@@ -1,0 +1,82 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html><head>
+<meta content="text/html; charset=ISO-8859-1" http-equiv="content-type"><title>SCM</title></head><body>
+
+  
+<h1>I. Introduction:</h1>
+The code base of all the software is stored in a <span style="font-weight: bold;">git</span> repository.<br>
+The currently used git repo is located at:<br>
+<ul>
+  <li><a style="font-weight: bold; font-style: italic;" href="http://gitlab.oamp.dev/ez_analysis/ez_rework">http://gitlab.oamp.dev/ez_analysis/ez_rework</a></li>
+</ul>
+Management rules for commit and branching follow the rules described in the following document:<br>
+<ul>
+  <li><span style="font-style: italic;"><span style="font-weight: bold;">A successful branching model: <a href="http://nvie.com/posts/a-successful-git-branching-model/">http://nvie.com/posts/a-successful-git-branching-model/</a>&nbsp;</span></span></li>
+</ul>
+<h1>II. Branch description:</h1>
+<h2>1. Master branch:</h2>Master branch on GitLab: <a href="http://gitlab.oamp.dev/ez_analysis/ez_rework/tree/master/">http://gitlab.oamp.dev/ez_analysis/ez_rework/tree/master/</a><br>
+<br>
+The master branch is the branch where you can get the latest released of the source code.<br>
+<span style="font-weight: bold;">No work happen on this branch.</span><br>
+<span style="font-weight: bold;">Code from develop branch get merged into master branch when a new release needs to be delivered.</span><br>
+For each release a new tag is created following those conventions (described <a href="http://semver.org/">here</a>):<br>
+<br>
+<span style="font-weight: bold; font-style: italic;">Tag name = Major.Minor.Patch</span><br>
+<br style="font-family: serif;">
+<span style="font-family: serif;">Where:</span><meta http-equiv="content-type" content="text/html; charset=utf-8"><br class="Apple-interchange-newline">
+<li style="color: rgb(0, 0, 0); font-size: 14px; font-style: normal; font-variant: normal; font-weight: normal; letter-spacing: normal; line-height: 21.6px; text-indent: 0px; text-transform: none; white-space: normal; word-spacing: 0px; font-family: serif;">
+  <ul>
+    <li><span style="font-weight: bold;">MAJOR</span> version when you make incompatible API changes,</li>
+    <li style="color: rgb(0, 0, 0); font-size: 14px; font-style: normal; font-variant: normal; font-weight: normal; letter-spacing: normal; line-height: 21.6px; text-indent: 0px; text-transform: none; white-space: normal; word-spacing: 0px; font-family: serif;"><span style="font-weight: bold;">MINOR</span> version when you add functionality in a backwards-compatible manner, and</li>
+    <li style="color: rgb(0, 0, 0); font-size: 14px; font-style: normal; font-variant: normal; font-weight: normal; letter-spacing: normal; line-height: 21.6px; text-indent: 0px; text-transform: none; white-space: normal; word-spacing: 0px; font-family: serif;"><span style="font-weight: bold;">PATCH</span> version when you make backwards-compatible bug fixes.</li>
+  </ul>
+  <span style="font-family: serif; text-decoration: underline;">- How to create a feature branch from develop:</span><br>
+
+
+  <br>
+  <span style="font-style: italic; font-weight: bold;"></span></li>
+
+<h2>2. Develop branch:</h2>
+
+Develop branch on GitLab: <a href="http://gitlab.oamp.dev/ez_analysis/ez_rework/tree/develop/">http://gitlab.oamp.dev/ez_analysis/ez_rework/tree/develop/</a><br>
+<br>
+The develop branch is the branch where you can get the latest development source code.<br>
+<span style="font-weight: bold;">Most of the time, o work happen on this branch.</span><br>
+
+<span style="font-weight: bold;">Code from features branch get merged
+into develop branch each time a feature or a fix is completed on it's
+own separated feature branch.</span><br>
+<br>
+<span style="font-family: serif; text-decoration: underline;">- How to re integrate a feature branch back to develop:</span><br>
+<br>
+<span style="font-style: italic; font-weight: bold;">cd $ROOT_DIR</span><br style="font-style: italic; font-weight: bold;">
+<span style="font-style: italic; font-weight: bold;">git checkout develop </span><br style="font-style: italic; font-weight: bold;">
+<span style="font-style: italic; font-weight: bold;">git merge --no-ff feature_branch_name</span><br style="font-style: italic; font-weight: bold;">
+<span style="font-style: italic; font-weight: bold;">git branch -d feature_branch_name</span><br style="font-style: italic; font-weight: bold;">
+<span style="font-style: italic; font-weight: bold;">git push origin develop</span><br>
+<span style="font-style: italic;"><span style="font-style: italic;"><span style="font-style: italic;"></span></span><br>
+</span>
+<h2>3. "Feature" branch:</h2>
+Feature branch is a generic name for each branch forked <span style="font-weight: bold;">FROM</span> the develop branch and used as an intermediary working area for features and bug fix development.<br>
+As soon as the developement of the feature or bug fix is finished, the branch must be re integrated back into develop.<br style="font-weight: bold;">
+<span style="font-weight: bold;">Note: re-integration on the develop
+branch MUST BE DONE with the --no-ff flags in order to keep feature
+branch separted from develop</span><br>
+<br>
+<span style="font-family: serif; text-decoration: underline;">- How to create a feature branch from develop:</span><br>
+
+<br>
+
+<span style="font-style: italic; font-weight: bold;">cd $ROOT_DIR</span><br style="font-style: italic; font-weight: bold;">
+
+<span style="font-style: italic; font-weight: bold;">git checkout -b</span><span style="font-style: italic; font-weight: bold;"> feature_branch_name develop</span><br>
+
+<span style="font-style: italic;"><span style="font-style: italic;"><span style="font-style: italic;"></span></span><br>
+</span><br>
+<br>
+<a href="http://gitlab.oamp.dev/ez_analysis/ez_rework/tree/master/">
+</a>
+
+
+</body>
+</html>

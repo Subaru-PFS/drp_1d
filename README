@@ -1,0 +1,46 @@
+============================================================
+I. Prequisite :
+============================================================
+
+Git: 1.7.11 or above
+GCC compiler: 4.2.1 or above
+CMake: 2.8.8 or above
+Python: 2.7.5 or above
+
+============================================================
+II. Build and install (Unix and unix like):
+============================================================
+
+- Clone Git repository:
+
+git clone ssh://git@gitlab.oamp.dev/ez_analysis/ez_rework.git $ROOT_DIR
+
+
+- Build and install third party library by running the buildandinstall.sh script:
+
+cd $ROOT_DIR/tools/
+python ./buildandinstallthirdparty.py
+
+
+- Create makefiles:
+
+cd $ROOT_DIR/build/
+cmake .
+
+
+- Build Everything:
+
+cd $ROOT_DIR/build/
+make
+
+
+============================================================
+III. Additional documentation
+============================================================
+
+Detailed documentation about this software can be found at:
+
+
+http://cct.oamp.dev:8080/view/EZ/job/ez_cpp-linux-x86_64/ws/docs/html/index.html
+
+
