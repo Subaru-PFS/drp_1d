@@ -15,7 +15,7 @@
 
 namespace bfs = boost::filesystem;
 
-using namespace __NS__;
+using namespace NSEpic;
 
 IMPLEMENT_MANAGED_OBJECT( CProcessFlowContext )
 

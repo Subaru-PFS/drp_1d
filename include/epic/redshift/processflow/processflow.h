@@ -8,7 +8,7 @@
 
 #include <boost/thread.hpp>
 
-namespace __NS__
+namespace NSEpic
 {
 
 class CProcessFlowContext;

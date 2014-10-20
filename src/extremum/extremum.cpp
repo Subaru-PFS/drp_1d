@@ -8,7 +8,7 @@
 #define PEAKS_MIN_THRESHOLD (3)
 #define PEAKS_SMOOTH_LIMIT (20)
 
-using namespace __NS__;
+using namespace NSEpic;
 using namespace std;
 
 CExtremum::CExtremum() :

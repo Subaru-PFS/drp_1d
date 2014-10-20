@@ -8,7 +8,7 @@
 #include <epic/redshift/extremum/extremum.h>
 #include <epic/redshift/continuum/median.h>
 
-using namespace __NS__;
+using namespace NSEpic;
 
 void CRedshiftOperatorTestCase::setUp()
 {

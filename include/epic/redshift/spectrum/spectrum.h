@@ -7,7 +7,7 @@
 #include <epic/redshift/spectrum/spectralaxis.h>
 #include <epic/redshift/continuum/continuum.h>
 
-namespace __NS__
+namespace NSEpic
 {
 
 class CSpectrum : public CManagedObject

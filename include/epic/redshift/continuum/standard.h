@@ -3,7 +3,7 @@
 
 #include <epic/redshift/continuum/continuum.h>
 
-namespace __NS__
+namespace NSEpic
 {
 
 class CContinuumStandard : public CContinuum

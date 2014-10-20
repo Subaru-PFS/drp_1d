@@ -5,7 +5,7 @@
 #include <epic/redshift/spectrum/io/reader.h>
 
 
-namespace __NS__
+namespace NSEpic
 {
 
 class CSpectrumIOGenericReader : public CSpectrumIOReader

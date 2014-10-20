@@ -6,7 +6,7 @@
 #include <epic/redshift/processflow/context.h>
 #include <epic/core/common/ref.h>
 
-using namespace __NS__;
+using namespace NSEpic;
 
 void CRedshiftProcessFlowTestCase::setUp()
 {

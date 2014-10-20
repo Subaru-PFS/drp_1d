@@ -4,7 +4,7 @@
 #include <epic/core/common/managedobject.h>
 #include <epic/core/common/datatypes.h>
 
-namespace __NS__
+namespace NSEpic
 {
 
 class CPeak

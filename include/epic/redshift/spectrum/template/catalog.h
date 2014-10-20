@@ -9,7 +9,7 @@
 #include <boost/filesystem.hpp>
 #include <vector>
 
-namespace __NS__
+namespace NSEpic
 {
 
 class CTemplateCatalog : public CManagedObject

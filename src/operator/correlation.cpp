@@ -15,7 +15,7 @@
 #define NOT_OVERLAP_VALUE NAN
 #include <stdio.h>
 
-using namespace __NS__;
+using namespace NSEpic;
 using namespace std;
 
 COperatorCorrelation::COperatorCorrelation()

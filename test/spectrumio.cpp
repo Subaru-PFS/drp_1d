@@ -3,7 +3,7 @@
 #include <epic/core/common/datatypes.h>
 #include <epic/redshift/spectrum/spectrum.h>
 
-using namespace __NS__;
+using namespace NSEpic;
 using namespace std;
 
 void CCRedshiftSpectrumioTestCase::setUp()

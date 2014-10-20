@@ -6,7 +6,7 @@
 #include <fstream>
 #include <iostream>
 
-using namespace __NS__;
+using namespace NSEpic;
 using namespace std;
 using namespace boost;
 

@@ -4,7 +4,7 @@
 #include <epic/redshift/common/datatypes.h>
 #include <epic/redshift/spectrum/axis.h>
 
-namespace __NS__
+namespace NSEpic
 {
 
 class CMask;

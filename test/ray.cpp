@@ -3,7 +3,7 @@
 #include <epic/core/common/datatypes.h>
 #include <epic/redshift/ray/catalog.h>
 
-using namespace __NS__;
+using namespace NSEpic;
 
 void CRedshiftRayTestCase::setUp()
 {

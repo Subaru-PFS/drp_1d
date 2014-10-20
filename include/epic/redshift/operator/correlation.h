@@ -12,7 +12,7 @@
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 
-namespace __NS__
+namespace NSEpic
 {
 
 class CSpectrum;

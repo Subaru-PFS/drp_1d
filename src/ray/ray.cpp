@@ -1,6 +1,6 @@
 #include <epic/redshift/ray/ray.h>
 
-using namespace __NS__;
+using namespace NSEpic;
 using namespace std;
 
 CRay::CRay()

@@ -7,7 +7,7 @@
 
 #include <math.h>
 
-using namespace __NS__;
+using namespace NSEpic;
 using namespace std;
 
 CSpectrumFluxAxis::CSpectrumFluxAxis()

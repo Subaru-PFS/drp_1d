@@ -10,7 +10,7 @@
 
 #include <algorithm>
 
-using namespace __NS__;
+using namespace NSEpic;
 using namespace std;
 
 IMPLEMENT_MANAGED_OBJECT( CContinuumMedian )

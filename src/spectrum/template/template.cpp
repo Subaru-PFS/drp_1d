@@ -1,6 +1,6 @@
 #include <epic/redshift/spectrum/template/template.h>
 
-using namespace __NS__;
+using namespace NSEpic;
 using namespace std;
 
 CTemplate::CTemplate() :

@@ -6,7 +6,7 @@
 
 #include <string>
 
-namespace __NS__
+namespace NSEpic
 {
 
 class CTemplate : public CSpectrum

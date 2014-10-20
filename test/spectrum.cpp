@@ -2,7 +2,7 @@
 
 #include <epic/core/common/datatypes.h>
 
-using namespace __NS__;
+using namespace NSEpic;
 
 void CRedshiftSpectrumTestCase::setUp()
 {

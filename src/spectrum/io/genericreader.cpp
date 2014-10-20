@@ -5,7 +5,7 @@
 
 #include <boost/filesystem.hpp>
 
-using namespace __NS__;
+using namespace NSEpic;
 using namespace std;
 
 namespace bfs = boost::filesystem;

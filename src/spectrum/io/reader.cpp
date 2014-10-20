@@ -1,6 +1,6 @@
 #include <epic/redshift/spectrum/io/reader.h>
 
-using namespace __NS__;
+using namespace NSEpic;
 
 CSpectrumIOReader::CSpectrumIOReader()
 {

@@ -3,7 +3,7 @@
 
 #include <epic/redshift/common/datatypes.h>
 
-namespace __NS__
+namespace NSEpic
 {
 
 class CGaussianFit

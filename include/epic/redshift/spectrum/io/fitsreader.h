@@ -7,7 +7,7 @@
 #include <vector>
 #include <fitsio.h>
 
-namespace __NS__
+namespace NSEpic
 {
 
 class CSpectrumIOFitsReader : public CSpectrumIOReader

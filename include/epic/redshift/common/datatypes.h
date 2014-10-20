@@ -5,7 +5,7 @@
 
 #include <vector>
 
-namespace __NS__
+namespace NSEpic
 {
 
 typedef UInt8                   Mask;

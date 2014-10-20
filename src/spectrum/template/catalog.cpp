@@ -7,7 +7,7 @@
 
 #include <string>
 
-using namespace __NS__;
+using namespace NSEpic;
 using namespace std;
 using namespace boost::filesystem;
 

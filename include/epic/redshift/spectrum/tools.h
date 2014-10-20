@@ -4,7 +4,7 @@
 #include <epic/core/common/datatypes.h>
 #include <epic/core/common/range.h>
 
-namespace __NS__
+namespace NSEpic
 {
 
 class CSpectrumAxis;

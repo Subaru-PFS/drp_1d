@@ -6,7 +6,7 @@
 
 
 
-using namespace __NS__;
+using namespace NSEpic;
 
 void CRedshiftCommonTestCase::setUp()
 {

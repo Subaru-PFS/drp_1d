@@ -5,7 +5,7 @@
 
 #include <math.h>
 
-using namespace __NS__;
+using namespace NSEpic;
 
 CPeak::CPeak( ) :
     m_StartIndex( -1 ),

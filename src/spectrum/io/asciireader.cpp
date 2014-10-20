@@ -6,7 +6,7 @@
 #include <boost/algorithm/string/predicate.hpp>
 #include <sstream>
 
-using namespace __NS__;
+using namespace NSEpic;
 using namespace std;
 namespace bfs = boost::filesystem;
 

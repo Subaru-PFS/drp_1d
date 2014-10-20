@@ -4,7 +4,7 @@
 #include <epic/redshift/spectrum/axis.h>
 
 
-using namespace __NS__;
+using namespace NSEpic;
 using namespace std;
 
 CSpectrumIOFitsReader::CSpectrumIOFitsReader()

@@ -28,12 +28,12 @@ int main( int argc, char **argv)
     controller.addListener( &progress );
 
     // Create logger and handler
-    __NS__::CLog log;
-    __NS__::CLogConsoleHandler consoleHandler( log );
+    NSEpic::CLog log;
+    NSEpic::CLogConsoleHandler consoleHandler( log );
 
-    __NS__::CTypeInfoRegistry typeInfoRegistry;
+    NSEpic::CTypeInfoRegistry typeInfoRegistry;
 
-    __NS__::CSocketContext socketContext;
+    NSEpic::CSocketContext socketContext;
 
     // Run tests
     CppUnit::TextUi::TestRunner runner;

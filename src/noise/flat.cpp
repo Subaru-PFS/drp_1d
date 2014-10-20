@@ -3,7 +3,7 @@
 #include <epic/redshift/spectrum/axis.h>
 #include <epic/redshift/spectrum/spectrum.h>
 
-using namespace __NS__;
+using namespace NSEpic;
 using namespace std;
 
 IMPLEMENT_MANAGED_OBJECT( CNoiseFlat )

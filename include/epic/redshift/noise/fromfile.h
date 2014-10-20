@@ -5,7 +5,7 @@
 #include <epic/core/common/ref.h>
 #include <epic/redshift/noise/noise.h>
 
-namespace __NS__
+namespace NSEpic
 {
 
 class CSpectrum;

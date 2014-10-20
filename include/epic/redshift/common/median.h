@@ -11,7 +11,7 @@
 
 using namespace std;
 
-namespace __NS__
+namespace NSEpic
 {
 
 template< typename T >

@@ -6,7 +6,7 @@
 #include <math.h>
 #include <float.h>
 
-using namespace __NS__;
+using namespace NSEpic;
 
 CRedshifts::CRedshifts()
 {

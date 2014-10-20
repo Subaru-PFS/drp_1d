@@ -8,7 +8,7 @@
 #include <boost/filesystem/fstream.hpp>
 #include <vector>
 
-namespace __NS__
+namespace NSEpic
 {
 
 class CSpectrumIOAsciiReader : public CSpectrumIOReader

@@ -4,7 +4,7 @@
 #include <epic/redshift/spectrum/template/template.h>
 #include <epic/redshift/spectrum/template/catalog.h>
 
-using namespace __NS__;
+using namespace NSEpic;
 
 void CRedshiftTemplateTestCase::setUp()
 {

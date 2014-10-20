@@ -6,7 +6,7 @@
 
 #include <vector>
 
-namespace __NS__
+namespace NSEpic
 {
 
 class CSpectrumAxis : public CSerializable

@@ -14,7 +14,7 @@
 #include <stdio.h>
 
 
-using namespace __NS__;
+using namespace NSEpic;
 
 IMPLEMENT_MANAGED_OBJECT( CProcessFlow )
 
@@ -42,7 +42,7 @@ bool CProcessFlow::Process( CProcessFlowContext& ctx )
     }
 }
 
-namespace __NS__
+namespace NSEpic
 {
 
 class CBlindSolveTask

@@ -5,7 +5,7 @@
 
 #include <vector>
 
-namespace __NS__
+namespace NSEpic
 {
 
 class CSpectrum;

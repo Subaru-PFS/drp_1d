@@ -6,7 +6,7 @@
 #include <math.h>
 #include <stdio.h>
 
-using namespace __NS__;
+using namespace NSEpic;
 
 IMPLEMENT_MANAGED_OBJECT( CSpectrum )
 

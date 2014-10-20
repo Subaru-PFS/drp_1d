@@ -5,7 +5,7 @@
 
 #include <string>
 
-namespace __NS__
+namespace NSEpic
 {
 
 /**
