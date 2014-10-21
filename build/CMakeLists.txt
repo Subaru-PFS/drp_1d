@@ -1,8 +1,6 @@
 CMAKE_MINIMUM_REQUIRED (VERSION 2.6) 
 PROJECT( epic_redshift ) 
 
-INCLUDE( ../../core/build/CMakeCommon.in )
-
 SET( COMPILE_TEST "" )
 #SET( ENABLE_PROFILING "" )
 
@@ -10,7 +8,6 @@ SET( COMPILE_TEST "" )
 # Setup shortcut acces directory
 #--------------------------------------------------------
 SET( EPIC_REDSHIFT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../" )
-SET( EPIC_CORE_DIR "${EPIC_REDSHIFT_DIR}/../core/" )
 
 MESSAGE( STATUS "CMAKE_BUILD_TYPE = " ${CMAKE_BUILD_TYPE} )
 MESSAGE( STATUS "CMAKE_SYSTEM_NAME = " ${CMAKE_SYSTEM_NAME} )
@@ -19,6 +16,18 @@ MESSAGE( STATUS "CMAKE_SYSTEM_PROCESSOR = " ${CMAKE_SYSTEM_PROCESSOR} )
 SET( CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${EPIC_REDSHIFT_DIR}/lib )
 SET( CMAKE_LIBRARY_OUTPUT_DIRECTORY ${EPIC_REDSHIFT_DIR}/lib )
 SET( CMAKE_RUNTIME_OUTPUT_DIRECTORY ${EPIC_REDSHIFT_DIR}/bin )
+
+#--------------------------------------------------------
+# Determine where Epic_Core is
+#--------------------------------------------------------
+IF( NOT DEFINED EPIC_CORE_DIR )
+    SET( EPIC_CORE_DIR "${EPIC_REDSHIFT_DIR}../core/" )
+ENDIF()
+
+
+MESSAGE( STATUS "EPIC_CORE_DIR = " ${EPIC_CORE_DIR} )
+
+INCLUDE( ${EPIC_CORE_DIR}/build/CMakeCommon.in )
 
 #--------------------------------------------------------
 # Setup bin sufix
