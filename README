@@ -13,8 +13,7 @@ II. Build and install (Unix and unix like):
 
 - Clone Git repository:
 
-git clone ssh://git@gitlab.oamp.dev/ez_analysis/ez_rework.git $ROOT_DIR
-
+git clone git@gitlab.oamp.dev:epic/epic_redshift.git $ROOT_DIR
 
 - Build and install third party library by running the buildandinstall.sh script:
 
@@ -38,9 +37,13 @@ make
 III. Additional documentation
 ============================================================
 
-Detailed documentation about this software can be found at:
+Detailed documentation about this software can be found by building the provided documentation:
 
+- Build documentation:
 
-http://cct.oamp.dev:8080/view/EZ/job/ez_cpp-linux-x86_64/ws/docs/html/index.html
+cd $ROOT_DIR/tools/
+python ./builddoc.py
 
+- Then open in your web browser:
 
+$ROOT_DIR/docs/html/index.html
