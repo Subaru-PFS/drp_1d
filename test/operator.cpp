@@ -18,7 +18,10 @@ void CRedshiftOperatorTestCase::tearDown()
 {
 }
 
-void CRedshiftOperatorTestCase::Correlation4()
+/**
+ * Test that correlating two identical spectrum give us a maximized correlation value fro Z=0
+ */
+void CRedshiftOperatorTestCase::Correlation1()
 {
     Bool retVal;
     CSpectrum s;
@@ -49,6 +52,7 @@ void CRedshiftOperatorTestCase::Correlation4()
 
     CPPUNIT_ASSERT( results.size() == status.size() );
 
+    // Test that correlation factor is maximized (close to 1) when Z == 0
     CPPUNIT_ASSERT_DOUBLES_EQUAL( 1.0, results[0], redshiftDelta*2 );
 
     for( Int32 i = 1; i<results.size(); i++ )
@@ -58,7 +62,12 @@ void CRedshiftOperatorTestCase::Correlation4()
 
 }
 
-void CRedshiftOperatorTestCase::Correlation1()
+/**
+ * Shift back a spectrum to it's rest pose (knowing it's z)
+ * cross correlate between the shifted version and the unshifted one at the given Z,
+ * and check that the correlation factor is maximized here (i.e: close to 1)
+ */
+void CRedshiftOperatorTestCase::Correlation2()
 {
     Bool retVal;
     CSpectrum s;
@@ -105,6 +114,11 @@ void CRedshiftOperatorTestCase::Correlation1()
 
 }
 
+/**
+ * Shift back a spectrum to it's rest pose (knowing it's z)
+ * cross correlate between the shifted version and the unshifted one over a Z range of [0-3]
+ * and check that the correlation factor is maximized at the expected Z
+ */
 void CRedshiftOperatorTestCase::Correlation3()
 {
     Bool retVal;
@@ -158,56 +172,7 @@ void CRedshiftOperatorTestCase::Correlation3()
 
 }
 
-void CRedshiftOperatorTestCase::Correlation2()
+void CRedshiftOperatorTestCase::Correlation4()
 {
-    Bool retVal;
-    CSpectrum s;
-    CTemplate t;
-
-    Float64 z = 1.11219;
-
-    CSpectrumIOFitsReader reader;
-
-    retVal = reader.Read( "../test/redshift/data/spectrum2_z_1.11219.fits", s );
-    CPPUNIT_ASSERT( retVal );
-
-    retVal = reader.Read( "../test/redshift/data/spectrum2_z_1.11219.fits", t );
-    CPPUNIT_ASSERT( retVal );
-
-    CSpectrumAxis& tplSpectralAxis = t.GetSpectralAxis();
-    for( Int32 i=0;i<tplSpectralAxis.GetSamplesCount();i++ )
-    {
-        tplSpectralAxis[i] = tplSpectralAxis[i] / (1.0 + z );
-    }
-
-    t.RemoveContinuum<CContinuumMedian>();
-    s.RemoveContinuum<CContinuumMedian>();
-
-    t.ConvertToLogScale();
-    s.ConvertToLogScale();
-
-    TFloat64Range lambdaRange( s.GetLambdaRange().GetBegin(), s.GetLambdaRange().GetEnd() );
-
-
-    Float64 redshiftDelta = 0.0001;
-    CRedshifts redshifts( 0.0, 3.0, redshiftDelta );
-
-    //CRedshifts redshifts( &z, 1 );
-
-    COperatorCorrelation correlation;
-    Bool r = correlation.Compute( s, t, lambdaRange, redshifts, 0.7 );
-    CPPUNIT_ASSERT( r == true );
-
-    const TFloat64List& results = correlation.GetResults();
-    const COperatorCorrelation::TStatusList& status = correlation.GetStatus();
-
-    CPPUNIT_ASSERT( results.size() == status.size() );
-
-    CExtremum extremum;
-    TPointList extremumList;
-    extremum.Find( redshifts.GetRedshifts(), correlation.GetResults().data(), redshifts.GetRedshiftsCount(), extremumList );
-
-    CPPUNIT_ASSERT_DOUBLES_EQUAL( z, extremumList[0].X, redshiftDelta*2 );
-
 
 }
