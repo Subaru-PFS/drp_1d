@@ -19,7 +19,7 @@ void CRedshiftProcessFlowTestCase::tearDown()
 void CRedshiftProcessFlowTestCase::Process()
 {
     CProcessFlowContext ctx;
-    CProcessFlow processFlow;
+    CProcessFlow processFlow( 4 );
 
     CProcessFlowContext::SParam params;
     params.lambdaRange = TFloat64Range( 3800.0, 12500.0 );
@@ -27,7 +27,7 @@ void CRedshiftProcessFlowTestCase::Process()
     params.templateCategoryList.push_back( CTemplate::nCategory_Galaxy );
     params.templateCategoryList.push_back( CTemplate::nCategory_Qso );
 
-    Bool retVal = ctx.Init( "../test/redshift/data/spectrum1_z_1.2299.fits", NULL, "../test/redshift/data/templatecatalog/", "../test/redshift/data/raycatalog.txt", params );
+    Bool retVal = ctx.Init( "../test/data/spectrum1_z_1.2299.fits", NULL, "../test/data/templatecatalog/", "../test/data/raycatalog.txt", params );
     CPPUNIT_ASSERT( retVal == true );
 
     retVal = processFlow.Process( ctx );

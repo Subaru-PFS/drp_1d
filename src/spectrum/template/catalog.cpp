@@ -28,6 +28,12 @@ const CTemplate& CTemplateCatalog::GetTemplate( CTemplate::ECategory category, U
     return *m_List[category][i];
 }
 
+
+const CTemplate& CTemplateCatalog::GetTemplateWithoutContinuum( CTemplate::ECategory category, UInt32 i ) const
+{
+    return *m_ListWithoutCont[category][i];
+}
+
 UInt32 CTemplateCatalog::GetTemplateCount( CTemplate::ECategory category ) const
 {
     return m_List[category].size();
@@ -39,6 +45,16 @@ Bool CTemplateCatalog::Add( CTemplate& r )
         return false;
 
     m_List[r.GetCategory()].push_back( &r );
+
+    // Compute continuum substracted spectrum
+    CRef<CTemplate> tmplWithoutCont = new CTemplate( r.GetName().c_str(), r.GetCategory() );
+
+    *tmplWithoutCont = r;
+
+    tmplWithoutCont->RemoveContinuum<CContinuumMedian>();
+    tmplWithoutCont->ConvertToLogScale();
+
+    m_ListWithoutCont[r.GetCategory()].push_back( tmplWithoutCont );
 
     return true;
 }

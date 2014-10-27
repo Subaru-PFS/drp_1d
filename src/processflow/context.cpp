@@ -89,7 +89,17 @@ bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath,
     }
 
     // Smooth flux
-    m_Spectrum->GetFluxAxis().ApplyMeanSmooth( params.smoothWidth );
+    if( params.smoothWidth > 0 )
+        m_Spectrum->GetFluxAxis().ApplyMeanSmooth( params.smoothWidth );
+
+
+    // Compute continuum substracted spectrum
+    m_SpectrumWithoutContinuum = new CSpectrum();
+    *m_SpectrumWithoutContinuum = *m_Spectrum;
+
+    m_SpectrumWithoutContinuum->RemoveContinuum<CContinuumMedian>();
+    m_SpectrumWithoutContinuum->ConvertToLogScale();
+
 
     // Load template catalog
     m_TemplateCatalog = new CTemplateCatalog;
@@ -133,6 +143,11 @@ const TFloat64Range& CProcessFlowContext::GetRedshiftRange() const
 CSpectrum& CProcessFlowContext::GetSpectrum()
 {
     return *m_Spectrum;
+}
+
+CSpectrum& CProcessFlowContext::GetSpectrumWithoutContinuum()
+{
+    return *m_SpectrumWithoutContinuum;
 }
 
 CTemplateCatalog& CProcessFlowContext::GetTemplateCatalog()

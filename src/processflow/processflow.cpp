@@ -18,29 +18,6 @@ using namespace NSEpic;
 
 IMPLEMENT_MANAGED_OBJECT( CProcessFlow )
 
-CProcessFlow::CProcessFlow( Int32 nbThread ) :
-    m_ThreadPool( nbThread )
-{
-
-}
-
-CProcessFlow::~CProcessFlow()
-{
-
-}
-
-bool CProcessFlow::Process( CProcessFlowContext& ctx )
-{
-    const CProcessFlowContext::TTemplateCategoryList& tplCategoryList = ctx.GetTemplateCategoryList();
-    if( std::find( tplCategoryList.begin(), tplCategoryList.end(), CTemplate::nCategory_Emission )==tplCategoryList.end() )
-    {
-        return ProcessWithoutEL( ctx );
-    }
-    else
-    {
-        return ProcessWithEL( ctx );
-    }
-}
 
 namespace NSEpic
 {
@@ -52,13 +29,17 @@ public:
     CProcessFlowContext&    m_Ctx;
     const CTemplate&        m_Tpl;
     const CSpectrum&        m_Spc;
+    const CTemplate&        m_TplWithoutCont;
+    const CSpectrum&        m_SpcWithoutCont;
     const TFloat64Range&    m_LambdaRanges;
     boost::mutex&           m_Mutex;
 
-    CBlindSolveTask( CProcessFlowContext& ctx, const CTemplate& tpl, const CSpectrum& spc, const TFloat64Range& lambdaRange, boost::mutex& mutex ) :
+    CBlindSolveTask( CProcessFlowContext& ctx, const CTemplate& tpl, const CTemplate& tplWithoutCont, const CSpectrum& spc, const CSpectrum& spcWithoutCont, const TFloat64Range& lambdaRange, boost::mutex& mutex ) :
         m_Ctx( ctx ),
         m_Tpl( tpl ),
         m_Spc( spc ),
+        m_TplWithoutCont( tplWithoutCont ),
+        m_SpcWithoutCont( spcWithoutCont ),
         m_LambdaRanges( lambdaRange ),
         m_Mutex( mutex )
     {
@@ -76,19 +57,9 @@ public:
         CRedshifts redshifts( m_Ctx.GetRedshiftRange(), m_Ctx.GetRedshiftStep() );
         DebugAssert( redshifts.GetRedshiftsCount() > 0 );
 
-        // Compute "Prepared" spctrum, i.e: spectrum with log scale and continuum removed
-        CSpectrum preparedSpc = m_Spc;
-        CTemplate preparedTpl = m_Tpl;
-
-        preparedSpc.RemoveContinuum<CContinuumMedian>();
-        preparedSpc.ConvertToLogScale();
-
-        preparedTpl.RemoveContinuum<CContinuumMedian>();
-        preparedTpl.ConvertToLogScale();
-
         // Compute correlation factor at each of those redshifts
         COperatorCorrelation correlation;
-        correlation.Compute( preparedSpc, preparedTpl, m_LambdaRanges, redshifts, m_Ctx.GetOverlapThreshold() );
+        correlation.Compute( m_SpcWithoutCont, m_TplWithoutCont, m_LambdaRanges, redshifts, m_Ctx.GetOverlapThreshold() );
 
         // Find redshifts extremum
         TPointList extremumList;
@@ -115,7 +86,7 @@ public:
             DebugAssert( tmpRedshifts.GetRedshiftsCount() > 0 );
 
             COperatorCorrelation tmpCorrelation;
-            retVal = tmpCorrelation.Compute( preparedSpc, preparedTpl, m_LambdaRanges, tmpRedshifts, m_Ctx.GetOverlapThreshold()  );
+            retVal = tmpCorrelation.Compute( m_SpcWithoutCont, m_TplWithoutCont, m_LambdaRanges, tmpRedshifts, m_Ctx.GetOverlapThreshold()  );
 
             TPointList tmpExtremumList;
             CExtremum tmpExtremum;
@@ -134,15 +105,14 @@ public:
             return;
         }
 
-        preparedSpc = m_Spc;
-        preparedTpl = m_Tpl;
-
-        preparedSpc.ConvertToLinearScale();
-        preparedTpl.ConvertToLinearScale();
-
         CRedshifts newRedshifts( newRedshiftsValues.data(), newRedshiftsValues.size() );
         COperatorChiSquare meritChiSquare;
-        retVal = meritChiSquare.Compute( preparedSpc, preparedTpl, m_LambdaRanges, newRedshifts, m_Ctx.GetOverlapThreshold() );
+        retVal = meritChiSquare.Compute( m_Spc, m_Tpl, m_LambdaRanges, newRedshifts, m_Ctx.GetOverlapThreshold() );
+        if( !retVal )
+        {
+            Log.LogInfo( "Failed to compute chi square value");
+            return;
+        }
 
         {
             boost::lock_guard<boost::mutex> lock( m_Mutex );
@@ -156,6 +126,31 @@ public:
 };
 
 }
+
+CProcessFlow::CProcessFlow( Int32 nbThread ) :
+    m_ThreadPool( nbThread )
+{
+
+}
+
+CProcessFlow::~CProcessFlow()
+{
+
+}
+
+bool CProcessFlow::Process( CProcessFlowContext& ctx )
+{
+    const CProcessFlowContext::TTemplateCategoryList& tplCategoryList = ctx.GetTemplateCategoryList();
+    if( std::find( tplCategoryList.begin(), tplCategoryList.end(), CTemplate::nCategory_Emission )==tplCategoryList.end() )
+    {
+        return ProcessWithoutEL( ctx );
+    }
+    else
+    {
+        return ProcessWithEL( ctx );
+    }
+}
+
 
 bool CProcessFlow::ProcessWithoutEL( CProcessFlowContext& ctx )
 {
@@ -179,12 +174,14 @@ bool CProcessFlow::ProcessWithoutEL( CProcessFlowContext& ctx )
         {
             for( UInt32 j=0; j<templateCatalog.GetTemplateCount( (CTemplate::ECategory) templateCategotyList[i] ); j++ )
             {
+
                 const CTemplate& tpl = templateCatalog.GetTemplate( (CTemplate::ECategory) templateCategotyList[i], j );
+                const CTemplate& tplWithoutCont = templateCatalog.GetTemplateWithoutContinuum( (CTemplate::ECategory) templateCategotyList[i], j );
                 const CSpectrum& spc = ctx.GetSpectrum();
+                const CSpectrum& spcWithoutCont = ctx.GetSpectrumWithoutContinuum();
                 const TFloat64Range& lambdaRange = ctx.GetLambdaRange();
 
-                m_ThreadPool.AddTask( CBlindSolveTask( ctx, tpl, spc, lambdaRange, m_SyncMutex ) );
-
+                m_ThreadPool.AddTask( CBlindSolveTask( ctx, tpl, tplWithoutCont, spc, spcWithoutCont, lambdaRange, m_SyncMutex ) );
             }
 
         }
@@ -227,10 +224,12 @@ bool CProcessFlow::ProcessWithEL( CProcessFlowContext& ctx )
             for( UInt32 j=0; j<templateCatalog.GetTemplateCount( (CTemplate::ECategory) templateCategotyList[i] ); j++ )
             {
                 const CTemplate& tpl = templateCatalog.GetTemplate( (CTemplate::ECategory) templateCategotyList[i], j );
+                const CTemplate& tplWithoutCont = templateCatalog.GetTemplateWithoutContinuum( (CTemplate::ECategory) templateCategotyList[i], j );
                 const CSpectrum& spc = ctx.GetSpectrum();
+                const CSpectrum& spcWithoutCont = ctx.GetSpectrumWithoutContinuum();
                 const TFloat64Range& lambdaRange = ctx.GetLambdaRange();
 
-                m_ThreadPool.AddTask( CBlindSolveTask( ctx, tpl, spc, lambdaRange, m_SyncMutex ) );
+                m_ThreadPool.AddTask( CBlindSolveTask( ctx, tpl, tplWithoutCont, spc, spcWithoutCont, lambdaRange, m_SyncMutex ) );
 
             }
 

@@ -7,6 +7,8 @@
 #include <epic/redshift/common/mask.h>
 #include <epic/redshift/common/redshifts.h>
 
+#include <epic/core/log/log.h>
+
 #include <math.h>
 #include <assert.h>
 
@@ -37,7 +39,10 @@ Float64 COperatorChiSquare::BasicFit( const CSpectrum& spectrum, const CTemplate
 {
 
     if( spectrum.GetSpectralAxis().IsInLinearScale() == false || tpl.GetSpectralAxis().IsInLinearScale() == false )
+    {
+        Log.LogError("Failed to compute Chi Square, input spetrum or template are not in linear scale");
         return false;
+    }
 
     CMask mask( spectrum.GetSampleCount() );
     CMask itplMask( spectrum.GetSampleCount() );

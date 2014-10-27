@@ -29,9 +29,9 @@ void CRedshiftOperatorTestCase::Correlation1()
 
     CSpectrumIOFitsReader reader;
 
-    retVal = reader.Read( "../test/redshift/data/spectrum1_z_1.2299.fits", s );
+    retVal = reader.Read( "../test/data/spectrum1_z_1.2299.fits", s );
     CPPUNIT_ASSERT( retVal );
-    retVal = reader.Read( "../test/redshift/data/spectrum1_z_1.2299.fits", t );
+    retVal = reader.Read( "../test/data/spectrum1_z_1.2299.fits", t );
     CPPUNIT_ASSERT( retVal );
 
     s.ConvertToLogScale();
@@ -78,9 +78,9 @@ void CRedshiftOperatorTestCase::Correlation2()
     CSpectrumIOFitsReader reader;
 
     // Those spectrum are already at Z = 1.2299
-    retVal = reader.Read( "../test/redshift/data/spectrum1_z_1.2299.fits", s );
+    retVal = reader.Read( "../test/data/spectrum1_z_1.2299.fits", s );
     CPPUNIT_ASSERT( retVal );
-    retVal = reader.Read( "../test/redshift/data/spectrum1_z_1.2299.fits", t );
+    retVal = reader.Read( "../test/data/spectrum1_z_1.2299.fits", t );
     CPPUNIT_ASSERT( retVal );
 
     // Shift template back to rest pose
@@ -129,9 +129,9 @@ void CRedshiftOperatorTestCase::Correlation3()
 
     CSpectrumIOFitsReader reader;
 
-    retVal = reader.Read( "../test/redshift/data/spectrum1_z_1.2299.fits", s );
+    retVal = reader.Read( "../test/data/spectrum1_z_1.2299.fits", s );
     CPPUNIT_ASSERT( retVal );
-    retVal = reader.Read( "../test/redshift/data/spectrum1_z_1.2299.fits", t );
+    retVal = reader.Read( "../test/data/spectrum1_z_1.2299.fits", t );
     CPPUNIT_ASSERT( retVal );
 
     CSpectrumSpectralAxis& tplSpectralAxis = t.GetSpectralAxis();

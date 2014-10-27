@@ -1,6 +1,7 @@
 #include <epic/redshift/operator/correlation.h>
 
 #include <epic/core/debug/assert.h>
+#include <epic/core/log/log.h>
 #include <epic/redshift/spectrum/fluxaxis.h>
 #include <epic/redshift/spectrum/spectralaxis.h>
 #include <epic/redshift/continuum/median.h>
@@ -57,7 +58,10 @@ Bool COperatorCorrelation::Compute(   const CSpectrum& spectrum, const CTemplate
 
     // Input spectrum MUST be in log scales
     if( spectrum.GetSpectralAxis().IsInLogScale() == false || tpl.GetSpectralAxis().IsInLogScale() == false )
+    {
+        Log.LogError("Failed to compute Cross correlation, input spectrum or template are not in log scale");
         return false;
+    }
 
     boost::posix_time::ptime  startTime = boost::posix_time::microsec_clock::local_time();
 

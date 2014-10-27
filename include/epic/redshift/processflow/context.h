@@ -54,6 +54,7 @@ public:
     bool Init( const char* spectrumPath, const char* noisePath, const char* tempalteCatalogPath, const char* rayCatalogPath, const SParam& params  );
 
     CSpectrum&                      GetSpectrum();
+    CSpectrum&                      GetSpectrumWithoutContinuum();
     CTemplateCatalog&               GetTemplateCatalog();
     CRayCatalog&                    GetRayCatalog();
     const TFloat64Range&            GetLambdaRange() const;
@@ -70,6 +71,7 @@ public:
 private:
 
     CRef<CSpectrum>                 m_Spectrum;
+    CRef<CSpectrum>                 m_SpectrumWithoutContinuum;
     CRef<CTemplateCatalog>          m_TemplateCatalog;
     CRef<CRayCatalog>               m_RayCatalog;
     TFloat64Range                   m_LambdaRanges;
@@ -81,6 +83,7 @@ private:
     TTemplateCategoryList           m_TemplateCategoryList;
 
     TCorrelationResults             m_CorrelationResult;
+
 
 };
 
