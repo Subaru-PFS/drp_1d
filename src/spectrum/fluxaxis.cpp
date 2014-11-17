@@ -123,13 +123,14 @@ Bool CSpectrumFluxAxis::ComputeMeanAndSDevWithoutError( const CMask& mask, Float
 
     sum=0.0;
     ndOfSampleUsed=0;
-    for ( j=0; j < GetSamplesCount(); j++)
+    for ( j=0; j < std::min( GetSamplesCount(), mask.GetMasksCount() ); j++)
     {
         DebugAssert( mask[j] == 1 || mask[j] == 0 );
 
         sum += mask[j] * m_Samples[j];
         ndOfSampleUsed += mask[j];
     }
+
 
     if( ndOfSampleUsed > 0 )
     {

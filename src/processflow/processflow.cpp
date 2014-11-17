@@ -83,7 +83,14 @@ public:
             newRange.SetEnd( std::min(redshifts.GetRange().GetEnd(),     p.X + m_Ctx.GetFineGrainedCorrelationRadius() ) );
 
             CRedshifts   tmpRedshifts( newRange, m_Ctx.GetRedshiftStep()  );
-            DebugAssert( tmpRedshifts.GetRedshiftsCount() > 0 );
+
+            // Redshift count could be == 0 if the curren extremum is located at the upper bound of the redshift range.
+            // So in that case we provide explicit z
+            if( tmpRedshifts.GetRedshiftsCount() == 0 )
+            {
+                Float64 z[] = { newRange.GetBegin(), newRange.GetEnd() };
+                tmpRedshifts = CRedshifts( z, 2 );
+            }
 
             COperatorCorrelation tmpCorrelation;
             retVal = tmpCorrelation.Compute( m_SpcWithoutCont, m_TplWithoutCont, m_LambdaRanges, tmpRedshifts, m_Ctx.GetOverlapThreshold()  );

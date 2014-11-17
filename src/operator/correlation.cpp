@@ -4,7 +4,6 @@
 #include <epic/core/log/log.h>
 #include <epic/redshift/spectrum/fluxaxis.h>
 #include <epic/redshift/spectrum/spectralaxis.h>
-#include <epic/redshift/continuum/median.h>
 #include <epic/redshift/spectrum/spectrum.h>
 #include <epic/redshift/spectrum/template/template.h>
 #include <epic/redshift/spectrum/tools.h>
@@ -66,8 +65,6 @@ Bool COperatorCorrelation::Compute(   const CSpectrum& spectrum, const CTemplate
     boost::posix_time::ptime  startTime = boost::posix_time::microsec_clock::local_time();
 
     DebugAssert( overlapThreshold > 0.0 && overlapThreshold <= 1.0 );
-
-    CContinuumMedian continuum;
 
     CMask spcMask( spectrum.GetSampleCount() );
     CMask itplTplMask( spectrum.GetSampleCount() );

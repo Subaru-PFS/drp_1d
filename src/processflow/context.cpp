@@ -48,7 +48,8 @@ CProcessFlowContext::~CProcessFlowContext()
 
 }
 
-bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath, const char* templateCatalogPath, const char* rayCatalogPath, const SParam& params )
+
+bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath, CTemplateCatalog& templateCatalog, CRayCatalog& rayCatalog, const SParam& params  )
 {
     m_Spectrum = new CSpectrum();
 
@@ -101,25 +102,9 @@ bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath,
     m_SpectrumWithoutContinuum->ConvertToLogScale();
 
 
-    // Load template catalog
-    m_TemplateCatalog = new CTemplateCatalog;
-    rValue = m_TemplateCatalog->Load( templateCatalogPath );
-    if( !rValue )
-    {
-        Log.LogError("Failed to load template catalog: (%s)", templateCatalogPath );
-        m_TemplateCatalog = NULL;
-        return false;
-    }
+    m_TemplateCatalog = &templateCatalog;
+    m_RayCatalog = &rayCatalog;
 
-    // Load ray catalog
-    m_RayCatalog = new CRayCatalog;
-    rValue = m_RayCatalog->Load( rayCatalogPath );
-    if( !rValue )
-    {
-        Log.LogError("Failed to load ray catalog: (%s)", rayCatalogPath );
-        m_RayCatalog = NULL;
-        return false;
-    }
 
     m_LambdaRanges = params.lambdaRange;
     m_RedshiftRange = params.redshiftRange;
@@ -128,6 +113,40 @@ bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath,
     m_OverlapThreshold = params.overlapThreshold;
 
     return true;
+}
+
+bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath, const char* templateCatalogPath, const char* rayCatalogPath, const SParam& params )
+{
+    CRef<CTemplateCatalog> templateCatalog = new CTemplateCatalog;
+    CRef<CRayCatalog> rayCatalog = new CRayCatalog;
+
+    Bool rValue;
+
+    // Load template catalog
+    if( templateCatalogPath )
+    {
+        rValue = templateCatalog->Load( templateCatalogPath );
+        if( !rValue )
+        {
+            Log.LogError("Failed to load template catalog: (%s)", templateCatalogPath );
+            m_TemplateCatalog = NULL;
+            return false;
+        }
+    }
+
+    // Load ray catalog
+    if( rayCatalogPath )
+    {
+        rValue = rayCatalog->Load( rayCatalogPath );
+        if( !rValue )
+        {
+            Log.LogError("Failed to load ray catalog: (%s)", rayCatalogPath );
+            m_RayCatalog = NULL;
+            return false;
+        }
+    }
+
+    return Init( spectrumPath, noisePath, *templateCatalog, *rayCatalog, params );
 }
 
 const TFloat64Range& CProcessFlowContext::GetLambdaRange() const
