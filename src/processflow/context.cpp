@@ -25,7 +25,7 @@ CProcessFlowContext::SParam::SParam()
     redshiftStep = 0.0001;
     lambdaRange = TFloat64Range( 3800.0, 12500.0 );
     smoothWidth = 3;
-    overlapThreshold = 1.0;
+    overlapThreshold = 0.9;
 
     //templateCategoryList.push_back( CTemplate::nCategory_Emission );
     templateCategoryList.push_back( CTemplate::nCategory_Galaxy );
@@ -34,11 +34,9 @@ CProcessFlowContext::SParam::SParam()
 }
 
 CProcessFlowContext::CProcessFlowContext() :
-    m_FineGrainedCorrelationRadius( 0.001 ),
     m_RedshiftRange( 0.0, 3.0 ),
     m_OverlapThreshold( 1.0 ),
-    m_RedshiftStep( 0.0001 ),
-    m_MaxCorrelationExtremumCount( 5 )
+    m_RedshiftStep( 0.0001 )
 {
 
 }
@@ -179,11 +177,6 @@ CRayCatalog& CProcessFlowContext::GetRayCatalog()
     return *m_RayCatalog;
 }
 
-Float64 CProcessFlowContext::GetFineGrainedCorrelationRadius() const
-{
-    return m_FineGrainedCorrelationRadius;
-}
-
 Float64 CProcessFlowContext::GetOverlapThreshold() const
 {
     return m_OverlapThreshold;
@@ -200,11 +193,6 @@ const CProcessFlowContext::TTemplateCategoryList& CProcessFlowContext::GetTempla
     return m_TemplateCategoryList;
 }
 
-Float64 CProcessFlowContext::GetMaxCorrelationExtremumCount() const
-{
-    return m_MaxCorrelationExtremumCount;
-}
-
 Bool CProcessFlowContext::AddCorrelationResult( const CTemplate& tpl, const CRedshifts& redshifts, const TFloat64List& merits )
 {
     if( m_CorrelationResult.find( tpl.GetName() ) != m_CorrelationResult.end() )
@@ -219,27 +207,47 @@ Bool CProcessFlowContext::AddCorrelationResult( const CTemplate& tpl, const CRed
     return true;
 }
 
-Bool CProcessFlowContext::GetBestCorrelationResult( Float64& redshift, Float64& merit, std::string& tplName ) const
+Bool CProcessFlowContext::GetBestCorrelationResult( Float64& redshift, Float64& merit, std::string& tplName, ESearchCriterion criterion ) const
 {
     Int32 maxIndex = 0;
     TCorrelationResults::const_iterator maxIt = m_CorrelationResult.end();
     TCorrelationResults::const_iterator it = m_CorrelationResult.begin();
 
-    Float64 min = DBL_MAX ;
-    for( it = m_CorrelationResult.begin(); it != m_CorrelationResult.end(); it++ )
+
+    if( criterion == nSearchCriterion_Minimized )
     {
-        const SCorrelationResult& r = (*it).second;
-        for( Int32 i=0; i<r.Merits.size(); i++ )
+        Float64 min = DBL_MAX ;
+        for( it = m_CorrelationResult.begin(); it != m_CorrelationResult.end(); it++ )
         {
-            if( r.Merits[i] < min )
+            const SCorrelationResult& r = (*it).second;
+            for( Int32 i=0; i<r.Merits.size(); i++ )
             {
-                min = r.Merits[i];
-                maxIndex = i;
-                maxIt = it;
+                if( r.Merits[i] < min )
+                {
+                    min = r.Merits[i];
+                    maxIndex = i;
+                    maxIt = it;
+                }
             }
         }
     }
-
+    else if( criterion == nSearchCriterion_Maximized )
+    {
+        Float64 min = DBL_MIN ;
+        for( it = m_CorrelationResult.begin(); it != m_CorrelationResult.end(); it++ )
+        {
+            const SCorrelationResult& r = (*it).second;
+            for( Int32 i=0; i<r.Merits.size(); i++ )
+            {
+                if( r.Merits[i] > min )
+                {
+                    min = r.Merits[i];
+                    maxIndex = i;
+                    maxIt = it;
+                }
+            }
+        }
+    }
 
     if( maxIt != m_CorrelationResult.end() )
     {

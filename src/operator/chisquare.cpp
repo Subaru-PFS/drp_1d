@@ -34,8 +34,7 @@ const TFloat64List& COperatorChiSquare::GetResults() const
 }
 
 Float64 COperatorChiSquare::BasicFit( const CSpectrum& spectrum, const CTemplate& tpl,
-                                const TFloat64Range& lambdaRange, Float64 redshift, Float64 overlapThreshold,
-                                Float64& ampl, Float64& overlapRate, Int32& numDevs )
+                                const TFloat64Range& lambdaRange, Float64 redshift, Float64 overlapThreshold, Float64& overlapRate )
 {
 
     if( spectrum.GetSpectralAxis().IsInLinearScale() == false || tpl.GetSpectralAxis().IsInLinearScale() == false )
@@ -44,90 +43,112 @@ Float64 COperatorChiSquare::BasicFit( const CSpectrum& spectrum, const CTemplate
         return false;
     }
 
-    CMask mask( spectrum.GetSampleCount() );
-    CMask itplMask( spectrum.GetSampleCount() );
-    CSpectrumSpectralAxis shiftedTplSpectralAxis( tpl.GetSampleCount() );
-    CSpectrumFluxAxis itplTplFluxAxis( spectrum.GetSampleCount() );
+    Bool retVal;
+    CSpectrumSpectralAxis shiftedTplSpectralAxis( tpl.GetSampleCount(), false );
 
     const CSpectrumSpectralAxis& spcSpectralAxis = spectrum.GetSpectralAxis();
     const CSpectrumFluxAxis& spcFluxAxis = spectrum.GetFluxAxis();
 
-    const CSpectrumAxis& tplSpectralAxis = tpl.GetSpectralAxis();
-    const CSpectrumAxis& tplFluxAxis = tpl.GetFluxAxis();
+    const CSpectrumSpectralAxis& tplSpectralAxis = tpl.GetSpectralAxis();
+    const CSpectrumFluxAxis& tplFluxAxis = tpl.GetFluxAxis();
 
-    spectrum.GetSpectralAxis().GetMask( lambdaRange, mask );
-
-    Float64 onePlusRedshift = 1.0 + redshift;
-    Float64 logOnePlusRedshift = log( onePlusRedshift );
+    // Compute clamped lambda range over spectrum
+    TFloat64Range spcLambdaRange;
+    retVal = spcSpectralAxis.ClampLambdaRange( lambdaRange, spcLambdaRange );
 
     // Compute shifted template
-    for( Int32 i = 0; i<tplSpectralAxis.GetSamplesCount(); i++ )
+    Float64 onePlusRedshift = 1.0 + redshift;
+    shiftedTplSpectralAxis.ShiftByWaveLength( tplSpectralAxis, onePlusRedshift, CSpectrumSpectralAxis::nShiftForward );
+
+    TFloat64Range intersectedLambdaRange( 0.0, 0.0 );
+
+    // Compute clamped lambda range over template
+    TFloat64Range tplLambdaRange;
+    retVal = shiftedTplSpectralAxis.ClampLambdaRange( lambdaRange, tplLambdaRange );
+
+    overlapRate = 0;
+
+    // if there is any intersection between the lambda range of the spectrum and the lambda range of the template
+    // Compute the intersected range
+    if( TFloat64Range::Intersect( tplLambdaRange, spcLambdaRange, intersectedLambdaRange ) )
     {
-        shiftedTplSpectralAxis[i] = tplSpectralAxis[i] * onePlusRedshift;
+        overlapRate = intersectedLambdaRange.GetLength() / spcLambdaRange.GetLength();
     }
 
-    // template rebin over spectrum lambda
-    CSpectrumTools::Interpolate(
-                shiftedTplSpectralAxis,
-                tplFluxAxis,
-                0,
-                tpl.GetSampleCount(),
-
-                spcSpectralAxis,
-                itplTplFluxAxis,
-                itplMask
-                );
-
-    if( itplMask.IntersectWith( mask ) == false )
-        return false;
-
-    overlapRate = mask.CompouteOverlapRate( itplMask );
+    // Check for overlap rate
     if( overlapRate < overlapThreshold )
         return false;
 
-    Float64 sum_xdevs = 0.0;
-    Float64 sum_ydevs = 0.0;
+    const Float64* Xtpl = shiftedTplSpectralAxis.GetSamples();
+    const Float64* Ytpl = tplFluxAxis.GetSamples();
+    const Float64* Xspc = spcSpectralAxis.GetSamples();
+    const Float64* Yspc = spcFluxAxis.GetSamples();
+
+    // Move cursors up to lambda range start
+    Int32 j = 0;
+    while( Xspc[j] < intersectedLambdaRange.GetBegin() )
+        j++;
+
+    Int32 k = 0;
+    while( Xtpl[k] < intersectedLambdaRange.GetBegin() )
+        k++;
+
+    Int32 jStart = j;
+    Int32 kStart = k;
+
+    Float64 sumXDevs = 0.0;
+    Float64 sumYDevs = 0.0;
     Float64 err2 = 0.0;
     Float64 fit = 0;
+    Float64 tplInterpolatedFlux=-1;
+    Float32 t = 0;
+    Int32 numDevs = 0;
+    const Float64* error = spcFluxAxis.GetError();
 
-    const Float64* spcFluxError = spcFluxAxis.GetError();
-    for( Int32 i = 0; i<spectrum.GetSampleCount(); i++ )
+    while( k<tpl.GetSampleCount()-1 && Xtpl[k] <= intersectedLambdaRange.GetEnd() )
     {
-        if( itplMask[i] )
+        while( j<spectrum.GetSampleCount() && Xspc[j] <= Xtpl[k+1] )
         {
+            t = ( Xspc[j] - Xtpl[k] ) / ( Xtpl[k+1] - Xtpl[k] );
+
+            tplInterpolatedFlux = Ytpl[k] + ( Ytpl[k+1] - Ytpl[k] ) * t;
+
             numDevs++;
-            err2 = 1.0 / pow( spcFluxError[i], 2.0 );
-            sum_ydevs+=spcFluxAxis[i]*err2;
-            sum_xdevs+=itplTplFluxAxis[i]*err2;
+            err2 = 1.0 / error[j] * error[j];
+            sumYDevs+=Yspc[j]*err2;
+            sumXDevs+=tplInterpolatedFlux*err2;
+
+            j++;
         }
+
+        k++;
     }
 
-    if( numDevs > 0 )
-    {
-        ampl = sum_ydevs / sum_xdevs;
-    }
-    else
+    if ( numDevs==0 || sumYDevs==0 || sumXDevs==0 )
     {
         return false;
     }
 
-    if ( sum_ydevs==0 )
-    {
-        return false;
-    }
+    Float64 ampl = sumYDevs / sumXDevs;
 
-    if ( sum_xdevs==0 )
-    {
-        return false;
-    }
+    j = jStart;
+    k = kStart;
 
     fit=0;
-    for ( Int32 j=0;j<spectrum.GetSampleCount();j++)
+
+    while( k<tpl.GetSampleCount()-1 && Xtpl[k] <= intersectedLambdaRange.GetEnd() )
     {
-        if (itplMask[j])
+        while( j<spectrum.GetSampleCount() && Xspc[j] <= Xtpl[k+1] )
         {
-            fit += pow( spcFluxAxis[j] - ampl * itplTplFluxAxis[j] , 2.0 ) / pow( spcFluxError[j], 2.0 );
+            t = ( Xspc[j] - Xtpl[k] ) / ( Xtpl[k+1] - Xtpl[k] );
+            tplInterpolatedFlux = Ytpl[k] + ( Ytpl[k+1] - Ytpl[k] ) * t;
+
+            fit += pow( Yspc[j] - ampl * tplInterpolatedFlux , 2.0 ) / pow( error[j], 2.0 );
+
+            j++;
         }
+
+        k++;
     }
 
     // Chi square reduct: it can introduces some problem?
@@ -153,11 +174,7 @@ Bool COperatorChiSquare::Compute(const CSpectrum& spectrum, const CTemplate& tpl
 
     for (i=0;i<redshifts.GetRedshiftsCount();i++)
     {
-        Float64 ampl = 0.0;
-        Float64 overlapRate = 0.0;
-        Int32   numDevs = 0;
-
-        m_Chisquare[i] = BasicFit( spectrum, tpl, lambdaRange, redshifts[i], overlapThreshold, ampl, m_Overlap[i], numDevs );
+        m_Chisquare[i] = BasicFit( spectrum, tpl, lambdaRange, redshifts[i], overlapThreshold, m_Overlap[i] );
 
     }
 

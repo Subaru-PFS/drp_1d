@@ -44,10 +44,11 @@ CRedshifts::CRedshifts( const TFloat64Range& range, Float64 delta )
     SpreadOver( range.GetBegin(), range.GetEnd(), delta );
 }
 
-CRedshifts::CRedshifts( UInt32 weightsCount ) :
-    m_Redshifts( weightsCount )
+CRedshifts::CRedshifts( Float64 redshift )
 {
-
+    m_Redshifts.resize( 1 );
+    m_Redshifts[0] = redshift;
+    m_Range.Set( redshift, redshift );
 }
 
 CRedshifts::~CRedshifts()

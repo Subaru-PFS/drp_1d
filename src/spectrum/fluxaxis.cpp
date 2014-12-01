@@ -117,13 +117,15 @@ Bool CSpectrumFluxAxis::ComputeMeanAndSDev( const CMask& mask, Float64& mean, Fl
 
 Bool CSpectrumFluxAxis::ComputeMeanAndSDevWithoutError( const CMask& mask, Float64& mean,  Float64& sdev) const
 {
+    DebugAssert( mask.GetMasksCount() == GetSamplesCount() );
+
     Int32 j;
     Float64 sum,var;
     Int32 ndOfSampleUsed;
 
     sum=0.0;
     ndOfSampleUsed=0;
-    for ( j=0; j < std::min( GetSamplesCount(), mask.GetMasksCount() ); j++)
+    for ( j=0; j < GetSamplesCount(); j++)
     {
         DebugAssert( mask[j] == 1 || mask[j] == 0 );
 
@@ -157,6 +159,8 @@ Bool CSpectrumFluxAxis::ComputeMeanAndSDevWithoutError( const CMask& mask, Float
 
 Bool CSpectrumFluxAxis::ComputeMeanAndSDevWithError( const CMask& mask, Float64& mean, Float64& sdev, const Float64* error ) const
 {
+    DebugAssert( mask.GetMasksCount() == GetSamplesCount() );
+
     Int32 j;
 
     Float64 sum, var, errorSum, err;

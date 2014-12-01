@@ -20,7 +20,7 @@ class CExtremum
 public:
 
     CExtremum();
-    CExtremum( const TFloat64Range& xRange, UInt32 maxPeakCount, UInt32 refreshCount = 2 );
+    CExtremum( const TFloat64Range& xRange, UInt32 maxPeakCount = 1, UInt32 refreshCount = 2 );
     ~CExtremum();
 
     void SetMaxPeakCount( UInt32 n );

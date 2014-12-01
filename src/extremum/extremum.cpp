@@ -85,19 +85,6 @@ Bool CExtremum::InternalFind( const Float64* xAxis, const Float64* yAxis, UInt32
     if( n == 0 )
         return false;
 
-    if( n == 1 )
-    {
-    }
-
-    if( n <= PEAKS_MIN_THRESHOLD )
-    {
-        Int32 xIndexMax = 0;
-        for( Int32 i=1; i<n ;i++ )
-        {
-            //            if( 
-        }
-    }
-
     vector<Float64> maxX( n );
     vector<Float64> maxY( n );
 

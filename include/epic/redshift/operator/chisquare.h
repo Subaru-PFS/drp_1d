@@ -30,8 +30,7 @@ public:
 private:
 
     Float64 BasicFit( const CSpectrum& spectrum, const CTemplate& tpl,
-                   const TFloat64Range& lambdaRange, Float64 redshift, Float64 overlapThreshold,
-                   Float64& ampl, Float64& overlapRate, Int32& numDevs );
+                   const TFloat64Range& lambdaRange, Float64 redshift, Float64 overlapThreshold, Float64& overlapRate );
 
     TFloat64List    m_Chisquare;
     TFloat64List    m_Overlap;

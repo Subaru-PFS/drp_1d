@@ -27,6 +27,12 @@ class CProcessFlowContext : public CManagedObject
 
 public:
 
+    enum ESearchCriterion
+    {
+        nSearchCriterion_Maximized,
+        nSearchCriterion_Minimized
+    };
+
     struct SCorrelationResult
     {
         CRedshifts      Redshifts;
@@ -61,13 +67,11 @@ public:
     const TFloat64Range&            GetLambdaRange() const;
     const TFloat64Range&            GetRedshiftRange() const;
     const TTemplateCategoryList&    GetTemplateCategoryList() const;
-    Float64                         GetFineGrainedCorrelationRadius() const;
     Float64                         GetOverlapThreshold() const;
     Float64                         GetRedshiftStep() const;
-    Float64                         GetMaxCorrelationExtremumCount() const;
 
     Bool                            AddCorrelationResult( const CTemplate& tpl, const CRedshifts& redshifts, const TFloat64List& merits );
-    Bool                            GetBestCorrelationResult( Float64& redshift, Float64& merit, std::string& tplName ) const;
+    Bool                            GetBestCorrelationResult( Float64& redshift, Float64& merit, std::string& tplName, ESearchCriterion criterion ) const;
 
 private:
 
@@ -77,10 +81,8 @@ private:
     CRef<CRayCatalog>               m_RayCatalog;
     TFloat64Range                   m_LambdaRanges;
     TFloat64Range                   m_RedshiftRange;
-    Float64                         m_FineGrainedCorrelationRadius;
     Float64                         m_OverlapThreshold;
     Float64                         m_RedshiftStep;
-    UInt32                          m_MaxCorrelationExtremumCount;
     TTemplateCategoryList           m_TemplateCategoryList;
 
     TCorrelationResults             m_CorrelationResult;

@@ -22,19 +22,25 @@ public:
         nFLags_LogScale = 1 << 0
     };
 
+    enum EShiftDirection
+    {
+        nShiftForward =0,
+        nShiftBackward
+    };
+
     CSpectrumSpectralAxis();
-    CSpectrumSpectralAxis( UInt32 n );
-    CSpectrumSpectralAxis( const Float64* samples, UInt32 n );
+    CSpectrumSpectralAxis( UInt32 n, Bool isLogScale );
+    CSpectrumSpectralAxis( const Float64* samples, UInt32 n, Bool isLogScale  );
+    CSpectrumSpectralAxis( const CSpectrumSpectralAxis& origin, Float64 redshift, EShiftDirection direction );
     ~CSpectrumSpectralAxis();
 
     Float64             GetResolution( Float64 atWavelength = -1.0 ) const;
 
-    Void                ShiftByWaveLength( Float64 redShift );
+    Void                ShiftByWaveLength(  const CSpectrumSpectralAxis& origin, Float64 wavelengthOffset, EShiftDirection direction );
 
     Int32               GetIndexAtWaveLength( Float64 waveLength ) const;
     TInt32Range         GetIndexesAtWaveLengthRange( const TFloat64Range& waveLengthRange ) const;
 
-    Bool                HasUniformResolution() const;
 
     Bool                ConvertToLinearScale();
     Bool                ConvertToLogScale();
@@ -46,6 +52,8 @@ public:
     Void                GetMask( const TFloat64Range& range,  CMask& mask ) const;
 
     Bool                PlotResolution( const char* filePath ) const;
+
+    Void                CopyFrom( const CSpectrumSpectralAxis& other );
 
 private:
 

@@ -33,6 +33,8 @@ public:
 
     static const char*  GetCategoryName( ECategory cat );
 
+    Void    Interpolate( const CTemplate& tpl, const CSpectrumSpectralAxis& targetSpectralAxis );
+
 private:
 
     ECategory   m_Category;

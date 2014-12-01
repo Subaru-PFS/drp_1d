@@ -37,10 +37,11 @@ void CRedshiftProcessFlowTestCase::Process()
     Float64 merit;
     std::string tplName;
 
-    ctx.GetBestCorrelationResult( redshift, merit, tplName );
+    ctx.GetBestCorrelationResult( redshift, merit, tplName, CProcessFlowContext::nSearchCriterion_Minimized );
+    ctx.GetBestCorrelationResult( redshift, merit, tplName, CProcessFlowContext::nSearchCriterion_Maximized );
     CPPUNIT_ASSERT( tplName == "elliptical.txt" );
-    CPPUNIT_ASSERT_DOUBLES_EQUAL( 1.2299, redshift, 0.0001 );
-    CPPUNIT_ASSERT_DOUBLES_EQUAL( 0.1955, merit, 0.0001 );
+    CPPUNIT_ASSERT_DOUBLES_EQUAL( 1.2299, redshift, 0.0005 );
+    CPPUNIT_ASSERT_DOUBLES_EQUAL( 0.1955, merit, 0.0005 );
 
 
 }

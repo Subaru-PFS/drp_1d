@@ -63,56 +63,18 @@ public:
 
         // Find redshifts extremum
         TPointList extremumList;
-        CExtremum extremum( m_Ctx.GetRedshiftRange(), m_Ctx.GetMaxCorrelationExtremumCount() );
+        CExtremum extremum( m_Ctx.GetRedshiftRange() );
         extremum.Find( redshifts.GetRedshifts(), correlation.GetResults().data(), redshifts.GetRedshiftsCount(), extremumList );
 
-
-        // Compute fine grained correlation over each extremum
-        TFloat64List newRedshiftsValues;
-        for( UInt32 k=0; k<extremumList.size(); k++ )
-        {
-            SPoint p = extremumList[k];
-            TFloat64Range newRange;
-
-            if( p.X > redshifts.GetRange().GetEnd() || p.X < redshifts.GetRange().GetBegin() )
-            {
-                continue;
-            }
-
-            newRange.SetBegin( std::max(redshifts.GetRange().GetBegin(), p.X - m_Ctx.GetFineGrainedCorrelationRadius() ) );
-            newRange.SetEnd( std::min(redshifts.GetRange().GetEnd(),     p.X + m_Ctx.GetFineGrainedCorrelationRadius() ) );
-
-            CRedshifts   tmpRedshifts( newRange, m_Ctx.GetRedshiftStep()  );
-
-            // Redshift count could be == 0 if the curren extremum is located at the upper bound of the redshift range.
-            // So in that case we provide explicit z
-            if( tmpRedshifts.GetRedshiftsCount() == 0 )
-            {
-                Float64 z[] = { newRange.GetBegin(), newRange.GetEnd() };
-                tmpRedshifts = CRedshifts( z, 2 );
-            }
-
-            COperatorCorrelation tmpCorrelation;
-            retVal = tmpCorrelation.Compute( m_SpcWithoutCont, m_TplWithoutCont, m_LambdaRanges, tmpRedshifts, m_Ctx.GetOverlapThreshold()  );
-
-            TPointList tmpExtremumList;
-            CExtremum tmpExtremum;
-            tmpExtremum.Find( tmpRedshifts.GetRedshifts(), tmpCorrelation.GetResults().data(), tmpRedshifts.GetRedshiftsCount(), tmpExtremumList );
-
-            if( tmpExtremumList.size() )
-            {
-                newRedshiftsValues.push_back( tmpExtremumList[0].X );
-            }
-        }
-
-        if( newRedshiftsValues.size( ) == 0 )
+        if( extremumList.size() == 0 )
         {
             Log.LogInfo( "Template: %s (LambdaRange: %f-%f:%f:%f)", m_Tpl.GetName().c_str(), m_Tpl.GetLambdaRange().GetBegin(), m_Tpl.GetLambdaRange().GetEnd(), m_Tpl.GetResolution(), m_Tpl.GetLambdaRange().GetLength() );
             Log.LogInfo( "No Redshift found" );
             return;
         }
 
-        CRedshifts newRedshifts( newRedshiftsValues.data(), newRedshiftsValues.size() );
+        // Compute merit function
+        CRedshifts newRedshifts( extremumList[0].X );
         COperatorChiSquare meritChiSquare;
         retVal = meritChiSquare.Compute( m_Spc, m_Tpl, m_LambdaRanges, newRedshifts, m_Ctx.GetOverlapThreshold() );
         if( !retVal )
@@ -121,6 +83,7 @@ public:
             return;
         }
 
+        // Store results
         {
             boost::lock_guard<boost::mutex> lock( m_Mutex );
             m_Ctx.AddCorrelationResult( m_Tpl, newRedshifts, meritChiSquare.GetResults() );
@@ -198,14 +161,6 @@ bool CProcessFlow::ProcessWithoutEL( CProcessFlowContext& ctx )
         Log.UnIndent();
     }
 
-
-    std::string tplName;
-    Float64 redshift = 0.0;
-    Float64 merit = 0.0;
-
-    if( !ctx.GetBestCorrelationResult( redshift, merit, tplName ) )
-        return false;
-
     return true;
 }
 
@@ -247,12 +202,6 @@ bool CProcessFlow::ProcessWithEL( CProcessFlowContext& ctx )
 
     m_ThreadPool.WaitForAllTaskToFinish();
 
-    std::string tplName;
-    Float64 redshift = 0.0;
-    Float64 merit = 0.0;
-
-    if( !ctx.GetBestCorrelationResult( redshift, merit, tplName ) )
-        return false;
 
     return true;
 }

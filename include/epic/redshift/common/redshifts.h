@@ -15,7 +15,7 @@ class CRedshifts
 public:
 
     CRedshifts( );
-    CRedshifts( UInt32 redshiftsCount );
+    CRedshifts( Float64 redshift );
     CRedshifts( const TFloat64Range& range, Float64 delta );
     CRedshifts( Redshift startRS, Redshift endRS, Float64 delta );
     CRedshifts( Float64* redshifts, UInt32 count );
