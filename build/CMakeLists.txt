@@ -9,6 +9,7 @@ SET( COMPILE_TEST "" )
 #--------------------------------------------------------
 SET( EPIC_REDSHIFT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../" )
 
+MESSAGE( STATUS "LIB_SUFFIX = " ${LIB_INSTALL_DIR} )
 MESSAGE( STATUS "CMAKE_BUILD_TYPE = " ${CMAKE_BUILD_TYPE} )
 MESSAGE( STATUS "CMAKE_SYSTEM_NAME = " ${CMAKE_SYSTEM_NAME} )
 MESSAGE( STATUS "CMAKE_SYSTEM_PROCESSOR = " ${CMAKE_SYSTEM_PROCESSOR} )
@@ -26,15 +27,6 @@ ENDIF()
 
 
 MESSAGE( STATUS "EPIC_CORE_DIR = " ${EPIC_CORE_DIR} )
-
-INCLUDE( ${EPIC_CORE_DIR}/build/CMakeCommon.in )
-
-#--------------------------------------------------------
-# Setup bin sufix
-# Save architecture and system info used by the package_release.py script
-#--------------------------------------------------------
-SET( BIN_SUFFIX "" )
-UPDATE_SYSTEM_NAME_AND_PROCESSOR( ${EPIC_REDSHIFT_DIR} BIN_SUFFIX )
 
 #--------------------------------------------------------
 # Compiler options
@@ -61,7 +53,6 @@ LINK_DIRECTORIES( "${EPIC_CORE_DIR}/lib/" )
 # Extract version number
 #--------------------------------------------------------
 FILE (STRINGS "${EPIC_REDSHIFT_DIR}/VERSION" VERSION_NUMBER)
-
 
 MESSAGE( STATUS "VERSION_NUMBER: " ${VERSION_NUMBER} )
 
@@ -112,7 +103,11 @@ IF( DEFINED COMPILE_TEST )
 ENDIF()
 
 
-
+#--------------------------------------------------------
+# Install directive
+#--------------------------------------------------------
+INSTALL( TARGETS ${EPIC_REDSHIFT_STATIC} ARCHIVE DESTINATION lib )
+INSTALL (DIRECTORY  "${EPIC_REDSHIFT_DIR}/include/" DESTINATION include)
 
 #--------------------------------------------------------
 # Compile docs
