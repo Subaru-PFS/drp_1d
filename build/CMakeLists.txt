@@ -9,7 +9,8 @@ SET( COMPILE_TEST "" )
 #--------------------------------------------------------
 SET( EPIC_REDSHIFT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../" )
 
-MESSAGE( STATUS "LIB_SUFFIX = " ${LIB_INSTALL_DIR} )
+MESSAGE( STATUS "------------------------------------------------------" )
+MESSAGE( STATUS "EPIC_REDSHIFT:" )
 MESSAGE( STATUS "CMAKE_BUILD_TYPE = " ${CMAKE_BUILD_TYPE} )
 MESSAGE( STATUS "CMAKE_SYSTEM_NAME = " ${CMAKE_SYSTEM_NAME} )
 MESSAGE( STATUS "CMAKE_SYSTEM_PROCESSOR = " ${CMAKE_SYSTEM_PROCESSOR} )
@@ -24,9 +25,6 @@ SET( CMAKE_RUNTIME_OUTPUT_DIRECTORY ${EPIC_REDSHIFT_DIR}/bin )
 IF( NOT DEFINED EPIC_CORE_DIR )
     SET( EPIC_CORE_DIR "${EPIC_REDSHIFT_DIR}../core/" )
 ENDIF()
-
-
-MESSAGE( STATUS "EPIC_CORE_DIR = " ${EPIC_CORE_DIR} )
 
 #--------------------------------------------------------
 # Compiler options
@@ -98,7 +96,7 @@ IF( DEFINED COMPILE_TEST )
   TARGET_LINK_LIBRARIES( ${EPIC_REDSHIFT_TEST} zmq.a )
   
   
-  ADD_CUSTOM_TARGET( runtest COMMAND cd ${EPIC_REDSHIFT_DIR}/bin/ && ./${EPIC_REDSHIFT_TEST} DEPENDS ${EPIC_REDSHIFT_TEST} )
+  ADD_CUSTOM_TARGET( redshift_runtest COMMAND cd ${EPIC_REDSHIFT_DIR}/bin/ && ./${EPIC_REDSHIFT_TEST} DEPENDS ${EPIC_REDSHIFT_TEST} )
   
 ENDIF()
 
@@ -112,4 +110,4 @@ INSTALL (DIRECTORY  "${EPIC_REDSHIFT_DIR}/include/" DESTINATION include)
 #--------------------------------------------------------
 # Compile docs
 #--------------------------------------------------------
-ADD_CUSTOM_TARGET( makedoc COMMAND cd ${EPIC_REDSHIFT_DIR}/doc/ && ../thirdparty/bin/doxygen ./doxygen.conf )
+ADD_CUSTOM_TARGET( redshift_makedoc COMMAND cd ${EPIC_REDSHIFT_DIR}/doc/ && ../thirdparty/bin/doxygen ./doxygen.conf )
