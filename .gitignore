@@ -4,7 +4,7 @@
 build/CMakeCache.txt
 build/CMakeFiles/
 build/Makefile
-build/cmake_install.cmake
+build/*.cmake
 build/epic_core*
 build/SYSTEM_*
 build/install_manifest.txt

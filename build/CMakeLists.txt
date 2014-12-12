@@ -5,9 +5,14 @@ SET( COMPILE_TEST "" )
 #SET( ENABLE_PROFILING "" )
 
 #--------------------------------------------------------
+# Find Package
+#--------------------------------------------------------
+find_package( epic_core REQUIRED )
+
+#--------------------------------------------------------
 # Setup shortcut acces directory
 #--------------------------------------------------------
-SET( EPIC_REDSHIFT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../" )
+SET( EPIC_REDSHIFT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/.." )
 
 MESSAGE( STATUS "------------------------------------------------------" )
 MESSAGE( STATUS "EPIC_REDSHIFT:" )
@@ -18,13 +23,6 @@ MESSAGE( STATUS "CMAKE_SYSTEM_PROCESSOR = " ${CMAKE_SYSTEM_PROCESSOR} )
 SET( CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${EPIC_REDSHIFT_DIR}/lib )
 SET( CMAKE_LIBRARY_OUTPUT_DIRECTORY ${EPIC_REDSHIFT_DIR}/lib )
 SET( CMAKE_RUNTIME_OUTPUT_DIRECTORY ${EPIC_REDSHIFT_DIR}/bin )
-
-#--------------------------------------------------------
-# Determine where Epic_Core is
-#--------------------------------------------------------
-IF( NOT DEFINED EPIC_CORE_DIR )
-    SET( EPIC_CORE_DIR "${EPIC_REDSHIFT_DIR}../core/" )
-ENDIF()
 
 #--------------------------------------------------------
 # Compiler options
@@ -39,13 +37,13 @@ ENDIF()
 
 INCLUDE_DIRECTORIES( "${EPIC_REDSHIFT_DIR}/include/" )
 INCLUDE_DIRECTORIES( "${EPIC_REDSHIFT_DIR}/thirdparty/include/" )
-INCLUDE_DIRECTORIES( "${EPIC_CORE_DIR}/include/" )
-INCLUDE_DIRECTORIES( "${EPIC_CORE_DIR}/thirdparty/include/" )
+INCLUDE_DIRECTORIES( ${epic_core_INCLUDE_DIR} )
+INCLUDE_DIRECTORIES( ${epic_core_thirdparty_INCLUDE_DIR} )
 
 LINK_DIRECTORIES( "${EPIC_REDSHIFT_DIR}/lib" )
 LINK_DIRECTORIES( "${EPIC_REDSHIFT_DIR}/thirdparty/lib/" )
-LINK_DIRECTORIES( "${EPIC_CORE_DIR}/thirdparty/lib/" )
-LINK_DIRECTORIES( "${EPIC_CORE_DIR}/lib/" )
+LINK_DIRECTORIES( ${epic_core_LINK_DIR} )
+LINK_DIRECTORIES( ${epic_core_thirdparty_LINK_DIR} )
 
 #-------------------------  -------------------------------
 # Extract version number
@@ -60,9 +58,9 @@ MESSAGE( STATUS "VERSION_NUMBER: " ${VERSION_NUMBER} )
 
 FILE( GLOB_RECURSE LIB_REDSHIFT_SOURCE_FILE_LIST ${EPIC_REDSHIFT_DIR}/src/*.cpp )
 
-SET( EPIC_REDSHIFT_STATIC epic_redshift_static )
+SET( EPIC_REDSHIFT epic_redshift )
 
-ADD_LIBRARY( ${EPIC_REDSHIFT_STATIC} STATIC ${LIB_REDSHIFT_SOURCE_FILE_LIST} )
+ADD_LIBRARY( ${EPIC_REDSHIFT} STATIC ${LIB_REDSHIFT_SOURCE_FILE_LIST} )
 
 
 #--------------------------------------------------------
@@ -77,7 +75,7 @@ IF( DEFINED COMPILE_TEST )
   ADD_EXECUTABLE( ${EPIC_REDSHIFT_TEST} ${TEST_SOURCE_FILE_LIST} )
 
   # Supply link librairies
-  TARGET_LINK_LIBRARIES( ${EPIC_REDSHIFT_TEST} ${EPIC_REDSHIFT_STATIC} )
+  TARGET_LINK_LIBRARIES( ${EPIC_REDSHIFT_TEST} ${EPIC_REDSHIFT} )
 
   TARGET_LINK_LIBRARIES( ${EPIC_REDSHIFT_TEST} pthread )
   
@@ -87,7 +85,7 @@ IF( DEFINED COMPILE_TEST )
     TARGET_LINK_LIBRARIES( ${EPIC_REDSHIFT_TEST} rt )
   ENDIF()
   
-  TARGET_LINK_LIBRARIES( ${EPIC_REDSHIFT_TEST} epic_core_static.a )
+  TARGET_LINK_LIBRARIES( ${EPIC_REDSHIFT_TEST} epic_core.a )
   TARGET_LINK_LIBRARIES( ${EPIC_REDSHIFT_TEST} cppunit.a )
   TARGET_LINK_LIBRARIES( ${EPIC_REDSHIFT_TEST} cfitsio.a )
   TARGET_LINK_LIBRARIES( ${EPIC_REDSHIFT_TEST} boost_filesystem.a )
@@ -104,8 +102,29 @@ ENDIF()
 #--------------------------------------------------------
 # Install directive
 #--------------------------------------------------------
-INSTALL( TARGETS ${EPIC_REDSHIFT_STATIC} ARCHIVE DESTINATION lib )
+INSTALL( TARGETS ${EPIC_REDSHIFT} ARCHIVE DESTINATION lib )
 INSTALL (DIRECTORY  "${EPIC_REDSHIFT_DIR}/include/" DESTINATION include)
+
+#--------------------------------------------------------
+# Package deployement and config
+#--------------------------------------------------------
+INCLUDE ( CMakePackageConfigHelpers )
+
+SET( epic_redshift_INCLUDE_DIR ${EPIC_REDSHIFT_DIR}/include/ )
+SET( epic_redshift_thirdparty_INCLUDE_DIR ${EPIC_REDSHIFT_DIR}/thirdparty/include/ )
+
+SET( epic_redshift_LINK_DIR ${EPIC_REDSHIFT_DIR}/lib/ )
+SET( epic_redshift_thirdparty_LINK_DIR ${EPIC_REDSHIFT_DIR}/thirdparty/lib/ )
+
+configure_package_config_file ( 
+       "${CMAKE_CURRENT_SOURCE_DIR}/epic_redshift-config.cmake.in" 
+       "${CMAKE_CURRENT_SOURCE_DIR}/epic_redshift-config.cmake"
+       INSTALL_DESTINATION "${CMAKE_CURRENT_SOURCE_DIR}"
+       
+        )
+       
+EXPORT( PACKAGE ${EPIC_REDSHIFT} )
+
 
 #--------------------------------------------------------
 # Compile docs
