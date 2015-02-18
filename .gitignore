@@ -10,7 +10,7 @@ build/install_manifest.txt
 
 bin/output.txt
 bin/*.tar.gz
-bin/epic_core*
+bin/cpf-redshift*
 bin/gmon.out
 
 # Third party

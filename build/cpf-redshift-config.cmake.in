@@ -1,0 +1,10 @@
+@PACKAGE_INIT@ 
+
+set_and_check ( cpf_redshift_INCLUDE_DIR "@cpf_redshift_INCLUDE_DIR@")
+set_and_check ( cpf_redshift_thirdparty_INCLUDE_DIR "@cpf_redshift_thirdparty_INCLUDE_DIR@")
+
+set_and_check ( cpf_redshift_LINK_DIR "@cpf_redshift_LINK_DIR@")
+set_and_check ( cpf_redshift_thirdparty_LINK_DIR "@cpf_redshift_thirdparty_LINK_DIR@")
+
+set ( cpf_redshift_LINK_LIBS "cpf-redshift;@cpf_redshift_LINK_LIBS@" )
+
