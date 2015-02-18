@@ -84,11 +84,10 @@ void CRedshiftOperatorTestCase::Correlation2()
     CPPUNIT_ASSERT( retVal );
 
     // Shift template back to rest pose
-    CSpectrumAxis& tplSpectralAxis = t.GetSpectralAxis();
-    for( Int32 i=0;i<tplSpectralAxis.GetSamplesCount();i++ )
-    {
-        tplSpectralAxis[i] = tplSpectralAxis[i] / (1.0 + z );
-    }
+    CSpectrumSpectralAxis& tplSpectralAxis = t.GetSpectralAxis();
+
+	tplSpectralAxis.ShiftByWaveLength( 1.0 + z,  CSpectrumSpectralAxis::nShiftBackward );
+
     s.RemoveContinuum<CContinuumMedian>();
     s.ConvertToLogScale();
 

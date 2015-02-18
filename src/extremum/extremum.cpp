@@ -4,6 +4,8 @@
 #include <epic/core/common/datatypes.h>
 
 #include <math.h>
+#include <float.h>
+#include <iostream>
 
 #define PEAKS_MIN_THRESHOLD (3)
 #define PEAKS_SMOOTH_LIMIT (20)
@@ -63,6 +65,7 @@ Bool CExtremum::Find( const Float64* xAxis, const Float64* yAxis, UInt32 n, TPoi
     }
     else
     {
+    	// Find index range for the given lambda range
         for( Int32 i=0; i<n; i++ )
         {
             if( rangeXBeginIndex == -1 && xAxis[i] >= m_XRange.GetBegin() )
@@ -84,6 +87,23 @@ Bool CExtremum::InternalFind( const Float64* xAxis, const Float64* yAxis, UInt32
 {
     if( n == 0 )
         return false;
+    maxPoint.resize( 1 );
+
+    Float64 max = DBL_MIN ;
+    Int32 maxIndex = 0;
+    for( Int32 i=0; i<n; i++ )
+    {
+    	if( yAxis[i] > max ) {
+    		max = yAxis[i];
+    		maxIndex = i;
+    	}
+    }
+
+    maxPoint[0].X = xAxis[maxIndex];
+    maxPoint[0].Y = yAxis[maxIndex];
+
+    return true;
+
 
     vector<Float64> maxX( n );
     vector<Float64> maxY( n );

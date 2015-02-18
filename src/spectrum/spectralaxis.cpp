@@ -41,6 +41,11 @@ CSpectrumSpectralAxis::CSpectrumSpectralAxis( const CSpectrumSpectralAxis& origi
     ShiftByWaveLength( origin, wavelengthOffset, direction );
 }
 
+Void CSpectrumSpectralAxis::ShiftByWaveLength( Float64 wavelengthOffset, EShiftDirection direction )
+{
+	ShiftByWaveLength( *this, wavelengthOffset, direction );
+}
+
 Void CSpectrumSpectralAxis::ShiftByWaveLength( const CSpectrumSpectralAxis& origin, Float64 wavelengthOffset, EShiftDirection direction )
 {
     m_SpectralFlags = 0;
@@ -51,6 +56,16 @@ Void CSpectrumSpectralAxis::ShiftByWaveLength( const CSpectrumSpectralAxis& orig
     const Float64* originSamples = origin.GetSamples();
 
     DebugAssert( direction == nShiftForward || direction == nShiftBackward );
+
+    if( wavelengthOffset == 0.0 )
+    {
+        for( Int32 i=0; i< origin.GetSamplesCount(); i++ )
+        {
+            m_Samples[i] = originSamples[i];
+        }
+
+        return;
+    }
 
     if( origin.IsInLogScale() )
     {
@@ -74,6 +89,7 @@ Void CSpectrumSpectralAxis::ShiftByWaveLength( const CSpectrumSpectralAxis& orig
     }
     else
     {
+
         if( direction == nShiftForward )
         {
             for( Int32 i=0; i< origin.GetSamplesCount(); i++ )

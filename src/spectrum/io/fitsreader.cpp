@@ -170,6 +170,5 @@ Bool CSpectrumIOFitsReader::Read( const char* filePath, CSpectrum& spectrum )
 
     fits_close_file(fptr, &status);
 
-
     return retv;
 }

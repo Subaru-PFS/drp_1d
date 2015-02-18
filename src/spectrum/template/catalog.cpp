@@ -1,5 +1,5 @@
 #include <epic/redshift/spectrum/template/catalog.h>
-#include <epic/redshift/spectrum/io/asciireader.h>
+#include <epic/redshift/spectrum/io/genericreader.h>
 #include <epic/redshift/spectrum/template/template.h>
 #include <epic/redshift/continuum/median.h>
 
@@ -69,7 +69,7 @@ Bool CTemplateCatalog::Add( const char* templatePath, CTemplate::ECategory categ
 
     CRef<CTemplate> tmpl = new CTemplate( name.c_str(), category );
 
-    CSpectrumIOAsciiReader asciiReader;
+    CSpectrumIOGenericReader asciiReader;
     if( !asciiReader.Read( templatePath, *tmpl ) )
         return false;
 

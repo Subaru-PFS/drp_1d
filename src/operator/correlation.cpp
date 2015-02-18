@@ -93,7 +93,7 @@ Bool COperatorCorrelation::Compute(   const CSpectrum& spectrum, const CTemplate
         m_Status[i] = nStatus_InvalidInputData;
         m_Overlap[i] = 0;
 
-        // Shift Template
+        // Shift Template (Since template are created at Z=0)
         Float64 onePlusRedshift = 1.0 + redshifts[i];
         shiftedTplSpectralAxis.ShiftByWaveLength( tplSpectralAxis, onePlusRedshift, CSpectrumSpectralAxis::nShiftForward );
 
@@ -159,14 +159,20 @@ Bool COperatorCorrelation::Compute(   const CSpectrum& spectrum, const CTemplate
         Float64 sumCorr=0;
         Float64 sumWeight=0;
         Float64 tplInterpolatedFlux=-1;
-        Float32 t = 0;
+        Float64 t = 0;
+        // k index: move over template
+        // j index: move over spectrum
+
+        // For each sample in the valid lambda range interval.
         while( k<tpl.GetSampleCount()-1 && Xtpl[k] <= logIntersectedLambdaRange.GetEnd() )
         {
+        	// For each sample in the spectrum that are in between two continous template sample
             while( j<spectrum.GetSampleCount() && Xspc[j] <= Xtpl[k+1] )
             {
+            	// perform linear interpolation of the flux
                 t = ( Xspc[j] - Xtpl[k] ) / ( Xtpl[k+1] - Xtpl[k] );
-
                 tplInterpolatedFlux = Ytpl[k] + ( Ytpl[k+1] - Ytpl[k] ) * t;
+
 
                 sumWeight += 1.0 / error[j];
                 sumCorr += ( tplInterpolatedFlux - tplMean ) * ( Yspc[j] - spcMean ) / error[j];

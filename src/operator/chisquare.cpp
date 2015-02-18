@@ -101,7 +101,7 @@ Float64 COperatorChiSquare::BasicFit( const CSpectrum& spectrum, const CTemplate
     Float64 err2 = 0.0;
     Float64 fit = 0;
     Float64 tplInterpolatedFlux=-1;
-    Float32 t = 0;
+    Float64 t = 0;
     Int32 numDevs = 0;
     const Float64* error = spcFluxAxis.GetError();
 

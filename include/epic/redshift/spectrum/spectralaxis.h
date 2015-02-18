@@ -37,6 +37,7 @@ public:
     Float64             GetResolution( Float64 atWavelength = -1.0 ) const;
 
     Void                ShiftByWaveLength(  const CSpectrumSpectralAxis& origin, Float64 wavelengthOffset, EShiftDirection direction );
+    Void                ShiftByWaveLength( Float64 wavelengthOffset, EShiftDirection direction );
 
     Int32               GetIndexAtWaveLength( Float64 waveLength ) const;
     TInt32Range         GetIndexesAtWaveLengthRange( const TFloat64Range& waveLengthRange ) const;
