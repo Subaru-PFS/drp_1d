@@ -1,4 +1,4 @@
-CMAKE_MINIMUM_REQUIRED (VERSION 2.6) 
+CMAKE_MINIMUM_REQUIRED (VERSION 2.8) 
 PROJECT( cpf-redshift ) 
 
 #--------------------------------------------------------
@@ -10,13 +10,6 @@ FIND_PACKAGE( cpf-core REQUIRED )
 # Setup shortcut acces directory
 #--------------------------------------------------------
 SET( ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/.." )
-
-MESSAGE( STATUS "------------------------------------------------------" )
-MESSAGE( STATUS "cpf-redshift:" )
-MESSAGE( STATUS "Build type: " ${CMAKE_BUILD_TYPE} )
-MESSAGE( STATUS "System name: " ${CMAKE_SYSTEM_NAME} )
-MESSAGE( STATUS "System proc: " ${CMAKE_SYSTEM_PROCESSOR} )
-MESSAGE( STATUS "Source dir: " ${CMAKE_SOURCE_DIR} )
 
 SET( CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${ROOT_DIR}/lib )
 SET( CMAKE_LIBRARY_OUTPUT_DIRECTORY ${ROOT_DIR}/lib )
@@ -36,22 +29,22 @@ ENDIF()
 #--------------------------------------------------------
 # Exported configuration variables
 #--------------------------------------------------------
-SET( cpf_redshift_INCLUDE_DIR ${ROOT_DIR}/include/ )
-SET( cpf_redshift_thirdparty_INCLUDE_DIR ${ROOT_DIR}/thirdparty/include/ )
+SET( cpf-redshift_INCLUDE_DIR ${ROOT_DIR}/include/ )
+SET( cpf-redshift_THIRDPARTY_INCLUDE_DIR ${ROOT_DIR}/thirdparty/include/ )
 
-SET( cpf_redshift_LINK_DIR ${ROOT_DIR}/lib/ )
-SET( cpf_redshift_thirdparty_LINK_DIR ${ROOT_DIR}/thirdparty/lib/ )
+SET( cpf-redshift_LINK_DIR ${ROOT_DIR}/lib/ )
+SET( cpf-redshift_THIRDPARTY_LINK_DIR ${ROOT_DIR}/thirdparty/lib/ )
 
-SET( cpf_redshift_LINK_LIBS cfitsio)
+SET( cpf-redshift_THIRDPARTY_LIBS cfitsio)
 
 #--------------------------------------------------------
 # Preprocessor and linker path
 #--------------------------------------------------------
-INCLUDE_DIRECTORIES(    ${cpf_redshift_INCLUDE_DIR}  ${cpf_redshift_thirdparty_INCLUDE_DIR} 
-                        ${cpf_core_INCLUDE_DIR} ${cpf_core_thirdparty_INCLUDE_DIR} )
+INCLUDE_DIRECTORIES(    ${cpf-redshift_INCLUDE_DIR}  ${cpf-redshift_THIRDPARTY_INCLUDE_DIR} 
+                        ${cpf-core_INCLUDE_DIR} ${cpf-core_THIRDPARTY_INCLUDE_DIR} )
 
-LINK_DIRECTORIES(       ${cpf_redshift_LINK_DIR} ${cpf_redshift_thirdparty_LINK_DIR} 
-                        ${cpf_core_LINK_DIR} ${cpf_core_thirdparty_LINK_DIR})
+LINK_DIRECTORIES(       ${cpf-redshift_LINK_DIR} ${cpf-redshift_THIRDPARTY_LINK_DIR} 
+                        ${cpf-core_LINK_DIR} ${cpf-core_THIRDPARTY_LINK_DIR})
 
 #-------------------------  -------------------------------
 # Extract version number
@@ -75,7 +68,7 @@ FILE( GLOB_RECURSE TEST_SOURCE_FILES ${ROOT_DIR}/test/*.cpp )
 ADD_EXECUTABLE( ${TEST_NAME} ${TEST_SOURCE_FILES} )
 
 # Supply link librairies
-TARGET_LINK_LIBRARIES( ${TEST_NAME} ${LIB_NAME} cppunit.a ${cpf_core_LINK_LIBS} ${cpf_redshift_LINK_LIBS})
+TARGET_LINK_LIBRARIES( ${TEST_NAME} ${LIB_NAME} cppunit.a ${cpf-core_THIRDPARTY_LIBS} ${cpf-redshift_THIRDPARTY_LIBS} ${cpf-core_LIB})
 
 #--------------------------------------------------------
 # Install directive
