@@ -24,6 +24,7 @@ void CRedshiftProcessFlowTestCase::Process()
     CProcessFlowContext::SParam params;
     params.lambdaRange = TFloat64Range( 3800.0, 12500.0 );
     params.redshiftStep = 0.00001;
+    params.smoothWidth = 0;
     params.templateCategoryList.clear();
     params.templateCategoryList.push_back( CTemplate::nCategory_Galaxy );
 
