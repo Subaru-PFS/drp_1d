@@ -52,7 +52,6 @@ Void CSpectrumSpectralAxis::ShiftByWaveLength( const CSpectrumSpectralAxis& orig
 
     DebugAssert( origin.GetSamplesCount() == GetSamplesCount() );
 
-    SetSize( origin.GetSamplesCount() );
     const Float64* originSamples = origin.GetSamples();
 
     DebugAssert( direction == nShiftForward || direction == nShiftBackward );

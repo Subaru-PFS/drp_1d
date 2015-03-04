@@ -8,10 +8,9 @@ build/*.cmake
 build/SYSTEM_*
 build/install_manifest.txt
 
-bin/output.txt
-bin/*.tar.gz
-bin/cpf-redshift*
-bin/gmon.out
+*.creator.user*
+
+bin/*
 
 # Third party
 thirdparty/boost-1.55.0.tar.gz
