@@ -139,7 +139,7 @@ Float64 CSpectrumSpectralAxis::GetResolution( Float64 atWavelength ) const
     }
     else
     {
-        return GetLambdaRange().GetLength() / m_Samples.size();
+        return m_Samples[1] - m_Samples[0];
     }
 
     return 0;
