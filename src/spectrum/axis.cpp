@@ -36,6 +36,11 @@ CSpectrumAxis::~CSpectrumAxis()
 
 }
 
+CSpectrumAxis& CSpectrumAxis::operator=(const CSpectrumAxis& other)
+{
+    m_Samples = other.m_Samples;
+}
+
 Void CSpectrumAxis::SetSize( UInt32 s )
 {
     m_Samples.resize( s );

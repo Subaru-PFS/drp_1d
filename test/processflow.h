@@ -7,7 +7,8 @@
 class CRedshiftProcessFlowTestCase : public CppUnit::TestCase
 {
     CPPUNIT_TEST_SUITE(CRedshiftProcessFlowTestCase);
-    CPPUNIT_TEST(Process);
+    CPPUNIT_TEST(ProcessShifted);
+    CPPUNIT_TEST(ProcessShiftedDecimated);
     CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -17,7 +18,8 @@ public:
 
 private:
 
-    void Process();
+    void ProcessShifted();
+    void ProcessShiftedDecimated();
 
 };
 

@@ -24,6 +24,8 @@ public:
     CSpectrum();
     ~CSpectrum();
 
+    CSpectrum& operator=(const CSpectrum& other);
+
     const CSpectrumSpectralAxis&    GetSpectralAxis() const;
     const CSpectrumFluxAxis&        GetFluxAxis() const;
 
@@ -42,7 +44,7 @@ public:
 
 private:
 
-    Bool                    Serialize( CSerializer& ar );
+    Bool                            Serialize( CSerializer& ar );
 
     CSpectrumFluxAxis               m_FluxAxis;
     CSpectrumSpectralAxis           m_SpectralAxis;

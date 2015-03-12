@@ -34,6 +34,8 @@ public:
     CSpectrumSpectralAxis( const CSpectrumSpectralAxis& origin, Float64 redshift, EShiftDirection direction );
     ~CSpectrumSpectralAxis();
 
+    CSpectrumSpectralAxis& operator=(const CSpectrumSpectralAxis& other);
+
     Float64             GetResolution( Float64 atWavelength = -1.0 ) const;
 
     Void                ShiftByWaveLength(  const CSpectrumSpectralAxis& origin, Float64 wavelengthOffset, EShiftDirection direction );

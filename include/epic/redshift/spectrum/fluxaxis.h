@@ -19,6 +19,8 @@ public:
     CSpectrumFluxAxis( const Float64* samples, UInt32 n );
     ~CSpectrumFluxAxis();
 
+    CSpectrumFluxAxis& operator=(const CSpectrumFluxAxis& other);
+
     const Float64*      GetError() const;
     Float64*            GetError();
 

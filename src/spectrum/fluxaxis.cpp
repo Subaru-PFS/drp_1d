@@ -40,6 +40,12 @@ CSpectrumFluxAxis::~CSpectrumFluxAxis()
 
 }
 
+CSpectrumFluxAxis& CSpectrumFluxAxis::operator=(const CSpectrumFluxAxis& other)
+{
+    m_StatError = other.m_StatError;
+    CSpectrumAxis::operator=( other );
+}
+
 Void CSpectrumFluxAxis::SetSize( UInt32 s )
 {
     CSpectrumAxis::SetSize( s );

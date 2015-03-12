@@ -30,15 +30,21 @@ CSpectrumSpectralAxis::CSpectrumSpectralAxis( const Float64* samples, UInt32 n, 
         m_SpectralFlags |= nFLags_LogScale;
 }
 
+CSpectrumSpectralAxis::CSpectrumSpectralAxis( const CSpectrumSpectralAxis& origin, Float64 wavelengthOffset, EShiftDirection direction  )
+{
+    ShiftByWaveLength( origin, wavelengthOffset, direction );
+}
+
 CSpectrumSpectralAxis::~CSpectrumSpectralAxis()
 {
 
 }
 
 
-CSpectrumSpectralAxis::CSpectrumSpectralAxis( const CSpectrumSpectralAxis& origin, Float64 wavelengthOffset, EShiftDirection direction  )
+CSpectrumSpectralAxis& CSpectrumSpectralAxis::operator=(const CSpectrumSpectralAxis& other)
 {
-    ShiftByWaveLength( origin, wavelengthOffset, direction );
+    m_SpectralFlags = other.m_SpectralFlags;
+    CSpectrumAxis::operator=( other );
 }
 
 Void CSpectrumSpectralAxis::ShiftByWaveLength( Float64 wavelengthOffset, EShiftDirection direction )
