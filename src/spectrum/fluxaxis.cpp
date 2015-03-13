@@ -7,6 +7,8 @@
 
 #include <math.h>
 
+#include <epic/core/log/log.h>
+
 using namespace NSEpic;
 using namespace std;
 
@@ -206,4 +208,32 @@ Bool CSpectrumFluxAxis::ComputeMeanAndSDevWithError( const CMask& mask, Float64&
     }
     return true;
 }
+
+
+Float64  CSpectrumFluxAxis::ComputeRMSDiff( const CSpectrumFluxAxis& other )
+{
+    Float64 er2 = 0.f;
+    Float64 er = 0.f;
+
+    int n = GetSamplesCount();
+    Float64 weight = (Float64)n;
+    for (int j=0;j<n;j++)
+    {
+        er2 += (m_Samples[j]-other[j])*(m_Samples[j]-other[j]) / weight;
+
+    }
+
+    er = sqrt(er2);
+    return er;
+}
+
+Bool CSpectrumFluxAxis::Subtract(const CSpectrumFluxAxis& other)
+{
+    Int32 N = GetSamplesCount();
+    for( UInt32 i=0; i<N; i++ )
+    {
+        m_Samples[i] = m_Samples[i]-other[i];
+    }
+}
+
 

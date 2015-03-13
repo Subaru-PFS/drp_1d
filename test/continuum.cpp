@@ -25,46 +25,39 @@ void CRedshiftContinuumTestCase::tearDown()
 void CRedshiftContinuumTestCase::Compute()
 {
 
-    // load continuum and associated simu spectrum
+    // load continuum and associated simu ECN spectrum (Emission line + Continuum + Noise)
     CSpectrumIOFitsReader reader;
     CSpectrum s;
-    CSpectrum s_continuum;
+    CSpectrum s_continuumRef;
 	
-    Bool retVal = reader.Read( "../test/data/simu_ECN_continuum_20150312B.fits", s_continuum );
+    Bool retVal = reader.Read( "../test/data/ContinuumTestCase/simu_ECN_continuum_20150312B.fits", s_continuumRef );
     CPPUNIT_ASSERT( retVal == true );
-    retVal = reader.Read( "../test/data/simu_ECN_all_20150312B.fits", s );
+    retVal = reader.Read( "../test/data/ContinuumTestCase/simu_ECN_all_20150312B.fits", s );
     CPPUNIT_ASSERT( retVal == true );
+    //Log.LogInfo("simu signals loaded");
 
     // Remove continuum 
     CContinuumMedian continuum;
-    CSpectrumFluxAxis fluxAxisWithoutContinuum;
+    CSpectrumFluxAxis fluxAxisWithoutContinuumCalc;
 
-    retVal = continuum.RemoveContinuum( s, fluxAxisWithoutContinuum );
-    CSpectrumFluxAxis& fa = s.GetFluxAxis();
-     
-
-    //retVal = s.RemoveContinuum<CContinuumMedian>();
+    retVal = continuum.RemoveContinuum( s, fluxAxisWithoutContinuumCalc );
     CPPUNIT_ASSERT( retVal == true );
+    //Log.LogInfo("continuum removed");
 
     // test the extracted continuum to be lower than a threshold all over the lambda range
     Float64 threshold = 0.05;
-    CSpectrumFluxAxis refContinuumFluxAxis;
-    refContinuumFluxAxis = s_continuum.GetFluxAxis();
-    Int32 N = refContinuumFluxAxis.GetSamplesCount();
-    Float64 weight = (Float64)N;
-    Float64 er2=0.f;
-
-    for( Int32 i=0; i<N; i++ )
-    {
-        er2 += (refContinuumFluxAxis[i] - (fa[i] - fluxAxisWithoutContinuum[i]))*(refContinuumFluxAxis[i] - (fa[i] - fluxAxisWithoutContinuum[i]))/weight;
-    }
-    Float64 er = sqrt(er2);
-    Log.LogInfo("Continuum rms error: %.5f", er);
+    CSpectrumFluxAxis fluxAxis = s.GetFluxAxis();
+    fluxAxis.Subtract(fluxAxisWithoutContinuumCalc);
+    //Log.LogInfo("subtraction done");
+    Float64 er = fluxAxis.ComputeRMSDiff(s_continuumRef.GetFluxAxis());
+    //Log.LogInfo("Continuum rms error: %f", er);
     CPPUNIT_ASSERT(er < threshold);
-    
-    fa = fluxAxisWithoutContinuum; 
+     
+
+    CSpectrumFluxAxis& sfluxAxisPtr = s.GetFluxAxis();
+    sfluxAxisPtr = fluxAxis;
     CSpectrumIOFitsWriter writer;
-    retVal = writer.Write( "../test/data/simu_ECN_continuum_20150312B_calc.fits", s );
+    retVal = writer.Write( "../test/data/ContinuumTestCase/simu_ECN_continuum_20150312B_calc.fits", s );
 }
 
 
