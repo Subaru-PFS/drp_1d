@@ -30,9 +30,9 @@ void CRedshiftContinuumTestCase::Compute()
     CSpectrum s;
     CSpectrum s_continuumRef;
 	
-    Bool retVal = reader.Read( "../test/data/ContinuumTestCase/simu_ECN_continuum_20150312B.fits", s_continuumRef );
+    Bool retVal = reader.Read( "../test/data/ContinuumTestCase/simu_ECN_continuum.fits", s_continuumRef );
     CPPUNIT_ASSERT( retVal == true );
-    retVal = reader.Read( "../test/data/ContinuumTestCase/simu_ECN_all_20150312B.fits", s );
+    retVal = reader.Read( "../test/data/ContinuumTestCase/simu_ECN_all.fits", s );
     CPPUNIT_ASSERT( retVal == true );
     //Log.LogInfo("simu signals loaded");
 
@@ -57,7 +57,7 @@ void CRedshiftContinuumTestCase::Compute()
     CSpectrumFluxAxis& sfluxAxisPtr = s.GetFluxAxis();
     sfluxAxisPtr = fluxAxis;
     CSpectrumIOFitsWriter writer;
-    retVal = writer.Write( "../test/data/ContinuumTestCase/simu_ECN_continuum_20150312B_calc.fits", s );
+    retVal = writer.Write( "../test/data/ContinuumTestCase/simu_ECN_continuum_calc.fits", s );
 }
 
 
