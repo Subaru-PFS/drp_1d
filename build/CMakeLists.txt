@@ -21,9 +21,9 @@ SET( CMAKE_RUNTIME_OUTPUT_DIRECTORY ${ROOT_DIR}/bin )
 SET( CMAKE_CXX_FLAGS "-O3 ")
 
 IF( DEFINED ENABLE_PROFILING )
-  SET( CMAKE_CXX_FLAGS_DEBUG "-O0 -g -DDEBUG_BUILD -pg")
+    SET( CMAKE_CXX_FLAGS_DEBUG "-O0 -g -DDEBUG_BUILD -pg")
 ELSE()
-  SET( CMAKE_CXX_FLAGS_DEBUG "-O0 -g -DDEBUG_BUILD")
+    SET( CMAKE_CXX_FLAGS_DEBUG "-O0 -g -DDEBUG_BUILD")
 ENDIF()
 
 #--------------------------------------------------------
@@ -57,6 +57,7 @@ FILE (STRINGS ${ROOT_DIR}/VERSION VERSION_NUMBER)
 SET( LIB_NAME cpf-redshift )
 
 FILE( GLOB_RECURSE LIB_SOURCE_FILES ${ROOT_DIR}/src/*.cpp )
+
 ADD_LIBRARY( ${LIB_NAME} STATIC ${LIB_SOURCE_FILES} )
 
 #--------------------------------------------------------
@@ -65,6 +66,7 @@ ADD_LIBRARY( ${LIB_NAME} STATIC ${LIB_SOURCE_FILES} )
 SET( TEST_NAME cpf-redshift-test )
   
 FILE( GLOB_RECURSE TEST_SOURCE_FILES ${ROOT_DIR}/test/*.cpp )
+
 ADD_EXECUTABLE( ${TEST_NAME} ${TEST_SOURCE_FILES} )
 
 # Supply link librairies

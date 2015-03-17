@@ -44,7 +44,7 @@ public:
 
 private:
 
-    Bool                            Serialize( CSerializer& ar );
+    Bool                    Serialize( CSerializer& ar );
 
     CSpectrumFluxAxis               m_FluxAxis;
     CSpectrumSpectralAxis           m_SpectralAxis;
