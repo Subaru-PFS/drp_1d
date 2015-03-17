@@ -31,6 +31,9 @@ public:
 
 
     Bool                ComputeMeanAndSDev( const CMask& mask, Float64& mean,  Float64& sdev, const Float64* error ) const;
+    Float64             ComputeRMSDiff( const CSpectrumFluxAxis& other );
+    Bool 		Subtract(const CSpectrumFluxAxis& other);
+
 
 private:
 
