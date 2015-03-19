@@ -86,7 +86,7 @@ public:
         // Store results
         {
             boost::lock_guard<boost::mutex> lock( m_Mutex );
-            m_Ctx.AddCorrelationResult( m_Tpl, newRedshifts, meritChiSquare.GetResults() );
+            m_Ctx.AddResults( m_Tpl, newRedshifts, meritChiSquare.GetResults(), redshifts, correlation.GetResults() );
             Log.LogInfo( "- Template: %s (LambdaRange: %f-%f:%f:%f)", m_Tpl.GetName().c_str(), m_Tpl.GetLambdaRange().GetBegin(), m_Tpl.GetLambdaRange().GetEnd(), m_Tpl.GetResolution(), m_Tpl.GetLambdaRange().GetLength() );
             Log.LogInfo( "|- Redshift: %f Merit: %f", newRedshifts[0], meritChiSquare.GetResults()[0] );
         }

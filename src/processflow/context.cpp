@@ -49,6 +49,8 @@ CProcessFlowContext::~CProcessFlowContext()
 
 bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath, CTemplateCatalog& templateCatalog, CRayCatalog& rayCatalog, const SParam& params  )
 {
+    m_SpectrumName = bfs::path( spectrumPath ).stem().string();
+
     m_Spectrum = new CSpectrum();
 
     CSpectrumIOGenericReader reader;
@@ -193,7 +195,7 @@ const CProcessFlowContext::TTemplateCategoryList& CProcessFlowContext::GetTempla
     return m_TemplateCategoryList;
 }
 
-Bool CProcessFlowContext::AddCorrelationResult( const CTemplate& tpl, const CRedshifts& redshifts, const TFloat64List& merits )
+Bool CProcessFlowContext::AddResults( const CTemplate& tpl, const CRedshifts& selectedRedshifts, const TFloat64List& selectedMerits, const CRedshifts& redshifts, const TFloat64List& correlationValues  )
 {
     if( m_CorrelationResult.find( tpl.GetName() ) != m_CorrelationResult.end() )
     {
@@ -201,8 +203,61 @@ Bool CProcessFlowContext::AddCorrelationResult( const CTemplate& tpl, const CRed
     }
 
     m_CorrelationResult[ tpl.GetName() ] = SCorrelationResult();
-    m_CorrelationResult[ tpl.GetName() ].Merits = merits;
+    m_CorrelationResult[ tpl.GetName() ].SelectedMerits = selectedMerits;
+    m_CorrelationResult[ tpl.GetName() ].SelectedRedshifts = selectedRedshifts;
     m_CorrelationResult[ tpl.GetName() ].Redshifts = redshifts;
+    m_CorrelationResult[ tpl.GetName() ].CorrelationValues = correlationValues;
+
+    return true;
+}
+
+Bool CProcessFlowContext::DumpResultsToCSV( const char* dir ) const
+{
+    char outputDir[256];
+
+    sprintf(outputDir, "%s/%s", dir, m_SpectrumName.c_str() );
+
+    if( ! bfs::exists( outputDir ) )
+    {
+        if( ! bfs::create_directories( outputDir ) )
+        {
+            Log.LogError("Failed to create directory: %s", outputDir );
+            return false;
+        }
+    }
+
+    if( !bfs::is_directory( outputDir ) )
+    {
+        Log.LogError("%s exists, but is not a directory", outputDir );
+        return false;
+    }
+
+
+    TCorrelationResults::const_iterator it;
+
+    for( it = m_CorrelationResult.begin(); it != m_CorrelationResult.end(); ++it )
+    {
+        char outputFileName[256];
+        sprintf(outputFileName, "%s/%s.txt", outputDir, it->first.c_str() );
+
+
+        FILE* f = fopen( outputFileName, "w+" );
+        if( f == NULL )
+        {
+            Log.LogError("Failed to create file: %s", outputFileName );
+            return false;
+        }
+
+        const SCorrelationResult& r = it->second;
+
+        for( int i=0;i<r.Redshifts.GetRedshiftsCount();i++)
+        {
+            fprintf( f, "%f %f\n", r.Redshifts[i], r.CorrelationValues[i]);
+        }
+
+        fclose( f );
+    }
+
 
     return true;
 }
@@ -220,11 +275,11 @@ Bool CProcessFlowContext::GetBestCorrelationResult( Float64& redshift, Float64& 
         for( it = m_CorrelationResult.begin(); it != m_CorrelationResult.end(); it++ )
         {
             const SCorrelationResult& r = (*it).second;
-            for( Int32 i=0; i<r.Merits.size(); i++ )
+            for( Int32 i=0; i<r.SelectedMerits.size(); i++ )
             {
-                if( r.Merits[i] < min )
+                if( r.SelectedMerits[i] < min )
                 {
-                    min = r.Merits[i];
+                    min = r.SelectedMerits[i];
                     maxIndex = i;
                     maxIt = it;
                 }
@@ -237,11 +292,11 @@ Bool CProcessFlowContext::GetBestCorrelationResult( Float64& redshift, Float64& 
         for( it = m_CorrelationResult.begin(); it != m_CorrelationResult.end(); it++ )
         {
             const SCorrelationResult& r = (*it).second;
-            for( Int32 i=0; i<r.Merits.size(); i++ )
+            for( Int32 i=0; i<r.SelectedMerits.size(); i++ )
             {
-                if( r.Merits[i] > min )
+                if( r.SelectedMerits[i] > min )
                 {
-                    min = r.Merits[i];
+                    min = r.SelectedMerits[i];
                     maxIndex = i;
                     maxIt = it;
                 }
@@ -253,7 +308,7 @@ Bool CProcessFlowContext::GetBestCorrelationResult( Float64& redshift, Float64& 
     {
         const SCorrelationResult& r = (*maxIt).second;
         redshift = r.Redshifts[maxIndex];
-        merit = r.Merits[maxIndex];
+        merit = r.SelectedMerits[maxIndex];
         tplName = (*maxIt).first;
         return true;
     }

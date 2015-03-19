@@ -35,8 +35,11 @@ public:
 
     struct SCorrelationResult
     {
+        CRedshifts      SelectedRedshifts;
+        TFloat64List    SelectedMerits;
+
         CRedshifts      Redshifts;
-        TFloat64List    Merits;
+        TFloat64List    CorrelationValues;
     };
 
     typedef std::map< std::string, SCorrelationResult >     TCorrelationResults;
@@ -70,8 +73,10 @@ public:
     Float64                         GetOverlapThreshold() const;
     Float64                         GetRedshiftStep() const;
 
-    Bool                            AddCorrelationResult( const CTemplate& tpl, const CRedshifts& redshifts, const TFloat64List& merits );
+    Bool                            AddResults( const CTemplate& tpl, const CRedshifts& selectedRedshifts, const TFloat64List& selectedMerits, const CRedshifts& allRedshifts, const TFloat64List& allMerits  );
     Bool                            GetBestCorrelationResult( Float64& redshift, Float64& merit, std::string& tplName, ESearchCriterion criterion ) const;
+
+    Bool                            DumpResultsToCSV( const char* outputDirName ) const;
 
 private:
 
@@ -84,6 +89,7 @@ private:
     Float64                         m_OverlapThreshold;
     Float64                         m_RedshiftStep;
     TTemplateCategoryList           m_TemplateCategoryList;
+    std::string                     m_SpectrumName;
 
     TCorrelationResults             m_CorrelationResult;
 
