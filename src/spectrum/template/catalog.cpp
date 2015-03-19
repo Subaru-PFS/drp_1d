@@ -2,6 +2,7 @@
 #include <epic/redshift/spectrum/io/genericreader.h>
 #include <epic/redshift/spectrum/template/template.h>
 #include <epic/redshift/continuum/median.h>
+#include <epic/core/log/log.h>
 
 #include <boost/filesystem.hpp>
 
@@ -70,8 +71,10 @@ Bool CTemplateCatalog::Add( const char* templatePath, CTemplate::ECategory categ
     CRef<CTemplate> tmpl = new CTemplate( name.c_str(), category );
 
     CSpectrumIOGenericReader asciiReader;
-    if( !asciiReader.Read( templatePath, *tmpl ) )
+    if( !asciiReader.Read( templatePath, *tmpl ) ) {
+        Log.LogError("Fail to read template: %s", templatePath);
         return false;
+    }
 
     Add( *tmpl );
     return true;
@@ -104,6 +107,7 @@ Bool CTemplateCatalog::LoadCategory( const path& dirPath, CTemplate::ECategory c
     directory_iterator end_itr;
     for ( directory_iterator itr( dirPath ); itr != end_itr; ++itr )
     {
+
         if ( !is_directory( itr->status() ) )
         {
             if( ! Add( itr->path().c_str(), category ) )

@@ -68,8 +68,8 @@ public:
 
         if( extremumList.size() == 0 )
         {
-            Log.LogInfo( "Template: %s (LambdaRange: %f-%f:%f:%f)", m_Tpl.GetName().c_str(), m_Tpl.GetLambdaRange().GetBegin(), m_Tpl.GetLambdaRange().GetEnd(), m_Tpl.GetResolution(), m_Tpl.GetLambdaRange().GetLength() );
-            Log.LogInfo( "No Redshift found" );
+            Log.LogInfo( "- Template: %s (LambdaRange: %f-%f:%f:%f)", m_Tpl.GetName().c_str(), m_Tpl.GetLambdaRange().GetBegin(), m_Tpl.GetLambdaRange().GetEnd(), m_Tpl.GetResolution(), m_Tpl.GetLambdaRange().GetLength() );
+            Log.LogInfo( "|- No Redshift found" );
             return;
         }
 
@@ -87,8 +87,8 @@ public:
         {
             boost::lock_guard<boost::mutex> lock( m_Mutex );
             m_Ctx.AddCorrelationResult( m_Tpl, newRedshifts, meritChiSquare.GetResults() );
-            Log.LogInfo( "Template: %s (LambdaRange: %f-%f:%f:%f)", m_Tpl.GetName().c_str(), m_Tpl.GetLambdaRange().GetBegin(), m_Tpl.GetLambdaRange().GetEnd(), m_Tpl.GetResolution(), m_Tpl.GetLambdaRange().GetLength() );
-            Log.LogInfo( "Redshift: %f Merit: %f", newRedshifts[0], meritChiSquare.GetResults()[0] );
+            Log.LogInfo( "- Template: %s (LambdaRange: %f-%f:%f:%f)", m_Tpl.GetName().c_str(), m_Tpl.GetLambdaRange().GetBegin(), m_Tpl.GetLambdaRange().GetEnd(), m_Tpl.GetResolution(), m_Tpl.GetLambdaRange().GetLength() );
+            Log.LogInfo( "|- Redshift: %f Merit: %f", newRedshifts[0], meritChiSquare.GetResults()[0] );
         }
 
     }
@@ -129,7 +129,7 @@ bool CProcessFlow::ProcessWithoutEL( CProcessFlowContext& ctx )
 
     m_ThreadPool.Reset();
 
-    Log.LogInfo( "Process pectrum without EL (LambdaRange: %f-%f:%f:%f)",
+    Log.LogInfo( "Process spectrum without EL (LambdaRange: %f-%f:%f:%f)",
             ctx.GetSpectrum().GetLambdaRange().GetBegin(), ctx.GetSpectrum().GetLambdaRange().GetEnd(), ctx.GetSpectrum().GetResolution(), ctx.GetSpectrum().GetLambdaRange().GetLength() );
 
     for( UInt32 i=0; i<templateCategotyList.size(); i++ )
@@ -144,7 +144,6 @@ bool CProcessFlow::ProcessWithoutEL( CProcessFlowContext& ctx )
         {
             for( UInt32 j=0; j<templateCatalog.GetTemplateCount( (CTemplate::ECategory) templateCategotyList[i] ); j++ )
             {
-
                 const CTemplate& tpl = templateCatalog.GetTemplate( (CTemplate::ECategory) templateCategotyList[i], j );
                 const CTemplate& tplWithoutCont = templateCatalog.GetTemplateWithoutContinuum( (CTemplate::ECategory) templateCategotyList[i], j );
                 const CSpectrum& spc = ctx.GetSpectrum();
