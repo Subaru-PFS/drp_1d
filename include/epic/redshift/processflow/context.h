@@ -76,7 +76,7 @@ public:
     Bool                            AddResults( const CTemplate& tpl, const CRedshifts& selectedRedshifts, const TFloat64List& selectedMerits, const CRedshifts& allRedshifts, const TFloat64List& allMerits  );
     Bool                            GetBestCorrelationResult( Float64& redshift, Float64& merit, std::string& tplName, ESearchCriterion criterion ) const;
 
-    Bool                            DumpResultsToCSV( const char* outputDirName ) const;
+    Bool                            DumpCorrelationResultsToCSV( const char* outputDirName ) const;
 
 private:
 

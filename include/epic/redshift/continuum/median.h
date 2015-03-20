@@ -18,6 +18,10 @@ public:
     CContinuumMedian();
     ~CContinuumMedian();
 
+    Void SetMeanKernelWidth( Float32 width );
+    Void SetMedianKernelWidth( Float32 width );
+    Void SetMedianCycleCount( UInt32 count );
+
     Bool RemoveContinuum( const CSpectrum& s, CSpectrumFluxAxis& noContinuumFluxAxis );
 
 private:

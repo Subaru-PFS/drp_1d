@@ -211,7 +211,7 @@ Bool CProcessFlowContext::AddResults( const CTemplate& tpl, const CRedshifts& se
     return true;
 }
 
-Bool CProcessFlowContext::DumpResultsToCSV( const char* dir ) const
+Bool CProcessFlowContext::DumpCorrelationResultsToCSV( const char* dir ) const
 {
     char outputDir[256];
 
@@ -307,7 +307,7 @@ Bool CProcessFlowContext::GetBestCorrelationResult( Float64& redshift, Float64& 
     if( maxIt != m_CorrelationResult.end() )
     {
         const SCorrelationResult& r = (*maxIt).second;
-        redshift = r.Redshifts[maxIndex];
+        redshift = r.SelectedRedshifts[maxIndex];
         merit = r.SelectedMerits[maxIndex];
         tplName = (*maxIt).first;
         return true;

@@ -41,7 +41,7 @@ Bool CSpectrumIOFitsWriter::Write( const char* filePath, CSpectrum& spectrum )
 	}
 
 
-    const char* ttype[2] = {"WAVE","FLUX_TRUE"};
+    const char* ttype[2] = {"WAVE","FLUX"};
     const char* tform[2] = {"E","E"};
     if( fits_create_tbl(fptr, BINARY_TBL, spectrum.GetSampleCount(), 2,(char**)ttype, (char**)tform, NULL, NULL, &status) )
     {

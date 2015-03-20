@@ -68,7 +68,7 @@ public:
 
         if( extremumList.size() == 0 )
         {
-            Log.LogInfo( "- Template: %s (LambdaRange: %f-%f:%f:%f)", m_Tpl.GetName().c_str(), m_Tpl.GetLambdaRange().GetBegin(), m_Tpl.GetLambdaRange().GetEnd(), m_Tpl.GetResolution(), m_Tpl.GetLambdaRange().GetLength() );
+            Log.LogInfo( "- Template: %s (LambdaRange: %f-%f:%f)", m_Tpl.GetName().c_str(), m_Tpl.GetLambdaRange().GetBegin(), m_Tpl.GetLambdaRange().GetEnd(), m_Tpl.GetResolution()  );
             Log.LogInfo( "|- No Redshift found" );
             return;
         }
@@ -87,7 +87,7 @@ public:
         {
             boost::lock_guard<boost::mutex> lock( m_Mutex );
             m_Ctx.AddResults( m_Tpl, newRedshifts, meritChiSquare.GetResults(), redshifts, correlation.GetResults() );
-            Log.LogInfo( "- Template: %s (LambdaRange: %f-%f:%f:%f)", m_Tpl.GetName().c_str(), m_Tpl.GetLambdaRange().GetBegin(), m_Tpl.GetLambdaRange().GetEnd(), m_Tpl.GetResolution(), m_Tpl.GetLambdaRange().GetLength() );
+            Log.LogInfo( "- Template: %s (LambdaRange: %f-%f:%f)", m_Tpl.GetName().c_str(), m_Tpl.GetLambdaRange().GetBegin(), m_Tpl.GetLambdaRange().GetEnd(), m_Tpl.GetResolution() );
             Log.LogInfo( "|- Redshift: %f Merit: %f", newRedshifts[0], meritChiSquare.GetResults()[0] );
         }
 
@@ -129,8 +129,8 @@ bool CProcessFlow::ProcessWithoutEL( CProcessFlowContext& ctx )
 
     m_ThreadPool.Reset();
 
-    Log.LogInfo( "Process spectrum without EL (LambdaRange: %f-%f:%f:%f)",
-            ctx.GetSpectrum().GetLambdaRange().GetBegin(), ctx.GetSpectrum().GetLambdaRange().GetEnd(), ctx.GetSpectrum().GetResolution(), ctx.GetSpectrum().GetLambdaRange().GetLength() );
+    Log.LogInfo( "Process spectrum without EL (LambdaRange: %f-%f:%f)",
+            ctx.GetSpectrum().GetLambdaRange().GetBegin(), ctx.GetSpectrum().GetLambdaRange().GetEnd(), ctx.GetSpectrum().GetResolution());
 
     for( UInt32 i=0; i<templateCategotyList.size(); i++ )
     {
