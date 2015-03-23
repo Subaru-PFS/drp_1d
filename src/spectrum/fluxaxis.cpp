@@ -173,41 +173,6 @@ Bool CSpectrumFluxAxis::ComputeMeanAndSDevWithError( const CMask& mask, Float64&
 
     Float64 sum, var, errorSum, err;
     Int32 ndOfSampleUsed=0;
-/*
-    sum=0.0;
-    errorSum= 0.0;
-    ndOfSampleUsed=0;
-    for (j=0;j< GetSamplesCount();j++)
-    {
-        err = error[j] * error[j];
-        sum += mask[j] * m_Samples[j] / err;
-        //errorSum += mask[j] / err;
-
-        errorSum += mask[j] * err;
-        ndOfSampleUsed += mask[j];
-    }
-
-    if (ndOfSampleUsed>0)
-    {
-        mean = sum / errorSum;
-
-        var=0.0;
-        for (j=0;j < GetSamplesCount();j++)
-        {
-            sum= mask[j] * ( m_Samples[j] - mean );
-            var += sum * sum;
-        }
-
-        sdev = sqrt( ( 1.0 / ndOfSampleUsed ) * var );
-    }
-    else
-    {
-        mean=NAN;
-        sdev=NAN;
-        return false;
-    }
-
-*/
 
     sum=0.0;
     errorSum= 0.0;
