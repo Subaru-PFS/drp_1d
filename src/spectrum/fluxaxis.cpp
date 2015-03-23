@@ -179,12 +179,11 @@ Bool CSpectrumFluxAxis::ComputeMeanAndSDevWithError( const CMask& mask, Float64&
     ndOfSampleUsed=0;
     for (j=0;j< GetSamplesCount();j++)
     {
-        err = error[j] * error[j];
-        sum += mask[j] * m_Samples[j] / err;
-        //errorSum += mask[j] / err;
+        err = 1.0 / ( error[j] * error[j] );
 
-        errorSum += mask[j] * err;
-        ndOfSampleUsed += mask[j];
+        sum = mask[j] * ( m_Samples[j] * err );
+
+        errorSum += mask[j] * ( err );
     }
 
     if (ndOfSampleUsed>0)
@@ -193,12 +192,15 @@ Bool CSpectrumFluxAxis::ComputeMeanAndSDevWithError( const CMask& mask, Float64&
 
         var=0.0;
         for (j=0;j < GetSamplesCount();j++)
-        {
-            sum= mask[j] * ( m_Samples[j] - mean );
-            var += sum * sum;
+        {            
+            err = 1.0 / ( error[j] * error[j] );
+
+            sum = mask[j] * ( m_Samples[j] - mean );
+
+            var += sum * sum *  err;
         }
 
-        sdev = sqrt( ( 1.0 / ndOfSampleUsed ) * var );
+        sdev = sqrt( ( 1.0 / ndOfSampleUsed ) * var / errorSum );
     }
     else
     {
@@ -206,6 +208,7 @@ Bool CSpectrumFluxAxis::ComputeMeanAndSDevWithError( const CMask& mask, Float64&
         sdev=NAN;
         return false;
     }
+
     return true;
 }
 
