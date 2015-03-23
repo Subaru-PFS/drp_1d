@@ -181,7 +181,7 @@ Bool CSpectrumFluxAxis::ComputeMeanAndSDevWithError( const CMask& mask, Float64&
     {
         err = 1.0 / ( error[j] * error[j] );
 
-        sum = mask[j] * ( m_Samples[j] * err );
+        sum += mask[j] * ( m_Samples[j] * err );
 
         errorSum += mask[j] * ( err );
     }
@@ -192,10 +192,10 @@ Bool CSpectrumFluxAxis::ComputeMeanAndSDevWithError( const CMask& mask, Float64&
 
         var=0.0;
         for (j=0;j < GetSamplesCount();j++)
-        {            
+        {
             err = 1.0 / ( error[j] * error[j] );
 
-            sum = mask[j] * ( m_Samples[j] - mean );
+            sum += mask[j] * ( m_Samples[j] - mean );
 
             var += sum * sum *  err;
         }
