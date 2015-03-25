@@ -24,7 +24,7 @@ void CCRedshiftSpectrumioTestCase::VVDSReadValidFile()
 
     CSpectrum s;
 
-    Bool retVal = reader.Read( "../test/data/spectrum1_z_1.2299.fits", s );
+    Bool retVal = reader.Read( "../test/data/SpectrumioTestCase/spectrum1_z_1.2299.fits", s );
     CPPUNIT_ASSERT( retVal == true );
 
     CPPUNIT_ASSERT( s.GetSampleCount() == 11391 );
@@ -38,7 +38,7 @@ void CCRedshiftSpectrumioTestCase::VVDSReadInvalidFile()
 
     CSpectrum s;
 
-    Bool rValue = reader.Read( "../test/data/invalidspectrum1.fits", s );
+    Bool rValue = reader.Read( "../test/data/SpectrumioTestCase/invalidspectrum1.fits", s );
 
     CPPUNIT_ASSERT( rValue == false );
     CPPUNIT_ASSERT( s.GetSampleCount() == 0 );
