@@ -28,17 +28,6 @@ COperatorCorrelation::~COperatorCorrelation()
 
 }
 
-
-const TFloat64List& COperatorCorrelation::GetResults() const
-{
-    return m_Correlation;
-}
-
-const COperatorCorrelation::TStatusList& COperatorCorrelation::GetStatus() const
-{
-    return m_Status;
-}
-
 Float64 COperatorCorrelation::GetComputationDuration() const
 {
     return m_TotalDuration;
@@ -74,7 +63,7 @@ Bool COperatorCorrelation::Compute(   const CSpectrum& spectrum, const CTemplate
     const CSpectrumSpectralAxis& tplSpectralAxis = tpl.GetSpectralAxis();
     const CSpectrumFluxAxis& tplFluxAxis = tpl.GetFluxAxis();
 
-    m_Correlation.resize( redshifts.GetRedshiftsCount() );
+    m_Result.resize( redshifts.GetRedshiftsCount() );
     m_Overlap.resize( redshifts.GetRedshiftsCount() );
     m_Status.resize( redshifts.GetRedshiftsCount() );
 
@@ -89,8 +78,8 @@ Bool COperatorCorrelation::Compute(   const CSpectrum& spectrum, const CTemplate
 
     for ( Int32 i=0; i<redshifts.GetRedshiftsCount(); i++)
     {
-        m_Correlation[i] = NAN;
-        m_Status[i] = nStatus_InvalidInputData;
+        m_Result[i] = NAN;
+        m_Status[i] = nStatus_DataError;
         m_Overlap[i] = 0;
 
         // Shift Template (Since template are created at Z=0)
@@ -113,7 +102,7 @@ Bool COperatorCorrelation::Compute(   const CSpectrum& spectrum, const CTemplate
 
         if( m_Overlap[i] < overlapThreshold )
         {
-            m_Status[i] = nStatus_AboveOverlapThreshold;
+            m_Status[i] = nStatus_NoOverlap;
             continue;
         }
 
@@ -126,7 +115,7 @@ Bool COperatorCorrelation::Compute(   const CSpectrum& spectrum, const CTemplate
         spcSpectralAxis.GetMask( intersectedLambdaRange, spcMask );
         if( !spcFluxAxis.ComputeMeanAndSDev( spcMask, spcMean, spcSDev, error ) )
         {
-            m_Status[i] = nStatus_InvalidInputData;
+            m_Status[i] = nStatus_DataError;
             continue;
         }
 
@@ -135,7 +124,7 @@ Bool COperatorCorrelation::Compute(   const CSpectrum& spectrum, const CTemplate
         shiftedTplSpectralAxis.GetMask( intersectedLambdaRange, tplMask );
         if( !tplFluxAxis.ComputeMeanAndSDev( tplMask, tplMean, tplSDev, NULL ) )
         {
-            m_Status[i] = nStatus_InvalidInputData;
+            m_Status[i] = nStatus_DataError;
             continue;
         }
 
@@ -185,7 +174,7 @@ Bool COperatorCorrelation::Compute(   const CSpectrum& spectrum, const CTemplate
 
         if( sumWeight>0 )
         {
-            m_Correlation[i] = sumCorr / ( tplSDev * spcSDev * sumWeight );
+            m_Result[i] = sumCorr / ( tplSDev * spcSDev * sumWeight );
             m_Status[i] = nStatus_OK;
         }
     }

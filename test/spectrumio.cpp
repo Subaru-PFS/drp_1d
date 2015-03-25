@@ -3,6 +3,8 @@
 #include <epic/core/common/datatypes.h>
 #include <epic/redshift/spectrum/spectrum.h>
 
+using namespace NSEpicTest;
+
 using namespace NSEpic;
 using namespace std;
 

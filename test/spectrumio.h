@@ -4,6 +4,9 @@
 #include <cppunit/TestCase.h>
 #include <cppunit/extensions/HelperMacros.h>
   
+namespace NSEpicTest
+{
+
 class CCRedshiftSpectrumioTestCase : public CppUnit::TestCase
 {
     CPPUNIT_TEST_SUITE(CCRedshiftSpectrumioTestCase);
@@ -24,5 +27,7 @@ private:
 };
 
 CPPUNIT_TEST_SUITE_REGISTRATION( CCRedshiftSpectrumioTestCase );
- 
+
+}
+
 #endif

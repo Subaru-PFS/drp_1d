@@ -195,18 +195,22 @@ const CProcessFlowContext::TTemplateCategoryList& CProcessFlowContext::GetTempla
     return m_TemplateCategoryList;
 }
 
-Bool CProcessFlowContext::AddResults( const CTemplate& tpl, const CRedshifts& selectedRedshifts, const TFloat64List& selectedMerits, const CRedshifts& redshifts, const TFloat64List& correlationValues  )
+Bool CProcessFlowContext::AddResults( const CTemplate& tpl,
+                                      const CRedshifts& selectedRedshifts,
+                                      const TFloat64List& selectedMerits, const COperator::TStatusList& selectedMeritsStatus,
+                                      const CRedshifts& redshifts, const TFloat64List& correlationValues  )
 {
-    if( m_CorrelationResult.find( tpl.GetName() ) != m_CorrelationResult.end() )
+    if( m_ProcessResult.find( tpl.GetName() ) != m_ProcessResult.end() )
     {
         return false;
     }
 
-    m_CorrelationResult[ tpl.GetName() ] = SCorrelationResult();
-    m_CorrelationResult[ tpl.GetName() ].SelectedMerits = selectedMerits;
-    m_CorrelationResult[ tpl.GetName() ].SelectedRedshifts = selectedRedshifts;
-    m_CorrelationResult[ tpl.GetName() ].Redshifts = redshifts;
-    m_CorrelationResult[ tpl.GetName() ].CorrelationValues = correlationValues;
+    m_ProcessResult[ tpl.GetName() ] = SCorrelationResult();
+    m_ProcessResult[ tpl.GetName() ].SelectedMerits = selectedMerits;
+    m_ProcessResult[ tpl.GetName() ].SelectedMeritsStatus = selectedMeritsStatus;
+    m_ProcessResult[ tpl.GetName() ].SelectedRedshifts = selectedRedshifts;
+    m_ProcessResult[ tpl.GetName() ].Redshifts = redshifts;
+    m_ProcessResult[ tpl.GetName() ].CorrelationValues = correlationValues;
 
     return true;
 }
@@ -217,25 +221,32 @@ Bool CProcessFlowContext::DumpCorrelationResultsToCSV( const char* dir ) const
 
     sprintf(outputDir, "%s/%s", dir, m_SpectrumName.c_str() );
 
-    if( ! bfs::exists( outputDir ) )
+    if( bfs::exists( outputDir ) )
     {
-        if( ! bfs::create_directories( outputDir ) )
+        if( bfs::is_directory( outputDir ) )
         {
-            Log.LogError("Failed to create directory: %s", outputDir );
+            // Remove everything by default
+            bfs::remove_all( outputDir );
+        }
+        else
+        {
+            Log.LogError("%s exists, but is not a directory", outputDir );
             return false;
         }
     }
 
-    if( !bfs::is_directory( outputDir ) )
+
+    if( ! bfs::create_directories( outputDir ) )
     {
-        Log.LogError("%s exists, but is not a directory", outputDir );
+        Log.LogError("Failed to create directory: %s", outputDir );
         return false;
     }
 
 
+
     TCorrelationResults::const_iterator it;
 
-    for( it = m_CorrelationResult.begin(); it != m_CorrelationResult.end(); ++it )
+    for( it = m_ProcessResult.begin(); it != m_ProcessResult.end(); ++it )
     {
         char outputFileName[256];
         sprintf(outputFileName, "%s/%s.txt", outputDir, it->first.c_str() );
@@ -262,49 +273,30 @@ Bool CProcessFlowContext::DumpCorrelationResultsToCSV( const char* dir ) const
     return true;
 }
 
-Bool CProcessFlowContext::GetBestCorrelationResult( Float64& redshift, Float64& merit, std::string& tplName, ESearchCriterion criterion ) const
+Bool CProcessFlowContext::GetBestCorrelationResult( Float64& redshift, Float64& merit, std::string& tplName ) const
 {
     Int32 maxIndex = 0;
-    TCorrelationResults::const_iterator maxIt = m_CorrelationResult.end();
-    TCorrelationResults::const_iterator it = m_CorrelationResult.begin();
+    TCorrelationResults::const_iterator maxIt = m_ProcessResult.end();
+    TCorrelationResults::const_iterator it = m_ProcessResult.begin();
 
 
-    if( criterion == nSearchCriterion_Minimized )
+    Float64 min = DBL_MAX ;
+    for( it = m_ProcessResult.begin(); it != m_ProcessResult.end(); it++ )
     {
-        Float64 min = DBL_MAX ;
-        for( it = m_CorrelationResult.begin(); it != m_CorrelationResult.end(); it++ )
+        const SCorrelationResult& r = (*it).second;
+        for( Int32 i=0; i<r.SelectedMerits.size(); i++ )
         {
-            const SCorrelationResult& r = (*it).second;
-            for( Int32 i=0; i<r.SelectedMerits.size(); i++ )
+            if( r.SelectedMerits[i] < min && r.SelectedMeritsStatus[i] == COperator::nStatus_OK )
             {
-                if( r.SelectedMerits[i] < min )
-                {
-                    min = r.SelectedMerits[i];
-                    maxIndex = i;
-                    maxIt = it;
-                }
-            }
-        }
-    }
-    else if( criterion == nSearchCriterion_Maximized )
-    {
-        Float64 min = DBL_MIN ;
-        for( it = m_CorrelationResult.begin(); it != m_CorrelationResult.end(); it++ )
-        {
-            const SCorrelationResult& r = (*it).second;
-            for( Int32 i=0; i<r.SelectedMerits.size(); i++ )
-            {
-                if( r.SelectedMerits[i] > min )
-                {
-                    min = r.SelectedMerits[i];
-                    maxIndex = i;
-                    maxIt = it;
-                }
+                min = r.SelectedMerits[i];
+                maxIndex = i;
+                maxIt = it;
             }
         }
     }
 
-    if( maxIt != m_CorrelationResult.end() )
+
+    if( maxIt != m_ProcessResult.end() )
     {
         const SCorrelationResult& r = (*maxIt).second;
         redshift = r.SelectedRedshifts[maxIndex];
@@ -312,6 +304,7 @@ Bool CProcessFlowContext::GetBestCorrelationResult( Float64& redshift, Float64& 
         tplName = (*maxIt).first;
         return true;
     }
+
     return false;
 
 }

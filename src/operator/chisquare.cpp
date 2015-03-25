@@ -9,6 +9,8 @@
 
 #include <epic/core/log/log.h>
 
+#include <boost/numeric/conversion/bounds.hpp>
+
 #include <math.h>
 #include <assert.h>
 
@@ -28,20 +30,14 @@ COperatorChiSquare::~COperatorChiSquare()
 
 }
 
-const TFloat64List& COperatorChiSquare::GetResults() const
-{
-    return m_Chisquare;
-}
 
-Float64 COperatorChiSquare::BasicFit( const CSpectrum& spectrum, const CTemplate& tpl,
-                                const TFloat64Range& lambdaRange, Float64 redshift, Float64 overlapThreshold, Float64& overlapRate )
+Void COperatorChiSquare::BasicFit( const CSpectrum& spectrum, const CTemplate& tpl,
+                                const TFloat64Range& lambdaRange, Float64 redshift, Float64 overlapThreshold,
+                                Float64& overlapRate, Float64& chiSquare, EStatus& status )
 {
-
-    if( spectrum.GetSpectralAxis().IsInLinearScale() == false || tpl.GetSpectralAxis().IsInLinearScale() == false )
-    {
-        Log.LogError("Failed to compute Chi Square, input spetrum or template are not in linear scale");
-        return false;
-    }
+    chiSquare = boost::numeric::bounds<float>::smallest();
+    overlapRate = 0.0;
+    status = nStatus_DataError;
 
     Bool retVal;
     CSpectrumSpectralAxis shiftedTplSpectralAxis( tpl.GetSampleCount(), false );
@@ -66,8 +62,6 @@ Float64 COperatorChiSquare::BasicFit( const CSpectrum& spectrum, const CTemplate
     TFloat64Range tplLambdaRange;
     retVal = shiftedTplSpectralAxis.ClampLambdaRange( lambdaRange, tplLambdaRange );
 
-    overlapRate = 0;
-
     // if there is any intersection between the lambda range of the spectrum and the lambda range of the template
     // Compute the intersected range
     if( TFloat64Range::Intersect( tplLambdaRange, spcLambdaRange, intersectedLambdaRange ) )
@@ -77,7 +71,10 @@ Float64 COperatorChiSquare::BasicFit( const CSpectrum& spectrum, const CTemplate
 
     // Check for overlap rate
     if( overlapRate < overlapThreshold )
-        return false;
+    {
+        status = nStatus_NoOverlap;
+        return ;
+    }
 
     const Float64* Xtpl = shiftedTplSpectralAxis.GetSamples();
     const Float64* Ytpl = tplFluxAxis.GetSamples();
@@ -126,7 +123,8 @@ Float64 COperatorChiSquare::BasicFit( const CSpectrum& spectrum, const CTemplate
 
     if ( numDevs==0 || sumYDevs==0 || sumXDevs==0 )
     {
-        return false;
+        status = nStatus_DataError;
+        return;
     }
 
     Float64 ampl = sumYDevs / sumXDevs;
@@ -136,8 +134,11 @@ Float64 COperatorChiSquare::BasicFit( const CSpectrum& spectrum, const CTemplate
 
     fit=0;
 
+    Float64 s = 0;
+
     while( k<tpl.GetSampleCount()-1 && Xtpl[k] <= intersectedLambdaRange.GetEnd() )
     {
+
         while( j<spectrum.GetSampleCount() && Xspc[j] <= Xtpl[k+1] )
         {
             t = ( Xspc[j] - Xtpl[k] ) / ( Xtpl[k+1] - Xtpl[k] );
@@ -145,6 +146,8 @@ Float64 COperatorChiSquare::BasicFit( const CSpectrum& spectrum, const CTemplate
 
             fit += pow( Yspc[j] - ampl * tplInterpolatedFlux , 2.0 ) / pow( error[j], 2.0 );
 
+
+            s += Yspc[j];
             j++;
         }
 
@@ -154,7 +157,9 @@ Float64 COperatorChiSquare::BasicFit( const CSpectrum& spectrum, const CTemplate
     // Chi square reduct: it can introduces some problem?
     fit /= numDevs;
 
-    return fit;
+
+    chiSquare = fit;
+    status = nStatus_OK;
 }
 
 
@@ -163,21 +168,21 @@ Bool COperatorChiSquare::Compute(const CSpectrum& spectrum, const CTemplate& tpl
                           Float64 overlapThreshold )
 {
 
-    Int32 i;
-    char fit_computation=1;
-
-    Float64 Ampl;
-    Int32 num_devs;
-
-    m_Chisquare.resize( redshifts.GetRedshiftsCount() );
-    m_Overlap.resize( redshifts.GetRedshiftsCount() );
-
-    for (i=0;i<redshifts.GetRedshiftsCount();i++)
+    if( spectrum.GetSpectralAxis().IsInLinearScale() == false || tpl.GetSpectralAxis().IsInLinearScale() == false )
     {
-        m_Chisquare[i] = BasicFit( spectrum, tpl, lambdaRange, redshifts[i], overlapThreshold, m_Overlap[i] );
-
+        Log.LogError("Failed to compute Cross correlation, input spectrum or template are not in log scale");
+        return false;
     }
 
+    m_Result.resize( redshifts.GetRedshiftsCount() );
+    m_Overlap.resize( redshifts.GetRedshiftsCount() );
+    m_Status.resize( redshifts.GetRedshiftsCount() );
+
+    for (Int32 i=0;i<redshifts.GetRedshiftsCount();i++)
+    {
+        BasicFit( spectrum, tpl, lambdaRange, redshifts[i], overlapThreshold, m_Overlap[i], m_Result[i], m_Status[i] );
+    }
 
     return true;
+
 }

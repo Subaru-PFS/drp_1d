@@ -4,8 +4,7 @@
 #include <time.h>
 #include <stdlib.h>
 
-
-
+using namespace NSEpicTest;
 using namespace NSEpic;
 
 void CRedshiftCommonTestCase::setUp()

@@ -5,6 +5,7 @@
 #include <epic/core/common/managedobject.h>
 #include <epic/redshift/common/redshifts.h>
 #include <epic/redshift/spectrum/template/template.h>
+#include <epic/redshift/operator/operator.h>
 
 #include <map>
 #include <string>
@@ -27,16 +28,12 @@ class CProcessFlowContext : public CManagedObject
 
 public:
 
-    enum ESearchCriterion
-    {
-        nSearchCriterion_Maximized,
-        nSearchCriterion_Minimized
-    };
-
     struct SCorrelationResult
     {
         CRedshifts      SelectedRedshifts;
+
         TFloat64List    SelectedMerits;
+        COperator::TStatusList SelectedMeritsStatus;
 
         CRedshifts      Redshifts;
         TFloat64List    CorrelationValues;
@@ -73,8 +70,11 @@ public:
     Float64                         GetOverlapThreshold() const;
     Float64                         GetRedshiftStep() const;
 
-    Bool                            AddResults( const CTemplate& tpl, const CRedshifts& selectedRedshifts, const TFloat64List& selectedMerits, const CRedshifts& allRedshifts, const TFloat64List& allMerits  );
-    Bool                            GetBestCorrelationResult( Float64& redshift, Float64& merit, std::string& tplName, ESearchCriterion criterion ) const;
+    Bool                            AddResults( const CTemplate& tpl,
+                                                const CRedshifts& selectedRedshifts,
+                                                const TFloat64List& selectedMerits, const COperator::TStatusList& selectedMeritsStatus,
+                                                const CRedshifts& allRedshifts, const TFloat64List& allMerits  );
+    Bool                            GetBestCorrelationResult( Float64& redshift, Float64& merit, std::string& tplName ) const;
 
     Bool                            DumpCorrelationResultsToCSV( const char* outputDirName ) const;
 
@@ -91,7 +91,7 @@ private:
     TTemplateCategoryList           m_TemplateCategoryList;
     std::string                     m_SpectrumName;
 
-    TCorrelationResults             m_CorrelationResult;
+    TCorrelationResults             m_ProcessResult;
 
 
 };

@@ -4,6 +4,9 @@
 #include <cppunit/TestCase.h>
 #include <cppunit/extensions/HelperMacros.h>
 
+namespace NSEpicTest
+{
+
 class CRedshiftExtremumTestCase : public CppUnit::TestCase
 {
     CPPUNIT_TEST_SUITE(CRedshiftExtremumTestCase);
@@ -22,5 +25,7 @@ private:
 };
 
 CPPUNIT_TEST_SUITE_REGISTRATION( CRedshiftExtremumTestCase );
+
+}
 
 #endif

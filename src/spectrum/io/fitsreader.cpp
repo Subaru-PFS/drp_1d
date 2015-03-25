@@ -62,6 +62,19 @@ Bool CSpectrumIOFitsReader::Read2( fitsfile* fptr, CSpectrum& spectrum )
     return true;
 }
 
+/**
+ * Read FITS file formated with the following rules:
+ *
+ * - One Primary HDU of Image type with the following keys in it's header:
+ *
+ * - NAXIS: 2
+ * - NAXIS1: Number of pixel in the flux axis
+ * - NAXIS2: 1
+ *
+ * - CRPIX1: -1
+ * - CRVAL1: Start lambda range
+ * - CDELT1: lambda range between two consecutives samples
+ */
 Bool CSpectrumIOFitsReader::Read1( fitsfile* fptr, CSpectrum& spectrum )
 {
     Int32 status = 0;

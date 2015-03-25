@@ -8,6 +8,8 @@
 
 using namespace NSEpic;
 
+using namespace NSEpicTest;
+
 void CRedshiftProcessFlowTestCase::setUp()
 {
 }
@@ -38,7 +40,7 @@ void CRedshiftProcessFlowTestCase::ProcessShifted1 ()
     Float64 merit;
     std::string tplName;
 
-    ctx.GetBestCorrelationResult( redshift, merit, tplName, CProcessFlowContext::nSearchCriterion_Minimized );
+    ctx.GetBestCorrelationResult( redshift, merit, tplName );
 
     CPPUNIT_ASSERT_DOUBLES_EQUAL( 2.02952, redshift, 0.00001 );
 
@@ -66,7 +68,7 @@ void CRedshiftProcessFlowTestCase::ProcessShifted2()
     Float64 merit;
     std::string tplName;
 
-    ctx.GetBestCorrelationResult( redshift, merit, tplName, CProcessFlowContext::nSearchCriterion_Minimized );
+    ctx.GetBestCorrelationResult( redshift, merit, tplName );
 
     CPPUNIT_ASSERT_DOUBLES_EQUAL( 2.77571, redshift, 0.00001 );
 
@@ -94,7 +96,7 @@ void CRedshiftProcessFlowTestCase::ProcessShiftedDecimated()
     Float64 merit;
     std::string tplName;
 
-    ctx.GetBestCorrelationResult( redshift, merit, tplName, CProcessFlowContext::nSearchCriterion_Minimized );
+    ctx.GetBestCorrelationResult( redshift, merit, tplName );
 
     CPPUNIT_ASSERT_DOUBLES_EQUAL( 2.02952, redshift, 0.00001 );
 

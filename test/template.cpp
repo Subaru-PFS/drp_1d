@@ -6,6 +6,8 @@
 
 using namespace NSEpic;
 
+using namespace NSEpicTest;
+
 void CRedshiftTemplateTestCase::setUp()
 {
 }
