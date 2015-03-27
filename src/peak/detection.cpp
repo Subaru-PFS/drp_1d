@@ -21,22 +21,17 @@ CPeakDetection::~CPeakDetection()
 
 }
 
-Bool CPeakDetection::Compute( const CSpectrum& spectrum, const TFloat64Range& lambdaRange )
+Bool CPeakDetection::Compute( const CSpectrum& spectrum, const TLambdaRange& lambdaRange, Float64 windowSize, Float64 cut, UInt32 medianSmoothHalfWidth, UInt32 enlargeRate )
 {
-    Bool mStarCheck = false;
-    Float64 windowSize = 1.0f;
-    Float64 cut = 1.0;
-
-    if( mStarCheck )
-    {
-
-    }
-
     const CSpectrumFluxAxis& fluxAxis = spectrum.GetFluxAxis();
     const CSpectrumSpectralAxis& spectralAxis = spectrum.GetSpectralAxis();
 
     CSpectrumFluxAxis smoothedFluxAxis = fluxAxis;
-    smoothedFluxAxis.ApplyMedianSmooth( 1 );
+
+    if( medianSmoothHalfWidth  )
+    {
+        smoothedFluxAxis.ApplyMedianSmooth( medianSmoothHalfWidth );
+    }
 
     UInt32 windowSampleCount = windowSize / spectrum.GetResolution();
 
@@ -51,22 +46,25 @@ Bool CPeakDetection::Compute( const CSpectrum& spectrum, const TFloat64Range& la
 
     RedefineBorders( peaksBorders, spectralAxis, smoothedFluxAxis, fluxAxis );
 
-    for( UInt32 i=0; i<peaksBorders.size(); i++ )
+    if( enlargeRate )
     {
-        TInt32Range fitRange = FindGaussianFitStartAndStop( i, peaksBorders, spectralAxis.GetSamplesCount() );
+        for( UInt32 i=0; i<peaksBorders.size(); i++ )
+        {
+            TInt32Range fitRange = FindGaussianFitStartAndStop( i, peaksBorders, enlargeRate, spectralAxis.GetSamplesCount() );
+        }
     }
 
     return true;
 }
 
-TInt32Range CPeakDetection::FindGaussianFitStartAndStop( Int32 i, const TInt32RangeList& peaksBorders, Int32 len )
+TInt32Range CPeakDetection::FindGaussianFitStartAndStop( Int32 i, const TInt32RangeList& peaksBorders, UInt32 enlargeRate, Int32 len )
 {
     Int32 fitStart = peaksBorders[i].GetBegin();
     Int32 fitStop = peaksBorders[i].GetEnd();
 
     Int32 rate = fitStop - fitStart;
-    fitStart = max( 0, fitStart - 2*rate );
-    fitStop = min( len, fitStop + 2*rate );
+    fitStart = max( 0, fitStart - (int)enlargeRate*rate );
+    fitStop = min( len, fitStop + (int)enlargeRate*rate );
 
     if( i>0 )
     {
