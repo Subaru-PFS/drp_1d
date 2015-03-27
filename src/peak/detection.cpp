@@ -9,6 +9,7 @@
 #include <math.h>
 
 using namespace NSEpic;
+IMPLEMENT_MANAGED_OBJECT(CPeakDetection)
 
 CPeakDetection::CPeakDetection()
 {

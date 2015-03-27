@@ -263,7 +263,11 @@ Bool CProcessFlowContext::DumpCorrelationResultsToCSV( const char* dir ) const
 
         for( int i=0;i<r.Redshifts.GetRedshiftsCount();i++)
         {
-            fprintf( f, "%f %f\n", r.Redshifts[i], r.CorrelationValues[i]);
+            if( r.CorrelationValues[i] < 0.0001 ){
+                fprintf( f, "%f %e\n", r.Redshifts[i], r.CorrelationValues[i]);
+            }else{
+                fprintf( f, "%f %f\n", r.Redshifts[i], r.CorrelationValues[i]);
+            }
         }
 
         fclose( f );

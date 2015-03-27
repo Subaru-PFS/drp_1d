@@ -9,6 +9,7 @@
 #include <epic/core/log/consolehandler.h>
 #include <math.h>
 
+using namespace NSEpicTest;
 using namespace NSEpic;
 using namespace std;
 
@@ -53,11 +54,12 @@ void CRedshiftContinuumTestCase::Compute()
     //Log.LogInfo("Continuum rms error: %f", er);
     CPPUNIT_ASSERT(er < threshold);
      
-
+    /* //saving the continuum for viewing
     CSpectrumFluxAxis& sfluxAxisPtr = s.GetFluxAxis();
     sfluxAxisPtr = fluxAxis;
     CSpectrumIOFitsWriter writer;
     retVal = writer.Write( "../test/data/ContinuumTestCase/simu_ECN_continuum_calc.fits", s );
+    */
 }
 
 

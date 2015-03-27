@@ -12,6 +12,7 @@ class CSpectrum;
 class CSpectrumAxis;
 class CPeakDetection : public CManagedObject
 {
+    DEFINE_MANAGED_OBJECT( CPeakDetection )
 
 public:
 
