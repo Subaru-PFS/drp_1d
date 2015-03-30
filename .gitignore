@@ -9,6 +9,10 @@ build/SYSTEM_*
 build/install_manifest.txt
 
 *.creator.user*
+*.config
+*.creator
+*.includes
+*.files
 
 bin/*
 
