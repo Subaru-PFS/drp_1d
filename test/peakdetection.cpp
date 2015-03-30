@@ -27,26 +27,29 @@ void CRedshiftPeakDetectionTestCase::Compute()
     CSpectrum s;
 	
     Bool retVal = reader.Read( "../test/data/PeakDetectionTestCase/peakdetection_simu.fits", s );
-    CPPUNIT_ASSERT( retVal == true );
+    CPPUNIT_ASSERT_MESSAGE(  "load fits", retVal == true);
 
     TLambdaRange lambdaRange = s.GetLambdaRange();
     CPeakDetection detection;
-    TInt32RangeList resPeaks = detection.Compute( s, lambdaRange );
+    retVal = detection.Compute( s, lambdaRange, 500.0, 15); //using winsize=500 and cut=15 so that 3 only peaks are detected in the test signal for sure
+    CPPUNIT_ASSERT_MESSAGE( "compute detection" , retVal == true );
+    const TInt32RangeList& resPeaks = detection.GetResults();
 
-    Float64 noiseSigma = 0.1f;
-    Float64 peakxpos[] = {1000, 2500, 3500, 3700, 5000, 8000, 7000, 9950};
-    Float64 peaksigmas[] = {40.0, 100.0, 40.0, 45.0, 10.0, 45.0, 30.0, 25.0};
-    UInt32 n=8;
+    Float64 peakxpos[] = {1000, 5000, 8000};
+    Float64 peaksigmas[] = {40.0, 10.0, 45.0};
+    UInt32 n=3;
 
     // test number of peaks
-    CPPUNIT_ASSERT(n = resPeaks.size());
+    CPPUNIT_ASSERT(n == resPeaks.size());
 
     // test peak xpos
-    Float64 toleranceXPos = 5.f; //todo: refine with noiseSigma... (noiseSigma)
-
+    Float64 toleranceXPos = 15.f;
     for(int i=0; i<n; i++){
-        Float64 infRef = peakxpos[i]-peaksigmas[i];
-        Float64 supRef = peakxpos[i]+peaksigmas[i];
+        Float64 fwhm =  2*sqrt(2*log(2))*peaksigmas[i];
+        Float64 infRef = peakxpos[i]-fwhm/2.0*1.5;
+        infRef = max((Float64)infRef, 0.0);
+        Float64 supRef = peakxpos[i]+fwhm/2.0*1.5;
+        supRef = min((Float64)supRef, (Float64)s.GetFluxAxis().GetSamplesCount());
 
         Float64 infCalc = resPeaks[i].GetBegin();
         Float64 supCalc = resPeaks[i].GetEnd();

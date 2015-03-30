@@ -8,6 +8,8 @@
 
 #include <math.h>
 
+#include <stdio.h>
+
 using namespace NSEpic;
 IMPLEMENT_MANAGED_OBJECT(CPeakDetection)
 
@@ -54,6 +56,7 @@ Bool CPeakDetection::Compute( const CSpectrum& spectrum, const TLambdaRange& lam
         }
     }
 
+    m_Results = peaksBorders;
     return true;
 }
 
@@ -82,12 +85,62 @@ TInt32Range CPeakDetection::FindGaussianFitStartAndStop( Int32 i, const TInt32Ra
 }
 
 /**
- * Not yet implemented.
+ * Not fully implemented.
  * Does not seam to do any vital things (CF ez.function.lines.EZELfind: 697)
+ *
+ * _find_borders8, (CF ez.function.lines.EZELfind: 365)
+ * 1. find center = max_position in the current range
+ * 2. if center (=max position) is  on the left or on the right -> disable this peak
+ * 3. todo: use waves and fluxAxis for proper logging
  */
 Void CPeakDetection::RedefineBorders( TInt32RangeList& peakList, const CSpectrumAxis& waves, const CSpectrumAxis& smoothFluxAxis, const CSpectrumAxis& fluxAxis )
 {
+    const Float64* smoothFluxData = smoothFluxAxis.GetSamples();
 
+    for( UInt32 iPeak=0; iPeak<peakList.size(); iPeak-- )
+    {
+        int centerPos=-1;
+        Float64 centerVal = -1e12;
+        // find position of the maximum on the smoothed flux
+        for( Int32 i=peakList[iPeak].GetBegin(); i<peakList[iPeak].GetEnd(); i++ )
+        {
+            if(centerVal<smoothFluxData[i]){
+                centerVal = smoothFluxData[i];
+                centerPos = i;
+            }
+        }
+
+        int old_left= centerPos;
+        int old_right= centerPos;
+        int new_left= std::max(0, centerPos-1);
+        int new_right= std::min(0, centerPos+1);
+
+        if(new_left==0 || new_right==fluxAxis.GetSamplesCount()){
+            // if the max is found on the border, then erase this range
+            peakList.erase(peakList.begin() + iPeak);
+        }else{
+            while(smoothFluxData[new_left]<=smoothFluxData[old_left]){
+                if(new_left==0){
+                    old_left=0;
+                    break;
+                }
+                old_left=new_left;
+                new_left=max(0, new_left-1);
+            }
+            while(smoothFluxData[new_right]<=smoothFluxData[old_right]){
+                if(new_right==fluxAxis.GetSamplesCount()-1){
+                    old_right=new_right;
+                    break;
+                }
+                old_right=new_right;
+                new_right=max(0, new_right+1);
+            }
+            if(new_right == new_left){
+                peakList.erase(peakList.begin() + iPeak);
+            }
+        }
+
+    }
 }
 
 
@@ -113,6 +166,21 @@ Void CPeakDetection::FindPossiblePeaks( const CSpectrumAxis& fluxAxis, const CSp
         med[i] = medianFilter.Find( fluxData + start, halfWindowSampleCount*2 + 1 );
         xmad[i] = XMad( fluxData+ start, halfWindowSampleCount*2 + 1, med[i] );
     }
+
+    //debug:
+    // save median and xmad
+    FILE* f = fopen( "peakdetection_dbg_median.txt", "w+" );
+    for( Int32 i=0; i<fluxAxis.GetSamplesCount(); i++ )
+    {
+        if( med[i] < 0.0001 ){
+            fprintf( f, "%d %e %e %e %e\n", i, med[i], xmad[i], med[i]+0.5*cut*xmad[i], fluxData[i]);
+        }else{
+            fprintf( f, "%d %f %f %f %f\n", i, med[i], xmad[i], med[i]+0.5*cut*xmad[i], fluxData[i]);
+        }
+    }
+    fclose( f );
+    // save flux data
+
 
     // Detect each point whose value is over the median precomputed median
     std::vector<Bool> points;
@@ -221,7 +289,7 @@ def Xmad(data, xmed):
     return xmadm
 */
 
-const TFloat64List& CPeakDetection::GetResults() const
+const TInt32RangeList& CPeakDetection::GetResults() const
 {
     return m_Results;
 }
