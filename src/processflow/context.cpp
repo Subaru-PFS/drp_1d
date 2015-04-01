@@ -9,6 +9,7 @@
 #include <epic/redshift/continuum/median.h>
 #include <epic/core/log/log.h>
 
+#include <stdio.h>
 #include <float.h>
 
 #include <boost/filesystem.hpp>

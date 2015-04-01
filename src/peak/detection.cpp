@@ -167,8 +167,8 @@ Void CPeakDetection::FindPossiblePeaks( const CSpectrumAxis& fluxAxis, const CSp
         xmad[i] = XMad( fluxData+ start, halfWindowSampleCount*2 + 1, med[i] );
     }
 
-    //debug:
-    // save median and xmad
+    /*//debug:
+    // save median and xmad,  flux data
     FILE* f = fopen( "peakdetection_dbg_median.txt", "w+" );
     for( Int32 i=0; i<fluxAxis.GetSamplesCount(); i++ )
     {
@@ -179,7 +179,7 @@ Void CPeakDetection::FindPossiblePeaks( const CSpectrumAxis& fluxAxis, const CSp
         }
     }
     fclose( f );
-    // save flux data
+    //*/
 
 
     // Detect each point whose value is over the median precomputed median
