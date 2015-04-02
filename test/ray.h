@@ -11,6 +11,7 @@ class CRedshiftRayTestCase : public CppUnit::TestCase
 {
     CPPUNIT_TEST_SUITE(CRedshiftRayTestCase);
     CPPUNIT_TEST(LoadCatalog);
+    CPPUNIT_TEST(MatchingTest1);
     CPPUNIT_TEST_SUITE_END();
  
 public:
@@ -21,6 +22,7 @@ public:
 private:
 
     void LoadCatalog();
+    void MatchingTest1();
 
 };
 

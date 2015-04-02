@@ -97,7 +97,7 @@ Void CPeakDetection::RedefineBorders( TInt32RangeList& peakList, const CSpectrum
 {
     const Float64* smoothFluxData = smoothFluxAxis.GetSamples();
 
-    for( UInt32 iPeak=0; iPeak<peakList.size(); iPeak-- )
+    for( UInt32 iPeak=peakList.size()-1; iPeak>=0; iPeak-- )
     {
         int centerPos=-1;
         Float64 centerVal = -1e12;
