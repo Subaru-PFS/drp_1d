@@ -17,9 +17,12 @@ CRayMatching::~CRayMatching()
 {
 }
 
-Bool CRayMatching::Compute( const CRayCatalog::TRayVector& detectedRayList, const CRayCatalog::TRayVector& restRayList, const TFloat64Range& redshiftRange, Int32 nThreshold, Float64 tol )
+Bool CRayMatching::Compute( const CRayCatalog& detectedRayCatalog, const CRayCatalog& restRayCatalog, const TFloat64Range& redshiftRange, Int32 nThreshold, Float64 tol )
 {
-    TRedshiftSolutionSetList solutions;
+    const CRayCatalog::TRayVector& detectedRayList = detectedRayCatalog.GetList();
+    const CRayCatalog::TRayVector& restRayList = restRayCatalog.GetList();
+
+    TRedshiftSolutionSetList solutions;  
     Int32 nDetectedRay = detectedRayList.size();
     if( nDetectedRay == 1 )
         // if there is only one detected line, then there are N=#restlines possible redshifts

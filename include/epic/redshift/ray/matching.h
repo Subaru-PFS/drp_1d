@@ -51,7 +51,7 @@ public:
     CRayMatching();
     virtual ~CRayMatching();
 
-    Bool Compute(const CRayCatalog::TRayVector& restRayList, const CRayCatalog::TRayVector& detectedRayList, const TFloat64Range& redshiftRange, Int32 nThreshold = 5, Float64 tol = 0.002 );
+    Bool Compute(const CRayCatalog& restRayCatalog, const CRayCatalog& detectedRayCatalog, const TFloat64Range& redshiftRange, Int32 nThreshold = 5, Float64 tol = 0.002 );
 
     const Float64 GetResults() const;
 

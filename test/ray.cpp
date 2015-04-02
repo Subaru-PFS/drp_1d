@@ -53,7 +53,7 @@ void CRedshiftRayTestCase::MatchingTest1()
 
     CRayMatching rayMatching;
     TFloat64Range redshiftrange( 0.0, 5.0);
-    returnValue = rayMatching.Compute(detectedCatalog.GetList(), restFrameCatalog.GetList(), redshiftrange, 2, 0.002 );
+    returnValue = rayMatching.Compute(detectedCatalog, restFrameCatalog, redshiftrange, 2, 0.002 );
 
 }
 
