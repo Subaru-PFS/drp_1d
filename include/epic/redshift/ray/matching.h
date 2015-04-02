@@ -34,7 +34,11 @@ struct SRedshiftSolution
 
     bool operator < (const SRedshiftSolution& str) const
     {
-        return (DetectedRay < str.DetectedRay);
+        if(DetectedRay == str.DetectedRay){
+            return (RestRay < str.RestRay);
+        }else{
+            return (DetectedRay < str.DetectedRay);
+        }
     }
 };
 
@@ -52,8 +56,10 @@ public:
     virtual ~CRayMatching();
 
     Bool Compute(const CRayCatalog& restRayCatalog, const CRayCatalog& detectedRayCatalog, const TFloat64Range& redshiftRange, Int32 nThreshold = 5, Float64 tol = 0.002 );
+    Float64 GetMeanRedshiftSolutionByIndex(Int32 index);
 
-    const Float64 GetResults() const;
+    const TRedshiftSolutionSetList GetResults() const;
+
 
 private:
 
@@ -67,7 +73,7 @@ private:
 
     //Float64     m_ZStep;        // not used ? this parameter was specified in the EZ documentation
     //Float64     m_Delta;        // not used ? this parameter was specified in the EZ documentation
-    Float64            m_Results;
+    TRedshiftSolutionSetList            m_Results;
 
 };
 

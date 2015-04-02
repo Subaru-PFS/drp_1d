@@ -3,7 +3,7 @@
 #include <epic/core/common/datatypes.h>
 #include <epic/redshift/ray/catalog.h>
 #include <epic/redshift/ray/matching.h>
-
+#include <math.h>
 
 using namespace NSEpic;
 
@@ -40,7 +40,7 @@ void CRedshiftRayTestCase::MatchingTest1()
     Bool returnValue;
 
     returnValue = restFrameCatalog.Load( "../test/data/RayTestCase/raycatalog_testMatch1.txt" );
-    CPPUNIT_ASSERT_MESSAGE( "Failed to load or parse raycatalog_OK1.txt", returnValue == true );
+    CPPUNIT_ASSERT_MESSAGE( "Failed to load or parse raycatalog_testMatch1.txt", returnValue == true );
 
     CRayCatalog detectedCatalog;
     Float64 shiftLambda = 1.5;
@@ -54,6 +54,10 @@ void CRedshiftRayTestCase::MatchingTest1()
     CRayMatching rayMatching;
     TFloat64Range redshiftrange( 0.0, 5.0);
     returnValue = rayMatching.Compute(detectedCatalog, restFrameCatalog, redshiftrange, 2, 0.002 );
+    CPPUNIT_ASSERT_MESSAGE( "Failed to match ray catalogs for MatchingTest1.txt", returnValue == true );
+
+    Float64 res = rayMatching.GetMeanRedshiftSolutionByIndex(0);
+    CPPUNIT_ASSERT_MESSAGE( "Failed to find redshift accurately for MatchingTest1", fabs(res-(shiftLambda-1)) < 0.0001 );
 
 }
 
