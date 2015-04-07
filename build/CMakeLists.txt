@@ -70,7 +70,7 @@ FILE( GLOB_RECURSE TEST_SOURCE_FILES ${ROOT_DIR}/test/*.cpp )
 ADD_EXECUTABLE( ${TEST_NAME} ${TEST_SOURCE_FILES} )
 
 # Supply link librairies
-TARGET_LINK_LIBRARIES( ${TEST_NAME} ${LIB_NAME} cppunit.a ${cpf-core_THIRDPARTY_LIBS} ${cpf-redshift_THIRDPARTY_LIBS} ${cpf-core_LIB})
+TARGET_LINK_LIBRARIES( ${TEST_NAME} ${LIB_NAME}   ${cpf-core_LIB} ${cpf-core_THIRDPARTY_LIBS} ${cpf-redshift_THIRDPARTY_LIBS} cppunit.a)
 
 #--------------------------------------------------------
 # Install directive

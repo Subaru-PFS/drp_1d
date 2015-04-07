@@ -221,7 +221,7 @@ def Xmad(data, xmed):
     return xmadm
 */
 
-const TFloat64List& CPeakDetection::GetResults() const
+const TInt32RangeList& CPeakDetection::GetResults() const
 {
     return m_Results;
 }

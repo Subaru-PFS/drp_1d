@@ -27,11 +27,13 @@ void CRedshiftPeakDetectionTestCase::Compute()
     CSpectrum s;
 	
     Bool retVal = reader.Read( "../test/data/PeakDetectionTestCase/peakdetection_simu.fits", s );
-    CPPUNIT_ASSERT( retVal == true );
+
 
     TLambdaRange lambdaRange = s.GetLambdaRange();
     CPeakDetection detection;
-    TInt32RangeList resPeaks = detection.Compute( s, lambdaRange );
+    retVal = detection.Compute( s, lambdaRange );
+    CPPUNIT_ASSERT_MESSAGE( "Failed to detect peak" , retVal == true );
+    TInt32RangeList resPeaks = detection.GetResults();
 
     Float64 noiseSigma = 0.1f;
     Float64 peakxpos[] = {1000, 2500, 3500, 3700, 5000, 8000, 7000, 9950};
