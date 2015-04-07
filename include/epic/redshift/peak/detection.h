@@ -19,7 +19,7 @@ public:
     CPeakDetection();
     virtual ~CPeakDetection();
 
-    Bool Compute( const CSpectrum& spectrum, const TLambdaRange& lambdaRange, Float64 windowSize = 1.0, Float64 cut = 1.0, UInt32 medianSmoothHalfWidth = 1, UInt32 enlargeRate = 2.0 );
+    Bool Compute( const CSpectrum& spectrum, const TLambdaRange& lambdaRange, Float64 windowSize = 250.0, Float64 cut = 5.0, UInt32 medianSmoothHalfWidth = 1, UInt32 enlargeRate = 2.0 );
 
     const TInt32RangeList& GetResults() const;
 

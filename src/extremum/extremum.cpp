@@ -14,7 +14,7 @@ using namespace NSEpic;
 using namespace std;
 
 CExtremum::CExtremum() :
-    m_MaxPeakCount( 1 ),
+    m_MaxPeakCount( 5 ),
     m_RefreshCount( 1 ),
     m_XRange( 0.0, 0.0 )
 {
@@ -87,6 +87,7 @@ Bool CExtremum::InternalFind( const Float64* xAxis, const Float64* yAxis, UInt32
 {
     if( n == 0 )
         return false;
+    /*
     maxPoint.resize( 1 );
 
     Float64 max = DBL_MIN ;
@@ -103,7 +104,7 @@ Bool CExtremum::InternalFind( const Float64* xAxis, const Float64* yAxis, UInt32
     maxPoint[0].Y = yAxis[maxIndex];
 
     return true;
-
+    */
 
     vector<Float64> maxX( n );
     vector<Float64> maxY( n );

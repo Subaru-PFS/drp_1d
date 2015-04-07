@@ -9,6 +9,7 @@
 #include <epic/redshift/continuum/median.h>
 #include <epic/core/log/log.h>
 
+#include <stdio.h>
 #include <float.h>
 
 #include <boost/filesystem.hpp>
@@ -312,3 +313,85 @@ Bool CProcessFlowContext::GetBestCorrelationResult( Float64& redshift, Float64& 
     return false;
 
 }
+
+
+Bool CProcessFlowContext::GetIntermediateResults(std::string& corrStr, std::string& fitStr)
+{
+    // get only the intermediate results for the chosen template
+    /*
+    Int32 maxIndex = 0;
+    TCorrelationResults::const_iterator maxIt = m_ProcessResult.end();
+    TCorrelationResults::const_iterator it = m_ProcessResult.begin();
+
+
+    Float64 min = DBL_MAX ;
+    for( it = m_ProcessResult.begin(); it != m_ProcessResult.end(); it++ )
+    {
+        const SCorrelationResult& r = (*it).second;
+        for( Int32 i=0; i<r.SelectedMerits.size(); i++ )
+        {
+            if( r.SelectedMerits[i] < min && r.SelectedMeritsStatus[i] == COperator::nStatus_OK )
+            {
+                min = r.SelectedMerits[i];
+                maxIndex = i;
+                maxIt = it;
+            }
+        }
+    }
+
+
+    if( maxIt != m_ProcessResult.end() )
+    {
+        Float64 redshift;
+        Float64 merit;
+        Float64 corr;
+
+        corrStr = "";
+        fitStr = "";
+        const SCorrelationResult& r = (*maxIt).second;
+        for( Int32 i=0; i<r.SelectedMerits.size(); i++ )
+        {
+            redshift = r.SelectedRedshifts[i];
+            merit = r.SelectedMerits[i];
+            corr = r.CorrelationValues[i];
+            std::ostringstream ss1;
+            ss1 << i << "\t" << redshift << "\t" << merit << "\t";
+            fitStr.append(ss1.str());
+            std::ostringstream ss2;
+            ss2 << i << "\t" << redshift << "\t" << corr << "\t";
+            corrStr.append(ss2.str());
+        }
+        return true;
+    }
+    return false;
+    //*/
+
+
+    std::ostringstream ssFit;
+    std::ostringstream ssCorr;
+    TCorrelationResults::const_iterator it = m_ProcessResult.begin();
+    Int32 tplInd = 0;
+    for( it = m_ProcessResult.begin(); it != m_ProcessResult.end(); it++ )
+    {
+        const SCorrelationResult& r = (*it).second;
+        Float64 redshift;
+        Float64 merit;
+        Float64 corr;
+
+        corrStr = "";
+        fitStr = "";
+        for( Int32 i=0; i<r.SelectedMerits.size(); i++ )
+        {
+            redshift = r.SelectedRedshifts[i];
+            merit = r.SelectedMerits[i];
+            corr = r.CorrelationValues[i];
+            ssFit << i+1000*tplInd << "\t" << redshift << "\t" << merit << "\t";
+            fitStr.append(ssFit.str());
+            ssCorr << i+1000*tplInd << "\t" << redshift << "\t" << corr << "\t";
+            corrStr.append(ssCorr.str());
+        }
+
+        tplInd ++;
+    }
+}
+
