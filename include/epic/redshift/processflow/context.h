@@ -77,6 +77,7 @@ public:
     Bool                            GetBestCorrelationResult( Float64& redshift, Float64& merit, std::string& tplName ) const;
 
     Bool                            DumpCorrelationResultsToCSV( const char* outputDirName ) const;
+    Bool                            GetIntermediateResults(std::string& corrStr, std::string& fitStr);
 
 private:
 

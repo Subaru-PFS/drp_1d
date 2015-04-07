@@ -34,7 +34,7 @@ void CRedshiftRayTestCase::LoadCatalog()
 }
 
 void CRedshiftRayTestCase::MatchingTest1()
-// load a simple EL catalog and test the match with a translated version of itself
+// load a simple EL catalog and test the match with a redshifted version of itself
 {
     CRayCatalog restFrameCatalog;
     Bool returnValue;

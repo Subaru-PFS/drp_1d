@@ -19,6 +19,8 @@ public:
     CRedshifts( const TFloat64Range& range, Float64 delta );
     CRedshifts( Redshift startRS, Redshift endRS, Float64 delta );
     CRedshifts( Float64* redshifts, UInt32 count );
+    CRedshifts( TPointList redshifts );
+
     ~CRedshifts();
 
     const TFloat64Range&    GetRange() const;

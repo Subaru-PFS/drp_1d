@@ -62,8 +62,9 @@ public:
         correlation.Compute( m_SpcWithoutCont, m_TplWithoutCont, m_LambdaRanges, redshifts, m_Ctx.GetOverlapThreshold() );
 
         // Find redshifts extremum
+        Int32 nExtremums = 5;
         TPointList extremumList;
-        CExtremum extremum( m_Ctx.GetRedshiftRange() );
+        CExtremum extremum( m_Ctx.GetRedshiftRange() , nExtremums);
         extremum.Find( redshifts.GetRedshifts(), correlation.GetResults().data(), redshifts.GetRedshiftsCount(), extremumList );
 
         if( extremumList.size() == 0 )
@@ -74,7 +75,7 @@ public:
         }
 
         // Compute merit function
-        CRedshifts newRedshifts( extremumList[0].X );
+        CRedshifts newRedshifts( extremumList );
         COperatorChiSquare meritChiSquare;
         retVal = meritChiSquare.Compute( m_Spc, m_Tpl, m_LambdaRanges, newRedshifts, m_Ctx.GetOverlapThreshold() );
         if( !retVal )
