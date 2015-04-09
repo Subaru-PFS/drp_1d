@@ -21,6 +21,10 @@ class CRayCatalog;
 class CTemplateCatalog;
 class CRayCatalog;
 
+/**
+ * Store all data concerning computation and processign of a given spectrum
+ *
+ */
 class CProcessFlowContext : public CManagedObject
 {
 
@@ -30,13 +34,13 @@ public:
 
     struct SCorrelationResult
     {
-        CRedshifts      SelectedRedshifts;
+        CRedshifts                  SelectedRedshifts;
 
-        TFloat64List    SelectedMerits;
-        COperator::TStatusList SelectedMeritsStatus;
+        TFloat64List                SelectedMerits;
+        COperator::TStatusList      SelectedMeritsStatus;
 
-        CRedshifts      Redshifts;
-        TFloat64List    CorrelationValues;
+        CRedshifts                  Redshifts;
+        TFloat64List                CorrelationValues;
     };
 
     typedef std::map< std::string, SCorrelationResult >     TCorrelationResults;
@@ -58,12 +62,12 @@ public:
     ~CProcessFlowContext();
 
     bool Init( const char* spectrumPath, const char* noisePath, const char* tempalteCatalogPath, const char* rayCatalogPath, const SParam& params  );
-    bool Init( const char* spectrumPath, const char* noisePath, CTemplateCatalog& templateCatalog, CRayCatalog& rayCatalog, const SParam& params  );
+    bool Init( const char* spectrumPath, const char* noisePath, const CTemplateCatalog& templateCatalog, const CRayCatalog& rayCatalog, const SParam& params  );
 
-    CSpectrum&                      GetSpectrum();
-    CSpectrum&                      GetSpectrumWithoutContinuum();
-    CTemplateCatalog&               GetTemplateCatalog();
-    CRayCatalog&                    GetRayCatalog();
+    const CSpectrum&                GetSpectrum();
+    const CSpectrum&                GetSpectrumWithoutContinuum();
+    const CTemplateCatalog&         GetTemplateCatalog();
+    const CRayCatalog&              GetRayCatalog();
     const TFloat64Range&            GetLambdaRange() const;
     const TFloat64Range&            GetRedshiftRange() const;
     const TTemplateCategoryList&    GetTemplateCategoryList() const;

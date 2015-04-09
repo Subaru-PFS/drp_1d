@@ -48,7 +48,7 @@ CProcessFlowContext::~CProcessFlowContext()
 }
 
 
-bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath, CTemplateCatalog& templateCatalog, CRayCatalog& rayCatalog, const SParam& params  )
+bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath, const CTemplateCatalog& templateCatalog, const CRayCatalog& rayCatalog, const SParam& params  )
 {
     m_SpectrumName = bfs::path( spectrumPath ).stem().string();
 
@@ -103,8 +103,8 @@ bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath,
     m_SpectrumWithoutContinuum->ConvertToLogScale();
 
 
-    m_TemplateCatalog = &templateCatalog;
-    m_RayCatalog = &rayCatalog;
+    m_TemplateCatalog = ( CTemplateCatalog*) &templateCatalog;
+    m_RayCatalog = ( CRayCatalog*) &rayCatalog;
 
 
     m_LambdaRanges = params.lambdaRange;
@@ -160,22 +160,22 @@ const TFloat64Range& CProcessFlowContext::GetRedshiftRange() const
     return m_RedshiftRange;
 }
 
-CSpectrum& CProcessFlowContext::GetSpectrum()
+const CSpectrum& CProcessFlowContext::GetSpectrum()
 {
     return *m_Spectrum;
 }
 
-CSpectrum& CProcessFlowContext::GetSpectrumWithoutContinuum()
+const CSpectrum& CProcessFlowContext::GetSpectrumWithoutContinuum()
 {
     return *m_SpectrumWithoutContinuum;
 }
 
-CTemplateCatalog& CProcessFlowContext::GetTemplateCatalog()
+const CTemplateCatalog& CProcessFlowContext::GetTemplateCatalog()
 {
     return *m_TemplateCatalog;
 }
 
-CRayCatalog& CProcessFlowContext::GetRayCatalog()
+const CRayCatalog& CProcessFlowContext::GetRayCatalog()
 {
     return *m_RayCatalog;
 }
