@@ -52,7 +52,7 @@ void CRedshiftGaussianFitTestCase::TestFit2()
 
 
     CGaussianFit fitter;
-    CGaussianFit::EStatus status = fitter.Compute( spectrum, TInt32Range( 3500, 4500 ) );
+    CGaussianFit::EStatus status = fitter.Compute( spectrum, TInt32Range( 3000, 5000 ) );
     CPPUNIT_ASSERT_MESSAGE( "Invalid return code", status == CGaussianFit::nStatus_IterationHasNotConverged );
 
     Float64 gaussAmp;
@@ -61,7 +61,7 @@ void CRedshiftGaussianFitTestCase::TestFit2()
     fitter.GetResults( gaussAmp, gaussPos, gaussWidth );
 
     CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE( "Invalid gaussian amplitude", 0.0, gaussAmp, 0.01 );
-    CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE( "Invalid gaussian position", 0.0, gaussPos, 2 );
+
 
 }
 

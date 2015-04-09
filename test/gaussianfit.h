@@ -11,7 +11,7 @@ class CRedshiftGaussianFitTestCase : public CppUnit::TestCase
 {
     CPPUNIT_TEST_SUITE(CRedshiftGaussianFitTestCase);
     CPPUNIT_TEST(TestFit1);
-   // CPPUNIT_TEST(TestFit2);
+    CPPUNIT_TEST(TestFit2);
     CPPUNIT_TEST_SUITE_END();
  
 public:
