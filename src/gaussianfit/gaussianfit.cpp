@@ -64,9 +64,9 @@ Void CGaussianFit::GetResultsError( Float64& amplitude, Float64& position, Float
 
 Void CGaussianFit::ComputeFirstGuess( const CSpectrum& spectrum, const TInt32Range& studyRange, Int32 polyOrder, Float64& peakValue, Float64& peakPos, Float64& gaussAmp )
 {
-    Int32 n = spectrum.GetSampleCount();
-    const Float64* x = spectrum.GetSpectralAxis().GetSamples();
-    const Float64* y = spectrum.GetFluxAxis().GetSamples();
+    Int32 n = studyRange.GetLength();
+    const Float64* x = spectrum.GetSpectralAxis().GetSamples() + studyRange.GetBegin();
+    const Float64* y = spectrum.GetFluxAxis().GetSamples() + studyRange.GetBegin();
 
     Int32 i;
     // Copy flux axis to v
@@ -130,7 +130,7 @@ Void CGaussianFit::ComputeFirstGuess( const CSpectrum& spectrum, const TInt32Ran
 CGaussianFit::EStatus CGaussianFit::Compute(const CSpectrum& spectrum, const TInt32Range& studyRange )
 {
     Int32 np = (3 + m_PolyOrder + 1);
-    Int32 n = spectrum.GetSampleCount();
+    Int32 n = studyRange.GetLength();
 
     // Create suitable first guess
     // To BE improved, trivial version now
@@ -246,10 +246,11 @@ CGaussianFit::EStatus CGaussianFit::Compute(const CSpectrum& spectrum, const TIn
 int CGaussianFit::GaussF( const gsl_vector *param, void *data, gsl_vector * f)
 {
     SUserData* userData = (SUserData*)data;
-    Int32 n = userData->spectrum->GetSampleCount();
-    const Float64* x = userData->spectrum->GetSpectralAxis().GetSamples();
-    const Float64* y = userData->spectrum->GetFluxAxis().GetSamples();
-    const Float64* err = userData->spectrum->GetFluxAxis().GetError();
+    Int32 n = userData->studyRange->GetLength();
+    const Float64* x = userData->spectrum->GetSpectralAxis().GetSamples() + userData->studyRange->GetBegin();
+    const Float64* y = userData->spectrum->GetFluxAxis().GetSamples() + userData->studyRange->GetBegin();
+    const Float64* err = userData->spectrum->GetFluxAxis().GetError() + userData->studyRange->GetBegin();
+
 
     Float64 A = gsl_vector_get (param, 0);
     Float64 mu = gsl_vector_get (param, 1);
@@ -282,10 +283,10 @@ int CGaussianFit::GaussF( const gsl_vector *param, void *data, gsl_vector * f)
 int CGaussianFit::GaussDF (const gsl_vector * param, void *data, gsl_matrix * J)
 {
     SUserData* userData = (SUserData*)data;
-    Int32 n = userData->spectrum->GetSampleCount();
-    const Float64* x = userData->spectrum->GetSpectralAxis().GetSamples();
-    const Float64* y = userData->spectrum->GetFluxAxis().GetSamples();
-    const Float64* err = userData->spectrum->GetFluxAxis().GetError();
+    Int32 n = userData->studyRange->GetLength();
+    const Float64* x = userData->spectrum->GetSpectralAxis().GetSamples() + userData->studyRange->GetBegin();
+    const Float64* y = userData->spectrum->GetFluxAxis().GetSamples() + userData->studyRange->GetBegin();
+    const Float64* err = userData->spectrum->GetFluxAxis().GetError() + userData->studyRange->GetBegin();
 
     Float64 A = gsl_vector_get (param, 0);
     Float64 mu = gsl_vector_get (param, 1);
