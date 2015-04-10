@@ -20,6 +20,7 @@ public:
     CRedshifts( Redshift startRS, Redshift endRS, Float64 delta );
     CRedshifts( Float64* redshifts, UInt32 count );
     CRedshifts( TPointList redshifts );
+    CRedshifts( TFloat64List redshifts );
 
     ~CRedshifts();
 

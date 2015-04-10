@@ -217,6 +217,25 @@ Bool CProcessFlowContext::AddResults( const CTemplate& tpl,
     return true;
 }
 
+Bool CProcessFlowContext::AddMeritResults( const CTemplate& tpl,
+                                      const CRedshifts& selectedRedshifts,
+                                      const TFloat64List& selectedMerits, const COperator::TStatusList& selectedMeritsStatus,
+                                      const CRedshifts& redshifts)
+{
+    if( m_ProcessResult.find( tpl.GetName() ) != m_ProcessResult.end() )
+    {
+        return false;
+    }
+
+    m_ProcessResult[ tpl.GetName() ] = SCorrelationResult();
+    m_ProcessResult[ tpl.GetName() ].SelectedMerits = selectedMerits;
+    m_ProcessResult[ tpl.GetName() ].SelectedMeritsStatus = selectedMeritsStatus;
+    m_ProcessResult[ tpl.GetName() ].SelectedRedshifts = selectedRedshifts;
+    m_ProcessResult[ tpl.GetName() ].Redshifts = redshifts;
+
+    return true;
+}
+
 Bool CProcessFlowContext::DumpCorrelationResultsToCSV( const char* dir ) const
 {
     char outputDir[256];

@@ -53,8 +53,8 @@ CRedshifts::CRedshifts( Float64 redshift )
 
 CRedshifts::CRedshifts( TPointList redshifts)
 {
-    Float64 min = DBL_MIN;
-    Float64 max = DBL_MAX;
+    Float64 min = DBL_MAX;
+    Float64 max = DBL_MIN;
 
     m_Redshifts.resize( redshifts.size() );
     for( UInt32 i=0; i<redshifts.size() ;i++ )
@@ -65,6 +65,25 @@ CRedshifts::CRedshifts( TPointList redshifts)
             min = m_Redshifts[i] ;
         else if( m_Redshifts[i] > max )
             max = m_Redshifts[i];
+    }
+    m_Range.SetBegin( min );
+    m_Range.SetEnd( max );
+}
+
+CRedshifts::CRedshifts( TFloat64List redshifts )
+{
+    Float64 min = DBL_MAX;
+    Float64 max = DBL_MIN;
+
+    m_Redshifts.resize( redshifts.size() );
+    for( UInt32 i=0; i<redshifts.size() ;i++ )
+    {
+        m_Redshifts[i] = redshifts[i];
+
+        if( redshifts[i] < min )
+            min = redshifts[i] ;
+        if( redshifts[i] > max )
+            max = redshifts[i];
     }
     m_Range.SetBegin( min );
     m_Range.SetEnd( max );

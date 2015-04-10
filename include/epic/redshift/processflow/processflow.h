@@ -30,6 +30,7 @@ private:
     bool ProcessWithoutEL( CProcessFlowContext& ctx );
     bool ProcessWithEL( CProcessFlowContext& ctx );
     bool ELSearch( CProcessFlowContext& ctx );
+    bool ComputeMerits( CProcessFlowContext& ctx, const TFloat64List& redshifts);
     CThreadPool         m_ThreadPool;
     boost::mutex        m_SyncMutex;
 

@@ -189,15 +189,15 @@ bool CProcessFlow::ProcessWithEL( CProcessFlowContext& ctx )
     Log.LogInfo( "Process spectrum with EL (LambdaRange: %f-%f:%f)",
             ctx.GetSpectrum().GetLambdaRange().GetBegin(), ctx.GetSpectrum().GetLambdaRange().GetEnd(), ctx.GetSpectrum().GetResolution());
 
-    // --- EL Search
+    // --- EZ: EL Search
     bool retVal = ELSearch(ctx);
     if(ctx.GetDetectedRayCatalog().GetList().size()<2){
         return ProcessWithoutEL( ctx );
     }
 
-    // --- EL Match
+    // --- EZ: EL Match
     CRayMatching rayMatching;
-    retVal = rayMatching.Compute(ctx.GetDetectedRayCatalog(), ctx.GetRayCatalog(), ctx.GetRedshiftRange(), 2, 0.002 );
+    retVal = rayMatching.Compute(ctx.GetDetectedRayCatalog(), ctx.GetRayCatalog(), ctx.GetRedshiftRange(), 2, 0.001 );
     Int32 maxMatchingNum = rayMatching.GetMaxMatchingNumber();
     if(maxMatchingNum>2){ //ez equivalent to SolveDecisionalTree2:three_lines_match()
         TFloat64List selectedRedshift;
@@ -208,10 +208,9 @@ bool CProcessFlow::ProcessWithEL( CProcessFlowContext& ctx )
             selectedRedshift.push_back(z);
         }
 
+        // --- EZ: solve_basic_nocorrelation
+        retVal = ComputeMerits( ctx, selectedRedshift);
     }
-
-    // ---solve_basic_nocorrelation
-    // ...
 
 
     return true;
@@ -286,6 +285,70 @@ bool CProcessFlow::ELSearch( CProcessFlowContext& ctx )
 
     ctx.SetRayDetectionResult(*detectedRayCatalog);
 
+}
+
+bool CProcessFlow::ComputeMerits( CProcessFlowContext& ctx, const TFloat64List& redshifts)
+{
+    const CSpectrum& spc = ctx.GetSpectrum();
+    const TFloat64Range& lambdaRange = ctx.GetLambdaRange();
+
+    const CTemplateCatalog& templateCatalog = ctx.GetTemplateCatalog();
+    const CProcessFlowContext::TTemplateCategoryList& templateCategotyList = ctx.GetTemplateCategoryList();
+
+
+    Log.LogInfo( "Process spectrum without EL (LambdaRange: %f-%f:%f)",
+            ctx.GetSpectrum().GetLambdaRange().GetBegin(), ctx.GetSpectrum().GetLambdaRange().GetEnd(), ctx.GetSpectrum().GetResolution());
+
+    for( UInt32 i=0; i<templateCategotyList.size(); i++ )
+    {
+        Log.LogInfo( "Processing template category: %s", CTemplate::GetCategoryName( templateCategotyList[i] ) );
+        Log.Indent();
+
+        if( ctx.GetTemplateCategoryList()[i] == CTemplate::nCategory_Star )
+        {
+        }
+        else
+        {
+            for( UInt32 j=0; j<templateCatalog.GetTemplateCount( (CTemplate::ECategory) templateCategotyList[i] ); j++ )
+            {
+                const CTemplate& tpl = templateCatalog.GetTemplate( (CTemplate::ECategory) templateCategotyList[i], j );
+                //const CTemplate& tplWithoutCont = templateCatalog.GetTemplateWithoutContinuum( (CTemplate::ECategory) templateCategotyList[i], j );
+
+
+                // Compute merit function
+                CRedshifts newRedshifts( redshifts );
+                COperatorChiSquare meritChiSquare;
+                Int32 retVal = meritChiSquare.Compute( spc, tpl, lambdaRange, newRedshifts, ctx.GetOverlapThreshold() );
+                if( !retVal )
+                {
+                    Log.LogInfo( "Failed to compute chi square value");
+                    return false;
+                }
+
+                // Store results
+                {
+                    ctx.AddMeritResults( tpl,
+                                      newRedshifts,
+                                      meritChiSquare.GetResults(), meritChiSquare.GetStatus(),
+                                      redshifts );
+                    Log.LogInfo( "- Template: %s (LambdaRange: %f-%f:%f)", tpl.GetName().c_str(), tpl.GetLambdaRange().GetBegin(), tpl.GetLambdaRange().GetEnd(), tpl.GetResolution() );
+
+                    Float64 merit = meritChiSquare.GetResults()[0];
+                    if( merit < 0.00001 )
+                        Log.LogInfo( "|- Redshift: %f Merit: %e", newRedshifts[0], merit );
+                    else
+                        Log.LogInfo( "|- Redshift: %f Merit: %f", newRedshifts[0], merit );
+
+                }
+            }
+
+        }
+
+
+        Log.UnIndent();
+    }
+
+    return true;
 }
 
 
