@@ -29,7 +29,7 @@ private:
 
     bool ProcessWithoutEL( CProcessFlowContext& ctx );
     bool ProcessWithEL( CProcessFlowContext& ctx );
-
+    bool ELSearch( CProcessFlowContext& ctx );
     CThreadPool         m_ThreadPool;
     boost::mutex        m_SyncMutex;
 

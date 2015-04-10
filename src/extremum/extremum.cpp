@@ -87,7 +87,9 @@ Bool CExtremum::InternalFind( const Float64* xAxis, const Float64* yAxis, UInt32
 {
     if( n == 0 )
         return false;
-    /*
+
+    //Method 1, use only 1 extremum
+    //*
     maxPoint.resize( 1 );
 
     Float64 max = DBL_MIN ;
@@ -104,7 +106,7 @@ Bool CExtremum::InternalFind( const Float64* xAxis, const Float64* yAxis, UInt32
     maxPoint[0].Y = yAxis[maxIndex];
 
     return true;
-    */
+    //*/
 
     vector<Float64> maxX( n );
     vector<Float64> maxY( n );

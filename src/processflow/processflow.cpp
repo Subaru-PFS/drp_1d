@@ -10,7 +10,11 @@
 #include <epic/redshift/continuum/median.h>
 #include <epic/core/log/log.h>
 #include <epic/core/debug/assert.h>
-
+#include <epic/redshift/peak/detection.h>
+#include <epic/redshift/gaussianfit/gaussianfit.h>
+#include <epic/redshift/ray/ray.h>
+#include <epic/redshift/ray/catalog.h>
+#include <epic/redshift/ray/matching.h>
 #include <stdio.h>
 
 
@@ -120,6 +124,8 @@ CProcessFlow::~CProcessFlow()
 
 bool CProcessFlow::Process( CProcessFlowContext& ctx )
 {
+    return ProcessWithEL( ctx );
+
     const CProcessFlowContext::TTemplateCategoryList& tplCategoryList = ctx.GetTemplateCategoryList();
     if( std::find( tplCategoryList.begin(), tplCategoryList.end(), CTemplate::nCategory_Emission )==tplCategoryList.end() )
     {
@@ -176,41 +182,110 @@ bool CProcessFlow::ProcessWithoutEL( CProcessFlowContext& ctx )
 
 bool CProcessFlow::ProcessWithEL( CProcessFlowContext& ctx )
 {
-    const CTemplateCatalog& templateCatalog = ctx.GetTemplateCatalog();
-    const CProcessFlowContext::TTemplateCategoryList& templateCategotyList = ctx.GetTemplateCategoryList();
+    //const CTemplateCatalog& templateCatalog = ctx.GetTemplateCatalog();
+    //const CProcessFlowContext::TTemplateCategoryList& templateCategoryList = ctx.GetTemplateCategoryList();
 
-    m_ThreadPool.Reset();
 
-    for( UInt32 i=0; i<templateCategotyList.size(); i++ )
-    {
-        Log.LogInfo( "Processing template category: %s", CTemplate::GetCategoryName( templateCategotyList[i] ) );
-        Log.Indent();
+    Log.LogInfo( "Process spectrum with EL (LambdaRange: %f-%f:%f)",
+            ctx.GetSpectrum().GetLambdaRange().GetBegin(), ctx.GetSpectrum().GetLambdaRange().GetEnd(), ctx.GetSpectrum().GetResolution());
 
-        if( ctx.GetTemplateCategoryList()[i] == CTemplate::nCategory_Star )
-        {
-            Log.LogError( "Processing not yet implemented for Star template" );
-        }
-        else
-        {
-            for( UInt32 j=0; j<templateCatalog.GetTemplateCount( (CTemplate::ECategory) templateCategotyList[i] ); j++ )
-            {
-                const CTemplate& tpl = templateCatalog.GetTemplate( (CTemplate::ECategory) templateCategotyList[i], j );
-                const CTemplate& tplWithoutCont = templateCatalog.GetTemplateWithoutContinuum( (CTemplate::ECategory) templateCategotyList[i], j );
-                const CSpectrum& spc = ctx.GetSpectrum();
-                const CSpectrum& spcWithoutCont = ctx.GetSpectrumWithoutContinuum();
-                const TFloat64Range& lambdaRange = ctx.GetLambdaRange();
-
-                m_ThreadPool.AddTask( CBlindSolveTask( ctx, tpl, tplWithoutCont, spc, spcWithoutCont, lambdaRange, m_SyncMutex ) );
-
-            }
-
-        }
-
-        Log.UnIndent();
+    // --- EL Search
+    bool retVal = ELSearch(ctx);
+    if(ctx.GetDetectedRayCatalog().GetList().size()<2){
+        return ProcessWithoutEL( ctx );
     }
 
-    m_ThreadPool.WaitForAllTaskToFinish();
+    // --- EL Match
+    CRayMatching rayMatching;
+    retVal = rayMatching.Compute(ctx.GetDetectedRayCatalog(), ctx.GetRayCatalog(), ctx.GetRedshiftRange(), 2, 0.002 );
+    Int32 maxMatchingNum = rayMatching.GetMaxMatchingNumber();
+    if(maxMatchingNum>2){ //ez equivalent to SolveDecisionalTree2:three_lines_match()
+        TFloat64List selectedRedshift;
+        TRedshiftSolutionSetList selectedResults = rayMatching.GetSolutionsListOverNumber(2);
+        for( UInt32 j=0; j<selectedResults.size(); j++ )
+        {
+            Float64 z = rayMatching.GetMeanRedshiftSolution(selectedResults[j]);
+            selectedRedshift.push_back(z);
+        }
+
+    }
+
+    // ---solve_basic_nocorrelation
+    // ...
 
 
     return true;
 }
+
+bool CProcessFlow::ELSearch( CProcessFlowContext& ctx )
+{
+    const CSpectrum& spc = ctx.GetSpectrum();
+    const TFloat64Range& lambdaRange = ctx.GetLambdaRange();
+
+    // detect possible peaks
+    Float64 winsize = 250.0;
+    Float64 cut = 5;
+    CPeakDetection detection;
+    Float64 minsize = 3;
+    Float64 maxsize = 90;
+    bool retVal = detection.Compute( spc, lambdaRange, winsize, cut);
+    const TInt32RangeList& resPeaks = detection.GetResults();
+    UInt32 nPeaks = resPeaks.size();
+
+    // filter the peaks with gaussian fit and create the detected rays catalog
+    CRef<CRayCatalog> detectedRayCatalog = new CRayCatalog();
+    for( UInt32 j=0; j<nPeaks; j++ )
+    {
+        bool toAdd = true;
+        //find gaussian fit
+        CGaussianFit fitter;
+        CGaussianFit::EStatus status = fitter.Compute( spc, TInt32Range( resPeaks[j].GetBegin(), resPeaks[j].GetEnd() ) );
+        if(status!=NSEpic::CGaussianFit::nStatus_Success){
+            continue;
+        }
+
+        Float64 gaussAmp;
+        Float64 gaussPos;
+        Float64 gaussWidth;
+        fitter.GetResults( gaussAmp, gaussPos, gaussWidth );
+
+        /* check pos
+        if(){
+            toAdd = false;
+        }
+        //*/
+        // check amp
+        if(gaussAmp<0){
+            toAdd = false;
+        }
+        // check width
+        Float64 FWHM_FACTOR=2.35;
+        if(gaussWidth<0){
+            toAdd = false;
+        }else{
+            Float64 fwhm = FWHM_FACTOR*gaussWidth;
+            if(fwhm<minsize){
+                toAdd = false;
+            }
+            if(fwhm>maxsize){
+                toAdd = false;
+            }
+        }
+
+        if(toAdd){
+            // check type weak or strong
+            Int32 type = 2;
+            // strong/weak test to do
+            //...
+            char buffer [64];
+            sprintf(buffer,"detected_peak_%d",j);
+            std::string peakName = buffer;
+            detectedRayCatalog->Add( CRay( peakName, gaussPos, type ) );
+        }
+    }
+
+    ctx.SetRayDetectionResult(*detectedRayCatalog);
+
+}
+
+

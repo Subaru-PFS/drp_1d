@@ -5,6 +5,7 @@
 #include <epic/redshift/spectrum/template/catalog.h>
 #include <epic/redshift/noise/flat.h>
 #include <epic/redshift/noise/fromfile.h>
+#include <epic/redshift/ray/ray.h>
 #include <epic/redshift/ray/catalog.h>
 #include <epic/redshift/continuum/median.h>
 #include <epic/core/log/log.h>
@@ -317,7 +318,7 @@ Bool CProcessFlowContext::GetBestCorrelationResult( Float64& redshift, Float64& 
 
 Bool CProcessFlowContext::GetIntermediateResults(std::string& corrStr, std::string& fitStr)
 {
-    // get only the intermediate results for the chosen template
+    // opt 1 : get only the intermediate results for the chosen template
     /*
     Int32 maxIndex = 0;
     TCorrelationResults::const_iterator maxIt = m_ProcessResult.end();
@@ -366,7 +367,8 @@ Bool CProcessFlowContext::GetIntermediateResults(std::string& corrStr, std::stri
     return false;
     //*/
 
-
+    // opt 2 : get the intermediate results for all the templates
+    //*
     std::ostringstream ssFit;
     std::ostringstream ssCorr;
     TCorrelationResults::const_iterator it = m_ProcessResult.begin();
@@ -393,5 +395,16 @@ Bool CProcessFlowContext::GetIntermediateResults(std::string& corrStr, std::stri
 
         tplInd ++;
     }
+    //*/
 }
 
+Bool CProcessFlowContext::SetRayDetectionResult(CRayCatalog &detectedRayCatalog)
+{
+    m_DetectedRayCatalog = &detectedRayCatalog;
+}
+
+
+CRayCatalog& CProcessFlowContext::GetDetectedRayCatalog()
+{
+    return *m_DetectedRayCatalog;
+}

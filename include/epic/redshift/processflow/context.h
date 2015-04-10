@@ -42,6 +42,15 @@ public:
     typedef std::map< std::string, SCorrelationResult >     TCorrelationResults;
     typedef std::vector< CTemplate::ECategory >             TTemplateCategoryList;
 
+    struct SRayMatchingResult
+    {
+        CRedshifts      Redshifts;
+        // not fully impleneted yet
+    };
+    typedef std::map< std::string, SRayMatchingResult >     TRayMatchingResults;
+
+
+
     struct SParam
     {
         SParam();
@@ -74,6 +83,8 @@ public:
                                                 const CRedshifts& selectedRedshifts,
                                                 const TFloat64List& selectedMerits, const COperator::TStatusList& selectedMeritsStatus,
                                                 const CRedshifts& allRedshifts, const TFloat64List& allMerits  );
+    Bool                            SetRayDetectionResult(CRayCatalog& detectedRayCatalog);
+    CRayCatalog&                    GetDetectedRayCatalog();
     Bool                            GetBestCorrelationResult( Float64& redshift, Float64& merit, std::string& tplName ) const;
 
     Bool                            DumpCorrelationResultsToCSV( const char* outputDirName ) const;
@@ -93,7 +104,7 @@ private:
     std::string                     m_SpectrumName;
 
     TCorrelationResults             m_ProcessResult;
-
+    CRef<CRayCatalog>               m_DetectedRayCatalog;
 
 };
 

@@ -131,6 +131,8 @@ CGaussianFit::EStatus CGaussianFit::Compute(const CSpectrum& spectrum, const TIn
 {
     Int32 np = (3 + m_PolyOrder + 1);
     Int32 n = studyRange.GetLength();
+    if (n < 1)
+        return nStatus_IllegalInput;
 
     // Create suitable first guess
     // To BE improved, trivial version now

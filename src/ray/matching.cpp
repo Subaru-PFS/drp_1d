@@ -141,6 +141,21 @@ const TRedshiftSolutionSetList CRayMatching::GetResults() const
     return m_Results;
 }
 
+const TRedshiftSolutionSetList CRayMatching::GetSolutionsListOverNumber(Int32 number) const
+{
+    //select results by matching number
+    TRedshiftSolutionSetList selectedResults;
+    for( UInt32 iSol=0; iSol<m_Results.size(); iSol++ )
+    {
+        TRedshiftSolutionSet currentSet = m_Results[iSol];
+        if(currentSet.size() > number){
+            selectedResults.push_back(currentSet);
+        }
+
+    }
+    return selectedResults;
+}
+
 Float64 CRayMatching::GetMeanRedshiftSolutionByIndex(Int32 index)
 {
     if(index > m_Results.size()-1)
@@ -159,3 +174,35 @@ Float64 CRayMatching::GetMeanRedshiftSolutionByIndex(Int32 index)
     return redshiftMean;
 }
 
+
+Float64 CRayMatching::GetMeanRedshiftSolution(TRedshiftSolutionSet& s){
+    TRedshiftSolutionSet currentSet = s;
+    Float64 redshiftMean=0.0;
+    for( UInt32 i=0; i<currentSet.size(); i++ )
+    {
+        redshiftMean += currentSet[i].Redshift;
+    }
+    redshiftMean /= currentSet.size();
+
+    return redshiftMean;
+}
+
+Int32 CRayMatching::GetMaxMatchingNumber()
+{
+    if(m_Results.size() < 1)
+    {
+        return -1.0;
+    }
+
+    Int32 maxNumber = 0;
+    for( UInt32 i=0; i<m_Results.size() ; i++ )
+    {
+        TRedshiftSolutionSet currentSet = m_Results[i];
+        if(maxNumber<currentSet.size()){
+            maxNumber = currentSet.size();
+        }
+
+    }
+
+    return maxNumber;
+}
