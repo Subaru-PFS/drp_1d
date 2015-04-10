@@ -197,21 +197,23 @@ const CProcessFlowContext::TTemplateCategoryList& CProcessFlowContext::GetTempla
 }
 
 Bool CProcessFlowContext::AddResults( const CTemplate& tpl,
-                                      const CRedshifts& selectedRedshifts,
-                                      const TFloat64List& selectedMerits, const COperator::TStatusList& selectedMeritsStatus,
-                                      const CRedshifts& redshifts, const TFloat64List& correlationValues  )
+                                      const TFloat64List& selectedRedshifts, const TFloat64List& selectedCorrelation,
+                                      const TFloat64List& selectedMerits, const COperator::TStatusList& selectedStatus,
+                                      const TFloat64List& allRedshifts, const TFloat64List& allCorrelation  )
 {
-    if( m_ProcessResult.find( tpl.GetName() ) != m_ProcessResult.end() )
+    if( m_Results.find( tpl.GetName() ) != m_Results.end() )
     {
         return false;
     }
 
-    m_ProcessResult[ tpl.GetName() ] = SCorrelationResult();
-    m_ProcessResult[ tpl.GetName() ].SelectedMerits = selectedMerits;
-    m_ProcessResult[ tpl.GetName() ].SelectedMeritsStatus = selectedMeritsStatus;
-    m_ProcessResult[ tpl.GetName() ].SelectedRedshifts = selectedRedshifts;
-    m_ProcessResult[ tpl.GetName() ].Redshifts = redshifts;
-    m_ProcessResult[ tpl.GetName() ].CorrelationValues = correlationValues;
+    m_Results[ tpl.GetName() ] = SResults();
+    m_Results[ tpl.GetName() ].SelectedMerits = selectedMerits;
+    m_Results[ tpl.GetName() ].SelectedStatus = selectedStatus;
+    m_Results[ tpl.GetName() ].SelectedCorrelations = selectedCorrelation;
+    m_Results[ tpl.GetName() ].SelectedRedshifts = selectedRedshifts;
+
+    m_Results[ tpl.GetName() ].AllRedshifts = allRedshifts;
+    m_Results[ tpl.GetName() ].AllCorrelation = allCorrelation;
 
     return true;
 }
@@ -245,9 +247,9 @@ Bool CProcessFlowContext::DumpCorrelationResultsToCSV( const char* dir ) const
 
 
 
-    TCorrelationResults::const_iterator it;
+    TResultsMap::const_iterator it;
 
-    for( it = m_ProcessResult.begin(); it != m_ProcessResult.end(); ++it )
+    for( it = m_Results.begin(); it != m_Results.end(); ++it )
     {
         char outputFileName[256];
         sprintf(outputFileName, "%s/%s.txt", outputDir, it->first.c_str() );
@@ -260,14 +262,14 @@ Bool CProcessFlowContext::DumpCorrelationResultsToCSV( const char* dir ) const
             return false;
         }
 
-        const SCorrelationResult& r = it->second;
+        const SResults& r = it->second;
 
-        for( int i=0;i<r.Redshifts.GetRedshiftsCount();i++)
+        for( int i=0;i<r.AllRedshifts.size();i++)
         {
-            if( r.CorrelationValues[i] < 0.0001 ){
-                fprintf( f, "%f %e\n", r.Redshifts[i], r.CorrelationValues[i]);
+            if( r.AllCorrelation[i] < 0.0001 ){
+                fprintf( f, "%f %e\n", r.AllRedshifts[i], r.AllCorrelation[i]);
             }else{
-                fprintf( f, "%f %f\n", r.Redshifts[i], r.CorrelationValues[i]);
+                fprintf( f, "%f %f\n", r.AllRedshifts[i], r.AllCorrelation[i]);
             }
         }
 
@@ -281,17 +283,17 @@ Bool CProcessFlowContext::DumpCorrelationResultsToCSV( const char* dir ) const
 Bool CProcessFlowContext::GetBestCorrelationResult( Float64& redshift, Float64& merit, std::string& tplName ) const
 {
     Int32 maxIndex = 0;
-    TCorrelationResults::const_iterator maxIt = m_ProcessResult.end();
-    TCorrelationResults::const_iterator it = m_ProcessResult.begin();
+    TResultsMap::const_iterator maxIt = m_Results.end();
+    TResultsMap::const_iterator it = m_Results.begin();
 
 
     Float64 min = DBL_MAX ;
-    for( it = m_ProcessResult.begin(); it != m_ProcessResult.end(); it++ )
+    for( it = m_Results.begin(); it != m_Results.end(); it++ )
     {
-        const SCorrelationResult& r = (*it).second;
+        const SResults& r = (*it).second;
         for( Int32 i=0; i<r.SelectedMerits.size(); i++ )
         {
-            if( r.SelectedMerits[i] < min && r.SelectedMeritsStatus[i] == COperator::nStatus_OK )
+            if( r.SelectedMerits[i] < min && r.SelectedStatus[i] == COperator::nStatus_OK )
             {
                 min = r.SelectedMerits[i];
                 maxIndex = i;
@@ -301,9 +303,9 @@ Bool CProcessFlowContext::GetBestCorrelationResult( Float64& redshift, Float64& 
     }
 
 
-    if( maxIt != m_ProcessResult.end() )
+    if( maxIt != m_Results.end() )
     {
-        const SCorrelationResult& r = (*maxIt).second;
+        const SResults& r = (*maxIt).second;
         redshift = r.SelectedRedshifts[maxIndex];
         merit = r.SelectedMerits[maxIndex];
         tplName = (*maxIt).first;
@@ -314,6 +316,10 @@ Bool CProcessFlowContext::GetBestCorrelationResult( Float64& redshift, Float64& 
 
 }
 
+const CProcessFlowContext::TResultsMap& CProcessFlowContext::GetResults() const
+{
+    return m_Results;
+}
 
 Bool CProcessFlowContext::GetIntermediateResults(std::string& corrStr, std::string& fitStr)
 {
@@ -369,11 +375,11 @@ Bool CProcessFlowContext::GetIntermediateResults(std::string& corrStr, std::stri
 
     std::ostringstream ssFit;
     std::ostringstream ssCorr;
-    TCorrelationResults::const_iterator it = m_ProcessResult.begin();
+    TResultsMap::const_iterator it = m_Results.begin();
     Int32 tplInd = 0;
-    for( it = m_ProcessResult.begin(); it != m_ProcessResult.end(); it++ )
+    for( it = m_Results.begin(); it != m_Results.end(); it++ )
     {
-        const SCorrelationResult& r = (*it).second;
+        const SResults& r = (*it).second;
         Float64 redshift;
         Float64 merit;
         Float64 corr;
@@ -384,7 +390,7 @@ Bool CProcessFlowContext::GetIntermediateResults(std::string& corrStr, std::stri
         {
             redshift = r.SelectedRedshifts[i];
             merit = r.SelectedMerits[i];
-            corr = r.CorrelationValues[i];
+            corr = r.SelectedCorrelations[i];
             ssFit << i+1000*tplInd << "\t" << redshift << "\t" << merit << "\t";
             fitStr.append(ssFit.str());
             ssCorr << i+1000*tplInd << "\t" << redshift << "\t" << corr << "\t";

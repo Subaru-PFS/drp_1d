@@ -3,7 +3,6 @@
 
 #include <epic/core/common/ref.h>
 #include <epic/core/common/managedobject.h>
-#include <epic/redshift/common/redshifts.h>
 #include <epic/redshift/spectrum/template/template.h>
 #include <epic/redshift/operator/operator.h>
 
@@ -32,19 +31,20 @@ class CProcessFlowContext : public CManagedObject
 
 public:
 
-    struct SCorrelationResult
+    struct SResults
     {
-        CRedshifts                  SelectedRedshifts;
-
+        TFloat64List                SelectedRedshifts;
         TFloat64List                SelectedMerits;
-        COperator::TStatusList      SelectedMeritsStatus;
+        TFloat64List                SelectedCorrelations;
 
-        CRedshifts                  Redshifts;
-        TFloat64List                CorrelationValues;
+        COperator::TStatusList      SelectedStatus;
+
+        TFloat64List                AllRedshifts;
+        TFloat64List                AllCorrelation;
     };
 
-    typedef std::map< std::string, SCorrelationResult >     TCorrelationResults;
-    typedef std::vector< CTemplate::ECategory >             TTemplateCategoryList;
+    typedef std::map< std::string, SResults >       TResultsMap;
+    typedef std::vector< CTemplate::ECategory >     TTemplateCategoryList;
 
     struct SParam
     {
@@ -75,9 +75,11 @@ public:
     Float64                         GetRedshiftStep() const;
 
     Bool                            AddResults( const CTemplate& tpl,
-                                                const CRedshifts& selectedRedshifts,
-                                                const TFloat64List& selectedMerits, const COperator::TStatusList& selectedMeritsStatus,
-                                                const CRedshifts& allRedshifts, const TFloat64List& allMerits  );
+                                                const TFloat64List& selectedRedshifts, const TFloat64List& selectedCorrelation,
+                                                const TFloat64List& selectedMerits, const COperator::TStatusList& selectedStatus,
+                                                const TFloat64List& allRedshifts, const TFloat64List& allCorrelation );
+
+    const TResultsMap&              GetResults() const;
     Bool                            GetBestCorrelationResult( Float64& redshift, Float64& merit, std::string& tplName ) const;
 
     Bool                            DumpCorrelationResultsToCSV( const char* outputDirName ) const;
@@ -96,7 +98,7 @@ private:
     TTemplateCategoryList           m_TemplateCategoryList;
     std::string                     m_SpectrumName;
 
-    TCorrelationResults             m_ProcessResult;
+    TResultsMap                     m_Results;
 
 
 };

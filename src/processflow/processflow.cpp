@@ -112,8 +112,8 @@ Bool CProcessFlow::BlindSolve( CProcessFlowContext& ctx, const CTemplate& tpl, c
     s.GetSpectralAxis().ConvertToLogScale();
 
     // Create redshift initial list by spanning redshift acdross the given range, with the given delta
-    CRedshifts redshifts( ctx.GetRedshiftRange(), ctx.GetRedshiftStep() );
-    DebugAssert( redshifts.GetRedshiftsCount() > 0 );
+    TFloat64List redshifts = ctx.GetRedshiftRange().SpreadOver( ctx.GetRedshiftStep() );
+    DebugAssert( redshifts.size() > 0 );
 
     // Compute correlation factor at each of those redshifts
     COperatorCorrelation correlation;
@@ -123,7 +123,7 @@ Bool CProcessFlow::BlindSolve( CProcessFlowContext& ctx, const CTemplate& tpl, c
     Int32 nExtremums = 5;
     TPointList extremumList;
     CExtremum extremum( ctx.GetRedshiftRange() , nExtremums);
-    extremum.Find( redshifts.GetRedshifts(), correlation.GetResults().data(), redshifts.GetRedshiftsCount(), extremumList );
+    extremum.Find( redshifts.data(), correlation.GetResults().data(), redshifts.size(), extremumList );
 
     if( extremumList.size() == 0 )
     {
@@ -131,9 +131,16 @@ Bool CProcessFlow::BlindSolve( CProcessFlowContext& ctx, const CTemplate& tpl, c
     }
 
     // Compute merit function
-    CRedshifts newRedshifts( extremumList );
+    TFloat64List extremumRedshifts( extremumList.size() );
+    TFloat64List extremumCorrelation( extremumList.size() );
+    for( Int32 i=0; i<extremumList.size(); i++ )
+    {
+        extremumRedshifts[i] = extremumList[i].X;
+        extremumCorrelation[i] = extremumList[i].Y;
+    }
+
     COperatorChiSquare meritChiSquare;
-    retVal = meritChiSquare.Compute( spc, tpl, lambdaRange, newRedshifts, ctx.GetOverlapThreshold() );
+    retVal = meritChiSquare.Compute( spc, tpl, lambdaRange, extremumRedshifts, ctx.GetOverlapThreshold() );
     if( !retVal )
     {
         Log.LogInfo( "Failed to compute chi square value");
@@ -142,10 +149,9 @@ Bool CProcessFlow::BlindSolve( CProcessFlowContext& ctx, const CTemplate& tpl, c
 
     // Store results
     ctx.AddResults( tpl,
-                      newRedshifts,
+                      extremumRedshifts, extremumCorrelation,
                       meritChiSquare.GetResults(), meritChiSquare.GetStatus(),
                       redshifts, correlation.GetResults() );
-
 
 
     return true;
