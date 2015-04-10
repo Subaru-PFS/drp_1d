@@ -31,6 +31,10 @@ private:
     Bool ProcessWithoutEL( CProcessFlowContext& ctx );
     Bool ProcessWithEL( CProcessFlowContext& ctx );
 
+    bool ELSearch( CProcessFlowContext& ctx );
+    bool ComputeMerits( CProcessFlowContext& ctx, const TFloat64List& redshifts);
+
+
     Bool BlindSolve( CProcessFlowContext& ctx, const CTemplate& tpl, const CTemplate& tplWithoutCont  );
 };
 

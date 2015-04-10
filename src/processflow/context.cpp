@@ -5,6 +5,7 @@
 #include <epic/redshift/spectrum/template/catalog.h>
 #include <epic/redshift/noise/flat.h>
 #include <epic/redshift/noise/fromfile.h>
+#include <epic/redshift/ray/ray.h>
 #include <epic/redshift/ray/catalog.h>
 #include <epic/redshift/continuum/median.h>
 #include <epic/core/log/log.h>
@@ -218,6 +219,25 @@ Bool CProcessFlowContext::AddResults( const CTemplate& tpl,
     return true;
 }
 
+Bool CProcessFlowContext::AddMeritResults( const CTemplate& tpl,
+                                      const TFloat64List& selectedRedshifts,
+                                      const TFloat64List& selectedMerits, const COperator::TStatusList& selectedMeritsStatus,
+                                      const TFloat64List& redshifts)
+{
+    if( m_Results.find( tpl.GetName() ) != m_Results.end() )
+    {
+        return false;
+    }
+
+    m_Results[ tpl.GetName() ] = SResults();
+    m_Results[ tpl.GetName() ].SelectedMerits = selectedMerits;
+    m_Results[ tpl.GetName() ].SelectedStatus = selectedMeritsStatus;
+    m_Results[ tpl.GetName() ].SelectedRedshifts = selectedRedshifts;
+    m_Results[ tpl.GetName() ].AllRedshifts = redshifts;
+
+    return true;
+}
+
 Bool CProcessFlowContext::DumpCorrelationResultsToCSV( const char* dir ) const
 {
     char outputDir[256];
@@ -323,7 +343,7 @@ const CProcessFlowContext::TResultsMap& CProcessFlowContext::GetResults() const
 
 Bool CProcessFlowContext::GetIntermediateResults(std::string& corrStr, std::string& fitStr)
 {
-    // get only the intermediate results for the chosen template
+    // opt 1 : get only the intermediate results for the chosen template
     /*
     Int32 maxIndex = 0;
     TCorrelationResults::const_iterator maxIt = m_ProcessResult.end();
@@ -372,7 +392,8 @@ Bool CProcessFlowContext::GetIntermediateResults(std::string& corrStr, std::stri
     return false;
     //*/
 
-
+    // opt 2 : get the intermediate results for all the templates
+    //*
     std::ostringstream ssFit;
     std::ostringstream ssCorr;
     TResultsMap::const_iterator it = m_Results.begin();
@@ -399,5 +420,16 @@ Bool CProcessFlowContext::GetIntermediateResults(std::string& corrStr, std::stri
 
         tplInd ++;
     }
+    //*/
 }
 
+Bool CProcessFlowContext::SetRayDetectionResult(CRayCatalog &detectedRayCatalog)
+{
+    m_DetectedRayCatalog = &detectedRayCatalog;
+}
+
+
+CRayCatalog& CProcessFlowContext::GetDetectedRayCatalog()
+{
+    return *m_DetectedRayCatalog;
+}

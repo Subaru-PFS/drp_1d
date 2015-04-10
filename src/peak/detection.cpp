@@ -30,7 +30,7 @@ Bool CPeakDetection::Compute( const CSpectrum& spectrum, const TLambdaRange& lam
 
     CSpectrumFluxAxis smoothedFluxAxis = fluxAxis;
 
-    if( medianSmoothHalfWidth  )
+    if(false && medianSmoothHalfWidth  )
     {
         smoothedFluxAxis.ApplyMedianSmooth( medianSmoothHalfWidth );
     }
@@ -46,13 +46,14 @@ Bool CPeakDetection::Compute( const CSpectrum& spectrum, const TLambdaRange& lam
         return false;
     }
 
-    RedefineBorders( peaksBorders, spectralAxis, smoothedFluxAxis, fluxAxis );
+    //RedefineBorders( peaksBorders, spectralAxis, smoothedFluxAxis, fluxAxis );
 
     if( enlargeRate )
     {
         for( UInt32 i=0; i<peaksBorders.size(); i++ )
         {
             TInt32Range fitRange = FindGaussianFitStartAndStop( i, peaksBorders, enlargeRate, spectralAxis.GetSamplesCount() );
+            peaksBorders[i] = fitRange;
         }
     }
 
@@ -78,7 +79,7 @@ TInt32Range CPeakDetection::FindGaussianFitStartAndStop( Int32 i, const TInt32Ra
     if( i<peaksBorders.size() )
     {
         if( peaksBorders[i+1].GetBegin() > -1 )
-            fitStop = max( peaksBorders[i+1].GetBegin(), fitStop );
+            fitStop = min( peaksBorders[i+1].GetBegin(), fitStop );
     }
 
     return TInt32Range( fitStart, fitStop );
@@ -167,7 +168,7 @@ Void CPeakDetection::FindPossiblePeaks( const CSpectrumAxis& fluxAxis, const CSp
         xmad[i] = XMad( fluxData+ start, halfWindowSampleCount*2 + 1, med[i] );
     }
 
-    /*//debug:
+    //*//debug:
     // save median and xmad,  flux data
     FILE* f = fopen( "peakdetection_dbg_median.txt", "w+" );
     for( Int32 i=0; i<fluxAxis.GetSamplesCount(); i++ )
