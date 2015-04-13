@@ -35,19 +35,6 @@ CGaussianFit::~CGaussianFit()
 }
 
 
-void _gauss_param_log( Float64 *p_out, Float64 *p_err_out, Int32 poly_order)
-{
-    int i;
-
-    Log.LogInfo( "A      = %g +/- %g", p_out[0], p_err_out[0]);
-    Log.LogInfo( "mu     = %g +/- %g", p_out[1], p_err_out[1]);
-    Log.LogInfo( "c      = %g +/- %g", p_out[2], p_err_out[2]);
-
-    for(i=0; i<=poly_order; i++){
-        Log.LogInfo( "p(%d)      = %g +/- %g", i, p_out[3+i], p_err_out[3+i]);
-    }
-}
-
 Void CGaussianFit::GetResults( Float64& amplitude, Float64& position, Float64& width ) const
 {
     amplitude =  m_Amplitude;
@@ -207,8 +194,6 @@ CGaussianFit::EStatus CGaussianFit::Compute(const CSpectrum& spectrum, const TIn
 
     // Set amplitude > 0 by default
     output[2] = fabs( output[2] );
-
-    _gauss_param_log(output, outputError, m_PolyOrder);
 
     EStatus returnCode = nStatus_Success;
     if ( status == GSL_ETOLX )
