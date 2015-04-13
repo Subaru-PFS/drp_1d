@@ -42,17 +42,17 @@ void CRedshiftOperatorTestCase::CorrelationAtZEqualZero()
     TFloat64Range lambdaRange( s.GetLambdaRange().GetBegin(), s.GetLambdaRange().GetEnd() );
 
     COperatorCorrelation correlation;
-    CRedshifts redshifts;
+    TFloat64List redshifts;
 
     Float64 redshiftDelta = 0.0001;
-    redshifts.SpreadOver( 0.0, 3.0, redshiftDelta );
+    redshifts = TFloat64Range( 0.0, 3.0 ).SpreadOver( redshiftDelta );
     Bool r = correlation.Compute( s, t, lambdaRange, redshifts, 1.0 );
     CPPUNIT_ASSERT( r == true );
 
 
     CExtremum extremum;
     TPointList extremumList;
-    extremum.Find( redshifts.GetRedshifts(), correlation.GetResults().data(), redshifts.GetRedshiftsCount(), extremumList );
+    extremum.Find( redshifts.data(), correlation.GetResults().data(), redshifts.size(), extremumList );
 
     CPPUNIT_ASSERT_DOUBLES_EQUAL( 0.0, extremumList[0].X, 0.000001 );
 
@@ -96,7 +96,7 @@ void CRedshiftOperatorTestCase::CorrelationAtGivenZ()
 
 
     Float64 redshiftDelta = 0.0001;
-    CRedshifts redshifts( 0.0, 3.0, redshiftDelta );
+    TFloat64List redshifts = TFloat64Range( 0.0, 3.0 ).SpreadOver( redshiftDelta );
 
     //CRedshifts redshifts( &z, 1 );
 
@@ -111,7 +111,7 @@ void CRedshiftOperatorTestCase::CorrelationAtGivenZ()
 
     CExtremum extremum;
     TPointList extremumList;
-    extremum.Find( redshifts.GetRedshifts(), correlation.GetResults().data(), redshifts.GetRedshiftsCount(), extremumList );
+    extremum.Find( redshifts.data(), correlation.GetResults().data(), redshifts.size(), extremumList );
 
     CPPUNIT_ASSERT_DOUBLES_EQUAL( z, extremumList[0].X, redshiftDelta*2 );
 

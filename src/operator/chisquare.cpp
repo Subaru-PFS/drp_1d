@@ -5,7 +5,6 @@
 #include <epic/redshift/spectrum/template/template.h>
 #include <epic/redshift/spectrum/tools.h>
 #include <epic/redshift/common/mask.h>
-#include <epic/redshift/common/redshifts.h>
 
 #include <epic/core/log/log.h>
 
@@ -164,7 +163,7 @@ Void COperatorChiSquare::BasicFit( const CSpectrum& spectrum, const CTemplate& t
 
 
 Bool COperatorChiSquare::Compute(const CSpectrum& spectrum, const CTemplate& tpl,
-                          const TFloat64Range& lambdaRange, const CRedshifts& redshifts,
+                          const TFloat64Range& lambdaRange, const TFloat64List& redshifts,
                           Float64 overlapThreshold )
 {
 
@@ -174,11 +173,11 @@ Bool COperatorChiSquare::Compute(const CSpectrum& spectrum, const CTemplate& tpl
         return false;
     }
 
-    m_Result.resize( redshifts.GetRedshiftsCount() );
-    m_Overlap.resize( redshifts.GetRedshiftsCount() );
-    m_Status.resize( redshifts.GetRedshiftsCount() );
+    m_Result.resize( redshifts.size() );
+    m_Overlap.resize( redshifts.size() );
+    m_Status.resize( redshifts.size() );
 
-    for (Int32 i=0;i<redshifts.GetRedshiftsCount();i++)
+    for (Int32 i=0;i<redshifts.size();i++)
     {
         BasicFit( spectrum, tpl, lambdaRange, redshifts[i], overlapThreshold, m_Overlap[i], m_Result[i], m_Status[i] );
     }

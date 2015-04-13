@@ -3,7 +3,6 @@
 
 #include <epic/core/common/datatypes.h>
 #include <epic/core/common/range.h>
-#include <epic/redshift/common/redshifts.h>
 #include <epic/redshift/spectrum/fluxaxis.h>
 #include <epic/redshift/spectrum/spectralaxis.h>
 #include <epic/redshift/operator/operator.h>
@@ -26,7 +25,7 @@ public:
     COperatorCorrelation();
     ~COperatorCorrelation();
 
-    Bool Compute( const CSpectrum& s1, const CTemplate& s2, const TFloat64Range& r, const CRedshifts& redhisfts, Float64 overlap );
+    Bool Compute( const CSpectrum& s1, const CTemplate& s2, const TFloat64Range& r, const TFloat64List& redhisfts, Float64 overlap );
 
     Float64 GetComputationDuration() const;
 

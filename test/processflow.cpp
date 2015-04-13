@@ -21,7 +21,7 @@ void CRedshiftProcessFlowTestCase::tearDown()
 void CRedshiftProcessFlowTestCase::ProcessShifted1 ()
 {
     CProcessFlowContext ctx;
-    CProcessFlow processFlow( 1 );
+    CProcessFlow processFlow;
 
     CProcessFlowContext::SParam params;
     params.lambdaRange = TFloat64Range( 3800.0, 12500.0 );
@@ -49,7 +49,7 @@ void CRedshiftProcessFlowTestCase::ProcessShifted1 ()
 void CRedshiftProcessFlowTestCase::ProcessShifted2()
 {
     CProcessFlowContext ctx;
-    CProcessFlow processFlow( 1 );
+    CProcessFlow processFlow;
 
     CProcessFlowContext::SParam params;
     params.lambdaRange = TFloat64Range( 3800.0, 12500.0 );
@@ -77,7 +77,7 @@ void CRedshiftProcessFlowTestCase::ProcessShifted2()
 void CRedshiftProcessFlowTestCase::ProcessShiftedDecimated()
 {
     CProcessFlowContext ctx;
-    CProcessFlow processFlow( 1 );
+    CProcessFlow processFlow;
 
     CProcessFlowContext::SParam params;
     params.lambdaRange = TFloat64Range( 3800.0, 12500.0 );

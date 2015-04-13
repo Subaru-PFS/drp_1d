@@ -117,7 +117,7 @@ def Main( argv ):
     # CFITSIO
     DownloadHTTPFile( "http://heasarc.gsfc.nasa.gov/FTP/software/fitsio/c/cfitsio3360.tar.gz", thirdPartyDir+cfitsio+".tar.gz" )
     if ExtractTarGZ( thirdPartyDir+cfitsio+".tar.gz", thirdPartyDir+cfitsio ) :
-        os.system( "cd "+thirdPartyDir+cfitsio+"/ ; ./configure --prefix="+thirdPartyDir+" ; make ; make install ; cd ../" )
+        os.system( "cd "+thirdPartyDir+cfitsio+"/ ; ./configure --enable-reentrant --prefix="+thirdPartyDir+" ; make ; make install ; cd ../" )
 
     if options.Clean == True:
         Cleanup()

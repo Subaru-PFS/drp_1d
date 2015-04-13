@@ -23,96 +23,7 @@ using namespace NSEpic;
 IMPLEMENT_MANAGED_OBJECT( CProcessFlow )
 
 
-namespace NSEpic
-{
-
-class CBlindSolveTask
-{
-public:
-
-    CProcessFlowContext&    m_Ctx;
-    const CTemplate&        m_Tpl;
-    const CSpectrum&        m_Spc;
-    const CTemplate&        m_TplWithoutCont;
-    const CSpectrum&        m_SpcWithoutCont;
-    const TFloat64Range&    m_LambdaRanges;
-    boost::mutex&           m_Mutex;
-
-    CBlindSolveTask( CProcessFlowContext& ctx, const CTemplate& tpl, const CTemplate& tplWithoutCont, const CSpectrum& spc, const CSpectrum& spcWithoutCont, const TFloat64Range& lambdaRange, boost::mutex& mutex ) :
-        m_Ctx( ctx ),
-        m_Tpl( tpl ),
-        m_Spc( spc ),
-        m_TplWithoutCont( tplWithoutCont ),
-        m_SpcWithoutCont( spcWithoutCont ),
-        m_LambdaRanges( lambdaRange ),
-        m_Mutex( mutex )
-    {
-
-    }
-
-    void operator()()
-    {
-        Bool retVal = true;
-
-        CSpectrum s = m_Spc;
-        s.GetSpectralAxis().ConvertToLogScale();
-
-        // Create redshift initial list by spanning redshift acdross the given range, with the given delta
-        CRedshifts redshifts( m_Ctx.GetRedshiftRange(), m_Ctx.GetRedshiftStep() );
-        DebugAssert( redshifts.GetRedshiftsCount() > 0 );
-
-        // Compute correlation factor at each of those redshifts
-        COperatorCorrelation correlation;
-        correlation.Compute( m_SpcWithoutCont, m_TplWithoutCont, m_LambdaRanges, redshifts, m_Ctx.GetOverlapThreshold() );
-
-        // Find redshifts extremum
-        Int32 nExtremums = 5;
-        TPointList extremumList;
-        CExtremum extremum( m_Ctx.GetRedshiftRange() , nExtremums);
-        extremum.Find( redshifts.GetRedshifts(), correlation.GetResults().data(), redshifts.GetRedshiftsCount(), extremumList );
-
-        if( extremumList.size() == 0 )
-        {
-            Log.LogInfo( "- Template: %s (LambdaRange: %f-%f:%f)", m_Tpl.GetName().c_str(), m_Tpl.GetLambdaRange().GetBegin(), m_Tpl.GetLambdaRange().GetEnd(), m_Tpl.GetResolution()  );
-            Log.LogInfo( "|- No Redshift found" );
-            return;
-        }
-
-        // Compute merit function
-        CRedshifts newRedshifts( extremumList );
-        COperatorChiSquare meritChiSquare;
-        retVal = meritChiSquare.Compute( m_Spc, m_Tpl, m_LambdaRanges, newRedshifts, m_Ctx.GetOverlapThreshold() );
-        if( !retVal )
-        {
-            Log.LogInfo( "Failed to compute chi square value");
-            return;
-        }
-
-        // Store results
-        {
-            boost::lock_guard<boost::mutex> lock( m_Mutex );
-            m_Ctx.AddResults( m_Tpl,
-                              newRedshifts,
-                              meritChiSquare.GetResults(), meritChiSquare.GetStatus(),
-                              redshifts, correlation.GetResults() );
-            Log.LogInfo( "- Template: %s (LambdaRange: %f-%f:%f)", m_Tpl.GetName().c_str(), m_Tpl.GetLambdaRange().GetBegin(), m_Tpl.GetLambdaRange().GetEnd(), m_Tpl.GetResolution() );
-
-            Float64 merit = meritChiSquare.GetResults()[0];
-            if( merit < 0.00001 )
-                Log.LogInfo( "|- Redshift: %f Merit: %e", newRedshifts[0], merit );
-            else
-                Log.LogInfo( "|- Redshift: %f Merit: %f", newRedshifts[0], merit );
-
-        }
-
-    }
-
-};
-
-}
-
-CProcessFlow::CProcessFlow( Int32 nbThread ) :
-    m_ThreadPool( nbThread )
+CProcessFlow::CProcessFlow()
 {
 
 }
@@ -122,7 +33,7 @@ CProcessFlow::~CProcessFlow()
 
 }
 
-bool CProcessFlow::Process( CProcessFlowContext& ctx )
+Bool CProcessFlow::Process( CProcessFlowContext& ctx )
 {
     return ProcessWithEL( ctx );
 
@@ -135,24 +46,18 @@ bool CProcessFlow::Process( CProcessFlowContext& ctx )
     {
         return ProcessWithEL( ctx );
     }
+
+    return false;
 }
 
 
-bool CProcessFlow::ProcessWithoutEL( CProcessFlowContext& ctx )
+Bool CProcessFlow::ProcessWithoutEL( CProcessFlowContext& ctx )
 {
     const CTemplateCatalog& templateCatalog = ctx.GetTemplateCatalog();
     const CProcessFlowContext::TTemplateCategoryList& templateCategotyList = ctx.GetTemplateCategoryList();
 
-    m_ThreadPool.Reset();
-
-    Log.LogInfo( "Process spectrum without EL (LambdaRange: %f-%f:%f)",
-            ctx.GetSpectrum().GetLambdaRange().GetBegin(), ctx.GetSpectrum().GetLambdaRange().GetEnd(), ctx.GetSpectrum().GetResolution());
-
     for( UInt32 i=0; i<templateCategotyList.size(); i++ )
     {
-        Log.LogInfo( "Processing template category: %s", CTemplate::GetCategoryName( templateCategotyList[i] ) );
-        Log.Indent();
-
         if( ctx.GetTemplateCategoryList()[i] == CTemplate::nCategory_Star )
         {
         }
@@ -162,25 +67,18 @@ bool CProcessFlow::ProcessWithoutEL( CProcessFlowContext& ctx )
             {
                 const CTemplate& tpl = templateCatalog.GetTemplate( (CTemplate::ECategory) templateCategotyList[i], j );
                 const CTemplate& tplWithoutCont = templateCatalog.GetTemplateWithoutContinuum( (CTemplate::ECategory) templateCategotyList[i], j );
-                const CSpectrum& spc = ctx.GetSpectrum();
-                const CSpectrum& spcWithoutCont = ctx.GetSpectrumWithoutContinuum();
-                const TFloat64Range& lambdaRange = ctx.GetLambdaRange();
 
-                m_ThreadPool.AddTask( CBlindSolveTask( ctx, tpl, tplWithoutCont, spc, spcWithoutCont, lambdaRange, m_SyncMutex ) );
+
+                BlindSolve( ctx, tpl, tplWithoutCont );
             }
-
         }
-
-        m_ThreadPool.WaitForAllTaskToFinish();
-
-        Log.UnIndent();
     }
 
     return true;
 }
 
 
-bool CProcessFlow::ProcessWithEL( CProcessFlowContext& ctx )
+Bool CProcessFlow::ProcessWithEL( CProcessFlowContext& ctx )
 {
     //const CTemplateCatalog& templateCatalog = ctx.GetTemplateCatalog();
     //const CProcessFlowContext::TTemplateCategoryList& templateCategoryList = ctx.GetTemplateCategoryList();
@@ -322,13 +220,13 @@ bool CProcessFlow::ComputeMerits( CProcessFlowContext& ctx, const TFloat64List& 
             for( UInt32 j=0; j<templateCatalog.GetTemplateCount( (CTemplate::ECategory) templateCategotyList[i] ); j++ )
             {
                 const CTemplate& tpl = templateCatalog.GetTemplate( (CTemplate::ECategory) templateCategotyList[i], j );
+
                 //const CTemplate& tplWithoutCont = templateCatalog.GetTemplateWithoutContinuum( (CTemplate::ECategory) templateCategotyList[i], j );
 
 
                 // Compute merit function
-                CRedshifts newRedshifts( redshifts );
                 COperatorChiSquare meritChiSquare;
-                Int32 retVal = meritChiSquare.Compute( spc, tpl, lambdaRange, newRedshifts, ctx.GetOverlapThreshold() );
+                Int32 retVal = meritChiSquare.Compute( spc, tpl, lambdaRange, redshifts, ctx.GetOverlapThreshold() );
                 if( !retVal )
                 {
                     Log.LogInfo( "Failed to compute chi square value");
@@ -338,25 +236,79 @@ bool CProcessFlow::ComputeMerits( CProcessFlowContext& ctx, const TFloat64List& 
                 // Store results
                 {
                     ctx.AddMeritResults( tpl,
-                                      newRedshifts,
+                                      redshifts,
                                       meritChiSquare.GetResults(), meritChiSquare.GetStatus(),
                                       redshifts );
                     Log.LogInfo( "- Template: %s (LambdaRange: %f-%f:%f)", tpl.GetName().c_str(), tpl.GetLambdaRange().GetBegin(), tpl.GetLambdaRange().GetEnd(), tpl.GetResolution() );
 
                     Float64 merit = meritChiSquare.GetResults()[0];
                     if( merit < 0.00001 )
-                        Log.LogInfo( "|- Redshift: %f Merit: %e", newRedshifts[0], merit );
+                        Log.LogInfo( "|- Redshift: %f Merit: %e", redshifts[0], merit );
                     else
-                        Log.LogInfo( "|- Redshift: %f Merit: %f", newRedshifts[0], merit );
+                        Log.LogInfo( "|- Redshift: %f Merit: %f", redshifts[0], merit );
 
                 }
             }
-
         }
-
-
-        Log.UnIndent();
     }
+
+    return true;
+}
+
+
+Bool CProcessFlow::BlindSolve( CProcessFlowContext& ctx, const CTemplate& tpl, const CTemplate& tplWithoutCont )
+{
+    const CSpectrum& spc = ctx.GetSpectrum();
+    const CSpectrum& spcWithoutCont = ctx.GetSpectrumWithoutContinuum();
+    const TFloat64Range& lambdaRange = ctx.GetLambdaRange();
+
+    Bool retVal = true;
+
+    CSpectrum s = spc;
+    s.GetSpectralAxis().ConvertToLogScale();
+
+    // Create redshift initial list by spanning redshift acdross the given range, with the given delta
+    TFloat64List redshifts = ctx.GetRedshiftRange().SpreadOver( ctx.GetRedshiftStep() );
+    DebugAssert( redshifts.size() > 0 );
+
+    // Compute correlation factor at each of those redshifts
+    COperatorCorrelation correlation;
+    correlation.Compute( spcWithoutCont, tplWithoutCont, lambdaRange, redshifts, ctx.GetOverlapThreshold() );
+
+    // Find redshifts extremum
+    Int32 nExtremums = 5;
+    TPointList extremumList;
+    CExtremum extremum( ctx.GetRedshiftRange() , nExtremums);
+    extremum.Find( redshifts.data(), correlation.GetResults().data(), redshifts.size(), extremumList );
+
+    if( extremumList.size() == 0 )
+    {
+        return false;
+    }
+
+    // Compute merit function
+    TFloat64List extremumRedshifts( extremumList.size() );
+    TFloat64List extremumCorrelation( extremumList.size() );
+    for( Int32 i=0; i<extremumList.size(); i++ )
+    {
+        extremumRedshifts[i] = extremumList[i].X;
+        extremumCorrelation[i] = extremumList[i].Y;
+    }
+
+    COperatorChiSquare meritChiSquare;
+    retVal = meritChiSquare.Compute( spc, tpl, lambdaRange, extremumRedshifts, ctx.GetOverlapThreshold() );
+    if( !retVal )
+    {
+        Log.LogInfo( "Failed to compute chi square value");
+        return false;
+    }
+
+    // Store results
+    ctx.AddResults( tpl,
+                      extremumRedshifts, extremumCorrelation,
+                      meritChiSquare.GetResults(), meritChiSquare.GetStatus(),
+                      redshifts, correlation.GetResults() );
+
 
     return true;
 }

@@ -23,7 +23,7 @@ public:
     ~COperatorChiSquare();
 
     Bool Compute( const CSpectrum& spectrum, const CTemplate& tpl,
-                  const TFloat64Range& lambdaRange, const CRedshifts& redshifts,
+                  const TFloat64Range& lambdaRange, const TFloat64List& redshifts,
                   Float64 overlapThreshold );
 
 

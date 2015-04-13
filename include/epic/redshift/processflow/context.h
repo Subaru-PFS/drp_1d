@@ -3,7 +3,6 @@
 
 #include <epic/core/common/ref.h>
 #include <epic/core/common/managedobject.h>
-#include <epic/redshift/common/redshifts.h>
 #include <epic/redshift/spectrum/template/template.h>
 #include <epic/redshift/operator/operator.h>
 
@@ -23,6 +22,10 @@ class CRayCatalog;
 class CTemplateCatalog;
 class CRayCatalog;
 
+/**
+ * Store all data concerning computation and processign of a given spectrum
+ *
+ */
 class CProcessFlowContext : public CManagedObject
 {
 
@@ -30,19 +33,20 @@ class CProcessFlowContext : public CManagedObject
 
 public:
 
-    struct SCorrelationResult
+    struct SResults
     {
-        CRedshifts      SelectedRedshifts;
+        TFloat64List                SelectedRedshifts;
+        TFloat64List                SelectedMerits;
+        TFloat64List                SelectedCorrelations;
 
-        TFloat64List    SelectedMerits;
-        COperator::TStatusList SelectedMeritsStatus;
+        COperator::TStatusList      SelectedStatus;
 
-        CRedshifts      Redshifts;
-        TFloat64List    CorrelationValues;
+        TFloat64List                AllRedshifts;
+        TFloat64List                AllCorrelation;
     };
 
-    typedef std::map< std::string, SCorrelationResult >     TCorrelationResults;
-    typedef std::vector< CTemplate::ECategory >             TTemplateCategoryList;
+    typedef std::map< std::string, SResults >       TResultsMap;
+    typedef std::vector< CTemplate::ECategory >     TTemplateCategoryList;
 
     struct SRayMatchingResult
     {
@@ -70,12 +74,12 @@ public:
     ~CProcessFlowContext();
 
     bool Init( const char* spectrumPath, const char* noisePath, const char* tempalteCatalogPath, const char* rayCatalogPath, const SParam& params  );
-    bool Init( const char* spectrumPath, const char* noisePath, CTemplateCatalog& templateCatalog, CRayCatalog& rayCatalog, const SParam& params  );
+    bool Init( const char* spectrumPath, const char* noisePath, const CTemplateCatalog& templateCatalog, const CRayCatalog& rayCatalog, const SParam& params  );
 
-    CSpectrum&                      GetSpectrum();
-    CSpectrum&                      GetSpectrumWithoutContinuum();
-    CTemplateCatalog&               GetTemplateCatalog();
-    CRayCatalog&                    GetRayCatalog();
+    const CSpectrum&                GetSpectrum();
+    const CSpectrum&                GetSpectrumWithoutContinuum();
+    const CTemplateCatalog&         GetTemplateCatalog();
+    const CRayCatalog&              GetRayCatalog();
     const TFloat64Range&            GetLambdaRange() const;
     const TFloat64Range&            GetRedshiftRange() const;
     const TTemplateCategoryList&    GetTemplateCategoryList() const;
@@ -83,13 +87,15 @@ public:
     Float64                         GetRedshiftStep() const;
 
     Bool                            AddResults( const CTemplate& tpl,
-                                                const CRedshifts& selectedRedshifts,
-                                                const TFloat64List& selectedMerits, const COperator::TStatusList& selectedMeritsStatus,
-                                                const CRedshifts& allRedshifts, const TFloat64List& allMerits  );
+                                                const TFloat64List& selectedRedshifts, const TFloat64List& selectedCorrelation,
+                                                const TFloat64List& selectedMerits, const COperator::TStatusList& selectedStatus,
+                                                const TFloat64List& allRedshifts, const TFloat64List& allCorrelation );
+
+    const TResultsMap&              GetResults() const;
     Bool                            AddMeritResults( const CTemplate& tpl,
-                                          const CRedshifts& selectedRedshifts,
+                                          const TFloat64List& selectedRedshifts,
                                           const TFloat64List& selectedMerits, const COperator::TStatusList& selectedMeritsStatus,
-                                          const CRedshifts& redshifts);
+                                          const TFloat64List& redshifts);
     Bool                            SetRayDetectionResult(CRayCatalog& detectedRayCatalog);
     CRayCatalog&                    GetDetectedRayCatalog();
     Bool                            SetRayMatchingResult(const TRedshiftSolutionSetList &allresults, Float64 bestRedshift, Int32 bestRedshiftMatchingNumber);
@@ -112,7 +118,8 @@ private:
     TTemplateCategoryList           m_TemplateCategoryList;
     std::string                     m_SpectrumName;
 
-    TCorrelationResults             m_ProcessResult;
+    TResultsMap                     m_Results;
+
     CRef<CRayCatalog>               m_DetectedRayCatalog;
     SRayMatchingResult              m_RayMatchingResult;
 

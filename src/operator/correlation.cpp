@@ -39,7 +39,7 @@ Float64 COperatorCorrelation::GetComputationDuration() const
  * \note Spectrum AND template MUST be in log scale
  */
 Bool COperatorCorrelation::Compute(   const CSpectrum& spectrum, const CTemplate& tpl,
-                                      const TFloat64Range& lambdaRange, const CRedshifts& redshifts,
+                                      const TFloat64Range& lambdaRange, const TFloat64List& redshifts,
                                       Float64 overlapThreshold )
 {
     Bool retVal;
@@ -63,9 +63,9 @@ Bool COperatorCorrelation::Compute(   const CSpectrum& spectrum, const CTemplate
     const CSpectrumSpectralAxis& tplSpectralAxis = tpl.GetSpectralAxis();
     const CSpectrumFluxAxis& tplFluxAxis = tpl.GetFluxAxis();
 
-    m_Result.resize( redshifts.GetRedshiftsCount() );
-    m_Overlap.resize( redshifts.GetRedshiftsCount() );
-    m_Status.resize( redshifts.GetRedshiftsCount() );
+    m_Result.resize( redshifts.size() );
+    m_Overlap.resize( redshifts.size() );
+    m_Status.resize( redshifts.size() );
 
     CMask spcMask( spectrum.GetSampleCount() );
     CMask tplMask( tpl.GetSampleCount() );
@@ -76,7 +76,7 @@ Bool COperatorCorrelation::Compute(   const CSpectrum& spectrum, const CTemplate
     DebugAssert( retVal );
 
 
-    for ( Int32 i=0; i<redshifts.GetRedshiftsCount(); i++)
+    for ( Int32 i=0; i<redshifts.size(); i++)
     {
         m_Result[i] = NAN;
         m_Status[i] = nStatus_DataError;
