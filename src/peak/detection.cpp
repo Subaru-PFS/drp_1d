@@ -185,7 +185,7 @@ Void CPeakDetection::FindPossiblePeaks( const CSpectrumAxis& fluxAxis, const CSp
 
     // Detect each point whose value is over the median precomputed median
     std::vector<Bool> points;
-    points.resize( fluxAxis.GetSamplesCount() );
+    points.resize( fluxAxis.GetSamplesCount() + 1 );
     Int32 j = 0;
 
     for( Int32 i=0; i<fluxAxis.GetSamplesCount(); i++ )
@@ -207,7 +207,7 @@ Void CPeakDetection::FindPossiblePeaks( const CSpectrumAxis& fluxAxis, const CSp
     Int32 current = points[0];
     Int32 stop = points[0];
 
-    for( Int32 i=1; i<j; i++ )
+    for( Int32 i=1; i<j+1; i++ )
     {
         // Index stored in points[] are contiguous (i.e: 4,5,6)
         if( points[i]-1 == current )

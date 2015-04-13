@@ -97,7 +97,7 @@ Bool CRayMatching::Compute( const CRayCatalog& detectedRayCatalog, const CRayCat
         }
         if(!found)
         {
-            if(currentSet.size() > nThreshold){
+            if(currentSet.size() >= nThreshold){
                 Float64 redshiftMean = 0.f;
                 for( UInt32 i=0; i<currentSet.size(); i++ )
                 {
@@ -141,6 +141,21 @@ const TRedshiftSolutionSetList CRayMatching::GetResults() const
     return m_Results;
 }
 
+
+Bool CRayMatching::GetBestRedshift(Float64& Redshift, Int32& MatchingNumber)
+{
+    MatchingNumber = GetMaxMatchingNumber();
+    TRedshiftSolutionSetList selectedResults = GetSolutionsListOverNumber(MatchingNumber-1);
+
+    if(selectedResults.size()>0){
+        Redshift = GetMeanRedshiftSolution(selectedResults[0]);
+    }else{
+        return false;
+    }
+
+    return true;
+}
+
 const TRedshiftSolutionSetList CRayMatching::GetSolutionsListOverNumber(Int32 number) const
 {
     //select results by matching number
@@ -182,7 +197,7 @@ Float64 CRayMatching::GetMeanRedshiftSolution(TRedshiftSolutionSet& s){
     {
         redshiftMean += currentSet[i].Redshift;
     }
-    redshiftMean /= currentSet.size();
+    redshiftMean /= (float)currentSet.size();
 
     return redshiftMean;
 }

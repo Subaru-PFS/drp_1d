@@ -7,6 +7,8 @@
 #include <epic/redshift/spectrum/template/template.h>
 #include <epic/redshift/operator/operator.h>
 
+#include <epic/redshift/ray/matching.h>
+
 #include <map>
 #include <string>
 
@@ -44,8 +46,9 @@ public:
 
     struct SRayMatchingResult
     {
-        CRedshifts      Redshifts;
-        // not fully impleneted yet
+        Float64     BestRedshift;
+        Int32       BestRedshiftMatchingNumber;
+        TRedshiftSolutionSetList  MatchingSolutions;
     };
     typedef std::map< std::string, SRayMatchingResult >     TRayMatchingResults;
 
@@ -89,6 +92,8 @@ public:
                                           const CRedshifts& redshifts);
     Bool                            SetRayDetectionResult(CRayCatalog& detectedRayCatalog);
     CRayCatalog&                    GetDetectedRayCatalog();
+    Bool                            SetRayMatchingResult(const TRedshiftSolutionSetList &allresults, Float64 bestRedshift, Int32 bestRedshiftMatchingNumber);
+    Bool                            GetBestRayMatchingResult(Float64& bestRedshift, Float64& bestRedshiftMatchingNumber) const;
     Bool                            GetBestCorrelationResult( Float64& redshift, Float64& merit, std::string& tplName ) const;
 
     Bool                            DumpCorrelationResultsToCSV( const char* outputDirName ) const;
@@ -109,6 +114,7 @@ private:
 
     TCorrelationResults             m_ProcessResult;
     CRef<CRayCatalog>               m_DetectedRayCatalog;
+    SRayMatchingResult              m_RayMatchingResult;
 
 };
 

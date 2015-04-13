@@ -192,12 +192,22 @@ bool CProcessFlow::ProcessWithEL( CProcessFlowContext& ctx )
     // --- EZ: EL Search
     bool retVal = ELSearch(ctx);
     if(ctx.GetDetectedRayCatalog().GetList().size()<2){
-        return ProcessWithoutEL( ctx );
+        return false;
+        //return ProcessWithoutEL( ctx );
     }
 
     // --- EZ: EL Match
     CRayMatching rayMatching;
-    retVal = rayMatching.Compute(ctx.GetDetectedRayCatalog(), ctx.GetRayCatalog(), ctx.GetRedshiftRange(), 2, 0.001 );
+    retVal = rayMatching.Compute(ctx.GetDetectedRayCatalog(), ctx.GetRayCatalog(), ctx.GetRedshiftRange(), 2, 0.002 );
+    // Store matching results
+    {
+        Float64 bestz=-1.0;
+        Int32 bestzMatchingNum = -1;
+        rayMatching.GetBestRedshift(bestz, bestzMatchingNum);
+        ctx.SetRayMatchingResult(rayMatching.GetResults(), bestz, bestzMatchingNum);
+    }
+    return true;
+
     Int32 maxMatchingNum = rayMatching.GetMaxMatchingNumber();
     if(maxMatchingNum>2){ //ez equivalent to SolveDecisionalTree2:three_lines_match()
         TFloat64List selectedRedshift;
@@ -209,7 +219,7 @@ bool CProcessFlow::ProcessWithEL( CProcessFlowContext& ctx )
         }
 
         // --- EZ: solve_basic_nocorrelation
-        retVal = ComputeMerits( ctx, selectedRedshift);
+        //retVal = ComputeMerits( ctx, selectedRedshift);
     }
 
 
@@ -296,12 +306,12 @@ bool CProcessFlow::ComputeMerits( CProcessFlowContext& ctx, const TFloat64List& 
     const CProcessFlowContext::TTemplateCategoryList& templateCategotyList = ctx.GetTemplateCategoryList();
 
 
-    Log.LogInfo( "Process spectrum without EL (LambdaRange: %f-%f:%f)",
+    Log.LogInfo( "Process spectrum for Merit (LambdaRange: %f-%f:%f)",
             ctx.GetSpectrum().GetLambdaRange().GetBegin(), ctx.GetSpectrum().GetLambdaRange().GetEnd(), ctx.GetSpectrum().GetResolution());
 
     for( UInt32 i=0; i<templateCategotyList.size(); i++ )
     {
-        Log.LogInfo( "Processing template category: %s", CTemplate::GetCategoryName( templateCategotyList[i] ) );
+        Log.LogInfo( "Processing merits for template category: %s", CTemplate::GetCategoryName( templateCategotyList[i] ) );
         Log.Indent();
 
         if( ctx.GetTemplateCategoryList()[i] == CTemplate::nCategory_Star )

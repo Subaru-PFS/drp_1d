@@ -60,6 +60,7 @@ public:
     Int32 GetMaxMatchingNumber();
     const TRedshiftSolutionSetList GetSolutionsListOverNumber(Int32 number) const;
     const TRedshiftSolutionSetList GetResults() const;
+    Bool GetBestRedshift(Float64& Redshift, Int32& MatchingNumber);
 
 
 private:

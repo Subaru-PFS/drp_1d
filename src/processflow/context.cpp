@@ -29,7 +29,7 @@ CProcessFlowContext::SParam::SParam()
     smoothWidth = 0;
     overlapThreshold = 0.9;
 
-    //templateCategoryList.push_back( CTemplate::nCategory_Emission );
+    templateCategoryList.push_back( CTemplate::nCategory_Emission );
     templateCategoryList.push_back( CTemplate::nCategory_Galaxy );
     templateCategoryList.push_back( CTemplate::nCategory_Star );
     templateCategoryList.push_back( CTemplate::nCategory_Qso );
@@ -334,6 +334,14 @@ Bool CProcessFlowContext::GetBestCorrelationResult( Float64& redshift, Float64& 
 
 }
 
+Bool CProcessFlowContext::GetBestRayMatchingResult( Float64& bestRedshift, Float64& bestRedshiftMatchingNumber) const
+{
+
+    bestRedshift = m_RayMatchingResult.BestRedshift;
+    bestRedshiftMatchingNumber = m_RayMatchingResult.BestRedshiftMatchingNumber;
+    return false;
+
+}
 
 Bool CProcessFlowContext::GetIntermediateResults(std::string& corrStr, std::string& fitStr)
 {
@@ -426,4 +434,13 @@ Bool CProcessFlowContext::SetRayDetectionResult(CRayCatalog &detectedRayCatalog)
 CRayCatalog& CProcessFlowContext::GetDetectedRayCatalog()
 {
     return *m_DetectedRayCatalog;
+}
+
+Bool CProcessFlowContext::SetRayMatchingResult(const TRedshiftSolutionSetList& allresults, Float64 bestRedshift, Int32 bestRedshiftMatchingNumber)
+{
+    m_RayMatchingResult.BestRedshift = bestRedshift;
+    m_RayMatchingResult.BestRedshiftMatchingNumber = bestRedshiftMatchingNumber;
+    m_RayMatchingResult.MatchingSolutions = allresults;
+
+    return true;
 }
