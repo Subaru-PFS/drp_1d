@@ -96,7 +96,7 @@ Bool CProcessFlow::ProcessWithEL( CProcessFlowContext& ctx )
 
     // --- EZ: EL Match
     CRayMatching rayMatching;
-    retVal = rayMatching.Compute(ctx.GetDetectedRayCatalog(), ctx.GetRayCatalog(), ctx.GetRedshiftRange(), 2, 0.002 );
+    retVal = rayMatching.Compute(ctx.GetDetectedRayCatalog(), ctx.GetRayCatalog(), ctx.GetRedshiftRange(), 2, 0.001 );
     // Store matching results
     {
         Float64 bestz=-1.0;

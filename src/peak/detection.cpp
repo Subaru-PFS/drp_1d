@@ -30,7 +30,7 @@ Bool CPeakDetection::Compute( const CSpectrum& spectrum, const TLambdaRange& lam
 
     CSpectrumFluxAxis smoothedFluxAxis = fluxAxis;
 
-    if(false && medianSmoothHalfWidth  )
+    if( medianSmoothHalfWidth  )
     {
         smoothedFluxAxis.ApplyMedianSmooth( medianSmoothHalfWidth );
     }
@@ -46,7 +46,7 @@ Bool CPeakDetection::Compute( const CSpectrum& spectrum, const TLambdaRange& lam
         return false;
     }
 
-    //RedefineBorders( peaksBorders, spectralAxis, smoothedFluxAxis, fluxAxis );
+    RedefineBorders( peaksBorders, spectralAxis, smoothedFluxAxis, fluxAxis );
 
     if( enlargeRate )
     {
@@ -76,7 +76,7 @@ TInt32Range CPeakDetection::FindGaussianFitStartAndStop( Int32 i, const TInt32Ra
             fitStart = max( peaksBorders[i-1].GetEnd(), fitStart );
     }
 
-    if( i<peaksBorders.size() )
+    if( i<peaksBorders.size()-1 )
     {
         if( peaksBorders[i+1].GetBegin() > -1 )
             fitStop = min( peaksBorders[i+1].GetBegin(), fitStop );
@@ -98,7 +98,8 @@ Void CPeakDetection::RedefineBorders( TInt32RangeList& peakList, const CSpectrum
 {
     const Float64* smoothFluxData = smoothFluxAxis.GetSamples();
 
-    for( UInt32 iPeak=peakList.size()-1; iPeak>=0; iPeak-- )
+    Int32 nPeaksInitial = peakList.size();
+    for( Int32 iPeak=nPeaksInitial-1; iPeak>=0; iPeak-- )
     {
         int centerPos=-1;
         Float64 centerVal = -1e12;

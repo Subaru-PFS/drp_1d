@@ -39,14 +39,14 @@ void CRedshiftPeakDetectionTestCase::Compute()
 
     Float64 peakxpos[] = {1000, 5000, 8000};
     Float64 peaksigmas[] = {40.0, 10.0, 45.0};
-    UInt32 n=3;
+    UInt32 n=4;
 
     // test number of peaks
     CPPUNIT_ASSERT(n == resPeaks.size());
 
     // test peak xpos
     Float64 toleranceXPos = 15.f;
-    for(int i=0; i<n; i++){
+    for(int i=0; i<n-1; i++){
         Float64 fwhm =  2*sqrt(2*log(2))*peaksigmas[i];
         Float64 infRef = peakxpos[i]-fwhm/2.0*1.5;
         infRef = max((Float64)infRef, 0.0);
