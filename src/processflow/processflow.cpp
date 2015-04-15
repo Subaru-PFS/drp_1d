@@ -36,7 +36,8 @@ CProcessFlow::~CProcessFlow()
 
 Bool CProcessFlow::Process( CProcessFlowContext& ctx )
 {
-    return ProcessWithEL( ctx );
+    return ProcessWithoutEL( ctx );
+    //return ProcessWithEL( ctx );
 
     const CProcessFlowContext::TTemplateCategoryList& tplCategoryList = ctx.GetTemplateCategoryList();
     if( std::find( tplCategoryList.begin(), tplCategoryList.end(), CTemplate::nCategory_Emission )==tplCategoryList.end() )
