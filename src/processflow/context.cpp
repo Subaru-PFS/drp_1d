@@ -438,7 +438,7 @@ Bool CProcessFlowContext::SetRayDetectionResult(CRayCatalog &detectedRayCatalog)
 }
 
 
-CRayCatalog& CProcessFlowContext::GetDetectedRayCatalog()
+CRayCatalog& CProcessFlowContext::GetDetectedRayCatalog() const
 {
     return *m_DetectedRayCatalog;
 }

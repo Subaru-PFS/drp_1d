@@ -97,11 +97,10 @@ public:
                                           const TFloat64List& selectedMerits, const COperator::TStatusList& selectedMeritsStatus,
                                           const TFloat64List& redshifts);
     Bool                            SetRayDetectionResult(CRayCatalog& detectedRayCatalog);
-    CRayCatalog&                    GetDetectedRayCatalog();
+    CRayCatalog&                    GetDetectedRayCatalog() const;
     Bool                            SetRayMatchingResult(const TRedshiftSolutionSetList &allresults, Float64 bestRedshift, Int32 bestRedshiftMatchingNumber);
     Bool                            GetBestRayMatchingResult(Float64& bestRedshift, Float64& bestRedshiftMatchingNumber) const;
     Bool                            GetBestCorrelationResult( Float64& redshift, Float64& merit, std::string& tplName ) const;
-
     Bool                            DumpCorrelationResultsToCSV( const char* outputDirName ) const;
     Bool                            GetIntermediateResults(std::string& corrStr, std::string& fitStr);
 

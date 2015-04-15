@@ -33,7 +33,7 @@ private:
 
     bool ELSearch( CProcessFlowContext& ctx );
     bool ComputeMerits( CProcessFlowContext& ctx, const TFloat64List& redshifts);
-
+    Float64 XMadFind( const Float64* x, Int32 n, Float64 median );
 
     Bool BlindSolve( CProcessFlowContext& ctx, const CTemplate& tpl, const CTemplate& tplWithoutCont  );
 };

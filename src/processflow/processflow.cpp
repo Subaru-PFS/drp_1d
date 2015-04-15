@@ -15,6 +15,7 @@
 #include <epic/redshift/ray/ray.h>
 #include <epic/redshift/ray/catalog.h>
 #include <epic/redshift/ray/matching.h>
+#include <epic/redshift/common/median.h>
 #include <stdio.h>
 
 
@@ -128,10 +129,12 @@ bool CProcessFlow::ELSearch( CProcessFlowContext& ctx )
 {
     const CSpectrum& spc = ctx.GetSpectrum();
     const TFloat64Range& lambdaRange = ctx.GetLambdaRange();
+    const CSpectrumFluxAxis fluxAxis = spc.GetFluxAxis();
 
     // detect possible peaks
     Float64 winsize = 250.0;
-    Float64 cut = 5;
+    Float64 cut = 5.0;
+    Float64 strongcut = 2.0;
     CPeakDetection detection;
     Float64 minsize = 3;
     Float64 maxsize = 90;
@@ -155,6 +158,8 @@ bool CProcessFlow::ELSearch( CProcessFlowContext& ctx )
         Float64 gaussPos;
         Float64 gaussWidth;
         fitter.GetResults( gaussAmp, gaussPos, gaussWidth );
+        Float64 gaussCont;
+        fitter.GetResultsPolyCoeff0( gaussCont );
 
         /* check pos
         if(){
@@ -166,24 +171,67 @@ bool CProcessFlow::ELSearch( CProcessFlowContext& ctx )
             toAdd = false;
         }
         // check width
-        Float64 FWHM_FACTOR=2.35;
-        if(gaussWidth<0){
-            toAdd = false;
-        }else{
-            Float64 fwhm = FWHM_FACTOR*gaussWidth;
-            if(fwhm<minsize){
+        if(toAdd){
+            Float64 FWHM_FACTOR=2.35;
+            if(gaussWidth<0){
                 toAdd = false;
+            }else{
+                Float64 fwhm = FWHM_FACTOR*gaussWidth;
+                if(fwhm<minsize){
+                    toAdd = false;
+                }
+                if(fwhm>maxsize){
+                    toAdd = false;
+                }
             }
-            if(fwhm>maxsize){
+        }
+
+        //find max value and pos
+        Float64 max_value = DBL_MIN;
+        Int32 max_index = -1;
+        for( Int32 k=resPeaks[j].GetBegin(); k<resPeaks[j].GetEnd(); k++ )
+        {
+            if(max_value < fluxAxis[k]){
+                max_value = fluxAxis[k];
+                max_index = k;
+            }
+        }
+
+        // Check if gaussian fit is very different from peak itself
+        if(toAdd){
+            // check max_gauss vs max_spectrum
+            Float64 gaussAmp_with_cont = gaussAmp + gaussCont;
+            if(gaussAmp_with_cont/max_value <= 0.65 || gaussAmp_with_cont/max_value >= 1.35){
                 toAdd = false;
             }
         }
 
+        // check type weak or strong
+        Int32 type = 1; //weak by default
         if(toAdd){
-            // check type weak or strong
-            Int32 type = 2;
             // strong/weak test to do
-            //...
+            const Float64* fluxData = fluxAxis.GetSamples();
+            CMedian<Float64> medianProcessor;
+            Float64 med = medianProcessor.Find( fluxData + resPeaks[j].GetBegin(), resPeaks[j].GetEnd() - resPeaks[j].GetBegin() + 1 );
+            Float64 xmad = XMadFind( fluxData + resPeaks[j].GetBegin(), resPeaks[j].GetEnd() - resPeaks[j].GetBegin() + 1 , med);
+            // TODO: check with the noise spectrum
+            /*if noise!=None:
+            noise_mean=noise[left_index:right_index].mean()
+            if noise_mean>xmadm:
+                # Use noise file
+                xmadm=noise_mean
+                self.msg.debug(self.__module__, '18.96', 0, self.spectrum.name, "%4.1f" % pos)
+            */
+            Float64 ratioAmp=max_value/xmad;
+
+            if(ratioAmp<cut){
+                toAdd = false;
+            }else if(ratioAmp>cut*strongcut){
+                type = 1001; //strong
+            }
+        }
+
+        if(toAdd){
             char buffer [64];
             sprintf(buffer,"detected_peak_%d",j);
             std::string peakName = buffer;
@@ -193,6 +241,37 @@ bool CProcessFlow::ELSearch( CProcessFlowContext& ctx )
 
     ctx.SetRayDetectionResult(*detectedRayCatalog);
 
+}
+
+Float64 CProcessFlow::XMadFind( const Float64* x, Int32 n, Float64 median )
+{
+    std::vector<Float64> xdata;
+    Float64 xmadm = 0.0;
+
+    xdata.reserve( n );
+
+    for( Int32 i=0;i<n; i++ )
+    {
+        xdata[i] = fabs( x[i]-median );
+    }
+
+    CQuickSort<Float64> sort;
+
+    sort.Sort( xdata.data(), n);
+
+    if( ((float)n)/2. - int(n/2.) == 0 )
+    {
+        UInt32 i1 = n/2;
+        UInt32 i2 = n/2 + 1;
+        xmadm = 0.5*(xdata[i1]+xdata[i2]);
+    }
+    else
+    {
+        UInt32 i1 = int(n/2) + 1;
+        xmadm = xdata[i1];
+    }
+
+    return xmadm;
 }
 
 bool CProcessFlow::ComputeMerits( CProcessFlowContext& ctx, const TFloat64List& redshifts)
