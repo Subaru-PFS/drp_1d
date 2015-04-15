@@ -20,6 +20,12 @@ CSpectrum::~CSpectrum()
 
 }
 
+CSpectrum& CSpectrum::operator=(const CSpectrum& other)
+{
+    m_SpectralAxis = other.GetSpectralAxis();
+    m_FluxAxis = other.GetFluxAxis();
+}
+
 /**
  * Convert the spectral axis to a neperian logarithm scale
  */

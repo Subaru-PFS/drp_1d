@@ -1,31 +1,19 @@
-CMAKE_MINIMUM_REQUIRED (VERSION 2.6) 
-PROJECT( epic_redshift ) 
+CMAKE_MINIMUM_REQUIRED (VERSION 2.8) 
+PROJECT( cpf-redshift ) 
 
-INCLUDE( ../../core/build/CMakeCommon.in )
-
-SET( COMPILE_TEST "" )
-#SET( ENABLE_PROFILING "" )
+#--------------------------------------------------------
+# Find Package
+#--------------------------------------------------------
+FIND_PACKAGE( cpf-core REQUIRED )
 
 #--------------------------------------------------------
 # Setup shortcut acces directory
 #--------------------------------------------------------
-SET( EPIC_REDSHIFT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../" )
-SET( EPIC_CORE_DIR "${EPIC_REDSHIFT_DIR}/../core/" )
+SET( ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/.." )
 
-MESSAGE( STATUS "CMAKE_BUILD_TYPE = " ${CMAKE_BUILD_TYPE} )
-MESSAGE( STATUS "CMAKE_SYSTEM_NAME = " ${CMAKE_SYSTEM_NAME} )
-MESSAGE( STATUS "CMAKE_SYSTEM_PROCESSOR = " ${CMAKE_SYSTEM_PROCESSOR} )
-
-SET( CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${EPIC_REDSHIFT_DIR}/lib )
-SET( CMAKE_LIBRARY_OUTPUT_DIRECTORY ${EPIC_REDSHIFT_DIR}/lib )
-SET( CMAKE_RUNTIME_OUTPUT_DIRECTORY ${EPIC_REDSHIFT_DIR}/bin )
-
-#--------------------------------------------------------
-# Setup bin sufix
-# Save architecture and system info used by the package_release.py script
-#--------------------------------------------------------
-SET( BIN_SUFFIX "" )
-UPDATE_SYSTEM_NAME_AND_PROCESSOR( ${EPIC_REDSHIFT_DIR} BIN_SUFFIX )
+SET( CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${ROOT_DIR}/lib )
+SET( CMAKE_LIBRARY_OUTPUT_DIRECTORY ${ROOT_DIR}/lib )
+SET( CMAKE_RUNTIME_OUTPUT_DIRECTORY ${ROOT_DIR}/bin )
 
 #--------------------------------------------------------
 # Compiler options
@@ -33,79 +21,73 @@ UPDATE_SYSTEM_NAME_AND_PROCESSOR( ${EPIC_REDSHIFT_DIR} BIN_SUFFIX )
 SET( CMAKE_CXX_FLAGS "-O3 ")
 
 IF( DEFINED ENABLE_PROFILING )
-  SET( CMAKE_CXX_FLAGS_DEBUG "-O0 -g -DDEBUG_BUILD -pg")
+    SET( CMAKE_CXX_FLAGS_DEBUG "-O0 -g -DDEBUG_BUILD -pg")
 ELSE()
-  SET( CMAKE_CXX_FLAGS_DEBUG "-O0 -g -DDEBUG_BUILD")
+    SET( CMAKE_CXX_FLAGS_DEBUG "-O0 -g -DDEBUG_BUILD")
 ENDIF()
 
-INCLUDE_DIRECTORIES( "${EPIC_REDSHIFT_DIR}/include/" )
-INCLUDE_DIRECTORIES( "${EPIC_REDSHIFT_DIR}/thirdparty/include/" )
-INCLUDE_DIRECTORIES( "${EPIC_CORE_DIR}/include/" )
-INCLUDE_DIRECTORIES( "${EPIC_CORE_DIR}/thirdparty/include/" )
+#--------------------------------------------------------
+# Exported configuration variables
+#--------------------------------------------------------
+SET( cpf-redshift_INCLUDE_DIR ${ROOT_DIR}/include/ )
+SET( cpf-redshift_THIRDPARTY_INCLUDE_DIR ${ROOT_DIR}/thirdparty/include/ )
 
-LINK_DIRECTORIES( "${EPIC_REDSHIFT_DIR}/lib" )
-LINK_DIRECTORIES( "${EPIC_REDSHIFT_DIR}/thirdparty/lib/" )
-LINK_DIRECTORIES( "${EPIC_CORE_DIR}/thirdparty/lib/" )
-LINK_DIRECTORIES( "${EPIC_CORE_DIR}/lib/" )
+SET( cpf-redshift_LINK_DIR ${ROOT_DIR}/lib/ )
+SET( cpf-redshift_THIRDPARTY_LINK_DIR ${ROOT_DIR}/thirdparty/lib/ )
+
+SET( cpf-redshift_THIRDPARTY_LIBS cfitsio)
+
+#--------------------------------------------------------
+# Preprocessor and linker path
+#--------------------------------------------------------
+INCLUDE_DIRECTORIES(    ${cpf-redshift_INCLUDE_DIR}  ${cpf-redshift_THIRDPARTY_INCLUDE_DIR} 
+                        ${cpf-core_INCLUDE_DIR} ${cpf-core_THIRDPARTY_INCLUDE_DIR} )
+
+LINK_DIRECTORIES(       ${cpf-redshift_LINK_DIR} ${cpf-redshift_THIRDPARTY_LINK_DIR} 
+                        ${cpf-core_LINK_DIR} ${cpf-core_THIRDPARTY_LINK_DIR})
 
 #-------------------------  -------------------------------
 # Extract version number
 #--------------------------------------------------------
-FILE (STRINGS "${EPIC_REDSHIFT_DIR}/VERSION" VERSION_NUMBER)
-
-
-MESSAGE( STATUS "VERSION_NUMBER: " ${VERSION_NUMBER} )
+FILE (STRINGS ${ROOT_DIR}/VERSION VERSION_NUMBER)
 
 #--------------------------------------------------------
 # Compile library
 #--------------------------------------------------------
+SET( LIB_NAME cpf-redshift )
 
-FILE( GLOB_RECURSE LIB_REDSHIFT_SOURCE_FILE_LIST ${EPIC_REDSHIFT_DIR}/src/*.cpp )
+FILE( GLOB_RECURSE LIB_SOURCE_FILES ${ROOT_DIR}/src/*.cpp )
 
-SET( EPIC_REDSHIFT_STATIC epic_redshift_static${BIN_SUFFIX} )
-
-ADD_LIBRARY( ${EPIC_REDSHIFT_STATIC} STATIC ${LIB_REDSHIFT_SOURCE_FILE_LIST} )
-
+ADD_LIBRARY( ${LIB_NAME} STATIC ${LIB_SOURCE_FILES} )
 
 #--------------------------------------------------------
 # Compile test
 #--------------------------------------------------------
-IF( DEFINED COMPILE_TEST )
+SET( TEST_NAME cpf-redshift-test )
+  
+FILE( GLOB_RECURSE TEST_SOURCE_FILES ${ROOT_DIR}/test/*.cpp )
 
-  SET( EPIC_REDSHIFT_TEST epic_redshift_test${BIN_SUFFIX} )
-  
-  FILE( GLOB_RECURSE TEST_SOURCE_FILE_LIST ${EPIC_REDSHIFT_DIR}/test/*.cpp )
-  
-  ADD_EXECUTABLE( ${EPIC_REDSHIFT_TEST} ${TEST_SOURCE_FILE_LIST} )
+ADD_EXECUTABLE( ${TEST_NAME} ${TEST_SOURCE_FILES} )
 
-  # Supply link librairies
-  TARGET_LINK_LIBRARIES( ${EPIC_REDSHIFT_TEST} ${EPIC_REDSHIFT_STATIC} )
-
-  TARGET_LINK_LIBRARIES( ${EPIC_REDSHIFT_TEST} pthread )
-  
-  IF( ${CMAKE_HOST_SYSTEM_NAME} STREQUAL "Darwin" )
-    
-  ELSEIF( ${CMAKE_HOST_SYSTEM_NAME} STREQUAL "Linux" )
-    TARGET_LINK_LIBRARIES( ${EPIC_REDSHIFT_TEST} rt )
-  ENDIF()
-  
-  TARGET_LINK_LIBRARIES( ${EPIC_REDSHIFT_TEST} epic_core_static${BIN_SUFFIX}.a )
-  TARGET_LINK_LIBRARIES( ${EPIC_REDSHIFT_TEST} cppunit.a )
-  TARGET_LINK_LIBRARIES( ${EPIC_REDSHIFT_TEST} cfitsio.a )
-  TARGET_LINK_LIBRARIES( ${EPIC_REDSHIFT_TEST} boost_filesystem.a )
-  TARGET_LINK_LIBRARIES( ${EPIC_REDSHIFT_TEST} boost_system.a )
-  TARGET_LINK_LIBRARIES( ${EPIC_REDSHIFT_TEST} boost_thread.a )
-  TARGET_LINK_LIBRARIES( ${EPIC_REDSHIFT_TEST} zmq.a )
-  
-  
-  ADD_CUSTOM_TARGET( runtest COMMAND cd ${EPIC_REDSHIFT_DIR}/bin/ && ./${EPIC_REDSHIFT_TEST} DEPENDS ${EPIC_REDSHIFT_TEST} )
-  
-ENDIF()
-
-
-
+# Supply link librairies
+TARGET_LINK_LIBRARIES( ${TEST_NAME} ${LIB_NAME}   ${cpf-core_LIB} ${cpf-core_THIRDPARTY_LIBS} ${cpf-redshift_THIRDPARTY_LIBS} cppunit.a)
 
 #--------------------------------------------------------
-# Compile docs
+# Install directive
 #--------------------------------------------------------
-ADD_CUSTOM_TARGET( makedoc COMMAND cd ${EPIC_REDSHIFT_DIR}/doc/ && ../thirdparty/bin/doxygen ./doxygen.conf )
+INSTALL( TARGETS ${LIB_NAME} ARCHIVE DESTINATION lib )
+INSTALL( DIRECTORY ${ROOT_DIR}/include/ DESTINATION include )
+INSTALL( FILES  ${CMAKE_CURRENT_SOURCE_DIR}/cpf-redshift-config.cmake DESTINATION cmake )
+
+#--------------------------------------------------------
+# Package deployement and config
+#--------------------------------------------------------
+INCLUDE ( CMakePackageConfigHelpers )
+
+CONFIGURE_PACKAGE_CONFIG_FILE( 
+       ${CMAKE_CURRENT_SOURCE_DIR}/cpf-redshift-config.cmake.in
+       ${CMAKE_CURRENT_SOURCE_DIR}/cpf-redshift-config.cmake
+       INSTALL_DESTINATION cmake
+        )
+       
+EXPORT( PACKAGE ${LIB_NAME} )

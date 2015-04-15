@@ -6,6 +6,8 @@
 
 using namespace NSEpic;
 
+using namespace NSEpicTest;
+
 void CRedshiftTemplateTestCase::setUp()
 {
 }
@@ -18,7 +20,7 @@ void CRedshiftTemplateTestCase::LoadCatalog()
 {
     CTemplateCatalog catalog;
 
-    Bool rValue = catalog.Load( "../test/redshift/data/templatecatalog/" );
+    Bool rValue = catalog.Load( "../test/data/templatecatalog/" );
     CPPUNIT_ASSERT( rValue == true );
     CPPUNIT_ASSERT( catalog.GetTemplateCount( CTemplate::nCategory_Galaxy ) == 2 );
     CPPUNIT_ASSERT( catalog.GetTemplateCount( CTemplate::nCategory_Emission ) == 1 );

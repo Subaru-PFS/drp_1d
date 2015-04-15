@@ -14,16 +14,25 @@ CSpectrumSpectralAxis::CSpectrumSpectralAxis() :
 
 }
 
-CSpectrumSpectralAxis::CSpectrumSpectralAxis( UInt32 n ) :
+CSpectrumSpectralAxis::CSpectrumSpectralAxis( UInt32 n, Bool isLogScale ) :
     CSpectrumAxis( n ),
     m_SpectralFlags( 0 )
 {
+    if( isLogScale )
+        m_SpectralFlags |= nFLags_LogScale;
 }
 
-CSpectrumSpectralAxis::CSpectrumSpectralAxis( const Float64* samples, UInt32 n ) :
+CSpectrumSpectralAxis::CSpectrumSpectralAxis( const Float64* samples, UInt32 n, Bool isLogScale ) :
     CSpectrumAxis( samples, n ),
     m_SpectralFlags( 0 )
 {
+    if( isLogScale )
+        m_SpectralFlags |= nFLags_LogScale;
+}
+
+CSpectrumSpectralAxis::CSpectrumSpectralAxis( const CSpectrumSpectralAxis& origin, Float64 wavelengthOffset, EShiftDirection direction  )
+{
+    ShiftByWaveLength( origin, wavelengthOffset, direction );
 }
 
 CSpectrumSpectralAxis::~CSpectrumSpectralAxis()
@@ -31,14 +40,90 @@ CSpectrumSpectralAxis::~CSpectrumSpectralAxis()
 
 }
 
-Void CSpectrumSpectralAxis::ShiftByWaveLength( Float64 wavelengthOffset )
-{
-    if( m_SpectralFlags & nFLags_LogScale )
-        wavelengthOffset = log( wavelengthOffset );
 
-    for( Int32 i=0; i< GetSamplesCount(); i++ )
+CSpectrumSpectralAxis& CSpectrumSpectralAxis::operator=(const CSpectrumSpectralAxis& other)
+{
+    m_SpectralFlags = other.m_SpectralFlags;
+    CSpectrumAxis::operator=( other );
+}
+
+Void CSpectrumSpectralAxis::ShiftByWaveLength( Float64 wavelengthOffset, EShiftDirection direction )
+{
+	ShiftByWaveLength( *this, wavelengthOffset, direction );
+}
+
+Void CSpectrumSpectralAxis::ShiftByWaveLength( const CSpectrumSpectralAxis& origin, Float64 wavelengthOffset, EShiftDirection direction )
+{
+    m_SpectralFlags = 0;
+
+    DebugAssert( origin.GetSamplesCount() == GetSamplesCount() );
+
+    const Float64* originSamples = origin.GetSamples();
+
+    DebugAssert( direction == nShiftForward || direction == nShiftBackward );
+
+    if( wavelengthOffset == 0.0 )
     {
-        m_Samples[i] = m_Samples[i] + wavelengthOffset;
+        for( Int32 i=0; i< origin.GetSamplesCount(); i++ )
+        {
+            m_Samples[i] = originSamples[i];
+        }
+
+        return;
+    }
+
+    if( origin.IsInLogScale() )
+    {
+        wavelengthOffset = log( wavelengthOffset );
+        m_SpectralFlags |= nFLags_LogScale;
+
+        if( direction == nShiftForward )
+        {
+            for( Int32 i=0; i< origin.GetSamplesCount(); i++ )
+            {
+                m_Samples[i] = originSamples[i] + wavelengthOffset;
+            }
+        }
+        else if( direction == nShiftBackward )
+        {
+            for( Int32 i=0; i< origin.GetSamplesCount(); i++ )
+            {
+                m_Samples[i] = originSamples[i] - wavelengthOffset;
+            }
+        }
+    }
+    else
+    {
+
+        if( direction == nShiftForward )
+        {
+            for( Int32 i=0; i< origin.GetSamplesCount(); i++ )
+            {
+                m_Samples[i] = originSamples[i] * wavelengthOffset;
+            }
+        }
+        else if( direction == nShiftBackward )
+        {
+            for( Int32 i=0; i< origin.GetSamplesCount(); i++ )
+            {
+                m_Samples[i] = originSamples[i] / wavelengthOffset;
+            }
+        }
+    }
+
+}
+
+Void CSpectrumSpectralAxis::CopyFrom( const CSpectrumSpectralAxis& other )
+{
+    m_SpectralFlags = other.m_SpectralFlags;
+
+    SetSize( other.GetSamplesCount() );
+
+    // Copy spectral data
+    const Float64* otherData = other.GetSamples();
+    for( UInt32 i=0; i<other.GetSamplesCount(); i++ )
+    {
+        m_Samples[i] = otherData[i];
     }
 }
 
@@ -60,7 +145,7 @@ Float64 CSpectrumSpectralAxis::GetResolution( Float64 atWavelength ) const
     }
     else
     {
-        return GetLambdaRange().GetLength() / m_Samples.size();
+        return m_Samples[1] - m_Samples[0];
     }
 
     return 0;
@@ -74,23 +159,6 @@ Bool CSpectrumSpectralAxis::IsInLogScale() const
 Bool CSpectrumSpectralAxis::IsInLinearScale() const
 {
     return !(m_SpectralFlags & nFLags_LogScale);
-}
-
-Bool CSpectrumSpectralAxis::HasUniformResolution() const
-{
-    Float64 r1 = GetResolution();
-    Float64 r2 = 0.0;
-    Float64 d = 0.0;
-
-    for( Int32 i=0; i<GetSamplesCount()-1; i++ )
-    {
-        r2 = m_Samples[i+1] - m_Samples[i];
-        d = fabs( r2 - r1 );
-        if( d > 0.01 )
-            return false;
-    }
-
-    return true;
 }
 
 TLambdaRange CSpectrumSpectralAxis::GetLambdaRange() const
@@ -129,22 +197,22 @@ Void CSpectrumSpectralAxis::GetMask( const TFloat64Range& lambdaRange,  CMask& m
 
 Bool CSpectrumSpectralAxis::ClampLambdaRange( const TFloat64Range& range, TFloat64Range& clampedRange ) const
 {
-    TFloat64Range otherRange = GetLambdaRange();
+    TFloat64Range effectiveRange = GetLambdaRange();
 
     clampedRange = TFloat64Range();
 
-    if( range.GetIsEmpty() || otherRange.GetIsEmpty() )
+    if( range.GetIsEmpty() || effectiveRange.GetIsEmpty() )
         return false;
 
     // Clamp lambda start
     Float64 start = range.GetBegin();
-    if ( start < otherRange.GetBegin() )
-        start = otherRange.GetBegin();
+    if ( start < effectiveRange.GetBegin() )
+        start = effectiveRange.GetBegin();
 
     // CLamp lambda end
     Float64 end = range.GetEnd();
-    if ( end > otherRange.GetEnd() )
-        end = otherRange.GetEnd();
+    if ( end > effectiveRange.GetEnd() )
+        end = effectiveRange.GetEnd();
 
     clampedRange = TFloat64Range( start, end );
     return true;

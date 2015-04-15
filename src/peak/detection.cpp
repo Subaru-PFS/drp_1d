@@ -8,7 +8,10 @@
 
 #include <math.h>
 
+#include <stdio.h>
+
 using namespace NSEpic;
+IMPLEMENT_MANAGED_OBJECT(CPeakDetection)
 
 CPeakDetection::CPeakDetection()
 {
@@ -20,22 +23,17 @@ CPeakDetection::~CPeakDetection()
 
 }
 
-Bool CPeakDetection::Compute( const CSpectrum& spectrum, const TFloat64Range& lambdaRange )
+Bool CPeakDetection::Compute( const CSpectrum& spectrum, const TLambdaRange& lambdaRange, Float64 windowSize, Float64 cut, UInt32 medianSmoothHalfWidth, UInt32 enlargeRate )
 {
-    Bool mStarCheck = false;
-    Float64 windowSize = 1.0f;
-    Float64 cut = 1.0;
-
-    if( mStarCheck )
-    {
-
-    }
-
     const CSpectrumFluxAxis& fluxAxis = spectrum.GetFluxAxis();
     const CSpectrumSpectralAxis& spectralAxis = spectrum.GetSpectralAxis();
 
     CSpectrumFluxAxis smoothedFluxAxis = fluxAxis;
-    smoothedFluxAxis.ApplyMedianSmooth( 1 );
+
+    if( medianSmoothHalfWidth  )
+    {
+        smoothedFluxAxis.ApplyMedianSmooth( medianSmoothHalfWidth );
+    }
 
     UInt32 windowSampleCount = windowSize / spectrum.GetResolution();
 
@@ -50,22 +48,27 @@ Bool CPeakDetection::Compute( const CSpectrum& spectrum, const TFloat64Range& la
 
     RedefineBorders( peaksBorders, spectralAxis, smoothedFluxAxis, fluxAxis );
 
-    for( UInt32 i=0; i<peaksBorders.size(); i++ )
+    if( enlargeRate )
     {
-        TInt32Range fitRange = FindGaussianFitStartAndStop( i, peaksBorders, spectralAxis.GetSamplesCount() );
+        for( UInt32 i=0; i<peaksBorders.size(); i++ )
+        {
+            TInt32Range fitRange = FindGaussianFitStartAndStop( i, peaksBorders, enlargeRate, spectralAxis.GetSamplesCount() );
+            peaksBorders[i] = fitRange;
+        }
     }
 
+    m_Results = peaksBorders;
     return true;
 }
 
-TInt32Range CPeakDetection::FindGaussianFitStartAndStop( Int32 i, const TInt32RangeList& peaksBorders, Int32 len )
+TInt32Range CPeakDetection::FindGaussianFitStartAndStop( Int32 i, const TInt32RangeList& peaksBorders, UInt32 enlargeRate, Int32 len )
 {
     Int32 fitStart = peaksBorders[i].GetBegin();
     Int32 fitStop = peaksBorders[i].GetEnd();
 
     Int32 rate = fitStop - fitStart;
-    fitStart = max( 0, fitStart - 2*rate );
-    fitStop = min( len, fitStop + 2*rate );
+    fitStart = max( 0, fitStart - (int)enlargeRate*rate );
+    fitStop = min( len, fitStop + (int)enlargeRate*rate );
 
     if( i>0 )
     {
@@ -73,22 +76,73 @@ TInt32Range CPeakDetection::FindGaussianFitStartAndStop( Int32 i, const TInt32Ra
             fitStart = max( peaksBorders[i-1].GetEnd(), fitStart );
     }
 
-    if( i<peaksBorders.size() )
+    if( i<peaksBorders.size()-1 )
     {
         if( peaksBorders[i+1].GetBegin() > -1 )
-            fitStop = max( peaksBorders[i+1].GetBegin(), fitStop );
+            fitStop = min( peaksBorders[i+1].GetBegin(), fitStop );
     }
 
     return TInt32Range( fitStart, fitStop );
 }
 
 /**
- * Not yet implemented.
+ * Not fully implemented.
  * Does not seam to do any vital things (CF ez.function.lines.EZELfind: 697)
+ *
+ * _find_borders8, (CF ez.function.lines.EZELfind: 365)
+ * 1. find center = max_position in the current range
+ * 2. if center (=max position) is  on the left or on the right -> disable this peak
+ * 3. todo: use waves and fluxAxis for proper logging
  */
 Void CPeakDetection::RedefineBorders( TInt32RangeList& peakList, const CSpectrumAxis& waves, const CSpectrumAxis& smoothFluxAxis, const CSpectrumAxis& fluxAxis )
 {
+    const Float64* smoothFluxData = smoothFluxAxis.GetSamples();
 
+    Int32 nPeaksInitial = peakList.size();
+    for( Int32 iPeak=nPeaksInitial-1; iPeak>=0; iPeak-- )
+    {
+        int centerPos=-1;
+        Float64 centerVal = -1e12;
+        // find position of the maximum on the smoothed flux
+        for( Int32 i=peakList[iPeak].GetBegin(); i<peakList[iPeak].GetEnd(); i++ )
+        {
+            if(centerVal<smoothFluxData[i]){
+                centerVal = smoothFluxData[i];
+                centerPos = i;
+            }
+        }
+
+        int old_left= centerPos;
+        int old_right= centerPos;
+        int new_left= std::max(0, centerPos-1);
+        int new_right= std::min(0, centerPos+1);
+
+        if(new_left==0 || new_right==fluxAxis.GetSamplesCount()){
+            // if the max is found on the border, then erase this range
+            peakList.erase(peakList.begin() + iPeak);
+        }else{
+            while(smoothFluxData[new_left]<=smoothFluxData[old_left]){
+                if(new_left==0){
+                    old_left=0;
+                    break;
+                }
+                old_left=new_left;
+                new_left=max(0, new_left-1);
+            }
+            while(smoothFluxData[new_right]<=smoothFluxData[old_right]){
+                if(new_right==fluxAxis.GetSamplesCount()-1){
+                    old_right=new_right;
+                    break;
+                }
+                old_right=new_right;
+                new_right=max(0, new_right+1);
+            }
+            if(new_right == new_left){
+                peakList.erase(peakList.begin() + iPeak);
+            }
+        }
+
+    }
 }
 
 
@@ -115,9 +169,24 @@ Void CPeakDetection::FindPossiblePeaks( const CSpectrumAxis& fluxAxis, const CSp
         xmad[i] = XMad( fluxData+ start, halfWindowSampleCount*2 + 1, med[i] );
     }
 
+    //*//debug:
+    // save median and xmad,  flux data
+    FILE* f = fopen( "peakdetection_dbg_median.txt", "w+" );
+    for( Int32 i=0; i<fluxAxis.GetSamplesCount(); i++ )
+    {
+        if( med[i] < 0.0001 ){
+            fprintf( f, "%d %e %e %e %e\n", i, med[i], xmad[i], med[i]+0.5*cut*xmad[i], fluxData[i]);
+        }else{
+            fprintf( f, "%d %f %f %f %f\n", i, med[i], xmad[i], med[i]+0.5*cut*xmad[i], fluxData[i]);
+        }
+    }
+    fclose( f );
+    //*/
+
+
     // Detect each point whose value is over the median precomputed median
     std::vector<Bool> points;
-    points.resize( fluxAxis.GetSamplesCount() );
+    points.resize( fluxAxis.GetSamplesCount() + 1 );
     Int32 j = 0;
 
     for( Int32 i=0; i<fluxAxis.GetSamplesCount(); i++ )
@@ -139,7 +208,7 @@ Void CPeakDetection::FindPossiblePeaks( const CSpectrumAxis& fluxAxis, const CSp
     Int32 current = points[0];
     Int32 stop = points[0];
 
-    for( Int32 i=1; i<j; i++ )
+    for( Int32 i=1; i<j+1; i++ )
     {
         // Index stored in points[] are contiguous (i.e: 4,5,6)
         if( points[i]-1 == current )
@@ -222,7 +291,7 @@ def Xmad(data, xmed):
     return xmadm
 */
 
-const TFloat64List& CPeakDetection::GetResults() const
+const TInt32RangeList& CPeakDetection::GetResults() const
 {
     return m_Results;
 }

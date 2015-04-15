@@ -7,6 +7,8 @@
 
 #include <math.h>
 
+#include <epic/core/log/log.h>
+
 using namespace NSEpic;
 using namespace std;
 
@@ -38,6 +40,12 @@ CSpectrumFluxAxis::CSpectrumFluxAxis( const Float64* samples, UInt32 n ) :
 CSpectrumFluxAxis::~CSpectrumFluxAxis()
 {
 
+}
+
+CSpectrumFluxAxis& CSpectrumFluxAxis::operator=(const CSpectrumFluxAxis& other)
+{
+    m_StatError = other.m_StatError;
+    CSpectrumAxis::operator=( other );
 }
 
 Void CSpectrumFluxAxis::SetSize( UInt32 s )
@@ -117,6 +125,8 @@ Bool CSpectrumFluxAxis::ComputeMeanAndSDev( const CMask& mask, Float64& mean, Fl
 
 Bool CSpectrumFluxAxis::ComputeMeanAndSDevWithoutError( const CMask& mask, Float64& mean,  Float64& sdev) const
 {
+    DebugAssert( mask.GetMasksCount() == GetSamplesCount() );
+
     Int32 j;
     Float64 sum,var;
     Int32 ndOfSampleUsed;
@@ -130,6 +140,7 @@ Bool CSpectrumFluxAxis::ComputeMeanAndSDevWithoutError( const CMask& mask, Float
         sum += mask[j] * m_Samples[j];
         ndOfSampleUsed += mask[j];
     }
+
 
     if( ndOfSampleUsed > 0 )
     {
@@ -156,6 +167,8 @@ Bool CSpectrumFluxAxis::ComputeMeanAndSDevWithoutError( const CMask& mask, Float
 
 Bool CSpectrumFluxAxis::ComputeMeanAndSDevWithError( const CMask& mask, Float64& mean, Float64& sdev, const Float64* error ) const
 {
+    DebugAssert( mask.GetMasksCount() == GetSamplesCount() );
+
     Int32 j;
 
     Float64 sum, var, errorSum, err;
@@ -166,11 +179,11 @@ Bool CSpectrumFluxAxis::ComputeMeanAndSDevWithError( const CMask& mask, Float64&
     ndOfSampleUsed=0;
     for (j=0;j< GetSamplesCount();j++)
     {
-        err = error[j] * error[j];
-        sum += mask[j] * m_Samples[j] / err;
-        //errorSum += mask[j] / err;
+        err = 1.0 / ( error[j] * error[j] );
 
-        errorSum += mask[j] * err;
+        sum += mask[j] * ( m_Samples[j] * err );
+
+        errorSum += mask[j] * ( err );
         ndOfSampleUsed += mask[j];
     }
 
@@ -181,11 +194,14 @@ Bool CSpectrumFluxAxis::ComputeMeanAndSDevWithError( const CMask& mask, Float64&
         var=0.0;
         for (j=0;j < GetSamplesCount();j++)
         {
-            sum= mask[j] * ( m_Samples[j] - mean );
-            var += sum * sum;
+            err = 1.0 / ( error[j] * error[j] );
+
+            sum += mask[j] * ( m_Samples[j] - mean );
+
+            var += sum * sum *  err;
         }
 
-        sdev = sqrt( ( 1.0 / ndOfSampleUsed ) * var );
+        sdev = sqrt( ( 1.0 / ndOfSampleUsed ) * var / errorSum );
     }
     else
     {
@@ -193,6 +209,35 @@ Bool CSpectrumFluxAxis::ComputeMeanAndSDevWithError( const CMask& mask, Float64&
         sdev=NAN;
         return false;
     }
+
     return true;
 }
+
+
+Float64  CSpectrumFluxAxis::ComputeRMSDiff( const CSpectrumFluxAxis& other )
+{
+    Float64 er2 = 0.f;
+    Float64 er = 0.f;
+
+    int n = GetSamplesCount();
+    Float64 weight = (Float64)n;
+    for (int j=0;j<n;j++)
+    {
+        er2 += (m_Samples[j]-other[j])*(m_Samples[j]-other[j]) / weight;
+
+    }
+
+    er = sqrt(er2);
+    return er;
+}
+
+Bool CSpectrumFluxAxis::Subtract(const CSpectrumFluxAxis& other)
+{
+    Int32 N = GetSamplesCount();
+    for( UInt32 i=0; i<N; i++ )
+    {
+        m_Samples[i] = m_Samples[i]-other[i];
+    }
+}
+
 

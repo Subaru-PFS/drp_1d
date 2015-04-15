@@ -1,7 +1,8 @@
 #include <epic/redshift/spectrum/template/catalog.h>
-#include <epic/redshift/spectrum/io/asciireader.h>
+#include <epic/redshift/spectrum/io/genericreader.h>
 #include <epic/redshift/spectrum/template/template.h>
 #include <epic/redshift/continuum/median.h>
+#include <epic/core/log/log.h>
 
 #include <boost/filesystem.hpp>
 
@@ -28,6 +29,12 @@ const CTemplate& CTemplateCatalog::GetTemplate( CTemplate::ECategory category, U
     return *m_List[category][i];
 }
 
+
+const CTemplate& CTemplateCatalog::GetTemplateWithoutContinuum( CTemplate::ECategory category, UInt32 i ) const
+{
+    return *m_ListWithoutCont[category][i];
+}
+
 UInt32 CTemplateCatalog::GetTemplateCount( CTemplate::ECategory category ) const
 {
     return m_List[category].size();
@@ -39,6 +46,16 @@ Bool CTemplateCatalog::Add( CTemplate& r )
         return false;
 
     m_List[r.GetCategory()].push_back( &r );
+
+    // Compute continuum substracted spectrum
+    CRef<CTemplate> tmplWithoutCont = new CTemplate( r.GetName().c_str(), r.GetCategory() );
+
+    *tmplWithoutCont = r;
+
+    tmplWithoutCont->RemoveContinuum<CContinuumMedian>();
+    tmplWithoutCont->ConvertToLogScale();
+
+    m_ListWithoutCont[r.GetCategory()].push_back( tmplWithoutCont );
 
     return true;
 }
@@ -53,9 +70,11 @@ Bool CTemplateCatalog::Add( const char* templatePath, CTemplate::ECategory categ
 
     CRef<CTemplate> tmpl = new CTemplate( name.c_str(), category );
 
-    CSpectrumIOAsciiReader asciiReader;
-    if( !asciiReader.Read( templatePath, *tmpl ) )
+    CSpectrumIOGenericReader asciiReader;
+    if( !asciiReader.Read( templatePath, *tmpl ) ) {
+        Log.LogError("Fail to read template: %s", templatePath);
         return false;
+    }
 
     Add( *tmpl );
     return true;
@@ -88,6 +107,7 @@ Bool CTemplateCatalog::LoadCategory( const path& dirPath, CTemplate::ECategory c
     directory_iterator end_itr;
     for ( directory_iterator itr( dirPath ); itr != end_itr; ++itr )
     {
+
         if ( !is_directory( itr->status() ) )
         {
             if( ! Add( itr->path().c_str(), category ) )

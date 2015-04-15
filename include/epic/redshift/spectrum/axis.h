@@ -19,6 +19,8 @@ public:
     CSpectrumAxis( const Float64* samples, UInt32 n );
     ~CSpectrumAxis();
 
+    CSpectrumAxis& operator=(const CSpectrumAxis& other);
+
     Float64 operator[]( const UInt32 i ) const;
     Float64& operator[]( const UInt32 i );
 

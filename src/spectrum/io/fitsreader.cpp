@@ -62,6 +62,19 @@ Bool CSpectrumIOFitsReader::Read2( fitsfile* fptr, CSpectrum& spectrum )
     return true;
 }
 
+/**
+ * Read FITS file formated with the following rules:
+ *
+ * - One Primary HDU of Image type with the following keys in it's header:
+ *
+ * - NAXIS: 2
+ * - NAXIS1: Number of pixel in the flux axis
+ * - NAXIS2: 1
+ *
+ * - CRPIX1: -1
+ * - CRVAL1: Start lambda range
+ * - CDELT1: lambda range between two consecutives samples
+ */
 Bool CSpectrumIOFitsReader::Read1( fitsfile* fptr, CSpectrum& spectrum )
 {
     Int32 status = 0;
@@ -120,6 +133,7 @@ Bool CSpectrumIOFitsReader::Read1( fitsfile* fptr, CSpectrum& spectrum )
 
     spcSpectralAxis.SetSize( length );
     double wave_value = crval1 - cdelt1 * (crpix1-1);
+    //double wave_value = crval1 + cdelt1 + crpix1*cdelt1; //Warning, modified from: wave_value = crval1 - cdelt1 * (crpix1-1);, to be further checked...
     spcSpectralAxis[0] = wave_value;
 
     // set wavelength
@@ -169,7 +183,6 @@ Bool CSpectrumIOFitsReader::Read( const char* filePath, CSpectrum& spectrum )
     }
 
     fits_close_file(fptr, &status);
-
 
     return retv;
 }

@@ -55,7 +55,7 @@ Bool CSpectrumIOGenericReader::Read( const char* filePath, CSpectrum& spectrum )
 
         return reader.Read( filePath, spectrum );
     }
-    else if( fileExtension == ".txt" )
+    else if( fileExtension == ".txt" || fileExtension == ".dat"  )
     {
         CSpectrumIOAsciiReader reader;
 

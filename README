@@ -1,11 +1,10 @@
 ============================================================
-I. Prequisite :
+I. Prerequisite :
 ============================================================
 
-Git: 1.7.11 or above
-GCC compiler: 4.2.1 or above
-CMake: 2.8.8 or above
-Python: 2.7.5 or above
+See Prerequisite in Epic Core package README:
+
+http://gitlab.oamp.dev/epic/epic_core/tree/develop/README
 
 ============================================================
 II. Build and install (Unix and unix like):

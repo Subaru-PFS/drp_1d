@@ -4,6 +4,8 @@
 
 using namespace NSEpic;
 
+using namespace NSEpicTest;
+
 void CRedshiftSmoothTestCase::setUp()
 {
 }

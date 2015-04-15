@@ -28,6 +28,21 @@ CContinuumMedian::~CContinuumMedian()
 
 }
 
+Void CContinuumMedian::SetMeanKernelWidth( Float32 width )
+{
+    m_MeanSmoothAmplitude = width;
+}
+
+Void CContinuumMedian::SetMedianKernelWidth( Float32 width )
+{
+    m_MedianSmoothAmplitude = width;
+}
+
+Void CContinuumMedian::SetMedianCycleCount( UInt32 count )
+{
+    m_MedianSmoothCycles = count;
+}
+
 Int32 CContinuumMedian::MedianSmooth( const Float64 *y, Int32 n_points, Int32 n_range, Float64 *y_out)
 {
     // Take an array lenght N,

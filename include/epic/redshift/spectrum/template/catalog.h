@@ -28,6 +28,7 @@ public:
     Bool Add( const char* templatePath, CTemplate::ECategory category );
     Bool Load( const char* filePath );
     const CTemplate& GetTemplate( CTemplate::ECategory category, UInt32 i ) const;
+    const CTemplate& GetTemplateWithoutContinuum( CTemplate::ECategory category, UInt32 i ) const;
     UInt32 GetTemplateCount( CTemplate::ECategory category ) const;
 
 private:
@@ -35,7 +36,7 @@ private:
     Bool                    LoadCategory( const boost::filesystem::path& dirPath, CTemplate::ECategory category );
     CTemplate::ECategory    ConvertStringToCategory( const std::string& category );
     TTemplateVector         m_List[CTemplate::nCategory_Count];
-
+    TTemplateVector         m_ListWithoutCont[CTemplate::nCategory_Count];
 };
 
 

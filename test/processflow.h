@@ -4,10 +4,15 @@
 #include <cppunit/TestCase.h>
 #include <cppunit/extensions/HelperMacros.h>
 
+namespace NSEpicTest
+{
+
 class CRedshiftProcessFlowTestCase : public CppUnit::TestCase
 {
     CPPUNIT_TEST_SUITE(CRedshiftProcessFlowTestCase);
-    CPPUNIT_TEST(Process);
+    CPPUNIT_TEST(ProcessShifted1);
+    CPPUNIT_TEST(ProcessShifted2);
+    CPPUNIT_TEST(ProcessShiftedDecimated);
     CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -17,10 +22,15 @@ public:
 
 private:
 
-    void Process();
+    void ProcessShifted1();
+    void ProcessShifted2();
+    void ProcessShiftedDecimated();
 
 };
 
 CPPUNIT_TEST_SUITE_REGISTRATION( CRedshiftProcessFlowTestCase );
+
+}
+
 
 #endif

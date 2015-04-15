@@ -4,14 +4,17 @@
 build/CMakeCache.txt
 build/CMakeFiles/
 build/Makefile
-build/cmake_install.cmake
-build/epic_core*
+build/*.cmake
 build/SYSTEM_*
+build/install_manifest.txt
 
-bin/output.txt
-bin/*.tar.gz
-bin/epic_core*
-bin/gmon.out
+*.creator.user*
+*.config
+*.creator
+*.includes
+*.files
+
+bin/*
 
 # Third party
 thirdparty/boost-1.55.0.tar.gz

@@ -24,6 +24,8 @@ public:
     CSpectrum();
     ~CSpectrum();
 
+    CSpectrum& operator=(const CSpectrum& other);
+
     const CSpectrumSpectralAxis&    GetSpectralAxis() const;
     const CSpectrumFluxAxis&        GetFluxAxis() const;
 
