@@ -4,15 +4,10 @@
 #include <epic/core/common/datatypes.h>
 #include <epic/core/common/range.h>
 #include <epic/redshift/operator/operator.h>
-
-#include <vector>
+#include <epic/redshift/operator/chisquareresult.h>
 
 namespace NSEpic
 {
-
-class CSpectrum;
-class CTemplate;
-class CRedshifts;
 
 class COperatorChiSquare : public COperator
 {
@@ -22,9 +17,9 @@ public:
     COperatorChiSquare();
     ~COperatorChiSquare();
 
-    Bool Compute( const CSpectrum& spectrum, const CTemplate& tpl,
-                  const TFloat64Range& lambdaRange, const TFloat64List& redshifts,
-                  Float64 overlapThreshold );
+    const COperatorResult* Compute( const CSpectrum& spectrum, const CTemplate& tpl,
+                                    const TFloat64Range& lambdaRange, const TFloat64List& redshifts,
+                                    Float64 overlapThreshold );
 
 
 private:

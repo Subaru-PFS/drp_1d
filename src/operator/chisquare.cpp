@@ -5,6 +5,7 @@
 #include <epic/redshift/spectrum/template/template.h>
 #include <epic/redshift/spectrum/tools.h>
 #include <epic/redshift/common/mask.h>
+#include <epic/redshift/operator/chisquareresult.h>
 
 #include <epic/core/log/log.h>
 
@@ -162,7 +163,7 @@ Void COperatorChiSquare::BasicFit( const CSpectrum& spectrum, const CTemplate& t
 }
 
 
-Bool COperatorChiSquare::Compute(const CSpectrum& spectrum, const CTemplate& tpl,
+const COperatorResult* COperatorChiSquare::Compute(const CSpectrum& spectrum, const CTemplate& tpl,
                           const TFloat64Range& lambdaRange, const TFloat64List& redshifts,
                           Float64 overlapThreshold )
 {
@@ -170,18 +171,25 @@ Bool COperatorChiSquare::Compute(const CSpectrum& spectrum, const CTemplate& tpl
     if( spectrum.GetSpectralAxis().IsInLinearScale() == false || tpl.GetSpectralAxis().IsInLinearScale() == false )
     {
         Log.LogError("Failed to compute Cross correlation, input spectrum or template are not in log scale");
-        return false;
+        return NULL;
     }
 
-    m_Result.resize( redshifts.size() );
-    m_Overlap.resize( redshifts.size() );
-    m_Status.resize( redshifts.size() );
+
+    CChisquareResult* result = new CChisquareResult();
+
+    result->ChiSquare.resize( redshifts.size() );
+    result->Redshifts.resize( redshifts.size() );
+    result->Overlap.resize( redshifts.size() );
+
+    result->Redshifts = redshifts;
+
+    EStatus status;
 
     for (Int32 i=0;i<redshifts.size();i++)
     {
-        BasicFit( spectrum, tpl, lambdaRange, redshifts[i], overlapThreshold, m_Overlap[i], m_Result[i], m_Status[i] );
+        BasicFit( spectrum, tpl, lambdaRange, result->Redshifts[i], overlapThreshold, result->Overlap[i], result->ChiSquare[i], status );
     }
 
-    return true;
+    return result;
 
 }

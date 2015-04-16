@@ -8,9 +8,13 @@
 #include <epic/redshift/spectrum/template/template.h>
 #include <epic/redshift/spectrum/tools.h>
 #include <epic/redshift/common/mask.h>
+#include <epic/redshift/operator/correlationresult.h>
 
 #include <math.h>
 #include <assert.h>
+
+
+#include <boost/date_time/posix_time/posix_time.hpp>
 
 #define NOT_OVERLAP_VALUE NAN
 #include <stdio.h>
@@ -38,7 +42,7 @@ Float64 COperatorCorrelation::GetComputationDuration() const
  * Compute correlation factor between spectrum and tpl for each value specified in redshifts.
  * \note Spectrum AND template MUST be in log scale
  */
-Bool COperatorCorrelation::Compute(   const CSpectrum& spectrum, const CTemplate& tpl,
+const COperatorResult*  COperatorCorrelation::Compute(   const CSpectrum& spectrum, const CTemplate& tpl,
                                       const TFloat64Range& lambdaRange, const TFloat64List& redshifts,
                                       Float64 overlapThreshold )
 {
@@ -48,7 +52,7 @@ Bool COperatorCorrelation::Compute(   const CSpectrum& spectrum, const CTemplate
     if( spectrum.GetSpectralAxis().IsInLogScale() == false || tpl.GetSpectralAxis().IsInLogScale() == false )
     {
         Log.LogError("Failed to compute Cross correlation, input spectrum or template are not in log scale");
-        return false;
+        return NULL;
     }
 
     boost::posix_time::ptime  startTime = boost::posix_time::microsec_clock::local_time();
@@ -63,10 +67,6 @@ Bool COperatorCorrelation::Compute(   const CSpectrum& spectrum, const CTemplate
     const CSpectrumSpectralAxis& tplSpectralAxis = tpl.GetSpectralAxis();
     const CSpectrumFluxAxis& tplFluxAxis = tpl.GetFluxAxis();
 
-    m_Result.resize( redshifts.size() );
-    m_Overlap.resize( redshifts.size() );
-    m_Status.resize( redshifts.size() );
-
     CMask spcMask( spectrum.GetSampleCount() );
     CMask tplMask( tpl.GetSampleCount() );
 
@@ -75,12 +75,22 @@ Bool COperatorCorrelation::Compute(   const CSpectrum& spectrum, const CTemplate
     retVal = spcSpectralAxis.ClampLambdaRange( lambdaRange, spcLambdaRange );
     DebugAssert( retVal );
 
+    // Create Results bag
+    CCorrelationResult* result = new CCorrelationResult();
+    result->Correlation.resize( redshifts.size() );
+    result->Overlap.resize( redshifts.size() );
+    result->Redshifts.resize( redshifts.size() );
+
+    result->Redshifts = redshifts;
+
+    TStatusList status;
+    status.resize( redshifts.size() );
 
     for ( Int32 i=0; i<redshifts.size(); i++)
     {
-        m_Result[i] = NAN;
-        m_Status[i] = nStatus_DataError;
-        m_Overlap[i] = 0;
+        result->Correlation[i] = NAN;
+        status[i] = nStatus_DataError;
+        result->Overlap[i] = 0;
 
         // Shift Template (Since template are created at Z=0)
         Float64 onePlusRedshift = 1.0 + redshifts[i];
@@ -97,12 +107,12 @@ Bool COperatorCorrelation::Compute(   const CSpectrum& spectrum, const CTemplate
         // Compute the intersected range
         if( TFloat64Range::Intersect( tplLambdaRange, spcLambdaRange, intersectedLambdaRange ) )
         {
-            m_Overlap[i] = intersectedLambdaRange.GetLength() / spcLambdaRange.GetLength();
+            result->Overlap[i] = intersectedLambdaRange.GetLength() / spcLambdaRange.GetLength();
         }
 
-        if( m_Overlap[i] < overlapThreshold )
+        if( result->Overlap[i] < overlapThreshold )
         {
-            m_Status[i] = nStatus_NoOverlap;
+            status[i] = nStatus_NoOverlap;
             continue;
         }
 
@@ -115,7 +125,7 @@ Bool COperatorCorrelation::Compute(   const CSpectrum& spectrum, const CTemplate
         spcSpectralAxis.GetMask( intersectedLambdaRange, spcMask );
         if( !spcFluxAxis.ComputeMeanAndSDev( spcMask, spcMean, spcSDev, error ) )
         {
-            m_Status[i] = nStatus_DataError;
+            status[i] = nStatus_DataError;
             continue;
         }
 
@@ -124,7 +134,7 @@ Bool COperatorCorrelation::Compute(   const CSpectrum& spectrum, const CTemplate
         shiftedTplSpectralAxis.GetMask( intersectedLambdaRange, tplMask );
         if( !tplFluxAxis.ComputeMeanAndSDev( tplMask, tplMean, tplSDev, NULL ) )
         {
-            m_Status[i] = nStatus_DataError;
+            status[i] = nStatus_DataError;
             continue;
         }
 
@@ -174,8 +184,8 @@ Bool COperatorCorrelation::Compute(   const CSpectrum& spectrum, const CTemplate
 
         if( sumWeight>0 )
         {
-            m_Result[i] = sumCorr / ( tplSDev * spcSDev * sumWeight );
-            m_Status[i] = nStatus_OK;
+            result->Correlation[i] = sumCorr / ( tplSDev * spcSDev * sumWeight );
+            status[i] = nStatus_OK;
         }
     }
 
@@ -183,7 +193,7 @@ Bool COperatorCorrelation::Compute(   const CSpectrum& spectrum, const CTemplate
 
     m_TotalDuration = diff.total_seconds();
 
-    return true;
+    return result;
 }
 
 

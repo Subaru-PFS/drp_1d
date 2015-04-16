@@ -114,9 +114,10 @@ Bool CRayMatching::Compute( const CRayCatalog& detectedRayCatalog, const CRayCat
     if(newSolutions.size()>0){
         m_Results = newSolutions;
     }
-    return true;
+    return NULL;
 }
 
+/*
 Bool CRayMatching::AreSolutionSetsEqual(TRedshiftSolutionSet s1, TRedshiftSolutionSet s2)
 {
     if(s1.size() != s2.size()){
@@ -221,3 +222,4 @@ Int32 CRayMatching::GetMaxMatchingNumber()
 
     return maxNumber;
 }
+*/
