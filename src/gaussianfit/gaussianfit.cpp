@@ -209,6 +209,8 @@ CGaussianFit::EStatus CGaussianFit::Compute(const CSpectrum& spectrum, const TIn
     else  if ( status == GSL_CONTINUE )
     {
         returnCode = nStatus_IterationHasNotConverged;
+    }else if(status !=GSL_SUCCESS){
+        returnCode = nStatus_FailToReachTolerance;
     }
 
     m_Amplitude = output[0];

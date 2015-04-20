@@ -28,6 +28,9 @@ CProcessFlowContext::SParam::SParam()
     lambdaRange = TFloat64Range( 3800.0, 12500.0 );
     smoothWidth = 0;
     overlapThreshold = 0.9;
+    //m_Method = nMethod_BlindSolve;
+    method = nMethod_LineMatching;
+
 
     templateCategoryList.push_back( CTemplate::nCategory_Emission );
     templateCategoryList.push_back( CTemplate::nCategory_Galaxy );
@@ -113,6 +116,7 @@ bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath,
     m_RedshiftStep = params.redshiftStep;
     m_TemplateCategoryList = params.templateCategoryList;
     m_OverlapThreshold = params.overlapThreshold;
+    m_Method = params.method;
 
     return true;
 }
@@ -189,6 +193,11 @@ Float64 CProcessFlowContext::GetOverlapThreshold() const
 Float64 CProcessFlowContext::GetRedshiftStep() const
 {
     return m_RedshiftStep;
+}
+
+const CProcessFlowContext::EMethod CProcessFlowContext::GetMethod() const
+{
+    return m_Method;
 }
 
 

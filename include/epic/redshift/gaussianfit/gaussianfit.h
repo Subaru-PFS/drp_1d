@@ -27,7 +27,7 @@ public:
         nStatus_IterationHasNotConverged = (1 << 3),
 
         // Results corresponding to a success
-        nStatus_FailToReachTolerance = (1 << 0) & nStatus_Success
+        nStatus_FailToReachTolerance = (1 << 4)
     };
 
     CGaussianFit( );

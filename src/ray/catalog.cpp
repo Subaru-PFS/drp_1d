@@ -30,13 +30,11 @@ const CRayCatalog::TRayVector& CRayCatalog::GetList() const
 
 Bool CRayCatalog::GetRayPositionStringList(std::string& strList)
 {
-    char tmpStr[256];
-
     TRayVector::iterator it;
     for( it = m_List.begin(); it != m_List.end(); ++it )
     {
-        sprintf(tmpStr, "%f\t%d\n", (*it).GetPosition(),  (*it).GetIsStrong() );
-        strList.append(tmpStr);
+        strList.append((*it).GetDescription());
+        strList.append("\n");
     }
 
     return true;

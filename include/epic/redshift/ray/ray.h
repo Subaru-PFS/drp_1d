@@ -18,10 +18,14 @@ public:
 
     enum EType
     {
-        nType_Absorption = (1<<0),
-        nType_Emission = (1<<1),
-        nType_Weak = (1<<2),
-        nType_Strong = (1<<3),
+        nType_Absorption = 1,
+        nType_Emission = 2,
+    };
+
+    enum EForce
+    {
+        nForce_Weak = 1,
+        nForce_Strong = 2,
     };
 
     CRay();
@@ -32,10 +36,12 @@ public:
     Bool                GetIsEmission() const;
     Float64             GetPosition() const;
     const std::string&  GetName() const;
+    const std::string GetDescription() const;
 
 private:
 
     UInt32         m_Type;
+    UInt32         m_Force;
     Float64        m_Pos;
     std::string    m_Name;
 };

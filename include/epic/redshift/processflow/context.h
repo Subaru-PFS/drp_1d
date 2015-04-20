@@ -56,7 +56,11 @@ public:
     };
     typedef std::map< std::string, SRayMatchingResult >     TRayMatchingResults;
 
-
+    enum EMethod
+    {
+        nMethod_BlindSolve = 1,
+        nMethod_LineMatching= 2,
+    };
 
     struct SParam
     {
@@ -67,6 +71,7 @@ public:
         Float64                 redshiftStep;
         Float64                 overlapThreshold;
         Int32                   smoothWidth;
+        EMethod                 method;
     };
 
 
@@ -85,6 +90,7 @@ public:
     const TTemplateCategoryList&    GetTemplateCategoryList() const;
     Float64                         GetOverlapThreshold() const;
     Float64                         GetRedshiftStep() const;
+    const EMethod                   GetMethod() const;
 
     Bool                            AddResults( const CTemplate& tpl,
                                                 const TFloat64List& selectedRedshifts, const TFloat64List& selectedCorrelation,
@@ -116,6 +122,8 @@ private:
     Float64                         m_RedshiftStep;
     TTemplateCategoryList           m_TemplateCategoryList;
     std::string                     m_SpectrumName;
+
+    EMethod                         m_Method;
 
     TResultsMap                     m_Results;
 

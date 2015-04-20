@@ -36,9 +36,13 @@ CProcessFlow::~CProcessFlow()
 
 Bool CProcessFlow::Process( CProcessFlowContext& ctx )
 {
-    return ProcessWithoutEL( ctx );
-    //return ProcessWithEL( ctx );
+    if(ctx.GetMethod()  == CProcessFlowContext::nMethod_LineMatching)
+        return ProcessWithEL( ctx );
 
+    if(ctx.GetMethod()  == CProcessFlowContext::nMethod_BlindSolve)
+        return ProcessWithoutEL( ctx );
+
+    /*// Method auto selection
     const CProcessFlowContext::TTemplateCategoryList& tplCategoryList = ctx.GetTemplateCategoryList();
     if( std::find( tplCategoryList.begin(), tplCategoryList.end(), CTemplate::nCategory_Emission )==tplCategoryList.end() )
     {
@@ -48,6 +52,7 @@ Bool CProcessFlow::Process( CProcessFlowContext& ctx )
     {
         return ProcessWithEL( ctx );
     }
+    //*/
 
     return false;
 }
@@ -190,7 +195,7 @@ bool CProcessFlow::ELSearch( CProcessFlowContext& ctx )
         //find max value and pos
         Float64 max_value = DBL_MIN;
         Int32 max_index = -1;
-        for( Int32 k=resPeaks[j].GetBegin(); k<resPeaks[j].GetEnd(); k++ )
+        for( Int32 k=resPeaks[j].GetBegin(); k<resPeaks[j].GetEnd()+1; k++ )
         {
             if(max_value < fluxAxis[k]){
                 max_value = fluxAxis[k];
@@ -205,6 +210,10 @@ bool CProcessFlow::ELSearch( CProcessFlowContext& ctx )
             if(gaussAmp_with_cont/max_value <= 0.65 || gaussAmp_with_cont/max_value >= 1.35){
                 toAdd = false;
             }
+            if(gaussAmp_with_cont/max_value <= 0.65 || gaussAmp_with_cont/max_value >= 1.35){
+                toAdd = false;
+            }
+
         }
 
         // check type weak or strong
@@ -228,7 +237,7 @@ bool CProcessFlow::ELSearch( CProcessFlowContext& ctx )
             if(ratioAmp<cut){
                 toAdd = false;
             }else if(ratioAmp>cut*strongcut){
-                type = 1001; //strong
+                type = 2; //strong
             }
         }
 
@@ -262,13 +271,13 @@ Float64 CProcessFlow::XMadFind( const Float64* x, Int32 n, Float64 median )
 
     if( ((float)n)/2. - int(n/2.) == 0 )
     {
-        UInt32 i1 = n/2;
-        UInt32 i2 = n/2 + 1;
+        UInt32 i1 = n/2 -1;
+        UInt32 i2 = n/2;
         xmadm = 0.5*(xdata[i1]+xdata[i2]);
     }
     else
     {
-        UInt32 i1 = int(n/2) + 1;
+        UInt32 i1 = int(n/2);
         xmadm = xdata[i1];
     }
 

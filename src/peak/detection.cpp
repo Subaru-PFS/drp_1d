@@ -48,27 +48,27 @@ Bool CPeakDetection::Compute( const CSpectrum& spectrum, const TLambdaRange& lam
 
     RedefineBorders( peaksBorders, spectralAxis, smoothedFluxAxis, fluxAxis );
 
+    TInt32RangeList peaksBordersEnlarged= peaksBorders;
     if( enlargeRate )
     {
         for( UInt32 i=0; i<peaksBorders.size(); i++ )
         {
             TInt32Range fitRange = FindGaussianFitStartAndStop( i, peaksBorders, enlargeRate, spectralAxis.GetSamplesCount() );
-            peaksBorders[i] = fitRange;
+            peaksBordersEnlarged[i] = fitRange;
         }
     }
-
-    m_Results = peaksBorders;
+    m_Results = peaksBordersEnlarged;
     return true;
 }
 
 TInt32Range CPeakDetection::FindGaussianFitStartAndStop( Int32 i, const TInt32RangeList& peaksBorders, UInt32 enlargeRate, Int32 len )
 {
     Int32 fitStart = peaksBorders[i].GetBegin();
-    Int32 fitStop = peaksBorders[i].GetEnd();
+    Int32 fitStop = peaksBorders[i].GetEnd()+1;
 
-    Int32 rate = fitStop - fitStart;
-    fitStart = max( 0, fitStart - (int)enlargeRate*rate );
-    fitStop = min( len, fitStop + (int)enlargeRate*rate );
+    Float64 width = fitStop - fitStart ;
+    fitStart = max( 0, fitStart - (int)(enlargeRate*width) );
+    fitStop = min( len, fitStop + (int)(enlargeRate*width) );
 
     if( i>0 )
     {
@@ -104,7 +104,10 @@ Void CPeakDetection::RedefineBorders( TInt32RangeList& peakList, const CSpectrum
         int centerPos=-1;
         Float64 centerVal = -1e12;
         // find position of the maximum on the smoothed flux
-        for( Int32 i=peakList[iPeak].GetBegin(); i<peakList[iPeak].GetEnd(); i++ )
+        Int32 start = peakList[iPeak].GetBegin();
+        Int32 stop = peakList[iPeak].GetEnd() + 1;
+
+        for( Int32 i= start; i< stop; i++ )
         {
             if(centerVal<smoothFluxData[i]){
                 centerVal = smoothFluxData[i];
@@ -165,8 +168,8 @@ Void CPeakDetection::FindPossiblePeaks( const CSpectrumAxis& fluxAxis, const CSp
         UInt32 start = std::max( 0, i - halfWindowSampleCount );
         UInt32 stop = std::min( (Int32) fluxAxis.GetSamplesCount(), i + halfWindowSampleCount );
 
-        med[i] = medianFilter.Find( fluxData + start, halfWindowSampleCount*2 + 1 );
-        xmad[i] = XMad( fluxData+ start, halfWindowSampleCount*2 + 1, med[i] );
+        med[i] = medianFilter.Find( fluxData + start, stop - start );
+        xmad[i] = XMad( fluxData+ start, stop - start , med[i] );
     }
 
     //*//debug:
@@ -244,13 +247,13 @@ Float64 CPeakDetection::XMad( const Float64* x, Int32 n, Float64 median )
 
     if( ((float)n)/2. - int(n/2.) == 0 )
     {
-        UInt32 i1 = n/2;
-        UInt32 i2 = n/2 + 1;
+        UInt32 i1 = n/2 - 1;
+        UInt32 i2 = n/2;
         xmadm = 0.5*(xdata[i1]+xdata[i2]);
     }
     else
     {
-        UInt32 i1 = int(n/2) + 1;
+        UInt32 i1 = int(n/2);
         xmadm = xdata[i1];
     }
 
