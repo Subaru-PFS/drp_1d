@@ -28,8 +28,8 @@ CProcessFlowContext::SParam::SParam()
     lambdaRange = TFloat64Range( 3800.0, 12500.0 );
     smoothWidth = 0;
     overlapThreshold = 0.9;
-    //m_Method = nMethod_BlindSolve;
-    method = nMethod_LineMatching;
+    method = nMethod_BlindSolve;
+    //method = nMethod_LineMatching;
 
 
     templateCategoryList.push_back( CTemplate::nCategory_Emission );
