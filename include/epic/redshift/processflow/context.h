@@ -53,6 +53,7 @@ public:
         Float64     BestRedshift;
         Int32       BestRedshiftMatchingNumber;
         TRedshiftSolutionSetList  MatchingSolutions;
+        std::string Description;
     };
     typedef std::map< std::string, SRayMatchingResult >     TRayMatchingResults;
 
@@ -104,8 +105,9 @@ public:
                                           const TFloat64List& redshifts);
     Bool                            SetRayDetectionResult(CRayCatalog& detectedRayCatalog);
     CRayCatalog&                    GetDetectedRayCatalog() const;
-    Bool                            SetRayMatchingResult(const TRedshiftSolutionSetList &allresults, Float64 bestRedshift, Int32 bestRedshiftMatchingNumber);
+    Bool                            SetRayMatchingResult(const TRedshiftSolutionSetList &allresults, Float64 bestRedshift, Int32 bestRedshiftMatchingNumber,  std::string strDesc);
     Bool                            GetBestRayMatchingResult(Float64& bestRedshift, Float64& bestRedshiftMatchingNumber) const;
+    Bool                            GetRayMatchingDescription(std::string& rayMatchStr) const;
     Bool                            GetBestCorrelationResult( Float64& redshift, Float64& merit, std::string& tplName ) const;
     Bool                            DumpCorrelationResultsToCSV( const char* outputDirName ) const;
     Bool                            GetIntermediateResults(std::string& corrStr, std::string& fitStr);

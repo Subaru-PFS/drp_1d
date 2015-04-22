@@ -29,19 +29,21 @@ public:
     };
 
     CRay();
-    CRay( const std::string& name, Float64 pos, UInt32 type );
+    CRay( const std::string& name, Float64 pos, UInt32 type, UInt32 force );
     ~CRay();
 
     Bool                GetIsStrong() const;
     Bool                GetIsEmission() const;
+    Int32               GetForce() const;
+    Int32               GetType() const;
     Float64             GetPosition() const;
     const std::string&  GetName() const;
     const std::string GetDescription() const;
 
 private:
 
-    UInt32         m_Type;
-    UInt32         m_Force;
+    Int32         m_Type;
+    Int32         m_Force;
     Float64        m_Pos;
     std::string    m_Name;
 };

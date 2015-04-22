@@ -48,6 +48,7 @@ Bool CPeakDetection::Compute( const CSpectrum& spectrum, const TLambdaRange& lam
 
     RedefineBorders( peaksBorders, spectralAxis, smoothedFluxAxis, fluxAxis );
 
+    m_Results = peaksBorders;
     TInt32RangeList peaksBordersEnlarged= peaksBorders;
     if( enlargeRate )
     {
@@ -57,7 +58,7 @@ Bool CPeakDetection::Compute( const CSpectrum& spectrum, const TLambdaRange& lam
             peaksBordersEnlarged[i] = fitRange;
         }
     }
-    m_Results = peaksBordersEnlarged;
+    m_ResultsEnlargedForFit = peaksBordersEnlarged;
     return true;
 }
 
@@ -297,6 +298,11 @@ def Xmad(data, xmed):
 const TInt32RangeList& CPeakDetection::GetResults() const
 {
     return m_Results;
+}
+
+const TInt32RangeList& CPeakDetection::GetResultsEnlarged() const
+{
+    return m_ResultsEnlargedForFit;
 }
 
 

@@ -54,14 +54,14 @@ public:
     CRayMatching();
     virtual ~CRayMatching();
 
-    Bool Compute(const CRayCatalog& restRayCatalog, const CRayCatalog& detectedRayCatalog, const TFloat64Range& redshiftRange, Int32 nThreshold = 5, Float64 tol = 0.002 );
+    Bool Compute(const CRayCatalog& restRayCatalog, const CRayCatalog& detectedRayCatalog, const TFloat64Range& redshiftRange, Int32 nThreshold = 5, Float64 tol = 0.002, Int32 typeFilter = 2, Int32 forceFilter = -1);
     Float64 GetMeanRedshiftSolutionByIndex(Int32 index);
     Float64 GetMeanRedshiftSolution(TRedshiftSolutionSet& s);
     Int32 GetMaxMatchingNumber();
     const TRedshiftSolutionSetList GetSolutionsListOverNumber(Int32 number) const;
     const TRedshiftSolutionSetList GetResults() const;
     Bool GetBestRedshift(Float64& Redshift, Int32& MatchingNumber);
-
+    Bool GetDescription(std::string& strList);
 
 private:
 

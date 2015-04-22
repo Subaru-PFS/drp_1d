@@ -28,8 +28,8 @@ CProcessFlowContext::SParam::SParam()
     lambdaRange = TFloat64Range( 3800.0, 12500.0 );
     smoothWidth = 0;
     overlapThreshold = 0.9;
-    method = nMethod_BlindSolve;
-    //method = nMethod_LineMatching;
+    //method = nMethod_BlindSolve;
+    method = nMethod_LineMatching;
 
 
     templateCategoryList.push_back( CTemplate::nCategory_Emission );
@@ -452,11 +452,17 @@ CRayCatalog& CProcessFlowContext::GetDetectedRayCatalog() const
     return *m_DetectedRayCatalog;
 }
 
-Bool CProcessFlowContext::SetRayMatchingResult(const TRedshiftSolutionSetList& allresults, Float64 bestRedshift, Int32 bestRedshiftMatchingNumber)
+Bool CProcessFlowContext::SetRayMatchingResult(const TRedshiftSolutionSetList& allresults, Float64 bestRedshift, Int32 bestRedshiftMatchingNumber, std::string strDesc)
 {
     m_RayMatchingResult.BestRedshift = bestRedshift;
     m_RayMatchingResult.BestRedshiftMatchingNumber = bestRedshiftMatchingNumber;
     m_RayMatchingResult.MatchingSolutions = allresults;
+    m_RayMatchingResult.Description = strDesc;
 
     return true;
+}
+
+Bool CProcessFlowContext::GetRayMatchingDescription(std::string& rayMatchStr) const
+{
+    rayMatchStr = m_RayMatchingResult.Description;
 }

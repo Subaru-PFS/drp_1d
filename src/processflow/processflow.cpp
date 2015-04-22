@@ -17,7 +17,7 @@
 #include <epic/redshift/ray/matching.h>
 #include <epic/redshift/common/median.h>
 #include <stdio.h>
-
+#include <math.h>
 
 using namespace NSEpic;
 
@@ -87,10 +87,6 @@ Bool CProcessFlow::ProcessWithoutEL( CProcessFlowContext& ctx )
 
 Bool CProcessFlow::ProcessWithEL( CProcessFlowContext& ctx )
 {
-    //const CTemplateCatalog& templateCatalog = ctx.GetTemplateCatalog();
-    //const CProcessFlowContext::TTemplateCategoryList& templateCategoryList = ctx.GetTemplateCategoryList();
-
-
     Log.LogInfo( "Process spectrum with EL (LambdaRange: %f-%f:%f)",
             ctx.GetSpectrum().GetLambdaRange().GetBegin(), ctx.GetSpectrum().GetLambdaRange().GetEnd(), ctx.GetSpectrum().GetResolution());
 
@@ -103,13 +99,15 @@ Bool CProcessFlow::ProcessWithEL( CProcessFlowContext& ctx )
 
     // --- EZ: EL Match
     CRayMatching rayMatching;
-    retVal = rayMatching.Compute(ctx.GetDetectedRayCatalog(), ctx.GetRayCatalog(), ctx.GetRedshiftRange(), 2, 0.001 );
+    retVal = rayMatching.Compute(ctx.GetDetectedRayCatalog(), ctx.GetRayCatalog(), ctx.GetRedshiftRange(), 2, 0.002 );
     // Store matching results
     {
         Float64 bestz=-1.0;
         Int32 bestzMatchingNum = -1;
         rayMatching.GetBestRedshift(bestz, bestzMatchingNum);
-        ctx.SetRayMatchingResult(rayMatching.GetResults(), bestz, bestzMatchingNum);
+        std::string strDesc;
+        rayMatching.GetDescription(strDesc);
+        ctx.SetRayMatchingResult(rayMatching.GetResults(), bestz, bestzMatchingNum, strDesc);
     }
     return true;
 
@@ -146,6 +144,8 @@ bool CProcessFlow::ELSearch( CProcessFlowContext& ctx )
     Float64 maxsize = 90;
     bool retVal = detection.Compute( spc, lambdaRange, winsize, cut);
     const TInt32RangeList& resPeaks = detection.GetResults();
+    const TInt32RangeList& resPeaksEnlarged = detection.GetResultsEnlarged();
+
     UInt32 nPeaks = resPeaks.size();
 
     // filter the peaks with gaussian fit and create the detected rays catalog
@@ -155,7 +155,7 @@ bool CProcessFlow::ELSearch( CProcessFlowContext& ctx )
         bool toAdd = true;
         //find gaussian fit
         CGaussianFit fitter;
-        CGaussianFit::EStatus status = fitter.Compute( spc, TInt32Range( resPeaks[j].GetBegin(), resPeaks[j].GetEnd() ) );
+        CGaussianFit::EStatus status = fitter.Compute( spc, TInt32Range( resPeaksEnlarged[j].GetBegin(), resPeaksEnlarged[j].GetEnd() ) );
         if(status!=NSEpic::CGaussianFit::nStatus_Success){
             continue;
         }
@@ -210,20 +210,28 @@ bool CProcessFlow::ELSearch( CProcessFlowContext& ctx )
             if(gaussAmp_with_cont/max_value <= 0.65 || gaussAmp_with_cont/max_value >= 1.35){
                 toAdd = false;
             }
-            if(gaussAmp_with_cont/max_value <= 0.65 || gaussAmp_with_cont/max_value >= 1.35){
+            if(abs(gaussPos-spc.GetSpectralAxis()[max_index])>3.*spc.GetResolution()){
                 toAdd = false;
             }
 
         }
 
         // check type weak or strong
-        Int32 type = 1; //weak by default
+        Int32 force = 1; //weak by default
         if(toAdd){
             // strong/weak test to do
             const Float64* fluxData = fluxAxis.GetSamples();
+            Int32 windowSampleCount = winsize / spc.GetResolution();
             CMedian<Float64> medianProcessor;
-            Float64 med = medianProcessor.Find( fluxData + resPeaks[j].GetBegin(), resPeaks[j].GetEnd() - resPeaks[j].GetBegin() + 1 );
-            Float64 xmad = XMadFind( fluxData + resPeaks[j].GetBegin(), resPeaks[j].GetEnd() - resPeaks[j].GetBegin() + 1 , med);
+            int left = max(0, (Int32)(max_index-windowSampleCount/2.0+0.5) ) ;
+            int right = min((Int32)fluxAxis.GetSamplesCount()-1, (Int32)(max_index + windowSampleCount/2.0) )+1;
+            int size_odd = right - left +1;
+            if( (int)(size_odd/2) == size_odd/2 ){
+                size_odd -= 1;
+            }
+
+            Float64 med = medianProcessor.Find( fluxData + left, size_odd);
+            Float64 xmad = XMadFind( fluxData + left, size_odd , med);
             // TODO: check with the noise spectrum
             /*if noise!=None:
             noise_mean=noise[left_index:right_index].mean()
@@ -232,12 +240,13 @@ bool CProcessFlow::ELSearch( CProcessFlowContext& ctx )
                 xmadm=noise_mean
                 self.msg.debug(self.__module__, '18.96', 0, self.spectrum.name, "%4.1f" % pos)
             */
-            Float64 ratioAmp=max_value/xmad;
+            Float64 max_value_no_continuum = max_value - med;
+            Float64 ratioAmp=max_value_no_continuum/xmad;
 
             if(ratioAmp<cut){
                 toAdd = false;
             }else if(ratioAmp>cut*strongcut){
-                type = 2; //strong
+                force = 2; //strong
             }
         }
 
@@ -245,7 +254,7 @@ bool CProcessFlow::ELSearch( CProcessFlowContext& ctx )
             char buffer [64];
             sprintf(buffer,"detected_peak_%d",j);
             std::string peakName = buffer;
-            detectedRayCatalog->Add( CRay( peakName, gaussPos, type ) );
+            detectedRayCatalog->Add( CRay( peakName, gaussPos, 2, force ) );
         }
     }
 

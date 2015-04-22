@@ -48,7 +48,7 @@ void CRedshiftRayTestCase::MatchingTest1()
     CRayCatalog::TRayVector ::iterator it;
     for( it = cataloglist.begin(); it != cataloglist.end(); ++it )
     {
-        detectedCatalog.Add( CRay( (*it).GetName(), (*it).GetPosition()*shiftLambda, 0 ) );
+        detectedCatalog.Add( CRay( (*it).GetName(), (*it).GetPosition()*shiftLambda, 2, 2 ) );
     }
 
     CRayMatching rayMatching;

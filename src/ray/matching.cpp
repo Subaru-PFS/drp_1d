@@ -17,10 +17,10 @@ CRayMatching::~CRayMatching()
 {
 }
 
-Bool CRayMatching::Compute( const CRayCatalog& detectedRayCatalog, const CRayCatalog& restRayCatalog, const TFloat64Range& redshiftRange, Int32 nThreshold, Float64 tol )
+Bool CRayMatching::Compute(const CRayCatalog& detectedRayCatalog, const CRayCatalog& restRayCatalog, const TFloat64Range& redshiftRange, Int32 nThreshold, Float64 tol , Int32 typeFilter, Int32 forceFilter)
 {
-    const CRayCatalog::TRayVector& detectedRayList = detectedRayCatalog.GetList();
-    const CRayCatalog::TRayVector& restRayList = restRayCatalog.GetList();
+    CRayCatalog::TRayVector detectedRayList = detectedRayCatalog.GetFilteredList(typeFilter, forceFilter);
+    CRayCatalog::TRayVector restRayList = restRayCatalog.GetFilteredList(typeFilter, forceFilter);
 
     TRedshiftSolutionSetList solutions;  
     Int32 nDetectedRay = detectedRayList.size();
@@ -220,4 +220,56 @@ Int32 CRayMatching::GetMaxMatchingNumber()
     }
 
     return maxNumber;
+}
+
+Bool CRayMatching::GetDescription(std::string& strList)
+{
+    TRedshiftSolutionSetList selectedResults = GetSolutionsListOverNumber(1);
+
+    if(selectedResults.size()>0){
+        char tmpChar[256];
+        strList.append("#MATCH_NUM\tDETECTED_LINES\tREST_LINES\tZ\n");
+        for( UInt32 iSol=0; iSol<selectedResults.size(); iSol++ )
+        {
+            std::string strMNUM= "";
+            TRedshiftSolutionSet currentSet = selectedResults[iSol];
+            sprintf(tmpChar, "%d", currentSet.size());
+            strMNUM.append(tmpChar);
+            std::string strZ= "";
+            sprintf(tmpChar, "%.10f", GetMeanRedshiftSolution(currentSet) );
+            strZ.append(tmpChar);
+
+            std::string strDetected = "(";
+            std::string strRest = "(";
+            for( UInt32 i=0; i<currentSet.size(); i++ )
+            {
+                sprintf(tmpChar, "%.1f, ", currentSet[i].DetectedRay);
+                strDetected.append(tmpChar);
+                sprintf(tmpChar, "%.1f, ", currentSet[i].RestRay);
+                strRest.append(tmpChar);
+            }
+            strDetected = strDetected.substr(0, strDetected.size()-2);
+            strDetected.append(")");
+            strRest = strRest.substr(0, strRest.size()-2);
+            strRest.append(")");
+
+            strList.append(strMNUM);
+            strList.append("\t");
+            strList.append(strDetected);
+            strList.append("\t");
+            strList.append(strRest);
+            strList.append("\t");
+            strList.append(strZ);
+            strList.append("\n");
+        }
+
+    }else{
+        return false;
+    }
+
+    return true;
+
+
+
+    return 0;
 }
