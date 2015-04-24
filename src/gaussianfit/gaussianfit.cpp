@@ -25,7 +25,8 @@ CGaussianFit::CGaussianFit( ) :
     m_Mu( 0.0 ),
     m_MuErr( 0.0 ),
     m_C( 0.0 ),
-    m_CErr( 0.0 )
+    m_CErr( 0.0 ),
+    m_coeff0( 0.0)
 {
 }
 
@@ -40,6 +41,11 @@ Void CGaussianFit::GetResults( Float64& amplitude, Float64& position, Float64& w
     amplitude =  m_Amplitude;
     position = m_Mu;
     width = m_C;
+}
+
+Void CGaussianFit::GetResultsPolyCoeff0( Float64& coeff0) const
+{
+    coeff0 =  m_coeff0;
 }
 
 Void CGaussianFit::GetResultsError( Float64& amplitude, Float64& position, Float64& width ) const
@@ -203,6 +209,8 @@ CGaussianFit::EStatus CGaussianFit::Compute(const CSpectrum& spectrum, const TIn
     else  if ( status == GSL_CONTINUE )
     {
         returnCode = nStatus_IterationHasNotConverged;
+    }else if(status !=GSL_SUCCESS){
+        returnCode = nStatus_FailToReachTolerance;
     }
 
     m_Amplitude = output[0];
@@ -213,6 +221,8 @@ CGaussianFit::EStatus CGaussianFit::Compute(const CSpectrum& spectrum, const TIn
 
     m_C = output[2];
     m_CErr = outputError[2];
+
+    m_coeff0 = output[3];
 
     gsl_multifit_fdfsolver_free (multifitSolver);
     gsl_matrix_free (covarMatrix);

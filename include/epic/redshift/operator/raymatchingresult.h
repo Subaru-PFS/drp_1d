@@ -22,6 +22,13 @@ public:
        Float64 RestRay;
        Float64 Redshift;
 
+       SSolution( Float64 detectedRay, Float64 restRay, Float64 redshift )
+       {
+           DetectedRay = detectedRay;
+           RestRay = restRay;
+           Redshift = redshift;
+       }
+
        bool operator < (const SSolution& str) const
        {
            if(DetectedRay == str.DetectedRay){
@@ -38,9 +45,16 @@ public:
     CRayMatchingResult();
     virtual ~CRayMatchingResult();
 
-    Void Save( std::ostream& stream ) const;
+    Void                Save( std::ostream& stream ) const;
 
-    TSolutionSetList SolutionSetList;
+    Bool                        GetBestRedshift(Float64& Redshift, Int32& MatchingNumber);
+    Int32                       GetMaxMatchingNumber();
+    Float64                     GetMeanRedshiftSolution( const TSolutionSet& s);
+    Float64                     GetMeanRedshiftSolutionByIndex(Int32 index);
+    TSolutionSetList            GetSolutionsListOverNumber(Int32 number) const;
+
+    TSolutionSetList    SolutionSetList;
+
 };
 
 

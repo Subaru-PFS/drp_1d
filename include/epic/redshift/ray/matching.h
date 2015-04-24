@@ -34,7 +34,7 @@ public:
 
 private:
 
-    //Bool AreSolutionSetsEqual(TRedshiftSolutionSet s1, TRedshiftSolutionSet s2);
+    Bool AreSolutionSetsEqual( const CRayMatchingResult::TSolutionSet& s1, const CRayMatchingResult::TSolutionSet& s2);
 
 
     //Int32       m_N;            // number of matching lines needed

@@ -180,14 +180,14 @@ const COperatorResult* COperatorChiSquare::Compute(const CSpectrum& spectrum, co
     result->ChiSquare.resize( redshifts.size() );
     result->Redshifts.resize( redshifts.size() );
     result->Overlap.resize( redshifts.size() );
+    result->Status.resize( redshifts.size() );
 
     result->Redshifts = redshifts;
 
-    EStatus status;
 
     for (Int32 i=0;i<redshifts.size();i++)
     {
-        BasicFit( spectrum, tpl, lambdaRange, result->Redshifts[i], overlapThreshold, result->Overlap[i], result->ChiSquare[i], status );
+        BasicFit( spectrum, tpl, lambdaRange, result->Redshifts[i], overlapThreshold, result->Overlap[i], result->ChiSquare[i], result->Status[i] );
     }
 
     return result;

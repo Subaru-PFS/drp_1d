@@ -6,7 +6,7 @@
 #include <epic/redshift/ray/ray.h>
 
 #include <vector>
-
+#include <string>
 
 namespace NSEpic
 {
@@ -36,6 +36,7 @@ public:
     Bool Add( const CRay& r );
     Bool Load( const char* filePath );
     const TRayVector& GetList() const;
+    Bool GetRayPositionStringList(std::string& strList);
 
 private:
 

@@ -32,21 +32,21 @@ void CRedshiftPeakDetectionTestCase::Compute()
 
     TLambdaRange lambdaRange = s.GetLambdaRange();
     CPeakDetection detection;
-    retVal = detection.Compute( s, lambdaRange, 500.0, 15); //using winsize=500 and cut=15 so that 3 only peaks are detected in the test signal for sure
+    retVal = detection.Compute( s, lambdaRange, 500.0, 15, 1, 0); //using winsize=500 and cut=15 so that 3 only peaks are detected in the test signal for sure
     CPPUNIT_ASSERT_MESSAGE( "compute detection" , retVal == true );
     const TInt32RangeList& resPeaks = detection.GetResults();
 
 
     Float64 peakxpos[] = {1000, 5000, 8000};
     Float64 peaksigmas[] = {40.0, 10.0, 45.0};
-    UInt32 n=3;
+    UInt32 n=4;
 
     // test number of peaks
     CPPUNIT_ASSERT(n == resPeaks.size());
 
     // test peak xpos
     Float64 toleranceXPos = 15.f;
-    for(int i=0; i<n; i++){
+    for(int i=0; i<n-1; i++){
         Float64 fwhm =  2*sqrt(2*log(2))*peaksigmas[i];
         Float64 infRef = peakxpos[i]-fwhm/2.0*1.5;
         infRef = max((Float64)infRef, 0.0);

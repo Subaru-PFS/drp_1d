@@ -80,16 +80,14 @@ const COperatorResult*  COperatorCorrelation::Compute(   const CSpectrum& spectr
     result->Correlation.resize( redshifts.size() );
     result->Overlap.resize( redshifts.size() );
     result->Redshifts.resize( redshifts.size() );
+    result->Status.resize( redshifts.size() );
 
     result->Redshifts = redshifts;
-
-    TStatusList status;
-    status.resize( redshifts.size() );
 
     for ( Int32 i=0; i<redshifts.size(); i++)
     {
         result->Correlation[i] = NAN;
-        status[i] = nStatus_DataError;
+        result->Status[i] = nStatus_DataError;
         result->Overlap[i] = 0;
 
         // Shift Template (Since template are created at Z=0)
@@ -112,7 +110,7 @@ const COperatorResult*  COperatorCorrelation::Compute(   const CSpectrum& spectr
 
         if( result->Overlap[i] < overlapThreshold )
         {
-            status[i] = nStatus_NoOverlap;
+            result->Status[i] = nStatus_NoOverlap;
             continue;
         }
 
@@ -125,7 +123,7 @@ const COperatorResult*  COperatorCorrelation::Compute(   const CSpectrum& spectr
         spcSpectralAxis.GetMask( intersectedLambdaRange, spcMask );
         if( !spcFluxAxis.ComputeMeanAndSDev( spcMask, spcMean, spcSDev, error ) )
         {
-            status[i] = nStatus_DataError;
+            result->Status[i] = nStatus_DataError;
             continue;
         }
 
@@ -134,7 +132,7 @@ const COperatorResult*  COperatorCorrelation::Compute(   const CSpectrum& spectr
         shiftedTplSpectralAxis.GetMask( intersectedLambdaRange, tplMask );
         if( !tplFluxAxis.ComputeMeanAndSDev( tplMask, tplMean, tplSDev, NULL ) )
         {
-            status[i] = nStatus_DataError;
+            result->Status[i] = nStatus_DataError;
             continue;
         }
 
@@ -185,7 +183,7 @@ const COperatorResult*  COperatorCorrelation::Compute(   const CSpectrum& spectr
         if( sumWeight>0 )
         {
             result->Correlation[i] = sumCorr / ( tplSDev * spcSDev * sumWeight );
-            status[i] = nStatus_OK;
+            result->Status[i] = nStatus_OK;
         }
     }
 

@@ -25,7 +25,8 @@ protected:
 
 };
 
-typedef std::vector< CConstRef<COperatorResult> > TOperatorResultList;
+typedef std::vector< CConstRef<COperatorResult> >           TOperatorResultList;
+typedef std::map< std::string, CConstRef<COperatorResult> > TOperatorResultMap;
 
 }
 

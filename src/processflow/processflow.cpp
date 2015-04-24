@@ -5,6 +5,7 @@
 #include <epic/redshift/spectrum/template/template.h>
 #include <epic/redshift/spectrum/template/catalog.h>
 #include <epic/redshift/operator/correlation.h>
+#include <epic/redshift/operator/blindsolveresult.h>
 #include <epic/redshift/processflow/context.h>
 #include <epic/redshift/extremum/extremum.h>
 #include <epic/redshift/continuum/median.h>
@@ -15,7 +16,9 @@
 #include <epic/redshift/ray/ray.h>
 #include <epic/redshift/ray/catalog.h>
 #include <epic/redshift/ray/matching.h>
+#include <epic/redshift/common/median.h>
 #include <stdio.h>
+#include <float.h>
 
 
 using namespace NSEpic;
@@ -35,8 +38,14 @@ CProcessFlow::~CProcessFlow()
 
 Bool CProcessFlow::Process( CProcessFlowContext& ctx )
 {
-    return ProcessWithEL( ctx );
+    /*
+    if(ctx.GetMethod()  == CProcessFlowContext::nMethod_LineMatching)
+        return ProcessWithEL( ctx );
 
+    if(ctx.GetMethod()  == CProcessFlowContext::nMethod_BlindSolve)
+        return ProcessWithoutEL( ctx );
+
+        */
     const CProcessFlowContext::TTemplateCategoryList& tplCategoryList = ctx.GetParams().templateCategoryList;
     if( std::find( tplCategoryList.begin(), tplCategoryList.end(), CTemplate::nCategory_Emission )==tplCategoryList.end() )
     {
@@ -46,6 +55,7 @@ Bool CProcessFlow::Process( CProcessFlowContext& ctx )
     {
         return ProcessWithEL( ctx );
     }
+    //*/
 
     return false;
 }
@@ -54,19 +64,19 @@ Bool CProcessFlow::Process( CProcessFlowContext& ctx )
 Bool CProcessFlow::ProcessWithoutEL( CProcessFlowContext& ctx )
 {
     const CTemplateCatalog& templateCatalog = ctx.GetTemplateCatalog();
-    const CProcessFlowContext::TTemplateCategoryList& templateCategotyList = ctx.GetParams().templateCategoryList;
 
-    for( UInt32 i=0; i<templateCategotyList.size(); i++ )
+    for( UInt32 i=0; i<ctx.GetParams().templateCategoryList.size(); i++ )
     {
-        if( ctx.GetParams().templateCategoryList[i] == CTemplate::nCategory_Star )
+        CTemplate::ECategory category = ctx.GetParams().templateCategoryList[i];
+        if( category == CTemplate::nCategory_Star )
         {
         }
         else
         {
-            for( UInt32 j=0; j<templateCatalog.GetTemplateCount( (CTemplate::ECategory) templateCategotyList[i] ); j++ )
+            for( UInt32 j=0; j<templateCatalog.GetTemplateCount( category ); j++ )
             {
-                const CTemplate& tpl = templateCatalog.GetTemplate( (CTemplate::ECategory) templateCategotyList[i], j );
-                const CTemplate& tplWithoutCont = templateCatalog.GetTemplateWithoutContinuum( (CTemplate::ECategory) templateCategotyList[i], j );
+                const CTemplate& tpl = templateCatalog.GetTemplate( category, j );
+                const CTemplate& tplWithoutCont = templateCatalog.GetTemplateWithoutContinuum( category, j );
 
 
                 BlindSolve( ctx, tpl, tplWithoutCont );
@@ -77,6 +87,8 @@ Bool CProcessFlow::ProcessWithoutEL( CProcessFlowContext& ctx )
     return true;
 }
 
+#include <epic/redshift/operator/raydetectionresult.h>
+#include <epic/redshift/operator/raymatchingresult.h>
 
 Bool CProcessFlow::ProcessWithEL( CProcessFlowContext& ctx )
 {
@@ -89,23 +101,22 @@ Bool CProcessFlow::ProcessWithEL( CProcessFlowContext& ctx )
 
     // --- EZ: EL Search
     bool retVal = ELSearch(ctx);
-    if(ctx.GetDetectedRayCatalog().GetList().size()<2){
+
+    const CRayDetectionResult* rayDetectionResult = (const CRayDetectionResult*)ctx.GetGlobalResult( "raycatalog" );
+    if(rayDetectionResult->RayCatalog.GetList().size()<2){
         return false;
         //return ProcessWithoutEL( ctx );
     }
 
     // --- EZ: EL Match
     CRayMatching rayMatching;
-    retVal = rayMatching.Compute(ctx.GetDetectedRayCatalog(), ctx.GetRayCatalog(), ctx.GetParams().redshiftRange, 2, 0.002 );
-    // Store matching results
-    {
-        Float64 bestz=-1.0;
-        Int32 bestzMatchingNum = -1;
-        rayMatching.GetBestRedshift(bestz, bestzMatchingNum);
-        ctx.SetRayMatchingResult(rayMatching.GetResults(), bestz, bestzMatchingNum);
-    }
-    return true;
+    CRef<CRayMatchingResult> rayMatchingResult = rayMatching.Compute(rayDetectionResult->RayCatalog, ctx.GetRayCatalog(), ctx.GetParams().redshiftRange, 2, 0.002 );
 
+    // Store matching results
+    ctx.StoreGlobalResult( "raymatching", *rayMatchingResult );
+
+    return true;
+/*
     Int32 maxMatchingNum = rayMatching.GetMaxMatchingNumber();
     if(maxMatchingNum>2){ //ez equivalent to SolveDecisionalTree2:three_lines_match()
         TFloat64List selectedRedshift;
@@ -120,18 +131,23 @@ Bool CProcessFlow::ProcessWithEL( CProcessFlowContext& ctx )
         //retVal = ComputeMerits( ctx, selectedRedshift);
     }
 
-
+*/
     return true;
 }
+
+#include <epic/redshift/operator/raydetectionresult.h>
 
 bool CProcessFlow::ELSearch( CProcessFlowContext& ctx )
 {
     const CSpectrum& spc = ctx.GetSpectrum();
+    const CSpectrumFluxAxis fluxAxis = spc.GetFluxAxis();
     const TFloat64Range& lambdaRange = ctx.GetParams().lambdaRange;
+
 
     // detect possible peaks
     Float64 winsize = 250.0;
-    Float64 cut = 5;
+    Float64 cut = 5.0;
+    Float64 strongcut = 2.0;
     CPeakDetection detection;
     Float64 minsize = 3;
     Float64 maxsize = 90;
@@ -139,8 +155,9 @@ bool CProcessFlow::ELSearch( CProcessFlowContext& ctx )
     const TInt32RangeList& resPeaks = detection.GetResults();
     UInt32 nPeaks = resPeaks.size();
 
+    CRef<CRayDetectionResult> result = new CRayDetectionResult();
+
     // filter the peaks with gaussian fit and create the detected rays catalog
-    CRef<CRayCatalog> detectedRayCatalog = new CRayCatalog();
     for( UInt32 j=0; j<nPeaks; j++ )
     {
         bool toAdd = true;
@@ -155,6 +172,8 @@ bool CProcessFlow::ELSearch( CProcessFlowContext& ctx )
         Float64 gaussPos;
         Float64 gaussWidth;
         fitter.GetResults( gaussAmp, gaussPos, gaussWidth );
+        Float64 gaussCont;
+        fitter.GetResultsPolyCoeff0( gaussCont );
 
         /* check pos
         if(){
@@ -166,33 +185,111 @@ bool CProcessFlow::ELSearch( CProcessFlowContext& ctx )
             toAdd = false;
         }
         // check width
-        Float64 FWHM_FACTOR=2.35;
-        if(gaussWidth<0){
-            toAdd = false;
-        }else{
-            Float64 fwhm = FWHM_FACTOR*gaussWidth;
-            if(fwhm<minsize){
+        if(toAdd){
+            Float64 FWHM_FACTOR=2.35;
+            if(gaussWidth<0){
+                toAdd = false;
+            }else{
+                Float64 fwhm = FWHM_FACTOR*gaussWidth;
+                if(fwhm<minsize){
+                    toAdd = false;
+                }
+                if(fwhm>maxsize){
+                    toAdd = false;
+                }
+            }
+        }
+
+        //find max value and pos
+        Float64 max_value = DBL_MIN;
+        Int32 max_index = -1;
+        for( Int32 k=resPeaks[j].GetBegin(); k<resPeaks[j].GetEnd()+1; k++ )
+        {
+            if(max_value < fluxAxis[k]){
+                max_value = fluxAxis[k];
+                max_index = k;
+            }
+        }
+
+        // Check if gaussian fit is very different from peak itself
+        if(toAdd){
+            // check max_gauss vs max_spectrum
+            Float64 gaussAmp_with_cont = gaussAmp + gaussCont;
+            if(gaussAmp_with_cont/max_value <= 0.65 || gaussAmp_with_cont/max_value >= 1.35){
                 toAdd = false;
             }
-            if(fwhm>maxsize){
+            if(gaussAmp_with_cont/max_value <= 0.65 || gaussAmp_with_cont/max_value >= 1.35){
                 toAdd = false;
+            }
+
+        }
+
+        // check type weak or strong
+        Int32 type = 1; //weak by default
+        if(toAdd){
+            // strong/weak test to do
+            const Float64* fluxData = fluxAxis.GetSamples();
+            CMedian<Float64> medianProcessor;
+            Float64 med = medianProcessor.Find( fluxData + resPeaks[j].GetBegin(), resPeaks[j].GetEnd() - resPeaks[j].GetBegin() + 1 );
+            Float64 xmad = XMadFind( fluxData + resPeaks[j].GetBegin(), resPeaks[j].GetEnd() - resPeaks[j].GetBegin() + 1 , med);
+            // TODO: check with the noise spectrum
+            /*if noise!=None:
+            noise_mean=noise[left_index:right_index].mean()
+            if noise_mean>xmadm:
+                # Use noise file
+                xmadm=noise_mean
+                self.msg.debug(self.__module__, '18.96', 0, self.spectrum.name, "%4.1f" % pos)
+            */
+            Float64 ratioAmp=max_value/xmad;
+
+            if(ratioAmp<cut){
+                toAdd = false;
+            }else if(ratioAmp>cut*strongcut){
+                type = 2; //strong
             }
         }
 
         if(toAdd){
-            // check type weak or strong
-            Int32 type = 2;
-            // strong/weak test to do
-            //...
             char buffer [64];
             sprintf(buffer,"detected_peak_%d",j);
             std::string peakName = buffer;
-            detectedRayCatalog->Add( CRay( peakName, gaussPos, type ) );
+            result->RayCatalog.Add( CRay( peakName, gaussPos, type ) );
         }
     }
 
-    ctx.SetRayDetectionResult(*detectedRayCatalog);
+    ctx.StoreGlobalResult( "raycatalog", *result );
 
+}
+
+Float64 CProcessFlow::XMadFind( const Float64* x, Int32 n, Float64 median )
+{
+    std::vector<Float64> xdata;
+    Float64 xmadm = 0.0;
+
+    xdata.reserve( n );
+
+    for( Int32 i=0;i<n; i++ )
+    {
+        xdata[i] = fabs( x[i]-median );
+    }
+
+    CQuickSort<Float64> sort;
+
+    sort.Sort( xdata.data(), n);
+
+    if( ((float)n)/2. - int(n/2.) == 0 )
+    {
+        UInt32 i1 = n/2 -1;
+        UInt32 i2 = n/2;
+        xmadm = 0.5*(xdata[i1]+xdata[i2]);
+    }
+    else
+    {
+        UInt32 i1 = int(n/2);
+        xmadm = xdata[i1];
+    }
+
+    return xmadm;
 }
 
 bool CProcessFlow::ComputeMerits( CProcessFlowContext& ctx, const TFloat64List& redshifts)
@@ -300,8 +397,10 @@ Bool CProcessFlow::BlindSolve( CProcessFlowContext& ctx, const CTemplate& tpl, c
 
     // Store results
     ctx.StorePerTemplateResult( tpl, "blindsolve.correlation", *correlationResult );
-    ctx.StorePerTemplateResult( tpl, "blindsolve.chisquare", *chisquareResult );
+    ctx.StorePerTemplateResult( tpl, "blindsolve.merit", *chisquareResult );
 
+    CRef<CBlindSolveResult>  chisquareResults = new CBlindSolveResult();
+    ctx.StoreGlobalResult( "blindsolve", *chisquareResults );
     return true;
 }
 

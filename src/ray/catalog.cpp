@@ -27,6 +27,19 @@ const CRayCatalog::TRayVector& CRayCatalog::GetList() const
     return m_List;
 }
 
+
+Bool CRayCatalog::GetRayPositionStringList(std::string& strList)
+{
+    TRayVector::iterator it;
+    for( it = m_List.begin(); it != m_List.end(); ++it )
+    {
+        strList.append((*it).GetDescription());
+        strList.append("\n");
+    }
+
+    return true;
+}
+
 Bool CRayCatalog::Add( const CRay& r )
 {
     TRayVector::iterator it;

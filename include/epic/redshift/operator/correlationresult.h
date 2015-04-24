@@ -3,6 +3,7 @@
 
 #include <epic/redshift/operator/result.h>
 #include <epic/core/common/datatypes.h>
+#include <epic/redshift/operator/operator.h>
 
 namespace NSEpic
 {
@@ -22,6 +23,7 @@ public:
     TFloat64List    Redshifts;
     TFloat64List    Correlation;
     TFloat64List    Overlap;
+    COperator::TStatusList  Status;
 
 };
 

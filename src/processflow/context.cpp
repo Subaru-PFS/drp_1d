@@ -168,7 +168,7 @@ const CRayCatalog& CProcessFlowContext::GetRayCatalog() const
 
 const CProcessFlowContext::SParam& CProcessFlowContext::GetParams() const
 {
-    m_Params;
+    return m_Params;
 }
 
 void CProcessFlowContext::StoreResult( TResultsMap& map, const char* name, const COperatorResult& result )
@@ -199,7 +199,7 @@ Void CProcessFlowContext::StoreGlobalResult( const char* name, const COperatorRe
     StoreResult( m_GlobalResults, name, result );
 }
 
-const COperatorResult* CProcessFlowContext::GetResult( const CTemplate& t, const char* name ) const
+const COperatorResult* CProcessFlowContext::GetPerTemplateResult( const CTemplate& t, const char* name ) const
 {
     TPerTemplateResultsMap::const_iterator it1 = m_PerTemplateResults.find( t.GetName() );
     if( it1 != m_PerTemplateResults.end() )
@@ -215,6 +215,25 @@ const COperatorResult* CProcessFlowContext::GetResult( const CTemplate& t, const
     return NULL;
 }
 
+TOperatorResultMap CProcessFlowContext::GetPerTemplateResult( const char* name ) const
+{
+    TOperatorResultMap map;
+    TPerTemplateResultsMap::const_iterator it;
+    for( it = m_PerTemplateResults.begin(); it != m_PerTemplateResults.end(); ++it )
+    {
+        std::string tplName = (*it).first;
+
+        const TResultsMap& m = (*it).second;
+        TResultsMap::const_iterator it2 = m.find( name );
+        if( it2 != m.end() )
+        {
+            map[tplName] = (*it2).second;
+        }
+    }
+
+    return map;
+}
+
 const COperatorResult* CProcessFlowContext::GetGlobalResult( const char* name ) const
 {
     TResultsMap::const_iterator it = m_GlobalResults.find( name );
@@ -222,4 +241,6 @@ const COperatorResult* CProcessFlowContext::GetGlobalResult( const char* name ) 
     {
         return (*it).second;
     }
+
+    return NULL;
 }

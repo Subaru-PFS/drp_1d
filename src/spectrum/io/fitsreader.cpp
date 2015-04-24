@@ -132,7 +132,8 @@ Bool CSpectrumIOFitsReader::Read1( fitsfile* fptr, CSpectrum& spectrum )
     CSpectrumAxis& spcSpectralAxis = spectrum.GetSpectralAxis();
 
     spcSpectralAxis.SetSize( length );
-    double wave_value = crval1 + cdelt1 + crpix1*cdelt1; //Warning, modified from: wave_value = crval1 - cdelt1 * (crpix1-1);, to be further checked...
+    double wave_value = crval1 - cdelt1 * (crpix1-1);
+    //double wave_value = crval1 + cdelt1 + crpix1*cdelt1; //Warning, modified from: wave_value = crval1 - cdelt1 * (crpix1-1);, to be further checked...
     spcSpectralAxis[0] = wave_value;
 
     // set wavelength

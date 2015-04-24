@@ -27,7 +27,7 @@ public:
         nStatus_IterationHasNotConverged = (1 << 3),
 
         // Results corresponding to a success
-        nStatus_FailToReachTolerance = (1 << 0) & nStatus_Success
+        nStatus_FailToReachTolerance = (1 << 4)
     };
 
     CGaussianFit( );
@@ -36,6 +36,7 @@ public:
     EStatus    Compute( const CSpectrum& s, const TInt32Range& studyRange );
 
     Void    GetResults( Float64& amplitude, Float64& position, Float64& width ) const;
+    Void    GetResultsPolyCoeff0( Float64& coeff0) const;
     Void    GetResultsError( Float64& amplitude, Float64& position, Float64& width ) const;
 
 private:
@@ -60,6 +61,8 @@ private:
     Float64 m_AmplitudeErr;
     Float64 m_MuErr;
     Float64 m_CErr;
+
+    Float64 m_coeff0;
 
     Int32   m_PolyOrder;
     Float64 m_AbsTol;

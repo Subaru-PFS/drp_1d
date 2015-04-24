@@ -1,0 +1,63 @@
+#include <epic/redshift/operator/blindsolveresult.h>
+
+#include <epic/redshift/processflow/context.h>
+#include <epic/redshift/operator/chisquareresult.h>
+
+#include <float.h>
+
+using namespace NSEpic;
+
+IMPLEMENT_MANAGED_OBJECT( CBlindSolveResult )
+
+CBlindSolveResult::CBlindSolveResult()
+{
+
+}
+
+CBlindSolveResult::~CBlindSolveResult()
+{
+
+}
+
+Void CBlindSolveResult::Save( std::ostream& stream ) const
+{
+
+}
+
+Bool CBlindSolveResult::GetBestCorrelationResult( const CProcessFlowContext& ctx, Float64& redshift, Float64& merit, std::string& tplName ) const
+{
+    TOperatorResultMap correlationResults = ctx.GetPerTemplateResult("blindsolve.correlation");
+    TOperatorResultMap meritResults = ctx.GetPerTemplateResult("blindsolve.merit");
+
+
+    Int32 maxIndex = 0;
+    Float64 tmpMerit = DBL_MAX ;
+    Float64 tmpRedshift = 0.0;
+    std::string tmpTplName;
+
+    for( TOperatorResultMap::const_iterator it = meritResults.begin(); it != meritResults.end(); it++ )
+    {
+        const CChisquareResult* meritResult = (const CChisquareResult*)(const COperatorResult*)(*it).second;
+        for( Int32 i=0; i<meritResult->ChiSquare.size(); i++ )
+        {
+            if( meritResult->ChiSquare[i] < tmpMerit && meritResult->Status[i] == COperator::nStatus_OK )
+            {
+                tmpMerit = meritResult->ChiSquare[i];
+                tmpRedshift = meritResult->Redshifts[i];
+                tmpTplName = (*it).first;
+            }
+        }
+    }
+
+
+    if( tmpMerit < DBL_MAX )
+    {
+        redshift = tmpRedshift;
+        merit = tmpMerit;
+        tplName = tmpTplName;
+        return true;
+    }
+
+    return false;
+
+}

@@ -61,8 +61,10 @@ public:
     Void  StorePerTemplateResult( const CTemplate& t, const char* name, const COperatorResult& result );
     Void  StoreGlobalResult( const char* name, const COperatorResult& result );
 
-    const COperatorResult* GetResult( const CTemplate& t, const char* name ) const;
+    const COperatorResult*  GetPerTemplateResult( const CTemplate& t, const char* name ) const;
+    TOperatorResultMap      GetPerTemplateResult( const char* name ) const;
     const COperatorResult* GetGlobalResult( const char* name ) const;
+
 
 private:
 
@@ -72,6 +74,7 @@ private:
     CRef<CSpectrum>                 m_SpectrumWithoutContinuum;
     CRef<CTemplateCatalog>          m_TemplateCatalog;
     CRef<CRayCatalog>               m_RayCatalog;
+
 
     SParam                          m_Params;
     std::string                     m_SpectrumName;

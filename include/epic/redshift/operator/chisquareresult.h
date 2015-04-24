@@ -3,6 +3,7 @@
 
 #include <epic/redshift/operator/result.h>
 #include <epic/core/common/datatypes.h>
+#include <epic/redshift/operator/operator.h>
 
 namespace NSEpic
 {
@@ -19,9 +20,10 @@ public:
 
     Void Save( std::ostream& stream ) const;
 
-    TFloat64List    Redshifts;
-    TFloat64List    ChiSquare;
-    TFloat64List    Overlap;
+    TFloat64List            Redshifts;
+    TFloat64List            ChiSquare;
+    TFloat64List            Overlap;
+    COperator::TStatusList  Status;
 
 };
 
