@@ -27,8 +27,23 @@ const CRayCatalog::TRayVector& CRayCatalog::GetList() const
     return m_List;
 }
 
+const CRayCatalog::TRayVector CRayCatalog::GetFilteredList(Int32 typeFilter, Int32 forceFilter) const
+{
+    {
+        TRayVector filteredList;
+        for( int i = 0; i< m_List.size(); i++ )
+        {
+            if( typeFilter == -1 || typeFilter == m_List[i].GetType()){
+                if( forceFilter == -1 || forceFilter == m_List[i].GetForce()){
+                    filteredList.push_back(m_List[i]);
+                }
+            }
+        }
+        return filteredList;
+    }
+}
 
-Bool CRayCatalog::GetRayPositionStringList(std::string& strList)
+Bool CRayCatalog::GetDescription(std::string& strList)
 {
     TRayVector::iterator it;
     for( it = m_List.begin(); it != m_List.end(); ++it )
@@ -45,8 +60,8 @@ Bool CRayCatalog::Add( const CRay& r )
     TRayVector::iterator it;
     for( it = m_List.begin(); it != m_List.end(); ++it )
     {
-        // Can't add a ray with a name that already exists in the list
-        if( (*it).GetName() == r.GetName() )
+        // Can't add a ray with a name + position + type that already exists in the list
+        if( (*it).GetName() == r.GetName() && (*it).GetPosition() == r.GetPosition() && (*it).GetType() == r.GetType() )
             return false;
     }
 
@@ -106,19 +121,30 @@ Bool CRayCatalog::Load( const char* filePath )
             }
 
             // Parse type
+            int Etype = 0;
             ++it;
-            string type = "E";
+            string type = "None";
             if( it != tok.end() )
                 type = *it;
+            if( strcmp(type.c_str(),"A")==0 ){
+                Etype = 1;
+            }else if( strcmp(type.c_str(),"E")==0 ){
+                Etype = 2;
+            }
 
             // Parse weak or strong
+            int Eforce = 0;
             ++it;
-            string strong = "S";
+            string strong = "None";
             if( it != tok.end() )
                 strong = *it;
-            
+            if( strcmp(strong.c_str(),"W")==0 ){
+                Eforce = 1;
+            }else if( strcmp(strong.c_str(),"S")==0 ){
+                Eforce = 2;
+            }
 
-            Add( CRay( name, pos, 0 ) );
+            Add( CRay( name, pos, Etype, Eforce ) );
         }
     }
 

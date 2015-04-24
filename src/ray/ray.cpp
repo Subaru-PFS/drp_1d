@@ -9,11 +9,12 @@ CRay::CRay()
 
 }
 
-CRay::CRay( const string& name, Float64 pos, UInt32 type )
+CRay::CRay( const string& name, Float64 pos, UInt32 type, UInt32 force )
 {
     m_Name = name;
     m_Pos = pos;
     m_Type = type;
+    m_Force = force;
 }
 
 CRay::~CRay()
@@ -23,12 +24,22 @@ CRay::~CRay()
 
 Bool CRay::GetIsStrong() const
 {
-    return m_Type == nForce_Strong;
+    return m_Force == nForce_Strong;
 }
 
 Bool CRay::GetIsEmission() const
 {
     return m_Type == nType_Emission;
+}
+
+Int32 CRay::GetType() const
+{
+    return m_Type;
+}
+
+Int32 CRay::GetForce() const
+{
+    return m_Force;
 }
 
 Float64 CRay::GetPosition() const

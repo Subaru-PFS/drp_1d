@@ -63,8 +63,7 @@ public:
 
     const COperatorResult*  GetPerTemplateResult( const CTemplate& t, const char* name ) const;
     TOperatorResultMap      GetPerTemplateResult( const char* name ) const;
-    const COperatorResult* GetGlobalResult( const char* name ) const;
-
+    const COperatorResult*  GetGlobalResult( const char* name ) const;
 
 private:
 

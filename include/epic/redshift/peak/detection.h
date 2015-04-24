@@ -22,6 +22,7 @@ public:
     Bool Compute( const CSpectrum& spectrum, const TLambdaRange& lambdaRange, Float64 windowSize = 250.0, Float64 cut = 5.0, UInt32 medianSmoothHalfWidth = 1, UInt32 enlargeRate = 2.0 );
 
     const TInt32RangeList& GetResults() const;
+    const TInt32RangeList& GetResultsEnlarged() const;
 
 private:
 
@@ -32,6 +33,7 @@ private:
     Float64 XMad( const Float64* x, Int32 n, Float64 median );
 
     TInt32RangeList            m_Results;
+    TInt32RangeList            m_ResultsEnlargedForFit;
 
 };
 

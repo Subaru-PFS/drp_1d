@@ -28,7 +28,7 @@ CProcessFlowContext::SParam::SParam()
     redshiftStep = 0.0001;
     lambdaRange = TFloat64Range( 3800.0, 12500.0 );
     smoothWidth = 0;
-    overlapThreshold = 1.0;
+    overlapThreshold = 0.9;
 
     templateCategoryList.push_back( CTemplate::nCategory_Emission );
     templateCategoryList.push_back( CTemplate::nCategory_Galaxy );
