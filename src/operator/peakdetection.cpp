@@ -1,10 +1,11 @@
-#include <epic/redshift/peak/detection.h>
+#include <epic/redshift/operator/peakdetection.h>
 
 #include <epic/redshift/peak/peak.h>
 #include <epic/redshift/spectrum/spectrum.h>
 #include <epic/redshift/spectrum/fluxaxis.h>
 #include <epic/redshift/spectrum/spectralaxis.h>
 #include <epic/redshift/common/median.h>
+#include <epic/redshift/operator/peakdetectionresult.h>
 
 #include <math.h>
 
@@ -23,8 +24,10 @@ CPeakDetection::~CPeakDetection()
 
 }
 
-Bool CPeakDetection::Compute( const CSpectrum& spectrum, const TLambdaRange& lambdaRange, Float64 windowSize, Float64 cut, UInt32 medianSmoothHalfWidth, UInt32 enlargeRate )
+const CPeakDetectionResult* CPeakDetection::Compute( const CSpectrum& spectrum, const TLambdaRange& lambdaRange, Float64 windowSize, Float64 cut, UInt32 medianSmoothHalfWidth, UInt32 enlargeRate )
 {
+    CPeakDetectionResult* result = new CPeakDetectionResult();
+
     const CSpectrumFluxAxis& fluxAxis = spectrum.GetFluxAxis();
     const CSpectrumSpectralAxis& spectralAxis = spectrum.GetSpectralAxis();
 
@@ -43,12 +46,12 @@ Bool CPeakDetection::Compute( const CSpectrum& spectrum, const TLambdaRange& lam
     // No Peak detected, exit
     if( peaksBorders.size() == 0 )
     {
-        return false;
+        return NULL;
     }
 
     RedefineBorders( peaksBorders, spectralAxis, smoothedFluxAxis, fluxAxis );
 
-    m_Results = peaksBorders;
+    result->PeakList = peaksBorders;
     TInt32RangeList peaksBordersEnlarged= peaksBorders;
     if( enlargeRate )
     {
@@ -58,8 +61,9 @@ Bool CPeakDetection::Compute( const CSpectrum& spectrum, const TLambdaRange& lam
             peaksBordersEnlarged[i] = fitRange;
         }
     }
-    m_ResultsEnlargedForFit = peaksBordersEnlarged;
-    return true;
+    result->EnlargedPeakList = peaksBordersEnlarged;
+
+    return result;
 }
 
 TInt32Range CPeakDetection::FindGaussianFitStartAndStop( Int32 i, const TInt32RangeList& peaksBorders, UInt32 enlargeRate, Int32 len )
@@ -294,15 +298,3 @@ def Xmad(data, xmed):
         xmadm = xdata[i1]
     return xmadm
 */
-
-const TInt32RangeList& CPeakDetection::GetResults() const
-{
-    return m_Results;
-}
-
-const TInt32RangeList& CPeakDetection::GetResultsEnlarged() const
-{
-    return m_ResultsEnlargedForFit;
-}
-
-
