@@ -34,6 +34,12 @@ public:
     typedef std::map< std::string, CConstRef<COperatorResult> > TResultsMap;
     typedef std::map< std::string, TResultsMap>                 TPerTemplateResultsMap;
 
+    enum EMethod
+    {
+        nMethod_BlindSolve = 1,
+        nMethod_LineMatching,
+    };
+
     struct SParam
     {
         SParam();
@@ -43,6 +49,7 @@ public:
         Float64                 redshiftStep;
         Float64                 overlapThreshold;
         Int32                   smoothWidth;
+        EMethod                 method;
     };
 
 

@@ -38,24 +38,13 @@ CProcessFlow::~CProcessFlow()
 
 Bool CProcessFlow::Process( CProcessFlowContext& ctx )
 {
-    /*
-    if(ctx.GetMethod()  == CProcessFlowContext::nMethod_LineMatching)
+
+    if(ctx.GetParams().method  == CProcessFlowContext::nMethod_LineMatching)
         return ProcessWithEL( ctx );
 
-    if(ctx.GetMethod()  == CProcessFlowContext::nMethod_BlindSolve)
+    if(ctx.GetParams().method  == CProcessFlowContext::nMethod_BlindSolve)
         return ProcessWithoutEL( ctx );
 
-        */
-    const CProcessFlowContext::TTemplateCategoryList& tplCategoryList = ctx.GetParams().templateCategoryList;
-    if( std::find( tplCategoryList.begin(), tplCategoryList.end(), CTemplate::nCategory_Emission )==tplCategoryList.end() )
-    {
-        return ProcessWithoutEL( ctx );
-    }
-    else
-    {
-        return ProcessWithEL( ctx );
-    }
-    //*/
 
     return false;
 }

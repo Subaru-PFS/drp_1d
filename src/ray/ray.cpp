@@ -52,17 +52,13 @@ const std::string& CRay::GetName() const
     return m_Name;
 }
 
-const std::string CRay::GetDescription() const
+Void CRay::Save( std::ostream& stream ) const
 {
-    std::string strForce = "Weak";
-    if(GetIsStrong()){
-       strForce = "Strong";
-    }
-    char tmpChar[256];
-    sprintf(tmpChar, "%f\t%s", GetPosition(),  strForce.c_str() );
-
-    std::string tmpStr = tmpChar;
-
-    return tmpStr;
+    stream << GetName() << "\t" << GetPosition() << "\t";
+    if( GetIsStrong() )
+        stream << "Strong";
+    else
+        stream << "Weak";
 }
+
 

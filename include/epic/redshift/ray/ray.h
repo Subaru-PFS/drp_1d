@@ -38,7 +38,7 @@ public:
     Int32               GetType() const;
     Float64             GetPosition() const;
     const std::string&  GetName() const;
-    const std::string GetDescription() const;
+    Void                Save( std::ostream& stream ) const;
 
 private:
 
