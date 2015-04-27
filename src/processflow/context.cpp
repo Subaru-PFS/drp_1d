@@ -30,6 +30,8 @@ CProcessFlowContext::SParam::SParam()
     smoothWidth = 0;
     overlapThreshold = 0.9;
 
+    method = nMethod_LineMatching;
+
     templateCategoryList.push_back( CTemplate::nCategory_Emission );
     templateCategoryList.push_back( CTemplate::nCategory_Galaxy );
     templateCategoryList.push_back( CTemplate::nCategory_Star );

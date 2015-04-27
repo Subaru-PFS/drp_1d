@@ -45,12 +45,12 @@ public:
     CRayMatchingResult();
     virtual ~CRayMatchingResult();
 
-    Void                Save( std::ostream& stream ) const;
+    Void                        Save( std::ostream& stream ) const;
 
-    Bool                        GetBestRedshift(Float64& Redshift, Int32& MatchingNumber);
-    Int32                       GetMaxMatchingNumber();
-    Float64                     GetMeanRedshiftSolution( const TSolutionSet& s);
-    Float64                     GetMeanRedshiftSolutionByIndex(Int32 index);
+    Bool                        GetBestRedshift(Float64& Redshift, Int32& MatchingNumber) const;
+    Int32                       GetMaxMatchingNumber() const;
+    Float64                     GetMeanRedshiftSolution( const TSolutionSet& s) const;
+    Float64                     GetMeanRedshiftSolutionByIndex(Int32 index) const;
     TSolutionSetList            GetSolutionsListOverNumber(Int32 number) const;
 
     TSolutionSetList    SolutionSetList;

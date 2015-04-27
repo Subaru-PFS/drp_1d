@@ -20,7 +20,7 @@ Void CRayMatchingResult::Save( std::ostream& stream ) const
 }
 
 
-Bool CRayMatchingResult::GetBestRedshift(Float64& Redshift, Int32& MatchingNumber)
+Bool CRayMatchingResult::GetBestRedshift(Float64& Redshift, Int32& MatchingNumber) const
 {
     MatchingNumber = GetMaxMatchingNumber();
     TSolutionSetList selectedResults = GetSolutionsListOverNumber(MatchingNumber-1);
@@ -50,7 +50,7 @@ CRayMatchingResult::TSolutionSetList CRayMatchingResult::GetSolutionsListOverNum
     return selectedResults;
 }
 
-Float64 CRayMatchingResult::GetMeanRedshiftSolutionByIndex(Int32 index)
+Float64 CRayMatchingResult::GetMeanRedshiftSolutionByIndex(Int32 index) const
 {
     if(index > SolutionSetList.size()-1)
     {
@@ -69,7 +69,7 @@ Float64 CRayMatchingResult::GetMeanRedshiftSolutionByIndex(Int32 index)
 }
 
 
-Float64 CRayMatchingResult::GetMeanRedshiftSolution( const TSolutionSet& s)
+Float64 CRayMatchingResult::GetMeanRedshiftSolution( const TSolutionSet& s ) const
 {
     TSolutionSet currentSet = s;
     Float64 redshiftMean=0.0;
@@ -82,7 +82,7 @@ Float64 CRayMatchingResult::GetMeanRedshiftSolution( const TSolutionSet& s)
     return redshiftMean;
 }
 
-Int32 CRayMatchingResult::GetMaxMatchingNumber()
+Int32 CRayMatchingResult::GetMaxMatchingNumber() const
 {
     if(SolutionSetList.size() < 1)
     {
