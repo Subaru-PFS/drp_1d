@@ -3,7 +3,7 @@
 #include <epic/core/common/datatypes.h>
 #include <epic/core/common/ref.h>
 #include <epic/redshift/ray/catalog.h>
-#include <epic/redshift/ray/matching.h>
+#include <epic/redshift/operator/raymatching.h>
 #include <epic/redshift/operator/raymatchingresult.h>
 
 #include <math.h>
