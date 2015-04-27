@@ -98,6 +98,7 @@ Bool CProcessFlow::ProcessWithEL( CProcessFlowContext& ctx )
 
     CRayDetection rayDetection;
     CConstRef<CRayDetectionResult> rayDetectionResult = rayDetection.Compute( ctx.GetSpectrum(), ctx.GetSpectrum().GetLambdaRange(), peakDetectionResult->PeakList, peakDetectionResult->EnlargedPeakList );
+
     ctx.StoreGlobalResult( "raycatalog", *rayDetectionResult );
 
     if(rayDetectionResult->RayCatalog.GetList().size()<2){
