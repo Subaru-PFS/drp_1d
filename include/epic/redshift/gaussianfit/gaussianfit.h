@@ -67,7 +67,6 @@ private:
     Int32   m_PolyOrder;
     Float64 m_AbsTol;
     Float64 m_RelTol;
-
 };
 
 }

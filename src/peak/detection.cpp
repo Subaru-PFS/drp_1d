@@ -119,9 +119,9 @@ Void CPeakDetection::RedefineBorders( TInt32RangeList& peakList, const CSpectrum
         int old_left= centerPos;
         int old_right= centerPos;
         int new_left= std::max(0, centerPos-1);
-        int new_right= std::min(0, centerPos+1);
+        int new_right= std::min((int)smoothFluxAxis.GetSamplesCount(), centerPos+1);
 
-        if(new_left==0 || new_right==fluxAxis.GetSamplesCount()){
+        if(new_left==0 || new_right==smoothFluxAxis.GetSamplesCount()){
             // if the max is found on the border, then erase this range
             peakList.erase(peakList.begin() + iPeak);
         }else{
@@ -173,7 +173,7 @@ Void CPeakDetection::FindPossiblePeaks( const CSpectrumAxis& fluxAxis, const CSp
         xmad[i] = XMad( fluxData+ start, stop - start , med[i] );
     }
 
-    //*//debug:
+    /*//debug:
     // save median and xmad,  flux data
     FILE* f = fopen( "peakdetection_dbg_median.txt", "w+" );
     for( Int32 i=0; i<fluxAxis.GetSamplesCount(); i++ )

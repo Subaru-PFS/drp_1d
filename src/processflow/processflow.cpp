@@ -92,14 +92,14 @@ Bool CProcessFlow::ProcessWithEL( CProcessFlowContext& ctx )
 
     // --- EZ: EL Search
     bool retVal = ELSearch(ctx);
-    if(ctx.GetDetectedRayCatalog().GetList().size()<2){
+    if(ctx.GetDetectedRayCatalog().GetList().size()<1){
         return false;
         //return ProcessWithoutEL( ctx );
     }
 
     // --- EZ: EL Match
     CRayMatching rayMatching;
-    retVal = rayMatching.Compute(ctx.GetDetectedRayCatalog(), ctx.GetRayCatalog(), ctx.GetRedshiftRange(), 2, 0.002 );
+    retVal = rayMatching.Compute(ctx.GetDetectedRayCatalog(), ctx.GetRayCatalog(), ctx.GetRedshiftRange(), 1, 0.002 );
     // Store matching results
     {
         Float64 bestz=-1.0;
@@ -125,7 +125,6 @@ Bool CProcessFlow::ProcessWithEL( CProcessFlowContext& ctx )
         //retVal = ComputeMerits( ctx, selectedRedshift);
     }
 
-
     return true;
 }
 
@@ -141,7 +140,7 @@ bool CProcessFlow::ELSearch( CProcessFlowContext& ctx )
     Float64 strongcut = 2.0;
     CPeakDetection detection;
     Float64 minsize = 3;
-    Float64 maxsize = 90;
+    Float64 maxsize = 70;
     bool retVal = detection.Compute( spc, lambdaRange, winsize, cut);
     const TInt32RangeList& resPeaks = detection.GetResults();
     const TInt32RangeList& resPeaksEnlarged = detection.GetResultsEnlarged();
@@ -232,7 +231,37 @@ bool CProcessFlow::ELSearch( CProcessFlowContext& ctx )
 
             Float64 med = medianProcessor.Find( fluxData + left, size_odd);
             Float64 xmad = XMadFind( fluxData + left, size_odd , med);
-            // TODO: check with the noise spectrum
+            // use noise spectrum
+            const Float64* error = fluxAxis.GetError();
+            if( error!= NULL ){
+                // check if noise file has been loaded
+                bool isNoiseOnes = true;
+                for ( Int32 i=left; i<right; i++)
+                {
+                    if(error[i]!=1.0){
+                        isNoiseOnes = false;
+                        break;
+                    }
+                }
+
+                if(!isNoiseOnes){
+                    Float64 mean_noise = 0.0;
+                    Int32 n_mean_noise = 0;
+                    for ( Int32 i=left; i<right; i++)
+                    {
+                        mean_noise += error[i];
+                        n_mean_noise ++;
+                    }
+                    if(n_mean_noise>0){
+                        mean_noise /= n_mean_noise;
+                    }
+                    // choose between noise mean or xmad
+                    if(mean_noise>xmad){
+                        xmad = mean_noise;
+                    }
+                }
+
+            }
             /*if noise!=None:
             noise_mean=noise[left_index:right_index].mean()
             if noise_mean>xmadm:

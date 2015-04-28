@@ -29,9 +29,9 @@ Bool CRayMatching::Compute(const CRayCatalog& detectedRayCatalog, const CRayCata
         for( UInt32 iRestRay=0; iRestRay<restRayList.size(); iRestRay++ )
         {
             TRedshiftSolutionSet solution;
-            Float64 redShift=(detectedRayList[0].GetPosition()-restRayList[0].GetPosition())/restRayList[0].GetPosition();
+            Float64 redShift=(detectedRayList[0].GetPosition()-restRayList[iRestRay].GetPosition())/restRayList[iRestRay].GetPosition();
             if( redShift > 0 ){
-                solution.push_back(SRedshiftSolution( detectedRayList[0].GetPosition(), restRayList[0].GetPosition(), redShift));
+                solution.push_back(SRedshiftSolution( detectedRayList[0].GetPosition(), restRayList[iRestRay].GetPosition(), redShift));
                 solutions.push_back(solution);
             }
         }
@@ -224,7 +224,7 @@ Int32 CRayMatching::GetMaxMatchingNumber()
 
 Bool CRayMatching::GetDescription(std::string& strList)
 {
-    TRedshiftSolutionSetList selectedResults = GetSolutionsListOverNumber(1);
+    TRedshiftSolutionSetList selectedResults = GetSolutionsListOverNumber(0);
 
     if(selectedResults.size()>0){
         char tmpChar[256];
