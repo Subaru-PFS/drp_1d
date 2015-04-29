@@ -2,6 +2,7 @@
 
 #include <epic/core/common/datatypes.h>
 #include <epic/redshift/spectrum/spectrum.h>
+#include <epic/redshift/operator/blindsolveresult.h>
 #include <epic/redshift/processflow/processflow.h>
 #include <epic/redshift/processflow/context.h>
 #include <epic/core/common/ref.h>
@@ -40,7 +41,8 @@ void CRedshiftProcessFlowTestCase::ProcessShifted1 ()
     Float64 merit;
     std::string tplName;
 
-    ctx.GetBestCorrelationResult( redshift, merit, tplName );
+    const CBlindSolveResult* blindSolveResult = (CBlindSolveResult*)ctx.GetGlobalResult( "blindsolve" );
+    blindSolveResult->GetBestCorrelationResult( ctx, redshift, merit, tplName );
 
     CPPUNIT_ASSERT_DOUBLES_EQUAL( 2.02952, redshift, 0.00001 );
 
@@ -68,9 +70,10 @@ void CRedshiftProcessFlowTestCase::ProcessShifted2()
     Float64 merit;
     std::string tplName;
 
-    ctx.GetBestCorrelationResult( redshift, merit, tplName );
+    const CBlindSolveResult* blindSolveResult = (CBlindSolveResult*)ctx.GetGlobalResult( "blindsolve" );
+    blindSolveResult->GetBestCorrelationResult( ctx, redshift, merit, tplName );
 
-    CPPUNIT_ASSERT_DOUBLES_EQUAL( 2.77571, redshift, 0.00001 );
+    CPPUNIT_ASSERT_DOUBLES_EQUAL( 2.77570, redshift, 0.00001 );
 
 }
 
@@ -96,7 +99,8 @@ void CRedshiftProcessFlowTestCase::ProcessShiftedDecimated()
     Float64 merit;
     std::string tplName;
 
-    ctx.GetBestCorrelationResult( redshift, merit, tplName );
+    const CBlindSolveResult* blindSolveResult = (CBlindSolveResult*)ctx.GetGlobalResult( "blindsolve" );
+    blindSolveResult->GetBestCorrelationResult( ctx, redshift, merit, tplName );
 
     CPPUNIT_ASSERT_DOUBLES_EQUAL( 2.02952, redshift, 0.00001 );
 

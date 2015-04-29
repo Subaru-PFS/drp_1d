@@ -20,11 +20,7 @@ SET( CMAKE_RUNTIME_OUTPUT_DIRECTORY ${ROOT_DIR}/bin )
 #--------------------------------------------------------
 SET( CMAKE_CXX_FLAGS "-O3 ")
 
-IF( DEFINED ENABLE_PROFILING )
-    SET( CMAKE_CXX_FLAGS_DEBUG "-O0 -g -DDEBUG_BUILD -pg")
-ELSE()
-    SET( CMAKE_CXX_FLAGS_DEBUG "-O0 -g -DDEBUG_BUILD")
-ENDIF()
+SET( CMAKE_CXX_FLAGS_DEBUG "-O0 -g -DDEBUG_BUILD")
 
 #--------------------------------------------------------
 # Exported configuration variables

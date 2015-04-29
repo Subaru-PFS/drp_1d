@@ -3,6 +3,7 @@
 
 #include <epic/core/common/datatypes.h>
 #include <epic/core/common/range.h>
+#include <epic/redshift/operator/result.h>
 
 #include <vector>
 
@@ -11,7 +12,7 @@ namespace NSEpic
 
 class CSpectrum;
 class CTemplate;
-class CRedshifts;
+class COperatorResult;
 
 class COperator
 {
@@ -30,19 +31,10 @@ public:
     COperator();
     virtual ~COperator();
 
-    virtual Bool Compute( const CSpectrum& spectrum, const CTemplate& tpl,
-                          const TFloat64Range& lambdaRange, const TFloat64List& redshifts, Float64 overlapThreshold ) = 0;
-
-
-    const TStatusList&  GetStatus() const;
-    const TFloat64List& GetOverlap() const;
-    const TFloat64List& GetResults() const;
+    virtual const COperatorResult* Compute( const CSpectrum& spectrum, const CTemplate& tpl,
+                                            const TFloat64Range& lambdaRange, const TFloat64List& redshifts, Float64 overlapThreshold ) = 0;
 
 protected:
-
-    TFloat64List            m_Result;
-    TFloat64List            m_Overlap;
-    std::vector<EStatus>    m_Status;
 
 };
 

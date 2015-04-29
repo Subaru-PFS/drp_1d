@@ -49,10 +49,11 @@ void CExtremum::SetRefreshCount( UInt32 n )
     m_RefreshCount = n;
 }
 
-Bool CExtremum::Find( const Float64* xAxis, const Float64* yAxis, UInt32 n, TPointList& maxPoint ) const
+Bool CExtremum::Find( const TFloat64List& xAxis, const TFloat64List& yAxis, TPointList& maxPoint ) const
 {
-    const Float64* selectedXAxis = xAxis;
-    const Float64* selectedYAxis = yAxis;
+    UInt32 n = xAxis.size();
+    const Float64* selectedXAxis = xAxis.data();
+    const Float64* selectedYAxis = yAxis.data();
 
     Int32 rangeXBeginIndex = -1;
     Int32 rangeXEndIndex = -1;

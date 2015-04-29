@@ -1,7 +1,9 @@
 #include "peakdetection.h"
 
-#include <epic/redshift/peak/detection.h>
+#include <epic/redshift/operator/peakdetection.h>
+#include <epic/redshift/operator/peakdetectionresult.h>
 #include <epic/core/common/datatypes.h>
+#include <epic/core/common/constref.h>
 #include <epic/redshift/spectrum/spectrum.h>
 #include <epic/redshift/spectrum/io/fitsreader.h>
 #include <math.h>
@@ -32,9 +34,9 @@ void CRedshiftPeakDetectionTestCase::Compute()
 
     TLambdaRange lambdaRange = s.GetLambdaRange();
     CPeakDetection detection;
-    retVal = detection.Compute( s, lambdaRange, 500.0, 15, 1, 0); //using winsize=500 and cut=15 so that 3 only peaks are detected in the test signal for sure
+    CConstRef<CPeakDetectionResult> peakDetectionResult = detection.Compute( s, lambdaRange, 500.0, 15, 1, 0); //using winsize=500 and cut=15 so that 3 only peaks are detected in the test signal for sure
     CPPUNIT_ASSERT_MESSAGE( "compute detection" , retVal == true );
-    const TInt32RangeList& resPeaks = detection.GetResults();
+    const TInt32RangeList& resPeaks = peakDetectionResult->PeakList;
 
 
     Float64 peakxpos[] = {1000, 5000, 8000};

@@ -143,7 +143,7 @@ Bool CSpectrumIOFitsReader::Read1( fitsfile* fptr, CSpectrum& spectrum )
         spcSpectralAxis[i]=wave_value;
     }
 
-    fits_close_file(fptr, &status);
+
     return true;
 }
 

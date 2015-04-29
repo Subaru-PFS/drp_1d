@@ -142,7 +142,7 @@ Bool CSpectrumFluxAxis::ComputeMeanAndSDevWithoutError( const CMask& mask, Float
     }
 
 
-    if( ndOfSampleUsed > 1 )
+    if( ndOfSampleUsed > 0 )
     {
         mean = sum / ndOfSampleUsed;
 
@@ -153,7 +153,7 @@ Bool CSpectrumFluxAxis::ComputeMeanAndSDevWithoutError( const CMask& mask, Float
             var += sum * sum;
         }
 
-        sdev = sqrt( ( 1.0 / (ndOfSampleUsed-1) ) * var );
+        sdev = sqrt( ( 1.0 / ndOfSampleUsed ) * var );
     }
     else
     {
@@ -187,7 +187,7 @@ Bool CSpectrumFluxAxis::ComputeMeanAndSDevWithError( const CMask& mask, Float64&
         ndOfSampleUsed += mask[j];
     }
 
-    if (ndOfSampleUsed>1)
+    if (ndOfSampleUsed>0)
     {
         mean = sum / errorSum;
 
@@ -199,7 +199,7 @@ Bool CSpectrumFluxAxis::ComputeMeanAndSDevWithError( const CMask& mask, Float64&
             var += sum * sum;
         }
 
-        sdev = sqrt( ( 1.0 / (ndOfSampleUsed-1) ) * var );
+        sdev = sqrt( ( 1.0 / ndOfSampleUsed ) * var / errorSum );
     }
     else
     {

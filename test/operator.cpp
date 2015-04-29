@@ -1,7 +1,9 @@
 #include "operator.h"
 
 #include <epic/core/common/datatypes.h>
+#include <epic/core/common/ref.h>
 #include <epic/redshift/operator/correlation.h>
+#include <epic/redshift/operator/correlationresult.h>
 #include <epic/redshift/spectrum/spectrum.h>
 #include <epic/redshift/spectrum/template/template.h>
 #include <epic/redshift/spectrum/io/fitsreader.h>
@@ -46,18 +48,18 @@ void CRedshiftOperatorTestCase::CorrelationAtZEqualZero()
 
     Float64 redshiftDelta = 0.0001;
     redshifts = TFloat64Range( 0.0, 3.0 ).SpreadOver( redshiftDelta );
-    Bool r = correlation.Compute( s, t, lambdaRange, redshifts, 1.0 );
-    CPPUNIT_ASSERT( r == true );
+    CRef<CCorrelationResult> r = (CCorrelationResult*) correlation.Compute( s, t, lambdaRange, redshifts, 1.0 );
+    CPPUNIT_ASSERT( r != NULL );
 
 
     CExtremum extremum;
     TPointList extremumList;
-    extremum.Find( redshifts.data(), correlation.GetResults().data(), redshifts.size(), extremumList );
+    extremum.Find( r->Redshifts, r->Correlation, extremumList );
 
     CPPUNIT_ASSERT_DOUBLES_EQUAL( 0.0, extremumList[0].X, 0.000001 );
 
     // Assert status
-    const COperatorCorrelation::TStatusList& status = correlation.GetStatus();
+    const COperatorCorrelation::TStatusList& status = r->Status;
     for( Int32 i = 1; i<status.size(); i++ )
     {
         CPPUNIT_ASSERT( status[i] != COperatorCorrelation::nStatus_OK );
@@ -101,17 +103,17 @@ void CRedshiftOperatorTestCase::CorrelationAtGivenZ()
     //CRedshifts redshifts( &z, 1 );
 
     COperatorCorrelation correlation;
-    Bool r = correlation.Compute( s, t, lambdaRange, redshifts, 0.7 );
-    CPPUNIT_ASSERT( r == true );
+    CRef<CCorrelationResult> r = (CCorrelationResult*) correlation.Compute( s, t, lambdaRange, redshifts, 0.7 );
+    CPPUNIT_ASSERT( r != NULL );
 
-    const TFloat64List& results = correlation.GetResults();
-    const COperatorCorrelation::TStatusList& status = correlation.GetStatus();
+    const TFloat64List& results = r->Correlation;
+    const COperatorCorrelation::TStatusList& status = r->Status;
 
     CPPUNIT_ASSERT( results.size() == status.size() );
 
     CExtremum extremum;
     TPointList extremumList;
-    extremum.Find( redshifts.data(), correlation.GetResults().data(), redshifts.size(), extremumList );
+    extremum.Find( r->Redshifts, r->Correlation, extremumList );
 
     CPPUNIT_ASSERT_DOUBLES_EQUAL( z, extremumList[0].X, redshiftDelta*2 );
 
