@@ -1,4 +1,5 @@
 #include <epic/redshift/operator/raymatchingresult.h>
+#include <stdio.h>
 
 using namespace NSEpic;
 
@@ -16,7 +17,49 @@ CRayMatchingResult::~CRayMatchingResult()
 
 Void CRayMatchingResult::Save( std::ostream& stream ) const
 {
+    TSolutionSetList selectedResults = GetSolutionsListOverNumber(0);
 
+    if(selectedResults.size()>0){
+        std::string strList;
+        char tmpChar[256];
+        strList.append("#MATCH_NUM\tDETECTED_LINES\tREST_LINES\tZ\n");
+        for( UInt32 iSol=0; iSol<selectedResults.size(); iSol++ )
+        {
+            std::string strMNUM= "";
+            TSolutionSet currentSet = selectedResults[iSol];
+            sprintf(tmpChar, "%d", currentSet.size());
+            strMNUM.append(tmpChar);
+            std::string strZ= "";
+            sprintf(tmpChar, "%.10f", GetMeanRedshiftSolution(currentSet) );
+            strZ.append(tmpChar);
+
+            std::string strDetected = "(";
+            std::string strRest = "(";
+            for( UInt32 i=0; i<currentSet.size(); i++ )
+            {
+                sprintf(tmpChar, "%.1f, ", currentSet[i].DetectedRay);
+                strDetected.append(tmpChar);
+                sprintf(tmpChar, "%.1f, ", currentSet[i].RestRay);
+                strRest.append(tmpChar);
+            }
+            strDetected = strDetected.substr(0, strDetected.size()-2);
+            strDetected.append(")");
+            strRest = strRest.substr(0, strRest.size()-2);
+            strRest.append(")");
+
+            strList.append(strMNUM);
+            strList.append("\t");
+            strList.append(strDetected);
+            strList.append("\t");
+            strList.append(strRest);
+            strList.append("\t");
+            strList.append(strZ);
+            strList.append("\n");
+        }
+        stream << strList.c_str();
+    }
+
+    return;
 }
 
 

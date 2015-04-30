@@ -58,11 +58,6 @@ const CRayDetectionResult* CRayDetection::Compute( const CSpectrum& spectrum, co
         Float64 gaussCont;
         fitter.GetResultsPolyCoeff0( gaussCont );
 
-        /* check pos
-        if(){
-            toAdd = false;
-        }
-        //*/
         // check amp
         if(gaussAmp<0){
             toAdd = false;
@@ -123,14 +118,37 @@ const CRayDetectionResult* CRayDetection::Compute( const CSpectrum& spectrum, co
 
             Float64 med = medianProcessor.Find( fluxData + left, size_odd);
             Float64 xmad = XMadFind( fluxData + left, size_odd , med);
-            // TODO: check with the noise spectrum
-            /*if noise!=None:
-            noise_mean=noise[left_index:right_index].mean()
-            if noise_mean>xmadm:
-                # Use noise file
-                xmadm=noise_mean
-                self.msg.debug(self.__module__, '18.96', 0, self.spectrum.name, "%4.1f" % pos)
-            */
+            // use noise spectrum
+            const Float64* error = fluxAxis.GetError();
+            if( error!= NULL ){
+                // check if noise file has been loaded
+                bool isNoiseOnes = true;
+                for ( Int32 i=left; i<right; i++)
+                {
+                    if(error[i]!=1.0){
+                        isNoiseOnes = false;
+                        break;
+                    }
+                }
+
+                if(!isNoiseOnes){
+                    Float64 mean_noise = 0.0;
+                    Int32 n_mean_noise = 0;
+                    for ( Int32 i=left; i<right; i++)
+                    {
+                        mean_noise += error[i];
+                        n_mean_noise ++;
+                    }
+                    if(n_mean_noise>0){
+                        mean_noise /= n_mean_noise;
+                    }
+                    // choose between noise mean or xmad
+                    if(mean_noise>xmad){
+                        xmad = mean_noise;
+                    }
+                }
+
+            }
             Float64 max_value_no_continuum = max_value - med;
             Float64 ratioAmp=max_value_no_continuum/xmad;
 
