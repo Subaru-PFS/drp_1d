@@ -1,5 +1,6 @@
 #include <epic/redshift/ray/catalog.h>
 
+#include <algorithm>    // std::sort
 #include <boost/tokenizer.hpp>
 #include <boost/lexical_cast.hpp>
 #include <string>
@@ -137,4 +138,9 @@ Bool CRayCatalog::Load( const char* filePath )
     }
 
     return true;
+}
+
+void CRayCatalog::Sort()
+{
+    sort(m_List.begin(), m_List.end());
 }
