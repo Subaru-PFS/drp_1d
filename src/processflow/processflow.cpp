@@ -21,6 +21,10 @@
 #include <epic/redshift/operator/raymatching.h>
 #include <epic/redshift/common/median.h>
 
+#include <epic/redshift/operator/peakdetectionresult.h>
+#include <epic/redshift/operator/raydetectionresult.h>
+#include <epic/redshift/operator/raymatchingresult.h>
+
 #include <stdio.h>
 #include <float.h>
 
@@ -43,10 +47,13 @@ Bool CProcessFlow::Process( CProcessFlowContext& ctx )
 {
 
     if(ctx.GetParams().method  == CProcessFlowContext::nMethod_LineMatching)
-        return ProcessWithEL( ctx );
+        return ProcessLineMatching( ctx );
 
     if(ctx.GetParams().method  == CProcessFlowContext::nMethod_BlindSolve || ctx.GetParams().method  == CProcessFlowContext::nMethod_FullSolve)
         return ProcessWithoutEL( ctx );
+
+    if(ctx.GetParams().method  == CProcessFlowContext::nMethod_DecisionalTree7)
+        return ProcessDecisionalTree7( ctx );
 
 
     return false;
@@ -82,11 +89,42 @@ Bool CProcessFlow::ProcessWithoutEL( CProcessFlowContext& ctx )
     return true;
 }
 
-#include <epic/redshift/operator/peakdetectionresult.h>
-#include <epic/redshift/operator/raydetectionresult.h>
-#include <epic/redshift/operator/raymatchingresult.h>
+Bool CProcessFlow::ProcessDecisionalTree7( CProcessFlowContext& ctx )
+{
+    Log.LogInfo( "Process Decisional Tree 7(LambdaRange: %f-%f:%f)",
+            ctx.GetSpectrum().GetLambdaRange().GetBegin(), ctx.GetSpectrum().GetLambdaRange().GetEnd(), ctx.GetSpectrum().GetResolution());
 
-Bool CProcessFlow::ProcessWithEL( CProcessFlowContext& ctx )
+    /*
+    // Peak Detection
+    Float64 winsize = 250.0;
+    Float64 cut = 5.0;
+    CPeakDetection peakDetection;
+    CConstRef<CPeakDetectionResult> peakDetectionResult = peakDetection.Compute( ctx.GetSpectrum(), ctx.GetSpectrum().GetLambdaRange(), winsize, cut);
+    ctx.StoreGlobalResult( "peakdetection", *peakDetectionResult );
+
+    // Ray Detection
+    CRayDetection rayDetection;
+    CConstRef<CRayDetectionResult> rayDetectionResult = rayDetection.Compute( ctx.GetSpectrum(), ctx.GetSpectrum().GetLambdaRange(), peakDetectionResult->PeakList, peakDetectionResult->EnlargedPeakList );
+    ctx.StoreGlobalResult( "raycatalog", *rayDetectionResult );
+
+    if(rayDetectionResult->RayCatalog.GetList().size()<1){
+        return false;
+    }
+
+    // --- EZ: EL Match
+    CRayMatching rayMatching;
+    Int32 MinMatchNum = 1;
+    Float64 tol = 0.002;
+    CRef<CRayMatchingResult> rayMatchingResult = rayMatching.Compute(rayDetectionResult->RayCatalog, ctx.GetRayCatalog(), ctx.GetParams().redshiftRange, MinMatchNum, tol );
+
+    // Store matching results
+    ctx.StoreGlobalResult( "raymatching", *rayMatchingResult );
+    */
+
+    return true;
+}
+
+Bool CProcessFlow::ProcessLineMatching( CProcessFlowContext& ctx )
 {
     Log.LogInfo( "Process spectrum with EL (LambdaRange: %f-%f:%f)",
             ctx.GetSpectrum().GetLambdaRange().GetBegin(), ctx.GetSpectrum().GetLambdaRange().GetEnd(), ctx.GetSpectrum().GetResolution());
@@ -107,7 +145,6 @@ Bool CProcessFlow::ProcessWithEL( CProcessFlowContext& ctx )
 
     if(rayDetectionResult->RayCatalog.GetList().size()<1){
         return false;
-        //return ProcessWithoutEL( ctx );
     }
 
     // --- EZ: EL Match

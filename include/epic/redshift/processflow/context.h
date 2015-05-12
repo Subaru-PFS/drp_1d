@@ -39,6 +39,7 @@ public:
         nMethod_BlindSolve = 1,
         nMethod_LineMatching = 2,
         nMethod_FullSolve = 3,
+        nMethod_DecisionalTree7 = 4,
     };
 
     struct SParam

@@ -29,7 +29,8 @@ public:
 private:
 
     Bool ProcessWithoutEL( CProcessFlowContext& ctx );
-    Bool ProcessWithEL( CProcessFlowContext& ctx );
+    Bool ProcessLineMatching( CProcessFlowContext& ctx );
+    Bool ProcessDecisionalTree7( CProcessFlowContext& ctx );
 
     bool ComputeMerits( CProcessFlowContext& ctx, const TFloat64List& redshifts);
 
