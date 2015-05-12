@@ -37,7 +37,8 @@ public:
     enum EMethod
     {
         nMethod_BlindSolve = 1,
-        nMethod_LineMatching,
+        nMethod_LineMatching = 2,
+        nMethod_FullSolve = 3,
     };
 
     struct SParam

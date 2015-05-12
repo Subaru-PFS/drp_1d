@@ -24,6 +24,7 @@ public:
 
     Void Save( std::ostream& stream ) const;
     Bool GetBestCorrelationResult( const CProcessFlowContext& ctx, Float64& redshift, Float64& merit, std::string& tplName ) const;
+    Bool GetBestCorrelationPeakResult( const CProcessFlowContext& ctx, Float64& redshift, Float64& merit, std::string& tplName ) const;
 
 };
 

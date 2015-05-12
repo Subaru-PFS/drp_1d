@@ -5,6 +5,7 @@
 #include <epic/redshift/spectrum/template/template.h>
 #include <epic/redshift/spectrum/template/catalog.h>
 #include <epic/redshift/operator/correlation.h>
+#include <epic/redshift/operator/chicorr.h>
 #include <epic/redshift/operator/blindsolveresult.h>
 #include <epic/redshift/operator/raydetectionresult.h>
 #include <epic/redshift/operator/raydetection.h>
@@ -44,7 +45,7 @@ Bool CProcessFlow::Process( CProcessFlowContext& ctx )
     if(ctx.GetParams().method  == CProcessFlowContext::nMethod_LineMatching)
         return ProcessWithEL( ctx );
 
-    if(ctx.GetParams().method  == CProcessFlowContext::nMethod_BlindSolve)
+    if(ctx.GetParams().method  == CProcessFlowContext::nMethod_BlindSolve || ctx.GetParams().method  == CProcessFlowContext::nMethod_FullSolve)
         return ProcessWithoutEL( ctx );
 
 
@@ -69,8 +70,11 @@ Bool CProcessFlow::ProcessWithoutEL( CProcessFlowContext& ctx )
                 const CTemplate& tpl = templateCatalog.GetTemplate( category, j );
                 const CTemplate& tplWithoutCont = templateCatalog.GetTemplateWithoutContinuum( category, j );
 
-
-                BlindSolve( ctx, tpl, tplWithoutCont );
+                if(ctx.GetParams().method  == CProcessFlowContext::nMethod_BlindSolve){
+                    BlindSolve( ctx, tpl, tplWithoutCont );
+                }else if(ctx.GetParams().method  == CProcessFlowContext::nMethod_FullSolve){
+                    FullSolve( ctx, tpl, tplWithoutCont );
+                }
             }
         }
     }
@@ -108,7 +112,9 @@ Bool CProcessFlow::ProcessWithEL( CProcessFlowContext& ctx )
 
     // --- EZ: EL Match
     CRayMatching rayMatching;
-    CRef<CRayMatchingResult> rayMatchingResult = rayMatching.Compute(rayDetectionResult->RayCatalog, ctx.GetRayCatalog(), ctx.GetParams().redshiftRange, 1, 0.002 );
+    Int32 MinMatchNum = 1;
+    Float64 tol = 0.002;
+    CRef<CRayMatchingResult> rayMatchingResult = rayMatching.Compute(rayDetectionResult->RayCatalog, ctx.GetRayCatalog(), ctx.GetParams().redshiftRange, MinMatchNum, tol );
 
     // Store matching results
     ctx.StoreGlobalResult( "raymatching", *rayMatchingResult );
@@ -242,9 +248,71 @@ Bool CProcessFlow::BlindSolve( CProcessFlowContext& ctx, const CTemplate& tpl, c
     ctx.StorePerTemplateResult( tpl, "blindsolve.correlation", *correlationResult );
     ctx.StorePerTemplateResult( tpl, "blindsolve.merit", *chisquareResult );
 
-    CRef<CBlindSolveResult>  chisquareResults = new CBlindSolveResult();
-    ctx.StoreGlobalResult( "blindsolve", *chisquareResults );
+    //CRef<CBlindSolveResult>  chisquareResults = new CBlindSolveResult();
+    //ctx.StoreGlobalResult( "blindsolve", *chisquareResults );
     return true;
 }
 
+Bool CProcessFlow::FullSolve( CProcessFlowContext& ctx, const CTemplate& tpl, const CTemplate& tplWithoutCont )
+{
+    const CSpectrum& spc = ctx.GetSpectrum();
+    const CSpectrum& spcWithoutCont = ctx.GetSpectrumWithoutContinuum();
 
+    CSpectrum s = spc;
+    s.GetSpectralAxis().ConvertToLogScale();
+
+    // Create redshift initial list by spanning redshift acdross the given range, with the given delta
+    TFloat64List redshifts = ctx.GetParams().redshiftRange.SpreadOver( ctx.GetParams().redshiftStep );
+    DebugAssert( redshifts.size() > 0 );
+
+    // Compute correlation factor at each of those redshifts
+    COperatorChicorr chicorr;
+    CChisquareResult* chisquareResult = new CChisquareResult();
+    CCorrelationResult* correlationResult = new CCorrelationResult();
+    chicorr.Compute( spc, spcWithoutCont, tpl, tplWithoutCont, ctx.GetParams().lambdaRange, redshifts, ctx.GetParams().overlapThreshold, correlationResult, chisquareResult);
+
+
+    // Store results
+    ctx.StorePerTemplateResult( tpl, "blindsolve.correlation", *correlationResult );
+    ctx.StorePerTemplateResult( tpl, "blindsolve.merit", *chisquareResult );
+
+    return true;
+}
+
+Bool CProcessFlow::FullSolveBrute( CProcessFlowContext& ctx, const CTemplate& tpl, const CTemplate& tplWithoutCont )
+{
+    const CSpectrum& spc = ctx.GetSpectrum();
+    const CSpectrum& spcWithoutCont = ctx.GetSpectrumWithoutContinuum();
+
+    CSpectrum s = spc;
+    s.GetSpectralAxis().ConvertToLogScale();
+
+    // Create redshift initial list by spanning redshift acdross the given range, with the given delta
+    TFloat64List redshifts = ctx.GetParams().redshiftRange.SpreadOver( ctx.GetParams().redshiftStep );
+    DebugAssert( redshifts.size() > 0 );
+
+    // Compute correlation factor at each of those redshifts
+    // Compute correlation factor at each of those redshifts
+    COperatorCorrelation correlation;
+    CRef<CCorrelationResult> correlationResult = (CCorrelationResult*) correlation.Compute( spcWithoutCont, tplWithoutCont, ctx.GetParams().lambdaRange, redshifts, ctx.GetParams().overlapThreshold );
+
+    COperatorChiSquare meritChiSquare;
+    CRef<CCorrelationResult> chisquareResult = (CCorrelationResult*)meritChiSquare.Compute( spc, tpl, ctx.GetParams().lambdaRange, redshifts, ctx.GetParams().overlapThreshold );
+    if( !chisquareResult )
+    {
+        Log.LogInfo( "Failed to compute chi square value");
+        return false;
+    }
+
+    //COperatorChicorr chicorr;
+    //CChisquareResult* chisquareResult = new CChisquareResult();
+    //CCorrelationResult* correlationResult = new CCorrelationResult();
+    //chicorr.Compute( spc, spcWithoutCont, tpl, tplWithoutCont, ctx.GetParams().lambdaRange, redshifts, ctx.GetParams().overlapThreshold, correlationResult, chisquareResult);
+
+
+    // Store results
+    ctx.StorePerTemplateResult( tpl, "blindsolve.correlation", *correlationResult );
+    ctx.StorePerTemplateResult( tpl, "blindsolve.merit", *chisquareResult );
+
+    return true;
+}
