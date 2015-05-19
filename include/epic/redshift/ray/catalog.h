@@ -37,7 +37,7 @@ public:
     Bool Load( const char* filePath );
     const TRayVector& GetList() const;
     const TRayVector GetFilteredList(Int32 typeFilter = -1, Int32 forceFilter=-1) const;
-
+    void Sort();
 private:
 
     TRayVector m_List;

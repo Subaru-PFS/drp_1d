@@ -101,20 +101,21 @@ Bool CProcessFlow::ProcessWithEL( CProcessFlowContext& ctx )
 
     ctx.StoreGlobalResult( "raycatalog", *rayDetectionResult );
 
-    if(rayDetectionResult->RayCatalog.GetList().size()<2){
+    if(rayDetectionResult->RayCatalog.GetList().size()<1){
         return false;
         //return ProcessWithoutEL( ctx );
     }
 
     // --- EZ: EL Match
     CRayMatching rayMatching;
-    CRef<CRayMatchingResult> rayMatchingResult = rayMatching.Compute(rayDetectionResult->RayCatalog, ctx.GetRayCatalog(), ctx.GetParams().redshiftRange, 2, 0.002 );
+    CRef<CRayMatchingResult> rayMatchingResult = rayMatching.Compute(rayDetectionResult->RayCatalog, ctx.GetRayCatalog(), ctx.GetParams().redshiftRange, 1, 0.002 );
 
     // Store matching results
     ctx.StoreGlobalResult( "raymatching", *rayMatchingResult );
 
 
     return true;
+
 /*
     Int32 maxMatchingNum = rayMatching.GetMaxMatchingNumber();
     if(maxMatchingNum>2){ //ez equivalent to SolveDecisionalTree2:three_lines_match()
@@ -129,11 +130,9 @@ Bool CProcessFlow::ProcessWithEL( CProcessFlowContext& ctx )
         // --- EZ: solve_basic_nocorrelation
         //retVal = ComputeMerits( ctx, selectedRedshift);
     }
-
 */
     return true;
 }
-
 
 
 bool CProcessFlow::ComputeMerits( CProcessFlowContext& ctx, const TFloat64List& redshifts)
