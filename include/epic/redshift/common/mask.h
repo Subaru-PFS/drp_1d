@@ -19,6 +19,7 @@ public:
     ~CMask();
 
     const Mask*     GetMasks() const;
+    CMask&          operator &= ( const CMask& other );
     UInt32          GetMasksCount() const;
     Mask            operator[]( const UInt32 i ) const;
     Mask&           operator[]( const UInt32 i );
@@ -26,6 +27,7 @@ public:
     Bool            IntersectWith( const CMask& other );
     UInt32          GetMaskedSampleCount() const;
     UInt32          GetUnMaskedSampleCount() const;
+    Void            SetSize( UInt32 s );
 
 private:
 
@@ -61,6 +63,12 @@ inline
 UInt32 CMask::GetMaskedSampleCount() const
 {
     return m_Mask.size()-GetUnMaskedSampleCount();
+}
+
+inline
+Void CMask::SetSize( UInt32 s )
+{
+    m_Mask.resize( s );
 }
 
 inline

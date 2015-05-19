@@ -48,7 +48,7 @@ void CRedshiftOperatorTestCase::CorrelationAtZEqualZero()
 
     Float64 redshiftDelta = 0.0001;
     redshifts = TFloat64Range( 0.0, 3.0 ).SpreadOver( redshiftDelta );
-    CRef<CCorrelationResult> r = (CCorrelationResult*) correlation.Compute( s, t, lambdaRange, redshifts, 1.0 );
+    CRef<CCorrelationResult> r = (CCorrelationResult*) correlation.Compute( s, t, lambdaRange, redshifts, 0.99 );
     CPPUNIT_ASSERT( r != NULL );
 
 
@@ -58,12 +58,6 @@ void CRedshiftOperatorTestCase::CorrelationAtZEqualZero()
 
     CPPUNIT_ASSERT_DOUBLES_EQUAL( 0.0, extremumList[0].X, 0.000001 );
 
-    // Assert status
-    const COperatorCorrelation::TStatusList& status = r->Status;
-    for( Int32 i = 1; i<status.size(); i++ )
-    {
-        CPPUNIT_ASSERT( status[i] != COperatorCorrelation::nStatus_OK );
-    }
 
 }
 

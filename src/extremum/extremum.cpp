@@ -90,7 +90,7 @@ Bool CExtremum::InternalFind( const Float64* xAxis, const Float64* yAxis, UInt32
         return false;
 
     //Method 1, use only 1 extremum
-    //*
+    /*
     maxPoint.resize( 1 );
 
     Float64 max = DBL_MIN ;
