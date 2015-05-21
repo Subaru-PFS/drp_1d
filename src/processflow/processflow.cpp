@@ -77,7 +77,7 @@ Bool CProcessFlow::ProcessWithoutEL( CProcessFlowContext& ctx )
                 const CTemplate& tpl = templateCatalog.GetTemplate( category, j );
                 const CTemplate& tplWithoutCont = templateCatalog.GetTemplateWithoutContinuum( category, j );
 
-                if(ctx.GetParams().method  == CProcessFlowContext::nMethod_BlindSolve){
+                if(ctx.GetParams().method  == CProcessFlowContext::nMethod_BlindSolve || ctx.GetParams().method  == CProcessFlowContext::nMethod_DecisionalTree7){
                     BlindSolve( ctx, tpl, tplWithoutCont );
                 }else if(ctx.GetParams().method  == CProcessFlowContext::nMethod_FullSolve){
                     FullSolve( ctx, tpl, tplWithoutCont );
@@ -94,34 +94,101 @@ Bool CProcessFlow::ProcessDecisionalTree7( CProcessFlowContext& ctx )
     Log.LogInfo( "Process Decisional Tree 7(LambdaRange: %f-%f:%f)",
             ctx.GetSpectrum().GetLambdaRange().GetBegin(), ctx.GetSpectrum().GetLambdaRange().GetEnd(), ctx.GetSpectrum().GetResolution());
 
-    /*
+
     // Peak Detection
     Float64 winsize = 250.0;
     Float64 cut = 5.0;
     CPeakDetection peakDetection;
     CConstRef<CPeakDetectionResult> peakDetectionResult = peakDetection.Compute( ctx.GetSpectrum(), ctx.GetSpectrum().GetLambdaRange(), winsize, cut);
     ctx.StoreGlobalResult( "peakdetection", *peakDetectionResult );
+    Log.LogInfo( "Peak Detection output: %d peaks found", peakDetectionResult->PeakList.size());
+
+    // check Peak Detection results
+    if(peakDetectionResult->PeakList.size()<1){
+        Log.LogInfo( "No Peak found, switching to ProcessWithoutEL");
+        return ProcessWithoutEL( ctx );
+    }
 
     // Ray Detection
     CRayDetection rayDetection;
     CConstRef<CRayDetectionResult> rayDetectionResult = rayDetection.Compute( ctx.GetSpectrum(), ctx.GetSpectrum().GetLambdaRange(), peakDetectionResult->PeakList, peakDetectionResult->EnlargedPeakList );
     ctx.StoreGlobalResult( "raycatalog", *rayDetectionResult );
+    Log.LogInfo( "Ray Detection output: %d ray(s) found", rayDetectionResult->RayCatalog.GetList().size());
 
-    if(rayDetectionResult->RayCatalog.GetList().size()<1){
-        return false;
+    // check Ray Detection results
+    Int32 nRaysDetected = rayDetectionResult->RayCatalog.GetList().size();
+    if( nRaysDetected < 1){
+        Log.LogInfo( "Not ray found, switching to ProcessWithoutEL");
+        return ProcessWithoutEL( ctx );
     }
 
-    // --- EZ: EL Match
+    // Ray Match
     CRayMatching rayMatching;
     Int32 MinMatchNum = 1;
     Float64 tol = 0.002;
     CRef<CRayMatchingResult> rayMatchingResult = rayMatching.Compute(rayDetectionResult->RayCatalog, ctx.GetRayCatalog(), ctx.GetParams().redshiftRange, MinMatchNum, tol );
-
     // Store matching results
     ctx.StoreGlobalResult( "raymatching", *rayMatchingResult );
-    */
 
-    return true;
+    //check ray matching results
+    if(rayMatchingResult->GetSolutionsListOverNumber(0).size()<1){
+        Log.LogInfo( "Not match found, switching to ProcessWithoutEL");
+        return ProcessWithoutEL( ctx );
+    }
+
+    Int32 matchNum = rayMatchingResult->GetMaxMatchingNumber();
+    UInt32 nStrongPeaks = rayDetectionResult->RayCatalog.GetFilteredList(CRay::nType_Emission, CRay::nForce_Strong).size();
+
+    // match num >= 3
+    if(matchNum >= 3 || (nStrongPeaks < 1 && matchNum >= 2)){
+        if(matchNum >= 3){
+            Log.LogInfo( "match num >= 3");
+        }
+        if(nStrongPeaks < 1 && matchNum >= 2){
+            Log.LogInfo( "match num <1, MatchNum>=2");
+        }
+        Log.LogInfo( "compute merits on redshift candidates from ray matching");
+        TFloat64List selectedRedshift;
+        CRayMatchingResult::TSolutionSetList selectedResults = rayMatchingResult->GetSolutionsListOverNumber(matchNum-1);
+        for( UInt32 j=0; j<selectedResults.size(); j++ )
+        {
+            Float64 z = rayMatchingResult->GetMeanRedshiftSolution(selectedResults[j]);
+            selectedRedshift.push_back(z);
+        }
+        return ComputeMerits( ctx, selectedRedshift);
+    }
+
+//    // 3 lines 1 match or 4 lines 2 matches
+//    if(nRaysDetected - matchNum >= 2){
+//        Log.LogInfo( "3 lines 1 match or 4 lines 2 matches...");
+//    }
+
+    if(nStrongPeaks > 0){
+        Log.LogInfo( "Ray Matching with %d strong peaks", nStrongPeaks);
+        CRayMatching rayMatchingStrong;
+        Int32 MinMatchNum = 1;
+        Float64 tol = 0.002;
+        CRef<CRayMatchingResult> rayMatchingStrongResult = rayMatchingStrong.Compute(rayDetectionResult->RayCatalog, ctx.GetRayCatalog(), ctx.GetParams().redshiftRange, MinMatchNum, tol, CRay::nType_Emission, CRay::nForce_Strong );
+        Int32 matchNumStrong = rayMatchingStrongResult->GetMaxMatchingNumber();
+
+        if(matchNumStrong>1){
+            Log.LogInfo( "match num strong >= 2, compute merits on redshift candidates from strong ray matching");
+            TFloat64List selectedRedshift;
+            CRayMatchingResult::TSolutionSetList selectedResults = rayMatchingStrongResult->GetSolutionsListOverNumber(matchNumStrong-1);
+            for( UInt32 j=0; j<selectedResults.size(); j++ )
+            {
+                Float64 z = rayMatchingStrongResult->GetMeanRedshiftSolution(selectedResults[j]);
+                selectedRedshift.push_back(z);
+            }
+            return ComputeMerits( ctx, selectedRedshift);
+        }else{
+            Log.LogInfo( "Not match found with strong lines, switching to ProcessWithoutEL");
+            return ProcessWithoutEL( ctx );
+        }
+    }
+
+    Log.LogInfo( "Switching to ProcessWithoutEL");
+    return ProcessWithoutEL( ctx );
 }
 
 Bool CProcessFlow::ProcessLineMatching( CProcessFlowContext& ctx )
