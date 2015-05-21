@@ -7,8 +7,12 @@
 #include <epic/redshift/spectrum/spectrum.h>
 #include <epic/redshift/spectrum/template/template.h>
 #include <epic/redshift/spectrum/io/fitsreader.h>
+#include <epic/redshift/spectrum/io/genericreader.h>
 #include <epic/redshift/extremum/extremum.h>
 #include <epic/redshift/continuum/median.h>
+#include <epic/redshift/noise/fromfile.h>
+
+#include <boost/math/special_functions.hpp>
 
 using namespace NSEpic;
 using namespace NSEpicTest;
@@ -111,5 +115,93 @@ void CRedshiftOperatorTestCase::CorrelationAtGivenZ()
 
     CPPUNIT_ASSERT_DOUBLES_EQUAL( z, extremumList[0].X, redshiftDelta*2 );
 
+
+}
+
+void CRedshiftOperatorTestCase::CorrelationMatchWithEZ()
+{
+    CorrelationMatchWithEZ( "../test/data/OperatorTestCase/fromVVDSDeep/spectra/sc_020086397_F02P016_vmM1_red_31_1_atm_clean.fits",
+                            NULL,
+                            "../test/data/OperatorTestCase/fromVVDSDeep/template/galaxy/zcosmos_red.txt",
+                            "../test/data/OperatorTestCase/fromVVDSDeep/results_nonoise/sc_020086397_F02P016_vmM1_red_31_1_atm_clean.csv" );
+
+    CorrelationMatchWithEZ( "../test/data/OperatorTestCase/fromVVDSDeep/spectra/sc_020100776_F02P017_vmM1_red_129_1_atm_clean.fits",
+                            NULL,
+                            "../test/data/OperatorTestCase/fromVVDSDeep/template/galaxy/zcosmos_red.txt",
+                            "../test/data/OperatorTestCase/fromVVDSDeep/results_nonoise/sc_020100776_F02P017_vmM1_red_129_1_atm_clean.csv" );
+
+
+    CorrelationMatchWithEZ( "../test/data/OperatorTestCase/fromVVDSDeep/spectra/sc_020088501_F02P017_vmM1_red_82_1_atm_clean.fits",
+                            "../test/data/OperatorTestCase/fromVVDSDeep/spectra/sc_020088501_F02P017_vmM1_red_82_1_noise.fits",
+                            "../test/data/OperatorTestCase/fromVVDSDeep/template/galaxy/zcosmos_red.txt",
+                            "../test/data/OperatorTestCase/fromVVDSDeep/results_withnoise/sc_020088501_F02P017_vmM1_red_82_1_atm_clean.csv" );
+
+
+    CorrelationMatchWithEZ( "../test/data/OperatorTestCase/fromVVDSDeep/spectra/sc_020123432_F02P019_vmM1_red_72_1_atm_clean.fits",
+                            "../test/data/OperatorTestCase/fromVVDSDeep/spectra/sc_020123432_F02P019_vmM1_red_72_1_noise.fits",
+                            "../test/data/OperatorTestCase/fromVVDSDeep/template/galaxy/zcosmos_red.txt",
+                            "../test/data/OperatorTestCase/fromVVDSDeep/results_withnoise/sc_020123432_F02P019_vmM1_red_72_1_atm_clean.csv" );
+
+}
+
+void CRedshiftOperatorTestCase::CorrelationMatchWithEZ( const char* spectraPath, const char* noisePath, const char* tplPath, const char* resultPath )
+{
+    Bool retVal;
+    CSpectrum s;
+    CTemplate t;
+
+    Float64 z = 1.2299;
+
+    // Load spectrum and templates
+    CSpectrumIOGenericReader reader;
+    retVal = reader.Read( spectraPath, s );
+    CPPUNIT_ASSERT( retVal );
+
+    if( noisePath )
+    {
+        CNoiseFromFile noise;
+        noise.SetNoiseFilePath( noisePath );
+        noise.AddNoise( s );
+    }
+
+    retVal = reader.Read( tplPath, t );
+    CPPUNIT_ASSERT( retVal );
+
+    s.RemoveContinuum<CContinuumMedian>();
+    t.RemoveContinuum<CContinuumMedian>();
+
+    s.ConvertToLogScale();
+    t.ConvertToLogScale();
+
+
+    Float64 redshiftDelta = 0.0001;
+    TFloat64List redshifts = TFloat64Range( 0.0, 2.0 ).SpreadOver( redshiftDelta );
+
+    COperatorCorrelation correlation;
+    CRef<CCorrelationResult> r = (CCorrelationResult*) correlation.Compute( s, t, TFloat64Range( 5600, 7000 ), redshifts, 1.0 );
+    CPPUNIT_ASSERT( r != NULL );
+
+    CCorrelationResult referenceResult;
+
+    std::ifstream input( resultPath );
+    CPPUNIT_ASSERT( input.is_open() );
+
+    referenceResult.Load( input );
+
+    for( Int32 i=0; i<referenceResult.Correlation.size(); i++ )
+    {
+        if( boost::math::isnan( referenceResult.Correlation[i] ) )
+        {
+            CPPUNIT_ASSERT( boost::math::isnan( r->Correlation[i] ) );
+        }
+        else
+        {
+            CPPUNIT_ASSERT_DOUBLES_EQUAL( referenceResult.Correlation[i], r->Correlation[i], 0.00001 );
+        }
+
+
+        CPPUNIT_ASSERT_DOUBLES_EQUAL( referenceResult.Redshifts[i], r->Redshifts[i], 0.00001 );
+        CPPUNIT_ASSERT_DOUBLES_EQUAL( referenceResult.Overlap[i], r->Overlap[i], 0.00001 );
+    }
 
 }

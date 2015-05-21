@@ -19,6 +19,7 @@ public:
     virtual ~CCorrelationResult();
 
     Void Save( std::ostream& stream ) const;
+    Void Load( std::istream& stream );
 
     TFloat64List    Redshifts;
     TFloat64List    Correlation;
