@@ -5,6 +5,7 @@
 
 #include <math.h>
 #include <stdio.h>
+#include <algorithm>
 
 using namespace NSEpic;
 
@@ -109,4 +110,5 @@ Bool CSpectrum::Serialize( CSerializer& ar )
 
     return false;
 }
+
 

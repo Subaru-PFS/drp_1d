@@ -29,6 +29,7 @@ CProcessFlowContext::SParam::SParam()
     lambdaRange = TFloat64Range( 3800.0, 12500.0 );
     smoothWidth = 0;
     overlapThreshold = 0.9;
+    correlationExtremumCount = 5;
 
     //method = nMethod_LineMatching;
     //method = nMethod_BlindSolve;

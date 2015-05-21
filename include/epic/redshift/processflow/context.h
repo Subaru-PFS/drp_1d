@@ -52,6 +52,7 @@ public:
         Float64                 overlapThreshold;
         Int32                   smoothWidth;
         EMethod                 method;
+        Int32                   correlationExtremumCount;
     };
 
 

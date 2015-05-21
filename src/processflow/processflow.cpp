@@ -312,16 +312,28 @@ Bool CProcessFlow::BlindSolve( CProcessFlowContext& ctx, const CTemplate& tpl, c
     CSpectrum s = spc;
     s.GetSpectralAxis().ConvertToLogScale();
 
+    CTemplate t = tpl;
+    t.GetSpectralAxis().ConvertToLogScale();
+
+
     // Create redshift initial list by spanning redshift acdross the given range, with the given delta
     TFloat64List redshifts = ctx.GetParams().redshiftRange.SpreadOver( ctx.GetParams().redshiftStep );
     DebugAssert( redshifts.size() > 0 );
 
     // Compute correlation factor at each of those redshifts
     COperatorCorrelation correlation;
+    //CRef<CCorrelationResult> correlationResult = (CCorrelationResult*) correlation.Compute( spcWithoutCont, tplWithoutCont, ctx.GetParams().lambdaRange, redshifts, ctx.GetParams().overlapThreshold );
     CRef<CCorrelationResult> correlationResult = (CCorrelationResult*) correlation.Compute( spcWithoutCont, tplWithoutCont, ctx.GetParams().lambdaRange, redshifts, ctx.GetParams().overlapThreshold );
 
+    if( !correlationResult )
+    {
+        return false;
+    }
+
+    ctx.StorePerTemplateResult( tpl, "blindsolve.correlation", *correlationResult );
+
     // Find redshifts extremum
-    Int32 nExtremums = 5;
+    Int32 nExtremums = ctx.GetParams().correlationExtremumCount;
     TPointList extremumList;
     CExtremum extremum( ctx.GetParams().redshiftRange , nExtremums);
     extremum.Find( correlationResult->Redshifts, correlationResult->Correlation, extremumList );
@@ -349,12 +361,12 @@ Bool CProcessFlow::BlindSolve( CProcessFlowContext& ctx, const CTemplate& tpl, c
     }
 
     // Store results
-    ctx.StorePerTemplateResult( tpl, "blindsolve.correlation", *correlationResult );
     ctx.StorePerTemplateResult( tpl, "blindsolve.merit", *chisquareResult );
 
-    //CRef<CBlindSolveResult>  chisquareResults = new CBlindSolveResult();
-    //ctx.StoreGlobalResult( "blindsolve", *chisquareResults );
+    CRef<CBlindSolveResult>  chisquareResults = new CBlindSolveResult();
+    ctx.StorePerTemplateResult( tpl, "blindsolve", *chisquareResults );
     return true;
+}
 }
 
 Bool CProcessFlow::FullSolve( CProcessFlowContext& ctx, const CTemplate& tpl, const CTemplate& tplWithoutCont )
@@ -380,6 +392,8 @@ Bool CProcessFlow::FullSolve( CProcessFlowContext& ctx, const CTemplate& tpl, co
     ctx.StorePerTemplateResult( tpl, "blindsolve.correlation", *correlationResult );
     ctx.StorePerTemplateResult( tpl, "blindsolve.merit", *chisquareResult );
 
+    CRef<CBlindSolveResult>  chisquareResults = new CBlindSolveResult();
+    ctx.StorePerTemplateResult( tpl, "blindsolve", *chisquareResults );
     return true;
 }
 

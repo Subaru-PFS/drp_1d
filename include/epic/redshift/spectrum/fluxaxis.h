@@ -3,11 +3,14 @@
 
 #include <epic/redshift/common/datatypes.h>
 #include <epic/redshift/spectrum/axis.h>
+#include <epic/core/common/range.h>
 
 namespace NSEpic
 {
 
 class CMask;
+class CSpectrum;
+class CSpectrumSpectralAxis;
 
 class CSpectrumFluxAxis : public CSpectrumAxis
 {
@@ -34,6 +37,8 @@ public:
     Float64             ComputeRMSDiff( const CSpectrumFluxAxis& other );
     Bool                Subtract(const CSpectrumFluxAxis& other);
 
+    static Bool         Rebin( const TFloat64Range& range, const CSpectrumFluxAxis& sourceFluxAxis, const CSpectrumSpectralAxis& sourceSpectralAxis, const CSpectrumSpectralAxis& targetSpectralAxis,
+                               CSpectrumFluxAxis& rebinedFluxAxis, CSpectrumSpectralAxis& rebinedSpectralAxis, CMask& rebinedMask );
 
 private:
 

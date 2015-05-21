@@ -26,7 +26,7 @@ void CRedshiftProcessFlowTestCase::ProcessShifted1 ()
 
     CProcessFlowContext::SParam params;
     params.lambdaRange = TFloat64Range( 3800.0, 12500.0 );
-    params.redshiftStep = 0.00001;
+    params.redshiftStep = 0.0001;
     params.smoothWidth = 0;
     params.templateCategoryList.clear();
     params.templateCategoryList.push_back( CTemplate::nCategory_Galaxy );
@@ -44,7 +44,7 @@ void CRedshiftProcessFlowTestCase::ProcessShifted1 ()
     const CBlindSolveResult* blindSolveResult = (CBlindSolveResult*)ctx.GetGlobalResult( "blindsolve" );
     blindSolveResult->GetBestCorrelationResult( ctx, redshift, merit, tplName );
 
-    CPPUNIT_ASSERT_DOUBLES_EQUAL( 2.02952, redshift, 0.00001 );
+    CPPUNIT_ASSERT_DOUBLES_EQUAL( 2.0295, redshift, 0.0001 );
 
 }
 
@@ -55,7 +55,7 @@ void CRedshiftProcessFlowTestCase::ProcessShifted2()
 
     CProcessFlowContext::SParam params;
     params.lambdaRange = TFloat64Range( 3800.0, 12500.0 );
-    params.redshiftStep = 0.00001;
+    params.redshiftStep = 0.0001;
     params.smoothWidth = 0;
     params.templateCategoryList.clear();
     params.templateCategoryList.push_back( CTemplate::nCategory_Galaxy );
@@ -73,7 +73,7 @@ void CRedshiftProcessFlowTestCase::ProcessShifted2()
     const CBlindSolveResult* blindSolveResult = (CBlindSolveResult*)ctx.GetGlobalResult( "blindsolve" );
     blindSolveResult->GetBestCorrelationResult( ctx, redshift, merit, tplName );
 
-    CPPUNIT_ASSERT_DOUBLES_EQUAL( 2.77570, redshift, 0.00001 );
+    CPPUNIT_ASSERT_DOUBLES_EQUAL( 2.7757, redshift, 0.0001 );
 
 }
 
@@ -84,7 +84,7 @@ void CRedshiftProcessFlowTestCase::ProcessShiftedDecimated()
 
     CProcessFlowContext::SParam params;
     params.lambdaRange = TFloat64Range( 3800.0, 12500.0 );
-    params.redshiftStep = 0.00001;
+    params.redshiftStep = 0.0001;
     params.smoothWidth = 0;
     params.templateCategoryList.clear();
     params.templateCategoryList.push_back( CTemplate::nCategory_Galaxy );

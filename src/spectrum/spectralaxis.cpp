@@ -181,6 +181,8 @@ Void CSpectrumSpectralAxis::GetMask( const TFloat64Range& lambdaRange,  CMask& m
     if( m_SpectralFlags & nFLags_LogScale )
         range.Set( log( range.GetBegin() ), log( range.GetEnd() ) );
 
+    mask.SetSize( m_Samples.size() );
+
     // weight = Spectrum over lambdarange flag
     for( Int32 i=0; i< m_Samples.size(); i++ )
     {
