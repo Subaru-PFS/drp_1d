@@ -8,6 +8,9 @@
 #include <epic/redshift/operator/blindsolveresult.h>
 #include <epic/redshift/operator/raydetectionresult.h>
 #include <epic/redshift/operator/raydetection.h>
+#include <epic/redshift/operator/blindsolve.h>
+#include <epic/redshift/operator/blindsolveresult.h>
+#include <epic/redshift/operator/blindsolve.h>
 #include <epic/redshift/processflow/context.h>
 #include <epic/redshift/extremum/extremum.h>
 #include <epic/redshift/continuum/median.h>
@@ -75,6 +78,17 @@ Bool CProcessFlow::ProcessWithoutEL( CProcessFlowContext& ctx )
         }
     }
 
+    TTemplateCategoryList categoryList = ctx.GetParams().templateCategoryList;
+
+    // Remove Star category
+    TTemplateCategoryList::iterator it = std::find(categoryList.begin(), categoryList.end(), CTemplate::nCategory_Star );
+    if(it != categoryList.end())
+        categoryList.erase(it);
+
+    COperatorBlindSolve blindSolve;
+    //blindSolve.Compute( ctx.GetSpectrum(), ctx.GetSpectrumWithoutContinuum(), )
+
+
     return true;
 }
 
@@ -141,7 +155,7 @@ bool CProcessFlow::ComputeMerits( CProcessFlowContext& ctx, const TFloat64List& 
     const TFloat64Range& lambdaRange = ctx.GetParams().lambdaRange;
 
     const CTemplateCatalog& templateCatalog = ctx.GetTemplateCatalog();
-    const CProcessFlowContext::TTemplateCategoryList& templateCategotyList = ctx.GetParams().templateCategoryList;
+    const TTemplateCategoryList& templateCategotyList = ctx.GetParams().templateCategoryList;
 
 
     Log.LogInfo( "Process spectrum for Merit (LambdaRange: %f-%f:%f)",
@@ -253,8 +267,8 @@ Bool CProcessFlow::BlindSolve( CProcessFlowContext& ctx, const CTemplate& tpl, c
     // Store results
     ctx.StorePerTemplateResult( tpl, "blindsolve.merit", *chisquareResult );
 
-    CRef<CBlindSolveResult>  chisquareResults = new CBlindSolveResult();
-    ctx.StorePerTemplateResult( tpl, "blindsolve", *chisquareResults );
+    CRef<CBlindSolveResult>  blindSolveResult = new CBlindSolveResult();
+    ctx.StoreGlobalResult(  "blindsolve", *blindSolveResult );
     return true;
 }
 
