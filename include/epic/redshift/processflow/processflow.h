@@ -7,6 +7,8 @@
 #include <epic/core/common/managedobject.h>
 #include <epic/redshift/processflow/processflow.h>
 
+#include <epic/redshift/spectrum/template/template.h>
+#include <epic/redshift/spectrum/template/catalog.h>
 namespace NSEpic
 {
 
@@ -28,7 +30,7 @@ public:
 
 private:
 
-    Bool ProcessWithoutEL( CProcessFlowContext& ctx );
+    Bool ProcessWithoutEL(CProcessFlowContext& ctx , NSEpic::CTemplate::ECategory CategoryFilter = NSEpic::CTemplate::nCategory_None);
     Bool ProcessLineMatching( CProcessFlowContext& ctx );
     Bool ProcessDecisionalTree7( CProcessFlowContext& ctx );
 

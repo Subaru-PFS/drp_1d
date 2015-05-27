@@ -25,15 +25,13 @@ CRayDetection::~CRayDetection()
 
 }
 
-const CRayDetectionResult* CRayDetection::Compute( const CSpectrum& spectrum, const TLambdaRange& lambdaRange, const TInt32RangeList& resPeaks, const TInt32RangeList& resPeaksEnlarged )
+const CRayDetectionResult* CRayDetection::Compute( const CSpectrum& spectrum, const TLambdaRange& lambdaRange, const TInt32RangeList& resPeaks, const TInt32RangeList& resPeaksEnlarged , Float64 cut, Float64 strongcut)
 {
     const CSpectrum& spc = spectrum;
     const CSpectrumFluxAxis fluxAxis = spc.GetFluxAxis();
 
     // detect possible peaks
     Float64 winsize = 250.0;
-    Float64 cut = 5.0;
-    Float64 strongcut = 2.0;
     Float64 minsize = 3;
     Float64 maxsize = 70;
 

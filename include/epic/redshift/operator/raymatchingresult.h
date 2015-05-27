@@ -52,6 +52,10 @@ public:
     Float64                     GetMeanRedshiftSolution( const TSolutionSet& s) const;
     Float64                     GetMeanRedshiftSolutionByIndex(Int32 index) const;
     TSolutionSetList            GetSolutionsListOverNumber(Int32 number) const;
+    TFloat64List                GetAverageRedshiftListOverNumber(Int32 number) const;
+
+    TFloat64List                GetRoundedRedshiftCandidatesOverNumber(Int32 number, Float64 step) const;
+    TFloat64List                GetRedshiftRangeCandidatesOverNumber(Int32 number) const;
 
     TSolutionSetList    SolutionSetList;
 

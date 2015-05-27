@@ -25,7 +25,7 @@ Void CBlindSolveResult::Save( std::ostream& stream ) const
 
 }
 
-Bool CBlindSolveResult::GetBestCorrelationResult( const CProcessFlowContext& ctx, Float64& redshift, Float64& merit, std::string& tplName ) const
+Bool CBlindSolveResult::GetBestFitResult( const CProcessFlowContext& ctx, Float64& redshift, Float64& merit, std::string& tplName ) const
 {
     TOperatorResultMap correlationResults = ctx.GetPerTemplateResult("blindsolve.correlation");
     TOperatorResultMap meritResults = ctx.GetPerTemplateResult("blindsolve.merit");

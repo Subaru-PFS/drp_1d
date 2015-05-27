@@ -42,7 +42,7 @@ void CRedshiftProcessFlowTestCase::ProcessShifted1 ()
     std::string tplName;
 
     const CBlindSolveResult* blindSolveResult = (CBlindSolveResult*)ctx.GetGlobalResult( "blindsolve" );
-    blindSolveResult->GetBestCorrelationResult( ctx, redshift, merit, tplName );
+    blindSolveResult->GetBestFitResult( ctx, redshift, merit, tplName );
 
     CPPUNIT_ASSERT_DOUBLES_EQUAL( 2.0295, redshift, 0.0001 );
 
@@ -71,7 +71,7 @@ void CRedshiftProcessFlowTestCase::ProcessShifted2()
     std::string tplName;
 
     const CBlindSolveResult* blindSolveResult = (CBlindSolveResult*)ctx.GetGlobalResult( "blindsolve" );
-    blindSolveResult->GetBestCorrelationResult( ctx, redshift, merit, tplName );
+    blindSolveResult->GetBestFitResult( ctx, redshift, merit, tplName );
 
     CPPUNIT_ASSERT_DOUBLES_EQUAL( 2.7757, redshift, 0.0001 );
 
@@ -100,7 +100,7 @@ void CRedshiftProcessFlowTestCase::ProcessShiftedDecimated()
     std::string tplName;
 
     const CBlindSolveResult* blindSolveResult = (CBlindSolveResult*)ctx.GetGlobalResult( "blindsolve" );
-    blindSolveResult->GetBestCorrelationResult( ctx, redshift, merit, tplName );
+    blindSolveResult->GetBestFitResult( ctx, redshift, merit, tplName );
 
     CPPUNIT_ASSERT_DOUBLES_EQUAL( 2.02952, redshift, 0.00001 );
 

@@ -60,7 +60,7 @@ Bool CProcessFlow::Process( CProcessFlowContext& ctx )
 }
 
 
-Bool CProcessFlow::ProcessWithoutEL( CProcessFlowContext& ctx )
+Bool CProcessFlow::ProcessWithoutEL( CProcessFlowContext& ctx, CTemplate::ECategory CategoryFilter)
 {
     const CTemplateCatalog& templateCatalog = ctx.GetTemplateCatalog();
 
@@ -70,7 +70,7 @@ Bool CProcessFlow::ProcessWithoutEL( CProcessFlowContext& ctx )
         if( category == CTemplate::nCategory_Star )
         {
         }
-        else
+        else if(CategoryFilter == NSEpic::CTemplate::nCategory_None || CategoryFilter == category)
         {
             for( UInt32 j=0; j<templateCatalog.GetTemplateCount( category ); j++ )
             {
@@ -97,7 +97,9 @@ Bool CProcessFlow::ProcessDecisionalTree7( CProcessFlowContext& ctx )
 
     // Peak Detection
     Float64 winsize = 250.0;
-    Float64 cut = 5.0;
+    Float64 cut = 4.0;
+    Float64 strongcut = 2.0;
+
     CPeakDetection peakDetection;
     CConstRef<CPeakDetectionResult> peakDetectionResult = peakDetection.Compute( ctx.GetSpectrum(), ctx.GetSpectrum().GetLambdaRange(), winsize, cut);
     ctx.StoreGlobalResult( "peakdetection", *peakDetectionResult );
@@ -111,7 +113,7 @@ Bool CProcessFlow::ProcessDecisionalTree7( CProcessFlowContext& ctx )
 
     // Ray Detection
     CRayDetection rayDetection;
-    CConstRef<CRayDetectionResult> rayDetectionResult = rayDetection.Compute( ctx.GetSpectrum(), ctx.GetSpectrum().GetLambdaRange(), peakDetectionResult->PeakList, peakDetectionResult->EnlargedPeakList );
+    CConstRef<CRayDetectionResult> rayDetectionResult = rayDetection.Compute( ctx.GetSpectrum(), ctx.GetSpectrum().GetLambdaRange(), peakDetectionResult->PeakList, peakDetectionResult->EnlargedPeakList, cut, strongcut );
     ctx.StoreGlobalResult( "raycatalog", *rayDetectionResult );
     Log.LogInfo( "Ray Detection output: %d ray(s) found", rayDetectionResult->RayCatalog.GetList().size());
 
@@ -139,30 +141,25 @@ Bool CProcessFlow::ProcessDecisionalTree7( CProcessFlowContext& ctx )
     Int32 matchNum = rayMatchingResult->GetMaxMatchingNumber();
     UInt32 nStrongPeaks = rayDetectionResult->RayCatalog.GetFilteredList(CRay::nType_Emission, CRay::nForce_Strong).size();
 
-    // match num >= 3
+    // match num >= 3, or no strong peaks
     if(matchNum >= 3 || (nStrongPeaks < 1 && matchNum >= 2)){
         if(matchNum >= 3){
             Log.LogInfo( "match num >= 3");
         }
         if(nStrongPeaks < 1 && matchNum >= 2){
-            Log.LogInfo( "match num <1, MatchNum>=2");
+            Log.LogInfo( "n Strong Peaks < 1, MatchNum>=2");
         }
         Log.LogInfo( "compute merits on redshift candidates from ray matching");
-        TFloat64List selectedRedshift;
-        CRayMatchingResult::TSolutionSetList selectedResults = rayMatchingResult->GetSolutionsListOverNumber(matchNum-1);
-        for( UInt32 j=0; j<selectedResults.size(); j++ )
-        {
-            Float64 z = rayMatchingResult->GetMeanRedshiftSolution(selectedResults[j]);
-            selectedRedshift.push_back(z);
-        }
-        return ComputeMerits( ctx, selectedRedshift);
+        TFloat64List roundedRedshift = rayMatchingResult->GetRoundedRedshiftCandidatesOverNumber(matchNum-1, ctx.GetParams().redshiftStep);
+        return ComputeMerits( ctx, roundedRedshift);
     }
 
-//    // 3 lines 1 match or 4 lines 2 matches
-//    if(nRaysDetected - matchNum >= 2){
-//        Log.LogInfo( "3 lines 1 match or 4 lines 2 matches...");
-//    }
+    //    // 3 lines 1 match or 4 lines 2 matches
+    //    if(nRaysDetected - matchNum >= 2){
+    //        Log.LogInfo( "3 lines 1 match or 4 lines 2 matches...");
+    //    }
 
+    // use Strong peaks
     if(nStrongPeaks > 0){
         Log.LogInfo( "Ray Matching with %d strong peaks", nStrongPeaks);
         CRayMatching rayMatchingStrong;
@@ -173,21 +170,15 @@ Bool CProcessFlow::ProcessDecisionalTree7( CProcessFlowContext& ctx )
 
         if(matchNumStrong>1){
             Log.LogInfo( "match num strong >= 2, compute merits on redshift candidates from strong ray matching");
-            TFloat64List selectedRedshift;
-            CRayMatchingResult::TSolutionSetList selectedResults = rayMatchingStrongResult->GetSolutionsListOverNumber(matchNumStrong-1);
-            for( UInt32 j=0; j<selectedResults.size(); j++ )
-            {
-                Float64 z = rayMatchingStrongResult->GetMeanRedshiftSolution(selectedResults[j]);
-                selectedRedshift.push_back(z);
-            }
-            return ComputeMerits( ctx, selectedRedshift);
+            TFloat64List roundedRedshift = rayMatchingStrongResult->GetRoundedRedshiftCandidatesOverNumber(matchNumStrong-1, ctx.GetParams().redshiftStep);
+            return ComputeMerits( ctx, roundedRedshift);
         }else{
-            Log.LogInfo( "Not match found with strong lines, switching to ProcessWithoutEL");
-            return ProcessWithoutEL( ctx );
+            Log.LogInfo( "Not match found with strong lines, switching to ProcessWithoutEL (EZ: only_correlation_... equivalent)");
+            return ProcessWithoutEL( ctx , CTemplate::nCategory_Emission); // this is the EZ: only_correlation_... probably equ. to Blindsolve with max corr peak selection on the results.
         }
     }
 
-    Log.LogInfo( "Switching to ProcessWithoutEL");
+    Log.LogInfo( "no other path found than switching to ProcessWithoutEL...");
     return ProcessWithoutEL( ctx );
 }
 
@@ -200,13 +191,15 @@ Bool CProcessFlow::ProcessLineMatching( CProcessFlowContext& ctx )
     // detect possible peaks
     Float64 winsize = 250.0;
     Float64 cut = 5.0;
+    Float64 strongcut = 2.0;
+
 
     CPeakDetection peakDetection;
     CConstRef<CPeakDetectionResult> peakDetectionResult = peakDetection.Compute( ctx.GetSpectrum(), ctx.GetSpectrum().GetLambdaRange(), winsize, cut);
     ctx.StoreGlobalResult( "peakdetection", *peakDetectionResult );
 
     CRayDetection rayDetection;
-    CConstRef<CRayDetectionResult> rayDetectionResult = rayDetection.Compute( ctx.GetSpectrum(), ctx.GetSpectrum().GetLambdaRange(), peakDetectionResult->PeakList, peakDetectionResult->EnlargedPeakList );
+    CConstRef<CRayDetectionResult> rayDetectionResult = rayDetection.Compute( ctx.GetSpectrum(), ctx.GetSpectrum().GetLambdaRange(), peakDetectionResult->PeakList, peakDetectionResult->EnlargedPeakList, cut, strongcut );
 
     ctx.StoreGlobalResult( "raycatalog", *rayDetectionResult );
 
@@ -276,8 +269,8 @@ bool CProcessFlow::ComputeMerits( CProcessFlowContext& ctx, const TFloat64List& 
 
                 // Compute merit function
                 COperatorChiSquare meritChiSquare;
-                CRef<CChisquareResult>  chisquareResults = (CChisquareResult*)meritChiSquare.Compute( spc, tpl, lambdaRange, redshifts, ctx.GetParams().overlapThreshold );
-                if( !chisquareResults )
+                CRef<CChisquareResult>  chisquareResult = (CChisquareResult*)meritChiSquare.Compute( spc, tpl, lambdaRange, redshifts, ctx.GetParams().overlapThreshold );
+                if( !chisquareResult )
                 {
                     Log.LogInfo( "Failed to compute chi square value");
                     return false;
@@ -285,15 +278,21 @@ bool CProcessFlow::ComputeMerits( CProcessFlowContext& ctx, const TFloat64List& 
 
                 // Store results
                 {
-                    ctx.StorePerTemplateResult( tpl, "merit.chisquare", *chisquareResults );
+                    //ctx.StorePerTemplateResult( tpl, "merit.chisquare", *chisquareResult );
 
                     Log.LogInfo( "- Template: %s (LambdaRange: %f-%f:%f)", tpl.GetName().c_str(), tpl.GetLambdaRange().GetBegin(), tpl.GetLambdaRange().GetEnd(), tpl.GetResolution() );
 
-                    Float64 merit = chisquareResults->ChiSquare[0];
+                    Float64 merit = chisquareResult->ChiSquare[0];
                     if( merit < 0.00001 )
                         Log.LogInfo( "|- Redshift: %f Merit: %e", redshifts[0], merit );
                     else
                         Log.LogInfo( "|- Redshift: %f Merit: %f", redshifts[0], merit );
+
+                    // Store results
+                    ctx.StorePerTemplateResult( tpl, "blindsolve.merit", *chisquareResult );
+
+                    CRef<CBlindSolveResult>  chisquareResults = new CBlindSolveResult();
+                    ctx.StorePerTemplateResult( tpl, "blindsolve", *chisquareResults );
 
                 }
             }
@@ -366,7 +365,6 @@ Bool CProcessFlow::BlindSolve( CProcessFlowContext& ctx, const CTemplate& tpl, c
     CRef<CBlindSolveResult>  chisquareResults = new CBlindSolveResult();
     ctx.StorePerTemplateResult( tpl, "blindsolve", *chisquareResults );
     return true;
-}
 }
 
 Bool CProcessFlow::FullSolve( CProcessFlowContext& ctx, const CTemplate& tpl, const CTemplate& tplWithoutCont )

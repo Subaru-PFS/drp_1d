@@ -77,7 +77,6 @@ Bool CRayMatchingResult::GetBestRedshift(Float64& Redshift, Int32& MatchingNumbe
     return true;
 }
 
-
 CRayMatchingResult::TSolutionSetList CRayMatchingResult::GetSolutionsListOverNumber(Int32 number) const
 {
     //select results by matching number
@@ -91,6 +90,32 @@ CRayMatchingResult::TSolutionSetList CRayMatchingResult::GetSolutionsListOverNum
 
     }
     return selectedResults;
+}
+
+TFloat64List CRayMatchingResult::GetAverageRedshiftListOverNumber(Int32 number) const
+{
+    TFloat64List selectedRedshift;
+    CRayMatchingResult::TSolutionSetList selectedResults = GetSolutionsListOverNumber(number);
+    for( UInt32 j=0; j<selectedResults.size(); j++ )
+    {
+        Float64 z = GetMeanRedshiftSolution(selectedResults[j]);
+        selectedRedshift.push_back(z);
+    }
+    return selectedRedshift;
+}
+
+
+TFloat64List CRayMatchingResult::GetRoundedRedshiftCandidatesOverNumber(Int32 number, Float64 step) const
+{
+    TFloat64List selectedRedshift = GetAverageRedshiftListOverNumber(number);
+    TFloat64List roundedRedshift;
+    for( UInt32 j=0; j<selectedRedshift.size(); j++ )
+    {
+        Float64 zround = Float64(int(selectedRedshift[j]/step+0.5f)*step);
+        roundedRedshift.push_back(zround);
+    }
+
+    return roundedRedshift;
 }
 
 Float64 CRayMatchingResult::GetMeanRedshiftSolutionByIndex(Int32 index) const

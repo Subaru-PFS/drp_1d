@@ -44,7 +44,7 @@ class CRayDetection : public CManagedObject
     CRayDetection();
     virtual ~CRayDetection();
 
-    const CRayDetectionResult* Compute( const CSpectrum& spectrum, const TLambdaRange& lambdaRange, const TInt32RangeList& resPeaks, const TInt32RangeList& resPeaksEnlarged );
+    const CRayDetectionResult* Compute(const CSpectrum& spectrum, const TLambdaRange& lambdaRange, const TInt32RangeList& resPeaks, const TInt32RangeList& resPeaksEnlarged , Float64 cut, Float64 strongcut);
 
 
     Float64 FWHM_FACTOR;
