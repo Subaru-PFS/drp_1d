@@ -40,6 +40,7 @@ Void COperatorChiSquare::BasicFit( const CSpectrum& spectrum, const CTemplate& t
     status = nStatus_DataError;
 
     Bool retVal;
+
     CSpectrumSpectralAxis shiftedTplSpectralAxis( tpl.GetSampleCount(), false );
 
     const CSpectrumSpectralAxis& spcSpectralAxis = spectrum.GetSpectralAxis();
@@ -64,11 +65,17 @@ Void COperatorChiSquare::BasicFit( const CSpectrum& spectrum, const CTemplate& t
 
     // if there is any intersection between the lambda range of the spectrum and the lambda range of the template
     // Compute the intersected range
-    if( TFloat64Range::Intersect( tplLambdaRange, spcLambdaRange, intersectedLambdaRange ) )
-    {
-        overlapRate = intersectedLambdaRange.GetLength() / spcLambdaRange.GetLength();
-    }
+    TFloat64Range::Intersect( tplLambdaRange, spcLambdaRange, intersectedLambdaRange );
 
+    CSpectrumFluxAxis itplTplFluxAxis;
+    CSpectrumSpectralAxis itplTplSpectralAxis;
+    CMask itplMask;
+    CSpectrumFluxAxis::Rebin( intersectedLambdaRange, tplFluxAxis, shiftedTplSpectralAxis, spcSpectralAxis, itplTplFluxAxis, itplTplSpectralAxis, itplMask );
+
+    CMask mask;
+    spcSpectralAxis.GetMask( lambdaRange, mask );
+    itplMask &= mask;
+    overlapRate = mask.CompouteOverlapRate( itplMask );
     // Check for overlap rate
     if( overlapRate < overlapThreshold )
     {
@@ -76,18 +83,27 @@ Void COperatorChiSquare::BasicFit( const CSpectrum& spectrum, const CTemplate& t
         return ;
     }
 
-    const Float64* Xtpl = shiftedTplSpectralAxis.GetSamples();
-    const Float64* Ytpl = tplFluxAxis.GetSamples();
+    const Float64* Xtpl = itplTplSpectralAxis.GetSamples();
+    const Float64* Ytpl = itplTplFluxAxis.GetSamples();
     const Float64* Xspc = spcSpectralAxis.GetSamples();
     const Float64* Yspc = spcFluxAxis.GetSamples();
+    TFloat64Range logIntersectedLambdaRange( log( intersectedLambdaRange.GetBegin() ), log( intersectedLambdaRange.GetEnd() ) );
+    //the spectral axis should be in the same scale
+    TFloat64Range currentRange = logIntersectedLambdaRange;
+    if( spcSpectralAxis.IsInLinearScale() != tplSpectralAxis.IsInLinearScale() )
+        return;
+    if(spcSpectralAxis.IsInLinearScale()){
+        currentRange = intersectedLambdaRange;
+    }
 
-    // Move cursors up to lambda range start
+    // j cursor move over spectrum
     Int32 j = 0;
-    while( Xspc[j] < intersectedLambdaRange.GetBegin() )
+    while( j < spcSpectralAxis.GetSamplesCount() && Xspc[j] < currentRange.GetBegin() )
         j++;
 
+    // k cursor move over template
     Int32 k = 0;
-    while( Xtpl[k] < intersectedLambdaRange.GetBegin() )
+    while( k < itplTplSpectralAxis.GetSamplesCount() && Xtpl[k] < currentRange.GetBegin() )
         k++;
 
     Int32 jStart = j;
@@ -97,28 +113,17 @@ Void COperatorChiSquare::BasicFit( const CSpectrum& spectrum, const CTemplate& t
     Float64 sumYDevs = 0.0;
     Float64 err2 = 0.0;
     Float64 fit = 0;
-    Float64 tplInterpolatedFlux=-1;
-    Float64 t = 0;
     Int32 numDevs = 0;
     const Float64* error = spcFluxAxis.GetError();
 
-    while( k<tpl.GetSampleCount()-1 && Xtpl[k] <= intersectedLambdaRange.GetEnd() )
+    while( j<spcSpectralAxis.GetSamplesCount() && Xspc[j] <= currentRange.GetEnd() )
     {
-        while( j<spectrum.GetSampleCount() && Xspc[j] <= Xtpl[k+1] )
-        {
-            t = ( Xspc[j] - Xtpl[k] ) / ( Xtpl[k+1] - Xtpl[k] );
+        numDevs++;
+        err2 = 1.0 / (error[j] * error[j]);
+        sumYDevs+=Yspc[j]*err2;
+        sumXDevs+=Ytpl[j]*err2;
 
-            tplInterpolatedFlux = Ytpl[k] + ( Ytpl[k+1] - Ytpl[k] ) * t;
-
-            numDevs++;
-            err2 = 1.0 / error[j] * error[j];
-            sumYDevs+=Yspc[j]*err2;
-            sumXDevs+=tplInterpolatedFlux*err2;
-
-            j++;
-        }
-
-        k++;
+        j++;
     }
 
     if ( numDevs==0 || sumYDevs==0 || sumXDevs==0 )
@@ -136,22 +141,15 @@ Void COperatorChiSquare::BasicFit( const CSpectrum& spectrum, const CTemplate& t
 
     Float64 s = 0;
 
-    while( k<tpl.GetSampleCount()-1 && Xtpl[k] <= intersectedLambdaRange.GetEnd() )
+    while( j<spcSpectralAxis.GetSamplesCount() && Xspc[j] <= currentRange.GetEnd() )
     {
-
-        while( j<spectrum.GetSampleCount() && Xspc[j] <= Xtpl[k+1] )
+        int k=j;
         {
-            t = ( Xspc[j] - Xtpl[k] ) / ( Xtpl[k+1] - Xtpl[k] );
-            tplInterpolatedFlux = Ytpl[k] + ( Ytpl[k+1] - Ytpl[k] ) * t;
-
-            fit += pow( Yspc[j] - ampl * tplInterpolatedFlux , 2.0 ) / pow( error[j], 2.0 );
-
-
+            // fit
+            fit += pow( Yspc[j] - ampl * Ytpl[k] , 2.0 ) / pow( error[j], 2.0 );
             s += Yspc[j];
-            j++;
         }
-
-        k++;
+        j++;
     }
 
     // Chi square reduct: it can introduces some problem?
@@ -190,19 +188,6 @@ const COperatorResult* COperatorChiSquare::Compute(const CSpectrum& spectrum, co
         BasicFit( spectrum, tpl, lambdaRange, result->Redshifts[i], overlapThreshold, result->Overlap[i], result->ChiSquare[i], result->Status[i] );
     }
 
-    //*//debug:
-    // save
-    FILE* f = fopen( "chisquare_dbg.txt", "w+" );
-    for( Int32 i=0; i<redshifts.size(); i++ )
-    {
-        if( result->ChiSquare[i] < 0.0001 ){
-            fprintf( f, "%d %e %e\n", i, result->Redshifts[i], result->ChiSquare[i]);
-        }else{
-            fprintf( f, "%d %f %f\n", i, result->Redshifts[i], result->ChiSquare[i]);
-        }
-    }
-    fclose( f );
-    //*/
 
     return result;
 

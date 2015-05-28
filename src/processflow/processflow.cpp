@@ -375,6 +375,9 @@ Bool CProcessFlow::FullSolve( CProcessFlowContext& ctx, const CTemplate& tpl, co
     CSpectrum s = spc;
     s.GetSpectralAxis().ConvertToLogScale();
 
+    CTemplate t = tpl;
+    t.GetSpectralAxis().ConvertToLogScale();
+
     // Create redshift initial list by spanning redshift acdross the given range, with the given delta
     TFloat64List redshifts = ctx.GetParams().redshiftRange.SpreadOver( ctx.GetParams().redshiftStep );
     DebugAssert( redshifts.size() > 0 );
@@ -403,6 +406,9 @@ Bool CProcessFlow::FullSolveBrute( CProcessFlowContext& ctx, const CTemplate& tp
     CSpectrum s = spc;
     s.GetSpectralAxis().ConvertToLogScale();
 
+    //CTemplate t = tpl;
+    //t.GetSpectralAxis().ConvertToLogScale();
+
     // Create redshift initial list by spanning redshift acdross the given range, with the given delta
     TFloat64List redshifts = ctx.GetParams().redshiftRange.SpreadOver( ctx.GetParams().redshiftStep );
     DebugAssert( redshifts.size() > 0 );
@@ -413,7 +419,7 @@ Bool CProcessFlow::FullSolveBrute( CProcessFlowContext& ctx, const CTemplate& tp
     CRef<CCorrelationResult> correlationResult = (CCorrelationResult*) correlation.Compute( spcWithoutCont, tplWithoutCont, ctx.GetParams().lambdaRange, redshifts, ctx.GetParams().overlapThreshold );
 
     COperatorChiSquare meritChiSquare;
-    CRef<CCorrelationResult> chisquareResult = (CCorrelationResult*)meritChiSquare.Compute( spc, tpl, ctx.GetParams().lambdaRange, redshifts, ctx.GetParams().overlapThreshold );
+    CRef<CChisquareResult> chisquareResult = (CChisquareResult*)meritChiSquare.Compute( spc, tpl, ctx.GetParams().lambdaRange, redshifts, ctx.GetParams().overlapThreshold );
     if( !chisquareResult )
     {
         Log.LogInfo( "Failed to compute chi square value");

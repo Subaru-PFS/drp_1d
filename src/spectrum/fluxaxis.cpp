@@ -56,10 +56,14 @@ Bool CSpectrumFluxAxis::Rebin( const TFloat64Range& range, const CSpectrumFluxAx
     if( sourceFluxAxis.GetSamplesCount() != sourceSpectralAxis.GetSamplesCount() )
         return false;
 
-    if( sourceSpectralAxis.IsInLinearScale() || sourceSpectralAxis.IsInLinearScale() )
-        return false;
-
+    //the spectral axis should be in the same scale
     TFloat64Range logIntersectedLambdaRange( log( range.GetBegin() ), log( range.GetEnd() ) );
+    TFloat64Range currentRange = logIntersectedLambdaRange;
+    if( sourceSpectralAxis.IsInLinearScale() != targetSpectralAxis.IsInLinearScale() )
+        return false;
+    if(sourceSpectralAxis.IsInLinearScale()){
+        currentRange = range;
+    }
 
     rebinedFluxAxis.SetSize( targetSpectralAxis.GetSamplesCount() );
     rebinedSpectralAxis.SetSize( targetSpectralAxis.GetSamplesCount() );
@@ -73,7 +77,7 @@ Bool CSpectrumFluxAxis::Rebin( const TFloat64Range& range, const CSpectrumFluxAx
 
     // Move cursors up to lambda range start
     Int32 j = 0;
-    while( j<targetSpectralAxis.GetSamplesCount() && Xtgt[j] < logIntersectedLambdaRange.GetBegin() )
+    while( j<targetSpectralAxis.GetSamplesCount() && Xtgt[j] < currentRange.GetBegin() )
     {
         rebinedMask[j] = 0;
         Yrebin[j] = 0.0;
@@ -87,7 +91,7 @@ Bool CSpectrumFluxAxis::Rebin( const TFloat64Range& range, const CSpectrumFluxAx
     Int32 k = 0;
 
     // For each sample in the valid lambda range interval.
-    while( k<sourceSpectralAxis.GetSamplesCount()-1 && Xsrc[k] <= logIntersectedLambdaRange.GetEnd() )
+    while( k<sourceSpectralAxis.GetSamplesCount()-1 && Xsrc[k] <= currentRange.GetEnd() )
     {
         // For each sample in the target spectrum that are in between two continous source sample
         while( j<targetSpectralAxis.GetSamplesCount() && Xtgt[j] <= Xsrc[k+1] )
