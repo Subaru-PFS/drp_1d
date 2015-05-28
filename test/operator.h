@@ -13,6 +13,7 @@ class CRedshiftOperatorTestCase : public CppUnit::TestCase
     //CPPUNIT_TEST(CorrelationAtZEqualZero);
     //CPPUNIT_TEST(CorrelationAtGivenZ);
     CPPUNIT_TEST(CorrelationMatchWithEZ);
+    CPPUNIT_TEST(ChisquareMatchWithEZ);
     CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -22,11 +23,14 @@ public:
 
 private:
 
+    void ChisquareMatchWithEZ();
     void CorrelationMatchWithEZ();
     void CorrelationAtZEqualZero();
     void CorrelationAtGivenZ();
 
     void CorrelationMatchWithEZ( const char* spectraPath, const char* noisePath, const char* tplPath, const char* resultPath );
+    void ChisquareMatchWithEZ( const char* spectraPath, const char* noisePath, const char* tplPath, const char* resultPath );
+
 
 };
 

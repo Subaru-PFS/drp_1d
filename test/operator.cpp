@@ -4,6 +4,8 @@
 #include <epic/core/common/ref.h>
 #include <epic/redshift/operator/correlation.h>
 #include <epic/redshift/operator/correlationresult.h>
+#include <epic/redshift/operator/chisquare.h>
+#include <epic/redshift/operator/chisquareresult.h>
 #include <epic/redshift/spectrum/spectrum.h>
 #include <epic/redshift/spectrum/template/template.h>
 #include <epic/redshift/spectrum/io/fitsreader.h>
@@ -197,6 +199,76 @@ void CRedshiftOperatorTestCase::CorrelationMatchWithEZ( const char* spectraPath,
         else
         {
             CPPUNIT_ASSERT_DOUBLES_EQUAL( referenceResult.Correlation[i], r->Correlation[i], 0.00001 );
+        }
+
+
+        CPPUNIT_ASSERT_DOUBLES_EQUAL( referenceResult.Redshifts[i], r->Redshifts[i], 0.00001 );
+        CPPUNIT_ASSERT_DOUBLES_EQUAL( referenceResult.Overlap[i], r->Overlap[i], 0.00001 );
+    }
+
+}
+
+void CRedshiftOperatorTestCase::ChisquareMatchWithEZ()
+{
+    ChisquareMatchWithEZ( "../test/data/OperatorTestCase/fromVVDSDeep/spectra/sc_020088501_F02P017_vmM1_red_82_1_atm_clean.fits",
+                            "../test/data/OperatorTestCase/fromVVDSDeep/spectra/sc_020088501_F02P017_vmM1_red_82_1_noise.fits",
+                            "../test/data/OperatorTestCase/fromVVDSDeep/template/galaxy/zcosmos_red.txt",
+                            "../test/data/OperatorTestCase/fromVVDSDeep/chisquare_results_withnoise/sc_020088501_F02P017_vmM1_red_82_1_atm_clean.csv" );
+
+
+    ChisquareMatchWithEZ( "../test/data/OperatorTestCase/fromVVDSDeep/spectra/sc_020123432_F02P019_vmM1_red_72_1_atm_clean.fits",
+                            "../test/data/OperatorTestCase/fromVVDSDeep/spectra/sc_020123432_F02P019_vmM1_red_72_1_noise.fits",
+                            "../test/data/OperatorTestCase/fromVVDSDeep/template/galaxy/zcosmos_red.txt",
+                            "../test/data/OperatorTestCase/fromVVDSDeep/chisquare_results_withnoise/sc_020123432_F02P019_vmM1_red_72_1_atm_clean.csv" );
+}
+
+
+void CRedshiftOperatorTestCase::ChisquareMatchWithEZ( const char* spectraPath, const char* noisePath, const char* tplPath, const char* resultPath )
+{
+    Bool retVal;
+    CSpectrum s;
+    CTemplate t;
+
+    Float64 z = 1.2299;
+
+    // Load spectrum and templates
+    CSpectrumIOGenericReader reader;
+    retVal = reader.Read( spectraPath, s );
+    CPPUNIT_ASSERT( retVal );
+
+    if( noisePath )
+    {
+        CNoiseFromFile noise;
+        noise.SetNoiseFilePath( noisePath );
+        noise.AddNoise( s );
+    }
+
+    retVal = reader.Read( tplPath, t );
+    CPPUNIT_ASSERT( retVal );
+
+    Float64 redshiftDelta = 0.0001;
+    TFloat64List redshifts = TFloat64Range( 0.0, 2.0 ).SpreadOver( redshiftDelta );
+
+    COperatorChiSquare chi;
+    CRef<CChisquareResult> r = (CChisquareResult*) chi.Compute( s, t, TFloat64Range( 5600, 7000 ), redshifts, 1.0 );
+    CPPUNIT_ASSERT( r != NULL );
+
+    CChisquareResult referenceResult;
+
+    std::ifstream input( resultPath );
+    CPPUNIT_ASSERT( input.is_open() );
+
+    referenceResult.Load( input );
+
+    for( Int32 i=0; i<referenceResult.ChiSquare.size(); i++ )
+    {
+        if( boost::math::isnan( referenceResult.ChiSquare[i] ) )
+        {
+            CPPUNIT_ASSERT( boost::math::isnan( r->ChiSquare[i] ) );
+        }
+        else
+        {
+            CPPUNIT_ASSERT_DOUBLES_EQUAL( referenceResult.ChiSquare[i], r->ChiSquare[i], 0.00001 );
         }
 
 
