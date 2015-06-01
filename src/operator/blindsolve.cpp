@@ -27,6 +27,7 @@ const CBlindSolveResult* COperatorBlindSolve::Compute(  COperatorResultStore& re
                                                         const TFloat64Range& lambdaRange, const TFloat64Range& redshiftsRange, Float64 redshiftStep,
                                                         Int32 correlationExtremumCount, Float64 overlapThreshold )
 {
+    Bool storeResult = false;
     for( UInt32 i=0; i<tplCategoryList.size(); i++ )
     {
         CTemplate::ECategory category = tplCategoryList[i];
@@ -41,13 +42,19 @@ const CBlindSolveResult* COperatorBlindSolve::Compute(  COperatorResultStore& re
                 const CTemplate& tplWithoutCont = tplCatalog.GetTemplateWithoutContinuum( category, j );
 
                 BlindSolve( resultStore, spc, spcWithoutCont, tpl, tplWithoutCont, lambdaRange, redshiftsRange, redshiftStep, correlationExtremumCount, overlapThreshold );
+
+                storeResult = true;
             }
 
-            CRef<CBlindSolveResult>  blindSolveResult = new CBlindSolveResult();
-            resultStore.StoreGlobalResult(  "blindsolve", *blindSolveResult );
-
-            return blindSolveResult;
         }
+    }
+
+    if( storeResult )
+    {
+        CRef<CBlindSolveResult>  blindSolveResult = new CBlindSolveResult();
+        resultStore.StoreGlobalResult(  "blindsolve", *blindSolveResult );
+
+        return blindSolveResult;
     }
 
     return NULL;

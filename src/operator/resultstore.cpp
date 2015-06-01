@@ -3,7 +3,11 @@
 #include <epic/core/debug/assert.h>
 #include <epic/redshift/spectrum/template/template.h>
 
+#include <fstream>
+
 using namespace NSEpic;
+
+namespace bfs = boost::filesystem;
 
 COperatorResultStore::COperatorResultStore()
 {
@@ -13,6 +17,16 @@ COperatorResultStore::COperatorResultStore()
 COperatorResultStore::~COperatorResultStore()
 {
 
+}
+
+Void COperatorResultStore::SetSpectrumName( const char* name )
+{
+    m_SpectrumName = name;
+}
+
+const std::string& COperatorResultStore::GetSpectrumName() const
+{
+    return m_SpectrumName;
 }
 
 void COperatorResultStore::StoreResult( TResultsMap& map, const char* name, const COperatorResult& result )
@@ -87,4 +101,60 @@ const COperatorResult* COperatorResultStore::GetGlobalResult( const char* name )
     }
 
     return NULL;
+}
+
+void COperatorResultStore::CreateResultStorage( std::fstream& stream, const bfs::path& path, const bfs::path& baseDir ) const
+{
+    bfs::path outputFilePath = bfs::path( baseDir ).append( path.string() );
+    std::fstream outputFile;
+
+    if( bfs::exists( outputFilePath.parent_path() ) == false )
+        bfs::create_directories( outputFilePath.parent_path() );
+
+    stream.open( outputFilePath.string().c_str(), std::fstream::out | std::fstream::app);
+    if( stream.rdstate() & std::ios_base::failbit )
+    {
+        return ;
+    }
+
+}
+
+Void COperatorResultStore::SaveAllResults( const char* dir ) const
+{
+    // Store global result
+    {
+        TResultsMap::const_iterator it;
+        for( it=m_GlobalResults.begin(); it != m_GlobalResults.end(); it++ )
+        {
+            std::string resultName = (*it).first;
+            CConstRef<COperatorResult>  result = (*it).second;
+
+            std::fstream outputStream;
+            // Save result at root of output directory
+            CreateResultStorage( outputStream, bfs::path( resultName + ".csv"), bfs::path( dir ) );
+            result->Save( *this, outputStream );
+        }
+    }
+
+    // Store per template results
+    {
+        TPerTemplateResultsMap::const_iterator it;
+        for( it=m_PerTemplateResults.begin(); it != m_PerTemplateResults.end(); it++ )
+        {
+            std::string templateName = (*it).first;
+            const TResultsMap& resultMap = (*it).second;
+
+            TResultsMap::const_iterator it2;
+            for( it2=resultMap.begin(); it2 != resultMap.end(); it2++ )
+            {
+                std::string resultName = (*it2).first;
+                CConstRef<COperatorResult>  result = (*it2).second;
+
+                std::fstream outputStream;
+                // Save result in sub directories of output directory
+                CreateResultStorage( outputStream, bfs::path( templateName ).append( resultName + ".csv"), bfs::path( dir ) );
+                result->Save( *this, outputStream );
+            }
+        }
+    }
 }

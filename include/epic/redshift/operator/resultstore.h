@@ -5,6 +5,7 @@
 #include <epic/core/common/managedobject.h>
 #include <epic/redshift/operator/result.h>
 
+#include <boost/filesystem.hpp>
 #include <vector>
 #include <ostream>
 
@@ -25,6 +26,9 @@ public:
     COperatorResultStore();
     virtual ~COperatorResultStore();
 
+    Void  SetSpectrumName( const char* name );
+    const std::string& GetSpectrumName() const;
+
     Void  StorePerTemplateResult( const CTemplate& t, const char* name, const COperatorResult& result );
     Void  StoreGlobalResult( const char* name, const COperatorResult& result );
 
@@ -32,12 +36,18 @@ public:
     TOperatorResultMap      GetPerTemplateResult( const char* name ) const;
     const COperatorResult*  GetGlobalResult( const char* name ) const;
 
+    Void SaveAllResults( const char* dir ) const;
+
 protected:
 
     void StoreResult( TResultsMap& map, const char* name, const COperatorResult& result );
 
+    void CreateResultStorage( std::fstream& stream, const boost::filesystem::path& path, const boost::filesystem::path& baseDir ) const;
+
     TPerTemplateResultsMap          m_PerTemplateResults;
     TResultsMap                     m_GlobalResults;
+
+    std::string                     m_SpectrumName;
 
 };
 

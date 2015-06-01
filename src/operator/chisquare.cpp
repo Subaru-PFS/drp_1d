@@ -190,6 +190,20 @@ const COperatorResult* COperatorChiSquare::Compute(const CSpectrum& spectrum, co
         BasicFit( spectrum, tpl, lambdaRange, result->Redshifts[i], overlapThreshold, result->Overlap[i], result->ChiSquare[i], result->Status[i] );
     }
 
+    //*//debug:
+    // save
+    FILE* f = fopen( "chisquare_dbg.txt", "w+" );
+    for( Int32 i=0; i<redshifts.size(); i++ )
+    {
+        if( result->ChiSquare[i] < 0.0001 ){
+            fprintf( f, "%d %e %e\n", i, result->Redshifts[i], result->ChiSquare[i]);
+        }else{
+            fprintf( f, "%d %f %f\n", i, result->Redshifts[i], result->ChiSquare[i]);
+        }
+    }
+    fclose( f );
+    //*/
+
     return result;
 
 }

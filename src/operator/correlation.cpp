@@ -188,6 +188,20 @@ const COperatorResult*  COperatorCorrelation::Compute(   const CSpectrum& spectr
         }
     }
 
+    /*//debug:
+    // save
+    FILE* f = fopen( "correlation_dbg.txt", "w+" );
+    for( Int32 i=0; i<redshifts.size(); i++ )
+    {
+        if( result->Correlation[i] < 0.0001 ){
+            fprintf( f, "%d %e %e\n", i, result->Redshifts[i], result->Correlation[i]);
+        }else{
+            fprintf( f, "%d %f %f\n", i, result->Redshifts[i], result->Correlation[i]);
+        }
+    }
+    fclose( f );
+    //*/
+
     boost::posix_time::time_duration diff = boost::posix_time::microsec_clock::local_time() - startTime;
 
     m_TotalDuration = diff.total_seconds();

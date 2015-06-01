@@ -16,7 +16,7 @@ CRayDetectionResult::~CRayDetectionResult()
 
 }
 
-Void CRayDetectionResult::Save( std::ostream& stream ) const
+Void CRayDetectionResult::Save( const COperatorResultStore& store, std::ostream& stream ) const
 {
     CRayCatalog::TRayVector::const_iterator it;
 

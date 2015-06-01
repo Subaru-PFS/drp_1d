@@ -18,7 +18,7 @@ public:
     CChisquareResult();
     virtual ~CChisquareResult();
 
-    Void Save( std::ostream& stream ) const;
+    Void Save( const COperatorResultStore& store, std::ostream& stream ) const;
 
     TFloat64List            Redshifts;
     TFloat64List            ChiSquare;
