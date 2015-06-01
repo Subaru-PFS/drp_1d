@@ -33,10 +33,12 @@ public:
 
     enum EMethod
     {
-        nMethod_BlindSolve = 1,
-        nMethod_LineMatching = 2,
-        nMethod_FullSolve = 3,
-        nMethod_DecisionalTree7 = 4,
+        nMethod_BlindSolve = 0,
+        nMethod_LineMatching,
+        nMethod_FullSolve,
+        nMethod_DecisionalTree7,
+        nMethod_Count,
+        nMethod_None = -1
     };
 
     struct SParam
@@ -64,6 +66,8 @@ public:
     const CTemplateCatalog&         GetTemplateCatalog() const;
     const CRayCatalog&              GetRayCatalog() const;
     const SParam&                   GetParams() const;
+
+    static std::string              GetMethodName( EMethod method );
 
 private:
 

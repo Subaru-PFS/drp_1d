@@ -149,6 +149,22 @@ bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath,
     return Init( spectrumPath, noisePath, *templateCatalog, *rayCatalog, params );
 }
 
+std::string CProcessFlowContext::GetMethodName( EMethod method )
+{
+    std::string methodStr = "Invalid method name";
+
+    if(method== CProcessFlowContext::nMethod_BlindSolve){
+        methodStr = "BlindSolve";
+    } else if (method == CProcessFlowContext::nMethod_LineMatching){
+        methodStr = "LineMatching";
+    } else if (method == CProcessFlowContext::nMethod_DecisionalTree7){
+        methodStr = "DecisionalTree7";
+    } else if (method == CProcessFlowContext::nMethod_FullSolve){
+        methodStr = "FullSolve";
+    }
+    return methodStr;
+}
+
 const CSpectrum& CProcessFlowContext::GetSpectrum() const
 {
     return *m_Spectrum;
