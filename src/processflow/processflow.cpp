@@ -108,6 +108,8 @@ Bool CProcessFlow::ProcessDecisionalTree7( CProcessFlowContext& ctx )
     // check Peak Detection results
     if(peakDetectionResult->PeakList.size()<1){
         Log.LogInfo( "No Peak found, switching to ProcessWithoutEL");
+        ctx.m_dtreepath = CProcessFlowContext::nDtreePath_BlindSolve;
+        ctx.m_dtreepathnum = 1.1;
         return ProcessWithoutEL( ctx );
     }
 
@@ -121,6 +123,8 @@ Bool CProcessFlow::ProcessDecisionalTree7( CProcessFlowContext& ctx )
     Int32 nRaysDetected = rayDetectionResult->RayCatalog.GetList().size();
     if( nRaysDetected < 1){
         Log.LogInfo( "Not ray found, switching to ProcessWithoutEL");
+        ctx.m_dtreepath = CProcessFlowContext::nDtreePath_BlindSolve;
+        ctx.m_dtreepathnum = 1.11;
         return ProcessWithoutEL( ctx );
     }
 
@@ -129,12 +133,21 @@ Bool CProcessFlow::ProcessDecisionalTree7( CProcessFlowContext& ctx )
     Int32 MinMatchNum = 1;
     Float64 tol = 0.002;
     CRef<CRayMatchingResult> rayMatchingResult = rayMatching.Compute(rayDetectionResult->RayCatalog, ctx.GetRayCatalog(), ctx.GetParams().redshiftRange, MinMatchNum, tol );
-    // Store matching results
-    ctx.StoreGlobalResult( "raymatching", *rayMatchingResult );
+    if(rayMatchingResult!=NULL){
+        // Store matching results
+        ctx.StoreGlobalResult( "raymatching", *rayMatchingResult );
 
-    //check ray matching results
-    if(rayMatchingResult->GetSolutionsListOverNumber(0).size()<1){
-        Log.LogInfo( "Not match found, switching to ProcessWithoutEL");
+        //check ray matching results
+        if(rayMatchingResult->GetSolutionsListOverNumber(0).size()<1){
+            Log.LogInfo( "Not match found [1], switching to ProcessWithoutEL");
+            ctx.m_dtreepath = CProcessFlowContext::nDtreePath_BlindSolve;
+            ctx.m_dtreepathnum = 1.2;
+            return ProcessWithoutEL( ctx );
+        }
+    }else{
+        Log.LogInfo( "Not match found  [0], switching to ProcessWithoutEL");
+        ctx.m_dtreepath = CProcessFlowContext::nDtreePath_BlindSolve;
+        ctx.m_dtreepathnum = 1.21;
         return ProcessWithoutEL( ctx );
     }
 
@@ -145,9 +158,11 @@ Bool CProcessFlow::ProcessDecisionalTree7( CProcessFlowContext& ctx )
     if(matchNum >= 3 || (nStrongPeaks < 1 && matchNum >= 2)){
         if(matchNum >= 3){
             Log.LogInfo( "match num >= 3");
+            ctx.m_dtreepathnum = 2.0;
         }
         if(nStrongPeaks < 1 && matchNum >= 2){
             Log.LogInfo( "n Strong Peaks < 1, MatchNum>=2");
+            ctx.m_dtreepathnum = 2.1;
         }
         Log.LogInfo( "compute merits on redshift candidates from ray matching");
         TFloat64List roundedRedshift = rayMatchingResult->GetRoundedRedshiftCandidatesOverNumber(matchNum-1, ctx.GetParams().redshiftStep);
@@ -171,14 +186,19 @@ Bool CProcessFlow::ProcessDecisionalTree7( CProcessFlowContext& ctx )
         if(matchNumStrong>1){
             Log.LogInfo( "match num strong >= 2, compute merits on redshift candidates from strong ray matching");
             TFloat64List roundedRedshift = rayMatchingStrongResult->GetRoundedRedshiftCandidatesOverNumber(matchNumStrong-1, ctx.GetParams().redshiftStep);
+            ctx.m_dtreepathnum = 2.2;
             return ComputeMerits( ctx, roundedRedshift);
         }else{
             Log.LogInfo( "Not match found with strong lines, switching to ProcessWithoutEL (EZ: only_correlation_... equivalent)");
+            ctx.m_dtreepath = CProcessFlowContext::nDtreePath_OnlyCorrelation;
+            ctx.m_dtreepathnum = 3.0;
             return ProcessWithoutEL( ctx , CTemplate::nCategory_Emission); // this is the EZ: only_correlation_... probably equ. to Blindsolve with max corr peak selection on the results.
         }
     }
 
     Log.LogInfo( "no other path found than switching to ProcessWithoutEL...");
+    ctx.m_dtreepath = CProcessFlowContext::nDtreePath_BlindSolve;
+    ctx.m_dtreepathnum = 1.3;
     return ProcessWithoutEL( ctx );
 }
 

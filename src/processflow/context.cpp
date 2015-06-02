@@ -33,8 +33,8 @@ CProcessFlowContext::SParam::SParam()
 
     //method = nMethod_LineMatching;
     //method = nMethod_BlindSolve;
-    method = nMethod_FullSolve;
-    //method = nMethod_DecisionalTree7;
+    //method = nMethod_FullSolve;
+    method = nMethod_DecisionalTree7;
 
     templateCategoryList.push_back( CTemplate::nCategory_Emission );
     templateCategoryList.push_back( CTemplate::nCategory_Galaxy );
@@ -60,6 +60,9 @@ bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath,
     m_Spectrum = new CSpectrum();
 
     m_Params = params;
+
+    m_dtreepath = nDtreePath_None;
+    m_dtreepathnum = -1.0;
 
     CSpectrumIOGenericReader reader;
     Bool rValue = reader.Read( spectrumPath, *m_Spectrum );

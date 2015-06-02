@@ -42,6 +42,14 @@ public:
         nMethod_DecisionalTree7 = 4,
     };
 
+    enum EDTREEPATH
+    {
+        nDtreePath_None = -1,
+        nDtreePath_BlindSolve = 1,
+        nDtreePath_FullSolve = 2,
+        nDtreePath_OnlyCorrelation = 3,
+    };
+
     struct SParam
     {
         SParam();
@@ -67,6 +75,8 @@ public:
     const CTemplateCatalog&         GetTemplateCatalog() const;
     const CRayCatalog&              GetRayCatalog() const;
     const SParam&                   GetParams() const;
+    Int32                           m_dtreepath;
+    Float64                         m_dtreepathnum;
 
     Void  StorePerTemplateResult( const CTemplate& t, const char* name, const COperatorResult& result );
     Void  StoreGlobalResult( const char* name, const COperatorResult& result );
@@ -87,6 +97,7 @@ private:
 
     SParam                          m_Params;
     std::string                     m_SpectrumName;
+
 
     TPerTemplateResultsMap          m_PerTemplateResults;
     TResultsMap                     m_GlobalResults;

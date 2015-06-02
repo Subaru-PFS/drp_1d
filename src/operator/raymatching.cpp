@@ -29,9 +29,9 @@ CRayMatchingResult* CRayMatching::Compute(const CRayCatalog& detectedRayCatalog,
         for( UInt32 iRestRay=0; iRestRay<restRayList.size(); iRestRay++ )
         {
             CRayMatchingResult::TSolutionSet solution;
-            Float64 redShift=(detectedRayList[0].GetPosition()-restRayList[0].GetPosition())/restRayList[0].GetPosition();
+            Float64 redShift=(detectedRayList[0].GetPosition()-restRayList[iRestRay].GetPosition())/restRayList[iRestRay].GetPosition();
             if( redShift > 0 ){
-                solution.push_back(CRayMatchingResult::SSolution( detectedRayList[0].GetPosition(), restRayList[0].GetPosition(), redShift));
+                solution.push_back(CRayMatchingResult::SSolution( detectedRayList[0].GetPosition(), restRayList[iRestRay].GetPosition(), redShift));
                 solutions.push_back(solution);
             }
         }
