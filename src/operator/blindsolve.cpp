@@ -28,6 +28,9 @@ const CBlindSolveResult* COperatorBlindSolve::Compute(  COperatorResultStore& re
                                                         Int32 correlationExtremumCount, Float64 overlapThreshold )
 {
     Bool storeResult = false;
+
+    COperatorResultStore::CAutoScope resultScope( resultStore, "blindsolve" );
+
     for( UInt32 i=0; i<tplCategoryList.size(); i++ )
     {
         CTemplate::ECategory category = tplCategoryList[i];
@@ -49,11 +52,10 @@ const CBlindSolveResult* COperatorBlindSolve::Compute(  COperatorResultStore& re
         }
     }
 
+
     if( storeResult )
     {
-        CRef<CBlindSolveResult>  blindSolveResult = new CBlindSolveResult();
-        resultStore.StoreGlobalResult(  "blindsolve", *blindSolveResult );
-
+        CBlindSolveResult*  blindSolveResult = new CBlindSolveResult();
         return blindSolveResult;
     }
 
@@ -84,7 +86,7 @@ Bool COperatorBlindSolve::BlindSolve( COperatorResultStore& resultStore, const C
         return false;
     }
 
-    resultStore.StorePerTemplateResult( tpl, "blindsolve.correlation", *correlationResult );
+    resultStore.StorePerTemplateResult( tpl, "correlation", *correlationResult );
 
     // Find redshifts extremum
     TPointList extremumList;
@@ -113,7 +115,7 @@ Bool COperatorBlindSolve::BlindSolve( COperatorResultStore& resultStore, const C
     }
 
     // Store results
-    resultStore.StorePerTemplateResult( tpl, "blindsolve.merit", *chisquareResult );
+    resultStore.StorePerTemplateResult( tpl, "merit", *chisquareResult );
 
     return true;
 }

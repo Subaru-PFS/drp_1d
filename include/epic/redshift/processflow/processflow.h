@@ -34,7 +34,6 @@ private:
 
     bool ComputeMerits( CProcessFlowContext& ctx, const TFloat64List& redshifts);
 
-    Bool BlindSolve( CProcessFlowContext& ctx, const CTemplate& tpl, const CTemplate& tplWithoutCont  );
     Bool FullSolve( CProcessFlowContext& ctx, const CTemplate& tpl, const CTemplate& tplWithoutCont  );
     Bool FullSolveBrute( CProcessFlowContext& ctx, const CTemplate& tpl, const CTemplate& tplWithoutCont  );
 };

@@ -21,7 +21,15 @@ public:
 
     typedef std::map< std::string, CConstRef<COperatorResult> > TResultsMap;
     typedef std::map< std::string, TResultsMap>                 TPerTemplateResultsMap;
+    typedef std::vector<std::string>                            TScopeStack;
 
+    class CAutoScope {
+    public:
+        CAutoScope( COperatorResultStore& store, const char* name );
+        ~CAutoScope();
+    private:
+        COperatorResultStore* m_Store;
+    };
 
     COperatorResultStore();
     virtual ~COperatorResultStore();
@@ -38,6 +46,11 @@ public:
 
     Void SaveAllResults( const char* dir ) const;
 
+    Void PushScope( const char* name );
+    Void PopScope();
+
+    std::string GetCurrentScopeName() const;
+
 protected:
 
     void StoreResult( TResultsMap& map, const char* name, const COperatorResult& result );
@@ -48,6 +61,8 @@ protected:
     TResultsMap                     m_GlobalResults;
 
     std::string                     m_SpectrumName;
+
+    TScopeStack                     m_ScopeStack;
 
 };
 

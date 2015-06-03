@@ -9,6 +9,17 @@ using namespace NSEpic;
 
 namespace bfs = boost::filesystem;
 
+COperatorResultStore::CAutoScope::CAutoScope( COperatorResultStore& store, const char* name )
+{
+    m_Store = & store;
+    m_Store->PushScope( name );
+}
+
+COperatorResultStore::CAutoScope::~CAutoScope()
+{
+    m_Store->PopScope();
+}
+
 COperatorResultStore::COperatorResultStore()
 {
 
@@ -38,7 +49,14 @@ void COperatorResultStore::StoreResult( TResultsMap& map, const char* name, cons
         return;
     }
 
-    map[ name ] = &result;
+    std::string scopedName;
+    if( m_ScopeStack.size() ) {
+        scopedName = GetCurrentScopeName();
+        scopedName.append( "." );
+    }
+    scopedName.append( name );
+
+    map[ scopedName ] = &result;
 }
 
 Void COperatorResultStore::StorePerTemplateResult( const CTemplate& t, const char* name, const COperatorResult& result )
@@ -157,4 +175,35 @@ Void COperatorResultStore::SaveAllResults( const char* dir ) const
             }
         }
     }
+}
+
+std::string COperatorResultStore::GetCurrentScopeName() const
+{
+    std::string n;
+
+    TScopeStack::const_iterator it;
+
+    if( m_ScopeStack.size() == 0 )
+        return n;
+
+    n = m_ScopeStack[0];
+    it = m_ScopeStack.begin();
+    it++;
+
+    for( ; it != m_ScopeStack.end(); it++ ) {
+        n.append(".");
+        n.append((*it));
+    }
+
+    return n;
+}
+
+Void COperatorResultStore::PushScope( const char* name )
+{
+    m_ScopeStack.push_back( name );
+}
+
+Void COperatorResultStore::PopScope()
+{
+    m_ScopeStack.pop_back();
 }

@@ -65,37 +65,49 @@ Bool CProcessFlow::Process( CProcessFlowContext& ctx )
 
 Bool CProcessFlow::ProcessWithoutEL( CProcessFlowContext& ctx )
 {
-    /*
-    const CTemplateCatalog& templateCatalog = ctx.GetTemplateCatalog();
 
-    for( UInt32 i=0; i<ctx.GetParams().templateCategoryList.size(); i++ )
-    {
-        CTemplate::ECategory category = ctx.GetParams().templateCategoryList[i];
-        if( category == CTemplate::nCategory_Star )
-        {
+
+
+    // Remove Star category
+
+    if(ctx.GetParams().method  == CProcessFlowContext::nMethod_BlindSolve ){
+
+        COperatorBlindSolve blindSolve;
+        CConstRef<CBlindSolveResult> blindsolveResult = blindSolve.Compute( ctx, ctx.GetSpectrum(), ctx.GetSpectrumWithoutContinuum(),
+                            ctx.GetTemplateCatalog(), ctx.GetParams().templateCategoryList,
+                            ctx.GetParams().lambdaRange, ctx.GetParams().redshiftRange, ctx.GetParams().redshiftStep,
+                            ctx.GetParams().correlationExtremumCount, ctx.GetParams().overlapThreshold );
+
+        if( blindsolveResult ) {
+            ctx.StoreGlobalResult( "blindsolve", *blindsolveResult );
         }
-        else
-        {
-            for( UInt32 j=0; j<templateCatalog.GetTemplateCount( category ); j++ )
-            {
-                const CTemplate& tpl = templateCatalog.GetTemplate( category, j );
-                const CTemplate& tplWithoutCont = templateCatalog.GetTemplateWithoutContinuum( category, j );
 
-                if(ctx.GetParams().method  == CProcessFlowContext::nMethod_BlindSolve || ctx.GetParams().method  == CProcessFlowContext::nMethod_DecisionalTree7){
-                    BlindSolve( ctx, tpl, tplWithoutCont );
-                }else if(ctx.GetParams().method  == CProcessFlowContext::nMethod_FullSolve){
+
+    }else if(ctx.GetParams().method  == CProcessFlowContext::nMethod_FullSolve){
+
+        const CTemplateCatalog& templateCatalog = ctx.GetTemplateCatalog();
+
+        for( UInt32 i=0; i<ctx.GetParams().templateCategoryList.size(); i++ )
+        {
+            CTemplate::ECategory category = ctx.GetParams().templateCategoryList[i];
+            if( category == CTemplate::nCategory_Star )
+            {
+            }
+            else
+            {
+                for( UInt32 j=0; j<templateCatalog.GetTemplateCount( category ); j++ )
+                {
+                    const CTemplate& tpl = templateCatalog.GetTemplate( category, j );
+                    const CTemplate& tplWithoutCont = templateCatalog.GetTemplateWithoutContinuum( category, j );
+
                     FullSolve( ctx, tpl, tplWithoutCont );
+
                 }
             }
         }
+
     }
-*/
-    // Remove Star category
-    COperatorBlindSolve blindSolve;
-    CConstRef<CBlindSolveResult> blindsolveResult = blindSolve.Compute( ctx, ctx.GetSpectrum(), ctx.GetSpectrumWithoutContinuum(),
-                        ctx.GetTemplateCatalog(), ctx.GetParams().templateCategoryList,
-                        ctx.GetParams().lambdaRange, ctx.GetParams().redshiftRange, ctx.GetParams().redshiftStep,
-                        ctx.GetParams().correlationExtremumCount, ctx.GetParams().overlapThreshold );
+
 
 
     return true;
@@ -215,15 +227,18 @@ Bool CProcessFlow::ProcessLineMatching( CProcessFlowContext& ctx )
 
     CPeakDetection peakDetection;
     CConstRef<CPeakDetectionResult> peakDetectionResult = peakDetection.Compute( ctx.GetSpectrum(), ctx.GetSpectrum().GetLambdaRange(), winsize, cut);
-    ctx.StoreGlobalResult( "peakdetection", *peakDetectionResult );
+    if( peakDetectionResult )
+        ctx.StoreGlobalResult( "peakdetection", *peakDetectionResult );
 
     CRayDetection rayDetection;
     CConstRef<CRayDetectionResult> rayDetectionResult = rayDetection.Compute( ctx.GetSpectrum(), ctx.GetSpectrum().GetLambdaRange(), peakDetectionResult->PeakList, peakDetectionResult->EnlargedPeakList );
 
-    ctx.StoreGlobalResult( "raycatalog", *rayDetectionResult );
+    if( rayDetectionResult ) {
+        ctx.StoreGlobalResult( "raycatalog", *rayDetectionResult );
 
-    if(rayDetectionResult->RayCatalog.GetList().size()<1){
-        return false;
+        if(rayDetectionResult->RayCatalog.GetList().size()<1){
+            return false;
+        }
     }
 
     // --- EZ: EL Match
@@ -233,7 +248,8 @@ Bool CProcessFlow::ProcessLineMatching( CProcessFlowContext& ctx )
     CRef<CRayMatchingResult> rayMatchingResult = rayMatching.Compute(rayDetectionResult->RayCatalog, ctx.GetRayCatalog(), ctx.GetParams().redshiftRange, MinMatchNum, tol );
 
     // Store matching results
-    ctx.StoreGlobalResult( "raymatching", *rayMatchingResult );
+    if( rayMatchingResult )
+        ctx.StoreGlobalResult( "raymatching", *rayMatchingResult );
 
 
     return true;
@@ -311,72 +327,6 @@ bool CProcessFlow::ComputeMerits( CProcessFlowContext& ctx, const TFloat64List& 
             }
         }
     }
-
-    return true;
-}
-
-
-Bool CProcessFlow::BlindSolve( CProcessFlowContext& ctx, const CTemplate& tpl, const CTemplate& tplWithoutCont )
-{
-    const CSpectrum& spc = ctx.GetSpectrum();
-    const CSpectrum& spcWithoutCont = ctx.GetSpectrumWithoutContinuum();
-
-    CSpectrum s = spc;
-    s.GetSpectralAxis().ConvertToLogScale();
-
-    CTemplate t = tpl;
-    t.GetSpectralAxis().ConvertToLogScale();
-
-
-    // Create redshift initial list by spanning redshift acdross the given range, with the given delta
-    TFloat64List redshifts = ctx.GetParams().redshiftRange.SpreadOver( ctx.GetParams().redshiftStep );
-    DebugAssert( redshifts.size() > 0 );
-
-    // Compute correlation factor at each of those redshifts
-    COperatorCorrelation correlation;
-    //CRef<CCorrelationResult> correlationResult = (CCorrelationResult*) correlation.Compute( spcWithoutCont, tplWithoutCont, ctx.GetParams().lambdaRange, redshifts, ctx.GetParams().overlapThreshold );
-    CRef<CCorrelationResult> correlationResult = (CCorrelationResult*) correlation.Compute( spcWithoutCont, tplWithoutCont, ctx.GetParams().lambdaRange, redshifts, ctx.GetParams().overlapThreshold );
-
-    if( !correlationResult )
-    {
-        return false;
-    }
-
-    ctx.StorePerTemplateResult( tpl, "blindsolve.correlation", *correlationResult );
-
-    // Find redshifts extremum
-    Int32 nExtremums = ctx.GetParams().correlationExtremumCount;
-    TPointList extremumList;
-    CExtremum extremum( ctx.GetParams().redshiftRange , nExtremums);
-    extremum.Find( correlationResult->Redshifts, correlationResult->Correlation, extremumList );
-
-    if( extremumList.size() == 0 )
-    {
-        return false;
-    }
-
-    // Compute merit function
-    TFloat64List extremumRedshifts( extremumList.size() );
-    TFloat64List extremumCorrelation( extremumList.size() );
-    for( Int32 i=0; i<extremumList.size(); i++ )
-    {
-        extremumRedshifts[i] = extremumList[i].X;
-        extremumCorrelation[i] = extremumList[i].Y;
-    }
-
-    COperatorChiSquare meritChiSquare;
-    CRef<CCorrelationResult> chisquareResult = (CCorrelationResult*)meritChiSquare.Compute( spc, tpl, ctx.GetParams().lambdaRange, extremumRedshifts, ctx.GetParams().overlapThreshold );
-    if( !chisquareResult )
-    {
-        Log.LogInfo( "Failed to compute chi square value");
-        return false;
-    }
-
-    // Store results
-    ctx.StorePerTemplateResult( tpl, "blindsolve.merit", *chisquareResult );
-
-    CRef<CBlindSolveResult>  blindSolveResult = new CBlindSolveResult();
-    ctx.StoreGlobalResult(  "blindsolve", *blindSolveResult );
 
     return true;
 }
