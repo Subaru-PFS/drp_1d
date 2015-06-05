@@ -189,9 +189,7 @@ void CRedshiftOperatorTestCase::CorrelationMatchWithEZ( const char* spectraPath,
         noise.AddNoise( s );
     }
 
-    int* i = NULL;
 
-    *i = 10;
 
     retVal = reader.Read( tplPath, t );
     CPPUNIT_ASSERT( retVal );
