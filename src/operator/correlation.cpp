@@ -206,17 +206,6 @@ const COperatorResult*  COperatorCorrelation::Compute(   const CSpectrum& spectr
 
     m_TotalDuration = diff.total_seconds();
 
-    {
-        FILE* f = fopen( "/home/cvidal/Dev/plotCorrelation_AMAZED.txt", "w" );
-
-        for ( int i=0; i<result->Correlation.size(); i++ )
-        {
-            fprintf(f, "%e %f %f\n", result->Correlation[i], result->Redshifts[i], result->Overlap[i]);
-        }
-
-        fclose( f );
-    }
-
     return result;
 }
 

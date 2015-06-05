@@ -146,30 +146,8 @@ void CRedshiftOperatorTestCase::CorrelationMatchWithEZ()
 
 }
 
-#include <stdio.h>
-#include <execinfo.h>
-#include <signal.h>
-#include <stdlib.h>
-#include <unistd.h>
-
-void handler(int sig) {
-  void *array[10];
-  size_t size;
-
-  // get void*'s for all entries on the stack
-  size = backtrace(array, 10);
-
-  // print out all the frames to stderr
-  fprintf(stderr, "Error: signal %d:\n", sig);
-  backtrace_symbols_fd(array, size, STDERR_FILENO);
-  exit(1);
-}
-
-
-
 void CRedshiftOperatorTestCase::CorrelationMatchWithEZ( const char* spectraPath, const char* noisePath, const char* tplPath, const char* resultPath )
 {
-    signal(SIGSEGV, handler);
 
     Bool retVal;
     CSpectrum s;
@@ -212,7 +190,7 @@ void CRedshiftOperatorTestCase::CorrelationMatchWithEZ( const char* spectraPath,
 
     std::ifstream input( resultPath );
     CPPUNIT_ASSERT( input.is_open() );
-/*
+
     referenceResult.Load( input );
 
     for( Int32 i=0; i<referenceResult.Correlation.size(); i++ )
@@ -230,5 +208,5 @@ void CRedshiftOperatorTestCase::CorrelationMatchWithEZ( const char* spectraPath,
         CPPUNIT_ASSERT_DOUBLES_EQUAL( referenceResult.Redshifts[i], r->Redshifts[i], 0.00001 );
         CPPUNIT_ASSERT_DOUBLES_EQUAL( referenceResult.Overlap[i], r->Overlap[i], 0.00001 );
     }
-*/
+
 }
