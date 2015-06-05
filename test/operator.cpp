@@ -120,6 +120,7 @@ void CRedshiftOperatorTestCase::CorrelationAtGivenZ()
 
 void CRedshiftOperatorTestCase::CorrelationMatchWithEZ()
 {
+    /*
     CorrelationMatchWithEZ( "../test/data/OperatorTestCase/fromVVDSDeep/spectra/sc_020086397_F02P016_vmM1_red_31_1_atm_clean.fits",
                             NULL,
                             "../test/data/OperatorTestCase/fromVVDSDeep/template/galaxy/zcosmos_red.txt",
@@ -141,6 +142,7 @@ void CRedshiftOperatorTestCase::CorrelationMatchWithEZ()
                             "../test/data/OperatorTestCase/fromVVDSDeep/spectra/sc_020123432_F02P019_vmM1_red_72_1_noise.fits",
                             "../test/data/OperatorTestCase/fromVVDSDeep/template/galaxy/zcosmos_red.txt",
                             "../test/data/OperatorTestCase/fromVVDSDeep/results_withnoise/sc_020123432_F02P019_vmM1_red_72_1_atm_clean.csv" );
+                            */
 
 }
 
