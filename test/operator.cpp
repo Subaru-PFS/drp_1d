@@ -174,7 +174,7 @@ void CRedshiftOperatorTestCase::CorrelationMatchWithEZ( const char* spectraPath,
 
     s.ConvertToLogScale();
     t.ConvertToLogScale();
-/*
+
 
     Float64 redshiftDelta = 0.0001;
     TFloat64List redshifts = TFloat64Range( 0.0, 2.0 ).SpreadOver( redshiftDelta );
@@ -187,7 +187,7 @@ void CRedshiftOperatorTestCase::CorrelationMatchWithEZ( const char* spectraPath,
 
     std::ifstream input( resultPath );
     CPPUNIT_ASSERT( input.is_open() );
-
+/*
     referenceResult.Load( input );
 
     for( Int32 i=0; i<referenceResult.Correlation.size(); i++ )
