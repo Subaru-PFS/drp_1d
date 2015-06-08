@@ -46,8 +46,9 @@ public:
     {
         nDtreePath_None = -1,
         nDtreePath_BlindSolve = 1,
-        nDtreePath_FullSolve = 2,
-        nDtreePath_OnlyCorrelation = 3,
+        nDtreePath_OnlyFit = 2,
+        nDtreePath_FullSolve = 3,
+        nDtreePath_OnlyCorrelation = 4,
     };
 
     struct SParam

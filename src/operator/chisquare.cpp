@@ -35,7 +35,7 @@ Void COperatorChiSquare::BasicFit( const CSpectrum& spectrum, const CTemplate& t
                                 const TFloat64Range& lambdaRange, Float64 redshift, Float64 overlapThreshold,
                                 Float64& overlapRate, Float64& chiSquare, EStatus& status )
 {
-    chiSquare = boost::numeric::bounds<float>::smallest();
+    chiSquare = boost::numeric::bounds<float>::highest();
     overlapRate = 0.0;
     status = nStatus_DataError;
 

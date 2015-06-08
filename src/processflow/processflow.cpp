@@ -80,7 +80,7 @@ Bool CProcessFlow::ProcessWithoutEL( CProcessFlowContext& ctx, CTemplate::ECateg
                 if(ctx.GetParams().method  == CProcessFlowContext::nMethod_BlindSolve || ctx.GetParams().method  == CProcessFlowContext::nMethod_DecisionalTree7){
                     BlindSolve( ctx, tpl, tplWithoutCont );
                 }else if(ctx.GetParams().method  == CProcessFlowContext::nMethod_FullSolve){
-                    FullSolve( ctx, tpl, tplWithoutCont );
+                    FullSolveBrute( ctx, tpl, tplWithoutCont );
                 }
             }
         }
@@ -164,9 +164,11 @@ Bool CProcessFlow::ProcessDecisionalTree7( CProcessFlowContext& ctx )
             Log.LogInfo( "n Strong Peaks < 1, MatchNum>=2");
             ctx.m_dtreepathnum = 2.1;
         }
-        Log.LogInfo( "compute merits on redshift candidates from ray matching");
+        Log.LogInfo( "compute merits on redshift candidates from ray matching" );
         TFloat64List roundedRedshift = rayMatchingResult->GetRoundedRedshiftCandidatesOverNumber(matchNum-1, ctx.GetParams().redshiftStep);
-        return ComputeMerits( ctx, roundedRedshift);
+        Log.LogInfo( "(n candidates = %d)", roundedRedshift.size());
+        ctx.m_dtreepath = CProcessFlowContext::nDtreePath_OnlyFit;
+        return ComputeMerits( ctx, roundedRedshift, CTemplate::nCategory_Emission);
     }
 
     //    // 3 lines 1 match or 4 lines 2 matches
@@ -186,8 +188,9 @@ Bool CProcessFlow::ProcessDecisionalTree7( CProcessFlowContext& ctx )
         if(matchNumStrong>1){
             Log.LogInfo( "match num strong >= 2, compute merits on redshift candidates from strong ray matching");
             TFloat64List roundedRedshift = rayMatchingStrongResult->GetRoundedRedshiftCandidatesOverNumber(matchNumStrong-1, ctx.GetParams().redshiftStep);
+            ctx.m_dtreepath = CProcessFlowContext::nDtreePath_OnlyFit;
             ctx.m_dtreepathnum = 2.2;
-            return ComputeMerits( ctx, roundedRedshift);
+            return ComputeMerits( ctx, roundedRedshift, CTemplate::nCategory_Emission);
         }else{
             Log.LogInfo( "Not match found with strong lines, switching to ProcessWithoutEL (EZ: only_correlation_... equivalent)");
             ctx.m_dtreepath = CProcessFlowContext::nDtreePath_OnlyCorrelation;
@@ -238,27 +241,10 @@ Bool CProcessFlow::ProcessLineMatching( CProcessFlowContext& ctx )
 
 
     return true;
-
-/*
-    Int32 maxMatchingNum = rayMatching.GetMaxMatchingNumber();
-    if(maxMatchingNum>2){ //ez equivalent to SolveDecisionalTree2:three_lines_match()
-        TFloat64List selectedRedshift;
-        TRedshiftSolutionSetList selectedResults = rayMatching.GetSolutionsListOverNumber(2);
-        for( UInt32 j=0; j<selectedResults.size(); j++ )
-        {
-            Float64 z = rayMatching.GetMeanRedshiftSolution(selectedResults[j]);
-            selectedRedshift.push_back(z);
-        }
-
-        // --- EZ: solve_basic_nocorrelation
-        //retVal = ComputeMerits( ctx, selectedRedshift);
-    }
-*/
-    return true;
 }
 
 
-bool CProcessFlow::ComputeMerits( CProcessFlowContext& ctx, const TFloat64List& redshifts)
+bool CProcessFlow::ComputeMerits( CProcessFlowContext& ctx, const TFloat64List& redshifts, CTemplate::ECategory CategoryFilter)
 {
     const CSpectrum& spc = ctx.GetSpectrum();
     const TFloat64Range& lambdaRange = ctx.GetParams().lambdaRange;
@@ -278,7 +264,7 @@ bool CProcessFlow::ComputeMerits( CProcessFlowContext& ctx, const TFloat64List& 
         if( ctx.GetParams().templateCategoryList[i] == CTemplate::nCategory_Star )
         {
         }
-        else
+        else if(CategoryFilter == NSEpic::CTemplate::nCategory_None || CategoryFilter == ctx.GetParams().templateCategoryList[i])
         {
             for( UInt32 j=0; j<templateCatalog.GetTemplateCount( (CTemplate::ECategory) templateCategotyList[i] ); j++ )
             {
@@ -356,6 +342,22 @@ Bool CProcessFlow::BlindSolve( CProcessFlowContext& ctx, const CTemplate& tpl, c
     TPointList extremumList;
     CExtremum extremum( ctx.GetParams().redshiftRange , nExtremums);
     extremum.Find( correlationResult->Redshifts, correlationResult->Correlation, extremumList );
+
+    // Refine Extremum with a second maximum search around the z candidates:
+    // This corresponds to the finer xcorrelation in EZ Pandora (in standard_DP fctn in SolveKernel.py)
+    Float64 radius = 0.001;
+    for( Int32 i=0; i<extremumList.size(); i++ )
+    {
+        Float64 x = extremumList[i].X;
+        Float64 left_border = max(ctx.GetParams().redshiftRange.GetBegin(), x-radius);
+        Float64 right_border=min(ctx.GetParams().redshiftRange.GetEnd(), x+radius);
+
+        TPointList extremumListFine;
+        TFloat64Range rangeFine = TFloat64Range( left_border, right_border );
+        CExtremum extremumFine( rangeFine , 1);
+        extremumFine.Find( correlationResult->Redshifts, correlationResult->Correlation, extremumListFine );
+        extremumList[i] = extremumListFine[0];
+    }
 
     if( extremumList.size() == 0 )
     {
