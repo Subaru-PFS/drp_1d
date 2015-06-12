@@ -20,7 +20,8 @@ CRayMatching::~CRayMatching()
 CRayMatchingResult* CRayMatching::Compute(const CRayCatalog& detectedRayCatalog, const CRayCatalog& restRayCatalog, const TFloat64Range& redshiftRange, Int32 nThreshold, Float64 tol , Int32 typeFilter, Int32 forceFilter)
 {
     CRayCatalog::TRayVector detectedRayList = detectedRayCatalog.GetFilteredList(typeFilter, forceFilter);
-    CRayCatalog::TRayVector restRayList = restRayCatalog.GetFilteredList(typeFilter, forceFilter);
+    //CRayCatalog::TRayVector restRayList = restRayCatalog.GetFilteredList(typeFilter, forceFilter);
+    CRayCatalog::TRayVector restRayList = restRayCatalog.GetFilteredList(typeFilter, -1);
 
     CRayMatchingResult::TSolutionSetList solutions;
     Int32 nDetectedRay = detectedRayList.size();

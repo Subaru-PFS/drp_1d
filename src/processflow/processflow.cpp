@@ -62,6 +62,9 @@ Bool CProcessFlow::Process( CProcessFlowContext& ctx )
 
 Bool CProcessFlow::ProcessWithoutEL( CProcessFlowContext& ctx, CTemplate::ECategory CategoryFilter)
 {
+    Log.LogInfo( "Process without EL (LambdaRange: %f-%f:%f)",
+            ctx.GetSpectrum().GetLambdaRange().GetBegin(), ctx.GetSpectrum().GetLambdaRange().GetEnd(), ctx.GetSpectrum().GetResolution());
+
     const CTemplateCatalog& templateCatalog = ctx.GetTemplateCatalog();
 
     for( UInt32 i=0; i<ctx.GetParams().templateCategoryList.size(); i++ )
