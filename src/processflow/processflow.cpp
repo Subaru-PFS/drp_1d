@@ -329,6 +329,12 @@ bool CProcessFlow::ComputeMerits( CProcessFlowContext& ctx, const TFloat64List& 
                     else
                         Log.LogInfo( "|- Redshift: %f Merit: %f", redshifts[0], merit );
 
+                    // Store results as blindsolve for dtree7 logic
+                    ctx.StorePerTemplateResult( tpl, "blindsolve.merit", *chisquareResults );
+
+                    CRef<CBlindSolveResult>  chisquareBSResults = new CBlindSolveResult();
+                    ctx.StorePerTemplateResult( tpl, "blindsolve", *chisquareBSResults );
+
                 }
             }
         }

@@ -93,6 +93,22 @@ Bool COperatorBlindSolve::BlindSolve( COperatorResultStore& resultStore, const C
     CExtremum extremum( redshiftsRange, correlationExtremumCount);
     extremum.Find( correlationResult->Redshifts, correlationResult->Correlation, extremumList );
 
+    // Refine Extremum with a second maximum search around the z candidates:
+    // This corresponds to the finer xcorrelation in EZ Pandora (in standard_DP fctn in SolveKernel.py)
+    Float64 radius = 0.001;
+    for( Int32 i=0; i<extremumList.size(); i++ )
+    {
+        Float64 x = extremumList[i].X;
+        Float64 left_border = max(redshiftsRange.GetBegin(), x-radius);
+        Float64 right_border=min(redshiftsRange.GetEnd(), x+radius);
+
+        TPointList extremumListFine;
+        TFloat64Range rangeFine = TFloat64Range( left_border, right_border );
+        CExtremum extremumFine( rangeFine , 1);
+        extremumFine.Find( correlationResult->Redshifts, correlationResult->Correlation, extremumListFine );
+        extremumList[i] = extremumListFine[0];
+    }
+
     if( extremumList.size() == 0 )
     {
         return false;
