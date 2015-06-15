@@ -16,7 +16,7 @@ CPeakDetectionResult::~CPeakDetectionResult()
 
 }
 
-Void CPeakDetectionResult::Save( std::ostream& stream ) const
+Void CPeakDetectionResult::Save( const COperatorResultStore& store, std::ostream& stream ) const
 {
 
 

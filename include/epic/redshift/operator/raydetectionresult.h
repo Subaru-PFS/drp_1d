@@ -20,7 +20,7 @@ public:
     CRayDetectionResult();
     virtual ~CRayDetectionResult();
 
-    Void Save( std::ostream& stream ) const;
+    Void Save( const COperatorResultStore& store, std::ostream& stream ) const;
 
     CRayCatalog RayCatalog;
 };

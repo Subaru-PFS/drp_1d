@@ -20,15 +20,26 @@ CBlindSolveResult::~CBlindSolveResult()
 
 }
 
-Void CBlindSolveResult::Save( std::ostream& stream ) const
+Void CBlindSolveResult::Save( const COperatorResultStore& store, std::ostream& stream ) const
 {
+    Float64 redshift;
+    Float64 merit;
+    std::string tplName;
 
+    GetBestCorrelationResult( store, redshift, merit, tplName );
+
+    stream <<  "#Spectrum\tRedshifts\tMerit\tTemplate"<< std::endl;
+
+    stream  << store.GetSpectrumName() << "\t"
+                << redshift << "\t"
+                << merit << "\t"
+                << tplName << std::endl;
 }
 
-Bool CBlindSolveResult::GetBestFitResult( const CProcessFlowContext& ctx, Float64& redshift, Float64& merit, std::string& tplName ) const
+Bool CBlindSolveResult::GetBestCorrelationResult( const COperatorResultStore& store, Float64& redshift, Float64& merit, std::string& tplName ) const
 {
-    TOperatorResultMap correlationResults = ctx.GetPerTemplateResult("blindsolve.correlation");
-    TOperatorResultMap meritResults = ctx.GetPerTemplateResult("blindsolve.merit");
+    TOperatorResultMap correlationResults = store.GetPerTemplateResult("blindsolve.correlation");
+    TOperatorResultMap meritResults = store.GetPerTemplateResult("blindsolve.merit");
 
 
     Int32 maxIndex = 0;
@@ -63,10 +74,10 @@ Bool CBlindSolveResult::GetBestFitResult( const CProcessFlowContext& ctx, Float6
 
 }
 
-Bool CBlindSolveResult::GetBestCorrelationPeakResult( const CProcessFlowContext& ctx, Float64& redshift, Float64& merit, std::string& tplName ) const
+Bool CBlindSolveResult::GetBestCorrelationPeakResult( const COperatorResultStore& store, Float64& redshift, Float64& merit, std::string& tplName ) const
 {
-    TOperatorResultMap correlationResults = ctx.GetPerTemplateResult("blindsolve.correlation");
-    TOperatorResultMap meritResults = ctx.GetPerTemplateResult("blindsolve.merit");
+    TOperatorResultMap correlationResults = store.GetPerTemplateResult("blindsolve.correlation");
+    TOperatorResultMap meritResults = store.GetPerTemplateResult("blindsolve.merit");
 
 
     Int32 maxIndex = 0;

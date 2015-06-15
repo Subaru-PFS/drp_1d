@@ -122,11 +122,12 @@ void CRedshiftOperatorTestCase::CorrelationAtGivenZ()
 
 void CRedshiftOperatorTestCase::CorrelationMatchWithEZ()
 {
+
     CorrelationMatchWithEZ( "../test/data/OperatorTestCase/fromVVDSDeep/spectra/sc_020086397_F02P016_vmM1_red_31_1_atm_clean.fits",
                             NULL,
                             "../test/data/OperatorTestCase/fromVVDSDeep/template/galaxy/zcosmos_red.txt",
                             "../test/data/OperatorTestCase/fromVVDSDeep/results_nonoise/sc_020086397_F02P016_vmM1_red_31_1_atm_clean.csv" );
-
+/*
     CorrelationMatchWithEZ( "../test/data/OperatorTestCase/fromVVDSDeep/spectra/sc_020100776_F02P017_vmM1_red_129_1_atm_clean.fits",
                             NULL,
                             "../test/data/OperatorTestCase/fromVVDSDeep/template/galaxy/zcosmos_red.txt",
@@ -143,11 +144,13 @@ void CRedshiftOperatorTestCase::CorrelationMatchWithEZ()
                             "../test/data/OperatorTestCase/fromVVDSDeep/spectra/sc_020123432_F02P019_vmM1_red_72_1_noise.fits",
                             "../test/data/OperatorTestCase/fromVVDSDeep/template/galaxy/zcosmos_red.txt",
                             "../test/data/OperatorTestCase/fromVVDSDeep/results_withnoise/sc_020123432_F02P019_vmM1_red_72_1_atm_clean.csv" );
+                            */
 
 }
 
 void CRedshiftOperatorTestCase::CorrelationMatchWithEZ( const char* spectraPath, const char* noisePath, const char* tplPath, const char* resultPath )
 {
+
     Bool retVal;
     CSpectrum s;
     CTemplate t;
@@ -165,6 +168,8 @@ void CRedshiftOperatorTestCase::CorrelationMatchWithEZ( const char* spectraPath,
         noise.SetNoiseFilePath( noisePath );
         noise.AddNoise( s );
     }
+
+
 
     retVal = reader.Read( tplPath, t );
     CPPUNIT_ASSERT( retVal );

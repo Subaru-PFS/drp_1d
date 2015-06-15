@@ -81,7 +81,7 @@ const std::string& CRay::GetName() const
     return m_Name;
 }
 
-Void CRay::Save( std::ostream& stream ) const
+Void CRay::Save(  std::ostream& stream ) const
 {
     stream << GetName() << "\t" << GetPosition() << "\t";
     if( GetIsStrong() )

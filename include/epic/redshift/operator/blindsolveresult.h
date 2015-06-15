@@ -22,9 +22,9 @@ public:
     CBlindSolveResult();
     virtual ~CBlindSolveResult();
 
-    Void Save( std::ostream& stream ) const;
-    Bool GetBestFitResult( const CProcessFlowContext& ctx, Float64& redshift, Float64& merit, std::string& tplName ) const;
-    Bool GetBestCorrelationPeakResult( const CProcessFlowContext& ctx, Float64& redshift, Float64& merit, std::string& tplName ) const;
+    Void Save( const COperatorResultStore& store, std::ostream& stream ) const;
+    Bool GetBestCorrelationResult( const COperatorResultStore& store, Float64& redshift, Float64& merit, std::string& tplName ) const;
+    Bool GetBestCorrelationPeakResult( const COperatorResultStore& store, Float64& redshift, Float64& merit, std::string& tplName ) const;
 
 };
 

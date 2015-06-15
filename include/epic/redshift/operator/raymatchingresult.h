@@ -45,7 +45,7 @@ public:
     CRayMatchingResult();
     virtual ~CRayMatchingResult();
 
-    Void                        Save( std::ostream& stream ) const;
+    Void                        Save( const COperatorResultStore& store, std::ostream& stream ) const;
 
     Bool                        GetBestRedshift(Float64& Redshift, Int32& MatchingNumber) const;
     Int32                       GetMaxMatchingNumber() const;

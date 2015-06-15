@@ -4,6 +4,7 @@
 #include <epic/core/common/ref.h>
 #include <epic/redshift/spectrum/template/template.h>
 #include <epic/redshift/operator/result.h>
+#include <epic/redshift/operator/resultstore.h>
 
 #include <map>
 #include <string>
@@ -23,23 +24,21 @@ class CRayCatalog;
  * Store all data concerning computation and processign of a given spectrum
  *
  */
-class CProcessFlowContext : public CManagedObject
+class CProcessFlowContext : public COperatorResultStore
 {
 
     DEFINE_MANAGED_OBJECT( CProcessFlowContext )
 
 public:
 
-    typedef std::vector< CTemplate::ECategory >                 TTemplateCategoryList;
-    typedef std::map< std::string, CConstRef<COperatorResult> > TResultsMap;
-    typedef std::map< std::string, TResultsMap>                 TPerTemplateResultsMap;
-
     enum EMethod
     {
-        nMethod_BlindSolve = 1,
-        nMethod_LineMatching = 2,
-        nMethod_FullSolve = 3,
-        nMethod_DecisionalTree7 = 4,
+        nMethod_BlindSolve = 0,
+        nMethod_LineMatching,
+        nMethod_FullSolve,
+        nMethod_DecisionalTree7,
+        nMethod_Count,
+        nMethod_None = -1
     };
 
     enum EDTREEPATH
@@ -79,29 +78,18 @@ public:
     Int32                           m_dtreepath;
     Float64                         m_dtreepathnum;
 
-    Void  StorePerTemplateResult( const CTemplate& t, const char* name, const COperatorResult& result );
-    Void  StoreGlobalResult( const char* name, const COperatorResult& result );
-
-    const COperatorResult*  GetPerTemplateResult( const CTemplate& t, const char* name ) const;
-    TOperatorResultMap      GetPerTemplateResult( const char* name ) const;
-    const COperatorResult*  GetGlobalResult( const char* name ) const;
+    static std::string              GetMethodName( EMethod method );
 
 private:
 
-    void StoreResult( TResultsMap& map, const char* name, const COperatorResult& result );
 
     CRef<CSpectrum>                 m_Spectrum;
     CRef<CSpectrum>                 m_SpectrumWithoutContinuum;
     CRef<CTemplateCatalog>          m_TemplateCatalog;
     CRef<CRayCatalog>               m_RayCatalog;
 
-
     SParam                          m_Params;
-    std::string                     m_SpectrumName;
 
-
-    TPerTemplateResultsMap          m_PerTemplateResults;
-    TResultsMap                     m_GlobalResults;
 
 };
 

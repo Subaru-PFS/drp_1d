@@ -36,7 +36,6 @@ private:
 
     bool ComputeMerits( CProcessFlowContext& ctx, const TFloat64List& redshifts, CTemplate::ECategory CategoryFilter = NSEpic::CTemplate::nCategory_None);
 
-    Bool BlindSolve( CProcessFlowContext& ctx, const CTemplate& tpl, const CTemplate& tplWithoutCont  );
     Bool FullSolve( CProcessFlowContext& ctx, const CTemplate& tpl, const CTemplate& tplWithoutCont  );
     Bool FullSolveBrute( CProcessFlowContext& ctx, const CTemplate& tpl, const CTemplate& tplWithoutCont  );
 };

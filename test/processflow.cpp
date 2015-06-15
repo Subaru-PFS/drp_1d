@@ -30,6 +30,7 @@ void CRedshiftProcessFlowTestCase::ProcessShifted1 ()
     params.smoothWidth = 0;
     params.templateCategoryList.clear();
     params.templateCategoryList.push_back( CTemplate::nCategory_Galaxy );
+    params.method = CProcessFlowContext::nMethod_BlindSolve;
 
     Bool retVal = ctx.Init( "../test/data/ProcessFlowTestCase/lbgabs_1K_2z3_20J22.5__EZ_fits-W-F_0.fits", NULL, "../test/data/ProcessFlowTestCase/template_shifted1/", NULL, params );
     CPPUNIT_ASSERT( retVal == true );
@@ -59,6 +60,7 @@ void CRedshiftProcessFlowTestCase::ProcessShifted2()
     params.smoothWidth = 0;
     params.templateCategoryList.clear();
     params.templateCategoryList.push_back( CTemplate::nCategory_Galaxy );
+    params.method = CProcessFlowContext::nMethod_BlindSolve;
 
     Bool retVal = ctx.Init( "../test/data/ProcessFlowTestCase/lbgabs_1K_2z3_20J22.5__EZ_fits-W-F_206.fits", NULL, "../test/data/ProcessFlowTestCase/template_shifted2/", NULL, params );
     CPPUNIT_ASSERT( retVal == true );
@@ -88,6 +90,7 @@ void CRedshiftProcessFlowTestCase::ProcessShiftedDecimated()
     params.smoothWidth = 0;
     params.templateCategoryList.clear();
     params.templateCategoryList.push_back( CTemplate::nCategory_Galaxy );
+    params.method = CProcessFlowContext::nMethod_BlindSolve;
 
     Bool retVal = ctx.Init( "../test/data/ProcessFlowTestCase/lbgabs_1K_2z3_20J22.5__EZ_fits-W-F_0.fits", NULL, "../test/data/ProcessFlowTestCase/template_shifted_decimated/", NULL, params );
     CPPUNIT_ASSERT( retVal == true );

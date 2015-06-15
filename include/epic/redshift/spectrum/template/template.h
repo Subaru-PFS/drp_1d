@@ -2,6 +2,8 @@
 #define _REDSHIFT_SPECTRUM_TEMPLATE_TEMPLATE_
 
 #include <epic/core/common/datatypes.h>
+#include <epic/core/common/ref.h>
+#include <epic/core/common/constref.h>
 #include <epic/redshift/spectrum/spectrum.h>
 
 #include <string>
@@ -33,7 +35,6 @@ public:
 
     static const char*  GetCategoryName( ECategory cat );
 
-    Void    Interpolate( const CTemplate& tpl, const CSpectrumSpectralAxis& targetSpectralAxis );
 
 private:
 
@@ -41,6 +42,9 @@ private:
     std::string m_Name;
 };
 
+typedef std::vector< CRef<CTemplate> >          TTemplateRefList;
+typedef std::vector< CConstRef<CTemplate> >     TTemplateConstRefList;
+typedef std::vector< CTemplate::ECategory >     TTemplateCategoryList;
 
 }
 

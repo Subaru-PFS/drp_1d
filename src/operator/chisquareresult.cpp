@@ -1,9 +1,5 @@
-#include <epic/redshift/operator/chisquareresult.h>
-
-#include <boost/tokenizer.hpp>
-#include <boost/lexical_cast.hpp>
-#include <string>
 #include <fstream>
+#include <epic/redshift/operator/chisquareresult.h>
 
 using namespace NSEpic;
 
@@ -100,12 +96,11 @@ Void CChisquareResult::Load( std::istream& stream )
     }
 }
 
-Void CChisquareResult::Save( std::ostream& stream ) const
+Void CChisquareResult::Save( const COperatorResultStore& store, std::ostream& stream ) const
 {
-    stream <<  "#Redshifts\tMerit\tOverlap"<< std::endl;
+    stream <<  "#Redshifts\tChiSquare\tOverlap"<< std::endl;
     for ( int i=0; i<Redshifts.size(); i++)
     {
-        //stream <<  Redshifts[i] << "\t" << std::scientific << ChiSquare[i] << std::fixed << "\t" << Overlap[i] << std::endl;
-        stream <<  Redshifts[i] << "\t" << ChiSquare[i] << std::fixed << "\t" << Overlap[i] << std::endl;
+        stream <<  Redshifts[i] << "\t" << std::scientific << ChiSquare[i] << std::fixed << "\t" << Overlap[i] << std::endl;
     }
 }

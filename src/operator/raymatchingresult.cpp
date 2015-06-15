@@ -15,8 +15,24 @@ CRayMatchingResult::~CRayMatchingResult()
 
 }
 
-Void CRayMatchingResult::Save( std::ostream& stream ) const
+Void CRayMatchingResult::Save( const COperatorResultStore& store, std::ostream& stream ) const
 {
+
+    // We should also save best result:
+
+    /*
+    const CRayMatchingResult* rayMatchingResult = (CRayMatchingResult*)ctx.GetGlobalResult( "raymatching" );
+    if(rayMatchingResult != NULL){
+        rayMatchingResult->GetBestRedshift( redshift, matchingNum );
+    }
+
+    outputFile.precision(6);
+    outputFile  << bfs::path( m_SpectrumPath ).filename().string()  << "\t"
+                << redshift << "\t"
+                << matchingNum << "\t"
+                << "Ray Matching" << std::endl;
+
+    */
     TSolutionSetList selectedResults = GetSolutionsListOverNumber(0);
 
     if(selectedResults.size()>0){

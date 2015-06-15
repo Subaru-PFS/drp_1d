@@ -55,7 +55,7 @@ CProcessFlowContext::~CProcessFlowContext()
 
 bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath, const CTemplateCatalog& templateCatalog, const CRayCatalog& rayCatalog, const SParam& params  )
 {
-    m_SpectrumName = bfs::path( spectrumPath ).stem().string();
+    SetSpectrumName( bfs::path( spectrumPath ).stem().string().c_str() );
 
     m_Spectrum = new CSpectrum();
 
@@ -155,6 +155,22 @@ bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath,
     return Init( spectrumPath, noisePath, *templateCatalog, *rayCatalog, params );
 }
 
+std::string CProcessFlowContext::GetMethodName( EMethod method )
+{
+    std::string methodStr = "Invalid method name";
+
+    if(method== CProcessFlowContext::nMethod_BlindSolve){
+        methodStr = "BlindSolve";
+    } else if (method == CProcessFlowContext::nMethod_LineMatching){
+        methodStr = "LineMatching";
+    } else if (method == CProcessFlowContext::nMethod_DecisionalTree7){
+        methodStr = "DecisionalTree7";
+    } else if (method == CProcessFlowContext::nMethod_FullSolve){
+        methodStr = "FullSolve";
+    }
+    return methodStr;
+}
+
 const CSpectrum& CProcessFlowContext::GetSpectrum() const
 {
     return *m_Spectrum;
@@ -178,78 +194,4 @@ const CRayCatalog& CProcessFlowContext::GetRayCatalog() const
 const CProcessFlowContext::SParam& CProcessFlowContext::GetParams() const
 {
     return m_Params;
-}
-
-void CProcessFlowContext::StoreResult( TResultsMap& map, const char* name, const COperatorResult& result )
-{
-    TResultsMap::iterator it = map.find( name );
-    if( it != map.end() )
-    {
-        DebugError( "Resulat already exist");
-        return;
-    }
-
-    map[ name ] = &result;
-}
-
-Void CProcessFlowContext::StorePerTemplateResult( const CTemplate& t, const char* name, const COperatorResult& result )
-{
-    TPerTemplateResultsMap::iterator it = m_PerTemplateResults.find( t.GetName() );
-    if( it == m_PerTemplateResults.end() )
-    {
-        m_PerTemplateResults[ t.GetName() ] = TResultsMap();
-    }
-
-    StoreResult( m_PerTemplateResults[ t.GetName() ], name, result );
-}
-
-Void CProcessFlowContext::StoreGlobalResult( const char* name, const COperatorResult& result )
-{
-    StoreResult( m_GlobalResults, name, result );
-}
-
-const COperatorResult* CProcessFlowContext::GetPerTemplateResult( const CTemplate& t, const char* name ) const
-{
-    TPerTemplateResultsMap::const_iterator it1 = m_PerTemplateResults.find( t.GetName() );
-    if( it1 != m_PerTemplateResults.end() )
-    {
-        const TResultsMap& m = (*it1).second;
-        TResultsMap::const_iterator it2 = m.find( name );
-        if( it2 != m.end() )
-        {
-            return (*it2).second;
-        }
-    }
-
-    return NULL;
-}
-
-TOperatorResultMap CProcessFlowContext::GetPerTemplateResult( const char* name ) const
-{
-    TOperatorResultMap map;
-    TPerTemplateResultsMap::const_iterator it;
-    for( it = m_PerTemplateResults.begin(); it != m_PerTemplateResults.end(); ++it )
-    {
-        std::string tplName = (*it).first;
-
-        const TResultsMap& m = (*it).second;
-        TResultsMap::const_iterator it2 = m.find( name );
-        if( it2 != m.end() )
-        {
-            map[tplName] = (*it2).second;
-        }
-    }
-
-    return map;
-}
-
-const COperatorResult* CProcessFlowContext::GetGlobalResult( const char* name ) const
-{
-    TResultsMap::const_iterator it = m_GlobalResults.find( name );
-    if( it != m_GlobalResults.end() )
-    {
-        return (*it).second;
-    }
-
-    return NULL;
 }
