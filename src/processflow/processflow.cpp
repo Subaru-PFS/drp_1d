@@ -68,14 +68,26 @@ Bool CProcessFlow::ProcessWithoutEL( CProcessFlowContext& ctx, CTemplate::ECateg
             ctx.GetSpectrum().GetLambdaRange().GetBegin(), ctx.GetSpectrum().GetLambdaRange().GetEnd(), ctx.GetSpectrum().GetResolution());
 
 
+    // Remove Star category, and filter the list with regard to input variable CategoryFilter
+    TTemplateCategoryList   filteredTemplateCategoryList;
+    for( UInt32 i=0; i<ctx.GetParams().templateCategoryList.size(); i++ )
+    {
+        CTemplate::ECategory category = ctx.GetParams().templateCategoryList[i];
+        if( category == CTemplate::nCategory_Star )
+        {
+        }
+        else if(CategoryFilter == NSEpic::CTemplate::nCategory_None || CategoryFilter == category)
+        {
+                filteredTemplateCategoryList.push_back( category );
+        }
+    }
 
-    // Remove Star category
 
     if(ctx.GetParams().method  == CProcessFlowContext::nMethod_BlindSolve || ctx.GetParams().method  == CProcessFlowContext::nMethod_DecisionalTree7){
 
         COperatorBlindSolve blindSolve;
         CConstRef<CBlindSolveResult> blindsolveResult = blindSolve.Compute( ctx, ctx.GetSpectrum(), ctx.GetSpectrumWithoutContinuum(),
-                            ctx.GetTemplateCatalog(), ctx.GetParams().templateCategoryList,
+                            ctx.GetTemplateCatalog(), filteredTemplateCategoryList,
                             ctx.GetParams().lambdaRange, ctx.GetParams().redshiftRange, ctx.GetParams().redshiftStep,
                             ctx.GetParams().correlationExtremumCount, ctx.GetParams().overlapThreshold );
 
@@ -84,26 +96,20 @@ Bool CProcessFlow::ProcessWithoutEL( CProcessFlowContext& ctx, CTemplate::ECateg
         }
 
 
-    }else if(ctx.GetParams().method  == CProcessFlowContext::nMethod_FullSolve){
+    }else if(ctx.GetParams().method  == CProcessFlowContext::nMethod_FullSolve){ // todo: move Fullsolve method in a separate operator (same as blindsolve)
 
         const CTemplateCatalog& templateCatalog = ctx.GetTemplateCatalog();
 
-        for( UInt32 i=0; i<ctx.GetParams().templateCategoryList.size(); i++ )
+        for( UInt32 i=0; i<filteredTemplateCategoryList.size(); i++ )
         {
             CTemplate::ECategory category = ctx.GetParams().templateCategoryList[i];
-            if( category == CTemplate::nCategory_Star )
-            {
-            }
-            else if(CategoryFilter == NSEpic::CTemplate::nCategory_None || CategoryFilter == category)
-            {
-                for( UInt32 j=0; j<templateCatalog.GetTemplateCount( category ); j++ )
-                {
-                    const CTemplate& tpl = templateCatalog.GetTemplate( category, j );
-                    const CTemplate& tplWithoutCont = templateCatalog.GetTemplateWithoutContinuum( category, j );
 
-                    FullSolve( ctx, tpl, tplWithoutCont );
+            for( UInt32 j=0; j<templateCatalog.GetTemplateCount( category ); j++ )
+            {
+                const CTemplate& tpl = templateCatalog.GetTemplate( category, j );
+                const CTemplate& tplWithoutCont = templateCatalog.GetTemplateWithoutContinuum( category, j );
 
-                }
+                FullSolve( ctx, tpl, tplWithoutCont );
             }
         }
 
@@ -116,8 +122,7 @@ Bool CProcessFlow::ProcessWithoutEL( CProcessFlowContext& ctx, CTemplate::ECateg
 
 Bool CProcessFlow::ProcessDecisionalTree7( CProcessFlowContext& ctx )
 {
-    Log.LogInfo( "Process Decisional Tree 7(LambdaRange: %f-%f:%f)",
-            ctx.GetSpectrum().GetLambdaRange().GetBegin(), ctx.GetSpectrum().GetLambdaRange().GetEnd(), ctx.GetSpectrum().GetResolution());
+    Log.LogInfo( "Process Decisional Tree 7" );
 
 
     // Peak Detection
@@ -128,11 +133,11 @@ Bool CProcessFlow::ProcessDecisionalTree7( CProcessFlowContext& ctx )
     CPeakDetection peakDetection;
     CConstRef<CPeakDetectionResult> peakDetectionResult = peakDetection.Compute( ctx.GetSpectrum(), ctx.GetSpectrum().GetLambdaRange(), winsize, cut);
     ctx.StoreGlobalResult( "peakdetection", *peakDetectionResult );
-    Log.LogInfo( "Peak Detection output: %d peaks found", peakDetectionResult->PeakList.size());
+    Log.LogInfo( "DTree7 - Peak Detection output: %d peaks found", peakDetectionResult->PeakList.size());
 
     // check Peak Detection results
     if(peakDetectionResult->PeakList.size()<1){
-        Log.LogInfo( "No Peak found, switching to ProcessWithoutEL");
+        Log.LogInfo( "DTree7 - No Peak found, switching to ProcessWithoutEL");
         ctx.m_dtreepath = CProcessFlowContext::nDtreePath_BlindSolve;
         ctx.m_dtreepathnum = 1.1;
         return ProcessWithoutEL( ctx );
@@ -142,12 +147,12 @@ Bool CProcessFlow::ProcessDecisionalTree7( CProcessFlowContext& ctx )
     CRayDetection rayDetection;
     CConstRef<CRayDetectionResult> rayDetectionResult = rayDetection.Compute( ctx.GetSpectrum(), ctx.GetSpectrum().GetLambdaRange(), peakDetectionResult->PeakList, peakDetectionResult->EnlargedPeakList, cut, strongcut );
     ctx.StoreGlobalResult( "raycatalog", *rayDetectionResult );
-    Log.LogInfo( "Ray Detection output: %d ray(s) found", rayDetectionResult->RayCatalog.GetList().size());
+    Log.LogInfo( "DTree7 - Ray Detection output: %d ray(s) found", rayDetectionResult->RayCatalog.GetList().size());
 
     // check Ray Detection results
     Int32 nRaysDetected = rayDetectionResult->RayCatalog.GetList().size();
     if( nRaysDetected < 1){
-        Log.LogInfo( "Not ray found, switching to ProcessWithoutEL");
+        Log.LogInfo( "DTree7 - Not ray found, switching to ProcessWithoutEL");
         ctx.m_dtreepath = CProcessFlowContext::nDtreePath_BlindSolve;
         ctx.m_dtreepathnum = 1.11;
         return ProcessWithoutEL( ctx );
@@ -164,13 +169,13 @@ Bool CProcessFlow::ProcessDecisionalTree7( CProcessFlowContext& ctx )
 
         //check ray matching results
         if(rayMatchingResult->GetSolutionsListOverNumber(0).size()<1){
-            Log.LogInfo( "Not match found [1], switching to ProcessWithoutEL");
+            Log.LogInfo( "DTree7 - Not match found [1], switching to ProcessWithoutEL");
             ctx.m_dtreepath = CProcessFlowContext::nDtreePath_BlindSolve;
             ctx.m_dtreepathnum = 1.2;
             return ProcessWithoutEL( ctx );
         }
     }else{
-        Log.LogInfo( "Not match found  [0], switching to ProcessWithoutEL");
+        Log.LogInfo( "DTree7 - Not match found  [0], switching to ProcessWithoutEL");
         ctx.m_dtreepath = CProcessFlowContext::nDtreePath_BlindSolve;
         ctx.m_dtreepathnum = 1.21;
         return ProcessWithoutEL( ctx );
@@ -182,16 +187,16 @@ Bool CProcessFlow::ProcessDecisionalTree7( CProcessFlowContext& ctx )
     // match num >= 3, or no strong peaks
     if(matchNum >= 3 || (nStrongPeaks < 1 && matchNum >= 2)){
         if(matchNum >= 3){
-            Log.LogInfo( "match num >= 3");
+            Log.LogInfo( "DTree7 - match num >= 3");
             ctx.m_dtreepathnum = 2.0;
         }
         if(nStrongPeaks < 1 && matchNum >= 2){
-            Log.LogInfo( "n Strong Peaks < 1, MatchNum>=2");
+            Log.LogInfo( "DTree7 - n Strong Peaks < 1, MatchNum>=2");
             ctx.m_dtreepathnum = 2.1;
         }
-        Log.LogInfo( "compute merits on redshift candidates from ray matching" );
+        Log.LogInfo( "DTree7 - compute merits on redshift candidates from ray matching" );
         TFloat64List roundedRedshift = rayMatchingResult->GetRoundedRedshiftCandidatesOverNumber(matchNum-1, ctx.GetParams().redshiftStep);
-        Log.LogInfo( "(n candidates = %d)", roundedRedshift.size());
+        Log.LogInfo( "DTree7 - (n candidates = %d)", roundedRedshift.size());
         ctx.m_dtreepath = CProcessFlowContext::nDtreePath_OnlyFit;
         return ComputeMerits( ctx, roundedRedshift, CTemplate::nCategory_Emission);
     }
@@ -203,7 +208,7 @@ Bool CProcessFlow::ProcessDecisionalTree7( CProcessFlowContext& ctx )
 
     // use Strong peaks
     if(nStrongPeaks > 0){
-        Log.LogInfo( "Ray Matching with %d strong peaks", nStrongPeaks);
+        Log.LogInfo( "DTree7 - Ray Matching with %d strong peaks", nStrongPeaks);
         CRayMatching rayMatchingStrong;
         Int32 MinMatchNum = 1;
         Float64 tol = 0.002;
@@ -211,20 +216,20 @@ Bool CProcessFlow::ProcessDecisionalTree7( CProcessFlowContext& ctx )
         Int32 matchNumStrong = rayMatchingStrongResult->GetMaxMatchingNumber();
 
         if(matchNumStrong>1){
-            Log.LogInfo( "match num strong >= 2, compute merits on redshift candidates from strong ray matching");
+            Log.LogInfo( "DTree7 - match num strong >= 2, compute merits on redshift candidates from strong ray matching");
             TFloat64List roundedRedshift = rayMatchingStrongResult->GetRoundedRedshiftCandidatesOverNumber(matchNumStrong-1, ctx.GetParams().redshiftStep);
             ctx.m_dtreepath = CProcessFlowContext::nDtreePath_OnlyFit;
             ctx.m_dtreepathnum = 2.2;
             return ComputeMerits( ctx, roundedRedshift, CTemplate::nCategory_Emission);
         }else{
-            Log.LogInfo( "Not match found with strong lines, switching to ProcessWithoutEL (EZ: only_correlation_... equivalent)");
+            Log.LogInfo( "DTree7 - Not match found with strong lines, switching to ProcessWithoutEL (EZ: only_correlation_... equivalent)");
             ctx.m_dtreepath = CProcessFlowContext::nDtreePath_OnlyCorrelation;
             ctx.m_dtreepathnum = 3.0;
             return ProcessWithoutEL( ctx , CTemplate::nCategory_Emission); // this is the EZ: only_correlation_... probably equ. to Blindsolve with max corr peak selection on the results.
         }
     }
 
-    Log.LogInfo( "no other path found than switching to ProcessWithoutEL...");
+    Log.LogInfo( "DTree7 - no other path found than switching to ProcessWithoutEL...");
     ctx.m_dtreepath = CProcessFlowContext::nDtreePath_BlindSolve;
     ctx.m_dtreepathnum = 1.3;
     return ProcessWithoutEL( ctx );
@@ -334,6 +339,9 @@ bool CProcessFlow::ComputeMerits( CProcessFlowContext& ctx, const TFloat64List& 
 
 Bool CProcessFlow::FullSolve( CProcessFlowContext& ctx, const CTemplate& tpl, const CTemplate& tplWithoutCont )
 {
+    Log.LogInfo( "Process FullSolve deactivated, running FullSolveBrute instead... )");
+
+    /* // Deactivated: Todo: has to be moved in operator Fullsolve (same as blindsolve)
     const CSpectrum& spc = ctx.GetSpectrum();
     const CSpectrum& spcWithoutCont = ctx.GetSpectrumWithoutContinuum();
 
@@ -361,6 +369,8 @@ Bool CProcessFlow::FullSolve( CProcessFlowContext& ctx, const CTemplate& tpl, co
     CRef<CBlindSolveResult>  chisquareResults = new CBlindSolveResult();
     ctx.StorePerTemplateResult( tpl, "blindsolve", *chisquareResults );
     return true;
+    */
+    return FullSolveBrute( ctx, tpl, tplWithoutCont );
 }
 
 Bool CProcessFlow::FullSolveBrute( CProcessFlowContext& ctx, const CTemplate& tpl, const CTemplate& tplWithoutCont )

@@ -79,6 +79,7 @@ public:
     Float64                         m_dtreepathnum;
 
     static std::string              GetMethodName( EMethod method );
+    void                            SaveRedshift( const char* dir );
 
 private:
 

@@ -26,7 +26,7 @@ Void CBlindSolveResult::Save( const COperatorResultStore& store, std::ostream& s
     Float64 merit;
     std::string tplName;
 
-    GetBestCorrelationResult( store, redshift, merit, tplName );
+    GetBestFitResult( store, redshift, merit, tplName );
 
     stream <<  "#Spectrum\tRedshifts\tMerit\tTemplate"<< std::endl;
 
@@ -36,7 +36,7 @@ Void CBlindSolveResult::Save( const COperatorResultStore& store, std::ostream& s
                 << tplName << std::endl;
 }
 
-Bool CBlindSolveResult::GetBestCorrelationResult( const COperatorResultStore& store, Float64& redshift, Float64& merit, std::string& tplName ) const
+Bool CBlindSolveResult::GetBestFitResult( const COperatorResultStore& store, Float64& redshift, Float64& merit, std::string& tplName ) const
 {
     TOperatorResultMap correlationResults = store.GetPerTemplateResult("blindsolve.correlation");
     TOperatorResultMap meritResults = store.GetPerTemplateResult("blindsolve.merit");

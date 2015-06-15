@@ -149,7 +149,7 @@ Void COperatorResultStore::SaveAllResults( const char* dir ) const
 
             std::fstream outputStream;
             // Save result at root of output directory
-            CreateResultStorage( outputStream, bfs::path( resultName + ".csv"), bfs::path( dir ) );
+            CreateResultStorage( outputStream, bfs::path( resultName + ".csv"), bfs::path( dir ).append( m_SpectrumName ) );
             result->Save( *this, outputStream );
         }
     }
@@ -170,7 +170,7 @@ Void COperatorResultStore::SaveAllResults( const char* dir ) const
 
                 std::fstream outputStream;
                 // Save result in sub directories of output directory
-                CreateResultStorage( outputStream, bfs::path( templateName ).append( resultName + ".csv"), bfs::path( dir ) );
+                CreateResultStorage( outputStream, bfs::path( templateName ).append( resultName + ".csv"), bfs::path( dir ).append( m_SpectrumName ) );
                 result->Save( *this, outputStream );
             }
         }
