@@ -293,8 +293,8 @@ bool CProcessFlow::ComputeMerits( CProcessFlowContext& ctx, const TFloat64List& 
 
     for( UInt32 i=0; i<templateCategotyList.size(); i++ )
     {
-        Log.LogInfo( "Processing merits for template category: %s", CTemplate::GetCategoryName( templateCategotyList[i] ) );
-        Log.Indent();
+        //Log.LogInfo( "Processing merits for template category: %s", CTemplate::GetCategoryName( templateCategotyList[i] ) );
+        //Log.Indent();
 
         if( ctx.GetParams().templateCategoryList[i] == CTemplate::nCategory_Star )
         {

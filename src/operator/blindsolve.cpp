@@ -34,21 +34,15 @@ const CBlindSolveResult* COperatorBlindSolve::Compute(  COperatorResultStore& re
     for( UInt32 i=0; i<tplCategoryList.size(); i++ )
     {
         CTemplate::ECategory category = tplCategoryList[i];
-        if( category == CTemplate::nCategory_Star )
+
+        for( UInt32 j=0; j<tplCatalog.GetTemplateCount( category ); j++ )
         {
-        }
-        else
-        {
-            for( UInt32 j=0; j<tplCatalog.GetTemplateCount( category ); j++ )
-            {
-                const CTemplate& tpl = tplCatalog.GetTemplate( category, j );
-                const CTemplate& tplWithoutCont = tplCatalog.GetTemplateWithoutContinuum( category, j );
+            const CTemplate& tpl = tplCatalog.GetTemplate( category, j );
+            const CTemplate& tplWithoutCont = tplCatalog.GetTemplateWithoutContinuum( category, j );
 
-                BlindSolve( resultStore, spc, spcWithoutCont, tpl, tplWithoutCont, lambdaRange, redshiftsRange, redshiftStep, correlationExtremumCount, overlapThreshold );
+            BlindSolve( resultStore, spc, spcWithoutCont, tpl, tplWithoutCont, lambdaRange, redshiftsRange, redshiftStep, correlationExtremumCount, overlapThreshold );
 
-                storeResult = true;
-            }
-
+            storeResult = true;
         }
     }
 
