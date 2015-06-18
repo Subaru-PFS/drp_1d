@@ -21,6 +21,7 @@ public:
     virtual ~CPeakDetectionResult();
 
     Void Save( const COperatorResultStore& store, std::ostream& stream ) const;
+    Void SaveLine( const COperatorResultStore& store, std::ostream& stream ) const;
 
     TInt32RangeList PeakList;
     TInt32RangeList EnlargedPeakList;

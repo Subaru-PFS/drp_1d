@@ -18,13 +18,16 @@ class CPeakDetection : public CManagedObject
 
 public:
 
-    CPeakDetection();
+    CPeakDetection( Float64 windowSize = 250.0, Float64 cut = 5.0, UInt32 medianSmoothHalfWidth = 1, UInt32 enlargeRate = 2.0 );
     ~CPeakDetection();
 
-    const CPeakDetectionResult* Compute( const CSpectrum& spectrum, const TLambdaRange& lambdaRange,
-                                         Float64 windowSize = 250.0, Float64 cut = 5.0, UInt32 medianSmoothHalfWidth = 1, UInt32 enlargeRate = 2.0 );
+    const CPeakDetectionResult* Compute( const CSpectrum& spectrum, const TLambdaRange& lambdaRange);
 
 private:
+    Float64 m_winsize;
+    Float64 m_cut;
+    UInt32 m_medianSmoothHalfWidth;
+    UInt32 m_enlargeRate;
 
     Void FindPossiblePeaks( const CSpectrumAxis& smoothedFluxAxis, const CSpectrumAxis& spectralAxis, UInt32 windowSampleCount, Float64 cut, TInt32RangeList& peakList );
     Void RedefineBorders( TInt32RangeList& peakList, const CSpectrumAxis& waves, const CSpectrumAxis& smoothFluxAxis, const CSpectrumAxis& fluxAxis );

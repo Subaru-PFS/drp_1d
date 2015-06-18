@@ -19,6 +19,7 @@ public:
     virtual ~CChisquareResult();
 
     Void Save( const COperatorResultStore& store, std::ostream& stream ) const;
+    Void SaveLine( const COperatorResultStore& store, std::ostream& stream ) const;
     Void Load( std::istream& stream );
 
     TFloat64List            Redshifts;

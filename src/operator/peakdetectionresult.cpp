@@ -18,6 +18,11 @@ CPeakDetectionResult::~CPeakDetectionResult()
 
 Void CPeakDetectionResult::Save( const COperatorResultStore& store, std::ostream& stream ) const
 {
-
-
+    stream << "not implemented" << std::endl;
 }
+
+Void CPeakDetectionResult::SaveLine( const COperatorResultStore& store, std::ostream& stream ) const
+{
+    stream << "not implemented" << std::endl;
+}
+

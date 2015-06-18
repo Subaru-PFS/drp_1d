@@ -2,7 +2,7 @@
 
 #include <epic/core/common/datatypes.h>
 #include <epic/redshift/spectrum/spectrum.h>
-#include <epic/redshift/operator/blindsolveresult.h>
+#include <epic/redshift/method/blindsolveresult.h>
 #include <epic/redshift/processflow/processflow.h>
 #include <epic/redshift/processflow/context.h>
 #include <epic/core/common/ref.h>

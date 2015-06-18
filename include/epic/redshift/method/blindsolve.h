@@ -3,7 +3,7 @@
 
 #include <epic/core/common/managedobject.h>
 #include <epic/core/common/datatypes.h>
-#include <epic/redshift/operator/blindsolveresult.h>
+#include <epic/redshift/method/blindsolveresult.h>
 #include <epic/redshift/spectrum/template/template.h>
 
 namespace NSEpic

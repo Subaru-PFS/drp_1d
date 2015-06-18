@@ -44,12 +44,15 @@ public:
     TOperatorResultMap      GetPerTemplateResult( const char* name ) const;
     const COperatorResult*  GetGlobalResult( const char* name ) const;
 
+    Void SaveRedshiftResultHeader( const char* dir );
+    Void SaveRedshiftResult( const char* dir );
     Void SaveAllResults( const char* dir ) const;
 
     Void PushScope( const char* name );
     Void PopScope();
 
     std::string GetCurrentScopeName() const;
+    std::string GetScope(CConstRef<COperatorResult>  result) const;
 
 protected:
 

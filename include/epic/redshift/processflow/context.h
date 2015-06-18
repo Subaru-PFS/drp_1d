@@ -41,15 +41,6 @@ public:
         nMethod_None = -1
     };
 
-    enum EDTREEPATH
-    {
-        nDtreePath_None = -1,
-        nDtreePath_BlindSolve = 1,
-        nDtreePath_OnlyFit = 2,
-        nDtreePath_FullSolve = 3,
-        nDtreePath_OnlyCorrelation = 4,
-    };
-
     struct SParam
     {
         SParam();
@@ -75,11 +66,8 @@ public:
     const CTemplateCatalog&         GetTemplateCatalog() const;
     const CRayCatalog&              GetRayCatalog() const;
     const SParam&                   GetParams() const;
-    Int32                           m_dtreepath;
-    Float64                         m_dtreepathnum;
 
     static std::string              GetMethodName( EMethod method );
-    void                            SaveRedshift( const char* dir );
 
 private:
 

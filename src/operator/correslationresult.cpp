@@ -107,3 +107,8 @@ Void CCorrelationResult::Save( const COperatorResultStore& store, std::ostream& 
         stream <<  Redshifts[i] << "\t" << std::scientific << Correlation[i] << std::fixed << "\t" << Overlap[i] << std::endl;
     }
 }
+
+Void CCorrelationResult::SaveLine( const COperatorResultStore& store, std::ostream& stream ) const
+{
+    stream << "tCorrelationResult" << "\t" << Redshifts.size() << std::endl;
+}

@@ -27,3 +27,10 @@ Void CRayDetectionResult::Save( const COperatorResultStore& store, std::ostream&
     }
 
 }
+
+
+
+Void CRayDetectionResult::SaveLine( const COperatorResultStore& store, std::ostream& stream ) const
+{
+    stream << "not implemented" << std::endl;
+}

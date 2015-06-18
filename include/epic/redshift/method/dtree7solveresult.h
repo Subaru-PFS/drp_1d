@@ -1,5 +1,5 @@
-#ifndef _REDSHIFT_OPERATOR_RAYDETECTIONRESULT_
-#define _REDSHIFT_OPERATOR_RAYDETECTIONRESULT_
+#ifndef _REDSHIFT_OPERATOR_DTREE7SOLVERESULT_
+#define _REDSHIFT_OPERATOR_DTREE7SOLVERESULT_
 
 #include <epic/redshift/operator/result.h>
 #include <epic/core/common/datatypes.h>
@@ -10,20 +10,21 @@
 namespace NSEpic
 {
 
-class CRayDetectionResult : public COperatorResult
+class CProcessFlowContext;
+
+class CDTree7SolveResult : public COperatorResult
 {
 
-    DEFINE_MANAGED_OBJECT( CRayDetectionResult )
+    DEFINE_MANAGED_OBJECT( CDTree7SolveResult )
 
 public:
 
-    CRayDetectionResult();
-    virtual ~CRayDetectionResult();
+    CDTree7SolveResult();
+    virtual ~CDTree7SolveResult();
 
     Void Save( const COperatorResultStore& store, std::ostream& stream ) const;
     Void SaveLine( const COperatorResultStore& store, std::ostream& stream ) const;
 
-    CRayCatalog RayCatalog;
 };
 
 

@@ -108,3 +108,8 @@ Void CChisquareResult::Save( const COperatorResultStore& store, std::ostream& st
         stream <<  Redshifts[i] << "\t" << std::scientific << ChiSquare[i] << std::fixed << "\t" << Overlap[i] << std::endl;
     }
 }
+
+Void CChisquareResult::SaveLine( const COperatorResultStore& store, std::ostream& stream ) const
+{
+    stream << "ChisquareResult" << "\t" << Redshifts.size() << std::endl;
+}

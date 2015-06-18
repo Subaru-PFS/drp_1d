@@ -11,7 +11,7 @@
 #include <epic/core/log/log.h>
 #include <epic/core/debug/assert.h>
 
-#include <epic/redshift/operator/blindsolveresult.h>
+#include <epic/redshift/method/blindsolveresult.h>
 #include <epic/redshift/operator/raymatchingresult.h>
 
 #include <stdio.h>
@@ -64,9 +64,6 @@ bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath,
     m_Spectrum = new CSpectrum();
 
     m_Params = params;
-
-    m_dtreepath = nDtreePath_None;
-    m_dtreepathnum = -1.0;
 
     CSpectrumIOGenericReader reader;
     Bool rValue = reader.Read( spectrumPath, *m_Spectrum );
@@ -175,91 +172,6 @@ std::string CProcessFlowContext::GetMethodName( EMethod method )
     return methodStr;
 }
 
-void CProcessFlowContext::SaveRedshift( const char* dir )
-{
-    // Append best redshift, best merit and selected template
-    {
-        std::fstream outputStream;
-        // Save result at root of output directory
-        CreateResultStorage( outputStream, bfs::path( "redshift.csv" ), bfs::path( dir ) );
-
-        // Dump output of blindsolve
-        if(m_Params.method == CProcessFlowContext::nMethod_BlindSolve)
-        {
-            Float64 redshift;
-            Float64 merit;
-            std::string tplName;
-
-            const CBlindSolveResult* blindSolveResult = (CBlindSolveResult*)GetGlobalResult( "blindsolve" );
-            blindSolveResult->GetBestFitResult( *this, redshift, merit, tplName );
-
-
-            outputStream  << m_SpectrumName  << "\t"
-                        << redshift << "\t"
-                        << merit << "\t"
-                        << tplName << std::endl;
-        }
-        // Dump output of full solve
-        else if(m_Params.method == CProcessFlowContext::nMethod_FullSolve)
-        {
-            Float64 redshift;
-            Float64 merit;
-            std::string tplName;
-
-            const CBlindSolveResult* blindSolveResult = (CBlindSolveResult*)GetGlobalResult( "blindsolve" );
-            blindSolveResult->GetBestCorrelationPeakResult( *this, redshift, merit, tplName );
-
-
-            outputStream  << m_SpectrumName  << "\t"
-                        << redshift << "\t"
-                        << merit << "\t"
-                        << tplName << std::endl;
-        }// Dump output of DecisionalTree7
-        else if(m_Params.method == CProcessFlowContext::nMethod_DecisionalTree7)
-        {
-            Float64 redshift;
-            Float64 merit;
-            std::string tplName;
-
-            const CBlindSolveResult* blindSolveResult = (CBlindSolveResult*)GetGlobalResult( "blindsolve" );
-            if(m_dtreepath == CProcessFlowContext::nDtreePath_BlindSolve || m_dtreepath == CProcessFlowContext::nDtreePath_OnlyFit ){
-                blindSolveResult->GetBestFitResult( *this, redshift, merit, tplName );
-            }else if(m_dtreepath == CProcessFlowContext::nDtreePath_OnlyCorrelation){
-                blindSolveResult->GetBestCorrelationPeakResult( *this, redshift, merit, tplName );
-            }else{
-                redshift = -1.0;
-                merit = -1.0;
-                tplName = "None";
-            }
-
-            outputStream  << m_SpectrumName  << "\t"
-                        << redshift << "\t"
-                        << merit << "\t"
-                        << tplName << "\t"
-                        << m_dtreepathnum  << "\t"
-                        << std::endl;
-        }
-        // Dump output of raymatching
-        else if(m_Params.method  == CProcessFlowContext::nMethod_LineMatching)
-        {
-            Float64 redshift = -1;
-            Int32 matchingNum = -1;
-
-            const CRayMatchingResult* rayMatchingResult = (CRayMatchingResult*)GetGlobalResult( "raymatching" );
-            if(rayMatchingResult != NULL){
-                rayMatchingResult->GetBestRedshift( redshift, matchingNum );
-            }
-
-            outputStream.precision(6);
-            outputStream  << m_SpectrumName  << "\t"
-                        << redshift << "\t"
-                        << matchingNum << "\t"
-                        << "Ray Matching" << std::endl;
-        }
-
-    }
-    return;
-}
 
 const CSpectrum& CProcessFlowContext::GetSpectrum() const
 {

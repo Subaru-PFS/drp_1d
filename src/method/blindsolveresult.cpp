@@ -1,4 +1,4 @@
-#include <epic/redshift/operator/blindsolveresult.h>
+#include <epic/redshift/method/blindsolveresult.h>
 
 #include <epic/redshift/processflow/context.h>
 #include <epic/redshift/operator/chisquareresult.h>
@@ -36,10 +36,28 @@ Void CBlindSolveResult::Save( const COperatorResultStore& store, std::ostream& s
                 << tplName << std::endl;
 }
 
+Void CBlindSolveResult::SaveLine( const COperatorResultStore& store, std::ostream& stream ) const
+{
+    Float64 redshift;
+    Float64 merit;
+    std::string tplName;
+
+    GetBestFitResult( store, redshift, merit, tplName );
+    stream  << store.GetSpectrumName() << "\t"
+                << redshift << "\t"
+                << merit << "\t"
+                << tplName << "\t"
+                << "BlindSolve" << std::endl;
+}
+
 Bool CBlindSolveResult::GetBestFitResult( const COperatorResultStore& store, Float64& redshift, Float64& merit, std::string& tplName ) const
 {
-    TOperatorResultMap correlationResults = store.GetPerTemplateResult("blindsolve.correlation");
-    TOperatorResultMap meritResults = store.GetPerTemplateResult("blindsolve.merit");
+    std::string scope_corr = store.GetScope( this ) + "blindsolve.correlation";
+    TOperatorResultMap correlationResults = store.GetPerTemplateResult( scope_corr.c_str() );
+    //TOperatorResultMap correlationResults = store.GetPerTemplateResult("blindsolve.correlation");
+
+    std::string scope_merit = store.GetScope( this ) + "blindsolve.merit";
+    TOperatorResultMap meritResults = store.GetPerTemplateResult( scope_merit.c_str() );
 
 
     Int32 maxIndex = 0;
@@ -66,44 +84,6 @@ Bool CBlindSolveResult::GetBestFitResult( const COperatorResultStore& store, Flo
     {
         redshift = tmpRedshift;
         merit = tmpMerit;
-        tplName = tmpTplName;
-        return true;
-    }
-
-    return false;
-
-}
-
-Bool CBlindSolveResult::GetBestCorrelationPeakResult( const COperatorResultStore& store, Float64& redshift, Float64& merit, std::string& tplName ) const
-{
-    TOperatorResultMap correlationResults = store.GetPerTemplateResult("blindsolve.correlation");
-    TOperatorResultMap meritResults = store.GetPerTemplateResult("blindsolve.merit");
-
-
-    Int32 maxIndex = 0;
-    Float64 tmpCorr = DBL_MIN ;
-    Float64 tmpRedshift = 0.0;
-    std::string tmpTplName;
-
-    for( TOperatorResultMap::const_iterator it = correlationResults.begin(); it != correlationResults.end(); it++ )
-    {
-        const CCorrelationResult* corrResult = (const CCorrelationResult*)(const COperatorResult*)(*it).second;
-        for( Int32 i=0; i<corrResult->Correlation.size(); i++ )
-        {
-            if( corrResult->Correlation[i] > tmpCorr && corrResult->Status[i] == COperator::nStatus_OK )
-            {
-                tmpCorr = corrResult->Correlation[i];
-                tmpRedshift = corrResult->Redshifts[i];
-                tmpTplName = (*it).first;
-            }
-        }
-    }
-
-
-    if( tmpCorr > DBL_MIN )
-    {
-        redshift = tmpRedshift;
-        merit = tmpCorr;
         tplName = tmpTplName;
         return true;
     }

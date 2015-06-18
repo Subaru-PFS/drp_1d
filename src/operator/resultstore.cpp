@@ -5,6 +5,7 @@
 
 #include <fstream>
 
+
 using namespace NSEpic;
 
 namespace bfs = boost::filesystem;
@@ -137,6 +138,33 @@ void COperatorResultStore::CreateResultStorage( std::fstream& stream, const bfs:
 
 }
 
+void COperatorResultStore::SaveRedshiftResult( const char* dir )
+{
+    // Append best redshift result line to output file
+    {
+        std::fstream outputStream;
+        // Save result at root of output directory
+        CreateResultStorage( outputStream, bfs::path( "redshift.csv" ), bfs::path( dir ) );
+
+        CConstRef<COperatorResult>  result = GetGlobalResult( "redshiftresult" );
+
+        result->SaveLine( *this, outputStream );
+    }
+}
+
+void COperatorResultStore::SaveRedshiftResultHeader( const char* dir )
+{
+    // Append best redshift result line to output file
+    {
+        std::fstream outputStream;
+        // Save result at root of output directory
+        CreateResultStorage( outputStream, bfs::path( "redshift.csv" ), bfs::path( dir ) );
+
+
+        outputStream <<  "#Spectrum\tRedshifts\tMerit\tTemplate\tMethod/Path"<< std::endl;
+    }
+}
+
 Void COperatorResultStore::SaveAllResults( const char* dir ) const
 {
     // Store global result
@@ -206,4 +234,28 @@ Void COperatorResultStore::PushScope( const char* name )
 Void COperatorResultStore::PopScope()
 {
     m_ScopeStack.pop_back();
+}
+
+
+std::string COperatorResultStore::GetScope(CConstRef<COperatorResult>  result) const
+{
+    std::string n="";
+
+    TResultsMap::const_iterator it;
+    for( it=m_GlobalResults.begin(); it != m_GlobalResults.end(); it++ )
+    {
+        CConstRef<COperatorResult>  r = (*it).second;
+        if(result == r){
+            std::string s = (*it).first;
+
+            std::size_t found = s.rfind(".");
+            if (found!=std::string::npos){
+                n = s.substr(0,found);
+                n = n.append(".");
+            }
+            break;
+        }
+    }
+
+    return n;
 }

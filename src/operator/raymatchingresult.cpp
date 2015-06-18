@@ -78,6 +78,11 @@ Void CRayMatchingResult::Save( const COperatorResultStore& store, std::ostream& 
     return;
 }
 
+Void CRayMatchingResult::SaveLine( const COperatorResultStore& store, std::ostream& stream ) const
+{
+
+}
+
 
 Bool CRayMatchingResult::GetBestRedshift(Float64& Redshift, Int32& MatchingNumber) const
 {

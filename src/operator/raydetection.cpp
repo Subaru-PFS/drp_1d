@@ -15,25 +15,44 @@
 using namespace NSEpic;
 IMPLEMENT_MANAGED_OBJECT(CRayDetection)
 
-CRayDetection::CRayDetection()
+//CRayDetection::CRayDetection()
+//{
+//    FWHM_FACTOR = 2.35;
+
+//    // detect possible peaks
+//    m_winsize = 250.0;
+//    m_minsize = 3;
+//    m_maxsize = 70;
+
+//    cut = 5.0;
+//    strongcut = 2.0;
+//}
+
+CRayDetection::CRayDetection(Float64 cut, Float64 strongcut, Float64 winsize, Float64 minsize, Float64 maxsize)
 {
     FWHM_FACTOR = 2.35;
+
+    // detect possible peaks
+    m_winsize = winsize;
+    m_minsize = minsize;
+    m_maxsize = maxsize;
+    m_cut = cut;
+    m_strongcut = strongcut;
+
+    // euclid overrides
+    m_maxsize = 110;
 }
+
 
 CRayDetection::~CRayDetection()
 {
 
 }
 
-const CRayDetectionResult* CRayDetection::Compute( const CSpectrum& spectrum, const TLambdaRange& lambdaRange, const TInt32RangeList& resPeaks, const TInt32RangeList& resPeaksEnlarged , Float64 cut, Float64 strongcut)
+const CRayDetectionResult* CRayDetection::Compute( const CSpectrum& spectrum, const TLambdaRange& lambdaRange, const TInt32RangeList& resPeaks, const TInt32RangeList& resPeaksEnlarged)
 {
     const CSpectrum& spc = spectrum;
     const CSpectrumFluxAxis fluxAxis = spc.GetFluxAxis();
-
-    // detect possible peaks
-    Float64 winsize = 250.0;
-    Float64 minsize = 3;
-    Float64 maxsize = 70;
 
     UInt32 nPeaks = resPeaks.size();
 
@@ -71,10 +90,10 @@ const CRayDetectionResult* CRayDetection::Compute( const CSpectrum& spectrum, co
                 toAdd = false;
             }else{
                 Float64 fwhm = FWHM_FACTOR*gaussWidth;
-                if(fwhm<minsize){
+                if(fwhm<m_minsize){
                     toAdd = false;
                 }
-                if(fwhm>maxsize){
+                if(fwhm>m_maxsize){
                     toAdd = false;
                 }
             }
@@ -107,13 +126,13 @@ const CRayDetectionResult* CRayDetection::Compute( const CSpectrum& spectrum, co
         Int32 force = 1; //weak by default
         Float64 ratioAmp = -1.0; //cut = -1.0 by default
         if(toAdd){
-            ratioAmp = ComputeFluxes(spc, winsize, resPeaks[j]);
-            if(ratioAmp<cut){
+            ratioAmp = ComputeFluxes(spc, m_winsize, resPeaks[j]);
+            if(ratioAmp<m_cut){
                 toAdd = false;
                 // add this peak range to retest list
                 retestPeaks.push_back(resPeaks[j]);
                 retestGaussParams.push_back(SGaussParams(gaussPos, gaussAmp, gaussWidth));
-            }else if(ratioAmp>cut*strongcut){
+            }else if(ratioAmp>m_cut*m_strongcut){
                 force = 2; //strong
             }
         }
@@ -134,7 +153,7 @@ const CRayDetectionResult* CRayDetection::Compute( const CSpectrum& spectrum, co
         retest_flag = true;
     }
     while(retest_flag){
-        retest_flag = Retest(spectrum, result, retestPeaks,  retestGaussParams, result->RayCatalog.GetFilteredList(CRay::nType_Emission, CRay::nForce_Strong), winsize, cut );
+        retest_flag = Retest(spectrum, result, retestPeaks,  retestGaussParams, result->RayCatalog.GetFilteredList(CRay::nType_Emission, CRay::nForce_Strong), m_winsize, m_cut );
     }
 
     return result;

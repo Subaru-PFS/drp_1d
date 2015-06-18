@@ -103,13 +103,13 @@ void CRedshiftRayDetectionTestCase::EzValidationTest()
         Float64 cut = 5.0;
         Float64 strongcut = 2.0;
 
-        CPeakDetection peakDetection;
-        CConstRef<CPeakDetectionResult> peakDetectionResult = peakDetection.Compute( s, s.GetLambdaRange(), winsize, cut);
+        CPeakDetection peakDetection(winsize, cut);
+        CConstRef<CPeakDetectionResult> peakDetectionResult = peakDetection.Compute( s, s.GetLambdaRange() );
 
 
         // detected rays
-        CRayDetection rayDetection;
-        CConstRef<CRayDetectionResult> rayDetectionResult = rayDetection.Compute( s, s.GetLambdaRange(), peakDetectionResult->PeakList, peakDetectionResult->EnlargedPeakList , cut, strongcut);
+        CRayDetection rayDetection(cut, strongcut);
+        CConstRef<CRayDetectionResult> rayDetectionResult = rayDetection.Compute( s, s.GetLambdaRange(), peakDetectionResult->PeakList, peakDetectionResult->EnlargedPeakList);
 
         //load reference results
         TFloat64List rayPosList = LoadDetectedRayPositions(inputrefdetectionresults.c_str());

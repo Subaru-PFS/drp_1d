@@ -33,8 +33,8 @@ void CRedshiftPeakDetectionTestCase::Compute()
     CPPUNIT_ASSERT_MESSAGE(  "load fits", retVal == true);
 
     TLambdaRange lambdaRange = s.GetLambdaRange();
-    CPeakDetection detection;
-    CConstRef<CPeakDetectionResult> peakDetectionResult = detection.Compute( s, lambdaRange, 500.0, 15, 1, 0); //using winsize=500 and cut=15 so that 3 only peaks are detected in the test signal for sure
+    CPeakDetection detection(500.0, 15, 1, 0);
+    CConstRef<CPeakDetectionResult> peakDetectionResult = detection.Compute( s, lambdaRange); //using winsize=500 and cut=15 so that 3 only peaks are detected in the test signal for sure
     CPPUNIT_ASSERT_MESSAGE( "compute detection" , retVal == true );
     const TInt32RangeList& resPeaks = peakDetectionResult->PeakList;
 

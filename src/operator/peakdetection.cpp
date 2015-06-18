@@ -13,9 +13,12 @@
 using namespace NSEpic;
 IMPLEMENT_MANAGED_OBJECT(CPeakDetection)
 
-CPeakDetection::CPeakDetection()
+CPeakDetection::CPeakDetection(Float64 windowSize, Float64 cut, UInt32 medianSmoothHalfWidth, UInt32 enlargeRate)
 {
-
+    m_winsize = windowSize;
+    m_cut = cut;
+    m_medianSmoothHalfWidth = medianSmoothHalfWidth;
+    m_enlargeRate = enlargeRate;
 }
 
 CPeakDetection::~CPeakDetection()
@@ -23,7 +26,7 @@ CPeakDetection::~CPeakDetection()
 
 }
 
-const CPeakDetectionResult* CPeakDetection::Compute( const CSpectrum& spectrum, const TLambdaRange& lambdaRange, Float64 windowSize, Float64 cut, UInt32 medianSmoothHalfWidth, UInt32 enlargeRate )
+const CPeakDetectionResult* CPeakDetection::Compute( const CSpectrum& spectrum, const TLambdaRange& lambdaRange)
 {
     CPeakDetectionResult* result = new CPeakDetectionResult();
 
@@ -32,15 +35,15 @@ const CPeakDetectionResult* CPeakDetection::Compute( const CSpectrum& spectrum, 
 
     CSpectrumFluxAxis smoothedFluxAxis = fluxAxis;
 
-    if( medianSmoothHalfWidth  )
+    if( m_medianSmoothHalfWidth  )
     {
-        smoothedFluxAxis.ApplyMedianSmooth( medianSmoothHalfWidth );
+        smoothedFluxAxis.ApplyMedianSmooth( m_medianSmoothHalfWidth );
     }
 
-    UInt32 windowSampleCount = windowSize / spectrum.GetResolution();
+    UInt32 windowSampleCount = m_winsize / spectrum.GetResolution();
 
     TInt32RangeList peaksBorders;
-    FindPossiblePeaks( smoothedFluxAxis, spectralAxis, windowSampleCount, cut, peaksBorders );
+    FindPossiblePeaks( smoothedFluxAxis, spectralAxis, windowSampleCount, m_cut, peaksBorders );
 
     // No Peak detected, exit
     if( peaksBorders.size() == 0 )
@@ -52,11 +55,11 @@ const CPeakDetectionResult* CPeakDetection::Compute( const CSpectrum& spectrum, 
 
     result->PeakList = peaksBorders;
     TInt32RangeList peaksBordersEnlarged= peaksBorders;
-    if( enlargeRate )
+    if( m_enlargeRate )
     {
         for( UInt32 i=0; i<peaksBorders.size(); i++ )
         {
-            TInt32Range fitRange = FindGaussianFitStartAndStop( i, peaksBorders, enlargeRate, spectralAxis.GetSamplesCount() );
+            TInt32Range fitRange = FindGaussianFitStartAndStop( i, peaksBorders, m_enlargeRate, spectralAxis.GetSamplesCount() );
             peaksBordersEnlarged[i] = fitRange;
         }
     }

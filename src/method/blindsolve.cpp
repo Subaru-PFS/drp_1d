@@ -1,4 +1,4 @@
-#include <epic/redshift/operator/blindsolve.h>
+#include <epic/redshift/method/blindsolve.h>
 
 #include <epic/core/debug/assert.h>
 #include <epic/redshift/spectrum/template/catalog.h>

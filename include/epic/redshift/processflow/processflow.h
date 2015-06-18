@@ -31,13 +31,13 @@ public:
 private:
 
     Bool ProcessWithoutEL(CProcessFlowContext& ctx , NSEpic::CTemplate::ECategory CategoryFilter = NSEpic::CTemplate::nCategory_None);
-    Bool ProcessLineMatching( CProcessFlowContext& ctx );
-    Bool ProcessDecisionalTree7( CProcessFlowContext& ctx );
+    Bool Blindsolve(CProcessFlowContext& ctx , NSEpic::CTemplate::ECategory CategoryFilter = NSEpic::CTemplate::nCategory_None);
+    Bool Fullsolve(CProcessFlowContext& ctx , NSEpic::CTemplate::ECategory CategoryFilter = NSEpic::CTemplate::nCategory_None);
+    //Bool Chisolve(CProcessFlowContext& ctx , TFloat64List& redshifts, NSEpic::CTemplate::ECategory CategoryFilter = NSEpic::CTemplate::nCategory_None);
+    //Bool Corrsolve(CProcessFlowContext& ctx , NSEpic::CTemplate::ECategory CategoryFilter = NSEpic::CTemplate::nCategory_None);
+    Bool LineMatching( CProcessFlowContext& ctx );
+    Bool DecisionalTree7( CProcessFlowContext& ctx );
 
-    bool ComputeMerits( CProcessFlowContext& ctx, const TFloat64List& redshifts, CTemplate::ECategory CategoryFilter = NSEpic::CTemplate::nCategory_None);
-
-    Bool FullSolve( CProcessFlowContext& ctx, const CTemplate& tpl, const CTemplate& tplWithoutCont  );
-    Bool FullSolveBrute( CProcessFlowContext& ctx, const CTemplate& tpl, const CTemplate& tplWithoutCont  );
 };
 
 
