@@ -28,11 +28,11 @@ IMPLEMENT_MANAGED_OBJECT( CProcessFlowContext )
 
 CProcessFlowContext::SParam::SParam()
 {
-    redshiftRange = TFloat64Range( 0.0, 3.0 );
+    redshiftRange = TFloat64Range( 0.0, 5.0 );
     redshiftStep = 0.0001;
-    lambdaRange = TFloat64Range( 3800.0, 12500.0 );
+    lambdaRange = TFloat64Range( 3000.0, 9600.0 );
     smoothWidth = 0;
-    overlapThreshold = 0.9;
+    overlapThreshold = 1.0;
     correlationExtremumCount = 5;
 
     //method = nMethod_LineMatching;

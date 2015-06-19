@@ -39,7 +39,7 @@ COperatorDTree7Solve::COperatorDTree7Solve()
 {
     // Peak Detection
     m_winsize = 250.0;
-    m_cut = 4.0;
+    m_cut = 5.0;
     m_strongcut = 2.0;
 
     // Line Matching
