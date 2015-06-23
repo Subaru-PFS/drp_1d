@@ -40,7 +40,7 @@ CRayDetection::CRayDetection(Float64 cut, Float64 strongcut, Float64 winsize, Fl
     m_strongcut = strongcut;
 
     // euclid overrides
-    m_maxsize = 110;
+    //m_maxsize = 110;
 }
 
 

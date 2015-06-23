@@ -100,6 +100,8 @@ void CRedshiftRayDetectionTestCase::EzValidationTest()
 
         // detect possible peaks
         Float64 winsize = 250.0;
+        Float64 minsize = 3.0;
+        Float64 maxsize = 70.0;
         Float64 cut = 5.0;
         Float64 strongcut = 2.0;
 
@@ -108,7 +110,7 @@ void CRedshiftRayDetectionTestCase::EzValidationTest()
 
 
         // detected rays
-        CRayDetection rayDetection(cut, strongcut);
+        CRayDetection rayDetection(cut, strongcut, winsize, minsize, maxsize);
         CConstRef<CRayDetectionResult> rayDetectionResult = rayDetection.Compute( s, s.GetLambdaRange(), peakDetectionResult->PeakList, peakDetectionResult->EnlargedPeakList);
 
         //load reference results
