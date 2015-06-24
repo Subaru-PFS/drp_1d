@@ -12,6 +12,7 @@ namespace NSEpicTest
 class CRedshiftRayDetectionTestCase : public CppUnit::TestCase
 {
     CPPUNIT_TEST_SUITE(CRedshiftRayDetectionTestCase);
+    CPPUNIT_TEST(SyntheticValidationTest);
     CPPUNIT_TEST(EzValidationTest);
     CPPUNIT_TEST_SUITE_END();
 
@@ -24,6 +25,7 @@ private:
 
     NSEpic::TFloat64List LoadDetectedRayPositions( const char* filePath );
     void EzValidationTest();
+    void SyntheticValidationTest();
 
 };
 

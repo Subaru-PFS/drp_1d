@@ -116,7 +116,15 @@ const CRayDetectionResult* CRayDetection::Compute( const CSpectrum& spectrum, co
             if(gaussAmp_with_cont/max_value <= 0.65 || gaussAmp_with_cont/max_value >= 1.35){
                 toAdd = false;
             }
-            if(fabs(gaussPos-spc.GetSpectralAxis()[max_index])>3.*spc.GetResolution()){
+            // check that gaussPos vs position of the max.
+            //reg. sampling, TAG: IRREGULAR_SAMPLING
+            //if(fabs(gaussPos-spc.GetSpectralAxis()[max_index])>3.*spc.GetResolution()){
+            //    toAdd = false;
+            //}
+            // irregular sampling
+            Float64 error3samples = (spc.GetSpectralAxis()[max_index+3]-spc.GetSpectralAxis()[max_index-3])/2.0;
+            Float64 diffPos = fabs(gaussPos-spc.GetSpectralAxis()[max_index]);
+            if(diffPos > error3samples){
                 toAdd = false;
             }
 
@@ -162,6 +170,7 @@ const CRayDetectionResult* CRayDetection::Compute( const CSpectrum& spectrum, co
 Float64 CRayDetection::ComputeFluxes(const CSpectrum& spectrum, Float64 winsize, TInt32Range range, TFloat64List mask){
     const CSpectrum& spc = spectrum;
     const CSpectrumFluxAxis fluxAxis = spc.GetFluxAxis();
+    const CSpectrumSpectralAxis specAxis = spc.GetSpectralAxis();
 
     //if no mask, then set it to 1
     if(mask.size()==0){
@@ -184,10 +193,14 @@ Float64 CRayDetection::ComputeFluxes(const CSpectrum& spectrum, Float64 winsize,
 
     // strong/weak test to do
     const Float64* fluxData = fluxAxis.GetSamples();
-    Int32 windowSampleCount = winsize / spc.GetResolution();
     CMedian<Float64> medianProcessor;
-    int left = max(0, (Int32)(max_index-windowSampleCount/2.0+0.5) ) ;
-    int right = min((Int32)fluxAxis.GetSamplesCount()-1, (Int32)(max_index + windowSampleCount/2.0) )+1;
+    //reg. sampling, TAG: IRREGULAR_SAMPLING
+    //Int32 windowSampleCount = winsize / spc.GetResolution();
+    //int left = max(0, (Int32)(max_index-windowSampleCount/2.0+0.5) ) ;
+    //int right = min((Int32)fluxAxis.GetSamplesCount()-1, (Int32)(max_index + windowSampleCount/2.0) )+1;
+    //irreg. sampling
+    int left = max(0, specAxis.GetIndexAtWaveLength(specAxis[max_index]-winsize/2.0) );
+    int right = min((Int32)fluxAxis.GetSamplesCount()-1, specAxis.GetIndexAtWaveLength(specAxis[max_index]+winsize/2.0) )+1;
     int size_odd = right - left +1;
     if( (int)(size_odd/2) == size_odd/2 ){
         size_odd -= 1;

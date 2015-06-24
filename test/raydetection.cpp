@@ -185,3 +185,44 @@ NSEpic::TFloat64List CRedshiftRayDetectionTestCase::LoadDetectedRayPositions( co
     return posList;
 }
 
+void CRedshiftRayDetectionTestCase::SyntheticValidationTest()
+// load synthetic spectra and check if the ray are correctly detected
+{
+    std::string spectraPath = "../test/data/RayDetectionTestCase/raydetection_simu_3700A40FWHM_7000A100FWHM.fits";
+    bfs::path inputspectrum = bfs::path( spectraPath );
+
+
+    // load spectrum
+    CSpectrumIOFitsReader reader;
+    CSpectrum s;
+
+    Bool retVal = reader.Read( inputspectrum.c_str(), s );
+    CPPUNIT_ASSERT_MESSAGE(  "load fits", retVal == true);
+
+    // detect possible peaks
+    Float64 winsize = 350.0;
+    Float64 minsize = 3.0;
+    Float64 maxsize = 200.0;
+    Float64 cut = 4.0;
+    Float64 strongcut = 2.0;
+
+    CPeakDetection peakDetection(winsize, cut);
+    CConstRef<CPeakDetectionResult> peakDetectionResult = peakDetection.Compute( s, s.GetLambdaRange() );
+
+
+    // detected rays
+    CRayDetection rayDetection(cut, strongcut, winsize, minsize, maxsize);
+    CConstRef<CRayDetectionResult> rayDetectionResult = rayDetection.Compute( s, s.GetLambdaRange(), peakDetectionResult->PeakList, peakDetectionResult->EnlargedPeakList);
+
+
+
+    // Check results
+    CPPUNIT_ASSERT_MESSAGE(  "1 Ray Detected", rayDetectionResult->RayCatalog.GetList().size() == 2);
+    Float64 pos1 = rayDetectionResult->RayCatalog.GetList()[0].GetPosition();
+    CPPUNIT_ASSERT_DOUBLES_EQUAL( pos1, 3702, 1e-1);
+    Float64 pos2 = rayDetectionResult->RayCatalog.GetList()[1].GetPosition();
+    CPPUNIT_ASSERT_DOUBLES_EQUAL( pos2, 7002, 1e-1);
+
+
+    return;
+}
