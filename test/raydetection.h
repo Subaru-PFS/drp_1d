@@ -13,7 +13,7 @@ class CRedshiftRayDetectionTestCase : public CppUnit::TestCase
 {
     CPPUNIT_TEST_SUITE(CRedshiftRayDetectionTestCase);
     CPPUNIT_TEST(SyntheticValidationTest);
-    CPPUNIT_TEST(EzValidationTest);
+    //CPPUNIT_TEST(EzValidationTest); //deactivated, 20150624, due to irregular sampling compatibility implementation (differs from EZ)
     CPPUNIT_TEST_SUITE_END();
 
 public:

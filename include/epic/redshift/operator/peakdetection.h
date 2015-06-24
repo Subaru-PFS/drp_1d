@@ -5,6 +5,8 @@
 #include <epic/core/common/datatypes.h>
 #include <epic/core/common/range.h>
 
+#include <epic/redshift/spectrum/spectralaxis.h>
+
 namespace NSEpic
 {
 
@@ -29,7 +31,7 @@ private:
     UInt32 m_medianSmoothHalfWidth;
     UInt32 m_enlargeRate;
 
-    Void FindPossiblePeaks( const CSpectrumAxis& smoothedFluxAxis, const CSpectrumAxis& spectralAxis, UInt32 windowSampleCount, Float64 cut, TInt32RangeList& peakList );
+    Void FindPossiblePeaks(const CSpectrumAxis& smoothedFluxAxis, const CSpectrumSpectralAxis& spectralAxis, TInt32RangeList& peakList );
     Void RedefineBorders( TInt32RangeList& peakList, const CSpectrumAxis& waves, const CSpectrumAxis& smoothFluxAxis, const CSpectrumAxis& fluxAxis );
     TInt32Range FindGaussianFitStartAndStop( Int32 i, const TInt32RangeList& peaksBorders, UInt32 enlargeRate, Int32 len );
 
