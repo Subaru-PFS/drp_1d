@@ -188,7 +188,14 @@ NSEpic::TFloat64List CRedshiftRayDetectionTestCase::LoadDetectedRayPositions( co
 void CRedshiftRayDetectionTestCase::SyntheticValidationTest()
 // load synthetic spectra and check if the ray are correctly detected
 {
-    std::string spectraPath = "../test/data/RayDetectionTestCase/raydetection_simu_3700A40FWHM_7000A100FWHM.fits";
+    std::string spectraPath = "../test/data/RayDetectionTestCase/raydetection_simu_7lines.fits";
+//    0#1000 : reference line = detected
+//    #2000 : negative line = NOT detected
+//    #3000 : very thin line = NOT detected
+//    #4000 : very large line = NOT detected
+//    1#5000 : ok line = detected
+//    #6000+6050 : double/deformed gaussian line = should be rejected, NOT detected
+//    #7000: too weak, NOT detected
     bfs::path inputspectrum = bfs::path( spectraPath );
 
 
@@ -200,10 +207,10 @@ void CRedshiftRayDetectionTestCase::SyntheticValidationTest()
     CPPUNIT_ASSERT_MESSAGE(  "load fits", retVal == true);
 
     // detect possible peaks
-    Float64 winsize = 350.0;
+    Float64 winsize = 250.0;
     Float64 minsize = 3.0;
-    Float64 maxsize = 200.0;
-    Float64 cut = 4.0;
+    Float64 maxsize = 80.0;
+    Float64 cut = 15.0;
     Float64 strongcut = 2.0;
 
     CPeakDetection peakDetection(winsize, cut);
@@ -217,11 +224,12 @@ void CRedshiftRayDetectionTestCase::SyntheticValidationTest()
 
 
     // Check results
+    Float64 tol = s.GetResolution();
     CPPUNIT_ASSERT_MESSAGE(  "1 Ray Detected", rayDetectionResult->RayCatalog.GetList().size() == 2);
     Float64 pos1 = rayDetectionResult->RayCatalog.GetList()[0].GetPosition();
-    CPPUNIT_ASSERT_DOUBLES_EQUAL( pos1, 3702, 1e-1);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL( pos1, 1000, tol);
     Float64 pos2 = rayDetectionResult->RayCatalog.GetList()[1].GetPosition();
-    CPPUNIT_ASSERT_DOUBLES_EQUAL( pos2, 7002, 1e-1);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL( pos2, 5000, tol);
 
 
     return;

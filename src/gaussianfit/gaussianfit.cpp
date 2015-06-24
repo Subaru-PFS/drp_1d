@@ -19,7 +19,7 @@ using namespace NSEpic;
 CGaussianFit::CGaussianFit( ) :
     m_PolyOrder( 2 ),
     m_AbsTol( 0.0 ),
-    m_RelTol( 1e-5 ),
+    m_RelTol( 1e-2 ),
     m_Amplitude( 0.0 ),
     m_AmplitudeErr( 0.0 ),
     m_Mu( 0.0 ),
