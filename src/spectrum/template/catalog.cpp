@@ -2,6 +2,8 @@
 #include <epic/redshift/spectrum/io/genericreader.h>
 #include <epic/redshift/spectrum/template/template.h>
 #include <epic/redshift/continuum/median.h>
+#include <epic/redshift/continuum/irregularsamplingmedian.h>
+
 #include <epic/core/log/log.h>
 
 #include <boost/filesystem.hpp>
@@ -96,7 +98,7 @@ Bool CTemplateCatalog::Add( CTemplate& r )
 
     *tmplWithoutCont = r;
 
-    tmplWithoutCont->RemoveContinuum<CContinuumMedian>();
+    tmplWithoutCont->RemoveContinuum<CContinuumIrregularSamplingMedian>();
     tmplWithoutCont->ConvertToLogScale();
 
     m_ListWithoutCont[r.GetCategory()].push_back( tmplWithoutCont );

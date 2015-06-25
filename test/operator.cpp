@@ -11,7 +11,7 @@
 #include <epic/redshift/spectrum/io/fitsreader.h>
 #include <epic/redshift/spectrum/io/genericreader.h>
 #include <epic/redshift/extremum/extremum.h>
-#include <epic/redshift/continuum/median.h>
+#include <epic/redshift/continuum/irregularsamplingmedian.h>
 #include <epic/redshift/noise/fromfile.h>
 
 #include <boost/math/special_functions.hpp>
@@ -174,8 +174,8 @@ void CRedshiftOperatorTestCase::CorrelationMatchWithEZ( const char* spectraPath,
     retVal = reader.Read( tplPath, t );
     CPPUNIT_ASSERT( retVal );
 
-    s.RemoveContinuum<CContinuumMedian>();
-    t.RemoveContinuum<CContinuumMedian>();
+    s.RemoveContinuum<CContinuumIrregularSamplingMedian>();
+    t.RemoveContinuum<CContinuumIrregularSamplingMedian>();
 
     s.ConvertToLogScale();
     t.ConvertToLogScale();

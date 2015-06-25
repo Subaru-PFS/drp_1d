@@ -151,6 +151,27 @@ Float64 CSpectrumSpectralAxis::GetResolution( Float64 atWavelength ) const
     return 0;
 }
 
+
+Float64 CSpectrumSpectralAxis::GetMeanResolution() const
+{
+    if( GetSamplesCount() < 2 )
+        return 0.0;
+
+    Float64 resolution = 0.0;
+    Int32 nsum = 0;
+    for( Int32 i=0; i< m_Samples.size()-1; i++ )
+    {
+        resolution = m_Samples[i+1]-m_Samples[i];
+        nsum++;
+    }
+
+    if(nsum>0){
+        resolution /=nsum;
+    }
+
+    return resolution;
+}
+
 Bool CSpectrumSpectralAxis::IsInLogScale() const
 {
     return m_SpectralFlags & nFLags_LogScale;

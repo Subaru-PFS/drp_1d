@@ -2,7 +2,7 @@
 
 #include <epic/core/common/datatypes.h>
 #include <epic/redshift/spectrum/spectrum.h>
-#include <epic/redshift/continuum/median.h>
+#include <epic/redshift/continuum/irregularsamplingmedian.h>
 #include <epic/redshift/spectrum/io/fitswriter.h>
 
 #include <epic/core/log/log.h>
@@ -38,7 +38,7 @@ void CRedshiftContinuumTestCase::Compute()
     //Log.LogInfo("simu signals loaded");
 
     // Remove continuum 
-    CContinuumMedian continuum;
+    CContinuumIrregularSamplingMedian continuum;
     CSpectrumFluxAxis fluxAxisWithoutContinuumCalc;
 
     retVal = continuum.RemoveContinuum( s, fluxAxisWithoutContinuumCalc );

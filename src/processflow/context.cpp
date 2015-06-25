@@ -8,6 +8,8 @@
 #include <epic/redshift/ray/ray.h>
 #include <epic/redshift/ray/catalog.h>
 #include <epic/redshift/continuum/median.h>
+#include <epic/redshift/continuum/irregularsamplingmedian.h>
+
 #include <epic/core/log/log.h>
 #include <epic/core/debug/assert.h>
 
@@ -112,7 +114,7 @@ bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath,
     m_SpectrumWithoutContinuum = new CSpectrum();
     *m_SpectrumWithoutContinuum = *m_Spectrum;
 
-    m_SpectrumWithoutContinuum->RemoveContinuum<CContinuumMedian>();
+    m_SpectrumWithoutContinuum->RemoveContinuum<CContinuumIrregularSamplingMedian>();
     m_SpectrumWithoutContinuum->ConvertToLogScale();
 
 

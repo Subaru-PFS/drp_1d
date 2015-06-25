@@ -37,6 +37,7 @@ public:
 
     UInt32                          GetSampleCount() const;
     Float64                         GetResolution() const;
+    Float64                         GetMeanResolution() const;
     TLambdaRange                    GetLambdaRange() const;
 
     Bool                            ConvertToLogScale();

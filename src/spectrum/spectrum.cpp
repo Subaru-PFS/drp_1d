@@ -86,6 +86,11 @@ Float64 CSpectrum::GetResolution() const
     return m_SpectralAxis.GetResolution();
 }
 
+Float64 CSpectrum::GetMeanResolution() const
+{
+    return m_SpectralAxis.GetMeanResolution();
+}
+
 /**
  * Return the lambda range of the entire spectrum.
  * Range is always expressed in linear scale NOT in log scale even if the underlying spcetrum is in log scale
