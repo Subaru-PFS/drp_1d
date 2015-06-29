@@ -38,9 +38,6 @@ CRayDetection::CRayDetection(Float64 cut, Float64 strongcut, Float64 winsize, Fl
     m_maxsize = maxsize;
     m_cut = cut;
     m_strongcut = strongcut;
-
-    // euclid overrides
-    //m_maxsize = 110;
 }
 
 
@@ -111,29 +108,39 @@ const CRayDetectionResult* CRayDetection::Compute( const CSpectrum& spectrum, co
                     max_index = k;
                 }
             }
-            // check max_gauss vs max_spectrum
+
+            // check flux max_gauss vs flux max_raw_spectrum
             Float64 gaussAmp_with_cont = gaussAmp + gaussCont;
             if(gaussAmp_with_cont/max_value <= 0.65 || gaussAmp_with_cont/max_value >= 1.35){
                 toAdd = false;
             }
-            // check that gaussPos vs position of the max.
-            //reg. sampling, TAG: IRREGULAR_SAMPLING
-            //if(fabs(gaussPos-spc.GetSpectralAxis()[max_index])>3.*spc.GetResolution()){
-            //    toAdd = false;
-            //}
-            //irregular sampling
-            Int32 nsamplestol=3;
-            Float64 error3samples = 1.0;
-            if(max_index<nsamplestol){
-                error3samples = spc.GetSpectralAxis()[max_index+nsamplestol];
-            }else if(max_index>spc.GetSampleCount()-nsamplestol-1){
-                error3samples = spc.GetSpectralAxis()[max_index-nsamplestol];
-            }else{
-                error3samples = (spc.GetSpectralAxis()[max_index+nsamplestol]-spc.GetSpectralAxis()[max_index-nsamplestol])/2.0;
-            }
-            Float64 diffPos = fabs(gaussPos-spc.GetSpectralAxis()[max_index]);
-            if(diffPos > error3samples){
-                toAdd = false;
+
+            // check gaussPos vs position of the max.
+            if(0){ // tolerance on the position in terms of number of samples
+                //reg. sampling, TAG: IRREGULAR_SAMPLING
+                //if(fabs(gaussPos-spc.GetSpectralAxis()[max_index])>3.*spc.GetResolution()){
+                //    toAdd = false;
+                //}
+                //irregular sampling
+                Int32 nsamplestol=3;
+                Float64 error3samples = 1.0;
+                if(max_index<nsamplestol){
+                    error3samples = spc.GetSpectralAxis()[max_index+nsamplestol];
+                }else if(max_index>spc.GetSampleCount()-nsamplestol-1){
+                    error3samples = spc.GetSpectralAxis()[max_index-nsamplestol];
+                }else{
+                    error3samples = (spc.GetSpectralAxis()[max_index+nsamplestol]-spc.GetSpectralAxis()[max_index-nsamplestol])/2.0;
+                }
+                Float64 diffPos = fabs(gaussPos-spc.GetSpectralAxis()[max_index]);
+                if(diffPos > error3samples){
+                    toAdd = false;
+                }
+            }else{ //tolerance in Angstrom
+                Float64 tolAngtsrom = 20.0;
+                Float64 diffPos = fabs(gaussPos-spc.GetSpectralAxis()[max_index]);
+                if(diffPos > tolAngtsrom){
+                    toAdd = false;
+                }
             }
 
         }

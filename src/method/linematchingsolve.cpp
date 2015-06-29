@@ -27,6 +27,10 @@ COperatorLineMatchingSolve::COperatorLineMatchingSolve()
     m_winsize = 250.0;
     m_cut = 5.0;
     m_strongcut = 2.0;
+    m_minsize = 3;
+    m_maxsize = 70;
+    m_enlargeRate = 2.0;
+
 
     // Line Matching
     m_minMatchNum = 1;
@@ -37,13 +41,17 @@ COperatorLineMatchingSolve::COperatorLineMatchingSolve()
     {
         m_winsize = 250.0;
         m_cut = 3.0;
+        m_maxsize = 120;
     }
 
     //pfs TF overrides
     if(1)
     {
         m_winsize = 250.0;
-        m_cut = 3.5;
+        m_cut = 150;
+        m_maxsize = 120;
+        m_enlargeRate = 1.0;
+        m_tol = 0.0025;
     }
 }
 
@@ -60,12 +68,12 @@ const CLineMatchingSolveResult* COperatorLineMatchingSolve::Compute(  COperatorR
     COperatorResultStore::CAutoScope resultScope( resultStore, "linematchingsolve" );
 
 
-    CPeakDetection peakDetection(m_winsize, m_cut);
+    CPeakDetection peakDetection(m_winsize, m_cut, 1, m_enlargeRate);
     CConstRef<CPeakDetectionResult> peakDetectionResult = peakDetection.Compute( spc, lambdaRange);
     if( peakDetectionResult )
         resultStore.StoreGlobalResult( "peakdetection", *peakDetectionResult );
 
-    CRayDetection rayDetection( m_cut, m_strongcut, m_winsize);
+    CRayDetection rayDetection( m_cut, m_strongcut, m_winsize, m_minsize, m_maxsize);
     CConstRef<CRayDetectionResult> rayDetectionResult = rayDetection.Compute( spc, lambdaRange, peakDetectionResult->PeakList, peakDetectionResult->EnlargedPeakList );
 
     if( rayDetectionResult ) {
