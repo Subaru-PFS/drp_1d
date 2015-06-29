@@ -187,9 +187,9 @@ Void CPeakDetection::FindPossiblePeaks( const CSpectrumAxis& fluxAxis, const CSp
     for( Int32 i=0; i<fluxAxis.GetSamplesCount(); i++ )
     {
         if( med[i] < 0.0001 ){
-            fprintf( f, "%d %e %e %e %e\n", i, med[i], xmad[i], med[i]+0.5*cut*xmad[i], fluxData[i]);
+            fprintf( f, "%e %e %e %e %e\n", spectralAxis[i], med[i], xmad[i], med[i]+0.5*m_cut*xmad[i], fluxData[i]);
         }else{
-            fprintf( f, "%d %f %f %f %f\n", i, med[i], xmad[i], med[i]+0.5*cut*xmad[i], fluxData[i]);
+            fprintf( f, "%f %f %f %f %f\n", spectralAxis[i], med[i], xmad[i], med[i]+0.5*m_cut*xmad[i], fluxData[i]);
         }
     }
     fclose( f );

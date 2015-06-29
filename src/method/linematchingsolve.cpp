@@ -33,8 +33,18 @@ COperatorLineMatchingSolve::COperatorLineMatchingSolve()
     m_tol = 0.002;
 
     //eudlid overrides
-    m_winsize = 500.0;
-    m_cut = 1.0;
+    if(0)
+    {
+        m_winsize = 250.0;
+        m_cut = 3.0;
+    }
+
+    //pfs TF overrides
+    if(1)
+    {
+        m_winsize = 250.0;
+        m_cut = 3.5;
+    }
 }
 
 COperatorLineMatchingSolve::~COperatorLineMatchingSolve()
