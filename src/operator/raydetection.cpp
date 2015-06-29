@@ -121,15 +121,15 @@ const CRayDetectionResult* CRayDetection::Compute( const CSpectrum& spectrum, co
             //if(fabs(gaussPos-spc.GetSpectralAxis()[max_index])>3.*spc.GetResolution()){
             //    toAdd = false;
             //}
-            // irregular sampling
+            //irregular sampling
             Int32 nsamplestol=3;
             Float64 error3samples = 1.0;
             if(max_index<nsamplestol){
-                error3samples = spc.GetSpectralAxis()[max_index+3];
+                error3samples = spc.GetSpectralAxis()[max_index+nsamplestol];
             }else if(max_index>spc.GetSampleCount()-nsamplestol-1){
-                error3samples = spc.GetSpectralAxis()[max_index-3];
+                error3samples = spc.GetSpectralAxis()[max_index-nsamplestol];
             }else{
-                error3samples = (spc.GetSpectralAxis()[max_index+3]-spc.GetSpectralAxis()[max_index-3])/2.0;
+                error3samples = (spc.GetSpectralAxis()[max_index+nsamplestol]-spc.GetSpectralAxis()[max_index-nsamplestol])/2.0;
             }
             Float64 diffPos = fabs(gaussPos-spc.GetSpectralAxis()[max_index]);
             if(diffPos > error3samples){
