@@ -38,6 +38,7 @@ public:
     const TRayVector& GetList() const;
     const TRayVector GetFilteredList(Int32 typeFilter = -1, Int32 forceFilter=-1) const;
     void Sort();
+    void ConvertVacuumToAir();
 private:
 
     TRayVector m_List;

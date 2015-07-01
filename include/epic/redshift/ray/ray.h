@@ -45,6 +45,8 @@ public:
     const std::string&  GetName() const;
     Void                Save( std::ostream& stream ) const;
 
+    Void                ConvertVacuumToAir();
+
 private:
 
     Int32           m_Type;

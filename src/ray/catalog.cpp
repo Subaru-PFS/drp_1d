@@ -144,3 +144,14 @@ void CRayCatalog::Sort()
 {
     sort(m_List.begin(), m_List.end());
 }
+
+void CRayCatalog::ConvertVacuumToAir()
+{
+    TRayVector::iterator it;
+    for( it = m_List.begin(); it != m_List.end(); ++it )
+    {
+        (*it).ConvertVacuumToAir();
+    }
+
+    return;
+}

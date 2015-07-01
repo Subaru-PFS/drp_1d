@@ -35,6 +35,7 @@ public:
     {
         nMethod_BlindSolve = 0,
         nMethod_LineMatching,
+        nMethod_LineMatching2,
         nMethod_FullSolve,
         nMethod_DecisionalTree7,
         nMethod_Count,

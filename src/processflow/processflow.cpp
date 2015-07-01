@@ -36,6 +36,7 @@
 #include <epic/redshift/method/linematchingsolve.h>
 #include <epic/redshift/method/dtree7solve.h>
 #include <epic/redshift/method/dtree7solveresult.h>
+#include <epic/redshift/method/linematching2solve.h>
 
 
 #include <stdio.h>
@@ -61,6 +62,9 @@ Bool CProcessFlow::Process( CProcessFlowContext& ctx )
 
     if(ctx.GetParams().method  == CProcessFlowContext::nMethod_LineMatching)
         return LineMatching( ctx );
+
+    if(ctx.GetParams().method  == CProcessFlowContext::nMethod_LineMatching2)
+        return LineMatching2( ctx );
 
     if(ctx.GetParams().method  == CProcessFlowContext::nMethod_BlindSolve)
         return Blindsolve( ctx );
@@ -152,6 +156,23 @@ Bool CProcessFlow::LineMatching( CProcessFlowContext& ctx )
 
     COperatorLineMatchingSolve Solve;
     CConstRef<CLineMatchingSolveResult> solveResult = Solve.Compute(ctx, ctx.GetSpectrum(), ctx.GetParams().lambdaRange, ctx.GetParams().redshiftRange,
+                                                                    ctx.GetParams().redshiftStep, ctx.GetRayCatalog() );
+
+    if( solveResult ) {
+        ctx.StoreGlobalResult( "redshiftresult", *solveResult );
+    }
+
+
+    return true;
+}
+
+Bool CProcessFlow::LineMatching2( CProcessFlowContext& ctx )
+{
+    Log.LogInfo( "Process Line Matching 2 (LambdaRange: %f-%f:%f)",
+            ctx.GetSpectrum().GetLambdaRange().GetBegin(), ctx.GetSpectrum().GetLambdaRange().GetEnd(), ctx.GetSpectrum().GetResolution());
+
+    COperatorLineMatching2Solve Solve;
+    CConstRef<CLineMatching2SolveResult> solveResult = Solve.Compute(ctx, ctx.GetSpectrum(), ctx.GetParams().lambdaRange, ctx.GetParams().redshiftRange,
                                                                     ctx.GetParams().redshiftStep, ctx.GetRayCatalog() );
 
     if( solveResult ) {

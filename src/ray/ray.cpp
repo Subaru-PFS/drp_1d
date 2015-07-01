@@ -81,6 +81,21 @@ const std::string& CRay::GetName() const
     return m_Name;
 }
 
+/**
+ * This function converts lambda vacuum to lambda air
+ *
+ * see. Morton 1991, ApJS, 77, 119.
+ */
+Void CRay::ConvertVacuumToAir()
+{
+    Float64 s = (1e-4)/m_Pos;
+    Float64 coeff = 1 + 8.34254*1e-5 + (2.406147*1e-2)/(130-s*s) + (1.5998*1e-4)/(38.9-s*s) ;
+
+    m_Pos = m_Pos/coeff;
+
+    return;
+}
+
 Void CRay::Save(  std::ostream& stream ) const
 {
     stream << GetName() << "\t" << GetPosition() << "\t";
