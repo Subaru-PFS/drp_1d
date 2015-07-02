@@ -42,12 +42,12 @@ Void CLineMatching2SolveResult::SaveLine( const COperatorResultStore& store, std
     stream  << store.GetSpectrumName() << "\t"
                 << redshift << "\t"
                 << merit << "\t"
-                << "LineMatchingSolve" << std::endl;
+                << "LineMatching2Solve" << std::endl;
 }
 
 Bool CLineMatching2SolveResult::GetBestResult(const COperatorResultStore& store, Float64& redshift, Float64& merit) const
 {
-    std::string scope = store.GetScope( this ) + "linematchingsolve.raymatching";
+    std::string scope = store.GetScope( this ) + "linematching2solve.raymatching";
     const CRayMatchingResult* Results = (CRayMatchingResult*)store.GetGlobalResult(scope.c_str());
 
     Int32 tmpMatchNum = -1;

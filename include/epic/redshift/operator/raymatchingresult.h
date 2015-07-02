@@ -4,6 +4,8 @@
 #include <epic/redshift/operator/result.h>
 #include <epic/core/common/datatypes.h>
 
+#include <epic/redshift/ray/catalog.h>
+
 #include <vector>
 
 namespace NSEpic
@@ -49,6 +51,10 @@ public:
     Void                        SaveLine( const COperatorResultStore& store, std::ostream& stream ) const;
 
     Bool                        GetBestRedshift(Float64& Redshift, Int32& MatchingNumber) const;
+    Bool                        GetBestMatchNumRedshift(Float64& Redshift, Int32& MatchingNumber) const;
+
+    Int32                       getNStrongRestLines( const TSolutionSet& s) const;
+
     Int32                       GetMaxMatchingNumber() const;
     Float64                     GetMeanRedshiftSolution( const TSolutionSet& s) const;
     Float64                     GetMeanRedshiftSolutionByIndex(Int32 index) const;
@@ -59,6 +65,7 @@ public:
     TFloat64List                GetRedshiftRangeCandidatesOverNumber(Int32 number) const;
 
     TSolutionSetList    SolutionSetList;
+    CRayCatalog          m_RestCatalog;
 
 };
 

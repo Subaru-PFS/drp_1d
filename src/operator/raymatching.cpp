@@ -115,6 +115,7 @@ CRayMatchingResult* CRayMatching::Compute(const CRayCatalog& detectedRayCatalog,
     if(newSolutions.size()>0){
         CRayMatchingResult* result = new CRayMatchingResult();
         result->SolutionSetList = newSolutions;
+        result->m_RestCatalog = restRayCatalog;
         return result;
     }
     return NULL;

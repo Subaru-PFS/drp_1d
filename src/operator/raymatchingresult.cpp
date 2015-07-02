@@ -1,5 +1,6 @@
 #include <epic/redshift/operator/raymatchingresult.h>
 #include <stdio.h>
+#include <math.h>
 
 using namespace NSEpic;
 
@@ -83,8 +84,55 @@ Void CRayMatchingResult::SaveLine( const COperatorResultStore& store, std::ostre
 
 }
 
-
+/**
+ * @brief CRayMatchingResult::GetBestRedshift
+ *
+ * select the best redshift given a set of rules:
+ * - the solution with the most strong lines
+ * - (TODO) if no solution with strong lines, the missing strong lines' absence should be excused by:
+ *      * high noise in the theoretical position of the strong lines
+ *      * lambda range not able to cover the strong lines
+ * @return
+ */
 Bool CRayMatchingResult::GetBestRedshift(Float64& Redshift, Int32& MatchingNumber) const
+{
+    Int32 thresMatchingNumber = 2; //minimum matching number for a solution
+    TSolutionSetList selectedResults = GetSolutionsListOverNumber(thresMatchingNumber-1);
+
+    if(selectedResults.size()>0){
+        int iStrongMax = -1;
+        int nStrongMax = -1;
+        for( UInt32 iSol=0; iSol<selectedResults.size(); iSol++ )
+        {
+            int currentNStrongRestLines = getNStrongRestLines(selectedResults[iSol]);
+            if(currentNStrongRestLines > nStrongMax){
+                iStrongMax = iSol;
+                nStrongMax = currentNStrongRestLines;
+            }else if(currentNStrongRestLines == nStrongMax && selectedResults[iSol].size()>selectedResults[iStrongMax].size()){
+                iStrongMax = iSol;
+                nStrongMax = currentNStrongRestLines;
+            }
+        }
+
+        if(iStrongMax>-1){
+            Redshift = GetMeanRedshiftSolution(selectedResults[iStrongMax]);
+            MatchingNumber = selectedResults[iStrongMax].size();
+        }
+    }else{
+        return false;
+    }
+
+    return true;
+}
+
+/**
+ * @brief CRayMatchingResult::GetBestMatchNumRedshift
+ *
+ * get the best redshift in the sense of the highest matching number
+ *
+ * @return
+ */
+Bool CRayMatchingResult::GetBestMatchNumRedshift(Float64& Redshift, Int32& MatchingNumber) const
 {
     MatchingNumber = GetMaxMatchingNumber();
     TSolutionSetList selectedResults = GetSolutionsListOverNumber(MatchingNumber-1);
@@ -169,6 +217,32 @@ Float64 CRayMatchingResult::GetMeanRedshiftSolution( const TSolutionSet& s ) con
     redshiftMean /= (float)currentSet.size();
 
     return redshiftMean;
+}
+
+Int32 CRayMatchingResult::getNStrongRestLines( const TSolutionSet& s ) const
+{
+    CRayCatalog::TRayVector strongRestRayList = m_RestCatalog.GetFilteredList(CRay::nType_Emission, CRay::nForce_Strong);
+    Int32 ncatalog = strongRestRayList.size();
+
+    TSolutionSet currentSet = s;
+    Int32 nStrong=0;
+    Float64 tol = 0.11;
+    for( UInt32 i=0; i<currentSet.size(); i++ )
+    {
+        Int32 found  = 0;
+        for( UInt32 c=0; c<ncatalog; c++ )
+        {
+            if( fabs(currentSet[i].RestRay-strongRestRayList[c].GetPosition())<tol ){
+                found = 1;
+                break;
+            }
+        }
+        if(found==1){
+            nStrong++;
+        }
+    }
+
+    return nStrong;
 }
 
 Int32 CRayMatchingResult::GetMaxMatchingNumber() const

@@ -47,10 +47,17 @@ COperatorLineMatching2Solve::COperatorLineMatching2Solve()
     //pfs TF overrides
     if(1)
     {
+        // TF
+        //m_winsize = 250.0;
+        //m_cut = 150;
+        //m_maxsize = 120;
+        //m_enlargeRate = 1.0;
+        //m_tol = 0.0025;
+        // F + ErrF
         m_winsize = 250.0;
-        m_cut = 150;
+        m_cut = 3;
         m_maxsize = 120;
-        m_enlargeRate = 1.0;
+        m_enlargeRate = 2.0;
         m_tol = 0.0025;
     }
 }
@@ -65,7 +72,7 @@ const CLineMatching2SolveResult* COperatorLineMatching2Solve::Compute(  COperato
 {
     Bool storeResult = false;
 
-    COperatorResultStore::CAutoScope resultScope( resultStore, "linematchingsolve2" );
+    COperatorResultStore::CAutoScope resultScope( resultStore, "linematching2solve" );
 
 
     CPeakDetection peakDetection(m_winsize, m_cut, 1, m_enlargeRate);
