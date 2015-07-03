@@ -38,10 +38,11 @@ CProcessFlowContext::SParam::SParam()
     correlationExtremumCount = 5;
 
     //method = nMethod_LineMatching;
-    method = nMethod_LineMatching2;
+    //method = nMethod_LineMatching2;
     //method = nMethod_BlindSolve;
     //method = nMethod_FullSolve;
     //method = nMethod_DecisionalTree7;
+    method = nMethod_DecisionalTreeA;
 
     templateCategoryList.push_back( CTemplate::nCategory_Emission );
     templateCategoryList.push_back( CTemplate::nCategory_Galaxy );
@@ -171,6 +172,8 @@ std::string CProcessFlowContext::GetMethodName( EMethod method )
         methodStr = "LineMatching2";
     } else if (method == CProcessFlowContext::nMethod_DecisionalTree7){
         methodStr = "DecisionalTree7";
+    } else if (method == CProcessFlowContext::nMethod_DecisionalTreeA){
+        methodStr = "DecisionalTreeA";
     } else if (method == CProcessFlowContext::nMethod_FullSolve){
         methodStr = "FullSolve";
     }

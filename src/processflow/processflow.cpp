@@ -36,6 +36,8 @@
 #include <epic/redshift/method/linematchingsolve.h>
 #include <epic/redshift/method/dtree7solve.h>
 #include <epic/redshift/method/dtree7solveresult.h>
+#include <epic/redshift/method/dtreeasolve.h>
+#include <epic/redshift/method/dtreeasolveresult.h>
 #include <epic/redshift/method/linematching2solve.h>
 
 
@@ -75,6 +77,8 @@ Bool CProcessFlow::Process( CProcessFlowContext& ctx )
     if(ctx.GetParams().method  == CProcessFlowContext::nMethod_DecisionalTree7)
         return DecisionalTree7( ctx );
 
+    if(ctx.GetParams().method  == CProcessFlowContext::nMethod_DecisionalTreeA)
+        return DecisionalTreeA( ctx );
 
     return false;
 }
@@ -191,6 +195,24 @@ Bool CProcessFlow::DecisionalTree7( CProcessFlowContext& ctx )
 
     COperatorDTree7Solve Solve;
     CConstRef<CDTree7SolveResult> solveResult = Solve.Compute( ctx, ctx.GetSpectrum(), ctx.GetSpectrumWithoutContinuum(),
+                                                                        ctx.GetTemplateCatalog(), ctx.GetParams().templateCategoryList, ctx.GetRayCatalog(),
+                                                                        ctx.GetParams().lambdaRange, ctx.GetParams().redshiftRange, ctx.GetParams().redshiftStep,
+                                                                        ctx.GetParams().correlationExtremumCount , ctx.GetParams().overlapThreshold );
+
+    if( solveResult ) {
+        ctx.StoreGlobalResult( "redshiftresult", *solveResult );
+    }
+
+    return true;
+}
+
+Bool CProcessFlow::DecisionalTreeA( CProcessFlowContext& ctx )
+{
+    Log.LogInfo( "Process Decisional Tree A" );
+
+
+    COperatorDTreeASolve Solve;
+    CConstRef<CDTreeASolveResult> solveResult = Solve.Compute( ctx, ctx.GetSpectrum(), ctx.GetSpectrumWithoutContinuum(),
                                                                         ctx.GetTemplateCatalog(), ctx.GetParams().templateCategoryList, ctx.GetRayCatalog(),
                                                                         ctx.GetParams().lambdaRange, ctx.GetParams().redshiftRange, ctx.GetParams().redshiftStep,
                                                                         ctx.GetParams().correlationExtremumCount , ctx.GetParams().overlapThreshold );

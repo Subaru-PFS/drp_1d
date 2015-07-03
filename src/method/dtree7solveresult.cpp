@@ -35,3 +35,5 @@ Void CDTree7SolveResult::SaveLine( const COperatorResultStore& store, std::ostre
 }
 
 
+
+
