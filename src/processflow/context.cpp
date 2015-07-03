@@ -37,6 +37,7 @@ CProcessFlowContext::SParam::SParam()
     overlapThreshold = 1.0;
     correlationExtremumCount = 5;
 
+    method = nMethod_Correlation;
     //method = nMethod_LineMatching;
     //method = nMethod_LineMatching2;
     //method = nMethod_BlindSolve;
@@ -166,6 +167,8 @@ std::string CProcessFlowContext::GetMethodName( EMethod method )
 
     if(method== CProcessFlowContext::nMethod_BlindSolve){
         methodStr = "BlindSolve";
+    } else if (method == CProcessFlowContext::nMethod_Correlation){
+        methodStr = "CorrelationSolve";
     } else if (method == CProcessFlowContext::nMethod_LineMatching){
         methodStr = "LineMatching";
     } else if (method == CProcessFlowContext::nMethod_LineMatching2){
