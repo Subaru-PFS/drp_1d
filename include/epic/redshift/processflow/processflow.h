@@ -34,7 +34,7 @@ private:
     Bool Blindsolve(CProcessFlowContext& ctx , NSEpic::CTemplate::ECategory CategoryFilter = NSEpic::CTemplate::nCategory_None);
     Bool Fullsolve(CProcessFlowContext& ctx , NSEpic::CTemplate::ECategory CategoryFilter = NSEpic::CTemplate::nCategory_None);
     //Bool Chisolve(CProcessFlowContext& ctx , TFloat64List& redshifts, NSEpic::CTemplate::ECategory CategoryFilter = NSEpic::CTemplate::nCategory_None);
-    //Bool Corrsolve(CProcessFlowContext& ctx , NSEpic::CTemplate::ECategory CategoryFilter = NSEpic::CTemplate::nCategory_None);
+    Bool Correlation(CProcessFlowContext& ctx , NSEpic::CTemplate::ECategory CategoryFilter = NSEpic::CTemplate::nCategory_None);
     Bool LineMatching( CProcessFlowContext& ctx );
     Bool LineMatching2( CProcessFlowContext& ctx );
     Bool DecisionalTree7( CProcessFlowContext& ctx );

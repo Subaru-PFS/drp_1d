@@ -34,6 +34,7 @@ public:
     enum EMethod
     {
         nMethod_BlindSolve = 0,
+        nMethod_Correlation,
         nMethod_LineMatching,
         nMethod_LineMatching2,
         nMethod_FullSolve,
