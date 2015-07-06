@@ -37,13 +37,14 @@ CProcessFlowContext::SParam::SParam()
     overlapThreshold = 1.0;
     correlationExtremumCount = 5;
 
-    method = nMethod_Correlation;
+    //method = nMethod_Correlation;
+    method = nMethod_Chisquare;
     //method = nMethod_LineMatching;
     //method = nMethod_LineMatching2;
     //method = nMethod_BlindSolve;
     //method = nMethod_FullSolve;
     //method = nMethod_DecisionalTree7;
-    method = nMethod_DecisionalTreeA;
+    //method = nMethod_DecisionalTreeA;
 
     templateCategoryList.push_back( CTemplate::nCategory_Emission );
     templateCategoryList.push_back( CTemplate::nCategory_Galaxy );
@@ -169,6 +170,8 @@ std::string CProcessFlowContext::GetMethodName( EMethod method )
         methodStr = "BlindSolve";
     } else if (method == CProcessFlowContext::nMethod_Correlation){
         methodStr = "CorrelationSolve";
+    } else if (method == CProcessFlowContext::nMethod_Chisquare){
+        methodStr = "ChisquareSolve";
     } else if (method == CProcessFlowContext::nMethod_LineMatching){
         methodStr = "LineMatching";
     } else if (method == CProcessFlowContext::nMethod_LineMatching2){

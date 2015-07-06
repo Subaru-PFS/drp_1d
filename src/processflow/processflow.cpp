@@ -64,6 +64,9 @@ Bool CProcessFlow::Process( CProcessFlowContext& ctx )
     if(ctx.GetParams().method  == CProcessFlowContext::nMethod_Correlation)
         return Correlation( ctx );
 
+    if(ctx.GetParams().method  == CProcessFlowContext::nMethod_Chisquare)
+        return Chisquare( ctx );
+
     if(ctx.GetParams().method  == CProcessFlowContext::nMethod_LineMatching)
         return LineMatching( ctx );
 
@@ -144,6 +147,43 @@ Bool CProcessFlow::Correlation( CProcessFlowContext& ctx, CTemplate::ECategory C
     CConstRef<CCorrelationSolveResult> solveResult = solve.Compute( ctx, ctx.GetSpectrum(), ctx.GetSpectrumWithoutContinuum(),
                                                                         ctx.GetTemplateCatalog(), filteredTemplateCategoryList,
                                                                         ctx.GetParams().lambdaRange, ctx.GetParams().redshiftRange, ctx.GetParams().redshiftStep, ctx.GetParams().overlapThreshold );
+
+    if( solveResult ) {
+        ctx.StoreGlobalResult( "redshiftresult", *solveResult );
+    }
+
+    return true;
+}
+
+
+Bool CProcessFlow::Chisquare( CProcessFlowContext& ctx, CTemplate::ECategory CategoryFilter)
+{
+    Log.LogInfo( "Process Chisquare (LambdaRange: %f-%f:%f)",
+                 ctx.GetSpectrum().GetLambdaRange().GetBegin(), ctx.GetSpectrum().GetLambdaRange().GetEnd(), ctx.GetSpectrum().GetResolution());
+
+
+    // Remove Star category, and filter the list with regard to input variable CategoryFilter
+    TTemplateCategoryList   filteredTemplateCategoryList;
+    for( UInt32 i=0; i<ctx.GetParams().templateCategoryList.size(); i++ )
+    {
+        CTemplate::ECategory category = ctx.GetParams().templateCategoryList[i];
+        if( category == CTemplate::nCategory_Star )
+        {
+        }
+        else if(CategoryFilter == NSEpic::CTemplate::nCategory_None || CategoryFilter == category)
+        {
+            filteredTemplateCategoryList.push_back( category );
+        }
+    }
+
+    // Create redshift initial list by spanning redshift acdross the given range, with the given delta
+    TFloat64List redshifts = ctx.GetParams().redshiftRange.SpreadOver( ctx.GetParams().redshiftStep );
+    DebugAssert( redshifts.size() > 0 );
+
+    CMethodChisquareSolve solve;
+    CConstRef<CChisquareSolveResult> solveResult = solve.Compute( ctx, ctx.GetSpectrum(), ctx.GetSpectrumWithoutContinuum(),
+                                                                        ctx.GetTemplateCatalog(), filteredTemplateCategoryList,
+                                                                        ctx.GetParams().lambdaRange, redshifts, ctx.GetParams().overlapThreshold );
 
     if( solveResult ) {
         ctx.StoreGlobalResult( "redshiftresult", *solveResult );
