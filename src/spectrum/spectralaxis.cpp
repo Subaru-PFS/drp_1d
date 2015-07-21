@@ -161,7 +161,7 @@ Float64 CSpectrumSpectralAxis::GetMeanResolution() const
     Int32 nsum = 0;
     for( Int32 i=0; i< m_Samples.size()-1; i++ )
     {
-        resolution = m_Samples[i+1]-m_Samples[i];
+        resolution += (m_Samples[i+1]-m_Samples[i]);
         nsum++;
     }
 
