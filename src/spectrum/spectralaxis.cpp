@@ -218,6 +218,38 @@ Void CSpectrumSpectralAxis::GetMask( const TFloat64Range& lambdaRange,  CMask& m
     }
 }
 
+Float64 CSpectrumSpectralAxis::IntersectMaskAndComputeOverlapRate( const TFloat64Range& lambdaRange,  CMask& omask ) const
+{
+    TFloat64Range range = lambdaRange;
+
+    if( m_SpectralFlags & nFLags_LogScale )
+        range.Set( log( range.GetBegin() ), log( range.GetEnd() ) );
+
+    Int32 selfRate=0;
+    Int32 otherRate=0;
+    const Mask* otherWeight = omask.GetMasks();
+
+    // weight = Spectrum over lambdarange flag
+    for( Int32 i=0; i< m_Samples.size(); i++ )
+    {
+        //otherWeight[i] = 0;
+        // If this sample is somewhere in a valid lambdaRande, tag weight with 1
+        if( m_Samples[i] >= range.GetBegin() && m_Samples[i] <= range.GetEnd() )
+        {
+            if(otherWeight[i]){
+                otherRate++;
+            }
+            selfRate++;
+        }
+    }
+
+    if( selfRate == 0.0 )
+        return 0;
+
+    return (Float64)otherRate/(Float64)selfRate;
+}
+
+
 Bool CSpectrumSpectralAxis::ClampLambdaRange( const TFloat64Range& range, TFloat64Range& clampedRange ) const
 {
     TFloat64Range effectiveRange = GetLambdaRange();

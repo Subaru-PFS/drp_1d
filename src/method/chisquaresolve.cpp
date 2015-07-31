@@ -5,6 +5,7 @@
 #include <epic/redshift/spectrum/template/catalog.h>
 #include <epic/redshift/operator/correlation.h>
 #include <epic/redshift/operator/chisquare.h>
+#include <epic/redshift/operator/chisquare2.h>
 #include <epic/redshift/extremum/extremum.h>
 #include <epic/redshift/operator/resultstore.h>
 
@@ -60,10 +61,34 @@ const CChisquareSolveResult* CMethodChisquareSolve::Compute(  COperatorResultSto
 Bool CMethodChisquareSolve::Solve( COperatorResultStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont, const CTemplate& tpl, const CTemplate& tplWithoutCont,
                                const TFloat64Range& lambdaRange, const TFloat64List& redshifts, Float64 overlapThreshold )
 {
+    /*
+    // use continuum only
+    CSpectrum _spc = spc;
+    CSpectrumFluxAxis spcfluxAxis = _spc.GetFluxAxis();
+    spcfluxAxis.Subtract(spcWithoutCont.GetFluxAxis());
+    CSpectrumFluxAxis& sfluxAxisPtr = _spc.GetFluxAxis();
+    sfluxAxisPtr = spcfluxAxis;
+    CTemplate _tpl = tpl;
+    CSpectrumFluxAxis tplfluxAxis = _tpl.GetFluxAxis();
+    tplfluxAxis.Subtract(tplWithoutCont.GetFluxAxis());
+    CSpectrumFluxAxis& tfluxAxisPtr = _tpl.GetFluxAxis();
+    tfluxAxisPtr = tplfluxAxis;
+    //*/
+
+    //*
+    // use full spectrum
+    CSpectrum _spc = spc;
+    CTemplate _tpl = tpl;
+    //*/
+
+//    // use full spectrum
+//    CSpectrum _spc = spcWithoutCont;
+//    CTemplate _tpl = tplWithoutCont;
+
 
     // Compute merit function
-    COperatorChiSquare chiSquare;
-    CRef<CChisquareResult>  chisquareResult = (CChisquareResult*)chiSquare.Compute( spc, tpl, lambdaRange, redshifts, overlapThreshold );
+    COperatorChiSquare2 chiSquare;
+    CRef<CChisquareResult>  chisquareResult = (CChisquareResult*)chiSquare.Compute( _spc, _tpl, lambdaRange, redshifts, overlapThreshold );
     if( !chisquareResult )
     {
         //Log.LogInfo( "Failed to compute chi square value");

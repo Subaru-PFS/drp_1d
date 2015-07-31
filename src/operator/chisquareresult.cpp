@@ -4,6 +4,7 @@
 #include <boost/lexical_cast.hpp>
 #include <string>
 #include <fstream>
+#include <iomanip>      // std::setprecision
 
 using namespace NSEpic;
 
@@ -105,7 +106,7 @@ Void CChisquareResult::Save( const COperatorResultStore& store, std::ostream& st
     stream <<  "#Redshifts\tChiSquare\tOverlap"<< std::endl;
     for ( int i=0; i<Redshifts.size(); i++)
     {
-        stream <<  Redshifts[i] << "\t" << std::scientific << ChiSquare[i] << std::fixed << "\t" << Overlap[i] << std::endl;
+        stream <<  Redshifts[i] << std::setprecision(16) << "\t" << std::scientific << ChiSquare[i] << std::fixed << "\t" << Overlap[i] << std::endl;
     }
 }
 

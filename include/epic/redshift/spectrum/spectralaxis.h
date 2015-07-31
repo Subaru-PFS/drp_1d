@@ -54,6 +54,7 @@ public:
     TLambdaRange        GetLambdaRange() const;
     Bool                ClampLambdaRange( const TFloat64Range& range, TFloat64Range& clampedRange ) const;
     Void                GetMask( const TFloat64Range& range,  CMask& mask ) const;
+    Float64             IntersectMaskAndComputeOverlapRate( const TFloat64Range& lambdaRange,  CMask& omask ) const;
 
     Bool                PlotResolution( const char* filePath ) const;
 

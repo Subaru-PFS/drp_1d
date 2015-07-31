@@ -8,7 +8,7 @@
 #include <epic/redshift/spectrum/spectralaxis.h>
 
 #include <math.h>
-
+#include <gsl/gsl_interp.h>
 #include <epic/core/log/log.h>
 
 using namespace NSEpic;
@@ -83,7 +83,6 @@ Bool CSpectrumFluxAxis::Rebin( const TFloat64Range& range, const CSpectrumFluxAx
         Yrebin[j] = 0.0;
         j++;
     }
-
     // Include ALL lambda range
     //if( j > 0 )
     //    j--;
@@ -98,7 +97,6 @@ Bool CSpectrumFluxAxis::Rebin( const TFloat64Range& range, const CSpectrumFluxAx
         {
             // perform linear interpolation of the flux
             Float64 t = ( Xtgt[j] - Xsrc[k] ) / ( Xsrc[k+1] - Xsrc[k] );
-
             Xrebin[j] = Xsrc[k] + ( Xsrc[k+1] - Xsrc[k] ) * t;
             Yrebin[j] = Ysrc[k] + ( Ysrc[k+1] - Ysrc[k] ) * t;
 
@@ -109,6 +107,151 @@ Bool CSpectrumFluxAxis::Rebin( const TFloat64Range& range, const CSpectrumFluxAx
 
         k++;
     }
+
+    while( j < targetSpectralAxis.GetSamplesCount() )
+    {
+        rebinedMask[j] = 0;
+        Yrebin[j] = 0.0;
+        j++;
+    }
+}
+
+Bool CSpectrumFluxAxis::Rebin2( const TFloat64Range& range, const CSpectrumFluxAxis& sourceFluxAxis, const CSpectrumSpectralAxis& sourceSpectralAxis, const CSpectrumSpectralAxis& targetSpectralAxis,
+                               CSpectrumFluxAxis& rebinedFluxAxis, CSpectrumSpectralAxis& rebinedSpectralAxis, CMask& rebinedMask  )
+{
+    if( sourceFluxAxis.GetSamplesCount() != sourceSpectralAxis.GetSamplesCount() )
+        return false;
+
+    //the spectral axis should be in the same scale
+    TFloat64Range logIntersectedLambdaRange( log( range.GetBegin() ), log( range.GetEnd() ) );
+    TFloat64Range currentRange = logIntersectedLambdaRange;
+    if( sourceSpectralAxis.IsInLinearScale() != targetSpectralAxis.IsInLinearScale() )
+        return false;
+    if(sourceSpectralAxis.IsInLinearScale()){
+        currentRange = range;
+    }
+
+    //rebinedFluxAxis.SetSize( targetSpectralAxis.GetSamplesCount() );
+    //rebinedSpectralAxis.SetSize( targetSpectralAxis.GetSamplesCount() );
+    //rebinedMask.SetSize( targetSpectralAxis.GetSamplesCount() );
+
+    const Float64* Xsrc = sourceSpectralAxis.GetSamples();
+    const Float64* Ysrc = sourceFluxAxis.GetSamples();
+    const Float64* Xtgt = targetSpectralAxis.GetSamples();
+    Float64* Yrebin = rebinedFluxAxis.GetSamples();
+    Float64* Xrebin = rebinedSpectralAxis.GetSamples();
+
+    // Move cursors up to lambda range start
+    Int32 j = 0;
+    while( j<targetSpectralAxis.GetSamplesCount() && Xtgt[j] < currentRange.GetBegin() )
+    {
+        rebinedMask[j] = 0;
+        Yrebin[j] = 0.0;
+        j++;
+    }
+    // Include ALL lambda range
+    //if( j > 0 )
+    //    j--;
+
+    /* //Original interp.
+    Int32 k = 0;
+    Float64 t = 0.0;
+    // For each sample in the valid lambda range interval.
+    while( k<sourceSpectralAxis.GetSamplesCount()-1 && Xsrc[k] <= currentRange.GetEnd() )
+    {
+        // For each sample in the target spectrum that are in between two continous source sample
+        while( j<targetSpectralAxis.GetSamplesCount() && Xtgt[j] <= Xsrc[k+1] )
+        {
+            // perform linear interpolation of the flux
+            t = ( Xtgt[j] - Xsrc[k] ) / ( Xsrc[k+1] - Xsrc[k] );
+            Xrebin[j] = Xsrc[k] + ( Xsrc[k+1] - Xsrc[k] ) * t;
+            Yrebin[j] = Ysrc[k] + ( Ysrc[k+1] - Ysrc[k] ) * t;
+
+            // closest value
+            //Xrebin[j] = Xsrc[k];
+            //Yrebin[j] = Ysrc[k];
+
+            rebinedMask[j] = 1;
+
+            j++;
+        }
+
+        k++;
+    }
+    //*/
+
+    /* //lookup speed
+    Int32 k = 0;
+    Int32 kprev = 0;
+    Int32 n = sourceSpectralAxis.GetSamplesCount();
+//    Int32 jmax = gsl_interp_bsearch (Xtgt, currentRange.GetEnd(), 0, targetSpectralAxis.GetSamplesCount());
+//    for(k=j; k<=jmax; k++){
+
+//        Xrebin[k] = Xtgt[k];
+//        Yrebin[k] = 0;
+//        rebinedMask[k] = 1;
+//    }
+    // For each sample in the valid lambda range interval.
+    while( j<targetSpectralAxis.GetSamplesCount() && Xtgt[j] <= currentRange.GetEnd() )
+    {
+        k = gsl_interp_bsearch (Xsrc, Xtgt[j], kprev, n);
+        kprev = k;
+        // closest value
+        Xrebin[j] = Xtgt[j];
+        Yrebin[j] = Ysrc[k];
+
+        rebinedMask[j] = 1;
+        j++;
+    }
+    //return false;
+    //*/
+
+    //* //
+    Int32 k = 0;
+    Int32 t = 0;
+    while( k<sourceSpectralAxis.GetSamplesCount()-1 && Xsrc[k] <= currentRange.GetEnd() )
+    {
+        // For each sample in the target spectrum that are in between two continous source sample
+        while( j<targetSpectralAxis.GetSamplesCount() && Xtgt[j] <= Xsrc[k+1] )
+        {
+            // perform linear interpolation of the flux
+            t = ( Xtgt[j] - Xsrc[k] ) / ( Xsrc[k+1] - Xsrc[k] );
+            Xrebin[j] = Xtgt[j];
+            Yrebin[j] = Ysrc[k] + ( Ysrc[k+1] - Ysrc[k] ) * t;
+
+            // closest value
+            //Xrebin[j] = Xsrc[k];
+            //Yrebin[j] = Ysrc[k];
+
+            rebinedMask[j] = 1;
+            j++;
+        }
+        k++;
+    }
+    //*/
+
+    /* // GSL method
+    //inialise and allocate the gsl objects
+    Int32 n = sourceSpectralAxis.GetSamplesCount();
+    gsl_interp *interpolation = gsl_interp_alloc (gsl_interp_linear,n);
+    gsl_interp_init(interpolation, Xsrc, Ysrc, n);
+    gsl_interp_accel * accelerator =  gsl_interp_accel_alloc();
+    Int32 k = 0;
+    // For each sample in the valid lambda range interval.
+    while( k<sourceSpectralAxis.GetSamplesCount()-1 && Xsrc[k] <= currentRange.GetEnd() )
+    {
+        // For each sample in the target spectrum that are in between two continous source sample
+        while( j<targetSpectralAxis.GetSamplesCount() && Xtgt[j] <= Xsrc[k+1] )
+        {
+            Xrebin[j] = Xtgt[j];
+            Yrebin[j] = gsl_interp_eval(interpolation, Xsrc, Ysrc, Xrebin[j], accelerator);
+            rebinedMask[j] = 1;
+
+            j++;
+        }
+        k++;
+    }
+    //*/
 
     while( j < targetSpectralAxis.GetSamplesCount() )
     {

@@ -78,6 +78,7 @@ private:
 
     CRef<CSpectrum>                 m_Spectrum;
     CRef<CSpectrum>                 m_SpectrumWithoutContinuum;
+
     CRef<CTemplateCatalog>          m_TemplateCatalog;
     CRef<CRayCatalog>               m_RayCatalog;
 
