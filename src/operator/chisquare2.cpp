@@ -35,7 +35,7 @@ COperatorChiSquare2::~COperatorChiSquare2()
 }
 
 
-Void COperatorChiSquare2::BasicFit( const CSpectrum& spectrum, const CTemplate& tpl, CTemplate& tplFineBuffer,
+Void COperatorChiSquare2::BasicFit( const CSpectrum& spectrum, const CTemplate& tpl, Float64* pfgTplBuffer,
                                 const TFloat64Range& lambdaRange, Float64 redshift, Float64 overlapThreshold,
                                 Float64& overlapRate, Float64& chiSquare, EStatus& status )
 {
@@ -75,10 +75,8 @@ Void COperatorChiSquare2::BasicFit( const CSpectrum& spectrum, const CTemplate& 
     CSpectrumSpectralAxis& itplTplSpectralAxis = m_templateRebined_bf.GetSpectralAxis();
     CMask& itplMask = m_mskRebined_bf;
 
-    CSpectrumFluxAxis& tplFineFluxAxis = tplFineBuffer.GetFluxAxis();
-
     //CSpectrumFluxAxis::Rebin( intersectedLambdaRange, tplFluxAxis, shiftedTplSpectralAxis, spcSpectralAxis, itplTplFluxAxis, itplTplSpectralAxis, itplMask );
-    CSpectrumFluxAxis::Rebin2( intersectedLambdaRange, tplFluxAxis, tplFineFluxAxis, redshift, m_shiftedTplSpectralAxis_bf, spcSpectralAxis, itplTplFluxAxis, itplTplSpectralAxis, itplMask );
+    CSpectrumFluxAxis::Rebin2( intersectedLambdaRange, tplFluxAxis, pfgTplBuffer, redshift, m_shiftedTplSpectralAxis_bf, spcSpectralAxis, itplTplFluxAxis, itplTplSpectralAxis, itplMask );
 
     /*//overlapRate, Method 1
     CMask mask;
@@ -222,11 +220,18 @@ const COperatorResult* COperatorChiSquare2::Compute(const CSpectrum& spectrum, c
     Float64 lmin = 0;
     Float64 lmax = tplSpectralAxis[n-1];
     Int32 nTgt = (lmax-lmin)/dLambdaTgt + 2.0/dLambdaTgt;
-    CTemplate       templateFine;
-    templateFine.GetSpectralAxis().SetSize(nTgt);
-    templateFine.GetFluxAxis().SetSize(nTgt);
-    Float64* Yfine = templateFine.GetFluxAxis().GetSamples();
-    Float64* Xfine = templateFine.GetSpectralAxis().GetSamples();
+
+    // pfg with std::vector
+    //CTemplate       templateFine;
+    //templateFine.GetSpectralAxis().SetSize(nTgt);
+    //templateFine.GetFluxAxis().SetSize(nTgt);
+    //Float64* precomputedFineGridTplFlux = templateFine.GetFluxAxis().GetSamples();
+    // pfg with malloc
+    Float64* precomputedFineGridTplFlux = (Float64*)malloc(nTgt*sizeof(Float64));
+    // pfg with static array => doesn't work
+    //nTgt = 999999;
+    //Float64 precomputedFineGridTplFlux[999999];
+    //Log.LogInfo( "nTgt: %d samples", nTgt);
 
     //inialise and allocate the gsl objects
     Float64* Ysrc = tplFluxAxis.GetSamples();
@@ -245,17 +250,16 @@ const COperatorResult* COperatorChiSquare2::Compute(const CSpectrum& spectrum, c
     Float64 x = 0.0;
     for(k=0; k<nTgt; k++){
         x = lmin + k*dLambdaTgt;
-        Xfine[k] = x;
         if(x < tplSpectralAxis[0] || x > tplSpectralAxis[n-1]){
-            Yfine[k] = 0.0;
+            precomputedFineGridTplFlux[k] = 0.0;
         }else{
-            //Yfine[k] = gsl_interp_eval(interpolation, Xsrc, Ysrc, x, accelerator);
-            Yfine[k] = gsl_spline_eval (spline, x, accelerator);
+            //precomputedFineGridTplFlux[k] = gsl_interp_eval(interpolation, Xsrc, Ysrc, x, accelerator);
+            precomputedFineGridTplFlux[k] = gsl_spline_eval (spline, x, accelerator);
         }
     }
     //*/
 
-    //*//debug:
+    /*//debug:
     // save templateFine
     FILE* f = fopen( "template_fine.txt", "w+" );
     for(Int32 m=0; m<nTgt; m++){
@@ -284,10 +288,10 @@ const COperatorResult* COperatorChiSquare2::Compute(const CSpectrum& spectrum, c
 
     for (Int32 i=0;i<sortedRedshifts.size();i++)
     {
-        BasicFit( spectrum, tpl, templateFine, lambdaRange, result->Redshifts[i], overlapThreshold, result->Overlap[i], result->ChiSquare[i], result->Status[i] );
+        BasicFit( spectrum, tpl, precomputedFineGridTplFlux, lambdaRange, result->Redshifts[i], overlapThreshold, result->Overlap[i], result->ChiSquare[i], result->Status[i] );
     }
 
-
+    free(precomputedFineGridTplFlux);
     return result;
 
 }

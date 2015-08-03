@@ -39,7 +39,7 @@ public:
 
     static Bool         Rebin( const TFloat64Range& range, const CSpectrumFluxAxis& sourceFluxAxis, const CSpectrumSpectralAxis& sourceSpectralAxis, const CSpectrumSpectralAxis& targetSpectralAxis,
                                CSpectrumFluxAxis& rebinedFluxAxis, CSpectrumSpectralAxis& rebinedSpectralAxis, CMask& rebinedMask );
-    static Bool         Rebin2(const TFloat64Range& range, const CSpectrumFluxAxis& sourceFluxAxis, const CSpectrumFluxAxis &sourceFineFluxAxis, Float64 sourcez, const CSpectrumSpectralAxis& sourceSpectralAxis, const CSpectrumSpectralAxis& targetSpectralAxis,
+    static Bool         Rebin2(const TFloat64Range& range, const CSpectrumFluxAxis& sourceFluxAxis, const Float64 *pfgTplBuffer, Float64 sourcez, const CSpectrumSpectralAxis& sourceSpectralAxis, const CSpectrumSpectralAxis& targetSpectralAxis,
                                CSpectrumFluxAxis& rebinedFluxAxis, CSpectrumSpectralAxis& rebinedSpectralAxis, CMask& rebinedMask );
 
 private:

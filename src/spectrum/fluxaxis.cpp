@@ -122,7 +122,7 @@ Bool CSpectrumFluxAxis::Rebin( const TFloat64Range& range, const CSpectrumFluxAx
 /// - it uses already allocated rebinedFluxAxis, rebinedSpectralAxis and rebinedMask
 /// - linear interpolation is performed
 ///
-Bool CSpectrumFluxAxis::Rebin2( const TFloat64Range& range, const CSpectrumFluxAxis& sourceFluxAxis, const CSpectrumFluxAxis& sourceFineFluxAxis, Float64 sourcez, const CSpectrumSpectralAxis& sourceSpectralAxis, const CSpectrumSpectralAxis& targetSpectralAxis,
+Bool CSpectrumFluxAxis::Rebin2( const TFloat64Range& range, const CSpectrumFluxAxis& sourceFluxAxis, const Float64* pfgTplBuffer, Float64 sourcez, const CSpectrumSpectralAxis& sourceSpectralAxis, const CSpectrumSpectralAxis& targetSpectralAxis,
                                CSpectrumFluxAxis& rebinedFluxAxis, CSpectrumSpectralAxis& rebinedSpectralAxis, CMask& rebinedMask  )
 {
     if( sourceFluxAxis.GetSamplesCount() != sourceSpectralAxis.GetSamplesCount() )
@@ -143,7 +143,6 @@ Bool CSpectrumFluxAxis::Rebin2( const TFloat64Range& range, const CSpectrumFluxA
 
     const Float64* Xsrc = sourceSpectralAxis.GetSamples();
     const Float64* Ysrc = sourceFluxAxis.GetSamples();
-    const Float64* YsrcFine = sourceFineFluxAxis.GetSamples();
     const Float64* Xtgt = targetSpectralAxis.GetSamples();
     Float64* Yrebin = rebinedFluxAxis.GetSamples();
     Float64* Xrebin = rebinedSpectralAxis.GetSamples();
@@ -197,22 +196,9 @@ Bool CSpectrumFluxAxis::Rebin2( const TFloat64Range& range, const CSpectrumFluxA
         k = (int)(Xtgt[j]*Coeffk+0.5);
        // k = 10;
         Xrebin[j] = Xtgt[j];
-        Yrebin[j] = YsrcFine[k];
+        Yrebin[j] = pfgTplBuffer[k];
         rebinedMask[j] = 1;
 
-//        // For each sample in the src spectrum that are in between two continous tgt sample
-//        while( k<sourceSpectralAxis.GetSamplesCount()-1 && Xsrc[k] <= Xtgt[j+1] )
-//        {
-//            if(Xsrc[k] >= Xtgt[j]){
-//                // closest value
-//                Xrebin[j] = Xsrc[k];// or Xtgt[j] ?
-//                Yrebin[j] = Ysrc[k];
-
-//                rebinedMask[j] = 1;
-//                break;
-//            }
-//            k++;
-//        }
         j++;
 
     }
