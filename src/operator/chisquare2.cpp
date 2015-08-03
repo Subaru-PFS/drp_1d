@@ -12,6 +12,10 @@
 #include <boost/numeric/conversion/bounds.hpp>
 
 #include <math.h>
+#include <gsl/gsl_interp.h>
+#include <gsl/gsl_spline.h>
+#include <algorithm>    // std::sort
+
 #include <assert.h>
 
 #define NOT_OVERLAP_VALUE NAN
@@ -31,7 +35,7 @@ COperatorChiSquare2::~COperatorChiSquare2()
 }
 
 
-Void COperatorChiSquare2::BasicFit( const CSpectrum& spectrum, const CTemplate& tpl, CTemplate& tplRebined, CMask& mskRebined,
+Void COperatorChiSquare2::BasicFit( const CSpectrum& spectrum, const CTemplate& tpl, CTemplate& tplFineBuffer,
                                 const TFloat64Range& lambdaRange, Float64 redshift, Float64 overlapThreshold,
                                 Float64& overlapRate, Float64& chiSquare, EStatus& status )
 {
@@ -41,7 +45,7 @@ Void COperatorChiSquare2::BasicFit( const CSpectrum& spectrum, const CTemplate& 
 
     Bool retVal;
 
-    CSpectrumSpectralAxis shiftedTplSpectralAxis( tpl.GetSampleCount(), false );
+    //CSpectrumSpectralAxis shiftedTplSpectralAxis( tpl.GetSampleCount(), false );
 
     const CSpectrumSpectralAxis& spcSpectralAxis = spectrum.GetSpectralAxis();
     const CSpectrumFluxAxis& spcFluxAxis = spectrum.GetFluxAxis();
@@ -55,38 +59,40 @@ Void COperatorChiSquare2::BasicFit( const CSpectrum& spectrum, const CTemplate& 
 
     // Compute shifted template
     Float64 onePlusRedshift = 1.0 + redshift;
-    shiftedTplSpectralAxis.ShiftByWaveLength( tplSpectralAxis, onePlusRedshift, CSpectrumSpectralAxis::nShiftForward );
-
+    m_shiftedTplSpectralAxis_bf.ShiftByWaveLength( tplSpectralAxis, onePlusRedshift, CSpectrumSpectralAxis::nShiftForward );
     TFloat64Range intersectedLambdaRange( 0.0, 0.0 );
 
     // Compute clamped lambda range over template
     TFloat64Range tplLambdaRange;
-    retVal = shiftedTplSpectralAxis.ClampLambdaRange( lambdaRange, tplLambdaRange );
+    retVal = m_shiftedTplSpectralAxis_bf.ClampLambdaRange( lambdaRange, tplLambdaRange );
 
     // if there is any intersection between the lambda range of the spectrum and the lambda range of the template
     // Compute the intersected range
     TFloat64Range::Intersect( tplLambdaRange, spcLambdaRange, intersectedLambdaRange );
 
     //UInt32 tgtn = spcSpectralAxis.GetSamplesCount() ;
-    CSpectrumFluxAxis& itplTplFluxAxis = tplRebined.GetFluxAxis();
-    CSpectrumSpectralAxis& itplTplSpectralAxis = tplRebined.GetSpectralAxis();
-    CMask& itplMask = mskRebined;
-    //CSpectrumFluxAxis::Rebin( intersectedLambdaRange, tplFluxAxis, shiftedTplSpectralAxis, spcSpectralAxis, itplTplFluxAxis, itplTplSpectralAxis, itplMask );
-    CSpectrumFluxAxis::Rebin2( intersectedLambdaRange, tplFluxAxis, shiftedTplSpectralAxis, spcSpectralAxis, itplTplFluxAxis, itplTplSpectralAxis, itplMask );
+    CSpectrumFluxAxis& itplTplFluxAxis = m_templateRebined_bf.GetFluxAxis();
+    CSpectrumSpectralAxis& itplTplSpectralAxis = m_templateRebined_bf.GetSpectralAxis();
+    CMask& itplMask = m_mskRebined_bf;
 
-    /*//Method 1
+    CSpectrumFluxAxis& tplFineFluxAxis = tplFineBuffer.GetFluxAxis();
+
+    //CSpectrumFluxAxis::Rebin( intersectedLambdaRange, tplFluxAxis, shiftedTplSpectralAxis, spcSpectralAxis, itplTplFluxAxis, itplTplSpectralAxis, itplMask );
+    CSpectrumFluxAxis::Rebin2( intersectedLambdaRange, tplFluxAxis, tplFineFluxAxis, redshift, m_shiftedTplSpectralAxis_bf, spcSpectralAxis, itplTplFluxAxis, itplTplSpectralAxis, itplMask );
+
+    /*//overlapRate, Method 1
     CMask mask;
     spcSpectralAxis.GetMask( lambdaRange, mask );
     itplMask &= mask;
     overlapRate = mask.CompouteOverlapRate( itplMask );
     //*/
 
-    //Method 2
+    //overlapRate, Method 2
     //CMask mask;
     //spcSpectralAxis.GetMask( lambdaRange, mask );
     //overlapRate = mask.IntersectAndComputeOverlapRate( itplMask );
 
-    //Method 3
+    //overlapRate, Method 3
     overlapRate = spcSpectralAxis.IntersectMaskAndComputeOverlapRate( lambdaRange, itplMask );
 
     // Check for overlap rate
@@ -196,27 +202,89 @@ const COperatorResult* COperatorChiSquare2::Compute(const CSpectrum& spectrum, c
         return NULL;
     }
 
-    // Allocate the rebined template and mask with regard to the spectrum size
-    CTemplate       templateRebined;
-    //templateRebined = new CTemplate();
-    templateRebined.GetSpectralAxis().SetSize(spectrum.GetSampleCount());
-    templateRebined.GetFluxAxis().SetSize(spectrum.GetSampleCount());
-    CMask mskRebined;
-    mskRebined.SetSize(spectrum.GetSampleCount());
+    // Pre-Allocate the rebined template and mask with regard to the spectrum size
+    m_templateRebined_bf.GetSpectralAxis().SetSize(spectrum.GetSampleCount());
+    m_templateRebined_bf.GetFluxAxis().SetSize(spectrum.GetSampleCount());
+    m_mskRebined_bf.SetSize(spectrum.GetSampleCount());
+    m_shiftedTplSpectralAxis_bf.SetSize( tpl.GetSampleCount());
+
+
+    TFloat64List sortedRedshifts = redshifts;
+    std::sort(sortedRedshifts.begin(), sortedRedshifts.end());
+    //*/
+    // Precalculate a fine grid template to be used for the 'closest value' rebin method
+    Int32 n = tpl.GetSampleCount();
+    CSpectrumFluxAxis tplFluxAxis = tpl.GetFluxAxis();
+    CSpectrumSpectralAxis tplSpectralAxis = tpl.GetSpectralAxis();
+    //Float64 dLambdaTgt =  1.0 * ( spectrum.GetMeanResolution()*0.9 )/( 1+sortedRedshifts[sortedRedshifts.size()-1] );
+    Float64 dLambdaTgt =  0.1;
+    //Float64 lmin = tplSpectralAxis[0];
+    Float64 lmin = 0;
+    Float64 lmax = tplSpectralAxis[n-1];
+    Int32 nTgt = (lmax-lmin)/dLambdaTgt + 2.0/dLambdaTgt;
+    CTemplate       templateFine;
+    templateFine.GetSpectralAxis().SetSize(nTgt);
+    templateFine.GetFluxAxis().SetSize(nTgt);
+    Float64* Yfine = templateFine.GetFluxAxis().GetSamples();
+    Float64* Xfine = templateFine.GetSpectralAxis().GetSamples();
+
+    //inialise and allocate the gsl objects
+    Float64* Ysrc = tplFluxAxis.GetSamples();
+    Float64* Xsrc = tplSpectralAxis.GetSamples();
+    // linear
+    //gsl_interp *interpolation = gsl_interp_alloc (gsl_interp_linear,n);
+    //gsl_interp_init(interpolation, Xsrc, Ysrc, n);
+    //gsl_interp_accel * accelerator =  gsl_interp_accel_alloc();
+
+    //spline
+    gsl_spline *spline = gsl_spline_alloc (gsl_interp_cspline, n);
+    gsl_spline_init (spline, Xsrc, Ysrc, n);
+    gsl_interp_accel * accelerator =  gsl_interp_accel_alloc();
+
+    Int32 k = 0;
+    Float64 x = 0.0;
+    for(k=0; k<nTgt; k++){
+        x = lmin + k*dLambdaTgt;
+        Xfine[k] = x;
+        if(x < tplSpectralAxis[0] || x > tplSpectralAxis[n-1]){
+            Yfine[k] = 0.0;
+        }else{
+            //Yfine[k] = gsl_interp_eval(interpolation, Xsrc, Ysrc, x, accelerator);
+            Yfine[k] = gsl_spline_eval (spline, x, accelerator);
+        }
+    }
+    //*/
+
+    //*//debug:
+    // save templateFine
+    FILE* f = fopen( "template_fine.txt", "w+" );
+    for(Int32 m=0; m<nTgt; m++){
+        if( Yfine[m] < 0.0001 ){
+            fprintf( f, "%e %e\n", Xfine[m], Yfine[m]);
+        }else{
+            fprintf( f, "%f %f\n", Xfine[m], Yfine[m]);
+        }
+    }
+    fclose( f );
+    //*/
+
+    // use original tpl
+    //CTemplate _tpl = tpl;
+    // use fine tpl
+    //CTemplate _tpl = templateFine;
 
     CChisquareResult* result = new CChisquareResult();
+    result->ChiSquare.resize( sortedRedshifts.size() );
+    result->Redshifts.resize( sortedRedshifts.size() );
+    result->Overlap.resize( sortedRedshifts.size() );
+    result->Status.resize( sortedRedshifts.size() );
 
-    result->ChiSquare.resize( redshifts.size() );
-    result->Redshifts.resize( redshifts.size() );
-    result->Overlap.resize( redshifts.size() );
-    result->Status.resize( redshifts.size() );
-
-    result->Redshifts = redshifts;
+    result->Redshifts = sortedRedshifts;
 
 
-    for (Int32 i=0;i<redshifts.size();i++)
+    for (Int32 i=0;i<sortedRedshifts.size();i++)
     {
-        BasicFit( spectrum, tpl, templateRebined, mskRebined, lambdaRange, result->Redshifts[i], overlapThreshold, result->Overlap[i], result->ChiSquare[i], result->Status[i] );
+        BasicFit( spectrum, tpl, templateFine, lambdaRange, result->Redshifts[i], overlapThreshold, result->Overlap[i], result->ChiSquare[i], result->Status[i] );
     }
 
 

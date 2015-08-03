@@ -9,6 +9,7 @@
 
 #include <math.h>
 #include <gsl/gsl_interp.h>
+#include <gsl/gsl_spline.h>
 #include <epic/core/log/log.h>
 
 using namespace NSEpic;
@@ -116,7 +117,12 @@ Bool CSpectrumFluxAxis::Rebin( const TFloat64Range& range, const CSpectrumFluxAx
     }
 }
 
-Bool CSpectrumFluxAxis::Rebin2( const TFloat64Range& range, const CSpectrumFluxAxis& sourceFluxAxis, const CSpectrumSpectralAxis& sourceSpectralAxis, const CSpectrumSpectralAxis& targetSpectralAxis,
+///
+/// * This rebin method targets processing speed:
+/// - it uses already allocated rebinedFluxAxis, rebinedSpectralAxis and rebinedMask
+/// - linear interpolation is performed
+///
+Bool CSpectrumFluxAxis::Rebin2( const TFloat64Range& range, const CSpectrumFluxAxis& sourceFluxAxis, const CSpectrumFluxAxis& sourceFineFluxAxis, Float64 sourcez, const CSpectrumSpectralAxis& sourceSpectralAxis, const CSpectrumSpectralAxis& targetSpectralAxis,
                                CSpectrumFluxAxis& rebinedFluxAxis, CSpectrumSpectralAxis& rebinedSpectralAxis, CMask& rebinedMask  )
 {
     if( sourceFluxAxis.GetSamplesCount() != sourceSpectralAxis.GetSamplesCount() )
@@ -137,6 +143,7 @@ Bool CSpectrumFluxAxis::Rebin2( const TFloat64Range& range, const CSpectrumFluxA
 
     const Float64* Xsrc = sourceSpectralAxis.GetSamples();
     const Float64* Ysrc = sourceFluxAxis.GetSamples();
+    const Float64* YsrcFine = sourceFineFluxAxis.GetSamples();
     const Float64* Xtgt = targetSpectralAxis.GetSamples();
     Float64* Yrebin = rebinedFluxAxis.GetSamples();
     Float64* Xrebin = rebinedSpectralAxis.GetSamples();
@@ -180,7 +187,63 @@ Bool CSpectrumFluxAxis::Rebin2( const TFloat64Range& range, const CSpectrumFluxA
     }
     //*/
 
-    /* //lookup speed
+    //* // Precomputed FINE GRID nearest sample, 20150801
+    Int32 k = 0;
+    Float64 dl = 0.1;
+    Float64 Coeffk = 1.0/dl/(1+sourcez);
+    // For each sample in the target spectrum
+    while( j<targetSpectralAxis.GetSamplesCount() && Xtgt[j] <= currentRange.GetEnd() )
+    {
+        k = (int)(Xtgt[j]*Coeffk+0.5);
+       // k = 10;
+        Xrebin[j] = Xtgt[j];
+        Yrebin[j] = YsrcFine[k];
+        rebinedMask[j] = 1;
+
+//        // For each sample in the src spectrum that are in between two continous tgt sample
+//        while( k<sourceSpectralAxis.GetSamplesCount()-1 && Xsrc[k] <= Xtgt[j+1] )
+//        {
+//            if(Xsrc[k] >= Xtgt[j]){
+//                // closest value
+//                Xrebin[j] = Xsrc[k];// or Xtgt[j] ?
+//                Yrebin[j] = Ysrc[k];
+
+//                rebinedMask[j] = 1;
+//                break;
+//            }
+//            k++;
+//        }
+        j++;
+
+    }
+    //*/
+
+    /* // GSL method
+    //inialise and allocate the gsl objects
+    Int32 n = sourceSpectralAxis.GetSamplesCount();
+    //lin
+    //gsl_interp *interpolation = gsl_interp_alloc (gsl_interp_linear,n);
+    //gsl_interp_init(interpolation, Xsrc, Ysrc, n);
+    //gsl_interp_accel * accelerator =  gsl_interp_accel_alloc();
+    //spline
+    gsl_spline *spline = gsl_spline_alloc (gsl_interp_cspline, n);
+    gsl_spline_init (spline, Xsrc, Ysrc, n);
+    gsl_interp_accel * accelerator =  gsl_interp_accel_alloc();
+
+    Int32 k = 0;
+    // For each sample in the valid lambda range interval.
+    while( j<targetSpectralAxis.GetSamplesCount() && Xtgt[j] <= currentRange.GetEnd() )
+    {
+            Xrebin[j] = Xtgt[j];
+            //Yrebin[j] = gsl_interp_eval(interpolation, Xsrc, Ysrc, Xrebin[j], accelerator);
+            Yrebin[j] = gsl_spline_eval (spline, Xrebin[j], accelerator);
+            rebinedMask[j] = 1;
+
+            j++;
+    }
+    //*/
+
+    /* //nearest sample, lookup
     Int32 k = 0;
     Int32 kprev = 0;
     Int32 n = sourceSpectralAxis.GetSamplesCount();
@@ -206,59 +269,27 @@ Bool CSpectrumFluxAxis::Rebin2( const TFloat64Range& range, const CSpectrumFluxA
     //return false;
     //*/
 
-    //* //
-    Int32 k = 0;
-    Int32 t = 0;
-    while( k<sourceSpectralAxis.GetSamplesCount()-1 && Xsrc[k] <= currentRange.GetEnd() )
-    {
-        // For each sample in the target spectrum that are in between two continous source sample
-        while( j<targetSpectralAxis.GetSamplesCount() && Xtgt[j] <= Xsrc[k+1] )
-        {
-            // perform linear interpolation of the flux
-            t = ( Xtgt[j] - Xsrc[k] ) / ( Xsrc[k+1] - Xsrc[k] );
-            Xrebin[j] = Xtgt[j];
-            Yrebin[j] = Ysrc[k] + ( Ysrc[k+1] - Ysrc[k] ) * t;
-
-            // closest value
-            //Xrebin[j] = Xsrc[k];
-            //Yrebin[j] = Ysrc[k];
-
-            rebinedMask[j] = 1;
-            j++;
-        }
-        k++;
-    }
-    //*/
-
-    /* // GSL method
-    //inialise and allocate the gsl objects
-    Int32 n = sourceSpectralAxis.GetSamplesCount();
-    gsl_interp *interpolation = gsl_interp_alloc (gsl_interp_linear,n);
-    gsl_interp_init(interpolation, Xsrc, Ysrc, n);
-    gsl_interp_accel * accelerator =  gsl_interp_accel_alloc();
-    Int32 k = 0;
-    // For each sample in the valid lambda range interval.
-    while( k<sourceSpectralAxis.GetSamplesCount()-1 && Xsrc[k] <= currentRange.GetEnd() )
-    {
-        // For each sample in the target spectrum that are in between two continous source sample
-        while( j<targetSpectralAxis.GetSamplesCount() && Xtgt[j] <= Xsrc[k+1] )
-        {
-            Xrebin[j] = Xtgt[j];
-            Yrebin[j] = gsl_interp_eval(interpolation, Xsrc, Ysrc, Xrebin[j], accelerator);
-            rebinedMask[j] = 1;
-
-            j++;
-        }
-        k++;
-    }
-    //*/
-
     while( j < targetSpectralAxis.GetSamplesCount() )
     {
         rebinedMask[j] = 0;
         Yrebin[j] = 0.0;
         j++;
     }
+
+    /*//debug:
+    // save rebinedtpl
+    if(sourcez==0.5){
+        FILE* f = fopen( "template_rebined.txt", "w+" );
+        for(Int32 m=0; m<targetSpectralAxis.GetSamplesCount(); m++){
+            if( Yrebin[m] < 0.0001 ){
+                fprintf( f, "%e %e\n", Xrebin[m], Yrebin[m]);
+            }else{
+                fprintf( f, "%f %f\n", Xrebin[m], Yrebin[m]);
+            }
+        }
+        fclose( f );
+    }
+    //*/
 }
 
 Void CSpectrumFluxAxis::SetSize( UInt32 s )
