@@ -99,7 +99,7 @@ const CRayDetectionResult* CRayDetection::Compute( const CSpectrum& spectrum, co
         // Check if gaussian fit is very different from peak itself
         if(toAdd){
             //find max value and pos
-            Float64 max_value = DBL_MIN;
+            Float64 max_value = -DBL_MAX;
             Int32 max_index = -1;
             for( Int32 k=resPeaks[j].GetBegin(); k<resPeaks[j].GetEnd()+1; k++ )
             {
@@ -182,7 +182,7 @@ const CRayDetectionResult* CRayDetection::Compute( const CSpectrum& spectrum, co
     return result;
 }
 
-Float64 CRayDetection::ComputeFluxes(const CSpectrum& spectrum, Float64 winsize, TInt32Range range, TFloat64List mask){
+Float64 CRayDetection::ComputeFluxes(const CSpectrum& spectrum, Float64 winsize, TInt32Range range, TFloat64List mask, Float64 *maxFluxnoContinuum, Float64 *noise){
     const CSpectrum& spc = spectrum;
     const CSpectrumFluxAxis fluxAxis = spc.GetFluxAxis();
     const CSpectrumSpectralAxis specAxis = spc.GetSpectralAxis();
@@ -196,7 +196,7 @@ Float64 CRayDetection::ComputeFluxes(const CSpectrum& spectrum, Float64 winsize,
         }
     }
 
-    Float64 max_value = DBL_MIN;
+    Float64 max_value = -DBL_MAX;
     Int32 max_index = -1;
     for( Int32 k=range.GetBegin(); k<range.GetEnd()+1; k++ )
     {
@@ -231,6 +231,7 @@ Float64 CRayDetection::ComputeFluxes(const CSpectrum& spectrum, Float64 winsize,
     }
     Float64 med = medianProcessor.Find( fluxMasked, n );
     Float64 xmad = XMadFind(  fluxMasked, n , med );
+    Float64 noise_win= xmad;
     // use noise spectrum
     const Float64* error = fluxAxis.GetError();
     if( error!= NULL ){
@@ -259,13 +260,23 @@ Float64 CRayDetection::ComputeFluxes(const CSpectrum& spectrum, Float64 winsize,
             }
             // choose between noise mean or xmad
             if(mean_noise>xmad){
-                xmad = mean_noise;
+                noise_win = mean_noise;
             }
+            //noise_win = mean_noise; //debug
         }
 
     }
     Float64 max_value_no_continuum = max_value - med;
-    Float64 ratioAmp=max_value_no_continuum/xmad;
+    Float64 ratioAmp=max_value_no_continuum/noise_win;
+
+    // assign output pointers
+    if(maxFluxnoContinuum != NULL){
+        *maxFluxnoContinuum = max_value_no_continuum;
+    }
+    if(noise != NULL){
+        *noise = xmad;
+    }
+
 
     return ratioAmp;
 }

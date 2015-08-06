@@ -1,6 +1,9 @@
 #include <epic/redshift/operator/raymatchingresult.h>
 #include <stdio.h>
 #include <math.h>
+#include <algorithm>    // std::sort
+
+#include <epic/redshift/ray/rules.h>
 
 using namespace NSEpic;
 
@@ -54,9 +57,9 @@ Void CRayMatchingResult::Save( const COperatorResultStore& store, std::ostream& 
             std::string strRest = "(";
             for( UInt32 i=0; i<currentSet.size(); i++ )
             {
-                sprintf(tmpChar, "%.1f, ", currentSet[i].DetectedRay);
+                sprintf(tmpChar, "%.1f, ", currentSet[i].DetectedRay.GetPosition());
                 strDetected.append(tmpChar);
-                sprintf(tmpChar, "%.1f, ", currentSet[i].RestRay);
+                sprintf(tmpChar, "%.1f, ", currentSet[i].RestRay.GetPosition());
                 strRest.append(tmpChar);
             }
             strDetected = strDetected.substr(0, strDetected.size()-2);
@@ -187,6 +190,26 @@ TFloat64List CRayMatchingResult::GetRoundedRedshiftCandidatesOverNumber(Int32 nu
     return roundedRedshift;
 }
 
+TFloat64List CRayMatchingResult::GetExtendedRedshiftCandidatesOverNumber(Int32 number, Float64 step, Float64 rangeWidth) const
+{
+    TFloat64List roundedRedshift = GetRoundedRedshiftCandidatesOverNumber(number, step);
+    TFloat64List extendedRedshifts;
+    Int32 halfk = rangeWidth/step/2.0;
+    for( UInt32 j=0; j<roundedRedshift.size(); j++ )
+    {
+
+        for( Int32 k=-halfk; k<halfk; k++ )
+        {
+            Float64 z = roundedRedshift[j]+k*step;
+            extendedRedshifts.push_back(z);
+        }
+    }
+    std::sort(extendedRedshifts.begin(), extendedRedshifts.end());
+    extendedRedshifts.erase( std::unique( extendedRedshifts.begin(), extendedRedshifts.end() ), extendedRedshifts.end() );
+
+    return extendedRedshifts;
+}
+
 Float64 CRayMatchingResult::GetMeanRedshiftSolutionByIndex(Int32 index) const
 {
     if(index > SolutionSetList.size()-1)
@@ -232,7 +255,7 @@ Int32 CRayMatchingResult::getNStrongRestLines( const TSolutionSet& s ) const
         Int32 found  = 0;
         for( UInt32 c=0; c<ncatalog; c++ )
         {
-            if( fabs(currentSet[i].RestRay-strongRestRayList[c].GetPosition())<tol ){
+            if( fabs(currentSet[i].RestRay.GetPosition()-strongRestRayList[c].GetPosition())<tol ){
                 found = 1;
                 break;
             }
@@ -245,7 +268,7 @@ Int32 CRayMatchingResult::getNStrongRestLines( const TSolutionSet& s ) const
     return nStrong;
 }
 
-Int32 CRayMatchingResult::GetMaxMatchingNumber() const
+Int32   CRayMatchingResult::GetMaxMatchingNumber() const
 {
     if(SolutionSetList.size() < 1)
     {
@@ -263,4 +286,31 @@ Int32 CRayMatchingResult::GetMaxMatchingNumber() const
     }
 
     return maxNumber;
+}
+
+Void    CRayMatchingResult::FilterWithRules(CSpectrum spc, TFloat64Range lambdaRange, Float64 winsize)
+{
+    //return;
+    if(SolutionSetList.size() < 1)
+    {
+        return;
+    }
+
+
+    CRules rules(spc, m_DetectedCatalog, m_RestCatalog, lambdaRange, winsize);
+    TSolutionSetList    _solutionSetList;
+    for( UInt32 i=0; i<SolutionSetList.size() ; i++ )
+    {
+        TSolutionSet currentSet = SolutionSetList[i];
+        Float64 z = GetMeanRedshiftSolution(currentSet);
+        bool isValid = rules.check(z, currentSet);
+
+        if(isValid){
+            _solutionSetList.push_back(currentSet);
+        }
+
+    }
+
+    SolutionSetList = _solutionSetList;
+
 }

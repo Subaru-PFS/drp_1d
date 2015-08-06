@@ -5,6 +5,7 @@
 #include <epic/core/common/datatypes.h>
 
 #include <epic/redshift/ray/catalog.h>
+#include <epic/redshift/spectrum/spectrum.h>
 
 #include <vector>
 
@@ -20,11 +21,11 @@ public:
 
     struct SSolution
     {
-       Float64 DetectedRay;
-       Float64 RestRay;
+       CRay DetectedRay;
+       CRay RestRay;
        Float64 Redshift;
 
-       SSolution( Float64 detectedRay, Float64 restRay, Float64 redshift )
+       SSolution( CRay detectedRay, CRay restRay, Float64 redshift )
        {
            DetectedRay = detectedRay;
            RestRay = restRay;
@@ -33,10 +34,10 @@ public:
 
        bool operator < (const SSolution& str) const
        {
-           if(DetectedRay == str.DetectedRay){
-               return (RestRay < str.RestRay);
+           if(DetectedRay.GetPosition() == str.DetectedRay.GetPosition()){
+               return (RestRay.GetPosition() < str.RestRay.GetPosition());
            }else{
-               return (DetectedRay < str.DetectedRay);
+               return (DetectedRay.GetPosition() < str.DetectedRay.GetPosition());
            }
        }
     };
@@ -62,10 +63,13 @@ public:
     TFloat64List                GetAverageRedshiftListOverNumber(Int32 number) const;
 
     TFloat64List                GetRoundedRedshiftCandidatesOverNumber(Int32 number, Float64 step) const;
-    TFloat64List                GetRedshiftRangeCandidatesOverNumber(Int32 number) const;
+    TFloat64List                GetExtendedRedshiftCandidatesOverNumber(Int32 number, Float64 step, Float64 rangeWidth) const;
+
+    Void                        FilterWithRules(CSpectrum spc, TFloat64Range lambdaRange, Float64 winsize);
 
     TSolutionSetList    SolutionSetList;
     CRayCatalog          m_RestCatalog;
+    CRayCatalog          m_DetectedCatalog;
 
 };
 

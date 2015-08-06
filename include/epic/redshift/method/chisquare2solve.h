@@ -1,10 +1,10 @@
-#ifndef _REDSHIFT_METHOD_CHISQUARESOLVE_
-#define _REDSHIFT_METHOD_CHISQUARESOLVE_
+#ifndef _REDSHIFT_METHOD_CHISQUARE2SOLVE_
+#define _REDSHIFT_METHOD_CHISQUARE2SOLVE_
 
 
 #include <epic/core/common/managedobject.h>
 #include <epic/core/common/datatypes.h>
-#include <epic/redshift/method/chisquaresolveresult.h>
+#include <epic/redshift/method/chisquare2solveresult.h>
 #include <epic/redshift/spectrum/template/template.h>
 
 namespace NSEpic
@@ -14,10 +14,10 @@ class CSpectrum;
 class CTemplateCatalog;
 class COperatorResultStore;
 
-class CMethodChisquareSolve : public CManagedObject
+class CMethodChisquare2Solve : public CManagedObject
 {
 
-    DEFINE_MANAGED_OBJECT( CMethodChisquareSolve )
+    DEFINE_MANAGED_OBJECT( CMethodChisquare2Solve )
 
     public:
 
@@ -28,9 +28,9 @@ class CMethodChisquareSolve : public CManagedObject
              nType_noContinuum = 3,
     };
 
-    CMethodChisquareSolve();
-    ~CMethodChisquareSolve();
-    const CChisquareSolveResult *Compute(   COperatorResultStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
+    CMethodChisquare2Solve();
+    ~CMethodChisquare2Solve();
+    const CChisquare2SolveResult *Compute(   COperatorResultStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
                                         const CTemplateCatalog& tplCatalog, const TTemplateCategoryList& tplCategoryList,
                                         const TFloat64Range& lambdaRange, const TFloat64List& redshifts, Float64 overlapThreshold  );
 
@@ -45,5 +45,6 @@ private:
 
 }
 
-#endif // _REDSHIFT_METHOD_CHISQUARESOLVE_
+#endif // _REDSHIFT_METHOD_CHISQUARE2SOLVE_
+
 

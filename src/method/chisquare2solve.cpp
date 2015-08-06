@@ -1,5 +1,6 @@
 
-#include <epic/redshift/method/chisquaresolve.h>
+
+#include <epic/redshift/method/chisquare2solve.h>
 
 #include <epic/core/debug/assert.h>
 #include <epic/redshift/spectrum/template/catalog.h>
@@ -12,26 +13,26 @@
 using namespace NSEpic;
 using namespace std;
 
-IMPLEMENT_MANAGED_OBJECT( CMethodChisquareSolve )
+IMPLEMENT_MANAGED_OBJECT( CMethodChisquare2Solve )
 
-CMethodChisquareSolve::CMethodChisquareSolve()
+CMethodChisquare2Solve::CMethodChisquare2Solve()
 {
 
 }
 
-CMethodChisquareSolve::~CMethodChisquareSolve()
+CMethodChisquare2Solve::~CMethodChisquare2Solve()
 {
 
 }
 
 
-const CChisquareSolveResult* CMethodChisquareSolve::Compute(  COperatorResultStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
+const CChisquare2SolveResult* CMethodChisquare2Solve::Compute(  COperatorResultStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
                                                         const CTemplateCatalog& tplCatalog, const TTemplateCategoryList& tplCategoryList,
                                                         const TFloat64Range& lambdaRange, const TFloat64List& redshifts, Float64 overlapThreshold )
 {
     Bool storeResult = false;
 
-    COperatorResultStore::CAutoScope resultScope( resultStore, "chisquaresolve" );
+    COperatorResultStore::CAutoScope resultScope( resultStore, "chisquare2solve" );
 
     for( UInt32 i=0; i<tplCategoryList.size(); i++ )
     {
@@ -51,14 +52,14 @@ const CChisquareSolveResult* CMethodChisquareSolve::Compute(  COperatorResultSto
 
     if( storeResult )
     {
-        CChisquareSolveResult*  ChisquareSolveResult = new CChisquareSolveResult();
+        CChisquare2SolveResult*  ChisquareSolveResult = new CChisquare2SolveResult();
         return ChisquareSolveResult;
     }
 
     return NULL;
 }
 
-Bool CMethodChisquareSolve::Solve( COperatorResultStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont, const CTemplate& tpl, const CTemplate& tplWithoutCont,
+Bool CMethodChisquare2Solve::Solve( COperatorResultStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont, const CTemplate& tpl, const CTemplate& tplWithoutCont,
                                const TFloat64Range& lambdaRange, const TFloat64List& redshifts, Float64 overlapThreshold, Int32 spctype )
 {
     CSpectrum _spc;

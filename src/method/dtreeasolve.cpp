@@ -39,7 +39,7 @@ COperatorDTreeASolve::COperatorDTreeASolve()
 {
     // Peak Detection
     m_winsize = 250.0;
-    m_cut = 5.0;
+    m_cut = 1.5;
     m_strongcut = 2.0;
 
     // Line Matching
@@ -101,7 +101,7 @@ Bool COperatorDTreeASolve::Solve(COperatorResultStore &resultStore, const CSpect
 
             CMethodChisquareSolve chiSolve;
             CConstRef<CChisquareSolveResult> chisolveResult = chiSolve.Compute( resultStore, spc, spcWithoutCont,
-                                                                                tplCatalog, filteredTemplateCategoryList,
+                                                                                tplCatalog, tplCategoryList,
                                                                                 lambdaRange, redshifts, overlapThreshold );
             if( chisolveResult ) {
                 resultStore.StoreGlobalResult( "redshiftresult", *chisolveResult );
@@ -129,7 +129,7 @@ Bool COperatorDTreeASolve::Solve(COperatorResultStore &resultStore, const CSpect
 
             CMethodChisquareSolve chiSolve;
             CConstRef<CChisquareSolveResult> chisolveResult = chiSolve.Compute( resultStore, spc, spcWithoutCont,
-                                                                                tplCatalog, filteredTemplateCategoryList,
+                                                                                tplCatalog, tplCategoryList,
                                                                                 lambdaRange, redshifts, overlapThreshold );
             if( chisolveResult ) {
                 resultStore.StoreGlobalResult( "redshiftresult", *chisolveResult );
@@ -139,8 +139,15 @@ Bool COperatorDTreeASolve::Solve(COperatorResultStore &resultStore, const CSpect
     }
 
     // Ray Match
+    Int32 typeFilter = CRay::nType_Emission;
+    Int32 restForceFilter = -1;
+    if(nRaysDetected == 1){
+        restForceFilter =   CRay::nForce_Strong;
+    }
+
     CRayMatching rayMatching;
-    CRef<CRayMatchingResult> rayMatchingResult = rayMatching.Compute(rayDetectionResult->RayCatalog, restRayCatalog, redshiftRange, m_minMatchNum, m_tol );
+    CRef<CRayMatchingResult> rayMatchingResult = rayMatching.Compute( rayDetectionResult->RayCatalog, restRayCatalog, redshiftRange, m_minMatchNum, m_tol, typeFilter, -1, restForceFilter);
+
     if(rayMatchingResult!=NULL){
         // Store matching results
         resultStore.StoreGlobalResult( "raymatching", *rayMatchingResult );
@@ -156,7 +163,7 @@ Bool COperatorDTreeASolve::Solve(COperatorResultStore &resultStore, const CSpect
 
                 CMethodChisquareSolve chiSolve;
                 CConstRef<CChisquareSolveResult> chisolveResult = chiSolve.Compute( resultStore, spc, spcWithoutCont,
-                                                                                    tplCatalog, filteredTemplateCategoryList,
+                                                                                    tplCatalog, tplCategoryList,
                                                                                     lambdaRange, redshifts, overlapThreshold );
                 if( chisolveResult ) {
                     resultStore.StoreGlobalResult( "redshiftresult", *chisolveResult );
@@ -164,7 +171,7 @@ Bool COperatorDTreeASolve::Solve(COperatorResultStore &resultStore, const CSpect
                 return true;
             }
         }
-    }else{
+    }else{ //TBD: is that likely to happen ?
         Log.LogInfo( "DTreeA - Not match found  [0], switching to Chisquare");
         m_dtreepathnum = 3.11;
         {  //chisquare
@@ -174,7 +181,7 @@ Bool COperatorDTreeASolve::Solve(COperatorResultStore &resultStore, const CSpect
 
             CMethodChisquareSolve chiSolve;
             CConstRef<CChisquareSolveResult> chisolveResult = chiSolve.Compute( resultStore, spc, spcWithoutCont,
-                                                                                tplCatalog, filteredTemplateCategoryList,
+                                                                                tplCatalog, tplCategoryList,
                                                                                 lambdaRange, redshifts, overlapThreshold );
             if( chisolveResult ) {
                 resultStore.StoreGlobalResult( "redshiftresult", *chisolveResult );
@@ -186,17 +193,18 @@ Bool COperatorDTreeASolve::Solve(COperatorResultStore &resultStore, const CSpect
     Int32 matchNum = rayMatchingResult->GetMaxMatchingNumber();
     UInt32 nStrongPeaks = rayDetectionResult->RayCatalog.GetFilteredList(CRay::nType_Emission, CRay::nForce_Strong).size();
 
-    // match num >= 2
-    if(matchNum >= 2){
+    //
+    if(matchNum >= 1){
         m_dtreepathnum = 4.1;
         Log.LogInfo( "DTreeA - compute chisquare on redshift candidates from ray matching" );
-        TFloat64List roundedRedshift = rayMatchingResult->GetRoundedRedshiftCandidatesOverNumber(2-1, redshiftStep);
-        Log.LogInfo( "DTreeA - (n candidates = %d)", roundedRedshift.size());
+        rayMatchingResult->FilterWithRules(spc, lambdaRange, m_winsize);
+        TFloat64List redshifts = rayMatchingResult->GetExtendedRedshiftCandidatesOverNumber(0, redshiftStep, 0.01);
+        Log.LogInfo( "DTreeA - (n candidates = %d)", redshifts.size());
         { //chisolve with emission templates only
             CMethodChisquareSolve chiSolve;
             CConstRef<CChisquareSolveResult> chisolveResult = chiSolve.Compute( resultStore, spc, spcWithoutCont,
                                                                                 tplCatalog, filteredTemplateCategoryList,
-                                                                                lambdaRange, roundedRedshift, overlapThreshold );
+                                                                                lambdaRange, redshifts, overlapThreshold );
             if( chisolveResult ) {
                 resultStore.StoreGlobalResult( "redshiftresult", *chisolveResult );
             }
@@ -213,7 +221,7 @@ Bool COperatorDTreeASolve::Solve(COperatorResultStore &resultStore, const CSpect
 
         CMethodChisquareSolve chiSolve;
         CConstRef<CChisquareSolveResult> chisolveResult = chiSolve.Compute( resultStore, spc, spcWithoutCont,
-                                                                            tplCatalog, filteredTemplateCategoryList,
+                                                                            tplCatalog, tplCategoryList,
                                                                             lambdaRange, redshifts, overlapThreshold );
         if( chisolveResult ) {
             resultStore.StoreGlobalResult( "redshiftresult", *chisolveResult );

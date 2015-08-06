@@ -1,4 +1,4 @@
-#include <epic/redshift/method/chisquaresolveresult.h>
+#include <epic/redshift/method/chisquare2solveresult.h>
 
 #include <epic/redshift/processflow/context.h>
 #include <epic/redshift/operator/chisquareresult.h>
@@ -8,19 +8,19 @@
 
 using namespace NSEpic;
 
-IMPLEMENT_MANAGED_OBJECT( CChisquareSolveResult )
+IMPLEMENT_MANAGED_OBJECT( CChisquare2SolveResult )
 
-CChisquareSolveResult::CChisquareSolveResult()
+CChisquare2SolveResult::CChisquare2SolveResult()
 {
 
 }
 
-CChisquareSolveResult::~CChisquareSolveResult()
+CChisquare2SolveResult::~CChisquare2SolveResult()
 {
 
 }
 
-Void CChisquareSolveResult::Save( const COperatorResultStore& store, std::ostream& stream ) const
+Void CChisquare2SolveResult::Save( const COperatorResultStore& store, std::ostream& stream ) const
 {
     Float64 redshift;
     Float64 merit;
@@ -43,10 +43,10 @@ Void CChisquareSolveResult::Save( const COperatorResultStore& store, std::ostrea
     stream << detailStr.c_str();
 }
 
-Bool CChisquareSolveResult::GetBestRedshiftPerTemplateString( const COperatorResultStore& store, std::string& output ) const
+Bool CChisquare2SolveResult::GetBestRedshiftPerTemplateString( const COperatorResultStore& store, std::string& output ) const
 {
 
-    std::string scope = store.GetScope( this ) + "chisquaresolve.chisquare";
+    std::string scope = store.GetScope( this ) + "chisquare2solve.chisquare";
     TOperatorResultMap meritResults = store.GetPerTemplateResult(scope.c_str());
 
 
@@ -88,7 +88,7 @@ Bool CChisquareSolveResult::GetBestRedshiftPerTemplateString( const COperatorRes
 
 }
 
-Void CChisquareSolveResult::SaveLine( const COperatorResultStore& store, std::ostream& stream ) const
+Void CChisquare2SolveResult::SaveLine( const COperatorResultStore& store, std::ostream& stream ) const
 {
     Float64 redshift;
     Float64 merit;
@@ -103,10 +103,10 @@ Void CChisquareSolveResult::SaveLine( const COperatorResultStore& store, std::os
                 << "ChisquareSolve" << std::endl;
 }
 
-Bool CChisquareSolveResult::GetBestRedshift( const COperatorResultStore& store, Float64& redshift, Float64& merit, std::string& tplName ) const
+Bool CChisquare2SolveResult::GetBestRedshift( const COperatorResultStore& store, Float64& redshift, Float64& merit, std::string& tplName ) const
 {
 
-    std::string scope = store.GetScope( this ) + "chisquaresolve.chisquare";
+    std::string scope = store.GetScope( this ) + "chisquare2solve.chisquare";
     TOperatorResultMap meritResults = store.GetPerTemplateResult(scope.c_str());
 
 
@@ -141,5 +141,6 @@ Bool CChisquareSolveResult::GetBestRedshift( const COperatorResultStore& store, 
     return false;
 
 }
+
 
 

@@ -22,7 +22,7 @@ public:
     CRayMatching();
     virtual ~CRayMatching();
 
-    CRayMatchingResult* Compute(const CRayCatalog& restRayCatalog, const CRayCatalog& detectedRayCatalog, const TFloat64Range& redshiftRange, Int32 nThreshold = 5, Float64 tol = 0.002, Int32 typeFilter = 2, Int32 forceFilter = -1);
+    CRayMatchingResult* Compute(const CRayCatalog& restRayCatalog, const CRayCatalog& detectedRayCatalog, const TFloat64Range& redshiftRange, Int32 nThreshold = 5, Float64 tol = 0.002, Int32 typeFilter = CRay::nType_Emission, Int32 detectedForceFilter = -1, Int32 restRorceFilter = -1);
 
 
 private:

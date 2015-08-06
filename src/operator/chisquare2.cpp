@@ -126,22 +126,26 @@ Void COperatorChiSquare2::BasicFit( const CSpectrum& spectrum, const CTemplate& 
     Int32 jStart = j;
     Int32 kStart = k;
 
+    //EZ formulation
     Float64 sumXDevs = 0.0;
     Float64 sumYDevs = 0.0;
+    // Tonry&Davis formulation
+    Float64 sumCross = 0.0;
+    Float64 sumT = 0.0;
+
     Float64 err2 = 0.0;
     Float64 fit = 0;
     Int32 numDevs = 0;
     const Float64* error = spcFluxAxis.GetError();
 
-    // Tonry&Davis formulation
-    Float64 sumCross = 0.0;
-    Float64 sumT = 0.0;
+
 
     //if(0)
     while( j<spcSpectralAxis.GetSamplesCount() && Xspc[j] <= currentRange.GetEnd() )
     {
         numDevs++;
         err2 = 1.0 / (error[j] * error[j]);
+        //EZ formulation
         sumYDevs+=Yspc[j]*err2;
         sumXDevs+=Ytpl[j]*err2;
 
@@ -152,7 +156,8 @@ Void COperatorChiSquare2::BasicFit( const CSpectrum& spectrum, const CTemplate& 
         j++;
     }
 
-    if ( numDevs==0 || sumYDevs==0 || sumXDevs==0 )
+    if ( numDevs==0 || sumYDevs==0 || sumXDevs==0 ) //EZ formulation
+    //if ( numDevs==0 || sumCross==0 || sumT==0 ) // Tonry&Davis formulation
     {
         status = nStatus_DataError;
         return;

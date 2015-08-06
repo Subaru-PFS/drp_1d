@@ -1,5 +1,5 @@
-#ifndef _REDSHIFT_OPERATOR_CHISQUARESOLVERESULT_
-#define _REDSHIFT_OPERATOR_CHISQUARESOLVERESULT_
+#ifndef _REDSHIFT_OPERATOR_CHISQUARE2SOLVERESULT_
+#define _REDSHIFT_OPERATOR_CHISQUARE2SOLVERESULT_
 
 #include <epic/redshift/operator/result.h>
 #include <epic/core/common/datatypes.h>
@@ -12,15 +12,15 @@ namespace NSEpic
 
 class CProcessFlowContext;
 
-class CChisquareSolveResult : public COperatorResult
+class CChisquare2SolveResult : public COperatorResult
 {
 
-    DEFINE_MANAGED_OBJECT( CChisquareSolveResult )
+    DEFINE_MANAGED_OBJECT( CChisquare2SolveResult )
 
 public:
 
-    CChisquareSolveResult();
-    virtual ~CChisquareSolveResult();
+    CChisquare2SolveResult();
+    virtual ~CChisquare2SolveResult();
 
     Void Save( const COperatorResultStore& store, std::ostream& stream ) const;
     Void SaveLine( const COperatorResultStore& store, std::ostream& stream ) const;

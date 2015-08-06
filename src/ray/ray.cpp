@@ -36,6 +36,15 @@ bool CRay::operator < (const CRay& str) const
     }
 }
 
+bool CRay::operator != (const CRay& str) const
+{
+    if(m_Pos == str.m_Pos){
+        return (m_Amp != str.m_Amp);
+    }else{
+        return (m_Pos != str.m_Pos);
+    }
+}
+
 Bool CRay::GetIsStrong() const
 {
     return m_Force == nForce_Strong;

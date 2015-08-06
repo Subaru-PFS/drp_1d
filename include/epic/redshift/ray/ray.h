@@ -32,6 +32,7 @@ public:
     CRay( const std::string& name, Float64 pos, UInt32 type, UInt32 force, Float64 amp=-1.0, Float64 width=-1.0, Float64 cut=-1.0 );
     ~CRay();
     bool operator < (const CRay& str) const;
+    bool operator != (const CRay& str) const;
 
     Bool                GetIsStrong() const;
     Bool                GetIsEmission() const;

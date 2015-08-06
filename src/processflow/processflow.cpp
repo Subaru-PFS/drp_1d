@@ -31,6 +31,7 @@
 #include <epic/redshift/operator/raymatchingresult.h>
 
 #include <epic/redshift/method/chisquaresolve.h>
+#include <epic/redshift/method/chisquare2solve.h>
 #include <epic/redshift/method/fullsolve.h>
 #include <epic/redshift/method/correlationsolve.h>
 #include <epic/redshift/method/linematchingsolve.h>
@@ -180,8 +181,8 @@ Bool CProcessFlow::Chisquare( CProcessFlowContext& ctx, CTemplate::ECategory Cat
     TFloat64List redshifts = ctx.GetParams().redshiftRange.SpreadOver( ctx.GetParams().redshiftStep );
     DebugAssert( redshifts.size() > 0 );
 
-    CMethodChisquareSolve solve;
-    CConstRef<CChisquareSolveResult> solveResult = solve.Compute( ctx, ctx.GetSpectrum(), ctx.GetSpectrumWithoutContinuum(),
+    CMethodChisquare2Solve solve;
+    CConstRef<CChisquare2SolveResult> solveResult = solve.Compute( ctx, ctx.GetSpectrum(), ctx.GetSpectrumWithoutContinuum(),
                                                                         ctx.GetTemplateCatalog(), filteredTemplateCategoryList,
                                                                         ctx.GetParams().lambdaRange, redshifts, ctx.GetParams().overlapThreshold );
 

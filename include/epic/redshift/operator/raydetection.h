@@ -48,6 +48,9 @@ class CRayDetection : public CManagedObject
 
 
     Float64 FWHM_FACTOR;
+    public:
+    Float64 ComputeFluxes(const CSpectrum& spectrum, Float64 winsize, TInt32Range range, TFloat64List mask=TFloat64List(),Float64* maxFluxnoContinuum=NULL, Float64* noise=NULL);
+
 
 private:
 
@@ -59,7 +62,6 @@ private:
     Float64 m_strongcut;
 
 
-    Float64 ComputeFluxes(const CSpectrum& spectrum, Float64 winsize, TInt32Range range, TFloat64List mask=TFloat64List());
     bool Retest( const CSpectrum &spectrum, CRayDetectionResult* result, TInt32RangeList retestPeaks,  TGaussParamsList retestGaussParams, CRayCatalog::TRayVector strongLines, Int32 winsize, Float64 cut);
     bool RemoveStrongFromSpectra(const CSpectrum &spectrum, CRayDetectionResult* result, CRayCatalog::TRayVector strongLines, TInt32RangeList selectedretestPeaks, TGaussParamsList selectedgaussparams, Float64 winsize, Float64 cut);
     Float64 XMadFind( const Float64* x, Int32 n, Float64 median );

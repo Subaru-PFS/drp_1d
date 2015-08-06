@@ -17,11 +17,10 @@ CRayMatching::~CRayMatching()
 {
 }
 
-CRayMatchingResult* CRayMatching::Compute(const CRayCatalog& detectedRayCatalog, const CRayCatalog& restRayCatalog, const TFloat64Range& redshiftRange, Int32 nThreshold, Float64 tol , Int32 typeFilter, Int32 forceFilter)
+CRayMatchingResult* CRayMatching::Compute(const CRayCatalog& detectedRayCatalog, const CRayCatalog& restRayCatalog, const TFloat64Range& redshiftRange, Int32 nThreshold, Float64 tol , Int32 typeFilter, Int32 detectedForceFilter, Int32 restForceFilter)
 {
-    CRayCatalog::TRayVector detectedRayList = detectedRayCatalog.GetFilteredList(typeFilter, forceFilter);
-    //CRayCatalog::TRayVector restRayList = restRayCatalog.GetFilteredList(typeFilter, forceFilter);
-    CRayCatalog::TRayVector restRayList = restRayCatalog.GetFilteredList(typeFilter, -1);
+    CRayCatalog::TRayVector detectedRayList = detectedRayCatalog.GetFilteredList(typeFilter, detectedForceFilter);
+    CRayCatalog::TRayVector restRayList = restRayCatalog.GetFilteredList(typeFilter, restForceFilter);
 
     CRayMatchingResult::TSolutionSetList solutions;
     Int32 nDetectedRay = detectedRayList.size();
@@ -32,7 +31,7 @@ CRayMatchingResult* CRayMatching::Compute(const CRayCatalog& detectedRayCatalog,
             CRayMatchingResult::TSolutionSet solution;
             Float64 redShift=(detectedRayList[0].GetPosition()-restRayList[iRestRay].GetPosition())/restRayList[iRestRay].GetPosition();
             if( redShift > 0 ){
-                solution.push_back(CRayMatchingResult::SSolution( detectedRayList[0].GetPosition(), restRayList[iRestRay].GetPosition(), redShift));
+                solution.push_back(CRayMatchingResult::SSolution( detectedRayList[0], restRayList[iRestRay], redShift));
                 solutions.push_back(solution);
             }
         }
@@ -47,7 +46,7 @@ CRayMatchingResult* CRayMatching::Compute(const CRayCatalog& detectedRayCatalog,
                 if( redShift < 0 ){
                     continue;
                 }
-                solution.push_back( CRayMatchingResult::SSolution( detectedRayList[iDetectedRay].GetPosition(), restRayList[iRestRay].GetPosition(), redShift) );
+                solution.push_back( CRayMatchingResult::SSolution( detectedRayList[iDetectedRay], restRayList[iRestRay], redShift) );
 
                 for( UInt32 iDetectedRay2=0; iDetectedRay2<detectedRayList.size(); iDetectedRay2++ )
                 {
@@ -64,13 +63,13 @@ CRayMatchingResult* CRayMatching::Compute(const CRayCatalog& detectedRayCatalog,
                                 //avoid repeated solution sets
                                 for( UInt32 iSet=0; iSet<solution.size(); iSet++ )
                                 {
-                                    if(solution[iSet].DetectedRay == detectedRayList[iDetectedRay2].GetPosition()){
+                                    if(solution[iSet].DetectedRay.GetPosition() == detectedRayList[iDetectedRay2].GetPosition()){
                                         found = true;
                                         break;
                                     }
                                 }
                                 if(!found){
-                                    solution.push_back( CRayMatchingResult::SSolution( detectedRayList[iDetectedRay2].GetPosition(), restRayList[iRestRay2].GetPosition(), redShift2) );
+                                    solution.push_back( CRayMatchingResult::SSolution( detectedRayList[iDetectedRay2], restRayList[iRestRay2], redShift2) );
                                 }
                             }
                         }
@@ -116,6 +115,8 @@ CRayMatchingResult* CRayMatching::Compute(const CRayCatalog& detectedRayCatalog,
         CRayMatchingResult* result = new CRayMatchingResult();
         result->SolutionSetList = newSolutions;
         result->m_RestCatalog = restRayCatalog;
+        result->m_DetectedCatalog = restRayCatalog;
+
         return result;
     }
     return NULL;

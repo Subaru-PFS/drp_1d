@@ -181,7 +181,7 @@ Void CPeakDetection::FindPossiblePeaks( const CSpectrumAxis& fluxAxis, const CSp
         xmad[i] = XMad( fluxData+ start, stop - start , med[i] );
     }
 
-    /*//debug:
+    //*//debug:
     // save median and xmad,  flux data
     FILE* f = fopen( "peakdetection_dbg_median.txt", "w+" );
     for( Int32 i=0; i<fluxAxis.GetSamplesCount(); i++ )
