@@ -23,7 +23,7 @@ COperatorResultStore::CAutoScope::~CAutoScope()
 
 COperatorResultStore::COperatorResultStore()
 {
-
+    m_dtreepathnum = -1.0;
 }
 
 COperatorResultStore::~COperatorResultStore()

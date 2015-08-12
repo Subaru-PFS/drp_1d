@@ -39,9 +39,6 @@ private:
     Int32 m_minMatchNum;
     Float64 m_tol;
 
-    // tree path
-    Float64 m_dtreepathnum;
-
 
     Bool Solve(COperatorResultStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
                               const CTemplateCatalog& tplCatalog, const TTemplateCategoryList& tplCategoryList, const CRayCatalog &restRayCatalog,

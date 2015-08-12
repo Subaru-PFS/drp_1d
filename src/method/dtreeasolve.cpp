@@ -23,7 +23,7 @@
 #include <epic/redshift/operator/raymatching.h>
 #include <epic/redshift/operator/raymatchingresult.h>
 
-#include <epic/redshift/method/chisquaresolve.h>
+#include <epic/redshift/method/chisquare2solve.h>
 #include <epic/redshift/method/fullsolve.h>
 #include <epic/redshift/method/correlationsolve.h>
 #include <epic/redshift/method/linematchingsolve.h>
@@ -45,9 +45,6 @@ COperatorDTreeASolve::COperatorDTreeASolve()
     // Line Matching
     m_minMatchNum = 1;
     m_tol = 0.002;
-
-    //dtree path
-    m_dtreepathnum = -1.0;
 }
 
 COperatorDTreeASolve::~COperatorDTreeASolve()
@@ -92,15 +89,15 @@ Bool COperatorDTreeASolve::Solve(COperatorResultStore &resultStore, const CSpect
     // check Peak Detection results
     if(peakDetectionResult->PeakList.size()<1){
         Log.LogInfo( "DTreeA - No Peak found, switching to Chisquare Solve");
-        m_dtreepathnum = 1.1;
+        resultStore.m_dtreepathnum = 1.1;
         {
             //chisquare
             // Create redshift initial list by spanning redshift acdross the given range, with the given delta
             TFloat64List redshifts = redshiftRange.SpreadOver( redshiftStep );
             DebugAssert( redshifts.size() > 0 );
 
-            CMethodChisquareSolve chiSolve;
-            CConstRef<CChisquareSolveResult> chisolveResult = chiSolve.Compute( resultStore, spc, spcWithoutCont,
+            CMethodChisquare2Solve chiSolve;
+            CConstRef<CChisquare2SolveResult> chisolveResult = chiSolve.Compute( resultStore, spc, spcWithoutCont,
                                                                                 tplCatalog, tplCategoryList,
                                                                                 lambdaRange, redshifts, overlapThreshold );
             if( chisolveResult ) {
@@ -120,15 +117,15 @@ Bool COperatorDTreeASolve::Solve(COperatorResultStore &resultStore, const CSpect
     Int32 nRaysDetected = rayDetectionResult->RayCatalog.GetList().size();
     if( nRaysDetected < 1){
         Log.LogInfo( "DTreeA - No ray found, switching to Chisquare Solve");
-        m_dtreepathnum = 1.11;
+        resultStore.m_dtreepathnum = 1.11;
         {
             //chisquare
             // Create redshift initial list by spanning redshift acdross the given range, with the given delta
             TFloat64List redshifts = redshiftRange.SpreadOver( redshiftStep );
             DebugAssert( redshifts.size() > 0 );
 
-            CMethodChisquareSolve chiSolve;
-            CConstRef<CChisquareSolveResult> chisolveResult = chiSolve.Compute( resultStore, spc, spcWithoutCont,
+            CMethodChisquare2Solve chiSolve;
+            CConstRef<CChisquare2SolveResult> chisolveResult = chiSolve.Compute( resultStore, spc, spcWithoutCont,
                                                                                 tplCatalog, tplCategoryList,
                                                                                 lambdaRange, redshifts, overlapThreshold );
             if( chisolveResult ) {
@@ -155,14 +152,14 @@ Bool COperatorDTreeASolve::Solve(COperatorResultStore &resultStore, const CSpect
         //check ray matching results
         if(rayMatchingResult->GetSolutionsListOverNumber(0).size()<1){
             Log.LogInfo( "DTreeA - Not match found [1], switching to Chisquare");
-            m_dtreepathnum = 3.1;
+            resultStore.m_dtreepathnum = 3.1;
             {  //chisquare
                 // Create redshift initial list by spanning redshift acdross the given range, with the given delta
                 TFloat64List redshifts = redshiftRange.SpreadOver( redshiftStep );
                 DebugAssert( redshifts.size() > 0 );
 
-                CMethodChisquareSolve chiSolve;
-                CConstRef<CChisquareSolveResult> chisolveResult = chiSolve.Compute( resultStore, spc, spcWithoutCont,
+                CMethodChisquare2Solve chiSolve;
+                CConstRef<CChisquare2SolveResult> chisolveResult = chiSolve.Compute( resultStore, spc, spcWithoutCont,
                                                                                     tplCatalog, tplCategoryList,
                                                                                     lambdaRange, redshifts, overlapThreshold );
                 if( chisolveResult ) {
@@ -173,14 +170,14 @@ Bool COperatorDTreeASolve::Solve(COperatorResultStore &resultStore, const CSpect
         }
     }else{ //TBD: is that likely to happen ?
         Log.LogInfo( "DTreeA - Not match found  [0], switching to Chisquare");
-        m_dtreepathnum = 3.11;
+        resultStore.m_dtreepathnum = 3.11;
         {  //chisquare
             // Create redshift initial list by spanning redshift acdross the given range, with the given delta
             TFloat64List redshifts = redshiftRange.SpreadOver( redshiftStep );
             DebugAssert( redshifts.size() > 0 );
 
-            CMethodChisquareSolve chiSolve;
-            CConstRef<CChisquareSolveResult> chisolveResult = chiSolve.Compute( resultStore, spc, spcWithoutCont,
+            CMethodChisquare2Solve chiSolve;
+            CConstRef<CChisquare2SolveResult> chisolveResult = chiSolve.Compute( resultStore, spc, spcWithoutCont,
                                                                                 tplCatalog, tplCategoryList,
                                                                                 lambdaRange, redshifts, overlapThreshold );
             if( chisolveResult ) {
@@ -195,14 +192,14 @@ Bool COperatorDTreeASolve::Solve(COperatorResultStore &resultStore, const CSpect
 
     //
     if(matchNum >= 1){
-        m_dtreepathnum = 4.1;
+        resultStore.m_dtreepathnum = 4.1;
         Log.LogInfo( "DTreeA - compute chisquare on redshift candidates from ray matching" );
         rayMatchingResult->FilterWithRules(spc, lambdaRange, m_winsize);
         TFloat64List redshifts = rayMatchingResult->GetExtendedRedshiftCandidatesOverNumber(0, redshiftStep, 0.01);
         Log.LogInfo( "DTreeA - (n candidates = %d)", redshifts.size());
         { //chisolve with emission templates only
-            CMethodChisquareSolve chiSolve;
-            CConstRef<CChisquareSolveResult> chisolveResult = chiSolve.Compute( resultStore, spc, spcWithoutCont,
+            CMethodChisquare2Solve chiSolve;
+            CConstRef<CChisquare2SolveResult> chisolveResult = chiSolve.Compute( resultStore, spc, spcWithoutCont,
                                                                                 tplCatalog, filteredTemplateCategoryList,
                                                                                 lambdaRange, redshifts, overlapThreshold );
             if( chisolveResult ) {
@@ -213,14 +210,14 @@ Bool COperatorDTreeASolve::Solve(COperatorResultStore &resultStore, const CSpect
     }
 
     Log.LogInfo( "DTreeA - no other path found than switching to Chisquare...");
-    m_dtreepathnum = 3.12;
+    resultStore.m_dtreepathnum = 5.1;
     {  //chisquare
         // Create redshift initial list by spanning redshift acdross the given range, with the given delta
         TFloat64List redshifts = redshiftRange.SpreadOver( redshiftStep );
         DebugAssert( redshifts.size() > 0 );
 
-        CMethodChisquareSolve chiSolve;
-        CConstRef<CChisquareSolveResult> chisolveResult = chiSolve.Compute( resultStore, spc, spcWithoutCont,
+        CMethodChisquare2Solve chiSolve;
+        CConstRef<CChisquare2SolveResult> chisolveResult = chiSolve.Compute( resultStore, spc, spcWithoutCont,
                                                                             tplCatalog, tplCategoryList,
                                                                             lambdaRange, redshifts, overlapThreshold );
         if( chisolveResult ) {

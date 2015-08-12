@@ -31,6 +31,8 @@ public:
         COperatorResultStore* m_Store;
     };
 
+    Float64 m_dtreepathnum; //Todo, should be handled differently...
+
     COperatorResultStore();
     virtual ~COperatorResultStore();
 

@@ -201,8 +201,8 @@ const COperatorResult* COperatorChiSquare2::Compute(const CSpectrum& spectrum, c
 
     if( spectrum.GetSpectralAxis().IsInLinearScale() == false || tpl.GetSpectralAxis().IsInLinearScale() == false )
     {
-        Log.LogError("Failed to compute Cross correlation, input spectrum or template are not in log scale");
-        return NULL;
+        Log.LogError("Chisquare2, input spectrum or template are not in log scale (ignored)");
+        //return NULL;
     }
 
     // Pre-Allocate the rebined template and mask with regard to the spectrum size

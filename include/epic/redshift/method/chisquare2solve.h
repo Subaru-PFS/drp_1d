@@ -23,9 +23,10 @@ class CMethodChisquare2Solve : public CManagedObject
 
     enum EType
     {
-             nType_full = 1,
+             nType_raw = 1,
              nType_continuumOnly = 2,
              nType_noContinuum = 3,
+             nType_all = 3,
     };
 
     CMethodChisquare2Solve();
@@ -39,7 +40,7 @@ class CMethodChisquare2Solve : public CManagedObject
 private:
 
     Bool Solve(COperatorResultStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont, const CTemplate& tpl, const CTemplate& tplWithoutCont,
-                                   const TFloat64Range& lambdaRange, const TFloat64List& redshifts, Float64 overlapThreshold , Int32 spctype=nType_full);
+                                   const TFloat64Range& lambdaRange, const TFloat64List& redshifts, Float64 overlapThreshold , Int32 spctype=nType_raw);
 };
 
 

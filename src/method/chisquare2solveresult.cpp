@@ -90,6 +90,9 @@ Bool CChisquare2SolveResult::GetBestRedshiftPerTemplateString( const COperatorRe
 
 Void CChisquare2SolveResult::SaveLine( const COperatorResultStore& store, std::ostream& stream ) const
 {
+    char tmpChar[256];
+    sprintf(tmpChar, "%.2f", store.m_dtreepathnum);
+
     Float64 redshift;
     Float64 merit;
     std::string tplName;
@@ -100,7 +103,8 @@ Void CChisquare2SolveResult::SaveLine( const COperatorResultStore& store, std::o
                 << redshift << "\t"
                 << merit << "\t"
                 << tplName << "\t"
-                << "ChisquareSolve" << std::endl;
+                << "Chisquare2Solve_" << tmpChar << std::endl;
+
 }
 
 Bool CChisquare2SolveResult::GetBestRedshift( const COperatorResultStore& store, Float64& redshift, Float64& merit, std::string& tplName ) const
