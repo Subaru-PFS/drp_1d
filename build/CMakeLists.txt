@@ -15,6 +15,7 @@ SET( CMAKE_RUNTIME_OUTPUT_DIRECTORY ${ROOT_DIR}/bin )
 # cpf-core-redshift-version.cmake with the appropriate version number
 #--------------------------------------------------------
 FILE (STRINGS ${ROOT_DIR}/VERSION VERSION)
+MESSAGE( STATUS "Version used: ${VERSION}" )
 
 #--------------------------------------------------------
 # Find Package
