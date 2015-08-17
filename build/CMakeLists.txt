@@ -2,11 +2,6 @@ CMAKE_MINIMUM_REQUIRED (VERSION 2.8)
 PROJECT( cpf-redshift ) 
 
 #--------------------------------------------------------
-# Find Package
-#--------------------------------------------------------
-FIND_PACKAGE( cpf-core REQUIRED )
-
-#--------------------------------------------------------
 # Setup shortcut acces directory
 #--------------------------------------------------------
 SET( ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/.." )
@@ -14,6 +9,17 @@ SET( ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/.." )
 SET( CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${ROOT_DIR}/lib )
 SET( CMAKE_LIBRARY_OUTPUT_DIRECTORY ${ROOT_DIR}/lib )
 SET( CMAKE_RUNTIME_OUTPUT_DIRECTORY ${ROOT_DIR}/bin )
+
+#--------------------------------------------------------
+# Parse version, this willbe used later to configure 
+# cpf-core-redshift-version.cmake with the appropriate version number
+#--------------------------------------------------------
+FILE (STRINGS ${ROOT_DIR}/VERSION VERSION)
+
+#--------------------------------------------------------
+# Find Package
+#--------------------------------------------------------
+FIND_PACKAGE( cpf-core ${VERSION} REQUIRED )
 
 #--------------------------------------------------------
 # Compiler options
@@ -80,10 +86,18 @@ INSTALL( FILES  ${CMAKE_CURRENT_SOURCE_DIR}/cpf-redshift-config.cmake DESTINATIO
 #--------------------------------------------------------
 INCLUDE ( CMakePackageConfigHelpers )
 
+# Configure config file (this is used by find_package to find where the library is)
 CONFIGURE_PACKAGE_CONFIG_FILE( 
        ${CMAKE_CURRENT_SOURCE_DIR}/cpf-redshift-config.cmake.in
        ${CMAKE_CURRENT_SOURCE_DIR}/cpf-redshift-config.cmake
        INSTALL_DESTINATION cmake
         )
-       
+
+# Configure version file (this is used by find_package to determine a matching version)
+CONFIGURE_FILE( 
+       ${CMAKE_CURRENT_SOURCE_DIR}/cpf-redshift-config-version.cmake.in
+       ${CMAKE_CURRENT_SOURCE_DIR}/cpf-redshift-config-version.cmake
+       @ONLY
+        )
+
 EXPORT( PACKAGE ${LIB_NAME} )
