@@ -7,6 +7,8 @@
 #include <epic/redshift/spectrum/spectralaxis.h>
 #include <epic/redshift/continuum/continuum.h>
 
+#include <string>
+
 namespace NSEpic
 {
 
@@ -22,6 +24,7 @@ public:
     };
 
     CSpectrum();
+    CSpectrum(const CSpectrum& other, TFloat64List mask);
     ~CSpectrum();
 
     CSpectrum& operator=(const CSpectrum& other);
@@ -44,8 +47,9 @@ public:
 
 private:
 
-    Bool                    Serialize( CSerializer& ar );
+    Bool                            Serialize( CSerializer& ar );
 
+    std::string                     m_Name;
     CSpectrumFluxAxis               m_FluxAxis;
     CSpectrumSpectralAxis           m_SpectralAxis;
 };

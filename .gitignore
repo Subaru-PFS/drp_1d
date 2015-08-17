@@ -13,6 +13,7 @@ build/install_manifest.txt
 *.creator
 *.includes
 *.files
+*.sh
 
 bin/*
 

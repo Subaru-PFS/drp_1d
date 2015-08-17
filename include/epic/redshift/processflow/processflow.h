@@ -7,6 +7,8 @@
 #include <epic/core/common/managedobject.h>
 #include <epic/redshift/processflow/processflow.h>
 
+#include <epic/redshift/spectrum/template/template.h>
+#include <epic/redshift/spectrum/template/catalog.h>
 namespace NSEpic
 {
 
@@ -28,14 +30,14 @@ public:
 
 private:
 
-    Bool ProcessWithoutEL( CProcessFlowContext& ctx );
-    Bool ProcessWithEL( CProcessFlowContext& ctx );
+    Bool ProcessWithoutEL(CProcessFlowContext& ctx , NSEpic::CTemplate::ECategory CategoryFilter = NSEpic::CTemplate::nCategory_None);
+    Bool Blindsolve(CProcessFlowContext& ctx , NSEpic::CTemplate::ECategory CategoryFilter = NSEpic::CTemplate::nCategory_None);
+    Bool Fullsolve(CProcessFlowContext& ctx , NSEpic::CTemplate::ECategory CategoryFilter = NSEpic::CTemplate::nCategory_None);
+    //Bool Chisolve(CProcessFlowContext& ctx , TFloat64List& redshifts, NSEpic::CTemplate::ECategory CategoryFilter = NSEpic::CTemplate::nCategory_None);
+    //Bool Corrsolve(CProcessFlowContext& ctx , NSEpic::CTemplate::ECategory CategoryFilter = NSEpic::CTemplate::nCategory_None);
+    Bool LineMatching( CProcessFlowContext& ctx );
+    Bool DecisionalTree7( CProcessFlowContext& ctx );
 
-    bool ELSearch( CProcessFlowContext& ctx );
-    bool ComputeMerits( CProcessFlowContext& ctx, const TFloat64List& redshifts);
-    Float64 XMadFind( const Float64* x, Int32 n, Float64 median );
-
-    Bool BlindSolve( CProcessFlowContext& ctx, const CTemplate& tpl, const CTemplate& tplWithoutCont  );
 };
 
 

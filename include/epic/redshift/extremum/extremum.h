@@ -27,7 +27,7 @@ public:
     void SetRefreshCount( UInt32 n );
     void SetXRange( const TFloat64Range& r );
 
-    Bool Find( const Float64* xAxis, const Float64* yAxis, UInt32 n, TPointList& maxPoint ) const;
+    Bool Find( const TFloat64List& xAxis, const TFloat64List& yAxis, TPointList& maxPoint ) const;
 
 private:
 

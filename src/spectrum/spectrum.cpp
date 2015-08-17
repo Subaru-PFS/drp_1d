@@ -5,6 +5,7 @@
 
 #include <math.h>
 #include <stdio.h>
+#include <algorithm>
 
 using namespace NSEpic;
 
@@ -13,6 +14,44 @@ IMPLEMENT_MANAGED_OBJECT( CSpectrum )
 CSpectrum::CSpectrum()
 {
 
+}
+
+
+CSpectrum::CSpectrum(const CSpectrum& other, TFloat64List mask)
+{
+    TFloat64List tmpFlux;
+    TFloat64List tmpError;
+    TFloat64List tmpWave;
+
+    CSpectrumSpectralAxis otherSpectral = other.GetSpectralAxis();
+    CSpectrumFluxAxis otherFlux = other.GetFluxAxis();
+
+
+    const Float64* error = otherFlux.GetError();
+
+    for(Int32 i=0; i<mask.size(); i++){
+        if(mask[i]!=0){
+            tmpWave.push_back(otherSpectral[i]);
+            tmpFlux.push_back(otherFlux[i]);
+            if( error!= NULL ){
+                tmpError.push_back(error[i]);
+            }
+        }
+    }
+
+    CSpectrumSpectralAxis *_SpectralAxis = new CSpectrumSpectralAxis(tmpWave.size(), otherSpectral.IsInLogScale());
+    CSpectrumFluxAxis *_FluxAxis = new CSpectrumFluxAxis(tmpFlux.size());
+
+    for(Int32 i=0; i<tmpFlux.size(); i++){
+        (*_SpectralAxis)[i] = tmpWave[i];
+        (*_FluxAxis)[i] = tmpFlux[i];
+        if( error!= NULL ){
+            (*_FluxAxis).GetError()[i] = tmpError[i];
+        }
+    }
+
+    m_SpectralAxis = *_SpectralAxis;
+    m_FluxAxis = *_FluxAxis;
 }
 
 CSpectrum::~CSpectrum()
@@ -71,4 +110,5 @@ Bool CSpectrum::Serialize( CSerializer& ar )
 
     return false;
 }
+
 

@@ -35,6 +35,50 @@ const CTemplate& CTemplateCatalog::GetTemplateWithoutContinuum( CTemplate::ECate
     return *m_ListWithoutCont[category][i];
 }
 
+TTemplateRefList CTemplateCatalog::GetTemplate( const TTemplateCategoryList& categoryList ) const
+{
+    TTemplateRefList list;
+
+    for( Int32 i=0;i<categoryList.size(); i++ )
+    {
+        for (Int32 j=0; j<GetTemplateCount( categoryList[i] ); i++ )
+        {
+            list.push_back( m_List[  categoryList[i] ][j] );
+        }
+    }
+
+    return list;
+}
+
+TTemplateRefList CTemplateCatalog::GetTemplateWithoutContinuum( const TTemplateCategoryList& categoryList ) const
+{
+    TTemplateRefList list;
+
+    for( Int32 i=0;i<categoryList.size(); i++ )
+    {
+        for (Int32 j=0; j<GetTemplateCount( categoryList[i] ); i++ )
+        {
+            list.push_back( m_ListWithoutCont[  categoryList[i] ][j] );
+        }
+    }
+
+    return list;
+}
+
+TTemplateCategoryList CTemplateCatalog::GetCategoryList() const
+{
+    TTemplateCategoryList l;
+    for( Int32 i=0;i<CTemplate::nCategory_Count; i++ )
+    {
+        if( m_List[i].size() )
+        {
+            l.push_back( (CTemplate::ECategory) i );
+        }
+    }
+
+    return l;
+}
+
 UInt32 CTemplateCatalog::GetTemplateCount( CTemplate::ECategory category ) const
 {
     return m_List[category].size();

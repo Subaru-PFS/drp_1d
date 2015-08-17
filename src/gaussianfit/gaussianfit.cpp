@@ -209,6 +209,8 @@ CGaussianFit::EStatus CGaussianFit::Compute(const CSpectrum& spectrum, const TIn
     else  if ( status == GSL_CONTINUE )
     {
         returnCode = nStatus_IterationHasNotConverged;
+    }else if(status !=GSL_SUCCESS){
+        returnCode = nStatus_FailToReachTolerance;
     }
 
     m_Amplitude = output[0];
@@ -244,8 +246,13 @@ int CGaussianFit::GaussF( const gsl_vector *param, void *data, gsl_vector * f)
     Int32 n = userData->studyRange->GetLength();
     const Float64* x = userData->spectrum->GetSpectralAxis().GetSamples() + userData->studyRange->GetBegin();
     const Float64* y = userData->spectrum->GetFluxAxis().GetSamples() + userData->studyRange->GetBegin();
-    const Float64* err = userData->spectrum->GetFluxAxis().GetError() + userData->studyRange->GetBegin();
-
+    //const Float64* err = userData->spectrum->GetFluxAxis().GetError() + userData->studyRange->GetBegin();
+    std::vector<Float64> err( n );
+    if(true){ //WARNING: Hardcoded disable the use of err vect. = 1.0
+        for ( Int32 i = 0; i < n; i++){
+            err[i] = 1.0;
+        }
+    }
 
     Float64 A = gsl_vector_get (param, 0);
     Float64 mu = gsl_vector_get (param, 1);
@@ -281,7 +288,13 @@ int CGaussianFit::GaussDF (const gsl_vector * param, void *data, gsl_matrix * J)
     Int32 n = userData->studyRange->GetLength();
     const Float64* x = userData->spectrum->GetSpectralAxis().GetSamples() + userData->studyRange->GetBegin();
     const Float64* y = userData->spectrum->GetFluxAxis().GetSamples() + userData->studyRange->GetBegin();
-    const Float64* err = userData->spectrum->GetFluxAxis().GetError() + userData->studyRange->GetBegin();
+    //Float64* err = userData->spectrum->GetFluxAxis().GetError() + userData->studyRange->GetBegin();
+    std::vector<Float64> err( n );
+    if(true){ //WARNING: Hardcoded disable the use of err vect. = 1.0
+        for ( Int32 i = 0; i < n; i++){
+            err[i] = 1.0;
+        }
+    }
 
     Float64 A = gsl_vector_get (param, 0);
     Float64 mu = gsl_vector_get (param, 1);

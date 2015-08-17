@@ -1,10 +1,10 @@
-#include <epic/redshift/peak/detection.h>
+#include <epic/redshift/operator/peakdetection.h>
 
-#include <epic/redshift/peak/peak.h>
 #include <epic/redshift/spectrum/spectrum.h>
 #include <epic/redshift/spectrum/fluxaxis.h>
 #include <epic/redshift/spectrum/spectralaxis.h>
 #include <epic/redshift/common/median.h>
+#include <epic/redshift/operator/peakdetectionresult.h>
 
 #include <math.h>
 
@@ -13,9 +13,12 @@
 using namespace NSEpic;
 IMPLEMENT_MANAGED_OBJECT(CPeakDetection)
 
-CPeakDetection::CPeakDetection()
+CPeakDetection::CPeakDetection(Float64 windowSize, Float64 cut, UInt32 medianSmoothHalfWidth, UInt32 enlargeRate)
 {
-
+    m_winsize = windowSize;
+    m_cut = cut;
+    m_medianSmoothHalfWidth = medianSmoothHalfWidth;
+    m_enlargeRate = enlargeRate;
 }
 
 CPeakDetection::~CPeakDetection()
@@ -23,52 +26,56 @@ CPeakDetection::~CPeakDetection()
 
 }
 
-Bool CPeakDetection::Compute( const CSpectrum& spectrum, const TLambdaRange& lambdaRange, Float64 windowSize, Float64 cut, UInt32 medianSmoothHalfWidth, UInt32 enlargeRate )
+const CPeakDetectionResult* CPeakDetection::Compute( const CSpectrum& spectrum, const TLambdaRange& lambdaRange)
 {
+    CPeakDetectionResult* result = new CPeakDetectionResult();
+
     const CSpectrumFluxAxis& fluxAxis = spectrum.GetFluxAxis();
     const CSpectrumSpectralAxis& spectralAxis = spectrum.GetSpectralAxis();
 
     CSpectrumFluxAxis smoothedFluxAxis = fluxAxis;
 
-    if( medianSmoothHalfWidth  )
+    if( m_medianSmoothHalfWidth  )
     {
-        smoothedFluxAxis.ApplyMedianSmooth( medianSmoothHalfWidth );
+        smoothedFluxAxis.ApplyMedianSmooth( m_medianSmoothHalfWidth );
     }
 
-    UInt32 windowSampleCount = windowSize / spectrum.GetResolution();
+    UInt32 windowSampleCount = m_winsize / spectrum.GetResolution();
 
     TInt32RangeList peaksBorders;
-    FindPossiblePeaks( smoothedFluxAxis, spectralAxis, windowSampleCount, cut, peaksBorders );
+    FindPossiblePeaks( smoothedFluxAxis, spectralAxis, windowSampleCount, m_cut, peaksBorders );
 
     // No Peak detected, exit
     if( peaksBorders.size() == 0 )
     {
-        return false;
+        return NULL;
     }
 
     RedefineBorders( peaksBorders, spectralAxis, smoothedFluxAxis, fluxAxis );
 
-    if( enlargeRate )
+    result->PeakList = peaksBorders;
+    TInt32RangeList peaksBordersEnlarged= peaksBorders;
+    if( m_enlargeRate )
     {
         for( UInt32 i=0; i<peaksBorders.size(); i++ )
         {
-            TInt32Range fitRange = FindGaussianFitStartAndStop( i, peaksBorders, enlargeRate, spectralAxis.GetSamplesCount() );
-            peaksBorders[i] = fitRange;
+            TInt32Range fitRange = FindGaussianFitStartAndStop( i, peaksBorders, m_enlargeRate, spectralAxis.GetSamplesCount() );
+            peaksBordersEnlarged[i] = fitRange;
         }
     }
+    result->EnlargedPeakList = peaksBordersEnlarged;
 
-    m_Results = peaksBorders;
-    return true;
+    return result;
 }
 
 TInt32Range CPeakDetection::FindGaussianFitStartAndStop( Int32 i, const TInt32RangeList& peaksBorders, UInt32 enlargeRate, Int32 len )
 {
     Int32 fitStart = peaksBorders[i].GetBegin();
-    Int32 fitStop = peaksBorders[i].GetEnd();
+    Int32 fitStop = peaksBorders[i].GetEnd()+1;
 
-    Int32 rate = fitStop - fitStart;
-    fitStart = max( 0, fitStart - (int)enlargeRate*rate );
-    fitStop = min( len, fitStop + (int)enlargeRate*rate );
+    Float64 width = fitStop - fitStart ;
+    fitStart = max( 0, fitStart - (int)(enlargeRate*width) );
+    fitStop = min( len, fitStop + (int)(enlargeRate*width) );
 
     if( i>0 )
     {
@@ -104,7 +111,10 @@ Void CPeakDetection::RedefineBorders( TInt32RangeList& peakList, const CSpectrum
         int centerPos=-1;
         Float64 centerVal = -1e12;
         // find position of the maximum on the smoothed flux
-        for( Int32 i=peakList[iPeak].GetBegin(); i<peakList[iPeak].GetEnd(); i++ )
+        Int32 start = peakList[iPeak].GetBegin();
+        Int32 stop = peakList[iPeak].GetEnd() + 1;
+
+        for( Int32 i= start; i< stop; i++ )
         {
             if(centerVal<smoothFluxData[i]){
                 centerVal = smoothFluxData[i];
@@ -115,9 +125,9 @@ Void CPeakDetection::RedefineBorders( TInt32RangeList& peakList, const CSpectrum
         int old_left= centerPos;
         int old_right= centerPos;
         int new_left= std::max(0, centerPos-1);
-        int new_right= std::min(0, centerPos+1);
+        int new_right= std::min((int)smoothFluxAxis.GetSamplesCount(), centerPos+1);
 
-        if(new_left==0 || new_right==fluxAxis.GetSamplesCount()){
+        if(new_left==0 || new_right==smoothFluxAxis.GetSamplesCount()){
             // if the max is found on the border, then erase this range
             peakList.erase(peakList.begin() + iPeak);
         }else{
@@ -165,11 +175,11 @@ Void CPeakDetection::FindPossiblePeaks( const CSpectrumAxis& fluxAxis, const CSp
         UInt32 start = std::max( 0, i - halfWindowSampleCount );
         UInt32 stop = std::min( (Int32) fluxAxis.GetSamplesCount(), i + halfWindowSampleCount );
 
-        med[i] = medianFilter.Find( fluxData + start, halfWindowSampleCount*2 + 1 );
-        xmad[i] = XMad( fluxData+ start, halfWindowSampleCount*2 + 1, med[i] );
+        med[i] = medianFilter.Find( fluxData + start, stop - start );
+        xmad[i] = XMad( fluxData+ start, stop - start , med[i] );
     }
 
-    //*//debug:
+    /*//debug:
     // save median and xmad,  flux data
     FILE* f = fopen( "peakdetection_dbg_median.txt", "w+" );
     for( Int32 i=0; i<fluxAxis.GetSamplesCount(); i++ )
@@ -244,13 +254,13 @@ Float64 CPeakDetection::XMad( const Float64* x, Int32 n, Float64 median )
 
     if( ((float)n)/2. - int(n/2.) == 0 )
     {
-        UInt32 i1 = n/2;
-        UInt32 i2 = n/2 + 1;
+        UInt32 i1 = n/2 - 1;
+        UInt32 i2 = n/2;
         xmadm = 0.5*(xdata[i1]+xdata[i2]);
     }
     else
     {
-        UInt32 i1 = int(n/2) + 1;
+        UInt32 i1 = int(n/2);
         xmadm = xdata[i1];
     }
 
@@ -290,10 +300,3 @@ def Xmad(data, xmed):
         xmadm = xdata[i1]
     return xmadm
 */
-
-const TInt32RangeList& CPeakDetection::GetResults() const
-{
-    return m_Results;
-}
-
-

@@ -7,6 +7,8 @@
 #include <float.h>
 #include <iostream>
 
+#include <stdio.h>
+
 #define PEAKS_MIN_THRESHOLD (3)
 #define PEAKS_SMOOTH_LIMIT (20)
 
@@ -49,10 +51,11 @@ void CExtremum::SetRefreshCount( UInt32 n )
     m_RefreshCount = n;
 }
 
-Bool CExtremum::Find( const Float64* xAxis, const Float64* yAxis, UInt32 n, TPointList& maxPoint ) const
+Bool CExtremum::Find( const TFloat64List& xAxis, const TFloat64List& yAxis, TPointList& maxPoint ) const
 {
-    const Float64* selectedXAxis = xAxis;
-    const Float64* selectedYAxis = yAxis;
+    UInt32 n = xAxis.size();
+    const Float64* selectedXAxis = xAxis.data();
+    const Float64* selectedYAxis = yAxis.data();
 
     Int32 rangeXBeginIndex = -1;
     Int32 rangeXEndIndex = -1;
@@ -89,7 +92,7 @@ Bool CExtremum::InternalFind( const Float64* xAxis, const Float64* yAxis, UInt32
         return false;
 
     //Method 1, use only 1 extremum
-    //*
+    /*
     maxPoint.resize( 1 );
 
     Float64 max = DBL_MIN ;
@@ -121,19 +124,38 @@ Bool CExtremum::InternalFind( const Float64* xAxis, const Float64* yAxis, UInt32
         tmpY[t]=yAxis[t];
     }
 
+
     for( Int32 count = 0; count < m_RefreshCount; count ++ )
     {
         Int32 maxCount = 0;
 
-        // First element
-        if( tmpY[0] > tmpY[1] )
+        // find first and last non Nan element
+        Int32 firstNonNanInd = 0;
+        for( Int32 iFirst=0; iFirst<tmpSize-1; iFirst++ )
         {
-            maxX[maxCount] = tmpX[0];
-            maxY[maxCount] = tmpY[0];
+            if( !isnan(tmpY[iFirst])){
+                firstNonNanInd = iFirst;
+                break;
+            }
+        }
+        Int32 lastNonNanInd = tmpSize-1;
+        for( Int32 iLast=tmpSize-1; iLast>0; iLast-- )
+        {
+            if( !isnan(tmpY[iLast])){
+                lastNonNanInd = iLast;
+                break;
+            }
+        }
+
+        // First element
+        if( tmpY[firstNonNanInd] > tmpY[firstNonNanInd+1] )
+        {
+            maxX[maxCount] = tmpX[firstNonNanInd];
+            maxY[maxCount] = tmpY[firstNonNanInd];
             maxCount++;
         }
 
-        for( Int32 i=1; i<tmpSize-2; i++ )
+        for( Int32 i=firstNonNanInd+1; i<lastNonNanInd; i++ )
         {
             if( ( tmpY[i] > tmpY[i-1] ) && ( tmpY[i] > tmpY[i+1] ) )
             {
@@ -144,10 +166,10 @@ Bool CExtremum::InternalFind( const Float64* xAxis, const Float64* yAxis, UInt32
         }
 
         // last elements
-        if( tmpY[tmpSize-2] < tmpY[tmpSize-1] )
+        if( tmpY[lastNonNanInd-1] < tmpY[lastNonNanInd] )
         {
-            maxX[maxCount] = tmpX[tmpSize-1];
-            maxY[maxCount] = tmpY[tmpSize-1];
+            maxX[maxCount] = tmpX[lastNonNanInd];
+            maxY[maxCount] = tmpY[lastNonNanInd];
             maxCount++;
         }
 
@@ -161,6 +183,16 @@ Bool CExtremum::InternalFind( const Float64* xAxis, const Float64* yAxis, UInt32
             tmpX[t]=maxX[t];
             tmpY[t]=maxY[t];
         }
+
+        /*//debug:
+        // save median and xmad,  flux data
+        FILE* f = fopen( "extremum_dbg.txt", "w+" );
+        for( Int32 t=0;t<maxCount;t++)
+        {
+            fprintf( f, "%d %f %f\n", t, tmpX[t], tmpY[t]);
+        }
+        fclose( f );
+        //*/
 
         if( maxCount == 0 )
             break;
