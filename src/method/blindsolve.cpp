@@ -100,7 +100,9 @@ Bool COperatorBlindSolve::BlindSolve( COperatorResultStore& resultStore, const C
         TFloat64Range rangeFine = TFloat64Range( left_border, right_border );
         CExtremum extremumFine( rangeFine , 1);
         extremumFine.Find( correlationResult->Redshifts, correlationResult->Correlation, extremumListFine );
-        extremumList[i] = extremumListFine[0];
+        if( extremumListFine.size() ) {
+            extremumList[i] = extremumListFine[0];
+        }
     }
 
     if( extremumList.size() == 0 )
