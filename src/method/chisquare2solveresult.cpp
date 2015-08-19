@@ -12,7 +12,7 @@ IMPLEMENT_MANAGED_OBJECT( CChisquare2SolveResult )
 
 CChisquare2SolveResult::CChisquare2SolveResult()
 {
-
+    m_type = nType_raw;
 }
 
 CChisquare2SolveResult::~CChisquare2SolveResult()
@@ -45,11 +45,18 @@ Void CChisquare2SolveResult::Save( const COperatorResultStore& store, std::ostre
 
 Bool CChisquare2SolveResult::GetBestRedshiftPerTemplateString( const COperatorResultStore& store, std::string& output ) const
 {
-
-    std::string scope = store.GetScope( this ) + "chisquare2solve.chisquare";
+    std::string scopeStr;
+    if(m_type == nType_raw){
+        scopeStr = "chisquare";
+    }else if(m_type == nType_all){
+        scopeStr = "chisquare";
+    }else if(m_type == nType_noContinuum){
+        scopeStr = "chisquare_nocontinuum";
+    }else if(m_type == nType_continuumOnly){
+        scopeStr = "chisquare_continuum";
+    }
+    std::string scope = store.GetScope( this ) + "chisquare2solve." + scopeStr.c_str();
     TOperatorResultMap meritResults = store.GetPerTemplateResult(scope.c_str());
-
-
 
 
     for( TOperatorResultMap::const_iterator it = meritResults.begin(); it != meritResults.end(); it++ )
@@ -109,8 +116,17 @@ Void CChisquare2SolveResult::SaveLine( const COperatorResultStore& store, std::o
 
 Bool CChisquare2SolveResult::GetBestRedshift( const COperatorResultStore& store, Float64& redshift, Float64& merit, std::string& tplName ) const
 {
-
-    std::string scope = store.GetScope( this ) + "chisquare2solve.chisquare";
+    std::string scopeStr;
+    if(m_type == nType_raw){
+        scopeStr = "chisquare";
+    }else if(m_type == nType_all){
+        scopeStr = "chisquare";
+    }else if(m_type == nType_noContinuum){
+        scopeStr = "chisquare_nocontinuum";
+    }else if(m_type == nType_continuumOnly){
+        scopeStr = "chisquare_continuum";
+    }
+    std::string scope = store.GetScope( this ) + "chisquare2solve." + scopeStr.c_str();
     TOperatorResultMap meritResults = store.GetPerTemplateResult(scope.c_str());
 
 

@@ -15,20 +15,24 @@
 using namespace NSEpic;
 using namespace std;
 
-CExtremum::CExtremum() :
+CExtremum::CExtremum( Bool invertForMinSearch ) :
     m_MaxPeakCount( 5 ),
     m_RefreshCount( 1 ),
     m_XRange( 0.0, 0.0 )
 {
-
+    if(invertForMinSearch){
+        SetSignSearch( -1.0 );
+    }
 }
 
-CExtremum::CExtremum( const TFloat64Range& xRange, UInt32 maxPeakCount, UInt32 refreshCount ) :
+CExtremum::CExtremum(const TFloat64Range& xRange, UInt32 maxPeakCount, Bool invertForMinSearch, UInt32 refreshCount ) :
     m_MaxPeakCount( maxPeakCount ),
     m_RefreshCount( refreshCount ),
     m_XRange( xRange )
 {
-
+    if(invertForMinSearch){
+        SetSignSearch( -1.0 );
+    }
 }
 
 CExtremum::~CExtremum()
@@ -51,8 +55,14 @@ void CExtremum::SetRefreshCount( UInt32 n )
     m_RefreshCount = n;
 }
 
-Bool CExtremum::Find( const TFloat64List& xAxis, const TFloat64List& yAxis, TPointList& maxPoint ) const
+void CExtremum::SetSignSearch( Float64 val )
 {
+    m_SignSearch = val;
+}
+
+Bool CExtremum::Find( const TFloat64List& xAxis, const TFloat64List& yAxis, TPointList& maxPoint) const
+{
+
     UInt32 n = xAxis.size();
     const Float64* selectedXAxis = xAxis.data();
     const Float64* selectedYAxis = yAxis.data();
@@ -121,7 +131,7 @@ Bool CExtremum::InternalFind( const Float64* xAxis, const Float64* yAxis, UInt32
     for( Int32 t=0;t<n;t++)
     {
         tmpX[t]=xAxis[t];
-        tmpY[t]=yAxis[t];
+        tmpY[t]=m_SignSearch*yAxis[t];
     }
 
 
@@ -221,7 +231,7 @@ Bool CExtremum::InternalFind( const Float64* xAxis, const Float64* yAxis, UInt32
         Int32 j = sortedIndexes[ (sortedIndexes.size()-1) - i];
         if( ! isnan( tmpY[j] ) )
         {
-            maxPoint[ k++ ] = SPoint( tmpX[j], tmpY[j]);
+            maxPoint[ k++ ] = SPoint( tmpX[j], m_SignSearch*tmpY[j]);
         }
     }
 

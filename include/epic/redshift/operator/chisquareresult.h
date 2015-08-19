@@ -25,6 +25,7 @@ public:
     TFloat64List            Redshifts;
     TFloat64List            ChiSquare;
     TFloat64List            Overlap;
+    TFloat64List            Extrema;
     COperator::TStatusList  Status;
 
 };

@@ -106,6 +106,15 @@ Void CCorrelationResult::Save( const COperatorResultStore& store, std::ostream& 
     {
         stream <<  Redshifts[i] << "\t" << std::scientific << Correlation[i] << std::fixed << "\t" << Overlap[i] << std::endl;
     }
+
+    if(Extrema.size()>0){
+        stream <<  "#Extrema for z = {";
+        for ( int i=0; i<Extrema.size(); i++)
+        {
+            stream <<  Extrema[i] << "\t";
+        }
+        stream << "}" << std::endl;
+    }
 }
 
 Void CCorrelationResult::SaveLine( const COperatorResultStore& store, std::ostream& stream ) const

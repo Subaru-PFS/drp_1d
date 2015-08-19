@@ -33,7 +33,7 @@ const CChisquare2SolveResult* CMethodChisquare2Solve::Compute(  COperatorResultS
     Bool storeResult = false;
 
     COperatorResultStore::CAutoScope resultScope( resultStore, "chisquare2solve" );
-
+    Int32 _type = CChisquare2SolveResult::nType_noContinuum;
     for( UInt32 i=0; i<tplCategoryList.size(); i++ )
     {
         CTemplate::ECategory category = tplCategoryList[i];
@@ -43,7 +43,7 @@ const CChisquare2SolveResult* CMethodChisquare2Solve::Compute(  COperatorResultS
             const CTemplate& tpl = tplCatalog.GetTemplate( category, j );
             const CTemplate& tplWithoutCont = tplCatalog.GetTemplateWithoutContinuum( category, j );
 
-            Solve( resultStore, spc, spcWithoutCont, tpl, tplWithoutCont, lambdaRange, redshifts, overlapThreshold, nType_raw );
+            Solve( resultStore, spc, spcWithoutCont, tpl, tplWithoutCont, lambdaRange, redshifts, overlapThreshold, _type);
 
             storeResult = true;
         }
@@ -53,6 +53,7 @@ const CChisquare2SolveResult* CMethodChisquare2Solve::Compute(  COperatorResultS
     if( storeResult )
     {
         CChisquare2SolveResult*  ChisquareSolveResult = new CChisquare2SolveResult();
+        ChisquareSolveResult->m_type = _type;
         return ChisquareSolveResult;
     }
 
@@ -67,22 +68,22 @@ Bool CMethodChisquare2Solve::Solve( COperatorResultStore& resultStore, const CSp
     std::string scopeStr = "chisquare";
     Int32 _ntype = 1;
     Int32 _spctype = spctype;
-    Int32 _spctypetab[3] = {nType_raw, nType_noContinuum, nType_continuumOnly};
+    Int32 _spctypetab[3] = {CChisquare2SolveResult::nType_raw, CChisquare2SolveResult::nType_noContinuum, CChisquare2SolveResult::nType_continuumOnly};
 
 
     //case: nType_all
-    if(spctype = nType_all){
+    if(spctype == CChisquare2SolveResult::nType_all){
         _ntype = 3;
     }
 
     for( Int32 i=0; i<_ntype; i++){
-        if(spctype = nType_all){
+        if(spctype == CChisquare2SolveResult::nType_all){
             _spctype = _spctypetab[i];
         }else{
             _spctype = spctype;
         }
 
-        if(_spctype == nType_continuumOnly){
+        if(_spctype == CChisquare2SolveResult::nType_continuumOnly){
             // use continuum only
             _spc = spc;
             CSpectrumFluxAxis spcfluxAxis = _spc.GetFluxAxis();
@@ -95,13 +96,13 @@ Bool CMethodChisquare2Solve::Solve( COperatorResultStore& resultStore, const CSp
             CSpectrumFluxAxis& tfluxAxisPtr = _tpl.GetFluxAxis();
             tfluxAxisPtr = tplfluxAxis;
             scopeStr = "chisquare_continuum";
-        }else if(_spctype == nType_raw){
+        }else if(_spctype == CChisquare2SolveResult::nType_raw){
             // use full spectrum
             _spc = spc;
             _tpl = tpl;
             scopeStr = "chisquare";
 
-        }else if(_spctype == nType_noContinuum){
+        }else if(_spctype == CChisquare2SolveResult::nType_noContinuum){
             // use spectrum without continuum
             _spc = spc;
             CSpectrumFluxAxis spcfluxAxis = spcWithoutCont.GetFluxAxis();
@@ -111,13 +112,14 @@ Bool CMethodChisquare2Solve::Solve( COperatorResultStore& resultStore, const CSp
             CSpectrumFluxAxis tplfluxAxis = tplWithoutCont.GetFluxAxis();
             CSpectrumFluxAxis& tfluxAxisPtr = _tpl.GetFluxAxis();
             tfluxAxisPtr = tplfluxAxis;
-            scopeStr = "chisquare_continuum";
             scopeStr = "chisquare_nocontinuum";
         }
 
         // Compute merit function
         COperatorChiSquare2 chiSquare;
+        //CRef<CChisquareResult>  chisquareResult = (CChisquareResult*)chiSquare.ExportChi2versusAZ( _spc, _tpl, lambdaRange, redshifts, overlapThreshold );
         CRef<CChisquareResult>  chisquareResult = (CChisquareResult*)chiSquare.Compute( _spc, _tpl, lambdaRange, redshifts, overlapThreshold );
+
         if( !chisquareResult )
         {
             //Log.LogInfo( "Failed to compute chi square value");

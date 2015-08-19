@@ -72,14 +72,43 @@ Bool COperatorCorrelationSolve::Solve( COperatorResultStore& resultStore, const 
 
     // Compute correlation factor at each of those redshifts
     COperatorCorrelation correlation;
-    CRef<CCorrelationResult> correlationResult = (CCorrelationResult*) correlation.Compute( spcWithoutCont, tplWithoutCont, lambdaRange, redshifts, overlapThreshold );
+    CRef<CCorrelationResult> result = (CCorrelationResult*) correlation.Compute( spcWithoutCont, tplWithoutCont, lambdaRange, redshifts, overlapThreshold );
 
-    if( !correlationResult )
+    if( !result )
     {
         return false;
     }
 
-    resultStore.StorePerTemplateResult( tpl, "correlation", *correlationResult );
+    // extrema
+    Int32 extremumCount = 5;
+    TPointList extremumList;
+    TFloat64Range range( result->Redshifts[0], result->Redshifts[result->Redshifts.size()-1] );
+    CExtremum extremum( range, extremumCount);
+    extremum.Find( result->Redshifts, result->Correlation, extremumList );
+    // Refine Extremum with a second maximum search around the z candidates:
+    // This corresponds to the finer xcorrelation in EZ Pandora (in standard_DP fctn in SolveKernel.py)
+    Float64 radius = 0.001;
+    for( Int32 i=0; i<extremumList.size(); i++ )
+    {
+        Float64 x = extremumList[i].X;
+        Float64 left_border = max(range.GetBegin(), x-radius);
+        Float64 right_border=min(range.GetEnd(), x+radius);
+
+        TPointList extremumListFine;
+        TFloat64Range rangeFine = TFloat64Range( left_border, right_border );
+        CExtremum extremumFine( rangeFine , 1);
+        extremumFine.Find( result->Redshifts, result->Correlation, extremumListFine );
+        extremumList[i] = extremumListFine[0];
+    }
+    // store extrema results
+    result->Extrema.resize( extremumCount );
+    for( Int32 i=0; i<extremumList.size(); i++ )
+    {
+
+        result->Extrema[i] = extremumList[i].X;
+    }
+
+    resultStore.StorePerTemplateResult( tpl, "correlation", *result );
 
 
     return true;

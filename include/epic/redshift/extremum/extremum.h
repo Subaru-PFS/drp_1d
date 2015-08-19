@@ -19,15 +19,16 @@ class CExtremum
 
 public:
 
-    CExtremum();
-    CExtremum( const TFloat64Range& xRange, UInt32 maxPeakCount = 5, UInt32 refreshCount = 2 );
+    CExtremum( Bool invertForMinSearch=false );
+    CExtremum( const TFloat64Range& xRange, UInt32 maxPeakCount = 5, Bool invertForMinSearch=false, UInt32 refreshCount = 2 );
     ~CExtremum();
 
     void SetMaxPeakCount( UInt32 n );
     void SetRefreshCount( UInt32 n );
     void SetXRange( const TFloat64Range& r );
+    void SetSignSearch( Float64 val );
+    Bool Find(const TFloat64List& xAxis, const TFloat64List& yAxis, TPointList& maxPoint ) const;
 
-    Bool Find( const TFloat64List& xAxis, const TFloat64List& yAxis, TPointList& maxPoint ) const;
 
 private:
 
@@ -38,6 +39,7 @@ private:
     UInt32          m_RefreshCount;
     TFloat64Range   m_XRange;
 
+    Float64         m_SignSearch;
 };
 
 

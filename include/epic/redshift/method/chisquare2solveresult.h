@@ -19,6 +19,14 @@ class CChisquare2SolveResult : public COperatorResult
 
 public:
 
+    enum EType
+    {
+             nType_raw = 1,
+             nType_continuumOnly = 2,
+             nType_noContinuum = 3,
+             nType_all = 4,
+    };
+
     CChisquare2SolveResult();
     virtual ~CChisquare2SolveResult();
 
@@ -27,6 +35,7 @@ public:
     Bool GetBestRedshift( const COperatorResultStore& store, Float64& redshift, Float64& merit, std::string& tplName ) const;
     Bool GetBestRedshiftPerTemplateString( const COperatorResultStore& store, std::string& output ) const;
 
+    Int32 m_type;
 
 };
 
