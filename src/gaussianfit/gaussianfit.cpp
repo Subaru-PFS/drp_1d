@@ -78,7 +78,8 @@ Void CGaussianFit::ComputeFirstGuess( const CSpectrum& spectrum, const TInt32Ran
     Float64 max = gsl_stats_max(v, 1, n);
     Float64 min = gsl_stats_min(v, 1, n);
 
-    if (fabs(max) > fabs(min))
+    //if (fabs(max) > fabs(min)) // TODO, WARNING, Gaussian fit forced to positive amplitudes, aschmitt, 20150827
+    if ( max > min )
     {
         // Peak value
         peakValue = max;

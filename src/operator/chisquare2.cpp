@@ -171,7 +171,7 @@ Void COperatorChiSquare2::BasicFit( const CSpectrum& spectrum, const CTemplate& 
     //Float64 ampl = 1.0;
     //Float64 ampl = sumYDevs / sumXDevs; //EZ formulation
     //Float64 ampl = sumT; //EZ formulation
-    Float64 ampl = sumCross / sumT; // Tonry&Davis formulation
+    Float64 ampl = max(0.0, sumCross / sumT); // Tonry&Davis formulation
     if(amplitude !=-1){
         ampl = amplitude;
     }
@@ -303,7 +303,7 @@ const COperatorResult* COperatorChiSquare2::Compute(const CSpectrum& spectrum, c
     }
 
     // extrema
-    Int32 extremumCount = 5;
+    Int32 extremumCount = 10;
     TPointList extremumList;
     TFloat64Range redshiftsRange(result->Redshifts[0], result->Redshifts[result->Redshifts.size()-1]);
     CExtremum extremum( redshiftsRange, extremumCount, true);

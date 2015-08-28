@@ -32,8 +32,11 @@ public:
 private:
     // Peak Detection
     Float64 m_winsize;
+    Float64 m_minsize;
+    Float64 m_maxsize;
     Float64 m_cut;
     Float64 m_strongcut;
+    Float64 m_enlargeRate;
 
     // Line Matching
     Int32 m_minMatchNum;

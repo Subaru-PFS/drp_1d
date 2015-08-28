@@ -123,19 +123,26 @@ Bool CRules::checkRule01(Float64 z, CRayMatchingResult::TSolutionSet& matchingSo
 Bool CRules::checkRule02(Float64 z, CRayMatchingResult::TSolutionSet& matchingSolutionSet){
 
     // check if the OIII doublet is in this solution set
-    Int32 found=0;
+    Int32 founda=0;
+    Int32 foundb=0;
     for( UInt32 i=0; i<matchingSolutionSet.size(); i++ )
     {
         std::string name = matchingSolutionSet[i].RestRay.GetName();
-        std::size_t foundstr = name.find("[OIII]");
-        if (foundstr!=std::string::npos){
-            found++;
+        std::size_t foundstra = name.find("[OIII](doublet-1)");
+        if (foundstra!=std::string::npos){
+            founda++;
+        }
+        std::size_t foundstrb = name.find("[OIII](doublet-1/3)");
+        if (foundstrb!=std::string::npos){
+            // check if OIIIa would be in the wavelength range
+            Float64 lambda = getRestRayLambda("[OIII](doublet-1)")*(1+z);
+            if( lambda >= m_lambdaRange.GetBegin() && lambda <= m_lambdaRange.GetEnd() ){
+                foundb++;
+            }
         }
     }
-    if(found==1){
+    if(foundb==1 && founda==0){
         return false;
-    }else if(found==0 || found==2){
-        return true;
     }
 
     return true;
@@ -150,12 +157,18 @@ Bool CRules::checkRule03(Float64 z, CRayMatchingResult::TSolutionSet& matchingSo
     // check if the Hbeta doublet is in this solution set
     Int32 foundHbeta=0;
     Int32 foundHalpha=0;
+
+    //Float64 z = CRayMatchingResult::GetMeanRedshiftSolution(matchingSolutionSet);
     for( UInt32 i=0; i<matchingSolutionSet.size(); i++ )
     {
         std::string name = matchingSolutionSet[i].RestRay.GetName();
         std::size_t foundstr = name.find("Hbeta");
         if (foundstr!=std::string::npos){
-            foundHbeta++;
+            // check if Halpha would be in the wavelength range
+            Float64 lambda = getRestRayLambda("Halpha")*(1+z);
+            if( lambda >= m_lambdaRange.GetBegin() && lambda <= m_lambdaRange.GetEnd() ){
+                foundHbeta++;
+            }
         }
         foundstr = name.find("Halpha");
         if (foundstr!=std::string::npos){
@@ -167,4 +180,18 @@ Bool CRules::checkRule03(Float64 z, CRayMatchingResult::TSolutionSet& matchingSo
     }
 
     return true;
+}
+
+Float64 CRules::getRestRayLambda(std::string nametag){
+    CRayCatalog::TRayVector restRayList = m_RestCatalog.GetFilteredList();
+    Int32 ncatalog = restRayList.size();
+    for( UInt32 c=0; c<ncatalog; c++ )
+    {
+        std::string name = restRayList[c].GetName();
+        std::size_t foundstr = name.find(nametag.c_str());
+        if (foundstr!=std::string::npos){
+            return restRayList[c].GetPosition();
+        }
+    }
+    return -1.0;
 }

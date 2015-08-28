@@ -80,7 +80,7 @@ Bool COperatorCorrelationSolve::Solve( COperatorResultStore& resultStore, const 
     }
 
     // extrema
-    Int32 extremumCount = 5;
+    Int32 extremumCount = 10;
     TPointList extremumList;
     TFloat64Range range( result->Redshifts[0], result->Redshifts[result->Redshifts.size()-1] );
     CExtremum extremum( range, extremumCount);

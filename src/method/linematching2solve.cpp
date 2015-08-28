@@ -53,9 +53,10 @@ COperatorLineMatching2Solve::COperatorLineMatching2Solve()
         //m_maxsize = 120;
         //m_enlargeRate = 1.0;
         //m_tol = 0.0025;
+
         // F + ErrF
         m_winsize = 250.0;
-        m_cut = 3;
+        m_cut = 1.5;
         m_maxsize = 120;
         m_enlargeRate = 2.0;
         m_tol = 0.0025;
@@ -94,6 +95,8 @@ const CLineMatching2SolveResult* COperatorLineMatching2Solve::Compute(  COperato
     // --- Match
     CRayMatching rayMatching;
     CRef<CRayMatchingResult> rayMatchingResult = rayMatching.Compute(rayDetectionResult->RayCatalog, restRayCatalog, redshiftsRange, m_minMatchNum, m_tol );
+
+    rayMatchingResult->FilterWithRules(spc, lambdaRange, m_winsize);
 
     // Store matching results
     if( rayMatchingResult )

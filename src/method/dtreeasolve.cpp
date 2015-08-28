@@ -41,10 +41,32 @@ COperatorDTreeASolve::COperatorDTreeASolve()
     m_winsize = 250.0;
     m_cut = 1.5;
     m_strongcut = 2.0;
+    m_minsize = 3;
+    m_maxsize = 70;
+    m_enlargeRate = 2.0;
 
     // Line Matching
     m_minMatchNum = 1;
     m_tol = 0.002;
+
+
+    //pfs TF overrides
+    if(1)
+    {
+        // TF
+        //m_winsize = 250.0;
+        //m_cut = 150;
+        //m_maxsize = 120;
+        //m_enlargeRate = 1.0;
+        //m_tol = 0.0025;
+
+        // F + ErrF
+        m_winsize = 250.0;
+        m_cut = 1.5;
+        m_maxsize = 120;
+        m_enlargeRate = 2.0;
+        m_tol = 0.0025;
+    }
 }
 
 COperatorDTreeASolve::~COperatorDTreeASolve()
@@ -81,7 +103,7 @@ Bool COperatorDTreeASolve::Solve(COperatorResultStore &resultStore, const CSpect
 
     TTemplateCategoryList   filteredTemplateCategoryList = getFilteredTplCategory( tplCategoryList, CTemplate::nCategory_Emission);
 
-    CPeakDetection peakDetection(m_winsize, m_cut);
+    CPeakDetection peakDetection(m_winsize, m_cut, 1, m_enlargeRate);
     CConstRef<CPeakDetectionResult> peakDetectionResult = peakDetection.Compute( spc, lambdaRange);
     resultStore.StoreGlobalResult( "peakdetection", *peakDetectionResult );
     Log.LogInfo( "DTreeA - Peak Detection output: %d peaks found", peakDetectionResult->PeakList.size());
@@ -108,7 +130,7 @@ Bool COperatorDTreeASolve::Solve(COperatorResultStore &resultStore, const CSpect
     }
 
     // Ray Detection
-    CRayDetection rayDetection( m_cut, m_strongcut );
+    CRayDetection rayDetection( m_cut, m_strongcut, m_winsize, m_minsize, m_maxsize);
     CConstRef<CRayDetectionResult> rayDetectionResult = rayDetection.Compute( spc, lambdaRange, peakDetectionResult->PeakList, peakDetectionResult->EnlargedPeakList );
     resultStore.StoreGlobalResult( "raycatalog", *rayDetectionResult );
     Log.LogInfo( "DTreeA - Ray Detection output: %d ray(s) found", rayDetectionResult->RayCatalog.GetList().size());

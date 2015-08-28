@@ -32,6 +32,7 @@ private:
     Bool checkRule02(Float64 z, CRayMatchingResult::TSolutionSet& matchingSolutionSet);
     Bool checkRule03(Float64 z, CRayMatchingResult::TSolutionSet& matchingSolutionSet);
 
+    Float64 getRestRayLambda(std::string nametag);
 
     CSpectrum    m_spc;
     CRayCatalog    m_DetectedCatalog;
