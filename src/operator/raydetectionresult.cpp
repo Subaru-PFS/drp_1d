@@ -26,6 +26,16 @@ Void CRayDetectionResult::Save( const COperatorResultStore& store, std::ostream&
         stream << std::endl;
     }
 
+    stream << std::endl;
+    stream << "#Peak detection status:" <<std::endl;
+    for(Int32 i=0; i<PeakListDetectionStatus.size(); i++)
+    {
+        stream << "#" << i << "\t" << PeakListDetectionStatus[i];
+        stream << std::endl;
+    }
+
+
+
 }
 
 

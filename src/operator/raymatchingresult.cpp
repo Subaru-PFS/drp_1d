@@ -37,10 +37,26 @@ Void CRayMatchingResult::Save( const COperatorResultStore& store, std::ostream& 
                 << "Ray Matching" << std::endl;
 
     */
-    TSolutionSetList selectedResults = GetSolutionsListOverNumber(0);
 
+    // save the solutions
+    TSolutionSetList selectedResults = GetSolutionsListOverNumber(0);
+    SaveSolutionSetToStream(stream,  selectedResults, 0);
+    // save the filtered solutions
+    SaveSolutionSetToStream(stream,  FilteredSolutionSetList, 1);
+
+    return;
+}
+
+Void CRayMatchingResult::SaveSolutionSetToStream(std::ostream& stream,  TSolutionSetList selectedResults, Int32 type) const
+{
+    //type == 0, solutions
+    //type == 1, not valid filtered solutions
     if(selectedResults.size()>0){
         std::string strList;
+        if(type==1){
+            strList.append("\n\n#FILTERED BY RULES: ");
+        }
+
         char tmpChar[256];
         strList.append("#MATCH_NUM\tDETECTED_LINES\tREST_LINES\tZ\n");
         for( UInt32 iSol=0; iSol<selectedResults.size(); iSol++ )
@@ -67,6 +83,12 @@ Void CRayMatchingResult::Save( const COperatorResultStore& store, std::ostream& 
             strRest = strRest.substr(0, strRest.size()-2);
             strRest.append(")");
 
+            if(type==1){
+                strList.append("#");
+                sprintf(tmpChar, "Rule_%d\t", FilterTypeList[iSol]);
+                strList.append(tmpChar);
+
+            }
             strList.append(strMNUM);
             strList.append("\t");
             strList.append(strDetected);
@@ -78,8 +100,6 @@ Void CRayMatchingResult::Save( const COperatorResultStore& store, std::ostream& 
         }
         stream << strList.c_str();
     }
-
-    return;
 }
 
 Void CRayMatchingResult::SaveLine( const COperatorResultStore& store, std::ostream& stream ) const
@@ -303,10 +323,13 @@ Void    CRayMatchingResult::FilterWithRules(CSpectrum spc, TFloat64Range lambdaR
     {
         TSolutionSet currentSet = SolutionSetList[i];
         Float64 z = GetMeanRedshiftSolution(currentSet);
-        bool isValid = rules.check(z, currentSet);
+        Int32 ruleId = rules.check(z, currentSet);
 
-        if(isValid){
+        if(ruleId <= 0){
             _solutionSetList.push_back(currentSet);
+        }else{
+            FilteredSolutionSetList.push_back(currentSet);
+            FilterTypeList.push_back(ruleId);
         }
 
     }

@@ -247,11 +247,15 @@ Bool CProcessFlow::LineMatching( CProcessFlowContext& ctx )
 
 Bool CProcessFlow::LineMatching2( CProcessFlowContext& ctx )
 {
+    const CSpectrumSpectralAxis& spcSpectralAxis = ctx.GetSpectrum().GetSpectralAxis();
+    TFloat64Range spcLambdaRange;
+    spcSpectralAxis.ClampLambdaRange( ctx.GetParams().lambdaRange, spcLambdaRange );
+
     Log.LogInfo( "Process Line Matching 2 (LambdaRange: %f-%f:%f)",
-            ctx.GetSpectrum().GetLambdaRange().GetBegin(), ctx.GetSpectrum().GetLambdaRange().GetEnd(), ctx.GetSpectrum().GetResolution());
+            spcLambdaRange.GetBegin(), spcLambdaRange.GetEnd(), ctx.GetSpectrum().GetResolution());
 
     COperatorLineMatching2Solve Solve;
-    CConstRef<CLineMatching2SolveResult> solveResult = Solve.Compute(ctx, ctx.GetSpectrum(), ctx.GetParams().lambdaRange, ctx.GetParams().redshiftRange,
+    CConstRef<CLineMatching2SolveResult> solveResult = Solve.Compute(ctx, ctx.GetSpectrum(), spcLambdaRange, ctx.GetParams().redshiftRange,
                                                                     ctx.GetParams().redshiftStep, ctx.GetRayCatalog() );
 
     if( solveResult ) {

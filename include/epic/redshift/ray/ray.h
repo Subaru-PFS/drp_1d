@@ -29,7 +29,7 @@ public:
     };
 
     CRay();
-    CRay( const std::string& name, Float64 pos, UInt32 type, UInt32 force, Float64 amp=-1.0, Float64 width=-1.0, Float64 cut=-1.0 );
+    CRay( const std::string& name, Float64 pos, UInt32 type, UInt32 force, Float64 amp=-1.0, Float64 width=-1.0, Float64 cut=-1.0, Float64 posErr=-1.0 );
     ~CRay();
     bool operator < (const CRay& str) const;
     bool operator != (const CRay& str) const;
@@ -42,6 +42,8 @@ public:
     Float64             GetAmplitude() const;
     Float64             GetWidth() const;
     Float64             GetCut() const;
+    Float64             GetPosFitError() const;
+
 
     const std::string&  GetName() const;
     Void                Save( std::ostream& stream ) const;
@@ -56,6 +58,9 @@ private:
     Float64         m_Amp;
     Float64         m_Width;
     Float64         m_Cut;
+
+    //fit err
+    Float64         m_PosFitErr;
 
     std::string     m_Name;
 };

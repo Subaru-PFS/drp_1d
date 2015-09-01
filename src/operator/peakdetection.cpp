@@ -13,12 +13,13 @@
 using namespace NSEpic;
 IMPLEMENT_MANAGED_OBJECT(CPeakDetection)
 
-CPeakDetection::CPeakDetection(Float64 windowSize, Float64 cut, UInt32 medianSmoothHalfWidth, UInt32 enlargeRate)
+CPeakDetection::CPeakDetection(Float64 windowSize, Float64 cut, UInt32 medianSmoothHalfWidth, UInt32 enlargeRate, Float64 detectionnoiseoffset)
 {
     m_winsize = windowSize;
     m_cut = cut;
     m_medianSmoothHalfWidth = medianSmoothHalfWidth;
     m_enlargeRate = enlargeRate;
+    m_detectionnoiseoffset = detectionnoiseoffset;
 }
 
 CPeakDetection::~CPeakDetection()
@@ -89,6 +90,7 @@ TInt32Range CPeakDetection::FindGaussianFitStartAndStop( Int32 i, const TInt32Ra
 
     return TInt32Range( fitStart, fitStop );
 }
+
 
 /**
  * Not fully implemented.
@@ -179,9 +181,10 @@ Void CPeakDetection::FindPossiblePeaks( const CSpectrumAxis& fluxAxis, const CSp
 
         med[i] = medianFilter.Find( fluxData + start, stop - start );
         xmad[i] = XMad( fluxData+ start, stop - start , med[i] );
+        xmad[i] += m_detectionnoiseoffset; //add a noise level, useful for simulation data
     }
 
-    //*//debug:
+    /*//debug:
     // save median and xmad,  flux data
     FILE* f = fopen( "peakdetection_dbg_median.txt", "w+" );
     for( Int32 i=0; i<fluxAxis.GetSamplesCount(); i++ )

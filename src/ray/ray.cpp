@@ -9,7 +9,7 @@ CRay::CRay()
 
 }
 
-CRay::CRay( const string& name, Float64 pos, UInt32 type, UInt32 force, Float64 amp, Float64 width, Float64 cut )
+CRay::CRay(const string& name, Float64 pos, UInt32 type, UInt32 force, Float64 amp, Float64 width, Float64 cut , Float64 posErr)
 {
     m_Name = name;
     m_Pos = pos;
@@ -19,6 +19,8 @@ CRay::CRay( const string& name, Float64 pos, UInt32 type, UInt32 force, Float64 
     m_Amp = amp;
     m_Width = width;
     m_Cut = cut;
+
+    m_PosFitErr = posErr;
 }
 
 CRay::~CRay()
@@ -85,6 +87,11 @@ Float64 CRay::GetCut() const
     return m_Cut;
 }
 
+Float64 CRay::GetPosFitError() const
+{
+    return m_PosFitErr;
+}
+
 const std::string& CRay::GetName() const
 {
     return m_Name;
@@ -112,7 +119,7 @@ Void CRay::Save(  std::ostream& stream ) const
         stream << "Strong"  << "\t";
     else
         stream << "Weak"  << "\t";
-    stream << GetCut() << "\t" << GetWidth() << "\t";
+    stream << GetCut() << "\t" << GetWidth() << "\t" << GetPosFitError() << "\t";
 }
 
 

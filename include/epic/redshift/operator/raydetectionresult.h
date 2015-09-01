@@ -24,6 +24,7 @@ public:
     Void SaveLine( const COperatorResultStore& store, std::ostream& stream ) const;
 
     CRayCatalog RayCatalog;
+    std::vector<std::string> PeakListDetectionStatus;
 };
 
 

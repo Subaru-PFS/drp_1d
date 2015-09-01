@@ -8,6 +8,8 @@
 #include <epic/redshift/operator/raydetectionresult.h>
 #include <epic/redshift/gaussianfit/gaussianfit.h>
 
+#include "boost/format.hpp"
+
 #include <math.h>
 #include <float.h>
 #include <stdio.h>
@@ -50,7 +52,11 @@ const CRayDetectionResult* CRayDetection::Compute( const CSpectrum& spectrum, co
 {
     const CSpectrum& spc = spectrum;
     const CSpectrumFluxAxis fluxAxis = spc.GetFluxAxis();
+    const CSpectrumSpectralAxis spectralAxis = spc.GetSpectralAxis();
 
+//    if(resPeaks==null){
+//        return NULL;
+//    }
     UInt32 nPeaks = resPeaks.size();
 
     CRayDetectionResult* result = new CRayDetectionResult();
@@ -65,8 +71,16 @@ const CRayDetectionResult* CRayDetection::Compute( const CSpectrum& spectrum, co
         bool toAdd = true;
         //find gaussian fit
         CGaussianFit fitter;
-        CGaussianFit::EStatus status = fitter.Compute( spc, TInt32Range( resPeaksEnlarged[j].GetBegin(), resPeaksEnlarged[j].GetEnd() ) );
+
+        //limit the peakRange
+        // optionally limit the size of the fitrange
+        //TInt32Range fitRange = LimitGaussianFitStartAndStop( j, resPeaksEnlarged, spectralAxis.GetSamplesCount(), spectralAxis);
+        TInt32Range fitRange = resPeaksEnlarged[j];
+
+        CGaussianFit::EStatus status = fitter.Compute( spc, TInt32Range( fitRange.GetBegin(), fitRange.GetEnd() ) );
         if(status!=NSEpic::CGaussianFit::nStatus_Success){
+            std::string status = (boost::format("Peak_%1% : Fitting failed") % j).str();
+            result->PeakListDetectionStatus.push_back(status);
             continue;
         }
 
@@ -74,24 +88,37 @@ const CRayDetectionResult* CRayDetection::Compute( const CSpectrum& spectrum, co
         Float64 gaussPos;
         Float64 gaussWidth;
         fitter.GetResults( gaussAmp, gaussPos, gaussWidth );
+        Float64 gaussAmpErr;
+        Float64 gaussPosErr;
+        Float64 gaussWidthErr;
+        fitter.GetResultsError( gaussAmpErr, gaussPosErr, gaussWidthErr );
+
         Float64 gaussCont;
         fitter.GetResultsPolyCoeff0( gaussCont );
 
         // check amp
         if(gaussAmp<0){
             toAdd = false;
+            std::string status = (boost::format("Peak_%1% : GaussAmp negative") % j).str();
+            result->PeakListDetectionStatus.push_back(status);
         }
         // check width
         if(toAdd){
             if(gaussWidth<0){
                 toAdd = false;
+                std::string status = (boost::format("Peak_%1% : GaussWidth negative") % j).str();
+                result->PeakListDetectionStatus.push_back(status);
             }else{
                 Float64 fwhm = FWHM_FACTOR*gaussWidth;
                 if(fwhm<m_minsize){
                     toAdd = false;
+                    std::string status = (boost::format("Peak_%1% : fwhm<m_minsize") % j).str();
+                    result->PeakListDetectionStatus.push_back(status);
                 }
                 if(fwhm>m_maxsize){
                     toAdd = false;
+                    std::string status = (boost::format("Peak_%1% : fwhm>m_maxsize") % j).str();
+                    result->PeakListDetectionStatus.push_back(status);
                 }
             }
         }
@@ -113,6 +140,8 @@ const CRayDetectionResult* CRayDetection::Compute( const CSpectrum& spectrum, co
             Float64 gaussAmp_with_cont = gaussAmp + gaussCont;
             if(gaussAmp_with_cont/max_value <= 0.65 || gaussAmp_with_cont/max_value >= 1.35){
                 toAdd = false;
+                std::string status = (boost::format("Peak_%1% : gaussAmp far from spectrum max_value") % j).str();
+                result->PeakListDetectionStatus.push_back(status);
             }
 
             // check gaussPos vs position of the max.
@@ -134,12 +163,16 @@ const CRayDetectionResult* CRayDetection::Compute( const CSpectrum& spectrum, co
                 Float64 diffPos = fabs(gaussPos-spc.GetSpectralAxis()[max_index]);
                 if(diffPos > error3samples){
                     toAdd = false;
+                    std::string status = (boost::format("Peak_%1% : gaussPos far from spectrum max_position (samples)") % j).str();
+                    result->PeakListDetectionStatus.push_back(status);
                 }
             }else{ //tolerance in Angstrom
                 Float64 tolAngtsrom = 20.0;
                 Float64 diffPos = fabs(gaussPos-spc.GetSpectralAxis()[max_index]);
                 if(diffPos > tolAngtsrom){
                     toAdd = false;
+                    std::string status = (boost::format("Peak_%1% : gaussAmp far from spectrum max_value (Angstrom)") % j).str();
+                    result->PeakListDetectionStatus.push_back(status);
                 }
             }
 
@@ -152,6 +185,8 @@ const CRayDetectionResult* CRayDetection::Compute( const CSpectrum& spectrum, co
             ratioAmp = ComputeFluxes(spc, m_winsize, resPeaks[j]);
             if(ratioAmp<m_cut){
                 toAdd = false;
+                std::string status = (boost::format("Peak_%1% : ratioAmp<m_cut") % j).str();
+                result->PeakListDetectionStatus.push_back(status);
                 // add this peak range to retest list
                 retestPeaks.push_back(resPeaks[j]);
                 retestGaussParams.push_back(SGaussParams(gaussPos, gaussAmp, gaussWidth));
@@ -161,11 +196,12 @@ const CRayDetectionResult* CRayDetection::Compute( const CSpectrum& spectrum, co
         }
 
         if(toAdd){
+            std::string status = (boost::format("Peak_%1% : line detected successfully") % j).str();
+            result->PeakListDetectionStatus.push_back(status);
             char buffer [64];
             sprintf(buffer,"detected_peak_%d",j);
             std::string peakName = buffer;
-            result->RayCatalog.Add( CRay( peakName, gaussPos, CRay::nType_Emission, force , gaussAmp, gaussWidth, ratioAmp) );
-
+            result->RayCatalog.Add( CRay( peakName, gaussPos, CRay::nType_Emission, force , gaussAmp, gaussWidth, ratioAmp, gaussPosErr) );
         }
     }
 
@@ -180,6 +216,41 @@ const CRayDetectionResult* CRayDetection::Compute( const CSpectrum& spectrum, co
     }
 
     return result;
+}
+
+/**
+*
+* This function uses a maximum gaussian width param. in order to limit the size of the interval used for the fit.
+*/
+TInt32Range CRayDetection::LimitGaussianFitStartAndStop( Int32 i, const TInt32RangeList& peaksBorders, Int32 len, const CSpectrumSpectralAxis spectralAxis )
+{
+    Int32 fitStart = peaksBorders[i].GetBegin();
+    Int32 fitStop = peaksBorders[i].GetEnd()+1;
+
+    Float64 width = fitStop - fitStart ;
+    UInt32 center = fitStart + width/2;
+    UInt32 start = std::max(0, spectralAxis.GetIndexAtWaveLength(spectralAxis[center]-m_maxsize/2.0) );
+    UInt32 stop = std::min( (Int32) len, spectralAxis.GetIndexAtWaveLength(spectralAxis[center]+m_maxsize/2.0)  );
+    Int32 maxwinsizeIndexes = stop-start;
+
+    if(width > maxwinsizeIndexes){
+        fitStart = max( 0, (int)start);
+        fitStop = min( len, (int)stop );
+    }
+
+    if( i>0 )
+    {
+        if( peaksBorders[i-1].GetEnd() > -1 )
+            fitStart = max( peaksBorders[i-1].GetEnd(), fitStart );
+    }
+
+    if( i<peaksBorders.size()-1 )
+    {
+        if( peaksBorders[i+1].GetBegin() > -1 )
+            fitStop = min( peaksBorders[i+1].GetBegin(), fitStop );
+    }
+
+    return TInt32Range( fitStart, fitStop );
 }
 
 Float64 CRayDetection::ComputeFluxes(const CSpectrum& spectrum, Float64 winsize, TInt32Range range, TFloat64List mask, Float64 *maxFluxnoContinuum, Float64 *noise){

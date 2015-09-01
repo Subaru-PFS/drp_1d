@@ -26,6 +26,8 @@ COperatorLineMatching2Solve::COperatorLineMatching2Solve()
     // Peak Detection
     m_winsize = 250.0;
     m_cut = 5.0;
+    m_detectioncut = 5.0;
+    m_detectionnoiseoffset = 0.0; // useful for simulation data
     m_strongcut = 2.0;
     m_minsize = 3;
     m_maxsize = 70;
@@ -41,6 +43,7 @@ COperatorLineMatching2Solve::COperatorLineMatching2Solve()
     {
         m_winsize = 250.0;
         m_cut = 3.0;
+        m_detectioncut = 3.0;
         m_maxsize = 120;
     }
 
@@ -48,15 +51,24 @@ COperatorLineMatching2Solve::COperatorLineMatching2Solve()
     if(1)
     {
         // TF
-        //m_winsize = 250.0;
-        //m_cut = 150;
-        //m_maxsize = 120;
-        //m_enlargeRate = 1.0;
-        //m_tol = 0.0025;
+        m_winsize = 250.0;
+        m_cut = 1.0;
+        m_detectioncut = 10.0;
+        m_detectionnoiseoffset = 0.0001;
+        m_maxsize = 120;
+        m_enlargeRate = 1.0;
+        m_tol = 0.0001;
 
-        // F + ErrF
+        // + ErrF overrides
+        //m_cut = 0.2;
+    }
+
+    //pfs F + ErrF overrides
+    if(0)
+    {   // F + ErrF
         m_winsize = 250.0;
         m_cut = 1.5;
+        m_detectioncut = m_cut;
         m_maxsize = 120;
         m_enlargeRate = 2.0;
         m_tol = 0.0025;
@@ -76,10 +88,13 @@ const CLineMatching2SolveResult* COperatorLineMatching2Solve::Compute(  COperato
     COperatorResultStore::CAutoScope resultScope( resultStore, "linematching2solve" );
 
 
-    CPeakDetection peakDetection(m_winsize, m_cut, 1, m_enlargeRate);
+    CPeakDetection peakDetection(m_winsize, m_detectioncut, 1, m_enlargeRate, m_detectionnoiseoffset);
     CConstRef<CPeakDetectionResult> peakDetectionResult = peakDetection.Compute( spc, lambdaRange);
-    if( peakDetectionResult )
+    if( peakDetectionResult ){
         resultStore.StoreGlobalResult( "peakdetection", *peakDetectionResult );
+    }else{
+        return NULL;
+    }
 
     CRayDetection rayDetection( m_cut, m_strongcut, m_winsize, m_minsize, m_maxsize);
     CConstRef<CRayDetectionResult> rayDetectionResult = rayDetection.Compute( spc, lambdaRange, peakDetectionResult->PeakList, peakDetectionResult->EnlargedPeakList );
@@ -96,12 +111,12 @@ const CLineMatching2SolveResult* COperatorLineMatching2Solve::Compute(  COperato
     CRayMatching rayMatching;
     CRef<CRayMatchingResult> rayMatchingResult = rayMatching.Compute(rayDetectionResult->RayCatalog, restRayCatalog, redshiftsRange, m_minMatchNum, m_tol );
 
-    rayMatchingResult->FilterWithRules(spc, lambdaRange, m_winsize);
 
-    // Store matching results
-    if( rayMatchingResult )
+    if( rayMatchingResult ){
+        rayMatchingResult->FilterWithRules(spc, lambdaRange, m_winsize);
+        // Store matching results
         resultStore.StoreGlobalResult( "raymatching", *rayMatchingResult );
-
+    }
 
     storeResult = true; //always save a matching result
     if( storeResult )

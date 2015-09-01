@@ -22,16 +22,28 @@ CRules::~CRules()
 
 }
 
-Bool CRules::check(Float64 z, CRayMatchingResult::TSolutionSet& matchingSolutionSet)
+Int32 CRules::check(Float64 z, CRayMatchingResult::TSolutionSet& matchingSolutionSet)
 {
-    Bool bval = true;
+    Int32 intval = 0;
 
-    bval &= checkRule01(z, matchingSolutionSet);
-    bval &= checkRule02(z, matchingSolutionSet);
-    bval &= checkRule03(z, matchingSolutionSet);
+    Bool bval;
+    bval = checkRule01(z, matchingSolutionSet);
+    if(!bval){
+        intval += 1;
+    }
+
+    bval = checkRule02(z, matchingSolutionSet);
+    if(!bval){
+        intval += 10;
+    }
+
+    bval = checkRule03(z, matchingSolutionSet);
+    if(!bval){
+        intval += 100;
+    }
 
 
-    return bval;
+    return intval;
 }
 
 /**
@@ -136,7 +148,7 @@ Bool CRules::checkRule02(Float64 z, CRayMatchingResult::TSolutionSet& matchingSo
         if (foundstrb!=std::string::npos){
             // check if OIIIa would be in the wavelength range
             Float64 lambda = getRestRayLambda("[OIII](doublet-1)")*(1+z);
-            if( lambda >= m_lambdaRange.GetBegin() && lambda <= m_lambdaRange.GetEnd() ){
+            if( lambda >= (m_lambdaRange.GetBegin()+m_winsize) && (lambda <= m_lambdaRange.GetEnd()-m_winsize) ){
                 foundb++;
             }
         }
@@ -166,7 +178,7 @@ Bool CRules::checkRule03(Float64 z, CRayMatchingResult::TSolutionSet& matchingSo
         if (foundstr!=std::string::npos){
             // check if Halpha would be in the wavelength range
             Float64 lambda = getRestRayLambda("Halpha")*(1+z);
-            if( lambda >= m_lambdaRange.GetBegin() && lambda <= m_lambdaRange.GetEnd() ){
+            if( lambda >= (m_lambdaRange.GetBegin()+m_winsize) && (lambda <= m_lambdaRange.GetEnd()-m_winsize) ){
                 foundHbeta++;
             }
         }

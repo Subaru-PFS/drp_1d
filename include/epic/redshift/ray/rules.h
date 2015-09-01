@@ -25,7 +25,7 @@ public:
     ~CRules();
 
 
-    Bool check(Float64 z, CRayMatchingResult::TSolutionSet& matchingSolutionSet);
+    Int32 check(Float64 z, CRayMatchingResult::TSolutionSet& matchingSolutionSet);
 private:
 
     Bool checkRule01(Float64 z, CRayMatchingResult::TSolutionSet& matchingSolutionSet);

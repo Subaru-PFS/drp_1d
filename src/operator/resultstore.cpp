@@ -147,8 +147,9 @@ void COperatorResultStore::SaveRedshiftResult( const char* dir )
         CreateResultStorage( outputStream, bfs::path( "redshift.csv" ), bfs::path( dir ) );
 
         CConstRef<COperatorResult>  result = GetGlobalResult( "redshiftresult" );
-
-        result->SaveLine( *this, outputStream );
+        if(result){
+            result->SaveLine( *this, outputStream );
+        }
     }
 }
 

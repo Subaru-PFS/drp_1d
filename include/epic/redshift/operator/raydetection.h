@@ -6,6 +6,7 @@
 #include <epic/core/common/range.h>
 
 #include <epic/redshift/operator/raydetectionresult.h>
+#include <epic/redshift/spectrum/spectralaxis.h>
 
 namespace NSEpic
 {
@@ -61,6 +62,7 @@ private:
     Float64 m_cut;
     Float64 m_strongcut;
 
+    TInt32Range LimitGaussianFitStartAndStop(Int32 i, const TInt32RangeList& peaksBorders, Int32 len, const CSpectrumSpectralAxis spectralAxis );
 
     bool Retest( const CSpectrum &spectrum, CRayDetectionResult* result, TInt32RangeList retestPeaks,  TGaussParamsList retestGaussParams, CRayCatalog::TRayVector strongLines, Int32 winsize, Float64 cut);
     bool RemoveStrongFromSpectra(const CSpectrum &spectrum, CRayDetectionResult* result, CRayCatalog::TRayVector strongLines, TInt32RangeList selectedretestPeaks, TGaussParamsList selectedgaussparams, Float64 winsize, Float64 cut);

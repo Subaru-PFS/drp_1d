@@ -50,6 +50,7 @@ public:
 
     Void                        Save( const COperatorResultStore& store, std::ostream& stream ) const;
     Void                        SaveLine( const COperatorResultStore& store, std::ostream& stream ) const;
+    Void                        SaveSolutionSetToStream(std::ostream& stream,  TSolutionSetList selectedResults, Int32 type) const;
 
     Bool                        GetBestRedshift(Float64& Redshift, Int32& MatchingNumber) const;
     Bool                        GetBestMatchNumRedshift(Float64& Redshift, Int32& MatchingNumber) const;
@@ -68,6 +69,9 @@ public:
     Void                        FilterWithRules(CSpectrum spc, TFloat64Range lambdaRange, Float64 winsize);
 
     TSolutionSetList    SolutionSetList;
+    TSolutionSetList    FilteredSolutionSetList;
+    std::vector<int>    FilterTypeList;
+
     CRayCatalog          m_RestCatalog;
     CRayCatalog          m_DetectedCatalog;
 

@@ -33,6 +33,8 @@ private:
     Float64 m_winsize;
     Float64 m_minsize;
     Float64 m_maxsize;
+    Float64 m_detectioncut;
+    Float64 m_detectionnoiseoffset;
     Float64 m_cut;
     Float64 m_strongcut;
     Float64 m_enlargeRate;

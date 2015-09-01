@@ -205,7 +205,7 @@ CGaussianFit::EStatus CGaussianFit::Compute(const CSpectrum& spectrum, const TIn
     EStatus returnCode = nStatus_Success;
     if ( status == GSL_ETOLX )
     {
-        returnCode = nStatus_FailToReachTolerance;
+        returnCode = nStatus_Success; //GSL_ETOLX, the change in the position vector falls below machine precision
     }
     else  if ( status == GSL_CONTINUE )
     {
