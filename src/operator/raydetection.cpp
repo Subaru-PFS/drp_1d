@@ -30,16 +30,17 @@ IMPLEMENT_MANAGED_OBJECT(CRayDetection)
 //    strongcut = 2.0;
 //}
 
-CRayDetection::CRayDetection(Float64 cut, Float64 strongcut, Float64 winsize, Float64 minsize, Float64 maxsize)
+CRayDetection::CRayDetection(Int32 type, Float64 cut, Float64 strongcut, Float64 winsize, Float64 minsize, Float64 maxsize)
 {
     FWHM_FACTOR = 2.35;
 
-    // detect possible peaks
     m_winsize = winsize;
     m_minsize = minsize;
     m_maxsize = maxsize;
     m_cut = cut;
     m_strongcut = strongcut;
+
+    m_type = type;
 }
 
 
@@ -201,7 +202,7 @@ const CRayDetectionResult* CRayDetection::Compute( const CSpectrum& spectrum, co
             char buffer [64];
             sprintf(buffer,"detected_peak_%d",j);
             std::string peakName = buffer;
-            result->RayCatalog.Add( CRay( peakName, gaussPos, CRay::nType_Emission, force , gaussAmp, gaussWidth, ratioAmp, gaussPosErr) );
+            result->RayCatalog.Add( CRay( peakName, gaussPos, m_type, force , gaussAmp, gaussWidth, ratioAmp, gaussPosErr) );
         }
     }
 
@@ -212,7 +213,7 @@ const CRayDetectionResult* CRayDetection::Compute( const CSpectrum& spectrum, co
         retest_flag = true;
     }
     while(retest_flag){
-        retest_flag = Retest(spectrum, result, retestPeaks,  retestGaussParams, result->RayCatalog.GetFilteredList(CRay::nType_Emission, CRay::nForce_Strong), m_winsize, m_cut );
+        retest_flag = Retest(spectrum, result, retestPeaks,  retestGaussParams, result->RayCatalog.GetFilteredList(m_type, CRay::nForce_Strong), m_winsize, m_cut );
     }
 
     return result;
@@ -457,7 +458,7 @@ bool CRayDetection::RemoveStrongFromSpectra(const CSpectrum& spectrum, CRayDetec
             char buffer [64];
             sprintf(buffer,"detected_retested_peak_%d",k);
             std::string peakName = buffer;
-            result->RayCatalog.Add( CRay( peakName, selectedgaussparams[k].Pos, CRay::nType_Emission, force , selectedgaussparams[k].Amp, selectedgaussparams[k].Width, ratioAmp) );
+            result->RayCatalog.Add( CRay( peakName, selectedgaussparams[k].Pos, m_type, force , selectedgaussparams[k].Amp, selectedgaussparams[k].Width, ratioAmp) );
             result->RayCatalog.Sort();
             added=true;
         }

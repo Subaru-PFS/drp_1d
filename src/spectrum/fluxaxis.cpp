@@ -469,4 +469,13 @@ Bool CSpectrumFluxAxis::Subtract(const CSpectrumFluxAxis& other)
     }
 }
 
+Bool CSpectrumFluxAxis::Invert()
+{
+    Int32 N = GetSamplesCount();
+    for( UInt32 i=0; i<N; i++ )
+    {
+        m_Samples[i] = -m_Samples[i];
+    }
+}
+
 

@@ -110,7 +110,7 @@ Bool COperatorDTree7Solve::SolveDecisionalTree7(COperatorResultStore &resultStor
     }
 
     // Ray Detection
-    CRayDetection rayDetection( m_cut, m_strongcut );
+    CRayDetection rayDetection(CRay::nType_Emission, m_cut, m_strongcut );
     CConstRef<CRayDetectionResult> rayDetectionResult = rayDetection.Compute( spc, lambdaRange, peakDetectionResult->PeakList, peakDetectionResult->EnlargedPeakList );
     resultStore.StoreGlobalResult( "raycatalog", *rayDetectionResult );
     Log.LogInfo( "DTree7 - Ray Detection output: %d ray(s) found", rayDetectionResult->RayCatalog.GetList().size());

@@ -110,7 +110,7 @@ void CRedshiftRayDetectionTestCase::EzValidationTest()
 
 
         // detected rays
-        CRayDetection rayDetection(cut, strongcut, winsize, minsize, maxsize);
+        CRayDetection rayDetection(CRay::nType_Emission, cut, strongcut, winsize, minsize, maxsize);
         CConstRef<CRayDetectionResult> rayDetectionResult = rayDetection.Compute( s, s.GetLambdaRange(), peakDetectionResult->PeakList, peakDetectionResult->EnlargedPeakList);
 
         //load reference results
@@ -218,7 +218,7 @@ void CRedshiftRayDetectionTestCase::SyntheticValidationTest()
 
 
     // detected rays
-    CRayDetection rayDetection(cut, strongcut, winsize, minsize, maxsize);
+    CRayDetection rayDetection(CRay::nType_Emission, cut, strongcut, winsize, minsize, maxsize);
     CConstRef<CRayDetectionResult> rayDetectionResult = rayDetection.Compute( s, s.GetLambdaRange(), peakDetectionResult->PeakList, peakDetectionResult->EnlargedPeakList);
 
 

@@ -29,6 +29,8 @@ public:
 
     CSpectrum& operator=(const CSpectrum& other);
 
+    Bool InvertFlux();
+
     const CSpectrumSpectralAxis&    GetSpectralAxis() const;
     const CSpectrumFluxAxis&        GetFluxAxis() const;
 

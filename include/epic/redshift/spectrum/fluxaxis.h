@@ -36,6 +36,7 @@ public:
     Bool                ComputeMeanAndSDev( const CMask& mask, Float64& mean,  Float64& sdev, const Float64* error ) const;
     Float64             ComputeRMSDiff( const CSpectrumFluxAxis& other );
     Bool                Subtract(const CSpectrumFluxAxis& other);
+    Bool                Invert();
 
     static Bool         Rebin( const TFloat64Range& range, const CSpectrumFluxAxis& sourceFluxAxis, const CSpectrumSpectralAxis& sourceSpectralAxis, const CSpectrumSpectralAxis& targetSpectralAxis,
                                CSpectrumFluxAxis& rebinedFluxAxis, CSpectrumSpectralAxis& rebinedSpectralAxis, CMask& rebinedMask );

@@ -73,7 +73,7 @@ const CLineMatchingSolveResult* COperatorLineMatchingSolve::Compute(  COperatorR
     if( peakDetectionResult )
         resultStore.StoreGlobalResult( "peakdetection", *peakDetectionResult );
 
-    CRayDetection rayDetection( m_cut, m_strongcut, m_winsize, m_minsize, m_maxsize);
+    CRayDetection rayDetection(CRay::nType_Emission, m_cut, m_strongcut, m_winsize, m_minsize, m_maxsize);
     CConstRef<CRayDetectionResult> rayDetectionResult = rayDetection.Compute( spc, lambdaRange, peakDetectionResult->PeakList, peakDetectionResult->EnlargedPeakList );
 
     if( rayDetectionResult ) {

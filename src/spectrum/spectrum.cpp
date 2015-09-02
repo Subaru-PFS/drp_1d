@@ -66,6 +66,14 @@ CSpectrum& CSpectrum::operator=(const CSpectrum& other)
 }
 
 /**
+ * Invert the flux axis
+ */
+Bool CSpectrum::InvertFlux()
+{
+    m_FluxAxis.Invert();
+}
+
+/**
  * Convert the spectral axis to a neperian logarithm scale
  */
 Bool CSpectrum::ConvertToLogScale()

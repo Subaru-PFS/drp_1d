@@ -130,7 +130,7 @@ Bool COperatorDTreeASolve::Solve(COperatorResultStore &resultStore, const CSpect
     }
 
     // Ray Detection
-    CRayDetection rayDetection( m_cut, m_strongcut, m_winsize, m_minsize, m_maxsize);
+    CRayDetection rayDetection(CRay::nType_Emission, m_cut, m_strongcut, m_winsize, m_minsize, m_maxsize);
     CConstRef<CRayDetectionResult> rayDetectionResult = rayDetection.Compute( spc, lambdaRange, peakDetectionResult->PeakList, peakDetectionResult->EnlargedPeakList );
     resultStore.StoreGlobalResult( "raycatalog", *rayDetectionResult );
     Log.LogInfo( "DTreeA - Ray Detection output: %d ray(s) found", rayDetectionResult->RayCatalog.GetList().size());
