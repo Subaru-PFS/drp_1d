@@ -63,7 +63,7 @@ COperatorLineMatching2Solve::COperatorLineMatching2Solve()
     }
 
     //PFS LBGABS, TF overrides
-    if(1)
+    if(0)
     {
         // TF
         m_winsize = 500.0;
@@ -79,14 +79,14 @@ COperatorLineMatching2Solve::COperatorLineMatching2Solve()
     }
 
     //PFS Really just lines, F + ErrF overrides
-    if(0)
+    if(1)
     {   // F + ErrF
         m_winsize = 250.0;
-        m_cut = 1.5;
-        m_detectioncut = m_cut;
+        m_cut = 1.0;
+        m_detectioncut = 1.0;
         m_maxsize = 120;
         m_enlargeRate = 2.0;
-        m_tol = 0.0025;
+        m_tol = 0.0001;
     }
 }
 
@@ -101,8 +101,8 @@ const CLineMatching2SolveResult* COperatorLineMatching2Solve::Compute(  COperato
     Bool storeResult = false;
 
     COperatorResultStore::CAutoScope resultScope( resultStore, "linematching2solve" );
-    //Int32 lineType = CRay::nType_Emission;
-    Int32 lineType = CRay::nType_Absorption;
+    Int32 lineType = CRay::nType_Emission;
+    //Int32 lineType = CRay::nType_Absorption;
 
     CPeakDetection peakDetection(m_winsize, m_detectioncut, 1, m_enlargeRate, m_detectionnoiseoffset);
     CSpectrum _spc = spc;
