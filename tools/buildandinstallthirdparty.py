@@ -22,9 +22,7 @@ def ExtractTarGZ( tarPath, destPath ) :
         print "Extracting: \n\tFrom: " + tarPath + " to: " + destPath
         
         extractDir = os.path.dirname(destPath)+"/"
-
         tfile.extractall( extractDir ) 
-        
         extractedPath = os.path.normpath ( extractDir+tfile.getmembers()[0].name )
         
         os.rename( extractedPath, destPath )
@@ -33,16 +31,13 @@ def ExtractTarGZ( tarPath, destPath ) :
 
 def DownloadHTTPFile( fileUrl, localFilePath ) :
     
-    
     if localFilePath == None :
         localFilePath = os.path.basename( fileUrl )
-
 
     # Check if file already exist
     if os.path.exists(localFilePath) :
         print "File: "+localFilePath+" already exist, download skipped..."
         return
-
 
     # Do HTTP request
     try :
