@@ -176,6 +176,8 @@ std::string CProcessFlowContext::GetMethodName( EMethod method )
         methodStr = "LineMatching";
     } else if (method == CProcessFlowContext::nMethod_LineMatching2){
         methodStr = "LineMatching2";
+    } else if (method == CProcessFlowContext::nMethod_LineModel){
+        methodStr = "LineModel";
     } else if (method == CProcessFlowContext::nMethod_DecisionalTree7){
         methodStr = "DecisionalTree7";
     } else if (method == CProcessFlowContext::nMethod_DecisionalTreeA){

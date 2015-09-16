@@ -1,4 +1,4 @@
-#include <epic/redshift/gaussianfit/gaussianfit.h>
+#include <epic/redshift/gaussianfit/gaussianfitsimple.h>
 
 #include <epic/core/debug/assert.h>
 #include <epic/redshift/spectrum/spectrum.h>
@@ -16,10 +16,10 @@
 
 using namespace NSEpic;
 
-CGaussianFit::CGaussianFit( ) :
+CGaussianFitSimple::CGaussianFitSimple( ) :
     m_PolyOrder( 2 ),
     m_AbsTol( 0.0 ),
-    m_RelTol( 1e-2 ),
+    m_RelTol( 1e-5 ),
     m_Amplitude( 0.0 ),
     m_AmplitudeErr( 0.0 ),
     m_Mu( 0.0 ),
@@ -30,32 +30,32 @@ CGaussianFit::CGaussianFit( ) :
 {
 }
 
-CGaussianFit::~CGaussianFit()
+CGaussianFitSimple::~CGaussianFitSimple()
 {
 
 }
 
 
-Void CGaussianFit::GetResults( Float64& amplitude, Float64& position, Float64& width ) const
+Void CGaussianFitSimple::GetResults( Float64& amplitude, Float64& position, Float64& width ) const
 {
     amplitude =  m_Amplitude;
     position = m_Mu;
     width = m_C;
 }
 
-Void CGaussianFit::GetResultsPolyCoeff0( Float64& coeff0) const
+Void CGaussianFitSimple::GetResultsPolyCoeff0( Float64& coeff0) const
 {
     coeff0 =  m_coeff0;
 }
 
-Void CGaussianFit::GetResultsError( Float64& amplitude, Float64& position, Float64& width ) const
+Void CGaussianFitSimple::GetResultsError( Float64& amplitude, Float64& position, Float64& width ) const
 {
     amplitude = m_AmplitudeErr;
     position = m_MuErr;
     width = m_CErr;
 }
 
-Void CGaussianFit::ComputeFirstGuess( const CSpectrum& spectrum, const TInt32Range& studyRange, Int32 polyOrder, Float64& peakValue, Float64& peakPos, Float64& gaussAmp )
+Void CGaussianFitSimple::ComputeFirstGuess( const CSpectrum& spectrum, const TInt32Range& studyRange, Int32 polyOrder, Float64& peakValue, Float64& peakPos, Float64& gaussAmp )
 {
     Int32 n = studyRange.GetLength();
     const Float64* x = spectrum.GetSpectralAxis().GetSamples() + studyRange.GetBegin();
@@ -121,7 +121,7 @@ Void CGaussianFit::ComputeFirstGuess( const CSpectrum& spectrum, const TInt32Ran
 /**
  *
  */
-CGaussianFit::EStatus CGaussianFit::Compute(const CSpectrum& spectrum, const TInt32Range& studyRange )
+CGaussianFitSimple::EStatus CGaussianFitSimple::Compute(const CSpectrum& spectrum, const TInt32Range& studyRange )
 {
     Int32 np = (3 + m_PolyOrder + 1);
     Int32 n = studyRange.GetLength();
@@ -241,7 +241,7 @@ CGaussianFit::EStatus CGaussianFit::Compute(const CSpectrum& spectrum, const TIn
  * Y[i] = c0*exp(-1*(x-mu)**2/c2**2) + c3 + c4*(x-mu) + c5*(x-mu)**2 + ... + cn*(x-mu)**(n-3)
  *
  */
-int CGaussianFit::GaussF( const gsl_vector *param, void *data, gsl_vector * f)
+int CGaussianFitSimple::GaussF( const gsl_vector *param, void *data, gsl_vector * f)
 {
     SUserData* userData = (SUserData*)data;
     Int32 n = userData->studyRange->GetLength();
@@ -283,7 +283,7 @@ int CGaussianFit::GaussF( const gsl_vector *param, void *data, gsl_vector * f)
 /**
  * Jacobian function definition
  */
-int CGaussianFit::GaussDF (const gsl_vector * param, void *data, gsl_matrix * J)
+int CGaussianFitSimple::GaussDF (const gsl_vector * param, void *data, gsl_matrix * J)
 {
     SUserData* userData = (SUserData*)data;
     Int32 n = userData->studyRange->GetLength();
@@ -335,7 +335,7 @@ int CGaussianFit::GaussDF (const gsl_vector * param, void *data, gsl_matrix * J)
 }
 
 
-int CGaussianFit::GaussFDF (const gsl_vector * param, void *data, gsl_vector * f, gsl_matrix * J)
+int CGaussianFitSimple::GaussFDF (const gsl_vector * param, void *data, gsl_vector * f, gsl_matrix * J)
 {
     GaussF (param, data, f);
     GaussDF (param, data, J);

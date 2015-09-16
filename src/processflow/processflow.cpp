@@ -40,6 +40,8 @@
 #include <epic/redshift/method/dtreeasolve.h>
 #include <epic/redshift/method/dtreeasolveresult.h>
 #include <epic/redshift/method/linematching2solve.h>
+#include <epic/redshift/method/linemodelsolve.h>
+#include <epic/redshift/method/linemodelsolveresult.h>
 
 
 #include <stdio.h>
@@ -73,6 +75,9 @@ Bool CProcessFlow::Process( CProcessFlowContext& ctx )
 
     if(ctx.GetParams().method  == CProcessFlowContext::nMethod_LineMatching2)
         return LineMatching2( ctx );
+
+    if(ctx.GetParams().method  == CProcessFlowContext::nMethod_LineModel)
+        return LineModelSolve( ctx );
 
     if(ctx.GetParams().method  == CProcessFlowContext::nMethod_BlindSolve)
         return Blindsolve( ctx );
@@ -266,6 +271,30 @@ Bool CProcessFlow::LineMatching2( CProcessFlowContext& ctx )
     return true;
 }
 
+Bool CProcessFlow::LineModelSolve( CProcessFlowContext& ctx )
+{
+    const CSpectrumSpectralAxis& spcSpectralAxis = ctx.GetSpectrum().GetSpectralAxis();
+    TFloat64Range spcLambdaRange;
+    spcSpectralAxis.ClampLambdaRange( ctx.GetParams().lambdaRange, spcLambdaRange );
+
+    Log.LogInfo( "Process Line Model (LambdaRange: %f-%f:%f)",
+            spcLambdaRange.GetBegin(), spcLambdaRange.GetEnd(), ctx.GetSpectrum().GetResolution());
+
+    // Create redshift initial list by spanning redshift acdross the given range, with the given delta
+    TFloat64List redshifts = ctx.GetParams().redshiftRange.SpreadOver( ctx.GetParams().redshiftStep );
+    DebugAssert( redshifts.size() > 0 );
+
+    CLineModelSolve Solve;
+    CConstRef<CLineModelSolveResult> solveResult = Solve.Compute(ctx, ctx.GetSpectrum(), ctx.GetSpectrumWithoutContinuum(), ctx.GetRayCatalog(),
+                                                                 spcLambdaRange, redshifts );
+
+    if( solveResult ) {
+        ctx.StoreGlobalResult( "redshiftresult", *solveResult );
+    }
+
+
+    return true;
+}
 
 Bool CProcessFlow::DecisionalTree7( CProcessFlowContext& ctx )
 {

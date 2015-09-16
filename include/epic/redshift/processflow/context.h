@@ -38,6 +38,7 @@ public:
          nMethod_Chisquare,
          nMethod_LineMatching,
          nMethod_LineMatching2,
+         nMethod_LineModel,
          nMethod_FullSolve,
          nMethod_DecisionalTree7,
          nMethod_DecisionalTreeA,

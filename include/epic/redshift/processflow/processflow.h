@@ -37,6 +37,7 @@ private:
     Bool Correlation(CProcessFlowContext& ctx , NSEpic::CTemplate::ECategory CategoryFilter = NSEpic::CTemplate::nCategory_None);
     Bool LineMatching( CProcessFlowContext& ctx );
     Bool LineMatching2( CProcessFlowContext& ctx );
+    Bool LineModelSolve( CProcessFlowContext& ctx );
     Bool DecisionalTree7( CProcessFlowContext& ctx );
     Bool DecisionalTreeA( CProcessFlowContext& ctx );
 

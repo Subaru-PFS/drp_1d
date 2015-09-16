@@ -82,7 +82,7 @@ COperatorLineMatching2Solve::COperatorLineMatching2Solve()
     if(1)
     {   // F + ErrF
         m_winsize = 250.0;
-        m_cut = 1.0;
+        m_cut = 0.5;
         m_detectioncut = 1.0;
         m_maxsize = 120;
         m_enlargeRate = 2.0;
@@ -134,7 +134,7 @@ const CLineMatching2SolveResult* COperatorLineMatching2Solve::Compute(  COperato
 
 
     if( rayMatchingResult ){
-        //rayMatchingResult->FilterWithRules(_spc, lambdaRange, m_winsize);
+        rayMatchingResult->FilterWithRules(_spc, lambdaRange, m_winsize);
         // Store matching results
         resultStore.StoreGlobalResult( "raymatching", *rayMatchingResult );
     }
