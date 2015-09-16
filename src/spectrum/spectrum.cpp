@@ -109,6 +109,16 @@ TLambdaRange CSpectrum::GetLambdaRange() const
 }
 
 
+const std::string CSpectrum::GetName() const
+{
+    return m_Name;
+}
+
+Void CSpectrum::SetName( const char* name )
+{
+    m_Name = name;
+}
+
 Bool CSpectrum::Serialize( CSerializer& ar )
 {
     Int16 version = 1;

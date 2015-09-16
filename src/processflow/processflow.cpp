@@ -277,7 +277,7 @@ Bool CProcessFlow::LineModelSolve( CProcessFlowContext& ctx )
     TFloat64Range spcLambdaRange;
     spcSpectralAxis.ClampLambdaRange( ctx.GetParams().lambdaRange, spcLambdaRange );
 
-    Log.LogInfo( "Process Line Model (LambdaRange: %f-%f:%f)",
+    Log.LogInfo( "Process Line Model for spc:%s (LambdaRange: %f-%f:%f)", ctx.GetSpectrum().GetName().c_str(),
             spcLambdaRange.GetBegin(), spcLambdaRange.GetEnd(), ctx.GetSpectrum().GetResolution());
 
     // Create redshift initial list by spanning redshift acdross the given range, with the given delta

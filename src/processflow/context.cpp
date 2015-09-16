@@ -68,6 +68,7 @@ bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath,
     SetSpectrumName( bfs::path( spectrumPath ).stem().string().c_str() );
 
     m_Spectrum = new CSpectrum();
+    m_Spectrum->SetName(bfs::path( spectrumPath ).stem().string().c_str() );
 
     m_Params = params;
 

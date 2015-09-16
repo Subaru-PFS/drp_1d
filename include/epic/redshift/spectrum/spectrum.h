@@ -29,10 +29,14 @@ public:
 
     CSpectrum& operator=(const CSpectrum& other);
 
+    Void  SetName( const char* name );
+
     Bool InvertFlux();
 
     const CSpectrumSpectralAxis&    GetSpectralAxis() const;
     const CSpectrumFluxAxis&        GetFluxAxis() const;
+
+    const std::string               GetName() const;
 
     CSpectrumFluxAxis&              GetFluxAxis();
     CSpectrumSpectralAxis&          GetSpectralAxis();
@@ -86,6 +90,7 @@ CSpectrumFluxAxis& CSpectrum::GetFluxAxis()
 {
     return m_FluxAxis;
 }
+
 
 template<typename ContinuumRemover>
 Bool CSpectrum::RemoveContinuum()
