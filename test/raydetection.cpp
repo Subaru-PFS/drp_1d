@@ -213,7 +213,7 @@ void CRedshiftRayDetectionTestCase::SyntheticValidationTest()
     Float64 cut = 15.0;
     Float64 strongcut = 2.0;
 
-    CPeakDetection peakDetection(winsize, cut);
+    CPeakDetection peakDetection(winsize, cut, 1, 2.0 , 0.0);
     CConstRef<CPeakDetectionResult> peakDetectionResult = peakDetection.Compute( s, s.GetLambdaRange() );
 
 

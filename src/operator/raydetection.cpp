@@ -168,7 +168,7 @@ const CRayDetectionResult* CRayDetection::Compute( const CSpectrum& spectrum, co
                     result->PeakListDetectionStatus.push_back(status);
                 }
             }else{ //tolerance in Angstrom
-                Float64 tolAngtsrom = 20.0;
+                Float64 tolAngtsrom = 6;
                 Float64 diffPos = fabs(gaussPos-spc.GetSpectralAxis()[max_index]);
                 if(diffPos > tolAngtsrom){
                     toAdd = false;
