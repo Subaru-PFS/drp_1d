@@ -18,20 +18,26 @@ using namespace std;
 CExtremum::CExtremum( Bool invertForMinSearch ) :
     m_MaxPeakCount( 5 ),
     m_RefreshCount( 1 ),
-    m_XRange( 0.0, 0.0 )
+    m_XRange( 0.0, 0.0 ),
+    m_SignSearch(1.0)
 {
     if(invertForMinSearch){
         SetSignSearch( -1.0 );
+    }else{
+        SetSignSearch( 1.0 );
     }
 }
 
 CExtremum::CExtremum(const TFloat64Range& xRange, UInt32 maxPeakCount, Bool invertForMinSearch, UInt32 refreshCount ) :
     m_MaxPeakCount( maxPeakCount ),
     m_RefreshCount( refreshCount ),
-    m_XRange( xRange )
+    m_XRange( xRange ),
+    m_SignSearch(1.0)
 {
     if(invertForMinSearch){
         SetSignSearch( -1.0 );
+    }else{
+        SetSignSearch( 1.0 );
     }
 }
 
