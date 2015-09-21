@@ -63,13 +63,13 @@ const COperatorResult* COperatorLineModel::Compute(const CSpectrum& spectrum, co
     CLineModelResult* result = new CLineModelResult();
     result->ChiSquare.resize( sortedRedshifts.size() );
     result->Redshifts.resize( sortedRedshifts.size() );
-    result->Status.resize( sortedRedshifts.size() );
     result->Redshifts = sortedRedshifts;
+    result->Status.resize( sortedRedshifts.size() );
     result->restRayList = restRayList;
     result->LineModelSolutions.resize( sortedRedshifts.size() );
 
+    CLineModelElementList model(spectrum, restRayList);
 
-    CSpectrum model = CSpectrum(spectrum);
     for (Int32 i=0;i<sortedRedshifts.size();i++)
     {
         ModelFit( spectrum, model, result->restRayList, lambdaRange, result->Redshifts[i], result->ChiSquare[i], result->LineModelSolutions[i]);
@@ -115,6 +115,8 @@ const COperatorResult* COperatorLineModel::Compute(const CSpectrum& spectrum, co
     }
     ComputeGaussAreaForExtrema(result);
 
+
+    //*
     //  //saving the best model for viewing
     if(result->Extrema.size()>0){
         Float64 _chi=0.0;
@@ -124,11 +126,12 @@ const COperatorResult* COperatorLineModel::Compute(const CSpectrum& spectrum, co
         //CSpectrumFluxAxis& sfluxAxisPtr = model.GetFluxAxis();
         //CSpectrumFluxAxis& modelFluxAxis = model.GetFluxAxis();
         //sfluxAxisPtr = modelFluxAxis;
-        CSpectrumIOFitsWriter writer;
-        Bool retVal = writer.Write( "model.fits", model );
-        //*/
-    }
+        CSpectrum spcmodel = model.GetModelSpectrum();
 
+        CSpectrumIOFitsWriter writer;
+        Bool retVal = writer.Write( "model.fits",  spcmodel);
+    }
+    //*/
     return result;
 
 }
@@ -232,80 +235,17 @@ void COperatorLineModel::ComputeGaussAreaForExtrema(CLineModelResult* results)
     }
 }
 
-Void COperatorLineModel::ModelFit(const CSpectrum& spectrum, CSpectrum& model, const CRayCatalog::TRayVector& restRayList,
+Void COperatorLineModel::ModelFit(const CSpectrum& spectrum, CLineModelElementList& model, const CRayCatalog::TRayVector& restRayList,
                                 const TFloat64Range& lambdaRange, Float64 redshift,
                                    Float64& chiSquare, CLineModelResult::SLineModelSolution& modelSolution)
 {
     chiSquare = boost::numeric::bounds<float>::highest();
 
+    model.fit(redshift, modelSolution);
+
     const CSpectrumSpectralAxis& spcSpectralAxis = spectrum.GetSpectralAxis();
     const CSpectrumFluxAxis& spcFluxAxis = spectrum.GetFluxAxis();
-
-    //initialize the model
-    const CSpectrumSpectralAxis& modelSpectralAxis = model.GetSpectralAxis();
-    CSpectrumFluxAxis& modelFluxAxis = model.GetFluxAxis();
-    for(UInt32 i=0; i<modelFluxAxis.GetSamplesCount(); i++){
-        modelFluxAxis[i] = 0.0;
-    }
-
-    // Compute shifted template
-    Float64 onePlusRedshift = 1.0 + redshift;
-    Float64 nSigmaSupport = 8.0;
-
-    for( UInt32 iRestRay=0; iRestRay<restRayList.size(); iRestRay++ )
-    {
-        Float64 lambda = restRayList[iRestRay].GetPosition()*onePlusRedshift;
-
-        // Line width
-        //Float64 width = 5.1; //Gaussian width, Angstrom, measured FWHM=12, on PFS reallyJustLines TF_13
-        Float64 width = 3.18*(1+redshift);
-        std::string name = restRayList[iRestRay].GetName();
-        std::size_t foundstra = name.find("[OII]");
-        if (foundstra!=std::string::npos){
-            width = 3.55*(1+redshift);
-        }
-
-        Float64 winsize = nSigmaSupport*width;
-        Int32 start = spcSpectralAxis.GetIndexAtWaveLength(lambda-winsize/2.0);
-        Int32 end = spcSpectralAxis.GetIndexAtWaveLength(lambda+winsize/2.0);
-        modelSolution.fittingIndexRange.push_back(TInt32Range(start, end));
-        if(start <= 0 || end >= spcSpectralAxis.GetSamplesCount()-1){
-            modelSolution.Amplitudes.push_back(-1.0);
-            modelSolution.Widths.push_back(-1.0);
-            modelSolution.OutsideLambdaRange.push_back(true);
-            continue;
-        }
-        //fit the amplitude
-        Float64 fittedAmplitude = FitAmplitude(spcSpectralAxis, spcFluxAxis, lambda, width, start, end);
-        modelSolution.Amplitudes.push_back(fittedAmplitude);
-        modelSolution.Widths.push_back(width);
-        modelSolution.OutsideLambdaRange.push_back(false);
-
-    }
-
-    //*
-    Float64 doublettol=0.2;
-    Apply2LinesAmplitudeRule(restRayList, modelSolution.Amplitudes, modelSolution.OutsideLambdaRange, "[OIII](doublet-1)", "[OIII](doublet-1/3)", 0.334*(1.0+doublettol));
-    Apply2LinesAmplitudeRule(restRayList, modelSolution.Amplitudes, modelSolution.OutsideLambdaRange, "[OIII](doublet-1/3)", "[OIII](doublet-1)", (1.0+doublettol)/0.334);
-    Apply2LinesAmplitudeRule(restRayList, modelSolution.Amplitudes, modelSolution.OutsideLambdaRange, "Halpha", "Hbeta", 1.0/2.86);
-    Apply2LinesAmplitudeRule(restRayList, modelSolution.Amplitudes, modelSolution.OutsideLambdaRange, "Hbeta", "Hgamma", 0.47);
-    Apply2LinesAmplitudeRule(restRayList, modelSolution.Amplitudes, modelSolution.OutsideLambdaRange, "Hgamma", "Hdelta", 1.0);
-    Apply2LinesAmplitudeRule(restRayList, modelSolution.Amplitudes, modelSolution.OutsideLambdaRange, "[NII](doublet-1)", "[NII](doublet-1/2.95)", (1.0+doublettol)/2.95);
-    Apply2LinesAmplitudeRule(restRayList, modelSolution.Amplitudes, modelSolution.OutsideLambdaRange, "[NII](doublet-1/2.95)", "[NII](doublet-1)", 2.95*(1.0+doublettol));
-    //*/
-
-    for( UInt32 iRestRay=0; iRestRay<restRayList.size(); iRestRay++ )
-    {
-        Float64 lambda = restRayList[iRestRay].GetPosition()*onePlusRedshift;
-        Float64 width = modelSolution.Widths[iRestRay];
-
-        if(modelSolution.OutsideLambdaRange[iRestRay]){
-            continue;
-        }
-        Float64 fittedAmplitude = modelSolution.Amplitudes[iRestRay];
-        //add it to the model
-        AddGaussLine( modelSpectralAxis, modelFluxAxis, lambda, width, fittedAmplitude, modelSolution.fittingIndexRange[iRestRay].GetBegin(), modelSolution.fittingIndexRange[iRestRay].GetEnd());
-    }
+    const CSpectrumFluxAxis& modelFluxAxis = model.GetModelSpectrum().GetFluxAxis();
 
     Int32 numDevs = 0;
     Float64 fit = 0;
@@ -486,23 +426,6 @@ Float64 COperatorLineModel::FitAmplitudeIterative( const CSpectrumSpectralAxis& 
     return A;
 }
 
-Void COperatorLineModel::AddGaussLine( const CSpectrumSpectralAxis& modelspectralAxis, CSpectrumFluxAxis& modelfluxAxis, Float64 lambda, Float64 width, Float64 amplitude, Int32 start, Int32 end)
-{
-    Float64 A = amplitude;
-    Float64 mu = lambda;
-    Float64 c = width;
-    Float64* flux = modelfluxAxis.GetSamples();
-    const Float64* spectral = modelspectralAxis.GetSamples();
-
-    for ( Int32 i = start; i < end; i++)
-    {
-        Float64 x = spectral[i];
-        Float64 Yi = A * exp (-1.*(x-mu)*(x-mu)/(2*c*c));
-        flux[i] += Yi;
-    }
-
-  return;
-}
 
 Void COperatorLineModel::Apply2LinesAmplitudeRule(const CRayCatalog::TRayVector& restRayList, std::vector<Float64>& Amplitudes, std::vector<Bool> outsidelambdarange,
                                                   std::string lineA, std::string lineB, Float64 coeff )

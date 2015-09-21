@@ -5,6 +5,7 @@
 #include <epic/core/common/range.h>
 #include <epic/redshift/operator/operator.h>
 #include <epic/redshift/operator/linemodelresult.h>
+#include <epic/redshift/linemodel/elementlist.h>
 #include <epic/redshift/common/mask.h>
 
 #include <epic/redshift/spectrum/spectrum.h>
@@ -26,7 +27,7 @@ public:
 
 private:
 
-    Void ModelFit(const CSpectrum& spectrum, CSpectrum &model, const CRayCatalog::TRayVector &restraycatalog,
+    Void ModelFit(const CSpectrum& spectrum, NSEpic::CLineModelElementList &model, const CRayCatalog::TRayVector &restraycatalog,
                    const TFloat64Range& lambdaRange, Float64 redshift,
                   Float64& chiSquare, CLineModelResult::SLineModelSolution &modelSolution);
 

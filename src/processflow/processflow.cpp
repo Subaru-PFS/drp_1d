@@ -235,7 +235,7 @@ Bool CProcessFlow::Fullsolve( CProcessFlowContext& ctx, CTemplate::ECategory Cat
 
 Bool CProcessFlow::LineMatching( CProcessFlowContext& ctx )
 {
-    Log.LogInfo( "Process Line Matching (LambdaRange: %f-%f:%f)",
+    Log.LogInfo( "Processing Line Matching (LambdaRange: %f-%f:%f)",
             ctx.GetSpectrum().GetLambdaRange().GetBegin(), ctx.GetSpectrum().GetLambdaRange().GetEnd(), ctx.GetSpectrum().GetResolution());
 
     COperatorLineMatchingSolve Solve;
@@ -256,7 +256,7 @@ Bool CProcessFlow::LineMatching2( CProcessFlowContext& ctx )
     TFloat64Range spcLambdaRange;
     spcSpectralAxis.ClampLambdaRange( ctx.GetParams().lambdaRange, spcLambdaRange );
 
-    Log.LogInfo( "Process Line Matching 2 (LambdaRange: %f-%f:%f)",
+    Log.LogInfo( "Processing Line Matching 2 (LambdaRange: %f-%f:%f)",
             spcLambdaRange.GetBegin(), spcLambdaRange.GetEnd(), ctx.GetSpectrum().GetResolution());
 
     COperatorLineMatching2Solve Solve;
@@ -277,7 +277,7 @@ Bool CProcessFlow::LineModelSolve( CProcessFlowContext& ctx )
     TFloat64Range spcLambdaRange;
     spcSpectralAxis.ClampLambdaRange( ctx.GetParams().lambdaRange, spcLambdaRange );
 
-    Log.LogInfo( "Process Line Model for spc:%s (LambdaRange: %f-%f:%f)", ctx.GetSpectrum().GetName().c_str(),
+    Log.LogInfo( "Processing Line Model for spc:%s (LambdaRange: %f-%f:%f)", ctx.GetSpectrum().GetName().c_str(),
             spcLambdaRange.GetBegin(), spcLambdaRange.GetEnd(), ctx.GetSpectrum().GetResolution());
 
     // Create redshift initial list by spanning redshift acdross the given range, with the given delta

@@ -68,9 +68,9 @@ void CRedshiftProcessFlowTestCase::ProcessShifted2()
     retVal = processFlow.Process( ctx );
     CPPUNIT_ASSERT( retVal == true );
 
-    Float64 redshift;
-    Float64 merit;
-    std::string tplName;
+    Float64 redshift=0.0;
+    Float64 merit=0.0;
+    std::string tplName="";
 
     const CBlindSolveResult* blindSolveResult = (CBlindSolveResult*)ctx.GetGlobalResult( "blindsolve" );
     blindSolveResult->GetBestFitResult( ctx, redshift, merit, tplName );
