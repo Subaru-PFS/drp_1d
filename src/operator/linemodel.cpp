@@ -116,7 +116,7 @@ const COperatorResult* COperatorLineModel::Compute(const CSpectrum& spectrum, co
     ComputeGaussAreaForExtrema(result);
 
 
-    //*
+    /*
     //  //saving the best model for viewing
     if(result->Extrema.size()>0){
         Float64 _chi=0.0;
