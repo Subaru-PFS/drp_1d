@@ -13,14 +13,12 @@
 
 #include <boost/numeric/conversion/bounds.hpp>
 
-#include <epic/redshift/gaussianfit/gaussianfitsimple.h>
-
 #include <math.h>
 #include <float.h>
 #include <gsl/gsl_interp.h>
 #include <gsl/gsl_spline.h>
 #include <algorithm>    // std::sort
-
+#include <gsl/gsl_multifit.h>
 #include <assert.h>
 
 #define NOT_OVERLAP_VALUE NAN
@@ -34,7 +32,7 @@ IMPLEMENT_MANAGED_OBJECT(COperatorLineModel)
 
 COperatorLineModel::COperatorLineModel()
 {
-
+    mSumLogErr=0.0;
 }
 
 COperatorLineModel::~COperatorLineModel()
@@ -70,6 +68,7 @@ const COperatorResult* COperatorLineModel::Compute(const CSpectrum& spectrum, co
 
     CLineModelElementList model(spectrum, restRayList);
 
+    PrecomputeLogErr(spectrum);
     for (Int32 i=0;i<sortedRedshifts.size();i++)
     {
         ModelFit( spectrum, model, result->restRayList, lambdaRange, result->Redshifts[i], result->ChiSquare[i], result->LineModelSolutions[i]);
@@ -86,7 +85,7 @@ const COperatorResult* COperatorLineModel::Compute(const CSpectrum& spectrum, co
     Int32 extremumCount = 15;
     TPointList extremumList;
     TFloat64Range redshiftsRange(result->Redshifts[0], result->Redshifts[result->Redshifts.size()-1]);
-    CExtremum extremum( redshiftsRange, extremumCount, true);
+    CExtremum extremum( redshiftsRange, extremumCount, true, 1);
     extremum.Find( result->Redshifts, result->ChiSquare, extremumList );
     // Refine Extremum with a second maximum search around the z candidates:
     // This corresponds to the finer xcorrelation in EZ Pandora (in standard_DP fctn in SolveKernel.py)
@@ -106,17 +105,19 @@ const COperatorResult* COperatorLineModel::Compute(const CSpectrum& spectrum, co
         }
     }
     // store extrema results
+    extremumCount = extremumList.size();
     result->Extrema.resize( extremumCount );
-    result->Area.resize( extremumCount );
+    result->LogArea.resize( extremumCount );
+    result->SigmaZ.resize( extremumCount );
     for( Int32 i=0; i<extremumList.size(); i++ )
     {
         result->Extrema[i] = extremumList[i].X;
-        result->Area[i] = -1.0;
+        result->LogArea[i] = -DBL_MAX;
     }
-    ComputeGaussAreaForExtrema(result);
+    ComputeArea2(result);
 
 
-    /*
+    //*
     //  //saving the best model for viewing
     if(result->Extrema.size()>0){
         Float64 _chi=0.0;
@@ -136,7 +137,7 @@ const COperatorResult* COperatorLineModel::Compute(const CSpectrum& spectrum, co
 
 }
 
-void COperatorLineModel::ComputeGaussAreaForExtrema(CLineModelResult* results)
+void COperatorLineModel::ComputeArea1(CLineModelResult* results)
 {
     //prepare p
     Float64 maxp = DBL_MIN;
@@ -231,7 +232,123 @@ void COperatorLineModel::ComputeGaussAreaForExtrema(CLineModelResult* results)
         }
 
         //Float64 area = gaussAmp*gaussWidth*sqrt(2.0*3.141592654);
-        results->Area[i] = area;
+        results->LogArea[i] = area;
+    }
+}
+
+///
+/// \brief COperatorLineModel::ComputeArea2
+/// computes the Laplace approx for a given Chi2 result around the N best extrema
+///
+void COperatorLineModel::ComputeArea2(CLineModelResult* results)
+{
+    Float64 maxp = DBL_MIN;
+    for( Int32 i2=0; i2<results->Redshifts.size(); i2++ )
+    {
+        if( maxp < results->ChiSquare[i2]){
+            maxp = results->ChiSquare[i2];
+        }
+    }
+    Float64 winsize = 0.001;
+    Float64 inclusionThresRatio = 0.2;
+    Int32 iz0=0;
+    for( Int32 indz=0; indz<results->Extrema.size(); indz++ )
+    {
+        //find iz, izmin and izmax
+        Int32 izmin= -1;
+        Int32 iz= -1;
+        Int32 izmax= -1;
+        for( Int32 i2=0; i2<results->Redshifts.size(); i2++ )
+        {
+            if(iz == -1 && (results->Extrema[indz]) <= results->Redshifts[i2]){
+                iz = i2;
+                if(indz==0){
+                    iz0=iz;
+                }
+            }
+            if(izmin == -1 && (results->Extrema[indz] - winsize/2.0) <= results->Redshifts[i2]){
+                izmin = i2;
+            }
+            if(izmax == -1 && (results->Extrema[indz] + winsize/2.0) <= results->Redshifts[i2]){
+                izmax = i2;
+                break;
+            }
+        }
+        Float64 di = abs(results->ChiSquare[iz]-maxp) ;
+        Float64 d0 = abs(results->ChiSquare[iz0]-maxp) ;
+        if( di < inclusionThresRatio*d0){
+            continue;
+        }
+        if(izmin == -1 || izmax == -1){
+            continue;
+        }
+
+        //quadratic fit
+        int i, n;
+        double xi, yi, ei, chisq;
+        gsl_matrix *X, *cov;
+        gsl_vector *y, *w, *c;
+
+        n = izmax - izmin +1;
+
+        X = gsl_matrix_alloc (n, 3);
+        y = gsl_vector_alloc (n);
+        w = gsl_vector_alloc (n);
+
+        c = gsl_vector_alloc (3);
+        cov = gsl_matrix_alloc (3, 3);
+
+        double x0 = results->Extrema[indz];
+        for (i = 0; i < n; i++)
+        {
+            xi = results->Redshifts[i+izmin];
+            yi = results->ChiSquare[i+izmin];
+            ei = 1.0; //todo, estimate weighting ?
+            gsl_matrix_set (X, i, 0, 1.0);
+            gsl_matrix_set (X, i, 1, xi-x0);
+            gsl_matrix_set (X, i, 2, (xi-x0)*(xi-x0));
+
+            gsl_vector_set (y, i, yi);
+            gsl_vector_set (w, i, 1.0/(ei*ei));
+        }
+
+        {
+          gsl_multifit_linear_workspace * work = gsl_multifit_linear_alloc (n, 3);
+          gsl_multifit_wlinear (X, w, y, c, cov, &chisq, work);
+          gsl_multifit_linear_free (work);
+        }
+
+#define C(i) (gsl_vector_get(c,(i)))
+#define COV(i,j) (gsl_matrix_get(cov,(i),(j)))
+
+        double zcorr = x0-C(1)/(2.0*C(2));
+        double sigma = sqrt(1.0/C(2));
+        Float64 a = (Float64)(C(0));
+        Float64 b2sur4c = (Float64)(C(1)*C(1)/((Float64)(4.0*C(2))));
+        Float64 logK = ( -(a - b2sur4c)/2.0 );
+        Float64 logarea = log(sigma) + logK + log(2.0*M_PI);
+        if(1){
+            Log.LogInfo("Extrema: %g", results->Extrema[indz]);
+            Log.LogInfo("# best fit: Y = %g + %g X + %g X^2", C(0), C(1), C(2));
+            //Log.LogInfo("# covariance matrix:\n");
+            //Log.LogInfo("[ %+.5e, %+.5e, %+.5e  \n", COV(0,0), COV(0,1), COV(0,2));
+            //Log.LogInfo("  %+.5e, %+.5e, %+.5e  \n", COV(1,0), COV(1,1), COV(1,2));
+            //Log.LogInfo("  %+.5e, %+.5e, %+.5e ]\n", COV(2,0), COV(2,1), COV(2,2));
+            Log.LogInfo("# chisq/n = %g", chisq/n);
+            Log.LogInfo("# zcorr = %g", zcorr);
+            Log.LogInfo("# sigma = %g", sigma);
+            Log.LogInfo("# logarea = %g", logarea);
+            Log.LogInfo("\n");
+        }
+
+        gsl_matrix_free (X);
+        gsl_vector_free (y);
+        gsl_vector_free (w);
+        gsl_vector_free (c);
+        gsl_matrix_free (cov);
+
+        results->LogArea[indz] = logarea;
+        results->SigmaZ[indz] = sigma;
     }
 }
 
@@ -252,76 +369,20 @@ Void COperatorLineModel::ModelFit(const CSpectrum& spectrum, CLineModelElementLi
     const Float64* error = spcFluxAxis.GetError();
     const Float64* Ymodel = modelFluxAxis.GetSamples();
     const Float64* Yspc = spcFluxAxis.GetSamples();
+    Float64 diff = 0.0;
     for( UInt32 j=0; j<spcSpectralAxis.GetSamplesCount(); j++ )
     {
         numDevs++;
         // fit
-        fit += pow( Yspc[j] - Ymodel[j] , 2.0 ) / pow( error[j], 2.0 );
+        diff = (Yspc[j] - Ymodel[j]);
+        fit += (diff*diff) / (error[j]*error[j]);
         //fit += pow( Yspc[j] - Ymodel[j] , 2.0 );
     }
-    fit /= numDevs;
+    //fit /= numDevs;
 
-    chiSquare = fit;
+    chiSquare = fit + mSumLogErr;
     return;
 }
-
-
-Float64 COperatorLineModel::FitAmplitude( const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis, Float64 lambda, Float64 width, Int32 start, Int32 end)
-{
-    const Float64* flux = fluxAxis.GetSamples();
-    const Float64* spectral = spectralAxis.GetSamples();
-    const Float64* error = fluxAxis.GetError();
-    Float64 mu = lambda;
-    Float64 c = width;
-
-    Float64 y = 0.0;
-    Float64 x = 0.0;
-    Float64 yg = 0.0;
-
-    Float64 sumCross = 0.0;
-    Float64 sumGauss = 0.0;
-    Float64 err2 = 0.0;
-    Int32 num = 0;
-
-    //A estimation
-    for ( Int32 i = start; i < end; i++)
-    {
-        y = flux[i];
-        x = spectral[i];
-        yg = exp (-1.*(x-mu)*(x-mu)/(2*c*c));
-
-        num++;
-        err2 = 1.0 / (error[i] * error[i]);
-        sumCross += yg*y*err2;
-        sumGauss += yg*yg*err2;
-    }
-
-    if ( num==0 || sumCross==0 || sumGauss==0 )
-    {
-        return 0.0;
-    }
-
-    Float64 A = max(0.0, sumCross / sumGauss);
-
-    /*
-    //SNR estimation
-    Float64 sumErr  = 0.0;
-    Float64 sumGaussA = 0.0;
-    for ( Int32 i = start; i < end; i++)
-    {
-        x = spectral[i];
-        sumGaussA += A*exp (-1.*(x-mu)*(x-mu)/(2*c*c));
-        sumErr += (error[i] * error[i]);
-    }
-    Float64 SNRThres = 0.0001;
-    if(sumGaussA/sumErr < SNRThres){
-        A = 0.0;
-    }
-    */
-
-    return A;
-}
-
 
 Float64 COperatorLineModel::FitBayesWidth( CSpectrumSpectralAxis& spectralAxis, CSpectrumFluxAxis& fluxAxis, Float64 z, Int32 start, Int32 end)
 {
@@ -330,7 +391,7 @@ Float64 COperatorLineModel::FitBayesWidth( CSpectrumSpectralAxis& spectralAxis, 
     const Float64* spectral = spectralAxis.GetSamples();
     //const Float64* error = fluxAxis.GetError();
 
-    //A = max, good guess ?
+    //A = max, good value ?
     for ( Int32 i = start; i < end; i++)
     {
         Float64 y = flux[i];
@@ -376,89 +437,21 @@ Float64 COperatorLineModel::FitBayesWidth( CSpectrumSpectralAxis& spectralAxis, 
     return minc;
 }
 
-Float64 COperatorLineModel::FitAmplitudeIterative( const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis, Float64 lambda, Float64 width, Int32 start, Int32 end)
+Float64 COperatorLineModel::PrecomputeLogErr(const CSpectrum& spectrum)
 {
-    Float64 A = boost::numeric::bounds<float>::lowest();
-    const Float64* flux = fluxAxis.GetSamples();
-    const Float64* spectral = spectralAxis.GetSamples();
-    const Float64* error = fluxAxis.GetError();
+    const CSpectrumSpectralAxis& spcSpectralAxis = spectrum.GetSpectralAxis();
+    const CSpectrumFluxAxis& spcFluxAxis = spectrum.GetFluxAxis();
 
-    //A first guess
-    for ( Int32 i = start; i < end; i++)
+    Int32 numDevs = 0;
+    Float64 logerrsum = 0.0;
+    const Float64* error = spcFluxAxis.GetError();
+    for( UInt32 j=0; j<spcSpectralAxis.GetSamplesCount(); j++ )
     {
-        Float64 y = flux[i];
-        if(y>A){
-            A = y;
-        }
+        numDevs++;
+        logerrsum += log(error[j]);
     }
+    logerrsum *= 2.0;
+    logerrsum += (Float64)numDevs*log(2*M_PI);
 
-    if(A<=0){
-        return 0.0;
-    }
-    //A fitting iteration loop
-    A = A*1.5;
-    Float64 mu = lambda;
-    Float64 c = width;
-    Float64 thres = 1e-5;
-    Int32 maxIteration = 100;
-    Float64 AstepDown = A/((Float64)(maxIteration+1));
-    Float64 sum2 = boost::numeric::bounds<float>::highest();
-    Float64 sum2prev = boost::numeric::bounds<float>::highest();
-    Int32 icmpt = 0;
-    while( sum2prev>=sum2 && sum2>thres && icmpt<maxIteration){
-        sum2prev = sum2;
-        sum2 = 0.0;
-        for ( Int32 i = start; i < end; i++)
-        {
-            Float64 x = spectral[i];
-            Float64 Yi = A * exp (-1.*(x-mu)*(x-mu)/(2*c*c));
-            //sum2 += Yi-flux[i];
-            sum2 += pow( Yi - flux[i] , 2.0 ) / pow( error[i], 2.0 );
-        }
-        //sum2 /= (Float64)(end-start+1);
-        icmpt++;
-        A = A-AstepDown;
-    }
-
-    if(A<0){
-        A=0;
-    }
-    return A;
-}
-
-
-Void COperatorLineModel::Apply2LinesAmplitudeRule(const CRayCatalog::TRayVector& restRayList, std::vector<Float64>& Amplitudes, std::vector<Bool> outsidelambdarange,
-                                                  std::string lineA, std::string lineB, Float64 coeff )
-{
-    Int32 iA = -1;
-    for( UInt32 iRestRay=0; iRestRay<restRayList.size(); iRestRay++ )
-    {
-        std::string name = restRayList[iRestRay].GetName();
-        std::size_t foundstra = name.find(lineA.c_str());
-        if (foundstra!=std::string::npos){
-            if(!outsidelambdarange[iRestRay]){
-                iA = iRestRay;
-            }
-            break;
-        }
-    }
-
-    if(iA == -1){
-        return;
-    }
-
-    for( UInt32 iRestRay=0; iRestRay<restRayList.size(); iRestRay++ )
-    {
-        if(iA == iRestRay){
-            continue;
-        }
-        std::string name = restRayList[iRestRay].GetName();
-        std::size_t foundstra = name.find(lineB.c_str());
-        if (foundstra!=std::string::npos){
-            if(Amplitudes[iRestRay] > coeff*Amplitudes[iA]){
-                Amplitudes[iRestRay] = coeff*Amplitudes[iA];
-            }
-        }
-    }
-
+    mSumLogErr = logerrsum;
 }

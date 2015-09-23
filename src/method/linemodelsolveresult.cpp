@@ -27,7 +27,7 @@ Void CLineModelSolveResult::Save( const COperatorResultStore& store, std::ostrea
     Float64 merit;
     std::string tplName;
 
-    GetBestRedshift( store, redshift, merit );
+    GetBestRedshiftLogArea( store, redshift, merit );
 
     stream <<  "#Redshifts\tMerit\tTemplate"<< std::endl;
 
@@ -45,7 +45,7 @@ Void CLineModelSolveResult::SaveLine( const COperatorResultStore& store, std::os
     Float64 merit;
     std::string tplName;
 
-    GetBestRedshift( store, redshift, merit );
+    GetBestRedshiftLogArea( store, redshift, merit );
 
     stream  << store.GetSpectrumName() << "\t"
                 << redshift << "\t"
@@ -82,21 +82,21 @@ Bool CLineModelSolveResult::GetBestRedshift( const COperatorResultStore& store, 
 
 }
 
-Bool CLineModelSolveResult::GetBestRedshiftBayes( const COperatorResultStore& store, Float64& redshift, Float64& merit ) const
+Bool CLineModelSolveResult::GetBestRedshiftLogArea( const COperatorResultStore& store, Float64& redshift, Float64& merit ) const
 {
 
     std::string scope = store.GetScope( this ) + "linemodelsolve.linemodel";
     CLineModelResult* results = (CLineModelResult*)store.GetGlobalResult(scope.c_str());
 
-    Float64 tmpMerit = DBL_MIN ;
+    Float64 tmpMerit = -DBL_MAX ;
     Float64 tmpRedshift = 0.0;
 
     if(results){
-        for( Int32 i=0; i<results->Area.size(); i++ )
+        for( Int32 i=0; i<results->LogArea.size(); i++ )
         {
-            if( results->Area[i] > tmpMerit )
+            if( results->LogArea[i] > tmpMerit )
             {
-                tmpMerit = results->Area[i];
+                tmpMerit = results->LogArea[i];
                 tmpRedshift = results->Extrema[i];
             }
         }

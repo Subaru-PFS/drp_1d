@@ -99,13 +99,33 @@ Void CLineModelResult::Save( const COperatorResultStore& store, std::ostream& st
         stream << "}" << std::endl;
     }
 
+    // save SigmaZ list, on 1 line
+    if(Extrema.size()>0){
+        stream <<  "#SigmaZ for each extrema = {";
+        for ( int i=0; i<SigmaZ.size(); i++)
+        {
+            stream <<  SigmaZ[i] << "\t";
+        }
+        stream << "}" << std::endl;
+    }
+
+    // save LogArea list, on 1 line
+    if(Extrema.size()>0){
+        stream <<  "#LogArea for each extrema = {";
+        for ( int i=0; i<LogArea.size(); i++)
+        {
+            stream <<  LogArea[i] << "\t";
+        }
+        stream << "}" << std::endl;
+    }
+
     // save linemodel solution
     if(LineModelSolutions.size()>0){
         for ( UInt32 i=0; i<Extrema.size(); i++)
         {
             stream <<  "#linemodel solution " << i << " for z = " <<  Extrema[i];
-            if(Area.size()>i){
-                stream <<  ", area = " <<  Area[i];
+            if(LogArea.size()>i){
+                stream <<  ", LogArea = " <<  LogArea[i];
             }
             Int32 idx=0;
             for ( UInt32 i2=0; i2<LineModelSolutions.size(); i2++)

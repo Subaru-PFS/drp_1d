@@ -27,8 +27,11 @@ public:
     virtual void addToSpectrumModel( const CSpectrumSpectralAxis& modelspectralAxis, CSpectrumFluxAxis& modelfluxAxis, Float64 redshift )=0;
 
     virtual Float64 GetFittedAmplitude(Int32 subeIdx)=0;
+    virtual void LimitFittedAmplitude(Int32 subeIdx, Float64 limit)=0;
 
+    Int32 GetSize();
     Int32 FindElementIndex(Int32 LineCatalogIndex);
+    virtual Int32 FindElementIndex(std::string LineTagStr)=0;
 
 protected:
 

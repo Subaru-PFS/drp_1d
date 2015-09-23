@@ -9,7 +9,7 @@ using namespace NSEpic;
 
 CLineModelElement::CLineModelElement()
 {
-    m_OutsideLambdaRange = false;
+    m_OutsideLambdaRange = true;
 }
 
 CLineModelElement::~CLineModelElement()
@@ -28,4 +28,9 @@ Int32 CLineModelElement::FindElementIndex(Int32 LineCatalogIndex)
     }
 
     return idx;
+}
+
+Int32 CLineModelElement::GetSize()
+{
+    return (Int32)m_LineCatalogIndexes.size();
 }
