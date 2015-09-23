@@ -31,7 +31,7 @@ void CLineModelElementList::LoadCatalog(const CRayCatalog::TRayVector& restRayLi
 {
     Float64 nominalWidthDefault = 3.3; //suited to PFS RJLcont simulations
 
-    //Load OIII lines
+    //Load OIII multilines
     std::vector<Int32> OIIIaIdx = findLineIdxInCatalog( restRayList, "[OIII](doublet-1)");
     std::vector<Int32> OIIIbIdx = findLineIdxInCatalog( restRayList, "[OIII](doublet-1/3)");
     if(OIIIaIdx.size()==1 && OIIIbIdx.size()==1){
@@ -45,7 +45,7 @@ void CLineModelElementList::LoadCatalog(const CRayCatalog::TRayVector& restRayLi
         }
     }
 
-    //Load NII lines
+    //Load NII multilines
     std::vector<Int32> NII1dx = findLineIdxInCatalog( restRayList, "[NII](doublet-1)");
     std::vector<Int32> NII2dx = findLineIdxInCatalog( restRayList, "[NII](doublet-1/2.95)");
     if(NII1dx.size()==1 && NII2dx.size()==1){
@@ -87,7 +87,7 @@ void CLineModelElementList::LoadCatalogMultilineBalmer(const CRayCatalog::TRayVe
 {
     Float64 nominalWidthDefault = 3.3; //suited to PFS RJLcont simulations
 
-    //Load OIII lines
+    //Load OIII multilines
     std::vector<Int32> OIIIaIdx = findLineIdxInCatalog( restRayList, "[OIII](doublet-1)");
     std::vector<Int32> OIIIbIdx = findLineIdxInCatalog( restRayList, "[OIII](doublet-1/3)");
     if(OIIIaIdx.size()==1 && OIIIbIdx.size()==1){
@@ -101,7 +101,7 @@ void CLineModelElementList::LoadCatalogMultilineBalmer(const CRayCatalog::TRayVe
         }
     }
 
-    //Load NII lines
+    //Load NII multilines
     std::vector<Int32> NII1dx = findLineIdxInCatalog( restRayList, "[NII](doublet-1)");
     std::vector<Int32> NII2dx = findLineIdxInCatalog( restRayList, "[NII](doublet-1/2.95)");
     if(NII1dx.size()==1 && NII2dx.size()==1){
@@ -234,7 +234,7 @@ void CLineModelElementList::fit(Float64 redshift, CLineModelResult::SLineModelSo
 
     //eventually apply rules,
     // WARNING: no noise taken into account for now...
-    //applyRules();
+    applyRules();
 
     //create spectrum model
     modelSolution = GetModelSolution();
@@ -321,8 +321,10 @@ Void CLineModelElementList::Apply2SingleLinesAmplitudeRule(std::string lineA, st
         return;
     }
 
-    Float64 ampA = m_Elements[iA]->GetFittedAmplitude(0);
-    m_Elements[iB]->LimitFittedAmplitude(0, coeff*ampA);
+    if(m_Elements[iA]->IsOutsideLambdaRange() == false){
+        Float64 ampA = m_Elements[iA]->GetFittedAmplitude(0);
+        m_Elements[iB]->LimitFittedAmplitude(0, coeff*ampA);
+    }
 }
 
 CLineModelResult::SLineModelSolution CLineModelElementList::GetModelSolution()

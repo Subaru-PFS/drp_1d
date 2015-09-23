@@ -6,6 +6,7 @@
 #include <epic/redshift/spectrum/spectrum.h>
 #include <epic/core/log/log.h>
 
+#include <float.h>
 #include <algorithm>
 
 using namespace NSEpic;
@@ -198,7 +199,7 @@ Float64 CSingleLine::GetFittedAmplitude(Int32 subeIdx){
 
 void CSingleLine::LimitFittedAmplitude(Int32 subeIdx, Float64 limit){
     if(m_FittedAmplitude > limit){
-        m_FittedAmplitude = limit;
+        m_FittedAmplitude = std::max(0.0, limit);
     }
 }
 

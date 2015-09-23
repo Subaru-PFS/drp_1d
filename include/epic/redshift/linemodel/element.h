@@ -30,6 +30,7 @@ public:
     virtual void LimitFittedAmplitude(Int32 subeIdx, Float64 limit)=0;
 
     Int32 GetSize();
+    bool IsOutsideLambdaRange();
     Int32 FindElementIndex(Int32 LineCatalogIndex);
     virtual Int32 FindElementIndex(std::string LineTagStr)=0;
 

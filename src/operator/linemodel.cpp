@@ -74,13 +74,6 @@ const COperatorResult* COperatorLineModel::Compute(const CSpectrum& spectrum, co
         ModelFit( spectrum, model, result->restRayList, lambdaRange, result->Redshifts[i], result->ChiSquare[i], result->LineModelSolutions[i]);
     }
 
-    /* //saving the model for viewing
-    CSpectrumFluxAxis& sfluxAxisPtr = model.GetFluxAxis();
-    sfluxAxisPtr = modelFluxAxis;
-    CSpectrumIOFitsWriter writer;
-    Bool retVal = writer.Write( "model.fits", model );
-    //*/
-
     // extrema
     Int32 extremumCount = 15;
     TPointList extremumList;

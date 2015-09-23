@@ -34,3 +34,8 @@ Int32 CLineModelElement::GetSize()
 {
     return (Int32)m_LineCatalogIndexes.size();
 }
+
+bool CLineModelElement::IsOutsideLambdaRange()
+{
+    return m_OutsideLambdaRange;
+}
