@@ -108,16 +108,18 @@ const COperatorResult* COperatorLineModel::Compute(const CSpectrum& spectrum, co
     extremumCount = extremumList.size();
     result->Extrema.resize( extremumCount );
     result->LogArea.resize( extremumCount );
+    result->LogAreaCorrectedExtrema.resize( extremumCount );
     result->SigmaZ.resize( extremumCount );
     for( Int32 i=0; i<extremumList.size(); i++ )
     {
         result->Extrema[i] = extremumList[i].X;
         result->LogArea[i] = -DBL_MAX;
+        result->LogAreaCorrectedExtrema[i] = -1.0;
     }
     ComputeArea2(result);
 
 
-    //*
+    /*
     //  //saving the best model for viewing
     if(result->Extrema.size()>0){
         Float64 _chi=0.0;
@@ -349,6 +351,7 @@ void COperatorLineModel::ComputeArea2(CLineModelResult* results)
 
         results->LogArea[indz] = logarea;
         results->SigmaZ[indz] = sigma;
+        results->LogAreaCorrectedExtrema[indz] = zcorr;
     }
 }
 

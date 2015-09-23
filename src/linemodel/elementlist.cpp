@@ -11,8 +11,8 @@ using namespace NSEpic;
 
 CLineModelElementList::CLineModelElementList( const CSpectrum& spectrum, const CRayCatalog::TRayVector& restRayList)
 {
-    //LoadCatalog(restRayList);
-    LoadCatalogMultilineBalmer(restRayList);
+    LoadCatalog(restRayList);
+    //LoadCatalogMultilineBalmer(restRayList);
     m_RestRayList = restRayList;
     m_SpectrumModel = new CSpectrum(spectrum);
     m_SpcFluxAxis = spectrum.GetFluxAxis();

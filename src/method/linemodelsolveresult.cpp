@@ -97,7 +97,7 @@ Bool CLineModelSolveResult::GetBestRedshiftLogArea( const COperatorResultStore& 
             if( results->LogArea[i] > tmpMerit )
             {
                 tmpMerit = results->LogArea[i];
-                tmpRedshift = results->Extrema[i];
+                tmpRedshift = results->LogAreaCorrectedExtrema[i];
             }
         }
 
