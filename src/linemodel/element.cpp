@@ -10,6 +10,8 @@ using namespace NSEpic;
 CLineModelElement::CLineModelElement()
 {
     m_OutsideLambdaRange = true;
+    m_OutsideLambdaRangeOverlapThreshold = 0.1;
+    //example: 0.1 means 10% of the line is allowed to be outside the spectrum with the line still considered inside the lambda range
 }
 
 CLineModelElement::~CLineModelElement()

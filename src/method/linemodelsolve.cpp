@@ -49,7 +49,7 @@ Bool CLineModelSolve::Solve( COperatorResultStore& resultStore, const CSpectrum&
     CSpectrum _spc;
 
     std::string scopeStr = "linemodel";
-    Int32 _spctype = CLineModelSolveResult::nType_noContinuum;
+    Int32 _spctype = CLineModelSolveResult::nType_raw;
 
     if(_spctype == CLineModelSolveResult::nType_continuumOnly){
         // use continuum only

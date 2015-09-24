@@ -30,6 +30,22 @@ CSingleLine::~CSingleLine()
 {
 }
 
+void CSingleLine::prepareSupport(const CSpectrumSpectralAxis& spectralAxis, Float64 redshift)
+{
+    Float64 mu = m_Ray.GetPosition()*(1+redshift);
+    Float64 c = m_NominalWidth*(1.0+redshift);
+    Float64 winsize = m_NSigmaSupport*c;
+    m_Start = spectralAxis.GetIndexAtWaveLength(mu-winsize/2.0);
+    m_End = spectralAxis.GetIndexAtWaveLength(mu+winsize/2.0);
+
+    Int32 minLineOverlap = m_OutsideLambdaRangeOverlapThreshold*winsize;
+    if( m_Start >= (spectralAxis.GetSamplesCount()-1-minLineOverlap) || m_End <=minLineOverlap){
+        m_OutsideLambdaRange=true;
+    }else{
+        m_OutsideLambdaRange=false;
+    }
+}
+
 void CSingleLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis, Float64  redshift)
 {
     prepareSupport(spectralAxis, redshift);
@@ -56,7 +72,7 @@ void CSingleLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const 
     Int32 num = 0;
 
     //A estimation
-    for ( Int32 i = m_Start; i < m_End; i++)
+    for ( Int32 i = m_Start; i <= m_End; i++)
     {
         y = flux[i];
         x = spectral[i];
@@ -159,12 +175,15 @@ void CSingleLine::addToSpectrumModel( const CSpectrumSpectralAxis& modelspectral
     }
 
     Float64 A = m_FittedAmplitude;
+    if(A==0){
+        return;
+    }
     Float64 mu = m_Ray.GetPosition()*(1+redshift);
     Float64 c = m_NominalWidth*(1.0+redshift);
     Float64* flux = modelfluxAxis.GetSamples();
     const Float64* spectral = modelspectralAxis.GetSamples();
 
-    for ( Int32 i = m_Start; i < m_End; i++)
+    for ( Int32 i = m_Start; i <= m_End; i++)
     {
         Float64 x = spectral[i];
         Float64 Yi = A * exp (-1.*(x-mu)*(x-mu)/(2*c*c));
@@ -172,21 +191,6 @@ void CSingleLine::addToSpectrumModel( const CSpectrumSpectralAxis& modelspectral
     }
 
   return;
-}
-
-void CSingleLine::prepareSupport(const CSpectrumSpectralAxis& spectralAxis, Float64 redshift)
-{
-    Float64 mu = m_Ray.GetPosition()*(1+redshift);
-    Float64 c = m_NominalWidth*(1.0+redshift);
-    Float64 winsize = m_NSigmaSupport*c;
-    m_Start = spectralAxis.GetIndexAtWaveLength(mu-winsize/2.0);
-    m_End = spectralAxis.GetIndexAtWaveLength(mu+winsize/2.0);
-
-    if(m_Start <= 0 || m_End >= spectralAxis.GetSamplesCount()-1 || m_End <=0 || m_Start >=spectralAxis.GetSamplesCount()-1 ){
-        m_OutsideLambdaRange=true;
-    }else{
-        m_OutsideLambdaRange=false;
-    }
 }
 
 Float64 CSingleLine::GetFittedAmplitude(Int32 subeIdx){

@@ -13,6 +13,7 @@ CLineModelElementList::CLineModelElementList( const CSpectrum& spectrum, const C
 {
     LoadCatalog(restRayList);
     //LoadCatalogMultilineBalmer(restRayList);
+    //LoadCatalogSingleLines(restRayList);
     m_RestRayList = restRayList;
     m_SpectrumModel = new CSpectrum(spectrum);
     m_SpcFluxAxis = spectrum.GetFluxAxis();

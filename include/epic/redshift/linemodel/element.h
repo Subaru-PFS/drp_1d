@@ -36,6 +36,7 @@ public:
 
 protected:
 
+    Float64 m_OutsideLambdaRangeOverlapThreshold;
     bool m_OutsideLambdaRange;
     std::vector<Int32> m_LineCatalogIndexes;
 
