@@ -25,12 +25,12 @@ CLineModelSolve::~CLineModelSolve()
 
 
 const CLineModelSolveResult* CLineModelSolve::Compute(  COperatorResultStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont, const CRayCatalog& restraycatalog,
-                                                        const TFloat64Range& lambdaRange, const TFloat64List& redshifts )
+                                                        const TFloat64Range& lambdaRange, const TFloat64List& redshifts, Int32 spcType)
 {
     Bool storeResult = false;
     COperatorResultStore::CAutoScope resultScope( resultStore, "linemodelsolve" );
 
-    Solve( resultStore, spc, spcWithoutCont, restraycatalog, lambdaRange, redshifts);
+    Solve( resultStore, spc, spcWithoutCont, restraycatalog, lambdaRange, redshifts, spcType);
     storeResult = true;
 
 
@@ -44,12 +44,12 @@ const CLineModelSolveResult* CLineModelSolve::Compute(  COperatorResultStore& re
 }
 
 Bool CLineModelSolve::Solve( COperatorResultStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont, const CRayCatalog& restraycatalog,
-                             const TFloat64Range& lambdaRange, const TFloat64List& redshifts )
+                             const TFloat64Range& lambdaRange, const TFloat64List& redshifts, Int32 spcType )
 {
     CSpectrum _spc;
 
     std::string scopeStr = "linemodel";
-    Int32 _spctype = CLineModelSolveResult::nType_raw;
+    Int32 _spctype = spcType;
 
     if(_spctype == CLineModelSolveResult::nType_continuumOnly){
         // use continuum only

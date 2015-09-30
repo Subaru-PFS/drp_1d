@@ -14,6 +14,13 @@ using namespace NSEpic;
 CSingleLine::CSingleLine(const CRay& r , Float64 nominalWidth, std::vector<Int32> catalogIndexes)
 {
     m_Ray = r;
+
+    if( m_Ray.GetType()==CRay::nType_Emission ){
+        m_SignFactor = 1.0;
+    }else{
+        m_SignFactor = -1.0;
+    }
+
     m_NominalWidth = nominalWidth;
     m_FittedAmplitude = -1;
 
@@ -76,7 +83,7 @@ void CSingleLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const 
     {
         y = flux[i];
         x = spectral[i];
-        yg = exp (-1.*(x-mu)*(x-mu)/(2*c*c));
+        yg = m_SignFactor * exp (-1.*(x-mu)*(x-mu)/(2*c*c));
 
         num++;
         err2 = 1.0 / (error[i] * error[i]);
@@ -186,7 +193,7 @@ void CSingleLine::addToSpectrumModel( const CSpectrumSpectralAxis& modelspectral
     for ( Int32 i = m_Start; i <= m_End; i++)
     {
         Float64 x = spectral[i];
-        Float64 Yi = A * exp (-1.*(x-mu)*(x-mu)/(2*c*c));
+        Float64 Yi = m_SignFactor * A * exp (-1.*(x-mu)*(x-mu)/(2*c*c));
         flux[i] += Yi;
     }
 
@@ -219,4 +226,9 @@ Int32 CSingleLine::FindElementIndex(std::string LineTagStr)
     }
 
     return idx;
+}
+
+
+bool CSingleLine::IsOutsideLambdaRange(Int32 subeIdx){
+    return m_OutsideLambdaRange;
 }

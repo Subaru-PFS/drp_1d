@@ -82,7 +82,7 @@ COperatorLineMatching2Solve::COperatorLineMatching2Solve()
     if(1)
     {   // F + ErrF
         m_winsize = 250.0;
-        m_cut = 0.5;
+        m_cut = 1.0;
         m_detectioncut = 1.0;
         m_maxsize = 120;
         m_enlargeRate = 2.0;
@@ -117,7 +117,8 @@ const CLineMatching2SolveResult* COperatorLineMatching2Solve::Compute(  COperato
         return NULL;
     }
 
-    CRayDetection rayDetection(lineType, m_cut, m_strongcut, m_winsize, m_minsize, m_maxsize);
+    bool disableGaussianFitQualityCheck = true;
+    CRayDetection rayDetection(lineType, m_cut, m_strongcut, m_winsize, m_minsize, m_maxsize, disableGaussianFitQualityCheck);
     CConstRef<CRayDetectionResult> rayDetectionResult = rayDetection.Compute( _spc, lambdaRange, peakDetectionResult->PeakList, peakDetectionResult->EnlargedPeakList );
 
     if( rayDetectionResult ) {

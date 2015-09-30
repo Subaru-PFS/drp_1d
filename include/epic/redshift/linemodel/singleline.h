@@ -27,13 +27,14 @@ public:
     void addToSpectrumModel( const CSpectrumSpectralAxis& modelspectralAxis, CSpectrumFluxAxis& modelfluxAxis, Float64 redshift );
     Float64 GetFittedAmplitude(Int32 subeIdx);
     void LimitFittedAmplitude(Int32 subeIdx, Float64 limit);
-
+    bool IsOutsideLambdaRange(Int32 subeIdx);
 
 private:
     Int32 FindElementIndex(std::string LineTagStr);
     void prepareSupport(const CSpectrumSpectralAxis& spectralAxis, Float64 redshift);
 
     CRay    m_Ray;
+    Float64 m_SignFactor;
     Float64 m_NominalWidth;
     Float64 m_FittedAmplitude;
 

@@ -30,7 +30,7 @@ IMPLEMENT_MANAGED_OBJECT(CRayDetection)
 //    strongcut = 2.0;
 //}
 
-CRayDetection::CRayDetection(Int32 type, Float64 cut, Float64 strongcut, Float64 winsize, Float64 minsize, Float64 maxsize)
+CRayDetection::CRayDetection(Int32 type, Float64 cut, Float64 strongcut, Float64 winsize, Float64 minsize, Float64 maxsize, bool disableFitQualityCheck)
 {
     FWHM_FACTOR = 2.35;
 
@@ -39,6 +39,8 @@ CRayDetection::CRayDetection(Int32 type, Float64 cut, Float64 strongcut, Float64
     m_maxsize = maxsize;
     m_cut = cut;
     m_strongcut = strongcut;
+
+    m_disableFitQualityCheck = disableFitQualityCheck;
 
     m_type = type;
 }
@@ -125,7 +127,7 @@ const CRayDetectionResult* CRayDetection::Compute( const CSpectrum& spectrum, co
         }
 
         // Check if gaussian fit is very different from peak itself
-        if(toAdd){
+        if(toAdd && !m_disableFitQualityCheck){
             //find max value and pos
             Float64 max_value = -DBL_MAX;
             Int32 max_index = -1;

@@ -13,6 +13,15 @@ using namespace NSEpic;
 CMultiLine::CMultiLine(std::vector<CRay> rs, std::vector<Float64> nominalAmplitudes, Float64 nominalWidth, std::vector<Int32> catalogIndexes)
 {
     m_Rays = rs;
+
+    m_SignFactors.resize(m_Rays.size());
+    for(Int32 i=0; i<m_Rays.size(); i++){
+        if( m_Rays[i].GetType()==CRay::nType_Emission ){
+            m_SignFactors[i] = 1.0;
+        }else{
+            m_SignFactors[i] = -1.0;
+        }
+    }
     m_NominalWidth = nominalWidth;
     m_NominalAmplitudes = nominalAmplitudes;
 
@@ -125,7 +134,7 @@ void CMultiLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const C
                 if(m_OutsideLambdaRangeList[k2]){
                     continue;
                 }
-                yg += m_NominalAmplitudes[k2] * exp (-1.*(x-mu[k2])*(x-mu[k2])/(2*c*c));
+                yg += m_SignFactors[k2] * m_NominalAmplitudes[k2] * exp (-1.*(x-mu[k2])*(x-mu[k2])/(2*c*c));
             }
             num++;
             err2 = 1.0 / (error[i] * error[i]);
@@ -179,7 +188,7 @@ void CMultiLine::addToSpectrumModel( const CSpectrumSpectralAxis& modelspectralA
                 }
                 Float64 A = m_FittedAmplitudes[k2];
                 Float64 mu = m_Rays[k2].GetPosition()*(1+redshift);
-                Yi += A * exp (-1.*(x-mu)*(x-mu)/(2*c*c));
+                Yi += m_SignFactors[k2] * A * exp (-1.*(x-mu)*(x-mu)/(2*c*c));
             }
             flux[i] += Yi;
         }
@@ -207,4 +216,9 @@ Int32 CMultiLine::FindElementIndex(std::string LineTagStr)
 void CMultiLine::LimitFittedAmplitude(Int32 subeIdx, Float64 limit){
     //..
     return;
+}
+
+
+bool CMultiLine::IsOutsideLambdaRange(Int32 subeIdx){
+    return m_OutsideLambdaRangeList[subeIdx];
 }

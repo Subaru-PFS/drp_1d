@@ -23,11 +23,11 @@ public:
     CLineModelSolve();
     ~CLineModelSolve();
 
-    const CLineModelSolveResult* Compute(  COperatorResultStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont, const CRayCatalog& restraycatalog,
-                                           const TFloat64Range& lambdaRange, const TFloat64List& redshifts );
+    const CLineModelSolveResult* Compute(COperatorResultStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont, const CRayCatalog& restraycatalog,
+                                           const TFloat64Range& lambdaRange, const TFloat64List& redshifts , Int32 spcType);
 
     Bool Solve( COperatorResultStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont, const CRayCatalog& restraycatalog,
-                                 const TFloat64Range& lambdaRange, const TFloat64List& redshifts );
+                                 const TFloat64Range& lambdaRange, const TFloat64List& redshifts, Int32 spcType );
 private:
 
     Float64 m_winsize;

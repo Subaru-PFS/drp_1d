@@ -11,6 +11,14 @@ using namespace NSEpic;
 
 CLineModelElementList::CLineModelElementList( const CSpectrum& spectrum, const CRayCatalog::TRayVector& restRayList)
 {
+    //PFS
+    m_nominalWidthDefaultEmission = 3.3; //suited to PFS RJLcont simulations
+    m_nominalWidthDefaultAbsorption = 2.3; //suited to PFS LBG simulations
+    //VVDS
+    m_nominalWidthDefaultEmission = 4.0; //VVDS DEEP
+    m_nominalWidthDefaultAbsorption = 4.0; //
+
+
     LoadCatalog(restRayList);
     //LoadCatalogMultilineBalmer(restRayList);
     //LoadCatalogSingleLines(restRayList);
@@ -30,111 +38,172 @@ const CSpectrum& CLineModelElementList::GetModelSpectrum() const
 
 void CLineModelElementList::LoadCatalog(const CRayCatalog::TRayVector& restRayList)
 {
-    Float64 nominalWidthDefault = 3.3; //suited to PFS RJLcont simulations
-
     //Load OIII multilines
-    std::vector<Int32> OIIIaIdx = findLineIdxInCatalog( restRayList, "[OIII](doublet-1)");
-    std::vector<Int32> OIIIbIdx = findLineIdxInCatalog( restRayList, "[OIII](doublet-1/3)");
+    std::vector<Int32> OIIIaIdx = findLineIdxInCatalog( restRayList, "[OIII](doublet-1)", CRay::nType_Emission);
+    std::vector<Int32> OIIIbIdx = findLineIdxInCatalog( restRayList, "[OIII](doublet-1/3)", CRay::nType_Emission);
     if(OIIIaIdx.size()==1 && OIIIbIdx.size()==1){
-        addDoubleLine(restRayList[OIIIaIdx[0]], restRayList[OIIIbIdx[0]], OIIIaIdx[0], OIIIbIdx[0], nominalWidthDefault, 1.0, 1.0/3.0);
+        addDoubleLine(restRayList[OIIIaIdx[0]], restRayList[OIIIbIdx[0]], OIIIaIdx[0], OIIIbIdx[0], m_nominalWidthDefaultEmission, 1.0, 1.0/3.0);
     }else{
         if(OIIIaIdx.size()==1){
-            addSingleLine(restRayList[OIIIaIdx[0]], OIIIaIdx[0], nominalWidthDefault);
+            addSingleLine(restRayList[OIIIaIdx[0]], OIIIaIdx[0], m_nominalWidthDefaultEmission);
         }
         if(OIIIbIdx.size()==1){
-            addSingleLine(restRayList[OIIIbIdx[0]], OIIIbIdx[0], nominalWidthDefault);
+            addSingleLine(restRayList[OIIIbIdx[0]], OIIIbIdx[0], m_nominalWidthDefaultEmission);
         }
     }
 
     //Load NII multilines
-    std::vector<Int32> NII1dx = findLineIdxInCatalog( restRayList, "[NII](doublet-1)");
-    std::vector<Int32> NII2dx = findLineIdxInCatalog( restRayList, "[NII](doublet-1/2.95)");
+    std::vector<Int32> NII1dx = findLineIdxInCatalog( restRayList, "[NII](doublet-1)", CRay::nType_Emission);
+    std::vector<Int32> NII2dx = findLineIdxInCatalog( restRayList, "[NII](doublet-1/2.95)", CRay::nType_Emission);
     if(NII1dx.size()==1 && NII2dx.size()==1){
-        addDoubleLine(restRayList[NII1dx[0]], restRayList[NII2dx[0]], NII1dx[0], NII2dx[0], nominalWidthDefault, 1.0, 1.0/2.95);
+        addDoubleLine(restRayList[NII1dx[0]], restRayList[NII2dx[0]], NII1dx[0], NII2dx[0], m_nominalWidthDefaultEmission, 1.0, 1.0/2.95);
     }else{
         if(NII1dx.size()==1){
-            addSingleLine(restRayList[NII1dx[0]], NII1dx[0], nominalWidthDefault);
+            addSingleLine(restRayList[NII1dx[0]], NII1dx[0], m_nominalWidthDefaultEmission);
         }
         if(NII2dx.size()==1){
-            addSingleLine(restRayList[NII2dx[0]], NII2dx[0], nominalWidthDefault);
+            addSingleLine(restRayList[NII2dx[0]], NII2dx[0], m_nominalWidthDefaultEmission);
         }
     }
 
     //Load OII line doublet
-    std::vector<Int32> OII1dx = findLineIdxInCatalog( restRayList, "[OII](doublet-1)");
-    std::vector<Int32> OII2dx = findLineIdxInCatalog( restRayList, "[OII](doublet-1/3)");
+    std::vector<Int32> OII1dx = findLineIdxInCatalog( restRayList, "[OII](doublet-1)", CRay::nType_Emission);
+    std::vector<Int32> OII2dx = findLineIdxInCatalog( restRayList, "[OII](doublet-1/3)", CRay::nType_Emission);
     if(OII1dx.size()==1 && OII2dx.size()==1){
         addDoubleLine(restRayList[OII1dx[0]], restRayList[OII2dx[0]], OII1dx[0], OII2dx[0], 3.2, 1.0, 1.0/2.9);
     }else{
         if(OII1dx.size()==1){
-            addSingleLine(restRayList[OII1dx[0]], OII1dx[0], nominalWidthDefault);
+            addSingleLine(restRayList[OII1dx[0]], OII1dx[0], m_nominalWidthDefaultEmission);
         }
         if(OII2dx.size()==1){
-            addSingleLine(restRayList[OII2dx[0]], OII2dx[0], nominalWidthDefault);
+            addSingleLine(restRayList[OII2dx[0]], OII2dx[0], m_nominalWidthDefaultEmission);
         }
     }
+
+
+    //Load FeII 2586/2600 multilines
+    std::vector<Int32> aIdx = findLineIdxInCatalog( restRayList, "FeII2600", CRay::nType_Absorption);
+    std::vector<Int32> bIdx = findLineIdxInCatalog( restRayList, "FeII2586", CRay::nType_Absorption);
+    std::vector<Int32> cIdx = findLineIdxInCatalog( restRayList, "FeII2382", CRay::nType_Absorption);
+    std::vector<Int32> dIdx = findLineIdxInCatalog( restRayList, "FeII2374", CRay::nType_Absorption);
+    std::vector<Int32> eIdx = findLineIdxInCatalog( restRayList, "FeII2344", CRay::nType_Absorption);
+    std::vector<Int32> fIdx = findLineIdxInCatalog( restRayList, "FeII2260", CRay::nType_Absorption);
+    std::vector<Int32> gIdx = findLineIdxInCatalog( restRayList, "FeII2249", CRay::nType_Absorption);
+    std::vector<Int32> hIdx = findLineIdxInCatalog( restRayList, "FeII1608", CRay::nType_Absorption);
+
+    std::vector<CRay> lines;
+    std::vector<Float64> amps;
+    std::vector<Int32> inds;
+
+    if(aIdx.size()==1){
+        lines.push_back(restRayList[aIdx[0]]);
+        amps.push_back(0.239);//2600
+        inds.push_back(aIdx[0]);
+    }
+    if(bIdx.size()==1){
+        lines.push_back(restRayList[bIdx[0]]);
+        amps.push_back(0.0691); //2586
+        inds.push_back(bIdx[0]);
+    }
+    if(cIdx.size()==1){
+        lines.push_back(restRayList[cIdx[0]]);
+        amps.push_back(0.32); //2382
+        inds.push_back(cIdx[0]);
+    }
+    if(dIdx.size()==1){
+        lines.push_back(restRayList[dIdx[0]]);
+        amps.push_back(0.0313); //2374
+        inds.push_back(dIdx[0]);
+    }
+    if(eIdx.size()==1){
+        lines.push_back(restRayList[eIdx[0]]);
+        amps.push_back(0.114); //2344
+        inds.push_back(eIdx[0]);
+    }
+    if(fIdx.size()==1){
+        lines.push_back(restRayList[fIdx[0]]);
+        amps.push_back(0.00244); //2260
+        inds.push_back(fIdx[0]);
+    }
+    if(gIdx.size()==1){
+        lines.push_back(restRayList[gIdx[0]]);
+        amps.push_back(0.001821);//2249
+        inds.push_back(gIdx[0]);
+    }
+    if(hIdx.size()==1){
+        lines.push_back(restRayList[hIdx[0]]);
+        amps.push_back(0.058);//1608
+        inds.push_back(hIdx[0]);
+    }
+
+    m_Elements.push_back(boost::shared_ptr<CLineModelElement> (new CMultiLine(lines, amps, m_nominalWidthDefaultAbsorption, inds)));
+
 
     //Load the rest of the single lines
     for( UInt32 iRestRay=0; iRestRay<restRayList.size(); iRestRay++ )
     {
         if ( FindElementIndex(iRestRay)==-1 )
         {
-            addSingleLine(restRayList[iRestRay], iRestRay, nominalWidthDefault);
+            Float64 nominalwidth = m_nominalWidthDefaultEmission;
+            if(restRayList[iRestRay].GetType() == CRay::nType_Emission){
+                nominalwidth = m_nominalWidthDefaultEmission;
+            }else{
+                nominalwidth = m_nominalWidthDefaultAbsorption;
+            }
+            addSingleLine(restRayList[iRestRay], iRestRay, nominalwidth);
         }
     }
 }
 
 void CLineModelElementList::LoadCatalogMultilineBalmer(const CRayCatalog::TRayVector& restRayList)
 {
-    Float64 nominalWidthDefault = 3.3; //suited to PFS RJLcont simulations
-
     //Load OIII multilines
-    std::vector<Int32> OIIIaIdx = findLineIdxInCatalog( restRayList, "[OIII](doublet-1)");
-    std::vector<Int32> OIIIbIdx = findLineIdxInCatalog( restRayList, "[OIII](doublet-1/3)");
+    std::vector<Int32> OIIIaIdx = findLineIdxInCatalog( restRayList, "[OIII](doublet-1)", CRay::nType_Emission);
+    std::vector<Int32> OIIIbIdx = findLineIdxInCatalog( restRayList, "[OIII](doublet-1/3)", CRay::nType_Emission);
     if(OIIIaIdx.size()==1 && OIIIbIdx.size()==1){
-        addDoubleLine(restRayList[OIIIaIdx[0]], restRayList[OIIIbIdx[0]], OIIIaIdx[0], OIIIbIdx[0], nominalWidthDefault, 1.0, 1.0/3.0);
+        addDoubleLine(restRayList[OIIIaIdx[0]], restRayList[OIIIbIdx[0]], OIIIaIdx[0], OIIIbIdx[0], m_nominalWidthDefaultEmission, 1.0, 1.0/3.0);
     }else{
         if(OIIIaIdx.size()==1){
-            addSingleLine(restRayList[OIIIaIdx[0]], OIIIaIdx[0], nominalWidthDefault);
+            addSingleLine(restRayList[OIIIaIdx[0]], OIIIaIdx[0], m_nominalWidthDefaultEmission);
         }
         if(OIIIbIdx.size()==1){
-            addSingleLine(restRayList[OIIIbIdx[0]], OIIIbIdx[0], nominalWidthDefault);
+            addSingleLine(restRayList[OIIIbIdx[0]], OIIIbIdx[0], m_nominalWidthDefaultEmission);
         }
     }
 
     //Load NII multilines
-    std::vector<Int32> NII1dx = findLineIdxInCatalog( restRayList, "[NII](doublet-1)");
-    std::vector<Int32> NII2dx = findLineIdxInCatalog( restRayList, "[NII](doublet-1/2.95)");
+    std::vector<Int32> NII1dx = findLineIdxInCatalog( restRayList, "[NII](doublet-1)", CRay::nType_Emission);
+    std::vector<Int32> NII2dx = findLineIdxInCatalog( restRayList, "[NII](doublet-1/2.95)", CRay::nType_Emission);
     if(NII1dx.size()==1 && NII2dx.size()==1){
-        addDoubleLine(restRayList[NII1dx[0]], restRayList[NII2dx[0]], NII1dx[0], NII2dx[0], nominalWidthDefault, 1.0, 1.0/2.95);
+        addDoubleLine(restRayList[NII1dx[0]], restRayList[NII2dx[0]], NII1dx[0], NII2dx[0], m_nominalWidthDefaultEmission, 1.0, 1.0/2.95);
     }else{
         if(NII1dx.size()==1){
-            addSingleLine(restRayList[NII1dx[0]], NII1dx[0], nominalWidthDefault);
+            addSingleLine(restRayList[NII1dx[0]], NII1dx[0], m_nominalWidthDefaultEmission);
         }
         if(NII2dx.size()==1){
-            addSingleLine(restRayList[NII2dx[0]], NII2dx[0], nominalWidthDefault);
+            addSingleLine(restRayList[NII2dx[0]], NII2dx[0], m_nominalWidthDefaultEmission);
         }
     }
 
     //Load OII line doublet
-    std::vector<Int32> OII1dx = findLineIdxInCatalog( restRayList, "[OII](doublet-1)");
-    std::vector<Int32> OII2dx = findLineIdxInCatalog( restRayList, "[OII](doublet-1/3)");
+    std::vector<Int32> OII1dx = findLineIdxInCatalog( restRayList, "[OII](doublet-1)", CRay::nType_Emission);
+    std::vector<Int32> OII2dx = findLineIdxInCatalog( restRayList, "[OII](doublet-1/3)", CRay::nType_Emission);
     if(OII1dx.size()==1 && OII2dx.size()==1){
         addDoubleLine(restRayList[OII1dx[0]], restRayList[OII2dx[0]], OII1dx[0], OII2dx[0], 3.2, 1.0, 1.0/2.9);
     }else{
         if(OII1dx.size()==1){
-            addSingleLine(restRayList[OII1dx[0]], OII1dx[0], nominalWidthDefault);
+            addSingleLine(restRayList[OII1dx[0]], OII1dx[0], m_nominalWidthDefaultEmission);
         }
         if(OII2dx.size()==1){
-            addSingleLine(restRayList[OII2dx[0]], OII2dx[0], nominalWidthDefault);
+            addSingleLine(restRayList[OII2dx[0]], OII2dx[0], m_nominalWidthDefaultEmission);
         }
     }
 
     //Load Balmer multilines
-    std::vector<Int32> Halphaidx = findLineIdxInCatalog( restRayList, "Halpha");
-    std::vector<Int32> Hbetaidx = findLineIdxInCatalog( restRayList, "Hbeta");
-    std::vector<Int32> Hgammaidx = findLineIdxInCatalog( restRayList, "Hgamma");
-    std::vector<Int32> Hdeltaidx = findLineIdxInCatalog( restRayList, "Hdelta");
+    std::vector<Int32> Halphaidx = findLineIdxInCatalog( restRayList, "Halpha", CRay::nType_Emission);
+    std::vector<Int32> Hbetaidx = findLineIdxInCatalog( restRayList, "Hbeta", CRay::nType_Emission);
+    std::vector<Int32> Hgammaidx = findLineIdxInCatalog( restRayList, "Hgamma", CRay::nType_Emission);
+    std::vector<Int32> Hdeltaidx = findLineIdxInCatalog( restRayList, "Hdelta", CRay::nType_Emission);
     if(Halphaidx.size()==1 && Hbetaidx.size()==1 && Hgammaidx.size()==1 && Hdeltaidx.size()==1){
         std::vector<CRay> lines;
         lines.push_back(restRayList[Halphaidx[0]]);
@@ -154,19 +223,19 @@ void CLineModelElementList::LoadCatalogMultilineBalmer(const CRayCatalog::TRayVe
         inds.push_back(Hgammaidx[0]);
         inds.push_back(Hdeltaidx[0]);
 
-        m_Elements.push_back(boost::shared_ptr<CLineModelElement> (new CMultiLine(lines, amps, nominalWidthDefault, inds)));
+        m_Elements.push_back(boost::shared_ptr<CLineModelElement> (new CMultiLine(lines, amps, m_nominalWidthDefaultEmission, inds)));
     }else{
         if(Halphaidx.size()==1){
-            addSingleLine(restRayList[Halphaidx[0]], Halphaidx[0], nominalWidthDefault);
+            addSingleLine(restRayList[Halphaidx[0]], Halphaidx[0], m_nominalWidthDefaultEmission);
         }
         if(Hbetaidx.size()==1){
-            addSingleLine(restRayList[Hbetaidx[0]], Hbetaidx[0], nominalWidthDefault);
+            addSingleLine(restRayList[Hbetaidx[0]], Hbetaidx[0], m_nominalWidthDefaultEmission);
         }
         if(Hgammaidx.size()==1){
-            addSingleLine(restRayList[Hgammaidx[0]], Hgammaidx[0], nominalWidthDefault);
+            addSingleLine(restRayList[Hgammaidx[0]], Hgammaidx[0], m_nominalWidthDefaultEmission);
         }
         if(Hdeltaidx.size()==1){
-            addSingleLine(restRayList[Hdeltaidx[0]], Hdeltaidx[0], nominalWidthDefault);
+            addSingleLine(restRayList[Hdeltaidx[0]], Hdeltaidx[0], m_nominalWidthDefaultEmission);
         }
     }
 
@@ -175,34 +244,32 @@ void CLineModelElementList::LoadCatalogMultilineBalmer(const CRayCatalog::TRayVe
     {
         if ( FindElementIndex(iRestRay)==-1 )
         {
-            addSingleLine(restRayList[iRestRay], iRestRay, nominalWidthDefault);
+            addSingleLine(restRayList[iRestRay], iRestRay, m_nominalWidthDefaultEmission);
         }
     }
 }
 
 void CLineModelElementList::LoadCatalogSingleLines(const CRayCatalog::TRayVector& restRayList)
 {
-    Float64 nominalWidthDefault = 3.18; //suited to PFS RJLcont simulations
-
     //Load OIII lines
-    std::vector<Int32> OIIIaIdx = findLineIdxInCatalog( restRayList, "[OIII](doublet-1)");
+    std::vector<Int32> OIIIaIdx = findLineIdxInCatalog( restRayList, "[OIII](doublet-1)", CRay::nType_Emission);
     if(OIIIaIdx.size()==1){
-        addSingleLine(restRayList[OIIIaIdx[0]], OIIIaIdx[0], nominalWidthDefault);
+        addSingleLine(restRayList[OIIIaIdx[0]], OIIIaIdx[0], m_nominalWidthDefaultEmission);
     }
-    std::vector<Int32> OIIIbIdx = findLineIdxInCatalog( restRayList, "[OIII](doublet-1/3)");
+    std::vector<Int32> OIIIbIdx = findLineIdxInCatalog( restRayList, "[OIII](doublet-1/3)", CRay::nType_Emission);
     if(OIIIbIdx.size()==1){
-        addSingleLine(restRayList[OIIIbIdx[0]], OIIIbIdx[0], nominalWidthDefault);
+        addSingleLine(restRayList[OIIIbIdx[0]], OIIIbIdx[0], m_nominalWidthDefaultEmission);
     }
 
     //Load NII lines
-    std::vector<Int32> NIIdx = findLineIdxInCatalog( restRayList, "[NII]");
+    std::vector<Int32> NIIdx = findLineIdxInCatalog( restRayList, "[NII]", CRay::nType_Emission);
     if(NIIdx.size()==2){
-        addSingleLine(restRayList[NIIdx[0]], NIIdx[0], nominalWidthDefault);
-        addSingleLine(restRayList[NIIdx[1]], NIIdx[1], nominalWidthDefault);
+        addSingleLine(restRayList[NIIdx[0]], NIIdx[0], m_nominalWidthDefaultEmission);
+        addSingleLine(restRayList[NIIdx[1]], NIIdx[1], m_nominalWidthDefaultEmission);
     }
 
     //Load OII line
-    std::vector<Int32> OIIdx = findLineIdxInCatalog( restRayList, "[OII]");
+    std::vector<Int32> OIIdx = findLineIdxInCatalog( restRayList, "[OII]", CRay::nType_Emission);
     if(OIIdx.size()==1){
         addSingleLine(restRayList[OIIdx[0]], OIIdx[0], 3.55);
     }
@@ -212,7 +279,7 @@ void CLineModelElementList::LoadCatalogSingleLines(const CRayCatalog::TRayVector
     {
         if ( FindElementIndex(iRestRay)==-1 )
         {
-            addSingleLine(restRayList[iRestRay], iRestRay, nominalWidthDefault);
+            addSingleLine(restRayList[iRestRay], iRestRay, m_nominalWidthDefaultEmission);
         }
     }
 }
@@ -245,11 +312,14 @@ void CLineModelElementList::fit(Float64 redshift, CLineModelResult::SLineModelSo
     }
 }
 
-std::vector<int> CLineModelElementList::findLineIdxInCatalog(const CRayCatalog::TRayVector& restRayList, std::string strTag)
+std::vector<int> CLineModelElementList::findLineIdxInCatalog(const CRayCatalog::TRayVector& restRayList, std::string strTag, Int32 type)
 {
     std::vector<Int32> indexes;
     for( UInt32 iRestRay=0; iRestRay<restRayList.size(); iRestRay++ )
     {
+        if(restRayList[iRestRay].GetType() != type){
+            continue;
+        }
         std::string name = restRayList[iRestRay].GetName();
         std::size_t foundstra = name.find(strTag.c_str());
         if (foundstra!=std::string::npos){
@@ -294,6 +364,9 @@ void CLineModelElementList::applyRules()
     Apply2SingleLinesAmplitudeRule("Halpha", "Hbeta", 1.0/2.86);
     Apply2SingleLinesAmplitudeRule("Hbeta", "Hgamma", 0.47);
     Apply2SingleLinesAmplitudeRule("Hgamma", "Hdelta", 1.0);
+
+    ApplyStrongHigherWeakRule();
+
     //    //*
     //    Float64 doublettol=0.2;
     //    Apply2LinesAmplitudeRule(restRayList, modelSolution.Amplitudes, modelSolution.OutsideLambdaRange, "[OIII](doublet-1)", "[OIII](doublet-1/3)", 0.334*(1.0+doublettol));
@@ -306,7 +379,43 @@ void CLineModelElementList::applyRules()
     //    //*/
 }
 
+Void CLineModelElementList::ApplyStrongHigherWeakRule()
+{
+    Float64 coeff = 1.0;
+    for( UInt32 iRestRayStrong=0; iRestRayStrong<m_RestRayList.size(); iRestRayStrong++ ) //loop on the strong lines
+    {
+        if(m_RestRayList[iRestRayStrong].GetForce() != CRay::nForce_Strong){
+            continue;
+        }
 
+        Int32 eIdxStrong = FindElementIndex(iRestRayStrong);
+        Int32 subeIdxStrong = m_Elements[eIdxStrong]->FindElementIndex(iRestRayStrong);
+
+        if(m_Elements[eIdxStrong]->IsOutsideLambdaRange(subeIdxStrong) == true){
+            continue;
+        }
+
+        for( UInt32 iRestRayWeak=0; iRestRayWeak<m_RestRayList.size(); iRestRayWeak++ ) //loop on the strong lines
+        {
+            if(m_RestRayList[iRestRayWeak].GetForce() != CRay::nForce_Weak){
+                continue;
+            }
+            if(m_RestRayList[iRestRayWeak].GetType() != m_RestRayList[iRestRayStrong].GetType() ){
+                continue;
+            }
+            Int32 eIdxWeak = FindElementIndex(iRestRayWeak);
+            Int32 subeIdxWeak = m_Elements[eIdxWeak]->FindElementIndex(iRestRayWeak);
+
+            if(m_Elements[eIdxWeak]->IsOutsideLambdaRange(subeIdxWeak) == true){
+                continue;
+            }
+
+            Float64 ampStrong = m_Elements[eIdxStrong]->GetFittedAmplitude(subeIdxStrong);
+            m_Elements[eIdxWeak]->LimitFittedAmplitude(subeIdxWeak, coeff*ampStrong);
+
+        }
+    }
+}
 
 Void CLineModelElementList::Apply2SingleLinesAmplitudeRule(std::string lineA, std::string lineB, Float64 coeff )
 {

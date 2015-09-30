@@ -31,6 +31,7 @@ public:
 
     Int32 GetSize();
     bool IsOutsideLambdaRange();
+    virtual bool IsOutsideLambdaRange(Int32 subeIdx)=0;
     Int32 FindElementIndex(Int32 LineCatalogIndex);
     virtual Int32 FindElementIndex(std::string LineTagStr)=0;
 

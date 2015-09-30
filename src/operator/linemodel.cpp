@@ -54,7 +54,7 @@ const COperatorResult* COperatorLineModel::Compute(const CSpectrum& spectrum, co
     TFloat64List sortedRedshifts = redshifts;
     std::sort(sortedRedshifts.begin(), sortedRedshifts.end());
 
-    Int32 typeFilter = CRay::nType_Emission;
+    Int32 typeFilter = -1;//CRay::nType_Absorption;//CRay::nType_Emission;
     Int32 forceFilter = -1;//CRay::nForce_Strong;
     CRayCatalog::TRayVector restRayList = restraycatalog.GetFilteredList(typeFilter, forceFilter);
 
@@ -112,7 +112,7 @@ const COperatorResult* COperatorLineModel::Compute(const CSpectrum& spectrum, co
     ComputeArea2(result);
 
 
-    /*
+    //*
     //  //saving the best model for viewing
     if(result->Extrema.size()>0){
         Float64 _chi=0.0;
@@ -125,7 +125,12 @@ const COperatorResult* COperatorLineModel::Compute(const CSpectrum& spectrum, co
         CSpectrum spcmodel = model.GetModelSpectrum();
 
         CSpectrumIOFitsWriter writer;
-        Bool retVal = writer.Write( "model.fits",  spcmodel);
+        Bool retVal1 = writer.Write( "model.fits",  spcmodel);
+
+        if(1 && retVal1){
+            CSpectrum s(spectrum);
+            Bool retVal2 = writer.Write( "spectrum.fits",  s);
+        }
     }
     //*/
     return result;

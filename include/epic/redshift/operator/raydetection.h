@@ -42,7 +42,7 @@ class CRayDetection : public CManagedObject
 
     typedef std::vector<SGaussParams>   TGaussParamsList;
 
-    CRayDetection(Int32 type=CRay::nType_Emission, Float64 cut=5.0, Float64 strongcut=2.0, Float64 winsize=250, Float64 minsize=3, Float64 maxsize=70);
+    CRayDetection(Int32 type=CRay::nType_Emission, Float64 cut=5.0, Float64 strongcut=2.0, Float64 winsize=250, Float64 minsize=3, Float64 maxsize=70, bool disableFitQualityCheck=false);
     virtual ~CRayDetection();
 
     const CRayDetectionResult* Compute(const CSpectrum& spectrum, const TLambdaRange& lambdaRange, const TInt32RangeList& resPeaks, const TInt32RangeList& resPeaksEnlarged);
@@ -62,6 +62,8 @@ private:
 
     Float64 m_cut;
     Float64 m_strongcut;
+
+    bool m_disableFitQualityCheck;
 
     TInt32Range LimitGaussianFitStartAndStop(Int32 i, const TInt32RangeList& peaksBorders, Int32 len, const CSpectrumSpectralAxis spectralAxis );
 

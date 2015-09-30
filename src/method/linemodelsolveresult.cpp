@@ -27,7 +27,7 @@ Void CLineModelSolveResult::Save( const COperatorResultStore& store, std::ostrea
     Float64 merit;
     std::string tplName;
 
-    GetBestRedshiftLogArea( store, redshift, merit );
+    GetBestRedshift( store, redshift, merit );
 
     stream <<  "#Redshifts\tMerit\tTemplate"<< std::endl;
 
@@ -45,7 +45,7 @@ Void CLineModelSolveResult::SaveLine( const COperatorResultStore& store, std::os
     Float64 merit;
     std::string tplName;
 
-    GetBestRedshiftLogArea( store, redshift, merit );
+    GetBestRedshift( store, redshift, merit );
 
     stream  << store.GetSpectrumName() << "\t"
                 << redshift << "\t"

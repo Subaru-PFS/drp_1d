@@ -40,13 +40,14 @@ public:
 
 private:
 
-    std::vector<Int32> findLineIdxInCatalog(const CRayCatalog::TRayVector& restRayList, std::string strTag);
+    std::vector<Int32> findLineIdxInCatalog(const CRayCatalog::TRayVector& restRayList, std::string strTag, Int32 type);
     Void Apply2SingleLinesAmplitudeRule(std::string lineA, std::string lineB, Float64 coeff );
 
     void addSingleLine(const CRay &r, Int32 index, Float64 nominalWidth);
     void addDoubleLine(const CRay &r1, const CRay &r2, Int32 index1, Int32 index2, Float64 nominalWidth, Float64 a1, Float64 a2);
 
     void applyRules();
+    Void ApplyStrongHigherWeakRule();
     Int32 FindElementIndex(Int32 LineCatalogIndex);
     Int32 FindElementIndex(std::string LineTagStr);
 
@@ -59,6 +60,9 @@ private:
     CSpectrumFluxAxis m_SpcFluxAxis;
 
     CRayCatalog::TRayVector m_RestRayList;
+
+    Float64 m_nominalWidthDefaultEmission;
+    Float64 m_nominalWidthDefaultAbsorption;
 };
 
 }
