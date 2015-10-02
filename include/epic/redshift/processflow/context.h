@@ -3,8 +3,9 @@
 
 #include <epic/core/common/ref.h>
 #include <epic/redshift/spectrum/template/template.h>
-#include <epic/redshift/operator/result.h>
-#include <epic/redshift/operator/resultstore.h>
+#include <epic/redshift/processflow/result.h>
+#include <epic/redshift/processflow/resultstore.h>
+#include <epic/redshift/processflow/parameterstore.h>
 
 #include <map>
 #include <string>
@@ -74,8 +75,16 @@ public:
 
     static std::string              GetMethodName( EMethod method );
 
+    Bool                            GetScopedParam( const char* name, TFloat64List& v, const TFloat64List& defaultValue = TFloat64List() );
+    Bool                            GetScopedParam( const char* name, TInt64List& v, const TInt64List& defaultValue = TInt64List() );
+    Bool                            GetScopedParam( const char* name, TBoolList& v, const TBoolList& defaultValue = TBoolList() );
+    Bool                            GetScopedParam( const char* name, Float64& v, Float64 defaultValue  = 0 );
+    Bool                            GetScopedParam( const char* name, Int64& v, Int64 defaultValue = 0 );
+    Bool                            GetScopedParam( const char* name, Bool& v, Bool defaultValue = true );
+
 private:
 
+    CMethodParameterStore           m_ParameterStore;
 
     CRef<CSpectrum>                 m_Spectrum;
     CRef<CSpectrum>                 m_SpectrumWithoutContinuum;

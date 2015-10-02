@@ -1,7 +1,7 @@
 #ifndef _REDSHIFT_OPERATOR_CHISQUARERESULT_
 #define _REDSHIFT_OPERATOR_CHISQUARERESULT_
 
-#include <epic/redshift/operator/result.h>
+#include <epic/redshift/processflow/result.h>
 #include <epic/core/common/datatypes.h>
 #include <epic/redshift/operator/operator.h>
 

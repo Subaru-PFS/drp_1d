@@ -214,3 +214,35 @@ const CProcessFlowContext::SParam& CProcessFlowContext::GetParams() const
 {
     return m_Params;
 }
+
+Bool CProcessFlowContext::GetScopedParam( const char* name, TFloat64List& v, const TFloat64List& defaultValue )
+{
+    return m_ParameterStore.Get( GetCurrentScopeName().c_str(), name, v, defaultValue );
+}
+
+Bool CProcessFlowContext::GetScopedParam( const char* name, TInt64List& v, const TInt64List& defaultValue )
+{
+    return m_ParameterStore.Get( GetCurrentScopeName().c_str(), name, v, defaultValue );
+}
+
+Bool CProcessFlowContext::GetScopedParam( const char* name, TBoolList& v, const TBoolList& defaultValue )
+{
+    return m_ParameterStore.Get( GetCurrentScopeName().c_str(), name, v, defaultValue );
+}
+
+Bool CProcessFlowContext::GetScopedParam( const char* name, Float64& v, Float64 defaultValue )
+{
+    return m_ParameterStore.Get( GetCurrentScopeName().c_str(), name, v, defaultValue );
+}
+
+Bool CProcessFlowContext::GetScopedParam( const char* name, Int64& v, Int64 defaultValue )
+{
+    return m_ParameterStore.Get( GetCurrentScopeName().c_str(), name, v, defaultValue );
+}
+
+Bool CProcessFlowContext::GetScopedParam( const char* name, Bool& v, Bool defaultValue )
+{
+    return m_ParameterStore.Get( GetCurrentScopeName().c_str(), name, v, defaultValue );
+}
+
+

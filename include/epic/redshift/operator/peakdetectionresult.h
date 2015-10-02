@@ -1,7 +1,7 @@
 #ifndef _REDSHIFT_OPERATOR_PEAKDETECTIONRESULT_
 #define _REDSHIFT_OPERATOR_PEAKDETECTIONRESULT_
 
-#include <epic/redshift/operator/result.h>
+#include <epic/redshift/processflow/result.h>
 #include <epic/core/common/datatypes.h>
 #include <epic/core/common/range.h>
 

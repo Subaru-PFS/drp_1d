@@ -1,4 +1,4 @@
-#include <epic/redshift/operator/resultstore.h>
+#include <epic/redshift/processflow/resultstore.h>
 
 #include <epic/core/debug/assert.h>
 #include <epic/redshift/spectrum/template/template.h>

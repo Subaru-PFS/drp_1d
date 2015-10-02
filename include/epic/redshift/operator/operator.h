@@ -3,7 +3,7 @@
 
 #include <epic/core/common/datatypes.h>
 #include <epic/core/common/range.h>
-#include <epic/redshift/operator/result.h>
+#include <epic/redshift/processflow/result.h>
 
 #include <vector>
 

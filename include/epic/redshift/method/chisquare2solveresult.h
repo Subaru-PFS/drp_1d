@@ -1,7 +1,7 @@
 #ifndef _REDSHIFT_OPERATOR_CHISQUARE2SOLVERESULT_
 #define _REDSHIFT_OPERATOR_CHISQUARE2SOLVERESULT_
 
-#include <epic/redshift/operator/result.h>
+#include <epic/redshift/processflow/result.h>
 #include <epic/core/common/datatypes.h>
 #include <epic/redshift/ray/catalog.h>
 

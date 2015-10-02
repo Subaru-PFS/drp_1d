@@ -6,7 +6,7 @@
 #include <epic/redshift/spectrum/template/catalog.h>
 #include <epic/redshift/operator/linemodel.h>
 #include <epic/redshift/extremum/extremum.h>
-#include <epic/redshift/operator/resultstore.h>
+#include <epic/redshift/processflow/resultstore.h>
 
 using namespace NSEpic;
 using namespace std;

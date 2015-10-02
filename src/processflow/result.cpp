@@ -1,4 +1,4 @@
-#include <epic/redshift/operator/result.h>
+#include <epic/redshift/processflow/result.h>
 
 using namespace NSEpic;
 

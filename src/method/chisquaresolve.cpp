@@ -7,7 +7,7 @@
 #include <epic/redshift/operator/chisquare.h>
 #include <epic/redshift/operator/chisquare2.h>
 #include <epic/redshift/extremum/extremum.h>
-#include <epic/redshift/operator/resultstore.h>
+#include <epic/redshift/processflow/resultstore.h>
 
 using namespace NSEpic;
 using namespace std;
