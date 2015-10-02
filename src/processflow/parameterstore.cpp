@@ -7,17 +7,17 @@ using namespace NSEpic;
 namespace bpt = boost::property_tree;
 
 
-CMethodParameterStore::CMethodParameterStore()
+CParameterStore::CParameterStore()
 {
 
 }
 
-CMethodParameterStore::~CMethodParameterStore()
+CParameterStore::~CParameterStore()
 {
 
 }
 
-Bool CMethodParameterStore::Get( const char* path, const char* name, TBoolList& v, const TBoolList& defaultValue )
+Bool CParameterStore::Get( const char* path, const char* name, TBoolList& v, const TBoolList& defaultValue )
 {
     std::string finalPath = GetQualifiedName( path, name );
 
@@ -49,7 +49,7 @@ Bool CMethodParameterStore::Get( const char* path, const char* name, TBoolList& 
     return true;
 }
 
-Bool CMethodParameterStore::Get( const char* path, const char* name, TInt64List& v, const TInt64List& defaultValue )
+Bool CParameterStore::Get( const char* path, const char* name, TInt64List& v, const TInt64List& defaultValue )
 {
     std::string finalPath = GetQualifiedName( path, name );
 
@@ -81,7 +81,7 @@ Bool CMethodParameterStore::Get( const char* path, const char* name, TInt64List&
     return true;
 }
 
-Bool CMethodParameterStore::Get( const char* path, const char* name, TFloat64List& v, const TFloat64List& defaultValue )
+Bool CParameterStore::Get( const char* path, const char* name, TFloat64List& v, const TFloat64List& defaultValue )
 {
     std::string finalPath = GetQualifiedName( path, name );
 
@@ -113,7 +113,7 @@ Bool CMethodParameterStore::Get( const char* path, const char* name, TFloat64Lis
     return true;
 }
 
-Bool CMethodParameterStore::Get( const char* path, const char* name, Float64& v, Float64 defaultValue )
+Bool CParameterStore::Get( const char* path, const char* name, Float64& v, Float64 defaultValue )
 {
     std::string finalPath = GetQualifiedName( path, name );
 
@@ -130,7 +130,7 @@ Bool CMethodParameterStore::Get( const char* path, const char* name, Float64& v,
     return true;
 }
 
-Bool CMethodParameterStore::Get( const char* path, const char* name, Int64& v, Int64 defaultValue )
+Bool CParameterStore::Get( const char* path, const char* name, Int64& v, Int64 defaultValue )
 {
     std::string finalPath = GetQualifiedName( path, name );
 
@@ -147,7 +147,7 @@ Bool CMethodParameterStore::Get( const char* path, const char* name, Int64& v, I
     return true;
 }
 
-Bool CMethodParameterStore::Get( const char* path, const char* name, Bool& v, Bool defaultValue )
+Bool CParameterStore::Get( const char* path, const char* name, Bool& v, Bool defaultValue )
 {
     std::string finalPath = GetQualifiedName( path, name );
 
@@ -164,7 +164,7 @@ Bool CMethodParameterStore::Get( const char* path, const char* name, Bool& v, Bo
     return true;
 }
 
-std::string CMethodParameterStore::GetQualifiedName( const char* path, const char* name )
+std::string CParameterStore::GetQualifiedName( const char* path, const char* name )
 {
     std::string finalPath;
     if( path ) {
@@ -176,13 +176,13 @@ std::string CMethodParameterStore::GetQualifiedName( const char* path, const cha
     return finalPath;
 }
 
-Bool CMethodParameterStore::Save( const char* path ) const
+Bool CParameterStore::Save( const char* path ) const
 {
     bpt::json_parser::write_json( path, m_PropertyTree );
     return true;
 }
 
-Bool CMethodParameterStore::Load( const char* path )
+Bool CParameterStore::Load( const char* path )
 {
     bpt::json_parser::read_json( path, m_PropertyTree );
     return true;

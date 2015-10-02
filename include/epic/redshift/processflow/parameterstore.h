@@ -8,14 +8,14 @@ namespace NSEpic
 {
 
 
-class CMethodParameterStore
+class CParameterStore
 {
 
 public:
 
 
-    CMethodParameterStore();
-    virtual ~CMethodParameterStore();
+    CParameterStore();
+    virtual ~CParameterStore();
 
     Bool Get( const char* path, const char* name, TFloat64List& v, const TFloat64List& defaultValue = TFloat64List() );
     Bool Get( const char* path, const char* name, TInt64List& v, const TInt64List& defaultValue = TInt64List() );
