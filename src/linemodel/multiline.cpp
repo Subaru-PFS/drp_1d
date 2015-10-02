@@ -37,6 +37,25 @@ CMultiLine::~CMultiLine()
 }
 
 
+Float64 CMultiLine::GetLineWidth(Float64 lambda, Float64 z)
+{
+    Float64 sigma = -1;
+    if( m_LineWidthType == nWidthType_PSFInstrumentDriven){
+        sigma = lambda/m_Resolution/m_FWHM_factor;
+    }else if( m_LineWidthType == nWidthType_ZDriven){
+        sigma = m_NominalWidth*(1+z);
+    }
+
+//    Float64 v = 400;
+//    Float64 c = 300000.0;
+//    Float64 minSigma = v/c*lambda;//, useless /(1+z)*(1+z);
+//    if(sigma < minSigma){
+//        sigma = minSigma;
+//    }
+
+    return sigma;
+}
+
 void CMultiLine::prepareSupport(const CSpectrumSpectralAxis& spectralAxis, Float64 redshift)
 {    
     m_OutsideLambdaRange=true;
@@ -45,7 +64,7 @@ void CMultiLine::prepareSupport(const CSpectrumSpectralAxis& spectralAxis, Float
     m_OutsideLambdaRangeList.resize(m_Rays.size());
     for(Int32 i=0; i<m_Rays.size(); i++){
         Float64 mu = m_Rays[i].GetPosition()*(1+redshift);
-        Float64 c = m_NominalWidth*(1.0+redshift);
+        Float64 c = GetLineWidth(mu, redshift);
         Float64 winsize = m_NSigmaSupport*c;
         m_Start[i] = spectralAxis.GetIndexAtWaveLength(mu-winsize/2.0);
         m_End[i] = spectralAxis.GetIndexAtWaveLength(mu+winsize/2.0);
@@ -113,10 +132,12 @@ void CMultiLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const C
 
     std::vector<Float64> mu;
     mu.resize(m_Rays.size());
+    std::vector<Float64> c;
+    c.resize(m_Rays.size());
     for(Int32 k2=0; k2<m_Rays.size(); k2++){ //loop for the signal synthesis
         mu[k2] = m_Rays[k2].GetPosition()*(1+redshift);
+        c[k2] = GetLineWidth(mu[k2], redshift);
     }
-    Float64 c = m_NominalWidth*(1.0+redshift);
 
     for(Int32 k=0; k<m_Rays.size(); k++){ //loop for the intervals
         if(m_OutsideLambdaRangeList[k]){
@@ -134,7 +155,7 @@ void CMultiLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const C
                 if(m_OutsideLambdaRangeList[k2]){
                     continue;
                 }
-                yg += m_SignFactors[k2] * m_NominalAmplitudes[k2] * exp (-1.*(x-mu[k2])*(x-mu[k2])/(2*c*c));
+                yg += m_SignFactors[k2] * m_NominalAmplitudes[k2] * exp (-1.*(x-mu[k2])*(x-mu[k2])/(2*c[k2]*c[k2]));
             }
             num++;
             err2 = 1.0 / (error[i] * error[i]);
@@ -168,7 +189,7 @@ void CMultiLine::addToSpectrumModel( const CSpectrumSpectralAxis& modelspectralA
         return;
     }
 
-    Float64 c = m_NominalWidth*(1.0+redshift);
+
     Float64* flux = modelfluxAxis.GetSamples();
     const Float64* spectral = modelspectralAxis.GetSamples();
     for(Int32 k=0; k<m_Rays.size(); k++){ //loop on the interval
@@ -188,6 +209,7 @@ void CMultiLine::addToSpectrumModel( const CSpectrumSpectralAxis& modelspectralA
                 }
                 Float64 A = m_FittedAmplitudes[k2];
                 Float64 mu = m_Rays[k2].GetPosition()*(1+redshift);
+                Float64 c = GetLineWidth(mu, redshift);
                 Yi += m_SignFactors[k2] * A * exp (-1.*(x-mu)*(x-mu)/(2*c*c));
             }
             flux[i] += Yi;

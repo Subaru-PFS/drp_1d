@@ -54,7 +54,7 @@ const COperatorResult* COperatorLineModel::Compute(const CSpectrum& spectrum, co
     TFloat64List sortedRedshifts = redshifts;
     std::sort(sortedRedshifts.begin(), sortedRedshifts.end());
 
-    Int32 typeFilter = -1;//CRay::nType_Absorption;//CRay::nType_Emission;
+    Int32 typeFilter = CRay::nType_Emission;//CRay::nType_Absorption;//CRay::nType_Emission;
     Int32 forceFilter = -1;//CRay::nForce_Strong;
     CRayCatalog::TRayVector restRayList = restraycatalog.GetFilteredList(typeFilter, forceFilter);
 
@@ -112,7 +112,7 @@ const COperatorResult* COperatorLineModel::Compute(const CSpectrum& spectrum, co
     ComputeArea2(result);
 
 
-    //*
+    /*
     //  //saving the best model for viewing
     if(result->Extrema.size()>0){
         Float64 _chi=0.0;
@@ -327,7 +327,7 @@ void COperatorLineModel::ComputeArea2(CLineModelResult* results)
         Float64 b2sur4c = (Float64)(C(1)*C(1)/((Float64)(4.0*C(2))));
         Float64 logK = ( -(a - b2sur4c)/2.0 );
         Float64 logarea = log(sigma) + logK + log(2.0*M_PI);
-        if(1){
+        if(0){
             Log.LogInfo("Extrema: %g", results->Extrema[indz]);
             Log.LogInfo("# best fit: Y = %g + %g X + %g X^2", C(0), C(1), C(2));
             //Log.LogInfo("# covariance matrix:\n");

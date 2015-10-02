@@ -29,6 +29,7 @@ public:
     bool IsOutsideLambdaRange(Int32 subeIdx);
 
 private:
+    Float64 GetLineWidth(Float64 lambda, Float64 z);
     Int32 FindElementIndex(std::string LineTagStr);
     void prepareSupport(const CSpectrumSpectralAxis& spectralAxis, Float64 redshift);
 

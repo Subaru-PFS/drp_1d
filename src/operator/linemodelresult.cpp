@@ -146,6 +146,12 @@ Void CLineModelResult::Save( const COperatorResultStore& store, std::ostream& st
                     typeStr = "E";
                 }
                 stream <<  typeStr << "\t";
+                std::string name = restRayList[j].GetName();
+                Int32 nstr = name.size();
+                for(int jstr=0; jstr<18-nstr; jstr++){
+                    name = name.append(" ");
+                }
+                stream <<  std::fixed << name << "\t";
                 stream <<  std::fixed << restRayList[j].GetPosition() << "\t";
                 stream << std::scientific <<  LineModelSolutions[idx].Amplitudes[j] << std::endl;
             }

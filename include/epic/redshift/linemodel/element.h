@@ -18,6 +18,11 @@ class CLineModelElement
 {
 
 public:
+    enum ELineWidthType
+    {
+        nWidthType_PSFInstrumentDriven = 1,
+        nWidthType_ZDriven = 2,
+    };
 
     CLineModelElement();
     ~CLineModelElement();
@@ -36,6 +41,10 @@ public:
     virtual Int32 FindElementIndex(std::string LineTagStr)=0;
 
 protected:
+
+    Int32 m_LineWidthType;
+    Float64 m_Resolution;
+    Float64 m_FWHM_factor;
 
     Float64 m_OutsideLambdaRangeOverlapThreshold;
     bool m_OutsideLambdaRange;

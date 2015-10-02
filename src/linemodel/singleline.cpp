@@ -40,7 +40,7 @@ CSingleLine::~CSingleLine()
 void CSingleLine::prepareSupport(const CSpectrumSpectralAxis& spectralAxis, Float64 redshift)
 {
     Float64 mu = m_Ray.GetPosition()*(1+redshift);
-    Float64 c = m_NominalWidth*(1.0+redshift);
+    Float64 c = GetLineWidth(mu, redshift);
     Float64 winsize = m_NSigmaSupport*c;
     m_Start = spectralAxis.GetIndexAtWaveLength(mu-winsize/2.0);
     m_End = spectralAxis.GetIndexAtWaveLength(mu+winsize/2.0);
@@ -51,6 +51,23 @@ void CSingleLine::prepareSupport(const CSpectrumSpectralAxis& spectralAxis, Floa
     }else{
         m_OutsideLambdaRange=false;
     }
+}
+
+Float64 CSingleLine::GetLineWidth(Float64 lambda, Float64 z){
+    Float64 sigma = -1;
+    if( m_LineWidthType == nWidthType_PSFInstrumentDriven){
+        sigma = lambda/m_Resolution/m_FWHM_factor;
+    }else if( m_LineWidthType == nWidthType_ZDriven){
+        sigma = m_NominalWidth*(1+z);
+    }
+
+//    Float64 v = 400;
+//    Float64 c = 300000.0;
+//    Float64 minSigma = v/c*lambda;//, useless /(1+z)*(1+z);
+//    if(sigma < minSigma){
+//        sigma = minSigma;
+//    }
+    return sigma;
 }
 
 void CSingleLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis, Float64  redshift)
@@ -67,7 +84,7 @@ void CSingleLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const 
     const Float64* spectral = spectralAxis.GetSamples();
     const Float64* error = fluxAxis.GetError();
     Float64 mu = m_Ray.GetPosition()*(1+redshift);
-    Float64 c = m_NominalWidth*(1.0+redshift);
+    Float64 c = GetLineWidth(mu, redshift);
 
     Float64 y = 0.0;
     Float64 x = 0.0;
@@ -186,7 +203,7 @@ void CSingleLine::addToSpectrumModel( const CSpectrumSpectralAxis& modelspectral
         return;
     }
     Float64 mu = m_Ray.GetPosition()*(1+redshift);
-    Float64 c = m_NominalWidth*(1.0+redshift);
+    Float64 c = GetLineWidth(mu, redshift);
     Float64* flux = modelfluxAxis.GetSamples();
     const Float64* spectral = modelspectralAxis.GetSamples();
 

@@ -9,6 +9,11 @@ using namespace NSEpic;
 
 CLineModelElement::CLineModelElement()
 {
+    //m_LineWidthType = nWidthType_PSFInstrumentDriven;
+    m_LineWidthType = nWidthType_ZDriven;
+    m_Resolution = 250.0;
+    m_FWHM_factor = 2.35;
+
     m_OutsideLambdaRange = true;
     m_OutsideLambdaRangeOverlapThreshold = 0.1;
     //example: 0.1 means 10% of the line is allowed to be outside the spectrum with the line still considered inside the lambda range

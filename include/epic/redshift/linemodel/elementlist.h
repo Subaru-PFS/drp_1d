@@ -47,7 +47,9 @@ private:
     void addDoubleLine(const CRay &r1, const CRay &r2, Int32 index1, Int32 index2, Float64 nominalWidth, Float64 a1, Float64 a2);
 
     void applyRules();
-    Void ApplyStrongHigherWeakRule();
+    Void ApplyStrongHigherWeakRule( Int32 lineType );
+    Float64 FindHighestStrongLineAmp( Int32 lineType );
+
     Int32 FindElementIndex(Int32 LineCatalogIndex);
     Int32 FindElementIndex(std::string LineTagStr);
 
