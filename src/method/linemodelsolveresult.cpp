@@ -21,7 +21,7 @@ CLineModelSolveResult::~CLineModelSolveResult()
 
 }
 
-Void CLineModelSolveResult::Save( const COperatorResultStore& store, std::ostream& stream ) const
+Void CLineModelSolveResult::Save( const CDataStore& store, std::ostream& stream ) const
 {
     Float64 redshift;
     Float64 merit;
@@ -39,7 +39,7 @@ Void CLineModelSolveResult::Save( const COperatorResultStore& store, std::ostrea
 }
 
 
-Void CLineModelSolveResult::SaveLine( const COperatorResultStore& store, std::ostream& stream ) const
+Void CLineModelSolveResult::SaveLine( const CDataStore& store, std::ostream& stream ) const
 {
     Float64 redshift;
     Float64 merit;
@@ -54,7 +54,7 @@ Void CLineModelSolveResult::SaveLine( const COperatorResultStore& store, std::os
                 << "LineModelSolve" << std::endl;
 }
 
-Bool CLineModelSolveResult::GetBestRedshift( const COperatorResultStore& store, Float64& redshift, Float64& merit ) const
+Bool CLineModelSolveResult::GetBestRedshift( const CDataStore& store, Float64& redshift, Float64& merit ) const
 {
 
     std::string scope = store.GetScope( this ) + "linemodelsolve.linemodel";
@@ -82,7 +82,7 @@ Bool CLineModelSolveResult::GetBestRedshift( const COperatorResultStore& store, 
 
 }
 
-Bool CLineModelSolveResult::GetBestRedshiftLogArea( const COperatorResultStore& store, Float64& redshift, Float64& merit ) const
+Bool CLineModelSolveResult::GetBestRedshiftLogArea( const CDataStore& store, Float64& redshift, Float64& merit ) const
 {
 
     std::string scope = store.GetScope( this ) + "linemodelsolve.linemodel";

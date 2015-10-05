@@ -22,9 +22,9 @@ public:
     CBlindSolveResult();
     virtual ~CBlindSolveResult();
 
-    Void Save( const COperatorResultStore& store, std::ostream& stream ) const;
-    Void SaveLine( const COperatorResultStore& store, std::ostream& stream ) const;
-    Bool GetBestFitResult( const COperatorResultStore& store, Float64& redshift, Float64& merit, std::string& tplName ) const;
+    Void Save( const CDataStore& store, std::ostream& stream ) const;
+    Void SaveLine( const CDataStore& store, std::ostream& stream ) const;
+    Bool GetBestFitResult( const CDataStore& store, Float64& redshift, Float64& merit, std::string& tplName ) const;
 };
 
 

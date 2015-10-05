@@ -22,9 +22,9 @@ public:
     CLineMatchingSolveResult();
     virtual ~CLineMatchingSolveResult();
 
-    Void Save( const COperatorResultStore& store, std::ostream& stream ) const;
-    Void SaveLine( const COperatorResultStore& store, std::ostream& stream ) const;
-    Bool GetBestResult( const COperatorResultStore& store, Float64& redshift, Float64& merit ) const;
+    Void Save( const CDataStore& store, std::ostream& stream ) const;
+    Void SaveLine( const CDataStore& store, std::ostream& stream ) const;
+    Bool GetBestResult( const CDataStore& store, Float64& redshift, Float64& merit ) const;
 
 };
 

@@ -20,8 +20,8 @@ public:
     CRayDetectionResult();
     virtual ~CRayDetectionResult();
 
-    Void Save( const COperatorResultStore& store, std::ostream& stream ) const;
-    Void SaveLine( const COperatorResultStore& store, std::ostream& stream ) const;
+    Void Save( const CDataStore& store, std::ostream& stream ) const;
+    Void SaveLine( const CDataStore& store, std::ostream& stream ) const;
 
     CRayCatalog RayCatalog;
     std::vector<std::string> PeakListDetectionStatus;

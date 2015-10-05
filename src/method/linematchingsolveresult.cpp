@@ -19,7 +19,7 @@ CLineMatchingSolveResult::~CLineMatchingSolveResult()
 
 }
 
-Void CLineMatchingSolveResult::Save( const COperatorResultStore& store, std::ostream& stream ) const
+Void CLineMatchingSolveResult::Save( const CDataStore& store, std::ostream& stream ) const
 {
     Float64 redshift;
     Float64 merit;
@@ -33,7 +33,7 @@ Void CLineMatchingSolveResult::Save( const COperatorResultStore& store, std::ost
                 << merit << std::endl;
 }
 
-Void CLineMatchingSolveResult::SaveLine( const COperatorResultStore& store, std::ostream& stream ) const
+Void CLineMatchingSolveResult::SaveLine( const CDataStore& store, std::ostream& stream ) const
 {
     Float64 redshift;
     Float64 merit;
@@ -45,7 +45,7 @@ Void CLineMatchingSolveResult::SaveLine( const COperatorResultStore& store, std:
                 << "LineMatchingSolve" << std::endl;
 }
 
-Bool CLineMatchingSolveResult::GetBestResult(const COperatorResultStore& store, Float64& redshift, Float64& merit) const
+Bool CLineMatchingSolveResult::GetBestResult(const CDataStore& store, Float64& redshift, Float64& merit) const
 {
     std::string scope = store.GetScope( this ) + "linematchingsolve.raymatching";
     const CRayMatchingResult* Results = (CRayMatchingResult*)store.GetGlobalResult(scope.c_str());

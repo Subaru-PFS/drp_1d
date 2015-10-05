@@ -8,7 +8,7 @@
 #include <epic/redshift/operator/chisquare.h>
 #include <epic/redshift/operator/chisquare2.h>
 #include <epic/redshift/extremum/extremum.h>
-#include <epic/redshift/processflow/resultstore.h>
+#include <epic/redshift/processflow/datastore.h>
 
 using namespace NSEpic;
 using namespace std;
@@ -26,13 +26,13 @@ CMethodChisquare2Solve::~CMethodChisquare2Solve()
 }
 
 
-const CChisquare2SolveResult* CMethodChisquare2Solve::Compute(  COperatorResultStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
+const CChisquare2SolveResult* CMethodChisquare2Solve::Compute(  CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
                                                         const CTemplateCatalog& tplCatalog, const TTemplateCategoryList& tplCategoryList,
                                                         const TFloat64Range& lambdaRange, const TFloat64List& redshifts, Float64 overlapThreshold )
 {
     Bool storeResult = false;
 
-    COperatorResultStore::CAutoScope resultScope( resultStore, "chisquare2solve" );
+    CDataStore::CAutoScope resultScope( resultStore, "chisquare2solve" );
     Int32 _type = CChisquare2SolveResult::nType_noContinuum;
     for( UInt32 i=0; i<tplCategoryList.size(); i++ )
     {
@@ -60,7 +60,7 @@ const CChisquare2SolveResult* CMethodChisquare2Solve::Compute(  COperatorResultS
     return NULL;
 }
 
-Bool CMethodChisquare2Solve::Solve( COperatorResultStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont, const CTemplate& tpl, const CTemplate& tplWithoutCont,
+Bool CMethodChisquare2Solve::Solve( CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont, const CTemplate& tpl, const CTemplate& tplWithoutCont,
                                const TFloat64Range& lambdaRange, const TFloat64List& redshifts, Float64 overlapThreshold, Int32 spctype )
 {
     CSpectrum _spc;

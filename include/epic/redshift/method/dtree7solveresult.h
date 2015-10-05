@@ -22,8 +22,8 @@ public:
     CDTree7SolveResult();
     virtual ~CDTree7SolveResult();
 
-    Void Save( const COperatorResultStore& store, std::ostream& stream ) const;
-    Void SaveLine( const COperatorResultStore& store, std::ostream& stream ) const;
+    Void Save( const CDataStore& store, std::ostream& stream ) const;
+    Void SaveLine( const CDataStore& store, std::ostream& stream ) const;
 
 };
 

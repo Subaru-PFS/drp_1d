@@ -2,7 +2,6 @@
 #define _REDSHIFT_OPERATOR_RESULTSTORE_
 
 #include <epic/core/common/datatypes.h>
-#include <epic/core/common/managedobject.h>
 #include <epic/redshift/processflow/result.h>
 
 #include <boost/filesystem.hpp>
@@ -13,61 +12,47 @@ namespace NSEpic
 {
 
 class CTemplate;
+class CDataStore;
 
-class COperatorResultStore : public CManagedObject
+class COperatorResultStore
 {
 
 public:
 
     typedef std::map< std::string, CConstRef<COperatorResult> > TResultsMap;
     typedef std::map< std::string, TResultsMap>                 TPerTemplateResultsMap;
-    typedef std::vector<std::string>                            TScopeStack;
 
-    class CAutoScope {
-    public:
-        CAutoScope( COperatorResultStore& store, const char* name );
-        ~CAutoScope();
-    private:
-        COperatorResultStore* m_Store;
-    };
 
-    Float64 m_dtreepathnum; //Todo, should be handled differently...
+
 
     COperatorResultStore();
     virtual ~COperatorResultStore();
 
-    Void  SetSpectrumName( const char* name );
-    const std::string& GetSpectrumName() const;
-
-    Void  StorePerTemplateResult( const CTemplate& t, const char* name, const COperatorResult& result );
-    Void  StoreGlobalResult( const char* name, const COperatorResult& result );
+    Void                    StorePerTemplateResult( const CTemplate& t, const char* path, const char* name, const COperatorResult& result );
+    Void                    StoreGlobalResult( const char* path, const char* name, const COperatorResult& result );
 
     const COperatorResult*  GetPerTemplateResult( const CTemplate& t, const char* name ) const;
     TOperatorResultMap      GetPerTemplateResult( const char* name ) const;
     const COperatorResult*  GetGlobalResult( const char* name ) const;
 
-    Void SaveRedshiftResultHeader( const char* dir );
-    Void SaveRedshiftResult( const char* dir );
-    Void SaveAllResults( const char* dir ) const;
+    Void                    SaveRedshiftResultHeader( const char* dir );
+    Void                    SaveRedshiftResult( const CDataStore& store, const char* dir );
+    Void                    SaveAllResults( const CDataStore& store, const char* dir ) const;
 
-    Void PushScope( const char* name );
-    Void PopScope();
+    Void                    SetSpectrumName( const char* name );
+    const std::string&      GetSpectrumName() const;
 
-    std::string GetCurrentScopeName() const;
-    std::string GetScope(CConstRef<COperatorResult>  result) const;
+    std::string             GetScope(CConstRef<COperatorResult>  result) const;
 
 protected:
 
-    void StoreResult( TResultsMap& map, const char* name, const COperatorResult& result );
+    void StoreResult( TResultsMap& map, const char* path, const char* name, const COperatorResult& result );
 
     void CreateResultStorage( std::fstream& stream, const boost::filesystem::path& path, const boost::filesystem::path& baseDir ) const;
 
     TPerTemplateResultsMap          m_PerTemplateResults;
     TResultsMap                     m_GlobalResults;
-
     std::string                     m_SpectrumName;
-
-    TScopeStack                     m_ScopeStack;
 
 };
 

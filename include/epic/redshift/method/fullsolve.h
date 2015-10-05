@@ -12,7 +12,7 @@ namespace NSEpic
 
 class CSpectrum;
 class CTemplateCatalog;
-class COperatorResultStore;
+class CDataStore;
 
 class COperatorFullSolve : public CManagedObject
 {
@@ -24,14 +24,14 @@ public:
     COperatorFullSolve();
     ~COperatorFullSolve();
 
-    const CFullSolveResult* Compute(COperatorResultStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
+    const CFullSolveResult* Compute( CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
                                         const CTemplateCatalog& tplCatalog, const TTemplateCategoryList& tplCategoryList,
                                         const TFloat64Range& lambdaRange, const TFloat64Range& redshiftsRange, Float64 redshiftStep, Float64 overlapThreshold  );
 
 
 private:
 
-    Bool SolveBrute( COperatorResultStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont, const CTemplate& tpl, const CTemplate& tplWithoutCont,
+    Bool SolveBrute( CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont, const CTemplate& tpl, const CTemplate& tplWithoutCont,
                                    const TFloat64Range& lambdaRange, const TFloat64Range& redshiftsRange, Float64 redshiftStep, Float64 overlapThreshold );
 };
 

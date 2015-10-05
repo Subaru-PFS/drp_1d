@@ -11,7 +11,7 @@ namespace NSEpic
 
 class CSpectrum;
 class CTemplateCatalog;
-class COperatorResultStore;
+class CDataStore;
 
 class COperatorCorrelationSolve : public CManagedObject
 {
@@ -23,7 +23,7 @@ public:
     COperatorCorrelationSolve();
     ~COperatorCorrelationSolve();
 
-    const CCorrelationSolveResult* Compute(   COperatorResultStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
+    const CCorrelationSolveResult* Compute( CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
                                         const CTemplateCatalog& tplCatalog, const TTemplateCategoryList& tplCategoryList,
                                         const TFloat64Range& lambdaRange, const TFloat64Range& redshiftsRange, Float64 redshiftStep,
                                         Float64 overlapThreshold  );
@@ -31,7 +31,7 @@ public:
 
 private:
 
-    Bool Solve( COperatorResultStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont, const CTemplate& tpl, const CTemplate& tplWithoutCont,
+    Bool Solve( CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont, const CTemplate& tpl, const CTemplate& tplWithoutCont,
                                    const TFloat64Range& lambdaRange, const TFloat64Range& redshiftsRange, Float64 redshiftStep, Float64 overlapThreshold );
 };
 

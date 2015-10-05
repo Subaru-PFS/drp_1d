@@ -20,7 +20,7 @@ CChisquareSolveResult::~CChisquareSolveResult()
 
 }
 
-Void CChisquareSolveResult::Save( const COperatorResultStore& store, std::ostream& stream ) const
+Void CChisquareSolveResult::Save( const CDataStore& store, std::ostream& stream ) const
 {
     Float64 redshift;
     Float64 merit;
@@ -43,7 +43,7 @@ Void CChisquareSolveResult::Save( const COperatorResultStore& store, std::ostrea
     stream << detailStr.c_str();
 }
 
-Bool CChisquareSolveResult::GetBestRedshiftPerTemplateString( const COperatorResultStore& store, std::string& output ) const
+Bool CChisquareSolveResult::GetBestRedshiftPerTemplateString( const CDataStore& store, std::string& output ) const
 {
 
     std::string scope = store.GetScope( this ) + "chisquaresolve.chisquare";
@@ -88,7 +88,7 @@ Bool CChisquareSolveResult::GetBestRedshiftPerTemplateString( const COperatorRes
 
 }
 
-Void CChisquareSolveResult::SaveLine( const COperatorResultStore& store, std::ostream& stream ) const
+Void CChisquareSolveResult::SaveLine( const CDataStore& store, std::ostream& stream ) const
 {
     Float64 redshift;
     Float64 merit;
@@ -103,7 +103,7 @@ Void CChisquareSolveResult::SaveLine( const COperatorResultStore& store, std::os
                 << "ChisquareSolve" << std::endl;
 }
 
-Bool CChisquareSolveResult::GetBestRedshift( const COperatorResultStore& store, Float64& redshift, Float64& merit, std::string& tplName ) const
+Bool CChisquareSolveResult::GetBestRedshift( const CDataStore& store, Float64& redshift, Float64& merit, std::string& tplName ) const
 {
 
     std::string scope = store.GetScope( this ) + "chisquaresolve.chisquare";

@@ -6,7 +6,7 @@
 #include <epic/redshift/operator/correlation.h>
 #include <epic/redshift/operator/chisquare.h>
 #include <epic/redshift/extremum/extremum.h>
-#include <epic/redshift/processflow/resultstore.h>
+#include <epic/redshift/processflow/datastore.h>
 
 using namespace NSEpic;
 using namespace std;
@@ -23,13 +23,13 @@ COperatorFullSolve::~COperatorFullSolve()
 
 }
 
-const CFullSolveResult* COperatorFullSolve::Compute(  COperatorResultStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
+const CFullSolveResult* COperatorFullSolve::Compute(  CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
                                                         const CTemplateCatalog& tplCatalog, const TTemplateCategoryList& tplCategoryList,
                                                         const TFloat64Range& lambdaRange, const TFloat64Range& redshiftsRange, Float64 redshiftStep, Float64 overlapThreshold )
 {
     Bool storeResult = false;
 
-    COperatorResultStore::CAutoScope resultScope( resultStore, "fullsolve" );
+    CDataStore::CAutoScope resultScope( resultStore, "fullsolve" );
 
     for( UInt32 i=0; i<tplCategoryList.size(); i++ )
     {
@@ -56,7 +56,7 @@ const CFullSolveResult* COperatorFullSolve::Compute(  COperatorResultStore& resu
     return NULL;
 }
 
-Bool COperatorFullSolve::SolveBrute( COperatorResultStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont, const CTemplate& tpl, const CTemplate& tplWithoutCont,
+Bool COperatorFullSolve::SolveBrute( CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont, const CTemplate& tpl, const CTemplate& tplWithoutCont,
                                const TFloat64Range& lambdaRange, const TFloat64Range& redshiftRange, Float64 redshiftStep,
                                Float64 overlapThreshold )
 {

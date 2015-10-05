@@ -6,7 +6,7 @@
 #include <epic/redshift/spectrum/template/catalog.h>
 #include <epic/redshift/operator/linemodel.h>
 #include <epic/redshift/extremum/extremum.h>
-#include <epic/redshift/processflow/resultstore.h>
+#include <epic/redshift/processflow/datastore.h>
 
 using namespace NSEpic;
 using namespace std;
@@ -24,11 +24,11 @@ CLineModelSolve::~CLineModelSolve()
 }
 
 
-const CLineModelSolveResult* CLineModelSolve::Compute(  COperatorResultStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont, const CRayCatalog& restraycatalog,
+const CLineModelSolveResult* CLineModelSolve::Compute(  CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont, const CRayCatalog& restraycatalog,
                                                         const TFloat64Range& lambdaRange, const TFloat64List& redshifts )
 {
     Bool storeResult = false;
-    COperatorResultStore::CAutoScope resultScope( resultStore, "linemodelsolve" );
+    CDataStore::CAutoScope resultScope( resultStore, "linemodelsolve" );
 
     Solve( resultStore, spc, spcWithoutCont, restraycatalog, lambdaRange, redshifts);
     storeResult = true;
@@ -43,7 +43,7 @@ const CLineModelSolveResult* CLineModelSolve::Compute(  COperatorResultStore& re
     return NULL;
 }
 
-Bool CLineModelSolve::Solve( COperatorResultStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont, const CRayCatalog& restraycatalog,
+Bool CLineModelSolve::Solve( CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont, const CRayCatalog& restraycatalog,
                              const TFloat64Range& lambdaRange, const TFloat64List& redshifts )
 {
     CSpectrum _spc;

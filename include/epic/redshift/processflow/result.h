@@ -11,7 +11,7 @@
 namespace NSEpic
 {
 
-class COperatorResultStore;
+class CDataStore;
 
 class COperatorResult : public CManagedObject
 {
@@ -21,8 +21,8 @@ public:
     COperatorResult();
     virtual ~COperatorResult();
 
-    virtual Void Save( const COperatorResultStore& store, std::ostream& stream ) const = 0;
-    virtual Void SaveLine( const COperatorResultStore& store, std::ostream& stream ) const = 0;
+    virtual Void Save( const CDataStore& store, std::ostream& stream ) const = 0;
+    virtual Void SaveLine( const CDataStore& store, std::ostream& stream ) const = 0;
     //virtual Void Load( std::istream& stream ) = 0;
 
 protected:

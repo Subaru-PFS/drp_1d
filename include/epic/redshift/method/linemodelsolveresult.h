@@ -30,10 +30,10 @@ public:
     CLineModelSolveResult();
     virtual ~CLineModelSolveResult();
 
-    Void Save( const COperatorResultStore& store, std::ostream& stream ) const;
-    Void SaveLine( const COperatorResultStore& store, std::ostream& stream ) const;
-    Bool GetBestRedshift( const COperatorResultStore& store, Float64& redshift, Float64& merit ) const;
-    Bool GetBestRedshiftLogArea( const COperatorResultStore& store, Float64& redshift, Float64& merit ) const;
+    Void Save( const CDataStore& store, std::ostream& stream ) const;
+    Void SaveLine( const CDataStore& store, std::ostream& stream ) const;
+    Bool GetBestRedshift( const CDataStore& store, Float64& redshift, Float64& merit ) const;
+    Bool GetBestRedshiftLogArea( const CDataStore& store, Float64& redshift, Float64& merit ) const;
 
 };
 

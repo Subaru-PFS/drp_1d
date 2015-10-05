@@ -20,7 +20,7 @@ CDTreeASolveResult::~CDTreeASolveResult()
 
 }
 
-Void CDTreeASolveResult::Save( const COperatorResultStore& store, std::ostream& stream ) const
+Void CDTreeASolveResult::Save( const CDataStore& store, std::ostream& stream ) const
 {
     std::string scope = store.GetScope( this ) + "dtreeAsolve.redshiftresult";
     const COperatorResult* Results = store.GetGlobalResult(scope.c_str());
@@ -29,7 +29,7 @@ Void CDTreeASolveResult::Save( const COperatorResultStore& store, std::ostream& 
     }
 }
 
-Void CDTreeASolveResult::SaveLine( const COperatorResultStore& store, std::ostream& stream ) const
+Void CDTreeASolveResult::SaveLine( const CDataStore& store, std::ostream& stream ) const
 {
     std::string scope = store.GetScope( this ) + "dtreeAsolve.redshiftresult";
     const COperatorResult* Results = store.GetGlobalResult(scope.c_str());

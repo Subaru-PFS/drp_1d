@@ -16,7 +16,7 @@ CPeakDetectionResult::~CPeakDetectionResult()
 
 }
 
-Void CPeakDetectionResult::Save( const COperatorResultStore& store, std::ostream& stream ) const
+Void CPeakDetectionResult::Save( const CDataStore& store, std::ostream& stream ) const
 {
     stream << "#index\tpeak.begin index\tpeak.end index" << std::endl;
 
@@ -31,7 +31,7 @@ Void CPeakDetectionResult::Save( const COperatorResultStore& store, std::ostream
     }
 }
 
-Void CPeakDetectionResult::SaveLine( const COperatorResultStore& store, std::ostream& stream ) const
+Void CPeakDetectionResult::SaveLine( const CDataStore& store, std::ostream& stream ) const
 {
     stream << "not implemented" << std::endl;
 }

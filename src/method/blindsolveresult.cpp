@@ -20,7 +20,7 @@ CBlindSolveResult::~CBlindSolveResult()
 
 }
 
-Void CBlindSolveResult::Save( const COperatorResultStore& store, std::ostream& stream ) const
+Void CBlindSolveResult::Save( const CDataStore& store, std::ostream& stream ) const
 {
     Float64 redshift;
     Float64 merit;
@@ -36,7 +36,7 @@ Void CBlindSolveResult::Save( const COperatorResultStore& store, std::ostream& s
                 << tplName << std::endl;
 }
 
-Void CBlindSolveResult::SaveLine( const COperatorResultStore& store, std::ostream& stream ) const
+Void CBlindSolveResult::SaveLine( const CDataStore& store, std::ostream& stream ) const
 {
     Float64 redshift;
     Float64 merit;
@@ -50,7 +50,7 @@ Void CBlindSolveResult::SaveLine( const COperatorResultStore& store, std::ostrea
                 << "BlindSolve" << std::endl;
 }
 
-Bool CBlindSolveResult::GetBestFitResult( const COperatorResultStore& store, Float64& redshift, Float64& merit, std::string& tplName ) const
+Bool CBlindSolveResult::GetBestFitResult( const CDataStore& store, Float64& redshift, Float64& merit, std::string& tplName ) const
 {
     std::string scope_corr = store.GetScope( this ) + "blindsolve.correlation";
     TOperatorResultMap correlationResults = store.GetPerTemplateResult( scope_corr.c_str() );

@@ -6,7 +6,7 @@
 #include <epic/redshift/operator/correlation.h>
 #include <epic/redshift/operator/chisquare.h>
 #include <epic/redshift/extremum/extremum.h>
-#include <epic/redshift/processflow/resultstore.h>
+#include <epic/redshift/processflow/datastore.h>
 
 #include <epic/redshift/operator/correlation.h>
 #include <epic/redshift/operator/chicorr.h>
@@ -74,14 +74,14 @@ COperatorDTreeASolve::~COperatorDTreeASolve()
 
 }
 
-const CDTreeASolveResult* COperatorDTreeASolve::Compute(COperatorResultStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
+const CDTreeASolveResult* COperatorDTreeASolve::Compute(CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
                                                         const CTemplateCatalog& tplCatalog, const TTemplateCategoryList& tplCategoryList, const CRayCatalog &restRayCatalog,
                                                         const TFloat64Range& lambdaRange, const TFloat64Range& redshiftRange, Float64 redshiftStep,
                                                         Int32 correlationExtremumCount, Float64 overlapThreshold )
 {
     Bool storeResult = false;
 
-    COperatorResultStore::CAutoScope resultScope( resultStore, "dtreeAsolve" );
+    CDataStore::CAutoScope resultScope( resultStore, "dtreeAsolve" );
 
     storeResult = Solve(resultStore, spc, spcWithoutCont,
                                        tplCatalog, tplCategoryList, restRayCatalog,
@@ -98,7 +98,7 @@ const CDTreeASolveResult* COperatorDTreeASolve::Compute(COperatorResultStore& re
     return NULL;
 }
 
-Bool COperatorDTreeASolve::Solve(COperatorResultStore &resultStore, const CSpectrum &spc, const CSpectrum &spcWithoutCont, const CTemplateCatalog &tplCatalog, const TTemplateCategoryList &tplCategoryList, const CRayCatalog &restRayCatalog, const TFloat64Range &lambdaRange, const TFloat64Range &redshiftRange, Float64 redshiftStep, Int32 correlationExtremumCount, Float64 overlapThreshold)
+Bool COperatorDTreeASolve::Solve(CDataStore &resultStore, const CSpectrum &spc, const CSpectrum &spcWithoutCont, const CTemplateCatalog &tplCatalog, const TTemplateCategoryList &tplCategoryList, const CRayCatalog &restRayCatalog, const TFloat64Range &lambdaRange, const TFloat64Range &redshiftRange, Float64 redshiftStep, Int32 correlationExtremumCount, Float64 overlapThreshold)
 {
 
     TTemplateCategoryList   filteredTemplateCategoryList = getFilteredTplCategory( tplCategoryList, CTemplate::nCategory_Emission);

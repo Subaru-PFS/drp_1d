@@ -5,7 +5,7 @@
 #include <epic/redshift/operator/correlation.h>
 #include <epic/redshift/operator/chisquare.h>
 #include <epic/redshift/extremum/extremum.h>
-#include <epic/redshift/processflow/resultstore.h>
+#include <epic/redshift/processflow/datastore.h>
 
 using namespace NSEpic;
 using namespace std;
@@ -22,14 +22,14 @@ COperatorBlindSolve::~COperatorBlindSolve()
 
 }
 
-const CBlindSolveResult* COperatorBlindSolve::Compute(  COperatorResultStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
+const CBlindSolveResult* COperatorBlindSolve::Compute(  CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
                                                         const CTemplateCatalog& tplCatalog, const TTemplateCategoryList& tplCategoryList,
                                                         const TFloat64Range& lambdaRange, const TFloat64Range& redshiftsRange, Float64 redshiftStep,
                                                         Int32 correlationExtremumCount, Float64 overlapThreshold )
 {
     Bool storeResult = false;
 
-    COperatorResultStore::CAutoScope resultScope( resultStore, "blindsolve" );
+    CDataStore::CAutoScope resultScope( resultStore, "blindsolve" );
 
     for( UInt32 i=0; i<tplCategoryList.size(); i++ )
     {
@@ -56,7 +56,7 @@ const CBlindSolveResult* COperatorBlindSolve::Compute(  COperatorResultStore& re
     return NULL;
 }
 
-Bool COperatorBlindSolve::BlindSolve( COperatorResultStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont, const CTemplate& tpl, const CTemplate& tplWithoutCont,
+Bool COperatorBlindSolve::BlindSolve( CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont, const CTemplate& tpl, const CTemplate& tplWithoutCont,
                                const TFloat64Range& lambdaRange, const TFloat64Range& redshiftsRange, Float64 redshiftStep, Int32 correlationExtremumCount,
                                Float64 overlapThreshold )
 {

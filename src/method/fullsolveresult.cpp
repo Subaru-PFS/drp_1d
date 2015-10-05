@@ -20,7 +20,7 @@ CFullSolveResult::~CFullSolveResult()
 
 }
 
-Void CFullSolveResult::Save( const COperatorResultStore& store, std::ostream& stream ) const
+Void CFullSolveResult::Save( const CDataStore& store, std::ostream& stream ) const
 {
     Float64 redshift;
     Float64 merit;
@@ -36,7 +36,7 @@ Void CFullSolveResult::Save( const COperatorResultStore& store, std::ostream& st
                 << tplName << std::endl;
 }
 
-Void CFullSolveResult::SaveLine( const COperatorResultStore& store, std::ostream& stream ) const
+Void CFullSolveResult::SaveLine( const CDataStore& store, std::ostream& stream ) const
 {
     Float64 redshift;
     Float64 merit;
@@ -52,7 +52,7 @@ Void CFullSolveResult::SaveLine( const COperatorResultStore& store, std::ostream
 }
 
 
-Bool CFullSolveResult::GetBestCorrelationResult( const COperatorResultStore& store, Float64& redshift, Float64& merit, std::string& tplName ) const
+Bool CFullSolveResult::GetBestCorrelationResult( const CDataStore& store, Float64& redshift, Float64& merit, std::string& tplName ) const
 {
     std::string scope = store.GetScope( this ) + "fullsolve.correlation";
     TOperatorResultMap correlationResults = store.GetPerTemplateResult(scope.c_str());

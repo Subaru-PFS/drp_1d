@@ -5,7 +5,7 @@
 #include <epic/redshift/operator/correlation.h>
 #include <epic/redshift/operator/chisquare.h>
 #include <epic/redshift/extremum/extremum.h>
-#include <epic/redshift/processflow/resultstore.h>
+#include <epic/redshift/processflow/datastore.h>
 
 #include <epic/redshift/operator/peakdetection.h>
 #include <epic/redshift/operator/raydetection.h>
@@ -95,12 +95,12 @@ COperatorLineMatching2Solve::~COperatorLineMatching2Solve()
 
 }
 
-const CLineMatching2SolveResult* COperatorLineMatching2Solve::Compute(  COperatorResultStore& resultStore, const CSpectrum& spc,
+const CLineMatching2SolveResult* COperatorLineMatching2Solve::Compute(  CDataStore& resultStore, const CSpectrum& spc,
                                                                       const TFloat64Range& lambdaRange, const TFloat64Range& redshiftsRange, Float64 redshiftStep, const CRayCatalog& restRayCatalog )
 {
     Bool storeResult = false;
 
-    COperatorResultStore::CAutoScope resultScope( resultStore, "linematching2solve" );
+    CDataStore::CAutoScope resultScope( resultStore, "linematching2solve" );
     Int32 lineType = CRay::nType_Emission;
     //Int32 lineType = CRay::nType_Absorption;
 

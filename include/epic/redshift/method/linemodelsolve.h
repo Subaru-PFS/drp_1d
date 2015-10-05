@@ -11,7 +11,7 @@ namespace NSEpic
 
 class CSpectrum;
 class CTemplateCatalog;
-class COperatorResultStore;
+class CDataStore;
 
 class CLineModelSolve : public CManagedObject
 {
@@ -23,10 +23,10 @@ public:
     CLineModelSolve();
     ~CLineModelSolve();
 
-    const CLineModelSolveResult* Compute(  COperatorResultStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont, const CRayCatalog& restraycatalog,
+    const CLineModelSolveResult* Compute(  CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont, const CRayCatalog& restraycatalog,
                                            const TFloat64Range& lambdaRange, const TFloat64List& redshifts );
 
-    Bool Solve( COperatorResultStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont, const CRayCatalog& restraycatalog,
+    Bool Solve( CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont, const CRayCatalog& restraycatalog,
                                  const TFloat64Range& lambdaRange, const TFloat64List& redshifts );
 private:
 

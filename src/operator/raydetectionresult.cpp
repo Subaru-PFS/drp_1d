@@ -16,7 +16,7 @@ CRayDetectionResult::~CRayDetectionResult()
 
 }
 
-Void CRayDetectionResult::Save( const COperatorResultStore& store, std::ostream& stream ) const
+Void CRayDetectionResult::Save( const CDataStore& store, std::ostream& stream ) const
 {
     CRayCatalog::TRayVector::const_iterator it;
 
@@ -40,7 +40,7 @@ Void CRayDetectionResult::Save( const COperatorResultStore& store, std::ostream&
 
 
 
-Void CRayDetectionResult::SaveLine( const COperatorResultStore& store, std::ostream& stream ) const
+Void CRayDetectionResult::SaveLine( const CDataStore& store, std::ostream& stream ) const
 {
     stream << "not implemented" << std::endl;
 }

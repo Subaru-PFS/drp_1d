@@ -20,7 +20,7 @@ CChisquare2SolveResult::~CChisquare2SolveResult()
 
 }
 
-Void CChisquare2SolveResult::Save( const COperatorResultStore& store, std::ostream& stream ) const
+Void CChisquare2SolveResult::Save( const CDataStore& store, std::ostream& stream ) const
 {
     Float64 redshift;
     Float64 merit;
@@ -43,7 +43,7 @@ Void CChisquare2SolveResult::Save( const COperatorResultStore& store, std::ostre
     stream << detailStr.c_str();
 }
 
-Bool CChisquare2SolveResult::GetBestRedshiftPerTemplateString( const COperatorResultStore& store, std::string& output ) const
+Bool CChisquare2SolveResult::GetBestRedshiftPerTemplateString( const CDataStore& store, std::string& output ) const
 {
     std::string scopeStr;
     if(m_type == nType_raw){
@@ -95,7 +95,7 @@ Bool CChisquare2SolveResult::GetBestRedshiftPerTemplateString( const COperatorRe
 
 }
 
-Void CChisquare2SolveResult::SaveLine( const COperatorResultStore& store, std::ostream& stream ) const
+Void CChisquare2SolveResult::SaveLine( const CDataStore& store, std::ostream& stream ) const
 {
     char tmpChar[256];
     sprintf(tmpChar, "%.2f", store.m_dtreepathnum);
@@ -114,7 +114,7 @@ Void CChisquare2SolveResult::SaveLine( const COperatorResultStore& store, std::o
 
 }
 
-Bool CChisquare2SolveResult::GetBestRedshift( const COperatorResultStore& store, Float64& redshift, Float64& merit, std::string& tplName ) const
+Bool CChisquare2SolveResult::GetBestRedshift( const CDataStore& store, Float64& redshift, Float64& merit, std::string& tplName ) const
 {
     std::string scopeStr;
     if(m_type == nType_raw){

@@ -99,7 +99,7 @@ Void CCorrelationResult::Load( std::istream& stream )
     }
 }
 
-Void CCorrelationResult::Save( const COperatorResultStore& store, std::ostream& stream ) const
+Void CCorrelationResult::Save( const CDataStore& store, std::ostream& stream ) const
 {
     stream <<  "#Redshifts\tCorrelation\tOverlap"<< std::endl;
     for ( int i=0; i<Redshifts.size(); i++)
@@ -117,7 +117,7 @@ Void CCorrelationResult::Save( const COperatorResultStore& store, std::ostream& 
     }
 }
 
-Void CCorrelationResult::SaveLine( const COperatorResultStore& store, std::ostream& stream ) const
+Void CCorrelationResult::SaveLine( const CDataStore& store, std::ostream& stream ) const
 {
     stream << "tCorrelationResult" << "\t" << Redshifts.size() << std::endl;
 }

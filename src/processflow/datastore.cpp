@@ -45,6 +45,36 @@ std::string CDataStore::GetCurrentScopeName() const
     return n;
 }
 
+Void  CDataStore::SaveRedshiftResult( const char* dir )
+{
+    m_ResultStore.SaveRedshiftResult( *this, dir );
+}
+
+Void  CDataStore::SaveAllResults( const char* dir ) const
+{
+    m_ResultStore.SaveAllResults( *this, dir );
+}
+
+Void  CDataStore::SetSpectrumName( const char* name )
+{
+    m_ResultStore.SetSpectrumName( name );
+}
+
+const std::string& CDataStore::GetSpectrumName() const
+{
+    return m_ResultStore.GetSpectrumName();
+}
+
+Void  CDataStore::StorePerTemplateResult( const CTemplate& t, const char* name, const COperatorResult& result )
+{
+    m_ResultStore.StorePerTemplateResult( t, GetCurrentScopeName().c_str(), name, result );
+}
+
+Void CDataStore::StoreGlobalResult( const char* name, const COperatorResult& result )
+{
+    m_ResultStore.StoreGlobalResult( GetCurrentScopeName().c_str(), name, result );
+}
+
 Void CDataStore::PushScope( const char* name )
 {
     m_ScopeStack.push_back( name );
@@ -53,6 +83,12 @@ Void CDataStore::PushScope( const char* name )
 Void CDataStore::PopScope()
 {
     m_ScopeStack.pop_back();
+}
+
+
+std::string CDataStore::GetScope(CConstRef<COperatorResult>  result) const
+{
+    return m_ResultStore.GetScope( result );
 }
 
 Bool CDataStore::GetScopedParam( const char* name, TFloat64List& v, const TFloat64List& defaultValue )
@@ -83,5 +119,21 @@ Bool CDataStore::GetScopedParam( const char* name, Int64& v, Int64 defaultValue 
 Bool CDataStore::GetScopedParam( const char* name, Bool& v, Bool defaultValue )
 {
     return m_ParameterStore.Get( GetCurrentScopeName().c_str(), name, v, defaultValue );
+}
+
+const COperatorResult*  CDataStore::GetPerTemplateResult( const CTemplate& t, const char* name ) const
+{
+    return m_ResultStore.GetPerTemplateResult( t, name );
+}
+
+TOperatorResultMap CDataStore::GetPerTemplateResult( const char* name ) const
+{
+    return m_ResultStore.GetPerTemplateResult( name );
+
+}
+
+const COperatorResult* CDataStore::GetGlobalResult( const char* name ) const
+{
+    return m_ResultStore.GetGlobalResult( name );
 }
 

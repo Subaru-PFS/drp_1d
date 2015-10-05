@@ -11,7 +11,7 @@ namespace NSEpic
 
 class CSpectrum;
 class CTemplateCatalog;
-class COperatorResultStore;
+class CDataStore;
 
 class COperatorLineMatchingSolve : public CManagedObject
 {
@@ -23,7 +23,7 @@ public:
     COperatorLineMatchingSolve();
     ~COperatorLineMatchingSolve();
 
-    const CLineMatchingSolveResult* Compute(COperatorResultStore& resultStore, const CSpectrum& spc,
+    const CLineMatchingSolveResult* Compute(CDataStore& resultStore, const CSpectrum& spc,
                                         const TFloat64Range& lambdaRange, const TFloat64Range& redshiftsRange, Float64 redshiftStep, const CRayCatalog &restRayCatalog);
 
 

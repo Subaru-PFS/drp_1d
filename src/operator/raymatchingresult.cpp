@@ -19,7 +19,7 @@ CRayMatchingResult::~CRayMatchingResult()
 
 }
 
-Void CRayMatchingResult::Save( const COperatorResultStore& store, std::ostream& stream ) const
+Void CRayMatchingResult::Save( const CDataStore& store, std::ostream& stream ) const
 {
 
     // We should also save best result:
@@ -102,7 +102,7 @@ Void CRayMatchingResult::SaveSolutionSetToStream(std::ostream& stream,  TSolutio
     }
 }
 
-Void CRayMatchingResult::SaveLine( const COperatorResultStore& store, std::ostream& stream ) const
+Void CRayMatchingResult::SaveLine( const CDataStore& store, std::ostream& stream ) const
 {
 
 }

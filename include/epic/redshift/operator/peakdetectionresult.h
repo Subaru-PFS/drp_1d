@@ -20,8 +20,8 @@ public:
     CPeakDetectionResult();
     virtual ~CPeakDetectionResult();
 
-    Void Save( const COperatorResultStore& store, std::ostream& stream ) const;
-    Void SaveLine( const COperatorResultStore& store, std::ostream& stream ) const;
+    Void Save( const CDataStore& store, std::ostream& stream ) const;
+    Void SaveLine( const CDataStore& store, std::ostream& stream ) const;
 
     TInt32RangeList PeakList;
     TInt32RangeList EnlargedPeakList;

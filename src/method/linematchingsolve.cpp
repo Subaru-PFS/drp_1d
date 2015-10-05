@@ -5,7 +5,7 @@
 #include <epic/redshift/operator/correlation.h>
 #include <epic/redshift/operator/chisquare.h>
 #include <epic/redshift/extremum/extremum.h>
-#include <epic/redshift/processflow/resultstore.h>
+#include <epic/redshift/processflow/datastore.h>
 
 #include <epic/redshift/operator/peakdetection.h>
 #include <epic/redshift/operator/raydetection.h>
@@ -60,12 +60,12 @@ COperatorLineMatchingSolve::~COperatorLineMatchingSolve()
 
 }
 
-const CLineMatchingSolveResult* COperatorLineMatchingSolve::Compute(  COperatorResultStore& resultStore, const CSpectrum& spc,
+const CLineMatchingSolveResult* COperatorLineMatchingSolve::Compute(  CDataStore& resultStore, const CSpectrum& spc,
                                                                       const TFloat64Range& lambdaRange, const TFloat64Range& redshiftsRange, Float64 redshiftStep, const CRayCatalog& restRayCatalog )
 {
     Bool storeResult = false;
 
-    COperatorResultStore::CAutoScope resultScope( resultStore, "linematchingsolve" );
+    CDataStore::CAutoScope resultScope( resultStore, "linematchingsolve" );
 
 
     CPeakDetection peakDetection(m_winsize, m_cut, 1, m_enlargeRate);

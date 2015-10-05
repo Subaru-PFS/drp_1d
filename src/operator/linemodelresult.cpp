@@ -81,7 +81,7 @@ Void CLineModelResult::Load( std::istream& stream )
     }
 }
 
-Void CLineModelResult::Save( const COperatorResultStore& store, std::ostream& stream ) const
+Void CLineModelResult::Save( const CDataStore& store, std::ostream& stream ) const
 {
     stream <<  "#Redshifts\tChiSquare\tOverlap"<< std::endl;
     for ( int i=0; i<Redshifts.size(); i++)
@@ -147,7 +147,7 @@ Void CLineModelResult::Save( const COperatorResultStore& store, std::ostream& st
     }
 }
 
-Void CLineModelResult::SaveLine( const COperatorResultStore& store, std::ostream& stream ) const
+Void CLineModelResult::SaveLine( const CDataStore& store, std::ostream& stream ) const
 {
     stream << "LineModelResult" << "\t" << Redshifts.size() << std::endl;
 }

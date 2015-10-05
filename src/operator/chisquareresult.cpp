@@ -101,7 +101,7 @@ Void CChisquareResult::Load( std::istream& stream )
     }
 }
 
-Void CChisquareResult::Save( const COperatorResultStore& store, std::ostream& stream ) const
+Void CChisquareResult::Save( const CDataStore& store, std::ostream& stream ) const
 {
     stream <<  "#Redshifts\tChiSquare\tOverlap"<< std::endl;
     for ( int i=0; i<Redshifts.size(); i++)
@@ -119,7 +119,7 @@ Void CChisquareResult::Save( const COperatorResultStore& store, std::ostream& st
     }
 }
 
-Void CChisquareResult::SaveLine( const COperatorResultStore& store, std::ostream& stream ) const
+Void CChisquareResult::SaveLine( const CDataStore& store, std::ostream& stream ) const
 {
     stream << "ChisquareResult" << "\t" << Redshifts.size() << std::endl;
 }

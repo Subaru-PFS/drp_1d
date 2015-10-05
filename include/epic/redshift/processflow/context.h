@@ -3,8 +3,7 @@
 
 #include <epic/core/common/ref.h>
 #include <epic/redshift/spectrum/template/template.h>
-#include <epic/redshift/processflow/result.h>
-#include <epic/redshift/processflow/resultstore.h>
+#include <epic/redshift/processflow/datastore.h>
 
 #include <map>
 #include <string>
@@ -24,7 +23,7 @@ class CRayCatalog;
  * Store all data concerning computation and processign of a given spectrum
  *
  */
-class CProcessFlowContext : public COperatorResultStore
+class CProcessFlowContext : public CDataStore
 {
 
     DEFINE_MANAGED_OBJECT( CProcessFlowContext )

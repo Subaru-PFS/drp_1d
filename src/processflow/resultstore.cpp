@@ -10,20 +10,10 @@ using namespace NSEpic;
 
 namespace bfs = boost::filesystem;
 
-COperatorResultStore::CAutoScope::CAutoScope( COperatorResultStore& store, const char* name )
-{
-    m_Store = & store;
-    m_Store->PushScope( name );
-}
-
-COperatorResultStore::CAutoScope::~CAutoScope()
-{
-    m_Store->PopScope();
-}
 
 COperatorResultStore::COperatorResultStore()
 {
-    m_dtreepathnum = -1.0;
+
 }
 
 COperatorResultStore::~COperatorResultStore()
@@ -31,18 +21,15 @@ COperatorResultStore::~COperatorResultStore()
 
 }
 
-Void COperatorResultStore::SetSpectrumName( const char* name )
+void COperatorResultStore::StoreResult( TResultsMap& map, const char* path, const char* name, const COperatorResult& result )
 {
-    m_SpectrumName = name;
-}
+    std::string scopedName;
+    if( path ) {
+        scopedName = path;
+        scopedName.append( "." );
+    }
+    scopedName.append( name );
 
-const std::string& COperatorResultStore::GetSpectrumName() const
-{
-    return m_SpectrumName;
-}
-
-void COperatorResultStore::StoreResult( TResultsMap& map, const char* name, const COperatorResult& result )
-{
     TResultsMap::iterator it = map.find( name );
     if( it != map.end() )
     {
@@ -50,17 +37,10 @@ void COperatorResultStore::StoreResult( TResultsMap& map, const char* name, cons
         return;
     }
 
-    std::string scopedName;
-    if( m_ScopeStack.size() ) {
-        scopedName = GetCurrentScopeName();
-        scopedName.append( "." );
-    }
-    scopedName.append( name );
-
     map[ scopedName ] = &result;
 }
 
-Void COperatorResultStore::StorePerTemplateResult( const CTemplate& t, const char* name, const COperatorResult& result )
+Void COperatorResultStore::StorePerTemplateResult( const CTemplate& t, const char* path, const char* name, const COperatorResult& result )
 {
     TPerTemplateResultsMap::iterator it = m_PerTemplateResults.find( t.GetName() );
     if( it == m_PerTemplateResults.end() )
@@ -68,12 +48,12 @@ Void COperatorResultStore::StorePerTemplateResult( const CTemplate& t, const cha
         m_PerTemplateResults[ t.GetName() ] = TResultsMap();
     }
 
-    StoreResult( m_PerTemplateResults[ t.GetName() ], name, result );
+    StoreResult( m_PerTemplateResults[ t.GetName() ], path, name, result );
 }
 
-Void COperatorResultStore::StoreGlobalResult( const char* name, const COperatorResult& result )
+Void COperatorResultStore::StoreGlobalResult( const char* path, const char* name, const COperatorResult& result )
 {
-    StoreResult( m_GlobalResults, name, result );
+    StoreResult( m_GlobalResults, path, name, result );
 }
 
 const COperatorResult* COperatorResultStore::GetPerTemplateResult( const CTemplate& t, const char* name ) const
@@ -138,7 +118,7 @@ void COperatorResultStore::CreateResultStorage( std::fstream& stream, const bfs:
 
 }
 
-void COperatorResultStore::SaveRedshiftResult( const char* dir )
+void COperatorResultStore::SaveRedshiftResult( const CDataStore& store, const char* dir )
 {
     // Append best redshift result line to output file
     {
@@ -148,12 +128,12 @@ void COperatorResultStore::SaveRedshiftResult( const char* dir )
 
         CConstRef<COperatorResult>  result = GetGlobalResult( "redshiftresult" );
         if(result){
-            result->SaveLine( *this, outputStream );
+            result->SaveLine( store, outputStream );
         }
     }
 }
 
-void COperatorResultStore::SaveRedshiftResultHeader( const char* dir )
+void COperatorResultStore::SaveRedshiftResultHeader(  const char* dir )
 {
     // Append best redshift result line to output file
     {
@@ -166,7 +146,7 @@ void COperatorResultStore::SaveRedshiftResultHeader( const char* dir )
     }
 }
 
-Void COperatorResultStore::SaveAllResults( const char* dir ) const
+Void COperatorResultStore::SaveAllResults( const CDataStore& store, const char* dir ) const
 {
     // Store global result
     {
@@ -179,7 +159,7 @@ Void COperatorResultStore::SaveAllResults( const char* dir ) const
             std::fstream outputStream;
             // Save result at root of output directory
             CreateResultStorage( outputStream, bfs::path( resultName + ".csv"), bfs::path( dir ).append( m_SpectrumName ) );
-            result->Save( *this, outputStream );
+            result->Save( store, outputStream );
         }
     }
 
@@ -200,41 +180,10 @@ Void COperatorResultStore::SaveAllResults( const char* dir ) const
                 std::fstream outputStream;
                 // Save result in sub directories of output directory
                 CreateResultStorage( outputStream, bfs::path( templateName ).append( resultName + ".csv"), bfs::path( dir ).append( m_SpectrumName ) );
-                result->Save( *this, outputStream );
+                result->Save( store, outputStream );
             }
         }
     }
-}
-
-std::string COperatorResultStore::GetCurrentScopeName() const
-{
-    std::string n;
-
-    TScopeStack::const_iterator it;
-
-    if( m_ScopeStack.size() == 0 )
-        return n;
-
-    n = m_ScopeStack[0];
-    it = m_ScopeStack.begin();
-    it++;
-
-    for( ; it != m_ScopeStack.end(); it++ ) {
-        n.append(".");
-        n.append((*it));
-    }
-
-    return n;
-}
-
-Void COperatorResultStore::PushScope( const char* name )
-{
-    m_ScopeStack.push_back( name );
-}
-
-Void COperatorResultStore::PopScope()
-{
-    m_ScopeStack.pop_back();
 }
 
 
@@ -259,4 +208,14 @@ std::string COperatorResultStore::GetScope(CConstRef<COperatorResult>  result) c
     }
 
     return n;
+}
+
+Void COperatorResultStore::SetSpectrumName( const char* name )
+{
+    m_SpectrumName = name;
+}
+
+const std::string& COperatorResultStore::GetSpectrumName() const
+{
+    return m_SpectrumName;
 }

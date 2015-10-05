@@ -12,7 +12,7 @@ namespace NSEpic
 
 class CSpectrum;
 class CTemplateCatalog;
-class COperatorResultStore;
+class CDataStore;
 
 class CMethodChisquareSolve : public CManagedObject
 {
@@ -30,7 +30,7 @@ class CMethodChisquareSolve : public CManagedObject
 
     CMethodChisquareSolve();
     ~CMethodChisquareSolve();
-    const CChisquareSolveResult *Compute(   COperatorResultStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
+    const CChisquareSolveResult *Compute( CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
                                         const CTemplateCatalog& tplCatalog, const TTemplateCategoryList& tplCategoryList,
                                         const TFloat64Range& lambdaRange, const TFloat64List& redshifts, Float64 overlapThreshold  );
 
@@ -38,7 +38,7 @@ class CMethodChisquareSolve : public CManagedObject
 
 private:
 
-    Bool Solve(COperatorResultStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont, const CTemplate& tpl, const CTemplate& tplWithoutCont,
+    Bool Solve(CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont, const CTemplate& tpl, const CTemplate& tplWithoutCont,
                                    const TFloat64Range& lambdaRange, const TFloat64List& redshifts, Float64 overlapThreshold , Int32 spctype=nType_full);
 };
 

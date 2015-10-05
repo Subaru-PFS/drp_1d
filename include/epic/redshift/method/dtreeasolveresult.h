@@ -11,6 +11,7 @@ namespace NSEpic
 {
 
 class CProcessFlowContext;
+class CDataStore;
 
 class CDTreeASolveResult : public COperatorResult
 {
@@ -22,8 +23,8 @@ public:
     CDTreeASolveResult();
     virtual ~CDTreeASolveResult();
 
-    Void Save( const COperatorResultStore& store, std::ostream& stream ) const;
-    Void SaveLine( const COperatorResultStore& store, std::ostream& stream ) const;
+    Void Save( const CDataStore& store, std::ostream& stream ) const;
+    Void SaveLine( const CDataStore& store, std::ostream& stream ) const;
 
 };
 
