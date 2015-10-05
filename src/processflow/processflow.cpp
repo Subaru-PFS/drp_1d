@@ -285,8 +285,8 @@ Bool CProcessFlow::LineModelSolve( CProcessFlowContext& ctx )
     DebugAssert( redshifts.size() > 0 );
 
     CLineModelSolve Solve;
-    //Int32 spcType = CLineModelSolveResult::nType_noContinuum;
-    Int32 spcType = CLineModelSolveResult::nType_raw;
+    Int32 spcType = CLineModelSolveResult::nType_noContinuum;
+    //Int32 spcType = CLineModelSolveResult::nType_raw;
     CConstRef<CLineModelSolveResult> solveResult = Solve.Compute(ctx, ctx.GetSpectrum(), ctx.GetSpectrumWithoutContinuum(), ctx.GetRayCatalog(),
                                                                  spcLambdaRange, redshifts, spcType );
 

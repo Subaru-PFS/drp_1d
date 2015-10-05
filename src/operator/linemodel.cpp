@@ -54,7 +54,7 @@ const COperatorResult* COperatorLineModel::Compute(const CSpectrum& spectrum, co
     TFloat64List sortedRedshifts = redshifts;
     std::sort(sortedRedshifts.begin(), sortedRedshifts.end());
 
-    Int32 typeFilter = CRay::nType_Emission;//CRay::nType_Absorption;//CRay::nType_Emission;
+    Int32 typeFilter = -1;//CRay::nType_Absorption;//CRay::nType_Emission;
     Int32 forceFilter = -1;//CRay::nForce_Strong;
     CRayCatalog::TRayVector restRayList = restraycatalog.GetFilteredList(typeFilter, forceFilter);
 
@@ -112,7 +112,13 @@ const COperatorResult* COperatorLineModel::Compute(const CSpectrum& spectrum, co
     ComputeArea2(result);
 
 
-    /*
+    if(result->Extrema.size()>0){
+        Log.LogInfo( "LineModel Solution: best z found = %.5f", result->Extrema[0]);
+    }else{
+        Log.LogInfo( "LineModel Solution: no extrema found...");
+    }
+
+    //*
     //  //saving the best model for viewing
     if(result->Extrema.size()>0){
         Float64 _chi=0.0;
@@ -361,25 +367,7 @@ Void COperatorLineModel::ModelFit(const CSpectrum& spectrum, CLineModelElementLi
 
     model.fit(redshift, modelSolution);
 
-    const CSpectrumSpectralAxis& spcSpectralAxis = spectrum.GetSpectralAxis();
-    const CSpectrumFluxAxis& spcFluxAxis = spectrum.GetFluxAxis();
-    const CSpectrumFluxAxis& modelFluxAxis = model.GetModelSpectrum().GetFluxAxis();
-
-    Int32 numDevs = 0;
-    Float64 fit = 0;
-    const Float64* error = spcFluxAxis.GetError();
-    const Float64* Ymodel = modelFluxAxis.GetSamples();
-    const Float64* Yspc = spcFluxAxis.GetSamples();
-    Float64 diff = 0.0;
-    for( UInt32 j=0; j<spcSpectralAxis.GetSamplesCount(); j++ )
-    {
-        numDevs++;
-        // fit
-        diff = (Yspc[j] - Ymodel[j]);
-        fit += (diff*diff) / (error[j]*error[j]);
-        //fit += pow( Yspc[j] - Ymodel[j] , 2.0 );
-    }
-    //fit /= numDevs;
+    Float64 fit = model.getLeastSquareMerit();
 
     chiSquare = fit + mSumLogErr;
     return;

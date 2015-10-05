@@ -9,9 +9,11 @@ using namespace NSEpic;
 
 CLineModelElement::CLineModelElement()
 {
-    //m_LineWidthType = nWidthType_PSFInstrumentDriven;
-    m_LineWidthType = nWidthType_ZDriven;
-    m_Resolution = 250.0;
+    m_LineWidthType = nWidthType_PSFInstrumentDriven;
+    //m_LineWidthType = nWidthType_ZDriven;
+    //m_LineWidthType = nWidthType_Fixed;
+
+    m_Resolution = 250.0 * (1.0 + 0.5); //dr=+0.5 found empirically on VVDS DEEP 651
     m_FWHM_factor = 2.35;
 
     m_OutsideLambdaRange = true;
@@ -21,6 +23,11 @@ CLineModelElement::CLineModelElement()
 
 CLineModelElement::~CLineModelElement()
 {
+}
+
+std::string CLineModelElement::GetElementTypeTag()
+{
+    return m_ElementType;
 }
 
 Int32 CLineModelElement::FindElementIndex(Int32 LineCatalogIndex)
