@@ -89,7 +89,7 @@ Bool COperatorDTree7Solve::SolveDecisionalTree7(CDataStore &resultStore, const C
 
     CPeakDetection peakDetection(m_winsize, m_cut);
     CConstRef<CPeakDetectionResult> peakDetectionResult = peakDetection.Compute( spc, lambdaRange);
-    resultStore.StoreGlobalResult( "peakdetection", *peakDetectionResult );
+    resultStore.StoreScopedGlobalResult( "peakdetection", *peakDetectionResult );
     Log.LogInfo( "DTree7 - Peak Detection output: %d peaks found", peakDetectionResult->PeakList.size());
 
     // check Peak Detection results
@@ -103,7 +103,7 @@ Bool COperatorDTree7Solve::SolveDecisionalTree7(CDataStore &resultStore, const C
                                                                                 lambdaRange, redshiftRange, redshiftStep,
                                                                                 correlationExtremumCount, overlapThreshold );
             if( blindsolveResult ) {
-                resultStore.StoreGlobalResult( "redshiftresult", *blindsolveResult );
+                resultStore.StoreScopedGlobalResult( "redshiftresult", *blindsolveResult );
             }
             return true;
         }
@@ -112,7 +112,7 @@ Bool COperatorDTree7Solve::SolveDecisionalTree7(CDataStore &resultStore, const C
     // Ray Detection
     CRayDetection rayDetection(CRay::nType_Emission, m_cut, m_strongcut );
     CConstRef<CRayDetectionResult> rayDetectionResult = rayDetection.Compute( spc, lambdaRange, peakDetectionResult->PeakList, peakDetectionResult->EnlargedPeakList );
-    resultStore.StoreGlobalResult( "raycatalog", *rayDetectionResult );
+    resultStore.StoreScopedGlobalResult( "raycatalog", *rayDetectionResult );
     Log.LogInfo( "DTree7 - Ray Detection output: %d ray(s) found", rayDetectionResult->RayCatalog.GetList().size());
 
     // check Ray Detection results
@@ -127,7 +127,7 @@ Bool COperatorDTree7Solve::SolveDecisionalTree7(CDataStore &resultStore, const C
                                                                                 lambdaRange, redshiftRange, redshiftStep,
                                                                                 correlationExtremumCount, overlapThreshold );
             if( blindsolveResult ) {
-                resultStore.StoreGlobalResult( "redshiftresult", *blindsolveResult );
+                resultStore.StoreScopedGlobalResult( "redshiftresult", *blindsolveResult );
             }
             return true;
         }
@@ -138,7 +138,7 @@ Bool COperatorDTree7Solve::SolveDecisionalTree7(CDataStore &resultStore, const C
     CRef<CRayMatchingResult> rayMatchingResult = rayMatching.Compute(rayDetectionResult->RayCatalog, restRayCatalog, redshiftRange, m_minMatchNum, m_tol );
     if(rayMatchingResult!=NULL){
         // Store matching results
-        resultStore.StoreGlobalResult( "raymatching", *rayMatchingResult );
+        resultStore.StoreScopedGlobalResult( "raymatching", *rayMatchingResult );
 
         //check ray matching results
         if(rayMatchingResult->GetSolutionsListOverNumber(0).size()<1){
@@ -151,7 +151,7 @@ Bool COperatorDTree7Solve::SolveDecisionalTree7(CDataStore &resultStore, const C
                                                                                     lambdaRange, redshiftRange, redshiftStep,
                                                                                     correlationExtremumCount, overlapThreshold );
                 if( blindsolveResult ) {
-                    resultStore.StoreGlobalResult( "redshiftresult", *blindsolveResult );
+                    resultStore.StoreScopedGlobalResult( "redshiftresult", *blindsolveResult );
                 }
                 return true;
             }
@@ -166,7 +166,7 @@ Bool COperatorDTree7Solve::SolveDecisionalTree7(CDataStore &resultStore, const C
                                                                                 lambdaRange, redshiftRange, redshiftStep,
                                                                                 correlationExtremumCount, overlapThreshold );
             if( blindsolveResult ) {
-                resultStore.StoreGlobalResult( "redshiftresult", *blindsolveResult );
+                resultStore.StoreScopedGlobalResult( "redshiftresult", *blindsolveResult );
             }
             return true;
         }
@@ -194,7 +194,7 @@ Bool COperatorDTree7Solve::SolveDecisionalTree7(CDataStore &resultStore, const C
                                                                                 tplCatalog, filteredTemplateCategoryList,
                                                                                 lambdaRange, roundedRedshift, overlapThreshold );
             if( chisolveResult ) {
-                resultStore.StoreGlobalResult( "redshiftresult", *chisolveResult );
+                resultStore.StoreScopedGlobalResult( "redshiftresult", *chisolveResult );
             }
             return true;
         }
@@ -222,7 +222,7 @@ Bool COperatorDTree7Solve::SolveDecisionalTree7(CDataStore &resultStore, const C
                                                                                     tplCatalog, filteredTemplateCategoryList,
                                                                                     lambdaRange, roundedRedshift, overlapThreshold );
                 if( chisolveResult ) {
-                    resultStore.StoreGlobalResult( "redshiftresult", *chisolveResult );
+                    resultStore.StoreScopedGlobalResult( "redshiftresult", *chisolveResult );
                 }
                 return true;
             }
@@ -236,7 +236,7 @@ Bool COperatorDTree7Solve::SolveDecisionalTree7(CDataStore &resultStore, const C
                                                                                 lambdaRange, redshiftRange, redshiftStep,
                                                                                 overlapThreshold );
                 if( solveResult ) {
-                    resultStore.StoreGlobalResult( "redshiftresult", *solveResult );
+                    resultStore.StoreScopedGlobalResult( "redshiftresult", *solveResult );
                 }
                 return true;
             }
@@ -252,7 +252,7 @@ Bool COperatorDTree7Solve::SolveDecisionalTree7(CDataStore &resultStore, const C
                                                                             lambdaRange, redshiftRange, redshiftStep,
                                                                             correlationExtremumCount, overlapThreshold );
         if( blindsolveResult ) {
-            resultStore.StoreGlobalResult( "redshiftresult", *blindsolveResult );
+            resultStore.StoreScopedGlobalResult( "redshiftresult", *blindsolveResult );
         }
         return true;
     }

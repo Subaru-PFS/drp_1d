@@ -82,7 +82,7 @@ Bool CLineModelSolve::Solve( CDataStore& resultStore, const CSpectrum& spc, cons
         return false;
     }else{
         // Store results
-        resultStore.StoreGlobalResult( scopeStr.c_str(), *result );
+        resultStore.StoreScopedGlobalResult( scopeStr.c_str(), *result );
     }
 
 

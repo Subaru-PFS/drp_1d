@@ -26,11 +26,14 @@ Void CFullSolveResult::Save( const CDataStore& store, std::ostream& stream ) con
     Float64 merit;
     std::string tplName;
 
+    std::string spectrumName;
+    store.GetParam( "spectrumName", spectrumName );
+
     GetBestCorrelationResult( store, redshift, merit, tplName );
 
     stream <<  "#Spectrum\tRedshifts\tMerit\tTemplate"<< std::endl;
 
-    stream  << store.GetSpectrumName() << "\t"
+    stream  << spectrumName << "\t"
                 << redshift << "\t"
                 << merit << "\t"
                 << tplName << std::endl;
@@ -42,9 +45,12 @@ Void CFullSolveResult::SaveLine( const CDataStore& store, std::ostream& stream )
     Float64 merit;
     std::string tplName;
 
+    std::string spectrumName;
+    store.GetParam( "spectrumName", spectrumName );
+
     GetBestCorrelationResult( store, redshift, merit, tplName );
 
-    stream  << store.GetSpectrumName() << "\t"
+    stream  << spectrumName << "\t"
                 << redshift << "\t"
                 << merit << "\t"
                 << tplName << "\t"

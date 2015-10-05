@@ -96,7 +96,7 @@ Bool CMethodChisquareSolve::Solve( CDataStore& resultStore, const CSpectrum& spc
         return false;
     }else{
         // Store results
-        resultStore.StorePerTemplateResult( tpl, "chisquare", *chisquareResult );
+        resultStore.StoreScopedPerTemplateResult( tpl, "chisquare", *chisquareResult );
     }
 
     return true;

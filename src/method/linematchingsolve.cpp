@@ -71,13 +71,13 @@ const CLineMatchingSolveResult* COperatorLineMatchingSolve::Compute(  CDataStore
     CPeakDetection peakDetection(m_winsize, m_cut, 1, m_enlargeRate);
     CConstRef<CPeakDetectionResult> peakDetectionResult = peakDetection.Compute( spc, lambdaRange);
     if( peakDetectionResult )
-        resultStore.StoreGlobalResult( "peakdetection", *peakDetectionResult );
+        resultStore.StoreScopedGlobalResult( "peakdetection", *peakDetectionResult );
 
     CRayDetection rayDetection(CRay::nType_Emission, m_cut, m_strongcut, m_winsize, m_minsize, m_maxsize);
     CConstRef<CRayDetectionResult> rayDetectionResult = rayDetection.Compute( spc, lambdaRange, peakDetectionResult->PeakList, peakDetectionResult->EnlargedPeakList );
 
     if( rayDetectionResult ) {
-        resultStore.StoreGlobalResult( "raycatalog", *rayDetectionResult );
+        resultStore.StoreScopedGlobalResult( "raycatalog", *rayDetectionResult );
 
         if(rayDetectionResult->RayCatalog.GetList().size()<1){
             //return NULL;
@@ -90,7 +90,7 @@ const CLineMatchingSolveResult* COperatorLineMatchingSolve::Compute(  CDataStore
 
     // Store matching results
     if( rayMatchingResult )
-        resultStore.StoreGlobalResult( "raymatching", *rayMatchingResult );
+        resultStore.StoreScopedGlobalResult( "raymatching", *rayMatchingResult );
 
 
     storeResult = true; //always save a matching result

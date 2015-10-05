@@ -108,7 +108,7 @@ Bool COperatorCorrelationSolve::Solve( CDataStore& resultStore, const CSpectrum&
         result->Extrema[i] = extremumList[i].X;
     }
 
-    resultStore.StorePerTemplateResult( tpl, "correlation", *result );
+    resultStore.StoreScopedPerTemplateResult( tpl, "correlation", *result );
 
 
     return true;

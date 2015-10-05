@@ -23,8 +23,6 @@ public:
     typedef std::map< std::string, TResultsMap>                 TPerTemplateResultsMap;
 
 
-
-
     COperatorResultStore();
     virtual ~COperatorResultStore();
 
@@ -38,9 +36,6 @@ public:
     Void                    SaveRedshiftResultHeader( const char* dir );
     Void                    SaveRedshiftResult( const CDataStore& store, const char* dir );
     Void                    SaveAllResults( const CDataStore& store, const char* dir ) const;
-
-    Void                    SetSpectrumName( const char* name );
-    const std::string&      GetSpectrumName() const;
 
     std::string             GetScope(CConstRef<COperatorResult>  result) const;
 

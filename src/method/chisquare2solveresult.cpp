@@ -98,15 +98,20 @@ Bool CChisquare2SolveResult::GetBestRedshiftPerTemplateString( const CDataStore&
 Void CChisquare2SolveResult::SaveLine( const CDataStore& store, std::ostream& stream ) const
 {
     char tmpChar[256];
-    sprintf(tmpChar, "%.2f", store.m_dtreepathnum);
+    Float64 dtreepathnum;
+    store.GetParam( "dtreepathnum", dtreepathnum );
+    sprintf(tmpChar, "%.2f", dtreepathnum);
 
     Float64 redshift;
     Float64 merit;
     std::string tplName;
 
+    std::string spectrumName;
+    store.GetParam( "spectrumName", spectrumName );
+
     GetBestRedshift( store, redshift, merit, tplName );
 
-    stream  << store.GetSpectrumName() << "\t"
+    stream  << spectrumName << "\t"
                 << redshift << "\t"
                 << merit << "\t"
                 << tplName << "\t"

@@ -123,7 +123,7 @@ Bool CProcessFlow::Blindsolve( CProcessFlowContext& ctx, CTemplate::ECategory Ca
                                                                         ctx.GetParams().correlationExtremumCount, ctx.GetParams().overlapThreshold );
 
     if( blindsolveResult ) {
-        ctx.StoreGlobalResult( "redshiftresult", *blindsolveResult );
+        ctx.StoreScopedGlobalResult( "redshiftresult", *blindsolveResult );
     }
 
     return true;
@@ -155,7 +155,7 @@ Bool CProcessFlow::Correlation( CProcessFlowContext& ctx, CTemplate::ECategory C
                                                                         ctx.GetParams().lambdaRange, ctx.GetParams().redshiftRange, ctx.GetParams().redshiftStep, ctx.GetParams().overlapThreshold );
 
     if( solveResult ) {
-        ctx.StoreGlobalResult( "redshiftresult", *solveResult );
+        ctx.StoreScopedGlobalResult( "redshiftresult", *solveResult );
     }
 
     return true;
@@ -192,7 +192,7 @@ Bool CProcessFlow::Chisquare( CProcessFlowContext& ctx, CTemplate::ECategory Cat
                                                                         ctx.GetParams().lambdaRange, redshifts, ctx.GetParams().overlapThreshold );
 
     if( solveResult ) {
-        ctx.StoreGlobalResult( "redshiftresult", *solveResult );
+        ctx.StoreScopedGlobalResult( "redshiftresult", *solveResult );
     }
 
     return true;
@@ -226,7 +226,7 @@ Bool CProcessFlow::Fullsolve( CProcessFlowContext& ctx, CTemplate::ECategory Cat
                                                                         ctx.GetParams().overlapThreshold );
 
     if( solveResult ) {
-        ctx.StoreGlobalResult( "redshiftresult", *solveResult );
+        ctx.StoreScopedGlobalResult( "redshiftresult", *solveResult );
     }
 
     return true;
@@ -243,7 +243,7 @@ Bool CProcessFlow::LineMatching( CProcessFlowContext& ctx )
                                                                     ctx.GetParams().redshiftStep, ctx.GetRayCatalog() );
 
     if( solveResult ) {
-        ctx.StoreGlobalResult( "redshiftresult", *solveResult );
+        ctx.StoreScopedGlobalResult( "redshiftresult", *solveResult );
     }
 
 
@@ -264,7 +264,7 @@ Bool CProcessFlow::LineMatching2( CProcessFlowContext& ctx )
                                                                     ctx.GetParams().redshiftStep, ctx.GetRayCatalog() );
 
     if( solveResult ) {
-        ctx.StoreGlobalResult( "redshiftresult", *solveResult );
+        ctx.StoreScopedGlobalResult( "redshiftresult", *solveResult );
     }
 
 
@@ -289,7 +289,7 @@ Bool CProcessFlow::LineModelSolve( CProcessFlowContext& ctx )
                                                                  spcLambdaRange, redshifts );
 
     if( solveResult ) {
-        ctx.StoreGlobalResult( "redshiftresult", *solveResult );
+        ctx.StoreScopedGlobalResult( "redshiftresult", *solveResult );
     }
 
 
@@ -308,7 +308,7 @@ Bool CProcessFlow::DecisionalTree7( CProcessFlowContext& ctx )
                                                                         ctx.GetParams().correlationExtremumCount , ctx.GetParams().overlapThreshold );
 
     if( solveResult ) {
-        ctx.StoreGlobalResult( "redshiftresult", *solveResult );
+        ctx.StoreScopedGlobalResult( "redshiftresult", *solveResult );
     }
 
     return true;
@@ -326,7 +326,7 @@ Bool CProcessFlow::DecisionalTreeA( CProcessFlowContext& ctx )
                                                                         ctx.GetParams().correlationExtremumCount , ctx.GetParams().overlapThreshold );
 
     if( solveResult ) {
-        ctx.StoreGlobalResult( "redshiftresult", *solveResult );
+        ctx.StoreScopedGlobalResult( "redshiftresult", *solveResult );
     }
 
     return true;

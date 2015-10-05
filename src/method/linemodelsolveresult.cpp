@@ -45,9 +45,12 @@ Void CLineModelSolveResult::SaveLine( const CDataStore& store, std::ostream& str
     Float64 merit;
     std::string tplName;
 
+    std::string spectrumName;
+    store.GetParam( "spectrumName", spectrumName );
+
     GetBestRedshiftLogArea( store, redshift, merit );
 
-    stream  << store.GetSpectrumName() << "\t"
+    stream  << spectrumName << "\t"
                 << redshift << "\t"
                 << merit << "\t"
                 << tplName << "\t"

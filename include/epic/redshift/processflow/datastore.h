@@ -22,37 +22,58 @@ public:
     typedef std::vector<std::string>    TScopeStack;
 
     class CAutoScope {
-    public:
-        CAutoScope( CDataStore& store, const char* name );
-        ~CAutoScope();
-    private:
-        CDataStore* m_Store;
+        public:
+            CAutoScope( CDataStore& store, const char* name );
+            ~CAutoScope();
+        private:
+            CDataStore* m_Store;
     };
 
     CDataStore();
     virtual ~CDataStore();
 
-    Void PushScope( const char* name );
-    Void PopScope();
+    Void                PushScope( const char* name );
+    Void                PopScope();
 
-    std::string GetCurrentScopeName() const;
+    std::string         GetCurrentScopeName() const;
 
-    // Utilities functions
-    Void  SetSpectrumName( const char* name );
-    const std::string& GetSpectrumName() const;
-
-    Float64 m_dtreepathnum; //Todo, should be handled differently...
+    std::string         GetScope(CConstRef<COperatorResult>  result) const;
 
     // Wrapper functions
-    Bool                            GetScopedParam( const char* name, TFloat64List& v, const TFloat64List& defaultValue = TFloat64List() );
-    Bool                            GetScopedParam( const char* name, TInt64List& v, const TInt64List& defaultValue = TInt64List() );
-    Bool                            GetScopedParam( const char* name, TBoolList& v, const TBoolList& defaultValue = TBoolList() );
-    Bool                            GetScopedParam( const char* name, Float64& v, Float64 defaultValue  = 0 );
-    Bool                            GetScopedParam( const char* name, Int64& v, Int64 defaultValue = 0 );
-    Bool                            GetScopedParam( const char* name, Bool& v, Bool defaultValue = true );
+    Bool                            GetScopedParam( const char* name, TFloat64List& v, const TFloat64List& defaultValue = TFloat64List() ) const;
+    Bool                            GetScopedParam( const char* name, TInt64List& v, const TInt64List& defaultValue = TInt64List() ) const;
+    Bool                            GetScopedParam( const char* name, TBoolList& v, const TBoolList& defaultValue = TBoolList() ) const;
+    Bool                            GetScopedParam( const char* name, Float64& v, Float64 defaultValue  = 0 ) const;
+    Bool                            GetScopedParam( const char* name, Int64& v, Int64 defaultValue = 0 ) const;
+    Bool                            GetScopedParam( const char* name, Bool& v, Bool defaultValue = true ) const;
+    Bool                            GetScopedParam( const char* name, std::string& v, std::string defaultValue = "" ) const;
 
-    Void                            StorePerTemplateResult( const CTemplate& t, const char* name, const COperatorResult& result );
-    Void                            StoreGlobalResult( const char* name, const COperatorResult& result );
+    Bool                            SetScopedParam( const char* name, const TFloat64List& v );
+    Bool                            SetScopedParam( const char* name, const TInt64List& v );
+    Bool                            SetScopedParam( const char* name, const TBoolList& v );
+    Bool                            SetScopedParam( const char* name, Float64 v );
+    Bool                            SetScopedParam( const char* name, Int64 v );
+    Bool                            SetScopedParam( const char* name, Bool v );
+    Bool                            SetScopedParam( const char* name, const std::string& v );
+
+    Bool                            GetParam( const char* name, TFloat64List& v, const TFloat64List& defaultValue = TFloat64List() ) const;
+    Bool                            GetParam( const char* name, TInt64List& v, const TInt64List& defaultValue = TInt64List() ) const;
+    Bool                            GetParam( const char* name, TBoolList& v, const TBoolList& defaultValue = TBoolList() ) const;
+    Bool                            GetParam( const char* name, Float64& v, Float64 defaultValue  = 0 ) const;
+    Bool                            GetParam( const char* name, Int64& v, Int64 defaultValue = 0 ) const;
+    Bool                            GetParam( const char* name, Bool& v, Bool defaultValue = true ) const;
+    Bool                            GetParam( const char* name, std::string& v, std::string defaultValue = "" ) const;
+
+    Bool                            SetParam( const char* name, const TFloat64List& v );
+    Bool                            SetParam( const char* name, const TInt64List& v );
+    Bool                            SetParam( const char* name, const TBoolList& v );
+    Bool                            SetParam( const char* name, Float64 v );
+    Bool                            SetParam( const char* name, Int64 v );
+    Bool                            SetParam( const char* name, Bool v );
+    Bool                            SetParam( const char* name, const std::string& v );
+
+    Void                            StoreScopedPerTemplateResult( const CTemplate& t, const char* name, const COperatorResult& result );
+    Void                            StoreScopedGlobalResult( const char* name, const COperatorResult& result );
 
     const COperatorResult*          GetPerTemplateResult( const CTemplate& t, const char* name ) const;
     TOperatorResultMap              GetPerTemplateResult( const char* name ) const;
@@ -62,11 +83,11 @@ public:
     Void                            SaveRedshiftResult( const char* dir );
     Void                            SaveAllResults( const char* dir ) const;
 
-    std::string                     GetScope(CConstRef<COperatorResult>  result) const;
 
 protected:
 
     COperatorResultStore            m_ResultStore;
+
     CParameterStore                 m_ParameterStore;
 
     TScopeStack                     m_ScopeStack;

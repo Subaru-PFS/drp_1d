@@ -209,13 +209,3 @@ std::string COperatorResultStore::GetScope(CConstRef<COperatorResult>  result) c
 
     return n;
 }
-
-Void COperatorResultStore::SetSpectrumName( const char* name )
-{
-    m_SpectrumName = name;
-}
-
-const std::string& COperatorResultStore::GetSpectrumName() const
-{
-    return m_SpectrumName;
-}

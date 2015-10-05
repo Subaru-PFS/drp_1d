@@ -80,7 +80,7 @@ Bool COperatorBlindSolve::BlindSolve( CDataStore& resultStore, const CSpectrum& 
         return false;
     }
 
-    resultStore.StorePerTemplateResult( tpl, "correlation", *correlationResult );
+    resultStore.StoreScopedPerTemplateResult( tpl, "correlation", *correlationResult );
 
     // Find redshifts extremum
     TPointList extremumList;
@@ -127,7 +127,7 @@ Bool COperatorBlindSolve::BlindSolve( CDataStore& resultStore, const CSpectrum& 
     }
 
     // Store results
-    resultStore.StorePerTemplateResult( tpl, "merit", *chisquareResult );
+    resultStore.StoreScopedPerTemplateResult( tpl, "merit", *chisquareResult );
 
     return true;
 }

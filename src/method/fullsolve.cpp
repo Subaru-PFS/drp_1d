@@ -83,7 +83,7 @@ Bool COperatorFullSolve::SolveBrute( CDataStore& resultStore, const CSpectrum& s
         return false;
     }else{
         // Store results
-        resultStore.StorePerTemplateResult( tpl, "correlation", *correlationResult );
+        resultStore.StoreScopedPerTemplateResult( tpl, "correlation", *correlationResult );
     }
 
     COperatorChiSquare meritChiSquare;
@@ -94,7 +94,7 @@ Bool COperatorFullSolve::SolveBrute( CDataStore& resultStore, const CSpectrum& s
         return false;
     }else{
         // Store results
-        resultStore.StorePerTemplateResult( tpl, "chisquare", *chisquareResult );
+        resultStore.StoreScopedPerTemplateResult( tpl, "chisquare", *chisquareResult );
     }
 
 
@@ -128,11 +128,11 @@ Bool CProcessFlow::FullSolve( CProcessFlowContext& ctx, const CTemplate& tpl, co
 
 
     // Store results
-    ctx.StorePerTemplateResult( tpl, "blindsolve.correlation", *correlationResult );
-    ctx.StorePerTemplateResult( tpl, "blindsolve.merit", *chisquareResult );
+    ctx.StoreScopedPerTemplateResult( tpl, "blindsolve.correlation", *correlationResult );
+    ctx.StoreScopedPerTemplateResult( tpl, "blindsolve.merit", *chisquareResult );
 
     CRef<CBlindSolveResult>  chisquareResults = new CBlindSolveResult();
-    ctx.StorePerTemplateResult( tpl, "blindsolve", *chisquareResults );
+    ctx.StoreScopedPerTemplateResult( tpl, "blindsolve", *chisquareResults );
     return true;
 
     return FullSolveBrute( ctx, tpl, tplWithoutCont );

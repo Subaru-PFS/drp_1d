@@ -126,7 +126,7 @@ Bool CMethodChisquare2Solve::Solve( CDataStore& resultStore, const CSpectrum& sp
             return false;
         }else{
             // Store results
-            resultStore.StorePerTemplateResult( tpl, scopeStr.c_str(), *chisquareResult );
+            resultStore.StoreScopedPerTemplateResult( tpl, scopeStr.c_str(), *chisquareResult );
         }
     }
 
