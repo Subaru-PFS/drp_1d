@@ -86,7 +86,7 @@ Void CLineModelResult::Save( const COperatorResultStore& store, std::ostream& st
     stream <<  "#Redshifts\tChiSquare\tOverlap"<< std::endl;
     for ( int i=0; i<Redshifts.size(); i++)
     {
-        stream <<  Redshifts[i] << std::setprecision(16) << "\t" << std::scientific << ChiSquare[i] << std::fixed << std::endl;
+        stream <<  Redshifts[i] << std::setprecision(32) << "\t" << std::scientific << ChiSquare[i] << std::fixed << std::endl;
     }
 
     // save extrema list, on 1 line
@@ -146,6 +146,13 @@ Void CLineModelResult::Save( const COperatorResultStore& store, std::ostream& st
                     typeStr = "E";
                 }
                 stream <<  typeStr << "\t";
+                std::string forceStr="";
+                if(restRayList[j].GetForce() == CRay::nForce_Strong){
+                    forceStr = "S";
+                }else{
+                    forceStr = "W";
+                }
+                stream <<  forceStr << "\t";
                 std::string name = restRayList[j].GetName();
                 Int32 nstr = name.size();
                 for(int jstr=0; jstr<18-nstr; jstr++){

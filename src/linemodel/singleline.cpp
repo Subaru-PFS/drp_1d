@@ -11,7 +11,7 @@
 
 using namespace NSEpic;
 
-CSingleLine::CSingleLine(const CRay& r , Float64 nominalWidth, std::vector<Int32> catalogIndexes)
+CSingleLine::CSingleLine(const CRay& r , Int32 widthType, Float64 nominalWidth, std::vector<Int32> catalogIndexes):CLineModelElement(widthType)
 {
     m_ElementType = "CSingleLine";
     m_Ray = r;
@@ -24,6 +24,7 @@ CSingleLine::CSingleLine(const CRay& r , Float64 nominalWidth, std::vector<Int32
 
     m_NominalWidth = nominalWidth;
     m_FittedAmplitude = -1;
+    m_FittedAmplitudeErrorSigma = -1;
 
     m_NSigmaSupport = 8.0;
     m_Start = -1;
@@ -72,28 +73,28 @@ TInt32RangeList CSingleLine::getSupport()
 }
 
 Float64 CSingleLine::GetLineWidth(Float64 lambda, Float64 z){
-    Float64 sigma = -1;
+    Float64 instrumentSigma = -1;
     if( m_LineWidthType == nWidthType_PSFInstrumentDriven){
-        sigma = lambda/m_Resolution/m_FWHM_factor;
+        instrumentSigma = lambda/m_Resolution/m_FWHM_factor;
     }else if( m_LineWidthType == nWidthType_ZDriven){
-        sigma = m_NominalWidth*(1+z);
+        instrumentSigma = m_NominalWidth*(1+z);
     }else if( m_LineWidthType == nWidthType_Fixed){
-        sigma = m_NominalWidth;
+        instrumentSigma = m_NominalWidth;
     }
 
 //    Float64 v = 400;
 //    Float64 c = 300000.0;
-//    Float64 minSigma = v/c*lambda;//, useless /(1+z)*(1+z);
-//    if(sigma < minSigma){
-//        sigma = minSigma;
-//    }
-    return sigma;
+//    Float64 velocitySigma = v/c*lambda;//, useless /(1+z)*(1+z);
+//    Float64 sigma = sqrt(instrumentSigma*instrumentSigma + velocitySigma*velocitySigma);
+
+    return instrumentSigma;
 }
 
 void CSingleLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis, Float64  redshift)
 {
     if(m_OutsideLambdaRange){
         m_FittedAmplitude = -1;
+        m_FittedAmplitudeErrorSigma = -1;
         return;
     }
 
@@ -132,6 +133,7 @@ void CSingleLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const 
     }
 
     m_FittedAmplitude = std::max(0.0, sumCross / sumGauss);
+    m_FittedAmplitudeErrorSigma = 1.0/sqrt(sumGauss);
 
     /*
     //SNR estimation
@@ -273,6 +275,18 @@ Float64 CSingleLine::GetFittedAmplitude(Int32 subeIdx){
 //    }
 
     return m_FittedAmplitude;
+}
+
+Float64 CSingleLine::GetFittedAmplitudeErrorSigma(Int32 subeIdx){
+//    if(m_OutsideLambdaRange){
+//        m_FittedAmplitude = -1;
+//    }
+
+    return m_FittedAmplitudeErrorSigma;
+}
+
+Float64 CSingleLine::GetNominalAmplitude(Int32 subeIdx){
+    return 1.0;
 }
 
 

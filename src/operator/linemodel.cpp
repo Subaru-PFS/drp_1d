@@ -42,7 +42,7 @@ COperatorLineModel::~COperatorLineModel()
 
 
 const COperatorResult* COperatorLineModel::Compute(const CSpectrum& spectrum, const CRayCatalog& restraycatalog,
-                          const TFloat64Range& lambdaRange, const TFloat64List& redshifts)
+                          const TFloat64Range& lambdaRange, const TFloat64List& redshifts, Int32 lineWidthType)
 {
 
     if( spectrum.GetSpectralAxis().IsInLinearScale() == false)
@@ -66,7 +66,8 @@ const COperatorResult* COperatorLineModel::Compute(const CSpectrum& spectrum, co
     result->restRayList = restRayList;
     result->LineModelSolutions.resize( sortedRedshifts.size() );
 
-    CLineModelElementList model(spectrum, restRayList);
+
+    CLineModelElementList model(spectrum, restRayList, lineWidthType);
 
     PrecomputeLogErr(spectrum);
     for (Int32 i=0;i<sortedRedshifts.size();i++)
@@ -118,8 +119,8 @@ const COperatorResult* COperatorLineModel::Compute(const CSpectrum& spectrum, co
         Log.LogInfo( "LineModel Solution: no extrema found...");
     }
 
-    //*
-    //  //saving the best model for viewing
+    /*
+   //  //saving the best model for viewing
     if(result->Extrema.size()>0){
         Float64 _chi=0.0;
         CLineModelResult::SLineModelSolution _lineModelSolution;

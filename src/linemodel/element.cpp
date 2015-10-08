@@ -7,13 +7,11 @@
 
 using namespace NSEpic;
 
-CLineModelElement::CLineModelElement()
+CLineModelElement::CLineModelElement(Int32 widthType)
 {
-    m_LineWidthType = nWidthType_PSFInstrumentDriven;
-    //m_LineWidthType = nWidthType_ZDriven;
-    //m_LineWidthType = nWidthType_Fixed;
+    m_LineWidthType = widthType;
 
-    m_Resolution = 250.0 * (1.0 + 0.5); //dr=+0.5 found empirically on VVDS DEEP 651
+    m_Resolution = 250.0 * (1.0 + 0.0); //dr=+0.5 found empirically on VVDS DEEP 651
     m_FWHM_factor = 2.35;
 
     m_OutsideLambdaRange = true;

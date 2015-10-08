@@ -9,14 +9,18 @@
 #include <epic/core/debug/assert.h>
 #include <epic/core/log/log.h>
 
+
+#include <boost/format.hpp>
 #include <boost/chrono/thread_clock.hpp>
 
 #include <algorithm>
 
 using namespace NSEpic;
 
-CLineModelElementList::CLineModelElementList( const CSpectrum& spectrum, const CRayCatalog::TRayVector& restRayList)
+CLineModelElementList::CLineModelElementList( const CSpectrum& spectrum, const CRayCatalog::TRayVector& restRayList, Int32 widthType)
 {
+    m_LineWidthType = widthType;
+
     //PFS
     m_nominalWidthDefaultEmission = 3.4; //suited to PFS RJLcont simulations
     m_nominalWidthDefaultAbsorption = m_nominalWidthDefaultEmission;
@@ -26,8 +30,8 @@ CLineModelElementList::CLineModelElementList( const CSpectrum& spectrum, const C
     //m_nominalWidthDefaultAbsorption = m_nominalWidthDefaultEmission; //
 
 
-    //LoadCatalog(restRayList);
-    LoadCatalog_tplExtendedBlue(restRayList);
+    LoadCatalog(restRayList);
+    //LoadCatalog_tplExtendedBlue(restRayList);
     //LoadCatalogMultilineBalmer(restRayList);
     //LoadCatalogSingleLines(restRayList);
     LogCatalogInfos();
@@ -145,7 +149,7 @@ void CLineModelElementList::LoadCatalog(const CRayCatalog::TRayVector& restRayLi
         inds.push_back(hIdx[0]);
     }
     if(lines.size()>0){
-        m_Elements.push_back(boost::shared_ptr<CLineModelElement> (new CMultiLine(lines, amps, m_nominalWidthDefaultAbsorption, inds)));
+        m_Elements.push_back(boost::shared_ptr<CLineModelElement> (new CMultiLine(lines, m_LineWidthType, amps, m_nominalWidthDefaultAbsorption, inds)));
     }
 
     //Load MgII multilines
@@ -165,7 +169,7 @@ void CLineModelElementList::LoadCatalog(const CRayCatalog::TRayVector& restRayLi
         indsMgII.push_back(bIdx[0]);
     }
     if(lines.size()>0){
-        m_Elements.push_back(boost::shared_ptr<CLineModelElement> (new CMultiLine(linesMgII, ampsMgII, m_nominalWidthDefaultAbsorption, indsMgII)));
+        m_Elements.push_back(boost::shared_ptr<CLineModelElement> (new CMultiLine(linesMgII, m_LineWidthType, ampsMgII, m_nominalWidthDefaultAbsorption, indsMgII)));
     }
 
     //Load SiIV multilines
@@ -185,7 +189,7 @@ void CLineModelElementList::LoadCatalog(const CRayCatalog::TRayVector& restRayLi
         indsSiIV.push_back(bIdx[0]);
     }
     if(lines.size()>0){
-        m_Elements.push_back(boost::shared_ptr<CLineModelElement> (new CMultiLine(linesSiIV, ampsSiIV, m_nominalWidthDefaultAbsorption, indsSiIV)));
+        m_Elements.push_back(boost::shared_ptr<CLineModelElement> (new CMultiLine(linesSiIV, m_LineWidthType, ampsSiIV, m_nominalWidthDefaultAbsorption, indsSiIV)));
     }
 
 //    //Load CIV multilines, emission possible = warning
@@ -204,7 +208,7 @@ void CLineModelElementList::LoadCatalog(const CRayCatalog::TRayVector& restRayLi
 //        ampsCIV.push_back(0.1908); //CIV1548
 //        indsCIV.push_back(bIdx[0]);
 //    }
-//    m_Elements.push_back(boost::shared_ptr<CLineModelElement> (new CMultiLine(linesCIV, ampsCIV, m_nominalWidthDefaultAbsorption, indsCIV)));
+//    m_Elements.push_back(boost::shared_ptr<CLineModelElement> (new CMultiLine(linesCIV, m_LineWidthType, ampsCIV, m_nominalWidthDefaultAbsorption, indsCIV)));
 
 //    //Load CaII multilines
 //    aIdx = findLineIdxInCatalog( restRayList, "CaII_H", CRay::nType_Absorption);
@@ -222,7 +226,7 @@ void CLineModelElementList::LoadCatalog(const CRayCatalog::TRayVector& restRayLi
 //        ampsCaII.push_back(0.6); //CaII_K
 //        indsCaII.push_back(bIdx[0]);
 //    }
-//    m_Elements.push_back(boost::shared_ptr<CLineModelElement> (new CMultiLine(linesCaII, ampsCaII, m_nominalWidthDefaultAbsorption, indsCaII)));
+//    m_Elements.push_back(boost::shared_ptr<CLineModelElement> (new CMultiLine(linesCaII, m_LineWidthType, ampsCaII, m_nominalWidthDefaultAbsorption, indsCaII)));
 
 
     //Load the rest of the single lines
@@ -268,7 +272,7 @@ void CLineModelElementList::LoadCatalog_tplExtendedBlue(const CRayCatalog::TRayV
         inds.push_back(Hbetadx[0]);
     }
     if(lines.size()>0){
-        m_Elements.push_back(boost::shared_ptr<CLineModelElement> (new CMultiLine(lines, amps, m_nominalWidthDefaultEmission, inds)));
+        m_Elements.push_back(boost::shared_ptr<CLineModelElement> (new CMultiLine(lines, m_LineWidthType, amps, m_nominalWidthDefaultEmission, inds)));
     }
     lines.clear();
     amps.clear();
@@ -287,7 +291,7 @@ void CLineModelElementList::LoadCatalog_tplExtendedBlue(const CRayCatalog::TRayV
         inds.push_back(OII2dx[0]);
     }
     if(lines.size()>0){
-        m_Elements.push_back(boost::shared_ptr<CLineModelElement> (new CMultiLine(lines, amps, m_nominalWidthDefaultEmission, inds)));
+        m_Elements.push_back(boost::shared_ptr<CLineModelElement> (new CMultiLine(lines, m_LineWidthType, amps, m_nominalWidthDefaultEmission, inds)));
     }
 
     //Load NII multilines
@@ -358,7 +362,7 @@ void CLineModelElementList::LoadCatalog_tplExtendedBlue(const CRayCatalog::TRayV
         inds.push_back(hIdx[0]);
     }
     if(lines.size()>0){
-        m_Elements.push_back(boost::shared_ptr<CLineModelElement> (new CMultiLine(lines, amps, m_nominalWidthDefaultAbsorption, inds)));
+        m_Elements.push_back(boost::shared_ptr<CLineModelElement> (new CMultiLine(lines, m_LineWidthType, amps, m_nominalWidthDefaultAbsorption, inds)));
     }
 
     //Load MgII multilines
@@ -378,7 +382,7 @@ void CLineModelElementList::LoadCatalog_tplExtendedBlue(const CRayCatalog::TRayV
         indsMgII.push_back(bIdx[0]);
     }
     if(lines.size()>0){
-        m_Elements.push_back(boost::shared_ptr<CLineModelElement> (new CMultiLine(linesMgII, ampsMgII, m_nominalWidthDefaultAbsorption, indsMgII)));
+        m_Elements.push_back(boost::shared_ptr<CLineModelElement> (new CMultiLine(linesMgII, m_LineWidthType, ampsMgII, m_nominalWidthDefaultAbsorption, indsMgII)));
     }
 
     //Load SiIV multilines
@@ -398,7 +402,7 @@ void CLineModelElementList::LoadCatalog_tplExtendedBlue(const CRayCatalog::TRayV
         indsSiIV.push_back(bIdx[0]);
     }
     if(lines.size()>0){
-        m_Elements.push_back(boost::shared_ptr<CLineModelElement> (new CMultiLine(linesSiIV, ampsSiIV, m_nominalWidthDefaultAbsorption, indsSiIV)));
+        m_Elements.push_back(boost::shared_ptr<CLineModelElement> (new CMultiLine(linesSiIV, m_LineWidthType, ampsSiIV, m_nominalWidthDefaultAbsorption, indsSiIV)));
     }
 
 //    //Load CIV multilines, emission possible = warning
@@ -417,7 +421,7 @@ void CLineModelElementList::LoadCatalog_tplExtendedBlue(const CRayCatalog::TRayV
 //        ampsCIV.push_back(0.1908); //CIV1548
 //        indsCIV.push_back(bIdx[0]);
 //    }
-//    m_Elements.push_back(boost::shared_ptr<CLineModelElement> (new CMultiLine(linesCIV, ampsCIV, m_nominalWidthDefaultAbsorption, indsCIV)));
+//    m_Elements.push_back(boost::shared_ptr<CLineModelElement> (new CMultiLine(linesCIV, m_LineWidthType, ampsCIV, m_nominalWidthDefaultAbsorption, indsCIV)));
 
 //    //Load CaII multilines
 //    aIdx = findLineIdxInCatalog( restRayList, "CaII_H", CRay::nType_Absorption);
@@ -435,7 +439,7 @@ void CLineModelElementList::LoadCatalog_tplExtendedBlue(const CRayCatalog::TRayV
 //        ampsCaII.push_back(0.6); //CaII_K
 //        indsCaII.push_back(bIdx[0]);
 //    }
-//    m_Elements.push_back(boost::shared_ptr<CLineModelElement> (new CMultiLine(linesCaII, ampsCaII, m_nominalWidthDefaultAbsorption, indsCaII)));
+//    m_Elements.push_back(boost::shared_ptr<CLineModelElement> (new CMultiLine(linesCaII, m_LineWidthType, ampsCaII, m_nominalWidthDefaultAbsorption, indsCaII)));
 
 
     //Load the rest of the single lines
@@ -522,7 +526,7 @@ void CLineModelElementList::LoadCatalogMultilineBalmer(const CRayCatalog::TRayVe
         inds.push_back(Hgammaidx[0]);
         inds.push_back(Hdeltaidx[0]);
 
-        m_Elements.push_back(boost::shared_ptr<CLineModelElement> (new CMultiLine(lines, amps, m_nominalWidthDefaultEmission, inds)));
+        m_Elements.push_back(boost::shared_ptr<CLineModelElement> (new CMultiLine(lines, m_LineWidthType, amps, m_nominalWidthDefaultEmission, inds)));
     }else{
         if(Halphaidx.size()==1){
             addSingleLine(restRayList[Halphaidx[0]], Halphaidx[0], m_nominalWidthDefaultEmission);
@@ -561,7 +565,11 @@ void CLineModelElementList::LogCatalogInfos()
 
         }
         for(UInt32 j=0; j<nRays; j++){
-            Log.LogInfo( "LineModel ctlg: elt %d (%s): ray %d = %s", iElts, m_Elements[iElts]->GetElementTypeTag().c_str(), j, m_Elements[iElts]->GetRayName(j).c_str());
+            std::string nominalAmpStr = "";
+            if(nRays>1){
+                nominalAmpStr = boost::str(boost::format("(nominal amp = %.4f)") % m_Elements[iElts]->GetNominalAmplitude(j));
+            }
+            Log.LogInfo( "LineModel ctlg: elt %d (%s): ray %d = %s %s", iElts, m_Elements[iElts]->GetElementTypeTag().c_str(), j, m_Elements[iElts]->GetRayName(j).c_str(), nominalAmpStr.c_str());
         }
     }
     Log.LogInfo( "\n");
@@ -827,7 +835,7 @@ Float64 CLineModelElementList::getLeastSquareMerit()
     const CSpectrumFluxAxis& modelFluxAxis = m_SpectrumModel->GetFluxAxis();
 
     Int32 numDevs = 0;
-    Float64 fit = 0;
+    Float64 fit = 0.0;
     const Float64* error = spcFluxAxis.GetError();
     const Float64* Ymodel = modelFluxAxis.GetSamples();
     const Float64* Yspc = spcFluxAxis.GetSamples();
@@ -838,6 +846,7 @@ Float64 CLineModelElementList::getLeastSquareMerit()
         // fit
         diff = (Yspc[j] - Ymodel[j]);
         fit += (diff*diff) / (error[j]*error[j]);
+        //fit += (diff*diff)/ (error[0]*error[0]);
         //fit += pow( Yspc[j] - Ymodel[j] , 2.0 );
     }
     //fit /= numDevs;
@@ -904,12 +913,12 @@ std::vector<int> CLineModelElementList::findLineIdxInCatalog(const CRayCatalog::
 
 void CLineModelElementList::addSingleLine(const CRay &r, Int32 index, Float64 nominalWidth)
 {
-    //CSingleLine line = CSingleLine(r, nominalWidth);
+    //CSingleLine line = CSingleLine(r, m_LineWidthType, nominalWidth);
     std::vector<Int32> a;
     a.push_back(index);
     //CSingleLine c(r, nominalWidth, a);
-    m_Elements.push_back(boost::shared_ptr<CLineModelElement> (new CSingleLine(r, nominalWidth, a)));
-    //m_Elements.push_back(new CSingleLine(r, nominalWidth, a));
+    m_Elements.push_back(boost::shared_ptr<CLineModelElement> (new CSingleLine(r, m_LineWidthType, nominalWidth, a)));
+    //m_Elements.push_back(new CSingleLine(r, m_LineWidthType, nominalWidth, a));
 }
 
 void CLineModelElementList::addDoubleLine(const CRay &r1, const CRay &r2, Int32 index1, Int32 index2, Float64 nominalWidth, Float64 a1, Float64 a2)
@@ -926,7 +935,7 @@ void CLineModelElementList::addDoubleLine(const CRay &r1, const CRay &r2, Int32 
     a.push_back(index1);
     a.push_back(index2);
     //CSingleLine c(r, nominalWidth, a);
-    m_Elements.push_back(boost::shared_ptr<CLineModelElement> (new CMultiLine(lines, amps, nominalWidth, a)));
+    m_Elements.push_back(boost::shared_ptr<CLineModelElement> (new CMultiLine(lines, m_LineWidthType, amps, nominalWidth, a)));
     //m_Elements.push_back(new CSingleLine(r, nominalWidth, a));
 }
 
@@ -970,7 +979,8 @@ void CLineModelElementList::applyRules()
 Void CLineModelElementList::ApplyStrongHigherWeakRule( Int32 linetype )
 {
     Float64 coeff = 1.0;
-    Float64 maxiStrong = FindHighestStrongLineAmp(linetype);
+    Float64 erStrong=-1.0;
+    Float64 maxiStrong = FindHighestStrongLineAmp(linetype, erStrong);
 
 
     for( UInt32 iRestRayWeak=0; iRestRayWeak<m_RestRayList.size(); iRestRayWeak++ ) //loop on the strong lines
@@ -988,14 +998,22 @@ Void CLineModelElementList::ApplyStrongHigherWeakRule( Int32 linetype )
             continue;
         }
 
-        Float64 ampStrong = maxiStrong;
-        m_Elements[eIdxWeak]->LimitFittedAmplitude(subeIdxWeak, coeff*ampStrong);
+        Float64 nSigma = 1.0;
+        Float64 ampA = maxiStrong;
+        Float64 erA = erStrong;
+
+        Float64 ampB = m_Elements[eIdxWeak]->GetFittedAmplitude(subeIdxWeak);
+        Float64 erB = m_Elements[eIdxWeak]->GetFittedAmplitudeErrorSigma(subeIdxWeak);
+
+        Float64 maxB = (coeff*ampA) + (erA*nSigma);
+
+        m_Elements[eIdxWeak]->LimitFittedAmplitude(subeIdxWeak, maxB);
 
     }
 
 }
 
-Float64 CLineModelElementList::FindHighestStrongLineAmp( Int32 linetype )
+Float64 CLineModelElementList::FindHighestStrongLineAmp( Int32 linetype , Float64 &er)
 {
     Float64 maxi = -1.0;
     for( UInt32 iRestRayStrong=0; iRestRayStrong<m_RestRayList.size(); iRestRayStrong++ ) //loop on the strong lines
@@ -1018,6 +1036,7 @@ Float64 CLineModelElementList::FindHighestStrongLineAmp( Int32 linetype )
         Float64 ampStrong = m_Elements[eIdxStrong]->GetFittedAmplitude(subeIdxStrong);
         if(maxi<ampStrong){
             maxi = ampStrong;
+            er = m_Elements[eIdxStrong]->GetFittedAmplitudeErrorSigma(subeIdxStrong);
         }
     }
     return maxi;
@@ -1044,8 +1063,16 @@ Void CLineModelElementList::Apply2SingleLinesAmplitudeRule( Int32 linetype, std:
     }
 
     if(m_Elements[iA]->IsOutsideLambdaRange() == false){
+        Float64 nSigma = 1.0;
         Float64 ampA = m_Elements[iA]->GetFittedAmplitude(0);
-        m_Elements[iB]->LimitFittedAmplitude(0, coeff*ampA);
+        Float64 erA = m_Elements[iA]->GetFittedAmplitudeErrorSigma(0);
+
+        Float64 ampB = m_Elements[iB]->GetFittedAmplitude(0);
+        Float64 erB = m_Elements[iB]->GetFittedAmplitudeErrorSigma(0);
+
+        Float64 maxB = (coeff*ampA) + (erA*nSigma);
+
+        m_Elements[iB]->LimitFittedAmplitude(0, maxB);
     }
 }
 

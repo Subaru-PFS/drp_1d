@@ -25,12 +25,12 @@ CLineModelSolve::~CLineModelSolve()
 
 
 const CLineModelSolveResult* CLineModelSolve::Compute(  COperatorResultStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont, const CRayCatalog& restraycatalog,
-                                                        const TFloat64Range& lambdaRange, const TFloat64List& redshifts, Int32 spcType)
+                                                        const TFloat64Range& lambdaRange, const TFloat64List& redshifts)
 {
     Bool storeResult = false;
     COperatorResultStore::CAutoScope resultScope( resultStore, "linemodelsolve" );
 
-    Solve( resultStore, spc, spcWithoutCont, restraycatalog, lambdaRange, redshifts, spcType);
+    Solve( resultStore, spc, spcWithoutCont, restraycatalog, lambdaRange, redshifts);
     storeResult = true;
 
 
@@ -44,11 +44,15 @@ const CLineModelSolveResult* CLineModelSolve::Compute(  COperatorResultStore& re
 }
 
 Bool CLineModelSolve::Solve( COperatorResultStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont, const CRayCatalog& restraycatalog,
-                             const TFloat64Range& lambdaRange, const TFloat64List& redshifts, Int32 spcType )
+                             const TFloat64Range& lambdaRange, const TFloat64List& redshifts)
 {
     CSpectrum _spc;
 
     std::string scopeStr = "linemodel";
+
+
+    Int32 spcType = CLineModelSolveResult::nType_noContinuum;
+    //Int32 spcType = CLineModelSolveResult::nType_raw;
     Int32 _spctype = spcType;
 
     if(_spctype == CLineModelSolveResult::nType_continuumOnly){
@@ -72,9 +76,14 @@ Bool CLineModelSolve::Solve( COperatorResultStore& resultStore, const CSpectrum&
         //scopeStr = "linemodel_nocontinuum";
     }
 
+
+    Int32 widthType = CLineModelElement::nWidthType_PSFInstrumentDriven;
+    //Int32 widthType = nWidthType_ZDriven;
+    //Int32 widthType = nWidthType_Fixed;
+
     // Compute merit function
     COperatorLineModel linemodel;
-    CRef<CLineModelResult>  result = (CLineModelResult*)linemodel.Compute( _spc, restraycatalog, lambdaRange, redshifts);
+    CRef<CLineModelResult>  result = (CLineModelResult*)linemodel.Compute( _spc, restraycatalog, lambdaRange, redshifts, widthType);
 
     if( !result )
     {

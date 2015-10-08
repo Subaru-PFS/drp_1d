@@ -18,7 +18,7 @@ class CSingleLine:public CLineModelElement
 
 public:
 
-    CSingleLine(const CRay &r, Float64 nominalWidth, std::vector<Int32> catalogIndexes);
+    CSingleLine(const CRay &r, Int32 widthType, Float64 nominalWidth, std::vector<Int32> catalogIndexes);
     ~CSingleLine();
 
     std::string GetRayName(Int32 subeIdx);
@@ -31,7 +31,9 @@ public:
     Float64 getModelAtLambda( Float64 lambda, Float64 redshift );
     void addToSpectrumModel( const CSpectrumSpectralAxis& modelspectralAxis, CSpectrumFluxAxis& modelfluxAxis, Float64 redshift );
     void initSpectrumModel( CSpectrumFluxAxis& modelfluxAxis );
+    Float64 GetNominalAmplitude(Int32 subeIdx);
     Float64 GetFittedAmplitude(Int32 subeIdx);
+    Float64 GetFittedAmplitudeErrorSigma(Int32 subeIdx);
     Float64 GetElementAmplitude();
     void SetFittedAmplitude(Float64 A);
     void LimitFittedAmplitude(Int32 subeIdx, Float64 limit);
@@ -47,6 +49,7 @@ private:
     Float64 m_SignFactor;
     Float64 m_NominalWidth;
     Float64 m_FittedAmplitude;
+    Float64 m_FittedAmplitudeErrorSigma;
 
     Float64 m_NSigmaSupport;
     Int32 m_Start;

@@ -25,7 +25,7 @@ class CLineModelElementList
 
 public:
 
-    CLineModelElementList( const CSpectrum& spectrum, const CRayCatalog::TRayVector& restRayList );
+    CLineModelElementList(const CSpectrum& spectrum, const CRayCatalog::TRayVector& restRayList , Int32 widthType);
     ~CLineModelElementList();
 
     void LoadCatalog(const CRayCatalog::TRayVector& restRayList);
@@ -62,7 +62,7 @@ private:
 
     void applyRules();
     Void ApplyStrongHigherWeakRule( Int32 lineType );
-    Float64 FindHighestStrongLineAmp( Int32 lineType );
+    Float64 FindHighestStrongLineAmp( Int32 lineType, Float64 &er);
 
     Int32 FindElementIndex(Int32 LineCatalogIndex);
     Int32 FindElementIndex(std::string LineTagStr, Int32 linetype);
@@ -76,6 +76,7 @@ private:
 
     CRayCatalog::TRayVector m_RestRayList;
 
+    Int32 m_LineWidthType;
     Float64 m_nominalWidthDefaultEmission;
     Float64 m_nominalWidthDefaultAbsorption;
 };
