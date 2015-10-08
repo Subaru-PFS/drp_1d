@@ -64,6 +64,13 @@ const CDTree7SolveResult* COperatorDTree7Solve::Compute(CDataStore& resultStore,
 
     CDataStore::CAutoScope resultScope( resultStore, "dtree7solve" );
 
+    resultStore.GetScopedParam( "winsize", m_winsize, 250.0 );
+    resultStore.GetScopedParam( "cut", m_cut, 5.0 );
+    resultStore.GetScopedParam( "strongcut", m_strongcut, 2.0 );
+    resultStore.GetScopedParam( "minMatchNum", m_minMatchNum, 1.0 );
+    resultStore.GetScopedParam( "tol", m_tol, 0.002 );
+
+
     storeResult = SolveDecisionalTree7(resultStore, spc, spcWithoutCont,
                                        tplCatalog, tplCategoryList, restRayCatalog,
                                        lambdaRange, redshiftRange, redshiftStep,

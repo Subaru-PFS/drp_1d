@@ -36,7 +36,7 @@ private:
     Float64 m_strongcut;
 
     // Line Matching
-    Int32 m_minMatchNum;
+    Int64 m_minMatchNum;
     Float64 m_tol;
 
     // tree path
