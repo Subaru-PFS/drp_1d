@@ -10,6 +10,9 @@
 #include <epic/redshift/extremum/extremum.h>
 #include <epic/redshift/processflow/datastore.h>
 
+
+#include <epic/redshift/spectrum/io/fitswriter.h>
+
 using namespace NSEpic;
 using namespace std;
 
@@ -41,6 +44,21 @@ const CChisquare2SolveResult* CMethodChisquare2Solve::Compute(  CDataStore& resu
         for( UInt32 j=0; j<tplCatalog.GetTemplateCount( category ); j++ )
         {
             const CTemplate& tpl = tplCatalog.GetTemplate( category, j );
+
+
+//            if(0){
+
+//                //*
+//                //CSpectrumFluxAxis& sfluxAxisPtr = model.GetFluxAxis();
+//                //CSpectrumFluxAxis& modelFluxAxis = model.GetFluxAxis();
+//                //sfluxAxisPtr = modelFluxAxis;
+//                CSpectrum spctpl= CSpectrum(tpl);
+
+//                CSpectrumIOFitsWriter writer;
+//                Bool retVal1 = writer.Write( "tplexported.fits",  spctpl);
+//            }
+
+
             const CTemplate& tplWithoutCont = tplCatalog.GetTemplateWithoutContinuum( category, j );
 
             Solve( resultStore, spc, spcWithoutCont, tpl, tplWithoutCont, lambdaRange, redshifts, overlapThreshold, _type);

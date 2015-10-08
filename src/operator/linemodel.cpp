@@ -54,7 +54,7 @@ const COperatorResult* COperatorLineModel::Compute(const CSpectrum& spectrum, co
     TFloat64List sortedRedshifts = redshifts;
     std::sort(sortedRedshifts.begin(), sortedRedshifts.end());
 
-    Int32 typeFilter = CRay::nType_Emission;
+    Int32 typeFilter = -1;//CRay::nType_Absorption;//CRay::nType_Emission;
     Int32 forceFilter = -1;//CRay::nForce_Strong;
     CRayCatalog::TRayVector restRayList = restraycatalog.GetFilteredList(typeFilter, forceFilter);
 
@@ -73,13 +73,6 @@ const COperatorResult* COperatorLineModel::Compute(const CSpectrum& spectrum, co
     {
         ModelFit( spectrum, model, result->restRayList, lambdaRange, result->Redshifts[i], result->ChiSquare[i], result->LineModelSolutions[i]);
     }
-
-    /* //saving the model for viewing
-    CSpectrumFluxAxis& sfluxAxisPtr = model.GetFluxAxis();
-    sfluxAxisPtr = modelFluxAxis;
-    CSpectrumIOFitsWriter writer;
-    Bool retVal = writer.Write( "model.fits", model );
-    //*/
 
     // extrema
     Int32 extremumCount = 15;
@@ -108,14 +101,22 @@ const COperatorResult* COperatorLineModel::Compute(const CSpectrum& spectrum, co
     extremumCount = extremumList.size();
     result->Extrema.resize( extremumCount );
     result->LogArea.resize( extremumCount );
+    result->LogAreaCorrectedExtrema.resize( extremumCount );
     result->SigmaZ.resize( extremumCount );
     for( Int32 i=0; i<extremumList.size(); i++ )
     {
         result->Extrema[i] = extremumList[i].X;
         result->LogArea[i] = -DBL_MAX;
+        result->LogAreaCorrectedExtrema[i] = -1.0;
     }
     ComputeArea2(result);
 
+
+    if(result->Extrema.size()>0){
+        Log.LogInfo( "LineModel Solution: best z found = %.5f", result->Extrema[0]);
+    }else{
+        Log.LogInfo( "LineModel Solution: no extrema found...");
+    }
 
     //*
     //  //saving the best model for viewing
@@ -130,7 +131,12 @@ const COperatorResult* COperatorLineModel::Compute(const CSpectrum& spectrum, co
         CSpectrum spcmodel = model.GetModelSpectrum();
 
         CSpectrumIOFitsWriter writer;
-        Bool retVal = writer.Write( "model.fits",  spcmodel);
+        Bool retVal1 = writer.Write( "model.fits",  spcmodel);
+
+        if(1 && retVal1){
+            CSpectrum s(spectrum);
+            Bool retVal2 = writer.Write( "spectrum.fits",  s);
+        }
     }
     //*/
     return result;
@@ -327,7 +333,7 @@ void COperatorLineModel::ComputeArea2(CLineModelResult* results)
         Float64 b2sur4c = (Float64)(C(1)*C(1)/((Float64)(4.0*C(2))));
         Float64 logK = ( -(a - b2sur4c)/2.0 );
         Float64 logarea = log(sigma) + logK + log(2.0*M_PI);
-        if(1){
+        if(0){
             Log.LogInfo("Extrema: %g", results->Extrema[indz]);
             Log.LogInfo("# best fit: Y = %g + %g X + %g X^2", C(0), C(1), C(2));
             //Log.LogInfo("# covariance matrix:\n");
@@ -349,6 +355,7 @@ void COperatorLineModel::ComputeArea2(CLineModelResult* results)
 
         results->LogArea[indz] = logarea;
         results->SigmaZ[indz] = sigma;
+        results->LogAreaCorrectedExtrema[indz] = zcorr;
     }
 }
 
@@ -360,25 +367,7 @@ Void COperatorLineModel::ModelFit(const CSpectrum& spectrum, CLineModelElementLi
 
     model.fit(redshift, modelSolution);
 
-    const CSpectrumSpectralAxis& spcSpectralAxis = spectrum.GetSpectralAxis();
-    const CSpectrumFluxAxis& spcFluxAxis = spectrum.GetFluxAxis();
-    const CSpectrumFluxAxis& modelFluxAxis = model.GetModelSpectrum().GetFluxAxis();
-
-    Int32 numDevs = 0;
-    Float64 fit = 0;
-    const Float64* error = spcFluxAxis.GetError();
-    const Float64* Ymodel = modelFluxAxis.GetSamples();
-    const Float64* Yspc = spcFluxAxis.GetSamples();
-    Float64 diff = 0.0;
-    for( UInt32 j=0; j<spcSpectralAxis.GetSamplesCount(); j++ )
-    {
-        numDevs++;
-        // fit
-        diff = (Yspc[j] - Ymodel[j]);
-        fit += (diff*diff) / (error[j]*error[j]);
-        //fit += pow( Yspc[j] - Ymodel[j] , 2.0 );
-    }
-    //fit /= numDevs;
+    Float64 fit = model.getLeastSquareMerit();
 
     chiSquare = fit + mSumLogErr;
     return;

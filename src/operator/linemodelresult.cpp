@@ -123,7 +123,7 @@ Void CLineModelResult::Save( const CDataStore& store, std::ostream& stream ) con
     if(LineModelSolutions.size()>0){
         for ( UInt32 i=0; i<Extrema.size(); i++)
         {
-            stream <<  "#linemodel solution " << i << " for z = " <<  Extrema[i];
+            stream <<  "#linemodel solution " << i << " for z = " <<  std::fixed <<  Extrema[i];
             if(LogArea.size()>i){
                 stream <<  ", LogArea = " <<  LogArea[i];
             }
@@ -139,8 +139,21 @@ Void CLineModelResult::Save( const CDataStore& store, std::ostream& stream ) con
             for ( UInt32 j=0; j<LineModelSolutions[idx].Amplitudes.size(); j++)
             {
                 stream <<  "#";
-                stream <<  restRayList[j].GetPosition() << "\t";
-                stream <<  LineModelSolutions[idx].Amplitudes[j] << std::endl;
+                std::string typeStr="";
+                if(restRayList[j].GetType() == CRay::nType_Absorption){
+                    typeStr = "A";
+                }else{
+                    typeStr = "E";
+                }
+                stream <<  typeStr << "\t";
+                std::string name = restRayList[j].GetName();
+                Int32 nstr = name.size();
+                for(int jstr=0; jstr<18-nstr; jstr++){
+                    name = name.append(" ");
+                }
+                stream <<  std::fixed << name << "\t";
+                stream <<  std::fixed << restRayList[j].GetPosition() << "\t";
+                stream << std::scientific <<  LineModelSolutions[idx].Amplitudes[j] << std::endl;
             }
             stream << "#}" << std::endl;
         }

@@ -18,25 +18,49 @@ class CLineModelElement
 {
 
 public:
+    enum ELineWidthType
+    {
+        nWidthType_PSFInstrumentDriven = 1,
+        nWidthType_ZDriven = 2,
+        nWidthType_Fixed = 3,
+    };
 
     CLineModelElement();
     ~CLineModelElement();
 
+    std::string GetElementTypeTag();
+
+    virtual void prepareSupport(const CSpectrumSpectralAxis& spectralAxis, Float64 redshift)=0;
+    virtual TInt32RangeList getSupport()=0;
 
     virtual void fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis, Float64  redshift) =0;
+    virtual Float64 getModelAtLambda( Float64 lambda, Float64 redshift )=0;
     virtual void addToSpectrumModel( const CSpectrumSpectralAxis& modelspectralAxis, CSpectrumFluxAxis& modelfluxAxis, Float64 redshift )=0;
+    virtual void initSpectrumModel( CSpectrumFluxAxis& modelfluxAxis )=0;
 
     virtual Float64 GetFittedAmplitude(Int32 subeIdx)=0;
+    virtual Float64 GetElementAmplitude()=0;
+    virtual void SetFittedAmplitude(Float64 A)=0;
     virtual void LimitFittedAmplitude(Int32 subeIdx, Float64 limit)=0;
 
     Int32 GetSize();
+    virtual std::string GetRayName(Int32 subeIdx)=0;
+    bool IsOutsideLambdaRange();
+    virtual bool IsOutsideLambdaRange(Int32 subeIdx)=0;
     Int32 FindElementIndex(Int32 LineCatalogIndex);
     virtual Int32 FindElementIndex(std::string LineTagStr)=0;
 
+    std::vector<Int32> m_LineCatalogIndexes;
+
 protected:
 
+    Int32 m_LineWidthType;
+    Float64 m_Resolution;
+    Float64 m_FWHM_factor;
+
+    Float64 m_OutsideLambdaRangeOverlapThreshold;
     bool m_OutsideLambdaRange;
-    std::vector<Int32> m_LineCatalogIndexes;
+    std::string m_ElementType;
 
 private:
 

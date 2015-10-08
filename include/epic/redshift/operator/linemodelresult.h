@@ -34,6 +34,7 @@ public:
     TFloat64List            Redshifts;
     TFloat64List            ChiSquare;
     TFloat64List            LogArea;
+    TFloat64List            LogAreaCorrectedExtrema;
     TFloat64List            SigmaZ;
     TFloat64List            Extrema;
     COperator::TStatusList  Status;
