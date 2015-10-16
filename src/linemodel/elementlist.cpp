@@ -624,7 +624,7 @@ void CLineModelElementList::LoadContinuum()
     CTemplate tpl;
     CSpectrumIOGenericReader asciiReader;
     if( !asciiReader.Read( templatePath.c_str(), tpl ) ) {
-        Log.LogError("Fail to read template: %s", templatePath);
+        Log.LogError("Fail to read template: %s", templatePath.c_str());
         return;
     }
 
