@@ -61,7 +61,7 @@ Float64 CMultiLine::GetLineWidth(Float64 lambda, Float64 z)
         instrumentSigma = m_NominalWidth;
     }
 
-//    Float64 v = 400;
+//    Float64 v = 200;
 //    Float64 c = 300000.0;
 //    Float64 velocitySigma = v/c*lambda;//, useless /(1+z)*(1+z);
 //    Float64 sigma = sqrt(instrumentSigma*instrumentSigma + velocitySigma*velocitySigma);
@@ -69,7 +69,7 @@ Float64 CMultiLine::GetLineWidth(Float64 lambda, Float64 z)
     return instrumentSigma;
 }
 
-void CMultiLine::prepareSupport(const CSpectrumSpectralAxis& spectralAxis, Float64 redshift)
+void CMultiLine::prepareSupport(const CSpectrumSpectralAxis& spectralAxis, Float64 redshift, const TFloat64Range &lambdaRange)
 {    
     m_OutsideLambdaRange=true;
     m_Start.resize(m_Rays.size());
@@ -79,8 +79,18 @@ void CMultiLine::prepareSupport(const CSpectrumSpectralAxis& spectralAxis, Float
         Float64 mu = m_Rays[i].GetPosition()*(1+redshift);
         Float64 c = GetLineWidth(mu, redshift);
         Float64 winsize = m_NSigmaSupport*c;
-        m_Start[i] = spectralAxis.GetIndexAtWaveLength(mu-winsize/2.0);
-        m_End[i] = spectralAxis.GetIndexAtWaveLength(mu+winsize/2.0);
+
+        Float64 lambda_start = mu-winsize/2.0;
+        if(lambda_start < lambdaRange.GetBegin()){
+            lambda_start = lambdaRange.GetBegin();
+        }
+        m_Start[i] = spectralAxis.GetIndexAtWaveLength(lambda_start);
+
+        Float64 lambda_end = mu+winsize/2.0;
+        if(lambda_end > lambdaRange.GetEnd()){
+            lambda_end = lambdaRange.GetEnd();
+        }
+        m_End[i] = spectralAxis.GetIndexAtWaveLength(lambda_end);
 
         Int32 minLineOverlap = m_OutsideLambdaRangeOverlapThreshold*winsize;
         if( m_Start[i] >= (spectralAxis.GetSamplesCount()-1-minLineOverlap) || m_End[i] <=minLineOverlap){
@@ -152,6 +162,7 @@ Float64 CMultiLine::GetNominalAmplitude(Int32 subeIdx){
 void CMultiLine::SetFittedAmplitude(Float64 A)
 {
     m_FittedAmplitudes.resize(m_Rays.size());
+    m_FittedAmplitudeErrorSigmas.resize(m_Rays.size());
     if(m_OutsideLambdaRange){
         for(Int32 k=0; k<m_Rays.size(); k++){
             m_FittedAmplitudes[k] = -1;
@@ -164,6 +175,7 @@ void CMultiLine::SetFittedAmplitude(Float64 A)
                 m_FittedAmplitudes[k] = -1;
             }
             m_FittedAmplitudes[k] = A*m_NominalAmplitudes[k];
+            m_FittedAmplitudeErrorSigmas[k] = 0.0;
         }
     }
 
@@ -242,7 +254,12 @@ void CMultiLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const C
             continue;
         }
         m_FittedAmplitudes[k] = A*m_NominalAmplitudes[k];
-        m_FittedAmplitudeErrorSigmas[k] = 1.0/sqrt(sumGauss);
+        if(A==0){
+            m_FittedAmplitudeErrorSigmas[k] = 0.0;
+        }else{
+            m_FittedAmplitudeErrorSigmas[k] = 1.0/sqrt(sumGauss);
+
+        }
     }
     //
 
@@ -296,7 +313,7 @@ Float64 CMultiLine::getModelAtLambda(Float64 lambda, Float64 redshift )
     return Yi;
 }
 
-void CMultiLine::initSpectrumModel( CSpectrumFluxAxis &modelfluxAxis )
+void CMultiLine::initSpectrumModel( CSpectrumFluxAxis &modelfluxAxis, CSpectrumFluxAxis &continuumfluxAxis )
 {
     if(m_OutsideLambdaRange){
         return;
@@ -310,7 +327,7 @@ void CMultiLine::initSpectrumModel( CSpectrumFluxAxis &modelfluxAxis )
 
         for ( Int32 i = m_Start[k]; i <= m_End[k]; i++)
         {
-            flux[i] = 0.0;
+            flux[i] = continuumfluxAxis[i];
         }
     }
   return;

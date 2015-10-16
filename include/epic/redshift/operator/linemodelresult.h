@@ -19,6 +19,7 @@ public:
     struct SLineModelSolution
     {
         std::vector<Float64> Amplitudes;
+        std::vector<Float64> Errors;
         std::vector<Float64> Widths;
         std::vector<Bool> OutsideLambdaRange;
         std::vector<TInt32Range> fittingIndexRange;

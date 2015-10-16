@@ -101,8 +101,8 @@ const CLineMatching2SolveResult* COperatorLineMatching2Solve::Compute(  COperato
     Bool storeResult = false;
 
     COperatorResultStore::CAutoScope resultScope( resultStore, "linematching2solve" );
-    Int32 lineType = CRay::nType_Emission;
-    //Int32 lineType = CRay::nType_Absorption;
+    //Int32 lineType = CRay::nType_Emission;
+    Int32 lineType = CRay::nType_Absorption;
 
     CPeakDetection peakDetection(m_winsize, m_detectioncut, 1, m_enlargeRate, m_detectionnoiseoffset);
     CSpectrum _spc = spc;
@@ -135,7 +135,7 @@ const CLineMatching2SolveResult* COperatorLineMatching2Solve::Compute(  COperato
 
 
     if( rayMatchingResult ){
-        rayMatchingResult->FilterWithRules(_spc, lambdaRange, m_winsize);
+        //rayMatchingResult->FilterWithRules(_spc, lambdaRange, m_winsize);
         // Store matching results
         resultStore.StoreGlobalResult( "raymatching", *rayMatchingResult );
     }

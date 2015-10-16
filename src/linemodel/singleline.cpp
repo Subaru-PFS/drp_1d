@@ -47,13 +47,22 @@ std::string CSingleLine::GetRayName(Int32 subeIdx)
     return m_Ray.GetName();
 }
 
-void CSingleLine::prepareSupport(const CSpectrumSpectralAxis& spectralAxis, Float64 redshift)
+void CSingleLine::prepareSupport(const CSpectrumSpectralAxis& spectralAxis, Float64 redshift, const TFloat64Range &lambdaRange)
 {
     Float64 mu = m_Ray.GetPosition()*(1+redshift);
     Float64 c = GetLineWidth(mu, redshift);
     Float64 winsize = m_NSigmaSupport*c;
-    m_Start = spectralAxis.GetIndexAtWaveLength(mu-winsize/2.0);
-    m_End = spectralAxis.GetIndexAtWaveLength(mu+winsize/2.0);
+    Float64 lambda_start = mu-winsize/2.0;
+    if(lambda_start < lambdaRange.GetBegin()){
+        lambda_start = lambdaRange.GetBegin();
+    }
+    m_Start = spectralAxis.GetIndexAtWaveLength(lambda_start);
+
+    Float64 lambda_end = mu+winsize/2.0;
+    if(lambda_end > lambdaRange.GetEnd()){
+        lambda_end = lambdaRange.GetEnd();
+    }
+    m_End = spectralAxis.GetIndexAtWaveLength(lambda_end);
 
     Int32 minLineOverlap = m_OutsideLambdaRangeOverlapThreshold*winsize;
     if( m_Start >= (spectralAxis.GetSamplesCount()-1-minLineOverlap) || m_End <=minLineOverlap){
@@ -82,7 +91,7 @@ Float64 CSingleLine::GetLineWidth(Float64 lambda, Float64 z){
         instrumentSigma = m_NominalWidth;
     }
 
-//    Float64 v = 400;
+//    Float64 v = 200;
 //    Float64 c = 300000.0;
 //    Float64 velocitySigma = v/c*lambda;//, useless /(1+z)*(1+z);
 //    Float64 sigma = sqrt(instrumentSigma*instrumentSigma + velocitySigma*velocitySigma);
@@ -123,6 +132,7 @@ void CSingleLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const 
 
         num++;
         err2 = 1.0 / (error[i] * error[i]);
+        //err2 = 1.0;
         sumCross += yg*y*err2;
         sumGauss += yg*yg*err2;
     }
@@ -133,28 +143,17 @@ void CSingleLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const 
     }
 
     m_FittedAmplitude = std::max(0.0, sumCross / sumGauss);
-    m_FittedAmplitudeErrorSigma = 1.0/sqrt(sumGauss);
-
-    /*
-    //SNR estimation
-    Float64 sumErr  = 0.0;
-    Float64 sumGaussA = 0.0;
-    for ( Int32 i = start; i < end; i++)
-    {
-        x = spectral[i];
-        sumGaussA += A*exp (-1.*(x-mu)*(x-mu)/(2*c*c));
-        sumErr += (error[i] * error[i]);
+    if(m_FittedAmplitude==0){
+        m_FittedAmplitudeErrorSigma = 0;
+    }else{
+        m_FittedAmplitudeErrorSigma = 1.0/sqrt(sumGauss);
+//        //SNR estimation
+//        Float64 SNRThres = 1.0;
+//        if(m_FittedAmplitudeErrorSigma/m_FittedAmplitudeErrorSigma < SNRThres){
+//            m_FittedAmplitudeErrorSigma = 0;
+//            m_FittedAmplitude=0;
+//        }
     }
-    Float64 SNRThres = 0.0001;
-    if(sumGaussA/sumErr < SNRThres){
-        A = 0.0;
-    }
-    */
-
-//    Float64 SNRThres = 0.1;
-//    if(m_FittedAmplitude/sqrt(sumGauss) < SNRThres){
-//        m_FittedAmplitude = 0.0;
-//    }
 
 
     return;
@@ -212,7 +211,7 @@ void CSingleLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const 
 //    return A;
 //}
 
-void CSingleLine::addToSpectrumModel( const CSpectrumSpectralAxis& modelspectralAxis, CSpectrumFluxAxis& modelfluxAxis, Float64 redshift )
+void CSingleLine::addToSpectrumModel(const CSpectrumSpectralAxis& modelspectralAxis, CSpectrumFluxAxis& modelfluxAxis, Float64 redshift )
 {
     if(m_OutsideLambdaRange){
         return;
@@ -253,7 +252,7 @@ Float64 CSingleLine::getModelAtLambda(Float64 lambda, Float64 redshift )
     return Yi;
 }
 
-void CSingleLine::initSpectrumModel(CSpectrumFluxAxis& modelfluxAxis)
+void CSingleLine::initSpectrumModel(CSpectrumFluxAxis& modelfluxAxis, CSpectrumFluxAxis &continuumfluxAxis)
 {
     if(m_OutsideLambdaRange){
         return;
@@ -263,7 +262,7 @@ void CSingleLine::initSpectrumModel(CSpectrumFluxAxis& modelfluxAxis)
     Float64* flux = modelfluxAxis.GetSamples();
     for ( Int32 i = m_Start; i <= m_End; i++)
     {
-        flux[i] = 0.0;
+        flux[i] = continuumfluxAxis[i];
     }
 
   return;
@@ -303,8 +302,10 @@ void CSingleLine::SetFittedAmplitude(Float64 A)
 {
     if(m_OutsideLambdaRange){
         m_FittedAmplitude = -1;
+        m_FittedAmplitudeErrorSigma = -1;
     }else{
         m_FittedAmplitude = std::max(0.0, A);
+        m_FittedAmplitudeErrorSigma = 0.0;
     }
 }
 

@@ -160,7 +160,8 @@ Void CLineModelResult::Save( const COperatorResultStore& store, std::ostream& st
                 }
                 stream <<  std::fixed << name << "\t";
                 stream <<  std::fixed << restRayList[j].GetPosition() << "\t";
-                stream << std::scientific <<  LineModelSolutions[idx].Amplitudes[j] << std::endl;
+                stream << std::scientific <<  LineModelSolutions[idx].Amplitudes[j] << "\t";
+                stream << std::scientific <<  LineModelSolutions[idx].Errors[j] << std::endl;
             }
             stream << "#}" << std::endl;
         }
