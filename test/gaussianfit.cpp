@@ -38,7 +38,7 @@ void CRedshiftGaussianFitTestCase::TestFit1()
 
     CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE( "Invalid gaussian amplitude", 1.0, gaussAmp, 0.01 );
     CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE( "Invalid gaussian position", 4000.0, gaussPos, 2 );
-    CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE( "Invalid gaussian width", 565.0, gaussWidth, 1 );
+    CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE( "Invalid gaussian width", 565.0/1.4142, gaussWidth, 1.0);
 }
 
 

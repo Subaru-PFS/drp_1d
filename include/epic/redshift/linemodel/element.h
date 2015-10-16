@@ -25,20 +25,22 @@ public:
         nWidthType_Fixed = 3,
     };
 
-    CLineModelElement();
+    CLineModelElement(Int32 widthType);
     ~CLineModelElement();
 
     std::string GetElementTypeTag();
 
-    virtual void prepareSupport(const CSpectrumSpectralAxis& spectralAxis, Float64 redshift)=0;
+    virtual void prepareSupport(const CSpectrumSpectralAxis& spectralAxis, Float64 redshift, const TFloat64Range& lambdaRange)=0;
     virtual TInt32RangeList getSupport()=0;
 
     virtual void fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis, Float64  redshift) =0;
     virtual Float64 getModelAtLambda( Float64 lambda, Float64 redshift )=0;
     virtual void addToSpectrumModel( const CSpectrumSpectralAxis& modelspectralAxis, CSpectrumFluxAxis& modelfluxAxis, Float64 redshift )=0;
-    virtual void initSpectrumModel( CSpectrumFluxAxis& modelfluxAxis )=0;
+    virtual void initSpectrumModel( CSpectrumFluxAxis& modelfluxAxis, CSpectrumFluxAxis& continuumfluxAxis )=0;
 
+    virtual Float64 GetNominalAmplitude(Int32 subeIdx)=0;
     virtual Float64 GetFittedAmplitude(Int32 subeIdx)=0;
+    virtual Float64 GetFittedAmplitudeErrorSigma(Int32 subeIdx)=0;
     virtual Float64 GetElementAmplitude()=0;
     virtual void SetFittedAmplitude(Float64 A)=0;
     virtual void LimitFittedAmplitude(Int32 subeIdx, Float64 limit)=0;

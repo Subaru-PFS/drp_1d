@@ -41,8 +41,8 @@ COperatorLineModel::~COperatorLineModel()
 }
 
 
-const COperatorResult* COperatorLineModel::Compute(const CSpectrum& spectrum, const CRayCatalog& restraycatalog,
-                          const TFloat64Range& lambdaRange, const TFloat64List& redshifts)
+const COperatorResult* COperatorLineModel::Compute(const CSpectrum& spectrum, const CSpectrum& spectrumNoContinuum, const CRayCatalog& restraycatalog,
+                          const TFloat64Range& lambdaRange, const TFloat64List& redshifts, Int32 lineWidthType)
 {
 
     if( spectrum.GetSpectralAxis().IsInLinearScale() == false)
@@ -66,12 +66,25 @@ const COperatorResult* COperatorLineModel::Compute(const CSpectrum& spectrum, co
     result->restRayList = restRayList;
     result->LineModelSolutions.resize( sortedRedshifts.size() );
 
-    CLineModelElementList model(spectrum, restRayList);
+
+    CLineModelElementList model(spectrum, spectrumNoContinuum, restRayList, lineWidthType);
+    //model.LoadContinuum();
 
     PrecomputeLogErr(spectrum);
     for (Int32 i=0;i<sortedRedshifts.size();i++)
     {
         ModelFit( spectrum, model, result->restRayList, lambdaRange, result->Redshifts[i], result->ChiSquare[i], result->LineModelSolutions[i]);
+
+        /*
+        CSpectrum spcmodel = model.GetModelSpectrum();
+        CSpectrumIOFitsWriter writer;
+        Bool retVal1 = writer.Write( "model.fits",  spcmodel);
+
+        if(retVal1){
+            CSpectrum s(spectrum);
+            Bool retVal2 = writer.Write( "spectrum.fits",  s);
+        }
+        //*/
     }
 
     // extrema
@@ -118,8 +131,8 @@ const COperatorResult* COperatorLineModel::Compute(const CSpectrum& spectrum, co
         Log.LogInfo( "LineModel Solution: no extrema found...");
     }
 
-    //*
-    //  //saving the best model for viewing
+   /*
+   //  //saving the best model for viewing
     if(result->Extrema.size()>0){
         Float64 _chi=0.0;
         CLineModelResult::SLineModelSolution _lineModelSolution;
@@ -133,7 +146,7 @@ const COperatorResult* COperatorLineModel::Compute(const CSpectrum& spectrum, co
         CSpectrumIOFitsWriter writer;
         Bool retVal1 = writer.Write( "model.fits",  spcmodel);
 
-        if(1 && retVal1){
+        if(retVal1){
             CSpectrum s(spectrum);
             Bool retVal2 = writer.Write( "spectrum.fits",  s);
         }
@@ -365,11 +378,11 @@ Void COperatorLineModel::ModelFit(const CSpectrum& spectrum, CLineModelElementLi
 {
     chiSquare = boost::numeric::bounds<float>::highest();
 
-    model.fit(redshift, modelSolution);
+    model.fit(redshift, lambdaRange, modelSolution);
 
-    Float64 fit = model.getLeastSquareMerit();
+    Float64 fit = model.getLeastSquareMerit(lambdaRange);
 
-    chiSquare = fit + mSumLogErr;
+    chiSquare = fit;// + mSumLogErr;
     return;
 }
 

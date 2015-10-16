@@ -46,7 +46,7 @@ const CChisquare2SolveResult* CMethodChisquare2Solve::Compute(  CDataStore& resu
             const CTemplate& tpl = tplCatalog.GetTemplate( category, j );
 
 
-//            if(0){
+//            if(1){
 
 //                //*
 //                //CSpectrumFluxAxis& sfluxAxisPtr = model.GetFluxAxis();

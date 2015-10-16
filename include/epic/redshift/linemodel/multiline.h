@@ -18,19 +18,21 @@ class CMultiLine:public CLineModelElement
 
 public:
 
-    CMultiLine(std::vector<CRay> rs, std::vector<Float64> nominalAmplitudes, Float64 nominalWidth, std::vector<Int32> catalogIndexes);
+    CMultiLine(std::vector<CRay> rs, Int32 widthType, std::vector<Float64> nominalAmplitudes, Float64 nominalWidth, std::vector<Int32> catalogIndexes);
     ~CMultiLine();
 
     std::string GetRayName(Int32 subeIdx);
 
-    void prepareSupport(const CSpectrumSpectralAxis& spectralAxis, Float64 redshift);
+    void prepareSupport(const CSpectrumSpectralAxis& spectralAxis, Float64 redshift, const TFloat64Range& lambdaRange);
     TInt32RangeList getSupport();
 
     void fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis, Float64  redshift);
     Float64 getModelAtLambda( Float64 lambda, Float64 redshift );
     void addToSpectrumModel( const CSpectrumSpectralAxis& modelspectralAxis, CSpectrumFluxAxis& modelfluxAxis, Float64 redshift );
-    void initSpectrumModel( CSpectrumFluxAxis &modelfluxAxis );
+    void initSpectrumModel(CSpectrumFluxAxis &modelfluxAxis , CSpectrumFluxAxis &continuumfluxAxis);
     Float64 GetFittedAmplitude(Int32 subeIdx);
+    Float64 GetFittedAmplitudeErrorSigma(Int32 subeIdx);
+    Float64 GetNominalAmplitude(Int32 subeIdx);
     Float64 GetElementAmplitude();
     void SetFittedAmplitude(Float64 A);
     void LimitFittedAmplitude(Int32 subeIdx, Float64 limit);
@@ -44,6 +46,7 @@ private:
     std::vector<Float64>    m_SignFactors;
     Float64                 m_NominalWidth;
     std::vector<Float64>        m_FittedAmplitudes;
+    std::vector<Float64>        m_FittedAmplitudeErrorSigmas;
     std::vector<Float64>        m_NominalAmplitudes;
 
     Float64                     m_NSigmaSupport;
