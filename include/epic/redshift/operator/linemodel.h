@@ -22,7 +22,7 @@ public:
     COperatorLineModel();
     virtual ~COperatorLineModel();
 
-    const COperatorResult* Compute(const CSpectrum& spectrum, const CSpectrum &spectrumNoContinuum, const CRayCatalog& restraycatalog,
+    const COperatorResult* Compute(const CSpectrum& spectrum, const CSpectrum &spectrumContinuum, const CRayCatalog& restraycatalog,
                                     const TFloat64Range& lambdaRange, const TFloat64List& redshifts , Int32 lineWidthType);
 
 private:

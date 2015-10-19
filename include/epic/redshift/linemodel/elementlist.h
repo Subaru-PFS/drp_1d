@@ -25,7 +25,7 @@ class CLineModelElementList
 
 public:
 
-    CLineModelElementList(const CSpectrum& spectrum, const CSpectrum& spectrumNoContinuum, const CRayCatalog::TRayVector& restRayList , Int32 widthType);
+    CLineModelElementList(const CSpectrum& spectrum, const CSpectrum& spectrumContinuum, const CRayCatalog::TRayVector& restRayList , Int32 widthType);
     ~CLineModelElementList();
 
     void LoadCatalog(const CRayCatalog::TRayVector& restRayList);
@@ -36,6 +36,9 @@ public:
 
     void LoadContinuum();
     void PrepareContinuum(Float64 z);
+
+    void EstimateSpectrumContinuum();
+
 
     Int32 GetModelValidElementsNDdl();
     std::vector<Int32> GetModelValidElementsIndexes();
@@ -54,7 +57,7 @@ public:
 private:
 
     void fitAmplitudesSimplex();
-    void fitAmplitudesLinSolve(std::vector<Int32> EltsIdx);
+    Int32 fitAmplitudesLinSolve(std::vector<Int32> EltsIdx, const CSpectrumSpectralAxis &spectralAxis, const CSpectrumFluxAxis &fluxAxis, std::vector<Float64> &ampsfitted);
     std::vector<Int32> getSupportIndexes(std::vector<Int32> EltsIdx);
     std::vector<Int32> getOverlappingElements( Int32 ind );
 
@@ -76,11 +79,12 @@ private:
     Float64 m_Redshift;
     std::vector<boost::shared_ptr<CLineModelElement>  > m_Elements;
 
-    CRef<CSpectrum>   m_SpectrumModel;
-    CSpectrumFluxAxis m_SpcFluxAxis;
-    CSpectrumFluxAxis m_SpcNoContinuumFluxAxis;
-    Float64*          m_precomputedFineGridContinuumFlux;
-    CSpectrumFluxAxis m_ContinuumFluxAxis;
+    CRef<CSpectrum>   m_SpectrumModel;  //model
+    CSpectrumFluxAxis m_SpcFluxAxis;    //observed spectrum
+    CSpectrumFluxAxis m_SpcContinuumFluxAxis; //oberved continuum spectrum
+
+    Float64*          m_precomputedFineGridContinuumFlux;   //PFG buffer for model continuum
+    CSpectrumFluxAxis m_ContinuumFluxAxis;  //rebined model continuum
 
     CRayCatalog::TRayVector m_RestRayList;
 
