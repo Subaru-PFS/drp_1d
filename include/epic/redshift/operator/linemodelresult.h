@@ -18,11 +18,13 @@ class CLineModelResult : public COperatorResult
 public:
     struct SLineModelSolution
     {
+        std::vector<Float64> ElementId;     //id of the linemodel element it is part of
         std::vector<Float64> Amplitudes;
         std::vector<Float64> Errors;
         std::vector<Float64> Widths;
         std::vector<Bool> OutsideLambdaRange;
         std::vector<TInt32Range> fittingIndexRange;
+        Int32 nDDL;
     };
 
     CLineModelResult();
@@ -32,15 +34,20 @@ public:
     Void SaveLine( const COperatorResultStore& store, std::ostream& stream ) const;
     Void Load( std::istream& stream );
 
-    TFloat64List            Redshifts;
-    TFloat64List            ChiSquare;
-    TFloat64List            LogArea;
-    TFloat64List            LogAreaCorrectedExtrema;
-    TFloat64List            SigmaZ;
-    TFloat64List            Extrema;
-    COperator::TStatusList  Status;
+    Int32 GetNLinesOverCutThreshold(Int32 extremaIdx, Float64 cutThres);
+    Float64 GetExtremaMerit(Int32 extremaIdx);
 
-    std::vector<SLineModelSolution> LineModelSolutions;
+    TFloat64List            Redshifts;  // z axis
+    TFloat64List            ChiSquare;  // chi2
+
+    TFloat64List            Extrema;    // z extramas
+    TFloat64List            LogArea;    // log area for each extrema
+    TFloat64List            LogAreaCorrectedExtrema;    //corrected z for each extrema
+    TFloat64List            SigmaZ; //sigmaz for each extrema
+    std::vector<SLineModelSolution> LineModelSolutions; //linemodel for each extrema
+    TFloat64List            bic;    // bayesian information criterion for each extrema
+
+    COperator::TStatusList  Status;
     CRayCatalog::TRayVector restRayList;
 
 

@@ -33,7 +33,7 @@ CMultiLine::CMultiLine(std::vector<CRay> rs, Int32 widthType, std::vector<Float6
         m_LineCatalogIndexes.push_back(catalogIndexes[i]);
     }
 
-    SetFittedAmplitude(-1);
+    SetFittedAmplitude(-1, -1);
 }
 
 CMultiLine::~CMultiLine()
@@ -159,13 +159,14 @@ Float64 CMultiLine::GetNominalAmplitude(Int32 subeIdx){
     return m_NominalAmplitudes[subeIdx];
 }
 
-void CMultiLine::SetFittedAmplitude(Float64 A)
+void CMultiLine::SetFittedAmplitude(Float64 A, Float64 SNR)
 {
     m_FittedAmplitudes.resize(m_Rays.size());
     m_FittedAmplitudeErrorSigmas.resize(m_Rays.size());
     if(m_OutsideLambdaRange){
         for(Int32 k=0; k<m_Rays.size(); k++){
             m_FittedAmplitudes[k] = -1;
+            m_FittedAmplitudeErrorSigmas[k] = -1;
         }
         return;
     }else{
@@ -175,7 +176,7 @@ void CMultiLine::SetFittedAmplitude(Float64 A)
                 m_FittedAmplitudes[k] = -1;
             }
             m_FittedAmplitudes[k] = A*m_NominalAmplitudes[k];
-            m_FittedAmplitudeErrorSigmas[k] = 0.0;
+            m_FittedAmplitudeErrorSigmas[k] = SNR*m_NominalAmplitudes[k]; //todo: check correct formulation for Error
         }
     }
 

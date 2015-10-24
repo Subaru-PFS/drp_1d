@@ -39,10 +39,11 @@ public:
 
     void EstimateSpectrumContinuum();
 
-
+    Int32 GetNElements();
     Int32 GetModelValidElementsNDdl();
+    Int32 GetModelNonZeroElementsNDdl();
     std::vector<Int32> GetModelValidElementsIndexes();
-    void SetElementAmplitude(Int32 j, Float64 a);
+    void SetElementAmplitude(Int32 j, Float64 a, Float64 snr);
     Float64 GetElementAmplitude(Int32 j);
 
     void fit(Float64 redshift, const TFloat64Range& lambdaRange, CLineModelResult::SLineModelSolution &modelSolution);
@@ -56,6 +57,7 @@ public:
 
 private:
 
+    Int32 fitAmplitudesHybrid(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& spcFluxAxisNoContinuum, Float64 redshift);
     void fitAmplitudesSimplex();
     Int32 fitAmplitudesLinSolve(std::vector<Int32> EltsIdx, const CSpectrumSpectralAxis &spectralAxis, const CSpectrumFluxAxis &fluxAxis, std::vector<Float64> &ampsfitted);
     std::vector<Int32> getSupportIndexes(std::vector<Int32> EltsIdx);

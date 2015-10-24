@@ -35,7 +35,7 @@ CSingleLine::CSingleLine(const CRay& r , Int32 widthType, Float64 nominalWidth, 
     }
 
     //initialize fitted amplitude
-    SetFittedAmplitude(-1.0);
+    SetFittedAmplitude(-1.0, -1.0);
 }
 
 CSingleLine::~CSingleLine()
@@ -298,14 +298,14 @@ Float64 CSingleLine::GetElementAmplitude(){
 }
 
 
-void CSingleLine::SetFittedAmplitude(Float64 A)
+void CSingleLine::SetFittedAmplitude(Float64 A, Float64 SNR)
 {
     if(m_OutsideLambdaRange){
         m_FittedAmplitude = -1;
         m_FittedAmplitudeErrorSigma = -1;
     }else{
         m_FittedAmplitude = std::max(0.0, A);
-        m_FittedAmplitudeErrorSigma = 0.0;
+        m_FittedAmplitudeErrorSigma = SNR;
     }
 }
 

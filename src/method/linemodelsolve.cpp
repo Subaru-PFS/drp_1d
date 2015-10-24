@@ -1,6 +1,6 @@
-
-
 #include <epic/redshift/method/linemodelsolve.h>
+
+#include <epic/core/log/log.h>
 
 #include <epic/core/debug/assert.h>
 #include <epic/redshift/spectrum/template/catalog.h>
@@ -85,6 +85,20 @@ Bool CLineModelSolve::Solve( COperatorResultStore& resultStore, const CSpectrum&
     // Compute merit function
     COperatorLineModel linemodel;
     CRef<CLineModelResult>  result = (CLineModelResult*)linemodel.Compute( _spc, _spcContinuum, restraycatalog, lambdaRange, redshifts, widthType);
+
+    static Float64 cutThres = 2.0;
+    static Int32 bestSolutionIdx = 0;
+    Int32 nValidLines = result->GetNLinesOverCutThreshold(bestSolutionIdx, cutThres);
+    Float64 bestExtremaMerit = result->GetExtremaMerit(0);
+    Log.LogInfo( "Linemodelsolve : bestExtremaMerit, %f", bestExtremaMerit);
+    Float64 nextExtremaMerit = result->GetExtremaMerit(1);
+    Log.LogInfo( "Linemodelsolve : nextExtremaMerit, %f", nextExtremaMerit);
+//    if(nValidLines<2 || (bestExtremaMerit - nextExtremaMerit) > -50.0 ){
+//        result=0;
+//        Log.LogInfo( "Linemodelsolve : result set to 0" );
+//    }
+
+    Log.LogInfo( "Linemodelsolve : for best solution, %d valid lines found", nValidLines);
 
     if( !result )
     {
