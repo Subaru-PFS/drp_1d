@@ -4,7 +4,9 @@
 
 using namespace NSEpic;
 
-CDataStore::CAutoScope::CAutoScope( CDataStore& store, const char* name )
+IMPLEMENT_MANAGED_OBJECT_NOT_INSTANCIABLE( CDataStore );
+
+CDataStore::CAutoScope::CAutoScope( CDataStore& store, const std::string& name )
 {
     m_Store = & store;
     m_Store->PushScope( name );
@@ -15,7 +17,9 @@ CDataStore::CAutoScope::~CAutoScope()
     m_Store->PopScope();
 }
 
-CDataStore::CDataStore()
+CDataStore::CDataStore( COperatorResultStore& resultStore, CParameterStore& parameStore ) :
+   m_ResultStore( resultStore ),
+   m_ParameterStore( parameStore )
 {
 }
 
@@ -55,33 +59,33 @@ Void  CDataStore::SaveAllResults( const char* dir ) const
     m_ResultStore.SaveAllResults( *this, dir );
 }
 
-Void  CDataStore::StoreScopedPerTemplateResult( const CTemplate& t, const char* name, const COperatorResult& result )
+Void  CDataStore::StoreScopedPerTemplateResult( const CTemplate& t, const std::string& name, const COperatorResult& result )
 {
-    m_ResultStore.StorePerTemplateResult( t, GetCurrentScopeName().c_str(), name, result );
+    m_ResultStore.StorePerTemplateResult( t, GetCurrentScopeName(), name, result );
 }
 
-Void CDataStore::StoreScopedGlobalResult( const char* name, const COperatorResult& result )
+Void CDataStore::StoreScopedGlobalResult( const std::string& name, const COperatorResult& result )
 {
-    m_ResultStore.StoreGlobalResult( GetCurrentScopeName().c_str(), name, result );
+    m_ResultStore.StoreGlobalResult( GetCurrentScopeName(), name, result );
 }
 
 
-const COperatorResult*  CDataStore::GetPerTemplateResult( const CTemplate& t, const char* name ) const
+const COperatorResult*  CDataStore::GetPerTemplateResult( const CTemplate& t, const std::string& name ) const
 {
     return m_ResultStore.GetPerTemplateResult( t, name );
 }
 
-TOperatorResultMap CDataStore::GetPerTemplateResult( const char* name ) const
+TOperatorResultMap CDataStore::GetPerTemplateResult( const std::string& name ) const
 {
     return m_ResultStore.GetPerTemplateResult( name );
 }
 
-const COperatorResult* CDataStore::GetGlobalResult( const char* name ) const
+const COperatorResult* CDataStore::GetGlobalResult( const std::string& name ) const
 {
     return m_ResultStore.GetGlobalResult( name );
 }
 
-Void CDataStore::PushScope( const char* name )
+Void CDataStore::PushScope( const std::string& name )
 {
     m_ScopeStack.push_back( name );
 }
@@ -98,146 +102,160 @@ std::string CDataStore::GetScope(CConstRef<COperatorResult>  result) const
 
 
 
-Bool CDataStore::GetScopedParam( const char* name, TFloat64List& v, const TFloat64List& defaultValue ) const
-{
-    return m_ParameterStore.Get( GetCurrentScopeName().c_str(), name, v, defaultValue );
+std::string  CDataStore::GetScopedName( const std::string& name ) const {
+
+    std::string scopedName = GetCurrentScopeName();
+
+    if( ! scopedName.empty() ) {
+        scopedName.append(".");
+    }
+
+    scopedName.append( name );
+
+    return scopedName;
+
 }
 
-Bool CDataStore::GetScopedParam( const char* name, TInt64List& v, const TInt64List& defaultValue ) const
+Bool CDataStore::GetScopedParam( const std::string& name, TFloat64List& v, const TFloat64List& defaultValue ) const
 {
-    return m_ParameterStore.Get( GetCurrentScopeName().c_str(), name, v, defaultValue );
+    return m_ParameterStore.Get( GetScopedName( name ), v, defaultValue );
 }
 
-Bool CDataStore::GetScopedParam( const char* name, TBoolList& v, const TBoolList& defaultValue ) const
+Bool CDataStore::GetScopedParam( const std::string& name, TInt64List& v, const TInt64List& defaultValue ) const
 {
-    return m_ParameterStore.Get( GetCurrentScopeName().c_str(), name, v, defaultValue );
+    return m_ParameterStore.Get( GetScopedName( name ), v, defaultValue );
 }
 
-Bool CDataStore::GetScopedParam( const char* name, Float64& v, Float64 defaultValue ) const
+Bool CDataStore::GetScopedParam( const std::string& name, TBoolList& v, const TBoolList& defaultValue ) const
 {
-    return m_ParameterStore.Get( GetCurrentScopeName().c_str(), name, v, defaultValue );
+    return m_ParameterStore.Get( GetScopedName( name ), v, defaultValue );
 }
 
-Bool CDataStore::GetScopedParam( const char* name, Int64& v, Int64 defaultValue ) const
+Bool CDataStore::GetScopedParam( const std::string& name, Float64& v, Float64 defaultValue ) const
 {
-    return m_ParameterStore.Get( GetCurrentScopeName().c_str(), name, v, defaultValue );
+    return m_ParameterStore.Get( GetScopedName( name ), v, defaultValue );
 }
 
-Bool CDataStore::GetScopedParam( const char* name, Bool& v, Bool defaultValue ) const
+Bool CDataStore::GetScopedParam( const std::string& name, Int64& v, Int64 defaultValue ) const
 {
-    return m_ParameterStore.Get( GetCurrentScopeName().c_str(), name, v, defaultValue );
+    return m_ParameterStore.Get( GetScopedName( name ), v, defaultValue );
 }
 
-Bool CDataStore::GetScopedParam( const char* name, std::string& v, std::string defaultValue ) const
+Bool CDataStore::GetScopedParam( const std::string& name, Bool& v, Bool defaultValue ) const
 {
-    return m_ParameterStore.Get( GetCurrentScopeName().c_str(), name, v, defaultValue );
+    return m_ParameterStore.Get( GetScopedName( name ), v, defaultValue );
 }
 
-Bool CDataStore::SetScopedParam( const char* name, const TFloat64List& v )
+Bool CDataStore::GetScopedParam( const std::string& name, std::string& v, std::string defaultValue ) const
 {
-    return m_ParameterStore.Set( GetCurrentScopeName().c_str(), name, v );
+    return m_ParameterStore.Get( GetScopedName( name ), v, defaultValue );
 }
 
-Bool CDataStore::SetScopedParam( const char* name, const TInt64List& v )
+Bool CDataStore::SetScopedParam( const std::string& name, const TFloat64List& v )
 {
-    return m_ParameterStore.Set( GetCurrentScopeName().c_str(), name, v );
+    return m_ParameterStore.Set( GetScopedName( name ), v );
 }
 
-Bool CDataStore::SetScopedParam( const char* name, const TBoolList& v )
+Bool CDataStore::SetScopedParam( const std::string& name, const TInt64List& v )
 {
-    return m_ParameterStore.Set( GetCurrentScopeName().c_str(), name, v );
+    return m_ParameterStore.Set( GetScopedName( name ), v );
 }
 
-Bool CDataStore::SetScopedParam( const char* name, Float64 v )
+Bool CDataStore::SetScopedParam( const std::string& name, const TBoolList& v )
 {
-    return m_ParameterStore.Set( GetCurrentScopeName().c_str(), name, v );
+    return m_ParameterStore.Set( GetScopedName( name ), v );
 }
 
-Bool CDataStore::SetScopedParam( const char* name, Int64 v )
+Bool CDataStore::SetScopedParam( const std::string& name, Float64 v )
 {
-    return m_ParameterStore.Set( GetCurrentScopeName().c_str(), name, v );
+    return m_ParameterStore.Set( GetScopedName( name ), v );
 }
 
-Bool CDataStore::SetScopedParam( const char* name, Bool v )
+Bool CDataStore::SetScopedParam( const std::string& name, Int64 v )
 {
-    return m_ParameterStore.Set( GetCurrentScopeName().c_str(), name, v );
+    return m_ParameterStore.Set( GetScopedName( name ), v );
 }
 
-Bool CDataStore::SetScopedParam( const char* name, const std::string& v )
+Bool CDataStore::SetScopedParam( const std::string& name, Bool v )
 {
-    return m_ParameterStore.Set( GetCurrentScopeName().c_str(), name, v );
+    return m_ParameterStore.Set( GetScopedName( name ), v );
+}
+
+Bool CDataStore::SetScopedParam( const std::string& name, const std::string& v )
+{
+    return m_ParameterStore.Set( GetScopedName( name ), v );
 }
 
 
 
 
 
-Bool CDataStore::GetParam( const char* name, TFloat64List& v, const TFloat64List& defaultValue ) const
+Bool CDataStore::GetParam( const std::string& name, TFloat64List& v, const TFloat64List& defaultValue ) const
 {
-    return m_ParameterStore.Get( NULL, name, v, defaultValue );
+    return m_ParameterStore.Get( name, v, defaultValue );
 }
 
-Bool CDataStore::GetParam( const char* name, TInt64List& v, const TInt64List& defaultValue ) const
+Bool CDataStore::GetParam( const std::string& name, TInt64List& v, const TInt64List& defaultValue ) const
 {
-    return m_ParameterStore.Get( NULL, name, v, defaultValue );
+    return m_ParameterStore.Get( name, v, defaultValue );
 }
 
-Bool CDataStore::GetParam( const char* name, TBoolList& v, const TBoolList& defaultValue ) const
+Bool CDataStore::GetParam( const std::string& name, TBoolList& v, const TBoolList& defaultValue ) const
 {
-    return m_ParameterStore.Get( NULL, name, v, defaultValue );
+    return m_ParameterStore.Get( name, v, defaultValue );
 }
 
-Bool CDataStore::GetParam( const char* name, Float64& v, Float64 defaultValue ) const
+Bool CDataStore::GetParam( const std::string& name, Float64& v, Float64 defaultValue ) const
 {
-    return m_ParameterStore.Get( NULL, name, v, defaultValue );
+    return m_ParameterStore.Get( name, v, defaultValue );
 }
 
-Bool CDataStore::GetParam( const char* name, Int64& v, Int64 defaultValue ) const
+Bool CDataStore::GetParam( const std::string& name, Int64& v, Int64 defaultValue ) const
 {
-    return m_ParameterStore.Get( NULL, name, v, defaultValue );
+    return m_ParameterStore.Get( name, v, defaultValue );
 }
 
-Bool CDataStore::GetParam( const char* name, Bool& v, Bool defaultValue ) const
+Bool CDataStore::GetParam( const std::string& name, Bool& v, Bool defaultValue ) const
 {
-    return m_ParameterStore.Get( NULL, name, v, defaultValue );
+    return m_ParameterStore.Get( name, v, defaultValue );
 }
 
-Bool CDataStore::GetParam( const char* name, std::string& v, std::string defaultValue ) const
+Bool CDataStore::GetParam( const std::string& name, std::string& v, std::string defaultValue ) const
 {
-    return m_ParameterStore.Get( NULL, name, v, defaultValue );
+    return m_ParameterStore.Get( name, v, defaultValue );
 }
 
-Bool CDataStore::SetParam( const char* name, const TFloat64List& v )
+Bool CDataStore::SetParam( const std::string& name, const TFloat64List& v )
 {
-    return m_ParameterStore.Set( NULL, name, v );
+    return m_ParameterStore.Set( name, v );
 }
 
-Bool CDataStore::SetParam( const char* name, const TInt64List& v )
+Bool CDataStore::SetParam( const std::string& name, const TInt64List& v )
 {
-    return m_ParameterStore.Set( NULL, name, v );
+    return m_ParameterStore.Set( name, v );
 }
 
-Bool CDataStore::SetParam( const char* name, const TBoolList& v )
+Bool CDataStore::SetParam( const std::string& name, const TBoolList& v )
 {
-    return m_ParameterStore.Set( NULL, name, v );
+    return m_ParameterStore.Set( name, v );
 }
 
-Bool CDataStore::SetParam( const char* name, Float64 v )
+Bool CDataStore::SetParam( const std::string& name, Float64 v )
 {
-    return m_ParameterStore.Set( NULL, name, v );
+    return m_ParameterStore.Set( name, v );
 }
 
-Bool CDataStore::SetParam( const char* name, Int64 v )
+Bool CDataStore::SetParam( const std::string& name, Int64 v )
 {
-    return m_ParameterStore.Set( NULL, name, v );
+    return m_ParameterStore.Set( name, v );
 }
 
-Bool CDataStore::SetParam( const char* name, Bool v )
+Bool CDataStore::SetParam( const std::string& name, Bool v )
 {
-    return m_ParameterStore.Set( NULL, name, v );
+    return m_ParameterStore.Set( name, v );
 }
 
-Bool CDataStore::SetParam( const char* name, const std::string& v )
+Bool CDataStore::SetParam( const std::string& name, const std::string& v )
 {
-    return m_ParameterStore.Set( NULL, name, v );
+    return m_ParameterStore.Set( name, v );
 }

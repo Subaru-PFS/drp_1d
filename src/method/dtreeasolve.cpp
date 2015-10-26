@@ -75,7 +75,7 @@ COperatorDTreeASolve::~COperatorDTreeASolve()
 }
 
 const CDTreeASolveResult* COperatorDTreeASolve::Compute(CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
-                                                        const CTemplateCatalog& tplCatalog, const TTemplateCategoryList& tplCategoryList, const CRayCatalog &restRayCatalog,
+                                                        const CTemplateCatalog& tplCatalog, const TStringList& tplCategoryList, const CRayCatalog &restRayCatalog,
                                                         const TFloat64Range& lambdaRange, const TFloat64Range& redshiftRange, Float64 redshiftStep,
                                                         Int32 correlationExtremumCount, Float64 overlapThreshold )
 {
@@ -98,10 +98,13 @@ const CDTreeASolveResult* COperatorDTreeASolve::Compute(CDataStore& resultStore,
     return NULL;
 }
 
-Bool COperatorDTreeASolve::Solve(CDataStore &resultStore, const CSpectrum &spc, const CSpectrum &spcWithoutCont, const CTemplateCatalog &tplCatalog, const TTemplateCategoryList &tplCategoryList, const CRayCatalog &restRayCatalog, const TFloat64Range &lambdaRange, const TFloat64Range &redshiftRange, Float64 redshiftStep, Int32 correlationExtremumCount, Float64 overlapThreshold)
+Bool COperatorDTreeASolve::Solve(CDataStore &resultStore, const CSpectrum &spc, const CSpectrum &spcWithoutCont,
+                                 const CTemplateCatalog &tplCatalog, const TStringList &tplCategoryList,
+                                 const CRayCatalog &restRayCatalog, const TFloat64Range &lambdaRange,
+                                 const TFloat64Range &redshiftRange, Float64 redshiftStep, Int32 correlationExtremumCount, Float64 overlapThreshold)
 {
 
-    TTemplateCategoryList   filteredTemplateCategoryList = getFilteredTplCategory( tplCategoryList, CTemplate::nCategory_Emission);
+    TStringList   filteredTemplateCategoryList = getFilteredTplCategory( tplCategoryList, "emission" );
 
     CPeakDetection peakDetection(m_winsize, m_cut, 1, m_enlargeRate);
     CConstRef<CPeakDetectionResult> peakDetectionResult = peakDetection.Compute( spc, lambdaRange);
@@ -250,16 +253,16 @@ Bool COperatorDTreeASolve::Solve(CDataStore &resultStore, const CSpectrum &spc, 
 }
 
 
-TTemplateCategoryList COperatorDTreeASolve::getFilteredTplCategory(TTemplateCategoryList tplCategoryListIn, CTemplate::ECategory CategoryFilter)
+TStringList COperatorDTreeASolve::getFilteredTplCategory( const TStringList& tplCategoryListIn, const std::string& CategoryFilter)
 {
-    TTemplateCategoryList   filteredTemplateCategoryList;
+    TStringList   filteredTemplateCategoryList;
     for( UInt32 i=0; i<tplCategoryListIn.size(); i++ )
     {
-        CTemplate::ECategory category = tplCategoryListIn[i];
-        if( category == CTemplate::nCategory_Star )
+        std::string category = tplCategoryListIn[i];
+        if( category == "star" )
         {
         }
-        else if(CategoryFilter == NSEpic::CTemplate::nCategory_None || CategoryFilter == category)
+        else if(CategoryFilter == "all" || CategoryFilter == category)
         {
             filteredTemplateCategoryList.push_back( category );
         }

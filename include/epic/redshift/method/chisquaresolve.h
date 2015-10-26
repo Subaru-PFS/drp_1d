@@ -31,7 +31,7 @@ class CMethodChisquareSolve : public CManagedObject
     CMethodChisquareSolve();
     ~CMethodChisquareSolve();
     const CChisquareSolveResult *Compute( CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
-                                        const CTemplateCatalog& tplCatalog, const TTemplateCategoryList& tplCategoryList,
+                                        const CTemplateCatalog& tplCatalog, const TStringList& tplCategoryList,
                                         const TFloat64Range& lambdaRange, const TFloat64List& redshifts, Float64 overlapThreshold  );
 
 

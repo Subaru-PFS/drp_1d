@@ -24,7 +24,7 @@ public:
     ~COperatorDTreeASolve();
 
     const CDTreeASolveResult* Compute(CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
-                                        const CTemplateCatalog& tplCatalog, const TTemplateCategoryList& tplCategoryList, const CRayCatalog &restRayCatalog,
+                                        const CTemplateCatalog& tplCatalog, const TStringList& tplCategoryList, const CRayCatalog &restRayCatalog,
                                         const TFloat64Range& lambdaRange, const TFloat64Range& redshiftRange, Float64 redshiftStep,
                                         Int32 correlationExtremumCount, Float64 overlapThreshold  );
 
@@ -44,11 +44,11 @@ private:
 
 
     Bool Solve(CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
-                              const CTemplateCatalog& tplCatalog, const TTemplateCategoryList& tplCategoryList, const CRayCatalog &restRayCatalog,
+                              const CTemplateCatalog& tplCatalog, const TStringList& tplCategoryList, const CRayCatalog &restRayCatalog,
                               const TFloat64Range& lambdaRange, const TFloat64Range& redshiftRange, Float64 redshiftStep,
                               Int32 correlationExtremumCount, Float64 overlapThreshold );
 
-    TTemplateCategoryList getFilteredTplCategory(TTemplateCategoryList tplCategoryListIn, CTemplate::ECategory CategoryFilter);
+    TStringList getFilteredTplCategory( const TStringList& tplCategoryListIn, const std::string& CategoryFilter);
 };
 
 

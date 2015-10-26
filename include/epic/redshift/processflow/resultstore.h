@@ -14,10 +14,12 @@ namespace NSEpic
 class CTemplate;
 class CDataStore;
 
-class COperatorResultStore
+class COperatorResultStore : public CManagedObject
 {
 
 public:
+
+    DEFINE_MANAGED_OBJECT( COperatorResultStore );
 
     typedef std::map< std::string, CConstRef<COperatorResult> > TResultsMap;
     typedef std::map< std::string, TResultsMap>                 TPerTemplateResultsMap;
@@ -26,12 +28,12 @@ public:
     COperatorResultStore();
     virtual ~COperatorResultStore();
 
-    Void                    StorePerTemplateResult( const CTemplate& t, const char* path, const char* name, const COperatorResult& result );
-    Void                    StoreGlobalResult( const char* path, const char* name, const COperatorResult& result );
+    Void                    StorePerTemplateResult( const CTemplate& t, const std::string& path, const std::string& name, const COperatorResult& result );
+    Void                    StoreGlobalResult( const std::string& path, const std::string& name, const COperatorResult& result );
 
-    const COperatorResult*  GetPerTemplateResult( const CTemplate& t, const char* name ) const;
-    TOperatorResultMap      GetPerTemplateResult( const char* name ) const;
-    const COperatorResult*  GetGlobalResult( const char* name ) const;
+    const COperatorResult*  GetPerTemplateResult( const CTemplate& t, const std::string& name ) const;
+    TOperatorResultMap      GetPerTemplateResult( const std::string& name ) const;
+    const COperatorResult*  GetGlobalResult( const std::string& name ) const;
 
     Void                    SaveRedshiftResultHeader( const char* dir );
     Void                    SaveRedshiftResult( const CDataStore& store, const char* dir );
@@ -41,7 +43,7 @@ public:
 
 protected:
 
-    void StoreResult( TResultsMap& map, const char* path, const char* name, const COperatorResult& result );
+    void StoreResult( TResultsMap& map, const std::string& path, const std::string& name, const COperatorResult& result );
 
     void CreateResultStorage( std::fstream& stream, const boost::filesystem::path& path, const boost::filesystem::path& baseDir ) const;
 

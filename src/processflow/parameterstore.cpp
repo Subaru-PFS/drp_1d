@@ -6,6 +6,7 @@ using namespace NSEpic;
 
 namespace bpt = boost::property_tree;
 
+IMPLEMENT_MANAGED_OBJECT( CParameterStore );
 
 CParameterStore::CParameterStore()
 {
@@ -19,16 +20,14 @@ CParameterStore::~CParameterStore()
 
 
 
-Bool CParameterStore::Get( const char* path, const char* name, TBoolList& v, const TBoolList& defaultValue ) const
+Bool CParameterStore::Get( const std::string& name, TBoolList& v, const TBoolList& defaultValue ) const
 {
-    std::string finalPath = GetQualifiedName( path, name );
-
-    boost::optional< bpt::ptree & > property = m_PropertyTree.get_child_optional( finalPath );
+    boost::optional< bpt::ptree & > property = m_PropertyTree.get_child_optional( name );
 
     // If property does not exist, add it
     if( !property ) {
         CParameterStore & self = const_cast<CParameterStore &>(*this);
-        self.Set( path, name, defaultValue );
+        self.Set( name, defaultValue );
         v = defaultValue;
     } else {
         v.resize( (*property).size() );
@@ -43,16 +42,14 @@ Bool CParameterStore::Get( const char* path, const char* name, TBoolList& v, con
     return true;
 }
 
-Bool CParameterStore::Get( const char* path, const char* name, TInt64List& v, const TInt64List& defaultValue ) const
+Bool CParameterStore::Get( const std::string& name, TInt64List& v, const TInt64List& defaultValue ) const
 {
-    std::string finalPath = GetQualifiedName( path, name );
-
-    boost::optional< bpt::ptree & > property = m_PropertyTree.get_child_optional( finalPath );
+    boost::optional< bpt::ptree & > property = m_PropertyTree.get_child_optional( name );
 
     // If property does not exist, add it
     if( !property ) {
         CParameterStore & self = const_cast<CParameterStore &>(*this);
-        self.Set( path, name, defaultValue );
+        self.Set( name, defaultValue );
         v = defaultValue;
     } else {
         v.resize( (*property).size() );
@@ -67,16 +64,14 @@ Bool CParameterStore::Get( const char* path, const char* name, TInt64List& v, co
     return true;
 }
 
-Bool CParameterStore::Get( const char* path, const char* name, TFloat64List& v, const TFloat64List& defaultValue ) const
+Bool CParameterStore::Get( const std::string& name, TFloat64List& v, const TFloat64List& defaultValue ) const
 {
-    std::string finalPath = GetQualifiedName( path, name );
-
-    boost::optional< bpt::ptree & > property = m_PropertyTree.get_child_optional( finalPath );
+    boost::optional< bpt::ptree & > property = m_PropertyTree.get_child_optional( name );
 
     // If property does not exist, add it
     if( !property ) {
         CParameterStore & self = const_cast<CParameterStore &>(*this);
-        self.Set( path, name, defaultValue );
+        self.Set( name, defaultValue );
         v = defaultValue;
     } else {
         v.resize( (*property).size() );
@@ -91,16 +86,36 @@ Bool CParameterStore::Get( const char* path, const char* name, TFloat64List& v, 
     return true;
 }
 
-Bool CParameterStore::Get( const char* path, const char* name, std::string& v, std::string defaultValue ) const
+Bool CParameterStore::Get( const std::string& name, TStringList& v, const TStringList& defaultValue ) const
 {
-    std::string finalPath = GetQualifiedName( path, name );
-
-    boost::optional< std::string > property = m_PropertyTree.get_optional< std::string >( finalPath );
+    boost::optional< bpt::ptree & > property = m_PropertyTree.get_child_optional( name );
 
     // If property does not exist, add it
     if( !property ) {
         CParameterStore & self = const_cast<CParameterStore &>(*this);
-        self.Set( path, name, defaultValue );
+        self.Set( name, defaultValue );
+        v = defaultValue;
+    } else {
+        v.resize( (*property).size() );
+
+        bpt::ptree::const_iterator it;
+        Int32 i=0;
+        for( it=property->begin(); it != property->end(); it++ ){
+            v[i++] = it->second.get_value<std::string>();
+        }
+    }
+
+    return true;
+}
+
+Bool CParameterStore::Get( const std::string& name, std::string& v, std::string defaultValue ) const
+{
+    boost::optional< std::string > property = m_PropertyTree.get_optional< std::string >( name );
+
+    // If property does not exist, add it
+    if( !property ) {
+        CParameterStore & self = const_cast<CParameterStore &>(*this);
+        self.Set( name, defaultValue );
         v = defaultValue;
     } else {
         v = *property;
@@ -109,16 +124,14 @@ Bool CParameterStore::Get( const char* path, const char* name, std::string& v, s
     return true;
 }
 
-Bool CParameterStore::Get( const char* path, const char* name, Float64& v, Float64 defaultValue ) const
+Bool CParameterStore::Get( const std::string& name, Float64& v, Float64 defaultValue ) const
 {
-    std::string finalPath = GetQualifiedName( path, name );
-
-    boost::optional<Float64> property = m_PropertyTree.get_optional<Float64>( finalPath );
+    boost::optional<Float64> property = m_PropertyTree.get_optional<Float64>( name );
 
     // If property does not exist, add it
     if( !property ) {
         CParameterStore & self = const_cast<CParameterStore &>(*this);
-        self.Set( path, name, defaultValue );
+        self.Set( name, defaultValue );
         v = defaultValue;
     } else {
         v = *property;
@@ -127,16 +140,14 @@ Bool CParameterStore::Get( const char* path, const char* name, Float64& v, Float
     return true;
 }
 
-Bool CParameterStore::Get( const char* path, const char* name, Int64& v, Int64 defaultValue ) const
+Bool CParameterStore::Get( const std::string& name, Int64& v, Int64 defaultValue ) const
 {
-    std::string finalPath = GetQualifiedName( path, name );
-
-    boost::optional<Int64> property = m_PropertyTree.get_optional<Int64>( finalPath );
+    boost::optional<Int64> property = m_PropertyTree.get_optional<Int64>( name );
 
     // If property does not exist, add it
     if( !property ) {
         CParameterStore & self = const_cast<CParameterStore &>(*this);
-        self.Set( path, name, defaultValue );
+        self.Set( name, defaultValue );
         v = defaultValue;
     } else {
         v = *property;
@@ -145,16 +156,14 @@ Bool CParameterStore::Get( const char* path, const char* name, Int64& v, Int64 d
     return true;
 }
 
-Bool CParameterStore::Get( const char* path, const char* name, Bool& v, Bool defaultValue ) const
+Bool CParameterStore::Get( const std::string& name, Bool& v, Bool defaultValue ) const
 {
-    std::string finalPath = GetQualifiedName( path, name );
-
-    boost::optional<Bool> property = m_PropertyTree.get_optional<Bool>( finalPath );
+    boost::optional<Bool> property = m_PropertyTree.get_optional<Bool>( name );
 
     // If property does not exist, add it
     if( !property ) {
         CParameterStore & self = const_cast<CParameterStore &>(*this);
-        self.Set( path, name, defaultValue );
+        self.Set( name, defaultValue );
         v = defaultValue;
     } else {
         v = *property;
@@ -163,10 +172,26 @@ Bool CParameterStore::Get( const char* path, const char* name, Bool& v, Bool def
     return true;
 }
 
-Bool CParameterStore::Set( const char* path, const char* name, const TFloat64List& v )
+
+Bool CParameterStore::Get( const std::string& name, TFloat64Range& v, TFloat64Range defaultValue ) const
 {
-    std::string finalPath = GetQualifiedName( path, name );
-    boost::optional< bpt::ptree & > property = m_PropertyTree.get_child_optional( finalPath );
+    TFloat64List listDefault( 2 );
+    TFloat64List list( 2 );
+
+    listDefault[0] = defaultValue.GetBegin();
+    listDefault[1] = defaultValue.GetEnd();
+
+    Bool r = Get( name, list, listDefault );
+
+    v.Set( list[0], list[1] );
+
+    return r;
+}
+
+
+Bool CParameterStore::Set( const std::string& name, const TFloat64List& v )
+{
+    boost::optional< bpt::ptree & > property = m_PropertyTree.get_child_optional( name );
 
     bpt::ptree array;
 
@@ -177,14 +202,13 @@ Bool CParameterStore::Set( const char* path, const char* name, const TFloat64Lis
         array.push_back( std::make_pair( "", item) );
     }
 
-    m_PropertyTree.add_child( finalPath, array );
+    m_PropertyTree.add_child( name, array );
 
 }
 
-Bool CParameterStore::Set( const char* path, const char* name, const TInt64List& v )
+Bool CParameterStore::Set( const std::string& name, const TStringList& v )
 {
-    std::string finalPath = GetQualifiedName( path, name );
-    boost::optional< bpt::ptree & > property = m_PropertyTree.get_child_optional( finalPath );
+    boost::optional< bpt::ptree & > property = m_PropertyTree.get_child_optional( name );
 
     bpt::ptree array;
 
@@ -195,14 +219,24 @@ Bool CParameterStore::Set( const char* path, const char* name, const TInt64List&
         array.push_back( std::make_pair( "", item) );
     }
 
-    m_PropertyTree.add_child( finalPath, array );
+    m_PropertyTree.add_child( name, array );
 
 }
 
-Bool CParameterStore::Set( const char* path, const char* name, const TBoolList& v )
+Bool CParameterStore::Set( const std::string& name, const TFloat64Range& v )
 {
-    std::string finalPath = GetQualifiedName( path, name );
-    boost::optional< bpt::ptree & > property = m_PropertyTree.get_child_optional( finalPath );
+    TFloat64List list( 2 );
+
+    list[0] = v.GetBegin();
+    list[1] = v.GetEnd();
+
+    return Set( name, list );
+
+}
+
+Bool CParameterStore::Set( const std::string& name, const TInt64List& v )
+{
+    boost::optional< bpt::ptree & > property = m_PropertyTree.get_child_optional( name );
 
     bpt::ptree array;
 
@@ -213,58 +247,58 @@ Bool CParameterStore::Set( const char* path, const char* name, const TBoolList& 
         array.push_back( std::make_pair( "", item) );
     }
 
-    m_PropertyTree.add_child( finalPath, array );
+    m_PropertyTree.add_child( name, array );
 
-    return true;
 }
 
-Bool CParameterStore::Set( const char* path, const char* name, Float64 v )
+Bool CParameterStore::Set( const std::string& name, const TBoolList& v )
 {
-    std::string finalPath = GetQualifiedName( path, name );
-    boost::optional<Float64> property = m_PropertyTree.get_optional<Float64>( finalPath );
+    boost::optional< bpt::ptree & > property = m_PropertyTree.get_child_optional( name );
 
-    m_PropertyTree.put( finalPath, v );
-    return true;
-}
+    bpt::ptree array;
 
-Bool CParameterStore::Set( const char* path, const char* name, Int64 v )
-{
-    std::string finalPath = GetQualifiedName( path, name );
-    boost::optional<Int64> property = m_PropertyTree.get_optional<Int64>( finalPath );
+    for( Int32 i=0; i<v.size(); i++ ){
+        bpt::ptree item;
+        item.put( "", v[i]);
 
-    m_PropertyTree.put( finalPath, v );
-    return true;
-}
-
-Bool CParameterStore::Set( const char* path, const char* name, Bool v )
-{
-    std::string finalPath = GetQualifiedName( path, name );
-    boost::optional<Bool> property = m_PropertyTree.get_optional<Bool>( finalPath );
-
-    m_PropertyTree.put( finalPath, v );
-    return true;
-}
-
-Bool CParameterStore::Set( const char* path, const char* name, const std::string& v )
-{
-    std::string finalPath = GetQualifiedName( path, name );
-    boost::optional<std::string> property = m_PropertyTree.get_optional<std::string>( finalPath );
-
-    m_PropertyTree.put( finalPath, v );
-    return true;
-}
-
-
-std::string CParameterStore::GetQualifiedName( const char* path, const char* name ) const
-{
-    std::string finalPath;
-    if( path ) {
-        finalPath = path;
-        finalPath += ".";
+        array.push_back( std::make_pair( "", item) );
     }
-    finalPath += name;
 
-    return finalPath;
+    m_PropertyTree.add_child( name, array );
+
+    return true;
+}
+
+Bool CParameterStore::Set( const std::string& name, Float64 v )
+{
+    boost::optional<Float64> property = m_PropertyTree.get_optional<Float64>( name );
+
+    m_PropertyTree.put( name, v );
+    return true;
+}
+
+Bool CParameterStore::Set( const std::string& name, Int64 v )
+{
+    boost::optional<Int64> property = m_PropertyTree.get_optional<Int64>( name );
+
+    m_PropertyTree.put( name, v );
+    return true;
+}
+
+Bool CParameterStore::Set( const std::string& name, Bool v )
+{
+    boost::optional<Bool> property = m_PropertyTree.get_optional<Bool>( name );
+
+    m_PropertyTree.put( name, v );
+    return true;
+}
+
+Bool CParameterStore::Set( const std::string& name, const std::string& v )
+{
+    boost::optional<std::string> property = m_PropertyTree.get_optional<std::string>( name );
+
+    m_PropertyTree.put( name, v );
+    return true;
 }
 
 

@@ -25,7 +25,7 @@ FIND_PACKAGE( cpf-core ${VERSION} REQUIRED )
 #--------------------------------------------------------
 # Compiler options
 #--------------------------------------------------------
-SET( CMAKE_CXX_FLAGS "-O3 ")
+SET( CMAKE_CXX_FLAGS "-O3 -std=c++11 -Wno-deprecated ")
 
 SET( CMAKE_CXX_FLAGS_DEBUG "-O0 -g -DDEBUG_BUILD")
 

@@ -25,24 +25,24 @@ CMethodChisquareSolve::~CMethodChisquareSolve()
 }
 
 
-const CChisquareSolveResult* CMethodChisquareSolve::Compute(  CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
-                                                        const CTemplateCatalog& tplCatalog, const TTemplateCategoryList& tplCategoryList,
+const CChisquareSolveResult* CMethodChisquareSolve::Compute(  CDataStore& dataStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
+                                                        const CTemplateCatalog& tplCatalog, const TStringList& tplCategoryList,
                                                         const TFloat64Range& lambdaRange, const TFloat64List& redshifts, Float64 overlapThreshold )
 {
     Bool storeResult = false;
 
-    CDataStore::CAutoScope resultScope( resultStore, "chisquaresolve" );
+    CDataStore::CAutoScope resultScope( dataStore, "chisquaresolve" );
 
     for( UInt32 i=0; i<tplCategoryList.size(); i++ )
     {
-        CTemplate::ECategory category = tplCategoryList[i];
+        std::string category = tplCategoryList[i];
 
         for( UInt32 j=0; j<tplCatalog.GetTemplateCount( category ); j++ )
         {
             const CTemplate& tpl = tplCatalog.GetTemplate( category, j );
             const CTemplate& tplWithoutCont = tplCatalog.GetTemplateWithoutContinuum( category, j );
 
-            Solve( resultStore, spc, spcWithoutCont, tpl, tplWithoutCont, lambdaRange, redshifts, overlapThreshold, nType_full );
+            Solve( dataStore, spc, spcWithoutCont, tpl, tplWithoutCont, lambdaRange, redshifts, overlapThreshold, nType_full );
 
             storeResult = true;
         }
@@ -58,7 +58,7 @@ const CChisquareSolveResult* CMethodChisquareSolve::Compute(  CDataStore& result
     return NULL;
 }
 
-Bool CMethodChisquareSolve::Solve( CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont, const CTemplate& tpl, const CTemplate& tplWithoutCont,
+Bool CMethodChisquareSolve::Solve( CDataStore& dataStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont, const CTemplate& tpl, const CTemplate& tplWithoutCont,
                                const TFloat64Range& lambdaRange, const TFloat64List& redshifts, Float64 overlapThreshold, Int32 spctype )
 {
     CSpectrum _spc;
@@ -96,7 +96,7 @@ Bool CMethodChisquareSolve::Solve( CDataStore& resultStore, const CSpectrum& spc
         return false;
     }else{
         // Store results
-        resultStore.StoreScopedPerTemplateResult( tpl, "chisquare", *chisquareResult );
+        dataStore.StoreScopedPerTemplateResult( tpl, "chisquare", *chisquareResult );
     }
 
     return true;

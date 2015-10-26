@@ -30,11 +30,11 @@ public:
 
 private:
 
-    Bool ProcessWithoutEL(CProcessFlowContext& ctx , NSEpic::CTemplate::ECategory CategoryFilter = NSEpic::CTemplate::nCategory_None);
-    Bool Blindsolve(CProcessFlowContext& ctx , NSEpic::CTemplate::ECategory CategoryFilter = NSEpic::CTemplate::nCategory_None);
-    Bool Fullsolve(CProcessFlowContext& ctx , NSEpic::CTemplate::ECategory CategoryFilter = NSEpic::CTemplate::nCategory_None);
-    Bool Chisquare(CProcessFlowContext& ctx , NSEpic::CTemplate::ECategory CategoryFilter = NSEpic::CTemplate::nCategory_None);
-    Bool Correlation(CProcessFlowContext& ctx , NSEpic::CTemplate::ECategory CategoryFilter = NSEpic::CTemplate::nCategory_None);
+    Bool ProcessWithoutEL(CProcessFlowContext& ctx , const std::string& CategoryFilter = "all");
+    Bool Blindsolve(CProcessFlowContext& ctx , const std::string& CategoryFilter = "all");
+    Bool Fullsolve(CProcessFlowContext& ctx ,  const std::string& CategoryFilter = "all");
+    Bool Chisquare(CProcessFlowContext& ctx , const std::string& CategoryFilter = "all");
+    Bool Correlation(CProcessFlowContext& ctx , const std::string& CategoryFilter = "all");
     Bool LineMatching( CProcessFlowContext& ctx );
     Bool LineMatching2( CProcessFlowContext& ctx );
     Bool LineModelSolve( CProcessFlowContext& ctx );

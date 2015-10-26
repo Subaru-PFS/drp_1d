@@ -55,23 +55,23 @@ COperatorDTree7Solve::~COperatorDTree7Solve()
 
 }
 
-const CDTree7SolveResult* COperatorDTree7Solve::Compute(CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
-                                                        const CTemplateCatalog& tplCatalog, const TTemplateCategoryList& tplCategoryList, const CRayCatalog &restRayCatalog,
+const CDTree7SolveResult* COperatorDTree7Solve::Compute(CDataStore& dataStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
+                                                        const CTemplateCatalog& tplCatalog, const TStringList& tplCategoryList, const CRayCatalog &restRayCatalog,
                                                         const TFloat64Range& lambdaRange, const TFloat64Range& redshiftRange, Float64 redshiftStep,
                                                         Int32 correlationExtremumCount, Float64 overlapThreshold )
 {
     Bool storeResult = false;
 
-    CDataStore::CAutoScope resultScope( resultStore, "dtree7solve" );
+    CDataStore::CAutoScope resultScope( dataStore, "dtree7solve" );
 
-    resultStore.GetScopedParam( "winsize", m_winsize, 250.0 );
-    resultStore.GetScopedParam( "cut", m_cut, 5.0 );
-    resultStore.GetScopedParam( "strongcut", m_strongcut, 2.0 );
-    resultStore.GetScopedParam( "minMatchNum", m_minMatchNum, 1.0 );
-    resultStore.GetScopedParam( "tol", m_tol, 0.002 );
+    dataStore.GetScopedParam( "winsize", m_winsize, 250.0 );
+    dataStore.GetScopedParam( "cut", m_cut, 5.0 );
+    dataStore.GetScopedParam( "strongcut", m_strongcut, 2.0 );
+    dataStore.GetScopedParam( "minMatchNum", m_minMatchNum, 1.0 );
+    dataStore.GetScopedParam( "tol", m_tol, 0.002 );
 
 
-    storeResult = SolveDecisionalTree7(resultStore, spc, spcWithoutCont,
+    storeResult = SolveDecisionalTree7(dataStore, spc, spcWithoutCont,
                                        tplCatalog, tplCategoryList, restRayCatalog,
                                        lambdaRange, redshiftRange, redshiftStep,
                                        correlationExtremumCount, overlapThreshold );
@@ -86,17 +86,17 @@ const CDTree7SolveResult* COperatorDTree7Solve::Compute(CDataStore& resultStore,
     return NULL;
 }
 
-Bool COperatorDTree7Solve::SolveDecisionalTree7(CDataStore &resultStore, const CSpectrum &spc, const CSpectrum &spcWithoutCont, const CTemplateCatalog &tplCatalog, const TTemplateCategoryList &tplCategoryList, const CRayCatalog &restRayCatalog, const TFloat64Range &lambdaRange, const TFloat64Range &redshiftRange, Float64 redshiftStep, Int32 correlationExtremumCount, Float64 overlapThreshold)
+Bool COperatorDTree7Solve::SolveDecisionalTree7(CDataStore &dataStore, const CSpectrum &spc, const CSpectrum &spcWithoutCont, const CTemplateCatalog &tplCatalog, const TStringList &tplCategoryList, const CRayCatalog &restRayCatalog, const TFloat64Range &lambdaRange, const TFloat64Range &redshiftRange, Float64 redshiftStep, Int32 correlationExtremumCount, Float64 overlapThreshold)
 {
     //Log.LogInfo( "Process Decisional Tree 7" );
 
-    //COperatorResultStore::CAutoScope resultScope( resultStore, "dtree7" );
+    //COperatordataStore::CAutoScope resultScope( dataStore, "dtree7" );
 
-    TTemplateCategoryList   filteredTemplateCategoryList = getFilteredTplCategory( tplCategoryList, CTemplate::nCategory_Emission);
+    TStringList   filteredTemplateCategoryList = getFilteredTplCategory( tplCategoryList, "emission" );
 
     CPeakDetection peakDetection(m_winsize, m_cut);
     CConstRef<CPeakDetectionResult> peakDetectionResult = peakDetection.Compute( spc, lambdaRange);
-    resultStore.StoreScopedGlobalResult( "peakdetection", *peakDetectionResult );
+    dataStore.StoreScopedGlobalResult( "peakdetection", *peakDetectionResult );
     Log.LogInfo( "DTree7 - Peak Detection output: %d peaks found", peakDetectionResult->PeakList.size());
 
     // check Peak Detection results
@@ -105,12 +105,12 @@ Bool COperatorDTree7Solve::SolveDecisionalTree7(CDataStore &resultStore, const C
         m_dtreepathnum = 1.1;
         { //blindsolve
             COperatorBlindSolve blindSolve;
-            CConstRef<CBlindSolveResult> blindsolveResult = blindSolve.Compute( resultStore, spc, spcWithoutCont,
+            CConstRef<CBlindSolveResult> blindsolveResult = blindSolve.Compute( dataStore, spc, spcWithoutCont,
                                                                                 tplCatalog, tplCategoryList,
                                                                                 lambdaRange, redshiftRange, redshiftStep,
                                                                                 correlationExtremumCount, overlapThreshold );
             if( blindsolveResult ) {
-                resultStore.StoreScopedGlobalResult( "redshiftresult", *blindsolveResult );
+                dataStore.StoreScopedGlobalResult( "redshiftresult", *blindsolveResult );
             }
             return true;
         }
@@ -119,7 +119,7 @@ Bool COperatorDTree7Solve::SolveDecisionalTree7(CDataStore &resultStore, const C
     // Ray Detection
     CRayDetection rayDetection(CRay::nType_Emission, m_cut, m_strongcut );
     CConstRef<CRayDetectionResult> rayDetectionResult = rayDetection.Compute( spc, lambdaRange, peakDetectionResult->PeakList, peakDetectionResult->EnlargedPeakList );
-    resultStore.StoreScopedGlobalResult( "raycatalog", *rayDetectionResult );
+    dataStore.StoreScopedGlobalResult( "raycatalog", *rayDetectionResult );
     Log.LogInfo( "DTree7 - Ray Detection output: %d ray(s) found", rayDetectionResult->RayCatalog.GetList().size());
 
     // check Ray Detection results
@@ -129,12 +129,12 @@ Bool COperatorDTree7Solve::SolveDecisionalTree7(CDataStore &resultStore, const C
         m_dtreepathnum = 1.11;
         { //blindsolve
             COperatorBlindSolve blindSolve;
-            CConstRef<CBlindSolveResult> blindsolveResult = blindSolve.Compute( resultStore, spc, spcWithoutCont,
+            CConstRef<CBlindSolveResult> blindsolveResult = blindSolve.Compute( dataStore, spc, spcWithoutCont,
                                                                                 tplCatalog, tplCategoryList,
                                                                                 lambdaRange, redshiftRange, redshiftStep,
                                                                                 correlationExtremumCount, overlapThreshold );
             if( blindsolveResult ) {
-                resultStore.StoreScopedGlobalResult( "redshiftresult", *blindsolveResult );
+                dataStore.StoreScopedGlobalResult( "redshiftresult", *blindsolveResult );
             }
             return true;
         }
@@ -145,7 +145,7 @@ Bool COperatorDTree7Solve::SolveDecisionalTree7(CDataStore &resultStore, const C
     CRef<CRayMatchingResult> rayMatchingResult = rayMatching.Compute(rayDetectionResult->RayCatalog, restRayCatalog, redshiftRange, m_minMatchNum, m_tol );
     if(rayMatchingResult!=NULL){
         // Store matching results
-        resultStore.StoreScopedGlobalResult( "raymatching", *rayMatchingResult );
+        dataStore.StoreScopedGlobalResult( "raymatching", *rayMatchingResult );
 
         //check ray matching results
         if(rayMatchingResult->GetSolutionsListOverNumber(0).size()<1){
@@ -153,12 +153,12 @@ Bool COperatorDTree7Solve::SolveDecisionalTree7(CDataStore &resultStore, const C
             m_dtreepathnum = 1.2;
             { //blindsolve
                 COperatorBlindSolve blindSolve;
-                CConstRef<CBlindSolveResult> blindsolveResult = blindSolve.Compute( resultStore, spc, spcWithoutCont,
+                CConstRef<CBlindSolveResult> blindsolveResult = blindSolve.Compute( dataStore, spc, spcWithoutCont,
                                                                                     tplCatalog, tplCategoryList,
                                                                                     lambdaRange, redshiftRange, redshiftStep,
                                                                                     correlationExtremumCount, overlapThreshold );
                 if( blindsolveResult ) {
-                    resultStore.StoreScopedGlobalResult( "redshiftresult", *blindsolveResult );
+                    dataStore.StoreScopedGlobalResult( "redshiftresult", *blindsolveResult );
                 }
                 return true;
             }
@@ -168,12 +168,12 @@ Bool COperatorDTree7Solve::SolveDecisionalTree7(CDataStore &resultStore, const C
         m_dtreepathnum = 1.21;
         { //blindsolve
             COperatorBlindSolve blindSolve;
-            CConstRef<CBlindSolveResult> blindsolveResult = blindSolve.Compute( resultStore, spc, spcWithoutCont,
+            CConstRef<CBlindSolveResult> blindsolveResult = blindSolve.Compute( dataStore, spc, spcWithoutCont,
                                                                                 tplCatalog, tplCategoryList,
                                                                                 lambdaRange, redshiftRange, redshiftStep,
                                                                                 correlationExtremumCount, overlapThreshold );
             if( blindsolveResult ) {
-                resultStore.StoreScopedGlobalResult( "redshiftresult", *blindsolveResult );
+                dataStore.StoreScopedGlobalResult( "redshiftresult", *blindsolveResult );
             }
             return true;
         }
@@ -197,11 +197,11 @@ Bool COperatorDTree7Solve::SolveDecisionalTree7(CDataStore &resultStore, const C
         Log.LogInfo( "DTree7 - (n candidates = %d)", roundedRedshift.size());
         { //chisolve with emission templqtes only
             CMethodChisquareSolve chiSolve;
-            CConstRef<CChisquareSolveResult> chisolveResult = chiSolve.Compute( resultStore, spc, spcWithoutCont,
+            CConstRef<CChisquareSolveResult> chisolveResult = chiSolve.Compute( dataStore, spc, spcWithoutCont,
                                                                                 tplCatalog, filteredTemplateCategoryList,
                                                                                 lambdaRange, roundedRedshift, overlapThreshold );
             if( chisolveResult ) {
-                resultStore.StoreScopedGlobalResult( "redshiftresult", *chisolveResult );
+                dataStore.StoreScopedGlobalResult( "redshiftresult", *chisolveResult );
             }
             return true;
         }
@@ -225,11 +225,11 @@ Bool COperatorDTree7Solve::SolveDecisionalTree7(CDataStore &resultStore, const C
             m_dtreepathnum = 2.2;
             { //chisolve with emission templqtes only
                 CMethodChisquareSolve chiSolve;
-                CConstRef<CChisquareSolveResult> chisolveResult = chiSolve.Compute( resultStore, spc, spcWithoutCont,
+                CConstRef<CChisquareSolveResult> chisolveResult = chiSolve.Compute( dataStore, spc, spcWithoutCont,
                                                                                     tplCatalog, filteredTemplateCategoryList,
                                                                                     lambdaRange, roundedRedshift, overlapThreshold );
                 if( chisolveResult ) {
-                    resultStore.StoreScopedGlobalResult( "redshiftresult", *chisolveResult );
+                    dataStore.StoreScopedGlobalResult( "redshiftresult", *chisolveResult );
                 }
                 return true;
             }
@@ -238,12 +238,12 @@ Bool COperatorDTree7Solve::SolveDecisionalTree7(CDataStore &resultStore, const C
             m_dtreepathnum = 3.0;
             { // corrsolve with emission templates only
                 COperatorCorrelationSolve Solve;
-                CConstRef<CCorrelationSolveResult> solveResult = Solve.Compute( resultStore, spc, spcWithoutCont,
+                CConstRef<CCorrelationSolveResult> solveResult = Solve.Compute( dataStore, spc, spcWithoutCont,
                                                                                 tplCatalog, filteredTemplateCategoryList,
                                                                                 lambdaRange, redshiftRange, redshiftStep,
                                                                                 overlapThreshold );
                 if( solveResult ) {
-                    resultStore.StoreScopedGlobalResult( "redshiftresult", *solveResult );
+                    dataStore.StoreScopedGlobalResult( "redshiftresult", *solveResult );
                 }
                 return true;
             }
@@ -254,28 +254,28 @@ Bool COperatorDTree7Solve::SolveDecisionalTree7(CDataStore &resultStore, const C
     m_dtreepathnum = 1.3;
     { //blindsolve
         COperatorBlindSolve blindSolve;
-        CConstRef<CBlindSolveResult> blindsolveResult = blindSolve.Compute( resultStore, spc, spcWithoutCont,
+        CConstRef<CBlindSolveResult> blindsolveResult = blindSolve.Compute( dataStore, spc, spcWithoutCont,
                                                                             tplCatalog, tplCategoryList,
                                                                             lambdaRange, redshiftRange, redshiftStep,
                                                                             correlationExtremumCount, overlapThreshold );
         if( blindsolveResult ) {
-            resultStore.StoreScopedGlobalResult( "redshiftresult", *blindsolveResult );
+            dataStore.StoreScopedGlobalResult( "redshiftresult", *blindsolveResult );
         }
         return true;
     }
 }
 
 
-TTemplateCategoryList COperatorDTree7Solve::getFilteredTplCategory(TTemplateCategoryList tplCategoryListIn, CTemplate::ECategory CategoryFilter)
+TStringList COperatorDTree7Solve::getFilteredTplCategory( const TStringList& tplCategoryListIn, const std::string& CategoryFilter)
 {
-    TTemplateCategoryList   filteredTemplateCategoryList;
+    TStringList   filteredTemplateCategoryList;
     for( UInt32 i=0; i<tplCategoryListIn.size(); i++ )
     {
-        CTemplate::ECategory category = tplCategoryListIn[i];
-        if( category == CTemplate::nCategory_Star )
+        std::string category = tplCategoryListIn[i];
+        if( category == "star" )
         {
         }
-        else if(CategoryFilter == NSEpic::CTemplate::nCategory_None || CategoryFilter == category)
+        else if(CategoryFilter == "all" || CategoryFilter == category)
         {
             filteredTemplateCategoryList.push_back( category );
         }

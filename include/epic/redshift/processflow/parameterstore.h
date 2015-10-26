@@ -2,44 +2,48 @@
 #define _REDSHIFT_METHOD_PARAMETERSTORE_
 
 #include <epic/core/common/datatypes.h>
+#include <epic/core/common/range.h>
+#include <epic/core/common/managedobject.h>
 #include <boost/property_tree/ptree.hpp>
 
 namespace NSEpic
 {
 
 
-class CParameterStore
+class CParameterStore : public CManagedObject
 {
 
 public:
 
+    DEFINE_MANAGED_OBJECT( CParameterStore );
 
     CParameterStore();
     virtual ~CParameterStore();
 
-    Bool Get( const char* path, const char* name, TFloat64List& v, const TFloat64List& defaultValue = TFloat64List() ) const;
-    Bool Get( const char* path, const char* name, TInt64List& v, const TInt64List& defaultValue = TInt64List() ) const;
-    Bool Get( const char* path, const char* name, TBoolList& v, const TBoolList& defaultValue = TBoolList() ) const;
-    Bool Get( const char* path, const char* name, Float64& v, Float64 defaultValue  = 0 ) const;
-    Bool Get( const char* path, const char* name, Int64& v, Int64 defaultValue = 0 ) const;
-    Bool Get( const char* path, const char* name, Bool& v, Bool defaultValue = true ) const;
-    Bool Get( const char* path, const char* name, std::string& v, std::string defaultValue = "" ) const;
+    Bool Get( const std::string& name, TFloat64List& v, const TFloat64List& defaultValue = TFloat64List() ) const;
+    Bool Get( const std::string& name, TInt64List& v, const TInt64List& defaultValue = TInt64List() ) const;
+    Bool Get( const std::string& name, TBoolList& v, const TBoolList& defaultValue = TBoolList() ) const;
+    Bool Get( const std::string& name, TStringList& v, const TStringList& defaultValue = TStringList() ) const;
+    Bool Get( const std::string& name, Float64& v, Float64 defaultValue  = 0 ) const;
+    Bool Get( const std::string& name, Int64& v, Int64 defaultValue = 0 ) const;
+    Bool Get( const std::string& name, Bool& v, Bool defaultValue = true ) const;
+    Bool Get( const std::string& name, TFloat64Range& v, TFloat64Range defaultValue = TFloat64Range( 0.0, 0.0 ) ) const;
+    Bool Get( const std::string& name, std::string& v, std::string defaultValue = "" ) const;
 
-    Bool Set( const char* path, const char* name, const TFloat64List& v );
-    Bool Set( const char* path, const char* name, const TInt64List& v );
-    Bool Set( const char* path, const char* name, const TBoolList& v );
-    Bool Set( const char* path, const char* name, Float64 v );
-    Bool Set( const char* path, const char* name, Int64 v );
-    Bool Set( const char* path, const char* name, Bool v );
-    Bool Set( const char* path, const char* name, const std::string& v );
+    Bool Set( const std::string& name, const TFloat64List& v );
+    Bool Set( const std::string& name, const TInt64List& v );
+    Bool Set( const std::string& name, const TBoolList& v );
+    Bool Set( const std::string& name, const TStringList& v );
+    Bool Set( const std::string& name, const TFloat64Range& v );
+    Bool Set( const std::string& name, const std::string& v );
+    Bool Set( const std::string& name, Float64 v );
+    Bool Set( const std::string& name, Int64 v );
+    Bool Set( const std::string& name, Bool v );
 
     Bool Save( const char* path ) const;
     Bool Load( const char* path );
 
 private:
-
-    std::string GetQualifiedName( const char* path, const char* name ) const;
-
 
     mutable boost::property_tree::ptree m_PropertyTree;
 

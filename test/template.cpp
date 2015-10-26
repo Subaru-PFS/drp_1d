@@ -22,9 +22,9 @@ void CRedshiftTemplateTestCase::LoadCatalog()
 
     Bool rValue = catalog.Load( "../test/data/templatecatalog/" );
     CPPUNIT_ASSERT( rValue == true );
-    CPPUNIT_ASSERT( catalog.GetTemplateCount( CTemplate::nCategory_Galaxy ) == 2 );
-    CPPUNIT_ASSERT( catalog.GetTemplateCount( CTemplate::nCategory_Emission ) == 1 );
-    CPPUNIT_ASSERT( catalog.GetTemplateCount( CTemplate::nCategory_Qso ) == 1 );
-    CPPUNIT_ASSERT( catalog.GetTemplateCount( CTemplate::nCategory_Star ) == 1 );
+    CPPUNIT_ASSERT( catalog.GetTemplateCount( "galaxy" ) == 2 );
+    CPPUNIT_ASSERT( catalog.GetTemplateCount( "emission" ) == 1 );
+    CPPUNIT_ASSERT( catalog.GetTemplateCount( "qso" ) == 1 );
+    CPPUNIT_ASSERT( catalog.GetTemplateCount( "star" ) == 1 );
 
 }

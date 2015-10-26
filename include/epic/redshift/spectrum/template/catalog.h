@@ -23,25 +23,25 @@ public:
     ~CTemplateCatalog();
 
     Bool Add( CTemplate& r );
-    Bool Add( const char* templatePath, CTemplate::ECategory category );
+    Bool Add( const char* templatePath, const std::string& category );
     Bool Load( const char* filePath );
 
-    const CTemplate& GetTemplate( CTemplate::ECategory category, UInt32 i ) const;
-    const CTemplate& GetTemplateWithoutContinuum( CTemplate::ECategory category, UInt32 i ) const;
+    const CTemplate& GetTemplate( const std::string& category, UInt32 i ) const;
+    const CTemplate& GetTemplateWithoutContinuum( const std::string& category, UInt32 i ) const;
 
-    TTemplateRefList GetTemplate( const TTemplateCategoryList& categoryList ) const;
-    TTemplateRefList GetTemplateWithoutContinuum(  const TTemplateCategoryList& categoryList  ) const;
+    TTemplateRefList GetTemplate( const TStringList& categoryList ) const;
+    TTemplateRefList GetTemplateWithoutContinuum(  const TStringList& categoryList  ) const;
 
-    TTemplateCategoryList GetCategoryList() const;
+    TStringList GetCategoryList() const;
 
-    UInt32 GetTemplateCount( CTemplate::ECategory category ) const;
+    UInt32 GetTemplateCount( const std::string& category ) const;
 
 private:
 
-    Bool                    LoadCategory( const boost::filesystem::path& dirPath, CTemplate::ECategory category );
-    CTemplate::ECategory    ConvertStringToCategory( const std::string& category );
-    TTemplateRefList        m_List[CTemplate::nCategory_Count];
-    TTemplateRefList        m_ListWithoutCont[CTemplate::nCategory_Count];
+    Bool                    LoadCategory( const boost::filesystem::path& dirPath, const std::string& category );
+
+    TTemplatesRefDict        m_List;
+    TTemplatesRefDict        m_ListWithoutCont;
 };
 
 

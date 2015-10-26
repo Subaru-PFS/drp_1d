@@ -10,6 +10,7 @@ using namespace NSEpic;
 
 namespace bfs = boost::filesystem;
 
+IMPLEMENT_MANAGED_OBJECT( COperatorResultStore );
 
 COperatorResultStore::COperatorResultStore()
 {
@@ -21,10 +22,10 @@ COperatorResultStore::~COperatorResultStore()
 
 }
 
-void COperatorResultStore::StoreResult( TResultsMap& map, const char* path, const char* name, const COperatorResult& result )
+void COperatorResultStore::StoreResult( TResultsMap& map, const std::string& path, const std::string& name, const COperatorResult& result )
 {
     std::string scopedName;
-    if( path ) {
+    if( ! path.empty() ) {
         scopedName = path;
         scopedName.append( "." );
     }
@@ -40,7 +41,7 @@ void COperatorResultStore::StoreResult( TResultsMap& map, const char* path, cons
     map[ scopedName ] = &result;
 }
 
-Void COperatorResultStore::StorePerTemplateResult( const CTemplate& t, const char* path, const char* name, const COperatorResult& result )
+Void COperatorResultStore::StorePerTemplateResult( const CTemplate& t, const std::string& path, const std::string& name, const COperatorResult& result )
 {
     TPerTemplateResultsMap::iterator it = m_PerTemplateResults.find( t.GetName() );
     if( it == m_PerTemplateResults.end() )
@@ -51,12 +52,12 @@ Void COperatorResultStore::StorePerTemplateResult( const CTemplate& t, const cha
     StoreResult( m_PerTemplateResults[ t.GetName() ], path, name, result );
 }
 
-Void COperatorResultStore::StoreGlobalResult( const char* path, const char* name, const COperatorResult& result )
+Void COperatorResultStore::StoreGlobalResult( const std::string& path, const std::string& name, const COperatorResult& result )
 {
     StoreResult( m_GlobalResults, path, name, result );
 }
 
-const COperatorResult* COperatorResultStore::GetPerTemplateResult( const CTemplate& t, const char* name ) const
+const COperatorResult* COperatorResultStore::GetPerTemplateResult( const CTemplate& t, const std::string& name ) const
 {
     TPerTemplateResultsMap::const_iterator it1 = m_PerTemplateResults.find( t.GetName() );
     if( it1 != m_PerTemplateResults.end() )
@@ -72,7 +73,7 @@ const COperatorResult* COperatorResultStore::GetPerTemplateResult( const CTempla
     return NULL;
 }
 
-TOperatorResultMap COperatorResultStore::GetPerTemplateResult( const char* name ) const
+TOperatorResultMap COperatorResultStore::GetPerTemplateResult( const std::string& name ) const
 {
     TOperatorResultMap map;
     TPerTemplateResultsMap::const_iterator it;
@@ -91,7 +92,7 @@ TOperatorResultMap COperatorResultStore::GetPerTemplateResult( const char* name 
     return map;
 }
 
-const COperatorResult* COperatorResultStore::GetGlobalResult( const char* name ) const
+const COperatorResult* COperatorResultStore::GetGlobalResult( const std::string& name ) const
 {
     TResultsMap::const_iterator it = m_GlobalResults.find( name );
     if( it != m_GlobalResults.end() )

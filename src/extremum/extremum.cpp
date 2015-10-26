@@ -3,7 +3,7 @@
 #include <epic/core/common/quicksort.h>
 #include <epic/core/common/datatypes.h>
 
-#include <math.h>
+#include <cmath>
 #include <float.h>
 #include <iostream>
 
@@ -149,7 +149,7 @@ Bool CExtremum::InternalFind( const Float64* xAxis, const Float64* yAxis, UInt32
         Int32 firstNonNanInd = 0;
         for( Int32 iFirst=0; iFirst<tmpSize-1; iFirst++ )
         {
-            if( !isnan(tmpY[iFirst])){
+            if( !std::isnan( (double) tmpY[iFirst])){
                 firstNonNanInd = iFirst;
                 break;
             }
@@ -157,7 +157,7 @@ Bool CExtremum::InternalFind( const Float64* xAxis, const Float64* yAxis, UInt32
         Int32 lastNonNanInd = tmpSize-1;
         for( Int32 iLast=tmpSize-1; iLast>0; iLast-- )
         {
-            if( !isnan(tmpY[iLast])){
+            if( !std::isnan(tmpY[iLast])){
                 lastNonNanInd = iLast;
                 break;
             }
@@ -235,7 +235,7 @@ Bool CExtremum::InternalFind( const Float64* xAxis, const Float64* yAxis, UInt32
     for( Int32 i=0; i<nbPeaks; i++ )
     {
         Int32 j = sortedIndexes[ (sortedIndexes.size()-1) - i];
-        if( ! isnan( tmpY[j] ) )
+        if( ! std::isnan( tmpY[j] ) )
         {
             maxPoint[ k++ ] = SPoint( tmpX[j], m_SignSearch*tmpY[j]);
         }
@@ -254,7 +254,7 @@ Bool CExtremum::InternalFind2( const Float64* xAxis, const Float64* yAxis, UInt3
     Int32 tmpSize = n;
     for( Int32 t=0;t<n;t++)
     {
-        if( ! isnan( yAxis[t] ) )
+        if( ! std::isnan( yAxis[t] ) )
         {
             tmpX[t]=xAxis[t];
             tmpY[t]=yAxis[t];

@@ -23,7 +23,7 @@ COperatorBlindSolve::~COperatorBlindSolve()
 }
 
 const CBlindSolveResult* COperatorBlindSolve::Compute(  CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
-                                                        const CTemplateCatalog& tplCatalog, const TTemplateCategoryList& tplCategoryList,
+                                                        const CTemplateCatalog& tplCatalog, const TStringList& tplCategoryList,
                                                         const TFloat64Range& lambdaRange, const TFloat64Range& redshiftsRange, Float64 redshiftStep,
                                                         Int32 correlationExtremumCount, Float64 overlapThreshold )
 {
@@ -33,7 +33,7 @@ const CBlindSolveResult* COperatorBlindSolve::Compute(  CDataStore& resultStore,
 
     for( UInt32 i=0; i<tplCategoryList.size(); i++ )
     {
-        CTemplate::ECategory category = tplCategoryList[i];
+        std::string category = tplCategoryList[i];
 
         for( UInt32 j=0; j<tplCatalog.GetTemplateCount( category ); j++ )
         {

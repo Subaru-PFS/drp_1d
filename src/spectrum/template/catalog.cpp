@@ -26,18 +26,18 @@ CTemplateCatalog::~CTemplateCatalog()
 
 }
 
-const CTemplate& CTemplateCatalog::GetTemplate( CTemplate::ECategory category, UInt32 i ) const
+const CTemplate& CTemplateCatalog::GetTemplate( const std::string& category, UInt32 i ) const
 {
-    return *m_List[category][i];
+    return *m_List.at(category)[i];
 }
 
 
-const CTemplate& CTemplateCatalog::GetTemplateWithoutContinuum( CTemplate::ECategory category, UInt32 i ) const
+const CTemplate& CTemplateCatalog::GetTemplateWithoutContinuum( const std::string& category, UInt32 i ) const
 {
-    return *m_ListWithoutCont[category][i];
+    return *m_ListWithoutCont.at(category)[i];
 }
 
-TTemplateRefList CTemplateCatalog::GetTemplate( const TTemplateCategoryList& categoryList ) const
+TTemplateRefList CTemplateCatalog::GetTemplate( const TStringList& categoryList ) const
 {
     TTemplateRefList list;
 
@@ -45,14 +45,14 @@ TTemplateRefList CTemplateCatalog::GetTemplate( const TTemplateCategoryList& cat
     {
         for (Int32 j=0; j<GetTemplateCount( categoryList[i] ); i++ )
         {
-            list.push_back( m_List[  categoryList[i] ][j] );
+            list.push_back( m_List.at( categoryList[i] )[j] );
         }
     }
 
     return list;
 }
 
-TTemplateRefList CTemplateCatalog::GetTemplateWithoutContinuum( const TTemplateCategoryList& categoryList ) const
+TTemplateRefList CTemplateCatalog::GetTemplateWithoutContinuum( const TStringList& categoryList ) const
 {
     TTemplateRefList list;
 
@@ -60,35 +60,32 @@ TTemplateRefList CTemplateCatalog::GetTemplateWithoutContinuum( const TTemplateC
     {
         for (Int32 j=0; j<GetTemplateCount( categoryList[i] ); i++ )
         {
-            list.push_back( m_ListWithoutCont[  categoryList[i] ][j] );
+            list.push_back( m_ListWithoutCont.at( categoryList[i] )[j] );
         }
     }
 
     return list;
 }
 
-TTemplateCategoryList CTemplateCatalog::GetCategoryList() const
+TStringList CTemplateCatalog::GetCategoryList() const
 {
-    TTemplateCategoryList l;
-    for( Int32 i=0;i<CTemplate::nCategory_Count; i++ )
-    {
-        if( m_List[i].size() )
-        {
-            l.push_back( (CTemplate::ECategory) i );
-        }
+    TStringList l;
+
+    for( auto it = m_List.begin(); it != m_List.end(); it++ ) {
+        l.push_back( it->first );
     }
 
     return l;
 }
 
-UInt32 CTemplateCatalog::GetTemplateCount( CTemplate::ECategory category ) const
+UInt32 CTemplateCatalog::GetTemplateCount( const std::string& category ) const
 {
-    return m_List[category].size();
+    return m_List.at(category).size();
 }
 
 Bool CTemplateCatalog::Add( CTemplate& r )
 {
-    if( r.GetCategory() == CTemplate::nCategory_None )
+    if( r.GetCategory().empty() )
         return false;
 
     m_List[r.GetCategory()].push_back( &r );
@@ -106,7 +103,7 @@ Bool CTemplateCatalog::Add( CTemplate& r )
     return true;
 }
 
-Bool CTemplateCatalog::Add( const char* templatePath, CTemplate::ECategory category )
+Bool CTemplateCatalog::Add( const char* templatePath, const std::string& category )
 {
     if ( !exists( templatePath ) )
         return false;
@@ -140,20 +137,19 @@ Bool CTemplateCatalog::Load( const char* dirPath )
         {
             path::iterator it = itr->path().end();
             it--;
-            CTemplate::ECategory category = ConvertStringToCategory( (*it).generic_string() );
-            if( category != CTemplate::nCategory_None )
-                LoadCategory( itr->path(), category );
+
+            std::string category = (*it).generic_string();
+            LoadCategory( itr->path(), category );
         }
     }
     return true;
 }
 
-Bool CTemplateCatalog::LoadCategory( const path& dirPath, CTemplate::ECategory category )
+Bool CTemplateCatalog::LoadCategory( const path& dirPath, const std::string&  category )
 {
     directory_iterator end_itr;
     for ( directory_iterator itr( dirPath ); itr != end_itr; ++itr )
     {
-
         if ( !is_directory( itr->status() ) )
         {
             if( ! Add( itr->path().c_str(), category ) )
@@ -162,18 +158,3 @@ Bool CTemplateCatalog::LoadCategory( const path& dirPath, CTemplate::ECategory c
     }
     return true;
 }
-
-CTemplate::ECategory CTemplateCatalog::ConvertStringToCategory( const string& category )
-{
-    if( category == "star" )
-        return CTemplate::nCategory_Star;
-    else if( category == "galaxy" )
-        return CTemplate::nCategory_Galaxy;
-    else if( category == "qso" )
-        return CTemplate::nCategory_Qso;
-    else if( category == "emission" )
-        return CTemplate::nCategory_Emission;
-
-    return CTemplate::nCategory_None;
-}
-

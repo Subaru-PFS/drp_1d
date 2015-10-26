@@ -30,16 +30,17 @@ CMethodChisquare2Solve::~CMethodChisquare2Solve()
 
 
 const CChisquare2SolveResult* CMethodChisquare2Solve::Compute(  CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
-                                                        const CTemplateCatalog& tplCatalog, const TTemplateCategoryList& tplCategoryList,
+                                                        const CTemplateCatalog& tplCatalog, const TStringList& tplCategoryList,
                                                         const TFloat64Range& lambdaRange, const TFloat64List& redshifts, Float64 overlapThreshold )
 {
     Bool storeResult = false;
 
     CDataStore::CAutoScope resultScope( resultStore, "chisquare2solve" );
+
     Int32 _type = CChisquare2SolveResult::nType_noContinuum;
     for( UInt32 i=0; i<tplCategoryList.size(); i++ )
     {
-        CTemplate::ECategory category = tplCategoryList[i];
+        std::string category = tplCategoryList[i];
 
         for( UInt32 j=0; j<tplCatalog.GetTemplateCount( category ); j++ )
         {

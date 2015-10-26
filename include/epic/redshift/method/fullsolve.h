@@ -25,7 +25,7 @@ public:
     ~COperatorFullSolve();
 
     const CFullSolveResult* Compute( CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
-                                        const CTemplateCatalog& tplCatalog, const TTemplateCategoryList& tplCategoryList,
+                                        const CTemplateCatalog& tplCatalog, const TStringList& tplCategoryList,
                                         const TFloat64Range& lambdaRange, const TFloat64Range& redshiftsRange, Float64 redshiftStep, Float64 overlapThreshold  );
 
 

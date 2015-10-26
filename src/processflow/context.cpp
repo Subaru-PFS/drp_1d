@@ -1,5 +1,6 @@
 #include <epic/redshift/processflow/context.h>
 
+#include <epic/redshift/processflow/datastore.h>
 #include <epic/redshift/spectrum/spectrum.h>
 #include <epic/redshift/spectrum/io/genericreader.h>
 #include <epic/redshift/spectrum/template/catalog.h>
@@ -28,30 +29,6 @@ using namespace NSEpic;
 
 IMPLEMENT_MANAGED_OBJECT( CProcessFlowContext )
 
-CProcessFlowContext::SParam::SParam()
-{
-    redshiftRange = TFloat64Range( 0.0, 5.0 );
-    redshiftStep = 0.0001;
-    lambdaRange = TFloat64Range( 3000.0, 9600.0 );
-    smoothWidth = 0;
-    overlapThreshold = 1.0;
-    correlationExtremumCount = 5;
-
-    //method = nMethod_Correlation;
-    //method = nMethod_Chisquare;
-    //method = nMethod_LineMatching;
-    //method = nMethod_LineMatching2;
-    //method = nMethod_BlindSolve;
-    //method = nMethod_FullSolve;
-    //method = nMethod_DecisionalTree7;
-    method = nMethod_DecisionalTreeA;
-
-    templateCategoryList.push_back( CTemplate::nCategory_Emission );
-    templateCategoryList.push_back( CTemplate::nCategory_Galaxy );
-    templateCategoryList.push_back( CTemplate::nCategory_Star );
-    templateCategoryList.push_back( CTemplate::nCategory_Qso );
-}
-
 CProcessFlowContext::CProcessFlowContext()
 {
 
@@ -63,14 +40,12 @@ CProcessFlowContext::~CProcessFlowContext()
 }
 
 
-bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath, const CTemplateCatalog& templateCatalog, const CRayCatalog& rayCatalog, const SParam& params  )
+bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath,
+                                const CTemplateCatalog& templateCatalog, const CRayCatalog& rayCatalog,
+                                CParameterStore& paramStore  )
 {
-    SetParam( "spectrumName", bfs::path( spectrumPath ).stem().string() );
-
     m_Spectrum = new CSpectrum();
     m_Spectrum->SetName(bfs::path( spectrumPath ).stem().string().c_str() );
-
-    m_Params = params;
 
     CSpectrumIOGenericReader reader;
     Bool rValue = reader.Read( spectrumPath, *m_Spectrum );
@@ -111,8 +86,10 @@ bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath,
     // This should be moved to CProcessFlow
 
     // Smooth flux
-    if( params.smoothWidth > 0 )
-        m_Spectrum->GetFluxAxis().ApplyMeanSmooth( params.smoothWidth );
+    Int64 smoothWidth;
+    paramStore.Get( "smoothWidth", smoothWidth, 0 );
+    if( smoothWidth > 0 )
+        m_Spectrum->GetFluxAxis().ApplyMeanSmooth( smoothWidth );
 
 
     // Compute continuum substracted spectrum
@@ -125,14 +102,23 @@ bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath,
 
     m_TemplateCatalog = ( CTemplateCatalog*) &templateCatalog;
     m_RayCatalog = ( CRayCatalog*) &rayCatalog;
+    m_ParameterStore = &paramStore;
+
+
+    m_DataStore = new CDataStore( *m_ResultStore, *m_ParameterStore );
+    //m_ParameterStore->SetParam( "spectrumName", bfs::path( spectrumPath ).stem().string() );
+
 
     return true;
 }
 
-bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath, const char* templateCatalogPath, const char* rayCatalogPath, const SParam& params )
+bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath,
+                                const char* templateCatalogPath, const char* rayCatalogPath,
+                                CParameterStore& paramStore )
 {
     CRef<CTemplateCatalog> templateCatalog = new CTemplateCatalog;
     CRef<CRayCatalog> rayCatalog = new CRayCatalog;
+
 
     Bool rValue;
 
@@ -160,35 +146,24 @@ bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath,
         }
     }
 
-    return Init( spectrumPath, noisePath, *templateCatalog, *rayCatalog, params );
+    return Init( spectrumPath, noisePath, *templateCatalog, *rayCatalog, paramStore );
 }
 
-std::string CProcessFlowContext::GetMethodName( EMethod method )
+CParameterStore& CProcessFlowContext::GetParameterStore()
 {
-    std::string methodStr = "Invalid method name";
-
-    if(method== CProcessFlowContext::nMethod_BlindSolve){
-        methodStr = "BlindSolve";
-    } else if (method == CProcessFlowContext::nMethod_Correlation){
-        methodStr = "CorrelationSolve";
-    } else if (method == CProcessFlowContext::nMethod_Chisquare){
-        methodStr = "ChisquareSolve";
-    } else if (method == CProcessFlowContext::nMethod_LineMatching){
-        methodStr = "LineMatching";
-    } else if (method == CProcessFlowContext::nMethod_LineMatching2){
-        methodStr = "LineMatching2";
-    } else if (method == CProcessFlowContext::nMethod_LineModel){
-        methodStr = "LineModel";
-    } else if (method == CProcessFlowContext::nMethod_DecisionalTree7){
-        methodStr = "DecisionalTree7";
-    } else if (method == CProcessFlowContext::nMethod_DecisionalTreeA){
-        methodStr = "DecisionalTreeA";
-    } else if (method == CProcessFlowContext::nMethod_FullSolve){
-        methodStr = "FullSolve";
-    }
-    return methodStr;
+    return *m_ParameterStore;
 }
 
+COperatorResultStore&  CProcessFlowContext::GetResultStore()
+{
+    return *m_ResultStore;
+}
+
+
+CDataStore& CProcessFlowContext::GetDataStore()
+{
+    return *m_DataStore;
+}
 
 const CSpectrum& CProcessFlowContext::GetSpectrum() const
 {
@@ -208,11 +183,6 @@ const CTemplateCatalog& CProcessFlowContext::GetTemplateCatalog() const
 const CRayCatalog& CProcessFlowContext::GetRayCatalog() const
 {
     return *m_RayCatalog;
-}
-
-const CProcessFlowContext::SParam& CProcessFlowContext::GetParams() const
-{
-    return m_Params;
 }
 
 

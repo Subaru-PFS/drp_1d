@@ -23,8 +23,8 @@ public:
     COperatorDTree7Solve();
     ~COperatorDTree7Solve();
 
-    const CDTree7SolveResult* Compute(CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
-                                        const CTemplateCatalog& tplCatalog, const TTemplateCategoryList& tplCategoryList, const CRayCatalog &restRayCatalog,
+    const CDTree7SolveResult* Compute(CDataStore& dataStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
+                                        const CTemplateCatalog& tplCatalog, const TStringList& tplCategoryList, const CRayCatalog &restRayCatalog,
                                         const TFloat64Range& lambdaRange, const TFloat64Range& redshiftRange, Float64 redshiftStep,
                                         Int32 correlationExtremumCount, Float64 overlapThreshold  );
 
@@ -43,12 +43,12 @@ private:
     Float64 m_dtreepathnum;
 
 
-    Bool SolveDecisionalTree7(CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
-                              const CTemplateCatalog& tplCatalog, const TTemplateCategoryList& tplCategoryList, const CRayCatalog &restRayCatalog,
+    Bool SolveDecisionalTree7(CDataStore& dataStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
+                              const CTemplateCatalog& tplCatalog, const TStringList& tplCategoryList, const CRayCatalog &restRayCatalog,
                               const TFloat64Range& lambdaRange, const TFloat64Range& redshiftRange, Float64 redshiftStep,
                               Int32 correlationExtremumCount, Float64 overlapThreshold );
 
-    TTemplateCategoryList getFilteredTplCategory(TTemplateCategoryList tplCategoryListIn, CTemplate::ECategory CategoryFilter);
+    TStringList getFilteredTplCategory( const TStringList& tplCategoryListIn, const std::string& CategoryFilter);
 };
 
 
