@@ -25,7 +25,7 @@ class CLineModelElementList
 
 public:
 
-    CLineModelElementList(const CSpectrum& spectrum, const CSpectrum& spectrumNoContinuum, const CRayCatalog::TRayVector& restRayList , Int32 widthType);
+    CLineModelElementList(const CSpectrum& spectrum, const CSpectrum& spectrumNoContinuum, const CRayCatalog::TRayVector& restRayList , const std::string& lineWidthType);
     ~CLineModelElementList();
 
     void LoadCatalog(const CRayCatalog::TRayVector& restRayList);
@@ -84,7 +84,7 @@ private:
 
     CRayCatalog::TRayVector m_RestRayList;
 
-    Int32 m_LineWidthType;
+    std::string m_LineWidthType;
     Float64 m_nominalWidthDefaultEmission;
     Float64 m_nominalWidthDefaultAbsorption;
 };

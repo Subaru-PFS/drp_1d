@@ -23,13 +23,13 @@ CLineModelSolve::~CLineModelSolve()
 
 }
 
-const CLineModelSolveResult* CLineModelSolve::Compute(  CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont, const CRayCatalog& restraycatalog,
+const CLineModelSolveResult* CLineModelSolve::Compute(  CDataStore& dataStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont, const CRayCatalog& restraycatalog,
                                                         const TFloat64Range& lambdaRange, const TFloat64List& redshifts)
 {
     Bool storeResult = false;
-    CDataStore::CAutoScope resultScope( resultStore, "linemodelsolve" );
+    CDataStore::CAutoScope resultScope( dataStore, "linemodelsolve" );
 
-    Solve( resultStore, spc, spcWithoutCont, restraycatalog, lambdaRange, redshifts);
+    Solve( dataStore, spc, spcWithoutCont, restraycatalog, lambdaRange, redshifts);
     storeResult = true;
 
 
@@ -42,15 +42,13 @@ const CLineModelSolveResult* CLineModelSolve::Compute(  CDataStore& resultStore,
     return NULL;
 }
 
-Bool CLineModelSolve::Solve( CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont, const CRayCatalog& restraycatalog,
+Bool CLineModelSolve::Solve( CDataStore& dataStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont, const CRayCatalog& restraycatalog,
                              const TFloat64Range& lambdaRange, const TFloat64List& redshifts)
 {
     std::string scopeStr = "linemodel";
 
-    Int32 spcType = CLineModelSolveResult::nType_noContinuum;
-    //Int32 spcType = CLineModelSolveResult::nType_raw;
-    //Int32 spcType = CLineModelSolveResult::nType_continuumOnly;
-    Int32 _spctype = spcType;
+    std::string type;
+    dataStore.GetScopedParam( "type", type, "nocontinuum" );
 
     CSpectrum _spc;
     CSpectrum _spcContinuum = spc;
@@ -59,15 +57,15 @@ Bool CLineModelSolve::Solve( CDataStore& resultStore, const CSpectrum& spc, cons
     CSpectrumFluxAxis& sfluxAxisPtr = _spcContinuum.GetFluxAxis();
     sfluxAxisPtr = spcfluxAxis;
 
-    if(_spctype == CLineModelSolveResult::nType_continuumOnly){
+    if(type == "continuumonly"){
         // use continuum only
         _spc = _spcContinuum;
         //scopeStr = "linemodel_continuum";
-    }else if(_spctype == CLineModelSolveResult::nType_raw){
+    }else if(type == "raw"){
         // use full spectrum
         _spc = spc;
         //scopeStr = "linemodel";
-    }else if(_spctype == CLineModelSolveResult::nType_noContinuum){
+    }else if(type == "nocontinuum" ){
         // use spectrum without continuum
         _spc = spc;
         CSpectrumFluxAxis spcfluxAxis = spcWithoutCont.GetFluxAxis();
@@ -77,9 +75,8 @@ Bool CLineModelSolve::Solve( CDataStore& resultStore, const CSpectrum& spc, cons
     }
 
 
-    Int32 widthType = CLineModelElement::nWidthType_PSFInstrumentDriven;
-    //Int32 widthType = CLineModelElement::nWidthType_ZDriven;
-    //Int32 widthType = CLineModelElement::nWidthType_Fixed;
+    std::string widthType;
+    dataStore.GetScopedParam( "widthtype", widthType, "psfinstrumentdriven" );
 
     // Compute merit function
     COperatorLineModel linemodel;
@@ -91,7 +88,7 @@ Bool CLineModelSolve::Solve( CDataStore& resultStore, const CSpectrum& spc, cons
         return false;
     }else{
         // Store results
-        resultStore.StoreScopedGlobalResult( scopeStr.c_str(), *result );
+        dataStore.StoreScopedGlobalResult( scopeStr.c_str(), *result );
     }
 
 

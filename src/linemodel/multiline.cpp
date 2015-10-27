@@ -10,7 +10,7 @@
 
 using namespace NSEpic;
 
-CMultiLine::CMultiLine(std::vector<CRay> rs, Int32 widthType, std::vector<Float64> nominalAmplitudes, Float64 nominalWidth, std::vector<Int32> catalogIndexes):CLineModelElement(widthType)
+CMultiLine::CMultiLine(std::vector<CRay> rs, const std::string& widthType, std::vector<Float64> nominalAmplitudes, Float64 nominalWidth, std::vector<Int32> catalogIndexes):CLineModelElement(widthType)
 {
 
     m_ElementType = "CMultiLine";
@@ -53,11 +53,11 @@ std::string CMultiLine::GetRayName(Int32 subeIdx)
 Float64 CMultiLine::GetLineWidth(Float64 lambda, Float64 z)
 {
     Float64 instrumentSigma = -1;
-    if( m_LineWidthType == nWidthType_PSFInstrumentDriven){
+    if( m_LineWidthType == "psfinstrumentdriven"){
         instrumentSigma = lambda/m_Resolution/m_FWHM_factor;
-    }else if( m_LineWidthType == nWidthType_ZDriven){
+    }else if( m_LineWidthType == "zdriven"){
         instrumentSigma = m_NominalWidth*(1+z);
-    }else if( m_LineWidthType == nWidthType_Fixed){
+    }else if( m_LineWidthType == "fixed"){
         instrumentSigma = m_NominalWidth;
     }
 

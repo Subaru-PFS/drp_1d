@@ -25,7 +25,7 @@
 
 using namespace NSEpic;
 
-CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum, const CSpectrum &spectrumNoContinuum, const CRayCatalog::TRayVector& restRayList, Int32 widthType)
+CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum, const CSpectrum &spectrumNoContinuum, const CRayCatalog::TRayVector& restRayList, const std::string& widthType)
 {
     m_LineWidthType = widthType;
 

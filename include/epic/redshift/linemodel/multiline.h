@@ -18,7 +18,7 @@ class CMultiLine:public CLineModelElement
 
 public:
 
-    CMultiLine(std::vector<CRay> rs, Int32 widthType, std::vector<Float64> nominalAmplitudes, Float64 nominalWidth, std::vector<Int32> catalogIndexes);
+    CMultiLine(std::vector<CRay> rs, const std::string& widthType, std::vector<Float64> nominalAmplitudes, Float64 nominalWidth, std::vector<Int32> catalogIndexes);
     ~CMultiLine();
 
     std::string GetRayName(Int32 subeIdx);

@@ -7,7 +7,7 @@
 
 using namespace NSEpic;
 
-CLineModelElement::CLineModelElement(Int32 widthType)
+CLineModelElement::CLineModelElement(const std::string& widthType)
 {
     m_LineWidthType = widthType;
 

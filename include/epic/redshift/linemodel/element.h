@@ -18,14 +18,8 @@ class CLineModelElement
 {
 
 public:
-    enum ELineWidthType
-    {
-        nWidthType_PSFInstrumentDriven = 1,
-        nWidthType_ZDriven = 2,
-        nWidthType_Fixed = 3,
-    };
 
-    CLineModelElement(Int32 widthType);
+    CLineModelElement(const std::string& widthType);
     ~CLineModelElement();
 
     std::string GetElementTypeTag();
@@ -56,7 +50,7 @@ public:
 
 protected:
 
-    Int32 m_LineWidthType;
+    std::string m_LineWidthType;
     Float64 m_Resolution;
     Float64 m_FWHM_factor;
 

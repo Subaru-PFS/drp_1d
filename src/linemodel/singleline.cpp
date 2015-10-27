@@ -11,7 +11,7 @@
 
 using namespace NSEpic;
 
-CSingleLine::CSingleLine(const CRay& r , Int32 widthType, Float64 nominalWidth, std::vector<Int32> catalogIndexes):CLineModelElement(widthType)
+CSingleLine::CSingleLine(const CRay& r , const std::string& widthType, Float64 nominalWidth, std::vector<Int32> catalogIndexes):CLineModelElement(widthType)
 {
     m_ElementType = "CSingleLine";
     m_Ray = r;
@@ -83,11 +83,11 @@ TInt32RangeList CSingleLine::getSupport()
 
 Float64 CSingleLine::GetLineWidth(Float64 lambda, Float64 z){
     Float64 instrumentSigma = -1;
-    if( m_LineWidthType == nWidthType_PSFInstrumentDriven){
+    if( m_LineWidthType == "psfinstrumentdriven"){
         instrumentSigma = lambda/m_Resolution/m_FWHM_factor;
-    }else if( m_LineWidthType == nWidthType_ZDriven){
+    }else if( m_LineWidthType == "zdriven"){
         instrumentSigma = m_NominalWidth*(1+z);
-    }else if( m_LineWidthType == nWidthType_Fixed){
+    }else if( m_LineWidthType == "fixed"){
         instrumentSigma = m_NominalWidth;
     }
 

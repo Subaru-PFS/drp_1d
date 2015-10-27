@@ -103,6 +103,7 @@ bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath,
     m_TemplateCatalog = ( CTemplateCatalog*) &templateCatalog;
     m_RayCatalog = ( CRayCatalog*) &rayCatalog;
     m_ParameterStore = &paramStore;
+    m_ResultStore = new COperatorResultStore;
 
 
     m_DataStore = new CDataStore( *m_ResultStore, *m_ParameterStore );

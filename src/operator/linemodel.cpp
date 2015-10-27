@@ -42,7 +42,7 @@ COperatorLineModel::~COperatorLineModel()
 
 
 const COperatorResult* COperatorLineModel::Compute(const CSpectrum& spectrum, const CSpectrum& spectrumNoContinuum, const CRayCatalog& restraycatalog,
-                          const TFloat64Range& lambdaRange, const TFloat64List& redshifts, Int32 lineWidthType)
+                          const TFloat64Range& lambdaRange, const TFloat64List& redshifts, const std::string& lineWidthType)
 {
 
     if( spectrum.GetSpectralAxis().IsInLinearScale() == false)

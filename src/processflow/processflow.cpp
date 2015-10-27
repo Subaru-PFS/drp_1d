@@ -43,7 +43,7 @@
 #include <epic/redshift/method/linemodelsolve.h>
 #include <epic/redshift/method/linemodelsolveresult.h>
 
-
+#include <boost/algorithm/string.hpp>
 #include <stdio.h>
 #include <float.h>
 
@@ -67,31 +67,33 @@ Bool CProcessFlow::Process( CProcessFlowContext& ctx )
     std::string methodName;
     ctx.GetParameterStore().Get( "method", methodName );
 
+    boost::algorithm::to_lower(methodName);
+
     if(methodName  == "correlation" )
         return Correlation( ctx );
 
     if(methodName  == "chisquare" )
         return Chisquare( ctx );
 
-    if(methodName  == "lineMatching" )
+    if(methodName  == "linematching" )
         return LineMatching( ctx );
 
-    if(methodName  == "lineMatching2" )
+    if(methodName  == "linematching2" )
         return LineMatching2( ctx );
 
-    if(methodName  == "LineModel" )
+    if(methodName  == "linemodel" )
         return LineModelSolve( ctx );
 
-    if(methodName  == "blindSolve" )
+    if(methodName  == "blindsolve" )
         return Blindsolve( ctx );
 
-    if(methodName  == "fullSolve" )
+    if(methodName  == "fullsolve" )
         return Fullsolve( ctx );
 
-    if(methodName  == "decisionalTree7" )
+    if(methodName  == "decisionaltree7" )
         return DecisionalTree7( ctx );
 
-    if(methodName  == "decisionalTreeA" )
+    if(methodName  == "decisionaltreeA" )
         return DecisionalTreeA( ctx );
 
     return false;
