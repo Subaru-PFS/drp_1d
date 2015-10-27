@@ -50,6 +50,11 @@ std::string CMultiLine::GetRayName(Int32 subeIdx)
     return m_Rays[subeIdx].GetName();
 }
 
+Float64 CMultiLine::GetSignFactor(Int32 subeIdx)
+{
+    return m_SignFactors[subeIdx];
+}
+
 Float64 CMultiLine::GetLineWidth(Float64 lambda, Float64 z)
 {
     Float64 instrumentSigma = -1;
@@ -119,6 +124,13 @@ void CMultiLine::prepareSupport(const CSpectrumSpectralAxis& spectralAxis, Float
             }
         }
     }
+
+    //init the fitted amplitude values
+    for(Int32 k=0; k<m_Rays.size(); k++){
+        if(m_OutsideLambdaRangeList[k]){
+            m_FittedAmplitudes[k] = -1.0;
+        }
+    }
 }
 
 TInt32RangeList CMultiLine::getSupport()
@@ -135,6 +147,25 @@ TInt32RangeList CMultiLine::getSupport()
 
     }
     return support;
+}
+
+TInt32Range CMultiLine::getSupportSubElt(Int32 subeIdx)
+{
+    TInt32Range support;
+    if(m_OutsideLambdaRange==false){
+        if(m_OutsideLambdaRangeList[subeIdx]){
+            support = TInt32Range(-1, -1);
+        }
+        support = TInt32Range(m_Start[subeIdx], m_End[subeIdx]);
+    }
+    return support;
+}
+
+Float64 CMultiLine::GetWidth(Int32 subeIdx, Float64 redshift)
+{
+    Float64 mu = m_Rays[subeIdx].GetPosition()*(1+redshift);
+    Float64 c = GetLineWidth(mu, redshift);
+    return c;
 }
 
 Float64 CMultiLine::GetFittedAmplitude(Int32 subeIdx){

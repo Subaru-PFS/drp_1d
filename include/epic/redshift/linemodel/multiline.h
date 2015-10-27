@@ -22,9 +22,12 @@ public:
     ~CMultiLine();
 
     std::string GetRayName(Int32 subeIdx);
+    Float64 GetWidth(Int32 subeIdx, Float64 redshift);
+    Float64 GetSignFactor(Int32 subeIdx);
 
     void prepareSupport(const CSpectrumSpectralAxis& spectralAxis, Float64 redshift, const TFloat64Range& lambdaRange);
     TInt32RangeList getSupport();
+    TInt32Range getSupportSubElt(Int32 subeIdx);
 
     void fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis, Float64  redshift);
     Float64 getModelAtLambda( Float64 lambda, Float64 redshift );

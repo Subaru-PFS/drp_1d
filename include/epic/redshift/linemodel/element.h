@@ -32,6 +32,7 @@ public:
 
     virtual void prepareSupport(const CSpectrumSpectralAxis& spectralAxis, Float64 redshift, const TFloat64Range& lambdaRange)=0;
     virtual TInt32RangeList getSupport()=0;
+    virtual TInt32Range getSupportSubElt(Int32 subeIdx)=0;
 
     virtual void fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis, Float64  redshift) =0;
     virtual Float64 getModelAtLambda( Float64 lambda, Float64 redshift )=0;
@@ -45,6 +46,8 @@ public:
     virtual void SetFittedAmplitude(Float64 A, Float64 SNR)=0;
     virtual void LimitFittedAmplitude(Int32 subeIdx, Float64 limit)=0;
 
+    virtual Float64 GetSignFactor(Int32 subeIdx)=0;
+    virtual Float64 GetWidth(Int32 subeIdx, Float64 redshift)=0;
     Int32 GetSize();
     virtual std::string GetRayName(Int32 subeIdx)=0;
     bool IsOutsideLambdaRange();

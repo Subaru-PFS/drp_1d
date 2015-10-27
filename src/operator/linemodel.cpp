@@ -284,7 +284,7 @@ void COperatorLineModel::ComputeArea2(CLineModelResult* results)
         }
     }
     Float64 winsize = 0.001;
-    Float64 inclusionThresRatio = 0.2;
+    Float64 inclusionThresRatio = 0.01;
     Int32 iz0=0;
     for( Int32 indz=0; indz<results->Extrema.size(); indz++ )
     {

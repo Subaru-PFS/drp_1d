@@ -47,6 +47,20 @@ std::string CSingleLine::GetRayName(Int32 subeIdx)
     return m_Ray.GetName();
 }
 
+
+Float64 CSingleLine::GetSignFactor(Int32 subeIdx)
+{
+    return m_SignFactor;
+}
+
+Float64 CSingleLine::GetWidth(Int32 subeIdx, Float64 redshift)
+{
+    Float64 mu = m_Ray.GetPosition()*(1+redshift);
+    Float64 c = GetLineWidth(mu, redshift);
+
+    return c;
+}
+
 void CSingleLine::prepareSupport(const CSpectrumSpectralAxis& spectralAxis, Float64 redshift, const TFloat64Range &lambdaRange)
 {
     Float64 mu = m_Ray.GetPosition()*(1+redshift);
@@ -70,6 +84,12 @@ void CSingleLine::prepareSupport(const CSpectrumSpectralAxis& spectralAxis, Floa
     }else{
         m_OutsideLambdaRange=false;
     }
+
+    if(m_OutsideLambdaRange){
+        m_FittedAmplitude = -1.0;
+        m_FittedAmplitudeErrorSigma = -1.0;
+        return;
+    }
 }
 
 TInt32RangeList CSingleLine::getSupport()
@@ -79,6 +99,16 @@ TInt32RangeList CSingleLine::getSupport()
         support.push_back(TInt32Range(m_Start, m_End));
     }
     return support;
+}
+
+TInt32Range CSingleLine::getSupportSubElt(Int32 subeIdx)
+{
+    TInt32Range support;
+     if(m_OutsideLambdaRange==false){
+         support = TInt32Range(m_Start, m_End);
+     }
+     return support;
+
 }
 
 Float64 CSingleLine::GetLineWidth(Float64 lambda, Float64 z){
@@ -102,8 +132,8 @@ Float64 CSingleLine::GetLineWidth(Float64 lambda, Float64 z){
 void CSingleLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis, Float64  redshift)
 {
     if(m_OutsideLambdaRange){
-        m_FittedAmplitude = -1;
-        m_FittedAmplitudeErrorSigma = -1;
+        m_FittedAmplitude = -1.0;
+        m_FittedAmplitudeErrorSigma = -1.0;
         return;
     }
 
