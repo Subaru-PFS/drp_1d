@@ -41,7 +41,7 @@ COperatorLineModel::~COperatorLineModel()
 }
 
 
-const COperatorResult* COperatorLineModel::Compute(const CSpectrum& spectrum, const CSpectrum& spectrumNoContinuum, const CRayCatalog& restraycatalog,
+const COperatorResult* COperatorLineModel::Compute(const CSpectrum& spectrum, const CSpectrum& spectrumContinuum, const CRayCatalog& restraycatalog,
                           const TFloat64Range& lambdaRange, const TFloat64List& redshifts, const std::string& lineWidthType)
 {
 
@@ -67,24 +67,13 @@ const COperatorResult* COperatorLineModel::Compute(const CSpectrum& spectrum, co
     result->LineModelSolutions.resize( sortedRedshifts.size() );
 
 
-    CLineModelElementList model(spectrum, spectrumNoContinuum, restRayList, lineWidthType);
-    //model.LoadContinuum();
+    CLineModelElementList model(spectrum, spectrumContinuum, restRayList, lineWidthType);
+    //model.LoadContinuum(); //in order to use a fit with continuum
 
     PrecomputeLogErr(spectrum);
     for (Int32 i=0;i<sortedRedshifts.size();i++)
     {
         ModelFit( spectrum, model, result->restRayList, lambdaRange, result->Redshifts[i], result->ChiSquare[i], result->LineModelSolutions[i]);
-
-        /*
-        CSpectrum spcmodel = model.GetModelSpectrum();
-        CSpectrumIOFitsWriter writer;
-        Bool retVal1 = writer.Write( "model.fits",  spcmodel);
-
-        if(retVal1){
-            CSpectrum s(spectrum);
-            Bool retVal2 = writer.Write( "spectrum.fits",  s);
-        }
-        //*/
     }
 
     // extrema
@@ -116,11 +105,37 @@ const COperatorResult* COperatorLineModel::Compute(const CSpectrum& spectrum, co
     result->LogArea.resize( extremumCount );
     result->LogAreaCorrectedExtrema.resize( extremumCount );
     result->SigmaZ.resize( extremumCount );
+    result->bic.resize( extremumCount );
+    Int32 start = spectrum.GetSpectralAxis().GetIndexAtWaveLength(lambdaRange.GetBegin());
+    Int32 end = spectrum.GetSpectralAxis().GetIndexAtWaveLength(lambdaRange.GetEnd());
+    Int32 nsamples = end - start + 1;
     for( Int32 i=0; i<extremumList.size(); i++ )
     {
-        result->Extrema[i] = extremumList[i].X;
+        Float64 z = extremumList[i].X;
+        Float64 m = extremumList[i].Y;
+
+        //find the index in the zaxis results
+        Int32 idx=0;
+        for ( UInt32 i2=0; i2<result->Redshifts.size(); i2++)
+        {
+            if(result->Redshifts[i2] == z){
+                idx = i2;
+                break;
+            }
+        }
+
+        result->Extrema[i] = z;
         result->LogArea[i] = -DBL_MAX;
         result->LogAreaCorrectedExtrema[i] = -1.0;
+
+
+        Int32 nddl = model.GetNElements(); //get the total number of elements in the model
+        nddl = result->LineModelSolutions[idx].nDDL; //override nddl by the actual number of elements in the fitted model
+
+        //result->bic[i] = m + nddl*log(nsamples); //BIC
+        Float64 aic = m + 2*nddl; //AIC
+        result->bic[i] = aic;
+        //result->bic[i] = aic + (2*nddl*(nddl+1) )/(nsamples-nddl-1);  //AICc, better when nsamples small
     }
     ComputeArea2(result);
 
@@ -269,7 +284,7 @@ void COperatorLineModel::ComputeArea2(CLineModelResult* results)
         }
     }
     Float64 winsize = 0.001;
-    Float64 inclusionThresRatio = 0.2;
+    Float64 inclusionThresRatio = 0.01;
     Int32 iz0=0;
     for( Int32 indz=0; indz<results->Extrema.size(); indz++ )
     {

@@ -35,7 +35,7 @@ CSingleLine::CSingleLine(const CRay& r , const std::string& widthType, Float64 n
     }
 
     //initialize fitted amplitude
-    SetFittedAmplitude(-1.0);
+    SetFittedAmplitude(-1.0, -1.0);
 }
 
 CSingleLine::~CSingleLine()
@@ -45,6 +45,20 @@ CSingleLine::~CSingleLine()
 std::string CSingleLine::GetRayName(Int32 subeIdx)
 {
     return m_Ray.GetName();
+}
+
+
+Float64 CSingleLine::GetSignFactor(Int32 subeIdx)
+{
+    return m_SignFactor;
+}
+
+Float64 CSingleLine::GetWidth(Int32 subeIdx, Float64 redshift)
+{
+    Float64 mu = m_Ray.GetPosition()*(1+redshift);
+    Float64 c = GetLineWidth(mu, redshift);
+
+    return c;
 }
 
 void CSingleLine::prepareSupport(const CSpectrumSpectralAxis& spectralAxis, Float64 redshift, const TFloat64Range &lambdaRange)
@@ -70,6 +84,12 @@ void CSingleLine::prepareSupport(const CSpectrumSpectralAxis& spectralAxis, Floa
     }else{
         m_OutsideLambdaRange=false;
     }
+
+    if(m_OutsideLambdaRange){
+        m_FittedAmplitude = -1.0;
+        m_FittedAmplitudeErrorSigma = -1.0;
+        return;
+    }
 }
 
 TInt32RangeList CSingleLine::getSupport()
@@ -79,6 +99,16 @@ TInt32RangeList CSingleLine::getSupport()
         support.push_back(TInt32Range(m_Start, m_End));
     }
     return support;
+}
+
+TInt32Range CSingleLine::getSupportSubElt(Int32 subeIdx)
+{
+    TInt32Range support;
+     if(m_OutsideLambdaRange==false){
+         support = TInt32Range(m_Start, m_End);
+     }
+     return support;
+
 }
 
 Float64 CSingleLine::GetLineWidth(Float64 lambda, Float64 z){
@@ -102,8 +132,8 @@ Float64 CSingleLine::GetLineWidth(Float64 lambda, Float64 z){
 void CSingleLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis, Float64  redshift)
 {
     if(m_OutsideLambdaRange){
-        m_FittedAmplitude = -1;
-        m_FittedAmplitudeErrorSigma = -1;
+        m_FittedAmplitude = -1.0;
+        m_FittedAmplitudeErrorSigma = -1.0;
         return;
     }
 
@@ -298,14 +328,14 @@ Float64 CSingleLine::GetElementAmplitude(){
 }
 
 
-void CSingleLine::SetFittedAmplitude(Float64 A)
+void CSingleLine::SetFittedAmplitude(Float64 A, Float64 SNR)
 {
     if(m_OutsideLambdaRange){
         m_FittedAmplitude = -1;
         m_FittedAmplitudeErrorSigma = -1;
     }else{
         m_FittedAmplitude = std::max(0.0, A);
-        m_FittedAmplitudeErrorSigma = 0.0;
+        m_FittedAmplitudeErrorSigma = SNR;
     }
 }
 

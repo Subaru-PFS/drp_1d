@@ -139,7 +139,7 @@ Int32 CMultiGaussianFit::Compute( CLineModelElementList model )
      {
          for(Int32 j=0; j<n; j++){
              Float64 a = gsl_vector_get (s->x, j);
-             model.SetElementAmplitude(modelIdx[j], a);
+             model.SetElementAmplitude(modelIdx[j], a, 0.0); //todo: add support for sigma error, now=0.0
          }
 
          model.refreshModel();
@@ -174,7 +174,7 @@ Float64  CMultiGaussianFit::my_f (const gsl_vector *v, void *data)
       if(a<0){
           pond = pond*(1+std::abs(a));
       }
-      userData->model->SetElementAmplitude(userData->modelIdx[j], a);
+      userData->model->SetElementAmplitude(userData->modelIdx[j], a, 0.0);
   }
   userData->model->refreshModel();
 

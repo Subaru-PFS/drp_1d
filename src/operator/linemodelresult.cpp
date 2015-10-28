@@ -99,6 +99,16 @@ Void CLineModelResult::Save( const CDataStore& store, std::ostream& stream ) con
         stream << "}" << std::endl;
     }
 
+    // save bic list, on 1 line
+    if(bic.size()>0){
+        stream <<  "#BIC for each extrema = {";
+        for ( int i=0; i<bic.size(); i++)
+        {
+            stream <<  bic[i] << "\t";
+        }
+        stream << "}" << std::endl;
+    }
+
     // save SigmaZ list, on 1 line
     if(Extrema.size()>0){
         stream <<  "#SigmaZ for each extrema = {";
@@ -135,6 +145,10 @@ Void CLineModelResult::Save( const CDataStore& store, std::ostream& stream ) con
                     break;
                 }
             }
+            if(bic.size()>i){
+                stream <<  ", bic"
+                           " = " <<  bic[i];
+            }
             stream << ", merit = " <<  ChiSquare[idx] << "{" <<  std::endl;
             for ( UInt32 j=0; j<LineModelSolutions[idx].Amplitudes.size(); j++)
             {
@@ -159,9 +173,10 @@ Void CLineModelResult::Save( const CDataStore& store, std::ostream& stream ) con
                     name = name.append(" ");
                 }
                 stream <<  std::fixed << name << "\t";
-                stream <<  std::fixed << restRayList[j].GetPosition() << "\t";
-                stream << std::scientific <<  LineModelSolutions[idx].Amplitudes[j] << "\t";
-                stream << std::scientific <<  LineModelSolutions[idx].Errors[j] << std::endl;
+                stream <<  std::fixed << std::setprecision(0) << LineModelSolutions[idx].ElementId[j] << "\t";
+                stream <<  std::fixed << std::setprecision(3) << restRayList[j].GetPosition() << "\t";
+                stream << std::scientific << std::setprecision(5) <<  LineModelSolutions[idx].Amplitudes[j] << "\t";
+                stream << std::scientific << std::setprecision(5) <<  LineModelSolutions[idx].Errors[j] << std::endl;
             }
             stream << "#}" << std::endl;
         }
@@ -173,3 +188,76 @@ Void CLineModelResult::SaveLine( const CDataStore& store, std::ostream& stream )
     stream << "LineModelResult" << "\t" << Redshifts.size() << std::endl;
 }
 
+Int32 CLineModelResult::GetNLinesOverCutThreshold(Int32 extremaIdx, Float64 cutThres)
+{
+    Int32 nSol=0;
+    if(Extrema.size()>extremaIdx)
+    {
+        Int32 solutionIdx=0;
+        for ( UInt32 i2=0; i2<LineModelSolutions.size(); i2++)
+        {
+            if(Redshifts[i2] == Extrema[extremaIdx]){
+                solutionIdx = i2;
+                break;
+            }
+        }
+
+        std::vector<Int32> indexesSols;
+        for ( UInt32 j=0; j<LineModelSolutions[solutionIdx].Amplitudes.size(); j++)
+        {
+            //skip if already sol
+            bool alreadysol = false;
+            for(Int32 i=0; i<indexesSols.size(); i++){
+                if(LineModelSolutions[solutionIdx].ElementId[j] == indexesSols[i]){
+                    alreadysol=true;
+                    continue;
+                }
+            }
+            if(alreadysol){
+                continue;
+            }
+
+            Float64 noise = LineModelSolutions[solutionIdx].Errors[j];
+            if(noise>0){
+                Float64 snr = LineModelSolutions[solutionIdx].Amplitudes[j]/noise;
+                if(snr>=cutThres){
+                    nSol++;
+                    indexesSols.push_back(LineModelSolutions[solutionIdx].ElementId[j]);
+                }
+            }else{
+            //WARNING: this is a quick fix to deal with the case when errors are set to 0 by the linmodel operator...
+            //todo: remove that fix and correct the linemodel operator to avoid this case
+                if(LineModelSolutions[solutionIdx].Amplitudes[j]>0.0){
+                    nSol++;
+                    indexesSols.push_back(LineModelSolutions[solutionIdx].ElementId[j]);
+                }
+            }
+        }
+
+    }else{
+        nSol = 0;
+    }
+
+    return nSol;
+}
+
+
+Float64 CLineModelResult::GetExtremaMerit(Int32 extremaIdx)
+{
+    Float64 outVal=-1.0;
+    if(Extrema.size()>extremaIdx)
+    {
+        Int32 solutionIdx=0;
+        for ( UInt32 i2=0; i2<Redshifts.size(); i2++)
+        {
+            if(Redshifts[i2] == Extrema[extremaIdx]){
+                solutionIdx = i2;
+                break;
+            }
+        }
+        outVal = ChiSquare[solutionIdx];
+
+    }
+
+    return outVal;
+}

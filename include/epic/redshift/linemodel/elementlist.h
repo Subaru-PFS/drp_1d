@@ -37,9 +37,13 @@ public:
     void LoadContinuum();
     void PrepareContinuum(Float64 z);
 
+    void EstimateSpectrumContinuum();
+
+    Int32 GetNElements();
     Int32 GetModelValidElementsNDdl();
+    Int32 GetModelNonZeroElementsNDdl();
     std::vector<Int32> GetModelValidElementsIndexes();
-    void SetElementAmplitude(Int32 j, Float64 a);
+    void SetElementAmplitude(Int32 j, Float64 a, Float64 snr);
     Float64 GetElementAmplitude(Int32 j);
 
     void fit(Float64 redshift, const TFloat64Range& lambdaRange, CLineModelResult::SLineModelSolution &modelSolution);
@@ -53,11 +57,13 @@ public:
 
 private:
 
+    Int32 fitAmplitudesHybrid(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& spcFluxAxisNoContinuum, Float64 redshift);
     void fitAmplitudesSimplex();
-    void fitAmplitudesLinSolve(std::vector<Int32> EltsIdx);
+    Int32 fitAmplitudesLinSolve(std::vector<Int32> EltsIdx, const CSpectrumSpectralAxis &spectralAxis, const CSpectrumFluxAxis &fluxAxis, std::vector<Float64> &ampsfitted);
     std::vector<Int32> getSupportIndexes(std::vector<Int32> EltsIdx);
     std::vector<Int32> getOverlappingElements( Int32 ind );
-
+    std::vector<Int32> refreshContinuum(std::vector<Int32> EltsIdx);
+    void refreshModelAfterContReestimation(std::vector<Int32> EltsIdx, CSpectrumFluxAxis& modelFluxAxis, CSpectrumFluxAxis& spcFluxAxisNoContinuum);
 
     std::vector<Int32> findLineIdxInCatalog(const CRayCatalog::TRayVector& restRayList, std::string strTag, Int32 type);
     Void Apply2SingleLinesAmplitudeRule(Int32 linetype, std::string lineA, std::string lineB, Float64 coeff );
@@ -76,11 +82,12 @@ private:
     Float64 m_Redshift;
     std::vector<boost::shared_ptr<CLineModelElement>  > m_Elements;
 
-    CRef<CSpectrum>   m_SpectrumModel;
-    CSpectrumFluxAxis m_SpcFluxAxis;
-    CSpectrumFluxAxis m_SpcNoContinuumFluxAxis;
-    Float64*          m_precomputedFineGridContinuumFlux;
-    CSpectrumFluxAxis m_ContinuumFluxAxis;
+    CRef<CSpectrum>   m_SpectrumModel;  //model
+    CSpectrumFluxAxis m_SpcFluxAxis;    //observed spectrum
+    CSpectrumFluxAxis m_SpcContinuumFluxAxis; //oberved continuum spectrum
+
+    Float64*          m_precomputedFineGridContinuumFlux;   //PFG buffer for model continuum
+    CSpectrumFluxAxis m_ContinuumFluxAxis;  //rebined model continuum
 
     CRayCatalog::TRayVector m_RestRayList;
 
