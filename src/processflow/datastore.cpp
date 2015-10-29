@@ -49,12 +49,22 @@ std::string CDataStore::GetCurrentScopeName() const
     return n;
 }
 
-Void  CDataStore::SaveRedshiftResult( const char* dir )
+const std::string& CDataStore::GetSpectrumName() const
+{
+    return m_SpectrumName;
+}
+
+Void CDataStore::SetSpectrumName( const std::string& name )
+{
+    m_SpectrumName = name;
+}
+
+Void  CDataStore::SaveRedshiftResult( const boost::filesystem::path& dir )
 {
     m_ResultStore.SaveRedshiftResult( *this, dir );
 }
 
-Void  CDataStore::SaveAllResults( const char* dir ) const
+Void  CDataStore::SaveAllResults( const boost::filesystem::path& dir ) const
 {
     m_ResultStore.SaveAllResults( *this, dir );
 }

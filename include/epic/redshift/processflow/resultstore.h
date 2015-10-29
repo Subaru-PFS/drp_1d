@@ -35,9 +35,9 @@ public:
     TOperatorResultMap      GetPerTemplateResult( const std::string& name ) const;
     const COperatorResult*  GetGlobalResult( const std::string& name ) const;
 
-    Void                    SaveRedshiftResultHeader( const char* dir );
-    Void                    SaveRedshiftResult( const CDataStore& store, const char* dir );
-    Void                    SaveAllResults( const CDataStore& store, const char* dir ) const;
+    Void                    SaveRedshiftResultHeader( const boost::filesystem::path& dir );
+    Void                    SaveRedshiftResult( const CDataStore& store, const boost::filesystem::path& dir );
+    Void                    SaveAllResults( const CDataStore& store, const boost::filesystem::path& dir ) const;
 
     std::string             GetScope(CConstRef<COperatorResult>  result) const;
 
@@ -49,7 +49,6 @@ protected:
 
     TPerTemplateResultsMap          m_PerTemplateResults;
     TResultsMap                     m_GlobalResults;
-    std::string                     m_SpectrumName;
 
 };
 

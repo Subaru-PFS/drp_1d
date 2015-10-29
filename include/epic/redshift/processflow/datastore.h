@@ -36,6 +36,9 @@ public:
     Void                PushScope( const std::string& name );
     Void                PopScope();
 
+    const std::string&  GetSpectrumName() const;
+    Void                SetSpectrumName( const std::string& name );
+
     std::string         GetCurrentScopeName() const;
 
     std::string         GetScope(CConstRef<COperatorResult>  result) const;
@@ -80,9 +83,9 @@ public:
     TOperatorResultMap              GetPerTemplateResult( const std::string& name ) const;
     const COperatorResult*          GetGlobalResult( const std::string& name ) const;
 
-    Void                            SaveRedshiftResultHeader( const char* dir );
-    Void                            SaveRedshiftResult( const char* dir );
-    Void                            SaveAllResults( const char* dir ) const;
+    Void                            SaveRedshiftResultHeader( const boost::filesystem::path& dir );
+    Void                            SaveRedshiftResult( const boost::filesystem::path& dir );
+    Void                            SaveAllResults( const boost::filesystem::path& dir ) const;
 
 
 protected:
@@ -92,6 +95,8 @@ protected:
     COperatorResultStore&            m_ResultStore;
 
     CParameterStore&                 m_ParameterStore;
+
+    std::string                     m_SpectrumName;
 
     TScopeStack                     m_ScopeStack;
 

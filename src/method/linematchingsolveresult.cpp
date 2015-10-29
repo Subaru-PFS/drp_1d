@@ -41,11 +41,8 @@ Void CLineMatchingSolveResult::SaveLine( const CDataStore& store, std::ostream& 
     Float64 redshift;
     Float64 merit;
 
-    std::string spectrumName;
-    store.GetParam( "spectrumName", spectrumName );
-
     GetBestResult( store, redshift, merit );
-    stream  << spectrumName << "\t"
+    stream  << store.GetSpectrumName() << "\t"
                 << redshift << "\t"
                 << merit << "\t"
                 << "LineMatchingSolve" << std::endl;

@@ -119,13 +119,13 @@ void COperatorResultStore::CreateResultStorage( std::fstream& stream, const bfs:
 
 }
 
-void COperatorResultStore::SaveRedshiftResult( const CDataStore& store, const char* dir )
+void COperatorResultStore::SaveRedshiftResult( const CDataStore& store, const bfs::path& dir )
 {
     // Append best redshift result line to output file
     {
         std::fstream outputStream;
         // Save result at root of output directory
-        CreateResultStorage( outputStream, bfs::path( "redshift.csv" ), bfs::path( dir ) );
+        CreateResultStorage( outputStream, bfs::path( "redshift.csv" ), dir );
 
         CConstRef<COperatorResult>  result = GetGlobalResult( "redshiftresult" );
         if(result){
@@ -134,20 +134,20 @@ void COperatorResultStore::SaveRedshiftResult( const CDataStore& store, const ch
     }
 }
 
-void COperatorResultStore::SaveRedshiftResultHeader(  const char* dir )
+void COperatorResultStore::SaveRedshiftResultHeader(  const bfs::path& dir )
 {
     // Append best redshift result line to output file
     {
         std::fstream outputStream;
         // Save result at root of output directory
-        CreateResultStorage( outputStream, bfs::path( "redshift.csv" ), bfs::path( dir ) );
+        CreateResultStorage( outputStream, bfs::path( "redshift.csv" ), dir );
 
 
         outputStream <<  "#Spectrum\tRedshifts\tMerit\tTemplate\tMethod/Path"<< std::endl;
     }
 }
 
-Void COperatorResultStore::SaveAllResults( const CDataStore& store, const char* dir ) const
+Void COperatorResultStore::SaveAllResults( const CDataStore& store, const bfs::path& dir ) const
 {
     // Store global result
     {
@@ -159,7 +159,7 @@ Void COperatorResultStore::SaveAllResults( const CDataStore& store, const char* 
 
             std::fstream outputStream;
             // Save result at root of output directory
-            CreateResultStorage( outputStream, bfs::path( resultName + ".csv"), bfs::path( dir ).append( m_SpectrumName ) );
+            CreateResultStorage( outputStream, bfs::path( resultName + ".csv"), dir );
             result->Save( store, outputStream );
         }
     }
@@ -180,7 +180,7 @@ Void COperatorResultStore::SaveAllResults( const CDataStore& store, const char* 
 
                 std::fstream outputStream;
                 // Save result in sub directories of output directory
-                CreateResultStorage( outputStream, bfs::path( templateName ).append( resultName + ".csv"), bfs::path( dir ).append( m_SpectrumName ) );
+                CreateResultStorage( outputStream, bfs::path( templateName ).append( resultName + ".csv"), dir );
                 result->Save( store, outputStream );
             }
         }

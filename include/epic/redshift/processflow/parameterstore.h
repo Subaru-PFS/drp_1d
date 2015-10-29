@@ -40,8 +40,8 @@ public:
     Bool Set( const std::string& name, Int64 v );
     Bool Set( const std::string& name, Bool v );
 
-    Bool Save( const char* path ) const;
-    Bool Load( const char* path );
+    Bool Save( const std::string& path ) const;
+    Bool Load( const std::string& path );
 
 private:
 

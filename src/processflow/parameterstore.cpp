@@ -302,13 +302,13 @@ Bool CParameterStore::Set( const std::string& name, const std::string& v )
 }
 
 
-Bool CParameterStore::Save( const char* path ) const
+Bool CParameterStore::Save( const std::string& path ) const
 {
     bpt::json_parser::write_json( path, m_PropertyTree );
     return true;
 }
 
-Bool CParameterStore::Load( const char* path )
+Bool CParameterStore::Load( const std::string& path )
 {
     bpt::json_parser::read_json( path, m_PropertyTree );
     return true;

@@ -26,14 +26,11 @@ Void CBlindSolveResult::Save( const CDataStore& store, std::ostream& stream ) co
     Float64 merit;
     std::string tplName;
 
-    std::string spectrumName;
-    store.GetParam( "spectrumName", spectrumName );
-
     GetBestFitResult( store, redshift, merit, tplName );
 
     stream <<  "#Spectrum\tRedshifts\tMerit\tTemplate"<< std::endl;
 
-    stream  << spectrumName << "\t"
+    stream  << store.GetSpectrumName() << "\t"
                 << redshift << "\t"
                 << merit << "\t"
                 << tplName << std::endl;
@@ -45,11 +42,8 @@ Void CBlindSolveResult::SaveLine( const CDataStore& store, std::ostream& stream 
     Float64 merit;
     std::string tplName;
 
-    std::string spectrumName;
-    store.GetParam( "spectrumName", spectrumName );
-
     GetBestFitResult( store, redshift, merit, tplName );
-    stream  << spectrumName << "\t"
+    stream  << store.GetSpectrumName() << "\t"
                 << redshift << "\t"
                 << merit << "\t"
                 << tplName << "\t"

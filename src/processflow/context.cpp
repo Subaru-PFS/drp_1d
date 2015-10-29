@@ -107,7 +107,7 @@ bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath,
 
 
     m_DataStore = new CDataStore( *m_ResultStore, *m_ParameterStore );
-    //m_ParameterStore->SetParam( "spectrumName", bfs::path( spectrumPath ).stem().string() );
+    m_DataStore->SetSpectrumName( bfs::path( spectrumPath ).stem().string() );
 
 
     return true;
