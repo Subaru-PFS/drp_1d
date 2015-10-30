@@ -27,10 +27,10 @@ void CRedshiftProcessFlowTestCase::ProcessShifted1 ()
 
     CRef<CParameterStore> params = new CParameterStore();
     params->Set( "lambdaRange", TFloat64Range( 3800.0, 12500.0 ) );
+    params->Set( "redshiftRange", TFloat64Range( 0.0, 5.0 ) );
     params->Set( "redshiftStep", 0.0001);
     params->Set( "smoothWidth", (Int64)0 );
-    TStringList templateCategoryList = { "galaxy" };
-    params->Set( "templateCategoryList", templateCategoryList );
+    params->Set( "templateCategoryList", TStringList { "galaxy" } );
     params->Set( "method", "blindsolve");
 
 
@@ -58,10 +58,10 @@ void CRedshiftProcessFlowTestCase::ProcessShifted2()
 
     CRef<CParameterStore> params = new CParameterStore();
     params->Set( "lambdaRange", TFloat64Range( 3800.0, 12500.0 ) );
+    params->Set( "redshiftRange", TFloat64Range( 0.0, 5.0 ) );
     params->Set( "redshiftStep", 0.0001);
     params->Set( "smoothWidth", (Int64)0 );
-    TStringList templateCategoryList = { "galaxy" };
-    params->Set( "templateCategoryList", templateCategoryList );
+    params->Set( "templateCategoryList",  TStringList { "galaxy" } );
     params->Set( "method", "blindsolve");
 
     Bool retVal = ctx.Init( "../test/data/ProcessFlowTestCase/lbgabs_1K_2z3_20J22.5__EZ_fits-W-F_206.fits", NULL, "../test/data/ProcessFlowTestCase/template_shifted2/", NULL, *params );

@@ -108,7 +108,7 @@ Bool CProcessFlow::Blindsolve( CProcessFlowContext& ctx, const std::string&  Cat
 
     // Remove Star category, and filter the list with regard to input variable CategoryFilter
     TStringList tempalteCategoyList;
-    ctx.GetParameterStore().Get( "tempalteCategoyList", tempalteCategoyList );
+    ctx.GetParameterStore().Get( "templateCategoryList", tempalteCategoyList );
     TStringList   filteredTemplateCategoryList;
     for( UInt32 i=0; i<tempalteCategoyList.size(); i++ )
     {
@@ -130,9 +130,9 @@ Bool CProcessFlow::Blindsolve( CProcessFlowContext& ctx, const std::string&  Cat
 
     ctx.GetParameterStore().Get( "lambdaRange", lambdaRange );
     ctx.GetParameterStore().Get( "redshiftRange", redshiftRange );
-    ctx.GetParameterStore().Get( "redshiftStep", redshiftStep );
-    ctx.GetParameterStore().Get( "correlationExtremumCount", correlationExtremumCount );
-    ctx.GetParameterStore().Get( "overlapThreshold", overlapThreshold );
+    ctx.GetParameterStore().Get( "redshiftStep", redshiftStep, 0.001 );
+    ctx.GetParameterStore().Get( "correlationExtremumCount", correlationExtremumCount, 5.0 );
+    ctx.GetParameterStore().Get( "overlapThreshold", overlapThreshold, 1.0 );
 
     COperatorBlindSolve blindSolve;
     CConstRef<CBlindSolveResult> blindsolveResult = blindSolve.Compute( ctx.GetDataStore(), ctx.GetSpectrum(), ctx.GetSpectrumWithoutContinuum(),
