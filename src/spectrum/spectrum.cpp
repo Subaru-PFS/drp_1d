@@ -1,6 +1,5 @@
 #include <epic/redshift/spectrum/spectrum.h>
 
-#include <epic/core/serializer/serializer.h>
 #include <epic/core/debug/assert.h>
 
 #include <math.h>
@@ -118,20 +117,3 @@ Void CSpectrum::SetName( const char* name )
 {
     m_Name = name;
 }
-
-Bool CSpectrum::Serialize( CSerializer& ar )
-{
-    Int16 version = 1;
-
-    if( ar.BeginScope( "Spectrum", version ) == version )
-    {
-        ar.Serialize( m_FluxAxis, "FluxAxis" );
-        ar.Serialize( m_SpectralAxis, "SpectralAxis" );
-        ar.EndScope();
-        return true;
-    }
-
-    return false;
-}
-
-

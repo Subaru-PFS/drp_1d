@@ -54,8 +54,6 @@ public:
 
 private:
 
-    Bool                            Serialize( CSerializer& ar );
-
     std::string                     m_Name;
     CSpectrumFluxAxis               m_FluxAxis;
     CSpectrumSpectralAxis           m_SpectralAxis;
