@@ -30,7 +30,6 @@ public:
                                  const TFloat64Range& lambdaRange, const TFloat64List& redshifts);
 private:
 
-    Float64 m_winsize;
 
 };
 

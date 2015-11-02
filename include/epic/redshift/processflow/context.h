@@ -42,6 +42,7 @@ public:
          nMethod_FullSolve,
          nMethod_DecisionalTree7,
          nMethod_DecisionalTreeA,
+         nMethod_DecisionalTreeB,
          nMethod_Count,
          nMethod_None = -1
     };

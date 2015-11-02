@@ -39,6 +39,8 @@
 #include <epic/redshift/method/dtree7solveresult.h>
 #include <epic/redshift/method/dtreeasolve.h>
 #include <epic/redshift/method/dtreeasolveresult.h>
+#include <epic/redshift/method/dtreebsolve.h>
+#include <epic/redshift/method/dtreebsolveresult.h>
 #include <epic/redshift/method/linematching2solve.h>
 #include <epic/redshift/method/linemodelsolve.h>
 #include <epic/redshift/method/linemodelsolveresult.h>
@@ -90,6 +92,9 @@ Bool CProcessFlow::Process( CProcessFlowContext& ctx )
 
     if(ctx.GetParams().method  == CProcessFlowContext::nMethod_DecisionalTreeA)
         return DecisionalTreeA( ctx );
+
+    if(ctx.GetParams().method  == CProcessFlowContext::nMethod_DecisionalTreeB)
+        return DecisionalTreeB( ctx );
 
     return false;
 }
@@ -328,6 +333,35 @@ Bool CProcessFlow::DecisionalTreeA( CProcessFlowContext& ctx )
     if( solveResult ) {
         ctx.StoreGlobalResult( "redshiftresult", *solveResult );
     }
+
+    return true;
+}
+
+
+Bool CProcessFlow::DecisionalTreeB( CProcessFlowContext& ctx )
+{
+    const CSpectrumSpectralAxis& spcSpectralAxis = ctx.GetSpectrum().GetSpectralAxis();
+    TFloat64Range spcLambdaRange;
+    spcSpectralAxis.ClampLambdaRange( ctx.GetParams().lambdaRange, spcLambdaRange );
+
+    Log.LogInfo( "Processing dtreeb for spc:%s (LambdaRange: %f-%f:%f)", ctx.GetSpectrum().GetName().c_str(),
+            spcLambdaRange.GetBegin(), spcLambdaRange.GetEnd(), ctx.GetSpectrum().GetResolution());
+
+    // Create redshift initial list by spanning redshift acdross the given range, with the given delta
+    TFloat64List redshifts = ctx.GetParams().redshiftRange.SpreadOver( ctx.GetParams().redshiftStep );
+    DebugAssert( redshifts.size() > 0 );
+
+    COperatorDTreeBSolve Solve;
+    CConstRef<CDTreeBSolveResult> solveResult = Solve.Compute( ctx, ctx.GetSpectrum(), ctx.GetSpectrumWithoutContinuum(),
+                                                                        ctx.GetTemplateCatalog(), ctx.GetParams().templateCategoryList, ctx.GetRayCatalog(),
+                                                                        spcLambdaRange, redshifts);
+
+    if( solveResult ) {
+        ctx.StoreGlobalResult( "redshiftresult", *solveResult );
+    }
+
+    return true;
+
 
     return true;
 }

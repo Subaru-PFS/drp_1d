@@ -77,10 +77,10 @@ const COperatorResult* COperatorLineModel::Compute(const CSpectrum& spectrum, co
     }
 
     // extrema
-    Int32 extremumCount = 15;
+    Int32 extremumCount = 20;
     TPointList extremumList;
     TFloat64Range redshiftsRange(result->Redshifts[0], result->Redshifts[result->Redshifts.size()-1]);
-    CExtremum extremum( redshiftsRange, extremumCount, true, 1);
+    CExtremum extremum( redshiftsRange, extremumCount, true, 2);
     extremum.Find( result->Redshifts, result->ChiSquare, extremumList );
     // Refine Extremum with a second maximum search around the z candidates:
     // This corresponds to the finer xcorrelation in EZ Pandora (in standard_DP fctn in SolveKernel.py)
@@ -394,6 +394,8 @@ Void COperatorLineModel::ModelFit(const CSpectrum& spectrum, CLineModelElementLi
     chiSquare = boost::numeric::bounds<float>::highest();
 
     model.fit(redshift, lambdaRange, modelSolution);
+    //model.fitWithModelSelection(redshift, lambdaRange, modelSolution);
+
 
     Float64 fit = model.getLeastSquareMerit(lambdaRange);
 

@@ -47,6 +47,9 @@ public:
     Float64 GetElementAmplitude(Int32 j);
 
     void fit(Float64 redshift, const TFloat64Range& lambdaRange, CLineModelResult::SLineModelSolution &modelSolution);
+    void fitWithModelSelection(Float64 redshift, const TFloat64Range& lambdaRange, CLineModelResult::SLineModelSolution &modelSolution);
+
+    void reinitModel();
     void refreshModel();
     void addToModel();
 
@@ -62,7 +65,8 @@ private:
     Int32 fitAmplitudesLinSolve(std::vector<Int32> EltsIdx, const CSpectrumSpectralAxis &spectralAxis, const CSpectrumFluxAxis &fluxAxis, std::vector<Float64> &ampsfitted);
     std::vector<Int32> getSupportIndexes(std::vector<Int32> EltsIdx);
     std::vector<Int32> getOverlappingElements( Int32 ind );
-    std::vector<Int32> refreshContinuum(std::vector<Int32> EltsIdx);
+    std::vector<Int32> ReestimateContinuumApprox(std::vector<Int32> EltsIdx);
+    std::vector<Int32> ReestimateContinuumUnderLines(std::vector<Int32> EltsIdx);
     void refreshModelAfterContReestimation(std::vector<Int32> EltsIdx, CSpectrumFluxAxis& modelFluxAxis, CSpectrumFluxAxis& spcFluxAxisNoContinuum);
 
     std::vector<Int32> findLineIdxInCatalog(const CRayCatalog::TRayVector& restRayList, std::string strTag, Int32 type);

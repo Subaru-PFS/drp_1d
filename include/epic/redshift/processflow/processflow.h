@@ -40,6 +40,7 @@ private:
     Bool LineModelSolve( CProcessFlowContext& ctx );
     Bool DecisionalTree7( CProcessFlowContext& ctx );
     Bool DecisionalTreeA( CProcessFlowContext& ctx );
+    Bool DecisionalTreeB( CProcessFlowContext& ctx );
 
 };
 

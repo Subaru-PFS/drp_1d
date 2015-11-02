@@ -91,9 +91,17 @@ Bool CLineModelSolve::Solve( COperatorResultStore& resultStore, const CSpectrum&
     Int32 nValidLines = result->GetNLinesOverCutThreshold(bestSolutionIdx, cutThres);
     Float64 bestExtremaMerit = result->GetExtremaMerit(0);
     Log.LogInfo( "Linemodelsolve : bestExtremaMerit, %f", bestExtremaMerit);
-    Float64 nextExtremaMerit = result->GetExtremaMerit(1);
+    Float64 thres = 0.001;
+    Int32 idxNextValid = 1;
+    for(Int32 idnext=1; idnext<result->Redshifts.size(); idnext++){
+       if( std::abs(result->Redshifts[idnext]-result->Redshifts[0])> thres){
+           idxNextValid = idnext;
+           break;
+       }
+    }
+    Float64 nextExtremaMerit = result->GetExtremaMerit(idxNextValid);
     Log.LogInfo( "Linemodelsolve : nextExtremaMerit, %f", nextExtremaMerit);
-//    if(nValidLines<2 || (bestExtremaMerit - nextExtremaMerit) > -50.0 ){
+//    if(nValidLines<2 /*|| (bestExtremaMerit - nextExtremaMerit) > -50.0*/ ){
 //        result=0;
 //        Log.LogInfo( "Linemodelsolve : result set to 0" );
 //    }
@@ -108,6 +116,32 @@ Bool CLineModelSolve::Solve( COperatorResultStore& resultStore, const CSpectrum&
         // Store results
         resultStore.StoreGlobalResult( scopeStr.c_str(), *result );
     }
+
+    /*
+    //_///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //**** ----- TEMP. Location for this add. data to be processed ----- ****
+    if( result->Extrema.size() == 0 )
+    {
+        return false;
+    }
+    // Compute merit function
+    TFloat64List extremumRedshifts( result->Extrema.size() );
+    for( Int32 i=0; i<result->Extrema.size(); i++ )
+    {
+        extremumRedshifts[i] = result->Extrema[i];
+    }
+
+    //COperatorChiSquare2 meritChiSquare;
+    //CRef<CCorrelationResult> chisquareResult = (CCorrelationResult*)meritChiSquare.Compute( spc, tpl, lambdaRange, extremumRedshifts, overlapThreshold );
+    if( !chisquareResult )
+    {
+        return false;
+    }
+
+    // Store results
+    resultStore.StorePerTemplateResult( tpl, "merit", *chisquareResult );
+    //_///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+*/
 
 
     return true;

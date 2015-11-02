@@ -44,7 +44,8 @@ CProcessFlowContext::SParam::SParam()
     //method = nMethod_BlindSolve;
     //method = nMethod_FullSolve;
     //method = nMethod_DecisionalTree7;
-    method = nMethod_DecisionalTreeA;
+    //method = nMethod_DecisionalTreeA;
+    method = nMethod_DecisionalTreeB;
 
     templateCategoryList.push_back( CTemplate::nCategory_Emission );
     templateCategoryList.push_back( CTemplate::nCategory_Galaxy );
@@ -183,6 +184,8 @@ std::string CProcessFlowContext::GetMethodName( EMethod method )
         methodStr = "DecisionalTree7";
     } else if (method == CProcessFlowContext::nMethod_DecisionalTreeA){
         methodStr = "DecisionalTreeA";
+    } else if (method == CProcessFlowContext::nMethod_DecisionalTreeB){
+        methodStr = "DecisionalTreeB";
     } else if (method == CProcessFlowContext::nMethod_FullSolve){
         methodStr = "FullSolve";
     }

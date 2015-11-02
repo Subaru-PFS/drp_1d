@@ -321,7 +321,9 @@ const COperatorResult* COperatorChiSquare2::Compute(const CSpectrum& spectrum, c
         TFloat64Range rangeFine = TFloat64Range( left_border, right_border );
         CExtremum extremumFine( rangeFine , 1, true);
         extremumFine.Find( result->Redshifts, result->ChiSquare, extremumListFine );
-        extremumList[i] = extremumListFine[0];
+        if(extremumListFine.size()>0){
+            extremumList[i] = extremumListFine[0];
+        }
     }
     // store extrema results
     result->Extrema.resize( extremumCount );
