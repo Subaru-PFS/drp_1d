@@ -45,7 +45,8 @@ Void CDTreeBSolveResult::SaveLine( const COperatorResultStore& store, std::ostre
 Bool CDTreeBSolveResult::GetBestRedshift( const COperatorResultStore& store, Float64& redshift, Float64& merit ) const
 {
 
-    std::string scope = store.GetScope( this ) + "dtreeBsolve.linemodel";
+    std::string scope = store.GetScope( this ) + "dtreeBsolve.chisquare2solve.chisquare";
+    //std::string scope = store.GetScope( this ) + "dtreeBsolve.linemodel";
     const CLineModelResult* results = (CLineModelResult*)store.GetGlobalResult(scope.c_str());
 
 

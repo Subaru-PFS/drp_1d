@@ -920,7 +920,7 @@ void CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambdaRan
     modelSolution = GetModelSolution();
 
 
-    /*
+    //*
     //model
     CSpectrum spcmodel = GetModelSpectrum();
     CSpectrumIOFitsWriter writer;
@@ -1855,24 +1855,34 @@ Void CLineModelElementList::Apply2SingleLinesAmplitudeRule( Int32 linetype, std:
         Float64 ampB = m_Elements[iB]->GetFittedAmplitude(0);
         Float64 erB = m_Elements[iB]->GetFittedAmplitudeErrorSigma(0);
 
-        /*
+        //*
         //Method 1, limit the weakest line's amplitude
         Float64 maxB = (coeff*ampA) + (erA*nSigma*coeff);
         m_Elements[iB]->LimitFittedAmplitude(0, maxB);
         //*/
 
-        //*
+        /*
         //Method 2, correct both lines depending on their sigmas
-        if(ampA!=0.0 && ampB!=0.0 && std::abs(ampB) >= std::abs(ampA*coeff) ){
+        if(ampB!=0.0 && (erA!=0 && erB!=0) && std::abs(ampB) > std::abs(ampA*coeff) ){
             Float64 R = 1.0/coeff;
-            Float64 wA = 1.0/(erA*erA);
-            Float64 wB = 1.0/(erB*erB*R*R);
+            Float64 wA = 0.0;
+            if(erA!=0.0){
+                wA = 1.0/(erA*erA);
+            }
+            Float64 wB = 0.0;
+            if(erB!=0.0){
+                wB = 1.0/(erB*erB*R*R);
+            }
             Float64 correctedA = (ampA*wA + ampB*wB*R)/(wA+wB) ;
             Float64 correctedB = correctedA/R;
 
             m_Elements[iA]->SetFittedAmplitude(correctedA, erA); //check: keep the original error sigma ?
             m_Elements[iB]->SetFittedAmplitude(correctedB, erB); //check: keep the original error sigma ?
+        }else if(ampB!=0.0 && ampA==0.0){
+            Float64 maxB = erA;//*nSigma*coeff;
+            m_Elements[iB]->LimitFittedAmplitude(0, maxB);
         }
+
         //*/
 
     }
