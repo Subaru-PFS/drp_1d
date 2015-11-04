@@ -920,7 +920,7 @@ void CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambdaRan
     modelSolution = GetModelSolution();
 
 
-    //*
+    /*
     //model
     CSpectrum spcmodel = GetModelSpectrum();
     CSpectrumIOFitsWriter writer;
@@ -1684,6 +1684,50 @@ Float64 CLineModelElementList::getLeastSquareMeritUnderElements()
     return fit;
 }
 
+Float64 CLineModelElementList::getModelErrorUnderElement(Int32 eltId)
+{
+    const CSpectrumFluxAxis& spcFluxAxis = m_SpcFluxAxis;
+    const CSpectrumFluxAxis& modelFluxAxis = m_SpectrumModel->GetFluxAxis();
+
+    Int32 numDevs = 0;
+    Float64 fit = 0;
+    const Float64* error = spcFluxAxis.GetError();
+    const Float64* Ymodel = modelFluxAxis.GetSamples();
+    const Float64* Yspc = spcFluxAxis.GetSamples();
+    Float64 diff = 0.0;
+
+    Float64 sumErr;
+
+    TInt32RangeList support;
+    UInt32 iElts=eltId;
+    {
+        TInt32RangeList s = m_Elements[iElts]->getSupport();
+        for( UInt32 iS=0; iS<s.size(); iS++ )
+        {
+            support.push_back(s[iS]);
+        }
+    }
+
+
+    Float64 w=0.0;
+    for( UInt32 iS=0; iS<support.size(); iS++ )
+    {
+        for( UInt32 j=support[iS].GetBegin(); j<support[iS].GetEnd(); j++ )
+        {
+            numDevs++;
+            // fit
+            diff = (Yspc[j] - Ymodel[j]);
+            w = 1.0 / (error[j]*error[j]);
+            fit += (diff*diff) * w;
+            //fit += diff*diff;
+            sumErr += w;
+        }
+    }
+
+
+    return sqrt(fit/sumErr);
+}
+
 std::vector<int> CLineModelElementList::findLineIdxInCatalog(const CRayCatalog::TRayVector& restRayList, std::string strTag, Int32 type)
 {
     std::vector<Int32> indexes;
@@ -1855,13 +1899,13 @@ Void CLineModelElementList::Apply2SingleLinesAmplitudeRule( Int32 linetype, std:
         Float64 ampB = m_Elements[iB]->GetFittedAmplitude(0);
         Float64 erB = m_Elements[iB]->GetFittedAmplitudeErrorSigma(0);
 
-        //*
+        /*
         //Method 1, limit the weakest line's amplitude
         Float64 maxB = (coeff*ampA) + (erA*nSigma*coeff);
         m_Elements[iB]->LimitFittedAmplitude(0, maxB);
         //*/
 
-        /*
+        //*
         //Method 2, correct both lines depending on their sigmas
         if(ampB!=0.0 && (erA!=0 && erB!=0) && std::abs(ampB) > std::abs(ampA*coeff) ){
             Float64 R = 1.0/coeff;
@@ -1897,10 +1941,12 @@ CLineModelResult::SLineModelSolution CLineModelElementList::GetModelSolution()
     {
         Int32 eIdx = FindElementIndex(iRestRay);
         Int32 subeIdx = m_Elements[eIdx]->FindElementIndex(iRestRay);
-
+        modelSolution.Rays.push_back(m_RestRayList[iRestRay]);
         modelSolution.ElementId.push_back( eIdx );
         modelSolution.Amplitudes.push_back(m_Elements[eIdx]->GetFittedAmplitude(subeIdx));
         modelSolution.Errors.push_back(m_Elements[eIdx]->GetFittedAmplitudeErrorSigma(subeIdx));
+        modelSolution.FittingError.push_back(getModelErrorUnderElement(eIdx));
+
         //modelSolution.Widths.push_back(-1.0);
         //modelSolution.OutsideLambdaRange.push_back(true);
     }

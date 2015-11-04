@@ -87,6 +87,7 @@ Bool COperatorDTreeBSolve::Solve(COperatorResultStore &resultStore, const CSpect
     COperatorLineModel linemodel;
     CRef<CLineModelResult>  result = (CLineModelResult*)linemodel.Compute( spc, _spcContinuum, restRayCatalog, lambdaRange, redshifts, widthType);
 
+    /*
     static Float64 cutThres = 2.0;
     static Int32 bestSolutionIdx = 0;
     Int32 nValidLines = result->GetNLinesOverCutThreshold(bestSolutionIdx, cutThres);
@@ -102,12 +103,12 @@ Bool COperatorDTreeBSolve::Solve(COperatorResultStore &resultStore, const CSpect
     }
     Float64 nextExtremaMerit = result->GetExtremaMerit(idxNextValid);
     Log.LogInfo( "Linemodelsolve : nextExtremaMerit, %f", nextExtremaMerit);
-//    if(nValidLines<2 /*|| (bestExtremaMerit - nextExtremaMerit) > -50.0*/ ){
+//    if(nValidLines<2 || (bestExtremaMerit - nextExtremaMerit) > -50.0 ){
 //        result=0;
 //        Log.LogInfo( "Linemodelsolve : result set to 0" );
 //    }
-
     Log.LogInfo( "Linemodelsolve : for best solution, %d valid lines found", nValidLines);
+    //*/
 
     if( !result )
     {

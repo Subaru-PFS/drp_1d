@@ -55,6 +55,7 @@ public:
 
     Float64 getLeastSquareMerit(const TFloat64Range &lambdaRange);
     Float64 getLeastSquareMeritUnderElements();
+    Float64 getModelErrorUnderElement(Int32 eltId);
     CLineModelResult::SLineModelSolution GetModelSolution();
     const CSpectrum&                GetModelSpectrum() const;
 

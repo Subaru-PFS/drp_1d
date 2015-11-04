@@ -102,6 +102,7 @@ const COperatorResult* COperatorLineModel::Compute(const CSpectrum& spectrum, co
     // store extrema results
     extremumCount = extremumList.size();
     result->Extrema.resize( extremumCount );
+    result->Posterior.resize( extremumCount );
     result->LogArea.resize( extremumCount );
     result->LogAreaCorrectedExtrema.resize( extremumCount );
     result->SigmaZ.resize( extremumCount );
@@ -125,6 +126,10 @@ const COperatorResult* COperatorLineModel::Compute(const CSpectrum& spectrum, co
         }
 
         result->Extrema[i] = z;
+
+        static Float64 cutThres = 5.0;
+        Int32 nValidLines = result->GetNLinesOverCutThreshold(i, cutThres);
+        result->Posterior[i] = m/Float64(1+nValidLines);
         result->LogArea[i] = -DBL_MAX;
         result->LogAreaCorrectedExtrema[i] = -1.0;
 
@@ -137,6 +142,7 @@ const COperatorResult* COperatorLineModel::Compute(const CSpectrum& spectrum, co
         result->bic[i] = aic;
         //result->bic[i] = aic + (2*nddl*(nddl+1) )/(nsamples-nddl-1);  //AICc, better when nsamples small
     }
+
     ComputeArea2(result);
 
 

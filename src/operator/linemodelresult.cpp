@@ -109,6 +109,16 @@ Void CLineModelResult::Save( const COperatorResultStore& store, std::ostream& st
         stream << "}" << std::endl;
     }
 
+    // save posterior list, on 1 line
+    if(Posterior.size()>0){
+        stream <<  "#POSTERIOR for each extrema = {";
+        for ( int i=0; i<Posterior.size(); i++)
+        {
+            stream <<  Posterior[i] << "\t";
+        }
+        stream << "}" << std::endl;
+    }
+
     // save SigmaZ list, on 1 line
     if(Extrema.size()>0){
         stream <<  "#SigmaZ for each extrema = {";
@@ -149,6 +159,10 @@ Void CLineModelResult::Save( const COperatorResultStore& store, std::ostream& st
                 stream <<  ", bic"
                            " = " <<  bic[i];
             }
+            if(Posterior.size()>i){
+                stream <<  ", post"
+                           " = " <<  Posterior[i];
+            }
             stream << ", merit = " <<  ChiSquare[idx] << "{" <<  std::endl;
             for ( UInt32 j=0; j<LineModelSolutions[idx].Amplitudes.size(); j++)
             {
@@ -176,7 +190,8 @@ Void CLineModelResult::Save( const COperatorResultStore& store, std::ostream& st
                 stream <<  std::fixed << std::setprecision(0) << LineModelSolutions[idx].ElementId[j] << "\t";
                 stream <<  std::fixed << std::setprecision(3) << restRayList[j].GetPosition() << "\t";
                 stream << std::scientific << std::setprecision(5) <<  LineModelSolutions[idx].Amplitudes[j] << "\t";
-                stream << std::scientific << std::setprecision(5) <<  LineModelSolutions[idx].Errors[j] << std::endl;
+                stream << std::scientific << std::setprecision(5) <<  LineModelSolutions[idx].Errors[j] << "\t";
+                stream << std::scientific << std::setprecision(5) <<  LineModelSolutions[idx].FittingError[j] << std::endl;
             }
             stream << "#}" << std::endl;
         }
@@ -217,11 +232,15 @@ Int32 CLineModelResult::GetNLinesOverCutThreshold(Int32 extremaIdx, Float64 cutT
             if(alreadysol){
                 continue;
             }
+            if(!LineModelSolutions[solutionIdx].Rays[j].GetIsStrong()){
+                continue;
+            }
 
             Float64 noise = LineModelSolutions[solutionIdx].Errors[j];
             if(noise>0){
                 Float64 snr = LineModelSolutions[solutionIdx].Amplitudes[j]/noise;
-                if(snr>=cutThres){
+                Float64 Fittingsnr = LineModelSolutions[solutionIdx].Amplitudes[j]/LineModelSolutions[solutionIdx].FittingError[j];
+                if(snr>=cutThres && Fittingsnr>=cutThres){
                     nSol++;
                     indexesSols.push_back(LineModelSolutions[solutionIdx].ElementId[j]);
                 }
