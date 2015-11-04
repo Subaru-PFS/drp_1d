@@ -69,10 +69,10 @@ Bool CProcessFlow::Process( CProcessFlowContext& ctx )
 
     boost::algorithm::to_lower(methodName);
 
-    if(methodName  == "correlation" )
+    if(methodName  == "correlationsolve" )
         return Correlation( ctx );
 
-    if(methodName  == "chisquare" )
+    if(methodName  == "chisquaresolve" )
         return Chisquare( ctx );
 
     if(methodName  == "linematching" )
@@ -93,7 +93,7 @@ Bool CProcessFlow::Process( CProcessFlowContext& ctx )
     if(methodName  == "decisionaltree7" )
         return DecisionalTree7( ctx );
 
-    if(methodName  == "decisionaltreeA" )
+    if(methodName  == "decisionaltreea" )
         return DecisionalTreeA( ctx );
 
     return false;
@@ -107,12 +107,12 @@ Bool CProcessFlow::Blindsolve( CProcessFlowContext& ctx, const std::string&  Cat
 
 
     // Remove Star category, and filter the list with regard to input variable CategoryFilter
-    TStringList tempalteCategoyList;
-    ctx.GetParameterStore().Get( "templateCategoryList", tempalteCategoyList );
+    TStringList templateCategoryList;
+    ctx.GetParameterStore().Get( "templateCategoryList", templateCategoryList );
     TStringList   filteredTemplateCategoryList;
-    for( UInt32 i=0; i<tempalteCategoyList.size(); i++ )
+    for( UInt32 i=0; i<templateCategoryList.size(); i++ )
     {
-        std::string category = tempalteCategoyList[i];
+        std::string category = templateCategoryList[i];
         if( category == "star" )
         {
         }
@@ -154,12 +154,12 @@ Bool CProcessFlow::Correlation( CProcessFlowContext& ctx,  const std::string&  C
 
 
     // Remove Star category, and filter the list with regard to input variable CategoryFilter
-    TStringList tempalteCategoyList;
-    ctx.GetParameterStore().Get( "tempalteCategoyList", tempalteCategoyList );
+    TStringList templateCategoryList;
+    ctx.GetParameterStore().Get( "templateCategoryList", templateCategoryList );
     TStringList   filteredTemplateCategoryList;
-    for( UInt32 i=0; i<tempalteCategoyList.size(); i++ )
+    for( UInt32 i=0; i<templateCategoryList.size(); i++ )
     {
-        std::string category = tempalteCategoyList[i];
+        std::string category = templateCategoryList[i];
         if( category == "star" )
         {
         }
@@ -201,12 +201,12 @@ Bool CProcessFlow::Chisquare( CProcessFlowContext& ctx, const std::string& Categ
 
 
     // Remove Star category, and filter the list with regard to input variable CategoryFilter
-    TStringList tempalteCategoyList;
-    ctx.GetParameterStore().Get( "tempalteCategoyList", tempalteCategoyList );
+    TStringList templateCategoryList;
+    ctx.GetParameterStore().Get( "templateCategoryList", templateCategoryList );
     TStringList   filteredTemplateCategoryList;
-    for( UInt32 i=0; i<tempalteCategoyList.size(); i++ )
+    for( UInt32 i=0; i<templateCategoryList.size(); i++ )
     {
-        std::string category = tempalteCategoyList[i];
+        std::string category = templateCategoryList[i];
         if( category == "star" )
         {
         }
@@ -251,12 +251,12 @@ Bool CProcessFlow::Fullsolve( CProcessFlowContext& ctx, const std::string& Categ
 
 
     // Remove Star category, and filter the list with regard to input variable CategoryFilter
-    TStringList tempalteCategoyList;
-    ctx.GetParameterStore().Get( "tempalteCategoyList", tempalteCategoyList );
+    TStringList templateCategoryList;
+    ctx.GetParameterStore().Get( "templateCategoryList", templateCategoryList );
     TStringList   filteredTemplateCategoryList;
-    for( UInt32 i=0; i<tempalteCategoyList.size(); i++ )
+    for( UInt32 i=0; i<templateCategoryList.size(); i++ )
     {
-        std::string category = tempalteCategoyList[i];
+        std::string category = templateCategoryList[i];
         if( category == "star" )
         {
         }
