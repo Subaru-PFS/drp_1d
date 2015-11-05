@@ -84,7 +84,7 @@ Bool CLineModelSolve::Solve( COperatorResultStore& resultStore, const CSpectrum&
 
     // Compute merit function
     COperatorLineModel linemodel;
-    CRef<CLineModelResult>  result = (CLineModelResult*)linemodel.Compute( _spc, _spcContinuum, restraycatalog, lambdaRange, redshifts, widthType);
+    CRef<CLineModelResult>  result = (CLineModelResult*)linemodel.Compute(resultStore, _spc, _spcContinuum, restraycatalog, lambdaRange, redshifts, widthType);
 
     static Float64 cutThres = 2.0;
     static Int32 bestSolutionIdx = 0;

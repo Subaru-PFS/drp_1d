@@ -46,7 +46,7 @@ public:
     void SetElementAmplitude(Int32 j, Float64 a, Float64 snr);
     Float64 GetElementAmplitude(Int32 j);
 
-    void fit(Float64 redshift, const TFloat64Range& lambdaRange, CLineModelResult::SLineModelSolution &modelSolution);
+    void fit(Float64 redshift, const TFloat64Range& lambdaRange, CLineModelResult::SLineModelSolution &modelSolution, Int32 fitOption=1);
     void fitWithModelSelection(Float64 redshift, const TFloat64Range& lambdaRange, CLineModelResult::SLineModelSolution &modelSolution);
 
     void reinitModel();

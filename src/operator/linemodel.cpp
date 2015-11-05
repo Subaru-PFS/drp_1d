@@ -7,6 +7,7 @@
 #include <epic/redshift/common/mask.h>
 #include <epic/redshift/operator/chisquareresult.h>
 #include <epic/redshift/extremum/extremum.h>
+#include <epic/redshift/linemodel/modelspectrumresult.h>
 
 #include <epic/redshift/spectrum/io/fitswriter.h>
 #include <epic/core/log/log.h>
@@ -41,7 +42,7 @@ COperatorLineModel::~COperatorLineModel()
 }
 
 
-const COperatorResult* COperatorLineModel::Compute(const CSpectrum& spectrum, const CSpectrum& spectrumContinuum, const CRayCatalog& restraycatalog,
+const COperatorResult* COperatorLineModel::Compute(COperatorResultStore& resultStore, const CSpectrum& spectrum, const CSpectrum& spectrumContinuum, const CRayCatalog& restraycatalog,
                           const TFloat64Range& lambdaRange, const TFloat64List& redshifts, Int32 lineWidthType)
 {
 
@@ -124,6 +125,20 @@ const COperatorResult* COperatorLineModel::Compute(const CSpectrum& spectrum, co
                 break;
             }
         }
+
+        //*
+        // reestimate the model with advanced settings on the extrema selected
+        Int32 fitOption = 2; //reestimate continuum
+        ModelFit( spectrum, model, result->restRayList, lambdaRange, z, result->ChiSquare[idx], result->LineModelSolutions[idx], fitOption);
+        m = result->ChiSquare[idx];
+        //*/
+
+        //save the model result
+        //CRef<CModelSpectrumResult> resultspcmodel = new CModelSpectrumResult();
+        //CModelSpectrumResult*  resultspcmodel = new CModelSpectrumResult(model.GetModelSpectrum());
+        // Store results
+        //resultStore.StoreGlobalResult( "model", *resultspcmodel );
+
 
         result->Extrema[i] = z;
 
@@ -395,11 +410,11 @@ void COperatorLineModel::ComputeArea2(CLineModelResult* results)
 
 Void COperatorLineModel::ModelFit(const CSpectrum& spectrum, CLineModelElementList& model, const CRayCatalog::TRayVector& restRayList,
                                 const TFloat64Range& lambdaRange, Float64 redshift,
-                                   Float64& chiSquare, CLineModelResult::SLineModelSolution& modelSolution)
+                                   Float64& chiSquare, CLineModelResult::SLineModelSolution& modelSolution, Int32 fitOption)
 {
     chiSquare = boost::numeric::bounds<float>::highest();
 
-    model.fit(redshift, lambdaRange, modelSolution);
+    model.fit(redshift, lambdaRange, modelSolution, fitOption);
     //model.fitWithModelSelection(redshift, lambdaRange, modelSolution);
 
 

@@ -22,14 +22,14 @@ public:
     COperatorLineModel();
     virtual ~COperatorLineModel();
 
-    const COperatorResult* Compute(const CSpectrum& spectrum, const CSpectrum &spectrumContinuum, const CRayCatalog& restraycatalog,
+    const COperatorResult* Compute(COperatorResultStore &resultStore, const CSpectrum& spectrum, const CSpectrum &spectrumContinuum, const CRayCatalog& restraycatalog,
                                     const TFloat64Range& lambdaRange, const TFloat64List& redshifts , Int32 lineWidthType);
 
 private:
 
     Void ModelFit(const CSpectrum& spectrum, NSEpic::CLineModelElementList &model, const CRayCatalog::TRayVector &restraycatalog,
                    const TFloat64Range& lambdaRange, Float64 redshift,
-                  Float64& chiSquare, CLineModelResult::SLineModelSolution &modelSolution);
+                  Float64& chiSquare, CLineModelResult::SLineModelSolution &modelSolution, Int32 fitOption=1);
 
     void ComputeArea1(CLineModelResult* results);
     void ComputeArea2(CLineModelResult* results);

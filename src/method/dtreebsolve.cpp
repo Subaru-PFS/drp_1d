@@ -85,7 +85,7 @@ Bool COperatorDTreeBSolve::Solve(COperatorResultStore &resultStore, const CSpect
 
     // Compute merit function
     COperatorLineModel linemodel;
-    CRef<CLineModelResult>  result = (CLineModelResult*)linemodel.Compute( spc, _spcContinuum, restRayCatalog, lambdaRange, redshifts, widthType);
+    CRef<CLineModelResult>  result = (CLineModelResult*)linemodel.Compute(resultStore, spc, _spcContinuum, restRayCatalog, lambdaRange, redshifts, widthType);
 
     /*
     static Float64 cutThres = 2.0;

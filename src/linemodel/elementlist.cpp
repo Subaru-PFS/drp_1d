@@ -785,7 +785,7 @@ void CLineModelElementList::PrepareContinuum(Float64 z)
     }
 }
 
-void CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambdaRange, CLineModelResult::SLineModelSolution& modelSolution)
+void CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambdaRange, CLineModelResult::SLineModelSolution& modelSolution, Int32 fitOption)
 {
     m_Redshift = redshift;
 
@@ -853,6 +853,11 @@ void CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambdaRan
 
         //apply a continuum iterative re-estimation with lines removed from the initial spectrum
         Int32 nIt = 0;
+        if(fitOption==1){
+            nIt = 0;
+        }else{
+            nIt = 1;
+        }
         Int32 it=0;
         while(it<nIt){
             applyRules();

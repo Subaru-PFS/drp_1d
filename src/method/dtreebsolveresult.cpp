@@ -69,6 +69,7 @@ Bool CDTreeBSolveResult::GetBestRedshift( const COperatorResultStore& store, Flo
 
     Float64 cutThresStrongLines = 5.0;
 
+    //***********************************************************
     //first test, NStrong lines>3, keep linemodel
     //*
     Int32 NStrongLinesThres = 3;
@@ -103,7 +104,9 @@ Bool CDTreeBSolveResult::GetBestRedshift( const COperatorResultStore& store, Flo
 
 
     //*
-    //second test, chi2 diff > 100 then keep the first extrema
+    //***********************************************************
+    //second test, chi2 diff > 300 then keep the first extrema
+    Float64 chi2diffThres = 250;
     Float64 bestExtremaMerit = results->GetExtremaMerit(0);
     Log.LogInfo( "Linemodelsolve : bestExtremaMerit, %f", bestExtremaMerit);
     Float64 thres = 0.002;
@@ -122,7 +125,7 @@ Bool CDTreeBSolveResult::GetBestRedshift( const COperatorResultStore& store, Flo
     }
     Float64 nextExtremaMerit = results->GetExtremaMerit(idxNextValid);
     Log.LogInfo( "Linemodelsolve : nextExtremaMerit, %f", nextExtremaMerit);
-    if((bestExtremaMerit - nextExtremaMerit) < -100.0 ){
+    if((bestExtremaMerit - nextExtremaMerit) < -chi2diffThres ){
         redshift = results->Extrema[0];
         merit = bestExtremaMerit;
         return true;
@@ -199,9 +202,11 @@ Bool CDTreeBSolveResult::GetBestRedshift( const COperatorResultStore& store, Flo
         w_chi2raw.push_back(merit_raw/minchi2raw);
     }
 
+
+    //***********************************************************
+    // Next Test: if chi2cont and linemodel agree
     Float64 tmpMerit = DBL_MAX ;
     Float64 tmpRedshift = -1.0;
-    // if chi2cont and linemodel agree
 //    if(w_chi2raw[0] == 1.0){
 //        merit = results->GetExtremaMerit(idxNextValid);
 //        redshift = results->Extrema[0];
@@ -222,8 +227,34 @@ Bool CDTreeBSolveResult::GetBestRedshift( const COperatorResultStore& store, Flo
         return true;
     }
 
+    /*
+    //***********************************************************
+    // Next Test: if chi2nc and linemodel agree
+    tmpMerit = DBL_MAX ;
+    tmpRedshift = -1.0;
+//    if(w_chi2raw[0] == 1.0){
+//        merit = results->GetExtremaMerit(idxNextValid);
+//        redshift = results->Extrema[0];
+//        return true;
+//    }
+    Float64 lmMeritRatioTol_nc = 0.01;
+    for( Int32 iE=0; iE<results->Extrema.size(); iE++ )
+    {
+        Float64 lmMeritRatio = results->GetExtremaMerit(iE)/results->GetExtremaMerit(0);
+        if(w_chi2nc[iE] == 1.0 && lmMeritRatio<(1.0+lmMeritRatioTol_nc)){
+            tmpMerit = results->GetExtremaMerit(idxNextValid);
+            tmpRedshift = results->Extrema[iE];
+        }
+    }
+    if(tmpRedshift > -1.0){
+        redshift = tmpRedshift;
+        merit = tmpMerit;
+        return true;
+    }
+    //*/
 
-    // then, use chi2 no continuum
+    //***********************************************************
+    //then, use chi2 no continuum
     if(results){
         for( Int32 iE=0; iE<results->Extrema.size(); iE++ )
         {
@@ -258,18 +289,18 @@ Bool CDTreeBSolveResult::GetBestRedshift( const COperatorResultStore& store, Flo
             Float64 redshift_continuum;
             Float64 merit_continuum;
             std::string tplName_continuum;
-            scopeStr = "chisquare";
+            scopeStr = "chisquare_continuum";
             GetBestRedshiftChi2( store, scopeStr, results->Extrema[iE], redshift_continuum, merit_continuum, tplName_continuum );
 
 
             Int32 nStrong = results->GetNLinesOverCutThreshold(iE, cutThresStrongLines);
-            Log.LogInfo( "dtreeBsolve gbr: z= %.4f\tnstrong= %d\tmerit_linemodel= %.5f\t merit_chi2nc= %.5f\tmerit_chi2= %.5f\tmerit_chi2cont= %.5f\t", results->Extrema[iE], nStrong, results->GetExtremaMerit(iE), merit_nc, merit_raw, merit_nc, merit_continuum);
+            Log.LogInfo( "dtreeBsolve gbr: z= %.4f\tnstrong= %d\tmerit_linemodel= %.5f\t merit_chi2nc= %.5f\tmerit_chi2= %.5f\tmerit_chi2cont= %.5f\t", results->Extrema[iE], nStrong, results->GetExtremaMerit(iE), merit_nc, merit_raw, merit_continuum);
 
 
             {
                 //if(nStrong>=2){
-                Float64 post = merit_nc;
                 //Float64 post = merit_nc;
+                Float64 post = results->GetExtremaMerit(iE);
 
                 if( post < tmpMerit )
                 {
