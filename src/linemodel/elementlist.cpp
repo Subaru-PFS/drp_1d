@@ -855,8 +855,10 @@ void CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambdaRan
         Int32 nIt = 0;
         if(fitOption==1){
             nIt = 0;
-        }else{
+        }else if(fitOption==2){
             nIt = 1;
+        }else{
+            nIt = 0;
         }
         Int32 it=0;
         while(it<nIt){
