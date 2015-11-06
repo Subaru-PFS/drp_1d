@@ -36,7 +36,7 @@ const CChisquare2SolveResult* CMethodChisquare2Solve::Compute(  COperatorResultS
     Bool storeResult = false;
 
     COperatorResultStore::CAutoScope resultScope( resultStore, "chisquare2solve" );
-    Int32 _type = CChisquare2SolveResult::nType_all;
+    Int32 _type = CChisquare2SolveResult::nType_noContinuum;
     for( UInt32 i=0; i<tplCategoryList.size(); i++ )
     {
         CTemplate::ECategory category = tplCategoryList[i];

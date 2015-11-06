@@ -106,7 +106,7 @@ Bool CDTreeBSolveResult::GetBestRedshift( const COperatorResultStore& store, Flo
     //*
     //***********************************************************
     //second test, chi2 diff > 300 then keep the first extrema
-    Float64 chi2diffThres = 250;
+    Float64 chi2diffThres = 100;
     Float64 bestExtremaMerit = results->GetExtremaMerit(0);
     Log.LogInfo( "Linemodelsolve : bestExtremaMerit, %f", bestExtremaMerit);
     Float64 thres = 0.002;
@@ -299,8 +299,8 @@ Bool CDTreeBSolveResult::GetBestRedshift( const COperatorResultStore& store, Flo
 
             {
                 //if(nStrong>=2){
-                //Float64 post = merit_nc;
-                Float64 post = results->GetExtremaMerit(iE);
+                Float64 post = merit_nc;
+                //Float64 post = results->GetExtremaMerit(iE);
 
                 if( post < tmpMerit )
                 {

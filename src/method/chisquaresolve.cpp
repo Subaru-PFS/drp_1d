@@ -42,7 +42,7 @@ const CChisquareSolveResult* CMethodChisquareSolve::Compute(  COperatorResultSto
             const CTemplate& tpl = tplCatalog.GetTemplate( category, j );
             const CTemplate& tplWithoutCont = tplCatalog.GetTemplateWithoutContinuum( category, j );
 
-            Solve( resultStore, spc, spcWithoutCont, tpl, tplWithoutCont, lambdaRange, redshifts, overlapThreshold, nType_full );
+            Solve( resultStore, spc, spcWithoutCont, tpl, tplWithoutCont, lambdaRange, redshifts, overlapThreshold, nType_noContinuum );
 
             storeResult = true;
         }

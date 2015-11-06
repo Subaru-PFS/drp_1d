@@ -9,10 +9,14 @@
 #include <epic/redshift/extremum/extremum.h>
 #include <epic/redshift/linemodel/modelspectrumresult.h>
 
+
 #include <epic/redshift/spectrum/io/fitswriter.h>
 #include <epic/core/log/log.h>
 
 #include <boost/numeric/conversion/bounds.hpp>
+#include "boost/format.hpp"
+
+#include <epic/redshift/operator/resultstore.h>
 
 #include <math.h>
 #include <float.h>
@@ -117,7 +121,7 @@ const COperatorResult* COperatorLineModel::Compute(COperatorResultStore& resultS
         Float64 m = extremumList[i].Y;
 
         //find the index in the zaxis results
-        Int32 idx=0;
+        Int32 idx=-1;
         for ( UInt32 i2=0; i2<result->Redshifts.size(); i2++)
         {
             if(result->Redshifts[i2] == z){
@@ -125,19 +129,27 @@ const COperatorResult* COperatorLineModel::Compute(COperatorResultStore& resultS
                 break;
             }
         }
+        if(idx==-1){
+            Log.LogInfo( "Problem. could not find extrema solution index...");
+            continue;
+        }
 
         //*
         // reestimate the model with advanced settings on the extrema selected
-        Int32 fitOption = 2; //reestimate continuum
-        ModelFit( spectrum, model, result->restRayList, lambdaRange, z, result->ChiSquare[idx], result->LineModelSolutions[idx], fitOption);
+        Int32 fitOption = 1; //reestimate continuum
+        ModelFit( spectrum, model, result->restRayList, lambdaRange, result->Redshifts[idx], result->ChiSquare[idx], result->LineModelSolutions[idx], fitOption);
         m = result->ChiSquare[idx];
         //*/
 
         //save the model result
-        //CRef<CModelSpectrumResult> resultspcmodel = new CModelSpectrumResult();
-        //CModelSpectrumResult*  resultspcmodel = new CModelSpectrumResult(model.GetModelSpectrum());
-        // Store results
-        //resultStore.StoreGlobalResult( "model", *resultspcmodel );
+        static Int32 maxModelSave = 5;
+        if(i<maxModelSave){
+            //CRef<CModelSpectrumResult> resultspcmodel = new CModelSpectrumResult();
+            CModelSpectrumResult*  resultspcmodel = new CModelSpectrumResult(model.GetModelSpectrum());
+            // Store results
+            std::string fname = (boost::format("linemodel_spc_extrema_%1%") % i).str();
+            resultStore.StoreGlobalResult( fname.c_str(), *resultspcmodel );
+        }
 
 
         result->Extrema[i] = z;

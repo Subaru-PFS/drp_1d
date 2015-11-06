@@ -70,28 +70,28 @@ const CLineMatchingSolveResult* COperatorLineMatchingSolve::Compute(  COperatorR
 
     CPeakDetection peakDetection(m_winsize, m_cut, 1, m_enlargeRate);
     CConstRef<CPeakDetectionResult> peakDetectionResult = peakDetection.Compute( spc, lambdaRange);
-    if( peakDetectionResult )
+    if( peakDetectionResult ){
         resultStore.StoreGlobalResult( "peakdetection", *peakDetectionResult );
 
-    CRayDetection rayDetection(CRay::nType_Emission, m_cut, m_strongcut, m_winsize, m_minsize, m_maxsize);
-    CConstRef<CRayDetectionResult> rayDetectionResult = rayDetection.Compute( spc, lambdaRange, peakDetectionResult->PeakList, peakDetectionResult->EnlargedPeakList );
+        CRayDetection rayDetection(CRay::nType_Emission, m_cut, m_strongcut, m_winsize, m_minsize, m_maxsize);
+        CConstRef<CRayDetectionResult> rayDetectionResult = rayDetection.Compute( spc, lambdaRange, peakDetectionResult->PeakList, peakDetectionResult->EnlargedPeakList );
 
-    if( rayDetectionResult ) {
-        resultStore.StoreGlobalResult( "raycatalog", *rayDetectionResult );
+        if( rayDetectionResult ) {
+            resultStore.StoreGlobalResult( "raycatalog", *rayDetectionResult );
 
-        if(rayDetectionResult->RayCatalog.GetList().size()<1){
-            //return NULL;
+            if(rayDetectionResult->RayCatalog.GetList().size()<1){
+                //return NULL;
+            }
         }
+
+        // --- Match
+        CRayMatching rayMatching;
+        CRef<CRayMatchingResult> rayMatchingResult = rayMatching.Compute(rayDetectionResult->RayCatalog, restRayCatalog, redshiftsRange, m_minMatchNum, m_tol );
+
+        // Store matching results
+        if( rayMatchingResult )
+            resultStore.StoreGlobalResult( "raymatching", *rayMatchingResult );
     }
-
-    // --- Match
-    CRayMatching rayMatching;
-    CRef<CRayMatchingResult> rayMatchingResult = rayMatching.Compute(rayDetectionResult->RayCatalog, restRayCatalog, redshiftsRange, m_minMatchNum, m_tol );
-
-    // Store matching results
-    if( rayMatchingResult )
-        resultStore.StoreGlobalResult( "raymatching", *rayMatchingResult );
-
 
     storeResult = true; //always save a matching result
     if( storeResult )
