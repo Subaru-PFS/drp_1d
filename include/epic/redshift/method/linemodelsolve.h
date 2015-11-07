@@ -23,6 +23,8 @@ public:
     CLineModelSolve();
     ~CLineModelSolve();
 
+    const std::string GetParametersDescription();
+
 
     const CLineModelSolveResult* Compute(CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont, const CRayCatalog& restraycatalog,
                                            const TFloat64Range& lambdaRange, const TFloat64List& redshifts );
@@ -32,7 +34,6 @@ public:
 
 private:
 
-    Float64 m_winsize;
 
 };
 

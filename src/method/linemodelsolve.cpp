@@ -23,6 +23,16 @@ CLineModelSolve::~CLineModelSolve()
 
 }
 
+const std::string GetDescription(){
+    std::string desc;
+
+    desc = "Method LinemodelSolve:";
+    desc.append("\tparam string: linewidthtype = {""psfinstrumentdriven"", ""linewidthtype"", ""linewidthtype""}");
+
+    return desc;
+
+}
+
 const CLineModelSolveResult* CLineModelSolve::Compute(  CDataStore& dataStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont, const CRayCatalog& restraycatalog,
                                                         const TFloat64Range& lambdaRange, const TFloat64List& redshifts)
 {
@@ -47,54 +57,40 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore, const CSpectrum& spc, const 
 {
     std::string scopeStr = "linemodel";
 
-    std::string type;
-    dataStore.GetScopedParam( "type", type, "raw" );
-
-    CSpectrum _spc;
+    CSpectrum _spc = spc;
     CSpectrum _spcContinuum = spc;
     CSpectrumFluxAxis spcfluxAxis = _spcContinuum.GetFluxAxis();
     spcfluxAxis.Subtract(spcWithoutCont.GetFluxAxis());
     CSpectrumFluxAxis& sfluxAxisPtr = _spcContinuum.GetFluxAxis();
     sfluxAxisPtr = spcfluxAxis;
 
-    if(type == "continuumonly"){
-        // use continuum only
-        _spc = _spcContinuum;
-        //scopeStr = "linemodel_continuum";
-    }else if(type == "raw"){
-        // use full spectrum
-        _spc = spc;
-        //scopeStr = "linemodel";
-    }else if(type == "nocontinuum" ){
-        // use spectrum without continuum
-        _spc = spc;
-        CSpectrumFluxAxis spcfluxAxis = spcWithoutCont.GetFluxAxis();
-        CSpectrumFluxAxis& sfluxAxisPtr = _spc.GetFluxAxis();
-        sfluxAxisPtr = spcfluxAxis;
-        //scopeStr = "linemodel_nocontinuum";
-    }
-
-
     std::string widthType;
-    dataStore.GetScopedParam( "widthtype", widthType, "psfinstrumentdriven" );
+    dataStore.GetScopedParam( "linewidthtype", widthType, "psfinstrumentdriven" );
 
     // Compute merit function
     COperatorLineModel linemodel;
-    CRef<CLineModelResult>  result = (CLineModelResult*)linemodel.Compute( _spc, _spcContinuum, restraycatalog, lambdaRange, redshifts, widthType);
+    CRef<CLineModelResult>  result = (CLineModelResult*)linemodel.Compute( dataStore, _spc, _spcContinuum, restraycatalog, lambdaRange, redshifts, widthType);
 
-    static Float64 cutThres = 2.0;
-    static Int32 bestSolutionIdx = 0;
-    Int32 nValidLines = result->GetNLinesOverCutThreshold(bestSolutionIdx, cutThres);
-    Float64 bestExtremaMerit = result->GetExtremaMerit(0);
-    Log.LogInfo( "Linemodelsolve : bestExtremaMerit, %f", bestExtremaMerit);
-    Float64 nextExtremaMerit = result->GetExtremaMerit(1);
-    Log.LogInfo( "Linemodelsolve : nextExtremaMerit, %f", nextExtremaMerit);
+//    static Float64 cutThres = 2.0;
+//    static Int32 bestSolutionIdx = 0;
+//    Int32 nValidLines = result->GetNLinesOverCutThreshold(bestSolutionIdx, cutThres);
+//    Float64 bestExtremaMerit = result->GetExtremaMerit(0);
+//    Log.LogInfo( "Linemodelsolve : bestExtremaMerit, %f", bestExtremaMerit);
+//    Float64 thres = 0.001;
+//    Int32 idxNextValid = 1;
+//    for(Int32 idnext=1; idnext<result->Redshifts.size(); idnext++){
+//       if( std::abs(result->Redshifts[idnext]-result->Redshifts[0])> thres){
+//           idxNextValid = idnext;
+//           break;
+//       }
+//    }
+//    Float64 nextExtremaMerit = result->GetExtremaMerit(idxNextValid);
+//    Log.LogInfo( "Linemodelsolve : nextExtremaMerit, %f", nextExtremaMerit);
 //    if(nValidLines<2 || (bestExtremaMerit - nextExtremaMerit) > -50.0 ){
 //        result=0;
 //        Log.LogInfo( "Linemodelsolve : result set to 0" );
 //    }
-
-    Log.LogInfo( "Linemodelsolve : for best solution, %d valid lines found", nValidLines);
+//    Log.LogInfo( "Linemodelsolve : for best solution, %d valid lines found", nValidLines);
 
     if( !result )
     {
@@ -104,7 +100,6 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore, const CSpectrum& spc, const 
         // Store results
         dataStore.StoreScopedGlobalResult( scopeStr.c_str(), *result );
     }
-
 
     return true;
 }

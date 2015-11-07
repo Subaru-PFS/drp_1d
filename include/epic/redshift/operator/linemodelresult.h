@@ -20,7 +20,10 @@ public:
     {
         std::vector<Float64> ElementId;     //id of the linemodel element it is part of
         std::vector<Float64> Amplitudes;
-        std::vector<Float64> Errors;
+        std::vector<CRay> Rays;
+        std::vector<Float64> Errors;    //noise sigma
+        std::vector<Float64> FittingError;    //ModelLeastSquare error under each ray
+
         std::vector<Float64> Widths;
         std::vector<Bool> OutsideLambdaRange;
         std::vector<TInt32Range> fittingIndexRange;
@@ -40,7 +43,8 @@ public:
     TFloat64List            Redshifts;  // z axis
     TFloat64List            ChiSquare;  // chi2
 
-    TFloat64List            Extrema;    // z extramas
+    TFloat64List            Extrema;    // z extrema
+    TFloat64List            Posterior;    // z extrema
     TFloat64List            LogArea;    // log area for each extrema
     TFloat64List            LogAreaCorrectedExtrema;    //corrected z for each extrema
     TFloat64List            SigmaZ; //sigmaz for each extrema

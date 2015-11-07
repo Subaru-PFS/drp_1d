@@ -39,6 +39,8 @@
 #include <epic/redshift/method/dtree7solveresult.h>
 #include <epic/redshift/method/dtreeasolve.h>
 #include <epic/redshift/method/dtreeasolveresult.h>
+#include <epic/redshift/method/dtreebsolve.h>
+#include <epic/redshift/method/dtreebsolveresult.h>
 #include <epic/redshift/method/linematching2solve.h>
 #include <epic/redshift/method/linemodelsolve.h>
 #include <epic/redshift/method/linemodelsolveresult.h>
@@ -95,6 +97,9 @@ Bool CProcessFlow::Process( CProcessFlowContext& ctx )
 
     if(methodName  == "decisionaltreea" )
         return DecisionalTreeA( ctx );
+
+    if(methodName  == "decisionaltreeb" )
+        return DecisionalTreeB( ctx );
 
     return false;
 }
@@ -436,6 +441,49 @@ Bool CProcessFlow::DecisionalTreeA( CProcessFlowContext& ctx )
     if( solveResult ) {
         ctx.GetDataStore().StoreScopedGlobalResult( "redshiftresult", *solveResult );
     }
+
+    return true;
+}
+
+
+Bool CProcessFlow::DecisionalTreeB( CProcessFlowContext& ctx )
+{
+    TFloat64Range lambdaRange;
+    TFloat64Range redshiftRange;
+    Float64       redshiftStep;
+    Int64         correlationExtremumCount;
+    Float64       overlapThreshold;
+    TStringList     templateCategoryList;
+
+    ctx.GetParameterStore().Get( "lambdaRange", lambdaRange );
+    ctx.GetParameterStore().Get( "redshiftRange", redshiftRange );
+    ctx.GetParameterStore().Get( "redshiftStep", redshiftStep );
+    ctx.GetParameterStore().Get( "correlationExtremumCount", correlationExtremumCount );
+    ctx.GetParameterStore().Get( "overlapThreshold", overlapThreshold );
+    ctx.GetParameterStore().Get( "templateCategoryList", templateCategoryList );
+
+    const CSpectrumSpectralAxis& spcSpectralAxis = ctx.GetSpectrum().GetSpectralAxis();
+    TFloat64Range spcLambdaRange;
+    spcSpectralAxis.ClampLambdaRange( lambdaRange, spcLambdaRange );
+
+    Log.LogInfo( "Processing dtreeb for spc:%s (LambdaRange: %f-%f:%f)", ctx.GetSpectrum().GetName().c_str(),
+            spcLambdaRange.GetBegin(), spcLambdaRange.GetEnd(), ctx.GetSpectrum().GetResolution());
+
+    // Create redshift initial list by spanning redshift acdross the given range, with the given delta
+    TFloat64List redshifts = redshiftRange.SpreadOver( redshiftStep );
+    DebugAssert( redshifts.size() > 0 );
+
+    COperatorDTreeBSolve Solve;
+    CConstRef<CDTreeBSolveResult> solveResult = Solve.Compute( ctx.GetDataStore(), ctx.GetSpectrum(), ctx.GetSpectrumWithoutContinuum(),
+                                                                        ctx.GetTemplateCatalog(), templateCategoryList, ctx.GetRayCatalog(),
+                                                                        spcLambdaRange, redshifts);
+
+    if( solveResult ) {
+        ctx.GetDataStore().StoreScopedGlobalResult( "redshiftresult", *solveResult );
+    }
+
+    return true;
+
 
     return true;
 }

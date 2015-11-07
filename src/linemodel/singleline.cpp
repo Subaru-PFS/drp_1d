@@ -172,9 +172,10 @@ void CSingleLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const 
         return;
     }
 
-    m_FittedAmplitude = std::max(0.0, sumCross / sumGauss);
-    if(m_FittedAmplitude==0){
-        m_FittedAmplitudeErrorSigma = 0;
+    m_FittedAmplitude = sumCross / sumGauss;
+    if(m_FittedAmplitude < 0){
+        m_FittedAmplitude = 0.0;
+        m_FittedAmplitudeErrorSigma = 1.0/sqrt(sumGauss) - sumCross / sumGauss; //warning: sigma estimated = rough approx.
     }else{
         m_FittedAmplitudeErrorSigma = 1.0/sqrt(sumGauss);
 //        //SNR estimation
