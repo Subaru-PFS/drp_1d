@@ -5,8 +5,6 @@
 
 #include <epic/core/log/log.h>
 #include <epic/core/log/consolehandler.h>
-#include <epic/core/common/typeinforegistry.h>
-
 #include <cppunit/TestResult.h>
 #include <cppunit/TestResultCollector.h>
 #include <cppunit/BriefTestProgressListener.h>
@@ -46,7 +44,6 @@ private:
 
     CLog                                m_Log;
     CLogConsoleHandler                  m_ConsoleHandler;
-    CTypeInfoRegistry                   m_TypeInfoRegistry;
 
 
     CppUnit::TestResult                 m_TestResult;

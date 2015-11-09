@@ -2,8 +2,6 @@
 #define _CORE_COMMON_MANAGEDOBJECT_
 
 #include <epic/core/common/datatypes.h>
-#include <epic/core/common/typeinfo.h>
-#include <epic/core/common/typeinforegistry.h>
 
 
 #define DEFINE_MANAGED_OBJECT( T )
