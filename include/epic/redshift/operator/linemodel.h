@@ -23,7 +23,7 @@ public:
     virtual ~COperatorLineModel();
 
     const COperatorResult* Compute(CDataStore &dataStore, const CSpectrum& spectrum, const CSpectrum &spectrumContinuum, const CRayCatalog& restraycatalog,
-                                    const TFloat64Range& lambdaRange, const TFloat64List& redshifts , const std::string& lineWidthType);
+                                    const TFloat64Range& lambdaRange, const TFloat64List& redshifts , const Int32 opt_extremacount, const std::string& opt_lineWidthType, const std::string &opt_continuumreest="no");
 
 private:
 

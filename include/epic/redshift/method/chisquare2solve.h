@@ -26,7 +26,7 @@ class CMethodChisquare2Solve : public CManagedObject
     ~CMethodChisquare2Solve();
     const CChisquare2SolveResult *Compute(   CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
                                         const CTemplateCatalog& tplCatalog, const TStringList& tplCategoryList,
-                                        const TFloat64Range& lambdaRange, const TFloat64List& redshifts, Float64 overlapThreshold  );
+                                        const TFloat64Range& lambdaRange, const TFloat64List& redshifts, Float64 overlapThreshold, std::string spcComponent="raw" );
 
 
 

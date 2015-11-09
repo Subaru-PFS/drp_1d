@@ -23,11 +23,15 @@ CLineModelSolve::~CLineModelSolve()
 
 }
 
-const std::string GetDescription(){
+const std::string CLineModelSolve::GetDescription()
+{
     std::string desc;
 
-    desc = "Method LinemodelSolve:";
-    desc.append("\tparam string: linewidthtype = {""psfinstrumentdriven"", ""linewidthtype"", ""linewidthtype""}");
+    desc = "Method LineModelSolve:\n";
+
+    desc.append("\tparam: linemodel.linewidthtype = {""psfinstrumentdriven"", ""zdriven"", ""fixed""}\n");
+    desc.append("\tparam: linemodel.continuumreestimation = {""no"", ""onlyextrema"", ""always""}\n");
+
 
     return desc;
 
@@ -64,12 +68,18 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore, const CSpectrum& spc, const 
     CSpectrumFluxAxis& sfluxAxisPtr = _spcContinuum.GetFluxAxis();
     sfluxAxisPtr = spcfluxAxis;
 
-    std::string widthType;
-    dataStore.GetScopedParam( "linewidthtype", widthType, "psfinstrumentdriven" );
+    std::string opt_lineWidthType;
+    dataStore.GetScopedParam( "linemodel.linewidthtype", opt_lineWidthType, "psfinstrumentdriven" );
+    //dataStore.GetScopedParam( "linemodel.linewidthtype", opt_lineWidthType, "zdriven" );
+    std::string opt_continuumreest;
+    dataStore.GetScopedParam( "linemodel.continuumreestimation", opt_continuumreest, "no" );
+    Float64 opt_extremacount;
+    dataStore.GetScopedParam( "linemodel.extremacount", opt_extremacount, 20.0 );
+
 
     // Compute merit function
     COperatorLineModel linemodel;
-    CRef<CLineModelResult>  result = (CLineModelResult*)linemodel.Compute( dataStore, _spc, _spcContinuum, restraycatalog, lambdaRange, redshifts, widthType);
+    CRef<CLineModelResult>  result = (CLineModelResult*)linemodel.Compute( dataStore, _spc, _spcContinuum, restraycatalog, lambdaRange, redshifts, opt_extremacount, opt_lineWidthType, opt_continuumreest);
 
 //    static Float64 cutThres = 2.0;
 //    static Int32 bestSolutionIdx = 0;

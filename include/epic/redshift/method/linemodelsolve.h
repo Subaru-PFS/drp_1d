@@ -23,7 +23,7 @@ public:
     CLineModelSolve();
     ~CLineModelSolve();
 
-    const std::string GetParametersDescription();
+    const std::string GetDescription();
 
 
     const CLineModelSolveResult* Compute(CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont, const CRayCatalog& restraycatalog,

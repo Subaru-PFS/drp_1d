@@ -47,6 +47,20 @@ COperatorDTreeBSolve::~COperatorDTreeBSolve()
 
 }
 
+const std::string COperatorDTreeBSolve::GetDescription()
+{
+    std::string desc;
+
+    desc = "Method DecisionalTreeB:\n";
+
+    desc.append("\tparam: linemodel.linewidthtype = {""psfinstrumentdriven"", ""zdriven"", ""fixed""}\n");
+    desc.append("\tparam: linemodel.continuumreestimation = {""no"", ""onlyextrema"", ""always""}\n");
+
+
+    return desc;
+
+}
+
 const CDTreeBSolveResult *COperatorDTreeBSolve::Compute( CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
                                                         const CTemplateCatalog& tplCatalog, const TStringList &tplCategoryList, const CRayCatalog &restRayCatalog,
                                                         const TFloat64Range& lambdaRange, const TFloat64List &redshifts)
@@ -71,20 +85,23 @@ const CDTreeBSolveResult *COperatorDTreeBSolve::Compute( CDataStore& resultStore
 
 Bool COperatorDTreeBSolve::Solve(CDataStore &dataStore, const CSpectrum &spc, const CSpectrum &spcWithoutCont, const CTemplateCatalog &tplCatalog, const TStringList &tplCategoryList, const CRayCatalog &restRayCatalog, const TFloat64Range &lambdaRange, const TFloat64List &redshifts)
 {
-    std::string scopeStr = "linemodel";
-
     CSpectrum _spcContinuum = spc;
     CSpectrumFluxAxis spcfluxAxis = _spcContinuum.GetFluxAxis();
     spcfluxAxis.Subtract(spcWithoutCont.GetFluxAxis());
     CSpectrumFluxAxis& sfluxAxisPtr = _spcContinuum.GetFluxAxis();
     sfluxAxisPtr = spcfluxAxis;
 
-    std::string widthType;
-    dataStore.GetScopedParam( "linewidthtype", widthType, "psfinstrumentdriven" );
+    std::string opt_lineWidthType;
+    dataStore.GetScopedParam( "linemodel.linewidthtype", opt_lineWidthType, "psfinstrumentdriven" );
+    std::string opt_continuumreest;
+    dataStore.GetScopedParam( "linemodel.continuumreestimation", opt_continuumreest, "no" );
+    Float64 opt_extremacount;
+    dataStore.GetScopedParam( "linemodel.extremacount", opt_extremacount, 20.0 );
+
 
     // Compute merit function
     COperatorLineModel linemodel;
-    CRef<CLineModelResult>  result = (CLineModelResult*)linemodel.Compute(dataStore, spc, _spcContinuum, restRayCatalog, lambdaRange, redshifts, widthType);
+    CRef<CLineModelResult>  result = (CLineModelResult*)linemodel.Compute(dataStore, spc, _spcContinuum, restRayCatalog, lambdaRange, redshifts, opt_extremacount, opt_lineWidthType, opt_continuumreest);
 
     /*
     static Float64 cutThres = 2.0;
@@ -115,7 +132,7 @@ Bool COperatorDTreeBSolve::Solve(CDataStore &dataStore, const CSpectrum &spc, co
         return false;
     }else{
         // Store results
-        dataStore.StoreScopedGlobalResult( scopeStr.c_str(), *result );
+        dataStore.StoreScopedGlobalResult( "linemodel", *result );
     }
 
     //*
@@ -125,7 +142,10 @@ Bool COperatorDTreeBSolve::Solve(CDataStore &dataStore, const CSpectrum &spc, co
     {
         return false;
     }
-    Float64 overlapThreshold = 1.0;
+
+
+    Float64 overlapThreshold;
+    dataStore.GetScopedParam( "chisquare.overlapthreshold", overlapThreshold, 1.0 );
     // Compute merit function
     TFloat64List extremumRedshifts( result->Extrema.size() );
     for( Int32 i=0; i<result->Extrema.size(); i++ )
@@ -133,10 +153,11 @@ Bool COperatorDTreeBSolve::Solve(CDataStore &dataStore, const CSpectrum &spc, co
         extremumRedshifts[i] = result->Extrema[i];
     }
 
+    std::string spcComponent = "all";
     CMethodChisquare2Solve chiSolve;
     CConstRef<CChisquare2SolveResult> chisolveResult = chiSolve.Compute( dataStore, spc, spcWithoutCont,
                                                                         tplCatalog, tplCategoryList,
-                                                                        lambdaRange, extremumRedshifts, overlapThreshold );
+                                                                        lambdaRange, extremumRedshifts, overlapThreshold, spcComponent);
     if( chisolveResult ) {
         dataStore.StoreScopedGlobalResult( "redshiftresult", *chisolveResult );
     }

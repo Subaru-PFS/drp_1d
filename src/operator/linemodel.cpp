@@ -46,9 +46,8 @@ COperatorLineModel::~COperatorLineModel()
 
 }
 
-
 const COperatorResult* COperatorLineModel::Compute( CDataStore &dataStore, const CSpectrum& spectrum, const CSpectrum& spectrumContinuum, const CRayCatalog& restraycatalog,
-                          const TFloat64Range& lambdaRange, const TFloat64List& redshifts, const std::string& lineWidthType)
+                          const TFloat64Range& lambdaRange, const TFloat64List& redshifts, const Int32 opt_extremacount, const std::string& opt_lineWidthType, const std::string& opt_continuumreest)
 {
 
     if( spectrum.GetSpectralAxis().IsInLinearScale() == false)
@@ -73,13 +72,11 @@ const COperatorResult* COperatorLineModel::Compute( CDataStore &dataStore, const
     result->LineModelSolutions.resize( sortedRedshifts.size() );
 
 
-    CLineModelElementList model(spectrum, spectrumContinuum, restRayList, lineWidthType);
+    CLineModelElementList model(spectrum, spectrumContinuum, restRayList, opt_lineWidthType);
     //model.LoadContinuum(); //in order to use a fit with continuum
 
     PrecomputeLogErr(spectrum);
 
-    std::string opt_continuumreest;
-    dataStore.GetScopedParam( "continuumreestimation", opt_continuumreest, "no" );
     Int32 contreest_iterations = 0;
     if(opt_continuumreest == "always"){
         contreest_iterations = 1;
@@ -92,7 +89,7 @@ const COperatorResult* COperatorLineModel::Compute( CDataStore &dataStore, const
     }
 
     // extrema
-    Int32 extremumCount = 20;
+    Int32 extremumCount = opt_extremacount;
     TPointList extremumList;
     TFloat64Range redshiftsRange(result->Redshifts[0], result->Redshifts[result->Redshifts.size()-1]);
     CExtremum extremum( redshiftsRange, extremumCount, true, 2);

@@ -23,6 +23,8 @@ public:
     COperatorDTreeBSolve();
     ~COperatorDTreeBSolve();
 
+    const std::string GetDescription();
+
     const CDTreeBSolveResult* Compute(CDataStore &resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
                                         const CTemplateCatalog& tplCatalog, const TStringList& tplCategoryList, const CRayCatalog &restRayCatalog,
                                         const TFloat64Range& lambdaRange, const TFloat64List& redshifts );
