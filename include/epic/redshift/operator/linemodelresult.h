@@ -22,7 +22,7 @@ public:
         std::vector<Float64> Amplitudes;
         std::vector<CRay> Rays;
         std::vector<Float64> Errors;    //noise sigma
-        std::vector<Float64> FittingError;    //ModelLeastSquare error under each ray
+        std::vector<Float64> FittingError;    //ModelLeastSquare error under each line
 
         std::vector<Float64> Widths;
         std::vector<Bool> OutsideLambdaRange;

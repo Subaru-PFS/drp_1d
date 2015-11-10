@@ -112,13 +112,13 @@ const CLineMatchingSolveResult* COperatorLineMatchingSolve::Compute(  CDataStore
     Float64 opt_maxlinewidth;
     dataStore.GetScopedParam( "linedetection.maxlinewidth", opt_maxlinewidth, 70.0 );
 
-    CRayDetection rayDetection(CRay::nType_Emission, opt_linedetectioncut, opt_strongcutfactor, opt_winsize, opt_minlinewidth, opt_maxlinewidth);
-    CConstRef<CRayDetectionResult> rayDetectionResult = rayDetection.Compute( spc, lambdaRange, peakDetectionResult->PeakList, peakDetectionResult->EnlargedPeakList );
+    CLineDetection lineDetection(CRay::nType_Emission, opt_linedetectioncut, opt_strongcutfactor, opt_winsize, opt_minlinewidth, opt_maxlinewidth);
+    CConstRef<CLineDetectionResult> lineDetectionResult = lineDetection.Compute( spc, lambdaRange, peakDetectionResult->PeakList, peakDetectionResult->EnlargedPeakList );
 
-    if( rayDetectionResult ) {
-        dataStore.StoreScopedGlobalResult( "raycatalog", *rayDetectionResult );
+    if( lineDetectionResult ) {
+        dataStore.StoreScopedGlobalResult( "raycatalog", *lineDetectionResult );
 
-        if(rayDetectionResult->RayCatalog.GetList().size()<1){
+        if(lineDetectionResult->RayCatalog.GetList().size()<1){
             //return NULL;
         }
     }
@@ -130,7 +130,7 @@ const CLineMatchingSolveResult* COperatorLineMatchingSolve::Compute(  CDataStore
     dataStore.GetScopedParam( "linematching.minmatchnum", opt_minmatchnum, 1.0 );
 
     CRayMatching rayMatching;
-    CRef<CRayMatchingResult> rayMatchingResult = rayMatching.Compute(rayDetectionResult->RayCatalog, restRayCatalog, redshiftsRange, opt_minmatchnum, opt_tolerance );
+    CRef<CRayMatchingResult> rayMatchingResult = rayMatching.Compute(lineDetectionResult->RayCatalog, restRayCatalog, redshiftsRange, opt_minmatchnum, opt_tolerance );
 
     // Store matching results
     if( rayMatchingResult )

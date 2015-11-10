@@ -4,19 +4,19 @@
 
 using namespace NSEpic;
 
-IMPLEMENT_MANAGED_OBJECT( CRayDetectionResult )
+IMPLEMENT_MANAGED_OBJECT( CLineDetectionResult )
 
-CRayDetectionResult::CRayDetectionResult()
+CLineDetectionResult::CLineDetectionResult()
 {
 
 }
 
-CRayDetectionResult::~CRayDetectionResult()
+CLineDetectionResult::~CLineDetectionResult()
 {
 
 }
 
-Void CRayDetectionResult::Save( const CDataStore& store, std::ostream& stream ) const
+Void CLineDetectionResult::Save( const CDataStore& store, std::ostream& stream ) const
 {
     CRayCatalog::TRayVector::const_iterator it;
 
@@ -40,7 +40,7 @@ Void CRayDetectionResult::Save( const CDataStore& store, std::ostream& stream ) 
 
 
 
-Void CRayDetectionResult::SaveLine( const CDataStore& store, std::ostream& stream ) const
+Void CLineDetectionResult::SaveLine( const CDataStore& store, std::ostream& stream ) const
 {
     stream << "not implemented" << std::endl;
 }

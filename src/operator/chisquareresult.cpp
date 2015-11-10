@@ -23,7 +23,7 @@ CChisquareResult::~CChisquareResult()
 
 Void CChisquareResult::Load( std::istream& stream )
 {
-    // Clear current ray list
+    // Clear current lines list
     Redshifts.clear();
     ChiSquare.clear();
     Overlap.clear();

@@ -21,7 +21,7 @@ CCorrelationResult::~CCorrelationResult()
 
 Void CCorrelationResult::Load( std::istream& stream )
 {
-    // Clear current ray list
+    // Clear current lines list
     Redshifts.clear();
     Correlation.clear();
     Overlap.clear();

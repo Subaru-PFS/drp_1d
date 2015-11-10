@@ -10,15 +10,15 @@
 namespace NSEpic
 {
 
-class CRayDetectionResult : public COperatorResult
+class CLineDetectionResult : public COperatorResult
 {
 
-    DEFINE_MANAGED_OBJECT( CRayDetectionResult )
+    DEFINE_MANAGED_OBJECT( CLineDetectionResult )
 
 public:
 
-    CRayDetectionResult();
-    virtual ~CRayDetectionResult();
+    CLineDetectionResult();
+    virtual ~CLineDetectionResult();
 
     Void Save( const CDataStore& store, std::ostream& stream ) const;
     Void SaveLine( const CDataStore& store, std::ostream& stream ) const;

@@ -9,7 +9,7 @@ namespace NSEpic
 {
 
 /**
- * Represent a Single Ray.
+ * Represent a Single Line.
  */
 class CRay
 {

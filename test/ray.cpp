@@ -65,7 +65,7 @@ void CRedshiftRayTestCase::MatchingTest1()
     CRayMatching rayMatching;
     TFloat64Range redshiftrange( 0.0, 5.0);
     CRef<CRayMatchingResult> result = rayMatching.Compute(detectedCatalog, restFrameCatalog, redshiftrange, 2, 0.002 );
-    CPPUNIT_ASSERT_MESSAGE( "Failed to match ray catalogs for MatchingTest1.txt", result != NULL );
+    CPPUNIT_ASSERT_MESSAGE( "Failed to match line catalogs for MatchingTest1.txt", result != NULL );
 
     Float64 res = result->GetMeanRedshiftSolutionByIndex(0);
     CPPUNIT_ASSERT_MESSAGE( "Failed to find redshift accurately for MatchingTest1", fabs(res-(shiftLambda-1)) < 0.0001 );
@@ -82,9 +82,9 @@ void CRedshiftRayTestCase::MatchingTest2_EzValidationTest()
     returnValue = restFrameCatalog.Load( "../test/data/RayTestCase/RayMatchingVVDS/raycatalog.txt" );
     CPPUNIT_ASSERT_MESSAGE( "Failed to load or parse raycatalog.txt", returnValue == true );
 
-    //load detected ray results
+    //load detected lines results
     TFloat64List rayPosList = LoadDetectedRayPositions("../test/data/RayTestCase/RayMatchingVVDS/sc_020100776_F02P017_vmM1_red_129_1_atm_clean.fits/detectedRayCatalog.csv");
-    CPPUNIT_ASSERT_MESSAGE( "Failed to load or parse input detected ray results", rayPosList.size()>0 );
+    CPPUNIT_ASSERT_MESSAGE( "Failed to load or parse input detected lines results", rayPosList.size()>0 );
 
     CRayCatalog detectedCatalog;
     for( int i=0; i<rayPosList.size(); i++)
@@ -97,7 +97,7 @@ void CRedshiftRayTestCase::MatchingTest2_EzValidationTest()
     CRayMatching rayMatching;
     TFloat64Range redshiftrange( 0.0, 2.0);
     CRef<CRayMatchingResult> result = rayMatching.Compute(detectedCatalog, restFrameCatalog, redshiftrange, 1, 0.002 );
-    CPPUNIT_ASSERT_MESSAGE( "Failed to match ray catalogs for MatchingTest1.txt", result != NULL );
+    CPPUNIT_ASSERT_MESSAGE( "Failed to match line catalogs for MatchingTest1.txt", result != NULL );
 
     //Load RayMatching reference results
     TFloat64List zListRef = LoadRayMatchingResults("../test/data/RayTestCase/RayMatchingVVDS/sc_020100776_F02P017_vmM1_red_129_1_atm_clean.fits/rayMatching.csv");

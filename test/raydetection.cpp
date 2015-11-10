@@ -29,15 +29,15 @@ using namespace NSEpicTest;
 namespace bfs = boost::filesystem;
 using namespace boost;
 
-void CRedshiftRayDetectionTestCase::setUp()
+void CRedshiftLineDetectionTestCase::setUp()
 {
 }
 
-void CRedshiftRayDetectionTestCase::tearDown()
+void CRedshiftLineDetectionTestCase::tearDown()
 {
 }
 
-void CRedshiftRayDetectionTestCase::EzValidationTest()
+void CRedshiftLineDetectionTestCase::EzValidationTest()
 // load spectra from the VVDS DEEP and compare results with EZ python EZELFind results
 {
     UInt32 nSpectraToBeTested = 5;
@@ -110,16 +110,16 @@ void CRedshiftRayDetectionTestCase::EzValidationTest()
 
 
         // detected rays
-        CRayDetection rayDetection(CRay::nType_Emission, cut, strongcut, winsize, minsize, maxsize);
-        CConstRef<CRayDetectionResult> rayDetectionResult = rayDetection.Compute( s, s.GetLambdaRange(), peakDetectionResult->PeakList, peakDetectionResult->EnlargedPeakList);
+        CLineDetection lineDetection(CRay::nType_Emission, cut, strongcut, winsize, minsize, maxsize);
+        CConstRef<CLineDetectionResult> lineDetectionResult = lineDetection.Compute( s, s.GetLambdaRange(), peakDetectionResult->PeakList, peakDetectionResult->EnlargedPeakList);
 
         //load reference results
         TFloat64List rayPosList = LoadDetectedRayPositions(inputrefdetectionresults.c_str());
 
         // Check results
-        CPPUNIT_ASSERT_MESSAGE(  "N Ray Detected", rayDetectionResult->RayCatalog.GetList().size() == rayPosList.size());
-        for(int i=0; i<rayDetectionResult->RayCatalog.GetList().size(); i++){
-            Float64 pos = rayDetectionResult->RayCatalog.GetList()[i].GetPosition();
+        CPPUNIT_ASSERT_MESSAGE(  "N Lines Detected", lineDetectionResult->RayCatalog.GetList().size() == rayPosList.size());
+        for(int i=0; i<lineDetectionResult->RayCatalog.GetList().size(); i++){
+            Float64 pos = lineDetectionResult->RayCatalog.GetList()[i].GetPosition();
             Float64 posRef = rayPosList[i];
             CPPUNIT_ASSERT_DOUBLES_EQUAL( pos, posRef, 1e-6);
         }
@@ -130,7 +130,7 @@ void CRedshiftRayDetectionTestCase::EzValidationTest()
 
 
 //
-NSEpic::TFloat64List CRedshiftRayDetectionTestCase::LoadDetectedRayPositions( const char* filePath ){
+NSEpic::TFloat64List CRedshiftLineDetectionTestCase::LoadDetectedRayPositions( const char* filePath ){
     TFloat64List posList;
 
     ifstream file;
@@ -185,8 +185,8 @@ NSEpic::TFloat64List CRedshiftRayDetectionTestCase::LoadDetectedRayPositions( co
     return posList;
 }
 
-void CRedshiftRayDetectionTestCase::SyntheticValidationTest()
-// load synthetic spectra and check if the ray are correctly detected
+void CRedshiftLineDetectionTestCase::SyntheticValidationTest()
+// load synthetic spectra and check if the lines are correctly detected
 {
     std::string spectraPath = "../test/data/RayDetectionTestCase/raydetection_simu_7lines.fits";
 //    0#1000 : reference line = detected
@@ -218,17 +218,17 @@ void CRedshiftRayDetectionTestCase::SyntheticValidationTest()
 
 
     // detected rays
-    CRayDetection rayDetection(CRay::nType_Emission, cut, strongcut, winsize, minsize, maxsize);
-    CConstRef<CRayDetectionResult> rayDetectionResult = rayDetection.Compute( s, s.GetLambdaRange(), peakDetectionResult->PeakList, peakDetectionResult->EnlargedPeakList);
+    CLineDetection lineDetection(CRay::nType_Emission, cut, strongcut, winsize, minsize, maxsize);
+    CConstRef<CLineDetectionResult> lineDetectionResult = lineDetection.Compute( s, s.GetLambdaRange(), peakDetectionResult->PeakList, peakDetectionResult->EnlargedPeakList);
 
 
 
     // Check results
     Float64 tol = s.GetResolution();
-    CPPUNIT_ASSERT_MESSAGE(  "1 Ray Detected", rayDetectionResult->RayCatalog.GetList().size() == 2);
-    Float64 pos1 = rayDetectionResult->RayCatalog.GetList()[0].GetPosition();
+    CPPUNIT_ASSERT_MESSAGE(  "1 line detected", lineDetectionResult->RayCatalog.GetList().size() == 2);
+    Float64 pos1 = lineDetectionResult->RayCatalog.GetList()[0].GetPosition();
     CPPUNIT_ASSERT_DOUBLES_EQUAL( pos1, 1000, tol);
-    Float64 pos2 = rayDetectionResult->RayCatalog.GetList()[1].GetPosition();
+    Float64 pos2 = lineDetectionResult->RayCatalog.GetList()[1].GetPosition();
     CPPUNIT_ASSERT_DOUBLES_EQUAL( pos2, 5000, tol);
 
 

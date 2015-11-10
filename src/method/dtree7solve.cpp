@@ -116,16 +116,16 @@ Bool COperatorDTree7Solve::SolveDecisionalTree7(CDataStore &dataStore, const CSp
         }
     }
 
-    // Ray Detection
-    CRayDetection rayDetection(CRay::nType_Emission, m_cut, m_strongcut );
-    CConstRef<CRayDetectionResult> rayDetectionResult = rayDetection.Compute( spc, lambdaRange, peakDetectionResult->PeakList, peakDetectionResult->EnlargedPeakList );
-    dataStore.StoreScopedGlobalResult( "raycatalog", *rayDetectionResult );
-    Log.LogInfo( "DTree7 - Ray Detection output: %d ray(s) found", rayDetectionResult->RayCatalog.GetList().size());
+    // Line Detection
+    CLineDetection lineDetection(CRay::nType_Emission, m_cut, m_strongcut );
+    CConstRef<CLineDetectionResult> lineDetectionResult = lineDetection.Compute( spc, lambdaRange, peakDetectionResult->PeakList, peakDetectionResult->EnlargedPeakList );
+    dataStore.StoreScopedGlobalResult( "raycatalog", *lineDetectionResult );
+    Log.LogInfo( "DTree7 - Line Detection output: %d line(s) found", lineDetectionResult->RayCatalog.GetList().size());
 
-    // check Ray Detection results
-    Int32 nRaysDetected = rayDetectionResult->RayCatalog.GetList().size();
+    // check Line Detection results
+    Int32 nRaysDetected = lineDetectionResult->RayCatalog.GetList().size();
     if( nRaysDetected < 1){
-        Log.LogInfo( "DTree7 - Not ray found, switching to ProcessWithoutEL");
+        Log.LogInfo( "DTree7 - No lines found, switching to ProcessWithoutEL");
         m_dtreepathnum = 1.11;
         { //blindsolve
             COperatorBlindSolve blindSolve;
@@ -140,14 +140,14 @@ Bool COperatorDTree7Solve::SolveDecisionalTree7(CDataStore &dataStore, const CSp
         }
     }
 
-    // Ray Match
+    // Line Matching
     CRayMatching rayMatching;
-    CRef<CRayMatchingResult> rayMatchingResult = rayMatching.Compute(rayDetectionResult->RayCatalog, restRayCatalog, redshiftRange, m_minMatchNum, m_tol );
+    CRef<CRayMatchingResult> rayMatchingResult = rayMatching.Compute(lineDetectionResult->RayCatalog, restRayCatalog, redshiftRange, m_minMatchNum, m_tol );
     if(rayMatchingResult!=NULL){
         // Store matching results
         dataStore.StoreScopedGlobalResult( "raymatching", *rayMatchingResult );
 
-        //check ray matching results
+        //check line matching results
         if(rayMatchingResult->GetSolutionsListOverNumber(0).size()<1){
             Log.LogInfo( "DTree7 - Not match found [1], switching to ProcessWithoutEL");
             m_dtreepathnum = 1.2;
@@ -180,7 +180,7 @@ Bool COperatorDTree7Solve::SolveDecisionalTree7(CDataStore &dataStore, const CSp
     }
 
     Int32 matchNum = rayMatchingResult->GetMaxMatchingNumber();
-    UInt32 nStrongPeaks = rayDetectionResult->RayCatalog.GetFilteredList(CRay::nType_Emission, CRay::nForce_Strong).size();
+    UInt32 nStrongPeaks = lineDetectionResult->RayCatalog.GetFilteredList(CRay::nType_Emission, CRay::nForce_Strong).size();
 
     // match num >= 3, or no strong peaks
     if(matchNum >= 3 || (nStrongPeaks < 1 && matchNum >= 2)){
@@ -192,7 +192,7 @@ Bool COperatorDTree7Solve::SolveDecisionalTree7(CDataStore &dataStore, const CSp
             Log.LogInfo( "DTree7 - n Strong Peaks < 1, MatchNum>=2");
             m_dtreepathnum = 2.1;
         }
-        Log.LogInfo( "DTree7 - compute merits on redshift candidates from ray matching" );
+        Log.LogInfo( "DTree7 - compute merits on redshift candidates from line matching" );
         TFloat64List roundedRedshift = rayMatchingResult->GetRoundedRedshiftCandidatesOverNumber(matchNum-1, redshiftStep);
         Log.LogInfo( "DTree7 - (n candidates = %d)", roundedRedshift.size());
         { //chisolve with emission templqtes only
@@ -214,13 +214,13 @@ Bool COperatorDTree7Solve::SolveDecisionalTree7(CDataStore &dataStore, const CSp
 
     // use Strong peaks
     if(nStrongPeaks > 0){
-        Log.LogInfo( "DTree7 - Ray Matching with %d strong peaks", nStrongPeaks);
+        Log.LogInfo( "DTree7 - Line Matching with %d strong peaks", nStrongPeaks);
         CRayMatching rayMatchingStrong;
-        CRef<CRayMatchingResult> rayMatchingStrongResult = rayMatchingStrong.Compute(rayDetectionResult->RayCatalog, restRayCatalog, redshiftRange, m_minMatchNum, m_tol, CRay::nType_Emission, CRay::nForce_Strong );
+        CRef<CRayMatchingResult> rayMatchingStrongResult = rayMatchingStrong.Compute(lineDetectionResult->RayCatalog, restRayCatalog, redshiftRange, m_minMatchNum, m_tol, CRay::nType_Emission, CRay::nForce_Strong );
         Int32 matchNumStrong = rayMatchingStrongResult->GetMaxMatchingNumber();
 
         if(matchNumStrong>1){
-            Log.LogInfo( "DTree7 - match num strong >= 2, compute merits on redshift candidates from strong ray matching");
+            Log.LogInfo( "DTree7 - match num strong >= 2, compute merits on redshift candidates from strong line matching");
             TFloat64List roundedRedshift = rayMatchingStrongResult->GetRoundedRedshiftCandidatesOverNumber(matchNumStrong-1, redshiftStep);
             m_dtreepathnum = 2.2;
             { //chisolve with emission templqtes only

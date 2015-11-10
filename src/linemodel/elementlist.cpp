@@ -577,7 +577,7 @@ void CLineModelElementList::LogCatalogInfos()
         Int32 nRays = m_Elements[iElts]->GetSize();
         if(nRays<1)
         {
-            Log.LogInfo( "LineModel ctlg: elt %d (%s): no rays", iElts, m_Elements[iElts]->GetElementTypeTag().c_str());
+            Log.LogInfo( "LineModel ctlg: elt %d (%s): no lines", iElts, m_Elements[iElts]->GetElementTypeTag().c_str());
 
         }
         for(UInt32 j=0; j<nRays; j++){
@@ -585,7 +585,7 @@ void CLineModelElementList::LogCatalogInfos()
             if(nRays>1){
                 nominalAmpStr = boost::str(boost::format("(nominal amp = %.4f)") % m_Elements[iElts]->GetNominalAmplitude(j));
             }
-            Log.LogInfo( "LineModel ctlg: elt %d (%s): ray %d = %s %s", iElts, m_Elements[iElts]->GetElementTypeTag().c_str(), j, m_Elements[iElts]->GetRayName(j).c_str(), nominalAmpStr.c_str());
+            Log.LogInfo( "LineModel ctlg: elt %d (%s): line %d = %s %s", iElts, m_Elements[iElts]->GetElementTypeTag().c_str(), j, m_Elements[iElts]->GetRayName(j).c_str(), nominalAmpStr.c_str());
         }
     }
     Log.LogInfo( "\n");

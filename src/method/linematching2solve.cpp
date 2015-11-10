@@ -118,20 +118,20 @@ const CLineMatching2SolveResult* COperatorLineMatching2Solve::Compute(  CDataSto
     }
 
     bool disableGaussianFitQualityCheck = true;
-    CRayDetection rayDetection(lineType, m_cut, m_strongcut, m_winsize, m_minsize, m_maxsize, disableGaussianFitQualityCheck);
-    CConstRef<CRayDetectionResult> rayDetectionResult = rayDetection.Compute( _spc, lambdaRange, peakDetectionResult->PeakList, peakDetectionResult->EnlargedPeakList );
+    CLineDetection lineDetection(lineType, m_cut, m_strongcut, m_winsize, m_minsize, m_maxsize, disableGaussianFitQualityCheck);
+    CConstRef<CLineDetectionResult> lineDetectionResult = lineDetection.Compute( _spc, lambdaRange, peakDetectionResult->PeakList, peakDetectionResult->EnlargedPeakList );
 
-    if( rayDetectionResult ) {
-        resultStore.StoreScopedGlobalResult( "raycatalog", *rayDetectionResult );
+    if( lineDetectionResult ) {
+        resultStore.StoreScopedGlobalResult( "raycatalog", *lineDetectionResult );
 
-        if(rayDetectionResult->RayCatalog.GetList().size()<1){
+        if(lineDetectionResult->RayCatalog.GetList().size()<1){
             //return NULL;
         }
     }
 
     // --- Match
     CRayMatching rayMatching;
-    CRef<CRayMatchingResult> rayMatchingResult = rayMatching.Compute(rayDetectionResult->RayCatalog, restRayCatalog, redshiftsRange, m_minMatchNum, m_tol, lineType);
+    CRef<CRayMatchingResult> rayMatchingResult = rayMatching.Compute(lineDetectionResult->RayCatalog, restRayCatalog, redshiftsRange, m_minMatchNum, m_tol, lineType);
 
 
     if( rayMatchingResult ){

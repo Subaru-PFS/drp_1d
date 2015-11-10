@@ -15,9 +15,9 @@
 #include <stdio.h>
 
 using namespace NSEpic;
-IMPLEMENT_MANAGED_OBJECT(CRayDetection)
+IMPLEMENT_MANAGED_OBJECT(CLineDetection)
 
-//CRayDetection::CRayDetection()
+//CLineDetection::CLineDetection()
 //{
 //    FWHM_FACTOR = 2.35;
 
@@ -30,7 +30,7 @@ IMPLEMENT_MANAGED_OBJECT(CRayDetection)
 //    strongcut = 2.0;
 //}
 
-CRayDetection::CRayDetection(Int32 type, Float64 cut, Float64 strongcut, Float64 winsize, Float64 minsize, Float64 maxsize, bool disableFitQualityCheck)
+CLineDetection::CLineDetection(Int32 type, Float64 cut, Float64 strongcut, Float64 winsize, Float64 minsize, Float64 maxsize, bool disableFitQualityCheck)
 {
     FWHM_FACTOR = 2.35;
 
@@ -46,12 +46,12 @@ CRayDetection::CRayDetection(Int32 type, Float64 cut, Float64 strongcut, Float64
 }
 
 
-CRayDetection::~CRayDetection()
+CLineDetection::~CLineDetection()
 {
 
 }
 
-const CRayDetectionResult* CRayDetection::Compute( const CSpectrum& spectrum, const TLambdaRange& lambdaRange, const TInt32RangeList& resPeaks, const TInt32RangeList& resPeaksEnlarged)
+const CLineDetectionResult* CLineDetection::Compute( const CSpectrum& spectrum, const TLambdaRange& lambdaRange, const TInt32RangeList& resPeaks, const TInt32RangeList& resPeaksEnlarged)
 {
     const CSpectrum& spc = spectrum;
     const CSpectrumFluxAxis fluxAxis = spc.GetFluxAxis();
@@ -62,7 +62,7 @@ const CRayDetectionResult* CRayDetection::Compute( const CSpectrum& spectrum, co
 //    }
     UInt32 nPeaks = resPeaks.size();
 
-    CRayDetectionResult* result = new CRayDetectionResult();
+    CLineDetectionResult* result = new CLineDetectionResult();
 
     //retest list
     TInt32RangeList retestPeaks;
@@ -225,7 +225,7 @@ const CRayDetectionResult* CRayDetection::Compute( const CSpectrum& spectrum, co
 *
 * This function uses a maximum gaussian width param. in order to limit the size of the interval used for the fit.
 */
-TInt32Range CRayDetection::LimitGaussianFitStartAndStop( Int32 i, const TInt32RangeList& peaksBorders, Int32 len, const CSpectrumSpectralAxis spectralAxis )
+TInt32Range CLineDetection::LimitGaussianFitStartAndStop( Int32 i, const TInt32RangeList& peaksBorders, Int32 len, const CSpectrumSpectralAxis spectralAxis )
 {
     Int32 fitStart = peaksBorders[i].GetBegin();
     Int32 fitStop = peaksBorders[i].GetEnd()+1;
@@ -256,7 +256,7 @@ TInt32Range CRayDetection::LimitGaussianFitStartAndStop( Int32 i, const TInt32Ra
     return TInt32Range( fitStart, fitStop );
 }
 
-Float64 CRayDetection::ComputeFluxes(const CSpectrum& spectrum, Float64 winsize, TInt32Range range, TFloat64List mask, Float64 *maxFluxnoContinuum, Float64 *noise){
+Float64 CLineDetection::ComputeFluxes(const CSpectrum& spectrum, Float64 winsize, TInt32Range range, TFloat64List mask, Float64 *maxFluxnoContinuum, Float64 *noise){
     const CSpectrum& spc = spectrum;
     const CSpectrumFluxAxis fluxAxis = spc.GetFluxAxis();
     const CSpectrumSpectralAxis specAxis = spc.GetSpectralAxis();
@@ -355,7 +355,7 @@ Float64 CRayDetection::ComputeFluxes(const CSpectrum& spectrum, Float64 winsize,
     return ratioAmp;
 }
 
-bool CRayDetection::Retest( const CSpectrum& spectrum, CRayDetectionResult* result, TInt32RangeList retestPeaks,  TGaussParamsList retestGaussParams, CRayCatalog::TRayVector strongLines, Int32 winsize, Float64 cut )
+bool CLineDetection::Retest( const CSpectrum& spectrum, CLineDetectionResult* result, TInt32RangeList retestPeaks,  TGaussParamsList retestGaussParams, CRayCatalog::TRayVector strongLines, Int32 winsize, Float64 cut )
 {
     DebugAssert( retestPeaks.size() == retestPeaks.size());
 
@@ -390,7 +390,7 @@ bool CRayDetection::Retest( const CSpectrum& spectrum, CRayDetectionResult* resu
     return continue_retest;
 }
 
-bool CRayDetection::RemoveStrongFromSpectra(const CSpectrum& spectrum, CRayDetectionResult* result,  CRayCatalog::TRayVector strongLines, TInt32RangeList selectedretestPeaks, TGaussParamsList selectedgaussparams, Float64 winsize, Float64 cut)
+bool CLineDetection::RemoveStrongFromSpectra(const CSpectrum& spectrum, CLineDetectionResult* result,  CRayCatalog::TRayVector strongLines, TInt32RangeList selectedretestPeaks, TGaussParamsList selectedgaussparams, Float64 winsize, Float64 cut)
 {
 
     const CSpectrumSpectralAxis wavesAxis = spectrum.GetSpectralAxis();
@@ -469,7 +469,7 @@ bool CRayDetection::RemoveStrongFromSpectra(const CSpectrum& spectrum, CRayDetec
     return false;
 }
 
-Float64 CRayDetection::XMadFind( const Float64* x, Int32 n, Float64 median )
+Float64 CLineDetection::XMadFind( const Float64* x, Int32 n, Float64 median )
 {
     std::vector<Float64> xdata;
     Float64 xmadm = 0.0;

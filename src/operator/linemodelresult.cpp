@@ -23,7 +23,7 @@ CLineModelResult::~CLineModelResult()
 
 Void CLineModelResult::Load( std::istream& stream )
 {
-    // Clear current ray list
+    // Clear current lines list
     Redshifts.clear();
     ChiSquare.clear();
     Status.clear();
