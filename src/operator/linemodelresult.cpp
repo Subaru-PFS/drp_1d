@@ -94,6 +94,9 @@ Void CLineModelResult::Save( const CDataStore& store, std::ostream& stream ) con
         stream <<  "#Extrema for z = {";
         for ( int i=0; i<Extrema.size(); i++)
         {
+            if(!IsLocalExtrema[i]){
+                continue;
+            }
             stream <<  Extrema[i] << "\t";
         }
         stream << "}" << std::endl;
@@ -104,6 +107,9 @@ Void CLineModelResult::Save( const CDataStore& store, std::ostream& stream ) con
         stream <<  "#BIC for each extrema = {";
         for ( int i=0; i<bic.size(); i++)
         {
+            if(!IsLocalExtrema[i]){
+                continue;
+            }
             stream <<  bic[i] << "\t";
         }
         stream << "}" << std::endl;
@@ -114,6 +120,9 @@ Void CLineModelResult::Save( const CDataStore& store, std::ostream& stream ) con
         stream <<  "#POSTERIOR for each extrema = {";
         for ( int i=0; i<Posterior.size(); i++)
         {
+            if(!IsLocalExtrema[i]){
+                continue;
+            }
             stream <<  Posterior[i] << "\t";
         }
         stream << "}" << std::endl;
@@ -124,6 +133,9 @@ Void CLineModelResult::Save( const CDataStore& store, std::ostream& stream ) con
         stream <<  "#SigmaZ for each extrema = {";
         for ( int i=0; i<SigmaZ.size(); i++)
         {
+            if(!IsLocalExtrema[i]){
+                continue;
+            }
             stream <<  SigmaZ[i] << "\t";
         }
         stream << "}" << std::endl;
@@ -134,6 +146,9 @@ Void CLineModelResult::Save( const CDataStore& store, std::ostream& stream ) con
         stream <<  "#LogArea for each extrema = {";
         for ( int i=0; i<LogArea.size(); i++)
         {
+            if(!IsLocalExtrema[i]){
+                continue;
+            }
             stream <<  LogArea[i] << "\t";
         }
         stream << "}" << std::endl;
@@ -143,6 +158,10 @@ Void CLineModelResult::Save( const CDataStore& store, std::ostream& stream ) con
     if(LineModelSolutions.size()>0){
         for ( UInt32 i=0; i<Extrema.size(); i++)
         {
+            if(!IsLocalExtrema[i]){
+                continue;
+            }
+
             stream <<  "#linemodel solution " << i << " for z = " <<  std::fixed <<  Extrema[i];
             if(LogArea.size()>i){
                 stream <<  ", LogArea = " <<  LogArea[i];

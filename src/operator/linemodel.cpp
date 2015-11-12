@@ -94,6 +94,8 @@ const COperatorResult* COperatorLineModel::Compute( CDataStore &dataStore, const
     TFloat64Range redshiftsRange(result->Redshifts[0], result->Redshifts[result->Redshifts.size()-1]);
     CExtremum extremum( redshiftsRange, extremumCount, true, 2);
     extremum.Find( result->Redshifts, result->ChiSquare, extremumList );
+
+    /*
     // Refine Extremum with a second maximum search around the z candidates:
     // This corresponds to the finer xcorrelation in EZ Pandora (in standard_DP fctn in SolveKernel.py)
     Float64 radius = 0.001;
@@ -111,9 +113,40 @@ const COperatorResult* COperatorLineModel::Compute( CDataStore &dataStore, const
             extremumList[i] = extremumListFine[0];
         }
     }
+    //*/
+
+    // extend z around the extrema
+    Float64 extensionradius = 0.01;
+    TPointList extremumListExtended;
+    TBoolList isLocalExtrema;
+    for( Int32 i=0; i<extremumList.size(); i++ )
+    {
+        Float64 x = extremumList[i].X;
+        Float64 left_border = max(redshiftsRange.GetBegin(), x-extensionradius);
+        Float64 right_border=min(redshiftsRange.GetEnd(), x+extensionradius);
+
+        for (Int32 i=0;i<result->Redshifts.size();i++)
+        {
+            if(result->Redshifts[i] >= left_border && result->Redshifts[i] <= right_border){
+                SPoint pt;
+                pt.X = result->Redshifts[i];
+                pt.Y = result->ChiSquare[i];
+                extremumListExtended.push_back(pt);
+                Bool isExtrema = false;
+                if( x == pt.X){
+                    isExtrema = true;
+                }
+                isLocalExtrema.push_back(isExtrema);
+            }
+        }
+    }
+    //extremumListExtended = extremumList;
+   //todo: remove duplicate redshifts from the extended extrema list
+
     // store extrema results
-    extremumCount = extremumList.size();
+    extremumCount = extremumListExtended.size();
     result->Extrema.resize( extremumCount );
+    result->IsLocalExtrema.resize( extremumCount );
     result->Posterior.resize( extremumCount );
     result->LogArea.resize( extremumCount );
     result->LogAreaCorrectedExtrema.resize( extremumCount );
@@ -122,10 +155,11 @@ const COperatorResult* COperatorLineModel::Compute( CDataStore &dataStore, const
     Int32 start = spectrum.GetSpectralAxis().GetIndexAtWaveLength(lambdaRange.GetBegin());
     Int32 end = spectrum.GetSpectralAxis().GetIndexAtWaveLength(lambdaRange.GetEnd());
     Int32 nsamples = end - start + 1;
-    for( Int32 i=0; i<extremumList.size(); i++ )
+    Int32 savedModels = 0;
+    for( Int32 i=0; i<extremumListExtended.size(); i++ )
     {
-        Float64 z = extremumList[i].X;
-        Float64 m = extremumList[i].Y;
+        Float64 z = extremumListExtended[i].X;
+        Float64 m = extremumListExtended[i].Y;
 
         //find the index in the zaxis results
         Int32 idx=-1;
@@ -154,16 +188,18 @@ const COperatorResult* COperatorLineModel::Compute( CDataStore &dataStore, const
 
         //save the model result
         static Int32 maxModelSave = 5;
-        if(i<maxModelSave){
+        if(savedModels<maxModelSave && isLocalExtrema[i]){
             //CRef<CModelSpectrumResult> resultspcmodel = new CModelSpectrumResult();
             CModelSpectrumResult*  resultspcmodel = new CModelSpectrumResult(model.GetModelSpectrum());
             // Store results
             std::string fname = (boost::format("linemodel_spc_extrema_%1%") % i).str();
             dataStore.StoreScopedGlobalResult( fname.c_str(), *resultspcmodel );
+            savedModels++;
         }
 
 
         result->Extrema[i] = z;
+        result->IsLocalExtrema[i]=isLocalExtrema[i];
 
         static Float64 cutThres = 5.0;
         Int32 nValidLines = result->GetNLinesOverCutThreshold(i, cutThres);
