@@ -53,6 +53,7 @@ public:
     void refreshModel();
     void addToModel();
 
+    Int32 getSpcNSamples(const TFloat64Range& lambdaRange);
     Float64 getLeastSquareMerit(const TFloat64Range &lambdaRange);
     Float64 getLeastSquareMeritUnderElements();
     Float64 getModelErrorUnderElement(Int32 eltId);

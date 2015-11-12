@@ -1644,6 +1644,22 @@ Float64 CLineModelElementList::getLeastSquareMerit(const TFloat64Range& lambdaRa
     return fit;
 }
 
+Int32 CLineModelElementList::getSpcNSamples(const TFloat64Range& lambdaRange){
+    const CSpectrumSpectralAxis& spcSpectralAxis = m_SpectrumModel->GetSpectralAxis();
+
+    Int32 numDevs = 0;
+
+    Float64 imin = spcSpectralAxis.GetIndexAtWaveLength(lambdaRange.GetBegin());
+    Float64 imax = spcSpectralAxis.GetIndexAtWaveLength(lambdaRange.GetEnd());
+
+    for( UInt32 j=imin; j<imax; j++ )
+    {
+        numDevs++;
+    }
+
+    return numDevs;
+}
+
 Float64 CLineModelElementList::getLeastSquareMeritUnderElements()
 {
     const CSpectrumFluxAxis& spcFluxAxis = m_SpcFluxAxis;

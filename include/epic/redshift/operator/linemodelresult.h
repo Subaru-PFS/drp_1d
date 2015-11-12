@@ -37,7 +37,7 @@ public:
     Void SaveLine( const CDataStore& store, std::ostream& stream ) const;
     Void Load( std::istream& stream );
 
-    Int32 GetNLinesOverCutThreshold(Int32 extremaIdx, Float64 cutThres);
+    Int32 GetNLinesOverCutThreshold(Int32 extremaIdx, Float64 snrThres, Float64 fitThres);
     Float64 GetExtremaMerit(Int32 extremaIdx);
 
     TFloat64List            Redshifts;  // z axis
@@ -54,6 +54,7 @@ public:
 
     COperator::TStatusList  Status;
     CRayCatalog::TRayVector restRayList;
+    Int32 nSpcSamples;
 
 
 };

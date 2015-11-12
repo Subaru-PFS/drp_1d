@@ -74,6 +74,7 @@ const COperatorResult* COperatorLineModel::Compute( CDataStore &dataStore, const
 
     CLineModelElementList model(spectrum, spectrumContinuum, restRayList, opt_lineWidthType);
     //model.LoadContinuum(); //in order to use a fit with continuum
+    result->nSpcSamples = model.getSpcNSamples(lambdaRange);
 
     PrecomputeLogErr(spectrum);
 
@@ -192,7 +193,7 @@ const COperatorResult* COperatorLineModel::Compute( CDataStore &dataStore, const
             //CRef<CModelSpectrumResult> resultspcmodel = new CModelSpectrumResult();
             CModelSpectrumResult*  resultspcmodel = new CModelSpectrumResult(model.GetModelSpectrum());
             // Store results
-            std::string fname = (boost::format("linemodel_spc_extrema_%1%") % i).str();
+            std::string fname = (boost::format("linemodel_spc_extrema_%1%") % savedModels).str();
             dataStore.StoreScopedGlobalResult( fname.c_str(), *resultspcmodel );
             savedModels++;
         }
@@ -202,7 +203,7 @@ const COperatorResult* COperatorLineModel::Compute( CDataStore &dataStore, const
         result->IsLocalExtrema[i]=isLocalExtrema[i];
 
         static Float64 cutThres = 5.0;
-        Int32 nValidLines = result->GetNLinesOverCutThreshold(i, cutThres);
+        Int32 nValidLines = result->GetNLinesOverCutThreshold(i, cutThres, cutThres);
         result->Posterior[i] = m/Float64(1+nValidLines);
         result->LogArea[i] = -DBL_MAX;
         result->LogAreaCorrectedExtrema[i] = -1.0;

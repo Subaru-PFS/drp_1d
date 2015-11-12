@@ -67,7 +67,8 @@ Bool CDTreeBSolveResult::GetBestRedshift( const CDataStore& store, Float64& reds
     std::string scope = store.GetScope( this ) + "dtreeBsolve.linemodel";
     CLineModelResult* results = (CLineModelResult*)store.GetGlobalResult(scope.c_str());
 
-    Float64 cutThresStrongLines = 5.0;
+    Float64 SNRcutThresStrongLines = 5.0;
+    Float64 FITcutThresStrongLines = 5.0;
 
     //***********************************************************
     //first test, NStrong lines>3, keep linemodel
@@ -82,10 +83,17 @@ Bool CDTreeBSolveResult::GetBestRedshift( const CDataStore& store, Float64& reds
             if(!results->IsLocalExtrema[iE]){
                 continue;
             }
-            Int32 nStrong = results->GetNLinesOverCutThreshold(iE, cutThresStrongLines);
+
+            /*
+            //print for debug
+            Int32 nStrongTmp = results->GetNLinesOverCutThreshold(iE, 5.0, 1.0);
+            Log.LogInfo( "dtreeBsolve nvalid strong test: z= %.4f\tnstrong= %d", results->Extrema[iE], nStrongTmp);
+            */
+
+            Int32 nStrong = results->GetNLinesOverCutThreshold(iE, SNRcutThresStrongLines, FITcutThresStrongLines);
             if(nStrong>=NStrongLinesThres){
                 moreThanNStrongLinesSols.push_back(iE);
-                Log.LogInfo( "dtreeBsolve gbr: z= %.4f\tnstrong= %d", results->Extrema[iE], results->GetNLinesOverCutThreshold(iE, cutThresStrongLines));
+                Log.LogInfo( "dtreeBsolve gbr: z= %.4f\tnstrong= %d", results->Extrema[iE], nStrong);
                 if(maxNStrong<nStrong){
                     maxNStrongId = iE;
                     maxNStrong = nStrong;
@@ -111,9 +119,10 @@ Bool CDTreeBSolveResult::GetBestRedshift( const CDataStore& store, Float64& reds
     //***********************************************************
     //second test, chi2 diff > 300 then keep the first extrema
     Float64 chi2diffThres = 100;
-    Float64 bestExtremaMerit = 1e12;
+    Float64 bestExtremaMerit = DBL_MAX;
     Float64 thres = 0.002;
     Int32 idxNextValid = 1;
+    Int32 idxFirstValid = 1;
     Float64 firstz = -1;
     Int32 nExtrema = results->Extrema.size();
     for( Int32 iE=0; iE<nExtrema; iE++ )
@@ -124,11 +133,12 @@ Bool CDTreeBSolveResult::GetBestRedshift( const CDataStore& store, Float64& reds
         if(firstz == -1 || bestExtremaMerit > results->GetExtremaMerit(iE)){
             firstz = results->Extrema[iE];
             bestExtremaMerit = results->GetExtremaMerit(iE);
+            idxFirstValid = iE;
         }
     }
     Log.LogInfo( "dtreeBsolve : bestExtremaMerit, %f", bestExtremaMerit);
 
-    Float64 nextExtremaMerit = 1e12;
+    Float64 nextExtremaMerit = DBL_MAX;
     for( Int32 iE=0; iE<nExtrema; iE++ )
     {
         if(!results->IsLocalExtrema[iE]){
@@ -145,10 +155,17 @@ Bool CDTreeBSolveResult::GetBestRedshift( const CDataStore& store, Float64& reds
     }
     Log.LogInfo( "dtreeBsolve : nextExtremaMerit, %f", nextExtremaMerit);
     Float64 chi2diff = -(bestExtremaMerit - nextExtremaMerit);
+    Int32 nStrongFirstExtremum = results->GetNLinesOverCutThreshold(idxFirstValid, 5.0, 1.5);
+    Int32 nStrongNextExtremum = results->GetNLinesOverCutThreshold(idxNextValid, 5.0, 1.5);
     if( chi2diff > chi2diffThres ){
         redshift = firstz;
         merit = bestExtremaMerit;
         Log.LogInfo( "dtreeBsolve : Found chi2diff result, z=%f", redshift);
+        return true;
+    }else if(chi2diff > 50.0 && nStrongFirstExtremum>=2 && nStrongNextExtremum<nStrongFirstExtremum){
+        redshift = firstz;
+        merit = bestExtremaMerit;
+        Log.LogInfo( "dtreeBsolve : Found chi2diff result, with nstrongextr=%d, z=%f", nStrongFirstExtremum, redshift);
         return true;
     }
 //    else{
@@ -259,12 +276,12 @@ Bool CDTreeBSolveResult::GetBestRedshift( const CDataStore& store, Float64& reds
         chi2continuum.push_back(merit_continuum);
     }
 
-    //*
+    /*
     // save all merits in a temp. txt file
     FILE* f = fopen( "dtreeb_merits_dbg.txt", "w+" );
     for( Int32 iE=0; iE<results->Extrema.size(); iE++ )
     {
-        fprintf( f, "%i %f %f %f %f\n", iE, results->Extrema[iE], results->GetExtremaMerit(iE), chi2nc[iE], chi2continuum[iE] );//*1e12);
+        fprintf( f, "%i %f %f %f %f\n", iE, results->Extrema[iE], results->GetExtremaMerit(iE)/((float)results->nSpcSamples), chi2nc[iE], chi2continuum[iE] );//*1e12);
     }
     fclose( f );
     //*/
@@ -272,13 +289,14 @@ Bool CDTreeBSolveResult::GetBestRedshift( const CDataStore& store, Float64& reds
     //*
     //***********************************************************
     // Next Test: chi2nc chi2cont linear combination
+    Float64 lmCoeff = 30.0/((float)results->nSpcSamples);
     Float64 chi2ncCoeff = 500.0;
-    Float64 chi2cCoeff = 100.0;
+    Float64 chi2cCoeff = 75.0;
     Float64 tmpMerit = DBL_MAX ;
     Float64 tmpRedshift = -1.0;
     for( Int32 iE=0; iE<results->Extrema.size(); iE++ )
     {
-        Float64 post = chi2ncCoeff*chi2nc[iE] + chi2cCoeff*chi2continuum[iE];
+        Float64 post = lmCoeff*results->GetExtremaMerit(iE) + chi2ncCoeff*chi2nc[iE] + chi2cCoeff*chi2continuum[iE];
         //Float64 post = results->GetExtremaMerit(iE);
 
         if( post < tmpMerit )

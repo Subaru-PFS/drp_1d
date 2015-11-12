@@ -222,7 +222,7 @@ Void CLineModelResult::SaveLine( const CDataStore& store, std::ostream& stream )
     stream << "LineModelResult" << "\t" << Redshifts.size() << std::endl;
 }
 
-Int32 CLineModelResult::GetNLinesOverCutThreshold(Int32 extremaIdx, Float64 cutThres)
+Int32 CLineModelResult::GetNLinesOverCutThreshold(Int32 extremaIdx, Float64 snrThres, Float64 fitThres)
 {
     Int32 nSol=0;
     if(Extrema.size()>extremaIdx)
@@ -258,11 +258,13 @@ Int32 CLineModelResult::GetNLinesOverCutThreshold(Int32 extremaIdx, Float64 cutT
             if(noise>0){
                 Float64 snr = LineModelSolutions[solutionIdx].Amplitudes[j]/noise;
                 Float64 Fittingsnr = LineModelSolutions[solutionIdx].Amplitudes[j]/LineModelSolutions[solutionIdx].FittingError[j];
-                if(snr>=cutThres && Fittingsnr>=cutThres){
+                if(snr>=snrThres && Fittingsnr>=fitThres){
                     nSol++;
                     indexesSols.push_back(LineModelSolutions[solutionIdx].ElementId[j]);
                 }
-            }else{
+            }
+            /*
+            else{
             //WARNING: this is a quick fix to deal with the case when errors are set to 0 by the linmodel operator...
             //todo: remove that fix and correct the linemodel operator to avoid this case
                 if(LineModelSolutions[solutionIdx].Amplitudes[j]>0.0){
@@ -270,6 +272,7 @@ Int32 CLineModelResult::GetNLinesOverCutThreshold(Int32 extremaIdx, Float64 cutT
                     indexesSols.push_back(LineModelSolutions[solutionIdx].ElementId[j]);
                 }
             }
+            //*/
         }
 
     }else{
