@@ -55,6 +55,7 @@ const std::string COperatorDTreeBSolve::GetDescription()
 
     desc.append("\tparam: linemodel.linewidthtype = {""psfinstrumentdriven"", ""zdriven"", ""fixed""}\n");
     desc.append("\tparam: linemodel.continuumreestimation = {""no"", ""onlyextrema"", ""always""}\n");
+    desc.append("\tparam: linemodel.extremacount = <float value>\n");
 
 
     return desc;

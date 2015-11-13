@@ -69,9 +69,8 @@ const std::string COperatorLineMatchingSolve::GetDescription()
 
     desc.append("\tparam: peakdetection.winsize = <float value in Angstrom>\n");
     desc.append("\tparam: peakdetection.cut = <float value>\n");
+    desc.append("\tparam: peakdetection.enlargerate = <float value>\n");
 
-
-    desc.append("\tparam: linedetection.enlargerate = <float value>\n");
     desc.append("\tparam: linedetection.cut = <float value>\n");
     desc.append("\tparam: linedetection.strongcutfactor = <float value>\n");
     desc.append("\tparam: linedetection.minlinewidth = <float value in Angstrom>\n");
