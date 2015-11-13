@@ -135,7 +135,7 @@ Bool CProcessFlow::Blindsolve( CProcessFlowContext& ctx, const std::string&  Cat
 
     ctx.GetParameterStore().Get( "lambdaRange", lambdaRange );
     ctx.GetParameterStore().Get( "redshiftRange", redshiftRange );
-    ctx.GetParameterStore().Get( "redshiftStep", redshiftStep, 0.001 );
+    ctx.GetParameterStore().Get( "redshiftStep", redshiftStep, 0.0001 );
     ctx.GetParameterStore().Get( "correlationExtremumCount", correlationExtremumCount, 5.0 );
     ctx.GetParameterStore().Get( "overlapThreshold", overlapThreshold, 1.0 );
 
@@ -237,10 +237,14 @@ Bool CProcessFlow::Chisquare( CProcessFlowContext& ctx, const std::string& Categ
     TFloat64List redshifts = redshiftRange.SpreadOver( redshiftStep );
     DebugAssert( redshifts.size() > 0 );
 
+    std::string opt_spcComponent;
+    ctx.GetDataStore().GetScopedParam( "chisquare2solve.spectrum.component", opt_spcComponent, "raw" );
+
+
     CMethodChisquare2Solve solve;
     CConstRef<CChisquare2SolveResult> solveResult = solve.Compute( ctx.GetDataStore(), ctx.GetSpectrum(), ctx.GetSpectrumWithoutContinuum(),
                                                                         ctx.GetTemplateCatalog(), filteredTemplateCategoryList,
-                                                                        lambdaRange, redshifts, overlapThreshold );
+                                                                        lambdaRange, redshifts, overlapThreshold, opt_spcComponent );
 
     if( solveResult ) {
         ctx.GetDataStore().StoreScopedGlobalResult( "redshiftresult", *solveResult );
