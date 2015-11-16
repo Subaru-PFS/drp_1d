@@ -19,7 +19,7 @@ class CTemplateCatalog : public CManagedObject
 
 public:
 
-    CTemplateCatalog();
+    CTemplateCatalog( std::string cremovalmethod="Median", Float64 mediankernelsize=75.0);
     ~CTemplateCatalog();
 
     Bool Add( CTemplate& r );
@@ -42,6 +42,11 @@ private:
 
     TTemplatesRefDict        m_List;
     TTemplatesRefDict        m_ListWithoutCont;
+
+
+    std::string m_continuumRemovalMethod;
+    Float64 m_continuumRemovalMedianKernelWidth;
+
 };
 
 

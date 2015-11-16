@@ -29,14 +29,16 @@ Void CDTreeBSolveResult::Save( const CDataStore& store, std::ostream& stream ) c
     Float64 redshift;
     Float64 merit;
     std::string tplName;
+    std::string dtreepath;
 
-    GetBestRedshift( store, redshift, merit );
+    GetBestRedshift( store, redshift, merit, dtreepath );
 
     stream <<  "#Redshifts\tMerit\tTemplate"<< std::endl;
 
     stream  << redshift << "\t"
                 << merit << "\t"
-                << tplName << std::endl;
+                << tplName << "\t"
+                   << "dtreeb_" << dtreepath.c_str() << std::endl;
 
 }
 
@@ -45,14 +47,15 @@ Void CDTreeBSolveResult::SaveLine( const CDataStore& store, std::ostream& stream
     Float64 redshift;
     Float64 merit;
     std::string tplName;
+    std::string dtreepath;
 
-    GetBestRedshift( store, redshift, merit );
+    GetBestRedshift( store, redshift, merit, dtreepath );
 
     stream  << store.GetSpectrumName() << "\t"
                 << redshift << "\t"
                 << merit << "\t"
                 << tplName << "\t"
-                << "LineModelSolve" << std::endl;
+                << "dtreeb_" << dtreepath.c_str() << std::endl;
 
 
 
@@ -60,8 +63,7 @@ Void CDTreeBSolveResult::SaveLine( const CDataStore& store, std::ostream& stream
 }
 
 
-
-Bool CDTreeBSolveResult::GetBestRedshift( const CDataStore& store, Float64& redshift, Float64& merit ) const
+Bool CDTreeBSolveResult::GetBestRedshift(const CDataStore& store, Float64& redshift, Float64& merit , std::string &dtreepath) const
 {
 
     std::string scope = store.GetScope( this ) + "dtreeBsolve.linemodel";
@@ -106,6 +108,7 @@ Bool CDTreeBSolveResult::GetBestRedshift( const CDataStore& store, Float64& reds
             redshift = results->Extrema[maxNStrongId];
             merit = 1;
             Log.LogInfo( "dtreeBsolve : Found N valid Strong lines result, z=%f", redshift);
+            dtreepath = "1.1";
             return true;
         }else{
             redshift = 0;
@@ -156,11 +159,13 @@ Bool CDTreeBSolveResult::GetBestRedshift( const CDataStore& store, Float64& reds
         redshift = firstz;
         merit = bestExtremaMerit;
         Log.LogInfo( "dtreeBsolve : Found chi2diff result, z=%f", redshift);
+        dtreepath = "2.1";
         return true;
     }else if(chi2diff > chi2diffThresLevel2 && nStrongFirstExtremum>=2 && nStrongNextExtremum<nStrongFirstExtremum){
         redshift = firstz;
         merit = bestExtremaMerit;
         Log.LogInfo( "dtreeBsolve : Found chi2diff result, with nstrongextr=%d, z=%f", nStrongFirstExtremum, redshift);
+        dtreepath = "2.2";
         return true;
     }
 //    else{
@@ -241,6 +246,7 @@ Bool CDTreeBSolveResult::GetBestRedshift( const CDataStore& store, Float64& reds
     }
     redshift = tmpRedshift;
     merit = tmpMerit;
+    dtreepath = "3.1";
     return true;
     //*/
 

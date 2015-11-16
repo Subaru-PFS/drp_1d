@@ -16,9 +16,10 @@ using namespace boost::filesystem;
 
 IMPLEMENT_MANAGED_OBJECT( CTemplateCatalog )
 
-CTemplateCatalog::CTemplateCatalog()
+CTemplateCatalog::CTemplateCatalog(string cremovalmethod, Float64 mediankernelsize)
 {
-
+    m_continuumRemovalMethod = cremovalmethod;
+    m_continuumRemovalMedianKernelWidth = mediankernelsize;
 }
 
 CTemplateCatalog::~CTemplateCatalog()
@@ -98,9 +99,16 @@ Bool CTemplateCatalog::Add( CTemplate& r )
 
     *tmplWithoutCont = r;
 
-    CContinuumIrregularSamplingMedian continuum;
+    if(m_continuumRemovalMethod == "Median"){
+        CContinuumMedian continuum;
+        continuum.SetMedianKernelWidth(m_continuumRemovalMedianKernelWidth);
+        tmplWithoutCont->RemoveContinuum( continuum );
+    }else{
+        CContinuumIrregularSamplingMedian continuum;
+        continuum.SetMedianKernelWidth(m_continuumRemovalMedianKernelWidth);
+        tmplWithoutCont->RemoveContinuum( continuum );
+    }
 
-    tmplWithoutCont->RemoveContinuum( continuum );
     tmplWithoutCont->ConvertToLogScale();
 
     m_ListWithoutCont[r.GetCategory()].push_back( tmplWithoutCont );

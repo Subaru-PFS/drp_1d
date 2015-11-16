@@ -96,10 +96,24 @@ bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath,
     m_SpectrumWithoutContinuum = new CSpectrum();
     *m_SpectrumWithoutContinuum = *m_Spectrum;
 
+    std::string medianRemovalMethod;
+    paramStore.Get( "continuumRemoval.method", medianRemovalMethod, "IrregularSamplingMedian" );
+    //ctx.GetParameterStore().Get( "continuumRemoval.method", medianRemovalMethod, "Median" );
+    if( medianRemovalMethod== "IrregularSamplingMedian"){
+        CContinuumIrregularSamplingMedian continuum;
+        Float64 opt_medianKernelWidth;
+        paramStore.Get( "continuumRemoval.medianKernelWidth", opt_medianKernelWidth, 75 );
+        continuum.SetMedianKernelWidth(opt_medianKernelWidth);
+        m_SpectrumWithoutContinuum->RemoveContinuum( continuum );
 
-    CContinuumIrregularSamplingMedian continuum;
+    }else{
+        CContinuumMedian continuum;
+        Float64 opt_medianKernelWidth;
+        paramStore.Get( "continuumRemoval.medianKernelWidth", opt_medianKernelWidth, 75 );
+        continuum.SetMedianKernelWidth(opt_medianKernelWidth);
+        m_SpectrumWithoutContinuum->RemoveContinuum( continuum );
+    }
 
-    m_SpectrumWithoutContinuum->RemoveContinuum( continuum );
     m_SpectrumWithoutContinuum->ConvertToLogScale();
 
 
@@ -120,7 +134,13 @@ bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath,
                                 const char* templateCatalogPath, const char* rayCatalogPath,
                                 CParameterStore& paramStore )
 {
-    CRef<CTemplateCatalog> templateCatalog = new CTemplateCatalog;
+
+    std::string medianRemovalMethod;
+    m_ParameterStore->Get( "continuumRemoval.method", medianRemovalMethod, "IrregularSamplingMedian" );
+    Float64 opt_medianKernelWidth;
+    m_ParameterStore->Get( "continuumRemoval.medianKernelWidth", opt_medianKernelWidth, 75 );
+
+    CRef<CTemplateCatalog> templateCatalog = new CTemplateCatalog( medianRemovalMethod, opt_medianKernelWidth);
     CRef<CRayCatalog> rayCatalog = new CRayCatalog;
 
 
