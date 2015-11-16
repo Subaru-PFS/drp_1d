@@ -14,6 +14,9 @@ class CSpectrum;
 class CTemplateCatalog;
 class CDataStore;
 
+/**
+ * \ingroup Redshift
+ */
 class COperatorFullSolve : public CManagedObject
 {
 

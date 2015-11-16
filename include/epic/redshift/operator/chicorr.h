@@ -16,6 +16,9 @@ class CTemplate;
 class CCorrelationResult;
 class CChisquareResult;
 
+/**
+ * \ingroup Redshift
+ */
 class COperatorChicorr : public CManagedObject
 {
     DEFINE_MANAGED_OBJECT( COperatorChicorr )

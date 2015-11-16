@@ -8,6 +8,10 @@ namespace NSEpic
 
 class CSpectrumFluxAxis;
 
+/**
+ * \ingroup Redshift
+ * Continuum estimated by enlarging spectrum with copies of itself, and applying the median method to it.
+ **/
 class CContinuumMedian : public CContinuum
 {
 

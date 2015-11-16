@@ -10,6 +10,10 @@ namespace NSEpic
 class CSpectrum;
 class CSpectrumFluxAxis;
 
+/**
+ * \ingroup Redshift
+ * Common ancestral class for continuum estimators.
+ **/
 class CContinuum : public CManagedObject
 {
 

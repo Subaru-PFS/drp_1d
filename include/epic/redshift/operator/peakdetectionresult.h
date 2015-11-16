@@ -10,6 +10,9 @@
 namespace NSEpic
 {
 
+/**
+ * \ingroup Redshift
+ */
 class CPeakDetectionResult : public COperatorResult
 {
 

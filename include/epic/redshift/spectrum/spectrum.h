@@ -12,6 +12,9 @@
 namespace NSEpic
 {
 
+/**
+ * \ingroup Redshift
+ */
 class CSpectrum : public CManagedObject
 {
     DEFINE_MANAGED_OBJECT( CSpectrum )

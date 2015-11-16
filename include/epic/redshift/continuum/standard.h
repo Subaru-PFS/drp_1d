@@ -6,6 +6,10 @@
 namespace NSEpic
 {
 
+  /**
+   * \ingroup Redshift
+   * Null continuum class.
+   */
 class CContinuumStandard : public CContinuum
 {
 

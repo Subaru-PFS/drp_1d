@@ -12,6 +12,9 @@ namespace NSEpic
 
 class CProcessFlowContext;
 
+/**
+ * \ingroup Redshift
+ */
 class CDTreeBSolveResult : public COperatorResult
 {
 

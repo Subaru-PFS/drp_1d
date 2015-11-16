@@ -13,6 +13,10 @@
 namespace NSEpic
 {
 
+  /**
+   * \ingroup Redshift
+   * Model predicting a single spectral line to be present in the data.
+   */
 class CSingleLine:public CLineModelElement
 {
 

@@ -23,6 +23,7 @@ class COperatorResultStore;
 class CDataStore;
 
 /**
+ * \ingroup Redshift
  * Store all data concerning computation and processign of a given spectrum
  *
  */

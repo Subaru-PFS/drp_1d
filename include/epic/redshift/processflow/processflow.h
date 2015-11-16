@@ -9,6 +9,7 @@
 
 #include <epic/redshift/spectrum/template/template.h>
 #include <epic/redshift/spectrum/template/catalog.h>
+
 namespace NSEpic
 {
 
@@ -16,6 +17,9 @@ class CProcessFlowContext;
 class CTemplate;
 class CSpectrum;
 
+/**
+ * \ingroup Redshift
+ */
 class CProcessFlow : public CManagedObject
 {
 

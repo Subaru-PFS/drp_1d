@@ -14,6 +14,9 @@ class CSpectrum;
 class CTemplateCatalog;
 class CDataStore;
 
+/**
+ * \ingroup Redshift
+ */
 class CMethodChisquare2Solve : public CManagedObject
 {
 

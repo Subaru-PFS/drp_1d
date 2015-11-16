@@ -2,11 +2,17 @@
 
 using namespace NSEpic;
 
+/**
+ * Empty constructor.
+ */
 CSpectrumIOWriter::CSpectrumIOWriter()
 {
 
 }
 
+/**
+ * Empty destructor.
+ */
 CSpectrumIOWriter::~CSpectrumIOWriter()
 {
 

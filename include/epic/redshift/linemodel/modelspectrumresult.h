@@ -12,6 +12,9 @@
 namespace NSEpic
 {
 
+  /**
+   * \ingroup Redshift
+   */
 class CModelSpectrumResult : public COperatorResult
 {
 

@@ -12,6 +12,9 @@ class CMask;
 class CSpectrum;
 class CSpectrumSpectralAxis;
 
+/**
+ * \ingroup Redshift
+ */
 class CSpectrumFluxAxis : public CSpectrumAxis
 {
 

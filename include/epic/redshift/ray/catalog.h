@@ -12,6 +12,7 @@ namespace NSEpic
 {
 
 /**
+ * /ingroup Redshift
  * Line catalog allow to store multiple lines description in a single text file.
  *
  * - Each line of the file represent a single Line

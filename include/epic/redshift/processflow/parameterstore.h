@@ -9,7 +9,9 @@
 namespace NSEpic
 {
 
-
+/**
+ * \ingroup Redshift
+ */
 class CParameterStore : public CManagedObject
 {
 

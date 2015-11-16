@@ -14,6 +14,9 @@
 namespace NSEpic
 {
 
+/**
+ * \ingroup Redshift
+ */
 class COperatorLineModel : public CManagedObject
 {
     DEFINE_MANAGED_OBJECT( COperatorLineModel )

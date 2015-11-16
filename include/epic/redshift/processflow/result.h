@@ -14,6 +14,9 @@ namespace NSEpic
 
 class CDataStore;
 
+/**
+ * \ingroup Redshift
+ */
 class COperatorResult : public CManagedObject
 {
 

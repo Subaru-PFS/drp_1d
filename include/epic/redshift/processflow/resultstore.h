@@ -14,6 +14,9 @@ namespace NSEpic
 class CTemplate;
 class CDataStore;
 
+/**
+ * \ingroup Redshift
+ */
 class COperatorResultStore : public CManagedObject
 {
 
