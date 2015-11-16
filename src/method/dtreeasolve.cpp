@@ -132,16 +132,16 @@ Bool COperatorDTreeASolve::Solve(CDataStore &resultStore, const CSpectrum &spc, 
         }
     }
 
-    // Ray Detection
-    CRayDetection rayDetection(CRay::nType_Emission, m_cut, m_strongcut, m_winsize, m_minsize, m_maxsize);
-    CConstRef<CRayDetectionResult> rayDetectionResult = rayDetection.Compute( spc, lambdaRange, peakDetectionResult->PeakList, peakDetectionResult->EnlargedPeakList );
-    resultStore.StoreScopedGlobalResult( "raycatalog", *rayDetectionResult );
-    Log.LogInfo( "DTreeA - Ray Detection output: %d ray(s) found", rayDetectionResult->RayCatalog.GetList().size());
+    // Line Detection
+    CLineDetection lineDetection(CRay::nType_Emission, m_cut, m_strongcut, m_winsize, m_minsize, m_maxsize);
+    CConstRef<CLineDetectionResult> lineDetectionResult = lineDetection.Compute( spc, lambdaRange, peakDetectionResult->PeakList, peakDetectionResult->EnlargedPeakList );
+    resultStore.StoreScopedGlobalResult( "raycatalog", *lineDetectionResult );
+    Log.LogInfo( "DTreeA - Line Detection output: %d line(s) found", lineDetectionResult->RayCatalog.GetList().size());
 
-    // check Ray Detection results
-    Int32 nRaysDetected = rayDetectionResult->RayCatalog.GetList().size();
+    // check line Detection results
+    Int32 nRaysDetected = lineDetectionResult->RayCatalog.GetList().size();
     if( nRaysDetected < 1){
-        Log.LogInfo( "DTreeA - No ray found, switching to Chisquare Solve");
+        Log.LogInfo( "DTreeA - No line found, switching to Chisquare Solve");
         resultStore.SetParam( "dtreepathnum", 1.11 );
         {
             //chisquare
@@ -160,7 +160,7 @@ Bool COperatorDTreeASolve::Solve(CDataStore &resultStore, const CSpectrum &spc, 
         }
     }
 
-    // Ray Match
+    // Line Match
     Int32 typeFilter = CRay::nType_Emission;
     Int32 restForceFilter = -1;
     if(nRaysDetected == 1){
@@ -168,13 +168,13 @@ Bool COperatorDTreeASolve::Solve(CDataStore &resultStore, const CSpectrum &spc, 
     }
 
     CRayMatching rayMatching;
-    CRef<CRayMatchingResult> rayMatchingResult = rayMatching.Compute( rayDetectionResult->RayCatalog, restRayCatalog, redshiftRange, m_minMatchNum, m_tol, typeFilter, -1, restForceFilter);
+    CRef<CRayMatchingResult> rayMatchingResult = rayMatching.Compute( lineDetectionResult->RayCatalog, restRayCatalog, redshiftRange, m_minMatchNum, m_tol, typeFilter, -1, restForceFilter);
 
     if(rayMatchingResult!=NULL){
         // Store matching results
         resultStore.StoreScopedGlobalResult( "raymatching", *rayMatchingResult );
 
-        //check ray matching results
+        //check line matching results
         if(rayMatchingResult->GetSolutionsListOverNumber(0).size()<1){
             Log.LogInfo( "DTreeA - Not match found [1], switching to Chisquare");
             resultStore.SetParam( "dtreepathnum", 3.1 );
@@ -213,12 +213,12 @@ Bool COperatorDTreeASolve::Solve(CDataStore &resultStore, const CSpectrum &spc, 
     }
 
     Int32 matchNum = rayMatchingResult->GetMaxMatchingNumber();
-    UInt32 nStrongPeaks = rayDetectionResult->RayCatalog.GetFilteredList(CRay::nType_Emission, CRay::nForce_Strong).size();
+    UInt32 nStrongPeaks = lineDetectionResult->RayCatalog.GetFilteredList(CRay::nType_Emission, CRay::nForce_Strong).size();
 
     //
     if(matchNum >= 1){
         resultStore.SetParam( "dtreepathnum", 4.1 );
-        Log.LogInfo( "DTreeA - compute chisquare on redshift candidates from ray matching" );
+        Log.LogInfo( "DTreeA - compute chisquare on redshift candidates from line matching" );
         rayMatchingResult->FilterWithRules(spc, lambdaRange, m_winsize);
         TFloat64List redshifts = rayMatchingResult->GetExtendedRedshiftCandidatesOverNumber(0, redshiftStep, 0.01);
         Log.LogInfo( "DTreeA - (n candidates = %d)", redshifts.size());

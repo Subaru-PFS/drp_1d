@@ -34,7 +34,7 @@ Void CRayMatchingResult::Save( const CDataStore& store, std::ostream& stream ) c
     outputFile  << bfs::path( m_SpectrumPath ).filename().string()  << "\t"
                 << redshift << "\t"
                 << matchingNum << "\t"
-                << "Ray Matching" << std::endl;
+                << "Line Matching" << std::endl;
 
     */
 

@@ -39,6 +39,8 @@
 #include <epic/redshift/method/dtree7solveresult.h>
 #include <epic/redshift/method/dtreeasolve.h>
 #include <epic/redshift/method/dtreeasolveresult.h>
+#include <epic/redshift/method/dtreebsolve.h>
+#include <epic/redshift/method/dtreebsolveresult.h>
 #include <epic/redshift/method/linematching2solve.h>
 #include <epic/redshift/method/linemodelsolve.h>
 #include <epic/redshift/method/linemodelsolveresult.h>
@@ -69,10 +71,10 @@ Bool CProcessFlow::Process( CProcessFlowContext& ctx )
 
     boost::algorithm::to_lower(methodName);
 
-    if(methodName  == "correlation" )
+    if(methodName  == "correlationsolve" )
         return Correlation( ctx );
 
-    if(methodName  == "chisquare" )
+    if(methodName  == "chisquaresolve" )
         return Chisquare( ctx );
 
     if(methodName  == "linematching" )
@@ -93,8 +95,11 @@ Bool CProcessFlow::Process( CProcessFlowContext& ctx )
     if(methodName  == "decisionaltree7" )
         return DecisionalTree7( ctx );
 
-    if(methodName  == "decisionaltreeA" )
+    if(methodName  == "decisionaltreea" )
         return DecisionalTreeA( ctx );
+
+    if(methodName  == "decisionaltreeb" )
+        return DecisionalTreeB( ctx );
 
     return false;
 }
@@ -107,12 +112,12 @@ Bool CProcessFlow::Blindsolve( CProcessFlowContext& ctx, const std::string&  Cat
 
 
     // Remove Star category, and filter the list with regard to input variable CategoryFilter
-    TStringList tempalteCategoyList;
-    ctx.GetParameterStore().Get( "templateCategoryList", tempalteCategoyList );
+    TStringList templateCategoryList;
+    ctx.GetParameterStore().Get( "templateCategoryList", templateCategoryList );
     TStringList   filteredTemplateCategoryList;
-    for( UInt32 i=0; i<tempalteCategoyList.size(); i++ )
+    for( UInt32 i=0; i<templateCategoryList.size(); i++ )
     {
-        std::string category = tempalteCategoyList[i];
+        std::string category = templateCategoryList[i];
         if( category == "star" )
         {
         }
@@ -130,7 +135,7 @@ Bool CProcessFlow::Blindsolve( CProcessFlowContext& ctx, const std::string&  Cat
 
     ctx.GetParameterStore().Get( "lambdaRange", lambdaRange );
     ctx.GetParameterStore().Get( "redshiftRange", redshiftRange );
-    ctx.GetParameterStore().Get( "redshiftStep", redshiftStep, 0.001 );
+    ctx.GetParameterStore().Get( "redshiftStep", redshiftStep, 0.0001 );
     ctx.GetParameterStore().Get( "correlationExtremumCount", correlationExtremumCount, 5.0 );
     ctx.GetParameterStore().Get( "overlapThreshold", overlapThreshold, 1.0 );
 
@@ -154,12 +159,12 @@ Bool CProcessFlow::Correlation( CProcessFlowContext& ctx,  const std::string&  C
 
 
     // Remove Star category, and filter the list with regard to input variable CategoryFilter
-    TStringList tempalteCategoyList;
-    ctx.GetParameterStore().Get( "tempalteCategoyList", tempalteCategoyList );
+    TStringList templateCategoryList;
+    ctx.GetParameterStore().Get( "templateCategoryList", templateCategoryList );
     TStringList   filteredTemplateCategoryList;
-    for( UInt32 i=0; i<tempalteCategoyList.size(); i++ )
+    for( UInt32 i=0; i<templateCategoryList.size(); i++ )
     {
-        std::string category = tempalteCategoyList[i];
+        std::string category = templateCategoryList[i];
         if( category == "star" )
         {
         }
@@ -201,12 +206,12 @@ Bool CProcessFlow::Chisquare( CProcessFlowContext& ctx, const std::string& Categ
 
 
     // Remove Star category, and filter the list with regard to input variable CategoryFilter
-    TStringList tempalteCategoyList;
-    ctx.GetParameterStore().Get( "tempalteCategoyList", tempalteCategoyList );
+    TStringList templateCategoryList;
+    ctx.GetParameterStore().Get( "templateCategoryList", templateCategoryList );
     TStringList   filteredTemplateCategoryList;
-    for( UInt32 i=0; i<tempalteCategoyList.size(); i++ )
+    for( UInt32 i=0; i<templateCategoryList.size(); i++ )
     {
-        std::string category = tempalteCategoyList[i];
+        std::string category = templateCategoryList[i];
         if( category == "star" )
         {
         }
@@ -232,10 +237,14 @@ Bool CProcessFlow::Chisquare( CProcessFlowContext& ctx, const std::string& Categ
     TFloat64List redshifts = redshiftRange.SpreadOver( redshiftStep );
     DebugAssert( redshifts.size() > 0 );
 
+    std::string opt_spcComponent;
+    ctx.GetDataStore().GetScopedParam( "chisquare2solve.spectrum.component", opt_spcComponent, "raw" );
+
+
     CMethodChisquare2Solve solve;
     CConstRef<CChisquare2SolveResult> solveResult = solve.Compute( ctx.GetDataStore(), ctx.GetSpectrum(), ctx.GetSpectrumWithoutContinuum(),
                                                                         ctx.GetTemplateCatalog(), filteredTemplateCategoryList,
-                                                                        lambdaRange, redshifts, overlapThreshold );
+                                                                        lambdaRange, redshifts, overlapThreshold, opt_spcComponent );
 
     if( solveResult ) {
         ctx.GetDataStore().StoreScopedGlobalResult( "redshiftresult", *solveResult );
@@ -251,12 +260,12 @@ Bool CProcessFlow::Fullsolve( CProcessFlowContext& ctx, const std::string& Categ
 
 
     // Remove Star category, and filter the list with regard to input variable CategoryFilter
-    TStringList tempalteCategoyList;
-    ctx.GetParameterStore().Get( "tempalteCategoyList", tempalteCategoyList );
+    TStringList templateCategoryList;
+    ctx.GetParameterStore().Get( "templateCategoryList", templateCategoryList );
     TStringList   filteredTemplateCategoryList;
-    for( UInt32 i=0; i<tempalteCategoyList.size(); i++ )
+    for( UInt32 i=0; i<templateCategoryList.size(); i++ )
     {
-        std::string category = tempalteCategoyList[i];
+        std::string category = templateCategoryList[i];
         if( category == "star" )
         {
         }
@@ -436,6 +445,49 @@ Bool CProcessFlow::DecisionalTreeA( CProcessFlowContext& ctx )
     if( solveResult ) {
         ctx.GetDataStore().StoreScopedGlobalResult( "redshiftresult", *solveResult );
     }
+
+    return true;
+}
+
+
+Bool CProcessFlow::DecisionalTreeB( CProcessFlowContext& ctx )
+{
+    TFloat64Range lambdaRange;
+    TFloat64Range redshiftRange;
+    Float64       redshiftStep;
+    Int64         correlationExtremumCount;
+    Float64       overlapThreshold;
+    TStringList     templateCategoryList;
+
+    ctx.GetParameterStore().Get( "lambdaRange", lambdaRange );
+    ctx.GetParameterStore().Get( "redshiftRange", redshiftRange );
+    ctx.GetParameterStore().Get( "redshiftStep", redshiftStep );
+    ctx.GetParameterStore().Get( "correlationExtremumCount", correlationExtremumCount );
+    ctx.GetParameterStore().Get( "overlapThreshold", overlapThreshold );
+    ctx.GetParameterStore().Get( "templateCategoryList", templateCategoryList );
+
+    const CSpectrumSpectralAxis& spcSpectralAxis = ctx.GetSpectrum().GetSpectralAxis();
+    TFloat64Range spcLambdaRange;
+    spcSpectralAxis.ClampLambdaRange( lambdaRange, spcLambdaRange );
+
+    Log.LogInfo( "Processing dtreeb for spc:%s (LambdaRange: %f-%f:%f)", ctx.GetSpectrum().GetName().c_str(),
+            spcLambdaRange.GetBegin(), spcLambdaRange.GetEnd(), ctx.GetSpectrum().GetResolution());
+
+    // Create redshift initial list by spanning redshift acdross the given range, with the given delta
+    TFloat64List redshifts = redshiftRange.SpreadOver( redshiftStep );
+    DebugAssert( redshifts.size() > 0 );
+
+    COperatorDTreeBSolve Solve;
+    CConstRef<CDTreeBSolveResult> solveResult = Solve.Compute( ctx.GetDataStore(), ctx.GetSpectrum(), ctx.GetSpectrumWithoutContinuum(),
+                                                                        ctx.GetTemplateCatalog(), templateCategoryList, ctx.GetRayCatalog(),
+                                                                        spcLambdaRange, redshifts);
+
+    if( solveResult ) {
+        ctx.GetDataStore().StoreScopedGlobalResult( "redshiftresult", *solveResult );
+    }
+
+    return true;
+
 
     return true;
 }

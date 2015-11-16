@@ -29,15 +29,39 @@ CMethodChisquare2Solve::~CMethodChisquare2Solve()
 }
 
 
+const std::string CMethodChisquare2Solve::GetDescription()
+{
+    std::string desc;
+
+    desc = "Method Chisquare2Solve:\n";
+
+    desc.append("\tparam: spectrum.component = {""raw"", ""nocontinuum"", ""continuum"", ""all""}\n");
+
+    return desc;
+
+}
+
+
 const CChisquare2SolveResult* CMethodChisquare2Solve::Compute(  CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
                                                         const CTemplateCatalog& tplCatalog, const TStringList& tplCategoryList,
-                                                        const TFloat64Range& lambdaRange, const TFloat64List& redshifts, Float64 overlapThreshold )
+                                                        const TFloat64Range& lambdaRange, const TFloat64List& redshifts, Float64 overlapThreshold, std::string spcComponent)
 {
     Bool storeResult = false;
 
     CDataStore::CAutoScope resultScope( resultStore, "chisquare2solve" );
 
-    Int32 _type = CChisquare2SolveResult::nType_noContinuum;
+    Int32 _type;
+    if(spcComponent=="raw"){
+       _type = CChisquare2SolveResult::nType_raw;
+    }else if(spcComponent=="nocontinuum"){
+       _type = CChisquare2SolveResult::nType_noContinuum;
+    }else if(spcComponent=="continuum"){
+        _type = CChisquare2SolveResult::nType_continuumOnly;
+    }else if(spcComponent=="all"){
+        _type = CChisquare2SolveResult::nType_all;
+    }
+
+
     for( UInt32 i=0; i<tplCategoryList.size(); i++ )
     {
         std::string category = tplCategoryList[i];

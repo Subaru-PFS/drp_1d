@@ -17,20 +17,19 @@ namespace NSEpic
 class COperatorLineModel : public CManagedObject
 {
     DEFINE_MANAGED_OBJECT( COperatorLineModel )
-
 public:
 
     COperatorLineModel();
     virtual ~COperatorLineModel();
 
-    const COperatorResult* Compute(const CSpectrum& spectrum, const CSpectrum &spectrumContinuum, const CRayCatalog& restraycatalog,
-                                    const TFloat64Range& lambdaRange, const TFloat64List& redshifts , const std::string& lineWidthType);
+    const COperatorResult* Compute(CDataStore &dataStore, const CSpectrum& spectrum, const CSpectrum &spectrumContinuum, const CRayCatalog& restraycatalog,
+                                    const TFloat64Range& lambdaRange, const TFloat64List& redshifts , const Int32 opt_extremacount, const std::string& opt_lineWidthType, const std::string &opt_continuumreest="no");
 
 private:
 
     Void ModelFit(const CSpectrum& spectrum, NSEpic::CLineModelElementList &model, const CRayCatalog::TRayVector &restraycatalog,
                    const TFloat64Range& lambdaRange, Float64 redshift,
-                  Float64& chiSquare, CLineModelResult::SLineModelSolution &modelSolution);
+                  Float64& chiSquare, CLineModelResult::SLineModelSolution &modelSolution, Int32 contreest_iterations);
 
     void ComputeArea1(CLineModelResult* results);
     void ComputeArea2(CLineModelResult* results);

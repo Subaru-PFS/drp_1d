@@ -20,7 +20,10 @@ public:
     {
         std::vector<Float64> ElementId;     //id of the linemodel element it is part of
         std::vector<Float64> Amplitudes;
-        std::vector<Float64> Errors;
+        std::vector<CRay> Rays;
+        std::vector<Float64> Errors;    //noise sigma
+        std::vector<Float64> FittingError;    //ModelLeastSquare error under each line
+
         std::vector<Float64> Widths;
         std::vector<Bool> OutsideLambdaRange;
         std::vector<TInt32Range> fittingIndexRange;
@@ -34,13 +37,15 @@ public:
     Void SaveLine( const CDataStore& store, std::ostream& stream ) const;
     Void Load( std::istream& stream );
 
-    Int32 GetNLinesOverCutThreshold(Int32 extremaIdx, Float64 cutThres);
+    Int32 GetNLinesOverCutThreshold(Int32 extremaIdx, Float64 snrThres, Float64 fitThres);
     Float64 GetExtremaMerit(Int32 extremaIdx);
 
     TFloat64List            Redshifts;  // z axis
     TFloat64List            ChiSquare;  // chi2
 
-    TFloat64List            Extrema;    // z extramas
+    TFloat64List            Extrema;    // z extrema
+    TBoolList               IsLocalExtrema;    // z extrema foudn by the extrema search method
+    TFloat64List            Posterior;    // z extrema
     TFloat64List            LogArea;    // log area for each extrema
     TFloat64List            LogAreaCorrectedExtrema;    //corrected z for each extrema
     TFloat64List            SigmaZ; //sigmaz for each extrema
@@ -49,6 +54,7 @@ public:
 
     COperator::TStatusList  Status;
     CRayCatalog::TRayVector restRayList;
+    Int32 nSpcSamples;
 
 
 };

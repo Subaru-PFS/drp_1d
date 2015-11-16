@@ -12,12 +12,12 @@ namespace NSEpic
 {
 
 /**
- * Ray catalog allow to store multiple Ray description in a single text file.
+ * Line catalog allow to store multiple lines description in a single text file.
  *
- * - Each line of the file represent a single Ray
+ * - Each line of the file represent a single Line
  * - Each line begenning with a # is a comment, and is skipped by the parser
  * - Format for each line is as follow:
- *        [Position in agstrum]   [Name of the ray]                   [A/E]       [W/S]
+ *        [Position in agstrum]   [Name of the line]                   [A/E]       [W/S]
  *        ex: 10320   [SII]                   E       W
  */
 class CRayCatalog : public CManagedObject

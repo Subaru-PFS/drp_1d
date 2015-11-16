@@ -80,6 +80,9 @@ TStringList CTemplateCatalog::GetCategoryList() const
 
 UInt32 CTemplateCatalog::GetTemplateCount( const std::string& category ) const
 {
+    if( m_List.find( category ) == m_List.end() )
+        return 0;
+
     return m_List.at(category).size();
 }
 

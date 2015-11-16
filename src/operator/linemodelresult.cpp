@@ -23,7 +23,7 @@ CLineModelResult::~CLineModelResult()
 
 Void CLineModelResult::Load( std::istream& stream )
 {
-    // Clear current ray list
+    // Clear current lines list
     Redshifts.clear();
     ChiSquare.clear();
     Status.clear();
@@ -94,6 +94,9 @@ Void CLineModelResult::Save( const CDataStore& store, std::ostream& stream ) con
         stream <<  "#Extrema for z = {";
         for ( int i=0; i<Extrema.size(); i++)
         {
+            if(!IsLocalExtrema[i]){
+                continue;
+            }
             stream <<  Extrema[i] << "\t";
         }
         stream << "}" << std::endl;
@@ -104,7 +107,23 @@ Void CLineModelResult::Save( const CDataStore& store, std::ostream& stream ) con
         stream <<  "#BIC for each extrema = {";
         for ( int i=0; i<bic.size(); i++)
         {
+            if(!IsLocalExtrema[i]){
+                continue;
+            }
             stream <<  bic[i] << "\t";
+        }
+        stream << "}" << std::endl;
+    }
+
+    // save posterior list, on 1 line
+    if(Posterior.size()>0){
+        stream <<  "#POSTERIOR for each extrema = {";
+        for ( int i=0; i<Posterior.size(); i++)
+        {
+            if(!IsLocalExtrema[i]){
+                continue;
+            }
+            stream <<  Posterior[i] << "\t";
         }
         stream << "}" << std::endl;
     }
@@ -114,6 +133,9 @@ Void CLineModelResult::Save( const CDataStore& store, std::ostream& stream ) con
         stream <<  "#SigmaZ for each extrema = {";
         for ( int i=0; i<SigmaZ.size(); i++)
         {
+            if(!IsLocalExtrema[i]){
+                continue;
+            }
             stream <<  SigmaZ[i] << "\t";
         }
         stream << "}" << std::endl;
@@ -124,6 +146,9 @@ Void CLineModelResult::Save( const CDataStore& store, std::ostream& stream ) con
         stream <<  "#LogArea for each extrema = {";
         for ( int i=0; i<LogArea.size(); i++)
         {
+            if(!IsLocalExtrema[i]){
+                continue;
+            }
             stream <<  LogArea[i] << "\t";
         }
         stream << "}" << std::endl;
@@ -133,6 +158,10 @@ Void CLineModelResult::Save( const CDataStore& store, std::ostream& stream ) con
     if(LineModelSolutions.size()>0){
         for ( UInt32 i=0; i<Extrema.size(); i++)
         {
+            if(!IsLocalExtrema[i]){
+                continue;
+            }
+
             stream <<  "#linemodel solution " << i << " for z = " <<  std::fixed <<  Extrema[i];
             if(LogArea.size()>i){
                 stream <<  ", LogArea = " <<  LogArea[i];
@@ -148,6 +177,10 @@ Void CLineModelResult::Save( const CDataStore& store, std::ostream& stream ) con
             if(bic.size()>i){
                 stream <<  ", bic"
                            " = " <<  bic[i];
+            }
+            if(Posterior.size()>i){
+                stream <<  ", post"
+                           " = " <<  Posterior[i];
             }
             stream << ", merit = " <<  ChiSquare[idx] << "{" <<  std::endl;
             for ( UInt32 j=0; j<LineModelSolutions[idx].Amplitudes.size(); j++)
@@ -176,7 +209,8 @@ Void CLineModelResult::Save( const CDataStore& store, std::ostream& stream ) con
                 stream <<  std::fixed << std::setprecision(0) << LineModelSolutions[idx].ElementId[j] << "\t";
                 stream <<  std::fixed << std::setprecision(3) << restRayList[j].GetPosition() << "\t";
                 stream << std::scientific << std::setprecision(5) <<  LineModelSolutions[idx].Amplitudes[j] << "\t";
-                stream << std::scientific << std::setprecision(5) <<  LineModelSolutions[idx].Errors[j] << std::endl;
+                stream << std::scientific << std::setprecision(5) <<  LineModelSolutions[idx].Errors[j] << "\t";
+                stream << std::scientific << std::setprecision(5) <<  LineModelSolutions[idx].FittingError[j] << std::endl;
             }
             stream << "#}" << std::endl;
         }
@@ -188,7 +222,7 @@ Void CLineModelResult::SaveLine( const CDataStore& store, std::ostream& stream )
     stream << "LineModelResult" << "\t" << Redshifts.size() << std::endl;
 }
 
-Int32 CLineModelResult::GetNLinesOverCutThreshold(Int32 extremaIdx, Float64 cutThres)
+Int32 CLineModelResult::GetNLinesOverCutThreshold(Int32 extremaIdx, Float64 snrThres, Float64 fitThres)
 {
     Int32 nSol=0;
     if(Extrema.size()>extremaIdx)
@@ -216,15 +250,21 @@ Int32 CLineModelResult::GetNLinesOverCutThreshold(Int32 extremaIdx, Float64 cutT
             if(alreadysol){
                 continue;
             }
+            if(!LineModelSolutions[solutionIdx].Rays[j].GetIsStrong()){
+                continue;
+            }
 
             Float64 noise = LineModelSolutions[solutionIdx].Errors[j];
             if(noise>0){
                 Float64 snr = LineModelSolutions[solutionIdx].Amplitudes[j]/noise;
-                if(snr>=cutThres){
+                Float64 Fittingsnr = LineModelSolutions[solutionIdx].Amplitudes[j]/LineModelSolutions[solutionIdx].FittingError[j];
+                if(snr>=snrThres && Fittingsnr>=fitThres){
                     nSol++;
                     indexesSols.push_back(LineModelSolutions[solutionIdx].ElementId[j]);
                 }
-            }else{
+            }
+            /*
+            else{
             //WARNING: this is a quick fix to deal with the case when errors are set to 0 by the linmodel operator...
             //todo: remove that fix and correct the linemodel operator to avoid this case
                 if(LineModelSolutions[solutionIdx].Amplitudes[j]>0.0){
@@ -232,6 +272,7 @@ Int32 CLineModelResult::GetNLinesOverCutThreshold(Int32 extremaIdx, Float64 cutT
                     indexesSols.push_back(LineModelSolutions[solutionIdx].ElementId[j]);
                 }
             }
+            //*/
         }
 
     }else{

@@ -49,7 +49,7 @@ Bool CRayCatalog::Add( const CRay& r )
     TRayVector::iterator it;
     for( it = m_List.begin(); it != m_List.end(); ++it )
     {
-        // Can't add a ray with a name + position + type that already exists in the list
+        // Can't add a line with a name + position + type that already exists in the list
         if( (*it).GetName() == r.GetName() && (*it).GetPosition() == r.GetPosition() && (*it).GetType() == r.GetType() )
             return false;
     }
@@ -63,7 +63,7 @@ Bool CRayCatalog::Load( const char* filePath )
 {
     ifstream file;
 
-    // Clear current ray list
+    // Clear current line list
     m_List.clear();
 
     file.open( filePath, ifstream::in );

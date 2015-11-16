@@ -84,7 +84,7 @@ Bool CRules::checkRule01(Float64 z, CRayMatchingResult::TSolutionSet& matchingSo
     }
 
     //check if the absence of the remaining strong lines is explained by noise
-    CRayDetection rayDetection;
+    CLineDetection lineDetection;
     //estimate the weak lines SNR
     Float64 maxSnrWeak = 0.0;
     Float64 maxNoiseWeak = 0.0;
@@ -97,7 +97,7 @@ Bool CRules::checkRule01(Float64 z, CRayMatchingResult::TSolutionSet& matchingSo
 
         Float64 flux=0.0;
         Float64 noiseWeak=0.0;
-        Float64 snrWeak = rayDetection.ComputeFluxes(m_spc, m_winsize, range, TFloat64List(), &flux, &noiseWeak);
+        Float64 snrWeak = lineDetection.ComputeFluxes(m_spc, m_winsize, range, TFloat64List(), &flux, &noiseWeak);
 
         if( maxSnrWeak < snrWeak){
             maxSnrWeak = snrWeak;
@@ -115,7 +115,7 @@ Bool CRules::checkRule01(Float64 z, CRayMatchingResult::TSolutionSet& matchingSo
 
         Float64 flux=0.0;
         Float64 noise=0.0;
-        Float64 snrStrong = rayDetection.ComputeFluxes(m_spc, m_winsize, range, TFloat64List(), &flux, &noise);
+        Float64 snrStrong = lineDetection.ComputeFluxes(m_spc, m_winsize, range, TFloat64List(), &flux, &noise);
 
         if( snrStrong < maxSnrWeak){
             if( noise < maxNoiseWeak ){

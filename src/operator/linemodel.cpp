@@ -7,11 +7,17 @@
 #include <epic/redshift/common/mask.h>
 #include <epic/redshift/operator/chisquareresult.h>
 #include <epic/redshift/extremum/extremum.h>
+#include <epic/redshift/linemodel/modelspectrumresult.h>
+
 
 #include <epic/redshift/spectrum/io/fitswriter.h>
 #include <epic/core/log/log.h>
 
 #include <boost/numeric/conversion/bounds.hpp>
+#include "boost/format.hpp"
+
+
+#include <epic/redshift/processflow/datastore.h>
 
 #include <math.h>
 #include <float.h>
@@ -40,9 +46,8 @@ COperatorLineModel::~COperatorLineModel()
 
 }
 
-
-const COperatorResult* COperatorLineModel::Compute(const CSpectrum& spectrum, const CSpectrum& spectrumContinuum, const CRayCatalog& restraycatalog,
-                          const TFloat64Range& lambdaRange, const TFloat64List& redshifts, const std::string& lineWidthType)
+const COperatorResult* COperatorLineModel::Compute( CDataStore &dataStore, const CSpectrum& spectrum, const CSpectrum& spectrumContinuum, const CRayCatalog& restraycatalog,
+                          const TFloat64Range& lambdaRange, const TFloat64List& redshifts, const Int32 opt_extremacount, const std::string& opt_lineWidthType, const std::string& opt_continuumreest)
 {
 
     if( spectrum.GetSpectralAxis().IsInLinearScale() == false)
@@ -67,21 +72,31 @@ const COperatorResult* COperatorLineModel::Compute(const CSpectrum& spectrum, co
     result->LineModelSolutions.resize( sortedRedshifts.size() );
 
 
-    CLineModelElementList model(spectrum, spectrumContinuum, restRayList, lineWidthType);
+    CLineModelElementList model(spectrum, spectrumContinuum, restRayList, opt_lineWidthType);
     //model.LoadContinuum(); //in order to use a fit with continuum
+    result->nSpcSamples = model.getSpcNSamples(lambdaRange);
 
     PrecomputeLogErr(spectrum);
+
+    Int32 contreest_iterations = 0;
+    if(opt_continuumreest == "always"){
+        contreest_iterations = 1;
+    }else{
+        contreest_iterations  = 0;
+    }
     for (Int32 i=0;i<sortedRedshifts.size();i++)
     {
-        ModelFit( spectrum, model, result->restRayList, lambdaRange, result->Redshifts[i], result->ChiSquare[i], result->LineModelSolutions[i]);
+        ModelFit( spectrum, model, result->restRayList, lambdaRange, result->Redshifts[i], result->ChiSquare[i], result->LineModelSolutions[i], contreest_iterations);
     }
 
     // extrema
-    Int32 extremumCount = 15;
+    Int32 extremumCount = opt_extremacount;
     TPointList extremumList;
     TFloat64Range redshiftsRange(result->Redshifts[0], result->Redshifts[result->Redshifts.size()-1]);
-    CExtremum extremum( redshiftsRange, extremumCount, true, 1);
+    CExtremum extremum( redshiftsRange, extremumCount, true, 2);
     extremum.Find( result->Redshifts, result->ChiSquare, extremumList );
+
+    /*
     // Refine Extremum with a second maximum search around the z candidates:
     // This corresponds to the finer xcorrelation in EZ Pandora (in standard_DP fctn in SolveKernel.py)
     Float64 radius = 0.001;
@@ -99,9 +114,41 @@ const COperatorResult* COperatorLineModel::Compute(const CSpectrum& spectrum, co
             extremumList[i] = extremumListFine[0];
         }
     }
+    //*/
+
+    // extend z around the extrema
+    Float64 extensionradius = 0.01;
+    TPointList extremumListExtended;
+    TBoolList isLocalExtrema;
+    for( Int32 i=0; i<extremumList.size(); i++ )
+    {
+        Float64 x = extremumList[i].X;
+        Float64 left_border = max(redshiftsRange.GetBegin(), x-extensionradius);
+        Float64 right_border=min(redshiftsRange.GetEnd(), x+extensionradius);
+
+        for (Int32 i=0;i<result->Redshifts.size();i++)
+        {
+            if(result->Redshifts[i] >= left_border && result->Redshifts[i] <= right_border){
+                SPoint pt;
+                pt.X = result->Redshifts[i];
+                pt.Y = result->ChiSquare[i];
+                extremumListExtended.push_back(pt);
+                Bool isExtrema = false;
+                if( x == pt.X){
+                    isExtrema = true;
+                }
+                isLocalExtrema.push_back(isExtrema);
+            }
+        }
+    }
+    //extremumListExtended = extremumList;
+   //todo: remove duplicate redshifts from the extended extrema list
+
     // store extrema results
-    extremumCount = extremumList.size();
+    extremumCount = extremumListExtended.size();
     result->Extrema.resize( extremumCount );
+    result->IsLocalExtrema.resize( extremumCount );
+    result->Posterior.resize( extremumCount );
     result->LogArea.resize( extremumCount );
     result->LogAreaCorrectedExtrema.resize( extremumCount );
     result->SigmaZ.resize( extremumCount );
@@ -109,13 +156,14 @@ const COperatorResult* COperatorLineModel::Compute(const CSpectrum& spectrum, co
     Int32 start = spectrum.GetSpectralAxis().GetIndexAtWaveLength(lambdaRange.GetBegin());
     Int32 end = spectrum.GetSpectralAxis().GetIndexAtWaveLength(lambdaRange.GetEnd());
     Int32 nsamples = end - start + 1;
-    for( Int32 i=0; i<extremumList.size(); i++ )
+    Int32 savedModels = 0;
+    for( Int32 i=0; i<extremumListExtended.size(); i++ )
     {
-        Float64 z = extremumList[i].X;
-        Float64 m = extremumList[i].Y;
+        Float64 z = extremumListExtended[i].X;
+        Float64 m = extremumListExtended[i].Y;
 
         //find the index in the zaxis results
-        Int32 idx=0;
+        Int32 idx=-1;
         for ( UInt32 i2=0; i2<result->Redshifts.size(); i2++)
         {
             if(result->Redshifts[i2] == z){
@@ -123,8 +171,40 @@ const COperatorResult* COperatorLineModel::Compute(const CSpectrum& spectrum, co
                 break;
             }
         }
+        if(idx==-1){
+            Log.LogInfo( "Problem. could not find extrema solution index...");
+            continue;
+        }
+
+
+        // reestimate the model (eventually with continuum reestimation) on the extrema selected
+        if(opt_continuumreest == "always" || opt_continuumreest == "onlyextrema"){
+            contreest_iterations = 1;
+        }else{
+            contreest_iterations  = 0;
+        }
+        ModelFit( spectrum, model, result->restRayList, lambdaRange, result->Redshifts[idx], result->ChiSquare[idx], result->LineModelSolutions[idx], contreest_iterations);
+        m = result->ChiSquare[idx];
+
+
+        //save the model result
+        static Int32 maxModelSave = 5;
+        if(savedModels<maxModelSave && isLocalExtrema[i]){
+            //CRef<CModelSpectrumResult> resultspcmodel = new CModelSpectrumResult();
+            CModelSpectrumResult*  resultspcmodel = new CModelSpectrumResult(model.GetModelSpectrum());
+            // Store results
+            std::string fname = (boost::format("linemodel_spc_extrema_%1%") % savedModels).str();
+            dataStore.StoreScopedGlobalResult( fname.c_str(), *resultspcmodel );
+            savedModels++;
+        }
+
 
         result->Extrema[i] = z;
+        result->IsLocalExtrema[i]=isLocalExtrema[i];
+
+        static Float64 cutThres = 5.0;
+        Int32 nValidLines = result->GetNLinesOverCutThreshold(i, cutThres, cutThres);
+        result->Posterior[i] = m/Float64(1+nValidLines);
         result->LogArea[i] = -DBL_MAX;
         result->LogAreaCorrectedExtrema[i] = -1.0;
 
@@ -137,6 +217,7 @@ const COperatorResult* COperatorLineModel::Compute(const CSpectrum& spectrum, co
         result->bic[i] = aic;
         //result->bic[i] = aic + (2*nddl*(nddl+1) )/(nsamples-nddl-1);  //AICc, better when nsamples small
     }
+
     ComputeArea2(result);
 
 
@@ -389,11 +470,13 @@ void COperatorLineModel::ComputeArea2(CLineModelResult* results)
 
 Void COperatorLineModel::ModelFit(const CSpectrum& spectrum, CLineModelElementList& model, const CRayCatalog::TRayVector& restRayList,
                                 const TFloat64Range& lambdaRange, Float64 redshift,
-                                   Float64& chiSquare, CLineModelResult::SLineModelSolution& modelSolution)
+                                   Float64& chiSquare, CLineModelResult::SLineModelSolution& modelSolution, Int32 contreest_iterations)
 {
     chiSquare = boost::numeric::bounds<float>::highest();
 
-    model.fit(redshift, lambdaRange, modelSolution);
+    model.fit(redshift, lambdaRange, modelSolution, contreest_iterations);
+    //model.fitWithModelSelection(redshift, lambdaRange, modelSolution);
+
 
     Float64 fit = model.getLeastSquareMerit(lambdaRange);
 

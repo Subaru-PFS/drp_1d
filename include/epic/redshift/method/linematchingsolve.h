@@ -23,23 +23,15 @@ public:
     COperatorLineMatchingSolve();
     ~COperatorLineMatchingSolve();
 
+
+    const std::string GetDescription();
+
     const CLineMatchingSolveResult* Compute(CDataStore& resultStore, const CSpectrum& spc,
                                         const TFloat64Range& lambdaRange, const TFloat64Range& redshiftsRange, Float64 redshiftStep, const CRayCatalog &restRayCatalog);
 
 
 private:
 
-    // Peak Detection
-    Float64 m_winsize;
-    Float64 m_minsize;
-    Float64 m_maxsize;
-    Float64 m_cut;
-    Float64 m_strongcut;
-    Float64 m_enlargeRate;
-
-    // Line Matching
-    Int32 m_minMatchNum;
-    Float64 m_tol;
 
 };
 

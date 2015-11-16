@@ -138,13 +138,13 @@ bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath,
         }
     }
 
-    // Load ray catalog
+    // Load line catalog
     if( rayCatalogPath )
     {
         rValue = rayCatalog->Load( rayCatalogPath );
         if( !rValue )
         {
-            Log.LogError("Failed to load ray catalog: (%s)", rayCatalogPath );
+            Log.LogError("Failed to load line catalog: (%s)", rayCatalogPath );
             m_RayCatalog = NULL;
             return false;
         }
