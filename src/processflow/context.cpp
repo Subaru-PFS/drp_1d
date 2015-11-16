@@ -20,6 +20,7 @@
 #include <stdio.h>
 #include <float.h>
 #include <fstream>
+#include <memory>
 
 #include <boost/filesystem.hpp>
 
@@ -44,7 +45,7 @@ bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath,
                                 const CTemplateCatalog& templateCatalog, const CRayCatalog& rayCatalog,
                                 CParameterStore& paramStore  )
 {
-    m_Spectrum = new CSpectrum();
+    m_Spectrum = std::shared_ptr<CSpectrum>( new CSpectrum() );
     m_Spectrum->SetName(bfs::path( spectrumPath ).stem().string().c_str() );
 
     CSpectrumIOGenericReader reader;
@@ -93,7 +94,7 @@ bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath,
 
 
     // Compute continuum substracted spectrum
-    m_SpectrumWithoutContinuum = new CSpectrum();
+    m_SpectrumWithoutContinuum = std::shared_ptr<CSpectrum>( new CSpectrum() );
     *m_SpectrumWithoutContinuum = *m_Spectrum;
 
 

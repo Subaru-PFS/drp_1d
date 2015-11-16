@@ -5,6 +5,8 @@
 #include <epic/core/common/ref.h>
 #include <epic/redshift/noise/noise.h>
 
+#include <memory>
+
 namespace NSEpic
 {
 
@@ -26,7 +28,7 @@ public:
 
 private:
 
-    CRef<CSpectrum>     m_NoiseSpectrum;
+    std::shared_ptr<CSpectrum>     m_NoiseSpectrum;
 
 };
 

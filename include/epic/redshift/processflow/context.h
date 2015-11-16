@@ -7,7 +7,7 @@
 
 #include <map>
 #include <string>
-
+#include <memory>
 
 namespace NSEpic
 {
@@ -55,8 +55,8 @@ public:
 
 private:
 
-    CRef<CSpectrum>                 m_Spectrum;
-    CRef<CSpectrum>                 m_SpectrumWithoutContinuum;
+    std::shared_ptr<CSpectrum>                 m_Spectrum;
+    std::shared_ptr<CSpectrum>                 m_SpectrumWithoutContinuum;
 
     CRef<CTemplateCatalog>          m_TemplateCatalog;
     CRef<CRayCatalog>               m_RayCatalog;
