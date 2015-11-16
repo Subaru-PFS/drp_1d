@@ -96,7 +96,10 @@ bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath,
     m_SpectrumWithoutContinuum = new CSpectrum();
     *m_SpectrumWithoutContinuum = *m_Spectrum;
 
-    m_SpectrumWithoutContinuum->RemoveContinuum<CContinuumIrregularSamplingMedian>();
+
+    CContinuumIrregularSamplingMedian continuum;
+
+    m_SpectrumWithoutContinuum->RemoveContinuum( continuum );
     m_SpectrumWithoutContinuum->ConvertToLogScale();
 
 

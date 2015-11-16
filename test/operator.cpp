@@ -174,8 +174,14 @@ void CRedshiftOperatorTestCase::CorrelationMatchWithEZ( const char* spectraPath,
     retVal = reader.Read( tplPath, t );
     CPPUNIT_ASSERT( retVal );
 
-    s.RemoveContinuum<CContinuumIrregularSamplingMedian>();
-    t.RemoveContinuum<CContinuumIrregularSamplingMedian>();
+    {
+        CContinuumIrregularSamplingMedian continuum;
+        s.RemoveContinuum( continuum );
+    }
+    {
+        CContinuumIrregularSamplingMedian continuum;
+        t.RemoveContinuum(continuum);
+    }
 
     s.ConvertToLogScale();
     t.ConvertToLogScale();

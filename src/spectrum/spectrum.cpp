@@ -64,6 +64,18 @@ CSpectrum& CSpectrum::operator=(const CSpectrum& other)
     m_FluxAxis = other.GetFluxAxis();
 }
 
+
+Bool CSpectrum::RemoveContinuum(  CContinuum& remover )
+{
+    CSpectrumFluxAxis fluxAxisWithoutContinuum;
+
+    remover.RemoveContinuum( *this, fluxAxisWithoutContinuum );
+
+    m_FluxAxis = fluxAxisWithoutContinuum;
+
+    return true;
+}
+
 /**
  * Invert the flux axis
  */
