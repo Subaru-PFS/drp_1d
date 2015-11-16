@@ -44,7 +44,6 @@ public:
     TFloat64List            ChiSquare;  // chi2
 
     TFloat64List            Extrema;    // z extrema
-    TBoolList               IsLocalExtrema;    // z extrema foudn by the extrema search method
     TFloat64List            Posterior;    // z extrema
     TFloat64List            LogArea;    // log area for each extrema
     TFloat64List            LogAreaCorrectedExtrema;    //corrected z for each extrema
