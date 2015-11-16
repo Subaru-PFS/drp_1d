@@ -98,7 +98,9 @@ Bool CTemplateCatalog::Add( CTemplate& r )
 
     *tmplWithoutCont = r;
 
-    tmplWithoutCont->RemoveContinuum<CContinuumIrregularSamplingMedian>();
+    CContinuumIrregularSamplingMedian continuum;
+
+    tmplWithoutCont->RemoveContinuum( continuum );
     tmplWithoutCont->ConvertToLogScale();
 
     m_ListWithoutCont[r.GetCategory()].push_back( tmplWithoutCont );

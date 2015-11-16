@@ -49,12 +49,9 @@ public:
     Bool                            ConvertToLogScale();
     Bool                            ConvertToLinearScale();
 
-    template< typename ContinuumRemover >
-    Bool                            RemoveContinuum();
+    Bool                            RemoveContinuum( CContinuum& remover );
 
 private:
-
-    Bool                            Serialize( CSerializer& ar );
 
     std::string                     m_Name;
     CSpectrumFluxAxis               m_FluxAxis;
@@ -91,19 +88,6 @@ CSpectrumFluxAxis& CSpectrum::GetFluxAxis()
     return m_FluxAxis;
 }
 
-
-template<typename ContinuumRemover>
-Bool CSpectrum::RemoveContinuum()
-{
-    ContinuumRemover cr;
-    CSpectrumFluxAxis fluxAxisWithoutContinuum;
-
-    cr.RemoveContinuum( *this, fluxAxisWithoutContinuum );
-
-    m_FluxAxis = fluxAxisWithoutContinuum;
-
-    return true;
-}
 
 }
 

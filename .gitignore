@@ -18,32 +18,7 @@ build/install_manifest.txt
 bin/*
 
 # Third party
-thirdparty/boost-1.55.0.tar.gz
-thirdparty/boost-1.55.0/
-thirdparty/cfitsio-3.36.tar.gz
-thirdparty/cfitsio-3.36/
-thirdparty/cppunit-1.12.1.tar.gz
-thirdparty/cppunit-1.12.1/
-thirdparty/6bb71fdd.patch
-thirdparty/e4bde20f.patch
-thirdparty/bin/curve_keygen
-thirdparty/zmq-4.0.4.tar.gz
-thirdparty/zmq-4.0.4/
-thirdparty/gsl-1.16.tar.gz
-thirdparty/gsl-1.16/
-
-thirdparty/bin/*
-thirdparty/czmq-2.2.0.tar.gz
-thirdparty/czmq-2.2.0/
-
-thirdparty/bin/doxygen
-thirdparty/bin/doxytag
-thirdparty/doc/
-thirdparty/doxygen-1.8.8.tar.gz
-thirdparty/doxygen-1.8.8/
-thirdparty/doxytag.py
-
-thirdparty/man
+thirdparty/*
 
 # doc
 docs/html/
