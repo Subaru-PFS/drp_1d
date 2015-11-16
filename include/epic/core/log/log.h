@@ -19,22 +19,23 @@ class CLogHandler;
 
 /**
  * \ingroup Core
- * Log Class
+ * Responsible for logging features.
+ * This class allows prioritized logging, and selective output of these log messages according to handler's configuration.
  */
 class CLog : public CSingleton< CLog >
 {
 
 public:
 
-    enum ELevel
-    {
-        nLevel_Error = 1,
-        nLevel_Warning,
-        nLevel_Info,
-        nLevel_All = 0x0fffffff,
-        nLevel_Count,
-        nLevel_None
-    };
+  enum ELevel
+  {
+    nLevel_Critical = 100,
+    nLevel_Error = 90,
+    nLevel_Warning = 80,
+    nLevel_Info = 70,
+    nLevel_Debug = 60,
+    nLevel_None = 0
+  };
 
     CLog( );
     virtual ~CLog();
@@ -42,6 +43,7 @@ public:
     Void LogError( const char* format, ... );
     Void LogWarning( const char* format, ... );
     Void LogInfo( const char* format, ... );
+    Void LogDebug( const char* format, ... );
 
     CMutex& GetSynchMutex();
 
@@ -58,7 +60,7 @@ private:
     const char*     GetHeader( CLog::ELevel lvl );
 
     //Attributes
-    CLogHandler*     m_HandlerTable[LOG_HANDLER_TABLE_SIZE];
+    CLogHandler*    m_HandlerTable[LOG_HANDLER_TABLE_SIZE];
     Char            m_CurrentHeader[LOG_HANDLER_HEADER_LENGTH];
     Char*           m_WorkingBuffer;
     Char            m_IndentBuffer[128];
