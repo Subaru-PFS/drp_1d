@@ -118,11 +118,11 @@ const COperatorResult* COperatorLineModel::Compute( CDataStore &dataStore, const
     }
     //*/
 
-    /*
+    //*
     // extend z around the extrema
     Float64 extensionradius = 0.01;
-    TPointList extremumListExtended;
-    TBoolList isLocalExtrema;
+    //TPointList extremumListExtended;
+    //TBoolList isLocalExtrema;
     for( Int32 i=0; i<extremumList.size(); i++ )
     {
         Float64 x = extremumList[i].X;
@@ -132,15 +132,16 @@ const COperatorResult* COperatorLineModel::Compute( CDataStore &dataStore, const
         for (Int32 i=0;i<result->Redshifts.size();i++)
         {
             if(result->Redshifts[i] >= left_border && result->Redshifts[i] <= right_border){
-                SPoint pt;
-                pt.X = result->Redshifts[i];
-                pt.Y = result->ChiSquare[i];
-                extremumListExtended.push_back(pt);
-                Bool isExtrema = false;
-                if( x == pt.X){
-                    isExtrema = true;
-                }
-                isLocalExtrema.push_back(isExtrema);
+                result->ExtremaExtendedRedshifts.push_back(result->Redshifts[i]);
+                //SPoint pt;
+                //pt.X = result->Redshifts[i];
+                //pt.Y = result->ChiSquare[i];
+                //extremumListExtended.push_back(pt);
+                //Bool isExtrema = false;
+                //if( x == pt.X){
+                //    isExtrema = true;
+                //}
+                //isLocalExtrema.push_back(isExtrema);
             }
         }
     }

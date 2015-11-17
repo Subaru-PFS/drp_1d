@@ -157,12 +157,13 @@ Bool COperatorDTreeBSolve::Solve(CDataStore &dataStore, const CSpectrum &spc, co
 //    {
 //        extremumRedshifts[i] = result->Extrema[i];
 //    }
+    TFloat64List redshiftsChi2 = result->ExtremaExtendedRedshifts;
 
     std::string spcComponent = "all";
     CMethodChisquare2Solve chiSolve;
     CConstRef<CChisquare2SolveResult> chisolveResult = chiSolve.Compute( dataStore, spc, spcWithoutCont,
                                                                         tplCatalog, tplCategoryList,
-                                                                        lambdaRange, redshifts, overlapThreshold, spcComponent);
+                                                                        lambdaRange, redshiftsChi2, overlapThreshold, spcComponent);
     if( chisolveResult ) {
         dataStore.StoreScopedGlobalResult( "redshiftresult", *chisolveResult );
     }

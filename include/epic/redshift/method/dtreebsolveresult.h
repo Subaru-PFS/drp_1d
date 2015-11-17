@@ -28,7 +28,7 @@ public:
     Bool GetBestRedshift( const CDataStore& store, Float64& redshift, Float64& merit, std::string& dtreepath) const;
 
     Bool GetBestRedshiftChi2( const CDataStore& store, std::string scopeStr, Float64 targetz, Float64& redshift, Float64& merit, std::string& tplName ) const;
-    TFloat64List GetBestRedshiftChi2List(const CDataStore& store, std::string scopeStr, Float64 &minmerit) const;
+    TFloat64List GetBestRedshiftChi2List(const CDataStore& store, std::string scopeStr, Float64 &minmerit, TFloat64List &zList) const;
 };
 
 

@@ -118,7 +118,7 @@ Bool CDTreeBSolveResult::GetBestRedshift(const CDataStore& store, Float64& redsh
     //*/
 
 
-    //*
+    /*
     //***********************************************************
     //second test, chi2 diff > 300 then keep the first extrema
     Float64 chi2diffThresLevel1 = 100;
@@ -180,9 +180,12 @@ Bool CDTreeBSolveResult::GetBestRedshift(const CDataStore& store, Float64& redsh
     //retrieve chi2nc values
     std::vector<Float64> w_chi2nc;
     TFloat64List chi2nc;
+    TFloat64List znc;
     Float64 minchi2nc= DBL_MAX;
 
-    chi2nc = GetBestRedshiftChi2List(store, "chisquare_nocontinuum", minchi2nc);
+    chi2nc = GetBestRedshiftChi2List(store, "chisquare_nocontinuum", minchi2nc, znc);
+
+    //Log.LogInfo( "dtreeBsolve : znc size=%d", znc.size());
     for( Int32 i=0; i<chi2nc.size(); i++ )
     {
         w_chi2nc.push_back(chi2nc[i]/minchi2nc);
@@ -193,9 +196,10 @@ Bool CDTreeBSolveResult::GetBestRedshift(const CDataStore& store, Float64& redsh
     //retrieve chi2 raw values
     std::vector<Float64> w_chi2raw;
     TFloat64List chi2raw;
+    TFloat64List zraw;
     Float64 minchi2raw= DBL_MAX;
 
-    chi2raw = GetBestRedshiftChi2List(store, "chisquare", minchi2raw);
+    chi2raw = GetBestRedshiftChi2List(store, "chisquare", minchi2raw, zraw);
     for( Int32 i=0; i<chi2raw.size(); i++ )
     {
         w_chi2raw.push_back(chi2raw[i]/minchi2raw);
@@ -207,14 +211,31 @@ Bool CDTreeBSolveResult::GetBestRedshift(const CDataStore& store, Float64& redsh
     //retrieve chi2 continuum values
     std::vector<Float64> w_chi2continuum;
     TFloat64List chi2continuum;
+    TFloat64List zcontinuum;
     Float64 minchi2continuum= DBL_MAX;
 
-    chi2continuum = GetBestRedshiftChi2List(store, "chisquare_continuum", minchi2continuum);
+    chi2continuum = GetBestRedshiftChi2List(store, "chisquare_continuum", minchi2continuum, zcontinuum);
     for( Int32 i=0; i<chi2continuum.size(); i++ )
     {
         w_chi2continuum.push_back(chi2continuum[i]/minchi2continuum);
     }
 
+    //*
+    //***********************************************************
+    //retrieve linemodel values
+    TFloat64List chi2lm;
+
+    for( Int32 i=0; i<znc.size(); i++ )
+    {
+        for( Int32 iall=0; iall<results->Redshifts.size(); iall++ )
+        {
+            if(results->Redshifts[iall] == znc[i]){
+                chi2lm.push_back(results->ChiSquare[iall]);
+                break;
+            }
+        }
+    }
+    //Log.LogInfo( "dtreeBsolve : chi2lm size=%d", chi2lm.size());
 
     /*
     // save all merits in a temp. txt file
@@ -229,19 +250,19 @@ Bool CDTreeBSolveResult::GetBestRedshift(const CDataStore& store, Float64& redsh
     //*
     //***********************************************************
     // Next Test: chi2nc chi2cont linear combination
-    Float64 lmCoeff = 30.0/((float)results->nSpcSamples);
-    Float64 chi2ncCoeff = 500.0;
-    Float64 chi2cCoeff = 75.0;
+    Float64 lmCoeff = 12.0/((float)results->nSpcSamples);
+    Float64 chi2ncCoeff = 100.0;
+    Float64 chi2cCoeff = 8.0;
     Float64 tmpMerit = DBL_MAX ;
     Float64 tmpRedshift = -1.0;
-    for( Int32 i=0; i<results->Redshifts.size(); i++ )
+    for( Int32 i=0; i<znc.size(); i++ )
     {
-        Float64 post = lmCoeff*results->ChiSquare[i] + chi2ncCoeff*chi2nc[i] + chi2cCoeff*chi2continuum[i];
+        Float64 post = lmCoeff*chi2lm[i] + chi2ncCoeff*chi2nc[i] + chi2cCoeff*chi2continuum[i];
 
         if( post < tmpMerit )
         {
             tmpMerit = post;
-            tmpRedshift = results->Redshifts[i];
+            tmpRedshift = znc[i];
         }
     }
     redshift = tmpRedshift;
@@ -424,7 +445,7 @@ Bool CDTreeBSolveResult::GetBestRedshiftChi2( const CDataStore& store, std::stri
 
 }
 
-TFloat64List CDTreeBSolveResult::GetBestRedshiftChi2List( const CDataStore& store, std::string scopeStr,  Float64& minmerit) const
+TFloat64List CDTreeBSolveResult::GetBestRedshiftChi2List( const CDataStore& store, std::string scopeStr,  Float64& minmerit, TFloat64List& zList) const
 {
 
     std::string scope = store.GetScope( this ) + "dtreeBsolve.chisquare2solve." + scopeStr.c_str();
@@ -438,6 +459,7 @@ TFloat64List CDTreeBSolveResult::GetBestRedshiftChi2List( const CDataStore& stor
         for( Int32 i=0; i<meritResult->ChiSquare.size(); i++ )
         {
             meritList.push_back(DBL_MAX);
+            zList.push_back(meritResult->Redshifts[i]);
         }
     }
 
