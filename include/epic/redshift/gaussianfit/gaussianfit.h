@@ -30,28 +30,28 @@ public:
         nStatus_FailToReachTolerance = (1 << 4)
     };
 
-    CGaussianFit( );
+    CGaussianFit();
     ~CGaussianFit();
 
     EStatus    Compute( const CSpectrum& s, const TInt32Range& studyRange );
 
     Void    GetResults( Float64& amplitude, Float64& position, Float64& width ) const;
-    Void    GetResultsPolyCoeff0( Float64& coeff0) const;
+    Void    GetResultsPolyCoeff0( Float64& coeff0 ) const;
     Void    GetResultsError( Float64& amplitude, Float64& position, Float64& width ) const;
 
 private:
 
 
-    static int GaussF (const gsl_vector *param, void *data, gsl_vector * f);
-    static int GaussDF (const gsl_vector * param, void *data, gsl_matrix * J);
-    static int GaussFDF (const gsl_vector * param, void *data, gsl_vector * f, gsl_matrix * J);
+    static int GaussF( const gsl_vector *param, void *data, gsl_vector *f );
+    static int GaussDF( const gsl_vector *param, void *data, gsl_matrix *J );
+    static int GaussFDF( const gsl_vector *param, void *data, gsl_vector *f, gsl_matrix *J );
 
     Void ComputeFirstGuess( const CSpectrum& spectrum, const TInt32Range& studyRange, Int32 polyOrder, Float64& peakValue, Float64& peakPos, Float64& gaussAmp );
 
     struct SUserData
     {
-        const CSpectrum*    spectrum;
-        const TInt32Range*  studyRange;
+        const CSpectrum     *spectrum;
+        const TInt32Range   *studyRange;
         Int32               polyOrder;
     };
 

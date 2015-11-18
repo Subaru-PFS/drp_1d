@@ -19,26 +19,32 @@ CExtremum::CExtremum( Bool invertForMinSearch ) :
     m_MaxPeakCount( 5 ),
     m_RefreshCount( 1 ),
     m_XRange( 0.0, 0.0 ),
-    m_SignSearch(1.0)
+    m_SignSearch( 1.0 )
 {
-    if(invertForMinSearch){
+    if( invertForMinSearch )
+      {
         SetSignSearch( -1.0 );
-    }else{
+      }
+    else
+      {
         SetSignSearch( 1.0 );
-    }
+      }
 }
 
-CExtremum::CExtremum(const TFloat64Range& xRange, UInt32 maxPeakCount, Bool invertForMinSearch, UInt32 refreshCount ) :
+CExtremum::CExtremum( const TFloat64Range& xRange, UInt32 maxPeakCount, Bool invertForMinSearch, UInt32 refreshCount ) :
     m_MaxPeakCount( maxPeakCount ),
     m_RefreshCount( refreshCount ),
     m_XRange( xRange ),
-    m_SignSearch(1.0)
+    m_SignSearch( 1.0 )
 {
-    if(invertForMinSearch){
+    if( invertForMinSearch )
+      {
         SetSignSearch( -1.0 );
-    }else{
+      }
+    else
+      {
         SetSignSearch( 1.0 );
-    }
+      }
 }
 
 CExtremum::~CExtremum()
@@ -87,19 +93,19 @@ Bool CExtremum::Find( const TFloat64List& xAxis, const TFloat64List& yAxis, TPoi
     	// Find index range for the given lambda range
         for( Int32 i=0; i<n; i++ )
         {
-            if( rangeXBeginIndex == -1 && xAxis[i] >= m_XRange.GetBegin() )
+            if( rangeXBeginIndex==-1 && xAxis[i]>=m_XRange.GetBegin() )
             {
                 rangeXBeginIndex = i;
             }
 
-            if( xAxis[i] <= m_XRange.GetEnd() )
+            if( xAxis[i]<=m_XRange.GetEnd() )
             {
                 rangeXEndIndex = i;
             }
         }
     }
 
-    return InternalFind( selectedXAxis + rangeXBeginIndex, selectedYAxis + rangeXBeginIndex, ( rangeXEndIndex - rangeXBeginIndex ) + 1, maxPoint );
+    return InternalFind( selectedXAxis+rangeXBeginIndex, selectedYAxis+rangeXBeginIndex, (rangeXEndIndex-rangeXBeginIndex)+1, maxPoint );
 }
 
 Bool CExtremum::InternalFind( const Float64* xAxis, const Float64* yAxis, UInt32 n, TPointList& maxPoint ) const
@@ -134,71 +140,73 @@ Bool CExtremum::InternalFind( const Float64* xAxis, const Float64* yAxis, UInt32
     vector<Float64> tmpX( n );
     vector<Float64> tmpY( n );
     Int32 tmpSize = n;
-    for( Int32 t=0;t<n;t++)
+    for( Int32 t=0; t<n; t++ )
     {
-        tmpX[t]=xAxis[t];
-        tmpY[t]=m_SignSearch*yAxis[t];
+        tmpX[t] = xAxis[t];
+        tmpY[t] = m_SignSearch*yAxis[t];
     }
 
 
-    for( Int32 count = 0; count < m_RefreshCount; count ++ )
+    for( Int32 count=0; count<m_RefreshCount; count++ )
     {
         Int32 maxCount = 0;
 
         // find first and last non Nan element
         Int32 firstNonNanInd = 0;
         for( Int32 iFirst=0; iFirst<tmpSize-1; iFirst++ )
-        {
-            if( !std::isnan( (double) tmpY[iFirst])){
+	  {
+            if( !std::isnan( (double) tmpY[iFirst] ) )
+	      {
                 firstNonNanInd = iFirst;
                 break;
-            }
-        }
+	      }
+	  }
         Int32 lastNonNanInd = tmpSize-1;
         for( Int32 iLast=tmpSize-1; iLast>0; iLast-- )
-        {
-            if( !std::isnan(tmpY[iLast])){
+	  {
+            if( !std::isnan( tmpY[iLast] ) )
+	      {
                 lastNonNanInd = iLast;
                 break;
-            }
-        }
+	      }
+	  }
 
         // First element
         if( tmpY[firstNonNanInd] > tmpY[firstNonNanInd+1] )
-        {
+	  {
             maxX[maxCount] = tmpX[firstNonNanInd];
             maxY[maxCount] = tmpY[firstNonNanInd];
             maxCount++;
-        }
+	  }
 
         for( Int32 i=firstNonNanInd+1; i<lastNonNanInd; i++ )
-        {
-            if( ( tmpY[i] > tmpY[i-1] ) && ( tmpY[i] > tmpY[i+1] ) )
-            {
+	  {
+            if( ( tmpY[i]>tmpY[i-1] ) && ( tmpY[i]>tmpY[i+1] ) )
+	      {
                 maxX[maxCount] = tmpX[i];
                 maxY[maxCount] = tmpY[i];
                 maxCount++;
-            }
-        }
+	      }
+	  }
 
         // last elements
-        if( tmpY[lastNonNanInd-1] < tmpY[lastNonNanInd] )
-        {
+        if( tmpY[lastNonNanInd-1]<tmpY[lastNonNanInd] )
+	  {
             maxX[maxCount] = tmpX[lastNonNanInd];
             maxY[maxCount] = tmpY[lastNonNanInd];
             maxCount++;
-        }
+	  }
 
         //tmpX = vector<Float64>( maxCount );
         //tmpY = vector<Float64>( maxCount );
 
         tmpSize = maxCount;
         // Prepare for next iteration by storing every maximum found in this iteration in the tmp array used as input for the next iteration
-        for( Int32 t=0;t<maxCount;t++)
-        {
+        for( Int32 t=0; t<maxCount; t++ )
+	  {
             tmpX[t]=maxX[t];
             tmpY[t]=maxY[t];
-        }
+	  }
 
         /*//debug:
         // save median and xmad,  flux data
@@ -211,17 +219,21 @@ Bool CExtremum::InternalFind( const Float64* xAxis, const Float64* yAxis, UInt32
         //*/
 
         if( maxCount == 0 )
+	  {
             break;
+	  }
 
         if( tmpSize <= PEAKS_SMOOTH_LIMIT )
+	  {
             break;
+	  }
     }
 
     Int32 nbPeaks = m_MaxPeakCount;
-    if( tmpSize < m_MaxPeakCount )
-    {
+    if( tmpSize<m_MaxPeakCount )
+      {
         nbPeaks = tmpSize;
-    }
+      }
 
     // Extract best results
     CQuickSort<Float64> sort;
@@ -233,13 +245,13 @@ Bool CExtremum::InternalFind( const Float64* xAxis, const Float64* yAxis, UInt32
     Int32 k = 0;
 
     for( Int32 i=0; i<nbPeaks; i++ )
-    {
-        Int32 j = sortedIndexes[ (sortedIndexes.size()-1) - i];
-        if( ! std::isnan( tmpY[j] ) )
-        {
-            maxPoint[ k++ ] = SPoint( tmpX[j], m_SignSearch*tmpY[j]);
-        }
-    }
+      {
+        Int32 j = sortedIndexes[(sortedIndexes.size()-1)-i];
+        if( !std::isnan( tmpY[j] ) )
+	  {
+            maxPoint[k++] = SPoint( tmpX[j], m_SignSearch*tmpY[j] );
+	  }
+      }
 
     return true;
 }
@@ -252,14 +264,14 @@ Bool CExtremum::InternalFind2( const Float64* xAxis, const Float64* yAxis, UInt3
     vector<Float64> tmpX( n );
     vector<Float64> tmpY( n );
     Int32 tmpSize = n;
-    for( Int32 t=0;t<n;t++)
-    {
-        if( ! std::isnan( yAxis[t] ) )
-        {
-            tmpX[t]=xAxis[t];
-            tmpY[t]=yAxis[t];
-        }
-    }
+    for( Int32 t=0; t<n; t++ )
+      {
+        if( !std::isnan( yAxis[t] ) )
+	  {
+            tmpX[t] = xAxis[t];
+            tmpY[t] = yAxis[t];
+	  }
+      }
 
     // Extract best results
     CQuickSort<Float64> sort;
@@ -271,11 +283,11 @@ Bool CExtremum::InternalFind2( const Float64* xAxis, const Float64* yAxis, UInt3
     Int32 k = 0;
 
     for( Int32 i=0; i<m_MaxPeakCount; i++ )
-    {
-        Int32 j = sortedIndexes[ (sortedIndexes.size()-1) - i];
+      {
+        Int32 j = sortedIndexes[(sortedIndexes.size()-1)-i];
 
-        maxPoint[ k++ ] = SPoint( tmpX[j], tmpY[j]);
-    }
+        maxPoint[k++] = SPoint( tmpX[j], tmpY[j] );
+      }
 
     return true;
 }

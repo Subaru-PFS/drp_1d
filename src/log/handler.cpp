@@ -7,7 +7,7 @@ using namespace NSEpic;
 CLogHandler::CLogHandler( CLog& logger )
 {
     m_Logger = &logger;
-    m_LevelMask = CLog::nLevel_All;
+    m_LevelMask = CLog::nLevel_Warning;
     m_Logger->AddHandler( *this );
 }
 
