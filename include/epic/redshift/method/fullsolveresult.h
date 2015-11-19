@@ -15,8 +15,6 @@ class CProcessFlowContext;
 class CFullSolveResult : public COperatorResult
 {
 
-    DEFINE_MANAGED_OBJECT( CFullSolveResult )
-
 public:
 
     CFullSolveResult();

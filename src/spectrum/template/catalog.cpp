@@ -14,7 +14,6 @@ using namespace NSEpic;
 using namespace std;
 using namespace boost::filesystem;
 
-IMPLEMENT_MANAGED_OBJECT( CTemplateCatalog )
 
 CTemplateCatalog::CTemplateCatalog()
 {
@@ -86,24 +85,25 @@ UInt32 CTemplateCatalog::GetTemplateCount( const std::string& category ) const
     return m_List.at(category).size();
 }
 
-Bool CTemplateCatalog::Add( CTemplate& r )
+
+Bool CTemplateCatalog::Add( std::shared_ptr<CTemplate> r )
 {
-    if( r.GetCategory().empty() )
+    if( r->GetCategory().empty() )
         return false;
 
-    m_List[r.GetCategory()].push_back( &r );
+    m_List[r->GetCategory()].push_back( r );
 
     // Compute continuum substracted spectrum
-    CRef<CTemplate> tmplWithoutCont = new CTemplate( r.GetName().c_str(), r.GetCategory() );
+    std::shared_ptr<CTemplate> tmplWithoutCont = std::shared_ptr<CTemplate>( new CTemplate( r->GetName().c_str(), r->GetCategory() ) );
 
-    *tmplWithoutCont = r;
+    *tmplWithoutCont = *r;
 
     CContinuumIrregularSamplingMedian continuum;
 
     tmplWithoutCont->RemoveContinuum( continuum );
     tmplWithoutCont->ConvertToLogScale();
 
-    m_ListWithoutCont[r.GetCategory()].push_back( tmplWithoutCont );
+    m_ListWithoutCont[r->GetCategory()].push_back( tmplWithoutCont );
 
     return true;
 }
@@ -116,7 +116,7 @@ Bool CTemplateCatalog::Add( const char* templatePath, const std::string& categor
     path p( templatePath );
     path name = p.leaf();
 
-    CRef<CTemplate> tmpl = new CTemplate( name.c_str(), category );
+    std::shared_ptr<CTemplate> tmpl = std::shared_ptr<CTemplate>( new CTemplate( name.c_str(), category ) );
 
     CSpectrumIOGenericReader asciiReader;
     if( !asciiReader.Read( templatePath, *tmpl ) ) {
@@ -124,7 +124,7 @@ Bool CTemplateCatalog::Add( const char* templatePath, const std::string& categor
         return false;
     }
 
-    Add( *tmpl );
+    Add( tmpl );
     return true;
 }
 

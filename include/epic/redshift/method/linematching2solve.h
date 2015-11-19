@@ -1,7 +1,6 @@
 #ifndef _REDSHIFT_OPERATOR_LINEMATCHINGSOLVE2_
 #define _REDSHIFT_OPERATOR_LINEMATCHINGSOLVE2_
 
-#include <epic/core/common/managedobject.h>
 #include <epic/core/common/datatypes.h>
 #include <epic/redshift/method/linematching2solveresult.h>
 #include <epic/redshift/spectrum/template/template.h>
@@ -13,17 +12,15 @@ class CSpectrum;
 class CTemplateCatalog;
 class CDataStore;
 
-class COperatorLineMatching2Solve : public CManagedObject
+class COperatorLineMatching2Solve
 {
-
-    DEFINE_MANAGED_OBJECT( COperatorLineMatching2Solve )
 
 public:
 
     COperatorLineMatching2Solve();
     ~COperatorLineMatching2Solve();
 
-    const CLineMatching2SolveResult* Compute( CDataStore& resultStore, const CSpectrum& spc,
+    std::shared_ptr<const CLineMatching2SolveResult> Compute( CDataStore& resultStore, const CSpectrum& spc,
                                         const TFloat64Range& lambdaRange, const TFloat64Range& redshiftsRange, Float64 redshiftStep, const CRayCatalog &restRayCatalog);
 
 

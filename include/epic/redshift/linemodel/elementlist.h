@@ -1,8 +1,6 @@
 #ifndef ELEMENTLIST_H
 #define ELEMENTLIST_H
 
-
-#include <epic/core/common/ref.h>
 #include <epic/core/common/range.h>
 #include <epic/redshift/common/datatypes.h>
 

@@ -1,7 +1,6 @@
 #ifndef _REDSHIFT_RAY_MATCHING_
 #define _REDSHIFT_RAY_MATCHING_
 
-#include <epic/core/common/managedobject.h>
 #include <epic/core/common/datatypes.h>
 #include <epic/core/common/range.h>
 
@@ -13,16 +12,15 @@
 namespace NSEpic
 {
 
-class CRayMatching : public CManagedObject
+class CRayMatching
 {
-    DEFINE_MANAGED_OBJECT( CRayMatching )
 
 public:
 
     CRayMatching();
     virtual ~CRayMatching();
 
-    CRayMatchingResult* Compute(const CRayCatalog& restRayCatalog, const CRayCatalog& detectedRayCatalog, const TFloat64Range& redshiftRange, Int32 nThreshold = 5, Float64 tol = 0.002, Int32 typeFilter = CRay::nType_Emission, Int32 detectedForceFilter = -1, Int32 restRorceFilter = -1);
+    std::shared_ptr<CRayMatchingResult> Compute(const CRayCatalog& restRayCatalog, const CRayCatalog& detectedRayCatalog, const TFloat64Range& redshiftRange, Int32 nThreshold = 5, Float64 tol = 0.002, Int32 typeFilter = CRay::nType_Emission, Int32 detectedForceFilter = -1, Int32 restRorceFilter = -1);
 
 
 private:

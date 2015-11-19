@@ -7,7 +7,6 @@
 using namespace NSEpic;
 using namespace std;
 
-IMPLEMENT_MANAGED_OBJECT( CNoiseFromFile )
 
 CNoiseFromFile::CNoiseFromFile()
 {

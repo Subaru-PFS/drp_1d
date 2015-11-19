@@ -11,8 +11,6 @@
 using namespace NSEpic;
 using namespace std;
 
-IMPLEMENT_MANAGED_OBJECT( CLineModelSolve )
-
 CLineModelSolve::CLineModelSolve()
 {
 
@@ -37,7 +35,7 @@ const std::string CLineModelSolve::GetDescription()
 
 }
 
-const CLineModelSolveResult* CLineModelSolve::Compute(  CDataStore& dataStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont, const CRayCatalog& restraycatalog,
+std::shared_ptr<const CLineModelSolveResult> CLineModelSolve::Compute(  CDataStore& dataStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont, const CRayCatalog& restraycatalog,
                                                         const TFloat64Range& lambdaRange, const TFloat64List& redshifts)
 {
     Bool storeResult = false;
@@ -49,8 +47,7 @@ const CLineModelSolveResult* CLineModelSolve::Compute(  CDataStore& dataStore, c
 
     if( storeResult )
     {
-        CLineModelSolveResult*  result = new CLineModelSolveResult();
-        return result;
+        return std::shared_ptr<const CLineModelSolveResult>( new CLineModelSolveResult() );
     }
 
     return NULL;
@@ -79,7 +76,7 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore, const CSpectrum& spc, const 
 
     // Compute merit function
     COperatorLineModel linemodel;
-    CRef<CLineModelResult>  result = (CLineModelResult*)linemodel.Compute( dataStore, _spc, _spcContinuum, restraycatalog, lambdaRange, redshifts, opt_extremacount, opt_lineWidthType, opt_continuumreest);
+    auto  result = linemodel.Compute( dataStore, _spc, _spcContinuum, restraycatalog, lambdaRange, redshifts, opt_extremacount, opt_lineWidthType, opt_continuumreest);
 
 //    static Float64 cutThres = 2.0;
 //    static Int32 bestSolutionIdx = 0;
@@ -108,7 +105,7 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore, const CSpectrum& spc, const 
         return false;
     }else{
         // Store results
-        dataStore.StoreScopedGlobalResult( scopeStr.c_str(), *result );
+        dataStore.StoreScopedGlobalResult( scopeStr.c_str(), result );
     }
 
     return true;

@@ -16,8 +16,6 @@ class CDataStore;
 class CDTreeASolveResult : public COperatorResult
 {
 
-    DEFINE_MANAGED_OBJECT( CDTreeASolveResult )
-
 public:
 
     CDTreeASolveResult();

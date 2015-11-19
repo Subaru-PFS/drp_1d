@@ -16,8 +16,6 @@ class CLogConsoleHandler : public CLogHandler
 
 public:
 
-    DEFINE_MANAGED_OBJECT( CLogConsoleHandler );
-
     CLogConsoleHandler( CLog& logger );
     ~CLogConsoleHandler();
 

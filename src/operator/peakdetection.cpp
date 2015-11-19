@@ -11,7 +11,6 @@
 #include <stdio.h>
 
 using namespace NSEpic;
-IMPLEMENT_MANAGED_OBJECT(CPeakDetection)
 
 CPeakDetection::CPeakDetection(Float64 windowSize, Float64 cut, UInt32 medianSmoothHalfWidth, UInt32 enlargeRate, Float64 detectionnoiseoffset)
 {
@@ -27,9 +26,9 @@ CPeakDetection::~CPeakDetection()
 
 }
 
-const CPeakDetectionResult* CPeakDetection::Compute( const CSpectrum& spectrum, const TLambdaRange& lambdaRange)
+std::shared_ptr<const CPeakDetectionResult> CPeakDetection::Compute( const CSpectrum& spectrum, const TLambdaRange& lambdaRange)
 {
-    CPeakDetectionResult* result = new CPeakDetectionResult();
+    auto result = std::shared_ptr<CPeakDetectionResult>( new CPeakDetectionResult() );
 
     const CSpectrumFluxAxis& fluxAxis = spectrum.GetFluxAxis();
     const CSpectrumSpectralAxis& spectralAxis = spectrum.GetSpectralAxis();

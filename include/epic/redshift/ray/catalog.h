@@ -2,7 +2,6 @@
 #define _REDSHIFT_RAY_CATALOG_
 
 #include <epic/core/common/datatypes.h>
-#include <epic/core/common/managedobject.h>
 #include <epic/redshift/ray/ray.h>
 
 #include <vector>
@@ -20,10 +19,8 @@ namespace NSEpic
  *        [Position in agstrum]   [Name of the line]                   [A/E]       [W/S]
  *        ex: 10320   [SII]                   E       W
  */
-class CRayCatalog : public CManagedObject
+class CRayCatalog
 {
-
-    DEFINE_MANAGED_OBJECT( CRayCatalog )
 
 public:
 
@@ -39,6 +36,7 @@ public:
     const TRayVector GetFilteredList(Int32 typeFilter = -1, Int32 forceFilter=-1) const;
     void Sort();
     void ConvertVacuumToAir();
+
 private:
 
     TRayVector m_List;

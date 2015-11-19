@@ -10,7 +10,6 @@
 using namespace NSEpic;
 using namespace std;
 
-IMPLEMENT_MANAGED_OBJECT( COperatorCorrelationSolve )
 
 COperatorCorrelationSolve::COperatorCorrelationSolve()
 {
@@ -22,7 +21,7 @@ COperatorCorrelationSolve::~COperatorCorrelationSolve()
 
 }
 
-const CCorrelationSolveResult* COperatorCorrelationSolve::Compute(  CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
+std::shared_ptr<const CCorrelationSolveResult>  COperatorCorrelationSolve::Compute(  CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
                                                         const CTemplateCatalog& tplCatalog, const TStringList& tplCategoryList,
                                                         const TFloat64Range& lambdaRange, const TFloat64Range& redshiftsRange, Float64 redshiftStep,
                                                         Float64 overlapThreshold )
@@ -49,8 +48,7 @@ const CCorrelationSolveResult* COperatorCorrelationSolve::Compute(  CDataStore& 
 
     if( storeResult )
     {
-        CCorrelationSolveResult*  solveResult = new CCorrelationSolveResult();
-        return solveResult;
+        return std::shared_ptr<CCorrelationSolveResult>( new CCorrelationSolveResult() );
     }
 
     return NULL;
@@ -72,7 +70,7 @@ Bool COperatorCorrelationSolve::Solve( CDataStore& resultStore, const CSpectrum&
 
     // Compute correlation factor at each of those redshifts
     COperatorCorrelation correlation;
-    CRef<CCorrelationResult> result = (CCorrelationResult*) correlation.Compute( spcWithoutCont, tplWithoutCont, lambdaRange, redshifts, overlapThreshold );
+    auto result = dynamic_pointer_cast<CCorrelationResult>( correlation.Compute( spcWithoutCont, tplWithoutCont, lambdaRange, redshifts, overlapThreshold ) );
 
     if( !result )
     {
@@ -108,7 +106,7 @@ Bool COperatorCorrelationSolve::Solve( CDataStore& resultStore, const CSpectrum&
         result->Extrema[i] = extremumList[i].X;
     }
 
-    resultStore.StoreScopedPerTemplateResult( tpl, "correlation", *result );
+    resultStore.StoreScopedPerTemplateResult( tpl, "correlation", result );
 
 
     return true;

@@ -34,8 +34,6 @@ using namespace NSEpic;
 using namespace std;
 
 
-IMPLEMENT_MANAGED_OBJECT(COperatorLineModel)
-
 COperatorLineModel::COperatorLineModel()
 {
     mSumLogErr=0.0;
@@ -46,7 +44,7 @@ COperatorLineModel::~COperatorLineModel()
 
 }
 
-const COperatorResult* COperatorLineModel::Compute( CDataStore &dataStore, const CSpectrum& spectrum, const CSpectrum& spectrumContinuum, const CRayCatalog& restraycatalog,
+std::shared_ptr<COperatorResult> COperatorLineModel::Compute( CDataStore &dataStore, const CSpectrum& spectrum, const CSpectrum& spectrumContinuum, const CRayCatalog& restraycatalog,
                           const TFloat64Range& lambdaRange, const TFloat64List& redshifts, const Int32 opt_extremacount, const std::string& opt_lineWidthType, const std::string& opt_continuumreest)
 {
 
@@ -63,7 +61,7 @@ const COperatorResult* COperatorLineModel::Compute( CDataStore &dataStore, const
     Int32 forceFilter = -1;//CRay::nForce_Strong;
     CRayCatalog::TRayVector restRayList = restraycatalog.GetFilteredList(typeFilter, forceFilter);
 
-    CLineModelResult* result = new CLineModelResult();
+    auto result = std::shared_ptr<CLineModelResult>( new CLineModelResult() );
     result->ChiSquare.resize( sortedRedshifts.size() );
     result->Redshifts.resize( sortedRedshifts.size() );
     result->Redshifts = sortedRedshifts;
@@ -191,10 +189,10 @@ const COperatorResult* COperatorLineModel::Compute( CDataStore &dataStore, const
         static Int32 maxModelSave = 5;
         if(savedModels<maxModelSave && isLocalExtrema[i]){
             //CRef<CModelSpectrumResult> resultspcmodel = new CModelSpectrumResult();
-            CModelSpectrumResult*  resultspcmodel = new CModelSpectrumResult(model.GetModelSpectrum());
+            std::shared_ptr<CModelSpectrumResult>  resultspcmodel = std::shared_ptr<CModelSpectrumResult>( new CModelSpectrumResult(model.GetModelSpectrum()) );
             // Store results
             std::string fname = (boost::format("linemodel_spc_extrema_%1%") % savedModels).str();
-            dataStore.StoreScopedGlobalResult( fname.c_str(), *resultspcmodel );
+            dataStore.StoreScopedGlobalResult( fname.c_str(), resultspcmodel );
             savedModels++;
         }
 
@@ -218,7 +216,7 @@ const COperatorResult* COperatorLineModel::Compute( CDataStore &dataStore, const
         //result->bic[i] = aic + (2*nddl*(nddl+1) )/(nsamples-nddl-1);  //AICc, better when nsamples small
     }
 
-    ComputeArea2(result);
+    ComputeArea2(*result);
 
 
     if(result->Extrema.size()>0){
@@ -252,25 +250,25 @@ const COperatorResult* COperatorLineModel::Compute( CDataStore &dataStore, const
 
 }
 
-void COperatorLineModel::ComputeArea1(CLineModelResult* results)
+void COperatorLineModel::ComputeArea1(CLineModelResult& results)
 {
     //prepare p
     Float64 maxp = DBL_MIN;
     CSpectrum pspc;
     CSpectrumFluxAxis& spcFluxAxis = pspc.GetFluxAxis();
-    spcFluxAxis.SetSize( results->Redshifts.size() );
+    spcFluxAxis.SetSize( results.Redshifts.size() );
     CSpectrumSpectralAxis& spcSpectralAxis = pspc.GetSpectralAxis();
-    spcSpectralAxis.SetSize( results->Redshifts.size()  );
-    for( Int32 i2=0; i2<results->Redshifts.size(); i2++ )
+    spcSpectralAxis.SetSize( results.Redshifts.size()  );
+    for( Int32 i2=0; i2<results.Redshifts.size(); i2++ )
     {
-        if( maxp < results->ChiSquare[i2]){
-            maxp = results->ChiSquare[i2];
+        if( maxp < results.ChiSquare[i2]){
+            maxp = results.ChiSquare[i2];
         }
     }
-    for( Int32 i2=0; i2<results->Redshifts.size(); i2++ )
+    for( Int32 i2=0; i2<results.Redshifts.size(); i2++ )
     {
-        spcFluxAxis[i2] = exp(-(results->ChiSquare[i2]-maxp)/2.0)-1.0;
-        spcSpectralAxis[i2] = results->Redshifts[i2];
+        spcFluxAxis[i2] = exp(-(results.ChiSquare[i2]-maxp)/2.0)-1.0;
+        spcSpectralAxis[i2] = results.Redshifts[i2];
     }
 
     /*//debug:
@@ -290,30 +288,30 @@ void COperatorLineModel::ComputeArea1(CLineModelResult* results)
     Float64 winsize = 0.0025;
     Float64 inclusionThresRatio = 0.25;
     Int32 iz0=0;
-    for( Int32 i=0; i<results->Extrema.size(); i++ )
+    for( Int32 i=0; i<results.Extrema.size(); i++ )
     {
         //find iz, izmin and izmax
         Int32 izmin= -1;
         Int32 iz= -1;
         Int32 izmax= -1;
-        for( Int32 i2=0; i2<results->Redshifts.size(); i2++ )
+        for( Int32 i2=0; i2<results.Redshifts.size(); i2++ )
         {
-            if(iz == -1 && (results->Extrema[i]) <= results->Redshifts[i2]){
+            if(iz == -1 && (results.Extrema[i]) <= results.Redshifts[i2]){
                 iz = i2;
                 if(i==0){
                     iz0=iz;
                 }
             }
-            if(izmin == -1 && (results->Extrema[i] - winsize/2.0) <= results->Redshifts[i2]){
+            if(izmin == -1 && (results.Extrema[i] - winsize/2.0) <= results.Redshifts[i2]){
                 izmin = i2;
             }
-            if(izmax == -1 && (results->Extrema[i] + winsize/2.0) <= results->Redshifts[i2]){
+            if(izmax == -1 && (results.Extrema[i] + winsize/2.0) <= results.Redshifts[i2]){
                 izmax = i2;
                 break;
             }
         }
-        Float64 di = abs(results->ChiSquare[iz]-maxp) ;
-        Float64 d0 = abs(results->ChiSquare[iz0]-maxp) ;
+        Float64 di = abs(results.ChiSquare[iz]-maxp) ;
+        Float64 d0 = abs(results.ChiSquare[iz0]-maxp) ;
         if( di < inclusionThresRatio*d0){
             continue;
         }
@@ -334,7 +332,7 @@ void COperatorLineModel::ComputeArea1(CLineModelResult* results)
         Float64 gaussWidthErr;
         fitter.GetResultsError( gaussAmpErr, gaussPosErr, gaussWidthErr );
         */
-        Float64 gaussWidth = FitBayesWidth( spcSpectralAxis, spcFluxAxis, results->Extrema[i], izmin, izmax);
+        Float64 gaussWidth = FitBayesWidth( spcSpectralAxis, spcFluxAxis, results.Extrema[i], izmin, izmax);
         Float64 gaussAmp = spcFluxAxis[iz];
 
         Float64 intsize = 0.001;
@@ -342,12 +340,12 @@ void COperatorLineModel::ComputeArea1(CLineModelResult* results)
         for( Int32 i2=izmin; i2<izmax; i2++ )
         {
             Float64 x = spcSpectralAxis[i2];
-            Float64 Yi = gaussAmp * exp (-1.*(x-results->Extrema[i])*(x-results->Extrema[i])/(2*gaussWidth*gaussWidth));
+            Float64 Yi = gaussAmp * exp (-1.*(x-results.Extrema[i])*(x-results.Extrema[i])/(2*gaussWidth*gaussWidth));
             area += Yi;
         }
 
         //Float64 area = gaussAmp*gaussWidth*sqrt(2.0*3.141592654);
-        results->LogArea[i] = area;
+        results.LogArea[i] = area;
     }
 }
 
@@ -355,42 +353,42 @@ void COperatorLineModel::ComputeArea1(CLineModelResult* results)
 /// \brief COperatorLineModel::ComputeArea2
 /// computes the Laplace approx for a given Chi2 result around the N best extrema
 ///
-void COperatorLineModel::ComputeArea2(CLineModelResult* results)
+void COperatorLineModel::ComputeArea2(CLineModelResult& results)
 {
     Float64 maxp = DBL_MIN;
-    for( Int32 i2=0; i2<results->Redshifts.size(); i2++ )
+    for( Int32 i2=0; i2<results.Redshifts.size(); i2++ )
     {
-        if( maxp < results->ChiSquare[i2]){
-            maxp = results->ChiSquare[i2];
+        if( maxp < results.ChiSquare[i2]){
+            maxp = results.ChiSquare[i2];
         }
     }
     Float64 winsize = 0.001;
     Float64 inclusionThresRatio = 0.01;
     Int32 iz0=0;
-    for( Int32 indz=0; indz<results->Extrema.size(); indz++ )
+    for( Int32 indz=0; indz<results.Extrema.size(); indz++ )
     {
         //find iz, izmin and izmax
         Int32 izmin= -1;
         Int32 iz= -1;
         Int32 izmax= -1;
-        for( Int32 i2=0; i2<results->Redshifts.size(); i2++ )
+        for( Int32 i2=0; i2<results.Redshifts.size(); i2++ )
         {
-            if(iz == -1 && (results->Extrema[indz]) <= results->Redshifts[i2]){
+            if(iz == -1 && (results.Extrema[indz]) <= results.Redshifts[i2]){
                 iz = i2;
                 if(indz==0){
                     iz0=iz;
                 }
             }
-            if(izmin == -1 && (results->Extrema[indz] - winsize/2.0) <= results->Redshifts[i2]){
+            if(izmin == -1 && (results.Extrema[indz] - winsize/2.0) <= results.Redshifts[i2]){
                 izmin = i2;
             }
-            if(izmax == -1 && (results->Extrema[indz] + winsize/2.0) <= results->Redshifts[i2]){
+            if(izmax == -1 && (results.Extrema[indz] + winsize/2.0) <= results.Redshifts[i2]){
                 izmax = i2;
                 break;
             }
         }
-        Float64 di = abs(results->ChiSquare[iz]-maxp) ;
-        Float64 d0 = abs(results->ChiSquare[iz0]-maxp) ;
+        Float64 di = abs(results.ChiSquare[iz]-maxp) ;
+        Float64 d0 = abs(results.ChiSquare[iz0]-maxp) ;
         if( di < inclusionThresRatio*d0){
             continue;
         }
@@ -413,11 +411,11 @@ void COperatorLineModel::ComputeArea2(CLineModelResult* results)
         c = gsl_vector_alloc (3);
         cov = gsl_matrix_alloc (3, 3);
 
-        double x0 = results->Extrema[indz];
+        double x0 = results.Extrema[indz];
         for (i = 0; i < n; i++)
         {
-            xi = results->Redshifts[i+izmin];
-            yi = results->ChiSquare[i+izmin];
+            xi = results.Redshifts[i+izmin];
+            yi = results.ChiSquare[i+izmin];
             ei = 1.0; //todo, estimate weighting ?
             gsl_matrix_set (X, i, 0, 1.0);
             gsl_matrix_set (X, i, 1, xi-x0);
@@ -443,7 +441,7 @@ void COperatorLineModel::ComputeArea2(CLineModelResult* results)
         Float64 logK = ( -(a - b2sur4c)/2.0 );
         Float64 logarea = log(sigma) + logK + log(2.0*M_PI);
         if(0){
-            Log.LogInfo("Extrema: %g", results->Extrema[indz]);
+            Log.LogInfo("Extrema: %g", results.Extrema[indz]);
             Log.LogInfo("# best fit: Y = %g + %g X + %g X^2", C(0), C(1), C(2));
             //Log.LogInfo("# covariance matrix:\n");
             //Log.LogInfo("[ %+.5e, %+.5e, %+.5e  \n", COV(0,0), COV(0,1), COV(0,2));
@@ -462,9 +460,9 @@ void COperatorLineModel::ComputeArea2(CLineModelResult* results)
         gsl_vector_free (c);
         gsl_matrix_free (cov);
 
-        results->LogArea[indz] = logarea;
-        results->SigmaZ[indz] = sigma;
-        results->LogAreaCorrectedExtrema[indz] = zcorr;
+        results.LogArea[indz] = logarea;
+        results.SigmaZ[indz] = sigma;
+        results.LogAreaCorrectedExtrema[indz] = zcorr;
     }
 }
 

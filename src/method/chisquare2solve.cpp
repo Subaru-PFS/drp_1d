@@ -1,5 +1,3 @@
-
-
 #include <epic/redshift/method/chisquare2solve.h>
 
 #include <epic/core/debug/assert.h>
@@ -15,8 +13,6 @@
 
 using namespace NSEpic;
 using namespace std;
-
-IMPLEMENT_MANAGED_OBJECT( CMethodChisquare2Solve )
 
 CMethodChisquare2Solve::CMethodChisquare2Solve()
 {
@@ -42,7 +38,7 @@ const std::string CMethodChisquare2Solve::GetDescription()
 }
 
 
-const CChisquare2SolveResult* CMethodChisquare2Solve::Compute(  CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
+std::shared_ptr<const CChisquare2SolveResult> CMethodChisquare2Solve::Compute(  CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
                                                         const CTemplateCatalog& tplCatalog, const TStringList& tplCategoryList,
                                                         const TFloat64Range& lambdaRange, const TFloat64List& redshifts, Float64 overlapThreshold, std::string spcComponent)
 {
@@ -95,7 +91,7 @@ const CChisquare2SolveResult* CMethodChisquare2Solve::Compute(  CDataStore& resu
 
     if( storeResult )
     {
-        CChisquare2SolveResult*  ChisquareSolveResult = new CChisquare2SolveResult();
+        std::shared_ptr< CChisquare2SolveResult>  ChisquareSolveResult = std::shared_ptr< CChisquare2SolveResult>( new CChisquare2SolveResult() );
         ChisquareSolveResult->m_type = _type;
         return ChisquareSolveResult;
     }
@@ -161,7 +157,7 @@ Bool CMethodChisquare2Solve::Solve( CDataStore& resultStore, const CSpectrum& sp
         // Compute merit function
         COperatorChiSquare2 chiSquare;
         //CRef<CChisquareResult>  chisquareResult = (CChisquareResult*)chiSquare.ExportChi2versusAZ( _spc, _tpl, lambdaRange, redshifts, overlapThreshold );
-        CRef<CChisquareResult>  chisquareResult = (CChisquareResult*)chiSquare.Compute( _spc, _tpl, lambdaRange, redshifts, overlapThreshold );
+        auto  chisquareResult = std::dynamic_pointer_cast<CChisquareResult>( chiSquare.Compute( _spc, _tpl, lambdaRange, redshifts, overlapThreshold ) );
 
         if( !chisquareResult )
         {
@@ -169,7 +165,7 @@ Bool CMethodChisquare2Solve::Solve( CDataStore& resultStore, const CSpectrum& sp
             return false;
         }else{
             // Store results
-            resultStore.StoreScopedPerTemplateResult( tpl, scopeStr.c_str(), *chisquareResult );
+            resultStore.StoreScopedPerTemplateResult( tpl, scopeStr.c_str(), chisquareResult );
         }
     }
 

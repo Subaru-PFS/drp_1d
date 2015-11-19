@@ -7,8 +7,6 @@
 
 using namespace NSEpic;
 
-IMPLEMENT_MANAGED_OBJECT( CCorrelationResult )
-
 CCorrelationResult::CCorrelationResult()
 {
 

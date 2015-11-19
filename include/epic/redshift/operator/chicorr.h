@@ -16,9 +16,8 @@ class CTemplate;
 class CCorrelationResult;
 class CChisquareResult;
 
-class COperatorChicorr : public CManagedObject
+class COperatorChicorr
 {
-    DEFINE_MANAGED_OBJECT( COperatorChicorr )
 
 public:
 

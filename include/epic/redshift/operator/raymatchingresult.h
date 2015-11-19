@@ -15,8 +15,6 @@ namespace NSEpic
 class CRayMatchingResult : public COperatorResult
 {
 
-    DEFINE_MANAGED_OBJECT( CRayMatchingResult )
-
 public:
 
     struct SSolution

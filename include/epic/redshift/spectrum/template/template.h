@@ -2,8 +2,6 @@
 #define _REDSHIFT_SPECTRUM_TEMPLATE_TEMPLATE_
 
 #include <epic/core/common/datatypes.h>
-#include <epic/core/common/ref.h>
-#include <epic/core/common/constref.h>
 #include <epic/redshift/spectrum/spectrum.h>
 
 #include <string>
@@ -30,8 +28,8 @@ private:
     std::string     m_Name;
 };
 
-typedef std::vector< CRef<CTemplate> >          TTemplateRefList;
-typedef std::vector< CConstRef<CTemplate> >     TTemplateConstRefList;
+typedef std::vector< std::shared_ptr<CTemplate> >          TTemplateRefList;
+typedef std::vector< std::shared_ptr< const CTemplate> >     TTemplateConstRefList;
 
 typedef std::map< std::string, TTemplateRefList >          TTemplatesRefDict;
 typedef std::map< std::string, TTemplateConstRefList >     TTemplatesConstRefDict;

@@ -11,7 +11,6 @@
 using namespace NSEpic;
 using namespace std;
 
-IMPLEMENT_MANAGED_OBJECT( COperatorFullSolve )
 
 COperatorFullSolve::COperatorFullSolve()
 {
@@ -23,7 +22,7 @@ COperatorFullSolve::~COperatorFullSolve()
 
 }
 
-const CFullSolveResult* COperatorFullSolve::Compute(  CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
+std::shared_ptr<const CFullSolveResult> COperatorFullSolve::Compute(  CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
                                                         const CTemplateCatalog& tplCatalog, const TStringList& tplCategoryList,
                                                         const TFloat64Range& lambdaRange, const TFloat64Range& redshiftsRange, Float64 redshiftStep, Float64 overlapThreshold )
 {
@@ -49,8 +48,7 @@ const CFullSolveResult* COperatorFullSolve::Compute(  CDataStore& resultStore, c
 
     if( storeResult )
     {
-        CFullSolveResult*  fullSolveResult = new CFullSolveResult();
-        return fullSolveResult;
+        return std::shared_ptr<const CFullSolveResult>( new CFullSolveResult() );
     }
 
     return NULL;
@@ -75,7 +73,7 @@ Bool COperatorFullSolve::SolveBrute( CDataStore& resultStore, const CSpectrum& s
 
     // Compute correlation factor at each of those redshifts
     COperatorCorrelation correlation;
-    CRef<CCorrelationResult> correlationResult = (CCorrelationResult*) correlation.Compute( spcWithoutCont, tplWithoutCont, lambdaRange, redshifts, overlapThreshold );
+    auto correlationResult = correlation.Compute( spcWithoutCont, tplWithoutCont, lambdaRange, redshifts, overlapThreshold );
 
     if( !correlationResult )
     {
@@ -83,18 +81,18 @@ Bool COperatorFullSolve::SolveBrute( CDataStore& resultStore, const CSpectrum& s
         return false;
     }else{
         // Store results
-        resultStore.StoreScopedPerTemplateResult( tpl, "correlation", *correlationResult );
+        resultStore.StoreScopedPerTemplateResult( tpl, "correlation", correlationResult );
     }
 
     COperatorChiSquare meritChiSquare;
-    CRef<CChisquareResult> chisquareResult = (CChisquareResult*)meritChiSquare.Compute( spc, tpl, lambdaRange, redshifts, overlapThreshold );
+    auto chisquareResult =meritChiSquare.Compute( spc, tpl, lambdaRange, redshifts, overlapThreshold );
     if( !chisquareResult )
     {
         //Log.LogInfo( "Failed to compute chi square value");
         return false;
     }else{
         // Store results
-        resultStore.StoreScopedPerTemplateResult( tpl, "chisquare", *chisquareResult );
+        resultStore.StoreScopedPerTemplateResult( tpl, "chisquare", chisquareResult );
     }
 
 

@@ -12,7 +12,6 @@
 using namespace NSEpic;
 using namespace std;
 
-IMPLEMENT_MANAGED_OBJECT( CMethodChisquareSolve )
 
 CMethodChisquareSolve::CMethodChisquareSolve()
 {
@@ -25,7 +24,7 @@ CMethodChisquareSolve::~CMethodChisquareSolve()
 }
 
 
-const CChisquareSolveResult* CMethodChisquareSolve::Compute(  CDataStore& dataStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
+std::shared_ptr<const CChisquareSolveResult>  CMethodChisquareSolve::Compute(  CDataStore& dataStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
                                                         const CTemplateCatalog& tplCatalog, const TStringList& tplCategoryList,
                                                         const TFloat64Range& lambdaRange, const TFloat64List& redshifts, Float64 overlapThreshold )
 {
@@ -51,8 +50,7 @@ const CChisquareSolveResult* CMethodChisquareSolve::Compute(  CDataStore& dataSt
 
     if( storeResult )
     {
-        CChisquareSolveResult*  ChisquareSolveResult = new CChisquareSolveResult();
-        return ChisquareSolveResult;
+        return std::shared_ptr<CChisquareSolveResult>( new CChisquareSolveResult() );
     }
 
     return NULL;
@@ -89,14 +87,14 @@ Bool CMethodChisquareSolve::Solve( CDataStore& dataStore, const CSpectrum& spc, 
 
     // Compute merit function
     COperatorChiSquare2 chiSquare;
-    CRef<CChisquareResult>  chisquareResult = (CChisquareResult*)chiSquare.Compute( _spc, _tpl, lambdaRange, redshifts, overlapThreshold );
+    auto  chisquareResult = chiSquare.Compute( _spc, _tpl, lambdaRange, redshifts, overlapThreshold );
     if( !chisquareResult )
     {
         //Log.LogInfo( "Failed to compute chi square value");
         return false;
     }else{
         // Store results
-        dataStore.StoreScopedPerTemplateResult( tpl, "chisquare", *chisquareResult );
+        dataStore.StoreScopedPerTemplateResult( tpl, "chisquare", chisquareResult );
     }
 
     return true;

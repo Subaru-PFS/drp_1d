@@ -11,8 +11,6 @@ class CSpectrumFluxAxis;
 class CContinuumMedian : public CContinuum
 {
 
-    DEFINE_MANAGED_OBJECT( CContinuumMedian )
-
 public:
 
     CContinuumMedian();

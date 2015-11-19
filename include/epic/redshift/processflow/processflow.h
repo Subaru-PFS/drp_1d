@@ -1,14 +1,13 @@
 #ifndef _REDSHIFT_PROCESSFLOW_PROCESSFLOW_
 #define _REDSHIFT_PROCESSFLOW_PROCESSFLOW_
 
-#include <epic/core/common/ref.h>
 #include <epic/core/common/datatypes.h>
 #include <epic/core/common/range.h>
-#include <epic/core/common/managedobject.h>
 #include <epic/redshift/processflow/processflow.h>
 
 #include <epic/redshift/spectrum/template/template.h>
 #include <epic/redshift/spectrum/template/catalog.h>
+
 namespace NSEpic
 {
 
@@ -16,10 +15,8 @@ class CProcessFlowContext;
 class CTemplate;
 class CSpectrum;
 
-class CProcessFlow : public CManagedObject
+class CProcessFlow
 {
-
-    DEFINE_MANAGED_OBJECT( CProcessFlow )
 
 public:
 

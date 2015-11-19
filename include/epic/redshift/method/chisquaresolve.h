@@ -1,8 +1,6 @@
 #ifndef _REDSHIFT_METHOD_CHISQUARESOLVE_
 #define _REDSHIFT_METHOD_CHISQUARESOLVE_
 
-
-#include <epic/core/common/managedobject.h>
 #include <epic/core/common/datatypes.h>
 #include <epic/redshift/method/chisquaresolveresult.h>
 #include <epic/redshift/spectrum/template/template.h>
@@ -14,12 +12,10 @@ class CSpectrum;
 class CTemplateCatalog;
 class CDataStore;
 
-class CMethodChisquareSolve : public CManagedObject
+class CMethodChisquareSolve
 {
 
-    DEFINE_MANAGED_OBJECT( CMethodChisquareSolve )
-
-    public:
+ public:
 
     enum EType
     {
@@ -30,7 +26,7 @@ class CMethodChisquareSolve : public CManagedObject
 
     CMethodChisquareSolve();
     ~CMethodChisquareSolve();
-    const CChisquareSolveResult *Compute( CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
+    std::shared_ptr<const CChisquareSolveResult> Compute( CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
                                         const CTemplateCatalog& tplCatalog, const TStringList& tplCategoryList,
                                         const TFloat64Range& lambdaRange, const TFloat64List& redshifts, Float64 overlapThreshold  );
 

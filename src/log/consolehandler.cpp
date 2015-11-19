@@ -4,7 +4,6 @@
 
 using namespace NSEpic;
 
-IMPLEMENT_MANAGED_OBJECT_NOT_INSTANCIABLE( CLogConsoleHandler );
 
 CLogConsoleHandler::CLogConsoleHandler( CLog& logger ) :
     CLogHandler( logger )
