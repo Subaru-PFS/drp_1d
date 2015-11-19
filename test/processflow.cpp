@@ -7,19 +7,23 @@
 #include <epic/redshift/processflow/parameterstore.h>
 #include <epic/redshift/processflow/context.h>
 
+#include <boost/property_tree/ptree.hpp>
+
 using namespace NSEpic;
 
 using namespace NSEpicTest;
 
 void CRedshiftProcessFlowTestCase::setUp()
 {
+
 }
 
 void CRedshiftProcessFlowTestCase::tearDown()
 {
+
 }
 
-void CRedshiftProcessFlowTestCase::ProcessShifted1 ()
+void CRedshiftProcessFlowTestCase::ProcessShifted1()
 {
     CProcessFlowContext ctx;
     CProcessFlow processFlow;
@@ -47,7 +51,6 @@ void CRedshiftProcessFlowTestCase::ProcessShifted1 ()
     blindSolveResult->GetBestFitResult( ctx.GetDataStore(), redshift, merit, tplName );
 
     CPPUNIT_ASSERT_DOUBLES_EQUAL( 2.0295, redshift, 0.0001 );
-
 }
 
 void CRedshiftProcessFlowTestCase::ProcessShifted2()

@@ -39,7 +39,6 @@ CProcessFlowContext::~CProcessFlowContext()
 
 }
 
-
 bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath,
                                 std::shared_ptr<const CTemplateCatalog> templateCatalog,
                                 std::shared_ptr<const CRayCatalog> rayCatalog,
@@ -145,19 +144,23 @@ bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath,
 
     Bool rValue;
 
+
     // Load template catalog
     if( templateCatalogPath )
     {
-        rValue = templateCatalog->Load( templateCatalogPath );
-        if( !rValue )
+      Log.LogDebug ( "templateCatalogPath exists." );
+      rValue = templateCatalog->Load( templateCatalogPath );
+      if( !rValue )
         {
-            Log.LogError("Failed to load template catalog: (%s)", templateCatalogPath );
-            m_TemplateCatalog = NULL;
-            return false;
+	  Log.LogError( "Failed to load template catalog from path: (%s)", templateCatalogPath );
+	  m_TemplateCatalog = NULL;
+	  return false;
         }
+      Log.LogDebug ( "Template catalog loaded." );
     }
 
     // Load line catalog
+    //std::cout << "ctx" << std::endl;
     if( rayCatalogPath )
     {
         rValue = rayCatalog->Load( rayCatalogPath );
@@ -170,6 +173,7 @@ bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath,
     }
 
     return Init( spectrumPath, noisePath, templateCatalog, rayCatalog, paramStore );
+
 }
 
 CParameterStore& CProcessFlowContext::GetParameterStore()

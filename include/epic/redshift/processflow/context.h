@@ -22,8 +22,8 @@ class COperatorResultStore;
 class CDataStore;
 
 /**
- * Store all data concerning computation and processign of a given spectrum
- *
+ * \ingroup Redshift
+ * Store all data concerning computation and processign of a given spectrum.
  */
 class CProcessFlowContext
 {
