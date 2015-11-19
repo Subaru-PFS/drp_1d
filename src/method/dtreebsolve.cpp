@@ -52,6 +52,7 @@ const std::string COperatorDTreeBSolve::GetDescription()
 
     desc = "Method DecisionalTreeB:\n";
 
+    desc.append("\tparam: linemodel.continuumcomponent = {""fromspectrum"", ""nocontinuum"", ""zero""}\n");
     desc.append("\tparam: linemodel.linewidthtype = {""psfinstrumentdriven"", ""zdriven"", ""fixed""}\n");
     desc.append("\tparam: linemodel.continuumreestimation = {""no"", ""onlyextrema"", ""always""}\n");
     desc.append("\tparam: linemodel.extremacount = <float value>\n");
@@ -90,17 +91,20 @@ Bool COperatorDTreeBSolve::Solve(CDataStore &dataStore, const CSpectrum &spc, co
     CSpectrumFluxAxis& sfluxAxisPtr = _spcContinuum.GetFluxAxis();
     sfluxAxisPtr = spcfluxAxis;
 
+    std::string opt_continuumcomponent;
+    //dataStore.GetScopedParam( "linemodel.continuumcomponent", opt_continuumcomponent, "nocontinuum" );
+    dataStore.GetScopedParam( "linemodel.continuumcomponent", opt_continuumcomponent, "fromspectrum" );
     std::string opt_lineWidthType;
     dataStore.GetScopedParam( "linemodel.linewidthtype", opt_lineWidthType, "psfinstrumentdriven" );
     std::string opt_continuumreest;
     dataStore.GetScopedParam( "linemodel.continuumreestimation", opt_continuumreest, "no" );
     Float64 opt_extremacount;
-    dataStore.GetScopedParam( "linemodel.extremacount", opt_extremacount, 20.0 );
+    dataStore.GetScopedParam( "linemodel.extremacount", opt_extremacount, 10.0 );
 
 
     // Compute merit function
     COperatorLineModel linemodel;
-    auto result = dynamic_pointer_cast<CLineModelResult>( linemodel.Compute(dataStore, spc, _spcContinuum, restRayCatalog, lambdaRange, redshifts, opt_extremacount, opt_lineWidthType, opt_continuumreest) );
+    auto result = dynamic_pointer_cast<CLineModelResult>(linemodel.Compute(dataStore, spc, _spcContinuum, restRayCatalog, lambdaRange, redshifts, opt_extremacount, opt_continuumcomponent, opt_lineWidthType, opt_continuumreest) );
 
     /*
     static Float64 cutThres = 2.0;
@@ -146,17 +150,17 @@ Bool COperatorDTreeBSolve::Solve(CDataStore &dataStore, const CSpectrum &spc, co
     Float64 overlapThreshold;
     dataStore.GetScopedParam( "chisquare.overlapthreshold", overlapThreshold, 1.0 );
     // Compute merit function
-    TFloat64List extremumRedshifts( result->Extrema.size() );
-    for( Int32 i=0; i<result->Extrema.size(); i++ )
-    {
-        extremumRedshifts[i] = result->Extrema[i];
-    }
+//    TFloat64List extremumRedshifts( result->Extrema.size() );
+//    for( Int32 i=0; i<result->Extrema.size(); i++ )
+//    {
+//        extremumRedshifts[i] = result->Extrema[i];
+//    }
 
     std::string spcComponent = "all";
     CMethodChisquare2Solve chiSolve;
     auto chisolveResult = chiSolve.Compute( dataStore, spc, spcWithoutCont,
                                                                         tplCatalog, tplCategoryList,
-                                                                        lambdaRange, extremumRedshifts, overlapThreshold, spcComponent);
+                                                                        lambdaRange, redshifts, overlapThreshold, spcComponent);
     if( chisolveResult ) {
         dataStore.StoreScopedGlobalResult( "redshiftresult", chisolveResult );
     }

@@ -44,8 +44,12 @@ COperatorLineModel::~COperatorLineModel()
 
 }
 
-std::shared_ptr<COperatorResult> COperatorLineModel::Compute( CDataStore &dataStore, const CSpectrum& spectrum, const CSpectrum& spectrumContinuum, const CRayCatalog& restraycatalog,
-                          const TFloat64Range& lambdaRange, const TFloat64List& redshifts, const Int32 opt_extremacount, const std::string& opt_lineWidthType, const std::string& opt_continuumreest)
+std::shared_ptr<COperatorResult> COperatorLineModel::Compute(
+                                CDataStore &dataStore, const CSpectrum& spectrum, const CSpectrum &spectrumContinuum, const CRayCatalog& restraycatalog,
+                                const TFloat64Range& lambdaRange, const TFloat64List& redshifts , const Int32 opt_extremacount,
+                                const std::string &opt_continuumcomponent, const std::string& opt_lineWidthType, const std::string &opt_continuumreest)
+
+
 {
 
     if( spectrum.GetSpectralAxis().IsInLinearScale() == false)
@@ -70,7 +74,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute( CDataStore &dataSt
     result->LineModelSolutions.resize( sortedRedshifts.size() );
 
 
-    CLineModelElementList model(spectrum, spectrumContinuum, restRayList, opt_lineWidthType);
+    CLineModelElementList model(spectrum, spectrumContinuum, restRayList, opt_continuumcomponent, opt_lineWidthType);
     //model.LoadContinuum(); //in order to use a fit with continuum
     result->nSpcSamples = model.getSpcNSamples(lambdaRange);
 
@@ -82,9 +86,10 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute( CDataStore &dataSt
     }else{
         contreest_iterations  = 0;
     }
+
     for (Int32 i=0;i<sortedRedshifts.size();i++)
     {
-        ModelFit( spectrum, model, result->restRayList, lambdaRange, result->Redshifts[i], result->ChiSquare[i], result->LineModelSolutions[i], contreest_iterations);
+        ModelFit( model, lambdaRange, result->Redshifts[i], result->ChiSquare[i], result->LineModelSolutions[i], contreest_iterations);
     }
 
     // extrema
@@ -94,7 +99,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute( CDataStore &dataSt
     CExtremum extremum( redshiftsRange, extremumCount, true, 2);
     extremum.Find( result->Redshifts, result->ChiSquare, extremumList );
 
-    /*
+    //*
     // Refine Extremum with a second maximum search around the z candidates:
     // This corresponds to the finer xcorrelation in EZ Pandora (in standard_DP fctn in SolveKernel.py)
     Float64 radius = 0.001;
@@ -114,6 +119,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute( CDataStore &dataSt
     }
     //*/
 
+    /*
     // extend z around the extrema
     Float64 extensionradius = 0.01;
     TPointList extremumListExtended;
@@ -139,13 +145,14 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute( CDataStore &dataSt
             }
         }
     }
-    //extremumListExtended = extremumList;
+    //*/
+    //TPointList extremumListExtended = extremumList;
    //todo: remove duplicate redshifts from the extended extrema list
 
+
     // store extrema results
-    extremumCount = extremumListExtended.size();
+    extremumCount = extremumList.size();
     result->Extrema.resize( extremumCount );
-    result->IsLocalExtrema.resize( extremumCount );
     result->Posterior.resize( extremumCount );
     result->LogArea.resize( extremumCount );
     result->LogAreaCorrectedExtrema.resize( extremumCount );
@@ -155,10 +162,10 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute( CDataStore &dataSt
     Int32 end = spectrum.GetSpectralAxis().GetIndexAtWaveLength(lambdaRange.GetEnd());
     Int32 nsamples = end - start + 1;
     Int32 savedModels = 0;
-    for( Int32 i=0; i<extremumListExtended.size(); i++ )
+    for( Int32 i=0; i<extremumList.size(); i++ )
     {
-        Float64 z = extremumListExtended[i].X;
-        Float64 m = extremumListExtended[i].Y;
+        Float64 z = extremumList[i].X;
+        Float64 m = extremumList[i].Y;
 
         //find the index in the zaxis results
         Int32 idx=-1;
@@ -181,13 +188,13 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute( CDataStore &dataSt
         }else{
             contreest_iterations  = 0;
         }
-        ModelFit( spectrum, model, result->restRayList, lambdaRange, result->Redshifts[idx], result->ChiSquare[idx], result->LineModelSolutions[idx], contreest_iterations);
+        ModelFit( model, lambdaRange, result->Redshifts[idx], result->ChiSquare[idx], result->LineModelSolutions[idx], contreest_iterations);
         m = result->ChiSquare[idx];
 
 
         //save the model result
         static Int32 maxModelSave = 5;
-        if(savedModels<maxModelSave && isLocalExtrema[i]){
+        if(savedModels<maxModelSave /*&& isLocalExtrema[i]*/){
             //CRef<CModelSpectrumResult> resultspcmodel = new CModelSpectrumResult();
             std::shared_ptr<CModelSpectrumResult>  resultspcmodel = std::shared_ptr<CModelSpectrumResult>( new CModelSpectrumResult(model.GetModelSpectrum()) );
             // Store results
@@ -198,7 +205,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute( CDataStore &dataSt
 
 
         result->Extrema[i] = z;
-        result->IsLocalExtrema[i]=isLocalExtrema[i];
+        //result->IsLocalExtrema[i]=isLocalExtrema[i];
 
         static Float64 cutThres = 5.0;
         Int32 nValidLines = result->GetNLinesOverCutThreshold(i, cutThres, cutThres);
@@ -466,8 +473,7 @@ void COperatorLineModel::ComputeArea2(CLineModelResult& results)
     }
 }
 
-Void COperatorLineModel::ModelFit(const CSpectrum& spectrum, CLineModelElementList& model, const CRayCatalog::TRayVector& restRayList,
-                                const TFloat64Range& lambdaRange, Float64 redshift,
+Void COperatorLineModel::ModelFit(CLineModelElementList& model, const TFloat64Range& lambdaRange, Float64 redshift,
                                    Float64& chiSquare, CLineModelResult::SLineModelSolution& modelSolution, Int32 contreest_iterations)
 {
     chiSquare = boost::numeric::bounds<float>::highest();

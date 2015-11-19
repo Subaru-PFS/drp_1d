@@ -22,13 +22,15 @@ public:
     COperatorLineModel();
     virtual ~COperatorLineModel();
 
-    std::shared_ptr<COperatorResult> Compute(CDataStore &dataStore, const CSpectrum& spectrum, const CSpectrum &spectrumContinuum, const CRayCatalog& restraycatalog,
-                                    const TFloat64Range& lambdaRange, const TFloat64List& redshifts , const Int32 opt_extremacount, const std::string& opt_lineWidthType, const std::string &opt_continuumreest="no");
+    std::shared_ptr<COperatorResult> Compute(
+                                    CDataStore &dataStore, const CSpectrum& spectrum, const CSpectrum &spectrumContinuum, const CRayCatalog& restraycatalog,
+                                    const TFloat64Range& lambdaRange, const TFloat64List& redshifts , const Int32 opt_extremacount,
+                                    const std::string &opt_continuumcomponent, const std::string& opt_lineWidthType, const std::string &opt_continuumreest="no");
+
 
 private:
 
-    Void ModelFit(const CSpectrum& spectrum, NSEpic::CLineModelElementList &model, const CRayCatalog::TRayVector &restraycatalog,
-                   const TFloat64Range& lambdaRange, Float64 redshift,
+    Void ModelFit(NSEpic::CLineModelElementList &model, const TFloat64Range& lambdaRange, Float64 redshift,
                   Float64& chiSquare, CLineModelResult::SLineModelSolution &modelSolution, Int32 contreest_iterations);
 
     void ComputeArea1(CLineModelResult& results);

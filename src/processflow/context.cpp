@@ -97,10 +97,24 @@ bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath,
     m_SpectrumWithoutContinuum = std::shared_ptr<CSpectrum>( new CSpectrum() );
     *m_SpectrumWithoutContinuum = *m_Spectrum;
 
+    std::string medianRemovalMethod;
+    paramStore->Get( "continuumRemoval.method", medianRemovalMethod, "IrregularSamplingMedian" );
+    //ctx.GetParameterStore().Get( "continuumRemoval.method", medianRemovalMethod, "Median" );
+    if( medianRemovalMethod== "IrregularSamplingMedian"){
+        CContinuumIrregularSamplingMedian continuum;
+        Float64 opt_medianKernelWidth;
+        paramStore->Get( "continuumRemoval.medianKernelWidth", opt_medianKernelWidth, 75 );
+        continuum.SetMedianKernelWidth(opt_medianKernelWidth);
+        m_SpectrumWithoutContinuum->RemoveContinuum( continuum );
 
-    CContinuumIrregularSamplingMedian continuum;
+    }else{
+        CContinuumMedian continuum;
+        Float64 opt_medianKernelWidth;
+        paramStore->Get( "continuumRemoval.medianKernelWidth", opt_medianKernelWidth, 75 );
+        continuum.SetMedianKernelWidth(opt_medianKernelWidth);
+        m_SpectrumWithoutContinuum->RemoveContinuum( continuum );
+    }
 
-    m_SpectrumWithoutContinuum->RemoveContinuum( continuum );
     m_SpectrumWithoutContinuum->ConvertToLogScale();
 
 
@@ -121,7 +135,11 @@ bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath,
                                 const char* templateCatalogPath, const char* rayCatalogPath,
                                 std::shared_ptr<CParameterStore> paramStore )
 {
-    std::shared_ptr<CTemplateCatalog> templateCatalog = std::shared_ptr<CTemplateCatalog>( new CTemplateCatalog );
+    std::string medianRemovalMethod;
+    m_ParameterStore->Get( "continuumRemoval.method", medianRemovalMethod, "IrregularSamplingMedian" );
+    Float64 opt_medianKernelWidth;
+    m_ParameterStore->Get( "continuumRemoval.medianKernelWidth", opt_medianKernelWidth, 75 );
+    std::shared_ptr<CTemplateCatalog> templateCatalog = std::shared_ptr<CTemplateCatalog>( new CTemplateCatalog( medianRemovalMethod, opt_medianKernelWidth) );
     std::shared_ptr<CRayCatalog> rayCatalog = std::shared_ptr<CRayCatalog>(new CRayCatalog);
 
 

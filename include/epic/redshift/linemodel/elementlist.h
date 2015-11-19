@@ -26,7 +26,7 @@ class CLineModelElementList
 
 public:
 
-    CLineModelElementList(const CSpectrum& spectrum, const CSpectrum& spectrumNoContinuum, const CRayCatalog::TRayVector& restRayList , const std::string& lineWidthType);
+    CLineModelElementList(const CSpectrum& spectrum, const CSpectrum& spectrumNoContinuum, const CRayCatalog::TRayVector& restRayList , const std::string &opt_continuumcomponent, const std::string& lineWidthType);
     ~CLineModelElementList();
 
     void LoadCatalog(const CRayCatalog::TRayVector& restRayList);
@@ -92,12 +92,15 @@ private:
     std::shared_ptr<CSpectrum>  m_SpectrumModel;  //model
     CSpectrumFluxAxis m_SpcFluxAxis;    //observed spectrum
     CSpectrumFluxAxis m_SpcContinuumFluxAxis; //oberved continuum spectrum
+    CSpectrumFluxAxis m_spcFluxAxisNoContinuum; //observed spectrum for line fitting
+    Float64* m_ErrorNoContinuum;
 
     Float64*          m_precomputedFineGridContinuumFlux;   //PFG buffer for model continuum
     CSpectrumFluxAxis m_ContinuumFluxAxis;  //rebined model continuum
 
     CRayCatalog::TRayVector m_RestRayList;
 
+    std::string m_ContinuumComponent;
     std::string m_LineWidthType;
     Float64 m_nominalWidthDefaultEmission;
     Float64 m_nominalWidthDefaultAbsorption;

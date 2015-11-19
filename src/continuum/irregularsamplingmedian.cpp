@@ -18,8 +18,7 @@ CContinuumIrregularSamplingMedian::CContinuumIrregularSamplingMedian()
 {
     m_MeanSmoothAmplitude = 75;     // Angstrom
     m_MedianSmoothCycles = 5;
-    //m_MedianSmoothAmplitude = 75;   // Angstrom
-    m_MedianSmoothAmplitude = 150;   // Angstrom, modified for VVDS2, linemodel 20151015, aschmitt
+    m_MedianSmoothAmplitude = 75;   // Angstrom
     m_Even = false;
 }
 
