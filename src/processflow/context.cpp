@@ -135,9 +135,9 @@ bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath,
                                 std::shared_ptr<CParameterStore> paramStore )
 {
     std::string medianRemovalMethod;
-    m_ParameterStore->Get( "continuumRemoval.method", medianRemovalMethod, "IrregularSamplingMedian" );
+    paramStore->Get( "continuumRemoval.method", medianRemovalMethod, "IrregularSamplingMedian" );
     Float64 opt_medianKernelWidth;
-    m_ParameterStore->Get( "continuumRemoval.medianKernelWidth", opt_medianKernelWidth, 75 );
+    paramStore->Get( "continuumRemoval.medianKernelWidth", opt_medianKernelWidth, 75 );
     std::shared_ptr<CTemplateCatalog> templateCatalog = std::shared_ptr<CTemplateCatalog>( new CTemplateCatalog( medianRemovalMethod, opt_medianKernelWidth) );
     std::shared_ptr<CRayCatalog> rayCatalog = std::shared_ptr<CRayCatalog>(new CRayCatalog);
 
