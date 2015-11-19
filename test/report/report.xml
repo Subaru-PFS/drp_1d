@@ -1,9 +1,85 @@
 <?xml version="1.0" encoding='ISO-8859-1' standalone='yes' ?>
 <TestRun>
   <FailedTests></FailedTests>
-  <SuccessfulTests></SuccessfulTests>
+  <SuccessfulTests>
+    <Test id="1">
+      <Name>N10NSEpicTest28CCRedshiftSpectrumioTestCaseE::VVDSReadValidFile</Name>
+    </Test>
+    <Test id="2">
+      <Name>N10NSEpicTest28CCRedshiftSpectrumioTestCaseE::VVDSReadInvalidFile</Name>
+    </Test>
+    <Test id="3">
+      <Name>N10NSEpicTest30CRedshiftLineDetectionTestCaseE::SyntheticValidationTest</Name>
+    </Test>
+    <Test id="4">
+      <Name>N10NSEpicTest23CRedshiftCommonTestCaseE::Median3</Name>
+    </Test>
+    <Test id="5">
+      <Name>N10NSEpicTest23CRedshiftCommonTestCaseE::Median5</Name>
+    </Test>
+    <Test id="6">
+      <Name>N10NSEpicTest23CRedshiftCommonTestCaseE::Median7</Name>
+    </Test>
+    <Test id="7">
+      <Name>N10NSEpicTest23CRedshiftCommonTestCaseE::Median9</Name>
+    </Test>
+    <Test id="8">
+      <Name>N10NSEpicTest23CRedshiftCommonTestCaseE::MedianBeers</Name>
+    </Test>
+    <Test id="9">
+      <Name>N10NSEpicTest23CRedshiftCommonTestCaseE::MedianFast</Name>
+    </Test>
+    <Test id="10">
+      <Name>N10NSEpicTest23CRedshiftCommonTestCaseE::Mean</Name>
+    </Test>
+    <Test id="11">
+      <Name>N10NSEpicTest20CRedshiftRayTestCaseE::LoadCatalog</Name>
+    </Test>
+    <Test id="12">
+      <Name>N10NSEpicTest20CRedshiftRayTestCaseE::MatchingTest1</Name>
+    </Test>
+    <Test id="13">
+      <Name>N10NSEpicTest20CRedshiftRayTestCaseE::MatchingTest2_EzValidationTest</Name>
+    </Test>
+    <Test id="14">
+      <Name>N10NSEpicTest26CRedshiftContinuumTestCaseE::Compute</Name>
+    </Test>
+    <Test id="15">
+      <Name>N10NSEpicTest25CRedshiftOperatorTestCaseE::CorrelationMatchWithEZ</Name>
+    </Test>
+    <Test id="16">
+      <Name>N10NSEpicTest25CRedshiftOperatorTestCaseE::ChisquareMatchWithEZ</Name>
+    </Test>
+    <Test id="17">
+      <Name>N10NSEpicTest25CRedshiftExtremumTestCaseE::Find</Name>
+    </Test>
+    <Test id="18">
+      <Name>N10NSEpicTest30CRedshiftPeakDetectionTestCaseE::Compute</Name>
+    </Test>
+    <Test id="19">
+      <Name>N10NSEpicTest28CRedshiftGaussianFitTestCaseE::TestFit1</Name>
+    </Test>
+    <Test id="20">
+      <Name>N10NSEpicTest28CRedshiftGaussianFitTestCaseE::TestFit2</Name>
+    </Test>
+    <Test id="21">
+      <Name>N10NSEpicTest25CRedshiftSpectrumTestCaseE::Load</Name>
+    </Test>
+    <Test id="22">
+      <Name>N10NSEpicTest28CRedshiftProcessFlowTestCaseE::ProcessShifted1</Name>
+    </Test>
+    <Test id="23">
+      <Name>N10NSEpicTest28CRedshiftProcessFlowTestCaseE::ProcessShifted2</Name>
+    </Test>
+    <Test id="24">
+      <Name>N10NSEpicTest23CRedshiftSmoothTestCaseE::Mean</Name>
+    </Test>
+    <Test id="25">
+      <Name>N10NSEpicTest25CRedshiftTemplateTestCaseE::LoadCatalog</Name>
+    </Test>
+  </SuccessfulTests>
   <Statistics>
-    <Tests>0</Tests>
+    <Tests>25</Tests>
     <FailuresTotal>0</FailuresTotal>
     <Errors>0</Errors>
     <Failures>0</Failures>

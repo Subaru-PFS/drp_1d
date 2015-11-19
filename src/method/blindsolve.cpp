@@ -118,7 +118,7 @@ Bool COperatorBlindSolve::BlindSolve( CDataStore& resultStore, const CSpectrum& 
     }
 
     COperatorChiSquare meritChiSquare;
-    std::shared_ptr<const CCorrelationResult> chisquareResult = dynamic_pointer_cast<const CCorrelationResult>( meritChiSquare.Compute( spc, tpl, lambdaRange, extremumRedshifts, overlapThreshold ) );
+    auto chisquareResult = dynamic_pointer_cast<const CChisquareResult>( meritChiSquare.Compute( spc, tpl, lambdaRange, extremumRedshifts, overlapThreshold ) );
     if( !chisquareResult )
     {
         return false;

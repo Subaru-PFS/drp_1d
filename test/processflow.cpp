@@ -36,7 +36,6 @@ void CRedshiftProcessFlowTestCase::ProcessShifted1()
     params->Set( "templateCategoryList", TStringList { "galaxy" } );
     params->Set( "method", "blindsolve");
 
-
     Bool retVal = ctx.Init( "../test/data/ProcessFlowTestCase/lbgabs_1K_2z3_20J22.5__EZ_fits-W-F_0.fits", NULL, "../test/data/ProcessFlowTestCase/template_shifted1/", NULL, params );
     CPPUNIT_ASSERT( retVal == true );
 
@@ -80,7 +79,6 @@ void CRedshiftProcessFlowTestCase::ProcessShifted2()
     blindSolveResult->GetBestFitResult( ctx.GetDataStore(), redshift, merit, tplName );
 
     CPPUNIT_ASSERT_DOUBLES_EQUAL( 2.7757, redshift, 0.0001 );
-
 }
 
 void CRedshiftProcessFlowTestCase::ProcessShiftedDecimated()
@@ -109,5 +107,4 @@ void CRedshiftProcessFlowTestCase::ProcessShiftedDecimated()
     blindSolveResult->GetBestFitResult( ctx.GetDataStore(), redshift, merit, tplName );
 
     CPPUNIT_ASSERT_DOUBLES_EQUAL( 2.02952, redshift, 0.00001 );
-
 }
