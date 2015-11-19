@@ -40,10 +40,9 @@ CProcessFlowContext::~CProcessFlowContext()
 }
 
 
-bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath,
-                                const CTemplateCatalog& templateCatalog, const CRayCatalog& rayCatalog,
-                                CParameterStore& paramStore  )
+bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath, const CTemplateCatalog& templateCatalog, const CRayCatalog& rayCatalog, CParameterStore& paramStore )
 {
+  //std::cout << "ctx init" << std::endl;
     m_Spectrum = new CSpectrum();
     m_Spectrum->SetName(bfs::path( spectrumPath ).stem().string().c_str() );
 
@@ -134,31 +133,40 @@ bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath,
                                 const char* templateCatalogPath, const char* rayCatalogPath,
                                 CParameterStore& paramStore )
 {
+  //std::cout << "ctx init" << std::endl;
+  //Log.LogDebug ( "CProcessFlowContext::Init started." );
+  std::string medianRemovalMethod;
+  //std::cout << "ctx b4 parameter store get" << std::endl;
+  //m_ParameterStore->Get( "continuumRemoval.method", medianRemovalMethod, "IrregularSamplingMedian" );
+  paramStore.Get( "continuumRemoval.method", medianRemovalMethod, "IrregularSamplingMedian" );
+  //std::cout << "ctx b4 2nd parameter store get" << std::endl;
+  Float64 opt_medianKernelWidth;
+  //m_ParameterStore->Get( "continuumRemoval.medianKernelWidth", opt_medianKernelWidth, 75 );
+  paramStore.Get( "continuumRemoval.medianKernelWidth", opt_medianKernelWidth, 75 );
 
-    std::string medianRemovalMethod;
-    m_ParameterStore->Get( "continuumRemoval.method", medianRemovalMethod, "IrregularSamplingMedian" );
-    Float64 opt_medianKernelWidth;
-    m_ParameterStore->Get( "continuumRemoval.medianKernelWidth", opt_medianKernelWidth, 75 );
+  //std::cout << "ctx" << std::endl;
+  CRef<CTemplateCatalog> templateCatalog = new CTemplateCatalog( medianRemovalMethod, opt_medianKernelWidth);
+  CRef<CRayCatalog> rayCatalog = new CRayCatalog;
 
-    CRef<CTemplateCatalog> templateCatalog = new CTemplateCatalog( medianRemovalMethod, opt_medianKernelWidth);
-    CRef<CRayCatalog> rayCatalog = new CRayCatalog;
-
-
-    Bool rValue;
+  //std::cout << "ctx" << std::endl;
+  Bool rValue;
 
     // Load template catalog
     if( templateCatalogPath )
     {
-        rValue = templateCatalog->Load( templateCatalogPath );
-        if( !rValue )
+      Log.LogDebug ( "templateCatalogPath exists." );
+      rValue = templateCatalog->Load( templateCatalogPath );
+      if( !rValue )
         {
-            Log.LogError("Failed to load template catalog: (%s)", templateCatalogPath );
-            m_TemplateCatalog = NULL;
-            return false;
+	  Log.LogError( "Failed to load template catalog from path: (%s)", templateCatalogPath );
+	  m_TemplateCatalog = NULL;
+	  return false;
         }
+      Log.LogDebug ( "Template catalog loaded." );
     }
 
     // Load line catalog
+    //std::cout << "ctx" << std::endl;
     if( rayCatalogPath )
     {
         rValue = rayCatalog->Load( rayCatalogPath );
@@ -170,6 +178,7 @@ bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath,
         }
     }
 
+    //std::cout << "ctx" << std::endl;
     return Init( spectrumPath, noisePath, *templateCatalog, *rayCatalog, paramStore );
 }
 

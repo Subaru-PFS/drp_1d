@@ -1,5 +1,6 @@
 #include <epic/core/test/helper.h>
-
+#include <epic/core/common/ref.h>
+#include <epic/core/log/log.h>
 #include <epic/core/debug/debug.h>
 
 #include <cppunit/extensions/TestFactoryRegistry.h>
@@ -15,41 +16,59 @@
 
 using namespace NSEpic;
 
+/**
+ * Assignment constructor.
+ */
 CTestHelper::CTestHelper( int argc, char **argv ) :
     m_ConsoleHandler( m_Log )
 {
 }
 
+/**
+ * Empty destructor.
+ */
 CTestHelper::~CTestHelper()
 {
 
 }
 
+/**
+ * Calls signal handler installer, test options configurator and returns a call to ConfigureCmdLineOptions. 
+ */
 Bool CTestHelper::Configure( int argc, char **argv )
 {
     InstallSignalHandler();
     ConfigureTestOptions();
+
+    // Create log handler
+    //CLog log;
+    //CRef<CLogConsoleHandler> logConsoleHandler;
+    //logConsoleHandler = new CLogConsoleHandler ( CLog::GetInstance() );
+    //logConsoleHandler->SetLevelMask ( CLog::nLevel_Info );
+    //logConsoleHandler->SetLevelMask ( CLog::nLevel_Debug );
+    
     return ConfigureCmdLineOptions( argc, argv );
 }
 
+/**
+ * Configure the test suite according to commandline options passed in.
+ */
 Bool CTestHelper::ConfigureCmdLineOptions( int argc, char **argv )
 {
     // Declare the supported options.
-    boost::program_options::options_description optionsDesc(  "Apply various operation to an input spectrum");
+    boost::program_options::options_description optionsDesc( "Apply various operation to an input spectrum" );
     optionsDesc.add_options()
-        ("help,h", "Print help")
-        ("RegexFilter", boost::program_options::value< std::string>(), "Regeluar expression to run only a subset of the sepcified tests")
-    ;
+      ( "help,h", "Print help" )
+      ( "RegexFilter", boost::program_options::value< std::string>(), "Regeluar expression to run only a subset of the sepcified tests" );
 
     boost::program_options::positional_options_description positionalOptionsDesc;
-    positionalOptionsDesc.add("RegexFilter", 1);
+    positionalOptionsDesc.add( "RegexFilter", 1 );
 
     boost::program_options::variables_map vm;
     try
     {
-        boost::program_options::store(boost::program_options::command_line_parser(argc, argv).
-                                      options(optionsDesc).positional(positionalOptionsDesc).run(), vm);
-        boost::program_options::notify(vm);
+        boost::program_options::store( boost::program_options::command_line_parser( argc, argv ).options( optionsDesc ).positional( positionalOptionsDesc ).run(), vm );
+        boost::program_options::notify( vm );
     }
     catch ( std::exception& e )
     {
@@ -57,14 +76,17 @@ Bool CTestHelper::ConfigureCmdLineOptions( int argc, char **argv )
         return false;
     }
 
-    if(vm.count("RegexFilter")){
-        m_RegexFilter = vm["RegexFilter"].as< std::string  >();
-    }
-
+    if( vm.count("RegexFilter" ) )
+      {
+        m_RegexFilter = vm["RegexFilter"].as< std::string >();
+      }
 
     return true;
 }
 
+/**
+ * 
+ */
 Void CTestHelper::ConfigureTestOptions()
 {
     // Add a listener that collects test result
@@ -73,7 +95,9 @@ Void CTestHelper::ConfigureTestOptions()
     m_TestResult.addListener( &m_TestProgressListener );
 }
 
-
+/**
+ * 
+ */
 Bool CTestHelper::TestMatchFilter( CppUnit::Test* t )
 {
     if( m_RegexFilter.size() == 0 )
@@ -83,13 +107,14 @@ Bool CTestHelper::TestMatchFilter( CppUnit::Test* t )
     return boost::regex_match( t->getName().c_str(), e);
 }
 
-
+/**
+ * 
+ */
 Void CTestHelper::RecursiveFilterTest( CppUnit::Test* t )
 {
     for( Int32 i=0; i<t->getChildTestCount(); i++ )
     {
         CppUnit::Test* child = t->getChildTestAt(i);
-
 
         if( child->getChildTestCount() )
         {
@@ -99,13 +124,15 @@ Void CTestHelper::RecursiveFilterTest( CppUnit::Test* t )
         {
             if( TestMatchFilter( child ) )
             {
-                m_TestRunner.addTest( child  );
+                m_TestRunner.addTest( child );
             }
         }
     }
 }
 
-
+/**
+ * 
+ */
 Bool CTestHelper::Run( const char* outputFile )
 {
     // Run tests
@@ -116,7 +143,7 @@ Bool CTestHelper::Run( const char* outputFile )
     }
     else
     {
-        m_TestRunner.addTest( CppUnit::TestFactoryRegistry::getRegistry().makeTest()  );
+        m_TestRunner.addTest( CppUnit::TestFactoryRegistry::getRegistry().makeTest() );
     }
 
     m_TestRunner.run( m_TestResult );
