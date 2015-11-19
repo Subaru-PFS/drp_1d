@@ -8,7 +8,6 @@
 #include <map>
 #include <string>
 
-
 namespace NSEpic
 {
 
@@ -23,8 +22,8 @@ class COperatorResultStore;
 class CDataStore;
 
 /**
- * Store all data concerning computation and processign of a given spectrum
- *
+ * \ingroup Redshift
+ * Store all data concerning computation and processign of a given spectrum.
  */
 class CProcessFlowContext : public CManagedObject
 {
@@ -38,7 +37,7 @@ public:
 
     bool Init( const char* spectrumPath, const char* noisePath,
                const char* tempalteCatalogPath, const char* rayCatalogPath,
-               CParameterStore& paramStore  );
+               CParameterStore& paramStore );
 
     bool Init( const char* spectrumPath, const char* noisePath,
                const CTemplateCatalog& templateCatalog, const CRayCatalog& rayCatalog,

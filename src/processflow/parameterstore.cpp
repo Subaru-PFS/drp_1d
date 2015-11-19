@@ -22,6 +22,7 @@ CParameterStore::~CParameterStore()
 
 Bool CParameterStore::Get( const std::string& name, TBoolList& v, const TBoolList& defaultValue ) const
 {
+  //std::cout << "Get v1" << std::endl;
     boost::optional< bpt::ptree & > property = m_PropertyTree.get_child_optional( name );
 
     // If property does not exist, add it
@@ -44,6 +45,7 @@ Bool CParameterStore::Get( const std::string& name, TBoolList& v, const TBoolLis
 
 Bool CParameterStore::Get( const std::string& name, TInt64List& v, const TInt64List& defaultValue ) const
 {
+  //std::cout << "Get v2" << std::endl;
     boost::optional< bpt::ptree & > property = m_PropertyTree.get_child_optional( name );
 
     // If property does not exist, add it
@@ -66,6 +68,7 @@ Bool CParameterStore::Get( const std::string& name, TInt64List& v, const TInt64L
 
 Bool CParameterStore::Get( const std::string& name, TFloat64List& v, const TFloat64List& defaultValue ) const
 {
+  //std::cout << "Get v3" << std::endl;
     boost::optional< bpt::ptree & > property = m_PropertyTree.get_child_optional( name );
 
     // If property does not exist, add it
@@ -88,6 +91,7 @@ Bool CParameterStore::Get( const std::string& name, TFloat64List& v, const TFloa
 
 Bool CParameterStore::Get( const std::string& name, TStringList& v, const TStringList& defaultValue ) const
 {
+  //std::cout << "Get v4" << std::endl;
     boost::optional< bpt::ptree & > property = m_PropertyTree.get_child_optional( name );
 
     // If property does not exist, add it
@@ -110,22 +114,27 @@ Bool CParameterStore::Get( const std::string& name, TStringList& v, const TStrin
 
 Bool CParameterStore::Get( const std::string& name, std::string& v, std::string defaultValue ) const
 {
-    boost::optional< std::string > property = m_PropertyTree.get_optional< std::string >( name );
+  //std::cout << "Get v5" << std::endl;
+  boost::optional< std::string > property = m_PropertyTree.get_optional< std::string >( name );
+  //std::cout << "got property tree" << std::endl;
 
-    // If property does not exist, add it
-    if( !property ) {
-        CParameterStore & self = const_cast<CParameterStore &>(*this);
-        self.Set( name, defaultValue );
-        v = defaultValue;
-    } else {
-        v = *property;
-    }
-
-    return true;
+  // If property does not exist, add it
+  if( !property ) {
+    //std::cout << "!property" << std::endl;
+    CParameterStore & self = const_cast<CParameterStore &>(*this);
+    self.Set( name, defaultValue );
+    v = defaultValue;
+  } else {
+    //std::cout << "property" << std::endl;
+    v = *property;
+  }
+  //std::cout << "Returning from CParameterStore::Get v5" << std::endl;
+  return true;
 }
 
 Bool CParameterStore::Get( const std::string& name, Float64& v, Float64 defaultValue ) const
 {
+  //std::cout << "Get v6" << std::endl;
     boost::optional<Float64> property = m_PropertyTree.get_optional<Float64>( name );
 
     // If property does not exist, add it
@@ -142,6 +151,7 @@ Bool CParameterStore::Get( const std::string& name, Float64& v, Float64 defaultV
 
 Bool CParameterStore::Get( const std::string& name, Int64& v, Int64 defaultValue ) const
 {
+  //std::cout << "Get v7" << std::endl;
     boost::optional<Int64> property = m_PropertyTree.get_optional<Int64>( name );
 
     // If property does not exist, add it
@@ -158,6 +168,7 @@ Bool CParameterStore::Get( const std::string& name, Int64& v, Int64 defaultValue
 
 Bool CParameterStore::Get( const std::string& name, Bool& v, Bool defaultValue ) const
 {
+  //std::cout << "Get v8" << std::endl;
     boost::optional<Bool> property = m_PropertyTree.get_optional<Bool>( name );
 
     // If property does not exist, add it
@@ -175,6 +186,7 @@ Bool CParameterStore::Get( const std::string& name, Bool& v, Bool defaultValue )
 
 Bool CParameterStore::Get( const std::string& name, TFloat64Range& v, TFloat64Range defaultValue ) const
 {
+  //std::cout << "Get v9" << std::endl;
     TFloat64List listDefault( 2 );
     TFloat64List list( 2 );
 
