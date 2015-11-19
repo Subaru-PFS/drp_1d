@@ -33,7 +33,6 @@
 using namespace NSEpic;
 using namespace std;
 
-IMPLEMENT_MANAGED_OBJECT( COperatorDTreeASolve )
 
 COperatorDTreeASolve::COperatorDTreeASolve()
 {
@@ -74,7 +73,7 @@ COperatorDTreeASolve::~COperatorDTreeASolve()
 
 }
 
-const CDTreeASolveResult* COperatorDTreeASolve::Compute(CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
+std::shared_ptr<const CDTreeASolveResult> COperatorDTreeASolve::Compute(CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
                                                         const CTemplateCatalog& tplCatalog, const TStringList& tplCategoryList, const CRayCatalog &restRayCatalog,
                                                         const TFloat64Range& lambdaRange, const TFloat64Range& redshiftRange, Float64 redshiftStep,
                                                         Int32 correlationExtremumCount, Float64 overlapThreshold )
@@ -91,8 +90,7 @@ const CDTreeASolveResult* COperatorDTreeASolve::Compute(CDataStore& resultStore,
     //storeResult = true;
     if( storeResult )
     {
-        CDTreeASolveResult*  SolveResult = new CDTreeASolveResult();
-        return SolveResult;
+        return std::shared_ptr<const CDTreeASolveResult>( new CDTreeASolveResult() );
     }
 
     return NULL;
@@ -107,8 +105,8 @@ Bool COperatorDTreeASolve::Solve(CDataStore &resultStore, const CSpectrum &spc, 
     TStringList   filteredTemplateCategoryList = getFilteredTplCategory( tplCategoryList, "emission" );
 
     CPeakDetection peakDetection(m_winsize, m_cut, 1, m_enlargeRate);
-    CConstRef<CPeakDetectionResult> peakDetectionResult = peakDetection.Compute( spc, lambdaRange);
-    resultStore.StoreScopedGlobalResult( "peakdetection", *peakDetectionResult );
+    auto peakDetectionResult = peakDetection.Compute( spc, lambdaRange);
+    resultStore.StoreScopedGlobalResult( "peakdetection", peakDetectionResult );
     Log.LogInfo( "DTreeA - Peak Detection output: %d peaks found", peakDetectionResult->PeakList.size());
 
     // check Peak Detection results
@@ -122,11 +120,11 @@ Bool COperatorDTreeASolve::Solve(CDataStore &resultStore, const CSpectrum &spc, 
             DebugAssert( redshifts.size() > 0 );
 
             CMethodChisquare2Solve chiSolve;
-            CConstRef<CChisquare2SolveResult> chisolveResult = chiSolve.Compute( resultStore, spc, spcWithoutCont,
+            auto chisolveResult = chiSolve.Compute( resultStore, spc, spcWithoutCont,
                                                                                 tplCatalog, tplCategoryList,
                                                                                 lambdaRange, redshifts, overlapThreshold );
             if( chisolveResult ) {
-                resultStore.StoreScopedGlobalResult( "redshiftresult", *chisolveResult );
+                resultStore.StoreScopedGlobalResult( "redshiftresult", chisolveResult );
             }
             return true;
         }
@@ -134,8 +132,8 @@ Bool COperatorDTreeASolve::Solve(CDataStore &resultStore, const CSpectrum &spc, 
 
     // Line Detection
     CLineDetection lineDetection(CRay::nType_Emission, m_cut, m_strongcut, m_winsize, m_minsize, m_maxsize);
-    CConstRef<CLineDetectionResult> lineDetectionResult = lineDetection.Compute( spc, lambdaRange, peakDetectionResult->PeakList, peakDetectionResult->EnlargedPeakList );
-    resultStore.StoreScopedGlobalResult( "raycatalog", *lineDetectionResult );
+    auto lineDetectionResult = lineDetection.Compute( spc, lambdaRange, peakDetectionResult->PeakList, peakDetectionResult->EnlargedPeakList );
+    resultStore.StoreScopedGlobalResult( "raycatalog", lineDetectionResult );
     Log.LogInfo( "DTreeA - Line Detection output: %d line(s) found", lineDetectionResult->RayCatalog.GetList().size());
 
     // check line Detection results
@@ -150,11 +148,11 @@ Bool COperatorDTreeASolve::Solve(CDataStore &resultStore, const CSpectrum &spc, 
             DebugAssert( redshifts.size() > 0 );
 
             CMethodChisquare2Solve chiSolve;
-            CConstRef<CChisquare2SolveResult> chisolveResult = chiSolve.Compute( resultStore, spc, spcWithoutCont,
+            auto chisolveResult = chiSolve.Compute( resultStore, spc, spcWithoutCont,
                                                                                 tplCatalog, tplCategoryList,
                                                                                 lambdaRange, redshifts, overlapThreshold );
             if( chisolveResult ) {
-                resultStore.StoreScopedGlobalResult( "redshiftresult", *chisolveResult );
+                resultStore.StoreScopedGlobalResult( "redshiftresult", chisolveResult );
             }
             return true;
         }
@@ -168,11 +166,11 @@ Bool COperatorDTreeASolve::Solve(CDataStore &resultStore, const CSpectrum &spc, 
     }
 
     CRayMatching rayMatching;
-    CRef<CRayMatchingResult> rayMatchingResult = rayMatching.Compute( lineDetectionResult->RayCatalog, restRayCatalog, redshiftRange, m_minMatchNum, m_tol, typeFilter, -1, restForceFilter);
+    auto rayMatchingResult = rayMatching.Compute( lineDetectionResult->RayCatalog, restRayCatalog, redshiftRange, m_minMatchNum, m_tol, typeFilter, -1, restForceFilter);
 
     if(rayMatchingResult!=NULL){
         // Store matching results
-        resultStore.StoreScopedGlobalResult( "raymatching", *rayMatchingResult );
+        resultStore.StoreScopedGlobalResult( "raymatching", rayMatchingResult );
 
         //check line matching results
         if(rayMatchingResult->GetSolutionsListOverNumber(0).size()<1){
@@ -184,11 +182,11 @@ Bool COperatorDTreeASolve::Solve(CDataStore &resultStore, const CSpectrum &spc, 
                 DebugAssert( redshifts.size() > 0 );
 
                 CMethodChisquare2Solve chiSolve;
-                CConstRef<CChisquare2SolveResult> chisolveResult = chiSolve.Compute( resultStore, spc, spcWithoutCont,
+                auto chisolveResult = chiSolve.Compute( resultStore, spc, spcWithoutCont,
                                                                                     tplCatalog, tplCategoryList,
                                                                                     lambdaRange, redshifts, overlapThreshold );
                 if( chisolveResult ) {
-                    resultStore.StoreScopedGlobalResult( "redshiftresult", *chisolveResult );
+                    resultStore.StoreScopedGlobalResult( "redshiftresult", chisolveResult );
                 }
                 return true;
             }
@@ -202,11 +200,11 @@ Bool COperatorDTreeASolve::Solve(CDataStore &resultStore, const CSpectrum &spc, 
             DebugAssert( redshifts.size() > 0 );
 
             CMethodChisquare2Solve chiSolve;
-            CConstRef<CChisquare2SolveResult> chisolveResult = chiSolve.Compute( resultStore, spc, spcWithoutCont,
+            auto chisolveResult = chiSolve.Compute( resultStore, spc, spcWithoutCont,
                                                                                 tplCatalog, tplCategoryList,
                                                                                 lambdaRange, redshifts, overlapThreshold );
             if( chisolveResult ) {
-                resultStore.StoreScopedGlobalResult( "redshiftresult", *chisolveResult );
+                resultStore.StoreScopedGlobalResult( "redshiftresult", chisolveResult );
             }
             return true;
         }
@@ -224,11 +222,11 @@ Bool COperatorDTreeASolve::Solve(CDataStore &resultStore, const CSpectrum &spc, 
         Log.LogInfo( "DTreeA - (n candidates = %d)", redshifts.size());
         { //chisolve with emission templates only
             CMethodChisquare2Solve chiSolve;
-            CConstRef<CChisquare2SolveResult> chisolveResult = chiSolve.Compute( resultStore, spc, spcWithoutCont,
+            auto chisolveResult = chiSolve.Compute( resultStore, spc, spcWithoutCont,
                                                                                 tplCatalog, filteredTemplateCategoryList,
                                                                                 lambdaRange, redshifts, overlapThreshold );
             if( chisolveResult ) {
-                resultStore.StoreScopedGlobalResult( "redshiftresult", *chisolveResult );
+                resultStore.StoreScopedGlobalResult( "redshiftresult", chisolveResult );
             }
             return true;
         }
@@ -242,11 +240,11 @@ Bool COperatorDTreeASolve::Solve(CDataStore &resultStore, const CSpectrum &spc, 
         DebugAssert( redshifts.size() > 0 );
 
         CMethodChisquare2Solve chiSolve;
-        CConstRef<CChisquare2SolveResult> chisolveResult = chiSolve.Compute( resultStore, spc, spcWithoutCont,
+        auto chisolveResult = chiSolve.Compute( resultStore, spc, spcWithoutCont,
                                                                             tplCatalog, tplCategoryList,
                                                                             lambdaRange, redshifts, overlapThreshold );
         if( chisolveResult ) {
-            resultStore.StoreScopedGlobalResult( "redshiftresult", *chisolveResult );
+            resultStore.StoreScopedGlobalResult( "redshiftresult", chisolveResult );
         }
         return true;
     }

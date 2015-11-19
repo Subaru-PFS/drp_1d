@@ -19,7 +19,6 @@
 using namespace NSEpic;
 using namespace std;
 
-IMPLEMENT_MANAGED_OBJECT( COperatorLineMatchingSolve )
 
 COperatorLineMatchingSolve::COperatorLineMatchingSolve()
 {
@@ -83,7 +82,8 @@ const std::string COperatorLineMatchingSolve::GetDescription()
     return desc;
 
 }
-const CLineMatchingSolveResult* COperatorLineMatchingSolve::Compute(  CDataStore& dataStore, const CSpectrum& spc,
+
+std::shared_ptr<const CLineMatchingSolveResult> COperatorLineMatchingSolve::Compute(  CDataStore& dataStore, const CSpectrum& spc,
                                                                       const TFloat64Range& lambdaRange, const TFloat64Range& redshiftsRange, Float64 redshiftStep, const CRayCatalog& restRayCatalog )
 {
     Bool storeResult = false;
@@ -98,9 +98,9 @@ const CLineMatchingSolveResult* COperatorLineMatchingSolve::Compute(  CDataStore
     dataStore.GetScopedParam( "peakdetection.enlargerate", opt_peakenlargerate, 2.0 );
 
     CPeakDetection peakDetection(opt_winsize, opt_peakdetectioncut, 1, opt_peakenlargerate);
-    CConstRef<CPeakDetectionResult> peakDetectionResult = peakDetection.Compute( spc, lambdaRange);
+    auto peakDetectionResult = peakDetection.Compute( spc, lambdaRange);
     if( peakDetectionResult )
-        dataStore.StoreScopedGlobalResult( "peakdetection", *peakDetectionResult );
+        dataStore.StoreScopedGlobalResult( "peakdetection", peakDetectionResult );
 
     Float64 opt_linedetectioncut;
     dataStore.GetScopedParam( "linedetection.cut", opt_linedetectioncut, 5.0 );
@@ -112,10 +112,10 @@ const CLineMatchingSolveResult* COperatorLineMatchingSolve::Compute(  CDataStore
     dataStore.GetScopedParam( "linedetection.maxlinewidth", opt_maxlinewidth, 70.0 );
 
     CLineDetection lineDetection(CRay::nType_Emission, opt_linedetectioncut, opt_strongcutfactor, opt_winsize, opt_minlinewidth, opt_maxlinewidth);
-    CConstRef<CLineDetectionResult> lineDetectionResult = lineDetection.Compute( spc, lambdaRange, peakDetectionResult->PeakList, peakDetectionResult->EnlargedPeakList );
+    auto lineDetectionResult = lineDetection.Compute( spc, lambdaRange, peakDetectionResult->PeakList, peakDetectionResult->EnlargedPeakList );
 
     if( lineDetectionResult ) {
-        dataStore.StoreScopedGlobalResult( "raycatalog", *lineDetectionResult );
+        dataStore.StoreScopedGlobalResult( "raycatalog", lineDetectionResult );
 
         if(lineDetectionResult->RayCatalog.GetList().size()<1){
             //return NULL;
@@ -129,18 +129,17 @@ const CLineMatchingSolveResult* COperatorLineMatchingSolve::Compute(  CDataStore
     dataStore.GetScopedParam( "linematching.minmatchnum", opt_minmatchnum, 1.0 );
 
     CRayMatching rayMatching;
-    CRef<CRayMatchingResult> rayMatchingResult = rayMatching.Compute(lineDetectionResult->RayCatalog, restRayCatalog, redshiftsRange, opt_minmatchnum, opt_tolerance );
+    auto rayMatchingResult = rayMatching.Compute(lineDetectionResult->RayCatalog, restRayCatalog, redshiftsRange, opt_minmatchnum, opt_tolerance );
 
     // Store matching results
     if( rayMatchingResult )
-        dataStore.StoreScopedGlobalResult( "raymatching", *rayMatchingResult );
+        dataStore.StoreScopedGlobalResult( "raymatching", rayMatchingResult );
 
 
     storeResult = true; //always save a matching result
     if( storeResult )
     {
-        CLineMatchingSolveResult*  SolveResult = new CLineMatchingSolveResult();
-        return SolveResult;
+        return std::shared_ptr<const CLineMatchingSolveResult>( new CLineMatchingSolveResult() );
     }
 
     return NULL;

@@ -8,7 +8,6 @@
 
 using namespace NSEpic;
 
-IMPLEMENT_MANAGED_OBJECT( CDTreeASolveResult )
 
 CDTreeASolveResult::CDTreeASolveResult()
 {
@@ -22,19 +21,19 @@ CDTreeASolveResult::~CDTreeASolveResult()
 
 Void CDTreeASolveResult::Save( const CDataStore& store, std::ostream& stream ) const
 {
-    std::string scope = store.GetScope( this ) + "dtreeAsolve.redshiftresult";
-    const COperatorResult* Results = store.GetGlobalResult(scope.c_str());
-    if(Results!=NULL){
-        Results->Save(store, stream );
+    std::string scope = store.GetScope( *this ) + "dtreeAsolve.redshiftresult";
+    auto Results = store.GetGlobalResult(scope.c_str());
+    if(!Results.expired()){
+        Results.lock()->Save(store, stream );
     }
 }
 
 Void CDTreeASolveResult::SaveLine( const CDataStore& store, std::ostream& stream ) const
 {
-    std::string scope = store.GetScope( this ) + "dtreeAsolve.redshiftresult";
-    const COperatorResult* Results = store.GetGlobalResult(scope.c_str());
-    if(Results!=NULL){
-        Results->SaveLine(store, stream);
+    std::string scope = store.GetScope( *this ) + "dtreeAsolve.redshiftresult";
+    auto Results = store.GetGlobalResult(scope.c_str());
+    if(!Results.expired()){
+        Results.lock()->SaveLine(store, stream);
     }
 }
 

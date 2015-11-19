@@ -10,7 +10,6 @@
 using namespace NSEpic;
 using namespace std;
 
-IMPLEMENT_MANAGED_OBJECT( COperatorBlindSolve )
 
 COperatorBlindSolve::COperatorBlindSolve()
 {
@@ -22,7 +21,7 @@ COperatorBlindSolve::~COperatorBlindSolve()
 
 }
 
-const CBlindSolveResult* COperatorBlindSolve::Compute(  CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
+std::shared_ptr<const CBlindSolveResult> COperatorBlindSolve::Compute(  CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
                                                         const CTemplateCatalog& tplCatalog, const TStringList& tplCategoryList,
                                                         const TFloat64Range& lambdaRange, const TFloat64Range& redshiftsRange, Float64 redshiftStep,
                                                         Int32 correlationExtremumCount, Float64 overlapThreshold )
@@ -49,8 +48,7 @@ const CBlindSolveResult* COperatorBlindSolve::Compute(  CDataStore& resultStore,
 
     if( storeResult )
     {
-        CBlindSolveResult*  blindSolveResult = new CBlindSolveResult();
-        return blindSolveResult;
+        return  std::shared_ptr<const CBlindSolveResult>( new CBlindSolveResult() );
     }
 
     return NULL;
@@ -73,14 +71,14 @@ Bool COperatorBlindSolve::BlindSolve( CDataStore& resultStore, const CSpectrum& 
 
     // Compute correlation factor at each of those redshifts
     COperatorCorrelation correlation;
-    CRef<CCorrelationResult> correlationResult = (CCorrelationResult*) correlation.Compute( spcWithoutCont, tplWithoutCont, lambdaRange, redshifts, overlapThreshold );
+    std::shared_ptr<const CCorrelationResult> correlationResult = dynamic_pointer_cast<const CCorrelationResult> ( correlation.Compute( spcWithoutCont, tplWithoutCont, lambdaRange, redshifts, overlapThreshold ) );
 
     if( !correlationResult )
     {
         return false;
     }
 
-    resultStore.StoreScopedPerTemplateResult( tpl, "correlation", *correlationResult );
+    resultStore.StoreScopedPerTemplateResult( tpl, "correlation", correlationResult );
 
     // Find redshifts extremum
     TPointList extremumList;
@@ -120,14 +118,14 @@ Bool COperatorBlindSolve::BlindSolve( CDataStore& resultStore, const CSpectrum& 
     }
 
     COperatorChiSquare meritChiSquare;
-    CRef<CCorrelationResult> chisquareResult = (CCorrelationResult*)meritChiSquare.Compute( spc, tpl, lambdaRange, extremumRedshifts, overlapThreshold );
+    std::shared_ptr<const CCorrelationResult> chisquareResult = dynamic_pointer_cast<const CCorrelationResult>( meritChiSquare.Compute( spc, tpl, lambdaRange, extremumRedshifts, overlapThreshold ) );
     if( !chisquareResult )
     {
         return false;
     }
 
     // Store results
-    resultStore.StoreScopedPerTemplateResult( tpl, "merit", *chisquareResult );
+    resultStore.StoreScopedPerTemplateResult( tpl, "merit", chisquareResult );
 
     return true;
 }

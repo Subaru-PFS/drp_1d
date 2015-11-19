@@ -7,7 +7,6 @@
 
 using namespace NSEpic;
 
-IMPLEMENT_MANAGED_OBJECT( CLineMatching2SolveResult )
 
 CLineMatching2SolveResult::CLineMatching2SolveResult()
 {
@@ -47,14 +46,14 @@ Void CLineMatching2SolveResult::SaveLine( const CDataStore& store, std::ostream&
 
 Bool CLineMatching2SolveResult::GetBestResult(const CDataStore& store, Float64& redshift, Float64& merit) const
 {
-    std::string scope = store.GetScope( this ) + "linematching2solve.raymatching";
-    const CRayMatchingResult* Results = (CRayMatchingResult*)store.GetGlobalResult(scope.c_str());
+    std::string scope = store.GetScope( *this ) + "linematching2solve.raymatching";
+    auto Results = store.GetGlobalResult(scope.c_str());
 
     Int32 tmpMatchNum = -1;
     Float64 tmpRedshift = -1.0;
 
-    if(Results){
-        Int32 er = Results->GetBestRedshift(tmpRedshift, tmpMatchNum);
+    if(!Results.expired()){
+        Int32 er = std::dynamic_pointer_cast<const CRayMatchingResult>( Results.lock() )->GetBestRedshift(tmpRedshift, tmpMatchNum);
     }
 
     redshift = tmpRedshift;

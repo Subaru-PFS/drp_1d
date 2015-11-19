@@ -6,8 +6,6 @@ using namespace NSEpic;
 
 namespace bpt = boost::property_tree;
 
-IMPLEMENT_MANAGED_OBJECT( CParameterStore );
-
 CParameterStore::CParameterStore()
 {
 
@@ -17,7 +15,6 @@ CParameterStore::~CParameterStore()
 {
 
 }
-
 
 
 Bool CParameterStore::Get( const std::string& name, TBoolList& v, const TBoolList& defaultValue ) const

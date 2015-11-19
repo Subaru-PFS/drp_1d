@@ -6,10 +6,7 @@
 #include <float.h>
 #include <math.h>
 
-
 using namespace NSEpic;
-
-IMPLEMENT_MANAGED_OBJECT( CLineModelSolveResult )
 
 CLineModelSolveResult::CLineModelSolveResult()
 {
@@ -57,20 +54,21 @@ Void CLineModelSolveResult::SaveLine( const CDataStore& store, std::ostream& str
 Bool CLineModelSolveResult::GetBestRedshift( const CDataStore& store, Float64& redshift, Float64& merit ) const
 {
 
-    std::string scope = store.GetScope( this ) + "linemodelsolve.linemodel";
-    const CLineModelResult* results = (CLineModelResult*)store.GetGlobalResult(scope.c_str());
+    std::string scope = store.GetScope( *this ) + "linemodelsolve.linemodel";
+    auto results = store.GetGlobalResult(scope.c_str());
 
 
     Float64 tmpMerit = DBL_MAX ;
     Float64 tmpRedshift = 0.0;
 
-    if(results){
-        for( Int32 i=0; i<results->ChiSquare.size(); i++ )
+    if(!results.expired()){
+        auto lineModelResult = std::dynamic_pointer_cast<const CLineModelResult>( results.lock() );
+        for( Int32 i=0; i<lineModelResult->ChiSquare.size(); i++ )
         {
-            if( results->ChiSquare[i] < tmpMerit )
+            if( lineModelResult->ChiSquare[i] < tmpMerit )
             {
-                tmpMerit = results->ChiSquare[i];
-                tmpRedshift = results->Redshifts[i];
+                tmpMerit = lineModelResult->ChiSquare[i];
+                tmpRedshift = lineModelResult->Redshifts[i];
             }
         }
 
@@ -85,19 +83,20 @@ Bool CLineModelSolveResult::GetBestRedshift( const CDataStore& store, Float64& r
 Bool CLineModelSolveResult::GetBestRedshiftLogArea( const CDataStore& store, Float64& redshift, Float64& merit ) const
 {
 
-    std::string scope = store.GetScope( this ) + "linemodelsolve.linemodel";
-    CLineModelResult* results = (CLineModelResult*)store.GetGlobalResult(scope.c_str());
+    std::string scope = store.GetScope( *this ) + "linemodelsolve.linemodel";
+    auto results = store.GetGlobalResult(scope.c_str());
 
     Float64 tmpMerit = -DBL_MAX ;
     Float64 tmpRedshift = 0.0;
 
-    if(results){
-        for( Int32 i=0; i<results->LogArea.size(); i++ )
+    if(!results.expired()){
+        auto lineModelResult = std::dynamic_pointer_cast<const CLineModelResult>( results.lock() );
+        for( Int32 i=0; i<lineModelResult->LogArea.size(); i++ )
         {
-            if( results->LogArea[i] > tmpMerit )
+            if( lineModelResult->LogArea[i] > tmpMerit )
             {
-                tmpMerit = results->LogArea[i];
-                tmpRedshift = results->LogAreaCorrectedExtrema[i];
+                tmpMerit = lineModelResult->LogArea[i];
+                tmpRedshift = lineModelResult->LogAreaCorrectedExtrema[i];
             }
         }
 

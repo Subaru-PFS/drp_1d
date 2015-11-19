@@ -15,7 +15,6 @@
 #include <stdio.h>
 
 using namespace NSEpic;
-IMPLEMENT_MANAGED_OBJECT(CLineDetection)
 
 //CLineDetection::CLineDetection()
 //{
@@ -51,7 +50,7 @@ CLineDetection::~CLineDetection()
 
 }
 
-const CLineDetectionResult* CLineDetection::Compute( const CSpectrum& spectrum, const TLambdaRange& lambdaRange, const TInt32RangeList& resPeaks, const TInt32RangeList& resPeaksEnlarged)
+std::shared_ptr<const CLineDetectionResult> CLineDetection::Compute( const CSpectrum& spectrum, const TLambdaRange& lambdaRange, const TInt32RangeList& resPeaks, const TInt32RangeList& resPeaksEnlarged)
 {
     const CSpectrum& spc = spectrum;
     const CSpectrumFluxAxis fluxAxis = spc.GetFluxAxis();
@@ -62,7 +61,7 @@ const CLineDetectionResult* CLineDetection::Compute( const CSpectrum& spectrum, 
 //    }
     UInt32 nPeaks = resPeaks.size();
 
-    CLineDetectionResult* result = new CLineDetectionResult();
+    auto result = std::shared_ptr<CLineDetectionResult>( new CLineDetectionResult() );
 
     //retest list
     TInt32RangeList retestPeaks;
@@ -215,7 +214,7 @@ const CLineDetectionResult* CLineDetection::Compute( const CSpectrum& spectrum, 
         retest_flag = true;
     }
     while(retest_flag){
-        retest_flag = Retest(spectrum, result, retestPeaks,  retestGaussParams, result->RayCatalog.GetFilteredList(m_type, CRay::nForce_Strong), m_winsize, m_cut );
+        retest_flag = Retest(spectrum, *result, retestPeaks,  retestGaussParams, result->RayCatalog.GetFilteredList(m_type, CRay::nForce_Strong), m_winsize, m_cut );
     }
 
     return result;
@@ -355,7 +354,7 @@ Float64 CLineDetection::ComputeFluxes(const CSpectrum& spectrum, Float64 winsize
     return ratioAmp;
 }
 
-bool CLineDetection::Retest( const CSpectrum& spectrum, CLineDetectionResult* result, TInt32RangeList retestPeaks,  TGaussParamsList retestGaussParams, CRayCatalog::TRayVector strongLines, Int32 winsize, Float64 cut )
+bool CLineDetection::Retest( const CSpectrum& spectrum, CLineDetectionResult& result, TInt32RangeList retestPeaks,  TGaussParamsList retestGaussParams, CRayCatalog::TRayVector strongLines, Int32 winsize, Float64 cut )
 {
     DebugAssert( retestPeaks.size() == retestPeaks.size());
 
@@ -390,7 +389,7 @@ bool CLineDetection::Retest( const CSpectrum& spectrum, CLineDetectionResult* re
     return continue_retest;
 }
 
-bool CLineDetection::RemoveStrongFromSpectra(const CSpectrum& spectrum, CLineDetectionResult* result,  CRayCatalog::TRayVector strongLines, TInt32RangeList selectedretestPeaks, TGaussParamsList selectedgaussparams, Float64 winsize, Float64 cut)
+bool CLineDetection::RemoveStrongFromSpectra(const CSpectrum& spectrum, CLineDetectionResult& result,  CRayCatalog::TRayVector strongLines, TInt32RangeList selectedretestPeaks, TGaussParamsList selectedgaussparams, Float64 winsize, Float64 cut)
 {
 
     const CSpectrumSpectralAxis wavesAxis = spectrum.GetSpectralAxis();
@@ -460,8 +459,8 @@ bool CLineDetection::RemoveStrongFromSpectra(const CSpectrum& spectrum, CLineDet
             char buffer [64];
             sprintf(buffer,"detected_retested_peak_%d",k);
             std::string peakName = buffer;
-            result->RayCatalog.Add( CRay( peakName, selectedgaussparams[k].Pos, m_type, force , selectedgaussparams[k].Amp, selectedgaussparams[k].Width, ratioAmp) );
-            result->RayCatalog.Sort();
+            result.RayCatalog.Add( CRay( peakName, selectedgaussparams[k].Pos, m_type, force , selectedgaussparams[k].Amp, selectedgaussparams[k].Width, ratioAmp) );
+            result.RayCatalog.Sort();
             added=true;
         }
     }

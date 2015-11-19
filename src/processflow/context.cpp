@@ -20,6 +20,7 @@
 #include <stdio.h>
 #include <float.h>
 #include <fstream>
+#include <memory>
 
 #include <boost/filesystem.hpp>
 
@@ -27,7 +28,6 @@ namespace bfs = boost::filesystem;
 
 using namespace NSEpic;
 
-IMPLEMENT_MANAGED_OBJECT( CProcessFlowContext )
 
 CProcessFlowContext::CProcessFlowContext()
 {
@@ -41,10 +41,11 @@ CProcessFlowContext::~CProcessFlowContext()
 
 
 bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath,
-                                const CTemplateCatalog& templateCatalog, const CRayCatalog& rayCatalog,
-                                CParameterStore& paramStore  )
+                                std::shared_ptr<const CTemplateCatalog> templateCatalog,
+                                std::shared_ptr<const CRayCatalog> rayCatalog,
+                                std::shared_ptr<CParameterStore> paramStore  )
 {
-    m_Spectrum = new CSpectrum();
+    m_Spectrum = std::shared_ptr<CSpectrum>( new CSpectrum() );
     m_Spectrum->SetName(bfs::path( spectrumPath ).stem().string().c_str() );
 
     CSpectrumIOGenericReader reader;
@@ -87,29 +88,29 @@ bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath,
 
     // Smooth flux
     Int64 smoothWidth;
-    paramStore.Get( "smoothWidth", smoothWidth, 0 );
+    paramStore->Get( "smoothWidth", smoothWidth, 0 );
     if( smoothWidth > 0 )
         m_Spectrum->GetFluxAxis().ApplyMeanSmooth( smoothWidth );
 
 
     // Compute continuum substracted spectrum
-    m_SpectrumWithoutContinuum = new CSpectrum();
+    m_SpectrumWithoutContinuum = std::shared_ptr<CSpectrum>( new CSpectrum() );
     *m_SpectrumWithoutContinuum = *m_Spectrum;
 
     std::string medianRemovalMethod;
-    paramStore.Get( "continuumRemoval.method", medianRemovalMethod, "IrregularSamplingMedian" );
+    paramStore->Get( "continuumRemoval.method", medianRemovalMethod, "IrregularSamplingMedian" );
     //ctx.GetParameterStore().Get( "continuumRemoval.method", medianRemovalMethod, "Median" );
     if( medianRemovalMethod== "IrregularSamplingMedian"){
         CContinuumIrregularSamplingMedian continuum;
         Float64 opt_medianKernelWidth;
-        paramStore.Get( "continuumRemoval.medianKernelWidth", opt_medianKernelWidth, 75 );
+        paramStore->Get( "continuumRemoval.medianKernelWidth", opt_medianKernelWidth, 75 );
         continuum.SetMedianKernelWidth(opt_medianKernelWidth);
         m_SpectrumWithoutContinuum->RemoveContinuum( continuum );
 
     }else{
         CContinuumMedian continuum;
         Float64 opt_medianKernelWidth;
-        paramStore.Get( "continuumRemoval.medianKernelWidth", opt_medianKernelWidth, 75 );
+        paramStore->Get( "continuumRemoval.medianKernelWidth", opt_medianKernelWidth, 75 );
         continuum.SetMedianKernelWidth(opt_medianKernelWidth);
         m_SpectrumWithoutContinuum->RemoveContinuum( continuum );
     }
@@ -117,13 +118,13 @@ bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath,
     m_SpectrumWithoutContinuum->ConvertToLogScale();
 
 
-    m_TemplateCatalog = ( CTemplateCatalog*) &templateCatalog;
-    m_RayCatalog = ( CRayCatalog*) &rayCatalog;
-    m_ParameterStore = &paramStore;
-    m_ResultStore = new COperatorResultStore;
+    m_TemplateCatalog = templateCatalog;
+    m_RayCatalog = rayCatalog;
+    m_ParameterStore = paramStore;
+    m_ResultStore = std::shared_ptr<COperatorResultStore>( new COperatorResultStore );
 
 
-    m_DataStore = new CDataStore( *m_ResultStore, *m_ParameterStore );
+    m_DataStore = std::shared_ptr<CDataStore>( new CDataStore( *m_ResultStore, *m_ParameterStore ) );
     m_DataStore->SetSpectrumName( bfs::path( spectrumPath ).stem().string() );
 
 
@@ -132,16 +133,14 @@ bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath,
 
 bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath,
                                 const char* templateCatalogPath, const char* rayCatalogPath,
-                                CParameterStore& paramStore )
+                                std::shared_ptr<CParameterStore> paramStore )
 {
-
     std::string medianRemovalMethod;
     m_ParameterStore->Get( "continuumRemoval.method", medianRemovalMethod, "IrregularSamplingMedian" );
     Float64 opt_medianKernelWidth;
     m_ParameterStore->Get( "continuumRemoval.medianKernelWidth", opt_medianKernelWidth, 75 );
-
-    CRef<CTemplateCatalog> templateCatalog = new CTemplateCatalog( medianRemovalMethod, opt_medianKernelWidth);
-    CRef<CRayCatalog> rayCatalog = new CRayCatalog;
+    std::shared_ptr<CTemplateCatalog> templateCatalog = std::shared_ptr<CTemplateCatalog>( new CTemplateCatalog( medianRemovalMethod, opt_medianKernelWidth) );
+    std::shared_ptr<CRayCatalog> rayCatalog = std::shared_ptr<CRayCatalog>(new CRayCatalog);
 
 
     Bool rValue;
@@ -170,7 +169,7 @@ bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath,
         }
     }
 
-    return Init( spectrumPath, noisePath, *templateCatalog, *rayCatalog, paramStore );
+    return Init( spectrumPath, noisePath, templateCatalog, rayCatalog, paramStore );
 }
 
 CParameterStore& CProcessFlowContext::GetParameterStore()
