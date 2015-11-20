@@ -7,21 +7,34 @@
 
 using namespace NSEpic;
 
+/**
+ *
+ */
 CMask::CMask()
 {
+
 }
 
+/**
+ *
+ */
 CMask::CMask( UInt32 weightsCount ) :
     m_Mask( weightsCount )
 {
 
 }
 
+/**
+ *
+ */
 CMask::~CMask()
 {
+
 }
 
-
+/**
+ *
+ */
 CMask& CMask::operator &= ( const CMask& other )
 {
     if( GetMasksCount() != other.GetMasksCount() )
@@ -35,6 +48,9 @@ CMask& CMask::operator &= ( const CMask& other )
     return *this;
 }
 
+/**
+ *
+ */
 Bool CMask::IntersectWith( const CMask& other )
 {
     if( GetMasksCount() != other.GetMasksCount() )
@@ -51,6 +67,9 @@ Bool CMask::IntersectWith( const CMask& other )
     return true;
 }
 
+/**
+ *
+ */
 Float64 CMask::CompouteOverlapRate( const CMask& other ) const
 {
     if( other.GetMasksCount() != GetMasksCount() )
@@ -83,6 +102,9 @@ Float64 CMask::CompouteOverlapRate( const CMask& other ) const
     return (Float64)otherRate/(Float64)selfRate;
 }
 
+/**
+ *
+ */
 Float64 CMask::IntersectAndComputeOverlapRate( const CMask& other ) const
 {
     if( other.GetMasksCount() != GetMasksCount() )

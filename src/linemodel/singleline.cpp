@@ -1,26 +1,30 @@
-
+#include <epic/core/debug/assert.h>
+#include <epic/core/log/log.h>
 #include <epic/redshift/linemodel/element.h>
 #include <epic/redshift/linemodel/singleline.h>
-
-#include <epic/core/debug/assert.h>
 #include <epic/redshift/spectrum/spectrum.h>
-#include <epic/core/log/log.h>
 
 #include <float.h>
 #include <algorithm>
 
 using namespace NSEpic;
 
-CSingleLine::CSingleLine(const CRay& r , const std::string& widthType, Float64 nominalWidth, std::vector<Int32> catalogIndexes):CLineModelElement(widthType)
+/**
+ * Attribution constructor.
+ */
+CSingleLine::CSingleLine( const CRay& r , const std::string& widthType, Float64 nominalWidth, std::vector<Int32> catalogIndexes ) : CLineModelElement( widthType )
 {
     m_ElementType = "CSingleLine";
     m_Ray = r;
 
-    if( m_Ray.GetType()==CRay::nType_Emission ){
+    if( m_Ray.GetType()==CRay::nType_Emission )
+      {
         m_SignFactor = 1.0;
-    }else{
+      }
+    else
+      {
         m_SignFactor = -1.0;
-    }
+      }
 
     m_NominalWidth = nominalWidth;
     m_FittedAmplitude = -1;
@@ -30,97 +34,141 @@ CSingleLine::CSingleLine(const CRay& r , const std::string& widthType, Float64 n
     m_Start = -1;
     m_End = -1;
 
-    for(int i=0; i<catalogIndexes.size(); i++){
-        m_LineCatalogIndexes.push_back(catalogIndexes[i]);
-    }
+    for( int i=0; i<catalogIndexes.size(); i++ )
+      {
+        m_LineCatalogIndexes.push_back( catalogIndexes[i] );
+      }
 
     //initialize fitted amplitude
-    SetFittedAmplitude(-1.0, -1.0);
+    SetFittedAmplitude(-1.0, -1.0 );
 }
 
+/**
+ * Empty destructor.
+ */
 CSingleLine::~CSingleLine()
 {
+
 }
 
-std::string CSingleLine::GetRayName(Int32 subeIdx)
+/**
+ * Wrapper around m_Ray.GetName().
+ */
+std::string CSingleLine::GetRayName( Int32 subeIdx )
 {
     return m_Ray.GetName();
 }
 
-
-Float64 CSingleLine::GetSignFactor(Int32 subeIdx)
+/**
+ * Gets m_SignFactor.
+ */
+Float64 CSingleLine::GetSignFactor( Int32 subeIdx )
 {
     return m_SignFactor;
 }
 
-Float64 CSingleLine::GetWidth(Int32 subeIdx, Float64 redshift)
+/**
+ * Calculates and returns the line width for the input redshift.
+ */
+Float64 CSingleLine::GetWidth( Int32 subeIdx, Float64 redshift )
 {
     Float64 mu = m_Ray.GetPosition()*(1+redshift);
-    Float64 c = GetLineWidth(mu, redshift);
+    Float64 c = GetLineWidth( mu, redshift );
 
     return c;
 }
 
-void CSingleLine::prepareSupport(const CSpectrumSpectralAxis& spectralAxis, Float64 redshift, const TFloat64Range &lambdaRange)
+/**
+ * Sets some m_ variables depending on the input parameters.
+ */
+void CSingleLine::prepareSupport( const CSpectrumSpectralAxis& spectralAxis, Float64 redshift, const TFloat64Range &lambdaRange )
 {
     Float64 mu = m_Ray.GetPosition()*(1+redshift);
-    Float64 c = GetLineWidth(mu, redshift);
+    Float64 c = GetLineWidth( mu, redshift );
     Float64 winsize = m_NSigmaSupport*c;
     Float64 lambda_start = mu-winsize/2.0;
-    if(lambda_start < lambdaRange.GetBegin()){
+    if( lambda_start<lambdaRange.GetBegin() )
+      {
         lambda_start = lambdaRange.GetBegin();
-    }
-    m_Start = spectralAxis.GetIndexAtWaveLength(lambda_start);
+      }
+    m_Start = spectralAxis.GetIndexAtWaveLength( lambda_start );
 
     Float64 lambda_end = mu+winsize/2.0;
-    if(lambda_end > lambdaRange.GetEnd()){
+    if( lambda_end>lambdaRange.GetEnd() )
+      {
         lambda_end = lambdaRange.GetEnd();
-    }
-    m_End = spectralAxis.GetIndexAtWaveLength(lambda_end);
+      }
+    m_End = spectralAxis.GetIndexAtWaveLength( lambda_end );
 
     Int32 minLineOverlap = m_OutsideLambdaRangeOverlapThreshold*winsize;
-    if( m_Start >= (spectralAxis.GetSamplesCount()-1-minLineOverlap) || m_End <=minLineOverlap){
+    if( m_Start>=(spectralAxis.GetSamplesCount()-1-minLineOverlap) || m_End<=minLineOverlap )
+      {
         m_OutsideLambdaRange=true;
-    }else{
+      }
+    else 
+      {
         m_OutsideLambdaRange=false;
-    }
+      }
 
-    if(m_OutsideLambdaRange){
+    if( m_OutsideLambdaRange )
+      {
         m_FittedAmplitude = -1.0;
         m_FittedAmplitudeErrorSigma = -1.0;
         return;
-    }
+      }
 }
 
+/**
+ * Returns an empty support if m_OutsideLambdaRange is false, or a TInt32Range ( m_Start, m_End ) otherwise.
+ */
 TInt32RangeList CSingleLine::getSupport()
 {
     TInt32RangeList support;
-    if(m_OutsideLambdaRange==false){
-        support.push_back(TInt32Range(m_Start, m_End));
-    }
+    if( m_OutsideLambdaRange==false )
+      {
+        support.push_back( TInt32Range( m_Start, m_End ) );
+      }
     return support;
 }
 
-TInt32Range CSingleLine::getSupportSubElt(Int32 subeIdx)
+/**
+ * Returns an empty range if m_OtsideLambdaRange is false, and a range between m_Start and m_End otherwise.
+ */
+TInt32Range CSingleLine::getSupportSubElt( Int32 subeIdx )
 {
     TInt32Range support;
-     if(m_OutsideLambdaRange==false){
-         support = TInt32Range(m_Start, m_End);
-     }
+     if( m_OutsideLambdaRange==false )
+       {
+         support = TInt32Range( m_Start, m_End );
+       }
      return support;
-
 }
 
-Float64 CSingleLine::GetLineWidth(Float64 lambda, Float64 z){
-    Float64 instrumentSigma = -1;
-    if( m_LineWidthType == "psfinstrumentdriven"){
-        instrumentSigma = lambda/m_Resolution/m_FWHM_factor;
-    }else if( m_LineWidthType == "zdriven"){
-        instrumentSigma = m_NominalWidth*(1+z);
-    }else if( m_LineWidthType == "fixed"){
-        instrumentSigma = m_NominalWidth;
+/**
+ * Returns a sigma value depending on the m_LineWidthType and the parameters. 
+ */
+Float64 CSingleLine::GetLineWidth( Float64 lambda, Float64 z )
+{
+  Float64 instrumentSigma = -1;
+  if( m_LineWidthType == "psfinstrumentdriven" )
+    {
+      instrumentSigma = lambda/m_Resolution/m_FWHM_factor;
     }
-
+  else 
+    {
+      if( m_LineWidthType == "zdriven")
+	{
+	  instrumentSigma = m_NominalWidth*(1+z);
+	}
+      else 
+	{
+	  if( m_LineWidthType == "fixed" )
+	    {
+	      instrumentSigma = m_NominalWidth;
+	    }
+	}
+    }
+  
 //    Float64 v = 200;
 //    Float64 c = 300000.0;
 //    Float64 velocitySigma = v/c*lambda;//, useless /(1+z)*(1+z);
@@ -129,14 +177,17 @@ Float64 CSingleLine::GetLineWidth(Float64 lambda, Float64 z){
     return instrumentSigma;
 }
 
-void CSingleLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis, Float64  redshift)
+/**
+ * Sets m_FittedAmplitude and m_FittedAmplitudeErrorSigma based on the parameters.
+ */
+void CSingleLine::fitAmplitude( const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis, Float64  redshift )
 {
-    if(m_OutsideLambdaRange){
+    if( m_OutsideLambdaRange )
+      {
         m_FittedAmplitude = -1.0;
         m_FittedAmplitudeErrorSigma = -1.0;
         return;
-    }
-
+      }
 
     const Float64* flux = fluxAxis.GetSamples();
     const Float64* spectral = spectralAxis.GetSamples();
@@ -154,7 +205,7 @@ void CSingleLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const 
     Int32 num = 0;
 
     //A estimation
-    for ( Int32 i = m_Start; i <= m_End; i++)
+    for ( Int32 i = m_Start; i <= m_End; i++ )
     {
         y = flux[i];
         x = spectral[i];
@@ -162,7 +213,6 @@ void CSingleLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const 
 
         num++;
         err2 = 1.0 / (error[i] * error[i]);
-        //err2 = 1.0;
         sumCross += yg*y*err2;
         sumGauss += yg*yg*err2;
     }
@@ -173,10 +223,13 @@ void CSingleLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const 
     }
 
     m_FittedAmplitude = sumCross / sumGauss;
-    if(m_FittedAmplitude < 0){
+    if( m_FittedAmplitude<0 )
+      {
         m_FittedAmplitude = 0.0;
         m_FittedAmplitudeErrorSigma = 1.0/sqrt(sumGauss) - sumCross / sumGauss; //warning: sigma estimated = rough approx.
-    }else{
+      }
+    else
+      {
         m_FittedAmplitudeErrorSigma = 1.0/sqrt(sumGauss);
 //        //SNR estimation
 //        Float64 SNRThres = 1.0;
@@ -242,21 +295,26 @@ void CSingleLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const 
 //    return A;
 //}
 
-void CSingleLine::addToSpectrumModel(const CSpectrumSpectralAxis& modelspectralAxis, CSpectrumFluxAxis& modelfluxAxis, Float64 redshift )
+/**
+ * If applicable, add to each x the value from getModelAtLambda for the input redshift.
+ */
+void CSingleLine::addToSpectrumModel( const CSpectrumSpectralAxis& modelspectralAxis, CSpectrumFluxAxis& modelfluxAxis, Float64 redshift )
 {
-    if(m_OutsideLambdaRange){
+    if( m_OutsideLambdaRange )
+      {
         return;
-    }
+      }
 
     Float64 A = m_FittedAmplitude;
-    if(A==0){
+    if( A==0 )
+      {
         return;
-    }
+      }
 
     Float64* flux = modelfluxAxis.GetSamples();
     const Float64* spectral = modelspectralAxis.GetSamples();
 
-    for ( Int32 i = m_Start; i <= m_End; i++)
+    for ( Int32 i = m_Start; i<=m_End; i++ )
     {
         Float64 x = spectral[i];
         Float64 Yi = getModelAtLambda( x, redshift );
@@ -266,6 +324,9 @@ void CSingleLine::addToSpectrumModel(const CSpectrumSpectralAxis& modelspectralA
   return;
 }
 
+/**
+ * 
+ */
 Float64 CSingleLine::getModelAtLambda(Float64 lambda, Float64 redshift )
 {
     if(m_OutsideLambdaRange){
@@ -283,6 +344,9 @@ Float64 CSingleLine::getModelAtLambda(Float64 lambda, Float64 redshift )
     return Yi;
 }
 
+/**
+ * 
+ */
 void CSingleLine::initSpectrumModel(CSpectrumFluxAxis& modelfluxAxis, CSpectrumFluxAxis &continuumfluxAxis)
 {
     if(m_OutsideLambdaRange){
@@ -299,6 +363,9 @@ void CSingleLine::initSpectrumModel(CSpectrumFluxAxis& modelfluxAxis, CSpectrumF
   return;
 }
 
+/**
+ * 
+ */
 Float64 CSingleLine::GetFittedAmplitude(Int32 subeIdx){
 //    if(m_OutsideLambdaRange){
 //        m_FittedAmplitude = -1;
@@ -307,6 +374,9 @@ Float64 CSingleLine::GetFittedAmplitude(Int32 subeIdx){
     return m_FittedAmplitude;
 }
 
+/**
+ * 
+ */
 Float64 CSingleLine::GetFittedAmplitudeErrorSigma(Int32 subeIdx){
 //    if(m_OutsideLambdaRange){
 //        m_FittedAmplitude = -1;
@@ -315,11 +385,16 @@ Float64 CSingleLine::GetFittedAmplitudeErrorSigma(Int32 subeIdx){
     return m_FittedAmplitudeErrorSigma;
 }
 
+/**
+ * 
+ */
 Float64 CSingleLine::GetNominalAmplitude(Int32 subeIdx){
     return 1.0;
 }
 
-
+/**
+ * 
+ */
 Float64 CSingleLine::GetElementAmplitude(){
 //    if(m_OutsideLambdaRange){
 //        m_FittedAmplitude = -1;
@@ -328,7 +403,9 @@ Float64 CSingleLine::GetElementAmplitude(){
     return m_FittedAmplitude;
 }
 
-
+/**
+ * 
+ */
 void CSingleLine::SetFittedAmplitude(Float64 A, Float64 SNR)
 {
     if(m_OutsideLambdaRange){
@@ -340,12 +417,18 @@ void CSingleLine::SetFittedAmplitude(Float64 A, Float64 SNR)
     }
 }
 
+/**
+ * 
+ */
 void CSingleLine::LimitFittedAmplitude(Int32 subeIdx, Float64 limit){
     if(m_FittedAmplitude > limit){
         m_FittedAmplitude = std::max(0.0, limit);
     }
 }
 
+/**
+ * 
+ */
 Int32 CSingleLine::FindElementIndex(std::string LineTagStr)
 {
     Int32 idx = -1;
@@ -360,7 +443,9 @@ Int32 CSingleLine::FindElementIndex(std::string LineTagStr)
     return idx;
 }
 
-
+/**
+ * 
+ */
 bool CSingleLine::IsOutsideLambdaRange(Int32 subeIdx){
     return m_OutsideLambdaRange;
 }
