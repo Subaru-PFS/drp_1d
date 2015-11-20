@@ -15,6 +15,9 @@ class CProcessFlowContext;
 class CTemplate;
 class CSpectrum;
 
+/**
+ * \ingroup Redshift
+ */
 class CProcessFlow
 {
 

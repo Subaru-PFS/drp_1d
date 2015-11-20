@@ -9,6 +9,9 @@ namespace NSEpic
 
 class CSpectrum;
 
+/**
+ * \ingroup Redshift
+ */
 class CNoiseFlat : public CNoise
 {
 

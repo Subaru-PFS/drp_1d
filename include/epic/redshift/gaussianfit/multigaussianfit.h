@@ -18,6 +18,10 @@ namespace NSEpic
 
 class CSpectrum;
 
+/**
+ * \ingroup Redshift
+ * Multiple gaussian equations fit.
+ */
 class CMultiGaussianFit
 {
 

@@ -16,6 +16,9 @@ class CTemplate;
 class CCorrelationResult;
 class CChisquareResult;
 
+/**
+ * \ingroup Redshift
+ */
 class COperatorChicorr
 {
 

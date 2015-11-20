@@ -15,6 +15,9 @@ namespace NSEpic
 class CSpectrum;
 class CTemplate;
 
+/**
+ * \ingroup Redshift
+ */
 class COperatorCorrelation : public COperator
 {
 

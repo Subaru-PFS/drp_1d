@@ -12,6 +12,10 @@ namespace NSEpic
 
 class CSpectrum;
 
+/**
+ * \ingroup Redshift
+ * Single gaussian equation fit.
+ **/
 class CGaussianFit
 {
 

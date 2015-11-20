@@ -10,8 +10,8 @@ namespace NSEpic
 {
 
 /**
+ * \ingroup Redshift
  * Analyse a given input 2D array and find the n stronger extremum.
- *
  */
 class CExtremum
 {

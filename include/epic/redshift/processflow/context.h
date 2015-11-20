@@ -23,7 +23,7 @@ class CDataStore;
 
 /**
  * \ingroup Redshift
- * Store all data concerning computation and processign of a given spectrum.
+ * Store all data concerning computation and processing of a given spectrum.
  */
 class CProcessFlowContext
 {

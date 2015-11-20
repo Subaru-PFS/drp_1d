@@ -12,6 +12,9 @@ namespace NSEpic
 
 class CDataStore;
 
+/**
+ * \ingroup Redshift
+ */
 class COperatorResult
 {
 

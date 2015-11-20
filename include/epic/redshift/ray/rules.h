@@ -13,6 +13,7 @@ namespace NSEpic
 {
 
 /**
+ * \ingroup Redshift
  * Rules
  */
 class CRules

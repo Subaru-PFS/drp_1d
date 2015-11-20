@@ -11,6 +11,9 @@
 namespace NSEpic
 {
 
+/**
+ * \ingroup Redshift
+ */
 class CSpectrum
 {
 

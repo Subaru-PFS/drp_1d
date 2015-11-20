@@ -9,6 +9,9 @@
 namespace NSEpic
 {
 
+/**
+ * \ingroup Redshift
+ */
 class COperatorChiSquare : public COperator
 {
 

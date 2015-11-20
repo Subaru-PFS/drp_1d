@@ -9,6 +9,7 @@ namespace NSEpic
 {
 
 /**
+ * /ingroup Redshift
  * Represent a Single Line.
  */
 class CRay

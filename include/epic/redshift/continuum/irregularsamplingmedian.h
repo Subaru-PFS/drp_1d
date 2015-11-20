@@ -8,6 +8,9 @@ namespace NSEpic
 
 class CSpectrumFluxAxis;
 
+/** \ingroup Redshift
+ * Algorithm for estimating the continuum by computing the 'medium' resolution and applying the median method to it.
+ */
 class CContinuumIrregularSamplingMedian : public CContinuum
 {
 

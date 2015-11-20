@@ -21,6 +21,7 @@ using namespace NSEpic;
 CTestHelper::CTestHelper( int argc, char **argv ) :
     m_ConsoleHandler( m_Log )
 {
+
 }
 
 /**
@@ -58,7 +59,7 @@ Bool CTestHelper::ConfigureCmdLineOptions( int argc, char **argv )
     boost::program_options::options_description optionsDesc( "Apply various operation to an input spectrum" );
     optionsDesc.add_options()
       ( "help,h", "Print help" )
-      ( "RegexFilter", boost::program_options::value< std::string>(), "Regeluar expression to run only a subset of the sepcified tests" );
+      ( "RegexFilter", boost::program_options::value< std::string>(), "Regular expression to run only a subset of the sepcified tests" );
 
     boost::program_options::positional_options_description positionalOptionsDesc;
     positionalOptionsDesc.add( "RegexFilter", 1 );
@@ -75,7 +76,7 @@ Bool CTestHelper::ConfigureCmdLineOptions( int argc, char **argv )
         return false;
     }
 
-    if( vm.count("RegexFilter" ) )
+    if( vm.count( "RegexFilter" ) )
       {
         m_RegexFilter = vm["RegexFilter"].as< std::string >();
       }
@@ -103,7 +104,7 @@ Bool CTestHelper::TestMatchFilter( CppUnit::Test* t )
         return false;
 
     boost::regex e( m_RegexFilter );
-    return boost::regex_match( t->getName().c_str(), e);
+    return boost::regex_match( t->getName().c_str(), e );
 }
 
 /**
@@ -113,7 +114,7 @@ Void CTestHelper::RecursiveFilterTest( CppUnit::Test* t )
 {
     for( Int32 i=0; i<t->getChildTestCount(); i++ )
     {
-        CppUnit::Test* child = t->getChildTestAt(i);
+        CppUnit::Test* child = t->getChildTestAt( i );
 
         if( child->getChildTestCount() )
         {

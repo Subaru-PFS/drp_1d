@@ -12,6 +12,9 @@ class CSpectrum;
 class CTemplateCatalog;
 class CDataStore;
 
+/**
+ * \ingroup Redshift
+ */
 class COperatorDTree7Solve
 {
 

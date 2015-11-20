@@ -12,6 +12,9 @@
 namespace NSEpic
 {
 
+  /**
+   * \ingroup Redshift
+   */
 class CRayMatchingResult : public COperatorResult
 {
 

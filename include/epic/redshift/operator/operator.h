@@ -14,6 +14,9 @@ class CSpectrum;
 class CTemplate;
 class COperatorResult;
 
+/**
+ * \ingroup Redshift
+ */
 class COperator
 {
 

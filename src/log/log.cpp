@@ -81,6 +81,7 @@ Void CLog::LogInfo( const char* format, ... )
 Void CLog::LogDebug( const char* format, ... )
 {
     m_Mutex.Lock();
+
     va_list args;
     va_start( args, format );
     LogEntry( nLevel_Debug, format, args );
