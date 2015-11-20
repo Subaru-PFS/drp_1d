@@ -1,13 +1,12 @@
 #ifndef _REDSHIFT_PROCESSFLOW_CONTEXT_
 #define _REDSHIFT_PROCESSFLOW_CONTEXT_
 
-#include <epic/core/common/ref.h>
 #include <epic/redshift/spectrum/template/template.h>
 #include <epic/redshift/processflow/datastore.h>
 
 #include <map>
 #include <string>
-
+#include <memory>
 
 namespace NSEpic
 {
@@ -24,13 +23,10 @@ class CDataStore;
 
 /**
  * \ingroup Redshift
- * Store all data concerning computation and processign of a given spectrum
- *
+ * Store all data concerning computation and processing of a given spectrum.
  */
-class CProcessFlowContext : public CManagedObject
+class CProcessFlowContext
 {
-
-    DEFINE_MANAGED_OBJECT( CProcessFlowContext )
 
 public:
 
@@ -39,11 +35,12 @@ public:
 
     bool Init( const char* spectrumPath, const char* noisePath,
                const char* tempalteCatalogPath, const char* rayCatalogPath,
-               CParameterStore& paramStore  );
+               std::shared_ptr<CParameterStore> paramStore  );
 
     bool Init( const char* spectrumPath, const char* noisePath,
-               const CTemplateCatalog& templateCatalog, const CRayCatalog& rayCatalog,
-               CParameterStore& paramStore  );
+               std::shared_ptr<const CTemplateCatalog> templateCatalog,
+               std::shared_ptr<const CRayCatalog> rayCatalog,
+               std::shared_ptr<CParameterStore> paramStore  );
 
     const CSpectrum&                GetSpectrum() const;
     const CSpectrum&                GetSpectrumWithoutContinuum() const;
@@ -56,17 +53,16 @@ public:
 
 private:
 
-    CRef<CSpectrum>                 m_Spectrum;
-    CRef<CSpectrum>                 m_SpectrumWithoutContinuum;
+    std::shared_ptr<CSpectrum>                 m_Spectrum;
+    std::shared_ptr<CSpectrum>                 m_SpectrumWithoutContinuum;
 
-    CRef<CTemplateCatalog>          m_TemplateCatalog;
-    CRef<CRayCatalog>               m_RayCatalog;
+    std::shared_ptr<const CTemplateCatalog>    m_TemplateCatalog;
+    std::shared_ptr<const CRayCatalog>         m_RayCatalog;
 
+    std::shared_ptr<CParameterStore>           m_ParameterStore;
+    std::shared_ptr<COperatorResultStore>      m_ResultStore;
 
-    CRef<CParameterStore>           m_ParameterStore;
-    CRef<COperatorResultStore>      m_ResultStore;
-
-    CRef<CDataStore>                m_DataStore;
+    std::shared_ptr<CDataStore>                m_DataStore;
 
 
 

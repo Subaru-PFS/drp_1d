@@ -1,7 +1,6 @@
 #include "operator.h"
 
 #include <epic/core/common/datatypes.h>
-#include <epic/core/common/ref.h>
 #include <epic/redshift/operator/correlation.h>
 #include <epic/redshift/operator/correlationresult.h>
 #include <epic/redshift/operator/chisquare.h>
@@ -54,7 +53,7 @@ void CRedshiftOperatorTestCase::CorrelationAtZEqualZero()
 
     Float64 redshiftDelta = 0.0001;
     redshifts = TFloat64Range( 0.0, 3.0 ).SpreadOver( redshiftDelta );
-    CRef<CCorrelationResult> r = (CCorrelationResult*) correlation.Compute( s, t, lambdaRange, redshifts, 0.99 );
+    auto r = std::dynamic_pointer_cast<CCorrelationResult>( correlation.Compute( s, t, lambdaRange, redshifts, 0.99 ) );
     CPPUNIT_ASSERT( r != NULL );
 
 
@@ -103,7 +102,7 @@ void CRedshiftOperatorTestCase::CorrelationAtGivenZ()
     //CRedshifts redshifts( &z, 1 );
 
     COperatorCorrelation correlation;
-    CRef<CCorrelationResult> r = (CCorrelationResult*) correlation.Compute( s, t, lambdaRange, redshifts, 0.7 );
+    auto r = std::dynamic_pointer_cast<CCorrelationResult>( correlation.Compute( s, t, lambdaRange, redshifts, 0.7 ) );
     CPPUNIT_ASSERT( r != NULL );
 
     const TFloat64List& results = r->Correlation;
@@ -191,7 +190,7 @@ void CRedshiftOperatorTestCase::CorrelationMatchWithEZ( const char* spectraPath,
     TFloat64List redshifts = TFloat64Range( 0.0, 2.0 ).SpreadOver( redshiftDelta );
 
     COperatorCorrelation correlation;
-    CRef<CCorrelationResult> r = (CCorrelationResult*) correlation.Compute( s, t, TFloat64Range( 5600, 7000 ), redshifts, 1.0 );
+    auto r = std::dynamic_pointer_cast<CCorrelationResult>( correlation.Compute( s, t, TFloat64Range( 5600, 7000 ), redshifts, 1.0 ) );
     CPPUNIT_ASSERT( r != NULL );
 
     CCorrelationResult referenceResult;
@@ -261,7 +260,7 @@ void CRedshiftOperatorTestCase::ChisquareMatchWithEZ( const char* spectraPath, c
     TFloat64List redshifts = TFloat64Range( 0.0, 2.0 ).SpreadOver( redshiftDelta );
 
     COperatorChiSquare chi;
-    CRef<CChisquareResult> r = (CChisquareResult*) chi.Compute( s, t, TFloat64Range( 5600, 7000 ), redshifts, 1.0 );
+    auto r = std::dynamic_pointer_cast<CChisquareResult>( chi.Compute( s, t, TFloat64Range( 5600, 7000 ), redshifts, 1.0 ) );
     CPPUNIT_ASSERT( r != NULL );
 
     CChisquareResult referenceResult;

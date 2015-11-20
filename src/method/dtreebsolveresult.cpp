@@ -12,7 +12,6 @@
 
 using namespace NSEpic;
 
-IMPLEMENT_MANAGED_OBJECT( CDTreeBSolveResult )
 
 CDTreeBSolveResult::CDTreeBSolveResult()
 {
@@ -65,9 +64,8 @@ Void CDTreeBSolveResult::SaveLine( const CDataStore& store, std::ostream& stream
 
 Bool CDTreeBSolveResult::GetBestRedshift(const CDataStore& store, Float64& redshift, Float64& merit , std::string &dtreepath) const
 {
-
-    std::string scope = store.GetScope( this ) + "dtreeBsolve.linemodel";
-    CLineModelResult* results = (CLineModelResult*)store.GetGlobalResult(scope.c_str());
+    std::string scope = store.GetScope( *this ) + "dtreeBsolve.linemodel";
+    auto results = std::dynamic_pointer_cast<const CLineModelResult>( store.GetGlobalResult(scope.c_str()).lock() );
 
     Float64 SNRcutThresStrongLines = 5.0;
     Float64 FITcutThresStrongLines = 5.0;
@@ -389,8 +387,7 @@ Bool CDTreeBSolveResult::GetBestRedshift(const CDataStore& store, Float64& redsh
 
 Bool CDTreeBSolveResult::GetBestRedshiftChi2( const CDataStore& store, std::string scopeStr, Float64 targetz, Float64& redshift, Float64& merit, std::string& tplName ) const
 {
-
-    std::string scope = store.GetScope( this ) + "dtreeBsolve.chisquare2solve." + scopeStr.c_str();
+    std::string scope = store.GetScope( *this ) + "dtreeBsolve.chisquare2solve." + scopeStr.c_str();
     TOperatorResultMap meritResults = store.GetPerTemplateResult(scope.c_str());
 
     Float64 tmpMerit = DBL_MAX ;
@@ -400,7 +397,8 @@ Bool CDTreeBSolveResult::GetBestRedshiftChi2( const CDataStore& store, std::stri
     for( TOperatorResultMap::const_iterator it = meritResults.begin(); it != meritResults.end(); it++ )
     {
         Float64 zthres = 1e-12;
-        const CChisquareResult* meritResult = (const CChisquareResult*)(const COperatorResult*)(*it).second;
+        auto meritResult = std::dynamic_pointer_cast<const CChisquareResult>((*it).second);
+
         for( Int32 i=0; i<meritResult->ChiSquare.size(); i++ )
         {
             if(std::abs(targetz-meritResult->Redshifts[i])<zthres && tmpMerit>meritResult->ChiSquare[i]){
@@ -426,15 +424,14 @@ Bool CDTreeBSolveResult::GetBestRedshiftChi2( const CDataStore& store, std::stri
 
 TFloat64List CDTreeBSolveResult::GetBestRedshiftChi2List( const CDataStore& store, std::string scopeStr,  Float64& minmerit) const
 {
-
-    std::string scope = store.GetScope( this ) + "dtreeBsolve.chisquare2solve." + scopeStr.c_str();
+    std::string scope = store.GetScope( *this ) + "dtreeBsolve.chisquare2solve." + scopeStr.c_str();
     TOperatorResultMap meritResults = store.GetPerTemplateResult(scope.c_str());
 
     TFloat64List meritList;
     //init meritresults
     TOperatorResultMap::const_iterator it0 = meritResults.begin();
     {
-        const CChisquareResult* meritResult = (const CChisquareResult*)(const COperatorResult*)(*it0).second;
+        auto meritResult = std::dynamic_pointer_cast<const CChisquareResult> ( (*it0).second );
         for( Int32 i=0; i<meritResult->ChiSquare.size(); i++ )
         {
             meritList.push_back(DBL_MAX);
@@ -445,7 +442,7 @@ TFloat64List CDTreeBSolveResult::GetBestRedshiftChi2List( const CDataStore& stor
     minmerit = DBL_MAX;
     for( TOperatorResultMap::const_iterator it = meritResults.begin(); it != meritResults.end(); it++ )
     {
-        const CChisquareResult* meritResult = (const CChisquareResult*)(const COperatorResult*)(*it).second;
+        auto meritResult = std::dynamic_pointer_cast<const CChisquareResult>((*it).second);
         for( Int32 i=0; i<meritResult->ChiSquare.size(); i++ )
         {
             if( meritList[i] > meritResult->ChiSquare[i]){

@@ -2,7 +2,6 @@
 
 #include <boost/filesystem.hpp>
 #include <epic/core/common/datatypes.h>
-#include <epic/core/common/ref.h>
 #include <epic/redshift/ray/catalog.h>
 
 #include <boost/tokenizer.hpp>
@@ -106,12 +105,12 @@ void CRedshiftLineDetectionTestCase::EzValidationTest()
         Float64 strongcut = 2.0;
 
         CPeakDetection peakDetection(winsize, cut);
-        CConstRef<CPeakDetectionResult> peakDetectionResult = peakDetection.Compute( s, s.GetLambdaRange() );
+        auto peakDetectionResult = peakDetection.Compute( s, s.GetLambdaRange() );
 
 
         // detected rays
         CLineDetection lineDetection(CRay::nType_Emission, cut, strongcut, winsize, minsize, maxsize);
-        CConstRef<CLineDetectionResult> lineDetectionResult = lineDetection.Compute( s, s.GetLambdaRange(), peakDetectionResult->PeakList, peakDetectionResult->EnlargedPeakList);
+        auto lineDetectionResult = lineDetection.Compute( s, s.GetLambdaRange(), peakDetectionResult->PeakList, peakDetectionResult->EnlargedPeakList);
 
         //load reference results
         TFloat64List rayPosList = LoadDetectedRayPositions(inputrefdetectionresults.c_str());
@@ -214,12 +213,12 @@ void CRedshiftLineDetectionTestCase::SyntheticValidationTest()
     Float64 strongcut = 2.0;
 
     CPeakDetection peakDetection(winsize, cut, 1, 2.0 , 0.0);
-    CConstRef<CPeakDetectionResult> peakDetectionResult = peakDetection.Compute( s, s.GetLambdaRange() );
+    auto peakDetectionResult = peakDetection.Compute( s, s.GetLambdaRange() );
 
 
     // detected rays
     CLineDetection lineDetection(CRay::nType_Emission, cut, strongcut, winsize, minsize, maxsize);
-    CConstRef<CLineDetectionResult> lineDetectionResult = lineDetection.Compute( s, s.GetLambdaRange(), peakDetectionResult->PeakList, peakDetectionResult->EnlargedPeakList);
+    auto lineDetectionResult = lineDetection.Compute( s, s.GetLambdaRange(), peakDetectionResult->PeakList, peakDetectionResult->EnlargedPeakList);
 
 
 

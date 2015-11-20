@@ -19,9 +19,8 @@ class CChisquareResult;
 /**
  * \ingroup Redshift
  */
-class COperatorChicorr : public CManagedObject
+class COperatorChicorr
 {
-    DEFINE_MANAGED_OBJECT( COperatorChicorr )
 
 public:
 

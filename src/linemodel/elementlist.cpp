@@ -43,7 +43,7 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum, const CS
 
     //LogCatalogInfos();
     m_RestRayList = restRayList;
-    m_SpectrumModel = new CSpectrum(spectrum);
+    m_SpectrumModel = std::shared_ptr<CSpectrum>( new CSpectrum(spectrum) );
 
     Int32 spectrumSampleCount = spectrum.GetSampleCount();
     m_SpcFluxAxis.SetSize( spectrumSampleCount );

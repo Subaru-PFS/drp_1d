@@ -18,8 +18,6 @@ class CProcessFlowContext;
 class CLineMatchingSolveResult : public COperatorResult
 {
 
-    DEFINE_MANAGED_OBJECT( CLineMatchingSolveResult )
-
 public:
 
     CLineMatchingSolveResult();

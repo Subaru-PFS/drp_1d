@@ -13,7 +13,6 @@
 using namespace NSEpic;
 using namespace std;
 
-IMPLEMENT_MANAGED_OBJECT( CContinuumMedian )
 
 CContinuumMedian::CContinuumMedian()
 {

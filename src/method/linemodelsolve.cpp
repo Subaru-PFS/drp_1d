@@ -11,8 +11,6 @@
 using namespace NSEpic;
 using namespace std;
 
-IMPLEMENT_MANAGED_OBJECT( CLineModelSolve )
-
 CLineModelSolve::CLineModelSolve()
 {
 
@@ -38,7 +36,7 @@ const std::string CLineModelSolve::GetDescription()
 
 }
 
-const CLineModelSolveResult* CLineModelSolve::Compute(  CDataStore& dataStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont, const CRayCatalog& restraycatalog,
+std::shared_ptr<const CLineModelSolveResult> CLineModelSolve::Compute(  CDataStore& dataStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont, const CRayCatalog& restraycatalog,
                                                         const TFloat64Range& lambdaRange, const TFloat64List& redshifts)
 {
     Bool storeResult = false;
@@ -50,8 +48,7 @@ const CLineModelSolveResult* CLineModelSolve::Compute(  CDataStore& dataStore, c
 
     if( storeResult )
     {
-        CLineModelSolveResult*  result = new CLineModelSolveResult();
-        return result;
+        return std::shared_ptr<const CLineModelSolveResult>( new CLineModelSolveResult() );
     }
 
     return NULL;
@@ -83,8 +80,28 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore, const CSpectrum& spc, const 
 
     // Compute merit function
     COperatorLineModel linemodel;
-    CRef<CLineModelResult>  result = (CLineModelResult*)linemodel.Compute( dataStore, _spc, _spcContinuum, restraycatalog, lambdaRange, redshifts, opt_extremacount, opt_continuumcomponent, opt_lineWidthType, opt_continuumreest);
+    auto  result = linemodel.Compute( dataStore, _spc, _spcContinuum, restraycatalog, lambdaRange, redshifts, opt_extremacount, opt_continuumcomponent, opt_lineWidthType, opt_continuumreest);
 
+//    static Float64 cutThres = 2.0;
+//    static Int32 bestSolutionIdx = 0;
+//    Int32 nValidLines = result->GetNLinesOverCutThreshold(bestSolutionIdx, cutThres);
+//    Float64 bestExtremaMerit = result->GetExtremaMerit(0);
+//    Log.LogInfo( "Linemodelsolve : bestExtremaMerit, %f", bestExtremaMerit);
+//    Float64 thres = 0.001;
+//    Int32 idxNextValid = 1;
+//    for(Int32 idnext=1; idnext<result->Redshifts.size(); idnext++){
+//       if( std::abs(result->Redshifts[idnext]-result->Redshifts[0])> thres){
+//           idxNextValid = idnext;
+//           break;
+//       }
+//    }
+//    Float64 nextExtremaMerit = result->GetExtremaMerit(idxNextValid);
+//    Log.LogInfo( "Linemodelsolve : nextExtremaMerit, %f", nextExtremaMerit);
+//    if(nValidLines<2 || (bestExtremaMerit - nextExtremaMerit) > -50.0 ){
+//        result=0;
+//        Log.LogInfo( "Linemodelsolve : result set to 0" );
+//    }
+//    Log.LogInfo( "Linemodelsolve : for best solution, %d valid lines found", nValidLines);
 
     if( !result )
     {
@@ -92,7 +109,7 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore, const CSpectrum& spc, const 
         return false;
     }else{
         // Store results
-        dataStore.StoreScopedGlobalResult( scopeStr.c_str(), *result );
+        dataStore.StoreScopedGlobalResult( scopeStr.c_str(), result );
     }
 
     return true;

@@ -16,8 +16,6 @@ namespace NSEpic
 class CLineDetectionResult : public COperatorResult
 {
 
-    DEFINE_MANAGED_OBJECT( CLineDetectionResult )
-
 public:
 
     CLineDetectionResult();

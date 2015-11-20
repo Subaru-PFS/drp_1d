@@ -14,8 +14,6 @@
 using namespace NSEpic;
 using namespace std;
 
-IMPLEMENT_MANAGED_OBJECT( CContinuumIrregularSamplingMedian )
-
 CContinuumIrregularSamplingMedian::CContinuumIrregularSamplingMedian()
 {
     m_MeanSmoothAmplitude = 75;     // Angstrom

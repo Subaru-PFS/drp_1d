@@ -4,7 +4,6 @@
 #include <epic/core/common/datatypes.h>
 
 #include <epic/redshift/processflow/parameterstore.h>
-#include <epic/core/common/managedobject.h>
 #include <epic/redshift/processflow/resultstore.h>
 
 #include <boost/filesystem.hpp>
@@ -17,10 +16,8 @@ namespace NSEpic
 /**
  * \ingroup Redshift
  */
-class CDataStore  : public CManagedObject
+class CDataStore
 {
-
-    DEFINE_MANAGED_OBJECT( CDataStore );
 
 public:
 
@@ -44,7 +41,7 @@ public:
 
     std::string         GetCurrentScopeName() const;
 
-    std::string         GetScope(CConstRef<COperatorResult>  result) const;
+    std::string         GetScope( const COperatorResult&  result) const;
 
     // Wrapper functions
     Bool                            GetScopedParam( const std::string& name, TFloat64List& v, const TFloat64List& defaultValue = TFloat64List() ) const;
@@ -79,12 +76,12 @@ public:
     Bool                            SetParam( const std::string& name, Bool v );
     Bool                            SetParam( const std::string& name, const std::string& v );
 
-    Void                            StoreScopedPerTemplateResult( const CTemplate& t, const std::string& name, const COperatorResult& result );
-    Void                            StoreScopedGlobalResult( const std::string& name, const COperatorResult& result );
+    Void                            StoreScopedPerTemplateResult( const CTemplate& t, const std::string& name, std::shared_ptr<const COperatorResult>  result );
+    Void                            StoreScopedGlobalResult( const std::string& name, std::shared_ptr<const COperatorResult>  result );
 
-    const COperatorResult*          GetPerTemplateResult( const CTemplate& t, const std::string& name ) const;
+    std::weak_ptr<const COperatorResult>          GetPerTemplateResult( const CTemplate& t, const std::string& name ) const;
     TOperatorResultMap              GetPerTemplateResult( const std::string& name ) const;
-    const COperatorResult*          GetGlobalResult( const std::string& name ) const;
+    std::weak_ptr<const COperatorResult>          GetGlobalResult( const std::string& name ) const;
 
     Void                            SaveRedshiftResultHeader( const boost::filesystem::path& dir );
     Void                            SaveRedshiftResult( const boost::filesystem::path& dir );

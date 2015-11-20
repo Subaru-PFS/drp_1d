@@ -3,7 +3,6 @@
 
 #include <epic/core/common/datatypes.h>
 #include <epic/core/common/range.h>
-#include <epic/core/common/managedobject.h>
 #include <boost/property_tree/ptree.hpp>
 
 namespace NSEpic
@@ -12,12 +11,10 @@ namespace NSEpic
 /**
  * \ingroup Redshift
  */
-class CParameterStore : public CManagedObject
+class CParameterStore
 {
 
 public:
-
-    DEFINE_MANAGED_OBJECT( CParameterStore );
 
     CParameterStore();
     virtual ~CParameterStore();

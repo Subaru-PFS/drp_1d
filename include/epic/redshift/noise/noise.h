@@ -2,7 +2,6 @@
 #define _REDSHIFT_NOISE_NOISE_
 
 #include <epic/core/common/datatypes.h>
-#include <epic/core/common/managedobject.h>
 
 namespace NSEpic
 {
@@ -12,7 +11,7 @@ class CSpectrum;
 /**
  * \ingroup Redshift
  */
-class CNoise : public CManagedObject
+class CNoise
 {
 
 public:

@@ -16,8 +16,6 @@ namespace NSEpic
 class CPeakDetectionResult : public COperatorResult
 {
 
-    DEFINE_MANAGED_OBJECT( CPeakDetectionResult )
-
 public:
 
     CPeakDetectionResult();

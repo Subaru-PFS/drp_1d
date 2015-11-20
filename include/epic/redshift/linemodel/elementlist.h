@@ -1,8 +1,6 @@
 #ifndef ELEMENTLIST_H
 #define ELEMENTLIST_H
 
-
-#include <epic/core/common/ref.h>
 #include <epic/core/common/range.h>
 #include <epic/redshift/common/datatypes.h>
 
@@ -15,7 +13,10 @@
 #include <epic/redshift/operator/linemodelresult.h>
 #include <epic/redshift/linemodel/element.h>
 #include <epic/redshift/linemodel/singleline.h>
+
 #include <boost/shared_ptr.hpp>
+
+#include <memory>
 
 namespace NSEpic
 {
@@ -88,7 +89,7 @@ private:
     Float64 m_Redshift;
     std::vector<boost::shared_ptr<CLineModelElement>  > m_Elements;
 
-    CRef<CSpectrum>   m_SpectrumModel;  //model
+    std::shared_ptr<CSpectrum>  m_SpectrumModel;  //model
     CSpectrumFluxAxis m_SpcFluxAxis;    //observed spectrum
     CSpectrumFluxAxis m_SpcContinuumFluxAxis; //oberved continuum spectrum
     CSpectrumFluxAxis m_spcFluxAxisNoContinuum; //observed spectrum for line fitting

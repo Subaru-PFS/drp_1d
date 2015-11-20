@@ -2,8 +2,6 @@
 #define _REDSHIFT_SPECTRUM_TEMPLATE_CATALOG_
 
 #include <epic/core/common/datatypes.h>
-#include <epic/core/common/managedobject.h>
-#include <epic/core/common/ref.h>
 #include <epic/redshift/spectrum/template/template.h>
 
 #include <boost/filesystem.hpp>
@@ -12,17 +10,15 @@
 namespace NSEpic
 {
 
-class CTemplateCatalog : public CManagedObject
+class CTemplateCatalog
 {
-
-    DEFINE_MANAGED_OBJECT( CTemplateCatalog )
 
 public:
 
     CTemplateCatalog( std::string cremovalmethod="Median", Float64 mediankernelsize=75.0);
     ~CTemplateCatalog();
 
-    Bool Add( CTemplate& r );
+    Bool Add( std::shared_ptr<CTemplate> );
     Bool Add( const char* templatePath, const std::string& category );
     Bool Load( const char* filePath );
 

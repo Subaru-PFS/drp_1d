@@ -14,8 +14,6 @@ class CSpectrumFluxAxis;
 class CContinuumIrregularSamplingMedian : public CContinuum
 {
 
-    DEFINE_MANAGED_OBJECT( CContinuumIrregularSamplingMedian )
-
 public:
 
     CContinuumIrregularSamplingMedian();

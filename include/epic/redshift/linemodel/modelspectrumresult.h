@@ -7,7 +7,6 @@
 #include <epic/redshift/operator/operator.h>
 
 #include <epic/redshift/spectrum/spectrum.h>
-#include <epic/core/common/ref.h>
 
 namespace NSEpic
 {
@@ -17,8 +16,6 @@ namespace NSEpic
    */
 class CModelSpectrumResult : public COperatorResult
 {
-
-    DEFINE_MANAGED_OBJECT( CModelSpectrumResult )
 
 public:
 

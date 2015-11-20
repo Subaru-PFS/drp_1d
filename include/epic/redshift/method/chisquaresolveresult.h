@@ -18,8 +18,6 @@ class CProcessFlowContext;
 class CChisquareSolveResult : public COperatorResult
 {
 
-    DEFINE_MANAGED_OBJECT( CChisquareSolveResult )
-
 public:
 
     CChisquareSolveResult();

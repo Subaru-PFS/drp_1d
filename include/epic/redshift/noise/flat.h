@@ -15,8 +15,6 @@ class CSpectrum;
 class CNoiseFlat : public CNoise
 {
 
-    DEFINE_MANAGED_OBJECT( CNoiseFlat )
-
 public:
 
     CNoiseFlat();

@@ -5,7 +5,6 @@
 #include <stdio.h>
 
 using namespace NSEpic;
-IMPLEMENT_MANAGED_OBJECT(CRayMatching)
 
 // This class's initial implementation duplicates the VIPGI method to match lines found with catalog lines, as in EZELmatch.py, Line 264
 
@@ -17,7 +16,7 @@ CRayMatching::~CRayMatching()
 {
 }
 
-CRayMatchingResult* CRayMatching::Compute(const CRayCatalog& detectedRayCatalog, const CRayCatalog& restRayCatalog, const TFloat64Range& redshiftRange, Int32 nThreshold, Float64 tol , Int32 typeFilter, Int32 detectedForceFilter, Int32 restForceFilter)
+std::shared_ptr<CRayMatchingResult> CRayMatching::Compute(const CRayCatalog& detectedRayCatalog, const CRayCatalog& restRayCatalog, const TFloat64Range& redshiftRange, Int32 nThreshold, Float64 tol , Int32 typeFilter, Int32 detectedForceFilter, Int32 restForceFilter)
 {
     CRayCatalog::TRayVector detectedRayList = detectedRayCatalog.GetFilteredList(typeFilter, detectedForceFilter);
     CRayCatalog::TRayVector restRayList = restRayCatalog.GetFilteredList(typeFilter, restForceFilter);
@@ -112,7 +111,7 @@ CRayMatchingResult* CRayMatching::Compute(const CRayCatalog& detectedRayCatalog,
     }
 
     if(newSolutions.size()>0){
-        CRayMatchingResult* result = new CRayMatchingResult();
+        auto result = std::shared_ptr<CRayMatchingResult>( new CRayMatchingResult() );
         result->SolutionSetList = newSolutions;
         result->m_RestCatalog = restRayCatalog;
         result->m_DetectedCatalog = restRayCatalog;

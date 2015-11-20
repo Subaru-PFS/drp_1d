@@ -4,8 +4,6 @@
 
 using namespace NSEpic;
 
-IMPLEMENT_MANAGED_OBJECT( CPeakDetectionResult )
-
 CPeakDetectionResult::CPeakDetectionResult()
 {
 

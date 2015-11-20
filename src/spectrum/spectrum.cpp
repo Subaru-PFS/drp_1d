@@ -8,8 +8,6 @@
 
 using namespace NSEpic;
 
-IMPLEMENT_MANAGED_OBJECT( CSpectrum )
-
 CSpectrum::CSpectrum()
 {
 
@@ -24,7 +22,6 @@ CSpectrum::CSpectrum(const CSpectrum& other, TFloat64List mask)
 
     CSpectrumSpectralAxis otherSpectral = other.GetSpectralAxis();
     CSpectrumFluxAxis otherFlux = other.GetFluxAxis();
-
 
     const Float64* error = otherFlux.GetError();
 

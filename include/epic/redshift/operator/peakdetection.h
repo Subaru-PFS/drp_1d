@@ -1,7 +1,6 @@
 #ifndef _REDSHIFT_OPERATOR_PEAKDETECTION_
 #define _REDSHIFT_OPERATOR_PEAKDETECTION_
 
-#include <epic/core/common/managedobject.h>
 #include <epic/core/common/datatypes.h>
 #include <epic/core/common/range.h>
 
@@ -14,16 +13,15 @@ class CSpectrum;
 class CSpectrumAxis;
 class CPeakDetectionResult;
 
-class CPeakDetection : public CManagedObject
+class CPeakDetection
 {
-    DEFINE_MANAGED_OBJECT( CPeakDetection )
 
 public:
 
     CPeakDetection( Float64 windowSize = 250.0, Float64 cut = 5.0, UInt32 medianSmoothHalfWidth = 1, UInt32 enlargeRate = 2.0 , Float64 detectionnoiseoffset=0.0);
     ~CPeakDetection();
 
-    const CPeakDetectionResult* Compute( const CSpectrum& spectrum, const TLambdaRange& lambdaRange);
+    std::shared_ptr<const CPeakDetectionResult> Compute( const CSpectrum& spectrum, const TLambdaRange& lambdaRange);
 
 private:
     Float64 m_winsize;

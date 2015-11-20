@@ -1,7 +1,6 @@
 #ifndef _REDSHIFT_CONTINUUM_CONTINUUM_
 #define _REDSHIFT_CONTINUUM_CONTINUUM_
 
-#include <epic/core/common/managedobject.h>
 #include <epic/core/common/datatypes.h>
 
 namespace NSEpic
@@ -14,7 +13,7 @@ class CSpectrumFluxAxis;
  * \ingroup Redshift
  * Common ancestral class for continuum estimators.
  **/
-class CContinuum : public CManagedObject
+class CContinuum
 {
 
 public:

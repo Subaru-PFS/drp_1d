@@ -2,7 +2,6 @@
 #define _CORE_LOG_HANDLER_
 
 #include <epic/core/common/datatypes.h>
-#include <epic/core/common/managedobject.h>
 
 namespace NSEpic
 {
@@ -13,7 +12,7 @@ class CLog;
  * \ingroup Core
  * Interface for log implementing custom log handler
  */
-class CLogHandler : public CManagedObject
+class CLogHandler
 {
 
 public:

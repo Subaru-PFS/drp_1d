@@ -4,7 +4,6 @@
 
 using namespace NSEpic;
 
-IMPLEMENT_MANAGED_OBJECT_NOT_INSTANCIABLE( CDataStore );
 
 CDataStore::CAutoScope::CAutoScope( CDataStore& store, const std::string& name )
 {
@@ -69,18 +68,18 @@ Void  CDataStore::SaveAllResults( const boost::filesystem::path& dir ) const
     m_ResultStore.SaveAllResults( *this, dir );
 }
 
-Void  CDataStore::StoreScopedPerTemplateResult( const CTemplate& t, const std::string& name, const COperatorResult& result )
+Void  CDataStore::StoreScopedPerTemplateResult( const CTemplate& t, const std::string& name, std::shared_ptr<const COperatorResult> result )
 {
     m_ResultStore.StorePerTemplateResult( t, GetCurrentScopeName(), name, result );
 }
 
-Void CDataStore::StoreScopedGlobalResult( const std::string& name, const COperatorResult& result )
+Void CDataStore::StoreScopedGlobalResult( const std::string& name, std::shared_ptr<const COperatorResult> result )
 {
     m_ResultStore.StoreGlobalResult( GetCurrentScopeName(), name, result );
 }
 
 
-const COperatorResult*  CDataStore::GetPerTemplateResult( const CTemplate& t, const std::string& name ) const
+std::weak_ptr<const COperatorResult>  CDataStore::GetPerTemplateResult( const CTemplate& t, const std::string& name ) const
 {
     return m_ResultStore.GetPerTemplateResult( t, name );
 }
@@ -90,7 +89,7 @@ TOperatorResultMap CDataStore::GetPerTemplateResult( const std::string& name ) c
     return m_ResultStore.GetPerTemplateResult( name );
 }
 
-const COperatorResult* CDataStore::GetGlobalResult( const std::string& name ) const
+std::weak_ptr<const COperatorResult> CDataStore::GetGlobalResult( const std::string& name ) const
 {
     return m_ResultStore.GetGlobalResult( name );
 }
@@ -105,7 +104,7 @@ Void CDataStore::PopScope()
     m_ScopeStack.pop_back();
 }
 
-std::string CDataStore::GetScope(CConstRef<COperatorResult>  result) const
+std::string CDataStore::GetScope( const COperatorResult&  result ) const
 {
     return m_ResultStore.GetScope( result );
 }

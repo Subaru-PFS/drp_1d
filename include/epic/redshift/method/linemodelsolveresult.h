@@ -18,8 +18,6 @@ class CProcessFlowContext;
 class CLineModelSolveResult : public COperatorResult
 {
 
-    DEFINE_MANAGED_OBJECT( CLineModelSolveResult )
-
 public:
 
     enum EType

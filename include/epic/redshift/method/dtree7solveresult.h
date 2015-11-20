@@ -18,8 +18,6 @@ class CProcessFlowContext;
 class CDTree7SolveResult : public COperatorResult
 {
 
-    DEFINE_MANAGED_OBJECT( CDTree7SolveResult )
-
 public:
 
     CDTree7SolveResult();

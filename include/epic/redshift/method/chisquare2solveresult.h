@@ -18,8 +18,6 @@ class CProcessFlowContext;
 class CChisquare2SolveResult : public COperatorResult
 {
 
-    DEFINE_MANAGED_OBJECT( CChisquare2SolveResult )
-
 public:
 
     enum EType

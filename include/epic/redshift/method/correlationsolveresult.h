@@ -18,8 +18,6 @@ class CProcessFlowContext;
 class CCorrelationSolveResult : public COperatorResult
 {
 
-    DEFINE_MANAGED_OBJECT( CCorrelationSolveResult )
-
 public:
 
     CCorrelationSolveResult();

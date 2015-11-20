@@ -7,7 +7,6 @@
 
 using namespace NSEpic;
 
-IMPLEMENT_MANAGED_OBJECT( CRayMatchingResult )
 
 CRayMatchingResult::CRayMatchingResult()
 {

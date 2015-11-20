@@ -18,8 +18,6 @@ class CProcessFlowContext;
 class CBlindSolveResult : public COperatorResult
 {
 
-    DEFINE_MANAGED_OBJECT( CBlindSolveResult )
-
 public:
 
     CBlindSolveResult();
