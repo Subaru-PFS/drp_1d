@@ -47,8 +47,11 @@ COperatorLineModel::~COperatorLineModel()
 }
 
 const COperatorResult* COperatorLineModel::Compute( CDataStore &dataStore, const CSpectrum& spectrum, const CSpectrum& spectrumContinuum, const CRayCatalog& restraycatalog,
+                                                    const std::string& opt_lineTypeFilter, const std::string& opt_lineForceFilter,
                                                     const TFloat64Range& lambdaRange, const TFloat64List& redshifts,
-                                                    const Int32 opt_extremacount, const std::string& opt_fittingmethod, const std::string& opt_continuumcomponent, const std::string& opt_lineWidthType, const Float64 opt_resolution, const Float64 opt_velocity, const std::string& opt_continuumreest)
+                                                    const Int32 opt_extremacount, const std::string& opt_fittingmethod, const std::string& opt_continuumcomponent,
+                                                    const std::string& opt_lineWidthType, const Float64 opt_resolution, const Float64 opt_velocity,
+                                                    const std::string& opt_continuumreest)
 {
 
     if( spectrum.GetSpectralAxis().IsInLinearScale() == false)
@@ -61,7 +64,16 @@ const COperatorResult* COperatorLineModel::Compute( CDataStore &dataStore, const
     std::sort(sortedRedshifts.begin(), sortedRedshifts.end());
 
     Int32 typeFilter = -1;//CRay::nType_Absorption;//CRay::nType_Emission;
+    if(opt_lineTypeFilter == "A"){
+        typeFilter = CRay::nType_Absorption;
+    }else if(opt_lineTypeFilter == "E"){
+        typeFilter = CRay::nType_Emission;
+    }
+
     Int32 forceFilter = -1;//CRay::nForce_Strong;
+    if(opt_lineForceFilter == "S"){
+        forceFilter = CRay::nForce_Strong;
+    }
     CRayCatalog::TRayVector restRayList = restraycatalog.GetFilteredList(typeFilter, forceFilter);
 
     CLineModelResult* result = new CLineModelResult();
@@ -478,11 +490,8 @@ Void COperatorLineModel::ModelFit(CLineModelElementList& model, const TFloat64Ra
 {
     chiSquare = boost::numeric::bounds<float>::highest();
 
-    model.fit(redshift, lambdaRange, modelSolution, contreest_iterations);
-    //model.fitWithModelSelection(redshift, lambdaRange, modelSolution);
-
-
-    Float64 fit = model.getLeastSquareMerit(lambdaRange);
+    Float64 fit = model.fit(redshift, lambdaRange, modelSolution, contreest_iterations);
+    //Float64 fit = model.fitWithModelSelection(redshift, lambdaRange, modelSolution);
 
     chiSquare = fit;// + mSumLogErr;
     return;

@@ -1023,7 +1023,7 @@ void CLineModelElementList::PrepareContinuum(Float64 z)
     }
 }
 
-void CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambdaRange, CLineModelResult::SLineModelSolution& modelSolution, Int32 contreest_iterations)
+Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambdaRange, CLineModelResult::SLineModelSolution& modelSolution, Int32 contreest_iterations)
 {
     m_Redshift = redshift;
 
@@ -1046,9 +1046,9 @@ void CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambdaRan
     //EstimateSpectrumContinuum();
 
     if(m_ContinuumComponent == "nocontinuum"){
-        for(UInt32 i=0; i<modelFluxAxis.GetSamplesCount(); i++){
-            modelFluxAxis[i] = 0.0;
-        }
+//        for(UInt32 i=0; i<modelFluxAxis.GetSamplesCount(); i++){
+//            modelFluxAxis[i] = 0.0;
+//        }
     }else{
         for(UInt32 i=0; i<modelFluxAxis.GetSamplesCount(); i++){
             modelFluxAxis[i] = m_ContinuumFluxAxis[i];
@@ -1057,7 +1057,7 @@ void CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambdaRan
     }
 
     //fit the amplitudes of each element independently
-    if(m_fittingmethod=="individually")
+    if(m_fittingmethod=="individual")
     {
         //fit the model amplitudes individually
         for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
@@ -1187,7 +1187,13 @@ void CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambdaRan
         Bool retVal2 = writer2.Write( "spectrum4linefit.fits",  s4linefitting);
     }
     //*/
+    Float64 merit = getLeastSquareMerit(lambdaRange);
 
+    if(m_ContinuumComponent == "nocontinuum"){
+        reinitModel();
+    }
+
+    return merit;
 }
 
 /**
@@ -1371,10 +1377,10 @@ Int32 CLineModelElementList::fitAmplitudesHybrid( const CSpectrumSpectralAxis& s
 
         //do the fit on the ovelapping elements
         Float64 overlapThres = 0.5;
-        std::vector<Int32> overlappingInds = getOverlappingElements(iElts, overlapThres);
+        std::vector<Int32> overlappingInds = getOverlappingElements(iElts, indexesFitted, overlapThres);
 
-        Log.LogInfo( "Redshift: %f", m_Redshift);
-        Log.LogInfo( "hybrid fit: idx=%d - overlappingIdx=%d", iValidElts, overlappingInds.size());
+//        Log.LogInfo( "Redshift: %f", m_Redshift);
+//        Log.LogInfo( "hybrid fit: idx=%d - overlappingIdx=%d", iValidElts, overlappingInds.size());
 //        for(Int32 ifit=0; ifit<overlappingInds.size(); ifit++)
 //        {
 //            Log.LogInfo( "hybrid fit: i=%d - Id=%d", ifit, overlappingInds[ifit]);
@@ -1549,7 +1555,7 @@ std::vector<Int32> CLineModelElementList::getOverlappingElementsBySupport(  Int3
     return indexes;
 }
 
-std::vector<Int32> CLineModelElementList::getOverlappingElements(  Int32 ind, Float64 overlapThres)
+std::vector<Int32> CLineModelElementList::getOverlappingElements(Int32 ind, std::vector<Int32> excludedInd, Float64 overlapThres)
 {
     std::vector<Int32> indexes;
 
@@ -1567,13 +1573,30 @@ std::vector<Int32> CLineModelElementList::getOverlappingElements(  Int32 ind, Fl
     Int32 ysup=0;
     for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
     {
+        //check linetype
         if(m_RestRayList[m_Elements[iElts]->m_LineCatalogIndexes[0]].GetType() != linetypeRef){
             continue;
         }
 
+        //check if outside lambdarange
         if(m_Elements[iElts]->IsOutsideLambdaRange()){
             continue;
         }
+
+        //check if in exclusion list
+        bool excluded=false;
+        for( UInt32 iexcl=0; iexcl<excludedInd.size(); iexcl++ )
+        {
+            if(iElts == excludedInd[iexcl]){
+               excluded = true;
+               break;
+            }
+        }
+        if(excluded){
+            continue;
+        }
+
+
         std::vector<CRay> raysElt = m_Elements[iElts]->GetRays();
 
         for( UInt32 iRayElt=0; iRayElt<raysElt.size(); iRayElt++ )
@@ -2159,6 +2182,10 @@ void CLineModelElementList::applyRules()
     //*/
 
     //*
+    ApplyAmplitudeRatioRangeRule(CRay::nType_Emission, "[OII]3729", "[OII]3726", 2.0, 0.5);
+    //*/
+
+    //*
     ApplyStrongHigherWeakRule(CRay::nType_Emission);
     //*/
 
@@ -2292,6 +2319,29 @@ Void CLineModelElementList::Apply2SingleLinesAmplitudeRule( Int32 linetype, std:
         //*/
 
     }
+}
+
+Void CLineModelElementList::ApplyAmplitudeRatioRangeRule( Int32 linetype, std::string lineA, std::string lineB, Float64 coeffMin, Float64 coeffMax )
+{
+    Int32 iA = FindElementIndex(lineA, linetype);
+    if(iA==-1){
+        return;
+    }
+    if(m_Elements[iA]->GetSize()>1){
+        iA=-1;
+    }
+    Int32 iB = FindElementIndex(lineB, linetype);
+    if(iB==-1){
+        return;
+    }
+    if(m_Elements[iB]->GetSize()>1){
+        iB=-1;
+    }
+    if(iA==-1 || iB==-1 || iA==iB){
+        return;
+    }
+
+    //todo
 }
 
 CLineModelResult::SLineModelSolution CLineModelElementList::GetModelSolution()

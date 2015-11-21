@@ -29,7 +29,9 @@ const std::string CLineModelSolve::GetDescription()
 
     desc = "Method LineModelSolve:\n";
 
-    desc.append("\tparam: linemodel.fittingmethod = {""hybrid"", ""individually""}\n");
+    desc.append("\tparam: linemodel.linetypefilter = {""no"", ""E"", ""A""}\n");
+    desc.append("\tparam: linemodel.lineforcefilter = {""no"", ""S""}\n");
+    desc.append("\tparam: linemodel.fittingmethod = {""hybrid"", ""individual""}\n");
     desc.append("\tparam: linemodel.continuumcomponent = {""fromspectrum"", ""nocontinuum"", ""zero""}\n");
     desc.append("\tparam: linemodel.linewidthtype = {""psfinstrumentdriven"", ""zdriven"", ""fixedvelocity"", ""fixed""}\n");
     desc.append("\tparam: linemodel.instrumentresolution = <float value>\n");
@@ -72,11 +74,14 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore, const CSpectrum& spc, const 
     CSpectrumFluxAxis& sfluxAxisPtr = _spcContinuum.GetFluxAxis();
     sfluxAxisPtr = spcfluxAxis;
 
-    std::string opt_fittingmethod;
-    dataStore.GetScopedParam( "linemodel.fittingmethod", opt_fittingmethod, "hybrid" );
 
+    std::string opt_linetypefilter;
+    dataStore.GetScopedParam( "linemodel.linetypefilter", opt_linetypefilter, "no" );
+    std::string opt_lineforcefilter;
+    dataStore.GetScopedParam( "linemodel.lineforcefilter", opt_lineforcefilter, "S" );
+    std::string opt_fittingmethod;
+    dataStore.GetScopedParam( "linemodel.fittingmethod", opt_fittingmethod, "individual" );
     std::string opt_continuumcomponent;
-    //dataStore.GetScopedParam( "linemodel.continuumcomponent", opt_continuumcomponent, "nocontinuum" );
     dataStore.GetScopedParam( "linemodel.continuumcomponent", opt_continuumcomponent, "fromspectrum" );
     std::string opt_lineWidthType;
     dataStore.GetScopedParam( "linemodel.linewidthtype", opt_lineWidthType, "fixedvelocity" );
@@ -90,16 +95,18 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore, const CSpectrum& spc, const 
     dataStore.GetScopedParam( "linemodel.extremacount", opt_extremacount, 10.0 );
 
     Log.LogInfo( "Linemodel parameters:");
-    Log.LogInfo( "fittingmethod: %s", opt_fittingmethod.c_str());
-    Log.LogInfo( "linewidthtype: %s", opt_lineWidthType.c_str());
+    Log.LogInfo( "    -linetypefilter: %s", opt_linetypefilter.c_str());
+    Log.LogInfo( "    -lineforcefilter: %s", opt_lineforcefilter.c_str());
+    Log.LogInfo( "    -fittingmethod: %s", opt_fittingmethod.c_str());
+    Log.LogInfo( "    -linewidthtype: %s", opt_lineWidthType.c_str());
     if(opt_lineWidthType=="fixedvelocity"){
-        Log.LogInfo( "instrumentresolution: %.2f", opt_resolution);
-        Log.LogInfo( "velocity: %.2f", opt_velocity);
+        Log.LogInfo( "    -instrumentresolution: %.2f", opt_resolution);
+        Log.LogInfo( "    -velocity: %.2f", opt_velocity);
     }
 
     // Compute merit function
     COperatorLineModel linemodel;
-    CRef<CLineModelResult>  result = (CLineModelResult*)linemodel.Compute( dataStore, _spc, _spcContinuum, restraycatalog, lambdaRange, redshifts, opt_extremacount, opt_fittingmethod, opt_continuumcomponent, opt_lineWidthType, opt_resolution, opt_velocity, opt_continuumreest);
+    CRef<CLineModelResult>  result = (CLineModelResult*)linemodel.Compute( dataStore, _spc, _spcContinuum, restraycatalog, opt_linetypefilter, opt_lineforcefilter, lambdaRange, redshifts, opt_extremacount, opt_fittingmethod, opt_continuumcomponent, opt_lineWidthType, opt_resolution, opt_velocity, opt_continuumreest);
 
 
     if( !result )

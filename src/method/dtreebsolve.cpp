@@ -53,7 +53,9 @@ const std::string COperatorDTreeBSolve::GetDescription()
 
     desc = "Method DecisionalTreeB:\n";
 
-    desc.append("\tparam: linemodel.fittingmethod = {""hybrid"", ""individually""}\n");
+    desc.append("\tparam: linemodel.linetypefilter = {""no"", ""E"", ""A""}\n");
+    desc.append("\tparam: linemodel.lineforcefilter = {""no"", ""S""}\n");
+    desc.append("\tparam: linemodel.fittingmethod = {""hybrid"", ""individual""}\n");
     desc.append("\tparam: linemodel.continuumcomponent = {""fromspectrum"", ""nocontinuum"", ""zero""}\n");
     desc.append("\tparam: linemodel.linewidthtype = {""psfinstrumentdriven"", ""zdriven"", ""fixedvelocity"", ""fixed""}\n");
     desc.append("\tparam: linemodel.instrumentresolution = <float value>\n");
@@ -96,6 +98,10 @@ Bool COperatorDTreeBSolve::Solve(CDataStore &dataStore, const CSpectrum &spc, co
     CSpectrumFluxAxis& sfluxAxisPtr = _spcContinuum.GetFluxAxis();
     sfluxAxisPtr = spcfluxAxis;
 
+    std::string opt_linetypefilter;
+    dataStore.GetScopedParam( "linemodel.linetypefilter", opt_linetypefilter, "no" );
+    std::string opt_lineforcefilter;
+    dataStore.GetScopedParam( "linemodel.lineforcefilter", opt_lineforcefilter, "no" );
     std::string opt_fittingmethod;
     dataStore.GetScopedParam( "linemodel.fittingmethod", opt_fittingmethod, "hybrid" );
     std::string opt_continuumcomponent;
@@ -115,7 +121,7 @@ Bool COperatorDTreeBSolve::Solve(CDataStore &dataStore, const CSpectrum &spc, co
 
     // Compute merit function
     COperatorLineModel linemodel;
-    CRef<CLineModelResult>  result = (CLineModelResult*)linemodel.Compute(dataStore, spc, _spcContinuum, restRayCatalog, lambdaRange, redshifts, opt_extremacount, opt_fittingmethod, opt_continuumcomponent, opt_lineWidthType, opt_resolution, opt_velocity, opt_continuumreest);
+    CRef<CLineModelResult>  result = (CLineModelResult*)linemodel.Compute(dataStore, spc, _spcContinuum, restRayCatalog, opt_linetypefilter, opt_lineforcefilter, lambdaRange, redshifts, opt_extremacount, opt_fittingmethod, opt_continuumcomponent, opt_lineWidthType, opt_resolution, opt_velocity, opt_continuumreest);
 
     /*
     static Float64 cutThres = 2.0;
