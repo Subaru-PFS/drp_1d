@@ -25,10 +25,11 @@ class CLineModelElementList
 
 public:
 
-    CLineModelElementList(const CSpectrum& spectrum, const CSpectrum& spectrumNoContinuum, const CRayCatalog::TRayVector& restRayList , const std::string &opt_continuumcomponent, const std::string& lineWidthType);
+    CLineModelElementList(const CSpectrum& spectrum, const CSpectrum& spectrumNoContinuum, const CRayCatalog::TRayVector& restRayList, const std::string& opt_fittingmethod, const std::string &opt_continuumcomponent, const std::string& lineWidthType, const Float64 resolution, const Float64 velocity);
     ~CLineModelElementList();
 
     void LoadCatalog(const CRayCatalog::TRayVector& restRayList);
+    void LoadCatalogPFS(const CRayCatalog::TRayVector& restRayList);
     void LoadCatalog_tplExtendedBlue(const CRayCatalog::TRayVector& restRayList);
     void LoadCatalogMultilineBalmer(const CRayCatalog::TRayVector& restRayList);
     void LoadCatalogSingleLines(const CRayCatalog::TRayVector& restRayList);
@@ -66,7 +67,8 @@ private:
     void fitAmplitudesSimplex();
     Int32 fitAmplitudesLinSolve(std::vector<Int32> EltsIdx, const CSpectrumSpectralAxis &spectralAxis, const CSpectrumFluxAxis &fluxAxis, std::vector<Float64> &ampsfitted);
     std::vector<Int32> getSupportIndexes(std::vector<Int32> EltsIdx);
-    std::vector<Int32> getOverlappingElements( Int32 ind );
+    std::vector<Int32> getOverlappingElements(Int32 ind , Float64 overlapThres=0.1);
+    std::vector<Int32> getOverlappingElementsBySupport(Int32 ind , Float64 overlapThres=0.1);
     std::vector<Int32> ReestimateContinuumApprox(std::vector<Int32> EltsIdx);
     std::vector<Int32> ReestimateContinuumUnderLines(std::vector<Int32> EltsIdx);
     void refreshModelAfterContReestimation(std::vector<Int32> EltsIdx, CSpectrumFluxAxis& modelFluxAxis, CSpectrumFluxAxis& spcFluxAxisNoContinuum);
@@ -101,8 +103,11 @@ private:
 
     std::string m_ContinuumComponent;
     std::string m_LineWidthType;
+    Float64 m_resolution;
+    Float64 m_velocity;
     Float64 m_nominalWidthDefaultEmission;
     Float64 m_nominalWidthDefaultAbsorption;
+    std::string m_fittingmethod;
 };
 
 }

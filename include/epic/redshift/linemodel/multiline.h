@@ -18,12 +18,13 @@ class CMultiLine:public CLineModelElement
 
 public:
 
-    CMultiLine(std::vector<CRay> rs, const std::string& widthType, std::vector<Float64> nominalAmplitudes, Float64 nominalWidth, std::vector<Int32> catalogIndexes);
+    CMultiLine(std::vector<CRay> rs, const std::string& widthType, const Float64 resolution, const Float64 velocity, std::vector<Float64> nominalAmplitudes, Float64 nominalWidth, std::vector<Int32> catalogIndexes);
     ~CMultiLine();
 
     std::string GetRayName(Int32 subeIdx);
     Float64 GetWidth(Int32 subeIdx, Float64 redshift);
     Float64 GetSignFactor(Int32 subeIdx);
+    std::vector<CRay> GetRays();
 
     void prepareSupport(const CSpectrumSpectralAxis& spectralAxis, Float64 redshift, const TFloat64Range& lambdaRange);
     TInt32RangeList getSupport();
@@ -42,17 +43,14 @@ public:
     bool IsOutsideLambdaRange(Int32 subeIdx);
 
 private:
-    Float64 GetLineWidth(Float64 lambda, Float64 z);
     Int32 FindElementIndex(std::string LineTagStr);
 
     std::vector<CRay>       m_Rays;
     std::vector<Float64>    m_SignFactors;
-    Float64                 m_NominalWidth;
     std::vector<Float64>        m_FittedAmplitudes;
     std::vector<Float64>        m_FittedAmplitudeErrorSigmas;
     std::vector<Float64>        m_NominalAmplitudes;
 
-    Float64                     m_NSigmaSupport;
     std::vector<Int32>          m_Start;
     std::vector<Int32>          m_End;
 

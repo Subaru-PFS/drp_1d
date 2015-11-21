@@ -48,7 +48,7 @@ COperatorLineModel::~COperatorLineModel()
 
 const COperatorResult* COperatorLineModel::Compute( CDataStore &dataStore, const CSpectrum& spectrum, const CSpectrum& spectrumContinuum, const CRayCatalog& restraycatalog,
                                                     const TFloat64Range& lambdaRange, const TFloat64List& redshifts,
-                                                    const Int32 opt_extremacount, const std::string& opt_continuumcomponent, const std::string& opt_lineWidthType, const std::string& opt_continuumreest)
+                                                    const Int32 opt_extremacount, const std::string& opt_fittingmethod, const std::string& opt_continuumcomponent, const std::string& opt_lineWidthType, const Float64 opt_resolution, const Float64 opt_velocity, const std::string& opt_continuumreest)
 {
 
     if( spectrum.GetSpectralAxis().IsInLinearScale() == false)
@@ -73,7 +73,7 @@ const COperatorResult* COperatorLineModel::Compute( CDataStore &dataStore, const
     result->LineModelSolutions.resize( sortedRedshifts.size() );
 
 
-    CLineModelElementList model(spectrum, spectrumContinuum, restRayList, opt_continuumcomponent, opt_lineWidthType);
+    CLineModelElementList model(spectrum, spectrumContinuum, restRayList, opt_fittingmethod, opt_continuumcomponent, opt_lineWidthType, opt_resolution, opt_velocity);
     //model.LoadContinuum(); //in order to use a fit with continuum
     result->nSpcSamples = model.getSpcNSamples(lambdaRange);
 
