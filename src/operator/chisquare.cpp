@@ -33,9 +33,10 @@ COperatorChiSquare::~COperatorChiSquare()
 
 Void COperatorChiSquare::BasicFit( const CSpectrum& spectrum, const CTemplate& tpl,
                                 const TFloat64Range& lambdaRange, Float64 redshift, Float64 overlapThreshold,
-                                Float64& overlapRate, Float64& chiSquare, EStatus& status )
+                                Float64& overlapRate, Float64& chiSquare, Float64& fitamplitude, EStatus& status )
 {
     chiSquare = boost::numeric::bounds<float>::highest();
+    fitamplitude = -1.0;
     overlapRate = 0.0;
     status = nStatus_DataError;
 
@@ -157,6 +158,7 @@ Void COperatorChiSquare::BasicFit( const CSpectrum& spectrum, const CTemplate& t
 
 
     chiSquare = fit;
+    fitamplitude = ampl;
     status = nStatus_OK;
 }
 
@@ -176,6 +178,7 @@ const COperatorResult* COperatorChiSquare::Compute(const CSpectrum& spectrum, co
     CChisquareResult* result = new CChisquareResult();
 
     result->ChiSquare.resize( redshifts.size() );
+    result->FitAmplitude.resize( redshifts.size() );
     result->Redshifts.resize( redshifts.size() );
     result->Overlap.resize( redshifts.size() );
     result->Status.resize( redshifts.size() );
@@ -185,7 +188,7 @@ const COperatorResult* COperatorChiSquare::Compute(const CSpectrum& spectrum, co
 
     for (Int32 i=0;i<redshifts.size();i++)
     {
-        BasicFit( spectrum, tpl, lambdaRange, result->Redshifts[i], overlapThreshold, result->Overlap[i], result->ChiSquare[i], result->Status[i] );
+        BasicFit( spectrum, tpl, lambdaRange, result->Redshifts[i], overlapThreshold, result->Overlap[i], result->ChiSquare[i], result->FitAmplitude[i], result->Status[i] );
     }
 
 

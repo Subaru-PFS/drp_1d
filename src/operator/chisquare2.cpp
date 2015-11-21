@@ -38,9 +38,10 @@ COperatorChiSquare2::~COperatorChiSquare2()
 
 Void COperatorChiSquare2::BasicFit( const CSpectrum& spectrum, const CTemplate& tpl, Float64* pfgTplBuffer,
                                 const TFloat64Range& lambdaRange, Float64 redshift, Float64 overlapThreshold,
-                                Float64& overlapRate, Float64& chiSquare, EStatus& status , Float64 amplitude)
+                                Float64& overlapRate, Float64& chiSquare, Float64& fittingAmplitude, EStatus& status , Float64 forcedAmplitude)
 {
     chiSquare = boost::numeric::bounds<float>::highest();
+    fittingAmplitude = -1.0;
     overlapRate = 0.0;
     status = nStatus_DataError;
 
@@ -172,8 +173,8 @@ Void COperatorChiSquare2::BasicFit( const CSpectrum& spectrum, const CTemplate& 
     //Float64 ampl = sumYDevs / sumXDevs; //EZ formulation
     //Float64 ampl = sumT; //EZ formulation
     Float64 ampl = max(0.0, sumCross / sumT); // Tonry&Davis formulation
-    if(amplitude !=-1){
-        ampl = amplitude;
+    if(forcedAmplitude !=-1){
+        ampl = forcedAmplitude;
     }
 
     j = jStart;
@@ -200,7 +201,7 @@ Void COperatorChiSquare2::BasicFit( const CSpectrum& spectrum, const CTemplate& 
 
 
     chiSquare = fit;
-    //chiSquare = ampl;
+    fittingAmplitude = ampl;
     status = nStatus_OK;
 }
 
@@ -290,6 +291,7 @@ const COperatorResult* COperatorChiSquare2::Compute(const CSpectrum& spectrum, c
 
     CChisquareResult* result = new CChisquareResult();
     result->ChiSquare.resize( sortedRedshifts.size() );
+    result->FitAmplitude.resize( sortedRedshifts.size() );
     result->Redshifts.resize( sortedRedshifts.size() );
     result->Overlap.resize( sortedRedshifts.size() );
     result->Status.resize( sortedRedshifts.size() );
@@ -299,7 +301,7 @@ const COperatorResult* COperatorChiSquare2::Compute(const CSpectrum& spectrum, c
 
     for (Int32 i=0;i<sortedRedshifts.size();i++)
     {
-        BasicFit( spectrum, tpl, precomputedFineGridTplFlux, lambdaRange, result->Redshifts[i], overlapThreshold, result->Overlap[i], result->ChiSquare[i], result->Status[i] );
+        BasicFit( spectrum, tpl, precomputedFineGridTplFlux, lambdaRange, result->Redshifts[i], overlapThreshold, result->Overlap[i], result->ChiSquare[i], result->FitAmplitude[i], result->Status[i] );
     }
 
     // extrema
@@ -461,6 +463,7 @@ const COperatorResult* COperatorChiSquare2::ExportChi2versusAZ(const CSpectrum& 
 
     CChisquareResult* result = new CChisquareResult();
     result->ChiSquare.resize( sortedRedshifts.size() );
+    result->FitAmplitude.resize( sortedRedshifts.size() );
     result->Redshifts.resize( sortedRedshifts.size() );
     result->Overlap.resize( sortedRedshifts.size() );
     result->Status.resize( sortedRedshifts.size() );
@@ -489,7 +492,7 @@ const COperatorResult* COperatorChiSquare2::ExportChi2versusAZ(const CSpectrum& 
         for (Int32 j=0;j<sortedAmplitudes.size();j++)
         {
             Float64 ampl = sortedAmplitudes[j];
-            BasicFit( spectrum, tpl, precomputedFineGridTplFlux, lambdaRange, result->Redshifts[i], overlapThreshold, result->Overlap[i], result->ChiSquare[i], result->Status[i], ampl );
+            BasicFit( spectrum, tpl, precomputedFineGridTplFlux, lambdaRange, result->Redshifts[i], overlapThreshold, result->Overlap[i], result->ChiSquare[i], result->FitAmplitude[i], result->Status[i], ampl );
             fprintf( f, "%.15e", result->ChiSquare[i]);
             if(j<sortedAmplitudes.size()-1){
                 fprintf( f, "\t");

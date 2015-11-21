@@ -22,6 +22,18 @@ COperatorCorrelationSolve::~COperatorCorrelationSolve()
 
 }
 
+const std::string COperatorCorrelationSolve::GetDescription()
+{
+    std::string desc;
+
+    desc = "Method correlationsolve:\n";
+
+    desc.append("\tparam: correlationsolve.overlapThreshold = <float value>\n");
+
+    return desc;
+
+}
+
 const CCorrelationSolveResult* COperatorCorrelationSolve::Compute(  CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
                                                         const CTemplateCatalog& tplCatalog, const TStringList& tplCategoryList,
                                                         const TFloat64Range& lambdaRange, const TFloat64Range& redshiftsRange, Float64 redshiftStep,
@@ -30,6 +42,10 @@ const CCorrelationSolveResult* COperatorCorrelationSolve::Compute(  CDataStore& 
     Bool storeResult = false;
 
     CDataStore::CAutoScope resultScope( resultStore, "correlationsolve" );
+
+    if(overlapThreshold==-1.0){
+        resultStore.GetScopedParam( "overlapThreshold", overlapThreshold, 1.0 );
+    }
 
     for( UInt32 i=0; i<tplCategoryList.size(); i++ )
     {

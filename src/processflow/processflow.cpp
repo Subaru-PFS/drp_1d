@@ -130,20 +130,16 @@ Bool CProcessFlow::Blindsolve( CProcessFlowContext& ctx, const std::string&  Cat
     TFloat64Range lambdaRange;
     TFloat64Range redshiftRange;
     Float64       redshiftStep;
-    Int64         correlationExtremumCount;
-    Float64       overlapThreshold;
 
     ctx.GetParameterStore().Get( "lambdaRange", lambdaRange );
     ctx.GetParameterStore().Get( "redshiftRange", redshiftRange );
     ctx.GetParameterStore().Get( "redshiftStep", redshiftStep, 0.0001 );
-    ctx.GetParameterStore().Get( "correlationExtremumCount", correlationExtremumCount, 5.0 );
-    ctx.GetParameterStore().Get( "overlapThreshold", overlapThreshold, 1.0 );
+
 
     COperatorBlindSolve blindSolve;
     CConstRef<CBlindSolveResult> blindsolveResult = blindSolve.Compute( ctx.GetDataStore(), ctx.GetSpectrum(), ctx.GetSpectrumWithoutContinuum(),
                                                                         ctx.GetTemplateCatalog(), filteredTemplateCategoryList,
-                                                                        lambdaRange, redshiftRange, redshiftStep,
-                                                                        (Int32)correlationExtremumCount, overlapThreshold );
+                                                                        lambdaRange, redshiftRange, redshiftStep);
 
     if( blindsolveResult ) {
         ctx.GetDataStore().StoreScopedGlobalResult( "redshiftresult", *blindsolveResult );
@@ -177,19 +173,15 @@ Bool CProcessFlow::Correlation( CProcessFlowContext& ctx,  const std::string&  C
     TFloat64Range lambdaRange;
     TFloat64Range redshiftRange;
     Float64       redshiftStep;
-    Int64         correlationExtremumCount;
-    Float64       overlapThreshold;
 
     ctx.GetParameterStore().Get( "lambdaRange", lambdaRange );
     ctx.GetParameterStore().Get( "redshiftRange", redshiftRange );
     ctx.GetParameterStore().Get( "redshiftStep", redshiftStep );
-    ctx.GetParameterStore().Get( "correlationExtremumCount", correlationExtremumCount );
-    ctx.GetParameterStore().Get( "overlapThreshold", overlapThreshold );
 
     COperatorCorrelationSolve solve;
     CConstRef<CCorrelationSolveResult> solveResult = solve.Compute( ctx.GetDataStore(), ctx.GetSpectrum(), ctx.GetSpectrumWithoutContinuum(),
                                                                         ctx.GetTemplateCatalog(), filteredTemplateCategoryList,
-                                                                        lambdaRange, redshiftRange, redshiftStep, overlapThreshold );
+                                                                        lambdaRange, redshiftRange, redshiftStep );
 
     if( solveResult ) {
         ctx.GetDataStore().StoreScopedGlobalResult( "redshiftresult", *solveResult );
@@ -224,19 +216,17 @@ Bool CProcessFlow::Chisquare( CProcessFlowContext& ctx, const std::string& Categ
     TFloat64Range lambdaRange;
     TFloat64Range redshiftRange;
     Float64       redshiftStep;
-    Int64         correlationExtremumCount;
-    Float64       overlapThreshold;
 
     ctx.GetParameterStore().Get( "lambdaRange", lambdaRange );
     ctx.GetParameterStore().Get( "redshiftRange", redshiftRange );
     ctx.GetParameterStore().Get( "redshiftStep", redshiftStep );
-    ctx.GetParameterStore().Get( "correlationExtremumCount", correlationExtremumCount );
-    ctx.GetParameterStore().Get( "overlapThreshold", overlapThreshold );
 
     // Create redshift initial list by spanning redshift acdross the given range, with the given delta
     TFloat64List redshifts = redshiftRange.SpreadOver( redshiftStep );
     DebugAssert( redshifts.size() > 0 );
 
+    Float64 overlapThreshold;
+    ctx.GetParameterStore().Get( "chisquare2solve.overlapThreshold", overlapThreshold, 1.0);
     std::string opt_spcComponent;
     ctx.GetDataStore().GetScopedParam( "chisquare2solve.spectrum.component", opt_spcComponent, "raw" );
 
@@ -278,13 +268,11 @@ Bool CProcessFlow::Fullsolve( CProcessFlowContext& ctx, const std::string& Categ
     TFloat64Range lambdaRange;
     TFloat64Range redshiftRange;
     Float64       redshiftStep;
-    Int64         correlationExtremumCount;
     Float64       overlapThreshold;
 
     ctx.GetParameterStore().Get( "lambdaRange", lambdaRange );
     ctx.GetParameterStore().Get( "redshiftRange", redshiftRange );
     ctx.GetParameterStore().Get( "redshiftStep", redshiftStep );
-    ctx.GetParameterStore().Get( "correlationExtremumCount", correlationExtremumCount );
     ctx.GetParameterStore().Get( "overlapThreshold", overlapThreshold );
 
 
@@ -393,22 +381,17 @@ Bool CProcessFlow::DecisionalTree7( CProcessFlowContext& ctx )
     TFloat64Range lambdaRange;
     TFloat64Range redshiftRange;
     Float64       redshiftStep;
-    Int64         correlationExtremumCount;
-    Float64       overlapThreshold;
     TStringList     templateCategoryList;
 
     ctx.GetParameterStore().Get( "lambdaRange", lambdaRange );
     ctx.GetParameterStore().Get( "redshiftRange", redshiftRange );
     ctx.GetParameterStore().Get( "redshiftStep", redshiftStep );
-    ctx.GetParameterStore().Get( "correlationExtremumCount", correlationExtremumCount );
-    ctx.GetParameterStore().Get( "overlapThreshold", overlapThreshold );
     ctx.GetParameterStore().Get( "templateCategoryList", templateCategoryList );
 
     COperatorDTree7Solve Solve;
     CConstRef<CDTree7SolveResult> solveResult = Solve.Compute( ctx.GetDataStore(), ctx.GetSpectrum(), ctx.GetSpectrumWithoutContinuum(),
                                                                         ctx.GetTemplateCatalog(), templateCategoryList, ctx.GetRayCatalog(),
-                                                                        lambdaRange, redshiftRange, redshiftStep,
-                                                                        correlationExtremumCount , overlapThreshold );
+                                                                        lambdaRange, redshiftRange, redshiftStep);
 
     if( solveResult ) {
         ctx.GetDataStore().StoreScopedGlobalResult( "redshiftresult", *solveResult );

@@ -22,6 +22,20 @@ COperatorBlindSolve::~COperatorBlindSolve()
 
 }
 
+
+const std::string COperatorBlindSolve::GetDescription()
+{
+    std::string desc;
+
+    desc = "Method blindsolve:\n";
+
+    desc.append("\tparam: blindsolve.overlapThreshold = <float value>\n");
+    desc.append("\tparam: blindsolve.correlationExtremumCount = <float value>\n");
+
+    return desc;
+
+}
+
 const CBlindSolveResult* COperatorBlindSolve::Compute(  CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
                                                         const CTemplateCatalog& tplCatalog, const TStringList& tplCategoryList,
                                                         const TFloat64Range& lambdaRange, const TFloat64Range& redshiftsRange, Float64 redshiftStep,
@@ -30,6 +44,15 @@ const CBlindSolveResult* COperatorBlindSolve::Compute(  CDataStore& resultStore,
     Bool storeResult = false;
 
     CDataStore::CAutoScope resultScope( resultStore, "blindsolve" );
+
+    if(correlationExtremumCount==-1){
+        Float64 count=0.0;
+        resultStore.GetScopedParam( "correlationExtremumCount", count, 5.0 );
+        correlationExtremumCount = (Int32)count;
+    }
+    if(overlapThreshold==-1.0){
+        resultStore.GetScopedParam( "overlapThreshold", overlapThreshold, 1.0 );
+    }
 
     for( UInt32 i=0; i<tplCategoryList.size(); i++ )
     {
@@ -120,7 +143,7 @@ Bool COperatorBlindSolve::BlindSolve( CDataStore& resultStore, const CSpectrum& 
     }
 
     COperatorChiSquare meritChiSquare;
-    CRef<CCorrelationResult> chisquareResult = (CCorrelationResult*)meritChiSquare.Compute( spc, tpl, lambdaRange, extremumRedshifts, overlapThreshold );
+    CRef<CChisquareResult> chisquareResult = (CChisquareResult*)meritChiSquare.Compute( spc, tpl, lambdaRange, extremumRedshifts, overlapThreshold );
     if( !chisquareResult )
     {
         return false;
