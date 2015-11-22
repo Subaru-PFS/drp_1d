@@ -52,6 +52,9 @@ public:
 
     void reinitModel();
     void refreshModel();
+    void reinitModelUnderElements(std::vector<Int32> filterEltsIdx);
+    void refreshModelUnderElements(std::vector<Int32> filterEltsIdx);
+
     void addToModel();
 
     Int32 getSpcNSamples(const TFloat64Range& lambdaRange);
@@ -77,6 +80,9 @@ private:
     Void Apply2SingleLinesAmplitudeRule(Int32 linetype, std::string lineA, std::string lineB, Float64 coeff );
     Void ApplyAmplitudeRatioRangeRule( Int32 linetype, std::string lineA, std::string lineB, Float64 coeffMin, Float64 coeffMax );
 
+    Int32 ApplyBalmerRuleLinSolve();
+    TFloat64List BalmerModelLinSolve( std::vector<Float64> lambdax, std::vector<Float64> continuumx, std::vector<Float64> datax, std::vector<Float64> errdatax );
+
     void addSingleLine(const CRay &r, Int32 index, Float64 nominalWidth);
     void addDoubleLine(const CRay &r1, const CRay &r2, Int32 index1, Int32 index2, Float64 nominalWidth, Float64 a1, Float64 a2);
 
@@ -93,7 +99,7 @@ private:
 
     CRef<CSpectrum>   m_SpectrumModel;  //model
     CSpectrumFluxAxis m_SpcFluxAxis;    //observed spectrum
-    CSpectrumFluxAxis m_SpcContinuumFluxAxis; //oberved continuum spectrum
+    CSpectrumFluxAxis m_SpcContinuumFluxAxis; //continuum spectrum used for the model
     CSpectrumFluxAxis m_spcFluxAxisNoContinuum; //observed spectrum for line fitting
     Float64* m_ErrorNoContinuum;
 
