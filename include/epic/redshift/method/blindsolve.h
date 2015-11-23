@@ -12,10 +12,11 @@ class CSpectrum;
 class CTemplateCatalog;
 class CDataStore;
 
-class COperatorBlindSolve : public CManagedObject
+/**
+ * \ingroup Redshift
+ */
+class COperatorBlindSolve
 {
-
-    DEFINE_MANAGED_OBJECT( COperatorBlindSolve )
 
 public:
 

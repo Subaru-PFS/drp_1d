@@ -77,7 +77,7 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore, const CSpectrum& spc, const 
     std::string opt_lineforcefilter;
     dataStore.GetScopedParam( "linemodel.lineforcefilter", opt_lineforcefilter, "S" );
     std::string opt_fittingmethod;
-    dataStore.GetScopedParam( "linemodel.fittingmethod", opt_fittingmethod, "individual" );
+    dataStore.GetScopedParam( "linemodel.fittingmethod", opt_fittingmethod, "hybrid" );
     std::string opt_continuumcomponent;
     dataStore.GetScopedParam( "linemodel.continuumcomponent", opt_continuumcomponent, "fromspectrum" );
     std::string opt_lineWidthType;

@@ -2455,7 +2455,7 @@ Int32 CLineModelElementList::ApplyBalmerRuleLinSolve()
         errdatax.push_back(er);
     }
 
-    //*
+    /*
     TFloat64List coeffs = BalmerModelLinSolve( lambdax, continuumx, datax, errdatax );
     // export for debug
     FILE* fspc = fopen( "BalmerLinSolve_dbg.txt", "w+" );
@@ -2464,7 +2464,7 @@ Int32 CLineModelElementList::ApplyBalmerRuleLinSolve()
         Float64 ampRegE = coeffs[0]*lambdax[i] + coeffs[3] ;
         Float64 coeffRegA = (coeffs[2]*lambdax[i] + coeffs[1]);
         Float64 coeffA = (continuumx[i] - ampsA[i])/continuumx[i];
-        fprintf( fspc, "%d %f %f %f %f %f\n", i, lambdax[i], errdatax[i], ampRegE, ampsE[i], coeffRegA, coeffA);
+        fprintf( fspc, "%d %f %f %f %f %f %f\n", i, lambdax[i], errdatax[i], ampRegE, ampsE[i], coeffRegA, coeffA);
     }
     fclose( fspc );
     //*/
@@ -2565,7 +2565,7 @@ Int32 CLineModelElementList::ApplyBalmerRuleLinSolve()
         Float64 ampRegE = coeffs[0]*lambdax[i] + coeffs[3] ;
         Float64 coeffRegA = (coeffs[2]*lambdax[i] + coeffs[1]);
         Float64 coeffA = (continuumx[i] - ampsA[i])/continuumx[i];
-        fprintf( fspc, "%d %f %f %f %f %f\n", i, lambdax[i], errdatax[i], ampRegE, ampsE[i], coeffRegA, coeffA);
+        fprintf( fspc, "%d %f %f %f %f %f %f\n", i, lambdax[i], errdatax[i], ampRegE, ampsE[i], coeffRegA, coeffA);
     }
     fclose( fspc );
     //*/
