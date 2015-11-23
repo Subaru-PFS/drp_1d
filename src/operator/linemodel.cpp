@@ -558,4 +558,6 @@ Float64 COperatorLineModel::PrecomputeLogErr(const CSpectrum& spectrum)
     logerrsum += (Float64)numDevs*log(2*M_PI);
 
     mSumLogErr = logerrsum;
+
+    return mSumLogErr;
 }

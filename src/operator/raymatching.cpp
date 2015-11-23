@@ -138,4 +138,5 @@ Bool CRayMatching::AreSolutionSetsEqual( const CRayMatchingResult::TSolutionSet&
     if(!diffFound){
         return true;
     }
+    return false;
 }
