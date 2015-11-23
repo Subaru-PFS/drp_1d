@@ -1215,6 +1215,7 @@ Int32 CLineModelElementList::fitAmplitudesHybrid( const CSpectrumSpectralAxis& s
 
     }
 
+    return 0;
 }
 
 void CLineModelElementList::fitAmplitudesSimplex()
@@ -2237,5 +2238,3 @@ void CLineModelElementList::EstimateSpectrumContinuum()
         //Y2[t] = m_SpcContinuumFluxAxis[t];
     }
 }
-
-

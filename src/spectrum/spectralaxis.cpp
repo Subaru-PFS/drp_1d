@@ -62,6 +62,7 @@ CSpectrumSpectralAxis& CSpectrumSpectralAxis::operator=( const CSpectrumSpectral
 {
     m_SpectralFlags = other.m_SpectralFlags;
     CSpectrumAxis::operator=( other );
+    return *this;
 }
 
 /**

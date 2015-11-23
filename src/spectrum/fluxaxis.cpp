@@ -49,6 +49,7 @@ CSpectrumFluxAxis& CSpectrumFluxAxis::operator=(const CSpectrumFluxAxis& other)
 {
     m_StatError = other.m_StatError;
     CSpectrumAxis::operator=( other );
+    return *this;
 }
 
 Bool CSpectrumFluxAxis::Rebin( const TFloat64Range& range, const CSpectrumFluxAxis& sourceFluxAxis, const CSpectrumSpectralAxis& sourceSpectralAxis, const CSpectrumSpectralAxis& targetSpectralAxis,
@@ -115,6 +116,8 @@ Bool CSpectrumFluxAxis::Rebin( const TFloat64Range& range, const CSpectrumFluxAx
         Yrebin[j] = 0.0;
         j++;
     }
+
+    return true;
 }
 
 ///
@@ -276,6 +279,8 @@ Bool CSpectrumFluxAxis::Rebin2( const TFloat64Range& range, const CSpectrumFluxA
         fclose( f );
     }
     //*/
+
+    return true;
 }
 
 Void CSpectrumFluxAxis::SetSize( UInt32 s )
@@ -287,6 +292,7 @@ Void CSpectrumFluxAxis::SetSize( UInt32 s )
     {
         m_StatError[i] = 1.0;
     }
+
 }
 
 Bool CSpectrumFluxAxis::ApplyMedianSmooth( UInt32 kernelHalfWidth )
@@ -467,6 +473,7 @@ Bool CSpectrumFluxAxis::Subtract(const CSpectrumFluxAxis& other)
     {
         m_Samples[i] = m_Samples[i]-other[i];
     }
+    return true;
 }
 
 Bool CSpectrumFluxAxis::Invert()
@@ -476,6 +483,7 @@ Bool CSpectrumFluxAxis::Invert()
     {
         m_Samples[i] = -m_Samples[i];
     }
+    return true;
 }
 
 

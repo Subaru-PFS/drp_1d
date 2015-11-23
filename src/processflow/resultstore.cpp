@@ -3,6 +3,7 @@
 #include <epic/core/debug/assert.h>
 #include <epic/redshift/spectrum/template/template.h>
 
+#include <boost/filesystem.hpp>
 #include <fstream>
 
 
@@ -105,7 +106,9 @@ std::weak_ptr<const COperatorResult> COperatorResultStore::GetGlobalResult( cons
 
 void COperatorResultStore::CreateResultStorage( std::fstream& stream, const bfs::path& path, const bfs::path& baseDir ) const
 {
-    bfs::path outputFilePath = bfs::path( baseDir ).append( path.string() );
+    bfs::path outputFilePath = bfs::path( baseDir );
+    outputFilePath /= path.string();
+
     std::fstream outputFile;
 
     if( bfs::exists( outputFilePath.parent_path() ) == false )
@@ -180,7 +183,9 @@ Void COperatorResultStore::SaveAllResults( const CDataStore& store, const bfs::p
 
                 std::fstream outputStream;
                 // Save result in sub directories of output directory
-                CreateResultStorage( outputStream, bfs::path( templateName ).append( resultName + ".csv"), dir );
+                bfs::path outputFilePath = bfs::path( templateName );
+                outputFilePath /= std::string( resultName + ".csv" );
+                CreateResultStorage( outputStream, outputFilePath, dir );
                 result->Save( store, outputStream );
             }
         }

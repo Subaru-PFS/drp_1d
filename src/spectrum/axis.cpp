@@ -38,6 +38,7 @@ CSpectrumAxis::~CSpectrumAxis()
 CSpectrumAxis& CSpectrumAxis::operator=(const CSpectrumAxis& other)
 {
     m_Samples = other.m_Samples;
+    return *this;
 }
 
 Void CSpectrumAxis::SetSize( UInt32 s )

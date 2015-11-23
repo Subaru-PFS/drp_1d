@@ -212,7 +212,7 @@ Bool CParameterStore::Set( const std::string& name, const TFloat64List& v )
     }
 
     m_PropertyTree.add_child( name, array );
-
+    return true;
 }
 
 Bool CParameterStore::Set( const std::string& name, const TStringList& v )
@@ -229,7 +229,7 @@ Bool CParameterStore::Set( const std::string& name, const TStringList& v )
     }
 
     m_PropertyTree.add_child( name, array );
-
+    return true;
 }
 
 Bool CParameterStore::Set( const std::string& name, const TFloat64Range& v )
@@ -257,7 +257,7 @@ Bool CParameterStore::Set( const std::string& name, const TInt64List& v )
     }
 
     m_PropertyTree.add_child( name, array );
-
+    return true;
 }
 
 Bool CParameterStore::Set( const std::string& name, const TBoolList& v )
@@ -274,7 +274,6 @@ Bool CParameterStore::Set( const std::string& name, const TBoolList& v )
     }
 
     m_PropertyTree.add_child( name, array );
-
     return true;
 }
 

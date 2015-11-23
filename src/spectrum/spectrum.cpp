@@ -59,6 +59,7 @@ CSpectrum& CSpectrum::operator=(const CSpectrum& other)
 {
     m_SpectralAxis = other.GetSpectralAxis();
     m_FluxAxis = other.GetFluxAxis();
+    return *this;
 }
 
 
@@ -79,6 +80,7 @@ Bool CSpectrum::RemoveContinuum(  CContinuum& remover )
 Bool CSpectrum::InvertFlux()
 {
     m_FluxAxis.Invert();
+    return true;
 }
 
 /**
