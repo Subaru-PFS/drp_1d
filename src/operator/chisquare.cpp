@@ -163,7 +163,7 @@ Void COperatorChiSquare::BasicFit( const CSpectrum& spectrum, const CTemplate& t
 }
 
 
-const COperatorResult* COperatorChiSquare::Compute(const CSpectrum& spectrum, const CTemplate& tpl,
+ std::shared_ptr<COperatorResult>  COperatorChiSquare::Compute(const CSpectrum& spectrum, const CTemplate& tpl,
                           const TFloat64Range& lambdaRange, const TFloat64List& redshifts,
                           Float64 overlapThreshold )
 {
@@ -175,7 +175,7 @@ const COperatorResult* COperatorChiSquare::Compute(const CSpectrum& spectrum, co
     }
 
 
-    CChisquareResult* result = new CChisquareResult();
+     std::shared_ptr<CChisquareResult>  result = std::shared_ptr<CChisquareResult>( new CChisquareResult() );
 
     result->ChiSquare.resize( redshifts.size() );
     result->FitAmplitude.resize( redshifts.size() );

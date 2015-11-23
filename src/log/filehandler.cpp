@@ -6,8 +6,6 @@
 
 using namespace NSEpic;
 
-IMPLEMENT_MANAGED_OBJECT_NOT_INSTANCIABLE( CLogFileHandler )
-
 CLogFileHandler::CLogFileHandler( CLog& logger, const char* filePath ) :
     CLogHandler( logger )
 {

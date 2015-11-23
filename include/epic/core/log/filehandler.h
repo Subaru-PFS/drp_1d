@@ -16,8 +16,6 @@ namespace NSEpic
 class CLogFileHandler : public CLogHandler
 {
 
-    DEFINE_MANAGED_OBJECT( CLogFileHandler )
-
 public:
 
     CLogFileHandler( CLog& logger, const char* filePath );

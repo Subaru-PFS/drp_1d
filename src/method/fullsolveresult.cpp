@@ -8,8 +8,6 @@
 
 using namespace NSEpic;
 
-IMPLEMENT_MANAGED_OBJECT( CFullSolveResult )
-
 CFullSolveResult::CFullSolveResult()
 {
 
@@ -54,7 +52,7 @@ Void CFullSolveResult::SaveLine( const CDataStore& store, std::ostream& stream )
 
 Bool CFullSolveResult::GetBestCorrelationResult( const CDataStore& store, Float64& redshift, Float64& merit, std::string& tplName ) const
 {
-    std::string scope = store.GetScope( this ) + "fullsolve.correlation";
+    std::string scope = store.GetScope( *this ) + "fullsolve.correlation";
     TOperatorResultMap correlationResults = store.GetPerTemplateResult(scope.c_str());
 
 
@@ -65,7 +63,7 @@ Bool CFullSolveResult::GetBestCorrelationResult( const CDataStore& store, Float6
 
     for( TOperatorResultMap::const_iterator it = correlationResults.begin(); it != correlationResults.end(); it++ )
     {
-        const CCorrelationResult* corrResult = (const CCorrelationResult*)(const COperatorResult*)(*it).second;
+        auto corrResult = std::dynamic_pointer_cast<const CCorrelationResult>( (*it).second );
         for( Int32 i=0; i<corrResult->Correlation.size(); i++ )
         {
             if( corrResult->Correlation[i] > tmpCorr && corrResult->Status[i] == COperator::nStatus_OK )

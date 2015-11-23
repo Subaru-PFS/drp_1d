@@ -9,10 +9,11 @@ namespace NSEpic
 
 class CSpectrum;
 
+/**
+ * \ingroup Redshift
+ */
 class CNoiseFlat : public CNoise
 {
-
-    DEFINE_MANAGED_OBJECT( CNoiseFlat )
 
 public:
 

@@ -1,7 +1,6 @@
 #include "ray.h"
 
 #include <epic/core/common/datatypes.h>
-#include <epic/core/common/ref.h>
 #include <epic/redshift/ray/catalog.h>
 #include <epic/redshift/operator/raymatching.h>
 #include <epic/redshift/operator/raymatchingresult.h>
@@ -64,7 +63,7 @@ void CRedshiftRayTestCase::MatchingTest1()
 
     CRayMatching rayMatching;
     TFloat64Range redshiftrange( 0.0, 5.0);
-    CRef<CRayMatchingResult> result = rayMatching.Compute(detectedCatalog, restFrameCatalog, redshiftrange, 2, 0.002 );
+    auto result = rayMatching.Compute(detectedCatalog, restFrameCatalog, redshiftrange, 2, 0.002 );
     CPPUNIT_ASSERT_MESSAGE( "Failed to match line catalogs for MatchingTest1.txt", result != NULL );
 
     Float64 res = result->GetMeanRedshiftSolutionByIndex(0);
@@ -96,7 +95,7 @@ void CRedshiftRayTestCase::MatchingTest2_EzValidationTest()
 
     CRayMatching rayMatching;
     TFloat64Range redshiftrange( 0.0, 2.0);
-    CRef<CRayMatchingResult> result = rayMatching.Compute(detectedCatalog, restFrameCatalog, redshiftrange, 1, 0.002 );
+    auto result = rayMatching.Compute(detectedCatalog, restFrameCatalog, redshiftrange, 1, 0.002 );
     CPPUNIT_ASSERT_MESSAGE( "Failed to match line catalogs for MatchingTest1.txt", result != NULL );
 
     //Load RayMatching reference results

@@ -19,8 +19,6 @@
 using namespace NSEpic;
 using namespace std;
 
-IMPLEMENT_MANAGED_OBJECT( COperatorLineMatching2Solve )
-
 COperatorLineMatching2Solve::COperatorLineMatching2Solve()
 {    
     // Peak Detection
@@ -95,7 +93,7 @@ COperatorLineMatching2Solve::~COperatorLineMatching2Solve()
 
 }
 
-const CLineMatching2SolveResult* COperatorLineMatching2Solve::Compute(  CDataStore& resultStore, const CSpectrum& spc,
+std::shared_ptr<const CLineMatching2SolveResult> COperatorLineMatching2Solve::Compute(  CDataStore& resultStore, const CSpectrum& spc,
                                                                       const TFloat64Range& lambdaRange, const TFloat64Range& redshiftsRange, Float64 redshiftStep, const CRayCatalog& restRayCatalog )
 {
     Bool storeResult = false;
@@ -110,19 +108,19 @@ const CLineMatching2SolveResult* COperatorLineMatching2Solve::Compute(  CDataSto
         _spc.InvertFlux();
     }
 
-    CConstRef<CPeakDetectionResult> peakDetectionResult = peakDetection.Compute( _spc, lambdaRange);
+    auto peakDetectionResult = peakDetection.Compute( _spc, lambdaRange);
     if( peakDetectionResult ){
-        resultStore.StoreScopedGlobalResult( "peakdetection", *peakDetectionResult );
+        resultStore.StoreScopedGlobalResult( "peakdetection", peakDetectionResult );
     }else{
         return NULL;
     }
 
     bool disableGaussianFitQualityCheck = true;
     CLineDetection lineDetection(lineType, m_cut, m_strongcut, m_winsize, m_minsize, m_maxsize, disableGaussianFitQualityCheck);
-    CConstRef<CLineDetectionResult> lineDetectionResult = lineDetection.Compute( _spc, lambdaRange, peakDetectionResult->PeakList, peakDetectionResult->EnlargedPeakList );
+    auto lineDetectionResult = lineDetection.Compute( _spc, lambdaRange, peakDetectionResult->PeakList, peakDetectionResult->EnlargedPeakList );
 
     if( lineDetectionResult ) {
-        resultStore.StoreScopedGlobalResult( "raycatalog", *lineDetectionResult );
+        resultStore.StoreScopedGlobalResult( "raycatalog", lineDetectionResult );
 
         if(lineDetectionResult->RayCatalog.GetList().size()<1){
             //return NULL;
@@ -131,20 +129,19 @@ const CLineMatching2SolveResult* COperatorLineMatching2Solve::Compute(  CDataSto
 
     // --- Match
     CRayMatching rayMatching;
-    CRef<CRayMatchingResult> rayMatchingResult = rayMatching.Compute(lineDetectionResult->RayCatalog, restRayCatalog, redshiftsRange, m_minMatchNum, m_tol, lineType);
+    auto rayMatchingResult = rayMatching.Compute(lineDetectionResult->RayCatalog, restRayCatalog, redshiftsRange, m_minMatchNum, m_tol, lineType);
 
 
     if( rayMatchingResult ){
         //rayMatchingResult->FilterWithRules(_spc, lambdaRange, m_winsize);
         // Store matching results
-        resultStore.StoreScopedGlobalResult( "raymatching", *rayMatchingResult );
+        resultStore.StoreScopedGlobalResult( "raymatching", rayMatchingResult );
     }
 
     storeResult = true; //always save a matching result
     if( storeResult )
     {
-        CLineMatching2SolveResult*  SolveResult = new CLineMatching2SolveResult();
-        return SolveResult;
+        return std::shared_ptr<const CLineMatching2SolveResult>( new CLineMatching2SolveResult() );
     }
 
     return NULL;

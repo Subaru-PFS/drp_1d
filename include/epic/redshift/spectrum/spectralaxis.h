@@ -12,6 +12,9 @@ namespace NSEpic
 
 class CMask;
 
+/**
+ * \ingroup Redshift
+ */
 class CSpectrumSpectralAxis : public CSpectrumAxis
 {
 

@@ -1,7 +1,6 @@
 #ifndef _REDSHIFT_SPECTRUM_SPECTRUM_
 #define _REDSHIFT_SPECTRUM_SPECTRUM_
 
-#include <epic/core/common/managedobject.h>
 #include <epic/core/common/range.h>
 #include <epic/redshift/spectrum/fluxaxis.h>
 #include <epic/redshift/spectrum/spectralaxis.h>
@@ -12,9 +11,11 @@
 namespace NSEpic
 {
 
-class CSpectrum : public CManagedObject
+/**
+ * \ingroup Redshift
+ */
+class CSpectrum
 {
-    DEFINE_MANAGED_OBJECT( CSpectrum )
 
 public:
 

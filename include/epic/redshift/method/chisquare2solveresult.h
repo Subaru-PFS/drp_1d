@@ -12,10 +12,11 @@ namespace NSEpic
 
 class CProcessFlowContext;
 
+/**
+ * \ingroup Redshift
+ */
 class CChisquare2SolveResult : public COperatorResult
 {
-
-    DEFINE_MANAGED_OBJECT( CChisquare2SolveResult )
 
 public:
 

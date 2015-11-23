@@ -13,6 +13,9 @@
 namespace NSEpic
 {
 
+  /**
+   * \ingroup Redshift
+   */
 class CMultiLine:public CLineModelElement
 {
 

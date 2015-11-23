@@ -14,6 +14,9 @@
 namespace NSEpic
 {
 
+  /**
+   * /ingroup Redshift
+   */
 class CLineModelElement
 {
 

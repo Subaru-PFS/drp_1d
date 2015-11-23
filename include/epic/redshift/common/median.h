@@ -14,6 +14,10 @@ using namespace std;
 namespace NSEpic
 {
 
+  /**
+   * \ingroup Redshift
+   * Statistical median objects.
+   */
 template< typename T >
 class CMedian
 {

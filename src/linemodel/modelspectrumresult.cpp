@@ -10,7 +10,6 @@
 
 using namespace NSEpic;
 
-IMPLEMENT_MANAGED_OBJECT( CModelSpectrumResult )
 
 CModelSpectrumResult::CModelSpectrumResult()
 {

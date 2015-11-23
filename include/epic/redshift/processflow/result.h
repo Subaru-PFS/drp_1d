@@ -2,8 +2,6 @@
 #define _REDSHIFT_OPERATOR_RESULT_
 
 #include <epic/core/common/datatypes.h>
-#include <epic/core/common/managedobject.h>
-#include <epic/core/common/constref.h>
 
 #include <vector>
 #include <ostream>
@@ -14,7 +12,10 @@ namespace NSEpic
 
 class CDataStore;
 
-class COperatorResult : public CManagedObject
+/**
+ * \ingroup Redshift
+ */
+class COperatorResult
 {
 
 public:
@@ -30,8 +31,8 @@ protected:
 
 };
 
-typedef std::vector< CConstRef<COperatorResult> >           TOperatorResultList;
-typedef std::map< std::string, CConstRef<COperatorResult> > TOperatorResultMap;
+typedef std::vector< std::shared_ptr<COperatorResult> >           TOperatorResultList;
+typedef std::map< std::string, std::shared_ptr< const COperatorResult> > TOperatorResultMap;
 
 }
 

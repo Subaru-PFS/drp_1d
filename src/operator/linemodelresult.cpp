@@ -8,7 +8,6 @@
 
 using namespace NSEpic;
 
-IMPLEMENT_MANAGED_OBJECT( CLineModelResult )
 
 CLineModelResult::CLineModelResult()
 {
@@ -222,7 +221,7 @@ Void CLineModelResult::SaveLine( const CDataStore& store, std::ostream& stream )
     stream << "LineModelResult" << "\t" << Redshifts.size() << std::endl;
 }
 
-Int32 CLineModelResult::GetNLinesOverCutThreshold(Int32 extremaIdx, Float64 snrThres, Float64 fitThres)
+Int32 CLineModelResult::GetNLinesOverCutThreshold(Int32 extremaIdx, Float64 snrThres, Float64 fitThres) const
 {
     Int32 nSol=0;
     if(Extrema.size()>extremaIdx)
@@ -283,7 +282,7 @@ Int32 CLineModelResult::GetNLinesOverCutThreshold(Int32 extremaIdx, Float64 snrT
 }
 
 
-Float64 CLineModelResult::GetExtremaMerit(Int32 extremaIdx)
+Float64 CLineModelResult::GetExtremaMerit(Int32 extremaIdx) const
 {
     Float64 outVal=-1.0;
     if(Extrema.size()>extremaIdx)

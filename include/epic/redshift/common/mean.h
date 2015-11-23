@@ -8,6 +8,10 @@ using namespace std;
 namespace NSEpic
 {
 
+  /**
+   * \ingroup Redshift
+   * Statistical mean objects.
+   **/
 template< typename T >
 class CMean
 {

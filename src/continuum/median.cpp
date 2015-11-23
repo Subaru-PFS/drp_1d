@@ -13,7 +13,6 @@
 using namespace NSEpic;
 using namespace std;
 
-IMPLEMENT_MANAGED_OBJECT( CContinuumMedian )
 
 CContinuumMedian::CContinuumMedian()
 {
@@ -46,23 +45,23 @@ Void CContinuumMedian::SetMedianCycleCount( UInt32 count )
 Int32 CContinuumMedian::MedianSmooth( const Float64 *y, Int32 n_points, Int32 n_range, Float64 *y_out)
 {
     // Take an array lenght N,
-    // foreach j element computes median value on interval j-n_range/2,j+n_range/2
+    // for each j element computes median value on interval j-n_range/2,j+n_range/2
     // an put this value in y_out array
 
     Int32 i;
 
-    Int32 half,rest;
+    Int32 half, rest;
 
     Int32 start, stop;
 
-    half=n_range/2;
-    rest=n_range-2*half;
+    half = n_range/2;
+    rest = n_range-2*half;
 
     CMedian<Float64> median;
-    for(i=0;i<n_points;i++)
+    for( i=0; i<n_points; i++)
     {
-        start= max(0, i-half);
-        stop= min(i+half+rest, n_points-1);
+        start = max( 0, i-half );
+        stop = min( i+half+rest, n_points-1 );
 
         *(y_out+i) = median.Find( y+start, stop-start );
     }
@@ -81,14 +80,14 @@ Int32 CContinuumMedian::OddMirror( const Float64* y_input, Int32 N, Int32 Nrefle
 
     Int32 j;
 
-    for(j=0;j<N;j++)
+    for( j=0; j<N; j++ )
     {
-        *(y_out+j+Nreflex)=*(y_input+j);
+        *(y_out+j+Nreflex) = *(y_input+j);
     }
-    for(j=0;j<Nreflex;j++)
+    for( j=0; j<Nreflex; j++ )
     {
-        *(y_out+Nreflex-j-1)=2**(y_input+0)-*(y_input+j);
-        *(y_out+N+Nreflex+j)=2**(y_input+N-1)-*(y_input+N-j-1);
+        *(y_out+Nreflex-j-1) = 2**(y_input+0)-*(y_input+j);
+        *(y_out+N+Nreflex+j) = 2**(y_input+N-1)-*(y_input+N-j-1);
     }
     return 0;
 }
@@ -98,14 +97,14 @@ Int32 CContinuumMedian::EvenMirror( const Float64* y_input, Int32 N, Int32 Nrefl
 {
     int j;
 
-    for(j=0;j<N;j++)
+    for( j=0; j<N; j++ )
     {
-        *(y_out+j+Nreflex)=*(y_input+j);
+        *(y_out+j+Nreflex) = *(y_input+j);
     }
-    for(j=0;j<Nreflex;j++)
+    for( j=0; j<Nreflex; j++ )
     {
-        *(y_out+Nreflex-j-1)=*(y_input+j);
-        *(y_out+N+Nreflex+j)=*(y_input+N-j-1);
+        *(y_out+Nreflex-j-1) = *(y_input+j);
+        *(y_out+N+Nreflex+j) = *(y_input+N-j-1);
     }
     return 0;
 }
@@ -113,26 +112,26 @@ Int32 CContinuumMedian::EvenMirror( const Float64* y_input, Int32 N, Int32 Nrefl
 /**
    This algorithm computes the spectrum continuum using the following procedure:
 
-   * The spetrum is enlargder outside its borders, reflecting the first and last m_MeanSmoothAmplitude angstroms with     respect to the wavelengths.
+   * The spetrum is enlarged outside its borders, reflecting the first and last m_MeanSmoothAmplitude angstroms with respect to the wavelengths.
 
    * the added parts are reflected with respect to the fluxes.
 
-   * On the enlarged spectru is applied:
+   * On the enlarged spectrum, it is applied:
      - m_MedianSmoothCycles times a median-smoothing with an amplitude of 2 * m_MedianSmoothAmplitude
      - m_MedianSmoothCycles times a median-smoothing with an amplitude of m_MedianSmoothAmplitude
 
-   * A mean smoothin with m_MeanSmoothingAmplitude / 4 is applied
+   * A mean smoothing with m_MeanSmoothingAmplitude / 4 is applied
 
    * The added parts are cut away
 **/
 Bool CContinuumMedian::RemoveContinuum( const CSpectrum& s, CSpectrumFluxAxis& noContinuumFluxAxis )
 {
-    Int32 k0=0;
-    Int32 k1=0;
+    Int32 k0 = 0;
+    Int32 k1 = 0;
     Int32 nd;
 
-    Int32 nreflex,nbig;
-    Int32 j,k;
+    Int32 nreflex, nbig;
+    Int32 j, k;
 
     const CSpectrumFluxAxis& fluxAxis = s.GetFluxAxis();
 
@@ -141,38 +140,38 @@ Bool CContinuumMedian::RemoveContinuum( const CSpectrum& s, CSpectrumFluxAxis& n
     Float64 resolution = s.GetResolution();
     Float64 frac = m_MeanSmoothAmplitude / resolution - floor( m_MeanSmoothAmplitude/resolution );
 
-    Int32 meanSmoothAmplitude=(Int32) m_MeanSmoothAmplitude/resolution;
+    Int32 meanSmoothAmplitude = (Int32) m_MeanSmoothAmplitude/resolution;
 
     if( frac>=0.5 )
     {
-        meanSmoothAmplitude+=1;
+        meanSmoothAmplitude += 1;
     }
 
     // set default
-    if(meanSmoothAmplitude<=0)
+    if( meanSmoothAmplitude<=0 )
     {
         return false;
     }
 
-    meanSmoothAmplitude= min(meanSmoothAmplitude,norig/2);
+    meanSmoothAmplitude = min( meanSmoothAmplitude,norig/2 );
 
     // set default
-    if(m_MedianSmoothCycles<=0)
+    if( m_MedianSmoothCycles<=0 )
     {
         return false;
     }
 
-    frac = m_MedianSmoothAmplitude/resolution-floor(m_MedianSmoothAmplitude/resolution);
+    frac = m_MedianSmoothAmplitude/resolution-floor( m_MedianSmoothAmplitude/resolution );
 
     m_MedianSmoothAmplitude = (Int32) m_MedianSmoothAmplitude/resolution;
 
-    if (frac>=0.5)
+    if( frac>=0.5 )
     {
-        m_MedianSmoothAmplitude+=1;
+        m_MedianSmoothAmplitude += 1;
     }
 
     // set default
-    if(m_MedianSmoothAmplitude<=0)
+    if( m_MedianSmoothAmplitude<=0 )
     {
         return false;
     }
@@ -182,20 +181,20 @@ Bool CContinuumMedian::RemoveContinuum( const CSpectrum& s, CSpectrumFluxAxis& n
     noContinuumFluxAxis.SetSize( norig );
     Float64* noContinuumFluxAxisError = noContinuumFluxAxis.GetError();
     const Float64* fluxAxisError = fluxAxis.GetError();
-    for(j=0;j<norig;j++)
+    for( j=0; j<norig; j++)
     {
-        noContinuumFluxAxis[j]=0;
+        noContinuumFluxAxis[j] = 0;
         // Also copy error
         noContinuumFluxAxisError[j] = fluxAxisError[j];
     }
 
     // Find the first not null element, and put its index in k0
-    k=0;
+    k = 0;
     for( j=0; j<norig; j++ )
     {
-        if( fluxAxis[j]!=0)
+        if( fluxAxis[j]!=0 )
         {
-            k0=j;
+            k0 = j;
             break;
         }
     }
@@ -205,24 +204,24 @@ Bool CContinuumMedian::RemoveContinuum( const CSpectrum& s, CSpectrumFluxAxis& n
     {
         if( fluxAxis[j] != 0 )
         {
-            k1=j;
+            k1 = j;
             break;
         }
     }
 
     // Strange test Here, ask MARCO why it's there
-    k=0;
+    k = 0;
     for( j=0; j<norig; j++ )
     {
         if( fluxAxis[j] != 0 )
         {
             k++;
         }
-        if(k>10)
+        if( k>10 )
             break;
     }
 
-    if (k<=10)
+    if( k<=10 )
     {
         return false;
     }
@@ -236,22 +235,22 @@ Bool CContinuumMedian::RemoveContinuum( const CSpectrum& s, CSpectrumFluxAxis& n
         //set the reflection size
         Float64 tmp =  nd / 2.0;
 
-        if( 5.0 * meanSmoothAmplitude < tmp )
+        if( 5.0*meanSmoothAmplitude<tmp )
         {
-            tmp=5.0*meanSmoothAmplitude;
+            tmp = 5.0*meanSmoothAmplitude;
         }
 
         if( tmp<10.0 )
         {
-            tmp=10.;
+            tmp = 10.;
         }
 
-        nreflex=(Int32) tmp;
+        nreflex = (Int32) tmp;
     }
 
 
     // spectrum reflected size
-    nbig=nd+2*nreflex;
+    nbig = nd+2*nreflex;
 
     // Allocate array
     vector<Float64> ysmoobig( nbig );
@@ -259,7 +258,7 @@ Bool CContinuumMedian::RemoveContinuum( const CSpectrum& s, CSpectrumFluxAxis& n
     // reflect original "effective spectrum" a set it in ysmoobig
     // if m_Even==1 reflects spectrum as an m_Even function
     // if m_Even==0 reflacts spectrum as an odd function
-    if (m_Even)
+    if( m_Even )
         EvenMirror( fluxAxis.GetSamples()+k0, nd, nreflex, ysmoobig.data() );
     else
         OddMirror( fluxAxis.GetSamples()+k0, nd, nreflex, ysmoobig.data() );
@@ -277,17 +276,17 @@ Bool CContinuumMedian::RemoveContinuum( const CSpectrum& s, CSpectrumFluxAxis& n
         for( k=0; k<m_MedianSmoothCycles; k++ )
         {
             // median smooth size=2*m_MedianSmoothAmplitude+1
-            MedianSmooth(ysmoobig.data(),nbig,2*m_MedianSmoothAmplitude+1,temp.data() );
+            MedianSmooth( ysmoobig.data(), nbig, 2*m_MedianSmoothAmplitude+1, temp.data() );
             ysmoobig = temp;
         }
 
         // m_MedianSmoothAmplitude must be odd
-        m_MedianSmoothAmplitude= 2 * (m_MedianSmoothAmplitude/2) + 1;
+        m_MedianSmoothAmplitude = 2*(m_MedianSmoothAmplitude/2)+1;
 
-        for(k=0;k<m_MedianSmoothCycles;k++)
+        for( k=0; k<m_MedianSmoothCycles; k++ )
         {
             // median smooth size=m_MedianSmoothAmplitude
-            MedianSmooth(ysmoobig.data(),nbig,m_MedianSmoothAmplitude,temp.data() );
+            MedianSmooth( ysmoobig.data(), nbig, m_MedianSmoothAmplitude, temp.data() );
             ysmoobig = temp;
         }
     }
@@ -298,29 +297,29 @@ Bool CContinuumMedian::RemoveContinuum( const CSpectrum& s, CSpectrumFluxAxis& n
         vector<Float64> temp( nbig );
 
         // mean smooth size=meanSmoothAmplitude/4
-        MeanSmooth(ysmoobig.data(),nbig,(Int32) meanSmoothAmplitude/4,temp.data());
+        MeanSmooth( ysmoobig.data(), nbig, (Int32) meanSmoothAmplitude/4, temp.data() );
 
         ysmoobig = temp;
     }
 
     // Copy spectrum before k0
-    for(j=0;j<k0;j++)
+    for( j=0; j<k0; j++ )
     {
-        noContinuumFluxAxis[j]=fluxAxis[j];
+        noContinuumFluxAxis[j] = fluxAxis[j];
     }
 
     // Set continuum inside "effective spectrum"
-    for(j=k0;j<=k1;j++)
+    for( j=k0; j<=k1; j++ )
     {
-        noContinuumFluxAxis[j]= fluxAxis[j] - ysmoobig[ j - k0 + nreflex ];
+        noContinuumFluxAxis[j] = fluxAxis[j]-ysmoobig[j-k0+nreflex];
     }
 
     // Copy spectrum after k1
-    if( k1 + 1 < s.GetSampleCount() )
+    if( k1+1<s.GetSampleCount() )
     {
-        for( j = k1 + 1; j< s.GetSampleCount(); j++ )
+        for( j=k1+1; j<s.GetSampleCount(); j++ )
         {
-            noContinuumFluxAxis[j]=fluxAxis[j];
+            noContinuumFluxAxis[j] = fluxAxis[j];
         }
     }
 
@@ -333,18 +332,16 @@ Int32 CContinuumMedian::MeanSmooth( const Float64 *y, Int32 N, Int32 n, Float64 
     Int32 i;
     Int32 start,end,half,rest;
 
-    half=n/2;
-    rest=n-2*half;
+    half = n/2;
+    rest = n-2*half;
 
     CMean<Float64> mean;
-    for(i=0;i<N;i++)
+    for( i=0; i<N; i++)
     {
-        start = max(0,i-half-rest);
-        end = min(i+half,N-1);
+        start = max( 0, i-half-rest );
+        end = min( i+half, N-1 );
 
-        *(y_out+i) = mean.Find( y+start, ( end - start ) + 1);
+        *(y_out+i) = mean.Find( y+start, (end-start)+1);
     }
     return 0;
  }
-
-

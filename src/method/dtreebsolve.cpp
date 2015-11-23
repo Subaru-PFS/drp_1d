@@ -35,7 +35,6 @@
 using namespace NSEpic;
 using namespace std;
 
-IMPLEMENT_MANAGED_OBJECT( COperatorDTreeBSolve )
 
 COperatorDTreeBSolve::COperatorDTreeBSolve()
 {
@@ -68,7 +67,7 @@ const std::string COperatorDTreeBSolve::GetDescription()
 
 }
 
-const CDTreeBSolveResult *COperatorDTreeBSolve::Compute( CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
+std::shared_ptr<const CDTreeBSolveResult> COperatorDTreeBSolve::Compute( CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
                                                         const CTemplateCatalog& tplCatalog, const TStringList &tplCategoryList, const CRayCatalog &restRayCatalog,
                                                         const TFloat64Range& lambdaRange, const TFloat64List &redshifts)
 {
@@ -83,8 +82,7 @@ const CDTreeBSolveResult *COperatorDTreeBSolve::Compute( CDataStore& resultStore
     //storeResult = true;
     if( storeResult )
     {
-        CDTreeBSolveResult*  SolveResult = new CDTreeBSolveResult();
-        return SolveResult;
+        return std::shared_ptr<const CDTreeBSolveResult>( new CDTreeBSolveResult() );
     }
 
     return NULL;
@@ -121,7 +119,7 @@ Bool COperatorDTreeBSolve::Solve(CDataStore &dataStore, const CSpectrum &spc, co
 
     // Compute merit function
     COperatorLineModel linemodel;
-    CRef<CLineModelResult>  result = (CLineModelResult*)linemodel.Compute(dataStore, spc, _spcContinuum, restRayCatalog, opt_linetypefilter, opt_lineforcefilter, lambdaRange, redshifts, opt_extremacount, opt_fittingmethod, opt_continuumcomponent, opt_lineWidthType, opt_resolution, opt_velocity, opt_continuumreest);
+    auto result = dynamic_pointer_cast<CLineModelResult>(linemodel.Compute(dataStore, spc, _spcContinuum, restRayCatalog, opt_linetypefilter, opt_lineforcefilter, lambdaRange, redshifts, opt_extremacount, opt_fittingmethod, opt_continuumcomponent, opt_lineWidthType, opt_resolution, opt_velocity, opt_continuumreest) );
 
     /*
     static Float64 cutThres = 2.0;
@@ -152,7 +150,7 @@ Bool COperatorDTreeBSolve::Solve(CDataStore &dataStore, const CSpectrum &spc, co
         return false;
     }else{
         // Store results
-        dataStore.StoreScopedGlobalResult( "linemodel", *result );
+        dataStore.StoreScopedGlobalResult( "linemodel", result );
     }
 
     //*
@@ -185,15 +183,15 @@ Bool COperatorDTreeBSolve::Solve(CDataStore &dataStore, const CSpectrum &spc, co
 
     std::string spcComponent = "nocontinuum";
     CMethodChisquare2Solve chiSolve;
-    CConstRef<CChisquare2SolveResult> chisolveResultnc = chiSolve.Compute( dataStore, spc, spcWithoutCont,
+    auto chisolveResultnc = chiSolve.Compute( dataStore, spc, spcWithoutCont,
                                                                         tplCatalog, tplCategoryList,
                                                                         lambdaRange, redshiftsChi2, overlapThreshold, spcComponent);
     if( chisolveResultnc ) {
-        dataStore.StoreScopedGlobalResult( "redshiftresult", *chisolveResultnc );
+        dataStore.StoreScopedGlobalResult( "redshiftresult", chisolveResultnc );
     }
 
     spcComponent = "continuum";
-    CConstRef<CChisquare2SolveResult> chisolveResultcontinuum = chiSolve.Compute( dataStore, spc, spcWithoutCont,
+    auto chisolveResultcontinuum = chiSolve.Compute( dataStore, spc, spcWithoutCont,
                                                                         tplCatalog, tplCategoryList,
                                                                         lambdaRange, redshiftsChi2, overlapThreshold, spcComponent);
 

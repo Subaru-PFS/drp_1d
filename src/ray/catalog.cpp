@@ -11,7 +11,6 @@ using namespace NSEpic;
 using namespace std;
 using namespace boost;
 
-IMPLEMENT_MANAGED_OBJECT( CRayCatalog )
 
 CRayCatalog::CRayCatalog()
 {

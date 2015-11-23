@@ -9,14 +9,12 @@ namespace NSEpic
 
 /**
  * \ingroup Core
- * Handler that output log to stdout
+ * Handler that outputs log to stdout.
  */
 class CLogConsoleHandler : public CLogHandler
 {
 
 public:
-
-    DEFINE_MANAGED_OBJECT( CLogConsoleHandler );
 
     CLogConsoleHandler( CLog& logger );
     ~CLogConsoleHandler();

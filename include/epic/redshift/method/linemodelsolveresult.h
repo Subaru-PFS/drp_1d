@@ -12,10 +12,11 @@ namespace NSEpic
 
 class CProcessFlowContext;
 
+/**
+ * \ingroup Redshift
+ */
 class CLineModelSolveResult : public COperatorResult
 {
-
-    DEFINE_MANAGED_OBJECT( CLineModelSolveResult )
 
 public:
 

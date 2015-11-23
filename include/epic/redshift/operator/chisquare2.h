@@ -21,7 +21,7 @@ public:
     COperatorChiSquare2();
     ~COperatorChiSquare2();
 
-    const COperatorResult* Compute( const CSpectrum& spectrum, const CTemplate& tpl,
+     std::shared_ptr<COperatorResult> Compute( const CSpectrum& spectrum, const CTemplate& tpl,
                                     const TFloat64Range& lambdaRange, const TFloat64List& redshifts,
                                     Float64 overlapThreshold );
 

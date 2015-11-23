@@ -6,8 +6,6 @@
 using namespace NSEpic;
 using namespace std;
 
-IMPLEMENT_MANAGED_OBJECT( CNoiseFlat )
-
 CNoiseFlat::CNoiseFlat() :
     m_StatErrorLevel( 1.0 )
 {

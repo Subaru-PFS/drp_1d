@@ -11,8 +11,6 @@ namespace NSEpic
 class CCorrelationResult : public COperatorResult
 {
 
-    DEFINE_MANAGED_OBJECT( CCorrelationResult )
-
 public:
 
     CCorrelationResult();

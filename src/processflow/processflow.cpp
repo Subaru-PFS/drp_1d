@@ -51,8 +51,6 @@
 
 using namespace NSEpic;
 
-IMPLEMENT_MANAGED_OBJECT( CProcessFlow )
-
 
 CProcessFlow::CProcessFlow()
 {
@@ -137,12 +135,12 @@ Bool CProcessFlow::Blindsolve( CProcessFlowContext& ctx, const std::string&  Cat
 
 
     COperatorBlindSolve blindSolve;
-    CConstRef<CBlindSolveResult> blindsolveResult = blindSolve.Compute( ctx.GetDataStore(), ctx.GetSpectrum(), ctx.GetSpectrumWithoutContinuum(),
+    std::shared_ptr<const CBlindSolveResult> blindsolveResult = blindSolve.Compute( ctx.GetDataStore(), ctx.GetSpectrum(), ctx.GetSpectrumWithoutContinuum(),
                                                                         ctx.GetTemplateCatalog(), filteredTemplateCategoryList,
                                                                         lambdaRange, redshiftRange, redshiftStep);
 
     if( blindsolveResult ) {
-        ctx.GetDataStore().StoreScopedGlobalResult( "redshiftresult", *blindsolveResult );
+        ctx.GetDataStore().StoreScopedGlobalResult( "redshiftresult", blindsolveResult );
     }
 
     return true;
@@ -179,12 +177,12 @@ Bool CProcessFlow::Correlation( CProcessFlowContext& ctx,  const std::string&  C
     ctx.GetParameterStore().Get( "redshiftStep", redshiftStep );
 
     COperatorCorrelationSolve solve;
-    CConstRef<CCorrelationSolveResult> solveResult = solve.Compute( ctx.GetDataStore(), ctx.GetSpectrum(), ctx.GetSpectrumWithoutContinuum(),
+    std::shared_ptr<const CCorrelationSolveResult> solveResult = solve.Compute( ctx.GetDataStore(), ctx.GetSpectrum(), ctx.GetSpectrumWithoutContinuum(),
                                                                         ctx.GetTemplateCatalog(), filteredTemplateCategoryList,
                                                                         lambdaRange, redshiftRange, redshiftStep );
 
     if( solveResult ) {
-        ctx.GetDataStore().StoreScopedGlobalResult( "redshiftresult", *solveResult );
+        ctx.GetDataStore().StoreScopedGlobalResult( "redshiftresult", solveResult );
     }
 
     return true;
@@ -232,12 +230,12 @@ Bool CProcessFlow::Chisquare( CProcessFlowContext& ctx, const std::string& Categ
 
 
     CMethodChisquare2Solve solve;
-    CConstRef<CChisquare2SolveResult> solveResult = solve.Compute( ctx.GetDataStore(), ctx.GetSpectrum(), ctx.GetSpectrumWithoutContinuum(),
+    std::shared_ptr< const CChisquare2SolveResult> solveResult = solve.Compute( ctx.GetDataStore(), ctx.GetSpectrum(), ctx.GetSpectrumWithoutContinuum(),
                                                                         ctx.GetTemplateCatalog(), filteredTemplateCategoryList,
                                                                         lambdaRange, redshifts, overlapThreshold, opt_spcComponent );
 
     if( solveResult ) {
-        ctx.GetDataStore().StoreScopedGlobalResult( "redshiftresult", *solveResult );
+        ctx.GetDataStore().StoreScopedGlobalResult( "redshiftresult", solveResult );
     }
 
     return true;
@@ -277,12 +275,12 @@ Bool CProcessFlow::Fullsolve( CProcessFlowContext& ctx, const std::string& Categ
 
 
     COperatorFullSolve Solve;
-    CConstRef<CFullSolveResult> solveResult = Solve.Compute( ctx.GetDataStore(), ctx.GetSpectrum(), ctx.GetSpectrumWithoutContinuum(),
+    std::shared_ptr<const CFullSolveResult> solveResult = Solve.Compute( ctx.GetDataStore(), ctx.GetSpectrum(), ctx.GetSpectrumWithoutContinuum(),
                                                                         ctx.GetTemplateCatalog(), filteredTemplateCategoryList,
                                                                         lambdaRange, redshiftRange, redshiftStep, overlapThreshold );
 
     if( solveResult ) {
-        ctx.GetDataStore().StoreScopedGlobalResult( "redshiftresult", *solveResult );
+        ctx.GetDataStore().StoreScopedGlobalResult( "redshiftresult", solveResult );
     }
 
     return true;
@@ -303,12 +301,12 @@ Bool CProcessFlow::LineMatching( CProcessFlowContext& ctx )
     ctx.GetParameterStore().Get( "redshiftStep", redshiftStep );
 
     COperatorLineMatchingSolve Solve;
-    CConstRef<CLineMatchingSolveResult> solveResult = Solve.Compute(ctx.GetDataStore(), ctx.GetSpectrum(),
+    std::shared_ptr<const CLineMatchingSolveResult> solveResult = Solve.Compute(ctx.GetDataStore(), ctx.GetSpectrum(),
                                                                     lambdaRange, redshiftRange,
                                                                     redshiftStep, ctx.GetRayCatalog() );
 
     if( solveResult ) {
-        ctx.GetDataStore().StoreScopedGlobalResult( "redshiftresult", *solveResult );
+        ctx.GetDataStore().StoreScopedGlobalResult( "redshiftresult", solveResult );
     }
 
 
@@ -332,11 +330,11 @@ Bool CProcessFlow::LineMatching2( CProcessFlowContext& ctx )
             spcLambdaRange.GetBegin(), spcLambdaRange.GetEnd(), ctx.GetSpectrum().GetResolution());
 
     COperatorLineMatching2Solve Solve;
-    CConstRef<CLineMatching2SolveResult> solveResult = Solve.Compute(ctx.GetDataStore(), ctx.GetSpectrum(), spcLambdaRange, redshiftRange,
+    std::shared_ptr<const CLineMatching2SolveResult> solveResult = Solve.Compute(ctx.GetDataStore(), ctx.GetSpectrum(), spcLambdaRange, redshiftRange,
                                                                     redshiftStep, ctx.GetRayCatalog() );
 
     if( solveResult ) {
-        ctx.GetDataStore().StoreScopedGlobalResult( "redshiftresult", *solveResult );
+        ctx.GetDataStore().StoreScopedGlobalResult( "redshiftresult", solveResult );
     }
 
     return true;
@@ -363,11 +361,11 @@ Bool CProcessFlow::LineModelSolve( CProcessFlowContext& ctx )
     DebugAssert( redshifts.size() > 0 );
 
     CLineModelSolve Solve;
-    CConstRef<CLineModelSolveResult> solveResult = Solve.Compute(ctx.GetDataStore(), ctx.GetSpectrum(), ctx.GetSpectrumWithoutContinuum(), ctx.GetRayCatalog(),
+    std::shared_ptr<const CLineModelSolveResult> solveResult = Solve.Compute(ctx.GetDataStore(), ctx.GetSpectrum(), ctx.GetSpectrumWithoutContinuum(), ctx.GetRayCatalog(),
                                                                  spcLambdaRange, redshifts);
 
     if( solveResult ) {
-        ctx.GetDataStore().StoreScopedGlobalResult( "redshiftresult", *solveResult );
+        ctx.GetDataStore().StoreScopedGlobalResult( "redshiftresult", solveResult );
     }
 
 
@@ -389,12 +387,12 @@ Bool CProcessFlow::DecisionalTree7( CProcessFlowContext& ctx )
     ctx.GetParameterStore().Get( "templateCategoryList", templateCategoryList );
 
     COperatorDTree7Solve Solve;
-    CConstRef<CDTree7SolveResult> solveResult = Solve.Compute( ctx.GetDataStore(), ctx.GetSpectrum(), ctx.GetSpectrumWithoutContinuum(),
+    std::shared_ptr<CDTree7SolveResult> solveResult = Solve.Compute( ctx.GetDataStore(), ctx.GetSpectrum(), ctx.GetSpectrumWithoutContinuum(),
                                                                         ctx.GetTemplateCatalog(), templateCategoryList, ctx.GetRayCatalog(),
                                                                         lambdaRange, redshiftRange, redshiftStep);
 
     if( solveResult ) {
-        ctx.GetDataStore().StoreScopedGlobalResult( "redshiftresult", *solveResult );
+        ctx.GetDataStore().StoreScopedGlobalResult( "redshiftresult", solveResult );
     }
 
     return true;
@@ -420,13 +418,13 @@ Bool CProcessFlow::DecisionalTreeA( CProcessFlowContext& ctx )
 
 
     COperatorDTreeASolve Solve;
-    CConstRef<CDTreeASolveResult> solveResult = Solve.Compute( ctx.GetDataStore(), ctx.GetSpectrum(), ctx.GetSpectrumWithoutContinuum(),
+    std::shared_ptr<const CDTreeASolveResult> solveResult = Solve.Compute( ctx.GetDataStore(), ctx.GetSpectrum(), ctx.GetSpectrumWithoutContinuum(),
                                                                         ctx.GetTemplateCatalog(), templateCategoryList, ctx.GetRayCatalog(),
                                                                         lambdaRange, redshiftRange, redshiftStep,
                                                                         correlationExtremumCount , overlapThreshold );
 
     if( solveResult ) {
-        ctx.GetDataStore().StoreScopedGlobalResult( "redshiftresult", *solveResult );
+        ctx.GetDataStore().StoreScopedGlobalResult( "redshiftresult", solveResult );
     }
 
     return true;
@@ -461,12 +459,12 @@ Bool CProcessFlow::DecisionalTreeB( CProcessFlowContext& ctx )
     DebugAssert( redshifts.size() > 0 );
 
     COperatorDTreeBSolve Solve;
-    CConstRef<CDTreeBSolveResult> solveResult = Solve.Compute( ctx.GetDataStore(), ctx.GetSpectrum(), ctx.GetSpectrumWithoutContinuum(),
+    std::shared_ptr<const CDTreeBSolveResult> solveResult = Solve.Compute( ctx.GetDataStore(), ctx.GetSpectrum(), ctx.GetSpectrumWithoutContinuum(),
                                                                         ctx.GetTemplateCatalog(), templateCategoryList, ctx.GetRayCatalog(),
                                                                         spcLambdaRange, redshifts);
 
     if( solveResult ) {
-        ctx.GetDataStore().StoreScopedGlobalResult( "redshiftresult", *solveResult );
+        ctx.GetDataStore().StoreScopedGlobalResult( "redshiftresult", solveResult );
     }
 
     return true;

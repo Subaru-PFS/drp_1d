@@ -13,9 +13,8 @@ namespace NSEpic
 class CLineModelResult : public COperatorResult
 {
 
-    DEFINE_MANAGED_OBJECT( CLineModelResult )
-
 public:
+
     struct SLineModelSolution
     {
         std::vector<Float64> ElementId;     //id of the linemodel element it is part of
@@ -37,8 +36,8 @@ public:
     Void SaveLine( const CDataStore& store, std::ostream& stream ) const;
     Void Load( std::istream& stream );
 
-    Int32 GetNLinesOverCutThreshold(Int32 extremaIdx, Float64 snrThres, Float64 fitThres);
-    Float64 GetExtremaMerit(Int32 extremaIdx);
+    Int32 GetNLinesOverCutThreshold(Int32 extremaIdx, Float64 snrThres, Float64 fitThres) const;
+    Float64 GetExtremaMerit(Int32 extremaIdx) const;
 
     TFloat64List            Redshifts;  // z axis
     TFloat64List            ChiSquare;  // chi2

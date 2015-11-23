@@ -8,8 +8,6 @@
 
 using namespace NSEpic;
 
-IMPLEMENT_MANAGED_OBJECT( CChisquareResult )
-
 CChisquareResult::CChisquareResult()
 {
 

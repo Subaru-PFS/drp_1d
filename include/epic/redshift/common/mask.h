@@ -9,6 +9,10 @@ namespace NSEpic
 
 class CSpectrum;
 
+/**
+ * \ingroup Redshift
+ * Wavelength interval objects.
+ */
 class CMask
 {
 

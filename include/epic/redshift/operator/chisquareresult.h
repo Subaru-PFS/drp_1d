@@ -11,8 +11,6 @@ namespace NSEpic
 class CChisquareResult : public COperatorResult
 {
 
-    DEFINE_MANAGED_OBJECT( CChisquareResult )
-
 public:
 
     CChisquareResult();

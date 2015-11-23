@@ -16,6 +16,7 @@ build/install_manifest.txt
 *.sh
 
 bin/*
+test/report/report.xml
 
 # Third party
 thirdparty/*

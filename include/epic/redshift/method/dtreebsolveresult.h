@@ -4,6 +4,7 @@
 #include <epic/redshift/processflow/result.h>
 #include <epic/core/common/datatypes.h>
 #include <epic/redshift/ray/catalog.h>
+#include <epic/redshift/processflow/result.h>
 
 #include <vector>
 
@@ -12,10 +13,11 @@ namespace NSEpic
 
 class CProcessFlowContext;
 
+/**
+ * \ingroup Redshift
+ */
 class CDTreeBSolveResult : public COperatorResult
 {
-
-    DEFINE_MANAGED_OBJECT( CDTreeBSolveResult )
 
 public:
 

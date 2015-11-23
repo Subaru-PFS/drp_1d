@@ -8,7 +8,6 @@
 
 using namespace NSEpic;
 
-IMPLEMENT_MANAGED_OBJECT( CChisquareSolveResult )
 
 CChisquareSolveResult::CChisquareSolveResult()
 {
@@ -46,7 +45,7 @@ Void CChisquareSolveResult::Save( const CDataStore& store, std::ostream& stream 
 Bool CChisquareSolveResult::GetBestRedshiftPerTemplateString( const CDataStore& store, std::string& output ) const
 {
 
-    std::string scope = store.GetScope( this ) + "chisquaresolve.chisquare";
+    std::string scope = store.GetScope( *this ) + "chisquaresolve.chisquare";
     TOperatorResultMap meritResults = store.GetPerTemplateResult(scope.c_str());
 
 
@@ -58,7 +57,7 @@ Bool CChisquareSolveResult::GetBestRedshiftPerTemplateString( const CDataStore& 
         Float64 tmpRedshift = 0.0;
         std::string tmpTplName;
 
-        const CChisquareResult* meritResult = (const CChisquareResult*)(const COperatorResult*)(*it).second;
+        auto meritResult = std::dynamic_pointer_cast<const CChisquareResult>( (*it).second );
         for( Int32 i=0; i<meritResult->ChiSquare.size(); i++ )
         {
             if( meritResult->ChiSquare[i] < tmpMerit && meritResult->Status[i] == COperator::nStatus_OK )
@@ -106,7 +105,7 @@ Void CChisquareSolveResult::SaveLine( const CDataStore& store, std::ostream& str
 Bool CChisquareSolveResult::GetBestRedshift( const CDataStore& store, Float64& redshift, Float64& merit, std::string& tplName ) const
 {
 
-    std::string scope = store.GetScope( this ) + "chisquaresolve.chisquare";
+    std::string scope = store.GetScope( *this ) + "chisquaresolve.chisquare";
     TOperatorResultMap meritResults = store.GetPerTemplateResult(scope.c_str());
 
 
@@ -117,7 +116,7 @@ Bool CChisquareSolveResult::GetBestRedshift( const CDataStore& store, Float64& r
 
     for( TOperatorResultMap::const_iterator it = meritResults.begin(); it != meritResults.end(); it++ )
     {
-        const CChisquareResult* meritResult = (const CChisquareResult*)(const COperatorResult*)(*it).second;
+        auto meritResult = std::dynamic_pointer_cast<const CChisquareResult>( (*it).second );
         for( Int32 i=0; i<meritResult->ChiSquare.size(); i++ )
         {
             if( meritResult->ChiSquare[i] < tmpMerit && meritResult->Status[i] == COperator::nStatus_OK )

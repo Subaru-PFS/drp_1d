@@ -10,10 +10,11 @@
 namespace NSEpic
 {
 
+/**
+ * \ingroup Redshift
+ */
 class CPeakDetectionResult : public COperatorResult
 {
-
-    DEFINE_MANAGED_OBJECT( CPeakDetectionResult )
 
 public:
 

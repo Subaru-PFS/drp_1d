@@ -13,10 +13,11 @@ namespace NSEpic
 class CProcessFlowContext;
 class CDataStore;
 
+/**
+ * \ingroup Redshift
+ */
 class CDTreeASolveResult : public COperatorResult
 {
-
-    DEFINE_MANAGED_OBJECT( CDTreeASolveResult )
 
 public:
 

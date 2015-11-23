@@ -10,10 +10,11 @@
 namespace NSEpic
 {
 
+/**
+ * \ingroup Redshift
+ */
 class CLineDetectionResult : public COperatorResult
 {
-
-    DEFINE_MANAGED_OBJECT( CLineDetectionResult )
 
 public:
 
