@@ -191,7 +191,7 @@ Bool CDTreeBSolveResult::GetBestRedshift(const CDataStore& store, Float64& redsh
         w_chi2nc.push_back(chi2nc[i]/minchi2nc);
     }
 
-    //*
+    /*
     //***********************************************************
     //retrieve chi2 raw values
     std::vector<Float64> w_chi2raw;
@@ -204,6 +204,7 @@ Bool CDTreeBSolveResult::GetBestRedshift(const CDataStore& store, Float64& redsh
     {
         w_chi2raw.push_back(chi2raw[i]/minchi2raw);
     }
+    //*/
 
 
     //*
@@ -252,7 +253,7 @@ Bool CDTreeBSolveResult::GetBestRedshift(const CDataStore& store, Float64& redsh
     // Next Test: chi2nc chi2cont linear combination
     Float64 lmCoeff = 12.0/((float)results->nSpcSamples);
     Float64 chi2ncCoeff = 100.0;
-    Float64 chi2cCoeff = 8.0;
+    Float64 chi2cCoeff = 1.0;//8.0;
     Float64 tmpMerit = DBL_MAX ;
     Float64 tmpRedshift = -1.0;
     for( Int32 i=0; i<znc.size(); i++ )

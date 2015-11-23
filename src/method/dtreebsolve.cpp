@@ -166,23 +166,37 @@ Bool COperatorDTreeBSolve::Solve(CDataStore &dataStore, const CSpectrum &spc, co
 
     Float64 overlapThreshold;
     dataStore.GetScopedParam( "chisquare.overlapthreshold", overlapThreshold, 1.0 );
+    std::string opt_redshiftsupport;
+    dataStore.GetScopedParam( "chisquare.redshiftsupport", opt_redshiftsupport, "full" );
     // Compute merit function
 //    TFloat64List extremumRedshifts( result->Extrema.size() );
 //    for( Int32 i=0; i<result->Extrema.size(); i++ )
 //    {
 //        extremumRedshifts[i] = result->Extrema[i];
 //    }
-    TFloat64List redshiftsChi2 = result->ExtremaExtendedRedshifts;
-    //TFloat64List redshiftsChi2 = redshifts;
+    TFloat64List redshiftsChi2;
+    if(opt_redshiftsupport == "full"){
+        redshiftsChi2 = redshifts;
+    }else if(opt_redshiftsupport == "extremaextended"){
+        redshiftsChi2= result->ExtremaExtendedRedshifts;
+    }else{
+        redshiftsChi2= result->Extrema;
+    }
 
-    std::string spcComponent = "all";
+    std::string spcComponent = "nocontinuum";
     CMethodChisquare2Solve chiSolve;
-    CConstRef<CChisquare2SolveResult> chisolveResult = chiSolve.Compute( dataStore, spc, spcWithoutCont,
+    CConstRef<CChisquare2SolveResult> chisolveResultnc = chiSolve.Compute( dataStore, spc, spcWithoutCont,
                                                                         tplCatalog, tplCategoryList,
                                                                         lambdaRange, redshiftsChi2, overlapThreshold, spcComponent);
-    if( chisolveResult ) {
-        dataStore.StoreScopedGlobalResult( "redshiftresult", *chisolveResult );
+    if( chisolveResultnc ) {
+        dataStore.StoreScopedGlobalResult( "redshiftresult", *chisolveResultnc );
     }
+
+    spcComponent = "continuum";
+    CConstRef<CChisquare2SolveResult> chisolveResultcontinuum = chiSolve.Compute( dataStore, spc, spcWithoutCont,
+                                                                        tplCatalog, tplCategoryList,
+                                                                        lambdaRange, redshiftsChi2, overlapThreshold, spcComponent);
+
     //_///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //*/
     return true;
