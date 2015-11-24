@@ -121,6 +121,8 @@ Bool CContinuumIrregularSamplingMedian::RemoveContinuum( const CSpectrum& s, CSp
     Float64 resolution = s.GetMeanResolution();
 
     ProcessRemoveContinuum( s, noContinuumFluxAxis, resolution );
+
+    return true;
 }
 
 Bool CContinuumIrregularSamplingMedian::ProcessRemoveContinuum( const CSpectrum& s, CSpectrumFluxAxis& noContinuumFluxAxis, Float64 resolution )

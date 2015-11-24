@@ -20,7 +20,7 @@ MESSAGE( STATUS "Version used: ${VERSION}" )
 #--------------------------------------------------------
 # Compiler options
 #--------------------------------------------------------
-SET( CMAKE_CXX_FLAGS "-O3 -std=c++11 -Wno-deprecated ")
+SET( CMAKE_CXX_FLAGS "-O3 -std=c++11 -Wno-deprecated -Werror=return-type")
 
 SET( CMAKE_CXX_FLAGS_DEBUG "-O0 -g -DDEBUG_BUILD")
 
@@ -33,7 +33,7 @@ SET( cpf-redshift_THIRDPARTY_INCLUDE_DIR ${ROOT_DIR}/thirdparty/include/ )
 SET( cpf-redshift_LINK_DIR ${ROOT_DIR}/lib/ )
 SET( cpf-redshift_THIRDPARTY_LINK_DIR ${ROOT_DIR}/thirdparty/lib/ )
 
-SET( cpf-redshift_THIRDPARTY_LIBS cfitsio pthread boost_filesystem boost_system boost_thread boost_timer boost_chrono boost_program_options boost_regex  gsl gslcblas)
+SET( cpf-redshift_THIRDPARTY_LIBS cfitsio pthread boost_filesystem boost_system boost_thread boost_timer boost_chrono boost_unit_test_framework boost_program_options boost_regex  gsl gslcblas)
 
 #--------------------------------------------------------
 # Preprocessor and linker path
