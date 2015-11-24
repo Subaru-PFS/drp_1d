@@ -33,7 +33,7 @@ SET( cpf-redshift_THIRDPARTY_INCLUDE_DIR ${ROOT_DIR}/thirdparty/include/ )
 SET( cpf-redshift_LINK_DIR ${ROOT_DIR}/lib/ )
 SET( cpf-redshift_THIRDPARTY_LINK_DIR ${ROOT_DIR}/thirdparty/lib/ )
 
-SET( cpf-redshift_THIRDPARTY_LIBS cfitsio pthread boost_filesystem boost_system boost_thread boost_timer boost_chrono boost_unit_test_framework boost_program_options boost_regex  gsl gslcblas)
+SET( cpf-redshift_THIRDPARTY_LIBS cfitsio pthread boost_filesystem boost_system boost_thread boost_timer boost_chrono  boost_program_options boost_regex  gsl gslcblas)
 
 #--------------------------------------------------------
 # Preprocessor and linker path
@@ -66,7 +66,7 @@ FILE( GLOB_RECURSE TEST_SOURCE_FILES ${ROOT_DIR}/test/*.cpp )
 ADD_EXECUTABLE( ${TEST_NAME} ${TEST_SOURCE_FILES} )
 
 # Supply link librairies
-TARGET_LINK_LIBRARIES( ${TEST_NAME} ${LIB_NAME}  ${cpf-redshift_THIRDPARTY_LIBS} cppunit.a)
+TARGET_LINK_LIBRARIES( ${TEST_NAME} ${LIB_NAME}  ${cpf-redshift_THIRDPARTY_LIBS} boost_unit_test_framework )
 
 #--------------------------------------------------------
 # Install directive

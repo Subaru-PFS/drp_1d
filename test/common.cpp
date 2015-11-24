@@ -1,18 +1,14 @@
-//#define BOOST_TEST_DYN_LINK
-#define BOOST_TEST_MODULE Suites
-
 
 #include <epic/core/common/datatypes.h>
 #include <epic/redshift/common/median.h>
 #include <epic/redshift/common/mean.h>
 
 #include <time.h>
+#include <iostream>
 #include <stdlib.h>
 #include <boost/test/unit_test.hpp>
 
 using namespace NSEpic;
-
-
 
 BOOST_AUTO_TEST_SUITE(Common)
 
