@@ -420,61 +420,12 @@ void CLineModelElementList::LoadCatalogPFS(const CRayCatalog::TRayVector& restRa
         m_Elements.push_back(boost::shared_ptr<CLineModelElement> (new CMultiLine(linesMgII, m_LineWidthType, m_resolution, m_velocity, ampsMgII, m_nominalWidthDefaultAbsorption, indsMgII)));
     }
 
-//    //Load SiIV multilines
-//    aIdx = findLineIdxInCatalog( restRayList, "SiIV1402", CRay::nType_Absorption);
-//    bIdx = findLineIdxInCatalog( restRayList, "SiIV1393", CRay::nType_Absorption);
-//    std::vector<CRay> linesSiIV;
-//    std::vector<Float64> ampsSiIV;
-//    std::vector<Int32> indsSiIV;
-//    if(aIdx.size()==1){
-//        linesSiIV.push_back(restRayList[aIdx[0]]);
-//        ampsSiIV.push_back(0.262);//SiIV1402
-//        indsSiIV.push_back(aIdx[0]);
-//    }
-//    if(bIdx.size()==1){
-//        linesSiIV.push_back(restRayList[bIdx[0]]);
-//        ampsSiIV.push_back(0.528); //SiIV1393
-//        indsSiIV.push_back(bIdx[0]);
-//    }
-//    if(lines.size()>0){
-//        m_Elements.push_back(boost::shared_ptr<CLineModelElement> (new CMultiLine(linesSiIV, m_LineWidthType, ampsSiIV, m_nominalWidthDefaultAbsorption, indsSiIV)));
-//    }
+    //Load Lya with broader width (Lya shape in the simu = unexplained yet)
+    std::vector<Int32> LyaEIdx = findLineIdxInCatalog( restRayList, "LyAE", CRay::nType_Emission);
+    if( LyaEIdx.size()==1 ){
+        m_Elements.push_back(boost::shared_ptr<CLineModelElement> (new CSingleLine(restRayList[LyaEIdx[0]], m_LineWidthType, m_resolution, m_velocity*4.0, m_nominalWidthDefaultEmission, LyaEIdx)));
 
-//    //Load CIV multilines, emission possible = warning
-//    aIdx = findLineIdxInCatalog( restRayList, "CIV1550", CRay::nType_Absorption);
-//    bIdx = findLineIdxInCatalog( restRayList, "CIV1548", CRay::nType_Absorption);
-//    std::vector<CRay> linesCIV;
-//    std::vector<Float64> ampsCIV;
-//    std::vector<Int32> indsCIV;
-//    if(aIdx.size()==1){
-//        linesCIV.push_back(restRayList[aIdx[0]]);
-//        ampsCIV.push_back(0.09522);//CIV1550
-//        indsCIV.push_back(aIdx[0]);
-//    }
-//    if(bIdx.size()==1){
-//        linesCIV.push_back(restRayList[bIdx[0]]);
-//        ampsCIV.push_back(0.1908); //CIV1548
-//        indsCIV.push_back(bIdx[0]);
-//    }
-//    m_Elements.push_back(boost::shared_ptr<CLineModelElement> (new CMultiLine(linesCIV, m_LineWidthType, ampsCIV, m_nominalWidthDefaultAbsorption, indsCIV)));
-
-//    //Load CaII multilines
-//    aIdx = findLineIdxInCatalog( restRayList, "CaII_H", CRay::nType_Absorption);
-//    bIdx = findLineIdxInCatalog( restRayList, "CaII_K", CRay::nType_Absorption);
-//    std::vector<CRay> linesCaII;
-//    std::vector<Float64> ampsCaII;
-//    std::vector<Int32> indsCaII;
-//    if(aIdx.size()==1){
-//        linesCaII.push_back(restRayList[aIdx[0]]);
-//        ampsCaII.push_back(1.0);//CaII_H
-//        indsCaII.push_back(aIdx[0]);
-//    }
-//    if(bIdx.size()==1){
-//        linesCaII.push_back(restRayList[bIdx[0]]);
-//        ampsCaII.push_back(0.6); //CaII_K
-//        indsCaII.push_back(bIdx[0]);
-//    }
-//    m_Elements.push_back(boost::shared_ptr<CLineModelElement> (new CMultiLine(linesCaII, m_LineWidthType, ampsCaII, m_nominalWidthDefaultAbsorption, indsCaII)));
+    }
 
 
     //Load the rest of the single lines
