@@ -23,9 +23,13 @@ public:
     COperatorLineMatching2Solve();
     ~COperatorLineMatching2Solve();
 
-    std::shared_ptr<const CLineMatching2SolveResult> Compute( CDataStore& resultStore, const CSpectrum& spc,
-                                        const TFloat64Range& lambdaRange, const TFloat64Range& redshiftsRange, Float64 redshiftStep, const CRayCatalog &restRayCatalog);
-
+    std::shared_ptr<const CLineMatching2SolveResult> Compute( CDataStore& resultStore, 
+							      const CSpectrum& spc, 
+							      const TFloat64Range& lambdaRange, 
+							      const TFloat64Range& redshiftsRange, 
+							      Float64 redshiftStep, 
+							      const CRayCatalog &restRayCatalog);
+    const std::string GetDescription();
 
 private:
 
@@ -40,11 +44,10 @@ private:
     Float64 m_enlargeRate;
 
     // Line Matching
-    Int32 m_minMatchNum;
+    Int64 m_minMatchNum;
     Float64 m_tol;
 
 };
-
 
 }
 

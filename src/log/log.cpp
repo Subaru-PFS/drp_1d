@@ -184,8 +184,11 @@ const char* CLog::GetHeader( CLog::ELevel lvl )
     case nLevel_Info:
         sprintf( m_CurrentHeader, "Info: %s ", m_IndentBuffer  );
         break;
+    case nLevel_Debug:
+        sprintf( m_CurrentHeader, "Debug: %s", m_IndentBuffer );
+        break;
     case nLevel_None:
-        sprintf( m_CurrentHeader,  "%s", m_IndentBuffer );
+        sprintf( m_CurrentHeader, "%s", m_IndentBuffer );
         break;
     default:
         return NULL;
