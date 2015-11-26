@@ -25,7 +25,7 @@ const std::string CLineModelSolve::GetDescription()
 {
     std::string desc;
 
-    desc = "Method LineModelSolve:\n";
+    desc = "Method linemodel:\n";
 
     desc.append("\tparam: linemodel.linetypefilter = {""no"", ""E"", ""A""}\n");
     desc.append("\tparam: linemodel.lineforcefilter = {""no"", ""S""}\n");

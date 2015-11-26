@@ -50,7 +50,7 @@ const std::string COperatorDTreeBSolve::GetDescription()
 {
     std::string desc;
 
-    desc = "Method DecisionalTreeB:\n";
+    desc = "Method decisionaltreeb:\n";
 
     desc.append("\tparam: linemodel.linetypefilter = {""no"", ""E"", ""A""}\n");
     desc.append("\tparam: linemodel.lineforcefilter = {""no"", ""S""}\n");

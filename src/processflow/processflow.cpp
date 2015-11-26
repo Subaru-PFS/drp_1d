@@ -72,7 +72,7 @@ Bool CProcessFlow::Process( CProcessFlowContext& ctx )
     if(methodName  == "correlationsolve" )
         return Correlation( ctx );
 
-    if(methodName  == "chisquaresolve" )
+    if(methodName  == "chisquare2solve" )
         return Chisquare( ctx );
 
     if(methodName  == "linematching" )
@@ -99,6 +99,7 @@ Bool CProcessFlow::Process( CProcessFlowContext& ctx )
     if(methodName  == "decisionaltreeb" )
         return DecisionalTreeB( ctx );
 
+    Log.LogError("Problem found while parsing the method parameter !");
     return false;
 }
 

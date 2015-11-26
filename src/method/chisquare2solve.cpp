@@ -29,7 +29,7 @@ const std::string CMethodChisquare2Solve::GetDescription()
 {
     std::string desc;
 
-    desc = "Method Chisquare2Solve:\n";
+    desc = "Method chisquare2solve:\n";
 
     desc.append("\tparam: chisquare2solve.spectrum.component = {""raw"", ""nocontinuum"", ""continuum"", ""all""}\n");
     desc.append("\tparam: chisquare2solve.overlapThreshold = <float value>\n");

@@ -57,23 +57,25 @@ bool CLineModelElement::IsOutsideLambdaRange()
     return m_OutsideLambdaRange;
 }
 
-Float64 CLineModelElement::GetLineWidth(Float64 lambda, Float64 z, Bool isEmission)
+Float64 CLineModelElement::GetLineWidth(Float64 redshiftedlambda, Float64 z, Bool isEmission)
 {
     Float64 instrumentSigma = 0.0;
     Float64 velocitySigma = 0.0;
     if( m_LineWidthType == "psfinstrumentdriven"){
-        instrumentSigma = lambda/m_Resolution/m_FWHM_factor;
+        instrumentSigma = redshiftedlambda/m_Resolution/m_FWHM_factor;
     }else if( m_LineWidthType == "zdriven"){
         instrumentSigma = m_NominalWidth*(1+z);
     }else if( m_LineWidthType == "fixed"){
         instrumentSigma = m_NominalWidth;
     }else if( m_LineWidthType == "fixedvelocity"){
         Float64 v = m_Velocity;
-        Float64 c = 299792.458;
-        velocitySigma = v/c*lambda*(1+z);//, useless /(1+z)*(1+z);
+        Float64 c = 300000.0;
+        Float64 pfsSimuCompensationFactor = 1.5;
+        velocitySigma = pfsSimuCompensationFactor*1.67/m_FWHM_factor*v/c*redshiftedlambda;//, useless /(1+z)*(1+z);
         if(!isEmission){
             velocitySigma*=3.0;
         }
+        instrumentSigma = redshiftedlambda/m_Resolution/m_FWHM_factor;
     }
 
     Float64 sigma = sqrt(instrumentSigma*instrumentSigma + velocitySigma*velocitySigma);
