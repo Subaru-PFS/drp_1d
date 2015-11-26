@@ -24,10 +24,12 @@ public:
     COperatorDTree7Solve();
     ~COperatorDTree7Solve();
 
+    const std::string GetDescription();
+
     std::shared_ptr<CDTree7SolveResult> Compute(CDataStore& dataStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
                                         const CTemplateCatalog& tplCatalog, const TStringList& tplCategoryList, const CRayCatalog &restRayCatalog,
                                         const TFloat64Range& lambdaRange, const TFloat64Range& redshiftRange, Float64 redshiftStep,
-                                        Int32 correlationExtremumCount, Float64 overlapThreshold  );
+                                        Int32 correlationExtremumCount=-1, Float64 overlapThreshold=-1.0  );
 
 
 private:

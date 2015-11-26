@@ -30,6 +30,10 @@ std::shared_ptr<const CCorrelationSolveResult>  COperatorCorrelationSolve::Compu
 
     CDataStore::CAutoScope resultScope( resultStore, "correlationsolve" );
 
+    if(overlapThreshold==-1.0){
+        resultStore.GetScopedParam( "overlapThreshold", overlapThreshold, 1.0 );
+    }
+
     for( UInt32 i=0; i<tplCategoryList.size(); i++ )
     {
         std::string category = tplCategoryList[i];

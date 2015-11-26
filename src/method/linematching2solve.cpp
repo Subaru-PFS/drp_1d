@@ -99,8 +99,8 @@ std::shared_ptr<const CLineMatching2SolveResult> COperatorLineMatching2Solve::Co
     Bool storeResult = false;
 
     CDataStore::CAutoScope resultScope( resultStore, "linematching2solve" );
-    //Int32 lineType = CRay::nType_Emission;
-    Int32 lineType = CRay::nType_Absorption;
+    Int32 lineType = CRay::nType_Emission;
+    //Int32 lineType = CRay::nType_Absorption;
 
     CPeakDetection peakDetection(m_winsize, m_detectioncut, 1, m_enlargeRate, m_detectionnoiseoffset);
     CSpectrum _spc = spc;

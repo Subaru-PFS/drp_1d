@@ -64,7 +64,7 @@ const std::string COperatorLineMatchingSolve::GetDescription()
 {
     std::string desc;
 
-    desc = "Method LineMatchingSolve:\n";
+    desc = "Method linematching:\n";
 
     desc.append("\tparam: peakdetection.winsize = <float value in Angstrom>\n");
     desc.append("\tparam: peakdetection.cut = <float value>\n");

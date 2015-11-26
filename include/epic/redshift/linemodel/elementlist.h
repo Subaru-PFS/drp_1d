@@ -26,10 +26,11 @@ class CLineModelElementList
 
 public:
 
-    CLineModelElementList(const CSpectrum& spectrum, const CSpectrum& spectrumNoContinuum, const CRayCatalog::TRayVector& restRayList , const std::string &opt_continuumcomponent, const std::string& lineWidthType);
+    CLineModelElementList(const CSpectrum& spectrum, const CSpectrum& spectrumNoContinuum, const CRayCatalog::TRayVector& restRayList, const std::string& opt_fittingmethod, const std::string &opt_continuumcomponent, const std::string& lineWidthType, const Float64 resolution, const Float64 velocity);
     ~CLineModelElementList();
 
     void LoadCatalog(const CRayCatalog::TRayVector& restRayList);
+    void LoadCatalogPFS(const CRayCatalog::TRayVector& restRayList);
     void LoadCatalog_tplExtendedBlue(const CRayCatalog::TRayVector& restRayList);
     void LoadCatalogMultilineBalmer(const CRayCatalog::TRayVector& restRayList);
     void LoadCatalogSingleLines(const CRayCatalog::TRayVector& restRayList);
@@ -47,11 +48,14 @@ public:
     void SetElementAmplitude(Int32 j, Float64 a, Float64 snr);
     Float64 GetElementAmplitude(Int32 j);
 
-    void fit(Float64 redshift, const TFloat64Range& lambdaRange, CLineModelResult::SLineModelSolution &modelSolution, Int32 contreest_iterations=0);
+    Float64 fit(Float64 redshift, const TFloat64Range& lambdaRange, CLineModelResult::SLineModelSolution &modelSolution, Int32 contreest_iterations=0);
     void fitWithModelSelection(Float64 redshift, const TFloat64Range& lambdaRange, CLineModelResult::SLineModelSolution &modelSolution);
 
     void reinitModel();
     void refreshModel();
+    void reinitModelUnderElements(std::vector<Int32> filterEltsIdx);
+    void refreshModelUnderElements(std::vector<Int32> filterEltsIdx);
+
     void addToModel();
 
     Int32 getSpcNSamples(const TFloat64Range& lambdaRange);
@@ -67,13 +71,18 @@ private:
     void fitAmplitudesSimplex();
     Int32 fitAmplitudesLinSolve(std::vector<Int32> EltsIdx, const CSpectrumSpectralAxis &spectralAxis, const CSpectrumFluxAxis &fluxAxis, std::vector<Float64> &ampsfitted);
     std::vector<Int32> getSupportIndexes(std::vector<Int32> EltsIdx);
-    std::vector<Int32> getOverlappingElements( Int32 ind );
+    std::vector<Int32> getOverlappingElements(Int32 ind , std::vector<Int32> excludedInd, Float64 overlapThres=0.1);
+    std::vector<Int32> getOverlappingElementsBySupport(Int32 ind , Float64 overlapThres=0.1);
     std::vector<Int32> ReestimateContinuumApprox(std::vector<Int32> EltsIdx);
     std::vector<Int32> ReestimateContinuumUnderLines(std::vector<Int32> EltsIdx);
     void refreshModelAfterContReestimation(std::vector<Int32> EltsIdx, CSpectrumFluxAxis& modelFluxAxis, CSpectrumFluxAxis& spcFluxAxisNoContinuum);
 
     std::vector<Int32> findLineIdxInCatalog(const CRayCatalog::TRayVector& restRayList, std::string strTag, Int32 type);
     Void Apply2SingleLinesAmplitudeRule(Int32 linetype, std::string lineA, std::string lineB, Float64 coeff );
+    Void ApplyAmplitudeRatioRangeRule( Int32 linetype, std::string lineA, std::string lineB, Float64 coeffMin, Float64 coeffMax );
+
+    Int32 ApplyBalmerRuleLinSolve();
+    TFloat64List BalmerModelLinSolve( std::vector<Float64> lambdax, std::vector<Float64> continuumx, std::vector<Float64> datax, std::vector<Float64> errdatax );
 
     void addSingleLine(const CRay &r, Int32 index, Float64 nominalWidth);
     void addDoubleLine(const CRay &r1, const CRay &r2, Int32 index1, Int32 index2, Float64 nominalWidth, Float64 a1, Float64 a2);
@@ -91,7 +100,7 @@ private:
 
     std::shared_ptr<CSpectrum>  m_SpectrumModel;  //model
     CSpectrumFluxAxis m_SpcFluxAxis;    //observed spectrum
-    CSpectrumFluxAxis m_SpcContinuumFluxAxis; //oberved continuum spectrum
+    CSpectrumFluxAxis m_SpcContinuumFluxAxis; //continuum spectrum used for the model
     CSpectrumFluxAxis m_spcFluxAxisNoContinuum; //observed spectrum for line fitting
     Float64* m_ErrorNoContinuum;
 
@@ -102,8 +111,11 @@ private:
 
     std::string m_ContinuumComponent;
     std::string m_LineWidthType;
+    Float64 m_resolution;
+    Float64 m_velocity;
     Float64 m_nominalWidthDefaultEmission;
     Float64 m_nominalWidthDefaultAbsorption;
+    std::string m_fittingmethod;
 };
 
 }

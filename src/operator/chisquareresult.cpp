@@ -114,6 +114,24 @@ Void CChisquareResult::Save( const CDataStore& store, std::ostream& stream ) con
             stream <<  Extrema[i] << "\t";
         }
         stream << "}" << std::endl;
+
+        if(FitAmplitude.size()>0){
+            stream <<  "#Extrema FitAmplitudes = {";
+            for ( int i=0; i<Extrema.size(); i++)
+            {
+                Int32 idx=0;
+                for ( UInt32 i2=0; i2<Redshifts.size(); i2++)
+                {
+                    if(Redshifts[i2] == Extrema[i]){
+                        idx = i2;
+                        break;
+                    }
+                }
+
+                stream <<  FitAmplitude[idx] << "\t";
+            }
+            stream << "}" << std::endl;
+        }
     }
 }
 

@@ -44,12 +44,12 @@ COperatorLineModel::~COperatorLineModel()
 
 }
 
-std::shared_ptr<COperatorResult> COperatorLineModel::Compute(
-                                CDataStore &dataStore, const CSpectrum& spectrum, const CSpectrum &spectrumContinuum, const CRayCatalog& restraycatalog,
-                                const TFloat64Range& lambdaRange, const TFloat64List& redshifts , const Int32 opt_extremacount,
-                                const std::string &opt_continuumcomponent, const std::string& opt_lineWidthType, const std::string &opt_continuumreest)
-
-
+std::shared_ptr<COperatorResult> COperatorLineModel::Compute( CDataStore &dataStore, const CSpectrum& spectrum, const CSpectrum& spectrumContinuum, const CRayCatalog& restraycatalog,
+                                                    const std::string& opt_lineTypeFilter, const std::string& opt_lineForceFilter,
+                                                    const TFloat64Range& lambdaRange, const TFloat64List& redshifts,
+                                                    const Int32 opt_extremacount, const std::string& opt_fittingmethod, const std::string& opt_continuumcomponent,
+                                                    const std::string& opt_lineWidthType, const Float64 opt_resolution, const Float64 opt_velocity,
+                                                    const std::string& opt_continuumreest)
 {
 
     if( spectrum.GetSpectralAxis().IsInLinearScale() == false)
@@ -62,7 +62,16 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(
     std::sort(sortedRedshifts.begin(), sortedRedshifts.end());
 
     Int32 typeFilter = -1;//CRay::nType_Absorption;//CRay::nType_Emission;
+    if(opt_lineTypeFilter == "A"){
+        typeFilter = CRay::nType_Absorption;
+    }else if(opt_lineTypeFilter == "E"){
+        typeFilter = CRay::nType_Emission;
+    }
+
     Int32 forceFilter = -1;//CRay::nForce_Strong;
+    if(opt_lineForceFilter == "S"){
+        forceFilter = CRay::nForce_Strong;
+    }
     CRayCatalog::TRayVector restRayList = restraycatalog.GetFilteredList(typeFilter, forceFilter);
 
     auto result = std::shared_ptr<CLineModelResult>( new CLineModelResult() );
@@ -74,7 +83,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(
     result->LineModelSolutions.resize( sortedRedshifts.size() );
 
 
-    CLineModelElementList model(spectrum, spectrumContinuum, restRayList, opt_continuumcomponent, opt_lineWidthType);
+    CLineModelElementList model(spectrum, spectrumContinuum, restRayList, opt_fittingmethod, opt_continuumcomponent, opt_lineWidthType, opt_resolution, opt_velocity);
     //model.LoadContinuum(); //in order to use a fit with continuum
     result->nSpcSamples = model.getSpcNSamples(lambdaRange);
 
@@ -119,11 +128,11 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(
     }
     //*/
 
-    /*
+    //*
     // extend z around the extrema
     Float64 extensionradius = 0.01;
-    TPointList extremumListExtended;
-    TBoolList isLocalExtrema;
+    //TPointList extremumListExtended;
+    //TBoolList isLocalExtrema;
     for( Int32 i=0; i<extremumList.size(); i++ )
     {
         Float64 x = extremumList[i].X;
@@ -133,15 +142,16 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(
         for (Int32 i=0;i<result->Redshifts.size();i++)
         {
             if(result->Redshifts[i] >= left_border && result->Redshifts[i] <= right_border){
-                SPoint pt;
-                pt.X = result->Redshifts[i];
-                pt.Y = result->ChiSquare[i];
-                extremumListExtended.push_back(pt);
-                Bool isExtrema = false;
-                if( x == pt.X){
-                    isExtrema = true;
-                }
-                isLocalExtrema.push_back(isExtrema);
+                result->ExtremaExtendedRedshifts.push_back(result->Redshifts[i]);
+                //SPoint pt;
+                //pt.X = result->Redshifts[i];
+                //pt.Y = result->ChiSquare[i];
+                //extremumListExtended.push_back(pt);
+                //Bool isExtrema = false;
+                //if( x == pt.X){
+                //    isExtrema = true;
+                //}
+                //isLocalExtrema.push_back(isExtrema);
             }
         }
     }
@@ -478,11 +488,8 @@ Void COperatorLineModel::ModelFit(CLineModelElementList& model, const TFloat64Ra
 {
     chiSquare = boost::numeric::bounds<float>::highest();
 
-    model.fit(redshift, lambdaRange, modelSolution, contreest_iterations);
-    //model.fitWithModelSelection(redshift, lambdaRange, modelSolution);
-
-
-    Float64 fit = model.getLeastSquareMerit(lambdaRange);
+    Float64 fit = model.fit(redshift, lambdaRange, modelSolution, contreest_iterations);
+    //Float64 fit = model.fitWithModelSelection(redshift, lambdaRange, modelSolution);
 
     chiSquare = fit;// + mSumLogErr;
     return;

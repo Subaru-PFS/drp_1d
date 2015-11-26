@@ -22,13 +22,13 @@ class CSingleLine:public CLineModelElement
 
 public:
 
-    CSingleLine(const CRay &r, const std::string& widthType, Float64 nominalWidth, std::vector<Int32> catalogIndexes);
+    CSingleLine(const CRay &r, const std::string& widthType, const Float64 resolution, const Float64 velocity, Float64 nominalWidth, std::vector<Int32> catalogIndexes);
     ~CSingleLine();
 
     std::string GetRayName(Int32 subeIdx);
     Float64 GetSignFactor(Int32 subeIdx);
     Float64 GetWidth(Int32 subeIdx, Float64 redshift);
-
+    std::vector<CRay> GetRays();
 
     void prepareSupport(const CSpectrumSpectralAxis& spectralAxis, Float64 redshift, const TFloat64Range& lambdaRange);
     TInt32RangeList getSupport();
@@ -50,16 +50,13 @@ public:
 
 
 private:
-    Float64 GetLineWidth(Float64 lambda, Float64 z);
     Int32 FindElementIndex(std::string LineTagStr);
 
     CRay    m_Ray;
     Float64 m_SignFactor;
-    Float64 m_NominalWidth;
     Float64 m_FittedAmplitude;
     Float64 m_FittedAmplitudeErrorSigma;
 
-    Float64 m_NSigmaSupport;
     Int32 m_Start;
     Int32 m_End;
 

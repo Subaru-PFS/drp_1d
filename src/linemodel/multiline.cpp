@@ -10,7 +10,7 @@
 
 using namespace NSEpic;
 
-CMultiLine::CMultiLine(std::vector<CRay> rs, const std::string& widthType, std::vector<Float64> nominalAmplitudes, Float64 nominalWidth, std::vector<Int32> catalogIndexes):CLineModelElement(widthType)
+CMultiLine::CMultiLine(std::vector<CRay> rs, const std::string& widthType, const Float64 resolution, const Float64 velocity, std::vector<Float64> nominalAmplitudes, Float64 nominalWidth, std::vector<Int32> catalogIndexes):CLineModelElement(widthType, resolution, velocity)
 {
 
     m_ElementType = "CMultiLine";
@@ -26,8 +26,6 @@ CMultiLine::CMultiLine(std::vector<CRay> rs, const std::string& widthType, std::
     }
     m_NominalWidth = nominalWidth;
     m_NominalAmplitudes = nominalAmplitudes;
-
-    m_NSigmaSupport = 8.0;
 
     for(int i=0; i<catalogIndexes.size(); i++){
         m_LineCatalogIndexes.push_back(catalogIndexes[i]);
@@ -55,25 +53,6 @@ Float64 CMultiLine::GetSignFactor(Int32 subeIdx)
     return m_SignFactors[subeIdx];
 }
 
-Float64 CMultiLine::GetLineWidth(Float64 lambda, Float64 z)
-{
-    Float64 instrumentSigma = -1;
-    if( m_LineWidthType == "psfinstrumentdriven"){
-        instrumentSigma = lambda/m_Resolution/m_FWHM_factor;
-    }else if( m_LineWidthType == "zdriven"){
-        instrumentSigma = m_NominalWidth*(1+z);
-    }else if( m_LineWidthType == "fixed"){
-        instrumentSigma = m_NominalWidth;
-    }
-
-//    Float64 v = 200;
-//    Float64 c = 300000.0;
-//    Float64 velocitySigma = v/c*lambda;//, useless /(1+z)*(1+z);
-//    Float64 sigma = sqrt(instrumentSigma*instrumentSigma + velocitySigma*velocitySigma);
-
-    return instrumentSigma;
-}
-
 void CMultiLine::prepareSupport(const CSpectrumSpectralAxis& spectralAxis, Float64 redshift, const TFloat64Range &lambdaRange)
 {    
     m_OutsideLambdaRange=true;
@@ -82,7 +61,7 @@ void CMultiLine::prepareSupport(const CSpectrumSpectralAxis& spectralAxis, Float
     m_OutsideLambdaRangeList.resize(m_Rays.size());
     for(Int32 i=0; i<m_Rays.size(); i++){
         Float64 mu = m_Rays[i].GetPosition()*(1+redshift);
-        Float64 c = GetLineWidth(mu, redshift);
+        Float64 c = GetLineWidth(mu, redshift, m_Rays[i].GetIsEmission());
         Float64 winsize = m_NSigmaSupport*c;
 
         Float64 lambda_start = mu-winsize/2.0;
@@ -144,7 +123,6 @@ TInt32RangeList CMultiLine::getSupport()
 
             support.push_back(TInt32Range(m_Start[i], m_End[i]));
         }
-
     }
     return support;
 }
@@ -164,8 +142,17 @@ TInt32Range CMultiLine::getSupportSubElt(Int32 subeIdx)
 Float64 CMultiLine::GetWidth(Int32 subeIdx, Float64 redshift)
 {
     Float64 mu = m_Rays[subeIdx].GetPosition()*(1+redshift);
-    Float64 c = GetLineWidth(mu, redshift);
+    Float64 c = GetLineWidth(mu, redshift, m_Rays[subeIdx].GetIsEmission());
     return c;
+}
+
+std::vector<CRay> CMultiLine::GetRays()
+{
+    std::vector<CRay> rays;
+    for(Int32 k=0; k<m_Rays.size(); k++){
+        rays.push_back(m_Rays[k]);
+    }
+    return rays;
 }
 
 Float64 CMultiLine::GetFittedAmplitude(Int32 subeIdx){
@@ -246,7 +233,7 @@ void CMultiLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const C
     c.resize(m_Rays.size());
     for(Int32 k2=0; k2<m_Rays.size(); k2++){ //loop for the signal synthesis
         mu[k2] = m_Rays[k2].GetPosition()*(1+redshift);
-        c[k2] = GetLineWidth(mu[k2], redshift);
+        c[k2] = GetLineWidth(mu[k2], redshift, m_Rays[k2].GetIsEmission());
     }
 
     for(Int32 k=0; k<m_Rays.size(); k++){ //loop for the intervals
@@ -339,7 +326,7 @@ Float64 CMultiLine::getModelAtLambda(Float64 lambda, Float64 redshift )
         }
         Float64 A = m_FittedAmplitudes[k2];
         Float64 mu = m_Rays[k2].GetPosition()*(1+redshift);
-        Float64 c = GetLineWidth(mu, redshift);
+        Float64 c = GetLineWidth(mu, redshift, m_Rays[k2].GetIsEmission());
         Yi += m_SignFactors[k2] * A * exp (-1.*(x-mu)*(x-mu)/(2*c*c));
     }
     return Yi;

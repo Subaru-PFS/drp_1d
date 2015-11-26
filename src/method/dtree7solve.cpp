@@ -54,6 +54,26 @@ COperatorDTree7Solve::~COperatorDTree7Solve()
 
 }
 
+
+const std::string COperatorDTree7Solve::GetDescription()
+{
+    std::string desc;
+
+    desc = "Method decisionaltree7:\n";
+
+    desc.append("\tparam: dtree7solve.overlapThreshold = <float value>\n");
+    desc.append("\tparam: dtree7solve.correlationExtremumCount = <float value>\n");
+    desc.append("\tparam: dtree7solve.winsize = <float value>\n");
+    desc.append("\tparam: dtree7solve.cut = <float value>\n");
+    desc.append("\tparam: dtree7solve.strongcut = <float value>\n");
+    desc.append("\tparam: dtree7solve.minMatchNum = <float value>\n");
+    desc.append("\tparam: dtree7solve.tol = <float value>\n");
+
+    return desc;
+
+}
+
+
 std::shared_ptr<CDTree7SolveResult> COperatorDTree7Solve::Compute(CDataStore& dataStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
                                                         const CTemplateCatalog& tplCatalog, const TStringList& tplCategoryList, const CRayCatalog &restRayCatalog,
                                                         const TFloat64Range& lambdaRange, const TFloat64Range& redshiftRange, Float64 redshiftStep,
@@ -68,6 +88,15 @@ std::shared_ptr<CDTree7SolveResult> COperatorDTree7Solve::Compute(CDataStore& da
     dataStore.GetScopedParam( "strongcut", m_strongcut, 2.0 );
     dataStore.GetScopedParam( "minMatchNum", m_minMatchNum, 1.0 );
     dataStore.GetScopedParam( "tol", m_tol, 0.002 );
+
+    if(correlationExtremumCount==-1){
+        Float64 count=0.0;
+        dataStore.GetScopedParam( "correlationExtremumCount", count, 5.0 );
+        correlationExtremumCount = (Int32)count;
+    }
+    if(overlapThreshold==-1.0){
+        dataStore.GetScopedParam( "overlapThreshold", overlapThreshold, 1.0 );
+    }
 
 
     storeResult = SolveDecisionalTree7(dataStore, spc, spcWithoutCont,

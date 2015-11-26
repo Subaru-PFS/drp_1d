@@ -11,7 +11,7 @@
 
 using namespace NSEpic;
 
-CSingleLine::CSingleLine(const CRay& r , const std::string& widthType, Float64 nominalWidth, std::vector<Int32> catalogIndexes):CLineModelElement(widthType)
+CSingleLine::CSingleLine(const CRay& r , const std::string& widthType, const Float64 resolution, const Float64 velocity, Float64 nominalWidth, std::vector<Int32> catalogIndexes):CLineModelElement(widthType, resolution, velocity)
 {
     m_ElementType = "CSingleLine";
     m_Ray = r;
@@ -26,7 +26,6 @@ CSingleLine::CSingleLine(const CRay& r , const std::string& widthType, Float64 n
     m_FittedAmplitude = -1;
     m_FittedAmplitudeErrorSigma = -1;
 
-    m_NSigmaSupport = 8.0;
     m_Start = -1;
     m_End = -1;
 
@@ -56,15 +55,23 @@ Float64 CSingleLine::GetSignFactor(Int32 subeIdx)
 Float64 CSingleLine::GetWidth(Int32 subeIdx, Float64 redshift)
 {
     Float64 mu = m_Ray.GetPosition()*(1+redshift);
-    Float64 c = GetLineWidth(mu, redshift);
+    Float64 c = GetLineWidth(mu, redshift, m_Ray.GetIsEmission());
 
     return c;
 }
 
+std::vector<CRay> CSingleLine::GetRays()
+{
+    std::vector<CRay> rays;
+    rays.push_back(m_Ray);
+    return rays;
+}
+
+
 void CSingleLine::prepareSupport(const CSpectrumSpectralAxis& spectralAxis, Float64 redshift, const TFloat64Range &lambdaRange)
 {
     Float64 mu = m_Ray.GetPosition()*(1+redshift);
-    Float64 c = GetLineWidth(mu, redshift);
+    Float64 c = GetLineWidth(mu, redshift, m_Ray.GetIsEmission());
     Float64 winsize = m_NSigmaSupport*c;
     Float64 lambda_start = mu-winsize/2.0;
     if(lambda_start < lambdaRange.GetBegin()){
@@ -111,24 +118,6 @@ TInt32Range CSingleLine::getSupportSubElt(Int32 subeIdx)
 
 }
 
-Float64 CSingleLine::GetLineWidth(Float64 lambda, Float64 z){
-    Float64 instrumentSigma = -1;
-    if( m_LineWidthType == "psfinstrumentdriven"){
-        instrumentSigma = lambda/m_Resolution/m_FWHM_factor;
-    }else if( m_LineWidthType == "zdriven"){
-        instrumentSigma = m_NominalWidth*(1+z);
-    }else if( m_LineWidthType == "fixed"){
-        instrumentSigma = m_NominalWidth;
-    }
-
-//    Float64 v = 200;
-//    Float64 c = 300000.0;
-//    Float64 velocitySigma = v/c*lambda;//, useless /(1+z)*(1+z);
-//    Float64 sigma = sqrt(instrumentSigma*instrumentSigma + velocitySigma*velocitySigma);
-
-    return instrumentSigma;
-}
-
 void CSingleLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis, Float64  redshift)
 {
     if(m_OutsideLambdaRange){
@@ -142,7 +131,7 @@ void CSingleLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const 
     const Float64* spectral = spectralAxis.GetSamples();
     const Float64* error = fluxAxis.GetError();
     Float64 mu = m_Ray.GetPosition()*(1+redshift);
-    Float64 c = GetLineWidth(mu, redshift);
+    Float64 c = GetLineWidth(mu, redshift, m_Ray.GetIsEmission());
 
     Float64 y = 0.0;
     Float64 x = 0.0;
@@ -277,7 +266,7 @@ Float64 CSingleLine::getModelAtLambda(Float64 lambda, Float64 redshift )
 
     Float64 A = m_FittedAmplitude;
     Float64 mu = m_Ray.GetPosition()*(1+redshift);
-    Float64 c = GetLineWidth(mu, redshift);
+    Float64 c = GetLineWidth(mu, redshift, m_Ray.GetIsEmission());
     Yi = m_SignFactor * A * exp (-1.*(x-mu)*(x-mu)/(2*c*c));
 
     return Yi;

@@ -22,7 +22,7 @@ class CLineModelElement
 
 public:
 
-    CLineModelElement(const std::string& widthType);
+    CLineModelElement(const std::string& widthType, const Float64 resolution, const Float64 velocity);
     ~CLineModelElement();
 
     std::string GetElementTypeTag();
@@ -46,6 +46,7 @@ public:
     virtual Float64 GetSignFactor(Int32 subeIdx)=0;
     virtual Float64 GetWidth(Int32 subeIdx, Float64 redshift)=0;
     Int32 GetSize();
+    virtual std::vector<CRay> GetRays()=0;
     virtual std::string GetRayName(Int32 subeIdx)=0;
     bool IsOutsideLambdaRange();
     virtual bool IsOutsideLambdaRange(Int32 subeIdx)=0;
@@ -53,13 +54,20 @@ public:
     virtual Int32 FindElementIndex(std::string LineTagStr)=0;
 
     std::vector<Int32> m_LineCatalogIndexes;
+    Float64 GetLineWidth(Float64 lambda, Float64 z, Bool isEmission);
+
+    Float64 GetNSigmaSupport();
 
 protected:
 
+
     std::string m_LineWidthType;
+    Float64 m_NominalWidth;
     Float64 m_Resolution;
+    Float64 m_Velocity;
     Float64 m_FWHM_factor;
 
+    Float64 m_NSigmaSupport;
     Float64 m_OutsideLambdaRangeOverlapThreshold;
     bool m_OutsideLambdaRange;
     std::string m_ElementType;

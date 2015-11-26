@@ -22,11 +22,12 @@ public:
 
     COperatorCorrelationSolve();
     ~COperatorCorrelationSolve();
+    const std::string GetDescription();
 
     std::shared_ptr<const CCorrelationSolveResult>  Compute( CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
                                         const CTemplateCatalog& tplCatalog, const TStringList& tplCategoryList,
                                         const TFloat64Range& lambdaRange, const TFloat64Range& redshiftsRange, Float64 redshiftStep,
-                                        Float64 overlapThreshold  );
+                                        Float64 overlapThreshold=-1.0  );
 
 
 private:
