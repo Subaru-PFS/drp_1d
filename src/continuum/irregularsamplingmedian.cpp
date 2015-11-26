@@ -1,4 +1,3 @@
-
 #include <epic/redshift/continuum/irregularsamplingmedian.h>
 
 #include <epic/core/common/quicksort.h>
@@ -8,12 +7,14 @@
 #include <epic/redshift/spectrum/spectrum.h>
 
 #include <math.h>
-
 #include <algorithm>
 
 using namespace NSEpic;
 using namespace std;
 
+/**
+ * Default attributions constructor.
+ */
 CContinuumIrregularSamplingMedian::CContinuumIrregularSamplingMedian()
 {
     m_MeanSmoothAmplitude = 75;     // Angstrom
@@ -22,32 +23,45 @@ CContinuumIrregularSamplingMedian::CContinuumIrregularSamplingMedian()
     m_Even = false;
 }
 
+/**
+ * Empty destructor.
+ */
 CContinuumIrregularSamplingMedian::~CContinuumIrregularSamplingMedian()
 {
 
 }
 
+/**
+ * Sets the value for m_MeanSmoothAmplitude.
+ */
 Void CContinuumIrregularSamplingMedian::SetMeanKernelWidth( Float32 width )
 {
     m_MeanSmoothAmplitude = width;
 }
 
+/**
+ * Sets the value for m_MedianSmoothAmplitude.
+ */
 Void CContinuumIrregularSamplingMedian::SetMedianKernelWidth( Float32 width )
 {
     m_MedianSmoothAmplitude = width;
 }
 
+/**
+ * Sets m_MedianSmoothCycles to input.
+ */
 Void CContinuumIrregularSamplingMedian::SetMedianCycleCount( UInt32 count )
 {
     m_MedianSmoothCycles = count;
 }
 
+/**
+ * Take an array lenght N,
+ * foreach j element computes median value on interval j-n_range/2,j+n_range/2
+ * an put this value in y_out array
+ */
 Int32 CContinuumIrregularSamplingMedian::MedianSmooth( const Float64 *y, Int32 n_points, Int32 n_range, Float64 *y_out)
 {
-    // Take an array lenght N,
-    // foreach j element computes median value on interval j-n_range/2,j+n_range/2
-    // an put this value in y_out array
-
     Int32 i;
 
     Int32 half,rest;
@@ -69,15 +83,13 @@ Int32 CContinuumIrregularSamplingMedian::MedianSmooth( const Float64 *y, Int32 n
     return 0;
 }
 
-
+/**
+ * Input: y_input, which has N elemnts
+ * Reflects on border this array
+ * y_out extended array
+ */
 Int32 CContinuumIrregularSamplingMedian::OddMirror( const Float64* y_input, Int32 N, Int32 Nreflex, Float64* y_out )
 {
-    /*
-      Input: y_input, which has N elemnts
-      Reflects on border this array
-      y_out extended array
-    */
-
     Int32 j;
 
     for( j=0; j<N; j++ )
@@ -92,7 +104,9 @@ Int32 CContinuumIrregularSamplingMedian::OddMirror( const Float64* y_input, Int3
     return 0;
 }
 
-
+/**
+ * Extends array with its own "reflection". Version for even-sized arrays.
+ */
 Int32 CContinuumIrregularSamplingMedian::EvenMirror( const Float64* y_input, Int32 N, Int32 Nreflex, Float64* y_out )
 {
     int j;
@@ -110,11 +124,9 @@ Int32 CContinuumIrregularSamplingMedian::EvenMirror( const Float64* y_input, Int
 }
 
 /**
-   This algorithm computes the spectrum continuum using the following procedure:
-
-   * estimate the 'middle' resolution (ex: for PFS the resolution doesn't vary more than ~ 25 % in a spectral axis')
-
-   * compute the continuum using the median technique with that adapted resolution
+ * This algorithm computes the spectrum continuum using the following procedure:
+ * estimate the 'middle' resolution (ex: for PFS the resolution doesn't vary more than ~ 25 % in a spectral axis')
+ * compute the continuum using the median technique with that adapted resolution
 **/
 Bool CContinuumIrregularSamplingMedian::RemoveContinuum( const CSpectrum& s, CSpectrumFluxAxis& noContinuumFluxAxis )
 {
@@ -123,6 +135,9 @@ Bool CContinuumIrregularSamplingMedian::RemoveContinuum( const CSpectrum& s, CSp
     ProcessRemoveContinuum( s, noContinuumFluxAxis, resolution );
 }
 
+/**
+ * Computes the continuum using the median technique, and the input resolution.
+ */
 Bool CContinuumIrregularSamplingMedian::ProcessRemoveContinuum( const CSpectrum& s, CSpectrumFluxAxis& noContinuumFluxAxis, Float64 resolution )
 {
     Int32 k0 = 0;
@@ -324,9 +339,11 @@ Bool CContinuumIrregularSamplingMedian::ProcessRemoveContinuum( const CSpectrum&
     return true;
 }
 
-Int32 CContinuumIrregularSamplingMedian::MeanSmooth( const Float64 *y, Int32 N, Int32 n, Float64 *y_out)
+/**
+ * Compute an average smooth.
+ */
+Int32 CContinuumIrregularSamplingMedian::MeanSmooth( const Float64 *y, Int32 N, Int32 n, Float64 *y_out )
 {
-    //Compute an average smooth
     Int32 i;
     Int32 start,end,half,rest;
 

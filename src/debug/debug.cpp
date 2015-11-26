@@ -1,5 +1,4 @@
 #include <epic/core/debug/debug.h>
-
 #include <epic/core/log/log.h>
 
 #include <assert.h>
@@ -11,14 +10,20 @@
 
 using namespace NSEpic;
 
+/**
+ * Wrapper around Log.LogInfo.
+ */
 Void NSEpic::DebugLogInfo( String format, ... )
 {
     va_list args;
     va_start( args, format );
-    Log.LogInfo(  format, args );
+    Log.LogInfo( format, args );
     va_end( args );
 }
 
+/**
+ * Wrapper around Log.LogWarning.
+ */
 Void NSEpic::DebugLogWarning( String format, ... )
 {
     va_list args;
@@ -27,6 +32,9 @@ Void NSEpic::DebugLogWarning( String format, ... )
     va_end( args );
 }
 
+/**
+ * Wrapper around Log.LogError.
+ */
 Void NSEpic::DebugLogError( String format, ... )
 {
     va_list args;
@@ -36,21 +44,33 @@ Void NSEpic::DebugLogError( String format, ... )
     va_end( args );
 }
 
+/**
+ * Traceback print.
+ */
 Void NSEpic::DebugLogCodeInformation( String file, UInt32 line, String func )
 {
     Log.LogInfo( "%s()\n%s:%d", func, file, line );
 }
 
+/**
+ * Raises SIGABRT.
+ */
 Void NSEpic::DebugRaiseException()
 {
     raise( SIGABRT );
 }
 
+/**
+ * Raises SIGABRT.
+ */
 Void NSEpic::DebugBreakExecution()
 {
     raise( SIGABRT );
 }
 
+/**
+ * Returns a string containing "./CrashDump/".
+ */
 String NSEpic::DebugGetDumpDirectory()
 {
     static String dir = "./CrashDump/";
@@ -58,16 +78,25 @@ String NSEpic::DebugGetDumpDirectory()
 
 }
 
+/**
+ * Empty.
+ */
 Void NSEpic::DebugCreateDump( Void* dumpData )
 {
 
 }
 
+/**
+ * Calls signal with a SignalHandler parameter.
+ */
 Void NSEpic::InstallSignalHandler()
 {
     signal( SIGSEGV, SignalHandler );
 }
 
+/**
+ * Helper structure to pass arguments to signal.
+ */
 Void NSEpic::SignalHandler(int sig)
 {
   void *array[16];

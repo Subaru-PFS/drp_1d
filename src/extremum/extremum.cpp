@@ -1,5 +1,4 @@
 #include <epic/redshift/extremum/extremum.h>
-
 #include <epic/core/common/quicksort.h>
 #include <epic/core/common/datatypes.h>
 
@@ -15,6 +14,9 @@
 using namespace NSEpic;
 using namespace std;
 
+/**
+ * Constructs CExtremum with default values, and SetSignSearch ( -1.0 ) if argument is true, SetSignSearch ( 1.0 ) otherwise.
+ */
 CExtremum::CExtremum( Bool invertForMinSearch ) :
     m_MaxPeakCount( 5 ),
     m_RefreshCount( 1 ),
@@ -31,6 +33,9 @@ CExtremum::CExtremum( Bool invertForMinSearch ) :
       }
 }
 
+/**
+ * Member attribution constructor.
+ */
 CExtremum::CExtremum( const TFloat64Range& xRange, UInt32 maxPeakCount, Bool invertForMinSearch, UInt32 refreshCount ) :
     m_MaxPeakCount( maxPeakCount ),
     m_RefreshCount( refreshCount ),
@@ -47,34 +52,51 @@ CExtremum::CExtremum( const TFloat64Range& xRange, UInt32 maxPeakCount, Bool inv
       }
 }
 
+/**
+ * Empty destructor.
+ */
 CExtremum::~CExtremum()
 {
 
 }
 
+/**
+ *  Sets m_XRange to r.
+ */
 void CExtremum::SetXRange( const TFloat64Range& r )
 {
     m_XRange = r;
 }
 
+/**
+ * Sets m_MaxPeakCount to n.
+ */
 void CExtremum::SetMaxPeakCount( UInt32 n )
 {
     m_MaxPeakCount = n;
 }
 
+/**
+ * Sets m_RefreshCount to n.
+ */
 void CExtremum::SetRefreshCount( UInt32 n )
 {
     m_RefreshCount = n;
 }
 
+/**
+ * Sets m_SignSearch to val.
+ */
 void CExtremum::SetSignSearch( Float64 val )
 {
     m_SignSearch = val;
 }
 
-Bool CExtremum::Find( const TFloat64List& xAxis, const TFloat64List& yAxis, TPointList& maxPoint) const
+/**
+ * Wrapper around InternalFind, this function validates and sets the search interval limits.
+ */
+Bool CExtremum::Find( const TFloat64List& xAxis, const TFloat64List& yAxis, TPointList& maxPoint ) const
 {
-
     UInt32 n = xAxis.size();
     const Float64* selectedXAxis = xAxis.data();
     const Float64* selectedYAxis = yAxis.data();
@@ -108,6 +130,9 @@ Bool CExtremum::Find( const TFloat64List& xAxis, const TFloat64List& yAxis, TPoi
     return InternalFind( selectedXAxis+rangeXBeginIndex, selectedYAxis+rangeXBeginIndex, (rangeXEndIndex-rangeXBeginIndex)+1, maxPoint );
 }
 
+/**
+ * Attempts to find peaks, returning (when appropriate) the points where they reside in the maxPoint argument.
+ */
 Bool CExtremum::InternalFind( const Float64* xAxis, const Float64* yAxis, UInt32 n, TPointList& maxPoint ) const
 {
     if( n == 0 )
@@ -256,6 +281,9 @@ Bool CExtremum::InternalFind( const Float64* xAxis, const Float64* yAxis, UInt32
     return true;
 }
 
+/**
+ * Attempts to find peaks, returning (when appropriate) the points where they reside in the maxPoint argument.
+ */
 Bool CExtremum::InternalFind2( const Float64* xAxis, const Float64* yAxis, UInt32 n, TPointList& maxPoint ) const
 {
     if( n == 0 )

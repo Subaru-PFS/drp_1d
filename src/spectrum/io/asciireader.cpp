@@ -12,18 +12,25 @@ using namespace NSEpic;
 using namespace std;
 namespace bfs = boost::filesystem;
 
-
-
+/**
+ * 
+ */
 CSpectrumIOAsciiReader::CSpectrumIOAsciiReader()
 {
 
 }
 
+/**
+ * 
+ */
 CSpectrumIOAsciiReader::~CSpectrumIOAsciiReader()
 {
 
 }
 
+/**
+ * 
+ */
 Bool CSpectrumIOAsciiReader::Read( const char* filePath, CSpectrum& spectrum )
 {
   //Uncomment below when --verbose works properly.
@@ -77,6 +84,9 @@ Bool CSpectrumIOAsciiReader::Read( const char* filePath, CSpectrum& spectrum )
   return true;
 }
 
+/**
+ * 
+ */
 Bool CSpectrumIOAsciiReader::IsAsciiDataFile( bfs::ifstream& file  )
 {
     return true;
