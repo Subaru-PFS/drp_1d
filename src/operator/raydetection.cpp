@@ -1,6 +1,6 @@
-#include <epic/redshift/operator/raydetection.h>
-
 #include <epic/core/debug/assert.h>
+#include <epic/core/log/log.h>
+#include <epic/redshift/operator/raydetection.h>
 #include <epic/redshift/spectrum/spectrum.h>
 #include <epic/redshift/spectrum/fluxaxis.h>
 #include <epic/redshift/spectrum/spectralaxis.h>
@@ -29,7 +29,7 @@ using namespace NSEpic;
 //    strongcut = 2.0;
 //}
 
-CLineDetection::CLineDetection(Int32 type, Float64 cut, Float64 strongcut, Float64 winsize, Float64 minsize, Float64 maxsize, bool disableFitQualityCheck)
+CLineDetection::CLineDetection( Int32 type, Float64 cut, Float64 strongcut, Float64 winsize, Float64 minsize, Float64 maxsize, bool disableFitQualityCheck )
 {
     FWHM_FACTOR = 2.35;
 
@@ -50,7 +50,7 @@ CLineDetection::~CLineDetection()
 
 }
 
-std::shared_ptr<const CLineDetectionResult> CLineDetection::Compute( const CSpectrum& spectrum, const TLambdaRange& lambdaRange, const TInt32RangeList& resPeaks, const TInt32RangeList& resPeaksEnlarged)
+std::shared_ptr<const CLineDetectionResult> CLineDetection::Compute( const CSpectrum& spectrum, const TLambdaRange& lambdaRange, const TInt32RangeList& resPeaks, const TInt32RangeList& resPeaksEnlarged )
 {
     const CSpectrum& spc = spectrum;
     const CSpectrumFluxAxis fluxAxis = spc.GetFluxAxis();
@@ -99,55 +99,66 @@ std::shared_ptr<const CLineDetectionResult> CLineDetection::Compute( const CSpec
         fitter.GetResultsPolyCoeff0( gaussCont );
 
         // check amp
-        if(gaussAmp<0){
+        if( gaussAmp<0 )
+	  {
             toAdd = false;
             std::string status = (boost::format("Peak_%1% : GaussAmp negative") % j).str();
             result->PeakListDetectionStatus.push_back(status);
-        }
+	  }
         // check width
-        if(toAdd){
-            if(gaussWidth<0){
+        if( toAdd )
+	  {
+            if( gaussWidth<0 )
+	      {
                 toAdd = false;
                 std::string status = (boost::format("Peak_%1% : GaussWidth negative") % j).str();
                 result->PeakListDetectionStatus.push_back(status);
-            }else{
+	      }
+	    else
+	      {
                 Float64 fwhm = FWHM_FACTOR*gaussWidth;
-                if(fwhm<m_minsize){
+                if( fwhm<m_minsize )
+		  {
                     toAdd = false;
                     std::string status = (boost::format("Peak_%1% : fwhm<m_minsize") % j).str();
                     result->PeakListDetectionStatus.push_back(status);
-                }
-                if(fwhm>m_maxsize){
+		  }
+                if( fwhm>m_maxsize )
+		  {
                     toAdd = false;
                     std::string status = (boost::format("Peak_%1% : fwhm>m_maxsize") % j).str();
                     result->PeakListDetectionStatus.push_back(status);
-                }
-            }
-        }
+		  }
+	      }
+	  }
 
         // Check if gaussian fit is very different from peak itself
-        if(toAdd && !m_disableFitQualityCheck){
+        if( toAdd && !m_disableFitQualityCheck )
+	  {
             //find max value and pos
             Float64 max_value = -DBL_MAX;
             Int32 max_index = -1;
             for( Int32 k=resPeaks[j].GetBegin(); k<resPeaks[j].GetEnd()+1; k++ )
             {
-                if(max_value < fluxAxis[k]){
+                if( max_value < fluxAxis[k] )
+		  {
                     max_value = fluxAxis[k];
                     max_index = k;
-                }
+		  }
             }
 
             // check flux max_gauss vs flux max_raw_spectrum
             Float64 gaussAmp_with_cont = gaussAmp + gaussCont;
-            if(gaussAmp_with_cont/max_value <= 0.65 || gaussAmp_with_cont/max_value >= 1.35){
+            if( gaussAmp_with_cont/max_value <= 0.65 || gaussAmp_with_cont/max_value >= 1.35 )
+	      {
                 toAdd = false;
                 std::string status = (boost::format("Peak_%1% : gaussAmp far from spectrum max_value") % j).str();
                 result->PeakListDetectionStatus.push_back(status);
-            }
+	      }
 
             // check gaussPos vs position of the max.
-            if(0){ // tolerance on the position in terms of number of samples
+            if( 0 )
+	      { // tolerance on the position in terms of number of samples
                 //reg. sampling, TAG: IRREGULAR_SAMPLING
                 //if(fabs(gaussPos-spc.GetSpectralAxis()[max_index])>3.*spc.GetResolution()){
                 //    toAdd = false;
@@ -155,67 +166,84 @@ std::shared_ptr<const CLineDetectionResult> CLineDetection::Compute( const CSpec
                 //irregular sampling
                 Int32 nsamplestol=3;
                 Float64 error3samples = 1.0;
-                if(max_index<nsamplestol){
+                if(max_index<nsamplestol)
+		  {
                     error3samples = spc.GetSpectralAxis()[max_index+nsamplestol];
-                }else if(max_index>spc.GetSampleCount()-nsamplestol-1){
-                    error3samples = spc.GetSpectralAxis()[max_index-nsamplestol];
-                }else{
-                    error3samples = (spc.GetSpectralAxis()[max_index+nsamplestol]-spc.GetSpectralAxis()[max_index-nsamplestol])/2.0;
-                }
+		  }
+		else 
+		  {
+		    if( max_index>spc.GetSampleCount()-nsamplestol-1 )
+		      {
+			error3samples = spc.GetSpectralAxis()[max_index-nsamplestol];
+		      }
+		    else
+		      {
+			error3samples = (spc.GetSpectralAxis()[max_index+nsamplestol]-spc.GetSpectralAxis()[max_index-nsamplestol])/2.0;
+		      }
+		  }
                 Float64 diffPos = fabs(gaussPos-spc.GetSpectralAxis()[max_index]);
-                if(diffPos > error3samples){
+                if( diffPos > error3samples )
+		  {
                     toAdd = false;
                     std::string status = (boost::format("Peak_%1% : gaussPos far from spectrum max_position (samples)") % j).str();
                     result->PeakListDetectionStatus.push_back(status);
-                }
-            }else{ //tolerance in Angstrom
+		  }
+	      }
+	    else
+	      { //tolerance in Angstrom
                 Float64 tolAngtsrom = 6;
                 Float64 diffPos = fabs(gaussPos-spc.GetSpectralAxis()[max_index]);
-                if(diffPos > tolAngtsrom){
+                if( diffPos > tolAngtsrom )
+		  {
                     toAdd = false;
                     std::string status = (boost::format("Peak_%1% : gaussAmp far from spectrum max_value (Angstrom)") % j).str();
                     result->PeakListDetectionStatus.push_back(status);
-                }
-            }
-
-        }
+		  }
+	      }
+	  }
 
         // check type weak or strong
         Int32 force = 1; //weak by default
         Float64 ratioAmp = -1.0; //cut = -1.0 by default
-        if(toAdd){
+        if( toAdd )
+	  {
             ratioAmp = ComputeFluxes(spc, m_winsize, resPeaks[j]);
-            if(ratioAmp<m_cut){
+            if( ratioAmp<m_cut )
+	      {
                 toAdd = false;
                 std::string status = (boost::format("Peak_%1% : ratioAmp<m_cut") % j).str();
                 result->PeakListDetectionStatus.push_back(status);
                 // add this peak range to retest list
                 retestPeaks.push_back(resPeaks[j]);
                 retestGaussParams.push_back(SGaussParams(gaussPos, gaussAmp, gaussWidth));
-            }else if(ratioAmp>m_cut*m_strongcut){
+	      }else if( ratioAmp>m_cut*m_strongcut )
+	      {
                 force = 2; //strong
-            }
-        }
+	      }
+	  }
 
-        if(toAdd){
+        if( toAdd )
+	  {
             std::string status = (boost::format("Peak_%1% : line detected successfully") % j).str();
             result->PeakListDetectionStatus.push_back(status);
             char buffer [64];
             sprintf(buffer,"detected_peak_%d",j);
             std::string peakName = buffer;
             result->RayCatalog.Add( CRay( peakName, gaussPos, m_type, force , gaussAmp, gaussWidth, ratioAmp, gaussPosErr) );
-        }
+	  }
     }
-
+    
     // retest
     bool retest_flag = false;
-    if(retestPeaks.size()>0){
+    if( retestPeaks.size()>0 )
+      {
         //CRayCatalog::TRayVector
         retest_flag = true;
-    }
-    while(retest_flag){
+      }
+    while( retest_flag )
+      {
         retest_flag = Retest(spectrum, *result, retestPeaks,  retestGaussParams, result->RayCatalog.GetFilteredList(m_type, CRay::nForce_Strong), m_winsize, m_cut );
-    }
+      }
 
     return result;
 }
