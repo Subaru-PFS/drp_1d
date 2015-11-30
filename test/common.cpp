@@ -1,23 +1,18 @@
-#include "common.h"
 
 #include <epic/core/common/datatypes.h>
-#include <time.h>
-#include <stdlib.h>
+#include <epic/redshift/common/median.h>
+#include <epic/redshift/common/mean.h>
 
-using namespace NSEpicTest;
+#include <time.h>
+#include <iostream>
+#include <stdlib.h>
+#include <boost/test/unit_test.hpp>
+
 using namespace NSEpic;
 
-void CRedshiftCommonTestCase::setUp()
-{
-}
+BOOST_AUTO_TEST_SUITE(Common)
 
-void CRedshiftCommonTestCase::tearDown()
-{
-}
-
-#include <epic/redshift/common/median.h>
-
-void CRedshiftCommonTestCase::Median3()
+BOOST_AUTO_TEST_CASE(Median3)
 {
     CMedian<Float64> median;
 
@@ -28,10 +23,10 @@ void CRedshiftCommonTestCase::Median3()
     data[1] = 64;
     data[2] = 32;
 
-    CPPUNIT_ASSERT( median.Find( data, size ) == 32 );
+    BOOST_CHECK( median.Find( data, size ) == 32 );
 }
 
-void CRedshiftCommonTestCase::Median5()
+BOOST_AUTO_TEST_CASE(Median5)
 {
     CMedian<Float64> median;
 
@@ -44,10 +39,10 @@ void CRedshiftCommonTestCase::Median5()
     data[3] = 74;
     data[4] = 69;
 
-    CPPUNIT_ASSERT( median.Find( data, size ) == 64 );
+    BOOST_CHECK( median.Find( data, size ) == 64 );
 }
 
-void CRedshiftCommonTestCase::Median7()
+BOOST_AUTO_TEST_CASE(Median7)
 {
     CMedian<Float64> median;
 
@@ -62,10 +57,10 @@ void CRedshiftCommonTestCase::Median7()
     data[5] = 101;
     data[6] = 100;  
 
-    CPPUNIT_ASSERT( median.Find( data, size ) == 100 );
+    BOOST_CHECK( median.Find( data, size ) == 100 );
 }
 
-void CRedshiftCommonTestCase::Median9()
+BOOST_AUTO_TEST_CASE(Median9)
 {
     CMedian<Float64> median;
 
@@ -82,10 +77,10 @@ void CRedshiftCommonTestCase::Median9()
     data[7] = 452;
     data[8] = 0;    
 
-    CPPUNIT_ASSERT( median.Find( data, size ) == 100 );
+    BOOST_CHECK( median.Find( data, size ) == 100 );
 }
 
-void CRedshiftCommonTestCase::MedianBeers()
+BOOST_AUTO_TEST_CASE(MedianBeers)
 {
     CMedian<Float64> median;
 
@@ -105,18 +100,18 @@ void CRedshiftCommonTestCase::MedianBeers()
 
     data[ size -1 ] = 150.0;
 
-    CPPUNIT_ASSERT( median.Find( data, size ) == 150.0 );
+    BOOST_CHECK( median.Find( data, size ) == 150.0 );
 }
 
-void CRedshiftCommonTestCase::MedianFast()
+BOOST_AUTO_TEST_CASE(MedianFast)
 {
     CMedian<Float64> median;
 
     const Int32 size = ( ( MEDIAN_FAST_OR_BEERS_THRESHOLD - 1 ) | 1 ) ;
     const Int32 halfSize = size / 2 ;
 
-    CPPUNIT_ASSERT(  size <= MEDIAN_FAST_OR_BEERS_THRESHOLD );
-    CPPUNIT_ASSERT( halfSize * 2 + 1 == size );
+    BOOST_CHECK(  size <= MEDIAN_FAST_OR_BEERS_THRESHOLD );
+    BOOST_CHECK( halfSize * 2 + 1 == size );
 
     Float64 data[size];
     srand( time(0) );
@@ -132,12 +127,10 @@ void CRedshiftCommonTestCase::MedianFast()
 
     data[ size - 1 ] = 150.0;
 
-    CPPUNIT_ASSERT( median.Find( data, size ) == 150.0 );
+    BOOST_CHECK( median.Find( data, size ) == 150.0 );
 }
 
-#include <epic/redshift/common/mean.h>
-
-void CRedshiftCommonTestCase::Mean()
+BOOST_AUTO_TEST_CASE(Mean)
 {
     CMean<Float64> mean;
 
@@ -150,5 +143,9 @@ void CRedshiftCommonTestCase::Mean()
         data[i] = 150.0;
     }
 
-    CPPUNIT_ASSERT( mean.Find( data, size ) == 150.0 );
+    BOOST_CHECK( mean.Find( data, size ) == 150.0 );
 }
+
+
+
+BOOST_AUTO_TEST_SUITE_END()

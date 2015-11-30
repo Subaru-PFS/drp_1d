@@ -1,21 +1,16 @@
-#include "spectrum.h"
-
 #include <epic/core/common/datatypes.h>
+
+#include <boost/test/unit_test.hpp>
 
 using namespace NSEpic;
 
-using namespace NSEpicTest;
 
-void CRedshiftSpectrumTestCase::setUp()
-{
-}
+BOOST_AUTO_TEST_SUITE(Spectrum)
 
-void CRedshiftSpectrumTestCase::tearDown()
-{
-}
 
-void CRedshiftSpectrumTestCase::Load()
+BOOST_AUTO_TEST_CASE(Load)
 {
 
 }
 
+BOOST_AUTO_TEST_SUITE_END()
