@@ -437,22 +437,18 @@ Bool CProcessFlow::DecisionalTreeB( CProcessFlowContext& ctx )
     TFloat64Range lambdaRange;
     TFloat64Range redshiftRange;
     Float64       redshiftStep;
-    Int64         correlationExtremumCount;
-    Float64       overlapThreshold;
     TStringList     templateCategoryList;
 
     ctx.GetParameterStore().Get( "lambdaRange", lambdaRange );
     ctx.GetParameterStore().Get( "redshiftRange", redshiftRange );
     ctx.GetParameterStore().Get( "redshiftStep", redshiftStep );
-    ctx.GetParameterStore().Get( "correlationExtremumCount", correlationExtremumCount );
-    ctx.GetParameterStore().Get( "overlapThreshold", overlapThreshold );
     ctx.GetParameterStore().Get( "templateCategoryList", templateCategoryList );
 
     const CSpectrumSpectralAxis& spcSpectralAxis = ctx.GetSpectrum().GetSpectralAxis();
     TFloat64Range spcLambdaRange;
     spcSpectralAxis.ClampLambdaRange( lambdaRange, spcLambdaRange );
 
-    Log.LogInfo( "Processing dtreeb for spc:%s (LambdaRange: %f-%f:%f)", ctx.GetSpectrum().GetName().c_str(),
+    Log.LogInfo( "Processing dtreeb for spc:%s (LambdaRange: %.2f-%.2f:%.2f)", ctx.GetSpectrum().GetName().c_str(),
             spcLambdaRange.GetBegin(), spcLambdaRange.GetEnd(), ctx.GetSpectrum().GetResolution());
 
     // Create redshift initial list by spanning redshift acdross the given range, with the given delta

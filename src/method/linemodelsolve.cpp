@@ -33,7 +33,8 @@ const std::string CLineModelSolve::GetDescription()
     desc.append("\tparam: linemodel.continuumcomponent = {""fromspectrum"", ""nocontinuum"", ""zero""}\n");
     desc.append("\tparam: linemodel.linewidthtype = {""psfinstrumentdriven"", ""zdriven"", ""fixedvelocity"", ""fixed""}\n");
     desc.append("\tparam: linemodel.instrumentresolution = <float value>\n");
-    desc.append("\tparam: linemodel.velocity = <float value>\n");
+    desc.append("\tparam: linemodel.velocityemission = <float value>\n");
+    desc.append("\tparam: linemodel.velocityabsorption = <float value>\n");
     desc.append("\tparam: linemodel.continuumreestimation = {""no"", ""onlyextrema"", ""always""}\n");
     desc.append("\tparam: linemodel.extremacount = <float value>\n");
 
@@ -103,6 +104,7 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore, const CSpectrum& spc, const 
         Log.LogInfo( "    -velocity emission: %.2f", opt_velocity_emission);
         Log.LogInfo( "    -velocity absorption: %.2f", opt_velocity_absorption);
     }
+    Log.LogInfo( "    -extremacount: %.3f", opt_extremacount);
 
     // Compute merit function
     COperatorLineModel linemodel;

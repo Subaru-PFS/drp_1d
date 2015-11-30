@@ -79,7 +79,7 @@ private:
 
     std::vector<Int32> findLineIdxInCatalog(const CRayCatalog::TRayVector& restRayList, std::string strTag, Int32 type);
     Void Apply2SingleLinesAmplitudeRule(Int32 linetype, std::string lineA, std::string lineB, Float64 coeff );
-    Void ApplyAmplitudeRatioRangeRule( Int32 linetype, std::string lineA, std::string lineB, Float64 coeffMin, Float64 coeffMax );
+    Void ApplyAmplitudeRatioRangeRule(Int32 linetype, std::string lineA, std::string lineB, Float64 coeff);
 
     Int32 ApplyBalmerRuleLinSolve();
     TFloat64List BalmerModelLinSolve( std::vector<Float64> lambdax, std::vector<Float64> continuumx, std::vector<Float64> datax, std::vector<Float64> errdatax );

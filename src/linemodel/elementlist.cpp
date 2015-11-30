@@ -2165,8 +2165,8 @@ void CLineModelElementList::applyRules()
     Apply2SingleLinesAmplitudeRule(CRay::nType_Absorption, "H10A", "H11A", 1.0);
     //*/
 
-    /*
-    ApplyAmplitudeRatioRangeRule(CRay::nType_Emission, "[OII]3729", "[OII]3726", 2.0, 0.5);
+    //*
+    ApplyAmplitudeRatioRangeRule(CRay::nType_Emission, "[OII]3726", "[OII]3729", 0.5);
     //*/
 
     //*
@@ -2305,7 +2305,7 @@ Void CLineModelElementList::Apply2SingleLinesAmplitudeRule( Int32 linetype, std:
     }
 }
 
-Void CLineModelElementList::ApplyAmplitudeRatioRangeRule( Int32 linetype, std::string lineA, std::string lineB, Float64 coeffMin, Float64 coeffMax )
+Void CLineModelElementList::ApplyAmplitudeRatioRangeRule( Int32 linetype, std::string lineA, std::string lineB, Float64 coeff)
 {
     Int32 iA = FindElementIndex(lineA, linetype);
     if(iA==-1){
@@ -2325,7 +2325,53 @@ Void CLineModelElementList::ApplyAmplitudeRatioRangeRule( Int32 linetype, std::s
         return;
     }
 
-    //todo
+    if(m_Elements[iA]->IsOutsideLambdaRange() == false && m_Elements[iB]->IsOutsideLambdaRange() == false){
+        Float64 ampA = m_Elements[iA]->GetFittedAmplitude(0);
+        Float64 erA = m_Elements[iA]->GetFittedAmplitudeErrorSigma(0);
+
+        Float64 ampB = m_Elements[iB]->GetFittedAmplitude(0);
+        Float64 erB = m_Elements[iB]->GetFittedAmplitudeErrorSigma(0);
+
+        Int32 i1 = iA;
+        Int32 i2 = iB;
+        Float64 amp1 = ampA;
+        Float64 er1 = erA;
+        Float64 amp2 = ampB;
+        Float64 er2 = erB;
+        if( std::abs(ampA) > std::abs(ampB*coeff) ){
+            i1 = iA;
+            i2 = iB;
+            amp1 = ampA;
+            er1 = erA;
+            amp2 = ampB;
+            er2 = erB;
+        }else if( std::abs(ampB) > std::abs(ampA*coeff) ){
+            i1 = iB;
+            i2 = iA;
+            amp1 = ampB;
+            er1 = erB;
+            amp2 = ampA;
+            er2 = erA;
+        }else{
+            return;
+        }
+
+        Float64 R = 1.0/coeff;
+        Float64 w1 = 0.0;
+        if(er1!=0.0){
+            w1 = 1.0/(er1*er1);
+        }
+        Float64 w2 = 0.0;
+        if(er2!=0.0){
+            w2 = 1.0/(er2*er2*R*R);
+        }
+        Float64 corrected1 = (amp1*w1 + amp2*w2*R)/(w1+w2) ;
+        Float64 corrected2 = corrected1/R;
+
+        m_Elements[i1]->SetFittedAmplitude(corrected1, er1);
+        m_Elements[i2]->SetFittedAmplitude(corrected2, er2);
+
+    }
 }
 
 Int32 CLineModelElementList::ApplyBalmerRuleLinSolve()
