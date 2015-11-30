@@ -11,6 +11,7 @@
 
 using namespace NSEpic;
 
+BOOST_AUTO_TEST_SUITE(ProcessFlow)
 
 BOOST_AUTO_TEST_CASE( ProcessShifted1 )
 {
@@ -77,6 +78,7 @@ BOOST_AUTO_TEST_CASE( ProcessShiftedDecimated )
 
     std::shared_ptr<CParameterStore> params = std::shared_ptr<CParameterStore>( new CParameterStore() );
     params->Set( "lambdaRange", TFloat64Range( 3800.0, 12500.0 ) );
+    params->Set( "redshiftRange", TFloat64Range( 0.0, 5.0 ) );
     params->Set( "redshiftStep", 0.0001);
     params->Set( "smoothWidth", (Int64)0 );
     params->Set( "templateCategoryList", TStringList { "galaxy" } );
@@ -97,3 +99,5 @@ BOOST_AUTO_TEST_CASE( ProcessShiftedDecimated )
 
     BOOST_CHECK_CLOSE_FRACTION( 2.02952, redshift, 0.00001 );
 }
+
+BOOST_AUTO_TEST_SUITE_END()
