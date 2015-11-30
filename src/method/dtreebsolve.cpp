@@ -58,10 +58,14 @@ const std::string COperatorDTreeBSolve::GetDescription()
     desc.append("\tparam: linemodel.continuumcomponent = {""fromspectrum"", ""nocontinuum"", ""zero""}\n");
     desc.append("\tparam: linemodel.linewidthtype = {""psfinstrumentdriven"", ""zdriven"", ""fixedvelocity"", ""fixed""}\n");
     desc.append("\tparam: linemodel.instrumentresolution = <float value>\n");
-    desc.append("\tparam: linemodel.velocity = <float value>\n");
+    desc.append("\tparam: linemodel.velocityemission = <float value>\n");
+    desc.append("\tparam: linemodel.velocityabsorption = <float value>\n");
+
     desc.append("\tparam: linemodel.continuumreestimation = {""no"", ""onlyextrema"", ""always""}\n");
     desc.append("\tparam: linemodel.extremacount = <float value>\n");
 
+    desc.append("\tparam: chisquare.overlapthreshold = <float value>\n");
+    desc.append("\tparam: chisquare.redshiftsupport = {""full"", ""extremaextended""}\n");
 
     return desc;
 
@@ -109,8 +113,10 @@ Bool COperatorDTreeBSolve::Solve(CDataStore &dataStore, const CSpectrum &spc, co
     dataStore.GetScopedParam( "linemodel.linewidthtype", opt_lineWidthType, "fixedvelocity" );
     Float64 opt_resolution;
     dataStore.GetScopedParam( "linemodel.instrumentresolution", opt_resolution, 3000.0 );
-    Float64 opt_velocity;
-    dataStore.GetScopedParam( "linemodel.velocity", opt_velocity, 100.0 );
+    Float64 opt_velocity_emission;
+    dataStore.GetScopedParam( "linemodel.velocityemission", opt_velocity_emission, 100.0 );
+    Float64 opt_velocity_absorption;
+    dataStore.GetScopedParam( "linemodel.velocityabsorption", opt_velocity_absorption, 300.0 );
     std::string opt_continuumreest;
     dataStore.GetScopedParam( "linemodel.continuumreestimation", opt_continuumreest, "no" );
     Float64 opt_extremacount;
@@ -119,7 +125,7 @@ Bool COperatorDTreeBSolve::Solve(CDataStore &dataStore, const CSpectrum &spc, co
 
     // Compute merit function
     COperatorLineModel linemodel;
-    auto result = dynamic_pointer_cast<CLineModelResult>(linemodel.Compute(dataStore, spc, _spcContinuum, restRayCatalog, opt_linetypefilter, opt_lineforcefilter, lambdaRange, redshifts, opt_extremacount, opt_fittingmethod, opt_continuumcomponent, opt_lineWidthType, opt_resolution, opt_velocity, opt_continuumreest) );
+    auto result = dynamic_pointer_cast<CLineModelResult>(linemodel.Compute(dataStore, spc, _spcContinuum, restRayCatalog, opt_linetypefilter, opt_lineforcefilter, lambdaRange, redshifts, opt_extremacount, opt_fittingmethod, opt_continuumcomponent, opt_lineWidthType, opt_resolution, opt_velocity_emission, opt_velocity_absorption, opt_continuumreest) );
 
     /*
     static Float64 cutThres = 2.0;

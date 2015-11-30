@@ -26,7 +26,7 @@ class CLineModelElementList
 
 public:
 
-    CLineModelElementList(const CSpectrum& spectrum, const CSpectrum& spectrumNoContinuum, const CRayCatalog::TRayVector& restRayList, const std::string& opt_fittingmethod, const std::string &opt_continuumcomponent, const std::string& lineWidthType, const Float64 resolution, const Float64 velocity);
+    CLineModelElementList(const CSpectrum& spectrum, const CSpectrum& spectrumNoContinuum, const CRayCatalog::TRayVector& restRayList, const std::string& opt_fittingmethod, const std::string &opt_continuumcomponent, const std::string& lineWidthType, const Float64 resolution, const Float64 velocityEmission, const Float64 velocityAbsorption);
     ~CLineModelElementList();
 
     void LoadCatalog(const CRayCatalog::TRayVector& restRayList);
@@ -112,7 +112,8 @@ private:
     std::string m_ContinuumComponent;
     std::string m_LineWidthType;
     Float64 m_resolution;
-    Float64 m_velocity;
+    Float64 m_velocityEmission;
+    Float64 m_velocityAbsorption;
     Float64 m_nominalWidthDefaultEmission;
     Float64 m_nominalWidthDefaultAbsorption;
     std::string m_fittingmethod;

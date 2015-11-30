@@ -84,8 +84,10 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore, const CSpectrum& spc, const 
     dataStore.GetScopedParam( "linemodel.linewidthtype", opt_lineWidthType, "fixedvelocity" );
     Float64 opt_resolution;
     dataStore.GetScopedParam( "linemodel.instrumentresolution", opt_resolution, 3000.0 );
-    Float64 opt_velocity;
-    dataStore.GetScopedParam( "linemodel.velocity", opt_velocity, 100.0 );
+    Float64 opt_velocity_emission;
+    dataStore.GetScopedParam( "linemodel.velocityemission", opt_velocity_emission, 100.0 );
+    Float64 opt_velocity_absorption;
+    dataStore.GetScopedParam( "linemodel.velocityabsorption", opt_velocity_absorption, 300.0 );
     std::string opt_continuumreest;
     dataStore.GetScopedParam( "linemodel.continuumreestimation", opt_continuumreest, "no" );
     Float64 opt_extremacount;
@@ -98,12 +100,13 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore, const CSpectrum& spc, const 
     Log.LogInfo( "    -linewidthtype: %s", opt_lineWidthType.c_str());
     if(opt_lineWidthType=="fixedvelocity"){
         Log.LogInfo( "    -instrumentresolution: %.2f", opt_resolution);
-        Log.LogInfo( "    -velocity: %.2f", opt_velocity);
+        Log.LogInfo( "    -velocity emission: %.2f", opt_velocity_emission);
+        Log.LogInfo( "    -velocity absorption: %.2f", opt_velocity_absorption);
     }
 
     // Compute merit function
     COperatorLineModel linemodel;
-    auto  result = linemodel.Compute( dataStore, _spc, _spcContinuum, restraycatalog, opt_linetypefilter, opt_lineforcefilter, lambdaRange, redshifts, opt_extremacount, opt_fittingmethod, opt_continuumcomponent, opt_lineWidthType, opt_resolution, opt_velocity, opt_continuumreest);
+    auto  result = linemodel.Compute( dataStore, _spc, _spcContinuum, restraycatalog, opt_linetypefilter, opt_lineforcefilter, lambdaRange, redshifts, opt_extremacount, opt_fittingmethod, opt_continuumcomponent, opt_lineWidthType, opt_resolution, opt_velocity_emission, opt_velocity_absorption, opt_continuumreest);
 
 
     if( !result )

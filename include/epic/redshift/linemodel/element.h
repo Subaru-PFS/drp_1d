@@ -22,7 +22,7 @@ class CLineModelElement
 
 public:
 
-    CLineModelElement(const std::string& widthType, const Float64 resolution, const Float64 velocity);
+    CLineModelElement(const std::string& widthType, const Float64 resolution, const Float64 velocityEmission, const Float64 velocityAbsorption);
     ~CLineModelElement();
 
     std::string GetElementTypeTag();
@@ -64,7 +64,8 @@ protected:
     std::string m_LineWidthType;
     Float64 m_NominalWidth;
     Float64 m_Resolution;
-    Float64 m_Velocity;
+    Float64 m_VelocityEmission;
+    Float64 m_VelocityAbsorption;
     Float64 m_FWHM_factor;
 
     Float64 m_NSigmaSupport;

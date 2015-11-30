@@ -7,13 +7,14 @@
 
 using namespace NSEpic;
 
-CLineModelElement::CLineModelElement(const std::string& widthType, const Float64 resolution, const Float64 velocity)
+CLineModelElement::CLineModelElement(const std::string& widthType, const Float64 resolution, const Float64 velocityEmission, const Float64 velocityAbsorption)
 {
     m_LineWidthType = widthType;
 
     //m_Resolution = 250.0 * (1.0 + 0.0); //dr=+0.5 found empirically on VVDS DEEP 651
     m_Resolution = resolution;
-    m_Velocity = velocity;
+    m_VelocityEmission = velocityEmission;
+    m_VelocityAbsorption= velocityAbsorption;
     m_FWHM_factor = 2.35;
 
 
@@ -68,13 +69,14 @@ Float64 CLineModelElement::GetLineWidth(Float64 redshiftedlambda, Float64 z, Boo
     }else if( m_LineWidthType == "fixed"){
         instrumentSigma = m_NominalWidth;
     }else if( m_LineWidthType == "fixedvelocity"){
-        Float64 v = m_Velocity;
-        Float64 c = 300000.0;
-        Float64 pfsSimuCompensationFactor = 1.5;
-        velocitySigma = pfsSimuCompensationFactor*1.67/m_FWHM_factor*v/c*redshiftedlambda;//, useless /(1+z)*(1+z);
+        Float64 v = m_VelocityEmission;
         if(!isEmission){
-            velocitySigma*=3.0;
+            v = m_VelocityAbsorption;
         }
+        Float64 c = 300000.0;
+        Float64 pfsSimuCompensationFactor = 1.0;
+        velocitySigma = pfsSimuCompensationFactor*v/c*redshiftedlambda;//, useless /(1+z)*(1+z);
+
         instrumentSigma = redshiftedlambda/m_Resolution/m_FWHM_factor;
     }
 

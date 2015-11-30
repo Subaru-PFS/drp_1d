@@ -11,7 +11,7 @@
 
 using namespace NSEpic;
 
-CSingleLine::CSingleLine(const CRay& r , const std::string& widthType, const Float64 resolution, const Float64 velocity, Float64 nominalWidth, std::vector<Int32> catalogIndexes):CLineModelElement(widthType, resolution, velocity)
+CSingleLine::CSingleLine(const CRay& r , const std::string& widthType, const Float64 resolution, const Float64 velocityEmission, const Float64 velocityAbsorption, Float64 nominalWidth, std::vector<Int32> catalogIndexes):CLineModelElement(widthType, resolution, velocityEmission, velocityAbsorption)
 {
     m_ElementType = "CSingleLine";
     m_Ray = r;

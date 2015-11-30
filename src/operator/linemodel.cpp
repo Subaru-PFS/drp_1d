@@ -48,7 +48,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute( CDataStore &dataSt
                                                     const std::string& opt_lineTypeFilter, const std::string& opt_lineForceFilter,
                                                     const TFloat64Range& lambdaRange, const TFloat64List& redshifts,
                                                     const Int32 opt_extremacount, const std::string& opt_fittingmethod, const std::string& opt_continuumcomponent,
-                                                    const std::string& opt_lineWidthType, const Float64 opt_resolution, const Float64 opt_velocity,
+                                                    const std::string& opt_lineWidthType, const Float64 opt_resolution, const Float64 opt_velocityEmission, const Float64 opt_velocityAbsorption,
                                                     const std::string& opt_continuumreest)
 {
 
@@ -83,7 +83,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute( CDataStore &dataSt
     result->LineModelSolutions.resize( sortedRedshifts.size() );
 
 
-    CLineModelElementList model(spectrum, spectrumContinuum, restRayList, opt_fittingmethod, opt_continuumcomponent, opt_lineWidthType, opt_resolution, opt_velocity);
+    CLineModelElementList model(spectrum, spectrumContinuum, restRayList, opt_fittingmethod, opt_continuumcomponent, opt_lineWidthType, opt_resolution, opt_velocityEmission, opt_velocityAbsorption);
     //model.LoadContinuum(); //in order to use a fit with continuum
     result->nSpcSamples = model.getSpcNSamples(lambdaRange);
 

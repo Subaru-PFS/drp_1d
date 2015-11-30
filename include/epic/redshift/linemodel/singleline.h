@@ -22,7 +22,7 @@ class CSingleLine:public CLineModelElement
 
 public:
 
-    CSingleLine(const CRay &r, const std::string& widthType, const Float64 resolution, const Float64 velocity, Float64 nominalWidth, std::vector<Int32> catalogIndexes);
+    CSingleLine(const CRay &r, const std::string& widthType, const Float64 resolution, const Float64 velocityEmission, const Float64 velocityAbsorption, Float64 nominalWidth, std::vector<Int32> catalogIndexes);
     ~CSingleLine();
 
     std::string GetRayName(Int32 subeIdx);

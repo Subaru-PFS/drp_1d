@@ -26,12 +26,13 @@
 
 using namespace NSEpic;
 
-CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum, const CSpectrum &spectrumContinuum, const CRayCatalog::TRayVector& restRayList, const std::string& opt_fittingmethod, const std::string& opt_continuumcomponent, const std::string& widthType, const Float64 resolution, const Float64 velocity)
+CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum, const CSpectrum &spectrumContinuum, const CRayCatalog::TRayVector& restRayList, const std::string& opt_fittingmethod, const std::string& opt_continuumcomponent, const std::string& widthType, const Float64 resolution, const Float64 velocityEmission, const Float64 velocityAbsorption)
 {
     m_ContinuumComponent = opt_continuumcomponent;
     m_LineWidthType = widthType;
     m_resolution = resolution;
-    m_velocity = velocity;
+    m_velocityEmission = velocityEmission;
+    m_velocityAbsorption = velocityAbsorption;
     m_fittingmethod = opt_fittingmethod;
 
     //PFS
@@ -220,7 +221,7 @@ void CLineModelElementList::LoadCatalog(const CRayCatalog::TRayVector& restRayLi
         indsMgII.push_back(bIdx[0]);
     }
     if(lines.size()>0){
-        m_Elements.push_back(boost::shared_ptr<CLineModelElement> (new CMultiLine(linesMgII, m_LineWidthType, m_resolution, m_velocity, ampsMgII, m_nominalWidthDefaultAbsorption, indsMgII)));
+        m_Elements.push_back(boost::shared_ptr<CLineModelElement> (new CMultiLine(linesMgII, m_LineWidthType, m_resolution, m_velocityEmission, m_velocityAbsorption, ampsMgII, m_nominalWidthDefaultAbsorption, indsMgII)));
     }
 
 //    //Load SiIV multilines
@@ -417,13 +418,13 @@ void CLineModelElementList::LoadCatalogPFS(const CRayCatalog::TRayVector& restRa
         indsMgII.push_back(bIdx[0]);
     }
     if(lines.size()>0){
-        m_Elements.push_back(boost::shared_ptr<CLineModelElement> (new CMultiLine(linesMgII, m_LineWidthType, m_resolution, m_velocity, ampsMgII, m_nominalWidthDefaultAbsorption, indsMgII)));
+        m_Elements.push_back(boost::shared_ptr<CLineModelElement> (new CMultiLine(linesMgII, m_LineWidthType, m_resolution, m_velocityEmission, m_velocityAbsorption, ampsMgII, m_nominalWidthDefaultAbsorption, indsMgII)));
     }
 
     //Load Lya with broader width (Lya shape in the simu = unexplained yet)
     std::vector<Int32> LyaEIdx = findLineIdxInCatalog( restRayList, "LyAE", CRay::nType_Emission);
     if( LyaEIdx.size()==1 ){
-        m_Elements.push_back(boost::shared_ptr<CLineModelElement> (new CSingleLine(restRayList[LyaEIdx[0]], m_LineWidthType, m_resolution, m_velocity*4.0, m_nominalWidthDefaultEmission, LyaEIdx)));
+        m_Elements.push_back(boost::shared_ptr<CLineModelElement> (new CSingleLine(restRayList[LyaEIdx[0]], m_LineWidthType, m_resolution, m_velocityEmission, m_velocityAbsorption, m_nominalWidthDefaultEmission, LyaEIdx)));
 
     }
 
@@ -498,7 +499,7 @@ void CLineModelElementList::LoadCatalog_tplExtendedBlue(const CRayCatalog::TRayV
         inds.push_back(OII2dx[0]);
     }
     if(lines.size()>0){
-        m_Elements.push_back(boost::shared_ptr<CLineModelElement> (new CMultiLine(lines, m_LineWidthType, m_resolution, m_velocity, amps, m_nominalWidthDefaultEmission, inds)));
+        m_Elements.push_back(boost::shared_ptr<CLineModelElement> (new CMultiLine(lines, m_LineWidthType, m_resolution, m_velocityEmission, m_velocityAbsorption, amps, m_nominalWidthDefaultEmission, inds)));
     }
 
     //Load NII multilines
@@ -608,7 +609,7 @@ void CLineModelElementList::LoadCatalog_tplExtendedBlue(const CRayCatalog::TRayV
         indsSiIV.push_back(bIdx[0]);
     }
     if(lines.size()>0){
-        m_Elements.push_back(boost::shared_ptr<CLineModelElement> (new CMultiLine(linesSiIV, m_LineWidthType, m_resolution, m_velocity, ampsSiIV, m_nominalWidthDefaultAbsorption, indsSiIV)));
+        m_Elements.push_back(boost::shared_ptr<CLineModelElement> (new CMultiLine(linesSiIV, m_LineWidthType, m_resolution, m_velocityEmission, m_velocityAbsorption, ampsSiIV, m_nominalWidthDefaultAbsorption, indsSiIV)));
     }
 
 //    //Load CIV multilines, emission possible = warning
@@ -732,7 +733,7 @@ void CLineModelElementList::LoadCatalogMultilineBalmer(const CRayCatalog::TRayVe
         inds.push_back(Hgammaidx[0]);
         inds.push_back(Hdeltaidx[0]);
 
-        m_Elements.push_back(boost::shared_ptr<CLineModelElement> (new CMultiLine(lines, m_LineWidthType, m_resolution, m_velocity, amps, m_nominalWidthDefaultEmission, inds)));
+        m_Elements.push_back(boost::shared_ptr<CLineModelElement> (new CMultiLine(lines, m_LineWidthType, m_resolution, m_velocityEmission, m_velocityAbsorption, amps, m_nominalWidthDefaultEmission, inds)));
     }else{
         if(Halphaidx.size()==1){
             addSingleLine(restRayList[Halphaidx[0]], Halphaidx[0], m_nominalWidthDefaultEmission);
@@ -2114,7 +2115,7 @@ void CLineModelElementList::addSingleLine(const CRay &r, Int32 index, Float64 no
     std::vector<Int32> a;
     a.push_back(index);
     //CSingleLine c(r, nominalWidth, a);
-    m_Elements.push_back(boost::shared_ptr<CLineModelElement> (new CSingleLine(r, m_LineWidthType, m_resolution, m_velocity, nominalWidth, a)));
+    m_Elements.push_back(boost::shared_ptr<CLineModelElement> (new CSingleLine(r, m_LineWidthType, m_resolution, m_velocityEmission, m_velocityAbsorption, nominalWidth, a)));
     //m_Elements.push_back(new CSingleLine(r, m_LineWidthType, nominalWidth, a));
 }
 
@@ -2132,7 +2133,7 @@ void CLineModelElementList::addDoubleLine(const CRay &r1, const CRay &r2, Int32 
     a.push_back(index1);
     a.push_back(index2);
     //CSingleLine c(r, nominalWidth, a);
-    m_Elements.push_back(boost::shared_ptr<CLineModelElement> (new CMultiLine(lines, m_LineWidthType, m_resolution, m_velocity, amps, nominalWidth, a)));
+    m_Elements.push_back(boost::shared_ptr<CLineModelElement> (new CMultiLine(lines, m_LineWidthType, m_resolution, m_velocityEmission, m_velocityAbsorption, amps, nominalWidth, a)));
     //m_Elements.push_back(new CSingleLine(r, nominalWidth, a));
 }
 
