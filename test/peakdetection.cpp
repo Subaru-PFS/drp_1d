@@ -1,26 +1,18 @@
-#include "peakdetection.h"
-
 #include <epic/redshift/operator/peakdetection.h>
 #include <epic/redshift/operator/peakdetectionresult.h>
 #include <epic/core/common/datatypes.h>
 #include <epic/redshift/spectrum/spectrum.h>
 #include <epic/redshift/spectrum/io/fitsreader.h>
-#include <math.h>
 
-using namespace NSEpicTest;
+#include <math.h>
+#include <boost/test/unit_test.hpp>
+
 using namespace NSEpic;
 using namespace std;
 
-void CRedshiftPeakDetectionTestCase::setUp()
-{
-}
+BOOST_AUTO_TEST_SUITE(PeakDetection)
 
-void CRedshiftPeakDetectionTestCase::tearDown()
-{
-}
-
-
-void CRedshiftPeakDetectionTestCase::Compute()
+BOOST_AUTO_TEST_CASE(Compute)
 {
 
     // load simu spectrum (emission lines + Noise)
@@ -29,12 +21,12 @@ void CRedshiftPeakDetectionTestCase::Compute()
 	
     Bool retVal = reader.Read( "../test/data/PeakDetectionTestCase/peakdetection_simu.fits", s );
 
-    CPPUNIT_ASSERT_MESSAGE(  "load fits", retVal == true);
+    BOOST_CHECK( retVal == true);
 
     TLambdaRange lambdaRange = s.GetLambdaRange();
     CPeakDetection detection(500.0, 15, 1, 0);
     auto peakDetectionResult = detection.Compute( s, lambdaRange); //using winsize=500 and cut=15 so that 3 only peaks are detected in the test signal for sure
-    CPPUNIT_ASSERT_MESSAGE( "compute detection" , retVal == true );
+    BOOST_CHECK( retVal == true );
     const TInt32RangeList& resPeaks = peakDetectionResult->PeakList;
 
 
@@ -43,7 +35,7 @@ void CRedshiftPeakDetectionTestCase::Compute()
     UInt32 n=4;
 
     // test number of peaks
-    CPPUNIT_ASSERT(n == resPeaks.size());
+    BOOST_CHECK(n == resPeaks.size());
 
     // test peak xpos
     Float64 toleranceXPos = 15.f;
@@ -56,12 +48,12 @@ void CRedshiftPeakDetectionTestCase::Compute()
 
         Float64 infCalc = resPeaks[i].GetBegin();
         Float64 supCalc = resPeaks[i].GetEnd();
-        CPPUNIT_ASSERT_DOUBLES_EQUAL(infRef, infCalc, toleranceXPos);
-        CPPUNIT_ASSERT_DOUBLES_EQUAL(supRef, supCalc, toleranceXPos);
+        BOOST_CHECK_CLOSE_FRACTION(infRef, infCalc, toleranceXPos);
+        BOOST_CHECK_CLOSE_FRACTION(supRef, supCalc, toleranceXPos);
     }
-
 }
 
+BOOST_AUTO_TEST_SUITE_END()
 
 
 

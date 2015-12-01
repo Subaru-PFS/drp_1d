@@ -132,7 +132,7 @@ def Main( argv ):
     libSrc = libDict["boost"]["src"];
     if DownloadHTTPFile( libSrc, libPath+".tar.gz" ) :
         if ExtractTarGZ( libPath+".tar.gz", libPath ) :
-            os.system( "cd "+libPath+"/ ; ./bootstrap.sh --with-libraries=filesystem,program_options,thread,regex,python,timer,chrono --prefix="+thirdPartyDir+" ; ./b2 link=static install ; cd ../" )
+            os.system( "cd "+libPath+"/ ; ./bootstrap.sh --with-libraries=test,filesystem,program_options,thread,regex,python,timer,chrono --prefix="+thirdPartyDir+" ; ./b2 link=static install ; cd ../" )
 
     # CFITSIO
     libPath = libDict["cfitsio"]["path"];

@@ -1,5 +1,3 @@
-#include "raydetection.h"
-
 #include <boost/filesystem.hpp>
 #include <epic/core/common/datatypes.h>
 #include <epic/redshift/ray/catalog.h>
@@ -21,115 +19,17 @@
 
 
 #include <math.h>
+#include <boost/test/unit_test.hpp>
 
 using namespace NSEpic;
 using namespace std;
-using namespace NSEpicTest;
-namespace bfs = boost::filesystem;
 using namespace boost;
+namespace bfs = boost::filesystem;
 
-void CRedshiftLineDetectionTestCase::setUp()
-{
-}
-
-void CRedshiftLineDetectionTestCase::tearDown()
-{
-}
-
-void CRedshiftLineDetectionTestCase::EzValidationTest()
-// load spectra from the VVDS DEEP and compare results with EZ python EZELFind results
-{
-    UInt32 nSpectraToBeTested = 5;
-    std::string spectraPath = "../test/data/RayDetectionTestCase/fromVVDSDeep/spectra/";
-    std::string refresults_nonoise_Path = "../test/data/RayDetectionTestCase/fromVVDSDeep/results_nonoise/";
-    std::string refresults_withnoise_Path = "../test/data/RayDetectionTestCase/fromVVDSDeep/results_withnoise/";
+BOOST_AUTO_TEST_SUITE(RayDetection)
 
 
-    for(int kspectrum=0; kspectrum<nSpectraToBeTested; kspectrum++){
-
-        // define test
-        std::string inputspectrumStr = "";
-        std::string inputnoiseStr = "";
-        std::string inputRayDetectionResultsFileStr = "detectedRayCatalog.csv";
-        if(kspectrum == 0){
-            // ...
-            inputspectrumStr.append( "sc_020086397_F02P016_vmM1_red_31_1_atm_clean.fits" );
-            inputnoiseStr.append("");
-        }else if(kspectrum == 1){
-            // spectrum for testing retest function
-            inputspectrumStr.append( "sc_020100776_F02P017_vmM1_red_129_1_atm_clean.fits" );
-            inputnoiseStr.append("");
-        }else if(kspectrum == 2){
-            // ...
-            inputspectrumStr.append( "sc_020123432_F02P019_vmM1_red_72_1_atm_clean.fits" );
-            inputnoiseStr.append("");
-        }else if(kspectrum == 3){
-            // same as previous with noise
-            inputspectrumStr.append( "sc_020123432_F02P019_vmM1_red_72_1_atm_clean.fits" );
-            inputnoiseStr.append("sc_020123432_F02P019_vmM1_red_72_1_noise.fits");
-        }else if(kspectrum == 4){
-            // ...
-            inputspectrumStr.append( "sc_020088501_F02P017_vmM1_red_82_1_atm_clean.fits" );
-            inputnoiseStr.append("sc_020088501_F02P017_vmM1_red_82_1_noise.fits");
-        }
-
-        bfs::path inputspectrum = bfs::path( spectraPath ).append( inputspectrumStr.c_str() );
-        bfs::path inputnoise = "";
-        bfs::path inputrefdetectionresults = "";
-        if(inputnoiseStr.size()>0){
-            inputrefdetectionresults = bfs::path( refresults_withnoise_Path ).append( inputspectrumStr.c_str() ).append( inputRayDetectionResultsFileStr.c_str() );
-            inputnoise = bfs::path( spectraPath ).append( inputnoiseStr.c_str() );
-        }else{
-            inputrefdetectionresults = bfs::path( refresults_nonoise_Path ).append( inputspectrumStr.c_str() ).append( inputRayDetectionResultsFileStr.c_str() );;
-        }
-
-        // load spectrum
-        CSpectrumIOFitsReader reader;
-        CSpectrum s;
-
-        Bool retVal = reader.Read( inputspectrum.c_str(), s );
-        CPPUNIT_ASSERT_MESSAGE(  "load fits", retVal == true);
-
-        // load noise
-        if(inputnoiseStr.size()>0){
-            CNoiseFromFile noise;
-            CPPUNIT_ASSERT_MESSAGE(  "load noise",  noise.SetNoiseFilePath( inputnoise.c_str() ) );
-            CPPUNIT_ASSERT_MESSAGE(  "add noise",  noise.AddNoise( s ) );
-        }
-
-        // detect possible peaks
-        Float64 winsize = 250.0;
-        Float64 minsize = 3.0;
-        Float64 maxsize = 70.0;
-        Float64 cut = 5.0;
-        Float64 strongcut = 2.0;
-
-        CPeakDetection peakDetection(winsize, cut);
-        auto peakDetectionResult = peakDetection.Compute( s, s.GetLambdaRange() );
-
-
-        // detected rays
-        CLineDetection lineDetection(CRay::nType_Emission, cut, strongcut, winsize, minsize, maxsize);
-        auto lineDetectionResult = lineDetection.Compute( s, s.GetLambdaRange(), peakDetectionResult->PeakList, peakDetectionResult->EnlargedPeakList);
-
-        //load reference results
-        TFloat64List rayPosList = LoadDetectedRayPositions(inputrefdetectionresults.c_str());
-
-        // Check results
-        CPPUNIT_ASSERT_MESSAGE(  "N Lines Detected", lineDetectionResult->RayCatalog.GetList().size() == rayPosList.size());
-        for(int i=0; i<lineDetectionResult->RayCatalog.GetList().size(); i++){
-            Float64 pos = lineDetectionResult->RayCatalog.GetList()[i].GetPosition();
-            Float64 posRef = rayPosList[i];
-            CPPUNIT_ASSERT_DOUBLES_EQUAL( pos, posRef, 1e-6);
-        }
-
-    }
-    return;
-}
-
-
-//
-NSEpic::TFloat64List CRedshiftLineDetectionTestCase::LoadDetectedRayPositions( const char* filePath ){
+NSEpic::TFloat64List UtilLoadDetectedRayPositions( const char* filePath ){
     TFloat64List posList;
 
     ifstream file;
@@ -184,7 +84,104 @@ NSEpic::TFloat64List CRedshiftLineDetectionTestCase::LoadDetectedRayPositions( c
     return posList;
 }
 
-void CRedshiftLineDetectionTestCase::SyntheticValidationTest()
+
+// load spectra from the VVDS DEEP and compare results with EZ python EZELFind results
+BOOST_AUTO_TEST_CASE(EzValidationTest)
+{
+     //deactivated, 20150624, due to irregular sampling compatibility implementation (differs from EZ)
+    return;
+
+    UInt32 nSpectraToBeTested = 5;
+    std::string spectraPath = "../test/data/RayDetectionTestCase/fromVVDSDeep/spectra/";
+    std::string refresults_nonoise_Path = "../test/data/RayDetectionTestCase/fromVVDSDeep/results_nonoise/";
+    std::string refresults_withnoise_Path = "../test/data/RayDetectionTestCase/fromVVDSDeep/results_withnoise/";
+
+
+    for(int kspectrum=0; kspectrum<nSpectraToBeTested; kspectrum++){
+
+        // define test
+        std::string inputspectrumStr = "";
+        std::string inputnoiseStr = "";
+        std::string inputRayDetectionResultsFileStr = "detectedRayCatalog.csv";
+        if(kspectrum == 0){
+            // ...
+            inputspectrumStr.append( "sc_020086397_F02P016_vmM1_red_31_1_atm_clean.fits" );
+            inputnoiseStr.append("");
+        }else if(kspectrum == 1){
+            // spectrum for testing retest function
+            inputspectrumStr.append( "sc_020100776_F02P017_vmM1_red_129_1_atm_clean.fits" );
+            inputnoiseStr.append("");
+        }else if(kspectrum == 2){
+            // ...
+            inputspectrumStr.append( "sc_020123432_F02P019_vmM1_red_72_1_atm_clean.fits" );
+            inputnoiseStr.append("");
+        }else if(kspectrum == 3){
+            // same as previous with noise
+            inputspectrumStr.append( "sc_020123432_F02P019_vmM1_red_72_1_atm_clean.fits" );
+            inputnoiseStr.append("sc_020123432_F02P019_vmM1_red_72_1_noise.fits");
+        }else if(kspectrum == 4){
+            // ...
+            inputspectrumStr.append( "sc_020088501_F02P017_vmM1_red_82_1_atm_clean.fits" );
+            inputnoiseStr.append("sc_020088501_F02P017_vmM1_red_82_1_noise.fits");
+        }
+
+        bfs::path inputspectrum = bfs::path( spectraPath ).append( inputspectrumStr.c_str() );
+        bfs::path inputnoise = "";
+        bfs::path inputrefdetectionresults = "";
+        if(inputnoiseStr.size()>0){
+            inputrefdetectionresults = bfs::path( refresults_withnoise_Path ).append( inputspectrumStr.c_str() ).append( inputRayDetectionResultsFileStr.c_str() );
+            inputnoise = bfs::path( spectraPath ).append( inputnoiseStr.c_str() );
+        }else{
+            inputrefdetectionresults = bfs::path( refresults_nonoise_Path ).append( inputspectrumStr.c_str() ).append( inputRayDetectionResultsFileStr.c_str() );;
+        }
+
+        // load spectrum
+        CSpectrumIOFitsReader reader;
+        CSpectrum s;
+
+        Bool retVal = reader.Read( inputspectrum.c_str(), s );
+        BOOST_CHECK( retVal == true);
+
+        // load noise
+        if(inputnoiseStr.size()>0){
+            CNoiseFromFile noise;
+            BOOST_CHECK( noise.SetNoiseFilePath( inputnoise.c_str() ) );
+            BOOST_CHECK( noise.AddNoise( s ) );
+        }
+
+        // detect possible peaks
+        Float64 winsize = 250.0;
+        Float64 minsize = 3.0;
+        Float64 maxsize = 70.0;
+        Float64 cut = 5.0;
+        Float64 strongcut = 2.0;
+
+        CPeakDetection peakDetection(winsize, cut);
+        auto peakDetectionResult = peakDetection.Compute( s, s.GetLambdaRange() );
+
+
+        // detected rays
+        CLineDetection lineDetection(CRay::nType_Emission, cut, strongcut, winsize, minsize, maxsize);
+        auto lineDetectionResult = lineDetection.Compute( s, s.GetLambdaRange(), peakDetectionResult->PeakList, peakDetectionResult->EnlargedPeakList);
+
+        //load reference results
+        TFloat64List rayPosList = UtilLoadDetectedRayPositions(inputrefdetectionresults.c_str());
+
+        // Check results
+        BOOST_CHECK( lineDetectionResult->RayCatalog.GetList().size() == rayPosList.size());
+        for(int i=0; i<lineDetectionResult->RayCatalog.GetList().size(); i++){
+            Float64 pos = lineDetectionResult->RayCatalog.GetList()[i].GetPosition();
+            Float64 posRef = rayPosList[i];
+            BOOST_CHECK_CLOSE_FRACTION( pos, posRef, 1e-6);
+        }
+
+    }
+    return;
+}
+
+
+//
+BOOST_AUTO_TEST_CASE(SyntheticValidationTest)
 // load synthetic spectra and check if the lines are correctly detected
 {
     std::string spectraPath = "../test/data/RayDetectionTestCase/raydetection_simu_7lines.fits";
@@ -203,7 +200,7 @@ void CRedshiftLineDetectionTestCase::SyntheticValidationTest()
     CSpectrum s;
 
     Bool retVal = reader.Read( inputspectrum.c_str(), s );
-    CPPUNIT_ASSERT_MESSAGE(  "load fits", retVal == true);
+    BOOST_CHECK( retVal == true);
 
     // detect possible peaks
     Float64 winsize = 250.0;
@@ -224,12 +221,14 @@ void CRedshiftLineDetectionTestCase::SyntheticValidationTest()
 
     // Check results
     Float64 tol = s.GetResolution();
-    CPPUNIT_ASSERT_MESSAGE(  "1 line detected", lineDetectionResult->RayCatalog.GetList().size() == 2);
+    BOOST_CHECK( lineDetectionResult->RayCatalog.GetList().size() == 2);
     Float64 pos1 = lineDetectionResult->RayCatalog.GetList()[0].GetPosition();
-    CPPUNIT_ASSERT_DOUBLES_EQUAL( pos1, 1000, tol);
+    BOOST_CHECK_CLOSE_FRACTION( pos1, 1000, tol);
     Float64 pos2 = lineDetectionResult->RayCatalog.GetList()[1].GetPosition();
-    CPPUNIT_ASSERT_DOUBLES_EQUAL( pos2, 5000, tol);
+    BOOST_CHECK_CLOSE_FRACTION( pos2, 5000, tol);
 
 
     return;
 }
+
+BOOST_AUTO_TEST_SUITE_END()

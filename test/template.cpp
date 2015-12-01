@@ -1,30 +1,28 @@
-#include "template.h"
-
 #include <epic/core/common/datatypes.h>
 #include <epic/redshift/spectrum/template/template.h>
 #include <epic/redshift/spectrum/template/catalog.h>
 
+
+#include <boost/test/unit_test.hpp>
+
 using namespace NSEpic;
 
-using namespace NSEpicTest;
+BOOST_AUTO_TEST_SUITE(Template)
 
-void CRedshiftTemplateTestCase::setUp()
-{
-}
 
-void CRedshiftTemplateTestCase::tearDown()
-{
-}
-
-void CRedshiftTemplateTestCase::LoadCatalog()
+BOOST_AUTO_TEST_CASE(LoadCatalog)
 {
     CTemplateCatalog catalog;
 
     Bool rValue = catalog.Load( "../test/data/templatecatalog/" );
-    CPPUNIT_ASSERT( rValue == true );
-    CPPUNIT_ASSERT( catalog.GetTemplateCount( "galaxy" ) == 2 );
-    CPPUNIT_ASSERT( catalog.GetTemplateCount( "emission" ) == 1 );
-    CPPUNIT_ASSERT( catalog.GetTemplateCount( "qso" ) == 1 );
-    CPPUNIT_ASSERT( catalog.GetTemplateCount( "star" ) == 1 );
+    BOOST_CHECK( rValue == true );
+    BOOST_CHECK( catalog.GetTemplateCount( "galaxy" ) == 2 );
+    BOOST_CHECK( catalog.GetTemplateCount( "emission" ) == 1 );
+    BOOST_CHECK( catalog.GetTemplateCount( "qso" ) == 1 );
+    BOOST_CHECK( catalog.GetTemplateCount( "star" ) == 1 );
 
 }
+
+
+BOOST_AUTO_TEST_SUITE_END()
+

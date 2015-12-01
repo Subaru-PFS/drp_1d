@@ -1,12 +1,9 @@
-#include <epic/redshift/gaussianfit/multigaussianfit.h>
-
 #include <epic/core/debug/assert.h>
-#include <epic/redshift/spectrum/spectrum.h>
 #include <epic/core/log/log.h>
-
+#include <epic/redshift/gaussianfit/multigaussianfit.h>
+#include <epic/redshift/spectrum/spectrum.h>
 
 #include <math.h>
-
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
 #include <gsl/gsl_vector.h>
@@ -14,13 +11,13 @@
 #include <gsl/gsl_multifit_nlin.h>
 #include <gsl/gsl_statistics.h>
 #include <gsl/gsl_sort.h>
-
-
 #include <gsl/gsl_multimin.h>
 
 using namespace NSEpic;
 
-
+/**
+ * Stack attribution constructor.
+ */
 CMultiGaussianFit::CMultiGaussianFit( ) :
     m_PolyOrder( 2 ),
     m_AbsTol( 0.0 ),
@@ -33,8 +30,12 @@ CMultiGaussianFit::CMultiGaussianFit( ) :
     m_CErr( 0.0 ),
     m_coeff0( 0.0)
 {
+
 }
 
+/**
+ * Empty destructor.
+ */
 CMultiGaussianFit::~CMultiGaussianFit()
 {
 
@@ -42,7 +43,7 @@ CMultiGaussianFit::~CMultiGaussianFit()
 
 
 /**
- *
+ * 
  */
 Int32 CMultiGaussianFit::Compute( CLineModelElementList model )
 {
@@ -50,11 +51,10 @@ Int32 CMultiGaussianFit::Compute( CLineModelElementList model )
     userData.model = &model;
 
     Int32 n = model.GetModelValidElementsNDdl();
-    if(n<1){
+    if( n<1 ){
         return -1;
     }
     std::vector<Int32> modelIdx = model.GetModelValidElementsIndexes();
-    //double par[5] = {1.0, 2.0, 10.0, 20.0, 30.0};
     userData.modelIdx = modelIdx;
     userData.nddl = n;
 
@@ -71,116 +71,117 @@ Int32 CMultiGaussianFit::Compute( CLineModelElementList model )
 
      /* Starting point */
      x = gsl_vector_alloc (n);
-     for(Int32 j=0; j<n; j++){
-         gsl_vector_set (x, j, model.GetElementAmplitude(modelIdx[j]));
-         //gsl_vector_set (x, j, 0.0);
-     }
+     for(Int32 j=0; j<n; j++)
+       {
+         gsl_vector_set( x, j, model.GetElementAmplitude( modelIdx[j] ) );
+       }
 
      // Set initial step sizes
-     ss = gsl_vector_alloc (n);
-     //gsl_vector_set_all (ss, 1.0);
-     for(Int32 j=0; j<n; j++){
-         gsl_vector_set (ss, j, model.GetElementAmplitude(modelIdx[j])/10.0);
-         //gsl_vector_set (ss, j, 1.0);
-     }
+     ss = gsl_vector_alloc( n );
+     for( Int32 j=0; j<n; j++ )
+       {
+         gsl_vector_set( ss, j, model.GetElementAmplitude( modelIdx[j] )/10.0 );
+       }
 
      /* Initialize method and iterate */
      minex_func.n = n;
      minex_func.f = &my_f;
      minex_func.params = &userData;
 
-     s = gsl_multimin_fminimizer_alloc (T, n);
-     gsl_multimin_fminimizer_set (s, &minex_func, x, ss);
+     s = gsl_multimin_fminimizer_alloc( T, n );
+     gsl_multimin_fminimizer_set( s, &minex_func, x, ss );
 
      do
        {
          iter++;
-         status = gsl_multimin_fminimizer_iterate(s);
+         status = gsl_multimin_fminimizer_iterate( s );
 
-         if (status)
+         if( status )
            break;
 
-         size = gsl_multimin_fminimizer_size (s);
-         status = gsl_multimin_test_size (size, minSizeSimplex);
+         size = gsl_multimin_fminimizer_size( s );
+         status = gsl_multimin_test_size( size, minSizeSimplex );
 
-         if (status == GSL_SUCCESS)
-         {
-             printf ("converged to minimum at\n");
-         }
+         if( status == GSL_SUCCESS )
+	   {
+	     printf( "converged to minimum at\n" );
+	   }
 
-         if(1)
-         {
-
-             if(n>3){
-                 printf ("%5d a0=%10.3e a1=%10.3e a2=%10.3e a3=%10.3e f() = %7.3f size = %.12f\n",
+         if( 1 )
+	   {
+             if( n>3 )
+	       {
+                 printf( "%5d a0=%10.3e a1=%10.3e a2=%10.3e a3=%10.3e f() = %7.3f size = %.12f\n",
                          iter,
-                         gsl_vector_get (s->x, 0),
-                         gsl_vector_get (s->x, 1),
-                         gsl_vector_get (s->x, 2),
-                         gsl_vector_get (s->x, 3),
-                         s->fval, size);
-             }else if(n==2){
-                 printf ("%5d a0=%10.3e a1=%10.3e f() = %7.3f size = %.12f\n",
+                         gsl_vector_get( s->x, 0 ),
+                         gsl_vector_get( s->x, 1 ),
+                         gsl_vector_get( s->x, 2 ),
+                         gsl_vector_get( s->x, 3 ),
+                         s->fval, size );
+	       }
+	     else if( n==2 )
+	       {
+                 printf( "%5d a0=%10.3e a1=%10.3e f() = %7.3f size = %.12f\n",
                          iter,
-                         gsl_vector_get (s->x, 0),
-                         gsl_vector_get (s->x, 1),
-                         s->fval, size);
-             }else{
-                 printf ("%5d a0=%10.3e f() = %7.3f size = %.12f\n",
+                         gsl_vector_get( s->x, 0 ),
+                         gsl_vector_get( s->x, 1 ),
+                         s->fval, size );
+	       } 
+	     else
+	       {
+                 printf( "%5d a0=%10.3e f() = %7.3f size = %.12f\n",
                          iter,
-                         gsl_vector_get (s->x, 0),
-                         s->fval, size);
-             }
-         }
-     }
-     while (status == GSL_CONTINUE && iter < maxIter);
+                         gsl_vector_get( s->x, 0 ),
+                         s->fval, size );
+	       }
+	   }
+       }
+     while( status==GSL_CONTINUE && iter<maxIter );
 
-     if (status == GSL_SUCCESS || iter>=maxIter)
-     {
-         for(Int32 j=0; j<n; j++){
-             Float64 a = gsl_vector_get (s->x, j);
-             model.SetElementAmplitude(modelIdx[j], a, 0.0); //todo: add support for sigma error, now=0.0
-         }
-
+     if( status==GSL_SUCCESS || iter>=maxIter )
+       {
+         for( Int32 j=0; j<n; j++ )
+	   {
+             Float64 a = gsl_vector_get( s->x, j );
+             model.SetElementAmplitude( modelIdx[j], a, 0.0 ); //todo: add support for sigma error, now=0.0
+	   }
          model.refreshModel();
-     }
+       }
 
-     printf ("ITER, END: %5d size = %.12f\n",
-             iter, size);
-     gsl_vector_free(x);
-     gsl_vector_free(ss);
-     gsl_multimin_fminimizer_free (s);
+     printf( "ITER, END: %5d size = %.12f\n",
+             iter, size );
+     gsl_vector_free( x );
+     gsl_vector_free( ss );
+     gsl_multimin_fminimizer_free( s );
 
      return status;
-
 }
 
-//**
-// * function used to model a fit of multi Gaussians
-// *
-// * mu = c1
-// * Y[i] = c0*exp(-1*(x-mu)**2/c2**2)
-// *
-// */
-
-Float64  CMultiGaussianFit::my_f (const gsl_vector *v, void *data)
+/**
+ * function used to model a fit of multi Gaussians
+ *
+ * mu = c1
+ * Y[i] = c0*exp(-1*(x-mu)**2/c2**2)
+ *
+ */
+Float64 CMultiGaussianFit::my_f( const gsl_vector *v, void *data )
 {
   SUserData* userData = (SUserData*)data;
   Int32 n = userData->nddl;
 
   Float64 pond = 1.0;
-  for(Int32 j=0; j<n; j++){
-      Float64 a = (gsl_vector_get(v, j));
-      if(a<0){
-          pond = pond*(1+std::abs(a));
-      }
-      userData->model->SetElementAmplitude(userData->modelIdx[j], a, 0.0);
-  }
+  for( Int32 j=0; j<n; j++ )
+    {
+      Float64 a = (gsl_vector_get( v, j ));
+      if( a<0 )
+	{
+          pond = pond*(1+std::abs( a ));
+	}
+      userData->model->SetElementAmplitude( userData->modelIdx[j], a, 0.0 );
+    }
   userData->model->refreshModel();
 
-  //Float64 fit = userData->model->getLeastSquareMerit();
   Float64 fit = userData->model->getLeastSquareMeritUnderElements();
-  //Float64 fit = 1.0;
   fit = fit*pond;
   return (fit);
 }

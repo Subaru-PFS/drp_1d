@@ -5,21 +5,33 @@
 
 using namespace NSEpic;
 
+/**
+ *
+ */
 CMutex::CMutex()
 {
 
 }
 
+/**
+ *
+ */
 CMutex::~CMutex()
 {
 
 }
 
+/**
+ *
+ */
 Void CMutex::Lock()
 {
     m_Mutex.lock();
 }
 
+/**
+ *
+ */
 Void CMutex::Unlock()
 {
     m_Mutex.unlock();

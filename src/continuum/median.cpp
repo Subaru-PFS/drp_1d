@@ -13,7 +13,9 @@
 using namespace NSEpic;
 using namespace std;
 
-
+/**
+ * Attribution constructor.
+ */
 CContinuumMedian::CContinuumMedian()
 {
     m_MeanSmoothAmplitude = 75;
@@ -22,36 +24,47 @@ CContinuumMedian::CContinuumMedian()
     m_Even = false;
 }
 
+/**
+ * Empty destructor.
+ */
 CContinuumMedian::~CContinuumMedian()
 {
 
 }
 
+/**
+ * Sets m_MeanSmoothAmplitude to width.
+ */
 Void CContinuumMedian::SetMeanKernelWidth( Float32 width )
 {
     m_MeanSmoothAmplitude = width;
 }
 
+/**
+ * Sets m_MedianSmoothAmplitude to width.
+ */
 Void CContinuumMedian::SetMedianKernelWidth( Float32 width )
 {
     m_MedianSmoothAmplitude = width;
 }
 
+/**
+ * Sets m_MedianSmoothCycles to count.
+ */
 Void CContinuumMedian::SetMedianCycleCount( UInt32 count )
 {
     m_MedianSmoothCycles = count;
 }
 
+/**
+ * Take an array lenght N,
+ * for each j element computes median value on interval j-n_range/2,j+n_range/2
+ * an put this value in y_out array
+ */
 Int32 CContinuumMedian::MedianSmooth( const Float64 *y, Int32 n_points, Int32 n_range, Float64 *y_out)
 {
-    // Take an array lenght N,
-    // for each j element computes median value on interval j-n_range/2,j+n_range/2
-    // an put this value in y_out array
-
     Int32 i;
-
     Int32 half, rest;
-
     Int32 start, stop;
 
     half = n_range/2;
@@ -69,14 +82,13 @@ Int32 CContinuumMedian::MedianSmooth( const Float64 *y, Int32 n_points, Int32 n_
     return 0;
 }
 
-
+/*
+ * Input: y_input, which has N elemnts
+ * Reflects on border this array
+ * y_out extended array
+ */
 Int32 CContinuumMedian::OddMirror( const Float64* y_input, Int32 N, Int32 Nreflex, Float64* y_out )
 {
-    /*
-      Input: y_input, which has N elemnts
-      Reflects on border this array
-      y_out extended array
-    */
 
     Int32 j;
 
@@ -92,7 +104,9 @@ Int32 CContinuumMedian::OddMirror( const Float64* y_input, Int32 N, Int32 Nrefle
     return 0;
 }
 
-
+/**
+ * Extend spectrum with even number of indexes using a "reflexion" of the spectrum itself.
+ */
 Int32 CContinuumMedian::EvenMirror( const Float64* y_input, Int32 N, Int32 Nreflex, Float64* y_out )
 {
     int j;
@@ -110,19 +124,14 @@ Int32 CContinuumMedian::EvenMirror( const Float64* y_input, Int32 N, Int32 Nrefl
 }
 
 /**
-   This algorithm computes the spectrum continuum using the following procedure:
-
-   * The spetrum is enlarged outside its borders, reflecting the first and last m_MeanSmoothAmplitude angstroms with respect to the wavelengths.
-
-   * the added parts are reflected with respect to the fluxes.
-
-   * On the enlarged spectrum, it is applied:
-     - m_MedianSmoothCycles times a median-smoothing with an amplitude of 2 * m_MedianSmoothAmplitude
-     - m_MedianSmoothCycles times a median-smoothing with an amplitude of m_MedianSmoothAmplitude
-
-   * A mean smoothing with m_MeanSmoothingAmplitude / 4 is applied
-
-   * The added parts are cut away
+ * This algorithm computes the spectrum continuum using the following procedure:
+ * The spetrum is enlarged outside its borders, reflecting the first and last m_MeanSmoothAmplitude angstroms with respect to the wavelengths.
+ * the added parts are reflected with respect to the fluxes.
+ * On the enlarged spectrum, it is applied:
+ * - m_MedianSmoothCycles times a median-smoothing with an amplitude of 2 * m_MedianSmoothAmplitude
+ * - m_MedianSmoothCycles times a median-smoothing with an amplitude of m_MedianSmoothAmplitude
+ * A mean smoothing with m_MeanSmoothingAmplitude / 4 is applied
+ * The added parts are cut away
 **/
 Bool CContinuumMedian::RemoveContinuum( const CSpectrum& s, CSpectrumFluxAxis& noContinuumFluxAxis )
 {
@@ -326,9 +335,11 @@ Bool CContinuumMedian::RemoveContinuum( const CSpectrum& s, CSpectrumFluxAxis& n
     return true;
 }
 
+/**
+ * Compute an average smooth.
+ */
 Int32 CContinuumMedian::MeanSmooth( const Float64 *y, Int32 N, Int32 n, Float64 *y_out)
 {
-    //Compute an average smooth
     Int32 i;
     Int32 start,end,half,rest;
 
