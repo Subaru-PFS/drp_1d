@@ -117,6 +117,7 @@ private:
     Float64 m_nominalWidthDefaultEmission;
     Float64 m_nominalWidthDefaultAbsorption;
     std::string m_fittingmethod;
+    std::string m_rulesoption;
 };
 
 }

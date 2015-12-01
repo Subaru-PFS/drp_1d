@@ -34,6 +34,8 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum, const CS
     m_velocityEmission = velocityEmission;
     m_velocityAbsorption = velocityAbsorption;
     m_fittingmethod = opt_fittingmethod;
+    //m_rulesoption = "no"; //all";
+    m_rulesoption = "all";
 
     //PFS
     //m_nominalWidthDefaultEmission = 3.4;//3.4; //suited to PFS RJLcont simulations
@@ -2139,6 +2141,9 @@ void CLineModelElementList::addDoubleLine(const CRay &r1, const CRay &r2, Int32 
 
 void CLineModelElementList::applyRules()
 {
+    if(m_rulesoption=="no"){
+        return;
+    }
     //*
     ApplyBalmerRuleLinSolve();
     //*/

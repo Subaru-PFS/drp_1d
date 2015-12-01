@@ -192,8 +192,20 @@ Bool CProcessFlow::Correlation( CProcessFlowContext& ctx,  const std::string&  C
 
 Bool CProcessFlow::Chisquare( CProcessFlowContext& ctx, const std::string& CategoryFilter)
 {
+    TFloat64Range lambdaRange;
+    TFloat64Range redshiftRange;
+    Float64       redshiftStep;
+
+    ctx.GetParameterStore().Get( "lambdaRange", lambdaRange );
+    ctx.GetParameterStore().Get( "redshiftRange", redshiftRange );
+    ctx.GetParameterStore().Get( "redshiftStep", redshiftStep );
+
+    const CSpectrumSpectralAxis& spcSpectralAxis = ctx.GetSpectrum().GetSpectralAxis();
+    TFloat64Range spcLambdaRange;
+    spcSpectralAxis.ClampLambdaRange( lambdaRange, spcLambdaRange );
+
     Log.LogInfo( "Process Chisquare (LambdaRange: %f-%f:%f)",
-                 ctx.GetSpectrum().GetLambdaRange().GetBegin(), ctx.GetSpectrum().GetLambdaRange().GetEnd(), ctx.GetSpectrum().GetResolution());
+                 spcLambdaRange.GetBegin(), spcLambdaRange.GetEnd(), ctx.GetSpectrum().GetResolution());
 
 
     // Remove Star category, and filter the list with regard to input variable CategoryFilter
@@ -212,13 +224,7 @@ Bool CProcessFlow::Chisquare( CProcessFlowContext& ctx, const std::string& Categ
         }
     }
 
-    TFloat64Range lambdaRange;
-    TFloat64Range redshiftRange;
-    Float64       redshiftStep;
 
-    ctx.GetParameterStore().Get( "lambdaRange", lambdaRange );
-    ctx.GetParameterStore().Get( "redshiftRange", redshiftRange );
-    ctx.GetParameterStore().Get( "redshiftStep", redshiftStep );
 
     // Create redshift initial list by spanning redshift acdross the given range, with the given delta
     TFloat64List redshifts = redshiftRange.SpreadOver( redshiftStep );
@@ -233,7 +239,7 @@ Bool CProcessFlow::Chisquare( CProcessFlowContext& ctx, const std::string& Categ
     CMethodChisquare2Solve solve;
     std::shared_ptr< const CChisquare2SolveResult> solveResult = solve.Compute( ctx.GetDataStore(), ctx.GetSpectrum(), ctx.GetSpectrumWithoutContinuum(),
                                                                         ctx.GetTemplateCatalog(), filteredTemplateCategoryList,
-                                                                        lambdaRange, redshifts, overlapThreshold, opt_spcComponent );
+                                                                        spcLambdaRange, redshifts, overlapThreshold, opt_spcComponent );
 
     if( solveResult ) {
         ctx.GetDataStore().StoreScopedGlobalResult( "redshiftresult", solveResult );

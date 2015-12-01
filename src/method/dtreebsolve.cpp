@@ -112,7 +112,7 @@ Bool COperatorDTreeBSolve::Solve(CDataStore &dataStore, const CSpectrum &spc, co
     std::string opt_lineWidthType;
     dataStore.GetScopedParam( "linemodel.linewidthtype", opt_lineWidthType, "fixedvelocity" );
     Float64 opt_resolution;
-    dataStore.GetScopedParam( "linemodel.instrumentresolution", opt_resolution, 3000.0 );
+    dataStore.GetScopedParam( "linemodel.instrumentresolution", opt_resolution, 2350.0 );
     Float64 opt_velocity_emission;
     dataStore.GetScopedParam( "linemodel.velocityemission", opt_velocity_emission, 100.0 );
     Float64 opt_velocity_absorption;
