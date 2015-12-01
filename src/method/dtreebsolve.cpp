@@ -61,6 +61,7 @@ const std::string COperatorDTreeBSolve::GetDescription()
     desc.append("\tparam: linemodel.velocityemission = <float value>\n");
     desc.append("\tparam: linemodel.velocityabsorption = <float value>\n");
 
+    desc.append("\tparam: linemodel.rules = {""all"", ""no""}\n");
     desc.append("\tparam: linemodel.continuumreestimation = {""no"", ""onlyextrema"", ""always""}\n");
     desc.append("\tparam: linemodel.extremacount = <float value>\n");
 
@@ -119,13 +120,15 @@ Bool COperatorDTreeBSolve::Solve(CDataStore &dataStore, const CSpectrum &spc, co
     dataStore.GetScopedParam( "linemodel.velocityabsorption", opt_velocity_absorption, 300.0 );
     std::string opt_continuumreest;
     dataStore.GetScopedParam( "linemodel.continuumreestimation", opt_continuumreest, "no" );
+    std::string opt_rules;
+    dataStore.GetScopedParam( "linemodel.rules", opt_rules, "all" );
     Float64 opt_extremacount;
     dataStore.GetScopedParam( "linemodel.extremacount", opt_extremacount, 10.0 );
 
 
     // Compute merit function
     COperatorLineModel linemodel;
-    auto result = dynamic_pointer_cast<CLineModelResult>(linemodel.Compute(dataStore, spc, _spcContinuum, restRayCatalog, opt_linetypefilter, opt_lineforcefilter, lambdaRange, redshifts, opt_extremacount, opt_fittingmethod, opt_continuumcomponent, opt_lineWidthType, opt_resolution, opt_velocity_emission, opt_velocity_absorption, opt_continuumreest) );
+    auto result = dynamic_pointer_cast<CLineModelResult>(linemodel.Compute(dataStore, spc, _spcContinuum, restRayCatalog, opt_linetypefilter, opt_lineforcefilter, lambdaRange, redshifts, opt_extremacount, opt_fittingmethod, opt_continuumcomponent, opt_lineWidthType, opt_resolution, opt_velocity_emission, opt_velocity_absorption, opt_continuumreest, opt_rules) );
 
     /*
     static Float64 cutThres = 2.0;

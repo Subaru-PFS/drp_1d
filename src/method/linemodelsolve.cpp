@@ -36,6 +36,7 @@ const std::string CLineModelSolve::GetDescription()
     desc.append("\tparam: linemodel.velocityemission = <float value>\n");
     desc.append("\tparam: linemodel.velocityabsorption = <float value>\n");
     desc.append("\tparam: linemodel.continuumreestimation = {""no"", ""onlyextrema"", ""always""}\n");
+    desc.append("\tparam: linemodel.rules = {""all"", ""no""}\n");
     desc.append("\tparam: linemodel.extremacount = <float value>\n");
 
     return desc;
@@ -91,6 +92,8 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore, const CSpectrum& spc, const 
     dataStore.GetScopedParam( "linemodel.velocityabsorption", opt_velocity_absorption, 300.0 );
     std::string opt_continuumreest;
     dataStore.GetScopedParam( "linemodel.continuumreestimation", opt_continuumreest, "no" );
+    std::string opt_rules;
+    dataStore.GetScopedParam( "linemodel.rules", opt_rules, "all" );
     Float64 opt_extremacount;
     dataStore.GetScopedParam( "linemodel.extremacount", opt_extremacount, 10.0 );
 
@@ -99,6 +102,7 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore, const CSpectrum& spc, const 
     Log.LogInfo( "    -lineforcefilter: %s", opt_lineforcefilter.c_str());
     Log.LogInfo( "    -fittingmethod: %s", opt_fittingmethod.c_str());
     Log.LogInfo( "    -linewidthtype: %s", opt_lineWidthType.c_str());
+    Log.LogInfo( "    -rules: %s", opt_rules.c_str());
     if(opt_lineWidthType=="fixedvelocity"){
         Log.LogInfo( "    -instrumentresolution: %.2f", opt_resolution);
         Log.LogInfo( "    -velocity emission: %.2f", opt_velocity_emission);
@@ -108,7 +112,7 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore, const CSpectrum& spc, const 
 
     // Compute merit function
     COperatorLineModel linemodel;
-    auto  result = linemodel.Compute( dataStore, _spc, _spcContinuum, restraycatalog, opt_linetypefilter, opt_lineforcefilter, lambdaRange, redshifts, opt_extremacount, opt_fittingmethod, opt_continuumcomponent, opt_lineWidthType, opt_resolution, opt_velocity_emission, opt_velocity_absorption, opt_continuumreest);
+    auto  result = linemodel.Compute( dataStore, _spc, _spcContinuum, restraycatalog, opt_linetypefilter, opt_lineforcefilter, lambdaRange, redshifts, opt_extremacount, opt_fittingmethod, opt_continuumcomponent, opt_lineWidthType, opt_resolution, opt_velocity_emission, opt_velocity_absorption, opt_continuumreest, opt_rules);
 
 
     if( !result )

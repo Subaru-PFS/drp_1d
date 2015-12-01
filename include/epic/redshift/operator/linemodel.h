@@ -27,7 +27,7 @@ public:
 
     std::shared_ptr<COperatorResult> Compute(CDataStore &dataStore, const CSpectrum& spectrum, const CSpectrum &spectrumContinuum, const CRayCatalog& restraycatalog,
                     const std::string &opt_lineTypeFilter, const std::string &opt_lineForceFilter,
-                                    const TFloat64Range& lambdaRange, const TFloat64List& redshifts , const Int32 opt_extremacount, const std::string &opt_fittingmethod, const std::string &opt_continuumcomponent, const std::string& opt_lineWidthType, const Float64 opt_resolution, const Float64 opt_velocityEmission, const Float64 opt_velocityAbsorption, const std::string &opt_continuumreest="no");
+                                    const TFloat64Range& lambdaRange, const TFloat64List& redshifts , const Int32 opt_extremacount, const std::string &opt_fittingmethod, const std::string &opt_continuumcomponent, const std::string& opt_lineWidthType, const Float64 opt_resolution, const Float64 opt_velocityEmission, const Float64 opt_velocityAbsorption, const std::string &opt_continuumreest="no", const std::string &opt_rules="all");
 
 private:
 

@@ -26,7 +26,7 @@
 
 using namespace NSEpic;
 
-CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum, const CSpectrum &spectrumContinuum, const CRayCatalog::TRayVector& restRayList, const std::string& opt_fittingmethod, const std::string& opt_continuumcomponent, const std::string& widthType, const Float64 resolution, const Float64 velocityEmission, const Float64 velocityAbsorption)
+CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum, const CSpectrum &spectrumContinuum, const CRayCatalog::TRayVector& restRayList, const std::string& opt_fittingmethod, const std::string& opt_continuumcomponent, const std::string& widthType, const Float64 resolution, const Float64 velocityEmission, const Float64 velocityAbsorption, const std::string& opt_rules)
 {
     m_ContinuumComponent = opt_continuumcomponent;
     m_LineWidthType = widthType;
@@ -35,7 +35,7 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum, const CS
     m_velocityAbsorption = velocityAbsorption;
     m_fittingmethod = opt_fittingmethod;
     //m_rulesoption = "no"; //all";
-    m_rulesoption = "all";
+    m_rulesoption = opt_rules;
 
     //PFS
     //m_nominalWidthDefaultEmission = 3.4;//3.4; //suited to PFS RJLcont simulations
