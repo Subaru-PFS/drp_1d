@@ -124,10 +124,17 @@ Bool COperatorDTree7Solve::SolveDecisionalTree7(CDataStore &dataStore, const CSp
     CPeakDetection peakDetection(m_winsize, m_cut);
     std::shared_ptr<const CPeakDetectionResult> peakDetectionResult = peakDetection.Compute( spc, lambdaRange);
     dataStore.StoreScopedGlobalResult( "peakdetection", peakDetectionResult );
-    Log.LogInfo( "DTree7 - Peak Detection output: %d peaks found", peakDetectionResult->PeakList.size());
+
+    Int32 nPeakDetected = -1;
+    if(peakDetectionResult==NULL){
+        nPeakDetected = -1;
+    }else{
+        Log.LogInfo( "DTree7 - Peak Detection output: %d peaks found", peakDetectionResult->PeakList.size());
+        nPeakDetected = peakDetectionResult->PeakList.size();
+    }
 
     // check Peak Detection results
-    if(peakDetectionResult->PeakList.size()<1){
+    if(nPeakDetected<1){
         Log.LogInfo( "DTree7 - No Peak found, switching to Blindsolve");
         m_dtreepathnum = 1.1;
         { //blindsolve
