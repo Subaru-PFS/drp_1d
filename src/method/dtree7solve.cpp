@@ -123,12 +123,13 @@ Bool COperatorDTree7Solve::SolveDecisionalTree7(CDataStore &dataStore, const CSp
 
     CPeakDetection peakDetection(m_winsize, m_cut);
     std::shared_ptr<const CPeakDetectionResult> peakDetectionResult = peakDetection.Compute( spc, lambdaRange);
-    dataStore.StoreScopedGlobalResult( "peakdetection", peakDetectionResult );
 
     Int32 nPeakDetected = -1;
     if(peakDetectionResult==NULL){
+        Log.LogInfo( "DTree7 - Unable to process peakdetection");
         nPeakDetected = -1;
     }else{
+        dataStore.StoreScopedGlobalResult( "peakdetection", peakDetectionResult );
         Log.LogInfo( "DTree7 - Peak Detection output: %d peaks found", peakDetectionResult->PeakList.size());
         nPeakDetected = peakDetectionResult->PeakList.size();
     }
