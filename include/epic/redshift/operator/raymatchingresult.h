@@ -12,6 +12,7 @@ namespace NSEpic
 {
   /**
    * \ingroup Redshift
+   * Holds the data corresponding to a match between two sets of lines. Commonly, holds the result of matching detected lines with template lines.
    */
   class CRayMatchingResult : public COperatorResult
   {
@@ -40,7 +41,7 @@ namespace NSEpic
 	  {
 	    return ( DetectedRay.GetPosition()<str.DetectedRay.GetPosition() );
 	  }
-      }
+      }  
     };
 
     typedef std::vector<SSolution> TSolutionSet; // a set of (detected line,rest line) couples for a given redshift
@@ -78,4 +79,4 @@ namespace NSEpic
   };
 }
 
-#endif
+#endif // _REDSHIFT_OPERATOR_RAYMATCHINGRESULT_
