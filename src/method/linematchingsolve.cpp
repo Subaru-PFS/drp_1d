@@ -100,7 +100,12 @@ std::shared_ptr<const CLineMatchingSolveResult> COperatorLineMatchingSolve::Comp
     CPeakDetection peakDetection(opt_winsize, opt_peakdetectioncut, 1, opt_peakenlargerate);
     auto peakDetectionResult = peakDetection.Compute( spc, lambdaRange);
     if( peakDetectionResult )
+    {
         dataStore.StoreScopedGlobalResult( "peakdetection", peakDetectionResult );
+    }else
+    {
+      return NULL;
+    }
 
     Float64 opt_linedetectioncut;
     dataStore.GetScopedParam( "linedetection.cut", opt_linedetectioncut, 5.0 );
@@ -120,6 +125,9 @@ std::shared_ptr<const CLineMatchingSolveResult> COperatorLineMatchingSolve::Comp
         if(lineDetectionResult->RayCatalog.GetList().size()<1){
             //return NULL;
         }
+    }else
+    {
+      return NULL;
     }
 
     // --- Match
