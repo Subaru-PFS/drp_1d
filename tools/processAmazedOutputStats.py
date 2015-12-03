@@ -1,0 +1,686 @@
+# v2.1	2015-07-06 stats hist saved (txt export) in 2 different bin sizes
+# v2.02	2015-06-19 stats histograms different colors with methods/templates subsets
+# v2.01	2015-06-18 plot different colors for methods/template subsets
+# v2.0	2015-06-18 allow calc file to be in a different order than the ref file. reordering is done using the spectrum name 
+# v1.52 2015-04-15 add output file failures.txt listing the failures over a threshold (default 0.01)
+# v1.51 2015-04-13 improved robustness for PFS data loading and new amazed processing
+# v1.5	2015-04-10 creation of processAmazedOutputVVDS.py (replacement of original processAmazedOutputVVDS.py)
+# v1.21 2015-04-10 set stats files output path to calculated input file path
+# v1.2 	2015-04-09 diff graphs normalized by 1+z
+# v1.1 	2015-03-31
+#!/usr/bin/python
+
+import sys
+import os
+import optparse
+
+from astropy.io import ascii
+import numpy as np
+
+from astropy.io import fits
+import random
+import matplotlib.pyplot as pp
+import matplotlib.cm as cm
+from matplotlib.patches import Rectangle
+
+sys.path.append(r'/home/nix/pfs/code')
+import lstats
+
+# global variables, default for VVDS
+iRefZ = 4
+iRefMag = 6
+iRefFlag = 5
+
+def setVVDSRefFileType():
+    global iRefZ, iRefMag, iRefFlag
+    iRefZ = 4
+    iRefMag = 6
+    iRefFlag = 5
+
+def setVVDS2RefFileType():
+    global iRefZ, iRefMag, iRefFlag
+    iRefZ = 5
+    iRefMag = 4
+    iRefFlag = 6
+
+def setPFSRefFileType():
+    global iRefZ, iRefMag, iRefFlag
+    iRefZ = 1
+    iRefMag = 2
+    iRefFlag = -1
+
+def ProcessDiff( refFile, calcFile, outFile ) :
+    global iRefZ, iRefMag, iRefFlag   
+     
+    f = open( outFile, "w" )
+
+    #*************** open ref file
+    fref = open(refFile, 'r')
+    dataRefStr = fref.read()
+    fref.close()
+    dataRef = ascii.read(dataRefStr)
+    dataRef_names = [a[0] for a in dataRef]
+    print("Dataref, first elt: {}".format(dataRef[0]))
+
+    #*************** open calc file
+    if 0: 
+        fcalc = open(calcFile, 'r')
+        dataCalcStr = fcalc.read()
+        fcalc.close()
+        #dataCalc = ascii.read(dataCalcStr)
+        #dataCalc = ascii.read(calcFile, data_start=1, delimiter='\t');
+        #dataCalc = np.loadtxt(calcFile, delimiter='\t', usecols=(1, 3), unpack=True)
+        dataCalc_raw = ascii.read(dataCalcStr, data_start=0, delimiter="\t")
+        #print dataCalc[0]
+    else:
+        dataCalc_raw = loadCalc( calcFile );
+    dataCalc_names_raw = [a[0] for a in dataCalc_raw]
+    
+    ## PFS specific: filter dataCalc_names_raw to exclude ambiguity due to input fits names
+    for i,x in enumerate(dataCalc_names_raw):
+        excludeStr = "FILTERED_SET_reallyjustlinecont_1k_0.5z1.8_0.1A100_Version"
+        if x.find(excludeStr)==-1:
+            excludeStr = "FILTERED_FEB2015_1stapprox_SET_reallyjustlinecont_1k_0.5z1.8_0.1A100_Version"
+        if x.find(excludeStr)==-1:
+            excludeStr = "FILTERED_SEPT2015_1loopw100_SET_reallyjustlinecont_1k_0.5z1.8_0.1A100_Version"
+        if x.find(excludeStr)==-1:
+            excludeStr = "FILTERED_SEPT2015_2loopw50_SET_reallyjustlinecont_1k_0.5z1.8_0.1A100_Version"
+        if x.find(excludeStr)==-1:
+            excludeStr = "470026900000130.2-0.4_20_20.5_EZ_fits-W-TF"
+        if x.find(excludeStr)==-1:
+            excludeStr = "470026900000130.2-0.4_20_20.5_EZ_fits-W-F"
+        #if x.find(excludeStr)==-1:
+        #    excludeStr = "SPC_fits-W-F"
+        
+        dataCalc_names_raw[i] = x.replace(excludeStr, "")
+    ##
+        
+    
+    print("dataCalc_raw, first elt: {}".format(dataCalc_raw[0]))
+      
+    #*************** reorder calc data by filename
+    inds = []
+    #readonlyN = 300;
+    for s in dataRef_names:#[0:readonlyN]:
+        #remove extension .fits from pandora results
+        #s = s[0:-5]
+        #p = [i for i,x in enumerate(dataCalc_names_raw) if str(s) == x] # PFS batch 1 to 5
+        p = [i for i,x in enumerate(dataCalc_names_raw) if str(s) in x] # PFS batch 6 onwards
+        if len(p) >0:
+            #print "OK : index found : ref={0} and calc={1}".format(s,p)
+            inds.append(p[0])
+        else:
+            inds.append(-1)
+            print "ERROR : index not found : {0}".format(s)
+            stop
+    #print inds
+    dataCalc = [dataCalc_raw[i] for i in inds]
+    # end re-order
+    
+    ### try to open snr file
+    snrFile = os.path.join(os.path.dirname(os.path.abspath(refFile)), "snr_TF_ErrF.csv")
+    print("SNRfile = {}".format(snrFile))
+    if os.path.exists(snrFile):
+        fsnr = open(snrFile, 'r')
+        dataSnrStr = fsnr.read()
+        fsnr.close()
+        dataSnr_raw = ascii.read(dataSnrStr)
+        dataSnr_names = [a[0].replace("SPC_fits-W-TF_", "").replace(".fits", "") for a in dataSnr_raw]
+        print("dataSnr, first elt: {}".format(dataSnr_raw[0]))
+        #*************** reorder snr data by filename
+        inds = []
+        #readonlyN = 300;
+        for s in dataRef_names:#[0:readonlyN]:
+            #remove extension .fits from pandora results
+            #s = s[0:-5]
+            print("dataRef_names entry: {}".format(s))
+            print("dataSnr_names first entry: {}".format(dataSnr_names[0]))
+        
+            p = [i for i,x in enumerate(dataSnr_names) if str(s) == x]
+            if len(p) >0:
+                print "OK : index found : ref={0} and calc={1}".format(s,p)
+                inds.append(p[0])
+            else:
+                inds.append(-1)
+                print "ERROR : index not found : {0}".format(s)
+                stop
+        #print inds
+        dataSnr = [dataSnr_raw[i] for i in inds]
+        # end re-order
+    else:
+        dataSnr = []
+    
+    
+
+    print "INFO: ref file size = " + str(len(dataRef))
+    print "INFO: calc file size = " + str(len(dataCalc))
+    n = min(len(dataRef), len(dataCalc))
+    print "INFO: n set to = " + str(n)
+            
+    f.write( "#ID\tMAGI\tZREF\tZFLAG\tZCALC\tMERIT\tTPL\tMETHOD\tSNR\tDIFF\n" )
+    for k in range(0,n):
+        if iRefFlag>-1:
+            flagValStr = str(dataRef[k][iRefFlag])
+        else:
+            flagValStr = "-1"
+
+        if len(dataSnr)>0:
+            snrValStr = str(dataSnr[k][1])
+        else:
+            snrValStr = "-1"       
+
+        tplStr = "-1" #str(dataCalc[k][4])
+        zdiff = dataCalc[k][1]-dataRef[k][iRefZ]
+                
+        
+        if 0:
+            print "\n"
+            print("DatarefNames: {}".format(dataRef_names[k]))
+            print("Name: {}".format(str(dataCalc[k][0])))
+            print("zref: {}".format(str(dataRef[k][iRefZ]) ))
+            print str(dataRef[k][iRefMag])
+            
+            print("zcalc: {}".format(str(dataCalc[k][1])))
+            print str(dataCalc[k][2])
+            print str(dataCalc[k][3])
+	        #print str(dataCalc[k][4])
+            print("diff: {}".format(str(dataRef[k][iRefZ] - dataCalc[k][1])))
+            print("snr: {}".format(snrValStr))
+            
+         
+        #f.write( str(dataCalc[k][0]) + "\t" + str(dataRef[k][iRefMag]) + "\t" + str(dataRef[k][iRefZ]) + "\t" + str(dataRef[k][iRefFlag]) + "\t" + str(dataCalc[k][1]) + "\t" + str(dataCalc[k][2]) + "\t" + str(dataCalc[k][3]) + "\t" + str(dataCalc[k][4]) + "\t" + str(dataRef[k][iRefZ] - dataCalc[k][1]) + "\n" )
+        f.write( str(dataCalc[k][0]) + "\t" + str(dataRef[k][iRefMag]) + "\t" + str(dataRef[k][iRefZ]) + "\t" + flagValStr + "\t" + str(dataCalc[k][1]) + "\t" + str(dataCalc[k][2]) + "\t" + str(dataCalc[k][3]) + "\t" + tplStr + "\t" + snrValStr + "\t" + str(zdiff) + "\n" )
+    
+    f.close()
+
+    #*************** create subsets
+    subset_index = 3 # index = 4 is the method, index = 3 is the tpl, 
+    subset_nmax = 8 # max num of subset shown in figure
+    data_label_subset = [a[subset_index] for a in dataCalc]
+    s = set(data_label_subset)
+    data_subsets = []
+    for a in s:
+        #print (a)
+        data_subsets.append([a, data_label_subset.count(a)])
+    #sorted_hist = sorted(hist, key=lambda hist: hist[0])
+    print("subsets = {0}".format(data_subsets))
+
+    ######### plot
+    xvect = range(0,n)
+    yvect = range(0,n)  
+    for k in range(0,n):
+    	xvect[k] = dataRef[k][iRefZ]
+	yvect[k] = (dataRef[k][iRefZ] - dataCalc[k][1])/(1+dataRef[k][iRefZ])
+    fig = pp.figure('Amazed output')
+    ax = fig.add_subplot(111)
+    color_ = ['r', 'g', 'b', 'y','c', 'm', 'y', 'k']
+    #n=max(len(s),5)
+    #color_=cm.rainbow(np.linspace(0,1,n))
+    mylegend = [a[0] for a in data_subsets]
+    for k in range(min(len(data_subsets),subset_nmax)):
+        inds = [i for i,x in enumerate(data_label_subset) if x==data_subsets[k][0]]
+	#print("indices found are {0}".format(inds))
+        xv = [xvect[i] for i in inds ]
+        yv = [yvect[i] for i in inds ]
+        ax.plot(xv, yv, 'x', label=mylegend[k], color=color_[k])
+
+    #pp.legend((mylegend),loc=4)
+    #pp.legend((mylegend))
+    # Shrink current axis by 20%
+    box = ax.get_position()
+    ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
+    pp.legend(loc=9, bbox_to_anchor=(0.5, -0.1))
+    # Put a legend to the right of the current axis
+    ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+    # Put a legend to the bottom of the current axis
+    #pp.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05),
+     #     fancybox=True, shadow=True, ncol=5)
+    #pp.hist(yvect, 5000, normed=1, histtype='step', cumulative=True)
+    ##bar
+    #ind = np.arange(len(OY))
+    #pp.plot(xvect, yvect, 'x')
+    #ax.set_xscale('log')
+    pp.grid(True) # Affiche la grille
+    #pp.legend(('cos','sin'), 'upper right', shadow = True)
+    pp.ylabel('(zcalc-zref)/(1+zref)')
+    pp.xlabel('z reference')
+    #pp.title('Amazed performance stats') # Titre
+    pp.savefig( os.path.dirname(os.path.abspath(outFile)) + '/' +'diff.png', bbox_inches='tight') # sauvegarde du fichier ExempleTrace.png
+    #pp.show()
+    zoomedRange = 0.005
+    ax.set_ylim([-zoomedRange, zoomedRange])
+    #pp.show()
+    pp.savefig( os.path.dirname(os.path.abspath(outFile)) + '/' +'diff_yzoomed.png', bbox_inches='tight') # sauvegarde du fichier ExempleTrace.png
+
+def loadCalc(fname):
+    """
+    load the calc redshift.csv data from file
+    1 - Spectrum name
+    2 - redshift
+    3 - Merit
+    4 - Method
+    """ 
+    dataArray = []
+    f = open(fname)
+    for line in f:
+        lineStr = line.strip()
+        if not lineStr.startswith('#'):
+            #print lineStr
+            data = lineStr.split("\t")
+            data = [r for r in data if r != '']
+            #print len(data)
+            if(len(data) == 4): #linematching for example
+                d0 = str(data[0])
+                d1 = float(data[1])
+                d2 = float(data[2])
+                d3 = str(data[3])
+                d = [d0, d1, d2, d3]
+                dataArray.append(d) 
+            if(len(data) == 5): #chisquarer for example
+                d0 = str(data[0])
+                d1 = float(data[1])
+                d2 = float(data[2])
+                d3 = str(data[3])
+                d4 = str(data[4])
+                d = [d0, d1, d2, d3, d4]
+                dataArray.append(d) 
+    f.close()
+    return dataArray
+    
+def loadDiff(fname):
+    """
+    load the diff diff.txt data from file
+
+    """ 
+    dataArray = []
+    f = open(fname)
+    for line in f:
+        lineStr = line.strip()
+        if not lineStr.startswith('#'):
+            #print lineStr
+            data = lineStr.split("\t")
+            data = [r for r in data if r != '']
+            #print len(data)
+            if(len(data) == 10): #Spectrum ID	MAGI	ZREF	ZFLAG	ZCALC	MERIT	TPL	METHOD	snr DIFF
+                d0 = str(data[0])
+                d1 = float(data[1])
+                d2 = float(data[2])
+                d3 = float(data[3])
+                d4 = float(data[4])
+                d5 = float(data[5])
+                d6 = str(data[6])
+                d7 = str(data[7])
+                d8 = float(data[8])
+                d9 = float(data[9])
+                d = [d0, d1, d2, d3, d4, d5, d6, d7, d8, d9]
+                dataArray.append(d) 
+    f.close()
+    return dataArray
+
+def ProcessStats( fname ):
+ 
+
+    
+    if 0: 
+        f = open(fname, 'r')
+        dataStr = f.read()
+        f.close()
+        data= ascii.read(dataStr, data_start=0, delimiter="\t")
+        #print data[0]
+    else:
+        data = loadDiff( fname );
+        
+
+    n = (len(data))
+    n2 = len(data[0])
+    print "INFO: processing stats: n=" + str(n) + ", n2=" + str(n2)
+    xvect = range(0,n)
+    yvect = range(0,n)
+    mvect = range(0,n)
+    snrvect = range(0,n)
+    for x in range(0,n):
+        xvect[x] = data[x][2]
+        yvect[x] = abs(data[x][n2-1])
+        mvect[x] = (data[x][1])
+        snrvect[x] = (data[x][8])
+
+    # ******* large bins histogram
+    vectErrorBins = [0.00001, 0.0001, 0.0005, 0.001, 0.005, 0.01, 0.1, 1.0, 10.0]
+    print 'the rough bins are: ' + str(vectErrorBins)
+    foutpath = os.path.dirname(os.path.abspath(fname)) + '/' + 'stats_brief.txt'
+    processHistogram( yvect, vectErrorBins, foutpath)
+
+    # ******* fine bins histogram
+    vectErrorBins = np.logspace(-5, 1, 50, endpoint=True)
+    print 'the fine bins are: ' + str(vectErrorBins)
+    foutpath = os.path.dirname(os.path.abspath(fname)) + '/' + 'stats.txt'
+    processHistogram( yvect, vectErrorBins, foutpath)
+
+    # ******* plot hist
+    outFigFile = os.path.dirname(os.path.abspath(fname)) + '/' +'stats_hist.png'
+    plotHist(yvect, outFigFile)
+
+    # ******* plot mag hist
+    if 0:
+        outFileNoExt = 'stats_versusMag_hist' 
+        outdir = os.path.dirname(os.path.abspath(fname))
+        lstats.PlotAmazedVersusNoiseHistogram(yvect, mvect, outdir, outFileNoExt)
+
+    # ******* plot snr hist       
+    if 1:
+        outFileNoExt = 'stats_versusNoise_hist' 
+        outdir = os.path.dirname(os.path.abspath(fname))
+        lstats.PlotAmazedVersusNoiseHistogram(yvect, snrvect, outdir, outFileNoExt)
+
+#    print '\n'
+#    print 'the mag bins are: ' + str(vectErrorBins)
+#    vectMagBins = np.logspace(-1, 3, 50, endpoint=True)
+#    outFigFile = os.path.dirname(os.path.abspath(fname)) + '/' +'stats_versusMag_hist.txt'
+#    ybins50, ybinsVERYLOW, ybinsLOW, ybinsHIGH, ybinsVERYHIGH, ynbins = lstats.exportHistogramComplex(yvect, mvect, vectMagBins, outFigFile)
+#    enablePlot =1
+#    enableExport=1
+#    outdir = os.path.dirname(os.path.abspath(fname))
+#    if 1: #enablePlot or enableExport:
+#        fig = pp.figure('Amazed stats - z error histogram versus Mag.', figsize=(14,7))
+#        ax = fig.add_subplot(111)
+#        #pp.plot(vectMagBins, ybins25, 'b-', label="z error, prctile25")
+#        pp.plot(vectMagBins, ybins50, 'b-', label="z error, [5%, 25%, median, 75%, 95%]")
+#        #pp.plot(vectMagBins, ybins75, 'b=', label="z error, prctile75")
+#        pp.fill_between(vectMagBins, ybinsLOW, ybinsHIGH, alpha=0.3, label="zerror, 25%-75% prctile")
+#        pp.fill_between(vectMagBins, ybinsVERYLOW, ybinsVERYHIGH, alpha=0.2, label="zerror, 5%-95% prctile")
+#        pp.plot(vectMagBins, ynbins, 'k+', label="Number of spectra")
+#        #plt.semilogx()
+#        pp.xlim([1e-1, 1e3])
+#        pp.ylim([1e-5, 100])
+#        ##bar
+#        #ind = np.arange(len(OY))
+#        #pp.plot(xvect, yvect, 'x')
+#        ax.set_xscale('log')
+#        ax.set_yscale('log')
+#        pp.grid(True) # Affiche la grille
+#        #r = Rectangle((0, 0), 1, 1) # creates rectangle patch for legend use.
+#        #pp.legend(r, ["z error, median", "zerror, 25%-75% prctile"],shadow=True,fancybox=True) 
+#        #pp.legend(shadow=True,fancybox=True, loc='center right', ncol=1)
+#        pp.ylabel('z error')
+#        pp.xlabel('Amplitude')
+#        name1 = "(-) z error, [Median (dark blue line), 25%-75% percentile (blue), 5%-95% percentile (light blue)]\n(+)Number of spectra"
+#        pp.title(name1)
+#        
+#        if enableExport:
+#            outFigFile = os.path.join(outdir,'stats_versusMag_hist.png')
+#            pp.savefig( outFigFile, bbox_inches='tight') # sauvegarde du fichier ExempleTrace.png
+#        if enablePlot:
+#            pp.show()  
+
+    print '\n'
+
+    
+
+def processHistogram(yvect, bins, outFile=""):
+    n = len(yvect)
+    nbins = len(bins)
+    #print 'number of bins = ' + str(nbins) + '\n'
+    ybins = np.zeros(nbins)
+
+    #print range(nbins-2, -1, -1)
+    for x in range(0,n):
+	for ex in range(0, nbins):
+	#for ex in range(nbins-2, -1, -1):
+	    if yvect[x]<bins[ex]:
+	   	ybins[ex] = ybins[ex]+1
+		#break;
+    for ex in range(0, nbins):
+        ybins[ex] = ybins[ex]/float(n)*100.0
+        
+    if not outFile=="":
+        # convert to percentage, and save in file 
+        fout = open( outFile, "w" )  
+        for ex in range(0, nbins):
+            outStr = str(ex) + '\t' + str(bins[ex]) + '\t' +str(ybins[ex])
+            print outStr
+            fout.write( outStr  + '\n')
+        fout.close()
+    return ybins
+
+def plotHist(yvect, outFigFile):
+    subsets_enable = False
+    ######### plot
+    fig = pp.figure('Amazed performance stats')
+    ax = fig.add_subplot(111)
+    #ax.plot(vectErrorBins, yVectErrorBins)
+    if 0:
+        pp.hist(yvect, 5000, range = (1e-5, 10), normed=1, histtype='step', cumulative=True)
+    else:
+        vectErrorBins = np.logspace(-5, 1, 500, endpoint=True)
+        ybins = processHistogram(yvect=yvect, bins=vectErrorBins, outFile="")
+        pp.plot(vectErrorBins, ybins)
+        pp.xlim([1e-5, 10])
+        pp.ylim([0, 100])
+    ##bar
+    #ind = np.arange(len(OY))
+    #pp.plot(xvect, yvect, 'x')
+    ax.set_xscale('log')
+    pp.grid(True) # Affiche la grille
+    #pp.legend(('cos','sin'), 'upper right', shadow = True)
+    ylabel = 'Success Rate (percentage) (over {} spectra)'.format(len(yvect))
+    pp.ylabel(ylabel)
+    pp.xlabel('abs( (zcalc-zref)/(1+zref) )')
+    #pp.title('Amazed performance stats') # Titre
+    pp.savefig( outFigFile, bbox_inches='tight') # sauvegarde du fichier ExempleTrace.png
+    #pp.show()
+    
+    if subsets_enable == False:    
+        return        
+
+    #*************** create subsets
+    subset_index = 7 # index = 7 is the method
+    subset_nmax = 8 # max num of subset shown in figure
+    data_label_subset = [a[subset_index] for a in data]
+    s = set(data_label_subset)
+    data_subsets = []
+    for a in s:
+        #print (a)
+        data_subsets.append([a, data_label_subset.count(a)])
+    #sorted_hist = sorted(hist, key=lambda hist: hist[0])
+    print("subsets = {0}".format(data_subsets))
+
+    ######### plot the subsets
+    fig = pp.figure('Amazed performance stats by subsets')
+    ax = fig.add_subplot(111)
+    mylegend = [a[0]+" (n= " + str(a[1])+")" for a in data_subsets]
+    color_ = ['r', 'g', 'b', 'y','c', 'm', 'y', 'k']
+    for k in range(min(len(data_subsets),subset_nmax)):
+        inds = [i for i,x in enumerate(data_label_subset) if x==data_subsets[k][0]] 
+        yv = [yvect[i] for i in inds ]
+        pp.hist(yv, 5000, normed=1, histtype='step', cumulative=True, label=mylegend[k], color=color_[k])
+    box = ax.get_position()
+    ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
+    pp.legend(loc=9, bbox_to_anchor=(0.5, -0.1))
+    # Put a legend to the right of the current axis
+    ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))    
+    ax.set_xscale('log')
+    pp.grid(True) # Affiche la grille
+    #pp.legend(('cos','sin'), 'upper right', shadow = True)
+    pp.ylabel('Cumulative Histogram')
+    pp.xlabel('abs(diff)')
+    #pp.title('Amazed performance stats') # Titre
+    pp.savefig( os.path.dirname(os.path.abspath(fname)) + '/' +'stats_hist_subsets.png', bbox_inches='tight') # sauvegarde du fichier ExempleTrace.png
+    #pp.show()
+    
+
+def ProcessFailures( fname, fnameFailures ): 
+    fFailures = open(fnameFailures, 'w')
+
+    
+    if 0: 
+        f = open(fname, 'r')
+        dataStr = f.read()
+        f.close()
+        data= ascii.read(dataStr, data_start=0, delimiter="\t")
+        print data[0]
+    else:
+        data = loadDiff( fname );
+
+    n = (len(data))
+    n2 = len(data[0])
+    print "INFO: processing failures: n=" + str(n) + ", n2=" + str(n2)
+    
+    f = open(fname, 'r')
+    dataHeader = f.readline()
+    f.close()
+    if "#" in dataHeader:
+        fFailures.write( dataHeader )
+    #print range(nbins-2, -1, -1)
+    for x in range(0,n):
+        if abs(data[x][n2-1]) > 1e-2:
+            for x2 in range(0,n2):
+                fFailures.write( str(data[x][x2]) + "\t" )
+            fFailures.write( "\n" )
+
+
+    fFailures.close()
+    print '\n'    
+
+def ProcessFailuresSeqFile( fname, refFile, fnameFailuresSeqFile, fnameFailureRefFile ): 
+    """
+    1. Creates a seq file "fnameFailuresSeqFile" that can be used as an input .spectrumlist file for Amazed.
+    2. Also creates the appropriate ref file in order to compare the results if a reprocess on this sub-list is carried out...
+    """
+    fFailures = open(fnameFailuresSeqFile, 'w')
+    if 0: 
+        f = open(fname, 'r')
+        dataStr = f.read()
+        f.close()
+        data= ascii.read(dataStr, data_start=0, delimiter="\t")
+        print data[0]
+    else:
+        data = loadDiff( fname );
+
+    n = (len(data))
+    n2 = len(data[0])
+    print "INFO: processing failures Seq file: n=" + str(n) + ", n2=" + str(n2)
+    
+    f = open(fname, 'r')
+    dataHeader = f.readline()
+    f.close()
+    if "#" in dataHeader:
+        #fFailures.write( dataHeader )
+        pass
+    #print range(nbins-2, -1, -1)
+    dataFailures_names_raw = []
+    for x in range(0,n):
+        if abs(data[x][n2-1]) > 1e-2:
+            indName = 0;    
+            spcName = str(data[x][indName]) + ".fits"
+            dataFailures_names_raw.append(spcName)
+            spcStr = "_atm_clean"
+            noiseStr = "_noise"
+            if spcName.find(spcStr)==-1:
+                spcStr = "-W-F_"
+                noiseStr = "-W-ErrF_"
+            noiseName = spcName.replace(spcStr, noiseStr)
+            fFailures.write( spcName + "\t" )
+            fFailures.write( noiseName )
+            fFailures.write( "\n" )
+    fFailures.close()
+    
+    
+    #*************** open ref file
+    fref = open(refFile, 'r')
+    dataRefStr = fref.read()
+    fref.close()
+    dataRef = ascii.read(dataRefStr)
+    dataRef_names = [a[0] for a in dataRef] 
+    
+    nref2 = len(dataRef[0])
+    #*************** reorder ref data by filename
+    inds = []
+    fFailuresRefFile = open(fnameFailureRefFile, 'w')
+    #readonlyN = 300;
+    for iref,s in enumerate(dataRef_names):#[0:readonlyN]:
+        #remove extension .fits from pandora results
+        #s = s[0:-5]
+        p = [i for i,x in enumerate(dataFailures_names_raw) if str(s) in x]
+        if len(p) >0:
+            #print "OK : index found : ref={0} and calc={1}".format(s,p)
+            inds.append(p[0])
+            for x2 in range(0,nref2):
+                fFailuresRefFile.write( str(dataRef[iref][x2]) + "\t" )
+            fFailuresRefFile.write( "\n" )
+        else:
+            inds.append(-1)
+            print "ERROR : index not found for failure-ref file creation: {0}".format(s)
+            #stop  
+    
+    
+    fFailuresRefFile.close()
+    
+    
+    
+    
+    print '\n'
+
+def StartFromCommandLine( argv ) :
+    global subsets_enable	
+    usage = """usage: %prog [options]
+    ex: python ./processAmazedOutputStats.py --ref=referenceRedshifts.txt --calc=amazedRedshifts.txt --type='vvds2' """
+    parser = optparse.OptionParser(usage=usage)
+    parser.add_option(u"-r", u"--ref", help="reference redshift values",  dest="refFile", default="referenceRedshifts.txt")
+    parser.add_option(u"-c", u"--calc", help="calculated redshift values",  dest="calcFile", default="output.txt")
+    parser.add_option(u"-t", u"--type", help="reference redshift values type",  dest="type", default="vvds")
+    (options, args) = parser.parse_args()
+
+    print "\n"
+    if os.path.isdir(options.calcFile):
+        print("Error: invalid input calc. file (directory)")
+        exit()
+        
+    if os.path.isdir(options.refFile):
+        print("Error: invalid input ref. file (directory)")
+        exit()
+        
+
+
+    subsets_enable = False;
+
+    if( len( args ) == 0 ) :
+        filenameDiff = "diff.txt"
+        filenameFailures = "failures.txt"
+        filenameFailuresSeqFile = "failures.spectrumlist"
+        filenameFailuresRefFile = "failures_ref.txt"
+        outputPath =  os.path.dirname(os.path.abspath(options.calcFile)) + '/' + "stats/"
+        outputFullpathDiff = outputPath + filenameDiff
+        outputFullpathFailures = outputPath + filenameFailures
+        outputFullpathFailuresSeqFile = outputPath + filenameFailuresSeqFile
+        outputFullpathFailuresRefFile = outputPath + filenameFailuresRefFile
+        if os.path.isdir(outputPath)==False:
+            os.mkdir( outputPath, 0755 );
+
+        if options.type == 'vvds1':
+	       print "Info: Using VVDS1 reference data file type"
+	       setVVDSRefFileType()
+        elif options.type == 'vvds2':
+            print "Info: Using VVDS2 reference data file type"
+            setVVDS2RefFileType()
+        elif options.type == 'pfs':
+            print "Info: Using PFS reference data file type"
+            setPFSRefFileType()
+        else:
+            print("Info: No reference file type given (--type), using vvds by default.")
+
+        ProcessDiff( options.refFile, options.calcFile, outputFullpathDiff )
+        ProcessFailures( outputFullpathDiff, outputFullpathFailures)
+        ProcessFailuresSeqFile( outputFullpathDiff, options.refFile, outputFullpathFailuresSeqFile, outputFullpathFailuresRefFile)
+        ProcessStats( outputFullpathDiff )
+    else :
+        print("Error: invalid argument count")
+        exit()
+
+
+def Main( argv ) :	
+    try:
+        StartFromCommandLine( argv )
+    except (KeyboardInterrupt):
+        exit()
+    
+Main( sys.argv )
