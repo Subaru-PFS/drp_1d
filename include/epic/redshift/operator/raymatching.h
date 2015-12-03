@@ -9,6 +9,11 @@
 
 namespace NSEpic
 {
+
+  /**
+   * \ingroup Redshift
+   * Holds the algorithms for calculating and comparing matches, when given reference and detection catalogue of rays (spectral lines) or matches themselves (instances of CRayMatchingResult).
+   */
   class CRayMatching
   {
   public:
