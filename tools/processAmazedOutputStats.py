@@ -23,7 +23,6 @@ import matplotlib.pyplot as pp
 import matplotlib.cm as cm
 from matplotlib.patches import Rectangle
 
-sys.path.append(r'/home/nix/pfs/code')
 import lstats
 
 # global variables, default for VVDS
@@ -89,8 +88,12 @@ def ProcessDiff( refFile, calcFile, outFile ) :
             excludeStr = "470026900000130.2-0.4_20_20.5_EZ_fits-W-TF"
         if x.find(excludeStr)==-1:
             excludeStr = "470026900000130.2-0.4_20_20.5_EZ_fits-W-F"
-        #if x.find(excludeStr)==-1:
-        #    excludeStr = "SPC_fits-W-F"
+        if x.find(excludeStr)==-1:
+            excludeStr = "SPC_fits-W-F_"
+        if x.find(excludeStr)==-1:
+            excludeStr = "SPC_fits-W-TF_"
+        if x.find(excludeStr)==-1:
+            excludeStr = "SPC_fits-W-FILT_"
         
         dataCalc_names_raw[i] = x.replace(excludeStr, "")
     ##
@@ -118,7 +121,7 @@ def ProcessDiff( refFile, calcFile, outFile ) :
     # end re-order
     
     ### try to open snr file
-    snrFile = os.path.join(os.path.dirname(os.path.abspath(refFile)), "snr_TF_ErrF.csv")
+    snrFile = os.path.join(os.path.dirname(os.path.abspath(refFile)), "snr2_TF_ErrF.csv")
     print("SNRfile = {}".format(snrFile))
     if os.path.exists(snrFile):
         fsnr = open(snrFile, 'r')
@@ -136,9 +139,12 @@ def ProcessDiff( refFile, calcFile, outFile ) :
             print("dataRef_names entry: {}".format(s))
             print("dataSnr_names first entry: {}".format(dataSnr_names[0]))
         
-            p = [i for i,x in enumerate(dataSnr_names) if str(s) == x]
+            #p = [i for i,x in enumerate(dataSnr_names) if str(s) == x] # PFS batch 1 to 5
+            p = [i for i,x in enumerate(dataSnr_names) if str(s) in x]# PFS batch 6 onwards
             if len(p) >0:
-                print "OK : index found : ref={0} and calc={1}".format(s,p)
+                #print("p={}".format(p))
+                #print("x={}".format(dataSnr_names[p[0]]))
+                print "OK : index found : ref={0} and snr={1}".format(s,dataSnr_names[p[0]])
                 inds.append(p[0])
             else:
                 inds.append(-1)
@@ -195,7 +201,7 @@ def ProcessDiff( refFile, calcFile, outFile ) :
 
     #*************** create subsets
     subset_index = 3 # index = 4 is the method, index = 3 is the tpl, 
-    subset_nmax = 8 # max num of subset shown in figure
+    subset_nmax = 12 # max num of subset shown in figure
     data_label_subset = [a[subset_index] for a in dataCalc]
     s = set(data_label_subset)
     data_subsets = []
@@ -213,7 +219,7 @@ def ProcessDiff( refFile, calcFile, outFile ) :
 	yvect[k] = (dataRef[k][iRefZ] - dataCalc[k][1])/(1+dataRef[k][iRefZ])
     fig = pp.figure('Amazed output')
     ax = fig.add_subplot(111)
-    color_ = ['r', 'g', 'b', 'y','c', 'm', 'y', 'k']
+    color_ = ['r', 'g', 'b', 'y','c', 'm', 'y', 'k', 'r', 'g', 'b', 'y']
     #n=max(len(s),5)
     #color_=cm.rainbow(np.linspace(0,1,n))
     mylegend = [a[0] for a in data_subsets]
@@ -338,11 +344,13 @@ def ProcessStats( fname ):
     yvect = range(0,n)
     mvect = range(0,n)
     snrvect = range(0,n)
+    zref = range(0,n)
     for x in range(0,n):
         xvect[x] = data[x][2]
         yvect[x] = abs(data[x][n2-1])
         mvect[x] = (data[x][1])
         snrvect[x] = (data[x][8])
+        zref[x] = (data[x][2])
 
     # ******* large bins histogram
     vectErrorBins = [0.00001, 0.0001, 0.0005, 0.001, 0.005, 0.01, 0.1, 1.0, 10.0]
@@ -361,56 +369,23 @@ def ProcessStats( fname ):
     plotHist(yvect, outFigFile)
 
     # ******* plot mag hist
-    if 0:
+    if 1:
         outFileNoExt = 'stats_versusMag_hist' 
         outdir = os.path.dirname(os.path.abspath(fname))
-        lstats.PlotAmazedVersusNoiseHistogram(yvect, mvect, outdir, outFileNoExt)
+        lstats.PlotAmazedVersusBinsHistogram(yvect, mvect, outdir, outFileNoExt, enableExport=1, mtype='MAG')
 
     # ******* plot snr hist       
     if 1:
         outFileNoExt = 'stats_versusNoise_hist' 
         outdir = os.path.dirname(os.path.abspath(fname))
-        lstats.PlotAmazedVersusNoiseHistogram(yvect, snrvect, outdir, outFileNoExt)
+        lstats.PlotAmazedVersusBinsHistogram(yvect, snrvect, outdir, outFileNoExt, enableExport=1, mtype='SNR') 
 
-#    print '\n'
-#    print 'the mag bins are: ' + str(vectErrorBins)
-#    vectMagBins = np.logspace(-1, 3, 50, endpoint=True)
-#    outFigFile = os.path.dirname(os.path.abspath(fname)) + '/' +'stats_versusMag_hist.txt'
-#    ybins50, ybinsVERYLOW, ybinsLOW, ybinsHIGH, ybinsVERYHIGH, ynbins = lstats.exportHistogramComplex(yvect, mvect, vectMagBins, outFigFile)
-#    enablePlot =1
-#    enableExport=1
-#    outdir = os.path.dirname(os.path.abspath(fname))
-#    if 1: #enablePlot or enableExport:
-#        fig = pp.figure('Amazed stats - z error histogram versus Mag.', figsize=(14,7))
-#        ax = fig.add_subplot(111)
-#        #pp.plot(vectMagBins, ybins25, 'b-', label="z error, prctile25")
-#        pp.plot(vectMagBins, ybins50, 'b-', label="z error, [5%, 25%, median, 75%, 95%]")
-#        #pp.plot(vectMagBins, ybins75, 'b=', label="z error, prctile75")
-#        pp.fill_between(vectMagBins, ybinsLOW, ybinsHIGH, alpha=0.3, label="zerror, 25%-75% prctile")
-#        pp.fill_between(vectMagBins, ybinsVERYLOW, ybinsVERYHIGH, alpha=0.2, label="zerror, 5%-95% prctile")
-#        pp.plot(vectMagBins, ynbins, 'k+', label="Number of spectra")
-#        #plt.semilogx()
-#        pp.xlim([1e-1, 1e3])
-#        pp.ylim([1e-5, 100])
-#        ##bar
-#        #ind = np.arange(len(OY))
-#        #pp.plot(xvect, yvect, 'x')
-#        ax.set_xscale('log')
-#        ax.set_yscale('log')
-#        pp.grid(True) # Affiche la grille
-#        #r = Rectangle((0, 0), 1, 1) # creates rectangle patch for legend use.
-#        #pp.legend(r, ["z error, median", "zerror, 25%-75% prctile"],shadow=True,fancybox=True) 
-#        #pp.legend(shadow=True,fancybox=True, loc='center right', ncol=1)
-#        pp.ylabel('z error')
-#        pp.xlabel('Amplitude')
-#        name1 = "(-) z error, [Median (dark blue line), 25%-75% percentile (blue), 5%-95% percentile (light blue)]\n(+)Number of spectra"
-#        pp.title(name1)
-#        
-#        if enableExport:
-#            outFigFile = os.path.join(outdir,'stats_versusMag_hist.png')
-#            pp.savefig( outFigFile, bbox_inches='tight') # sauvegarde du fichier ExempleTrace.png
-#        if enablePlot:
-#            pp.show()  
+    # ******* plot redshift hist       
+    if 1:
+        outFileNoExt = 'stats_versusRedshift_hist' 
+        outdir = os.path.dirname(os.path.abspath(fname))
+        lstats.PlotAmazedVersusBinsHistogram(yvect, zref, outdir, outFileNoExt, enableExport=1, mtype='REDSHIFT') 
+
 
     print '\n'
 

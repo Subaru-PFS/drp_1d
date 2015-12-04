@@ -126,7 +126,7 @@ std::shared_ptr<const CLineMatching2SolveResult> COperatorLineMatching2Solve::Co
   Log.LogDebug ( "Attempting to load parameters from parameter JSON." );
   {
     resultStore.GetScopedParam( "linematching2.winsize", m_winsize, 250.0 );
-    resultStore.GetScopedParam( "linematching2.cut", m_cut, 1.0 );
+    resultStore.GetScopedParam( "linematching2.cut", m_cut, 5.0 );
     resultStore.GetScopedParam( "linematching2.detectioncut", m_detectioncut, 5.0 );
     resultStore.GetScopedParam( "linematching2.detectionnoiseoffset", m_detectionnoiseoffset, 0.0 );
     resultStore.GetScopedParam( "linematching2.strongcut", m_strongcut, 2.0 );
