@@ -14,11 +14,27 @@ CRayMatching::CRayMatching()
 
 }
 
+/**
+ * Empty destructor.
+ */
 CRayMatching::~CRayMatching()
 {
 
 }
 
+/**
+ * Executes the algorithm for matching the input sets of lines against the catalogue of atomic transitions.
+ * Parameters:
+ * - detectedRayCatalog, the set of lines detected in the spectrum.
+ * - restRayCatalog, the set of reference lines.
+ * - redshiftRange.
+ * - nThreshold.
+ * - tol.
+ * - typeFilter.
+ * - detectedForceFilter.
+ * - restForceFilter.
+ * Returns a smart pointer of a CRayMatchingResult, containing the set of matches.
+ */
 std::shared_ptr<CRayMatchingResult> CRayMatching::Compute( const CRayCatalog& detectedRayCatalog, const CRayCatalog& restRayCatalog, const TFloat64Range& redshiftRange, Int32 nThreshold, Float64 tol , Int32 typeFilter, Int32 detectedForceFilter, Int32 restForceFilter )
 {
   CRayCatalog::TRayVector detectedRayList = detectedRayCatalog.GetFilteredList( typeFilter, detectedForceFilter );
@@ -33,11 +49,11 @@ std::shared_ptr<CRayMatchingResult> CRayMatching::Compute( const CRayCatalog& de
         {
 	  CRayMatchingResult::TSolutionSet solution;
 	  Float64 redShift = (detectedRayList[0].GetPosition()-restRayList[iRestRay].GetPosition())/restRayList[iRestRay].GetPosition();
-            if( redShift > 0 )
-	      {
-                solution.push_back( CRayMatchingResult::SSolution( detectedRayList[0], restRayList[iRestRay], redShift ) );
-                solutions.push_back( solution );
-	      }
+	  if( redShift > 0 ) // we don't care about blueshift.
+	    {
+	      solution.push_back( CRayMatchingResult::SSolution( detectedRayList[0], restRayList[iRestRay], redShift ) );
+	      solutions.push_back( solution );
+	    }
         }
     }
   else
@@ -49,7 +65,7 @@ std::shared_ptr<CRayMatchingResult> CRayMatching::Compute( const CRayCatalog& de
 	      // for each detected line / rest line couple, enumerate how many other couples fit within the tolerance
 	      CRayMatchingResult::TSolutionSet solution;
 	      Float64 redShift=(detectedRayList[iDetectedRay].GetPosition()-restRayList[iRestRay].GetPosition())/restRayList[iRestRay].GetPosition();
-	      if( redShift < 0 )
+	      if( redShift < 0 ) // we don't care about blueshifts.
 		{
 		  continue;
                 }
@@ -62,7 +78,7 @@ std::shared_ptr<CRayMatchingResult> CRayMatching::Compute( const CRayCatalog& de
 		      for( UInt32 iRestRay2=0; iRestRay2<restRayList.size(); iRestRay2++ )
                         {
 			  Float64 redShift2=(detectedRayList[iDetectedRay2].GetPosition()-restRayList[iRestRay2].GetPosition())/restRayList[iRestRay2].GetPosition();
-			  if( redShift2 < 0 )
+			  if( redShift2 < 0 ) // we don't care about blueshifts.
 			    {
 			      continue;
                             }
@@ -84,9 +100,9 @@ std::shared_ptr<CRayMatchingResult> CRayMatching::Compute( const CRayCatalog& de
 				  solution.push_back( CRayMatchingResult::SSolution( detectedRayList[iDetectedRay2], restRayList[iRestRay2], redShift2) );
                                 }
                             }
-                        }
+                        } // for
                     }
-                }
+                } // for
 	      if( solution.size()>0 )
 		{
 		  solutions.push_back( solution );
@@ -104,12 +120,12 @@ std::shared_ptr<CRayMatchingResult> CRayMatching::Compute( const CRayCatalog& de
       Bool found = false;
       for( UInt32 iNewSol=0; iNewSol<newSolutions.size(); iNewSol++ )
         {
-	  if( AreSolutionSetsEqual(newSolutions[iNewSol],currentSet) )
+	  if( AreSolutionSetsEqual( newSolutions[iNewSol],currentSet ) )
 	    {
 	      found = true;
             }
         }
-      if( !found )
+      if( !found ) // if solution is new, let's check it is within the range
 	{
 	  if( currentSet.size()>=nThreshold )
 	    {
@@ -139,6 +155,10 @@ std::shared_ptr<CRayMatchingResult> CRayMatching::Compute( const CRayCatalog& de
   return NULL;
 }
 
+/**
+ * Given 2 TSolutionSets, returns true if they are equivalent (have the same line values), false otherwise.
+ * The algorithm only works reliably if the inputs are sorted.
+ */
 Bool CRayMatching::AreSolutionSetsEqual( const CRayMatchingResult::TSolutionSet& s1, const CRayMatchingResult::TSolutionSet& s2 )
 {
   if( s1.size() != s2.size() ) 
