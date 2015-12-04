@@ -6,16 +6,25 @@
 
 using namespace NSEpic;
 
+/**
+ * Empty constructor.
+ */
 CRayMatchingResult::CRayMatchingResult()
 {
 
 }
 
+/**
+ * Empty destructor.
+ */
 CRayMatchingResult::~CRayMatchingResult()
 {
 
 }
 
+/**
+ * Will output to stream the current results and filtered results at index 0.
+ */
 Void CRayMatchingResult::Save( const CDataStore& store, std::ostream& stream ) const
 {
   /*
@@ -40,6 +49,9 @@ Void CRayMatchingResult::Save( const CDataStore& store, std::ostream& stream ) c
   return;
 }
 
+/**
+ * Outputs the solutions in "selectedResults" to "stream". Depending on "type", certain fields will be output.
+ */
 Void CRayMatchingResult::SaveSolutionSetToStream( std::ostream& stream,  TSolutionSetList selectedResults, Int32 type ) const
 {
   //type == 0, solutions
@@ -61,7 +73,7 @@ Void CRayMatchingResult::SaveSolutionSetToStream( std::ostream& stream,  TSoluti
 	  sprintf( tmpChar, "%d", currentSet.size() );
 	  strMNUM.append( tmpChar );
 	  std::string strZ= "";
-	  sprintf( tmpChar, "%.10f", GetMeanRedshiftSolution(currentSet) );
+	  sprintf( tmpChar, "%.10f", GetMeanRedshiftSolution( currentSet ) );
 	  strZ.append( tmpChar );
 
 	  std::string strDetected = "(";
@@ -73,12 +85,13 @@ Void CRayMatchingResult::SaveSolutionSetToStream( std::ostream& stream,  TSoluti
 	      sprintf( tmpChar, "%.1f, ", currentSet[i].RestRay.GetPosition() );
 	      strRest.append( tmpChar );
 	    }
+	  // Remove trailing ", " from the strings, and add ")" to them.
 	  strDetected = strDetected.substr( 0, strDetected.size()-2 );
 	  strDetected.append( ")" );
 	  strRest = strRest.substr( 0, strRest.size()-2 );
 	  strRest.append( ")" );
 
-	  if( type==1 )
+	  if( type==1 ) // if these are filtered invalid results, add the rule that caused the filtrage.
 	    {
 	      strList.append( "#" );
 	      sprintf( tmpChar, "Rule_%d\t", FilterTypeList[iSol] );
@@ -97,6 +110,9 @@ Void CRayMatchingResult::SaveSolutionSetToStream( std::ostream& stream,  TSoluti
     }
 }
 
+/**
+ * Empty method.
+ */
 Void CRayMatchingResult::SaveLine( const CDataStore& store, std::ostream& stream ) const
 {
 
@@ -175,6 +191,9 @@ Bool CRayMatchingResult::GetBestMatchNumRedshift( Float64& Redshift, Int32& Matc
   return true;
 }
 
+/**
+ * Returns the set of results that have more than "number" entries.
+ */
 CRayMatchingResult::TSolutionSetList CRayMatchingResult::GetSolutionsListOverNumber( Int32 number ) const
 {
   //select results by matching number
@@ -190,6 +209,9 @@ CRayMatchingResult::TSolutionSetList CRayMatchingResult::GetSolutionsListOverNum
   return selectedResults;
 }
 
+/**
+ * Returns a list of the mean redshifts for solutions that have at least "number" lines.
+ */
 TFloat64List CRayMatchingResult::GetAverageRedshiftListOverNumber( Int32 number ) const
 {
   TFloat64List selectedRedshift;
@@ -202,6 +224,9 @@ TFloat64List CRayMatchingResult::GetAverageRedshiftListOverNumber( Int32 number 
   return selectedRedshift;
 }
 
+/**
+ * Returns a custom-computed round value for the mean redshift for each solution that has over "number" lines.
+ */
 TFloat64List CRayMatchingResult::GetRoundedRedshiftCandidatesOverNumber( Int32 number, Float64 step ) const
 {
   TFloat64List selectedRedshift = GetAverageRedshiftListOverNumber( number );
@@ -214,6 +239,9 @@ TFloat64List CRayMatchingResult::GetRoundedRedshiftCandidatesOverNumber( Int32 n
   return roundedRedshift;
 }
 
+/**
+ * Retuns a list of redshifts that are "step"pedly within the "rangeWidth" interval around each mean redshift for solutions with over "number" lines.
+ */
 TFloat64List CRayMatchingResult::GetExtendedRedshiftCandidatesOverNumber( Int32 number, Float64 step, Float64 rangeWidth ) const
 {
   TFloat64List roundedRedshift = GetRoundedRedshiftCandidatesOverNumber( number, step );
@@ -232,6 +260,9 @@ TFloat64List CRayMatchingResult::GetExtendedRedshiftCandidatesOverNumber( Int32 
   return extendedRedshifts;
 }
 
+/**
+ * If "index" is valid, return the mean of the redshifts in the solution set at "index".
+ */
 Float64 CRayMatchingResult::GetMeanRedshiftSolutionByIndex( Int32 index ) const
 {
   if( index>SolutionSetList.size()-1 )
@@ -249,6 +280,9 @@ Float64 CRayMatchingResult::GetMeanRedshiftSolutionByIndex( Int32 index ) const
   return redshiftMean;
 }
 
+/**
+ * Returns the mean redshift for the solution set "s".
+ */
 Float64 CRayMatchingResult::GetMeanRedshiftSolution( const TSolutionSet& s ) const
 {
   TSolutionSet currentSet = s;
@@ -262,6 +296,9 @@ Float64 CRayMatchingResult::GetMeanRedshiftSolution( const TSolutionSet& s ) con
   return redshiftMean;
 }
 
+/**
+ * Returns the number of lines that are near (tolerance = 0.11 Angstroms) to strong emission lines.
+ */
 Int32 CRayMatchingResult::getNStrongRestLines( const TSolutionSet& s ) const
 {
   CRayCatalog::TRayVector strongRestRayList = m_RestCatalog.GetFilteredList( CRay::nType_Emission, CRay::nForce_Strong );
@@ -275,7 +312,7 @@ Int32 CRayMatchingResult::getNStrongRestLines( const TSolutionSet& s ) const
       Int32 found  = 0;
       for( UInt32 c=0; c<ncatalog; c++ )
 	{
-	  if( fabs(currentSet[i].RestRay.GetPosition()-strongRestRayList[c].GetPosition())<tol )
+	  if( fabs( currentSet[i].RestRay.GetPosition()-strongRestRayList[c].GetPosition() )<tol )
 	    {
 	      found = 1;
 	      break;
@@ -290,6 +327,9 @@ Int32 CRayMatchingResult::getNStrongRestLines( const TSolutionSet& s ) const
   return nStrong;
 }
 
+/**
+ * Returns the largest number of lines in a single solution for the current set of solutions.
+ */
 Int32 CRayMatchingResult::GetMaxMatchingNumber() const
 {
   if( SolutionSetList.size()<1 )
@@ -298,7 +338,7 @@ Int32 CRayMatchingResult::GetMaxMatchingNumber() const
     }
 
   Int32 maxNumber = 0;
-  for( UInt32 i=0; i<SolutionSetList.size() ; i++ )
+  for( UInt32 i=0; i<SolutionSetList.size(); i++ )
     {
       TSolutionSet currentSet = SolutionSetList[i];
       if( maxNumber<currentSet.size() )
@@ -309,9 +349,11 @@ Int32 CRayMatchingResult::GetMaxMatchingNumber() const
   return maxNumber;
 }
 
+/**
+ * Attempts to apply all rules to each solution. If a rule is applicable, that solution is removed from the current set of solutions.
+ */
 Void CRayMatchingResult::FilterWithRules( CSpectrum spc, TFloat64Range lambdaRange, Float64 winsize )
 {
-  //return;
   if( SolutionSetList.size()<1 )
     {
       return;
