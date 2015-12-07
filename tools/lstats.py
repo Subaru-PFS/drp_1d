@@ -188,22 +188,35 @@ def PlotAmazedVersusNoiseHistogram(yvect, mvect, outdir, outFileNoExt, enableExp
             pp.show()    
     
   
-def PlotAmazedVersusBinsHistogram(yvect, mvect, outdir, outFileNoExt, enableExport=1, mtype='REDSHIFT'):
+def PlotAmazedVersusBinsHistogram(yvect, mvect, outdir, outFileNoExt, enablePlot=0, enableExport=1, mtype='REDSHIFT', nPercentileDepth=2):
     if mtype=='SNR':
         print '\n\nPlotAmazedVersusNoiseHistogram:'
-        vectBins = np.logspace(-3, 3, 50, endpoint=True)
+        vectBins = np.logspace(-3, 3, 30, endpoint=True)
         print 'the SNR bins are: ' + str(vectBins)
     elif mtype=='MAG':
         print '\n\nPlotAmazedVersusMagHistogram:'
-        vectBins = np.linspace(15, 30, 25, endpoint=True)
+        #vectBins = np.linspace(15, 30, 25, endpoint=True)
+        vectBins = np.linspace(15, 30, 30, endpoint=True)
         print 'the MAG bins are: ' + str(vectBins)  
     elif mtype=='REDSHIFT':
         print '\n\nPlotAmazedVersusRedshiftHistogram:'
-        vectBins = np.linspace(0.0, 5.0, 15, endpoint=True)
-        print 'the redshift bins are: ' + str(vectBins)  
+        #vectBins = np.linspace(0.0, 5.0, 15, endpoint=True)
+        vectBins = np.linspace(0.0, 5.0, 30, endpoint=True)
+        print 'the redshift bins are: ' + str(vectBins)
+    elif mtype=='SFR':
+        print '\n\nPlotAmazedVersusSFRtHistogram:'
+        vectBins = np.logspace(-3, 3, 40, endpoint=True)
+        print 'the sfr bins are: ' + str(vectBins)  
+    elif mtype=='EBMV':
+        print '\n\nPlotAmazedVersusEBMVtHistogram:'
+        vectBins = np.logspace(-3, 2, 30, endpoint=True)
+        print 'the ebmv bins are: ' + str(vectBins)  
+    elif mtype=='SIGMA':
+        print '\n\nPlotAmazedVersusEBMVtHistogram:'
+        vectBins = np.linspace(50, 350, 15, endpoint=True)
+        print 'the sigma bins are: ' + str(vectBins)  
     
-    ybins49, ybins50, ybins51, ybinsVERYLOW, ybinsLOW, ybinsHIGH, ybinsVERYHIGH, ynbins = exportHistogramComplex(yvect, mvect, vectBins, outFileNoExt)
-    enablePlot =1
+    ybins49, ybins50, ybins51, ybinsVERYLOW, ybinsLOW, ybinsHIGH, ybinsVERYHIGH, ynbins = exportHistogramComplex(yvect, mvect, vectBins, outFileNoExt+'.csv')
     if enablePlot or enableExport:
         fig = pp.figure('Amazed stats - z error histogram versus {}'.format(mtype), figsize=(14,10))
         gs = gridspec.GridSpec(2, 1, height_ratios=[12,4])
@@ -248,18 +261,20 @@ def PlotAmazedVersusBinsHistogram(yvect, mvect, outdir, outFileNoExt, enableExpo
         #indszero = [i for i, e in enumerate(ybinsHIGH) if ybinsHIGH[i]>ybinsLOW[i]]
         #indszero = np.where(ybinsHIGH>ybinsLOW)[0]
         #print("indszero = {}".format(indszero))
-        ax2.bar(vectBars[mask], ybinsHIGH[mask], bottom=ybinsLOW[mask], width = widthbins[mask], label="z error, 25%-75%%", alpha=0.3)
-        #ax2.plot(vectBins, ybinsLOW, '-b+', alpha=0.3, label="zerror, 25%-75% prctile LOW")      
-        #ax2.plot(vectBins, ybinsHIGH, '-b+', alpha=0.3, label="zerror, 25%-75% prctile HIGH")
-        #ax2.fill_between(vectBins, ybinsLOW, ybinsHIGH, alpha=0.3, label="zerror, 25%-75% prctile")
+        if nPercentileDepth>=1:                    
+            ax2.bar(vectBars[mask], ybinsHIGH[mask], bottom=ybinsLOW[mask], width = widthbins[mask], label="z error, 25%-75%%", alpha=0.3)
+            #ax2.plot(vectBins, ybinsLOW, '-b+', alpha=0.3, label="zerror, 25%-75% prctile LOW")      
+            #ax2.plot(vectBins, ybinsHIGH, '-b+', alpha=0.3, label="zerror, 25%-75% prctile HIGH")
+            #ax2.fill_between(vectBins, ybinsLOW, ybinsHIGH, alpha=0.3, label="zerror, 25%-75% prctile")
         
-        data = ybinsVERYHIGH-ybinsVERYLOW
-        mask = data.nonzero()
-        ax2.bar(vectBars[mask], ybinsVERYHIGH[mask], bottom=ybinsVERYLOW[mask], width = widthbins[mask], label="z error, 5%-95%", alpha=0.2)
-        #ax2.plot(vectBins, ybinsVERYLOW, '-b+', alpha=0.2, label="zerror, zerror, 5%-95% prctile LOW")
-        #ax2.plot(vectBins, ybinsVERYHIGH, '-b+', alpha=0.2, label="zerror, zerror, 5%-95% prctile HIGH")
-        #ax2.fill_between(vectBins, ybinsVERYLOW, ybinsVERYHIGH, alpha=0.2, label="zerror, 5%-95% prctile")
-
+        if nPercentileDepth>=2:
+            data = ybinsVERYHIGH-ybinsVERYLOW
+            mask = data.nonzero()
+            ax2.bar(vectBars[mask], ybinsVERYHIGH[mask], bottom=ybinsVERYLOW[mask], width = widthbins[mask], label="z error, 5%-95%", alpha=0.2)
+            #ax2.plot(vectBins, ybinsVERYLOW, '-b+', alpha=0.2, label="zerror, zerror, 5%-95% prctile LOW")
+            #ax2.plot(vectBins, ybinsVERYHIGH, '-b+', alpha=0.2, label="zerror, zerror, 5%-95% prctile HIGH")
+            #ax2.fill_between(vectBins, ybinsVERYLOW, ybinsVERYHIGH, alpha=0.2, label="zerror, 5%-95% prctile")
+        
         ax1.plot(vectBins, ynbins, 'k+', label="Number of spectra")
         d = sp.zeros(len(ynbins))        
         ax1.bar(vectBars, ynbins, bottom=np.zeros((nbins)), width = widthbins, label="count", alpha=0.4, color='k')
@@ -273,9 +288,21 @@ def PlotAmazedVersusBinsHistogram(yvect, mvect, outdir, outFileNoExt, enableExpo
             ax2.set_xscale('log')
             ax1.set_xscale('log')
         elif mtype=='MAG':
-            ax2.set_xlim([15, 30])
+            #ax2.set_xlim([15, 30])
+            ax2.set_xlim([15, 29])
         elif mtype=='REDSHIFT':
             ax2.set_xlim([-0.5, 5.5])
+            #ax2.set_xlim([0.0, 3.0])
+        elif mtype=='SFR':
+            ax2.set_xlim([1e-3, 1e3])
+            ax2.set_xscale('log')
+            ax1.set_xscale('log')
+        elif mtype=='EBMV':
+            ax2.set_xlim([1e-3, 1e2])
+            ax2.set_xscale('log')
+            ax1.set_xscale('log')
+        elif mtype=='SIGMA':
+            ax2.set_xlim([50, 350])
         else:
             ax2.set_xlim([15, 30])
             
@@ -293,7 +320,11 @@ def PlotAmazedVersusBinsHistogram(yvect, mvect, outdir, outFileNoExt, enableExpo
         #ax2.set_ylabel('$| z_{calc} - z_{ref} |$', fontsize=18)
         ax2.set_ylabel('| zcalc - zref |', fontsize=18)
         ax1.set_xlabel('{}'.format(mtype), fontsize=18)
-        name1 = '[dark blue line]=Median, [blue area]=Percentile 25%-75%, [light blue]=Percentile 5%-95%'
+        name1 = "[dark blue line]=Median"
+        if nPercentileDepth>=1:
+             name1 = name1 + ", [blue area]=Percentile 25%-75%"
+        if nPercentileDepth>=2:
+             name1 = name1 + ", [light blue]=Percentile 5%-95%"
         ax2.set_title(name1)
         
         if enableExport:

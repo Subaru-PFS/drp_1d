@@ -2175,6 +2175,11 @@ void CLineModelElementList::applyRules()
     //*/
 
     //*
+    //add rule, if AL CaK present, the AL CaH should be threre too...
+    //*/
+
+
+    //*
     ApplyStrongHigherWeakRule(CRay::nType_Emission);
     //*/
 

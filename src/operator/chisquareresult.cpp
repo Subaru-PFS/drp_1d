@@ -128,7 +128,7 @@ Void CChisquareResult::Save( const CDataStore& store, std::ostream& stream ) con
                     }
                 }
 
-                stream <<  FitAmplitude[idx] << "\t";
+                stream << std::setprecision(16) << "\t" << std::scientific <<   FitAmplitude[idx] << "\t";
             }
             stream << "}" << std::endl;
         }

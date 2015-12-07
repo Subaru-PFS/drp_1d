@@ -29,6 +29,9 @@ import lstats
 iRefZ = 4
 iRefMag = 6
 iRefFlag = 5
+iRefSFR = -1
+iRefEBmV = -1
+iRefSigma = -1
 
 def setVVDSRefFileType():
     global iRefZ, iRefMag, iRefFlag
@@ -43,10 +46,13 @@ def setVVDS2RefFileType():
     iRefFlag = 6
 
 def setPFSRefFileType():
-    global iRefZ, iRefMag, iRefFlag
+    global iRefZ, iRefMag, iRefFlag, iRefSFR, iRefEBmV, iRefSigma
     iRefZ = 1
     iRefMag = 2
     iRefFlag = -1
+    iRefSFR = 5
+    iRefEBmV = 4
+    iRefSigma = 6
 
 def ProcessDiff( refFile, calcFile, outFile ) :
     global iRefZ, iRefMag, iRefFlag   
@@ -163,13 +169,25 @@ def ProcessDiff( refFile, calcFile, outFile ) :
     n = min(len(dataRef), len(dataCalc))
     print "INFO: n set to = " + str(n)
             
-    f.write( "#ID\tMAGI\tZREF\tZFLAG\tZCALC\tMERIT\tTPL\tMETHOD\tSNR\tDIFF\n" )
+    f.write( "#ID\tMAGI\tZREF\tZFLAG\tZCALC\tMERIT\tTPL\tMETHOD\tSNR\tSFR\tE(B-V)\tSigma\tDIFF\n" )
     for k in range(0,n):
         if iRefFlag>-1:
             flagValStr = str(dataRef[k][iRefFlag])
         else:
             flagValStr = "-1"
-
+        if iRefSFR>-1:
+            SFRValStr = str(dataRef[k][iRefSFR])
+        else:
+            SFRValStr = "-1"
+        if iRefEBmV>-1:
+            EBmVValStr = str(dataRef[k][iRefEBmV])
+        else:
+            EBmVValStr = "-1"
+        if iRefSigma>-1:
+            SigmaValStr = str(dataRef[k][iRefSigma])
+        else:
+            SigmaValStr = "-1"
+            
         if len(dataSnr)>0:
             snrValStr = str(dataSnr[k][1])
         else:
@@ -195,7 +213,19 @@ def ProcessDiff( refFile, calcFile, outFile ) :
             
          
         #f.write( str(dataCalc[k][0]) + "\t" + str(dataRef[k][iRefMag]) + "\t" + str(dataRef[k][iRefZ]) + "\t" + str(dataRef[k][iRefFlag]) + "\t" + str(dataCalc[k][1]) + "\t" + str(dataCalc[k][2]) + "\t" + str(dataCalc[k][3]) + "\t" + str(dataCalc[k][4]) + "\t" + str(dataRef[k][iRefZ] - dataCalc[k][1]) + "\n" )
-        f.write( str(dataCalc[k][0]) + "\t" + str(dataRef[k][iRefMag]) + "\t" + str(dataRef[k][iRefZ]) + "\t" + flagValStr + "\t" + str(dataCalc[k][1]) + "\t" + str(dataCalc[k][2]) + "\t" + str(dataCalc[k][3]) + "\t" + tplStr + "\t" + snrValStr + "\t" + str(zdiff) + "\n" )
+        f.write( str(dataCalc[k][0]) + "\t")
+        f.write( str(dataRef[k][iRefMag]) + "\t")
+        f.write( str(dataRef[k][iRefZ]) + "\t")
+        f.write( flagValStr + "\t")
+        f.write( str(dataCalc[k][1]) + "\t")
+        f.write( str(dataCalc[k][2]) + "\t")
+        f.write( str(dataCalc[k][3]) + "\t")
+        f.write( tplStr + "\t")
+        f.write( snrValStr + "\t")
+        f.write( SFRValStr + "\t")
+        f.write( EBmVValStr + "\t")
+        f.write( SigmaValStr + "\t")
+        f.write( str(zdiff) + "\n" )
     
     f.close()
 
@@ -307,7 +337,7 @@ def loadDiff(fname):
             data = lineStr.split("\t")
             data = [r for r in data if r != '']
             #print len(data)
-            if(len(data) == 10): #Spectrum ID	MAGI	ZREF	ZFLAG	ZCALC	MERIT	TPL	METHOD	snr DIFF
+            if(len(data) == 13): #Spectrum ID	MAGI	ZREF	ZFLAG	ZCALC	MERIT	TPL	METHOD    SNR	SFR E(B-V) Sigma DIFF
                 d0 = str(data[0])
                 d1 = float(data[1])
                 d2 = float(data[2])
@@ -318,39 +348,53 @@ def loadDiff(fname):
                 d7 = str(data[7])
                 d8 = float(data[8])
                 d9 = float(data[9])
-                d = [d0, d1, d2, d3, d4, d5, d6, d7, d8, d9]
+                d10 = float(data[10])
+                d11 = float(data[11])
+                d12 = float(data[12])
+                d = [d0, d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11, d12]
                 dataArray.append(d) 
     f.close()
     return dataArray
 
-def ProcessStats( fname ):
- 
-
-    
-    if 0: 
-        f = open(fname, 'r')
-        dataStr = f.read()
-        f.close()
-        data= ascii.read(dataStr, data_start=0, delimiter="\t")
-        #print data[0]
-    else:
-        data = loadDiff( fname );
+def ProcessStats( fname, zRange, magRange ):
+    data = loadDiff( fname );
         
-
     n = (len(data))
     n2 = len(data[0])
     print "INFO: processing stats: n=" + str(n) + ", n2=" + str(n2)
-    xvect = range(0,n)
-    yvect = range(0,n)
-    mvect = range(0,n)
-    snrvect = range(0,n)
-    zref = range(0,n)
+    
+    zmin = zRange[0]
+    zmax = zRange[1]
+    magmin = magRange[0]
+    magmax = magRange[1]
+    print("INFO: processing stats: zmin = {}, zmax = {}".format(zmin, zmax))
+    print("INFO: processing stats: magmin = {}, magmax = {}".format(magmin, magmax))
+        
+    indsForHist = []
     for x in range(0,n):
-        xvect[x] = data[x][2]
-        yvect[x] = abs(data[x][n2-1])
-        mvect[x] = (data[x][1])
-        snrvect[x] = (data[x][8])
-        zref[x] = (data[x][2])
+        zreference = (data[x][2])
+        mag = (data[x][1])
+        if zreference <= zmax and zreference >= zmin and mag >= magmin and mag <= magmax:
+            indsForHist.append(x)
+            
+    nSelected = len(indsForHist)
+    xvect = range(0,nSelected)
+    yvect = range(0,nSelected)
+    mvect = range(0,nSelected)
+    snrvect = range(0,nSelected)
+    sfrvect = range(0,nSelected)
+    ebmvvect = range(0,nSelected)
+    sigmavect = range(0,nSelected)
+    zref = range(0,nSelected)
+    for x in range(0,nSelected):
+        xvect[x] = data[indsForHist[x]][2]
+        yvect[x] = abs(data[indsForHist[x]][n2-1])
+        mvect[x] = (data[indsForHist[x]][1])
+        snrvect[x] = (data[indsForHist[x]][8])
+        sfrvect[x] = (data[indsForHist[x]][9])
+        ebmvvect[x] = (data[indsForHist[x]][10]) 
+        sigmavect[x] = (data[indsForHist[x]][11]) 
+        zref[x] = (data[indsForHist[x]][2])
 
     # ******* large bins histogram
     vectErrorBins = [0.00001, 0.0001, 0.0005, 0.001, 0.005, 0.01, 0.1, 1.0, 10.0]
@@ -368,23 +412,49 @@ def ProcessStats( fname ):
     outFigFile = os.path.dirname(os.path.abspath(fname)) + '/' +'stats_hist.png'
     plotHist(yvect, outFigFile)
 
+    nPercentileDepth = 1
+    enablePlot = 0
     # ******* plot mag hist
     if 1:
         outFileNoExt = 'stats_versusMag_hist' 
+        outFilepathNoExt = os.path.join(os.path.dirname(os.path.abspath(fname)),outFileNoExt)
         outdir = os.path.dirname(os.path.abspath(fname))
-        lstats.PlotAmazedVersusBinsHistogram(yvect, mvect, outdir, outFileNoExt, enableExport=1, mtype='MAG')
+        lstats.PlotAmazedVersusBinsHistogram(yvect, mvect, outdir, outFilepathNoExt, enablePlot=enablePlot, enableExport=1, mtype='MAG', nPercentileDepth=nPercentileDepth)
 
     # ******* plot snr hist       
     if 1:
         outFileNoExt = 'stats_versusNoise_hist' 
+        outFilepathNoExt = os.path.join(os.path.dirname(os.path.abspath(fname)),outFileNoExt)
         outdir = os.path.dirname(os.path.abspath(fname))
-        lstats.PlotAmazedVersusBinsHistogram(yvect, snrvect, outdir, outFileNoExt, enableExport=1, mtype='SNR') 
+        lstats.PlotAmazedVersusBinsHistogram(yvect, snrvect, outdir, outFilepathNoExt, enablePlot=enablePlot, enableExport=1, mtype='SNR', nPercentileDepth=nPercentileDepth) 
 
     # ******* plot redshift hist       
     if 1:
-        outFileNoExt = 'stats_versusRedshift_hist' 
+        outFileNoExt = 'stats_versusRedshift_hist'
+        outFilepathNoExt = os.path.join(os.path.dirname(os.path.abspath(fname)),outFileNoExt) 
         outdir = os.path.dirname(os.path.abspath(fname))
-        lstats.PlotAmazedVersusBinsHistogram(yvect, zref, outdir, outFileNoExt, enableExport=1, mtype='REDSHIFT') 
+        lstats.PlotAmazedVersusBinsHistogram(yvect, zref, outdir, outFilepathNoExt, enablePlot=enablePlot, enableExport=1, mtype='REDSHIFT', nPercentileDepth=nPercentileDepth) 
+        
+    # ******* plot sfr hist       
+    if 1:
+        outFileNoExt = 'stats_versusSFR_hist' 
+        outFilepathNoExt = os.path.join(os.path.dirname(os.path.abspath(fname)),outFileNoExt)
+        outdir = os.path.dirname(os.path.abspath(fname))
+        lstats.PlotAmazedVersusBinsHistogram(yvect, sfrvect, outdir, outFilepathNoExt, enablePlot=enablePlot, enableExport=1, mtype='SFR', nPercentileDepth=nPercentileDepth) 
+
+    # ******* plot EBmV hist       
+    if 1:
+        outFileNoExt = 'stats_versusEBMV_hist' 
+        outFilepathNoExt = os.path.join(os.path.dirname(os.path.abspath(fname)),outFileNoExt)
+        outdir = os.path.dirname(os.path.abspath(fname))
+        lstats.PlotAmazedVersusBinsHistogram(yvect, ebmvvect, outdir, outFilepathNoExt, enablePlot=enablePlot, enableExport=1, mtype='EBMV', nPercentileDepth=nPercentileDepth) 
+
+    # ******* plot Sigma hist       
+    if 1:
+        outFileNoExt = 'stats_versusSigma_hist' 
+        outFilepathNoExt = os.path.join(os.path.dirname(os.path.abspath(fname)),outFileNoExt)
+        outdir = os.path.dirname(os.path.abspath(fname))
+        lstats.PlotAmazedVersusBinsHistogram(yvect, sigmavect, outdir, outFilepathNoExt, enablePlot=enablePlot, enableExport=1, mtype='SIGMA', nPercentileDepth=nPercentileDepth) 
 
 
     print '\n'
@@ -603,6 +673,8 @@ def StartFromCommandLine( argv ) :
     parser.add_option(u"-r", u"--ref", help="reference redshift values",  dest="refFile", default="referenceRedshifts.txt")
     parser.add_option(u"-c", u"--calc", help="calculated redshift values",  dest="calcFile", default="output.txt")
     parser.add_option(u"-t", u"--type", help="reference redshift values type",  dest="type", default="vvds")
+    parser.add_option(u"-m", u"--magRange", help="magnitude range filter for the histograms",  dest="magRange", default="0.0 40.0")
+    parser.add_option(u"-z", u"--zRange", help="redshift range filter for the histograms",  dest="zRange", default="-1.0 20.0")
     (options, args) = parser.parse_args()
 
     print "\n"
@@ -646,7 +718,14 @@ def StartFromCommandLine( argv ) :
         ProcessDiff( options.refFile, options.calcFile, outputFullpathDiff )
         ProcessFailures( outputFullpathDiff, outputFullpathFailures)
         ProcessFailuresSeqFile( outputFullpathDiff, options.refFile, outputFullpathFailuresSeqFile, outputFullpathFailuresRefFile)
-        ProcessStats( outputFullpathDiff )
+
+        zRange = [-1.0, 20.0]
+        zRange[0] = float(options.zRange.split(" ")[0])
+        zRange[1] = float(options.zRange.split(" ")[1])
+        magRange = [0.0, 40.0]
+        magRange[0] = float(options.magRange.split(" ")[0])
+        magRange[1] = float(options.magRange.split(" ")[1])        
+        ProcessStats( outputFullpathDiff, zRange, magRange )
     else :
         print("Error: invalid argument count")
         exit()
