@@ -3,42 +3,28 @@
 
 #include <epic/core/common/datatypes.h>
 #include <epic/core/common/range.h>
-
 #include <epic/redshift/operator/raymatchingresult.h>
 #include <epic/redshift/ray/ray.h>
 #include <epic/redshift/ray/catalog.h>
 
-
 namespace NSEpic
 {
 
-class CRayMatching
-{
-
-public:
-
+  /**
+   * \ingroup Redshift
+   * Holds the algorithms for calculating and comparing matches, when given reference and detection catalogue of rays (spectral lines) or matches themselves (instances of CRayMatchingResult).
+   */
+  class CRayMatching
+  {
+  public:
     CRayMatching();
     virtual ~CRayMatching();
 
-    std::shared_ptr<CRayMatchingResult> Compute(const CRayCatalog& restRayCatalog, const CRayCatalog& detectedRayCatalog, const TFloat64Range& redshiftRange, Int32 nThreshold = 5, Float64 tol = 0.002, Int32 typeFilter = CRay::nType_Emission, Int32 detectedForceFilter = -1, Int32 restRorceFilter = -1);
-
-
-private:
-
+    std::shared_ptr<CRayMatchingResult> Compute( const CRayCatalog& restRayCatalog, const CRayCatalog& detectedRayCatalog, const TFloat64Range& redshiftRange, Int32 nThreshold = 5, Float64 tol = 0.002, Int32 typeFilter = CRay::nType_Emission, Int32 detectedForceFilter = -1, Int32 restRorceFilter = -1 );
+    
+  private:
     Bool AreSolutionSetsEqual( const CRayMatchingResult::TSolutionSet& s1, const CRayMatchingResult::TSolutionSet& s2);
-
-
-    //Int32       m_N;            // number of matching lines needed
-
-    //Float64     m_Tol;          // tolerance (Angstrom) for the line matching
-    //TFloat64Range     m_RedshiftRange;         // redshift range
-
-    //Float64     m_ZStep;        // not used ? this parameter was specified in the EZ documentation
-    //Float64     m_Delta;        // not used ? this parameter was specified in the EZ documentation
-    //TRedshiftSolutionSetList            m_Results;
-
-};
-
+  };
 }
 
-#endif
+#endif //_REDSHIFT_RAY_MATCHING_
