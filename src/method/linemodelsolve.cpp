@@ -108,6 +108,7 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore, const CSpectrum& spc, const 
         Log.LogInfo( "    -velocity emission: %.2f", opt_velocity_emission);
         Log.LogInfo( "    -velocity absorption: %.2f", opt_velocity_absorption);
     }
+    Log.LogInfo( "    -continuumreestimation: %s", opt_continuumreest.c_str());
     Log.LogInfo( "    -extremacount: %.3f", opt_extremacount);
 
     // Compute merit function

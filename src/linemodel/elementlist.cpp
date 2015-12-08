@@ -2171,7 +2171,7 @@ void CLineModelElementList::applyRules()
     //*/
 
     //*
-    ApplyAmplitudeRatioRangeRule(CRay::nType_Emission, "[OII]3726", "[OII]3729", 0.5);
+    ApplyAmplitudeRatioRangeRule(CRay::nType_Emission, "[OII]3726", "[OII]3729", 2.0);
     //*/
 
     //*
