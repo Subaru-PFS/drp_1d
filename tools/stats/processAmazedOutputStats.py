@@ -358,6 +358,13 @@ def loadDiff(fname):
 
 def ProcessStats( fname, zRange, magRange ):
     data = loadDiff( fname );
+    
+    
+    _baseOutputDirectory = os.path.dirname(os.path.abspath(fname))
+    outputDirectory = os.path.join(_baseOutputDirectory, "stats_magmin{}magmax{}_zmin{}zmax{}".format(magRange[0], magRange[1], zRange[0], zRange[1]))
+    if os.path.exists( outputDirectory ) == False :        
+        print("makedir: Output dir: "+outputDirectory)
+        os.mkdir( outputDirectory )        
         
     n = (len(data))
     n2 = len(data[0])
@@ -378,6 +385,7 @@ def ProcessStats( fname, zRange, magRange ):
             indsForHist.append(x)
             
     nSelected = len(indsForHist)
+    namevect = range(0,nSelected)
     xvect = range(0,nSelected)
     yvect = range(0,nSelected)
     mvect = range(0,nSelected)
@@ -387,6 +395,7 @@ def ProcessStats( fname, zRange, magRange ):
     sigmavect = range(0,nSelected)
     zref = range(0,nSelected)
     for x in range(0,nSelected):
+        namevect[x] = data[indsForHist[x]][0]
         xvect[x] = data[indsForHist[x]][2]
         yvect[x] = abs(data[indsForHist[x]][n2-1])
         mvect[x] = (data[indsForHist[x]][1])
@@ -395,21 +404,50 @@ def ProcessStats( fname, zRange, magRange ):
         ebmvvect[x] = (data[indsForHist[x]][10]) 
         sigmavect[x] = (data[indsForHist[x]][11]) 
         zref[x] = (data[indsForHist[x]][2])
+        
+    # export the filtered list
+    foutpath = outputDirectory + '/' + 'stats_subset_list.txt'
+    fout = open( foutpath, "w" )  
+    outStr = ""
+    outStr = outStr + "ID" + "\t"
+    outStr = outStr + "ZCALC" + "\t"
+    outStr = outStr + "DIFF" + "\t"
+    outStr = outStr + "MAG" + "\t"
+    outStr = outStr + "SNR" + "\t"
+    outStr = outStr + "SFR" + "\t"
+    outStr = outStr + "EBmV" + "\t"
+    outStr = outStr + "Sigma" + "\t"
+    outStr = outStr + "ZREF" + "\t"
+    fout.write( outStr  + '\n')
+    for x in range(0,nSelected):
+        outStr = ""
+        outStr = outStr + str(namevect[x]) + "\t"
+        outStr = outStr + str(xvect[x]) + "\t"
+        outStr = outStr + str(yvect[x]) + "\t"
+        outStr = outStr + str(mvect[x]) + "\t"
+        outStr = outStr + str(snrvect[x]) + "\t"
+        outStr = outStr + str(sfrvect[x]) + "\t"
+        outStr = outStr + str(ebmvvect[x]) + "\t"
+        outStr = outStr + str(sigmavect[x]) + "\t"
+        outStr = outStr + str(zref[x]) + "\t"
+        fout.write( outStr  + '\n')
+    fout.close()
+    # ...
 
     # ******* large bins histogram
     vectErrorBins = [0.00001, 0.0001, 0.0005, 0.001, 0.005, 0.01, 0.1, 1.0, 10.0]
     print 'the rough bins are: ' + str(vectErrorBins)
-    foutpath = os.path.dirname(os.path.abspath(fname)) + '/' + 'stats_brief.txt'
+    foutpath = outputDirectory + '/' + 'stats_brief.txt'
     processHistogram( yvect, vectErrorBins, foutpath)
 
     # ******* fine bins histogram
     vectErrorBins = np.logspace(-5, 1, 50, endpoint=True)
     print 'the fine bins are: ' + str(vectErrorBins)
-    foutpath = os.path.dirname(os.path.abspath(fname)) + '/' + 'stats.txt'
+    foutpath = outputDirectory + '/' + 'stats.txt'
     processHistogram( yvect, vectErrorBins, foutpath)
 
     # ******* plot hist
-    outFigFile = os.path.dirname(os.path.abspath(fname)) + '/' +'stats_hist.png'
+    outFigFile = outputDirectory + '/' +'stats_hist.png'
     plotHist(yvect, outFigFile)
 
     nPercentileDepth = 1
@@ -417,43 +455,43 @@ def ProcessStats( fname, zRange, magRange ):
     # ******* plot mag hist
     if 1:
         outFileNoExt = 'stats_versusMag_hist' 
-        outFilepathNoExt = os.path.join(os.path.dirname(os.path.abspath(fname)),outFileNoExt)
-        outdir = os.path.dirname(os.path.abspath(fname))
+        outFilepathNoExt = os.path.join(outputDirectory,outFileNoExt)
+        outdir = outputDirectory
         lstats.PlotAmazedVersusBinsHistogram(yvect, mvect, outdir, outFilepathNoExt, enablePlot=enablePlot, enableExport=1, mtype='MAG', nPercentileDepth=nPercentileDepth)
 
     # ******* plot snr hist       
     if 1:
         outFileNoExt = 'stats_versusNoise_hist' 
-        outFilepathNoExt = os.path.join(os.path.dirname(os.path.abspath(fname)),outFileNoExt)
-        outdir = os.path.dirname(os.path.abspath(fname))
+        outFilepathNoExt = os.path.join(outputDirectory,outFileNoExt)
+        outdir = outputDirectory
         lstats.PlotAmazedVersusBinsHistogram(yvect, snrvect, outdir, outFilepathNoExt, enablePlot=enablePlot, enableExport=1, mtype='SNR', nPercentileDepth=nPercentileDepth) 
 
     # ******* plot redshift hist       
     if 1:
         outFileNoExt = 'stats_versusRedshift_hist'
-        outFilepathNoExt = os.path.join(os.path.dirname(os.path.abspath(fname)),outFileNoExt) 
-        outdir = os.path.dirname(os.path.abspath(fname))
+        outFilepathNoExt = os.path.join(outputDirectory,outFileNoExt) 
+        outdir = outputDirectory
         lstats.PlotAmazedVersusBinsHistogram(yvect, zref, outdir, outFilepathNoExt, enablePlot=enablePlot, enableExport=1, mtype='REDSHIFT', nPercentileDepth=nPercentileDepth) 
         
     # ******* plot sfr hist       
     if 1:
         outFileNoExt = 'stats_versusSFR_hist' 
-        outFilepathNoExt = os.path.join(os.path.dirname(os.path.abspath(fname)),outFileNoExt)
-        outdir = os.path.dirname(os.path.abspath(fname))
+        outFilepathNoExt = os.path.join(outputDirectory,outFileNoExt)
+        outdir = outputDirectory
         lstats.PlotAmazedVersusBinsHistogram(yvect, sfrvect, outdir, outFilepathNoExt, enablePlot=enablePlot, enableExport=1, mtype='SFR', nPercentileDepth=nPercentileDepth) 
 
     # ******* plot EBmV hist       
     if 1:
         outFileNoExt = 'stats_versusEBMV_hist' 
-        outFilepathNoExt = os.path.join(os.path.dirname(os.path.abspath(fname)),outFileNoExt)
-        outdir = os.path.dirname(os.path.abspath(fname))
+        outFilepathNoExt = os.path.join(outputDirectory,outFileNoExt)
+        outdir = outputDirectory
         lstats.PlotAmazedVersusBinsHistogram(yvect, ebmvvect, outdir, outFilepathNoExt, enablePlot=enablePlot, enableExport=1, mtype='EBMV', nPercentileDepth=nPercentileDepth) 
 
     # ******* plot Sigma hist       
     if 1:
         outFileNoExt = 'stats_versusSigma_hist' 
-        outFilepathNoExt = os.path.join(os.path.dirname(os.path.abspath(fname)),outFileNoExt)
-        outdir = os.path.dirname(os.path.abspath(fname))
+        outFilepathNoExt = os.path.join(outputDirectory,outFileNoExt)
+        outdir = outputDirectory
         lstats.PlotAmazedVersusBinsHistogram(yvect, sigmavect, outdir, outFilepathNoExt, enablePlot=enablePlot, enableExport=1, mtype='SIGMA', nPercentileDepth=nPercentileDepth) 
 
 
