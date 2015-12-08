@@ -39,3 +39,6 @@ pkgconfig
 
 # Temp files
 *~
+
+# Python cache files
+*.pyc
