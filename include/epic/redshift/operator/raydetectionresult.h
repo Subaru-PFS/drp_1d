@@ -1,8 +1,8 @@
 #ifndef _REDSHIFT_OPERATOR_RAYDETECTIONRESULT_
 #define _REDSHIFT_OPERATOR_RAYDETECTIONRESULT_
 
-#include <epic/redshift/processflow/result.h>
 #include <epic/core/common/datatypes.h>
+#include <epic/redshift/processflow/result.h>
 #include <epic/redshift/ray/catalog.h>
 
 #include <vector>
@@ -12,6 +12,7 @@ namespace NSEpic
 
 /**
  * \ingroup Redshift
+ * Responsible for outputing the results in a standardized format.
  */
 class CLineDetectionResult : public COperatorResult
 {
@@ -28,7 +29,6 @@ public:
     std::vector<std::string> PeakListDetectionStatus;
 };
 
-
 }
 
-#endif
+#endif // _REDSHIFT_OPERATOR_RAYDETECTIONRESULT_
