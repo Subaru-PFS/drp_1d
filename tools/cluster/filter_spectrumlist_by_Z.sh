@@ -2,7 +2,7 @@
 
 range_min=$1
 range_max=$2
-suffix="_F"
+suffix='_F'
 
 if [ "$range_min" == "" -o \
     "$range_max" == "" ]; then
@@ -18,8 +18,14 @@ fi
 
 while read line; do
     file_name=`echo "$line" | awk '{ print $1; }'`
-    index=`echo $file_name | sed 's/$suffix\.fits.*//'` # <index>_F.fits
+    index=`echo $file_name | sed "s/$suffix\.fits.*//"` # <index>_F.fits
+    #echo $index
     expected_redshift=`grep -E "^$index " Z-Mag.list | awk '{ print $2; }'` 
+    #echo $expected_redshift
+    if [ "$expected_redshift" == "" ]; then
+	echo "Z-Mag mising $index"
+        continue
+    fi
     min_test=`echo "$expected_redshift >= $range_min" | bc`
     if [ $min_test -eq 0 ]; then
 	continue
