@@ -109,7 +109,7 @@ COperatorLineMatching2Solve::~COperatorLineMatching2Solve()
  * Attempts to find a matching line using the input parameters.
  * This algorithm will create and run a CPeakDetection object, using the parameters as input.
  * If peaks are found, it will try to find lines in the peaks found, using a CLineDetection object (warning: this class is defined in raydetectionresult.h).
- * If lines are found, it will try to match catalogued templates to the found lines.
+ * If lines are found, it will try to match these lines to the catalogue of known lines and determine the redshift that way.
  */
 std::shared_ptr<const CLineMatching2SolveResult> COperatorLineMatching2Solve::Compute( CDataStore& resultStore, 
 										       const CSpectrum& spc, 
@@ -127,6 +127,7 @@ std::shared_ptr<const CLineMatching2SolveResult> COperatorLineMatching2Solve::Co
   {
     resultStore.GetScopedParam( "linematching2.winsize", m_winsize, 250.0 );
     resultStore.GetScopedParam( "linematching2.cut", m_cut, 5.0 );
+    resultStore.GetScopedParam( "linematching2.dynamicCut", m_dynamicCut, 1 );
     resultStore.GetScopedParam( "linematching2.detectioncut", m_detectioncut, 5.0 );
     resultStore.GetScopedParam( "linematching2.detectionnoiseoffset", m_detectionnoiseoffset, 0.0 );
     resultStore.GetScopedParam( "linematching2.strongcut", m_strongcut, 2.0 );
@@ -135,16 +136,24 @@ std::shared_ptr<const CLineMatching2SolveResult> COperatorLineMatching2Solve::Co
     resultStore.GetScopedParam( "linematching2.enlargeRate", m_enlargeRate, 2.0 );
     resultStore.GetScopedParam( "linematching2.minMatchNum", m_minMatchNum, 1.0 );
     resultStore.GetScopedParam( "linematching2.tol", m_tol, 0.002 );
-    Log.LogDebug ( "m_winsize = %f", m_winsize );
-    Log.LogDebug ( "m_cut = %f", m_cut );
-    Log.LogDebug ( "m_detectioncut = %f", m_detectioncut );
-    Log.LogDebug ( "m_detectionnoiseoffset = %f", m_detectionnoiseoffset );
-    Log.LogDebug ( "m_strongcut = %f", m_strongcut );
-    Log.LogDebug ( "m_minsize = %f", m_minsize );
-    Log.LogDebug ( "m_maxsize = %f", m_maxsize );
-    Log.LogDebug ( "m_enlargeRate = %f", m_enlargeRate );
-    Log.LogDebug ( "m_minMatchNum = %d", m_minMatchNum );
-    Log.LogDebug ( "m_tol = %f", m_tol );
+    Log.LogDebug( "m_winsize = %f", m_winsize );
+    Log.LogDebug( "m_cut = %f", m_cut );
+    if( m_dynamicCut == 0 ) 
+      {
+	Log.LogDebug( "m_dynamicCut is true (0 on json)" );
+      }
+    else
+      {
+	Log.LogDebug( "m_dynamicCut is false (anything but 0 on json)" );
+      }
+    Log.LogDebug( "m_detectioncut = %f", m_detectioncut );
+    Log.LogDebug( "m_detectionnoiseoffset = %f", m_detectionnoiseoffset );
+    Log.LogDebug( "m_strongcut = %f", m_strongcut );
+    Log.LogDebug( "m_minsize = %f", m_minsize );
+    Log.LogDebug( "m_maxsize = %f", m_maxsize );
+    Log.LogDebug( "m_enlargeRate = %f", m_enlargeRate );
+    Log.LogDebug( "m_minMatchNum = %d", m_minMatchNum );
+    Log.LogDebug( "m_tol = %f", m_tol );
   }
 
   Int32 lineType = CRay::nType_Emission;
@@ -176,7 +185,7 @@ std::shared_ptr<const CLineMatching2SolveResult> COperatorLineMatching2Solve::Co
     }
 
   // Since we detected at least one peak, try to detect lines related that correspond to those peaks.
-  bool disableGaussianFitQualityCheck = false;
+  bool disableGaussianFitQualityCheck = true;
   if ( disableGaussianFitQualityCheck )
     {
       Log.LogDebug ( "Fit quality check disabled." );
@@ -198,6 +207,15 @@ std::shared_ptr<const CLineMatching2SolveResult> COperatorLineMatching2Solve::Co
 	{
 	  Log.LogError ( "Line detection returned no entries in RayCatalog." );
 	  //return NULL;
+	  if ( m_dynamicCut == 0 )
+	    {
+	      Log.LogDebug ( "dynamicCut is true, retrying with cut = 1e-10." );
+	      
+	      Float64 newCut = 1e-10;
+	      CLineDetection dynLineDetection( lineType, newCut, m_strongcut, m_winsize, m_minsize, m_maxsize, disableGaussianFitQualityCheck );
+	      auto dynLineDetectionResult = dynLineDetection.Compute( _spc, lambdaRange, peakDetectionResult->PeakList, peakDetectionResult->EnlargedPeakList );
+	      lineDetectionResult = dynLineDetectionResult;	      
+	    }
 	}
     }
 

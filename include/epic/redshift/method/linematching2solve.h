@@ -46,6 +46,7 @@ private:
     // Line Matching
     Int64 m_minMatchNum;
     Float64 m_tol;
+    Bool m_dynamicCut;
 
 };
 
