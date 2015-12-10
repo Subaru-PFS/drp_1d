@@ -292,7 +292,7 @@ def PlotAmazedVersusBinsHistogram(yvect, mvect, outdir, outFileNoExt, enablePlot
             ax2.set_xlim([15, 29])
         elif mtype=='REDSHIFT':
             ax2.set_xlim([-0.5, 5.5])
-            #ax2.set_xlim([0.0, 3.0])
+            #ax2.set_xlim([-0.5, 3.0])
         elif mtype=='SFR':
             ax2.set_xlim([1e-3, 1e3])
             ax2.set_xscale('log')

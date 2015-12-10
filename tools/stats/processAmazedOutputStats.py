@@ -356,7 +356,7 @@ def loadDiff(fname):
     f.close()
     return dataArray
 
-def ProcessStats( fname, zRange, magRange ):
+def ProcessStats( fname, zRange, magRange, enablePlot = False ):
     data = loadDiff( fname );
     
     
@@ -394,6 +394,7 @@ def ProcessStats( fname, zRange, magRange ):
     ebmvvect = range(0,nSelected)
     sigmavect = range(0,nSelected)
     zref = range(0,nSelected)
+    zcalc = range(0,nSelected)
     for x in range(0,nSelected):
         namevect[x] = data[indsForHist[x]][0]
         xvect[x] = data[indsForHist[x]][2]
@@ -404,6 +405,7 @@ def ProcessStats( fname, zRange, magRange ):
         ebmvvect[x] = (data[indsForHist[x]][10]) 
         sigmavect[x] = (data[indsForHist[x]][11]) 
         zref[x] = (data[indsForHist[x]][2])
+        zcalc[x] = (data[indsForHist[x]][4])
         
     # export the filtered list
     foutpath = outputDirectory + '/' + 'stats_subset_list.txt'
@@ -433,7 +435,48 @@ def ProcessStats( fname, zRange, magRange ):
         fout.write( outStr  + '\n')
     fout.close()
     # ...
-
+    
+    # plot the filtered list
+    relerrorvect = range(0,nSelected)
+    for x in range(0,nSelected):
+        relerrorvect[x] = (zcalc[x] - zref[x])/(1+zref[x])
+    fig = pp.figure('filtered dataset z relative error')
+    pp.plot(zref, relerrorvect, 'x')
+    pp.grid(True) # Affiche la grille
+    #pp.legend(('cos','sin'), 'upper right', shadow = True)
+    pp.ylabel('(zcalc-zref)/(1+zref)')
+    pp.xlabel('z reference')
+    pp.title('All spectra included') # Titre
+    pp.savefig( os.path.join(outputDirectory, 'filteredset_relzerr.png'), bbox_inches='tight')
+    # plot zoom 1
+    zoomedRange = 0.005
+    nmissing = 0
+    for x in range(0,nSelected):
+        if abs(relerrorvect[x])>zoomedRange:
+            nmissing += 1
+    pp.ylim([-zoomedRange, zoomedRange])
+    #pp.show()
+    spcStr = "spectrum"
+    if nmissing>1:
+        spcStr = "spectra"
+    pp.title('{}/{} {} outside displayed range'.format(nmissing,nSelected, spcStr)) # Titre
+    pp.savefig( os.path.join(outputDirectory, 'filteredset_relzerr_zoom_1.png'), bbox_inches='tight')
+    # plot zoom 2
+    zoomedRange = 0.0005
+    nmissing = 0
+    for x in range(0,nSelected):
+        if abs(relerrorvect[x])>zoomedRange:
+            nmissing += 1
+    pp.ylim([-zoomedRange, zoomedRange])
+    #pp.show()
+    spcStr = "spectrum"
+    if nmissing>1:
+        spcStr = "spectra"
+    pp.title('{}/{} {} outside displayed range'.format(nmissing,nSelected,spcStr)) # Titre
+    pp.savefig( os.path.join(outputDirectory, 'filteredset_relzerr_zoom_2.png'), bbox_inches='tight')
+    if enablePlot:
+        pp.show()
+    
     # ******* large bins histogram
     vectErrorBins = [0.00001, 0.0001, 0.0005, 0.001, 0.005, 0.01, 0.1, 1.0, 10.0]
     print 'the rough bins are: ' + str(vectErrorBins)
@@ -451,7 +494,6 @@ def ProcessStats( fname, zRange, magRange ):
     plotHist(yvect, outFigFile)
 
     nPercentileDepth = 1
-    enablePlot = 0
     # ******* plot mag hist
     if 1:
         outFileNoExt = 'stats_versusMag_hist' 

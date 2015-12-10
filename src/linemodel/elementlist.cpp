@@ -1032,7 +1032,8 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
         fitAmplitudesSimplex();
     }
     //fit the amplitude of all elements together with linear solver: gsl_multifit_wlinear
-    if(0){
+    if(m_fittingmethod=="svd")
+    {
         std::vector<Int32> validEltsIdx = GetModelValidElementsIndexes();
         std::vector<Float64> ampsfitted;
         fitAmplitudesLinSolve(validEltsIdx, spectralAxis, m_spcFluxAxisNoContinuum, ampsfitted);
