@@ -205,7 +205,7 @@ def PlotAmazedVersusBinsHistogram(yvect, mvect, outdir, outFileNoExt, enablePlot
         print 'the redshift bins are: ' + str(vectBins)
     elif mtype=='SFR':
         print '\n\nPlotAmazedVersusSFRtHistogram:'
-        vectBins = np.logspace(-3, 3, 40, endpoint=True)
+        vectBins = np.logspace(-2, 2, 40, endpoint=True)
         print 'the sfr bins are: ' + str(vectBins)  
     elif mtype=='EBMV':
         print '\n\nPlotAmazedVersusEBMVtHistogram:'
@@ -294,7 +294,7 @@ def PlotAmazedVersusBinsHistogram(yvect, mvect, outdir, outFileNoExt, enablePlot
             ax2.set_xlim([-0.5, 5.5])
             #ax2.set_xlim([-0.5, 3.0])
         elif mtype=='SFR':
-            ax2.set_xlim([1e-3, 1e3])
+            ax2.set_xlim([1e-2, 1e2])
             ax2.set_xscale('log')
             ax1.set_xscale('log')
         elif mtype=='EBMV':
@@ -318,7 +318,7 @@ def PlotAmazedVersusBinsHistogram(yvect, mvect, outdir, outFileNoExt, enablePlot
         #pp.legend(shadow=True,fancybox=True, loc='center right', ncol=1)
         ax1.set_ylabel('COUNT', fontsize=16)
         #ax2.set_ylabel('$| z_{calc} - z_{ref} |$', fontsize=18)
-        ax2.set_ylabel('| zcalc - zref |', fontsize=18)
+        ax2.set_ylabel('| zcalc - zref |/(1+zref)', fontsize=18)
         ax1.set_xlabel('{}'.format(mtype), fontsize=18)
         name1 = "[dark blue line]=Median"
         if nPercentileDepth>=1:

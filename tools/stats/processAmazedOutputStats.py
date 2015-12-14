@@ -397,8 +397,7 @@ def ProcessStats( fname, zRange, magRange, enablePlot = False ):
     zcalc = range(0,nSelected)
     for x in range(0,nSelected):
         namevect[x] = data[indsForHist[x]][0]
-        xvect[x] = data[indsForHist[x]][2]
-        yvect[x] = abs(data[indsForHist[x]][n2-1])
+        
         mvect[x] = (data[indsForHist[x]][1])
         snrvect[x] = (data[indsForHist[x]][8])
         sfrvect[x] = (data[indsForHist[x]][9])
@@ -406,6 +405,9 @@ def ProcessStats( fname, zRange, magRange, enablePlot = False ):
         sigmavect[x] = (data[indsForHist[x]][11]) 
         zref[x] = (data[indsForHist[x]][2])
         zcalc[x] = (data[indsForHist[x]][4])
+        
+        xvect[x] = data[indsForHist[x]][2]
+        yvect[x] = abs(data[indsForHist[x]][n2-1])/(1+zref[x])
         
     # export the filtered list
     foutpath = outputDirectory + '/' + 'stats_subset_list.txt'

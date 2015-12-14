@@ -91,6 +91,17 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum, const CS
         }
     }
     m_precomputedFineGridContinuumFlux = NULL;
+
+
+    /*
+    // export continuum for debug
+    FILE* fspc = fopen( "lm_continuum_dbg.txt", "w+" );
+    Float64 coeffSaveSpc = 1e16;
+    for(UInt32 i=0; i<spectrumSampleCount; i++){
+        fprintf( fspc, "%f %f %f\n", m_SpectrumModel->GetSpectralAxis()[i], (m_SpcFluxAxis[i])*coeffSaveSpc, (m_ContinuumFluxAxis[i])*coeffSaveSpc);
+    }
+    fclose( fspc );
+    //*/
 }
 
 CLineModelElementList::~CLineModelElementList()
