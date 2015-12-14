@@ -29,16 +29,16 @@ class CMethodChisquareSolve
 
     CMethodChisquareSolve();
     ~CMethodChisquareSolve();
-    std::shared_ptr<const CChisquareSolveResult> Compute( CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
+    std::shared_ptr<const CChisquareSolveResult> Compute(CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
                                         const CTemplateCatalog& tplCatalog, const TStringList& tplCategoryList,
-                                        const TFloat64Range& lambdaRange, const TFloat64List& redshifts, Float64 overlapThreshold  );
+                                        const TFloat64Range& lambdaRange, const TFloat64List& redshifts, Float64 overlapThreshold  , std::string opt_interp="lin");
 
 
 
 private:
 
     Bool Solve(CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont, const CTemplate& tpl, const CTemplate& tplWithoutCont,
-                                   const TFloat64Range& lambdaRange, const TFloat64List& redshifts, Float64 overlapThreshold , Int32 spctype=nType_full);
+                                   const TFloat64Range& lambdaRange, const TFloat64List& redshifts, Float64 overlapThreshold , Int32 spctype=nType_full, std::string opt_interp="lin");
 };
 
 

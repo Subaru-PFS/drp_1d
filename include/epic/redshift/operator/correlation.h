@@ -26,7 +26,7 @@ public:
     COperatorCorrelation();
     ~COperatorCorrelation();
 
-    std::shared_ptr<COperatorResult> Compute( const CSpectrum& s1, const CTemplate& s2, const TFloat64Range& r, const TFloat64List& redhisfts, Float64 overlap );
+    std::shared_ptr<COperatorResult> Compute( const CSpectrum& s1, const CTemplate& s2, const TFloat64Range& r, const TFloat64List& redhisfts, Float64 overlap, std::string opt_interp_unused="lin" );
 
     Float64 GetComputationDuration() const;
 

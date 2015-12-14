@@ -33,6 +33,7 @@ const std::string CMethodChisquare2Solve::GetDescription()
 
     desc.append("\tparam: chisquare2solve.spectrum.component = {""raw"", ""nocontinuum"", ""continuum"", ""all""}\n");
     desc.append("\tparam: chisquare2solve.overlapThreshold = <float value>\n");
+    desc.append("\tparam: chisquare.interpolation = {""precomputedfinegrid"", ""lin""}\n");
 
 
     return desc;
@@ -42,7 +43,7 @@ const std::string CMethodChisquare2Solve::GetDescription()
 
 std::shared_ptr<const CChisquare2SolveResult> CMethodChisquare2Solve::Compute(  CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
                                                         const CTemplateCatalog& tplCatalog, const TStringList& tplCategoryList,
-                                                        const TFloat64Range& lambdaRange, const TFloat64List& redshifts, Float64 overlapThreshold, std::string spcComponent)
+                                                        const TFloat64Range& lambdaRange, const TFloat64List& redshifts, Float64 overlapThreshold, std::string spcComponent, std::string opt_interp)
 {
     Bool storeResult = false;
 
@@ -84,7 +85,7 @@ std::shared_ptr<const CChisquare2SolveResult> CMethodChisquare2Solve::Compute(  
 
             const CTemplate& tplWithoutCont = tplCatalog.GetTemplateWithoutContinuum( category, j );
 
-            Solve( resultStore, spc, spcWithoutCont, tpl, tplWithoutCont, lambdaRange, redshifts, overlapThreshold, _type);
+            Solve( resultStore, spc, spcWithoutCont, tpl, tplWithoutCont, lambdaRange, redshifts, overlapThreshold, _type, opt_interp);
 
             storeResult = true;
         }
@@ -102,7 +103,7 @@ std::shared_ptr<const CChisquare2SolveResult> CMethodChisquare2Solve::Compute(  
 }
 
 Bool CMethodChisquare2Solve::Solve( CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont, const CTemplate& tpl, const CTemplate& tplWithoutCont,
-                               const TFloat64Range& lambdaRange, const TFloat64List& redshifts, Float64 overlapThreshold, Int32 spctype )
+                               const TFloat64Range& lambdaRange, const TFloat64List& redshifts, Float64 overlapThreshold, Int32 spctype, std::string opt_interp )
 {
     CSpectrum _spc;
     CTemplate _tpl;
@@ -159,7 +160,7 @@ Bool CMethodChisquare2Solve::Solve( CDataStore& resultStore, const CSpectrum& sp
         // Compute merit function
         COperatorChiSquare2 chiSquare;
         //CRef<CChisquareResult>  chisquareResult = (CChisquareResult*)chiSquare.ExportChi2versusAZ( _spc, _tpl, lambdaRange, redshifts, overlapThreshold );
-        auto  chisquareResult = std::dynamic_pointer_cast<CChisquareResult>( chiSquare.Compute( _spc, _tpl, lambdaRange, redshifts, overlapThreshold ) );
+        auto  chisquareResult = std::dynamic_pointer_cast<CChisquareResult>( chiSquare.Compute( _spc, _tpl, lambdaRange, redshifts, overlapThreshold, opt_interp ) );
 
         if( !chisquareResult )
         {

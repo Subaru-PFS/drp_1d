@@ -45,7 +45,7 @@ Float64 COperatorCorrelation::GetComputationDuration() const
  */
  std::shared_ptr<COperatorResult> COperatorCorrelation::Compute(   const CSpectrum& spectrum, const CTemplate& tpl,
                                       const TFloat64Range& lambdaRange, const TFloat64List& redshifts,
-                                      Float64 overlapThreshold )
+                                      Float64 overlapThreshold, std::string opt_interp_unused )
 {
     Bool retVal;
 

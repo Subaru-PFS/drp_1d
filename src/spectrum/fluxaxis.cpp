@@ -126,7 +126,7 @@ Bool CSpectrumFluxAxis::Rebin( const TFloat64Range& range, const CSpectrumFluxAx
 /// - linear interpolation is performed
 ///
 Bool CSpectrumFluxAxis::Rebin2( const TFloat64Range& range, const CSpectrumFluxAxis& sourceFluxAxis, const Float64* pfgTplBuffer, Float64 sourcez, const CSpectrumSpectralAxis& sourceSpectralAxis, const CSpectrumSpectralAxis& targetSpectralAxis,
-                               CSpectrumFluxAxis& rebinedFluxAxis, CSpectrumSpectralAxis& rebinedSpectralAxis, CMask& rebinedMask  )
+                               CSpectrumFluxAxis& rebinedFluxAxis, CSpectrumSpectralAxis& rebinedSpectralAxis, CMask& rebinedMask , const std::string opt_interp )
 {
     if( sourceFluxAxis.GetSamplesCount() != sourceSpectralAxis.GetSamplesCount() )
         return false;
@@ -162,50 +162,54 @@ Bool CSpectrumFluxAxis::Rebin2( const TFloat64Range& range, const CSpectrumFluxA
     //if( j > 0 )
     //    j--;
 
-    /* //Original interp.
-    Int32 k = 0;
-    Float64 t = 0.0;
-    // For each sample in the valid lambda range interval.
-    while( k<sourceSpectralAxis.GetSamplesCount()-1 && Xsrc[k] <= currentRange.GetEnd() )
-    {
-        // For each sample in the target spectrum that are in between two continous source sample
-        while( j<targetSpectralAxis.GetSamplesCount() && Xtgt[j] <= Xsrc[k+1] )
+    if(opt_interp=="lin"){
+        //* //Original interp.
+        Int32 k = 0;
+        Float64 t = 0.0;
+        // For each sample in the valid lambda range interval.
+        while( k<sourceSpectralAxis.GetSamplesCount()-1 && Xsrc[k] <= currentRange.GetEnd() )
         {
-            // perform linear interpolation of the flux
-            t = ( Xtgt[j] - Xsrc[k] ) / ( Xsrc[k+1] - Xsrc[k] );
-            Xrebin[j] = Xsrc[k] + ( Xsrc[k+1] - Xsrc[k] ) * t;
-            Yrebin[j] = Ysrc[k] + ( Ysrc[k+1] - Ysrc[k] ) * t;
+            // For each sample in the target spectrum that are in between two continous source sample
+            while( j<targetSpectralAxis.GetSamplesCount() && Xtgt[j] <= Xsrc[k+1] )
+            {
+                // perform linear interpolation of the flux
+                t = ( Xtgt[j] - Xsrc[k] ) / ( Xsrc[k+1] - Xsrc[k] );
+                Xrebin[j] = Xsrc[k] + ( Xsrc[k+1] - Xsrc[k] ) * t;
+                Yrebin[j] = Ysrc[k] + ( Ysrc[k+1] - Ysrc[k] ) * t;
 
-            // closest value
-            //Xrebin[j] = Xsrc[k];
-            //Yrebin[j] = Ysrc[k];
+                // closest value
+                //Xrebin[j] = Xsrc[k];
+                //Yrebin[j] = Ysrc[k];
 
+                rebinedMask[j] = 1;
+
+                j++;
+            }
+
+            k++;
+        }
+        //*/
+    }
+
+    if(opt_interp=="precomputedfinegrid"){
+        //* // Precomputed FINE GRID nearest sample, 20150801
+        Int32 k = 0;
+        Float64 dl = 0.1;
+        Float64 Coeffk = 1.0/dl/(1+sourcez);
+        // For each sample in the target spectrum
+        while( j<targetSpectralAxis.GetSamplesCount() && Xtgt[j] <= currentRange.GetEnd() )
+        {
+            k = (int)(Xtgt[j]*Coeffk+0.5);
+            // k = 10;
+            Xrebin[j] = Xtgt[j];
+            Yrebin[j] = pfgTplBuffer[k];
             rebinedMask[j] = 1;
 
             j++;
+
         }
-
-        k++;
+        //*/
     }
-    //*/
-
-    //* // Precomputed FINE GRID nearest sample, 20150801
-    Int32 k = 0;
-    Float64 dl = 0.1;
-    Float64 Coeffk = 1.0/dl/(1+sourcez);
-    // For each sample in the target spectrum
-    while( j<targetSpectralAxis.GetSamplesCount() && Xtgt[j] <= currentRange.GetEnd() )
-    {
-        k = (int)(Xtgt[j]*Coeffk+0.5);
-       // k = 10;
-        Xrebin[j] = Xtgt[j];
-        Yrebin[j] = pfgTplBuffer[k];
-        rebinedMask[j] = 1;
-
-        j++;
-
-    }
-    //*/
 
     /* // GSL method
     //inialise and allocate the gsl objects
