@@ -757,6 +757,7 @@ def StartFromCommandLine( argv ) :
     parser.add_option(u"-t", u"--type", help="reference redshift values type",  dest="type", default="vvds")
     parser.add_option(u"-m", u"--magRange", help="magnitude range filter for the histograms",  dest="magRange", default="0.0 40.0")
     parser.add_option(u"-z", u"--zRange", help="redshift range filter for the histograms",  dest="zRange", default="-1.0 20.0")
+    parser.add_option(u"-l", u"--computeLvl", help="compute level",  dest="computeLevel", default="brief")
     (options, args) = parser.parse_args()
 
     print "\n"
@@ -800,14 +801,15 @@ def StartFromCommandLine( argv ) :
         ProcessDiff( options.refFile, options.calcFile, outputFullpathDiff )
         ProcessFailures( outputFullpathDiff, outputFullpathFailures)
         ProcessFailuresSeqFile( outputFullpathDiff, options.refFile, outputFullpathFailuresSeqFile, outputFullpathFailuresRefFile)
-
-        zRange = [-1.0, 20.0]
-        zRange[0] = float(options.zRange.split(" ")[0])
-        zRange[1] = float(options.zRange.split(" ")[1])
-        magRange = [0.0, 40.0]
-        magRange[0] = float(options.magRange.split(" ")[0])
-        magRange[1] = float(options.magRange.split(" ")[1])        
-        ProcessStats( outputFullpathDiff, zRange, magRange )
+        
+        if  options.computeLevel == "full":
+            zRange = [-1.0, 20.0]
+            zRange[0] = float(options.zRange.split(" ")[0])
+            zRange[1] = float(options.zRange.split(" ")[1])
+            magRange = [0.0, 40.0]
+            magRange[0] = float(options.magRange.split(" ")[0])
+            magRange[1] = float(options.magRange.split(" ")[1])        
+            ProcessStats( outputFullpathDiff, zRange, magRange )
     else :
         print("Error: invalid argument count")
         exit()

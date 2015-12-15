@@ -35,7 +35,7 @@ private:
 
     Void BasicFit(const CSpectrum& spectrum, const CTemplate& tpl, Float64 *pfgTplBuffer,
                    const TFloat64Range& lambdaRange, Float64 redshift, Float64 overlapThreshold,
-                   Float64& overlapRate, Float64& chiSquare, Float64 &fittingAmplitude, EStatus& status, Float64 forcedAmplitude=-1 , std::string opt_interp="lin");
+                   Float64& overlapRate, Float64& chiSquare, Float64 &fittingAmplitude, EStatus& status, std::string opt_interp, Float64 forcedAmplitude=-1);
 
     CTemplate       m_templateRebined_bf; //buffer
     CMask           m_mskRebined_bf; //buffer

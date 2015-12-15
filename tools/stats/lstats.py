@@ -192,29 +192,29 @@ def PlotAmazedVersusBinsHistogram(yvect, mvect, outdir, outFileNoExt, enablePlot
     if mtype=='SNR':
         print '\n\nPlotAmazedVersusNoiseHistogram:'
         vectBins = np.logspace(-3, 3, 30, endpoint=True)
-        print 'the SNR bins are: ' + str(vectBins)
+        #print 'the SNR bins are: ' + str(vectBins)
     elif mtype=='MAG':
         print '\n\nPlotAmazedVersusMagHistogram:'
         #vectBins = np.linspace(15, 30, 25, endpoint=True)
         vectBins = np.linspace(15, 30, 30, endpoint=True)
-        print 'the MAG bins are: ' + str(vectBins)  
+        #print 'the MAG bins are: ' + str(vectBins)  
     elif mtype=='REDSHIFT':
         print '\n\nPlotAmazedVersusRedshiftHistogram:'
         #vectBins = np.linspace(0.0, 5.0, 15, endpoint=True)
         vectBins = np.linspace(0.0, 5.0, 30, endpoint=True)
-        print 'the redshift bins are: ' + str(vectBins)
+        #print 'the redshift bins are: ' + str(vectBins)
     elif mtype=='SFR':
         print '\n\nPlotAmazedVersusSFRtHistogram:'
         vectBins = np.logspace(-2, 2, 40, endpoint=True)
-        print 'the sfr bins are: ' + str(vectBins)  
+        #print 'the sfr bins are: ' + str(vectBins)  
     elif mtype=='EBMV':
         print '\n\nPlotAmazedVersusEBMVtHistogram:'
         vectBins = np.logspace(-3, 2, 30, endpoint=True)
-        print 'the ebmv bins are: ' + str(vectBins)  
+        #print 'the ebmv bins are: ' + str(vectBins)  
     elif mtype=='SIGMA':
         print '\n\nPlotAmazedVersusEBMVtHistogram:'
         vectBins = np.linspace(50, 350, 15, endpoint=True)
-        print 'the sigma bins are: ' + str(vectBins)  
+        #print 'the sigma bins are: ' + str(vectBins)  
     
     ybins49, ybins50, ybins51, ybinsVERYLOW, ybinsLOW, ybinsHIGH, ybinsVERYHIGH, ynbins = exportHistogramComplex(yvect, mvect, vectBins, outFileNoExt+'.csv')
     if enablePlot or enableExport:
@@ -232,8 +232,8 @@ def PlotAmazedVersusBinsHistogram(yvect, mvect, outdir, outFileNoExt, enablePlot
             vectBars[i] = (vectBins[i]-widthbins[i]/2.0)
         widthbins[nbins-1] = (vectBins[nbins-1]-vectBins[nbins-2])
         vectBars[nbins-1] = (vectBins[nbins-1]-widthbins[nbins-1]/2.0)
-        print("vectBars = {}".format(vectBars))
-        print("widthbins = {}".format(widthbins))
+        #print("vectBars = {}".format(vectBars))
+        #print("widthbins = {}".format(widthbins))
 
 #        ybins50p = np.copy(ybins50);
 #        ybins50m = np.copy(ybins50);

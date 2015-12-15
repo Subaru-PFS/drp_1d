@@ -36,9 +36,9 @@ COperatorChiSquare2::~COperatorChiSquare2()
 }
 
 
-Void COperatorChiSquare2::BasicFit( const CSpectrum& spectrum, const CTemplate& tpl, Float64* pfgTplBuffer,
+Void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& tpl, Float64* pfgTplBuffer,
                                 const TFloat64Range& lambdaRange, Float64 redshift, Float64 overlapThreshold,
-                                Float64& overlapRate, Float64& chiSquare, Float64& fittingAmplitude, EStatus& status , Float64 forcedAmplitude, std::string opt_interp)
+                                Float64& overlapRate, Float64& chiSquare, Float64& fittingAmplitude, EStatus& status , std::string opt_interp, Float64 forcedAmplitude)
 {
     chiSquare = boost::numeric::bounds<float>::highest();
     fittingAmplitude = -1.0;
@@ -134,6 +134,7 @@ Void COperatorChiSquare2::BasicFit( const CSpectrum& spectrum, const CTemplate& 
     // Tonry&Davis formulation
     Float64 sumCross = 0.0;
     Float64 sumT = 0.0;
+    Float64 sumS = 0.0;
 
     Float64 err2 = 0.0;
     Float64 fit = 0;
@@ -158,6 +159,7 @@ Void COperatorChiSquare2::BasicFit( const CSpectrum& spectrum, const CTemplate& 
         sumT+=Ytpl[j]*Ytpl[j]*err2;
         //sumCross+=Yspc[j]*Ytpl[j];
         //sumT+=Ytpl[j]*Ytpl[j];
+        sumS+= Yspc[j]*Yspc[j]*err2;
 
         j++;
     }
@@ -182,19 +184,29 @@ Void COperatorChiSquare2::BasicFit( const CSpectrum& spectrum, const CTemplate& 
 
     fit=0;
 
-    Float64 s = 0;
+    //* //1. fast method: D. Vibert, Amazed methods improvements, 10/06/2015
+    fit = sumS - sumCross*ampl;
+    //*/
 
+    /*/ //2. old method: least squares loop
+    Float64 s = 0;
+    Float64 diff = 0;
     while( j<spcSpectralAxis.GetSamplesCount() && Xspc[j] <= currentRange.GetEnd() )
     {
         int k=j;
         {
             // fit
-            fit += pow( Yspc[j] - ampl * Ytpl[k] , 2.0 ) / pow( error[j], 2.0 );
+            //fit += pow( Yspc[j] - ampl * Ytpl[k] , 2.0 ) / pow( error[j], 2.0 );
             //fit += pow( Yspc[j] - ampl * Ytpl[k] , 2.0 );
+            //
+            diff = Yspc[j] - ampl * Ytpl[k];
+            err2 = 1.0 / (error[j] * error[j]);
+            fit += diff*diff*err2;
             s += Yspc[j];
         }
         j++;
     }
+    //*/
 
     // Chi square reduct: it can introduces some problem?
     fit /= numDevs;
@@ -301,7 +313,7 @@ std::shared_ptr<COperatorResult> COperatorChiSquare2::Compute(const CSpectrum& s
 
     for (Int32 i=0;i<sortedRedshifts.size();i++)
     {
-        BasicFit( spectrum, tpl, precomputedFineGridTplFlux, lambdaRange, result->Redshifts[i], overlapThreshold, result->Overlap[i], result->ChiSquare[i], result->FitAmplitude[i], result->Status[i] ,overlapThreshold, opt_interp);
+        BasicFit( spectrum, tpl, precomputedFineGridTplFlux, lambdaRange, result->Redshifts[i], overlapThreshold, result->Overlap[i], result->ChiSquare[i], result->FitAmplitude[i], result->Status[i], opt_interp);
     }
 
     // extrema
@@ -492,7 +504,7 @@ const COperatorResult* COperatorChiSquare2::ExportChi2versusAZ(const CSpectrum& 
         for (Int32 j=0;j<sortedAmplitudes.size();j++)
         {
             Float64 ampl = sortedAmplitudes[j];
-            BasicFit( spectrum, tpl, precomputedFineGridTplFlux, lambdaRange, result->Redshifts[i], overlapThreshold, result->Overlap[i], result->ChiSquare[i], result->FitAmplitude[i], result->Status[i], ampl , "lin");
+            BasicFit( spectrum, tpl, precomputedFineGridTplFlux, lambdaRange, result->Redshifts[i], overlapThreshold, result->Overlap[i], result->ChiSquare[i], result->FitAmplitude[i], result->Status[i], "lin", ampl );
             fprintf( f, "%.15e", result->ChiSquare[i]);
             if(j<sortedAmplitudes.size()-1){
                 fprintf( f, "\t");
