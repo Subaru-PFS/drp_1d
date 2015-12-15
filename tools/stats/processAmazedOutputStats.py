@@ -386,7 +386,6 @@ def ProcessStats( fname, zRange, magRange, enablePlot = False ):
             
     nSelected = len(indsForHist)
     namevect = range(0,nSelected)
-    xvect = range(0,nSelected)
     yvect = range(0,nSelected)
     mvect = range(0,nSelected)
     snrvect = range(0,nSelected)
@@ -406,7 +405,6 @@ def ProcessStats( fname, zRange, magRange, enablePlot = False ):
         zref[x] = (data[indsForHist[x]][2])
         zcalc[x] = (data[indsForHist[x]][4])
         
-        xvect[x] = data[indsForHist[x]][2]
         yvect[x] = abs(data[indsForHist[x]][n2-1])/(1+zref[x])
         
     # export the filtered list
@@ -426,7 +424,7 @@ def ProcessStats( fname, zRange, magRange, enablePlot = False ):
     for x in range(0,nSelected):
         outStr = ""
         outStr = outStr + str(namevect[x]) + "\t"
-        outStr = outStr + str(xvect[x]) + "\t"
+        outStr = outStr + str(zcalc[x]) + "\t"
         outStr = outStr + str(yvect[x]) + "\t"
         outStr = outStr + str(mvect[x]) + "\t"
         outStr = outStr + str(snrvect[x]) + "\t"
