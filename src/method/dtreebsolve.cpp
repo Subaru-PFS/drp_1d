@@ -32,6 +32,9 @@
 
 #include <epic/redshift/operator/linemodel.h>
 
+
+#include <float.h>
+
 using namespace NSEpic;
 using namespace std;
 
@@ -165,12 +168,11 @@ Bool COperatorDTreeBSolve::Solve(CDataStore &dataStore, const CSpectrum &spc, co
 
     //*
     //_///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    // compute chisquare
+    // compute chisquares
     if( result->Extrema.size() == 0 )
     {
         return false;
     }
-
 
     Float64 overlapThreshold;
     dataStore.GetScopedParam( "chisquare.overlapthreshold", overlapThreshold, 1.0 );
@@ -204,13 +206,221 @@ Bool COperatorDTreeBSolve::Solve(CDataStore &dataStore, const CSpectrum &spc, co
     }
 
     spcComponent = "continuum";
+    Int32 enableFastContinuumFitLargeGrid = 1;
+    std::vector<Float64> redshiftsChi2Continuum;
+    //*
+    if(enableFastContinuumFitLargeGrid==1){
+        //calculate on a wider grid, defined by a minimum step
+        Float64 dz_chi2c_thres = 1e-3;
+        std::vector<Int32> removed_inds;
+        Int32 lastKeptInd = 0;
+        for(Int32 i=1; i<redshiftsChi2.size()-1; i++){
+            if( abs(redshiftsChi2[i]-redshiftsChi2[lastKeptInd])<dz_chi2c_thres && abs(redshiftsChi2[i+1]-redshiftsChi2[i])<dz_chi2c_thres ){
+                removed_inds.push_back(i);
+            }else{
+                lastKeptInd=i;
+            }
+        }
+        Int32 rmInd = 0;
+        for(Int32 i=1; i<redshiftsChi2.size()-1; i++){
+            if(removed_inds[rmInd]==i){
+                rmInd++;
+            }else{
+                redshiftsChi2Continuum.push_back(redshiftsChi2[i]);
+            }
+        }
+    }else{
+        redshiftsChi2Continuum=redshiftsChi2;
+    }
+
+    //*/
     auto chisolveResultcontinuum = chiSolve.Compute( dataStore, spc, spcWithoutCont,
                                                                         tplCatalog, tplCategoryList,
-                                                                        lambdaRange, redshiftsChi2, overlapThreshold, spcComponent, opt_interp);
-
+                                                                        lambdaRange, redshiftsChi2Continuum, overlapThreshold, spcComponent, opt_interp);
     //_///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //*/
+
+    // Calculate the Combination //////////////////////////////////////////////////
+    GetCombinedRedshift(dataStore);
+
+    // /////////////////////////////////////////////////////////////////////////////
+
+
     return true;
 }
 
 
+Bool COperatorDTreeBSolve::GetCombinedRedshift(CDataStore& store)
+{
+    std::shared_ptr<CChisquareResult> resultCombined = std::shared_ptr<CChisquareResult>( new CChisquareResult() );
+
+
+    std::string scope = "dtreeBsolve.linemodel";
+    auto results = std::dynamic_pointer_cast<const CLineModelResult>( store.GetGlobalResult(scope.c_str()).lock() );
+
+    //*
+    //***********************************************************
+    //retrieve chi2nc values
+    std::vector<Float64> w_chi2nc;
+    TFloat64List chi2nc;
+    TFloat64List znc;
+    Float64 minchi2nc= DBL_MAX;
+
+    chi2nc = GetBestRedshiftChi2List(store, "chisquare_nocontinuum", minchi2nc, znc);
+
+    //Log.LogInfo( "dtreeBsolve : znc size=%d", znc.size());
+    for( Int32 i=0; i<chi2nc.size(); i++ )
+    {
+        w_chi2nc.push_back(chi2nc[i]/minchi2nc);
+    }
+
+    //*
+    //***********************************************************
+    //retrieve chi2 continuum values
+    std::vector<Float64> w_chi2continuum;
+    TFloat64List chi2continuum;
+    TFloat64List chi2continuum_calcGrid;
+
+    TFloat64List zcontinuum_calcGrid;
+    Float64 minchi2continuum= DBL_MAX;
+
+    chi2continuum_calcGrid = GetBestRedshiftChi2List(store, "chisquare_continuum", minchi2continuum, zcontinuum_calcGrid);
+    //todo: interpolate the continuum results on the continuum fit grid
+    Int32 enableFastContinuumFitLargeGrid = 1;
+    if(enableFastContinuumFitLargeGrid){
+        Int32 iCalcGrid=0;
+        for( Int32 i=0; i<znc.size(); i++ )
+        {
+            if(znc[i]>=zcontinuum_calcGrid[iCalcGrid] || iCalcGrid==0){
+                chi2continuum.push_back(chi2continuum_calcGrid[iCalcGrid]);
+                iCalcGrid++;
+            }else{
+                //interpolate between iCalcGrid-1 and iCalcGrid
+                Float64 a = (chi2continuum_calcGrid[iCalcGrid]-chi2continuum_calcGrid[iCalcGrid-1])/(zcontinuum_calcGrid[iCalcGrid]-zcontinuum_calcGrid[iCalcGrid-1]);
+                Float64 continuumVal = chi2continuum_calcGrid[iCalcGrid-1]+a*(znc[i]-zcontinuum_calcGrid[iCalcGrid-1]);
+                chi2continuum.push_back(continuumVal);
+            }
+        }
+    }else{
+        chi2continuum = chi2continuum_calcGrid;
+    }
+    for( Int32 i=0; i<chi2continuum.size(); i++ )
+    {
+        w_chi2continuum.push_back(chi2continuum[i]/minchi2continuum);
+    }
+
+
+    //*
+    //***********************************************************
+    //retrieve linemodel values
+    TFloat64List chi2lm;
+
+    for( Int32 i=0; i<znc.size(); i++ )
+    {
+        for( Int32 iall=0; iall<results->Redshifts.size(); iall++ )
+        {
+            if(results->Redshifts[iall] == znc[i]){
+                chi2lm.push_back(results->ChiSquare[iall]);
+                break;
+            }
+        }
+    }
+    //Log.LogInfo( "dtreeBsolve : chi2lm size=%d", chi2lm.size());
+
+    /*
+    // save all merits in a temp. txt file
+    FILE* f = fopen( "dtreeb_merits_dbg.txt", "w+" );
+    for( Int32 i=0; i<results->Redshifts.size(); i++ )
+    {
+        fprintf( f, "%i %f %f %f %f\n", i, results->Extrema[i], results->GetExtremaMerit(i)/((float)results->nSpcSamples), chi2nc[i], chi2continuum[i] );//*1e12);
+    }
+    fclose( f );
+    //*/
+
+    //*
+    //***********************************************************
+    // Next Test: chi2nc chi2cont linear combination
+    //*
+    Float64 lmCoeff = 75.0/((float)results->nSpcSamples);
+    Float64 chi2ncCoeff = 100.0;
+    Float64 chi2cCoeff = 50.0;
+    //*/
+    /*
+    Float64 lmCoeff = 12.0/((float)results->nSpcSamples);
+    Float64 chi2ncCoeff = 100.0;
+    Float64 chi2cCoeff = 8.0;
+    //*/
+
+
+    //save the combined chisquare result
+    resultCombined->ChiSquare.resize( znc.size() );
+    resultCombined->Redshifts.resize( znc.size() );
+    resultCombined->Overlap.resize( znc.size() );
+
+
+    //estimate the combined chisquare result
+    Float64 tmpMerit = DBL_MAX ;
+    Float64 tmpRedshift = -1.0;
+    for( Int32 i=0; i<znc.size(); i++ )
+    {
+        Float64 post = lmCoeff*chi2lm[i] + chi2ncCoeff*chi2nc[i] + chi2cCoeff*chi2continuum[i];
+
+        resultCombined->ChiSquare[i] = post;
+        resultCombined->Redshifts[i] = znc[i];
+        resultCombined->Overlap[i] = -1.0;
+
+        if( post < tmpMerit )
+        {
+            tmpMerit = post;
+            tmpRedshift = znc[i];
+        }
+    }
+
+    if( resultCombined ) {
+        store.StoreScopedGlobalResult( "resultdtreeBCombined", resultCombined );
+    }
+
+    return true;
+    //*/
+
+}
+
+
+TFloat64List COperatorDTreeBSolve::GetBestRedshiftChi2List( CDataStore& store, std::string scopeStr,  Float64& minmerit, TFloat64List& zList)
+{
+    std::string scope = "dtreeBsolve.chisquare2solve.";
+    scope.append(scopeStr.c_str());
+
+    TOperatorResultMap meritResults = store.GetPerTemplateResult(scope.c_str());
+
+    TFloat64List meritList;
+    //init meritresults
+    TOperatorResultMap::const_iterator it0 = meritResults.begin();
+    {
+        auto meritResult = std::dynamic_pointer_cast<const CChisquareResult> ( (*it0).second );
+        for( Int32 i=0; i<meritResult->ChiSquare.size(); i++ )
+        {
+            meritList.push_back(DBL_MAX);
+            zList.push_back(meritResult->Redshifts[i]);
+        }
+    }
+
+    //find best merit for each tpl
+    minmerit = DBL_MAX;
+    for( TOperatorResultMap::const_iterator it = meritResults.begin(); it != meritResults.end(); it++ )
+    {
+        auto meritResult = std::dynamic_pointer_cast<const CChisquareResult>((*it).second);
+        for( Int32 i=0; i<meritResult->ChiSquare.size(); i++ )
+        {
+            if( meritList[i] > meritResult->ChiSquare[i]){
+                meritList[i] = meritResult->ChiSquare[i];
+            }
+            if( minmerit > meritResult->ChiSquare[i]){
+                minmerit = meritResult->ChiSquare[i];
+            }
+        }
+    }
+
+    return meritList;
+
+}

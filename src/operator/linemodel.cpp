@@ -233,7 +233,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute( CDataStore &dataSt
         //result->bic[i] = aic + (2*nddl*(nddl+1) )/(nsamples-nddl-1);  //AICc, better when nsamples small
     }
 
-    ComputeArea2(*result);
+    //ComputeArea2(*result);
 
 
     if(result->Extrema.size()>0){
