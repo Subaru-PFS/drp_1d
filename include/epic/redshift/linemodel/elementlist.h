@@ -30,6 +30,7 @@ public:
     ~CLineModelElementList();
 
     void LoadCatalog(const CRayCatalog::TRayVector& restRayList);
+    void LoadCatalog2(const CRayCatalog::TRayVector& restRayList);
     void LoadCatalogPFS(const CRayCatalog::TRayVector& restRayList);
     void LoadCatalog_tplExtendedBlue(const CRayCatalog::TRayVector& restRayList);
     void LoadCatalogMultilineBalmer(const CRayCatalog::TRayVector& restRayList);

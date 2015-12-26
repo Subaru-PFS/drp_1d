@@ -8,6 +8,7 @@
 #include <epic/redshift/operator/chisquareresult.h>
 #include <epic/redshift/extremum/extremum.h>
 #include <epic/redshift/linemodel/modelspectrumresult.h>
+#include <epic/redshift/linemodel/modelfittingresult.h>
 
 
 #include <epic/redshift/spectrum/io/fitswriter.h>
@@ -205,11 +206,15 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute( CDataStore &dataSt
         //save the model result
         static Int32 maxModelSave = 5;
         if(savedModels<maxModelSave /*&& isLocalExtrema[i]*/){
-            //CRef<CModelSpectrumResult> resultspcmodel = new CModelSpectrumResult();
+            // CModelSpectrumResult
             std::shared_ptr<CModelSpectrumResult>  resultspcmodel = std::shared_ptr<CModelSpectrumResult>( new CModelSpectrumResult(model.GetModelSpectrum()) );
-            // Store results
-            std::string fname = (boost::format("linemodel_spc_extrema_%1%") % savedModels).str();
-            dataStore.StoreScopedGlobalResult( fname.c_str(), resultspcmodel );
+            std::string fname_spc = (boost::format("linemodel_spc_extrema_%1%") % savedModels).str();
+            dataStore.StoreScopedGlobalResult( fname_spc.c_str(), resultspcmodel );
+
+            // CModelFittingResult
+            std::shared_ptr<CModelFittingResult>  resultfitmodel = std::shared_ptr<CModelFittingResult>( new CModelFittingResult(result->LineModelSolutions[idx], result->Redshifts[idx], result->ChiSquare[idx], result->restRayList) );
+            std::string fname_fit = (boost::format("linemodel_fit_extrema_%1%") % savedModels).str();
+            dataStore.StoreScopedGlobalResult( fname_fit.c_str(), resultfitmodel );
             savedModels++;
         }
 

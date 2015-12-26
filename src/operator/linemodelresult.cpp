@@ -152,68 +152,6 @@ Void CLineModelResult::Save( const CDataStore& store, std::ostream& stream ) con
         }
         stream << "}" << std::endl;
     }
-
-    // save linemodel solution
-    if(LineModelSolutions.size()>0){
-        for ( UInt32 i=0; i<Extrema.size(); i++)
-        {
-//            if(!IsLocalExtrema[i]){
-//                continue;
-//            }
-
-            stream <<  "#linemodel solution " << i << " for z = " <<  std::fixed <<  Extrema[i];
-            if(LogArea.size()>i){
-                stream <<  ", LogArea = " <<  LogArea[i];
-            }
-            Int32 idx=0;
-            for ( UInt32 i2=0; i2<LineModelSolutions.size(); i2++)
-            {
-                if(Redshifts[i2] == Extrema[i]){
-                    idx = i2;
-                    break;
-                }
-            }
-            if(bic.size()>i){
-                stream <<  ", bic"
-                           " = " <<  bic[i];
-            }
-            if(Posterior.size()>i){
-                stream <<  ", post"
-                           " = " <<  Posterior[i];
-            }
-            stream << ", merit = " <<  ChiSquare[idx] << "{" <<  std::endl;
-            for ( UInt32 j=0; j<LineModelSolutions[idx].Amplitudes.size(); j++)
-            {
-                stream <<  "#";
-                std::string typeStr="";
-                if(restRayList[j].GetType() == CRay::nType_Absorption){
-                    typeStr = "A";
-                }else{
-                    typeStr = "E";
-                }
-                stream <<  typeStr << "\t";
-                std::string forceStr="";
-                if(restRayList[j].GetForce() == CRay::nForce_Strong){
-                    forceStr = "S";
-                }else{
-                    forceStr = "W";
-                }
-                stream <<  forceStr << "\t";
-                std::string name = restRayList[j].GetName();
-                Int32 nstr = name.size();
-                for(int jstr=0; jstr<18-nstr; jstr++){
-                    name = name.append(" ");
-                }
-                stream <<  std::fixed << name << "\t";
-                stream <<  std::fixed << std::setprecision(0) << LineModelSolutions[idx].ElementId[j] << "\t";
-                stream <<  std::fixed << std::setprecision(3) << restRayList[j].GetPosition() << "\t";
-                stream << std::scientific << std::setprecision(5) <<  LineModelSolutions[idx].Amplitudes[j] << "\t";
-                stream << std::scientific << std::setprecision(5) <<  LineModelSolutions[idx].Errors[j] << "\t";
-                stream << std::scientific << std::setprecision(5) <<  LineModelSolutions[idx].FittingError[j] << std::endl;
-            }
-            stream << "#}" << std::endl;
-        }
-    }
 }
 
 Void CLineModelResult::SaveLine( const CDataStore& store, std::ostream& stream ) const

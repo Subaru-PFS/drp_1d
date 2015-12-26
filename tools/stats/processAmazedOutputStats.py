@@ -819,4 +819,5 @@ def Main( argv ) :
     except (KeyboardInterrupt):
         exit()
     
-Main( sys.argv )
+if __name__ == '__main__':
+    Main( sys.argv )

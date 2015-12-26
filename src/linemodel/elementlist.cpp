@@ -42,8 +42,8 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum, const CS
     m_nominalWidthDefaultEmission = 1.15;// suited to new pfs simulations
     m_nominalWidthDefaultAbsorption = m_nominalWidthDefaultEmission;
 
-    //LoadCatalog(restRayList);
-    LoadCatalogPFS(restRayList);
+    LoadCatalog2(restRayList);
+    //LoadCatalogPFS(restRayList);
     //LoadCatalog_tplExtendedBlue(restRayList);
     //LoadCatalogMultilineBalmer(restRayList);
     //LoadCatalogSingleLines(restRayList);
@@ -111,6 +111,26 @@ CLineModelElementList::~CLineModelElementList()
 const CSpectrum& CLineModelElementList::GetModelSpectrum() const
 {
     return *m_SpectrumModel;
+}
+
+void CLineModelElementList::LoadCatalog2(const CRayCatalog::TRayVector& restRayList)
+{
+    CRayCatalog crctlg;
+    std::vector<CRayCatalog::TRayVector> groupList = crctlg.ConvertToGroupList(restRayList);
+    for(Int32 ig=0; ig<groupList.size(); ig++){
+        std::vector<CRay> lines;
+        std::vector<Float64> amps;
+        std::vector<Int32> inds;
+        for(Int32 i=0; i<groupList[ig].size(); i++){
+            std::vector<Int32> idx = findLineIdxInCatalog( restRayList, groupList[ig][i].GetName(), groupList[ig][i].GetType());
+            inds.push_back(idx[0]);
+            amps.push_back(groupList[ig][i].GetNominalAmplitude());
+            lines.push_back(groupList[ig][i]);
+        }
+        if(lines.size()>0){
+            m_Elements.push_back(boost::shared_ptr<CLineModelElement> (new CMultiLine(lines, m_LineWidthType, m_resolution, m_velocityEmission, m_velocityAbsorption, amps, m_nominalWidthDefaultAbsorption, inds)));
+        }
+    }
 }
 
 void CLineModelElementList::LoadCatalog(const CRayCatalog::TRayVector& restRayList)
@@ -292,6 +312,7 @@ void CLineModelElementList::LoadCatalog(const CRayCatalog::TRayVector& restRayLi
 //        indsCaII.push_back(bIdx[0]);
 //    }
 //    m_Elements.push_back(boost::shared_ptr<CLineModelElement> (new CMultiLine(linesCaII, m_LineWidthType, ampsCaII, m_nominalWidthDefaultAbsorption, indsCaII)));
+
 
 
     //Load the rest of the single lines
