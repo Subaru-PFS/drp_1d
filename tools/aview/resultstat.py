@@ -18,7 +18,7 @@ import time
 subfolder = "../stats"
 cmd_subfolder = os.path.realpath(os.path.abspath(os.path.join(os.path.split(inspect.getfile( inspect.currentframe() ))[0],subfolder)))
 if cmd_subfolder not in sys.path:
-    print("inserting sys path : cmd_subfolder = {}".format(cmd_subfolder))
+    #print("inserting sys path : cmd_subfolder = {}".format(cmd_subfolder))
     sys.path.insert(0, cmd_subfolder)
      
 import lstats

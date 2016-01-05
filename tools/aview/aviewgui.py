@@ -9,14 +9,16 @@ from PyQt4 import QtGui, QtCore
 import sys
 import os
 import inspect
- 
+import glob
+
 import aview
 import resultstat
+import resparser
 
 subfolder = "../stats"
 cmd_subfolder = os.path.realpath(os.path.abspath(os.path.join(os.path.split(inspect.getfile( inspect.currentframe() ))[0],subfolder)))
 if cmd_subfolder not in sys.path:
-    print("inserting sys path : cmd_subfolder = {}".format(cmd_subfolder))
+    #print("inserting sys path : cmd_subfolder = {}".format(cmd_subfolder))
     sys.path.insert(0, cmd_subfolder)
      
 import processAmazedOutputStats
@@ -162,7 +164,7 @@ class AViewGui(QtGui.QMainWindow):
         self.show()
  
     def bt_loadresults(self):
-        #self.setCurrentDir()
+        self.setCurrentDir()
     
         _resDir = str(self.leResDir.text())
         print("using _resDir: {}".format(_resDir))
@@ -299,24 +301,53 @@ class AViewGui(QtGui.QMainWindow):
         self.btn.setEnabled(val)
     
     def setCurrentDir(self):
-#        _resDir = str(self.leResDir.text())
-#        _resParser = resparser.ResParser(_resDir)
-#        _relResDir = os.path.normpath( _resParser.getConfigVal("output"))
-#        print("_relResDir = {}".format(_relResDir))
-#        if _relResDir.startswith('./'):
-#            _relResDir = _relResDir[2:]
-#        print("_relResDir = {}".format(_relResDir))
-#        
-#        if _resDir.endswith('/'):
-#            _resDir = _resDir[:len(_resDir)-1]
-#        print("resdir = {}".format(_resDir))
-#        if _resDir.endswith(_relResDir):
-#            _amazedDir = _resDir.replace(_relResDir, "")
-#        
-#        print("_amazedDir = {}".format(_amazedDir))
-        _amazedDir = "/home/aschmitt/data/pfs/pfs2_simu20151118_jenny/amazed"
-        os.chdir(_amazedDir)
- 
+        _savedCurDir = os.path.realpath(os.path.abspath(os.path.curdir))
+        _resDir = str(self.leResDir.text())
+        _resParser = resparser.ResParser(_resDir)
+
+        #fixed
+        #_amazedDir = "/home/aschmitt/data/pfs/pfs2_simu20151118_jenny/amazed"    
+        #os.chdir(_amazedDir)
+    
+        #try to find the amazed working directory by identifying the linecatalog relative path
+        _abscurpath = os.path.realpath(os.path.abspath(_resDir))
+        _relCatalogDir = os.path.normpath( _resParser.getConfigVal("linecatalog"))
+        if len(glob.glob(_relCatalogDir))>0:
+            return
+        #print("_relCatalogDir = {}".format(_relCatalogDir))
+        continueDown = True;
+        while continueDown:
+            os.chdir(_abscurpath)
+            #print("\ncurdir = {}".format(_abscurpath))
+            subfolder = "../"      
+            
+            _possible_root = glob.glob(_relCatalogDir) 
+            _possible_level1 = glob.glob("*/" + _relCatalogDir)
+            _possible_level2 = glob.glob("*/" + "*/" + _relCatalogDir)            
+            #print("_possible_root = {}".format(_possible_root))     
+            #print("_possible_level1 = {}".format(_possible_level1))
+            
+            if _abscurpath==os.path.sep:
+                continueDown = False
+                os.chdir(_savedCurDir)
+            elif len(_possible_root)==1:
+                continueDown = False
+                print("SETTING CURRENT DIRECTORY: _amazedDir = {}".format(_abscurpath))
+            elif len(_possible_level1)==1:
+                subdir = _possible_level1[0].split(os.path.sep)[0]
+                _amazedDir = os.path.join(_abscurpath, subdir)
+                os.chdir(_amazedDir)
+                continueDown = False
+                print("SETTING CURRENT DIRECTORY: _amazedDir = {}".format(_amazedDir))
+            elif len(_possible_level2)==1:
+                subdir0 = _possible_level2[0].split(os.path.sep)[0]
+                subdir1 = _possible_level2[0].split(os.path.sep)[1]
+                _amazedDir = os.path.join(_abscurpath, subdir0, subdir1)
+                os.chdir(_amazedDir)
+                continueDown = False
+                print("SETTING CURRENT DIRECTORY: _amazedDir = {}".format(_amazedDir))
+            else:
+                _abscurpath = os.path.realpath(os.path.abspath(os.path.join(_abscurpath,subfolder)))  
  
 def main():
     app = QtGui.QApplication(sys.argv)
