@@ -11,13 +11,13 @@ def Process():
 def StartFromCommandLine( argv ) :	
     usage = """usage: %prog
     Run doxygen and build documentation"""
-    parser = optparse.OptionParser(usage=usage)
+    parser = optparse.OptionParser( usage=usage )
     (options, args) = parser.parse_args()
     
     if( len( args ) == 0 ) :
         Process( );
     else :
-        print("Error: invalid argument count")
+        print( "Error: invalid argument count" )
         exit()
 
 
@@ -25,7 +25,7 @@ def Main( argv ) :
     try:
         if len( argv ) == 1 :
             StartFromCommandLine( argv )
-    except (KeyboardInterrupt):
+    except ( KeyboardInterrupt ):
         exit()
     
 Main( sys.argv )

@@ -1,14 +1,12 @@
 #ifndef _REDSHIFT_PROCESSFLOW_CONTEXT_
 #define _REDSHIFT_PROCESSFLOW_CONTEXT_
 
-#include <epic/core/common/ref.h>
 #include <epic/redshift/spectrum/template/template.h>
-#include <epic/redshift/operator/result.h>
-#include <epic/redshift/operator/resultstore.h>
+#include <epic/redshift/processflow/datastore.h>
 
 #include <map>
 #include <string>
-
+#include <memory>
 
 namespace NSEpic
 {
@@ -19,65 +17,53 @@ class CPeakStore;
 class CRayCatalog;
 class CTemplateCatalog;
 class CRayCatalog;
+class CParameterStore;
+class COperatorResultStore;
+class CDataStore;
 
 /**
- * Store all data concerning computation and processign of a given spectrum
- *
+ * \ingroup Redshift
+ * Store all data concerning computation and processing of a given spectrum.
  */
-class CProcessFlowContext : public COperatorResultStore
+class CProcessFlowContext
 {
 
-    DEFINE_MANAGED_OBJECT( CProcessFlowContext )
-
 public:
-
-    enum EMethod
-    {
-        nMethod_BlindSolve = 0,
-        nMethod_LineMatching,
-        nMethod_FullSolve,
-        nMethod_DecisionalTree7,
-        nMethod_Count,
-        nMethod_None = -1
-    };
-
-    struct SParam
-    {
-        SParam();
-        TTemplateCategoryList   templateCategoryList;
-        TFloat64Range           lambdaRange;
-        TFloat64Range           redshiftRange;
-        Float64                 redshiftStep;
-        Float64                 overlapThreshold;
-        Int32                   smoothWidth;
-        EMethod                 method;
-        Int32                   correlationExtremumCount;
-    };
-
 
     CProcessFlowContext();
     ~CProcessFlowContext();
 
-    bool Init( const char* spectrumPath, const char* noisePath, const char* tempalteCatalogPath, const char* rayCatalogPath, const SParam& params  );
-    bool Init( const char* spectrumPath, const char* noisePath, const CTemplateCatalog& templateCatalog, const CRayCatalog& rayCatalog, const SParam& params  );
+    bool Init( const char* spectrumPath, const char* noisePath,
+               const char* tempalteCatalogPath, const char* rayCatalogPath,
+               std::shared_ptr<CParameterStore> paramStore  );
+
+    bool Init( const char* spectrumPath, const char* noisePath,
+               std::shared_ptr<const CTemplateCatalog> templateCatalog,
+               std::shared_ptr<const CRayCatalog> rayCatalog,
+               std::shared_ptr<CParameterStore> paramStore  );
 
     const CSpectrum&                GetSpectrum() const;
     const CSpectrum&                GetSpectrumWithoutContinuum() const;
     const CTemplateCatalog&         GetTemplateCatalog() const;
     const CRayCatalog&              GetRayCatalog() const;
-    const SParam&                   GetParams() const;
 
-    static std::string              GetMethodName( EMethod method );
+    CParameterStore&                GetParameterStore();
+    COperatorResultStore&           GetResultStore();
+    CDataStore&                     GetDataStore();
 
 private:
 
+    std::shared_ptr<CSpectrum>                 m_Spectrum;
+    std::shared_ptr<CSpectrum>                 m_SpectrumWithoutContinuum;
 
-    CRef<CSpectrum>                 m_Spectrum;
-    CRef<CSpectrum>                 m_SpectrumWithoutContinuum;
-    CRef<CTemplateCatalog>          m_TemplateCatalog;
-    CRef<CRayCatalog>               m_RayCatalog;
+    std::shared_ptr<const CTemplateCatalog>    m_TemplateCatalog;
+    std::shared_ptr<const CRayCatalog>         m_RayCatalog;
 
-    SParam                          m_Params;
+    std::shared_ptr<CParameterStore>           m_ParameterStore;
+    std::shared_ptr<COperatorResultStore>      m_ResultStore;
+
+    std::shared_ptr<CDataStore>                m_DataStore;
+
 
 
 };

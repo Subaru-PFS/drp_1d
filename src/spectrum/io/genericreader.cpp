@@ -10,16 +10,25 @@ using namespace std;
 
 namespace bfs = boost::filesystem;
 
+/**
+ * Empty constructor.
+ */
 CSpectrumIOGenericReader::CSpectrumIOGenericReader()
 {
 
 }
 
+/**
+ * Empty destructor.
+ */
 CSpectrumIOGenericReader::~CSpectrumIOGenericReader()
 {
 
 }
 
+/**
+ * Will return true if the file extension is either fits or txt. Returns false otherwise.
+ */
 Bool CSpectrumIOGenericReader::CanRead( const char* filePath )
 {
     bfs::path path( filePath );
@@ -38,6 +47,9 @@ Bool CSpectrumIOGenericReader::CanRead( const char* filePath )
     return false;
 }
 
+/**
+ * Will return a call to reader.Read if the file extension is fits, txt or dat. Returns false otherwise.
+ */
 Bool CSpectrumIOGenericReader::Read( const char* filePath, CSpectrum& spectrum )
 {
     bfs::path path( filePath );

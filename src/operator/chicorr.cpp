@@ -24,7 +24,6 @@
 using namespace NSEpic;
 using namespace std;
 
-IMPLEMENT_MANAGED_OBJECT(COperatorChicorr)
 
 COperatorChicorr::COperatorChicorr()
 {

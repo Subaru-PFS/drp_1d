@@ -1,38 +1,30 @@
-#include "spectrumio.h"
-
 #include <epic/core/common/datatypes.h>
 #include <epic/redshift/spectrum/spectrum.h>
+#include <epic/redshift/spectrum/io/fitsreader.h>
 
-using namespace NSEpicTest;
+#include <boost/test/unit_test.hpp>
 
 using namespace NSEpic;
 using namespace std;
 
-void CCRedshiftSpectrumioTestCase::setUp()
-{
-}
+BOOST_AUTO_TEST_SUITE(SpectrumIO)
 
-void CCRedshiftSpectrumioTestCase::tearDown()
-{
-}
 
-#include <epic/redshift/spectrum/io/fitsreader.h>
-
-void CCRedshiftSpectrumioTestCase::VVDSReadValidFile()
+BOOST_AUTO_TEST_CASE(VVDSReadValidFile)
 {
     CSpectrumIOFitsReader reader;
 
     CSpectrum s;
 
     Bool retVal = reader.Read( "../test/data/SpectrumioTestCase/spectrum1_z_1.2299.fits", s );
-    CPPUNIT_ASSERT( retVal == true );
+    BOOST_CHECK( retVal == true );
 
-    CPPUNIT_ASSERT( s.GetSampleCount() == 11391 );
-    CPPUNIT_ASSERT_DOUBLES_EQUAL( 3800.0, s.GetLambdaRange().GetBegin(), 0.01 );
+    BOOST_CHECK( s.GetSampleCount() == 11391 );
+    BOOST_CHECK_CLOSE_FRACTION( 3800.0, s.GetLambdaRange().GetBegin(), 0.01 );
 
 }
 
-void CCRedshiftSpectrumioTestCase::VVDSReadInvalidFile()
+BOOST_AUTO_TEST_CASE(VVDSReadInvalidFile)
 {
     CSpectrumIOFitsReader reader;
 
@@ -40,11 +32,13 @@ void CCRedshiftSpectrumioTestCase::VVDSReadInvalidFile()
 
     Bool rValue = reader.Read( "../test/data/SpectrumioTestCase/invalidspectrum1.fits", s );
 
-    CPPUNIT_ASSERT( rValue == false );
-    CPPUNIT_ASSERT( s.GetSampleCount() == 0 );
-    CPPUNIT_ASSERT_DOUBLES_EQUAL( 0.0, s.GetLambdaRange().GetBegin(), 0.01 );
-    CPPUNIT_ASSERT_DOUBLES_EQUAL( 0.0, s.GetResolution(), 0.01  );
+    BOOST_CHECK( rValue == false );
+    BOOST_CHECK( s.GetSampleCount() == 0 );
+    BOOST_CHECK_CLOSE_FRACTION( 0.0, s.GetLambdaRange().GetBegin(), 0.01 );
+    BOOST_CHECK_CLOSE_FRACTION( 0.0, s.GetResolution(), 0.01  );
 
 }
 
+
+BOOST_AUTO_TEST_SUITE_END()
 

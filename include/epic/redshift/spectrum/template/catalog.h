@@ -2,8 +2,6 @@
 #define _REDSHIFT_SPECTRUM_TEMPLATE_CATALOG_
 
 #include <epic/core/common/datatypes.h>
-#include <epic/core/common/managedobject.h>
-#include <epic/core/common/ref.h>
 #include <epic/redshift/spectrum/template/template.h>
 
 #include <boost/filesystem.hpp>
@@ -12,36 +10,39 @@
 namespace NSEpic
 {
 
-class CTemplateCatalog : public CManagedObject
+class CTemplateCatalog
 {
-
-    DEFINE_MANAGED_OBJECT( CTemplateCatalog )
 
 public:
 
-    CTemplateCatalog();
+    CTemplateCatalog( std::string cremovalmethod="Median", Float64 mediankernelsize=75.0);
     ~CTemplateCatalog();
 
-    Bool Add( CTemplate& r );
-    Bool Add( const char* templatePath, CTemplate::ECategory category );
+    Bool Add( std::shared_ptr<CTemplate> );
+    Bool Add( const char* templatePath, const std::string& category );
     Bool Load( const char* filePath );
 
-    const CTemplate& GetTemplate( CTemplate::ECategory category, UInt32 i ) const;
-    const CTemplate& GetTemplateWithoutContinuum( CTemplate::ECategory category, UInt32 i ) const;
+    const CTemplate& GetTemplate( const std::string& category, UInt32 i ) const;
+    const CTemplate& GetTemplateWithoutContinuum( const std::string& category, UInt32 i ) const;
 
-    TTemplateRefList GetTemplate( const TTemplateCategoryList& categoryList ) const;
-    TTemplateRefList GetTemplateWithoutContinuum(  const TTemplateCategoryList& categoryList  ) const;
+    TTemplateRefList GetTemplate( const TStringList& categoryList ) const;
+    TTemplateRefList GetTemplateWithoutContinuum(  const TStringList& categoryList  ) const;
 
-    TTemplateCategoryList GetCategoryList() const;
+    TStringList GetCategoryList() const;
 
-    UInt32 GetTemplateCount( CTemplate::ECategory category ) const;
+    UInt32 GetTemplateCount( const std::string& category ) const;
 
 private:
 
-    Bool                    LoadCategory( const boost::filesystem::path& dirPath, CTemplate::ECategory category );
-    CTemplate::ECategory    ConvertStringToCategory( const std::string& category );
-    TTemplateRefList        m_List[CTemplate::nCategory_Count];
-    TTemplateRefList        m_ListWithoutCont[CTemplate::nCategory_Count];
+    Bool                    LoadCategory( const boost::filesystem::path& dirPath, const std::string& category );
+
+    TTemplatesRefDict        m_List;
+    TTemplatesRefDict        m_ListWithoutCont;
+
+
+    std::string m_continuumRemovalMethod;
+    Float64 m_continuumRemovalMedianKernelWidth;
+
 };
 
 

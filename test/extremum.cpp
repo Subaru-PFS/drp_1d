@@ -1,21 +1,13 @@
-#include "extremum.h"
-
 #include <epic/core/common/datatypes.h>
 #include <epic/redshift/extremum/extremum.h>
 
+#include <boost/test/unit_test.hpp>
+
 using namespace NSEpic;
 
-using namespace NSEpicTest;
+BOOST_AUTO_TEST_SUITE(Extremum)
 
-void CRedshiftExtremumTestCase::setUp()
-{
-}
-
-void CRedshiftExtremumTestCase::tearDown()
-{
-}
-
-void CRedshiftExtremumTestCase::Find()
+BOOST_AUTO_TEST_CASE(Find)
 {
     CExtremum peaks;
 
@@ -59,3 +51,4 @@ void CRedshiftExtremumTestCase::Find()
     */
 }
 
+BOOST_AUTO_TEST_SUITE_END()

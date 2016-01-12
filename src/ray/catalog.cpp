@@ -11,7 +11,6 @@ using namespace NSEpic;
 using namespace std;
 using namespace boost;
 
-IMPLEMENT_MANAGED_OBJECT( CRayCatalog )
 
 CRayCatalog::CRayCatalog()
 {
@@ -44,12 +43,55 @@ const CRayCatalog::TRayVector CRayCatalog::GetFilteredList(Int32 typeFilter, Int
     }
 }
 
+const std::vector<CRayCatalog::TRayVector> CRayCatalog::ConvertToGroupList( TRayVector filteredList ) const
+{
+
+    std::vector<std::string> tags;
+    for( int i = 0; i< filteredList.size(); i++ )
+    {
+        if(filteredList[i].GetGroupName() != "-1"){
+            tags.push_back(filteredList[i].GetGroupName());
+        }
+    }
+
+    // create the group tag set by removing duplicates
+    std::sort( tags.begin(), tags.end() );
+    tags.erase( std::unique( tags.begin(), tags.end() ), tags.end() );
+
+    //get all group tags
+    std::vector<TRayVector> fullList;
+    for( Int32 itag = 0; itag<tags.size(); itag++){
+        TRayVector taggedGroupList;
+        for( int i = 0; i< filteredList.size(); i++ )
+        {
+            std::string group = filteredList[i].GetGroupName();
+            if(group==tags[itag]){
+                taggedGroupList.push_back(filteredList[i]);
+            }
+        }
+        fullList.push_back(taggedGroupList);
+    }
+    //add the non grouped lines
+    for( int i = 0; i< filteredList.size(); i++ )
+    {
+        std::string group = filteredList[i].GetGroupName();
+        if(group=="-1"){
+            TRayVector taggedGroupList;
+            taggedGroupList.push_back(filteredList[i]);
+            fullList.push_back(taggedGroupList);
+        }
+    }
+
+    return fullList;
+}
+
+
 Bool CRayCatalog::Add( const CRay& r )
 {
     TRayVector::iterator it;
     for( it = m_List.begin(); it != m_List.end(); ++it )
     {
-        // Can't add a ray with a name + position + type that already exists in the list
+        // Can't add a line with a name + position + type that already exists in the list
         if( (*it).GetName() == r.GetName() && (*it).GetPosition() == r.GetPosition() && (*it).GetType() == r.GetType() )
             return false;
     }
@@ -63,7 +105,7 @@ Bool CRayCatalog::Load( const char* filePath )
 {
     ifstream file;
 
-    // Clear current ray list
+    // Clear current line list
     m_List.clear();
 
     file.open( filePath, ifstream::in );
@@ -75,6 +117,9 @@ Bool CRayCatalog::Load( const char* filePath )
     // Read file line by line
     while( getline( file, line ) )
     {
+        if(line.compare(0,1,"#",1)==0){
+            continue;
+        }
         char_separator<char> sep(" \t");
 
         // Tokenize each line
@@ -133,7 +178,27 @@ Bool CRayCatalog::Load( const char* filePath )
                 Eforce = 2;
             }
 
-            Add( CRay( name, pos, Etype, Eforce ) );
+            std::string groupName = "-1";
+            Float64 nominaleAmplitude = 1.0;
+            // Parse group name
+            ++it;
+            if( it != tok.end() ){
+                groupName = *it;
+                // Parse group line nominal amplitude
+                ++it;
+                if( it != tok.end() ){
+                    try
+                    {
+                        nominaleAmplitude = lexical_cast<double>(*it);
+                    }
+                    catch (bad_lexical_cast)
+                    {
+                        nominaleAmplitude = 1.0;
+                    }
+                }
+            }
+
+            Add( CRay( name, pos, Etype, Eforce, -1, -1, -1, -1, groupName, nominaleAmplitude ) );
         }
     }
 
@@ -143,4 +208,15 @@ Bool CRayCatalog::Load( const char* filePath )
 void CRayCatalog::Sort()
 {
     sort(m_List.begin(), m_List.end());
+}
+
+void CRayCatalog::ConvertVacuumToAir()
+{
+    TRayVector::iterator it;
+    for( it = m_List.begin(); it != m_List.end(); ++it )
+    {
+        (*it).ConvertVacuumToAir();
+    }
+
+    return;
 }

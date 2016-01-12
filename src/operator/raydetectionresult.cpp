@@ -1,22 +1,28 @@
 #include <epic/redshift/operator/raydetectionresult.h>
-
 #include <epic/redshift/ray/ray.h>
 
 using namespace NSEpic;
 
-IMPLEMENT_MANAGED_OBJECT( CRayDetectionResult )
-
-CRayDetectionResult::CRayDetectionResult()
+/**
+ * Empty constructor.
+ */
+CLineDetectionResult::CLineDetectionResult()
 {
 
 }
 
-CRayDetectionResult::~CRayDetectionResult()
+/**
+ * Empty destructor.
+ */
+CLineDetectionResult::~CLineDetectionResult()
 {
 
 }
 
-Void CRayDetectionResult::Save( const COperatorResultStore& store, std::ostream& stream ) const
+/**
+ * Call "Save" on each entry of "RayCatalog". Then output comments with each entry of "PeakListDetectionStatus".
+ */
+Void CLineDetectionResult::Save( const CDataStore& store, std::ostream& stream ) const
 {
     CRayCatalog::TRayVector::const_iterator it;
 
@@ -26,11 +32,19 @@ Void CRayDetectionResult::Save( const COperatorResultStore& store, std::ostream&
         stream << std::endl;
     }
 
+    stream << std::endl;
+    stream << "#Peak detection status:" <<std::endl;
+    for( Int32 i=0; i<PeakListDetectionStatus.size(); i++ )
+    {
+        stream << "#" << i << "\t" << PeakListDetectionStatus[i];
+        stream << std::endl;
+    }
 }
 
-
-
-Void CRayDetectionResult::SaveLine( const COperatorResultStore& store, std::ostream& stream ) const
+/**
+ * Stub method.
+ */
+Void CLineDetectionResult::SaveLine( const CDataStore& store, std::ostream& stream ) const
 {
     stream << "not implemented" << std::endl;
 }

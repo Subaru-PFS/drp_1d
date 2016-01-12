@@ -11,14 +11,14 @@
 #include <stdio.h>
 
 using namespace NSEpic;
-IMPLEMENT_MANAGED_OBJECT(CPeakDetection)
 
-CPeakDetection::CPeakDetection(Float64 windowSize, Float64 cut, UInt32 medianSmoothHalfWidth, UInt32 enlargeRate)
+CPeakDetection::CPeakDetection(Float64 windowSize, Float64 cut, UInt32 medianSmoothHalfWidth, UInt32 enlargeRate, Float64 detectionnoiseoffset)
 {
     m_winsize = windowSize;
     m_cut = cut;
     m_medianSmoothHalfWidth = medianSmoothHalfWidth;
     m_enlargeRate = enlargeRate;
+    m_detectionnoiseoffset = detectionnoiseoffset;
 }
 
 CPeakDetection::~CPeakDetection()
@@ -26,9 +26,9 @@ CPeakDetection::~CPeakDetection()
 
 }
 
-const CPeakDetectionResult* CPeakDetection::Compute( const CSpectrum& spectrum, const TLambdaRange& lambdaRange)
+std::shared_ptr<const CPeakDetectionResult> CPeakDetection::Compute( const CSpectrum& spectrum, const TLambdaRange& lambdaRange)
 {
-    CPeakDetectionResult* result = new CPeakDetectionResult();
+    auto result = std::shared_ptr<CPeakDetectionResult>( new CPeakDetectionResult() );
 
     const CSpectrumFluxAxis& fluxAxis = spectrum.GetFluxAxis();
     const CSpectrumSpectralAxis& spectralAxis = spectrum.GetSpectralAxis();
@@ -40,10 +40,8 @@ const CPeakDetectionResult* CPeakDetection::Compute( const CSpectrum& spectrum, 
         smoothedFluxAxis.ApplyMedianSmooth( m_medianSmoothHalfWidth );
     }
 
-    UInt32 windowSampleCount = m_winsize / spectrum.GetResolution();
-
     TInt32RangeList peaksBorders;
-    FindPossiblePeaks( smoothedFluxAxis, spectralAxis, windowSampleCount, m_cut, peaksBorders );
+    FindPossiblePeaks( smoothedFluxAxis, spectralAxis, peaksBorders );
 
     // No Peak detected, exit
     if( peaksBorders.size() == 0 )
@@ -91,6 +89,7 @@ TInt32Range CPeakDetection::FindGaussianFitStartAndStop( Int32 i, const TInt32Ra
 
     return TInt32Range( fitStart, fitStop );
 }
+
 
 /**
  * Not fully implemented.
@@ -156,7 +155,7 @@ Void CPeakDetection::RedefineBorders( TInt32RangeList& peakList, const CSpectrum
 }
 
 
-Void CPeakDetection::FindPossiblePeaks( const CSpectrumAxis& fluxAxis, const CSpectrumAxis& spectralAxis, UInt32 windowSampleCount, Float64 cut, TInt32RangeList& peakList )
+Void CPeakDetection::FindPossiblePeaks( const CSpectrumAxis& fluxAxis, const CSpectrumSpectralAxis& spectralAxis, TInt32RangeList& peakList )
 {
     peakList.clear();
 
@@ -168,15 +167,20 @@ Void CPeakDetection::FindPossiblePeaks( const CSpectrumAxis& fluxAxis, const CSp
 
     // Compute median value for each sample over a window of size windowSampleCount
     const Float64* fluxData = fluxAxis.GetSamples();
-    Int32 halfWindowSampleCount = windowSampleCount / 2;
     CMedian<Float64> medianFilter;
     for( Int32 i=0; i<fluxAxis.GetSamplesCount(); i++ )
     {
-        UInt32 start = std::max( 0, i - halfWindowSampleCount );
-        UInt32 stop = std::min( (Int32) fluxAxis.GetSamplesCount(), i + halfWindowSampleCount );
+        //old: regular sampling hypthesis
+        //Int32 halfWindowSampleCount = windowSampleCount / 2;
+        //UInt32 start = std::max( 0, i - halfWindowSampleCount );
+        //UInt32 stop = std::min( (Int32) fluxAxis.GetSamplesCount(), i + halfWindowSampleCount );
+        //irregular sampling compatible
+        UInt32 start = std::max(0, spectralAxis.GetIndexAtWaveLength(spectralAxis[i]-m_winsize/2.0) );
+        UInt32 stop = std::min( (Int32) fluxAxis.GetSamplesCount(), spectralAxis.GetIndexAtWaveLength(spectralAxis[i]+m_winsize/2.0)  );
 
         med[i] = medianFilter.Find( fluxData + start, stop - start );
         xmad[i] = XMad( fluxData+ start, stop - start , med[i] );
+        xmad[i] += m_detectionnoiseoffset; //add a noise level, useful for simulation data
     }
 
     /*//debug:
@@ -185,9 +189,9 @@ Void CPeakDetection::FindPossiblePeaks( const CSpectrumAxis& fluxAxis, const CSp
     for( Int32 i=0; i<fluxAxis.GetSamplesCount(); i++ )
     {
         if( med[i] < 0.0001 ){
-            fprintf( f, "%d %e %e %e %e\n", i, med[i], xmad[i], med[i]+0.5*cut*xmad[i], fluxData[i]);
+            fprintf( f, "%e %e %e %e %e\n", spectralAxis[i], med[i], xmad[i], med[i]+0.5*m_cut*xmad[i], fluxData[i]);
         }else{
-            fprintf( f, "%d %f %f %f %f\n", i, med[i], xmad[i], med[i]+0.5*cut*xmad[i], fluxData[i]);
+            fprintf( f, "%f %f %f %f %f\n", spectralAxis[i], med[i], xmad[i], med[i]+0.5*m_cut*xmad[i], fluxData[i]);
         }
     }
     fclose( f );
@@ -201,7 +205,7 @@ Void CPeakDetection::FindPossiblePeaks( const CSpectrumAxis& fluxAxis, const CSp
 
     for( Int32 i=0; i<fluxAxis.GetSamplesCount(); i++ )
     {
-        if( fluxData[i] > med[i]+0.5*cut*xmad[i] )
+        if( fluxData[i] > med[i]+0.5*m_cut*xmad[i] )
         {
             points[j++] = i;
         }

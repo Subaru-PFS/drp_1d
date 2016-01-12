@@ -2,14 +2,17 @@
 #define _REDSHIFT_SPECTRUM_AXIS_
 
 #include <epic/redshift/common/datatypes.h>
-#include <epic/core/serializer/serializable.h>
+
 
 #include <vector>
 
 namespace NSEpic
 {
 
-class CSpectrumAxis : public CSerializable
+/**
+ * \ingroup Redshift
+ */
+class CSpectrumAxis
 {
 
 public:
@@ -31,8 +34,6 @@ public:
     virtual Void        SetSize( UInt32 s );
 
 protected:
-
-    Bool                Serialize( CSerializer& ar );
 
     TAxisSampleList     m_Samples;
 

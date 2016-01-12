@@ -1,5 +1,6 @@
 #include <epic/redshift/processflow/context.h>
 
+#include <epic/redshift/processflow/datastore.h>
 #include <epic/redshift/spectrum/spectrum.h>
 #include <epic/redshift/spectrum/io/genericreader.h>
 #include <epic/redshift/spectrum/template/catalog.h>
@@ -8,6 +9,8 @@
 #include <epic/redshift/ray/ray.h>
 #include <epic/redshift/ray/catalog.h>
 #include <epic/redshift/continuum/median.h>
+#include <epic/redshift/continuum/irregularsamplingmedian.h>
+
 #include <epic/core/log/log.h>
 #include <epic/core/debug/assert.h>
 
@@ -17,6 +20,7 @@
 #include <stdio.h>
 #include <float.h>
 #include <fstream>
+#include <memory>
 
 #include <boost/filesystem.hpp>
 
@@ -24,27 +28,6 @@ namespace bfs = boost::filesystem;
 
 using namespace NSEpic;
 
-IMPLEMENT_MANAGED_OBJECT( CProcessFlowContext )
-
-CProcessFlowContext::SParam::SParam()
-{
-    redshiftRange = TFloat64Range( 0.0, 5.0 );
-    redshiftStep = 0.0001;
-    lambdaRange = TFloat64Range( 3000.0, 9600.0 );
-    smoothWidth = 0;
-    overlapThreshold = 1.0;
-    correlationExtremumCount = 5;
-
-    //method = nMethod_LineMatching;
-    //method = nMethod_BlindSolve;
-    //method = nMethod_FullSolve;
-    method = nMethod_DecisionalTree7;
-
-    templateCategoryList.push_back( CTemplate::nCategory_Emission );
-    templateCategoryList.push_back( CTemplate::nCategory_Galaxy );
-    templateCategoryList.push_back( CTemplate::nCategory_Star );
-    templateCategoryList.push_back( CTemplate::nCategory_Qso );
-}
 
 CProcessFlowContext::CProcessFlowContext()
 {
@@ -56,14 +39,13 @@ CProcessFlowContext::~CProcessFlowContext()
 
 }
 
-
-bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath, const CTemplateCatalog& templateCatalog, const CRayCatalog& rayCatalog, const SParam& params  )
+bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath,
+                                std::shared_ptr<const CTemplateCatalog> templateCatalog,
+                                std::shared_ptr<const CRayCatalog> rayCatalog,
+                                std::shared_ptr<CParameterStore> paramStore  )
 {
-    SetSpectrumName( bfs::path( spectrumPath ).stem().string().c_str() );
-
-    m_Spectrum = new CSpectrum();
-
-    m_Params = params;
+    m_Spectrum = std::shared_ptr<CSpectrum>( new CSpectrum() );
+    m_Spectrum->SetName(bfs::path( spectrumPath ).stem().string().c_str() );
 
     CSpectrumIOGenericReader reader;
     Bool rValue = reader.Read( spectrumPath, *m_Spectrum );
@@ -104,74 +86,111 @@ bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath,
     // This should be moved to CProcessFlow
 
     // Smooth flux
-    if( params.smoothWidth > 0 )
-        m_Spectrum->GetFluxAxis().ApplyMeanSmooth( params.smoothWidth );
+    Int64 smoothWidth;
+    paramStore->Get( "smoothWidth", smoothWidth, 0 );
+    if( smoothWidth > 0 )
+        m_Spectrum->GetFluxAxis().ApplyMeanSmooth( smoothWidth );
 
 
     // Compute continuum substracted spectrum
-    m_SpectrumWithoutContinuum = new CSpectrum();
+    m_SpectrumWithoutContinuum = std::shared_ptr<CSpectrum>( new CSpectrum() );
     *m_SpectrumWithoutContinuum = *m_Spectrum;
 
-    m_SpectrumWithoutContinuum->RemoveContinuum<CContinuumMedian>();
+    std::string medianRemovalMethod;
+    paramStore->Get( "continuumRemoval.method", medianRemovalMethod, "IrregularSamplingMedian" );
+    //ctx.GetParameterStore().Get( "continuumRemoval.method", medianRemovalMethod, "Median" );
+    if( medianRemovalMethod== "IrregularSamplingMedian"){
+        CContinuumIrregularSamplingMedian continuum;
+        Float64 opt_medianKernelWidth;
+        paramStore->Get( "continuumRemoval.medianKernelWidth", opt_medianKernelWidth, 75 );
+        continuum.SetMedianKernelWidth(opt_medianKernelWidth);
+        m_SpectrumWithoutContinuum->RemoveContinuum( continuum );
+
+    }else{
+        CContinuumMedian continuum;
+        Float64 opt_medianKernelWidth;
+        paramStore->Get( "continuumRemoval.medianKernelWidth", opt_medianKernelWidth, 75 );
+        continuum.SetMedianKernelWidth(opt_medianKernelWidth);
+        m_SpectrumWithoutContinuum->RemoveContinuum( continuum );
+    }
+
     m_SpectrumWithoutContinuum->ConvertToLogScale();
 
 
-    m_TemplateCatalog = ( CTemplateCatalog*) &templateCatalog;
-    m_RayCatalog = ( CRayCatalog*) &rayCatalog;
+    m_TemplateCatalog = templateCatalog;
+    m_RayCatalog = rayCatalog;
+    m_ParameterStore = paramStore;
+    m_ResultStore = std::shared_ptr<COperatorResultStore>( new COperatorResultStore );
+
+
+    m_DataStore = std::shared_ptr<CDataStore>( new CDataStore( *m_ResultStore, *m_ParameterStore ) );
+    m_DataStore->SetSpectrumName( bfs::path( spectrumPath ).stem().string() );
+
 
     return true;
 }
 
-bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath, const char* templateCatalogPath, const char* rayCatalogPath, const SParam& params )
+bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath,
+                                const char* templateCatalogPath, const char* rayCatalogPath,
+                                std::shared_ptr<CParameterStore> paramStore )
 {
-    CRef<CTemplateCatalog> templateCatalog = new CTemplateCatalog;
-    CRef<CRayCatalog> rayCatalog = new CRayCatalog;
+    std::string medianRemovalMethod;
+    paramStore->Get( "continuumRemoval.method", medianRemovalMethod, "IrregularSamplingMedian" );
+    Float64 opt_medianKernelWidth;
+    paramStore->Get( "continuumRemoval.medianKernelWidth", opt_medianKernelWidth, 75 );
+    std::shared_ptr<CTemplateCatalog> templateCatalog = std::shared_ptr<CTemplateCatalog>( new CTemplateCatalog( medianRemovalMethod, opt_medianKernelWidth) );
+    std::shared_ptr<CRayCatalog> rayCatalog = std::shared_ptr<CRayCatalog>(new CRayCatalog);
+
 
     Bool rValue;
+
 
     // Load template catalog
     if( templateCatalogPath )
     {
-        rValue = templateCatalog->Load( templateCatalogPath );
-        if( !rValue )
+      Log.LogDebug ( "templateCatalogPath exists." );
+      rValue = templateCatalog->Load( templateCatalogPath );
+      if( !rValue )
         {
-            Log.LogError("Failed to load template catalog: (%s)", templateCatalogPath );
-            m_TemplateCatalog = NULL;
-            return false;
+	  Log.LogError( "Failed to load template catalog from path: (%s)", templateCatalogPath );
+	  m_TemplateCatalog = NULL;
+	  return false;
         }
+      Log.LogDebug ( "Template catalog loaded." );
     }
 
-    // Load ray catalog
+    // Load line catalog
+    //std::cout << "ctx" << std::endl;
     if( rayCatalogPath )
     {
         rValue = rayCatalog->Load( rayCatalogPath );
         if( !rValue )
         {
-            Log.LogError("Failed to load ray catalog: (%s)", rayCatalogPath );
+            Log.LogError("Failed to load line catalog: (%s)", rayCatalogPath );
             m_RayCatalog = NULL;
             return false;
         }
     }
 
-    return Init( spectrumPath, noisePath, *templateCatalog, *rayCatalog, params );
+    return Init( spectrumPath, noisePath, templateCatalog, rayCatalog, paramStore );
+
 }
 
-std::string CProcessFlowContext::GetMethodName( EMethod method )
+CParameterStore& CProcessFlowContext::GetParameterStore()
 {
-    std::string methodStr = "Invalid method name";
-
-    if(method== CProcessFlowContext::nMethod_BlindSolve){
-        methodStr = "BlindSolve";
-    } else if (method == CProcessFlowContext::nMethod_LineMatching){
-        methodStr = "LineMatching";
-    } else if (method == CProcessFlowContext::nMethod_DecisionalTree7){
-        methodStr = "DecisionalTree7";
-    } else if (method == CProcessFlowContext::nMethod_FullSolve){
-        methodStr = "FullSolve";
-    }
-    return methodStr;
+    return *m_ParameterStore;
 }
 
+COperatorResultStore&  CProcessFlowContext::GetResultStore()
+{
+    return *m_ResultStore;
+}
+
+
+CDataStore& CProcessFlowContext::GetDataStore()
+{
+    return *m_DataStore;
+}
 
 const CSpectrum& CProcessFlowContext::GetSpectrum() const
 {
@@ -193,7 +212,4 @@ const CRayCatalog& CProcessFlowContext::GetRayCatalog() const
     return *m_RayCatalog;
 }
 
-const CProcessFlowContext::SParam& CProcessFlowContext::GetParams() const
-{
-    return m_Params;
-}
+

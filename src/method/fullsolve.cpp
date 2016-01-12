@@ -6,12 +6,11 @@
 #include <epic/redshift/operator/correlation.h>
 #include <epic/redshift/operator/chisquare.h>
 #include <epic/redshift/extremum/extremum.h>
-#include <epic/redshift/operator/resultstore.h>
+#include <epic/redshift/processflow/datastore.h>
 
 using namespace NSEpic;
 using namespace std;
 
-IMPLEMENT_MANAGED_OBJECT( COperatorFullSolve )
 
 COperatorFullSolve::COperatorFullSolve()
 {
@@ -23,17 +22,17 @@ COperatorFullSolve::~COperatorFullSolve()
 
 }
 
-const CFullSolveResult* COperatorFullSolve::Compute(  COperatorResultStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
-                                                        const CTemplateCatalog& tplCatalog, const TTemplateCategoryList& tplCategoryList,
+std::shared_ptr<const CFullSolveResult> COperatorFullSolve::Compute(  CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
+                                                        const CTemplateCatalog& tplCatalog, const TStringList& tplCategoryList,
                                                         const TFloat64Range& lambdaRange, const TFloat64Range& redshiftsRange, Float64 redshiftStep, Float64 overlapThreshold )
 {
     Bool storeResult = false;
 
-    COperatorResultStore::CAutoScope resultScope( resultStore, "fullsolve" );
+    CDataStore::CAutoScope resultScope( resultStore, "fullsolve" );
 
     for( UInt32 i=0; i<tplCategoryList.size(); i++ )
     {
-        CTemplate::ECategory category = tplCategoryList[i];
+        std::string category = tplCategoryList[i];
 
         for( UInt32 j=0; j<tplCatalog.GetTemplateCount( category ); j++ )
         {
@@ -49,14 +48,13 @@ const CFullSolveResult* COperatorFullSolve::Compute(  COperatorResultStore& resu
 
     if( storeResult )
     {
-        CFullSolveResult*  fullSolveResult = new CFullSolveResult();
-        return fullSolveResult;
+        return std::shared_ptr<const CFullSolveResult>( new CFullSolveResult() );
     }
 
     return NULL;
 }
 
-Bool COperatorFullSolve::SolveBrute( COperatorResultStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont, const CTemplate& tpl, const CTemplate& tplWithoutCont,
+Bool COperatorFullSolve::SolveBrute( CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont, const CTemplate& tpl, const CTemplate& tplWithoutCont,
                                const TFloat64Range& lambdaRange, const TFloat64Range& redshiftRange, Float64 redshiftStep,
                                Float64 overlapThreshold )
 {
@@ -75,7 +73,7 @@ Bool COperatorFullSolve::SolveBrute( COperatorResultStore& resultStore, const CS
 
     // Compute correlation factor at each of those redshifts
     COperatorCorrelation correlation;
-    CRef<CCorrelationResult> correlationResult = (CCorrelationResult*) correlation.Compute( spcWithoutCont, tplWithoutCont, lambdaRange, redshifts, overlapThreshold );
+    auto correlationResult = correlation.Compute( spcWithoutCont, tplWithoutCont, lambdaRange, redshifts, overlapThreshold );
 
     if( !correlationResult )
     {
@@ -83,18 +81,18 @@ Bool COperatorFullSolve::SolveBrute( COperatorResultStore& resultStore, const CS
         return false;
     }else{
         // Store results
-        resultStore.StorePerTemplateResult( tpl, "correlation", *correlationResult );
+        resultStore.StoreScopedPerTemplateResult( tpl, "correlation", correlationResult );
     }
 
     COperatorChiSquare meritChiSquare;
-    CRef<CChisquareResult> chisquareResult = (CChisquareResult*)meritChiSquare.Compute( spc, tpl, lambdaRange, redshifts, overlapThreshold );
+    auto chisquareResult =meritChiSquare.Compute( spc, tpl, lambdaRange, redshifts, overlapThreshold );
     if( !chisquareResult )
     {
         //Log.LogInfo( "Failed to compute chi square value");
         return false;
     }else{
         // Store results
-        resultStore.StorePerTemplateResult( tpl, "chisquare", *chisquareResult );
+        resultStore.StoreScopedPerTemplateResult( tpl, "chisquare", chisquareResult );
     }
 
 
@@ -128,11 +126,11 @@ Bool CProcessFlow::FullSolve( CProcessFlowContext& ctx, const CTemplate& tpl, co
 
 
     // Store results
-    ctx.StorePerTemplateResult( tpl, "blindsolve.correlation", *correlationResult );
-    ctx.StorePerTemplateResult( tpl, "blindsolve.merit", *chisquareResult );
+    ctx.StoreScopedPerTemplateResult( tpl, "blindsolve.correlation", *correlationResult );
+    ctx.StoreScopedPerTemplateResult( tpl, "blindsolve.merit", *chisquareResult );
 
     CRef<CBlindSolveResult>  chisquareResults = new CBlindSolveResult();
-    ctx.StorePerTemplateResult( tpl, "blindsolve", *chisquareResults );
+    ctx.StoreScopedPerTemplateResult( tpl, "blindsolve", *chisquareResults );
     return true;
 
     return FullSolveBrute( ctx, tpl, tplWithoutCont );

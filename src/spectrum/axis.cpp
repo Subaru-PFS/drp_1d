@@ -1,7 +1,6 @@
 #include <epic/redshift/spectrum/axis.h>
 
 #include <epic/core/debug/assert.h>
-#include <epic/core/serializer/serializer.h>
 
 #include <algorithm>
 
@@ -39,6 +38,7 @@ CSpectrumAxis::~CSpectrumAxis()
 CSpectrumAxis& CSpectrumAxis::operator=(const CSpectrumAxis& other)
 {
     m_Samples = other.m_Samples;
+    return *this;
 }
 
 Void CSpectrumAxis::SetSize( UInt32 s )
@@ -47,17 +47,3 @@ Void CSpectrumAxis::SetSize( UInt32 s )
 }
 
 
-Bool CSpectrumAxis::Serialize( CSerializer& ar )
-{
-    Int16 version = 1;
-
-    if( ar.BeginScope( "Axis", version ) == version )
-    {
-        ar.Serialize( m_Samples, "Samples" );
-        ar.EndScope();
-
-        return true;
-    }
-
-    return false;
-}

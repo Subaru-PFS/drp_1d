@@ -7,8 +7,6 @@
 
 using namespace NSEpic;
 
-IMPLEMENT_MANAGED_OBJECT( CCorrelationResult )
-
 CCorrelationResult::CCorrelationResult()
 {
 
@@ -21,7 +19,7 @@ CCorrelationResult::~CCorrelationResult()
 
 Void CCorrelationResult::Load( std::istream& stream )
 {
-    // Clear current ray list
+    // Clear current lines list
     Redshifts.clear();
     Correlation.clear();
     Overlap.clear();
@@ -99,16 +97,25 @@ Void CCorrelationResult::Load( std::istream& stream )
     }
 }
 
-Void CCorrelationResult::Save( const COperatorResultStore& store, std::ostream& stream ) const
+Void CCorrelationResult::Save( const CDataStore& store, std::ostream& stream ) const
 {
     stream <<  "#Redshifts\tCorrelation\tOverlap"<< std::endl;
     for ( int i=0; i<Redshifts.size(); i++)
     {
         stream <<  Redshifts[i] << "\t" << std::scientific << Correlation[i] << std::fixed << "\t" << Overlap[i] << std::endl;
     }
+
+    if(Extrema.size()>0){
+        stream <<  "#Extrema for z = {";
+        for ( int i=0; i<Extrema.size(); i++)
+        {
+            stream <<  Extrema[i] << "\t";
+        }
+        stream << "}" << std::endl;
+    }
 }
 
-Void CCorrelationResult::SaveLine( const COperatorResultStore& store, std::ostream& stream ) const
+Void CCorrelationResult::SaveLine( const CDataStore& store, std::ostream& stream ) const
 {
     stream << "tCorrelationResult" << "\t" << Redshifts.size() << std::endl;
 }

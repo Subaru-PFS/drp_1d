@@ -2,11 +2,17 @@
 
 using namespace NSEpic;
 
+/**
+ * Empty constructor.
+ */
 CSpectrumIOReader::CSpectrumIOReader()
 {
 
 }
 
+/**
+ * Empty destructor.
+ */
 CSpectrumIOReader::~CSpectrumIOReader()
 {
 

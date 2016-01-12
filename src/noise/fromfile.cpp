@@ -7,7 +7,6 @@
 using namespace NSEpic;
 using namespace std;
 
-IMPLEMENT_MANAGED_OBJECT( CNoiseFromFile )
 
 CNoiseFromFile::CNoiseFromFile()
 {
@@ -19,7 +18,7 @@ CNoiseFromFile::~CNoiseFromFile()
 
 Bool CNoiseFromFile::SetNoiseFilePath( const char* filePath )
 {
-    m_NoiseSpectrum = new CSpectrum();
+    m_NoiseSpectrum = std::shared_ptr<CSpectrum>( new CSpectrum() );
     CSpectrumIOGenericReader reader;
 
     if( reader.Read( filePath, *m_NoiseSpectrum ) )

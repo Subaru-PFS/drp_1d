@@ -7,8 +7,6 @@
 
 using namespace NSEpic;
 
-IMPLEMENT_MANAGED_OBJECT( CLineMatchingSolveResult )
-
 CLineMatchingSolveResult::CLineMatchingSolveResult()
 {
 
@@ -19,21 +17,24 @@ CLineMatchingSolveResult::~CLineMatchingSolveResult()
 
 }
 
-Void CLineMatchingSolveResult::Save( const COperatorResultStore& store, std::ostream& stream ) const
+Void CLineMatchingSolveResult::Save( const CDataStore& store, std::ostream& stream ) const
 {
     Float64 redshift;
     Float64 merit;
+
+    std::string spectrumName;
+    store.GetParam( "spectrumName", spectrumName );
 
     GetBestResult( store, redshift, merit );
 
     stream <<  "#Spectrum\tRedshifts\tMatchNum\t"<< std::endl;
 
-    stream  << store.GetSpectrumName() << "\t"
+    stream  << spectrumName << "\t"
                 << redshift << "\t"
                 << merit << std::endl;
 }
 
-Void CLineMatchingSolveResult::SaveLine( const COperatorResultStore& store, std::ostream& stream ) const
+Void CLineMatchingSolveResult::SaveLine( const CDataStore& store, std::ostream& stream ) const
 {
     Float64 redshift;
     Float64 merit;
@@ -45,16 +46,16 @@ Void CLineMatchingSolveResult::SaveLine( const COperatorResultStore& store, std:
                 << "LineMatchingSolve" << std::endl;
 }
 
-Bool CLineMatchingSolveResult::GetBestResult(const COperatorResultStore& store, Float64& redshift, Float64& merit) const
+Bool CLineMatchingSolveResult::GetBestResult(const CDataStore& store, Float64& redshift, Float64& merit) const
 {
-    std::string scope = store.GetScope( this ) + "linematchingsolve.raymatching";
-    const CRayMatchingResult* Results = (CRayMatchingResult*)store.GetGlobalResult(scope.c_str());
+    std::string scope = store.GetScope( *this ) + "linematchingsolve.raymatching";
+    auto Results =  store.GetGlobalResult(scope.c_str());
 
     Int32 tmpMatchNum = -1;
     Float64 tmpRedshift = -1.0;
 
-    if(Results){
-        Int32 er = Results->GetBestRedshift(tmpRedshift, tmpMatchNum);
+    if(!Results.expired()){
+        Int32 er = std::dynamic_pointer_cast<const CRayMatchingResult>( Results.lock() )->GetBestRedshift(tmpRedshift, tmpMatchNum);
     }
 
     redshift = tmpRedshift;

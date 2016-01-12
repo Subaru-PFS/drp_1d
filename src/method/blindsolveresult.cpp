@@ -8,8 +8,6 @@
 
 using namespace NSEpic;
 
-IMPLEMENT_MANAGED_OBJECT( CBlindSolveResult )
-
 CBlindSolveResult::CBlindSolveResult()
 {
 
@@ -20,7 +18,7 @@ CBlindSolveResult::~CBlindSolveResult()
 
 }
 
-Void CBlindSolveResult::Save( const COperatorResultStore& store, std::ostream& stream ) const
+Void CBlindSolveResult::Save( const CDataStore& store, std::ostream& stream ) const
 {
     Float64 redshift;
     Float64 merit;
@@ -36,7 +34,7 @@ Void CBlindSolveResult::Save( const COperatorResultStore& store, std::ostream& s
                 << tplName << std::endl;
 }
 
-Void CBlindSolveResult::SaveLine( const COperatorResultStore& store, std::ostream& stream ) const
+Void CBlindSolveResult::SaveLine( const CDataStore& store, std::ostream& stream ) const
 {
     Float64 redshift;
     Float64 merit;
@@ -50,13 +48,13 @@ Void CBlindSolveResult::SaveLine( const COperatorResultStore& store, std::ostrea
                 << "BlindSolve" << std::endl;
 }
 
-Bool CBlindSolveResult::GetBestFitResult( const COperatorResultStore& store, Float64& redshift, Float64& merit, std::string& tplName ) const
+Bool CBlindSolveResult::GetBestFitResult( const CDataStore& store, Float64& redshift, Float64& merit, std::string& tplName ) const
 {
-    std::string scope_corr = store.GetScope( this ) + "blindsolve.correlation";
+    std::string scope_corr = store.GetScope( *this ) + "blindsolve.correlation";
     TOperatorResultMap correlationResults = store.GetPerTemplateResult( scope_corr.c_str() );
     //TOperatorResultMap correlationResults = store.GetPerTemplateResult("blindsolve.correlation");
 
-    std::string scope_merit = store.GetScope( this ) + "blindsolve.merit";
+    std::string scope_merit = store.GetScope( *this ) + "blindsolve.merit";
     TOperatorResultMap meritResults = store.GetPerTemplateResult( scope_merit.c_str() );
 
 
@@ -67,7 +65,7 @@ Bool CBlindSolveResult::GetBestFitResult( const COperatorResultStore& store, Flo
 
     for( TOperatorResultMap::const_iterator it = meritResults.begin(); it != meritResults.end(); it++ )
     {
-        const CChisquareResult* meritResult = (const CChisquareResult*)(const COperatorResult*)(*it).second;
+        auto meritResult = std::dynamic_pointer_cast< const CChisquareResult>( (*it).second );
         for( Int32 i=0; i<meritResult->ChiSquare.size(); i++ )
         {
             if( meritResult->ChiSquare[i] < tmpMerit && meritResult->Status[i] == COperator::nStatus_OK )

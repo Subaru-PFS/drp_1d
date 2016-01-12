@@ -18,14 +18,9 @@ FILE (STRINGS ${ROOT_DIR}/VERSION VERSION)
 MESSAGE( STATUS "Version used: ${VERSION}" )
 
 #--------------------------------------------------------
-# Find Package
-#--------------------------------------------------------
-FIND_PACKAGE( cpf-core ${VERSION} REQUIRED )
-
-#--------------------------------------------------------
 # Compiler options
 #--------------------------------------------------------
-SET( CMAKE_CXX_FLAGS "-O3 ")
+SET( CMAKE_CXX_FLAGS "-O3 -std=c++11 -Wno-deprecated -Werror=return-type")
 
 SET( CMAKE_CXX_FLAGS_DEBUG "-O0 -g -DDEBUG_BUILD")
 
@@ -38,16 +33,14 @@ SET( cpf-redshift_THIRDPARTY_INCLUDE_DIR ${ROOT_DIR}/thirdparty/include/ )
 SET( cpf-redshift_LINK_DIR ${ROOT_DIR}/lib/ )
 SET( cpf-redshift_THIRDPARTY_LINK_DIR ${ROOT_DIR}/thirdparty/lib/ )
 
-SET( cpf-redshift_THIRDPARTY_LIBS cfitsio)
+SET( cpf-redshift_THIRDPARTY_LIBS cfitsio pthread boost_filesystem boost_system boost_thread boost_timer boost_chrono  boost_program_options boost_regex  gsl gslcblas)
 
 #--------------------------------------------------------
 # Preprocessor and linker path
 #--------------------------------------------------------
-INCLUDE_DIRECTORIES(    ${cpf-redshift_INCLUDE_DIR}  ${cpf-redshift_THIRDPARTY_INCLUDE_DIR} 
-                        ${cpf-core_INCLUDE_DIR} ${cpf-core_THIRDPARTY_INCLUDE_DIR} )
+INCLUDE_DIRECTORIES(    ${cpf-redshift_INCLUDE_DIR}  ${cpf-redshift_THIRDPARTY_INCLUDE_DIR} )
 
-LINK_DIRECTORIES(       ${cpf-redshift_LINK_DIR} ${cpf-redshift_THIRDPARTY_LINK_DIR} 
-                        ${cpf-core_LINK_DIR} ${cpf-core_THIRDPARTY_LINK_DIR})
+LINK_DIRECTORIES(       ${cpf-redshift_LINK_DIR} ${cpf-redshift_THIRDPARTY_LINK_DIR}  )
 
 #-------------------------  -------------------------------
 # Extract version number
@@ -73,7 +66,7 @@ FILE( GLOB_RECURSE TEST_SOURCE_FILES ${ROOT_DIR}/test/*.cpp )
 ADD_EXECUTABLE( ${TEST_NAME} ${TEST_SOURCE_FILES} )
 
 # Supply link librairies
-TARGET_LINK_LIBRARIES( ${TEST_NAME} ${LIB_NAME}   ${cpf-core_LIB} ${cpf-core_THIRDPARTY_LIBS} ${cpf-redshift_THIRDPARTY_LIBS} cppunit.a)
+TARGET_LINK_LIBRARIES( ${TEST_NAME} ${LIB_NAME}  ${cpf-redshift_THIRDPARTY_LIBS} boost_unit_test_framework )
 
 #--------------------------------------------------------
 # Install directive

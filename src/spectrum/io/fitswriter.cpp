@@ -11,16 +11,25 @@ namespace bfs = boost::filesystem;
 using namespace NSEpic;
 using namespace std;
 
+/**
+ * Empty constructor.
+ */
 CSpectrumIOFitsWriter::CSpectrumIOFitsWriter()
 {
 
 }
 
+/**
+ * Empty destructor.
+ */
 CSpectrumIOFitsWriter::~CSpectrumIOFitsWriter()
 {
 
 }
 
+/**
+ * 
+ */
 Bool CSpectrumIOFitsWriter::Write( const char* filePath, CSpectrum& spectrum )
 {
     fitsfile *fptr = NULL;

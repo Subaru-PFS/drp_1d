@@ -4,10 +4,9 @@
 #include <boost/lexical_cast.hpp>
 #include <string>
 #include <fstream>
+#include <iomanip>      // std::setprecision
 
 using namespace NSEpic;
-
-IMPLEMENT_MANAGED_OBJECT( CChisquareResult )
 
 CChisquareResult::CChisquareResult()
 {
@@ -22,7 +21,7 @@ CChisquareResult::~CChisquareResult()
 
 Void CChisquareResult::Load( std::istream& stream )
 {
-    // Clear current ray list
+    // Clear current lines list
     Redshifts.clear();
     ChiSquare.clear();
     Overlap.clear();
@@ -100,16 +99,43 @@ Void CChisquareResult::Load( std::istream& stream )
     }
 }
 
-Void CChisquareResult::Save( const COperatorResultStore& store, std::ostream& stream ) const
+Void CChisquareResult::Save( const CDataStore& store, std::ostream& stream ) const
 {
     stream <<  "#Redshifts\tChiSquare\tOverlap"<< std::endl;
     for ( int i=0; i<Redshifts.size(); i++)
     {
-        stream <<  Redshifts[i] << "\t" << std::scientific << ChiSquare[i] << std::fixed << "\t" << Overlap[i] << std::endl;
+        stream <<  Redshifts[i] << std::setprecision(16) << "\t" << std::scientific << ChiSquare[i] << std::fixed << "\t" << Overlap[i] << std::endl;
+    }
+
+    if(Extrema.size()>0){
+        stream <<  "#Extrema for z = {";
+        for ( int i=0; i<Extrema.size(); i++)
+        {
+            stream <<  Extrema[i] << "\t";
+        }
+        stream << "}" << std::endl;
+
+        if(FitAmplitude.size()>0){
+            stream <<  "#Extrema FitAmplitudes = {";
+            for ( int i=0; i<Extrema.size(); i++)
+            {
+                Int32 idx=0;
+                for ( UInt32 i2=0; i2<Redshifts.size(); i2++)
+                {
+                    if(Redshifts[i2] == Extrema[i]){
+                        idx = i2;
+                        break;
+                    }
+                }
+
+                stream << std::setprecision(16) << "\t" << std::scientific <<   FitAmplitude[idx] << "\t";
+            }
+            stream << "}" << std::endl;
+        }
     }
 }
 
-Void CChisquareResult::SaveLine( const COperatorResultStore& store, std::ostream& stream ) const
+Void CChisquareResult::SaveLine( const CDataStore& store, std::ostream& stream ) const
 {
     stream << "ChisquareResult" << "\t" << Redshifts.size() << std::endl;
 }

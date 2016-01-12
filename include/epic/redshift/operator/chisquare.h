@@ -9,6 +9,9 @@
 namespace NSEpic
 {
 
+/**
+ * \ingroup Redshift
+ */
 class COperatorChiSquare : public COperator
 {
 
@@ -17,16 +20,16 @@ public:
     COperatorChiSquare();
     ~COperatorChiSquare();
 
-    const COperatorResult* Compute( const CSpectrum& spectrum, const CTemplate& tpl,
+    std::shared_ptr<COperatorResult> Compute( const CSpectrum& spectrum, const CTemplate& tpl,
                                     const TFloat64Range& lambdaRange, const TFloat64List& redshifts,
-                                    Float64 overlapThreshold );
+                                    Float64 overlapThreshold, std::string opt_interp_unused="lin" );
 
 
 private:
 
-    Void BasicFit( const CSpectrum& spectrum, const CTemplate& tpl,
+    Void BasicFit(const CSpectrum& spectrum, const CTemplate& tpl,
                    const TFloat64Range& lambdaRange, Float64 redshift, Float64 overlapThreshold,
-                   Float64& overlapRate, Float64& chiSquare, EStatus& status  );
+                   Float64& overlapRate, Float64& chiSquare, Float64 &fitamplitude, EStatus& status  );
 
 
 };

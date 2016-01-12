@@ -1,12 +1,28 @@
-#include <epic/core/test/helper.h>
 
-int main( int argc, char **argv )
+#define BOOST_TEST_MAIN
+
+#include <boost/test/unit_test.hpp>
+
+#include <epic/core/log/log.h>
+#include <epic/core/log/consolehandler.h>
+
+
+using namespace NSEpic;
+
+struct MyConfig
 {
-    NSEpic::CTestHelper testHelper( argc, argv );
 
-    if( testHelper.Configure( argc, argv ) )
-        return testHelper.Run( "../test/report/report.xml" );
+    CLog                                m_Log;
+    CLogConsoleHandler                  m_ConsoleHandler;
+    MyConfig():
+        m_ConsoleHandler( m_Log )
+    {
 
-    return 1;
-}
+    }
+    ~MyConfig()
+    {
 
+    }
+};
+
+BOOST_GLOBAL_FIXTURE( MyConfig );

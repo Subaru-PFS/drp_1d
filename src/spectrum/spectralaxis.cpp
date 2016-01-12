@@ -8,12 +8,18 @@
 using namespace NSEpic;
 using namespace std;
 
+/**
+ * Constructor, zeroes flags.
+ */
 CSpectrumSpectralAxis::CSpectrumSpectralAxis() :
     m_SpectralFlags( 0 )
 {
 
 }
 
+/**
+ * Constructor, flags log scale when set.
+ */
 CSpectrumSpectralAxis::CSpectrumSpectralAxis( UInt32 n, Bool isLogScale ) :
     CSpectrumAxis( n ),
     m_SpectralFlags( 0 )
@@ -22,6 +28,9 @@ CSpectrumSpectralAxis::CSpectrumSpectralAxis( UInt32 n, Bool isLogScale ) :
         m_SpectralFlags |= nFLags_LogScale;
 }
 
+/**
+ * Constructor, flags log scale when set.
+ */
 CSpectrumSpectralAxis::CSpectrumSpectralAxis( const Float64* samples, UInt32 n, Bool isLogScale ) :
     CSpectrumAxis( samples, n ),
     m_SpectralFlags( 0 )
@@ -30,28 +39,43 @@ CSpectrumSpectralAxis::CSpectrumSpectralAxis( const Float64* samples, UInt32 n, 
         m_SpectralFlags |= nFLags_LogScale;
 }
 
+/**
+ * Constructor, shifts origin along direction an offset distance.
+ */
 CSpectrumSpectralAxis::CSpectrumSpectralAxis( const CSpectrumSpectralAxis& origin, Float64 wavelengthOffset, EShiftDirection direction  )
 {
     ShiftByWaveLength( origin, wavelengthOffset, direction );
 }
 
+/**
+ * Destructor.
+ */
 CSpectrumSpectralAxis::~CSpectrumSpectralAxis()
 {
 
 }
 
-
-CSpectrumSpectralAxis& CSpectrumSpectralAxis::operator=(const CSpectrumSpectralAxis& other)
+/**
+ * Overloaded assignment operator.
+ */
+CSpectrumSpectralAxis& CSpectrumSpectralAxis::operator=( const CSpectrumSpectralAxis& other )
 {
     m_SpectralFlags = other.m_SpectralFlags;
     CSpectrumAxis::operator=( other );
+    return *this;
 }
 
+/**
+ * Shift current axis the input offset in the input direction.
+ */
 Void CSpectrumSpectralAxis::ShiftByWaveLength( Float64 wavelengthOffset, EShiftDirection direction )
 {
 	ShiftByWaveLength( *this, wavelengthOffset, direction );
 }
 
+/**
+ * Copy the input axis samples and shift the axis the specified offset in the specidifed direction.
+ */
 Void CSpectrumSpectralAxis::ShiftByWaveLength( const CSpectrumSpectralAxis& origin, Float64 wavelengthOffset, EShiftDirection direction )
 {
     m_SpectralFlags = 0;
@@ -113,6 +137,9 @@ Void CSpectrumSpectralAxis::ShiftByWaveLength( const CSpectrumSpectralAxis& orig
 
 }
 
+/**
+ * Copy the input axis, including its samples.
+ */
 Void CSpectrumSpectralAxis::CopyFrom( const CSpectrumSpectralAxis& other )
 {
     m_SpectralFlags = other.m_SpectralFlags;
@@ -127,6 +154,9 @@ Void CSpectrumSpectralAxis::CopyFrom( const CSpectrumSpectralAxis& other )
     }
 }
 
+/**
+ * Return the wavelength interval between two consecutive samples.
+ */
 Float64 CSpectrumSpectralAxis::GetResolution( Float64 atWavelength ) const
 {
     if( GetSamplesCount() < 2 )
@@ -151,16 +181,48 @@ Float64 CSpectrumSpectralAxis::GetResolution( Float64 atWavelength ) const
     return 0;
 }
 
+/**
+ * 
+ */
+Float64 CSpectrumSpectralAxis::GetMeanResolution() const
+{
+    if( GetSamplesCount() < 2 )
+        return 0.0;
+
+    Float64 resolution = 0.0;
+    Int32 nsum = 0;
+    for( Int32 i=0; i< m_Samples.size()-1; i++ )
+    {
+        resolution += (m_Samples[i+1]-m_Samples[i]);
+        nsum++;
+    }
+
+    if(nsum>0){
+        resolution /=nsum;
+    }
+
+    return resolution;
+}
+
+/**
+ * 
+ */
 Bool CSpectrumSpectralAxis::IsInLogScale() const
 {
     return m_SpectralFlags & nFLags_LogScale;
 }
 
+/**
+ * 
+ */
 Bool CSpectrumSpectralAxis::IsInLinearScale() const
 {
     return !(m_SpectralFlags & nFLags_LogScale);
 }
 
+/**
+ * 
+ */
 TLambdaRange CSpectrumSpectralAxis::GetLambdaRange() const
 {
     if( m_Samples.size() < 2 )
@@ -174,6 +236,9 @@ TLambdaRange CSpectrumSpectralAxis::GetLambdaRange() const
     return TLambdaRange( m_Samples[0], m_Samples[m_Samples.size()-1] );
 }
 
+/**
+ * 
+ */
 Void CSpectrumSpectralAxis::GetMask( const TFloat64Range& lambdaRange,  CMask& mask ) const
 {
     TFloat64Range range = lambdaRange;
@@ -197,6 +262,43 @@ Void CSpectrumSpectralAxis::GetMask( const TFloat64Range& lambdaRange,  CMask& m
     }
 }
 
+/**
+ * 
+ */
+Float64 CSpectrumSpectralAxis::IntersectMaskAndComputeOverlapRate( const TFloat64Range& lambdaRange,  CMask& omask ) const
+{
+    TFloat64Range range = lambdaRange;
+
+    if( m_SpectralFlags & nFLags_LogScale )
+        range.Set( log( range.GetBegin() ), log( range.GetEnd() ) );
+
+    Int32 selfRate=0;
+    Int32 otherRate=0;
+    const Mask* otherWeight = omask.GetMasks();
+
+    // weight = Spectrum over lambdarange flag
+    for( Int32 i=0; i< m_Samples.size(); i++ )
+    {
+        //otherWeight[i] = 0;
+        // If this sample is somewhere in a valid lambdaRande, tag weight with 1
+        if( m_Samples[i] >= range.GetBegin() && m_Samples[i] <= range.GetEnd() )
+        {
+            if(otherWeight[i]){
+                otherRate++;
+            }
+            selfRate++;
+        }
+    }
+
+    if( selfRate == 0.0 )
+        return 0;
+
+    return (Float64)otherRate/(Float64)selfRate;
+}
+
+/**
+ * 
+ */
 Bool CSpectrumSpectralAxis::ClampLambdaRange( const TFloat64Range& range, TFloat64Range& clampedRange ) const
 {
     TFloat64Range effectiveRange = GetLambdaRange();
@@ -220,6 +322,9 @@ Bool CSpectrumSpectralAxis::ClampLambdaRange( const TFloat64Range& range, TFloat
     return true;
 }
 
+/**
+ * 
+ */
 Bool CSpectrumSpectralAxis::PlotResolution( const char* filePath ) const
 {
     FILE* f = fopen( filePath, "w+" );
@@ -238,6 +343,9 @@ Bool CSpectrumSpectralAxis::PlotResolution( const char* filePath ) const
     return true;
 }
 
+/**
+ * 
+ */
 TInt32Range CSpectrumSpectralAxis::GetIndexesAtWaveLengthRange( const TFloat64Range& waveLengthRange ) const
 {
     TInt32Range r;
@@ -248,6 +356,9 @@ TInt32Range CSpectrumSpectralAxis::GetIndexesAtWaveLengthRange( const TFloat64Ra
     return r;
 }
 
+/**
+ * 
+ */
 Int32 CSpectrumSpectralAxis::GetIndexAtWaveLength( Float64 waveLength ) const
 {
     Int32 m;
@@ -279,6 +390,9 @@ Int32 CSpectrumSpectralAxis::GetIndexAtWaveLength( Float64 waveLength ) const
     return -1;
 }
 
+/**
+ * 
+ */
 Bool CSpectrumSpectralAxis::ConvertToLinearScale()
 {
     if( ( m_SpectralFlags & nFLags_LogScale ) == false )
@@ -294,6 +408,9 @@ Bool CSpectrumSpectralAxis::ConvertToLinearScale()
     return true;
 }
 
+/**
+ * 
+ */
 Bool CSpectrumSpectralAxis::ConvertToLogScale()
 {
     if( m_SpectralFlags & nFLags_LogScale )

@@ -1,7 +1,6 @@
 #ifndef _REDSHIFT_SPECTRUM_SPECTRUM_
 #define _REDSHIFT_SPECTRUM_SPECTRUM_
 
-#include <epic/core/common/managedobject.h>
 #include <epic/core/common/range.h>
 #include <epic/redshift/spectrum/fluxaxis.h>
 #include <epic/redshift/spectrum/spectralaxis.h>
@@ -12,9 +11,11 @@
 namespace NSEpic
 {
 
-class CSpectrum : public CManagedObject
+/**
+ * \ingroup Redshift
+ */
+class CSpectrum
 {
-    DEFINE_MANAGED_OBJECT( CSpectrum )
 
 public:
 
@@ -29,25 +30,29 @@ public:
 
     CSpectrum& operator=(const CSpectrum& other);
 
+    Void  SetName( const char* name );
+
+    Bool InvertFlux();
+
     const CSpectrumSpectralAxis&    GetSpectralAxis() const;
     const CSpectrumFluxAxis&        GetFluxAxis() const;
+
+    const std::string               GetName() const;
 
     CSpectrumFluxAxis&              GetFluxAxis();
     CSpectrumSpectralAxis&          GetSpectralAxis();
 
     UInt32                          GetSampleCount() const;
     Float64                         GetResolution() const;
+    Float64                         GetMeanResolution() const;
     TLambdaRange                    GetLambdaRange() const;
 
     Bool                            ConvertToLogScale();
     Bool                            ConvertToLinearScale();
 
-    template< typename ContinuumRemover >
-    Bool                            RemoveContinuum();
+    Bool                            RemoveContinuum( CContinuum& remover );
 
 private:
-
-    Bool                            Serialize( CSerializer& ar );
 
     std::string                     m_Name;
     CSpectrumFluxAxis               m_FluxAxis;
@@ -84,18 +89,6 @@ CSpectrumFluxAxis& CSpectrum::GetFluxAxis()
     return m_FluxAxis;
 }
 
-template<typename ContinuumRemover>
-Bool CSpectrum::RemoveContinuum()
-{
-    ContinuumRemover cr;
-    CSpectrumFluxAxis fluxAxisWithoutContinuum;
-
-    cr.RemoveContinuum( *this, fluxAxisWithoutContinuum );
-
-    m_FluxAxis = fluxAxisWithoutContinuum;
-
-    return true;
-}
 
 }
 

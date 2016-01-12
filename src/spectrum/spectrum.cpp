@@ -1,6 +1,5 @@
 #include <epic/redshift/spectrum/spectrum.h>
 
-#include <epic/core/serializer/serializer.h>
 #include <epic/core/debug/assert.h>
 
 #include <math.h>
@@ -8,8 +7,6 @@
 #include <algorithm>
 
 using namespace NSEpic;
-
-IMPLEMENT_MANAGED_OBJECT( CSpectrum )
 
 CSpectrum::CSpectrum()
 {
@@ -25,7 +22,6 @@ CSpectrum::CSpectrum(const CSpectrum& other, TFloat64List mask)
 
     CSpectrumSpectralAxis otherSpectral = other.GetSpectralAxis();
     CSpectrumFluxAxis otherFlux = other.GetFluxAxis();
-
 
     const Float64* error = otherFlux.GetError();
 
@@ -63,6 +59,28 @@ CSpectrum& CSpectrum::operator=(const CSpectrum& other)
 {
     m_SpectralAxis = other.GetSpectralAxis();
     m_FluxAxis = other.GetFluxAxis();
+    return *this;
+}
+
+
+Bool CSpectrum::RemoveContinuum(  CContinuum& remover )
+{
+    CSpectrumFluxAxis fluxAxisWithoutContinuum;
+
+    remover.RemoveContinuum( *this, fluxAxisWithoutContinuum );
+
+    m_FluxAxis = fluxAxisWithoutContinuum;
+
+    return true;
+}
+
+/**
+ * Invert the flux axis
+ */
+Bool CSpectrum::InvertFlux()
+{
+    m_FluxAxis.Invert();
+    return true;
 }
 
 /**
@@ -86,6 +104,11 @@ Float64 CSpectrum::GetResolution() const
     return m_SpectralAxis.GetResolution();
 }
 
+Float64 CSpectrum::GetMeanResolution() const
+{
+    return m_SpectralAxis.GetMeanResolution();
+}
+
 /**
  * Return the lambda range of the entire spectrum.
  * Range is always expressed in linear scale NOT in log scale even if the underlying spcetrum is in log scale
@@ -96,19 +119,12 @@ TLambdaRange CSpectrum::GetLambdaRange() const
 }
 
 
-Bool CSpectrum::Serialize( CSerializer& ar )
+const std::string CSpectrum::GetName() const
 {
-    Int16 version = 1;
-
-    if( ar.BeginScope( "Spectrum", version ) == version )
-    {
-        ar.Serialize( m_FluxAxis, "FluxAxis" );
-        ar.Serialize( m_SpectralAxis, "SpectralAxis" );
-        ar.EndScope();
-        return true;
-    }
-
-    return false;
+    return m_Name;
 }
 
-
+Void CSpectrum::SetName( const char* name )
+{
+    m_Name = name;
+}

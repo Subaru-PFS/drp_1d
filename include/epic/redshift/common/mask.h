@@ -9,6 +9,10 @@ namespace NSEpic
 
 class CSpectrum;
 
+/**
+ * \ingroup Redshift
+ * Wavelength interval objects.
+ */
 class CMask
 {
 
@@ -24,6 +28,8 @@ public:
     Mask            operator[]( const UInt32 i ) const;
     Mask&           operator[]( const UInt32 i );
     Float64         CompouteOverlapRate( const CMask& other ) const;
+    Float64         IntersectAndComputeOverlapRate( const CMask& other ) const;
+
     Bool            IntersectWith( const CMask& other );
     UInt32          GetMaskedSampleCount() const;
     UInt32          GetUnMaskedSampleCount() const;

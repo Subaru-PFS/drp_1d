@@ -8,7 +8,6 @@
 
 using namespace NSEpic;
 
-IMPLEMENT_MANAGED_OBJECT( CCorrelationSolveResult )
 
 CCorrelationSolveResult::CCorrelationSolveResult()
 {
@@ -20,7 +19,7 @@ CCorrelationSolveResult::~CCorrelationSolveResult()
 
 }
 
-Void CCorrelationSolveResult::Save( const COperatorResultStore& store, std::ostream& stream ) const
+Void CCorrelationSolveResult::Save( const CDataStore& store, std::ostream& stream ) const
 {
     Float64 redshift;
     Float64 merit;
@@ -37,7 +36,7 @@ Void CCorrelationSolveResult::Save( const COperatorResultStore& store, std::ostr
 }
 
 
-Void CCorrelationSolveResult::SaveLine( const COperatorResultStore& store, std::ostream& stream ) const
+Void CCorrelationSolveResult::SaveLine( const CDataStore& store, std::ostream& stream ) const
 {
     Float64 redshift;
     Float64 merit;
@@ -53,9 +52,9 @@ Void CCorrelationSolveResult::SaveLine( const COperatorResultStore& store, std::
 }
 
 
-Bool CCorrelationSolveResult::GetBestCorrelationResult( const COperatorResultStore& store, Float64& redshift, Float64& merit, std::string& tplName ) const
+Bool CCorrelationSolveResult::GetBestCorrelationResult( const CDataStore& store, Float64& redshift, Float64& merit, std::string& tplName ) const
 {
-    std::string scope = store.GetScope( this ) + "correlationsolve.correlation";
+    std::string scope = store.GetScope( *this ) + "correlationsolve.correlation";
     TOperatorResultMap correlationResults = store.GetPerTemplateResult(scope.c_str());
 
 
@@ -66,7 +65,7 @@ Bool CCorrelationSolveResult::GetBestCorrelationResult( const COperatorResultSto
 
     for( TOperatorResultMap::const_iterator it = correlationResults.begin(); it != correlationResults.end(); it++ )
     {
-        const CCorrelationResult* corrResult = (const CCorrelationResult*)(const COperatorResult*)(*it).second;
+        auto corrResult = std::dynamic_pointer_cast<const CCorrelationResult>( (*it).second );
         for( Int32 i=0; i<corrResult->Correlation.size(); i++ )
         {
             if( corrResult->Correlation[i] > tmpCorr && corrResult->Status[i] == COperator::nStatus_OK )
