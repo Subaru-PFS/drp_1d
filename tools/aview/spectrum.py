@@ -41,6 +41,8 @@ class Spectrum(object):
             self.loadpfs2reech() 
         elif(self.stype == 'pfs2'):
             self.loadpfs2() 
+        elif(self.stype == 'hplana'):
+            self.loadhplana() 
         else:
             self.load()
 
@@ -167,6 +169,34 @@ class Spectrum(object):
         self.n = scidata.shape[0]
         if self.n<3:
             self.n = scidata.shape[1]
+        #print('{0} - n = {1}'.format(self.logTagStr, self.n))
+    
+        #---- default xaxis index array
+        self.xvect = range(0,self.n)
+        self.yvect = range(0,self.n)
+        self.ysum = 0.0
+        for x in range(0,self.n):
+            self.xvect[x] = xaxisStart + (x+1-xaxisRefPix)*xaxisRes
+            self.yvect[x] = scidata[0][x]
+            self.ysum += self.yvect[x]
+            
+    def loadhplana(self):
+        print("Loading hplana fits")
+        hdulist = fits.open(self.spath) 
+        print hdulist
+        
+        scidata = hdulist[0].data
+        sciheader = hdulist[0].header
+        
+        xaxisStart = sciheader["CRVAL1"]
+        print("xaxisstart = {}".format(xaxisStart))
+        xaxisRes = sciheader["CDELT1"]
+        print("xaxisRes = {}".format(xaxisRes))
+        xaxisRefPix = sciheader["CRPIX1"]
+        print("xaxisRefPix = {}".format(xaxisRefPix))
+            
+            
+        self.n = scidata.shape[1]
         #print('{0} - n = {1}'.format(self.logTagStr, self.n))
     
         #---- default xaxis index array
@@ -441,7 +471,7 @@ class Spectrum(object):
 if __name__ == '__main__':
     print "Spectrum plotting"
     # plot single spectrum
-    if 0:
+    if 1:
         path = "/home/aschmitt/data/pfs/pfs_lbg/lbgabs_1K_2z3_20J22.5"
         #name = "EZ_fits-W-ErrF_9.fits"
         #name = "EZ_fits-W-F_9.fits"
@@ -466,12 +496,12 @@ if __name__ == '__main__':
         path = "/home/aschmitt/data/pfs/pfs_testsimu_20151105/470026900000130.24-0.426_20.3_20.4vacLine"
         name = "EZ_fits-W-TF_0.fits"
         
-        path = "/home/aschmitt/data/pfs/pfs_simu_20151117_jenny/firstbatch"
-        name = "3011195000040vacLine.fits"
+        path = "/home/aschmitt/data/hplana/Residual_fits"
+        name = "0278-51900-0151.fits"
 
         spath = os.path.join(path,name)
         print('using full path: {0}'.format(spath))
-        s = Spectrum(spath)
+        s = Spectrum(spath, "hplana")
         print(s) 
         s.plot()
     
@@ -517,7 +547,7 @@ if __name__ == '__main__':
         s.plot()
         
     # compare templates
-    if 1:          
+    if 0:          
         path = "/home/aschmitt/data/pfs/pfs_lbg/amazed/Templates/ExtendedGalaxyEL2/emission"
         name = "NEW_Im_extended_blue.dat"
         #name = "NEW_Im_extended.dat" #1

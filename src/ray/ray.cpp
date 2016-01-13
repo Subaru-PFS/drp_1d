@@ -139,4 +139,12 @@ Void CRay::Save(  std::ostream& stream ) const
     stream << GetCut() << "\t" << GetWidth() << "\t" << GetPosFitError() << "\t";
 }
 
+Void CRay::SaveDescription(  std::ostream& stream ) const
+{
+    stream << "#";
+    stream << "Name" << "\t" << "Position" << "\t";
+    stream << "Force"  << "\t";
+    stream << "Cut" << "\t" << "Width" << "\t" << "PosFitErr" << "\t";
+}
+
 

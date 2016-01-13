@@ -26,8 +26,14 @@ Void CLineDetectionResult::Save( const CDataStore& store, std::ostream& stream )
 {
     CRayCatalog::TRayVector::const_iterator it;
 
+    Bool SaveDescriptionDone=false;
     for( it = RayCatalog.GetList().begin(); it != RayCatalog.GetList().end(); ++it )
     {
+        if(!SaveDescriptionDone){
+            it->SaveDescription( stream );
+            stream << std::endl;
+            SaveDescriptionDone = true;
+        }
         it->Save( stream );
         stream << std::endl;
     }

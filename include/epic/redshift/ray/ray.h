@@ -51,6 +51,7 @@ public:
     const Float64 GetNominalAmplitude() const;
 
     Void                Save( std::ostream& stream ) const;
+    Void                SaveDescription( std::ostream& stream ) const;
 
     Void                ConvertVacuumToAir();
 

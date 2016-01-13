@@ -123,6 +123,8 @@ std::shared_ptr<const CLineMatching2SolveResult> COperatorLineMatching2Solve::Co
   Bool storeResult = false;
   CDataStore::CAutoScope resultScope( resultStore, "linematching2solve" );
 
+  std::string linetypeStr = "E";
+
   Log.LogDebug ( "Attempting to load parameters from parameter JSON." );
   {
     resultStore.GetScopedParam( "linematching2.winsize", m_winsize, 250.0 );
@@ -136,16 +138,16 @@ std::shared_ptr<const CLineMatching2SolveResult> COperatorLineMatching2Solve::Co
     resultStore.GetScopedParam( "linematching2.enlargeRate", m_enlargeRate, 2.0 );
     resultStore.GetScopedParam( "linematching2.minMatchNum", m_minMatchNum, 1.0 );
     resultStore.GetScopedParam( "linematching2.tol", m_tol, 0.002 );
+    resultStore.GetScopedParam( "linematching2.linetype", linetypeStr, "E" );
     Log.LogDebug( "m_winsize = %f", m_winsize );
     Log.LogDebug( "m_cut = %f", m_cut );
-    if( m_dynamicCut == 0 ) 
-      {
-	Log.LogDebug( "m_dynamicCut is true (0 on json)" );
-      }
-    else
-      {
-	Log.LogDebug( "m_dynamicCut is false (anything but 0 on json)" );
-      }
+    if( m_dynamicCut == 0 )
+    {
+        Log.LogDebug( "m_dynamicCut is true (0 on json)" );
+    }else
+    {
+        Log.LogDebug( "m_dynamicCut is false (anything but 0 on json)" );
+    }
     Log.LogDebug( "m_detectioncut = %f", m_detectioncut );
     Log.LogDebug( "m_detectionnoiseoffset = %f", m_detectionnoiseoffset );
     Log.LogDebug( "m_strongcut = %f", m_strongcut );
@@ -157,7 +159,12 @@ std::shared_ptr<const CLineMatching2SolveResult> COperatorLineMatching2Solve::Co
   }
 
   Int32 lineType = CRay::nType_Emission;
-  //Int32 lineType = CRay::nType_Absorption;
+  if(linetypeStr == "E"){
+      lineType = CRay::nType_Emission;
+  }else if(linetypeStr == "A"){
+      lineType = CRay::nType_Absorption;
+  }
+
 
   CPeakDetection peakDetection( m_winsize, m_detectioncut, 1, m_enlargeRate, m_detectionnoiseoffset );
   CSpectrum _spc = spc;

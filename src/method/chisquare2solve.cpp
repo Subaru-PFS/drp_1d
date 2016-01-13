@@ -69,19 +69,17 @@ std::shared_ptr<const CChisquare2SolveResult> CMethodChisquare2Solve::Compute(  
         {
             const CTemplate& tpl = tplCatalog.GetTemplate( category, j );
 
+            /*
+            //optionnally export the templates into fits files
+            if(1){
+                CSpectrum spctpl= CSpectrum(tpl);
+                std::string tplName = tpl.GetName();
+                tplName.append(".fits");
 
-//            if(1){
-
-//                //*
-//                //CSpectrumFluxAxis& sfluxAxisPtr = model.GetFluxAxis();
-//                //CSpectrumFluxAxis& modelFluxAxis = model.GetFluxAxis();
-//                //sfluxAxisPtr = modelFluxAxis;
-//                CSpectrum spctpl= CSpectrum(tpl);
-
-//                CSpectrumIOFitsWriter writer;
-//                Bool retVal1 = writer.Write( "tplexported.fits",  spctpl);
-//            }
-
+                CSpectrumIOFitsWriter writer;
+                Bool retValueExportTpl = writer.Write( tplName.c_str(),  spctpl);
+            }
+            //*/
 
             const CTemplate& tplWithoutCont = tplCatalog.GetTemplateWithoutContinuum( category, j );
 

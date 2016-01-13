@@ -207,7 +207,7 @@ class AViewGui(QtGui.QMainWindow):
     
     def bt_nextResultIndex(self):
         current_index = int(self.leResultIndex.text() )
-        if current_index>self.resList.n-2:
+        if current_index>self.resList.n-1:
             return
         self.leResultIndex.setText(str(current_index+1))  
         self.refreshResultDetails()  
