@@ -58,7 +58,7 @@ Void CDTreeBSolveResult::SaveLine( const CDataStore& store, std::ostream& stream
 
 
 
-    Log.LogInfo( "dtreeBsolve Solution: best z found = %.5f", redshift);
+    Log.LogInfo( "DecisionalTreeB Solution: best z found = %.5f", redshift);
 }
 
 

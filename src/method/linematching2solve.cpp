@@ -263,6 +263,7 @@ const std::string COperatorLineMatching2Solve::GetDescription()
     desc.append("\tparam: linematching2.enlargeRate = <float value>\n");
     desc.append("\tparam: linematching2.minMatchNum = <int value>\n");
     desc.append("\tparam: linematching2.tol = <float value>\n");
+    desc.append("\tparam: linematching2.linetype = {""E"", ""A""}\n");
 
     return desc;
 }
