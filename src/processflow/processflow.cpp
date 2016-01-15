@@ -90,13 +90,13 @@ Bool CProcessFlow::Process( CProcessFlowContext& ctx )
     if(methodName  == "fullsolve" )
         return Fullsolve( ctx );
 
-    if(methodName  == "decisionaltree7" )
+    if(methodName  == "amazed0_1" )
         return DecisionalTree7( ctx );
 
     if(methodName  == "decisionaltreea" )
         return DecisionalTreeA( ctx );
 
-    if(methodName  == "decisionaltreeb" )
+    if(methodName  == "amazed0_2" )
         return DecisionalTreeB( ctx );
 
     Log.LogError("Problem found while parsing the method parameter !");

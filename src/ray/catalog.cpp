@@ -197,8 +197,9 @@ Bool CRayCatalog::Load( const char* filePath )
                     }
                 }
             }
-
-            Add( CRay( name, pos, Etype, Eforce, -1, -1, -1, -1, groupName, nominaleAmplitude ) );
+            if(nominaleAmplitude!=0.0){
+                Add( CRay( name, pos, Etype, Eforce, -1, -1, -1, -1, groupName, nominaleAmplitude ) );
+            }
         }
     }
 

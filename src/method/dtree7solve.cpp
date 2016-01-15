@@ -59,7 +59,7 @@ const std::string COperatorDTree7Solve::GetDescription()
 {
     std::string desc;
 
-    desc = "Method decisionaltree7:\n";
+    desc = "Method Amazed0_1:\n";
 
     desc.append("\tparam: dtree7solve.overlapThreshold = <float value>\n");
     desc.append("\tparam: dtree7solve.correlationExtremumCount = <float value>\n");

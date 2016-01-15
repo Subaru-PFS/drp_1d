@@ -1319,7 +1319,7 @@ class ResultList(object):
             f.write(thisStr+"\n")  
             refStr = "Failures for REF resultset = {} :\n".format(refreslist.name)
             refStr = refStr + "N total failures REF resultset = {}\n".format(nref)
-            refStr = refStr + "N failures only THIS resultset = {}\n".format(nref-len(failures_both))        
+            refStr = refStr + "N failures only REF resultset = {}\n".format(nref-len(failures_both))        
             for x in range(0,len(failures_onlyRef)):
                 refStr = refStr +"\t{}\n".format(failures_onlyRef[x])
             f.write(refStr+"\n")  
