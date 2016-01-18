@@ -75,7 +75,7 @@ def plotRes(resDir, spcName, tplpath, redshift, iextremaredshift, diffthres, fai
         method = s.getConfigVal('method')
         if method == "linemodel":
             name = "linemodelsolve.linemodel_spc_extrema_{}.csv".format(idxExtrema)
-        elif method == "decisionaltreeb":
+        elif method == "decisionaltreeb" or method == "amazed0_2":
             name = "dtreeBsolve.linemodel_spc_extrema_{}.csv".format(idxExtrema)
 
         tplpath = os.path.join(path,name)
