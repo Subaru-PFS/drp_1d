@@ -853,7 +853,8 @@ std::vector<Int32> CLineModelElementList::getOverlappingElementsBySupport(  Int3
     Int32 linetype = ray.GetType();
     Float64 mu = ray.GetPosition()*(1+m_Redshift);
     Float64 c = m_Elements[ind]->GetLineWidth(mu, m_Redshift, ray.GetIsEmission());
-    Float64 winsize = m_Elements[ind]->GetNSigmaSupport()*c;
+    std::string profile = ray.GetProfile();
+    Float64 winsize = m_Elements[ind]->GetNSigmaSupport(profile)*c;
     Float64 overlapThresholdMin = winsize*overlapThres;
     //overlapThresholdMin = 0.0;
 
@@ -954,14 +955,16 @@ std::vector<Int32> CLineModelElementList::getOverlappingElements(Int32 ind, std:
             {
                 Float64 muRef = raysRef[iRayRef].GetPosition()*(1+m_Redshift);
                 Float64 cRef = m_Elements[ind]->GetLineWidth(muRef, m_Redshift, raysRef[iRayRef].GetIsEmission());
-                Float64 winsizeRef = m_Elements[ind]->GetNSigmaSupport()*cRef;
+                std::string profileRef = raysRef[iRayRef].GetProfile();
+                Float64 winsizeRef = m_Elements[ind]->GetNSigmaSupport(profileRef)*cRef;
                 Float64 overlapSizeMin = winsizeRef*overlapThres;
                 xinf = muRef-winsizeRef/2.0;
                 xsup = muRef+winsizeRef/2.0;
 
                 Float64 muElt = raysElt[iRayElt].GetPosition()*(1+m_Redshift);
                 Float64 cElt = m_Elements[iElts]->GetLineWidth(muElt, m_Redshift, raysElt[iRayElt].GetIsEmission());
-                Float64 winsizeElt = m_Elements[iElts]->GetNSigmaSupport()*cElt;
+                std::string profileElt = raysElt[iRayElt].GetProfile();
+                Float64 winsizeElt = m_Elements[iElts]->GetNSigmaSupport(profileElt)*cElt;
                 yinf = muElt-winsizeElt/2.0;
                 ysup = muElt+winsizeElt/2.0;
 
