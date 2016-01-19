@@ -109,7 +109,6 @@ def plotRes(resDir, spcName, tplpath, redshift, iextremaredshift, diffthres, fai
 
     
     if redshift == "":
-        
         if not iextremaredshift == "": 
             idx = int(iextremaredshift)
             if 'chi' in locals():
@@ -118,30 +117,7 @@ def plotRes(resDir, spcName, tplpath, redshift, iextremaredshift, diffthres, fai
         if not 'zval' in locals():
             zval = s.getRedshiftVal(spcName)
         #overrride zval
-        #zval = 2.11605 #for pfs lbg abs, EZ_fits-W-F_9
-        #zval = 1.1714 #for vvds1 'sc_020086397_F02P016_vmM1_red_31_1_atm_clean'
-    
-        #zval = 1.06876
-        #zval = 1.3698
-        #zval = 1.3455
-        
-        #zval = 1.5462 #strange chi2nocontinuum result
-        #zval = 2.5009
-        #zval =  1.1796
-        #zval = 1.064
-        #zval = 1.0827
-        #zval = 1.3808
-        #zval = 1.0738
-        #zval = 0.7673381150
-        #zval = 1.47192 #46
-        #zval = 0.703275 #31
-        #zval = 0.9604 #8
-        #zval = 1.75558
-        #zval = 2.02952
-        #zval = 2.94268
-        
         #zval = 1.1164
-        #zval = 1.1714
     else:
         zval = float(redshift)    
     
@@ -164,8 +140,7 @@ def plotRes(resDir, spcName, tplpath, redshift, iextremaredshift, diffthres, fai
         #tpath = s.getTplFullPath("NEW_E_extendeddataExtensionData.dat") #itpl = 10, 
         #tpath = s.getTplFullPath("EllipticaldataExtensionData.dat") #itpl = 11
         #tpath = s.getTplFullPath("NEW_E_extendeddataExtensionData.dat") #itpl = 12
-        #tpath = s.getTplFullPath("s0dataExtensionData.dat") #itpl = 13
-        
+        #tpath = s.getTplFullPath("s0dataExtensionData.dat") #itpl = 13  
         #tpath = s.getTplFullPath("sadataExtensionData.dat")
         #tpath = s.getTplFullPath("vvds_reddestdataExtensionData.dat")
         try:
@@ -191,7 +166,11 @@ def plotRes(resDir, spcName, tplpath, redshift, iextremaredshift, diffthres, fai
     print('Catalog path is: {0}'.format(cpath) )  
     
     # PLOT Spectrum/tpl/lines view
-    avp.AViewPlot(spath, npath, tpath, cpath, zval, forceTplAmplitude=forceTplAmplitude, forceTplDoNotRedShift = forceTplDoNotRedShift)
+    avp1 = avp.AViewPlot(spath, npath, tpath, cpath, zval, forceTplAmplitude=forceTplAmplitude, forceTplDoNotRedShift = forceTplDoNotRedShift)
+    displaySpcPath = os.path.join(s.getDisplaysDirPath(), spcName)
+    if not os.path.exists(displaySpcPath):
+        os.makedirs(displaySpcPath)
+    avp1.exportDisplays(displaySpcPath);
 
 def StartFromCommandLine( argv ) :	
     usage = """usage: %prog [options]

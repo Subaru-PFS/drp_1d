@@ -364,6 +364,19 @@ class Spectrum(object):
                     
     def getFluxMin(self):
         return min(self.yvect)
+    
+    def getWavelengthMin(self):
+        return self.xvect[0]
+    def getWavelengthMax(self):
+        return self.xvect[len(self.xvect)-1]    
+    def getWavelengthIndex(self, wl):
+        i=0
+        for x in range(0,self.n-1):
+            if wl >= self.xvect[x]:
+                i=x
+            if wl < self.xvect[x+1]:
+                break
+        return i
         
         
     def smoothGaussian(self,signal,degree=5):  

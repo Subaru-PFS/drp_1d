@@ -24,6 +24,7 @@ class AViewPlot(object):
         self.cpath = cpath
         self.z = z
         self.name = "-"
+        self.spcname = "-"
         
         self.forceTplAmplitude = forceTplAmplitude;
         self.forceTplDoNotRedShift = forceTplDoNotRedShift;
@@ -45,12 +46,15 @@ class AViewPlot(object):
         # enable lines plot
         self.forcePlotNoLines = False            
             
+        self.exportAutoDisplaysPath = ""
+        
         self.load()
         self.plot()
         
     def load(self):
         self.s = sp.Spectrum(self.spath) 
         titleStr = "spc={}\n".format(self.s.name)
+        self.spcname = self.s.name
         
         if not self.forcePlotNoNoise:
             self.noise = sp.Spectrum(self.npath)
@@ -165,6 +169,8 @@ class AViewPlot(object):
             for k in range(len(self.linesx)):
                 #x = self.linesx[k]*(1+self.z)
                 x = self.linesx[k]
+                if x<self.xmin or x>self.xmax :
+                    continue
                 if self.linestype[k]=='E':
                     cstyle = 'b-'
                     ccolor = 'b'
@@ -233,10 +239,109 @@ class AViewPlot(object):
         ax1.set_ylabel('spectrum')
         ax2.set_ylabel('noise')
         ax1.set_title(self.name) # Titre
-        #pp.savefig('ExempleTrace') # sauvegarde du fichier ExempleTrace.png
-        #pp.tight_layout()
-        pp.show()
+        
+        
+        if not self.exportAutoDisplaysPath == "":
+            self.xmin = self.exportAuto_lambda_min
+            self.xmax = self.exportAuto_lambda_max
+            ixmin = self.s.getWavelengthIndex(self.xmin)
+            ixmax = self.s.getWavelengthIndex(self.xmax)
+            print("ixmin={}".format(ixmin))
+            print("ixmax={}".format(ixmax))
+            if not self.forcePlotNoTemplate:
+                if 1: #hybrid range
+                    alpha = 0.33
+                    ymintpl = min(self.tyvect[ixmin:ixmax])
+                    yminspc = min(self.syvect[ixmin:ixmax])
+                    self.ymin = min(ymintpl, (ymintpl+alpha*yminspc)/(1.0+alpha))
+                    ymaxtpl = max(self.tyvect[ixmin:ixmax])
+                    ymaxspc = max(self.syvect[ixmin:ixmax])
+                    self.ymax = max(ymaxtpl, (ymaxtpl+alpha*ymaxspc)/(1.0+alpha))
+                if 0: #spc+tpl range
+                    self.ymin = min(min(self.syvect[ixmin:ixmax]), min(self.tyvect[ixmin:ixmax]))
+                    self.ymax = max(max(self.syvect[ixmin:ixmax]), max(self.tyvect[ixmin:ixmax]))
+                    
+                if 0: #tpl min
+                    self.ymin = min(self.tyvect[ixmin:ixmax])
+                    self.ymax = max(self.tyvect[ixmin:ixmax])
+                if 0: #spc min
+                    self.ymin = min(self.tyvect[ixmin:ixmax])
+                    self.ymax = max(self.tyvect[ixmin:ixmax])
+            else:
+                self.ymin = min(self.syvect[ixmin:ixmax])
+                self.ymax = max(self.syvect[ixmin:ixmax])
+            
+            ax1.set_xlim([self.xmin,self.xmax])
+            ax2.set_xlim([self.xmin,self.xmax])
+            ax3.set_xlim([self.xmin,self.xmax])         
+            ax1.set_ylim([self.ymin*(1-np.sign(self.ymin)*limmarg),self.ymax*(1+limmarg)])
+            
+            outFigFile = os.path.join(self.exportAutoDisplaysPath, 'aview_{}_z{}_zoom{}.png'.format(self.spcname, self.z, self.exportAuto_name))
+            #pp.savefig( outFigFile, bbox_inches='tight')
+            pp.savefig( outFigFile)
+            #pp.savefig('ExempleTrace') # sauvegarde du fichier ExempleTrace.png
+            #pp.tight_layout()
+        else:
+            pp.show()
         print '\n'
+      
+    def exportDisplays(self, displayExportPath):
+        self.exportAutoDisplaysPath = displayExportPath
+        zplus1 = self.z+1
+        
+        
+        # add full range 
+        smin = self.s.getWavelengthMin()/zplus1
+        smax = self.s.getWavelengthMax()/zplus1
+        displays_lambdas_rest_center = [(smax+smin)/2.0]
+        displays_lambdas_rest_min = [smin]
+        displays_lambdas_rest_max = [smax]
+        displays_names = ["FullRange"]
+        # add lya to the pool of displayed ranges
+        displays_lambdas_rest_center.append(1215)
+        displays_lambdas_rest_min.append(1110)
+        displays_lambdas_rest_max.append(1310)
+        displays_names.append("Lya")
+        # add OII_Hgamma to the pool of displayed ranges
+        displays_lambdas_rest_center.append(4000)
+        displays_lambdas_rest_min.append(3695)
+        displays_lambdas_rest_max.append(4380)
+        displays_names.append("OII_Hgamma")
+#        # add OIII to the pool of displayed ranges
+#        displays_lambdas_rest_center.append(5000)
+#        displays_lambdas_rest_min.append(4925)
+#        displays_lambdas_rest_max.append(5075)
+#        displays_names.append("OIII")
+        # add OIII_Hb to the pool of displayed ranges
+        displays_lambdas_rest_center.append(4950)
+        displays_lambdas_rest_min.append(4800)
+        displays_lambdas_rest_max.append(5075)
+        displays_names.append("OIII_Hb")
+        # add Ha to the pool of displayed ranges
+        displays_lambdas_rest_center.append(6562)
+        displays_lambdas_rest_min.append(6450)
+        displays_lambdas_rest_max.append(6650)
+        displays_names.append("Ha")
+        # add Ca to the pool of displayed ranges
+        displays_lambdas_rest_center.append(3950)
+        displays_lambdas_rest_min.append(3750)
+        displays_lambdas_rest_max.append(4050)
+        displays_names.append("CaH_CaK")
+        
+        
+        for a in range(len(displays_lambdas_rest_center)):
+            self.exportAuto_lambda_center = displays_lambdas_rest_center[a]*zplus1
+            self.exportAuto_lambda_min = displays_lambdas_rest_min[a]*zplus1
+            self.exportAuto_lambda_max = displays_lambdas_rest_max[a]*zplus1
+            self.exportAuto_name = displays_names[a]
+            
+            _max = max(self.s.getWavelengthMin(),self.exportAuto_lambda_min)
+            _min = min(self.s.getWavelengthMax(),self.exportAuto_lambda_max)
+            overlapMin = _max-_min
+            print("overlapRange = {}".format(overlapMin))
+            if overlapMin <= 2:
+                print("exporting auto display for lambda rest = {}, with z = {}".format(displays_lambdas_rest_center[a], self.z))
+                self.plot()
         
         
 if __name__ == '__main__':
