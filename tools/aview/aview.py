@@ -167,11 +167,12 @@ def plotRes(resDir, spcName, tplpath, redshift, iextremaredshift, diffthres, fai
     print('Catalog path is: {0}'.format(cpath) )  
     
     # PLOT Spectrum/tpl/lines view
-    avp1 = avp.AViewPlot(spath, npath, tpath, cpath, zval, forceTplAmplitude=forceTplAmplitude, forceTplDoNotRedShift = forceTplDoNotRedShift, enablePlot=False)
-    displaySpcPath = os.path.join(s.getDisplaysDirPath(), spcName)
-    if not os.path.exists(displaySpcPath):
-        os.makedirs(displaySpcPath)
-    avp1.exportDisplays(displaySpcPath);
+    avp1 = avp.AViewPlot(spath, npath, tpath, cpath, zval, forceTplAmplitude=forceTplAmplitude, forceTplDoNotRedShift = forceTplDoNotRedShift, enablePlot=enablePlot)
+    if enablePlot==False:
+        displaySpcPath = os.path.join(s.getDisplaysDirPath(), spcName)
+        if not os.path.exists(displaySpcPath):
+            os.makedirs(displaySpcPath)
+        avp1.exportDisplays(displaySpcPath);
 
 def StartFromCommandLine( argv ) :	
     usage = """usage: %prog [options]

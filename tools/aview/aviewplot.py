@@ -247,8 +247,8 @@ class AViewPlot(object):
             self.xmax = self.exportAuto_lambda_max
             ixmin = self.s.getWavelengthIndex(self.xmin)
             ixmax = self.s.getWavelengthIndex(self.xmax)
-            print("ixmin={}".format(ixmin))
-            print("ixmax={}".format(ixmax))
+            #print("ixmin={}".format(ixmin))
+            #print("ixmax={}".format(ixmax))
             if not self.forcePlotNoTemplate:
                 if 1: #hybrid range
                     alpha = 0.33
