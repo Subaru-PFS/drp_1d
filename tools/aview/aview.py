@@ -16,7 +16,7 @@ import aviewplot as avp
 import resultstat as rstat
 import chisquare as chisq
 
-def plotRes(resDir, spcName, tplpath, redshift, iextremaredshift, diffthres, failureIdx):
+def plotRes(resDir, spcName, tplpath, redshift, iextremaredshift, diffthres, failureIdx, enablePlot=True):
     print('using amazed results full path: {0}'.format(resDir))
     s = rp.ResParser(resDir)
     print(s) 
@@ -61,7 +61,8 @@ def plotRes(resDir, spcName, tplpath, redshift, iextremaredshift, diffthres, fai
             print('plot chi2 using full path: {}'.format(chipath))
             chi = chisq.ResultChisquare(chipath)
             #print(chi) 
-            chi.plot(showContinuumEstimate=False, showExtrema=True, showAmbiguities=False)
+            if enablePlot:
+                chi.plot(showContinuumEstimate=False, showExtrema=True, showAmbiguities=False)
         
 
     try:
@@ -166,7 +167,7 @@ def plotRes(resDir, spcName, tplpath, redshift, iextremaredshift, diffthres, fai
     print('Catalog path is: {0}'.format(cpath) )  
     
     # PLOT Spectrum/tpl/lines view
-    avp1 = avp.AViewPlot(spath, npath, tpath, cpath, zval, forceTplAmplitude=forceTplAmplitude, forceTplDoNotRedShift = forceTplDoNotRedShift)
+    avp1 = avp.AViewPlot(spath, npath, tpath, cpath, zval, forceTplAmplitude=forceTplAmplitude, forceTplDoNotRedShift = forceTplDoNotRedShift, enablePlot=False)
     displaySpcPath = os.path.join(s.getDisplaysDirPath(), spcName)
     if not os.path.exists(displaySpcPath):
         os.makedirs(displaySpcPath)

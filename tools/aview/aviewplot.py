@@ -17,7 +17,7 @@ import catalog as ctlg
 
 
 class AViewPlot(object):
-    def __init__(self, spath, npath, tpath, cpath, z, forceTplAmplitude=-1.0, forceTplDoNotRedShift = 0):
+    def __init__(self, spath, npath, tpath, cpath, z, forceTplAmplitude=-1.0, forceTplDoNotRedShift = 0, enablePlot=True):
         self.spath = spath
         self.npath = npath
         self.tpath = tpath
@@ -49,7 +49,8 @@ class AViewPlot(object):
         self.exportAutoDisplaysPath = ""
         
         self.load()
-        self.plot()
+        if enablePlot:
+            self.plot()
         
     def load(self):
         self.s = sp.Spectrum(self.spath) 
@@ -200,8 +201,8 @@ class AViewPlot(object):
                
                
         #apply x,y range
-        limmarg = 0.15;
-        ax1.set_ylim([self.ymin*(1-np.sign(self.ymin)*limmarg),self.ymax*(1+limmarg)])
+        limmarg = 0.2;
+        ax1.set_ylim([self.ymin*(1-np.sign(self.ymin)*limmarg*2.0),self.ymax*(1+limmarg)])
         ax1.set_xlim([self.xmin,self.xmax])
         #ax2.set_ylim([0, 10])
         ax2.set_xlim([self.xmin,self.xmax])
@@ -274,7 +275,7 @@ class AViewPlot(object):
             ax1.set_xlim([self.xmin,self.xmax])
             ax2.set_xlim([self.xmin,self.xmax])
             ax3.set_xlim([self.xmin,self.xmax])         
-            ax1.set_ylim([self.ymin*(1-np.sign(self.ymin)*limmarg),self.ymax*(1+limmarg)])
+            ax1.set_ylim([self.ymin*(1-np.sign(self.ymin)*limmarg*10.0),self.ymax*(1+limmarg)])
             
             outFigFile = os.path.join(self.exportAutoDisplaysPath, 'aview_{}_z{}_zoom{}.png'.format(self.spcname, self.z, self.exportAuto_name))
             #pp.savefig( outFigFile, bbox_inches='tight')
@@ -297,31 +298,43 @@ class AViewPlot(object):
         displays_lambdas_rest_min = [smin]
         displays_lambdas_rest_max = [smax]
         displays_names = ["FullRange"]
+        
         # add lya to the pool of displayed ranges
         displays_lambdas_rest_center.append(1215)
-        displays_lambdas_rest_min.append(1110)
-        displays_lambdas_rest_max.append(1310)
+        displays_lambdas_rest_min.append(1195)
+        displays_lambdas_rest_max.append(1235)
         displays_names.append("Lya")
+        
+        # add CIV1550 to the pool of displayed ranges
+        displays_lambdas_rest_center.append(1500)
+        displays_lambdas_rest_min.append(1250)
+        displays_lambdas_rest_max.append(1700)
+        displays_names.append("CIV1550")
+        
         # add OII_Hgamma to the pool of displayed ranges
         displays_lambdas_rest_center.append(4000)
         displays_lambdas_rest_min.append(3695)
         displays_lambdas_rest_max.append(4380)
         displays_names.append("OII_Hgamma")
+        
 #        # add OIII to the pool of displayed ranges
 #        displays_lambdas_rest_center.append(5000)
 #        displays_lambdas_rest_min.append(4925)
 #        displays_lambdas_rest_max.append(5075)
 #        displays_names.append("OIII")
+        
         # add OIII_Hb to the pool of displayed ranges
         displays_lambdas_rest_center.append(4950)
         displays_lambdas_rest_min.append(4800)
         displays_lambdas_rest_max.append(5075)
         displays_names.append("OIII_Hb")
+        
         # add Ha to the pool of displayed ranges
         displays_lambdas_rest_center.append(6562)
         displays_lambdas_rest_min.append(6450)
         displays_lambdas_rest_max.append(6650)
         displays_names.append("Ha")
+        
         # add Ca to the pool of displayed ranges
         displays_lambdas_rest_center.append(3950)
         displays_lambdas_rest_min.append(3750)
@@ -338,7 +351,7 @@ class AViewPlot(object):
             _max = max(self.s.getWavelengthMin(),self.exportAuto_lambda_min)
             _min = min(self.s.getWavelengthMax(),self.exportAuto_lambda_max)
             overlapMin = _max-_min
-            print("overlapRange = {}".format(overlapMin))
+            #print("overlapRange = {}".format(overlapMin))
             if overlapMin <= 2:
                 print("exporting auto display for lambda rest = {}, with z = {}".format(displays_lambdas_rest_center[a], self.z))
                 self.plot()
