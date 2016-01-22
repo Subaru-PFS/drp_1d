@@ -406,7 +406,7 @@ class ResParser(object):
             chipath.append(os.path.join(path,name))
             chiname.append(name)
             
-        elif method == "decisionaltreeb" or method == "amazed0_2":
+        elif method == "decisionaltreeb" or method.lower() == "amazed0_2":
             
             if 1:
                 #name = "dtreebsolve.linemodel.csv"
