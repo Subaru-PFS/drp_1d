@@ -128,3 +128,15 @@ Void CSpectrum::SetName( const char* name )
 {
     m_Name = name;
 }
+
+Bool CSpectrum::IsNoiseValid(){
+    Bool valid=true;
+
+    const Float64* error = m_FluxAxis.GetError();
+    for(Int32 i=0; i<m_FluxAxis.GetSamplesCount(); i++){
+        if( error[i] == 0 ){
+            valid = false;
+        }
+    }
+    return valid;
+}

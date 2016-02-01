@@ -33,6 +33,16 @@ iRefSFR = -1
 iRefEBmV = -1
 iRefSigma = -1
 
+def setMuseRefFileType():
+    global iRefZ, iRefMag, iRefFlag, iRefSFR, iRefEBmV, iRefSigma
+    iRefZ = 1
+    iRefMag = 1
+    iRefFlag = -1
+    
+    iRefSFR = -1
+    iRefEBmV = -1
+    iRefSigma = -1
+    
 def setVVDSRefFileType():
     global iRefZ, iRefMag, iRefFlag
     iRefZ = 4
@@ -793,6 +803,9 @@ def StartFromCommandLine( argv ) :
         elif options.type == 'pfs':
             print "Info: Using PFS reference data file type"
             setPFSRefFileType()
+        elif options.type == 'muse':
+            print "Info: Using MUSE reference data file type"            
+            setMuseRefFileType()
         else:
             print("Info: No reference file type given (--type), using vvds by default.")
 

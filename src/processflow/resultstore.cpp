@@ -150,6 +150,21 @@ void COperatorResultStore::SaveRedshiftResultHeader(  const bfs::path& dir )
     }
 }
 
+void COperatorResultStore::SaveRedshiftResultError(  const std::string spcName, const bfs::path& dir )
+{
+    // Append best redshift result line to output file
+    {
+        std::fstream outputStream;
+        // Save result at root of output directory
+        CreateResultStorage( outputStream, bfs::path( "redshift.csv" ), dir );
+
+
+        outputStream <<  spcName << "\t-1\t-1\t-1\t-1\t-1"<< std::endl;
+    }
+}
+
+
+
 Void COperatorResultStore::SaveAllResults( const CDataStore& store, const bfs::path& dir ) const
 {
     // Store global result

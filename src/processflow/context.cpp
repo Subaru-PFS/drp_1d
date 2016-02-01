@@ -82,6 +82,13 @@ bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath,
             return false;
         }
     }
+    //check if there is any zeroes in the nosie spectrum
+    if( !m_Spectrum->IsNoiseValid() ){
+        Log.LogError( "Failed to validate noise from spectrum: %s", noisePath );
+        return false;
+    }
+
+
 
     // This should be moved to CProcessFlow
 

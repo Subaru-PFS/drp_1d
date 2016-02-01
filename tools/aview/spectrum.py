@@ -65,7 +65,14 @@ class Spectrum(object):
         #print("header = {0}".format(sciheader))
         n = sciheader["NAXIS"]
         #n1 = sciheader["NAXIS1"]
-        n2 = sciheader["NAXIS2"]
+        
+        try:
+            n2 = sciheader["NAXIS2"]
+        except:
+            self.type='muse' #euclid and muse splitted
+            self.loadmuse()
+            return
+                    
         #print("n1 = {0}".format(n1))
         #print("n2 = {0}".format(n2))
         if self.stype == 'undefspc' and n2 > 2:
@@ -183,6 +190,32 @@ class Spectrum(object):
             self.xvect[x] = xaxisStart + (x+1-xaxisRefPix)*xaxisRes
             self.yvect[x] = scidata[0][x]
             self.ysum += self.yvect[x]
+
+
+    def loadmuse(self):
+        hdulist = fits.open(self.spath) 
+
+        scidata = hdulist[0].data
+        sciheader = hdulist[0].header
+        
+        xaxisStart = sciheader["CRVAL1"]
+        xaxisRes = sciheader["CDELT1"]
+        xaxisRefPix = sciheader["CRPIX1"]
+            
+            
+        self.n = scidata.shape[0]
+        if self.n<3:
+            self.n = scidata.shape[1]
+        #print('{0} - n = {1}'.format(self.logTagStr, self.n))
+    
+        #---- default xaxis index array
+        self.xvect = range(0,self.n)
+        self.yvect = range(0,self.n)
+        self.ysum = 0.0
+        for x in range(0,self.n):
+            self.xvect[x] = xaxisStart + (x+1-xaxisRefPix)*xaxisRes
+            self.yvect[x] = scidata[x]
+            self.ysum += self.yvect[x]            
             
     def loadhplana(self):
         print("Loading hplana fits")
@@ -213,8 +246,8 @@ class Spectrum(object):
             self.ysum += self.yvect[x]
             
                 
-    def loadmuse(self):
-        print("Loading muse fits")
+    def loadmuseraw(self):
+        print("Loading muse (raw, non splitted) fits")
         hdulist = fits.open(self.spath) 
         print hdulist
 

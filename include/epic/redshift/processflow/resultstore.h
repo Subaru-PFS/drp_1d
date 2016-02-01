@@ -37,6 +37,7 @@ public:
     std::weak_ptr<const COperatorResult>  GetGlobalResult( const std::string& name ) const;
 
     Void                    SaveRedshiftResultHeader( const boost::filesystem::path& dir );
+    Void                    SaveRedshiftResultError( const std::string spcName, const boost::filesystem::path& dir );
     Void                    SaveRedshiftResult( const CDataStore& store, const boost::filesystem::path& dir );
     Void                    SaveAllResults( const CDataStore& store, const boost::filesystem::path& dir ) const;
 

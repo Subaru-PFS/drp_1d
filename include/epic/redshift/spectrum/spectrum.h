@@ -51,6 +51,7 @@ public:
     Bool                            ConvertToLinearScale();
 
     Bool                            RemoveContinuum( CContinuum& remover );
+    Bool                            IsNoiseValid();
 
 private:
 
