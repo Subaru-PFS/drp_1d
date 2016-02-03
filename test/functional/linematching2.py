@@ -1,4 +1,4 @@
-#!/bin/python3
+#!/bin/python
 # -*- coding:utf-8 -*-
 
 import os
