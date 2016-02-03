@@ -7,4 +7,5 @@ if [ "$host" == "lam" ]; then
     exit 0
 fi
 
-./linematching2.py > /home/jenkins/jenkins/amazed/cpf-redshift/label/linux-centos7/test/report/functional.xml
+#./linematching2.py > /home/jenkins/jenkins/amazed/cpf-redshift/label/linux-centos7/test/report/functional.xml
+./linematching2.py > /home/jenkins/jenkins/amazed/amazed/label/linux-centos7/functional.xml
