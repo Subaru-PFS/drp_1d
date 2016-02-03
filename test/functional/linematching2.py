@@ -4,10 +4,7 @@
 import os
 from shutil import rmtree
 
-#amazedPath = os.path.expanduser ( "../../../amazed" )
-# /home/jenkins/jenkins/amazed/amazed/label/linux-centos7/bin/amazed-0.0.0
-# cd /home/jenkins/jenkins/amazed/cpf-redshift/label/linux-centos7/test/functional && ./linematching2.py
-amazedPath = os.path.expanduser ( "/home/jenkins/jenkins/amazed/amazed/label/linux-centos7/" )
+amazedPath = os.path.expanduser ( "../../../amazed" )
 amazedExecutable = amazedPath + "/bin/amazed-0.0.0"
 cpfPath = os.path.expanduser ( "../.." )
 successStrings = [ ]
