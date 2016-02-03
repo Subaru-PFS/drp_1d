@@ -1,9 +1,0 @@
-Info:  ===============================================
-Info:  Session setup:
-Info:  Lambda Range: [3000.00 13000.00]
-Info:  Redshift Range: [0.00 5.00]
-Info:  Redshift Step: 0.000100
-Info:  Smooth width: 0
-Info:  Method: linematching2
-Info:  ===============================================
-Info:  Processing Line Matching 2 (LambdaRange: 3800.000000-12599.200195:0.669922)
