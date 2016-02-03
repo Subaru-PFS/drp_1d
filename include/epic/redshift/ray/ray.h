@@ -30,7 +30,7 @@ public:
     };
 
     CRay();
-    CRay( const std::string& name, Float64 pos, UInt32 type, UInt32 force, Float64 amp=-1.0, Float64 width=-1.0, Float64 cut=-1.0, Float64 posErr=-1.0, const std::string& groupName="-1", Float64 nominalAmp=1.0 );
+    CRay( const std::string& name, Float64 pos, UInt32 type, std::string profile, UInt32 force, Float64 amp=-1.0, Float64 width=-1.0, Float64 cut=-1.0, Float64 posErr=-1.0, const std::string& groupName="-1", Float64 nominalAmp=1.0 );
     ~CRay();
     bool operator < (const CRay& str) const;
     bool operator != (const CRay& str) const;
@@ -39,6 +39,7 @@ public:
     Bool                GetIsEmission() const;
     Int32               GetForce() const;
     Int32               GetType() const;
+    std::string         GetProfile() const;
     Float64             GetPosition() const;
     Float64             GetAmplitude() const;
     Float64             GetWidth() const;
@@ -58,6 +59,7 @@ public:
 private:
 
     Int32           m_Type;
+    std::string     m_Profile;
     Int32           m_Force;
     Float64         m_Pos;
     Float64         m_Amp;

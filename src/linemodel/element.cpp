@@ -17,9 +17,6 @@ CLineModelElement::CLineModelElement(const std::string& widthType, const Float64
     m_VelocityAbsorption= velocityAbsorption;
     m_FWHM_factor = 2.35;
 
-
-    m_NSigmaSupport = 8.0;
-
     m_OutsideLambdaRange = true;
     m_OutsideLambdaRangeOverlapThreshold = 0.1;
     //example: 0.1 means 10% of the line is allowed to be outside the spectrum with the line still considered inside the lambda range
@@ -86,7 +83,31 @@ Float64 CLineModelElement::GetLineWidth(Float64 redshiftedlambda, Float64 z, Boo
     return sigma;
 }
 
-Float64 CLineModelElement::GetNSigmaSupport()
+Float64 CLineModelElement::GetLineProfile(std::string profile, Float64 xc, Float64 c)
 {
-    return m_NSigmaSupport;
+    Float64 val=0.0;
+
+    if(profile=="SYM"){
+        const Float64 xsurc = xc/c;
+        val = exp(-0.5*xsurc*xsurc);
+    }else if(profile=="ASYM"){
+        const Float64 xsurc = xc/c/2.5;
+        const Float64 alpha=10.0;
+        val = exp(-0.5*xsurc*xsurc)*(1.0+erf(alpha/sqrt(2.0)*xsurc));
+    }
+    return val;
 }
+
+Float64 CLineModelElement::GetNSigmaSupport(std::string profile)
+{
+    static Float64 nominal = 8.0;
+    Float64 val=nominal;
+
+    if(profile=="SYM"){
+        val = nominal;
+    }else if(profile=="ASYM"){
+        val = nominal*2.5;
+    }
+    return val;
+}
+

@@ -1,3 +1,4 @@
+#include <epic/core/log/log.h>
 #include <epic/redshift/operator/raymatchingresult.h>
 #include <epic/redshift/ray/rules.h>
 #include <stdio.h>
@@ -7,11 +8,11 @@
 using namespace NSEpic;
 
 /**
- * Empty constructor.
+ * Attribution constructor. Will only set the debugging bypass option.
  */
 CRayMatchingResult::CRayMatchingResult()
 {
-
+  m_bypassDebug = true;
 }
 
 /**
@@ -354,13 +355,16 @@ Int32 CRayMatchingResult::GetMaxMatchingNumber() const
  */
 Void CRayMatchingResult::FilterWithRules( CSpectrum spc, TFloat64Range lambdaRange, Float64 winsize )
 {
+  Log.LogDebug ( "Void CRayMatchingResult::FilterWithRules( CSpectrum spc, TFloat64Range lambdaRange, Float64 winsize )" );
   if( SolutionSetList.size()<1 )
     {
+      Log.LogDebug ( "SolutionSetList.size()<1, returning" );
       return;
     }
 
   CRules rules( spc, m_DetectedCatalog, m_RestCatalog, lambdaRange, winsize );
   TSolutionSetList _solutionSetList;
+  Log.LogDebug( "There are %d solutions to test.", SolutionSetList.size( ) );
   for( UInt32 i=0; i<SolutionSetList.size() ; i++ )
     {
       TSolutionSet currentSet = SolutionSetList[i];
@@ -369,10 +373,14 @@ Void CRayMatchingResult::FilterWithRules( CSpectrum spc, TFloat64Range lambdaRan
 
       if( ruleId<=0 )
 	{
+	  if ( ! m_bypassDebug )
+	    Log.LogDebug( "Solution %d passed!", i );
 	  _solutionSetList.push_back( currentSet );
 	}
       else
 	{
+	  if ( ! m_bypassDebug )
+	    Log.LogDebug( "Solution %d failed rule %d", i, ruleId );
 	  FilteredSolutionSetList.push_back( currentSet );
 	  FilterTypeList.push_back( ruleId );
 	}

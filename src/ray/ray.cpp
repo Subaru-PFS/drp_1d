@@ -9,12 +9,14 @@ CRay::CRay()
 
 }
 
-CRay::CRay(const string& name, Float64 pos, UInt32 type, UInt32 force, Float64 amp, Float64 width, Float64 cut , Float64 posErr, const std::string& groupName, Float64 nominalAmp)
+CRay::CRay(const string& name, Float64 pos, UInt32 type, std::string profile, UInt32 force, Float64 amp, Float64 width, Float64 cut , Float64 posErr, const std::string& groupName, Float64 nominalAmp)
 {
     m_Name = name;
     m_Pos = pos;
     m_Type = type;
     m_Force = force;
+
+    m_Profile = profile;
 
     m_Amp = amp;
     m_Width = width;
@@ -65,6 +67,11 @@ Bool CRay::GetIsEmission() const
 Int32 CRay::GetType() const
 {
     return m_Type;
+}
+
+std::string CRay::GetProfile() const
+{
+    return m_Profile;
 }
 
 Int32 CRay::GetForce() const

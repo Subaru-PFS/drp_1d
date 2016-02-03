@@ -161,7 +161,7 @@ BOOST_AUTO_TEST_CASE(MatchingTest1)
     CRayCatalog::TRayVector ::iterator it;
     for( it = cataloglist.begin(); it != cataloglist.end(); ++it )
     {
-        detectedCatalog.Add( CRay( (*it).GetName(), (*it).GetPosition()*shiftLambda, 2, 2 ) );
+        detectedCatalog.Add( CRay( (*it).GetName(), (*it).GetPosition()*shiftLambda, 2, "SYM", 2 ) );
     }
 
     CRayMatching rayMatching;
@@ -193,7 +193,7 @@ BOOST_AUTO_TEST_CASE(MatchingTest2_EzValidationTest)
     {
         char buffer [64];
         sprintf(buffer,"loaded_%d",i);
-        detectedCatalog.Add( CRay("", rayPosList[i], 2, 2 ) );
+        detectedCatalog.Add( CRay("", rayPosList[i], 2, "SYM", 2 ) );
     }
 
     CRayMatching rayMatching;

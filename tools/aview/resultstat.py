@@ -429,7 +429,7 @@ class ResultList(object):
             
             if enableExport:
                 outFigFile = os.path.join(outdir, 'closestz_{}_nextrema{}_hist.png'.format(chi2Type, nextrema))
-                plt.savefig( outFigFile, bbox_inches='tight') # sauvegarde du fichier ExempleTrace.png
+                plt.savefig( outFigFile, bbox_inches='tight')
             if enablePlot:
                 plt.show()  
 

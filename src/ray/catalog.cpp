@@ -114,9 +114,16 @@ Bool CRayCatalog::Load( const char* filePath )
 
     string line;
 
+    Float64 ver = 0.0;
     // Read file line by line
     while( getline( file, line ) )
     {
+        // manage version
+        if(line.find("#version:0.3.0")!= std::string::npos){
+            ver = 0.3;
+            continue;
+        }
+        // remove comments
         if(line.compare(0,1,"#",1)==0){
             continue;
         }
@@ -178,6 +185,15 @@ Bool CRayCatalog::Load( const char* filePath )
                 Eforce = 2;
             }
 
+            std::string profileName = "SYM";
+            if(ver>=0.3){
+                // Parse profile name
+                ++it;
+                if( it != tok.end() ){
+                    profileName = *it;
+                }
+            }
+
             std::string groupName = "-1";
             Float64 nominaleAmplitude = 1.0;
             // Parse group name
@@ -198,7 +214,7 @@ Bool CRayCatalog::Load( const char* filePath )
                 }
             }
             if(nominaleAmplitude!=0.0){
-                Add( CRay( name, pos, Etype, Eforce, -1, -1, -1, -1, groupName, nominaleAmplitude ) );
+                Add( CRay( name, pos, Etype, profileName, Eforce, -1, -1, -1, -1, groupName, nominaleAmplitude ) );
             }
         }
     }

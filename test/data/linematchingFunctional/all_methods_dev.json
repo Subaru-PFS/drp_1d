@@ -1,0 +1,110 @@
+{
+    "lambdaRange": [
+        "3000",
+        "13000"
+    ],
+    "redshiftRange": [
+        "0",
+        "5"
+    ],
+    "redshiftStep": "0.0001",
+    "overlapThreshold": "0.8",
+    "smoothWidth": "0",
+    "templateCategoryList": [
+        "emission",
+        "galaxy",
+        "star",
+        "qso"
+    ],
+    "continuumRemoval": {
+        "method": "IrregularSamplingMedian",
+        "medianKernelWidth": "75"
+    },
+    "dtreeBsolve": {
+        "linemodel": {
+            "linetypefilter": "no",
+            "lineforcefilter": "no",
+            "fittingmethod": "hybrid",
+            "continuumcomponent": "fromspectrum",
+            "linewidthtype": "fixedvelocity",
+            "instrumentresolution": "3000",
+            "velocityemission": "100",
+            "velocityabsorption": "300",
+            "continuumreestimation": "no",
+            "extremacount": "10",
+            "rules": "all"
+        },
+        "chisquare": {
+            "overlapthreshold": "0.8",
+            "redshiftsupport": "full"
+        }
+    },
+    "blindsolve": {
+        "correlationExtremumCount": "5",
+        "overlapThreshold": "0.8"
+    },
+    "chisquare2solve": {
+        "overlapThreshold": "0.8",
+        "spectrum": {
+            "component": "nocontinuum"
+        }
+    },
+    "correlationsolve": {
+        "overlapThreshold": "0.8"
+    },
+    "dtree7solve": {
+        "winsize": "250",
+        "cut": "5",
+        "strongcut": "2",
+        "minMatchNum": "1",
+        "tol": "0.002",
+        "correlationExtremumCount": "5",
+        "overlapThreshold": "0.8"
+    },
+    "linemodelsolve": {
+        "linemodel": {
+            "linetypefilter": "no",
+            "lineforcefilter": "no",
+            "fittingmethod": "hybrid",
+            "continuumcomponent": "fromspectrum",
+            "linewidthtype": "fixedvelocity",
+            "instrumentresolution": "2350",
+            "velocityemission": "100",
+            "velocityabsorption": "300",
+            "continuumreestimation": "no",
+            "extremacount": "10"
+        }
+    },
+    "SaveIntermediateResults": "all",
+    "lambdaRange": [
+        "3000",
+        "13000"
+    ],
+    "redshiftRange": [
+        "0",
+        "5"
+    ],
+    "method": "linematching2",
+    "templateCategoryList": [
+        "emission",
+        "galaxy",
+        "star",
+        "qso"
+    ],
+    "linematching2solve": {
+        "linematching2": {
+            "cut": "5",
+	    "disablegaussianfitqualitycheck" : "0",
+	    "dynamicLinematching" : "1",
+            "detectioncut": "5",
+            "detectionnoiseoffset": "0",
+            "minsize": "3",
+            "maxsize": "70",
+            "enlargeRate": "2",
+            "minMatchNum": "1",
+            "strongcut": "2",
+            "tol": "0.002",
+	    "winsize": "250"
+        }
+    }
+}

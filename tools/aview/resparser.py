@@ -46,7 +46,7 @@ class ResParser(object):
         if methodParam=="decisionaltreeb":
             self.linemodelrelpath = "dtreeBsolve.linemodel.csv" 
                 
-        
+        self.displaysOutputPath = os.path.join(self.respath,"displays")
            
         
         self.detectedpeakcatalogrelpath = 'linematching2solve.peakdetection.csv'
@@ -75,6 +75,14 @@ class ResParser(object):
         returns the stats path
         """
         return self.statsdirpath
+    
+    def getDisplaysDirPath(self):
+        """
+        returns the displays path
+        """
+        if not os.path.exists(self.displaysOutputPath):
+            os.makedirs(self.displaysOutputPath)
+        return self.displaysOutputPath
     
     def getDiffPath(self):
         """
@@ -398,7 +406,7 @@ class ResParser(object):
             chipath.append(os.path.join(path,name))
             chiname.append(name)
             
-        elif method == "decisionaltreeb":
+        elif method == "decisionaltreeb" or method.lower() == "amazed0_2":
             
             if 1:
                 #name = "dtreebsolve.linemodel.csv"

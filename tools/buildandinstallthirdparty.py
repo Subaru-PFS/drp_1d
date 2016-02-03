@@ -125,7 +125,7 @@ def Main( argv ):
     libSrc = libDict["doxygen"]["src"];
     if DownloadHTTPFile( libSrc, libPath+".tar.gz" ) :
         if ExtractTarGZ( libPath+".tar.gz", libPath ) :
-            os.system( "cd "+libPath+"/ ; ./configure --prefix "+thirdPartyDir+" ; make ; make install ; cd ../" )
+            os.system( "cd " + libPath + "/ ; ./configure --prefix " + thirdPartyDir + " ; make ; make install ; cd ../" )
 
     # BOOST
     libPath = libDict["boost"]["path"];

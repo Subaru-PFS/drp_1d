@@ -62,7 +62,8 @@ void CMultiLine::prepareSupport(const CSpectrumSpectralAxis& spectralAxis, Float
     for(Int32 i=0; i<m_Rays.size(); i++){
         Float64 mu = m_Rays[i].GetPosition()*(1+redshift);
         Float64 c = GetLineWidth(mu, redshift, m_Rays[i].GetIsEmission());
-        Float64 winsize = m_NSigmaSupport*c;
+        std::string profile = m_Rays[i].GetProfile();
+        Float64 winsize = GetNSigmaSupport(profile)*c;
 
         Float64 lambda_start = mu-winsize/2.0;
         if(lambda_start < lambdaRange.GetBegin()){
@@ -231,9 +232,12 @@ void CMultiLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const C
     mu.resize(m_Rays.size());
     std::vector<Float64> c;
     c.resize(m_Rays.size());
+    std::vector<std::string> profile;
+    profile.resize(m_Rays.size());
     for(Int32 k2=0; k2<m_Rays.size(); k2++){ //loop for the signal synthesis
         mu[k2] = m_Rays[k2].GetPosition()*(1+redshift);
         c[k2] = GetLineWidth(mu[k2], redshift, m_Rays[k2].GetIsEmission());
+        profile[k2] = m_Rays[k2].GetProfile();
     }
 
     for(Int32 k=0; k<m_Rays.size(); k++){ //loop for the intervals
@@ -252,7 +256,7 @@ void CMultiLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const C
                 if(m_OutsideLambdaRangeList[k2]){
                     continue;
                 }
-                yg += m_SignFactors[k2] * m_NominalAmplitudes[k2] * exp (-1.*(x-mu[k2])*(x-mu[k2])/(2*c[k2]*c[k2]));
+                yg += m_SignFactors[k2] * m_NominalAmplitudes[k2] * GetLineProfile(profile[k2], x-mu[k2], c[k2]);
             }
             num++;
             err2 = 1.0 / (error[i] * error[i]);
@@ -327,7 +331,9 @@ Float64 CMultiLine::getModelAtLambda(Float64 lambda, Float64 redshift )
         Float64 A = m_FittedAmplitudes[k2];
         Float64 mu = m_Rays[k2].GetPosition()*(1+redshift);
         Float64 c = GetLineWidth(mu, redshift, m_Rays[k2].GetIsEmission());
-        Yi += m_SignFactors[k2] * A * exp (-1.*(x-mu)*(x-mu)/(2*c*c));
+        std::string profile = m_Rays[k2].GetProfile();
+
+        Yi += m_SignFactors[k2] * A * GetLineProfile(profile, x-mu, c);
     }
     return Yi;
 }

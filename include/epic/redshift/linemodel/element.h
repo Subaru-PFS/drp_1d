@@ -55,8 +55,8 @@ public:
 
     std::vector<Int32> m_LineCatalogIndexes;
     Float64 GetLineWidth(Float64 lambda, Float64 z, Bool isEmission);
-
-    Float64 GetNSigmaSupport();
+    Float64 GetLineProfile(std::string profile, Float64 xc, Float64 c);
+    Float64 GetNSigmaSupport(std::string profile);
 
 protected:
 
@@ -68,7 +68,6 @@ protected:
     Float64 m_VelocityAbsorption;
     Float64 m_FWHM_factor;
 
-    Float64 m_NSigmaSupport;
     Float64 m_OutsideLambdaRangeOverlapThreshold;
     bool m_OutsideLambdaRange;
     std::string m_ElementType;

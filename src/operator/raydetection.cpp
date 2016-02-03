@@ -32,6 +32,8 @@ CLineDetection::CLineDetection( Int32 type, Float64 cut, Float64 strongcut, Floa
     m_disableFitQualityCheck = disableFitQualityCheck;
 
     m_type = type;
+
+    m_bypassDebug = true;
 }
 
 /**
@@ -75,7 +77,8 @@ std::shared_ptr<const CLineDetectionResult> CLineDetection::Compute( const CSpec
         if( status!=NSEpic::CGaussianFit::nStatus_Success )
 	  {
             std::string status = ( boost::format( "Peak_%1% : Fitting failed" ) % j ).str();
-	    Log.LogDebug ( "Peak_%d : Fitting failed", j );
+	    if ( ! m_bypassDebug )
+	      Log.LogDebug ( "Peak_%d : Fitting failed", j );
             result->PeakListDetectionStatus.push_back( status );
             continue;
 	  }
@@ -97,7 +100,8 @@ std::shared_ptr<const CLineDetectionResult> CLineDetection::Compute( const CSpec
 	  {
             toAdd = false;
             std::string status = (boost::format( "Peak_%1% : GaussAmp negative" ) % j).str();
-	    Log.LogDebug ( "Peak_%d : GaussAmp negative", j );
+	    if ( ! m_bypassDebug )
+	      Log.LogDebug ( "Peak_%d : GaussAmp negative", j );
             result->PeakListDetectionStatus.push_back( status );
 	  }
 
@@ -107,7 +111,8 @@ std::shared_ptr<const CLineDetectionResult> CLineDetection::Compute( const CSpec
 	      {
                 toAdd = false;
                 std::string status = (boost::format( "Peak_%1% : GaussWidth negative" ) % j).str();
-		Log.LogDebug ( "Peak_%d : GaussWidth negative", j );
+		if ( ! m_bypassDebug )
+		  Log.LogDebug ( "Peak_%d : GaussWidth negative", j );
                 result->PeakListDetectionStatus.push_back( status );
 	      }
 	    else
@@ -117,14 +122,16 @@ std::shared_ptr<const CLineDetectionResult> CLineDetection::Compute( const CSpec
 		  {
                     toAdd = false;
                     std::string status = (boost::format( "Peak_%1% : fwhm<m_minsize" ) % j).str();
-		    Log.LogDebug ( "Peak_%d : fwhm<m_minsize", j );
+		    if ( ! m_bypassDebug )
+		      Log.LogDebug ( "Peak_%d : fwhm<m_minsize", j );
                     result->PeakListDetectionStatus.push_back( status );
 		  }
                 if( fwhm>m_maxsize )
 		  {
                     toAdd = false;
                     std::string status = (boost::format( "Peak_%1% : fwhm>m_maxsize" ) % j).str();
-		    Log.LogDebug ( "Peak_%d : fwhm>m_maxsize", j );
+		    if ( ! m_bypassDebug )
+		      Log.LogDebug ( "Peak_%d : fwhm>m_maxsize", j );
                     result->PeakListDetectionStatus.push_back( status );
 		  }
 	      }
@@ -150,7 +157,8 @@ std::shared_ptr<const CLineDetectionResult> CLineDetection::Compute( const CSpec
 	      {
                 toAdd = false;
                 std::string status = (boost::format( "Peak_%1% : gaussAmp far from spectrum max_value" ) % j).str();
-		Log.LogDebug ( "Peak_%d : gaussAmp far from spectrum max_value", j );
+		if ( ! m_bypassDebug )
+		  Log.LogDebug ( "Peak_%d : gaussAmp far from spectrum max_value", j );
                 result->PeakListDetectionStatus.push_back( status );
 	      }
 
@@ -183,7 +191,8 @@ std::shared_ptr<const CLineDetectionResult> CLineDetection::Compute( const CSpec
 		  {
                     toAdd = false;
                     std::string status = (boost::format( "Peak_%1% : gaussPos far from spectrum max_position (samples)" ) % j).str();
-		    Log.LogDebug ( "Peak_%d : gaussPos far from spectrum max_position (samples)", j );
+		    if ( ! m_bypassDebug )
+		      Log.LogDebug ( "Peak_%d : gaussPos far from spectrum max_position (samples)", j );
                     result->PeakListDetectionStatus.push_back(status);
 		  }
 	      } // check gaussPos vs position of the max.
@@ -195,7 +204,8 @@ std::shared_ptr<const CLineDetectionResult> CLineDetection::Compute( const CSpec
 		  {
                     toAdd = false;
                     std::string status = (boost::format( "Peak_%1% : gaussAmp far from spectrum max_value (Angstrom)" ) % j).str();
-		    Log.LogDebug ( "Peak_%d : gaussAmp far from spectrum max_value (Angstrom)", j );
+		    if ( ! m_bypassDebug )
+		      Log.LogDebug ( "Peak_%d : gaussAmp far from spectrum max_value (Angstrom)", j );
                     result->PeakListDetectionStatus.push_back(status);
 		  }
 	      }
@@ -211,7 +221,8 @@ std::shared_ptr<const CLineDetectionResult> CLineDetection::Compute( const CSpec
 	      {
                 toAdd = false;
                 std::string status = (boost::format( "Peak_%1% : ratioAmp<m_cut" ) % j).str();
-		Log.LogDebug ( "Peak_%d : ratioAmp<m_cut (%f<%f)", j, ratioAmp, m_cut );
+		if ( ! m_bypassDebug )
+		  Log.LogDebug ( "Peak_%d : ratioAmp<m_cut (%f<%f)", j, ratioAmp, m_cut );
                 result->PeakListDetectionStatus.push_back( status );
                 // add this peak range to retest list
                 retestPeaks.push_back( resPeaks[j] );
@@ -233,7 +244,7 @@ std::shared_ptr<const CLineDetectionResult> CLineDetection::Compute( const CSpec
             char buffer [64];
             sprintf( buffer,"detected_peak_%d", j );
             std::string peakName = buffer;
-            result->RayCatalog.Add( CRay( peakName, gaussPos, m_type, force , gaussAmp, gaussWidth, ratioAmp, gaussPosErr) );
+            result->RayCatalog.Add( CRay( peakName, gaussPos, m_type, "SYM", force , gaussAmp, gaussWidth, ratioAmp, gaussPosErr) );
 	  }
     }
     
@@ -410,7 +421,8 @@ Float64 CLineDetection::ComputeFluxes( const CSpectrum& spectrum, Float64 winsiz
  */
 bool CLineDetection::Retest( const CSpectrum& spectrum, CLineDetectionResult& result, TInt32RangeList retestPeaks,  TGaussParamsList retestGaussParams, CRayCatalog::TRayVector strongLines, Int32 winsize, Float64 cut )
 {
-  Log.LogDebug( "Retest %d peaks, winsize = %d, strongLines.size() = %d.", retestPeaks.size(), winsize, strongLines.size() );
+  if ( ! m_bypassDebug )
+    Log.LogDebug( "Retest %d peaks, winsize = %d, strongLines.size() = %d.", retestPeaks.size(), winsize, strongLines.size() );
   DebugAssert( retestPeaks.size() == retestPeaks.size() );
 
   TGaussParamsList selectedgaussparams;
@@ -428,20 +440,23 @@ bool CLineDetection::Retest( const CSpectrum& spectrum, CLineDetectionResult& re
 	  {
             if( strongLines[l].GetPosition()-winsize/2.0<center && strongLines[l].GetPosition()+winsize/2.0 > center )
 	      {
-		Log.LogDebug ( "The strongLine[%d].GetPosition() == %f is within winsize centered on %f.", l, strongLines[l].GetPosition(), center );
+		if ( ! m_bypassDebug )
+		  Log.LogDebug ( "The strongLine[%d].GetPosition() == %f is within winsize centered on %f.", l, strongLines[l].GetPosition(), center );
                 selectedretestPeaks.push_back( retestPeaks[k] );
                 selectedgaussparams.push_back( retestGaussParams[k] );
 	      }
 	    else
 	      {
-		Log.LogDebug ( "The strongLine[%d].GetPosition() == %f is not within winsize centered on %f.", l, strongLines[l].GetPosition(), center );
+		if ( ! m_bypassDebug )
+		  Log.LogDebug ( "The strongLine[%d].GetPosition() == %f is not within winsize centered on %f.", l, strongLines[l].GetPosition(), center );
 	      }
 	  }
       }
 
     if( selectedretestPeaks.size()<1 )
       {
-	Log.LogDebug ( "No retestPeaks were selected." );
+	if ( ! m_bypassDebug )
+	  Log.LogDebug ( "No retestPeaks were selected." );
         return false;
       }
 
@@ -544,7 +559,7 @@ bool CLineDetection::RemoveStrongFromSpectra(const CSpectrum& spectrum, CLineDet
             char buffer [64];
             sprintf( buffer, "detected_retested_peak_%d", k );
             std::string peakName = buffer;
-            result.RayCatalog.Add( CRay( peakName, selectedgaussparams[k].Pos, m_type, force , selectedgaussparams[k].Amp, selectedgaussparams[k].Width, ratioAmp) );
+            result.RayCatalog.Add( CRay( peakName, selectedgaussparams[k].Pos, m_type, "SYM", force , selectedgaussparams[k].Amp, selectedgaussparams[k].Width, ratioAmp) );
             result.RayCatalog.Sort();
             added=true;
         }
