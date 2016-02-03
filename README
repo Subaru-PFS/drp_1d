@@ -19,6 +19,9 @@ git clone git@gitlab.oamp.dev:epic/epic_redshift.git $ROOT_DIR
 cd $ROOT_DIR/tools/
 python ./buildandinstallthirdparty.py
 
+Please note that each tool has its own dependency list. If a tool fails to build, remove the relevant files from $ROOT_DIR/thirdparty, install the missing dependency and try again.
+
+The "doxygen" tool requires at least flex and bison to work.
 
 - Create makefiles:
 
