@@ -14,6 +14,8 @@ class CDataStore;
 
 /**
  * \ingroup Redshift
+ * \class COperatorLineMatching2Solve
+ * \brief Solver method based on matching peaks to the lines catalogue.
  */
 class COperatorLineMatching2Solve
 {
@@ -44,10 +46,13 @@ private:
     Float64 m_enlargeRate;
 
     // Line Matching
+    Bool m_disablegaussianfitqualitycheck;
+    Bool m_dynamicLinematching;
     Int64 m_minMatchNum;
     Float64 m_tol;
-    Bool m_dynamicCut;
 
+    // Log
+    Bool m_bypassDebug; // If True, debug messages are suppressed even if the --verbose flag is passed.
 };
 
 }

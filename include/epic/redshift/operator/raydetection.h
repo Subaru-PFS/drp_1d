@@ -66,6 +66,9 @@ class CLineDetection
   bool Retest( const CSpectrum &spectrum, CLineDetectionResult& result, TInt32RangeList retestPeaks,  TGaussParamsList retestGaussParams, CRayCatalog::TRayVector strongLines, Int32 winsize, Float64 cut );
   bool RemoveStrongFromSpectra( const CSpectrum &spectrum, CLineDetectionResult& result, CRayCatalog::TRayVector strongLines, TInt32RangeList selectedretestPeaks, TGaussParamsList selectedgaussparams, Float64 winsize, Float64 cut );
   Float64 XMadFind( const Float64* x, Int32 n, Float64 median );
+
+  // Log
+  Bool m_bypassDebug; // If true, debug messages are ignored even if --verbose has been set.
 };
 }
 

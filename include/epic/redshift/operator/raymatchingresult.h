@@ -76,6 +76,8 @@ namespace NSEpic
 
     CRayCatalog m_RestCatalog;
     CRayCatalog m_DetectedCatalog;
+  private:
+    Bool m_bypassDebug;
   };
 }
 
