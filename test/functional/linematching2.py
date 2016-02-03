@@ -23,7 +23,7 @@ def amazed ( amazedPathname, spectrumlist, templatedir, spectrumPath, linecatalo
         spectrumPath,
         linecatalogPathname,
         parametersPathname )
-    os.system ( amazedString )
+    return os.system ( amazedString )
 
 def cleanup ( ):
     try:
@@ -46,6 +46,13 @@ def printSuccesses ( ):
     for success in range ( len ( successStrings ) ):
         print ( "{}".format ( successStrings [ success ] ) )
 
+def wrapCall ( testFunctionName ):
+    try:
+        testFunctionName ( )
+    except Exception as e:
+        errorStrings.append ( "{}: {}".format ( testFunctionName.__name__, e ) )
+    cleanup ( )
+        
 def test_good_input_good_output ( ):
     spectrumlist = cpfPath + "/test/data/linematchingFunctional/batch6testGood.spectrumlist"
     amazed ( amazedExecutable,
@@ -81,19 +88,35 @@ def test_bad_input_bad_output ( ):
     else:
         successStrings.append ( "{}".format ( sys._getframe ( ).f_code.co_name ) )
 
+def testInvalidFluxFilenameOnSpectrumlistCausesAbortion ( ):
+    spectrumlist = cpfPath + "/test/data/linematchingFunctional/batch6testInvalid.spectrumlist"
+    retval = amazed ( amazedExecutable,
+                      spectrumlist,
+                      cpfPath + "/test/data/linematchingFunctional/ExtendedGalaxyEL3",
+                      cpfPath + "/test/data/linematchingFunctional/batch6",
+                      cpfPath + "/test/data/linematchingFunctional/linecatalogamazedvacuum_B7C.txt",
+                      cpfPath + "/test/data/linematchingFunctional/all_methods_dev.json" )
+    logFile = open ( "output/log.txt" )
+    logString = logFile.read ( )
+    failed = False
+    if retval == 0:
+        failed = True
+        print ( "{}: Amazed returned a value of 0 to the operating system, despite input error.".format ( sys._getframe ( ).f_code.co_name ) )
+    if not "Error: invalid file name 10000663000008vacLine_Invalid.fits specified in spectrumlist." in logString:
+        failed = True
+        print ( "{}: Amazed did not inform user of inexistent file listed on spectrumlist.".format ( sys._getframe ( ).f_code.co_name ) )
+
+    if failed:
+        failureStrings.append ( "{}".format ( sys._getframe ( ).f_code.co_name ) )
+    else:
+        successStrings.append ( "{}".format ( sys._getframe ( ).f_code.co_name ) )
+        
 if __name__ == "__main__":
     cleanup ( )
-    try:
-        test_good_input_good_output ( )
-    except Exception as e:
-        errorStrings.append ( "test_good_input_good_output: {}".format ( e ) )
-    cleanup ( )
-    try:
-        test_bad_input_bad_output ( )
-    except Exception as e:
-        errorStrings.append ( "test_bad_input_bad_output: {}".format ( e ) )
-    cleanup ( )
-
+    wrapCall ( test_good_input_good_output )
+    wrapCall ( test_bad_input_bad_output )
+    wrapCall ( testInvalidFluxFilenameOnSpectrumlistCausesAbortion )
+    
     printSuccesses ( )
     printFailures ( )
     printErrors ( )
