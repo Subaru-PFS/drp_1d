@@ -3,6 +3,7 @@
 
 import os
 from shutil import rmtree
+import sys
 
 amazedPath = os.path.expanduser ( "../../../amazed" )
 amazedExecutable = amazedPath + "/bin/amazed-0.0.0"
@@ -30,34 +31,20 @@ def cleanup ( ):
     except:
         pass
 
-def xmlHeader ( ):
-    print ( "<?xml version=\"1.0\" encoding='ISO-8859-1' standalone='yes' ?>" )
-    print ( "<TestRun>" )
+def printErrors ( ):
+    print ( "ErroredTests:" )
+    for error in range ( len ( errorStrings ) ):
+        print ( "{}".format ( errorStrings [ error ] ) )
 
-def xmlFailures ( ):
-    print ( "<FailedTests>" )
+def printFailures ( ):
+    print ( "FailedTests:" )
     for failure in range ( len ( failureStrings ) ):
-        print ( "<Test id=\"{}\">".format ( failure + 1 ) )
-        print ( "<Name>{}</Name>".format ( failureStrings [ failure ] ) )
-        print ( "</Test>" )
-    print ( "</FailedTests>" )
+        print ( "{}".format ( failureStrings [ failure ] ) )
 
-def xmlSuccesses ( ):
-    print ( "<SuccessfulTests>" )
+def printSuccesses ( ):
+    print ( "SuccessfulTests:" )
     for success in range ( len ( successStrings ) ):
-        print ( "<Test id=\"{}\">".format ( success + 1 ) )
-        print ( "<Name>{}</Name>".format ( successStrings [ success ] ) )
-        print ( "</Test>" )
-    print ( "</SuccessfulTests>" )
-
-def xmlStatistics ( ):
-    print ( "<Statistics>" )
-    print ( "<Tests>{}</Tests>".format ( len ( successStrings ) + len ( failureStrings ) ) )
-    print ( "<FailuresTotal>{}</FailuresTotal>".format ( len ( failureStrings ) ) )
-    print ( "<Errors>{}</Errors>".format ( len ( errorStrings ) ) )
-    print ( "<Failures>{}</Failures>".format ( len ( failureStrings ) ) )
-    print ( "</Statistics>" )
-    print ( "</TestRun>" )
+        print ( "{}".format ( successStrings [ success ] ) )
 
 def test_good_input_good_output ( ):
     spectrumlist = cpfPath + "/test/data/linematchingFunctional/batch6testGood.spectrumlist"
@@ -70,11 +57,12 @@ def test_good_input_good_output ( ):
     redshiftFile = open ( "output/redshift.csv" )
     redshiftString = redshiftFile.read ( )
     redshift = float ( redshiftString.split ( ) [ 1 ] )
-    expectedRedshift = 3.59831
+    expectedRedshift = 0.077164
     if expectedRedshift - 1e-4 <= redshift <= expectedRedshift + 1e-4:
-        successStrings.append ( "test_good_input_good_output" )
+        successStrings.append ( "{}".format ( sys._getframe ( ).f_code.co_name ) )
     else:
-        failureStrings.append ( "test_good_input_good_output" )
+        failureStrings.append ( "{}".format ( sys._getframe ( ).f_code.co_name ) )
+        print ( "{}: redshift {} too different from 0.077164".format ( sys._getframe ( ).f_code.co_name, redshift ) )
 
 def test_bad_input_bad_output ( ):
     spectrumlist = cpfPath + "/test/data/linematchingFunctional/batch6testBad.spectrumlist"
@@ -87,11 +75,11 @@ def test_bad_input_bad_output ( ):
     redshiftFile = open ( "output/redshift.csv" )
     redshiftString = redshiftFile.read ( )
     redshift = float ( redshiftString.split ( ) [ 1 ] )
-    expectedRedshift = 3.56089
+    expectedRedshift = 3.59831
     if expectedRedshift - 1e-4 <= redshift <= expectedRedshift + 1e-4:
-        failureStrings.append ( "test_bad_input_bad_output" )
+        failureStrings.append ( "{}".format ( sys._getframe ( ).f_code.co_name ) )
     else:
-        successStrings.append ( "test_bad_input_bad_output" )
+        successStrings.append ( "{}".format ( sys._getframe ( ).f_code.co_name ) )
 
 if __name__ == "__main__":
     cleanup ( )
@@ -106,7 +94,7 @@ if __name__ == "__main__":
         errorStrings.append ( "test_bad_input_bad_output: {}".format ( e ) )
     cleanup ( )
 
-    xmlHeader ( )
-    xmlSuccesses ( )
-    xmlFailures ( )
-    xmlStatistics ( )
+    printSuccesses ( )
+    printFailures ( )
+    printErrors ( )
+    
