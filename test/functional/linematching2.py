@@ -16,7 +16,8 @@ def amazed ( amazedPathname, spectrumlist, templatedir, spectrumPath, linecatalo
     """
     Runs amazed.
     """
-    amazedString = "{} --input {} --templatedir {} --spectrum {} -y {} -o output -m linematching2 --parameters {} --thread-count 1 > /dev/null".format (
+    #amazedString = "{} --input {} --templatedir {} --spectrum {} -y {} -o output -m linematching2 --parameters {} --thread-count 1".format (
+    amazedString = "{} --input {} --templatedir {} --spectrum {} -y {} -o output -m linematching2 --parameters {} --thread-count 1 > /dev/null 2>&1".format (
         amazedPathname,
         spectrumlist,
         templatedir,
@@ -113,12 +114,36 @@ def testInvalidFluxFilenameOnSpectrumlistCausesAbortion ( ):
         failureStrings.append ( "{}".format ( sys._getframe ( ).f_code.co_name ) )
     else:
         successStrings.append ( "{}".format ( sys._getframe ( ).f_code.co_name ) )
-        
+
+def testInvalidParameterNameOnJSONCausesAbortion ( ):
+    spectrumlist = cpfPath + "/test/data/linematchingFunctional/batch6testGood.spectrumlist"
+    retval = amazed ( amazedExecutable,
+                      spectrumlist,
+                      cpfPath + "/test/data/linematchingFunctional/ExtendedGalaxyEL3",
+                      cpfPath + "/test/data/linematchingFunctional/batch6",
+                      cpfPath + "/test/data/linematchingFunctional/linecatalogamazedvacuum_B7C.txt",
+                      cpfPath + "/test/data/linematchingFunctional/linematching2InvalidParameter.json" )
+    logFile = open ( "output/log.txt" )
+    logString = logFile.read ( )
+    failed = False
+    if retval == 0:
+        failed = True
+        print ( "{}: Amazed returned a value of 0 to the operating system, despite invalid parameter on JSON.".format ( sys._getframe ( ).f_code.co_name ) )
+    if not "Error: invalid parameter specified in JSON." in logString:
+        failed = True
+        print ( "{}: Amazed did not inform user of invalid parameter present on JSON.".format ( sys._getframe ( ).f_code.co_name ) )
+
+    if failed:
+        failureStrings.append ( "{}".format ( sys._getframe ( ).f_code.co_name ) )
+    else:
+        successStrings.append ( "{}".format ( sys._getframe ( ).f_code.co_name ) )
+
 if __name__ == "__main__":
     cleanup ( )
     wrapCall ( testGoodSpectrumYieldsGoodRedshift )
     wrapCall ( testBadSpectrumYieldsBadRedshift )
     wrapCall ( testInvalidFluxFilenameOnSpectrumlistCausesAbortion )
+    wrapCall ( testInvalidParameterNameOnJSONCausesAbortion )
     
     printSuccesses ( )
     printFailures ( )
