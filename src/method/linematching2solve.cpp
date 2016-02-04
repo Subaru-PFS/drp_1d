@@ -210,7 +210,7 @@ std::shared_ptr<const CLineMatching2SolveResult> COperatorLineMatching2Solve::Co
 	  currentNumberOfPeaks = lineDetectionResult->RayCatalog.GetList().size();
 	  if ( ! m_bypassDebug )
 	    Log.LogDebug ( "Found %d peaks.", currentNumberOfPeaks );
-	  if( currentNumberOfPeaks>=minimumNumberOfPeaks || numberOfPeaksBestBypass )
+	  if( currentNumberOfPeaks>=minimumNumberOfPeaks || numberOfPeaksBestBypass || ! m_dynamicLinematching )
 	    {
 	      Log.LogDebug ( "Storing %d lines from lineDetection in the result store.", lineDetectionResult->RayCatalog.GetList().size() );
 	      resultStore.StoreScopedGlobalResult( "raycatalog", lineDetectionResult );
