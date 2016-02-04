@@ -23,7 +23,10 @@ def amazed ( amazedPathname, spectrumlist, templatedir, spectrumPath, linecatalo
         spectrumPath,
         linecatalogPathname,
         parametersPathname )
-    return os.system ( amazedString )
+    try:
+        return os.system ( amazedString )
+    except Exception as e:
+        return e
 
 def cleanup ( ):
     try:
@@ -53,7 +56,7 @@ def wrapCall ( testFunctionName ):
         errorStrings.append ( "{}: {}".format ( testFunctionName.__name__, e ) )
     cleanup ( )
         
-def test_good_input_good_output ( ):
+def testGoodSpectrumYieldsGoodRedshift ( ):
     spectrumlist = cpfPath + "/test/data/linematchingFunctional/batch6testGood.spectrumlist"
     amazed ( amazedExecutable,
              spectrumlist,
@@ -71,7 +74,7 @@ def test_good_input_good_output ( ):
         failureStrings.append ( "{}".format ( sys._getframe ( ).f_code.co_name ) )
         print ( "{}: redshift {} too different from 0.077164".format ( sys._getframe ( ).f_code.co_name, redshift ) )
 
-def test_bad_input_bad_output ( ):
+def testBadSpectrumYieldsBadRedshift ( ):
     spectrumlist = cpfPath + "/test/data/linematchingFunctional/batch6testBad.spectrumlist"
     amazed ( amazedExecutable,
              spectrumlist,
@@ -113,11 +116,10 @@ def testInvalidFluxFilenameOnSpectrumlistCausesAbortion ( ):
         
 if __name__ == "__main__":
     cleanup ( )
-    wrapCall ( test_good_input_good_output )
-    wrapCall ( test_bad_input_bad_output )
+    wrapCall ( testGoodSpectrumYieldsGoodRedshift )
+    wrapCall ( testBadSpectrumYieldsBadRedshift )
     wrapCall ( testInvalidFluxFilenameOnSpectrumlistCausesAbortion )
     
     printSuccesses ( )
     printFailures ( )
     printErrors ( )
-    
