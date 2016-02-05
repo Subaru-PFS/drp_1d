@@ -223,6 +223,61 @@ def testInvalidParameterValueOnJSONCausesDefault ( ):
         failureStrings.append ( "{}".format ( sys._getframe ( ).f_code.co_name ) )
     else:
         successStrings.append ( "{}".format ( sys._getframe ( ).f_code.co_name ) )
+
+def testLinetypeAbsorptionOnlyWorks ( ):
+    spectrumlist = cpfPath + "/test/data/linematchingFunctional/batch6testBad.spectrumlist"
+    amazed ( amazedExecutable,
+             spectrumlist,
+             cpfPath + "/test/data/linematchingFunctional/ExtendedGalaxyEL3",
+             cpfPath + "/test/data/linematchingFunctional/batch6",
+             cpfPath + "/test/data/linematchingFunctional/linecatalogamazedvacuum_B7C.txt",
+             cpfPath + "/test/data/linematchingFunctional/linematching2AbsorptionOnly.json" )
+    redshiftFile = open ( "output/redshift.csv" )
+    redshiftString = redshiftFile.read ( )
+    redshift = float ( redshiftString.split ( ) [ 1 ] )
+    expectedRedshift = 1.46877
+    if not expectedRedshift - 1e-4 <= redshift <= expectedRedshift + 1e-4:
+        successStrings.append ( "{}".format ( sys._getframe ( ).f_code.co_name ) )
+    else:
+        failureStrings.append ( "{}".format ( sys._getframe ( ).f_code.co_name ) )
+        print ( "{}: calculated redshift {} equal to emission-only redshift {}".format ( sys._getframe ( ).f_code.co_name, redshift, expectedRedshift ) )
+
+def testLinetypeEmissionOnlyWorks ( ):
+    spectrumlist = cpfPath + "/test/data/linematchingFunctional/batch6testBad.spectrumlist"
+    amazed ( amazedExecutable,
+             spectrumlist,
+             cpfPath + "/test/data/linematchingFunctional/ExtendedGalaxyEL3",
+             cpfPath + "/test/data/linematchingFunctional/batch6",
+             cpfPath + "/test/data/linematchingFunctional/linecatalogamazedvacuum_B7C.txt",
+             cpfPath + "/test/data/linematchingFunctional/linematching2EmissionOnly.json" )
+    redshiftFile = open ( "output/redshift.csv" )
+    redshiftString = redshiftFile.read ( )
+    redshift = float ( redshiftString.split ( ) [ 1 ] )
+    expectedRedshift = 1.46877
+    if expectedRedshift - 1e-4 <= redshift <= expectedRedshift + 1e-4:
+        successStrings.append ( "{}".format ( sys._getframe ( ).f_code.co_name ) )
+    else:
+        failureStrings.append ( "{}".format ( sys._getframe ( ).f_code.co_name ) )
+        print ( "{}: redshift {} too different from {}".format ( sys._getframe ( ).f_code.co_name, redshift, expectedRedshift ) )
+
+def testLinetypeAllWorks ( ):
+    spectrumlist = cpfPath + "/test/data/linematchingFunctional/batch6testBad.spectrumlist"
+    amazed ( amazedExecutable,
+             spectrumlist,
+             cpfPath + "/test/data/linematchingFunctional/ExtendedGalaxyEL3",
+             cpfPath + "/test/data/linematchingFunctional/batch6",
+             cpfPath + "/test/data/linematchingFunctional/linecatalogamazedvacuum_B7C.txt",
+             cpfPath + "/test/data/linematchingFunctional/linematching2AllLinetypes.json" )
+    redshiftFile = open ( "output/redshift.csv" )
+    redshiftString = redshiftFile.read ( )
+    redshift = float ( redshiftString.split ( ) [ 1 ] )
+    expectedRedshift = 1.46877
+    if not expectedRedshift - 1e-4 <= redshift <= expectedRedshift + 1e-4:
+        successStrings.append ( "{}".format ( sys._getframe ( ).f_code.co_name ) )
+    else:
+        failureStrings.append ( "{}".format ( sys._getframe ( ).f_code.co_name ) )
+        print ( "{}: redshift {} too similar to emission only redshift {}".format ( sys._getframe ( ).f_code.co_name, redshift, expectedRedshift ) )
+
         
 if __name__ == "__main__":
     cleanup ( )
@@ -234,7 +289,10 @@ if __name__ == "__main__":
     wrapCall ( testInvalidParameterNameOnJSONCausesAbortion )
     wrapCall ( testMissingParameterOnJSONCausesDefault )
     wrapCall ( testInvalidParameterValueOnJSONCausesDefault )
-    
+    wrapCall ( testLinetypeAbsorptionOnlyWorks )
+    wrapCall ( testLinetypeEmissionOnlyWorks )
+    wrapCall ( testLinetypeAllWorks )
+            
     printSuccesses ( )
     printFailures ( )
     printErrors ( )

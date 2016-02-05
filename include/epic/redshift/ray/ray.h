@@ -21,6 +21,7 @@ public:
     {
         nType_Absorption = 1,
         nType_Emission = 2,
+	nType_All = 3,
     };
 
     enum EForce
