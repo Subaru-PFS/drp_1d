@@ -94,14 +94,19 @@ std::shared_ptr<const CLineMatching2SolveResult> COperatorLineMatching2Solve::Co
     resultStore.GetScopedParam( "linematching2.disablegaussianfitqualitycheck", m_disablegaussianfitqualitycheck, 0 );
     resultStore.GetScopedParam( "linematching2.dynamicLinematching", m_dynamicLinematching, 1 );
     resultStore.GetScopedParam( "linematching2.enlargeRate", m_enlargeRate, 2.0 );
-    resultStore.GetScopedParam( "linematching2.linetype", linetypeStr, "E" );
+    resultStore.GetScopedParam( "linematching2.linetype", linetypeStr, "Emission" );
     resultStore.GetScopedParam( "linematching2.maxsize", m_maxsize, 70.0 );
     resultStore.GetScopedParam( "linematching2.minMatchNum", m_minMatchNum, 1.0 );
     resultStore.GetScopedParam( "linematching2.minsize", m_minsize, 3.0 );
     resultStore.GetScopedParam( "linematching2.strongcut", m_strongcut, 2.0 );
     resultStore.GetScopedParam( "linematching2.tol", m_tol, 0.002 );
     resultStore.GetScopedParam( "linematching2.winsize", m_winsize, 250.0 );
-    if( linetypeStr == "A" )
+    lineType = CRay::nType_All;
+    if( linetypeStr == "Absorption" )
+      {
+	lineType = CRay::nType_Absorption;
+      }
+    if( linetypeStr == "Emission" )
       {
 	lineType = CRay::nType_Absorption;
       }
@@ -308,7 +313,7 @@ const std::string COperatorLineMatching2Solve::GetDescription()
     desc.append("\tparam: linematching2.disablegaussianfitqualitycheck = <integer value>\n");
     desc.append("\tparam: linematching2.dynamicLinematching = <integer value>\n");
     desc.append("\tparam: linematching2.enlargeRate = <float value>\n");
-    desc.append("\tparam: linematching2.linetype = {""E"", ""A""}\n");
+    desc.append("\tparam: linematching2.linetype = {""Emission"", ""Absorption"", ""All""}\n");
     desc.append("\tparam: linematching2.maxsize = <float value in Angstrom>\n");
     desc.append("\tparam: linematching2.minMatchNum = <int value>\n");
     desc.append("\tparam: linematching2.minsize = <float value in Angstrom>\n");
