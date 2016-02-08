@@ -13,7 +13,7 @@ import numpy as np
 from scipy.optimize import fsolve
 
 class Catalog(object):
-    def __init__(self, spath, ctype='vacuum'):
+    def __init__(self, spath, ctype='undef'):
         self.logTagStr = "Catalog"
         self.spath = spath
         self.name = os.path.basename(spath)
@@ -23,6 +23,11 @@ class Catalog(object):
         self.linename = -1
         self.lineforce = -1
         self.linetype = -1
+        self.lineprofile = -1
+        self.linegroup = -1
+        self.linenominalamp = -1
+        
+        self.conversion = "" #"toAir" #"toVacuum"#"toAir"
         self.load()
         
     def load(self):
@@ -31,6 +36,11 @@ class Catalog(object):
         linelambda = []
         force = []
         linetype = []
+        
+        lineprofile = []
+        linegroup = []
+        linenominalamp = []
+        
         f = open(filename)
         for line in f:
             lineStr = line.strip()
@@ -50,6 +60,14 @@ class Catalog(object):
                     linelambda.append(float(data[0]))
                     force.append(data[3])
                     linetype.append(data[2])
+                    if(len(data) >=7):
+                        lineprofile.append(data[4])
+                        linegroup.append(data[5])
+                        linenominalamp.append(float(data[6]))
+                    else:
+                        lineprofile.append("-1")
+                        linegroup.append("-1")
+                        linenominalamp.append(-1) 
                     
         f.close()
         self.n = len(linelambda)
@@ -59,20 +77,29 @@ class Catalog(object):
         self.linename = range(0,self.n)
         self.lineforce = range(0,self.n)
         self.linetype = range(0,self.n)  
+        self.lineprofile = range(0,self.n)  
+        self.linegroup = range(0,self.n)  
+        self.linenominalamp = range(0,self.n)  
         for x in range(0,self.n):
-            if 1:
-                if 1:
+            if not self.conversion=="":
+                if self.conversion=="toAir":
                     lval = self.vacuumToAir(linelambda[x])
-                    print("WARNING: converting VACUUM to AIR !!")
-                if 0:                
+                    self.ctype = "{}_{}".format(self.ctype, "convertedToAir")
+                    print("WARNING: converting to AIR !!")
+                elif self.conversion=="toVacuum":                
                     lval = self.airToVacuum(linelambda[x])
-                    print("WARNING: converting AIR to VACUUM !!")
+                    self.ctype = "{}_{}".format(self.ctype, "convertedToVacuum")
+                    print("WARNING: converting to VACUUM !!")
             else:
                 lval = linelambda[x]
             self.linelambda[x] = lval
             self.linename[x] = name[x]
             self.lineforce[x] = force[x]
             self.linetype[x] = linetype[x]
+            self.lineprofile[x] = lineprofile[x]
+            self.linegroup[x] = linegroup[x]
+            self.linenominalamp[x] = linenominalamp[x]
+                
         
     def vacuumToAir(self, vacuumVal):
         s = (1e-4)/vacuumVal;
@@ -173,18 +200,31 @@ class Catalog(object):
                     #print("ambiguity type ref = {}, type fail ={}".format(shiftedCatalogReference["type"][x], shiftedCatalogFail["type"][y]))
                     pass
         return ambiguityZs
+        
+    def getRedmineTableString(self, ):
+        outStr = ""      
+        
+        outStr = outStr + "|_.lambda|_.Name|_.type|_.force|_.profile|_.group|_.nominal_ampl|" + "\n"
+        for x in range(0,self.n):
+            nominalamp = ""
+            if not self.linenominalamp[x] == -1:
+               nominalamp = str(self.linenominalamp[x]) 
+            group = ""
+            if not self.linegroup[x] == -1:
+               group = self.linegroup[x]
+            outStr = outStr + "|{}|{}|{}|{}|{}|{}|{}|".format(self.linelambda[x], self.linename[x], self.linetype[x], self.lineforce[x], self.lineprofile[x], group, nominalamp) + "\n"
       
+        return outStr
       
             
 if __name__ == '__main__':
-    path = "/home/aschmitt/data/pfs/pfs_lbg/amazed/RayCatalogs"
-    name = "raycatalogamazedvacuum.txt"
-    
-    path = "/home/aschmitt/data/pfs/pfs_testsimu_20151009/amazed/linecatalogs"
-    name = "linecatalogamazedair_B5.txt"
+    path = "/home/aschmitt/data/muse/muse1_20160126/amazed/linecatalogs"
+    name = "linecatalogamazedvacuum_B8B.txt"
     cpath = os.path.join(path,name)
     print('using full path: {0}'.format(cpath))
-    c = Catalog(cpath)
+    c = Catalog(cpath, ctype="vacuum")
     print(c) 
     #print(c.getShiftedCatalog(1.0, "E"))
     c.plot()
+    
+    print("the REDMINE (copy/paste) generated table is:\n{}".format(c.getRedmineTableString()))
