@@ -18,7 +18,7 @@ using namespace NSEpic;
 using namespace std;
 
 /**
- * Attribution constructor.
+ * \brief This constructor will attribute values to this method's parameters with default values.
  */
 COperatorLineMatching2Solve::COperatorLineMatching2Solve()
 {    
@@ -28,73 +28,19 @@ COperatorLineMatching2Solve::COperatorLineMatching2Solve()
   m_winsize = 250.0;
   m_cut = 5.0;
   m_detectioncut = 5.0;
-  m_detectionnoiseoffset = 0.0; // useful for simulation data
+  m_detectionnoiseoffset = 0.0; /**\var Useful for simulation data. */
   m_strongcut = 2.0;
   m_minsize = 3;
   m_maxsize = 70;
   m_enlargeRate = 2.0;
   
   // Line Matching
+  m_disablegaussianfitqualitycheck = false;
   m_minMatchNum = 1;
   m_tol = 0.002;
-  
-  //EUCLID overrides
-  if( 0 )
-    {
-      m_winsize = 250.0;
-      m_cut = 3.0;
-      m_detectioncut = 3.0;
-      m_maxsize = 120;
-    }
-  
-  //PFS Really just lines, TF overrides
-  if( 0 )
-    {
-      // TF
-      m_winsize = 250.0;
-      m_cut = 1.0;
-      m_detectioncut = 10.0;
-      m_detectionnoiseoffset = 0.0001;
-      m_maxsize = 120;
-      m_enlargeRate = 1.0;
-      m_tol = 0.0001;
-      
-      // + ErrF overrides
-      //m_cut = 0.2;
-    }
-  
-  //PFS LBGABS, TF overrides
-  if( 0 )
-    {
-      // TF
-      m_winsize = 500.0;
-      m_cut = 1.0;
-      m_detectioncut = 10.0;
-      m_detectionnoiseoffset = 0.0001;
-      m_maxsize = 120;
-      m_enlargeRate = 1.0;
-      m_tol = 0.0001;
-      
-      // + ErrF overrides
-      //m_cut = 0.2;
-    }
-  
-  if( 0 )
-    { 
-      Log.LogWarning ( "Using hardcoded 'PFS Really just lines, F + ErrF' overrides." );
-      m_winsize = 250.0;
-      m_cut = 1.0;
-      m_detectioncut = 1.0;
-      m_maxsize = 120;
-      m_enlargeRate = 2.0;
-      m_tol = 0.0001;
-    }
 
-  if( false )
-    {
-      Log.LogWarning ( "Using hardcoded 'PFS batch5' default parameters." );
-      m_cut = 1.0;
-    }
+  // Log
+  m_bypassDebug = true;
 }
 
 /**
@@ -106,10 +52,23 @@ COperatorLineMatching2Solve::~COperatorLineMatching2Solve()
 }
 
 /**
- * Attempts to find a matching line using the input parameters.
+ * \brief Attempts to find a matching line using the input parameters.
  * This algorithm will create and run a CPeakDetection object, using the parameters as input.
- * If peaks are found, it will try to find lines in the peaks found, using a CLineDetection object (warning: this class is defined in raydetectionresult.h).
- * If lines are found, it will try to match these lines to the catalogue of known lines and determine the redshift that way.
+ *
+ * The input spectrum is copied to the local scope.
+ *
+ * If the lines' type are absorption lines, the spectrum has its fluxes inverted.
+ *
+ * This local spectrum is passed to a lineDetection object.
+ *
+ * If the dynamic option is false, the following algorithm will be run:
+ *
+ * - If peaks are found, it will try to find lines in the peaks found, using a CLineDetection object (please note that this class is defined in raydetectionresult.h).
+ *
+ * - If lines are found, it will try to match these lines to the catalogue of known lines and determine the redshift using this information.
+ *
+ * If the dynamic option is true, the line detection is run several times, with the parameters being varied withing physically meaningful values.
+ * When either a threshold number of peaks is detected, or all parameters are exhaustively searched, the algorithm continues as normal.
  */
 std::shared_ptr<const CLineMatching2SolveResult> COperatorLineMatching2Solve::Compute( CDataStore& resultStore, 
 										       const CSpectrum& spc, 
@@ -119,54 +78,72 @@ std::shared_ptr<const CLineMatching2SolveResult> COperatorLineMatching2Solve::Co
 										       const CRayCatalog& restRayCatalog )
 {
   Log.LogDebug ( "std::shared_ptr<const CLineMatching2SolveResult> COperatorLineMatching2Solve::Compute( CDataStore& resultStore, const CSpectrum& spc, const TFloat64Range& lambdaRange, const TFloat64Range& redshiftsRange, Float64 redshiftStep, const CRayCatalog& restRayCatalog )" );
-  
-  Bool storeResult = false;
-  CDataStore::CAutoScope resultScope( resultStore, "linematching2solve" );
 
+  Int32 disablegaussianfitqualitycheck_value;
+  Int32 lineType = CRay::nType_Emission;
   std::string linetypeStr = "E";
+  Bool storeResult = false;
+
+  CDataStore::CAutoScope resultScope ( resultStore, "linematching2solve" );
 
   Log.LogDebug ( "Attempting to load parameters from parameter JSON." );
   {
-    resultStore.GetScopedParam( "linematching2.winsize", m_winsize, 250.0 );
     resultStore.GetScopedParam( "linematching2.cut", m_cut, 5.0 );
-    resultStore.GetScopedParam( "linematching2.dynamicCut", m_dynamicCut, 1 );
     resultStore.GetScopedParam( "linematching2.detectioncut", m_detectioncut, 5.0 );
     resultStore.GetScopedParam( "linematching2.detectionnoiseoffset", m_detectionnoiseoffset, 0.0 );
-    resultStore.GetScopedParam( "linematching2.strongcut", m_strongcut, 2.0 );
-    resultStore.GetScopedParam( "linematching2.minsize", m_minsize, 3.0 );
-    resultStore.GetScopedParam( "linematching2.maxsize", m_maxsize, 70.0 );
+    resultStore.GetScopedParam( "linematching2.disablegaussianfitqualitycheck", m_disablegaussianfitqualitycheck, 0 );
+    resultStore.GetScopedParam( "linematching2.dynamicLinematching", m_dynamicLinematching, 1 );
     resultStore.GetScopedParam( "linematching2.enlargeRate", m_enlargeRate, 2.0 );
+    resultStore.GetScopedParam( "linematching2.linetype", linetypeStr, "Emission" );
+    resultStore.GetScopedParam( "linematching2.maxsize", m_maxsize, 70.0 );
     resultStore.GetScopedParam( "linematching2.minMatchNum", m_minMatchNum, 1.0 );
+    resultStore.GetScopedParam( "linematching2.minsize", m_minsize, 3.0 );
+    resultStore.GetScopedParam( "linematching2.strongcut", m_strongcut, 2.0 );
     resultStore.GetScopedParam( "linematching2.tol", m_tol, 0.002 );
-    resultStore.GetScopedParam( "linematching2.linetype", linetypeStr, "E" );
-    Log.LogDebug( "m_winsize = %f", m_winsize );
+    resultStore.GetScopedParam( "linematching2.winsize", m_winsize, 250.0 );
+    lineType = CRay::nType_All;
+    if( linetypeStr == "Absorption" )
+      {
+	lineType = CRay::nType_Absorption;
+      }
+    if( linetypeStr == "Emission" )
+      {
+	lineType = CRay::nType_Absorption;
+      }
+  }
+  
+  Log.LogDebug( "Final parameters read:" );
+  {
     Log.LogDebug( "m_cut = %f", m_cut );
-    if( m_dynamicCut == 0 )
-    {
-        Log.LogDebug( "m_dynamicCut is true (0 on json)" );
-    }else
-    {
-        Log.LogDebug( "m_dynamicCut is false (anything but 0 on json)" );
-    }
+    if( m_dynamicLinematching )
+      {
+	Log.LogDebug( "m_dynamicLinematching is true (any value, except 0, on json)" );
+      }
+    else
+      {
+	Log.LogDebug( "m_dynamicLinematching is false (value 0 on json)" );
+      }
     Log.LogDebug( "m_detectioncut = %f", m_detectioncut );
     Log.LogDebug( "m_detectionnoiseoffset = %f", m_detectionnoiseoffset );
-    Log.LogDebug( "m_strongcut = %f", m_strongcut );
+    if ( m_disablegaussianfitqualitycheck )
+      {
+	Log.LogDebug( "m_disablegaussianfitqualitycheck is true (any value, except 0, in json)" );
+      }
+    else
+      {
+	Log.LogDebug( "m_disablegaussianfitqualitycheck is false (value 0 in json)" );
+      }
+    Log.LogDebug( "m_enlargeRate = %f", m_enlargeRate );
+    Log.LogDebug( "linetype = %s", linetypeStr.c_str ( ) );
+    Log.LogDebug( "m_minMatchNum = %d", m_minMatchNum );
     Log.LogDebug( "m_minsize = %f", m_minsize );
     Log.LogDebug( "m_maxsize = %f", m_maxsize );
-    Log.LogDebug( "m_enlargeRate = %f", m_enlargeRate );
-    Log.LogDebug( "m_minMatchNum = %d", m_minMatchNum );
+    Log.LogDebug( "m_strongcut = %f", m_strongcut );
     Log.LogDebug( "m_tol = %f", m_tol );
+    Log.LogDebug( "m_winsize = %f", m_winsize );
   }
 
-  Int32 lineType = CRay::nType_Emission;
-  if(linetypeStr == "E"){
-      lineType = CRay::nType_Emission;
-  }else if(linetypeStr == "A"){
-      lineType = CRay::nType_Absorption;
-  }
-
-
-  CPeakDetection peakDetection( m_winsize, m_detectioncut, 1, m_enlargeRate, m_detectionnoiseoffset );
+  CPeakDetection peakDetection ( m_winsize, m_detectioncut, 1, m_enlargeRate, m_detectionnoiseoffset );
   CSpectrum _spc = spc;
   if( lineType == CRay::nType_Absorption )
     {
@@ -191,79 +168,158 @@ std::shared_ptr<const CLineMatching2SolveResult> COperatorLineMatching2Solve::Co
       return NULL;
     }
 
-  // Since we detected at least one peak, try to detect lines related that correspond to those peaks.
-  bool disableGaussianFitQualityCheck = true;
-  if ( disableGaussianFitQualityCheck )
-    {
-      Log.LogDebug ( "Fit quality check disabled." );
-    }
-  else
-    {
-      Log.LogDebug ( "Fit quality check enabled." );
-    }
-
-  CLineDetection lineDetection( lineType, m_cut, m_strongcut, m_winsize, m_minsize, m_maxsize, disableGaussianFitQualityCheck );
-  auto lineDetectionResult = lineDetection.Compute( _spc, lambdaRange, peakDetectionResult->PeakList, peakDetectionResult->EnlargedPeakList );
+  // Since we detected at least one peak, try to detect lines related to those peaks.
+  Int32 bestMatchingNumber = -1;
+  Float64 bestRedshift = -1.0;
+  Int32 currentNumberOfPeaks = -1;
+  Float64 cutBest = m_cut;
+  auto cutCurrent = m_cut;
+  Float64 cutMaximum = 1e1;
+  Float64 cutMinimum = 1e-1;
+  Float64 cutStep = ( cutMaximum - cutMinimum ) / 5;
+  Float64 minimumFwhhBest = m_minsize;
+  Float64 minimumFwhhCurrent = m_minsize;
+  Float64 minimumFwhhMinimum = 1e-3;
+  Float64 minimumFwhhMaximum = 1e1;
+  Float64 minimumFwhhStep = ( minimumFwhhMaximum - minimumFwhhMinimum ) / 5;
+  Int32 minimumNumberOfPeaks = 200;
+  Bool newValues = false;
+  Int32 numberOfPeaksBest = -1;
+  Bool numberOfPeaksBestBypass = false;
+  Int32 previousNumberOfPeaks = -1;
+  Float64 strongcutBest = m_strongcut;
+  auto strongcutCurrent = m_strongcut;
+  Float64 strongcutMaximum = 1e1;
+  Float64 strongcutMinimum = 1e-2;
+  Float64 strongcutStep = ( strongcutMaximum - strongcutMinimum ) / 5;
+  Float64 winsizeBest = m_winsize;
+  auto winsizeCurrent = m_winsize;
+  Float64 winsizeMaximum = 1e4;
+  Float64 winsizeMinimum = 1e3;
+  Float64 winsizeStep = ( winsizeMaximum - winsizeMinimum ) / 5;
   
-  if( lineDetectionResult ) 
+  while ( true )
     {
-      Log.LogDebug ( "Storing %d lines from lineDetection in the result store.", lineDetectionResult->RayCatalog.GetList().size() );
-      resultStore.StoreScopedGlobalResult( "raycatalog", lineDetectionResult );
-      
-      if( lineDetectionResult->RayCatalog.GetList().size()<1 )
+      if ( ! m_bypassDebug )
 	{
-	  Log.LogError ( "Line detection returned no entries in RayCatalog." );
-	  //return NULL;
-	  if ( m_dynamicCut == 0 )
-	    {
-	      Log.LogDebug ( "dynamicCut is true, retrying with cut = 1e-10." );
-	      
-	      Float64 newCut = 1e-10;
-	      CLineDetection dynLineDetection( lineType, newCut, m_strongcut, m_winsize, m_minsize, m_maxsize, disableGaussianFitQualityCheck );
-	      auto dynLineDetectionResult = dynLineDetection.Compute( _spc, lambdaRange, peakDetectionResult->PeakList, peakDetectionResult->EnlargedPeakList );
-	      lineDetectionResult = dynLineDetectionResult;	      
-	    }
+	  Log.LogDebug( "*************************" );
+	  Log.LogDebug( "cutCurrent == %f", cutCurrent );
+	  Log.LogDebug( "minimumFwhhCurrent == %f", minimumFwhhCurrent );
+	  Log.LogDebug( "strongcutCurrent == %f", strongcutCurrent );
+	  Log.LogDebug( "winsizeCurrent == %f", winsizeCurrent );
 	}
-    }
-
-    // Since we know at least one peak that corresponds to a line, let's try to match to a catalogued template.
-    CRayMatching rayMatching;
-    auto rayMatchingResult = rayMatching.Compute( lineDetectionResult->RayCatalog, restRayCatalog, redshiftsRange, m_minMatchNum, m_tol, lineType );
-
-    if( rayMatchingResult )
+      CLineDetection lineDetection( lineType, cutCurrent, strongcutCurrent, winsizeCurrent, minimumFwhhCurrent, m_maxsize, m_disablegaussianfitqualitycheck );
+      auto lineDetectionResult = lineDetection.Compute( _spc, lambdaRange, peakDetectionResult->PeakList, peakDetectionResult->EnlargedPeakList );
+      if ( lineDetectionResult )
+	{
+	  currentNumberOfPeaks = lineDetectionResult->RayCatalog.GetList().size();
+	  if ( ! m_bypassDebug )
+	    Log.LogDebug ( "Found %d peaks.", currentNumberOfPeaks );
+	  if( currentNumberOfPeaks>=minimumNumberOfPeaks || numberOfPeaksBestBypass || ! m_dynamicLinematching )
+	    {
+	      Log.LogDebug ( "Storing %d lines from lineDetection in the result store.", lineDetectionResult->RayCatalog.GetList().size() );
+	      resultStore.StoreScopedGlobalResult( "raycatalog", lineDetectionResult );
+	      // Since we know at least one peak that corresponds to a line, let's try to match to a catalogued template.
+	      CRayMatching rayMatching;
+	      auto rayMatchingResult = rayMatching.Compute( lineDetectionResult->RayCatalog, restRayCatalog, redshiftsRange, m_minMatchNum, m_tol, lineType );
+	      if( rayMatchingResult )
+		{
+		  rayMatchingResult->FilterWithRules( _spc, lambdaRange, m_winsize );
+		  Log.LogDebug ( "CRayMatching yielded %d sets of solutions and %d sets of filtered solutions.", rayMatchingResult->SolutionSetList.size(), rayMatchingResult->FilteredSolutionSetList.size() );
+		  // Store matching results
+		  resultStore.StoreScopedGlobalResult( "raymatching", rayMatchingResult );
+		  rayMatchingResult->GetBestRedshift ( bestRedshift, bestMatchingNumber );
+		  Log.LogDebug ( "bestRedshift == %f, bestMatchingNumber == %d", bestRedshift, bestMatchingNumber );
+		  if( bestRedshift != -1.0 )
+		    {
+		      Log.LogDebug ( "return std::shared_ptr<const CLineMatching2SolveResult>( new CLineMatching2SolveResult() );" );
+		      return std::shared_ptr<const CLineMatching2SolveResult>( new CLineMatching2SolveResult() );
+		    }
+		} // rayMatchingResult
+	    } // minimumNumberOfPeaks
+	} // lineDetectionResult
+      // update parameters
       {
-	rayMatchingResult->FilterWithRules( _spc, lambdaRange, m_winsize );
-	Log.LogDebug ( "CRayMatching yielded %d sets of solutions and %d sets of filtered solutions.", rayMatchingResult->SolutionSetList.size(), rayMatchingResult->FilteredSolutionSetList.size() );
-        // Store matching results
-        resultStore.StoreScopedGlobalResult( "raymatching", rayMatchingResult );
+	if( currentNumberOfPeaks>=numberOfPeaksBest )
+	  {
+	    numberOfPeaksBest = currentNumberOfPeaks;
+	    cutBest = cutCurrent;
+	    minimumFwhhBest = minimumFwhhCurrent;
+	    strongcutBest = strongcutCurrent;
+	    winsizeBest = winsizeCurrent;
+	  }
+	if( currentNumberOfPeaks<previousNumberOfPeaks && ! newValues )
+	  {
+	    Log.LogError ( "Dynamic logic failed - number of peaks is falling." );
+	    return NULL;
+	  }
+	else
+	  {
+	    previousNumberOfPeaks = currentNumberOfPeaks;
+	    if( ! m_dynamicLinematching )
+	      {
+		Log.LogError ( "No result found - returning NULL." );
+		return NULL;
+	      }
+	    newValues = false;
+	    if( minimumFwhhCurrent>minimumFwhhMinimum )
+	      {
+		minimumFwhhCurrent = std::max ( minimumFwhhMinimum, minimumFwhhCurrent - minimumFwhhStep );
+		continue;
+	      }
+	    newValues = true;
+	    minimumFwhhCurrent = minimumFwhhMaximum;
+	    if( cutCurrent>=cutMinimum )
+	      {
+		cutCurrent -= cutStep;
+		continue;
+	      }
+	    cutCurrent = strongcutCurrent;
+	    if( strongcutCurrent>strongcutMinimum )
+	      {
+		strongcutCurrent = std::max ( strongcutMinimum, strongcutCurrent - strongcutStep );
+		continue;
+	      }
+	    strongcutCurrent = strongcutMaximum;
+	    if( winsizeCurrent<=winsizeMaximum )
+	      {
+		winsizeCurrent += winsizeStep;
+		continue;
+	      }
+	    winsizeCurrent = winsizeMinimum;
+	    // if all checks failed, dynamic system failed.
+	    Log.LogDebug ( "Dynamic logic: all parameters searched. Using best values." );
+	    {
+	      cutCurrent = cutBest;
+	      minimumFwhhCurrent = minimumFwhhBest;
+	      strongcutCurrent = strongcutBest;
+	      winsizeCurrent = winsizeBest;
+	      numberOfPeaksBestBypass = true;
+	      continue;
+	    }
+	  }
       }
-
-    storeResult = true; //always save a matching result
-    if( storeResult )
-      {
-	Log.LogDebug ( "return std::shared_ptr<const CLineMatching2SolveResult>( new CLineMatching2SolveResult() );" );
-        return std::shared_ptr<const CLineMatching2SolveResult>( new CLineMatching2SolveResult() );
-      }
-
-    Log.LogError ( "No result found - returning NULL." );
-    return NULL;
+      Log.LogDebug( "Dynamically retrying linematching." );
+    }; // while
 }
 
 const std::string COperatorLineMatching2Solve::GetDescription()
 {
     std::string desc;
     desc = "Method linematching2:\n";
-    desc.append("\tparam: linematching2.winsize = <float value in Angstrom>\n");
     desc.append("\tparam: linematching2.cut = <float value>\n");
     desc.append("\tparam: linematching2.detectioncut = <float value>\n");
     desc.append("\tparam: linematching2.detectionnoiseoffset = <float value>\n");
-    desc.append("\tparam: linematching2.strongcut = <float value>\n");
-    desc.append("\tparam: linematching2.minsize = <float value in Angstrom>\n");
-    desc.append("\tparam: linematching2.maxsize = <float value in Angstrom>\n");
+    desc.append("\tparam: linematching2.disablegaussianfitqualitycheck = <integer value>\n");
+    desc.append("\tparam: linematching2.dynamicLinematching = <integer value>\n");
     desc.append("\tparam: linematching2.enlargeRate = <float value>\n");
+    desc.append("\tparam: linematching2.linetype = {""Emission"", ""Absorption"", ""All""}\n");
+    desc.append("\tparam: linematching2.maxsize = <float value in Angstrom>\n");
     desc.append("\tparam: linematching2.minMatchNum = <int value>\n");
+    desc.append("\tparam: linematching2.minsize = <float value in Angstrom>\n");
+    desc.append("\tparam: linematching2.strongcut = <float value>\n");
     desc.append("\tparam: linematching2.tol = <float value>\n");
-    desc.append("\tparam: linematching2.linetype = {""E"", ""A""}\n");
+    desc.append("\tparam: linematching2.winsize = <float value in Angstrom>\n");
 
     return desc;
 }

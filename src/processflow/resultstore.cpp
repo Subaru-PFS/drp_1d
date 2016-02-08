@@ -35,7 +35,7 @@ void COperatorResultStore::StoreResult( TResultsMap& map, const std::string& pat
     TResultsMap::iterator it = map.find( name );
     if( it != map.end() )
     {
-        DebugError( "Resulat already exist");
+        DebugError( "Result already exist");
         return;
     }
 
@@ -92,6 +92,13 @@ TOperatorResultMap COperatorResultStore::GetPerTemplateResult( const std::string
 
     return map;
 }
+
+/**
+ * /brief Returns the best global result, if there is one.
+ * 
+ * The somewhat strange syntax of this method is due to the usage of std::map, which will yield an iterator when accessing a member using .find().
+ * This method will find the global result entry with key "name", and if it exists, will return its .second member (which will be a COperatorResult or derived object). Otherwise, will return a pointer to an empty COperatorResult.
+ */
 
 std::weak_ptr<const COperatorResult> COperatorResultStore::GetGlobalResult( const std::string& name ) const
 {

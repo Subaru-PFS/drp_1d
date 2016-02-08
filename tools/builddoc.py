@@ -6,8 +6,7 @@ import optparse
 
 def Process():
     os.chdir( "../docs/" )
-    os.system( "../thirdparty/bin/doxygen ./doxygen.conf" )
-
+    os.system( "(cat doxygen.conf; number=`cat ../VERSION`; echo \"PROJECT_NUMBER=\"$number\"\") | ../thirdparty/bin/doxygen - " )
 def StartFromCommandLine( argv ) :	
     usage = """usage: %prog
     Run doxygen and build documentation"""
