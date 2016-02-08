@@ -60,12 +60,11 @@ class Catalog(object):
                     linelambda.append(float(data[0]))
                     force.append(data[3])
                     linetype.append(data[2])
+                    lineprofile.append(data[4])
                     if(len(data) >=7):
-                        lineprofile.append(data[4])
                         linegroup.append(data[5])
                         linenominalamp.append(float(data[6]))
                     else:
-                        lineprofile.append("-1")
                         linegroup.append("-1")
                         linenominalamp.append(-1) 
                     
@@ -210,7 +209,7 @@ class Catalog(object):
             if not self.linenominalamp[x] == -1:
                nominalamp = str(self.linenominalamp[x]) 
             group = ""
-            if not self.linegroup[x] == -1:
+            if not self.linegroup[x] == "-1":
                group = self.linegroup[x]
             outStr = outStr + "|{}|{}|{}|{}|{}|{}|{}|".format(self.linelambda[x], self.linename[x], self.linetype[x], self.lineforce[x], self.lineprofile[x], group, nominalamp) + "\n"
       
