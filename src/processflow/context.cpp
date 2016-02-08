@@ -72,7 +72,7 @@ bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath,
         CNoiseFromFile noise;
         if( ! noise.SetNoiseFilePath( noisePath ) )
         {
-            Log.LogError("Failled to load noise spectrum");
+            Log.LogError("Failed to load noise spectrum");
             return false;
         }
 

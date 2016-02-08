@@ -201,8 +201,9 @@ class AViewPlot(object):
                
                
         #apply x,y range
-        limmarg = 0.2;
-        ax1.set_ylim([self.ymin*(1-np.sign(self.ymin)*limmarg*2.0),self.ymax*(1+limmarg)])
+        limmarg = 0.2;        
+        yrange = self.ymax-self.ymin
+        ax1.set_ylim([self.ymin - yrange*limmarg,self.ymax+yrange*limmarg])
         ax1.set_xlim([self.xmin,self.xmax])
         #ax2.set_ylim([0, 10])
         ax2.set_xlim([self.xmin,self.xmax])
@@ -274,8 +275,9 @@ class AViewPlot(object):
             
             ax1.set_xlim([self.xmin,self.xmax])
             ax2.set_xlim([self.xmin,self.xmax])
-            ax3.set_xlim([self.xmin,self.xmax])         
-            ax1.set_ylim([self.ymin*(1-np.sign(self.ymin)*limmarg*10.0),self.ymax*(1+limmarg)])
+            ax3.set_xlim([self.xmin,self.xmax]) 
+            yrange = self.ymax-self.ymin
+            ax1.set_ylim([self.ymin - yrange*limmarg*1.0,self.ymax+yrange*limmarg])
             
             outFigFile = os.path.join(self.exportAutoDisplaysPath, 'aview_{}_z{}_zoom{}.png'.format(self.spcname, self.z, self.exportAuto_name))
             #pp.savefig( outFigFile, bbox_inches='tight')
@@ -287,6 +289,10 @@ class AViewPlot(object):
         print '\n'
       
     def exportDisplays(self, displayExportPath):
+        if self.z == -1:
+            print("FOUND UNSUPPORTED REDSHIFT RESULT: Aborting export for this target...")
+            return
+        
         self.exportAutoDisplaysPath = displayExportPath
         zplus1 = self.z+1
         
@@ -303,19 +309,31 @@ class AViewPlot(object):
         displays_lambdas_rest_center.append(1215)
         displays_lambdas_rest_min.append(1195)
         displays_lambdas_rest_max.append(1235)
-        displays_names.append("Lya")
+        displays_names.append("Lya")   
+        
+        # add CIII to the pool of displayed ranges
+        displays_lambdas_rest_center.append(1908)
+        displays_lambdas_rest_min.append(1850)
+        displays_lambdas_rest_max.append(1950)
+        displays_names.append("CIII")
         
         # add CIV1550 to the pool of displayed ranges
-        displays_lambdas_rest_center.append(1500)
-        displays_lambdas_rest_min.append(1250)
-        displays_lambdas_rest_max.append(1700)
+        displays_lambdas_rest_center.append(1550)
+        displays_lambdas_rest_min.append(1480)
+        displays_lambdas_rest_max.append(1590)
         displays_names.append("CIV1550")
         
         # add OII_Hgamma to the pool of displayed ranges
         displays_lambdas_rest_center.append(4000)
         displays_lambdas_rest_min.append(3695)
         displays_lambdas_rest_max.append(4380)
-        displays_names.append("OII_Hgamma")
+        displays_names.append("OII_Hgamma") 
+        
+        # add OII to the pool of displayed ranges
+        displays_lambdas_rest_center.append(4000)
+        displays_lambdas_rest_min.append(3695)
+        displays_lambdas_rest_max.append(3770)
+        displays_names.append("OII")
         
 #        # add OIII to the pool of displayed ranges
 #        displays_lambdas_rest_center.append(5000)

@@ -34,7 +34,6 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum, const CS
     m_velocityEmission = velocityEmission;
     m_velocityAbsorption = velocityAbsorption;
     m_fittingmethod = opt_fittingmethod;
-    //m_rulesoption = "no"; //all";
     m_rulesoption = opt_rules;
 
     // to be deleted: nominal width
@@ -1515,23 +1514,27 @@ void CLineModelElementList::applyRules()
     if(m_rulesoption=="no"){
         return;
     }
-    //*
-    ApplyBalmerRuleLinSolve();
-    //*/
 
-    //*
-    Apply2SingleLinesAmplitudeRule(CRay::nType_Emission, "Halpha", "Hbeta", 1.0/2.86*1.1);
-    Apply2SingleLinesAmplitudeRule(CRay::nType_Emission, "Hbeta", "Hgamma", 0.47*1.1);
-    Apply2SingleLinesAmplitudeRule(CRay::nType_Emission, "Hgamma", "Hdelta", 1.1);
-    //Apply2SingleLinesAmplitudeRule(CRay::nType_Emission, "Hdelta", "Hepsilon", 1.1);
-    //Apply2SingleLinesAmplitudeRule(CRay::nType_Emission, "Hepsilon", "H8", 1.1);
-    Apply2SingleLinesAmplitudeRule(CRay::nType_Emission, "Hdelta", "H8", 1.1);
-    Apply2SingleLinesAmplitudeRule(CRay::nType_Emission, "H8", "H9", 1.1);
-    Apply2SingleLinesAmplitudeRule(CRay::nType_Emission, "H9", "H10", 1.1);
-    Apply2SingleLinesAmplitudeRule(CRay::nType_Emission, "H10", "H11", 1.1);
-    //*/
+    Bool enableBalmer = m_rulesoption.find("balmer") != std::string::npos;
+    if(m_rulesoption=="all" || enableBalmer){
 
-    /*
+        //*
+        ApplyBalmerRuleLinSolve();
+        //*/
+
+        //*
+        Apply2SingleLinesAmplitudeRule(CRay::nType_Emission, "Halpha", "Hbeta", 1.0/2.86*1.1);
+        Apply2SingleLinesAmplitudeRule(CRay::nType_Emission, "Hbeta", "Hgamma", 0.47*1.1);
+        Apply2SingleLinesAmplitudeRule(CRay::nType_Emission, "Hgamma", "Hdelta", 1.1);
+        //Apply2SingleLinesAmplitudeRule(CRay::nType_Emission, "Hdelta", "Hepsilon", 1.1);
+        //Apply2SingleLinesAmplitudeRule(CRay::nType_Emission, "Hepsilon", "H8", 1.1);
+        Apply2SingleLinesAmplitudeRule(CRay::nType_Emission, "Hdelta", "H8", 1.1);
+        Apply2SingleLinesAmplitudeRule(CRay::nType_Emission, "H8", "H9", 1.1);
+        Apply2SingleLinesAmplitudeRule(CRay::nType_Emission, "H9", "H10", 1.1);
+        Apply2SingleLinesAmplitudeRule(CRay::nType_Emission, "H10", "H11", 1.1);
+        //*/
+
+        /*
     Apply2SingleLinesAmplitudeRule(CRay::nType_Absorption, "HbetaA", "HgammaA", 1.0);
     Apply2SingleLinesAmplitudeRule(CRay::nType_Absorption, "HgammaA", "HdeltaA", 1.0);
     Apply2SingleLinesAmplitudeRule(CRay::nType_Absorption, "HdeltaA", "HepsilonA", 1.0);
@@ -1540,23 +1543,32 @@ void CLineModelElementList::applyRules()
     Apply2SingleLinesAmplitudeRule(CRay::nType_Absorption, "H9A", "H10A", 1.0);
     Apply2SingleLinesAmplitudeRule(CRay::nType_Absorption, "H10A", "H11A", 1.0);
     //*/
+    }
 
-    //*
-    ApplyAmplitudeRatioRangeRule(CRay::nType_Emission, "[OII]3726", "[OII]3729", 2.0);
-    //*/
+    Bool enableOIIRatioRange= m_rulesoption.find("oiiratio") != std::string::npos;
+    if(m_rulesoption=="all" || enableOIIRatioRange){
+
+        //*
+        ApplyAmplitudeRatioRangeRule(CRay::nType_Emission, "[OII]3726", "[OII]3729", 2.0);
+        //*/
+    }
 
     //*
     //add rule, if AL CaK present, the AL CaH should be threre too...
     //*/
 
 
-    //*
-    ApplyStrongHigherWeakRule(CRay::nType_Emission);
-    //*/
+    Bool enableStrongWeak= m_rulesoption.find("strongweak") != std::string::npos;
+    if(m_rulesoption=="all" || enableStrongWeak){
 
-    //*
-    ApplyStrongHigherWeakRule(CRay::nType_Absorption);
-    //*/
+        //*
+        ApplyStrongHigherWeakRule(CRay::nType_Emission);
+        //*/
+
+        //*
+        ApplyStrongHigherWeakRule(CRay::nType_Absorption);
+        //*/
+    }
 }
 
 Void CLineModelElementList::ApplyStrongHigherWeakRule( Int32 linetype )
@@ -1564,7 +1576,9 @@ Void CLineModelElementList::ApplyStrongHigherWeakRule( Int32 linetype )
     Float64 coeff = 1.0;
     Float64 erStrong=-1.0;
     Float64 maxiStrong = FindHighestStrongLineAmp(linetype, erStrong);
-
+    if(maxiStrong == -1){
+        return;
+    }
 
     for( UInt32 iRestRayWeak=0; iRestRayWeak<m_RestRayList.size(); iRestRayWeak++ ) //loop on the strong lines
     {
@@ -1737,7 +1751,7 @@ Void CLineModelElementList::ApplyAmplitudeRatioRangeRule( Int32 linetype, std::s
             return;
         }
 
-        Float64 R = 1.0/coeff;
+        Float64 R = coeff;
         Float64 w1 = 0.0;
         if(er1!=0.0){
             w1 = 1.0/(er1*er1);

@@ -28,6 +28,9 @@ public:
     Void Save( const CDataStore& store, std::ostream& stream ) const;
     Void SaveLine( const CDataStore& store, std::ostream& stream ) const;
 
+    const CLineModelResult::SLineModelSolution& GetLineModelSolution() const;
+
+
 private:
 
     CLineModelResult::SLineModelSolution LineModelSolution;
@@ -37,6 +40,12 @@ private:
     CRayCatalog::TRayVector restRayList;
 
 };
+
+inline
+const CLineModelResult::SLineModelSolution& CModelFittingResult::GetLineModelSolution() const
+{
+    return LineModelSolution;
+}
 
 
 }

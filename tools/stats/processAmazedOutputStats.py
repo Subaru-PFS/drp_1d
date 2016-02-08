@@ -322,7 +322,7 @@ def loadCalc(fname):
                 d3 = str(data[3])
                 d = [d0, d1, d2, d3]
                 dataArray.append(d) 
-            if(len(data) == 5): #chisquarer for example
+            if(len(data) >= 5): #chisquarer for example
                 d0 = str(data[0])
                 d1 = float(data[1])
                 d2 = float(data[2])

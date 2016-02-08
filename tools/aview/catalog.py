@@ -60,9 +60,13 @@ class Catalog(object):
         self.lineforce = range(0,self.n)
         self.linetype = range(0,self.n)  
         for x in range(0,self.n):
-            if 0:
-                lval = self.vacuumToAir(linelambda[x])
-                lval = self.airToVacuum(linelambda[x])
+            if 1:
+                if 1:
+                    lval = self.vacuumToAir(linelambda[x])
+                    print("WARNING: converting VACUUM to AIR !!")
+                if 0:                
+                    lval = self.airToVacuum(linelambda[x])
+                    print("WARNING: converting AIR to VACUUM !!")
             else:
                 lval = linelambda[x]
             self.linelambda[x] = lval
