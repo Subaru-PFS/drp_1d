@@ -1,3 +1,4 @@
+#include <epic/core/log/log.h>
 #include <epic/redshift/ray/catalog.h>
 
 #include <algorithm>    // std::sort
