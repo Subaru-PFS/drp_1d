@@ -1509,6 +1509,13 @@ void CLineModelElementList::addDoubleLine(const CRay &r1, const CRay &r2, Int32 
     //m_Elements.push_back(new CSingleLine(r, nominalWidth, a));
 }
 
+/**
+ * /brief Calls the rules' methods depending on the JSON options.
+ * If m_rulesoption is "no", do nothing.
+ * If either "balmer" or "all" is in the rules string, call ApplyBalmerRuleLinSolve and each Apply2SingleLinesAmplitudeRule applicable.
+ * If "all" or "oiiratio" is in the rules string, call ApplyAmplitudeRatioRangeRule parameterized for OII.
+ * If "all" or "strongweak" is in the rules string, call ApplyStrongHigherWeakRule for emission and then for absorption.
+ **/
 void CLineModelElementList::applyRules()
 {
     if(m_rulesoption=="no"){
