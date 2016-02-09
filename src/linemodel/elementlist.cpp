@@ -1578,6 +1578,15 @@ void CLineModelElementList::applyRules()
     }
 }
 
+/** \brief Verify that "stronger lines have higher amplitudes than weaker lines" rule is applicable, and then apply it.
+ * If the maximum amplitude for strong lines of the specified type is -1, do nothing.
+ * For each weak line of the specified type:
+ *  Find the first element that contains that weak line
+ *  Get the index of the entry in that element that corresponds to the weak line
+ *  If the indexed entry IsOutsideLambdaRange, go for the next weak line
+ *  Get the parameters for the entry
+ *  Limit the amplitude of the entry to the maximum ampltiude for strong lines
+ **/
 Void CLineModelElementList::ApplyStrongHigherWeakRule( Int32 linetype )
 {
     Float64 coeff = 1.0;
@@ -1587,7 +1596,7 @@ Void CLineModelElementList::ApplyStrongHigherWeakRule( Int32 linetype )
         return;
     }
 
-    for( UInt32 iRestRayWeak=0; iRestRayWeak<m_RestRayList.size(); iRestRayWeak++ ) //loop on the strong lines
+    for( UInt32 iRestRayWeak=0; iRestRayWeak<m_RestRayList.size(); iRestRayWeak++ ) //loop on the weak lines
     {
         if(m_RestRayList[iRestRayWeak].GetForce() != CRay::nForce_Weak){
             continue;
