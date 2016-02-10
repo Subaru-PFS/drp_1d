@@ -87,7 +87,12 @@ std::vector<CRay> CSingleLine::GetRays()
 }
 
 /**
+ * /brief Calculates the profile of a fit of this line with the specified redshift.
  * Sets some m_ variables depending on the input parameters.
+ * Find the wavelength this line would have at the specified redshift.
+ * Calculate the line width this line would have at the specified redshift.
+ * This defines a gaussian profile, which is recorded by GetNSigmaSupport.
+ * Check if this profile is within the specified lambdaRange. If it isn't, invalidate the current support.
  */
 void CSingleLine::prepareSupport(const CSpectrumSpectralAxis& spectralAxis, Float64 redshift, const TFloat64Range &lambdaRange)
 {
@@ -154,6 +159,7 @@ TInt32Range CSingleLine::getSupportSubElt( Int32 subeIdx )
 }
 
 /**
+ * /brief Fits a gaussian considering the flux in a width calculated by the prepareSupport method.
  * Sets m_FittedAmplitude and m_FittedAmplitudeErrorSigma based on the parameters.
  */
 void CSingleLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis, Float64  redshift)
