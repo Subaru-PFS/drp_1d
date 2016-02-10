@@ -1585,7 +1585,7 @@ void CLineModelElementList::applyRules()
  *  Get the index of the entry in that element that corresponds to the weak line
  *  If the indexed entry IsOutsideLambdaRange, go for the next weak line
  *  Get the parameters for the entry
- *  Limit the amplitude of the entry to the maximum ampltiude for strong lines
+ *  Limit the amplitude of the entry to the maximum amplitude for strong lines
  **/
 Void CLineModelElementList::ApplyStrongHigherWeakRule( Int32 linetype )
 {
