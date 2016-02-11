@@ -11,16 +11,25 @@
 using namespace NSEpic;
 using namespace std;
 
+/** 
+ * \brief Empty constructor.
+ **/
 CLineModelSolve::CLineModelSolve()
 {
 
 }
 
+/**
+ * \brief Empty destructor.
+ **/
 CLineModelSolve::~CLineModelSolve()
 {
 
 }
 
+/**
+ * \brief Returns a string describing the names and allowed values for the parameters of the Linemodel method.
+ **/
 const std::string CLineModelSolve::GetDescription()
 {
     std::string desc;
@@ -43,33 +52,44 @@ const std::string CLineModelSolve::GetDescription()
 
 }
 
-std::shared_ptr<const CLineModelSolveResult> CLineModelSolve::Compute(  CDataStore& dataStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont, const CRayCatalog& restraycatalog,
-                                                        const TFloat64Range& lambdaRange, const TFloat64List& redshifts)
+/**
+ * \brief Calls the Solve method and returns a new "result" object.
+ * Call Solve.
+ * Return a pointer to an empty CLineModelSolveResult. (The results for Linemodel will reside in the linemodel.linemodel result).
+ **/
+std::shared_ptr<const CLineModelSolveResult> CLineModelSolve::Compute( CDataStore& dataStore,
+								       const CSpectrum& spc,
+								       const CSpectrum& spcWithoutCont,
+								       const CRayCatalog& restraycatalog,
+								       const TFloat64Range& lambdaRange,
+								       const TFloat64List& redshifts )
 {
-    Bool storeResult = false;
     CDataStore::CAutoScope resultScope( dataStore, "linemodelsolve" );
-
     Solve( dataStore, spc, spcWithoutCont, restraycatalog, lambdaRange, redshifts);
-    storeResult = true;
-
-
-    if( storeResult )
-    {
-        return std::shared_ptr<const CLineModelSolveResult>( new CLineModelSolveResult() );
-    }
-
-    return NULL;
+    return std::shared_ptr<const CLineModelSolveResult>( new CLineModelSolveResult() );
 }
 
-Bool CLineModelSolve::Solve( CDataStore& dataStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont, const CRayCatalog& restraycatalog,
-                             const TFloat64Range& lambdaRange, const TFloat64List& redshifts)
+/**
+ * \brief
+ * Create a continuum object by subtracting spcWithoutCont from the spc.
+ * Configure the opt_XXX variables from the dataStore scope parameters.
+ * LogInfo the opt_XXX values.
+ * Create a COperatorLineModel, call its Compute method. 
+ * If that returned true, store results.
+ **/
+Bool CLineModelSolve::Solve( CDataStore& dataStore,
+			     const CSpectrum& spc,
+			     const CSpectrum& spcWithoutCont,
+			     const CRayCatalog& restraycatalog,
+                             const TFloat64Range& lambdaRange,
+			     const TFloat64List& redshifts )
 {
     std::string scopeStr = "linemodel";
 
     CSpectrum _spc = spc;
     CSpectrum _spcContinuum = spc;
     CSpectrumFluxAxis spcfluxAxis = _spcContinuum.GetFluxAxis();
-    spcfluxAxis.Subtract(spcWithoutCont.GetFluxAxis());
+    spcfluxAxis.Subtract( spcWithoutCont.GetFluxAxis() );
     CSpectrumFluxAxis& sfluxAxisPtr = _spcContinuum.GetFluxAxis();
     sfluxAxisPtr = spcfluxAxis;
 
