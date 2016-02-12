@@ -22,6 +22,8 @@ class Spectrum(object):
         self.name = os.path.basename(spath)
         self.label = label
         self.stype = stype
+        if self.stype == "" or self.stype == "-1":
+            self.stype = 'undefspc'
         print("type = {0}".format(stype))
         print("norm = {0}".format(snorm))
         self.snorm = snorm
@@ -44,7 +46,11 @@ class Spectrum(object):
         elif(self.stype == 'pfs2'):
             self.loadpfs2() 
         elif(self.stype == 'hplana'):
-            self.loadhplana() 
+            self.loadpfs2() 
+        elif(self.stype == 'vvds'):
+            self.loadvvds() 
+        elif(self.stype == 'pfs'):
+            self.loadpfs() 
         elif(self.stype == 'muse'):
             self.loadmuse() 
         else:
@@ -56,7 +62,7 @@ class Spectrum(object):
         
     def load(self):
         hdulist = fits.open(self.spath) 
-        #print hdulist
+        print("\nHDULIST = \n{}\n".format(hdulist))
         try:
             sciheader = hdulist[1].header
         except: 
@@ -69,7 +75,8 @@ class Spectrum(object):
         try:
             n2 = sciheader["NAXIS2"]
         except:
-            self.type='muse' #euclid and muse splitted
+            print("INFO: USING MUSE spectrum format...")
+            self.stype='muse' #euclid and muse splitted
             self.loadmuse()
             return
                     
@@ -336,7 +343,8 @@ class Spectrum(object):
         a = a + ("    type = {0}\n".format(self.stype))
         a = a + ("    n = {0}\n".format(self.n))
         a = a + ("    dlambda = {0}\n".format(self.getResolution()))
-        a = a + ("    flux min = {0}\n".format(self.getFluxMin()))
+        a = a + ("    lambda min = {}, lambda max = {}\n".format(self.getWavelengthMin(), self.getWavelengthMax()))
+        a = a + ("    flux min = {}, flux max = {}\n".format(self.getFluxMin(),self.getFluxMin()))
         a = a + ("\n")
         
         return a
@@ -435,7 +443,9 @@ class Spectrum(object):
                     return self.yvect[x]*a
                     
     def getFluxMin(self):
-        return min(self.yvect)
+        return min(self.yvect)                    
+    def getFluxMax(self):
+        return max(self.yvect)
     
     def getWavelengthMin(self):
         return self.xvect[0]
@@ -558,7 +568,7 @@ def StartFromCommandLine( argv ) :
     ex: python ./spectum.py -s """
     parser = optparse.OptionParser(usage=usage)
     parser.add_option(u"-s", u"--spc", help="path to the fits spectrum to be plotted",  dest="spcPath", default="")
-    parser.add_option(u"-t", u"--type", help="type of spectrum, can be in teh following list {}",  dest="spcType", default="")
+    parser.add_option(u"-t", u"--type", help="type of spectrum, can be in teh following list {vvds, pfs, pfs2, muse, hplana, euclid, pfs2reech}",  dest="spcType", default="")
 
     (options, args) = parser.parse_args()
 

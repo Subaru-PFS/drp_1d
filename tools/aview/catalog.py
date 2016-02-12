@@ -9,6 +9,7 @@ import re
 from astropy.io import fits
 
 import matplotlib.pyplot as pp
+from matplotlib.ticker import MultipleLocator, FormatStrFormatter
 import numpy as np
 from scipy.optimize import fsolve
 
@@ -60,7 +61,10 @@ class Catalog(object):
                     linelambda.append(float(data[0]))
                     force.append(data[3])
                     linetype.append(data[2])
-                    lineprofile.append(data[4])
+                    if(len(data) >=5):
+                        lineprofile.append(data[4])
+                    else:
+                        lineprofile.append("-1")
                     if(len(data) >=7):
                         linegroup.append(data[5])
                         linenominalamp.append(float(data[6]))
@@ -153,6 +157,90 @@ class Catalog(object):
         #pp.savefig('ExempleTrace') # sauvegarde du fichier ExempleTrace.png
         pp.show()
     
+    def plotInZplane(self):
+        obs_lambda_min = 12500.0
+        obs_lambda_max = 17500.0
+        #PFS
+        obs_lambda_min = 3800.0
+        obs_lambda_max = 12600.0
+
+        filter_type = "E"
+        filter_force = -1
+        ctlg_rest = self.getShiftedCatalog(0.0, filter_type, filter_force)       
+        nlines = len(ctlg_rest['lambda']) 
+        print("nlines={}".format(nlines))
+        print("catalog rest = {}".format(ctlg_rest))
+        linesaxisticks = ["{}".format(a) for a in ctlg_rest['name']]
+        
+        zmin = 0.0
+        zmax = 7.0
+        zstep = 0.01
+        nz = int((zmax-zmin)/zstep)
+        zaxis = np.linspace(zmin, zmax, nz)
+        decimateZAxisN = int(nz/25.0)
+        zaxisticks = ["{:.1f}".format(a) for a in zaxis[::decimateZAxisN]]
+        zaxisticksinds = [int(a) for a in range(nz)[::decimateZAxisN]]
+        print zaxisticksinds
+                
+        print("zaxis : n={}".format(len(zaxis)))
+        matrix = np.zeros((nz, nlines))
+
+        for iz,z in enumerate(zaxis):
+            ctlg = self.getShiftedCatalog(z, filter_type, filter_force)
+            print("Processing for z={}".format(z))
+            #print("catalog = {}".format(ctlg))
+            for ic in range(nlines):
+                a = ctlg['lambda'][ic]
+                #print("lambda for line={} and z={} is: lambda={}".format(ctlg['name'][ic],z,ctlg['lambda'][ic])) 
+                if a >= obs_lambda_min and a<=obs_lambda_max:
+                    matrix[iz,ic] = 1.0
+                else:
+                    matrix[iz,ic] = -0.50
+        
+        pp.clf()
+        pp.close()
+        #fig = pp.figure('catalog z map', figsize=(9, 8))
+        #ax = fig.add_subplot(111)
+        #i = ax.matshow(np.transpose(matrix), interpolation='nearest', aspect='equal', cmap=cmap)
+        
+        cmap = pp.get_cmap('Greys')
+        pp.matshow(np.transpose(matrix), interpolation='nearest',aspect='auto', cmap=cmap)
+        pp.xticks(zaxisticksinds, zaxisticks, rotation='horizontal',verticalalignment='bottom')
+        pp.yticks(range(nlines), linesaxisticks, rotation='horizontal',verticalalignment='bottom')
+        
+        #pp.subplots_adjust(bottom=0.15)
+        
+        pp.xlabel('z')
+        pp.ylabel('LINE')
+        name1 = "Lines presence = f(z)\nblack=present, white=absent".format()
+        pp.title(name1)
+        
+        
+        cmin = -0.5
+        cmax = 1.75
+        pp.clim(cmin,cmax)
+
+        #ml = MultipleLocator(5)
+        #pp.axes().yaxis.set_minor_locator(ml)
+
+        pp.grid(True,'major',linewidth=1)
+        #pp.grid(True,'minor', linewidth=1)
+        pp.show()
+
+#    def getFilteredCatalog(self, ltype='E', lforce='S'):
+#        inds = []
+#        for x in range(0,self.n):
+#            if (self.linetype[x]==ltype or ltype==-1) and (self.lineforce[x]==lforce or lforce==-1):
+#                inds.append(x)
+#            
+#        _linelambdarest = [x for i,x in enumerate(self.linelambda) if i in inds]
+#        _linename = [x for i,x in enumerate(self.linename) if i in inds]
+#        _lineforce = [x for i,x in enumerate(self.lineforce) if i in inds]
+#        _linetype = [x for i,x in enumerate(self.linetype) if i in inds]
+#        
+#        return {"lambda":_linelambda, "lambdarest":_linelambdarest, "name":_linename,
+#                "force":_lineforce, "type":_linetype} 
+    
     def getShiftedCatalog(self, z, lineTypeFilter=-1, lineForceFilter=-1):
         coeff= 1.0+z
         linelambda = range(0,self.n)
@@ -224,6 +312,8 @@ if __name__ == '__main__':
     c = Catalog(cpath, ctype="vacuum")
     print(c) 
     #print(c.getShiftedCatalog(1.0, "E"))
-    c.plot()
     
-    print("the REDMINE (copy/paste) generated table is:\n{}".format(c.getRedmineTableString()))
+    #c.plot()
+    c.plotInZplane()  
+    
+    #print("the REDMINE (copy/paste) generated table is:\n{}".format(c.getRedmineTableString()))

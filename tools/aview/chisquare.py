@@ -146,7 +146,10 @@ class ResultChisquare(object):
         else:
             return -1.0;
     
-    def plot(self, showContinuumEstimate=False, showExtrema=False, showAmbiguities=False):
+    def getMeanValue(self):
+        return np.mean(self.yvect)
+    
+    def plot(self, showContinuumEstimate=False, showExtrema=False, showAmbiguities=False, enablePlot=True, exportPath=""):
         #find limits
         cmin = +1e6;
         cmax = -1e6;
@@ -156,11 +159,15 @@ class ResultChisquare(object):
                 cmin = self.yvect[x]
             if cmax <  self.yvect[x] and self.yvect[x]<thres:
                 cmax = self.yvect[x]
+        #overrride cmax
+        cmax = self.getMeanValue()
             
         range_ori = (cmax-cmin)
         cmax = cmax+0.1*range_ori
         cmin = cmin-0.1*range_ori
         
+        pp.close()
+        pp.clf()
         fig = pp.figure("chi2")
         titleStr = self.name
         if not self.forcePlotXIndex:
@@ -217,7 +224,13 @@ class ResultChisquare(object):
         #pp.savefig('ExempleTrace') # sauvegarde du fichier ExempleTrace.png
         
         fig.tight_layout()
-        pp.show()
+        if enablePlot:
+            pp.show()
+        else:
+            outFigFile = os.path.join(exportPath, 'chi2_{}.png'.format(self.stype))
+            #pp.savefig( outFigFile, bbox_inches='tight')
+            pp.savefig( outFigFile)
+            
         print '\n'
         
     def plotCompare(self, other_spc):

@@ -1249,8 +1249,9 @@ class ResultList(object):
         failures_onlyThis = []
         failures_onlyRef = []
 
-        removeStr2 = "_F"
-        removeStr1 = "_FILT3dec2015"
+        removeStrRef = "_F"
+        #removeStrRef = "_FILT3dec2015"
+        removeStrThis = "_FILT_MGv0_c"
         #removeStr2 = "_FILT"        
         
         n = self.n
@@ -1259,13 +1260,13 @@ class ResultList(object):
             #print("\n")
             #print("Spc {}/{}".format(x+1, self.n))
             spcName = self.list[x].name
-            spcName = spcName.replace(removeStr1, "")
+            spcName = spcName.replace(removeStrThis, "")
             spcFound = False;
             for xref in range(0,nref):
                 #print("\n")
                 #print("SpcRef {}/{}".format(xref+1, nref)) 
                 spcNameRef = refreslist.list[xref].name
-                spcNameRef = spcNameRef.replace(removeStr2, "")
+                spcNameRef = spcNameRef.replace(removeStrRef, "")
                 if spcName.find(spcNameRef)!=-1:
                     failures_both.append(spcName)
                     spcFound = True;
@@ -1277,11 +1278,13 @@ class ResultList(object):
             #print("\n")
             #print("Spc {}/{}".format(x+1, self.n))
             spcNameRef = refreslist.list[xref].name
+            spcNameRef = spcNameRef.replace(removeStrRef, "")
             spcRefFound = False;
             for x in range(0,n):
                 #print("\n")
                 #print("SpcRef {}/{}".format(xref+1, nref)) 
                 spcName = self.list[x].name
+                spcName = spcName.replace(removeStrThis, "")
                 if spcName.find(spcNameRef)!=-1:
                     spcRefFound = True;
                     break

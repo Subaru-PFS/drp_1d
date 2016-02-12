@@ -248,8 +248,13 @@ class AViewPlot(object):
             self.xmax = self.exportAuto_lambda_max
             ixmin = self.s.getWavelengthIndex(self.xmin)
             ixmax = self.s.getWavelengthIndex(self.xmax)
-            #print("ixmin={}".format(ixmin))
-            #print("ixmax={}".format(ixmax))
+            #print("exportAutoDisplaysPath: self.xmin={}".format(self.xmin))
+            #print("exportAutoDisplaysPath: self.xmax={}".format(self.xmax))
+            #print("exportAutoDisplaysPath: ixmin={}".format(ixmin))
+            #print("exportAutoDisplaysPath: ixmax={}".format(ixmax))
+            if ixmax - ixmin < 2:
+                return
+            
             if not self.forcePlotNoTemplate:
                 if 1: #hybrid range
                     alpha = 0.33
@@ -303,7 +308,7 @@ class AViewPlot(object):
         displays_lambdas_rest_center = [(smax+smin)/2.0]
         displays_lambdas_rest_min = [smin]
         displays_lambdas_rest_max = [smax]
-        displays_names = ["FullRange"]
+        displays_names = ["All"]
         
         # add lya to the pool of displayed ranges
         displays_lambdas_rest_center.append(1215)

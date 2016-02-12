@@ -1554,7 +1554,7 @@ void CLineModelElementList::applyRules()
     }
 
     //*
-    //add rule, if AL CaK present, the AL CaH should be threre too...
+    //add rule, if OIII present, then OII should be there too
     //*/
 
 

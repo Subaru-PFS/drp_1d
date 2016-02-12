@@ -441,7 +441,7 @@ class ResParser(object):
                 chipath.append(os.path.join(path,name))
                 chiname.append(name)
 
-        return chipath#, chiname
+        return chipath, chiname
 
          
     def getChi2FullPath(self, spcnametag, tplnametag, chi2type="raw"):

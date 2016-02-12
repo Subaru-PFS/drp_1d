@@ -42,6 +42,14 @@ def plotRes(resDir, spcName, tplpath, redshift, iextremaredshift, diffthres, fai
     spath = s.getSpcFullPath(spcName)
     print('Spc path is: {0}'.format(spath))
 
+    #prepare exportPath if necessary
+    if enablePlot==False:
+        displaySpcPath = os.path.join(s.getDisplaysDirPath(), spcName)
+        if not os.path.exists(displaySpcPath):
+            os.makedirs(displaySpcPath)
+    else:
+        displaySpcPath = ""
+
     # PLOT Chisquare 
     spctag = spcName;
     extensions = ['.fits', '.FITS', '.txt', '.TXT', '.dat', '.DAT']
@@ -52,18 +60,17 @@ def plotRes(resDir, spcName, tplpath, redshift, iextremaredshift, diffthres, fai
             break
     path = os.path.join(resDir, spctag)
     
-    chipathlist = s.getAutoChi2FullPath(spcName)
+    [chipathlist, chinamelist] = s.getAutoChi2FullPath(spcName)
     print("chipathlist found : {}".format(chipathlist))       
        
-    for chipath in chipathlist:
+    for ii,chipath in enumerate(chipathlist):
         print('Trying to plot chi2 using full path: {}'.format(chipath))
         if os.path.exists(chipath):
             print('plot chi2 using full path: {}'.format(chipath))
-            chi = chisq.ResultChisquare(chipath)
+            chi = chisq.ResultChisquare(chipath, stype=os.path.splitext(chinamelist[ii])[0])
             #print(chi) 
-            if enablePlot:
-                chi.plot(showContinuumEstimate=False, showExtrema=True, showAmbiguities=False)
-        
+            chi.plot(showContinuumEstimate=False, showExtrema=True, showAmbiguities=False, enablePlot=enablePlot, exportPath=displaySpcPath)
+
 
     try:
         if not iextremaredshift == "": 
@@ -169,9 +176,6 @@ def plotRes(resDir, spcName, tplpath, redshift, iextremaredshift, diffthres, fai
     # PLOT Spectrum/tpl/lines view
     avp1 = avp.AViewPlot(spath, npath, tpath, cpath, zval, forceTplAmplitude=forceTplAmplitude, forceTplDoNotRedShift = forceTplDoNotRedShift, enablePlot=enablePlot)
     if enablePlot==False:
-        displaySpcPath = os.path.join(s.getDisplaysDirPath(), spcName)
-        if not os.path.exists(displaySpcPath):
-            os.makedirs(displaySpcPath)
         avp1.exportDisplays(displaySpcPath);
 
 def StartFromCommandLine( argv ) :	
