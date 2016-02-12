@@ -10,21 +10,33 @@
 
 using namespace NSEpic;
 
-
+/**
+ * \brief Empty constructor.
+ **/
 CModelSpectrumResult::CModelSpectrumResult()
 {
+  
 }
 
+/**
+ * \brief Sets the model to CSpectrum ( spc ).
+ **/
 CModelSpectrumResult::CModelSpectrumResult(CSpectrum spc)
 {
     model = CSpectrum(spc);
 }
 
+/**
+ * \brief Empty destructor.
+ **/
 CModelSpectrumResult::~CModelSpectrumResult()
 {
 
 }
 
+/**
+ * \brief Prints to argument stream each lambda and flux in the model.
+ **/
 Void CModelSpectrumResult::Save( const CDataStore& store, std::ostream& stream ) const
 {
     const CSpectrumSpectralAxis& spectralAxis = model.GetSpectralAxis();
@@ -33,12 +45,15 @@ Void CModelSpectrumResult::Save( const CDataStore& store, std::ostream& stream )
     stream <<  "#lambda\tflux\t"<< std::endl;
     for ( int i=0; i<spectralAxis.GetSamplesCount(); i++)
     {
-        stream <<  spectralAxis[i] << std::setprecision(16) << "\t" << std::scientific << modelFluxAxis[i] << std::endl;
+        stream << spectralAxis[i] << std::setprecision(16) << "\t" << std::scientific << modelFluxAxis[i] << std::endl;
     }
 
 
 }
 
+/**
+ * \brief Empty method.
+ **/
 Void CModelSpectrumResult::SaveLine(const CDataStore &store, std::ostream& stream ) const
 {
 
