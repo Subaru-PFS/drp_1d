@@ -1509,6 +1509,13 @@ void CLineModelElementList::addDoubleLine(const CRay &r1, const CRay &r2, Int32 
     //m_Elements.push_back(new CSingleLine(r, nominalWidth, a));
 }
 
+/**
+ * /brief Calls the rules' methods depending on the JSON options.
+ * If m_rulesoption is "no", do nothing.
+ * If either "balmer" or "all" is in the rules string, call ApplyBalmerRuleLinSolve and each Apply2SingleLinesAmplitudeRule applicable.
+ * If "all" or "oiiratio" is in the rules string, call ApplyAmplitudeRatioRangeRule parameterized for OII.
+ * If "all" or "strongweak" is in the rules string, call ApplyStrongHigherWeakRule for emission and then for absorption.
+ **/
 void CLineModelElementList::applyRules()
 {
     if(m_rulesoption=="no"){
@@ -1571,6 +1578,15 @@ void CLineModelElementList::applyRules()
     }
 }
 
+/** \brief Verify that "stronger lines have higher amplitudes than weaker lines" rule is applicable, and then apply it.
+ * If the maximum amplitude for strong lines of the specified type is -1, do nothing.
+ * For each weak line of the specified type:
+ *  Find the first element that contains that weak line
+ *  Get the index of the entry in that element that corresponds to the weak line
+ *  If the indexed entry IsOutsideLambdaRange, go for the next weak line
+ *  Get the parameters for the entry
+ *  Limit the amplitude of the entry to the maximum amplitude for strong lines
+ **/
 Void CLineModelElementList::ApplyStrongHigherWeakRule( Int32 linetype )
 {
     Float64 coeff = 1.0;
@@ -1580,7 +1596,7 @@ Void CLineModelElementList::ApplyStrongHigherWeakRule( Int32 linetype )
         return;
     }
 
-    for( UInt32 iRestRayWeak=0; iRestRayWeak<m_RestRayList.size(); iRestRayWeak++ ) //loop on the strong lines
+    for( UInt32 iRestRayWeak=0; iRestRayWeak<m_RestRayList.size(); iRestRayWeak++ ) //loop on the weak lines
     {
         if(m_RestRayList[iRestRayWeak].GetForce() != CRay::nForce_Weak){
             continue;

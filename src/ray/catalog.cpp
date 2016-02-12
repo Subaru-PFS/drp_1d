@@ -1,3 +1,4 @@
+#include <epic/core/log/log.h>
 #include <epic/redshift/ray/catalog.h>
 
 #include <algorithm>    // std::sort
@@ -195,27 +196,31 @@ Bool CRayCatalog::Load( const char* filePath )
             }
 
             std::string groupName = "-1";
-            Float64 nominaleAmplitude = 1.0;
+            Float64 nominalAmplitude = 1.0;
             // Parse group name
             ++it;
-            if( it != tok.end() ){
+            if( it != tok.end() )
+	      {
                 groupName = *it;
                 // Parse group line nominal amplitude
                 ++it;
-                if( it != tok.end() ){
+                if( it != tok.end() )
+		  {
                     try
                     {
-                        nominaleAmplitude = lexical_cast<double>(*it);
+                        nominalAmplitude = lexical_cast<double>(*it);
                     }
                     catch (bad_lexical_cast)
                     {
-                        nominaleAmplitude = 1.0;
+		      Log.LogError( "Unable to read nominal amplitude value from file, setting as default (1.0)." );
+		      nominalAmplitude = 1.0;
                     }
                 }
             }
-            if(nominaleAmplitude!=0.0){
-                Add( CRay( name, pos, Etype, profileName, Eforce, -1, -1, -1, -1, groupName, nominaleAmplitude ) );
-            }
+            if( nominalAmplitude!=0.0 )
+	      {
+                Add( CRay( name, pos, Etype, profileName, Eforce, -1, -1, -1, -1, groupName, nominalAmplitude ) );
+	      }
         }
     }
 
