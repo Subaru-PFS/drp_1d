@@ -262,7 +262,7 @@ Float64 CLineModelResult::GetExtremaMerit( Int32 extremaIdx ) const
   Float64 outVal=-1.0;
   if( Extrema.size()>extremaIdx )
     {
-      Int32 solutionIdx=0;
+      Int32 solutionIdx=-1;
       for ( UInt32 i2=0; i2<Redshifts.size(); i2++)
         {
 	  if(Redshifts[i2] == Extrema[extremaIdx]){
@@ -270,6 +270,10 @@ Float64 CLineModelResult::GetExtremaMerit( Int32 extremaIdx ) const
 	    break;
 	  }
         }
+      if( solutionIdx==-1 )
+	{
+	  return -1;
+	}
       outVal = ChiSquare[solutionIdx];
     }
     return outVal;
