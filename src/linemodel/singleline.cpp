@@ -79,6 +79,9 @@ Float64 CSingleLine::GetWidth( Int32 subeIdx, Float64 redshift )
     return c;
 }
 
+/**
+ * \brief Returns a vector containing m_Ray.
+ **/
 std::vector<CRay> CSingleLine::GetRays()
 {
     std::vector<CRay> rays;
@@ -214,69 +217,9 @@ void CSingleLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const 
     else
       {
         m_FittedAmplitudeErrorSigma = 1.0/sqrt(sumGauss);
-//        //SNR estimation
-//        Float64 SNRThres = 1.0;
-//        if(m_FittedAmplitudeErrorSigma/m_FittedAmplitudeErrorSigma < SNRThres){
-//            m_FittedAmplitudeErrorSigma = 0;
-//            m_FittedAmplitude=0;
-//        }
-    }
-
-
+      }
     return;
-
 }
-
-
-//Float64 CSingleLine::FitAmplitudeIterative( const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis, Float64 lambda, Float64 width, Int32 start, Int32 end)
-//{
-//    Float64 A = boost::numeric::bounds<float>::lowest();
-//    const Float64* flux = fluxAxis.GetSamples();
-//    const Float64* spectral = spectralAxis.GetSamples();
-//    const Float64* error = fluxAxis.GetError();
-
-//    //A first guess
-//    for ( Int32 i = start; i < end; i++)
-//    {
-//        Float64 y = flux[i];
-//        if(y>A){
-//            A = y;
-//        }
-//    }
-
-//    if(A<=0){
-//        return 0.0;
-//    }
-//    //A fitting iteration loop
-//    A = A*1.5;
-//    Float64 mu = lambda;
-//    Float64 c = width;
-//    Float64 thres = 1e-5;
-//    Int32 maxIteration = 100;
-//    Float64 AstepDown = A/((Float64)(maxIteration+1));
-//    Float64 sum2 = boost::numeric::bounds<float>::highest();
-//    Float64 sum2prev = boost::numeric::bounds<float>::highest();
-//    Int32 icmpt = 0;
-//    while( sum2prev>=sum2 && sum2>thres && icmpt<maxIteration){
-//        sum2prev = sum2;
-//        sum2 = 0.0;
-//        for ( Int32 i = start; i < end; i++)
-//        {
-//            Float64 x = spectral[i];
-//            Float64 Yi = A * exp (-1.*(x-mu)*(x-mu)/(2*c*c));
-//            //sum2 += Yi-flux[i];
-//            sum2 += pow( Yi - flux[i] , 2.0 ) / pow( error[i], 2.0 );
-//        }
-//        //sum2 /= (Float64)(end-start+1);
-//        icmpt++;
-//        A = A-AstepDown;
-//    }
-
-//    if(A<0){
-//        A=0;
-//    }
-//    return A;
-//}
 
 /**
  * If applicable, add to each x the value from getModelAtLambda for the input redshift.
@@ -308,17 +251,18 @@ void CSingleLine::addToSpectrumModel( const CSpectrumSpectralAxis& modelspectral
 }
 
 /**
- * 
+ * \brief Returns the amplitude for the argument lambda, at the argument redshift.
+ * If outside lambda range, return 0.
+ * Return the amplitude according to sign, fitted amplitude and line profile.
  */
 Float64 CSingleLine::getModelAtLambda(Float64 lambda, Float64 redshift )
 {
-    if(m_OutsideLambdaRange){
+    if( m_OutsideLambdaRange )
+      {
         return 0.0;
-    }
+      }
     Float64 Yi=0.0;
-
     Float64 x = lambda;
-
     Float64 A = m_FittedAmplitude;
     Float64 mu = m_Ray.GetPosition()*(1+redshift);
     Float64 c = GetLineWidth(mu, redshift, m_Ray.GetIsEmission());
@@ -330,17 +274,17 @@ Float64 CSingleLine::getModelAtLambda(Float64 lambda, Float64 redshift )
 }
 
 /**
- * 
+ * If outside lambda range, return.
+ * Copy the continuum flux into the model flux.
  */
 void CSingleLine::initSpectrumModel(CSpectrumFluxAxis& modelfluxAxis, CSpectrumFluxAxis &continuumfluxAxis)
 {
-    if(m_OutsideLambdaRange){
+    if( m_OutsideLambdaRange )
+      {
         return;
-    }
-
-
+      }
     Float64* flux = modelfluxAxis.GetSamples();
-    for ( Int32 i = m_Start; i <= m_End; i++)
+    for ( Int32 i=m_Start; i<=m_End; i++ )
     {
         flux[i] = continuumfluxAxis[i];
     }
@@ -349,70 +293,68 @@ void CSingleLine::initSpectrumModel(CSpectrumFluxAxis& modelfluxAxis, CSpectrumF
 }
 
 /**
- * 
+ * \brief Returns m_FittedAmplitude.
  */
-Float64 CSingleLine::GetFittedAmplitude(Int32 subeIdx){
-//    if(m_OutsideLambdaRange){
-//        m_FittedAmplitude = -1;
-//    }
-
+Float64 CSingleLine::GetFittedAmplitude(Int32 subeIdx)
+{
     return m_FittedAmplitude;
 }
 
 /**
- * 
+ * \brief Returns m_FittedAmplitudeErrorSigma.
  */
-Float64 CSingleLine::GetFittedAmplitudeErrorSigma(Int32 subeIdx){
-//    if(m_OutsideLambdaRange){
-//        m_FittedAmplitude = -1;
-//    }
-
+Float64 CSingleLine::GetFittedAmplitudeErrorSigma(Int32 subeIdx)
+{
     return m_FittedAmplitudeErrorSigma;
 }
 
 /**
- * 
+ * \brief Returns 1.0.
  */
-Float64 CSingleLine::GetNominalAmplitude(Int32 subeIdx){
+Float64 CSingleLine::GetNominalAmplitude(Int32 subeIdx)
+{
     return 1.0;
 }
 
 /**
- * 
+ * \brief Returns m_FittedAmplitude.
  */
 Float64 CSingleLine::GetElementAmplitude(){
-//    if(m_OutsideLambdaRange){
-//        m_FittedAmplitude = -1;
-//    }
-
     return m_FittedAmplitude;
 }
 
 /**
- * 
+ * \brief Sets the amplitude and sigma members.
+ * If outside the lambda range, set invalid amplitude and sigma.
+ * Else, set amplitude to A (or 0 if A is negative) and sigma to SNR.
  */
 void CSingleLine::SetFittedAmplitude(Float64 A, Float64 SNR)
 {
-    if(m_OutsideLambdaRange){
-        m_FittedAmplitude = -1;
-        m_FittedAmplitudeErrorSigma = -1;
-    }else{
-        m_FittedAmplitude = std::max(0.0, A);
-        m_FittedAmplitudeErrorSigma = SNR;
+  if( m_OutsideLambdaRange )
+    {
+      m_FittedAmplitude = -1;
+      m_FittedAmplitudeErrorSigma = -1;
+    }
+  else
+    {
+      m_FittedAmplitude = std::max(0.0, A);
+      m_FittedAmplitudeErrorSigma = SNR;
     }
 }
 
 /**
- * 
+ * \brief If the current amplitude is above the argument limit, update it to the limit (or zero if the limit is negative).
  */
-void CSingleLine::LimitFittedAmplitude(Int32 subeIdx, Float64 limit){
-    if(m_FittedAmplitude > limit){
-        m_FittedAmplitude = std::max(0.0, limit);
+void CSingleLine::LimitFittedAmplitude( Int32 subeIdx, Float64 limit )
+{
+  if( m_FittedAmplitude>limit )
+    {
+      m_FittedAmplitude = std::max(0.0, limit);
     }
 }
 
 /**
- * 
+ * \brief Returns -1 if the argument is not a line name, and 0 if it is.
  */
 Int32 CSingleLine::FindElementIndex(std::string LineTagStr)
 {
@@ -421,16 +363,18 @@ Int32 CSingleLine::FindElementIndex(std::string LineTagStr)
     std::string name = m_Ray.GetName();
     std::size_t foundstra = name.find(LineTagStr.c_str());
 
-    if (foundstra!=std::string::npos){
+    if (foundstra!=std::string::npos)
+      {
         idx = 0;
-    }
+      }
 
     return idx;
 }
 
 /**
- * 
+ * \brief Returns m_OutsideLambdaRange.
  */
-bool CSingleLine::IsOutsideLambdaRange(Int32 subeIdx){
+bool CSingleLine::IsOutsideLambdaRange(Int32 subeIdx)
+{
     return m_OutsideLambdaRange;
 }

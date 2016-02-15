@@ -10,49 +10,76 @@
 
 using namespace NSEpic;
 
-CMultiLine::CMultiLine(std::vector<CRay> rs, const std::string& widthType, const Float64 resolution, const Float64 velocityEmission, const Float64 velocityAbsorption, std::vector<Float64> nominalAmplitudes, Float64 nominalWidth, std::vector<Int32> catalogIndexes):CLineModelElement(widthType, resolution, velocityEmission, velocityAbsorption)
+/**
+ * \brief Constructs the object setting memebers according to arguments and defaults.
+ **/
+CMultiLine::CMultiLine( std::vector<CRay> rs,
+			const std::string& widthType,
+			const Float64 resolution,
+			const Float64 velocityEmission,
+			const Float64 velocityAbsorption,
+			std::vector<Float64> nominalAmplitudes,
+			Float64 nominalWidth,
+			std::vector<Int32> catalogIndexes ) : CLineModelElement ( widthType, resolution, velocityEmission, velocityAbsorption )
 {
-
     m_ElementType = "CMultiLine";
     m_Rays = rs;
 
     m_SignFactors.resize(m_Rays.size());
-    for(Int32 i=0; i<m_Rays.size(); i++){
-        if( m_Rays[i].GetType()==CRay::nType_Emission ){
+    for(Int32 i=0; i<m_Rays.size(); i++)
+      {
+        if( m_Rays[i].GetType()==CRay::nType_Emission )
+	  {
             m_SignFactors[i] = 1.0;
-        }else{
+	  }
+	else
+	  {
             m_SignFactors[i] = -1.0;
-        }
-    }
+	  }
+      }
     m_NominalWidth = nominalWidth;
     m_NominalAmplitudes = nominalAmplitudes;
 
-    for(int i=0; i<catalogIndexes.size(); i++){
+    for(int i=0; i<catalogIndexes.size(); i++)
+      {
         m_LineCatalogIndexes.push_back(catalogIndexes[i]);
-    }
+      }
 
     SetFittedAmplitude(-1, -1);
 }
 
+/**
+ * \brief Empty destructor.
+ **/
 CMultiLine::~CMultiLine()
 {
 }
 
+/**
+ * \brief If the argument is greater than or equal to the size of m_Rays, returns the string "-1". Otherwise returns a call to the m_Rays GetName.
+ **/
 std::string CMultiLine::GetRayName(Int32 subeIdx)
 {
     if(subeIdx>=m_Rays.size())
     {
         return "-1";
     }
-
     return m_Rays[subeIdx].GetName();
 }
 
+/**
+ * \brief Returns the content of the m_SignFactors with index equal to the argument.
+ **/
 Float64 CMultiLine::GetSignFactor(Int32 subeIdx)
 {
     return m_SignFactors[subeIdx];
 }
 
+/**
+ * \brief Limits each m_Rays element within the argument lambdaRange, and sets the m_FittedAmplitudes to -1.
+ * Sets the global outside lambda range.
+ * Inits the fitted amplitude values.
+ **/
 void CMultiLine::prepareSupport(const CSpectrumSpectralAxis& spectralAxis, Float64 redshift, const TFloat64Range &lambdaRange)
 {    
     m_OutsideLambdaRange=true;
@@ -113,21 +140,29 @@ void CMultiLine::prepareSupport(const CSpectrumSpectralAxis& spectralAxis, Float
     }
 }
 
+/**
+ * \brief Creates an empty list of ranges as the return value. If not m_OutsideLambdaRange, for each m_Rays element which is also not outside lambda range, add its support to the return value.
+ **/
 TInt32RangeList CMultiLine::getSupport()
 {
     TInt32RangeList support;
-    if(m_OutsideLambdaRange==false){
-        for(Int32 i=0; i<m_Rays.size(); i++){
-            if(m_OutsideLambdaRangeList[i]){
+    if(m_OutsideLambdaRange==false)
+      {
+        for(Int32 i=0; i<m_Rays.size(); i++)
+	  {
+            if(m_OutsideLambdaRangeList[i])
+	      {
                 continue;
-            }
-
+	      }
             support.push_back(TInt32Range(m_Start[i], m_End[i]));
-        }
-    }
+	  }
+      }
     return support;
 }
 
+/**
+ * \brief Creates an empty list of ranges as the return value. If not m_OutsideLambdaRange, for each m_Rays element belonging to the argument subeIdx which is also not outside lambda range, add its support to the return value.
+ **/
 TInt32Range CMultiLine::getSupportSubElt(Int32 subeIdx)
 {
     TInt32Range support;
@@ -140,6 +175,9 @@ TInt32Range CMultiLine::getSupportSubElt(Int32 subeIdx)
     return support;
 }
 
+/**
+ * \brief Calls GetLineWidth using the arguments and a calculated argument mu.
+ **/
 Float64 CMultiLine::GetWidth(Int32 subeIdx, Float64 redshift)
 {
     Float64 mu = m_Rays[subeIdx].GetPosition()*(1+redshift);
@@ -147,6 +185,9 @@ Float64 CMultiLine::GetWidth(Int32 subeIdx, Float64 redshift)
     return c;
 }
 
+/**
+ * \brief Returns a copy of m_Rays.
+ **/
 std::vector<CRay> CMultiLine::GetRays()
 {
     std::vector<CRay> rays;
@@ -156,64 +197,91 @@ std::vector<CRay> CMultiLine::GetRays()
     return rays;
 }
 
-Float64 CMultiLine::GetFittedAmplitude(Int32 subeIdx){
+/**
+ * \brief Returns the fitted amplitude for the argument index.
+ **/
+Float64 CMultiLine::GetFittedAmplitude(Int32 subeIdx)
+{
     return m_FittedAmplitudes[subeIdx];
 }
 
-Float64 CMultiLine::GetFittedAmplitudeErrorSigma(Int32 subeIdx){
+/**
+ * \brief Returns the fitted amplitude error for the argument index.
+ **/
+Float64 CMultiLine::GetFittedAmplitudeErrorSigma(Int32 subeIdx)
+{
     return m_FittedAmplitudeErrorSigmas[subeIdx];
 }
 
-Float64 CMultiLine::GetElementAmplitude(){
-    if(m_OutsideLambdaRange){
-
-        return -1;
-    }else{
-
-        return m_FittedAmplitudes[0]/m_NominalAmplitudes[0];
+/**
+ * \brief Returns -1 if m_OutsideLambdaRange, and the fitted amplitude / nominal amplitude of the first element otherwise.
+ **/
+Float64 CMultiLine::GetElementAmplitude()
+{
+  if( m_OutsideLambdaRange )
+    {
+      return -1;
     }
+  return m_FittedAmplitudes[0]/m_NominalAmplitudes[0];
 }
 
-Float64 CMultiLine::GetNominalAmplitude(Int32 subeIdx){
+/**
+ * \brief Returns the nominal amplitude with index subeIdx.
+ **/
+Float64 CMultiLine::GetNominalAmplitude(Int32 subeIdx)
+{
     return m_NominalAmplitudes[subeIdx];
 }
 
+/**
+ * \brief If outside lambda range, sets fitted amplitudes and errors to -1. If inside, sets each ray's fitted amplitude and error to -1 if ray outside lambda range, or amplitude to A * nominal amplitude and error to SNR * nominal amplitude.
+ **/
 void CMultiLine::SetFittedAmplitude(Float64 A, Float64 SNR)
 {
     m_FittedAmplitudes.resize(m_Rays.size());
     m_FittedAmplitudeErrorSigmas.resize(m_Rays.size());
-    if(m_OutsideLambdaRange){
-        for(Int32 k=0; k<m_Rays.size(); k++){
+    if(m_OutsideLambdaRange)
+      {
+        for(Int32 k=0; k<m_Rays.size(); k++)
+	  {
             m_FittedAmplitudes[k] = -1;
             m_FittedAmplitudeErrorSigmas[k] = -1;
-        }
+	  }
         return;
-    }else{
-        A = std::max(0.0, A);
-        for(Int32 k=0; k<m_Rays.size(); k++){
-            if(m_OutsideLambdaRangeList[k]){
-                m_FittedAmplitudes[k] = -1;
-            }
-            m_FittedAmplitudes[k] = A*m_NominalAmplitudes[k];
-            m_FittedAmplitudeErrorSigmas[k] = SNR*m_NominalAmplitudes[k]; //todo: check correct formulation for Error
-        }
-    }
-
+      }
+    A = std::max(0.0, A);
+    for(Int32 k=0; k<m_Rays.size(); k++)
+      {
+	if(m_OutsideLambdaRangeList[k])
+	  {
+	    m_FittedAmplitudes[k] = -1;
+	  }
+	m_FittedAmplitudes[k] = A*m_NominalAmplitudes[k];
+	m_FittedAmplitudeErrorSigmas[k] = SNR*m_NominalAmplitudes[k]; //todo: check correct formulation for Error
+      }
 }
 
-
+/**
+ * \brief Estimates an amplitude and fit the relevant rays using this estimate weighed by each ray's nominal amplitude.
+ * Loop for the signal synthesis.
+ * Loop for the intervals.
+ * A estimation.
+ * Loop for the signal synthesis.
+ **/
 void CMultiLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis, Float64  redshift)
 {
     m_FittedAmplitudes.resize(m_Rays.size());
     m_FittedAmplitudeErrorSigmas.resize(m_Rays.size());
-    for(Int32 k=0; k<m_Rays.size(); k++){
+    for(Int32 k=0; k<m_Rays.size(); k++)
+      {
         m_FittedAmplitudes[k] = -1.0;
         m_FittedAmplitudeErrorSigmas[k] = -1.0;
-    }
+      }
 
-    if(m_OutsideLambdaRange){
+    if(m_OutsideLambdaRange)
+      {
         return;
-    }
+      }
 
     const Float64* flux = fluxAxis.GetSamples();
     const Float64* spectral = spectralAxis.GetSamples();
@@ -234,17 +302,19 @@ void CMultiLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const C
     c.resize(m_Rays.size());
     std::vector<std::string> profile;
     profile.resize(m_Rays.size());
-    for(Int32 k2=0; k2<m_Rays.size(); k2++){ //loop for the signal synthesis
+    for(Int32 k2=0; k2<m_Rays.size(); k2++)
+      { //loop for the signal synthesis
         mu[k2] = m_Rays[k2].GetPosition()*(1+redshift);
         c[k2] = GetLineWidth(mu[k2], redshift, m_Rays[k2].GetIsEmission());
         profile[k2] = m_Rays[k2].GetProfile();
-    }
+      }
 
-    for(Int32 k=0; k<m_Rays.size(); k++){ //loop for the intervals
-        if(m_OutsideLambdaRangeList[k]){
+    for(Int32 k=0; k<m_Rays.size(); k++)
+      { //loop for the intervals
+        if(m_OutsideLambdaRangeList[k])
+	  {
             continue;
-        }
-
+	  }
         //A estimation
         for ( Int32 i = m_Start[k]; i <= m_End[k]; i++)
         {
@@ -252,82 +322,94 @@ void CMultiLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const C
             x = spectral[i];
 
             yg = 0.0;
-            for(Int32 k2=0; k2<m_Rays.size(); k2++){ //loop for the signal synthesis
-                if(m_OutsideLambdaRangeList[k2]){
+            for(Int32 k2=0; k2<m_Rays.size(); k2++)
+	      { //loop for the signal synthesis
+                if(m_OutsideLambdaRangeList[k2])
+		  {
                     continue;
-                }
+		  }
                 yg += m_SignFactors[k2] * m_NominalAmplitudes[k2] * GetLineProfile(profile[k2], x-mu[k2], c[k2]);
-            }
+	      }
             num++;
             err2 = 1.0 / (error[i] * error[i]);
             sumCross += yg*y*err2;
             sumGauss += yg*yg*err2;
         }
 
-    }
+      }
     if ( num==0 || sumCross==0 || sumGauss==0 )
-    {
+      {
         return;
-    }
+      }
 
     Float64 A = std::max(0.0, sumCross / sumGauss);
 
-    for(Int32 k=0; k<m_Rays.size(); k++){
-        if(m_OutsideLambdaRangeList[k]){
+    for(Int32 k=0; k<m_Rays.size(); k++)
+      {
+        if(m_OutsideLambdaRangeList[k])
+	  {
             continue;
-        }
+	  }
         m_FittedAmplitudes[k] = A*m_NominalAmplitudes[k];
-        if(A==0){
+        if(A==0)
+	  {
             m_FittedAmplitudeErrorSigmas[k] = 0.0;
-        }else{
+	  }
+	else
+	  {
             m_FittedAmplitudeErrorSigmas[k] = 1.0/sqrt(sumGauss);
-
-        }
-    }
-    //
-
+	  }
+      }
     return;
 }
 
-
+/**
+ * \brief Adds to the model's flux, at each ray not outside lambda range, the value contained in the corresponding lambda for each catalog line.
+ **/
 void CMultiLine::addToSpectrumModel( const CSpectrumSpectralAxis& modelspectralAxis, CSpectrumFluxAxis& modelfluxAxis, Float64 redshift )
 {
-    if(m_OutsideLambdaRange){
+    if(m_OutsideLambdaRange)
+      {
         return;
-    }
-
+      }
 
     const Float64* spectral = modelspectralAxis.GetSamples();
     Float64* flux = modelfluxAxis.GetSamples();
-    for(Int32 k=0; k<m_Rays.size(); k++){ //loop on the interval
-        if(m_OutsideLambdaRangeList[k]){
+    for(Int32 k=0; k<m_Rays.size(); k++)
+      { //loop on the interval
+        if(m_OutsideLambdaRangeList[k])
+	  {
             continue;
-        }
-
+	  }
         for ( Int32 i = m_Start[k]; i <= m_End[k]; i++)
-        {
+	  {
             Float64 lambda = spectral[i];
             Float64 Yi=getModelAtLambda(lambda, redshift);
             flux[i] += Yi;
-        }
-    }
-  return;
+	  }
+      }
+    return;
 }
 
-Float64 CMultiLine::getModelAtLambda(Float64 lambda, Float64 redshift )
+/**
+ * \brief Returns the sum of the amplitude of each ray on redshifted lambda.
+ **/
+Float64 CMultiLine::getModelAtLambda( Float64 lambda, Float64 redshift )
 {
-    if(m_OutsideLambdaRange){
+    if(m_OutsideLambdaRange)
+      {
         return 0.0;
-    }
+      }
     Float64 Yi=0.0;
 
     Float64 x = lambda;
 
     for(Int32 k2=0; k2<m_Rays.size(); k2++) //loop on rays
     {
-        if(m_OutsideLambdaRangeList[k2]){
+        if(m_OutsideLambdaRangeList[k2])
+	  {
             continue;
-        }
+	  }
         Float64 A = m_FittedAmplitudes[k2];
         Float64 mu = m_Rays[k2].GetPosition()*(1+redshift);
         Float64 c = GetLineWidth(mu, redshift, m_Rays[k2].GetIsEmission());
@@ -338,26 +420,35 @@ Float64 CMultiLine::getModelAtLambda(Float64 lambda, Float64 redshift )
     return Yi;
 }
 
+/**
+ * \brief For rays inside lambda range, sets the flux to the continuum flux.
+ **/
 void CMultiLine::initSpectrumModel( CSpectrumFluxAxis &modelfluxAxis, CSpectrumFluxAxis &continuumfluxAxis )
 {
-    if(m_OutsideLambdaRange){
+    if(m_OutsideLambdaRange)
+      {
         return;
-    }
+      }
 
     Float64* flux = modelfluxAxis.GetSamples();
-    for(Int32 k=0; k<m_Rays.size(); k++){ //loop on the interval
-        if(m_OutsideLambdaRangeList[k]){
+    for(Int32 k=0; k<m_Rays.size(); k++)
+      { //loop on the interval
+        if(m_OutsideLambdaRangeList[k])
+	  {
             continue;
-        }
+	  }
 
         for ( Int32 i = m_Start[k]; i <= m_End[k]; i++)
-        {
+	  {
             flux[i] = continuumfluxAxis[i];
-        }
-    }
-  return;
+	  }
+      }
+    return;
 }
 
+/**
+ * \brief Returns the index corresponding to the first ray whose GetName method returns LineTagStr.
+ **/
 Int32 CMultiLine::FindElementIndex(std::string LineTagStr)
 {
     Int32 idx = -1;
@@ -366,24 +457,32 @@ Int32 CMultiLine::FindElementIndex(std::string LineTagStr)
         std::string name = m_Rays[iElts].GetName();
         std::size_t foundstra = name.find(LineTagStr.c_str());
 
-        if (foundstra!=std::string::npos){
+        if (foundstra!=std::string::npos)
+	  {
             idx = iElts;
             break;
-        }
+	  }
     }
-
     return idx;
 }
 
-void CMultiLine::LimitFittedAmplitude(Int32 subeIdx, Float64 limit){
+/**
+ * \brief If the fitted amplitude of ray with index subeIdx is above the limit, sets it to either that limit or zero, whichever is greater.
+ **/
+void CMultiLine::LimitFittedAmplitude(Int32 subeIdx, Float64 limit)
+{
 
-    if(m_FittedAmplitudes[subeIdx] > limit){
+    if(m_FittedAmplitudes[subeIdx] > limit)
+      {
         m_FittedAmplitudes[subeIdx] = std::max(0.0, limit);
-    }
+      }
     return;
 }
 
-
-bool CMultiLine::IsOutsideLambdaRange(Int32 subeIdx){
+/**
+ * \brief Returns whether the ray with index subeIdx is outside the lambda range.
+ **/
+bool CMultiLine::IsOutsideLambdaRange(Int32 subeIdx)
+{
     return m_OutsideLambdaRangeList[subeIdx];
 }

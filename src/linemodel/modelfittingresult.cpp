@@ -10,11 +10,16 @@
 
 using namespace NSEpic;
 
-
+/**
+ * \brief Empty constructor.
+ **/
 CModelFittingResult::CModelFittingResult()
 {
 }
 
+/**
+ * \brief Attributes values to member variables according to arguments.
+ **/
 CModelFittingResult::CModelFittingResult(CLineModelResult::SLineModelSolution _lineModelSolution, Float64 _redshift, Float64 _merit, CRayCatalog::TRayVector _restRayList)
 {
     LineModelSolution   = _lineModelSolution;
@@ -23,11 +28,16 @@ CModelFittingResult::CModelFittingResult(CLineModelResult::SLineModelSolution _l
     restRayList         = _restRayList;
 }
 
+/**
+ * \brief Empty destructor.
+ **/
 CModelFittingResult::~CModelFittingResult()
 {
-
 }
 
+/**
+ * \brief Prints the results of the Linemodel in the argument store, using the argument stream as output.
+ **/
 Void CModelFittingResult::Save( const CDataStore& store, std::ostream& stream ) const
 {
     // save linemodel solution
@@ -71,7 +81,9 @@ Void CModelFittingResult::Save( const CDataStore& store, std::ostream& stream ) 
 
 }
 
+/**
+ * \brief Empty method.
+ **/
 Void CModelFittingResult::SaveLine(const CDataStore &store, std::ostream& stream ) const
 {
-
 }
