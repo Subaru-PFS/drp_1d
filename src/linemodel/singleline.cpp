@@ -302,7 +302,7 @@ void CSingleLine::addToSpectrumModel( const CSpectrumSpectralAxis& modelspectral
 }
 
 /**
- * 
+ *
  */
 Float64 CSingleLine::getModelAtLambda(Float64 lambda, Float64 redshift )
 {
@@ -319,6 +319,27 @@ Float64 CSingleLine::getModelAtLambda(Float64 lambda, Float64 redshift )
     std::string profile = m_Ray.GetProfile();
 
     Yi = m_SignFactor * A * GetLineProfile(profile, x-mu, c);
+
+    return Yi;
+}
+
+/**
+ *
+ */
+Float64 CSingleLine::GetModelDerivAmplitudeAtLambda(Float64 lambda, Float64 redshift )
+{
+    if(m_OutsideLambdaRange){
+        return 0.0;
+    }
+    Float64 Yi=0.0;
+
+    Float64 x = lambda;
+
+    Float64 mu = m_Ray.GetPosition()*(1+redshift);
+    Float64 c = GetLineWidth(mu, redshift, m_Ray.GetIsEmission());
+    std::string profile = m_Ray.GetProfile();
+
+    Yi = m_SignFactor * GetLineProfile(profile, x-mu, c);
 
     return Yi;
 }

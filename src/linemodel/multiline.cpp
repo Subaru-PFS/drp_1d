@@ -338,6 +338,30 @@ Float64 CMultiLine::getModelAtLambda(Float64 lambda, Float64 redshift )
     return Yi;
 }
 
+Float64 CMultiLine::GetModelDerivAmplitudeAtLambda(Float64 lambda, Float64 redshift )
+{
+    if(m_OutsideLambdaRange){
+        return 0.0;
+    }
+    Float64 Yi=0.0;
+
+    Float64 x = lambda;
+
+    for(Int32 k2=0; k2<m_Rays.size(); k2++) //loop on rays
+    {
+        if(m_OutsideLambdaRangeList[k2]){
+            continue;
+        }
+
+        Float64 mu = m_Rays[k2].GetPosition()*(1+redshift);
+        Float64 c = GetLineWidth(mu, redshift, m_Rays[k2].GetIsEmission());
+        std::string profile = m_Rays[k2].GetProfile();
+
+        Yi += m_SignFactors[k2] * GetLineProfile(profile, x-mu, c);
+    }
+    return Yi;
+}
+
 void CMultiLine::initSpectrumModel( CSpectrumFluxAxis &modelfluxAxis, CSpectrumFluxAxis &continuumfluxAxis )
 {
     if(m_OutsideLambdaRange){

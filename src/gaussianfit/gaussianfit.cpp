@@ -211,7 +211,7 @@ CGaussianFit::EStatus CGaussianFit::Compute( const CSpectrum& spectrum, const TI
 
     // Set values and errors
     gsl_matrix *covarMatrix = gsl_matrix_alloc( np, np );
-    gsl_multifit_covar( multifitSolver->J, 0.0, covarMatrix );
+    //gsl_multifit_covar( multifitSolver->J, 0.0, covarMatrix ); //WARNING: fit broken since using GSL2.1 instead of GSL1.16
 
     Float64 chi = gsl_blas_dnrm2( multifitSolver->f );
     Float64 dof = n - np;

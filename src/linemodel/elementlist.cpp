@@ -24,6 +24,17 @@
 
 #include <algorithm>
 
+#include <stdlib.h>
+#include <stdio.h>
+#include <gsl/gsl_rng.h>
+#include <gsl/gsl_randist.h>
+#include <gsl/gsl_vector.h>
+#include <gsl/gsl_blas.h>
+#include <gsl/gsl_multifit_nlin.h>
+#include "lmfitfunctions.c"
+
+
+
 using namespace NSEpic;
 
 CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum, const CSpectrum &spectrumContinuum, const CRayCatalog::TRayVector& restRayList, const std::string& opt_fittingmethod, const std::string& opt_continuumcomponent, const std::string& widthType, const Float64 resolution, const Float64 velocityEmission, const Float64 velocityAbsorption, const std::string& opt_rules)
@@ -108,6 +119,34 @@ const CSpectrum& CLineModelElementList::GetModelSpectrum() const
 {
     return *m_SpectrumModel;
 }
+
+
+Float64 CLineModelElementList::getModelFluxVal(Int32 idx) const
+{
+    CSpectrumFluxAxis& modelFluxAxis = m_SpectrumModel->GetFluxAxis();
+    if(idx<modelFluxAxis.GetSamplesCount()){
+        return modelFluxAxis[idx];
+    }
+
+    return -1.0;
+}
+
+
+Float64 CLineModelElementList::getModelFluxDerivEltVal(Int32 DerivEltIdx, Int32 idx) const
+{
+
+    CSpectrumSpectralAxis& spectralAxis = m_SpectrumModel->GetSpectralAxis();
+    Int32 iElts=DerivEltIdx;
+    if(idx<spectralAxis.GetSamplesCount())
+    {
+        //Float64 derivateVal = m_Elements[iElts]->getModelAtLambda(spectralAxis[idx], m_Redshift);
+        Float64 derivateVal = m_Elements[iElts]->GetModelDerivAmplitudeAtLambda(spectralAxis[idx], m_Redshift);
+        return derivateVal;
+    }
+
+    return -1.0;
+}
+
 
 void CLineModelElementList::LoadCatalog(const CRayCatalog::TRayVector& restRayList)
 {
@@ -397,6 +436,15 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
         //fit the amplitudes together
         fitAmplitudesSimplex();
     }
+
+    //fit the amplitude of all elements together with iterative   solver: lmfit
+    if(m_fittingmethod=="lmfit")
+    {
+        std::vector<Int32> validEltsIdx = GetModelValidElementsIndexes();
+        std::vector<Float64> ampsfitted;
+        fitAmplitudesLmfit(validEltsIdx, spectralAxis, m_spcFluxAxisNoContinuum, ampsfitted);
+    }
+
     //fit the amplitude of all elements together with linear solver: gsl_multifit_wlinear
     if(m_fittingmethod=="svd")
     {
@@ -802,6 +850,174 @@ void CLineModelElementList::fitAmplitudesSimplex()
 //    fitter.GetResultsError( gaussAmpErr, gaussPosErr, gaussWidthErr );
 
 
+}
+
+//temporary stuff, dev of the lmfit method: int
+
+void print_state (size_t iter, gsl_multifit_fdfsolver * s)
+{
+  printf ("iter: %3u x = % 15.8f % 15.8f % 15.8f "
+          "|f(x)| = %g\n",
+          iter,
+          gsl_vector_get (s->x, 0),
+          gsl_vector_get (s->x, 1),
+          gsl_vector_get (s->x, 2),
+          gsl_blas_dnrm2 (s->f));
+}
+
+
+Int32 CLineModelElementList::fitAmplitudesLmfit(std::vector<Int32> EltsIdx, const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis, std::vector<Float64>& ampsfitted)
+{
+    //http://www.gnu.org/software/gsl/manual/html_node/Example-programs-for-Nonlinear-Least_002dSquares-Fitting.html
+
+    Int32 nddl = EltsIdx.size();
+    if(nddl<1){
+        return -1;
+    }
+    std::vector<Int32> xInds = getSupportIndexes( EltsIdx );
+
+    const Float64* spectral = spectralAxis.GetSamples();
+    const Float64* flux = fluxAxis.GetSamples();
+
+    //create gsl solver object
+    const gsl_multifit_fdfsolver_type *T = gsl_multifit_fdfsolver_lmsder;
+    gsl_multifit_fdfsolver *s;
+    int status, info;
+    size_t i;
+    size_t n; //n samples on the support, /* number of data points to fit */
+    size_t p = nddl; //DOF = n amplitudes to fit (1 for each element) + 1 (EL velocity)
+
+    n = xInds.size();
+    if(n<nddl){
+        ampsfitted.resize(nddl);
+        for (Int32 iddl = 0; iddl < nddl; iddl++)
+        {
+            ampsfitted[iddl] = 0.0;
+        }
+        return -1;
+    }
+
+    gsl_matrix *J = gsl_matrix_alloc(n, p);
+    gsl_matrix *covar = gsl_matrix_alloc (p, p);
+    double y[n], weights[n];
+    struct lmfitdata d = {n,y,this, EltsIdx, xInds};
+    //struct lmfitdata d = {n,y,this};
+//    d.n =n;
+//    d.y = y;
+//    d.linemodel = std::shared_ptr<CLineModelElementList>( this );
+    gsl_multifit_function_fdf f;
+    //double x_init[3] = { 1.0, 0.0, 0.0 };
+    Float64* x_init = (Float64*) calloc( p, sizeof( Float64 ) );
+
+    gsl_vector_view x = gsl_vector_view_array (x_init, p);
+    gsl_vector_view w = gsl_vector_view_array(weights, n);
+    const gsl_rng_type * type;
+    gsl_rng * r;
+    gsl_vector *res_f;
+    double chi, chi0;
+
+    const double xtol = 1e-8;
+    const double gtol = 1e-8;
+    const double ftol = 0.0;
+
+    gsl_rng_env_setup();
+
+    type = gsl_rng_default;
+    r = gsl_rng_alloc (type);
+
+    f.f = &lmfit_f;//&CLineModelElementList::lmfit_f;//&expb_f;//
+    f.df = &lmfit_df;//&expb_df;   /* set to NULL for finite-difference Jacobian */
+    f.n = n;
+    f.p = p;
+    f.params = &d;
+
+
+//    for (i = 0; i < n; i++)
+//    {
+//        double t = i;
+//        double yi = 1.0 + 5 * exp (-0.1 * t);
+//        double si = 0.1 * yi;
+//        double dy = gsl_ran_gaussian(r, si);
+
+//        weights[i] = 1.0 / (si * si);
+//        y[i] = yi + dy;
+//        printf ("data: %zu %g %g\n", i, y[i], si);
+//    };
+
+    //
+    // This is the data to be fitted
+    //todo: normalize, center...
+    //
+    Int32 idx = 0;
+    Float64 ei;
+    for (i = 0; i < n; i++)
+    {
+        idx = xInds[i];
+        //xi = spectral[idx];
+        ei = m_ErrorNoContinuum[idx];
+
+//        for (Int32 iddl = 0; iddl < nddl; iddl++)
+//        {
+//            fval =  m_Elements[EltsIdx[iddl]]->getModelAtLambda(xi, m_Redshift);
+//            gsl_matrix_set (X, i, iddl, fval);
+//        }
+
+        weights[i] = 1.0 / (ei * ei);
+        y[i] = flux[idx];
+    }
+
+
+    s = gsl_multifit_fdfsolver_alloc (T, n, p);
+
+    /* initialize solver with starting point and weights */
+    gsl_multifit_fdfsolver_wset (s, &f, &x.vector, &w.vector);
+
+    /* compute initial residual norm */
+    res_f = gsl_multifit_fdfsolver_residual(s);
+    chi0 = gsl_blas_dnrm2(res_f);
+
+    /* solve the system with a maximum of 20 iterations */
+    status = gsl_multifit_fdfsolver_driver(s, 20, xtol, gtol, ftol, &info);
+
+    gsl_multifit_fdfsolver_jac(s, J);
+    gsl_multifit_covar (J, 0.0, covar);
+
+    /* compute final residual norm */
+    chi = gsl_blas_dnrm2(res_f);
+
+#define FIT(i) gsl_vector_get(s->x, i)
+#define ERR(i) sqrt(gsl_matrix_get(covar,i,i))
+
+    fprintf(stderr, "summary from method '%s'\n",
+            gsl_multifit_fdfsolver_name(s));
+    fprintf(stderr, "number of iterations: %zu\n",
+            gsl_multifit_fdfsolver_niter(s));
+    fprintf(stderr, "function evaluations: %zu\n", f.nevalf);
+    fprintf(stderr, "Jacobian evaluations: %zu\n", f.nevaldf);
+    fprintf(stderr, "reason for stopping: %s\n",
+            (info == 1) ? "small step size" : "small gradient");
+    fprintf(stderr, "initial |f(x)| = %g\n", chi0);
+    fprintf(stderr, "final   |f(x)| = %g\n", chi);
+
+    {
+        double dof = n - p;
+        double c = GSL_MAX_DBL(1, chi / sqrt(dof));
+
+        fprintf(stderr, "chisq/dof = %g\n",  pow(chi, 2.0) / dof);
+
+        for(Int32 k=0; k<p; k++)
+        {
+            fprintf (stderr, "A      = %.5f +/- %.5f\n", FIT(k), c*ERR(k));
+
+        }
+    }
+    fprintf (stderr, "status = %s\n", gsl_strerror (status));
+
+    gsl_multifit_fdfsolver_free (s);
+    gsl_matrix_free (covar);
+    gsl_matrix_free (J);
+    gsl_rng_free (r);
+    return 0;
 }
 
 std::vector<Int32> CLineModelElementList::getSupportIndexes( std::vector<Int32> EltsIdx)
@@ -2195,6 +2411,23 @@ Float64 CLineModelElementList::GetElementAmplitude(Int32 j)
     }
     return a;
 }
+
+
+void CLineModelElementList::SetVelocityEmission(Float64 vel)
+{
+    m_velocityEmission = vel;
+    for(Int32 j=0; j<m_Elements.size(); j++)
+    {
+        m_Elements[j]->SetVelocityEmission(vel);
+    }
+}
+
+
+Float64 CLineModelElementList::GetVelocityEmission()
+{
+    return m_velocityEmission;
+}
+
 
 //this function estimates the continuum after removal(interpolation) of the flux samples under the lines for a given redshift
 void CLineModelElementList::EstimateSpectrumContinuum()

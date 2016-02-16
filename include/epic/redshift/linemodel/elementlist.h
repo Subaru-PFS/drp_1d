@@ -45,6 +45,9 @@ public:
     void SetElementAmplitude(Int32 j, Float64 a, Float64 snr);
     Float64 GetElementAmplitude(Int32 j);
 
+    void SetVelocityEmission(Float64 vel);
+    Float64 GetVelocityEmission();
+
     Float64 fit(Float64 redshift, const TFloat64Range& lambdaRange, CLineModelResult::SLineModelSolution &modelSolution, Int32 contreest_iterations=0);
     void fitWithModelSelection(Float64 redshift, const TFloat64Range& lambdaRange, CLineModelResult::SLineModelSolution &modelSolution);
 
@@ -53,19 +56,20 @@ public:
     void reinitModelUnderElements(std::vector<Int32> filterEltsIdx);
     void refreshModelUnderElements(std::vector<Int32> filterEltsIdx);
 
-    void addToModel();
-
     Int32 getSpcNSamples(const TFloat64Range& lambdaRange);
     Float64 getLeastSquareMerit(const TFloat64Range &lambdaRange);
     Float64 getLeastSquareMeritUnderElements();
     Float64 getModelErrorUnderElement(Int32 eltId);
     CLineModelResult::SLineModelSolution GetModelSolution();
-    const CSpectrum&                GetModelSpectrum() const;
+    const CSpectrum&    GetModelSpectrum() const;
+    Float64 getModelFluxVal(Int32 idx) const;
+    Float64 getModelFluxDerivEltVal(Int32 DerivEltIdx, Int32 idx) const;
 
 private:
 
     Int32 fitAmplitudesHybrid(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& spcFluxAxisNoContinuum, Float64 redshift);
     void fitAmplitudesSimplex();
+    Int32 fitAmplitudesLmfit(std::vector<Int32> EltsIdx, const CSpectrumSpectralAxis &spectralAxis, const CSpectrumFluxAxis &fluxAxis, std::vector<Float64> &ampsfitted);
     Int32 fitAmplitudesLinSolve(std::vector<Int32> EltsIdx, const CSpectrumSpectralAxis &spectralAxis, const CSpectrumFluxAxis &fluxAxis, std::vector<Float64> &ampsfitted);
     std::vector<Int32> getSupportIndexes(std::vector<Int32> EltsIdx);
     std::vector<Int32> getOverlappingElements(Int32 ind , std::vector<Int32> excludedInd, Float64 overlapThres=0.1);

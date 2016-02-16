@@ -37,6 +37,8 @@ public:
     void fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis, Float64  redshift);
     //Float64 FitAmplitudeIterative( const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis, Float64 lambda, Float64 width, Int32 start, Int32 end); //deprecated
     Float64 getModelAtLambda( Float64 lambda, Float64 redshift );
+    Float64 GetModelDerivAmplitudeAtLambda( Float64 lambda, Float64 redshift );
+
     void addToSpectrumModel(const CSpectrumSpectralAxis& modelspectralAxis, CSpectrumFluxAxis& modelfluxAxis, Float64 redshift );
     void initSpectrumModel( CSpectrumFluxAxis& modelfluxAxis, CSpectrumFluxAxis& continuumfluxAxis );
     Float64 GetNominalAmplitude(Int32 subeIdx);

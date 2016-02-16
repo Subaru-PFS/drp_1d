@@ -33,6 +33,7 @@ public:
 
     virtual void fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis, Float64  redshift) =0;
     virtual Float64 getModelAtLambda( Float64 lambda, Float64 redshift )=0;
+    virtual Float64 GetModelDerivAmplitudeAtLambda( Float64 lambda, Float64 redshift )=0;
     virtual void addToSpectrumModel( const CSpectrumSpectralAxis& modelspectralAxis, CSpectrumFluxAxis& modelfluxAxis, Float64 redshift )=0;
     virtual void initSpectrumModel( CSpectrumFluxAxis& modelfluxAxis, CSpectrumFluxAxis& continuumfluxAxis )=0;
 
@@ -42,6 +43,9 @@ public:
     virtual Float64 GetElementAmplitude()=0;
     virtual void SetFittedAmplitude(Float64 A, Float64 SNR)=0;
     virtual void LimitFittedAmplitude(Int32 subeIdx, Float64 limit)=0;
+
+    void SetVelocityEmission(Float64 vel);
+    Float64 GetVelocityEmission();
 
     virtual Float64 GetSignFactor(Int32 subeIdx)=0;
     virtual Float64 GetWidth(Int32 subeIdx, Float64 redshift)=0;

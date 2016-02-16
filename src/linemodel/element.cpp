@@ -111,3 +111,13 @@ Float64 CLineModelElement::GetNSigmaSupport(std::string profile)
     return val;
 }
 
+void CLineModelElement::SetVelocityEmission(Float64 vel)
+{
+    m_VelocityEmission = vel;
+}
+
+
+Float64 CLineModelElement::GetVelocityEmission()
+{
+    return m_VelocityEmission;
+}
