@@ -55,6 +55,7 @@ public:
     void refreshModel();
     void reinitModelUnderElements(std::vector<Int32> filterEltsIdx);
     void refreshModelUnderElements(std::vector<Int32> filterEltsIdx);
+    void refreshModelDerivSigmaUnderElements(std::vector<Int32> filterEltsIdx);
 
     Int32 getSpcNSamples(const TFloat64Range& lambdaRange);
     Float64 getLeastSquareMerit(const TFloat64Range &lambdaRange);
@@ -64,6 +65,7 @@ public:
     const CSpectrum&    GetModelSpectrum() const;
     Float64 getModelFluxVal(Int32 idx) const;
     Float64 getModelFluxDerivEltVal(Int32 DerivEltIdx, Int32 idx) const;
+    Float64 getModelFluxDerivSigmaVal(Int32 idx) const;
 
 private:
 
@@ -104,6 +106,7 @@ private:
     CSpectrumFluxAxis m_SpcContinuumFluxAxis; //continuum spectrum used for the model
     CSpectrumFluxAxis m_spcFluxAxisNoContinuum; //observed spectrum for line fitting
     Float64* m_ErrorNoContinuum;
+    CSpectrumFluxAxis m_SpcFluxAxisModelDerivSigma;
 
     Float64*          m_precomputedFineGridContinuumFlux;   //PFG buffer for model continuum
     CSpectrumFluxAxis m_ContinuumFluxAxis;  //rebined model continuum

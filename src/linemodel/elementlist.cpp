@@ -63,6 +63,8 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum, const CS
     m_SpcFluxAxis.SetSize( spectrumSampleCount );
     m_SpcContinuumFluxAxis = spectrumContinuum.GetFluxAxis();
     m_ContinuumFluxAxis.SetSize( spectrumSampleCount );
+    m_SpcFluxAxisModelDerivSigma.SetSize( spectrumSampleCount );
+
     CSpectrumFluxAxis& modelFluxAxis = m_SpectrumModel->GetFluxAxis();
     const CSpectrumFluxAxis& spectrumFluxAxis = spectrum.GetFluxAxis();
 
@@ -139,9 +141,18 @@ Float64 CLineModelElementList::getModelFluxDerivEltVal(Int32 DerivEltIdx, Int32 
     Int32 iElts=DerivEltIdx;
     if(idx<spectralAxis.GetSamplesCount())
     {
-        //Float64 derivateVal = m_Elements[iElts]->getModelAtLambda(spectralAxis[idx], m_Redshift);
         Float64 derivateVal = m_Elements[iElts]->GetModelDerivAmplitudeAtLambda(spectralAxis[idx], m_Redshift);
         return derivateVal;
+    }
+
+    return -1.0;
+}
+
+
+Float64 CLineModelElementList::getModelFluxDerivSigmaVal(Int32 idx) const
+{
+    if(idx<m_SpcFluxAxisModelDerivSigma.GetSamplesCount()){
+        return m_SpcFluxAxisModelDerivSigma[idx];
     }
 
     return -1.0;
@@ -748,6 +759,23 @@ void CLineModelElementList::refreshModelUnderElements(std::vector<Int32> filterE
     }
 }
 
+void CLineModelElementList::refreshModelDerivSigmaUnderElements(std::vector<Int32> filterEltsIdx)
+{
+    const CSpectrumSpectralAxis& spectralAxis = m_SpectrumModel->GetSpectralAxis();
+    std::vector<Int32> supportIdxes = getSupportIndexes( filterEltsIdx );
+    for( UInt32 i=0; i<supportIdxes.size(); i++ )
+    {
+        m_SpcFluxAxisModelDerivSigma[supportIdxes[i]]=0.0;
+    }
+
+    //create spectrum model partial derivate vs sigma
+    Int32 iElts;
+    for( UInt32 i=0; i<filterEltsIdx.size(); i++ )
+    {
+        iElts = filterEltsIdx[i];
+        m_Elements[iElts]->addToSpectrumModelDerivSigma(spectralAxis, m_SpcFluxAxisModelDerivSigma, m_Redshift);
+    }
+}
 
 Int32 CLineModelElementList::fitAmplitudesHybrid( const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& spcFluxAxisNoContinuum, Float64 redshift)
 {
@@ -885,7 +913,7 @@ Int32 CLineModelElementList::fitAmplitudesLmfit(std::vector<Int32> EltsIdx, cons
     int status, info;
     size_t i;
     size_t n; //n samples on the support, /* number of data points to fit */
-    size_t p = nddl; //DOF = n amplitudes to fit (1 for each element) + 1 (EL velocity)
+    size_t p = nddl+1; //DOF = n amplitudes to fit (1 for each element) + 1 (EL velocity)
 
     n = xInds.size();
     if(n<nddl){
@@ -901,12 +929,9 @@ Int32 CLineModelElementList::fitAmplitudesLmfit(std::vector<Int32> EltsIdx, cons
     gsl_matrix *covar = gsl_matrix_alloc (p, p);
     double y[n], weights[n];
     struct lmfitdata d = {n,y,this, EltsIdx, xInds};
-    //struct lmfitdata d = {n,y,this};
-//    d.n =n;
-//    d.y = y;
-//    d.linemodel = std::shared_ptr<CLineModelElementList>( this );
     gsl_multifit_function_fdf f;
     //double x_init[3] = { 1.0, 0.0, 0.0 };
+    //todo: initialize lmfit with individual/hybrid fit method
     Float64* x_init = (Float64*) calloc( p, sizeof( Float64 ) );
 
     gsl_vector_view x = gsl_vector_view_array (x_init, p);
@@ -925,24 +950,11 @@ Int32 CLineModelElementList::fitAmplitudesLmfit(std::vector<Int32> EltsIdx, cons
     type = gsl_rng_default;
     r = gsl_rng_alloc (type);
 
-    f.f = &lmfit_f;//&CLineModelElementList::lmfit_f;//&expb_f;//
-    f.df = &lmfit_df;//&expb_df;   /* set to NULL for finite-difference Jacobian */
+    f.f = &lmfit_f;
+    f.df = &lmfit_df;
     f.n = n;
     f.p = p;
     f.params = &d;
-
-
-//    for (i = 0; i < n; i++)
-//    {
-//        double t = i;
-//        double yi = 1.0 + 5 * exp (-0.1 * t);
-//        double si = 0.1 * yi;
-//        double dy = gsl_ran_gaussian(r, si);
-
-//        weights[i] = 1.0 / (si * si);
-//        y[i] = yi + dy;
-//        printf ("data: %zu %g %g\n", i, y[i], si);
-//    };
 
     //
     // This is the data to be fitted
@@ -953,19 +965,10 @@ Int32 CLineModelElementList::fitAmplitudesLmfit(std::vector<Int32> EltsIdx, cons
     for (i = 0; i < n; i++)
     {
         idx = xInds[i];
-        //xi = spectral[idx];
         ei = m_ErrorNoContinuum[idx];
-
-//        for (Int32 iddl = 0; iddl < nddl; iddl++)
-//        {
-//            fval =  m_Elements[EltsIdx[iddl]]->getModelAtLambda(xi, m_Redshift);
-//            gsl_matrix_set (X, i, iddl, fval);
-//        }
-
         weights[i] = 1.0 / (ei * ei);
         y[i] = flux[idx];
     }
-
 
     s = gsl_multifit_fdfsolver_alloc (T, n, p);
 
@@ -977,7 +980,7 @@ Int32 CLineModelElementList::fitAmplitudesLmfit(std::vector<Int32> EltsIdx, cons
     chi0 = gsl_blas_dnrm2(res_f);
 
     /* solve the system with a maximum of 20 iterations */
-    status = gsl_multifit_fdfsolver_driver(s, 20, xtol, gtol, ftol, &info);
+    status = gsl_multifit_fdfsolver_driver(s, 50, xtol, gtol, ftol, &info);
 
     gsl_multifit_fdfsolver_jac(s, J);
     gsl_multifit_covar (J, 0.0, covar);

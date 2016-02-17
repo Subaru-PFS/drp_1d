@@ -83,15 +83,32 @@ Float64 CLineModelElement::GetLineWidth(Float64 redshiftedlambda, Float64 z, Boo
     return sigma;
 }
 
-Float64 CLineModelElement::GetLineProfile(std::string profile, Float64 xc, Float64 c)
+Float64 CLineModelElement::GetLineProfile(std::string profile, Float64 xc, Float64 sigma)
 {
     Float64 val=0.0;
 
     if(profile=="SYM"){
-        const Float64 xsurc = xc/c;
+        const Float64 xsurc = xc/sigma;
         val = exp(-0.5*xsurc*xsurc);
     }else if(profile=="ASYM"){
-        const Float64 xsurc = xc/c/2.5;
+        const Float64 xsurc = xc/sigma/2.5;
+        const Float64 alpha=10.0;
+        val = exp(-0.5*xsurc*xsurc)*(1.0+erf(alpha/sqrt(2.0)*xsurc));
+    }
+    return val;
+}
+
+Float64 CLineModelElement::GetLineProfileDerivSigma(std::string profile, Float64 x, Float64 x0, Float64 sigma)
+{
+    Float64 val=0.0;
+    Float64 cel = 300000.0;
+    Float64 xc = x-x0;
+    if(true || profile=="SYM"){
+        const Float64 xsurc = xc/sigma;
+        val = xc*xc /cel *x0 /(sigma*sigma*sigma) * exp(-0.5*xsurc*xsurc);
+    }else if(profile=="ASYM"){
+        //not implemeted yet... to be calculated...
+        const Float64 xsurc = xc/sigma/2.5;
         const Float64 alpha=10.0;
         val = exp(-0.5*xsurc*xsurc)*(1.0+erf(alpha/sqrt(2.0)*xsurc));
     }

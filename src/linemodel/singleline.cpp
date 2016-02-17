@@ -275,18 +275,18 @@ void CSingleLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const 
 /**
  * If applicable, add to each x the value from getModelAtLambda for the input redshift.
  */
-void CSingleLine::addToSpectrumModel( const CSpectrumSpectralAxis& modelspectralAxis, CSpectrumFluxAxis& modelfluxAxis, Float64 redshift )
+void CSingleLine::addToSpectrumModel(const CSpectrumSpectralAxis& modelspectralAxis, CSpectrumFluxAxis& modelfluxAxis, Float64 redshift)
 {
     if( m_OutsideLambdaRange )
-      {
+    {
         return;
-      }
+    }
 
     Float64 A = m_FittedAmplitude;
     if( A==0 )
-      {
+    {
         return;
-      }
+    }
 
     Float64* flux = modelfluxAxis.GetSamples();
     const Float64* spectral = modelspectralAxis.GetSamples();
@@ -298,9 +298,37 @@ void CSingleLine::addToSpectrumModel( const CSpectrumSpectralAxis& modelspectral
         flux[i] += Yi;
     }
 
-  return;
+    return;
 }
 
+/**
+ * If applicable, add to each x the value from GetModelDerivSigmaAtLambda for the input redshift.
+ */
+void CSingleLine::addToSpectrumModelDerivSigma(const CSpectrumSpectralAxis& modelspectralAxis, CSpectrumFluxAxis& modelfluxAxis, Float64 redshift)
+{
+    if( m_OutsideLambdaRange )
+    {
+        return;
+    }
+
+    Float64 A = m_FittedAmplitude;
+    if( A==0 )
+    {
+        return;
+    }
+
+    Float64* flux = modelfluxAxis.GetSamples();
+    const Float64* spectral = modelspectralAxis.GetSamples();
+
+    for ( Int32 i = m_Start; i<=m_End; i++ )
+    {
+        Float64 x = spectral[i];
+        Float64 Yi = GetModelDerivSigmaAtLambda( x, redshift );
+        flux[i] += Yi;
+    }
+
+    return;
+}
 /**
  *
  */
@@ -340,6 +368,28 @@ Float64 CSingleLine::GetModelDerivAmplitudeAtLambda(Float64 lambda, Float64 reds
     std::string profile = m_Ray.GetProfile();
 
     Yi = m_SignFactor * GetLineProfile(profile, x-mu, c);
+
+    return Yi;
+}
+
+/**
+ *
+ */
+Float64 CSingleLine::GetModelDerivSigmaAtLambda(Float64 lambda, Float64 redshift )
+{
+    if(m_OutsideLambdaRange){
+        return 0.0;
+    }
+    Float64 Yi=0.0;
+
+    Float64 x = lambda;
+
+    Float64 A = m_FittedAmplitude;
+    Float64 mu = m_Ray.GetPosition()*(1+redshift);
+    Float64 c = GetLineWidth(mu, redshift, m_Ray.GetIsEmission());
+    std::string profile = m_Ray.GetProfile();
+
+    Yi = m_SignFactor * A * GetLineProfileDerivSigma(profile, x, mu, c);
 
     return Yi;
 }

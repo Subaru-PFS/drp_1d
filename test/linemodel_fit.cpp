@@ -48,7 +48,7 @@ BOOST_AUTO_TEST_CASE( LinemodelFitDumb )
     std::string opt_continuumcomponent = "fromspectrum";
     std::string opt_lineWidthType = "fixedvelocity";
     Float64 opt_resolution = 2350;
-    Float64 opt_velocityEmission = 400;
+    Float64 opt_velocityEmission = 100;
     Float64 opt_velocityAbsorption = 300;
     std::string opt_rules = "all";
 
