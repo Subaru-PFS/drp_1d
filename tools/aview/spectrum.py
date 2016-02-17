@@ -344,7 +344,7 @@ class Spectrum(object):
         a = a + ("    n = {0}\n".format(self.n))
         a = a + ("    dlambda = {0}\n".format(self.getResolution()))
         a = a + ("    lambda min = {}, lambda max = {}\n".format(self.getWavelengthMin(), self.getWavelengthMax()))
-        a = a + ("    flux min = {}, flux max = {}\n".format(self.getFluxMin(),self.getFluxMin()))
+        a = a + ("    flux min = {}, flux max = {}\n".format(self.getFluxMin(),self.getFluxMax()))
         a = a + ("\n")
         
         return a

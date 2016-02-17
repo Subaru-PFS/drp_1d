@@ -1,0 +1,22 @@
+#version:0.3.0	
+#2016-02-17						
+#	Emission	lines		list		
+6564.58	Halpha	E	S	SYM		
+5008.16	[OIII](doublet-1)	E	S	SYM
+4960.15	[OIII](doublet-1/3)	E	S	SYM
+4862.62	Hbeta	E	S	SYM		
+4341.58	Hgamma	E	W	SYM		
+4102.81	Hdelta	E	W	SYM		
+3971.15	Hepsilon	E	W	SYM		
+3890.11	H8	E	W	SYM		
+3869.05	NeIII	E	W	SYM		
+3836.43	H9	E	W	SYM		
+3798.93	H10	E	W	SYM		
+3771.65	H11	E	W	SYM		
+3729.88	[OII]3729	E	S	SYM		
+3727.09	[OII]3726	E	S	SYM		
+3426.73	[NeVa]	E	W	SYM		
+3346.81	[NeVb]	E	W	SYM		
+1906.68	[CIII]1907	E	W	SYM		
+1908.73	[CIII]1909	E	W	SYM		
+

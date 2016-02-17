@@ -925,14 +925,35 @@ Int32 CLineModelElementList::fitAmplitudesLmfit(std::vector<Int32> EltsIdx, cons
         return -1;
     }
 
+    Int32 idx = 0;
+    Float64 maxabsval = DBL_MIN;
+    for (i = 0; i < n; i++)
+    {
+        idx = xInds[i];
+
+        if(maxabsval<std::abs(flux[idx]))
+        {
+            maxabsval=std::abs(flux[idx]);
+        }
+    }
+    Float64 normFactor = 1.0/maxabsval;
+
+    fprintf(stderr, "normFactor = '%.3e'\n",
+            normFactor);
+
     gsl_matrix *J = gsl_matrix_alloc(n, p);
     gsl_matrix *covar = gsl_matrix_alloc (p, p);
     double y[n], weights[n];
-    struct lmfitdata d = {n,y,this, EltsIdx, xInds};
+    struct lmfitdata d = {n,y,this, EltsIdx, xInds, normFactor};
     gsl_multifit_function_fdf f;
     //double x_init[3] = { 1.0, 0.0, 0.0 };
     //todo: initialize lmfit with individual/hybrid fit method
     Float64* x_init = (Float64*) calloc( p, sizeof( Float64 ) );
+    for(Int32 kp=0; kp<nddl; kp++)
+    {
+        x_init[kp] = 0;
+    }
+    x_init[nddl] = GetVelocityEmission();
 
     gsl_vector_view x = gsl_vector_view_array (x_init, p);
     gsl_vector_view w = gsl_vector_view_array(weights, n);
@@ -958,16 +979,15 @@ Int32 CLineModelElementList::fitAmplitudesLmfit(std::vector<Int32> EltsIdx, cons
 
     //
     // This is the data to be fitted
-    //todo: normalize, center...
-    //
-    Int32 idx = 0;
+    //todo: normalize, center ?...
+
     Float64 ei;
     for (i = 0; i < n; i++)
     {
         idx = xInds[i];
-        ei = m_ErrorNoContinuum[idx];
-        weights[i] = 1.0 / (ei * ei);
-        y[i] = flux[idx];
+        ei = m_ErrorNoContinuum[idx]*normFactor;
+        weights[i] = 1.0; //1.0 / (ei * ei);
+        y[i] = flux[idx]*normFactor;
     }
 
     s = gsl_multifit_fdfsolver_alloc (T, n, p);
@@ -1010,11 +1030,34 @@ Int32 CLineModelElementList::fitAmplitudesLmfit(std::vector<Int32> EltsIdx, cons
 
         for(Int32 k=0; k<p; k++)
         {
-            fprintf (stderr, "A      = %.5f +/- %.5f\n", FIT(k), c*ERR(k));
+            if(FIT(k)<1e-3)
+            {
+                fprintf (stderr, "A      = %.3e +/- %.8f\n", FIT(k), c*ERR(k));
+            }else{
+                fprintf (stderr, "A      = %.5f +/- %.8f\n", FIT(k), c*ERR(k));
+            }
 
         }
     }
     fprintf (stderr, "status = %s\n", gsl_strerror (status));
+
+
+    {
+        for (Int32 iddl = 0; iddl < nddl; iddl++)
+        {
+            Float64 a = gsl_vector_get(s->x,iddl)/normFactor;
+            Float64 dof = n - p;
+            Float64 c = GSL_MAX_DBL(1, chi / sqrt(dof));
+            Float64 sigma = c*sqrt(gsl_matrix_get(covar,iddl,iddl))/normFactor;
+            if(a<0.0){
+                a=0.0;
+            }
+            SetElementAmplitude(EltsIdx[iddl], a, sigma);
+        }
+        Float64 velEmission = gsl_vector_get(s->x,nddl);
+        SetVelocityEmission(velEmission);
+        //refreshModel();
+    }
 
     gsl_multifit_fdfsolver_free (s);
     gsl_matrix_free (covar);

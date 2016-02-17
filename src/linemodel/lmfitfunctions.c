@@ -8,10 +8,11 @@ class CLineModelElementList;
 
 struct lmfitdata {
     size_t n;
-    double * y;
+    Float64 * y;
     CLineModelElementList* linemodel;
     std::vector<Int32> linemodel_elts_indexes;
     std::vector<Int32> linemodel_samples_indexes;
+    Float64 normFactor;
 };
 
 int
@@ -24,10 +25,12 @@ lmfit_f (const gsl_vector * x, void *data,
     CLineModelElementList* linemodel = ((struct lmfitdata *)data)->linemodel;
     std::vector<Int32> elts_indexes = ((struct lmfitdata *)data)->linemodel_elts_indexes;
     std::vector<Int32> samples_indexes = ((struct lmfitdata *)data)->linemodel_samples_indexes;
+    Float64 normFactor = ((struct lmfitdata *)data)->normFactor;
 
     for (Int32 iElt = 0; iElt < elts_indexes.size(); iElt++)
     {
-        linemodel->SetElementAmplitude(elts_indexes[iElt], gsl_vector_get (x, iElt), 0.0);
+        Float64 amp = gsl_vector_get (x, iElt)/normFactor;
+        linemodel->SetElementAmplitude(elts_indexes[iElt], amp, 0.0);
     }
 
     Int32 idxVelocityEmission = elts_indexes.size();
@@ -37,7 +40,7 @@ lmfit_f (const gsl_vector * x, void *data,
 
     for (Int32 i = 0; i < n; i++)
     {
-        Float64 Yi = linemodel->getModelFluxVal(samples_indexes[i]);
+        Float64 Yi = linemodel->getModelFluxVal(samples_indexes[i])*normFactor;
         gsl_vector_set (f, i, Yi - y[i]);
     }
 
@@ -77,11 +80,12 @@ lmfit_df (const gsl_vector * x, void *data,
     CLineModelElementList* linemodel = ((struct lmfitdata *)data)->linemodel;
     std::vector<Int32> elts_indexes = ((struct lmfitdata *)data)->linemodel_elts_indexes;
     std::vector<Int32> samples_indexes = ((struct lmfitdata *)data)->linemodel_samples_indexes;
-
+    Float64 normFactor = ((struct lmfitdata *)data)->normFactor;
 
     for (Int32 iElt = 0; iElt < elts_indexes.size(); iElt++)
     {
-        linemodel->SetElementAmplitude(elts_indexes[iElt], gsl_vector_get (x, iElt), 0.0);
+        Float64 amp = gsl_vector_get (x, iElt)/normFactor;
+        linemodel->SetElementAmplitude(elts_indexes[iElt], amp, 0.0);
     }
 
     Int32 idxVelocityEmission = elts_indexes.size();
@@ -96,7 +100,7 @@ lmfit_df (const gsl_vector * x, void *data,
             Float64 dval = linemodel->getModelFluxDerivEltVal(elts_indexes[iElt], samples_indexes[i]);
             gsl_matrix_set (J, i, iElt, dval);
         }
-        Float64 dval = linemodel->getModelFluxDerivSigmaVal(samples_indexes[i]);
+        Float64 dval = linemodel->getModelFluxDerivSigmaVal(samples_indexes[i])*normFactor;
         gsl_matrix_set (J, i, idxVelocityEmission, dval);
     }
 
