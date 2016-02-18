@@ -24,6 +24,7 @@ import matplotlib.cm as cm
 from matplotlib.patches import Rectangle
 
 import lstats
+import lperf
 
 # global variables, default for VVDS
 iRefZ = 4
@@ -549,7 +550,16 @@ def ProcessStats( fname, zRange, magRange, enablePlot = False ):
 
     print '\n'
 
+def processPerformance( fname ):
+    dataDiff = loadDiff( fname );
     
+    _baseOutputDirectory = os.path.dirname(os.path.abspath(fname))
+    outputDirectory = os.path.join(_baseOutputDirectory, "performances".format())
+    if os.path.exists( outputDirectory ) == False :        
+        print("makedir: Output dir: "+outputDirectory)
+        os.mkdir( outputDirectory )
+        
+    lperf.exportPerformances(dataDiff, outputDirectory)
 
 def processHistogram(yvect, bins, outFile=""):
     n = len(yvect)
@@ -813,7 +823,7 @@ def StartFromCommandLine( argv ) :
         ProcessFailures( outputFullpathDiff, outputFullpathFailures)
         ProcessFailuresSeqFile( outputFullpathDiff, options.refFile, outputFullpathFailuresSeqFile, outputFullpathFailuresRefFile)
         
-        if  options.computeLevel == "full":
+        if  options.computeLevel == "full" or options.computeLevel == "hist":
             zRange = [-1.0, 20.0]
             zRange[0] = float(options.zRange.split(" ")[0])
             zRange[1] = float(options.zRange.split(" ")[1])
@@ -821,6 +831,10 @@ def StartFromCommandLine( argv ) :
             magRange[0] = float(options.magRange.split(" ")[0])
             magRange[1] = float(options.magRange.split(" ")[1])        
             ProcessStats( outputFullpathDiff, zRange, magRange )
+        
+        if  options.computeLevel == "full" or options.computeLevel == "perf":        
+            processPerformance( outputFullpathDiff )
+            
     else :
         print("Error: invalid argument count")
         exit()

@@ -938,8 +938,7 @@ Int32 CLineModelElementList::fitAmplitudesLmfit(std::vector<Int32> EltsIdx, cons
     }
     Float64 normFactor = 1.0/maxabsval;
 
-    fprintf(stderr, "normFactor = '%.3e'\n",
-            normFactor);
+    fprintf(stderr, "normFactor = '%.3e'\n", normFactor);
 
     gsl_matrix *J = gsl_matrix_alloc(n, p);
     gsl_matrix *covar = gsl_matrix_alloc (p, p);
@@ -986,7 +985,7 @@ Int32 CLineModelElementList::fitAmplitudesLmfit(std::vector<Int32> EltsIdx, cons
     {
         idx = xInds[i];
         ei = m_ErrorNoContinuum[idx]*normFactor;
-        weights[i] = 1.0; //1.0 / (ei * ei);
+        weights[i] = 1.0 / (ei * ei);
         y[i] = flux[idx]*normFactor;
     }
 
