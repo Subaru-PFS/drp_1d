@@ -49,6 +49,8 @@ public:
 
     void SetVelocityEmission(Float64 vel);
     Float64 GetVelocityEmission();
+    void SetVelocityAbsorption(Float64 vel);
+    Float64 GetVelocityAbsorption();
 
     virtual Float64 GetSignFactor(Int32 subeIdx)=0;
     virtual Float64 GetWidth(Int32 subeIdx, Float64 redshift)=0;

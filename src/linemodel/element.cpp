@@ -133,8 +133,17 @@ void CLineModelElement::SetVelocityEmission(Float64 vel)
     m_VelocityEmission = vel;
 }
 
+void CLineModelElement::SetVelocityAbsorption(Float64 vel)
+{
+    m_VelocityAbsorption = vel;
+}
 
 Float64 CLineModelElement::GetVelocityEmission()
 {
     return m_VelocityEmission;
+}
+
+Float64 CLineModelElement::GetVelocityAbsorption()
+{
+    return m_VelocityAbsorption;
 }

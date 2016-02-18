@@ -448,12 +448,15 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
         fitAmplitudesSimplex();
     }
 
-    //fit the amplitude of all elements together with iterative   solver: lmfit
+    //fit the amplitude of all elements together (but Emission or Absorption separately) with iterative   solver: lmfit
     if(m_fittingmethod=="lmfit")
     {
         std::vector<Int32> validEltsIdx = GetModelValidElementsIndexes();
         std::vector<Float64> ampsfitted;
-        fitAmplitudesLmfit(validEltsIdx, spectralAxis, m_spcFluxAxisNoContinuum, ampsfitted);
+        Int32 lineType = CRay::nType_Absorption;
+        fitAmplitudesLmfit(validEltsIdx, m_spcFluxAxisNoContinuum, ampsfitted, lineType);
+        lineType = CRay::nType_Emission;
+        fitAmplitudesLmfit(validEltsIdx, m_spcFluxAxisNoContinuum, ampsfitted, lineType);
     }
 
     //fit the amplitude of all elements together with linear solver: gsl_multifit_wlinear
@@ -894,17 +897,27 @@ void print_state (size_t iter, gsl_multifit_fdfsolver * s)
 }
 
 
-Int32 CLineModelElementList::fitAmplitudesLmfit(std::vector<Int32> EltsIdx, const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis, std::vector<Float64>& ampsfitted)
+Int32 CLineModelElementList::fitAmplitudesLmfit(std::vector<Int32> EltsIdx, const CSpectrumFluxAxis& fluxAxis, std::vector<Float64>& ampsfitted, Int32 lineType)
 {
     //http://www.gnu.org/software/gsl/manual/html_node/Example-programs-for-Nonlinear-Least_002dSquares-Fitting.html
+    Bool verbose=true;
 
-    Int32 nddl = EltsIdx.size();
+    std::vector<Int32> filteredEltsIdx;
+    for (Int32 iElt = 0; iElt < EltsIdx.size(); iElt++)
+    {
+        if(m_RestRayList[m_Elements[iElt]->m_LineCatalogIndexes[0]].GetType() != lineType)
+        {
+            continue;
+        }
+        filteredEltsIdx.push_back(EltsIdx[iElt]);
+    }
+
+    Int32 nddl = filteredEltsIdx.size();
     if(nddl<1){
         return -1;
     }
-    std::vector<Int32> xInds = getSupportIndexes( EltsIdx );
+    std::vector<Int32> xInds = getSupportIndexes( filteredEltsIdx );
 
-    const Float64* spectral = spectralAxis.GetSamples();
     const Float64* flux = fluxAxis.GetSamples();
 
     //create gsl solver object
@@ -938,21 +951,31 @@ Int32 CLineModelElementList::fitAmplitudesLmfit(std::vector<Int32> EltsIdx, cons
     }
     Float64 normFactor = 1.0/maxabsval;
 
-    fprintf(stderr, "normFactor = '%.3e'\n", normFactor);
+    if(verbose)
+    {
+        fprintf(stderr, "normFactor = '%.3e'\n", normFactor);
+    }
 
     gsl_matrix *J = gsl_matrix_alloc(n, p);
     gsl_matrix *covar = gsl_matrix_alloc (p, p);
     double y[n], weights[n];
-    struct lmfitdata d = {n,y,this, EltsIdx, xInds, normFactor};
+    struct lmfitdata d = {n,y,this, filteredEltsIdx, xInds, normFactor, lineType};
     gsl_multifit_function_fdf f;
-    //double x_init[3] = { 1.0, 0.0, 0.0 };
-    //todo: initialize lmfit with individual/hybrid fit method
+
     Float64* x_init = (Float64*) calloc( p, sizeof( Float64 ) );
+    //TODO: initialize lmfit with individual/hybrid fit method
     for(Int32 kp=0; kp<nddl; kp++)
     {
         x_init[kp] = 0;
     }
-    x_init[nddl] = GetVelocityEmission();
+    if(lineType==CRay::nType_Emission)
+    {
+        x_init[nddl] = GetVelocityEmission();
+    }else
+    {
+        x_init[nddl] = GetVelocityAbsorption();
+
+    }
 
     gsl_vector_view x = gsl_vector_view_array (x_init, p);
     gsl_vector_view w = gsl_vector_view_array(weights, n);
@@ -976,10 +999,7 @@ Int32 CLineModelElementList::fitAmplitudesLmfit(std::vector<Int32> EltsIdx, cons
     f.p = p;
     f.params = &d;
 
-    //
     // This is the data to be fitted
-    //todo: normalize, center ?...
-
     Float64 ei;
     for (i = 0; i < n; i++)
     {
@@ -1007,40 +1027,43 @@ Int32 CLineModelElementList::fitAmplitudesLmfit(std::vector<Int32> EltsIdx, cons
     /* compute final residual norm */
     chi = gsl_blas_dnrm2(res_f);
 
+    if(verbose)
+    {
 #define FIT(i) gsl_vector_get(s->x, i)
 #define ERR(i) sqrt(gsl_matrix_get(covar,i,i))
 
-    fprintf(stderr, "summary from method '%s'\n",
-            gsl_multifit_fdfsolver_name(s));
-    fprintf(stderr, "number of iterations: %zu\n",
-            gsl_multifit_fdfsolver_niter(s));
-    fprintf(stderr, "function evaluations: %zu\n", f.nevalf);
-    fprintf(stderr, "Jacobian evaluations: %zu\n", f.nevaldf);
-    fprintf(stderr, "reason for stopping: %s\n",
-            (info == 1) ? "small step size" : "small gradient");
-    fprintf(stderr, "initial |f(x)| = %g\n", chi0);
-    fprintf(stderr, "final   |f(x)| = %g\n", chi);
+        fprintf(stderr, "summary from method '%s'\n",
+                gsl_multifit_fdfsolver_name(s));
+        fprintf(stderr, "number of iterations: %zu\n",
+                gsl_multifit_fdfsolver_niter(s));
+        fprintf(stderr, "function evaluations: %zu\n", f.nevalf);
+        fprintf(stderr, "Jacobian evaluations: %zu\n", f.nevaldf);
+        fprintf(stderr, "reason for stopping: %s\n",
+                (info == 1) ? "small step size" : "small gradient");
+        fprintf(stderr, "initial |f(x)| = %g\n", chi0);
+        fprintf(stderr, "final   |f(x)| = %g\n", chi);
 
-    {
-        double dof = n - p;
-        double c = GSL_MAX_DBL(1, chi / sqrt(dof));
-
-        fprintf(stderr, "chisq/dof = %g\n",  pow(chi, 2.0) / dof);
-
-        for(Int32 k=0; k<p; k++)
         {
-            if(FIT(k)<1e-3)
+            double dof = n - p;
+            double c = GSL_MAX_DBL(1, chi / sqrt(dof));
+
+            fprintf(stderr, "chisq/dof = %g\n",  pow(chi, 2.0) / dof);
+
+            for(Int32 k=0; k<p; k++)
             {
-                fprintf (stderr, "A      = %.3e +/- %.8f\n", FIT(k), c*ERR(k));
-            }else{
-                fprintf (stderr, "A      = %.5f +/- %.8f\n", FIT(k), c*ERR(k));
+                if(FIT(k)<1e-3)
+                {
+                    fprintf (stderr, "A      = %.3e +/- %.8f\n", FIT(k), c*ERR(k));
+                }else{
+                    fprintf (stderr, "A      = %.5f +/- %.8f\n", FIT(k), c*ERR(k));
+                }
+
             }
-
         }
+        fprintf (stderr, "status = %s\n", gsl_strerror (status));
     }
-    fprintf (stderr, "status = %s\n", gsl_strerror (status));
 
-
+    // finally populate the fitting results to the linemodel
     {
         for (Int32 iddl = 0; iddl < nddl; iddl++)
         {
@@ -1051,17 +1074,17 @@ Int32 CLineModelElementList::fitAmplitudesLmfit(std::vector<Int32> EltsIdx, cons
             if(a<0.0){
                 a=0.0;
             }
-            SetElementAmplitude(EltsIdx[iddl], a, sigma);
+            SetElementAmplitude(filteredEltsIdx[iddl], a, sigma);
         }
         Float64 velEmission = gsl_vector_get(s->x,nddl);
         SetVelocityEmission(velEmission);
-        //refreshModel();
     }
 
     gsl_multifit_fdfsolver_free (s);
     gsl_matrix_free (covar);
     gsl_matrix_free (J);
     gsl_rng_free (r);
+
     return 0;
 }
 
@@ -2467,10 +2490,22 @@ void CLineModelElementList::SetVelocityEmission(Float64 vel)
     }
 }
 
+void CLineModelElementList::SetVelocityAbsorption(Float64 vel)
+{
+    m_velocityAbsorption = vel;
+    for(Int32 j=0; j<m_Elements.size(); j++)
+    {
+        m_Elements[j]->SetVelocityAbsorption(vel);
+    }
+}
 
 Float64 CLineModelElementList::GetVelocityEmission()
 {
     return m_velocityEmission;
+}
+Float64 CLineModelElementList::GetVelocityAbsorption()
+{
+    return m_velocityAbsorption;
 }
 
 
