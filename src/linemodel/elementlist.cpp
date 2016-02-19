@@ -579,6 +579,11 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
     return merit;
 }
 
+void CLineModelElementList::SetFittingMethod(std::string fitMethod)
+{
+    m_fittingmethod = fitMethod;
+}
+
 /**
  * @brief CLineModelElementList::fit with model selection
  * @param redshift
@@ -900,7 +905,7 @@ void print_state (size_t iter, gsl_multifit_fdfsolver * s)
 Int32 CLineModelElementList::fitAmplitudesLmfit(std::vector<Int32> EltsIdx, const CSpectrumFluxAxis& fluxAxis, std::vector<Float64>& ampsfitted, Int32 lineType)
 {
     //http://www.gnu.org/software/gsl/manual/html_node/Example-programs-for-Nonlinear-Least_002dSquares-Fitting.html
-    Bool verbose=true;
+    Bool verbose=false;
 
     std::vector<Int32> filteredEltsIdx;
     for (Int32 iElt = 0; iElt < EltsIdx.size(); iElt++)
@@ -2424,10 +2429,50 @@ std::vector<Int32> CLineModelElementList::GetModelValidElementsIndexes()
         if(m_Elements[iElts]->IsOutsideLambdaRange() == true){
             continue;
         }
+        if(IsElementIndexInDisabledList(iElts))
+        {
+            continue;
+        }
 
         nonZeroIndexes.push_back(iElts);
     }
     return nonZeroIndexes;
+}
+
+bool CLineModelElementList::IsElementIndexInDisabledList(Int32 index)
+{
+    for( UInt32 i=0; i<m_elementsDisabledIndexes.size(); i++ )
+    {
+        if( m_elementsDisabledIndexes[i]== index){
+            return true;
+        }
+    }
+    return false;
+}
+
+void CLineModelElementList::SetElementIndexesDisabledAuto()
+{
+    for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
+    {
+        if(m_Elements[iElts]->IsOutsideLambdaRange() == true){
+            continue;
+        }
+        bool isAllZero=true;
+        for(Int32 ie=0; ie<m_Elements[iElts]->GetSize(); ie++){
+            if(m_Elements[iElts]->GetFittedAmplitude(ie) > 0.0){
+                isAllZero=false;
+            }
+        }
+
+        if(isAllZero==true){
+            m_elementsDisabledIndexes.push_back(iElts);
+        }
+    }
+}
+
+void CLineModelElementList::ResetElementIndexesDisabled()
+{
+    m_elementsDisabledIndexes.clear();
 }
 
 Int32 CLineModelElementList::FindElementIndex(Int32 LineCatalogIndex)

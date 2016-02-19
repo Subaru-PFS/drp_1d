@@ -62,7 +62,35 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute( CDataStore &dataSt
     TFloat64List sortedRedshifts = redshifts;
     std::sort(sortedRedshifts.begin(), sortedRedshifts.end());
 
-    Int32 typeFilter = -1;//CRay::nType_Absorption;//CRay::nType_Emission;
+    // redefine redshift grid
+    Int32 enableFastFitLargeGrid = 1;
+    TFloat64List largeGridRedshifts;
+    //*
+    if(enableFastFitLargeGrid==1){
+        //calculate on a wider grid, defined by a minimum step
+        Float64 dz_thres = 1e-3;
+        std::vector<Int32> removed_inds;
+        Int32 lastKeptInd = 0;
+        for(Int32 i=1; i<sortedRedshifts.size()-1; i++){
+            if( abs(sortedRedshifts[i]-sortedRedshifts[lastKeptInd])<dz_thres && abs(sortedRedshifts[i+1]-sortedRedshifts[i])<dz_thres ){
+                removed_inds.push_back(i);
+            }else{
+                lastKeptInd=i;
+            }
+        }
+        Int32 rmInd = 0;
+        for(Int32 i=1; i<sortedRedshifts.size()-1; i++){
+            if(removed_inds[rmInd]==i){
+                rmInd++;
+            }else{
+                largeGridRedshifts.push_back(sortedRedshifts[i]);
+            }
+        }
+    }
+
+
+
+    Int32 typeFilter = -1;
     if(opt_lineTypeFilter == "A"){
         typeFilter = CRay::nType_Absorption;
     }else if(opt_lineTypeFilter == "E"){
@@ -75,13 +103,14 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute( CDataStore &dataSt
     }
     CRayCatalog::TRayVector restRayList = restraycatalog.GetFilteredList(typeFilter, forceFilter);
 
+    Int32 nResults = largeGridRedshifts.size();
     auto result = std::shared_ptr<CLineModelResult>( new CLineModelResult() );
-    result->ChiSquare.resize( sortedRedshifts.size() );
-    result->Redshifts.resize( sortedRedshifts.size() );
-    result->Redshifts = sortedRedshifts;
-    result->Status.resize( sortedRedshifts.size() );
+    result->ChiSquare.resize( nResults );
+    result->Redshifts.resize( nResults );
+    result->Redshifts = largeGridRedshifts;
+    result->Status.resize( nResults );
     result->restRayList = restRayList;
-    result->LineModelSolutions.resize( sortedRedshifts.size() );
+    result->LineModelSolutions.resize( nResults );
 
 
     CLineModelElementList model(spectrum, spectrumContinuum, restRayList, opt_fittingmethod, opt_continuumcomponent, opt_lineWidthType, opt_resolution, opt_velocityEmission, opt_velocityAbsorption, opt_rules);
@@ -97,7 +126,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute( CDataStore &dataSt
         contreest_iterations  = 0;
     }
 
-    for (Int32 i=0;i<sortedRedshifts.size();i++)
+    for (Int32 i=0;i<nResults;i++)
     {
         ModelFit( model, lambdaRange, result->Redshifts[i], result->ChiSquare[i], result->LineModelSolutions[i], contreest_iterations);
     }
@@ -109,7 +138,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute( CDataStore &dataSt
     CExtremum extremum( redshiftsRange, extremumCount, true, 2);
     extremum.Find( result->Redshifts, result->ChiSquare, extremumList );
 
-    //*
+    /*
     // Refine Extremum with a second maximum search around the z candidates:
     // This corresponds to the finer xcorrelation in EZ Pandora (in standard_DP fctn in SolveKernel.py)
     Float64 radius = 0.001;
@@ -198,6 +227,18 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute( CDataStore &dataSt
             contreest_iterations = 1;
         }else{
             contreest_iterations  = 0;
+        }
+
+        bool enableVelocityFitting = true;
+        if(enableVelocityFitting){
+            //fit the emission and absorption width using the lindemodel lmfit strategy
+            model.SetFittingMethod("lmfit");
+            model.SetElementIndexesDisabledAuto();
+            ModelFit( model, lambdaRange, result->Redshifts[idx], result->ChiSquare[idx], result->LineModelSolutions[idx], contreest_iterations);
+
+
+            model.SetFittingMethod(opt_fittingmethod);
+            model.ResetElementIndexesDisabled();
         }
         ModelFit( model, lambdaRange, result->Redshifts[idx], result->ChiSquare[idx], result->LineModelSolutions[idx], contreest_iterations);
         m = result->ChiSquare[idx];

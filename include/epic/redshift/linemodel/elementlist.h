@@ -42,8 +42,11 @@ public:
     Int32 GetModelValidElementsNDdl();
     Int32 GetModelNonZeroElementsNDdl();
     std::vector<Int32> GetModelValidElementsIndexes();
+    bool IsElementIndexInDisabledList(Int32 index);
     void SetElementAmplitude(Int32 j, Float64 a, Float64 snr);
     Float64 GetElementAmplitude(Int32 j);
+    void SetElementIndexesDisabledAuto();
+    void ResetElementIndexesDisabled();
 
     void SetVelocityEmission(Float64 vel);
     void SetVelocityAbsorption(Float64 vel);
@@ -52,6 +55,7 @@ public:
 
     Float64 fit(Float64 redshift, const TFloat64Range& lambdaRange, CLineModelResult::SLineModelSolution &modelSolution, Int32 contreest_iterations=0);
     void fitWithModelSelection(Float64 redshift, const TFloat64Range& lambdaRange, CLineModelResult::SLineModelSolution &modelSolution);
+    void SetFittingMethod(std::string fitMethod);
 
     void reinitModel();
     void refreshModel();
@@ -123,6 +127,7 @@ private:
     Float64 m_nominalWidthDefaultEmission;
     Float64 m_nominalWidthDefaultAbsorption;
     std::string m_fittingmethod;
+    std::vector<Int32> m_elementsDisabledIndexes;
     std::string m_rulesoption;
 };
 

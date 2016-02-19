@@ -135,6 +135,7 @@ def plotMagSFRPerformanceMatrix(bin_dataset, zmin, zmax, catastrophic_failure_th
             
     pp.clf()
     pp.close()
+    pp.figure('performance')
     #fig = pp.figure('catalog z map', figsize=(9, 8))
     #ax = fig.add_subplot(111)
     #i = ax.matshow(np.transpose(matrix), interpolation='nearest', aspect='equal', cmap=cmap)
