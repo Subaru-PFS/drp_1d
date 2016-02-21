@@ -103,11 +103,11 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute( CDataStore &dataSt
     }
     CRayCatalog::TRayVector restRayList = restraycatalog.GetFilteredList(typeFilter, forceFilter);
 
-    Int32 nResults = largeGridRedshifts.size();
+    Int32 nResults = sortedRedshifts.size();
     auto result = std::shared_ptr<CLineModelResult>( new CLineModelResult() );
     result->ChiSquare.resize( nResults );
     result->Redshifts.resize( nResults );
-    result->Redshifts = largeGridRedshifts;
+    result->Redshifts = sortedRedshifts;
     result->Status.resize( nResults );
     result->restRayList = restRayList;
     result->LineModelSolutions.resize( nResults );
@@ -126,9 +126,17 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute( CDataStore &dataSt
         contreest_iterations  = 0;
     }
 
+    Int32 indexLargeGrid = 0;
     for (Int32 i=0;i<nResults;i++)
     {
-        ModelFit( model, lambdaRange, result->Redshifts[i], result->ChiSquare[i], result->LineModelSolutions[i], contreest_iterations);
+        if(i==0 || result->Redshifts[i] == largeGridRedshifts[indexLargeGrid])
+        {
+            ModelFit( model, lambdaRange, result->Redshifts[i], result->ChiSquare[i], result->LineModelSolutions[i], contreest_iterations);
+            indexLargeGrid++;
+        }else{
+            result->ChiSquare[i] = result->ChiSquare[i-1] + 1e-6;
+            result->LineModelSolutions[i] = result->LineModelSolutions[i-1];
+        }
     }
 
     // extrema
@@ -160,7 +168,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute( CDataStore &dataSt
 
     //*
     // extend z around the extrema
-    Float64 extensionradius = 0.01;
+    Float64 extensionradius = 0.005;
     //TPointList extremumListExtended;
     //TBoolList isLocalExtrema;
     for( Int32 i=0; i<extremumList.size(); i++ )
@@ -188,6 +196,66 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute( CDataStore &dataSt
     //*/
     //TPointList extremumListExtended = extremumList;
    //todo: remove duplicate redshifts from the extended extrema list
+
+
+    //recompute the fine grid results around the extrema
+    for( Int32 i=0; i<extremumList.size(); i++ )
+    {
+        Float64 z = extremumList[i].X;
+        Float64 m = extremumList[i].Y;
+
+        //find the index in the zaxis results
+        Int32 idx=-1;
+        for ( UInt32 i2=0; i2<result->Redshifts.size(); i2++)
+        {
+            if(result->Redshifts[i2] == z){
+                idx = i2;
+                break;
+            }
+        }
+        if(idx==-1){
+            Log.LogInfo( "Problem. could not find extrema solution index...");
+            continue;
+        }
+
+
+        // reestimate the model (eventually with continuum reestimation) on the extrema selected
+        if(opt_continuumreest == "always"){
+            contreest_iterations = 1;
+        }else{
+            contreest_iterations  = 0;
+        }
+
+        bool enableVelocityFitting = true;
+        if(enableVelocityFitting){
+            //fit the emission and absorption width using the lindemodel lmfit strategy
+            model.SetFittingMethod("lmfit");
+            model.SetElementIndexesDisabledAuto();
+            ModelFit( model, lambdaRange, result->Redshifts[idx], result->ChiSquare[idx], result->LineModelSolutions[idx], contreest_iterations);
+
+
+            model.SetFittingMethod(opt_fittingmethod);
+            model.ResetElementIndexesDisabled();
+            model.ApplyVelocityBound();
+        }
+        ModelFit( model, lambdaRange, result->Redshifts[idx], result->ChiSquare[idx], result->LineModelSolutions[idx], contreest_iterations);
+        m = result->ChiSquare[idx];
+
+        //finally compute the redshifts on the extended ExtremaExtendedRedshifts values
+        Float64 left_border = max(redshiftsRange.GetBegin(), z-extensionradius);
+        Float64 right_border=min(redshiftsRange.GetEnd(), z+extensionradius);
+        for (Int32 iz=0;iz<result->Redshifts.size();iz++)
+        {
+            if(result->Redshifts[iz] >= left_border && result->Redshifts[iz] <= right_border){
+                ModelFit( model, lambdaRange, result->Redshifts[iz], result->ChiSquare[iz], result->LineModelSolutions[iz], contreest_iterations);
+                if(result->ChiSquare[iz]< extremumList[i].Y)
+                {
+                    extremumList[i].X = result->Redshifts[iz];
+                    extremumList[i].Y = result->ChiSquare[iz];
+                }
+            }
+        }
+    }
 
 
     // store extrema results
@@ -239,6 +307,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute( CDataStore &dataSt
 
             model.SetFittingMethod(opt_fittingmethod);
             model.ResetElementIndexesDisabled();
+            model.ApplyVelocityBound();
         }
         ModelFit( model, lambdaRange, result->Redshifts[idx], result->ChiSquare[idx], result->LineModelSolutions[idx], contreest_iterations);
         m = result->ChiSquare[idx];
@@ -278,7 +347,6 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute( CDataStore &dataSt
         result->bic[i] = aic;
         //result->bic[i] = aic + (2*nddl*(nddl+1) )/(nsamples-nddl-1);  //AICc, better when nsamples small
     }
-
     //ComputeArea2(*result);
 
 

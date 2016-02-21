@@ -44,6 +44,8 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum, const CS
     m_resolution = resolution;
     m_velocityEmission = velocityEmission;
     m_velocityAbsorption = velocityAbsorption;
+    m_velocityEmissionInit = m_velocityEmission;
+    m_velocityAbsorptionInit = m_velocityAbsorption;
     m_fittingmethod = opt_fittingmethod;
     m_rulesoption = opt_rules;
 
@@ -2551,6 +2553,22 @@ Float64 CLineModelElementList::GetVelocityEmission()
 Float64 CLineModelElementList::GetVelocityAbsorption()
 {
     return m_velocityAbsorption;
+}
+
+
+void CLineModelElementList::ApplyVelocityBound()
+{
+    Float64 vel;
+    vel = GetVelocityEmission();
+    if(vel>450 || vel<50)
+    {
+        SetVelocityEmission(m_velocityEmissionInit);
+    }
+    vel = GetVelocityAbsorption();
+    if(vel>900 || vel<100)
+    {
+        SetVelocityAbsorption(m_velocityAbsorptionInit);
+    }
 }
 
 

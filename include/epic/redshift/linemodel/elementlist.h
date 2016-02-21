@@ -52,6 +52,7 @@ public:
     void SetVelocityAbsorption(Float64 vel);
     Float64 GetVelocityEmission();
     Float64 GetVelocityAbsorption();
+    void ApplyVelocityBound();
 
     Float64 fit(Float64 redshift, const TFloat64Range& lambdaRange, CLineModelResult::SLineModelSolution &modelSolution, Int32 contreest_iterations=0);
     void fitWithModelSelection(Float64 redshift, const TFloat64Range& lambdaRange, CLineModelResult::SLineModelSolution &modelSolution);
@@ -124,6 +125,8 @@ private:
     Float64 m_resolution;
     Float64 m_velocityEmission;
     Float64 m_velocityAbsorption;
+    Float64 m_velocityEmissionInit;
+    Float64 m_velocityAbsorptionInit;
     Float64 m_nominalWidthDefaultEmission;
     Float64 m_nominalWidthDefaultAbsorption;
     std::string m_fittingmethod;
