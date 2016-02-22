@@ -1083,8 +1083,15 @@ Int32 CLineModelElementList::fitAmplitudesLmfit(std::vector<Int32> EltsIdx, cons
             }
             SetElementAmplitude(filteredEltsIdx[iddl], a, sigma);
         }
-        Float64 velEmission = gsl_vector_get(s->x,nddl);
-        SetVelocityEmission(velEmission);
+        Float64 vel = gsl_vector_get(s->x,nddl);
+        if(lineType==CRay::nType_Emission)
+        {
+            SetVelocityEmission(vel);
+        }else
+        {
+            SetVelocityAbsorption(vel);
+
+        }
     }
 
     gsl_multifit_fdfsolver_free (s);
@@ -2558,14 +2565,19 @@ Float64 CLineModelElementList::GetVelocityAbsorption()
 
 void CLineModelElementList::ApplyVelocityBound()
 {
+    static Float64 c = 300000.0;
+    static Float64 tolCoeff = 2.0;
+    static Float64 velInfFromInstrument = c/m_resolution/tolCoeff;
+    static Float64 velSup = 500.0;
+
     Float64 vel;
     vel = GetVelocityEmission();
-    if(vel>450 || vel<50)
+    if(vel>velSup || vel<velInfFromInstrument)
     {
         SetVelocityEmission(m_velocityEmissionInit);
     }
     vel = GetVelocityAbsorption();
-    if(vel>900 || vel<100)
+    if(vel>velSup || vel<velInfFromInstrument)
     {
         SetVelocityAbsorption(m_velocityAbsorptionInit);
     }

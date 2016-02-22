@@ -59,7 +59,7 @@ const std::string COperatorDTreeBSolve::GetDescription()
     desc.append("\tparam: linemodel.lineforcefilter = {""no"", ""S""}\n");
     desc.append("\tparam: linemodel.fittingmethod = {""hybrid"", ""individual""}\n");
     desc.append("\tparam: linemodel.continuumcomponent = {""fromspectrum"", ""nocontinuum"", ""zero""}\n");
-    desc.append("\tparam: linemodel.linewidthtype = {""psfinstrumentdriven"", ""zdriven"", ""fixedvelocity"", ""fixed""}\n");
+    desc.append("\tparam: linemodel.linewidthtype = {""psfinstrumentdriven"", ""zdriven"", ""combined"", ""fixed""}\n");
     desc.append("\tparam: linemodel.instrumentresolution = <float value>\n");
     desc.append("\tparam: linemodel.velocityemission = <float value>\n");
     desc.append("\tparam: linemodel.velocityabsorption = <float value>\n");
@@ -115,7 +115,7 @@ Bool COperatorDTreeBSolve::Solve(CDataStore &dataStore, const CSpectrum &spc, co
     //dataStore.GetScopedParam( "linemodel.continuumcomponent", opt_continuumcomponent, "nocontinuum" );
     dataStore.GetScopedParam( "linemodel.continuumcomponent", opt_continuumcomponent, "fromspectrum" );
     std::string opt_lineWidthType;
-    dataStore.GetScopedParam( "linemodel.linewidthtype", opt_lineWidthType, "fixedvelocity" );
+    dataStore.GetScopedParam( "linemodel.linewidthtype", opt_lineWidthType, "combined" );
     Float64 opt_resolution;
     dataStore.GetScopedParam( "linemodel.instrumentresolution", opt_resolution, 2350.0 );
     Float64 opt_velocity_emission;

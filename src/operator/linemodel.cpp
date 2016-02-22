@@ -50,7 +50,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute( CDataStore &dataSt
                                                     const TFloat64Range& lambdaRange, const TFloat64List& redshifts,
                                                     const Int32 opt_extremacount, const std::string& opt_fittingmethod, const std::string& opt_continuumcomponent,
                                                     const std::string& opt_lineWidthType, const Float64 opt_resolution, const Float64 opt_velocityEmission, const Float64 opt_velocityAbsorption,
-                                                    const std::string& opt_continuumreest, const std::string& opt_rules)
+                                                    const std::string& opt_continuumreest, const std::string& opt_rules, const std::string& opt_velocityFitting)
 {
 
     if( spectrum.GetSpectralAxis().IsInLinearScale() == false)
@@ -89,6 +89,10 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute( CDataStore &dataSt
     }
 
 
+    bool enableVelocityFitting = true;
+    if(opt_velocityFitting != "yes"){
+        enableVelocityFitting = false;
+    }
 
     Int32 typeFilter = -1;
     if(opt_lineTypeFilter == "A"){
@@ -226,7 +230,6 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute( CDataStore &dataSt
             contreest_iterations  = 0;
         }
 
-        bool enableVelocityFitting = true;
         if(enableVelocityFitting){
             //fit the emission and absorption width using the lindemodel lmfit strategy
             model.SetFittingMethod("lmfit");
@@ -297,7 +300,6 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute( CDataStore &dataSt
             contreest_iterations  = 0;
         }
 
-        bool enableVelocityFitting = true;
         if(enableVelocityFitting){
             //fit the emission and absorption width using the lindemodel lmfit strategy
             model.SetFittingMethod("lmfit");
@@ -322,7 +324,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute( CDataStore &dataSt
             dataStore.StoreScopedGlobalResult( fname_spc.c_str(), resultspcmodel );
 
             // CModelFittingResult
-            std::shared_ptr<CModelFittingResult>  resultfitmodel = std::shared_ptr<CModelFittingResult>( new CModelFittingResult(result->LineModelSolutions[idx], result->Redshifts[idx], result->ChiSquare[idx], result->restRayList) );
+            std::shared_ptr<CModelFittingResult>  resultfitmodel = std::shared_ptr<CModelFittingResult>( new CModelFittingResult(result->LineModelSolutions[idx], result->Redshifts[idx], result->ChiSquare[idx], result->restRayList, model.GetVelocityEmission(), model.GetVelocityAbsorption()) );
             std::string fname_fit = (boost::format("linemodel_fit_extrema_%1%") % savedModels).str();
             dataStore.StoreScopedGlobalResult( fname_fit.c_str(), resultfitmodel );
             savedModels++;

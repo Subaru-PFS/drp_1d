@@ -15,12 +15,14 @@ CModelFittingResult::CModelFittingResult()
 {
 }
 
-CModelFittingResult::CModelFittingResult(CLineModelResult::SLineModelSolution _lineModelSolution, Float64 _redshift, Float64 _merit, CRayCatalog::TRayVector _restRayList)
+CModelFittingResult::CModelFittingResult(CLineModelResult::SLineModelSolution _lineModelSolution, Float64 _redshift, Float64 _merit, CRayCatalog::TRayVector _restRayList, Float64 _velEmission, Float64 _velAbsorption)
 {
     LineModelSolution   = _lineModelSolution;
     Redshift            = _redshift;
     Merit               = _merit;
     restRayList         = _restRayList;
+    VelocityEmission               = _velEmission;
+    VelocityAbsorption               = _velAbsorption;
 }
 
 CModelFittingResult::~CModelFittingResult()
@@ -35,6 +37,8 @@ Void CModelFittingResult::Save( const CDataStore& store, std::ostream& stream ) 
         for ( UInt32 i=0; i<1; i++)
         {
             stream <<  "#linemodel solution " << i << " for z = " <<  std::fixed <<  Redshift;
+            stream << ", velocityEmission = " <<  VelocityEmission;
+            stream << ", velocityAbsorption = " <<  VelocityAbsorption;
             stream << ", merit = " <<  Merit << "{" <<  std::endl;
             stream << "#type\t#force\t#Name_____________\t#elt_ID\t#lambda_rest\t#amp_____\t#err_____\t#err_fit_____\n";
             for ( UInt32 j=0; j<LineModelSolution.Amplitudes.size(); j++)

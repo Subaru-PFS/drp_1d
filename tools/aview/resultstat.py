@@ -1249,9 +1249,11 @@ class ResultList(object):
         failures_onlyThis = []
         failures_onlyRef = []
 
-        removeStrRef = "_F"
+        #removeStrRef = "_F"
+        removeStrRef = "_FILT_MGv0_c"
         #removeStrRef = "_FILT3dec2015"
-        removeStrThis = "_FILT_MGv0_c"
+        removeStrThis = "_FILT_MGv1_c"
+        #removeStrThis = "_F"
         #removeStr2 = "_FILT"        
         
         n = self.n

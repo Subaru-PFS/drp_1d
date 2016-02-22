@@ -54,7 +54,7 @@ void checkAmplitudeAndVelocityFit(std::string spectrumPath, std::string noisePat
 
 
     std::string opt_continuumcomponent = "fromspectrum";
-    std::string opt_lineWidthType = "fixedvelocity";
+    std::string opt_lineWidthType = "combined";
     Float64 opt_resolution = 2350;
     Float64 opt_velocityEmission = initVelocity;
     Float64 opt_velocityAbsorption = initVelocity;

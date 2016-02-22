@@ -65,7 +65,7 @@ Float64 CLineModelElement::GetLineWidth(Float64 redshiftedlambda, Float64 z, Boo
         instrumentSigma = m_NominalWidth*(1+z);
     }else if( m_LineWidthType == "fixed"){
         instrumentSigma = m_NominalWidth;
-    }else if( m_LineWidthType == "fixedvelocity"){
+    }else if( m_LineWidthType == "combined"){
         Float64 v = m_VelocityEmission;
         if(!isEmission){
             v = m_VelocityAbsorption;
