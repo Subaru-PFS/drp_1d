@@ -244,8 +244,18 @@ void CMultiLine::SetFittedAmplitude(Float64 A, Float64 SNR)
       {
         for(Int32 k=0; k<m_Rays.size(); k++)
 	  {
-            m_FittedAmplitudes[k] = -1;
-            m_FittedAmplitudeErrorSigmas[k] = -1;
+	    // This separation in distinct negative values is to facilitate unit testing. All negative amplitudes should be considered invalid.
+	    if( A<0 )
+	      {
+		m_FittedAmplitudes[k] = A;
+		m_FittedAmplitudeErrorSigmas[k] = A;
+	      }
+	    else
+	      {
+		m_FittedAmplitudes[k] = -1 -A;
+		m_FittedAmplitudeErrorSigmas[k] = -1 -A;
+	      }
+		
 	  }
         return;
       }

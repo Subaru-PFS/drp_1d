@@ -61,6 +61,7 @@ public:
     Float64 getModelErrorUnderElement(Int32 eltId);
     CLineModelResult::SLineModelSolution GetModelSolution();
     const CSpectrum&                GetModelSpectrum() const;
+    std::vector<boost::shared_ptr<CLineModelElement>  > m_Elements;
 
 private:
 
@@ -93,7 +94,6 @@ private:
 
 
     Float64 m_Redshift;
-    std::vector<boost::shared_ptr<CLineModelElement>  > m_Elements;
 
     std::shared_ptr<CSpectrum>  m_SpectrumModel;  //model
     CSpectrumFluxAxis m_SpcFluxAxis;    //observed spectrum
