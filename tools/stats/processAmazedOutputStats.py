@@ -721,8 +721,8 @@ def ProcessFailuresSeqFile( fname, refFile, fnameFailuresSeqFile, fnameFailureRe
             spcStr = "_atm_clean"
             noiseStr = "_noise"
             if spcName.find(spcStr)==-1:
-                spcStr = "-W-F_"
-                noiseStr = "-W-ErrF_"
+                spcStr = "_F_"
+                noiseStr = "_ErrF"
             noiseName = spcName.replace(spcStr, noiseStr)
             fFailures.write( spcName + "\t" )
             fFailures.write( noiseName )

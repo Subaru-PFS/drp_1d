@@ -201,6 +201,13 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute( CDataStore &dataSt
     //TPointList extremumListExtended = extremumList;
    //todo: remove duplicate redshifts from the extended extrema list
 
+    std::vector<Float64> extrema_velocityEL;
+    std::vector<Float64> extrema_velocityAL;
+    extrema_velocityEL.resize(extremumList.size());
+    extrema_velocityAL.resize(extremumList.size());
+
+    TPointList extremumList2;
+    extremumList2.resize(extremumList.size());
 
     //recompute the fine grid results around the extrema
     for( Int32 i=0; i<extremumList.size(); i++ )
@@ -230,6 +237,9 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute( CDataStore &dataSt
             contreest_iterations  = 0;
         }
 
+
+        ModelFit( model, lambdaRange, result->Redshifts[idx], result->ChiSquare[idx], result->LineModelSolutions[idx], contreest_iterations);
+        m = result->ChiSquare[idx];
         if(enableVelocityFitting){
             //fit the emission and absorption width using the lindemodel lmfit strategy
             model.SetFittingMethod("lmfit");
@@ -240,43 +250,68 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute( CDataStore &dataSt
             model.SetFittingMethod(opt_fittingmethod);
             model.ResetElementIndexesDisabled();
             model.ApplyVelocityBound();
-        }
-        ModelFit( model, lambdaRange, result->Redshifts[idx], result->ChiSquare[idx], result->LineModelSolutions[idx], contreest_iterations);
-        m = result->ChiSquare[idx];
+        }        
+        extrema_velocityEL[i]=model.GetVelocityEmission();
+        extrema_velocityAL[i]=model.GetVelocityAbsorption();
 
         //finally compute the redshifts on the extended ExtremaExtendedRedshifts values
         Float64 left_border = max(redshiftsRange.GetBegin(), z-extensionradius);
         Float64 right_border=min(redshiftsRange.GetEnd(), z+extensionradius);
+        //model.SetFittingMethod("nofit");
+        extremumList2[i].Y = DBL_MAX;
+        extremumList2[i].X = result->Redshifts[idx];
         for (Int32 iz=0;iz<result->Redshifts.size();iz++)
         {
             if(result->Redshifts[iz] >= left_border && result->Redshifts[iz] <= right_border){
                 ModelFit( model, lambdaRange, result->Redshifts[iz], result->ChiSquare[iz], result->LineModelSolutions[iz], contreest_iterations);
-                if(result->ChiSquare[iz]< extremumList[i].Y)
+                if(result->ChiSquare[iz]< extremumList2[i].Y)
                 {
-                    extremumList[i].X = result->Redshifts[iz];
-                    extremumList[i].Y = result->ChiSquare[iz];
+                    extremumList2[i].X = result->Redshifts[iz];
+                    extremumList2[i].Y = result->ChiSquare[iz];
                 }
             }
         }
+        //model.SetFittingMethod(opt_fittingmethod);
     }
 
+    //return result;
+    //reorder extremumList using .Y values : smallest to highest
+    TPointList extremumListOrdered;
+    std::vector<Float64> extrema_velocityELOrdered;
+    std::vector<Float64> extrema_velocityALOrdered;
+    extremumCount = extremumList2.size();
+    for(Int32 ie=0; ie<extremumCount; ie++)
+    {
+        Int32 iYmin=0;
+        Float64 YMin=DBL_MAX;
+        for(Int32 ie2=0; ie2<extremumList2.size(); ie2++)
+        {
+            if(YMin>extremumList2[ie2].Y){
+                YMin = extremumList2[ie2].Y;
+                iYmin = ie2;
+            }
+        }
+
+        extremumListOrdered.push_back(extremumList2[iYmin]);
+        extremumList2.erase(extremumList2.begin() + iYmin);
+        extrema_velocityELOrdered.push_back(extrema_velocityEL[iYmin]);
+        extrema_velocityEL.erase(extrema_velocityEL.begin() + iYmin);
+        extrema_velocityALOrdered.push_back(extrema_velocityAL[iYmin]);
+        extrema_velocityAL.erase(extrema_velocityAL.begin() + iYmin);
+
+    }
 
     // store extrema results
-    extremumCount = extremumList.size();
-    result->Extrema.resize( extremumCount );
-    result->Posterior.resize( extremumCount );
-    result->LogArea.resize( extremumCount );
-    result->LogAreaCorrectedExtrema.resize( extremumCount );
-    result->SigmaZ.resize( extremumCount );
-    result->bic.resize( extremumCount );
+    result->ResizeExtremaResults(extremumCount);
+
     Int32 start = spectrum.GetSpectralAxis().GetIndexAtWaveLength(lambdaRange.GetBegin());
     Int32 end = spectrum.GetSpectralAxis().GetIndexAtWaveLength(lambdaRange.GetEnd());
     Int32 nsamples = end - start + 1;
     Int32 savedModels = 0;
-    for( Int32 i=0; i<extremumList.size(); i++ )
+    for( Int32 i=0; i<extremumCount; i++ )
     {
-        Float64 z = extremumList[i].X;
-        Float64 m = extremumList[i].Y;
+        Float64 z = extremumListOrdered[i].X;
+        Float64 m = extremumListOrdered[i].Y;
 
         //find the index in the zaxis results
         Int32 idx=-1;
@@ -300,20 +335,28 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute( CDataStore &dataSt
             contreest_iterations  = 0;
         }
 
+
         if(enableVelocityFitting){
-            //fit the emission and absorption width using the lindemodel lmfit strategy
-            model.SetFittingMethod("lmfit");
-            model.SetElementIndexesDisabledAuto();
-            ModelFit( model, lambdaRange, result->Redshifts[idx], result->ChiSquare[idx], result->LineModelSolutions[idx], contreest_iterations);
+//            ModelFit( model, lambdaRange, result->Redshifts[idx], result->ChiSquare[idx], result->LineModelSolutions[idx], contreest_iterations);
+//            m = result->ChiSquare[idx];
+//            //fit the emission and absorption width using the lindemodel lmfit strategy
+//            model.SetFittingMethod("lmfit");
+//            model.SetElementIndexesDisabledAuto();
+//            ModelFit( model, lambdaRange, result->Redshifts[idx], result->ChiSquare[idx], result->LineModelSolutions[idx], contreest_iterations);
 
 
-            model.SetFittingMethod(opt_fittingmethod);
-            model.ResetElementIndexesDisabled();
-            model.ApplyVelocityBound();
+//            model.SetFittingMethod(opt_fittingmethod);
+//            model.ResetElementIndexesDisabled();
+//            model.ApplyVelocityBound();
+//        }else{
+            model.SetVelocityEmission(extrema_velocityELOrdered[i]);
+            model.SetVelocityAbsorption(extrema_velocityALOrdered[i]);
         }
+
+
+
         ModelFit( model, lambdaRange, result->Redshifts[idx], result->ChiSquare[idx], result->LineModelSolutions[idx], contreest_iterations);
         m = result->ChiSquare[idx];
-
 
         //save the model result
         static Int32 maxModelSave = 5;

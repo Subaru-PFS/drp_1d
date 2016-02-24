@@ -19,6 +19,16 @@ CLineModelResult::~CLineModelResult()
 
 }
 
+Void CLineModelResult::ResizeExtremaResults(Int32 size)
+{
+    Extrema.resize(size);
+    Posterior.resize(size);
+    LogArea.resize(size);
+    LogAreaCorrectedExtrema.resize(size);
+    SigmaZ.resize(size);
+    bic.resize(size);
+
+}
 
 Void CLineModelResult::Load( std::istream& stream )
 {

@@ -21,10 +21,14 @@ def exportPerformances(dataDiff, outputDirectory):
     izref = 2
 
     print '\n\nexportPerformances:'
-    n_zbins = 10
-    z_bins_limits = np.linspace(0, 5.0, n_zbins+1, endpoint=True)
+    n_zbins_1 = 10
+    n_zbins_2 = 2
+    z_bins_limits_1 = np.linspace(0, 5.0, n_zbins_1+1, endpoint=True)
+    z_bins_limits_2 = np.linspace(6.0, 8.0, n_zbins_2+1, endpoint=True)
+    z_bins_limits = np.concatenate((z_bins_limits_1, z_bins_limits_2), axis=0)
+    n_zbins = len(z_bins_limits)-1
     print 'the z bins limits are: ' + str(z_bins_limits)  
-
+    
 
     n = len(dataDiff)
     print("datadiff n = {}".format(n))

@@ -91,7 +91,10 @@ Float64 CLineModelElement::GetLineProfile(std::string profile, Float64 xc, Float
         const Float64 xsurc = xc/sigma;
         val = exp(-0.5*xsurc*xsurc);
     }else if(profile=="ASYM"){
-        const Float64 xsurc = xc/sigma/2.5;
+        const Float64 coeff = 2.5;
+
+        sigma = sigma*coeff;
+        const Float64 xsurc = xc/sigma;
         const Float64 alpha=10.0;
         val = exp(-0.5*xsurc*xsurc)*(1.0+erf(alpha/sqrt(2.0)*xsurc));
     }
@@ -107,10 +110,18 @@ Float64 CLineModelElement::GetLineProfileDerivSigma(std::string profile, Float64
         const Float64 xsurc = xc/sigma;
         val = xc*xc /cel *x0 /(sigma*sigma*sigma) * exp(-0.5*xsurc*xsurc);
     }else if(profile=="ASYM"){
-        //not implemeted yet... to be calculated...
-        const Float64 xsurc = xc/sigma/2.5;
+        const Float64 coeff = 2.5;
+
+        sigma = sigma*coeff;
+        const Float64 xsurc = xc/sigma;
         const Float64 alpha=10.0;
-        val = exp(-0.5*xsurc*xsurc)*(1.0+erf(alpha/sqrt(2.0)*xsurc));
+        const Float64 valsym = exp(-0.5*xsurc*xsurc);
+        const Float64 valsymd = xc*xc /cel *x0 /(sigma*sigma*sigma) * exp(-0.5*xsurc*xsurc);
+
+        const Float64 valasym = (1.0+erf(alpha/sqrt(2.0)*xsurc));
+        const Float64 arg = alpha*xc/sqrt(2)/sigma;
+        const Float64 valasymd = -alpha/sqrt(2*M_PI)*xc /(sigma*sigma) /cel*x0*exp(-arg*arg);
+        val = valsym*valasymd+valsymd*valasym;
     }
     return val;
 }

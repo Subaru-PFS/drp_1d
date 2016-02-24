@@ -453,12 +453,57 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
     //fit the amplitude of all elements together (but Emission or Absorption separately) with iterative   solver: lmfit
     if(m_fittingmethod=="lmfit")
     {
-        std::vector<Int32> validEltsIdx = GetModelValidElementsIndexes();
         std::vector<Float64> ampsfitted;
-        Int32 lineType = CRay::nType_Absorption;
-        fitAmplitudesLmfit(validEltsIdx, m_spcFluxAxisNoContinuum, ampsfitted, lineType);
-        lineType = CRay::nType_Emission;
-        fitAmplitudesLmfit(validEltsIdx, m_spcFluxAxisNoContinuum, ampsfitted, lineType);
+        Int32 retVal;
+        Int32 lineType;
+
+        for(Int32 iLineType = 0; iLineType<2; iLineType++)
+        {
+            if(iLineType==0)
+            {
+                Log.LogInfo( "\nLineModel Infos: Lmfit ABSORPTION, for z = %.4f", m_Redshift);
+                lineType = CRay::nType_Absorption;
+            }else{
+                Log.LogInfo( "\nLineModel Infos: Lmfit EMISSION, for z = %.4f", m_Redshift);
+                lineType = CRay::nType_Emission;
+            }
+            retVal = 0;
+            std::vector<Int32> validEltsIdx = GetModelValidElementsIndexes();
+            std::vector<Int32> filteredEltsIdx;
+            for (Int32 iElt = 0; iElt < validEltsIdx.size(); iElt++)
+            {
+                if(m_RestRayList[m_Elements[validEltsIdx[iElt]]->m_LineCatalogIndexes[0]].GetType() != lineType)
+                {
+                    continue;
+                }
+                filteredEltsIdx.push_back(validEltsIdx[iElt]);
+            }
+
+
+            Int32 previousValidEltsSizeEltsSize = filteredEltsIdx.size()+1;
+            while( (retVal!=1 || retVal!=-1) && filteredEltsIdx.size()>0 && filteredEltsIdx.size()!=previousValidEltsSizeEltsSize)
+            {
+
+                Log.LogInfo( "LineModel Infos: Lmfit IN filteredEltsIdx.size() = %d", filteredEltsIdx.size());
+                Log.LogInfo( "LineModel Infos: Lmfit previousValidEltsSizeEltsSize = %d", previousValidEltsSizeEltsSize);
+                previousValidEltsSizeEltsSize = filteredEltsIdx.size();
+                retVal = fitAmplitudesLmfit(filteredEltsIdx, m_spcFluxAxisNoContinuum, ampsfitted, lineType);
+                Log.LogInfo( "LineModel Infos: Lmfit retVal = %d", retVal);
+                Log.LogInfo( "LineModel Infos: Lmfit ampsfitted.size() = %d", ampsfitted.size());
+                if(retVal==0 && filteredEltsIdx.size()==ampsfitted.size()){
+                    for(Int32 ie=filteredEltsIdx.size()-1; ie>=0; ie--)
+                    {
+                        if(ampsfitted[ie]<=0.0)
+                        {
+                            Log.LogInfo( "LineModel Infos: erasing i= %d", ie);
+                            filteredEltsIdx.erase(filteredEltsIdx.begin() + ie);
+                        }
+                    }
+                }
+                Log.LogInfo( "LineModel Infos: Lmfit OUT, validEltsIdx.size() = %d", filteredEltsIdx.size());
+            }
+        }
+
     }
 
     //fit the amplitude of all elements together with linear solver: gsl_multifit_wlinear
@@ -904,20 +949,12 @@ void print_state (size_t iter, gsl_multifit_fdfsolver * s)
 }
 
 
-Int32 CLineModelElementList::fitAmplitudesLmfit(std::vector<Int32> EltsIdx, const CSpectrumFluxAxis& fluxAxis, std::vector<Float64>& ampsfitted, Int32 lineType)
+Int32 CLineModelElementList::fitAmplitudesLmfit(std::vector<Int32> filteredEltsIdx, const CSpectrumFluxAxis& fluxAxis, std::vector<Float64>& ampsfitted, Int32 lineType)
 {
     //http://www.gnu.org/software/gsl/manual/html_node/Example-programs-for-Nonlinear-Least_002dSquares-Fitting.html
-    Bool verbose=false;
+    Bool verbose=true;
 
-    std::vector<Int32> filteredEltsIdx;
-    for (Int32 iElt = 0; iElt < EltsIdx.size(); iElt++)
-    {
-        if(m_RestRayList[m_Elements[iElt]->m_LineCatalogIndexes[0]].GetType() != lineType)
-        {
-            continue;
-        }
-        filteredEltsIdx.push_back(EltsIdx[iElt]);
-    }
+
 
     Int32 nddl = filteredEltsIdx.size();
     if(nddl<1){
@@ -1060,38 +1097,77 @@ Int32 CLineModelElementList::fitAmplitudesLmfit(std::vector<Int32> EltsIdx, cons
             {
                 if(FIT(k)<1e-3)
                 {
-                    fprintf (stderr, "A      = %.3e +/- %.8f\n", FIT(k), c*ERR(k));
+                    fprintf (stderr, "A %d     = %.3e +/- %.8f\n", k, FIT(k), c*ERR(k));
                 }else{
-                    fprintf (stderr, "A      = %.5f +/- %.8f\n", FIT(k), c*ERR(k));
+                    fprintf (stderr, "A %d     = %.5f +/- %.8f\n", k, FIT(k), c*ERR(k));
                 }
 
             }
         }
-        fprintf (stderr, "status = %s\n", gsl_strerror (status));
+        fprintf (stderr, "status = %s (%d)\n", gsl_strerror (status), status);
+    }
+
+
+    Int32 sameSign = 1;
+    Float64 a0 = gsl_vector_get(s->x,0)/normFactor;
+    for (Int32 iddl = 1; iddl < nddl; iddl++)
+    {
+        Float64 a = gsl_vector_get(s->x,iddl)/normFactor;
+        Float64 product = a0*a;
+        if(product<0){
+            sameSign = 0;
+        }
     }
 
     // finally populate the fitting results to the linemodel
+    if(sameSign && status==0)
     {
+        Float64 dof = n - p;
+        Float64 c = GSL_MAX_DBL(1, chi / sqrt(dof));
+//        for (Int32 iddl = 0; iddl < nddl; iddl++)
+//        {
+//            Float64 a = gsl_vector_get(s->x,iddl)/normFactor;
+//            Float64 sigma = c*sqrt(gsl_matrix_get(covar,iddl,iddl))/normFactor;
+//            if(a<0.0){
+//                a=0.0;
+//            }
+//            SetElementAmplitude(filteredEltsIdx[iddl], a, sigma);
+//        }
+        Float64 vel = gsl_vector_get(s->x,nddl);
+        Float64 errVel = c*sqrt(gsl_matrix_get(covar,nddl,nddl));
+
+
+        Log.LogInfo( "LineModel Infos: Lmfit velocity found = %.1f with err = %.1f", vel, errVel);
+
+        if(vel>errVel*2.0){
+            if(lineType==CRay::nType_Emission)
+            {
+                SetVelocityEmission(vel);
+            }else
+            {
+                SetVelocityAbsorption(vel);
+            }
+        }else{
+            if(lineType==CRay::nType_Emission)
+            {
+                Log.LogInfo( "LineModel Infos: Lmfit velocity Emission reset = %.1f ", m_velocityEmissionInit);
+                SetVelocityEmission(m_velocityEmissionInit);
+            }else
+            {
+                Log.LogInfo( "LineModel Infos: Lmfit velocity Absorption reset = %.1f ", m_velocityAbsorptionInit);
+                SetVelocityAbsorption(m_velocityAbsorptionInit);
+            }
+        }
+    }else{
+        ampsfitted.resize(nddl);
         for (Int32 iddl = 0; iddl < nddl; iddl++)
         {
             Float64 a = gsl_vector_get(s->x,iddl)/normFactor;
-            Float64 dof = n - p;
-            Float64 c = GSL_MAX_DBL(1, chi / sqrt(dof));
-            Float64 sigma = c*sqrt(gsl_matrix_get(covar,iddl,iddl))/normFactor;
-            if(a<0.0){
-                a=0.0;
-            }
-            SetElementAmplitude(filteredEltsIdx[iddl], a, sigma);
+            ampsfitted[iddl] = (a);
         }
-        Float64 vel = gsl_vector_get(s->x,nddl);
-        if(lineType==CRay::nType_Emission)
-        {
-            SetVelocityEmission(vel);
-        }else
-        {
-            SetVelocityAbsorption(vel);
 
-        }
+        SetVelocityAbsorption(m_velocityAbsorptionInit);
+        SetVelocityEmission(m_velocityEmissionInit);
     }
 
     gsl_multifit_fdfsolver_free (s);
@@ -1099,7 +1175,7 @@ Int32 CLineModelElementList::fitAmplitudesLmfit(std::vector<Int32> EltsIdx, cons
     gsl_matrix_free (J);
     gsl_rng_free (r);
 
-    return 0;
+    return sameSign;
 }
 
 std::vector<Int32> CLineModelElementList::getSupportIndexes( std::vector<Int32> EltsIdx)
@@ -1824,23 +1900,23 @@ void CLineModelElementList::applyRules()
         Apply2SingleLinesAmplitudeRule(CRay::nType_Emission, "Halpha", "Hbeta", 1.0/2.86*1.1);
         Apply2SingleLinesAmplitudeRule(CRay::nType_Emission, "Hbeta", "Hgamma", 0.47*1.1);
         Apply2SingleLinesAmplitudeRule(CRay::nType_Emission, "Hgamma", "Hdelta", 1.1);
-        //Apply2SingleLinesAmplitudeRule(CRay::nType_Emission, "Hdelta", "Hepsilon", 1.1);
-        //Apply2SingleLinesAmplitudeRule(CRay::nType_Emission, "Hepsilon", "H8", 1.1);
-        Apply2SingleLinesAmplitudeRule(CRay::nType_Emission, "Hdelta", "H8", 1.1);
+        Apply2SingleLinesAmplitudeRule(CRay::nType_Emission, "Hdelta", "Hepsilon", 1.1);
+        Apply2SingleLinesAmplitudeRule(CRay::nType_Emission, "Hepsilon", "H8", 1.1);
+        //Apply2SingleLinesAmplitudeRule(CRay::nType_Emission, "Hdelta", "H8", 1.1);
         Apply2SingleLinesAmplitudeRule(CRay::nType_Emission, "H8", "H9", 1.1);
         Apply2SingleLinesAmplitudeRule(CRay::nType_Emission, "H9", "H10", 1.1);
         Apply2SingleLinesAmplitudeRule(CRay::nType_Emission, "H10", "H11", 1.1);
         //*/
 
         /*
-    Apply2SingleLinesAmplitudeRule(CRay::nType_Absorption, "HbetaA", "HgammaA", 1.0);
-    Apply2SingleLinesAmplitudeRule(CRay::nType_Absorption, "HgammaA", "HdeltaA", 1.0);
-    Apply2SingleLinesAmplitudeRule(CRay::nType_Absorption, "HdeltaA", "HepsilonA", 1.0);
-    Apply2SingleLinesAmplitudeRule(CRay::nType_Absorption, "HepsilonA", "H8A", 1.0);
-    Apply2SingleLinesAmplitudeRule(CRay::nType_Absorption, "H8A", "H9A", 1.0);
-    Apply2SingleLinesAmplitudeRule(CRay::nType_Absorption, "H9A", "H10A", 1.0);
-    Apply2SingleLinesAmplitudeRule(CRay::nType_Absorption, "H10A", "H11A", 1.0);
-    //*/
+        Apply2SingleLinesAmplitudeRule(CRay::nType_Absorption, "HbetaA", "HgammaA", 1.0);
+        Apply2SingleLinesAmplitudeRule(CRay::nType_Absorption, "HgammaA", "HdeltaA", 1.0);
+        //Apply2SingleLinesAmplitudeRule(CRay::nType_Absorption, "HdeltaA", "HepsilonA", 1.0);
+        //Apply2SingleLinesAmplitudeRule(CRay::nType_Absorption, "HepsilonA", "H8A", 1.0);
+        Apply2SingleLinesAmplitudeRule(CRay::nType_Absorption, "H8A", "H9A", 1.0);
+        Apply2SingleLinesAmplitudeRule(CRay::nType_Absorption, "H9A", "H10A", 1.0);
+        Apply2SingleLinesAmplitudeRule(CRay::nType_Absorption, "H10A", "H11A", 1.0);
+        //*/
     }
 
     Bool enableOIIRatioRange= m_rulesoption.find("oiiratio") != std::string::npos;
@@ -1850,6 +1926,15 @@ void CLineModelElementList::applyRules()
         ApplyAmplitudeRatioRangeRule(CRay::nType_Emission, "[OII]3726", "[OII]3729", 2.0);
         //*/
     }
+
+    Bool enableCIIIRatioRange= m_rulesoption.find("ciiiratio") != std::string::npos;
+    if(m_rulesoption=="all" || enableCIIIRatioRange){
+
+        //*
+        ApplyAmplitudeRatioRangeRule(CRay::nType_Emission, "[CIII]1907", "[CIII]1909", 2.0);
+        //*/
+    }
+
 
     //*
     //add rule, if OIII present, then OII should be there too
@@ -1965,13 +2050,19 @@ Void CLineModelElementList::Apply2SingleLinesAmplitudeRule( Int32 linetype, std:
         Float64 ampB = m_Elements[iB]->GetFittedAmplitude(0);
         Float64 erB = m_Elements[iB]->GetFittedAmplitudeErrorSigma(0);
 
+        //*
+        //Method 0, limit the weakest line's amplitude, no noise taken into account
+        Float64 maxB = (coeff*ampA);
+        m_Elements[iB]->LimitFittedAmplitude(0, maxB);
+        //*/
+
         /*
         //Method 1, limit the weakest line's amplitude
         Float64 maxB = (coeff*ampA) + (erA*nSigma*coeff);
         m_Elements[iB]->LimitFittedAmplitude(0, maxB);
         //*/
 
-        //*
+        /*
         //Method 2, correct both lines depending on their sigmas
         if(ampB!=0.0 && (erA!=0 && erB!=0) && std::abs(ampB) > std::abs(ampA*coeff) ){
             Float64 R = 1.0/coeff;
@@ -2568,18 +2659,21 @@ void CLineModelElementList::ApplyVelocityBound()
     static Float64 c = 300000.0;
     static Float64 tolCoeff = 2.0;
     static Float64 velInfFromInstrument = c/m_resolution/tolCoeff;
-    static Float64 velSup = 500.0;
+    static Float64 velSupEmission = 800.0;
+    static Float64 velSupAbsorption = 800.0;
 
     Float64 vel;
     vel = GetVelocityEmission();
-    if(vel>velSup || vel<velInfFromInstrument)
+    if(vel>velSupEmission || vel<velInfFromInstrument)
     {
         SetVelocityEmission(m_velocityEmissionInit);
+        Log.LogInfo( "\nLineModel Infos: Reset Velocity Emission, to v = %.1f", m_velocityEmissionInit);
     }
     vel = GetVelocityAbsorption();
-    if(vel>velSup || vel<velInfFromInstrument)
+    if(vel>velSupAbsorption || vel<velInfFromInstrument)
     {
         SetVelocityAbsorption(m_velocityAbsorptionInit);
+        Log.LogInfo( "\nLineModel Infos: Reset Velocity Absorption, to v = %.1f", m_velocityAbsorptionInit);
     }
 }
 

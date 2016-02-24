@@ -32,6 +32,8 @@ public:
     CLineModelResult();
     virtual ~CLineModelResult();
 
+    Void ResizeExtremaResults(Int32 size);
+
     Void Save( const CDataStore& store, std::ostream& stream ) const;
     Void SaveLine( const CDataStore& store, std::ostream& stream ) const;
     Void Load( std::istream& stream );

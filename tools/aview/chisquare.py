@@ -536,7 +536,7 @@ class ResultChisquare(object):
 if __name__ == '__main__':
     
     # plot single chisquare
-    if 1:
+    if 0:
         path = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/res_20150807_chi2_fullResults/sc_020088969_F02P016_vmM1_red_21_1_atm_clean/StarBurst3.txt"
         path = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/res_20150820_chi2_fullResults/sc_020086471_F02P016_vmM1_red_107_1_atm_clean/NEW_Im_extended_blue.dat"
         #path = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/res_20150818_corr_fullResults/sc_020086471_F02P016_vmM1_red_107_1_atm_clean/NEW_Im_extended_blue.dat"        
@@ -592,27 +592,19 @@ if __name__ == '__main__':
         chi.plot(showContinuumEstimate=False, showExtrema=True, showAmbiguities=False)
         
     # compare chisquares
-    if 0:          
-        #path = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/res_20150807_chi2_fullResults/sc_020088969_F02P016_vmM1_red_21_1_atm_clean/StarBurst3.txt"
-        path = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/res_20150813_chi2_fullResults/sc_020086471_F02P016_vmM1_red_107_1_atm_clean/NEW_Im_extended_blue.dat"
-        path = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/output/sc_020086471_F02P016_vmM1_red_107_1_atm_clean/NEW_Im_extended_blue.dat"
-        #path = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/res_20150813_chi2_fullResults/sc_020086471_F02P016_vmM1_red_107_1_atm_clean/EllipticaldataExtensionData.dat"
-        #path = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/res_20150807_chi2_fullResults/sc_020089640_F02P019_vmM1_red_93_1_atm_clean/BulgedataExtensionData.dat"
-        #path = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/res_20150813_chi2_fullResults/sc_020089640_F02P019_vmM1_red_93_1_atm_clean/NEW_E_extendeddataExtensionData.dat"
-        
-        #path = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/res_20150813_chi2_fullResults/sc_020106186_F02P018_vmM1_red_18_1_atm_clean/EdataExtensionData.dat"
-        #path = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/res_20150813_chi2_fullResults/sc_020106186_F02P018_vmM1_red_18_1_atm_clean/sbdataExtensionData.dat"
-        #path = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/res_20150807_chi2_fullResults/sc_020115875_F02P019_vmM1_red_33_1_atm_clean/EW_SB2extended.dat"
-        #path = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/res_20150807_chi2_fullResults/sc_020141834_F02P030_vmM1_red_130_1_atm_clean/BulgedataExtensionData.dat"
-        
-        name = "chisquare2solve.chisquare.csv"
+    if 1:          
+        path = "/home/aschmitt/data/pfs/pfs2_simu20151118_jenny/amazed/output_fail_no_fit/54000015012999vacLine_F"
+        #path = "/home/aschmitt/data/pfs/pfs2_simu20151118_jenny/amazed/output/54000015007903vacLine_F"
+        name = "linemodelsolve.linemodel.csv"
         spath = os.path.join(path,name)
         print('using full path: {0}'.format(spath))
         chi1 = ResultChisquare(spath)
         print(chi1)
         #chi1.plot()
         
-        name = "chisquare2solve.chisquare_nocontinuum.csv"
+        path = "/home/aschmitt/data/pfs/pfs2_simu20151118_jenny/amazed/output_fail_lmfit/54000015012999vacLine_F"
+        #path = "/home/aschmitt/data/pfs/pfs2_simu20151118_jenny/amazed/output_largegrid/54000015007903vacLine_F"
+        name = "linemodelsolve.linemodel.csv"
         spath = os.path.join(path,name)
         print('using full path: {0}'.format(spath))
         chi2 = ResultChisquare(spath)        
