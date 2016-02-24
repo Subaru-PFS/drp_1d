@@ -21,6 +21,8 @@
 namespace NSEpic
 {
 
+  class CRegulament;
+  
 class CLineModelElementList
 {
 
@@ -88,6 +90,7 @@ private:
     void applyRules();
     Void ApplyStrongHigherWeakRule( Int32 lineType );
     Float64 FindHighestStrongLineAmp( Int32 lineType, Float64 &er);
+    CRegulament* m_Regulament;
 
     Int32 FindElementIndex(Int32 LineCatalogIndex);
     Int32 FindElementIndex(std::string LineTagStr, Int32 linetype);

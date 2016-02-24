@@ -2,6 +2,7 @@
 #include <epic/redshift/linemodel/singleline.h>
 #include <epic/redshift/linemodel/multiline.h>
 #include <epic/redshift/gaussianfit/multigaussianfit.h>
+#include <epic/redshift/ray/regulament.h>
 #include <gsl/gsl_multifit.h>
 #include <epic/redshift/spectrum/io/genericreader.h>
 #include <epic/redshift/spectrum/template/template.h>
@@ -105,6 +106,12 @@ CLineModelElementList::CLineModelElementList( const CSpectrum& spectrum,
 	}
       fclose( fspc );
     }
+
+  // new style rules
+  m_Regulament = new CRegulament ( );
+  m_Regulament->CreateRulesFromJSONFiles( );
+  m_Regulament->EnableRulesAccordingToParameters ( m_rulesoption );
+    
 }
 
 /**

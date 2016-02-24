@@ -15,6 +15,8 @@ namespace NSEpic
   {
   public:
     Bool Enabled;
+    std::string Name;
+    
     CRule ( );
     void Apply( std::vector<boost::shared_ptr<CLineModelElement> > LinemodelElements );
     virtual Bool Check( std::vector<boost::shared_ptr<CLineModelElement> > LinemodelElements ) = 0;
