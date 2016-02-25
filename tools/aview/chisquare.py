@@ -5,7 +5,6 @@ Created on Sat Jul 25 11:44:49 2015
 @author: aschmitt
 """
 import os
-from astropy.io import fits
 import math
 
 import matplotlib.pyplot as pp
@@ -245,8 +244,10 @@ class ResultChisquare(object):
                 cmax = self.yvect[x]
              
         pp.figure("chi2")
-        pp.plot(other_spc.xvect, other_spc.yvect, 'b', label=other_spc.label)
-        pp.plot(self.xvect, self.yvect, 'k', label=self.label)
+        spcColor = '0.5'
+        pp.plot(other_spc.xvect, other_spc.yvect, color=spcColor,linewidth = 2.0, label=other_spc.label)
+
+        pp.plot(self.xvect, self.yvect, 'r', linestyle = "dashed", linewidth = 1.0, label=self.label)
 
         pp.grid(True) # Affiche la grille
         pp.legend()
@@ -593,7 +594,7 @@ if __name__ == '__main__':
         
     # compare chisquares
     if 1:          
-        path = "/home/aschmitt/data/pfs/pfs2_simu20151118_jenny/amazed/output_fail_no_fit/54000015012999vacLine_F"
+        path = "/home/aschmitt/data/pfs/pfs2_simu20151118_jenny/amazed/res_20160209_results_batch6_fev2016/res_20160224_linemodel_velocityfit_balmer0_F_ErrF/16000010000158vacLine_F"
         #path = "/home/aschmitt/data/pfs/pfs2_simu20151118_jenny/amazed/output/54000015007903vacLine_F"
         name = "linemodelsolve.linemodel.csv"
         spath = os.path.join(path,name)
@@ -602,7 +603,7 @@ if __name__ == '__main__':
         print(chi1)
         #chi1.plot()
         
-        path = "/home/aschmitt/data/pfs/pfs2_simu20151118_jenny/amazed/output_fail_lmfit/54000015012999vacLine_F"
+        path = "/home/aschmitt/data/pfs/pfs2_simu20151118_jenny/amazed/res_20160209_results_batch6_fev2016/res_20160224_linemodel_balmer0_F_ErrF/16000010000158vacLine_F"
         #path = "/home/aschmitt/data/pfs/pfs2_simu20151118_jenny/amazed/output_largegrid/54000015007903vacLine_F"
         name = "linemodelsolve.linemodel.csv"
         spath = os.path.join(path,name)

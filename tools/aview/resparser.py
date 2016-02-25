@@ -41,7 +41,7 @@ class ResParser(object):
         self.corrrelpath = "correlationsolve.correlation.csv"    
         
         methodParam = self.getParameterVal('method')
-        if methodParam=="linemodelsolve":
+        if methodParam=="linemodelsolve" or methodParam=="linemodel":
             self.linemodelrelpath = "linemodelsolve.linemodel.csv" #"dtreeBsolve.linemodel.csv" 
         if methodParam=="decisionaltreeb":
             self.linemodelrelpath = "dtreeBsolve.linemodel.csv" 

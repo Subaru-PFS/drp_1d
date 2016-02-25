@@ -138,7 +138,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute( CDataStore &dataSt
             ModelFit( model, lambdaRange, result->Redshifts[i], result->ChiSquare[i], result->LineModelSolutions[i], contreest_iterations);
             indexLargeGrid++;
         }else{
-            result->ChiSquare[i] = result->ChiSquare[i-1] + 1e-6;
+            result->ChiSquare[i] = result->ChiSquare[i-1] + 1e-2;
             result->LineModelSolutions[i] = result->LineModelSolutions[i-1];
         }
     }

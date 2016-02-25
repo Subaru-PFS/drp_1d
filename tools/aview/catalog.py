@@ -158,11 +158,14 @@ class Catalog(object):
         pp.show()
     
     def plotInZplane(self):
-        obs_lambda_min = 12500.0
-        obs_lambda_max = 17500.0
-        #PFS
-        obs_lambda_min = 3800.0
-        obs_lambda_max = 12600.0
+        if 1:
+            #EUCLID
+            obs_lambda_min = 12500.0
+            obs_lambda_max = 17500.0
+        else:        
+            #PFS
+            obs_lambda_min = 3800.0
+            obs_lambda_max = 12600.0
 
         filter_type = "E"
         filter_force = -1
@@ -170,10 +173,10 @@ class Catalog(object):
         nlines = len(ctlg_rest['lambda']) 
         print("nlines={}".format(nlines))
         print("catalog rest = {}".format(ctlg_rest))
-        linesaxisticks = ["{}".format(a) for a in ctlg_rest['name']]
+        linesaxisticks = ["{} - {}A".format(ctlg_rest['name'][a], ctlg_rest['lambdarest'][a]) for a in range(len(ctlg_rest['name']))]
         
         zmin = 0.0
-        zmax = 7.0
+        zmax = 5.0
         zstep = 0.01
         nz = int((zmax-zmin)/zstep)
         zaxis = np.linspace(zmin, zmax, nz)
@@ -212,7 +215,7 @@ class Catalog(object):
         
         pp.xlabel('z')
         pp.ylabel('LINE')
-        name1 = "Lines presence = f(z)\nblack=present, white=absent".format()
+        name1 = "Lines presence = f(z) for observed spectrum in [{:.1f}A - {:.1f}A]\nblack=present, white=absent".format(obs_lambda_min, obs_lambda_max)
         pp.title(name1)
         
         
@@ -305,8 +308,8 @@ class Catalog(object):
       
             
 if __name__ == '__main__':
-    path = "/home/aschmitt/data/muse/muse1_20160126/amazed/linecatalogs"
-    name = "linecatalogamazedvacuum_B8B.txt"
+    path = "/home/aschmitt/data/pfs/pfs2_simu20151118_jenny/amazed/linecatalogs"
+    name = "linecatalogamazedvacuum_B9B.txt"
     cpath = os.path.join(path,name)
     print('using full path: {0}'.format(cpath))
     c = Catalog(cpath, ctype="vacuum")
