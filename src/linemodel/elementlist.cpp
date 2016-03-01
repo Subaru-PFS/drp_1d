@@ -112,6 +112,7 @@ CLineModelElementList::CLineModelElementList( const CSpectrum& spectrum,
   m_Regulament = new CRegulament ( );
   m_Regulament->CreateRulesFromJSONFiles( );
   m_Regulament->EnableRulesAccordingToParameters ( m_rulesoption );
+  m_Regulament->Apply( m_Elements );
 }
 
 /**
@@ -1381,7 +1382,7 @@ void CLineModelElementList::addDoubleLine(const CRay &r1, const CRay &r2, Int32 
 /**
  * /brief Calls the rules' methods depending on the JSON options.
  * If m_rulesoption is "no", do nothing.
- * If either "balmer" or "all" is in the rules string, call ApplyBalmerRuleLinSolve and each Apply2SingleLinesAmplitudeRule applicable.
+ * If either "balmer" or "all" is in the rules string, call ApplyBalmerRuleLinSolve.
  * If "all" or "oiiratio" is in the rules string, call ApplyAmplitudeRatioRangeRule parameterized for OII.
  * If "all" or "strongweak" is in the rules string, call ApplyStrongHigherWeakRule for emission and then for absorption.
  **/
@@ -1394,13 +1395,6 @@ void CLineModelElementList::applyRules()
     Bool enableBalmer = m_rulesoption.find("balmer") != std::string::npos;
     if(m_rulesoption=="all" || enableBalmer){
         ApplyBalmerRuleLinSolve();
-        Apply2SingleLinesAmplitudeRule(CRay::nType_Emission, "Halpha", "Hbeta", 1.0/2.86*1.1);
-        Apply2SingleLinesAmplitudeRule(CRay::nType_Emission, "Hbeta", "Hgamma", 0.47*1.1);
-        Apply2SingleLinesAmplitudeRule(CRay::nType_Emission, "Hgamma", "Hdelta", 1.1);
-        Apply2SingleLinesAmplitudeRule(CRay::nType_Emission, "Hdelta", "H8", 1.1);
-        Apply2SingleLinesAmplitudeRule(CRay::nType_Emission, "H8", "H9", 1.1);
-        Apply2SingleLinesAmplitudeRule(CRay::nType_Emission, "H9", "H10", 1.1);
-        Apply2SingleLinesAmplitudeRule(CRay::nType_Emission, "H10", "H11", 1.1);
     }
 
     Bool enableOIIRatioRange= m_rulesoption.find("oiiratio") != std::string::npos;
@@ -1500,75 +1494,6 @@ Float64 CLineModelElementList::FindHighestStrongLineAmp( Int32 linetype , Float6
 	  }
     }
     return maxi;
-}
-
-/**
- * \brief For two distinct lines, if the first not IsOutsideLambdaRange, SetFittedAmplitude for both lines with corrected values.
- **/
-Void CLineModelElementList::Apply2SingleLinesAmplitudeRule( Int32 linetype, std::string lineA, std::string lineB, Float64 coeff )
-{
-    Int32 iA = FindElementIndex(lineA, linetype);
-    if(iA==-1){
-        return;
-    }
-    if(m_Elements[iA]->GetSize()>1){
-        iA=-1;
-    }
-    Int32 iB = FindElementIndex(lineB, linetype);
-    if(iB==-1){
-        return;
-    }
-    if(m_Elements[iB]->GetSize()>1){
-        iB=-1;
-    }
-    if(iA==-1 || iB==-1 || iA==iB){
-        return;
-    }
-
-    if(m_Elements[iA]->IsOutsideLambdaRange() == false)
-      {
-        Float64 nSigma = 1.0;
-        Float64 ampA = m_Elements[iA]->GetFittedAmplitude(0);
-        Float64 erA = m_Elements[iA]->GetFittedAmplitudeErrorSigma(0);
-        Float64 ampB = m_Elements[iB]->GetFittedAmplitude(0);
-        Float64 erB = m_Elements[iB]->GetFittedAmplitudeErrorSigma(0);
-
-        /*
-        //Method 1, limit the weakest line's amplitude
-        Float64 maxB = (coeff*ampA) + (erA*nSigma*coeff);
-        m_Elements[iB]->LimitFittedAmplitude(0, maxB);
-        //*/
-
-        //*
-        //Method 2, correct both lines depending on their sigmas
-        if(ampB!=0.0 && (erA!=0 && erB!=0) && std::abs(ampB) > std::abs(ampA*coeff) )
-	  {
-            Float64 R = 1.0/coeff;
-            Float64 wA = 0.0;
-            if(erA!=0.0)
-	      {
-                wA = 1.0/(erA*erA);
-	      }
-            Float64 wB = 0.0;
-            if(erB!=0.0)
-	      {
-                wB = 1.0/(erB*erB*R*R);
-	      }
-            Float64 correctedA = (ampA*wA + ampB*wB*R)/(wA+wB);
-            Float64 correctedB = correctedA/R;
-            m_Elements[iA]->SetFittedAmplitude(correctedA, erA); //check: keep the original error sigma ?
-            m_Elements[iB]->SetFittedAmplitude(correctedB, erB); //check: keep the original error sigma ?
-	  }
-	else
-	  {
-	    if(ampB!=0.0 && ampA==0.0)
-	      {
-		Float64 maxB = erA;//*nSigma*coeff;
-		m_Elements[iB]->LimitFittedAmplitude(0, maxB);
-	      }
-	  }
-        //*/
-      }
 }
 
 /**
