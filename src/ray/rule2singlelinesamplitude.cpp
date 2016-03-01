@@ -12,8 +12,8 @@ void CRule2SingleLinesAmplitude::SetUp( Bool EnabledArgument, ... )
   va_list Arguments;
   va_start ( Arguments, EnabledArgument );
   m_LineType = va_arg( Arguments, Int32 );
-  m_LineA = va_arg( Arguments, std::string );
-  m_LineB = va_arg( Arguments, std::string );
+  m_LineA = std::string ( va_arg( Arguments, const char* ) );
+  m_LineB = std::string ( va_arg( Arguments, const char* ) );
   m_Coefficient = va_arg( Arguments, Float64 );
 }
 
