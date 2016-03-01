@@ -46,7 +46,8 @@ CLineModelElementList::CLineModelElementList( const CSpectrum& spectrum,
   m_rulesoption = opt_rules;
   m_nominalWidthDefaultEmission = 1.15;// suited to new pfs simulations
   m_nominalWidthDefaultAbsorption = m_nominalWidthDefaultEmission;
-  
+
+  Log.LogDebug( "About to load catalog." );
   LoadCatalog(restRayList);
   
   m_RestRayList = restRayList;
@@ -111,7 +112,6 @@ CLineModelElementList::CLineModelElementList( const CSpectrum& spectrum,
   m_Regulament = new CRegulament ( );
   m_Regulament->CreateRulesFromJSONFiles( );
   m_Regulament->EnableRulesAccordingToParameters ( m_rulesoption );
-    
 }
 
 /**

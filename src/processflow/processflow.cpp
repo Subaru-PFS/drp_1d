@@ -369,13 +369,16 @@ Bool CProcessFlow::LineModelSolve( CProcessFlowContext& ctx )
     DebugAssert( redshifts.size() > 0 );
 
     CLineModelSolve Solve;
-    std::shared_ptr<const CLineModelSolveResult> solveResult = Solve.Compute(ctx.GetDataStore(), ctx.GetSpectrum(), ctx.GetSpectrumWithoutContinuum(), ctx.GetRayCatalog(),
-                                                                 spcLambdaRange, redshifts);
+    std::shared_ptr<const CLineModelSolveResult> solveResult = Solve.Compute( ctx.GetDataStore(),
+									      ctx.GetSpectrum(),
+									      ctx.GetSpectrumWithoutContinuum(),
+									      ctx.GetRayCatalog(),
+									      spcLambdaRange,
+									      redshifts );
 
     if( solveResult ) {
         ctx.GetDataStore().StoreScopedGlobalResult( "redshiftresult", solveResult );
     }
-
 
     return true;
 }

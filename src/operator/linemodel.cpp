@@ -98,7 +98,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute( CDataStore &dataSt
     {
         forceFilter = CRay::nForce_Strong;
     }
-  CRayCatalog::TRayVector restRayList = restraycatalog.GetFilteredList(typeFilter, forceFilter);
+  CRayCatalog::TRayVector restRayList = restraycatalog.GetFilteredList( typeFilter, forceFilter);
 
   auto result = std::shared_ptr<CLineModelResult>( new CLineModelResult() );
   result->ChiSquare.resize( sortedRedshifts.size() );
@@ -108,7 +108,16 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute( CDataStore &dataSt
   result->restRayList = restRayList;
   result->LineModelSolutions.resize( sortedRedshifts.size() );
 
-  CLineModelElementList model( spectrum, spectrumContinuum, restRayList, opt_fittingmethod, opt_continuumcomponent, opt_lineWidthType, opt_resolution, opt_velocityEmission, opt_velocityAbsorption, opt_rules );
+  CLineModelElementList model( spectrum,
+			       spectrumContinuum,
+			       restRayList,
+			       opt_fittingmethod,
+			       opt_continuumcomponent,
+			       opt_lineWidthType,
+			       opt_resolution,
+			       opt_velocityEmission,
+			       opt_velocityAbsorption,
+			       opt_rules );
   //model.LoadContinuum(); //in order to use a fit with continuum
   result->nSpcSamples = model.getSpcNSamples(lambdaRange);
 
@@ -216,7 +225,6 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute( CDataStore &dataSt
         }
       ModelFit( model, lambdaRange, result->Redshifts[idx], result->ChiSquare[idx], result->LineModelSolutions[idx], contreest_iterations);
       m = result->ChiSquare[idx];
-
 
       //save the model result
       static Int32 maxModelSave = 5;

@@ -133,8 +133,23 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
 
     // Compute merit function
     COperatorLineModel linemodel;
-    auto  result = linemodel.Compute( dataStore, _spc, _spcContinuum, restraycatalog, opt_linetypefilter, opt_lineforcefilter, lambdaRange, redshifts, opt_extremacount, opt_fittingmethod, opt_continuumcomponent, opt_lineWidthType, opt_resolution, opt_velocity_emission, opt_velocity_absorption, opt_continuumreest, opt_rules);
-
+    auto  result = linemodel.Compute( dataStore,
+				      _spc,
+				      _spcContinuum,
+				      restraycatalog,
+				      opt_linetypefilter,
+				      opt_lineforcefilter,
+				      lambdaRange,
+				      redshifts,
+				      opt_extremacount,
+				      opt_fittingmethod,
+				      opt_continuumcomponent,
+				      opt_lineWidthType,
+				      opt_resolution,
+				      opt_velocity_emission,
+				      opt_velocity_absorption,
+				      opt_continuumreest,
+				      opt_rules );
 
     if( !result )
     {

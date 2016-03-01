@@ -22,7 +22,7 @@ namespace NSEpic
     void EnableRulesAccordingToParameters( std::string Parameters );
   private:
     Float64 m_Redshift;
-    std::vector<CRule> m_RulesVector;
+    std::vector<CRule*> m_RulesVector;
     std::vector<boost::shared_ptr<CLineModelElement> > m_Elements;
   };
 }
