@@ -31,16 +31,22 @@ BOOST_AUTO_TEST_SUITE(RayRule)
 class GoodDataConcreteRule : public CRule
 {
 public:
-  Bool Check( std::vector<boost::shared_ptr<CLineModelElement> > LinemodelElements );
-  void Correct( std::vector<boost::shared_ptr<CLineModelElement> > LinemodelElements );
+  Bool Check( std::vector<boost::shared_ptr<CLineModelElement> >& LinemodelElements );
+  void SetUp( Bool EnabledArgument, ... );
+private:
+  void Correct( std::vector<boost::shared_ptr<CLineModelElement> >& LinemodelElements );
 };
 
-Bool GoodDataConcreteRule::Check( std::vector<boost::shared_ptr<CLineModelElement> > LinemodelElements )
+void GoodDataConcreteRule::SetUp( Bool EnabledArgument, ... )
+{
+}
+
+Bool GoodDataConcreteRule::Check( std::vector<boost::shared_ptr<CLineModelElement> >& LinemodelElements )
 {
   return true;
 }
 
-void GoodDataConcreteRule::Correct( std::vector<boost::shared_ptr<CLineModelElement> > LinemodelElements )
+void GoodDataConcreteRule::Correct( std::vector<boost::shared_ptr<CLineModelElement> >& LinemodelElements )
 {
   return;
 }
@@ -48,21 +54,23 @@ void GoodDataConcreteRule::Correct( std::vector<boost::shared_ptr<CLineModelElem
 class BadDataConcreteRule : public CRule
 {
 public:
-  Bool Check( std::vector<boost::shared_ptr<CLineModelElement> > LinemodelElements );
-  void Correct( std::vector<boost::shared_ptr<CLineModelElement> > LinemodelElements );
+  Bool Check( std::vector<boost::shared_ptr<CLineModelElement> >& LinemodelElements );
+  void SetUp( Bool EnabledArgument, ... );
+private:
+  void Correct( std::vector<boost::shared_ptr<CLineModelElement> >& LinemodelElements );
 };
 
-Bool BadDataConcreteRule::Check( std::vector<boost::shared_ptr<CLineModelElement> > LinemodelElements )
+void BadDataConcreteRule::SetUp( Bool EnabledArgument, ... )
+{
+}
+
+Bool BadDataConcreteRule::Check( std::vector<boost::shared_ptr<CLineModelElement> >& LinemodelElements )
 {
   return false;
 }
 
-void BadDataConcreteRule::Correct( std::vector<boost::shared_ptr<CLineModelElement> > LinemodelElements )
+void BadDataConcreteRule::Correct( std::vector<boost::shared_ptr<CLineModelElement> >& LinemodelElements )
 {
-  if ( ! Enabled )
-    {
-      return;
-    }
   std::cout << "Correct" << std::endl;
   int dataSize = LinemodelElements.size( );
   std::cout << "Correct dataSize == " << dataSize << std::endl;
@@ -75,7 +83,7 @@ void BadDataConcreteRule::Correct( std::vector<boost::shared_ptr<CLineModelEleme
   return;
 }
 
-std::vector<boost::shared_ptr<CLineModelElement> > GetData ( void )
+void GetData ( std::vector<boost::shared_ptr<CLineModelElement> >& ReferenceArgument )
 {
   std::string spc, noise;
   spc = "../test/data/LinemodelRulesTestCase/simu_rules_ratiorange_1.fits";
@@ -93,7 +101,7 @@ std::vector<boost::shared_ptr<CLineModelElement> > GetData ( void )
   params->Set( "method", "linemodel");
   Bool retVal = ctx.Init( spc.c_str(), noise.c_str(), NULL, "../test/data/LinemodelRulesTestCase/raycatalog_test_elratiorules.txt",params );
   BOOST_CHECK( retVal == true );
-  retVal = processFlow.Process( ctx );
+  retVal = processFlow.Process( ctx ); // Segmentation fault
   BOOST_CHECK( retVal == true );
   // Create redshift initial list by spanning redshift acdross the given range, with the given delta
   Float64 redshiftStep = 0.01;
@@ -102,7 +110,7 @@ std::vector<boost::shared_ptr<CLineModelElement> > GetData ( void )
   Float64 emissionVelocity = 100.0;
   Float64 absorptionVelocity = 300.0;
   std::string opt_rules = "all";
-  
+  //* Segmentation fault
   CLineModelElementList lineModel = CLineModelElementList ( ctx.GetSpectrum(),
 							    ctx.GetSpectrumWithoutContinuum(),
 							    ctx.GetRayCatalog().GetList(),
@@ -114,7 +122,7 @@ std::vector<boost::shared_ptr<CLineModelElement> > GetData ( void )
 							    absorptionVelocity,
 							    opt_rules );
   lineModel.LoadCatalog ( ctx.GetRayCatalog().GetList() );
-  return lineModel.m_Elements;
+  ReferenceArgument = lineModel.m_Elements;
 }
 
 Bool CompareData ( std::vector<boost::shared_ptr<CLineModelElement> > a,
@@ -139,7 +147,8 @@ BOOST_AUTO_TEST_CASE(DisabledGoodCheck)
 {
   // Disabled rule + Good data, Check() -> True.
   GoodDataConcreteRule aRule = GoodDataConcreteRule ( );
-  std::vector<boost::shared_ptr<CLineModelElement> > someData = GetData ( );
+  std::vector<boost::shared_ptr<CLineModelElement> > someData;
+  GetData ( someData );
   Bool test = aRule.Check ( someData );
   BOOST_CHECK( test == true );
 }
@@ -148,38 +157,21 @@ BOOST_AUTO_TEST_CASE(DisabledBadCheck)
 {
   // Disabled rule + Bad data, Check() -> False.
   BadDataConcreteRule aRule = BadDataConcreteRule ( );
-  std::vector<boost::shared_ptr<CLineModelElement> > someData = GetData ( );
+  std::vector<boost::shared_ptr<CLineModelElement> > someData;
+  GetData ( someData );
   Bool test = aRule.Check ( someData );
   BOOST_CHECK( test == false );
-}
-
-BOOST_AUTO_TEST_CASE(DisabledGoodCorrect)
-{
-  // Disabled rule + Good data, Correct() -> output == input.
-  GoodDataConcreteRule aRule = GoodDataConcreteRule ( );
-  std::vector<boost::shared_ptr<CLineModelElement> > someData = GetData ( );
-  aRule.Correct ( someData );
-  std::vector<boost::shared_ptr<CLineModelElement> > originalData = GetData ( );
-  BOOST_CHECK( CompareData ( someData, originalData ) );
-}
-
-BOOST_AUTO_TEST_CASE(DisabledBadCorrect)
-{
-  // Disabled rule + Bad data, Correct() -> output, check() -> True.
-  BadDataConcreteRule aRule = BadDataConcreteRule ( );
-  std::vector<boost::shared_ptr<CLineModelElement> > someData = GetData ( );
-  aRule.Correct ( someData );
-  std::vector<boost::shared_ptr<CLineModelElement> > originalData = GetData ( );
-  BOOST_CHECK( CompareData ( someData, originalData ) );
 }
 
 BOOST_AUTO_TEST_CASE(DisabledGoodApply)
 {
   // Disabled rule + Good data, Apply() -> output == input.
   GoodDataConcreteRule aRule = GoodDataConcreteRule ( );
-  std::vector<boost::shared_ptr<CLineModelElement> > someData = GetData ( );
+  std::vector<boost::shared_ptr<CLineModelElement> > someData;
+  GetData ( someData );
   aRule.Apply ( someData );
-  std::vector<boost::shared_ptr<CLineModelElement> > originalData = GetData ( );
+  std::vector<boost::shared_ptr<CLineModelElement> > originalData;
+  GetData ( originalData );
   BOOST_CHECK( CompareData ( someData, originalData ) );
 }
 
@@ -187,9 +179,11 @@ BOOST_AUTO_TEST_CASE(DisabledBadApply)
 {
   // Disabled rule + Bad data, Apply() -> output == input.
   BadDataConcreteRule aRule = BadDataConcreteRule ( );
-  std::vector<boost::shared_ptr<CLineModelElement> > someData = GetData ( );
+  std::vector<boost::shared_ptr<CLineModelElement> > someData;
+  GetData ( someData );
   aRule.Apply ( someData );
-  std::vector<boost::shared_ptr<CLineModelElement> > originalData = GetData ( );
+  std::vector<boost::shared_ptr<CLineModelElement> > originalData;
+  GetData ( originalData );
   BOOST_CHECK( CompareData ( someData, originalData ) );
 }
 
@@ -198,9 +192,11 @@ BOOST_AUTO_TEST_CASE(EnabledBadApply)
   // Enabled rule + Bad data, Apply() -> output, Check() -> True.
   BadDataConcreteRule aRule = BadDataConcreteRule ( );
   aRule.Enabled = true;
-  std::vector<boost::shared_ptr<CLineModelElement> > someData = GetData ( );
+  std::vector<boost::shared_ptr<CLineModelElement> > someData;
+  GetData ( someData );
   aRule.Apply ( someData );
-  std::vector<boost::shared_ptr<CLineModelElement> > originalData = GetData ( );
+  std::vector<boost::shared_ptr<CLineModelElement> > originalData;
+  GetData ( originalData );
   BOOST_CHECK( CompareData ( someData, originalData ) == false );
 }
 
@@ -209,9 +205,11 @@ BOOST_AUTO_TEST_CASE(EnabledGoodApply)
   // Enabled rule + Good data, Apply() -> output == input.
   GoodDataConcreteRule aRule = GoodDataConcreteRule ( );
   aRule.Enabled = true;
-  std::vector<boost::shared_ptr<CLineModelElement> > someData = GetData ( );
+  std::vector<boost::shared_ptr<CLineModelElement> > someData;
+  GetData ( someData );
   aRule.Apply ( someData );
-  std::vector<boost::shared_ptr<CLineModelElement> > originalData = GetData ( );
+  std::vector<boost::shared_ptr<CLineModelElement> > originalData;
+  GetData ( originalData );
   BOOST_CHECK( CompareData ( someData, originalData ) );
 }
 
