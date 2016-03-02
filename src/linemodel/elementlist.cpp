@@ -107,12 +107,10 @@ CLineModelElementList::CLineModelElementList( const CSpectrum& spectrum,
 	}
       fclose( fspc );
     }
-
-  // new style rules
+  // "New style" rules initialization:
   m_Regulament = new CRegulament ( );
   m_Regulament->CreateRulesFromJSONFiles( );
   m_Regulament->EnableRulesAccordingToParameters ( m_rulesoption );
-  m_Regulament->Apply( m_Elements );
 }
 
 /**
@@ -1388,29 +1386,33 @@ void CLineModelElementList::addDoubleLine(const CRay &r1, const CRay &r2, Int32 
  **/
 void CLineModelElementList::applyRules()
 {
-    if(m_rulesoption=="no"){
-        return;
+  if( m_rulesoption=="no" )
+    {
+      return;
+    }
+  Bool enableBalmer = m_rulesoption.find( "balmer" ) != std::string::npos;
+  if( m_rulesoption=="all" || enableBalmer )
+    {
+      ApplyBalmerRuleLinSolve();
+    }
+  Bool enableOIIRatioRange= m_rulesoption.find( "oiiratio" ) != std::string::npos;
+  if( m_rulesoption=="all" || enableOIIRatioRange )
+    {
+      ApplyAmplitudeRatioRangeRule( CRay::nType_Emission, "[OII]3726", "[OII]3729", 2.0 );
     }
 
-    Bool enableBalmer = m_rulesoption.find("balmer") != std::string::npos;
-    if(m_rulesoption=="all" || enableBalmer){
-        ApplyBalmerRuleLinSolve();
+  //*
+  //add rule, if OIII present, then OII should be there too
+  //*/
+  
+  Bool enableStrongWeak= m_rulesoption.find( "strongweak" ) != std::string::npos;
+  if( m_rulesoption=="all" || enableStrongWeak )
+    {
+      ApplyStrongHigherWeakRule( CRay::nType_Emission );
+      ApplyStrongHigherWeakRule( CRay::nType_Absorption );
     }
-
-    Bool enableOIIRatioRange= m_rulesoption.find("oiiratio") != std::string::npos;
-    if(m_rulesoption=="all" || enableOIIRatioRange){
-        ApplyAmplitudeRatioRangeRule(CRay::nType_Emission, "[OII]3726", "[OII]3729", 2.0);
-    }
-
-    //*
-    //add rule, if OIII present, then OII should be there too
-    //*/
-
-    Bool enableStrongWeak= m_rulesoption.find("strongweak") != std::string::npos;
-    if(m_rulesoption=="all" || enableStrongWeak){
-        ApplyStrongHigherWeakRule(CRay::nType_Emission);
-        ApplyStrongHigherWeakRule(CRay::nType_Absorption);
-    }
+  // new style rules
+  m_Regulament->Apply( m_Elements );
 }
 
 /** \brief Verify that "stronger lines have higher amplitudes than weaker lines" rule is applicable, and then apply it.
