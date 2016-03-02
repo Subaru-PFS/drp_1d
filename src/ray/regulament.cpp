@@ -4,17 +4,17 @@
 #include <epic/redshift/ray/regulament.h>
 // To be removed once JSON code is in <--
 #include <epic/redshift/ray/rule2singlelinesamplitude.h>
+#include <epic/redshift/ray/ruleBalmerLinearSolver.h>
 // -->
 
 using namespace NSEpic;
 using namespace std;
 
-void CRegulament::Apply( std::vector<boost::shared_ptr<CLineModelElement> >& LinemodelElements )
+void CRegulament::Apply( CLineModelElementList& LineModelElementList )
 {
-  m_Elements = LinemodelElements;
   for( std::vector<CRule*>::iterator it = m_RulesVector.begin(); it != m_RulesVector.end(); it++ )
     {
-      (*it)->Apply ( LinemodelElements );
+      (*it)->Apply ( LineModelElementList );
     }
 }
 /*
@@ -48,6 +48,9 @@ Bool CRegulament::CreateRulesFromJSONFiles( void )
   CRule2SingleLinesAmplitude* ARule7 = new CRule2SingleLinesAmplitude( );
   ARule7->SetUp ( True, CRay::nType_Emission, std::string( "H10" ).c_str(), std::string( "H11" ).c_str(), 1.1 );
   m_RulesVector.push_back( dynamic_cast<CRule*> ( ARule7 ) );
+  CRuleBalmerLinearSolver* ARule8 = new CRuleBalmerLinearSolver( );
+  ARule8->SetUp ( True );
+  m_RulesVector.push_back( dynamic_cast<CRule*> ( ARule8 ) );
   // -->
   return true;
 }

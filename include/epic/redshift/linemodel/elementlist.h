@@ -64,6 +64,11 @@ public:
     CLineModelResult::SLineModelSolution GetModelSolution();
     const CSpectrum&                GetModelSpectrum() const;
     std::vector<boost::shared_ptr<CLineModelElement>  > m_Elements;
+    std::shared_ptr<CSpectrum>  m_SpectrumModel;  //model
+    CSpectrumFluxAxis m_SpcContinuumFluxAxis; //continuum spectrum used for the model
+    Int32 FindElementIndex(Int32 LineCatalogIndex);
+    Int32 FindElementIndex(std::string LineTagStr, Int32 linetype);
+    std::vector<Int32> getOverlappingElements(Int32 ind , std::vector<Int32> excludedInd, Float64 overlapThres=0.1);
 
 private:
 
@@ -71,7 +76,6 @@ private:
     void fitAmplitudesSimplex();
     Int32 fitAmplitudesLinSolve(std::vector<Int32> EltsIdx, const CSpectrumSpectralAxis &spectralAxis, const CSpectrumFluxAxis &fluxAxis, std::vector<Float64> &ampsfitted);
     std::vector<Int32> getSupportIndexes(std::vector<Int32> EltsIdx);
-    std::vector<Int32> getOverlappingElements(Int32 ind , std::vector<Int32> excludedInd, Float64 overlapThres=0.1);
     std::vector<Int32> getOverlappingElementsBySupport(Int32 ind , Float64 overlapThres=0.1);
     std::vector<Int32> ReestimateContinuumApprox(std::vector<Int32> EltsIdx);
     std::vector<Int32> ReestimateContinuumUnderLines(std::vector<Int32> EltsIdx);
@@ -92,15 +96,9 @@ private:
     Float64 FindHighestStrongLineAmp( Int32 lineType, Float64 &er);
     CRegulament* m_Regulament;
 
-    Int32 FindElementIndex(Int32 LineCatalogIndex);
-    Int32 FindElementIndex(std::string LineTagStr, Int32 linetype);
-
-
     Float64 m_Redshift;
 
-    std::shared_ptr<CSpectrum>  m_SpectrumModel;  //model
     CSpectrumFluxAxis m_SpcFluxAxis;    //observed spectrum
-    CSpectrumFluxAxis m_SpcContinuumFluxAxis; //continuum spectrum used for the model
     CSpectrumFluxAxis m_spcFluxAxisNoContinuum; //observed spectrum for line fitting
     Float64* m_ErrorNoContinuum;
 

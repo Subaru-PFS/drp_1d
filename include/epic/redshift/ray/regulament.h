@@ -16,14 +16,13 @@ namespace NSEpic
   class CRegulament
   {
   public:
-    void Apply( std::vector<boost::shared_ptr<CLineModelElement> >& LinemodelElements );
+    void Apply( CLineModelElementList& LineModelElementList );
     //void ApplyWithRedshift( std::vector<boost::shared_ptr<CLineModelElement> > LinemodelElements, Float64 Redshift );
     Bool CreateRulesFromJSONFiles( void );
     void EnableRulesAccordingToParameters( std::string Parameters );
   private:
     Float64 m_Redshift;
     std::vector<CRule*> m_RulesVector;
-    std::vector<boost::shared_ptr<CLineModelElement> > m_Elements;
   };
 }
 
