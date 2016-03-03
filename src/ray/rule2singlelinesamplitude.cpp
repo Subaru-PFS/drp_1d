@@ -8,6 +8,7 @@ using namespace std;
 
 void CRule2SingleLinesAmplitude::SetUp( Bool EnabledArgument, ... )
 {
+  Name = "balmer";
   Enabled = EnabledArgument;
   va_list Arguments;
   va_start ( Arguments, EnabledArgument );

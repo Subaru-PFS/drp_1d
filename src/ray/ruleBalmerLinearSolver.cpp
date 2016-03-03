@@ -13,6 +13,7 @@ using namespace std;
 
 void CRuleBalmerLinearSolver::SetUp( Bool EnabledArgument, ... )
 {
+  Name = "balmer";
   Enabled = EnabledArgument;
   va_list Arguments;
   va_start ( Arguments, EnabledArgument );

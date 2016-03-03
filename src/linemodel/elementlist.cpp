@@ -591,13 +591,14 @@ Int32 CLineModelElementList::fitAmplitudesHybrid( const CSpectrumSpectralAxis& s
         Float64 overlapThres = 0.33;
         std::vector<Int32> overlappingInds = getOverlappingElements(iElts, indexesFitted, overlapThres);
 
+	/*
         Log.LogDebug( "Redshift: %f", m_Redshift);
         Log.LogDebug( "hybrid fit: idx=%d - overlappingIdx=%d", iValidElts, overlappingInds.size());
         for(Int32 ifit=0; ifit<overlappingInds.size(); ifit++)
 	  {
 	    Log.LogDebug( "hybrid fit: i=%d - Id=%d", ifit, overlappingInds[ifit]);
 	  }
-
+	*/
         if(overlappingInds.size()<2)
 	  {
             m_Elements[iElts]->fitAmplitude(spectralAxis, spcFluxAxisNoContinuum, redshift);
@@ -943,7 +944,7 @@ Int32 CLineModelElementList::fitAmplitudesLinSolve( std::vector<Int32> EltsIdx, 
     //
     boost::chrono::thread_clock::time_point stop_fit = boost::chrono::thread_clock::now();
     Float64 duration_fit = boost::chrono::duration_cast<boost::chrono::microseconds>(stop_fit - start_fit).count();
-    Log.LogDebug( "LineModel linear fit: prep = %.3f - fit = %.3f", duration_prep, duration_fit);
+    //Log.LogDebug( "LineModel linear fit: prep = %.3f - fit = %.3f", duration_prep, duration_fit);
 
     Int32 sameSign = 1;
     Float64 a0 = gsl_vector_get(c,0);
@@ -1390,11 +1391,6 @@ void CLineModelElementList::applyRules()
     {
       return;
     }
-  Bool enableOIIRatioRange= m_rulesoption.find( "oiiratio" ) != std::string::npos;
-  if( m_rulesoption=="all" || enableOIIRatioRange )
-    {
-      ApplyAmplitudeRatioRangeRule( CRay::nType_Emission, "[OII]3726", "[OII]3729", 2.0 );
-    }
 
   //*
   //add rule, if OIII present, then OII should be there too
@@ -1491,78 +1487,6 @@ Float64 CLineModelElementList::FindHighestStrongLineAmp( Int32 linetype , Float6
 	  }
     }
     return maxi;
-}
-
-/**
- * For two distinct lines, if neither IsOutsideLambdaRange, and their amplitudes are beyond a range (considering coeff), SetFittedAmplitude of each with corrected values.
- **/
-Void CLineModelElementList::ApplyAmplitudeRatioRangeRule( Int32 linetype, std::string lineA, std::string lineB, Float64 coeff)
-{
-    Int32 iA = FindElementIndex(lineA, linetype);
-    if(iA==-1){
-        return;
-    }
-    if(m_Elements[iA]->GetSize()>1){
-        iA=-1;
-    }
-    Int32 iB = FindElementIndex(lineB, linetype);
-    if(iB==-1){
-        return;
-    }
-    if(m_Elements[iB]->GetSize()>1){
-        iB=-1;
-    }
-    if(iA==-1 || iB==-1 || iA==iB){
-        return;
-    }
-
-    if(m_Elements[iA]->IsOutsideLambdaRange() == false && m_Elements[iB]->IsOutsideLambdaRange() == false){
-        Float64 ampA = m_Elements[iA]->GetFittedAmplitude(0);
-        Float64 erA = m_Elements[iA]->GetFittedAmplitudeErrorSigma(0);
-
-        Float64 ampB = m_Elements[iB]->GetFittedAmplitude(0);
-        Float64 erB = m_Elements[iB]->GetFittedAmplitudeErrorSigma(0);
-
-        Int32 i1 = iA;
-        Int32 i2 = iB;
-        Float64 amp1 = ampA;
-        Float64 er1 = erA;
-        Float64 amp2 = ampB;
-        Float64 er2 = erB;
-        if( std::abs(ampA) > std::abs(ampB*coeff) ){
-            i1 = iA;
-            i2 = iB;
-            amp1 = ampA;
-            er1 = erA;
-            amp2 = ampB;
-            er2 = erB;
-        }else if( std::abs(ampB) > std::abs(ampA*coeff) ){
-            i1 = iB;
-            i2 = iA;
-            amp1 = ampB;
-            er1 = erB;
-            amp2 = ampA;
-            er2 = erA;
-        }else{
-            return;
-        }
-
-        Float64 R = coeff;
-        Float64 w1 = 0.0;
-        if(er1!=0.0){
-            w1 = 1.0/(er1*er1);
-        }
-        Float64 w2 = 0.0;
-        if(er2!=0.0){
-            w2 = 1.0/(er2*er2*R*R);
-        }
-        Float64 corrected1 = (amp1*w1 + amp2*w2*R)/(w1+w2) ;
-        Float64 corrected2 = corrected1/R;
-
-        m_Elements[i1]->SetFittedAmplitude(corrected1, er1);
-        m_Elements[i2]->SetFittedAmplitude(corrected2, er2);
-
-    }
 }
 
 /**
