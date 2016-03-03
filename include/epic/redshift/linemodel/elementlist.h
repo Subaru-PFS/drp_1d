@@ -82,11 +82,6 @@ private:
     void refreshModelAfterContReestimation(std::vector<Int32> EltsIdx, CSpectrumFluxAxis& modelFluxAxis, CSpectrumFluxAxis& spcFluxAxisNoContinuum);
 
     std::vector<Int32> findLineIdxInCatalog(const CRayCatalog::TRayVector& restRayList, std::string strTag, Int32 type);
-    Void Apply2SingleLinesAmplitudeRule(Int32 linetype, std::string lineA, std::string lineB, Float64 coeff );
-    Void ApplyAmplitudeRatioRangeRule(Int32 linetype, std::string lineA, std::string lineB, Float64 coeff);
-
-    Int32 ApplyBalmerRuleLinSolve();
-    TFloat64List BalmerModelLinSolve( std::vector<Float64> lambdax, std::vector<Float64> continuumx, std::vector<Float64> datax, std::vector<Float64> errdatax );
 
     void addSingleLine(const CRay &r, Int32 index, Float64 nominalWidth);
     void addDoubleLine(const CRay &r1, const CRay &r2, Int32 index1, Int32 index2, Float64 nominalWidth, Float64 a1, Float64 a2);
@@ -119,12 +114,5 @@ private:
 };
 
 }
-
-
-
-
-
-
-
 #endif // ELEMENTLIST_H
 
