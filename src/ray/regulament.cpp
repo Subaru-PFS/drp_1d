@@ -7,6 +7,7 @@
 #include <epic/redshift/ray/rule2singlelinesamplitude.h>
 #include <epic/redshift/ray/ruleBalmerLinearSolver.h>
 #include <epic/redshift/ray/ruleOIIRatioRange.h>
+#include <epic/redshift/ray/ruleStrongHigherThanWeak.h>
 // -->
 
 using namespace NSEpic;
@@ -56,6 +57,13 @@ Bool CRegulament::CreateRulesFromJSONFiles( void )
   CRuleOIIRatioRange* ARule9 = new CRuleOIIRatioRange( );
   ARule9->SetUp( True, CRay::nType_Emission, "[OII]3726", "[OII]3729", 2.0 );
   m_RulesVector.push_back( dynamic_cast<CRule*>( ARule9 ) );
+  CRuleStrongHigherThanWeak* ARule10 = new CRuleStrongHigherThanWeak( );
+  ARule10->SetUp( True, CRay::nType_Emission );
+  m_RulesVector.push_back( dynamic_cast<CRule*>( ARule10 ) );
+  CRuleStrongHigherThanWeak* ARule11 = new CRuleStrongHigherThanWeak( );
+  ARule11->SetUp( True, CRay::nType_Absorption );
+  m_RulesVector.push_back( dynamic_cast<CRule*>( ARule11 ) );
+  //add rule, if OIII present, then OII should be there too
   // -->
   return true;
 }
