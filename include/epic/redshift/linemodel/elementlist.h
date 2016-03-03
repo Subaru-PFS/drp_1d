@@ -69,6 +69,7 @@ public:
     Int32 FindElementIndex(Int32 LineCatalogIndex);
     Int32 FindElementIndex(std::string LineTagStr, Int32 linetype);
     std::vector<Int32> getOverlappingElements(Int32 ind , std::vector<Int32> excludedInd, Float64 overlapThres=0.1);
+    CRayCatalog::TRayVector m_RestRayList;
 
 private:
 
@@ -99,9 +100,6 @@ private:
 
     Float64*          m_precomputedFineGridContinuumFlux;   //PFG buffer for model continuum
     CSpectrumFluxAxis m_ContinuumFluxAxis;  //rebined model continuum
-
-    CRayCatalog::TRayVector m_RestRayList;
-
     std::string m_ContinuumComponent;
     std::string m_LineWidthType;
     Float64 m_resolution;
