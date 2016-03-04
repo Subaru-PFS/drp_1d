@@ -349,7 +349,8 @@ class ResParser(object):
     def getAutoChi2FullPath(self, spcnametag):
         """
         """ 
-        spcnametag = os.path.splitext(spcnametag)[0]
+        if os.path.splitext(spcnametag)[1].lower()==".fits":
+            spcnametag = os.path.splitext(spcnametag)[0]
         method = self.getConfigVal('method')
         print("method found in config is: {}".format(method))
         path = os.path.join(self.respath, spcnametag)

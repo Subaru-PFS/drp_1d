@@ -294,7 +294,9 @@ class AViewPlot(object):
         print '\n'
       
     def exportDisplays(self, displayExportPath):
-        if self.z == -1:
+        
+        print("using z = {}".format(self.z))
+        if self.z == -1 or self.z == "-1" :
             print("FOUND UNSUPPORTED REDSHIFT RESULT: Aborting export for this target...")
             return
         
