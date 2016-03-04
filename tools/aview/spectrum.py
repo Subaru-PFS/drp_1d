@@ -8,12 +8,14 @@ Created on Sat Jul 25 11:44:49 2015
 import os
 import sys
 from astropy.io import fits
+import pyfits
 import optparse
 
 from bokeh.plotting import figure, output_file, show
         
 import matplotlib.pyplot as pp
 import numpy as np
+from scipy import interpolate
 
 class Spectrum(object):
     def __init__(self, spath, stype='undefspc', snorm=False, label=""):
@@ -33,14 +35,7 @@ class Spectrum(object):
         self.ysum = 0
         self.forcePlotXIndex = False
         if(self.stype == 'template'):
-            self.loadTpl()        
-            if self.snorm:
-                print("WARNING: snorm = {0}".format(snorm))
-                for x in range(0,self.n):
-                    self.yvect[x] /= self.ysum/self.n
-                self.ysum = 0.0
-                for x in range(0,self.n):
-                    self.ysum += self.yvect[x]
+            self.loadTpl() 
         elif(self.stype == 'pfs2reech'):
             self.loadpfs2reech() 
         elif(self.stype == 'pfs2'):
@@ -55,6 +50,14 @@ class Spectrum(object):
             self.loadmuse() 
         else:
             self.load()
+               
+        if self.snorm:
+            print("WARNING: snorm = {0}".format(snorm))
+            for x in range(0,self.n):
+                self.yvect[x] /= self.ysum/self.n
+            self.ysum = 0.0
+            for x in range(0,self.n):
+                self.ysum += self.yvect[x]
 
     def copy(self):
         scopy = Spectrum(self.spath, self.stype, self.snorm)
@@ -350,6 +353,7 @@ class Spectrum(object):
         return a
         
     def plot(self, saveFullDirPath=""):
+        #pp.plot(self.xvect, self.yvect, "x-")
         pp.plot(self.xvect, self.yvect)
 
         pp.grid(True) # Affiche la grille
@@ -562,19 +566,78 @@ class Spectrum(object):
         if k>=1e6:
             print("WARNING: stopping extension, max iteration reached")
             
+    def interpolate(self, dx=0.1):
+        x = np.copy(self.xvect)
+        y = np.copy(self.yvect)
+        f = interpolate.interp1d(x, y)
+
+        self.xvect = np.arange(x[0], x[self.n-1], dx)
+        self.yvect = f(self.xvect) 
+        self.n = len(self.yvect)
+        
+    def applyWeight(self, w):
+        
+        for x in range(0,self.n):
+            self.yvect[x] = self.yvect[x]*w
+
+    def exportFits(self, path="", name="", exportSigma=True):
+        """
+        write spectrum into a new fits file (useful for model csv input spectra)
+        """
+        if name == "":
+            name = "spectrum_exported"
+        noisename = "{}_noise".format(name)
+        destfileout = os.path.join(path, "{}.fits".format(name))
+        print("Spectrum exporting to fits: {}".format(destfileout))
+          
+        a1 = self.xvect
+        #print("col1={}".format(a1))
+        a2 = self.yvect
+        #print("col2={}".format(a2))
+        col1 = pyfits.Column(name='wave', format='E', array=a1)
+        col2 = pyfits.Column(name='flux', format='E', array=a2)
+        cols_spc = pyfits.ColDefs([col1, col2])
+ 
+        #INFO: This shortcut will automatically create a minimal primary HDU with no data and prepend it to the table HDU to create a valid FITS file.
+        # from https://pythonhosted.org/pyfits/ 
+        hdu_new = pyfits.BinTableHDU.from_columns(cols_spc)
+        hdu_new.writeto(destfileout)
+        
+        if exportSigma:
+            
+            destfileoutnoise = os.path.join(path, "{}.fits".format(noisename))
+            print("Noise exporting to fits: {}".format(destfileoutnoise))
+            #noise
+            knoise = 0.1 * np.std(self.yvect)
+            anoise = np.ones((len(a1)))
+            colnoise = pyfits.Column(name='noise', format='E', array=anoise)
+            cols_noise = pyfits.ColDefs([col1, colnoise])        
+    
+            hdu_noise = pyfits.BinTableHDU.from_columns(cols_noise)
+            hdu_noise.writeto(destfileoutnoise)
+            
+        print ""
+    
+        return destfileout
+            
 
 def StartFromCommandLine( argv ) :	
     usage = """usage: %prog [options]
     ex: python ./spectum.py -s """
     parser = optparse.OptionParser(usage=usage)
     parser.add_option(u"-s", u"--spc", help="path to the fits spectrum to be plotted",  dest="spcPath", default="")
-    parser.add_option(u"-t", u"--type", help="type of spectrum, can be in teh following list {vvds, pfs, pfs2, muse, hplana, euclid, pfs2reech}",  dest="spcType", default="")
+    parser.add_option(u"-t", u"--type", help="type of spectrum, can be in teh following list {template, vvds, pfs, pfs2, muse, hplana, euclid, pfs2reech}",  dest="spcType", default="")
+    parser.add_option(u"-e", u"--export", help="export to fits format",  dest="export", default="no")
 
     (options, args) = parser.parse_args()
 
     if( len( args ) == 0 ) :
         print('using full path: {0}'.format(options.spcPath))
         s = Spectrum(options.spcPath, options.spcType)
+        if options.export == "yes":
+            path = os.path.split(options.spcPath)[0]
+            nameWext = os.path.split(options.spcPath)[1]
+            s.exportFits(path, name=os.path.splitext(nameWext)[0])
         print(s) 
         s.plot()
     else :
@@ -597,7 +660,7 @@ if __name__ == '__main__':
     if 0: #deprecated, but not fully covered by the command line args functionnality...
         print "Spectrum plotting"
         # plot single spectrum
-        if 1:
+        if 0:
             path = "/home/aschmitt/data/pfs/pfs_lbg/lbgabs_1K_2z3_20J22.5"
             #name = "EZ_fits-W-ErrF_9.fits"
             #name = "EZ_fits-W-F_9.fits"
@@ -633,11 +696,40 @@ if __name__ == '__main__':
         
         # plot single template
         if 0:
-            path = "/home/aschmitt/data/pfs/pfs_lbg/amazed/Templates/ExtendedGalaxyEL2/emission"
-            name = "NEW_Im_extended_blue.dat"
+            path = "/home/aschmitt/code/python/simulation_perf_matrix_linemodel/templates"
+            name = "NEW_Im_extended.dat"
             #path = "/home/aschmitt/data/pfs/pfs_lbg/amazed/Templates/ExtendedGalaxyEL2/galaxy"
             #name = "sadataExtensionData.dat"
             
+            #path = "/home/aschmitt/data/vvds/vvds2/cesam_vvds_z0_F02_DEEP/amazed/output/sc_020103374_F02P021_M1_red_49_1_atm_clean"
+            #name = "linemodelsolve.linemodel_spc_extrema_0.csv"
+    
+            spath = os.path.join(path,name)
+            print('using full path: {0}'.format(spath))
+            s = Spectrum(spath, 'template', snorm=True)
+            print(s)
+            s.interpolate()
+            #s.exportFits()
+            s.plot()   
+            
+        # plot single template, interp. normalized, exported as fits
+        if 0:
+            path = "/home/aschmitt/code/python/simulation_perf_matrix_linemodel/templates"
+            name = "spectrum_exported.fits"
+            #path = "/home/aschmitt/data/pfs/pfs_lbg/amazed/Templates/ExtendedGalaxyEL2/galaxy"
+            #name = "sadataExtensionData.dat"
+            
+            #path = "/home/aschmitt/data/vvds/vvds2/cesam_vvds_z0_F02_DEEP/amazed/output/sc_020103374_F02P021_M1_red_49_1_atm_clean"
+            #name = "linemodelsolve.linemodel_spc_extrema_0.csv"
+    
+            spath = os.path.join(path,name)
+            print('using full path: {0}'.format(spath))
+            s = Spectrum(spath)
+            print(s)
+            s.plot()
+        
+        # plot model
+        if 0:
             path = "/home/aschmitt/data/vvds/vvds2/cesam_vvds_z0_F02_DEEP/amazed/output/sc_020103374_F02P021_M1_red_49_1_atm_clean"
             name = "linemodelsolve.linemodel_spc_extrema_0.csv"
     

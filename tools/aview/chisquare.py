@@ -4,8 +4,9 @@ Created on Sat Jul 25 11:44:49 2015
 
 @author: aschmitt
 """
-import os
+import os, sys
 import math
+import optparse
 
 import matplotlib.pyplot as pp
 import scipy.interpolate
@@ -532,10 +533,40 @@ class ResultChisquare(object):
         
         
         return area, zminParabolicfit
-          
+
+            
+
+def StartFromCommandLine( argv ) :	
+    usage = """usage: %prog [options]
+    ex: python ./chisquare.py -s """
+    parser = optparse.OptionParser(usage=usage)
+    parser.add_option(u"-i", u"--input", help="path to the chi2 curve to be plotted",  dest="chi2Path", default="")
+
+    (options, args) = parser.parse_args()
+
+    if( len( args ) == 0 ) :
+        print('using full path: {0}'.format(options.chi2Path))
+        s = ResultChisquare(options.chi2Path)
+        print(s) 
+        s.plot()
+    else :
+        print("Error: invalid argument count")
+        exit()
+
+
+def Main( argv ) :	
+    try:
+        StartFromCommandLine( argv )
+    except (KeyboardInterrupt):
+        exit()
+        
  
 if __name__ == '__main__':
     
+    if 1:
+        Main( sys.argv )
+        
+        
     # plot single chisquare
     if 0:
         path = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/res_20150807_chi2_fullResults/sc_020088969_F02P016_vmM1_red_21_1_atm_clean/StarBurst3.txt"
@@ -593,7 +624,7 @@ if __name__ == '__main__':
         chi.plot(showContinuumEstimate=False, showExtrema=True, showAmbiguities=False)
         
     # compare chisquares
-    if 1:          
+    if 0:          
         path = "/home/aschmitt/data/pfs/pfs2_simu20151118_jenny/amazed/res_20160209_results_batch6_fev2016/res_20160224_linemodel_velocityfit_balmer0_F_ErrF/16000010000158vacLine_F"
         #path = "/home/aschmitt/data/pfs/pfs2_simu20151118_jenny/amazed/output/54000015007903vacLine_F"
         name = "linemodelsolve.linemodel.csv"
