@@ -84,14 +84,10 @@ libDict = {
     "doxytag": { "path": thirdPartyDir+"doxytag.py", "src": "https://raw.githubusercontent.com/vlfeat/vlfeat/master/docsrc/doxytag.py" },
     "cfitsio": { "path": thirdPartyDir+"cfitsio-3.36", "src": "http://heasarc.gsfc.nasa.gov/FTP/software/fitsio/c/cfitsio3360.tar.gz" } }
 
-
-def  Clear() :
-
+def Clear() :
     os.system( "rm -rf "+thirdPartyDir+"/*" )
 
-
 def Main( argv ):
-
     usage = "Download and install third party library libraries:\n\t"
     parser = optparse.OptionParser(usage=usage)
     parser.add_option(u"-d", u"--dry", help="Clear thirdparty dir before download and installation", action="store_true",  dest="Dry")
@@ -139,7 +135,7 @@ def Main( argv ):
     libSrc = libDict["cfitsio"]["src"];
     if DownloadHTTPFile( libSrc, libPath+".tar.gz" ) :
         if ExtractTarGZ( libPath+".tar.gz", libPath ) :
-            os.system( "cd "+libPath+"/ ; ./configure --enable-reentrant --prefix="+thirdPartyDir+" ; make ; make install ; cd ../" )
+            os.system( "cd "+libPath+"/ ; ./configure --enable-reentrant --prefix="+thirdPartyDir+" --enable-sse2 --enable-ssse3; make all-nofitsio; make install; cd ../" )
 
 
 
