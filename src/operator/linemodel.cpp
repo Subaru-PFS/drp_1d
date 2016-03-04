@@ -63,7 +63,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute( CDataStore &dataSt
     std::sort(sortedRedshifts.begin(), sortedRedshifts.end());
 
     // redefine redshift grid
-    Int32 enableFastFitLargeGrid = 1;
+    Int32 enableFastFitLargeGrid = 0;
     TFloat64List largeGridRedshifts;
     //*
     if(enableFastFitLargeGrid==1){
@@ -133,7 +133,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute( CDataStore &dataSt
     Int32 indexLargeGrid = 0;
     for (Int32 i=0;i<nResults;i++)
     {
-        if(i==0 || result->Redshifts[i] == largeGridRedshifts[indexLargeGrid])
+        if(!enableFastFitLargeGrid==1 || i==0 || result->Redshifts[i] == largeGridRedshifts[indexLargeGrid])
         {
             ModelFit( model, lambdaRange, result->Redshifts[i], result->ChiSquare[i], result->LineModelSolutions[i], contreest_iterations);
             indexLargeGrid++;
