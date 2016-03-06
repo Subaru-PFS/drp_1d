@@ -10,6 +10,8 @@ import sys
 from astropy.io import fits
 import pyfits
 import optparse
+import random
+import math
 
 from bokeh.plotting import figure, output_file, show
         
@@ -348,6 +350,7 @@ class Spectrum(object):
         a = a + ("    dlambda = {0}\n".format(self.getResolution()))
         a = a + ("    lambda min = {}, lambda max = {}\n".format(self.getWavelengthMin(), self.getWavelengthMax()))
         a = a + ("    flux min = {}, flux max = {}\n".format(self.getFluxMin(),self.getFluxMax()))
+        a = a + ("    flux std = {}\n".format(np.std(self.yvect)))
         a = a + ("\n")
         
         return a
@@ -566,7 +569,7 @@ class Spectrum(object):
         if k>=1e6:
             print("WARNING: stopping extension, max iteration reached")
             
-    def interpolate(self, dx=0.1):
+    def interpolate(self, dx=1.0):
         x = np.copy(self.xvect)
         y = np.copy(self.yvect)
         f = interpolate.interp1d(x, y)
@@ -576,20 +579,64 @@ class Spectrum(object):
         self.n = len(self.yvect)
         
     def applyWeight(self, w):
-        
         for x in range(0,self.n):
             self.yvect[x] = self.yvect[x]*w
+    
+    def applyRedshift(self, z):
+        coeff= 1+z
+        for x in range(0,self.n):
+            self.xvect[x] = self.xvect[x]*coeff
+    
+    def applyLambdaCrop(self, lambdaMin, lambdaMax):
+        imin = 0
+        imax = self.n-1
+        for k in range(1,self.n):
+            if self.xvect[k-1]<=lambdaMin and self.xvect[k]>=lambdaMin:
+                imin = k
+            if self.xvect[k-1]<=lambdaMax and self.xvect[k]>=lambdaMax:
+                imax = k
+        old_xvect = self.xvect
+        old_yvect = self.yvect
+            
+        print("imin = {}, imax = {}".format(imin, imax))
+        self.n = imax-imin+1
+        self.xvect = range(0,self.n)
+        self.yvect = range(0,self.n)
+        self.ysum = 0.0
+        for x in range(0,self.n):
+            self.xvect[x] = old_xvect[x+imin]
+            self.yvect[x] = old_yvect[x+imin]
+            self.ysum += self.yvect[x]
+            
 
-    def exportFits(self, path="", name="", exportSigma=True):
+    def exportFits(self, path="", name="", addNoise=False, exportSigma=False):
         """
         write spectrum into a new fits file (useful for model csv input spectra)
         """
         if name == "":
             name = "spectrum_exported"
-        noisename = "{}_noise".format(name)
+        noisename = "{}_ErrF".format(name)
+        name = "{}_F".format(name)
         destfileout = os.path.join(path, "{}.fits".format(name))
         print("Spectrum exporting to fits: {}".format(destfileout))
-          
+        if os.path.exists(destfileout):
+            print("Spectrum deleting existing fits: {}".format(destfileout))
+            os.remove(destfileout)
+
+        anoise = np.ones((len(self.yvect)))
+        if addNoise:
+            #noise
+            #knoise = 0.1 * np.std(self.yvect)
+            sigma_from_pfs_simu = 1.57e-19 #corresponds to 3h exposure time
+            
+            for k in range(len(self.yvect)):
+                mu = 0.0
+                sigma = np.sqrt(sigma_from_pfs_simu**2+self.yvect[k]**4)
+                anoise[k] =  sigma
+                
+                self.yvect[k] = self.yvect[k] + random.gauss(mu, sigma) 
+        
+                  
         a1 = self.xvect
         #print("col1={}".format(a1))
         a2 = self.yvect
@@ -607,12 +654,12 @@ class Spectrum(object):
             
             destfileoutnoise = os.path.join(path, "{}.fits".format(noisename))
             print("Noise exporting to fits: {}".format(destfileoutnoise))
-            #noise
-            knoise = 0.1 * np.std(self.yvect)
-            anoise = np.ones((len(a1)))
+            if os.path.exists(destfileoutnoise):
+                print("Spectrum deleting existing fits: {}".format(destfileoutnoise))
+                os.remove(destfileoutnoise)   
+            
             colnoise = pyfits.Column(name='noise', format='E', array=anoise)
-            cols_noise = pyfits.ColDefs([col1, colnoise])        
-    
+            cols_noise = pyfits.ColDefs([col1, colnoise])
             hdu_noise = pyfits.BinTableHDU.from_columns(cols_noise)
             hdu_noise.writeto(destfileoutnoise)
             

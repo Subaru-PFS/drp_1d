@@ -428,6 +428,52 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
         }
     }
 
+    //generate random amplitudes
+    if(m_fittingmethod=="simulation")
+    {
+        srand(time(0));
+        Float64 randNumFloat = (Float64) rand() / (Float64) (RAND_MAX);
+        for(Int32 irand=0; irand<(int)(randNumFloat*100); irand++)
+        {
+            rand();
+        }
+
+        Float64 coeffAmpEmission = pow(10.0, randNumFloat*3.0-1.0);
+        randNumFloat = (Float64) rand() / (Float64) (RAND_MAX);
+        Float64 coeffAmpAbsorption = pow(10.0, randNumFloat*1.0-1.0);
+        Log.LogInfo( "\nLineModel simulation: coeffAmpEmission = %.2f", coeffAmpEmission);
+        Log.LogInfo( "LineModel simulation: coeffAmpAbsorption = %.2f", coeffAmpAbsorption);
+        //fit the model amplitudes individually
+        for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
+        {
+            Float64 meanContinuum = getContinuumMeanUnderElement(iElts);
+            Float64 err = 1e-22;
+            Float64 amax = meanContinuum;
+            if(m_RestRayList[m_Elements[iElts]->m_LineCatalogIndexes[0]].GetType() == CRay::nType_Absorption)
+            {
+                amax = meanContinuum*0.5*coeffAmpAbsorption;
+            }else{
+                amax = meanContinuum*coeffAmpEmission;
+            }
+            randNumFloat = (Float64) rand() / (Float64) (RAND_MAX);
+            Float64 a = randNumFloat*amax;
+            if(a<0.0){
+                a=0.0;
+            }
+            //get the max nominal amplitude
+            Int32 nRays = m_Elements[iElts]->GetSize();
+            Float64 maxNominalAmp = -1.0;
+            for(UInt32 j=0; j<nRays; j++){
+                if(maxNominalAmp<m_Elements[iElts]->GetNominalAmplitude(j))
+                {
+                    maxNominalAmp = m_Elements[iElts]->GetNominalAmplitude(j);
+                }
+            }
+
+            SetElementAmplitude(iElts, a/maxNominalAmp, err);
+        }
+    }
+
     //fit the amplitudes of each element independently
     if(m_fittingmethod=="individual")
     {
@@ -1836,6 +1882,43 @@ Float64 CLineModelElementList::getModelErrorUnderElement(Int32 eltId)
 
 
     return sqrt(fit/sumErr);
+}
+
+Float64 CLineModelElementList::getContinuumMeanUnderElement(Int32 eltId)
+{
+    Int32 n = 0;
+    Float64 m=0.0;
+    //Float64 sumErr=0.0;
+
+    TInt32RangeList support;
+    UInt32 iElts=eltId;
+    {
+        if(m_Elements[iElts]->IsOutsideLambdaRange()){
+            return 0.0;
+        }
+        TInt32RangeList s = m_Elements[iElts]->getSupport();
+        for( UInt32 iS=0; iS<s.size(); iS++ )
+        {
+            support.push_back(s[iS]);
+        }
+    }
+
+
+    Float64 w=0.0;
+    for( UInt32 iS=0; iS<support.size(); iS++ )
+    {
+        for( UInt32 j=support[iS].GetBegin(); j<support[iS].GetEnd(); j++ )
+        {
+            n++;
+            //w = 1.0 / m_ErrorNoContinuum[j];
+            //sumErr += w;
+            //m += m_ContinuumFluxAxis[j] * w;
+            m += m_ContinuumFluxAxis[j];
+        }
+    }
+
+
+    return m/Float64(n);
 }
 
 std::vector<int> CLineModelElementList::findLineIdxInCatalog(const CRayCatalog::TRayVector& restRayList, std::string strTag, Int32 type)

@@ -63,7 +63,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute( CDataStore &dataSt
     std::sort(sortedRedshifts.begin(), sortedRedshifts.end());
 
     // redefine redshift grid
-    Int32 enableFastFitLargeGrid = 0;
+    Int32 enableFastFitLargeGrid = 1;
     TFloat64List largeGridRedshifts;
     //*
     if(enableFastFitLargeGrid==1){
@@ -147,9 +147,14 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute( CDataStore &dataSt
     Int32 extremumCount = opt_extremacount;
     TPointList extremumList;
     TFloat64Range redshiftsRange(result->Redshifts[0], result->Redshifts[result->Redshifts.size()-1]);
-    CExtremum extremum( redshiftsRange, extremumCount, true, 2);
-    extremum.Find( result->Redshifts, result->ChiSquare, extremumList );
-
+    if(result->Redshifts.size() == 1)
+    {
+        extremumList.push_back(SPoint( result->Redshifts[0], result->ChiSquare[0] ));
+    }else if (result->Redshifts.size() == 1)
+    {
+        CExtremum extremum( redshiftsRange, extremumCount, true, 2);
+        extremum.Find( result->Redshifts, result->ChiSquare, extremumList );
+    }
     /*
     // Refine Extremum with a second maximum search around the z candidates:
     // This corresponds to the finer xcorrelation in EZ Pandora (in standard_DP fctn in SolveKernel.py)
