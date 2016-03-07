@@ -1,6 +1,7 @@
 #include <cstdarg>
 #include <iostream>
 
+#include <epic/core/log/log.h>
 #include <epic/redshift/ray/ruleStrongHigherThanWeak.h>
 
 using namespace NSEpic;
@@ -31,6 +32,7 @@ void CRuleStrongHigherThanWeak::Correct( CLineModelElementList& LineModelElement
   Float64 maxiStrong = FindHighestStrongLineAmp( m_LineType, erStrong, LineModelElementList );
   if( maxiStrong == -1 )
     {
+      //Log.LogDebug( "Rule %s: no strong line detected.", Name.c_str() );
       return;
     }
   for( UInt32 iRestRayWeak=0; iRestRayWeak<LineModelElementList.m_RestRayList.size(); iRestRayWeak++ ) //loop on the weak lines
@@ -39,23 +41,24 @@ void CRuleStrongHigherThanWeak::Correct( CLineModelElementList& LineModelElement
 	{
 	  continue;
         }
-        if( LineModelElementList.m_RestRayList[iRestRayWeak].GetType() != m_LineType )
-	  {
-            continue;
-	  }
-        Int32 eIdxWeak = LineModelElementList.FindElementIndex( iRestRayWeak );
-        Int32 subeIdxWeak = LineModelElementList.m_Elements[eIdxWeak]->FindElementIndex( iRestRayWeak );
-        if( LineModelElementList.m_Elements[eIdxWeak]->IsOutsideLambdaRange( subeIdxWeak ) == true )
-	  {
-            continue;
-	  }
-        Float64 nSigma = 1.0;
-        Float64 ampA = maxiStrong;
-        Float64 erA = erStrong;
-        Float64 ampB = LineModelElementList.m_Elements[eIdxWeak]->GetFittedAmplitude( subeIdxWeak );
-        Float64 erB = LineModelElementList.m_Elements[eIdxWeak]->GetFittedAmplitudeErrorSigma( subeIdxWeak );
-        Float64 maxB = (coeff*ampA) + coeff*(erA*nSigma);
-        LineModelElementList.m_Elements[eIdxWeak]->LimitFittedAmplitude( subeIdxWeak, maxB );
+      if( LineModelElementList.m_RestRayList[iRestRayWeak].GetType() != m_LineType )
+	{
+	  continue;
+	}
+      Int32 eIdxWeak = LineModelElementList.FindElementIndex( iRestRayWeak );
+      Int32 subeIdxWeak = LineModelElementList.m_Elements[eIdxWeak]->FindElementIndex( iRestRayWeak );
+      if( LineModelElementList.m_Elements[eIdxWeak]->IsOutsideLambdaRange( subeIdxWeak ) == true )
+	{
+	  continue;
+	}
+      //Log.LogDebug( "Rule %s: element %d has force weak, type %d and is not outside lambda range.", Name.c_str(), iRestRayWeak, m_LineType );
+      Float64 nSigma = 1.0;
+      Float64 ampA = maxiStrong;
+      Float64 erA = erStrong;
+      Float64 ampB = LineModelElementList.m_Elements[eIdxWeak]->GetFittedAmplitude( subeIdxWeak );
+      Float64 erB = LineModelElementList.m_Elements[eIdxWeak]->GetFittedAmplitudeErrorSigma( subeIdxWeak );
+      Float64 maxB = (coeff*ampA) + coeff*(erA*nSigma);
+      LineModelElementList.m_Elements[eIdxWeak]->LimitFittedAmplitude( subeIdxWeak, maxB );
     }
 }
 
@@ -93,5 +96,6 @@ Float64 CRuleStrongHigherThanWeak::FindHighestStrongLineAmp( Int32 linetype , Fl
 	  er = LineModelElementList.m_Elements[eIdxStrong]->GetFittedAmplitudeErrorSigma( subeIdxStrong );
 	}
     }
+  //Log.LogDebug( "Highest strong line amplitude = %f", maxi );
   return maxi;
 }
