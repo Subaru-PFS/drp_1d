@@ -226,8 +226,10 @@ class AViewPlot(object):
             nmin = min(self.nyvect)
             nmax = max(self.nyvect)
             nrange = float(nmax - nmin);
-            ax2.yaxis.set_major_locator(MultipleLocator(nrange/3.0))
-            #ax2.yaxis.set_major_formatter(FormatStrFormatter('%.2e'))
+            if nrange > 0.0:
+                print("major locator nrange = {}".format(nrange))
+                ax2.yaxis.set_major_locator(MultipleLocator(nrange/3.0))
+                #ax2.yaxis.set_major_formatter(FormatStrFormatter('%.2e'))
             ax2.xaxis.grid(True,'major')
             ax2.yaxis.grid(True,'major')
             ax2.yaxis.grid(True,'minor')

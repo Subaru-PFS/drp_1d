@@ -38,10 +38,9 @@ def exportPerformances(dataDiff, outputDirectory):
             zref = dataDiff[x][izref]
             if zref >= z_bins_limits[izbin] and zref < z_bins_limits[izbin+1]:
                 zbin_dataset.append(dataDiff[x])
-                #print("line kep is {}".format(dataDiff[x]))
+                #print("line kept is {}".format(dataDiff[x]))
         print("\n\nThis z bin n = {}".format(len(zbin_dataset)))
         plotMagSFRPerformanceMatrix(zbin_dataset, z_bins_limits[izbin], z_bins_limits[izbin+1], 1e-3, 0.8, outputDirectory)
-     
     mergeImagesInFolder(outputDirectory, ncols = 4)
       
 def mergeImagesInFolder(dir_path, ncols):
@@ -116,20 +115,25 @@ def plotMagSFRPerformanceMatrix(bin_dataset, zmin, zmax, catastrophic_failure_th
         m_bin_dataset = []
         for x in range(n):
             mag = bin_dataset[x][imag]
+            #print("imbin = {}".format(imbin))
+            #print("mag = {}".format(mag))
+            #print("mag bin min = {}".format(mag_bins_limits[imbin]))
+            #print("mag bin max = {}".format(mag_bins_limits[imbin+1]))
             if mag >= mag_bins_limits[imbin] and mag < mag_bins_limits[imbin+1]:
                 m_bin_dataset.append(bin_dataset[x])
-                #print("line kep is {}".format(dataDiff[x]))
+                #print("line kept is {}".format(bin_dataset[x]))
                 
         n_mag = len(m_bin_dataset)
         for isfrbin in range(n_sfr_bins):
             sfr_bin_dataset = []
             for x in range(n_mag):
-                sfr = bin_dataset[x][isfr]
+                sfr = m_bin_dataset[x][isfr]
                 if sfr >= sfr_bins_limits[isfrbin] and sfr < sfr_bins_limits[isfrbin+1]:
-                    sfr_bin_dataset.append(bin_dataset[x])
+                    sfr_bin_dataset.append(m_bin_dataset[x])
                  
             n_matrix[imbin][isfrbin] = len(sfr_bin_dataset) 
-            success_rate_matrix[imbin][isfrbin] = getSuccessRate(sfr_bin_dataset, catastrophic_failure_threshold)
+            success_rate_matrix[imbin][isfrbin] = getSuccessRate(sfr_bin_dataset, catastrophic_failure_threshold)            
+            
             if len(sfr_bin_dataset) == 0:
                 matrix[imbin][isfrbin] = 0
             elif success_rate_matrix[imbin][isfrbin] > success_rate_thres:
@@ -238,8 +242,8 @@ def getSuccessRate(datasetdiff, catastrophic_failure_threshold):
     if n_total == 0:
         return 0.0
     n_success = 0
-    for i in datasetdiff:
-        if abs(i[idiff]) < catastrophic_failure_threshold:
+    for e in datasetdiff:
+        if abs(e[idiff]) < catastrophic_failure_threshold:
             n_success += 1
     
     rate = float(n_success)/float(n_total)

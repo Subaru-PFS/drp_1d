@@ -64,9 +64,11 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute( CDataStore &dataSt
 
     // redefine redshift grid
     Int32 enableFastFitLargeGrid = 1;
+
     TFloat64List largeGridRedshifts;
     //*
     if(enableFastFitLargeGrid==1){
+        Log.LogInfo("Line Model, Fast Fit Large Grid enabled");
         //calculate on a wider grid, defined by a minimum step
         Float64 dz_thres = 1e-3;
         std::vector<Int32> removed_inds;
@@ -133,7 +135,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute( CDataStore &dataSt
     Int32 indexLargeGrid = 0;
     for (Int32 i=0;i<nResults;i++)
     {
-        if(!enableFastFitLargeGrid==1 || i==0 || result->Redshifts[i] == largeGridRedshifts[indexLargeGrid])
+        if(enableFastFitLargeGrid==0 || i==0 || result->Redshifts[i] == largeGridRedshifts[indexLargeGrid])
         {
             ModelFit( model, lambdaRange, result->Redshifts[i], result->ChiSquare[i], result->LineModelSolutions[i], contreest_iterations);
             indexLargeGrid++;
@@ -150,10 +152,17 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute( CDataStore &dataSt
     if(result->Redshifts.size() == 1)
     {
         extremumList.push_back(SPoint( result->Redshifts[0], result->ChiSquare[0] ));
-    }else if (result->Redshifts.size() == 1)
+        Log.LogInfo("Line Model, only 1 redshift calculated, only 1 extremum");
+    }else
     {
         CExtremum extremum( redshiftsRange, extremumCount, true, 2);
         extremum.Find( result->Redshifts, result->ChiSquare, extremumList );
+        if( extremumList.size() == 0 )
+        {
+            Log.LogError("Line Model, Extremum find method failed");
+            return NULL;
+        }
+
     }
     /*
     // Refine Extremum with a second maximum search around the z candidates:
@@ -215,68 +224,78 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute( CDataStore &dataSt
     extremumList2.resize(extremumList.size());
 
     //recompute the fine grid results around the extrema
-    for( Int32 i=0; i<extremumList.size(); i++ )
+    if(enableFastFitLargeGrid==1 || enableVelocityFitting)
     {
-        Float64 z = extremumList[i].X;
-        Float64 m = extremumList[i].Y;
-
-        //find the index in the zaxis results
-        Int32 idx=-1;
-        for ( UInt32 i2=0; i2<result->Redshifts.size(); i2++)
+        for( Int32 i=0; i<extremumList.size(); i++ )
         {
-            if(result->Redshifts[i2] == z){
-                idx = i2;
-                break;
-            }
-        }
-        if(idx==-1){
-            Log.LogInfo( "Problem. could not find extrema solution index...");
-            continue;
-        }
+            Float64 z = extremumList[i].X;
+            Float64 m = extremumList[i].Y;
 
-
-        // reestimate the model (eventually with continuum reestimation) on the extrema selected
-        if(opt_continuumreest == "always"){
-            contreest_iterations = 1;
-        }else{
-            contreest_iterations  = 0;
-        }
-
-
-        ModelFit( model, lambdaRange, result->Redshifts[idx], result->ChiSquare[idx], result->LineModelSolutions[idx], contreest_iterations);
-        m = result->ChiSquare[idx];
-        if(enableVelocityFitting){
-            //fit the emission and absorption width using the lindemodel lmfit strategy
-            model.SetFittingMethod("lmfit");
-            model.SetElementIndexesDisabledAuto();
-            ModelFit( model, lambdaRange, result->Redshifts[idx], result->ChiSquare[idx], result->LineModelSolutions[idx], contreest_iterations);
-
-
-            model.SetFittingMethod(opt_fittingmethod);
-            model.ResetElementIndexesDisabled();
-            model.ApplyVelocityBound();
-        }        
-        extrema_velocityEL[i]=model.GetVelocityEmission();
-        extrema_velocityAL[i]=model.GetVelocityAbsorption();
-
-        //finally compute the redshifts on the extended ExtremaExtendedRedshifts values
-        Float64 left_border = max(redshiftsRange.GetBegin(), z-extensionradius);
-        Float64 right_border=min(redshiftsRange.GetEnd(), z+extensionradius);
-        //model.SetFittingMethod("nofit");
-        extremumList2[i].Y = DBL_MAX;
-        extremumList2[i].X = result->Redshifts[idx];
-        for (Int32 iz=0;iz<result->Redshifts.size();iz++)
-        {
-            if(result->Redshifts[iz] >= left_border && result->Redshifts[iz] <= right_border){
-                ModelFit( model, lambdaRange, result->Redshifts[iz], result->ChiSquare[iz], result->LineModelSolutions[iz], contreest_iterations);
-                if(result->ChiSquare[iz]< extremumList2[i].Y)
-                {
-                    extremumList2[i].X = result->Redshifts[iz];
-                    extremumList2[i].Y = result->ChiSquare[iz];
+            //find the index in the zaxis results
+            Int32 idx=-1;
+            for ( UInt32 i2=0; i2<result->Redshifts.size(); i2++)
+            {
+                if(result->Redshifts[i2] == z){
+                    idx = i2;
+                    break;
                 }
             }
+            if(idx==-1){
+                Log.LogInfo( "Problem. could not find extrema solution index...");
+                continue;
+            }
+
+
+            // reestimate the model (eventually with continuum reestimation) on the extrema selected
+            if(opt_continuumreest == "always"){
+                contreest_iterations = 1;
+            }else{
+                contreest_iterations  = 0;
+            }
+
+
+            ModelFit( model, lambdaRange, result->Redshifts[idx], result->ChiSquare[idx], result->LineModelSolutions[idx], contreest_iterations);
+            m = result->ChiSquare[idx];
+            if(enableVelocityFitting){
+                //fit the emission and absorption width using the lindemodel lmfit strategy
+                model.SetFittingMethod("lmfit");
+                model.SetElementIndexesDisabledAuto();
+                ModelFit( model, lambdaRange, result->Redshifts[idx], result->ChiSquare[idx], result->LineModelSolutions[idx], contreest_iterations);
+
+
+                model.SetFittingMethod(opt_fittingmethod);
+                model.ResetElementIndexesDisabled();
+                model.ApplyVelocityBound();
+            }
+            extrema_velocityEL[i]=model.GetVelocityEmission();
+            extrema_velocityAL[i]=model.GetVelocityAbsorption();
+
+            //finally compute the redshifts on the extended ExtremaExtendedRedshifts values
+            Float64 left_border = max(redshiftsRange.GetBegin(), z-extensionradius);
+            Float64 right_border=min(redshiftsRange.GetEnd(), z+extensionradius);
+            //model.SetFittingMethod("nofit");
+            extremumList2[i].Y = DBL_MAX;
+            extremumList2[i].X = result->Redshifts[idx];
+            for (Int32 iz=0;iz<result->Redshifts.size();iz++)
+            {
+                if(result->Redshifts[iz] >= left_border && result->Redshifts[iz] <= right_border){
+                    ModelFit( model, lambdaRange, result->Redshifts[iz], result->ChiSquare[iz], result->LineModelSolutions[iz], contreest_iterations);
+                    if(result->ChiSquare[iz]< extremumList2[i].Y)
+                    {
+                        extremumList2[i].X = result->Redshifts[iz];
+                        extremumList2[i].Y = result->ChiSquare[iz];
+                    }
+                }
+            }
+            //model.SetFittingMethod(opt_fittingmethod);
         }
-        //model.SetFittingMethod(opt_fittingmethod);
+    }else
+    {
+        for( Int32 i=0; i<extremumList.size(); i++ )
+        {
+            extremumList2[i].X = extremumList[i].X;
+            extremumList2[i].Y = extremumList[i].Y;
+        }
     }
 
     //return result;
@@ -303,7 +322,10 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute( CDataStore &dataSt
         extrema_velocityEL.erase(extrema_velocityEL.begin() + iYmin);
         extrema_velocityALOrdered.push_back(extrema_velocityAL[iYmin]);
         extrema_velocityAL.erase(extrema_velocityAL.begin() + iYmin);
-
+    }
+    if( extremumListOrdered.size() == 0 )
+    {
+        Log.LogError("Line Model, Extremum Ordering failed");
     }
 
     // store extrema results
