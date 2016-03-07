@@ -99,6 +99,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute( CDataStore &dataSt
         forceFilter = CRay::nForce_Strong;
     }
   CRayCatalog::TRayVector restRayList = restraycatalog.GetFilteredList( typeFilter, forceFilter);
+  Log.LogDebug( "restRayList.size() = %d", restRayList.size() );
 
   auto result = std::shared_ptr<CLineModelResult>( new CLineModelResult() );
   result->ChiSquare.resize( sortedRedshifts.size() );
@@ -135,13 +136,17 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute( CDataStore &dataSt
 
   for( Int32 i=0; i<sortedRedshifts.size(); i++ )
     {
+      //Log.LogDebug( "Fitting model at redshift %f", result->Redshifts[i] );
       ModelFit( model, lambdaRange, result->Redshifts[i], result->ChiSquare[i], result->LineModelSolutions[i], contreest_iterations);
     }
 
   // extrema
   Int32 extremumCount = opt_extremacount;
+  Log.LogDebug( "opt_extremacount = %d", opt_extremacount );
   TPointList extremumList;
   TFloat64Range redshiftsRange( result->Redshifts[0], result->Redshifts[result->Redshifts.size()-1] );
+  Log.LogDebug( "redshiftsRange.GetBegin() = %f, redshiftsRange.GetEnd() = %f",
+		redshiftsRange.GetBegin(), redshiftsRange.GetEnd() );
   CExtremum extremum( redshiftsRange, extremumCount, true, 2 );
   extremum.Find( result->Redshifts, result->ChiSquare, extremumList );
 
@@ -183,6 +188,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute( CDataStore &dataSt
 
   // store extrema results
   extremumCount = extremumList.size();
+  Log.LogDebug( "extremumCount = %d", extremumCount );
   result->Extrema.resize( extremumCount );
   result->Posterior.resize( extremumCount );
   result->LogArea.resize( extremumCount );
