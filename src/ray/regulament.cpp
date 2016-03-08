@@ -79,7 +79,7 @@ void CRegulament::EnableRulesAccordingToParameters( std::string Parameters )
       Bool enableRule = Parameters.find ( (*it)->Name ) != std::string::npos;
       if( Parameters=="all" || enableRule )
 	{
-	  Log.LogInfo( "Enabling rule %s.", (*it)->Name.c_str() );
+	  Log.LogDebug( "Enabling rule %s.", (*it)->Name.c_str() );
 	  (*it)->Enabled = true;
 	}
     }

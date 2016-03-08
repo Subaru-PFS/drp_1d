@@ -121,9 +121,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute( CDataStore &dataSt
 			       opt_rules );
   //model.LoadContinuum(); //in order to use a fit with continuum
   result->nSpcSamples = model.getSpcNSamples(lambdaRange);
-
   PrecomputeLogErr( spectrum );
-
   Int32 contreest_iterations = 0;
   if( opt_continuumreest == "always" )
     {
@@ -138,6 +136,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute( CDataStore &dataSt
     {
       //Log.LogDebug( "Fitting model at redshift %f", result->Redshifts[i] );
       ModelFit( model, lambdaRange, result->Redshifts[i], result->ChiSquare[i], result->LineModelSolutions[i], contreest_iterations);
+      Log.LogDebug( "Z interval %d: Chi2 = %f", i, result->ChiSquare[i] );
     }
 
   // extrema
@@ -167,7 +166,6 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute( CDataStore &dataSt
 	  extremumList[i] = extremumListFine[0];
         }
     }
-
   // extend z around the extrema
   Float64 extensionradius = 0.01;
   for( Int32 i=0; i<extremumList.size(); i++ )
@@ -231,6 +229,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute( CDataStore &dataSt
         }
       ModelFit( model, lambdaRange, result->Redshifts[idx], result->ChiSquare[idx], result->LineModelSolutions[idx], contreest_iterations);
       m = result->ChiSquare[idx];
+      Log.LogDebug( "m = %f", m );
 
       //save the model result
       static Int32 maxModelSave = 5;
@@ -261,7 +260,16 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute( CDataStore &dataSt
       Float64 aic = m + 2*nddl; //AIC
       result->bic[i] = aic;
     }
-
+  for( Int32 count = 0; count < result->Redshifts.size(); count++ )
+    {
+      /*Float64 posterior = result->Posterior[count];
+      if( posterior + 1 < 0.0000001 || posterior < 0.000001 || posterior -1 < 0.0000000001 )
+	{
+	  continue;
+	}	  
+	Log.LogDebug( "Z,Posterior: %f %f", result->Redshifts[count], result->Posterior[count] );*/
+      Log.LogDebug( "Z,Chi2: %f %f", result->Redshifts[count], result->ChiSquare[count] );
+    }
   if( result->Extrema.size()>0 )
     {
       Log.LogInfo( "LineModel Solution: best z found = %.5f", result->Extrema[0] );
@@ -501,6 +509,7 @@ Void COperatorLineModel::ModelFit(CLineModelElementList& model, const TFloat64Ra
     chiSquare = boost::numeric::bounds<float>::highest();
     Float64 fit = model.fit( redshift, lambdaRange, modelSolution, contreest_iterations );
     chiSquare = fit;
+    Log.LogDebug( "ModelFit: Chi2 = %f", fit );
 }
 
 /**
