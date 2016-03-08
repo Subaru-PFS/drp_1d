@@ -36,23 +36,23 @@ Void CRuleOIIRatioRange::Correct( CLineModelElementList& LineModelElementList )
   Int32 iA = LineModelElementList.FindElementIndex( m_LineA, m_LineType);
   if( iA==-1 )
     {
-      Log.LogDebug( "Rule %s: line %s not found.", Name.c_str(), m_LineA );
+      Log.LogDebug( "Rule %s: line %s not found.", Name.c_str(), m_LineA.c_str() );
       return;
     }
   if( LineModelElementList.m_Elements[iA]->GetSize()>1 )
     {
-      Log.LogDebug( "Rule %s: line %s has size < 1.", Name.c_str(), m_LineA );
+      Log.LogDebug( "Rule %s: line %s has size < 1.", Name.c_str(), m_LineA.c_str() );
       iA=-1;
     }
   Int32 iB = LineModelElementList.FindElementIndex( m_LineB, m_LineType );
   if( iB==-1 )
     {
-      Log.LogDebug( "Rule %s: line %s not found.", Name.c_str(), m_LineB );
+      Log.LogDebug( "Rule %s: line %s not found.", Name.c_str(), m_LineB.c_str() );
       return;
     }
   if( LineModelElementList.m_Elements[iB]->GetSize()>1 )
     {
-      Log.LogDebug( "Rule %s: line %s has size < 1.", Name.c_str(), m_LineB );
+      Log.LogDebug( "Rule %s: line %s has size < 1.", Name.c_str(), m_LineB.c_str() );
       iB=-1;
     }
   if (iA==-1 || iB==-1 || iA==iB )
