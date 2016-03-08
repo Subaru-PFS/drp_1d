@@ -82,6 +82,9 @@ protected:
     bool m_OutsideLambdaRange;
     std::string m_ElementType;
 
+    Float64 m_asym_sigma_coeff;
+    Float64 m_asym_alpha;
+
 private:
 
 

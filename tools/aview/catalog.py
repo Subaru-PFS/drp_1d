@@ -28,7 +28,7 @@ class Catalog(object):
         self.linegroup = -1
         self.linenominalamp = -1
         
-        self.conversion = "" #"toAir" #"toVacuum"#"toAir"
+        self.conversion = "toAir" #"toVacuum"#"toAir"
         self.load()
         
     def load(self):

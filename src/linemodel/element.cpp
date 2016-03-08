@@ -17,6 +17,9 @@ CLineModelElement::CLineModelElement(const std::string& widthType, const Float64
     m_VelocityAbsorption= velocityAbsorption;
     m_FWHM_factor = 2.35;
 
+    m_asym_sigma_coeff = 4.0;
+    m_asym_alpha = 4.5;
+
     m_OutsideLambdaRange = true;
     m_OutsideLambdaRangeOverlapThreshold = 0.1;
     //example: 0.1 means 10% of the line is allowed to be outside the spectrum with the line still considered inside the lambda range
@@ -59,10 +62,8 @@ Float64 CLineModelElement::GetLineWidth(Float64 redshiftedlambda, Float64 z, Boo
 {
     Float64 instrumentSigma = 0.0;
     Float64 velocitySigma = 0.0;
-    if( m_LineWidthType == "psfinstrumentdriven"){
+    if( m_LineWidthType == "instrumentdriven"){
         instrumentSigma = redshiftedlambda/m_Resolution/m_FWHM_factor;
-    }else if( m_LineWidthType == "zdriven"){
-        instrumentSigma = m_NominalWidth*(1+z);
     }else if( m_LineWidthType == "fixed"){
         instrumentSigma = m_NominalWidth;
     }else if( m_LineWidthType == "combined"){
@@ -91,11 +92,11 @@ Float64 CLineModelElement::GetLineProfile(std::string profile, Float64 xc, Float
         const Float64 xsurc = xc/sigma;
         val = exp(-0.5*xsurc*xsurc);
     }else if(profile=="ASYM"){
-        const Float64 coeff = 2.5;
+        const Float64 coeff = m_asym_sigma_coeff;
 
         sigma = sigma*coeff;
         const Float64 xsurc = xc/sigma;
-        const Float64 alpha=10.0;
+        const Float64 alpha = m_asym_alpha;
         val = exp(-0.5*xsurc*xsurc)*(1.0+erf(alpha/sqrt(2.0)*xsurc));
     }
     return val;
@@ -106,22 +107,28 @@ Float64 CLineModelElement::GetLineProfileDerivSigma(std::string profile, Float64
     Float64 val=0.0;
     Float64 cel = 300000.0;
     Float64 xc = x-x0;
-    if(true || profile=="SYM"){
+    if(profile=="SYM"){
         const Float64 xsurc = xc/sigma;
         val = xc*xc /cel *x0 /(sigma*sigma*sigma) * exp(-0.5*xsurc*xsurc);
     }else if(profile=="ASYM"){
-        const Float64 coeff = 2.5;
+        const Float64 coeff = m_asym_sigma_coeff;
 
         sigma = sigma*coeff;
         const Float64 xsurc = xc/sigma;
-        const Float64 alpha=10.0;
+        const Float64 alpha = m_asym_alpha;
         const Float64 valsym = exp(-0.5*xsurc*xsurc);
         const Float64 valsymd = xc*xc /cel *x0 /(sigma*sigma*sigma) * exp(-0.5*xsurc*xsurc);
 
         const Float64 valasym = (1.0+erf(alpha/sqrt(2.0)*xsurc));
         const Float64 arg = alpha*xc/sqrt(2)/sigma;
-        const Float64 valasymd = -alpha/sqrt(2*M_PI)*xc /(sigma*sigma) /cel*x0*exp(-arg*arg);
+        //const Float64 valasymd = -alpha/sqrt(2*M_PI)*xc /(sigma*sigma) /cel*x0*exp(-arg*arg);
+        const Float64 valasymd = -alpha*sqrt(2)/sqrt(M_PI)*xc /(sigma*sigma) /cel*x0*exp(-arg*arg);
         val = valsym*valasymd+valsymd*valasym;
+        //val = valsymd;
+
+        //Float64 v = sigma*cel/x0;
+        //val = -sqrt(2)*alpha*cel*(x - x0)*exp(-0.5*pow(cel*(x - x0)/(v*x0),2))*exp(-pow(alpha*cel*(x - x0), 2)/(2*pow(v*x0, 2)))/(sqrt(M_PI)*pow(v,2)*x0) + 1.0*pow(cel*(x - x0),2)*(erf(sqrt(2)*alpha*cel*(x - x0)/(2*v*x0)) + 1)*exp(-0.5*pow(cel*(x - x0)/(v*x0),2))/(pow(v,3)*pow(x0,2));
+
     }
     return val;
 }
@@ -134,7 +141,7 @@ Float64 CLineModelElement::GetNSigmaSupport(std::string profile)
     if(profile=="SYM"){
         val = nominal;
     }else if(profile=="ASYM"){
-        val = nominal*2.5;
+        val = nominal*m_asym_sigma_coeff;
     }
     return val;
 }

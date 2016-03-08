@@ -1,9 +1,0 @@
-#version:0.3.0	
-#2016-02-23						
-#	Emission	lines		list			
-1216.03	Lya	E	S	ASYM
-1116.03	Lya2	E	S	SYM
-1416.03	Lya3	E	S	SYM
-	
-		
-

@@ -549,7 +549,6 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
                 Log.LogInfo( "LineModel Infos: Lmfit OUT, validEltsIdx.size() = %d", filteredEltsIdx.size());
             }
         }
-
     }
 
     //fit the amplitude of all elements together with linear solver: gsl_multifit_wlinear
@@ -998,7 +997,7 @@ void print_state (size_t iter, gsl_multifit_fdfsolver * s)
 Int32 CLineModelElementList::fitAmplitudesLmfit(std::vector<Int32> filteredEltsIdx, const CSpectrumFluxAxis& fluxAxis, std::vector<Float64>& ampsfitted, Int32 lineType)
 {
     //http://www.gnu.org/software/gsl/manual/html_node/Example-programs-for-Nonlinear-Least_002dSquares-Fitting.html
-    Bool verbose=true;
+    Bool verbose=false;
 
 
 
@@ -1074,8 +1073,8 @@ Int32 CLineModelElementList::fitAmplitudesLmfit(std::vector<Int32> filteredEltsI
     gsl_vector *res_f;
     double chi, chi0;
 
-    const double xtol = 1e-8;
-    const double gtol = 1e-8;
+    const double xtol = 1e-12;
+    const double gtol = 1e-12;
     const double ftol = 0.0;
 
     gsl_rng_env_setup();
@@ -2736,28 +2735,42 @@ Float64 CLineModelElementList::GetVelocityAbsorption()
     return m_velocityAbsorption;
 }
 
-
-void CLineModelElementList::ApplyVelocityBound()
+Float64 CLineModelElementList::GetVelocityInfFromInstrumentResolution()
 {
     static Float64 c = 300000.0;
     static Float64 tolCoeff = 2.0;
-    static Float64 velInfFromInstrument = c/m_resolution/tolCoeff;
-    static Float64 velSupEmission = 800.0;
-    static Float64 velSupAbsorption = 800.0;
+    return c/m_resolution/tolCoeff;
+}
+
+Float64 CLineModelElementList::GetVelocitySup()
+{
+    return 800.0;
+}
+
+Int32 CLineModelElementList::ApplyVelocityBound()
+{
+
+    Int32 corrected=false;
+    static Float64 velInfFromInstrument = GetVelocityInfFromInstrumentResolution();
+    static Float64 velSupEmission = GetVelocitySup();
+    static Float64 velSupAbsorption = GetVelocitySup();
 
     Float64 vel;
     vel = GetVelocityEmission();
     if(vel>velSupEmission || vel<velInfFromInstrument)
     {
         SetVelocityEmission(m_velocityEmissionInit);
+        corrected = true;
         Log.LogInfo( "\nLineModel Infos: Reset Velocity Emission, to v = %.1f", m_velocityEmissionInit);
     }
     vel = GetVelocityAbsorption();
     if(vel>velSupAbsorption || vel<velInfFromInstrument)
     {
         SetVelocityAbsorption(m_velocityAbsorptionInit);
+        corrected = true;
         Log.LogInfo( "\nLineModel Infos: Reset Velocity Absorption, to v = %.1f", m_velocityAbsorptionInit);
     }
+    return corrected;
 }
 
 

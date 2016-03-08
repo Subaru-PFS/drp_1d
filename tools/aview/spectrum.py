@@ -350,7 +350,9 @@ class Spectrum(object):
         a = a + ("    dlambda = {0}\n".format(self.getResolution()))
         a = a + ("    lambda min = {}, lambda max = {}\n".format(self.getWavelengthMin(), self.getWavelengthMax()))
         a = a + ("    flux min = {}, flux max = {}\n".format(self.getFluxMin(),self.getFluxMax()))
-        a = a + ("    flux std = {}\n".format(np.std(self.yvect)))
+        a = a + ("    flux std = {}, flux std 6000_8000 = {}\n".format(np.std(self.yvect), self.GetFluxStd6000_8000()))
+        a = a + ("    magI = {}\n".format(self.getMagI()))
+        
         a = a + ("\n")
         
         return a
@@ -453,6 +455,13 @@ class Spectrum(object):
         return min(self.yvect)                    
     def getFluxMax(self):
         return max(self.yvect)
+        
+    def GetFluxStd6000_8000(self):
+        imin = self.getWavelengthIndex(6000)
+        imax = self.getWavelengthIndex(8000)
+        if imin == 0 or imax == 0:
+            return -1.0
+        return np.std(self.yvect[imin:imax])
     
     def getWavelengthMin(self):
         return self.xvect[0]
@@ -607,16 +616,40 @@ class Spectrum(object):
             self.xvect[x] = old_xvect[x+imin]
             self.yvect[x] = old_yvect[x+imin]
             self.ysum += self.yvect[x]
+    
+            
+    def setMagI(self, magI):
+        
+        for x in range(imin,imax):
+            self.yvect[x] = self.yvect[x]*w
+        
+    def getMagI(self):
+        lambda_min=6000
+        lambda_max=9800
+        imin = self.getWavelengthIndex(lambda_min)
+        imax = self.getWavelengthIndex(lambda_max)
+
+        y = np.array(self.yvect[imin:imax])*np.array(self.xvect[imin:imax])*np.array(self.xvect[imin:imax])
+        sumF = np.sum(y)/1e-29/3e18*self.getResolution()*1e-32
+        
+        #sumF = 8.31*1e-9#2.55*10e-20 #Vega, band I
+        print("sumF = {}".format(sumF))
+        refF = 2550*1e-23#8.31*1e-9#2.55*10e-20 #Vega, band I
+        mag = -2.5*np.log10(sumF/refF)
+        return mag
             
 
-    def exportFits(self, path="", name="", addNoise=False, exportSigma=False):
+    def exportFits(self, path="", name="", addNoise=False, exportNoiseSpectrum=False):
         """
         write spectrum into a new fits file (useful for model csv input spectra)
         """
         if name == "":
             name = "spectrum_exported"
         noisename = "{}_ErrF".format(name)
-        name = "{}_F".format(name)
+        if addNoise:
+            name = "{}_F".format(name)
+        else:
+            name = "{}_TF".format(name)
         destfileout = os.path.join(path, "{}.fits".format(name))
         print("Spectrum exporting to fits: {}".format(destfileout))
         if os.path.exists(destfileout):
@@ -624,17 +657,19 @@ class Spectrum(object):
             os.remove(destfileout)
 
         anoise = np.ones((len(self.yvect)))
-        if addNoise:
+        if addNoise or exportNoiseSpectrum:
             #noise
             #knoise = 0.1 * np.std(self.yvect)
-            sigma_from_pfs_simu = 1.57e-19 #corresponds to 3h exposure time
+            sigma_from_pfs_simu = 1.5e-19 #corresponds to 3h exposure time
+            print("using Noise STD fixed value = {}".format(sigma_from_pfs_simu))            
             
             for k in range(len(self.yvect)):
                 mu = 0.0
                 sigma = np.sqrt(sigma_from_pfs_simu**2+self.yvect[k]**4)
                 anoise[k] =  sigma
-                
-                self.yvect[k] = self.yvect[k] + random.gauss(mu, sigma) 
+                if addNoise:
+                    print("Adding Noise to spectrum".format()) 
+                    self.yvect[k] = self.yvect[k] + random.gauss(mu, sigma) 
         
                   
         a1 = self.xvect
@@ -650,7 +685,7 @@ class Spectrum(object):
         hdu_new = pyfits.BinTableHDU.from_columns(cols_spc)
         hdu_new.writeto(destfileout)
         
-        if exportSigma:
+        if exportNoiseSpectrum:
             
             destfileoutnoise = os.path.join(path, "{}.fits".format(noisename))
             print("Noise exporting to fits: {}".format(destfileoutnoise))
@@ -682,9 +717,10 @@ def StartFromCommandLine( argv ) :
         print('using full path: {0}'.format(options.spcPath))
         s = Spectrum(options.spcPath, options.spcType)
         if options.export == "yes":
+            #s.applyLambdaCrop(7500, 9000)
             path = os.path.split(options.spcPath)[0]
             nameWext = os.path.split(options.spcPath)[1]
-            s.exportFits(path, name=os.path.splitext(nameWext)[0])
+            s.exportFits(path, name=os.path.splitext(nameWext)[0], addNoise=False, exportNoiseSpectrum=True)
         print(s) 
         s.plot()
     else :

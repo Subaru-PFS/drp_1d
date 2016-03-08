@@ -182,22 +182,23 @@ BOOST_AUTO_TEST_CASE( LinemodelFit_lmfit_velocity_pfsbatch6_absorption_sym_singl
 
 }
 
-BOOST_AUTO_TEST_CASE( LinemodelFit_lmfit_velocity_pfsbatch6_emission_asym_single )
+BOOST_AUTO_TEST_CASE( LinemodelFit_lmfit_velocity_pfshighz_emission_asym_single )
 {
-    std::string spectrumPath = "../test/data/LinemodelFitTestCase/16000010000158vacLine_TF.fits";
-    std::string noisePath = "../test/data/LinemodelFitTestCase/16000010000158vacLine_ErrF.fits";
-    std::string linecatalogPath = "../test/data/LinemodelFitTestCase/linecatalog_b9_emission_asym_single_debug.txt";
+    std::string spectrumPath = "../test/data/LinemodelFitTestCase/lya/spec_lines_oc_z5.70_ew50_fwhm10_nb25.0mag_TF.fits";
+    std::string noisePath = "../test/data/LinemodelFitTestCase/lya/spec_lines_oc_z5.70_ew50_fwhm10_nb25.0mag_ErrF.fits";
+    std::string linecatalogPath = "../test/data/LinemodelFitTestCase/linecatalog_b9_emission_asym_single.txt";
 
     std::string opt_fittingmethod = "lmfit";
     //std::string opt_fittingmethod = "individual";
     Int32 lineTypeFilter = CRay::nType_Emission;
-    Float64 initialVelocity = 100.0;
+    Float64 initialVelocity = 200.0;
     Int32 forceFilter = -1;
 
     std::vector<Float64> ampsRef;
-    ampsRef.push_back(1.6e-19);
-    Float64 emissionVelocityRef = 150.0;
-    Float64 z = 3.72787;
+    ampsRef.push_back(1e-18);
+    Float64 emissionVelocityRef = 45;
+    //Float64 z = 5.702; //sym profile
+    Float64 z = 5.698; //asym profile
     checkAmplitudeAndVelocityFit(spectrumPath, noisePath, linecatalogPath, opt_fittingmethod, lineTypeFilter, forceFilter, initialVelocity, z, ampsRef, emissionVelocityRef);
 
 }
