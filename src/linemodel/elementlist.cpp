@@ -482,6 +482,7 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
     if(m_ContinuumComponent == "nocontinuum"){
         reinitModel();
     }
+    Log.LogDebug( "CElementList::fit merit = %f", merit );
     return merit;
 }
 
@@ -1212,14 +1213,20 @@ Float64 CLineModelElementList::getLeastSquareMerit(const TFloat64Range& lambdaRa
     Float64 diff = 0.0;
 
     Float64 imin = spcSpectralAxis.GetIndexAtWaveLength(lambdaRange.GetBegin());
-    Float64 imax = spcSpectralAxis.GetIndexAtWaveLength(lambdaRange.GetEnd());
-
+    Float64 imax = spcSpectralAxis.GetIndexAtWaveLength(lambdaRange.GetEnd());   
     for( UInt32 j=imin; j<imax; j++ )
     {
         numDevs++;
         diff = (Yspc[j] - Ymodel[j]);
         fit += (diff*diff) / (m_ErrorNoContinuum[j]*m_ErrorNoContinuum[j]);
+	if ( 1E6 * diff < m_ErrorNoContinuum[j] )
+	  {
+	    Log.LogDebug( "Warning: noise is at least 6 orders greater than the residue!" );
+	    Log.LogDebug( "CLineModelElementList::getLeastSquareMerit diff = %f", diff );
+	    Log.LogDebug( "CLineModelElementList::getLeastSquareMerit m_ErrorNoContinuum[%d] = %f", j, m_ErrorNoContinuum[j] );
+	  }
     }
+    Log.LogDebug( "CLineModelElementList::getLeastSquareMerit fit = %f", fit );
     return fit;
 }
 

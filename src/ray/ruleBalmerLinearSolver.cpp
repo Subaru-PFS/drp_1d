@@ -66,12 +66,12 @@ void CRuleBalmerLinearSolver::Correct( CLineModelElementList& LineModelElementLi
       ilineA = LineModelElementList.FindElementIndex( tagA, CRay::nType_Absorption );
       if( ilineE==-1 )
 	{
-	  Log.LogDebug( "Rule %s: no element with name %s.", Name.c_str(), tagE );
+	  Log.LogDebug( "Rule %s: no element with name %s.", Name.c_str(), tagE.c_str() );
 	  continue;
 	}
       if( ilineA==-1 )
 	{
-	  Log.LogDebug( "Rule %s: no element with name %s.", Name.c_str(), tagA );
+	  Log.LogDebug( "Rule %s: no element with name %s.", Name.c_str(), tagA.c_str() );
 	  continue;
         }
       Float64 ampE = LineModelElementList.m_Elements[ilineE]->GetFittedAmplitude( 0 );
