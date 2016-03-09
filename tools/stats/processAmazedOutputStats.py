@@ -44,6 +44,12 @@ def setMuseRefFileType():
     iRefEBmV = -1
     iRefSigma = -1
     
+def setVUDSRefFileType():
+    global iRefZ, iRefMag, iRefFlag
+    iRefZ = 3
+    iRefMag = 5
+    iRefFlag = 4  
+    
 def setVVDSRefFileType():
     global iRefZ, iRefMag, iRefFlag
     iRefZ = 4
@@ -816,6 +822,9 @@ def StartFromCommandLine( argv ) :
         elif options.type == 'muse':
             print "Info: Using MUSE reference data file type"            
             setMuseRefFileType()
+        elif options.type == 'vuds':
+            print "Info: Using VUDS reference data file type"            
+            setVUDSRefFileType()
         else:
             print("Info: No reference file type given (--type), using vvds by default.")
 

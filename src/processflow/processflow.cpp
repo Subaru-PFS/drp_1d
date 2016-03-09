@@ -64,6 +64,25 @@ CProcessFlow::~CProcessFlow()
 
 Bool CProcessFlow::Process( CProcessFlowContext& ctx )
 {
+    //Check if the Spectrum is valid on the lambdarange
+    TFloat64Range lambdaRange;
+    ctx.GetParameterStore().Get( "lambdaRange", lambdaRange );
+    const CSpectrumSpectralAxis& spcSpectralAxis = ctx.GetSpectrum().GetSpectralAxis();
+    TFloat64Range spcLambdaRange;
+    spcSpectralAxis.ClampLambdaRange( lambdaRange, spcLambdaRange );
+    const Float64 lmin = spcLambdaRange.GetBegin();
+    const Float64 lmax = spcLambdaRange.GetEnd();
+    if( !ctx.GetSpectrum().IsFluxValid( lmin, lmax ) ){
+        Log.LogError( "Failed to validate spectrum flux: %s, on wavelength range (%.1f ; %.1f)", ctx.GetSpectrum().GetName().c_str(), lmin, lmax );
+        return false;
+    }
+    if( !ctx.GetSpectrum().IsNoiseValid( lmin, lmax ) ){
+        Log.LogError( "Failed to validate noise from spectrum: %s, on wavelength range (%.1f ; %.1f)", ctx.GetSpectrum().GetName().c_str(), lmin, lmax );
+        return false;
+    }
+
+
+
     std::string methodName;
     ctx.GetParameterStore().Get( "method", methodName );
 
