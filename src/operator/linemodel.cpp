@@ -258,7 +258,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute( CDataStore &dataSt
             m = result->ChiSquare[idx];
             if(enableVelocityFitting){
                 Bool enableManualStepVelocityFit = true;
-                Bool enableLMVelocityFit = false;
+                Bool enableLMVelocityFit = true;
                 if(enableLMVelocityFit){
                     //fit the emission and absorption width using the linemodel lmfit strategy
                     model.SetFittingMethod("lmfit");

@@ -129,6 +129,19 @@ Void CSpectrum::SetName( const char* name )
     m_Name = name;
 }
 
+Bool CSpectrum::IsFluxValid(){
+    Bool allzero=true;
+
+    const Float64* flux = m_FluxAxis.GetSamples();
+    for(Int32 i=0; i<m_FluxAxis.GetSamplesCount(); i++){
+        if( flux[i] != 0.0 ){
+            allzero = false;
+        }
+    }
+    Bool valid = !allzero;
+    return valid;
+}
+
 Bool CSpectrum::IsNoiseValid(){
     Bool valid=true;
 

@@ -55,6 +55,11 @@ bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath,
         m_Spectrum = NULL;
         return false;
     }
+    //check if the Spectrum is valid
+    if( !m_Spectrum->IsFluxValid() ){
+        Log.LogError( "Failed to validate spectrum: %s", spectrumPath );
+        return false;
+    }
 
     // add noise if any or add flat noise
     if( noisePath == NULL )
