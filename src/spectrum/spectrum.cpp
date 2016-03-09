@@ -147,7 +147,7 @@ Bool CSpectrum::IsNoiseValid(){
 
     const Float64* error = m_FluxAxis.GetError();
     for(Int32 i=0; i<m_FluxAxis.GetSamplesCount(); i++){
-        if( error[i] == 0 ){
+        if( error[i] <= 0 ){
             valid = false;
         }
     }
