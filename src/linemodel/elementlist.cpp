@@ -1107,7 +1107,7 @@ Int32 CLineModelElementList::fitAmplitudesLmfit(std::vector<Int32> filteredEltsI
     res_f = gsl_multifit_fdfsolver_residual(s);
     chi0 = gsl_blas_dnrm2(res_f);
 
-    /* solve the system with a maximum of 20 iterations */
+    /* solve the system with a maximum of 50 iterations */
     status = gsl_multifit_fdfsolver_driver(s, 50, xtol, gtol, ftol, &info);
 
     gsl_multifit_fdfsolver_jac(s, J);

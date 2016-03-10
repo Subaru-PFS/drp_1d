@@ -526,8 +526,8 @@ class Spectrum(object):
         x = x2
         while(x<wavelengthSup and k<1e6):
             x = x2 + k*xstep
-            #y = coefficients1[1] + coefficients1[0]*x #y2# + k*ystep
-            y = moyenne
+            y = coefficients1[1] + coefficients1[0]*x #y2# + k*ystep
+            #y = moyenne
             print("INFO (extension Red): new sample at x = {} and y = {}".format(x, y))            
             self.xvect.append(x)
             self.yvect.append(y)
@@ -557,8 +557,21 @@ class Spectrum(object):
         x = x1
         while(x>wavelengthInf and k<1e6):
             x = x1 - k*xstep
-            #y = coefficients1[1] + coefficients1[0]*x#y1 #-k*ystep
-            y = moyenne
+            y = coefficients1[1] + coefficients1[0]*x#y1 #-k*ystep
+            #y = moyenne
+            
+            # custom profile
+            if x<912:
+                y=0
+#            else:
+#                x1=2238.0
+#                y1=9.11*1e-19
+#                x0=912.0
+#                y0=0.0
+#                a = (y1-y0)/(x1-x0)
+#                b = -a*x0
+#                y = b + a*x#y1 #-k*ystep
+            
             print("INFO (extension Blue: new sample at x = {} and y = {}".format(x, y))
             xvect_tmp = []
             yvect_tmp = []
@@ -718,9 +731,10 @@ def StartFromCommandLine( argv ) :
         s = Spectrum(options.spcPath, options.spcType)
         if options.export == "yes":
             #s.applyLambdaCrop(7500, 9000)
+            #s.applyWeight(1e-18)
             path = os.path.split(options.spcPath)[0]
             nameWext = os.path.split(options.spcPath)[1]
-            s.exportFits(path, name=os.path.splitext(nameWext)[0], addNoise=False, exportNoiseSpectrum=True)
+            s.exportFits(path, name=os.path.splitext(nameWext)[0], addNoise=False, exportNoiseSpectrum=False)
         print(s) 
         s.plot()
     else :
