@@ -351,7 +351,7 @@ class Spectrum(object):
         a = a + ("    lambda min = {}, lambda max = {}\n".format(self.getWavelengthMin(), self.getWavelengthMax()))
         a = a + ("    flux min = {}, flux max = {}\n".format(self.getFluxMin(),self.getFluxMax()))
         a = a + ("    flux std = {}, flux std 6000_8000 = {}\n".format(np.std(self.yvect), self.GetFluxStd6000_8000()))
-        a = a + ("    magI = {}\n".format(self.getMagI()))
+        a = a + ("    magI = {}\n".format(self.getMagIAB()))
         
         a = a + ("\n")
         
@@ -631,26 +631,55 @@ class Spectrum(object):
             self.ysum += self.yvect[x]
     
             
-    def setMagI(self, magI):
+    def setMagIAB(self, magIAB):
+        dMThreshold = 0.1
+        maxIterations = 10000
+        mag = self.getMagIAB()     
         
-        for x in range(imin,imax):
-            self.yvect[x] = self.yvect[x]*w
+        it = 0
+        coeffStep = 1.+dMThreshold*10.0
+        while abs(mag-magIAB) > dMThreshold and it<maxIterations:
+            if mag>magIAB:
+                self.applyWeight(coeffStep)
+            else:
+                self.applyWeight(1/coeffStep)
+            mag = self.getMagIAB() 
+            #print("current Mag = {}".format(mag))
+            it +=1
+            if it>20:
+                coeffStep = 1.+dMThreshold
+        print("Mag found (n={} iterations) is {}".format(it, mag))
+
+
         
-    def getMagI(self):
+    def getMagIAB(self):
         lambda_min=6000
         lambda_max=9800
         imin = self.getWavelengthIndex(lambda_min)
         imax = self.getWavelengthIndex(lambda_max)
 
-        y = np.array(self.yvect[imin:imax])*np.array(self.xvect[imin:imax])*np.array(self.xvect[imin:imax])
-        sumF = np.sum(y)/1e-29/3e18*self.getResolution()*1e-32
+        
+        y = self.getFNU()[imin:imax]
+        #y = self.yvect[imin]*self.xvect[imin]*self.xvect[imin]
+        #f = np.mean(y)/1e-29/3e18
+        f = np.mean(y)
         
         #sumF = 8.31*1e-9#2.55*10e-20 #Vega, band I
-        print("sumF = {}".format(sumF))
-        refF = 2550*1e-23#8.31*1e-9#2.55*10e-20 #Vega, band I
-        mag = -2.5*np.log10(sumF/refF)
+        #print("meanF = {}".format(meanF))
+        #refF = 3631.0#2550*1e-23#8.31*1e-9#2.55*10e-20 #Vega, band I
+        #refM = 46.8
+        mag = -5.0/2.0*np.log10(f)-46.8
         return mag
+    
+    def getFNU(self):
+        c_cm_s = 3e18
+        yvect = np.array(self.yvect)
+        
+        for x in range(self.n):
+            #self.yvect[x] = self.yvect[x]*3.34*1e4*self.xvect[x]**2
+            yvect[x] = self.yvect[x]/c_cm_s*(self.xvect[x])**2*10
             
+        return yvect
 
     def exportFits(self, path="", name="", addNoise=False, exportNoiseSpectrum=False):
         """
@@ -729,9 +758,12 @@ def StartFromCommandLine( argv ) :
     if( len( args ) == 0 ) :
         print('using full path: {0}'.format(options.spcPath))
         s = Spectrum(options.spcPath, options.spcType)
+        
+        
         if options.export == "yes":
             #s.applyLambdaCrop(7500, 9000)
             #s.applyWeight(1e-18)
+            #s.setMagIAB(20)
             path = os.path.split(options.spcPath)[0]
             nameWext = os.path.split(options.spcPath)[1]
             s.exportFits(path, name=os.path.splitext(nameWext)[0], addNoise=False, exportNoiseSpectrum=False)
