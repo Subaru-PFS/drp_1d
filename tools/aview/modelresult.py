@@ -127,12 +127,16 @@ class ModelResult(object):
         pp.show()
 
     def randomAmplitudes(self, coeffE=1.0, coeffA=0.5):
-        coeffE *= 1e-16 #coefficient additive, needs absolute value
+        coeffE *= 1e-16 #coefficient additive and continuum independent, needs absolute value
         
+        # First get OII and Halpha in range +- 30% of the SFR coefficient value
         ampOII = coeffE*(0.7+random.random()*0.6)
         ampHalpha = coeffE*(0.7+random.random()*0.6)
+        
+        # OIII in range +- 30% of OII
         ampOIII = ampOII*(0.7+random.random()*0.6)
-        ampHbetaE = ampHalpha*(1.0/2.86)*(random.random()*0.33)
+        # Hbeta should be in the Balmer rule
+        ampHbetaE = ampHalpha*(1.0/2.86)*(random.random())
         
         ampCIII = ampHalpha*(random.random())
         ampCIV = ampHalpha*(random.random())
@@ -143,24 +147,28 @@ class ModelResult(object):
                 elif self.linename[k]=="Hbeta":
                     self.lineamplitude[k] = ampHbetaE
                 elif self.linename[k]=="[OII]3729":
-                    self.lineamplitude[k] = ampOII*0.7
+                    self.lineamplitude[k] = ampOII*0.7 #coeff 0.7 grossièrement pour compenser doublet
                 elif self.linename[k]=="[OII]3726":
-                    self.lineamplitude[k] = ampOII*0.7
+                    self.lineamplitude[k] = ampOII*0.7 #coeff 0.7 grossièrement pour compenser doublet
                 elif self.linename[k]=="[OIII](doublet-1)":
                     self.lineamplitude[k] = ampOIII
                 elif self.linename[k]=="[OIII](doublet-1/3)":
                     self.lineamplitude[k] = ampOIII*0.33
                 elif self.linename[k]=="LyAE":
+                    #Lya in range 0-150% of OII
                     self.lineamplitude[k] = ampOII*(random.random()*1.5)
                 elif self.linename[k]=="[CIII]1907":
+                    #CIII in range 0-100% of Halpha
                     self.lineamplitude[k] = ampCIII
                 elif self.linename[k]=="[CIII]1909":
                     self.lineamplitude[k] = ampCIII
                 elif self.linename[k]=="CIV1550":
+                    #CIV in range 0-100% of Halpha
                     self.lineamplitude[k] = ampCIV
                 elif self.linename[k]=="CIV1548":
                     self.lineamplitude[k] = ampCIV
                 elif self.linename[k]=="Hgamma":
+                    #Balmer lines beyond Hgamma = 0 in emission
                     self.lineamplitude[k] = 0.0
                 elif self.linename[k]=="Hdelta":
                     self.lineamplitude[k] = 0.0
@@ -183,17 +191,21 @@ class ModelResult(object):
                 if self.linename[k]=="HalphaA":
                     self.lineamplitude[k] = 0.0
                 elif self.linename[k]=="HbetaA":
+                    #HbetaA only present if HbetaE > 0.1*HalphaE : then = in the range +-30% of the ISM coeff
                     if ampHbetaE/ampHalpha > 0.1:
                         self.lineamplitude[k] = coeffA*(0.7+random.random()*0.6)
                     else:
                         self.lineamplitude[k] = 0.0
                 if self.lineforce[k] == "S":
+                    #Strong ABS lines in the range 70%-130% of the ISM coeff
                     self.lineamplitude[k] = coeffA*(0.7+random.random()*0.6)
                 elif self.lineforce[k] == "W":
+                    #Weak ABS lines in the range 20%-30% of the ISM coeff
                     self.lineamplitude[k] = coeffA*(0.2+random.random()*0.1)
                 else:
                     self.lineamplitude[k] = 0.0
-                    
+              
+               
         #check 
         if 0:
             for k in range(self.n):

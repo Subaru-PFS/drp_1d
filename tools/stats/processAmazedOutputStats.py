@@ -77,12 +77,17 @@ def ProcessDiff( refFile, calcFile, outFile ) :
     f = open( outFile, "w" )
 
     #*************** open ref file
-    fref = open(refFile, 'r')
-    dataRefStr = fref.read()
-    fref.close()
-    dataRef = ascii.read(dataRefStr)
+    if 0:     
+        fref = open(refFile, 'r')
+        dataRefStr = fref.read()
+        fref.close()
+        dataRef = ascii.read(dataRefStr)
+    else:
+        dataRef = loadRef( refFile );
     dataRef_names = [a[0] for a in dataRef]
-    print("Dataref, first elt: {}".format(dataRef[0]))
+    print("ProcessDiff : Dataref N = {}".format(len(dataRef)))    
+    print("ProcessDiff : Dataref, first elt: {}".format(dataRef[0]))
+    print("ProcessDiff : Dataref, second elt: {}\n".format(dataRef[1]))
 
     #*************** open calc file
     if 0: 
@@ -122,7 +127,9 @@ def ProcessDiff( refFile, calcFile, outFile ) :
     ##
         
     
-    print("dataCalc_raw, first elt: {}".format(dataCalc_raw[0]))
+    print("ProcessDiff : dataCalc_raw N = {}".format(len(dataCalc_raw)))    
+    print("ProcessDiff : dataCalc_raw, first elt: {}".format(dataCalc_raw[0]))
+    print("ProcessDiff : dataCalc_raw, second elt: {}\n".format(dataCalc_raw[1]))
       
     #*************** reorder calc data by filename
     inds = []
@@ -137,7 +144,8 @@ def ProcessDiff( refFile, calcFile, outFile ) :
             inds.append(p[0])
         else:
             inds.append(-1)
-            print "ERROR : index not found : {0}".format(s)
+            print "ERROR : index not found while comparing ref and calc lists!!".format()
+            print "ERROR : dataRef_names = {}\n".format(s)
             stop
     #print inds
     dataCalc = [dataCalc_raw[i] for i in inds]
@@ -304,6 +312,33 @@ def ProcessDiff( refFile, calcFile, outFile ) :
     ax.set_ylim([-zoomedRange, zoomedRange])
     #pp.show()
     pp.savefig( os.path.dirname(os.path.abspath(outFile)) + '/' +'diff_yzoomed.png', bbox_inches='tight') # sauvegarde du fichier ExempleTrace.png
+
+
+def loadRef(fname):
+    """
+    load the ref file data
+    """ 
+    dataArray = []
+    f = open(fname)
+    for line in f:
+        lineStr = line.strip()
+        if not lineStr.startswith('#'):
+            #print lineStr
+            data = lineStr.split("\t")
+            data = [r for r in data if r != '']
+            #print len(data)
+            if(len(data) >= 7): #PFS or simu
+                d0 = str(data[0])
+                d1 = float(data[1])
+                d2 = float(data[2])
+                d3 = str(data[3])
+                d4 = float(data[4])
+                d5 = float(data[5])
+                d6 = float(data[6])
+                d = [d0, d1, d2, d3, d4, d5, d6]
+                dataArray.append(d) 
+    f.close()
+    return dataArray
 
 def loadCalc(fname):
     """

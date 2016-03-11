@@ -28,7 +28,7 @@ class Catalog(object):
         self.linegroup = -1
         self.linenominalamp = -1
         
-        self.conversion = "toAir" #"toVacuum"#"toAir"
+        self.conversion = ""#"toAir" #"toVacuum"#"toAir"
         self.load()
         
     def load(self):
@@ -158,7 +158,7 @@ class Catalog(object):
         pp.show()
     
     def plotInZplane(self):
-        if 1:
+        if 0:
             #EUCLID
             obs_lambda_min = 12500.0
             obs_lambda_max = 17500.0
@@ -308,8 +308,8 @@ class Catalog(object):
       
             
 if __name__ == '__main__':
-    path = "/home/aschmitt/data/pfs/pfs2_simu20151118_jenny/amazed/linecatalogs"
-    name = "linecatalogamazedvacuum_B9B.txt"
+    path = "/home/aschmitt/data/simu_linemodel/simulm_20160310/amazed/linecatalogs"
+    name = "linecatalogamazedvacuum_B9D_LyaAbsSYMprofile.txt"
     cpath = os.path.join(path,name)
     print('using full path: {0}'.format(cpath))
     c = Catalog(cpath, ctype="vacuum")
