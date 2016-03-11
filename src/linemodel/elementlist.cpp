@@ -2,6 +2,8 @@
 #include <epic/redshift/linemodel/singleline.h>
 #include <epic/redshift/linemodel/multiline.h>
 
+#include <epic/redshift/linemodel/modelfittingresult.h>
+
 #include <epic/redshift/gaussianfit/multigaussianfit.h>
 #include <gsl/gsl_multifit.h>
 
@@ -429,7 +431,7 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
     }
 
     //generate random amplitudes
-    if(m_fittingmethod=="simulation")
+    if(m_fittingmethod=="random")
     {
         srand(time(0));
         Float64 randNumFloat = (Float64) rand() / (Float64) (RAND_MAX);
@@ -473,6 +475,44 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
             SetElementAmplitude(iElts, a/maxNominalAmp, err);
         }
     }
+
+    //generate amplitudes from existing linemodel fit solution file .csv
+    if(m_fittingmethod=="fromfile")
+    {
+        CModelFittingResult result;
+        std::string linemodelFitResultsPath = "/home/aschmitt/code/python/simulation_perf_matrix_linemodel/amazed/linecatalogs/linemodelsolve.linemodel_fit_extrema_0.csv";
+        result.Load(linemodelFitResultsPath.c_str());
+
+        for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
+        {
+            Float64 meanContinuum = getContinuumMeanUnderElement(iElts);
+
+            //get the max nominal amplitude
+            Int32 nRays = m_Elements[iElts]->GetSize();
+            Float64 nominalAmp = -1.0;
+            Float64 err=1.5*1e-20; //not used
+            for(UInt32 j=0; j<nRays; j++){
+                Int32 lineIndex = m_Elements[iElts]->m_LineCatalogIndexes[j];
+                nominalAmp = m_Elements[iElts]->GetNominalAmplitude(j);
+                Float64 a = result.GetLineModelSolution().Amplitudes[lineIndex];
+
+                if(m_RestRayList[m_Elements[iElts]->m_LineCatalogIndexes[0]].GetType() == CRay::nType_Absorption)
+                {
+                    Float64 ampFitted = meanContinuum*a/nominalAmp;
+                    SetElementAmplitude(iElts, ampFitted, err);
+                }else{
+                    Float64 ampFitted = a/nominalAmp;
+                    SetElementAmplitude(iElts, ampFitted, err);
+                }
+
+            }
+
+
+        }
+
+    }
+
+
 
     //fit the amplitudes of each element independently
     if(m_fittingmethod=="individual")

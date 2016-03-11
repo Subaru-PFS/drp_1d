@@ -710,7 +710,7 @@ class Spectrum(object):
                 sigma = np.sqrt(sigma_from_pfs_simu**2+self.yvect[k]**4)
                 anoise[k] =  sigma
                 if addNoise:
-                    print("Adding Noise to spectrum".format()) 
+                    #print("Adding Noise to spectrum".format()) 
                     self.yvect[k] = self.yvect[k] + random.gauss(mu, sigma) 
         
                   

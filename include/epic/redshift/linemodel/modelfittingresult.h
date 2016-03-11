@@ -27,6 +27,7 @@ public:
 
     Void Save( const CDataStore& store, std::ostream& stream ) const;
     Void SaveLine( const CDataStore& store, std::ostream& stream ) const;
+    Void Load( const char* filePath );
 
     const CLineModelResult::SLineModelSolution& GetLineModelSolution() const;
 

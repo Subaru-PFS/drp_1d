@@ -64,7 +64,19 @@ class ModelResult(object):
             self.linetype[x] = linetype[x]
             self.lineid[x] = lineid[x]
             self.lineamplitude[x] = amplitude[x]
-            
+
+    def save(self, outputPath):
+        text_file = open(outputPath, "w")
+        data = "#\n"
+        text_file.write("{}".format(data))
+        
+        for k in range(self.n):
+            data = "{}\t{}\t{}\t-1\t-1\t{}\t-1\t-1\t\n".format(self.linetype[k], self.lineforce[k], self.linename[k], self.lineamplitude[k])
+            text_file.write("{}".format(data))
+        
+        text_file.close()             
+    
+        
     def plot(self):
         amax = 0.0
         emax = 0.0
@@ -113,6 +125,83 @@ class ModelResult(object):
         pp.title(self.name) # Titre
         #pp.savefig('ExempleTrace') # sauvegarde du fichier ExempleTrace.png
         pp.show()
+
+    def randomAmplitudes(self, coeffE=1.0, coeffA=0.5):
+        coeffE *= 1e-16 #coefficient additive, needs absolute value
+        
+        ampOII = coeffE*(0.7+random.random()*0.6)
+        ampHalpha = coeffE*(0.7+random.random()*0.6)
+        ampOIII = ampOII*(0.7+random.random()*0.6)
+        ampHbetaE = ampHalpha*(1.0/2.86)*(random.random()*0.33)
+        
+        ampCIII = ampHalpha*(random.random())
+        ampCIV = ampHalpha*(random.random())
+        for k in range(self.n):
+            if self.linetype[k] == "E":
+                if self.linename[k]=="Halpha":
+                    self.lineamplitude[k] = ampHalpha
+                elif self.linename[k]=="Hbeta":
+                    self.lineamplitude[k] = ampHbetaE
+                elif self.linename[k]=="[OII]3729":
+                    self.lineamplitude[k] = ampOII*0.7
+                elif self.linename[k]=="[OII]3726":
+                    self.lineamplitude[k] = ampOII*0.7
+                elif self.linename[k]=="[OIII](doublet-1)":
+                    self.lineamplitude[k] = ampOIII
+                elif self.linename[k]=="[OIII](doublet-1/3)":
+                    self.lineamplitude[k] = ampOIII*0.33
+                elif self.linename[k]=="LyAE":
+                    self.lineamplitude[k] = ampOII*(random.random()*1.5)
+                elif self.linename[k]=="[CIII]1907":
+                    self.lineamplitude[k] = ampCIII
+                elif self.linename[k]=="[CIII]1909":
+                    self.lineamplitude[k] = ampCIII
+                elif self.linename[k]=="CIV1550":
+                    self.lineamplitude[k] = ampCIV
+                elif self.linename[k]=="CIV1548":
+                    self.lineamplitude[k] = ampCIV
+                elif self.linename[k]=="Hgamma":
+                    self.lineamplitude[k] = 0.0
+                elif self.linename[k]=="Hdelta":
+                    self.lineamplitude[k] = 0.0
+                elif self.linename[k]=="Hepsilon":
+                    self.lineamplitude[k] = 0.0
+                elif self.linename[k]=="H8":
+                    self.lineamplitude[k] = 0.0
+                elif self.linename[k]=="H9":
+                    self.lineamplitude[k] = 0.0
+                elif self.linename[k]=="H10":
+                    self.lineamplitude[k] = 0.0
+                elif self.linename[k]=="H11":
+                    self.lineamplitude[k] = 0.0
+                else:
+                    self.lineamplitude[k] = ampHalpha*(random.random()*0.33) 
+                
+        
+        for k in range(self.n):
+            if self.linetype[k] == "A":
+                if self.linename[k]=="HalphaA":
+                    self.lineamplitude[k] = 0.0
+                elif self.linename[k]=="HbetaA":
+                    if ampHbetaE/ampHalpha > 0.1:
+                        self.lineamplitude[k] = coeffA*(0.7+random.random()*0.6)
+                    else:
+                        self.lineamplitude[k] = 0.0
+                if self.lineforce[k] == "S":
+                    self.lineamplitude[k] = coeffA*(0.7+random.random()*0.6)
+                elif self.lineforce[k] == "W":
+                    self.lineamplitude[k] = coeffA*(0.2+random.random()*0.1)
+                else:
+                    self.lineamplitude[k] = 0.0
+                    
+        #check 
+        if 0:
+            for k in range(self.n):
+                if self.linetype[k] == "A":               
+                    self.lineamplitude[k] = 1.0
+                if self.linetype[k] == "E":               
+                    self.lineamplitude[k] = coeffE
+         
         
     def getAmplitudeMeanNhighest(self, nhighest=5):
         ehighestpeaks = []

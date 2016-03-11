@@ -6,6 +6,8 @@
 #include <fstream>
 #include <iomanip>      // std::setprecision
 
+#include <string>
+
 using namespace NSEpic;
 
 
