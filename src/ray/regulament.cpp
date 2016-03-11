@@ -15,6 +15,7 @@ using namespace std;
 
 void CRegulament::Apply( CLineModelElementList& LineModelElementList )
 {
+    
   for( std::vector<CRule*>::iterator it = m_RulesVector.begin(); it != m_RulesVector.end(); it++ )
     {
       (*it)->Apply ( LineModelElementList );
@@ -23,7 +24,7 @@ void CRegulament::Apply( CLineModelElementList& LineModelElementList )
 /*
 void CRegulament::ApplyWithRedshift( Float64 Redshift )
 {
-  
+
 }
 */
 Bool CRegulament::CreateRulesFromJSONFiles( void )

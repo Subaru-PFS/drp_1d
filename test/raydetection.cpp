@@ -125,14 +125,17 @@ BOOST_AUTO_TEST_CASE(EzValidationTest)
             inputnoiseStr.append("sc_020088501_F02P017_vmM1_red_82_1_noise.fits");
         }
 
-        bfs::path inputspectrum = bfs::path( spectraPath ).append( inputspectrumStr.c_str() );
+        bfs::path inputspectrum = bfs::path( spectraPath ) / inputspectrumStr;
         bfs::path inputnoise = "";
         bfs::path inputrefdetectionresults = "";
         if(inputnoiseStr.size()>0){
-            inputrefdetectionresults = bfs::path( refresults_withnoise_Path ).append( inputspectrumStr.c_str() ).append( inputRayDetectionResultsFileStr.c_str() );
-            inputnoise = bfs::path( spectraPath ).append( inputnoiseStr.c_str() );
+            inputrefdetectionresults = bfs::path( refresults_withnoise_Path ) / inputspectrumStr / inputRayDetectionResultsFileStr;
+            inputnoise = bfs::path( spectraPath ) / inputnoiseStr;
         }else{
-            inputrefdetectionresults = bfs::path( refresults_nonoise_Path ).append( inputspectrumStr.c_str() ).append( inputRayDetectionResultsFileStr.c_str() );;
+            inputrefdetectionresults = bfs::path( refresults_nonoise_Path ) / inputspectrumStr / inputRayDetectionResultsFileStr;
+            //inputrefdetectionresults /= bfs::path( inputspectrumStr );
+            //inputrefdetectionresults /= bfs::path( inputRayDetectionResultsFileStr );
+            //.append( bfs::path( inputspectrumStr.c_str() ) ).append( inputRayDetectionResultsFileStr.c_str() );;
         }
 
         // load spectrum
