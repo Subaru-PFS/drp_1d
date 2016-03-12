@@ -107,6 +107,7 @@ private:
     void applyRules();
     Void ApplyStrongHigherWeakRule( Int32 lineType );
     Float64 FindHighestStrongLineAmp( Int32 lineType, Float64 &er);
+    CRegulament* m_Regulament;
 
     //merge with dev_linemodel_widthlmfit 20160312 to be deleted
     //Int32 FindElementIndex(Int32 LineCatalogIndex);
