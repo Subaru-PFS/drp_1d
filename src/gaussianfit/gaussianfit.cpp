@@ -20,7 +20,7 @@ using namespace NSEpic;
 CGaussianFit::CGaussianFit( ) :
     m_PolyOrder( 2 ),
     m_AbsTol( 0.0 ),
-    m_RelTol( 1e-2 ),
+    m_RelTol( 1e-12),
     m_Amplitude( 0.0 ),
     m_AmplitudeErr( 0.0 ),
     m_Mu( 0.0 ),
@@ -195,6 +195,8 @@ CGaussianFit::EStatus CGaussianFit::Compute( const CSpectrum& spectrum, const TI
     int iter = 0;
     int status = 0;
 
+    if(0)
+    {
     do 
       {
         iter++;
@@ -208,14 +210,62 @@ CGaussianFit::EStatus CGaussianFit::Compute( const CSpectrum& spectrum, const TI
         status = gsl_multifit_test_delta( multifitSolver->dx, multifitSolver->x, m_AbsTol, m_RelTol );
     }
     while( status==GSL_CONTINUE && iter<500 );
+    }else{
+        /* solve the system with a maximum of 50 iterations */
+        int status, info;
+        status = gsl_multifit_fdfsolver_driver(multifitSolver, 500, m_RelTol, m_RelTol, 0.0, &info);
+    }
 
     // Set values and errors
     gsl_matrix *covarMatrix = gsl_matrix_alloc( np, np );
-    gsl_multifit_covar( multifitSolver->J, 0.0, covarMatrix );
+    //gsl_multifit_covar( multifitSolver->J, 0.0, covarMatrix ); //WARNING: fit broken since using GSL2.1 instead of GSL1.16 = OLD version
+    gsl_matrix *J = gsl_matrix_alloc(n, np);     //WARNING: fit broken since using GSL2.1 instead of GSL1.16  = replacement version
+    gsl_multifit_fdfsolver_jac(multifitSolver, J);   //WARNING: fit broken since using GSL2.1 instead of GSL1.16  = replacement version
+    gsl_multifit_covar (J, 0.0, covarMatrix);    //WARNING: fit broken since using GSL2.1 instead of GSL1.16     = replacement version
 
-    Float64 chi = gsl_blas_dnrm2( multifitSolver->f );
+    //Float64 chi = gsl_blas_dnrm2( multifitSolver->f );  //WARNING: fit broken since using GSL2.1 instead of GSL1.16 = OLD version
+    gsl_vector *res_f;
+    res_f = gsl_multifit_fdfsolver_residual(multifitSolver);  //WARNING: fit broken since using GSL2.1 instead of GSL1.16     = replacement version
+    Float64 chi = gsl_blas_dnrm2(res_f);    //WARNING: fit broken since using GSL2.1 instead of GSL1.16     = replacement version
+
     Float64 dof = n - np;
     Float64 c = GSL_MAX_DBL( 1, chi / sqrt( dof ) );
+
+    Int32 verbose = false;
+    if(verbose)
+    {
+
+        fprintf(stderr, "summary from method '%s'\n",
+                gsl_multifit_fdfsolver_name(multifitSolver));
+        fprintf(stderr, "number of iterations: %zu\n",
+                gsl_multifit_fdfsolver_niter(multifitSolver));
+        fprintf(stderr, "function evaluations: %zu\n", multifitFunction.nevalf);
+        fprintf(stderr, "Jacobian evaluations: %zu\n", multifitFunction.nevaldf);
+
+        fprintf(stderr, "final   |multifitFunction(x)| = %g\n", chi);
+
+        {
+            double dof = n - np;
+            double c = GSL_MAX_DBL(1, chi / sqrt(dof));
+
+            fprintf(stderr, "chisq/dof = %g\n",  pow(chi, 2.0) / dof);
+
+            for(Int32 k=0; k<np; k++)
+            {
+                Float64 fit =  gsl_vector_get(multifitSolver->x, k);
+                Float64 err = sqrt(gsl_matrix_get(covarMatrix,k,k));
+                if(fit<1e-3)
+                {
+                    fprintf (stderr, "A %d     = %.3e +/- %.8f\n", k, fit, c*err);
+                }else{
+                    fprintf (stderr, "A %d     = %.5f +/- %.8f\n", k, fit, c*err);
+                }
+
+            }
+        }
+        fprintf (stderr, "status = %s (%d)\n", gsl_strerror (status), status);
+    }
+
 
     Float64 *output = (Float64*) calloc( n ,sizeof( Float64 ) );
     Float64 *outputError = (Float64*) calloc( n ,sizeof( Float64 ) );
@@ -264,6 +314,7 @@ CGaussianFit::EStatus CGaussianFit::Compute( const CSpectrum& spectrum, const TI
 
     gsl_multifit_fdfsolver_free( multifitSolver );
     gsl_matrix_free( covarMatrix );
+    gsl_matrix_free( J );
 
     free( firstGuessData );
 

@@ -4,9 +4,9 @@ Created on Sat Jul 25 11:44:49 2015
 
 @author: aschmitt
 """
-import os
-from astropy.io import fits
+import os, sys
 import math
+import optparse
 
 import matplotlib.pyplot as pp
 import scipy.interpolate
@@ -245,8 +245,10 @@ class ResultChisquare(object):
                 cmax = self.yvect[x]
              
         pp.figure("chi2")
-        pp.plot(other_spc.xvect, other_spc.yvect, 'b', label=other_spc.label)
-        pp.plot(self.xvect, self.yvect, 'k', label=self.label)
+        spcColor = '0.5'
+        pp.plot(other_spc.xvect, other_spc.yvect, color=spcColor,linewidth = 2.0, label=other_spc.label)
+
+        pp.plot(self.xvect, self.yvect, 'r', linestyle = "dashed", linewidth = 1.0, label=self.label)
 
         pp.grid(True) # Affiche la grille
         pp.legend()
@@ -531,12 +533,42 @@ class ResultChisquare(object):
         
         
         return area, zminParabolicfit
-          
+
+            
+
+def StartFromCommandLine( argv ) :	
+    usage = """usage: %prog [options]
+    ex: python ./chisquare.py -s """
+    parser = optparse.OptionParser(usage=usage)
+    parser.add_option(u"-i", u"--input", help="path to the chi2 curve to be plotted",  dest="chi2Path", default="")
+
+    (options, args) = parser.parse_args()
+
+    if( len( args ) == 0 ) :
+        print('using full path: {0}'.format(options.chi2Path))
+        s = ResultChisquare(options.chi2Path)
+        print(s) 
+        s.plot()
+    else :
+        print("Error: invalid argument count")
+        exit()
+
+
+def Main( argv ) :	
+    try:
+        StartFromCommandLine( argv )
+    except (KeyboardInterrupt):
+        exit()
+        
  
 if __name__ == '__main__':
     
-    # plot single chisquare
     if 1:
+        Main( sys.argv )
+        
+        
+    # plot single chisquare
+    if 0:
         path = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/res_20150807_chi2_fullResults/sc_020088969_F02P016_vmM1_red_21_1_atm_clean/StarBurst3.txt"
         path = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/res_20150820_chi2_fullResults/sc_020086471_F02P016_vmM1_red_107_1_atm_clean/NEW_Im_extended_blue.dat"
         #path = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/res_20150818_corr_fullResults/sc_020086471_F02P016_vmM1_red_107_1_atm_clean/NEW_Im_extended_blue.dat"        
@@ -593,26 +625,18 @@ if __name__ == '__main__':
         
     # compare chisquares
     if 0:          
-        #path = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/res_20150807_chi2_fullResults/sc_020088969_F02P016_vmM1_red_21_1_atm_clean/StarBurst3.txt"
-        path = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/res_20150813_chi2_fullResults/sc_020086471_F02P016_vmM1_red_107_1_atm_clean/NEW_Im_extended_blue.dat"
-        path = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/output/sc_020086471_F02P016_vmM1_red_107_1_atm_clean/NEW_Im_extended_blue.dat"
-        #path = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/res_20150813_chi2_fullResults/sc_020086471_F02P016_vmM1_red_107_1_atm_clean/EllipticaldataExtensionData.dat"
-        #path = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/res_20150807_chi2_fullResults/sc_020089640_F02P019_vmM1_red_93_1_atm_clean/BulgedataExtensionData.dat"
-        #path = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/res_20150813_chi2_fullResults/sc_020089640_F02P019_vmM1_red_93_1_atm_clean/NEW_E_extendeddataExtensionData.dat"
-        
-        #path = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/res_20150813_chi2_fullResults/sc_020106186_F02P018_vmM1_red_18_1_atm_clean/EdataExtensionData.dat"
-        #path = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/res_20150813_chi2_fullResults/sc_020106186_F02P018_vmM1_red_18_1_atm_clean/sbdataExtensionData.dat"
-        #path = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/res_20150807_chi2_fullResults/sc_020115875_F02P019_vmM1_red_33_1_atm_clean/EW_SB2extended.dat"
-        #path = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/res_20150807_chi2_fullResults/sc_020141834_F02P030_vmM1_red_130_1_atm_clean/BulgedataExtensionData.dat"
-        
-        name = "chisquare2solve.chisquare.csv"
+        path = "/home/aschmitt/data/pfs/pfs2_simu20151118_jenny/amazed/res_20160209_results_batch6_fev2016/res_20160224_linemodel_velocityfit_balmer0_F_ErrF/16000010000158vacLine_F"
+        #path = "/home/aschmitt/data/pfs/pfs2_simu20151118_jenny/amazed/output/54000015007903vacLine_F"
+        name = "linemodelsolve.linemodel.csv"
         spath = os.path.join(path,name)
         print('using full path: {0}'.format(spath))
         chi1 = ResultChisquare(spath)
         print(chi1)
         #chi1.plot()
         
-        name = "chisquare2solve.chisquare_nocontinuum.csv"
+        path = "/home/aschmitt/data/pfs/pfs2_simu20151118_jenny/amazed/res_20160209_results_batch6_fev2016/res_20160224_linemodel_balmer0_F_ErrF/16000010000158vacLine_F"
+        #path = "/home/aschmitt/data/pfs/pfs2_simu20151118_jenny/amazed/output_largegrid/54000015007903vacLine_F"
+        name = "linemodelsolve.linemodel.csv"
         spath = os.path.join(path,name)
         print('using full path: {0}'.format(spath))
         chi2 = ResultChisquare(spath)        

@@ -171,7 +171,10 @@ class ResultList(object):
             chi2 = chisq.ResultChisquare(filepath)
             
             redshiftstpl = chi2.amazed_extrema
-            if len(redshiftstpl)<1:
+            print("amazed_extrema found = {}".format(redshiftstpl))
+            
+            if len(redshiftstpl)<nextremaPerTpl:
+                print("number of amazed_extrema found is too small = n={}, vs nextrema={}".format(len(redshiftstpl), nextremaPerTpl))
                 return [-1],[-1]
             meritstpl = []
             npx = np.copy(chi2.xvect)
@@ -618,12 +621,11 @@ class ResultList(object):
                 print outStr                           
         return zrelativemerit
         
-    def getSecondExtremaZcandidateRelativePositionList(self, chi2Type="raw", extremaType="amazed", enablePlot=True, enableExport=False):
+    def getSecondExtremaZcandidateRelativePositionList(self, chi2Type="raw", extremaType="amazed", enablePlot=True, enableExport=False, nextrema=10):
         zrelativemerit = []
         diffvect = []
         n = self.n
         #n = 10#self.n
-        nextrema = 15
                 
         
         for x in range(0,n):
@@ -678,6 +680,9 @@ class ResultList(object):
             plt.xlabel('spc id')
             name1 = "merit(2stExtrema) - merit(best extrema) in chi2{} (extrema)".format(chi2Type)
             plt.title(name1)
+            if enableExport: 
+                outFigFile = os.path.join(outdir, 'relative_merit_2stExtrema_zcandidates_found_chi2{}_nextrema{}_hist.png'.format(chi2Type, nextrema))
+                plt.savefig( outFigFile, bbox_inches='tight') # sauvegarde du fichier ExempleTrace.png
             plt.show()
             
             
@@ -1250,8 +1255,10 @@ class ResultList(object):
         failures_onlyRef = []
 
         removeStrRef = "_F"
+        #removeStrRef = "_FILT_MGv0_c"
         #removeStrRef = "_FILT3dec2015"
-        removeStrThis = "_FILT_MGv0_c"
+        #removeStrThis = "_FILT_MGv1_c"
+        removeStrThis = "_F"
         #removeStr2 = "_FILT"        
         
         n = self.n
@@ -1405,13 +1412,14 @@ def plotRelativePosSecondBestExtrema(resDir, diffthres, spcName=""):
         return
     zrelativemeritList = []
     
+    nextrema = 10
 #    relposraw = resList.getClosestZcandidateRelativePositionList("raw", "amazed", enablePlot=True, enableExport=False, nextrema = nextrema)
 #    zrelativemeritList.append(relposraw)
 #    relposnocont = resList.getClosestZcandidateRelativePositionList("nocontinuum", "amazed", enablePlot=True, enableExport=False, nextrema = nextrema)
 #    zrelativemeritList.append(relposnocont)
 #    relposcorr = resList.getClosestZcandidateRelativePositionList("corr", "amazed", enablePlot=True, enableExport=False, nextrema = nextrema)
 #    zrelativemeritList.append(relposcorr)
-    relposlinemodel = resList.getSecondExtremaZcandidateRelativePositionList("linemodel", "amazed", enablePlot=True, enableExport=True)
+    relposlinemodel = resList.getSecondExtremaZcandidateRelativePositionList("linemodel", "amazed", enablePlot=True, enableExport=True, nextrema=nextrema)
     zrelativemeritList.append(relposlinemodel)
     
     n = resList.n

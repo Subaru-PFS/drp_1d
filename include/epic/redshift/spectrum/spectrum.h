@@ -51,7 +51,8 @@ public:
     Bool                            ConvertToLinearScale();
 
     Bool                            RemoveContinuum( CContinuum& remover );
-    Bool                            IsNoiseValid();
+    const Bool                      IsFluxValid(Float64 LambdaMin, Float64 LambdaMax) const;
+    const Bool                      IsNoiseValid(Float64 LambdaMin, Float64 LambdaMax) const;
 
 private:
 

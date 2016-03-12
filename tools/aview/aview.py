@@ -123,10 +123,12 @@ def plotRes(resDir, spcName, tplpath, redshift, iextremaredshift, diffthres, fai
                 zval = chi.getExtrema(idx)
         
         if not 'zval' in locals():
+            print("WARNING: could not use first extrema as redshift value !!!!")
             zval = s.getRedshiftVal(spcName)
         #overrride zval
         #zval = 1.1164
     else:
+        print("WARNING: using custom user defined redshift value !!!!")
         zval = float(redshift)    
     
     print('Redshift is: {0}'.format(zval))

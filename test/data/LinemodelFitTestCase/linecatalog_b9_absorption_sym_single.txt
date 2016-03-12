@@ -1,0 +1,12 @@
+#version:0.3.0	
+#2016-02-09					
+#	Absorption	lines	list			
+#lambda	Name	type	force	profile	group	nominal_ampl		
+4102.81	HdeltaA	A	W	SYM		
+3969.55	CaII_H	A	S	SYM		
+3934.73	CaII_K	A	S	SYM		
+3890.11	H8A	A	W	SYM		
+3836.43	H9A	A	W	SYM		
+3798.93	H10A	A	W	SYM		
+3771.65	H11A	A	W	SYM		
+		

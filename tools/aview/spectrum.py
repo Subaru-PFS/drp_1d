@@ -8,12 +8,16 @@ Created on Sat Jul 25 11:44:49 2015
 import os
 import sys
 from astropy.io import fits
+import pyfits
 import optparse
+import random
+import math
 
 from bokeh.plotting import figure, output_file, show
         
 import matplotlib.pyplot as pp
 import numpy as np
+from scipy import interpolate
 
 class Spectrum(object):
     def __init__(self, spath, stype='undefspc', snorm=False, label=""):
@@ -33,14 +37,7 @@ class Spectrum(object):
         self.ysum = 0
         self.forcePlotXIndex = False
         if(self.stype == 'template'):
-            self.loadTpl()        
-            if self.snorm:
-                print("WARNING: snorm = {0}".format(snorm))
-                for x in range(0,self.n):
-                    self.yvect[x] /= self.ysum/self.n
-                self.ysum = 0.0
-                for x in range(0,self.n):
-                    self.ysum += self.yvect[x]
+            self.loadTpl() 
         elif(self.stype == 'pfs2reech'):
             self.loadpfs2reech() 
         elif(self.stype == 'pfs2'):
@@ -55,6 +52,14 @@ class Spectrum(object):
             self.loadmuse() 
         else:
             self.load()
+               
+        if self.snorm:
+            print("WARNING: snorm = {0}".format(snorm))
+            for x in range(0,self.n):
+                self.yvect[x] /= self.ysum/self.n
+            self.ysum = 0.0
+            for x in range(0,self.n):
+                self.ysum += self.yvect[x]
 
     def copy(self):
         scopy = Spectrum(self.spath, self.stype, self.snorm)
@@ -344,12 +349,16 @@ class Spectrum(object):
         a = a + ("    n = {0}\n".format(self.n))
         a = a + ("    dlambda = {0}\n".format(self.getResolution()))
         a = a + ("    lambda min = {}, lambda max = {}\n".format(self.getWavelengthMin(), self.getWavelengthMax()))
-        a = a + ("    flux min = {}, flux max = {}\n".format(self.getFluxMin(),self.getFluxMin()))
+        a = a + ("    flux min = {}, flux max = {}\n".format(self.getFluxMin(),self.getFluxMax()))
+        a = a + ("    flux std = {}, flux std 6000_8000 = {}\n".format(np.std(self.yvect), self.GetFluxStd6000_8000()))
+        a = a + ("    magI = {}\n".format(self.getMagIAB()))
+        
         a = a + ("\n")
         
         return a
         
     def plot(self, saveFullDirPath=""):
+        #pp.plot(self.xvect, self.yvect, "x-")
         pp.plot(self.xvect, self.yvect)
 
         pp.grid(True) # Affiche la grille
@@ -446,6 +455,13 @@ class Spectrum(object):
         return min(self.yvect)                    
     def getFluxMax(self):
         return max(self.yvect)
+        
+    def GetFluxStd6000_8000(self):
+        imin = self.getWavelengthIndex(6000)
+        imax = self.getWavelengthIndex(8000)
+        if imin == 0 or imax == 0:
+            return -1.0
+        return np.std(self.yvect[imin:imax])
     
     def getWavelengthMin(self):
         return self.xvect[0]
@@ -510,8 +526,8 @@ class Spectrum(object):
         x = x2
         while(x<wavelengthSup and k<1e6):
             x = x2 + k*xstep
-            #y = coefficients1[1] + coefficients1[0]*x #y2# + k*ystep
-            y = moyenne
+            y = coefficients1[1] + coefficients1[0]*x #y2# + k*ystep
+            #y = moyenne
             print("INFO (extension Red): new sample at x = {} and y = {}".format(x, y))            
             self.xvect.append(x)
             self.yvect.append(y)
@@ -541,8 +557,21 @@ class Spectrum(object):
         x = x1
         while(x>wavelengthInf and k<1e6):
             x = x1 - k*xstep
-            #y = coefficients1[1] + coefficients1[0]*x#y1 #-k*ystep
-            y = moyenne
+            y = coefficients1[1] + coefficients1[0]*x#y1 #-k*ystep
+            #y = moyenne
+            
+            # custom profile
+            if x<912:
+                y=0
+#            else:
+#                x1=2238.0
+#                y1=9.11*1e-19
+#                x0=912.0
+#                y0=0.0
+#                a = (y1-y0)/(x1-x0)
+#                b = -a*x0
+#                y = b + a*x#y1 #-k*ystep
+            
             print("INFO (extension Blue: new sample at x = {} and y = {}".format(x, y))
             xvect_tmp = []
             yvect_tmp = []
@@ -562,19 +591,182 @@ class Spectrum(object):
         if k>=1e6:
             print("WARNING: stopping extension, max iteration reached")
             
+    def interpolate(self, dx=1.0):
+        x = np.copy(self.xvect)
+        y = np.copy(self.yvect)
+        f = interpolate.interp1d(x, y)
+
+        self.xvect = np.arange(x[0], x[self.n-1], dx)
+        self.yvect = f(self.xvect) 
+        self.n = len(self.yvect)
+        
+    def applyWeight(self, w):
+        for x in range(0,self.n):
+            self.yvect[x] = self.yvect[x]*w
+    
+    def applyRedshift(self, z):
+        coeff= 1+z
+        for x in range(0,self.n):
+            self.xvect[x] = self.xvect[x]*coeff
+    
+    def applyLambdaCrop(self, lambdaMin, lambdaMax):
+        imin = 0
+        imax = self.n-1
+        for k in range(1,self.n):
+            if self.xvect[k-1]<=lambdaMin and self.xvect[k]>=lambdaMin:
+                imin = k
+            if self.xvect[k-1]<=lambdaMax and self.xvect[k]>=lambdaMax:
+                imax = k
+        old_xvect = self.xvect
+        old_yvect = self.yvect
+            
+        print("imin = {}, imax = {}".format(imin, imax))
+        self.n = imax-imin+1
+        self.xvect = range(0,self.n)
+        self.yvect = range(0,self.n)
+        self.ysum = 0.0
+        for x in range(0,self.n):
+            self.xvect[x] = old_xvect[x+imin]
+            self.yvect[x] = old_yvect[x+imin]
+            self.ysum += self.yvect[x]
+    
+            
+    def setMagIAB(self, magIAB):
+        dMThreshold = 0.1
+        maxIterations = 10000
+        mag = self.getMagIAB()     
+        
+        it = 0
+        coeffStep = 1.+dMThreshold*10.0
+        while abs(mag-magIAB) > dMThreshold and it<maxIterations:
+            if mag>magIAB:
+                self.applyWeight(coeffStep)
+            else:
+                self.applyWeight(1/coeffStep)
+            mag = self.getMagIAB() 
+            #print("current Mag = {}".format(mag))
+            it +=1
+            if it>20:
+                coeffStep = 1.+dMThreshold
+        print("Mag found (n={} iterations) is {}".format(it, mag))
+
+
+        
+    def getMagIAB(self):
+        lambda_min=6000
+        lambda_max=9800
+        imin = self.getWavelengthIndex(lambda_min)
+        imax = self.getWavelengthIndex(lambda_max)
+
+        
+        y = self.getFNU()[imin:imax]
+        #y = self.yvect[imin]*self.xvect[imin]*self.xvect[imin]
+        #f = np.mean(y)/1e-29/3e18
+        f = np.mean(y)
+        
+        #sumF = 8.31*1e-9#2.55*10e-20 #Vega, band I
+        #print("meanF = {}".format(meanF))
+        #refF = 3631.0#2550*1e-23#8.31*1e-9#2.55*10e-20 #Vega, band I
+        #refM = 46.8
+        mag = -5.0/2.0*np.log10(f)-46.8
+        return mag
+    
+    def getFNU(self):
+        c_cm_s = 3e18
+        yvect = np.array(self.yvect)
+        
+        for x in range(self.n):
+            #self.yvect[x] = self.yvect[x]*3.34*1e4*self.xvect[x]**2
+            yvect[x] = self.yvect[x]/c_cm_s*(self.xvect[x])**2*10
+            
+        return yvect
+
+    def exportFits(self, path="", name="", addNoise=False, exportNoiseSpectrum=False):
+        """
+        write spectrum into a new fits file (useful for model csv input spectra)
+        """
+        if name == "":
+            name = "spectrum_exported"
+        noisename = "{}_ErrF".format(name)
+        if addNoise:
+            name = "{}_F".format(name)
+        else:
+            name = "{}_TF".format(name)
+        destfileout = os.path.join(path, "{}.fits".format(name))
+        print("Spectrum exporting to fits: {}".format(destfileout))
+        if os.path.exists(destfileout):
+            print("Spectrum deleting existing fits: {}".format(destfileout))
+            os.remove(destfileout)
+
+        anoise = np.ones((len(self.yvect)))
+        if addNoise or exportNoiseSpectrum:
+            #noise
+            #knoise = 0.1 * np.std(self.yvect)
+            sigma_from_pfs_simu = 1.5e-19 #corresponds to 3h exposure time
+            print("using Noise STD fixed value = {}".format(sigma_from_pfs_simu))            
+            
+            for k in range(len(self.yvect)):
+                mu = 0.0
+                sigma = np.sqrt(sigma_from_pfs_simu**2+self.yvect[k]**4)
+                anoise[k] =  sigma
+                if addNoise:
+                    #print("Adding Noise to spectrum".format()) 
+                    self.yvect[k] = self.yvect[k] + random.gauss(mu, sigma) 
+        
+                  
+        a1 = self.xvect
+        #print("col1={}".format(a1))
+        a2 = self.yvect
+        #print("col2={}".format(a2))
+        col1 = pyfits.Column(name='wave', format='E', array=a1)
+        col2 = pyfits.Column(name='flux', format='E', array=a2)
+        cols_spc = pyfits.ColDefs([col1, col2])
+ 
+        #INFO: This shortcut will automatically create a minimal primary HDU with no data and prepend it to the table HDU to create a valid FITS file.
+        # from https://pythonhosted.org/pyfits/ 
+        hdu_new = pyfits.BinTableHDU.from_columns(cols_spc)
+        hdu_new.writeto(destfileout)
+        
+        if exportNoiseSpectrum:
+            
+            destfileoutnoise = os.path.join(path, "{}.fits".format(noisename))
+            print("Noise exporting to fits: {}".format(destfileoutnoise))
+            if os.path.exists(destfileoutnoise):
+                print("Spectrum deleting existing fits: {}".format(destfileoutnoise))
+                os.remove(destfileoutnoise)   
+            
+            colnoise = pyfits.Column(name='noise', format='E', array=anoise)
+            cols_noise = pyfits.ColDefs([col1, colnoise])
+            hdu_noise = pyfits.BinTableHDU.from_columns(cols_noise)
+            hdu_noise.writeto(destfileoutnoise)
+            
+        print ""
+    
+        return destfileout
+            
 
 def StartFromCommandLine( argv ) :	
     usage = """usage: %prog [options]
     ex: python ./spectum.py -s """
     parser = optparse.OptionParser(usage=usage)
     parser.add_option(u"-s", u"--spc", help="path to the fits spectrum to be plotted",  dest="spcPath", default="")
-    parser.add_option(u"-t", u"--type", help="type of spectrum, can be in teh following list {vvds, pfs, pfs2, muse, hplana, euclid, pfs2reech}",  dest="spcType", default="")
+    parser.add_option(u"-t", u"--type", help="type of spectrum, can be in teh following list {template, vvds, pfs, pfs2, muse, hplana, euclid, pfs2reech}",  dest="spcType", default="")
+    parser.add_option(u"-e", u"--export", help="export to fits format",  dest="export", default="no")
 
     (options, args) = parser.parse_args()
 
     if( len( args ) == 0 ) :
         print('using full path: {0}'.format(options.spcPath))
         s = Spectrum(options.spcPath, options.spcType)
+        
+        
+        if options.export == "yes":
+            #s.applyLambdaCrop(7500, 9000)
+            #s.applyWeight(1e-18)
+            #s.setMagIAB(20)
+            path = os.path.split(options.spcPath)[0]
+            nameWext = os.path.split(options.spcPath)[1]
+            s.exportFits(path, name=os.path.splitext(nameWext)[0], addNoise=False, exportNoiseSpectrum=False)
         print(s) 
         s.plot()
     else :
@@ -597,7 +789,7 @@ if __name__ == '__main__':
     if 0: #deprecated, but not fully covered by the command line args functionnality...
         print "Spectrum plotting"
         # plot single spectrum
-        if 1:
+        if 0:
             path = "/home/aschmitt/data/pfs/pfs_lbg/lbgabs_1K_2z3_20J22.5"
             #name = "EZ_fits-W-ErrF_9.fits"
             #name = "EZ_fits-W-F_9.fits"
@@ -633,11 +825,40 @@ if __name__ == '__main__':
         
         # plot single template
         if 0:
-            path = "/home/aschmitt/data/pfs/pfs_lbg/amazed/Templates/ExtendedGalaxyEL2/emission"
-            name = "NEW_Im_extended_blue.dat"
+            path = "/home/aschmitt/code/python/simulation_perf_matrix_linemodel/templates"
+            name = "NEW_Im_extended.dat"
             #path = "/home/aschmitt/data/pfs/pfs_lbg/amazed/Templates/ExtendedGalaxyEL2/galaxy"
             #name = "sadataExtensionData.dat"
             
+            #path = "/home/aschmitt/data/vvds/vvds2/cesam_vvds_z0_F02_DEEP/amazed/output/sc_020103374_F02P021_M1_red_49_1_atm_clean"
+            #name = "linemodelsolve.linemodel_spc_extrema_0.csv"
+    
+            spath = os.path.join(path,name)
+            print('using full path: {0}'.format(spath))
+            s = Spectrum(spath, 'template', snorm=True)
+            print(s)
+            s.interpolate()
+            #s.exportFits()
+            s.plot()   
+            
+        # plot single template, interp. normalized, exported as fits
+        if 0:
+            path = "/home/aschmitt/code/python/simulation_perf_matrix_linemodel/templates"
+            name = "spectrum_exported.fits"
+            #path = "/home/aschmitt/data/pfs/pfs_lbg/amazed/Templates/ExtendedGalaxyEL2/galaxy"
+            #name = "sadataExtensionData.dat"
+            
+            #path = "/home/aschmitt/data/vvds/vvds2/cesam_vvds_z0_F02_DEEP/amazed/output/sc_020103374_F02P021_M1_red_49_1_atm_clean"
+            #name = "linemodelsolve.linemodel_spc_extrema_0.csv"
+    
+            spath = os.path.join(path,name)
+            print('using full path: {0}'.format(spath))
+            s = Spectrum(spath)
+            print(s)
+            s.plot()
+        
+        # plot model
+        if 0:
             path = "/home/aschmitt/data/vvds/vvds2/cesam_vvds_z0_F02_DEEP/amazed/output/sc_020103374_F02P021_M1_red_49_1_atm_clean"
             name = "linemodelsolve.linemodel_spc_extrema_0.csv"
     

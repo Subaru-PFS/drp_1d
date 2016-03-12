@@ -79,7 +79,7 @@ def DownloadHTTPFile( fileUrl, localFilePath ) :
 libDict = {
     "cppunit": { "path": thirdPartyDir+"cppunit-1.12.1", "src": "http://downloads.sourceforge.net/cppunit/cppunit-1.12.1.tar.gz" },
     "boost": { "path":  thirdPartyDir+"boost-1.57.0", "src": "http://downloads.sourceforge.net/project/boost/boost/1.57.0/boost_1_57_0.tar.gz" },
-    "gsl": { "path":  thirdPartyDir+"gsl-1.16", "src": "http://ftp.igh.cnrs.fr/pub/gnu/gsl/gsl-1.16.tar.gz" },
+    "gsl": { "path":  thirdPartyDir+"gsl-2.1", "src": "http://ftp.igh.cnrs.fr/pub/gnu/gsl/gsl-2.1.tar.gz" },
     "doxygen": { "path":  thirdPartyDir+"doxygen-1.8.8", "src": "http://ftp.stack.nl/pub/users/dimitri/doxygen-1.8.8.src.tar.gz" },
     "doxytag": { "path": thirdPartyDir+"doxytag.py", "src": "https://raw.githubusercontent.com/vlfeat/vlfeat/master/docsrc/doxytag.py" },
     "cfitsio": { "path": thirdPartyDir+"cfitsio-3.36", "src": "http://heasarc.gsfc.nasa.gov/FTP/software/fitsio/c/cfitsio3360.tar.gz" } }

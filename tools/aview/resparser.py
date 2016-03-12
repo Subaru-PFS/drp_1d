@@ -41,7 +41,7 @@ class ResParser(object):
         self.corrrelpath = "correlationsolve.correlation.csv"    
         
         methodParam = self.getParameterVal('method')
-        if methodParam=="linemodelsolve":
+        if methodParam=="linemodelsolve" or methodParam=="linemodel":
             self.linemodelrelpath = "linemodelsolve.linemodel.csv" #"dtreeBsolve.linemodel.csv" 
         if methodParam=="decisionaltreeb":
             self.linemodelrelpath = "dtreeBsolve.linemodel.csv" 
@@ -349,7 +349,8 @@ class ResParser(object):
     def getAutoChi2FullPath(self, spcnametag):
         """
         """ 
-        spcnametag = os.path.splitext(spcnametag)[0]
+        if os.path.splitext(spcnametag)[1].lower()==".fits":
+            spcnametag = os.path.splitext(spcnametag)[0]
         method = self.getConfigVal('method')
         print("method found in config is: {}".format(method))
         path = os.path.join(self.respath, spcnametag)

@@ -40,13 +40,16 @@ const std::string CLineModelSolve::GetDescription()
     desc.append("\tparam: linemodel.lineforcefilter = {""no"", ""S""}\n");
     desc.append("\tparam: linemodel.fittingmethod = {""hybrid"", ""individual""}\n");
     desc.append("\tparam: linemodel.continuumcomponent = {""fromspectrum"", ""nocontinuum"", ""zero""}\n");
-    desc.append("\tparam: linemodel.linewidthtype = {""psfinstrumentdriven"", ""zdriven"", ""fixedvelocity"", ""fixed""}\n");
+    desc.append("\tparam: linemodel.linewidthtype = {""instrumentdriven"", ""combined"", ""fixed""}\n");
     desc.append("\tparam: linemodel.instrumentresolution = <float value>\n");
     desc.append("\tparam: linemodel.velocityemission = <float value>\n");
     desc.append("\tparam: linemodel.velocityabsorption = <float value>\n");
     desc.append("\tparam: linemodel.continuumreestimation = {""no"", ""onlyextrema"", ""always""}\n");
-    desc.append("\tparam: linemodel.rules = {""all"", ""balmer"", ""strongweak"", ""oiiratio"", ""no""}\n");
+    desc.append("\tparam: linemodel.rules = {""all"", ""balmer"", ""strongweak"", ""oiiratio"", ""ciiiratio"", ""no""}\n");
     desc.append("\tparam: linemodel.extremacount = <float value>\n");
+    desc.append("\tparam: linemodel.velocityfit = {""yes"", ""no""}\n");
+
+
 
     return desc;
 
@@ -64,7 +67,9 @@ std::shared_ptr<const CLineModelSolveResult> CLineModelSolve::Compute( CDataStor
 								       const TFloat64Range& lambdaRange,
 								       const TFloat64List& redshifts )
 {
+    Bool storeResult = false;
     CDataStore::CAutoScope resultScope( dataStore, "linemodelsolve" );
+
     Solve( dataStore, spc, spcWithoutCont, restraycatalog, lambdaRange, redshifts);
     return std::shared_ptr<const CLineModelSolveResult>( new CLineModelSolveResult() );
 }
@@ -103,13 +108,15 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
     std::string opt_continuumcomponent;
     dataStore.GetScopedParam( "linemodel.continuumcomponent", opt_continuumcomponent, "fromspectrum" );
     std::string opt_lineWidthType;
-    dataStore.GetScopedParam( "linemodel.linewidthtype", opt_lineWidthType, "fixedvelocity" );
+    dataStore.GetScopedParam( "linemodel.linewidthtype", opt_lineWidthType, "combined" );
     Float64 opt_resolution;
     dataStore.GetScopedParam( "linemodel.instrumentresolution", opt_resolution, 2350.0 );
     Float64 opt_velocity_emission;
     dataStore.GetScopedParam( "linemodel.velocityemission", opt_velocity_emission, 100.0 );
     Float64 opt_velocity_absorption;
     dataStore.GetScopedParam( "linemodel.velocityabsorption", opt_velocity_absorption, 300.0 );
+    std::string opt_velocityfit;
+    dataStore.GetScopedParam( "linemodel.velocityfit", opt_velocityfit, "yes" );
     std::string opt_continuumreest;
     dataStore.GetScopedParam( "linemodel.continuumreestimation", opt_continuumreest, "no" );
     std::string opt_rules;
@@ -123,10 +130,12 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
     Log.LogInfo( "    -fittingmethod: %s", opt_fittingmethod.c_str());
     Log.LogInfo( "    -linewidthtype: %s", opt_lineWidthType.c_str());
     Log.LogInfo( "    -rules: %s", opt_rules.c_str());
-    if(opt_lineWidthType=="fixedvelocity"){
+    if(opt_lineWidthType=="combined"){
         Log.LogInfo( "    -instrumentresolution: %.2f", opt_resolution);
         Log.LogInfo( "    -velocity emission: %.2f", opt_velocity_emission);
         Log.LogInfo( "    -velocity absorption: %.2f", opt_velocity_absorption);
+        Log.LogInfo( "    -velocity fit: %s", opt_velocityfit.c_str());
+
     }
     Log.LogInfo( "    -continuumreestimation: %s", opt_continuumreest.c_str());
     Log.LogInfo( "    -extremacount: %.3f", opt_extremacount);
@@ -149,7 +158,8 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
 				      opt_velocity_emission,
 				      opt_velocity_absorption,
 				      opt_continuumreest,
-				      opt_rules );
+				      opt_rules
+				     , opt_velocityfit);
 
     if( !result )
     {

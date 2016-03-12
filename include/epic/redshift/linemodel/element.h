@@ -33,7 +33,11 @@ public:
 
     virtual void fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis, Float64  redshift) =0;
     virtual Float64 getModelAtLambda( Float64 lambda, Float64 redshift )=0;
+    virtual Float64 GetModelDerivAmplitudeAtLambda( Float64 lambda, Float64 redshift )=0;
+    virtual Float64 GetModelDerivSigmaAtLambda( Float64 lambda, Float64 redshift )=0;
     virtual void addToSpectrumModel( const CSpectrumSpectralAxis& modelspectralAxis, CSpectrumFluxAxis& modelfluxAxis, Float64 redshift )=0;
+    virtual void addToSpectrumModelDerivSigma( const CSpectrumSpectralAxis& modelspectralAxis, CSpectrumFluxAxis& modelfluxAxis, Float64 redshift )=0;
+
     virtual void initSpectrumModel( CSpectrumFluxAxis& modelfluxAxis, CSpectrumFluxAxis& continuumfluxAxis )=0;
 
     virtual Float64 GetNominalAmplitude(Int32 subeIdx)=0;
@@ -42,6 +46,11 @@ public:
     virtual Float64 GetElementAmplitude()=0;
     virtual void SetFittedAmplitude(Float64 A, Float64 SNR)=0;
     virtual void LimitFittedAmplitude(Int32 subeIdx, Float64 limit)=0;
+
+    void SetVelocityEmission(Float64 vel);
+    Float64 GetVelocityEmission();
+    void SetVelocityAbsorption(Float64 vel);
+    Float64 GetVelocityAbsorption();
 
     virtual Float64 GetSignFactor(Int32 subeIdx)=0;
     virtual Float64 GetWidth(Int32 subeIdx, Float64 redshift)=0;
@@ -56,6 +65,7 @@ public:
     std::vector<Int32> m_LineCatalogIndexes;
     Float64 GetLineWidth(Float64 lambda, Float64 z, Bool isEmission);
     Float64 GetLineProfile(std::string profile, Float64 xc, Float64 c);
+    Float64 GetLineProfileDerivSigma(std::string profile, Float64 x, Float64 x0, Float64 sigma);
     Float64 GetNSigmaSupport(std::string profile);
 
 protected:
@@ -71,6 +81,9 @@ protected:
     Float64 m_OutsideLambdaRangeOverlapThreshold;
     bool m_OutsideLambdaRange;
     std::string m_ElementType;
+
+    Float64 m_asym_sigma_coeff;
+    Float64 m_asym_alpha;
 
 private:
 

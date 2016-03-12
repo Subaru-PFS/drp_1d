@@ -396,9 +396,33 @@ void CMultiLine::addToSpectrumModel( const CSpectrumSpectralAxis& modelspectralA
             Float64 lambda = spectral[i];
             Float64 Yi=getModelAtLambda(lambda, redshift);
             flux[i] += Yi;
-	  }
-      }
-    return;
+        }
+    }
+  return;
+}
+
+void CMultiLine::addToSpectrumModelDerivSigma( const CSpectrumSpectralAxis& modelspectralAxis, CSpectrumFluxAxis& modelfluxAxis, Float64 redshift )
+{
+    if(m_OutsideLambdaRange){
+        return;
+    }
+
+
+    const Float64* spectral = modelspectralAxis.GetSamples();
+    Float64* flux = modelfluxAxis.GetSamples();
+    for(Int32 k=0; k<m_Rays.size(); k++){ //loop on the interval
+        if(m_OutsideLambdaRangeList[k]){
+            continue;
+        }
+
+        for ( Int32 i = m_Start[k]; i <= m_End[k]; i++)
+        {
+            Float64 lambda = spectral[i];
+            Float64 Yi=GetModelDerivSigmaAtLambda(lambda, redshift);
+            flux[i] += Yi;
+        }
+    }
+  return;
 }
 
 /**
@@ -429,6 +453,56 @@ Float64 CMultiLine::getModelAtLambda( Float64 lambda, Float64 redshift )
     }
     return Yi;
 }
+
+Float64 CMultiLine::GetModelDerivAmplitudeAtLambda(Float64 lambda, Float64 redshift )
+{
+    if(m_OutsideLambdaRange){
+        return 0.0;
+    }
+    Float64 Yi=0.0;
+
+    Float64 x = lambda;
+
+    for(Int32 k2=0; k2<m_Rays.size(); k2++) //loop on rays
+    {
+        if(m_OutsideLambdaRangeList[k2]){
+            continue;
+        }
+
+        Float64 mu = m_Rays[k2].GetPosition()*(1+redshift);
+        Float64 c = GetLineWidth(mu, redshift, m_Rays[k2].GetIsEmission());
+        std::string profile = m_Rays[k2].GetProfile();
+
+        Yi += m_SignFactors[k2] * GetLineProfile(profile, x-mu, c);
+    }
+    return Yi;
+}
+
+Float64 CMultiLine::GetModelDerivSigmaAtLambda(Float64 lambda, Float64 redshift )
+{
+    if(m_OutsideLambdaRange){
+        return 0.0;
+    }
+    Float64 Yi=0.0;
+
+    Float64 x = lambda;
+
+    for(Int32 k2=0; k2<m_Rays.size(); k2++) //loop on rays
+    {
+        if(m_OutsideLambdaRangeList[k2]){
+            continue;
+        }
+
+        Float64 A = m_FittedAmplitudes[k2];
+        Float64 mu = m_Rays[k2].GetPosition()*(1+redshift);
+        Float64 c = GetLineWidth(mu, redshift, m_Rays[k2].GetIsEmission());
+        std::string profile = m_Rays[k2].GetProfile();
+
+        Yi += m_SignFactors[k2] * A * GetLineProfileDerivSigma(profile, x, mu, c);
+    }
+    return Yi;
+}
+
 
 /**
  * \brief For rays inside lambda range, sets the flux to the continuum flux.

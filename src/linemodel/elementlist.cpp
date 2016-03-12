@@ -1,6 +1,7 @@
 #include <epic/redshift/linemodel/elementlist.h>
 #include <epic/redshift/linemodel/singleline.h>
 #include <epic/redshift/linemodel/multiline.h>
+#include <epic/redshift/linemodel/modelfittingresult.h>
 #include <epic/redshift/gaussianfit/multigaussianfit.h>
 #include <epic/redshift/ray/regulament.h>
 #include <gsl/gsl_multifit.h>
@@ -17,6 +18,17 @@
 #include <boost/format.hpp>
 #include <boost/chrono/thread_clock.hpp>
 #include <algorithm>
+
+#include <stdlib.h>
+#include <stdio.h>
+#include <gsl/gsl_rng.h>
+#include <gsl/gsl_randist.h>
+#include <gsl/gsl_vector.h>
+#include <gsl/gsl_blas.h>
+#include <gsl/gsl_multifit_nlin.h>
+#include "lmfitfunctions.c"
+
+
 
 using namespace NSEpic;
 
@@ -37,31 +49,40 @@ CLineModelElementList::CLineModelElementList( const CSpectrum& spectrum,
 					      const Float64 velocityAbsorption,
 					      const std::string& opt_rules )
 {
-  m_ContinuumComponent = opt_continuumcomponent;
-  m_LineWidthType = widthType;
-  m_resolution = resolution;
-  m_velocityEmission = velocityEmission;
-  m_velocityAbsorption = velocityAbsorption;
-  m_fittingmethod = opt_fittingmethod;
-  m_rulesoption = opt_rules;
-  m_nominalWidthDefaultEmission = 1.15;// suited to new pfs simulations
-  m_nominalWidthDefaultAbsorption = m_nominalWidthDefaultEmission;
+    m_ContinuumComponent = opt_continuumcomponent;
+    m_LineWidthType = widthType;
+    m_resolution = resolution;
+    m_velocityEmission = velocityEmission;
+    m_velocityAbsorption = velocityAbsorption;
+    m_velocityEmissionInit = m_velocityEmission;
+    m_velocityAbsorptionInit = m_velocityAbsorption;
+    m_fittingmethod = opt_fittingmethod;
+    m_rulesoption = opt_rules;
 
-  Log.LogDebug( "About to load catalog." );
-  LoadCatalog(restRayList);
-  
-  m_RestRayList = restRayList;
-  m_SpectrumModel = std::shared_ptr<CSpectrum>( new CSpectrum(spectrum) );
-  Int32 spectrumSampleCount = spectrum.GetSampleCount();
-  m_SpcFluxAxis.SetSize( spectrumSampleCount );
-  m_SpcContinuumFluxAxis = spectrumContinuum.GetFluxAxis();
-  m_ContinuumFluxAxis.SetSize( spectrumSampleCount );
-  CSpectrumFluxAxis& modelFluxAxis = m_SpectrumModel->GetFluxAxis();
-  const CSpectrumFluxAxis& spectrumFluxAxis = spectrum.GetFluxAxis();
-  m_spcFluxAxisNoContinuum.SetSize( spectrumSampleCount );
-  const Float64* error = spectrumFluxAxis.GetError();
-  m_ErrorNoContinuum = m_spcFluxAxisNoContinuum.GetError();
-  Float64* errorSpc = m_SpcFluxAxis.GetError();
+    // to be deleted: nominal width
+    //m_nominalWidthDefaultEmission = 3.4;//3.4; //suited to PFS RJLcont simulations
+    m_nominalWidthDefaultEmission = 1.15;// suited to new pfs simulations
+    m_nominalWidthDefaultAbsorption = m_nominalWidthDefaultEmission;
+    // end: to be deleted
+
+    Log.LogDebug( "About to load catalog." );
+    LoadCatalog(restRayList);
+    //LogCatalogInfos();
+
+    m_RestRayList = restRayList;
+    m_SpectrumModel = std::shared_ptr<CSpectrum>( new CSpectrum(spectrum) );
+    Int32 spectrumSampleCount = spectrum.GetSampleCount();
+    m_SpcFluxAxis.SetSize( spectrumSampleCount );
+    m_SpcContinuumFluxAxis = spectrumContinuum.GetFluxAxis();
+    m_ContinuumFluxAxis.SetSize( spectrumSampleCount );
+    m_SpcFluxAxisModelDerivSigma.SetSize( spectrumSampleCount );
+    CSpectrumFluxAxis& modelFluxAxis = m_SpectrumModel->GetFluxAxis();
+    const CSpectrumFluxAxis& spectrumFluxAxis = spectrum.GetFluxAxis();
+    m_spcFluxAxisNoContinuum.SetSize( spectrumSampleCount );
+
+    const Float64* error = spectrumFluxAxis.GetError();
+    m_ErrorNoContinuum = m_spcFluxAxisNoContinuum.GetError();
+    Float64* errorSpc = m_SpcFluxAxis.GetError();
   Float64* errorSpcContinuum = m_SpcContinuumFluxAxis.GetError();
   // sets the error vectors
   for( UInt32 i=0; i<spectrumSampleCount; i++ )
@@ -210,18 +231,63 @@ void CLineModelElementList::LoadCatalogSingleLines(const CRayCatalog::TRayVector
  **/
 void CLineModelElementList::LoadContinuum()
 {
+    //path p( templatePath );
+    //path name = p.leaf();
+    //std::string templatePath = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/Templates/ExtendedGalaxyEL2/emission/NEW_Im_extended.dat";
+    //std::string templatePath = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/Templates/ExtendedGalaxyEL2/galaxy/EW_SB2extended.dat";
+    //std::string templatePath = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/Templates/ExtendedGalaxyEL2/galaxy/BulgedataExtensionData.dat";
+
     std::string templatePath = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/Templates/linemodel/emission/NEW_Im_extended_blue_continuum.txt";
+    //std::string templatePath = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/Templates/linemodel/emission/NEW_Im_extended_continuum.txt";
+    //std::string templatePath = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/Templates/linemodel/galaxy/EW_SB2extended.txt";
+    //std::string templatePath = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/Templates/linemodel/galaxy/BulgedataExtensionData.txt";
+
+    //std::string templatePath = "/home/aschmitt/data/pfs/pfs_testsimu_20151009/47002690000013_flam.txt";
+
+
+    //CRef<CTemplate> tmpl = new CTemplate();
     CTemplate tpl;
     CSpectrumIOGenericReader asciiReader;
     if( !asciiReader.Read( templatePath.c_str(), tpl ) ) {
         Log.LogError("Fail to read template: %s", templatePath.c_str());
         return;
     }
+
+//    //save as a spectrum
+//    CSpectrumIOFitsWriter writer;
+//    Bool retVal1 = writer.Write( "tplexported.fits",  tpl);
+
+
+//    //create a continuum tpl
+//    if(1)
+//    {
+//        // Remove continuum
+//        CContinuumIrregularSamplingMedian continuum;
+//        CSpectrumFluxAxis fluxAxisWithoutContinuumCalc;
+
+//        Int32 retVal = continuum.RemoveContinuum( tpl, fluxAxisWithoutContinuumCalc );
+//        CSpectrumFluxAxis fluxAxis = tpl.GetFluxAxis();
+//        fluxAxis.Subtract(fluxAxisWithoutContinuumCalc);
+//        CSpectrumSpectralAxis tplSpectralAxis = tpl.GetSpectralAxis();
+//        //*//debug:
+//        // save continuum tpl and xmad,  flux data
+//        FILE* f = fopen( "continuum_tpl_dbg.txt", "w+" );
+//        for( Int32 t=0;t<fluxAxisWithoutContinuumCalc.GetSamplesCount();t++)
+//        {
+//            fprintf( f, "%f %f\n", t, tplSpectralAxis[t], fluxAxis[t]);//*1e12);
+//        }
+//        fclose( f );
+//        //*/
+//        return;
+//    }
+
+
     // Precalculate a fine grid template to be used for the 'closest value' rebin method
     Int32 n = tpl.GetSampleCount();
     CSpectrumFluxAxis tplFluxAxis = tpl.GetFluxAxis();
     CSpectrumSpectralAxis tplSpectralAxis = tpl.GetSpectralAxis();
     Float64 dLambdaTgt =  0.1; //should be sufficient for the continuum
+
     Float64 lmin = 0;
     Float64 lmax = tplSpectralAxis[n-1];
     Int32 nTgt = (lmax-lmin)/dLambdaTgt + 2.0/dLambdaTgt;
@@ -378,8 +444,92 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
 	  {
             modelFluxAxis[i] = m_ContinuumFluxAxis[i];
             m_spcFluxAxisNoContinuum[i] = m_SpcFluxAxis[i]-m_ContinuumFluxAxis[i];
-	  }
-      }
+        }
+    }
+
+    //generate random amplitudes
+    if(m_fittingmethod=="random")
+    {
+        srand(time(0));
+        Float64 randNumFloat = (Float64) rand() / (Float64) (RAND_MAX);
+        for(Int32 irand=0; irand<(int)(randNumFloat*100); irand++)
+        {
+            rand();
+        }
+
+        Float64 coeffAmpEmission = pow(10.0, randNumFloat*3.0-1.0);
+        randNumFloat = (Float64) rand() / (Float64) (RAND_MAX);
+        Float64 coeffAmpAbsorption = pow(10.0, randNumFloat*1.0-1.0);
+        Log.LogInfo( "\nLineModel simulation: coeffAmpEmission = %.2f", coeffAmpEmission);
+        Log.LogInfo( "LineModel simulation: coeffAmpAbsorption = %.2f", coeffAmpAbsorption);
+        //fit the model amplitudes individually
+        for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
+        {
+            Float64 meanContinuum = getContinuumMeanUnderElement(iElts);
+            Float64 err = 1e-22;
+            Float64 amax = meanContinuum;
+            if(m_RestRayList[m_Elements[iElts]->m_LineCatalogIndexes[0]].GetType() == CRay::nType_Absorption)
+            {
+                amax = meanContinuum*0.5*coeffAmpAbsorption;
+            }else{
+                amax = meanContinuum*coeffAmpEmission;
+            }
+            randNumFloat = (Float64) rand() / (Float64) (RAND_MAX);
+            Float64 a = randNumFloat*amax;
+            if(a<0.0){
+                a=0.0;
+            }
+            //get the max nominal amplitude
+            Int32 nRays = m_Elements[iElts]->GetSize();
+            Float64 maxNominalAmp = -1.0;
+            for(UInt32 j=0; j<nRays; j++){
+                if(maxNominalAmp<m_Elements[iElts]->GetNominalAmplitude(j))
+                {
+                    maxNominalAmp = m_Elements[iElts]->GetNominalAmplitude(j);
+                }
+            }
+
+            SetElementAmplitude(iElts, a/maxNominalAmp, err);
+        }
+    }
+
+    //generate amplitudes from existing linemodel fit solution file .csv
+    if(m_fittingmethod=="fromfile")
+    {
+        CModelFittingResult result;
+        std::string linemodelFitResultsPath = "/home/aschmitt/code/python/simulation_perf_matrix_linemodel/amazed/linecatalogs/linemodelsolve.linemodel_fit_extrema_0.csv";
+        result.Load(linemodelFitResultsPath.c_str());
+
+        for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
+        {
+            Float64 meanContinuum = getContinuumMeanUnderElement(iElts);
+
+            //get the max nominal amplitude
+            Int32 nRays = m_Elements[iElts]->GetSize();
+            Float64 nominalAmp = -1.0;
+            Float64 err=1.5*1e-20; //not used
+            for(UInt32 j=0; j<nRays; j++){
+                Int32 lineIndex = m_Elements[iElts]->m_LineCatalogIndexes[j];
+                nominalAmp = m_Elements[iElts]->GetNominalAmplitude(j);
+                Float64 a = result.GetLineModelSolution().Amplitudes[lineIndex];
+
+                if(m_RestRayList[m_Elements[iElts]->m_LineCatalogIndexes[0]].GetType() == CRay::nType_Absorption)
+                {
+                    Float64 ampFitted = meanContinuum*a/nominalAmp;
+                    SetElementAmplitude(iElts, ampFitted, err);
+                }else{
+                    Float64 ampFitted = a/nominalAmp;
+                    SetElementAmplitude(iElts, ampFitted, err);
+                }
+
+            }
+
+
+        }
+
+    }
+
+
 
     //fit the amplitudes of each element independently
     if(m_fittingmethod=="individual")
@@ -396,6 +546,62 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
         //fit the amplitudes together
         fitAmplitudesSimplex();
     }
+
+    //fit the amplitude of all elements together (but Emission or Absorption separately) with iterative   solver: lmfit
+    if(m_fittingmethod=="lmfit")
+    {
+        std::vector<Float64> ampsfitted;
+        Int32 retVal;
+        Int32 lineType;
+
+        for(Int32 iLineType = 0; iLineType<2; iLineType++)
+        {
+            if(iLineType==0)
+            {
+                Log.LogInfo( "\nLineModel Infos: Lmfit ABSORPTION, for z = %.4f", m_Redshift);
+                lineType = CRay::nType_Absorption;
+            }else{
+                Log.LogInfo( "\nLineModel Infos: Lmfit EMISSION, for z = %.4f", m_Redshift);
+                lineType = CRay::nType_Emission;
+            }
+            retVal = 0;
+            std::vector<Int32> validEltsIdx = GetModelValidElementsIndexes();
+            std::vector<Int32> filteredEltsIdx;
+            for (Int32 iElt = 0; iElt < validEltsIdx.size(); iElt++)
+            {
+                if(m_RestRayList[m_Elements[validEltsIdx[iElt]]->m_LineCatalogIndexes[0]].GetType() != lineType)
+                {
+                    continue;
+                }
+                filteredEltsIdx.push_back(validEltsIdx[iElt]);
+            }
+
+
+            Int32 previousValidEltsSizeEltsSize = filteredEltsIdx.size()+1;
+            while( (retVal!=1 || retVal!=-1) && filteredEltsIdx.size()>0 && filteredEltsIdx.size()!=previousValidEltsSizeEltsSize)
+            {
+
+                Log.LogInfo( "LineModel Infos: Lmfit IN filteredEltsIdx.size() = %d", filteredEltsIdx.size());
+                Log.LogInfo( "LineModel Infos: Lmfit previousValidEltsSizeEltsSize = %d", previousValidEltsSizeEltsSize);
+                previousValidEltsSizeEltsSize = filteredEltsIdx.size();
+                retVal = fitAmplitudesLmfit(filteredEltsIdx, m_spcFluxAxisNoContinuum, ampsfitted, lineType);
+                Log.LogInfo( "LineModel Infos: Lmfit retVal = %d", retVal);
+                Log.LogInfo( "LineModel Infos: Lmfit ampsfitted.size() = %d", ampsfitted.size());
+                if(retVal==0 && filteredEltsIdx.size()==ampsfitted.size()){
+                    for(Int32 ie=filteredEltsIdx.size()-1; ie>=0; ie--)
+                    {
+                        if(ampsfitted[ie]<=0.0)
+                        {
+                            Log.LogInfo( "LineModel Infos: erasing i= %d", ie);
+                            filteredEltsIdx.erase(filteredEltsIdx.begin() + ie);
+                        }
+                    }
+                }
+                Log.LogInfo( "LineModel Infos: Lmfit OUT, validEltsIdx.size() = %d", filteredEltsIdx.size());
+            }
+        }
+    }
+
     //fit the amplitude of all elements together with linear solver: gsl_multifit_wlinear
     if(m_fittingmethod=="svd")
     {
@@ -477,13 +683,47 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
     //create spectrum model
     modelSolution = GetModelSolution();
 
+
+    /*
+    //model
+    CSpectrum spcmodel = GetModelSpectrum();
+    CSpectrumIOFitsWriter writer;
+    Bool retVal1 = writer.Write( "model.fits",  spcmodel);
+
+    if(retVal1){
+        CSpectrum s(spcmodel);
+        s.GetFluxAxis() = m_SpcFluxAxis;
+        Bool retVal2 = writer.Write( "spectrum.fits",  s);
+    }
+    //*/
+
+
+    /*
+    //model for linefitting
+    CSpectrum spcmodel4linefitting = GetModelSpectrum();
+    for(UInt32 i=0; i<spcmodel4linefitting.GetFluxAxis().GetSamplesCount(); i++){
+        spcmodel4linefitting.GetFluxAxis()[i] = spcmodel4linefitting.GetFluxAxis()[i]-m_ContinuumFluxAxis[i];
+    }
+    CSpectrumIOFitsWriter writer2;
+    Bool retVal2 = writer2.Write( "model4linefit.fits",  spcmodel4linefitting);
+
+    if(retVal1){
+        CSpectrum s4linefitting(spcmodel);
+        s4linefitting.GetFluxAxis() = spcFluxAxisNoContinuum;
+        Bool retVal2 = writer2.Write( "spectrum4linefit.fits",  s4linefitting);
+    }
+    //*/
     Float64 merit = getLeastSquareMerit(lambdaRange);
 
     if(m_ContinuumComponent == "nocontinuum"){
         reinitModel();
     }
-    Log.LogDebug( "CElementList::fit merit = %f", merit );
     return merit;
+}
+
+void CLineModelElementList::SetFittingMethod(std::string fitMethod)
+{
+    m_fittingmethod = fitMethod;
 }
 
 /**
@@ -546,6 +786,25 @@ void CLineModelElementList::refreshModelUnderElements(std::vector<Int32> filterE
     {
         iElts = filterEltsIdx[i];
         m_Elements[iElts]->addToSpectrumModel(spectralAxis, modelFluxAxis, m_Redshift);
+    }
+}
+
+
+void CLineModelElementList::refreshModelDerivSigmaUnderElements(std::vector<Int32> filterEltsIdx)
+{
+    const CSpectrumSpectralAxis& spectralAxis = m_SpectrumModel->GetSpectralAxis();
+    std::vector<Int32> supportIdxes = getSupportIndexes( filterEltsIdx );
+    for( UInt32 i=0; i<supportIdxes.size(); i++ )
+    {
+        m_SpcFluxAxisModelDerivSigma[supportIdxes[i]]=0.0;
+    }
+
+    //create spectrum model partial derivate vs sigma
+    Int32 iElts;
+    for( UInt32 i=0; i<filterEltsIdx.size(); i++ )
+    {
+        iElts = filterEltsIdx[i];
+        m_Elements[iElts]->addToSpectrumModelDerivSigma(spectralAxis, m_SpcFluxAxisModelDerivSigma, m_Redshift);
     }
 }
 
@@ -622,41 +881,38 @@ Int32 CLineModelElementList::fitAmplitudesHybrid( const CSpectrumSpectralAxis& s
 		    else
 		      {
                         SetElementAmplitude(overlappingInds[ifit], 0.0, 0.0);
-		      }
-		  } // for
+                    }
+                }
                 //fit the rest of the overlapping elements (same sign) together
                 if(overlappingIndsSameSign.size()==1)
 		  {
                     m_Elements[overlappingIndsSameSign[0]]->fitAmplitude(spectralAxis, spcFluxAxisNoContinuum, redshift);
-		  }
-		else
-		  {
-		    if(overlappingIndsSameSign.size()>1)
-		      {
-			Int32 retVal2 = fitAmplitudesLinSolve(overlappingIndsSameSign, spectralAxis, spcFluxAxisNoContinuum, ampsfitted);
-			if(retVal2!=1)
-			  {
-			    for(Int32 ifit=0; ifit<overlappingIndsSameSign.size(); ifit++)
-			      {
-				if(ampsfitted[ifit]>0)
-				  {
-				    m_Elements[overlappingIndsSameSign[ifit]]->fitAmplitude(spectralAxis, spcFluxAxisNoContinuum, redshift);
-				  }
-				else
-				  {
-				    SetElementAmplitude(overlappingIndsSameSign[ifit], 0.0, 0.0);
-				  }
-			      } // for
-			  }
-		      }
-		  } // else
-	      }
-	  } // else
+                }else if(overlappingIndsSameSign.size()>1){
+//                    for(Int32 ifit=0; ifit<overlappingIndsSameSign.size(); ifit++)
+//                    {
+//                        SetElementAmplitude(overlappingIndsSameSign[ifit], 0.0, 0.0);
+//                    }
+                    Int32 retVal2 = fitAmplitudesLinSolve(overlappingIndsSameSign, spectralAxis, spcFluxAxisNoContinuum, ampsfitted);
+                    if(retVal2!=1){
+                        for(Int32 ifit=0; ifit<overlappingIndsSameSign.size(); ifit++)
+                        {
+                            if(ampsfitted[ifit]>0){
+                                m_Elements[overlappingIndsSameSign[ifit]]->fitAmplitude(spectralAxis, spcFluxAxisNoContinuum, redshift);
+                            }else{
+                                SetElementAmplitude(overlappingIndsSameSign[ifit], 0.0, 0.0);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         //update the already fitted list
         for(Int32 i=0; i<overlappingInds.size(); i++)
 	  {
             indexesFitted.push_back(overlappingInds[i]);
-	  }
+        }
+
     }
   return 0;
 }
@@ -669,6 +925,263 @@ void CLineModelElementList::fitAmplitudesSimplex()
     CMultiGaussianFit fitter;
 
     Int32 status = fitter.Compute( *this );
+//    if(status!=NSEpic::CMultiGaussianFit::nStatus_Success){
+//        continue;
+//    }
+
+//    Float64 gaussAmp;
+//    Float64 gaussPos;
+//    Float64 gaussWidth;
+//    fitter.GetResults( gaussAmp, gaussPos, gaussWidth );
+//    Float64 gaussAmpErr;
+//    Float64 gaussPosErr;
+//    Float64 gaussWidthErr;
+//    fitter.GetResultsError( gaussAmpErr, gaussPosErr, gaussWidthErr );
+
+
+}
+
+//temporary stuff, dev of the lmfit method: int
+
+void print_state (size_t iter, gsl_multifit_fdfsolver * s)
+{
+  printf ("iter: %3u x = % 15.8f % 15.8f % 15.8f "
+          "|f(x)| = %g\n",
+          iter,
+          gsl_vector_get (s->x, 0),
+          gsl_vector_get (s->x, 1),
+          gsl_vector_get (s->x, 2),
+          gsl_blas_dnrm2 (s->f));
+}
+
+
+Int32 CLineModelElementList::fitAmplitudesLmfit(std::vector<Int32> filteredEltsIdx, const CSpectrumFluxAxis& fluxAxis, std::vector<Float64>& ampsfitted, Int32 lineType)
+{
+    //http://www.gnu.org/software/gsl/manual/html_node/Example-programs-for-Nonlinear-Least_002dSquares-Fitting.html
+    Bool verbose=false;
+
+
+
+    Int32 nddl = filteredEltsIdx.size();
+    if(nddl<1){
+        return -1;
+    }
+    std::vector<Int32> xInds = getSupportIndexes( filteredEltsIdx );
+
+    const Float64* flux = fluxAxis.GetSamples();
+
+    //create gsl solver object
+    const gsl_multifit_fdfsolver_type *T = gsl_multifit_fdfsolver_lmsder;
+    gsl_multifit_fdfsolver *s;
+    int status, info;
+    size_t i;
+    size_t n; //n samples on the support, /* number of data points to fit */
+    size_t p = nddl+1; //DOF = n amplitudes to fit (1 for each element) + 1 (EL velocity)
+
+    n = xInds.size();
+    if(n<nddl){
+        ampsfitted.resize(nddl);
+        for (Int32 iddl = 0; iddl < nddl; iddl++)
+        {
+            ampsfitted[iddl] = 0.0;
+        }
+        return -1;
+    }
+
+    Int32 idx = 0;
+    Float64 maxabsval = DBL_MIN;
+    for (i = 0; i < n; i++)
+    {
+        idx = xInds[i];
+
+        if(maxabsval<std::abs(flux[idx]))
+        {
+            maxabsval=std::abs(flux[idx]);
+        }
+    }
+    Float64 normFactor = 1.0/maxabsval;
+
+    if(verbose)
+    {
+        fprintf(stderr, "normFactor = '%.3e'\n", normFactor);
+    }
+
+    gsl_matrix *J = gsl_matrix_alloc(n, p);
+    gsl_matrix *covar = gsl_matrix_alloc (p, p);
+    double y[n], weights[n];
+    struct lmfitdata d = {n,y,this, filteredEltsIdx, xInds, normFactor, lineType};
+    gsl_multifit_function_fdf f;
+
+    Float64* x_init = (Float64*) calloc( p, sizeof( Float64 ) );
+    //TODO: initialize lmfit with individual/hybrid fit method
+    for(Int32 kp=0; kp<nddl; kp++)
+    {
+        x_init[kp] = 0;
+    }
+    if(lineType==CRay::nType_Emission)
+    {
+        x_init[nddl] = GetVelocityEmission();
+    }else
+    {
+        x_init[nddl] = GetVelocityAbsorption();
+
+    }
+
+    gsl_vector_view x = gsl_vector_view_array (x_init, p);
+    gsl_vector_view w = gsl_vector_view_array(weights, n);
+    const gsl_rng_type * type;
+    gsl_rng * r;
+    gsl_vector *res_f;
+    double chi, chi0;
+
+    const double xtol = 1e-12;
+    const double gtol = 1e-12;
+    const double ftol = 0.0;
+
+    gsl_rng_env_setup();
+
+    type = gsl_rng_default;
+    r = gsl_rng_alloc (type);
+
+    f.f = &lmfit_f;
+    f.df = &lmfit_df;
+    f.n = n;
+    f.p = p;
+    f.params = &d;
+
+    // This is the data to be fitted
+    Float64 ei;
+    for (i = 0; i < n; i++)
+    {
+        idx = xInds[i];
+        ei = m_ErrorNoContinuum[idx]*normFactor;
+        weights[i] = 1.0 / (ei * ei);
+        y[i] = flux[idx]*normFactor;
+    }
+
+    s = gsl_multifit_fdfsolver_alloc (T, n, p);
+
+    /* initialize solver with starting point and weights */
+    gsl_multifit_fdfsolver_wset (s, &f, &x.vector, &w.vector);
+
+    /* compute initial residual norm */
+    res_f = gsl_multifit_fdfsolver_residual(s);
+    chi0 = gsl_blas_dnrm2(res_f);
+
+    /* solve the system with a maximum of 50 iterations */
+    status = gsl_multifit_fdfsolver_driver(s, 50, xtol, gtol, ftol, &info);
+
+    gsl_multifit_fdfsolver_jac(s, J);
+    gsl_multifit_covar (J, 0.0, covar);
+
+    /* compute final residual norm */
+    chi = gsl_blas_dnrm2(res_f);
+
+    if(verbose)
+    {
+#define FIT(i) gsl_vector_get(s->x, i)
+#define ERR(i) sqrt(gsl_matrix_get(covar,i,i))
+
+        fprintf(stderr, "summary from method '%s'\n",
+                gsl_multifit_fdfsolver_name(s));
+        fprintf(stderr, "number of iterations: %zu\n",
+                gsl_multifit_fdfsolver_niter(s));
+        fprintf(stderr, "function evaluations: %zu\n", f.nevalf);
+        fprintf(stderr, "Jacobian evaluations: %zu\n", f.nevaldf);
+        fprintf(stderr, "reason for stopping: %s\n",
+                (info == 1) ? "small step size" : "small gradient");
+        fprintf(stderr, "initial |f(x)| = %g\n", chi0);
+        fprintf(stderr, "final   |f(x)| = %g\n", chi);
+
+        {
+            double dof = n - p;
+            double c = GSL_MAX_DBL(1, chi / sqrt(dof));
+
+            fprintf(stderr, "chisq/dof = %g\n",  pow(chi, 2.0) / dof);
+
+            for(Int32 k=0; k<p; k++)
+            {
+                if(FIT(k)<1e-3)
+                {
+                    fprintf (stderr, "A %d     = %.3e +/- %.8f\n", k, FIT(k), c*ERR(k));
+                }else{
+                    fprintf (stderr, "A %d     = %.5f +/- %.8f\n", k, FIT(k), c*ERR(k));
+                }
+
+            }
+        }
+        fprintf (stderr, "status = %s (%d)\n", gsl_strerror (status), status);
+    }
+
+
+    Int32 sameSign = 1;
+    Float64 a0 = gsl_vector_get(s->x,0)/normFactor;
+    for (Int32 iddl = 1; iddl < nddl; iddl++)
+    {
+        Float64 a = gsl_vector_get(s->x,iddl)/normFactor;
+        Float64 product = a0*a;
+        if(product<0){
+            sameSign = 0;
+        }
+    }
+
+    // finally populate the fitting results to the linemodel
+    if(sameSign && status==0)
+    {
+        Float64 dof = n - p;
+        Float64 c = GSL_MAX_DBL(1, chi / sqrt(dof));
+//        for (Int32 iddl = 0; iddl < nddl; iddl++)
+//        {
+//            Float64 a = gsl_vector_get(s->x,iddl)/normFactor;
+//            Float64 sigma = c*sqrt(gsl_matrix_get(covar,iddl,iddl))/normFactor;
+//            if(a<0.0){
+//                a=0.0;
+//            }
+//            SetElementAmplitude(filteredEltsIdx[iddl], a, sigma);
+//        }
+        Float64 vel = gsl_vector_get(s->x,nddl);
+        Float64 errVel = c*sqrt(gsl_matrix_get(covar,nddl,nddl));
+
+
+        Log.LogInfo( "LineModel Infos: Lmfit velocity found = %.1f with err = %.1f", vel, errVel);
+
+        if(vel>errVel*2.0){
+            if(lineType==CRay::nType_Emission)
+            {
+                SetVelocityEmission(vel);
+            }else
+            {
+                SetVelocityAbsorption(vel);
+            }
+        }else{
+            if(lineType==CRay::nType_Emission)
+            {
+                Log.LogInfo( "LineModel Infos: Lmfit velocity Emission reset = %.1f ", m_velocityEmissionInit);
+                SetVelocityEmission(m_velocityEmissionInit);
+            }else
+            {
+                Log.LogInfo( "LineModel Infos: Lmfit velocity Absorption reset = %.1f ", m_velocityAbsorptionInit);
+                SetVelocityAbsorption(m_velocityAbsorptionInit);
+            }
+        }
+    }else{
+        ampsfitted.resize(nddl);
+        for (Int32 iddl = 0; iddl < nddl; iddl++)
+        {
+            Float64 a = gsl_vector_get(s->x,iddl)/normFactor;
+            ampsfitted[iddl] = (a);
+        }
+
+        SetVelocityAbsorption(m_velocityAbsorptionInit);
+        SetVelocityEmission(m_velocityEmissionInit);
+    }
+
+    gsl_multifit_fdfsolver_free (s);
+    gsl_matrix_free (covar);
+    gsl_matrix_free (J);
+    gsl_rng_free (r);
+
+    return sameSign;
 }
 
 /**
@@ -739,21 +1252,21 @@ std::vector<Int32> CLineModelElementList::getOverlappingElementsBySupport( Int32
     std::string profile = ray.GetProfile();
     Float64 winsize = m_Elements[ind]->GetNSigmaSupport(profile)*c;
     Float64 overlapThresholdMin = winsize*overlapThres;
+    //overlapThresholdMin = 0.0;
+
     Int32 x1=0;
     Int32 y1=0;
     Int32 x2=0;
     Int32 y2=0;
     for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
     {
-        if(m_RestRayList[m_Elements[iElts]->m_LineCatalogIndexes[0]].GetType() != linetype)
-	  {
+        if(m_RestRayList[m_Elements[iElts]->m_LineCatalogIndexes[0]].GetType() != linetype){
             continue;
-	  }
+        }
 
-        if(m_Elements[iElts]->IsOutsideLambdaRange())
-	  {
+        if(m_Elements[iElts]->IsOutsideLambdaRange()){
             continue;
-	  }
+        }
         TInt32RangeList s = m_Elements[iElts]->getSupport();
         for( UInt32 iS=0; iS<s.size(); iS++ )
         {
@@ -764,8 +1277,13 @@ std::vector<Int32> CLineModelElementList::getOverlappingElementsBySupport( Int32
                 y1 = s[iS].GetBegin();
                 y2 = s[iS].GetEnd();
 
-                Log.LogDebug( "hybrid fit: iRefS=%d - support=%d,%d", iRefS, x1, x2 );
-                Log.LogDebug( "hybrid fit: iS=%d - support=%d,%d", iS, y1, y2 );
+                //Log.LogInfo( "hybrid fit: iRefS=%d - support=%d,%d", iRefS, x1, x2);
+                //Log.LogInfo( "hybrid fit: iS=%d - support=%d,%d", iS, y1, y2);
+
+//                if( std::max(x1,y1) < std::min(x2,y2) ){
+//                    indexes.push_back(iElts);
+//                    break;
+//                }
 
                 Float64 max = spectralAxis[std::max(x1,y1)];
                 Float64 min = spectralAxis[std::min(x2,y2)];
@@ -773,7 +1291,7 @@ std::vector<Int32> CLineModelElementList::getOverlappingElementsBySupport( Int32
 		  {
                     indexes.push_back(iElts);
                     break;
-		  }
+                }
             }
         }
     }
@@ -874,10 +1392,9 @@ Int32 CLineModelElementList::fitAmplitudesLinSolve( std::vector<Int32> EltsIdx, 
     boost::chrono::thread_clock::time_point start_prep = boost::chrono::thread_clock::now();
 
     Int32 nddl = EltsIdx.size();
-    if(nddl<1)
-      {
+    if(nddl<1){
         return -1;
-      }
+    }
     std::vector<Int32> xInds = getSupportIndexes( EltsIdx );
 
     for (Int32 iddl = 0; iddl < nddl; iddl++)
@@ -911,8 +1428,9 @@ Int32 CLineModelElementList::fitAmplitudesLinSolve( std::vector<Int32> EltsIdx, 
     c = gsl_vector_alloc (nddl);
     cov = gsl_matrix_alloc (nddl, nddl);
 
+    //
     //todo: normalize, center...
-    
+    //
     Int32 idx = 0;
     for (i = 0; i < n; i++)
     {
@@ -945,7 +1463,22 @@ Int32 CLineModelElementList::fitAmplitudesLinSolve( std::vector<Int32> EltsIdx, 
     //
     boost::chrono::thread_clock::time_point stop_fit = boost::chrono::thread_clock::now();
     Float64 duration_fit = boost::chrono::duration_cast<boost::chrono::microseconds>(stop_fit - start_fit).count();
-    //Log.LogDebug( "LineModel linear fit: prep = %.3f - fit = %.3f", duration_prep, duration_fit);
+    //Log.LogInfo( "LineModel linear fit: prep = %.3f - fit = %.3f", duration_prep, duration_fit);
+
+//#define C(i) (gsl_vector_get(c,(i)))
+//#define COV(i,j) (gsl_matrix_get(cov,(i),(j)))
+//    if(0){
+//        Log.LogInfo("# best fit: Y = %g X1 + %g X2 ...", C(0), C(1));
+//        Log.LogInfo("# covariance matrix:\n");
+//        Log.LogInfo("[ %+.5e, %+.5e \n", COV(0,0), COV(0,1));
+//        Log.LogInfo("  %+.5e, %+.5e \n", COV(1,0), COV(1,1));
+
+////        Log.LogInfo("[ %+.5e, %+.5e, %+.5e  \n", COV(0,0), COV(0,1), COV(0,2));
+////        Log.LogInfo("  %+.5e, %+.5e, %+.5e  \n", COV(1,0), COV(1,1), COV(1,2));
+////        Log.LogInfo("  %+.5e, %+.5e, %+.5e ]\n", COV(2,0), COV(2,1), COV(2,2));
+
+//        Log.LogInfo("# chisq/n = %g", chisq/n);
+//    }
 
     Int32 sameSign = 1;
     Float64 a0 = gsl_vector_get(c,0);
@@ -967,6 +1500,7 @@ Int32 CLineModelElementList::fitAmplitudesLinSolve( std::vector<Int32> EltsIdx, 
             Float64 sigma = sqrt(cova);
             SetElementAmplitude(EltsIdx[iddl], a, sigma);
         }
+        //refreshModel();
     }else{
         ampsfitted.resize(nddl);
         for (Int32 iddl = 0; iddl < nddl; iddl++)
@@ -1054,6 +1588,9 @@ std::vector<Int32> CLineModelElementList::ReestimateContinuumUnderLines(std::vec
     for(Int32 i=0; i<spcSize; i++){
         (*_SpectralAxis)[i] = spectralAxis[i+imin];
         (*_FluxAxis)[i] = m_SpcFluxAxis[i+imin] - modelFluxAxisTmp[i+imin];
+        //                if( error!= NULL ){
+        //                    (*_FluxAxis).GetError()[i] = tmpError[i];
+        //                }
     }
     spcBuffer.GetSpectralAxis() = *_SpectralAxis;
     spcBuffer.GetFluxAxis() = *_FluxAxis;
@@ -1381,7 +1918,6 @@ void CLineModelElementList::addDoubleLine(const CRay &r1, const CRay &r2, Int32 
     std::vector<Int32> a;
     a.push_back(index1);
     a.push_back(index2);
-    
     m_Elements.push_back(boost::shared_ptr<CLineModelElement> (new CMultiLine(lines, m_LineWidthType, m_resolution, m_velocityEmission, m_velocityAbsorption, amps, nominalWidth, a)));
 }
 
@@ -1418,6 +1954,9 @@ CLineModelResult::SLineModelSolution CLineModelElementList::GetModelSolution()
         modelSolution.Amplitudes.push_back(m_Elements[eIdx]->GetFittedAmplitude(subeIdx));
         modelSolution.Errors.push_back(m_Elements[eIdx]->GetFittedAmplitudeErrorSigma(subeIdx));
         modelSolution.FittingError.push_back(getModelErrorUnderElement(eIdx));
+
+        //modelSolution.Widths.push_back(-1.0);
+        //modelSolution.OutsideLambdaRange.push_back(true);
     }
     return modelSolution;
 }
@@ -1484,11 +2023,52 @@ std::vector<Int32> CLineModelElementList::GetModelValidElementsIndexes()
         if(m_Elements[iElts]->IsOutsideLambdaRange() == true){
             continue;
         }
+        if(IsElementIndexInDisabledList(iElts))
+        {
+            continue;
+        }
 
         nonZeroIndexes.push_back(iElts);
     }
     return nonZeroIndexes;
 }
+
+bool CLineModelElementList::IsElementIndexInDisabledList(Int32 index)
+{
+    for( UInt32 i=0; i<m_elementsDisabledIndexes.size(); i++ )
+    {
+        if( m_elementsDisabledIndexes[i]== index){
+            return true;
+        }
+    }
+    return false;
+}
+
+void CLineModelElementList::SetElementIndexesDisabledAuto()
+{
+    for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
+    {
+        if(m_Elements[iElts]->IsOutsideLambdaRange() == true){
+            continue;
+        }
+        bool isAllZero=true;
+        for(Int32 ie=0; ie<m_Elements[iElts]->GetSize(); ie++){
+            if(m_Elements[iElts]->GetFittedAmplitude(ie) > 0.0){
+                isAllZero=false;
+            }
+        }
+
+        if(isAllZero==true){
+            m_elementsDisabledIndexes.push_back(iElts);
+        }
+    }
+}
+
+void CLineModelElementList::ResetElementIndexesDisabled()
+{
+    m_elementsDisabledIndexes.clear();
+}
+
 
 /**
  * \brief Returns the first index of m_Elements where calling the element's FindElementIndex method with LineCatalogIndex argument does not return -1.
@@ -1551,6 +2131,73 @@ Float64 CLineModelElementList::GetElementAmplitude(Int32 j)
     return a;
 }
 
+
+void CLineModelElementList::SetVelocityEmission(Float64 vel)
+{
+    m_velocityEmission = vel;
+    for(Int32 j=0; j<m_Elements.size(); j++)
+    {
+        m_Elements[j]->SetVelocityEmission(vel);
+    }
+}
+
+void CLineModelElementList::SetVelocityAbsorption(Float64 vel)
+{
+    m_velocityAbsorption = vel;
+    for(Int32 j=0; j<m_Elements.size(); j++)
+    {
+        m_Elements[j]->SetVelocityAbsorption(vel);
+    }
+}
+
+Float64 CLineModelElementList::GetVelocityEmission()
+{
+    return m_velocityEmission;
+}
+Float64 CLineModelElementList::GetVelocityAbsorption()
+{
+    return m_velocityAbsorption;
+}
+
+Float64 CLineModelElementList::GetVelocityInfFromInstrumentResolution()
+{
+    static Float64 c = 300000.0;
+    static Float64 tolCoeff = 2.0;
+    return c/m_resolution/tolCoeff;
+}
+
+Float64 CLineModelElementList::GetVelocitySup()
+{
+    return 800.0;
+}
+
+Int32 CLineModelElementList::ApplyVelocityBound()
+{
+
+    Int32 corrected=false;
+    static Float64 velInfFromInstrument = GetVelocityInfFromInstrumentResolution();
+    static Float64 velSupEmission = GetVelocitySup();
+    static Float64 velSupAbsorption = GetVelocitySup();
+
+    Float64 vel;
+    vel = GetVelocityEmission();
+    if(vel>velSupEmission || vel<velInfFromInstrument)
+    {
+        SetVelocityEmission(m_velocityEmissionInit);
+        corrected = true;
+        Log.LogInfo( "\nLineModel Infos: Reset Velocity Emission, to v = %.1f", m_velocityEmissionInit);
+    }
+    vel = GetVelocityAbsorption();
+    if(vel>velSupAbsorption || vel<velInfFromInstrument)
+    {
+        SetVelocityAbsorption(m_velocityAbsorptionInit);
+        corrected = true;
+        Log.LogInfo( "\nLineModel Infos: Reset Velocity Absorption, to v = %.1f", m_velocityAbsorptionInit);
+    }
+    return corrected;
+}
+
+
 /**
  * \brief this function estimates the continuum after removal(interpolation) of the flux samples under the lines for a given redshift 
  **/
@@ -1608,7 +2255,6 @@ void CLineModelElementList::EstimateSpectrumContinuum()
     }
     fclose( fspc );
     //*/
- 
     // Remove continuum
     CContinuumIrregularSamplingMedian continuum;
     CSpectrumFluxAxis fluxAxisWithoutContinuumCalc;
@@ -1645,11 +2291,21 @@ void CLineModelElementList::EstimateSpectrumContinuum()
     fclose( f );
     //*/
 
+//    //modify m_SpcFluxAxis
+//    CSpectrumFluxAxis& fluxAxisModified = m_SpcFluxAxis;
+//    Float64* Y2 = fluxAxisModified.GetSamples();
+//    for( Int32 t=0;t<spectralAxis.GetSamplesCount();t++)
+//    {
+//        Y2[t] = m_SpcFluxAxis[t]-fluxAxisNewContinuum[t];
+//        //Y2[t] = m_SpcFluxAxis[t]-m_SpcContinuumFluxAxis[t];
+//    }
+
     //modify m_ContinuumFluxAxis
     CSpectrumFluxAxis& fluxAxisModified = m_ContinuumFluxAxis;
     Float64* Y2 = fluxAxisModified.GetSamples();
     for( Int32 t=0;t<spectralAxis.GetSamplesCount();t++)
     {
         Y2[t] = fluxAxisNewContinuum[t];
+        //Y2[t] = m_SpcContinuumFluxAxis[t];
     }
 }

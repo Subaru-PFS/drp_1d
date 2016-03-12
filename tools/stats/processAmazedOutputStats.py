@@ -24,6 +24,7 @@ import matplotlib.cm as cm
 from matplotlib.patches import Rectangle
 
 import lstats
+import lperf
 
 # global variables, default for VVDS
 iRefZ = 4
@@ -42,6 +43,12 @@ def setMuseRefFileType():
     iRefSFR = -1
     iRefEBmV = -1
     iRefSigma = -1
+    
+def setVUDSRefFileType():
+    global iRefZ, iRefMag, iRefFlag
+    iRefZ = 3
+    iRefMag = 5
+    iRefFlag = 4  
     
 def setVVDSRefFileType():
     global iRefZ, iRefMag, iRefFlag
@@ -70,12 +77,17 @@ def ProcessDiff( refFile, calcFile, outFile ) :
     f = open( outFile, "w" )
 
     #*************** open ref file
-    fref = open(refFile, 'r')
-    dataRefStr = fref.read()
-    fref.close()
-    dataRef = ascii.read(dataRefStr)
+    if 0:     
+        fref = open(refFile, 'r')
+        dataRefStr = fref.read()
+        fref.close()
+        dataRef = ascii.read(dataRefStr)
+    else:
+        dataRef = loadRef( refFile );
     dataRef_names = [a[0] for a in dataRef]
-    print("Dataref, first elt: {}".format(dataRef[0]))
+    print("ProcessDiff : Dataref N = {}".format(len(dataRef)))    
+    print("ProcessDiff : Dataref, first elt: {}".format(dataRef[0]))
+    print("ProcessDiff : Dataref, second elt: {}\n".format(dataRef[1]))
 
     #*************** open calc file
     if 0: 
@@ -115,7 +127,9 @@ def ProcessDiff( refFile, calcFile, outFile ) :
     ##
         
     
-    print("dataCalc_raw, first elt: {}".format(dataCalc_raw[0]))
+    print("ProcessDiff : dataCalc_raw N = {}".format(len(dataCalc_raw)))    
+    print("ProcessDiff : dataCalc_raw, first elt: {}".format(dataCalc_raw[0]))
+    print("ProcessDiff : dataCalc_raw, second elt: {}\n".format(dataCalc_raw[1]))
       
     #*************** reorder calc data by filename
     inds = []
@@ -130,7 +144,8 @@ def ProcessDiff( refFile, calcFile, outFile ) :
             inds.append(p[0])
         else:
             inds.append(-1)
-            print "ERROR : index not found : {0}".format(s)
+            print "ERROR : index not found while comparing ref and calc lists!!".format()
+            print "ERROR : dataRef_names = {}\n".format(s)
             stop
     #print inds
     dataCalc = [dataCalc_raw[i] for i in inds]
@@ -297,6 +312,33 @@ def ProcessDiff( refFile, calcFile, outFile ) :
     ax.set_ylim([-zoomedRange, zoomedRange])
     #pp.show()
     pp.savefig( os.path.dirname(os.path.abspath(outFile)) + '/' +'diff_yzoomed.png', bbox_inches='tight') # sauvegarde du fichier ExempleTrace.png
+
+
+def loadRef(fname):
+    """
+    load the ref file data
+    """ 
+    dataArray = []
+    f = open(fname)
+    for line in f:
+        lineStr = line.strip()
+        if not lineStr.startswith('#'):
+            #print lineStr
+            data = lineStr.split("\t")
+            data = [r for r in data if r != '']
+            #print len(data)
+            if(len(data) >= 7): #PFS or simu
+                d0 = str(data[0])
+                d1 = float(data[1])
+                d2 = float(data[2])
+                d3 = str(data[3])
+                d4 = float(data[4])
+                d5 = float(data[5])
+                d6 = float(data[6])
+                d = [d0, d1, d2, d3, d4, d5, d6]
+                dataArray.append(d) 
+    f.close()
+    return dataArray
 
 def loadCalc(fname):
     """
@@ -549,7 +591,16 @@ def ProcessStats( fname, zRange, magRange, enablePlot = False ):
 
     print '\n'
 
+def processPerformance( fname ):
+    dataDiff = loadDiff( fname );
     
+    _baseOutputDirectory = os.path.dirname(os.path.abspath(fname))
+    outputDirectory = os.path.join(_baseOutputDirectory, "performances".format())
+    if os.path.exists( outputDirectory ) == False :        
+        print("makedir: Output dir: "+outputDirectory)
+        os.mkdir( outputDirectory )
+        
+    lperf.exportPerformances(dataDiff, outputDirectory)
 
 def processHistogram(yvect, bins, outFile=""):
     n = len(yvect)
@@ -711,8 +762,8 @@ def ProcessFailuresSeqFile( fname, refFile, fnameFailuresSeqFile, fnameFailureRe
             spcStr = "_atm_clean"
             noiseStr = "_noise"
             if spcName.find(spcStr)==-1:
-                spcStr = "-W-F_"
-                noiseStr = "-W-ErrF_"
+                spcStr = "_F_"
+                noiseStr = "_ErrF"
             noiseName = spcName.replace(spcStr, noiseStr)
             fFailures.write( spcName + "\t" )
             fFailures.write( noiseName )
@@ -806,6 +857,9 @@ def StartFromCommandLine( argv ) :
         elif options.type == 'muse':
             print "Info: Using MUSE reference data file type"            
             setMuseRefFileType()
+        elif options.type == 'vuds':
+            print "Info: Using VUDS reference data file type"            
+            setVUDSRefFileType()
         else:
             print("Info: No reference file type given (--type), using vvds by default.")
 
@@ -813,7 +867,7 @@ def StartFromCommandLine( argv ) :
         ProcessFailures( outputFullpathDiff, outputFullpathFailures)
         ProcessFailuresSeqFile( outputFullpathDiff, options.refFile, outputFullpathFailuresSeqFile, outputFullpathFailuresRefFile)
         
-        if  options.computeLevel == "full":
+        if  options.computeLevel == "full" or options.computeLevel == "hist":
             zRange = [-1.0, 20.0]
             zRange[0] = float(options.zRange.split(" ")[0])
             zRange[1] = float(options.zRange.split(" ")[1])
@@ -821,6 +875,10 @@ def StartFromCommandLine( argv ) :
             magRange[0] = float(options.magRange.split(" ")[0])
             magRange[1] = float(options.magRange.split(" ")[1])        
             ProcessStats( outputFullpathDiff, zRange, magRange )
+        
+        if  options.computeLevel == "full" or options.computeLevel == "perf":        
+            processPerformance( outputFullpathDiff )
+            
     else :
         print("Error: invalid argument count")
         exit()

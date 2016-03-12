@@ -129,12 +129,31 @@ Void CSpectrum::SetName( const char* name )
     m_Name = name;
 }
 
-Bool CSpectrum::IsNoiseValid(){
+const Bool CSpectrum::IsFluxValid( Float64 LambdaMin,  Float64 LambdaMax ) const
+{
+    Bool allzero=true;
+
+    const Float64* flux = m_FluxAxis.GetSamples();
+    Int32 iMin = m_SpectralAxis.GetIndexAtWaveLength(LambdaMin);
+    Int32 iMax = m_SpectralAxis.GetIndexAtWaveLength(LambdaMax);
+    for(Int32 i=iMin; i<iMax; i++){
+        if( flux[i] != 0.0 ){
+            allzero = false;
+        }
+    }
+    Bool valid = !allzero;
+    return valid;
+}
+
+const Bool CSpectrum::IsNoiseValid( Float64 LambdaMin,  Float64 LambdaMax ) const
+{
     Bool valid=true;
 
     const Float64* error = m_FluxAxis.GetError();
-    for(Int32 i=0; i<m_FluxAxis.GetSamplesCount(); i++){
-        if( error[i] == 0 ){
+    Int32 iMin = m_SpectralAxis.GetIndexAtWaveLength(LambdaMin);
+    Int32 iMax = m_SpectralAxis.GetIndexAtWaveLength(LambdaMax);
+    for(Int32 i=iMin; i<iMax; i++){
+        if( error[i] <= 0 ){
             valid = false;
         }
     }

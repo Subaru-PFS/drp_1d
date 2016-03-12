@@ -6,6 +6,8 @@
 #include <fstream>
 #include <iomanip>      // std::setprecision
 
+#include <string>
+
 using namespace NSEpic;
 
 
@@ -24,6 +26,18 @@ CLineModelResult::~CLineModelResult()
 {
 
 }
+
+Void CLineModelResult::ResizeExtremaResults(Int32 size)
+{
+    Extrema.resize(size);
+    Posterior.resize(size);
+    LogArea.resize(size);
+    LogAreaCorrectedExtrema.resize(size);
+    SigmaZ.resize(size);
+    bic.resize(size);
+
+}
+
 
 /**
  * \brief Attempts to read the redshift and chisquare values stored in the argument stream.
@@ -120,6 +134,9 @@ Void CLineModelResult::Save( const CDataStore& store, std::ostream& stream ) con
         stream <<  "#Extrema for z = {";
         for ( int i=0; i<Extrema.size(); i++)
         {
+//            if(!IsLocalExtrema[i]){
+//                continue;
+//            }
             stream <<  Extrema[i] << "\t";
         }
         stream << "}" << std::endl;
@@ -130,6 +147,9 @@ Void CLineModelResult::Save( const CDataStore& store, std::ostream& stream ) con
         stream <<  "#BIC for each extrema = {";
         for ( int i=0; i<bic.size(); i++)
         {
+//            if(!IsLocalExtrema[i]){
+//                continue;
+//            }
             stream <<  bic[i] << "\t";
         }
         stream << "}" << std::endl;
@@ -140,6 +160,9 @@ Void CLineModelResult::Save( const CDataStore& store, std::ostream& stream ) con
         stream <<  "#POSTERIOR for each extrema = {";
         for ( int i=0; i<Posterior.size(); i++)
         {
+//            if(!IsLocalExtrema[i]){
+//                continue;
+//            }
             stream <<  Posterior[i] << "\t";
         }
         stream << "}" << std::endl;
@@ -150,6 +173,9 @@ Void CLineModelResult::Save( const CDataStore& store, std::ostream& stream ) con
         stream <<  "#SigmaZ for each extrema = {";
         for ( int i=0; i<SigmaZ.size(); i++)
         {
+//            if(!IsLocalExtrema[i]){
+//                continue;
+//            }
             stream <<  SigmaZ[i] << "\t";
         }
         stream << "}" << std::endl;
@@ -160,6 +186,9 @@ Void CLineModelResult::Save( const CDataStore& store, std::ostream& stream ) con
         stream <<  "#LogArea for each extrema = {";
         for ( int i=0; i<LogArea.size(); i++)
         {
+//            if(!IsLocalExtrema[i]){
+//                continue;
+//            }
             stream <<  LogArea[i] << "\t";
         }
         stream << "}" << std::endl;
@@ -174,19 +203,7 @@ Void CLineModelResult::SaveLine( const CDataStore& store, std::ostream& stream )
     stream << "LineModelResult" << "\t" << Redshifts.size() << std::endl;
 }
 
-/**
- * \brief Returns the number of strong lines in the solution that are above the given SNR thresholds.
- * Let nSol be the number of lines above a given SNR threshold. Set it as 0.
- * If the argument extremaIdx cannot be an index for Extrema, return 0.
- * Find the index for the redshift corresponding to the extremaIdx.
- * For each amplitude in the solutions:
- *   Skip if solution already checked.
- *   Skip if solution is not a strong line.
- *   If the solution error is greater than 0:
- *     Calculate the solution SNR as amplitude / noise and the fitting SNR as amplitude / fitting error.
- *     If both SNRs are above their thresholds, include the solution in the "already checked", and increase nSol by one.
- **/
-Int32 CLineModelResult::GetNLinesOverCutThreshold( Int32 extremaIdx, Float64 snrThres, Float64 fitThres ) const
+Int32 CLineModelResult::GetNLinesOverCutThreshold(Int32 extremaIdx, Float64 snrThres, Float64 fitThres) const
 {
   if( Extrema.size()<=extremaIdx )
     {
