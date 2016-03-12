@@ -149,6 +149,44 @@ const CSpectrum& CLineModelElementList::GetModelSpectrum() const
     return *m_SpectrumModel;
 }
 
+
+Float64 CLineModelElementList::getModelFluxVal(Int32 idx) const
+{
+    CSpectrumFluxAxis& modelFluxAxis = m_SpectrumModel->GetFluxAxis();
+    if(idx<modelFluxAxis.GetSamplesCount()){
+        return modelFluxAxis[idx];
+    }
+
+    return -1.0;
+}
+
+
+Float64 CLineModelElementList::getModelFluxDerivEltVal(Int32 DerivEltIdx, Int32 idx) const
+{
+
+    CSpectrumSpectralAxis& spectralAxis = m_SpectrumModel->GetSpectralAxis();
+    Int32 iElts=DerivEltIdx;
+    if(idx<spectralAxis.GetSamplesCount())
+    {
+        Float64 derivateVal = m_Elements[iElts]->GetModelDerivAmplitudeAtLambda(spectralAxis[idx], m_Redshift);
+        return derivateVal;
+    }
+
+    return -1.0;
+}
+
+
+Float64 CLineModelElementList::getModelFluxDerivSigmaVal(Int32 idx) const
+{
+    if(idx<m_SpcFluxAxisModelDerivSigma.GetSamplesCount()){
+        return m_SpcFluxAxisModelDerivSigma[idx];
+    }
+
+    return -1.0;
+}
+
+
+
 /**
  * \brief For each ray in each group of the argument, finds the associated line in the catalog and saves this information to m_Elements.
  * Converts the argument restRayList to a group list.
@@ -1872,6 +1910,44 @@ Float64 CLineModelElementList::getModelErrorUnderElement( Int32 eltId )
         }
     }
     return sqrt(fit/sumErr);
+}
+
+
+Float64 CLineModelElementList::getContinuumMeanUnderElement(Int32 eltId)
+{
+    Int32 n = 0;
+    Float64 m=0.0;
+    //Float64 sumErr=0.0;
+
+    TInt32RangeList support;
+    UInt32 iElts=eltId;
+    {
+        if(m_Elements[iElts]->IsOutsideLambdaRange()){
+            return 0.0;
+        }
+        TInt32RangeList s = m_Elements[iElts]->getSupport();
+        for( UInt32 iS=0; iS<s.size(); iS++ )
+        {
+            support.push_back(s[iS]);
+        }
+    }
+
+
+    Float64 w=0.0;
+    for( UInt32 iS=0; iS<support.size(); iS++ )
+    {
+        for( UInt32 j=support[iS].GetBegin(); j<support[iS].GetEnd(); j++ )
+        {
+            n++;
+            //w = 1.0 / m_ErrorNoContinuum[j];
+            //sumErr += w;
+            //m += m_ContinuumFluxAxis[j] * w;
+            m += m_ContinuumFluxAxis[j];
+        }
+    }
+
+
+    return m/Float64(n);
 }
 
 /**
