@@ -474,12 +474,12 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
     //EstimateSpectrumContinuum();
 
     if(m_ContinuumComponent == "nocontinuum")
-      {
-      }
+    {
+    }
     else
-      {
+    {
         for(UInt32 i=0; i<modelFluxAxis.GetSamplesCount(); i++)
-	  {
+        {
             modelFluxAxis[i] = m_ContinuumFluxAxis[i];
             m_spcFluxAxisNoContinuum[i] = m_SpcFluxAxis[i]-m_ContinuumFluxAxis[i];
         }

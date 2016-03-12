@@ -71,7 +71,7 @@ def setPFSRefFileType():
     iRefEBmV = 4
     iRefSigma = 6
 
-def ProcessDiff( refFile, calcFile, outFile ) :
+def ProcessDiff( refFile, calcFile, outFile, reftype ) :
     global iRefZ, iRefMag, iRefFlag   
      
     f = open( outFile, "w" )
@@ -83,11 +83,11 @@ def ProcessDiff( refFile, calcFile, outFile ) :
         fref.close()
         dataRef = ascii.read(dataRefStr)
     else:
-        dataRef = loadRef( refFile );
+        dataRef = loadRef( refFile, reftype );
     dataRef_names = [a[0] for a in dataRef]
     print("ProcessDiff : Dataref N = {}".format(len(dataRef)))    
     print("ProcessDiff : Dataref, first elt: {}".format(dataRef[0]))
-    print("ProcessDiff : Dataref, second elt: {}\n".format(dataRef[1]))
+    #print("ProcessDiff : Dataref, second elt: {}\n".format(dataRef[1]))
 
     #*************** open calc file
     if 0: 
@@ -129,7 +129,7 @@ def ProcessDiff( refFile, calcFile, outFile ) :
     
     print("ProcessDiff : dataCalc_raw N = {}".format(len(dataCalc_raw)))    
     print("ProcessDiff : dataCalc_raw, first elt: {}".format(dataCalc_raw[0]))
-    print("ProcessDiff : dataCalc_raw, second elt: {}\n".format(dataCalc_raw[1]))
+    #print("ProcessDiff : dataCalc_raw, second elt: {}\n".format(dataCalc_raw[1]))
       
     #*************** reorder calc data by filename
     inds = []
@@ -314,29 +314,43 @@ def ProcessDiff( refFile, calcFile, outFile ) :
     pp.savefig( os.path.dirname(os.path.abspath(outFile)) + '/' +'diff_yzoomed.png', bbox_inches='tight') # sauvegarde du fichier ExempleTrace.png
 
 
-def loadRef(fname):
+def loadRef(fname, reftype):
     """
     load the ref file data
     """ 
+    print("loadref with type={}".format(reftype))
     dataArray = []
     f = open(fname)
     for line in f:
         lineStr = line.strip()
         if not lineStr.startswith('#'):
-            #print lineStr
-            data = lineStr.split("\t")
+            print lineStr
+            #data = lineStr.split("\t")
+            data = lineStr.split(" ")
             data = [r for r in data if r != '']
-            #print len(data)
-            if(len(data) >= 7): #PFS or simu
-                d0 = str(data[0])
-                d1 = float(data[1])
-                d2 = float(data[2])
-                d3 = str(data[3])
-                d4 = float(data[4])
-                d5 = float(data[5])
-                d6 = float(data[6])
-                d = [d0, d1, d2, d3, d4, d5, d6]
-                dataArray.append(d) 
+            print len(data)
+            if reftype=="pfs":
+                if(len(data) >= 7): #PFS
+                    d0 = str(data[0])
+                    d1 = float(data[1])
+                    d2 = float(data[2])
+                    d3 = str(data[3])
+                    d4 = float(data[4])
+                    d5 = float(data[5])
+                    d6 = float(data[6])
+                    d = [d0, d1, d2, d3, d4, d5, d6]
+                    dataArray.append(d) 
+            elif reftype=="vuds":
+                if(len(data) >= 6):
+                    d0 = str(data[0])
+                    d1 = float(data[1])
+                    d2 = float(data[2])
+                    d3 = float(data[3])
+                    d4 = int(data[4])
+                    d5 = float(data[5])
+                    d = [d0, d1, d2, d3, d4, d5]
+                    dataArray.append(d) 
+            
     f.close()
     return dataArray
 
@@ -863,7 +877,7 @@ def StartFromCommandLine( argv ) :
         else:
             print("Info: No reference file type given (--type), using vvds by default.")
 
-        ProcessDiff( options.refFile, options.calcFile, outputFullpathDiff )
+        ProcessDiff( options.refFile, options.calcFile, outputFullpathDiff, options.type )
         ProcessFailures( outputFullpathDiff, outputFullpathFailures)
         ProcessFailuresSeqFile( outputFullpathDiff, options.refFile, outputFullpathFailuresSeqFile, outputFullpathFailuresRefFile)
         
