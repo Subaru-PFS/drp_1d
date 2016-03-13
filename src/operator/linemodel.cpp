@@ -79,9 +79,9 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute( CDataStore &dataSt
 							      const std::string& opt_rules,
 							      const std::string& opt_velocityFitting)
 {
-  if( spectrum.GetSpectralAxis().IsInLinearScale()==false )
+    if( spectrum.GetSpectralAxis().IsInLinearScale()==false )
     {
-      Log.LogError( "Line Model, input spectrum is not in linear scale (ignored)." );
+        Log.LogError( "Line Model, input spectrum is not in linear scale (ignored)." );
     }
 
     TFloat64List sortedRedshifts = redshifts;
@@ -107,9 +107,15 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute( CDataStore &dataSt
         }
         Int32 rmInd = 0;
         for(Int32 i=1; i<sortedRedshifts.size()-1; i++){
-            if(removed_inds[rmInd]==i){
-                rmInd++;
-            }else{
+            bool addToLargeGrid = true;
+            if(removed_inds.size()>0)
+            {
+                if(removed_inds[rmInd]==i){
+                    rmInd++;
+                    addToLargeGrid = false;
+                }
+            }
+            if(addToLargeGrid){
                 largeGridRedshifts.push_back(sortedRedshifts[i]);
             }
         }
@@ -132,8 +138,8 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute( CDataStore &dataSt
     if(opt_lineForceFilter == "S"){
         forceFilter = CRay::nForce_Strong;
     }
-  CRayCatalog::TRayVector restRayList = restraycatalog.GetFilteredList( typeFilter, forceFilter);
-  Log.LogDebug( "restRayList.size() = %d", restRayList.size() );
+    CRayCatalog::TRayVector restRayList = restraycatalog.GetFilteredList( typeFilter, forceFilter);
+    Log.LogDebug( "restRayList.size() = %d", restRayList.size() );
 
     Int32 nResults = sortedRedshifts.size();
     auto result = std::shared_ptr<CLineModelResult>( new CLineModelResult() );
@@ -144,27 +150,27 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute( CDataStore &dataSt
     result->restRayList = restRayList;
     result->LineModelSolutions.resize( nResults );
 
-  CLineModelElementList model( spectrum,
-			       spectrumContinuum,
-			       restRayList,
-			       opt_fittingmethod,
-			       opt_continuumcomponent,
-			       opt_lineWidthType,
-			       opt_resolution,
-			       opt_velocityEmission,
-			       opt_velocityAbsorption,
-			       opt_rules );
-  //model.LoadContinuum(); //in order to use a fit with continuum
-  result->nSpcSamples = model.getSpcNSamples(lambdaRange);
-  PrecomputeLogErr( spectrum );
-  Int32 contreest_iterations = 0;
-  if( opt_continuumreest == "always" )
+    CLineModelElementList model( spectrum,
+                                 spectrumContinuum,
+                                 restRayList,
+                                 opt_fittingmethod,
+                                 opt_continuumcomponent,
+                                 opt_lineWidthType,
+                                 opt_resolution,
+                                 opt_velocityEmission,
+                                 opt_velocityAbsorption,
+                                 opt_rules );
+    //model.LoadContinuum(); //in order to use a fit with continuum
+    result->nSpcSamples = model.getSpcNSamples(lambdaRange);
+    PrecomputeLogErr( spectrum );
+    Int32 contreest_iterations = 0;
+    if( opt_continuumreest == "always" )
     {
-      contreest_iterations = 1;
+        contreest_iterations = 1;
     }
-  else
+    else
     {
-      contreest_iterations = 0;
+        contreest_iterations = 0;
     }
 
     Int32 indexLargeGrid = 0;
@@ -173,8 +179,8 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute( CDataStore &dataSt
         if(enableFastFitLargeGrid==0 || i==0 || result->Redshifts[i] == largeGridRedshifts[indexLargeGrid])
         {
             ModelFit( model, lambdaRange, result->Redshifts[i], result->ChiSquare[i], result->LineModelSolutions[i], contreest_iterations);
-      	    Log.LogDebug( "Z interval %d: Chi2 = %f", i, result->ChiSquare[i] );            
-	    indexLargeGrid++;
+            Log.LogDebug( "Z interval %d: Chi2 = %f", i, result->ChiSquare[i] );
+            indexLargeGrid++;
         }else{
             result->ChiSquare[i] = result->ChiSquare[i-1] + 1e-2;
             result->LineModelSolutions[i] = result->LineModelSolutions[i-1];
