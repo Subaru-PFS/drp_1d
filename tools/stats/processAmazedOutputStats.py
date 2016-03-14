@@ -324,9 +324,10 @@ def loadRef(fname, reftype):
     for line in f:
         lineStr = line.strip()
         if not lineStr.startswith('#'):
-            print lineStr
-            #data = lineStr.split("\t")
-            data = lineStr.split(" ")
+            #print lineStr
+            data = lineStr.split("\t")
+            if len(data)<2:
+                data = lineStr.split(" ")
             data = [r for r in data if r != '']
             print len(data)
             if reftype=="pfs":

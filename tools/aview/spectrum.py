@@ -681,7 +681,7 @@ class Spectrum(object):
             
         return yvect
 
-    def exportFits(self, path="", name="", addNoise=False, exportNoiseSpectrum=False):
+    def exportFits(self, path="", name="", addNoise=False, exportNoiseSpectrum=False, noiseSigma = 1.5e-19):
         """
         write spectrum into a new fits file (useful for model csv input spectra)
         """
@@ -703,11 +703,12 @@ class Spectrum(object):
             #noise
             #knoise = 0.1 * np.std(self.yvect)
             sigma_from_pfs_simu = 1.5e-19 #corresponds to 3h exposure time
-            print("using Noise STD fixed value = {}".format(sigma_from_pfs_simu))            
+            #noiseSigma = sigma_from_pfs_simu #corresponds to 3h exposure time
+            print("using Noise STD fixed value = {}".format(noiseSigma))            
             
             for k in range(len(self.yvect)):
                 mu = 0.0
-                sigma = np.sqrt(sigma_from_pfs_simu**2+self.yvect[k]**4)
+                sigma = np.sqrt(noiseSigma**2+self.yvect[k]**4)
                 anoise[k] =  sigma
                 if addNoise:
                     #print("Adding Noise to spectrum".format()) 

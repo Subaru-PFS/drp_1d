@@ -304,7 +304,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute( CDataStore &dataSt
             m = result->ChiSquare[idx];
             if(enableVelocityFitting){
                 Bool enableManualStepVelocityFit = true;
-                Bool enableLMVelocityFit = true;
+                Bool enableLMVelocityFit = false;
                 if(enableLMVelocityFit){
                     //fit the emission and absorption width using the linemodel lmfit strategy
                     model.SetFittingMethod("lmfit");
@@ -324,7 +324,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute( CDataStore &dataSt
                     model.SetFittingMethod("hybrid");
                     Float64 vInfLim = model.GetVelocityInfFromInstrumentResolution();
                     Float64 vSupLim = model.GetVelocitySup();
-                    Float64 vStep = 5.0;
+                    Float64 vStep = 10.0;
                     Int32 nSteps = (int)((vSupLim-vInfLim)/vStep);
 
 
@@ -353,9 +353,10 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute( CDataStore &dataSt
                             }
                             Float64 meritv;
                             ModelFit( model, lambdaRange, result->Redshifts[idx], meritv, result->LineModelSolutions[idx], contreest_iterations);
-                            meritv = model.getLeastSquareMeritUnderElements();
+                            //meritv = model.getLeastSquareMeritUnderElements();
+                            //todo: eventually use the merit under the elements with a BIC estimator taking the n samples in the support for each velocity solution...
 
-                            Log.LogInfo( "LineModel Solution: testing velocity: merit=%.1f for velocity = %.1f", meritv, vTest);
+                            Log.LogInfo("LineModel Solution: testing velocity: merit=%.1f for velocity = %.1f", meritv, vTest);
                             if(meritMin>meritv)
                             {
                                 meritMin = meritv;

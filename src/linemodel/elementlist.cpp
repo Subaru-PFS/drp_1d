@@ -996,7 +996,7 @@ void print_state (size_t iter, gsl_multifit_fdfsolver * s)
 Int32 CLineModelElementList::fitAmplitudesLmfit(std::vector<Int32> filteredEltsIdx, const CSpectrumFluxAxis& fluxAxis, std::vector<Float64>& ampsfitted, Int32 lineType)
 {
     //http://www.gnu.org/software/gsl/manual/html_node/Example-programs-for-Nonlinear-Least_002dSquares-Fitting.html
-    Bool verbose=false;
+    Bool verbose = false;
 
 
 
@@ -1075,6 +1075,7 @@ Int32 CLineModelElementList::fitAmplitudesLmfit(std::vector<Int32> filteredEltsI
     const double xtol = 1e-12;
     const double gtol = 1e-12;
     const double ftol = 0.0;
+    Int32 maxIterations = 250;
 
     gsl_rng_env_setup();
 
@@ -1107,7 +1108,7 @@ Int32 CLineModelElementList::fitAmplitudesLmfit(std::vector<Int32> filteredEltsI
     chi0 = gsl_blas_dnrm2(res_f);
 
     /* solve the system with a maximum of 50 iterations */
-    status = gsl_multifit_fdfsolver_driver(s, 50, xtol, gtol, ftol, &info);
+    status = gsl_multifit_fdfsolver_driver(s, maxIterations, xtol, gtol, ftol, &info);
 
     gsl_multifit_fdfsolver_jac(s, J);
     gsl_multifit_covar (J, 0.0, covar);
@@ -2239,7 +2240,13 @@ Float64 CLineModelElementList::GetVelocityInfFromInstrumentResolution()
 {
     static Float64 c = 300000.0;
     static Float64 tolCoeff = 2.0;
-    return c/m_resolution/tolCoeff;
+    Float64 vel = c/m_resolution/tolCoeff;
+    Float64 roundingVal = 10.0;
+    vel = Float64(Int32(vel/roundingVal))*roundingVal;
+    if(vel<40.0){
+        vel=40;
+    }
+    return vel;
 }
 
 Float64 CLineModelElementList::GetVelocitySup()

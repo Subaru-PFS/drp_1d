@@ -187,10 +187,11 @@ class ResultChisquare(object):
             for k in range(len(linesx)):
                 x = linesx[k]
                 minivect = [np.abs(a-x) for a in self.xvect]
-                idx = np.argmin(minivect)
-                chimin = self.yvect[idx]*1.0
-                chimax = self.yvect[idx]*1.0
-                pp.plot((x, x), (chimin, chimax) , 'ro', label="Extremum_{}".format(k) )
+                if len(minivect)>0:
+                    idx = np.argmin(minivect)
+                    chimin = self.yvect[idx]*1.0
+                    chimax = self.yvect[idx]*1.0
+                    pp.plot((x, x), (chimin, chimax) , 'ro', label="Extremum_{}".format(k) )
         if showAmbiguities and len(self.amazed_extrema)>0:
             zrefamb = self.amazed_extrema[0]
             #zrefamb = 1.064
