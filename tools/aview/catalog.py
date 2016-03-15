@@ -13,6 +13,8 @@ from matplotlib.ticker import MultipleLocator, FormatStrFormatter
 import numpy as np
 from scipy.optimize import fsolve
 
+import modelresult
+
 class Catalog(object):
     def __init__(self, spath, ctype='undef'):
         self.logTagStr = "Catalog"
@@ -102,7 +104,19 @@ class Catalog(object):
             self.lineprofile[x] = lineprofile[x]
             self.linegroup[x] = linegroup[x]
             self.linenominalamp[x] = linenominalamp[x]
+     
+    def save(self, outputPath):
+        text_file = open(outputPath, "w")
+        data = "#\n"
+        text_file.write("{}".format(data))
+        data = "#lambda	Name	type	force	profile	group	nominal_ampl"
+        text_file.write("{}\n".format(data))
                 
+        for k in range(self.n):
+            data = "{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(self.linelambda[k], self.linename[k], self.linetype[k], self.lineforce[k], self.lineprofile[k], self.linegroup[k], self.linenominalamp[k])
+            text_file.write("{}".format(data))
+        
+        text_file.close()            
         
     def vacuumToAir(self, vacuumVal):
         s = (1e-4)/vacuumVal;
@@ -305,10 +319,24 @@ class Catalog(object):
             outStr = outStr + "|{}|{}|{}|{}|{}|{}|{}|".format(self.linelambda[x], self.linename[x], self.linetype[x], self.lineforce[x], self.lineprofile[x], group, nominalamp) + "\n"
       
         return outStr
-      
+
+    def applyTemplateShapeFromLinemodelFitResult(self, lmFitResFilePath):
+        mres = modelresult.ModelResult(lmFitResFilePath)
+        
+        #
+        for x in range(0,self.n):        
+            a = mres.getAmplitude( self.linename[x], self.linetype[x])
+            self.linegroup[x] = "tplshape"
+            self.linenominalamp[x] = a
+        #path = "/home/aschmitt/code/python/linemodel_tplshape/amazed/linecatalogs"
+        #name = "linecatalogamazedvacuum_B9D_LyaAbsSYMprofile_tplShape.txt"
+        #outpath = os.path.join(path,name)
+        #self.save(outpath)
+        
+     
             
 if __name__ == '__main__':
-    path = "/home/aschmitt/data/simu_linemodel/simulm_20160310/amazed/linecatalogs"
+    path = "/home/aschmitt/code/python/linemodel_tplshape/amazed/linecatalogs"
     name = "linecatalogamazedvacuum_B9D_LyaAbsSYMprofile.txt"
     cpath = os.path.join(path,name)
     print('using full path: {0}'.format(cpath))
@@ -320,3 +348,6 @@ if __name__ == '__main__':
     c.plotInZplane()  
     
     #print("the REDMINE (copy/paste) generated table is:\n{}".format(c.getRedmineTableString()))
+    
+    #lmResPath = "/home/aschmitt/code/python/linemodel_tplshape/amazed/output/spectrum_tpl_NEW_Im_extended.dat_TF/linemodelsolve.linemodel_fit_extrema_0.csv"
+    #c.applyTemplateShapeFromLinemodelFitResult(lmResPath)

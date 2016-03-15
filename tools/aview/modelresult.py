@@ -240,7 +240,15 @@ class ModelResult(object):
         print("highest EL names = {}".format(highestELNames))
         outVal = np.mean(highestELAmps)
         print("MEAN ( {} highest EL amps ) = {}".format(nhighestValid, outVal))
-        return outVal
+        return outVal  
+        
+    def getAmplitude(self, strTag, linetypeTag):
+        for k in range(self.n):
+            if self.linetype[k] == linetypeTag:
+                if self.linename[k] == strTag:
+                    outVal = self.lineamplitude[k]                
+                    return outVal
+        return -1
             
           
 if __name__ == '__main__':
