@@ -107,7 +107,7 @@ class Catalog(object):
      
     def save(self, outputPath):
         text_file = open(outputPath, "w")
-        data = "#\n"
+        data = "#version:0.3.0\n"
         text_file.write("{}".format(data))
         data = "#lambda	Name	type	force	profile	group	nominal_ampl"
         text_file.write("{}\n".format(data))

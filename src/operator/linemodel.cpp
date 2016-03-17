@@ -356,7 +356,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute( CDataStore &dataSt
                             //meritv = model.getLeastSquareMeritUnderElements();
                             //todo: eventually use the merit under the elements with a BIC estimator taking the n samples in the support for each velocity solution...
 
-                            Log.LogInfo("LineModel Solution: testing velocity: merit=%.1f for velocity = %.1f", meritv, vTest);
+                            //Log.LogInfo("LineModel Solution: testing velocity: merit=%.1f for velocity = %.1f", meritv, vTest);
                             if(meritMin>meritv)
                             {
                                 meritMin = meritv;

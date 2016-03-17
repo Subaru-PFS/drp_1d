@@ -56,6 +56,46 @@ const std::string CLineModelSolve::GetDescription()
 }
 
 /**
+ * \brief
+ * Populates the method parameters from the dataStore into the class members
+ * Returns true if successful, false otherwise
+ **/
+Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
+{
+    dataStore.GetScopedParam( "linemodel.linetypefilter", m_opt_linetypefilter, "no" );
+    dataStore.GetScopedParam( "linemodel.lineforcefilter", m_opt_lineforcefilter, "S" );
+    dataStore.GetScopedParam( "linemodel.fittingmethod", m_opt_fittingmethod, "hybrid" );
+    dataStore.GetScopedParam( "linemodel.continuumcomponent", m_opt_continuumcomponent, "fromspectrum" );
+    dataStore.GetScopedParam( "linemodel.linewidthtype", m_opt_lineWidthType, "combined" );
+    dataStore.GetScopedParam( "linemodel.instrumentresolution", m_opt_resolution, 2350.0 );
+    dataStore.GetScopedParam( "linemodel.velocityemission", m_opt_velocity_emission, 100.0 );
+    dataStore.GetScopedParam( "linemodel.velocityabsorption", m_opt_velocity_absorption, 300.0 );
+    dataStore.GetScopedParam( "linemodel.velocityfit", m_opt_velocityfit, "yes" );
+    dataStore.GetScopedParam( "linemodel.continuumreestimation", m_opt_continuumreest, "no" );
+    dataStore.GetScopedParam( "linemodel.rules", m_opt_rules, "all" );
+    dataStore.GetScopedParam( "linemodel.extremacount", m_opt_extremacount, 10.0 );
+
+    Log.LogInfo( "Linemodel parameters:");
+    Log.LogInfo( "    -linetypefilter: %s", m_opt_linetypefilter.c_str());
+    Log.LogInfo( "    -lineforcefilter: %s", m_opt_lineforcefilter.c_str());
+    Log.LogInfo( "    -fittingmethod: %s", m_opt_fittingmethod.c_str());
+    Log.LogInfo( "    -linewidthtype: %s", m_opt_lineWidthType.c_str());
+    if(m_opt_lineWidthType=="combined"){
+        Log.LogInfo( "    -instrumentresolution: %.2f", m_opt_resolution);
+        Log.LogInfo( "    -velocity emission: %.2f", m_opt_velocity_emission);
+        Log.LogInfo( "    -velocity absorption: %.2f", m_opt_velocity_absorption);
+        Log.LogInfo( "    -velocity fit: %s", m_opt_velocityfit.c_str());
+    }else if(m_opt_lineWidthType=="instrumentdriven"){
+        Log.LogInfo( "    -instrumentresolution: %.2f", m_opt_resolution);
+    }
+    Log.LogInfo( "    -rules: %s", m_opt_rules.c_str());
+    Log.LogInfo( "    -continuumreestimation: %s", m_opt_continuumreest.c_str());
+    Log.LogInfo( "    -extremacount: %.3f", m_opt_extremacount);
+
+    return true;
+}
+
+/**
  * \brief Calls the Solve method and returns a new "result" object.
  * Call Solve.
  * Return a pointer to an empty CLineModelSolveResult. (The results for Linemodel will reside in the linemodel.linemodel result).
@@ -70,6 +110,7 @@ std::shared_ptr<const CLineModelSolveResult> CLineModelSolve::Compute( CDataStor
     Bool storeResult = false;
     CDataStore::CAutoScope resultScope( dataStore, "linemodelsolve" );
 
+    PopulateParameters( dataStore );
     Solve( dataStore, spc, spcWithoutCont, restraycatalog, lambdaRange, redshifts);
     return std::shared_ptr<const CLineModelSolveResult>( new CLineModelSolveResult() );
 }
@@ -99,46 +140,6 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
     sfluxAxisPtr = spcfluxAxis;
 
 
-    std::string opt_linetypefilter;
-    dataStore.GetScopedParam( "linemodel.linetypefilter", opt_linetypefilter, "no" );
-    std::string opt_lineforcefilter;
-    dataStore.GetScopedParam( "linemodel.lineforcefilter", opt_lineforcefilter, "S" );
-    std::string opt_fittingmethod;
-    dataStore.GetScopedParam( "linemodel.fittingmethod", opt_fittingmethod, "hybrid" );
-    std::string opt_continuumcomponent;
-    dataStore.GetScopedParam( "linemodel.continuumcomponent", opt_continuumcomponent, "fromspectrum" );
-    std::string opt_lineWidthType;
-    dataStore.GetScopedParam( "linemodel.linewidthtype", opt_lineWidthType, "combined" );
-    Float64 opt_resolution;
-    dataStore.GetScopedParam( "linemodel.instrumentresolution", opt_resolution, 2350.0 );
-    Float64 opt_velocity_emission;
-    dataStore.GetScopedParam( "linemodel.velocityemission", opt_velocity_emission, 100.0 );
-    Float64 opt_velocity_absorption;
-    dataStore.GetScopedParam( "linemodel.velocityabsorption", opt_velocity_absorption, 300.0 );
-    std::string opt_velocityfit;
-    dataStore.GetScopedParam( "linemodel.velocityfit", opt_velocityfit, "yes" );
-    std::string opt_continuumreest;
-    dataStore.GetScopedParam( "linemodel.continuumreestimation", opt_continuumreest, "no" );
-    std::string opt_rules;
-    dataStore.GetScopedParam( "linemodel.rules", opt_rules, "all" );
-    Float64 opt_extremacount;
-    dataStore.GetScopedParam( "linemodel.extremacount", opt_extremacount, 10.0 );
-
-    Log.LogInfo( "Linemodel parameters:");
-    Log.LogInfo( "    -linetypefilter: %s", opt_linetypefilter.c_str());
-    Log.LogInfo( "    -lineforcefilter: %s", opt_lineforcefilter.c_str());
-    Log.LogInfo( "    -fittingmethod: %s", opt_fittingmethod.c_str());
-    Log.LogInfo( "    -linewidthtype: %s", opt_lineWidthType.c_str());
-    Log.LogInfo( "    -rules: %s", opt_rules.c_str());
-    if(opt_lineWidthType=="combined"){
-        Log.LogInfo( "    -instrumentresolution: %.2f", opt_resolution);
-        Log.LogInfo( "    -velocity emission: %.2f", opt_velocity_emission);
-        Log.LogInfo( "    -velocity absorption: %.2f", opt_velocity_absorption);
-        Log.LogInfo( "    -velocity fit: %s", opt_velocityfit.c_str());
-
-    }
-    Log.LogInfo( "    -continuumreestimation: %s", opt_continuumreest.c_str());
-    Log.LogInfo( "    -extremacount: %.3f", opt_extremacount);
 
     // Compute merit function
     COperatorLineModel linemodel;
@@ -146,20 +147,20 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
 				      _spc,
 				      _spcContinuum,
 				      restraycatalog,
-				      opt_linetypefilter,
-				      opt_lineforcefilter,
+                      m_opt_linetypefilter,
+                      m_opt_lineforcefilter,
 				      lambdaRange,
 				      redshifts,
-				      opt_extremacount,
-				      opt_fittingmethod,
-				      opt_continuumcomponent,
-				      opt_lineWidthType,
-				      opt_resolution,
-				      opt_velocity_emission,
-				      opt_velocity_absorption,
-				      opt_continuumreest,
-				      opt_rules
-				     , opt_velocityfit);
+                      m_opt_extremacount,
+                      m_opt_fittingmethod,
+                      m_opt_continuumcomponent,
+                      m_opt_lineWidthType,
+                      m_opt_resolution,
+                      m_opt_velocity_emission,
+                      m_opt_velocity_absorption,
+                      m_opt_continuumreest,
+                      m_opt_rules,
+                      m_opt_velocityfit);
 
     if( !result )
     {

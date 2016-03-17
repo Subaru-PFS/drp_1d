@@ -44,6 +44,8 @@
 #include <epic/redshift/method/linematching2solve.h>
 #include <epic/redshift/method/linemodelsolve.h>
 #include <epic/redshift/method/linemodelsolveresult.h>
+#include <epic/redshift/method/linemodeltplshapesolve.h>
+#include <epic/redshift/method/linemodeltplshapesolveresult.h>
 
 #include <boost/algorithm/string.hpp>
 #include <stdio.h>
@@ -102,6 +104,9 @@ Bool CProcessFlow::Process( CProcessFlowContext& ctx )
 
     if(methodName  == "linemodel" )
         return LineModelSolve( ctx );
+
+    if(methodName  == "linemodeltplshape" )
+        return LineModelTplshapeSolve( ctx );
 
     if(methodName  == "blindsolve" )
         return Blindsolve( ctx );
@@ -389,11 +394,46 @@ Bool CProcessFlow::LineModelSolve( CProcessFlowContext& ctx )
 
     CLineModelSolve Solve;
     std::shared_ptr<const CLineModelSolveResult> solveResult = Solve.Compute( ctx.GetDataStore(),
-									      ctx.GetSpectrum(),
-									      ctx.GetSpectrumWithoutContinuum(),
-									      ctx.GetRayCatalog(),
-									      spcLambdaRange,
-									      redshifts );
+                                          ctx.GetSpectrum(),
+                                          ctx.GetSpectrumWithoutContinuum(),
+                                          ctx.GetRayCatalog(),
+                                          spcLambdaRange,
+                                          redshifts );
+
+    if( solveResult ) {
+        ctx.GetDataStore().StoreScopedGlobalResult( "redshiftresult", solveResult );
+    }
+
+    return true;
+}
+
+Bool CProcessFlow::LineModelTplshapeSolve( CProcessFlowContext& ctx )
+{
+    TFloat64Range lambdaRange;
+    TFloat64Range redshiftRange;
+    Float64       redshiftStep;
+
+    ctx.GetParameterStore().Get( "lambdaRange", lambdaRange );
+    ctx.GetParameterStore().Get( "redshiftRange", redshiftRange );
+    ctx.GetParameterStore().Get( "redshiftStep", redshiftStep );
+
+    TFloat64Range spcLambdaRange;
+    ctx.GetSpectrum().GetSpectralAxis().ClampLambdaRange( lambdaRange, spcLambdaRange );
+
+    Log.LogInfo( "Processing LineModel-TplShape for spc:%s (LambdaRange: %f-%f:%f)", ctx.GetSpectrum().GetName().c_str(),
+            spcLambdaRange.GetBegin(), spcLambdaRange.GetEnd(), ctx.GetSpectrum().GetResolution());
+
+    // Create redshift initial list by spanning redshift acdross the given range, with the given delta
+    TFloat64List redshifts = redshiftRange.SpreadOver( redshiftStep );
+    DebugAssert( redshifts.size() > 0 );
+
+    CLineModelTplshapeSolve Solve;
+    std::shared_ptr<const CLineModelTplshapeSolveResult> solveResult = Solve.Compute( ctx.GetDataStore(),
+                                          ctx.GetSpectrum(),
+                                          ctx.GetSpectrumWithoutContinuum(),
+                                          ctx.GetRayCatalog(),
+                                          spcLambdaRange,
+                                          redshifts );
 
     if( solveResult ) {
         ctx.GetDataStore().StoreScopedGlobalResult( "redshiftresult", solveResult );

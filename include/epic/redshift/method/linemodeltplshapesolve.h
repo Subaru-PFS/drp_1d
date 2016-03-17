@@ -1,8 +1,8 @@
-#ifndef _REDSHIFT_OPERATOR_LINEMODELMATCHINGSOLVE_
-#define _REDSHIFT_OPERATOR_LINEMODELMATCHINGSOLVE_
+#ifndef _REDSHIFT_OPERATOR_LINEMODELTPLSHAPESOLVE_
+#define _REDSHIFT_OPERATOR_LINEMODELTPLSHAPESOLVE_
 
 #include <epic/core/common/datatypes.h>
-#include <epic/redshift/method/linemodelsolveresult.h>
+#include <epic/redshift/method/linemodeltplshapesolveresult.h>
 #include <epic/redshift/spectrum/template/template.h>
 
 namespace NSEpic
@@ -15,19 +15,19 @@ class CDataStore;
 /**
  * \ingroup Redshift
  */
-class CLineModelSolve
+class CLineModelTplshapeSolve
 {
 
 public:
 
-    CLineModelSolve();
-    ~CLineModelSolve();
+    CLineModelTplshapeSolve();
+    ~CLineModelTplshapeSolve();
 
     const std::string GetDescription();
     Bool PopulateParameters( CDataStore& dataStore );
 
 
-    std::shared_ptr<const CLineModelSolveResult> Compute(CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont, const CRayCatalog& restraycatalog,
+    std::shared_ptr<const CLineModelTplshapeSolveResult> Compute(CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont, const CRayCatalog& restraycatalog,
                                            const TFloat64Range& lambdaRange, const TFloat64List& redshifts );
 
     Bool Solve(CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont, const CRayCatalog& restraycatalog,

@@ -42,7 +42,9 @@ class ResParser(object):
         
         methodParam = self.getParameterVal('method')
         if methodParam=="linemodelsolve" or methodParam=="linemodel":
-            self.linemodelrelpath = "linemodelsolve.linemodel.csv" #"dtreeBsolve.linemodel.csv" 
+            self.linemodelrelpath = "linemodelsolve.linemodel.csv" 
+        if methodParam=="linemodeltplshapesolve" or methodParam=="linemodeltplshape":
+            self.linemodelrelpath = "linemodeltplshapesolve.linemodel.csv" 
         if methodParam=="decisionaltreeb":
             self.linemodelrelpath = "dtreeBsolve.linemodel.csv" 
                 
@@ -404,6 +406,11 @@ class ResParser(object):
         elif method == "linemodel":
             name = "linemodelsolve.linemodel.csv"
             #name = "dtreeBsolve.linemodel.csv"    
+            chipath.append(os.path.join(path,name))
+            chiname.append(name)
+            
+        elif method == "linemodeltplshape":
+            name = "linemodeltplshapesolve.linemodel.csv"  
             chipath.append(os.path.join(path,name))
             chiname.append(name)
             
