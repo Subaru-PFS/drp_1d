@@ -677,7 +677,7 @@ class Spectrum(object):
         
         for x in range(self.n):
             #self.yvect[x] = self.yvect[x]*3.34*1e4*self.xvect[x]**2
-            yvect[x] = self.yvect[x]/c_cm_s*(self.xvect[x])**2*10
+            yvect[x] = self.yvect[x]/c_cm_s*(self.xvect[x]**2)*3.5 #coeff 3.5 added to fit exactly V. Lebrun's numbers 1e-18 at mag 23.5
             
         return yvect
 
@@ -699,20 +699,30 @@ class Spectrum(object):
             os.remove(destfileout)
 
         anoise = np.ones((len(self.yvect)))
+        snr_meanFlux = np.mean(self.yvect)
+        snr_rmsNoise = 0.0
         if addNoise or exportNoiseSpectrum:
             #noise
             #knoise = 0.1 * np.std(self.yvect)
             sigma_from_pfs_simu = 1.5e-19 #corresponds to 3h exposure time
-            #noiseSigma = sigma_from_pfs_simu #corresponds to 3h exposure time
+            #noiseSigma = sigma_from_pfs_simu 
+            sigma_from_vvds_typical = 1.5e-19 #corresponds approx. to SNR=7 at Mag=23.5
             print("using Noise STD fixed value = {}".format(noiseSigma))            
             
-            for k in range(len(self.yvect)):
+            nvalues = len(self.yvect)
+            for k in range(nvalues):
                 mu = 0.0
-                sigma = np.sqrt(noiseSigma**2+self.yvect[k]**4)
+                sigma = np.sqrt(noiseSigma**2)#+self.yvect[k]**2) todo: add the poisson component
                 anoise[k] =  sigma
                 if addNoise:
                     #print("Adding Noise to spectrum".format()) 
-                    self.yvect[k] = self.yvect[k] + random.gauss(mu, sigma) 
+                    noise = random.gauss(mu, sigma)
+                    snr_rmsNoise += noise*noise
+                    self.yvect[k] = self.yvect[k] + noise
+            if addNoise:
+                snr_rmsNoise = np.sqrt(snr_rmsNoise/(nvalues-1))
+                snr = snr_meanFlux/snr_rmsNoise
+                print("SNR for the exported spectrum is: {}".format(snr))
         
                   
         a1 = self.xvect

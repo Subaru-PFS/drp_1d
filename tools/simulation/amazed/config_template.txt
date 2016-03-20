@@ -1,0 +1,11 @@
+input=__tmp_path__/tmp.spectrumlist
+lambdarange=
+linecatalog=__amazed_path__/linecatalogs/linecatalogamazedvacuum_B9D_LyaAbsSYMprofile.txt
+method=linemodel
+parameters=__amazed_path__/parameters/parameters.json
+redshiftrange=
+smooth=0
+output=__amazed_path__/output
+spectrumdir=__tmp_path__
+templatedir=__amazed_path__/templates/dumb
+thread-count=4

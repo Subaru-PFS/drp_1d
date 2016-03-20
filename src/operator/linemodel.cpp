@@ -603,9 +603,9 @@ void COperatorLineModel::storeGlobalModelResults( CDataStore &dataStore )
     Int32 nResults = m_savedModelSpectrumResults.size();
     if( nResults > m_savedModelFittingResults.size())
     {
+        Log.LogError( "Line Model, not as many model fitting results as model spectrum results, (nspc = %d, nfit = %d)",  m_savedModelSpectrumResults.size(), m_savedModelFittingResults.size());
         nResults = m_savedModelFittingResults.size();
     }
-    Log.LogError( "Line Model, not as many model fitting results as model spectrum results" );
 
     for(Int32 k=0; k<nResults; k++)
     {

@@ -535,8 +535,15 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
     if(m_fittingmethod=="fromfile")
     {
         CModelFittingResult result;
-        std::string linemodelFitResultsPath = "/home/aschmitt/code/python/simulation_perf_matrix_linemodel/amazed/linecatalogs/linemodelsolve.linemodel_fit_extrema_0.csv";
+        std::string linemodelFitResultsPath = "/home/aschmitt/gitlab/cpf-redshift/tools/simulation"; //this is the simulation folder absolute path !
+        linemodelFitResultsPath.append("/amazed/linecatalogs/linemodelsolve.linemodel_fit_extrema_0.csv");
+
+        Log.LogInfo("\nLineModel fitting from File: loading: %s", linemodelFitResultsPath.c_str());
         result.Load(linemodelFitResultsPath.c_str());
+        if(result.GetLineModelSolution().Amplitudes.size()<2)
+        {
+            Log.LogError( "\nLineModel fitting from File: unable to load from file: %s", linemodelFitResultsPath.c_str());
+        }
 
         for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
         {
