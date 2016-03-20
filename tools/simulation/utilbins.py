@@ -28,7 +28,6 @@ class UtilBins(object):
         print('{}: the z bins limits are: {}'.format(self.logTagStr, str(self.z_bins_limits)))
         
         self.mag_bins_limits = [20.0, 21.0, 22.0, 23.0, 24.0, 25.0, 26.0]
-        self.mag_bins_limits = [23.0, 24.0, 25.0, 26.0]
         self.n_mag_bins = len(self.mag_bins_limits)-1
         print('{}: the mag bins limits are: {}'.format(self.logTagStr, str(self.mag_bins_limits)))
         
@@ -146,7 +145,6 @@ class UtilBins(object):
             magmin = self.mag_bins_limits[imagFound]
             magmax = self.mag_bins_limits[imagFound+1]
             mag = random.random()*(magmax-magmin)+magmin
-            mag = 23.5
                         
             sfrmin = self.sfr_bins_limits[isfrFound]
             sfrmax = self.sfr_bins_limits[isfrFound+1]

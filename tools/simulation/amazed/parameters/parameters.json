@@ -4,8 +4,8 @@
         "12600.0"
     ],
     "redshiftRange": [
-        "0.0229066044068",
-        "0.0229066044068"
+        "7.7578674971",
+        "7.7578674971"
     ],
     "redshiftStep": "0.0001",
     "smoothWidth": "0",
@@ -28,8 +28,8 @@
             "continuumcomponent": "fromspectrum",
             "linewidthtype": "combined",
             "instrumentresolution": "2350",
-            "velocityemission": "223.103750793",
-            "velocityabsorption": "239.305068479",
+            "velocityemission": "341.683401687",
+            "velocityabsorption": "263.373083508",
             "continuumreestimation": "no",
             "rules": "balmer",
             "extremacount": "10",

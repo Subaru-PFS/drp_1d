@@ -24,7 +24,7 @@ import utilbins
 
 #parameters
 enablePlot = False
-n_count_per_bin = 10
+n_count_per_bin = 2
 lambda_obs_min = 3800.0
 lambda_obs_max = 12600.0
 

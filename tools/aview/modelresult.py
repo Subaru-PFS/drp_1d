@@ -127,7 +127,7 @@ class ModelResult(object):
         pp.show()
 
     def randomAmplitudes(self, coeffE=1.0, coeffA=0.5):
-        coeffE *= 1e-16 #coefficient additive and continuum independent, needs absolute value
+        coeffE *= 1e-17 #coefficient additive and continuum independent, needs absolute value
         
         # First get OII and Halpha in range +- 30% of the SFR coefficient value
         ampOII = coeffE*(0.7+random.random()*0.6)
