@@ -145,7 +145,7 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
     COperatorLineModel linemodel;
     auto  result = linemodel.Compute( dataStore,
 				      _spc,
-				      _spcContinuum,
+                      _spcContinuum,
 				      restraycatalog,
                       m_opt_linetypefilter,
                       m_opt_lineforcefilter,
@@ -167,8 +167,10 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
         //Log.LogInfo( "Failed to compute linemodel");
         return false;
     }else{
-        // Store results
+        // Store linemodel chisquare results
         dataStore.StoreScopedGlobalResult( scopeStr.c_str(), result );
+        //save linemodel fitting and spectrum-model results
+        linemodel.storeGlobalModelResults(dataStore);
     }
 
     return true;

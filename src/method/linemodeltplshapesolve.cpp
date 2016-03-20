@@ -103,6 +103,8 @@ Bool CLineModelTplshapeSolve::PopulateParameters( CDataStore& dataStore )
 std::shared_ptr<const CLineModelTplshapeSolveResult> CLineModelTplshapeSolve::Compute( CDataStore& dataStore,
 								       const CSpectrum& spc,
 								       const CSpectrum& spcWithoutCont,
+                                       const CTemplateCatalog& tplCatalog,
+                                       const TStringList& tplCategoryList,
 								       const CRayCatalog& restraycatalog,
 								       const TFloat64Range& lambdaRange,
 								       const TFloat64List& redshifts )
@@ -111,33 +113,6 @@ std::shared_ptr<const CLineModelTplshapeSolveResult> CLineModelTplshapeSolve::Co
     CDataStore::CAutoScope resultScope( dataStore, "linemodeltplshapesolve" );
 
     PopulateParameters( dataStore );
-    Solve( dataStore, spc, spcWithoutCont, restraycatalog, lambdaRange, redshifts);
-    return std::shared_ptr<const CLineModelTplshapeSolveResult>( new CLineModelTplshapeSolveResult() );
-}
-
-/**
- * \brief
- * Create a continuum object by subtracting spcWithoutCont from the spc.
- * Configure the opt_XXX variables from the dataStore scope parameters.
- * LogInfo the opt_XXX values.
- * Create a COperatorLineModel, call its Compute method. 
- * If that returned true, store results.
- **/
-Bool CLineModelTplshapeSolve::Solve( CDataStore& dataStore,
-			     const CSpectrum& spc,
-			     const CSpectrum& spcWithoutCont,
-			     const CRayCatalog& restraycatalog,
-                             const TFloat64Range& lambdaRange,
-			     const TFloat64List& redshifts )
-{
-    std::string scopeStr = "linemodel";
-
-    CSpectrum _spc = spc;
-    CSpectrum _spcContinuum = spc;
-    CSpectrumFluxAxis spcfluxAxis = _spcContinuum.GetFluxAxis();
-    spcfluxAxis.Subtract( spcWithoutCont.GetFluxAxis() );
-    CSpectrumFluxAxis& sfluxAxisPtr = _spcContinuum.GetFluxAxis();
-    sfluxAxisPtr = spcfluxAxis;
 
     //load the catalogs list from the files in the tplshape-catalogs folder : tplshapeCatalogDir
     namespace fs = boost::filesystem;
@@ -156,113 +131,111 @@ Bool CLineModelTplshapeSolve::Solve( CDataStore& dataStore,
     }
     Log.LogInfo( "Linemodel tplshape - Found %d tplshaped catalogs", tplshapeCatalogList.size());
 
-    //prepare the combined merit function
-    std::shared_ptr<CLineModelResult> resultCombined = std::shared_ptr<CLineModelResult>( new CLineModelResult() );
-
-    // Compute merit function for each tplshape_catalog
-    for(Int32 k=0; k<tplshapeCatalogList.size(); k++)
+    //loop on the templates
+    for( UInt32 i=0; i<tplCategoryList.size(); i++ )
     {
-        //get line catalog
-        CRayCatalog lineCatalog;
-        Bool rValue = lineCatalog.Load( tplshapeCatalogList[k].c_str() );
-        if( !rValue )
-        {
-            Log.LogInfo( "Failed to load tplshape catalog: %s", tplshapeCatalogList[k].c_str());
-            continue;
-        }
-        else
-        {
-            Log.LogInfo( "Loaded tplshape: %s", tplshapeCatalogList[k].c_str());
-        }
-        COperatorLineModel linemodel;
-        auto  result = linemodel.Compute( dataStore,
-                                          _spc,
-                                          _spcContinuum,
-                                          lineCatalog,
-                                          m_opt_linetypefilter,
-                                          m_opt_lineforcefilter,
-                                          lambdaRange,
-                                          redshifts,
-                                          m_opt_extremacount,
-                                          m_opt_fittingmethod,
-                                          m_opt_continuumcomponent,
-                                          m_opt_lineWidthType,
-                                          m_opt_resolution,
-                                          m_opt_velocity_emission,
-                                          m_opt_velocity_absorption,
-                                          m_opt_continuumreest,
-                                          m_opt_rules,
-                                          m_opt_velocityfit);
+        std::string category = tplCategoryList[i];
 
-        if( !result )
+        for( UInt32 j=0; j<tplCatalog.GetTemplateCount( category ); j++ )
         {
-            //Log.LogInfo( "Failed to compute linemodel");
-            return false;
-        }else{
-            auto resultPtr = std::dynamic_pointer_cast<const CLineModelResult>( result );
+            const CTemplate& tpl = tplCatalog.GetTemplate( category, j );
 
-            if(resultCombined->Redshifts.size()<1)
+            //find the linecatalog-tplshaped corresponding to the template name
+            Int32 kctlg = -1;
+            for(Int32 k=0; k<tplshapeCatalogList.size(); k++)
             {
-                Int32 nz = resultPtr->Redshifts.size();
-                resultCombined->ChiSquare.resize( nz );
-                resultCombined->Redshifts.resize( nz );
-                resultCombined->LineModelSolutions.resize( nz );
-
-                for( Int32 i=0; i<nz; i++ )
-                {
-                    resultCombined->ChiSquare[i] = resultPtr->ChiSquare[i];
-                    resultCombined->Redshifts[i] = resultPtr->Redshifts[i];
-                    resultCombined->LineModelSolutions[i] = resultPtr->LineModelSolutions[i];
+                std::string tplname = tpl.GetName();
+                std::string ctlgname = tplshapeCatalogList[k];
+                std::size_t foundstra = ctlgname.find(tplname.c_str());
+                if (foundstra==std::string::npos){
+                    continue;
                 }
+                kctlg = k;
+            }
 
-                resultCombined->ResizeExtremaResults(1);
-                resultCombined->Extrema[0] = resultPtr->Extrema[0];
-
+            if(kctlg<0)
+            {
+                Log.LogError( "Failed to match tpl with tplshape catalog: %s", tpl.GetName().c_str());
+                continue;
+            }
+            //get line catalog
+            CRayCatalog lineCatalog;
+            Bool rValue = lineCatalog.Load( tplshapeCatalogList[kctlg].c_str() );
+            if( !rValue )
+            {
+                Log.LogError( "Failed to load tplshape catalog: %s", tplshapeCatalogList[kctlg].c_str());
+                continue;
             }
             else
             {
-
-                Int32 n = resultCombined->Redshifts.size();
-                for( Int32 i=0; i<n; i++ )
-                {
-                    if( resultPtr->ChiSquare[i] < resultCombined->ChiSquare[i] )
-                    {
-                        resultCombined->ChiSquare[i] = resultPtr->ChiSquare[i];
-                        resultCombined->LineModelSolutions[i] = resultPtr->LineModelSolutions[i];
-                    }
-                }
-
-                //deal with the first extrema only, for now...
-                Int32 extremaIdx = 0;
-                Int32 solutionCombinedIdx=0;
-                for ( UInt32 i2=0; i2<resultCombined->LineModelSolutions.size(); i2++)
-                {
-                    if( resultCombined->Redshifts[i2]==resultCombined->Extrema[extremaIdx] )
-                    {
-                        solutionCombinedIdx = i2;
-                        break;
-                    }
-                }
-                Int32 solutionIdx=0;
-                for ( UInt32 i2=0; i2<resultPtr->LineModelSolutions.size(); i2++)
-                {
-                    if( resultPtr->Redshifts[i2]==resultPtr->Extrema[extremaIdx] )
-                    {
-                        solutionIdx = i2;
-                        break;
-                    }
-                }
-
-                if( resultPtr->ChiSquare[solutionIdx] < resultCombined->ChiSquare[solutionCombinedIdx] )
-                {
-                    resultCombined->Extrema[extremaIdx] = resultPtr->Extrema[extremaIdx];
-                }
+                Log.LogInfo( "Loaded tplshape: %s", tplshapeCatalogList[kctlg].c_str());
             }
+
+
+            Solve( dataStore, spc, spcWithoutCont, tpl, lineCatalog, lambdaRange, redshifts);
+            storeResult = true;
         }
     }
 
-    // Store results
-    dataStore.StoreScopedGlobalResult( scopeStr.c_str(), resultCombined );
+    return std::shared_ptr<const CLineModelTplshapeSolveResult>( new CLineModelTplshapeSolveResult() );
+}
+
+/**
+ * \brief
+ * Create a continuum object by subtracting spcWithoutCont from the spc.
+ * Configure the opt_XXX variables from the dataStore scope parameters.
+ * LogInfo the opt_XXX values.
+ * Create a COperatorLineModel, call its Compute method. 
+ * If that returned true, store results.
+ **/
+Bool CLineModelTplshapeSolve::Solve( CDataStore& dataStore,
+			     const CSpectrum& spc,
+                 const CSpectrum& spcWithoutCont,
+                 const CTemplate& tpl,
+                 const CRayCatalog& lineCatalog,
+                 const TFloat64Range& lambdaRange,
+			     const TFloat64List& redshifts )
+{
+    std::string scopeStr = "linemodel";
+
+    CSpectrum _spc = spc;
+    CSpectrum _spcContinuum = spc;
+    CSpectrumFluxAxis spcfluxAxis = _spcContinuum.GetFluxAxis();
+    spcfluxAxis.Subtract( spcWithoutCont.GetFluxAxis() );
+    CSpectrumFluxAxis& sfluxAxisPtr = _spcContinuum.GetFluxAxis();
+    sfluxAxisPtr = spcfluxAxis;
+
+    COperatorLineModel linemodel;
+    auto  result = linemodel.Compute( dataStore,
+                                      _spc,
+                                      _spcContinuum,
+                                      lineCatalog,
+                                      m_opt_linetypefilter,
+                                      m_opt_lineforcefilter,
+                                      lambdaRange,
+                                      redshifts,
+                                      m_opt_extremacount,
+                                      m_opt_fittingmethod,
+                                      m_opt_continuumcomponent,
+                                      m_opt_lineWidthType,
+                                      m_opt_resolution,
+                                      m_opt_velocity_emission,
+                                      m_opt_velocity_absorption,
+                                      m_opt_continuumreest,
+                                      m_opt_rules,
+                                      m_opt_velocityfit);
+
+    if( !result )
+    {
+        Log.LogInfo( "Failed to compute linemodeltplshape");
+        return false;
+    }else{
+        //save linemodel chisquare results
+        dataStore.StoreScopedPerTemplateResult( tpl, scopeStr.c_str(), result );
+        //save linemodel fitting and spectrum-model results
+        linemodel.storePerTemplateModelResults(dataStore, tpl);
+    }
+
 
     return true;
 }

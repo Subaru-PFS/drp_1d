@@ -38,7 +38,7 @@ private:
     Bool LineMatching( CProcessFlowContext& ctx );
     Bool LineMatching2( CProcessFlowContext& ctx );
     Bool LineModelSolve( CProcessFlowContext& ctx );
-    Bool LineModelTplshapeSolve( CProcessFlowContext& ctx );
+    Bool LineModelTplshapeSolve(CProcessFlowContext& ctx , const std::string &CategoryFilter = "all");
     Bool DecisionalTree7( CProcessFlowContext& ctx );
     Bool DecisionalTreeA( CProcessFlowContext& ctx );
     Bool DecisionalTreeB( CProcessFlowContext& ctx );

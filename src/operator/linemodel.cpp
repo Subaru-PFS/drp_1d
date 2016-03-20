@@ -6,8 +6,6 @@
 #include <epic/redshift/common/mask.h>
 #include <epic/redshift/operator/chisquareresult.h>
 #include <epic/redshift/extremum/extremum.h>
-#include <epic/redshift/linemodel/modelspectrumresult.h>
-#include <epic/redshift/linemodel/modelfittingresult.h>
 #include <epic/redshift/spectrum/io/fitswriter.h>
 #include <epic/core/log/log.h>
 
@@ -60,24 +58,24 @@ COperatorLineModel::~COperatorLineModel()
  * Filter out peaks outside intervals centered on the refined extrema.
  * Save the results.
  **/
-std::shared_ptr<COperatorResult> COperatorLineModel::Compute( CDataStore &dataStore,
-							      const CSpectrum& spectrum,
-							      const CSpectrum& spectrumContinuum,
-							      const CRayCatalog& restraycatalog,
-							      const std::string& opt_lineTypeFilter,
-							      const std::string& opt_lineForceFilter,
-							      const TFloat64Range& lambdaRange,
-							      const TFloat64List& redshifts,
-							      const Int32 opt_extremacount,
-							      const std::string& opt_fittingmethod,
-							      const std::string& opt_continuumcomponent,
-							      const std::string& opt_lineWidthType,
-							      const Float64 opt_resolution,
-							      const Float64 opt_velocityEmission,
-							      const Float64 opt_velocityAbsorption,
-							      const std::string& opt_continuumreest,
-							      const std::string& opt_rules,
-							      const std::string& opt_velocityFitting)
+std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataStore,
+                                  const CSpectrum& spectrum,
+                                  const CSpectrum& spectrumContinuum,
+                                  const CRayCatalog& restraycatalog,
+                                  const std::string& opt_lineTypeFilter,
+                                  const std::string& opt_lineForceFilter,
+                                  const TFloat64Range& lambdaRange,
+                                  const TFloat64List& redshifts,
+                                  const Int32 opt_extremacount,
+                                  const std::string& opt_fittingmethod,
+                                  const std::string& opt_continuumcomponent,
+                                  const std::string& opt_lineWidthType,
+                                  const Float64 opt_resolution,
+                                  const Float64 opt_velocityEmission,
+                                  const Float64 opt_velocityAbsorption,
+                                  const std::string& opt_continuumreest,
+                                  const std::string& opt_rules,
+                                  const std::string& opt_velocityFitting)
 {
     if( spectrum.GetSpectralAxis().IsInLinearScale()==false )
     {
@@ -455,6 +453,9 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute( CDataStore &dataSt
     Int32 end = spectrum.GetSpectralAxis().GetIndexAtWaveLength(lambdaRange.GetEnd());
     Int32 nsamples = end - start + 1;
     Int32 savedModels = 0;
+    m_savedModelSpectrumResults.clear();
+    m_savedModelFittingResults.clear();
+
     for( Int32 i=0; i<extremumCount; i++ )
     {
         Float64 z = extremumListOrdered[i].X;
@@ -477,7 +478,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute( CDataStore &dataSt
 
         // reestimate the model (eventually with continuum reestimation) on the extrema selected
         if(opt_continuumreest == "always" || opt_continuumreest == "onlyextrema"){
-            contreest_iterations = 1;
+            contreest_iterations = 10;
         }else{
             contreest_iterations  = 0;
         }
@@ -506,17 +507,36 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute( CDataStore &dataSt
         m = result->ChiSquare[idx];
 
         //save the model result
-        static Int32 maxModelSave = 5;
-        if(savedModels<maxModelSave /*&& isLocalExtrema[i]*/){
+        static Int32 maxModelSave = 3;
+        if( savedModels<maxModelSave /*&& isLocalExtrema[i]*/)
+        {
             // CModelSpectrumResult
             std::shared_ptr<CModelSpectrumResult>  resultspcmodel = std::shared_ptr<CModelSpectrumResult>( new CModelSpectrumResult(model.GetModelSpectrum()) );
-            std::string fname_spc = (boost::format("linemodel_spc_extrema_%1%") % savedModels).str();
-            dataStore.StoreScopedGlobalResult( fname_spc.c_str(), resultspcmodel );
+            m_savedModelSpectrumResults.push_back(resultspcmodel);
+
+//            std::string fname_spc = (boost::format("linemodel_spc_extrema_%1%") % savedModels).str();
+//            if ( tpl==NULL )
+//            {
+//                dataStore.StoreScopedGlobalResult( fname_spc.c_str(), resultspcmodel );
+//            }else
+//            {
+//                dataStore.StoreScopedPerTemplateResult( tpl, fname_spc.c_str(), resultspcmodel );
+//            }
+
 
             // CModelFittingResult
             std::shared_ptr<CModelFittingResult>  resultfitmodel = std::shared_ptr<CModelFittingResult>( new CModelFittingResult(result->LineModelSolutions[idx], result->Redshifts[idx], result->ChiSquare[idx], result->restRayList, model.GetVelocityEmission(), model.GetVelocityAbsorption()) );
-            std::string fname_fit = (boost::format("linemodel_fit_extrema_%1%") % savedModels).str();
-            dataStore.StoreScopedGlobalResult( fname_fit.c_str(), resultfitmodel );
+            m_savedModelFittingResults.push_back(resultfitmodel);
+
+//            std::string fname_fit = (boost::format("linemodel_fit_extrema_%1%") % savedModels).str();
+//            if ( tpl==NULL )
+//            {
+//                dataStore.StoreScopedGlobalResult( fname_fit.c_str(), resultfitmodel );
+//            }
+//            else
+//            {
+//                dataStore.StoreScopedPerTemplateResult( tpl, fname_fit.c_str(), resultfitmodel );
+//            }
             savedModels++;
         }
 
@@ -571,6 +591,54 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute( CDataStore &dataSt
     }
     //*/
     return result;
+
+}
+
+///
+/// \brief COperatorLineModel::storeGlobalModelResults
+/// stores the linemodel results as global results in the datastore
+///
+void COperatorLineModel::storeGlobalModelResults( CDataStore &dataStore )
+{
+    Int32 nResults = m_savedModelSpectrumResults.size();
+    if( nResults > m_savedModelFittingResults.size())
+    {
+        nResults = m_savedModelFittingResults.size();
+    }
+    Log.LogError( "Line Model, not as many model fitting results as model spectrum results" );
+
+    for(Int32 k=0; k<nResults; k++)
+    {
+        std::string fname_spc = (boost::format("linemodel_spc_extrema_%1%") % k).str();
+        dataStore.StoreScopedGlobalResult( fname_spc.c_str(), m_savedModelSpectrumResults[k] );
+
+        std::string fname_fit = (boost::format("linemodel_fit_extrema_%1%") % k).str();
+        dataStore.StoreScopedGlobalResult( fname_fit.c_str(), m_savedModelFittingResults[k] );
+    }
+
+}
+
+///
+/// \brief COperatorLineModel::storePerTemplateModelResults
+/// stores the linemodel results as per template results in the datastore
+///
+void COperatorLineModel::storePerTemplateModelResults( CDataStore &dataStore, const CTemplate& tpl )
+{
+    Int32 nResults = m_savedModelSpectrumResults.size();
+    if( nResults > m_savedModelFittingResults.size())
+    {
+        Log.LogError( "Line Model, not as many model fitting results as model spectrum results, (nspc = %d, nfit = %d)",  m_savedModelSpectrumResults.size(), m_savedModelFittingResults.size());
+        nResults = m_savedModelFittingResults.size();
+    }
+
+    for(Int32 k=0; k<nResults; k++)
+    {
+        std::string fname_spc = (boost::format("linemodel_spc_extrema_%1%") % k).str();
+        dataStore.StoreScopedPerTemplateResult(  tpl, fname_spc.c_str(), m_savedModelSpectrumResults[k] );
+
+        std::string fname_fit = (boost::format("linemodel_fit_extrema_%1%") % k).str();
+        dataStore.StoreScopedPerTemplateResult(  tpl, fname_fit.c_str(), m_savedModelFittingResults[k] );
+    }
 
 }
 

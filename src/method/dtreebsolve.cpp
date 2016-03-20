@@ -164,6 +164,8 @@ Bool COperatorDTreeBSolve::Solve(CDataStore &dataStore, const CSpectrum &spc, co
     }else{
         // Store results
         dataStore.StoreScopedGlobalResult( "linemodel", result );
+        //save linemodel fitting and spectrum-model results
+        linemodel.storeGlobalModelResults(dataStore);
     }
 
     //*

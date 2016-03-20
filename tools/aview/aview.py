@@ -79,16 +79,8 @@ def plotRes(resDir, spcName, tplpath, redshift, iextremaredshift, diffthres, fai
             idxExtrema = int(0)
         print('using idxExtrema: {}'.format(idxExtrema))
             
-            
-        method = s.getConfigVal('method')
-        if method == "linemodel":
-            name = "linemodelsolve.linemodel_spc_extrema_{}.csv".format(idxExtrema)
-        if method == "linemodeltplshape":
-            name = "linemodeltplshapesolve.linemodel_spc_extrema_{}.csv".format(idxExtrema)
-        elif method == "decisionaltreeb" or method.lower() == "amazed0_2":
-            name = "dtreeBsolve.linemodel_spc_extrema_{}.csv".format(idxExtrema)
 
-        tplpath = os.path.join(path,name)
+        tplpath = s.getAutoTplFullPath(spcName)
         print("full extrema model path: {}".format(tplpath))
         if not os.path.exists(tplpath):
             print("reset tplpath = {}".format(""))

@@ -6,6 +6,8 @@
 #include <epic/redshift/operator/operator.h>
 #include <epic/redshift/operator/linemodelresult.h>
 #include <epic/redshift/linemodel/elementlist.h>
+#include <epic/redshift/linemodel/modelspectrumresult.h>
+#include <epic/redshift/linemodel/modelfittingresult.h>
 #include <epic/redshift/common/mask.h>
 
 #include <epic/redshift/spectrum/spectrum.h>
@@ -25,9 +27,27 @@ public:
     COperatorLineModel();
     virtual ~COperatorLineModel();
 
-    std::shared_ptr<COperatorResult> Compute(CDataStore &dataStore, const CSpectrum& spectrum, const CSpectrum &spectrumContinuum, const CRayCatalog& restraycatalog,
-                    const std::string &opt_lineTypeFilter, const std::string &opt_lineForceFilter,
-                                    const TFloat64Range& lambdaRange, const TFloat64List& redshifts , const Int32 opt_extremacount, const std::string &opt_fittingmethod, const std::string &opt_continuumcomponent, const std::string& opt_lineWidthType, const Float64 opt_resolution, const Float64 opt_velocityEmission, const Float64 opt_velocityAbsorption, const std::string &opt_continuumreest="no", const std::string &opt_rules="all", const std::string &opt_velocityFitting="no");
+    std::shared_ptr<COperatorResult> Compute(CDataStore &dataStore,
+                                              const CSpectrum& spectrum,
+                                              const CSpectrum &spectrumContinuum,
+                                              const CRayCatalog& restraycatalog,
+                                              const std::string &opt_lineTypeFilter,
+                                              const std::string &opt_lineForceFilter,
+                                              const TFloat64Range& lambdaRange,
+                                              const TFloat64List& redshifts ,
+                                              const Int32 opt_extremacount,
+                                              const std::string &opt_fittingmethod,
+                                              const std::string &opt_continuumcomponent,
+                                              const std::string& opt_lineWidthType,
+                                              const Float64 opt_resolution,
+                                              const Float64 opt_velocityEmission,
+                                              const Float64 opt_velocityAbsorption,
+                                              const std::string &opt_continuumreest="no",
+                                              const std::string &opt_rules="all",
+                                              const std::string &opt_velocityFitting="no");
+
+    void storeGlobalModelResults( CDataStore &dataStore );
+    void storePerTemplateModelResults( CDataStore &dataStore, const CTemplate& tpl );
 
 private:
 
@@ -41,6 +61,9 @@ private:
     Float64 PrecomputeLogErr(const CSpectrum& spectrum);
 
     Float64 mSumLogErr;
+
+    std::vector<std::shared_ptr<CModelSpectrumResult>  > m_savedModelSpectrumResults;
+    std::vector<std::shared_ptr<CModelFittingResult>  > m_savedModelFittingResults;
 };
 
 

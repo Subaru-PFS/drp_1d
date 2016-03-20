@@ -33,12 +33,21 @@ Void CLineModelTplshapeSolveResult::Save( const CDataStore& store, std::ostream&
     Float64 merit;
     std::string tplName;
 
-    GetBestRedshift( store, redshift, merit );
+    GetBestRedshift( store, redshift, merit, tplName);
 
-    stream <<  "#Redshifts\tMerit\tTemplate"<< std::endl;
+    stream <<  "#Redshifts\tMerit\tTemplateShape"<< std::endl;
     stream << redshift << "\t"
 	   << merit << "\t"
 	   << tplName << std::endl;
+
+
+
+    stream << std::endl;
+    stream << std::endl;
+    std::string detailStr;
+    GetBestRedshiftPerTemplateString( store, detailStr);
+
+    stream << detailStr.c_str();
 }
 
 /**
@@ -50,7 +59,7 @@ Void CLineModelTplshapeSolveResult::SaveLine( const CDataStore& store, std::ostr
     Float64 merit;
     std::string tplName;
 
-    GetBestRedshift( store, redshift, merit );
+    GetBestRedshift( store, redshift, merit, tplName);
 
     stream  << store.GetSpectrumName() << "\t"
 	    << redshift << "\t"
@@ -67,65 +76,80 @@ Void CLineModelTplshapeSolveResult::SaveLine( const CDataStore& store, std::ostr
  *   if this entry is less than the temporary merit, update the temporary merit and redshift values with the result stored in this entry.
  * Set the redshift and merit referenced arguments with the best values found.
  **/
-Bool CLineModelTplshapeSolveResult::GetBestRedshift( const CDataStore& store, Float64& redshift, Float64& merit ) const
+Bool CLineModelTplshapeSolveResult::GetBestRedshift( const CDataStore& store, Float64& redshift, Float64& merit , std::string& tplName) const
 {
     std::string scope = store.GetScope( *this ) + "linemodeltplshapesolve.linemodel";
-    auto results = store.GetGlobalResult( scope.c_str() );
+    TOperatorResultMap meritResults = store.GetPerTemplateResult(scope.c_str());
 
-    Float64 tmpMerit = DBL_MAX;
+    Float64 tmpMerit = DBL_MAX ;
     Float64 tmpRedshift = 0.0;
+    std::string tmpTplName;
 
-    if( !results.expired() )
-      {
-        auto lineModelResult = std::dynamic_pointer_cast<const CLineModelResult>( results.lock() );
-        for( Int32 i=0; i<lineModelResult->ChiSquare.size(); i++ )
-	  {
-            if( lineModelResult->ChiSquare[i] < tmpMerit )
-	      {
-                tmpMerit = lineModelResult->ChiSquare[i];
-                tmpRedshift = lineModelResult->Redshifts[i];
-	      }
-	  }
-      }
-
-    redshift = tmpRedshift;
-    merit = tmpMerit;
-    return true;
-}
-
-/**
- * \brief Searches all the results for the first one with the largest value for the LogArea, and uses it to update the argument references.
- * Construct the scope string for the Linemodel results.
- * Set temporary variables with minimum merit and 0 redshift.
- * If the results are not expired, lock the mutex, and for each entry in the result LogArea:
- *   if this entry is larger than the temporary merit, update the temporary merit and redshift values with the results stored in this entry.
- * Set the redshift and merit referenced arguments with the best values found.
- **/
-Bool CLineModelTplshapeSolveResult::GetBestRedshiftLogArea( const CDataStore& store, Float64& redshift, Float64& merit ) const
-{
-    std::string scope = store.GetScope( *this ) + "linemodelsolve.linemodel";
-    auto results = store.GetGlobalResult( scope.c_str() );
-
-    Float64 tmpMerit = -DBL_MAX ;
-    Float64 tmpRedshift = 0.0;
-
-    if(!results.expired())
-      {
-        auto lineModelResult = std::dynamic_pointer_cast<const CLineModelResult>( results.lock() );
-        for( Int32 i=0; i<lineModelResult->LogArea.size(); i++ )
-	  {
-            if( lineModelResult->LogArea[i] > tmpMerit )
+    for( TOperatorResultMap::const_iterator it = meritResults.begin(); it != meritResults.end(); it++ )
+    {
+        auto meritResult = std::dynamic_pointer_cast<const CLineModelResult>( (*it).second );
+        for( Int32 i=0; i<meritResult->ChiSquare.size(); i++ )
+        {
+            if( meritResult->ChiSquare[i] < tmpMerit && meritResult->Status[i] == COperator::nStatus_OK )
             {
-                tmpMerit = lineModelResult->LogArea[i];
-                tmpRedshift = lineModelResult->LogAreaCorrectedExtrema[i];
+                tmpMerit = meritResult->ChiSquare[i];
+                tmpRedshift = meritResult->Redshifts[i];
+                tmpTplName = (*it).first;
             }
-	  }
-      }
+        }
+    }
 
-    redshift = tmpRedshift;
-    merit = tmpMerit;
-    return true;
+    if( tmpMerit < DBL_MAX )
+    {
+        redshift = tmpRedshift;
+        merit = tmpMerit;
+        tplName = tmpTplName;
+        return true;
+    }
+
+    return false;
 }
 
+Bool CLineModelTplshapeSolveResult::GetBestRedshiftPerTemplateString( const CDataStore& store, std::string& output ) const
+{
+    std::string scope = store.GetScope( *this ) + "linemodeltplshapesolve.linemodel";
+    TOperatorResultMap meritResults = store.GetPerTemplateResult(scope.c_str());
+
+
+    for( TOperatorResultMap::const_iterator it = meritResults.begin(); it != meritResults.end(); it++ )
+    {
+        Float64 tmpMerit = DBL_MAX ;
+        Float64 tmpRedshift = 0.0;
+        std::string tmpTplName;
+
+        auto meritResult = std::dynamic_pointer_cast<const CLineModelResult>( (*it).second );
+        for( Int32 i=0; i<meritResult->ChiSquare.size(); i++ )
+        {
+            if( meritResult->ChiSquare[i] < tmpMerit && meritResult->Status[i] == COperator::nStatus_OK )
+            {
+                tmpMerit = meritResult->ChiSquare[i];
+                tmpRedshift = meritResult->Redshifts[i];
+                tmpTplName = (*it).first;
+            }
+        }
+
+
+
+        if( tmpMerit < DBL_MAX )
+        {
+            char tmpChar[256];
+            sprintf(tmpChar, "%f\t%f\t%s\n", tmpRedshift, tmpMerit, tmpTplName.c_str());
+            output.append(tmpChar);
+        }else{
+            char tmpChar[256];
+            sprintf(tmpChar, "-1\t-1\t%s\n", tmpTplName.c_str());
+            output.append(tmpChar);
+        }
+    }
+
+
+    return true;
+
+}
 
 

@@ -270,6 +270,30 @@ class ResParser(object):
         f.close()
         return strVal
         
+    def getAutoTplFullPath(self, spcnametag, idxExtrema=0):
+        """
+        """ 
+        if os.path.splitext(spcnametag)[1].lower()==".fits":
+            spcnametag = os.path.splitext(spcnametag)[0]
+        method = self.getConfigVal('method')
+        print("method found in config is: {}".format(method))
+        path = os.path.join(self.respath, spcnametag)
+
+        tplpath = ""
+        if method == "linemodel":
+            name = "linemodelsolve.linemodel_spc_extrema_{}.csv".format(idxExtrema)
+            tplpath = os.path.join(path,name)
+        if method == "linemodeltplshape":
+            tplnametag = self.getRedshiftTpl(spcnametag)
+            pathTplChi = os.path.join(path, tplnametag)
+            name = "linemodeltplshapesolve.linemodel_spc_extrema_{}.csv".format(idxExtrema) 
+            tplpath = os.path.join(pathTplChi,name)
+        elif method == "decisionaltreeb" or method.lower() == "amazed0_2":
+            name = "dtreeBsolve.linemodel_spc_extrema_{}.csv".format(idxExtrema)
+            tplpath = os.path.join(path,name)
+            
+        return tplpath
+        
     def getTplFullPath(self, tplnametag):
         """
         """
@@ -410,8 +434,11 @@ class ResParser(object):
             chiname.append(name)
             
         elif method == "linemodeltplshape":
+            tplnametag = self.getRedshiftTpl(spcnametag)
+            pathTplChi = os.path.join(path, tplnametag)
+            
             name = "linemodeltplshapesolve.linemodel.csv"  
-            chipath.append(os.path.join(path,name))
+            chipath.append(os.path.join(pathTplChi,name))
             chiname.append(name)
             
         elif method == "decisionaltreeb" or method.lower() == "amazed0_2":
