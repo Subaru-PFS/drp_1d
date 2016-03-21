@@ -166,6 +166,7 @@ class ResultList(object):
             filepath = s.getChi2FullPath(spcName, os.path.basename(tplpaths[a]), chi2Type)
             if not os.path.exists(filepath):
                 print("Problem while retrieving chi2 filepath..")
+                continue
             else:
                 print("using Chi2 file path : ".format(filepath))
             chi2 = chisq.ResultChisquare(filepath)

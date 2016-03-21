@@ -91,7 +91,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
     TFloat64List largeGridRedshifts;
     //*
     if(enableFastFitLargeGrid==1){
-        Log.LogInfo("Line Model, Fast Fit Large Grid enabled");
+        //Log.LogInfo("Line Model, Fast Fit Large Grid enabled");
         //calculate on a wider grid, defined by a minimum step
         Float64 dz_thres = 1e-3;
         std::vector<Int32> removed_inds;
@@ -117,6 +117,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
                 largeGridRedshifts.push_back(sortedRedshifts[i]);
             }
         }
+        Log.LogInfo( "Linemodel: FastFitLargeGrid enabled: %d redshifts will be calculated on the large grid (%d initially)", largeGridRedshifts.size(), sortedRedshifts.size());
     }
 
 
@@ -184,6 +185,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
             result->LineModelSolutions[i] = result->LineModelSolutions[i-1];
         }
     }
+    Log.LogInfo( "Linemodel: main z loop done");
 
     // extrema
     Int32 extremumCount = opt_extremacount;
@@ -207,6 +209,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
             return NULL;
         }
 
+        Log.LogInfo( "Linemodel: found %d extrema", extremumList.size());
     }
     /*
     // Refine Extremum with a second maximum search around the z candidates:
@@ -514,29 +517,10 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
             std::shared_ptr<CModelSpectrumResult>  resultspcmodel = std::shared_ptr<CModelSpectrumResult>( new CModelSpectrumResult(model.GetModelSpectrum()) );
             m_savedModelSpectrumResults.push_back(resultspcmodel);
 
-//            std::string fname_spc = (boost::format("linemodel_spc_extrema_%1%") % savedModels).str();
-//            if ( tpl==NULL )
-//            {
-//                dataStore.StoreScopedGlobalResult( fname_spc.c_str(), resultspcmodel );
-//            }else
-//            {
-//                dataStore.StoreScopedPerTemplateResult( tpl, fname_spc.c_str(), resultspcmodel );
-//            }
-
-
             // CModelFittingResult
             std::shared_ptr<CModelFittingResult>  resultfitmodel = std::shared_ptr<CModelFittingResult>( new CModelFittingResult(result->LineModelSolutions[idx], result->Redshifts[idx], result->ChiSquare[idx], result->restRayList, model.GetVelocityEmission(), model.GetVelocityAbsorption()) );
             m_savedModelFittingResults.push_back(resultfitmodel);
 
-//            std::string fname_fit = (boost::format("linemodel_fit_extrema_%1%") % savedModels).str();
-//            if ( tpl==NULL )
-//            {
-//                dataStore.StoreScopedGlobalResult( fname_fit.c_str(), resultfitmodel );
-//            }
-//            else
-//            {
-//                dataStore.StoreScopedPerTemplateResult( tpl, fname_fit.c_str(), resultfitmodel );
-//            }
             savedModels++;
         }
 

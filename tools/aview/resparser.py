@@ -34,8 +34,8 @@ class ResParser(object):
         self.chisquarerelpath = "dtreeBsolve.chisquare2solve.chisquare.csv" 
         self.chisquarerelpath = "chisquare2solve.chisquare.csv" 
 
-        self.chisquarencrelpath = "dtreeBsolve.chisquare2solve.chisquare_nocontinuum.csv" 
-        #self.chisquarencrelpath = "chisquare2solve.chisquare_nocontinuum.csv" 
+        #self.chisquarencrelpath = "dtreeBsolve.chisquare2solve.chisquare_nocontinuum.csv" 
+        self.chisquarencrelpath = "chisquare2solve.chisquare_nocontinuum.csv" 
 
         self.chisquarecrelpath = "dtreeBsolve.chisquare2solve.chisquare_continuum.csv"   
         self.corrrelpath = "correlationsolve.correlation.csv"    

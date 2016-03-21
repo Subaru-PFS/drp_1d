@@ -30,7 +30,9 @@ class Catalog(object):
         self.linegroup = -1
         self.linenominalamp = -1
         
-        self.conversion = ""#"toAir" #"toVacuum"#"toAir"
+        #self.conversion = "toAir" #"toVacuum"#"toAir"
+        self.conversion = ""
+        
         self.load()
         
     def load(self):
@@ -176,10 +178,14 @@ class Catalog(object):
             #EUCLID
             obs_lambda_min = 12500.0
             obs_lambda_max = 17500.0
-        else:        
+        if 0:        
             #PFS
             obs_lambda_min = 3800.0
             obs_lambda_max = 12600.0
+        if 1:        
+            #PFS
+            obs_lambda_min = 3600.0
+            obs_lambda_max = 9400.0
 
         filter_type = "E"
         filter_force = -1
