@@ -83,55 +83,56 @@ CLineModelElementList::CLineModelElementList( const CSpectrum& spectrum,
     const Float64* error = spectrumFluxAxis.GetError();
     m_ErrorNoContinuum = m_spcFluxAxisNoContinuum.GetError();
     Float64* errorSpc = m_SpcFluxAxis.GetError();
-  Float64* errorSpcContinuum = m_SpcContinuumFluxAxis.GetError();
-  // sets the error vectors
-  for( UInt32 i=0; i<spectrumSampleCount; i++ )
+    Float64* errorSpcContinuum = m_SpcContinuumFluxAxis.GetError();
+    // sets the error vectors
+    for( UInt32 i=0; i<spectrumSampleCount; i++ )
     {
-      m_ErrorNoContinuum[i] = error[i];
-      errorSpc[i] = error[i];
-      errorSpcContinuum[i] = error[i];
+        m_ErrorNoContinuum[i] = error[i];
+        errorSpc[i] = error[i];
+        errorSpcContinuum[i] = error[i];
     }
-  
-  if( m_ContinuumComponent=="nocontinuum" )
+
+    if( m_ContinuumComponent=="nocontinuum" )
     {
-      //the continuum is set to zero and the observed spectrum is the spectrum without continuum
-      for( UInt32 i=0; i<modelFluxAxis.GetSamplesCount(); i++ )
-	{
-	  modelFluxAxis[i] = 0.0;
-	  m_ContinuumFluxAxis[i] = 0.0;
-	  m_spcFluxAxisNoContinuum[i] = spectrumFluxAxis[i]-m_SpcContinuumFluxAxis[i];
-	  m_SpcFluxAxis[i] = m_spcFluxAxisNoContinuum[i];
-	}
+        //the continuum is set to zero and the observed spectrum is the spectrum without continuum
+        for( UInt32 i=0; i<modelFluxAxis.GetSamplesCount(); i++ )
+        {
+            modelFluxAxis[i] = 0.0;
+            m_ContinuumFluxAxis[i] = 0.0;
+            m_spcFluxAxisNoContinuum[i] = spectrumFluxAxis[i]-m_SpcContinuumFluxAxis[i];
+            m_SpcFluxAxis[i] = m_spcFluxAxisNoContinuum[i];
+        }
     }
-  if( m_ContinuumComponent == "fromspectrum" )
+    if( m_ContinuumComponent == "fromspectrum" )
     {
-      //the continuum is set to the SpcContinuum and the observed spectrum is the raw spectrum
-      CSpectrumFluxAxis& modelFluxAxis = m_SpectrumModel->GetFluxAxis();
-      for(UInt32 i=0; i<modelFluxAxis.GetSamplesCount(); i++)
-	{
-	  m_ContinuumFluxAxis[i] = m_SpcContinuumFluxAxis[i];
-	  m_spcFluxAxisNoContinuum[i] = spectrumFluxAxis[i]-m_SpcContinuumFluxAxis[i];
-	  
-	  modelFluxAxis[i] = m_ContinuumFluxAxis[i];
-	  m_SpcFluxAxis[i] = spectrumFluxAxis[i];
-	}
+        //the continuum is set to the SpcContinuum and the observed spectrum is the raw spectrum
+        CSpectrumFluxAxis& modelFluxAxis = m_SpectrumModel->GetFluxAxis();
+        for(UInt32 i=0; i<modelFluxAxis.GetSamplesCount(); i++)
+        {
+            m_ContinuumFluxAxis[i] = m_SpcContinuumFluxAxis[i];
+            m_spcFluxAxisNoContinuum[i] = spectrumFluxAxis[i]-m_SpcContinuumFluxAxis[i];
+
+            modelFluxAxis[i] = m_ContinuumFluxAxis[i];
+            m_SpcFluxAxis[i] = spectrumFluxAxis[i];
+        }
     }
-  m_precomputedFineGridContinuumFlux = NULL;
-  
-  if ( false )// Debug only: export continuum.
+    m_precomputedFineGridContinuumFlux = NULL;
+
+    if ( false )// Debug only: export continuum.
     {
-      FILE* fspc = fopen( "lm_continuum_dbg.txt", "w+" );
-      Float64 coeffSaveSpc = 1e16;
-      for(UInt32 i=0; i<spectrumSampleCount; i++)
-	{
-	  fprintf( fspc, "%f %f %f\n", m_SpectrumModel->GetSpectralAxis()[i], (m_SpcFluxAxis[i])*coeffSaveSpc, (m_ContinuumFluxAxis[i])*coeffSaveSpc);
-	}
-      fclose( fspc );
+        FILE* fspc = fopen( "lm_continuum_dbg.txt", "w+" );
+        Float64 coeffSaveSpc = 1e16;
+        for(UInt32 i=0; i<spectrumSampleCount; i++)
+        {
+            fprintf( fspc, "%f %f %f\n", m_SpectrumModel->GetSpectralAxis()[i], (m_SpcFluxAxis[i])*coeffSaveSpc, (m_ContinuumFluxAxis[i])*coeffSaveSpc);
+        }
+        fclose( fspc );
     }
-  // "New style" rules initialization:
-  m_Regulament = new CRegulament ( );
-  m_Regulament->CreateRulesFromJSONFiles( );
-  m_Regulament->EnableRulesAccordingToParameters ( m_rulesoption );
+
+    // "New style" rules initialization:
+    m_Regulament = new CRegulament ( );
+    m_Regulament->CreateRulesFromJSONFiles( );
+    m_Regulament->EnableRulesAccordingToParameters ( m_rulesoption );
 }
 
 /**
@@ -1802,12 +1803,12 @@ Float64 CLineModelElementList::getLeastSquareMerit(const TFloat64Range& lambdaRa
         numDevs++;
         diff = (Yspc[j] - Ymodel[j]);
         fit += (diff*diff) / (m_ErrorNoContinuum[j]*m_ErrorNoContinuum[j]);
-	if ( 1E6 * diff < m_ErrorNoContinuum[j] )
-	  {
-	    Log.LogDebug( "Warning: noise is at least 6 orders greater than the residue!" );
-	    Log.LogDebug( "CLineModelElementList::getLeastSquareMerit diff = %f", diff );
-	    Log.LogDebug( "CLineModelElementList::getLeastSquareMerit m_ErrorNoContinuum[%d] = %f", j, m_ErrorNoContinuum[j] );
-	  }
+//        if ( 1E6 * diff < m_ErrorNoContinuum[j] )
+//        {
+//            Log.LogDebug( "Warning: noise is at least 6 orders greater than the residue!" );
+//            Log.LogDebug( "CLineModelElementList::getLeastSquareMerit diff = %f", diff );
+//            Log.LogDebug( "CLineModelElementList::getLeastSquareMerit m_ErrorNoContinuum[%d] = %f", j, m_ErrorNoContinuum[j] );
+//        }
     }
     Log.LogDebug( "CLineModelElementList::getLeastSquareMerit fit = %f", fit );
     return fit;

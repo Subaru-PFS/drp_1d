@@ -769,6 +769,7 @@ def StartFromCommandLine( argv ) :
     if( len( args ) == 0 ) :
         print('using full path: {0}'.format(options.spcPath))
         s = Spectrum(options.spcPath, options.spcType)
+        #s.applyRedshift(0.25)
         
         
         if options.export == "yes":
