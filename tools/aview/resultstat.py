@@ -146,7 +146,7 @@ class ResultList(object):
         redshifts = [redshiftsUnsorted[b] for b in sortId]
         return redshifts
     
-    def getZCandidatesFromAmazedChi2Extrema(self, indice=0, chi2Type = "raw", nextrema = 5):
+    def getZCandidatesFromAmazedChi2Extrema(self, indice=0, chi2Type = "raw", nextrema = 5, enableZrangePerTpl=False):
         redshiftslist = []
         meritslist = []        
         spcName = self.list[indice].name
@@ -165,18 +165,28 @@ class ResultList(object):
             #filepath = s.getChi2FullPath(spcName, os.path.basename(tplpaths[a]), "raw")
             filepath = s.getChi2FullPath(spcName, os.path.basename(tplpaths[a]), chi2Type)
             if not os.path.exists(filepath):
-                print("Problem while retrieving chi2 filepath..")
+                print("Problem while retrieving chi2 filepath.. using: {}".format(filepath))
                 continue
             else:
                 print("using Chi2 file path : ".format(filepath))
             chi2 = chisq.ResultChisquare(filepath)
             
-            redshiftstpl = chi2.amazed_extrema
+            if not enableZrangePerTpl:
+                redshiftstpl = chi2.amazed_extrema
+                
+                if len(redshiftstpl)<nextremaPerTpl:
+                    print("number of amazed_extrema found is too small = n={}, vs nextrema={}".format(len(redshiftstpl), nextremaPerTpl))
+                    return [-1],[-1]
+            else:
+                tpltag = os.path.basename(tplpaths[a])
+                zrange = self.getZrangeForTemplate(tpltag)
+                redshiftstpl = [a for a in chi2.amazed_extrema if a>=zrange[0] and a<= zrange[1]]
+                if len(redshiftstpl)<nextremaPerTpl:
+                    print("number of amazed_extrema found is too small = n={}, vs nextrema={}".format(len(redshiftstpl), nextremaPerTpl))
+                    continue
             print("amazed_extrema found = {}".format(redshiftstpl))
             
-            if len(redshiftstpl)<nextremaPerTpl:
-                print("number of amazed_extrema found is too small = n={}, vs nextrema={}".format(len(redshiftstpl), nextremaPerTpl))
-                return [-1],[-1]
+            
             meritstpl = []
             npx = np.copy(chi2.xvect)
             for b in range(nextremaPerTpl):
@@ -206,7 +216,9 @@ class ResultList(object):
             else:
                 redshifts = [redshiftsUnsorted[sortId[0]]]
                 merits = [meritsUnsorted[sortId[0]]]
+        
         return redshifts, merits
+
         
     def to_flag(self):
         thres = 0.01
@@ -315,6 +327,66 @@ class ResultList(object):
             imin = np.argmin(self.list[x].chi2PerTplZcalc)
             bestTpl.append(tplNames[imin])
         return bestTpl
+        
+    def getZrangeForTemplate(self, tplTag):
+        zrangePerTemplate = {}
+        
+        #ExtendedGalaxyEL2/, for lambda range = [4500, 9400]
+        zrangePerTemplate["BulgedataExtensionData.dat"]=[0.0, 2.076]
+        zrangePerTemplate["EdataExtensionData.dat"]=[0.0, 0.581]
+        zrangePerTemplate["EllipticaldataExtensionData.dat"]=[0.0, 2.076]
+        zrangePerTemplate["E_reddataExtensionData.dat"]=[0.0, 2.081]
+        zrangePerTemplate["EW_SB2extended.dat"]=[0.261, 3.607]
+        zrangePerTemplate["NEW_E_extendeddataExtensionData.dat"]=[0.0, 4.516]
+        zrangePerTemplate["NEW_Im_extended.dat"]=[0.261, 3.146]
+        zrangePerTemplate["NEW_Im_extended_blue.dat"]=[0.261, 2.568]
+        zrangePerTemplate["NEW_Sbc_extended.dat"]=[0.261, 3.146]
+        zrangePerTemplate["s0dataExtensionData.dat"]=[0.0, 2.076]
+        zrangePerTemplate["sadataExtensionData.dat"]=[0.0, 2.076]
+        zrangePerTemplate["sbdataExtensionData.dat"]=[0.0, 2.076]
+        zrangePerTemplate["Scd.txt"]=[0.261, 0.583]
+        zrangePerTemplate["StarBurst1.txt"]=[0.261, 0.583]
+        zrangePerTemplate["StarBurst2.txt"]=[0.261, 0.583]
+        zrangePerTemplate["StarBurst3.txt"]=[0.261, 0.583]
+        zrangePerTemplate["vvds_reddestdataExtensionData.dat"]=[0.0, 0.696]
+        zrangePerTemplate["zcosmos_red.txt"]=[2.34, 3.48]
+        
+        try:
+            zrange = zrangePerTemplate[tplTag]
+        except:
+            print("Can't find zrange for template tag : {}".format(tplTag))
+        
+        return zrange
+        
+    def getBestZcandidateWithinZrangePerTpl(self, chi2Type="raw", extremaType="amazed", enablePlot = False, enableExport = False):
+        zbest = []
+        meritbest = []
+
+        nextrema = 1
+        n=self.n
+        for x in range(0,n):
+            print("\n")
+            print("Spc {}/{}".format(x, self.n))
+            if extremaType=="amazed":
+                redshifts, merits = self.getZCandidatesFromAmazedChi2Extrema(x, chi2Type, nextrema, enableZrangePerTpl=True)
+            else:
+                redshifts, merits = self.getZCandidatesFromChi2Extrema(x, chi2Type, nextrema)
+                
+            if len(redshifts)<1:
+               print("no redshifts found...") 
+               print("redshifts ={}".format(redshifts))
+            #print("\n\n")
+            #print("zref = {}".format(self.list[x].zref))
+            zbest.append(1e6)
+            meritbest.append(1e6)
+            for idx,z in enumerate(redshifts):
+                if True:
+                    zbest[x] = z
+                    meritbest[x] = merits[idx]
+                    break
+            print("zbest = {}".format(zbest[x]))
+            
+        return zbest, meritbest
       
     def getClosestZcandidateZrefIndex(self, indice, chi2Type="raw", extremaType="amazed"):
         print("\n")
@@ -1255,12 +1327,13 @@ class ResultList(object):
         failures_onlyThis = []
         failures_onlyRef = []
 
-        removeStrRef = "_F"
+        removeStrRef = ""
         #removeStrRef = "_FILT_MGv0_c"
         #removeStrRef = "_FILT3dec2015"
         #removeStrThis = "_FILT_MGv1_c"
-        removeStrThis = "_F"
+        removeStrThis = ""
         #removeStr2 = "_FILT"        
+        WarningKeyStr = raw_input("\n\nWARNING: Removing strings for comparison : ref, removing={} - this, removing={}\n".format(removeStrRef, removeStrThis))
         
         n = self.n
         nref = refreslist.n
@@ -1467,6 +1540,33 @@ def plotRelativePosSecondBestExtrema(resDir, diffthres, spcName=""):
         #name1 = "merit(closest) - merit(next extrema) in chi2{} (extrema)".format(chi2Type)
         #plt.title(name1)
         plt.show()   
+
+def plotBestRedshiftWithZRangePerTemplate(resDir, diffthres, spcName=""):
+    print('using amazed results full path: {0}'.format(resDir))
+    resList = ResultList(resDir, diffthreshold=diffthres, opt='brief', spcName=spcName)
+    if resList.n <1:
+        print('No results loaded...')
+        return
+    
+    bestz, bestmerit = resList.getBestZcandidateWithinZrangePerTpl("linemodeltplshape", "amazed", enablePlot=True, enableExport=True)
+    
+    enableExport = True
+    if enableExport:            
+            outdir = os.path.join(resList.analysisoutputdir, "best_redshift".format())
+            if not os.path.exists(outdir):
+                print("creating outputdir {}".format(outdir))
+                os.makedirs(outdir) 
+                
+            #export new redshift.csv file
+            newredshift_fname = os.path.join(outdir, "best_redshift_zrangepertpl.csv")
+            text_file = open(newredshift_fname, "w")
+            data = "#id   Z   MERIT   TplID   Method\n"
+            text_file.write("{}".format(data))
+            for k in range(resList.n):    
+                data = "{}\t{}\t{}\t{}\t{}\n".format(resList.list[k].name, bestz, "tpl", bestmerit, "method" )
+                text_file.write("{}".format(data))
+            text_file.close() 
+    
 
 def cmap_discretize(cmap, N):
     """Return a discrete colormap from the continuous colormap cmap.
@@ -1706,6 +1806,7 @@ def StartFromCommandLine( argv ) :
         3. Plot Closest Z Candidats\n\
         4. Plot Relative Position - Closest Z candidate\n\
         5. Plot Relative Position - 2nd extrema z candidate\n\
+        6. Plot Best Redshift - with zrange(per template)\n\
         \n\
         10. Export Line Detection Stats\n\
         11. Compare Peak Detection with reference\n\
@@ -1756,6 +1857,13 @@ def StartFromCommandLine( argv ) :
             if not (spcStr == "No" or spcStr == "no"):
                 spcName = spcStr
             plotRelativePosSecondBestExtrema(options.resDir, float(options.diffthres), spcName)
+        
+        elif choice == 6:
+            spcName = ""
+            spcStr = raw_input("Do you want to enter a spectrum name to filter the results ? (press enter to skip) :")
+            if not (spcStr == "No" or spcStr == "no"):
+                spcName = spcStr
+            plotBestRedshiftWithZRangePerTemplate(options.resDir, float(options.diffthres), spcName)
         
         elif choice == 10:
             exportLineDetectionStats(options.resDir)

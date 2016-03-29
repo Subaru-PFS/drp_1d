@@ -1,9 +1,9 @@
 input=/home/aschmitt/gitlab/cpf-redshift/tools/simulation/tmp/tmp.spectrumlist
-lambdarange=3800.0 12600.0
+lambdarange=100.0 13000.0
 linecatalog=/home/aschmitt/gitlab/cpf-redshift/tools/simulation/amazed/linecatalogs/linecatalogamazedvacuum_B9D_LyaAbsSYMprofile.txt
 method=linemodel
 parameters=/home/aschmitt/gitlab/cpf-redshift/tools/simulation/amazed/parameters/parameters.json
-redshiftrange=7.7579 7.7579 0.0001
+redshiftrange=0.0000 0.0000 0.0001
 smooth=0
 output=/home/aschmitt/gitlab/cpf-redshift/tools/simulation/amazed/output
 spectrumdir=/home/aschmitt/gitlab/cpf-redshift/tools/simulation/tmp

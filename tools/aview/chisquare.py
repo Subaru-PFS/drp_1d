@@ -166,8 +166,7 @@ class ResultChisquare(object):
         cmax = cmax+0.1*range_ori
         cmin = cmin-0.1*range_ori
         
-        pp.close()
-        pp.clf()
+        
         fig = pp.figure("chi2")
         titleStr = self.name
         if not self.forcePlotXIndex:
@@ -231,6 +230,8 @@ class ResultChisquare(object):
             outFigFile = os.path.join(exportPath, 'chi2_{}.png'.format(self.stype))
             #pp.savefig( outFigFile, bbox_inches='tight')
             pp.savefig( outFigFile)
+            pp.close()
+            pp.clf()
             
         print '\n'
         

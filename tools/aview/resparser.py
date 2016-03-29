@@ -255,6 +255,11 @@ class ResParser(object):
         """
         returns the template selected for the spectrum corresponding to the nametag in the output redshift file 
         """
+        #override:
+        if 0:
+            tplnametag = "zcosmos_red.txt"
+            return tplnametag     
+            
         strVal = ""
         filename = self.redshiftpath
         #print("getRedshiftTpl, filename : {}".format(filename))
@@ -498,6 +503,8 @@ class ResParser(object):
         elif chi2type=='corr':
             frelpath = self.corrrelpath 
         elif chi2type=='linemodel':
+            frelpath = self.linemodelrelpath
+        elif chi2type=='linemodeltplshape':
             frelpath = self.linemodelrelpath 
         
         chi2path = os.path.join(dirpath, frelpath)  

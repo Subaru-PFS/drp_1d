@@ -19,6 +19,7 @@ CLineModelElement::CLineModelElement(const std::string& widthType, const Float64
 
     m_asym_sigma_coeff = 4.0;
     m_asym_alpha = 4.5;
+    m_symxl_sigma_coeff = 6.0;
 
     m_OutsideLambdaRange = true;
     m_OutsideLambdaRangeOverlapThreshold = 0.1;
@@ -91,6 +92,11 @@ Float64 CLineModelElement::GetLineProfile(std::string profile, Float64 xc, Float
     if(profile=="SYM"){
         const Float64 xsurc = xc/sigma;
         val = exp(-0.5*xsurc*xsurc);
+    }else if(profile=="SYMXL"){
+        const Float64 coeff = m_symxl_sigma_coeff;
+        sigma = sigma*coeff;
+        const Float64 xsurc = xc/sigma;
+        val = exp(-0.5*xsurc*xsurc);
     }else if(profile=="ASYM"){
         const Float64 coeff = m_asym_sigma_coeff;
 
@@ -108,6 +114,11 @@ Float64 CLineModelElement::GetLineProfileDerivSigma(std::string profile, Float64
     Float64 cel = 300000.0;
     Float64 xc = x-x0;
     if(profile=="SYM"){
+        const Float64 xsurc = xc/sigma;
+        val = xc*xc /cel *x0 /(sigma*sigma*sigma) * exp(-0.5*xsurc*xsurc);
+    }else if(profile=="SYMXL"){
+        const Float64 coeff = m_symxl_sigma_coeff;
+        sigma = sigma*coeff;
         const Float64 xsurc = xc/sigma;
         val = xc*xc /cel *x0 /(sigma*sigma*sigma) * exp(-0.5*xsurc*xsurc);
     }else if(profile=="ASYM"){
@@ -142,6 +153,8 @@ Float64 CLineModelElement::GetNSigmaSupport(std::string profile)
         val = nominal;
     }else if(profile=="ASYM"){
         val = nominal*m_asym_sigma_coeff;
+    }else if(profile=="SYMXL"){
+        val = nominal*m_symxl_sigma_coeff;
     }
     return val;
 }

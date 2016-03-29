@@ -560,7 +560,7 @@ def ProcessStats( fname, zRange, magRange, enablePlot = False ):
     outFigFile = outputDirectory + '/' +'stats_hist.png'
     plotHist(yvect, outFigFile)
 
-    nPercentileDepth = 1
+    nPercentileDepth = 2
     # ******* plot mag hist
     if 1:
         outFileNoExt = 'stats_versusMag_hist' 

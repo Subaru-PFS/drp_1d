@@ -117,7 +117,7 @@ class AViewPlot(object):
         #self.linesname.append("Halpha")    
         #self.linesname.append("0III")   
         c = ctlg.Catalog(self.cpath)
-        print(c) 
+        #print(c) 
         shiftedctlg = c.getShiftedCatalog(self.z, -1, -1) #z, "A", "S"
         #print(shiftedctlg)
         self.linesx = shiftedctlg['lambda']
@@ -316,8 +316,8 @@ class AViewPlot(object):
         
         # add lya to the pool of displayed ranges
         displays_lambdas_rest_center.append(1215)
-        displays_lambdas_rest_min.append(1195)
-        displays_lambdas_rest_max.append(1235)
+        displays_lambdas_rest_min.append(1155)
+        displays_lambdas_rest_max.append(1275)
         displays_names.append("Lya")   
         
         # add CIII to the pool of displayed ranges

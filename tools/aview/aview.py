@@ -80,7 +80,7 @@ def plotRes(resDir, spcName, tplpath, redshift, iextremaredshift, diffthres, fai
         print('using idxExtrema: {}'.format(idxExtrema))
             
 
-        tplpath = s.getAutoTplFullPath(spcName)
+        tplpath = s.getAutoTplFullPath(spcName, idxExtrema)
         print("full extrema model path: {}".format(tplpath))
         if not os.path.exists(tplpath):
             print("reset tplpath = {}".format(""))
@@ -130,27 +130,31 @@ def plotRes(resDir, spcName, tplpath, redshift, iextremaredshift, diffthres, fai
     
     if tplpath == "":
         tpath = s.getTplFullPath(s.getRedshiftTpl(spcName)) #AUTO from amazed results
-        #tpath = ""
-        #tpath = s.getTplFullPath("NEW_Im_extended.dat") #itpl = 0
-        #tpath = s.getTplFullPath("NEW_Im_extended_blue.dat") #itpl = 1
-        #tpath = s.getTplFullPath("NEW_Sbc_extended.dat") #itpl = 2
-        #tpath = s.getTplFullPath("Scd.txt") #itpl = 3
-        #tpath = s.getTplFullPath("StarBurst1.txt") #itpl = 4
-        #tpath = s.getTplFullPath("StarBurst2.txt") #itpl = 5
-        #tpath = s.getTplFullPath("StarBurst3.txt") #itpl = 6
-        #tpath = s.getTplFullPath("BulgedataExtensionData.dat") #itpl = 7
-        #tpath = s.getTplFullPath("EW_SB2extended.dat") #itpl = 8
-        #tpath = s.getTplFullPath("EdataExtensionData.dat") #itpl = 10
-        #tpath = s.getTplFullPath("NEW_E_extendeddataExtensionData.dat") #itpl = 10, 
-        #tpath = s.getTplFullPath("EllipticaldataExtensionData.dat") #itpl = 11
-        #tpath = s.getTplFullPath("NEW_E_extendeddataExtensionData.dat") #itpl = 12
-        #tpath = s.getTplFullPath("s0dataExtensionData.dat") #itpl = 13  
-        #tpath = s.getTplFullPath("sadataExtensionData.dat")
-        #tpath = s.getTplFullPath("vvds_reddestdataExtensionData.dat")
         try:
             forceTplAmplitude = chi.amazed_fitamplitude[idxExtrema]
         except:
             forceTplAmplitude = -1
+        
+        if 0:
+            #tpath = ""
+            #tpath = s.getTplFullPath("NEW_Im_extended.dat") #itpl = 0
+            #tpath = s.getTplFullPath("NEW_Im_extended_blue.dat") #itpl = 1
+            #tpath = s.getTplFullPath("NEW_Sbc_extended.dat") #itpl = 2
+            #tpath = s.getTplFullPath("Scd.txt") #itpl = 3
+            #tpath = s.getTplFullPath("StarBurst1.txt") #itpl = 4
+            #tpath = s.getTplFullPath("StarBurst2.txt") #itpl = 5
+            #tpath = s.getTplFullPath("StarBurst3.txt") #itpl = 6
+            #tpath = s.getTplFullPath("BulgedataExtensionData.dat") #itpl = 7
+            #tpath = s.getTplFullPath("EW_SB2extended.dat") #itpl = 8
+            #tpath = s.getTplFullPath("EdataExtensionData.dat") #itpl = 10
+            #tpath = s.getTplFullPath("NEW_E_extendeddataExtensionData.dat") #itpl = 10, 
+            tpath = s.getTplFullPath("EllipticaldataExtensionData.dat") #itpl = 11
+            #tpath = s.getTplFullPath("NEW_E_extendeddataExtensionData.dat") #itpl = 12
+            #tpath = s.getTplFullPath("s0dataExtensionData.dat") #itpl = 13  
+            #tpath = s.getTplFullPath("sadataExtensionData.dat")
+            #tpath = s.getTplFullPath("vvds_reddestdataExtensionData.dat")
+            forceTplAmplitude = -1
+            forceTplAmplitude = 7e-5
         
         print('using forceTplAmplitude: {}'.format(forceTplAmplitude))
         

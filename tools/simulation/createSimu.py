@@ -129,7 +129,7 @@ while not allfull:
     mAmpsTplpath = os.path.join(amazed_directory, "linecatalogs/linemodelsolve.linemodel_fit_extrema_0_template.csv".format())
     model_amps = modelresult.ModelResult(mAmpsTplpath)
     coeffE_SFR = sfr/100.0
-    coeffA_ISM = 0.5*random.random()
+    coeffA_ISM = 0.25#0.5*random.random()
     ism = coeffA_ISM
     print("RANDOM: ism = {}".format(ism))
     model_amps.randomAmplitudes(coeffE=coeffE_SFR, coeffA=coeffA_ISM)

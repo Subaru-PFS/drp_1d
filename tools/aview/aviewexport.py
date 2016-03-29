@@ -15,7 +15,7 @@ import resparser as rp
 import resultstat as rstat
 import aview
 
-def export(resDir):
+def export(resDir, spcName=""):
     
     print('using amazed results full path: {0}'.format(resDir))
     s = rp.ResParser(resDir)
@@ -25,8 +25,11 @@ def export(resDir):
     #print("Using Diffthreshold: {}".format(diffthres))
     resList = rstat.ResultList(resDir, diffthreshold=float(diffthres), opt='brief')        
     print("Results, N found failures = {0}".format(resList.n))
-    for indice in range(resList.n):
-        _spcName = ""
+    nDisp = resList.n
+    if not spcName=="":
+        nDisp = 1
+    for indice in range(nDisp):
+        _spcName = spcName
         _tplpath = ""
         _redshift = ""
         _iextremaredshift = 0
@@ -41,10 +44,11 @@ def StartFromCommandLine( argv ) :
     ex: python ./aviewexport.py -d path_to_res_dir"""
     parser = optparse.OptionParser(usage=usage)
     parser.add_option(u"-d", u"--dir", help="path to the amazed results directory (/output/)",  dest="resDir", default="./output")
+    parser.add_option(u"-s", u"--spc", help="name of the spectrum to be plotted",  dest="spcName", default="")
     (options, args) = parser.parse_args()
 
     if( len( args ) == 0 ) :
-        export(options.resDir)
+        export(options.resDir, options.spcName)
     else :
         print("Error: invalid argument count")
         exit()

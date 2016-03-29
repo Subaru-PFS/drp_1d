@@ -192,7 +192,7 @@ class ModelResult(object):
                     self.lineamplitude[k] = 0.0
                 elif self.linename[k]=="HbetaA":
                     #HbetaA only present if HbetaE > 0.1*HalphaE : then = in the range +-30% of the ISM coeff
-                    if ampHbetaE/ampHalpha > 0.1:
+                    if ampHalpha>0.0 and ampHbetaE/ampHalpha > 0.1:
                         self.lineamplitude[k] = coeffA*(0.7+random.random()*0.6)
                     else:
                         self.lineamplitude[k] = 0.0

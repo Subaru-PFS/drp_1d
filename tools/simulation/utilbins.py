@@ -101,7 +101,7 @@ class UtilBins(object):
         return 1
         
     def getRandTemplate(self):
-        #return self.template_bins[1]
+        #return self.template_bins[2]
         itpl = int(random.random()*self.n_template_bins)
         return self.template_bins[itpl]
         
@@ -115,9 +115,14 @@ class UtilBins(object):
     def getRandVelocity(self, minV=50, maxV=500):
         print("velocity generation between {} and {}".format(minV, maxV))
         v = random.random()*(maxV-minV)+minV
+        print("velocity generation : returning = {}".format(v))
         return v
         
     def getRandZMagSfr_fromOpenBin(self):
+        #override
+        if 0:        
+            return 0, 23.5, 1.0
+        
         foundOpenBin = False
         izFound = -1
         imagFound = -1
