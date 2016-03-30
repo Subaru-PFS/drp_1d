@@ -188,7 +188,7 @@ def StartFromCommandLine( argv ) :
     parser.add_option(u"-t", u"--tpl", help="path of the template to be plotted",  dest="tplpath", default="")
     parser.add_option(u"-z", u"--redshift", help="z to be plotted",  dest="redshift", default="")
     parser.add_option(u"-e", u"--iextremaredshift", help="extrema index for the z to be plotted",  dest="iextremaredshift", default="")
-    parser.add_option(u"-f", u"--failurediffthres", help="diff threshold for the extraction of the failure spectra",  dest="diffthres", default=0.01)
+    parser.add_option(u"-f", u"--failurediffthres", help="diff threshold for the extraction of the failure spectra",  dest="diffthres", default=-1)
     parser.add_option(u"-i", u"--failureindex", help="failure index",  dest="failureindex", default=0)
     (options, args) = parser.parse_args()
 
