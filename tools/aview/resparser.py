@@ -258,6 +258,7 @@ class ResParser(object):
         #override:
         if 0:
             tplnametag = "zcosmos_red.txt"
+            tplnametag = "NEW_Sbc_extended.dat"
             return tplnametag     
             
         strVal = ""

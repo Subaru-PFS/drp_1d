@@ -86,6 +86,8 @@ protected:
     Float64 m_asym_alpha;
     Float64 m_symxl_sigma_coeff;
 
+    Float64 m_asym2_sigma_coeff;
+    Float64 m_asym2_alpha;
 private:
 
 

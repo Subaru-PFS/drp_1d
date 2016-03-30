@@ -20,6 +20,8 @@ CLineModelElement::CLineModelElement(const std::string& widthType, const Float64
     m_asym_sigma_coeff = 4.0;
     m_asym_alpha = 4.5;
     m_symxl_sigma_coeff = 6.0;
+    m_asym2_sigma_coeff = 2.0;
+    m_asym2_alpha = 2.0;
 
     m_OutsideLambdaRange = true;
     m_OutsideLambdaRangeOverlapThreshold = 0.1;
@@ -104,6 +106,13 @@ Float64 CLineModelElement::GetLineProfile(std::string profile, Float64 xc, Float
         const Float64 xsurc = xc/sigma;
         const Float64 alpha = m_asym_alpha;
         val = exp(-0.5*xsurc*xsurc)*(1.0+erf(alpha/sqrt(2.0)*xsurc));
+    }else if(profile=="ASYM2"){
+        const Float64 coeff = m_asym2_sigma_coeff;
+
+        sigma = sigma*coeff;
+        const Float64 xsurc = xc/sigma;
+        const Float64 alpha = m_asym2_alpha;
+        val = exp(-0.5*xsurc*xsurc)*(1.0+erf(alpha/sqrt(2.0)*xsurc));
     }
     return val;
 }
@@ -140,6 +149,25 @@ Float64 CLineModelElement::GetLineProfileDerivSigma(std::string profile, Float64
         //Float64 v = sigma*cel/x0;
         //val = -sqrt(2)*alpha*cel*(x - x0)*exp(-0.5*pow(cel*(x - x0)/(v*x0),2))*exp(-pow(alpha*cel*(x - x0), 2)/(2*pow(v*x0, 2)))/(sqrt(M_PI)*pow(v,2)*x0) + 1.0*pow(cel*(x - x0),2)*(erf(sqrt(2)*alpha*cel*(x - x0)/(2*v*x0)) + 1)*exp(-0.5*pow(cel*(x - x0)/(v*x0),2))/(pow(v,3)*pow(x0,2));
 
+    }else if(profile=="ASYM2"){
+        const Float64 coeff = m_asym2_sigma_coeff;
+
+        sigma = sigma*coeff;
+        const Float64 xsurc = xc/sigma;
+        const Float64 alpha = m_asym2_alpha;
+        const Float64 valsym = exp(-0.5*xsurc*xsurc);
+        const Float64 valsymd = xc*xc /cel *x0 /(sigma*sigma*sigma) * exp(-0.5*xsurc*xsurc);
+
+        const Float64 valasym = (1.0+erf(alpha/sqrt(2.0)*xsurc));
+        const Float64 arg = alpha*xc/sqrt(2)/sigma;
+        //const Float64 valasymd = -alpha/sqrt(2*M_PI)*xc /(sigma*sigma) /cel*x0*exp(-arg*arg);
+        const Float64 valasymd = -alpha*sqrt(2)/sqrt(M_PI)*xc /(sigma*sigma) /cel*x0*exp(-arg*arg);
+        val = valsym*valasymd+valsymd*valasym;
+        //val = valsymd;
+
+        //Float64 v = sigma*cel/x0;
+        //val = -sqrt(2)*alpha*cel*(x - x0)*exp(-0.5*pow(cel*(x - x0)/(v*x0),2))*exp(-pow(alpha*cel*(x - x0), 2)/(2*pow(v*x0, 2)))/(sqrt(M_PI)*pow(v,2)*x0) + 1.0*pow(cel*(x - x0),2)*(erf(sqrt(2)*alpha*cel*(x - x0)/(2*v*x0)) + 1)*exp(-0.5*pow(cel*(x - x0)/(v*x0),2))/(pow(v,3)*pow(x0,2));
+
     }
     return val;
 }
@@ -153,6 +181,8 @@ Float64 CLineModelElement::GetNSigmaSupport(std::string profile)
         val = nominal;
     }else if(profile=="ASYM"){
         val = nominal*m_asym_sigma_coeff;
+    }else if(profile=="ASYM2"){
+        val = nominal*m_asym2_sigma_coeff;
     }else if(profile=="SYMXL"){
         val = nominal*m_symxl_sigma_coeff;
     }

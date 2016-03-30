@@ -280,6 +280,23 @@ class ResultChisquare(object):
         
     def getFluxMax(self):
         return max(self.yvect)
+    
+    def getBestZ_byFluxMin(self, zmin, zmax):
+        imin = self.getZIndex(zmin)
+        imax = self.getZIndex(zmax)
+        iFluxMin = np.argmin(self.yvect[imin:imax])
+        bestz = self.xvect[imin+iFluxMin]
+        merit = self.yvect[imin+iFluxMin]
+        return bestz, merit
+    
+    def getZIndex(self, z):
+        i=0
+        for x in range(0,self.n-1):
+            if z >= self.xvect[x]:
+                i=x
+            if z < self.xvect[x+1]:
+                break
+        return i
         
     def smoothListGaussian(self,list,degree=5):  
         window=degree*2-1  

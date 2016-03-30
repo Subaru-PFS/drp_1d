@@ -271,7 +271,7 @@ def ProcessDiff( refFile, calcFile, outFile, reftype ) :
     yvect = range(0,n)  
     for k in range(0,n):
     	xvect[k] = dataRef[k][iRefZ]
-	yvect[k] = (dataRef[k][iRefZ] - dataCalc[k][1])/(1+dataRef[k][iRefZ])
+	yvect[k] = (dataCalc[k][1]-dataRef[k][iRefZ])/(1+dataRef[k][iRefZ])
     fig = pp.figure('Amazed output')
     ax = fig.add_subplot(111)
     color_ = ['r', 'g', 'b', 'y','c', 'm', 'y', 'k', 'r', 'g', 'b', 'y']

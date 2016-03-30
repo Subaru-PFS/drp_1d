@@ -219,6 +219,43 @@ class ResultList(object):
         
         return redshifts, merits
 
+    def getBestZinZrange(self, indice=0, chi2Type = "raw"): 
+        bestz = -1
+        bestmerit = 1e12
+        besttpl = "-1"
+        
+        spcName = self.list[indice].name
+        print("spcname = {}".format(spcName))
+        s = rp.ResParser(self.dir)
+        if not chi2Type=='linemodel':
+            tplpaths = s.getTplFullPathList()
+        else:
+            tplpaths = [''];
+        if len(tplpaths)<1:
+            print("Problem while getting the templates directory path...")
+
+        for a in range(len(tplpaths)):
+            filepath = s.getChi2FullPath(spcName, os.path.basename(tplpaths[a]), chi2Type)
+            if not os.path.exists(filepath):
+                print("Problem while retrieving chi2 filepath.. using: {}".format(filepath))
+                continue
+            else:
+                print("using Chi2 file path : ".format(filepath))
+            chi2 = chisq.ResultChisquare(filepath)
+            
+            tpltag = os.path.basename(tplpaths[a])
+            zrange = self.getZrangeForTemplate(tpltag)
+            print("using zrange = {}".format(zrange))
+            z, merit = chi2.getBestZ_byFluxMin(zrange[0], zrange[1])
+            print("found best redshift for this tpl = {}, wirh merit = {}".format(z, merit))
+            
+            if bestmerit>merit:
+                bestz=z
+                bestmerit=merit
+                besttpl = tpltag
+                
+        print("best z found = {}, with merit = {}".format(bestz, bestmerit))
+        return bestz, bestmerit, besttpl
         
     def to_flag(self):
         thres = 0.01
@@ -326,30 +363,53 @@ class ResultList(object):
             print("Spc {}/{}".format(x, self.n))
             imin = np.argmin(self.list[x].chi2PerTplZcalc)
             bestTpl.append(tplNames[imin])
-        return bestTpl
+        return bestTpl 
+
         
     def getZrangeForTemplate(self, tplTag):
         zrangePerTemplate = {}
         
-        #ExtendedGalaxyEL2/, for lambda range = [4500, 9400]
-        zrangePerTemplate["BulgedataExtensionData.dat"]=[0.0, 2.076]
-        zrangePerTemplate["EdataExtensionData.dat"]=[0.0, 0.581]
-        zrangePerTemplate["EllipticaldataExtensionData.dat"]=[0.0, 2.076]
-        zrangePerTemplate["E_reddataExtensionData.dat"]=[0.0, 2.081]
-        zrangePerTemplate["EW_SB2extended.dat"]=[0.261, 3.607]
-        zrangePerTemplate["NEW_E_extendeddataExtensionData.dat"]=[0.0, 4.516]
-        zrangePerTemplate["NEW_Im_extended.dat"]=[0.261, 3.146]
-        zrangePerTemplate["NEW_Im_extended_blue.dat"]=[0.261, 2.568]
-        zrangePerTemplate["NEW_Sbc_extended.dat"]=[0.261, 3.146]
-        zrangePerTemplate["s0dataExtensionData.dat"]=[0.0, 2.076]
-        zrangePerTemplate["sadataExtensionData.dat"]=[0.0, 2.076]
-        zrangePerTemplate["sbdataExtensionData.dat"]=[0.0, 2.076]
-        zrangePerTemplate["Scd.txt"]=[0.261, 0.583]
-        zrangePerTemplate["StarBurst1.txt"]=[0.261, 0.583]
-        zrangePerTemplate["StarBurst2.txt"]=[0.261, 0.583]
-        zrangePerTemplate["StarBurst3.txt"]=[0.261, 0.583]
-        zrangePerTemplate["vvds_reddestdataExtensionData.dat"]=[0.0, 0.696]
-        zrangePerTemplate["zcosmos_red.txt"]=[2.34, 3.48]
+        if 0:
+            #DEPRECATED: ExtendedGalaxyEL2/, for lambda range = [4500, 9400]
+            zrangePerTemplate["BulgedataExtensionData.dat"]=[0.0, 2.076]
+            zrangePerTemplate["EdataExtensionData.dat"]=[0.0, 0.581]
+            zrangePerTemplate["EllipticaldataExtensionData.dat"]=[0.0, 2.076]
+            zrangePerTemplate["E_reddataExtensionData.dat"]=[0.0, 2.081]
+            zrangePerTemplate["EW_SB2extended.dat"]=[0.261, 3.607]
+            zrangePerTemplate["NEW_E_extendeddataExtensionData.dat"]=[0.0, 4.516]
+            zrangePerTemplate["NEW_Im_extended.dat"]=[0.261, 3.146]
+            zrangePerTemplate["NEW_Im_extended_blue.dat"]=[0.261, 2.568]
+            zrangePerTemplate["NEW_Sbc_extended.dat"]=[0.261, 3.146]
+            zrangePerTemplate["s0dataExtensionData.dat"]=[0.0, 2.076]
+            zrangePerTemplate["sadataExtensionData.dat"]=[0.0, 2.076]
+            zrangePerTemplate["sbdataExtensionData.dat"]=[0.0, 2.076]
+            zrangePerTemplate["Scd.txt"]=[0.261, 0.583]
+            zrangePerTemplate["StarBurst1.txt"]=[0.261, 0.583]
+            zrangePerTemplate["StarBurst2.txt"]=[0.261, 0.583]
+            zrangePerTemplate["StarBurst3.txt"]=[0.261, 0.583]
+            zrangePerTemplate["vvds_reddestdataExtensionData.dat"]=[0.0, 0.696]
+            zrangePerTemplate["zcosmos_red.txt"]=[2.34, 3.48]
+        
+        if 1:
+            #from Amazed outputs, chi2nc 20160321: ExtendedGalaxyEL2/, for lambda range = [3600, 9460]
+            zrangePerTemplate["BulgedataExtensionData.dat"]=[0.0, 1.9163]
+            zrangePerTemplate["EdataExtensionData.dat"]=[0.0, 0.4989]
+            zrangePerTemplate["EllipticaldataExtensionData.dat"]=[0.0, 1.9164]
+            zrangePerTemplate["E_reddataExtensionData.dat"]=[0.0, 1.9212]
+            zrangePerTemplate["EW_SB2extended.dat"]=[0.0, 3.3668]
+            zrangePerTemplate["NEW_E_extendeddataExtensionData.dat"]=[0.0, 4.2290]
+            zrangePerTemplate["NEW_Im_extended.dat"]=[0.0, 2.9304]
+            zrangePerTemplate["NEW_Im_extended_blue.dat"]=[0.0, 2.3820]
+            zrangePerTemplate["NEW_Sbc_extended.dat"]=[0.0, 3.2469]
+            zrangePerTemplate["s0dataExtensionData.dat"]=[0.0, 1.9164]
+            zrangePerTemplate["sadataExtensionData.dat"]=[0.0, 1.9164]
+            zrangePerTemplate["sbdataExtensionData.dat"]=[0.0, 1.9164]
+            zrangePerTemplate["Scd.txt"]=[0.0, 0.5008]
+            zrangePerTemplate["StarBurst1.txt"]=[0.0, 0.5008]
+            zrangePerTemplate["StarBurst2.txt"]=[0.0, 0.5008]
+            zrangePerTemplate["StarBurst3.txt"]=[0.0, 0.5008]
+            zrangePerTemplate["vvds_reddestdataExtensionData.dat"]=[0.0, 0.6080]
+            zrangePerTemplate["zcosmos_red.txt"]=[1.5109, 3.2469]
         
         try:
             zrange = zrangePerTemplate[tplTag]
@@ -358,10 +418,11 @@ class ResultList(object):
         
         return zrange
         
-    def getBestZcandidateWithinZrangePerTpl(self, chi2Type="raw", extremaType="amazed", enablePlot = False, enableExport = False):
+    def getBestZcandidateWithinZrangePerTpl(self, chi2Type="raw", extremaType="full", enablePlot = False, enableExport = False):
         zbest = []
         meritbest = []
-
+        tplbest = []
+        
         nextrema = 1
         n=self.n
         for x in range(0,n):
@@ -370,23 +431,19 @@ class ResultList(object):
             if extremaType=="amazed":
                 redshifts, merits = self.getZCandidatesFromAmazedChi2Extrema(x, chi2Type, nextrema, enableZrangePerTpl=True)
             else:
-                redshifts, merits = self.getZCandidatesFromChi2Extrema(x, chi2Type, nextrema)
+                z, merit, tpl = self.getBestZinZrange(x, chi2Type)
                 
-            if len(redshifts)<1:
-               print("no redshifts found...") 
-               print("redshifts ={}".format(redshifts))
-            #print("\n\n")
-            #print("zref = {}".format(self.list[x].zref))
             zbest.append(1e6)
             meritbest.append(1e6)
-            for idx,z in enumerate(redshifts):
-                if True:
-                    zbest[x] = z
-                    meritbest[x] = merits[idx]
-                    break
+            tplbest.append("-1")
+            
+            zbest[x] = z
+            meritbest[x] = merit
+            tplbest[x] = tpl
+                    
             print("zbest = {}".format(zbest[x]))
             
-        return zbest, meritbest
+        return zbest, meritbest, tplbest
       
     def getClosestZcandidateZrefIndex(self, indice, chi2Type="raw", extremaType="amazed"):
         print("\n")
@@ -1333,13 +1390,14 @@ class ResultList(object):
         #removeStrThis = "_FILT_MGv1_c"
         removeStrThis = ""
         #removeStr2 = "_FILT"        
-        WarningKeyStr = raw_input("\n\nWARNING: Removing strings for comparison : ref, removing={} - this, removing={}\n".format(removeStrRef, removeStrThis))
+        WarningKeyStr = raw_input("\n\nWARNING: Removing strings for comparison : ref, removing={} - this, removing={}\nPress any key to continue...".format(removeStrRef, removeStrThis))
         
         n = self.n
         nref = refreslist.n
+        print("\nINFO: searching for failures in THIS dataset...")
         for x in range(0,n):
             #print("\n")
-            #print("Spc {}/{}".format(x+1, self.n))
+            print("Spc {}/{}".format(x+1, self.n))
             spcName = self.list[x].name
             spcName = spcName.replace(removeStrThis, "")
             spcFound = False;
@@ -1355,9 +1413,11 @@ class ResultList(object):
             if not spcFound:
                 failures_onlyThis.append(spcName)
                 
+                
+        print("\nINFO: searching for failures in REF dataset...")
         for xref in range(0,nref):
             #print("\n")
-            #print("Spc {}/{}".format(x+1, self.n))
+            print("Spc {}/{}".format(x+1, self.n))
             spcNameRef = refreslist.list[xref].name
             spcNameRef = spcNameRef.replace(removeStrRef, "")
             spcRefFound = False;
@@ -1541,14 +1601,14 @@ def plotRelativePosSecondBestExtrema(resDir, diffthres, spcName=""):
         #plt.title(name1)
         plt.show()   
 
-def plotBestRedshiftWithZRangePerTemplate(resDir, diffthres, spcName=""):
+def exportBestRedshiftWithZRangePerTemplate(resDir, diffthres, spcName=""):
     print('using amazed results full path: {0}'.format(resDir))
     resList = ResultList(resDir, diffthreshold=diffthres, opt='brief', spcName=spcName)
     if resList.n <1:
         print('No results loaded...')
         return
     
-    bestz, bestmerit = resList.getBestZcandidateWithinZrangePerTpl("linemodeltplshape", "amazed", enablePlot=True, enableExport=True)
+    bestz, bestmerit, bestTpl = resList.getBestZcandidateWithinZrangePerTpl("linemodeltplshape", "full", enablePlot=True, enableExport=True)
     
     enableExport = True
     if enableExport:            
@@ -1563,7 +1623,7 @@ def plotBestRedshiftWithZRangePerTemplate(resDir, diffthres, spcName=""):
             data = "#id   Z   MERIT   TplID   Method\n"
             text_file.write("{}".format(data))
             for k in range(resList.n):    
-                data = "{}\t{}\t{}\t{}\t{}\n".format(resList.list[k].name, bestz, "tpl", bestmerit, "method" )
+                data = "{}\t{}\t{}\t{}\t{}\n".format(resList.list[k].name, bestz[k], bestmerit[k], bestTpl[k], "method" )
                 text_file.write("{}".format(data))
             text_file.close() 
     
@@ -1806,7 +1866,7 @@ def StartFromCommandLine( argv ) :
         3. Plot Closest Z Candidats\n\
         4. Plot Relative Position - Closest Z candidate\n\
         5. Plot Relative Position - 2nd extrema z candidate\n\
-        6. Plot Best Redshift - with zrange(per template)\n\
+        6. Export Best Redshift - with zrange(per template)\n\
         \n\
         10. Export Line Detection Stats\n\
         11. Compare Peak Detection with reference\n\
@@ -1863,7 +1923,7 @@ def StartFromCommandLine( argv ) :
             spcStr = raw_input("Do you want to enter a spectrum name to filter the results ? (press enter to skip) :")
             if not (spcStr == "No" or spcStr == "no"):
                 spcName = spcStr
-            plotBestRedshiftWithZRangePerTemplate(options.resDir, float(options.diffthres), spcName)
+            exportBestRedshiftWithZRangePerTemplate(options.resDir, float(options.diffthres), spcName)
         
         elif choice == 10:
             exportLineDetectionStats(options.resDir)
