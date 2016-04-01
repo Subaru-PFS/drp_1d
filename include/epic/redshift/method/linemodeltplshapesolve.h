@@ -38,7 +38,7 @@ public:
 
     Bool Solve(CDataStore& resultStore,
                const CSpectrum& spc,
-               const CSpectrum& spcWithoutCont,
+               const CSpectrum& spcCont,
                const CTemplate& tpl,
                const CRayCatalog& lineCatalog,
                const TFloat64Range& lambdaRange,

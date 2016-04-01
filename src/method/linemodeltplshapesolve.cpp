@@ -114,6 +114,15 @@ std::shared_ptr<const CLineModelTplshapeSolveResult> CLineModelTplshapeSolve::Co
 
     PopulateParameters( dataStore );
 
+
+    CSpectrum _spc = spc;
+    CSpectrum _spcContinuum = spc;
+    CSpectrumFluxAxis spcfluxAxis = _spcContinuum.GetFluxAxis();
+    spcfluxAxis.Subtract( spcWithoutCont.GetFluxAxis() );
+    CSpectrumFluxAxis& sfluxAxisPtr = _spcContinuum.GetFluxAxis();
+    sfluxAxisPtr = spcfluxAxis;
+
+
     //load the catalogs list from the files in the tplshape-catalogs folder : tplshapeCatalogDir
     namespace fs = boost::filesystem;
     fs::path tplshapeCatalogDir("/home/aschmitt/data/vuds/VUDS_flag3_4/amazed/linecatalogs/linecatalogs_tplshape_ExtendedGalaxyEL2_20160330_mixtLya");
@@ -172,7 +181,7 @@ std::shared_ptr<const CLineModelTplshapeSolveResult> CLineModelTplshapeSolve::Co
             }
 
 
-            Solve( dataStore, spc, spcWithoutCont, tpl, lineCatalog, lambdaRange, redshifts);
+            Solve( dataStore, _spc, _spcContinuum, tpl, lineCatalog, lambdaRange, redshifts);
             storeResult = true;
         }
     }
@@ -190,7 +199,7 @@ std::shared_ptr<const CLineModelTplshapeSolveResult> CLineModelTplshapeSolve::Co
  **/
 Bool CLineModelTplshapeSolve::Solve( CDataStore& dataStore,
 			     const CSpectrum& spc,
-                 const CSpectrum& spcWithoutCont,
+                 const CSpectrum& spcCont,
                  const CTemplate& tpl,
                  const CRayCatalog& lineCatalog,
                  const TFloat64Range& lambdaRange,
@@ -198,17 +207,10 @@ Bool CLineModelTplshapeSolve::Solve( CDataStore& dataStore,
 {
     std::string scopeStr = "linemodel";
 
-    CSpectrum _spc = spc;
-    CSpectrum _spcContinuum = spc;
-    CSpectrumFluxAxis spcfluxAxis = _spcContinuum.GetFluxAxis();
-    spcfluxAxis.Subtract( spcWithoutCont.GetFluxAxis() );
-    CSpectrumFluxAxis& sfluxAxisPtr = _spcContinuum.GetFluxAxis();
-    sfluxAxisPtr = spcfluxAxis;
-
     COperatorLineModel linemodel;
     auto  result = linemodel.Compute( dataStore,
-                                      _spc,
-                                      _spcContinuum,
+                                      spc,
+                                      spcCont,
                                       lineCatalog,
                                       m_opt_linetypefilter,
                                       m_opt_lineforcefilter,

@@ -11,6 +11,7 @@
 
 #include <boost/numeric/conversion/bounds.hpp>
 #include "boost/format.hpp"
+#include <boost/chrono/thread_clock.hpp>
 
 #include <epic/redshift/processflow/datastore.h>
 
@@ -159,6 +160,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
                                  opt_velocityEmission,
                                  opt_velocityAbsorption,
                                  opt_rules );
+    Log.LogInfo( "Linemodel: initialized");
     //model.LoadContinuum(); //in order to use a fit with continuum
     result->nSpcSamples = model.getSpcNSamples(lambdaRange);
     PrecomputeLogErr( spectrum );
@@ -173,6 +175,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
     }
 
     Int32 indexLargeGrid = 0;
+    boost::chrono::thread_clock::time_point start_mainloop = boost::chrono::thread_clock::now();
     for (Int32 i=0;i<nResults;i++)
     {
         if(enableFastFitLargeGrid==0 || i==0 || result->Redshifts[i] == largeGridRedshifts[indexLargeGrid])
@@ -180,12 +183,15 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
             ModelFit( model, lambdaRange, result->Redshifts[i], result->ChiSquare[i], result->LineModelSolutions[i], contreest_iterations);
             Log.LogDebug( "Z interval %d: Chi2 = %f", i, result->ChiSquare[i] );
             indexLargeGrid++;
+            //Log.LogInfo( "\nLineModel Infos: large grid step %d", i);
         }else{
             result->ChiSquare[i] = result->ChiSquare[i-1] + 1e-2;
             result->LineModelSolutions[i] = result->LineModelSolutions[i-1];
         }
     }
-    Log.LogInfo( "Linemodel: main z loop done");
+    boost::chrono::thread_clock::time_point stop_mainloop = boost::chrono::thread_clock::now();
+    Float64 duration_mainloop = boost::chrono::duration_cast<boost::chrono::microseconds>(stop_mainloop - start_mainloop).count();
+    Log.LogInfo( "Linemodel: main z loop done in %.4e sec", duration_mainloop/1e6);
 
     // extrema
     Int32 extremumCount = opt_extremacount;
@@ -449,6 +455,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
         Log.LogError("Line Model, Extremum Ordering failed");
     }
 
+    Log.LogInfo("Line Model, Store extrema results");
     // store extrema results
     result->ResizeExtremaResults(extremumCount);
 

@@ -34,7 +34,7 @@ public:
     TInt32Range getSupportSubElt(Int32 subeIdx);
 
     void fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis, Float64  redshift);
-    Float64 getModelAtLambda( Float64 lambda, Float64 redshift );
+    Float64 getModelAtLambda(Float64 lambda, Float64 redshift , Int32 kRaySupport);
     Float64 GetModelDerivAmplitudeAtLambda( Float64 lambda, Float64 redshift );
     Float64 GetModelDerivSigmaAtLambda( Float64 lambda, Float64 redshift );
 
@@ -53,6 +53,7 @@ private:
     Int32 FindElementIndex(std::string LineTagStr);
 
     std::vector<CRay>       m_Rays;
+    std::vector<std::vector<Int32>>     m_RayIsActiveOnSupport;
     std::vector<Float64>    m_SignFactors;
     std::vector<Float64>        m_FittedAmplitudes;
     std::vector<Float64>        m_FittedAmplitudeErrorSigmas;

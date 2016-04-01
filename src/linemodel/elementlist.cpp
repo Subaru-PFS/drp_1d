@@ -238,7 +238,7 @@ void CLineModelElementList::LogCatalogInfos()
         for(UInt32 j=0; j<nRays; j++){
             std::string nominalAmpStr = "";
             if(nRays>1){
-                nominalAmpStr = boost::str(boost::format("(nominal amp = %.4f)") % m_Elements[iElts]->GetNominalAmplitude(j));
+                nominalAmpStr = boost::str(boost::format("(nominal amp = %.4e)") % m_Elements[iElts]->GetNominalAmplitude(j));
             }
             Log.LogInfo( "LineModel ctlg: elt %d (%s): line %d = %s %s", iElts, m_Elements[iElts]->GetElementTypeTag().c_str(), j, m_Elements[iElts]->GetRayName(j).c_str(), nominalAmpStr.c_str());
         }
@@ -465,7 +465,6 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
     const CSpectrumSpectralAxis& spectralAxis = m_SpectrumModel->GetSpectralAxis();
     CSpectrumFluxAxis& modelFluxAxis = m_SpectrumModel->GetFluxAxis();
 
-
     //prepare the elements
     for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
     {
@@ -574,7 +573,6 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
         }
 
     }
-
 
 
     //fit the amplitudes of each element independently

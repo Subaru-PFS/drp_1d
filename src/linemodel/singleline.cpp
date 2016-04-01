@@ -344,7 +344,7 @@ void CSingleLine::addToSpectrumModelDerivSigma(const CSpectrumSpectralAxis& mode
  * If outside lambda range, return 0.
  * Return the amplitude according to sign, fitted amplitude and line profile.
  */
-Float64 CSingleLine::getModelAtLambda(Float64 lambda, Float64 redshift )
+Float64 CSingleLine::getModelAtLambda(Float64 lambda, Float64 redshift , Int32 kRaySupport)
 {
     if(m_OutsideLambdaRange){
         return 0.0;

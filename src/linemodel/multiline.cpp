@@ -83,6 +83,7 @@ Float64 CMultiLine::GetSignFactor(Int32 subeIdx)
 void CMultiLine::prepareSupport(const CSpectrumSpectralAxis& spectralAxis, Float64 redshift, const TFloat64Range &lambdaRange)
 {    
     m_OutsideLambdaRange=true;
+    m_RayIsActiveOnSupport.resize( m_Rays.size() , std::vector<Int32>( m_Rays.size() , 0.0 ) );
     m_Start.resize(m_Rays.size());
     m_End.resize(m_Rays.size());
     m_OutsideLambdaRangeList.resize(m_Rays.size());
@@ -113,6 +114,9 @@ void CMultiLine::prepareSupport(const CSpectrumSpectralAxis& spectralAxis, Float
 
         // set the global outside lambda range
         m_OutsideLambdaRange = m_OutsideLambdaRange && m_OutsideLambdaRangeList[i];
+
+        //set the rays active on their own support
+        m_RayIsActiveOnSupport[i][i] = 1;
     }
 
     for(Int32 i=0; i<m_Rays.size(); i++){
@@ -128,6 +132,9 @@ void CMultiLine::prepareSupport(const CSpectrumSpectralAxis& spectralAxis, Float
             }
             if(m_Rays[i].GetPosition()<m_Rays[j].GetPosition() && m_Start[j]<=m_End[i]){
                 m_Start[j]=m_End[i]+1;
+                //set the rays active on the overlapping support
+                m_RayIsActiveOnSupport[i][j] = 1;
+                m_RayIsActiveOnSupport[j][i] = 1;
             }
         }
     }
@@ -280,9 +287,13 @@ void CMultiLine::SetFittedAmplitude(Float64 A, Float64 SNR)
  **/
 void CMultiLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis, Float64  redshift)
 {
-    m_FittedAmplitudes.resize(m_Rays.size());
-    m_FittedAmplitudeErrorSigmas.resize(m_Rays.size());
-    for(Int32 k=0; k<m_Rays.size(); k++)
+    Float64 nRays = m_Rays.size();
+    if(m_FittedAmplitudes.size()!=nRays)
+    {
+        m_FittedAmplitudes.resize(nRays);
+        m_FittedAmplitudeErrorSigmas.resize(nRays);
+    }
+    for(Int32 k=0; k<nRays; k++)
       {
         m_FittedAmplitudes[k] = -1.0;
         m_FittedAmplitudeErrorSigmas[k] = -1.0;
@@ -292,7 +303,6 @@ void CMultiLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const C
       {
         return;
       }
-
     const Float64* flux = fluxAxis.GetSamples();
     const Float64* spectral = spectralAxis.GetSamples();
     const Float64* error = fluxAxis.GetError();
@@ -307,19 +317,20 @@ void CMultiLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const C
     Int32 num = 0;
 
     std::vector<Float64> mu;
-    mu.resize(m_Rays.size());
+    mu.resize(nRays);
     std::vector<Float64> c;
-    c.resize(m_Rays.size());
+    c.resize(nRays);
     std::vector<std::string> profile;
-    profile.resize(m_Rays.size());
-    for(Int32 k2=0; k2<m_Rays.size(); k2++)
-      { //loop for the signal synthesis
+    profile.resize(nRays);
+
+    for(Int32 k2=0; k2<nRays; k2++)
+      {
         mu[k2] = m_Rays[k2].GetPosition()*(1+redshift);
         c[k2] = GetLineWidth(mu[k2], redshift, m_Rays[k2].GetIsEmission());
         profile[k2] = m_Rays[k2].GetProfile();
       }
 
-    for(Int32 k=0; k<m_Rays.size(); k++)
+    for(Int32 k=0; k<nRays; k++)
       { //loop for the intervals
         if(m_OutsideLambdaRangeList[k])
 	  {
@@ -332,14 +343,18 @@ void CMultiLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const C
             x = spectral[i];
 
             yg = 0.0;
-            for(Int32 k2=0; k2<m_Rays.size(); k2++)
-	      { //loop for the signal synthesis
+            for(Int32 k2=0; k2<nRays; k2++)
+            { //loop for the signal synthesis
                 if(m_OutsideLambdaRangeList[k2])
-		  {
+                {
                     continue;
-		  }
+                }
+                if(m_RayIsActiveOnSupport[k2][k]==0)
+                {
+                    continue;
+                }
                 yg += m_SignFactors[k2] * m_NominalAmplitudes[k2] * GetLineProfile(profile[k2], x-mu[k2], c[k2]);
-	      }
+            }
             num++;
             err2 = 1.0 / (error[i] * error[i]);
             sumCross += yg*y*err2;
@@ -347,6 +362,7 @@ void CMultiLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const C
         }
 
       }
+
     if ( num==0 || sumCross==0 || sumGauss==0 )
       {
         return;
@@ -354,22 +370,22 @@ void CMultiLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const C
 
     Float64 A = std::max(0.0, sumCross / sumGauss);
 
-    for(Int32 k=0; k<m_Rays.size(); k++)
-      {
+    for(Int32 k=0; k<nRays; k++)
+    {
         if(m_OutsideLambdaRangeList[k])
-	  {
+        {
             continue;
-	  }
+        }
         m_FittedAmplitudes[k] = A*m_NominalAmplitudes[k];
         if(A==0)
-	  {
+        {
             m_FittedAmplitudeErrorSigmas[k] = 0.0;
-	  }
-	else
-	  {
+        }
+        else
+        {
             m_FittedAmplitudeErrorSigmas[k] = 1.0/sqrt(sumGauss);
-	  }
-      }
+        }
+    }
     return;
 }
 
@@ -392,9 +408,9 @@ void CMultiLine::addToSpectrumModel( const CSpectrumSpectralAxis& modelspectralA
             continue;
 	  }
         for ( Int32 i = m_Start[k]; i <= m_End[k]; i++)
-	  {
+      {
             Float64 lambda = spectral[i];
-            Float64 Yi=getModelAtLambda(lambda, redshift);
+            Float64 Yi=getModelAtLambda(lambda, redshift, k);
             flux[i] += Yi;
         }
     }
@@ -428,7 +444,7 @@ void CMultiLine::addToSpectrumModelDerivSigma( const CSpectrumSpectralAxis& mode
 /**
  * \brief Returns the sum of the amplitude of each ray on redshifted lambda.
  **/
-Float64 CMultiLine::getModelAtLambda( Float64 lambda, Float64 redshift )
+Float64 CMultiLine::getModelAtLambda( Float64 lambda, Float64 redshift, Int32 kRaySupport)
 {
     if(m_OutsideLambdaRange)
       {
@@ -444,6 +460,10 @@ Float64 CMultiLine::getModelAtLambda( Float64 lambda, Float64 redshift )
 	  {
             continue;
 	  }
+        if( kRaySupport>=0 && m_RayIsActiveOnSupport[k2][kRaySupport]==0 )
+        {
+            continue;
+        }
         Float64 A = m_FittedAmplitudes[k2];
         Float64 mu = m_Rays[k2].GetPosition()*(1+redshift);
         Float64 c = GetLineWidth(mu, redshift, m_Rays[k2].GetIsEmission());
