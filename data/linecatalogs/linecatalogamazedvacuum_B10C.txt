@@ -1,8 +1,9 @@
 #version:0.3.0	
-#2016-02-09					
+#2016-04-01					
 #	Absorption	lines	list			
 #lambda	Name	type	force	profile	group	nominal_ampl
 6564.58	HalphaA	A	W	SYM		
+5895.6	NaD	A	W	SYM				
 5176.71	MgI5175	A	S	SYM		
 4862.62	HbetaA	A	W	SYM		
 4341.58	HgammaA	A	W	SYM		
@@ -15,6 +16,7 @@
 3836.43	H9A	A	W	SYM		
 3798.93	H10A	A	W	SYM		
 3771.65	H11A	A	W	SYM		
+3582.19	FeI	A	W	SYM		
 2853.73	MgI2852	A	S	SYM		
 2804.29	MgII2803	A	S	SYM	A_MgII	0.3054
 2797.11	MgII2796	A	S	SYM	A_MgII	0.6123
@@ -39,8 +41,10 @@
 1334.89	CII	A	W	SYM		
 1302.51	OI	A	W	SYM		
 1260.76	SiII1260	A	W	SYM		
-1216	LyAA	A	S	SYM		
-#	Emission	lines		list		
+1211	LyAA	A	S	SYMXL		
+#	Emission	lines		list
+6732.71	[SII]6731	E	W	SYM		
+6718.32	[SII]6716	E	W	SYM		
 6585.23	[NII](doublet-1)	E	W	SYM	E_NII	2.95
 6564.58	Halpha	E	S	SYM		
 6549.84	[NII](doublet-1/2.95)	E	W	SYM	E_NII	1

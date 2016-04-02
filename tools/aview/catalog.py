@@ -30,7 +30,8 @@ class Catalog(object):
         self.linegroup = -1
         self.linenominalamp = -1
         
-        #self.conversion = "toAir" #"toVacuum"#"toAir"
+        #self.conversion = "toAir"
+        #self.conversion = "toVacuum"#"toAir"
         self.conversion = ""
         
         self.load()
@@ -342,8 +343,8 @@ class Catalog(object):
      
             
 if __name__ == '__main__':
-    path = "/home/aschmitt/code/python/linemodel_tplshape/amazed/linecatalogs"
-    name = "linecatalogamazedvacuum_B9D_LyaAbsSYMprofile.txt"
+    path = "/home/aschmitt/gitlab/cpf-redshift/tools/simulation/amazed/linecatalogs"
+    name = "linecatalogamazedvacuum_B10C.txt"
     cpath = os.path.join(path,name)
     print('using full path: {0}'.format(cpath))
     c = Catalog(cpath, ctype="vacuum")

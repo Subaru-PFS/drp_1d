@@ -770,7 +770,6 @@ def StartFromCommandLine( argv ) :
     if( len( args ) == 0 ) :
         print('using full path: {0}'.format(options.spcPath))
         s = Spectrum(options.spcPath, options.spcType)
-        s.fitLya(4.2093)
         #s.applyRedshift(0.25)
         
         

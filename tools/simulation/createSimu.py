@@ -24,9 +24,10 @@ import utilbins
 
 #parameters
 enablePlot = False
-n_count_per_bin = 2
+n_count_per_bin = 10
 lambda_obs_min = 3800.0
 lambda_obs_max = 12600.0
+dlambda = 0.6
 
 temp_directory = "./tmp/"
 amazed_directory = "./amazed/"
@@ -74,7 +75,7 @@ while not allfull:
     tpl.applyRedshift(z)
     tpl.setMagIAB(mag)
     tpl.applyLambdaCrop(lambda_obs_min, lambda_obs_max)
-    tpl.interpolate(dx=0.6)
+    tpl.interpolate(dx=dlambda)
     
     print(tpl)
     exported_fits_path = tpl.exportFits(temp_directory, "spectrum_simu_tmp", addNoise=False, exportNoiseSpectrum=False)
