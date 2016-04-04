@@ -47,6 +47,8 @@ public:
     Float64                         GetMeanResolution() const;
     TLambdaRange                    GetLambdaRange() const;
 
+    bool                         GetMeanFluxInRange( TFloat64Range wlRange, Float64& mean ) const;
+
     Bool                            ConvertToLogScale();
     Bool                            ConvertToLinearScale();
 

@@ -549,6 +549,11 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
         Float64 aic = m + 2*nddl; //AIC
         result->bic[i] = aic;
         //result->bic[i] = aic + (2*nddl*(nddl+1) )/(nsamples-nddl-1);  //AICc, better when nsamples small
+
+        //compute continuum indexes
+        CContinuumIndexes continuumIndexes;
+        result->ContinuumIndexes[i] = continuumIndexes.getIndexes( spectrum, z );
+
     }
 
     //ComputeArea2(*result);

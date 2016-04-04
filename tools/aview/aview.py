@@ -112,9 +112,12 @@ def plotRes(resDir, spcName, tplpath, redshift, iextremaredshift, diffthres, fai
     
     if redshift == "":
         if not iextremaredshift == "": 
-            idx = int(iextremaredshift)
-            if 'chi' in locals():
-                zval = chi.getExtrema(idx)
+            idxExtrema = int(iextremaredshift)
+        else:
+            idxExtrema = int(0)
+        print('using idxExtrema: {}'.format(idxExtrema)) 
+        if 'chi' in locals():
+            zval = chi.getExtrema(idxExtrema)
         
         if not 'zval' in locals():
             print("WARNING: could not use first extrema as redshift value !!!!")

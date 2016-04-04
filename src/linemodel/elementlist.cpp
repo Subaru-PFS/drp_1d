@@ -727,41 +727,12 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
     //create spectrum model
     modelSolution = GetModelSolution();
 
-
-    /*
-    //model
-    CSpectrum spcmodel = GetModelSpectrum();
-    CSpectrumIOFitsWriter writer;
-    Bool retVal1 = writer.Write( "model.fits",  spcmodel);
-
-    if(retVal1){
-        CSpectrum s(spcmodel);
-        s.GetFluxAxis() = m_SpcFluxAxis;
-        Bool retVal2 = writer.Write( "spectrum.fits",  s);
-    }
-    //*/
-
-
-    /*
-    //model for linefitting
-    CSpectrum spcmodel4linefitting = GetModelSpectrum();
-    for(UInt32 i=0; i<spcmodel4linefitting.GetFluxAxis().GetSamplesCount(); i++){
-        spcmodel4linefitting.GetFluxAxis()[i] = spcmodel4linefitting.GetFluxAxis()[i]-m_ContinuumFluxAxis[i];
-    }
-    CSpectrumIOFitsWriter writer2;
-    Bool retVal2 = writer2.Write( "model4linefit.fits",  spcmodel4linefitting);
-
-    if(retVal1){
-        CSpectrum s4linefitting(spcmodel);
-        s4linefitting.GetFluxAxis() = spcFluxAxisNoContinuum;
-        Bool retVal2 = writer2.Write( "spectrum4linefit.fits",  s4linefitting);
-    }
-    //*/
     Float64 merit = getLeastSquareMerit(lambdaRange);
 
     if(m_ContinuumComponent == "nocontinuum"){
         reinitModel();
     }
+
     return merit;
 }
 

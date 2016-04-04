@@ -36,7 +36,8 @@ class ResultChisquare(object):
         self.amazed_extrema = []
         self.amazed_logarea = []
         self.amazed_sigmaz = [] 
-        self.amazed_fitamplitude = []        
+        self.amazed_fitamplitude = []
+        self.amazed_continuumIndexes = []        
         
         #self.cpath = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/RayCatalogs/raycatalogamazedvacuum.txt"
         self.cpath = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/linecatalogs/linecatalogamazedair_B.txt"
@@ -95,8 +96,24 @@ class ResultChisquare(object):
                 data = [d for d in data if len(d.strip(" "))>0]
                 for d in data:
                     self.amazed_fitamplitude.append(float(d))
+            elif not lineStr.find("ContinuumIndexes for each extrema = {") == -1:
+                beg = lineStr.find("{")
+                end = lineStr.find("}")  
+                dataStr = lineStr[beg+1:end]
+                strExtrema = dataStr.split(">")
+                strExtrema = [d.replace("<", "") for d in strExtrema]
+                #print("strExtrema = {}".format(strExtrema))
+                dataExtrema = [d for d in strExtrema if len(d.strip(" "))>0]
+                for de in dataExtrema:
+                    #print("de = {}".format(de))
+                    extremaContIndexes = []
+                    data = de.split("\t")
+                    data = [d for d in data if len(d.strip(" "))>0]
+                    for d in data:
+                        #print("d = {}".format(d))
+                        extremaContIndexes.append(float(d))
+                    self.amazed_continuumIndexes.append(extremaContIndexes)
                 
-                    
         f.close()
         self.n = len(wave)
         #print('len wave = {0}'.format(self.n))
@@ -134,8 +151,15 @@ class ResultChisquare(object):
                 sigmaz = self.amazed_sigmaz[z]
             except:
                 pass
-            a = a + ("    z = {0}\t\tlogarea = {1}\t\tsigmaz = {2}\n".format(extrema, logarea, sigmaz ))
-
+            a = a + ("    z = {0}\t\tlogarea = {1}\t\tsigmaz = {2}\n".format(extrema, logarea, sigmaz )) 
+            
+        a = a + ("\n")
+        for z in range(len(self.amazed_continuumIndexes)):
+            data = self.amazed_continuumIndexes[z]
+            a = a + ("    ci_{} = ".format(z))
+            for d in data:
+                a = a + ("{:<20}\t".format(d ))
+            a = a + ("\n")   
         
         
         return a

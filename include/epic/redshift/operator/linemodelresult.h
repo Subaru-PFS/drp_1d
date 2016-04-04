@@ -6,6 +6,7 @@
 #include <epic/redshift/operator/operator.h>
 
 #include <epic/redshift/ray/catalog.h>
+#include <epic/redshift/continuum/indexes.h>
 
 namespace NSEpic
 {
@@ -52,6 +53,7 @@ public:
     TFloat64List            SigmaZ; //sigmaz for each extrema
     std::vector<SLineModelSolution> LineModelSolutions; //linemodel for each extrema
     TFloat64List            bic;    // bayesian information criterion for each extrema
+    std::vector<CContinuumIndexes::TContinuumIndexList> ContinuumIndexes; //continuum indexes for each extrema
 
     COperator::TStatusList  Status;
     CRayCatalog::TRayVector restRayList;

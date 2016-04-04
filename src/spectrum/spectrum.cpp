@@ -1,5 +1,7 @@
 #include <epic/redshift/spectrum/spectrum.h>
 
+
+#include <epic/redshift/common/mask.h>
 #include <epic/core/debug/assert.h>
 
 #include <math.h>
@@ -118,6 +120,29 @@ TLambdaRange CSpectrum::GetLambdaRange() const
     return m_SpectralAxis.GetLambdaRange();
 }
 
+
+bool CSpectrum::GetMeanFluxInRange( TFloat64Range wlRange,  Float64& mean) const
+{
+    //wlrange should be totally included in teh spectrum lambdarange
+    if(wlRange.GetBegin()<m_SpectralAxis.GetLambdaRange().GetBegin())
+    {
+        return false;
+    }
+    if(wlRange.GetEnd()>m_SpectralAxis.GetLambdaRange().GetEnd())
+    {
+        return false;
+    }
+
+    CMask mask;
+    m_SpectralAxis.GetMask( wlRange, mask );
+    const Float64* error = m_FluxAxis.GetError();
+    Float64 _Mean = 0.0;
+    Float64 _SDev = 0.0;
+    m_FluxAxis.ComputeMeanAndSDev( mask,_Mean ,_SDev, error);
+
+    mean = _Mean;
+    return true;
+}
 
 const std::string CSpectrum::GetName() const
 {
