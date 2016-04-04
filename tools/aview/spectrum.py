@@ -668,8 +668,9 @@ class Spectrum(object):
         #sumF = 8.31*1e-9#2.55*10e-20 #Vega, band I
         #print("meanF = {}".format(meanF))
         #refF = 3631.0#2550*1e-23#8.31*1e-9#2.55*10e-20 #Vega, band I
-        #refM = 46.8
-        mag = -5.0/2.0*np.log10(f)-46.8
+        #refM = 48.6
+        mag = -5.0/2.0*np.log10(f)-48.6
+        #Check: V. Lebrun's numbers F = 1e-18 at mag 23.5
         return mag
     
     def getFNU(self):
@@ -678,7 +679,7 @@ class Spectrum(object):
         
         for x in range(self.n):
             #self.yvect[x] = self.yvect[x]*3.34*1e4*self.xvect[x]**2
-            yvect[x] = self.yvect[x]/c_cm_s*(self.xvect[x]**2)*3.5 #coeff 3.5 added to fit exactly V. Lebrun's numbers 1e-18 at mag 23.5
+            yvect[x] = self.yvect[x]/c_cm_s*(self.xvect[x]**2)
             
         return yvect
 
