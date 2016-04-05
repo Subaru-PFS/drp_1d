@@ -376,11 +376,14 @@ class Spectrum(object):
         pp.show()
         print '\n'
         
-    def plotCompare(self, other_spc, amplitude = 1.0, modellinetype = "-bo"):
+    def plotCompare(self, other_spc, amplitude = 1.0, modellinetype = "-bo", exportPath=""):
+        fig = pp.figure( "spectrumview", figsize=(15,11))
+        
         lbl = self.label
         if lbl=="":
             lbl = self.name
-        pp.plot(self.xvect, self.yvect, 'k', label=self.name)
+        spcColor = '0.6'
+        pp.plot(self.xvect, self.yvect,  color=spcColor, label=self.name)
         yother = [a*amplitude for a in other_spc.yvect]
         lbl = other_spc.label
         if lbl=="":
@@ -390,13 +393,18 @@ class Spectrum(object):
         pp.grid(True) # Affiche la grille
         pp.legend()
         if not self.forcePlotXIndex:
-             pp.xlabel('angstrom')
+             pp.xlabel('Angstrom')
         else:
             pp.xlabel('index')
-        pp.ylabel('y')
+        pp.ylabel('Flux')
         pp.title(self.name) # Titre
-        #pp.savefig('ExempleTrace') # sauvegarde du fichier ExempleTrace.png
-        pp.show()
+        if exportPath=="":
+            pp.show()
+        else:
+            pp.savefig(exportPath)
+            pp.close()
+            pp.clf()
+            
         print '\n'
         
     def exportPlotCompareBokeh(self, other_spc, amplitude = 1.0, fname = "spectrum_comparison"):

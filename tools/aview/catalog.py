@@ -179,11 +179,11 @@ class Catalog(object):
             #EUCLID
             obs_lambda_min = 12500.0
             obs_lambda_max = 17500.0
-        if 0:        
+        if 1:        
             #PFS
             obs_lambda_min = 3800.0
             obs_lambda_max = 12600.0
-        if 1:        
+        if 0:        
             #PFS
             obs_lambda_min = 3600.0
             obs_lambda_max = 9400.0
@@ -197,7 +197,7 @@ class Catalog(object):
         linesaxisticks = ["{} - {}A".format(ctlg_rest['name'][a], ctlg_rest['lambdarest'][a]) for a in range(len(ctlg_rest['name']))]
         
         zmin = 0.0
-        zmax = 5.0
+        zmax = 10.0
         zstep = 0.01
         nz = int((zmax-zmin)/zstep)
         zaxis = np.linspace(zmin, zmax, nz)
@@ -326,6 +326,32 @@ class Catalog(object):
             outStr = outStr + "|{}|{}|{}|{}|{}|{}|{}|".format(self.linelambda[x], self.linename[x], self.linetype[x], self.lineforce[x], self.lineprofile[x], group, nominalamp) + "\n"
       
         return outStr
+    
+            
+    def getLatexTableString(self, ):
+        outStr = ""      
+        
+        outStr = outStr + "\\begin{tabular}{ | c | c | c | c | c | c | c | } \n"
+        outStr = outStr + "\\hline \n"
+        outStr = outStr + "lambda & Name & type & force & profile & group & nominal_ampl \\\\ \n"
+        outStr = outStr + "\\hline \n"
+        
+        for x in range(0,self.n):
+            nominalamp = ""
+            if not self.linenominalamp[x] == -1:
+               nominalamp = str(self.linenominalamp[x]) 
+            group = ""
+            if not self.linegroup[x] == "-1":
+               group = self.linegroup[x]
+            outStr = outStr + "{}&{}&{}&{}&{}&{}&{} \\\\ \n".format(self.linelambda[x], self.linename[x], self.linetype[x], self.lineforce[x], self.lineprofile[x], group, nominalamp) + "\n"
+        
+        outStr = outStr + "\\hline \n"
+        outStr = outStr + "\end{tabular}\n" 
+
+        #correcting underscores for lateX
+        outStr = outStr.replace("_", "\\_")      
+        
+        return outStr
 
     def applyTemplateShapeFromLinemodelFitResult(self, lmFitResFilePath):
         mres = modelresult.ModelResult(lmFitResFilePath)
@@ -352,9 +378,10 @@ if __name__ == '__main__':
     #print(c.getShiftedCatalog(1.0, "E"))
     
     #c.plot()
-    c.plotInZplane()  
+    #c.plotInZplane()  
     
     #print("the REDMINE (copy/paste) generated table is:\n{}".format(c.getRedmineTableString()))
+    print("the LATEX (copy/paste) generated table is:\n{}".format(c.getLatexTableString()))
     
     #lmResPath = "/home/aschmitt/code/python/linemodel_tplshape/amazed/output/spectrum_tpl_NEW_Im_extended.dat_TF/linemodelsolve.linemodel_fit_extrema_0.csv"
     #c.applyTemplateShapeFromLinemodelFitResult(lmResPath)

@@ -127,7 +127,8 @@ class ModelResult(object):
         pp.show()
 
     def randomAmplitudes(self, coeffE=1.0, coeffA=0.5):
-        coeffE *= 1e-17 #coefficient additive and continuum independent, needs absolute value
+	#coeffE = continuum independent value: this is the 'SFR=100.0' line amplitude
+        coeffE *= 1e-17 
         
         # First get OII and Halpha in range +- 30% of the SFR coefficient value
         ampOII = coeffE*(0.7+random.random()*0.6)
@@ -140,6 +141,7 @@ class ModelResult(object):
         
         ampCIII = ampHalpha*(random.random())
         ampCIV = ampHalpha*(random.random())
+	# NOTE: Emission, lineamplitude[k] = absolute amplitude of the line
         for k in range(self.n):
             if self.linetype[k] == "E":
                 if self.linename[k]=="Halpha":
@@ -147,9 +149,11 @@ class ModelResult(object):
                 elif self.linename[k]=="Hbeta":
                     self.lineamplitude[k] = ampHbetaE
                 elif self.linename[k]=="[OII]3729":
-                    self.lineamplitude[k] = ampOII*0.7 #coeff 0.7 grossièrement pour compenser doublet
+                    self.lineamplitude[k] = ampOII*0.7 
+		    #coeff 0.7 = approx. doublet compensation
                 elif self.linename[k]=="[OII]3726":
-                    self.lineamplitude[k] = ampOII*0.7 #coeff 0.7 grossièrement pour compenser doublet
+                    self.lineamplitude[k] = ampOII*0.7
+		    #coeff 0.7 = approx. doublet compensation
                 elif self.linename[k]=="[OIII](doublet-1)":
                     self.lineamplitude[k] = ampOIII
                 elif self.linename[k]=="[OIII](doublet-1/3)":
@@ -186,6 +190,7 @@ class ModelResult(object):
                     self.lineamplitude[k] = ampHalpha*(random.random()*0.33) 
                 
         
+        # NOTE: Absorption, lineamplitude[k] = absorption coeff of the line
         for k in range(self.n):
             if self.linetype[k] == "A":
                 if self.linename[k]=="HalphaA":
