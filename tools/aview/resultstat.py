@@ -219,7 +219,7 @@ class ResultList(object):
         
         return redshifts, merits
 
-    def getBestZinZrange(self, indice=0, chi2Type = "raw"): 
+    def getBestZinZrange(self, indice=0, chi2Type = "raw", enableZrangeFilter=False): 
         bestz = -1
         bestmerit = 1e12
         besttpl = "-1"
@@ -244,7 +244,9 @@ class ResultList(object):
             chi2 = chisq.ResultChisquare(filepath)
             
             tpltag = os.path.basename(tplpaths[a])
-            zrange = self.getZrangeForTemplate(tpltag)
+            zrange = [-1000.0, 1000.0] #using full zrange by default
+            if enableZrangeFilter:
+                zrange = self.getZrangeForTemplate(tpltag)
             print("using zrange = {}".format(zrange))
             z, merit = chi2.getBestZ_byFluxMin(zrange[0], zrange[1])
             print("found best redshift for this tpl = {}, wirh merit = {}".format(z, merit))
@@ -418,7 +420,7 @@ class ResultList(object):
         
         return zrange
         
-    def getBestZcandidateWithinZrangePerTpl(self, chi2Type="raw", extremaType="full", enablePlot = False, enableExport = False):
+    def getBestZcandidateWithinZrangePerTpl(self, chi2Type="raw", extremaType="full", enableZrangeFilter=False):
         zbest = []
         meritbest = []
         tplbest = []
@@ -431,7 +433,7 @@ class ResultList(object):
             if extremaType=="amazed":
                 redshifts, merits = self.getZCandidatesFromAmazedChi2Extrema(x, chi2Type, nextrema, enableZrangePerTpl=True)
             else:
-                z, merit, tpl = self.getBestZinZrange(x, chi2Type)
+                z, merit, tpl = self.getBestZinZrange(x, chi2Type, enableZrangeFilter=enableZrangeFilter)
                 
             zbest.append(1e6)
             meritbest.append(1e6)
@@ -1601,18 +1603,21 @@ def plotRelativePosSecondBestExtrema(resDir, diffthres, spcName=""):
         #plt.title(name1)
         plt.show()   
 
-def exportBestRedshiftWithZRangePerTemplate(resDir, diffthres, spcName=""):
+def exportBestRedshiftWithZRangePerTemplate(resDir, diffthres, chi2Type="linemodeltplshape", spcName="", enableZrangeFilter=False):
     print('using amazed results full path: {0}'.format(resDir))
     resList = ResultList(resDir, diffthreshold=diffthres, opt='brief', spcName=spcName)
     if resList.n <1:
         print('No results loaded...')
         return
     
-    bestz, bestmerit, bestTpl = resList.getBestZcandidateWithinZrangePerTpl("linemodeltplshape", "full", enablePlot=True, enableExport=True)
+    bestz, bestmerit, bestTpl = resList.getBestZcandidateWithinZrangePerTpl(chi2Type, "full", enableZrangeFilter=False)
     
     enableExport = True
-    if enableExport:            
-            outdir = os.path.join(resList.analysisoutputdir, "best_redshift".format())
+    if enableExport:    
+            zrangeFilterSwitchStr = "ON"
+            if not enableZrangeFilter:
+                zrangeFilterSwitchStr = "OFF"
+            outdir = os.path.join(resList.analysisoutputdir, "best_redshift_chi2Type{}_zrangeFilter{}".format( chi2Type, zrangeFilterSwitchStr))
             if not os.path.exists(outdir):
                 print("creating outputdir {}".format(outdir))
                 os.makedirs(outdir) 
@@ -1863,7 +1868,7 @@ def StartFromCommandLine( argv ) :
         choiceStr = raw_input("\n\nPlease choose the processing:\n\
         1. Export Full Analysis\n\
         2. Plot Template Missing rate\n\
-        3. Plot Closest Z Candidats\n\
+        3. Plot Closest Z Candidate\n\
         4. Plot Relative Position - Closest Z candidate\n\
         5. Plot Relative Position - 2nd extrema z candidate\n\
         6. Export Best Redshift - with zrange(per template)\n\
@@ -1923,7 +1928,21 @@ def StartFromCommandLine( argv ) :
             spcStr = raw_input("Do you want to enter a spectrum name to filter the results ? (press enter to skip) :")
             if not (spcStr == "No" or spcStr == "no"):
                 spcName = spcStr
-            exportBestRedshiftWithZRangePerTemplate(options.resDir, float(options.diffthres), spcName)
+            extremaTypeStr = raw_input("Please enter the extrema type : choices = raw, nocontinuum, corr, linemodel, linemodeltplshape :")
+            if not (extremaTypeStr == "raw" or extremaTypeStr == "nocontinuum" or extremaTypeStr == "corr" or extremaTypeStr == "linemodel" or extremaTypeStr == "linemodeltplshape"):
+                print("extrema type not successfully, aborting")
+                return
+            enableZrangeFilterStr = raw_input("Do you want to use the hardcoded zrange values to filter each z candidates ? (y, n) :")
+            if not (enableZrangeFilterStr == "y" or enableZrangeFilterStr == "n"):
+                print("enableZrangeFilterStr not successfully retrieved from user input, aborting")
+                return
+            else:
+                if enableZrangeFilterStr == "n":
+                    enableZrangeFilter=False
+                if enableZrangeFilterStr == "y":
+                    enableZrangeFilter=True
+                    
+            exportBestRedshiftWithZRangePerTemplate(options.resDir, float(options.diffthres), chi2Type=extremaTypeStr, spcName=spcName, enableZrangeFilter=enableZrangeFilter)
         
         elif choice == 10:
             exportLineDetectionStats(options.resDir)
