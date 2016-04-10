@@ -21,7 +21,7 @@ class CModelFittingResult : public COperatorResult
 
 public:
 
-    CModelFittingResult( CLineModelResult::SLineModelSolution _lineModelSolution, Float64 _redshift, Float64 _merit, CRayCatalog::TRayVector _restRayList, Float64 _velEmission=-1.0, Float64 _velAbsorption=-1.0 );
+    CModelFittingResult(CLineModelResult::SLineModelSolution _lineModelSolution, Float64 _redshift, Float64 _merit, CRayCatalog::TRayVector _restRayList, Float64 _velEmission=-1.0, Float64 _velAbsorption=-1.0 );
     CModelFittingResult();
     virtual ~CModelFittingResult();
 
@@ -41,7 +41,6 @@ private:
     CRayCatalog::TRayVector restRayList;
     Float64 VelocityEmission;
     Float64 VelocityAbsorption;
-
 };
 
 inline

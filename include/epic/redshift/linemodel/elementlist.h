@@ -93,6 +93,9 @@ private:
     void fitAmplitudesSimplex();
     Int32 fitAmplitudesLmfit(std::vector<Int32> EltsIdx, const CSpectrumFluxAxis &fluxAxis, std::vector<Float64> &ampsfitted, Int32 lineType);
     Int32 fitAmplitudesLinSolve(std::vector<Int32> EltsIdx, const CSpectrumSpectralAxis &spectralAxis, const CSpectrumFluxAxis &fluxAxis, std::vector<Float64> &ampsfitted);
+
+    Int32 fitLyaProfile( Float64 redshift, const CSpectrumSpectralAxis& spectralAxis );
+
     std::vector<Int32> getSupportIndexes(std::vector<Int32> EltsIdx);
     std::vector<Int32> getOverlappingElementsBySupport(Int32 ind , Float64 overlapThres=0.1);
     std::vector<Int32> ReestimateContinuumApprox(std::vector<Int32> EltsIdx);
@@ -107,12 +110,8 @@ private:
     void applyRules();
     Void ApplyStrongHigherWeakRule( Int32 lineType );
     Float64 FindHighestStrongLineAmp( Int32 lineType, Float64 &er);
+
     CRegulament* m_Regulament;
-
-    //merge with dev_linemodel_widthlmfit 20160312 to be deleted
-    //Int32 FindElementIndex(Int32 LineCatalogIndex);
-    //Int32 FindElementIndex(std::string LineTagStr, Int32 linetype);
-
 
     Float64 m_Redshift;
 

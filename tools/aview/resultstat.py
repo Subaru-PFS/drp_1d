@@ -1895,8 +1895,8 @@ def StartFromCommandLine( argv ) :
         elif choice == 2:
             plotTplMissingRate(options.resDir)
         elif choice == 3:
-            extremaTypeStr = raw_input("Please enter the extrema type : choices = raw, nocontinuum, corr, linemodel :")
-            if not (extremaTypeStr == "raw" or extremaTypeStr == "nocontinuum" or extremaTypeStr == "corr" or extremaTypeStr == "linemodel"):
+            extremaTypeStr = raw_input("Please enter the extrema type : choices = raw, nocontinuum, corr, linemodel, linemodeltplshape :")
+            if not (extremaTypeStr == "raw" or extremaTypeStr == "nocontinuum" or extremaTypeStr == "corr" or extremaTypeStr == "linemodel" or extremaTypeStr == "linemodeltplshape"):
                 print("extrema type not successfully, aborting")
                 return
                 

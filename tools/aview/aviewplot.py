@@ -340,8 +340,8 @@ class AViewPlot(object):
         
         # add OII to the pool of displayed ranges
         displays_lambdas_rest_center.append(4000)
-        displays_lambdas_rest_min.append(3695)
-        displays_lambdas_rest_max.append(3770)
+        displays_lambdas_rest_min.append(3665)
+        displays_lambdas_rest_max.append(3800)
         displays_names.append("OII")
         
 #        # add OIII to the pool of displayed ranges
@@ -359,7 +359,7 @@ class AViewPlot(object):
         # add Ha to the pool of displayed ranges
         displays_lambdas_rest_center.append(6562)
         displays_lambdas_rest_min.append(6450)
-        displays_lambdas_rest_max.append(6650)
+        displays_lambdas_rest_max.append(6780)
         displays_names.append("Ha")
         
         # add Ca to the pool of displayed ranges

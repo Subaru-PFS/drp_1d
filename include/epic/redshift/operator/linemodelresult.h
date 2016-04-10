@@ -27,6 +27,11 @@ public:
         std::vector<Float64> Widths;
         std::vector<Bool> OutsideLambdaRange;
         std::vector<TInt32Range> fittingIndexRange;
+
+        Float64 LyaWidthCoeff;
+        Float64 LyaAlpha;
+        Float64 LyaDelta;
+
         Int32 nDDL;
     };
 

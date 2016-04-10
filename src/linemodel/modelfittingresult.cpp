@@ -22,7 +22,12 @@ CModelFittingResult::CModelFittingResult()
 /**
  * \brief Attributes values to member variables according to arguments.
  **/
-CModelFittingResult::CModelFittingResult(CLineModelResult::SLineModelSolution _lineModelSolution, Float64 _redshift, Float64 _merit, CRayCatalog::TRayVector _restRayList, Float64 _velEmission, Float64 _velAbsorption)
+CModelFittingResult::CModelFittingResult( CLineModelResult::SLineModelSolution _lineModelSolution,
+                                          Float64 _redshift,
+                                          Float64 _merit,
+                                          CRayCatalog::TRayVector _restRayList,
+                                          Float64 _velEmission,
+                                          Float64 _velAbsorption)
 {
     LineModelSolution   = _lineModelSolution;
     Redshift            = _redshift;
@@ -30,6 +35,7 @@ CModelFittingResult::CModelFittingResult(CLineModelResult::SLineModelSolution _l
     restRayList         = _restRayList;
     VelocityEmission               = _velEmission;
     VelocityAbsorption               = _velAbsorption;
+
 }
 
 /**
@@ -82,6 +88,12 @@ Void CModelFittingResult::Save( const CDataStore& store, std::ostream& stream ) 
                 stream << std::scientific << std::setprecision(5) <<  LineModelSolution.FittingError[j] << std::endl;
             }
             stream << "#}" << std::endl;
+
+            stream <<  "#lya asymfit params = { ";
+            stream << "widthCoeff= " <<  LineModelSolution.LyaWidthCoeff << ", ";
+            stream << "alpha= " <<  LineModelSolution.LyaAlpha << ", ";
+            stream << "delta= " <<  LineModelSolution.LyaDelta << " ";
+            stream << "}" << std::endl;
         }
     }
 
