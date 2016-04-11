@@ -298,7 +298,7 @@ class ResParser(object):
             pathTplChi = os.path.join(path, tplnametag)
             name = "linemodeltplshapesolve.linemodel_spc_extrema_{}.csv".format(idxExtrema) 
             tplpath = os.path.join(pathTplChi,name)
-            tplpath = ""
+            #tplpath = ""
         elif method == "decisionaltreeb" or method.lower() == "amazed0_2":
             name = "dtreeBsolve.linemodel_spc_extrema_{}.csv".format(idxExtrema)
             tplpath = os.path.join(path,name)

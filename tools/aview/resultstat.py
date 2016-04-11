@@ -493,7 +493,7 @@ class ResultList(object):
             for idx,z in enumerate(redshifts):
                 if abs(self.list[x].zref-z) < abs(self.list[x].zref-zclosest[x]):
                     zclosest[x] = z
-                    zabsdiff[x] = abs(self.list[x].zref-z)
+                    zabsdiff[x] = abs(self.list[x].zref-z)/(1.0+self.list[x].zref)
                     zrank[x] = idx
             
             #print("zabsdiff = {}".format(zabsdiff[x]))
@@ -517,8 +517,8 @@ class ResultList(object):
                 fout = open( outFile, "w" ) 
                 foutFailures = open( outFileFailures, "w" ) 
                 
-                fout.write( "idx" + '\t' + "spc" + '\t' + 'zclosest' + '\t' + "rank" + '\t' + "abszdiff"  + '\n')
-                foutFailures.write( "idx" + '\t' + "spc" + '\t' + 'zclosest' + '\t' + "rank" + '\t' + "abszdiff"  + '\n')
+                fout.write( "idx" + '\t' + "spc" + '\t' + 'zclosest' + '\t' + "rank" + '\t' + "zrelerr"  + '\n')
+                foutFailures.write( "idx" + '\t' + "spc" + '\t' + 'zclosest' + '\t' + "rank" + '\t' + "zrelerr"  + '\n')
                 for ex in range(0, n):
                     outStr = str(ex) + '\t' + str(self.list[ex].name) + '\t' +str(zclosest[ex]) + '\t' +str(zrank[ex]) + '\t' +str(zabsdiff[ex])
                     #print outStr
@@ -558,7 +558,7 @@ class ResultList(object):
             plt.grid(True) # Affiche la grille
             #pp.legend(('cos','sin'), 'upper right', shadow = True)
             plt.ylabel('Cumulative Histogram')
-            plt.xlabel('abs(zref - closest z candidate)')
+            plt.xlabel('abs(zref - closest z candidate) / (1+zref)')
             name1 = "Closest Z candidates found in chi2{}\nN={}, diffthres={}, N extrema ={}".format(chi2Type,len(zabsdiff), self.diffthreshold, nextrema)
             plt.title(name1)
             
