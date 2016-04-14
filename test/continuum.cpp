@@ -8,6 +8,9 @@
 #include <epic/core/log/consolehandler.h>
 #include <epic/redshift/spectrum/io/fitsreader.h>
 
+
+#include <epic/redshift/continuum/indexes.h>
+
 #include <math.h>
 #include <boost/test/unit_test.hpp>
 
@@ -22,13 +25,13 @@ BOOST_AUTO_TEST_CASE(Compute)
     CSpectrumIOFitsReader reader;
     CSpectrum s;
     CSpectrum s_continuumRef;
-	
+
     Bool retVal = reader.Read( "../test/data/ContinuumTestCase/simu_ECN_continuum.fits", s_continuumRef );
     BOOST_CHECK( retVal == true );
     retVal = reader.Read( "../test/data/ContinuumTestCase/simu_ECN_all.fits", s );
     BOOST_CHECK( retVal == true );
 
-    // Remove continuum 
+    // Remove continuum
     CContinuumIrregularSamplingMedian continuum;
     CSpectrumFluxAxis fluxAxisWithoutContinuumCalc;
 
@@ -40,7 +43,36 @@ BOOST_AUTO_TEST_CASE(Compute)
     fluxAxis.Subtract(fluxAxisWithoutContinuumCalc);
     Float64 er = fluxAxis.ComputeRMSDiff(s_continuumRef.GetFluxAxis());
     BOOST_CHECK(er < threshold);
-     
+}
+
+BOOST_AUTO_TEST_CASE(ContinuumIndexes)
+{
+    // load spectrum
+    CSpectrumIOFitsReader reader;
+    CSpectrum s;
+
+    Bool retVal = reader.Read( "../test/data/ContinuumTestCase/spectrum_tpl_vvds-reddestdataExtensionData.txt_TF.fits", s );
+    BOOST_CHECK( retVal == true );
+
+    //compute continuum indexes
+    CContinuumIndexes continuumIndexes;
+    CContinuumIndexes::TContinuumIndexList indexesList = continuumIndexes.getIndexes( s, 0.0 );
+
+    // test the extracted indexes
+    //Lya index
+    BOOST_CHECK_CLOSE_FRACTION( indexesList[0].Color, 0.34, 0.1 );
+    BOOST_CHECK_CLOSE_FRACTION( indexesList[0].Break, 0.0, 0.1 );
+    //OII index
+    BOOST_CHECK_CLOSE_FRACTION( indexesList[1].Color, 0.9, 0.1 );
+    BOOST_CHECK_CLOSE_FRACTION( indexesList[1].Break, -0.5, 0.1 );
+    //OIII index
+    BOOST_CHECK_CLOSE_FRACTION( indexesList[2].Color, 0.1, 0.1 );
+    BOOST_CHECK_CLOSE_FRACTION( indexesList[2].Break, 0.4, 0.1 );
+    //Halpha index
+    BOOST_CHECK( indexesList[3].Color == NAN );
+    BOOST_CHECK( indexesList[3].Break == NAN );
+
+
 }
 
 

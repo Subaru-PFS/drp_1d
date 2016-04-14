@@ -21,9 +21,10 @@ def plotRes(resDir, spcName, tplpath, redshift, iextremaredshift, diffthres, fai
     s = rp.ResParser(resDir)
     print(s) 
     
+    print("Using Diffthreshold: {}".format(diffthres))
+    resList = rstat.ResultList(resDir, diffthreshold=float(diffthres), opt='brief')      
+        
     if spcName == "":
-        print("Using Diffthreshold: {}".format(diffthres))
-        resList = rstat.ResultList(resDir, diffthreshold=float(diffthres), opt='brief')        
         print("Results, N found failures = {0}".format(resList.n))
         indice = int(failureIdx)
         if indice < resList.n:
@@ -37,7 +38,14 @@ def plotRes(resDir, spcName, tplpath, redshift, iextremaredshift, diffthres, fai
 
         else:
             print("WARNING: index is not within the failure list size range... aborting".format())
-            return
+            return 
+    else:
+        for idx in range(resList.n):
+            if spcName == resList.list[idx].name:
+                print("INFO: found index for this spectrum and diffthreshold : i={}\n".format(idx))
+                break
+            
+        
         
     spath = s.getSpcFullPath(spcName)
     print('Spc path is: {0}'.format(spath))

@@ -64,8 +64,6 @@ private:
 
     std::shared_ptr<CDataStore>                m_DataStore;
 
-
-
 };
 
 

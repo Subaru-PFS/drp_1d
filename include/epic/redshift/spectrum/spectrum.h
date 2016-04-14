@@ -47,7 +47,8 @@ public:
     Float64                         GetMeanResolution() const;
     TLambdaRange                    GetLambdaRange() const;
 
-    bool                         GetMeanFluxInRange( TFloat64Range wlRange, Float64& mean ) const;
+    bool                            GetMeanFluxInRange( TFloat64Range wlRange, Float64& mean ) const;
+    bool                            GetLinearRegInRange( TFloat64Range wlRange,  Float64& a, Float64& b) const;
 
     Bool                            ConvertToLogScale();
     Bool                            ConvertToLinearScale();
@@ -56,11 +57,18 @@ public:
     const Bool                      IsFluxValid(Float64 LambdaMin, Float64 LambdaMax) const;
     const Bool                      IsNoiseValid(Float64 LambdaMin, Float64 LambdaMax) const;
 
+    const std::string&       	    GetFullPath() const;
+    const Int32                     GetDecompScales() const;
+    void 			    SetFullPath(const char* nameP);
+    void 			    SetDecompScales(Int32 decompScales);
+
 private:
 
     std::string                     m_Name;
     CSpectrumFluxAxis               m_FluxAxis;
     CSpectrumSpectralAxis           m_SpectralAxis;
+    std::string                     m_FullPath;
+    Int32                           m_nbScales;
 };
 
 inline

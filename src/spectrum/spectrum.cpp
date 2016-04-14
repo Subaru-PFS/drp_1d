@@ -8,6 +8,8 @@
 #include <stdio.h>
 #include <algorithm>
 
+#include <gsl/gsl_fit.h>
+
 using namespace NSEpic;
 
 CSpectrum::CSpectrum()
@@ -120,10 +122,9 @@ TLambdaRange CSpectrum::GetLambdaRange() const
     return m_SpectralAxis.GetLambdaRange();
 }
 
-
 bool CSpectrum::GetMeanFluxInRange( TFloat64Range wlRange,  Float64& mean) const
 {
-    //wlrange should be totally included in teh spectrum lambdarange
+    //wlrange should be totally included in the spectrum lambdarange
     if(wlRange.GetBegin()<m_SpectralAxis.GetLambdaRange().GetBegin())
     {
         return false;
@@ -141,6 +142,46 @@ bool CSpectrum::GetMeanFluxInRange( TFloat64Range wlRange,  Float64& mean) const
     m_FluxAxis.ComputeMeanAndSDev( mask,_Mean ,_SDev, error);
 
     mean = _Mean;
+    return true;
+}
+
+bool CSpectrum::GetLinearRegInRange(TFloat64Range wlRange,  Float64& a, Float64 &b) const
+{
+    //wlrange should be totally included in the spectrum lambdarange
+    if(wlRange.GetBegin()<m_SpectralAxis.GetLambdaRange().GetBegin())
+    {
+        return false;
+    }
+    if(wlRange.GetEnd()>m_SpectralAxis.GetLambdaRange().GetEnd())
+    {
+        return false;
+    }
+
+    const Float64* error = m_FluxAxis.GetError();
+
+    TInt32Range iRange = m_SpectralAxis.GetIndexesAtWaveLengthRange(wlRange);
+    Int32 n = iRange.GetEnd()-iRange.GetBegin()+1;
+    Float64* x = (Float64*)malloc(n*sizeof(Float64));
+    Float64* y = (Float64*)malloc(n*sizeof(Float64));
+    Float64* w = (Float64*)malloc(n*sizeof(Float64));
+
+    for(Int32 k=0; k<n; k++)
+    {
+        Int32 ik=k+iRange.GetBegin();
+        w[k] = 1.0/(error[ik]*error[ik]);
+        x[k] = m_SpectralAxis[ik];
+        y[k] = m_FluxAxis[ik];
+    }
+
+    double c0, c1, cov00, cov01, cov11, chisq;
+    gsl_fit_wlinear (x, 1, w, 1, y, 1, n, &c0, &c1, &cov00, &cov01, &cov11, &chisq);
+
+    a = c1;
+    b = c0;
+    //todo: use chisq (weighted sum of squares of the residuals) for fitting quality,
+    free(x);
+    free(y);
+    free(w);
     return true;
 }
 
@@ -183,4 +224,25 @@ const Bool CSpectrum::IsNoiseValid( Float64 LambdaMin,  Float64 LambdaMax ) cons
         }
     }
     return valid;
+}
+
+
+const std::string& CSpectrum::GetFullPath() const
+{
+      return m_FullPath;
+}
+
+const Int32 CSpectrum::GetDecompScales() const
+{
+      return m_nbScales;
+}
+
+void CSpectrum::SetFullPath(const char* nameP)
+{
+	m_FullPath = nameP;
+}
+
+void CSpectrum::SetDecompScales( Int32 decompScales )
+{
+	m_nbScales = decompScales;
 }

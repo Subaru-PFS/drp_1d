@@ -9,6 +9,7 @@
 #include <epic/redshift/ray/ray.h>
 #include <epic/redshift/ray/catalog.h>
 #include <epic/redshift/continuum/median.h>
+#include <epic/redshift/continuum/waveletsdf.h>
 #include <epic/redshift/continuum/irregularsamplingmedian.h>
 
 #include <epic/core/log/log.h>
@@ -16,6 +17,7 @@
 
 #include <epic/redshift/method/blindsolveresult.h>
 #include <epic/redshift/operator/raymatchingresult.h>
+#include <epic/redshift/operator/spectraFluxResult.h>
 
 #include <stdio.h>
 #include <float.h>
@@ -101,20 +103,43 @@ bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath,
 
     std::string medianRemovalMethod;
     paramStore->Get( "continuumRemoval.method", medianRemovalMethod, "IrregularSamplingMedian" );
-    //ctx.GetParameterStore().Get( "continuumRemoval.method", medianRemovalMethod, "Median" );
-    if( medianRemovalMethod== "IrregularSamplingMedian"){
+    //paramStore->Get( "continuumRemoval.method", medianRemovalMethod, "waveletsDF" );
+
+    const char*     nameBaseline;		// baseline filename
+    Log.LogInfo( "Continuum estimation: using %s", medianRemovalMethod.c_str() );
+    if( medianRemovalMethod== "IrregularSamplingMedian")
+    {
+        nameBaseline = "preprocess/baselineISMedian";
         CContinuumIrregularSamplingMedian continuum;
         Float64 opt_medianKernelWidth;
         paramStore->Get( "continuumRemoval.medianKernelWidth", opt_medianKernelWidth, 75 );
         continuum.SetMedianKernelWidth(opt_medianKernelWidth);
         m_SpectrumWithoutContinuum->RemoveContinuum( continuum );
 
-    }else{
+    }else if( medianRemovalMethod== "Median")
+    {
+        nameBaseline = "preprocess/baselineMedian";
         CContinuumMedian continuum;
         Float64 opt_medianKernelWidth;
         paramStore->Get( "continuumRemoval.medianKernelWidth", opt_medianKernelWidth, 75 );
         continuum.SetMedianKernelWidth(opt_medianKernelWidth);
         m_SpectrumWithoutContinuum->RemoveContinuum( continuum );
+
+    }else if( medianRemovalMethod== "waveletsDF")
+    {
+        nameBaseline = "preprocess/baselineDF";
+        Int64 nscales;
+        paramStore->Get( "continuumRemoval.decompScales", nscales);
+        std::string dfBinPath;
+        paramStore->Get( "continuumRemoval.binPath", dfBinPath, "absolute_path_to_df_binaries_here");
+        CContinuumDF continuum(dfBinPath);
+        m_SpectrumWithoutContinuum->SetDecompScales(nscales);
+        bool ret = m_SpectrumWithoutContinuum->RemoveContinuum( continuum );
+        if( !ret ) //doesn't seem to work. TODO: check that the df errors lead to a ret=false value
+        {
+            Log.LogError( "Failed to apply continuum substraction for spectrum: %s", spectrumPath );
+            return false;
+        }
     }
 
     m_SpectrumWithoutContinuum->ConvertToLogScale();
@@ -129,7 +154,19 @@ bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath,
     m_DataStore = std::shared_ptr<CDataStore>( new CDataStore( *m_ResultStore, *m_ParameterStore ) );
     m_DataStore->SetSpectrumName( bfs::path( spectrumPath ).stem().string() );
 
+    // Save the baseline in store
+    std::shared_ptr<CSpectraFluxResult> baselineResult = (std::shared_ptr<CSpectraFluxResult>) new CSpectraFluxResult();
+    baselineResult->m_optio = 0;
+    UInt32 len = m_Spectrum->GetSampleCount();
 
+    baselineResult->fluxes.resize(len);
+    baselineResult->wavel.resize(len);
+    for( Int32 k=0; k<len; k++ )
+    {
+        baselineResult->fluxes[k] = (m_Spectrum->GetFluxAxis())[k] - (m_SpectrumWithoutContinuum->GetFluxAxis())[k];
+        baselineResult->wavel[k]  = (m_Spectrum->GetSpectralAxis())[k];
+    }
+    m_DataStore->StoreScopedGlobalResult(nameBaseline, baselineResult);
     return true;
 }
 

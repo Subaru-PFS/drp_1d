@@ -99,7 +99,8 @@ class ResultList(object):
             #print('zcalc is: {0}'.format(zcalc)) 
             method = line[6]
             
-            if 1:
+            enableShowDetails = False
+            if enableShowDetails:
                 print('name is: {0}'.format(name))
                 print('zref is: {0}'.format(zref))
                 print('zcalc is: {0}'.format(zcalc)) 
@@ -123,7 +124,8 @@ class ResultList(object):
                     self.list.append(res)
                     self.n +=1
             #print('{0}/{1} results loaded: last chi2 = {2}'.format(self.n,x, chi2))
-            print('{0}/{1} results loaded\n'.format(self.n,x+1))
+            if enableShowDetails:
+                print('{0}/{1} results loaded\n'.format(self.n,x+1))
                 
         print('{0} results loaded.'.format(self.n))
         
@@ -1848,7 +1850,101 @@ def compareFailures(resDir, refresdir):
     refresList = ResultList(refresdir, diffthreshold=0.01, opt='brief')
     resList.getFailuresComparison(refresList)
   
+def plotContinuumIndexes(resDir, diffthres, spcName=""):
+    print('using amazed results full path: {0}'.format(resDir))
+    resList = ResultList(resDir, diffthreshold=diffthres, opt='brief', spcName=spcName)
+    if resList.n <1:
+        print('No results loaded...')
+        return
 
+    s = rp.ResParser(resDir)        
+    continuumIndexesZrefList = []   
+    zrefZrefList = []  
+    continuumIndexesZwrongList = []
+    zrefZwrongList = []
+    
+    #nres = 1
+    nres = resList.n
+    for k in range(nres):
+        print("\nprocessing result #{}/{}".format(k+1, resList.n))
+        zref = resList.list[k].zref
+        if zref > 1.5:
+            continue
+        print("zref is {}".format(zref))
+        redshifts, merits = resList.getZCandidatesFromAmazedChi2Extrema(k, chi2Type="linemodel", nextrema=3, enableZrangePerTpl=False)
+        print("redshifts: {}".format(redshifts))       
+        print("merits: {}".format(merits))  
+        thres_zref_zerr = 1e-1
+        indsZrefExtremum = [i for i,z in enumerate(redshifts) if abs(z-zref)<thres_zref_zerr]
+        thres_zwrong_zerr_min = 0.25*(1+zref)
+        thres_zwrong_zerr_max = 2.5*(1+zref)
+        thres_extrema_id = 10
+        indsZwrongExtrema = [i for i,z in enumerate(redshifts) if abs(z-zref)>thres_zwrong_zerr_min and abs(z-zref)<thres_zwrong_zerr_max and i<thres_extrema_id]
+        
+        print("inds extrema for zref found = {}".format(indsZrefExtremum))
+        print("inds extrema for zwrong found = {}".format(indsZwrongExtrema))
+        if len(indsZrefExtremum)>0 and len(indsZwrongExtrema)>0:
+            filepaths, filenames = s.getAutoChi2FullPath(resList.list[k].name)
+            filepath = filepaths[0]
+            print("Found chi2 filepath: {}".format(filepath))
+            if not os.path.exists(filepath):
+                print("Problem while retrieving chi2 filepath.. using: {}".format(filepath))
+                continue
+            else:
+                print("using Chi2 file path : ".format(filepath))
+            chi2 = chisq.ResultChisquare(filepath)
+            #print("chi2 is: {}".format(chi2))
+            
+            iZrefExtremum = indsZrefExtremum[0]
+            continuumIndexesZref = chi2.amazed_continuumIndexes[iZrefExtremum]
+            print("continuum indexes zref are: {}".format(continuumIndexesZref))
+            continuumIndexesZrefList.append(continuumIndexesZref)
+            zrefZrefList.append(zref)
+            
+            for ie in indsZwrongExtrema:
+                continuumIndexesZwrong = chi2.amazed_continuumIndexes[ie]
+                print("continuum indexes zwrong are: {}".format(continuumIndexesZwrong))
+                continuumIndexesZwrongList.append(continuumIndexesZwrong)
+                zrefZwrongList.append(zref)
+            
+    enablePlot = 1
+    enableExport = 0
+    if enablePlot or enableExport:
+        idx_continuum_index = 1
+        
+        fig = plt.figure('continuum indexes'.format())
+        ax = fig.add_subplot(111)
+        
+        #xvect = range(len(continuumIndexesZrefList))
+        xvect = zrefZrefList
+        yvect = [a[idx_continuum_index] for a in continuumIndexesZrefList]
+        ax.plot(xvect, yvect, 'xk', label='zref')
+        
+        #xvect = range(len(continuumIndexesZwrongList))
+        xvect = zrefZwrongList
+        yvect = [a[idx_continuum_index] for a in continuumIndexesZwrongList]
+        ax.plot(xvect, yvect, 'or', label='zwrong')
+        
+        #plt.xlim([1e-5, 10])
+        #plt.ylim([0, 100])
+        ##bar
+        #ind = np.arange(len(OY))
+        #pp.plot(xvect, yvect, 'x')
+        #ax.set_xscale('log')
+        plt.grid(True) # Affiche la grille
+        plt.legend()
+        #plt.ylabel('Cumulative Histogram')
+        #plt.xlabel('abs(zref - closest z candidate) / (1+zref)')
+       # name1 = "Closest Z candidates found in chi2{}\nN={}, diffthres={}, N extrema ={}".format(chi2Type,len(zabsdiff), self.diffthreshold, nextrema)
+        #plt.title(name1)
+        
+        if enableExport:
+            outFigFile = os.path.join(outdir, 'closestz_{}_nextrema{}_hist.png'.format(chi2Type, nextrema))
+            plt.savefig( outFigFile, bbox_inches='tight')
+        if enablePlot:
+            plt.show() 
+
+    
     
     
     
@@ -1881,6 +1977,7 @@ def StartFromCommandLine( argv ) :
         20. Compare failures\n\
         \n\
         30. Plot 2D Linear Comb. Merit Coeff map\n\
+        35. Plot continuum indexes\n\
         \n")
         choice = int(choiceStr)
         
@@ -1978,6 +2075,15 @@ def StartFromCommandLine( argv ) :
             if not (methodStr == "No" or methodStr == "no"):
                 methodName = methodStr
             plotChi2LinCombinationCoeff2DMap(options.resDir, float(options.diffthres), spcName, methodName)
+            
+                
+        elif choice == 35:
+            spcName = ""
+            spcStr = raw_input("Do you want to enter a spectrum name to filter the results ? (press enter to skip) :")
+            if not (spcStr == "No" or spcStr == "no"):
+                spcName = spcStr
+           
+            plotContinuumIndexes(options.resDir, float(options.diffthres), spcName)
             
         else:    
             print("Error: invalid entry, aborting...")

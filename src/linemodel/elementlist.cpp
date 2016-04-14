@@ -488,7 +488,7 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
     }
 
     //prepare the Lya width and asym coefficients if the asymfit profile option is met
-    fitLyaProfile(redshift, spectralAxis);
+    setLyaProfile(redshift, spectralAxis);
 
     //generate random amplitudes
     if(m_fittingmethod=="random")
@@ -1541,12 +1541,13 @@ Int32 CLineModelElementList::fitAmplitudesLinSolve( std::vector<Int32> EltsIdx, 
 
 
 /**
-* @brief CLineModelElementList::fitLyaProfile
-* If a Lya line is present, fit the width and asymmetry parameters
+* @brief CLineModelElementList::setLyaProfile
+* If a Lya line is present with ASYMFIT profile, fit the width and asymmetry parameters
+* If a Lya line is present with ASYMFIXED profile, set the width and asymmetry parameters according to profile parameters given in the string
 * @param redshift, spectralAxis
 * @return 1 if successfully fitted, 0 if error, 2 if Lya not present, 3 if Lya not configured to be fitted in the catalog
 */
-Int32 CLineModelElementList::fitLyaProfile(Float64 redshift , const CSpectrumSpectralAxis &spectralAxis)
+Int32 CLineModelElementList::setLyaProfile(Float64 redshift , const CSpectrumSpectralAxis &spectralAxis)
 {
     //1. retrieve the Lya index
     std::string lyaTag = "LyAE";
@@ -1560,6 +1561,8 @@ Int32 CLineModelElementList::fitLyaProfile(Float64 redshift , const CSpectrumSpe
 
     //2. check if the profile has to be fitted
     bool asimfitProfileFound = false;
+    bool asimfixedProfileFound = false;
+    std::string profileFixedStr = "";
     Int32 nrays = m_Elements[idxLyaE]->GetSize();
     for(Int32 iray=0; iray<nrays; iray++)
     {
@@ -1570,64 +1573,99 @@ Int32 CLineModelElementList::fitLyaProfile(Float64 redshift , const CSpectrumSpe
         if( strProfile=="ASYMFIT" && !lineOutsideLambdaRange)
         {
             asimfitProfileFound = true;
+            break;
+        }else if(strProfile.find("ASYMFIXED")!= std::string::npos)
+        {
+            asimfixedProfileFound = true;
+            profileFixedStr = strProfile;
+            break;
         }
     }
-    if( !asimfitProfileFound )
+    if( !asimfitProfileFound && !asimfixedProfileFound)
     {
         return 3; //no profile found with parameters to be fitted
     }
 
-    //3. find the best width and asym coeff. parameters
-    Float64 widthCoeffStep = 1.0;
-    Float64 widthCoeffMin = 1.0;
-    Float64 widthCoeffMax = 4.0;
-    Int32 nWidthSteps = int((widthCoeffMax-widthCoeffMin)/widthCoeffStep+0.5);
-    Float64 asymCoeffStep = 0.5;
-    Float64 asymCoeffMin = 0.0;
-    Float64 asymCoeffMax = 2.5;
-    Int32 nAsymSteps = int((asymCoeffMax-asymCoeffMin)/asymCoeffStep+0.5);
-    Float64 deltaStep = 0.5;
-    Float64 deltaMin = 0.0;
-    Float64 deltaMax = 4.0;
-    Int32 nDeltaSteps = int((deltaMax-deltaMin)/deltaStep+0.5);
-
-    Float64 bestWidth = widthCoeffMin;
-    Float64 bestAlpha = asymCoeffMin;
-    Float64 bestDelta = deltaMin;
-    Float64 meritMin = boost::numeric::bounds<float>::highest();
-
-    for(Int32 iDelta=0; iDelta<nDeltaSteps; iDelta++)
+    //use the manual fixed profile parameters from catalog profile string
+    if(asimfixedProfileFound)
     {
-        Float64 delta = deltaMin + deltaStep*iDelta;
-        for(Int32 iWidth=0; iWidth<nWidthSteps; iWidth++)
+        std::vector < std::string > numbers;
+        std::string  temp;
+
+        while (profileFixedStr.find("_", 0) != std::string::npos)
         {
-            Float64 asymWidthCoeff = widthCoeffMin + widthCoeffStep*iWidth;
-            for(Int32 iAsym=0; iAsym<nAsymSteps; iAsym++)
+            //does the string have an underscore in it?
+            size_t  pos = profileFixedStr.find("_", 0); //store the position of the delimiter
+            temp = profileFixedStr.substr(0, pos);      //get the token
+            profileFixedStr.erase(0, pos + 1);          //erase it from the source
+            numbers.push_back(temp);                //and put it into the array
+        }
+        numbers.push_back(profileFixedStr);
+        if(numbers.size()==4)
+        {
+            //set the associated Lya members in the element definition
+            m_Elements[idxLyaE]->SetAsymfitWidthCoeff(std::stod(numbers[1]));
+            m_Elements[idxLyaE]->SetAsymfitAlphaCoeff(std::stod(numbers[2]));
+            m_Elements[idxLyaE]->SetAsymfitDelta(std::stod(numbers[3]));
+        }
+
+    }
+
+    //FIT the profile parameters
+    if(asimfitProfileFound)
+    {
+        //3. find the best width and asym coeff. parameters
+        Float64 widthCoeffStep = 1.0;
+        Float64 widthCoeffMin = 1.0;
+        Float64 widthCoeffMax = 4.0;
+        Int32 nWidthSteps = int((widthCoeffMax-widthCoeffMin)/widthCoeffStep+0.5);
+        Float64 asymCoeffStep = 0.5;
+        Float64 asymCoeffMin = 0.0;
+        Float64 asymCoeffMax = 2.5;
+        Int32 nAsymSteps = int((asymCoeffMax-asymCoeffMin)/asymCoeffStep+0.5);
+        Float64 deltaStep = 0.5;
+        Float64 deltaMin = 0.0;
+        Float64 deltaMax = 4.0;
+        Int32 nDeltaSteps = int((deltaMax-deltaMin)/deltaStep+0.5);
+
+        Float64 bestWidth = widthCoeffMin;
+        Float64 bestAlpha = asymCoeffMin;
+        Float64 bestDelta = deltaMin;
+        Float64 meritMin = boost::numeric::bounds<float>::highest();
+
+        for(Int32 iDelta=0; iDelta<nDeltaSteps; iDelta++)
+        {
+            Float64 delta = deltaMin + deltaStep*iDelta;
+            for(Int32 iWidth=0; iWidth<nWidthSteps; iWidth++)
             {
-                Float64 asymAlphaCoeff = asymCoeffMin + asymCoeffStep*iAsym;
-
-                m_Elements[idxLyaE]->SetAsymfitDelta(delta);
-                m_Elements[idxLyaE]->SetAsymfitWidthCoeff(asymWidthCoeff);
-                m_Elements[idxLyaE]->SetAsymfitAlphaCoeff(asymAlphaCoeff);
-
-                m_Elements[idxLyaE]->fitAmplitude(spectralAxis, m_spcFluxAxisNoContinuum, redshift);
-                refreshModelUnderElements(filterEltsIdxLya);
-                Float64 m = getModelErrorUnderElement(idxLyaE);
-                if( m<meritMin )
+                Float64 asymWidthCoeff = widthCoeffMin + widthCoeffStep*iWidth;
+                for(Int32 iAsym=0; iAsym<nAsymSteps; iAsym++)
                 {
-                    meritMin = m;
-                    bestWidth = m_Elements[idxLyaE]->GetAsymfitWidthCoeff();
-                    bestAlpha = m_Elements[idxLyaE]->GetAsymfitAlphaCoeff();
-                    bestDelta = m_Elements[idxLyaE]->GetAsymfitDelta();
+                    Float64 asymAlphaCoeff = asymCoeffMin + asymCoeffStep*iAsym;
+
+                    m_Elements[idxLyaE]->SetAsymfitDelta(delta);
+                    m_Elements[idxLyaE]->SetAsymfitWidthCoeff(asymWidthCoeff);
+                    m_Elements[idxLyaE]->SetAsymfitAlphaCoeff(asymAlphaCoeff);
+
+                    m_Elements[idxLyaE]->fitAmplitude(spectralAxis, m_spcFluxAxisNoContinuum, redshift);
+                    refreshModelUnderElements(filterEltsIdxLya);
+                    Float64 m = getModelErrorUnderElement(idxLyaE);
+                    if( m<meritMin )
+                    {
+                        meritMin = m;
+                        bestWidth = m_Elements[idxLyaE]->GetAsymfitWidthCoeff();
+                        bestAlpha = m_Elements[idxLyaE]->GetAsymfitAlphaCoeff();
+                        bestDelta = m_Elements[idxLyaE]->GetAsymfitDelta();
+                    }
                 }
             }
         }
-    }
 
-    //4. set the associated Lya members in the element definition
-    m_Elements[idxLyaE]->SetAsymfitWidthCoeff(bestWidth);
-    m_Elements[idxLyaE]->SetAsymfitAlphaCoeff(bestAlpha);
-    m_Elements[idxLyaE]->SetAsymfitDelta(bestDelta);
+        //4. set the associated Lya members in the element definition
+        m_Elements[idxLyaE]->SetAsymfitWidthCoeff(bestWidth);
+        m_Elements[idxLyaE]->SetAsymfitAlphaCoeff(bestAlpha);
+        m_Elements[idxLyaE]->SetAsymfitDelta(bestDelta);
+    }
 
     return 1;
 }

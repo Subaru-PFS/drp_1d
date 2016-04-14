@@ -42,6 +42,13 @@ CContinuumIndexes::TContinuumIndexList CContinuumIndexes::getIndexes(const CSpec
         bool retA = spectrum.GetMeanFluxInRange( rangeA, Fa );
         Float64 Fb = NAN;
         bool retB = spectrum.GetMeanFluxInRange( rangeB, Fb );
+
+        Float64 a;
+        Float64 b;
+        bool retC = spectrum.GetLinearRegInRange( rangeA,  a, b);
+        Float64 wlCenterB = (rangeB.GetEnd()+rangeB.GetBegin())/2.0;
+        Float64 Fc = wlCenterB*a + b;
+
         SContinuumIndex sci;
         sci.Break = NAN;
         sci.Color = NAN;
@@ -49,6 +56,10 @@ CContinuumIndexes::TContinuumIndexList CContinuumIndexes::getIndexes(const CSpec
         if(Fb != 0.0 && retA && retB)
         {
             sci.Color = -2.5*log10(Fa/Fb);
+        }
+        if(Fc != 0.0 && retB && retC)
+        {
+            sci.Break = -2.5*log10(Fb/Fc);
         }
 
         indexesList.push_back(sci);

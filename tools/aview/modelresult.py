@@ -30,7 +30,7 @@ class ModelResult(object):
         
         lineid = []
         amplitude = []
-        
+                
         f = open(filename)
         for line in f:            
             #print("line = {}".format(line))
@@ -46,7 +46,16 @@ class ModelResult(object):
                     linetype.append(data[0])
                     
                     lineid.append(float(data[3]))
-                    amplitude.append(float(data[5]))                    
+                    amplitude.append(float(data[5])) 
+            if lineStr.startswith('#lya asymfit params = {'):
+                data = re.split("widthCoeff=", lineStr)
+                data = re.split(", alpha=", data[1])
+                self.lya_widthCoeff = float(data[0])
+                data = re.split(", delta=", data[1])
+                self.lya_alpha = float(data[0])
+                data = re.split(" }", data[1])
+                self.lya_delta = float(data[0])     
+                
         f.close()
         self.n = len(linelambda)
         #print('len wave = {0}'.format(self.n))

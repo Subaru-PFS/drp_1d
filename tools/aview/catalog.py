@@ -361,6 +361,10 @@ class Catalog(object):
             a = mres.getAmplitude( self.linename[x], self.linetype[x])
             self.linegroup[x] = "tplshape"
             self.linenominalamp[x] = a
+            #replace the fitted profiles by the fixed values of the parameters
+            if self.lineprofile[x] == "ASYMFIT":
+                self.lineprofile[x] = "ASYMFIXED_{}_{}_{}".format(mres.lya_widthCoeff, mres.lya_alpha, mres.lya_delta)
+            
         #path = "/home/aschmitt/code/python/linemodel_tplshape/amazed/linecatalogs"
         #name = "linecatalogamazedvacuum_B9D_LyaAbsSYMprofile_tplShape.txt"
         #outpath = os.path.join(path,name)
