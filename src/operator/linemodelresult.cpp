@@ -197,13 +197,24 @@ Void CLineModelResult::Save( const CDataStore& store, std::ostream& stream ) con
 
     // save ContinuumIndexes list, on 1 line
     if(Extrema.size()>0){
-        stream <<  "#ContinuumIndexes for each extrema = {";
+        stream <<  "#ContinuumIndexes Color for each extrema = {";
         for ( int i=0; i<ContinuumIndexes.size(); i++)
         {
             stream << "<";
             for(Int32 kci=0; kci<ContinuumIndexes[i].size(); kci++)
             {
                 stream <<  ContinuumIndexes[i][kci].Color << "\t";
+            }
+            stream << ">";
+        }
+        stream << "}" << std::endl;
+        stream <<  "#ContinuumIndexes Break for each extrema = {";
+        for ( int i=0; i<ContinuumIndexes.size(); i++)
+        {
+            stream << "<";
+            for(Int32 kci=0; kci<ContinuumIndexes[i].size(); kci++)
+            {
+                stream <<  ContinuumIndexes[i][kci].Break << "\t";
             }
             stream << ">";
         }

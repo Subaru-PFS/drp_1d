@@ -37,7 +37,7 @@ class ResultChisquare(object):
         self.amazed_logarea = []
         self.amazed_sigmaz = [] 
         self.amazed_fitamplitude = []
-        self.amazed_continuumIndexes = []        
+        self.amazed_continuumIndexes = {'color': [], 'break': []}       
         
         #self.cpath = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/RayCatalogs/raycatalogamazedvacuum.txt"
         self.cpath = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/linecatalogs/linecatalogamazedair_B.txt"
@@ -96,7 +96,7 @@ class ResultChisquare(object):
                 data = [d for d in data if len(d.strip(" "))>0]
                 for d in data:
                     self.amazed_fitamplitude.append(float(d))
-            elif not lineStr.find("ContinuumIndexes for each extrema = {") == -1:
+            elif not lineStr.find("ContinuumIndexes Color for each extrema = {") == -1:
                 beg = lineStr.find("{")
                 end = lineStr.find("}")  
                 dataStr = lineStr[beg+1:end]
@@ -112,7 +112,24 @@ class ResultChisquare(object):
                     for d in data:
                         #print("d = {}".format(d))
                         extremaContIndexes.append(float(d))
-                    self.amazed_continuumIndexes.append(extremaContIndexes)
+                    self.amazed_continuumIndexes['color'].append(extremaContIndexes)
+            elif not lineStr.find("ContinuumIndexes Break for each extrema = {") == -1:
+                beg = lineStr.find("{")
+                end = lineStr.find("}")  
+                dataStr = lineStr[beg+1:end]
+                strExtrema = dataStr.split(">")
+                strExtrema = [d.replace("<", "") for d in strExtrema]
+                #print("strExtrema = {}".format(strExtrema))
+                dataExtrema = [d for d in strExtrema if len(d.strip(" "))>0]
+                for de in dataExtrema:
+                    #print("de = {}".format(de))
+                    extremaContIndexes = []
+                    data = de.split("\t")
+                    data = [d for d in data if len(d.strip(" "))>0]
+                    for d in data:
+                        #print("d = {}".format(d))
+                        extremaContIndexes.append(float(d))
+                    self.amazed_continuumIndexes['break'].append(extremaContIndexes)
                 
         f.close()
         self.n = len(wave)
@@ -151,13 +168,21 @@ class ResultChisquare(object):
                 sigmaz = self.amazed_sigmaz[z]
             except:
                 pass
-            a = a + ("    z = {0}\t\tlogarea = {1}\t\tsigmaz = {2}\n".format(extrema, logarea, sigmaz )) 
+            
+            a = a + ("    zcandidate_{}\tz = {}\t\tlogarea = {}\t\tsigmaz = {}\n".format( z, extrema, logarea, sigmaz )) 
             
         a = a + ("\n")
-        for z in range(len(self.amazed_continuumIndexes)):
-            data = self.amazed_continuumIndexes[z]
-            a = a + ("    ci_{} = ".format(z))
-            for d in data:
+        
+        a = a + ("    contIndexes = {:<20}\t{:<20}\t{:<20}\t{:<20}\n".format("Lya", "OII", "OIII", "Halpha"))
+        for z in range(len(self.amazed_continuumIndexes['color'])):
+            dataColor = self.amazed_continuumIndexes['color'][z]
+            dataBreak = self.amazed_continuumIndexes['break'][z]
+            a = a + ("    ci_color_{} = ".format(z))
+            for d in dataColor:
+                a = a + ("{:<20}\t".format(d ))
+            a = a + ("\n") 
+            a = a + ("    ci_break_{} = ".format(z))
+            for d in dataBreak:
                 a = a + ("{:<20}\t".format(d ))
             a = a + ("\n")   
         
