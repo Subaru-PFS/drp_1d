@@ -2154,7 +2154,7 @@ CLineModelResult::SLineModelSolution CLineModelElementList::GetModelSolution()
     modelSolution.LyaAlpha = -1.0;
     modelSolution.LyaDelta = -1.0;
     std::string lyaTag = "LyAE";
-    Int32 idxLyaE = FindElementIndex(lyaTag, CRay::nType_Emission);
+    Int32 idxLyaE = FindElementIndex(lyaTag);
     if( idxLyaE>-1 )
     {
         modelSolution.LyaWidthCoeff = m_Elements[idxLyaE]->GetAsymfitWidthCoeff();
@@ -2298,8 +2298,12 @@ Int32 CLineModelElementList::FindElementIndex(std::string LineTagStr, Int32 line
     Int32 idx = -1;
     for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
     {
-        if(m_RestRayList[m_Elements[iElts]->m_LineCatalogIndexes[0]].GetType() != linetype){
-            continue;
+        if( linetype!=-1 )
+        {
+            //WARNING: this linetype filter impl. supposes that all liens in a multiline element are from the same type
+            if(m_RestRayList[m_Elements[iElts]->m_LineCatalogIndexes[0]].GetType() != linetype){
+                continue;
+            }
         }
 
         if(m_Elements[iElts]->FindElementIndex(LineTagStr) !=-1){

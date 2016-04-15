@@ -83,7 +83,7 @@ public:
     std::shared_ptr<CSpectrum>  m_SpectrumModel;  //model
     CSpectrumFluxAxis m_SpcContinuumFluxAxis; //continuum spectrum used for the model
     Int32 FindElementIndex(Int32 LineCatalogIndex);
-    Int32 FindElementIndex(std::string LineTagStr, Int32 linetype);
+    Int32 FindElementIndex(std::string LineTagStr, Int32 linetype=-1);
     std::vector<Int32> getOverlappingElements(Int32 ind , std::vector<Int32> excludedInd, Float64 overlapThres=0.1);
     CRayCatalog::TRayVector m_RestRayList;
 
