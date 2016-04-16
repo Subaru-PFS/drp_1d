@@ -24,10 +24,21 @@ import utilbins
 
 #parameters
 enablePlot = False
-n_count_per_bin = 10
-lambda_obs_min = 3800.0
-lambda_obs_max = 12600.0
-dlambda = 0.6
+optMission = "euclid"
+#optMission = "pfs"
+
+if optMission == "euclid":
+    n_count_per_bin = 1
+    lambda_obs_min = 12500.0
+    lambda_obs_max = 18500.0
+    dlambda = 12.5
+elif optMission == "pfs":
+    n_count_per_bin = 10
+    lambda_obs_min = 3800.0
+    lambda_obs_max = 12600.0
+    dlambda = 0.6
+
+
 
 temp_directory = "./tmp/"
 amazed_directory = "./amazed/"

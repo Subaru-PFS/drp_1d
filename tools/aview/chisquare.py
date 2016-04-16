@@ -37,7 +37,7 @@ class ResultChisquare(object):
         self.amazed_logarea = []
         self.amazed_sigmaz = [] 
         self.amazed_fitamplitude = []
-        self.amazed_continuumIndexes = {'color': [], 'break': []}       
+        self.amazed_continuumIndexes = []      
         
         #self.cpath = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/RayCatalogs/raycatalogamazedvacuum.txt"
         self.cpath = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/linecatalogs/linecatalogamazedair_B.txt"
@@ -48,6 +48,8 @@ class ResultChisquare(object):
         filename = self.spath
         wave = []
         flux = []
+        amazed_continuumIndexesColor = []
+        amazed_continuumIndexesBreak = []
         f = open(filename)
         for line in f:
             lineStr = line.strip()
@@ -112,7 +114,7 @@ class ResultChisquare(object):
                     for d in data:
                         #print("d = {}".format(d))
                         extremaContIndexes.append(float(d))
-                    self.amazed_continuumIndexes['color'].append(extremaContIndexes)
+                    amazed_continuumIndexesColor.append(extremaContIndexes)
             elif not lineStr.find("ContinuumIndexes Break for each extrema = {") == -1:
                 beg = lineStr.find("{")
                 end = lineStr.find("}")  
@@ -129,7 +131,7 @@ class ResultChisquare(object):
                     for d in data:
                         #print("d = {}".format(d))
                         extremaContIndexes.append(float(d))
-                    self.amazed_continuumIndexes['break'].append(extremaContIndexes)
+                    amazed_continuumIndexesBreak.append(extremaContIndexes)
                 
         f.close()
         self.n = len(wave)
@@ -141,9 +143,19 @@ class ResultChisquare(object):
             self.xvect[x] = wave[x]
             #self.yvect[x] = math.exp(-flux[x]/2.0)
             self.yvect[x] = flux[x]
+            
+        nconti = len(amazed_continuumIndexesColor)
+        #print("amazed_continuumIndexesColor size = {}".format(len(amazed_continuumIndexesColor)))
+        #print("amazed_continuumIndexesBreak size = {}".format(len(amazed_continuumIndexesBreak)))
+        for x in range(0,nconti):
+            self.amazed_continuumIndexes.append({'color': amazed_continuumIndexesColor[x], 'break': amazed_continuumIndexesBreak[x]})
+            
+            
 
         #print("Extrema found : {0}".format(self.amazed_extrema))
         print("loaded chi2 : {0}".format((filename)))
+        
+        
         
     def __str__(self):
         a = "\nChisquare: {0}\n".format(self.name)
@@ -174,9 +186,9 @@ class ResultChisquare(object):
         a = a + ("\n")
         
         a = a + ("    contIndexes = {:<20}\t{:<20}\t{:<20}\t{:<20}\n".format("Lya", "OII", "OIII", "Halpha"))
-        for z in range(len(self.amazed_continuumIndexes['color'])):
-            dataColor = self.amazed_continuumIndexes['color'][z]
-            dataBreak = self.amazed_continuumIndexes['break'][z]
+        for z in range(len(self.amazed_continuumIndexes)):
+            dataColor = self.amazed_continuumIndexes[z]['color']
+            dataBreak = self.amazed_continuumIndexes[z]['break']
             a = a + ("    ci_color_{} = ".format(z))
             for d in dataColor:
                 a = a + ("{:<20}\t".format(d ))

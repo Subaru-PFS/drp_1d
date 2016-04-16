@@ -58,11 +58,14 @@ class Result(object):
         return rate;
                 
 class ResultList(object):
-    def __init__(self, dir, diffthreshold=-1, opt='full', spcName="", methodName=""):
+    def __init__(self, dir, diffthreshold=-1, opt='full', spcName="", methodName="", zrefmin=-1, zrefmax=20):
         self.logTagStr = "ResultList"
         self.dir = dir
         self.name = os.path.basename(self.dir)
         self.diffthreshold = diffthreshold  
+        self.zrefmin = zrefmin
+        self.zrefmax = zrefmax
+        
         self.opt = opt
         self.statsdir = ""
         self.list = [] 
@@ -118,11 +121,21 @@ class ResultList(object):
                 chi2PerTplZcalc = []
                 chi2PerTplZref = []
                 chi2ncPerTplZref = []
-            if (spcName=="" or spcName==name) and (methodName=="" or methodName==method):   
-                if abs(zdiff)>=self.diffthreshold:
-                    res = Result(name, zref, zcalc, zdiff, chi2, chi2nc, chi2PerTplZcalc, chi2PerTplZref, chi2ncPerTplZref)
-                    self.list.append(res)
-                    self.n +=1
+            
+            accepted = True
+            if not (spcName=="" or spcName==name): 
+                accepted = False
+            if not (methodName=="" or methodName==method):  
+                accepted = False
+            if not abs(zdiff)>=self.diffthreshold:
+                accepted = False
+            if not (zref>=self.zrefmin and zref<=self.zrefmax):
+                accepted = False
+                
+            if accepted:
+                res = Result(name, zref, zcalc, zdiff, chi2, chi2nc, chi2PerTplZcalc, chi2PerTplZref, chi2ncPerTplZref)
+                self.list.append(res)
+                self.n +=1
             #print('{0}/{1} results loaded: last chi2 = {2}'.format(self.n,x, chi2))
             if enableShowDetails:
                 print('{0}/{1} results loaded\n'.format(self.n,x+1))
@@ -1852,7 +1865,7 @@ def compareFailures(resDir, refresdir):
   
 def plotContinuumIndexes(resDir, diffthres, spcName=""):
     print('using amazed results full path: {0}'.format(resDir))
-    resList = ResultList(resDir, diffthreshold=diffthres, opt='brief', spcName=spcName)
+    resList = ResultList(resDir, diffthreshold=diffthres, opt='brief', spcName=spcName, methodName="", zrefmin=0.01, zrefmax=1.5)
     if resList.n <1:
         print('No results loaded...')
         return
@@ -1863,21 +1876,19 @@ def plotContinuumIndexes(resDir, diffthres, spcName=""):
     continuumIndexesZwrongList = []
     zrefZwrongList = []
     
-    #nres = 1
+    #nres = 20
     nres = resList.n
     for k in range(nres):
         print("\nprocessing result #{}/{}".format(k+1, resList.n))
         zref = resList.list[k].zref
-        if zref > 1.5:
-            continue
         print("zref is {}".format(zref))
         redshifts, merits = resList.getZCandidatesFromAmazedChi2Extrema(k, chi2Type="linemodel", nextrema=3, enableZrangePerTpl=False)
         print("redshifts: {}".format(redshifts))       
         print("merits: {}".format(merits))  
         thres_zref_zerr = 1e-1
         indsZrefExtremum = [i for i,z in enumerate(redshifts) if abs(z-zref)<thres_zref_zerr]
-        thres_zwrong_zerr_min = 0.25*(1+zref)
-        thres_zwrong_zerr_max = 2.5*(1+zref)
+        thres_zwrong_zerr_min = 0.5*(1+zref)
+        thres_zwrong_zerr_max = 1.4*(1+zref)
         thres_extrema_id = 10
         indsZwrongExtrema = [i for i,z in enumerate(redshifts) if abs(z-zref)>thres_zwrong_zerr_min and abs(z-zref)<thres_zwrong_zerr_max and i<thres_extrema_id]
         
@@ -1916,13 +1927,16 @@ def plotContinuumIndexes(resDir, diffthres, spcName=""):
         ax = fig.add_subplot(111)
         
         #xvect = range(len(continuumIndexesZrefList))
-        xvect = zrefZrefList
-        yvect = [a[idx_continuum_index] for a in continuumIndexesZrefList]
+        #xvect = zrefZrefList
+        #print continuumIndexesZrefList[0]['color']
+        xvect = [a['break'][idx_continuum_index] for a in continuumIndexesZrefList]
+        yvect = [a['color'][idx_continuum_index] for a in continuumIndexesZrefList]
         ax.plot(xvect, yvect, 'xk', label='zref')
         
         #xvect = range(len(continuumIndexesZwrongList))
-        xvect = zrefZwrongList
-        yvect = [a[idx_continuum_index] for a in continuumIndexesZwrongList]
+        #xvect = zrefZwrongList
+        xvect = [a['break'][idx_continuum_index] for a in continuumIndexesZwrongList]
+        yvect = [a['color'][idx_continuum_index] for a in continuumIndexesZwrongList]
         ax.plot(xvect, yvect, 'or', label='zwrong')
         
         #plt.xlim([1e-5, 10])

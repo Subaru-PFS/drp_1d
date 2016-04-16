@@ -19,7 +19,7 @@ import matplotlib.pyplot as pp
 import numpy as np
 from scipy import interpolate
 
-   
+
 class Spectrum(object):
     def __init__(self, spath, stype='undefspc', snorm=False, label=""):
         self.logTagStr = "Spectrum"
@@ -359,10 +359,17 @@ class Spectrum(object):
         return a
         
     def plot(self, saveFullDirPath=""):
-        #pp.plot(self.xvect, self.yvect, "x-")
-        pp.plot(self.xvect, self.yvect)
+        fig = pp.figure(1)
+        
+        ax = fig.add_subplot(111)
 
-        pp.grid(True) # Affiche la grille
+        #pp.plot(self.xvect, self.yvect, "x-")
+        ax.plot(self.xvect, self.yvect)
+
+        #pp.grid(True) # Affiche la grille
+        ax.xaxis.grid(True,'major')
+        ax.yaxis.grid(True,'major')
+        
         #pp.legend(('cos','sin'), 'upper right', shadow = True)
         if not self.forcePlotXIndex:
              pp.xlabel('angstrom')
@@ -373,8 +380,74 @@ class Spectrum(object):
         if not saveFullDirPath == "":
             saveFullPath = os.path.join(saveFullDirPath, self.name + str(".png"))
             pp.savefig(saveFullPath) # sauvegarde du fichier ExempleTrace.png
-        pp.show()
+        #pp.show(1)
         print '\n'
+        
+        if 1:
+            print("start event handling: ...")
+            self.coords = []
+            # Call click func
+            cid1 = fig.canvas.mpl_connect('button_press_event', self.onclick)
+            self.enablepointpicking = False
+            self.shift_is_held = False
+            cid2 = fig.canvas.mpl_connect('key_press_event', self.on_key_press)
+            cid3 = fig.canvas.mpl_connect('key_release_event', self.on_key_release)
+    
+            pp.show(1)
+            fig.canvas.mpl_disconnect(cid1)
+            fig.canvas.mpl_disconnect(cid2)
+            fig.canvas.mpl_disconnect(cid3)
+            
+            if len(self.coords)>1:
+                #save the curve into new file
+                self.n = len(self.coords)
+                self.xvect = range(0,self.n)
+                self.yvect = range(0,self.n)
+                self.ysum = 0.0    
+                for x in range(0,self.n):
+                    self.xvect[x] = self.coords[x][0]
+                    self.yvect[x] = self.coords[x][1]
+                    self.ysum += self.yvect[x]
+                #self.interpolate(dx=1.0)
+                    
+                soutputpath = self.spath +"_aview_handdrawncurve.dat"
+                self.saveTpl(soutputpath)
+        
+
+
+    ##callback for poitn picking event    
+    def onclick(self, event):
+        global ix, iy
+        if event.button == 1: #1=left click, 3=rightclick
+            if self.shift_is_held:        
+                ix, iy = event.xdata, event.ydata
+                print("x = {:.2f}, y = {:.4e}".format(float(ix), float(iy)))    
+                #print 'x = %e, y = %e'%(ix, iy)    
+                self.coords.append((ix, iy))
+
+
+    def on_key_press(self, event):
+       if event.key == 'shift' and self.enablepointpicking:
+           self.shift_is_held = True
+           print("shift is held: point picking is enabled !")
+       elif event.key == 'p':
+           if not self.enablepointpicking:
+               self.enablepointpicking = True
+               print("Point picking enabled !")
+           elif self.enablepointpicking:
+               self.enablepointpicking = False
+               print("Point picking disabled !")
+       elif event.key == 'r' and self.enablepointpicking:
+           self.coords.pop()
+           print("last point removed !")
+       elif self.enablepointpicking:
+           self.shift_is_held = False 
+           print("shift is released: point picking is disabled !") 
+    
+    def on_key_release(self, event):
+       if event.key == 'shift':
+           self.shift_is_held = False 
+           print("shift is released: point picking is disabled !")              
         
     def plotCompare(self, other_spc, amplitude = 1.0, modellinetype = "-bo", exportPath=""):
         fig = pp.figure( "spectrumview", figsize=(15,11))
@@ -567,6 +640,8 @@ class Spectrum(object):
         while(x>wavelengthInf and k<1e6):
             x = x1 - k*xstep
             y = coefficients1[1] + coefficients1[0]*x#y1 #-k*ystep
+            if y<0:
+                y=0
             #y = moyenne
             
             # custom profile
@@ -804,7 +879,7 @@ def Main( argv ) :
 
  
 if __name__ == '__main__':
-    print "Spectrum plotting"
+    print "Spectrum"
     if 1:
         Main( sys.argv )
            
@@ -892,7 +967,8 @@ if __name__ == '__main__':
             
                 
         # extend and plot single template
-        if 0:
+        if 1:
+            print("extend and plot single template")
             path = "/home/aschmitt/data/pfs/pfs_lbg/amazed/Templates/ExtendedGalaxyEL2/emission"
             name = "NEW_Im_extended_blue.dat"
             #path = "/home/aschmitt/data/pfs/pfs_lbg/amazed/Templates/ExtendedGalaxyEL2/galaxy"
@@ -901,16 +977,16 @@ if __name__ == '__main__':
             path = "/home/aschmitt/data/vvds/vvds2/cesam_vvds_z0_F02_DEEP/amazed/output/sc_020103374_F02P021_M1_red_49_1_atm_clean"
             name = "linemodelsolve.linemodel_spc_extrema_0.csv"
             
-            path = "/home/aschmitt/data/pfs/pfs2_simu20151118_jenny/amazed/templates/ExtendedGalaxyEL2/galaxy"
-            name = "EW_SB2extended.dat"
+            path = "/home/aschmitt/Documents/amazed/methods/linemodel/simulation_usingLinemodel/continuum_templates_work/templates_work_20160415/2newtemplates_4extension"
+            name = "NEW_Im_extended_blue.dat"
     
             spath = os.path.join(path,name)
             print('using full path: {0}'.format(spath))
             s = Spectrum(spath, 'template')
             s.extendWavelengthRangeRed(13000)
             s.extendWavelengthRangeBlue(100)
-            outputpath = "/home/aschmitt/data/pfs/pfs2_simu20151118_jenny/amazed/templates/MoreExtendedGalaxyEL2/galaxy"
-            soutputpath = os.path.join(outputpath,name)
+            outputpath = path
+            soutputpath = os.path.join(outputpath, name+"modified.dat")
             s.saveTpl(soutputpath)
             print(s) 
             s.plot()
