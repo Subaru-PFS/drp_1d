@@ -68,8 +68,10 @@ Float64 CLineModelElement::GetLineWidth(Float64 redshiftedlambda, Float64 z, Boo
 {
     Float64 instrumentSigma = 0.0;
     Float64 velocitySigma = 0.0;
+
+    Float64 empiricalFactor = 325.0/230.0/m_FWHM_factor; //derived from (emission line) linemodel-width fit on VUDS ECDFS flags3+4
     if( m_LineWidthType == "instrumentdriven"){
-        instrumentSigma = redshiftedlambda/m_Resolution/m_FWHM_factor;
+        instrumentSigma = redshiftedlambda/m_Resolution*empiricalFactor;
     }else if( m_LineWidthType == "fixed"){
         instrumentSigma = m_NominalWidth;
     }else if( m_LineWidthType == "combined"){
@@ -81,7 +83,7 @@ Float64 CLineModelElement::GetLineWidth(Float64 redshiftedlambda, Float64 z, Boo
         Float64 pfsSimuCompensationFactor = 1.0;
         velocitySigma = pfsSimuCompensationFactor*v/c*redshiftedlambda;//, useless /(1+z)*(1+z);
 
-        instrumentSigma = redshiftedlambda/m_Resolution/m_FWHM_factor;
+        instrumentSigma = redshiftedlambda/m_Resolution*empiricalFactor;
     }
 
     Float64 sigma = sqrt(instrumentSigma*instrumentSigma + velocitySigma*velocitySigma);

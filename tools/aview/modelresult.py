@@ -54,7 +54,13 @@ class ModelResult(object):
                 data = re.split(", delta=", data[1])
                 self.lya_alpha = float(data[0])
                 data = re.split(" }", data[1])
-                self.lya_delta = float(data[0])     
+                self.lya_delta = float(data[0]) 
+            if lineStr.startswith('#linemodel solution '):
+                data = re.split("velocityEmission = ", lineStr)
+                data = re.split(", velocityAbsorption = ", data[1])
+                self.vel_emission = float(data[0])
+                data = re.split(", merit =", data[1])
+                self.vel_absorption = float(data[0])    
                 
         f.close()
         self.n = len(linelambda)
