@@ -363,7 +363,7 @@ void CMultiLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const C
 
       }
 
-    if ( num==0 || sumCross==0 || sumGauss==0 )
+    if ( num==0 || sumGauss==0 )
       {
         return;
       }

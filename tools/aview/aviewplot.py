@@ -5,6 +5,8 @@ Created on Sat Jul 25 11:34:13 2015
 @author: aschmitt
 """
 import os
+import sys
+import optparse
 
 import matplotlib.pyplot as pp
 from matplotlib import gridspec
@@ -44,7 +46,9 @@ class AViewPlot(object):
             self.forcePlotNoNoise = False
             
         # enable lines plot
-        self.forcePlotNoLines = False            
+        self.forcePlotNoLines = False 
+        if self.cpath == "":
+            self.forcePlotNoLines = True
             
         self.exportAutoDisplaysPath = ""
         
@@ -110,23 +114,24 @@ class AViewPlot(object):
         
         
         #prepare lines
-        #self.linesx = []
-        #self.linesx.append(6564)
-        #self.linesx.append(5008)
-        #self.linesname= []
-        #self.linesname.append("Halpha")    
-        #self.linesname.append("0III")   
-        c = ctlg.Catalog(self.cpath)
-        #print(c) 
-        shiftedctlg = c.getShiftedCatalog(self.z, -1, -1) #z, "A", "S"
-        #print(shiftedctlg)
-        self.linesx = shiftedctlg['lambda']
-        self.linestype= shiftedctlg['type']
-        self.linesxrest = shiftedctlg['lambdarest']
-        self.linesname = shiftedctlg['name']
-        self.linesforce = shiftedctlg['force']
-        #print(self.linesx)    
-        #print(self.linesname)    
+        if not self.forcePlotNoLines:
+            #self.linesx = []
+            #self.linesx.append(6564)
+            #self.linesx.append(5008)
+            #self.linesname= []
+            #self.linesname.append("Halpha")    
+            #self.linesname.append("0III")   
+            c = ctlg.Catalog(self.cpath)
+            #print(c) 
+            shiftedctlg = c.getShiftedCatalog(self.z, -1, -1) #z, "A", "S"
+            #print(shiftedctlg)
+            self.linesx = shiftedctlg['lambda']
+            self.linestype= shiftedctlg['type']
+            self.linesxrest = shiftedctlg['lambdarest']
+            self.linesname = shiftedctlg['name']
+            self.linesforce = shiftedctlg['force']
+            #print(self.linesx)    
+            #print(self.linesname)    
         
         
         #do the plotting
@@ -315,6 +320,12 @@ class AViewPlot(object):
         displays_names = ["All"]
         
         # add lya to the pool of displayed ranges
+        displays_lambdas_rest_center.append(1050)
+        displays_lambdas_rest_min.append(900)
+        displays_lambdas_rest_max.append(1240)
+        displays_names.append("Lyb_Lyg_OVI")    
+        
+        # add lya to the pool of displayed ranges
         displays_lambdas_rest_center.append(1215)
         displays_lambdas_rest_min.append(1155)
         displays_lambdas_rest_max.append(1275)
@@ -382,79 +393,112 @@ class AViewPlot(object):
             if overlapMin <= 2:
                 print("exporting auto display for lambda rest = {}, with z = {}".format(displays_lambdas_rest_center[a], self.z))
                 self.plot()
+       
+def StartFromCommandLine( argv ) :	
+    usage = """usage: %prog [options]
+    ex: python ./aviewplot.py """
+    parser = optparse.OptionParser(usage=usage)
+    parser.add_option(u"-s", u"--spc", help="path to the spectrum to be plotted",  dest="spcPath", default="")
+    parser.add_option(u"-n", u"--noise", help="path to the noise spectrum to be plotted",  dest="noisePath", default="")
+    parser.add_option(u"-t", u"--tpl", help="path to the template to be plotted",  dest="tplpath", default="")
+    parser.add_option(u"-c", u"--ctlg", help="path to the catalog to be displayed",  dest="ctlgPath", default="")
+    parser.add_option(u"-z", u"--redshift", help="z to be plotted",  dest="redshift", default="-1")
+    parser.add_option(u"-m", u"--redshifttpl", help="force do not plot redshift",  dest="redshifttpl", default="0")
+    parser.add_option(u"-a", u"--tplamp", help="amp. to be used to rescale the template",  dest="tplamp", default="-1")
+    
+    
+    (options, args) = parser.parse_args()
+
+    if( len( args ) == 0 ) :
+        forceTplDoNotRedShift = bool(int(options.redshifttpl))
+        print("forceTplDoNotRedShift = {}".format(forceTplDoNotRedShift))
+        avp = AViewPlot(options.spcPath, options.noisePath, options.tplpath, options.ctlgPath, float(options.redshift), float(options.tplamp), forceTplDoNotRedShift = forceTplDoNotRedShift )
         
-        
+        exit()
+    else:
+        print("Error: invalid argument count")
+    
+def Main( argv ) :	
+    try:
+        StartFromCommandLine( argv )
+    except (KeyboardInterrupt):
+        exit()  
+            
 if __name__ == '__main__':
-    if 0:
-        path = "/home/aschmitt/data/pfs/pfs_lbg/lbgabs_1K_2z3_20J22.5"
-        name = "EZ_fits-W-F_9.fits"
-        spath = os.path.join(path,name)
-        print('using full path s: {0}'.format(spath))
-    
-        name = "EZ_fits-W-F_9.fits"
-        tpath = os.path.join(path,name)
-        print('using full path t: {0}'.format(tpath))
+    print "Catalog"
+    Main( sys.argv )
         
-        avp = AViewPlot(spath, tpath, 0.1)
-    
-    if 0:
-        spath = "/home/aschmitt/data/vvds/vvds2/cesam_vvds_z0_F02_DEEP/1D/sc_020086957_F02P018_vmM1_red_88_1_atm_clean.fits"
-        print('Spc path is: {0}'.format(spath))
-        zval = 4.8
-        print('Redshift is: {0}'.format(zval))
-        #print(s.getRedshiftTpl(spcName))
-        tpath = "/home/aschmitt/data/vvds/vvds2/cesam_vvds_z0_F02_DEEP/amazed/Templates/Default/qso/SDSS_AGN.txt"
-        tpath = "/home/aschmitt/data/vvds/vvds2/cesam_vvds_z0_F02_DEEP/amazed/Templates/Default/galaxy/ave_Lya_no.txt"
-        print('Tpl path is: {0}'.format(tpath) )  
-        cpath = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/RayCatalogs/raycatalogamazedvacuum.txt"
-        print('Catalog path is: {0}'.format(cpath) )  
-        
-        #overrride zval
-        #zval = 2.11605 #for pfs lbg abs, EZ_fits-W-F_9
-        #zval = 1.1714 #for vvds1 'sc_020086397_F02P016_vmM1_red_31_1_atm_clean'
-        #zval = 1.355
-        #zval = 1.075
-        avp = AViewPlot(spath, tpath, cpath, zval)
-        
-    if 1:
-        spath = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/1D/sc_020086471_F02P016_vmM1_red_107_1_atm_clean.fits"
-        spath = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/1D/sc_020135682_F02P019_vmM1_red_99_1_atm_clean.fits"
-        print('Spc path is: {0}'.format(spath))
-        zval = 1.1247
-        print('Redshift is: {0}'.format(zval))
-        #print(s.getRedshiftTpl(spcName))
-        tpath = "/home/aschmitt/data/pfs/pfs_lbg/amazed/Templates/ExtendedGalaxyEL2/emission/NEW_Im_extended_blue.dat"
-        tpath = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/Templates/ExtendedGalaxyEL2/emission/NEW_Im_extended_blue.dat"
-        tpath = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/Templates/linemodel/emission/NEW_Im_extended_blue_continuum.txt"
-        print('Tpl path is: {0}'.format(tpath) )  
-        
-        cpath = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/linecatalogs/linecatalogamazedair_B5.txt"
-        print('Catalog path is: {0}'.format(cpath) )  
-        
-        #overrride zval
-        #zval = 2.11605 #for pfs lbg abs, EZ_fits-W-F_9
-        #zval = 1.1714 #for vvds1 'sc_020086397_F02P016_vmM1_red_31_1_atm_clean'
-        #zval = 1.355
-        #zval = 1.075
-        avp = AViewPlot(spath, "", tpath, cpath, zval)
-    
-    if 0:
-        spath = "/home/aschmitt/data/pfs/pfs_testsimu_20151009/470026900000130.2-0.4_20_20.5_/470026900000130.2-0.4_20_20.5_EZ_fits-W-TF_0.fits"
-        print('Spc path is: {0}'.format(spath))
-        npath = "/home/aschmitt/data/pfs/pfs_testsimu_20151009/470026900000130.2-0.4_20_20.5_/470026900000130.2-0.4_20_20.5_EZ_fits-W-ErrF_0.fits"
-        print('Noise path is: {0}'.format(npath))
-        
-        zval = 0.3375
-        print('Redshift is: {0}'.format(zval))
-        #print(s.getRedshiftTpl(spcName))
-        tpath = ""
-        print('Tpl path is: {0}'.format(tpath) )  
-        cpath = "/home/aschmitt/data/pfs/pfs_testsimu_20151009/amazed/linecatalogs/linecatalogamazedvacuum_B5.txt"
-        print('Catalog path is: {0}'.format(cpath) )  
-        
-        #overrride zval
-        #zval = 2.11605 #for pfs lbg abs, EZ_fits-W-F_9
-        #zval = 1.1714 #for vvds1 'sc_020086397_F02P016_vmM1_red_31_1_atm_clean'
-        #zval = 1.355
-        #zval = 1.075
-        avp = AViewPlot(spath, npath, tpath, cpath, zval)
+#if __name__ == '__main__':
+#    if 0:
+#        path = "/home/aschmitt/data/pfs/pfs_lbg/lbgabs_1K_2z3_20J22.5"
+#        name = "EZ_fits-W-F_9.fits"
+#        spath = os.path.join(path,name)
+#        print('using full path s: {0}'.format(spath))
+#    
+#        name = "EZ_fits-W-F_9.fits"
+#        tpath = os.path.join(path,name)
+#        print('using full path t: {0}'.format(tpath))
+#        
+#        avp = AViewPlot(spath, tpath, 0.1)
+#    
+#    if 0:
+#        spath = "/home/aschmitt/data/vvds/vvds2/cesam_vvds_z0_F02_DEEP/1D/sc_020086957_F02P018_vmM1_red_88_1_atm_clean.fits"
+#        print('Spc path is: {0}'.format(spath))
+#        zval = 4.8
+#        print('Redshift is: {0}'.format(zval))
+#        #print(s.getRedshiftTpl(spcName))
+#        tpath = "/home/aschmitt/data/vvds/vvds2/cesam_vvds_z0_F02_DEEP/amazed/Templates/Default/qso/SDSS_AGN.txt"
+#        tpath = "/home/aschmitt/data/vvds/vvds2/cesam_vvds_z0_F02_DEEP/amazed/Templates/Default/galaxy/ave_Lya_no.txt"
+#        print('Tpl path is: {0}'.format(tpath) )  
+#        cpath = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/RayCatalogs/raycatalogamazedvacuum.txt"
+#        print('Catalog path is: {0}'.format(cpath) )  
+#        
+#        #overrride zval
+#        #zval = 2.11605 #for pfs lbg abs, EZ_fits-W-F_9
+#        #zval = 1.1714 #for vvds1 'sc_020086397_F02P016_vmM1_red_31_1_atm_clean'
+#        #zval = 1.355
+#        #zval = 1.075
+#        avp = AViewPlot(spath, tpath, cpath, zval)
+#        
+#    if 1:
+#        spath = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/1D/sc_020086471_F02P016_vmM1_red_107_1_atm_clean.fits"
+#        spath = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/1D/sc_020135682_F02P019_vmM1_red_99_1_atm_clean.fits"
+#        print('Spc path is: {0}'.format(spath))
+#        zval = 1.1247
+#        print('Redshift is: {0}'.format(zval))
+#        #print(s.getRedshiftTpl(spcName))
+#        tpath = "/home/aschmitt/data/pfs/pfs_lbg/amazed/Templates/ExtendedGalaxyEL2/emission/NEW_Im_extended_blue.dat"
+#        tpath = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/Templates/ExtendedGalaxyEL2/emission/NEW_Im_extended_blue.dat"
+#        tpath = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/Templates/linemodel/emission/NEW_Im_extended_blue_continuum.txt"
+#        print('Tpl path is: {0}'.format(tpath) )  
+#        
+#        cpath = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/linecatalogs/linecatalogamazedair_B5.txt"
+#        print('Catalog path is: {0}'.format(cpath) )  
+#        
+#        #overrride zval
+#        #zval = 2.11605 #for pfs lbg abs, EZ_fits-W-F_9
+#        #zval = 1.1714 #for vvds1 'sc_020086397_F02P016_vmM1_red_31_1_atm_clean'
+#        #zval = 1.355
+#        #zval = 1.075
+#        avp = AViewPlot(spath, "", tpath, cpath, zval)
+#    
+#    if 0:
+#        spath = "/home/aschmitt/data/pfs/pfs_testsimu_20151009/470026900000130.2-0.4_20_20.5_/470026900000130.2-0.4_20_20.5_EZ_fits-W-TF_0.fits"
+#        print('Spc path is: {0}'.format(spath))
+#        npath = "/home/aschmitt/data/pfs/pfs_testsimu_20151009/470026900000130.2-0.4_20_20.5_/470026900000130.2-0.4_20_20.5_EZ_fits-W-ErrF_0.fits"
+#        print('Noise path is: {0}'.format(npath))
+#        
+#        zval = 0.3375
+#        print('Redshift is: {0}'.format(zval))
+#        #print(s.getRedshiftTpl(spcName))
+#        tpath = ""
+#        print('Tpl path is: {0}'.format(tpath) )  
+#        cpath = "/home/aschmitt/data/pfs/pfs_testsimu_20151009/amazed/linecatalogs/linecatalogamazedvacuum_B5.txt"
+#        print('Catalog path is: {0}'.format(cpath) )  
+#        
+#        #overrride zval
+#        #zval = 2.11605 #for pfs lbg abs, EZ_fits-W-F_9
+#        #zval = 1.1714 #for vvds1 'sc_020086397_F02P016_vmM1_red_31_1_atm_clean'
+#        #zval = 1.355
+#        #zval = 1.075
+#        avp = AViewPlot(spath, npath, tpath, cpath, zval)

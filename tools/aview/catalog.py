@@ -4,8 +4,10 @@ Created on Sat Jul 25 14:39:53 2015
 
 @author: aschmitt
 """
+import sys
 import os
 import re
+import optparse
 from astropy.io import fits
 
 import matplotlib.pyplot as pp
@@ -179,12 +181,12 @@ class Catalog(object):
             #EUCLID
             obs_lambda_min = 12500.0
             obs_lambda_max = 17500.0
-        if 1:        
+        if 0:        
             #PFS
             obs_lambda_min = 3800.0
             obs_lambda_max = 12600.0
-        if 0:        
-            #PFS
+        if 1:        
+            #VVDS
             obs_lambda_min = 3600.0
             obs_lambda_max = 9400.0
 
@@ -236,7 +238,7 @@ class Catalog(object):
         
         pp.xlabel('z')
         pp.ylabel('LINE')
-        name1 = "Lines presence = f(z) for observed spectrum in [{:.1f}A - {:.1f}A]\nblack=present, white=absent".format(obs_lambda_min, obs_lambda_max)
+        name1 = "catalog: {}\nLines presence = f(z) for observed spectrum in [{:.1f}A - {:.1f}A]\nblack=present, white=absent".format(self.name, obs_lambda_min, obs_lambda_max)
         pp.title(name1)
         
         
@@ -370,22 +372,58 @@ class Catalog(object):
         #outpath = os.path.join(path,name)
         #self.save(outpath)
         
-     
+def StartFromCommandLine( argv ) :	
+    usage = """usage: %prog [options]
+    ex: python ./catalog.py -i """
+    parser = optparse.OptionParser(usage=usage)
+    parser.add_option(u"-i", u"--ctlg", help="path to the catalog to be plotted",  dest="ctlgPath", default="")
+
+
+    (options, args) = parser.parse_args()
+
+    if( len( args ) == 0 ) :
+        cpath = options.ctlgPath
+        print('using full path: {0}'.format(cpath))
+        c = Catalog(cpath, ctype="vacuum")
+        print(c) 
+        #print(c.getShiftedCatalog(1.0, "E"))
+        
+        #c.plot()
+        c.plotInZplane()  
+        
+        #print("the REDMINE (copy/paste) generated table is:\n{}".format(c.getRedmineTableString()))
+        #print("the LATEX (copy/paste) generated table is:\n{}".format(c.getLatexTableString()))
+        
+        #lmResPath = "/home/aschmitt/code/python/linemodel_tplshape/amazed/output/spectrum_tpl_NEW_Im_extended.dat_TF/linemodelsolve.linemodel_fit_extrema_0.csv"
+        #c.applyTemplateShapeFromLinemodelFitResult(lmResPath)
+    else :
+        print("Error: invalid argument count")
+        exit()
+        
+def Main( argv ) :	
+    try:
+        StartFromCommandLine( argv )
+    except (KeyboardInterrupt):
+        exit()  
             
 if __name__ == '__main__':
-    path = "/home/aschmitt/gitlab/cpf-redshift/tools/simulation/amazed/linecatalogs"
-    name = "linecatalogamazedvacuum_B10C.txt"
-    cpath = os.path.join(path,name)
-    print('using full path: {0}'.format(cpath))
-    c = Catalog(cpath, ctype="vacuum")
-    print(c) 
-    #print(c.getShiftedCatalog(1.0, "E"))
-    
-    #c.plot()
-    #c.plotInZplane()  
-    
-    #print("the REDMINE (copy/paste) generated table is:\n{}".format(c.getRedmineTableString()))
-    print("the LATEX (copy/paste) generated table is:\n{}".format(c.getLatexTableString()))
-    
-    #lmResPath = "/home/aschmitt/code/python/linemodel_tplshape/amazed/output/spectrum_tpl_NEW_Im_extended.dat_TF/linemodelsolve.linemodel_fit_extrema_0.csv"
-    #c.applyTemplateShapeFromLinemodelFitResult(lmResPath)
+    print "Catalog"
+    Main( sys.argv )
+        
+#if __name__ == '__main__':
+#    path = "/home/aschmitt/gitlab/cpf-redshift/tools/simulation/amazed/linecatalogs"
+#    name = "linecatalogamazedvacuum_B10C.txt"
+#    cpath = os.path.join(path,name)
+#    print('using full path: {0}'.format(cpath))
+#    c = Catalog(cpath, ctype="vacuum")
+#    print(c) 
+#    #print(c.getShiftedCatalog(1.0, "E"))
+#    
+#    #c.plot()
+#    c.plotInZplane()  
+#    
+#    #print("the REDMINE (copy/paste) generated table is:\n{}".format(c.getRedmineTableString()))
+#    #print("the LATEX (copy/paste) generated table is:\n{}".format(c.getLatexTableString()))
+#    
+#    #lmResPath = "/home/aschmitt/code/python/linemodel_tplshape/amazed/output/spectrum_tpl_NEW_Im_extended.dat_TF/linemodelsolve.linemodel_fit_extrema_0.csv"
+#    #c.applyTemplateShapeFromLinemodelFitResult(lmResPath)

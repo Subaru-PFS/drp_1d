@@ -19,7 +19,7 @@ CLineModelElement::CLineModelElement(const std::string& widthType, const Float64
 
     m_asym_sigma_coeff = 4.0;
     m_asym_alpha = 4.5;
-    m_symxl_sigma_coeff = 6.0;
+    m_symxl_sigma_coeff = 4.0;
     m_asym2_sigma_coeff = 2.0;
     m_asym2_alpha = 2.0;
     m_asymfit_sigma_coeff = 2.0;
@@ -69,7 +69,7 @@ Float64 CLineModelElement::GetLineWidth(Float64 redshiftedlambda, Float64 z, Boo
     Float64 instrumentSigma = 0.0;
     Float64 velocitySigma = 0.0;
 
-    Float64 empiricalFactor = 325.0/230.0/m_FWHM_factor; //derived from (emission line) linemodel-width fit on VUDS ECDFS flags3+4
+    Float64 empiricalFactor = 230.0/325.0/m_FWHM_factor; //derived from (emission line) linemodel-width fit on VUDS ECDFS flags3+4
     if( m_LineWidthType == "instrumentdriven"){
         instrumentSigma = redshiftedlambda/m_Resolution*empiricalFactor;
     }else if( m_LineWidthType == "fixed"){
