@@ -360,12 +360,12 @@ class Spectrum(object):
         
     def plot(self, saveFullDirPath=""):
         pp.ion()
-        fig = pp.figure(1)
-        self.canvas = fig.canvas
-        self.ax = fig.add_subplot(111)
+        self.fig = pp.figure(1)
+        self.canvas = self.fig.canvas
+        self.ax = self.fig.add_subplot(111)
 
         #pp.plot(self.xvect, self.yvect, "x-")
-        self.line = self.ax.plot(self.xvect, self.yvect)
+        self.ax.plot(self.xvect, self.yvect)
 
         #pp.grid(True) # Affiche la grille
         self.ax.xaxis.grid(True,'major')
@@ -381,98 +381,31 @@ class Spectrum(object):
         if not saveFullDirPath == "":
             saveFullPath = os.path.join(saveFullDirPath, self.name + str(".png"))
             pp.savefig(saveFullPath) # sauvegarde du fichier ExempleTrace.png
-        #pp.show(1)
+        else:
+            if 1:
+                self.startEventHandling()
+            else:
+                pp.show(1)
+            
         print '\n'
         
-        if 1:
-            print("start event handling: ...")
-            print("\t Press 'p' to start picking points")
-            print("\t Press 'r' to remove the last point")
-            print("\t")
-            self.coords = []
-            # Call click func
-            cid1 = fig.canvas.mpl_connect('button_press_event', self.onclick)
-            self.enablepointpicking = False
-            self.shift_is_held = False
-            cid2 = fig.canvas.mpl_connect('key_press_event', self.on_key_press)
-            cid3 = fig.canvas.mpl_connect('key_release_event', self.on_key_release)
-    
-            pp.show(1)
-            fig.canvas.mpl_disconnect(cid1)
-            fig.canvas.mpl_disconnect(cid2)
-            fig.canvas.mpl_disconnect(cid3)
-            
-            if len(self.coords)>1:
-                #save the curve into new file
-                self.n = len(self.coords)
-                self.xvect = range(0,self.n)
-                self.yvect = range(0,self.n)
-                self.ysum = 0.0    
-                for x in range(0,self.n):
-                    self.xvect[x] = self.coords[x][0]
-                    self.yvect[x] = self.coords[x][1]
-                    self.ysum += self.yvect[x]
-                #self.interpolate(dx=1.0)
-                    
-                soutputpath = self.spath +"_aview_handdrawncurve.dat"
-                self.saveTpl(soutputpath)
-        
-
-    def refresh(self):
-        #if len(self.coords)>1:
-            #self.line.pop(1).remove()
-            
-        self.ax.plot([x[0] for x in self.coords[-1:]], [x[1] for x in self.coords[-1:]], 'rx')
-        self.canvas.draw()
-
-    ##callback for poitn picking event    
-    def onclick(self, event):
-        global ix, iy
-        if event.button == 1: #1=left click, 3=rightclick
-            if self.shift_is_held:        
-                ix, iy = event.xdata, event.ydata
-                print("x = {:.2f}, y = {:.4e}".format(float(ix), float(iy)))    
-                #print 'x = %e, y = %e'%(ix, iy)    
-                self.coords.append((ix, iy))
-                self.refresh()
-
-
-    def on_key_press(self, event):
-       if event.key == 'shift' and self.enablepointpicking:
-           self.shift_is_held = True
-           print("shift is held: point picking is enabled !")
-       elif event.key == 'p':
-           if not self.enablepointpicking:
-               self.enablepointpicking = True
-               print("Point picking enabled ! (use SHIFT to pick with Left-click")
-           elif self.enablepointpicking:
-               self.enablepointpicking = False
-               print("Point picking disabled !")
-       elif event.key == 'r' and self.enablepointpicking:
-           self.coords.pop()
-           print("last point removed !")
-       elif self.enablepointpicking:
-           self.shift_is_held = False 
-           print("shift is released: point picking is disabled !") 
-    
-    def on_key_release(self, event):
-       if event.key == 'shift':
-           self.shift_is_held = False 
-           print("shift is released: point picking is disabled !")              
-        
     def plotCompare(self, other_spc, amplitude = 1.0, modellinetype = "-bo", exportPath=""):
-        fig = pp.figure( "spectrumview", figsize=(15,11))
+        self.fig = pp.figure( "spectrumview", figsize=(15,11))
         
         lbl = self.label
         if lbl=="":
             lbl = self.name
         spcColor = '0.6'
-        pp.plot(self.xvect, self.yvect,  color=spcColor, label=self.name)
+        self.canvas = self.fig.canvas
+        self.ax = self.fig.add_subplot(111)
+
+        #pp.plot(self.xvect, self.yvect, "x-")
+        self.ax.plot(self.xvect, self.yvect,  color=spcColor, label=self.name)
         yother = [a*amplitude for a in other_spc.yvect]
         lbl = other_spc.label
         if lbl=="":
             lbl = other_spc.name
-        pp.plot(other_spc.xvect, yother, modellinetype, label=other_spc.name)
+        self.ax.plot(other_spc.xvect, yother, modellinetype, label=other_spc.name)
 
         pp.grid(True) # Affiche la grille
         pp.legend()
@@ -483,13 +416,320 @@ class Spectrum(object):
         pp.ylabel('Flux')
         pp.title(self.name) # Titre
         if exportPath=="":
-            pp.show()
+            if 1:
+                self.other_spc = other_spc
+                self.startEventHandling()
+            else:
+                pp.show(1)
         else:
             pp.savefig(exportPath)
             pp.close()
             pp.clf()
             
         print '\n'
+
+        
+    def startEventHandling(self):
+        print("start event handling: ...")
+        print("\t Press 'p' to start picking points")
+        print("\t")
+        self.coords = []
+        # Call click func
+        cid1 = self.fig.canvas.mpl_connect('button_press_event', self.onclick)
+        self.enablepointpicking = False
+        self.shift_is_held = False
+        cid2 = self.fig.canvas.mpl_connect('key_press_event', self.on_key_press)
+        cid3 = self.fig.canvas.mpl_connect('key_release_event', self.on_key_release)
+
+        pp.show(1)
+        self.fig.canvas.mpl_disconnect(cid1)
+        self.fig.canvas.mpl_disconnect(cid2)
+        self.fig.canvas.mpl_disconnect(cid3)
+        
+        if len(self.coords)>1:
+            #save the curve into new file
+            self.n = len(self.coords)
+            self.xvect = range(0,self.n)
+            self.yvect = range(0,self.n)
+            self.ysum = 0.0    
+            for x in range(0,self.n):
+                self.xvect[x] = self.coords[x][0]
+                self.yvect[x] = self.coords[x][1]
+                self.ysum += self.yvect[x]
+            #self.interpolate(dx=1.0)
+                
+            soutputpath = self.spath +"_aview_handdrawncurve.dat"
+            self.saveTpl(soutputpath)
+            print("Saved new spectrum at: {}".format(soutputpath))
+
+    def refresh(self):
+        #if len(self.coords)>1:
+            #self.line.pop(1).remove()
+            
+        self.ax.plot([x[0] for x in self.coords[-1:]], [x[1] for x in self.coords[-1:]], 'rx')
+        self.canvas.draw()
+
+    ##callback for point picking event    
+    def onclick(self, event):
+        global ix, iy
+        if event.button == 1: #1=left click, 3=rightclick
+            if self.shift_is_held:        
+                ix, iy = event.xdata, event.ydata
+                print("x = {:.2f}, y = {:.4e}".format(float(ix), float(iy)))    
+                #print 'x = %e, y = %e'%(ix, iy)    
+                self.coords.append((ix, iy))
+                self.refresh()
+        print("INFO: there are {} points in store".format(len(self.coords)))
+
+
+    def on_key_press(self, event):
+       if event.key == 'shift' and self.enablepointpicking:
+           self.shift_is_held = True
+           print("shift is held: point picking is enabled !")
+       elif event.key == 'p':
+           if not self.enablepointpicking:
+               self.enablepointpicking = True
+               print("Point picking enabled ! (use SHIFT to pick with Left-click")           
+               print("\t Press 'r' to remove the last picked point")         
+               print("\t Press 'm' to use the existing points as a correction")
+               print("\t Press 'd' to use the existing points to linear smooth (droite) around the point")
+               print("\t Press 'a' to add the existing points to the curve")
+               print("\t Press 'r' to remove the closest point from the curve")
+           elif self.enablepointpicking:
+               self.enablepointpicking = False
+               print("Point picking disabled !")
+       elif event.key == 'm':
+           if self.enablepointpicking:
+               self.enablepointpicking = False
+               print("Point picking disabled !")
+               print("modifying curve #2:")
+               n = len(self.coords)
+               if n==1:
+                   self.mergeSaveCorrection(self.other_spc, self.coords)
+               else:
+                   print("curve correction only availbale with 1 correction point, please remove points with '-' key !")
+       elif event.key == 'd':
+           if self.enablepointpicking:
+               self.enablepointpicking = False
+               print("Point picking disabled !")
+               print("smoothing curve #2:")
+               n = len(self.coords)
+               if n==1:
+                   self.smoothSaveCorrection(self.other_spc, self.coords)
+               else:
+                   print("curve correction only availbale with 1 correction point, please remove points with '-' key !")
+       elif event.key == 'a':
+           if self.enablepointpicking:
+               self.enablepointpicking = False
+               print("Point picking disabled !")
+               print("adding points to curve #2:")
+               n = len(self.coords)
+               if n>0:
+                   self.addPointsToCurve(self.other_spc, self.coords)
+       elif event.key == 'r':
+           if self.enablepointpicking:
+               self.enablepointpicking = False
+               print("Point picking disabled !")
+               print("removing points from curve #2:")
+               n = len(self.coords)
+               if n==1:
+                   self.removePointsFromCurve(self.other_spc, self.coords)
+               else:
+                   print("curve point removal only availbale with 1 correction point, please remove points with '-' key !")
+       elif event.key == '-' and self.enablepointpicking:
+           self.coords.pop()
+           print("last point removed !")
+       elif self.enablepointpicking:
+           self.shift_is_held = False 
+           print("shift is released: point picking is disabled !")
+           
+       if self.enablepointpicking:
+           print("INFO: there are {} points in store".format(len(self.coords)))
+    
+    def on_key_release(self, event):
+       if event.key == 'shift':
+           self.shift_is_held = False               
+
+    def mergeSaveCorrection(self, spc, coords):
+        alpha_max = 1.0
+        for k in range(len(coords)):
+            for ks in range(spc.n):
+                diffx = (self.coords[k][0]-spc.xvect[ks])
+                diffy = (self.coords[k][1]-spc.yvect[ks])
+                diff = diffx#np.sqrt(diffx**2+diffy**2)
+                sigmax = 100.0 #span of the correction 
+                alpha = alpha_max*(np.exp(-(diff**2)/(2*sigmax**2)) )
+                spc.yvect[ks] = (1-alpha)*spc.yvect[ks] + alpha*self.coords[k][1]
+                spc.xvect[ks] = (1-alpha)*spc.xvect[ks] + alpha*self.coords[k][0]
+        
+        spc.ysum = 0.0
+        for x in range(0,spc.n):
+            spc.ysum += spc.yvect[x]
+            
+        soutputpath = spc.spath +"_corr.dat"
+        spc.saveTpl(soutputpath)        
+        print("Saved new spectrum at: {}".format(soutputpath))
+        self.coords = []
+        
+        if 1:
+            #plotting saved spectrum
+            snew = Spectrum(soutputpath, spc.stype)
+            self.ax.plot(snew.xvect, snew.yvect,  color="g", label=snew.name)
+            self.ax.legend()
+            self.canvas.draw()
+            
+    def smoothSaveCorrection(self, spc, coords):
+        spanWavelength = 500.0
+        k=0
+        
+        #find index of the point
+        diffx = 1e12
+        kx = 0
+        for ks in range(spc.n):
+            if diffx > abs(self.coords[k][0]-spc.xvect[ks]):
+                diffx = abs(self.coords[k][0]-spc.xvect[ks])
+                kx = ks
+        #find index of the min
+        diffx = 1e12
+        kxmin = 0
+        for ks in range(spc.n):
+            if diffx > abs(self.coords[k][0]-spanWavelength-spc.xvect[ks]):
+                diffx = abs(self.coords[k][0]-spanWavelength-spc.xvect[ks])
+                kxmin = ks
+        #find index of the max
+        diffx = 1e12
+        kxmax = spc.n
+        for ks in range(spc.n):
+            if diffx > abs(self.coords[k][0]+spanWavelength-spc.xvect[ks]):
+                diffx = abs(self.coords[k][0]+spanWavelength-spc.xvect[ks])
+                kxmax = ks
+        
+        x1 = self.xvect[kxmin:kxmax]
+        y1 = self.yvect[kxmin:kxmax]
+        n1 = len(x1)
+        print("linearfit on {} points".format(n1))
+        if n1<3:
+            print("not enough points for polyfit !")
+            return
+        # Use polyfit.
+        coefficients1 = np.polyfit(x1,y1,1) 
+        droite = np.zeros((n1))
+        for x in range(len(x1)):
+            droite[x] = coefficients1[0]*x1[x] + coefficients1[1]
+        
+        #apply correction
+        alpha_max = 1.0
+        for ks in range(kxmin, kxmax):
+            diffx = (self.coords[k][0]-spc.xvect[ks])
+            diffy = (self.coords[k][1]-spc.yvect[ks])
+            diff = diffx#np.sqrt(diffx**2+diffy**2)
+            sigmax = 100.0 #span of the correction 
+            alpha = alpha_max*(np.exp(-(diff**2)/(2*sigmax**2)) )
+            spc.yvect[ks] = (1-alpha)*spc.yvect[ks] + alpha*droite[ks-kxmin]        
+        
+        spc.ysum = 0.0
+        for x in range(0,spc.n):
+            spc.ysum += spc.yvect[x]
+            
+        soutputpath = spc.spath +"_corr.dat"
+        spc.saveTpl(soutputpath)        
+        print("Saved new spectrum at: {}".format(soutputpath))
+        self.coords = []
+        
+        if 1:
+            #plotting saved spectrum
+            snew = Spectrum(soutputpath, spc.stype)
+            self.ax.plot(snew.xvect, snew.yvect,  color="g", label=snew.name)
+            self.ax.legend()
+            self.canvas.draw()
+            
+    def addPointsToCurve(self, spc, coords):
+        for k in range(len(coords)):
+            print("adding point : x={}, y={}".format(self.coords[k][0], self.coords[k][1]))
+            #find index of the point
+            diffx = 1e12
+            kx = 0
+            for ks in range(spc.n):
+                d = self.coords[k][0]-spc.xvect[ks]
+                if diffx > abs(d) and d > 0:
+                    diffx = abs(d)
+                    kx = ks
+            print("adding the point at wl = {}A".format(spc.xvect[kx]))
+                    
+            xvect = range(0,spc.n+1)
+            yvect = range(0,spc.n+1)
+            ysum = 0.0   
+            dec = 0
+            for x in range(0,spc.n):
+                if x == kx+1:
+                    xvect[x] = self.coords[k][0]
+                    yvect[x] = self.coords[k][1]
+                    ysum += yvect[x]
+                    dec = 1
+                
+                xvect[x+dec] = spc.xvect[x]
+                yvect[x+dec] = spc.yvect[x]
+                ysum += yvect[x+dec]
+                
+            spc.xvect = np.copy(xvect)
+            spc.yvect = np.copy(yvect)
+            spc.ysum = ysum
+            spc.n += 1
+            
+        soutputpath = spc.spath +"_corr.dat"
+        spc.saveTpl(soutputpath)        
+        print("Saved new spectrum at: {}".format(soutputpath))
+        self.coords = []
+        
+        if 1:
+            #plotting saved spectrum
+            snew = Spectrum(soutputpath, spc.stype)
+            self.ax.plot(snew.xvect, snew.yvect,  color="g", label=snew.name)
+            self.ax.legend()
+            self.canvas.draw()
+                
+    def removePointsFromCurve(self, spc, coords):
+        for k in range(len(coords)):
+            print("removing point close to: x={}, y={}".format(self.coords[k][0], self.coords[k][1]))
+            #find index of the point
+            diffx = 1e12
+            kx = 0
+            for ks in range(spc.n):
+                d = self.coords[k][0]-spc.xvect[ks]
+                if diffx > abs(d) and d > 0:
+                    diffx = abs(d)
+                    kx = ks
+            print("removing the point at wl = {}A".format(spc.xvect[kx]))
+                    
+            xvect = range(0,spc.n-1)
+            yvect = range(0,spc.n-1)
+            ysum = 0.0   
+            dec = 0
+            for x in range(0,spc.n-1):
+                if x == kx:
+                    dec = 1
+                
+                xvect[x] = spc.xvect[x+dec]
+                yvect[x] = spc.yvect[x+dec]
+                ysum += yvect[x]
+                    
+            spc.xvect = np.copy(xvect)
+            spc.yvect = np.copy(yvect)
+            spc.ysum = ysum
+            spc.n -= 1
+            
+        soutputpath = spc.spath +"_corr.dat"
+        spc.saveTpl(soutputpath)        
+        print("Saved new spectrum at: {}".format(soutputpath))
+        self.coords = []
+        
+        if 1:
+            #plotting saved spectrum
+            snew = Spectrum(soutputpath, spc.stype)
+            self.ax.plot(snew.xvect, snew.yvect,  color="g", label=snew.name)
+            self.ax.legend()
+            self.canvas.draw()
+                    
         
     def exportPlotCompareBokeh(self, other_spc, amplitude = 1.0, fname = "spectrum_comparison"):
         # output to static HTML file
@@ -860,6 +1100,9 @@ def StartFromCommandLine( argv ) :
     parser.add_option(u"-t", u"--type", help="type of spectrum, can be in teh following list {template, vvds, pfs, pfs2, muse, hplana, euclid, pfs2reech}",  dest="spcType", default="")
     parser.add_option(u"-e", u"--export", help="export to fits format",  dest="export", default="no")
 
+    parser.add_option(u"-o", u"--otherspc", help="path to the other fits spectrum to be plotted",  dest="otherspcPath", default="")
+    parser.add_option(u"-p", u"--otherspctype", help="type of other spc",  dest="otherspcType", default="template")
+
     (options, args) = parser.parse_args()
 
     if( len( args ) == 0 ) :
@@ -867,16 +1110,20 @@ def StartFromCommandLine( argv ) :
         s = Spectrum(options.spcPath, options.spcType)
         #s.applyRedshift(0.25)
         
-        
-        if options.export == "yes":
-            #s.applyLambdaCrop(7500, 9000)
-            #s.applyWeight(1e-18)
-            #s.setMagIAB(20)
-            path = os.path.split(options.spcPath)[0]
-            nameWext = os.path.split(options.spcPath)[1]
-            s.exportFits(path, name=os.path.splitext(nameWext)[0], addNoise=False, exportNoiseSpectrum=False)
-        print(s) 
-        s.plot()
+        if options.otherspcPath == "":
+            if options.export == "yes":
+                #s.applyLambdaCrop(7500, 9000)
+                #s.applyWeight(1e-18)
+                #s.setMagIAB(20)
+                path = os.path.split(options.spcPath)[0]
+                nameWext = os.path.split(options.spcPath)[1]
+                s.exportFits(path, name=os.path.splitext(nameWext)[0], addNoise=False, exportNoiseSpectrum=False)
+            print(s) 
+            s.plot()
+        else:
+            s2 = Spectrum(options.otherspcPath, options.otherspcType)
+            s.plotCompare(s2, 1.0, modellinetype = "k-")
+            
     else :
         print("Error: invalid argument count")
         exit()
@@ -891,10 +1138,10 @@ def Main( argv ) :
  
 if __name__ == '__main__':
     print "Spectrum"
-    if 0:
+    if 1:
         Main( sys.argv )
            
-    if 1: #deprecated, but not fully covered by the command line args functionnality...
+    if 0: #deprecated, but not fully covered by the command line args functionnality...
         print "Spectrum plotting"
         # plot single spectrum
         if 0:
@@ -1026,8 +1273,12 @@ if __name__ == '__main__':
             
             path = "/home/aschmitt/code/python/linemodel_estimateContinuum/continua_output" 
             name = "spectrum_tpl_BulgedataExtensionData_extMarch2016.dat_TF_continuum.txt"
-            name = "spectrum_tpl_NEW_Im_extended_ext20160415.dat_TF_continuum.txt"
-            name ="linemodelsolve.linemodel_continuum_extrema_0.csv_aview_handdrawncurve.dat"
+            #name = "spectrum_tpl_NEW_Im_extended_ext20160415.dat_TF_continuum.txt"
+            name ="linemodelsolve.linemodel_continuum_extrema_0.csv_aview_handdrawncurve2.dat"
+            
+            if 1:
+                path = "/home/aschmitt/code/python/linemodel_estimateContinuum/templates/templates_forSimulationLm_selected_and_extended_20160415"
+                name = "BulgedataExtensionData_extMarch2016.dat_aview_handdrawncurve.dat"
  
             spath = os.path.join(path,name)
             print('using full path: {0}'.format(spath))
@@ -1035,7 +1286,7 @@ if __name__ == '__main__':
             #s2.yvect =  s2.smoothGaussian(s2.yvect,degree=10)
             print(s2)
             
-            s1.plotCompare(s2, 1.0, modellinetype = "k-")
+            s1.plotCompare(s2, 1.0, modellinetype = "k-x")
             #s1.plotCompare(s2, s1.ysum/s2.ysum)
             
         # compare spectrum
