@@ -518,7 +518,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
         m = result->ChiSquare[idx];
 
         //save the model result
-        static Int32 maxModelSave = 10;
+        static Int32 maxModelSave = 3;
         if( savedModels<maxModelSave /*&& isLocalExtrema[i]*/)
         {
             // CModelSpectrumResult
@@ -529,7 +529,8 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
             std::shared_ptr<CModelFittingResult>  resultfitmodel = std::shared_ptr<CModelFittingResult>( new CModelFittingResult(result->LineModelSolutions[idx], result->Redshifts[idx], result->ChiSquare[idx], result->restRayList, model.GetVelocityEmission(), model.GetVelocityAbsorption()) );
             m_savedModelFittingResults.push_back(resultfitmodel);
 
-            if(1 && savedModels==0)
+            Int32 saveNLinemodelContinua = 0;
+            if( savedModels < saveNLinemodelContinua )
             {
                 // Save the reestimated continuum, only the first extrema
                 std::shared_ptr<CSpectraFluxResult> baselineResult = (std::shared_ptr<CSpectraFluxResult>) new CSpectraFluxResult();

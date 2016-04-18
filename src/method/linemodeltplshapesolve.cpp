@@ -8,6 +8,8 @@
 #include <epic/redshift/extremum/extremum.h>
 #include <epic/redshift/processflow/datastore.h>
 
+#include <fstream>
+
 using namespace NSEpic;
 using namespace std;
 
@@ -125,7 +127,7 @@ std::shared_ptr<const CLineModelTplshapeSolveResult> CLineModelTplshapeSolve::Co
 
     //load the catalogs list from the files in the tplshape-catalogs folder : tplshapeCatalogDir
     namespace fs = boost::filesystem;
-    fs::path tplshapeCatalogDir("/home/aschmitt/data/vuds/VUDS_flag3_4/amazed/linecatalogs/linecatalogs_tplshape_ExtendedTemplatesMarch2016_v2_20160417_LyaEasymfixedbytpl_LyabA_R230");
+    fs::path tplshapeCatalogDir("/home/aschmitt/data/vuds/VUDS_flag3_4/amazed/linecatalogs/linecatalogs_tplshape_ExtendedTemplatesMarch2016_v2_20160418_LyaEasymfixedbytpl_LyabA_velocityfit");
 
     fs::directory_iterator end_iter;
     std::vector<std::string> tplshapeCatalogList;
@@ -140,6 +142,21 @@ std::shared_ptr<const CLineModelTplshapeSolveResult> CLineModelTplshapeSolve::Co
       }
     }
     Log.LogInfo( "Linemodel tplshape - Found %d tplshaped catalogs", tplshapeCatalogList.size());
+
+    //load the velocities list for all the catalogs
+    fs::path tplshapeVelocitiesDir = tplshapeCatalogDir/"velocities/";
+    std::vector<std::string> tplshapeVelocitiesList;
+    if ( fs::exists(tplshapeVelocitiesDir) && fs::is_directory(tplshapeVelocitiesDir))
+    {
+      for( fs::directory_iterator dir_iter(tplshapeVelocitiesDir) ; dir_iter != end_iter ; ++dir_iter)
+      {
+        if (fs::is_regular_file(dir_iter->status()) )
+        {
+          tplshapeVelocitiesList.push_back(dir_iter->path().c_str());
+        }
+      }
+    }
+    Log.LogInfo( "Linemodel tplshape - Found %d tplshaped velocities files", tplshapeVelocitiesList.size());
 
     //loop on the templates
     for( UInt32 i=0; i<tplCategoryList.size(); i++ )
@@ -181,6 +198,39 @@ std::shared_ptr<const CLineModelTplshapeSolveResult> CLineModelTplshapeSolve::Co
                 Log.LogInfo( "Loaded tplshape: %s", tplshapeCatalogList[kctlg].c_str());
             }
 
+            //find the velocities-tplshaped corresponding to the template name
+            Int32 kvel = -1;
+            for(Int32 k=0; k<tplshapeVelocitiesList.size(); k++)
+            {
+                std::string tplname = tpl.GetName();
+                std::string velname = tplshapeVelocitiesList[k];
+                std::size_t foundstra = velname.find(tplname.c_str());
+                if (foundstra==std::string::npos){
+                    continue;
+                }
+                kvel = k;
+            }
+
+            if(kvel<0)
+            {
+                Log.LogError( "Failed to match tpl with tplshape velocities: %s", tpl.GetName().c_str());
+                continue;
+            }
+            //get velocities from file
+            Float64 elv=100.0;
+            Float64 alv=300.0;
+            bool ret = LoadVelocities(tplshapeVelocitiesList[kvel].c_str(), elv, alv);
+            if( !ret )
+            {
+                Log.LogError( "Failed to load tplshape velocities: %s", tplshapeVelocitiesList[kvel].c_str());
+                continue;
+            }
+            else
+            {
+                Log.LogInfo( "Loaded tplshape velocities: %s", tplshapeVelocitiesList[kvel].c_str());
+                m_opt_velocity_emission = elv;
+                m_opt_velocity_absorption = alv;
+            }
 
             Solve( dataStore, _spc, _spcContinuum, tpl, lineCatalog, lambdaRange, redshifts);
             storeResult = true;
@@ -239,6 +289,38 @@ Bool CLineModelTplshapeSolve::Solve( CDataStore& dataStore,
         linemodel.storePerTemplateModelResults(dataStore, tpl);
     }
 
+
+    return true;
+}
+
+Bool CLineModelTplshapeSolve::LoadVelocities( const char* filePath, Float64& elv, Float64& alv )
+{
+    ifstream file;
+
+    file.open( filePath, ifstream::in );
+    if( file.rdstate() & ios_base::failbit )
+        return false;
+
+    string line;
+
+    // Read file line by line
+    Int32 readNums = 0;
+    while( getline( file, line ) )
+    {
+        if(readNums==0)
+        {
+            elv = std::stod(line);
+        }else if(readNums==1)
+        {
+            alv = std::stod(line);
+        }
+        readNums++;
+    }
+
+    if(readNums!=2)
+    {
+        return false;
+    }
 
     return true;
 }

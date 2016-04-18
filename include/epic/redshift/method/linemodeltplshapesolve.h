@@ -25,7 +25,7 @@ public:
 
     const std::string GetDescription();
     Bool PopulateParameters( CDataStore& dataStore );
-
+    Bool LoadVelocities( const char* filePath, Float64& elv, Float64& alv );
 
     std::shared_ptr<const CLineModelTplshapeSolveResult> Compute( CDataStore& resultStore,
                                                                   const CSpectrum& spc,
