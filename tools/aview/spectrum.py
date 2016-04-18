@@ -359,16 +359,17 @@ class Spectrum(object):
         return a
         
     def plot(self, saveFullDirPath=""):
+        pp.ion()
         fig = pp.figure(1)
-        
-        ax = fig.add_subplot(111)
+        self.canvas = fig.canvas
+        self.ax = fig.add_subplot(111)
 
         #pp.plot(self.xvect, self.yvect, "x-")
-        ax.plot(self.xvect, self.yvect)
+        self.line = self.ax.plot(self.xvect, self.yvect)
 
         #pp.grid(True) # Affiche la grille
-        ax.xaxis.grid(True,'major')
-        ax.yaxis.grid(True,'major')
+        self.ax.xaxis.grid(True,'major')
+        self.ax.yaxis.grid(True,'major')
         
         #pp.legend(('cos','sin'), 'upper right', shadow = True)
         if not self.forcePlotXIndex:
@@ -385,6 +386,9 @@ class Spectrum(object):
         
         if 1:
             print("start event handling: ...")
+            print("\t Press 'p' to start picking points")
+            print("\t Press 'r' to remove the last point")
+            print("\t")
             self.coords = []
             # Call click func
             cid1 = fig.canvas.mpl_connect('button_press_event', self.onclick)
@@ -414,6 +418,12 @@ class Spectrum(object):
                 self.saveTpl(soutputpath)
         
 
+    def refresh(self):
+        #if len(self.coords)>1:
+            #self.line.pop(1).remove()
+            
+        self.ax.plot([x[0] for x in self.coords[-1:]], [x[1] for x in self.coords[-1:]], 'rx')
+        self.canvas.draw()
 
     ##callback for poitn picking event    
     def onclick(self, event):
@@ -424,6 +434,7 @@ class Spectrum(object):
                 print("x = {:.2f}, y = {:.4e}".format(float(ix), float(iy)))    
                 #print 'x = %e, y = %e'%(ix, iy)    
                 self.coords.append((ix, iy))
+                self.refresh()
 
 
     def on_key_press(self, event):
@@ -433,7 +444,7 @@ class Spectrum(object):
        elif event.key == 'p':
            if not self.enablepointpicking:
                self.enablepointpicking = True
-               print("Point picking enabled !")
+               print("Point picking enabled ! (use SHIFT to pick with Left-click")
            elif self.enablepointpicking:
                self.enablepointpicking = False
                print("Point picking disabled !")
@@ -880,10 +891,10 @@ def Main( argv ) :
  
 if __name__ == '__main__':
     print "Spectrum"
-    if 1:
+    if 0:
         Main( sys.argv )
            
-    if 0: #deprecated, but not fully covered by the command line args functionnality...
+    if 1: #deprecated, but not fully covered by the command line args functionnality...
         print "Spectrum plotting"
         # plot single spectrum
         if 0:
@@ -967,7 +978,7 @@ if __name__ == '__main__':
             
                 
         # extend and plot single template
-        if 1:
+        if 0:
             print("extend and plot single template")
             path = "/home/aschmitt/data/pfs/pfs_lbg/amazed/Templates/ExtendedGalaxyEL2/emission"
             name = "NEW_Im_extended_blue.dat"
@@ -992,7 +1003,7 @@ if __name__ == '__main__':
             s.plot()
             
         # compare templates
-        if 0:          
+        if 1:          
             path = "/home/aschmitt/data/pfs/pfs_lbg/amazed/Templates/ExtendedGalaxyEL2/emission"
             name = "NEW_Im_extended_blue.dat"
             #name = "NEW_Im_extended.dat" #1
@@ -1002,53 +1013,29 @@ if __name__ == '__main__':
             #name = "StarBurst2.txt" #2
             #name = "StarBurst3.txt" #2
             
-            path = "/home/aschmitt/data/pfs/pfs2_simu20151118_jenny/amazed/templates/ExtendedGalaxyEL3/emission"
-            #name = "zcosmos_red.txt" #1
-            #name = "s0dataExtensionData.dat"    #3    
-            #name = "BulgedataExtensionData.dat"  #3      
-            name = "EllipticaldataExtensionData.dat" #3
-            
-            name = "EW_SB2extended.dat" #2
+            path = "/home/aschmitt/code/python/linemodel_estimateContinuum/templates/templates_forSimulationLm_selected_and_extended_20160415"
+            name = "BulgedataExtensionData_extMarch2016.dat" 
+            #name = "NEW_Im_extended_ext20160415.dat" 
     
             
             spath = os.path.join(path,name)
             print('using full path: {0}'.format(spath))
-            s1 = Spectrum(spath, 'template', snorm=True)
+            s1 = Spectrum(spath, 'template', snorm=False)
             print(s1)
             #s.plot()
-        
-            #path = "/home/aschmitt/gitlab/amazed/bin"
-            #name = "template_fine.txt"
-            path = "/home/aschmitt/data/pfs/pfs2_simu20151118_jenny/amazed/templates/ExtendedGalaxyEL3/galaxy" 
-            name = "NEW_E_extendeddataExtensionData.dat"
-            #name = "BulgedataExtensionData.dat"  #3
-            #name = "sadataExtensionData.dat"
-            #name = "EdataExtensionData.dat"
-    
-            #path = "/home/aschmitt/data/pfs/pfs_lbg/amazed/Templates/ExtendedGalaxyEL2/emission"
-            #name = "Scd.txt" #1
             
-            #name = "StarBurst2.txt" #2
-            
-            #path = "/home/aschmitt/data/pfs/pfs_lbg/amazed/Templates/ExtendedGalaxyEL2/galaxy"
-            #name = "BulgedataExtensionData.dat"
-            #path = "/home/aschmitt/data/pfs/pfs_lbg/amazed/Templates/ExtendedGalaxyEL2/galaxy"
-            #name = "EllipticaldataExtensionData.dat"
-            
-            #path = "/home/aschmitt/data/pfs/pfs_lbg/amazed/Templates/ExtendedGalaxyEL2/galaxy"
-            #name = "EW_SB2extended.dat"
-            
-            
-            #path = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/Templates/linemodel/emission"
-            #name = "NEW_Im_extended_blue_continuum.txt"
-    
+            path = "/home/aschmitt/code/python/linemodel_estimateContinuum/continua_output" 
+            name = "spectrum_tpl_BulgedataExtensionData_extMarch2016.dat_TF_continuum.txt"
+            name = "spectrum_tpl_NEW_Im_extended_ext20160415.dat_TF_continuum.txt"
+            name ="linemodelsolve.linemodel_continuum_extrema_0.csv_aview_handdrawncurve.dat"
+ 
             spath = os.path.join(path,name)
             print('using full path: {0}'.format(spath))
-            s2 = Spectrum(spath, 'template', snorm=True)
+            s2 = Spectrum(spath, 'template', snorm=False)
             #s2.yvect =  s2.smoothGaussian(s2.yvect,degree=10)
             print(s2)
             
-            s1.plotCompare(s2, 1.0)
+            s1.plotCompare(s2, 1.0, modellinetype = "k-")
             #s1.plotCompare(s2, s1.ysum/s2.ysum)
             
         # compare spectrum

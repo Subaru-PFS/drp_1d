@@ -152,6 +152,15 @@ const CSpectrum& CLineModelElementList::GetModelSpectrum() const
     return *m_SpectrumModel;
 }
 
+/**
+ * \brief Returns a pointer to the (re-)estimated continuum flux.
+ **/
+const CSpectrumFluxAxis &CLineModelElementList::GetModelContinuum() const
+{
+    return m_ContinuumFluxAxis;
+}
+
+
 
 Float64 CLineModelElementList::getModelFluxVal(Int32 idx) const
 {

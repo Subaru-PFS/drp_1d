@@ -75,6 +75,7 @@ public:
     Float64 getContinuumMeanUnderElement(Int32 eltId);
     CLineModelResult::SLineModelSolution GetModelSolution();
     const CSpectrum&    GetModelSpectrum() const;
+    const CSpectrumFluxAxis&    GetModelContinuum() const;
     Float64 getModelFluxVal(Int32 idx) const;
     Float64 getModelFluxDerivEltVal(Int32 DerivEltIdx, Int32 idx) const;
     Float64 getModelFluxDerivSigmaVal(Int32 idx) const;
