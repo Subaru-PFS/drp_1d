@@ -60,17 +60,17 @@ BOOST_AUTO_TEST_CASE(ContinuumIndexes)
 
     // test the extracted indexes
     //Lya index
-    BOOST_CHECK_CLOSE_FRACTION( indexesList[0].Color, 0.34, 0.1 );
-    BOOST_CHECK_CLOSE_FRACTION( indexesList[0].Break, 0.0, 0.1 );
+    BOOST_CHECK_SMALL( abs(indexesList[0].Color - 0.34), 0.1 );
+    BOOST_CHECK_SMALL( abs(indexesList[0].Break - 0.0), 0.1 );
     //OII index
-    BOOST_CHECK_CLOSE_FRACTION( indexesList[1].Color, 0.9, 0.1 );
-    BOOST_CHECK_CLOSE_FRACTION( indexesList[1].Break, -0.5, 0.1 );
+    BOOST_CHECK_SMALL( abs(indexesList[1].Color - 0.9), 0.1 );
+    BOOST_CHECK_SMALL( abs(indexesList[1].Break - -0.5), 0.1 );
     //OIII index
-    BOOST_CHECK_CLOSE_FRACTION( indexesList[2].Color, 0.1, 0.1 );
-    BOOST_CHECK_CLOSE_FRACTION( indexesList[2].Break, 0.4, 0.1 );
+    BOOST_CHECK_SMALL( abs(indexesList[2].Color - 0.1), 0.1 );
+    BOOST_CHECK_SMALL( abs(indexesList[2].Break - 0.4), 0.1 );
     //Halpha index
-    BOOST_CHECK( indexesList[3].Color == NAN );
-    BOOST_CHECK( indexesList[3].Break == NAN );
+    BOOST_CHECK( std::isnan(indexesList[3].Color) );
+    BOOST_CHECK( std::isnan(indexesList[3].Break) );
 
 
 }

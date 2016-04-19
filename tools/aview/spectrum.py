@@ -479,7 +479,8 @@ class Spectrum(object):
                 #print 'x = %e, y = %e'%(ix, iy)    
                 self.coords.append((ix, iy))
                 self.refresh()
-        print("INFO: there are {} points in store".format(len(self.coords)))
+        if self.enablepointpicking:
+            print("INFO: there are {} points in store".format(len(self.coords)))
 
 
     def on_key_press(self, event):
@@ -557,10 +558,10 @@ class Spectrum(object):
                 diffx = (self.coords[k][0]-spc.xvect[ks])
                 diffy = (self.coords[k][1]-spc.yvect[ks])
                 diff = diffx#np.sqrt(diffx**2+diffy**2)
-                sigmax = 100.0 #span of the correction 
+                sigmax = 20.0 #span of the correction 
                 alpha = alpha_max*(np.exp(-(diff**2)/(2*sigmax**2)) )
                 spc.yvect[ks] = (1-alpha)*spc.yvect[ks] + alpha*self.coords[k][1]
-                spc.xvect[ks] = (1-alpha)*spc.xvect[ks] + alpha*self.coords[k][0]
+                #spc.xvect[ks] = (1-alpha)*spc.xvect[ks] + alpha*self.coords[k][0]
         
         spc.ysum = 0.0
         for x in range(0,spc.n):
@@ -1098,7 +1099,7 @@ def StartFromCommandLine( argv ) :
     parser = optparse.OptionParser(usage=usage)
     parser.add_option(u"-s", u"--spc", help="path to the fits spectrum to be plotted",  dest="spcPath", default="")
     parser.add_option(u"-t", u"--type", help="type of spectrum, can be in teh following list {template, vvds, pfs, pfs2, muse, hplana, euclid, pfs2reech}",  dest="spcType", default="")
-    parser.add_option(u"-e", u"--export", help="export to fits format",  dest="export", default="no")
+    parser.add_option(u"-e", u"--export", help="export to fits format (no, yes)",  dest="export", default="no")
 
     parser.add_option(u"-o", u"--otherspc", help="path to the other fits spectrum to be plotted",  dest="otherspcPath", default="")
     parser.add_option(u"-p", u"--otherspctype", help="type of other spc",  dest="otherspcType", default="template")

@@ -9,6 +9,7 @@
 #include <epic/redshift/spectrum/template/template.h>
 #include <gsl/gsl_interp.h>
 #include <gsl/gsl_spline.h>
+#include <epic/redshift/continuum/waveletsdf.h>
 #include <epic/redshift/continuum/irregularsamplingmedian.h>
 #include <epic/redshift/spectrum/io/fitswriter.h>
 #include <epic/core/debug/assert.h>
@@ -2478,10 +2479,26 @@ void CLineModelElementList::EstimateSpectrumContinuum()
     }
     fclose( fspc );
     //*/
+
+    // TODO: use the continuum remover defined in the json instead of this hardcoded choice !
     // Remove continuum
-    CContinuumIrregularSamplingMedian continuum;
     CSpectrumFluxAxis fluxAxisWithoutContinuumCalc;
-    Int32 retVal = continuum.RemoveContinuum( spcCorrectedUnderLines, fluxAxisWithoutContinuumCalc );
+    if(1)
+    {
+        CContinuumIrregularSamplingMedian continuum;
+        Float64 opt_medianKernelWidth = 150;
+        continuum.SetMedianKernelWidth(opt_medianKernelWidth);
+        Int32 retVal = continuum.RemoveContinuum( spcCorrectedUnderLines, fluxAxisWithoutContinuumCalc );
+    }else
+    {
+        Int64 nscales = 6;
+        std::string dfBinPath="~/gitlab/amazed/extern/df_linux/";
+        CContinuumDF continuum(dfBinPath);
+        spcCorrectedUnderLines.SetDecompScales(nscales);
+        Int32 retVal = continuum.RemoveContinuum( spcCorrectedUnderLines, fluxAxisWithoutContinuumCalc );
+    }
+
+
 
     CSpectrumFluxAxis fluxAxisNewContinuum;
     fluxAxisNewContinuum.SetSize( fluxAxisNothingUnderLines.GetSamplesCount() );

@@ -407,7 +407,7 @@ class ResultList(object):
             zrangePerTemplate["vvds_reddestdataExtensionData.dat"]=[0.0, 0.696]
             zrangePerTemplate["zcosmos_red.txt"]=[2.34, 3.48]
         
-        if 1:
+        if 0:
             #from Amazed outputs, chi2nc 20160321: ExtendedGalaxyEL2/, for lambda range = [3600, 9460]
             zrangePerTemplate["BulgedataExtensionData.dat"]=[0.0, 1.9163]
             zrangePerTemplate["EdataExtensionData.dat"]=[0.0, 0.4989]
@@ -426,7 +426,11 @@ class ResultList(object):
             zrangePerTemplate["StarBurst2.txt"]=[0.0, 0.5008]
             zrangePerTemplate["StarBurst3.txt"]=[0.0, 0.5008]
             zrangePerTemplate["vvds_reddestdataExtensionData.dat"]=[0.0, 0.6080]
-            zrangePerTemplate["zcosmos_red.txt"]=[1.5109, 3.2469]
+            zrangePerTemplate["zcosmos_red.txt"]=[1.5109, 3.2469] 
+            
+        if 1:
+            #from Amazed outputs, chi2nc 20160321: ExtendedGalaxyEL2/, for lambda range = [3600, 9460]
+            zrangePerTemplate["BulgedataExtensionData.dat"]=[0.0, 1.9163]
         
         try:
             zrange = zrangePerTemplate[tplTag]

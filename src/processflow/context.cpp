@@ -129,7 +129,7 @@ bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath,
     {
         nameBaseline = "preprocess/baselineDF";
         Int64 nscales;
-        paramStore->Get( "continuumRemoval.decompScales", nscales);
+        paramStore->Get( "continuumRemoval.decompScales", nscales, 6);
         std::string dfBinPath;
         paramStore->Get( "continuumRemoval.binPath", dfBinPath, "absolute_path_to_df_binaries_here");
         CContinuumDF continuum(dfBinPath);
