@@ -18,9 +18,10 @@
 
 #include <memory>
 
+
 namespace NSEpic
 {
-
+  static Int32 defaultIdx = -1;
   class CRegulament;
   
 class CLineModelElementList
@@ -64,8 +65,8 @@ public:
 
     void reinitModel();
     void refreshModel();
-    void reinitModelUnderElements(std::vector<Int32> filterEltsIdx);
-    void refreshModelUnderElements(std::vector<Int32> filterEltsIdx);
+    void reinitModelUnderElements(std::vector<Int32> filterEltsIdx, Int32 lineIdx=-1 );
+    void refreshModelUnderElements(std::vector<Int32> filterEltsIdx, Int32 lineIdx=-1 );
     void refreshModelDerivSigmaUnderElements(std::vector<Int32> filterEltsIdx);
 
     Int32 getSpcNSamples(const TFloat64Range& lambdaRange);
@@ -84,7 +85,7 @@ public:
     std::shared_ptr<CSpectrum>  m_SpectrumModel;  //model
     CSpectrumFluxAxis m_SpcContinuumFluxAxis; //continuum spectrum used for the model
     Int32 FindElementIndex(Int32 LineCatalogIndex);
-    Int32 FindElementIndex(std::string LineTagStr, Int32 linetype=-1);
+    Int32 FindElementIndex(std::string LineTagStr, Int32 linetype=-1, Int32& lineIdx=defaultIdx);
     std::vector<Int32> getOverlappingElements(Int32 ind , std::vector<Int32> excludedInd, Float64 overlapThres=0.1);
     CRayCatalog::TRayVector m_RestRayList;
 

@@ -198,9 +198,13 @@ class AViewPlot(object):
                     except:
                         pp.text(x, self.ymax*0.75, '{0}'.format(self.linesname[k]))
                 else:
-                    #pp.text(x, self.ymax*0.75, '{0}:{1:.2f}'.format(self.linesname[k], x))
-                    ax3.plot((x, x), (lpos+4, 10) , cstyle, linestyle = lstyle, label=self.linesname[k] )
-                    ax3.text(x, lpos, '{0}'.format(self.linesname[k]), color=ccolor)
+                    #showLine = self.linesforce[k]=='S'
+                    showLine = True
+                    if showLine:
+                        #pp.text(x, self.ymax*0.75, '{0}:{1:.2f}'.format(self.linesname[k], x))
+                        ax3.plot((x, x), (lpos+4, 10) , cstyle, linestyle = lstyle, label=self.linesname[k] )
+                        annotation = ax3.text(x, lpos, '{0}'.format(self.linesname[k]), color=ccolor)
+                    
         # make ax3 nice
         ax3.get_yaxis().set_visible(False)
                

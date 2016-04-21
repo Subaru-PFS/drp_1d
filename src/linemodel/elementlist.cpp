@@ -772,7 +772,7 @@ void CLineModelElementList::reinitModel()
 /**
  * \brief Init the argument elements from the spectrum model with continuum.
  **/
-void CLineModelElementList::reinitModelUnderElements(std::vector<Int32>  filterEltsIdx)
+void CLineModelElementList::reinitModelUnderElements(std::vector<Int32>  filterEltsIdx, Int32 lineIdx )
 {
     Int32 iElts;
     CSpectrumFluxAxis& modelFluxAxis = m_SpectrumModel->GetFluxAxis();
@@ -780,7 +780,7 @@ void CLineModelElementList::reinitModelUnderElements(std::vector<Int32>  filterE
     for( UInt32 i=0; i<filterEltsIdx.size(); i++ )
     {
         iElts = filterEltsIdx[i];
-        m_Elements[iElts]->initSpectrumModel(modelFluxAxis, m_ContinuumFluxAxis);
+        m_Elements[iElts]->initSpectrumModel(modelFluxAxis, m_ContinuumFluxAxis, lineIdx);
     }
 }
 
@@ -805,9 +805,9 @@ void CLineModelElementList::refreshModel()
  * \brief Adds a new model to each m_Elements entry specified on the argument.
  * Works as refreshModel.
  **/
-void CLineModelElementList::refreshModelUnderElements(std::vector<Int32> filterEltsIdx)
+void CLineModelElementList::refreshModelUnderElements(std::vector<Int32> filterEltsIdx, Int32 lineIdx )
 {
-    reinitModelUnderElements(filterEltsIdx);
+    reinitModelUnderElements(filterEltsIdx, lineIdx);
     const CSpectrumSpectralAxis& spectralAxis = m_SpectrumModel->GetSpectralAxis();
     CSpectrumFluxAxis& modelFluxAxis = m_SpectrumModel->GetFluxAxis();
     //create spectrum model
@@ -815,7 +815,7 @@ void CLineModelElementList::refreshModelUnderElements(std::vector<Int32> filterE
     for( UInt32 i=0; i<filterEltsIdx.size(); i++ )
     {
         iElts = filterEltsIdx[i];
-        m_Elements[iElts]->addToSpectrumModel(spectralAxis, modelFluxAxis, m_Redshift);
+        m_Elements[iElts]->addToSpectrumModel(spectralAxis, modelFluxAxis, m_Redshift, lineIdx);
     }
 }
 
@@ -1561,8 +1561,9 @@ Int32 CLineModelElementList::setLyaProfile(Float64 redshift , const CSpectrumSpe
 {
     //1. retrieve the Lya index
     std::string lyaTag = "LyAE";
-    Int32 idxLyaE = FindElementIndex(lyaTag, CRay::nType_Emission);
-    if( idxLyaE<0 )
+    Int32 idxLineLyaE = -1;
+    Int32 idxLyaE = FindElementIndex(lyaTag, -1, idxLineLyaE);
+    if( idxLyaE<0 || idxLineLyaE<0 )
     {
         return 2; //Lya alpha not found
     }
@@ -1657,8 +1658,9 @@ Int32 CLineModelElementList::setLyaProfile(Float64 redshift , const CSpectrumSpe
                     m_Elements[idxLyaE]->SetAsymfitWidthCoeff(asymWidthCoeff);
                     m_Elements[idxLyaE]->SetAsymfitAlphaCoeff(asymAlphaCoeff);
 
-                    m_Elements[idxLyaE]->fitAmplitude(spectralAxis, m_spcFluxAxisNoContinuum, redshift);
-                    refreshModelUnderElements(filterEltsIdxLya);
+                    idxLineLyaE = -1;
+                    m_Elements[idxLyaE]->fitAmplitude(spectralAxis, m_spcFluxAxisNoContinuum, redshift, idxLineLyaE);
+                    refreshModelUnderElements(filterEltsIdxLya, idxLineLyaE);
                     Float64 m = getModelErrorUnderElement(idxLyaE);
                     if( m<meritMin )
                     {
@@ -2303,20 +2305,19 @@ Int32 CLineModelElementList::FindElementIndex(Int32 LineCatalogIndex)
 /**
  * \brief Returns the first index of m_Elements where calling the element's FindElementIndex method with LineTagStr argument does not return -1.
  **/
-Int32 CLineModelElementList::FindElementIndex(std::string LineTagStr, Int32 linetype)
+Int32 CLineModelElementList::FindElementIndex(std::string LineTagStr, Int32 linetype, Int32& lineIdx )
 {
     Int32 idx = -1;
     for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
     {
-        if( linetype!=-1 )
-        {
-            //WARNING: this linetype filter impl. supposes that all liens in a multiline element are from the same type
-            if(m_RestRayList[m_Elements[iElts]->m_LineCatalogIndexes[0]].GetType() != linetype){
-                continue;
+        lineIdx = m_Elements[iElts]->FindElementIndex(LineTagStr) ;
+        if( lineIdx!=-1 ){
+            if( linetype!=-1 )
+            {
+                if(m_RestRayList[m_Elements[iElts]->m_LineCatalogIndexes[lineIdx]].GetType() != linetype){
+                    continue;
+                }
             }
-        }
-
-        if(m_Elements[iElts]->FindElementIndex(LineTagStr) !=-1){
             idx = iElts;
             break;
         }

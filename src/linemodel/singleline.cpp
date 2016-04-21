@@ -165,7 +165,7 @@ TInt32Range CSingleLine::getSupportSubElt( Int32 subeIdx )
  * /brief Fits a gaussian considering the flux in a width calculated by the prepareSupport method.
  * Sets m_FittedAmplitude and m_FittedAmplitudeErrorSigma based on the parameters.
  */
-void CSingleLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis, Float64  redshift)
+void CSingleLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis, Float64  redshift, Int32 lineIdx )
 {
     if( m_OutsideLambdaRange )
       {
@@ -283,7 +283,7 @@ void CSingleLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const 
 /**
  * If applicable, add to each x the value from getModelAtLambda for the input redshift.
  */
-void CSingleLine::addToSpectrumModel(const CSpectrumSpectralAxis& modelspectralAxis, CSpectrumFluxAxis& modelfluxAxis, Float64 redshift)
+void CSingleLine::addToSpectrumModel(const CSpectrumSpectralAxis& modelspectralAxis, CSpectrumFluxAxis& modelfluxAxis, Float64 redshift, Int32 lineIdx )
 {
     if( m_OutsideLambdaRange )
     {
@@ -410,7 +410,7 @@ Float64 CSingleLine::GetModelDerivSigmaAtLambda(Float64 lambda, Float64 redshift
  * If outside lambda range, return.
  * Copy the continuum flux into the model flux.
  */
-void CSingleLine::initSpectrumModel(CSpectrumFluxAxis& modelfluxAxis, CSpectrumFluxAxis &continuumfluxAxis)
+void CSingleLine::initSpectrumModel(CSpectrumFluxAxis& modelfluxAxis, CSpectrumFluxAxis &continuumfluxAxis, Int32 lineIdx)
 {
     if( m_OutsideLambdaRange )
       {

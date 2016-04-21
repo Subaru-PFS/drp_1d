@@ -31,14 +31,14 @@ public:
     virtual TInt32RangeList getSupport()=0;
     virtual TInt32Range getSupportSubElt(Int32 subeIdx)=0;
 
-    virtual void fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis, Float64  redshift) =0;
+    virtual void fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis, Float64  redshift, Int32 lineIdx=-1 ) =0;
     virtual Float64 getModelAtLambda( Float64 lambda, Float64 redshift, Int32 kRaySupport=-1 )=0;
     virtual Float64 GetModelDerivAmplitudeAtLambda( Float64 lambda, Float64 redshift )=0;
     virtual Float64 GetModelDerivSigmaAtLambda( Float64 lambda, Float64 redshift )=0;
-    virtual void addToSpectrumModel( const CSpectrumSpectralAxis& modelspectralAxis, CSpectrumFluxAxis& modelfluxAxis, Float64 redshift )=0;
+    virtual void addToSpectrumModel( const CSpectrumSpectralAxis& modelspectralAxis, CSpectrumFluxAxis& modelfluxAxis, Float64 redshift, Int32 lineIdx=-1 )=0;
     virtual void addToSpectrumModelDerivSigma( const CSpectrumSpectralAxis& modelspectralAxis, CSpectrumFluxAxis& modelfluxAxis, Float64 redshift )=0;
 
-    virtual void initSpectrumModel( CSpectrumFluxAxis& modelfluxAxis, CSpectrumFluxAxis& continuumfluxAxis )=0;
+    virtual void initSpectrumModel( CSpectrumFluxAxis& modelfluxAxis, CSpectrumFluxAxis& continuumfluxAxis, Int32 lineIdx=-1 )=0;
 
     virtual Float64 GetNominalAmplitude(Int32 subeIdx)=0;
     virtual Float64 GetFittedAmplitude(Int32 subeIdx)=0;

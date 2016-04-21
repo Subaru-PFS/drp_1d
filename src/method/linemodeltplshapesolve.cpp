@@ -127,7 +127,7 @@ std::shared_ptr<const CLineModelTplshapeSolveResult> CLineModelTplshapeSolve::Co
 
     //load the catalogs list from the files in the tplshape-catalogs folder : tplshapeCatalogDir
     namespace fs = boost::filesystem;
-    fs::path tplshapeCatalogDir("/home/aschmitt/data/vuds/VUDS_flag3_4/amazed/linecatalogs/linecatalogs_tplshape_ExtendedTemplatesMarch2016_v2_20160418_LyaEasymfit_LyabA_velocityfit");
+    fs::path tplshapeCatalogDir("/home/aschmitt/data/vuds/VUDS_flag3_4/amazed/linecatalogs/linecatalogs_tplshape_ExtendedTemplatesMarch2016_v2_20160418_cLyaEasymfitted_cLyabA_cvelocityfit_Lyaasym2_2groups");
 
     fs::directory_iterator end_iter;
     std::vector<std::string> tplshapeCatalogList;
@@ -198,38 +198,41 @@ std::shared_ptr<const CLineModelTplshapeSolveResult> CLineModelTplshapeSolve::Co
                 Log.LogInfo( "Loaded tplshape: %s", tplshapeCatalogList[kctlg].c_str());
             }
 
-            //find the velocities-tplshaped corresponding to the template name
-            Int32 kvel = -1;
-            for(Int32 k=0; k<tplshapeVelocitiesList.size(); k++)
+            if(0)
             {
-                std::string tplname = tpl.GetName();
-                std::string velname = tplshapeVelocitiesList[k];
-                std::size_t foundstra = velname.find(tplname.c_str());
-                if (foundstra==std::string::npos){
+                //find the velocities-tplshaped corresponding to the template name
+                Int32 kvel = -1;
+                for(Int32 k=0; k<tplshapeVelocitiesList.size(); k++)
+                {
+                    std::string tplname = tpl.GetName();
+                    std::string velname = tplshapeVelocitiesList[k];
+                    std::size_t foundstra = velname.find(tplname.c_str());
+                    if (foundstra==std::string::npos){
+                        continue;
+                    }
+                    kvel = k;
+                }
+
+                if(kvel<0)
+                {
+                    Log.LogError( "Failed to match tpl with tplshape velocities: %s", tpl.GetName().c_str());
                     continue;
                 }
-                kvel = k;
-            }
-
-            if(kvel<0)
-            {
-                Log.LogError( "Failed to match tpl with tplshape velocities: %s", tpl.GetName().c_str());
-                continue;
-            }
-            //get velocities from file
-            Float64 elv=100.0;
-            Float64 alv=300.0;
-            bool ret = LoadVelocities(tplshapeVelocitiesList[kvel].c_str(), elv, alv);
-            if( !ret )
-            {
-                Log.LogError( "Failed to load tplshape velocities: %s", tplshapeVelocitiesList[kvel].c_str());
-                continue;
-            }
-            else
-            {
-                Log.LogInfo( "Loaded tplshape velocities: %s", tplshapeVelocitiesList[kvel].c_str());
-                m_opt_velocity_emission = elv;
-                m_opt_velocity_absorption = alv;
+                //get velocities from file
+                Float64 elv=100.0;
+                Float64 alv=300.0;
+                bool ret = LoadVelocities(tplshapeVelocitiesList[kvel].c_str(), elv, alv);
+                if( !ret )
+                {
+                    Log.LogError( "Failed to load tplshape velocities: %s", tplshapeVelocitiesList[kvel].c_str());
+                    continue;
+                }
+                else
+                {
+                    Log.LogInfo( "Loaded tplshape velocities: %s", tplshapeVelocitiesList[kvel].c_str());
+                    m_opt_velocity_emission = elv;
+                    m_opt_velocity_absorption = alv;
+                }
             }
 
             Solve( dataStore, _spc, _spcContinuum, tpl, lineCatalog, lambdaRange, redshifts);

@@ -25,8 +25,10 @@ CMultiLine::CMultiLine( std::vector<CRay> rs,
     m_ElementType = "CMultiLine";
     m_Rays = rs;
 
-    m_SignFactors.resize(m_Rays.size());
-    for(Int32 i=0; i<m_Rays.size(); i++)
+    Int32 nRays = m_Rays.size();
+
+    m_SignFactors.resize(nRays);
+    for(Int32 i=0; i<nRays; i++)
       {
         if( m_Rays[i].GetType()==CRay::nType_Emission )
 	  {
@@ -44,6 +46,20 @@ CMultiLine::CMultiLine( std::vector<CRay> rs,
       {
         m_LineCatalogIndexes.push_back(catalogIndexes[i]);
       }
+
+    if(m_FittedAmplitudes.size()!=nRays)
+    {
+        m_FittedAmplitudes.resize(nRays);
+        m_FittedAmplitudeErrorSigmas.resize(nRays);
+
+        mBuffer_mu.resize(nRays);
+        mBuffer_c.resize(nRays);
+        m_profile.resize(nRays);
+    }
+    for(Int32 k2=0; k2<nRays; k2++)
+    {
+        m_profile[k2] = m_Rays[k2].GetProfile();
+    }
 
     SetFittedAmplitude(-1, -1);
 }
@@ -90,8 +106,7 @@ void CMultiLine::prepareSupport(const CSpectrumSpectralAxis& spectralAxis, Float
     for(Int32 i=0; i<m_Rays.size(); i++){
         Float64 mu = m_Rays[i].GetPosition()*(1+redshift);
         Float64 c = GetLineWidth(mu, redshift, m_Rays[i].GetIsEmission());
-        std::string profile = m_Rays[i].GetProfile();
-        Float64 winsize = GetNSigmaSupport(profile)*c;
+        Float64 winsize = GetNSigmaSupport(m_profile[i])*c;
 
         Float64 lambda_start = mu-winsize/2.0;
         if(lambda_start < lambdaRange.GetBegin()){
@@ -245,8 +260,6 @@ Float64 CMultiLine::GetNominalAmplitude(Int32 subeIdx)
  **/
 void CMultiLine::SetFittedAmplitude(Float64 A, Float64 SNR)
 {
-    m_FittedAmplitudes.resize(m_Rays.size());
-    m_FittedAmplitudeErrorSigmas.resize(m_Rays.size());
     if(m_OutsideLambdaRange)
       {
         for(Int32 k=0; k<m_Rays.size(); k++)
@@ -285,15 +298,18 @@ void CMultiLine::SetFittedAmplitude(Float64 A, Float64 SNR)
  * A estimation.
  * Loop for the signal synthesis.
  **/
-void CMultiLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis, Float64  redshift)
+void CMultiLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis, Float64  redshift, Int32 lineIdx )
 {
     Float64 nRays = m_Rays.size();
-    if(m_FittedAmplitudes.size()!=nRays)
+    Int32 iLineStart = 0;
+    Int32 iLineEnd = nRays-1;
+    if( lineIdx >-1 )
     {
-        m_FittedAmplitudes.resize(nRays);
-        m_FittedAmplitudeErrorSigmas.resize(nRays);
+        iLineStart = lineIdx;
+        iLineEnd = lineIdx;
     }
-    for(Int32 k=0; k<nRays; k++)
+
+    for(Int32 k=iLineStart; k<iLineEnd+1; k++)
       {
         m_FittedAmplitudes[k] = -1.0;
         m_FittedAmplitudeErrorSigmas[k] = -1.0;
@@ -316,18 +332,12 @@ void CMultiLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const C
     Float64 err2 = 0.0;
     Int32 num = 0;
 
-    std::vector<Float64> mu;
-    mu.resize(nRays);
-    std::vector<Float64> c;
-    c.resize(nRays);
-    std::vector<std::string> profile;
-    profile.resize(nRays);
 
-    for(Int32 k2=0; k2<nRays; k2++)
+
+    for(Int32 k2=iLineStart; k2<iLineEnd+1; k2++)
       {
-        mu[k2] = m_Rays[k2].GetPosition()*(1+redshift);
-        c[k2] = GetLineWidth(mu[k2], redshift, m_Rays[k2].GetIsEmission());
-        profile[k2] = m_Rays[k2].GetProfile();
+        mBuffer_mu[k2] = m_Rays[k2].GetPosition()*(1+redshift);
+        mBuffer_c[k2] = GetLineWidth(mBuffer_mu[k2], redshift, m_Rays[k2].GetIsEmission());
       }
 
     for(Int32 k=0; k<nRays; k++)
@@ -336,6 +346,11 @@ void CMultiLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const C
 	  {
             continue;
 	  }
+        if( lineIdx>-1 && !(k == lineIdx || m_RayIsActiveOnSupport[k][lineIdx]))
+        {
+            continue;
+        }
+
         //A estimation
         for ( Int32 i = m_Start[k]; i <= m_End[k]; i++)
         {
@@ -343,7 +358,7 @@ void CMultiLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const C
             x = spectral[i];
 
             yg = 0.0;
-            for(Int32 k2=0; k2<nRays; k2++)
+            for(Int32 k2=iLineStart; k2<iLineEnd+1; k2++)
             { //loop for the signal synthesis
                 if(m_OutsideLambdaRangeList[k2])
                 {
@@ -353,7 +368,7 @@ void CMultiLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const C
                 {
                     continue;
                 }
-                yg += m_SignFactors[k2] * m_NominalAmplitudes[k2] * GetLineProfile(profile[k2], x-mu[k2], c[k2]);
+                yg += m_SignFactors[k2] * m_NominalAmplitudes[k2] * GetLineProfile(m_profile[k2], x-mBuffer_mu[k2], mBuffer_c[k2]);
             }
             num++;
             err2 = 1.0 / (error[i] * error[i]);
@@ -370,7 +385,7 @@ void CMultiLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const C
 
     Float64 A = std::max(0.0, sumCross / sumGauss);
 
-    for(Int32 k=0; k<nRays; k++)
+    for(Int32 k=iLineStart; k<iLineEnd+1; k++)
     {
         if(m_OutsideLambdaRangeList[k])
         {
@@ -392,7 +407,7 @@ void CMultiLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const C
 /**
  * \brief Adds to the model's flux, at each ray not outside lambda range, the value contained in the corresponding lambda for each catalog line.
  **/
-void CMultiLine::addToSpectrumModel( const CSpectrumSpectralAxis& modelspectralAxis, CSpectrumFluxAxis& modelfluxAxis, Float64 redshift )
+void CMultiLine::addToSpectrumModel( const CSpectrumSpectralAxis& modelspectralAxis, CSpectrumFluxAxis& modelfluxAxis, Float64 redshift, Int32 lineIdx )
 {
     if(m_OutsideLambdaRange)
       {
@@ -407,6 +422,12 @@ void CMultiLine::addToSpectrumModel( const CSpectrumSpectralAxis& modelspectralA
 	  {
             continue;
 	  }
+
+        if( lineIdx>-1 && !(k == lineIdx || m_RayIsActiveOnSupport[k][lineIdx]))
+        {
+            continue;
+        }
+
         for ( Int32 i = m_Start[k]; i <= m_End[k]; i++)
       {
             Float64 lambda = spectral[i];
@@ -467,9 +488,8 @@ Float64 CMultiLine::getModelAtLambda( Float64 lambda, Float64 redshift, Int32 kR
         Float64 A = m_FittedAmplitudes[k2];
         Float64 mu = m_Rays[k2].GetPosition()*(1+redshift);
         Float64 c = GetLineWidth(mu, redshift, m_Rays[k2].GetIsEmission());
-        std::string profile = m_Rays[k2].GetProfile();
 
-        Yi += m_SignFactors[k2] * A * GetLineProfile(profile, x-mu, c);
+        Yi += m_SignFactors[k2] * A * GetLineProfile(m_profile[k2], x-mu, c);
     }
     return Yi;
 }
@@ -491,9 +511,8 @@ Float64 CMultiLine::GetModelDerivAmplitudeAtLambda(Float64 lambda, Float64 redsh
 
         Float64 mu = m_Rays[k2].GetPosition()*(1+redshift);
         Float64 c = GetLineWidth(mu, redshift, m_Rays[k2].GetIsEmission());
-        std::string profile = m_Rays[k2].GetProfile();
 
-        Yi += m_SignFactors[k2] * GetLineProfile(profile, x-mu, c);
+        Yi += m_SignFactors[k2] * GetLineProfile(m_profile[k2], x-mu, c);
     }
     return Yi;
 }
@@ -516,9 +535,8 @@ Float64 CMultiLine::GetModelDerivSigmaAtLambda(Float64 lambda, Float64 redshift 
         Float64 A = m_FittedAmplitudes[k2];
         Float64 mu = m_Rays[k2].GetPosition()*(1+redshift);
         Float64 c = GetLineWidth(mu, redshift, m_Rays[k2].GetIsEmission());
-        std::string profile = m_Rays[k2].GetProfile();
 
-        Yi += m_SignFactors[k2] * A * GetLineProfileDerivSigma(profile, x, mu, c);
+        Yi += m_SignFactors[k2] * A * GetLineProfileDerivSigma(m_profile[k2], x, mu, c);
     }
     return Yi;
 }
@@ -527,7 +545,7 @@ Float64 CMultiLine::GetModelDerivSigmaAtLambda(Float64 lambda, Float64 redshift 
 /**
  * \brief For rays inside lambda range, sets the flux to the continuum flux.
  **/
-void CMultiLine::initSpectrumModel( CSpectrumFluxAxis &modelfluxAxis, CSpectrumFluxAxis &continuumfluxAxis )
+void CMultiLine::initSpectrumModel( CSpectrumFluxAxis &modelfluxAxis, CSpectrumFluxAxis &continuumfluxAxis, Int32 lineIdx )
 {
     if(m_OutsideLambdaRange)
       {
@@ -541,6 +559,11 @@ void CMultiLine::initSpectrumModel( CSpectrumFluxAxis &modelfluxAxis, CSpectrumF
 	  {
             continue;
 	  }
+
+        if( lineIdx>-1 && !(k == lineIdx || m_RayIsActiveOnSupport[k][lineIdx]))
+        {
+            continue;
+        }
 
         for ( Int32 i = m_Start[k]; i <= m_End[k]; i++)
 	  {

@@ -429,8 +429,29 @@ class ResultList(object):
             zrangePerTemplate["zcosmos_red.txt"]=[1.5109, 3.2469] 
             
         if 1:
-            #from Amazed outputs, chi2nc 20160321: ExtendedGalaxyEL2/, for lambda range = [3600, 9460]
-            zrangePerTemplate["BulgedataExtensionData.dat"]=[0.0, 1.9163]
+            #from Amazed outputs, chi2nc 20160420: ExtendedGalaxyEL2/, for lambda range = [3800, 9459]
+            zrangePerTemplate["COMBINE-ave-BX-highblue-AND-Scd.txt"]=[0.0, 6.6]
+            zrangePerTemplate["COMBINE-ave-BX-highblue-AND-StarBurst1.txt"]=[0.0, 6.6]
+            zrangePerTemplate["COMBINE-ave-BX-highblue-AND-StarBurst3.txt"]=[0.0, 6.6]
+            zrangePerTemplate["COMBINE-ave-Lya-abs-AND-Scd.txt"]=[0.0, 6.6]
+            zrangePerTemplate["COMBINE-ave-Lya-abs-AND-StarBurst1.txt"]=[0.0, 6.6]
+            zrangePerTemplate["COMBINE-ave-Lya-abs-AND-StarBurst3.txt"]=[0.0, 6.6]
+            zrangePerTemplate["COMBINE-ave-Lya-emstr-AND-Scd.txt"]=[0.0, 6.6]
+            zrangePerTemplate["COMBINE-ave-Lya-emstr-AND-StarBurst1.txt"]=[0.0, 6.6]
+            zrangePerTemplate["COMBINE-ave-Lya-emstr-AND-StarBurst3.txt"]=[0.0, 6.6]
+            zrangePerTemplate["NEW_Im_extended_blue.dat"]=[0.0, 6.6]
+            zrangePerTemplate["NEW_Im_extended.dat"]=[0.0, 6.6]
+            zrangePerTemplate["NEW_Sbc_extended.dat"]=[0.0, 6.6]
+            
+            zrangePerTemplate["E_reddataExtensionData.dat"]=[0.0, 2.082]
+            zrangePerTemplate["Rebinned_EW-SB2extended.txt"]=[0.0, 3.607]
+            zrangePerTemplate["Rebinned_NEW-E-extendeddataExtensionData.txt"]=[0.0, 4.517]
+            zrangePerTemplate["vvds_reddestdataExtensionData.dat"]=[0.0, 0.696]
+            zrangePerTemplate["COMBINE-zcosmos-red-0Extended-AND-BulgedataExtensionData.txt"]=[0.0, 3.75]
+            zrangePerTemplate["COMBINE-zcosmos-red-0Extended-AND-EllipticaldataExtensionData.txt"]=[0.0, 3.75]
+            zrangePerTemplate["COMBINE-zcosmos-red-0Extended-AND-s0dataExtensionData.txt"]=[0.0, 3.75]
+            zrangePerTemplate["COMBINE-zcosmos-red-0Extended-AND-sadataExtensionData.txt"]=[0.0, 3.75]
+            zrangePerTemplate["COMBINE-zcosmos-red-0Extended-AND-sbdataExtensionData.txt"]=[0.0, 3.75]
         
         try:
             zrange = zrangePerTemplate[tplTag]
@@ -1823,7 +1844,34 @@ def plotClosestZCandidates(resDir, diffthres, nextrema=5, extremaType = "linemod
     zrefFoundChi2Raw = resList.getClosestZcandidatesZrefList(extremaType, "amazed", enablePlot=True, enableExport=True, nextrema = nextrema)
     #zrefFoundChi2Raw = resList.getClosestZcandidatesZrefList("raw", "", True)
 
+def plotPrecisionHist(resDir):
+    print('using amazed results full path: {0}'.format(resDir))
+    resList = ResultList(resDir, diffthreshold=-1.0, opt='brief')
     
+    zrefMin = 0.0
+    zrefMax = 20.0
+    relzerrList = []
+    
+    nres = resList.n
+    for k in range(nres):
+        print("\nprocessing result #{}/{}".format(k+1, resList.n))
+        zref = resList.list[k].zref
+        zcalc = resList.list[k].zcalc
+        relzerr = (resList.list[k].zref-zcalc)/(1.0+resList.list[k].zref)
+        if zref >= zrefMin and zref <= zrefMax:
+            if abs(relzerr) < 5e-3:
+                relzerrList.append(relzerr)
+    
+    plt.figure("Precision Histogram", figsize=(10,8))
+    #xvect = range(len(relzerrList))
+    nbins = 40
+    plt.hist(relzerrList, bins=nbins, normed=0, histtype='step')
+    plt.xlim([-5e-3, 5e-3])
+    plt.grid(True) # Affiche la grille
+    plt.xlabel('(zcalc-zref)/(1+zref)')
+    plt.ylabel('count')
+    plt.title('Histogram\n{}/{} included results'.format(len(relzerrList), nres))
+    plt.show()
   
 def plotTplMissingRate(resDir, opt=0):
     print('using amazed results full path: {0}'.format(resDir))
@@ -1996,6 +2044,8 @@ def StartFromCommandLine( argv ) :
         \n\
         30. Plot 2D Linear Comb. Merit Coeff map\n\
         35. Plot continuum indexes\n\
+        \n\
+        40. Plot precision histogram\n\
         \n")
         choice = int(choiceStr)
         
@@ -2102,6 +2152,9 @@ def StartFromCommandLine( argv ) :
                 spcName = spcStr
            
             plotContinuumIndexes(options.resDir, float(options.diffthres), spcName)
+            
+        elif choice == 40:           
+            plotPrecisionHist(options.resDir)
             
         else:    
             print("Error: invalid entry, aborting...")
