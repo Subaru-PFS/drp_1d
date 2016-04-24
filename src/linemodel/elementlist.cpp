@@ -838,6 +838,32 @@ void CLineModelElementList::refreshModelDerivSigmaUnderElements(std::vector<Int3
     }
 }
 
+void CLineModelElementList::setModelSpcObservedOnSupportZeroOutside(  const TFloat64Range& lambdaRange )
+{
+    m_Redshift = 0.0;
+
+    //initialize the model spectrum
+    const CSpectrumSpectralAxis& spectralAxis = m_SpectrumModel->GetSpectralAxis();
+    CSpectrumFluxAxis& modelFluxAxis = m_SpectrumModel->GetFluxAxis();
+
+    //prepare the elements
+    for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
+    {
+        m_Elements[iElts]->prepareSupport(spectralAxis, m_Redshift, lambdaRange);
+    }
+
+    std::vector<Int32> validEltsIdx = GetModelValidElementsIndexes();
+    std::vector<Int32> supportIdxes = getSupportIndexes( validEltsIdx );
+    for( UInt32 i=0; i<spectralAxis.GetSamplesCount(); i++ )
+    {
+        modelFluxAxis[i]=0.0;
+    }
+    for( UInt32 i=0; i<supportIdxes.size(); i++ )
+    {
+        modelFluxAxis[supportIdxes[i]] = m_SpcFluxAxis[supportIdxes[i]];
+    }
+}
+
 /**
  * \brief Tries to fit subelements considering their overlap.
  * For each entry in GetModelValidElementsIndexes:

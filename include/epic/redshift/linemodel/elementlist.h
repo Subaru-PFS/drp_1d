@@ -69,6 +69,8 @@ public:
     void refreshModelUnderElements(std::vector<Int32> filterEltsIdx, Int32 lineIdx=-1 );
     void refreshModelDerivSigmaUnderElements(std::vector<Int32> filterEltsIdx);
 
+    void setModelSpcObservedOnSupportZeroOutside(const TFloat64Range &lambdaRange);
+
     Int32 getSpcNSamples(const TFloat64Range& lambdaRange);
     Float64 getLeastSquareMerit(const TFloat64Range &lambdaRange);
     Float64 getLeastSquareMeritUnderElements();

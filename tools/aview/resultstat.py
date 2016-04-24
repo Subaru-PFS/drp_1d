@@ -2073,8 +2073,8 @@ def StartFromCommandLine( argv ) :
             spcStr = raw_input("Do you want to enter a spectrum name to filter the results ? (press enter to skip) :")
             if not (spcStr == "No" or spcStr == "no"):
                 spcName = spcStr
-            extremaTypeStr = raw_input("Please enter the extrema type : choices = raw, nocontinuum, corr, linemodel :")
-            if not (extremaTypeStr == "raw" or extremaTypeStr == "nocontinuum" or extremaTypeStr == "corr" or extremaTypeStr == "linemodel"):
+            extremaTypeStr = raw_input("Please enter the extrema type : choices = raw, nocontinuum, corr, linemodel, linemodeltplshape :")
+            if not (extremaTypeStr == "raw" or extremaTypeStr == "nocontinuum" or extremaTypeStr == "corr" or extremaTypeStr == "linemodel" or extremaTypeStr == "linemodeltplshape"):
                 print("extrema type not successfully, aborting")
                 return
             extrChoiceStr = raw_input("\n\nPlease enter the number of extrema to be considered...\n")

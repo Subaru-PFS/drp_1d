@@ -162,6 +162,29 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
                                  opt_velocityAbsorption,
                                  opt_rules );
     Log.LogInfo( "Linemodel: initialized");
+
+//    //hack, zero outside of the support  ///////////////////////////////////////////////////////////////////////////////////////////
+//    model.setModelSpcObservedOnSupportZeroOutside(lambdaRange);
+
+
+//    std::shared_ptr<CSpectraFluxResult> baselineResult = (std::shared_ptr<CSpectraFluxResult>) new CSpectraFluxResult();
+//    baselineResult->m_optio = 0;
+//    const CSpectrum& modelSpc = model.GetModelSpectrum();
+//    UInt32 len = modelSpc.GetSampleCount();
+
+//    baselineResult->fluxes.resize(len);
+//    baselineResult->wavel.resize(len);
+//    for( Int32 k=0; k<len; k++ )
+//    {
+//        baselineResult->fluxes[k] = modelSpc.GetFluxAxis()[k];
+//        baselineResult->wavel[k]  = (spectrum.GetSpectralAxis())[k];
+//    }
+
+//    std::string nameBaselineStr = (boost::format("linemodel_template_zeroedoutsidelines")).str();
+//    dataStore.StoreScopedGlobalResult(nameBaselineStr.c_str(), baselineResult);
+//    return NULL;
+//    // end of hack //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
     //model.LoadContinuum(); //in order to use a fit with continuum
     result->nSpcSamples = model.getSpcNSamples(lambdaRange);
     PrecomputeLogErr( spectrum );

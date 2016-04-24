@@ -51,6 +51,8 @@ class Spectrum(object):
             self.loadpfs() 
         elif(self.stype == 'muse'):
             self.loadmuse() 
+        elif(self.stype == 'empty'):
+            pass 
         else:
             self.load()
                
@@ -62,6 +64,16 @@ class Spectrum(object):
             for x in range(0,self.n):
                 self.ysum += self.yvect[x]
 
+    def setData( self, xvect, yvect):
+        if not len(xvect) == len(yvect):
+            stop
+            
+        self.yvect = yvect
+        self.xvect = xvect
+        self.ysum = 0.0
+        for x in range(0,self.n):
+            self.ysum += self.yvect[x]
+        
     def copy(self):
         scopy = Spectrum(self.spath, self.stype, self.snorm)
         return scopy
@@ -788,7 +800,10 @@ class Spectrum(object):
     def getFluxMin(self):
         return min(self.yvect)                    
     def getFluxMax(self):
-        return max(self.yvect)
+        return max(self.yvect) 
+                 
+    def getFluxMean(self):
+        return np.mean(self.yvect)
         
     def GetFluxStd6000_8000(self):
         imin = self.getWavelengthIndex(6000)
@@ -935,6 +950,10 @@ class Spectrum(object):
         self.xvect = np.arange(x[0], x[self.n-1], dx)
         self.yvect = f(self.xvect) 
         self.n = len(self.yvect)
+        
+        self.ysum = 0.0
+        for x in range(0,self.n):
+            self.ysum += self.yvect[x]
         
     def applyWeight(self, w):
         for x in range(0,self.n):
@@ -1111,6 +1130,9 @@ def StartFromCommandLine( argv ) :
         s = Spectrum(options.spcPath, options.spcType)
         #s.applyRedshift(0.25)
         
+        #s.applyLambdaCrop(3600, 9460)
+        #print(s)
+        
         if options.otherspcPath == "":
             if options.export == "yes":
                 #s.applyLambdaCrop(7500, 9000)
@@ -1123,7 +1145,7 @@ def StartFromCommandLine( argv ) :
             s.plot()
         else:
             s2 = Spectrum(options.otherspcPath, options.otherspcType)
-            s.plotCompare(s2, 1.0, modellinetype = "k-")
+            s.plotCompare(s2, 1.0, modellinetype = "b-")
             
     else :
         print("Error: invalid argument count")

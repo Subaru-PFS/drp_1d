@@ -150,6 +150,28 @@ void CMultiLine::prepareSupport(const CSpectrumSpectralAxis& spectralAxis, Float
                 //set the rays active on the overlapping support
                 m_RayIsActiveOnSupport[i][j] = 1;
                 m_RayIsActiveOnSupport[j][i] = 1;
+                //append all the previously overlapping rays as active on the support
+                for(Int32 i2=0; i2<i; i2++){
+                    if(m_OutsideLambdaRangeList[i2]){
+                        continue;
+                    }
+                    if(m_RayIsActiveOnSupport[i][i2] == 1)
+                    {
+                        m_RayIsActiveOnSupport[i2][j] = 1;
+                        m_RayIsActiveOnSupport[j][i2] = 1;
+                    }
+                }
+                //append all the previously overlapping rays as active on the support
+                for(Int32 j2=0; j2<j; j2++){
+                    if(m_OutsideLambdaRangeList[j2]){
+                        continue;
+                    }
+                    if(m_RayIsActiveOnSupport[j][j2] == 1)
+                    {
+                        m_RayIsActiveOnSupport[j2][i] = 1;
+                        m_RayIsActiveOnSupport[i][j2] = 1;
+                    }
+                }
             }
         }
     }

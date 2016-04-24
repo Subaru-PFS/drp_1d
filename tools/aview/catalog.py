@@ -177,15 +177,15 @@ class Catalog(object):
         pp.show()
     
     def plotInZplane(self):
-        if 0:
+        if 1:
             #EUCLID
             obs_lambda_min = 12500.0
-            obs_lambda_max = 17500.0
+            obs_lambda_max = 18500.0
         if 0:        
             #PFS
             obs_lambda_min = 3800.0
             obs_lambda_max = 12600.0
-        if 1:        
+        if 0:        
             #VVDS
             obs_lambda_min = 3600.0
             obs_lambda_max = 9400.0
@@ -371,6 +371,20 @@ class Catalog(object):
         #name = "linecatalogamazedvacuum_B9D_LyaAbsSYMprofile_tplShape.txt"
         #outpath = os.path.join(path,name)
         #self.save(outpath)
+            
+    def getComparisonDistance(self, otherCatalog):
+        if not otherCatalog.n == self.n:
+            print("Error: the catalogs must be the same size")
+            return
+        
+        d = 0.0
+        for x in range(0,self.n):
+            if self.linename[x] == otherCatalog.linename[x]:
+                d += (self.linenominalamp[x]-otherCatalog.linenominalamp[x])**2
+            else:
+                print("unable to match lines names... aborting")
+                return -1
+        return d
         
 def StartFromCommandLine( argv ) :	
     usage = """usage: %prog [options]
