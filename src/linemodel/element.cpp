@@ -117,7 +117,7 @@ Float64 CLineModelElement::GetLineProfile(std::string profile, Float64 xc, Float
         const Float64 xsurc = xc/sigma;
         const Float64 alpha = m_asym2_alpha;
         val = exp(-0.5*xsurc*xsurc)*(1.0+erf(alpha/sqrt(2.0)*xsurc));
-    }else if(profile=="ASYMFIT"){
+    }else if(profile=="ASYMFIT" || profile.find("ASYMFIXED")!=std::string::npos){
         const Float64 coeff = m_asymfit_sigma_coeff;
         const Float64 xcd = xc+m_asymfit_delta;
 
@@ -126,6 +126,7 @@ Float64 CLineModelElement::GetLineProfile(std::string profile, Float64 xc, Float
         const Float64 alpha = m_asymfit_alpha;
         val = exp(-0.5*xsurc*xsurc)*(1.0+erf(alpha/sqrt(2.0)*xsurc));
     }
+
     return val;
 }
 
@@ -180,7 +181,7 @@ Float64 CLineModelElement::GetLineProfileDerivSigma(std::string profile, Float64
         //Float64 v = sigma*cel/x0;
         //val = -sqrt(2)*alpha*cel*(x - x0)*exp(-0.5*pow(cel*(x - x0)/(v*x0),2))*exp(-pow(alpha*cel*(x - x0), 2)/(2*pow(v*x0, 2)))/(sqrt(M_PI)*pow(v,2)*x0) + 1.0*pow(cel*(x - x0),2)*(erf(sqrt(2)*alpha*cel*(x - x0)/(2*v*x0)) + 1)*exp(-0.5*pow(cel*(x - x0)/(v*x0),2))/(pow(v,3)*pow(x0,2));
 
-    }else if(profile=="ASYMFIT"){
+    }else if(profile=="ASYMFIT"  || profile.find("ASYMFIXED")!=std::string::npos){
         const Float64 coeff = m_asymfit_sigma_coeff;
         const Float64 xcd = xc+m_asymfit_delta;
 
@@ -217,7 +218,7 @@ Float64 CLineModelElement::GetNSigmaSupport(std::string profile)
         val = nominal*m_asym2_sigma_coeff;
     }else if(profile=="SYMXL"){
         val = nominal*m_symxl_sigma_coeff;
-    }else if(profile=="ASYMFIT"){
+    }else if(profile=="ASYMFIT"  || profile.find("ASYMFIXED")!=std::string::npos){
         val = nominal*m_asymfit_sigma_coeff*2.5;
     }
     return val;

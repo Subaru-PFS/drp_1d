@@ -323,15 +323,8 @@ void CMultiLine::SetFittedAmplitude(Float64 A, Float64 SNR)
 void CMultiLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis, Float64  redshift, Int32 lineIdx )
 {
     Float64 nRays = m_Rays.size();
-    Int32 iLineStart = 0;
-    Int32 iLineEnd = nRays-1;
-    if( lineIdx >-1 )
-    {
-        iLineStart = lineIdx;
-        iLineEnd = lineIdx;
-    }
 
-    for(Int32 k=iLineStart; k<iLineEnd+1; k++)
+    for(Int32 k=0; k<nRays; k++)
       {
         m_FittedAmplitudes[k] = -1.0;
         m_FittedAmplitudeErrorSigmas[k] = -1.0;
@@ -356,7 +349,7 @@ void CMultiLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const C
 
 
 
-    for(Int32 k2=iLineStart; k2<iLineEnd+1; k2++)
+    for(Int32 k2=0; k2<nRays; k2++)
       {
         mBuffer_mu[k2] = m_Rays[k2].GetPosition()*(1+redshift);
         mBuffer_c[k2] = GetLineWidth(mBuffer_mu[k2], redshift, m_Rays[k2].GetIsEmission());
@@ -368,7 +361,7 @@ void CMultiLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const C
 	  {
             continue;
 	  }
-        if( lineIdx>-1 && !(k == lineIdx || m_RayIsActiveOnSupport[k][lineIdx]))
+        if( lineIdx>-1 && !(m_RayIsActiveOnSupport[k][lineIdx]))
         {
             continue;
         }
@@ -380,7 +373,7 @@ void CMultiLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const C
             x = spectral[i];
 
             yg = 0.0;
-            for(Int32 k2=iLineStart; k2<iLineEnd+1; k2++)
+            for(Int32 k2=0; k2<nRays; k2++)
             { //loop for the signal synthesis
                 if(m_OutsideLambdaRangeList[k2])
                 {
@@ -407,7 +400,7 @@ void CMultiLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const C
 
     Float64 A = std::max(0.0, sumCross / sumGauss);
 
-    for(Int32 k=iLineStart; k<iLineEnd+1; k++)
+    for(Int32 k=0; k<nRays; k++)
     {
         if(m_OutsideLambdaRangeList[k])
         {
@@ -445,7 +438,7 @@ void CMultiLine::addToSpectrumModel( const CSpectrumSpectralAxis& modelspectralA
             continue;
 	  }
 
-        if( lineIdx>-1 && !(k == lineIdx || m_RayIsActiveOnSupport[k][lineIdx]))
+        if( lineIdx>-1 && !(m_RayIsActiveOnSupport[k][lineIdx]))
         {
             continue;
         }
@@ -582,7 +575,7 @@ void CMultiLine::initSpectrumModel( CSpectrumFluxAxis &modelfluxAxis, CSpectrumF
             continue;
 	  }
 
-        if( lineIdx>-1 && !(k == lineIdx || m_RayIsActiveOnSupport[k][lineIdx]))
+        if( lineIdx>-1 && !(m_RayIsActiveOnSupport[k][lineIdx]))
         {
             continue;
         }
