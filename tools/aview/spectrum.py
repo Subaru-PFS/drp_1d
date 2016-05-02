@@ -377,7 +377,7 @@ class Spectrum(object):
         self.ax = self.fig.add_subplot(111)
 
         #pp.plot(self.xvect, self.yvect, "x-")
-        self.ax.plot(self.xvect, self.yvect)
+        self.ax.plot(self.xvect, self.yvect, '-+')
 
         #pp.grid(True) # Affiche la grille
         self.ax.xaxis.grid(True,'major')
@@ -503,7 +503,7 @@ class Spectrum(object):
            if not self.enablepointpicking:
                self.enablepointpicking = True
                print("Point picking enabled ! (use SHIFT to pick with Left-click")           
-               print("\t Press 'r' to remove the last picked point")         
+               print("\t Press '-' to remove the last picked point")         
                print("\t Press 'm' to use the existing points as a correction")
                print("\t Press 'd' to use the existing points to linear smooth (droite) around the point")
                print("\t Press 'a' to add the existing points to the curve")
@@ -942,12 +942,16 @@ class Spectrum(object):
         if k>=1e6:
             print("WARNING: stopping extension, max iteration reached")
             
-    def interpolate(self, dx=1.0):
+    def interpolate(self, dx=1.0, offsetx=0.0):
         x = np.copy(self.xvect)
         y = np.copy(self.yvect)
         f = interpolate.interp1d(x, y)
 
         self.xvect = np.arange(x[0], x[self.n-1], dx)
+        if not offsetx==0.0:
+            for k in range(len(self.xvect)-1):
+                self.xvect[k] = self.xvect[k] + offsetx
+                
         self.yvect = f(self.xvect) 
         self.n = len(self.yvect)
         
@@ -984,8 +988,32 @@ class Spectrum(object):
             self.xvect[x] = old_xvect[x+imin]
             self.yvect[x] = old_yvect[x+imin]
             self.ysum += self.yvect[x]
-    
             
+    def applyLyaExtinction(self, redshift):
+        if redshift<=4:
+            return
+        if redshift>4.0 and redshift<=5.0:
+            coeffUnder1216 = 1.0/2.0
+            for x in range(self.n):
+                if self.xvect[x]<1216:
+                    self.yvect[x] *= coeffUnder1216
+        if redshift>5.0 and redshift<=6.0:
+            coeffUnder1216 = 1.0/3.5
+            for x in range(self.n):
+                if self.xvect[x]<1216:
+                    self.yvect[x] *= coeffUnder1216
+        if redshift>6.0:
+            for x in range(self.n):
+                if self.xvect[x]<1216:
+                    self.yvect[x] = 1e-24
+            
+    
+    def correctZeros(self, replacementValue=1e-24):
+        for x in range(0,self.n):
+            if True or self.yvect[x]<replacementValue:
+                self.yvect[x]=replacementValue
+                
+         
     def setMagIAB(self, magIAB):
         dMThreshold = 0.1
         maxIterations = 10000
@@ -1127,25 +1155,34 @@ def StartFromCommandLine( argv ) :
 
     if( len( args ) == 0 ) :
         print('using full path: {0}'.format(options.spcPath))
-        s = Spectrum(options.spcPath, options.spcType)
+        s = Spectrum(options.spcPath, options.spcType, snorm=False)
         #s.applyRedshift(0.25)
         
         #s.applyLambdaCrop(3600, 9460)
         #print(s)
+
         
         if options.otherspcPath == "":
+#            if 0:            
+#                s.correctZeros()        
+#                #s.interpolate()
+#                soutputpath = options.spcPath+"modified.dat"
+#                s.saveTpl(soutputpath)
+#                WarningKeyStr = raw_input("\n\nINFO: Modifications applied: saved to {}".format(soutputpath))
+#                                        
             if options.export == "yes":
                 #s.applyLambdaCrop(7500, 9000)
                 #s.applyWeight(1e-18)
-                #s.setMagIAB(20)
+                #s.setMagIAB(20)        
+        
                 path = os.path.split(options.spcPath)[0]
                 nameWext = os.path.split(options.spcPath)[1]
                 s.exportFits(path, name=os.path.splitext(nameWext)[0], addNoise=False, exportNoiseSpectrum=False)
             print(s) 
             s.plot()
         else:
-            s2 = Spectrum(options.otherspcPath, options.otherspcType)
-            s.plotCompare(s2, 1.0, modellinetype = "b-")
+            s2 = Spectrum(options.otherspcPath, options.otherspcType, snorm=False)
+            s.plotCompare(s2, 1.0, modellinetype = "b-+")
             
     else :
         print("Error: invalid argument count")

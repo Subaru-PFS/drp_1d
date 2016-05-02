@@ -232,8 +232,18 @@ class AViewPlot(object):
         
         #set the Noise axis
         if not self.forcePlotNoNoise:
-            nmin = min(self.nyvect)
-            nmax = max(self.nyvect)
+            useReducedNoise = True
+            if useReducedNoise:
+                nmean = np.mean([a for a in self.nyvect if a>0.0])
+                nstd = np.std([a for a in self.nyvect if a>0.0])
+                #print("noise nmean={}, nstd={}".format(nmean, nstd))
+                reducedNyvect = [a for a in self.nyvect if abs(a-nmean)<2*nstd and a>0.0]
+                nmin = min(reducedNyvect)
+                nmax = max(reducedNyvect)
+            else:
+                nmin = min(self.nyvect)
+                nmax = max(self.nyvect)
+            #print("noise nmin={}, nmax={}".format(nmin, nmax))
             nrange = float(nmax - nmin);
             if nrange > 0.0:
                 print("major locator nrange = {}".format(nrange))
@@ -242,6 +252,8 @@ class AViewPlot(object):
             ax2.xaxis.grid(True,'major')
             ax2.yaxis.grid(True,'major')
             ax2.yaxis.grid(True,'minor')
+            
+            ax2.set_ylim([nmin, nmax])
         ax3.xaxis.grid(True,'major')
         ax3.yaxis.grid(False,'major')
         #pp.legend(('spectrum','shifted template'), 'lower left', shadow = True)

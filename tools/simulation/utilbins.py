@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-Created on Tue Mar  1 10:32:00 2016
-
-@author: aschmitt
 """
 from time import localtime, strftime, strptime
 import matplotlib.pyplot as pp
@@ -15,39 +12,67 @@ class UtilBins(object):
     """
     helps exploring the parameters used for a simulation with z-mag-sfr bins
     """
-    def __init__(self, target_count_per_bin):
+    def __init__(self, target_count_per_bin, optMission="default"):
         self.logTagStr = "UtilBins"
         self.target_count_per_bin = target_count_per_bin
         
-        n_zbins_1 = 10
-        n_zbins_2 = 2
-        z_bins_limits_1 = np.linspace(0, 5.0, n_zbins_1+1, endpoint=True)
-        z_bins_limits_2 = np.linspace(6.0, 8.0, n_zbins_2+1, endpoint=True)
-        self.z_bins_limits = np.concatenate((z_bins_limits_1, z_bins_limits_2), axis=0)
+        if optMission=="pfs":
+            n_zbins_1 = 10
+            n_zbins_2 = 2
+            z_bins_limits_1 = np.linspace(0, 5.0, n_zbins_1+1, endpoint=True)
+            z_bins_limits_2 = np.linspace(6.0, 8.0, n_zbins_2+1, endpoint=True)
+            self.z_bins_limits = np.concatenate((z_bins_limits_1, z_bins_limits_2), axis=0)
+        elif optMission=="euclid":
+            zcenter = 1.1
+            self.z_bins_limits = [zcenter, zcenter+0.1]        
         self.n_zbins = len(self.z_bins_limits)-1
         print('{}: the z bins limits are: {}'.format(self.logTagStr, str(self.z_bins_limits)))
         
-        self.mag_bins_limits = [20.0, 21.0, 22.0, 23.0, 24.0, 25.0, 26.0]
+        if optMission=="pfs":
+            self.mag_bins_limits = [20.0, 21.0, 22.0, 23.0, 24.0, 25.0, 26.0]
+        elif optMission=="euclid":
+            self.mag_bins_limits = [20.0, 21.0, 22.0, 23.0, 24.0, 25.0, 26.0]
         self.n_mag_bins = len(self.mag_bins_limits)-1
         print('{}: the mag bins limits are: {}'.format(self.logTagStr, str(self.mag_bins_limits)))
         
-        self.n_sfr_bins = 3
-        self.sfr_bins_limits = np.logspace(-1.0, 2.0, self.n_sfr_bins+1, endpoint=True)
+        if optMission=="pfs":
+            self.n_sfr_bins = 3
+            self.sfr_bins_limits = np.logspace(-1.0, 2.0, self.n_sfr_bins+1, endpoint=True)
+        elif optMission=="euclid":
+            self.n_sfr_bins = 1
+            self.sfr_bins_limits = [10.0001, 10.0002]
         print('{}: the sfr bins limits are: {}'.format(self.logTagStr, str(self.sfr_bins_limits)))    
         
         self.templates_path = "./templates"
-        self.template_bins = []
-        self.template_bins.append("NEW_Sbc_extended_extMarch2016.dat")
-        self.template_bins.append("BulgedataExtensionData_extMarch2016.dat")
-        self.template_bins.append("vvds_reddestdataExtensionData_extMarch2016.dat")
-        self.n_template_bins = len(self.template_bins)
+        self.importTemplatesContinuum(optMission)
         print('{}: the template bins are: {}'.format(self.logTagStr, str(self.template_bins)))
     
         self.matrix = np.zeros((self.n_zbins, self.n_mag_bins, self.n_sfr_bins)) 
         
         self.datetimetag = strftime('%Y%m%d%H%M',localtime())
         self.idx_spc = 0
+
+    def importTemplatesContinuum(self, optMission="default"):
+        self.template_bins = []
         
+        if optMission=="pfs":
+            ##archive: before April 26
+            #self.template_bins.append("NEW_Sbc_extended_extMarch2016.dat")
+            #self.template_bins.append("BulgedataExtensionData_extMarch2016.dat")
+            #self.template_bins.append("vvds_reddestdataExtensionData_extMarch2016.dat")
+            
+            ##20160426
+            self.template_bins.append("BulgedataExtensionData_extMarch2016_corrected20160426_interp0429.dat")
+            self.template_bins.append("NEW_Im_extended_blue_corrected20160426_interp0429.dat")
+            self.template_bins.append("NEW_Im_extended_ext20160415_corrected20160426_interp0429.dat")
+            self.template_bins.append("NEW_Sbc_extended_extMarch2016corrected20160426_interp0429.dat")
+            self.template_bins.append("vvds_reddestdataExtensionData_extMarch2016_corrected20160426_interp0429.dat")
+        elif optMission=="euclid":
+            self.template_bins.append("flat.dat")
+            
+        self.n_template_bins = len(self.template_bins)
+        self.idx_current_template = 0
+      
     def findIndexes(self, z, mag, sfr):
         found = False
         izFound = -1
@@ -102,8 +127,8 @@ class UtilBins(object):
         
     def getRandTemplate(self):
         #return self.template_bins[2]
-        itpl = int(random.random()*self.n_template_bins)
-        return self.template_bins[itpl]
+        self.idx_current_template = int(random.random()*self.n_template_bins)
+        return self.template_bins[self.idx_current_template]
         
     def getRandSfr(self):
         sfrmin_log = -1

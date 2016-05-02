@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-Created on Tue Mar  1 11:01:56 2016
-
-@author: aschmitt
 """
 import time
 import sys
@@ -31,13 +28,23 @@ if optMission == "euclid":
     n_count_per_bin = 1
     lambda_obs_min = 12500.0
     lambda_obs_max = 18500.0
-    dlambda = 12.5
+    dlambda = 13.5
+    R=250.0;
+    optISM = "fixed0.0"
+    optLineAmplitudes = "file"
+    #optLineAmplitudes = "pseudorandom"
+    optVelocity = "fixed"
+    optLineWidth = "nispsim2016"
 elif optMission == "pfs":
     n_count_per_bin = 10
     lambda_obs_min = 3800.0
     lambda_obs_max = 12600.0
     dlambda = 0.6
-
+    R=2350.0;
+    optISM = "fixed0.25"
+    optLineAmplitudes = "pseudorandom"
+    optVelocity = "random"
+    optLineWidth = "combined"
 
 
 temp_directory = "./tmp/"
@@ -57,7 +64,7 @@ text_file.write("{}".format(data))
 text_file.close() 
 
 print("\n_\nCreate simulation set by z-mag-sfr bins")
-ubins = utilbins.UtilBins(n_count_per_bin)
+ubins = utilbins.UtilBins(n_count_per_bin, optMission)
 
 allfull = False
 while not allfull:
@@ -83,10 +90,12 @@ while not allfull:
     #coeff_mag_from_pfs = 4.54e-10*math.exp(-0.976*mag) #TODO: to be replaced
     #print("MAG COEFF: applied on tpl = {}".format(coeff_mag_from_pfs))
     #tpl.applyWeight(coeff_mag_from_pfs)
+    
+    tpl.applyLyaExtinction(redshift=z)
     tpl.applyRedshift(z)
     tpl.setMagIAB(mag)
     tpl.applyLambdaCrop(lambda_obs_min, lambda_obs_max)
-    tpl.interpolate(dx=dlambda)
+    tpl.interpolate(dx=0.1) #high sampling for the synthesis process
     
     print(tpl)
     exported_fits_path = tpl.exportFits(temp_directory, "spectrum_simu_tmp", addNoise=False, exportNoiseSpectrum=False)
@@ -115,10 +124,15 @@ while not allfull:
     text_file.write("{}".format(data))
     text_file.close()
     
-    SigmaE = 111.0 
-    SigmaE = ubins.getRandVelocity()
-    SigmaA = 311.0
-    SigmaA = ubins.getRandVelocity()
+    if optVelocity == "random":
+        SigmaE = ubins.getRandVelocity()
+        SigmaA = ubins.getRandVelocity()        
+    elif optVelocity == "fixed":
+        #SigmaA = 311.0
+        #SigmaE = 111.0 
+        SigmaA = 51.0
+        SigmaE = 51.0 
+        
     
     #prepare the parameters file for the amazed pipeline
     params_tpl_fname = os.path.join(amazed_directory, "parameters/parameters_template.json".format())
@@ -130,6 +144,9 @@ while not allfull:
     data = data.replace("redshiftRangeMaxxxx", "{}".format(z))
     data = data.replace("velocityemissionxxx", "{}".format(SigmaE))
     data = data.replace("velocityabsorptionxxx", "{}".format(SigmaA))
+    data = data.replace("instresolutionionxxx", "{}".format(R))
+    data = data.replace("linewidthtypexxx", "{}".format(optLineWidth))
+    
     #print("parameters file generated content is :\n{}".format(data))
     params_fname = os.path.join(amazed_directory, "parameters/parameters.json".format())
     text_file = open(params_fname, "w")
@@ -137,17 +154,28 @@ while not allfull:
     text_file.close()   
 
     #prepare the linemodel amplitude fit file for the linemodel
-    #open linemodel template for catalog linecatalogamazedvacuum_B9D_LyaAbsSYMprofile
-    mAmpsTplpath = os.path.join(amazed_directory, "linecatalogs/linemodelsolve.linemodel_fit_extrema_0_template.csv".format())
-    model_amps = modelresult.ModelResult(mAmpsTplpath)
     coeffE_SFR = sfr/100.0
-    coeffA_ISM = 0.25#0.5*random.random()
+    if optISM == "fixed0.25":
+        coeffA_ISM = 0.25
+    elif optISM == "fixed0.0":
+        coeffA_ISM = 0.0
+    if optISM == "random":
+        coeffA_ISM = 0.5*random.random()
     ism = coeffA_ISM
-    print("RANDOM: ism = {}".format(ism))
-    model_amps.randomAmplitudes(coeffE=coeffE_SFR, coeffA=coeffA_ISM)
+    print("USING: ism = {}".format(ism))
+        
     mAmpsOutputpath = os.path.join(amazed_directory, "linecatalogs/linemodelsolve.linemodel_fit_extrema_0.csv".format())
+    if optLineAmplitudes == "pseudorandom":        
+        #open linemodel template for catalog linecatalogamazedvacuum_B9D_LyaAbsSYMprofile
+        mAmpsTplpath = os.path.join(amazed_directory, "linecatalogs/linemodelsolve.linemodel_fit_extrema_0_template.csv".format())
+        model_amps = modelresult.ModelResult(mAmpsTplpath)
+        model_amps.randomAmplitudes(coeffE=coeffE_SFR, coeffA=coeffA_ISM)
+    elif optLineAmplitudes == "file":
+        #tplmodelresultfilepath = "/home/aschmitt/gitlab/cpf-redshift/tools/simulation/templates_lines/201604291255_id0_z1.11448_mag20.6_sfr1.0_linemodel_amps.csv"   
+        tplmodelresultfilepath = "/home/aschmitt/gitlab/cpf-redshift/tools/simulation/templates_lines/201605022133_id0_z1.12688_mag20.7_sfr10.0_linemodel_amps.csv"   
+        model_amps = modelresult.ModelResult(tplmodelresultfilepath)     
     model_amps.save(mAmpsOutputpath)
-
+    
     #run the linemodel with the random line amplitude fitting option, with rules
     #current_path = os.getcwd()
     #os.chdir('./amazed')
@@ -177,9 +205,29 @@ while not allfull:
         if enablePlot:
             model.plot()
         spc_simu_name = ubins.getSpcName(z, mag, sfr)
-        model.exportFits(output_directory, "{}".format(spc_simu_name), addNoise=False, exportNoiseSpectrum=False)
-        model.exportFits(output_directory, "{}".format(spc_simu_name), addNoise=True, exportNoiseSpectrum=True)
-
+        
+        if optMission=='pfs':
+            model.interpolate(dx=dlambda)
+            model.exportFits(output_directory, "{}".format(spc_simu_name), addNoise=False, exportNoiseSpectrum=False)
+            model.exportFits(output_directory, "{}".format(spc_simu_name), addNoise=True, exportNoiseSpectrum=True)
+        elif optMission=='euclid':
+            _spc_name = spc_simu_name + "_raw"
+            model.exportFits(output_directory, "{}".format(_spc_name), addNoise=False, exportNoiseSpectrum=False)
+            model.exportFits(output_directory, "{}".format(_spc_name), addNoise=True, exportNoiseSpectrum=True)
+            
+            _spc_name = spc_simu_name + "_roll0"
+            model_roll = model.copy()
+            model_roll.interpolate(dx=dlambda)
+            model_roll.exportFits(output_directory, "{}".format(_spc_name), addNoise=False, exportNoiseSpectrum=False)
+            model_roll.exportFits(output_directory, "{}".format(_spc_name), addNoise=True, exportNoiseSpectrum=True)
+            
+            delta_roll1 = 0.25
+            _spc_name = spc_simu_name + "_roll1"
+            model_roll = model.copy()
+            model_roll.interpolate(dx=dlambda, offsetx=dlambda*delta_roll1)
+            model_roll.exportFits(output_directory, "{}".format(_spc_name), addNoise=False, exportNoiseSpectrum=False)
+            model_roll.exportFits(output_directory, "{}".format(_spc_name), addNoise=True, exportNoiseSpectrum=True)
+            
         #save the linemodel input amplitude fits csv file  
         model_amps_savePath = os.path.join(output_directory, "{}_linemodel_amps.csv".format(spc_simu_name))        
         model_amps.save(model_amps_savePath)
@@ -209,7 +257,7 @@ while not allfull:
             ubins.exportBinCountPlot(bin_count_path)
 
 
-    #break
+    break
     #time.sleep(2)
     
     

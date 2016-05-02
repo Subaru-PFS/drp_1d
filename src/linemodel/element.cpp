@@ -19,7 +19,7 @@ CLineModelElement::CLineModelElement(const std::string& widthType, const Float64
 
     m_asym_sigma_coeff = 4.0;
     m_asym_alpha = 4.5;
-    m_symxl_sigma_coeff = 4.0;
+    m_symxl_sigma_coeff = 5.0;
     m_asym2_sigma_coeff = 2.0;
     m_asym2_alpha = 2.0;
     m_asymfit_sigma_coeff = 2.0;
@@ -83,6 +83,8 @@ Float64 CLineModelElement::GetLineWidth(Float64 redshiftedlambda, Float64 z, Boo
         velocitySigma = pfsSimuCompensationFactor*v/c*redshiftedlambda;//, useless /(1+z)*(1+z);
 
         instrumentSigma = redshiftedlambda/m_Resolution*m_instrumentResolutionEmpiricalFactor;
+    }else if( m_LineWidthType == "nispsim2016"){
+        instrumentSigma = (redshiftedlambda*8.121e-4 + 7.4248)/2.35;
     }
 
     Float64 sigma = sqrt(instrumentSigma*instrumentSigma + velocitySigma*velocitySigma);

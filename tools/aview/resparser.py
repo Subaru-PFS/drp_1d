@@ -263,6 +263,8 @@ class ResParser(object):
         if 0:
             tplnametag = "zcosmos_red.txt"
             tplnametag = "NEW_Sbc_extended.dat"
+            tplnametag = "COMBINE-ave-Lya-abs-AND-StarBurst1.txt"
+            tplnametag = "Rebinned-NEW-E-extendeddataExtensionData"
             return tplnametag     
             
         strVal = ""
@@ -302,6 +304,7 @@ class ResParser(object):
         elif method == "decisionaltreeb" or method.lower() == "amazed0_2":
             name = "dtreeBsolve.linemodel_spc_extrema_{}.csv".format(idxExtrema)
             tplpath = os.path.join(path,name)
+            #tplpath = ""
             
         return tplpath
         

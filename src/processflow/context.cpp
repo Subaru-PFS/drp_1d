@@ -140,6 +140,19 @@ bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath,
             Log.LogError( "Failed to apply continuum substraction for spectrum: %s", spectrumPath );
             return false;
         }
+    }else if( medianRemovalMethod== "raw")
+    {
+        nameBaseline = "preprocess/baselineRAW";
+        CSpectrumFluxAxis& spcFluxAxis = m_SpectrumWithoutContinuum->GetFluxAxis();
+        spcFluxAxis.SetSize( m_Spectrum->GetSampleCount() );
+        CSpectrumSpectralAxis& spcSpectralAxis = m_SpectrumWithoutContinuum->GetSpectralAxis();
+        spcSpectralAxis.SetSize( m_Spectrum->GetSampleCount()  );
+
+
+        for(Int32 k=0; k<m_SpectrumWithoutContinuum->GetSampleCount(); k++)
+        {
+            spcFluxAxis[k] = 0.0;
+        }
     }
 
     m_SpectrumWithoutContinuum->ConvertToLogScale();

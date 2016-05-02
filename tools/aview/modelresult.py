@@ -58,9 +58,13 @@ class ModelResult(object):
             if lineStr.startswith('#linemodel solution '):
                 data = re.split("velocityEmission = ", lineStr)
                 data = re.split(", velocityAbsorption = ", data[1])
-                self.vel_emission = float(data[0])
-                data = re.split(", merit =", data[1])
-                self.vel_absorption = float(data[0])    
+                try:
+                    self.vel_emission = float(data[0])
+                    data = re.split(", merit =", data[1])
+                    self.vel_absorption = float(data[0])    
+                except:
+                    self.vel_emission = -1
+                    self.vel_absorption = -1
                 
         f.close()
         self.n = len(linelambda)

@@ -17,8 +17,7 @@
         "qso"
     ],
     "continuumRemoval": {
-        "method": "IrregularSamplingMedian",
-        "medianKernelWidth": "400"
+        "method": "raw"
     },
     "linemodelsolve": {
         "linemodel": {
@@ -26,8 +25,8 @@
             "lineforcefilter": "no",
             "fittingmethod": "fromfile",
             "continuumcomponent": "fromspectrum",
-            "linewidthtype": "combined",
-            "instrumentresolution": "2350",
+            "linewidthtype": "linewidthtypexxx",
+            "instrumentresolution": "instresolutionionxxx",
             "velocityemission": "velocityemissionxxx",
             "velocityabsorption": "velocityabsorptionxxx",
             "continuumreestimation": "no",

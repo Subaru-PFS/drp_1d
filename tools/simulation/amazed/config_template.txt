@@ -1,6 +1,6 @@
 input=__tmp_path__/tmp.spectrumlist
 lambdarange=
-linecatalog=__amazed_path__/linecatalogs/linecatalogamazedvacuum_B10C.txt
+linecatalog=__amazed_path__/linecatalogs/linecatalogamazedvacuum_B10C2.txt
 method=linemodel
 parameters=__amazed_path__/parameters/parameters.json
 redshiftrange=
