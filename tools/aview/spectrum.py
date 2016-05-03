@@ -370,14 +370,14 @@ class Spectrum(object):
         
         return a
         
-    def plot(self, saveFullDirPath=""):
+    def plot(self, saveFullDirPath="", lstyle="b-"):
         pp.ion()
         self.fig = pp.figure(1)
         self.canvas = self.fig.canvas
         self.ax = self.fig.add_subplot(111)
 
         #pp.plot(self.xvect, self.yvect, "x-")
-        self.ax.plot(self.xvect, self.yvect, '-+')
+        self.ax.plot(self.xvect, self.yvect, lstyle)
 
         #pp.grid(True) # Affiche la grille
         self.ax.xaxis.grid(True,'major')
@@ -979,7 +979,7 @@ class Spectrum(object):
         old_xvect = self.xvect
         old_yvect = self.yvect
             
-        print("imin = {}, imax = {}".format(imin, imax))
+        print("INFO - applyLambdaCrop: imin = {}, imax = {}".format(imin, imax))
         self.n = imax-imin+1
         self.xvect = range(0,self.n)
         self.yvect = range(0,self.n)
@@ -1010,7 +1010,7 @@ class Spectrum(object):
     
     def correctZeros(self, replacementValue=1e-24):
         for x in range(0,self.n):
-            if True or self.yvect[x]<replacementValue:
+            if self.yvect[x]<replacementValue:
                 self.yvect[x]=replacementValue
                 
          
@@ -1109,9 +1109,9 @@ class Spectrum(object):
                 print("SNR for the exported spectrum is: {}".format(snr))
         
                   
-        a1 = self.xvect
+        a1 = np.copy(self.xvect)
         #print("col1={}".format(a1))
-        a2 = self.yvect
+        a2 = np.copy(self.yvect)
         #print("col2={}".format(a2))
         col1 = pyfits.Column(name='wave', format='E', array=a1)
         col2 = pyfits.Column(name='flux', format='E', array=a2)
@@ -1158,8 +1158,12 @@ def StartFromCommandLine( argv ) :
         s = Spectrum(options.spcPath, options.spcType, snorm=False)
         #s.applyRedshift(0.25)
         
-        #s.applyLambdaCrop(3600, 9460)
-        #print(s)
+#        z = 7.26
+#        s.applyLyaExtinction(z)
+#        s.applyRedshift(z)
+#        s.setMagIAB(25)
+#        s.applyLambdaCrop(3800, 12600)
+#        s.interpolate(dx=0.1) #high sampling for the synthesis process
 
         
         if options.otherspcPath == "":
@@ -1182,7 +1186,7 @@ def StartFromCommandLine( argv ) :
             s.plot()
         else:
             s2 = Spectrum(options.otherspcPath, options.otherspcType, snorm=False)
-            s.plotCompare(s2, 1.0, modellinetype = "b-+")
+            s.plotCompare(s2, 1.0, modellinetype = "b-")
             
     else :
         print("Error: invalid argument count")

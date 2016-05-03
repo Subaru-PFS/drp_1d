@@ -21,8 +21,8 @@ import utilbins
 
 #parameters
 enablePlot = False
-optMission = "euclid"
-#optMission = "pfs"
+#optMission = "euclid"
+optMission = "pfs"
 
 if optMission == "euclid":
     n_count_per_bin = 1
@@ -84,12 +84,9 @@ while not allfull:
   
     #prepare the template spc with the given mag
     tplPath = os.path.join(ubins.templates_path, tpl_name)
-    tpl = spectrum.Spectrum(tplPath ,'template', snorm=True)
+    tpl = spectrum.Spectrum(tplPath ,'template', snorm=False)
     tpl.extendWavelengthRangeRed(lambda_obs_max)
     tpl.extendWavelengthRangeBlue(lambda_obs_min)
-    #coeff_mag_from_pfs = 4.54e-10*math.exp(-0.976*mag) #TODO: to be replaced
-    #print("MAG COEFF: applied on tpl = {}".format(coeff_mag_from_pfs))
-    #tpl.applyWeight(coeff_mag_from_pfs)
     
     tpl.applyLyaExtinction(redshift=z)
     tpl.applyRedshift(z)
@@ -201,7 +198,8 @@ while not allfull:
                 
         #save simulation spectrum and noise
         modelPath = os.path.join(amazed_directory, "output/{}/linemodelsolve.linemodel_spc_extrema_0.csv".format(os.path.splitext(exported_fits_name)[0]))
-        model = spectrum.Spectrum(modelPath ,'template')
+        model = spectrum.Spectrum(modelPath ,'template', snorm=False)
+        model.correctZeros()
         if enablePlot:
             model.plot()
         spc_simu_name = ubins.getSpcName(z, mag, sfr)
