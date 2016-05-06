@@ -342,12 +342,14 @@ Bool COperatorDTreeBSolve::GetCombinedRedshift(CDataStore& store)
     //*
     //***********************************************************
     // Next Test: chi2nc chi2cont linear combination
-    //*
+    /*
+    // coeffs for PFS simu dec 2015.
     Float64 lmCoeff = 75.0/((float)results->nSpcSamples);
     Float64 chi2ncCoeff = 100.0;
     Float64 chi2cCoeff = 50.0;
     //*/
-    /*
+    //*
+    // coeffs for VVDS deep, udeep and VUDS
     Float64 lmCoeff = 12.0/((float)results->nSpcSamples);
     Float64 chi2ncCoeff = 100.0;
     Float64 chi2cCoeff = 8.0;

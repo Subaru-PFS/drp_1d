@@ -64,15 +64,15 @@ Void CDTreeBSolveResult::SaveLine( const CDataStore& store, std::ostream& stream
 
 Bool CDTreeBSolveResult::GetBestRedshift(const CDataStore& store, Float64& redshift, Float64& merit , std::string &dtreepath) const
 {
+    //***********************************************************
+    //first test, NStrong lines>3, keep linemodel
+    /*
     std::string scope = store.GetScope( *this ) + "dtreeBsolve.linemodel";
     auto results = std::dynamic_pointer_cast<const CLineModelResult>( store.GetGlobalResult(scope.c_str()).lock() );
 
     Float64 SNRcutThresStrongLines = 5.0;
     Float64 FITcutThresStrongLines = 5.0;
 
-    //***********************************************************
-    //first test, NStrong lines>3, keep linemodel
-    //*
     Int32 NStrongLinesThres = 3;
     std::vector<Int32> moreThanNStrongLinesSols;
     if(results){
@@ -84,11 +84,11 @@ Bool CDTreeBSolveResult::GetBestRedshift(const CDataStore& store, Float64& redsh
 //                continue;
 //            }
 
-            /*
+
             //print for debug
-            Int32 nStrongTmp = results->GetNLinesOverCutThreshold(iE, 5.0, 1.0);
-            Log.LogInfo( "dtreeBsolve nvalid strong test: z= %.4f\tnstrong= %d", results->Extrema[iE], nStrongTmp);
-            */
+            //Int32 nStrongTmp = results->GetNLinesOverCutThreshold(iE, 5.0, 1.0);
+            //Log.LogInfo( "dtreeBsolve nvalid strong test: z= %.4f\tnstrong= %d", results->Extrema[iE], nStrongTmp);
+
 
             Int32 nStrong = results->GetNLinesOverCutThreshold(iE, SNRcutThresStrongLines, FITcutThresStrongLines);
             if(nStrong>=NStrongLinesThres){
