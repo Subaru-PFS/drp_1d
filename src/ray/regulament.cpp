@@ -31,6 +31,11 @@ Bool CRegulament::CreateRulesFromJSONFiles( void )
 {
   // To be removed once JSON code is in <--
   Bool True = true;
+
+  CRuleBalmerLinearSolver* ARule8 = new CRuleBalmerLinearSolver( );
+  ARule8->SetUp( True );
+  m_RulesVector.push_back( dynamic_cast<CRule*>( ARule8 ) );
+
   CRule2SingleLinesAmplitude* ARule1 = new CRule2SingleLinesAmplitude( );
   ARule1->SetUp( True, CRay::nType_Emission, std::string( "Halpha" ).c_str(), std::string( "Hbeta" ).c_str(), 1.0/2.86*1.1 );
   m_RulesVector.push_back( dynamic_cast<CRule*>( ARule1 ) );
@@ -52,9 +57,7 @@ Bool CRegulament::CreateRulesFromJSONFiles( void )
   CRule2SingleLinesAmplitude* ARule7 = new CRule2SingleLinesAmplitude( );
   ARule7->SetUp( True, CRay::nType_Emission, std::string( "H10" ).c_str(), std::string( "H11" ).c_str(), 1.1 );
   m_RulesVector.push_back( dynamic_cast<CRule*>( ARule7 ) );
-  CRuleBalmerLinearSolver* ARule8 = new CRuleBalmerLinearSolver( );
-  ARule8->SetUp( True );
-  m_RulesVector.push_back( dynamic_cast<CRule*>( ARule8 ) );
+
   CRuleOIIRatioRange* ARule9 = new CRuleOIIRatioRange( );
   ARule9->SetUp( True, CRay::nType_Emission, "[OII]3726", "[OII]3729", 2.0 );
   m_RulesVector.push_back( dynamic_cast<CRule*>( ARule9 ) );

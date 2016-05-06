@@ -58,33 +58,49 @@ void CRule2SingleLinesAmplitude::Correct( CLineModelElementList& LineModelElemen
       Float64 erA = LineModelElementList.m_Elements[iA]->GetFittedAmplitudeErrorSigma( 0 );
       Float64 ampB = LineModelElementList.m_Elements[iB]->GetFittedAmplitude( 0 );
       Float64 erB = LineModelElementList.m_Elements[iB]->GetFittedAmplitudeErrorSigma( 0 );
+
+      /*
+      //Method 0, limit the weakest line's amplitude, no noise taken into account
+      Float64 maxB = (m_Coefficient*ampA);
+      LineModelElementList.m_Elements[iB]->LimitFittedAmplitude(0, maxB);
+      //*/
+
+      //*
+      //Method 1, limit the weakest line's amplitude, only the strongest line's noise is taken into account
+      Float64 maxB = (m_Coefficient*ampA) + (erA*nSigma*m_Coefficient);
+      LineModelElementList.m_Elements[iB]->LimitFittedAmplitude(0, maxB);
+      //*/
+
+      /*
+      //Method 2, correct both lines depending on their sigmas
       if( ampB!=0.0 && (erA!=0 && erB!=0) && std::abs( ampB )>std::abs( ampA*m_Coefficient ) )
-	{
-	  Float64 R = 1.0/m_Coefficient;
-	  Float64 wA = 0.0;
-	  if( erA!=0.0 )
-	    {
-	      wA = 1.0/(erA*erA);
-	    }
-	  Float64 wB = 0.0;
-	  if( erB!=0.0 )
-	    {
-	      wB = 1.0/(erB*erB*R*R);
-	    }
-	  Float64 correctedA = (ampA*wA + ampB*wB*R)/(wA+wB);
-	  Float64 correctedB = correctedA/R;
-	  LineModelElementList.m_Elements[iA]->SetFittedAmplitude( correctedA, erA ); //check: keep the original error sigma ?
-	  LineModelElementList.m_Elements[iB]->SetFittedAmplitude( correctedB, erB ); //check: keep the original error sigma ?
-	}
+      {
+          Float64 R = 1.0/m_Coefficient;
+          Float64 wA = 0.0;
+          if( erA!=0.0 )
+          {
+              wA = 1.0/(erA*erA);
+          }
+          Float64 wB = 0.0;
+          if( erB!=0.0 )
+          {
+              wB = 1.0/(erB*erB*R*R);
+          }
+          Float64 correctedA = (ampA*wA + ampB*wB*R)/(wA+wB);
+          Float64 correctedB = correctedA/R;
+          LineModelElementList.m_Elements[iA]->SetFittedAmplitude( correctedA, erA ); //check: keep the original error sigma ?
+          LineModelElementList.m_Elements[iB]->SetFittedAmplitude( correctedB, erB ); //check: keep the original error sigma ?
+      }
       else
-	{
-	  if( ampB!=0.0 && ampA==0.0 )
-	    {
-	      Float64 maxB = erA;
-	      LineModelElementList.m_Elements[iB]->LimitFittedAmplitude( 0, maxB );
-	    }
-	}
-    }
+      {
+          if( ampB!=0.0 && ampA==0.0 )
+          {
+              Float64 maxB = erA;
+              LineModelElementList.m_Elements[iB]->LimitFittedAmplitude( 0, maxB );
+          }
+      }
+      //*/
+  }
 }
 
 Bool CRule2SingleLinesAmplitude::Check( CLineModelElementList& LineModelElementList )
