@@ -255,7 +255,7 @@ while not allfull:
             ubins.exportBinCountPlot(bin_count_path)
 
 
-    break
+    #break
     #time.sleep(2)
     
     
