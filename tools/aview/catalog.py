@@ -177,11 +177,11 @@ class Catalog(object):
         pp.show()
     
     def plotInZplane(self):
-        if 1:
+        if 0:
             #EUCLID
             obs_lambda_min = 12500.0
             obs_lambda_max = 18500.0
-        if 0:        
+        if 1:        
             #PFS
             obs_lambda_min = 3800.0
             obs_lambda_max = 12600.0
@@ -190,7 +190,7 @@ class Catalog(object):
             obs_lambda_min = 3600.0
             obs_lambda_max = 9400.0
 
-        filter_type = "A"
+        filter_type = "E"
         filter_force = -1
         ctlg_rest = self.getShiftedCatalog(0.0, filter_type, filter_force)       
         nlines = len(ctlg_rest['lambda']) 

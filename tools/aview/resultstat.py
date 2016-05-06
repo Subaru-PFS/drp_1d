@@ -15,6 +15,8 @@ import numpy as np
 import math
 import time
 
+from scipy import interpolate
+
 subfolder = "../stats"
 cmd_subfolder = os.path.realpath(os.path.abspath(os.path.join(os.path.split(inspect.getfile( inspect.currentframe() ))[0],subfolder)))
 if cmd_subfolder not in sys.path:
@@ -955,6 +957,13 @@ class ResultList(object):
 #            if max_chi2_all<chi2_lm[i] and chi2_lm[i]<1e20:
 #                max_chi2_all = chi2_lm[i]
         nz = len(chi2_lm)
+
+        #interpolate continuum on linemodel grid
+        f = interpolate.interp1d(z_continuum, chi2_continuum, bounds_error=False, fill_value=1e32, assume_sorted=False)
+        chi2_continuum_interp = f(z_lm)
+        #interpolate no_continuum on linemodel grid
+        f = interpolate.interp1d(z_nc, chi2_nc, bounds_error=False, fill_value=1e32, assume_sorted=False) 
+        chi2_nc_interp = f(z_lm)
         
         #print max_chi2_all
         
@@ -981,9 +990,9 @@ class ResultList(object):
             #plot chi2
             fig = plt.figure('dtreeb - chi2s')
             ax = fig.add_subplot(111)
-            ax.plot(z_nc, chi2_nc, label='no continuum')
+            ax.plot(z_lm, chi2_nc_interp, label='no continuum')
             ax.plot(z_lm, chi2_lm, label='linemodel', linestyle = "dashed")
-            ax.plot(z_continuum, chi2_continuum, label='continuum')
+            ax.plot(z_lm, chi2_continuum_interp, label='continuum')
             plt.grid(True)
             plt.legend()
             plt.ylabel('Chi2')
@@ -1024,15 +1033,16 @@ class ResultList(object):
                 coeff_lm = coeff_lm_min+ilinemodel*coeff_lm_step
                 #print("this solution uses : coeff_continuum={}, coeff_lm={}".format(coeff_continuum, coeff_lm) )
                 for i in range(nz):
-                    merit[i] = coeff_nc*chi2_nc[i] + coeff_continuum*chi2_continuum[i] + coeff_lm*chi2_lm[i]
+                    merit[i] = coeff_nc*chi2_nc_interp[i] + coeff_continuum*chi2_continuum_interp[i] + coeff_lm*chi2_lm[i]
                 izbest = np.argmin(merit)
                 zbest = z_nc[izbest]
                 if(np.abs(zbest - self.list[indice].zref ) < zthres):
                     _map[icontinuum,ilinemodel] = 1
-                    #print("this solution works : z={}, zref={}".format(zbest, self.list[indice].zref) )
+                    print("this solution works : z={}, zref={}".format(zbest, self.list[indice].zref) )
                 else:          
                     _map[icontinuum,ilinemodel] = 0
-                    #print("this solution fails : z={}, zref={}".format(zbest, self.list[indice].zref) )
+                    print("this solution fails : z={}, zref={}".format(zbest, self.list[indice].zref) )
+                    
         return _map
     
     def plotReducedZcandidates(self, chi2Type="raw", extremaType="amazed"):
@@ -1716,7 +1726,7 @@ def plotChi2LinCombinationCoeff2DMap(resDir, diffthres, spcName="", methodName="
     
     ## parameters :
     zthres = 0.01
-    if 0: 
+    if 1: 
         plt.ion()
         chi2dontloadThres = -1#1e12 #better for direct plotting, but use -1 to do the optimization map
         enablePlot = False
@@ -1734,7 +1744,10 @@ def plotChi2LinCombinationCoeff2DMap(resDir, diffthres, spcName="", methodName="
     
     for k in range(resList.n):
         print("processing result #{}/{}".format(k+1, resList.n))
-        coeffmap = resList.getChi2LinCombinationCoeff2DMap(k, enablePlot=enablePlot, chi2dontloadThres=chi2dontloadThres,  zthres=zthres)
+        try:
+            coeffmap = resList.getChi2LinCombinationCoeff2DMap(k, enablePlot=enablePlot, chi2dontloadThres=chi2dontloadThres,  zthres=zthres)
+        except:
+            continue
         print("coeffmap = {}".format(coeffmap))
         cumulcoeffmap = np.add(cumulcoeffmap, coeffmap)
         print("cumulcoeffmap = {}".format(cumulcoeffmap))

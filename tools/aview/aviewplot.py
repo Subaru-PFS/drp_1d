@@ -236,10 +236,14 @@ class AViewPlot(object):
             if useReducedNoise:
                 nmean = np.mean([a for a in self.nyvect if a>0.0])
                 nstd = np.std([a for a in self.nyvect if a>0.0])
-                #print("noise nmean={}, nstd={}".format(nmean, nstd))
+                print("noise nmean={}, nstd={}".format(nmean, nstd))
                 reducedNyvect = [a for a in self.nyvect if abs(a-nmean)<2*nstd and a>0.0]
-                nmin = min(reducedNyvect)
-                nmax = max(reducedNyvect)
+                if len(reducedNyvect)>2:
+                    nmin = min(reducedNyvect)
+                    nmax = max(reducedNyvect)
+                else:
+                   nmin = min(self.nyvect)
+                   nmax = max(self.nyvect) 
             else:
                 nmin = min(self.nyvect)
                 nmax = max(self.nyvect)

@@ -44,12 +44,11 @@ class ResParser(object):
         self.chisquarecrelpath = "dtreeBsolve.chisquare2solve.chisquare_continuum.csv"   
         self.corrrelpath = "correlationsolve.correlation.csv"    
         
-        
         if methodParam=="linemodelsolve" or methodParam=="linemodel":
             self.linemodelrelpath = "linemodelsolve.linemodel.csv" 
         if methodParam=="linemodeltplshapesolve" or methodParam=="linemodeltplshape":
             self.linemodelrelpath = "linemodeltplshapesolve.linemodel.csv" 
-        if methodParam=="decisionaltreeb":
+        if methodParam=="decisionaltreeb" or methodParam=="amazed0_2":
             self.linemodelrelpath = "dtreeBsolve.linemodel.csv" 
                 
         self.displaysOutputPath = os.path.join(self.respath,"displays")
