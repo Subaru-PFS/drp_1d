@@ -66,7 +66,7 @@ CProcessFlow::~CProcessFlow()
 
 Bool CProcessFlow::Process( CProcessFlowContext& ctx )
 {
-    if(0)
+    if(1)
     {
         //Check if the Spectrum is valid on the lambdarange
         TFloat64Range lambdaRange;

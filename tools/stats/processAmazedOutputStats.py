@@ -854,7 +854,7 @@ def StartFromCommandLine( argv ) :
     parser = optparse.OptionParser(usage=usage)
     parser.add_option(u"-r", u"--ref", help="reference redshift values",  dest="refFile", default="referenceRedshifts.txt")
     parser.add_option(u"-c", u"--calc", help="calculated redshift values",  dest="calcFile", default="output.txt")
-    parser.add_option(u"-t", u"--type", help="reference redshift values type, choose between 'vvds1', 'vvds2' or 'pfs'",  dest="type", default="vvds")
+    parser.add_option(u"-t", u"--type", help="reference redshift values type, choose between 'vvds1', 'vvds2' or 'pfs', 'vuds', 'simulm'",  dest="type", default="vvds")
     parser.add_option(u"-m", u"--magRange", help="magnitude range filter for the histograms",  dest="magRange", default="0.0 40.0")
     parser.add_option(u"-s", u"--sfrRange", help="sfr range filter for the histograms",  dest="sfrRange", default="0.0 10000.0")
     parser.add_option(u"-z", u"--zRange", help="redshift range filter for the histograms",  dest="zRange", default="-1.0 20.0")
