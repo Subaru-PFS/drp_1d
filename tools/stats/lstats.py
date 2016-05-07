@@ -302,7 +302,7 @@ def PlotAmazedVersusBinsHistogram(yvect, mvect, outdir, outFileNoExt, enablePlot
             ax2.set_xscale('log')
             ax1.set_xscale('log')
         elif mtype=='SIGMA':
-            ax2.set_xlim([50, 350])
+            ax2.set_xlim([25, 375])
         else:
             ax2.set_xlim([15, 30])
             

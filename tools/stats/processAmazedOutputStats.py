@@ -71,6 +71,16 @@ def setPFSRefFileType():
     iRefEBmV = 4
     iRefSigma = 6
 
+def setSIMULMRefFileType():
+    global iRefZ, iRefMag, iRefFlag, iRefSFR, iRefEBmV, iRefSigma
+    iRefZ = 1
+    iRefMag = 2
+    iRefFlag = -1
+    iRefSFR = 5
+    iRefEBmV = 4
+    iRefISM = 6
+    iRefSigma = 7
+
 def ProcessDiff( refFile, calcFile, outFile, reftype ) :
     global iRefZ, iRefMag, iRefFlag   
      
@@ -341,6 +351,18 @@ def loadRef(fname, reftype):
                     d6 = float(data[6])
                     d = [d0, d1, d2, d3, d4, d5, d6]
                     dataArray.append(d) 
+            elif reftype=="simulm":
+                if(len(data) >= 8): #SIMULM
+                    d0 = str(data[0])
+                    d1 = float(data[1])
+                    d2 = float(data[2])
+                    d3 = str(data[3])
+                    d4 = float(data[4])
+                    d5 = float(data[5])
+                    d6 = float(data[6])
+                    d7 = float(data[7])
+                    d = [d0, d1, d2, d3, d4, d5, d6, d7]
+                    dataArray.append(d) 
             elif reftype=="vuds":
                 if(len(data) >= 6):
                     d0 = str(data[0])
@@ -423,12 +445,12 @@ def loadDiff(fname):
     f.close()
     return dataArray
 
-def ProcessStats( fname, zRange, magRange, enablePlot = False ):
+def ProcessStats( fname, zRange, magRange,  sfrRange, enablePlot = False ):
     data = loadDiff( fname );
     
     
     _baseOutputDirectory = os.path.dirname(os.path.abspath(fname))
-    outputDirectory = os.path.join(_baseOutputDirectory, "stats_magmin{}magmax{}_zmin{}zmax{}".format(magRange[0], magRange[1], zRange[0], zRange[1]))
+    outputDirectory = os.path.join(_baseOutputDirectory, "stats_magmin{}magmax{}_zmin{}zmax{}_sfrmin{}sfrmax{}".format(magRange[0], magRange[1], zRange[0], zRange[1], sfrRange[0], sfrRange[1]))
     if os.path.exists( outputDirectory ) == False :        
         print("makedir: Output dir: "+outputDirectory)
         os.mkdir( outputDirectory )        
@@ -441,14 +463,18 @@ def ProcessStats( fname, zRange, magRange, enablePlot = False ):
     zmax = zRange[1]
     magmin = magRange[0]
     magmax = magRange[1]
+    sfrmin = sfrRange[0]
+    sfrmax = sfrRange[1]
     print("INFO: processing stats: zmin = {}, zmax = {}".format(zmin, zmax))
     print("INFO: processing stats: magmin = {}, magmax = {}".format(magmin, magmax))
+    print("INFO: processing stats: sfrmin = {}, sfrmax = {}".format(sfrmin, sfrmax))
         
     indsForHist = []
     for x in range(0,n):
         zreference = (data[x][2])
         mag = (data[x][1])
-        if zreference <= zmax and zreference >= zmin and mag >= magmin and mag <= magmax:
+        sfr = (data[x][9])
+        if zreference <= zmax and zreference >= zmin and mag >= magmin and mag <= magmax and sfr >= sfrmin and sfr <= sfrmax:
             indsForHist.append(x)
             
     nSelected = len(indsForHist)
@@ -830,6 +856,7 @@ def StartFromCommandLine( argv ) :
     parser.add_option(u"-c", u"--calc", help="calculated redshift values",  dest="calcFile", default="output.txt")
     parser.add_option(u"-t", u"--type", help="reference redshift values type, choose between 'vvds1', 'vvds2' or 'pfs'",  dest="type", default="vvds")
     parser.add_option(u"-m", u"--magRange", help="magnitude range filter for the histograms",  dest="magRange", default="0.0 40.0")
+    parser.add_option(u"-s", u"--sfrRange", help="sfr range filter for the histograms",  dest="sfrRange", default="0.0 10000.0")
     parser.add_option(u"-z", u"--zRange", help="redshift range filter for the histograms",  dest="zRange", default="-1.0 20.0")
     parser.add_option(u"-l", u"--computeLvl", help="compute level, choose between 'brief' or 'full'",  dest="computeLevel", default="brief")
     (options, args) = parser.parse_args()
@@ -875,6 +902,9 @@ def StartFromCommandLine( argv ) :
         elif options.type == 'vuds':
             print "Info: Using VUDS reference data file type"            
             setVUDSRefFileType()
+        elif options.type == 'simulm':
+            print "Info: Using SimuLM reference data file type"            
+            setSIMULMRefFileType()
         else:
             print("Info: No reference file type given (--type), using vvds by default.")
 
@@ -888,8 +918,11 @@ def StartFromCommandLine( argv ) :
             zRange[1] = float(options.zRange.split(" ")[1])
             magRange = [0.0, 40.0]
             magRange[0] = float(options.magRange.split(" ")[0])
-            magRange[1] = float(options.magRange.split(" ")[1])        
-            ProcessStats( outputFullpathDiff, zRange, magRange )
+            magRange[1] = float(options.magRange.split(" ")[1])
+            sfrRange = [0.0, 10000.0]
+            sfrRange[0] = float(options.sfrRange.split(" ")[0])
+            sfrRange[1] = float(options.sfrRange.split(" ")[1])        
+            ProcessStats( outputFullpathDiff, zRange, magRange, sfrRange )
         
         if  options.computeLevel == "full" or options.computeLevel == "perf":        
             processPerformance( outputFullpathDiff )
