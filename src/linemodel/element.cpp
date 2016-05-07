@@ -85,6 +85,13 @@ Float64 CLineModelElement::GetLineWidth(Float64 redshiftedlambda, Float64 z, Boo
         instrumentSigma = redshiftedlambda/m_Resolution*m_instrumentResolutionEmpiricalFactor;
     }else if( m_LineWidthType == "nispsim2016"){
         instrumentSigma = (redshiftedlambda*8.121e-4 + 7.4248)/2.35;
+        Float64 v = m_VelocityEmission;
+        if(!isEmission){
+            v = m_VelocityAbsorption;
+        }
+        Float64 c = 300000.0;
+        Float64 pfsSimuCompensationFactor = 1.0;
+        velocitySigma = pfsSimuCompensationFactor*v/c*redshiftedlambda;
     }
 
     Float64 sigma = sqrt(instrumentSigma*instrumentSigma + velocitySigma*velocitySigma);

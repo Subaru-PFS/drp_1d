@@ -40,7 +40,7 @@ const std::string CLineModelSolve::GetDescription()
     desc.append("\tparam: linemodel.lineforcefilter = {""no"", ""S""}\n");
     desc.append("\tparam: linemodel.fittingmethod = {""hybrid"", ""individual""}\n");
     desc.append("\tparam: linemodel.continuumcomponent = {""fromspectrum"", ""nocontinuum"", ""zero""}\n");
-    desc.append("\tparam: linemodel.linewidthtype = {""instrumentdriven"", ""combined"", ""fixed""}\n");
+    desc.append("\tparam: linemodel.linewidthtype = {""instrumentdriven"", ""combined"", ""nispsim2016"", ""fixed""}\n");
     desc.append("\tparam: linemodel.instrumentresolution = <float value>\n");
     desc.append("\tparam: linemodel.velocityemission = <float value>\n");
     desc.append("\tparam: linemodel.velocityabsorption = <float value>\n");
@@ -87,6 +87,10 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
         Log.LogInfo( "    -velocity fit: %s", m_opt_velocityfit.c_str());
     }else if(m_opt_lineWidthType=="instrumentdriven"){
         Log.LogInfo( "    -instrumentresolution: %.2f", m_opt_resolution);
+    }else if(m_opt_lineWidthType=="nispsim2016"){
+        Log.LogInfo( "    -velocity emission: %.2f", m_opt_velocity_emission);
+        Log.LogInfo( "    -velocity absorption: %.2f", m_opt_velocity_absorption);
+        Log.LogInfo( "    -velocity fit: %s", m_opt_velocityfit.c_str());
     }
     Log.LogInfo( "    -rules: %s", m_opt_rules.c_str());
     Log.LogInfo( "    -continuumreestimation: %s", m_opt_continuumreest.c_str());
