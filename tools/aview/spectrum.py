@@ -401,7 +401,7 @@ class Spectrum(object):
             
         print '\n'
         
-    def plotCompare(self, other_spc, amplitude = 1.0, modellinetype = "-bo", exportPath=""):
+    def plotCompare(self, other_spc, amplitude = 1.0, modellinetype = "-bo", exportPath="", other2_spc=None):
         self.fig = pp.figure( "spectrumview", figsize=(15,11))
         
         lbl = self.label
@@ -418,6 +418,9 @@ class Spectrum(object):
         if lbl=="":
             lbl = other_spc.name
         self.ax.plot(other_spc.xvect, yother, modellinetype, label=other_spc.name)
+        if not other2_spc==None:
+            self.ax.plot(other2_spc.xvect, other2_spc.yvect, "-r", label=other2_spc.name)
+            
 
         pp.grid(True) # Affiche la grille
         pp.legend()
@@ -1149,7 +1152,9 @@ def StartFromCommandLine( argv ) :
     parser.add_option(u"-e", u"--export", help="export to fits format (no, yes)",  dest="export", default="no")
 
     parser.add_option(u"-o", u"--otherspc", help="path to the other fits spectrum to be plotted",  dest="otherspcPath", default="")
-    parser.add_option(u"-p", u"--otherspctype", help="type of other spc",  dest="otherspcType", default="template")
+    parser.add_option(u"-y", u"--otherspctype", help="type of other spc",  dest="otherspcType", default="template")
+    parser.add_option(u"-p", u"--otherspc2", help="path to the seond other fits spectrum to be plotted",  dest="other2spcPath", default="")
+    parser.add_option(u"-u", u"--otherspctype2", help="type of second other spc",  dest="other2spcType", default="template")
 
     (options, args) = parser.parse_args()
 
@@ -1186,7 +1191,11 @@ def StartFromCommandLine( argv ) :
             s.plot()
         else:
             s2 = Spectrum(options.otherspcPath, options.otherspcType, snorm=False)
-            s.plotCompare(s2, 1.0, modellinetype = "b-")
+            if options.other2spcPath == "":
+                s.plotCompare(s2, 1.0, modellinetype = "b-")
+            else:
+                s3 = Spectrum(options.other2spcPath, options.other2spcType, snorm=False)
+                s.plotCompare(s2, 1.0, modellinetype = "b-", exportPath="", other2_spc=s3)
             
     else :
         print("Error: invalid argument count")

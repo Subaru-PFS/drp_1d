@@ -17,11 +17,14 @@ CLineModelElement::CLineModelElement(const std::string& widthType, const Float64
     m_VelocityAbsorption= velocityAbsorption;
     m_instrumentResolutionEmpiricalFactor = 230.0/325.0/2.35; //derived from (emission line) linemodel-width fit on VUDS ECDFS flags3+4
 
-    m_asym_sigma_coeff = 4.0;
+    m_asym_sigma_coeff = 1.0;
     m_asym_alpha = 4.5;
+
     m_symxl_sigma_coeff = 5.0;
+
     m_asym2_sigma_coeff = 2.0;
     m_asym2_alpha = 2.0;
+
     m_asymfit_sigma_coeff = 2.0;
     m_asymfit_alpha = 2.0;
     m_asymfit_delta = 0.0;

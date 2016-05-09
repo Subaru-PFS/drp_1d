@@ -65,6 +65,8 @@ text_file.close()
 
 print("\n_\nCreate simulation set by z-mag-sfr bins")
 ubins = utilbins.UtilBins(n_count_per_bin, optMission)
+WarningCheckBins = raw_input("\n\nWARNING: Bins have been created: Please CHECK!\nPress any key to continue...".format())
+        
 
 allfull = False
 while not allfull:

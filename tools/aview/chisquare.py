@@ -307,20 +307,32 @@ class ResultChisquare(object):
             if cmax <  self.yvect[x] and self.yvect[x]<thres:
                 cmax = self.yvect[x]
              
-        pp.figure("chi2")
+        
         spcColor = '0.5'
-        pp.plot(other_spc.xvect, other_spc.yvect, color=spcColor,linewidth = 2.0, label=other_spc.label)
+        fig, ax1 = pp.subplots()
+        ax1.plot(other_spc.xvect, other_spc.yvect, color=spcColor,linewidth = 2.0, label=other_spc.label)
+        ax1.set_ylabel('Chisquare - continuum subtracted')
+        
+        ax2 = ax1.twinx()
+        ax2.plot(self.xvect, self.yvect, 'r', linestyle = "dashed", linewidth = 1.0, label=self.label)
 
-        pp.plot(self.xvect, self.yvect, 'r', linestyle = "dashed", linewidth = 1.0, label=self.label)
+        if 0:  
+            chi2path3 = "/home/aschmitt/data/vuds/VUDS_flag3_4/amazed/output/sc_530036900_F53P001_join_seq.fits_60_1_atm_clean/COMBINE-ave-Lya-emstr-AND-StarBurst3.txt/chisquare2solve.chisquare.csv"
+            s3 = ResultChisquare(chi2path3)
+            ax2.plot(s3.xvect, s3.yvect, 'r', linestyle = "-", linewidth = 2.0, label=s3.label)
+        
+        ax2.set_ylabel('Chisquare - continuum (dashed) and raw (line)', color='r')
+        for tl in ax2.get_yticklabels():
+            tl.set_color('r')
 
         pp.grid(True) # Affiche la grille
-        pp.legend()
+        #pp.legend()
         if not self.forcePlotXIndex:
-             pp.xlabel('z')
+            ax1.set_xlabel('z')
         else:
-            pp.xlabel('index')
-        pp.ylabel('y')
-        pp.title(self.name) # Titre
+            ax1.set_xlabel('index')
+        #pp.ylabel('y')
+        #pp.title(self.name) # Titre
         pp.ylim([cmin,cmax])
         #pp.savefig('ExempleTrace') # sauvegarde du fichier ExempleTrace.png
         pp.show()
@@ -621,6 +633,7 @@ def StartFromCommandLine( argv ) :
     ex: python ./chisquare.py -s """
     parser = optparse.OptionParser(usage=usage)
     parser.add_option(u"-i", u"--input", help="path to the chi2 curve to be plotted",  dest="chi2Path", default="")
+    parser.add_option(u"-o", u"--input2", help="path to the other chi2 curve to be plotted",  dest="chi2Path2", default="")
 
     (options, args) = parser.parse_args()
 
@@ -628,7 +641,12 @@ def StartFromCommandLine( argv ) :
         print('using full path: {0}'.format(options.chi2Path))
         s = ResultChisquare(options.chi2Path)
         print(s) 
-        s.plot()
+        
+        if options.chi2Path2 == "":    
+            s.plot()
+        else:
+            s2 = ResultChisquare(options.chi2Path2) 
+            s.plotCompare(s2) 
     else :
         print("Error: invalid argument count")
         exit()
