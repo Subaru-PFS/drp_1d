@@ -589,6 +589,7 @@ def ProcessStats( fname, zRange, magRange,  sfrRange, enablePlot = False ):
     nPercentileDepth = 2
     # ******* plot mag hist
     if 1:
+        print("Plotting versus Mag")
         outFileNoExt = 'stats_versusMag_hist' 
         outFilepathNoExt = os.path.join(outputDirectory,outFileNoExt)
         outdir = outputDirectory
@@ -596,6 +597,7 @@ def ProcessStats( fname, zRange, magRange,  sfrRange, enablePlot = False ):
 
     # ******* plot snr hist       
     if 1:
+        print("Plotting versus Noise")
         outFileNoExt = 'stats_versusNoise_hist' 
         outFilepathNoExt = os.path.join(outputDirectory,outFileNoExt)
         outdir = outputDirectory
@@ -603,6 +605,7 @@ def ProcessStats( fname, zRange, magRange,  sfrRange, enablePlot = False ):
 
     # ******* plot redshift hist       
     if 1:
+        print("Plotting versus redshift")
         outFileNoExt = 'stats_versusRedshift_hist'
         outFilepathNoExt = os.path.join(outputDirectory,outFileNoExt) 
         outdir = outputDirectory
@@ -610,6 +613,7 @@ def ProcessStats( fname, zRange, magRange,  sfrRange, enablePlot = False ):
         
     # ******* plot sfr hist       
     if 1:
+        print("Plotting versus sfr")
         outFileNoExt = 'stats_versusSFR_hist' 
         outFilepathNoExt = os.path.join(outputDirectory,outFileNoExt)
         outdir = outputDirectory
@@ -617,6 +621,7 @@ def ProcessStats( fname, zRange, magRange,  sfrRange, enablePlot = False ):
 
     # ******* plot EBmV hist       
     if 1:
+        print("Plotting versus ebmv")
         outFileNoExt = 'stats_versusEBMV_hist' 
         outFilepathNoExt = os.path.join(outputDirectory,outFileNoExt)
         outdir = outputDirectory
@@ -624,6 +629,7 @@ def ProcessStats( fname, zRange, magRange,  sfrRange, enablePlot = False ):
 
     # ******* plot Sigma hist       
     if 1:
+        print("Plotting versus sigma")
         outFileNoExt = 'stats_versusSigma_hist' 
         outFilepathNoExt = os.path.join(outputDirectory,outFileNoExt)
         outdir = outputDirectory

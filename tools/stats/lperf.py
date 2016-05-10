@@ -33,14 +33,16 @@ def exportPerformances(dataDiff, outputDirectory):
     n = len(dataDiff)
     print("datadiff n = {}".format(n))
     for izbin in range(len(z_bins_limits)-1):
+        zmin = z_bins_limits[izbin]
+        zmax = z_bins_limits[izbin+1]
         zbin_dataset = []
         for x in range(n):
             zref = dataDiff[x][izref]
-            if zref >= z_bins_limits[izbin] and zref < z_bins_limits[izbin+1]:
+            if zref >= zmin and zref < zmax :
                 zbin_dataset.append(dataDiff[x])
                 #print("line kept is {}".format(dataDiff[x]))
-        print("\n\nThis z bin n = {}".format(len(zbin_dataset)))
-        plotMagSFRPerformanceMatrix(zbin_dataset, z_bins_limits[izbin], z_bins_limits[izbin+1], 1e-3, 0.8, outputDirectory)
+        print("\n\nThis z bin n = {}, in [{}, {}]".format(len(zbin_dataset), zmin, zmax ))
+        plotMagSFRPerformanceMatrix(zbin_dataset, zmin, zmax, 1e-3, 0.8, outputDirectory)
     mergeImagesInFolder(outputDirectory, ncols = 4)
       
 def mergeImagesInFolder(dir_path, ncols):
@@ -102,6 +104,7 @@ def plotMagSFRPerformanceMatrix(bin_dataset, zmin, zmax, catastrophic_failure_th
     
     n_sfr_bins = 4
     sfr_bins_limits = np.logspace(-1.0, 3.0, n_sfr_bins+1, endpoint=True)
+    sfr_bins_limits = [a for a in sfr_bins_limits[::-1]]
     print 'the sfr bins limits are: ' + str(sfr_bins_limits) 
     isfr = 9
     sfr_axis_ticks = ["{:.1f}".format(a) for a in sfr_bins_limits[::]]
@@ -128,7 +131,7 @@ def plotMagSFRPerformanceMatrix(bin_dataset, zmin, zmax, catastrophic_failure_th
             sfr_bin_dataset = []
             for x in range(n_mag):
                 sfr = m_bin_dataset[x][isfr]
-                if sfr >= sfr_bins_limits[isfrbin] and sfr < sfr_bins_limits[isfrbin+1]:
+                if sfr < sfr_bins_limits[isfrbin] and sfr >= sfr_bins_limits[isfrbin+1]:
                     sfr_bin_dataset.append(m_bin_dataset[x])
                  
             n_matrix[imbin][isfrbin] = len(sfr_bin_dataset) 

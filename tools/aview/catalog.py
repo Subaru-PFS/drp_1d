@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Sat Jul 25 14:39:53 2015
-
+Created on Jul 25 2015
 @author: aschmitt
 """
 import sys
@@ -190,7 +189,7 @@ class Catalog(object):
             obs_lambda_min = 3600.0
             obs_lambda_max = 9400.0
 
-        filter_type = "E"
+        filter_type = "A"
         filter_force = -1
         ctlg_rest = self.getShiftedCatalog(0.0, filter_type, filter_force)       
         nlines = len(ctlg_rest['lambda']) 
