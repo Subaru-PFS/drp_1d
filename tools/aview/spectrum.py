@@ -9,7 +9,7 @@ import os
 import sys
 from astropy.io import fits
 import pyfits
-import optparse
+import argparse
 import random
 import math
 
@@ -401,7 +401,7 @@ class Spectrum(object):
             
         print '\n'
         
-    def plotCompare(self, other_spc, amplitude = 1.0, modellinetype = "-bo", exportPath="", other2_spc=None):
+    def plotCompare(self, other_spc, amplitude = 1.0, modellinetype = "-bo", exportPath="", other_spc_list=None):
         self.fig = pp.figure( "spectrumview", figsize=(15,11))
         
         lbl = self.label
@@ -412,14 +412,20 @@ class Spectrum(object):
         self.ax = self.fig.add_subplot(111)
 
         #pp.plot(self.xvect, self.yvect, "x-")
-        self.ax.plot(self.xvect, self.yvect,  color=spcColor, label=self.name)
+        self.ax.plot(self.xvect, self.yvect,  color=spcColor, label=lbl)
         yother = [a*amplitude for a in other_spc.yvect]
         lbl = other_spc.label
         if lbl=="":
             lbl = other_spc.name
-        self.ax.plot(other_spc.xvect, yother, modellinetype, label=other_spc.name)
-        if not other2_spc==None:
-            self.ax.plot(other2_spc.xvect, other2_spc.yvect, "-r", label=other2_spc.name)
+        self.ax.plot(other_spc.xvect, yother, modellinetype, label=lbl)
+        if not other_spc_list==None:
+            for i, o2 in enumerate(other_spc_list):
+                other_spc_listColor = 1.0 - float(i)/len(other_spc_list)
+                _color = (other_spc_listColor, 0.0, 0.0)
+                lbl = o2.label
+                if lbl=="":
+                    lbl = o2.name
+                self.ax.plot(o2.xvect, o2.yvect, color=_color, label=lbl)
             
 
         pp.grid(True) # Affiche la grille
@@ -1144,21 +1150,36 @@ class Spectrum(object):
             
 
 def StartFromCommandLine( argv ) :	
-    usage = """usage: %prog [options]
-    ex: python ./spectum.py -s """
-    parser = optparse.OptionParser(usage=usage)
-    parser.add_option(u"-s", u"--spc", help="path to the fits spectrum to be plotted",  dest="spcPath", default="")
-    parser.add_option(u"-t", u"--type", help="type of spectrum, can be in teh following list {template, vvds, pfs, pfs2, muse, hplana, euclid, pfs2reech}",  dest="spcType", default="")
-    parser.add_option(u"-e", u"--export", help="export to fits format (no, yes)",  dest="export", default="no")
+    parser = argparse.ArgumentParser()
+    
+    parser.add_argument("-s", "--spc", dest="spcPath", default="",
+                    help="path to the fits spectrum to be plotted")
+    parser.add_argument("-t", "--type", 
+                        help="type of spectrum, can be in teh following list \
+                        {template, vvds, pfs, pfs2, muse, hplana, euclid, pfs2reech}",  
+                        dest="spcType",     
+                        default="")                
+    parser.add_argument("-o", "--otherspc", 
+                        help="path to the other fits spectrum to be plotted",  
+                        dest="otherspcPath", default="")
+    parser.add_argument("-e", "--export", 
+                        help="export to fits format (no, yes)",  
+                        dest="export", default="no")
+    parser.add_argument("-y", "--otherspctype", help="type of other spc",  
+                        dest="otherspcType", default="template")
+    parser.add_argument(u"-p", u"--otherNspc", action='append', 
+                        help="path to the second, third, \
+                        and more...fits spectrum to be plotted", 
+                        dest="otherNspcPath", default=[])
+    parser.add_argument(u"-u", u"--otherNspctype", 
+                      help="type of second other spc",  dest="otherNspcType", 
+                      default="")
 
-    parser.add_option(u"-o", u"--otherspc", help="path to the other fits spectrum to be plotted",  dest="otherspcPath", default="")
-    parser.add_option(u"-y", u"--otherspctype", help="type of other spc",  dest="otherspcType", default="template")
-    parser.add_option(u"-p", u"--otherspc2", help="path to the seond other fits spectrum to be plotted",  dest="other2spcPath", default="")
-    parser.add_option(u"-u", u"--otherspctype2", help="type of second other spc",  dest="other2spcType", default="template")
+    options = parser.parse_args()
 
-    (options, args) = parser.parse_args()
+    print options
 
-    if( len( args ) == 0 ) :
+    if os.path.exists(options.spcPath) :
         print('using full path: {0}'.format(options.spcPath))
         s = Spectrum(options.spcPath, options.spcType, snorm=False)
         #s.applyRedshift(0.25)
@@ -1191,11 +1212,15 @@ def StartFromCommandLine( argv ) :
             s.plot()
         else:
             s2 = Spectrum(options.otherspcPath, options.otherspcType, snorm=False)
-            if options.other2spcPath == "":
+            if len(options.otherNspcPath) == 0:
                 s.plotCompare(s2, 1.0, modellinetype = "b-")
             else:
-                s3 = Spectrum(options.other2spcPath, options.other2spcType, snorm=False)
-                s.plotCompare(s2, 1.0, modellinetype = "b-", exportPath="", other2_spc=s3)
+                others_list = []
+                for o in options.otherNspcPath:
+                    print("o = {}".format(o))
+                    others_list.append(Spectrum(o, options.otherNspcType, snorm=False))
+                
+                s.plotCompare(s2, 1.0, modellinetype = "b-+", exportPath="", other_spc_list=others_list)
             
     else :
         print("Error: invalid argument count")
@@ -1211,194 +1236,6 @@ def Main( argv ) :
  
 if __name__ == '__main__':
     print "Spectrum"
-    if 1:
-        Main( sys.argv )
+    Main( sys.argv )
            
-    if 0: #deprecated, but not fully covered by the command line args functionnality...
-        print "Spectrum plotting"
-        # plot single spectrum
-        if 0:
-            path = "/home/aschmitt/data/pfs/pfs_lbg/lbgabs_1K_2z3_20J22.5"
-            #name = "EZ_fits-W-ErrF_9.fits"
-            #name = "EZ_fits-W-F_9.fits"
-            name = "EZ_fits-W-TF_445.fits"
-            
-            path = "/home/aschmitt/data/pfs/pfs_reallyjustline/reallyjustlinecont_1k_0.5z1.8_0.1A100/"
-            #name = "EZ_fits-W-TF_929.fits"
-            
-            path = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/../1D"
-            name = "sc_020086397_F02P016_vmM1_red_31_1_atm_clean.fits"
-              
-            #path = "/home/aschmitt/data/pfs/all_fromSara/SET_reallyjustlinecont_1k_0.5z1.8_0.1A100/SET_reallyjustlinecont_1k_0.5z1.8_0.1A100"
-            #path = "/home/aschmitt/data/pfs/all_fromSara/reech_SET_reallyjustlinecont_1k_0.5z1.8_0.1A100/SET_reallyjustlinecont_1k_0.5z1.8_0.1A100"        
-            #name = "SET_reallyjustlinecont_1k_0.5z1.8_0.1A100_Version0.fits"
-            
-            #path = "/home/aschmitt/data/pfs/reech_fromSara/PFS_data_FITS_reechantillonne_noRMSE_trueflux_FILES/trueFlux/SET_reallyjustlinecont_1k_0.5z1.8_0.1A100/"
-            #name = "SET_reallyjustlinecont_1k_0.5z1.8_0.1A100_Version929.fits"
-    
-            path = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/Templates/fits"
-            name = "NEW_Im_extended_blue.fits"
-            
-            path = "/home/aschmitt/data/pfs/pfs_testsimu_20151105/470026900000130.24-0.426_20.3_20.4vacLine"
-            name = "EZ_fits-W-TF_0.fits"
-            
-            path = "/home/aschmitt/data/hplana/Residual_fits"
-            name = "0278-51900-0151.fits"
-    
-            spath = os.path.join(path,name)
-            print('using full path: {0}'.format(spath))
-            s = Spectrum(spath, "hplana")
-            print(s) 
-            s.plot()
-        
-        # plot single template
-        if 0:
-            path = "/home/aschmitt/code/python/simulation_perf_matrix_linemodel/templates"
-            name = "NEW_Im_extended.dat"
-            #path = "/home/aschmitt/data/pfs/pfs_lbg/amazed/Templates/ExtendedGalaxyEL2/galaxy"
-            #name = "sadataExtensionData.dat"
-            
-            #path = "/home/aschmitt/data/vvds/vvds2/cesam_vvds_z0_F02_DEEP/amazed/output/sc_020103374_F02P021_M1_red_49_1_atm_clean"
-            #name = "linemodelsolve.linemodel_spc_extrema_0.csv"
-    
-            spath = os.path.join(path,name)
-            print('using full path: {0}'.format(spath))
-            s = Spectrum(spath, 'template', snorm=True)
-            print(s)
-            s.interpolate()
-            #s.exportFits()
-            s.plot()   
-            
-        # plot single template, interp. normalized, exported as fits
-        if 0:
-            path = "/home/aschmitt/code/python/simulation_perf_matrix_linemodel/templates"
-            name = "spectrum_exported.fits"
-            #path = "/home/aschmitt/data/pfs/pfs_lbg/amazed/Templates/ExtendedGalaxyEL2/galaxy"
-            #name = "sadataExtensionData.dat"
-            
-            #path = "/home/aschmitt/data/vvds/vvds2/cesam_vvds_z0_F02_DEEP/amazed/output/sc_020103374_F02P021_M1_red_49_1_atm_clean"
-            #name = "linemodelsolve.linemodel_spc_extrema_0.csv"
-    
-            spath = os.path.join(path,name)
-            print('using full path: {0}'.format(spath))
-            s = Spectrum(spath)
-            print(s)
-            s.plot()
-        
-        # plot model
-        if 0:
-            path = "/home/aschmitt/data/vvds/vvds2/cesam_vvds_z0_F02_DEEP/amazed/output/sc_020103374_F02P021_M1_red_49_1_atm_clean"
-            name = "linemodelsolve.linemodel_spc_extrema_0.csv"
-    
-            spath = os.path.join(path,name)
-            print('using full path: {0}'.format(spath))
-            s = Spectrum(spath, 'template')
-            print(s) 
-            s.plot()
-            
-                
-        # extend and plot single template
-        if 0:
-            print("extend and plot single template")
-            path = "/home/aschmitt/data/pfs/pfs_lbg/amazed/Templates/ExtendedGalaxyEL2/emission"
-            name = "NEW_Im_extended_blue.dat"
-            #path = "/home/aschmitt/data/pfs/pfs_lbg/amazed/Templates/ExtendedGalaxyEL2/galaxy"
-            #name = "sadataExtensionData.dat"
-            
-            path = "/home/aschmitt/data/vvds/vvds2/cesam_vvds_z0_F02_DEEP/amazed/output/sc_020103374_F02P021_M1_red_49_1_atm_clean"
-            name = "linemodelsolve.linemodel_spc_extrema_0.csv"
-            
-            path = "/home/aschmitt/Documents/amazed/methods/linemodel/simulation_usingLinemodel/continuum_templates_work/templates_work_20160415/2newtemplates_4extension"
-            name = "NEW_Im_extended_blue.dat"
-    
-            spath = os.path.join(path,name)
-            print('using full path: {0}'.format(spath))
-            s = Spectrum(spath, 'template')
-            s.extendWavelengthRangeRed(13000)
-            s.extendWavelengthRangeBlue(100)
-            outputpath = path
-            soutputpath = os.path.join(outputpath, name+"modified.dat")
-            s.saveTpl(soutputpath)
-            print(s) 
-            s.plot()
-            
-        # compare templates
-        if 1:          
-            path = "/home/aschmitt/data/pfs/pfs_lbg/amazed/Templates/ExtendedGalaxyEL2/emission"
-            name = "NEW_Im_extended_blue.dat"
-            #name = "NEW_Im_extended.dat" #1
-            #name = "NEW_Sbc_extended.dat" #1        
-            #name = "Scd.txt" #1
-            #name = "StarBurst1.txt" #2
-            #name = "StarBurst2.txt" #2
-            #name = "StarBurst3.txt" #2
-            
-            path = "/home/aschmitt/code/python/linemodel_estimateContinuum/templates/templates_forSimulationLm_selected_and_extended_20160415"
-            name = "BulgedataExtensionData_extMarch2016.dat" 
-            #name = "NEW_Im_extended_ext20160415.dat" 
-    
-            
-            spath = os.path.join(path,name)
-            print('using full path: {0}'.format(spath))
-            s1 = Spectrum(spath, 'template', snorm=False)
-            print(s1)
-            #s.plot()
-            
-            path = "/home/aschmitt/code/python/linemodel_estimateContinuum/continua_output" 
-            name = "spectrum_tpl_BulgedataExtensionData_extMarch2016.dat_TF_continuum.txt"
-            #name = "spectrum_tpl_NEW_Im_extended_ext20160415.dat_TF_continuum.txt"
-            name ="linemodelsolve.linemodel_continuum_extrema_0.csv_aview_handdrawncurve2.dat"
-            
-            if 1:
-                path = "/home/aschmitt/code/python/linemodel_estimateContinuum/templates/templates_forSimulationLm_selected_and_extended_20160415"
-                name = "BulgedataExtensionData_extMarch2016.dat_aview_handdrawncurve.dat"
- 
-            spath = os.path.join(path,name)
-            print('using full path: {0}'.format(spath))
-            s2 = Spectrum(spath, 'template', snorm=False)
-            #s2.yvect =  s2.smoothGaussian(s2.yvect,degree=10)
-            print(s2)
-            
-            s1.plotCompare(s2, 1.0, modellinetype = "k-x")
-            #s1.plotCompare(s2, s1.ysum/s2.ysum)
-            
-        # compare spectrum
-        if 0:
-            path = "/home/aschmitt/data/pfs/pfs_reallyjustline/reallyjustlinecont_1k_0.5z1.8_0.1A100/"
-            name = "EZ_fits-W-F_622.fits"
-            path = "/home/aschmitt/data/pfs/pfs_reallyjustline/reallyjustlinecont_1k_0.5z1.8_0.1A100/"
-            name = "EZ_fits-W-F_0.fits"
-            path = "/home/aschmitt/data/pfs/all_fromSara/reech_SET_reallyjustlinecont_1k_0.5z1.8_0.1A100/SET_reallyjustlinecont_1k_0.5z1.8_0.1A100"        
-            name = "SET_reallyjustlinecont_1k_0.5z1.8_0.1A100_Version0.fits"
-            path = "/home/aschmitt/data/pfs/pfs_reallyjustline/reallyjustlinecont_1k_0.5z1.8_0.1A100/"
-            name = "FILTERED_REECH_SET_reallyjustlinecont_1k_0.5z1.8_0.1A100_Version0.fits"
-    
-            path = "/home/aschmitt/gitlab/amazed/bin/"
-            name = "spectrum.fits"     
-            #name = "spectrum4linefit.fits"     
-         
-            spath = os.path.join(path,name)
-            print('using full path: {0}'.format(spath))
-            s1 = Spectrum(spath)
-            print(s1) 
-            #s1.plot() 
-            
-            #path = "/home/aschmitt/data/pfs/reech_fromSara/PFS_data_FITS_reechantillonne_noRMSE_trueflux_FILES/trueFlux/SET_reallyjustlinecont_1k_0.5z1.8_0.1A100/"
-            #name = "SET_reallyjustlinecont_1k_0.5z1.8_0.1A100_Version929.fits"
-            path = "/home/aschmitt/data/pfs/all_fromSara/SET_reallyjustlinecont_1k_0.5z1.8_0.1A100/SET_reallyjustlinecont_1k_0.5z1.8_0.1A100"
-            name = "SET_reallyjustlinecont_1k_0.5z1.8_0.1A100_Version0.fits"
-            
-            path = "/home/aschmitt/data/pfs/pfs_reallyjustline/reallyjustlinecont_1k_0.5z1.8_0.1A100/"
-            name = "FILTERED_SET_reallyjustlinecont_1k_0.5z1.8_0.1A100_Version0.fits"
-            
-            path = "/home/aschmitt/gitlab/amazed/bin/"
-            name = "model.fits"
-            #name = "model4linefit.fits"
-            spath = os.path.join(path,name)
-            print('using full path: {0}'.format(spath))
-            s2 = Spectrum(spath)
-            print(s2) 
-            
-            s1.plotCompare(s2, 1.0, modellinetype = "bo-")    
-               
-            
+   

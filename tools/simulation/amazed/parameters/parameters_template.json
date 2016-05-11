@@ -30,7 +30,7 @@
             "velocityemission": "velocityemissionxxx",
             "velocityabsorption": "velocityabsorptionxxx",
             "continuumreestimation": "no",
-            "rules": "balmer",
+            "rules": "rulesxxx",
             "extremacount": "10",
             "velocityfit": "no"
         }

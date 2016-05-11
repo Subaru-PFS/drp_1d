@@ -308,22 +308,28 @@ class ResultChisquare(object):
                 cmax = self.yvect[x]
              
         
-        spcColor = '0.5'
+        selfColor = 'g'#, '0.5'
         fig, ax1 = pp.subplots()
-        ax1.plot(other_spc.xvect, other_spc.yvect, color=spcColor,linewidth = 2.0, label=other_spc.label)
-        ax1.set_ylabel('Chisquare - continuum subtracted')
+        ax1.plot(other_spc.xvect, other_spc.yvect, color=selfColor,linewidth = 2.0, label=other_spc.label)
+        ax1.set_ylabel('Least-Square Error - continuum subtracted', color=selfColor)
         
-        ax2 = ax1.twinx()
-        ax2.plot(self.xvect, self.yvect, 'r', linestyle = "dashed", linewidth = 1.0, label=self.label)
-
-        if 0:  
-            chi2path3 = "/home/aschmitt/data/vuds/VUDS_flag3_4/amazed/output/sc_530036900_F53P001_join_seq.fits_60_1_atm_clean/COMBINE-ave-Lya-emstr-AND-StarBurst3.txt/chisquare2solve.chisquare.csv"
+        ax2 = ax1.twinx()        
+        otherColor = 'b'
+        if 1:
+            ax2.plot(self.xvect, self.yvect, otherColor, linestyle = "-", linewidth = 1.0, label=self.label)
+            ax2.set_ylabel('Least-Square Error - continuum', color=otherColor)
+        else:  
+            ax2.plot(self.xvect, self.yvect, otherColor, linestyle = "dashed", linewidth = 1.0, label=self.label)
+            
+            #chi2path3 = "/home/aschmitt/data/vuds/VUDS_flag3_4/amazed/output/sc_530036900_F53P001_join_seq.fits_60_1_atm_clean/COMBINE-ave-Lya-emstr-AND-StarBurst3.txt/chisquare2solve.chisquare.csv"
+            chi2path3 = "/run/media/aschmitt/al1passport/data_transfert/res_20160511_chisquareRaw/sc_530002417_F53P002_join_A_93_1_atm_clean/NEW-Im-extended.txt/chisquare2solve.chisquare.csv"            
             s3 = ResultChisquare(chi2path3)
-            ax2.plot(s3.xvect, s3.yvect, 'r', linestyle = "-", linewidth = 2.0, label=s3.label)
+            ax2.plot(s3.xvect, s3.yvect, otherColor, linestyle = "-", linewidth = 2.0, label=s3.label)
+            ax2.set_ylabel('Least-Square Error - continuum (dashed) and raw (line)', color=otherColor)
         
-        ax2.set_ylabel('Chisquare - continuum (dashed) and raw (line)', color='r')
+        
         for tl in ax2.get_yticklabels():
-            tl.set_color('r')
+            tl.set_color(otherColor)
 
         pp.grid(True) # Affiche la grille
         #pp.legend()

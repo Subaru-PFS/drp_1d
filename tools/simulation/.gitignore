@@ -1,5 +1,7 @@
 amazed/output/
 simulation_output/
+simulation_euclid_output/
+simulation_pfs_output/
 tmp/
 amazed/linecatalogs/linemodelsolve.linemodel_fit_extrema_0.csv
 amazed/parameters/parameters.json

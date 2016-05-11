@@ -21,8 +21,8 @@ import utilbins
 
 #parameters
 enablePlot = False
-#optMission = "euclid"
-optMission = "pfs"
+optMission = "euclid"
+#optMission = "pfs"
 
 if optMission == "euclid":
     n_count_per_bin = 1
@@ -35,6 +35,7 @@ if optMission == "euclid":
     #optLineAmplitudes = "pseudorandom"
     optVelocity = "fixed"
     optLineWidth = "nispsim2016"
+    optRules = "no"
 elif optMission == "pfs":
     n_count_per_bin = 10
     lambda_obs_min = 3800.0
@@ -45,11 +46,12 @@ elif optMission == "pfs":
     optLineAmplitudes = "pseudorandom"
     optVelocity = "random"
     optLineWidth = "combined"
+    optRules = "balmer"
 
 
 temp_directory = "./tmp/"
 amazed_directory = "./amazed/"
-output_directory = "./simulation_output/"
+output_directory = "./simulation_{}_output/".format(optMission)
 refz_fname = os.path.join(output_directory, "refz.txt")
 if os.path.exists(refz_fname):
     print("Deleting existing refz file: {}".format(refz_fname))
@@ -129,8 +131,8 @@ while not allfull:
     elif optVelocity == "fixed":
         #SigmaA = 311.0
         #SigmaE = 111.0 
-        SigmaA = 51.0
-        SigmaE = 51.0 
+        SigmaA = 175.0
+        SigmaE = 175.0
         
     
     #prepare the parameters file for the amazed pipeline
@@ -145,6 +147,7 @@ while not allfull:
     data = data.replace("velocityabsorptionxxx", "{}".format(SigmaA))
     data = data.replace("instresolutionionxxx", "{}".format(R))
     data = data.replace("linewidthtypexxx", "{}".format(optLineWidth))
+    data = data.replace("rulesxxx", "{}".format(optRules))
     
     #print("parameters file generated content is :\n{}".format(data))
     params_fname = os.path.join(amazed_directory, "parameters/parameters.json".format())
@@ -170,7 +173,6 @@ while not allfull:
         model_amps = modelresult.ModelResult(mAmpsTplpath)
         model_amps.randomAmplitudes(coeffE=coeffE_SFR, coeffA=coeffA_ISM)
     elif optLineAmplitudes == "file":
-        #tplmodelresultfilepath = "/home/aschmitt/gitlab/cpf-redshift/tools/simulation/templates_lines/201604291255_id0_z1.11448_mag20.6_sfr1.0_linemodel_amps.csv"   
         tplmodelresultfilepath = "/home/aschmitt/gitlab/cpf-redshift/tools/simulation/templates_lines/201605022133_id0_z1.12688_mag20.7_sfr10.0_linemodel_amps.csv"   
         model_amps = modelresult.ModelResult(tplmodelresultfilepath)     
     model_amps.save(mAmpsOutputpath)
@@ -215,18 +217,13 @@ while not allfull:
             model.exportFits(output_directory, "{}".format(_spc_name), addNoise=False, exportNoiseSpectrum=False)
             model.exportFits(output_directory, "{}".format(_spc_name), addNoise=True, exportNoiseSpectrum=True)
             
-            _spc_name = spc_simu_name + "_roll0"
-            model_roll = model.copy()
-            model_roll.interpolate(dx=dlambda)
-            model_roll.exportFits(output_directory, "{}".format(_spc_name), addNoise=False, exportNoiseSpectrum=False)
-            model_roll.exportFits(output_directory, "{}".format(_spc_name), addNoise=True, exportNoiseSpectrum=True)
-            
-            delta_roll1 = 0.25
-            _spc_name = spc_simu_name + "_roll1"
-            model_roll = model.copy()
-            model_roll.interpolate(dx=dlambda, offsetx=dlambda*delta_roll1)
-            model_roll.exportFits(output_directory, "{}".format(_spc_name), addNoise=False, exportNoiseSpectrum=False)
-            model_roll.exportFits(output_directory, "{}".format(_spc_name), addNoise=True, exportNoiseSpectrum=True)
+            delta_rolls = [0.0, 0.25, 0.7, 0.0]
+            for i,d in enumerate(delta_rolls):
+                _spc_name = spc_simu_name + "_roll{}".format(i)
+                model_roll = model.copy()
+                model_roll.interpolate(dx=dlambda, offsetx=dlambda*d)
+                model_roll.exportFits(output_directory, "{}".format(_spc_name), addNoise=False, exportNoiseSpectrum=False)
+                model_roll.exportFits(output_directory, "{}".format(_spc_name), addNoise=True, exportNoiseSpectrum=True)
             
         #save the linemodel input amplitude fits csv file  
         model_amps_savePath = os.path.join(output_directory, "{}_linemodel_amps.csv".format(spc_simu_name))        
@@ -257,7 +254,7 @@ while not allfull:
             ubins.exportBinCountPlot(bin_count_path)
 
 
-    #break
+    break
     #time.sleep(2)
     
     

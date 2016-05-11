@@ -686,7 +686,7 @@ def plotHist(yvect, outFigFile):
     else:
         vectErrorBins = np.logspace(-5, 1, 500, endpoint=True)
         ybins = processHistogram(yvect=yvect, bins=vectErrorBins, outFile="")
-        pp.plot(vectErrorBins, ybins)
+        pp.plot(vectErrorBins, ybins, "+-")
         pp.xlim([1e-5, 10])
         pp.ylim([0, 100])
     ##bar
