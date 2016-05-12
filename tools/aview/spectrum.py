@@ -16,6 +16,10 @@ import math
 from bokeh.plotting import figure, output_file, show
         
 import matplotlib.pyplot as pp
+import seaborn as sns
+sns.set_context("poster")
+sns.set_style("whitegrid")
+
 import numpy as np
 from scipy import interpolate
 
@@ -68,6 +72,7 @@ class Spectrum(object):
         if not len(xvect) == len(yvect):
             stop
             
+        self.n = len(xvect)
         self.yvect = yvect
         self.xvect = xvect
         self.ysum = 0.0
@@ -370,9 +375,10 @@ class Spectrum(object):
         
         return a
         
-    def plot(self, saveFullDirPath="", lstyle="b-"):
+    def plot(self, saveFullDirPath="", lstyle="b-+"):
         pp.ion()
         self.fig = pp.figure(1)
+        #self.fig = sns.pyplot.figure(1)
         self.canvas = self.fig.canvas
         self.ax = self.fig.add_subplot(111)
 
@@ -1015,13 +1021,108 @@ class Spectrum(object):
             for x in range(self.n):
                 if self.xvect[x]<1216:
                     self.yvect[x] = 1e-24
+          
+    def applyLyaExtinctionMeiksin(self):
+        #using Meiksin curves 3.0 : hardcoded for redshift = 3.0
+        meiksin = np.loadtxt("/home/aschmitt/Documents/amazed/methods/linemodel/simulation_usingLinemodel/continuum_templates_work/templates_work_20160511/Meiksin_Var_curves_3.0.txt")        
+        colNum = 6
+        xmeiksin = meiksin[:,0]
+        ymeiksin = meiksin[:,colNum]
+        if 0:        
+            pp.plot(xmeiksin, ymeiksin)
+            pp.show()
+            print("meiksin val = {}".format(meiksin[0][0])) 
+            print("meiksin n = {}".format(len(xmeiksin)))        
+            return
+        
+        f = interpolate.interp1d(xmeiksin, ymeiksin)
+        weighting = np.zeros(len(self.xvect))
+        for i,x in enumerate(self.xvect):
+            if x<xmeiksin[0]:
+                weighting[i] = ymeiksin[0]
+            if x>=xmeiksin[0] and x<=xmeiksin[-1]:
+                weighting[i] = f(self.xvect[i]) 
+            if x>xmeiksin[-1]:
+                weighting[i] = ymeiksin[-1] 
             
+        if 0:        
+            pp.plot(self.xvect, weighting)
+            pp.title("weighting")
+            pp.show()       
+            return
+        
+        for i,x in enumerate(self.xvect):
+            self.yvect[i] *= weighting[i]
     
     def correctZeros(self, replacementValue=1e-24):
         for x in range(0,self.n):
             if self.yvect[x]<replacementValue:
                 self.yvect[x]=replacementValue
                 
+    def interleave(self, otherspc, selfNoise, otherNoise):
+        new_xvect = self.xvect + otherspc.xvect
+        #print("new n = {}".format(new_xvect))
+        isorted = np.argsort(new_xvect)
+        #print("isorted = {}".format(isorted))
+        
+        final_xvect = []
+        final_yvect = []
+        final_noise_yvect = []
+        for k, idx in enumerate(isorted):
+            if k>0 and new_xvect[idx]==new_xvect[isorted[k-1]]:
+                continue
+            if k<len(isorted)-1 and new_xvect[idx]==new_xvect[isorted[k+1]]:
+                x = new_xvect[idx]
+                if idx >= self.n:
+                    i = idx-self.n
+                    y1 = otherspc.yvect[i]
+                    w1 = otherNoise.yvect[i]
+                else:
+                    y1 = self.yvect[idx]
+                    w1 = self.yvect[idx]
+                print("y1={} and w1={}".format(y1, w1))
+                if isorted[k+1] >= self.n:
+                    i = isorted[k+1]-self.n
+                    y2 = otherspc.yvect[i]
+                    w2 = otherNoise.yvect[i]
+                else:
+                    y2 = self.yvect[isorted[k+1]]
+                    w2 = self.yvect[isorted[k+1]]
+                print("y2={} and w2={}".format(y2, w2))
+                y = (1.0/(1/(w1**2)+1/(w2**2)))*(y1/w1**2 + y2/w2**2)
+                ynoise = np.sqrt(w1**2+w2**2)
+                print("y={} and ynoise={}".format(y, ynoise))
+            else:
+                x = new_xvect[idx]
+                if idx >= self.n:
+                    i = idx-self.n
+                    y = otherspc.yvect[i]
+                    ynoise = otherNoise.yvect[i]
+                else:
+                    y = self.yvect[idx]
+                    ynoise = selfNoise.yvect[idx]
+                    
+            final_xvect.append(x)
+            final_yvect.append(y)
+            final_noise_yvect.append(ynoise)
+        
+        self.n = len(final_xvect)
+        self.yvect = final_yvect
+        self.xvect = final_xvect
+        self.ysum = 0.0
+        for x in range(0,self.n):
+            self.ysum += self.yvect[x]
+        
+        noiseInterleaved = Spectrum("", "empty")
+        noiseInterleaved.n = len(final_xvect)
+        noiseInterleaved.yvect = final_noise_yvect
+        noiseInterleaved.xvect = final_xvect
+        noiseInterleaved.ysum = 0.0
+        for x in range(0,noiseInterleaved.n):
+            noiseInterleaved.ysum += noiseInterleaved.yvect[x]
+        
+        return noiseInterleaved
+        
          
     def setMagIAB(self, magIAB):
         dMThreshold = 0.1
@@ -1191,6 +1292,10 @@ def StartFromCommandLine( argv ) :
 #        s.applyLambdaCrop(3800, 12600)
 #        s.interpolate(dx=0.1) #high sampling for the synthesis process
 
+#        #20160512: applied lya extinction to bulge continuum template
+#        s.applyLyaExtinctionMeiksin()
+#        soutputpath = options.spcPath+"modified.dat"
+#        s.saveTpl(soutputpath)
         
         if options.otherspcPath == "":
 #            if 0:            

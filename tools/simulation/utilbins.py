@@ -70,15 +70,15 @@ class UtilBins(object):
             #self.template_bins.append("vvds_reddestdataExtensionData_extMarch2016.dat")
             
             ##20160426
-            self.template_bins.append("BulgedataExtensionData_extMarch2016_corrected20160426_interp0429.dat")
+            self.template_bins.append("BulgedataExtensionData_extMarch2016_corrected20160426_interp0429_lyaExt0512.dat")
             self.template_bins.append("NEW_Im_extended_blue_corrected20160426_interp0429.dat")
             self.template_bins.append("NEW_Im_extended_ext20160415_corrected20160426_interp0429.dat")
             self.template_bins.append("NEW_Sbc_extended_extMarch2016corrected20160426_interp0429.dat")
-            self.template_bins.append("vvds_reddestdataExtensionData_extMarch2016_corrected20160426_interp0429.dat")
+            self.template_bins.append("vvds_reddestdataExtensionData_extMarch2016_corrected20160426_interp0429_lyaExt0512.dat")
         elif optMission=="euclid":
             self.template_bins.append("flat.dat")
         elif optMission=="fixed":
-            self.template_bins.append("vvds_reddestdataExtensionData_extMarch2016_corrected20160426_interp0429.dat")
+            self.template_bins.append("vvds_reddestdataExtensionData_extMarch2016_corrected20160426_interp0429_lyaExt0512.dat")
             
         self.n_template_bins = len(self.template_bins)
         self.idx_current_template = 0
