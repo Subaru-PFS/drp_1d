@@ -9,6 +9,9 @@ import math
 import optparse
 
 import matplotlib.pyplot as pp
+import seaborn as sns
+sns.set_context("poster")
+sns.set_style("whitegrid")
 import scipy.interpolate
 import numpy as np
 
@@ -310,36 +313,44 @@ class ResultChisquare(object):
         
         selfColor = 'g'#, '0.5'
         fig, ax1 = pp.subplots()
-        ax1.plot(other_spc.xvect, other_spc.yvect, color=selfColor,linewidth = 2.0, label=other_spc.label)
-        ax1.set_ylabel('Least-Square Error - continuum subtracted', color=selfColor)
+        lns1 = ax1.plot(other_spc.xvect, other_spc.yvect, color=selfColor,linewidth = 2.0, label=other_spc.label)
+        ax1.set_ylabel('Least-Square Error', color=selfColor)
+        for tl in ax1.get_yticklabels():
+            tl.set_color(selfColor)
         
         ax2 = ax1.twinx()        
         otherColor = 'b'
         if 1:
             ax2.plot(self.xvect, self.yvect, otherColor, linestyle = "-", linewidth = 1.0, label=self.label)
-            ax2.set_ylabel('Least-Square Error - continuum', color=otherColor)
+            ax2.set_ylabel('Least-Square Error', color=otherColor)
         else:  
-            ax2.plot(self.xvect, self.yvect, otherColor, linestyle = "dashed", linewidth = 1.0, label=self.label)
+            lns2 = ax2.plot(self.xvect, self.yvect, otherColor, linestyle = "dashed", linewidth = 1.0, label="continuum")# label=self.label)
             
             #chi2path3 = "/home/aschmitt/data/vuds/VUDS_flag3_4/amazed/output/sc_530036900_F53P001_join_seq.fits_60_1_atm_clean/COMBINE-ave-Lya-emstr-AND-StarBurst3.txt/chisquare2solve.chisquare.csv"
-            chi2path3 = "/run/media/aschmitt/al1passport/data_transfert/res_20160511_chisquareRaw/sc_530002417_F53P002_join_A_93_1_atm_clean/NEW-Im-extended.txt/chisquare2solve.chisquare.csv"            
+            #chi2path3 = "/run/media/aschmitt/al1passport/data_transfert/res_20160511_chisquareRaw/sc_530002417_F53P002_join_A_93_1_atm_clean/NEW-Im-extended.txt/chisquare2solve.chisquare.csv"            
+            #chi2path3 = "/run/media/aschmitt/al1passport/data_transfert/res_20160511_chisquareRaw/sc_530004745_F53P002_join_A_46_1_atm_clean/COMBINE-ave-Lya-abs-AND-StarBurst1.txt/chisquare2solve.chisquare.csv"            
+            chi2path3 = "/run/media/aschmitt/al1passport/data_transfert/res_20160511_chisquareRaw/sc_530011852_F53P002_join_A_56_1_atm_clean/COMBINE-ave-Lya-emstr-AND-Scd.txt/chisquare2solve.chisquare.csv"            
             s3 = ResultChisquare(chi2path3)
-            ax2.plot(s3.xvect, s3.yvect, otherColor, linestyle = "-", linewidth = 2.0, label=s3.label)
-            ax2.set_ylabel('Least-Square Error - continuum (dashed) and raw (line)', color=otherColor)
+            lns3 = ax2.plot(s3.xvect, s3.yvect, otherColor, linestyle = "-", linewidth = 2.0, label="raw")# label=s3.label)
+            ax2.set_ylabel('Least-Square Error', color=otherColor)
         
         
         for tl in ax2.get_yticklabels():
             tl.set_color(otherColor)
 
         pp.grid(True) # Affiche la grille
-        #pp.legend()
+        if 0:
+            # added these three lines
+            lns = lns1+lns2+lns3
+            labs = [l.get_label() for l in lns]
+            pp.legend(lns, labs, loc=0)
         if not self.forcePlotXIndex:
             ax1.set_xlabel('z')
         else:
             ax1.set_xlabel('index')
         #pp.ylabel('y')
         #pp.title(self.name) # Titre
-        pp.ylim([cmin,cmax])
+        #pp.ylim([cmin,cmax])
         #pp.savefig('ExempleTrace') # sauvegarde du fichier ExempleTrace.png
         pp.show()
         print '\n'

@@ -96,7 +96,7 @@ def plotMagSFRPerformanceMatrix(bin_dataset, zmin, zmax, catastrophic_failure_th
     """
 
     #mag_bins_limits = np.linspace(16.0, 30.0, n_mag_bins+1, endpoint=True)
-    mag_bins_limits = [12.0, 21.0, 22.0, 23.0, 24.0, 25.0, 26.0, 27.0, 28.0, 32.0]
+    mag_bins_limits = [20.0, 21.0, 22.0, 23.0, 24.0, 25.0, 26.0, 27.0, 28.0, 30.0]
     #mag_bins_limits = [20.0, 21.0, 22.0, 23.0, 24.0, 25.0, 26.0]
     n_mag_bins = len(mag_bins_limits)-1
     print 'the mag bins limits are: ' + str(mag_bins_limits)  
@@ -147,6 +147,9 @@ def plotMagSFRPerformanceMatrix(bin_dataset, zmin, zmax, catastrophic_failure_th
                 matrix[imbin][isfrbin] = -1
             else:
                 matrix[imbin][isfrbin] = 1
+            s = np.log( (success_rate_matrix[imbin][isfrbin]-success_rate_thres)/(1-success_rate_thres) +1)
+            matrix[imbin][isfrbin] = (s + np.sign(s)*1.5)
+            
             
     pp.clf()
     pp.close()
@@ -156,12 +159,14 @@ def plotMagSFRPerformanceMatrix(bin_dataset, zmin, zmax, catastrophic_failure_th
     #i = ax.matshow(np.transpose(matrix), interpolation='nearest', aspect='equal', cmap=cmap)
     
     cmap = pp.get_cmap('seismic')
-    cmin = -1.4
-    cmax = 1.4
+    cmap = pp.get_cmap('RdYlBu')
+    cmapMaxVal = np.log(2.0)+1.5
+    cmin = -cmapMaxVal
+    cmax = cmapMaxVal
     
     use_transparency = True
     if use_transparency: 
-        max_alpha_map = 75.0
+        max_alpha_map = 50.0
         alpha_map = np.zeros((n_mag_bins,n_sfr_bins))
         for imbin in range(n_mag_bins):
             for isfrbin in range(n_sfr_bins):

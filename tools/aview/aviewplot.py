@@ -135,7 +135,7 @@ class AViewPlot(object):
         
         
         #do the plotting
-        fig = pp.figure( "aview", figsize=(15,11))
+        fig = pp.figure( "aview", figsize=(15,15))
         gs = gridspec.GridSpec(3, 1, height_ratios=[12,2,2])
         ax1 = pp.subplot(gs[0]) # main plotting area = spectrum
         #ax1.plot(...)
@@ -146,9 +146,9 @@ class AViewPlot(object):
         # SPECTRUM
         spcColor = '0.6'
         if not self.forcePlotXIndex:
-            ax1.plot(self.sxvect, self.syvect, color = spcColor, label='spectrum')
+            ax1.plot(self.sxvect, self.syvect, color = spcColor, label='Flux')
         else:
-            ax1.plot(self.syvect, color = spcColor, label='spectrum')
+            ax1.plot(self.syvect, color = spcColor, label='Flux')
         if not self.forcePlotNoTemplate:
             if not self.forcePlotXIndex:
                 ax1.plot(self.txvect, self.tyvect, 'b', label='shifted template')
@@ -265,8 +265,8 @@ class AViewPlot(object):
              ax3.set_xlabel('Angstrom')
         else:
             ax3.set_xlabel('index')
-        ax1.set_ylabel('spectrum')
-        ax2.set_ylabel('noise')
+        ax1.set_ylabel('Flux')
+        ax2.set_ylabel('Noise')
         ax1.set_title(self.name) # Titre
         
         
