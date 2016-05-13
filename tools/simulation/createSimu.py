@@ -125,12 +125,13 @@ while not allfull:
     text_file.write("{}".format(data))
     text_file.close()
     
+
+    #SigmaA = 311.0
+    #SigmaE = 111.0 
     if optVelocity == "random":
         SigmaE = ubins.getRandVelocity()
         SigmaA = ubins.getRandVelocity()        
     elif optVelocity == "fixed":
-        #SigmaA = 311.0
-        #SigmaE = 111.0 
         SigmaA = 175.0
         SigmaE = 175.0
         
