@@ -21,8 +21,8 @@ import utilbins
 
 #parameters
 enablePlot = False
-optMission = "euclid"
-#optMission = "pfs"
+#optMission = "euclid"
+optMission = "pfs"
 
 if optMission == "euclid":
     n_count_per_bin = 1
@@ -254,7 +254,7 @@ while not allfull:
             ubins.exportBinCountPlot(bin_count_path)
 
 
-    break
+    #break
     #time.sleep(2)
     
     
