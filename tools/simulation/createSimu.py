@@ -21,11 +21,11 @@ import utilbins
 
 #parameters
 enablePlot = False
-#optMission = "euclid"
-optMission = "pfs"
+optMission = "euclid"
+#optMission = "pfs"
 
 if optMission == "euclid":
-    n_count_per_bin = 1
+    n_count_per_bin = 100
     lambda_obs_min = 12500.0
     lambda_obs_max = 18500.0
     dlambda = 13.5
@@ -93,10 +93,11 @@ while not allfull:
     tpl.extendWavelengthRangeBlue(lambda_obs_min)
     
     tpl.applyLyaExtinction(redshift=z)
-    tpl.applyRedshift(z)
+    tpl.applyRedshift(z)    
     tpl.setMagIAB(mag)
     tpl.applyLambdaCrop(lambda_obs_min, lambda_obs_max)
     tpl.interpolate(dx=0.1) #high sampling for the synthesis process
+
     
     print(tpl)
     exported_fits_path = tpl.exportFits(temp_directory, "spectrum_simu_tmp", addNoise=False, exportNoiseSpectrum=False)
@@ -174,7 +175,7 @@ while not allfull:
         model_amps = modelresult.ModelResult(mAmpsTplpath)
         model_amps.randomAmplitudes(coeffE=coeffE_SFR, coeffA=coeffA_ISM)
     elif optLineAmplitudes == "file":
-        tplmodelresultfilepath = "/home/aschmitt/gitlab/cpf-redshift/tools/simulation/templates_lines/201605022133_id0_z1.12688_mag20.7_sfr10.0_linemodel_amps.csv"   
+        tplmodelresultfilepath = "/home/aschmitt/gitlab/cpf-redshift/tools/simulation/templates_lines/201605022133_id0_z1.12688_mag20.7_sfr10.0_linemodel_amps_dividedby3.csv"   
         model_amps = modelresult.ModelResult(tplmodelresultfilepath)     
     model_amps.save(mAmpsOutputpath)
     

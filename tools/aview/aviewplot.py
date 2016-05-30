@@ -8,7 +8,14 @@ import os
 import sys
 import optparse
 
+import matplotlib as mpl
+mpl.rcParams.update(mpl.rcParamsDefault)
+
 import matplotlib.pyplot as pp
+#import seaborn as sns
+#sns.set_context("paper")
+##sns.set_context("poster")
+#sns.set_style("whitegrid")
 from matplotlib import gridspec
 from matplotlib.ticker import MultipleLocator, FormatStrFormatter
 

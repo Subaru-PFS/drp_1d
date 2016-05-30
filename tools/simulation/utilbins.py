@@ -34,7 +34,7 @@ class UtilBins(object):
         if optMission=="pfs":
             self.mag_bins_limits = [20.0, 21.0, 22.0, 23.0, 24.0, 25.0, 26.0]
         elif optMission=="euclid":
-            self.mag_bins_limits = [20.0, 21.0, 22.0, 23.0, 24.0, 25.0, 26.0]
+            self.mag_bins_limits = [40.0, 41.0]
         elif optMission=="fixed":
             self.mag_bins_limits = [24.0, 25.0]
         self.n_mag_bins = len(self.mag_bins_limits)-1
@@ -45,7 +45,7 @@ class UtilBins(object):
             self.sfr_bins_limits = np.logspace(-1.0, 2.0, self.n_sfr_bins+1, endpoint=True)
         elif optMission=="euclid":
             self.n_sfr_bins = 1
-            self.sfr_bins_limits = [10.0001, 10.0002]
+            self.sfr_bins_limits = [1.0001, 1.0002]
         elif optMission=="fixed":
             self.n_sfr_bins = 1
             self.sfr_bins_limits = [10.0001, 10.0002]

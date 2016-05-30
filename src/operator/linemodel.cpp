@@ -119,7 +119,13 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
                 largeGridRedshifts.push_back(sortedRedshifts[i]);
             }
         }
-        Log.LogInfo( "Linemodel: FastFitLargeGrid enabled: %d redshifts will be calculated on the large grid (%d initially)", largeGridRedshifts.size(), sortedRedshifts.size());
+        if(largeGridRedshifts.size()<1)
+        {
+            enableFastFitLargeGrid = 0;
+            Log.LogInfo( "Linemodel: FastFitLargeGrid auto disabled: raw %d redshifts will be calculated", sortedRedshifts.size());
+        }else{
+            Log.LogInfo( "Linemodel: FastFitLargeGrid enabled: %d redshifts will be calculated on the large grid (%d initially)", largeGridRedshifts.size(), sortedRedshifts.size());
+        }
     }
 
 
@@ -236,7 +242,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
         if( extremumList.size() == 0 )
         {
             Log.LogError("Line Model, Extremum find method failed");
-            return NULL;
+            return result;
         }
 
         Log.LogInfo( "Linemodel: found %d extrema", extremumList.size());

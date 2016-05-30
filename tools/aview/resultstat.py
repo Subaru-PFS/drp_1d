@@ -1437,11 +1437,13 @@ class ResultList(object):
         failures_onlyRef = []
 
         removeStrRef = ""
+        removeStrRef = "_interleaved"
         #removeStrRef = "_FILT_MGv0_c"
         #removeStrRef = "_FILT3dec2015"
         #removeStrThis = "_FILT_MGv1_c"
-        removeStrThis = ""
-        #removeStr2 = "_FILT"        
+        removeStrThis = "_combined"  
+        #removeStrThis = ""
+        #removeStr2 = "_FILT"              
         WarningKeyStr = raw_input("\n\nWARNING: Removing strings for comparison : ref, removing={} - this, removing={}\nPress any key to continue...".format(removeStrRef, removeStrThis))
         
         n = self.n

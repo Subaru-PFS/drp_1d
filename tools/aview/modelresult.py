@@ -273,14 +273,25 @@ class ModelResult(object):
                     outVal = self.lineamplitude[k]                
                     return outVal
         return -1
+        
+    def applyWeight(self, coeff):
+        for k in range(self.n):
+            if self.lineamplitude[k] > 0.0:
+                self.lineamplitude[k] *= coeff
             
           
 if __name__ == '__main__':
-    path = "/home/aschmitt/code/python/simulation_perf_matrix_linemodel/amazed/output/spectrum_simu_tmp_F"
-    name = "linemodelsolve.linemodel_fit_extrema_0.csv"
+    path = "/home/aschmitt/gitlab/cpf-redshift/tools/simulation/templates_lines"
+    name = "201605022133_id0_z1.12688_mag20.7_sfr10.0_linemodel_amps.csv"
     mpath = os.path.join(path,name)
     print('using full path: {0}'.format(mpath))
     m = ModelResult(mpath)
+
+    if 0:
+        name_out = "201605022133_id0_z1.12688_mag20.7_sfr10.0_linemodel_amps_modified.csv"
+        mpath_out = os.path.join(path,name_out)
+        m.applyWeight(0.333)
+        m.save(mpath_out)
 
     m.getAmplitudeMeanNhighest() 
     m.plot()

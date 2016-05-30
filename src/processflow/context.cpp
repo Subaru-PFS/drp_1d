@@ -153,6 +153,19 @@ bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath,
         {
             spcFluxAxis[k] = 0.0;
         }
+    }else if( medianRemovalMethod== "zero")
+    {
+        nameBaseline = "preprocess/baselineZERO";
+        CSpectrumFluxAxis& spcFluxAxis = m_SpectrumWithoutContinuum->GetFluxAxis();
+        spcFluxAxis.SetSize( m_Spectrum->GetSampleCount() );
+        CSpectrumSpectralAxis& spcSpectralAxis = m_SpectrumWithoutContinuum->GetSpectralAxis();
+        spcSpectralAxis.SetSize( m_Spectrum->GetSampleCount()  );
+
+
+        for(Int32 k=0; k<m_SpectrumWithoutContinuum->GetSampleCount(); k++)
+        {
+            spcFluxAxis[k] = m_Spectrum->GetFluxAxis()[k];
+        }
     }
 
     m_SpectrumWithoutContinuum->ConvertToLogScale();

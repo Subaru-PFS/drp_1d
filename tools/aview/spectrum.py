@@ -15,10 +15,14 @@ import math
 
 from bokeh.plotting import figure, output_file, show
         
+import matplotlib as mpl
+#mpl.rcParams.update(mpl.rcParamsDefault)        
+
 import matplotlib.pyplot as pp
-import seaborn as sns
-sns.set_context("poster")
-sns.set_style("whitegrid")
+#import seaborn as sns
+#sns.set_context("paper")
+#sns.set_context("poster")
+#sns.set_style("whitegrid")
 
 import numpy as np
 from scipy import interpolate
@@ -758,7 +762,28 @@ class Spectrum(object):
             self.ax.legend()
             self.canvas.draw()
                     
-        
+    def removePointsByIndex(self, indexes):
+        for kx in indexes:
+            print("removing point at idx={}, ie. coords: x={}, y={}".format(kx, self.xvect[kx], self.yvect[kx]))
+                    
+            xvect = range(0,self.n-1)
+            yvect = range(0,self.n-1)
+            ysum = 0.0   
+            dec = 0
+            for x in range(0,self.n-1):
+                if x == kx:
+                    dec = 1
+                
+                xvect[x] = self.xvect[x+dec]
+                yvect[x] = self.yvect[x+dec]
+                ysum += yvect[x]
+                    
+            self.xvect = np.copy(xvect)
+            self.yvect = np.copy(yvect)
+            self.ysum = ysum
+            self.n -= 1
+
+     
     def exportPlotCompareBokeh(self, other_spc, amplitude = 1.0, fname = "spectrum_comparison"):
         # output to static HTML file
         output_file(fname + ".html", title=fname)
@@ -1057,7 +1082,12 @@ class Spectrum(object):
     def correctZeros(self, replacementValue=1e-24):
         for x in range(0,self.n):
             if self.yvect[x]<replacementValue:
-                self.yvect[x]=replacementValue
+                self.yvect[x]=replacementValue   
+                
+    def setToZero(self):
+        for x in range(0,self.n):
+            self.yvect[x]=0.0
+        self.ysum = 0.0
                 
     def interleave(self, otherspc, selfNoise, otherNoise):
         new_xvect = self.xvect + otherspc.xvect
@@ -1079,7 +1109,7 @@ class Spectrum(object):
                     w1 = otherNoise.yvect[i]
                 else:
                     y1 = self.yvect[idx]
-                    w1 = self.yvect[idx]
+                    w1 = selfNoise.yvect[idx]
                 print("y1={} and w1={}".format(y1, w1))
                 if isorted[k+1] >= self.n:
                     i = isorted[k+1]-self.n
@@ -1087,10 +1117,11 @@ class Spectrum(object):
                     w2 = otherNoise.yvect[i]
                 else:
                     y2 = self.yvect[isorted[k+1]]
-                    w2 = self.yvect[isorted[k+1]]
+                    w2 = selfNoise.yvect[isorted[k+1]]
                 print("y2={} and w2={}".format(y2, w2))
-                y = (1.0/(1/(w1**2)+1/(w2**2)))*(y1/w1**2 + y2/w2**2)
-                ynoise = np.sqrt(w1**2+w2**2)
+                sumweights = (1/(w1**2)+1/(w2**2))
+                y = (1.0/sumweights)*(y1/w1**2 + y2/w2**2)
+                ynoise = np.sqrt((1.0/sumweights))
                 print("y={} and ynoise={}".format(y, ynoise))
             else:
                 x = new_xvect[idx]
