@@ -379,7 +379,7 @@ class Spectrum(object):
         
         return a
         
-    def plot(self, saveFullDirPath="", lstyle="b-+"):
+    def plot(self, saveFullDirPath="", lstyle="r-+"):
         pp.ion()
         self.fig = pp.figure(1)
         #self.fig = sns.pyplot.figure(1)

@@ -23,8 +23,7 @@ class UtilBins(object):
             z_bins_limits_2 = np.linspace(6.0, 7.0, n_zbins_2+1, endpoint=True)
             self.z_bins_limits = np.concatenate((z_bins_limits_1, z_bins_limits_2), axis=0)
         elif optMission=="euclid":
-            zcenter = 1.1
-            self.z_bins_limits = [zcenter, zcenter+0.1]
+            self.z_bins_limits = [1.0, 1.2, 1.4, 1.6, 1.8]
         elif optMission=="fixed":
             zcenter = 7.2
             self.z_bins_limits = [zcenter, zcenter+0.1]        

@@ -175,7 +175,7 @@ while not allfull:
         model_amps = modelresult.ModelResult(mAmpsTplpath)
         model_amps.randomAmplitudes(coeffE=coeffE_SFR, coeffA=coeffA_ISM)
     elif optLineAmplitudes == "file":
-        tplmodelresultfilepath = "/home/aschmitt/gitlab/cpf-redshift/tools/simulation/templates_lines/201605022133_id0_z1.12688_mag20.7_sfr10.0_linemodel_amps_dividedby3.csv"   
+        tplmodelresultfilepath = "/home/aschmitt/gitlab/cpf-redshift/tools/simulation/templates_lines/201605022133_id0_z1.12688_mag20.7_sfr10.0_linemodel_amps_2thirdAmps.csv"   
         model_amps = modelresult.ModelResult(tplmodelresultfilepath)     
     model_amps.save(mAmpsOutputpath)
     
@@ -219,7 +219,7 @@ while not allfull:
             model.exportFits(output_directory, "{}".format(_spc_name), addNoise=False, exportNoiseSpectrum=False)
             model.exportFits(output_directory, "{}".format(_spc_name), addNoise=True, exportNoiseSpectrum=True)
             
-            delta_rolls = [0.0, 0.25, 0.7, 0.0]
+            delta_rolls = [0.0, 0.25, 0.7, 0.5]
             for i,d in enumerate(delta_rolls):
                 _spc_name = spc_simu_name + "_roll{}".format(i)
                 model_roll = model.copy()
