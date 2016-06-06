@@ -219,7 +219,7 @@ Bool CRayCatalog::Load( const char* filePath )
             }
             if( nominalAmplitude>0.0 )
 	      {
-                Add( CRay( name, pos, Etype, profileName, Eforce, -1, -1, -1, -1, groupName, nominalAmplitude ) );
+                Add( CRay( name, pos, Etype, profileName, Eforce, -1, -1, -1, -1, -1, -1, groupName, nominalAmplitude ) );
 	      }
         }
     }

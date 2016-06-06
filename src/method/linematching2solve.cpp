@@ -92,7 +92,7 @@ std::shared_ptr<const CLineMatching2SolveResult> COperatorLineMatching2Solve::Co
     resultStore.GetScopedParam( "linematching2.detectioncut", m_detectioncut, 5.0 );
     resultStore.GetScopedParam( "linematching2.detectionnoiseoffset", m_detectionnoiseoffset, 0.0 );
     resultStore.GetScopedParam( "linematching2.disablegaussianfitqualitycheck", m_disablegaussianfitqualitycheck, 0 );
-    resultStore.GetScopedParam( "linematching2.dynamicLinematching", m_dynamicLinematching, 1 );
+    resultStore.GetScopedParam( "linematching2.dynamicLinematching", m_dynamicLinematching, 0 );
     resultStore.GetScopedParam( "linematching2.enlargeRate", m_enlargeRate, 2.0 );
     resultStore.GetScopedParam( "linematching2.linetype", linetypeStr, "Emission" );
     resultStore.GetScopedParam( "linematching2.maxsize", m_maxsize, 70.0 );
@@ -198,109 +198,125 @@ std::shared_ptr<const CLineMatching2SolveResult> COperatorLineMatching2Solve::Co
   Float64 winsizeMinimum = 1e3;
   Float64 winsizeStep = ( winsizeMaximum - winsizeMinimum ) / 5;
   
-  while ( true )
-    {
+  Int32 cmptMax = 100;
+  Int32 iCmpt = 0;
+  while ( iCmpt<cmptMax )
+  {
       if ( ! m_bypassDebug )
-	{
-	  Log.LogDebug( "*************************" );
-	  Log.LogDebug( "cutCurrent == %f", cutCurrent );
-	  Log.LogDebug( "minimumFwhhCurrent == %f", minimumFwhhCurrent );
-	  Log.LogDebug( "strongcutCurrent == %f", strongcutCurrent );
-	  Log.LogDebug( "winsizeCurrent == %f", winsizeCurrent );
-	}
+      {
+          Log.LogDebug( "*************************" );
+          Log.LogDebug( "cutCurrent == %f", cutCurrent );
+          Log.LogDebug( "minimumFwhhCurrent == %f", minimumFwhhCurrent );
+          Log.LogDebug( "strongcutCurrent == %f", strongcutCurrent );
+          Log.LogDebug( "winsizeCurrent == %f", winsizeCurrent );
+      }
       CLineDetection lineDetection( lineType, cutCurrent, strongcutCurrent, winsizeCurrent, minimumFwhhCurrent, m_maxsize, m_disablegaussianfitqualitycheck );
       auto lineDetectionResult = lineDetection.Compute( _spc, lambdaRange, peakDetectionResult->PeakList, peakDetectionResult->EnlargedPeakList );
-      if ( lineDetectionResult )
-	{
-	  currentNumberOfPeaks = lineDetectionResult->RayCatalog.GetList().size();
-	  if ( ! m_bypassDebug )
-	    Log.LogDebug ( "Found %d peaks.", currentNumberOfPeaks );
-	  if( currentNumberOfPeaks>=minimumNumberOfPeaks || numberOfPeaksBestBypass || ! m_dynamicLinematching )
-	    {
-	      Log.LogDebug ( "Storing %d lines from lineDetection in the result store.", lineDetectionResult->RayCatalog.GetList().size() );
-	      resultStore.StoreScopedGlobalResult( "raycatalog", lineDetectionResult );
-	      // Since we know at least one peak that corresponds to a line, let's try to match to a catalogued template.
-	      CRayMatching rayMatching;
-	      auto rayMatchingResult = rayMatching.Compute( lineDetectionResult->RayCatalog, restRayCatalog, redshiftsRange, m_minMatchNum, m_tol, lineType );
-	      if( rayMatchingResult )
-		{
-		  rayMatchingResult->FilterWithRules( _spc, lambdaRange, m_winsize );
-		  Log.LogDebug ( "CRayMatching yielded %d sets of solutions and %d sets of filtered solutions.", rayMatchingResult->SolutionSetList.size(), rayMatchingResult->FilteredSolutionSetList.size() );
-		  // Store matching results
-		  resultStore.StoreScopedGlobalResult( "raymatching", rayMatchingResult );
-		  rayMatchingResult->GetBestRedshift ( bestRedshift, bestMatchingNumber );
-		  Log.LogDebug ( "bestRedshift == %f, bestMatchingNumber == %d", bestRedshift, bestMatchingNumber );
-		  if( bestRedshift != -1.0 )
-		    {
-		      Log.LogDebug ( "return std::shared_ptr<const CLineMatching2SolveResult>( new CLineMatching2SolveResult() );" );
-		      return std::shared_ptr<const CLineMatching2SolveResult>( new CLineMatching2SolveResult() );
-		    }
-		} // rayMatchingResult
-	    } // minimumNumberOfPeaks
-	} // lineDetectionResult
+      if ( lineDetectionResult || ! m_dynamicLinematching)
+      {
+          currentNumberOfPeaks = lineDetectionResult->RayCatalog.GetList().size();
+          if ( ! m_bypassDebug )
+              Log.LogDebug ( "Found %d peaks.", currentNumberOfPeaks );
+          if( currentNumberOfPeaks>=minimumNumberOfPeaks || numberOfPeaksBestBypass || ! m_dynamicLinematching )
+          {
+              Log.LogDebug ( "Storing %d lines from lineDetection in the result store.", lineDetectionResult->RayCatalog.GetList().size() );
+              resultStore.StoreScopedGlobalResult( "raycatalog", lineDetectionResult );
+              // Since we know at least one peak that corresponds to a line, let's try to match to a catalogued template.
+              CRayMatching rayMatching;
+              auto rayMatchingResult = rayMatching.Compute( lineDetectionResult->RayCatalog, restRayCatalog, redshiftsRange, m_minMatchNum, m_tol, lineType );
+              if( rayMatchingResult )
+              {
+                  rayMatchingResult->FilterWithRules( _spc, lambdaRange, m_winsize );
+                  Log.LogDebug ( "CRayMatching yielded %d sets of solutions and %d sets of filtered solutions.", rayMatchingResult->SolutionSetList.size(), rayMatchingResult->FilteredSolutionSetList.size() );
+                  // Store matching results
+                  resultStore.StoreScopedGlobalResult( "raymatching", rayMatchingResult );
+                  rayMatchingResult->GetBestRedshift ( bestRedshift, bestMatchingNumber );
+                  Log.LogDebug ( "bestRedshift == %f, bestMatchingNumber == %d", bestRedshift, bestMatchingNumber );
+                  if( bestRedshift != -1.0 )
+                  {
+                      Log.LogDebug ( "return std::shared_ptr<const CLineMatching2SolveResult>( new CLineMatching2SolveResult() );" );
+                      return std::shared_ptr<const CLineMatching2SolveResult>( new CLineMatching2SolveResult() );
+                  }else if(! m_dynamicLinematching)
+                  {
+                      return std::shared_ptr<const CLineMatching2SolveResult>( new CLineMatching2SolveResult() );
+                  }
+              } // rayMatchingResult
+              else if(! m_dynamicLinematching)
+              {
+                  return std::shared_ptr<const CLineMatching2SolveResult>( new CLineMatching2SolveResult() );
+              }
+          } // minimumNumberOfPeaks
+      } // lineDetectionResult
       // update parameters
       {
-	if( currentNumberOfPeaks>=numberOfPeaksBest )
-	  {
-	    numberOfPeaksBest = currentNumberOfPeaks;
-	    cutBest = cutCurrent;
-	    minimumFwhhBest = minimumFwhhCurrent;
-	    strongcutBest = strongcutCurrent;
-	    winsizeBest = winsizeCurrent;
-	  }
-	if( currentNumberOfPeaks<previousNumberOfPeaks && ! newValues )
-	  {
-	    Log.LogError ( "Dynamic logic failed - number of peaks is falling." );
-	    return NULL;
-	  }
-	else
-	  {
-	    previousNumberOfPeaks = currentNumberOfPeaks;
-	    if( ! m_dynamicLinematching )
-	      {
-		Log.LogError ( "No result found - returning NULL." );
-		return NULL;
-	      }
-	    newValues = false;
-	    if( minimumFwhhCurrent>minimumFwhhMinimum )
-	      {
-		minimumFwhhCurrent = std::max ( minimumFwhhMinimum, minimumFwhhCurrent - minimumFwhhStep );
-		continue;
-	      }
-	    newValues = true;
-	    minimumFwhhCurrent = minimumFwhhMaximum;
-	    if( cutCurrent>=cutMinimum )
-	      {
-		cutCurrent -= cutStep;
-		continue;
-	      }
-	    cutCurrent = strongcutCurrent;
-	    if( strongcutCurrent>strongcutMinimum )
-	      {
-		strongcutCurrent = std::max ( strongcutMinimum, strongcutCurrent - strongcutStep );
-		continue;
-	      }
-	    strongcutCurrent = strongcutMaximum;
-	    if( winsizeCurrent<=winsizeMaximum )
-	      {
-		winsizeCurrent += winsizeStep;
-		continue;
-	      }
-	    winsizeCurrent = winsizeMinimum;
-	    // if all checks failed, dynamic system failed.
-	    Log.LogDebug ( "Dynamic logic: all parameters searched. Using best values." );
-	    {
-	      cutCurrent = cutBest;
-	      minimumFwhhCurrent = minimumFwhhBest;
-	      strongcutCurrent = strongcutBest;
-	      winsizeCurrent = winsizeBest;
-	      numberOfPeaksBestBypass = true;
-	      continue;
-	    }
-	  }
+          if( currentNumberOfPeaks>=numberOfPeaksBest )
+          {
+              numberOfPeaksBest = currentNumberOfPeaks;
+              cutBest = cutCurrent;
+              minimumFwhhBest = minimumFwhhCurrent;
+              strongcutBest = strongcutCurrent;
+              winsizeBest = winsizeCurrent;
+          }
+          if( currentNumberOfPeaks<previousNumberOfPeaks && ! newValues )
+          {
+              Log.LogError ( "Dynamic logic failed - number of peaks is falling." );
+              return NULL;
+          }
+          else
+          {
+              previousNumberOfPeaks = currentNumberOfPeaks;
+              if( ! m_dynamicLinematching )
+              {
+                  Log.LogError ( "No result found - returning NULL." );
+                  return NULL;
+              }
+              newValues = false;
+              if( minimumFwhhCurrent>minimumFwhhMinimum )
+              {
+                  minimumFwhhCurrent = std::max ( minimumFwhhMinimum, minimumFwhhCurrent - minimumFwhhStep );
+                  continue;
+              }
+              newValues = true;
+              minimumFwhhCurrent = minimumFwhhMaximum;
+              if( cutCurrent>=cutMinimum )
+              {
+                  cutCurrent -= cutStep;
+                  continue;
+              }
+              cutCurrent = strongcutCurrent;
+              if( strongcutCurrent>strongcutMinimum )
+              {
+                  strongcutCurrent = std::max ( strongcutMinimum, strongcutCurrent - strongcutStep );
+                  continue;
+              }
+              strongcutCurrent = strongcutMaximum;
+              if( winsizeCurrent<=winsizeMaximum )
+              {
+                  winsizeCurrent += winsizeStep;
+                  continue;
+              }
+              winsizeCurrent = winsizeMinimum;
+              // if all checks failed, dynamic system failed.
+              Log.LogDebug ( "Dynamic logic: all parameters searched. Using best values." );
+              {
+                  cutCurrent = cutBest;
+                  minimumFwhhCurrent = minimumFwhhBest;
+                  strongcutCurrent = strongcutBest;
+                  winsizeCurrent = winsizeBest;
+                  numberOfPeaksBestBypass = true;
+                  continue;
+              }
+          }
       }
       Log.LogDebug( "Dynamically retrying linematching." );
-    }; // while
+      iCmpt++;
+  }; // while
+
+  if( iCmpt==cmptMax )
+  {
+      Log.LogWarning( "Warning. Stopped the linematching dynamic cut loop..." );
+  }
+  return std::shared_ptr<const CLineMatching2SolveResult>( new CLineMatching2SolveResult() );
 }
 
 const std::string COperatorLineMatching2Solve::GetDescription()

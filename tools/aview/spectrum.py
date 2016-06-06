@@ -95,7 +95,7 @@ class Spectrum(object):
         except: 
             sciheader = hdulist[0].header
             
-        #print("header = {0}".format(sciheader))
+        #print("\nheader = {0}\n".format(sciheader))
         n = sciheader["NAXIS"]
         #n1 = sciheader["NAXIS1"]
         

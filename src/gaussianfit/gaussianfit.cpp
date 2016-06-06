@@ -308,7 +308,7 @@ CGaussianFit::EStatus CGaussianFit::Compute( const CSpectrum& spectrum, const TI
     m_C = output[2]/sqrt( 2 ) ;
     //WARNING: this coefficient (sqrt(2)) has been added to compensate for the gaussian expression used in GaussF and GaussDF
     // so that the gaussian function denominator ( originally: c0*exp(-1*(x-mu)**2/c2**2) ) becomes c0*exp(-1*(x-mu)**2/ (2*c2**2))
-    m_CErr = outputError[2];
+    m_CErr = outputError[2]/sqrt( 2 );
 
     m_coeff0 = output[3];
 

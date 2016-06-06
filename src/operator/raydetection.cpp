@@ -244,7 +244,7 @@ std::shared_ptr<const CLineDetectionResult> CLineDetection::Compute( const CSpec
             char buffer [64];
             sprintf( buffer,"detected_peak_%d", j );
             std::string peakName = buffer;
-            result->RayCatalog.Add( CRay( peakName, gaussPos, m_type, "SYM", force , gaussAmp, gaussWidth, ratioAmp, gaussPosErr) );
+            result->RayCatalog.Add( CRay( peakName, gaussPos, m_type, "SYM", force , gaussAmp, gaussWidth, ratioAmp, gaussPosErr, gaussWidthErr, gaussAmpErr) );
 	  }
     }
     

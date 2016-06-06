@@ -9,7 +9,7 @@ CRay::CRay()
 
 }
 
-CRay::CRay(const string& name, Float64 pos, UInt32 type, std::string profile, UInt32 force, Float64 amp, Float64 width, Float64 cut , Float64 posErr, const std::string& groupName, Float64 nominalAmp)
+CRay::CRay(const string& name, Float64 pos, UInt32 type, std::string profile, UInt32 force, Float64 amp, Float64 width, Float64 cut , Float64 posErr, Float64 sigmaErr, Float64 ampErr, const std::string& groupName, Float64 nominalAmp)
 {
     m_Name = name;
     m_Pos = pos;
@@ -23,6 +23,8 @@ CRay::CRay(const string& name, Float64 pos, UInt32 type, std::string profile, UI
     m_Cut = cut;
 
     m_PosFitErr = posErr;
+    m_SigmaFitErr = sigmaErr;
+    m_AmpFitErr = ampErr;
 
 
     m_GroupName = groupName;
@@ -104,6 +106,16 @@ Float64 CRay::GetPosFitError() const
     return m_PosFitErr;
 }
 
+Float64 CRay::GetSigmaFitError() const
+{
+    return m_SigmaFitErr;
+}
+
+Float64 CRay::GetAmpFitError() const
+{
+    return m_AmpFitErr;
+}
+
 const std::string& CRay::GetName() const
 {
     return m_Name;
@@ -143,7 +155,7 @@ Void CRay::Save(  std::ostream& stream ) const
         stream << "Strong"  << "\t";
     else
         stream << "Weak"  << "\t";
-    stream << GetCut() << "\t" << GetWidth() << "\t" << GetPosFitError() << "\t";
+    stream << GetCut() << "\t" << GetWidth() << "\t" << GetAmplitude() << "\t" << GetPosFitError() << "\t" << GetSigmaFitError() << "\t" << GetAmpFitError() << "\t";
 }
 
 Void CRay::SaveDescription(  std::ostream& stream ) const
@@ -151,7 +163,7 @@ Void CRay::SaveDescription(  std::ostream& stream ) const
     stream << "#";
     stream << "Name" << "\t" << "Position" << "\t";
     stream << "Force"  << "\t";
-    stream << "Cut" << "\t" << "Width" << "\t" << "PosFitErr" << "\t";
+    stream << "Cut" << "\t" << "Width" << "\t" << "Amp" << "\t" << "PosFitErr" << "\t" << "SigmaFitErr" << "\t" << "AmpFitErr" << "\t";
 }
 
 
