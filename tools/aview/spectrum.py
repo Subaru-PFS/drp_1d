@@ -59,6 +59,8 @@ class Spectrum(object):
             self.loadpfs() 
         elif(self.stype == 'muse'):
             self.loadmuse() 
+        elif(self.stype == 'euclid_sim_noise'):
+            self.loadeuclidSimNoise() 
         elif(self.stype == 'empty'):
             pass 
         else:
@@ -140,6 +142,29 @@ class Spectrum(object):
             #print scidata[x]
             self.xvect[x] = scidata[x][0]
             self.yvect[x] = scidata[x][1]
+            self.ysum += self.yvect[x]
+    
+    def loadeuclidSimNoise(self):
+        hdulist = fits.open(self.spath) 
+
+        try:
+            scidata = hdulist[1].data
+        except:
+            scidata = hdulist[0].data
+            
+        self.n = scidata.shape[0]
+        if self.n<3:
+            self.n = scidata.shape[1]
+        #print('{0} - n = {1}'.format(self.logTagStr, self.n))
+    
+        #---- default xaxis index array
+        self.xvect = range(0,self.n)
+        self.yvect = range(0,self.n)
+        self.ysum = 0.0
+        for x in range(0,self.n):
+            #print scidata[x]
+            self.xvect[x] = scidata[x][0]
+            self.yvect[x] = scidata[x][2]
             self.ysum += self.yvect[x]
     
     #same as pfs but with xaxis in nm instead of Angstrom
@@ -372,6 +397,7 @@ class Spectrum(object):
         a = a + ("    dlambda = {0}\n".format(self.getResolution()))
         a = a + ("    lambda min = {}, lambda max = {}\n".format(self.getWavelengthMin(), self.getWavelengthMax()))
         a = a + ("    flux min = {}, flux max = {}\n".format(self.getFluxMin(),self.getFluxMax()))
+        a = a + ("    flux mean = {}\n".format(np.mean(self.yvect)))
         a = a + ("    flux std = {}, flux std 6000_8000 = {}\n".format(np.std(self.yvect), self.GetFluxStd6000_8000()))
         a = a + ("    magI = {}\n".format(self.getMagIAB()))
         
@@ -1288,7 +1314,7 @@ def StartFromCommandLine( argv ) :
                     help="path to the fits spectrum to be plotted")
     parser.add_argument("-t", "--type", 
                         help="type of spectrum, can be in teh following list \
-                        {template, vvds, pfs, pfs2, muse, hplana, euclid, pfs2reech}",  
+                        {template, vvds, pfs, pfs2, muse, hplana, euclid, pfs2reech, euclid_sim_noise}",  
                         dest="spcType",     
                         default="")                
     parser.add_argument("-o", "--otherspc", 
