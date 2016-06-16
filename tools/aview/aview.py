@@ -24,6 +24,7 @@ def plotRes(resDir, spcName, tplpath, redshift, iextremaredshift, diffthres, fai
     print("Using Diffthreshold: {}".format(diffthres))
     resList = rstat.ResultList(resDir, diffthreshold=float(diffthres), opt='brief')      
         
+    #retrieve the spectrum name or id
     if spcName == "":
         print("Results, N found failures = {0}".format(resList.n))
         indice = int(failureIdx)
@@ -45,10 +46,14 @@ def plotRes(resDir, spcName, tplpath, redshift, iextremaredshift, diffthres, fai
                 print("INFO: found index for this spectrum and diffthreshold : i={}\n".format(idx))
                 break
             
-        
-        
+    #prepare spectrum path and noise path
     spath = s.getSpcFullPath(spcName)
     print('Spc path is: {0}'.format(spath))
+    npath = ""   
+    npath = s.getNoiseFullPath(spcName)
+    if not os.path.exists(npath):
+        npath = ""
+    print('Noise path is: {}'.format(npath))
 
     #prepare exportPath if necessary
     if enablePlot==False:
@@ -80,71 +85,57 @@ def plotRes(resDir, spcName, tplpath, redshift, iextremaredshift, diffthres, fai
             chi.plot(showContinuumEstimate=False, showExtrema=True, showAmbiguities=False, enablePlot=enablePlot, exportPath=displaySpcPath)
 
 
+    # get candidate parameters : z, tplname, ...
     try:
         if not iextremaredshift == "": 
             idxExtrema = int(iextremaredshift)
         else:
             idxExtrema = int(0)
-        print('using idxExtrema: {}'.format(idxExtrema))
+        print('retrieve tpl-model path - using idxExtrema: {}'.format(idxExtrema))
             
+        # todo, when idxExtrema is -1, z should be found from the "zval = s.getRedshiftVal(spcName)"
+        zvalCandidate, tplpathCandidate, forceTplAmplitudeCandidate, forceTplDoNotRedShiftCandidate = s.getAutoCandidate(spcName, idxExtrema)
+        print("full tpl-model path: {}".format(tplpathCandidate))
+        if not os.path.exists(tplpathCandidate):
+            print("does not exist : reset tpl-model path = {}".format(""))
+            tplpathCandidate = ""
+            forceTplAmplitudeCandidate = -1
+            forceTplDoNotRedShiftCandidate = 0
+#        #else:
+#         #   try:
+#                #forceTplAmplitude = chi.amazed_fitamplitude[idxExtrema]
+#            except:
+#                forceTplAmplitude = -1
+#            forceTplAmplitude = 1
+#            forceTplDoNotRedShift = 1
 
-        tplpath = s.getAutoTplFullPath(spcName, idxExtrema)
-        print("full extrema model path: {}".format(tplpath))
-        if not os.path.exists(tplpath):
-            print("reset tplpath = {}".format(""))
-            tplpath = ""
-            forceTplAmplitude = -1
-            forceTplDoNotRedShift = 0
-        else:
-            forceTplAmplitude = 1
-            forceTplDoNotRedShift = 1
     except:
+        print("WARNING: except while retrieving tpl-model path...")
         pass
-            
-
-    npath = ""
-#    spctag = "atm_clean" #for VVDS
-#    if spcName.find(spctag)!=-1:
-#        noiseName = spcName.replace("atm_clean", "noise")
-#        npath = s.getNoiseFullPath(noiseName)
-#    spctag = "-W-F_" #for PFS
-#    if spcName.find(spctag)!=-1:
-#        noiseName = spcName.replace(spctag, "-W-ErrF_")
-#        npath = s.getSpcFullPath(noiseName)
-#        
-    npath = s.getNoiseFullPath(spcName)
-    if not os.path.exists(npath):
-        npath = ""
-    print('Noise path is: {}'.format(npath))
-
     
     if redshift == "":
-        if not iextremaredshift == "": 
-            idxExtrema = int(iextremaredshift)
-        else:
-            idxExtrema = int(0)
-        print('using idxExtrema: {}'.format(idxExtrema)) 
-        if 'chi' in locals():
-            zval = chi.getExtrema(idxExtrema)
-        
-        if not 'zval' in locals():
-            print("WARNING: could not use first extrema as redshift value !!!!")
-            zval = s.getRedshiftVal(spcName)
-        #overrride zval
-        #zval = 1.1164
+        print("INFO: redshift set to z={} by the extremum #{}".format(zvalCandidate, idxExtrema))        
+        zval = zvalCandidate
     else:
         print("WARNING: using custom user defined redshift value !!!!")
         zval = float(redshift)    
     
-    print('Redshift is: {0}'.format(zval))
+    print('\n\n**********')
+    
+    print('AVIEW: Redshift is: {0}'.format(zval))
     #print(s.getRedshiftTpl(spcName))
     
     if tplpath == "":
-        tpath = s.getTplFullPath(s.getRedshiftTpl(spcName)) #AUTO from amazed results
-        try:
-            forceTplAmplitude = chi.amazed_fitamplitude[idxExtrema]
-        except:
-            forceTplAmplitude = -1
+        tpath = tplpathCandidate
+        forceTplAmplitude = forceTplAmplitudeCandidate
+        forceTplDoNotRedShift = forceTplDoNotRedShiftCandidate
+        
+        if 0:
+            tpath = s.getTplFullPath(s.getRedshiftTpl(spcName)) #AUTO from amazed results
+            try:
+                forceTplAmplitude = chi.amazed_fitamplitude[idxExtrema]
+            except:
+                forceTplAmplitude = -1
         
         if 0:
             #tpath = ""
@@ -167,25 +158,32 @@ def plotRes(resDir, spcName, tplpath, redshift, iextremaredshift, diffthres, fai
             forceTplAmplitude = -1
             forceTplAmplitude = 7e-5
         
-        print('using forceTplAmplitude: {}'.format(forceTplAmplitude))
-        
-        forceTplDoNotRedShift = 0
+            print('RECOVER-OVERRIDE TPL - using forceTplAmplitude: {}'.format(forceTplAmplitude))
+
     elif tplpath==-1:
         tpath = ""
     else:
         tpath = tplpath
+        forceTplAmplitude = -1
+        forceTplDoNotRedShift = 0
     
-    print('Tpl path is: {0}'.format(tpath) )  
+    print('AVIEW: Tpl path is: {0}'.format(tpath) ) 
+    print('AVIEW: forceTplAmplitude = {}'.format(forceTplAmplitude))
+    print('AVIEW: forceTplDoNotRedShift = {}'.format(forceTplDoNotRedShift))
+        
     cpath = s.getCatalogFullPath()
     if 0:
         path = "/home/aschmitt/data/pfs/pfs_lbg/amazed/RayCatalogs"
         name = "raycatalogamazedvacuum.txt"
         cpath = os.path.join(path,name)
     
-    print('Catalog path is: {0}'.format(cpath) )  
+    print('AVIEW: Catalog path is: {0}'.format(cpath) ) 
+    print('**********\n\n')
     
     # PLOT Spectrum/tpl/lines view
-    avp1 = avp.AViewPlot(spath, npath, tpath, cpath, zval, forceTplAmplitude=forceTplAmplitude, forceTplDoNotRedShift = forceTplDoNotRedShift, enablePlot=enablePlot)
+    scontinuumpath = s.getAutoContinuumFullPath(spcName)
+    #scontinuumpath = ""
+    avp1 = avp.AViewPlot(spath, npath, tpath, cpath, zval, forceTplAmplitude=forceTplAmplitude, forceTplDoNotRedShift = forceTplDoNotRedShift, enablePlot=enablePlot, scontinuumpath=scontinuumpath)
     if enablePlot==False:
         avp1.exportDisplays(displaySpcPath);
 

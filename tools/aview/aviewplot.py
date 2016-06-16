@@ -26,8 +26,10 @@ import catalog as ctlg
 
 
 class AViewPlot(object):
-    def __init__(self, spath, npath, tpath, cpath, z, forceTplAmplitude=-1.0, forceTplDoNotRedShift = 0, enablePlot=True):
+    def __init__(self, spath, npath, tpath, cpath, z, forceTplAmplitude=-1.0, forceTplDoNotRedShift = 0, enablePlot=True, scontinuumpath = ""):
         self.spath = spath
+        self.scontinuumpath = scontinuumpath
+        
         self.npath = npath
         self.tpath = tpath
         self.cpath = cpath
@@ -65,7 +67,21 @@ class AViewPlot(object):
         
     def load(self):
         self.s = sp.Spectrum(self.spath) 
-        titleStr = "spc={}\n".format(self.s.name)
+        
+        if not self.scontinuumpath=="":
+            waveErrThreshold = 0.01
+            
+            self.scontinuum = sp.Spectrum(self.scontinuumpath, stype='template')
+            for k in range(self.scontinuum.n):
+                if abs(self.s.xvect[k] - self.scontinuum.xvect[k]) > waveErrThreshold:
+                    print("\nERROR: wave vector not aligned !: aborting...")
+                    print("\nERROR: info: xvect[{}]={}, conti.xvect[{}]={}".format(k, self.s.xvect[k], k, self.scontinuum.xvect[k]))
+                    return
+                self.s.yvect[k] -=  self.scontinuum.yvect[k]
+            titleStr = "spc(NoCont.)={}\n".format(self.s.name)
+        else:
+            titleStr = "spc={}\n".format(self.s.name)
+
         self.spcname = self.s.name
         
         if not self.forcePlotNoNoise:

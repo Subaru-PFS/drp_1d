@@ -1924,10 +1924,10 @@ def exportLineMatchingStats(resDir):
     resList = ResultList(resDir, diffthreshold=-1, opt='brief')
     resList.getLineMatchingStatsList(enablePlot = False)
    
-def compareFailures(resDir, refresdir):
+def compareFailures(resDir, refresdir, diffthreshold=0.01, zrefmin=-1, zrefmax=20):
     print('using amazed results full path: {0}'.format(resDir))
-    resList = ResultList(resDir, diffthreshold=0.01, opt='brief')
-    refresList = ResultList(refresdir, diffthreshold=0.01, opt='brief')
+    resList = ResultList(resDir, diffthreshold=diffthreshold, opt='brief', spcName="", methodName="", zrefmin=zrefmin, zrefmax=zrefmax)
+    refresList = ResultList(refresdir, diffthreshold=diffthreshold, opt='brief', spcName="", methodName="", zrefmin=zrefmin, zrefmax=zrefmax)
     resList.getFailuresComparison(refresList)
   
 def plotContinuumIndexes(resDir, diffthres, spcName=""):
@@ -2145,8 +2145,16 @@ def StartFromCommandLine( argv ) :
             refresDir = raw_input("Enter a reference dir. to compare the failures ? (press enter to skip) :")
             refresDir = refresDir.strip()
             refresDir = refresDir.replace("'", "")
-            if not (refresDir == ""):
-                compareFailures(options.resDir, refresDir) 
+            if refresDir == "":
+                print("ERROR: empty reference result directory: aborting...")    
+            else:
+                diffthreshold = 0.01
+                zrefmin = 0.1
+                zrefmax = 1.5
+                print("INFO: using default diffthreshold={}, and zrange=[{} {}]".format(diffthreshold, zrefmin, zrefmax)) 
+                WarningKeyStr = raw_input("Press any key to continue...".format())
+        
+                compareFailures(options.resDir, refresDir, diffthreshold=diffthreshold, zrefmin=zrefmin, zrefmax=zrefmax) 
                 
         elif choice == 30:
             spcName = ""
