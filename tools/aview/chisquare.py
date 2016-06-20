@@ -18,7 +18,7 @@ import numpy as np
 import catalog as ctlg
 
 class ResultChisquare(object):
-    def __init__(self, spath, stype='undef', dontloadThres=1e37, label=""):
+    def __init__(self, spath, stype='undef', dontloadThres=1e31, label=""):
         self.logTagStr = "ResultChisquare"
         self.spath = spath
         tplpath = os.path.dirname(spath)
@@ -47,7 +47,7 @@ class ResultChisquare(object):
         #self.cpath = "/home/aschmitt/data/pfs/pfs_reallyjustline/amazed/RayCatalogs/raycatalogamazedair_custompfs2.txt"
         self.load(dontloadThres=dontloadThres)
         
-    def load(self, dontloadThres=1e37):
+    def load(self, dontloadThres=1e31):
         filename = self.spath
         wave = []
         flux = []

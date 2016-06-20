@@ -108,7 +108,7 @@ std::shared_ptr<const CLineMatching2SolveResult> COperatorLineMatching2Solve::Co
       }
     if( linetypeStr == "Emission" )
       {
-	lineType = CRay::nType_Absorption;
+    lineType = CRay::nType_Emission;
       }
   }
   

@@ -1232,18 +1232,22 @@ class Spectrum(object):
             
         return yvect
 
-    def exportFits(self, path="", name="", addNoise=False, exportNoiseSpectrum=False, noiseSigma = 1.5e-19):
+    def exportFits(self, path="", name="", addNoise=False, exportNoiseSpectrum=False, noiseSigma = 1.5e-19, addNameSuffix = True, addFileExt = True):
         """
         write spectrum into a new fits file (useful for model csv input spectra)
         """
         if name == "":
             name = "spectrum_exported"
         noisename = "{}_ErrF".format(name)
-        if addNoise:
-            name = "{}_F".format(name)
+        if addNameSuffix:
+            if addNoise:
+                name = "{}_F".format(name)
+            else:
+                name = "{}_TF".format(name)
+        if addFileExt:
+            destfileout = os.path.join(path, "{}.fits".format(name))
         else:
-            name = "{}_TF".format(name)
-        destfileout = os.path.join(path, "{}.fits".format(name))
+            destfileout = os.path.join(path, "{}".format(name))
         print("Spectrum exporting to fits: {}".format(destfileout))
         if os.path.exists(destfileout):
             print("Spectrum deleting existing fits: {}".format(destfileout))

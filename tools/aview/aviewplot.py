@@ -294,6 +294,7 @@ class AViewPlot(object):
         
         
         if not self.exportAutoDisplaysPath == "":
+            print("INFO: exporting auto display")
             self.xmin = self.exportAuto_lambda_min
             self.xmax = self.exportAuto_lambda_max
             ixmin = self.s.getWavelengthIndex(self.xmin)
@@ -340,6 +341,7 @@ class AViewPlot(object):
             #pp.savefig('ExempleTrace') # sauvegarde du fichier ExempleTrace.png
             #pp.tight_layout()
         else:
+            print("INFO: showing figure")
             pp.show()
         print '\n'
       
