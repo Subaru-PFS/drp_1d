@@ -33,15 +33,17 @@ class ResParser(object):
         
         # intermediate directory
         methodParam = self.getParameterVal('method')
+        methodParam = methodParam.lower()
         print("using method param : {}".format(methodParam))
         if methodParam=="decisionaltreeb" or methodParam=="amazed0_2":
             self.chisquarerelpath = "dtreeBsolve.chisquare2solve.chisquare.csv" 
             self.chisquarencrelpath = "dtreeBsolve.chisquare2solve.chisquare_nocontinuum.csv"
+            self.chisquarecrelpath = "dtreeBsolve.chisquare2solve.chisquare_continuum.csv" 
         else:
             self.chisquarerelpath = "chisquare2solve.chisquare.csv" 
             self.chisquarencrelpath = "chisquare2solve.chisquare_nocontinuum.csv"
+            self.chisquarecrelpath = "chisquare2solve.chisquare2solve.chisquare_continuum.csv" 
 
-        self.chisquarecrelpath = "dtreeBsolve.chisquare2solve.chisquare_continuum.csv"   
         self.corrrelpath = "correlationsolve.correlation.csv"    
         
         if methodParam=="linemodelsolve" or methodParam=="linemodel":

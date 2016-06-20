@@ -122,6 +122,8 @@ Bool COperatorDTreeBSolve::Solve(CDataStore &dataStore, const CSpectrum &spc, co
     dataStore.GetScopedParam( "linemodel.velocityemission", opt_velocity_emission, 100.0 );
     Float64 opt_velocity_absorption;
     dataStore.GetScopedParam( "linemodel.velocityabsorption", opt_velocity_absorption, 300.0 );
+    std::string opt_velocityfit;
+    dataStore.GetScopedParam( "linemodel.velocityfit", opt_velocityfit, "no" );
     std::string opt_continuumreest;
     dataStore.GetScopedParam( "linemodel.continuumreestimation", opt_continuumreest, "no" );
     std::string opt_rules;
@@ -132,12 +134,29 @@ Bool COperatorDTreeBSolve::Solve(CDataStore &dataStore, const CSpectrum &spc, co
 
     // Compute merit function
     COperatorLineModel linemodel;
-    auto result = dynamic_pointer_cast<CLineModelResult>(linemodel.Compute(dataStore, spc, _spcContinuum, restRayCatalog, opt_linetypefilter, opt_lineforcefilter, lambdaRange, redshifts, opt_extremacount, opt_fittingmethod, opt_continuumcomponent, opt_lineWidthType, opt_resolution, opt_velocity_emission, opt_velocity_absorption, opt_continuumreest, opt_rules) );
+    auto result = dynamic_pointer_cast<CLineModelResult>(linemodel.Compute(dataStore,
+                                                                           spc,
+                                                                           _spcContinuum,
+                                                                           restRayCatalog,
+                                                                           opt_linetypefilter,
+                                                                           opt_lineforcefilter,
+                                                                           lambdaRange,
+                                                                           redshifts,
+                                                                           opt_extremacount,
+                                                                           opt_fittingmethod,
+                                                                           opt_continuumcomponent,
+                                                                           opt_lineWidthType,
+                                                                           opt_resolution,
+                                                                           opt_velocity_emission,
+                                                                           opt_velocity_absorption,
+                                                                           opt_continuumreest,
+                                                                           opt_rules,
+                                                                           opt_velocityfit) );
 
     /*
     static Float64 cutThres = 2.0;
     static Int32 bestSolutionIdx = 0;
-    Int32 nValidLines = result->GetNLinesOverCutThreshold(bestSolutionIdx, cutThres);
+    Int32 nValidLines = result->GetNLinesOverCutThreshold(bestSolutionIdx, cutThres, cutThres);
     Float64 bestExtremaMerit = result->GetExtremaMerit(0);
     Log.LogInfo( "Linemodelsolve : bestExtremaMerit, %f", bestExtremaMerit);
     Float64 thres = 0.001;
@@ -150,10 +169,10 @@ Bool COperatorDTreeBSolve::Solve(CDataStore &dataStore, const CSpectrum &spc, co
     }
     Float64 nextExtremaMerit = result->GetExtremaMerit(idxNextValid);
     Log.LogInfo( "Linemodelsolve : nextExtremaMerit, %f", nextExtremaMerit);
-//    if(nValidLines<2 || (bestExtremaMerit - nextExtremaMerit) > -50.0 ){
-//        result=0;
-//        Log.LogInfo( "Linemodelsolve : result set to 0" );
-//    }
+    //    if(nValidLines<2 || (bestExtremaMerit - nextExtremaMerit) > -50.0 ){
+    //        result=0;
+    //        Log.LogInfo( "Linemodelsolve : result set to 0" );
+    //    }
     Log.LogInfo( "Linemodelsolve : for best solution, %d valid lines found", nValidLines);
     //*/
 

@@ -182,26 +182,26 @@ BOOST_AUTO_TEST_CASE( LinemodelFit_lmfit_velocity_pfsbatch6_absorption_sym_singl
 
 }
 
-BOOST_AUTO_TEST_CASE( LinemodelFit_lmfit_velocity_pfshighz_emission_asym_single )
-{
-    std::string spectrumPath = "../test/data/LinemodelFitTestCase/lya/spec_lines_oc_z5.70_ew50_fwhm10_nb25.0mag_TF.fits";
-    std::string noisePath = "../test/data/LinemodelFitTestCase/lya/spec_lines_oc_z5.70_ew50_fwhm10_nb25.0mag_ErrF.fits";
-    std::string linecatalogPath = "../test/data/LinemodelFitTestCase/linecatalog_b9_emission_asym_single.txt";
+//BOOST_AUTO_TEST_CASE( LinemodelFit_lmfit_velocity_pfshighz_emission_asym_single )
+//{
+//    std::string spectrumPath = "../test/data/LinemodelFitTestCase/lya/spec_lines_oc_z5.70_ew50_fwhm10_nb25.0mag_TF.fits";
+//    std::string noisePath = "../test/data/LinemodelFitTestCase/lya/spec_lines_oc_z5.70_ew50_fwhm10_nb25.0mag_ErrF.fits";
+//    std::string linecatalogPath = "../test/data/LinemodelFitTestCase/linecatalog_b9_emission_asym_single.txt";
 
-    std::string opt_fittingmethod = "lmfit";
-    //std::string opt_fittingmethod = "individual";
-    Int32 lineTypeFilter = CRay::nType_Emission;
-    Float64 initialVelocity = 200.0;
-    Int32 forceFilter = -1;
+//    std::string opt_fittingmethod = "lmfit";
+//    //std::string opt_fittingmethod = "individual";
+//    Int32 lineTypeFilter = CRay::nType_Emission;
+//    Float64 initialVelocity = 200.0;
+//    Int32 forceFilter = -1;
 
-    std::vector<Float64> ampsRef;
-    ampsRef.push_back(1e-18);
-    Float64 emissionVelocityRef = 50;
-    //Float64 z = 5.702; //sym profile
-    Float64 z = 5.698; //asym profile
-    checkAmplitudeAndVelocityFit(spectrumPath, noisePath, linecatalogPath, opt_fittingmethod, lineTypeFilter, forceFilter, initialVelocity, z, ampsRef, emissionVelocityRef);
+//    std::vector<Float64> ampsRef;
+//    ampsRef.push_back(1e-18);
+//    Float64 emissionVelocityRef = 50;
+//    //Float64 z = 5.702; //sym profile
+//    Float64 z = 5.698; //asym profile
+//    checkAmplitudeAndVelocityFit(spectrumPath, noisePath, linecatalogPath, opt_fittingmethod, lineTypeFilter, forceFilter, initialVelocity, z, ampsRef, emissionVelocityRef);
 
-}
+//}
 
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -182,7 +182,7 @@ class AViewGui(QtGui.QMainWindow):
                     os.mkdir( statsPath, 0755 );
                 self.settings.setValue("refzfilepath", _refzfilepath)
                 processAmazedOutputStats.setPFSRefFileType()
-                processAmazedOutputStats.ProcessDiff( _refzfilepath, calcFile, diffPath )
+                processAmazedOutputStats.ProcessDiff( _refzfilepath, calcFile, diffPath , reftype='pfs')
             else:
                 print("Selected zref file does not exist...")
         
