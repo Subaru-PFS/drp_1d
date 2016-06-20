@@ -77,7 +77,8 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
                                   const Float64 opt_velocityAbsorption,
                                   const std::string& opt_continuumreest,
                                   const std::string& opt_rules,
-                                  const std::string& opt_velocityFitting)
+                                  const std::string& opt_velocityFitting,
+                                  const Float64 &opt_twosteplargegridstep)
 {
     if( spectrum.GetSpectralAxis().IsInLinearScale()==false )
     {
@@ -88,14 +89,18 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
     std::sort(sortedRedshifts.begin(), sortedRedshifts.end());
 
     // redefine redshift grid
-    Int32 enableFastFitLargeGrid = 1;
+    Int32 enableFastFitLargeGrid = 0;
+    if(opt_twosteplargegridstep > 0.0)
+    {
+        enableFastFitLargeGrid = 1;
+    }
 
     TFloat64List largeGridRedshifts;
     //*
     if(enableFastFitLargeGrid==1){
         //Log.LogInfo("Line Model, Fast Fit Large Grid enabled");
         //calculate on a wider grid, defined by a minimum step
-        Float64 dz_thres = 1e-3;
+        Float64 dz_thres = opt_twosteplargegridstep;
         std::vector<Int32> removed_inds;
         Int32 lastKeptInd = 0;
         for(Int32 i=1; i<sortedRedshifts.size()-1; i++){

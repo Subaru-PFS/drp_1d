@@ -47,6 +47,7 @@ private:
     std::string m_opt_continuumreest;
     std::string m_opt_rules;
     Float64 m_opt_extremacount;
+    Float64 m_opt_twosteplargegridstep;
 
 
 };

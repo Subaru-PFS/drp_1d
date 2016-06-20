@@ -260,8 +260,8 @@ class AViewGui(QtGui.QMainWindow):
         _spcName = str(self.leResultSpcName.text())
         _tplpath = ""
         
-        current_index = int(self.leResultIndex.text() )-1
-        _redshift = self.resList.list[current_index].zcalc
+        #current_index = int(self.leResultIndex.text() )-1
+        _redshift = ""#self.resList.list[current_index].zcalc
 
         _iextremaredshift = 0
         _diffthres = str(self.leDiffThres.text())

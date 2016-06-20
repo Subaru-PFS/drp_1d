@@ -429,7 +429,7 @@ class ResParser(object):
         elif method == "decisionaltreeb" or method.lower() == "amazed0_2":
             #find redshift
             [chipathlist, chinamelist] = self.getAutoChi2FullPath(spcnametag)
-            chi = chisq.ResultChisquare(chipathlist[0], stype=os.path.splitext(chinamelist[0])[0])
+            chi = chisq.ResultChisquare(chipathlist[3], stype=os.path.splitext(chinamelist[3])[0]) #3st chipath for linemodel
             redshift = chi.getExtrema(idxExtrema)
             
             name = "dtreeBsolve.linemodel_spc_extrema_{}.csv".format(idxExtrema)

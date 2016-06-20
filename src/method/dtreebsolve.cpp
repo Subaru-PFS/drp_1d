@@ -67,6 +67,7 @@ const std::string COperatorDTreeBSolve::GetDescription()
     desc.append("\tparam: linemodel.rules = {""all"", ""no""}\n");
     desc.append("\tparam: linemodel.continuumreestimation = {""no"", ""onlyextrema"", ""always""}\n");
     desc.append("\tparam: linemodel.extremacount = <float value>\n");
+    desc.append("\tparam: linemodel.fastfitlargegridstep = <float value>, deactivated if negative or zero\n");
 
     desc.append("\tparam: chisquare.overlapthreshold = <float value>\n");
     desc.append("\tparam: chisquare.redshiftsupport = {""full"", ""extremaextended""}\n");
@@ -130,6 +131,8 @@ Bool COperatorDTreeBSolve::Solve(CDataStore &dataStore, const CSpectrum &spc, co
     dataStore.GetScopedParam( "linemodel.rules", opt_rules, "all" );
     Float64 opt_extremacount;
     dataStore.GetScopedParam( "linemodel.extremacount", opt_extremacount, 10.0 );
+    Float64 opt_twosteplargegridstep;
+    dataStore.GetScopedParam( "linemodel.fastfitlargegridstep", opt_twosteplargegridstep, 0.001 );
 
 
     // Compute merit function
@@ -151,7 +154,8 @@ Bool COperatorDTreeBSolve::Solve(CDataStore &dataStore, const CSpectrum &spc, co
                                                                            opt_velocity_absorption,
                                                                            opt_continuumreest,
                                                                            opt_rules,
-                                                                           opt_velocityfit) );
+                                                                           opt_velocityfit,
+                                                                           opt_twosteplargegridstep) );
 
     /*
     static Float64 cutThres = 2.0;

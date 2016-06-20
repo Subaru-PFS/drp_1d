@@ -44,7 +44,8 @@ public:
                                               const Float64 opt_velocityAbsorption,
                                               const std::string &opt_continuumreest="no",
                                               const std::string &opt_rules="all",
-                                              const std::string &opt_velocityFitting="no");
+                                              const std::string &opt_velocityFitting="no",
+                                              const Float64 &opt_twosteplargegridstep=0.001);
 
     void storeGlobalModelResults( CDataStore &dataStore );
     void storePerTemplateModelResults( CDataStore &dataStore, const CTemplate& tpl );

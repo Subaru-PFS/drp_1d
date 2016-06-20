@@ -48,6 +48,7 @@ const std::string CLineModelSolve::GetDescription()
     desc.append("\tparam: linemodel.rules = {""all"", ""balmer"", ""strongweak"", ""oiiratio"", ""ciiiratio"", ""no""}\n");
     desc.append("\tparam: linemodel.extremacount = <float value>\n");
     desc.append("\tparam: linemodel.velocityfit = {""yes"", ""no""}\n");
+    desc.append("\tparam: linemodel.fastfitlargegridstep = <float value>, deactivated if negative or zero\n");
 
 
 
@@ -65,6 +66,7 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
     dataStore.GetScopedParam( "linemodel.linetypefilter", m_opt_linetypefilter, "no" );
     dataStore.GetScopedParam( "linemodel.lineforcefilter", m_opt_lineforcefilter, "no" );
     dataStore.GetScopedParam( "linemodel.fittingmethod", m_opt_fittingmethod, "hybrid" );
+    dataStore.GetScopedParam( "linemodel.fastfitlargegridstep", m_opt_twosteplargegridstep, 0.001 );
     dataStore.GetScopedParam( "linemodel.continuumcomponent", m_opt_continuumcomponent, "fromspectrum" );
     dataStore.GetScopedParam( "linemodel.linewidthtype", m_opt_lineWidthType, "combined" );
     dataStore.GetScopedParam( "linemodel.instrumentresolution", m_opt_resolution, 2350.0 );
@@ -95,6 +97,7 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
     Log.LogInfo( "    -rules: %s", m_opt_rules.c_str());
     Log.LogInfo( "    -continuumreestimation: %s", m_opt_continuumreest.c_str());
     Log.LogInfo( "    -extremacount: %.3f", m_opt_extremacount);
+    Log.LogInfo( "    -fastfitlargegridstep: %.6f", m_opt_twosteplargegridstep);
 
     return true;
 }
@@ -164,7 +167,8 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
                       m_opt_velocity_absorption,
                       m_opt_continuumreest,
                       m_opt_rules,
-                      m_opt_velocityfit);
+                      m_opt_velocityfit,
+                      m_opt_twosteplargegridstep);
 
     if( !result )
     {
