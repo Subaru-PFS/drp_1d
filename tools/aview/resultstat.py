@@ -1934,7 +1934,7 @@ def plotVelocityError(resDir):
                 elvList.append(elv) 
                 alvList.append(alv)
                 elvRefList.append(resList.list[k].refValues['elvelocity'])
-                elvErrorList.append(abs(resList.list[k].refValues['elvelocity']-elv))
+                elvErrorList.append((elv-resList.list[k].refValues['elvelocity']))
 
     print("got relzerr n = {}".format(len(relzerrList)))
     print("got elvError n = {}".format(len(elvErrorList)))        
@@ -1963,9 +1963,10 @@ def plotVelocityError(resDir):
             plt.show() 
             
         #Plotting hist versus velocity
+        #elvAbsErrorList = [np.abs(a) for a in elvErrorList]
         outFileNoExt = 'stats_versusSigma_hist' 
         outFilepathNoExt = os.path.join(outdir,outFileNoExt)
-        lstats.PlotAmazedVersusBinsHistogram(relzerrList, elvErrorList, outdir, outFilepathNoExt, enablePlot=enablePlot, enableExport=enableExport, mtype='SIGMA', nPercentileDepth=2) 
+        lstats.PlotAmazedVersusBinsHistogram(relzerrList, elvErrorList, outdir, outFilepathNoExt, enablePlot=enablePlot, enableExport=enableExport, mtype='ERROR_SIGMA', nPercentileDepth=2) 
     
   
 def plotTplMissingRate(resDir, opt=0):

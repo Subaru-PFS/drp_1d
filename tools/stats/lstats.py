@@ -204,16 +204,20 @@ def PlotAmazedVersusBinsHistogram(yvect, mvect, outdir, outFileNoExt, enablePlot
         vectBins = np.linspace(0.0, 5.0, 30, endpoint=True)
         #print 'the redshift bins are: ' + str(vectBins)
     elif mtype=='SFR':
-        print '\n\nPlotAmazedVersusSFRtHistogram:'
+        print '\n\nPlotAmazedVersusSFRHistogram:'
         vectBins = np.logspace(-2, 2, 40, endpoint=True)
         #print 'the sfr bins are: ' + str(vectBins)  
     elif mtype=='EBMV':
-        print '\n\nPlotAmazedVersusEBMVtHistogram:'
+        print '\n\nPlotAmazedVersusEBMVHistogram:'
         vectBins = np.logspace(-3, 2, 30, endpoint=True)
         #print 'the ebmv bins are: ' + str(vectBins)  
     elif mtype=='SIGMA':
-        print '\n\nPlotAmazedVersusEBMVtHistogram:'
+        print '\n\nPlotAmazedVersusSIGMAHistogram:'
         vectBins = np.linspace(50, 350, 15, endpoint=True)
+        #print 'the sigma bins are: ' + str(vectBins)
+    elif mtype=='ERROR_SIGMA':
+        print '\n\nPlotAmazedVersusERROR_SIGMAHistogram:'
+        vectBins = np.linspace(-500, 500, 40, endpoint=True)
         #print 'the sigma bins are: ' + str(vectBins)  
     
     ybins49, ybins50, ybins51, ybinsVERYLOW, ybinsLOW, ybinsHIGH, ybinsVERYHIGH, ynbins = exportHistogramComplex(yvect, mvect, vectBins, outFileNoExt+'.csv')
@@ -303,6 +307,8 @@ def PlotAmazedVersusBinsHistogram(yvect, mvect, outdir, outFileNoExt, enablePlot
             ax1.set_xscale('log')
         elif mtype=='SIGMA':
             ax2.set_xlim([25, 375])
+        elif mtype=='ERROR_SIGMA':
+            ax2.set_xlim([-550, 550])
         else:
             ax2.set_xlim([15, 30])
             
