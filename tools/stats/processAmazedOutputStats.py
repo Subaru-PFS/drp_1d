@@ -84,7 +84,6 @@ def setSIMULMRefFileType():
 def ProcessDiff( refFile, calcFile, outFile, reftype ) :
     global iRefZ, iRefMag, iRefFlag   
      
-    f = open( outFile, "w" )
 
     #*************** open ref file
     if 0:     
@@ -204,6 +203,8 @@ def ProcessDiff( refFile, calcFile, outFile, reftype ) :
     n = min(len(dataRef), len(dataCalc))
     print "INFO: n set to = " + str(n)
             
+    #Write the diff file
+    f = open( outFile, "w" )
     f.write( "#ID\tMAGI\tZREF\tZFLAG\tZCALC\tMERIT\tTPL\tMETHOD\tSNR\tSFR\tE(B-V)\tSigma\tDIFF\n" )
     for k in range(0,n):
         if iRefFlag>-1:
@@ -529,7 +530,7 @@ def ProcessStats( fname, zRange, magRange,  sfrRange, enablePlot = False ):
     fout.close()
     # ...
     
-    # plot the filtered list
+    # plot the filtered list scatter zrelerr = f(1+zref)
     relerrorvect = range(0,nSelected)
     for x in range(0,nSelected):
         relerrorvect[x] = (zcalc[x] - zref[x])/(1+zref[x])
@@ -569,7 +570,18 @@ def ProcessStats( fname, zRange, magRange,  sfrRange, enablePlot = False ):
     pp.savefig( os.path.join(outputDirectory, 'filteredset_relzerr_zoom_2.png'), bbox_inches='tight')
     if enablePlot:
         pp.show()
-    
+        
+    # plot the filtered list scatter zcalc = f(Zref)    
+    fig = pp.figure('filtered dataset zcalc=f(zref)')
+    pp.plot(zref, zcalc, 'x')
+    pp.grid(True) # Affiche la grille
+    #pp.legend(('cos','sin'), 'upper right', shadow = True)
+    pp.ylabel('zcalc')
+    pp.xlabel('zref')
+    pp.title('All spectra included') # Titre
+    pp.savefig( os.path.join(outputDirectory, 'filteredset_zcalc-vs-zref.png'), bbox_inches='tight')
+        
+    # plot Histograms
     # ******* large bins histogram
     vectErrorBins = [0.00001, 0.0001, 0.0005, 0.001, 0.005, 0.01, 0.1, 1.0, 10.0]
     print 'the rough bins are: ' + str(vectErrorBins)
