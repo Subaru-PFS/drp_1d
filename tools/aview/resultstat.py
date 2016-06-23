@@ -31,9 +31,10 @@ import detectedpeakcatalog as dpeakctlg
 import detectedcatalog as dctlg 
 import matchingsolution as matchsol 
 import spectrum as sp
+import modelresult
 
 class Result(object):
-    def __init__(self, name, zref, zcalc, zdiff, chi2, chi2nc, chi2PerTplZcalc, chi2PerTplZref, chi2ncPerTplZref):
+    def __init__(self, name, zref, zcalc, zdiff, chi2, chi2nc, chi2PerTplZcalc, chi2PerTplZref, chi2ncPerTplZref, refValues):
         self.logTagStr = "Result"
         self.name = name
         self.zcalc = zcalc;
@@ -47,6 +48,8 @@ class Result(object):
         self.chi2ncPerTplZref = chi2ncPerTplZref; #list of chi2nocontinuum val, per template, at z = zref
         if len(chi2PerTplZref)>0:
             self.tplMissingRate = self.ComputeTplMissingRate(); # rate: percentage of templates for which the chi2 val is not available at z ref, could be due to insufficient overlap
+
+        self.refValues = refValues        
         
     def ComputeTplMissingRate(self):
         ntpl = len(self.chi2PerTplZref)
@@ -79,9 +82,9 @@ class ResultList(object):
         self.load(spcName=spcName, methodName=methodName)
     
     def load(self, spcName="", methodName=""):
-        s = rp.ResParser(self.dir)
-        print(s) 
-        self.statsdir = s.getStatsDirPath()
+        self.resParser = rp.ResParser(self.dir)
+        print(self.resParser) 
+        self.statsdir = self.resParser.getStatsDirPath()
         self.analysisoutputdir = os.path.join(self.statsdir, "analysis")
         diffthresStr = "diffthres_{}".format(self.diffthreshold)
         if(self.diffthreshold<0):
@@ -90,19 +93,21 @@ class ResultList(object):
         if not os.path.exists(self.analysisoutputdir):
             os.makedirs(self.analysisoutputdir)
     
-        n = s.getDiffSize() 
+        n = self.resParser.getDiffSize() 
         #n = 4
         print('Number of spectra is: {0}'.format(n))
     
         self.n = 0;
         for x in range(0, n):
-            line = s.getDiffLine(x)
+            line = self.resParser.getDiffLine(x)
             name = line[0] 
             zref = line[2]
             zcalc = line[4]
             zdiff = line[4]-line[2]
             #print('zcalc is: {0}'.format(zcalc)) 
             method = line[6]
+            
+            elvelocity = line[11]
             
             enableShowDetails = False
             if enableShowDetails:
@@ -111,12 +116,13 @@ class ResultList(object):
                 print('zcalc is: {0}'.format(zcalc)) 
                 print('self.diffthreshold is: {0}'.format(self.diffthreshold))
                 print('method is: {0}'.format(method)) 
+                print('elvelocity is: {0}'.format(elvelocity)) 
             if self.opt=='full':
-                chi2 = s.getChi2Val(name, zcalc, "", chi2type="raw")
-                chi2nc = s.getChi2Val(name, zcalc, "", chi2type="nocontinuum")
-                chi2PerTplZcalc = s.getChi2List(name, zcalc, chi2type="raw")
-                chi2PerTplZref = s.getChi2List(name, zref, chi2type="raw")
-                chi2ncPerTplZref = [];#s.getChi2List(name, zref, chi2type="nocontinuum")
+                chi2 = self.resParser.getChi2Val(name, zcalc, "", chi2type="raw")
+                chi2nc = self.resParser.getChi2Val(name, zcalc, "", chi2type="nocontinuum")
+                chi2PerTplZcalc = self.resParser.getChi2List(name, zcalc, chi2type="raw")
+                chi2PerTplZref = self.resParser.getChi2List(name, zref, chi2type="raw")
+                chi2ncPerTplZref = [];#self.resParser.getChi2List(name, zref, chi2type="nocontinuum")
             else:
                 chi2 = -1
                 chi2nc = -1
@@ -135,7 +141,8 @@ class ResultList(object):
                 accepted = False
                 
             if accepted:
-                res = Result(name, zref, zcalc, zdiff, chi2, chi2nc, chi2PerTplZcalc, chi2PerTplZref, chi2ncPerTplZref)
+                refValues = {'elvelocity': elvelocity}
+                res = Result(name, zref, zcalc, zdiff, chi2, chi2nc, chi2PerTplZcalc, chi2PerTplZref, chi2ncPerTplZref, refValues)
                 self.list.append(res)
                 self.n +=1
             #print('{0}/{1} results loaded: last chi2 = {2}'.format(self.n,x, chi2))
@@ -1887,6 +1894,79 @@ def plotPrecisionHist(resDir):
     plt.ylabel('count')
     plt.title('Histogram\n{}/{} included results'.format(len(relzerrList), nres))
     plt.show()
+    
+def plotVelocityError(resDir):
+    print('using amazed results full path: {0}'.format(resDir))
+    resList = ResultList(resDir, diffthreshold=-1.0, opt='brief')
+    
+    elvList = []
+    alvList = []
+    idXExtremum = 0
+    elvErrorList = []
+    elvRefList = []
+    
+    zrefMin = 0.0
+    zrefMax = 20.0
+    relzerrList = []
+    relzerr_threshold = 100#5e-3
+    
+    nres = resList.n
+    for k in range(nres):
+        print("\nprocessing result #{}/{}".format(k+1, resList.n))
+        zref = resList.list[k].zref
+        zcalc = resList.list[k].zcalc
+        relzerr = (resList.list[k].zref-zcalc)/(1.0+resList.list[k].zref)
+        if zref >= zrefMin and zref <= zrefMax:
+            if abs(relzerr) < relzerr_threshold:
+                relzerrList.append(abs(relzerr))
+                lmModelFitPath = resList.resParser.getLineModelResultPath(resList.list[k].name, idXExtremum)
+                if os.path.exists(lmModelFitPath):
+                    mres = modelresult.ModelResult(lmModelFitPath)
+                else:
+                    print("ERROR: unable to find the modelResult file... aborting...")
+                    stop
+                try:
+                    elv = mres.vel_emission
+                    alv = mres.vel_absorption
+                except:
+                    print("ERROR-EXCEPT: unable to find the line velocities file... aborting...")
+                    stop
+                elvList.append(elv) 
+                alvList.append(alv)
+                elvRefList.append(resList.list[k].refValues['elvelocity'])
+                elvErrorList.append(abs(resList.list[k].refValues['elvelocity']-elv))
+
+    print("got relzerr n = {}".format(len(relzerrList)))
+    print("got elvError n = {}".format(len(elvErrorList)))        
+      
+    enableExport = 1 
+    enablePlot = 1
+    if enableExport or enablePlot:
+        outdir = os.path.join(resList.analysisoutputdir, "velocity")
+        if not os.path.exists(outdir):
+            os.makedirs(outdir)
+            
+            plt.figure("Velocity Error Histogram", figsize=(10,8))
+            
+        #plotting Errorvelocity histogram
+        nbins = 80
+        plt.hist(elvErrorList, bins=nbins, normed=0, histtype='stepfilled')
+        #plt.xlim([-5e-3, 5e-3])
+        plt.grid(True) # Affiche la grille
+        plt.xlabel('abs(ELVcalc-ELVref)')
+        plt.ylabel('count')
+        plt.title('Histogram\n{}/{} included results'.format(len(elvErrorList), nres))
+        if enableExport:
+            outFigFile = os.path.join(outdir, 'velocityErr_hist.png'.format())
+            plt.savefig( outFigFile, bbox_inches='tight')
+        if enablePlot:
+            plt.show() 
+            
+        #Plotting hist versus velocity
+        outFileNoExt = 'stats_versusSigma_hist' 
+        outFilepathNoExt = os.path.join(outdir,outFileNoExt)
+        lstats.PlotAmazedVersusBinsHistogram(relzerrList, elvErrorList, outdir, outFilepathNoExt, enablePlot=enablePlot, enableExport=enableExport, mtype='SIGMA', nPercentileDepth=2) 
+    
   
 def plotTplMissingRate(resDir, opt=0):
     print('using amazed results full path: {0}'.format(resDir))
@@ -2061,6 +2141,7 @@ def StartFromCommandLine( argv ) :
         35. Plot continuum indexes\n\
         \n\
         40. Plot precision histogram\n\
+        41. Plot velocity error histogram\n\
         \n")
         choice = int(choiceStr)
         
@@ -2177,7 +2258,9 @@ def StartFromCommandLine( argv ) :
             plotContinuumIndexes(options.resDir, float(options.diffthres), spcName)
             
         elif choice == 40:           
-            plotPrecisionHist(options.resDir)
+            plotPrecisionHist(options.resDir)            
+        elif choice == 41:           
+            plotVelocityError(options.resDir)
             
         else:    
             print("Error: invalid entry, aborting...")

@@ -116,7 +116,7 @@ class AViewGui(QtGui.QMainWindow):
         self.lblResultZdiff = QtGui.QLabel('        - zdiff', wdg)
         layout.addWidget(self.lblResultZdiff, 9, 0, 1, 1) 
         self.leResultSpcZdiff = QtGui.QLineEdit(wdg)
-        self.leResultSpcZdiff.setFixedWidth(100) 
+        self.leResultSpcZdiff.setFixedWidth(300) 
         layout.addWidget(self.leResultSpcZdiff, 9, 1, 1, 2) 
         self.leResultSpcZdiff.setEnabled(False)
         #Add the result zcalc 
@@ -133,14 +133,34 @@ class AViewGui(QtGui.QMainWindow):
         self.leResultSpcZref.setFixedWidth(100) 
         layout.addWidget(self.leResultSpcZref, 11, 1, 1, 2) 
         self.leResultSpcZref.setEnabled(False)  
-      
+
+        
+        #Add the show parameters section separator
+        self.lblShowParametersSection = QtGui.QLabel('----------', wdg)
+        layout.addWidget(self.lblShowParametersSection, 15, 0, 1, 1) 
+        
         #Add the show button
         self.btn = QtGui.QPushButton('Show', wdg)
         self.btn.setFixedWidth(500)
         self.btn.setFixedHeight(50)
         self.btn.clicked.connect(self.bt_showResult)
         self.btn.setToolTip('Display the Chi2/spectrum/fitted template/linemodel results successively...')
-        layout.addWidget(self.btn, 15, 1, 1, 1)
+        layout.addWidget(self.btn, 16, 1, 1, 1)
+
+        #Add the extremum choice ctrls
+        self.lblExtremumChoice = QtGui.QLabel(' Extremum: ', wdg)
+        layout.addWidget(self.lblExtremumChoice, 18, 0, 1, 1)
+        
+        self.leExtremumChoice = QtGui.QLineEdit(wdg)
+        self.leExtremumChoice.setToolTip('Enter the extremum num to be selected for display...')
+        self.leExtremumChoice.setFixedWidth(100) 
+        self.leExtremumChoice.setEnabled(False)
+        layout.addWidget(self.leExtremumChoice, 18, 1, 1, 10)
+        
+        self.ckExtremumChoiceOverride = QtGui.QCheckBox('Extremum Override', wdg)
+        self.ckExtremumChoiceOverride.stateChanged.connect(self.ck_extremumOverride)
+        layout.addWidget(self.ckExtremumChoiceOverride, 18, 2, 1, 10)
+        #self.ckExtremumChoiceOverride.toggle()
         
         self.setCentralWidget(wdg)
         self.setWindowTitle('Aview')
@@ -201,8 +221,8 @@ class AViewGui(QtGui.QMainWindow):
         current_index = int(self.leResultIndex.text() )-1
         self.leResultSpcName.setText(self.resList.list[current_index].name)
         self.leResultSpcZdiff.setText(str(self.resList.list[current_index].zdiff))
-        self.leResultSpcZcalc.setText(str(self.resList.list[current_index].zcalc))
-        self.leResultSpcZref.setText(str(self.resList.list[current_index].zref))
+        self.leResultSpcZcalc.setText("{:.5}".format(self.resList.list[current_index].zcalc))
+        self.leResultSpcZref.setText("{:.5}".format(self.resList.list[current_index].zref))
         
     
     def bt_nextResultIndex(self):
@@ -263,7 +283,16 @@ class AViewGui(QtGui.QMainWindow):
         #current_index = int(self.leResultIndex.text() )-1
         _redshift = ""#self.resList.list[current_index].zcalc
 
-        _iextremaredshift = 0
+                
+        if self.ckExtremumChoiceOverride.isChecked():
+            iextrFromCtrl = str(self.leExtremumChoice.text())
+            if iextrFromCtrl=="":
+                _iextremaredshift = 0
+            else:
+                _iextremaredshift = float(iextrFromCtrl)
+        else:
+            _iextremaredshift = 0
+            
         _diffthres = str(self.leDiffThres.text())
         if _diffthres=="":
             _diffthres = -1
@@ -294,7 +323,15 @@ class AViewGui(QtGui.QMainWindow):
         self.settings.setValue("resDir", _resDirPrevious);
         self.enableCtrls(True)
         
-    
+    def ck_extremumOverride(self, state):
+        if state == QtCore.Qt.Checked:
+            self.leExtremumChoice.setEnabled(True)
+            iextrFromCtrl = str(self.leExtremumChoice.text())
+            if iextrFromCtrl=="":
+                self.leExtremumChoice.setText("0")
+        else:
+            self.leExtremumChoice.setEnabled(False)
+            
     def enableCtrls(self, val):
         self.leDiffThres.setEnabled(val)
         #self.leSpcFilter.setEnabled(val)

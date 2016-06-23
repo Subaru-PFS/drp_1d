@@ -123,7 +123,22 @@ class ResParser(object):
                 data = lineStr.split("\t")
                 data = [r for r in data if r != '']
                 #print len(data)
-                if(len(data) >=9):
+                if(len(data) >=11):
+                    d0 = str(data[0])
+                    d1 = float(data[1])
+                    d2 = float(data[2])
+                    d3 = int(data[3])
+                    d4 = float(data[4])
+                    d5 = float(data[5])
+                    d6 = str(data[6])
+                    d7 = str(data[7])
+                    d8 = float(data[8])
+                    d9 = float(data[9])
+                    d10 = float(data[10])
+                    d11 = float(data[11])
+                    d = [d0, d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11]
+                    self.diffData.append(d)
+                elif (len(data) >=9):
                     d0 = str(data[0])
                     d1 = float(data[1])
                     d2 = float(data[2])
@@ -849,7 +864,27 @@ class ResParser(object):
         #print("dirpath = {0}".format(dirpath))
         dctlgfullpath = os.path.join(dirpath, self.lineMatchingResultrelpath)
  
-        return dctlgfullpath
+        return dctlgfullpath     
+        
+    def getLineModelResultPath(self, spcnametag, idxExtremum): 
+        """
+        This function returns the model result full path for a spectrum name tag - idxExtremum pair.
+        """ 
+        if os.path.splitext(spcnametag)[1].lower()==".fits":
+            spcnametag = os.path.splitext(spcnametag)[0]
+        method = self.getConfigVal('method')
+        print("method found in config is: {}".format(method))
+        path = os.path.join(self.respath, spcnametag)
+        #, chi2type="raw"
+        #tplnametag
+        modelpath = ""
+            
+        if method == "linemodel":
+            name = "linemodelsolve.linemodel_fit_extrema_{}.csv".format(idxExtremum) 
+            modelpath = os.path.join(path,name)
+
+
+        return modelpath
 
 
 if __name__ == '__main__':
