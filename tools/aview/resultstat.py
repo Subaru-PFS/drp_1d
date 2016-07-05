@@ -63,13 +63,17 @@ class Result(object):
         return rate;
                 
 class ResultList(object):
-    def __init__(self, dir, diffthreshold=-1, opt='full', spcName="", methodName="", zrefmin=-1, zrefmax=20):
+    def __init__(self, dir, diffthreshold=-1, opt='full', spcName="", methodName="", zrefmin=-1, zrefmax=20, magrefmin=-1.0, magrefmax=50, sfrrefmin=-1.0, sfrrefmax=1e4):
         self.logTagStr = "ResultList"
         self.dir = dir
         self.name = os.path.basename(self.dir)
         self.diffthreshold = diffthreshold  
         self.zrefmin = zrefmin
         self.zrefmax = zrefmax
+        self.magrefmin = magrefmin
+        self.magrefmax = magrefmax
+        self.sfrrefmin = sfrrefmin
+        self.sfrrefmax = sfrrefmax
         
         self.opt = opt
         self.statsdir = ""
@@ -102,6 +106,10 @@ class ResultList(object):
             line = self.resParser.getDiffLine(x)
             name = line[0] 
             zref = line[2]
+
+            magref = line[1]
+            sfrref = line[9]            
+            
             zcalc = line[4]
             zdiff = line[4]-line[2]
             #print('zcalc is: {0}'.format(zcalc)) 
@@ -138,6 +146,10 @@ class ResultList(object):
             if not abs(zdiff)>=self.diffthreshold:
                 accepted = False
             if not (zref>=self.zrefmin and zref<=self.zrefmax):
+                accepted = False
+            if not (magref>=self.magrefmin and magref<=self.magrefmax):
+                accepted = False
+            if not (sfrref>=self.sfrrefmin and sfrref<=self.sfrrefmax):
                 accepted = False
                 
             if accepted:
@@ -1689,7 +1701,17 @@ def exportBestRedshiftWithZRangePerTemplate(resDir, diffthres, chi2Type="linemod
             for k in range(resList.n):    
                 data = "{}\t{}\t{}\t{}\t{}\n".format(resList.list[k].name, bestz[k], bestmerit[k], bestTpl[k], "method" )
                 text_file.write("{}".format(data))
-            text_file.close() 
+            text_file.close()
+            
+def printSourcesInZMagSfrBin(resDir, diffthres, zrefmin, zrefmax, magrefmin, magrefmax, sfrrefmin, sfrrefmax):
+    print('using amazed results full path: {0}'.format(resDir))
+    resList = ResultList(resDir, diffthreshold=diffthres, opt='brief', spcName="", methodName="", zrefmin=1.25, zrefmax=1.4, magrefmin=-1.0, magrefmax=23.5, sfrrefmin=-1.0, sfrrefmax=5)
+    if resList.n <1:
+        print('No results loaded...')
+        return
+    
+    for k in range(resList.n):
+        print("{:<8}{:<30}{:<8}".format(k, resList.list[k].name, resList.list[k].zref))
     
 
 def cmap_discretize(cmap, N):
@@ -2130,6 +2152,7 @@ def StartFromCommandLine( argv ) :
         4. Plot Relative Position - Closest Z candidate\n\
         5. Plot Relative Position - 2nd extrema z candidate\n\
         6. Export Best Redshift - with zrange(per template)\n\
+        7. Export Sources in z-mag-sfr Bin\n\
         \n\
         10. Export Line Detection Stats\n\
         11. Compare Peak Detection with reference\n\
@@ -2205,7 +2228,10 @@ def StartFromCommandLine( argv ) :
                     enableZrangeFilter=True
                     
             exportBestRedshiftWithZRangePerTemplate(options.resDir, float(options.diffthres), chi2Type=extremaTypeStr, spcName=spcName, enableZrangeFilter=enableZrangeFilter)
-        
+                
+        elif choice == 7:
+            printSourcesInZMagSfrBin(options.resDir, float(options.diffthres), zrefmin=1.25, zrefmax=1.4, magrefmin=-1.0, magrefmax=23.0, sfrrefmin=-1.0, sfrrefmax=5)
+            
         elif choice == 10:
             exportLineDetectionStats(options.resDir)
         elif choice == 11:
