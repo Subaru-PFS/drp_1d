@@ -33,6 +33,7 @@ iRefFlag = 5
 iRefSFR = -1
 iRefEBmV = -1
 iRefSigma = -1
+iRefLogHalpha = -1
 
 def setMuseRefFileType():
     global iRefZ, iRefMag, iRefFlag, iRefSFR, iRefEBmV, iRefSigma
@@ -80,6 +81,18 @@ def setSIMULMRefFileType():
     iRefEBmV = 4
     iRefISM = 6
     iRefSigma = 7
+    
+def setSIMUEuclid2016RefFileType():
+    global iRefZ, iRefMag, iRefFlag, iRefSFR, iRefEBmV, iRefSigma, iRefLogHalpha
+    iRefZ = 1
+    iRefMag = 2
+    iRefFlag = -1
+    iRefSFR = 5
+    iRefEBmV = 4
+    iRefISM = -1
+    iRefSigma = 6
+    iRefLogHalpha = 7
+    
 
 def ProcessDiff( refFile, calcFile, outFile, reftype ) :
     global iRefZ, iRefMag, iRefFlag   
@@ -205,7 +218,7 @@ def ProcessDiff( refFile, calcFile, outFile, reftype ) :
             
     #Write the diff file
     f = open( outFile, "w" )
-    f.write( "#ID\tMAGI\tZREF\tZFLAG\tZCALC\tMERIT\tTPL\tMETHOD\tSNR\tSFR\tE(B-V)\tSigma\tDIFF\n" )
+    f.write( "#ID\tMAGI\tZREF\tZFLAG\tZCALC\tMERIT\tTPL\tMETHOD\tSNR\tSFR\tE(B-V)\tSigma\tLogHalpha\tDIFF\n" )
     for k in range(0,n):
         if iRefFlag>-1:
             flagValStr = str(dataRef[k][iRefFlag])
@@ -223,6 +236,10 @@ def ProcessDiff( refFile, calcFile, outFile, reftype ) :
             SigmaValStr = str(dataRef[k][iRefSigma])
         else:
             SigmaValStr = "-1"
+        if iRefLogHalpha>-1:
+            LogHalphaValStr = str(dataRef[k][iRefLogHalpha])
+        else:
+            LogHalphaValStr = "-1"
             
         if len(dataSnr)>0:
             snrValStr = str(dataSnr[k][1])
@@ -261,6 +278,7 @@ def ProcessDiff( refFile, calcFile, outFile, reftype ) :
         f.write( SFRValStr + "\t")
         f.write( EBmVValStr + "\t")
         f.write( SigmaValStr + "\t")
+        f.write( LogHalphaValStr + "\t")
         f.write( str(zdiff) + "\n" )
     
     f.close()
@@ -340,7 +358,7 @@ def loadRef(fname, reftype):
             if len(data)<2:
                 data = lineStr.split(" ")
             data = [r for r in data if r != '']
-            print len(data)
+            #print len(data)
             if reftype=="pfs":
                 if(len(data) >= 7): #PFS
                     d0 = str(data[0])
@@ -363,6 +381,29 @@ def loadRef(fname, reftype):
                     d6 = float(data[6])
                     d7 = float(data[7])
                     d = [d0, d1, d2, d3, d4, d5, d6, d7]
+                    dataArray.append(d) 
+            elif reftype=="simueuclid2016":
+                if(len(data) >= 8): #SIMUEuclid2016
+                    d0 = str(data[0])
+                    d1 = float(data[1])
+                    d2 = float(data[2])
+                    d3 = str(data[3])
+                    d4 = float(data[4])
+                    d5 = float(data[5])
+                    d6 = float(data[6])
+                    d7 = float(data[7])
+                    d = [d0, d1, d2, d3, d4, d5, d6, d7]
+                    dataArray.append(d) 
+            elif reftype=="vvds2":
+                if(len(data) >= 7): #VVDS2
+                    d0 = str(data[0])
+                    d1 = str(data[1])
+                    d2 = float(data[2])
+                    d3 = float(data[3])
+                    d4 = float(data[4])
+                    d5 = float(data[5])
+                    d6 = float(data[6])
+                    d = [d0, d1, d2, d3, d4, d5, d6]
                     dataArray.append(d) 
             elif reftype=="vuds":
                 if(len(data) >= 6):
@@ -427,7 +468,7 @@ def loadDiff(fname):
             data = lineStr.split("\t")
             data = [r for r in data if r != '']
             #print len(data)
-            if(len(data) == 13): #Spectrum ID	MAGI	ZREF	ZFLAG	ZCALC	MERIT	TPL	METHOD    SNR	SFR E(B-V) Sigma DIFF
+            if(len(data) == 14): #Spectrum ID	MAGI	ZREF	ZFLAG	ZCALC	MERIT	TPL	METHOD    SNR	SFR E(B-V) Sigma LogHalpha DIFF
                 d0 = str(data[0])
                 d1 = float(data[1])
                 d2 = float(data[2])
@@ -441,7 +482,8 @@ def loadDiff(fname):
                 d10 = float(data[10])
                 d11 = float(data[11])
                 d12 = float(data[12])
-                d = [d0, d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11, d12]
+                d13 = float(data[13])
+                d = [d0, d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11, d12, d13]
                 dataArray.append(d) 
     f.close()
     return dataArray
@@ -486,6 +528,7 @@ def ProcessStats( fname, zRange, magRange,  sfrRange, enablePlot = False ):
     sfrvect = range(0,nSelected)
     ebmvvect = range(0,nSelected)
     sigmavect = range(0,nSelected)
+    fhalphavect = range(0,nSelected)
     zref = range(0,nSelected)
     zcalc = range(0,nSelected)
     for x in range(0,nSelected):
@@ -495,7 +538,8 @@ def ProcessStats( fname, zRange, magRange,  sfrRange, enablePlot = False ):
         snrvect[x] = (data[indsForHist[x]][8])
         sfrvect[x] = (data[indsForHist[x]][9])
         ebmvvect[x] = (data[indsForHist[x]][10]) 
-        sigmavect[x] = (data[indsForHist[x]][11]) 
+        sigmavect[x] = (data[indsForHist[x]][11])
+        fhalphavect[x] = (data[indsForHist[x]][12]) 
         zref[x] = (data[indsForHist[x]][2])
         zcalc[x] = (data[indsForHist[x]][4])
         
@@ -646,6 +690,14 @@ def ProcessStats( fname, zRange, magRange,  sfrRange, enablePlot = False ):
         outFilepathNoExt = os.path.join(outputDirectory,outFileNoExt)
         outdir = outputDirectory
         lstats.PlotAmazedVersusBinsHistogram(yvect, sigmavect, outdir, outFilepathNoExt, enablePlot=enablePlot, enableExport=1, mtype='SIGMA', nPercentileDepth=nPercentileDepth) 
+
+    # ******* plot logHalpha hist       
+    if 1:
+        print("Plotting versus logfhalpha")
+        outFileNoExt = 'stats_versusLogFHAlpha_hist' 
+        outFilepathNoExt = os.path.join(outputDirectory,outFileNoExt)
+        outdir = outputDirectory
+        lstats.PlotAmazedVersusBinsHistogram(yvect, fhalphavect, outdir, outFilepathNoExt, enablePlot=enablePlot, enableExport=1, mtype='LOGFHALPHA', nPercentileDepth=nPercentileDepth) 
 
 
     print '\n'
@@ -872,7 +924,7 @@ def StartFromCommandLine( argv ) :
     parser = optparse.OptionParser(usage=usage)
     parser.add_option(u"-r", u"--ref", help="reference redshift values",  dest="refFile", default="referenceRedshifts.txt")
     parser.add_option(u"-c", u"--calc", help="calculated redshift values",  dest="calcFile", default="output.txt")
-    parser.add_option(u"-t", u"--type", help="reference redshift values type, choose between 'vvds1', 'vvds2' or 'pfs', 'vuds', 'simulm'",  dest="type", default="vvds")
+    parser.add_option(u"-t", u"--type", help="reference redshift values type, choose between 'vvds1', 'vvds2' or 'pfs', 'vuds', 'simulm', 'simueuclid2016'",  dest="type", default="vvds")
     parser.add_option(u"-m", u"--magRange", help="magnitude range filter for the histograms",  dest="magRange", default="0.0 50.0")
     parser.add_option(u"-s", u"--sfrRange", help="sfr range filter for the histograms",  dest="sfrRange", default="-1.0 10000.0")
     parser.add_option(u"-z", u"--zRange", help="redshift range filter for the histograms",  dest="zRange", default="-1.0 20.0")
@@ -923,6 +975,9 @@ def StartFromCommandLine( argv ) :
         elif options.type == 'simulm':
             print "Info: Using SimuLM reference data file type"            
             setSIMULMRefFileType()
+        elif options.type == 'simueuclid2016':
+            print "Info: Using SimuEuclid2016 reference data file type"            
+            setSIMUEuclid2016RefFileType()
         else:
             print("Info: No reference file type given (--type), using vvds by default.")
 

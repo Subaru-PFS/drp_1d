@@ -127,7 +127,7 @@ class ResParser(object):
                     d0 = str(data[0])
                     d1 = float(data[1])
                     d2 = float(data[2])
-                    d3 = int(data[3])
+                    d3 = float(data[3])
                     d4 = float(data[4])
                     d5 = float(data[5])
                     d6 = str(data[6])

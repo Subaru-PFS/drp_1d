@@ -218,6 +218,10 @@ def PlotAmazedVersusBinsHistogram(yvect, mvect, outdir, outFileNoExt, enablePlot
     elif mtype=='ERROR_SIGMA':
         print '\n\nPlotAmazedVersusERROR_SIGMAHistogram:'
         vectBins = np.linspace(-500, 500, 40, endpoint=True)
+        #print 'the sigma bins are: ' + str(vectBins) 
+    elif mtype=='LOGFHALPHA':
+        print '\n\nPlotAmazedVersusLOGFHaHistogram:'
+        vectBins = np.linspace(-16, -14, 20, endpoint=True)
         #print 'the sigma bins are: ' + str(vectBins)  
     
     ybins49, ybins50, ybins51, ybinsVERYLOW, ybinsLOW, ybinsHIGH, ybinsVERYHIGH, ynbins = exportHistogramComplex(yvect, mvect, vectBins, outFileNoExt+'.csv')
@@ -298,7 +302,7 @@ def PlotAmazedVersusBinsHistogram(yvect, mvect, outdir, outFileNoExt, enablePlot
             ax2.set_xlim([-0.5, 5.5])
             #ax2.set_xlim([-0.5, 3.0])
         elif mtype=='SFR':
-            ax2.set_xlim([1e-2, 1e2])
+            ax2.set_xlim([1e-1, 2*1e2])
             ax2.set_xscale('log')
             ax1.set_xscale('log')
         elif mtype=='EBMV':
@@ -309,6 +313,8 @@ def PlotAmazedVersusBinsHistogram(yvect, mvect, outdir, outFileNoExt, enablePlot
             ax2.set_xlim([25, 375])
         elif mtype=='ERROR_SIGMA':
             ax2.set_xlim([-550, 550])
+        elif mtype=='LOGFHALPHA':
+            ax2.set_xlim([-16.5, -13.5])
         else:
             ax2.set_xlim([15, 30])
             
