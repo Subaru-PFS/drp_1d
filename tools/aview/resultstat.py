@@ -1704,8 +1704,9 @@ def exportBestRedshiftWithZRangePerTemplate(resDir, diffthres, chi2Type="linemod
             text_file.close()
             
 def printSourcesInZMagSfrBin(resDir, diffthres, zrefmin, zrefmax, magrefmin, magrefmax, sfrrefmin, sfrrefmax):
+    print('\n')
     print('using amazed results full path: {0}'.format(resDir))
-    resList = ResultList(resDir, diffthreshold=diffthres, opt='brief', spcName="", methodName="", zrefmin=1.25, zrefmax=1.4, magrefmin=-1.0, magrefmax=23.5, sfrrefmin=-1.0, sfrrefmax=5)
+    resList = ResultList(resDir, diffthreshold=diffthres, opt='brief', spcName="", methodName="", zrefmin=zrefmin, zrefmax=zrefmax, magrefmin=magrefmin, magrefmax=magrefmax, sfrrefmin=sfrrefmin, sfrrefmax=sfrrefmax)
     if resList.n <1:
         print('No results loaded...')
         return
@@ -2230,7 +2231,16 @@ def StartFromCommandLine( argv ) :
             exportBestRedshiftWithZRangePerTemplate(options.resDir, float(options.diffthres), chi2Type=extremaTypeStr, spcName=spcName, enableZrangeFilter=enableZrangeFilter)
                 
         elif choice == 7:
-            printSourcesInZMagSfrBin(options.resDir, float(options.diffthres), zrefmin=1.25, zrefmax=1.4, magrefmin=-1.0, magrefmax=23.0, sfrrefmin=-1.0, sfrrefmax=5)
+            zrefmin = 0.95
+            zrefmax = 1.1
+            print("using zrange = {:<10}{:<10}".format(zrefmin, zrefmax))
+            magrefmin = 0.0
+            magrefmax = 23.0
+            print("using magrange = {:<10}{:<10}".format(magrefmin, magrefmax))
+            sfrrefmin = 0.0
+            sfrrefmax = 5.0
+            print("using sfrrnage = {:<10}{:<10}".format(sfrrefmin, sfrrefmax))
+            printSourcesInZMagSfrBin(options.resDir, float(options.diffthres), zrefmin=zrefmin, zrefmax=zrefmax, magrefmin=magrefmin, magrefmax=magrefmax, sfrrefmin=sfrrefmin, sfrrefmax=sfrrefmax)
             
         elif choice == 10:
             exportLineDetectionStats(options.resDir)

@@ -69,6 +69,7 @@ def exportPerformances(dataDiff, outputDirectory):
 
     n = len(dataDiff)
     print("datadiff n = {}".format(n))
+    logStr = ""
     for izbin in range(len(z_bins_limits)-1):
         zmin = z_bins_limits[izbin]
         zmax = z_bins_limits[izbin+1]
@@ -79,7 +80,15 @@ def exportPerformances(dataDiff, outputDirectory):
                 zbin_dataset.append(dataDiff[x])
                 #print("line kept is {}".format(dataDiff[x]))
         print("\n\nThis z bin n = {}, in [{}, {}]".format(len(zbin_dataset), zmin, zmax ))
-        plotMagSFRPerformanceMatrix(zbin_dataset, zmin, zmax, 1e-3, 0.8, outputDirectory)
+        logStr += plotMagSFRPerformanceMatrix(zbin_dataset, zmin, zmax, 1e-3, 0.8, outputDirectory)
+
+    #export log        
+    outTxtFile = os.path.join(outputDirectory,"performance" + '.txt') 
+    fout = open(outTxtFile, "w")
+    fout.write(logStr)
+    fout.close()
+    
+    #merge images to form Image-Matrix summary
     mergeImagesInFolder(outputDirectory, ncols = 4)
       
 def mergeImagesInFolder(dir_path, ncols):
@@ -149,7 +158,7 @@ def plotMagSFRPerformanceMatrix(bin_dataset, zmin, zmax, catastrophic_failure_th
     matrix = np.zeros((n_mag_bins,n_sfr_bins))
     n_matrix = np.zeros((n_mag_bins,n_sfr_bins))
     success_rate_matrix = np.zeros((n_mag_bins,n_sfr_bins)) 
-    logStr = "#MagSfr summary:"
+    logStr = ""
     for imbin in range(n_mag_bins):
         m_bin_dataset = []
         for x in range(n):
@@ -187,7 +196,7 @@ def plotMagSFRPerformanceMatrix(bin_dataset, zmin, zmax, catastrophic_failure_th
                 matrix[imbin][isfrbin] = 1
             s = np.log( (success_rate_matrix[imbin][isfrbin]-success_rate_thres)/(1-success_rate_thres) +1)
             matrix[imbin][isfrbin] = (s + np.sign(s)*1.5)
-            binLogStr = "\nzbin = [{}, {}], magbin = [{}, {}], sfrbin = [{}, {}] : ncount = {}, nsuccess={}".format(zmin, zmax, 
+            binLogStr = "\nzbin = [{:<8}, {:<8}], magbin = [{:<6}, {:<6}], sfrbin = [{:<8}, {:<8}] : ncount = {:<8}, success_rate={:<8}".format(zmin, zmax, 
                                              mag_bins_limits[imbin], mag_bins_limits[imbin+1], 
                                             sfr_bins_limits[isfrbin], sfr_bins_limits[isfrbin+1], 
                                             n_matrix[imbin][isfrbin], success_rate_matrix[imbin][isfrbin])
@@ -291,6 +300,8 @@ def plotMagSFRPerformanceMatrix(bin_dataset, zmin, zmax, catastrophic_failure_th
         pp.savefig( outFigFile, bbox_inches='tight')
     else:
         pp.show() 
+        
+    return logStr
   
       
 def getSuccessRate(datasetdiff, catastrophic_failure_threshold):

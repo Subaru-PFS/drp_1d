@@ -1,3 +1,4 @@
+# v3.0    2016-07-06 added stats support for euclid-simu dataset type.
 # v2.1	2015-07-06 stats hist saved (txt export) in 2 different bin sizes
 # v2.02	2015-06-19 stats histograms different colors with methods/templates subsets
 # v2.01	2015-06-18 plot different colors for methods/template subsets
