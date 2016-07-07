@@ -112,9 +112,6 @@ private:
     void addDoubleLine(const CRay &r1, const CRay &r2, Int32 index1, Int32 index2, Float64 nominalWidth, Float64 a1, Float64 a2);
 
     void applyRules();
-    Void ApplyStrongHigherWeakRule( Int32 lineType );
-    Float64 FindHighestStrongLineAmp( Int32 lineType, Float64 &er);
-
     CRegulament* m_Regulament;
 
     Float64 m_Redshift;

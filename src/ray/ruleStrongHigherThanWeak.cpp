@@ -33,7 +33,8 @@ void CRuleStrongHigherThanWeak::Correct( CLineModelElementList& LineModelElement
   if( maxiStrong == -1 )
     {
       //Log.LogDebug( "Rule %s: no strong line detected.", Name.c_str() );
-      return;
+      //return;
+      maxiStrong = 0.0;
     }
   for( UInt32 iRestRayWeak=0; iRestRayWeak<LineModelElementList.m_RestRayList.size(); iRestRayWeak++ ) //loop on the weak lines
     {
@@ -57,6 +58,9 @@ void CRuleStrongHigherThanWeak::Correct( CLineModelElementList& LineModelElement
       Float64 erA = erStrong;
       Float64 ampB = LineModelElementList.m_Elements[eIdxWeak]->GetFittedAmplitude( subeIdxWeak );
       Float64 erB = LineModelElementList.m_Elements[eIdxWeak]->GetFittedAmplitudeErrorSigma( subeIdxWeak );
+      //Method 0 : no noise taken into acccount
+      //Float64 maxB = (coeff*ampA);
+      //Method 1 : using Strong line noise to be more tolerant
       Float64 maxB = (coeff*ampA) + coeff*(erA*nSigma);
       LineModelElementList.m_Elements[eIdxWeak]->LimitFittedAmplitude( subeIdxWeak, maxB );
     }
@@ -89,12 +93,20 @@ Float64 CRuleStrongHigherThanWeak::FindHighestStrongLineAmp( Int32 linetype , Fl
 	{
 	  continue;
 	}
+
+      Float64 validSNRCut = 0.05;
       Float64 ampStrong = LineModelElementList.m_Elements[eIdxStrong]->GetFittedAmplitude( subeIdxStrong );
-      if( maxi<ampStrong )
+      Float64 erStrong = LineModelElementList.m_Elements[eIdxStrong]->GetFittedAmplitudeErrorSigma( subeIdxStrong );
+      Float64 lineSnr = -1.0;
+      if(erStrong>0.0 && ampStrong>0.0)
+      {
+          lineSnr = ampStrong/erStrong;
+      }
+      if( maxi<ampStrong && lineSnr>validSNRCut )
 	{
 	  maxi = ampStrong;
-	  er = LineModelElementList.m_Elements[eIdxStrong]->GetFittedAmplitudeErrorSigma( subeIdxStrong );
-	}
+      er = erStrong;
+    }
     }
   //Log.LogDebug( "Highest strong line amplitude = %f", maxi );
   return maxi;
