@@ -2231,11 +2231,11 @@ def StartFromCommandLine( argv ) :
             exportBestRedshiftWithZRangePerTemplate(options.resDir, float(options.diffthres), chi2Type=extremaTypeStr, spcName=spcName, enableZrangeFilter=enableZrangeFilter)
                 
         elif choice == 7:
-            zrefmin = 0.95
-            zrefmax = 1.1
+            zrefmin = 1.25
+            zrefmax = 1.4
             print("using zrange = {:<10}{:<10}".format(zrefmin, zrefmax))
-            magrefmin = 0.0
-            magrefmax = 23.0
+            magrefmin = 23.0
+            magrefmax = 23.5
             print("using magrange = {:<10}{:<10}".format(magrefmin, magrefmax))
             sfrrefmin = 0.0
             sfrrefmax = 5.0

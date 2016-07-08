@@ -162,9 +162,14 @@ def ProcessDiff( refFile, calcFile, outFile, reftype ) :
         #s = s[0:-5]
         #p = [i for i,x in enumerate(dataCalc_names_raw) if str(s) == x] # PFS batch 1 to 5
         p = [i for i,x in enumerate(dataCalc_names_raw) if str(s) in x] # PFS batch 6 onwards
-        if len(p) >0:
+        if len(p) == 1:
             #print "OK : index found : ref={0} and calc={1}".format(s,p)
             inds.append(p[0])
+        elif len(p) > 1:
+            print "ERROR : multiple calc index found for a given ref name!!".format()
+            print "ERROR : dataRef_names = {}\n".format(s)
+            print "ERROR : dataCalc_names_raw = {}\n".format(p)
+            stop
         else:
             inds.append(-1)
             print "ERROR : index not found while comparing ref and calc lists!!".format()
