@@ -31,9 +31,9 @@ class Catalog(object):
         self.linegroup = -1
         self.linenominalamp = -1
         
-        #self.conversion = "toAir"
+        self.conversion = "toAir"
         #self.conversion = "toVacuum"#"toAir"
-        self.conversion = ""
+        #self.conversion = ""
         
         self.load()
         
@@ -163,7 +163,7 @@ class Catalog(object):
         for k in range(len(self.linesx)):
             #x = self.linesx[k]*(1+self.z)
             x = self.linesx[k]
-            pp.plot((x, x), (-1000,1000) , 'r-', label=self.linesname[k] )
+            pp.plot((x, x), (-100000,100000) , 'r-', label=self.linesname[k] )
             #pp.text(x, self.ymax*0.75, '{0}'.format(self.linesname[k]))
             pp.text(x, 900, '{0}'.format(self.linesname[k]))
         

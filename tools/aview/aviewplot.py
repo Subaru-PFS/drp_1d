@@ -210,7 +210,7 @@ class AViewPlot(object):
                     ccolor = 'r'
                     lpos = 2
                     lstyle = 'dashed'
-                ax1.plot((x, x), (-1000,1000) , cstyle, linestyle = lstyle, label=self.linesname[k] )
+                ax1.plot((x, x), (-100000,100000) , cstyle, linestyle = lstyle, label=self.linesname[k] )
                 #pp.text(x, self.ymax*0.75, '{0}'.format(self.linesname[k]))
                 #print("testlinepos = {0}".format(self.t.getWeightedFlux(self.linesxrest[k], self.s.ysum / self.t.ysum)*2.0))
                 if 0 and not self.forcePlotNoTemplate:

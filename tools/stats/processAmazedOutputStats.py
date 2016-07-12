@@ -28,6 +28,7 @@ import lstats
 import lperf
 
 # global variables, default for VVDS
+iRefID = 0
 iRefZ = 4
 iRefMag = 6
 iRefFlag = 5
@@ -72,6 +73,16 @@ def setPFSRefFileType():
     iRefSFR = 5
     iRefEBmV = 4
     iRefSigma = 6
+    
+def setKeckRefFileType():
+    global iRefID, iRefZ, iRefMag, iRefFlag, iRefSFR, iRefEBmV, iRefSigma
+    iRefID = 3
+    iRefZ = 1
+    iRefMag = 2
+    iRefFlag = -1
+    iRefSFR = 5
+    iRefEBmV = 4
+    iRefSigma = 6
 
 def setSIMULMRefFileType():
     global iRefZ, iRefMag, iRefFlag, iRefSFR, iRefEBmV, iRefSigma
@@ -96,7 +107,7 @@ def setSIMUEuclid2016RefFileType():
     
 
 def ProcessDiff( refFile, calcFile, outFile, reftype ) :
-    global iRefZ, iRefMag, iRefFlag   
+    global iRefID, iRefZ, iRefMag, iRefFlag, iRefSFR, iRefEBmV, iRefSigma, iRefLogHalpha   
      
 
     #*************** open ref file
@@ -107,7 +118,7 @@ def ProcessDiff( refFile, calcFile, outFile, reftype ) :
         dataRef = ascii.read(dataRefStr)
     else:
         dataRef = loadRef( refFile, reftype );
-    dataRef_names = [a[0] for a in dataRef]
+    dataRef_names = [a[iRefID] for a in dataRef]
     print("ProcessDiff : Dataref N = {}".format(len(dataRef)))    
     print("ProcessDiff : Dataref, first elt: {}".format(dataRef[0]))
     #print("ProcessDiff : Dataref, second elt: {}\n".format(dataRef[1]))
@@ -289,64 +300,65 @@ def ProcessDiff( refFile, calcFile, outFile, reftype ) :
     
     f.close()
 
-    #*************** create subsets
-    subset_index = 3 # index = 4 is the method, index = 3 is the tpl, 
-    subset_nmax = 12 # max num of subset shown in figure
-    data_label_subset = [a[subset_index] for a in dataCalc]
-    s = set(data_label_subset)
-    data_subsets = []
-    for a in s:
-        #print (a)
-        data_subsets.append([a, data_label_subset.count(a)])
-    #sorted_hist = sorted(hist, key=lambda hist: hist[0])
-    print("subsets = {0}".format(data_subsets))
-
-    ######### plot
-    xvect = range(0,n)
-    yvect = range(0,n)  
-    for k in range(0,n):
-    	xvect[k] = dataRef[k][iRefZ]
-	yvect[k] = (dataCalc[k][1]-dataRef[k][iRefZ])/(1+dataRef[k][iRefZ])
-    fig = pp.figure('Amazed output')
-    ax = fig.add_subplot(111)
-    color_ = ['r', 'g', 'b', 'y','c', 'm', 'y', 'k', 'r', 'g', 'b', 'y']
-    #n=max(len(s),5)
-    #color_=cm.rainbow(np.linspace(0,1,n))
-    mylegend = [a[0] for a in data_subsets]
-    for k in range(min(len(data_subsets),subset_nmax)):
-        inds = [i for i,x in enumerate(data_label_subset) if x==data_subsets[k][0]]
-	#print("indices found are {0}".format(inds))
-        xv = [xvect[i] for i in inds ]
-        yv = [yvect[i] for i in inds ]
-        ax.plot(xv, yv, 'x', label=mylegend[k], color=color_[k])
-
-    #pp.legend((mylegend),loc=4)
-    #pp.legend((mylegend))
-    # Shrink current axis by 20%
-    box = ax.get_position()
-    ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
-    pp.legend(loc=9, bbox_to_anchor=(0.5, -0.1))
-    # Put a legend to the right of the current axis
-    ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
-    # Put a legend to the bottom of the current axis
-    #pp.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05),
-     #     fancybox=True, shadow=True, ncol=5)
-    #pp.hist(yvect, 5000, normed=1, histtype='step', cumulative=True)
-    ##bar
-    #ind = np.arange(len(OY))
-    #pp.plot(xvect, yvect, 'x')
-    #ax.set_xscale('log')
-    pp.grid(True) # Affiche la grille
-    #pp.legend(('cos','sin'), 'upper right', shadow = True)
-    pp.ylabel('(zcalc-zref)/(1+zref)')
-    pp.xlabel('z reference')
-    #pp.title('Amazed performance stats') # Titre
-    pp.savefig( os.path.dirname(os.path.abspath(outFile)) + '/' +'diff.png', bbox_inches='tight') # sauvegarde du fichier ExempleTrace.png
-    #pp.show()
-    zoomedRange = 0.005
-    ax.set_ylim([-zoomedRange, zoomedRange])
-    #pp.show()
-    pp.savefig( os.path.dirname(os.path.abspath(outFile)) + '/' +'diff_yzoomed.png', bbox_inches='tight') # sauvegarde du fichier ExempleTrace.png
+    if 0:
+        #*************** create subsets
+        subset_index = 3 # index = 4 is the method, index = 3 is the tpl, 
+        subset_nmax = 12 # max num of subset shown in figure
+        data_label_subset = [a[subset_index] for a in dataCalc]
+        s = set(data_label_subset)
+        data_subsets = []
+        for a in s:
+            #print (a)
+            data_subsets.append([a, data_label_subset.count(a)])
+        #sorted_hist = sorted(hist, key=lambda hist: hist[0])
+        print("subsets = {0}".format(data_subsets))
+    
+        ######### plot
+        xvect = range(0,n)
+        yvect = range(0,n)  
+        for k in range(0,n):
+        	xvect[k] = dataRef[k][iRefZ]
+    	yvect[k] = (dataCalc[k][1]-dataRef[k][iRefZ])/(1+dataRef[k][iRefZ])
+        fig = pp.figure('Amazed output')
+        ax = fig.add_subplot(111)
+        color_ = ['r', 'g', 'b', 'y','c', 'm', 'y', 'k', 'r', 'g', 'b', 'y']
+        #n=max(len(s),5)
+        #color_=cm.rainbow(np.linspace(0,1,n))
+        mylegend = [a[0] for a in data_subsets]
+        for k in range(min(len(data_subsets),subset_nmax)):
+            inds = [i for i,x in enumerate(data_label_subset) if x==data_subsets[k][0]]
+    	#print("indices found are {0}".format(inds))
+            xv = [xvect[i] for i in inds ]
+            yv = [yvect[i] for i in inds ]
+            ax.plot(xv, yv, 'x', label=mylegend[k], color=color_[k])
+    
+        #pp.legend((mylegend),loc=4)
+        #pp.legend((mylegend))
+        # Shrink current axis by 20%
+        box = ax.get_position()
+        ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
+        pp.legend(loc=9, bbox_to_anchor=(0.5, -0.1))
+        # Put a legend to the right of the current axis
+        ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+        # Put a legend to the bottom of the current axis
+        #pp.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05),
+         #     fancybox=True, shadow=True, ncol=5)
+        #pp.hist(yvect, 5000, normed=1, histtype='step', cumulative=True)
+        ##bar
+        #ind = np.arange(len(OY))
+        #pp.plot(xvect, yvect, 'x')
+        #ax.set_xscale('log')
+        pp.grid(True) # Affiche la grille
+        #pp.legend(('cos','sin'), 'upper right', shadow = True)
+        pp.ylabel('(zcalc-zref)/(1+zref)')
+        pp.xlabel('z reference')
+        #pp.title('Amazed performance stats') # Titre
+        pp.savefig( os.path.dirname(os.path.abspath(outFile)) + '/' +'diff.png', bbox_inches='tight') # sauvegarde du fichier ExempleTrace.png
+        #pp.show()
+        zoomedRange = 0.005
+        ax.set_ylim([-zoomedRange, zoomedRange])
+        #pp.show()
+        pp.savefig( os.path.dirname(os.path.abspath(outFile)) + '/' +'diff_yzoomed.png', bbox_inches='tight') # sauvegarde du fichier ExempleTrace.png
 
 
 def loadRef(fname, reftype):
@@ -367,6 +379,17 @@ def loadRef(fname, reftype):
             #print len(data)
             if reftype=="pfs":
                 if(len(data) >= 7): #PFS
+                    d0 = str(data[0])
+                    d1 = float(data[1])
+                    d2 = float(data[2])
+                    d3 = str(data[3])
+                    d4 = float(data[4])
+                    d5 = float(data[5])
+                    d6 = float(data[6])
+                    d = [d0, d1, d2, d3, d4, d5, d6]
+                    dataArray.append(d) 
+            elif reftype=="keck":
+                if(len(data) >= 7): #KECK
                     d0 = str(data[0])
                     d1 = float(data[1])
                     d2 = float(data[2])
@@ -972,6 +995,9 @@ def StartFromCommandLine( argv ) :
         elif options.type == 'pfs':
             print "Info: Using PFS reference data file type"
             setPFSRefFileType()
+        elif options.type == 'keck':
+            print "Info: Using KECK reference data file type"
+            setKeckRefFileType()
         elif options.type == 'muse':
             print "Info: Using MUSE reference data file type"            
             setMuseRefFileType()
