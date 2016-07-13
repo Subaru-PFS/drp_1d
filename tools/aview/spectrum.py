@@ -90,6 +90,7 @@ class Spectrum(object):
         return scopy
         
     def load(self):
+        print("\nPATH = {}\n".format(self.spath))
         hdulist = fits.open(self.spath) 
         print("\nHDULIST = \n{}\n".format(hdulist))
         try:
@@ -395,6 +396,7 @@ class Spectrum(object):
         a = a + ("    type = {0}\n".format(self.stype))
         a = a + ("    n = {0}\n".format(self.n))
         a = a + ("    dlambda = {0}\n".format(self.getResolution()))
+        a = a + ("    dlambdaMax = {0}, dlambdaMin = {1}\n".format(self.getMaxMinLambdaSteps()[0], self.getMaxMinLambdaSteps()[1]))
         a = a + ("    lambda min = {}, lambda max = {}\n".format(self.getWavelengthMin(), self.getWavelengthMax()))
         a = a + ("    flux min = {}, flux max = {}\n".format(self.getFluxMin(),self.getFluxMax()))
         a = a + ("    flux mean = {}\n".format(np.mean(self.yvect)))
@@ -434,6 +436,38 @@ class Spectrum(object):
                 self.startEventHandling()
             else:
                 pp.show(1)
+            
+        print '\n'  
+        
+    def plotLambda(self, opt_deriv=False, lstyle="r-+"):
+        pp.ion()
+        self.fig = pp.figure(1)
+        #self.fig = sns.pyplot.figure(1)
+        self.canvas = self.fig.canvas
+        self.ax = self.fig.add_subplot(111)
+
+        #pp.plot(self.xvect, self.yvect, "x-")
+        xplot = self.xvect
+        self.ax.plot(xplot, lstyle, label = "wave")
+
+        #find best linear grid on lambda
+        
+        x = range(len(xplot))
+        y = xplot
+        z = np.polyfit(x, y, 1)
+        linearRegMiddle = np.poly1d(z)   
+        self.ax.plot(linearRegMiddle(x), label = "lin reg")
+        
+
+        #pp.grid(True) # Affiche la grille
+        self.ax.xaxis.grid(True,'major')
+        self.ax.yaxis.grid(True,'major')
+        
+        pp.xlabel('index')
+        pp.ylabel('Lambda')
+        pp.title(self.name) # Titre
+        pp.legend()
+        pp.show(1)
             
         print '\n'
         
@@ -838,7 +872,14 @@ class Spectrum(object):
         for x in range(0,self.n-1):
             dl += self.xvect[x+1]-self.xvect[x]
         dl /= self.n
-        return dl
+        return dl  
+        
+    def getMaxMinLambdaSteps(self):
+        dls = []
+        for x in range(0,self.n-1):
+            dl = self.xvect[x+1]-self.xvect[x]
+            dls.append(dl)
+        return np.max(dls), np.min(dls)
         
     def getShiftedX(self, z):
         coeff= 1+z
@@ -1344,6 +1385,10 @@ def StartFromCommandLine( argv ) :
     if os.path.exists(options.spcPath) :
         print('using full path: {0}'.format(options.spcPath))
         s = Spectrum(options.spcPath, options.spcType, snorm=False)
+        
+        #s.plotLambda()
+        #exit()
+        
         #s.applyRedshift(0.25)
         
 #        z = 7.26

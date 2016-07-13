@@ -215,7 +215,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
     {
         if(enableFastFitLargeGrid==0 || i==0 || result->Redshifts[i] == largeGridRedshifts[indexLargeGrid])
         {
-            ModelFit( model, lambdaRange, result->Redshifts[i], result->ChiSquare[i], result->LineModelSolutions[i], contreest_iterations);
+            ModelFit( model, lambdaRange, result->Redshifts[i], result->ChiSquare[i], result->LineModelSolutions[i], contreest_iterations, false);
             Log.LogDebug( "Z interval %d: Chi2 = %f", i, result->ChiSquare[i] );
             indexLargeGrid++;
             //Log.LogInfo( "\nLineModel Infos: large grid step %d", i);
@@ -342,7 +342,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
             }
 
 
-            ModelFit( model, lambdaRange, result->Redshifts[idx], result->ChiSquare[idx], result->LineModelSolutions[idx], contreest_iterations);
+            ModelFit( model, lambdaRange, result->Redshifts[idx], result->ChiSquare[idx], result->LineModelSolutions[idx], contreest_iterations, false);
             m = result->ChiSquare[idx];
             if(enableVelocityFitting){
                 Bool enableManualStepVelocityFit = true;
@@ -352,7 +352,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
                     model.SetFittingMethod("lmfit");
                     model.SetElementIndexesDisabledAuto();
                     Float64 meritTmp;
-                    ModelFit( model, lambdaRange, result->Redshifts[idx], meritTmp, result->LineModelSolutions[idx], contreest_iterations);
+                    ModelFit( model, lambdaRange, result->Redshifts[idx], meritTmp, result->LineModelSolutions[idx], contreest_iterations, false);
 
 
                     model.SetFittingMethod(opt_fittingmethod);
@@ -394,7 +394,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
                                 model.SetVelocityEmission(vTest);
                             }
                             Float64 meritv;
-                            ModelFit( model, lambdaRange, result->Redshifts[idx], meritv, result->LineModelSolutions[idx], contreest_iterations);
+                            ModelFit( model, lambdaRange, result->Redshifts[idx], meritv, result->LineModelSolutions[idx], contreest_iterations, false);
                             //meritv = model.getLeastSquareMeritUnderElements();
                             //todo: eventually use the merit under the elements with a BIC estimator taking the n samples in the support for each velocity solution...
 
@@ -441,7 +441,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
             for (Int32 iz=0;iz<result->Redshifts.size();iz++)
             {
                 if(result->Redshifts[iz] >= left_border && result->Redshifts[iz] <= right_border){
-                    ModelFit( model, lambdaRange, result->Redshifts[iz], result->ChiSquare[iz], result->LineModelSolutions[iz], contreest_iterations);
+                    ModelFit( model, lambdaRange, result->Redshifts[iz], result->ChiSquare[iz], result->LineModelSolutions[iz], contreest_iterations, false);
                     if(result->ChiSquare[iz]< extremumList2[i].Y)
                     {
                         extremumList2[i].X = result->Redshifts[iz];
@@ -500,6 +500,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
     Int32 savedModels = 0;
     m_savedModelSpectrumResults.clear();
     m_savedModelFittingResults.clear();
+    m_savedModelRulesResults.clear();
 
     for( Int32 i=0; i<extremumCount; i++ )
     {
@@ -548,11 +549,11 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
 
 
 
-        ModelFit( model, lambdaRange, result->Redshifts[idx], result->ChiSquare[idx], result->LineModelSolutions[idx], contreest_iterations);
+        ModelFit( model, lambdaRange, result->Redshifts[idx], result->ChiSquare[idx], result->LineModelSolutions[idx], contreest_iterations, true);
         m = result->ChiSquare[idx];
 
         //save the model result
-        static Int32 maxModelSave = 3;
+        static Int32 maxModelSave = 5;
         if( savedModels<maxModelSave /*&& isLocalExtrema[i]*/)
         {
             // CModelSpectrumResult
@@ -562,6 +563,10 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
             // CModelFittingResult
             std::shared_ptr<CModelFittingResult>  resultfitmodel = std::shared_ptr<CModelFittingResult>( new CModelFittingResult(result->LineModelSolutions[idx], result->Redshifts[idx], result->ChiSquare[idx], result->restRayList, model.GetVelocityEmission(), model.GetVelocityAbsorption()) );
             m_savedModelFittingResults.push_back(resultfitmodel);
+
+            // CModelRulesResult
+            std::shared_ptr<CModelRulesResult>  resultrulesmodel = std::shared_ptr<CModelRulesResult>( new CModelRulesResult( model.GetModelRulesLog() ));
+            m_savedModelRulesResults.push_back(resultrulesmodel);
 
             Int32 saveNLinemodelContinua = 1;
             if( savedModels < saveNLinemodelContinua && contreest_iterations>0)
@@ -591,7 +596,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
         result->Extrema[i] = z;
         //result->IsLocalExtrema[i]=isLocalExtrema[i];
 
-        static Float64 cutThres = 5.0;
+        static Float64 cutThres = 6.0;
         Int32 nValidLines = result->GetNLinesOverCutThreshold(i, cutThres, cutThres);
         result->Posterior[i] = m/Float64(1+nValidLines);
         result->LogArea[i] = -DBL_MAX;
@@ -666,6 +671,9 @@ void COperatorLineModel::storeGlobalModelResults( CDataStore &dataStore )
 
         std::string fname_fit = (boost::format("linemodel_fit_extrema_%1%") % k).str();
         dataStore.StoreScopedGlobalResult( fname_fit.c_str(), m_savedModelFittingResults[k] );
+
+        std::string fname_rules = (boost::format("linemodel_rules_extrema_%1%") % k).str();
+        dataStore.StoreScopedGlobalResult( fname_rules.c_str(), m_savedModelRulesResults[k] );
     }
 
 }
@@ -690,6 +698,9 @@ void COperatorLineModel::storePerTemplateModelResults( CDataStore &dataStore, co
 
         std::string fname_fit = (boost::format("linemodel_fit_extrema_%1%") % k).str();
         dataStore.StoreScopedPerTemplateResult(  tpl, fname_fit.c_str(), m_savedModelFittingResults[k] );
+
+        std::string fname_rules = (boost::format("linemodel_rules_extrema_%1%") % k).str();
+        dataStore.StoreScopedPerTemplateResult(  tpl, fname_rules.c_str(), m_savedModelRulesResults[k] );
     }
 
 }
@@ -917,10 +928,10 @@ void COperatorLineModel::ComputeArea2(CLineModelResult& results)
  * \brief Calls model.fit() and sets the chisquare to the return value of that method.
  **/
 Void COperatorLineModel::ModelFit(CLineModelElementList& model, const TFloat64Range& lambdaRange, Float64 redshift,
-				  Float64& chiSquare, CLineModelResult::SLineModelSolution& modelSolution, Int32 contreest_iterations)
+                  Float64& chiSquare, CLineModelResult::SLineModelSolution& modelSolution, Int32 contreest_iterations, bool enableLogging)
 {
     chiSquare = boost::numeric::bounds<float>::highest();
-    Float64 fit = model.fit( redshift, lambdaRange, modelSolution, contreest_iterations );
+    Float64 fit = model.fit( redshift, lambdaRange, modelSolution, contreest_iterations, enableLogging );
     chiSquare = fit;// + mSumLogErr;
     Log.LogDebug( "ModelFit: Chi2 = %f", fit );
 }

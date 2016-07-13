@@ -464,7 +464,7 @@ void CLineModelElementList::PrepareContinuum(Float64 z)
  * Create spectrum model.
  * Return merit.
  **/
-Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambdaRange, CLineModelResult::SLineModelSolution& modelSolution, Int32 contreest_iterations)
+Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambdaRange, CLineModelResult::SLineModelSolution& modelSolution, Int32 contreest_iterations, bool enableLogging)
 {
     m_Redshift = redshift;
 
@@ -735,7 +735,7 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
 
 
     //Apply rules,
-    applyRules();
+    applyRules( enableLogging );
 
     refreshModel();
 
@@ -2157,15 +2157,23 @@ void CLineModelElementList::addDoubleLine(const CRay &r1, const CRay &r2, Int32 
  * If "all" or "oiiratio" is in the rules string, call ApplyAmplitudeRatioRangeRule parameterized for OII.
  * If "all" or "strongweak" is in the rules string, call ApplyStrongHigherWeakRule for emission and then for absorption.
  **/
-void CLineModelElementList::applyRules()
+void CLineModelElementList::applyRules( bool enableLogs )
 {
   if( m_rulesoption=="no" )
     {
       return;
     }
-  // new style rules
+
+  m_Regulament-> EnableLogs(enableLogs);
   m_Regulament->Apply( *this );
+
 }
+
+TStringList CLineModelElementList::GetModelRulesLog()
+{
+  return m_Regulament->GetLogs();
+}
+
 
 /**
  * \brief Returns a SLineModelSolution object populated with the current solutions.

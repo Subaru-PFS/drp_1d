@@ -8,6 +8,7 @@
 #include <epic/redshift/ray/ruleBalmerLinearSolver.h>
 #include <epic/redshift/ray/ruleOIIRatioRange.h>
 #include <epic/redshift/ray/ruleStrongHigherThanWeak.h>
+#include <epic/redshift/ray/ruleSuperStrongHighest.h>
 // -->
 
 using namespace NSEpic;
@@ -19,7 +20,11 @@ void CRegulament::Apply( CLineModelElementList& LineModelElementList )
   for( std::vector<CRule*>::iterator it = m_RulesVector.begin(); it != m_RulesVector.end(); it++ )
     {
       (*it)->Apply ( LineModelElementList );
-    }
+      std::string logRule = (*it)->GetLogs ( );
+      if(logRule.size()>0 && m_LogsEnabled){
+        m_RulesLog.push_back(logRule);
+      }
+  }
 }
 /*
 void CRegulament::ApplyWithRedshift( Float64 Redshift )
@@ -67,8 +72,16 @@ Bool CRegulament::CreateRulesFromJSONFiles( void )
   CRuleStrongHigherThanWeak* ARule11 = new CRuleStrongHigherThanWeak( );
   ARule11->SetUp( True, CRay::nType_Absorption );
   m_RulesVector.push_back( dynamic_cast<CRule*>( ARule11 ) );
-  //add rule, if OIII present, then OII should be there too
-  // -->
+
+  // OII and Halpha Super Strong
+  CRuleSuperStrong* ARule12 = new CRuleSuperStrong( );
+  ARule12->SetUp( True, CRay::nType_Emission, std::string( "[OII]3726" ).c_str(), std::string( "[OII]3726" ).c_str(), std::string( "Halpha" ).c_str(), 1.1 );
+  m_RulesVector.push_back( dynamic_cast<CRule*>( ARule12 ) );
+
+  if(m_LogsEnabled)
+  {
+    m_RulesLog.push_back("Linemodel-Regulament: rules creation");
+  }
   return true;
 }
 
@@ -92,3 +105,14 @@ void CRegulament::EnableRulesAccordingToParameters( std::string Parameters )
       }
     }
 }
+
+void CRegulament::EnableLogs( bool enable )
+{
+    m_LogsEnabled = enable;
+    m_RulesLog.clear();
+}
+std::vector<string> CRegulament::GetLogs( )
+{
+    return m_RulesLog;
+}
+

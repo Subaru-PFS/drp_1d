@@ -2,35 +2,41 @@
 #include <iostream>
 
 #include <epic/core/log/log.h>
-#include <epic/redshift/ray/ruleStrongHigherThanWeak.h>
+#include <epic/redshift/ray/ruleSuperStrongHighest.h>
 
 using namespace NSEpic;
 using namespace std;
 
-void CRuleStrongHigherThanWeak::SetUp( Bool EnabledArgument, ... )
+void CRuleSuperStrong::SetUp( Bool EnabledArgument, ... )
 {
-  Name = "strongweak";
+  Name = "superstrong";
   Enabled = EnabledArgument;
   va_list Arguments;
   va_start ( Arguments, EnabledArgument );
   m_LineType = va_arg( Arguments, Int32 );
+  std::string _superStrongTag1 = std::string ( va_arg( Arguments, const char* ) );
+  m_SuperStrongTags.push_back(_superStrongTag1);
+  std::string _superStrongTag2 = std::string ( va_arg( Arguments, const char* ) );
+  m_SuperStrongTags.push_back(_superStrongTag2);
+  std::string _superStrongTag3 = std::string ( va_arg( Arguments, const char* ) );
+  m_SuperStrongTags.push_back(_superStrongTag3);
 }
 
-/** \brief Verify that "stronger lines have higher amplitudes than weaker lines" rule is applicable, and then apply it.
- * If the maximum amplitude for strong lines of the specified type is -1, do nothing.
- * For each weak line of the specified type:
- *  Find the first element that contains that weak line
- *  Get the index of the entry in that element that corresponds to the weak line
- *  If the indexed entry IsOutsideLambdaRange, go for the next weak line
+/** \brief Verify that "super stronger lines have higher amplitudes than other lines" rule is applicable, and then apply it.
+ * If the maximum amplitude for super strong lines of the specified type is -1, do nothing.
+ * For each other line of the specified type:
+ *  Find the first element that contains that line
+ *  Get the index of the entry in that element that corresponds to the line
+ *  If the indexed entry IsOutsideLambdaRange, go for the next line
  *  Get the parameters for the entry
- *  Limit the amplitude of the entry to the maximum amplitude for strong lines
+ *  Limit the amplitude of the entry to the maximum amplitude for super strong lines
  **/
-void CRuleStrongHigherThanWeak::Correct( CLineModelElementList& LineModelElementList )
+void CRuleSuperStrong::Correct( CLineModelElementList& LineModelElementList )
 {
   Float64 coeff = 1.0;
   Float64 erStrong=-1.0;
   std::string strongName = "";
-  Float64 maxiStrong = FindHighestStrongLineAmp( m_LineType, erStrong, strongName, LineModelElementList );
+  Float64 maxiStrong = FindHighestSuperStrongLineAmp( m_SuperStrongTags, erStrong, strongName, LineModelElementList );
   if( maxiStrong == -1 )
     {
       //Log.LogDebug( "Rule %s: no strong line detected.", Name.c_str() );
@@ -44,10 +50,22 @@ void CRuleStrongHigherThanWeak::Correct( CLineModelElementList& LineModelElement
     }
   for( UInt32 iRestRayWeak=0; iRestRayWeak<LineModelElementList.m_RestRayList.size(); iRestRayWeak++ ) //loop on the weak lines
     {
-      if( LineModelElementList.m_RestRayList[iRestRayWeak].GetForce() != CRay::nForce_Weak )
-	{
-	  continue;
-        }
+
+      bool foundSuperStringTag=false;
+      for(Int32 k=0; k<m_SuperStrongTags.size(); k++)
+      {
+          if(LineModelElementList.m_RestRayList[iRestRayWeak].GetName() == m_SuperStrongTags[k])
+          {
+              foundSuperStringTag=true;
+              break;
+          }
+      }
+      if( foundSuperStringTag )
+      {
+          continue;
+      }
+
+
       if( LineModelElementList.m_RestRayList[iRestRayWeak].GetType() != m_LineType )
 	{
 	  continue;
@@ -66,10 +84,8 @@ void CRuleStrongHigherThanWeak::Correct( CLineModelElementList& LineModelElement
       Float64 erB = LineModelElementList.m_Elements[eIdxWeak]->GetFittedAmplitudeErrorSigma( subeIdxWeak );
       //Method 0 : no noise taken into acccount
       //Float64 maxB = (coeff*ampA);
-
       //Method 1 : using Strong line noise to be more tolerant
       //Float64 maxB = (coeff*ampA) + coeff*(erA*nSigma);
-
       //Method 2 : using Strong line noise and Weak line noise to correct with a ratio
       Float64 maxB = ampB; //default value
       if(erB>0.0 && erB<erA && erA>0.0)
@@ -88,25 +104,25 @@ void CRuleStrongHigherThanWeak::Correct( CLineModelElementList& LineModelElement
               std::string nameWeak = LineModelElementList.m_RestRayList[iRestRayWeak].GetName();
               if(Logs.size()==0)
               {
-                  std::string strTmp0 = boost::str( (boost::format("correct - %-10s") % "STRONG_WEAK" ));
+                  std::string strTmp0 = boost::str( (boost::format("correct - %-10s") % "SUPER_STRONG" ));
                   Logs.append(strTmp0.c_str());
               }
-              std::string strTmp = boost::str( (boost::format("\n\tlineWeak=%-10s, lineStrong=%-10s, previousAmp=%.4e, correctedAmp=%.4e") % nameWeak % strongName % ampB % maxB ));
+              std::string strTmp = boost::str( (boost::format("\n\tline=%-10s, lineSuperStrong=%-10s, previousAmp=%.4e, correctedAmp=%.4e") % nameWeak % strongName % ampB % maxB ));
               Logs.append(strTmp.c_str());
           }
       }
     }
 }
 
-Bool CRuleStrongHigherThanWeak::Check( CLineModelElementList& LineModelElementList )
+Bool CRuleSuperStrong::Check( CLineModelElementList& LineModelElementList )
 {
   return false;
 }
 
 /**
- * \brief Returns the maximum amplitude between superstrong lines within the support of m_Elements. The referenced er argument will hold the error sigma for the same element.
+ * \brief Returns the maximum amplitude between strong lines within the support of m_Elements. The referenced er argument will hold the error sigma for the same element.
  **/
-Float64 CRuleStrongHigherThanWeak::FindHighestStrongLineAmp( Int32 linetype , Float64 &er, std::string &name, CLineModelElementList& LineModelElementList )
+Float64 CRuleSuperStrong::FindHighestSuperStrongLineAmp( TStringList superstrongTags , Float64 &er, std::string &name, CLineModelElementList& LineModelElementList )
 {
   Float64 maxi = -1.0;
   for( UInt32 iRestRayStrong=0; iRestRayStrong<LineModelElementList.m_RestRayList.size(); iRestRayStrong++ ) //loop on the strong lines
@@ -119,6 +135,20 @@ Float64 CRuleStrongHigherThanWeak::FindHighestStrongLineAmp( Int32 linetype , Fl
 	{
 	  continue;
 	}
+      bool foundSuperStringTag=false;
+      for(Int32 k=0; k<superstrongTags.size(); k++)
+      {
+        if(LineModelElementList.m_RestRayList[iRestRayStrong].GetName() == superstrongTags[k])
+        {
+            foundSuperStringTag=true;
+            break;
+        }
+      }
+      if( !foundSuperStringTag )
+      {
+        continue;
+      }
+
       Int32 eIdxStrong = LineModelElementList.FindElementIndex( iRestRayStrong );
       Int32 subeIdxStrong = LineModelElementList.m_Elements[eIdxStrong]->FindElementIndex( iRestRayStrong );
       if( LineModelElementList.m_Elements[eIdxStrong]->IsOutsideLambdaRange( subeIdxStrong ) == true )

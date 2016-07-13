@@ -29,3 +29,13 @@ void CRule::Apply( CLineModelElementList& LineModelElementList )
     }
   Correct( LineModelElementList );
 }
+
+/**
+ * Returns the Logs string.
+ **/
+std::string CRule::GetLogs( )
+{
+    std::string _logs = (std::string)Logs;
+    Logs.clear();
+    return _logs;
+}

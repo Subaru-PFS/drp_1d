@@ -4,10 +4,13 @@
 """
 
 import os
+import sys
 import re
 import random
 import matplotlib.pyplot as pp
 import numpy as np
+
+import argparse
 
 class ModelResult(object):
     def __init__(self, modelpath):
@@ -105,6 +108,10 @@ class ModelResult(object):
             if emax < self.lineamplitude[k] and self.linetype[k] == "E":
                 emax = self.lineamplitude[k]
         aemax = max(amax, emax)
+        if amax==0 and not emax==0 :
+            amax = emax/20.0
+        if emax==0 and not amax==0 :
+            emax = amax/20.0
         plotrange = 1000.0
         coeffAmp = plotrange/aemax
         
@@ -278,21 +285,44 @@ class ModelResult(object):
         for k in range(self.n):
             if self.lineamplitude[k] > 0.0:
                 self.lineamplitude[k] *= coeff
-            
+           
+           
+def StartFromCommandLine( argv ) :	
+    parser = argparse.ArgumentParser()
+    
+    parser.add_argument("-i", "--model", dest="modelPath", default="",
+                    help="path to the model to be loaded")          
           
+    options = parser.parse_args()
+    print options
+
+    if os.path.exists(options.modelPath) :
+        mpath = os.path.abspath(options.modelPath)
+        print('using full path: {0}'.format(mpath))
+        m = ModelResult(mpath)
+
+        if 0:
+            name_out = "201605022133_id0_z1.12688_mag20.7_sfr10.0_linemodel_amps_modified.csv"
+            mpath_out = os.path.join(path,name_out)
+            m.applyWeight(0.333)
+            m.save(mpath_out)
+    
+        m.getAmplitudeMeanNhighest() 
+        m.plot()
+    else :
+        print("Error: invalid argument count")
+        exit()
+    
+    
+    
+def Main( argv ) :	
+    try:
+        StartFromCommandLine( argv )
+    except (KeyboardInterrupt):
+        exit()
+
+ 
 if __name__ == '__main__':
-    path = "/home/aschmitt/gitlab/cpf-redshift/tools/simulation/templates_lines"
-    name = "201605022133_id0_z1.12688_mag20.7_sfr10.0_linemodel_amps.csv"
-    mpath = os.path.join(path,name)
-    print('using full path: {0}'.format(mpath))
-    m = ModelResult(mpath)
-
-    if 0:
-        name_out = "201605022133_id0_z1.12688_mag20.7_sfr10.0_linemodel_amps_modified.csv"
-        mpath_out = os.path.join(path,name_out)
-        m.applyWeight(0.333)
-        m.save(mpath_out)
-
-    m.getAmplitudeMeanNhighest() 
-    m.plot()
+    print "ModelResult"
+    Main( sys.argv )
     

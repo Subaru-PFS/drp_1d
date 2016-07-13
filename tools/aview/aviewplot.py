@@ -257,8 +257,8 @@ class AViewPlot(object):
         if not self.forcePlotNoNoise:
             useReducedNoise = True
             if useReducedNoise:
-                nmean = np.mean([a for a in self.nyvect if a>0.0])
-                nstd = np.std([a for a in self.nyvect if a>0.0])
+                nmean = np.mean([a for a in self.nyvect if a>0.0 and np.isfinite(a)])
+                nstd = np.std([a for a in self.nyvect if a>0.0 and np.isfinite(a)])
                 print("noise nmean={}, nstd={}".format(nmean, nstd))
                 reducedNyvect = [a for a in self.nyvect if abs(a-nmean)<2*nstd and a>0.0]
                 if len(reducedNyvect)>2:
