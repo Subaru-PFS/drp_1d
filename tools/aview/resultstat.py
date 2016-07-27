@@ -1454,6 +1454,9 @@ class ResultList(object):
         failures_both = []
         failures_onlyThis = []
         failures_onlyRef = []
+        
+        
+        zrelerr_onlyThis = []
 
         removeStrRef = ""
         removeStrRef = "_interleaved"
@@ -1473,6 +1476,7 @@ class ResultList(object):
             print("Spc {}/{}".format(x+1, self.n))
             spcName = self.list[x].name
             spcName = spcName.replace(removeStrThis, "")
+            relzerr = (self.list[x].zcalc-self.list[x].zref)/(1.0+self.list[x].zref)
             spcFound = False;
             for xref in range(0,nref):
                 #print("\n")
@@ -1485,6 +1489,7 @@ class ResultList(object):
                     break
             if not spcFound:
                 failures_onlyThis.append(spcName)
+                zrelerr_onlyThis.append(relzerr)
                 
                 
         print("\nINFO: searching for failures in REF dataset...")
@@ -1512,7 +1517,7 @@ class ResultList(object):
         print("N total failures this = {}".format(n))
         print("N failures only this = {}".format(len(failures_onlyThis)))
         for x in range(0,len(failures_onlyThis)):
-            print("\t{}".format(failures_onlyThis[x]))
+            print("\t{}\t{}".format(failures_onlyThis[x], zrelerr_onlyThis[x]))
         print("\n")
         print("N total failures ref = {}".format(nref))
         print("N failures only ref = {}".format(nref-len(failures_both)))
@@ -1532,7 +1537,7 @@ class ResultList(object):
             thisStr = thisStr + "N total failures THIS resultset = {}\n".format(n)
             thisStr = thisStr + "N failures only THIS resultset = {}\n".format(len(failures_onlyThis))        
             for x in range(0,len(failures_onlyThis)):
-                thisStr = thisStr +"\t{}\n".format(failures_onlyThis[x])
+                thisStr = thisStr +"\t{}\t{}\n".format(failures_onlyThis[x], zrelerr_onlyThis[x])
             f.write(thisStr+"\n")  
             refStr = "Failures for REF resultset = {} :\n".format(refreslist.name)
             refStr = refStr + "N total failures REF resultset = {}\n".format(nref)
@@ -1712,7 +1717,8 @@ def printSourcesInZMagSfrBin(resDir, diffthres, zrefmin, zrefmax, magrefmin, mag
         return
     
     for k in range(resList.n):
-        print("{:<8}{:<30}{:<8}".format(k, resList.list[k].name, resList.list[k].zref))
+        relzerr = (resList.list[k].zcalc-resList.list[k].zref)/(1+resList.list[k].zref)
+        print("{:<8}{:<50}\t{:3.4f}\t{:3.4f}".format(k, resList.list[k].name, resList.list[k].zref, relzerr))
     
 
 def cmap_discretize(cmap, N):
@@ -2231,14 +2237,14 @@ def StartFromCommandLine( argv ) :
             exportBestRedshiftWithZRangePerTemplate(options.resDir, float(options.diffthres), chi2Type=extremaTypeStr, spcName=spcName, enableZrangeFilter=enableZrangeFilter)
                 
         elif choice == 7:
-            zrefmin = 1.25
-            zrefmax = 1.4
+            zrefmin = 4.5
+            zrefmax = 5.0
             print("using zrange = {:<10}{:<10}".format(zrefmin, zrefmax))
-            magrefmin = 23.0
-            magrefmax = 23.5
+            magrefmin = 21.0
+            magrefmax = 22.0
             print("using magrange = {:<10}{:<10}".format(magrefmin, magrefmax))
-            sfrrefmin = 0.0
-            sfrrefmax = 5.0
+            sfrrefmin = 10.0
+            sfrrefmax = 100.0
             print("using sfrrnage = {:<10}{:<10}".format(sfrrefmin, sfrrefmax))
             printSourcesInZMagSfrBin(options.resDir, float(options.diffthres), zrefmin=zrefmin, zrefmax=zrefmax, magrefmin=magrefmin, magrefmax=magrefmax, sfrrefmin=sfrrefmin, sfrrefmax=sfrrefmax)
             
@@ -2267,8 +2273,8 @@ def StartFromCommandLine( argv ) :
                 print("ERROR: empty reference result directory: aborting...")    
             else:
                 diffthreshold = 0.01
-                zrefmin = 0.1
-                zrefmax = 1.5
+                zrefmin = 2.5
+                zrefmax = 4.0
                 print("INFO: using default diffthreshold={}, and zrange=[{} {}]".format(diffthreshold, zrefmin, zrefmax)) 
                 WarningKeyStr = raw_input("Press any key to continue...".format())
         

@@ -402,6 +402,8 @@ class Spectrum(object):
         a = a + ("    flux mean = {}\n".format(np.mean(self.yvect)))
         a = a + ("    flux std = {}, flux std 6000_8000 = {}\n".format(np.std(self.yvect), self.GetFluxStd6000_8000()))
         a = a + ("    magI = {}\n".format(self.getMagIAB()))
+        a = a + ("    flux has NaN indexes = {}\n".format([k for k, f in enumerate(self.yvect) if np.isnan(f)]))
+        a = a + ("    flux has in indexes = {}\n".format([k for k, f in enumerate(self.yvect) if np.isinf(f)]))
         
         a = a + ("\n")
         
@@ -1240,7 +1242,7 @@ class Spectrum(object):
             if it>20:
                 coeffStep = 1.+dMThreshold
         print("Mag found (n={} iterations) is {}".format(it, mag))
-
+        return mag
 
         
     def getMagIAB(self):
@@ -1353,7 +1355,7 @@ class Spectrum(object):
             
 
 def StartFromCommandLine( argv ) :	
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     
     parser.add_argument("-s", "--spc", dest="spcPath", default="",
                     help="path to the fits spectrum to be plotted")
