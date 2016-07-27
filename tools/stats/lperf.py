@@ -14,8 +14,8 @@ import scipy as sp
   
 import PIL
 
-opt_bins_type = "simueuclid2016"
-#opt_bins_type = "simulm201606"
+#opt_bins_type = "simueuclid2016"
+opt_bins_type = "simulm201606"
 
 def getZBinsLimits(bins_type):
     if bins_type == "simulm201606":

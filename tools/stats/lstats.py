@@ -65,7 +65,7 @@ def exportHistogram(yvect, bins, outFile="", htype="cumulative", ytype="percenta
     
     return ybins
     
-def exportHistogramComplex(yvect, mvect, bins, outFile="", htype="simple", lowhigh=[5, 25, 75, 95]):
+def exportHistogramComplex(yvect, mvect, bins, outFileNoExt="", htype="simple", lowhigh=[5, 25, 75, 95]):
     """
     This function calculates the histogram with the bins on mvect, 
     and then computes the average on yvect over the elements of the bin
@@ -126,11 +126,19 @@ def exportHistogramComplex(yvect, mvect, bins, outFile="", htype="simple", lowhi
             ybinsHIGH[ex] = 0.0
             ybinsVERYHIGH[ex] = 0.0
         
-    if not outFile == "":
-        # convert to percentage, and save in file 
-        fout = open( outFile, "w" )  
+    if not outFileNoExt == "":
+        # save 50 prctile in file
+        fout = open( outFileNoExt+"prct50.csv", "w" )  
         for ex in range(0, nbins):
             outStr = str(ex) + '\t' + str(bins[ex]) + '\t' +str(ybins50[ex]) + '\t' +str(ynbins[ex])
+            print outStr
+            fout.write( outStr  + '\n')
+        fout.close()  
+        
+        # save high prctile in file
+        fout = open( outFileNoExt+"prct{}.csv".format(lowhigh[2]), "w" )  
+        for ex in range(0, nbins):
+            outStr = str(ex) + '\t' + str(bins[ex]) + '\t' +str(ybinsHIGH[ex]) + '\t' +str(ynbins[ex])
             print outStr
             fout.write( outStr  + '\n')
         fout.close()
@@ -213,7 +221,7 @@ def PlotAmazedVersusBinsHistogram(yvect, mvect, outdir, outFileNoExt, enablePlot
         #print 'the ebmv bins are: ' + str(vectBins)  
     elif mtype=='SIGMA':
         print '\n\nPlotAmazedVersusSIGMAHistogram:'
-        vectBins = np.linspace(50, 350, 15, endpoint=True)
+        vectBins = np.linspace(50, 600, 30, endpoint=True)
         #print 'the sigma bins are: ' + str(vectBins)
     elif mtype=='ERROR_SIGMA':
         print '\n\nPlotAmazedVersusERROR_SIGMAHistogram:'
@@ -224,7 +232,7 @@ def PlotAmazedVersusBinsHistogram(yvect, mvect, outdir, outFileNoExt, enablePlot
         vectBins = np.linspace(-16, -14, 20, endpoint=True)
         #print 'the sigma bins are: ' + str(vectBins)  
     
-    ybins49, ybins50, ybins51, ybinsVERYLOW, ybinsLOW, ybinsHIGH, ybinsVERYHIGH, ynbins = exportHistogramComplex(yvect, mvect, vectBins, outFileNoExt+'.csv')
+    ybins49, ybins50, ybins51, ybinsVERYLOW, ybinsLOW, ybinsHIGH, ybinsVERYHIGH, ynbins = exportHistogramComplex(yvect, mvect, vectBins, outFileNoExt)
     if enablePlot or enableExport:
         fig = pp.figure('Amazed stats - z error histogram versus {}'.format(mtype), figsize=(14,10))
         gs = gridspec.GridSpec(2, 1, height_ratios=[12,4])
@@ -310,7 +318,7 @@ def PlotAmazedVersusBinsHistogram(yvect, mvect, outdir, outFileNoExt, enablePlot
             ax2.set_xscale('log')
             ax1.set_xscale('log')
         elif mtype=='SIGMA':
-            ax2.set_xlim([25, 375])
+            ax2.set_xlim([25, 650])
         elif mtype=='ERROR_SIGMA':
             ax2.set_xlim([-550, 550])
         elif mtype=='LOGFHALPHA':

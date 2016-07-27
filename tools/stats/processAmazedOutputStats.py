@@ -40,7 +40,7 @@ iRefLogHalpha = -1
 def setMuseRefFileType():
     global iRefZ, iRefMag, iRefFlag, iRefSFR, iRefEBmV, iRefSigma
     iRefZ = 1
-    iRefMag = 1
+    iRefMag = -1
     iRefFlag = -1
     
     iRefSFR = -1
@@ -387,6 +387,12 @@ def loadRef(fname, reftype):
                     d5 = float(data[5])
                     d6 = float(data[6])
                     d = [d0, d1, d2, d3, d4, d5, d6]
+                    dataArray.append(d) 
+            elif reftype=="muse":
+                if(len(data) >= 2): #MUSE
+                    d0 = str(data[0])
+                    d1 = float(data[1])
+                    d = [d0, d1]
                     dataArray.append(d) 
             elif reftype=="keck":
                 if(len(data) >= 7): #KECK
