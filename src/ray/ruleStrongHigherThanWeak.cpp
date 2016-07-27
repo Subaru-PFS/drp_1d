@@ -68,16 +68,16 @@ void CRuleStrongHigherThanWeak::Correct( CLineModelElementList& LineModelElement
       //Float64 maxB = (coeff*ampA);
 
       //Method 1 : using Strong line noise to be more tolerant
-      //Float64 maxB = (coeff*ampA) + coeff*(erA*nSigma);
+      Float64 maxB = (coeff*ampA) + coeff*(erA*nSigma);
 
       //Method 2 : using Strong line noise and Weak line noise to correct with a ratio
-      Float64 maxB = ampB; //default value
-      if(erB>0.0 && erB<erA && erA>0.0)
-      {
-          maxB = (coeff*ampA)*(erA/erB);
-      }else{
-          maxB = (coeff*ampA);
-      }
+//      Float64 maxB = ampB; //default value
+//      if(erB>0.0 && erB<erA && erA>0.0)
+//      {
+//          maxB = (coeff*ampA)*(erA/erB);
+//      }else{
+//          maxB = (coeff*ampA);
+//      }
       //
 
       if(maxB==std::min(maxB, ampB) && maxB!=ampB)
