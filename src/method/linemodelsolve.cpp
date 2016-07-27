@@ -239,23 +239,23 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
     sfluxAxisPtr = spcfluxAxis;
 
 
-    //Hack: load the simulated true-velocities
-    if(true)
-    {
-        Float64 elv = 0.0;
-        Float64 alv = 0.0;
-        namespace fs = boost::filesystem;
-        fs::path refFilePath("/home/aschmitt/data/simu_linemodel/simulm_20160513/simulation_pfswlinemodel_20160513_10spcperbin/refz.txt");
-        if ( fs::exists(refFilePath) )
-        {
-            std::string spcSubStringId = spc.GetName().substr(0, 20);
-            getVelocitiesFromRefFile( refFilePath.c_str(), spcSubStringId, elv, alv);
-        }
-        Float64 offsetv = 0.0;
-        m_opt_velocity_emission = elv+offsetv;
-        m_opt_velocity_absorption = alv+offsetv;
-        Log.LogInfo( "Linemodel - hack - Loaded velocities for spc %s : elv=%4.1f, alv=%4.1f", spc.GetName().c_str(), elv, alv);
-    }
+//    //Hack: load the simulated true-velocities
+//    if(false)
+//    {
+//        Float64 elv = 0.0;
+//        Float64 alv = 0.0;
+//        namespace fs = boost::filesystem;
+//        fs::path refFilePath("/home/aschmitt/data/simu_linemodel/simulm_20160513/simulation_pfswlinemodel_20160513_10spcperbin/refz.txt");
+//        if ( fs::exists(refFilePath) )
+//        {
+//            std::string spcSubStringId = spc.GetName().substr(0, 20);
+//            getVelocitiesFromRefFile( refFilePath.c_str(), spcSubStringId, elv, alv);
+//        }
+//        Float64 offsetv = 0.0;
+//        m_opt_velocity_emission = elv+offsetv;
+//        m_opt_velocity_absorption = alv+offsetv;
+//        Log.LogInfo( "Linemodel - hack - Loaded velocities for spc %s : elv=%4.1f, alv=%4.1f", spc.GetName().c_str(), elv, alv);
+//    }
 
     // Compute merit function
     COperatorLineModel linemodel;
