@@ -55,7 +55,7 @@ const std::string CLineModelSolve::GetDescription()
     desc.append("\tparam: linemodel.velocityemission = <float value>\n");
     desc.append("\tparam: linemodel.velocityabsorption = <float value>\n");
     desc.append("\tparam: linemodel.continuumreestimation = {""no"", ""onlyextrema"", ""always""}\n");
-    desc.append("\tparam: linemodel.rules = {""all"", ""balmer"", ""strongweak"", ""oiiratio"", ""ciiiratio"", ""no""}\n");
+    desc.append("\tparam: linemodel.rules = {""all"", ""balmer"", ""strongweak"", ""superstrong"", ""oiiratio"", ""ciiiratio"", ""no""}\n");
     desc.append("\tparam: linemodel.extremacount = <float value>\n");
     desc.append("\tparam: linemodel.velocityfit = {""yes"", ""no""}\n");
     desc.append("\tparam: linemodel.fastfitlargegridstep = <float value>, deactivated if negative or zero\n");

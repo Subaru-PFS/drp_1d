@@ -80,9 +80,9 @@ Bool CRegulament::CreateRulesFromJSONFiles( void )
   m_RulesVector.push_back( dynamic_cast<CRule*>( ARule13 ) );
 
   // OII and Halpha Super Strong
-  //CRuleSuperStrong* ARule12 = new CRuleSuperStrong( );
-  //ARule12->SetUp( True, CRay::nType_Emission, std::string( "[OII]3726" ).c_str(), std::string( "[OII]3726" ).c_str(), std::string( "Halpha" ).c_str(), 1.1 );
-  //m_RulesVector.push_back( dynamic_cast<CRule*>( ARule12 ) );
+  CRuleSuperStrong* ARule12 = new CRuleSuperStrong( );
+  ARule12->SetUp( True, CRay::nType_Emission, std::string( "[OII]3726" ).c_str(), std::string( "[OII]3726" ).c_str(), std::string( "Halpha" ).c_str(), 1.1 );
+  m_RulesVector.push_back( dynamic_cast<CRule*>( ARule12 ) );
 
   if(m_LogsEnabled)
   {

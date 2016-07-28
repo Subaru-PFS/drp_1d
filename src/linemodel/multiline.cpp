@@ -617,6 +617,13 @@ void CMultiLine::LimitFittedAmplitude(Int32 subeIdx, Float64 limit)
     if(m_FittedAmplitudes[subeIdx] > limit)
       {
         m_FittedAmplitudes[subeIdx] = std::max(0.0, limit);
+
+        //now update the amplitude of the other lines
+        Float64 amplitudeRef = m_FittedAmplitudes[subeIdx]/m_NominalAmplitudes[subeIdx];
+        for(Int32 k=0; k<m_Rays.size(); k++)
+        {
+            m_FittedAmplitudes[k] = m_NominalAmplitudes[k]*amplitudeRef;
+        }
       }
     return;
 }
