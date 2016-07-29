@@ -14,10 +14,13 @@ class CContinuumDF : public CContinuum
 {
 
 public:
-    CContinuumDF( std::string binPath );
+	CContinuumDF( std::string binPath );
+	CContinuumDF();
 	~CContinuumDF();
 
 	Bool RemoveContinuum ( const CSpectrum& s, CSpectrumFluxAxis& noContinuumFluxAxis);
+
+	Bool m_optclus = false;
 
 private:
 
