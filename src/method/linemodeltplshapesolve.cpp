@@ -127,7 +127,8 @@ std::shared_ptr<const CLineModelTplshapeSolveResult> CLineModelTplshapeSolve::Co
 
     //load the catalogs list from the files in the tplshape-catalogs folder : tplshapeCatalogDir
     namespace fs = boost::filesystem;
-    fs::path tplshapeCatalogDir("/home/aschmitt/data/vuds/VUDS_flag3_4/amazed/linecatalogs/linecatalogs_tplshape_ExtendedTemplatesMarch2016_v2_20160424_LyaEasymfixedbytpl_LyaAxloffsetMixt_CIVoffset_R230");
+    std::string dirPath = "/home/aschmitt/data/vuds/VUDS_flag3_4/amazed/linecatalogs/linecatalogs_tplshape_ExtendedTemplatesMarch2016_v2_20160731_B10H";
+    fs::path tplshapeCatalogDir(dirPath.c_str());
 
     fs::directory_iterator end_iter;
     std::vector<std::string> tplshapeCatalogList;

@@ -1455,8 +1455,8 @@ class ResultList(object):
         failures_onlyThis = []
         failures_onlyRef = []
         
-        
         zrelerr_onlyThis = []
+        zrelerr_onlyRef = []
 
         removeStrRef = ""
         removeStrRef = "_interleaved"
@@ -1498,6 +1498,7 @@ class ResultList(object):
             print("Spc {}/{}".format(x+1, self.n))
             spcNameRef = refreslist.list[xref].name
             spcNameRef = spcNameRef.replace(removeStrRef, "")
+            relzerrRef = (refreslist.list[xref].zcalc-refreslist.list[xref].zref)/(1.0+refreslist.list[xref].zref)
             spcRefFound = False;
             for x in range(0,n):
                 #print("\n")
@@ -1509,6 +1510,7 @@ class ResultList(object):
                     break
             if not spcRefFound:
                 failures_onlyRef.append(spcNameRef)
+                zrelerr_onlyRef.append(relzerrRef)
                 
         print("\n\n")
         print("########## Failures Comparison: ##########")
@@ -1522,7 +1524,7 @@ class ResultList(object):
         print("N total failures ref = {}".format(nref))
         print("N failures only ref = {}".format(nref-len(failures_both)))
         for x in range(0,len(failures_onlyRef)):
-            print("\t{}".format(failures_onlyRef[x]))
+            print("\t{}\t{}".format(failures_onlyRef[x], zrelerr_onlyRef[x]))
         print("\n")
         
         if enableExport:            
@@ -1543,7 +1545,7 @@ class ResultList(object):
             refStr = refStr + "N total failures REF resultset = {}\n".format(nref)
             refStr = refStr + "N failures only REF resultset = {}\n".format(nref-len(failures_both))        
             for x in range(0,len(failures_onlyRef)):
-                refStr = refStr +"\t{}\n".format(failures_onlyRef[x])
+                refStr = refStr +"\t{}\t{}\n".format(failures_onlyRef[x], zrelerr_onlyRef[x])
             f.write(refStr+"\n")  
             f.close()
 
@@ -1627,12 +1629,12 @@ def plotRelativePosSecondBestExtrema(resDir, diffthres, spcName=""):
     nextrema = 10
 #    relposraw = resList.getClosestZcandidateRelativePositionList("raw", "amazed", enablePlot=True, enableExport=False, nextrema = nextrema)
 #    zrelativemeritList.append(relposraw)
-#    relposnocont = resList.getClosestZcandidateRelativePositionList("nocontinuum", "amazed", enablePlot=True, enableExport=False, nextrema = nextrema)
-#    zrelativemeritList.append(relposnocont)
+    relposnocont = resList.getClosestZcandidateRelativePositionList("nocontinuum", "amazed", enablePlot=True, enableExport=True, nextrema = nextrema)
+    zrelativemeritList.append(relposnocont)
 #    relposcorr = resList.getClosestZcandidateRelativePositionList("corr", "amazed", enablePlot=True, enableExport=False, nextrema = nextrema)
 #    zrelativemeritList.append(relposcorr)
-    relposlinemodel = resList.getSecondExtremaZcandidateRelativePositionList("linemodel", "amazed", enablePlot=True, enableExport=True, nextrema=nextrema)
-    zrelativemeritList.append(relposlinemodel)
+#    relposlinemodel = resList.getSecondExtremaZcandidateRelativePositionList("linemodel", "amazed", enablePlot=True, enableExport=True, nextrema=nextrema)
+#    zrelativemeritList.append(relposlinemodel)
     
     n = resList.n
     #n = 10
@@ -1686,7 +1688,7 @@ def exportBestRedshiftWithZRangePerTemplate(resDir, diffthres, chi2Type="linemod
         print('No results loaded...')
         return
     
-    bestz, bestmerit, bestTpl = resList.getBestZcandidateWithinZrangePerTpl(chi2Type, "full", enableZrangeFilter=False)
+    bestz, bestmerit, bestTpl = resList.getBestZcandidateWithinZrangePerTpl(chi2Type, "full", enableZrangeFilter=enableZrangeFilter)
     
     enableExport = True
     if enableExport:    
@@ -2273,8 +2275,8 @@ def StartFromCommandLine( argv ) :
                 print("ERROR: empty reference result directory: aborting...")    
             else:
                 diffthreshold = 0.01
-                zrefmin = 2.5
-                zrefmax = 4.0
+                zrefmin = 0
+                zrefmax = 1.5
                 print("INFO: using default diffthreshold={}, and zrange=[{} {}]".format(diffthreshold, zrefmin, zrefmax)) 
                 WarningKeyStr = raw_input("Press any key to continue...".format())
         

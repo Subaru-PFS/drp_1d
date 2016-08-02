@@ -141,10 +141,50 @@ class AViewPlot(object):
             self.ymax = max(self.syvect)
         print("INFO: Ampl. factor used is {}".format(A))
 
-        #compute ranges        
+        #compute ranges  
+        if not self.exportAutoDisplaysPath == "":
+            print("INFO: computing ranges for auto display")
+            self.xmin = self.exportAuto_lambda_min
+            self.xmax = self.exportAuto_lambda_max
+            ixminSpc = self.s.getWavelengthIndex(self.xmin)
+            ixmaxSpc = self.s.getWavelengthIndex(self.xmax)
+            ixminTpl = self.t.getWavelengthIndex(self.xmin)
+            ixmaxTpl = self.t.getWavelengthIndex(self.xmax)
+            #print("exportAutoDisplaysPath: self.xmin={}".format(self.xmin))
+            #print("exportAutoDisplaysPath: self.xmax={}".format(self.xmax))
+            #print("exportAutoDisplaysPath: ixmin={}".format(ixmin))
+            #print("exportAutoDisplaysPath: ixmax={}".format(ixmax))
+            if ixmaxSpc - ixminSpc < 2:
+                return
+            
+            if not self.forcePlotNoTemplate:
+                print("computes ranges with template")
+                if 0: #hybrid range
+                    alpha = 0.33
+                    ymintpl = min(self.tyvect[ixminTpl:ixmaxTpl])
+                    yminspc = min(self.syvect[ixminSpc:ixmaxSpc])
+                    self.ymin = min(ymintpl, (ymintpl+alpha*yminspc)/(1.0+alpha))
+                    ymaxtpl = max(self.tyvect[ixminTpl:ixmaxTpl])
+                    ymaxspc = max(self.syvect[ixminSpc:ixmaxSpc])
+                    self.ymax = max(ymaxtpl, (ymaxtpl+alpha*ymaxspc)/(1.0+alpha))
+                if 0: #spc+tpl range
+                    self.ymin = min(min(self.syvect[ixminSpc:ixmaxSpc]), min(self.tyvect[ixminTpl:ixmaxTpl]))
+                    self.ymax = max(max(self.syvect[ixminSpc:ixmaxSpc]), max(self.tyvect[ixminTpl:ixmaxTpl]))
+                    
+                if 0: #tpl min
+                    self.ymin = min(self.tyvect[ixminTpl:ixmaxTpl])
+                    self.ymax = max(self.tyvect[ixminTpl:ixmaxTpl])
+                if 1: #spc min
+                    self.ymin = min(self.syvect[ixminSpc:ixmaxSpc])
+                    self.ymax = max(self.syvect[ixminSpc:ixmaxSpc])
+            else:
+                print("computes ranges without template")
+                self.ymin = min(self.syvect[ixminSpc:ixmaxSpc])
+                self.ymax = max(self.syvect[ixminSpc:ixmaxSpc])
+                
         yrange = self.ymax-self.ymin
         xxrange = self.xmax-self.xmin
-        
+        print("Plotting aviewplot: ymin={}, ymax={}".format(self.ymin, self.ymax))
 
         #prepare noise vects
         if not self.forcePlotNoNoise:
@@ -216,7 +256,21 @@ class AViewPlot(object):
             #pp.setp(ax2.get_yticklabels(), visible=False)
             #ax2.get_yaxis().set_visible(False)
             #ax2.get_xaxis().set_visible(False)              
-              
+
+        #APPLY x,y range
+        limmargy_up = 0.35
+        limmargy_down = 0.15
+        limmargx = 0.02
+        ax1.set_ylim([self.ymin - yrange*limmargy_down,self.ymax+yrange*limmargy_up])
+        ax1.set_xlim([self.xmin - xxrange*limmargx,self.xmax + xxrange*limmargx])
+        #ax2.set_ylim([0, 10])
+        #ax2.set_xlim([self.xmin,self.xmax])
+        if lines_label_method==0:
+            ax3.set_ylim([0, 10])
+            #ax3.set_xlim([self.xmin,self.xmax])
+        #ax1.ylim([self.ymin*(1-np.sign(self.ymin)*limmarg),self.ymax*(1+limmarg)])
+        #ax1.xlim([self.xmin,self.xmax])             
+             
         # LINES     
         line_wave = []
         line_label = []
@@ -281,7 +335,7 @@ class AViewPlot(object):
             if lines_label_method==1:
                 
                 #pk['color'] = '#f89393'
-                lineid_plot.plot_line_ids(self.sxvect, [f+yrange*0.075 for f in self.syvect], line_wave, line_label, annotate_kwargs=ak, plot_kwargs=pk, ax=ax1)                
+                lineid_plot.plot_line_ids(self.sxvect, [f+yrange*0.075 for f in self.syvect], line_wave, line_label, arrow_tip=self.ymax+yrange*self.ymax+yrange*limmargy_up/4.0, annotate_kwargs=ak, plot_kwargs=pk, ax=ax1)                
  
                 for i in ax1.texts:
                     tag = i.get_label()
@@ -332,21 +386,7 @@ class AViewPlot(object):
             # make ax3 nice
             ax3.get_yaxis().set_visible(False)
                
-               
-        #apply x,y range
-        limmargy_up = 0.35
-        limmargy_down = 0.15
-        limmargx = 0.02
-        ax1.set_ylim([self.ymin - yrange*limmargy_down,self.ymax+yrange*limmargy_up])
-        ax1.set_xlim([self.xmin - xxrange*limmargx,self.xmax + xxrange*limmargx])
-        #ax2.set_ylim([0, 10])
-        #ax2.set_xlim([self.xmin,self.xmax])
-        if lines_label_method==0:
-            ax3.set_ylim([0, 10])
-            #ax3.set_xlim([self.xmin,self.xmax])
-        #ax1.ylim([self.ymin*(1-np.sign(self.ymin)*limmarg),self.ymax*(1+limmarg)])
-        #ax1.xlim([self.xmin,self.xmax])
-        
+                      
         #ax1.xaxis.set_major_locator(MultipleLocator(20))
         #ax1.xaxis.set_major_formatter(FormatStrFormatter('%d'))
         #ax1.xaxis.set_minor_locator(MultipleLocator(5))
@@ -406,48 +446,49 @@ class AViewPlot(object):
         
         if not self.exportAutoDisplaysPath == "":
             print("INFO: exporting auto display")
-            self.xmin = self.exportAuto_lambda_min
-            self.xmax = self.exportAuto_lambda_max
-            ixmin = self.s.getWavelengthIndex(self.xmin)
-            ixmax = self.s.getWavelengthIndex(self.xmax)
-            #print("exportAutoDisplaysPath: self.xmin={}".format(self.xmin))
-            #print("exportAutoDisplaysPath: self.xmax={}".format(self.xmax))
-            #print("exportAutoDisplaysPath: ixmin={}".format(ixmin))
-            #print("exportAutoDisplaysPath: ixmax={}".format(ixmax))
-            if ixmax - ixmin < 2:
-                return
-            
-            if not self.forcePlotNoTemplate:
-                if 1: #hybrid range
-                    alpha = 0.33
-                    ymintpl = min(self.tyvect[ixmin:ixmax])
-                    yminspc = min(self.syvect[ixmin:ixmax])
-                    self.ymin = min(ymintpl, (ymintpl+alpha*yminspc)/(1.0+alpha))
-                    ymaxtpl = max(self.tyvect[ixmin:ixmax])
-                    ymaxspc = max(self.syvect[ixmin:ixmax])
-                    self.ymax = max(ymaxtpl, (ymaxtpl+alpha*ymaxspc)/(1.0+alpha))
-                if 0: #spc+tpl range
-                    self.ymin = min(min(self.syvect[ixmin:ixmax]), min(self.tyvect[ixmin:ixmax]))
-                    self.ymax = max(max(self.syvect[ixmin:ixmax]), max(self.tyvect[ixmin:ixmax]))
-                    
-                if 0: #tpl min
-                    self.ymin = min(self.tyvect[ixmin:ixmax])
-                    self.ymax = max(self.tyvect[ixmin:ixmax])
-                if 0: #spc min
-                    self.ymin = min(self.tyvect[ixmin:ixmax])
-                    self.ymax = max(self.tyvect[ixmin:ixmax])
-            else:
-                self.ymin = min(self.syvect[ixmin:ixmax])
-                self.ymax = max(self.syvect[ixmin:ixmax])
-            
-            xxrange = self.xmax-self.xmin
-            ax1.set_xlim([self.xmin - xxrange*limmargx,self.xmax + xxrange*limmargx])
-            #ax2.set_xlim([self.xmin,self.xmax])
-            #if lines_label_method==0:
-                #ax3.set_xlim([self.xmin,self.xmax]) 
-            yrange = self.ymax-self.ymin
-            ax1.set_ylim([self.ymin - yrange*limmargy_down*1.0,self.ymax+yrange*limmargy_up])
-            
+            if 0:
+                self.xmin = self.exportAuto_lambda_min
+                self.xmax = self.exportAuto_lambda_max
+                ixmin = self.s.getWavelengthIndex(self.xmin)
+                ixmax = self.s.getWavelengthIndex(self.xmax)
+                #print("exportAutoDisplaysPath: self.xmin={}".format(self.xmin))
+                #print("exportAutoDisplaysPath: self.xmax={}".format(self.xmax))
+                #print("exportAutoDisplaysPath: ixmin={}".format(ixmin))
+                #print("exportAutoDisplaysPath: ixmax={}".format(ixmax))
+                if ixmax - ixmin < 2:
+                    return
+                
+                if not self.forcePlotNoTemplate:
+                    if 1: #hybrid range
+                        alpha = 0.33
+                        ymintpl = min(self.tyvect[ixmin:ixmax])
+                        yminspc = min(self.syvect[ixmin:ixmax])
+                        self.ymin = min(ymintpl, (ymintpl+alpha*yminspc)/(1.0+alpha))
+                        ymaxtpl = max(self.tyvect[ixmin:ixmax])
+                        ymaxspc = max(self.syvect[ixmin:ixmax])
+                        self.ymax = max(ymaxtpl, (ymaxtpl+alpha*ymaxspc)/(1.0+alpha))
+                    if 0: #spc+tpl range
+                        self.ymin = min(min(self.syvect[ixmin:ixmax]), min(self.tyvect[ixmin:ixmax]))
+                        self.ymax = max(max(self.syvect[ixmin:ixmax]), max(self.tyvect[ixmin:ixmax]))
+                        
+                    if 0: #tpl min
+                        self.ymin = min(self.tyvect[ixmin:ixmax])
+                        self.ymax = max(self.tyvect[ixmin:ixmax])
+                    if 0: #spc min
+                        self.ymin = min(self.tyvect[ixmin:ixmax])
+                        self.ymax = max(self.tyvect[ixmin:ixmax])
+                else:
+                    self.ymin = min(self.syvect[ixmin:ixmax])
+                    self.ymax = max(self.syvect[ixmin:ixmax])
+                
+                xxrange = self.xmax-self.xmin
+                ax1.set_xlim([self.xmin - xxrange*limmargx,self.xmax + xxrange*limmargx])
+                #ax2.set_xlim([self.xmin,self.xmax])
+                #if lines_label_method==0:
+                    #ax3.set_xlim([self.xmin,self.xmax]) 
+                yrange = self.ymax-self.ymin
+                ax1.set_ylim([self.ymin - yrange*limmargy_down*1.0,self.ymax+yrange*limmargy_up])
+                
             outFigFile = os.path.join(self.exportAutoDisplaysPath, 'aview_{}_z{}_zoom{}.png'.format(self.spcname, self.z, self.exportAuto_name))
             #pp.savefig( outFigFile, bbox_inches='tight')
             pp.savefig( outFigFile)
@@ -503,7 +544,7 @@ class AViewPlot(object):
         
         # add OII_Hgamma to the pool of displayed ranges
         displays_lambdas_rest_center.append(4000)
-        displays_lambdas_rest_min.append(3695)
+        displays_lambdas_rest_min.append(3615)
         displays_lambdas_rest_max.append(4380)
         displays_names.append("OII_Hgamma") 
         
@@ -537,8 +578,9 @@ class AViewPlot(object):
         displays_lambdas_rest_max.append(4050)
         displays_names.append("CaH_CaK")
         
-        
-        for a in range(len(displays_lambdas_rest_center)):
+        ndisp = len(displays_lambdas_rest_center)
+        #ndisp = 1
+        for a in range(ndisp):
             self.exportAuto_lambda_center = displays_lambdas_rest_center[a]*zplus1
             self.exportAuto_lambda_min = displays_lambdas_rest_min[a]*zplus1
             self.exportAuto_lambda_max = displays_lambdas_rest_max[a]*zplus1
@@ -546,9 +588,10 @@ class AViewPlot(object):
             
             _max = max(self.s.getWavelengthMin(),self.exportAuto_lambda_min)
             _min = min(self.s.getWavelengthMax(),self.exportAuto_lambda_max)
-            overlapMin = _max-_min
-            #print("overlapRange = {}".format(overlapMin))
-            if overlapMin <= 2:
+            overlapRange = _max-_min
+            print("overlapRange = {}".format(overlapRange))
+            minOverlapRate = 0.66
+            if overlapRange <= -(self.exportAuto_lambda_max-self.exportAuto_lambda_min)*minOverlapRate:
                 print("exporting auto display for lambda rest = {}, with z = {}".format(displays_lambdas_rest_center[a], self.z))
                 self.plot()
        

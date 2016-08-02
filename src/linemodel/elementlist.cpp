@@ -4,6 +4,7 @@
 #include <epic/redshift/linemodel/modelfittingresult.h>
 #include <epic/redshift/gaussianfit/multigaussianfit.h>
 #include <epic/redshift/ray/regulament.h>
+
 #include <gsl/gsl_multifit.h>
 #include <epic/redshift/spectrum/io/genericreader.h>
 #include <epic/redshift/spectrum/template/template.h>
@@ -136,6 +137,10 @@ CLineModelElementList::CLineModelElementList( const CSpectrum& spectrum,
     m_Regulament = new CRegulament ( );
     m_Regulament->CreateRulesFromJSONFiles( );
     m_Regulament->EnableRulesAccordingToParameters ( m_rulesoption );
+
+    //TplShapePrior initialization
+    m_CatalogTplShape = new CRayCatalogsTplShape();
+    m_CatalogTplShape->Init();
 }
 
 /**
@@ -300,7 +305,7 @@ void CLineModelElementList::LoadContinuum()
     CTemplate tpl;
     CSpectrumIOGenericReader asciiReader;
     if( !asciiReader.Read( templatePath.c_str(), tpl ) ) {
-        Log.LogError("Fail to read template: %s", templatePath.c_str());
+        Log.LogError("Fail to read/load template: %s", templatePath.c_str());
         return;
     }
 
@@ -742,7 +747,28 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
     //create spectrum model
     modelSolution = GetModelSolution();
 
+    //correct lines amplitude with tplshapePrior
+    if(0)
+    {
+        std::vector<Float64> correctedAmplitudes;
+        correctedAmplitudes.resize(modelSolution.Amplitudes.size());
+        Float64 fitTplShape = m_CatalogTplShape->GetBestFit( modelSolution.Rays, modelSolution.Amplitudes, modelSolution.Errors, correctedAmplitudes );
+        for( UInt32 iRestRay=0; iRestRay<m_RestRayList.size(); iRestRay++ )
+        {
+            Int32 eIdx = FindElementIndex(iRestRay);
+            Int32 subeIdx = m_Elements[eIdx]->FindElementIndex(iRestRay);
+            Float64 er = m_Elements[eIdx]->GetFittedAmplitudeErrorSigma(subeIdx); //not modifying the fitting error for now
+            Float64 nominalAmp = m_Elements[eIdx]->GetNominalAmplitude(subeIdx);
+            m_Elements[eIdx]->SetFittedAmplitude(correctedAmplitudes[iRestRay]/nominalAmp, er);
+        }
+        refreshModel();
+        modelSolution = GetModelSolution();
+    }
     Float64 merit = getLeastSquareMerit(lambdaRange);
+
+    //Float64 tplshapePriorCoeff = m_CatalogTplShape->GetBestFit( modelSolution.Rays, modelSolution.Amplitudes,  );
+    //Log.LogDebug( "Linemodel: tplshapePriorCoeff = %f", tplshapePriorCoeff);
+    //merit = sqrt(merit*merit/2.0-log(tplshapePriorCoeff));
 
     if(m_ContinuumComponent == "nocontinuum"){
         reinitModel();
