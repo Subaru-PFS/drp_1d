@@ -140,9 +140,13 @@ Bool CContinuumDF::RemoveContinuum ( const CSpectrum& s, CSpectrumFluxAxis& noCo
 
 	std::string filePath;
 	bfs::path binPath = bfs::current_path();
-	if (m_optclus)
-	{ binPath = "/home/sjamal/AMAZED_run_pdf/code/cpf_gitLAM/amazed/extern/mr1d_filter_modified";
-	} else  {   binPath.append("../extern/mr1d_filter_modified"); }
+    if (m_optclus)
+    {
+        binPath = "/home/sjamal/AMAZED_run_pdf/code/cpf_gitLAM/amazed/extern/mr1d_filter_modified";
+    } else  {
+        binPath = m_dfBinPath;
+        binPath.append("mr1d_filter_modified");
+    }
 	filePath = binPath.string(); //= "../extern/mr1d_filter_modified";
 
 	//bfs::path binPath = m_dfBinPath;
@@ -157,17 +161,21 @@ Bool CContinuumDF::RemoveContinuum ( const CSpectrum& s, CSpectrumFluxAxis& noCo
 	/* *******************************************************
 	*            STEP 2 :    APPLY B3SPLINE TRANSFORM
 	* ****************************************************** */
-	std::string inputFileSpline = outputFilePMT;
+    std::string inputFileSpline = outputFilePMT;
 
     std::string filePathSpline;
-    	bfs::path binPathSpline = bfs::current_path();
+    bfs::path binPathSpline = bfs::current_path();
     if (m_optclus)
-    { binPathSpline = "/home/sjamal/AMAZED_run_pdf/code/cpf_gitLAM/amazed/extern/mr1d_trans_modified"; //mr1d_trans";
-    } else { binPathSpline.append("../extern/mr1d_trans_modified");} //mr1d_trans");
-    	filePathSpline = binPathSpline.string();
+    {
+        binPathSpline = "/home/sjamal/AMAZED_run_pdf/code/cpf_gitLAM/amazed/extern/mr1d_trans_modified"; //mr1d_trans";
+    } else {
+        binPathSpline = m_dfBinPath;
+        binPathSpline.append("mr1d_trans_modified");
+    } //mr1d_trans");
+    filePathSpline = binPathSpline.string();
 
-    	//bfs::path binPathSpline = m_dfBinPath;
-    	//binPathSpline.append("mr1d_trans");
+    //bfs::path binPathSpline = m_dfBinPath;
+    //binPathSpline.append("mr1d_trans");
 
     std::string paramsSpline = "-n"+decomp_spline+" -t3 ";
 	std::string cmmspline= filePathSpline+" "+paramsSpline+" "+inputFileSpline+" "+outputFileSpline;
@@ -278,7 +286,7 @@ Bool CContinuumDF::RemoveContinuum ( const CSpectrum& s, CSpectrumFluxAxis& noCo
 			  bfs::remove_all(bfs::system_complete(bfs::path(inputFile).parent_path()));
 		  }
 	}
-	std::cout<< "STEP REMOVE completed"<<std::endl;
+    //std::cout<< "STEP REMOVE completed"<<std::endl;
 
 
 	return true;
