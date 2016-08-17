@@ -136,7 +136,7 @@ Float64 CRayCatalogsTplShape::GetBestFit( const CRayCatalog::TRayVector& restRay
 
         for( UInt32 iRestRay=0; iRestRay<restRayList.size(); iRestRay++ )
         {
-            if(fittedAmplitudes[iRestRay]>=0)
+            if(fittedAmplitudes[iRestRay]>=0 && fittedErrors[iRestRay]>0)
             {
                 mask[iRestRay]=1;
                 Int32 iTplshapeRayFound = -1;
@@ -190,6 +190,7 @@ Float64 CRayCatalogsTplShape::GetBestFit( const CRayCatalog::TRayVector& restRay
         if(mask[iRestRay]>0 && coeffMin>=0)
         {
             amplitudesCorrected[iRestRay]=bestFitAmplitudes[iTplAmps];
+            iTplAmps++;
         }else
         {
             amplitudesCorrected[iRestRay]=-1.0;
@@ -219,17 +220,29 @@ Float64 CRayCatalogsTplShape::GetFit( std::vector<Float64> ampsLM, std::vector<F
     //estimate fitting amplitude
     Float64 sumLM = 0.0;
     Float64 sumTPL = 0.0;
+    Float64 sumCross= 0.0;
+    Float64 sumTPL2 = 0.0;
+
     for(Int32 k=0; k<N; k++)
     {
         Float64 err2 = 1.0 / (errLM[k] * errLM[k]);
+
+        sumCross+=ampsLM[k]*ampsTPL[k]*err2;
+        sumTPL2+=ampsTPL[k]*ampsTPL[k]*err2;
+
         sumLM += ampsLM[k]*err2;
         sumTPL += ampsTPL[k]*err2;
     }
-    if ( sumLM==0 || sumTPL==0 )
+//    if ( sumLM==0 || sumTPL==0 )
+//    {
+//        return -1.0;
+//    }
+//    Float64 ampl = sumLM / sumTPL;
+    if ( sumCross==0 || sumTPL2==0 )
     {
         return -1.0;
     }
-    Float64 ampl = sumLM / sumTPL;
+    Float64 ampl = sumCross / sumTPL2;
 
     Float64 fit=0.0;
     Float64 diff;

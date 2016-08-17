@@ -165,6 +165,7 @@ class ResultChisquare(object):
         a = a + ("    type = {0}\n".format(self.stype))
         a = a + ("    n = {0}\n".format(self.n))
         a = a + ("    flux min = {0}\n".format(self.getFluxMin()))
+        a = a + ("    flux median = {0}\n".format(self.getFluxMedian()))
         a = a + ("\n")
         
         for z in range(len(self.amazed_extrema)):
@@ -209,9 +210,6 @@ class ResultChisquare(object):
             return self.amazed_extrema[idx]
         else:
             return -1.0;
-    
-    def getMeanValue(self):
-        return np.mean(self.yvect)
     
     def plot(self, showContinuumEstimate=False, showExtrema=False, showAmbiguities=False, enablePlot=True, exportPath=""):
         #find limits
@@ -369,7 +367,16 @@ class ResultChisquare(object):
         #print "splerr", scipy.interpolate.ssqe(sp(x), s, npts)
         #pp.show()
         return sp(x)         
-           
+               
+    def getFluxMedian(self):
+        return np.median(self.yvect)
+        
+    def getMeanValue(self):
+        return np.mean(self.yvect)
+        
+    def getFluxStd(self):
+        return np.std(self.yvect)
+        
     def getFluxMin(self):
         return min(self.yvect)
         

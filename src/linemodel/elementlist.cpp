@@ -748,7 +748,7 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
     modelSolution = GetModelSolution();
 
     //correct lines amplitude with tplshapePrior
-    if(0)
+    if(1)
     {
         std::vector<Float64> correctedAmplitudes;
         correctedAmplitudes.resize(modelSolution.Amplitudes.size());
@@ -910,6 +910,7 @@ void CLineModelElementList::setModelSpcObservedOnSupportZeroOutside(  const TFlo
  **/
 Int32 CLineModelElementList::fitAmplitudesHybrid( const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& spcFluxAxisNoContinuum, Float64 redshift)
 {
+  Float64 ampErrFitFails = 1e12; //some High Value For Amplitude Error When The Fit Fails
   std::vector<Int32> validEltsIdx = GetModelValidElementsIndexes();
   std::vector<Int32> indexesFitted;
   for( UInt32 iValidElts=0; iValidElts<validEltsIdx.size(); iValidElts++ )
@@ -962,7 +963,7 @@ Int32 CLineModelElementList::fitAmplitudesHybrid( const CSpectrumSpectralAxis& s
 		      }
 		    else
 		      {
-                        SetElementAmplitude(overlappingInds[ifit], 0.0, 0.0);
+                        SetElementAmplitude(overlappingInds[ifit], 0.0, ampErrFitFails);
                     }
                 }
                 //fit the rest of the overlapping elements (same sign) together
@@ -981,7 +982,7 @@ Int32 CLineModelElementList::fitAmplitudesHybrid( const CSpectrumSpectralAxis& s
                             if(ampsfitted[ifit]>0){
                                 m_Elements[overlappingIndsSameSign[ifit]]->fitAmplitude(spectralAxis, spcFluxAxisNoContinuum, redshift);
                             }else{
-                                SetElementAmplitude(overlappingIndsSameSign[ifit], 0.0, 0.0);
+                                SetElementAmplitude(overlappingIndsSameSign[ifit], 0.0, ampErrFitFails);
                             }
                         }
                     }

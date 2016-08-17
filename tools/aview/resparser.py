@@ -677,20 +677,27 @@ class ResParser(object):
         path = os.path.join(self.respath, spcnametag)
         #, chi2type="raw"
         scontinuumpath = ""
+
+        enableContinuumPath = False            
             
-        if method == "chisquaresolve" or method == "chisquare2solve" or method == "linemodeltplshape":
+        if method == "chisquaresolve" or method == "chisquare2solve":
             spcComponent = self.getParameterVal('chisquare2solve', 'spectrum', 'component')
             print('component parameter found = {}'.format(spcComponent))
             if spcComponent=="nocontinuum":
-                cdirpath = os.path.join(path, self.continuumrelpath)
-                onlyfiles = [f for f in os.listdir(cdirpath) if os.path.isfile(os.path.join(cdirpath, f))]
-                if len(onlyfiles)==1:
-                    scontinuumpath = os.path.join(cdirpath, onlyfiles[0])
-                    print("\nINFO: Found a suitable continuum file for this method-spectrum pair : {}".format(scontinuumpath))
-                else:
-                    print("\nWARNING: Could not find a unique continuum file in the standard directory... aborting...\n")
-                    stop
-   
+                enableContinuumPath = True
+        if method == "linemodeltplshape":
+            enableContinuumPath = True
+            enableContinuumPath = False
+        
+        if enableContinuumPath:
+            cdirpath = os.path.join(path, self.continuumrelpath)
+            onlyfiles = [f for f in os.listdir(cdirpath) if os.path.isfile(os.path.join(cdirpath, f))]
+            if len(onlyfiles)==1:
+                scontinuumpath = os.path.join(cdirpath, onlyfiles[0])
+                print("\nINFO: Found a suitable continuum file for this method-spectrum pair : {}".format(scontinuumpath))
+            else:
+                print("\nWARNING: Could not find a unique continuum file in the standard directory... aborting...\n")
+                stop
         else:
             scontinuumpath = ""
             
