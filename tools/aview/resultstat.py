@@ -117,7 +117,7 @@ class ResultList(object):
             
             elvelocity = line[11]
             
-            enableShowDetails = False
+            enableShowDetails = True
             if enableShowDetails:
                 print('name is: {0}'.format(name))
                 print('zref is: {0}'.format(zref))
@@ -2044,6 +2044,7 @@ def compareFailures(resDir, refresdir, diffthreshold=0.01, zrefmin=-1, zrefmax=2
   
 def plotContinuumIndexes(resDir, diffthres, spcName=""):
     print('using amazed results full path: {0}'.format(resDir))
+    print('using spc filter by name: {}'.format(spcName))
     resList = ResultList(resDir, diffthreshold=diffthres, opt='brief', spcName=spcName, methodName="", zrefmin=0.01, zrefmax=1.5)
     if resList.n <1:
         print('No results loaded...')
@@ -2055,25 +2056,32 @@ def plotContinuumIndexes(resDir, diffthres, spcName=""):
     continuumIndexesZwrongList = []
     zrefZwrongList = []
     
+    thres_extrema_id = 10
+    thres_extremasearch_id = 10
+    
+    nSkippedZref = 0
     #nres = 20
     nres = resList.n
     for k in range(nres):
         print("\nprocessing result #{}/{}".format(k+1, resList.n))
         zref = resList.list[k].zref
         print("zref is {}".format(zref))
-        redshifts, merits = resList.getZCandidatesFromAmazedChi2Extrema(k, chi2Type="linemodel", nextrema=2, enableZrangePerTpl=False)
+        redshifts, merits = resList.getZCandidatesFromAmazedChi2Extrema(k, chi2Type="linemodel", nextrema=thres_extremasearch_id, enableZrangePerTpl=False)
         print("redshifts: {}".format(redshifts))       
         print("merits: {}".format(merits))  
         thres_zref_zerr = 1e-1
         indsZrefExtremum = [i for i,z in enumerate(redshifts) if abs(z-zref)<thres_zref_zerr]
-        thres_zwrong_zerr_min = 0.05*(1+zref)
-        thres_zwrong_zerr_max = 1.5*(1+zref)
-        thres_extrema_id = 10
+        if 0: #keep only the potential Ha/OII ambiguities
+            thres_zwrong_zerr_min = 0.05*(1+zref)
+            thres_zwrong_zerr_max = 1.5*(1+zref)
+        else:
+            thres_zwrong_zerr_min = 0.001*(1+zref)
+            thres_zwrong_zerr_max = 10.0*(1+zref)        
         indsZwrongExtrema = [i for i,z in enumerate(redshifts) if abs(z-zref)>thres_zwrong_zerr_min and abs(z-zref)<thres_zwrong_zerr_max and i<thres_extrema_id]
         
         print("inds extrema for zref found = {}".format(indsZrefExtremum))
         print("inds extrema for zwrong found = {}".format(indsZwrongExtrema))
-        if len(indsZrefExtremum)>0 and len(indsZwrongExtrema)>0:
+        if len(indsZrefExtremum)>0 or len(indsZwrongExtrema)>0:
             filepaths, filenames = s.getAutoChi2FullPath(resList.list[k].name)
             filepath = filepaths[0]
             print("Found chi2 filepath: {}".format(filepath))
@@ -2085,55 +2093,90 @@ def plotContinuumIndexes(resDir, diffthres, spcName=""):
             chi2 = chisq.ResultChisquare(filepath)
             #print("chi2 is: {}".format(chi2))
             
-            iZrefExtremum = indsZrefExtremum[0]
-            continuumIndexesZref = chi2.amazed_continuumIndexes[iZrefExtremum]
-            print("continuum indexes zref are: {}".format(continuumIndexesZref))
-            continuumIndexesZrefList.append(continuumIndexesZref)
-            zrefZrefList.append(zref)
+        if len(indsZrefExtremum)>0:
+            for ie in indsZrefExtremum:
+                continuumIndexesZref = chi2.amazed_continuumIndexes[ie]
+                print("continuum indexes zref are: {}".format(continuumIndexesZref))
+                continuumIndexesZrefList.append(continuumIndexesZref)
+                zrefZrefList.append(zref)
+        else:
+            nSkippedZref+=1
             
+        if len(indsZwrongExtrema)>0:
             for ie in indsZwrongExtrema:
                 continuumIndexesZwrong = chi2.amazed_continuumIndexes[ie]
                 print("continuum indexes zwrong are: {}".format(continuumIndexesZwrong))
                 continuumIndexesZwrongList.append(continuumIndexesZwrong)
                 zrefZwrongList.append(zref)
             
+    print("\nINFO-SKIPPED: nskipped zref = {}".format(nSkippedZref))
+    
+    
     enablePlot = 1
     enableExport = 0
+    enablePlotZref = 1
+    enablePlotZwrong = 1
+    enablePlotLineSeparation = 1
+    
     if enablePlot or enableExport:
         
         idx_continuum_index_OII = 1
+        idx_continuum_index_OIII = 2
         idx_continuum_index_Ha = 3
         
         fig = plt.figure('continuum indexes'.format())
         ax = fig.add_subplot(111)
         
-        #xvect = range(len(continuumIndexesZrefList))
-        #xvect = zrefZrefList
-        #print continuumIndexesZrefList[0]['color']
-        xvect = [a['break'][idx_continuum_index_OII] for a in continuumIndexesZrefList if not np.isnan(a['break'][idx_continuum_index_OII]) and not np.isnan(a['color'][idx_continuum_index_OII])]
-        yvect = [a['color'][idx_continuum_index_OII] for a in continuumIndexesZrefList if not np.isnan(a['break'][idx_continuum_index_OII]) and not np.isnan(a['color'][idx_continuum_index_OII])]
-        print("1. xvect={}".format(xvect))
-        print("1. yvect={}".format(yvect))
-        ax.plot(xvect, yvect, 'xk', label='zref OII')
+        if enablePlotZref:
+            #xvect = range(len(continuumIndexesZrefList))
+            #xvect = zrefZrefList
+            #print continuumIndexesZrefList[0]['color']
+            xvect = [a['break'][idx_continuum_index_OII] for a in continuumIndexesZrefList if not np.isnan(a['break'][idx_continuum_index_OII]) and not np.isnan(a['color'][idx_continuum_index_OII])]
+            yvect = [a['color'][idx_continuum_index_OII] for a in continuumIndexesZrefList if not np.isnan(a['break'][idx_continuum_index_OII]) and not np.isnan(a['color'][idx_continuum_index_OII])]
+            print("1. xvect={}".format(xvect))
+            print("1. yvect={}".format(yvect))
+            ax.plot(xvect, yvect, 'xb', label='zref OII')
+            
+            xvect = [a['break'][idx_continuum_index_OIII] for a in continuumIndexesZrefList if not np.isnan(a['break'][idx_continuum_index_OIII]) and not np.isnan(a['color'][idx_continuum_index_OIII])]
+            yvect = [a['color'][idx_continuum_index_OIII] for a in continuumIndexesZrefList if not np.isnan(a['break'][idx_continuum_index_OIII]) and not np.isnan(a['color'][idx_continuum_index_OIII])]
+            print("2. xvect={}".format(xvect))
+            print("2. yvect={}".format(yvect))
+            ax.plot(xvect, yvect, 'xg', label='zref OIII')
+            
+            xvect = [a['break'][idx_continuum_index_Ha] for a in continuumIndexesZrefList if not np.isnan(a['break'][idx_continuum_index_Ha]) and not np.isnan(a['color'][idx_continuum_index_Ha])]
+            yvect = [a['color'][idx_continuum_index_Ha] for a in continuumIndexesZrefList if not np.isnan(a['break'][idx_continuum_index_Ha]) and not np.isnan(a['color'][idx_continuum_index_Ha])]
+            print("3. xvect={}".format(xvect))
+            print("3. yvect={}".format(yvect))
+            ax.plot(xvect, yvect, 'xr', label='zref Ha')
         
-        xvect = [a['break'][idx_continuum_index_Ha] for a in continuumIndexesZrefList if not np.isnan(a['break'][idx_continuum_index_Ha]) and not np.isnan(a['color'][idx_continuum_index_Ha])]
-        yvect = [a['color'][idx_continuum_index_Ha] for a in continuumIndexesZrefList if not np.isnan(a['break'][idx_continuum_index_Ha]) and not np.isnan(a['color'][idx_continuum_index_Ha])]
-        print("2. xvect={}".format(xvect))
-        print("2. yvect={}".format(yvect))
-        ax.plot(xvect, yvect, 'xb', label='zref Ha')
-        
-        #xvect = range(len(continuumIndexesZwrongList))
-        #xvect = zrefZwrongList
-        xvect = [a['break'][idx_continuum_index_OII] for a in continuumIndexesZwrongList if not np.isnan(a['break'][idx_continuum_index_OII]) and not np.isnan(a['color'][idx_continuum_index_OII])]
-        yvect = [a['color'][idx_continuum_index_OII] for a in continuumIndexesZwrongList if not np.isnan(a['break'][idx_continuum_index_OII]) and not np.isnan(a['color'][idx_continuum_index_OII])]
-        print("3. xvect={}".format(xvect))
-        print("3. yvect={}".format(yvect))
-        ax.plot(xvect, yvect, 'or', label='zwrong OII')
-        xvect = [a['break'][idx_continuum_index_Ha] for a in continuumIndexesZwrongList if not np.isnan(a['break'][idx_continuum_index_Ha]) and not np.isnan(a['color'][idx_continuum_index_Ha])]
-        yvect = [a['color'][idx_continuum_index_Ha] for a in continuumIndexesZwrongList if not np.isnan(a['break'][idx_continuum_index_Ha]) and not np.isnan(a['color'][idx_continuum_index_Ha])]
-        print("4. xvect={}".format(xvect))
-        print("4. yvect={}".format(yvect))
-        ax.plot(xvect, yvect, 'ob', label='zwrong Ha')
+        if enablePlotZwrong:
+            #xvect = range(len(continuumIndexesZwrongList))
+            #xvect = zrefZwrongList
+            xvect = [a['break'][idx_continuum_index_OII] for a in continuumIndexesZwrongList if not np.isnan(a['break'][idx_continuum_index_OII]) and not np.isnan(a['color'][idx_continuum_index_OII])]
+            yvect = [a['color'][idx_continuum_index_OII] for a in continuumIndexesZwrongList if not np.isnan(a['break'][idx_continuum_index_OII]) and not np.isnan(a['color'][idx_continuum_index_OII])]
+            print("4. xvect={}".format(xvect))
+            print("4. yvect={}".format(yvect))
+            ax.plot(xvect, yvect, 'vb', label='zwrong OII')
+            
+            
+            xvect = [a['break'][idx_continuum_index_OIII] for a in continuumIndexesZwrongList if not np.isnan(a['break'][idx_continuum_index_OIII]) and not np.isnan(a['color'][idx_continuum_index_OIII])]
+            yvect = [a['color'][idx_continuum_index_OIII] for a in continuumIndexesZwrongList if not np.isnan(a['break'][idx_continuum_index_OIII]) and not np.isnan(a['color'][idx_continuum_index_OIII])]
+            print("5. xvect={}".format(xvect))
+            print("5. yvect={}".format(yvect))
+            ax.plot(xvect, yvect, 'vg', label='zwrong OIII')
+            
+            xvect = [a['break'][idx_continuum_index_Ha] for a in continuumIndexesZwrongList if not np.isnan(a['break'][idx_continuum_index_Ha]) and not np.isnan(a['color'][idx_continuum_index_Ha])]
+            yvect = [a['color'][idx_continuum_index_Ha] for a in continuumIndexesZwrongList if not np.isnan(a['break'][idx_continuum_index_Ha]) and not np.isnan(a['color'][idx_continuum_index_Ha])]
+            print("6. xvect={}".format(xvect))
+            print("6. yvect={}".format(yvect))
+            ax.plot(xvect, yvect, 'vr',label='zwrong Ha')
+            
+        if enablePlotLineSeparation:
+            a = 1.0
+            b = 0.25
+            xvect = [-1.0, 0.0, 1.0]
+            yvect = [a*x+b for x in xvect]
+            ax.plot(xvect, yvect, 'k-', linestyle = "dashed", label='line: a={}, b={}'.format(a, b))
         
         #plt.xlim([1e-5, 10])
         #plt.ylim([0, 100])
@@ -2143,10 +2186,10 @@ def plotContinuumIndexes(resDir, diffthres, spcName=""):
         #ax.set_xscale('log')
         plt.grid(True) # Affiche la grille
         plt.legend()
-        #plt.ylabel('Cumulative Histogram')
-        #plt.xlabel('abs(zref - closest z candidate) / (1+zref)')
-       # name1 = "Closest Z candidates found in chi2{}\nN={}, diffthres={}, N extrema ={}".format(chi2Type,len(zabsdiff), self.diffthreshold, nextrema)
-        #plt.title(name1)
+        plt.ylabel('color')
+        plt.xlabel('break')
+        titleStr = "Continuum Indexes, nSkippedZref = {}/{}".format(nSkippedZref, nres)
+        plt.title(titleStr)
         
         if enableExport:
             outFigFile = os.path.join(outdir, 'closestz_{}_nextrema{}_hist.png'.format(chi2Type, nextrema))
@@ -2191,7 +2234,7 @@ def exportSVMTable(resDir, diffthres, spcName=""):
         print("\nprocessing result #{}/{}".format(k+1, resList.n))
         zref = resList.list[k].zref
         print("zref is {}".format(zref))
-        redshifts, merits = resList.getZCandidatesFromAmazedChi2Extrema(k, chi2Type="linemodel", nextrema=2, enableZrangePerTpl=False)
+        redshifts, merits = resList.getZCandidatesFromAmazedChi2Extrema(k, chi2Type="linemodel", nextrema=10, enableZrangePerTpl=False)
         print("redshifts: {}".format(redshifts))       
         print("merits: {}".format(merits))  
         

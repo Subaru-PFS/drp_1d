@@ -747,8 +747,8 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
     //create spectrum model
     modelSolution = GetModelSolution();
 
-    //correct lines amplitude with tplshapePrior
-    if(1)
+    //correct lines amplitude with tplshapePrior: Warning: Rules must all be deactivated
+    if(0)
     {
         std::vector<Float64> correctedAmplitudes;
         correctedAmplitudes.resize(modelSolution.Amplitudes.size());
