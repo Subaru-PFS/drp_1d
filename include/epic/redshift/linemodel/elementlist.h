@@ -14,6 +14,8 @@
 #include <epic/redshift/linemodel/element.h>
 #include <epic/redshift/linemodel/singleline.h>
 
+#include <epic/redshift/ray/catalogsTplShape.h>
+
 #include <boost/shared_ptr.hpp>
 
 #include <memory>
@@ -116,6 +118,8 @@ private:
 
     void applyRules(bool enableLogs=false);
     CRegulament* m_Regulament;
+
+    CRayCatalogsTplShape* m_CatalogTplShape;
 
     Float64 m_Redshift;
 

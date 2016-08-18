@@ -108,6 +108,8 @@ class ModelResult(object):
             if emax < self.lineamplitude[k] and self.linetype[k] == "E":
                 emax = self.lineamplitude[k]
         aemax = max(amax, emax)
+        aemax = 2.45435e-17
+        print("aemax = {}".format(aemax))
         if amax==0 and not emax==0 :
             amax = emax/20.0
         if emax==0 and not amax==0 :

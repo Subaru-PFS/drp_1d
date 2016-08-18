@@ -328,7 +328,7 @@ class ResParser(object):
                 print("Problem while retrieving chi2 filepath.. using: {}".format(filepath))
                 continue
             else:
-                print("using Chi2 file path : ".format(filepath))
+                print("using Chi2 file path : {}".format(filepath))
             chi2 = chisq.ResultChisquare(filepath)
             
             if not enableZrangePerTpl:
@@ -357,9 +357,13 @@ class ResParser(object):
                 #print("merit for z={} : {}".format(redshiftstpl[b], chi2.yvect[ind]))
             for b in range(nextremaPerTpl):
                 redshiftslist.append(redshiftstpl[b])
-                ampslist.append(ampstpl[b])
+                if chi2Type=='linemodeltplshape':
+                    ampslist.append(1.0)
+                else:
+                    ampslist.append(ampstpl[b])
                 meritslist.append(meritstpl[b])
                 tplNameList.append(tplNameTag)
+            
         if nextrema > 0:
             redshiftsUnsorted = list((redshiftslist))
             ampsUnsorted = list((ampslist))
@@ -429,18 +433,19 @@ class ResParser(object):
             forceTplAmplitude = 1
             forceTplDoNotRedShift = 1
         elif method == "linemodeltplshape":
-            #find redshift : not finished - this only searches the extrema in the best tpl
-            [chipathlist, chinamelist] = self.getAutoChi2FullPath(spcnametag)
-            chi = chisq.ResultChisquare(chipathlist[0], stype=os.path.splitext(chinamelist[0])[0])
-            redshift = chi.getExtrema(idxExtrema)
-            
-            tplnametag = self.getRedshiftTpl(spcnametag)
-            pathTplChi = os.path.join(path, tplnametag)
-            name = "linemodeltplshapesolve.linemodel_spc_extrema_{}.csv".format(idxExtrema) 
-            tplpath = os.path.join(pathTplChi,name)
-            #tplpath = ""
-            forceTplAmplitude = 1
-            forceTplDoNotRedShift = 1
+            if 1:
+                zList, meritList, tplList, ampsList = self.getCandidatesFromAmazedChi2Extrema(spcnametag, chi2Type=method) 
+                pathTplChi = os.path.join(path, tplList[idxExtrema])
+                name = "linemodeltplshapesolve.linemodel_spc_extrema_{}.csv".format(0) #WARNING: TODO: spc extrema idx should vary wr to the extraction done in getCandidatesFromAmazedChi2Extrema()
+                tplpath = os.path.join(pathTplChi,name)
+                redshift = zList[idxExtrema]
+                forceTplAmplitude = 1
+                forceTplDoNotRedShift = 1
+                
+                print("\nDEBUG: Candidates found:")
+                for k in range(len(zList)):
+                    print("cand. #{}: z={:15}, merit={:15}, tpl={:25}, amp={:25}".format(k, zList[k], meritList[k], tplList[k], ampsList[k]))
+                print("\n")
         elif method == "decisionaltreeb" or method.lower() == "amazed0_2":
             #find redshift
             [chipathlist, chinamelist] = self.getAutoChi2FullPath(spcnametag)
@@ -672,20 +677,27 @@ class ResParser(object):
         path = os.path.join(self.respath, spcnametag)
         #, chi2type="raw"
         scontinuumpath = ""
+
+        enableContinuumPath = False            
             
         if method == "chisquaresolve" or method == "chisquare2solve":
             spcComponent = self.getParameterVal('chisquare2solve', 'spectrum', 'component')
             print('component parameter found = {}'.format(spcComponent))
             if spcComponent=="nocontinuum":
-                cdirpath = os.path.join(path, self.continuumrelpath)
-                onlyfiles = [f for f in os.listdir(cdirpath) if os.path.isfile(os.path.join(cdirpath, f))]
-                if len(onlyfiles)==1:
-                    scontinuumpath = os.path.join(cdirpath, onlyfiles[0])
-                    print("\nINFO: Found a suitable continuum file for this method-spectrum pair : {}".format(scontinuumpath))
-                else:
-                    print("\nWARNING: Could not find a unique continuum file in the standard directory... aborting...\n")
-                    stop
-   
+                enableContinuumPath = True
+        if method == "linemodeltplshape":
+            enableContinuumPath = True
+            enableContinuumPath = False
+        
+        if enableContinuumPath:
+            cdirpath = os.path.join(path, self.continuumrelpath)
+            onlyfiles = [f for f in os.listdir(cdirpath) if os.path.isfile(os.path.join(cdirpath, f))]
+            if len(onlyfiles)==1:
+                scontinuumpath = os.path.join(cdirpath, onlyfiles[0])
+                print("\nINFO: Found a suitable continuum file for this method-spectrum pair : {}".format(scontinuumpath))
+            else:
+                print("\nWARNING: Could not find a unique continuum file in the standard directory... aborting...\n")
+                stop
         else:
             scontinuumpath = ""
             

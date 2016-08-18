@@ -202,6 +202,9 @@ bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath,
 {
     std::string medianRemovalMethod;
     paramStore->Get( "continuumRemoval.method", medianRemovalMethod, "IrregularSamplingMedian" );
+    //disable the continuum removal :
+    medianRemovalMethod = "noRontinuumRemovalforTemplates";
+
     Float64 opt_medianKernelWidth;
     paramStore->Get( "continuumRemoval.medianKernelWidth", opt_medianKernelWidth, 75 );
     std::shared_ptr<CTemplateCatalog> templateCatalog = std::shared_ptr<CTemplateCatalog>( new CTemplateCatalog( medianRemovalMethod, opt_medianKernelWidth) );

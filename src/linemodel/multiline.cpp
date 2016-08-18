@@ -407,13 +407,13 @@ void CMultiLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const C
             continue;
         }
         m_FittedAmplitudes[k] = A*m_NominalAmplitudes[k];
-        if(A==0)
+//        if(A==0)
+//        {
+//            m_FittedAmplitudeErrorSigmas[k] = 0.0; //why would this be useful ?
+//        }
+//        else
         {
-            m_FittedAmplitudeErrorSigmas[k] = 0.0;
-        }
-        else
-        {
-            m_FittedAmplitudeErrorSigmas[k] = m_NominalAmplitudes[k]*1.0/sqrt(sumGauss); //Achtung! To be discussed with Didier V.
+            m_FittedAmplitudeErrorSigmas[k] = m_NominalAmplitudes[k]*1.0/sqrt(sumGauss);
         }
     }
     return;
