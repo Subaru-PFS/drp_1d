@@ -194,7 +194,7 @@ class AViewPlot(object):
         
         
         #prepare lines        
-        lines_label_method = 1
+        lines_label_method = 0 #0 = subplot with labels, #1 = using lineid_plot on main spc view
         if not self.forcePlotNoLines:
             #self.linesx = []
             #self.linesx.append(6564)
@@ -204,7 +204,7 @@ class AViewPlot(object):
             #self.linesname.append("0III")   
             c = ctlg.Catalog(self.cpath)
             #print(c) 
-            shiftedctlg = c.getShiftedCatalog(self.z, -1, -1) #z, "A", "S"
+            shiftedctlg = c.getShiftedCatalog(self.z, -1, "S") #z, "A", "S"
             #print(shiftedctlg)
             self.linesx = shiftedctlg['lambda']
             self.linestype= shiftedctlg['type']

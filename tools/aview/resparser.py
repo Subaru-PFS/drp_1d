@@ -123,7 +123,8 @@ class ResParser(object):
                 data = lineStr.split("\t")
                 data = [r for r in data if r != '']
                 #print len(data)
-                if(len(data) >=11):
+                if(len(data) >=11): #only 1 diff file format should be accepted, the latest processed by AmazedprocessOutputStats.py...
+                    #ID	MAGI	ZREF	ZFLAG	ZCALC	MERIT	TPL	METHOD	SNR	SFR	E(B-V)	Sigma	LogHalpha	DIFF
                     d0 = str(data[0])
                     d1 = float(data[1])
                     d2 = float(data[2])

@@ -943,7 +943,7 @@ class ResultList(object):
             return zrelativemerit
 
     
-    def getChi2LinCombinationCoeff2DMap(self, indice=0, enablePlot=0, chi2dontloadThres=-1, zthres=0.01):       
+    def getChi2LinCombinationCoeff2DMap(self, indice=0, enablePlot=0, chi2dontloadThres=-1, zthres=0.01, opt_combination=1):       
         spcName = self.list[indice].name
         print("spcname = {}".format(spcName))
         s = rp.ResParser(self.dir)
@@ -1045,14 +1045,28 @@ class ResultList(object):
         
         #print("n_continuum = {}".format(n_continuum))
         #print("n_lm = {}".format(n_lm))
+        opt_combine = opt_combination #0=lincomb, 1=bayescomb
         for icontinuum in range(n_continuum):
             print "."
             coeff_continuum = coeff_continuum_min+icontinuum*coeff_continuum_step
             for ilinemodel in range(n_lm):
                 coeff_lm = coeff_lm_min+ilinemodel*coeff_lm_step
                 #print("this solution uses : coeff_continuum={}, coeff_lm={}".format(coeff_continuum, coeff_lm) )
-                for i in range(nz):
-                    merit[i] = coeff_nc*chi2_nc_interp[i] + coeff_continuum*chi2_continuum_interp[i] + coeff_lm*chi2_lm[i]
+                if opt_combine==0: #lincomb
+                    for i in range(nz):
+                        merit[i] = coeff_nc*chi2_nc_interp[i] + coeff_continuum*chi2_continuum_interp[i] + coeff_lm*chi2_lm[i]
+                else:      
+                    prior_nc = coeff_nc/100.0
+                    prior_c = coeff_continuum/100.0
+                    prior_lm = coeff_lm/100.0
+                    
+                    for i in range(nz):
+                        likelihood_chi2nc= np.exp(-chi2_nc_interp[i]/2.0)
+                        likelihood_chi2c = np.exp(-chi2_continuum_interp[i]/2.0)
+                        likelihood_lm = np.exp(-chi2_lm[i]/2.0)
+                        
+                        merit[i] = -( prior_lm*likelihood_lm + prior_nc*likelihood_chi2nc + prior_c*likelihood_chi2c )
+                    
                 izbest = np.argmin(merit)
                 zbest = z_nc[izbest]
                 if(np.abs(zbest - self.list[indice].zref ) < zthres):
@@ -1766,6 +1780,7 @@ def plotChi2LinCombinationCoeff2DMap(resDir, diffthres, spcName="", methodName="
     
     ## parameters :
     zthres = 0.01
+    opt_combination = 1 #0=lincomb, 1=bayescomb 
     if 1: 
         plt.ion()
         chi2dontloadThres = -1#1e12 #better for direct plotting, but use -1 to do the optimization map
@@ -1785,8 +1800,10 @@ def plotChi2LinCombinationCoeff2DMap(resDir, diffthres, spcName="", methodName="
     for k in range(resList.n):
         print("processing result #{}/{}".format(k+1, resList.n))
         try:
-            coeffmap = resList.getChi2LinCombinationCoeff2DMap(k, enablePlot=enablePlot, chi2dontloadThres=chi2dontloadThres,  zthres=zthres)
-        except:
+            coeffmap = resList.getChi2LinCombinationCoeff2DMap(k, enablePlot=enablePlot, chi2dontloadThres=chi2dontloadThres,  zthres=zthres, opt_combination=opt_combination)
+        except Exception as e:
+            print(e)
+            stop
             continue
         print("coeffmap = {}".format(coeffmap))
         cumulcoeffmap = np.add(cumulcoeffmap, coeffmap)
@@ -1795,7 +1812,13 @@ def plotChi2LinCombinationCoeff2DMap(resDir, diffthres, spcName="", methodName="
         plt.clf()
         plt.close()
 
-        fig = plt.figure('dtreeb lincomb coeff map', figsize=(9, 8))
+        
+        if opt_combination==0:
+            comb_name = 'lincomb'
+        elif opt_combination == 1:
+            comb_name = 'bayescomb'
+        
+        fig = plt.figure('dtreeb {} coeff map'.format(comb_name), figsize=(9, 8))
         ax = fig.add_subplot(111)
         cmap = plt.get_cmap('RdYlGn') 
         ncolors = 20 #min(20,k+2)
@@ -1804,7 +1827,7 @@ def plotChi2LinCombinationCoeff2DMap(resDir, diffthres, spcName="", methodName="
         i = ax.matshow(np.transpose(cumulcoeffmap), interpolation='nearest', aspect='equal', cmap=cmap)
         plt.xlabel('continuum coeff')
         plt.ylabel('lm coeff')
-        name1 = "linear combination coeff map \nzThreshold = {}\n(processed idx={}/{})".format(zthres, k+1, resList.n)
+        name1 = "combination coeff map \nzThreshold = {}\n(processed idx={}/{})".format(zthres, k+1, resList.n)
         plt.title(name1)
         #plt.legend(legendz)
         #plt.grid()
@@ -1825,7 +1848,7 @@ def plotChi2LinCombinationCoeff2DMap(resDir, diffthres, spcName="", methodName="
         
        
         if enableExport:            
-            outdir = os.path.join(resList.analysisoutputdir, "dtreeb_lincomb_coeffmap_method{}".format(methodName))
+            outdir = os.path.join(resList.analysisoutputdir, "dtreeb_{}_coeffmap_method{}".format(comb_name, methodName))
             if not os.path.exists(outdir):
                 print("creating outputdir {}".format(outdir))
                 os.makedirs(outdir)   
