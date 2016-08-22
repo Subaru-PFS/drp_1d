@@ -409,9 +409,9 @@ Bool COperatorDTreeBSolve::GetCombinedRedshift(CDataStore& store)
         Float64 post = DBL_MAX;
         if(1) //bayesian combination
         {
-            Float64 lmCoeff = 1.0;
+            Float64 lmCoeff = 0.4;
             Float64 chi2ncCoeff = 1.0;
-            Float64 chi2cCoeff = 1.0;
+            Float64 chi2cCoeff = 0.18;
 
             //lmCoeff = exp(lmCoeff/1000.0);
             //chi2ncCoeff = exp(chi2ncCoeff/1000.0);

@@ -943,7 +943,7 @@ class ResultList(object):
             return zrelativemerit
 
     
-    def getChi2LinCombinationCoeff2DMap(self, indice=0, enablePlot=0, chi2dontloadThres=-1, zthres=0.01, opt_combination=1):       
+    def getChi2CombinationCoeff2DMap(self, indice=0, enablePlot=0, chi2dontloadThres=-1, zthres=0.01, opt_combination=1):       
         spcName = self.list[indice].name
         print("spcname = {}".format(spcName))
         s = rp.ResParser(self.dir)
@@ -983,6 +983,11 @@ class ResultList(object):
         #interpolate no_continuum on linemodel grid
         f = interpolate.interp1d(z_nc, chi2_nc, bounds_error=False, fill_value=1e32, assume_sorted=False) 
         chi2_nc_interp = f(z_lm)
+        
+        #converting to numpy arrays
+        chi2_lm = np.array(chi2_lm)
+        chi2_continuum_interp = np.array(chi2_continuum_interp)
+        chi2_nc_interp = np.array(chi2_nc_interp)
         
         #print max_chi2_all
         
@@ -1053,28 +1058,27 @@ class ResultList(object):
                 coeff_lm = coeff_lm_min+ilinemodel*coeff_lm_step
                 #print("this solution uses : coeff_continuum={}, coeff_lm={}".format(coeff_continuum, coeff_lm) )
                 if opt_combine==0: #lincomb
-                    for i in range(nz):
-                        merit[i] = coeff_nc*chi2_nc_interp[i] + coeff_continuum*chi2_continuum_interp[i] + coeff_lm*chi2_lm[i]
+                    merit = coeff_nc*chi2_nc_interp + coeff_continuum*chi2_continuum_interp + coeff_lm*chi2_lm
                 else:      
-                    prior_nc = coeff_nc/100.0
-                    prior_c = coeff_continuum/100.0
-                    prior_lm = coeff_lm/100.0
-                    
-                    for i in range(nz):
-                        likelihood_chi2nc= np.exp(-chi2_nc_interp[i]/2.0)
-                        likelihood_chi2c = np.exp(-chi2_continuum_interp[i]/2.0)
-                        likelihood_lm = np.exp(-chi2_lm[i]/2.0)
-                        
-                        merit[i] = -( prior_lm*likelihood_lm + prior_nc*likelihood_chi2nc + prior_c*likelihood_chi2c )
+                    logVect = np.logspace(-1.0, 0.0, 101)
+                    prior_nc = logVect[int(coeff_nc)]
+                    prior_c = logVect[int(coeff_continuum)]
+                    prior_lm = logVect[int(coeff_lm)]
+
+                    likelihood_chi2nc= np.exp(-chi2_nc_interp/2.0)
+                    likelihood_chi2c = np.exp(-chi2_continuum_interp/2.0)
+                    likelihood_lm = np.exp(-chi2_lm/2.0)
+                    merit = -( prior_lm*likelihood_lm + prior_nc*likelihood_chi2nc + prior_c*likelihood_chi2c )
+
                     
                 izbest = np.argmin(merit)
                 zbest = z_nc[izbest]
                 if(np.abs(zbest - self.list[indice].zref ) < zthres):
                     _map[icontinuum,ilinemodel] = 1
-                    print("this solution works : z={}, zref={}".format(zbest, self.list[indice].zref) )
+                    print("this solution works ilm={}, ic={}  : z={}, zref={}".format(ilinemodel, icontinuum, zbest, self.list[indice].zref) )
                 else:          
                     _map[icontinuum,ilinemodel] = 0
-                    print("this solution fails : z={}, zref={}".format(zbest, self.list[indice].zref) )
+                    print("this solution fails ilm={}, ic={}  : z={}, zref={}".format(ilinemodel, icontinuum, zbest, self.list[indice].zref) )
                     
         return _map
     
@@ -1770,7 +1774,7 @@ def colorbar_index(ncolors, cmap):
     colorbar.set_ticks(np.linspace(0, ncolors, ncolors))
     colorbar.set_ticklabels(range(ncolors))
       
-def plotChi2LinCombinationCoeff2DMap(resDir, diffthres, spcName="", methodName="", enableExport=True):
+def plotChi2CombinationCoeff2DMap(resDir, diffthres, spcName="", methodName="", enableExport=True):
     print('using amazed results full path: {0}'.format(resDir))
     resList = ResultList(resDir, diffthreshold=diffthres, opt='brief', spcName=spcName, methodName=methodName)
     if resList.n <1:
@@ -1781,6 +1785,7 @@ def plotChi2LinCombinationCoeff2DMap(resDir, diffthres, spcName="", methodName="
     ## parameters :
     zthres = 0.01
     opt_combination = 1 #0=lincomb, 1=bayescomb 
+    dont_skip_no_spc = False
     if 1: 
         plt.ion()
         chi2dontloadThres = -1#1e12 #better for direct plotting, but use -1 to do the optimization map
@@ -1800,11 +1805,14 @@ def plotChi2LinCombinationCoeff2DMap(resDir, diffthres, spcName="", methodName="
     for k in range(resList.n):
         print("processing result #{}/{}".format(k+1, resList.n))
         try:
-            coeffmap = resList.getChi2LinCombinationCoeff2DMap(k, enablePlot=enablePlot, chi2dontloadThres=chi2dontloadThres,  zthres=zthres, opt_combination=opt_combination)
+            coeffmap = resList.getChi2CombinationCoeff2DMap(k, enablePlot=enablePlot, chi2dontloadThres=chi2dontloadThres,  zthres=zthres, opt_combination=opt_combination)
         except Exception as e:
             print(e)
-            stop
-            continue
+            if dont_skip_no_spc:
+                stop
+            else:
+                continue
+
         print("coeffmap = {}".format(coeffmap))
         cumulcoeffmap = np.add(cumulcoeffmap, coeffmap)
         print("cumulcoeffmap = {}".format(cumulcoeffmap))
@@ -2372,7 +2380,7 @@ def StartFromCommandLine( argv ) :
         \n\
         20. Compare failures\n\
         \n\
-        30. Plot 2D Linear Comb. Merit Coeff map\n\
+        30. Plot 2D Combination Merit Coeff map\n\
         35. Plot continuum indexes\n\
         36. Export SVM table\n\
         \n\
@@ -2494,7 +2502,7 @@ def StartFromCommandLine( argv ) :
             methodStr = raw_input("Do you want to enter a method name to filter the results ? (press enter to skip) :")
             if not (methodStr == "No" or methodStr == "no"):
                 methodName = methodStr
-            plotChi2LinCombinationCoeff2DMap(options.resDir, float(options.diffthres), spcName, methodName)
+            plotChi2CombinationCoeff2DMap(options.resDir, float(options.diffthres), spcName, methodName)
             
                 
         elif choice == 35:
