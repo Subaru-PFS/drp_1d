@@ -21,12 +21,17 @@ public:
         Float64 Color;
         Float64 Break;
     };
+    struct SContinuumRelevance
+    {
+        Float64 StdSpectrum;
+        Float64 StdContinuum;
+    };
     typedef std::vector<SContinuumIndex> TContinuumIndexList;
 
 
     TContinuumIndexList getIndexes(const CSpectrum& spectrum, Float64 z);
+    SContinuumRelevance getRelevance(const CSpectrum& spectrum, const CSpectrum& continuum);
 private:
-    TContinuumIndexList m_indexes;
 };
 
 }

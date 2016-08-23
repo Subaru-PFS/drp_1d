@@ -285,7 +285,7 @@ class ResultList(object):
                 zrange = self.getZrangeForTemplate(tpltag)
             print("using zrange = {}".format(zrange))
             z, merit = chi2.getBestZ_byFluxMin(zrange[0], zrange[1])
-            print("found best redshift for this tpl = {}, wirh merit = {}".format(z, merit))
+            print("found best redshift for this tpl = {}, with merit = {}".format(z, merit))
             
             if bestmerit>merit:
                 bestz=z
@@ -539,7 +539,13 @@ class ResultList(object):
             print("\n")
             print("Spc {}/{}".format(x, self.n))
             if extremaType=="amazed":
-                redshifts, merits = self.getZCandidatesFromAmazedChi2Extrema(x, chi2Type, nextrema)
+                try:
+                    redshifts, merits = self.getZCandidatesFromAmazedChi2Extrema(x, chi2Type, nextrema)
+                except Exception as e:
+                    print(e)
+                    redshifts = []
+                    merits = []
+                    
             else:
                 redshifts, merits = self.getZCandidatesFromChi2Extrema(x, chi2Type, nextrema)
                 
@@ -1059,12 +1065,17 @@ class ResultList(object):
                 #print("this solution uses : coeff_continuum={}, coeff_lm={}".format(coeff_continuum, coeff_lm) )
                 if opt_combine==0: #lincomb
                     merit = coeff_nc*chi2_nc_interp + coeff_continuum*chi2_continuum_interp + coeff_lm*chi2_lm
-                else:      
-                    logVect = np.logspace(-1.0, 0.0, 101)
-                    prior_nc = logVect[int(coeff_nc)]
-                    prior_c = logVect[int(coeff_continuum)]
-                    prior_lm = logVect[int(coeff_lm)]
-
+                else:   
+                    if 0: #log scale
+                        logVect = np.logspace(-1.25, 0.025, 101)-10**(-1.25)
+                        prior_nc = logVect[int(coeff_nc)]
+                        prior_c = logVect[int(coeff_continuum)]
+                        prior_lm = logVect[int(coeff_lm)]
+                    else: #lin scale
+                        prior_nc = coeff_nc/100.0;
+                        prior_c = coeff_continuum/100.0; 
+                        prior_lm = coeff_lm/100.0;
+    
                     likelihood_chi2nc= np.exp(-chi2_nc_interp/2.0)
                     likelihood_chi2c = np.exp(-chi2_continuum_interp/2.0)
                     likelihood_lm = np.exp(-chi2_lm/2.0)
@@ -1781,6 +1792,7 @@ def plotChi2CombinationCoeff2DMap(resDir, diffthres, spcName="", methodName="", 
         print('No results loaded...')
         return
     cumulcoeffmap = np.zeros((20,20))
+    fullcoeffmap = np.ones((resList.n,20,20))*-1
     
     ## parameters :
     zthres = 0.01
@@ -1814,6 +1826,7 @@ def plotChi2CombinationCoeff2DMap(resDir, diffthres, spcName="", methodName="", 
                 continue
 
         print("coeffmap = {}".format(coeffmap))
+        fullcoeffmap[k, :, :] = np.copy(coeffmap)
         cumulcoeffmap = np.add(cumulcoeffmap, coeffmap)
         print("cumulcoeffmap = {}".format(cumulcoeffmap))
         #print("coeffmap shape = {}".format(coeffmap.shape))  
@@ -1864,6 +1877,8 @@ def plotChi2CombinationCoeff2DMap(resDir, diffthres, spcName="", methodName="", 
             plt.savefig( outFigFile, bbox_inches='tight') # sauvegarde du fichier ExempleTrace.png
             outtxtFile = os.path.join(outdir, 'cumulcoeffmap.txt')
             np.savetxt(outtxtFile, cumulcoeffmap)
+            outFullMapFile = os.path.join(outdir, 'fullcoeffmap.dat')
+            np.save(outFullMapFile, fullcoeffmap)
    
 def plotReducedZcandidates(resDir):
     print('using amazed results full path: {0}'.format(resDir))
@@ -2348,6 +2363,125 @@ def exportSVMTable(resDir, diffthres, spcName=""):
         np.savetxt(outFile, data_list)
 
     
+      
+def exportContinuumrelevance(resDir, diffthres, spcName=""):
+    print('using amazed results full path: {0}'.format(resDir))
+    resList = ResultList(resDir, diffthreshold=diffthres, opt='brief', spcName=spcName, methodName="", zrefmin=-1, zrefmax=50)
+    if resList.n <1:
+        print('No results loaded...')
+        return
+
+    resultParser = rp.ResParser(resDir) 
+    idxSpcName = 0
+    idxStdSpc = 1
+    idxStdContinuum = 2
+
+    
+    N = 3
+    data_list_str = "" #"#name\tstdcont_over_stdspc\n"
+    data_list = []
+    
+    #nres = 100
+    nres = resList.n
+    for k in range(nres):
+        print("\nprocessing result #{}/{}".format(k+1, resList.n))
+        
+        _spcName = resList.list[k].name
+        contRelevancepath = resultParser.getContinuumRelevancePath(_spcName) 
+        f = open(contRelevancepath, 'r')
+        for l in f:
+            if not (l.startswith('#') or 'std_spc' in l):
+                print("line is {}".format(l))
+                llist = l.split("\t")
+                _stdSpc = float(llist[0])
+                _stdContinuum = float(llist[1])
+                break
+        f.close()
+                
+        print('_stdSpc = {}'.format(_stdSpc))
+        print('_stdContinuum = {}'.format(_stdContinuum))
+        
+        #build the common (all candidates for this source) template vector
+#        _data = np.zeros((N))
+#        _data[idxSpcName] = _spcName#resList.list[k].name.split("_")[1]
+#        _data[idxStdSpc] = _stdSpc
+#        _data[idxStdContinuum] = _stdContinuum
+
+        dataStr = "{}\t{}\n".format(_spcName, _stdContinuum)
+        data_list_str+=dataStr
+        print("data = {}".format(dataStr))
+        data_list.append([_stdSpc, _stdContinuum])
+    
+    enablePlot = 1
+    if enablePlot:
+        #print("data_list = {}".format(data_list))
+
+###
+        histRawData = np.array([a[1]/a[0] for i,a in enumerate(data_list)])
+        plt.plot(histRawData, 'x')
+        plt.yscale('log')
+        plt.grid()
+        
+        print("histRawData = {}".format(histRawData))
+        mini = np.nanmin(histRawData)
+        maxi = np.nanmax(histRawData)
+        
+        print("min={}, max={}".format(mini, maxi))
+        nbins = 20
+        vectBins = np.linspace(mini, maxi, nbins, endpoint=True)
+
+        mybins = vectBins
+                
+        print("mybins={}".format(mybins))
+        centerbins = [(mybins[k]+mybins[k+1])/2.0 for k in range(len(mybins)-1)]
+        widthbins = [(mybins[k+1]-mybins[k]) for k in range(len(mybins)-1)]
+        ybins, bin_edges = np.histogram(histRawData, bins=mybins)
+     
+        fig = plt.figure( "stats", figsize=(15,11))
+        if 1:
+            width = 0.7 * widthbins[0] #assuming all the bins have the same size
+            center = (bin_edges[:-1] + bin_edges[1:]) / 2
+            barlist = plt.bar(center, ybins, align='center', width=width)
+#            for k in range(len(barlist)):
+#                if centerbins[k]<-thres:
+#                    barlist[k].set_color('g')   
+#                elif centerbins[k]>thres:
+#                    barlist[k].set_color('r') 
+            
+        else:
+            plt.plot(centerbins, ybins, 'x-')
+        
+        nbins = len(ybins)
+        plt.xlim(min(mybins), max(mybins))
+        #plt.semilogx()
+        #plt.xlim([-2, 2])
+        #plt.ylim([0, 100])            
+
+        ##bar
+        #ind = np.arange(len(OY))
+        #plt.plot(xvect, yvect, 'x')
+        #ax.set_xscale('log')
+        plt.grid(True) # Affiche la grille
+        #plt.legend(('cos','sin'), 'uplter right', shadow = True)
+        plt.ylabel('Count')
+        plt.xlabel('StdContinuum/StdSpectrum'.format())
+        plt.show() 
+###
+    
+    
+    
+    enableExport = 1 
+    if enableExport:
+        outdir = os.path.join(resList.analysisoutputdir, "continuum")
+        if not os.path.exists(outdir):
+            os.makedirs(outdir)
+            
+        outFile = os.path.join(outdir, 'continuumRelevance_data.txt'.format())
+        f = open(outFile, "w")
+        f.write(data_list_str)
+        f.close()
+
+    
     
         
     
@@ -2383,6 +2517,7 @@ def StartFromCommandLine( argv ) :
         30. Plot 2D Combination Merit Coeff map\n\
         35. Plot continuum indexes\n\
         36. Export SVM table\n\
+        37. Export continuum Relevance\n\
         \n\
         40. Plot precision histogram\n\
         41. Plot velocity error histogram\n\
@@ -2521,6 +2656,14 @@ def StartFromCommandLine( argv ) :
                 spcName = spcStr
            
             exportSVMTable(options.resDir, float(options.diffthres), spcName)
+            
+        elif choice == 37:
+            spcName = ""
+            spcStr = raw_input("Do you want to enter a spectrum name to filter the results ? (press enter to skip) :")
+            if not (spcStr == "No" or spcStr == "no"):
+                spcName = spcStr
+           
+            exportContinuumrelevance(options.resDir, float(options.diffthres), spcName)
             
         elif choice == 40:           
             plotPrecisionHist(options.resDir)            

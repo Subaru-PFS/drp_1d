@@ -141,6 +141,14 @@ def exportHistogramComplex(yvect, mvect, bins, outFileNoExt="", htype="simple", 
             outStr = str(ex) + '\t' + str(bins[ex]) + '\t' +str(ybinsHIGH[ex]) + '\t' +str(ynbins[ex])
             print outStr
             fout.write( outStr  + '\n')
+        fout.close()  
+        
+        # save low prctile in file
+        fout = open( outFileNoExt+"prct{}.csv".format(lowhigh[1]), "w" )  
+        for ex in range(0, nbins):
+            outStr = str(ex) + '\t' + str(bins[ex]) + '\t' +str(ybinsLOW[ex]) + '\t' +str(ynbins[ex])
+            print outStr
+            fout.write( outStr  + '\n')
         fout.close()
     
     return ybins49, ybins50, ybins51, ybinsVERYLOW, ybinsLOW, ybinsHIGH, ybinsVERYHIGH, ynbins
@@ -226,6 +234,23 @@ def PlotAmazedVersusBinsHistogram(yvect, mvect, outdir, outFileNoExt, enablePlot
     elif mtype=='ERROR_SIGMA':
         print '\n\nPlotAmazedVersusERROR_SIGMAHistogram:'
         vectBins = np.linspace(-500, 500, 40, endpoint=True)
+        #print 'the sigma bins are: ' + str(vectBins) 
+    elif mtype=='EXT':
+        print '\n\nPlotAmazedVersusEXTHistogram:'
+        ext_min = np.nanmin(mvect)
+        ext_max = np.nanmax(mvect)
+        ext_range = ext_max-ext_min
+        #ext_min -= ext_range/5.0
+        #ext_min = max(ext_min, 0.0)
+        #ext_max += ext_range/5.0
+        if 0:
+            vectBins = np.linspace(ext_min, ext_max, 40, endpoint=True)
+        else:
+            logmin = np.log10(ext_min)-1
+            logmax = np.log10(ext_max)+1
+            print("logmin = {}, logmax = {}".format(logmin, logmax))
+            
+            vectBins = np.logspace(logmin, logmax, 40, endpoint=True)
         #print 'the sigma bins are: ' + str(vectBins) 
     elif mtype=='LOGFHALPHA':
         print '\n\nPlotAmazedVersusLOGFHaHistogram:'
@@ -321,6 +346,10 @@ def PlotAmazedVersusBinsHistogram(yvect, mvect, outdir, outFileNoExt, enablePlot
             ax2.set_xlim([25, 650])
         elif mtype=='ERROR_SIGMA':
             ax2.set_xlim([-550, 550])
+        elif mtype=='EXT':
+            ax2.set_xlim([ext_min, ext_max])            
+            ax2.set_xscale('log')
+            ax1.set_xscale('log')
         elif mtype=='LOGFHALPHA':
             ax2.set_xlim([-16.5, -13.5])
         else:

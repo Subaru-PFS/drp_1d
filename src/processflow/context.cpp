@@ -11,6 +11,9 @@
 #include <epic/redshift/continuum/median.h>
 #include <epic/redshift/continuum/waveletsdf.h>
 #include <epic/redshift/continuum/irregularsamplingmedian.h>
+#include <epic/redshift/continuum/indexes.h>
+#include <epic/redshift/continuum/indexesresult.h>
+
 
 #include <epic/core/log/log.h>
 #include <epic/core/debug/assert.h>
@@ -168,6 +171,17 @@ bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath,
         }
     }
 
+    //process continuum relevance
+    CContinuumIndexes continuumIndexes;
+    CSpectrum _spcContinuum = *m_Spectrum;
+    CSpectrumFluxAxis spcfluxAxis = _spcContinuum.GetFluxAxis();
+    spcfluxAxis.Subtract( m_SpectrumWithoutContinuum->GetFluxAxis() );
+    CSpectrumFluxAxis& sfluxAxisPtr = _spcContinuum.GetFluxAxis();
+    sfluxAxisPtr = spcfluxAxis;
+
+    CContinuumIndexes::SContinuumRelevance continuumRelevance = continuumIndexes.getRelevance( *m_Spectrum, _spcContinuum );
+
+
     m_SpectrumWithoutContinuum->ConvertToLogScale();
 
 
@@ -193,6 +207,14 @@ bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath,
         baselineResult->wavel[k]  = (m_Spectrum->GetSpectralAxis())[k];
     }
     m_DataStore->StoreScopedGlobalResult(nameBaseline, baselineResult);
+
+    //Save the continuum relevance in store
+    const char*     nameContinuumIndexesResult;		// continuum indexes filename
+    nameContinuumIndexesResult = "preprocess/continuumIndexes";
+    std::shared_ptr<CContinuumIndexesResult> continuumIndexesResult = (std::shared_ptr<CContinuumIndexesResult>) new CContinuumIndexesResult();
+    continuumIndexesResult->SetValues(continuumRelevance.StdSpectrum, continuumRelevance.StdContinuum);
+    m_DataStore->StoreScopedGlobalResult(nameContinuumIndexesResult, continuumIndexesResult);
+
     return true;
 }
 

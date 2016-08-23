@@ -122,7 +122,7 @@ TLambdaRange CSpectrum::GetLambdaRange() const
     return m_SpectralAxis.GetLambdaRange();
 }
 
-bool CSpectrum::GetMeanFluxInRange( TFloat64Range wlRange,  Float64& mean) const
+bool CSpectrum::GetMeanAndStdFluxInRange(TFloat64Range wlRange,  Float64& mean, Float64 &std) const
 {
     //wlrange should be totally included in the spectrum lambdarange
     if(wlRange.GetBegin()<m_SpectralAxis.GetLambdaRange().GetBegin())
@@ -142,6 +142,7 @@ bool CSpectrum::GetMeanFluxInRange( TFloat64Range wlRange,  Float64& mean) const
     m_FluxAxis.ComputeMeanAndSDev( mask,_Mean ,_SDev, error);
 
     mean = _Mean;
+    std = _SDev;
     return true;
 }
 

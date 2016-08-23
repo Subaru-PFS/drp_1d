@@ -386,9 +386,15 @@ class ResultChisquare(object):
     def getBestZ_byFluxMin(self, zmin, zmax):
         imin = self.getZIndex(zmin)
         imax = self.getZIndex(zmax)
-        iFluxMin = np.argmin(self.yvect[imin:imax])
-        bestz = self.xvect[imin+iFluxMin]
-        merit = self.yvect[imin+iFluxMin]
+        try:
+            iFluxMin = np.argmin(self.yvect[imin:imax])
+            bestz = self.xvect[imin+iFluxMin]
+            merit = self.yvect[imin+iFluxMin]
+        except Exception as e:
+            print(e)
+            bestz = -1
+            merit = -1
+            
         return bestz, merit
     
     def getZIndex(self, z):

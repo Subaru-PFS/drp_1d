@@ -225,6 +225,43 @@ def ProcessDiff( refFile, calcFile, outFile, reftype ) :
         # end re-order
     else:
         dataSnr = []
+        
+    ### try to open external data file :it has to be placed in the ref file directory
+    externalFile = os.path.join(os.path.dirname(os.path.abspath(refFile)), "external.csv")
+    print("Externalfile = {}".format(externalFile))
+    if os.path.exists(externalFile):
+        fext = open(externalFile, 'r')
+        dataExtStr = fext.read()
+        fext.close()
+        dataExt_raw = ascii.read(dataExtStr)
+        dataExt_names = [a[0].replace("SPC_fits-W-TF_", "").replace(".fits", "") for a in dataExt_raw]
+        print("dataExt, first elt: {}".format(dataExt_raw[0]))
+        #*************** reorder ext data by filename
+        inds = []
+        #readonlyN = 300;
+        for s in dataRef_names:#[0:readonlyN]:
+            #remove extension .fits from pandora results
+            #s = s[0:-5]
+            print("dataRef_names entry: {}".format(s))
+            print("dataExt_names first entry: {}".format(dataExt_names[0]))
+        
+            #p = [i for i,x in enumerate(dataSnr_names) if str(s) == x] # PFS batch 1 to 5
+            p = [i for i,x in enumerate(dataExt_names) if str(s) in x]# PFS batch 6 onwards
+            if len(p) == 1:
+                #print("p={}".format(p))
+                #print("x={}".format(dataSnr_names[p[0]]))
+                print "OK : index found : ref={0} and snr={1}".format(s,dataExt_names[p[0]])
+                inds.append(p[0])
+            else:
+                inds.append(-1)
+                print "ERROR : index not found : {0}".format(s)
+                stop
+        #print inds
+        dataExt = [dataExt_raw[i] for i in inds]
+        # end re-order
+    else:
+        print('EXT file not found')
+        dataExt = []
     
     
 
@@ -235,7 +272,7 @@ def ProcessDiff( refFile, calcFile, outFile, reftype ) :
             
     #Write the diff file
     f = open( outFile, "w" )
-    f.write( "#ID\tMAGI\tZREF\tZFLAG\tZCALC\tMERIT\tTPL\tMETHOD\tSNR\tSFR\tE(B-V)\tSigma\tLogHalpha\tDIFF\n" )
+    f.write( "#ID\tMAGI\tZREF\tZFLAG\tZCALC\tMERIT\tTPL\tMETHOD\tSNR\tSFR\tE(B-V)\tSigma\tLogHalpha\tExtValue\tDIFF\n" )
     for k in range(0,n):
         if iRefFlag>-1:
             flagValStr = str(dataRef[k][iRefFlag])
@@ -261,7 +298,12 @@ def ProcessDiff( refFile, calcFile, outFile, reftype ) :
         if len(dataSnr)>0:
             snrValStr = str(dataSnr[k][1])
         else:
-            snrValStr = "-1"       
+            snrValStr = "-1" 
+            
+        if len(dataExt)>0:
+            extValStr = str(dataExt[k][1])
+        else:
+            extValStr = "-1"       
 
         tplStr = "-1" #str(dataCalc[k][4])
         zdiff = dataCalc[k][1]-dataRef[k][iRefZ]
@@ -280,6 +322,7 @@ def ProcessDiff( refFile, calcFile, outFile, reftype ) :
 	        #print str(dataCalc[k][4])
             print("diff: {}".format(str(dataRef[k][iRefZ] - dataCalc[k][1])))
             print("snr: {}".format(snrValStr))
+            print("ext: {}".format(extValStr))
             
          
         #f.write( str(dataCalc[k][0]) + "\t" + str(dataRef[k][iRefMag]) + "\t" + str(dataRef[k][iRefZ]) + "\t" + str(dataRef[k][iRefFlag]) + "\t" + str(dataCalc[k][1]) + "\t" + str(dataCalc[k][2]) + "\t" + str(dataCalc[k][3]) + "\t" + str(dataCalc[k][4]) + "\t" + str(dataRef[k][iRefZ] - dataCalc[k][1]) + "\n" )
@@ -296,6 +339,7 @@ def ProcessDiff( refFile, calcFile, outFile, reftype ) :
         f.write( EBmVValStr + "\t")
         f.write( SigmaValStr + "\t")
         f.write( LogHalphaValStr + "\t")
+        f.write( extValStr + "\t" )
         f.write( str(zdiff) + "\n" )
     
     f.close()
@@ -503,7 +547,7 @@ def loadDiff(fname):
             data = lineStr.split("\t")
             data = [r for r in data if r != '']
             #print len(data)
-            if(len(data) == 14): #Spectrum ID	MAGI	ZREF	ZFLAG	ZCALC	MERIT	TPL	METHOD    SNR	SFR E(B-V) Sigma LogHalpha DIFF
+            if(len(data) == 15): #Spectrum ID	MAGI	ZREF	ZFLAG	ZCALC	MERIT	TPL	METHOD    SNR	SFR E(B-V) Sigma LogHalpha ExtValue DIFF
                 d0 = str(data[0])
                 d1 = float(data[1])
                 d2 = float(data[2])
@@ -518,7 +562,8 @@ def loadDiff(fname):
                 d11 = float(data[11])
                 d12 = float(data[12])
                 d13 = float(data[13])
-                d = [d0, d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11, d12, d13]
+                d14 = float(data[14])
+                d = [d0, d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11, d12, d13, d14]
                 dataArray.append(d) 
     f.close()
     return dataArray
@@ -549,6 +594,10 @@ def ProcessStats( fname, zRange, magRange,  sfrRange, enablePlot = False ):
         
     indsForHist = []
     for x in range(0,n):
+        if 0: #filter by flag
+            flag = data[x][3]
+            if flag!=2.0:
+                continue
         zreference = (data[x][2])
         mag = (data[x][1])
         sfr = (data[x][9])
@@ -560,6 +609,7 @@ def ProcessStats( fname, zRange, magRange,  sfrRange, enablePlot = False ):
     yvect = range(0,nSelected)
     mvect = range(0,nSelected)
     snrvect = range(0,nSelected)
+    extvect = range(0,nSelected)
     sfrvect = range(0,nSelected)
     ebmvvect = range(0,nSelected)
     sigmavect = range(0,nSelected)
@@ -571,6 +621,7 @@ def ProcessStats( fname, zRange, magRange,  sfrRange, enablePlot = False ):
         
         mvect[x] = (data[indsForHist[x]][1])
         snrvect[x] = (data[indsForHist[x]][8])
+        extvect[x] = (data[indsForHist[x]][13])
         sfrvect[x] = (data[indsForHist[x]][9])
         ebmvvect[x] = (data[indsForHist[x]][10]) 
         sigmavect[x] = (data[indsForHist[x]][11])
@@ -733,6 +784,15 @@ def ProcessStats( fname, zRange, magRange,  sfrRange, enablePlot = False ):
         outFilepathNoExt = os.path.join(outputDirectory,outFileNoExt)
         outdir = outputDirectory
         lstats.PlotAmazedVersusBinsHistogram(yvect, fhalphavect, outdir, outFilepathNoExt, enablePlot=enablePlot, enableExport=1, mtype='LOGFHALPHA', nPercentileDepth=nPercentileDepth) 
+
+
+    # ******* plot ext hist       
+    if 0:
+        print("Plotting versus ExtValue")
+        outFileNoExt = 'stats_versusExt_hist' 
+        outFilepathNoExt = os.path.join(outputDirectory,outFileNoExt)
+        outdir = outputDirectory
+        lstats.PlotAmazedVersusBinsHistogram(yvect, extvect, outdir, outFilepathNoExt, enablePlot=enablePlot, enableExport=1, mtype='EXT', nPercentileDepth=nPercentileDepth) 
 
 
     print '\n'
