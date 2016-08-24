@@ -38,7 +38,7 @@ COperatorChiSquare2::~COperatorChiSquare2()
 
 Void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& tpl, Float64* pfgTplBuffer,
                                 const TFloat64Range& lambdaRange, Float64 redshift, Float64 overlapThreshold,
-                                Float64& overlapRate, Float64& chiSquare, Float64& fittingAmplitude, EStatus& status , std::string opt_interp, Float64 forcedAmplitude)
+                                Float64& overlapRate, Float64& chiSquare, Float64& fittingAmplitude, EStatus& status , std::string opt_interp, Float64 forcedAmplitude, Int32 opt_extinction)
 {
     chiSquare = boost::numeric::bounds<float>::highest();
     fittingAmplitude = -1.0;
@@ -102,8 +102,9 @@ Void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& t
         return ;
     }
 
+
     const Float64* Xtpl = itplTplSpectralAxis.GetSamples();
-    const Float64* Ytpl = itplTplFluxAxis.GetSamples();
+    Float64* Ytpl = itplTplFluxAxis.GetSamples();
     const Float64* Xspc = spcSpectralAxis.GetSamples();
     const Float64* Yspc = spcFluxAxis.GetSamples();
     TFloat64Range logIntersectedLambdaRange( log( intersectedLambdaRange.GetBegin() ), log( intersectedLambdaRange.GetEnd() ) );
@@ -114,6 +115,42 @@ Void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& t
     if(spcSpectralAxis.IsInLinearScale()){
         currentRange = intersectedLambdaRange;
     }
+
+
+    //* Optionally Apply some extinction
+    if(opt_extinction)
+    {
+        Float64 coeffUnder1216 = 1.0;
+        Float64 z = redshift;
+        for(Int32 k=0; k<itplTplSpectralAxis.GetSamplesCount(); k++)
+        {
+            if(Xtpl[k] < currentRange.GetBegin()){
+                continue;
+            }
+            if(Xtpl[k] > currentRange.GetEnd()){
+                continue;
+            }
+
+            Float64 restLambda = Xtpl[k]/(1.0+z);
+            if(restLambda < 1216.0)
+            {
+                coeffUnder1216 = 1.0;
+                if(z>=4.0 && z<5.0)
+                {
+                    coeffUnder1216 = 0.5;
+                }else if(z>=5.0 && z<6.0)
+                {
+                    coeffUnder1216 = 1.0/3.5;
+                }else if(z>=6.0){
+                    coeffUnder1216 = 1.0/1e16;
+                }
+
+                Ytpl[k] *= coeffUnder1216;
+            }
+
+        }
+    }
+    //*/
 
     // j cursor move over spectrum
     Int32 j = 0;
@@ -220,7 +257,7 @@ Void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& t
 
 std::shared_ptr<COperatorResult> COperatorChiSquare2::Compute(const CSpectrum& spectrum, const CTemplate& tpl,
                           const TFloat64Range& lambdaRange, const TFloat64List& redshifts,
-                          Float64 overlapThreshold , std::string opt_interp)
+                          Float64 overlapThreshold , std::string opt_interp, Int32 opt_extinction)
 {
 
     if( spectrum.GetSpectralAxis().IsInLinearScale() == false || tpl.GetSpectralAxis().IsInLinearScale() == false )
@@ -313,7 +350,7 @@ std::shared_ptr<COperatorResult> COperatorChiSquare2::Compute(const CSpectrum& s
 
     for (Int32 i=0;i<sortedRedshifts.size();i++)
     {
-        BasicFit( spectrum, tpl, precomputedFineGridTplFlux, lambdaRange, result->Redshifts[i], overlapThreshold, result->Overlap[i], result->ChiSquare[i], result->FitAmplitude[i], result->Status[i], opt_interp);
+        BasicFit( spectrum, tpl, precomputedFineGridTplFlux, lambdaRange, result->Redshifts[i], overlapThreshold, result->Overlap[i], result->ChiSquare[i], result->FitAmplitude[i], result->Status[i], opt_interp, -1, opt_extinction);
     }
 
     // extrema

@@ -293,13 +293,14 @@ void CLineModelElementList::LoadContinuum()
     //std::string templatePath = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/Templates/ExtendedGalaxyEL2/galaxy/EW_SB2extended.dat";
     //std::string templatePath = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/Templates/ExtendedGalaxyEL2/galaxy/BulgedataExtensionData.dat";
 
-    std::string templatePath = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/Templates/linemodel/emission/NEW_Im_extended_blue_continuum.txt";
+    //std::string templatePath = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/Templates/linemodel/emission/NEW_Im_extended_blue_continuum.txt";
     //std::string templatePath = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/Templates/linemodel/emission/NEW_Im_extended_continuum.txt";
     //std::string templatePath = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/Templates/linemodel/galaxy/EW_SB2extended.txt";
     //std::string templatePath = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/Templates/linemodel/galaxy/BulgedataExtensionData.txt";
 
     //std::string templatePath = "/home/aschmitt/data/pfs/pfs_testsimu_20151009/47002690000013_flam.txt";
 
+    std::string templatePath = "/home/aschmitt/gitlab/cpf-redshift/tools/simulation/templates/NEW_Sbc_extended_extMarch2016corrected20160426_interp0429.dat";
 
     //CRef<CTemplate> tmpl = new CTemplate();
     CTemplate tpl;
@@ -399,11 +400,32 @@ void CLineModelElementList::PrepareContinuum(Float64 z)
     Int32 k = 0;
     Float64 dl = 0.1;
     Float64 Coeffk = 1.0/dl/(1+z);
+    Float64 coeffUnder1216 = 1.0;
     // For each sample in the target spectrum
     while( j<targetSpectralAxis.GetSamplesCount() && Xtgt[j] <= currentRange.GetEnd() )
     {
         k = (int)(Xtgt[j]*Coeffk+0.5);
-        Yrebin[j] = m_precomputedFineGridContinuumFlux[k];
+
+        //* Optionally Apply some extinction
+        if(0)
+        {
+            coeffUnder1216 = 1.0;
+            if(k*0.1 < 1216.0)
+            {
+                if(z>=4.0 && z<5.0)
+                {
+                    coeffUnder1216 = 0.5;
+                }else if(z>=5.0 && z<6.0)
+                {
+                    coeffUnder1216 = 1.0/3.5;
+                }else if(z>=6.0){
+                    coeffUnder1216 = 1.0/1e16;
+                }
+            }
+        }
+        //*/
+
+        Yrebin[j] = coeffUnder1216*m_precomputedFineGridContinuumFlux[k];
         j++;
 
     }
