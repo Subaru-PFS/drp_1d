@@ -14,8 +14,8 @@ import scipy as sp
   
 import PIL
 
-#opt_bins_type = "simueuclid2016"
-opt_bins_type = "simulm201606"
+### List of all the existing presets for z, mag, sfr bins
+list_presets = ["simulm201606", "simueuclid2016"]
 
 def getZBinsLimits(bins_type):
     if bins_type == "simulm201606":
@@ -55,14 +55,18 @@ def getSfrBinsLimits(bins_type):
     
 
   
-def exportPerformances(dataDiff, outputDirectory):
-
+def exportPerformances(dataDiff, outputDirectory, preset):
+    #check if preset exists
+    if preset not in list_presets:
+        print("ERROR: exporting perf. - unable to find this preset ({}), aborting...".format(preset))
+        return
+        
     # dataDiff expected cols are:
     #Spectrum ID	MAGI	ZREF	ZFLAG	ZCALC	MERIT	TPL	METHOD    SNR	SFR E(B-V) Sigma ... DIFF
     izref = 2
 
     print '\n\nexportPerformances:'
-    z_bins_limits = getZBinsLimits(opt_bins_type)
+    z_bins_limits = getZBinsLimits(preset)
     n_zbins = len(z_bins_limits)-1
     print 'the z bins limits are: ' + str(z_bins_limits)  
     
@@ -80,7 +84,7 @@ def exportPerformances(dataDiff, outputDirectory):
                 zbin_dataset.append(dataDiff[x])
                 #print("line kept is {}".format(dataDiff[x]))
         print("\n\nThis z bin n = {}, in [{}, {}]".format(len(zbin_dataset), zmin, zmax ))
-        logStr += plotMagSFRPerformanceMatrix(zbin_dataset, zmin, zmax, 1e-3, 0.8, outputDirectory)
+        logStr += plotMagSFRPerformanceMatrix(zbin_dataset, zmin, zmax, 1e-3, 0.8, outputDirectory, preset=preset)
 
     #export log        
     outTxtFile = os.path.join(outputDirectory,"performance" + '.txt') 
@@ -134,20 +138,20 @@ def mergeImagesInFolder(dir_path, ncols):
     merged_image.save(os.path.join(dir_path, merge_image_name))
      
      
-def plotMagSFRPerformanceMatrix(bin_dataset, zmin, zmax, catastrophic_failure_threshold, success_rate_thres, outdir, enableExport=True):    
+def plotMagSFRPerformanceMatrix(bin_dataset, zmin, zmax, catastrophic_failure_threshold, success_rate_thres, outdir, preset, enableExport=True):    
     """
     bin_dataset : expected cols are  [ #Spectrum ID	MAGI	ZREF	ZFLAG	ZCALC	MERIT	TPL	METHOD    SNR	SFR E(B-V) Sigma DIFF ]
     success_rate_thres : should be in range [0; 1]
     """
 
-    mag_bins_limits = getMagBinsLimits(opt_bins_type)
+    mag_bins_limits = getMagBinsLimits(preset)
     n_mag_bins = len(mag_bins_limits)-1
     print 'the mag bins limits are: ' + str(mag_bins_limits)  
     imag = 1
     mag_axis_ticks = ["{:.1f}".format(a) for a in mag_bins_limits[::]]
     mag_axis_ticks_inds = [int(a)-0.5 for a in range(n_mag_bins)[::]]
     
-    sfr_bins_limits = getSfrBinsLimits(opt_bins_type)
+    sfr_bins_limits = getSfrBinsLimits(preset)
     n_sfr_bins = len(sfr_bins_limits)-1
     print 'the sfr bins limits are: ' + str(sfr_bins_limits) 
     isfr = 9

@@ -229,7 +229,7 @@ def ProcessDiff( refFile, calcFile, outFile, reftype ) :
     ### try to open external data file :it has to be placed in the ref file directory
     externalFile = os.path.join(os.path.dirname(os.path.abspath(refFile)), "external.csv")
     print("Externalfile = {}".format(externalFile))
-    if os.path.exists(externalFile):
+    if 0 and os.path.exists(externalFile):
         fext = open(externalFile, 'r')
         dataExtStr = fext.read()
         fext.close()
@@ -797,7 +797,7 @@ def ProcessStats( fname, zRange, magRange,  sfrRange, enablePlot = False ):
 
     print '\n'
 
-def processPerformance( fname ):
+def processPerformance( fname, opt_preset ):
     dataDiff = loadDiff( fname );
     
     _baseOutputDirectory = os.path.dirname(os.path.abspath(fname))
@@ -806,7 +806,7 @@ def processPerformance( fname ):
         print("makedir: Output dir: "+outputDirectory)
         os.mkdir( outputDirectory )
         
-    lperf.exportPerformances(dataDiff, outputDirectory)
+    lperf.exportPerformances(dataDiff, outputDirectory, preset=opt_preset)
 
 def processHistogram(yvect, bins, outFile=""):
     n = len(yvect)
@@ -1020,9 +1020,15 @@ def StartFromCommandLine( argv ) :
     parser.add_option(u"-r", u"--ref", help="reference redshift values",  dest="refFile", default="referenceRedshifts.txt")
     parser.add_option(u"-c", u"--calc", help="calculated redshift values",  dest="calcFile", default="output.txt")
     parser.add_option(u"-t", u"--type", help="reference redshift values type, choose between 'vvds1', 'vvds2' or 'pfs', 'vuds', 'simulm', 'simueuclid2016'",  dest="type", default="vvds")
+    parser.add_option(u"-d", u"--diff", help="diff file (overrides the use of --ref, --calc and --type)",  dest="diffFile", default="")
+    
     parser.add_option(u"-m", u"--magRange", help="magnitude range filter for the histograms",  dest="magRange", default="0.0 50.0")
     parser.add_option(u"-s", u"--sfrRange", help="sfr range filter for the histograms",  dest="sfrRange", default="-1.0 10000.0")
     parser.add_option(u"-z", u"--zRange", help="redshift range filter for the histograms",  dest="zRange", default="-1.0 20.0")
+
+    parser.add_option(u"-p", u"--perfpreset", help="performance matrix preset, choose between 'simulm201606', 'simueuclid2016'",  dest="perfpreset", default="simulm201606")
+    
+    
     parser.add_option(u"-l", u"--computeLvl", help="compute level, choose between 'brief' or 'full'",  dest="computeLevel", default="brief")
     (options, args) = parser.parse_args()
 
@@ -1040,48 +1046,54 @@ def StartFromCommandLine( argv ) :
     subsets_enable = False;
 
     if( len( args ) == 0 ) :
-        filenameDiff = "diff.txt"
-        filenameFailures = "failures.txt"
-        filenameFailuresSeqFile = "failures.spectrumlist"
-        filenameFailuresRefFile = "failures_ref.txt"
-        outputPath =  os.path.dirname(os.path.abspath(options.calcFile)) + '/' + "stats/"
-        outputFullpathDiff = outputPath + filenameDiff
-        outputFullpathFailures = outputPath + filenameFailures
-        outputFullpathFailuresSeqFile = outputPath + filenameFailuresSeqFile
-        outputFullpathFailuresRefFile = outputPath + filenameFailuresRefFile
-        if os.path.isdir(outputPath)==False:
-            os.mkdir( outputPath, 0755 );
-
-        if options.type == 'vvds1':
-	       print "Info: Using VVDS1 reference data file type"
-	       setVVDSRefFileType()
-        elif options.type == 'vvds2':
-            print "Info: Using VVDS2 reference data file type"
-            setVVDS2RefFileType()
-        elif options.type == 'pfs':
-            print "Info: Using PFS reference data file type"
-            setPFSRefFileType()
-        elif options.type == 'keck':
-            print "Info: Using KECK reference data file type"
-            setKeckRefFileType()
-        elif options.type == 'muse':
-            print "Info: Using MUSE reference data file type"            
-            setMuseRefFileType()
-        elif options.type == 'vuds':
-            print "Info: Using VUDS reference data file type"            
-            setVUDSRefFileType()
-        elif options.type == 'simulm':
-            print "Info: Using SimuLM reference data file type"            
-            setSIMULMRefFileType()
-        elif options.type == 'simueuclid2016':
-            print "Info: Using SimuEuclid2016 reference data file type"            
-            setSIMUEuclid2016RefFileType()
+        if options.diffFile == "":
+            filenameDiff = "diff.txt"
+            filenameFailures = "failures.txt"
+            filenameFailuresSeqFile = "failures.spectrumlist"
+            filenameFailuresRefFile = "failures_ref.txt"
+            outputPath =  os.path.dirname(os.path.abspath(options.calcFile)) + '/' + "stats/"
+            outputFullpathDiff = outputPath + filenameDiff
+            outputFullpathFailures = outputPath + filenameFailures
+            outputFullpathFailuresSeqFile = outputPath + filenameFailuresSeqFile
+            outputFullpathFailuresRefFile = outputPath + filenameFailuresRefFile
+            if os.path.isdir(outputPath)==False:
+                os.mkdir( outputPath, 0755 );
+    
+            if options.type == 'vvds1':
+    	       print "Info: Using VVDS1 reference data file type"
+    	       setVVDSRefFileType()
+            elif options.type == 'vvds2':
+                print "Info: Using VVDS2 reference data file type"
+                setVVDS2RefFileType()
+            elif options.type == 'pfs':
+                print "Info: Using PFS reference data file type"
+                setPFSRefFileType()
+            elif options.type == 'keck':
+                print "Info: Using KECK reference data file type"
+                setKeckRefFileType()
+            elif options.type == 'muse':
+                print "Info: Using MUSE reference data file type"            
+                setMuseRefFileType()
+            elif options.type == 'vuds':
+                print "Info: Using VUDS reference data file type"            
+                setVUDSRefFileType()
+            elif options.type == 'simulm':
+                print "Info: Using SimuLM reference data file type"            
+                setSIMULMRefFileType()
+            elif options.type == 'simueuclid2016':
+                print "Info: Using SimuEuclid2016 reference data file type"            
+                setSIMUEuclid2016RefFileType()
+            else:
+                print("Info: No reference file type given (--type), using vvds by default.")
+    
+            ProcessDiff( options.refFile, options.calcFile, outputFullpathDiff, options.type )
+            ProcessFailures( outputFullpathDiff, outputFullpathFailures)
+            ProcessFailuresSeqFile( outputFullpathDiff, options.refFile, outputFullpathFailuresSeqFile, outputFullpathFailuresRefFile)
         else:
-            print("Info: No reference file type given (--type), using vvds by default.")
-
-        ProcessDiff( options.refFile, options.calcFile, outputFullpathDiff, options.type )
-        ProcessFailures( outputFullpathDiff, outputFullpathFailures)
-        ProcessFailuresSeqFile( outputFullpathDiff, options.refFile, outputFullpathFailuresSeqFile, outputFullpathFailuresRefFile)
+            if os.path.exists(options.diffFile):
+                outputFullpathDiff = options.diffFile
+            else:
+                print("ERROR: Cannot find diff file, aborting: {}".format(options.diffFile))
         
         if  options.computeLevel == "full" or options.computeLevel == "hist":
             zRange = [-1.0, 20.0]
@@ -1096,7 +1108,7 @@ def StartFromCommandLine( argv ) :
             ProcessStats( outputFullpathDiff, zRange, magRange, sfrRange )
         
         if  options.computeLevel == "full" or options.computeLevel == "perf":        
-            processPerformance( outputFullpathDiff )
+            processPerformance( outputFullpathDiff, opt_preset = options.perfpreset )
             
     else :
         print("Error: invalid argument count")
