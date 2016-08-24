@@ -135,14 +135,9 @@ Void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& t
             if(restLambda < 1216.0)
             {
                 coeffUnder1216 = 1.0;
-                if(z>=4.0 && z<5.0)
+                if(z>=3.5)
                 {
-                    coeffUnder1216 = 0.5;
-                }else if(z>=5.0 && z<6.0)
-                {
-                    coeffUnder1216 = 1.0/3.5;
-                }else if(z>=6.0){
-                    coeffUnder1216 = 1.0/1e16;
+                    coeffUnder1216 = -0.33*z+2.16;
                 }
 
                 Ytpl[k] *= coeffUnder1216;
