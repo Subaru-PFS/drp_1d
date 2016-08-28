@@ -8,12 +8,16 @@ import sys
 import os
 import inspect
 import optparse
-import matplotlib.pyplot as plt
-import matplotlib.cm as cm
-import matplotlib.colors as mcolors
 import numpy as np
 import math
 import time
+
+import matplotlib as mpl
+mpl.use('Agg') #disable showing the mpl windows
+import matplotlib.pyplot as plt
+import matplotlib.cm as cm
+import matplotlib.colors as mcolors
+
 
 from scipy import interpolate
 
@@ -63,7 +67,7 @@ class Result(object):
         return rate;
                 
 class ResultList(object):
-    def __init__(self, dir, diffthreshold=-1, opt='full', spcName="", methodName="", zrefmin=-1, zrefmax=20, magrefmin=-1.0, magrefmax=50, sfrrefmin=-1.0, sfrrefmax=1e4):
+    def __init__(self, dir, diffthreshold=-1, opt='full', spcName="", methodName="", zrefmin=-1, zrefmax=20, magrefmin=-100.0, magrefmax=100, sfrrefmin=-1.0, sfrrefmax=1e4):
         self.logTagStr = "ResultList"
         self.dir = dir
         self.name = os.path.basename(self.dir)
@@ -141,16 +145,22 @@ class ResultList(object):
             accepted = True
             if not (spcName=="" or spcName==name): 
                 accepted = False
+                print("Rejected by name")
             if not (methodName=="" or methodName==method):  
                 accepted = False
+                print("Rejected by methodName")
             if not abs(zdiff)>=self.diffthreshold:
                 accepted = False
+                print("Rejected by diffthreshold")
             if not (zref>=self.zrefmin and zref<=self.zrefmax):
                 accepted = False
+                print("Rejected by zref")
             if not (magref>=self.magrefmin and magref<=self.magrefmax):
                 accepted = False
+                print("Rejected by magref")
             if not (sfrref>=self.sfrrefmin and sfrref<=self.sfrrefmax):
                 accepted = False
+                print("Rejected by sfrref")
                 
             if accepted:
                 refValues = {'elvelocity': elvelocity}
@@ -676,7 +686,8 @@ class ResultList(object):
             if chi2Type=="corr":
                 mclosest[x] = -1e6
             zabsdiff.append(1e6)            
-            thres = 0.005
+            thres = 0.005          
+            #thres = 0.01 #for continuum
             for k in range(len(redshifts)):      
                 z = redshifts[k]
                 conditionHighestMerit = merits[k] < mclosest[x];
@@ -963,15 +974,15 @@ class ResultList(object):
         #max_chi2_all = -1e12
         chi2type = "continuum"
         z_continuum, chi2_continuum = s.getChi2MinValList(spcName, chi2type, dontloadThres=chi2dontloadThres)
-#        for i in range(len(chi2_continuum)):
-#            chi2_continuum[i] = chi2_continuum[i]#/nspcSamples
+        for i in range(len(chi2_continuum)):
+            chi2_continuum[i] = chi2_continuum[i]/nspcSamples/10.0
 #            chi2_continuum[i] = chi2_continuum[i]*nspcSamples
 #            if max_chi2_all<chi2_continuum[i] and chi2_continuum[i]<1e20:
 #                max_chi2_all = chi2_continuum[i]
         chi2type = "nocontinuum"
         z_nc, chi2_nc = s.getChi2MinValList(spcName, chi2type, dontloadThres=chi2dontloadThres) 
-#        for i in range(len(chi2_nc)):
-#            chi2_nc[i] = chi2_nc[i]#/nspcSamples
+        for i in range(len(chi2_nc)):
+            chi2_nc[i] = chi2_nc[i]/nspcSamples
 #            chi2_nc[i] = chi2_nc[i]*nspcSamples
 #            if max_chi2_all<chi2_nc[i] and chi2_nc[i]<1e20:
 #                max_chi2_all = chi2_nc[i]
@@ -994,7 +1005,19 @@ class ResultList(object):
         chi2_lm = np.array(chi2_lm)
         chi2_continuum_interp = np.array(chi2_continuum_interp)
         chi2_nc_interp = np.array(chi2_nc_interp)
-        
+
+        #normalizing by min value
+        if 0:
+            mini_lm = np.min(chi2_lm) 
+            mini_chi2c = np.min(chi2_continuum_interp) 
+            mini_chi2nc = np.min(chi2_nc_interp) 
+            mini_global = np.min([ mini_lm, mini_chi2c, mini_chi2nc ])
+            print("normalizing chisquare curves: mini global = {}".format(mini_global))
+            
+            chi2_lm = np.divide(chi2_lm, mini_global)
+            chi2_continuum_interp = np.divide(chi2_continuum_interp, mini_global)
+            chi2_nc_interp = np.divide(chi2_nc_interp, mini_global)
+                
         #print max_chi2_all
         
 #        for i in range(len(chi2_continuum)):
@@ -1041,15 +1064,15 @@ class ResultList(object):
                 plt.show()
         
         #range for coeffs
-        coeff_nc = 100
+        coeff_nc = 75
         coeff_continuum_min = 0.0
         coeff_continuum_max = 99.0
-        coeff_continuum_step = 5.0
+        coeff_continuum_step = 2.0
         n_continuum = int((coeff_continuum_max-coeff_continuum_min+1)/float(coeff_continuum_step))
         
         coeff_lm_min = 0.0
         coeff_lm_max = 99.0
-        coeff_lm_step = 5.0
+        coeff_lm_step = 2.0
         n_lm = int((coeff_lm_max-coeff_lm_min+1)/float(coeff_lm_step))
         merit = np.zeros((nz))
         _map = np.zeros((n_continuum, n_lm))
@@ -1066,20 +1089,37 @@ class ResultList(object):
                 if opt_combine==0: #lincomb
                     merit = coeff_nc*chi2_nc_interp + coeff_continuum*chi2_continuum_interp + coeff_lm*chi2_lm
                 else:   
+                    if 1: #log scale 0-100, goes to 1e-7 to 1.0
+                        vectTransform = np.logspace(-10, 0, 101)-10**(-10)
+                        prior_nc = vectTransform[int(coeff_nc)]
+                        prior_c = vectTransform[int(coeff_continuum)]
+                        prior_lm = vectTransform[int(coeff_lm)]  
                     if 0: #log scale
                         logVect = np.logspace(-1.25, 0.025, 101)-10**(-1.25)
                         prior_nc = logVect[int(coeff_nc)]
-                        prior_c = logVect[int(coeff_continuum)]
+                        prior_c = logVect[int(coeff_continuum)]/1e5
                         prior_lm = logVect[int(coeff_lm)]
-                    else: #lin scale
+                    if 0: #lin scale
                         prior_nc = coeff_nc/100.0;
                         prior_c = coeff_continuum/100.0; 
                         prior_lm = coeff_lm/100.0;
-    
-                    likelihood_chi2nc= np.exp(-chi2_nc_interp/2.0)
-                    likelihood_chi2c = np.exp(-chi2_continuum_interp/2.0)
-                    likelihood_lm = np.exp(-chi2_lm/2.0)
-                    merit = -( prior_lm*likelihood_lm + prior_nc*likelihood_chi2nc + prior_c*likelihood_chi2c )
+                    logCoeffLm = -2*np.log(prior_lm)
+                    logCoeffC = -2*np.log(prior_c)
+                    logCoeffNC = -2*np.log(prior_nc)
+                        
+                    mini_lm = np.min(chi2_lm+logCoeffLm) 
+                    mini_chi2c = np.min(chi2_continuum_interp+logCoeffC) 
+                    mini_chi2nc = np.min(chi2_nc_interp+logCoeffNC) 
+                    mini_global = np.min([ mini_lm, mini_chi2c, mini_chi2nc ])
+                    #print("normalizing chisquare curves: mini global = {}".format(mini_global))
+                    
+                    valDenom = chi2_lm + logCoeffLm - mini_global
+                    likelihood_lm = np.exp(-valDenom/2.0)
+                    valDenom = chi2_nc_interp + logCoeffNC - mini_global
+                    likelihood_chi2nc= np.exp(-valDenom/2.0)
+                    valDenom = chi2_continuum_interp + logCoeffC - mini_global
+                    likelihood_chi2c = np.exp(-valDenom/2.0)
+                    merit = -( likelihood_lm + likelihood_chi2nc + likelihood_chi2c )
 
                     
                 izbest = np.argmin(merit)
@@ -1791,14 +1831,16 @@ def plotChi2CombinationCoeff2DMap(resDir, diffthres, spcName="", methodName="", 
     if resList.n <1:
         print('No results loaded...')
         return
-    cumulcoeffmap = np.zeros((20,20))
-    fullcoeffmap = np.ones((resList.n,20,20))*-1
+    nPtsPerAxis = 50
+    cumulcoeffmap = np.zeros((nPtsPerAxis,nPtsPerAxis))
+    fullcoeffmap = np.ones((resList.n,nPtsPerAxis,nPtsPerAxis))*-1
     
     ## parameters :
-    zthres = 0.01
     opt_combination = 1 #0=lincomb, 1=bayescomb 
-    dont_skip_no_spc = False
-    if 1: 
+    zthres = 0.01
+    enableDirectPlottingDebugMode = 0
+    dont_skip_no_spc = 0
+    if not enableDirectPlottingDebugMode: 
         plt.ion()
         chi2dontloadThres = -1#1e12 #better for direct plotting, but use -1 to do the optimization map
         enablePlot = False
@@ -1829,11 +1871,12 @@ def plotChi2CombinationCoeff2DMap(resDir, diffthres, spcName="", methodName="", 
         fullcoeffmap[k, :, :] = np.copy(coeffmap)
         cumulcoeffmap = np.add(cumulcoeffmap, coeffmap)
         print("cumulcoeffmap = {}".format(cumulcoeffmap))
-        #print("coeffmap shape = {}".format(coeffmap.shape))  
+        #print("coeffmap shape = {}".format(coeffmap.shape)) 
+        
+        #NOTE: in order to deactivate showing this window at each iteration, use Agg (see imports)
         plt.clf()
         plt.close()
-
-        
+  
         if opt_combination==0:
             comb_name = 'lincomb'
         elif opt_combination == 1:
@@ -1844,8 +1887,9 @@ def plotChi2CombinationCoeff2DMap(resDir, diffthres, spcName="", methodName="", 
         cmap = plt.get_cmap('RdYlGn') 
         ncolors = 20 #min(20,k+2)
         cmap = cmap_discretize(cmap, ncolors) 
-        
+
         i = ax.matshow(np.transpose(cumulcoeffmap), interpolation='nearest', aspect='equal', cmap=cmap)
+
         plt.xlabel('continuum coeff')
         plt.ylabel('lm coeff')
         name1 = "combination coeff map \nzThreshold = {}\n(processed idx={}/{})".format(zthres, k+1, resList.n)
@@ -1868,16 +1912,17 @@ def plotChi2CombinationCoeff2DMap(resDir, diffthres, spcName="", methodName="", 
         plt.draw()
         
        
-        if enableExport:            
-            outdir = os.path.join(resList.analysisoutputdir, "dtreeb_{}_coeffmap_method{}".format(comb_name, methodName))
+        if enableExport:    
+            tag = "dtreeb_{}_coeffmap_zthres{}_method{}".format(comb_name, zthres, methodName)
+            outdir = os.path.join(resList.analysisoutputdir, tag)
             if not os.path.exists(outdir):
                 print("creating outputdir {}".format(outdir))
                 os.makedirs(outdir)   
             outFigFile = os.path.join(outdir, 'cumulcoeffmap.png')
             plt.savefig( outFigFile, bbox_inches='tight') # sauvegarde du fichier ExempleTrace.png
-            outtxtFile = os.path.join(outdir, 'cumulcoeffmap.txt')
+            outtxtFile = os.path.join(outdir, 'cumulcoeffmap_{}.txt'.format(tag))
             np.savetxt(outtxtFile, cumulcoeffmap)
-            outFullMapFile = os.path.join(outdir, 'fullcoeffmap.dat')
+            outFullMapFile = os.path.join(outdir, 'fullcoeffmap_{}.dat'.format(tag))
             np.save(outFullMapFile, fullcoeffmap)
    
 def plotReducedZcandidates(resDir):
@@ -2535,8 +2580,8 @@ def StartFromCommandLine( argv ) :
         elif choice == 2:
             plotTplMissingRate(options.resDir)
         elif choice == 3:
-            extremaTypeStr = raw_input("Please enter the extrema type : choices = raw, nocontinuum, corr, linemodel, linemodeltplshape :")
-            if not (extremaTypeStr == "raw" or extremaTypeStr == "nocontinuum" or extremaTypeStr == "corr" or extremaTypeStr == "linemodel" or extremaTypeStr == "linemodeltplshape"):
+            extremaTypeStr = raw_input("Please enter the extrema type : choices = raw, continuum, nocontinuum, corr, linemodel, linemodeltplshape :")
+            if not (extremaTypeStr == "raw" or extremaTypeStr == "continuum" or extremaTypeStr == "nocontinuum" or extremaTypeStr == "corr" or extremaTypeStr == "linemodel" or extremaTypeStr == "linemodeltplshape"):
                 print("extrema type not successfully, aborting")
                 return
                 
@@ -2548,8 +2593,8 @@ def StartFromCommandLine( argv ) :
             spcStr = raw_input("Do you want to enter a spectrum name to filter the results ? (press enter to skip) :")
             if not (spcStr == "No" or spcStr == "no"):
                 spcName = spcStr
-            extremaTypeStr = raw_input("Please enter the extrema type : choices = raw, nocontinuum, corr, linemodel, linemodeltplshape :")
-            if not (extremaTypeStr == "raw" or extremaTypeStr == "nocontinuum" or extremaTypeStr == "corr" or extremaTypeStr == "linemodel" or extremaTypeStr == "linemodeltplshape"):
+            extremaTypeStr = raw_input("Please enter the extrema type : choices = raw, continuum, nocontinuum, corr, linemodel, linemodeltplshape :")
+            if not (extremaTypeStr == "raw" or extremaTypeStr == "continuum" or extremaTypeStr == "nocontinuum" or extremaTypeStr == "corr" or extremaTypeStr == "linemodel" or extremaTypeStr == "linemodeltplshape"):
                 print("extrema type not successfully, aborting")
                 return
             extrChoiceStr = raw_input("\n\nPlease enter the number of extrema to be considered...\n")
@@ -2568,8 +2613,8 @@ def StartFromCommandLine( argv ) :
             spcStr = raw_input("Do you want to enter a spectrum name to filter the results ? (press enter to skip) :")
             if not (spcStr == "No" or spcStr == "no"):
                 spcName = spcStr
-            extremaTypeStr = raw_input("Please enter the extrema type : choices = raw, nocontinuum, corr, linemodel, linemodeltplshape :")
-            if not (extremaTypeStr == "raw" or extremaTypeStr == "nocontinuum" or extremaTypeStr == "corr" or extremaTypeStr == "linemodel" or extremaTypeStr == "linemodeltplshape"):
+            extremaTypeStr = raw_input("Please enter the extrema type : choices = raw, nocontinuum, continuum, corr, linemodel, linemodeltplshape :")
+            if not (extremaTypeStr == "raw" or extremaTypeStr == "continuum" or extremaTypeStr == "nocontinuum" or extremaTypeStr == "corr" or extremaTypeStr == "linemodel" or extremaTypeStr == "linemodeltplshape"):
                 print("extrema type not successfully, aborting")
                 return
             enableZrangeFilterStr = raw_input("Do you want to use the hardcoded zrange values to filter each z candidates ? (y, n) :")
@@ -2621,8 +2666,8 @@ def StartFromCommandLine( argv ) :
                 print("ERROR: empty reference result directory: aborting...")    
             else:
                 diffthreshold = 0.01
-                zrefmin = 0
-                zrefmax = 1.5
+                zrefmin = -1
+                zrefmax = 50.0
                 print("INFO: using default diffthreshold={}, and zrange=[{} {}]".format(diffthreshold, zrefmin, zrefmax)) 
                 WarningKeyStr = raw_input("Press any key to continue...".format())
         

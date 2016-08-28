@@ -79,8 +79,8 @@ class Spectrum(object):
             stop
             
         self.n = len(xvect)
-        self.yvect = yvect
-        self.xvect = xvect
+        self.yvect = [a for a in yvect]
+        self.xvect = [a for a in xvect]
         self.ysum = 0.0
         for x in range(0,self.n):
             self.ysum += self.yvect[x]
@@ -411,7 +411,7 @@ class Spectrum(object):
         
     def plot(self, saveFullDirPath="", lstyle="r-+"):
         pp.ion()
-        self.fig = pp.figure(1)
+        self.fig = pp.figure("Spectrum")
         #self.fig = sns.pyplot.figure(1)
         self.canvas = self.fig.canvas
         self.ax = self.fig.add_subplot(111)
@@ -962,7 +962,7 @@ class Spectrum(object):
             smoothed2[i+decInit]=smoothed[len(smoothed)-1]
         return smoothed2 
         
-    def extendWavelengthRangeRed(self, wavelengthSup):
+    def extendWavelengthRangeRed(self, wavelengthSup, overridingExtensionValue=None):
         i1 = self.n-2;
         i2 = self.n-1;
         x1 = self.xvect[i1];
@@ -983,8 +983,12 @@ class Spectrum(object):
         k = 1
         x = x2
         while(x<wavelengthSup and k<1e6):
-            x = x2 + k*xstep
-            y = coefficients1[1] + coefficients1[0]*x #y2# + k*ystep
+            if overridingExtensionValue==None:
+                x = x2 + k*xstep
+                y = coefficients1[1] + coefficients1[0]*x #y2# + k*ystep
+            else:
+                x = x2 + k*xstep
+                y = overridingExtensionValue
             #y = moyenne
             print("INFO (extension Red): new sample at x = {} and y = {}".format(x, y))            
             self.xvect.append(x)

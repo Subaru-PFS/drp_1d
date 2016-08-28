@@ -448,35 +448,35 @@ class ResParser(object):
                 for k in range(len(zList)):
                     print("cand. #{}: z={:15}, merit={:15}, tpl={:25}, amp={:25}".format(k, zList[k], meritList[k], tplList[k], ampsList[k]))
                 print("\n")
-#        elif method == "decisionaltreeb" or method.lower() == "amazed0_2":
-#            #find redshift
-#            [chipathlist, chinamelist] = self.getAutoChi2FullPath(spcnametag)
-#            chi = chisq.ResultChisquare(chipathlist[3], stype=os.path.splitext(chinamelist[3])[0]) #3st chipath for linemodel
-#            redshift = chi.getExtrema(idxExtrema)
-#            
-#            name = "dtreeBsolve.linemodel_spc_extrema_{}.csv".format(idxExtrema)
-#            tplpath = os.path.join(path,name)
-#            #tplpath = ""            
-#            forceTplAmplitude = 1
-#            forceTplDoNotRedShift = 1
-        elif method.lower() == "amazed0_2":
-            if idxExtrema==-1:
-                tplnametag = self.getRedshiftTpl(spcnametag)
-                tplpath = self.getTplFullPath(tplnametag)
-                forceTplAmplitude = 0
-            else:
-                spcComponent = "nocontinuum" 
-                zList, meritList, tplList, ampsList = self.getCandidatesFromAmazedChi2Extrema(spcnametag, chi2Type=spcComponent) 
-                tplpath = self.getTplFullPath(tplList[idxExtrema])
-                redshift = zList[idxExtrema]
-                forceTplAmplitude = ampsList[idxExtrema]
-                print("\nDEBUG: Candidates found:")
-                for k in range(len(zList)):
-                    print("cand. #{}: z={:15}, merit={:15}, tpl={:25}, amp={:25}".format(k, zList[k], meritList[k], tplList[k], ampsList[k]))
-                print("\n")
+        elif method == "decisionaltreeb" or method.lower() == "amazed0_2":
+            #find redshift
+            [chipathlist, chinamelist] = self.getAutoChi2FullPath(spcnametag)
+            chi = chisq.ResultChisquare(chipathlist[3], stype=os.path.splitext(chinamelist[3])[0]) #3st chipath for linemodel
+            redshift = chi.getExtrema(idxExtrema)
             
-            forceTplDoNotRedShift = 0
-        elif method == "chisquaresolve" or method == "chisquare2solve" or method.lower() == "amazed0_2":
+            name = "dtreeBsolve.linemodel_spc_extrema_{}.csv".format(idxExtrema)
+            tplpath = os.path.join(path,name)
+            #tplpath = ""            
+            forceTplAmplitude = 1
+            forceTplDoNotRedShift = 1
+#        elif method.lower() == "amazed0_2":
+#            if idxExtrema==-1:
+#                tplnametag = self.getRedshiftTpl(spcnametag)
+#                tplpath = self.getTplFullPath(tplnametag)
+#                forceTplAmplitude = 0
+#            else:
+#                spcComponent = "nocontinuum" 
+#                zList, meritList, tplList, ampsList = self.getCandidatesFromAmazedChi2Extrema(spcnametag, chi2Type=spcComponent) 
+#                tplpath = self.getTplFullPath(tplList[idxExtrema])
+#                redshift = zList[idxExtrema]
+#                forceTplAmplitude = ampsList[idxExtrema]
+#                print("\nDEBUG: Candidates found:")
+#                for k in range(len(zList)):
+#                    print("cand. #{}: z={:15}, merit={:15}, tpl={:25}, amp={:25}".format(k, zList[k], meritList[k], tplList[k], ampsList[k]))
+#                print("\n")
+#            
+#            forceTplDoNotRedShift = 0
+        elif method == "chisquaresolve" or method == "chisquare2solve":
             if idxExtrema==-1:
                 tplnametag = self.getRedshiftTpl(spcnametag)
                 tplpath = self.getTplFullPath(tplnametag)

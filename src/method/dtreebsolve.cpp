@@ -281,8 +281,6 @@ Bool COperatorDTreeBSolve::GetCombinedRedshift(CDataStore& store)
 {
     std::shared_ptr<CChisquareResult> resultCombined = std::shared_ptr<CChisquareResult>( new CChisquareResult() );
 
-    Float64 minChi2 = DBL_MAX; //overall chi2 minimum for rescaling
-
     std::string scope = "dtreeBsolve.linemodel";
     auto results = std::dynamic_pointer_cast<const CLineModelResult>( store.GetGlobalResult(scope.c_str()).lock() );
 
@@ -295,11 +293,6 @@ Bool COperatorDTreeBSolve::GetCombinedRedshift(CDataStore& store)
     Float64 minchi2nc= DBL_MAX;
 
     chi2nc = GetBestRedshiftChi2List(store, "chisquare_nocontinuum", minchi2nc, znc);
-    //overall chi2 minimum for rescaling
-    if(minchi2nc<minChi2)
-    {
-        minChi2 = minchi2nc;
-    }
 
     //Log.LogInfo( "dtreeBsolve : znc size=%d", znc.size());
     for( Int32 i=0; i<chi2nc.size(); i++ )
@@ -318,11 +311,6 @@ Bool COperatorDTreeBSolve::GetCombinedRedshift(CDataStore& store)
     Float64 minchi2continuum= DBL_MAX;
 
     chi2continuum_calcGrid = GetBestRedshiftChi2List(store, "chisquare_continuum", minchi2continuum, zcontinuum_calcGrid);
-    //overall chi2 minimum for rescaling
-    if(minchi2continuum<minChi2)
-    {
-        minChi2 = minchi2continuum;
-    }
 
     //todo: interpolate the continuum results on the continuum fit grid
     Int32 enableFastContinuumFitLargeGrid = 1;
@@ -368,26 +356,6 @@ Bool COperatorDTreeBSolve::GetCombinedRedshift(CDataStore& store)
     }
     //Log.LogInfo( "dtreeBsolve : chi2lm size=%d", chi2lm.size());
 
-
-    for( Int32 i=0; i<chi2lm.size(); i++ )
-    {
-        if(chi2lm[i]/((float)results->nSpcSamples)<minChi2)
-        {
-            minChi2 = chi2lm[i]/((float)results->nSpcSamples);
-        }
-
-    }
-
-//    //***********************************************************
-//    // rescale chi2s
-//    Log.LogInfo( "dtreeBsolve : chi2min found is = %f", minChi2);
-//    for( Int32 i=0; i<znc.size(); i++ )
-//    {
-//        chi2lm[i] /= std::abs(minChi2)*((float)results->nSpcSamples);
-//        chi2nc[i] /= std::abs(minChi2);
-//        chi2continuum[i] /= std::abs(minChi2);
-//    }
-
     /*
     // save all merits in a temp. txt file
     FILE* f = fopen( "dtreeb_merits_dbg.txt", "w+" );
@@ -403,44 +371,100 @@ Bool COperatorDTreeBSolve::GetCombinedRedshift(CDataStore& store)
     resultCombined->Redshifts.resize( znc.size() );
     resultCombined->Overlap.resize( znc.size() );
 
+    // compute the average log likelihood
+    for( Int32 i=0; i<znc.size(); i++ )
+    {
+        chi2lm[i] = chi2lm[i]/(float)results->nSpcSamples;
+        chi2nc[i] = chi2nc[i]/(float)results->nSpcSamples;
+        chi2continuum[i] = chi2continuum[i]/(float)results->nSpcSamples;
+    }
 
     //*
     //***********************************************************
     // Estimate the combined chisquare result
+    Int32 combineOption = 0; //1 = bayes, 0 = linear
+
+    //Set the coefficients
+    Float64 lmCoeff = 1.0;
+    Float64 chi2ncCoeff = 1.0;
+    Float64 chi2cCoeff = 1.0;
+    if(combineOption==1) //bayesian combination
+    {
+        lmCoeff = 0.3;
+        chi2ncCoeff = 1e-32;
+        chi2cCoeff = 2e-5;
+
+        //logcoeff
+        lmCoeff = -2.0*log(lmCoeff);
+        chi2ncCoeff = -2.0*log(chi2ncCoeff);
+        chi2cCoeff = -2.0*log(chi2cCoeff);
+
+        Log.LogInfo( "dtreeBsolve : lmCoeff=%f", lmCoeff);
+        Log.LogInfo( "dtreeBsolve : chi2ncCoeff=%f", chi2ncCoeff);
+        Log.LogInfo( "dtreeBsolve : chi2cCoeff=%f", chi2cCoeff);
+    }
+    else //linear combination
+    {
+        /*
+        // coeffs for PFS simu dec 2015.
+        lmCoeff = 75.0/((float)results->nSpcSamples);
+        chi2ncCoeff = 100.0;
+        chi2cCoeff = 50.0;
+        //*/
+        //*
+        // coeffs for VVDS deep, udeep and VUDS
+        lmCoeff = 12.0;
+        chi2ncCoeff = 100.0;
+        chi2cCoeff = 8.0;
+        //*/
+    }
+
+    //Rescale if necessary
+    Float64 minChi2WithCoeffs = DBL_MAX; //overall chi2 minimum for rescaling
+    if(combineOption==1) //bayesian combination
+    {
+        std::string methodForMin = "";
+        //find the rescaling value
+        for( Int32 i=0; i<znc.size(); i++ )
+        {
+            if(chi2lm[i]+lmCoeff < minChi2WithCoeffs)
+            {
+                minChi2WithCoeffs = chi2lm[i]+lmCoeff;
+                methodForMin = "lm";
+            }
+            if(chi2nc[i]+chi2ncCoeff < minChi2WithCoeffs)
+            {
+                minChi2WithCoeffs = chi2nc[i]+chi2ncCoeff;
+                methodForMin = "chi2nc";
+            }
+            if(chi2continuum[i]+chi2cCoeff < minChi2WithCoeffs)
+            {
+                minChi2WithCoeffs = chi2continuum[i]+chi2cCoeff;
+                methodForMin = "chi2c";
+            }
+        }
+        Log.LogInfo( "dtreeBsolve : minChi2WithCoeffs=%f", minChi2WithCoeffs);
+        Log.LogInfo( "dtreeBsolve : methodForMin=%s", methodForMin.c_str());
+    }
+
+    //Do the actual combination
     for( Int32 i=0; i<znc.size(); i++ )
     {
         Float64 post = DBL_MAX;
-        if(1) //bayesian combination
+        if(combineOption==1) //bayesian combination
         {
-            Float64 lmCoeff = 0.4;
-            Float64 chi2ncCoeff = 1.0;
-            Float64 chi2cCoeff = 0.18;
+            Float64 valf = 1.0;
+            valf = chi2lm[i]+lmCoeff-minChi2WithCoeffs;
+            Float64 lmLikelihood = exp(-valf/2.0);
+            valf = chi2nc[i]+chi2ncCoeff-minChi2WithCoeffs;
+            Float64 chi2ncLikelihood = exp(-valf/2.0);
+            valf = chi2continuum[i]+chi2cCoeff-minChi2WithCoeffs;
+            Float64 chi2continuumLikelihood = exp(-valf/2.0);
 
-            //lmCoeff = exp(lmCoeff/1000.0);
-            //chi2ncCoeff = exp(chi2ncCoeff/1000.0);
-            //chi2cCoeff = exp(chi2cCoeff/1000.0);
-
-
-            Float64 lmLikelihood = exp(-chi2lm[i]/((float)results->nSpcSamples)/2.0);
-            Float64 chi2ncLikelihood = exp(-chi2nc[i]/2.0);
-            Float64 chi2continuumLikelihood = exp(-chi2continuum[i]/2.0);
-            post = -(lmCoeff*lmLikelihood + chi2ncCoeff*chi2ncLikelihood + chi2cCoeff*chi2continuumLikelihood);
+            post = -(lmLikelihood + chi2continuumLikelihood + chi2ncLikelihood );
         }
         else //linear combination
         {
-            /*
-            // coeffs for PFS simu dec 2015.
-            Float64 lmCoeff = 75.0/((float)results->nSpcSamples);
-            Float64 chi2ncCoeff = 100.0;
-            Float64 chi2cCoeff = 50.0;
-            //*/
-            //*
-            // coeffs for VVDS deep, udeep and VUDS
-            Float64 lmCoeff = 12.0/((float)results->nSpcSamples);
-            Float64 chi2ncCoeff = 100.0;
-            Float64 chi2cCoeff = 8.0;
-            //*/
-
             post = lmCoeff*chi2lm[i] + chi2ncCoeff*chi2nc[i] + chi2cCoeff*chi2continuum[i];
         }
 

@@ -241,7 +241,7 @@ Void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& t
     //*/
 
     // Chi square reduct: it can introduces some problem?
-    fit /= numDevs;
+    //fit /= numDevs;
 
 
     chiSquare = fit;
