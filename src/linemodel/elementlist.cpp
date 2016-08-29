@@ -1,6 +1,7 @@
 #include <epic/redshift/linemodel/elementlist.h>
 #include <epic/redshift/linemodel/singleline.h>
 #include <epic/redshift/linemodel/multiline.h>
+#include <epic/redshift/linemodel/extinctionresidue.h>
 #include <epic/redshift/linemodel/modelfittingresult.h>
 #include <epic/redshift/gaussianfit/multigaussianfit.h>
 #include <epic/redshift/ray/regulament.h>
@@ -219,22 +220,22 @@ void CLineModelElementList::LoadCatalog(const CRayCatalog::TRayVector& restRayLi
     CRayCatalog crctlg;
     std::vector<CRayCatalog::TRayVector> groupList = crctlg.ConvertToGroupList(restRayList);
     for(Int32 ig=0; ig<groupList.size(); ig++)
-      {
+    {
         std::vector<CRay> lines;
         std::vector<Float64> amps;
         std::vector<Int32> inds;
         for(Int32 i=0; i<groupList[ig].size(); i++)
-	  {
+        {
             std::vector<Int32> idx = findLineIdxInCatalog( restRayList, groupList[ig][i].GetName(), groupList[ig][i].GetType());
             inds.push_back(idx[0]);
             amps.push_back(groupList[ig][i].GetNominalAmplitude());
             lines.push_back(groupList[ig][i]);
-	  }
+        }
         if(lines.size()>0)
-	  {
+        {
             m_Elements.push_back(boost::shared_ptr<CLineModelElement> (new CMultiLine(lines, m_LineWidthType, m_resolution, m_velocityEmission, m_velocityEmission, amps, m_nominalWidthDefaultAbsorption, inds)));
-	  }
-      }
+        }
+    }
 }
 
 /**
@@ -526,6 +527,7 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
 
     //prepare the Lya width and asym coefficients if the asymfit profile option is met
     setLyaProfile(redshift, spectralAxis);
+
 
     //generate random amplitudes
     if(m_fittingmethod=="random")
@@ -1354,8 +1356,8 @@ std::vector<Int32> CLineModelElementList::getOverlappingElementsBySupport( Int32
     CRay ray = m_RestRayList[m_Elements[ind]->m_LineCatalogIndexes[0]];
     Int32 linetype = ray.GetType();
     Float64 mu = ray.GetPosition()*(1+m_Redshift);
-    Float64 c = m_Elements[ind]->GetLineWidth(mu, m_Redshift, ray.GetIsEmission());
     std::string profile = ray.GetProfile();
+    Float64 c = m_Elements[ind]->GetLineWidth(mu, m_Redshift, ray.GetIsEmission(), profile);
     Float64 winsize = m_Elements[ind]->GetNSigmaSupport(profile)*c;
     Float64 overlapThresholdMin = winsize*overlapThres;
     //overlapThresholdMin = 0.0;
@@ -1459,16 +1461,16 @@ std::vector<Int32> CLineModelElementList::getOverlappingElements(Int32 ind, std:
             for( UInt32 iRayRef=0; iRayRef<raysRef.size(); iRayRef++ )
             {
                 Float64 muRef = raysRef[iRayRef].GetPosition()*(1+m_Redshift);
-                Float64 cRef = m_Elements[ind]->GetLineWidth(muRef, m_Redshift, raysRef[iRayRef].GetIsEmission());
                 std::string profileRef = raysRef[iRayRef].GetProfile();
+                Float64 cRef = m_Elements[ind]->GetLineWidth(muRef, m_Redshift, raysRef[iRayRef].GetIsEmission(), profileRef);
                 Float64 winsizeRef = m_Elements[ind]->GetNSigmaSupport(profileRef)*cRef;
                 Float64 overlapSizeMin = winsizeRef*overlapThres;
                 xinf = muRef-winsizeRef/2.0;
                 xsup = muRef+winsizeRef/2.0;
 
                 Float64 muElt = raysElt[iRayElt].GetPosition()*(1+m_Redshift);
-                Float64 cElt = m_Elements[iElts]->GetLineWidth(muElt, m_Redshift, raysElt[iRayElt].GetIsEmission());
                 std::string profileElt = raysElt[iRayElt].GetProfile();
+                Float64 cElt = m_Elements[iElts]->GetLineWidth(muElt, m_Redshift, raysElt[iRayElt].GetIsEmission(), profileElt);
                 Float64 winsizeElt = m_Elements[iElts]->GetNSigmaSupport(profileElt)*cElt;
                 yinf = muElt-winsizeElt/2.0;
                 ysup = muElt+winsizeElt/2.0;

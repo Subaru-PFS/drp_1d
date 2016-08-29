@@ -4,6 +4,14 @@
 #include <epic/redshift/spectrum/spectrum.h>
 #include <epic/core/log/log.h>
 
+#include <sstream>
+#include <boost/filesystem.hpp>
+#include <boost/filesystem/fstream.hpp>
+#include <boost/algorithm/string/predicate.hpp>
+#include <vector>
+
+namespace bfs = boost::filesystem;
+
 
 using namespace NSEpic;
 
@@ -32,6 +40,8 @@ CLineModelElement::CLineModelElement(const std::string& widthType, const Float64
     m_OutsideLambdaRange = true;
     m_OutsideLambdaRangeOverlapThreshold = 0.1;
     //example: 0.1 means 10% of the line is allowed to be outside the spectrum with the line still considered inside the lambda range
+
+    //LoadDataExtinction(); //uncomment if this line profile is used
 }
 
 CLineModelElement::~CLineModelElement()
@@ -67,8 +77,13 @@ bool CLineModelElement::IsOutsideLambdaRange()
     return m_OutsideLambdaRange;
 }
 
-Float64 CLineModelElement::GetLineWidth(Float64 redshiftedlambda, Float64 z, Bool isEmission)
+Float64 CLineModelElement::GetLineWidth(Float64 redshiftedlambda, Float64 z, Bool isEmission, std::string profile)
 {
+    if(profile=="EXTINCT")
+    {
+        return 300*(1.0+z); //hardcoded, in Angstrom
+    }
+
     Float64 instrumentSigma = 0.0;
     Float64 velocitySigma = 0.0;
 
@@ -103,8 +118,9 @@ Float64 CLineModelElement::GetLineWidth(Float64 redshiftedlambda, Float64 z, Boo
     return sigma;
 }
 
-Float64 CLineModelElement::GetLineProfile(std::string profile, Float64 xc, Float64 sigma)
+Float64 CLineModelElement::GetLineProfile(std::string profile, Float64 x, Float64 x0, Float64 sigma)
 {
+    Float64 xc = x-x0;
     Float64 val=0.0;
 
     if(profile=="SYM"){
@@ -137,6 +153,12 @@ Float64 CLineModelElement::GetLineProfile(std::string profile, Float64 xc, Float
         const Float64 xsurc = xcd/sigma;
         const Float64 alpha = m_asymfit_alpha;
         val = exp(-0.5*xsurc*xsurc)*(1.0+erf(alpha/sqrt(2.0)*xsurc));
+    }else if(profile=="EXTINCT"){
+        Float64 sigma_rest = m_dataN*m_dataStepLambda;
+        Float64 z = sigma/sigma_rest - 1.0;
+        Float64 dataStartLambda = (x0/(1+z)) - sigma_rest/2.0;
+        Int32 valI = int( (x/(1.0+z)-dataStartLambda)/m_dataStepLambda );
+        return m_dataExtinctionFlux[valI];
     }
 
     return val;
@@ -213,6 +235,12 @@ Float64 CLineModelElement::GetLineProfileDerivSigma(std::string profile, Float64
         //Float64 v = sigma*cel/x0;
         //val = -sqrt(2)*alpha*cel*(x - x0)*exp(-0.5*pow(cel*(x - x0)/(v*x0),2))*exp(-pow(alpha*cel*(x - x0), 2)/(2*pow(v*x0, 2)))/(sqrt(M_PI)*pow(v,2)*x0) + 1.0*pow(cel*(x - x0),2)*(erf(sqrt(2)*alpha*cel*(x - x0)/(2*v*x0)) + 1)*exp(-0.5*pow(cel*(x - x0)/(v*x0),2))/(pow(v,3)*pow(x0,2));
 
+    }else if(profile=="EXTINCT"){ //NOT IMPLEMENTED FOR THIS PROFILE, to be done when necessary...
+        Float64 sigma_rest = m_dataN*m_dataStepLambda;
+        Float64 z = sigma/sigma_rest - 1.0;
+        Float64 dataStartLambda = (x0/(1+z)) - sigma_rest/2.0;
+        Int32 valI = int( (x/(1.0+z)-dataStartLambda)/m_dataStepLambda );
+        return m_dataExtinctionFlux[valI];
     }
     return val;
 }
@@ -232,6 +260,8 @@ Float64 CLineModelElement::GetNSigmaSupport(std::string profile)
         val = nominal*m_symxl_sigma_coeff;
     }else if(profile=="ASYMFIT"  || profile.find("ASYMFIXED")!=std::string::npos){
         val = nominal*m_asymfit_sigma_coeff*2.5;
+    }else if(profile=="EXTINCT"){
+        val = 1.0;
     }
     return val;
 }
@@ -284,4 +314,50 @@ void CLineModelElement::SetAsymfitDelta(Float64 coeff)
 Float64 CLineModelElement::GetAsymfitDelta()
 {
     return m_asymfit_delta;
+}
+
+/**
+ * Laod the extinction residue data.
+ */
+Bool CLineModelElement::LoadDataExtinction()
+{
+    std::string filePathStr = "/home/aschmitt/Documents/amazed/methods/linemodel/extinction_element/extinction_data/element_meiksin_dl0.1cropped930-1230.fits.txt";
+    Log.LogDebug ( "Parsing ASCII file %s.", filePathStr.c_str() );
+    if( !bfs::exists( filePathStr.c_str() ) )
+    {
+        Log.LogError( "Read: Path for element_extinction file does not exist." );
+        return false;
+    }
+
+    bfs::ifstream file;
+    file.open( filePathStr.c_str() );
+
+    m_dataExtinctionFlux = (Float64 *) malloc(m_dataN* sizeof(Float64));
+
+    Int32 i = 0;
+    file.clear();
+    file.seekg( 0 );
+    int l = file.tellg();
+    for( std::string line; std::getline( file, line ); )
+    {
+        if( !boost::starts_with( line, "#" ) )
+        {
+            std::istringstream iss( line );
+            Float64 x, y;
+            iss >> x >> y;
+            //spcSpectralAxis[i] = x; //not reading x, hardcoded from 930 to 1230, with dlambda = 0.1A
+            m_dataExtinctionFlux[i] = y;
+            i++;
+            if(i>=m_dataN)
+            {
+                break;
+            }
+        }
+    }
+    if(i<m_dataN)
+    {
+        Log.LogError( "Read: linemodel- extinction residue: data not read successfully" );
+    }
+    Log.LogInfo( "Read exctinction successfully" );
+    return true;
 }

@@ -975,7 +975,7 @@ class ResultList(object):
         chi2type = "continuum"
         z_continuum, chi2_continuum = s.getChi2MinValList(spcName, chi2type, dontloadThres=chi2dontloadThres)
         for i in range(len(chi2_continuum)):
-            chi2_continuum[i] = chi2_continuum[i]/nspcSamples/10.0
+            chi2_continuum[i] = chi2_continuum[i]/nspcSamples#/1000.0
 #            chi2_continuum[i] = chi2_continuum[i]*nspcSamples
 #            if max_chi2_all<chi2_continuum[i] and chi2_continuum[i]<1e20:
 #                max_chi2_all = chi2_continuum[i]
@@ -2136,7 +2136,12 @@ def compareFailures(resDir, refresdir, diffthreshold=0.01, zrefmin=-1, zrefmax=2
 def plotContinuumIndexes(resDir, diffthres, spcName=""):
     print('using amazed results full path: {0}'.format(resDir))
     print('using spc filter by name: {}'.format(spcName))
-    resList = ResultList(resDir, diffthreshold=diffthres, opt='brief', spcName=spcName, methodName="", zrefmin=0.01, zrefmax=1.5)
+    zrefmin=0.01
+    zrefmax=1.5
+    zrefmin=-1
+    zrefmax=50.0
+    
+    resList = ResultList(resDir, diffthreshold=diffthres, opt='brief', spcName=spcName, methodName="", zrefmin=zrefmin, zrefmax=zrefmax)
     if resList.n <1:
         print('No results loaded...')
         return
@@ -2206,11 +2211,12 @@ def plotContinuumIndexes(resDir, diffthres, spcName=""):
     enablePlot = 1
     enableExport = 0
     enablePlotZref = 1
-    enablePlotZwrong = 1
+    enablePlotZwrong = 0
     enablePlotLineSeparation = 1
     
     if enablePlot or enableExport:
         
+        idx_continuum_index_Lya = 0
         idx_continuum_index_OII = 1
         idx_continuum_index_OIII = 2
         idx_continuum_index_Ha = 3
@@ -2222,6 +2228,12 @@ def plotContinuumIndexes(resDir, diffthres, spcName=""):
             #xvect = range(len(continuumIndexesZrefList))
             #xvect = zrefZrefList
             #print continuumIndexesZrefList[0]['color']
+            xvect = [a['break'][idx_continuum_index_Lya] for a in continuumIndexesZrefList if not np.isnan(a['break'][idx_continuum_index_Lya]) and not np.isnan(a['color'][idx_continuum_index_Lya])]
+            yvect = [a['color'][idx_continuum_index_Lya] for a in continuumIndexesZrefList if not np.isnan(a['break'][idx_continuum_index_Lya]) and not np.isnan(a['color'][idx_continuum_index_Lya])]
+            print("1. xvect={}".format(xvect))
+            print("1. yvect={}".format(yvect))
+            ax.plot(xvect, yvect, 'xk', label='zref Lya')
+            
             xvect = [a['break'][idx_continuum_index_OII] for a in continuumIndexesZrefList if not np.isnan(a['break'][idx_continuum_index_OII]) and not np.isnan(a['color'][idx_continuum_index_OII])]
             yvect = [a['color'][idx_continuum_index_OII] for a in continuumIndexesZrefList if not np.isnan(a['break'][idx_continuum_index_OII]) and not np.isnan(a['color'][idx_continuum_index_OII])]
             print("1. xvect={}".format(xvect))

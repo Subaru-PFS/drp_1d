@@ -382,7 +382,7 @@ Bool COperatorDTreeBSolve::GetCombinedRedshift(CDataStore& store)
     //*
     //***********************************************************
     // Estimate the combined chisquare result
-    Int32 combineOption = 0; //1 = bayes, 0 = linear
+    Int32 combineOption = 1; //1 = bayes, 0 = linear
 
     //Set the coefficients
     Float64 lmCoeff = 1.0;
@@ -390,9 +390,9 @@ Bool COperatorDTreeBSolve::GetCombinedRedshift(CDataStore& store)
     Float64 chi2cCoeff = 1.0;
     if(combineOption==1) //bayesian combination
     {
-        lmCoeff = 0.3;
-        chi2ncCoeff = 1e-32;
-        chi2cCoeff = 2e-5;
+        lmCoeff = 3.981e-6;
+        chi2ncCoeff = 0.00316;
+        chi2cCoeff = 3.981e-9;
 
         //logcoeff
         lmCoeff = -2.0*log(lmCoeff);

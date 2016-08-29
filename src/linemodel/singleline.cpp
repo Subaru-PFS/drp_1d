@@ -74,7 +74,7 @@ Float64 CSingleLine::GetSignFactor( Int32 subeIdx )
 Float64 CSingleLine::GetWidth( Int32 subeIdx, Float64 redshift )
 {
     Float64 mu = m_Ray.GetPosition()*(1+redshift);
-    Float64 c = GetLineWidth( mu, redshift, m_Ray.GetIsEmission() );
+    Float64 c = GetLineWidth( mu, redshift, m_Ray.GetIsEmission(), m_Ray.GetProfile() );
 
     return c;
 }
@@ -100,7 +100,7 @@ std::vector<CRay> CSingleLine::GetRays()
 void CSingleLine::prepareSupport(const CSpectrumSpectralAxis& spectralAxis, Float64 redshift, const TFloat64Range &lambdaRange)
 {
     Float64 mu = m_Ray.GetPosition()*(1+redshift);
-    Float64 c = GetLineWidth(mu, redshift, m_Ray.GetIsEmission());
+    Float64 c = GetLineWidth(mu, redshift, m_Ray.GetIsEmission(), m_Ray.GetProfile());
     std::string profile = m_Ray.GetProfile();
     Float64 winsize = GetNSigmaSupport(profile)*c;
     Float64 lambda_start = mu-winsize/2.0;
@@ -178,7 +178,7 @@ void CSingleLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const 
     const Float64* spectral = spectralAxis.GetSamples();
     const Float64* error = fluxAxis.GetError();
     Float64 mu = m_Ray.GetPosition()*(1+redshift);
-    Float64 c = GetLineWidth(mu, redshift, m_Ray.GetIsEmission());
+    Float64 c = GetLineWidth(mu, redshift, m_Ray.GetIsEmission(), m_Ray.GetProfile());
     std::string profile = m_Ray.GetProfile();
 
     Float64 y = 0.0;
@@ -195,7 +195,7 @@ void CSingleLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const 
     {
         y = flux[i];
         x = spectral[i];
-        yg = m_SignFactor * GetLineProfile(profile, x-mu, c);
+        yg = m_SignFactor * GetLineProfile(profile, x, mu, c);
 
         num++;
         err2 = 1.0 / (error[i] * error[i]);
@@ -355,10 +355,10 @@ Float64 CSingleLine::getModelAtLambda(Float64 lambda, Float64 redshift , Int32 k
 
     Float64 A = m_FittedAmplitude;
     Float64 mu = m_Ray.GetPosition()*(1+redshift);
-    Float64 c = GetLineWidth(mu, redshift, m_Ray.GetIsEmission());
+    Float64 c = GetLineWidth(mu, redshift, m_Ray.GetIsEmission(), m_Ray.GetProfile());
     std::string profile = m_Ray.GetProfile();
 
-    Yi = m_SignFactor * A * GetLineProfile(profile, x-mu, c);
+    Yi = m_SignFactor * A * GetLineProfile(profile, x, mu, c);
 
     return Yi;
 }
@@ -376,10 +376,10 @@ Float64 CSingleLine::GetModelDerivAmplitudeAtLambda(Float64 lambda, Float64 reds
     Float64 x = lambda;
 
     Float64 mu = m_Ray.GetPosition()*(1+redshift);
-    Float64 c = GetLineWidth(mu, redshift, m_Ray.GetIsEmission());
+    Float64 c = GetLineWidth(mu, redshift, m_Ray.GetIsEmission(), m_Ray.GetProfile());
     std::string profile = m_Ray.GetProfile();
 
-    Yi = m_SignFactor * GetLineProfile(profile, x-mu, c);
+    Yi = m_SignFactor * GetLineProfile(profile, x, mu, c);
 
     return Yi;
 }
@@ -398,7 +398,7 @@ Float64 CSingleLine::GetModelDerivSigmaAtLambda(Float64 lambda, Float64 redshift
 
     Float64 A = m_FittedAmplitude;
     Float64 mu = m_Ray.GetPosition()*(1+redshift);
-    Float64 c = GetLineWidth(mu, redshift, m_Ray.GetIsEmission());
+    Float64 c = GetLineWidth(mu, redshift, m_Ray.GetIsEmission(), m_Ray.GetProfile());
     std::string profile = m_Ray.GetProfile();
 
     Yi = m_SignFactor * A * GetLineProfileDerivSigma(profile, x, mu, c);

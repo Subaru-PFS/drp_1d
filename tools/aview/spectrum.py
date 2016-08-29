@@ -380,15 +380,7 @@ class Spectrum(object):
             self.xvect[x] = wave[x]
             self.yvect[x] = flux[x]
             self.ysum += self.yvect[x]   
-            
-    def saveTpl(self, outputfullpath):
-        filename = outputfullpath
-        f = open(filename, "w")
 
-        f.write("# lambda\tflux\n")
-        for x in range(0,self.n):        
-            f.write(" " + str(self.xvect[x]) + " " + str(self.yvect[x]) + "\n")
-        f.close()
         
         
     def __str__(self):
@@ -1356,6 +1348,16 @@ class Spectrum(object):
         print ""
     
         return destfileout
+        
+            
+    def saveTpl(self, outputfullpath):
+        filename = outputfullpath
+        f = open(filename, "w")
+
+        f.write("# lambda\tflux\n")
+        for x in range(0,self.n):        
+            f.write(" " + str(self.xvect[x]) + " " + str(self.yvect[x]) + "\n")
+        f.close()
             
 
 def StartFromCommandLine( argv ) :	
@@ -1372,7 +1374,7 @@ def StartFromCommandLine( argv ) :
                         help="path to the other fits spectrum to be plotted",  
                         dest="otherspcPath", default="")
     parser.add_argument("-e", "--export", 
-                        help="export to fits format (no, yes)",  
+                        help="export to fits format (no, yes), or export to tpl (tpl)",  
                         dest="export", default="no")
     parser.add_argument("-y", "--otherspctype", help="type of other spc",  
                         dest="otherspcType", default="template")
@@ -1417,8 +1419,14 @@ def StartFromCommandLine( argv ) :
 #                s.saveTpl(soutputpath)
 #                WarningKeyStr = raw_input("\n\nINFO: Modifications applied: saved to {}".format(soutputpath))
 #                                        
-            if options.export == "yes":
-                #s.applyLambdaCrop(7500, 9000)
+            if options.export == "tpl":
+                
+                path = os.path.split(options.spcPath)[0]
+                nameWext = os.path.split(options.spcPath)[1]
+                s.saveTpl(os.path.join(path, "{}.txt".format(nameWext)))
+            elif options.export == "yes":
+                #s.interpolate(dx=0.1) #high sampling for the synthesis process
+                #s.applyLambdaCrop(930, 1230)
                 #s.applyWeight(1e-18)
                 #s.setMagIAB(20)        
         
