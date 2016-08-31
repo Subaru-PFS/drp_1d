@@ -251,7 +251,7 @@ def PlotAmazedVersusBinsHistogram(yvect, mvect, outdir, outFileNoExt, enablePlot
             print("logmin = {}, logmax = {}".format(logmin, logmax))
             
             vectBins = np.logspace(logmin, logmax, 40, endpoint=True)
-        #print 'the sigma bins are: ' + str(vectBins) 
+        vectBins = np.linspace(ext_min, ext_max, ext_max-ext_min+1, endpoint=True)
     elif mtype=='LOGFHALPHA':
         print '\n\nPlotAmazedVersusLOGFHaHistogram:'
         vectBins = np.linspace(-16, -14, 20, endpoint=True)
@@ -348,8 +348,9 @@ def PlotAmazedVersusBinsHistogram(yvect, mvect, outdir, outFileNoExt, enablePlot
             ax2.set_xlim([-550, 550])
         elif mtype=='EXT':
             ax2.set_xlim([ext_min, ext_max])            
-            ax2.set_xscale('log')
-            ax1.set_xscale('log')
+            if 0:       
+                ax2.set_xscale('log')
+                ax1.set_xscale('log')
         elif mtype=='LOGFHALPHA':
             ax2.set_xlim([-16.5, -13.5])
         else:

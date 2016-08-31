@@ -553,7 +553,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
         m = result->ChiSquare[idx];
 
         //save the model result
-        static Int32 maxModelSave = 3;
+        static Int32 maxModelSave = extremumCount;
         if( savedModels<maxModelSave /*&& isLocalExtrema[i]*/)
         {
             // CModelSpectrumResult

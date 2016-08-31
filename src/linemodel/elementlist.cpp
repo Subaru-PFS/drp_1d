@@ -1,7 +1,6 @@
 #include <epic/redshift/linemodel/elementlist.h>
 #include <epic/redshift/linemodel/singleline.h>
 #include <epic/redshift/linemodel/multiline.h>
-#include <epic/redshift/linemodel/extinctionresidue.h>
 #include <epic/redshift/linemodel/modelfittingresult.h>
 #include <epic/redshift/gaussianfit/multigaussianfit.h>
 #include <epic/redshift/ray/regulament.h>
@@ -695,7 +694,8 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
     {
         std::vector<Int32> validEltsIdx = GetModelValidElementsIndexes();
         std::vector<Float64> ampsfitted;
-        fitAmplitudesLinSolve(validEltsIdx, spectralAxis, m_spcFluxAxisNoContinuum, ampsfitted);
+        std::vector<Float64> errorsfitted;
+        fitAmplitudesLinSolve(validEltsIdx, spectralAxis, m_spcFluxAxisNoContinuum, ampsfitted, errorsfitted);
     }
 
     //fit the amplitudes of each element independently, unless there is overlap
@@ -934,93 +934,93 @@ void CLineModelElementList::setModelSpcObservedOnSupportZeroOutside(  const TFlo
  **/
 Int32 CLineModelElementList::fitAmplitudesHybrid( const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& spcFluxAxisNoContinuum, Float64 redshift)
 {
-  Float64 ampErrFitFails = 1e12; //some High Value For Amplitude Error When The Fit Fails
   std::vector<Int32> validEltsIdx = GetModelValidElementsIndexes();
   std::vector<Int32> indexesFitted;
   for( UInt32 iValidElts=0; iValidElts<validEltsIdx.size(); iValidElts++ )
-    {
+  {
       Int32 iElts = validEltsIdx[iValidElts];
       //skip if already fitted
       bool alreadyfitted=false;
       for(Int32 i=0; i<indexesFitted.size(); i++)
-	{
-	  if(iElts == indexesFitted[i])
-	    {
-	      alreadyfitted=true;
-	      break;
-            }
-        }
-        if(alreadyfitted)
-	  {
-            continue;
-	  }
-        //do the fit on the ovelapping elements
-        Float64 overlapThres = 0.33;
-        std::vector<Int32> overlappingInds = getOverlappingElements(iElts, indexesFitted, overlapThres);
+      {
+          if(iElts == indexesFitted[i])
+          {
+              alreadyfitted=true;
+              break;
+          }
+      }
+      if(alreadyfitted)
+      {
+          continue;
+      }
+      //do the fit on the ovelapping elements
+      Float64 overlapThres = 0.33;
+      std::vector<Int32> overlappingInds = getOverlappingElements(iElts, indexesFitted, overlapThres);
 
-	/*
+      /*
         Log.LogDebug( "Redshift: %f", m_Redshift);
         Log.LogDebug( "hybrid fit: idx=%d - overlappingIdx=%d", iValidElts, overlappingInds.size());
         for(Int32 ifit=0; ifit<overlappingInds.size(); ifit++)
-	  {
-	    Log.LogDebug( "hybrid fit: i=%d - Id=%d", ifit, overlappingInds[ifit]);
-	  }
-	*/
-        if(overlappingInds.size()<2)
-	  {
-            m_Elements[iElts]->fitAmplitude(spectralAxis, spcFluxAxisNoContinuum, redshift);
-	  }
-	else
-	  {
-            std::vector<Float64> ampsfitted;
-            Int32 retVal = fitAmplitudesLinSolve(overlappingInds, spectralAxis, spcFluxAxisNoContinuum, ampsfitted);
-            // todo: if all the amplitudes fitted don't have the same sign, do it separately
-            std::vector<Int32> overlappingIndsSameSign;
-            if(retVal!=1)
-	      {
-                for(Int32 ifit=0; ifit<overlappingInds.size(); ifit++)
-		  {
-                    if(ampsfitted[ifit]>0)
-		      {
-                        overlappingIndsSameSign.push_back(overlappingInds[ifit]);
-                        //m_Elements[overlappingInds[ifit]]->fitAmplitude(spectralAxis, spcFluxAxisNoContinuum, redshift);
-		      }
-		    else
-		      {
-                        SetElementAmplitude(overlappingInds[ifit], 0.0, ampErrFitFails);
-                    }
-                }
-                //fit the rest of the overlapping elements (same sign) together
-                if(overlappingIndsSameSign.size()==1)
-		  {
-                    m_Elements[overlappingIndsSameSign[0]]->fitAmplitude(spectralAxis, spcFluxAxisNoContinuum, redshift);
-                }else if(overlappingIndsSameSign.size()>1){
-//                    for(Int32 ifit=0; ifit<overlappingIndsSameSign.size(); ifit++)
-//                    {
-//                        SetElementAmplitude(overlappingIndsSameSign[ifit], 0.0, 0.0);
-//                    }
-                    Int32 retVal2 = fitAmplitudesLinSolve(overlappingIndsSameSign, spectralAxis, spcFluxAxisNoContinuum, ampsfitted);
-                    if(retVal2!=1){
-                        for(Int32 ifit=0; ifit<overlappingIndsSameSign.size(); ifit++)
-                        {
-                            if(ampsfitted[ifit]>0){
-                                m_Elements[overlappingIndsSameSign[ifit]]->fitAmplitude(spectralAxis, spcFluxAxisNoContinuum, redshift);
-                            }else{
-                                SetElementAmplitude(overlappingIndsSameSign[ifit], 0.0, ampErrFitFails);
-                            }
-                        }
-                    }
-                }
-            }
-        }
+      {
+        Log.LogDebug( "hybrid fit: i=%d - Id=%d", ifit, overlappingInds[ifit]);
+      }
+    */
+      if(overlappingInds.size()<2)
+      {
+          m_Elements[iElts]->fitAmplitude(spectralAxis, spcFluxAxisNoContinuum, redshift);
+      }
+      else
+      {
+          std::vector<Float64> ampsfitted;
+          std::vector<Float64> errorsfitted;
+          Int32 retVal = fitAmplitudesLinSolve(overlappingInds, spectralAxis, spcFluxAxisNoContinuum, ampsfitted, errorsfitted);
+          // if all the amplitudes fitted don't have the same sign, do it separately
+          std::vector<Int32> overlappingIndsSameSign;
+          if(retVal!=1)
+          {
+              for(Int32 ifit=0; ifit<overlappingInds.size(); ifit++)
+              {
+                  if(ampsfitted[ifit]>0)
+                  {
+                      overlappingIndsSameSign.push_back(overlappingInds[ifit]);
+                      //m_Elements[overlappingInds[ifit]]->fitAmplitude(spectralAxis, spcFluxAxisNoContinuum, redshift);
+                  }
+                  else
+                  {
+                      SetElementAmplitude(overlappingInds[ifit], 0.0, errorsfitted[ifit]);
+                  }
+              }
+              //fit the rest of the overlapping elements (same sign) together
+              if(overlappingIndsSameSign.size()==1)
+              {
+                  m_Elements[overlappingIndsSameSign[0]]->fitAmplitude(spectralAxis, spcFluxAxisNoContinuum, redshift);
+              }else if(overlappingIndsSameSign.size()>1){
+                  //                    for(Int32 ifit=0; ifit<overlappingIndsSameSign.size(); ifit++)
+                  //                    {
+                  //                        SetElementAmplitude(overlappingIndsSameSign[ifit], 0.0, 0.0);
+                  //                    }
+                  Int32 retVal2 = fitAmplitudesLinSolve(overlappingIndsSameSign, spectralAxis, spcFluxAxisNoContinuum, ampsfitted, errorsfitted);
+                  if(retVal2!=1){
+                      for(Int32 ifit=0; ifit<overlappingIndsSameSign.size(); ifit++)
+                      {
+                          if(ampsfitted[ifit]>0){
+                              m_Elements[overlappingIndsSameSign[ifit]]->fitAmplitude(spectralAxis, spcFluxAxisNoContinuum, redshift);
+                          }else{
+                              SetElementAmplitude(overlappingIndsSameSign[ifit], 0.0, errorsfitted[ifit]);
+                          }
+                      }
+                  }
+              }
+          }
+      }
 
-        //update the already fitted list
-        for(Int32 i=0; i<overlappingInds.size(); i++)
-	  {
-            indexesFitted.push_back(overlappingInds[i]);
-        }
+      //update the already fitted list
+      for(Int32 i=0; i<overlappingInds.size(); i++)
+      {
+          indexesFitted.push_back(overlappingInds[i]);
+      }
 
-    }
+  }
   return 0;
 }
 
@@ -1495,7 +1495,7 @@ std::vector<Int32> CLineModelElementList::getOverlappingElements(Int32 ind, std:
  * \brief Use GSL to fit linearly the elements listed in argument EltsIdx.
  * If size of argument EltsIdx is less than 1 return -1.
  **/
-Int32 CLineModelElementList::fitAmplitudesLinSolve( std::vector<Int32> EltsIdx, const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis, std::vector<Float64>& ampsfitted)
+Int32 CLineModelElementList::fitAmplitudesLinSolve( std::vector<Int32> EltsIdx, const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis, std::vector<Float64>& ampsfitted, std::vector<Float64>& errorsfitted)
 {
     boost::chrono::thread_clock::time_point start_prep = boost::chrono::thread_clock::now();
 
@@ -1523,9 +1523,11 @@ Int32 CLineModelElementList::fitAmplitudesLinSolve( std::vector<Int32> EltsIdx, 
     n = xInds.size();
     if(n<nddl){
         ampsfitted.resize(nddl);
+        errorsfitted.resize(nddl);
         for (Int32 iddl = 0; iddl < nddl; iddl++)
         {
             ampsfitted[iddl] = 0.0;
+            errorsfitted[iddl] = 1e12;//some high number
         }
         return -1;
     }
@@ -1611,10 +1613,14 @@ Int32 CLineModelElementList::fitAmplitudesLinSolve( std::vector<Int32> EltsIdx, 
         //refreshModel();
     }else{
         ampsfitted.resize(nddl);
+        errorsfitted.resize(nddl);
         for (Int32 iddl = 0; iddl < nddl; iddl++)
         {
             Float64 a = gsl_vector_get(c,iddl);
+            Float64 cova = gsl_matrix_get(cov,iddl,iddl);
+            Float64 sigma = sqrt(cova);
             ampsfitted[iddl] = (a);
+            errorsfitted[iddl] = (sigma);
         }
     }
     gsl_matrix_free (X);

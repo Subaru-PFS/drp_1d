@@ -13,7 +13,7 @@ import math
 import time
 
 import matplotlib as mpl
-mpl.use('Agg') #disable showing the mpl windows
+#mpl.use('Agg') #disable showing the mpl windows
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import matplotlib.colors as mcolors
@@ -2300,6 +2300,71 @@ def plotContinuumIndexes(resDir, diffthres, spcName=""):
         if enablePlot:
             plt.show() 
 
+def exportNLinesExternal(resDir, diffthres, spcName=""):
+    print('using amazed results full path: {0}'.format(resDir))
+    print('using spc filter by name: {}'.format(spcName))
+    
+    
+    zrefmin=-1
+    zrefmax=50.0
+    
+    resList = ResultList(resDir, diffthreshold=diffthres, opt='brief', spcName=spcName, methodName="", zrefmin=zrefmin, zrefmax=zrefmax)
+    if resList.n <1:
+        print('No results loaded...')
+        return
+       
+    nlinesZrefList = []  
+    
+    thres_extremasearch_id = 10
+    
+    nSkippedZref = 0
+    #nres = 20
+    nres = resList.n
+    for k in range(nres):
+        print("\nprocessing result #{}/{}".format(k+1, resList.n))
+        zref = resList.list[k].zref
+        print("zref is {}".format(zref))
+        redshifts, merits = resList.getZCandidatesFromAmazedChi2Extrema(k, chi2Type="linemodel", nextrema=thres_extremasearch_id, enableZrangePerTpl=False)
+        print("redshifts: {}".format(redshifts))       
+        print("merits: {}".format(merits))  
+        thres_zref_zerr = 1e-2
+        indsZrefExtremum = [i for i,z in enumerate(redshifts) if abs(z-zref)<thres_zref_zerr]
+        
+        print("inds extrema for zref found = {}".format(indsZrefExtremum))
+            
+        if len(indsZrefExtremum)>0:
+            ie = indsZrefExtremum[0]
+            lmModelFitPath = resList.resParser.getLineModelResultPath(resList.list[k].name, ie)
+            if os.path.exists(lmModelFitPath):
+                mres = modelresult.ModelResult(lmModelFitPath)
+            else:
+                print("ERROR: unable to find the modelResult file... aborting...")
+                nSkippedZref+=1
+                nlinesZrefList.append(-1)
+                continue
+            res_nlines = mres.getNLinesStrong(redshifts[ie])
+                
+            nlinesZrefList.append(res_nlines)
+        else:
+            nSkippedZref+=1
+            nlinesZrefList.append(-1)
+            continue
+            
+    print("\nINFO-SKIPPED: nskipped zref = {}".format(nSkippedZref))
+    
+    enableExport = 1 
+    if enableExport:
+        outdir = os.path.join(resList.analysisoutputdir, "lm_nlinesvalid")
+        if not os.path.exists(outdir):
+            os.makedirs(outdir)
+                        
+        outFileNoExt = 'external_lmnlinesstrong' 
+        outFilepathNoExt = os.path.join(outdir,outFileNoExt)
+        outFile = '{}.txt'.format(outFilepathNoExt)
+        f = open(outFile, "w")
+        for k in range(nres):
+            f.write("{}\t{}\n".format(resList.list[k].name, nlinesZrefList[k]))
+        f.close()    
     
 def exportSVMTable(resDir, diffthres, spcName=""):
     print('using amazed results full path: {0}'.format(resDir))
@@ -2564,15 +2629,17 @@ def StartFromCommandLine( argv ) :
         6. Export Best Redshift - with zrange(per template)\n\
         7. Export Sources in z-mag-sfr Bin\n\
         \n\
-        10. Export Line Detection Stats\n\
-        11. Compare Peak Detection with reference\n\
-        12. Compare Line Detection with reference\n\
-        13. Export Line Matching Stats\n\
+        10. Export Line Detection Stats (for linematching)\n\
+        11. Compare Peak Detection with reference (for linematching)\n\
+        12. Compare Line Detection with reference (for linematching)\n\
+        13. Export Line Matching Stats (for linematching)\n\
+        \n\
+        14. Export N Line Stats external.csv file (for lienmodel)\n\
         \n\
         20. Compare failures\n\
         \n\
         30. Plot 2D Combination Merit Coeff map\n\
-        35. Plot continuum indexes\n\
+        35. Plot continuum indexes (only for linemodel)\n\
         36. Export SVM table\n\
         37. Export continuum Relevance\n\
         \n\
@@ -2669,6 +2736,15 @@ def StartFromCommandLine( argv ) :
                 compareLineDetection(options.resDir, refresDir)
         elif choice == 13:
             exportLineMatchingStats(options.resDir)
+                            
+        elif choice == 14:
+            spcName = ""
+            spcStr = raw_input("Do you want to enter a spectrum name to filter the results ? (press enter to skip) :")
+            if not (spcStr == "No" or spcStr == "no"):
+                spcName = spcStr
+           
+            exportNLinesExternal(options.resDir, float(options.diffthres), spcName)
+            
         
         elif choice == 20:
             refresDir = raw_input("Enter a reference dir. to compare the failures ? (press enter to skip) :")

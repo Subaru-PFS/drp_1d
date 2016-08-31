@@ -193,7 +193,7 @@ def ProcessDiff( refFile, calcFile, outFile, reftype ) :
     ### try to open snr file
     snrFile = os.path.join(os.path.dirname(os.path.abspath(refFile)), "snr2_TF_ErrF.csv")
     print("SNRfile = {}".format(snrFile))
-    if os.path.exists(snrFile):
+    if 1 and os.path.exists(snrFile):
         fsnr = open(snrFile, 'r')
         dataSnrStr = fsnr.read()
         fsnr.close()
@@ -229,7 +229,7 @@ def ProcessDiff( refFile, calcFile, outFile, reftype ) :
     ### try to open external data file :it has to be placed in the ref file directory
     externalFile = os.path.join(os.path.dirname(os.path.abspath(refFile)), "external.csv")
     print("Externalfile = {}".format(externalFile))
-    if 0 and os.path.exists(externalFile):
+    if 1 and os.path.exists(externalFile):
         fext = open(externalFile, 'r')
         dataExtStr = fext.read()
         fext.close()
@@ -598,6 +598,10 @@ def ProcessStats( fname, zRange, magRange,  sfrRange, enablePlot = False ):
             flag = data[x][3]
             if flag!=2.0:
                 continue
+        if 1: #filter by n valid lines
+            extvect = (data[x][13])
+            if extvect != 2:
+                continue
         zreference = (data[x][2])
         mag = (data[x][1])
         sfr = (data[x][9])
@@ -787,7 +791,7 @@ def ProcessStats( fname, zRange, magRange,  sfrRange, enablePlot = False ):
 
 
     # ******* plot ext hist       
-    if 0:
+    if 1:
         print("Plotting versus ExtValue")
         outFileNoExt = 'stats_versusExt_hist' 
         outFilepathNoExt = os.path.join(outputDirectory,outFileNoExt)
