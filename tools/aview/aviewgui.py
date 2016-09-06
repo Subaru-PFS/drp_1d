@@ -24,13 +24,14 @@ if cmd_subfolder not in sys.path:
 import processAmazedOutputStats
  
 class ObjectAViewGui(object):
-    def __init__(self):
+    def __init__(self, parent=None):
         self.value = []
+        self.parent = parent
  
  
 class AViewGui(QtGui.QMainWindow):
-    def __init__(self, obj):
-        super(AViewGui, self).__init__()
+    def __init__(self, obj, init_resdir="", init_refpath=""):
+        super(AViewGui, self).__init__(obj.parent)
         self.obj = obj
         wdg = QtGui.QWidget()
         layout = QtGui.QGridLayout(wdg)     
@@ -180,10 +181,15 @@ class AViewGui(QtGui.QMainWindow):
         #Set zdiff Threshold
         self.leDiffThres.setText("")
             
+
+        #auto load from inputs args
+        if not init_resdir=="" and not init_refpath=="":
+            self.leResDir.setText(init_resdir) 
+            self.bt_loadresults(init_refpath)
             
         self.show()
  
-    def bt_loadresults(self):
+    def bt_loadresults(self, init_refPath=""):
         self.setCurrentDir()
     
         _resDir = str(self.leResDir.text())
@@ -195,8 +201,11 @@ class AViewGui(QtGui.QMainWindow):
             print("diff file not found... computing the diff file is necessary: please select the reference redshift file list in order continue !")
             calcFile = os.path.join(_resDir, "redshift.csv") 
             
-            _refzfilepathDefault = self.settings.value("refzfilepath").toString()
-            _refzfilepath = str(QtGui.QFileDialog.getOpenFileName(self, "Select Reference Redshift list file", _refzfilepathDefault))
+            if not init_refPath=="":
+                _refzfilepath = init_refPath
+            else:
+                _refzfilepathDefault = self.settings.value("refzfilepath").toString()
+                _refzfilepath = str(QtGui.QFileDialog.getOpenFileName(self, "Select Reference Redshift list file", _refzfilepathDefault))
             if os.path.exists(_refzfilepath) :
                 if os.path.isdir(statsPath)==False:
                     os.mkdir( statsPath, 0755 );
@@ -388,7 +397,7 @@ class AViewGui(QtGui.QMainWindow):
  
 def main():
     app = QtGui.QApplication(sys.argv)
-    ins = ObjectAViewGui()
+    ins = ObjectAViewGui(parent=app)
     ex = AViewGui(ins)
     sys.exit(app.exec_())
  

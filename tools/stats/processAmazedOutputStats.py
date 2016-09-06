@@ -598,7 +598,7 @@ def ProcessStats( fname, zRange, magRange,  sfrRange, enablePlot = False ):
             flag = data[x][3]
             if flag!=2.0:
                 continue
-        if 1: #filter by n valid lines
+        if 0: #filter by n valid lines
             extvect = (data[x][13])
             if extvect != 2:
                 continue

@@ -194,7 +194,7 @@ class AViewPlot(object):
         
         
         #prepare lines        
-        lines_label_method = 1 #0 = subplot with labels, #1 = using lineid_plot on main spc view
+        lines_label_method = 0 #0 = subplot with labels, #1 = using lineid_plot on main spc view
         if not self.forcePlotNoLines:
             #self.linesx = []
             #self.linesx.append(6564)
