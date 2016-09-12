@@ -118,6 +118,7 @@ class AViewWidget(QtGui.QWidget):
         #canddidates list
         self.lst_Candidates = candidateListWidget(self)
         self.lst_Candidates.setWindowTitle('Redshift Candidates')
+        self.lst_Candidates.setToolTip("Left-click on a candidate (row) to display")
         self.lst_Candidates.itemClicked.connect(self.lst_Candidates.Clicked)
    
         layoutLeftColumn.addWidget(self.lst_Candidates) 
@@ -204,6 +205,8 @@ class AViewWidget(QtGui.QWidget):
         return ind
         
     def plotCandidate(self, zClick=-1, iextremaredshift=-1):
+        QtGui.QApplication.setOverrideCursor(QtGui.QCursor(QtCore.Qt.WaitCursor))
+        
         if self.ckRedshiftChoiceOverride.isChecked():
             self.ckRedshiftChoiceOverride.toggle()        
 
@@ -275,6 +278,7 @@ class AViewWidget(QtGui.QWidget):
         self.canvasChi2 = Graph(self, self.figureChi2, graphType="merit")
         self.canvasChi2.setFixedHeight(475.0)
         self.canvasChi2.setFixedWidth(475.0)
+        self.canvasChi2.setToolTip("Double left-click on the extrema (red circles) to display")
         
         try:
             self.toolbarChi2
@@ -363,6 +367,9 @@ class AViewWidget(QtGui.QWidget):
         
         #set the list candidates current row
         self.lst_Candidates.setCurrentRow( self.iextremaredshift );
+        
+        QtGui.QApplication.restoreOverrideCursor()
+        print('{}: finished\n\n'.format(tag))
         
     def closeEvent(self, event):
         print "AviewGui: Closing main widget"

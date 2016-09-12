@@ -301,7 +301,7 @@ class AViewPlot(object):
                     lpos = 1 + lposOffsetA
                     lstyle = 'dashed'
                 if lines_label_method==0: #old method
-                    ax1.plot((x, x), (-100000,100000) , cstyle, linestyle = lstyle, label=self.linesname[k] )
+                    ax1.plot((x, x), (-100000,100000) , cstyle, linestyle = lstyle, alpha=0.45, label=self.linesname[k] )
                     #pp.text(x, self.ymax*0.75, '{0}'.format(self.linesname[k]))
                     #print("testlinepos = {0}".format(self.t.getWeightedFlux(self.linesxrest[k], self.s.ysum / self.t.ysum)*2.0))
                     if 0 and not self.forcePlotNoTemplate:
@@ -316,8 +316,8 @@ class AViewPlot(object):
                         showLine = True
                         if showLine:
                             #pp.text(x, self.ymax*0.75, '{0}:{1:.2f}'.format(self.linesname[k], x))
-                            ax3.plot((x, x), (lpos+2, 10) , cstyle, linestyle = lstyle, label=self.linesname[k] )
-                            annotation = ax3.text(x, lpos, '{0}'.format(self.linesname[k]), color=ccolor)
+                            ax3.plot((x, x), (lpos+2, 10) , cstyle, linestyle = lstyle, alpha=0.45, label=self.linesname[k] )
+                            annotation = ax3.text(x, lpos, '{0}'.format(self.linesname[k]), color=ccolor, alpha = 0.85)
                             if self.linestype[k]=='E':
                                 lposOffsetE += 1
                                 if lposOffsetE>3:
