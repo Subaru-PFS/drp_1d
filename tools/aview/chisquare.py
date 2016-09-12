@@ -9,6 +9,7 @@ import math
 import optparse
 
 import matplotlib.pyplot as pp
+#pp.style.use('ggplot')
 #import seaborn as sns
 #sns.set_context("poster")
 #sns.set_style("whitegrid")
@@ -209,9 +210,9 @@ class ResultChisquare(object):
         if idx < len(self.amazed_extrema):
             return self.amazed_extrema[idx]
         else:
-            return -1.0;
+            return -1.0;      
     
-    def plot(self, showContinuumEstimate=False, showExtrema=False, showAmbiguities=False, enablePlot=True, exportPath=""):
+    def plot(self, showContinuumEstimate=False, showExtrema=False, showAmbiguities=False, enablePlot=True, exportPath="", enableReturnFig=False):
         #find limits
         cmin = +1e6;
         cmax = -1e6;
@@ -286,14 +287,17 @@ class ResultChisquare(object):
         #pp.savefig('ExempleTrace') # sauvegarde du fichier ExempleTrace.png
         
         fig.tight_layout()
-        if enablePlot:
-            pp.show()
+        if not enableReturnFig:
+            if enablePlot:
+                pp.show()
+            else:
+                outFigFile = os.path.join(exportPath, 'chi2_{}.png'.format(self.stype))
+                #pp.savefig( outFigFile, bbox_inches='tight')
+                pp.savefig( outFigFile)
+                pp.close()
+                pp.clf()
         else:
-            outFigFile = os.path.join(exportPath, 'chi2_{}.png'.format(self.stype))
-            #pp.savefig( outFigFile, bbox_inches='tight')
-            pp.savefig( outFigFile)
-            pp.close()
-            pp.clf()
+            return fig
             
         print '\n'
         

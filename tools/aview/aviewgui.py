@@ -12,6 +12,7 @@ import inspect
 import glob
 
 import aview
+import aviewwidget
 import resultstat
 import resparser
 
@@ -29,114 +30,154 @@ class ObjectAViewGui(object):
         self.parent = parent
  
  
-class AViewGui(QtGui.QMainWindow):
-    def __init__(self, obj, init_resdir="", init_refpath=""):
-        super(AViewGui, self).__init__(obj.parent)
-        self.obj = obj
-        wdg = QtGui.QWidget()
+class AViewGui(QtGui.QWidget):
+    def __init__(self, parent=None, init_resdir="", init_refpath=""):
+        super(AViewGui, self).__init__(parent)
+        self.parent = parent
+        wdg = self#QtGui.QWidget()
         layout = QtGui.QGridLayout(wdg)     
         
+        
+        layoutRow = 0
+        separator_height = 20        
+        separator_ncols = 5
+        
+        #Add the configuration separator
+        self.lblInputSection = QtGui.QLabel('Load results', wdg) 
+        self.lblInputSection.setAlignment(QtCore.Qt.AlignCenter)           
+        self.lblInputSection.setFixedHeight(separator_height)
+        self.lblInputSection.setProperty("coloredcell", True)
+        layout.addWidget(self.lblInputSection, layoutRow, 0, 1, 1) 
+        for i in range(1, separator_ncols):
+            lbl = QtGui.QLabel('', wdg)
+            if i==separator_ncols-1:
+                lbl.setFixedWidth(100)
+            lbl.setProperty("coloredcell", True)
+            layout.addWidget(lbl, layoutRow, i, 1, 1)         
+ 
+ 
         #Add the result dir. setup ctrls
+        layoutRow += 1
         self.lblResdir = QtGui.QLabel(' AMAZED Output Result Dir. ', wdg)
-        layout.addWidget(self.lblResdir, 0, 0, 1, 1)
+        layout.addWidget(self.lblResdir, layoutRow, 0, 1, 1)
         
         self.leResDir = QtGui.QLineEdit(wdg)
         self.leResDir.setFixedWidth(500) 
-        layout.addWidget(self.leResDir, 0, 1, 1, 10)
+        layout.addWidget(self.leResDir, layoutRow, 1, 1, 10)
         
         self.btnBrowseResdir = QtGui.QPushButton(' Browse ', wdg)
         self.btnBrowseResdir.setToolTip('Browse to select the AMAZED output directory...')
         self.btnBrowseResdir.clicked.connect(self.bt_setResultDir)
-        layout.addWidget(self.btnBrowseResdir, 0, 2, 1, 1)
+        layout.addWidget(self.btnBrowseResdir, layoutRow, 2, 1, 1)
         
         self.btnBrowseResdirPrevious = QtGui.QPushButton(' < ', wdg)
         self.btnBrowseResdirPrevious.setToolTip('Back to the previous ResDir...')
         self.btnBrowseResdirPrevious.clicked.connect(self.bt_setResultDirPrevious)
-        layout.addWidget(self.btnBrowseResdirPrevious, 0, 3, 1, 1)
+        layout.addWidget(self.btnBrowseResdirPrevious, layoutRow, 3, 1, 1)
         
         #Add the failure threshold filter ctrls
+        layoutRow += 1
         self.lblDiffThres = QtGui.QLabel(' Filter by z diff. threshold: ', wdg)
-        layout.addWidget(self.lblDiffThres, 1, 0, 1, 1)
+        layout.addWidget(self.lblDiffThres, layoutRow, 0, 1, 1)
         
         self.leDiffThres = QtGui.QLineEdit(wdg)
         self.leDiffThres.setToolTip('Enter threshold value to filter the dataset by the z error value...')
         self.leDiffThres.setFixedWidth(200) 
-        layout.addWidget(self.leDiffThres, 1, 1, 1, 10)
+        layout.addWidget(self.leDiffThres, layoutRow, 1, 1, 10)
         
         #Add the spectrum filter ctrls
+        layoutRow += 1
         self.lblSpcFilter = QtGui.QLabel(' Filter by spectrum name: ', wdg)
-        layout.addWidget(self.lblSpcFilter, 2, 0, 1, 1)
+        layout.addWidget(self.lblSpcFilter, layoutRow, 0, 1, 1)
         
         self.leSpcFilter = QtGui.QLineEdit(wdg)
         self.leSpcFilter.setToolTip('Enter a tag to filter the dataset by the spectrum name...')
         self.leSpcFilter.setFixedWidth(300) 
-        layout.addWidget(self.leSpcFilter, 2, 1, 1, 10)
+        layout.addWidget(self.leSpcFilter, layoutRow, 1, 1, 10)
         
         #Add the show button
+        layoutRow += 1
         self.btnLoad = QtGui.QPushButton('Load Result List', wdg)
         self.btnLoad.setFixedWidth(500)
         self.btnLoad.setFixedHeight(50)
         self.btnLoad.clicked.connect(self.bt_loadresults)
-        layout.addWidget(self.btnLoad, 4, 1, 1, 1)
-
-        #Add the result list section separator
-        self.lblResultsSection = QtGui.QLabel('----------', wdg)
-        layout.addWidget(self.lblResultsSection, 5, 0, 1, 1)   
+        layout.addWidget(self.btnLoad, layoutRow, 1, 1, 1)
         
         #Add the result list N
+        layoutRow += 1
         self.lblResultsN = QtGui.QLabel('N Results loaded:', wdg)
-        layout.addWidget(self.lblResultsN, 6, 0, 1, 1) 
+        layout.addWidget(self.lblResultsN, layoutRow, 0, 1, 1) 
         self.leResultsN = QtGui.QLineEdit(wdg)
         self.leResultsN.setFixedWidth(100) 
-        layout.addWidget(self.leResultsN, 6, 1, 1, 10) 
+        layout.addWidget(self.leResultsN, layoutRow, 1, 1, 10) 
         self.leResultsN.setEnabled(False)
         
+        #Add the result list section separator
+        layoutRow += 1
+        self.lblResultListSection = QtGui.QLabel('Browse results', wdg) 
+        self.lblResultListSection.setAlignment(QtCore.Qt.AlignCenter)           
+        self.lblResultListSection.setFixedHeight(separator_height)
+        self.lblResultListSection.setProperty("coloredcell", True)
+        layout.addWidget(self.lblResultListSection, layoutRow, 0, 1, 1) 
+        for i in range(1, separator_ncols):
+            lbl = QtGui.QLabel('', wdg)
+            if i==separator_ncols-1:
+                lbl.setFixedWidth(100)
+            lbl.setProperty("coloredcell", True)
+            layout.addWidget(lbl, layoutRow, i, 1, 1)   
+        
         #Add the result index
+        layoutRow += 1
         self.lblResultIndex = QtGui.QLabel('Result #', wdg)
-        layout.addWidget(self.lblResultIndex, 7, 0, 1, 1) 
+        layout.addWidget(self.lblResultIndex, layoutRow, 0, 1, 1) 
         self.leResultIndex = QtGui.QLineEdit(wdg)
         self.leResultIndex.setFixedWidth(100) 
-        layout.addWidget(self.leResultIndex, 7, 1, 1, 2) 
+        layout.addWidget(self.leResultIndex, layoutRow, 1, 1, 2) 
 
         self.btnSetResultPrevious = QtGui.QPushButton(' < ', wdg)
         self.btnSetResultPrevious.setToolTip('Got to the previous Result in the list...')
         self.btnSetResultPrevious.clicked.connect(self.bt_previousResultIndex)
-        layout.addWidget(self.btnSetResultPrevious, 7, 2, 1, 1)
+        layout.addWidget(self.btnSetResultPrevious, layoutRow, 2, 1, 1)
         self.btnSetResultNext = QtGui.QPushButton(' > ', wdg)
         self.btnSetResultNext.setToolTip('Go to the next Result in the list...')
         self.btnSetResultNext.clicked.connect(self.bt_nextResultIndex)
-        layout.addWidget(self.btnSetResultNext, 7, 3, 1, 1)
+        layout.addWidget(self.btnSetResultNext, layoutRow, 3, 1, 1)
         #Add the result name 
+        layoutRow += 1
         self.lblResultName = QtGui.QLabel('        - name', wdg)
-        layout.addWidget(self.lblResultName, 8, 0, 1, 1) 
+        layout.addWidget(self.lblResultName, layoutRow, 0, 1, 1) 
         self.leResultSpcName = QtGui.QLineEdit(wdg)
         self.leResultSpcName.setFixedWidth(500) 
-        layout.addWidget(self.leResultSpcName, 8, 1, 1, 2) 
+        layout.addWidget(self.leResultSpcName, layoutRow, 1, 1, 2) 
         self.leResultSpcName.setEnabled(False)
         #Add the result zdiff
+        layoutRow += 1
         self.lblResultZdiff = QtGui.QLabel('        - zdiff', wdg)
-        layout.addWidget(self.lblResultZdiff, 9, 0, 1, 1) 
+        layout.addWidget(self.lblResultZdiff, layoutRow, 0, 1, 1) 
         self.leResultSpcZdiff = QtGui.QLineEdit(wdg)
         self.leResultSpcZdiff.setFixedWidth(300) 
-        layout.addWidget(self.leResultSpcZdiff, 9, 1, 1, 2) 
+        layout.addWidget(self.leResultSpcZdiff, layoutRow, 1, 1, 2) 
         self.leResultSpcZdiff.setEnabled(False)
         #Add the result zcalc 
+        layoutRow += 1
         self.lblResultZcalc = QtGui.QLabel('        - zcalc', wdg)
-        layout.addWidget(self.lblResultZcalc, 10, 0, 1, 1) 
+        layout.addWidget(self.lblResultZcalc, layoutRow, 0, 1, 1) 
         self.leResultSpcZcalc = QtGui.QLineEdit(wdg)
         self.leResultSpcZcalc.setFixedWidth(100) 
-        layout.addWidget(self.leResultSpcZcalc, 10, 1, 1, 2) 
+        layout.addWidget(self.leResultSpcZcalc, layoutRow, 1, 1, 2) 
         self.leResultSpcZcalc.setEnabled(False)
         #Add the result zref
+        layoutRow += 1
         self.lblResultZref = QtGui.QLabel('        - zref', wdg)
-        layout.addWidget(self.lblResultZref, 11, 0, 1, 1) 
+        layout.addWidget(self.lblResultZref, layoutRow, 0, 1, 1) 
         self.leResultSpcZref = QtGui.QLineEdit(wdg)
         self.leResultSpcZref.setFixedWidth(100) 
-        layout.addWidget(self.leResultSpcZref, 11, 1, 1, 2) 
+        layout.addWidget(self.leResultSpcZref, layoutRow, 1, 1, 2) 
         self.leResultSpcZref.setEnabled(False)  
 
         
         #Add the show parameters section separator
+                
         self.lblShowParametersSection = QtGui.QLabel('----------', wdg)
         layout.addWidget(self.lblShowParametersSection, 15, 0, 1, 1) 
         
@@ -144,7 +185,7 @@ class AViewGui(QtGui.QMainWindow):
         self.btn = QtGui.QPushButton('Show', wdg)
         self.btn.setFixedWidth(500)
         self.btn.setFixedHeight(50)
-        self.btn.clicked.connect(self.bt_showResult)
+        self.btn.clicked.connect(self.bt_showAViewWidget)
         self.btn.setToolTip('Display the Chi2/spectrum/fitted template/linemodel results successively...')
         layout.addWidget(self.btn, 16, 1, 1, 1)
 
@@ -163,7 +204,8 @@ class AViewGui(QtGui.QMainWindow):
         layout.addWidget(self.ckExtremumChoiceOverride, 18, 2, 1, 10)
         #self.ckExtremumChoiceOverride.toggle()
         
-        self.setCentralWidget(wdg)
+        #self.setCentralWidget(wdg)
+        self.setLayout(layout)        
         self.setWindowTitle('Aview')
         
 
@@ -187,6 +229,7 @@ class AViewGui(QtGui.QMainWindow):
             self.leResDir.setText(init_resdir) 
             self.bt_loadresults(init_refpath)
             
+        wdg.setStyleSheet("*[coloredcell=\"true\"] {background-color:rgb(215,215,215);}")
         self.show()
  
     def bt_loadresults(self, init_refPath=""):
@@ -308,6 +351,32 @@ class AViewGui(QtGui.QMainWindow):
         _failureindex = "0"
         aview.plotRes(_resDir, _spcName, _tplpath, _redshift, _iextremaredshift, _diffthres, _failureindex)
         
+    def bt_showAViewWidget(self):
+        
+        _resDir = str(self.leResDir.text())
+        
+        _spcName = str(self.leResultSpcName.text())
+        _spcIdx = -1
+        for idx in range(self.resList.n):
+            if _spcName == self.resList.list[idx].name:
+                print("INFO: found index for this spectrum and diffthreshold : i={}\n".format(idx))
+                _spcIdx = idx
+                break
+            
+        if self.ckExtremumChoiceOverride.isChecked():
+            iextrFromCtrl = str(self.leExtremumChoice.text())
+            if iextrFromCtrl=="":
+                _iextremaredshift = 0
+            else:
+                _iextremaredshift = float(iextrFromCtrl)
+        else:
+            _iextremaredshift = 0
+            
+        _resParser = resparser.ResParser(_resDir)
+
+        self.AViewWidget = aviewwidget.AViewWidget(parent=None, resParser=_resParser, resList=self.resList, resIdx=_spcIdx, iextremaredshift=_iextremaredshift)
+        self.AViewWidget.show()
+        
     
     def bt_setResultDir(self):
         _resDirDefault = os.path.abspath(str(self.leResDir.text()))
@@ -397,8 +466,8 @@ class AViewGui(QtGui.QMainWindow):
  
 def main():
     app = QtGui.QApplication(sys.argv)
-    ins = ObjectAViewGui(parent=app)
-    ex = AViewGui(ins)
+    ins = ObjectAViewGui()
+    ex = AViewGui()
     sys.exit(app.exec_())
  
 if __name__ == '__main__':

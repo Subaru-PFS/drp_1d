@@ -64,7 +64,7 @@ class AViewPlot(object):
         
         self.load()
         if enablePlot:
-            self.plot()
+            self.plot(enableReturnFig=False)
         
     def load(self):
         self.s = sp.Spectrum(self.spath) 
@@ -112,7 +112,7 @@ class AViewPlot(object):
         titleStr += "z={}".format(self.z)
         self.name = titleStr
         
-    def plot(self):
+    def plot(self, enableReturnFig=False):
         #prepare plot vects  
         self.sxvect = self.s.xvect
         self.syvect = self.s.yvect
@@ -216,7 +216,7 @@ class AViewPlot(object):
         
         
         #do the plotting
-        fig = pp.figure( "aview", figsize=(15,15))
+        fig = pp.figure( "aview", figsize=(16,15))
         if lines_label_method==0:
             gs = gridspec.GridSpec(3, 1, height_ratios=[12,2,2])
             ax1 = pp.subplot(gs[0]) # main plotting area = spectrum
@@ -282,6 +282,8 @@ class AViewPlot(object):
         pk = lineid_plot.initial_plot_kwargs()
         #print(pk)
         label_max_size = 12
+        lposOffsetE = 0
+        lposOffsetA = 0
         if not self.forcePlotNoLines:
             for k in range(len(self.linesx)):
                 #x = self.linesx[k]*(1+self.z)
@@ -291,12 +293,12 @@ class AViewPlot(object):
                 if self.linestype[k]=='E':
                     cstyle = 'b-'
                     ccolor = 'b'
-                    lpos = 4
+                    lpos = 5 + lposOffsetE
                     lstyle = 'dashdot'
                 elif self.linestype[k]=='A':
                     cstyle = 'r-'
                     ccolor = 'r'
-                    lpos = 2
+                    lpos = 1 + lposOffsetA
                     lstyle = 'dashed'
                 if lines_label_method==0: #old method
                     ax1.plot((x, x), (-100000,100000) , cstyle, linestyle = lstyle, label=self.linesname[k] )
@@ -314,8 +316,16 @@ class AViewPlot(object):
                         showLine = True
                         if showLine:
                             #pp.text(x, self.ymax*0.75, '{0}:{1:.2f}'.format(self.linesname[k], x))
-                            ax3.plot((x, x), (lpos+4, 10) , cstyle, linestyle = lstyle, label=self.linesname[k] )
+                            ax3.plot((x, x), (lpos+2, 10) , cstyle, linestyle = lstyle, label=self.linesname[k] )
                             annotation = ax3.text(x, lpos, '{0}'.format(self.linesname[k]), color=ccolor)
+                            if self.linestype[k]=='E':
+                                lposOffsetE += 1
+                                if lposOffsetE>3:
+                                    lposOffsetE=0
+                            elif self.linestype[k]=='A':
+                                lposOffsetA += 1
+                                if lposOffsetA>3:
+                                    lposOffsetA=0
                 elif lines_label_method==1: #new method with lineid_plot
                     line_wave.append(self.linesx[k])
                     
@@ -335,7 +345,33 @@ class AViewPlot(object):
             if lines_label_method==1:
                 
                 #pk['color'] = '#f89393'
-                lineid_plot.plot_line_ids(self.sxvect, [f+yrange*0.075 for f in self.syvect], line_wave, line_label, arrow_tip=self.ymax+yrange*self.ymax+yrange*limmargy_up/4.0, annotate_kwargs=ak, plot_kwargs=pk, ax=ax1)                
+                arrow_tip_position_abs = self.ymin-yrange*self.ymax-yrange*limmargy_up/4.0
+                arrow_tip_position_em = self.ymax+yrange*self.ymax+yrange*limmargy_up/4.0
+                
+                arrow_base_position_list_em = [f+yrange*0.075 for f in self.syvect]
+                arrow_base_position_list_abs = [f-yrange*0.075 for f in self.syvect]
+                print("arrow_base_position_list_em shape={}".format(len(arrow_base_position_list_em)))
+
+                arrow_tip_position_list = []
+                arrow_base_position_list = []                
+                for i, l in enumerate(line_wave):
+                    if 1:#line_type[i]=='E':                    
+                        tip = arrow_tip_position_em
+                        base = arrow_base_position_list_em[i]
+                    else:
+                        tip = arrow_tip_position_abs
+                        base = arrow_base_position_list_abs[i]
+                        
+                    arrow_tip_position_list.append(tip)
+                    arrow_base_position_list.append(base)
+                
+                print("arrow_base_position_list shape={}".format(len(arrow_base_position_list)))
+                lineid_plot.plot_line_ids(self.sxvect,
+                                            arrow_base_position_list_em,
+                                            line_wave, line_label, 
+                                            arrow_tip=arrow_tip_position_em, 
+                                            annotate_kwargs=ak, plot_kwargs=pk, 
+                                            ax=ax1)                
  
                 for i in ax1.texts:
                     tag = i.get_label()
@@ -494,6 +530,9 @@ class AViewPlot(object):
             pp.savefig( outFigFile)
             #pp.savefig('ExempleTrace') # sauvegarde du fichier ExempleTrace.png
             #pp.tight_layout()
+        elif enableReturnFig:
+            #gs.tight_layout(fig)
+            return fig
         else:
             print("INFO: showing figure")
             pp.show()

@@ -38,11 +38,11 @@ def file_len(fname):
     else:
         return 0
         
-class AProcessGui(QtGui.QMainWindow):
+class AProcessGui(QtGui.QWidget):
     def __init__(self, obj):
         super(AProcessGui, self).__init__()
         self.obj = obj
-        wdg = QtGui.QWidget()
+        wdg = self#QtGui.QWidget()
         layout = QtGui.QGridLayout(wdg)    
         
         #some directories settings
@@ -170,8 +170,8 @@ class AProcessGui(QtGui.QMainWindow):
         layout.addWidget(self.lblMethodCombo, layoutRow, 0, 1, 1)
         self.cbMethod = QtGui.QComboBox()
         self.cbMethod.addItem("linemodel")
-        self.cbMethod.addItem("chi2")
-        self.cbMethod.addItem("amazed0_2")
+        self.cbMethod.addItem("chisquare2solve")
+        #self.cbMethod.addItem("amazed0_2")
         self.cbMethod.currentIndexChanged.connect(self.cb_method_selectionchange)
         layout.addWidget(self.cbMethod, layoutRow, 1, 1, 1)  
         
@@ -297,7 +297,8 @@ class AProcessGui(QtGui.QMainWindow):
         #self.progress.setGeometry(200, 80, 250, 20)
 
  
-        self.setCentralWidget(wdg)
+        #self.setCentralWidget(wdg)
+        self.setLayout(layout)        
         self.setWindowTitle('AProcess')        
 
         
@@ -351,7 +352,7 @@ class AProcessGui(QtGui.QMainWindow):
         self.leProcThreadCount.setText("1") 
         self.btnShow.setEnabled(False)
             
-        wdg.setStyleSheet("*[coloredcell=\"true\"] {background-color:rgb(225,225,225);}")
+        wdg.setStyleSheet("*[coloredcell=\"true\"] {background-color:rgb(215,215,215);}")
         self.show()
         
     def enableCtrls(self, val):
@@ -799,8 +800,8 @@ class AProcessGui(QtGui.QMainWindow):
         
     def bt_show(self):
         frefpath = os.path.join(self.m_tmpDirPath, "ref_tmp.txt")
-        ex = aviewgui.AViewGui(self.obj, self.m_outputPath, frefpath)
-        ex.show()
+        self.aviewWindow = aviewgui.AViewGui(parent=None, init_resdir=self.m_outputPath, init_refpath=frefpath)
+        self.aviewWindow.show()
         return
         
 def main():
