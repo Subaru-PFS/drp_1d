@@ -227,6 +227,50 @@ Bool CRayCatalog::Load( const char* filePath )
     return true;
 }
 
+Bool CRayCatalog::Save( const char* filePath )
+{
+    ofstream file;
+    file.open( filePath, ofstream::out );
+    if( file.rdstate() & ios_base::failbit )
+    {
+        return false;
+    }
+
+    file << "#version:0.3.0" << std::endl;
+    file << "#Lambda" << "\t" << "Name" << "\t" << "Type" << "\t" << std::endl;
+    for( int i = 0; i< m_List.size(); i++ )
+    {
+        file << m_List[i].GetPosition() << "\t";
+        file << m_List[i].GetName() << "\t";
+        if(m_List[i].GetType() == 1)
+        {
+            file << "A" << "\t";
+        }else
+        {
+            file << "E" << "\t";
+        }
+
+        if(m_List[i].GetForce() == 1)
+        {
+            file << "W" << "\t";
+        }else
+        {
+            file << "S" << "\t";
+        }
+        file << m_List[i].GetProfile() << "\t";
+
+        if(m_List[i].GetGroupName()!="-1")
+        {
+            file << m_List[i].GetGroupName() << "\t";
+            file << m_List[i].GetNominalAmplitude();
+        }
+        file << std::endl;
+
+    }
+
+    return true;
+}
+
 void CRayCatalog::Sort()
 {
     sort(m_List.begin(), m_List.end());
