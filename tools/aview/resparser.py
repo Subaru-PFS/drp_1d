@@ -23,6 +23,7 @@ class ResParser(object):
         self.redshiftpath = os.path.join(self.respath,"redshift.csv")
         self.configpath = os.path.join(self.respath,"config.txt") 
         self.parameterspath = os.path.join(self.respath,"parameters.json") 
+        self.linecatalogpath = os.path.join(self.respath,"linecatalog.txt") 
         # template categories
         self.config_tplCategories = ['emission', 'galaxy', 'qso', 'star']
         # in stats directory
@@ -414,90 +415,16 @@ class ResParser(object):
         """
         This function retrieves the candidate params for a given spectrum and a given extrema_index
         returned tuple: (z, tplPath, forceTplAmplitude, forceTplDoNotRedShift) 
-        NB: if idxExtrema==-1, then a list for all extrema available is provided
-        #TODO: use getAutoCandidatesList inside this function !
         """ 
-        if os.path.splitext(spcnametag)[1].lower()==".fits":
-            spcnametag = os.path.splitext(spcnametag)[0]
-        method = self.getConfigVal('method')
-        print("method found in config is: {}".format(method))
-        path = os.path.join(self.respath, spcnametag)
-
-        redshift = -1
-        tplpath = ""
-        forceTplAmplitude = -1
-        forceTplDoNotRedShift = 0
-        if method == "linemodel":
-            #find redshift
-            [chipathlist, chinamelist] = self.getAutoChi2FullPath(spcnametag)
-            chi = chisq.ResultChisquare(chipathlist[0], stype=os.path.splitext(chinamelist[0])[0])
-            redshift = chi.getExtrema(idxExtrema)
-            
-            name = "linemodelsolve.linemodel_spc_extrema_{}.csv".format(idxExtrema)
-            tplpath = os.path.join(path,name)
-            forceTplAmplitude = 1
-            forceTplDoNotRedShift = 1
-        elif method == "linemodeltplshape":
-            if 1:
-                zList, meritList, tplList, ampsList = self.getCandidatesFromAmazedChi2Extrema(spcnametag, chi2Type=method) 
-                pathTplChi = os.path.join(path, tplList[idxExtrema])
-                name = "linemodeltplshapesolve.linemodel_spc_extrema_{}.csv".format(0) #WARNING: TODO: spc extrema idx should vary wr to the extraction done in getCandidatesFromAmazedChi2Extrema()
-                tplpath = os.path.join(pathTplChi,name)
-                redshift = zList[idxExtrema]
-                forceTplAmplitude = 1
-                forceTplDoNotRedShift = 1
-                
-                print("\nDEBUG: Candidates found:")
-                for k in range(len(zList)):
-                    print("cand. #{}: z={:15}, merit={:15}, tpl={:25}, amp={:25}".format(k, zList[k], meritList[k], tplList[k], ampsList[k]))
-                print("\n")
-        elif method == "decisionaltreeb" or method.lower() == "amazed0_2":
-            #find redshift
-            [chipathlist, chinamelist] = self.getAutoChi2FullPath(spcnametag)
-            chi = chisq.ResultChisquare(chipathlist[3], stype=os.path.splitext(chinamelist[3])[0]) #3st chipath for linemodel
-            redshift = chi.getExtrema(idxExtrema)
-            
-            name = "dtreeBsolve.linemodel_spc_extrema_{}.csv".format(idxExtrema)
-            tplpath = os.path.join(path,name)
-            #tplpath = ""            
-            forceTplAmplitude = 1
-            forceTplDoNotRedShift = 1
-#        elif method.lower() == "amazed0_2":
-#            if idxExtrema==-1:
-#                tplnametag = self.getRedshiftTpl(spcnametag)
-#                tplpath = self.getTplFullPath(tplnametag)
-#                forceTplAmplitude = 0
-#            else:
-#                spcComponent = "nocontinuum" 
-#                zList, meritList, tplList, ampsList = self.getCandidatesFromAmazedChi2Extrema(spcnametag, chi2Type=spcComponent) 
-#                tplpath = self.getTplFullPath(tplList[idxExtrema])
-#                redshift = zList[idxExtrema]
-#                forceTplAmplitude = ampsList[idxExtrema]
-#                print("\nDEBUG: Candidates found:")
-#                for k in range(len(zList)):
-#                    print("cand. #{}: z={:15}, merit={:15}, tpl={:25}, amp={:25}".format(k, zList[k], meritList[k], tplList[k], ampsList[k]))
-#                print("\n")
-#            
-#            forceTplDoNotRedShift = 0
-        elif method == "chisquaresolve" or method == "chisquare2solve":
-            if idxExtrema==-1:
-                tplnametag = self.getRedshiftTpl(spcnametag)
-                tplpath = self.getTplFullPath(tplnametag)
-                forceTplAmplitude = 0
-            else:
-                spcComponent = self.getParameterVal(method, 'spectrum', 'component') 
-                zList, meritList, tplList, ampsList = self.getCandidatesFromAmazedChi2Extrema(spcnametag, chi2Type=spcComponent) 
-                tplpath = self.getTplFullPath(tplList[idxExtrema])
-                redshift = zList[idxExtrema]
-                forceTplAmplitude = ampsList[idxExtrema]
-                print("\nDEBUG: Candidates found:")
-                for k in range(len(zList)):
-                    print("cand. #{}: z={:15}, merit={:15}, tpl={:25}, amp={:25}".format(k, zList[k], meritList[k], tplList[k], ampsList[k]))
-                print("\n")
-            
-            forceTplDoNotRedShift = 0
-            
+        
+        zvalCandidates, tplpathCandidates, forceTplAmplitudeCandidates, forceTplDoNotRedShiftCandidates = self.getAutoCandidatesList(spcnametag)
                     
+        redshift = zvalCandidates[idxExtrema]
+        tplpath = tplpathCandidates[idxExtrema]
+        forceTplAmplitude = forceTplAmplitudeCandidates[idxExtrema]
+        forceTplDoNotRedShift = forceTplDoNotRedShiftCandidates[idxExtrema]
+        
+                
         return redshift, tplpath, forceTplAmplitude, forceTplDoNotRedShift
         
     
@@ -631,7 +558,8 @@ class ResParser(object):
     def getCatalogFullPath(self):
         """
         """
-        strVal = self.getConfigVal('linecatalog')
+        #strVal = self.getConfigVal('linecatalog') #deprecated, this is the input catalog, now using the one saved by the pipeline at each run
+        strVal = self.linecatalogpath
         return strVal
     
     def getContinuumRelevancePath(self, spcnametag):
@@ -657,7 +585,7 @@ class ResParser(object):
     def getAutoChi2FullPath(self, spcnametag, tplnametag=""):
         """
         This function returns the chi2 full path for a spectrum-template pair,
-        The template is selected from the best redshift found by Amazed (in redshift.csv) 
+        The template is selected from the best redshift found by Amazed (in redshift.csv), if not given as input
         """ 
         if os.path.splitext(spcnametag)[1].lower()==".fits":
             spcnametag = os.path.splitext(spcnametag)[0]

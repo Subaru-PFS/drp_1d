@@ -46,7 +46,7 @@ class AProcessGui(QtGui.QWidget):
         layout = QtGui.QGridLayout(wdg)    
         
         #some directories settings
-        self.m_tmpDirPath = "/home/aschmitt/tmp"
+        self.m_tmpDirPath = "/var/tmp/amazed"
         print("ProcessGui: using tmp path = {}".format(self.m_tmpDirPath))
         if os.path.exists(self.m_tmpDirPath):
             shutil.rmtree(self.m_tmpDirPath) 
@@ -303,7 +303,8 @@ class AProcessGui(QtGui.QWidget):
 
         
         ### INITIAL POPULATE       
-        self.settings = QtCore.QSettings("amazed", "aprocessgui")                
+        self.settings = QtCore.QSettings("amazed", "aprocessgui")  
+        #self.settings.clear()              
         #Set spclist path from settings
         _spclistPath = self.settings.value("spclistPath").toString()
         self.leSpclist.setText(_spclistPath)      
@@ -361,7 +362,7 @@ class AProcessGui(QtGui.QWidget):
     def bt_setSpclist(self):
         tag = "setSpclist"
         _spclistDefault = os.path.abspath(str(self.leSpclist.text()))
-        _spclistDefault = _spclistDefault[:_spclistDefault.index(os.sep)] if os.sep in _spclistDefault else _spclistDefault
+        #_spclistDefault = _spclistDefault[:_spclistDefault.index(os.sep)] if os.sep in _spclistDefault else _spclistDefault
         
         _spclistPath = str(QtGui.QFileDialog.getOpenFileName(self, "Select File",_spclistDefault))
         if os.path.exists(_spclistPath):
@@ -506,7 +507,7 @@ class AProcessGui(QtGui.QWidget):
         _spcdirDefault = str(self.leSpcdir.text())
         if not os.path.exists(_spcdirDefault):
             _spcdirDefault = os.path.abspath(str(self.leSpcdir.text()))
-            _spcdirDefault = _spcdirDefault[:_spcdirDefault.index(os.sep)] if os.sep in _spcdirDefault else _spcdirDefault
+            #_spcdirDefault = _spcdirDefault[:_spcdirDefault.index(os.sep)] if os.sep in _spcdirDefault else _spcdirDefault
             
         _spcdirPath = str(QtGui.QFileDialog.getExistingDirectory(self, "Select File",_spcdirDefault))
         if os.path.exists(_spcdirPath):
@@ -531,7 +532,7 @@ class AProcessGui(QtGui.QWidget):
     def bt_setTpldir(self):
         tag = "setTpldir"
         _TpldirDefault = os.path.abspath(str(self.leTpldir.text()))
-        _TpldirDefault = _TpldirDefault[:_TpldirDefault.index(os.sep)] if os.sep in _TpldirDefault else _TpldirDefault
+        #_TpldirDefault = _TpldirDefault[:_TpldirDefault.index(os.sep)] if os.sep in _TpldirDefault else _TpldirDefault
         
         _TpldirPath = str(QtGui.QFileDialog.getExistingDirectory(self, "Select File",_TpldirDefault))
         if os.path.exists(_TpldirPath):
@@ -556,7 +557,7 @@ class AProcessGui(QtGui.QWidget):
     def bt_setParametersFilePath(self):
         tag = "setParametersFilePath"
         _MethodParametersDefault = os.path.abspath(str(self.leMethodParametersPath.text()))
-        _MethodParametersDefault = _MethodParametersDefault[:_MethodParametersDefault.index(os.sep)] if os.sep in _MethodParametersDefault else _MethodParametersDefault
+        #_MethodParametersDefault = _MethodParametersDefault[:_MethodParametersDefault.index(os.sep)] if os.sep in _MethodParametersDefault else _MethodParametersDefault
         
         _MethodParametersPath = str(QtGui.QFileDialog.getOpenFileName(self, "Select File",_MethodParametersDefault))
         if os.path.exists(_MethodParametersPath):
@@ -593,8 +594,9 @@ class AProcessGui(QtGui.QWidget):
     def bt_setLinecatalogFilePath(self):
         tag = "setLinecatalogFilePath"
         _linecatalogDefault = os.path.abspath(str(self.leLinecatalog.text()))
-        _linecatalogDefault = _linecatalogDefault[:_linecatalogDefault.index(os.sep)] if os.sep in _linecatalogDefault else _linecatalogDefault
-        
+        #_linecatalogDefault = _linecatalogDefault[:_linecatalogDefault.index(os.sep)] if os.sep in _linecatalogDefault else _linecatalogDefault
+        #print("default path = {}".format(_linecatalogDefault))
+                
         _linecatalogPath = str(QtGui.QFileDialog.getOpenFileName(self, "Select File",_linecatalogDefault))
         if os.path.exists(_linecatalogPath):
             #check the diff file is present, if not, do something...

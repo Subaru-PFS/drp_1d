@@ -325,7 +325,7 @@ class AViewGui(QtGui.QWidget):
         _failureindex = "0"
         aview.plotRes(_resDir, _spcName, _tplpath, _redshift, _iextremaredshift, _diffthres, _failureindex)
 
-
+    #not used, this just calls the aview command line interface
     def bt_showResult(self):
         _resDir = str(self.leResDir.text())
         
@@ -350,6 +350,7 @@ class AViewGui(QtGui.QWidget):
             _diffthres = -1
         _failureindex = "0"
         aview.plotRes(_resDir, _spcName, _tplpath, _redshift, _iextremaredshift, _diffthres, _failureindex)
+        
         
     def bt_showAViewWidget(self):
         

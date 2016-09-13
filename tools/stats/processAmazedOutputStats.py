@@ -79,7 +79,7 @@ def setKeckRefFileType():
     iRefID = 3
     iRefZ = 1
     iRefMag = 2
-    iRefFlag = -1
+    iRefFlag = 7
     iRefSFR = 5
     iRefEBmV = 4
     iRefSigma = 6
@@ -447,7 +447,8 @@ def loadRef(fname, reftype):
                     d4 = float(data[4])
                     d5 = float(data[5])
                     d6 = float(data[6])
-                    d = [d0, d1, d2, d3, d4, d5, d6]
+                    d7 = float(data[7])
+                    d = [d0, d1, d2, d3, d4, d5, d6, d7]
                     dataArray.append(d) 
             elif reftype=="simulm":
                 if(len(data) >= 8): #SIMULM
@@ -1026,7 +1027,7 @@ def StartFromCommandLine( argv ) :
     parser.add_option(u"-t", u"--type", help="reference redshift values type, choose between 'vvds1', 'vvds2' or 'pfs', 'vuds', 'simulm', 'simueuclid2016'",  dest="type", default="vvds")
     parser.add_option(u"-d", u"--diff", help="diff file (overrides the use of --ref, --calc and --type)",  dest="diffFile", default="")
     
-    parser.add_option(u"-m", u"--magRange", help="magnitude range filter for the histograms",  dest="magRange", default="0.0 50.0")
+    parser.add_option(u"-m", u"--magRange", help="magnitude range filter for the histograms",  dest="magRange", default="-1.0 50.0")
     parser.add_option(u"-s", u"--sfrRange", help="sfr range filter for the histograms",  dest="sfrRange", default="-1.0 10000.0")
     parser.add_option(u"-z", u"--zRange", help="redshift range filter for the histograms",  dest="zRange", default="-1.0 20.0")
 
@@ -1103,10 +1104,10 @@ def StartFromCommandLine( argv ) :
             zRange = [-1.0, 20.0]
             zRange[0] = float(options.zRange.split(" ")[0])
             zRange[1] = float(options.zRange.split(" ")[1])
-            magRange = [0.0, 40.0]
+            magRange = [-1.0, 40.0]
             magRange[0] = float(options.magRange.split(" ")[0])
             magRange[1] = float(options.magRange.split(" ")[1])
-            sfrRange = [0.0, 10000.0]
+            sfrRange = [-1.0, 10000.0]
             sfrRange[0] = float(options.sfrRange.split(" ")[0])
             sfrRange[1] = float(options.sfrRange.split(" ")[1])        
             ProcessStats( outputFullpathDiff, zRange, magRange, sfrRange )

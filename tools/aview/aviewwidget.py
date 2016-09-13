@@ -332,7 +332,10 @@ class AViewWidget(QtGui.QWidget):
         #tpath = "/home/aschmitt/tmp/output/sc_530002397_F53P002_join_A_125_1_atm_clean/linemodelsolve.linemodel_spc_extrema_0.csv"
         tpath = tplpathCandidate
         
-        cpath = "/home/aschmitt/data/vuds/VUDS_flag3_4/amazed/linecatalogs/linecatalogamazedvacuum_B10I.txt"
+        cpath = self.resParser.getCatalogFullPath()
+        if not os.path.exists(cpath):
+            print("{}: ERROR: linecatalog file not found, please check : {}".format(tag, cpath))
+            
         if zManual==-1:
             z = zvalCandidate
         else:
