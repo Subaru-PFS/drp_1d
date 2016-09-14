@@ -46,12 +46,15 @@ class AProcessGui(QtGui.QWidget):
         layout = QtGui.QGridLayout(wdg)    
         
         #some directories settings
-        self.m_tmpDirPath = "/var/tmp/amazed"
-        print("ProcessGui: using tmp path = {}".format(self.m_tmpDirPath))
-        if os.path.exists(self.m_tmpDirPath):
-            shutil.rmtree(self.m_tmpDirPath) 
-        os.mkdir(self.m_tmpDirPath) 
-        self.m_outputPath = os.path.join(self.m_tmpDirPath, "output")        
+        self.m_workspace = "/var/tmp/amazed"
+        print("ProcessGui: using workspace = {}".format(self.m_workspace))
+        if os.path.exists(self.m_workspace):
+            shutil.rmtree(self.m_workspace) 
+        os.mkdir(self.m_workspace) 
+        self.m_outputPath = os.path.join(self.m_workspace, "output")  
+        self.amazed_bin_path = "/home/aschmitt/gitlab/amazed/bin/amazed-0.0.0"
+        print("ProcessGui: using amazed bin path = {}".format(self.amazed_bin_path))
+        print("\n")
         
         layoutRow = 0
         separator_height = 20        
@@ -164,6 +167,14 @@ class AProcessGui(QtGui.QWidget):
             layout.addWidget(lbl, layoutRow, i, 1, 1)         
  
 
+        #Add the import config button        
+        layoutRow += 1
+        self.btnImportFromConfigFile = QtGui.QPushButton(' Import ', wdg)
+        self.btnImportFromConfigFile.setToolTip('Import config/parameters from existing config.txt file')
+        self.btnImportFromConfigFile.clicked.connect(self.bt_importConfigFile)
+        layout.addWidget(self.btnImportFromConfigFile, layoutRow, 0, 1, 1)  
+         
+
         #Add the method selection        
         layoutRow += 1
         self.lblMethodCombo = QtGui.QLabel('Method', wdg)
@@ -273,18 +284,36 @@ class AProcessGui(QtGui.QWidget):
             lbl.setProperty("coloredcell", True)
             layout.addWidget(lbl, layoutRow, i, 1, 1)         
  
+        #Add the processing settings buttons : amazed bin selection 
+        layoutRow += 1
+        self.layoutProcessLeftCol= QtGui.QVBoxLayout()
+        self.btnSetWorkDirPath = QtGui.QPushButton(' Workspace ', wdg)
+        self.btnSetWorkDirPath.setToolTip('Set the working directory (ex: /usr/tmp/amazed)')
+        self.btnSetWorkDirPath.clicked.connect(self.bt_setWorkspace)
+        self.layoutProcessLeftCol.addWidget(self.btnSetWorkDirPath) 
+        
+        self.btnSetAmazedBinPath = QtGui.QPushButton(' Amazed Bin Path ', wdg)
+        self.btnSetAmazedBinPath.setToolTip('Set AMAZED bin path (ex: /home/user/amazed/amazed-0.2.5)')
+        self.btnSetAmazedBinPath.clicked.connect(self.bt_setAmazedBinPath)
+        self.layoutProcessLeftCol.addWidget(self.btnSetAmazedBinPath) 
+        
+        self.btnPrintAmazedUsage = QtGui.QPushButton(' Amazed usage ', wdg)
+        self.btnPrintAmazedUsage.setToolTip('Print AMAZED usage in the console')
+        self.btnPrintAmazedUsage.clicked.connect(self.bt_printAmazedBinUsage)
+        self.layoutProcessLeftCol.addWidget(self.btnPrintAmazedUsage) 
+        layout.addLayout(self.layoutProcessLeftCol, layoutRow, 0, 1, 1)
+        
         
         #Add the process button
-        layoutRow += 1
         self.btnProcess = QtGui.QPushButton('Start Processing', wdg)
         self.btnProcess.setFixedWidth(500)
-        self.btnProcess.setFixedHeight(50)
+        self.btnProcess.setFixedHeight(100)
         self.btnProcess.clicked.connect(self.bt_process)
         self.btnProcess.setToolTip('Process with the selected parameters/configuration...')
         layout.addWidget(self.btnProcess, layoutRow, 1, 1, 1)
 
         self.btnShow = QtGui.QPushButton('AView', wdg)
-        self.btnShow.setFixedHeight(50)
+        self.btnShow.setFixedHeight(100)
         self.btnShow.clicked.connect(self.bt_show)
         self.btnShow.setToolTip('Start aview to display the results')
         layout.addWidget(self.btnShow, layoutRow, 2, 1, 1)
@@ -304,7 +333,7 @@ class AProcessGui(QtGui.QWidget):
         
         ### INITIAL POPULATE       
         self.settings = QtCore.QSettings("amazed", "aprocessgui")  
-        #self.settings.clear()              
+        self.settings.clear()              
         #Set spclist path from settings
         _spclistPath = self.settings.value("spclistPath").toString()
         self.leSpclist.setText(_spclistPath)      
@@ -509,7 +538,7 @@ class AProcessGui(QtGui.QWidget):
             _spcdirDefault = os.path.abspath(str(self.leSpcdir.text()))
             #_spcdirDefault = _spcdirDefault[:_spcdirDefault.index(os.sep)] if os.sep in _spcdirDefault else _spcdirDefault
             
-        _spcdirPath = str(QtGui.QFileDialog.getExistingDirectory(self, "Select File",_spcdirDefault))
+        _spcdirPath = str(QtGui.QFileDialog.getExistingDirectory(self, "Select Spectrum Directory",_spcdirDefault))
         if os.path.exists(_spcdirPath):
             #check the diff file is present, if not, do something...
             print("{}: _spcdirPath = {}".format(tag, _spcdirPath))
@@ -528,13 +557,73 @@ class AProcessGui(QtGui.QWidget):
         self.settings.setValue("spcDirPath", _spcDirPathPrevious);
         self.enableCtrls(True) 
         
+       
+    def bt_importConfigFile(self):
+        tag = "bt_importConfigFile"
+        
+        _configFilePathDefault = "/home/aschmitt/Documents/amazed/amazed_v0.2_implementation/data-0.2.4/config_example.txt"
+        #_TpldirDefault = _TpldirDefault[:_TpldirDefault.index(os.sep)] if os.sep in _TpldirDefault else _TpldirDefault
+        
+        _configFilePath = str(QtGui.QFileDialog.getOpenFileName(self, "Select config.txt file",_configFilePathDefault))
+        _configFileDir = os.path.split(_configFilePath)[0]
+        print("config dir = {}".format(_configFileDir))
+        
+        if not os.path.exists(_configFilePath):
+            print("{}: ERROR, config file does not exist!".format(tag))
+            return
+            
+        print("{}: importing from {}".format(tag, _configFilePath))
+        f = open(_configFilePath)
+        for line in f:
+            lineStr = line.strip()
+            if not lineStr.startswith('#'):
+                valStr = ""
+                #print lineStr
+                keyword = "method="
+                if keyword in lineStr:
+                    valStr = lineStr.replace(keyword, "")
+                    print("{}: Found {} {}".format(tag, keyword, valStr))
+                    methodSet = False
+                    for count in range(self.cbMethod.count()):
+                        if valStr.lower() == str(self.cbMethod.itemText(count)).lower():
+                            self.cbMethod.setCurrentIndex(count)
+                            methodSet = True
+                            break
+                    if not methodSet:
+                        print("{}: ERROR unable to set the method ({}) from config file".format(tag, valStr))
+                            
+                keyword = "linecatalog="
+                if keyword in lineStr:
+                    valStr = lineStr.replace(keyword, "")
+                    print("{}: Found {} {}".format(tag, keyword, valStr))
+                    lcatPath = os.path.abspath(os.path.join(_configFileDir, valStr))
+                    self.leLinecatalog.setText(lcatPath)
+                keyword = "linecatalog-convert="
+                if keyword in lineStr:
+                    valStr = lineStr.replace(keyword, "")
+                    print("{}: Found {} {}".format(tag, keyword, valStr))
+                keyword = "parameters="
+                if keyword in lineStr:
+                    valStr = lineStr.replace(keyword, "")
+                    print("{}: Found {} {}".format(tag, keyword, valStr))
+                    lcatPath = os.path.abspath(os.path.join(_configFileDir, valStr))
+                    self.leMethodParametersPath.setText(lcatPath)
+                keyword = "templatedir="
+                if keyword in lineStr:
+                    valStr = lineStr.replace(keyword, "")
+                    print("{}: Found {} {}".format(tag, keyword, valStr))
+                    lcatPath = os.path.abspath(os.path.join(_configFileDir, valStr))
+                    self.leTpldir.setText(lcatPath)
+
+                
+        f.close()
    
     def bt_setTpldir(self):
         tag = "setTpldir"
         _TpldirDefault = os.path.abspath(str(self.leTpldir.text()))
         #_TpldirDefault = _TpldirDefault[:_TpldirDefault.index(os.sep)] if os.sep in _TpldirDefault else _TpldirDefault
         
-        _TpldirPath = str(QtGui.QFileDialog.getExistingDirectory(self, "Select File",_TpldirDefault))
+        _TpldirPath = str(QtGui.QFileDialog.getExistingDirectory(self, "Select Templates directory",_TpldirDefault))
         if os.path.exists(_TpldirPath):
             #check the diff file is present, if not, do something...
             print("{}: _TpldirPath = {}".format(tag, _TpldirPath))
@@ -628,7 +717,38 @@ class AProcessGui(QtGui.QWidget):
         for count in range(self.cbMethod.count()):
             print("    {}".format(self.cbMethod.itemText(count)))
         print("{}: Current index = {}, selection changed to {}".format(tag, i, self.cbMethod.currentText()))
+
+    def bt_setWorkspace(self):
+        tag = "bt_setWorkspace"
+        _wokspaceDefault = self.m_workspace
         
+        _workspace = str(QtGui.QFileDialog.getExistingDirectory(self, "Select working directory",_wokspaceDefault))
+        if os.path.exists(_workspace):
+            self.m_workspace = _workspace
+        else:
+            print("{}: ERROR: Unable to set workspace {}".format(tag, _workspace))
+        
+        print("{}: Using workspace : {}".format(tag, self.m_workspace))       
+    
+    def bt_setAmazedBinPath(self):
+        tag = "bt_setAmazedBinPath"
+        
+        print("{}: Using amazed_bin_path : {}".format(tag, self.amazed_bin_path))
+        _amazedBinPathDefault = self.amazed_bin_path
+        #_TpldirDefault = _TpldirDefault[:_TpldirDefault.index(os.sep)] if os.sep in _TpldirDefault else _TpldirDefault
+        
+        _amazedBinPath = str(QtGui.QFileDialog.getOpenFileName(self, "Select AMAZED binary (amazed-x-x-x)",_amazedBinPathDefault))
+        if os.path.exists(_amazedBinPath):
+            self.amazed_bin_path = _amazedBinPath
+        else:
+            print("{}: ERROR: Unable to set amazed_bin_path {}".format(tag, _amazedBinPath))
+        
+        print("{}: Using amazed_bin_path : {}".format(tag, self.amazed_bin_path))
+        
+    def bt_printAmazedBinUsage(self):
+        tag = "bt_printAmazedBinUsage"
+        bashCommand = "{} -h".format(self.amazed_bin_path)
+        os.system(bashCommand) 
 
     def bt_process(self):
         tag = ""
@@ -664,13 +784,17 @@ class AProcessGui(QtGui.QWidget):
         return
         
     def getProgress(self):
+
+        config_output_fname = os.path.join(self.m_workspace, "output/config.txt".format())  
+        if os.path.exists(config_output_fname):
+            return 100.0
         
         if self.ckSpclist.isChecked():
             _spclistPath = str(self.leSpclist.text())
         else:
             _spclistPath = self.createSpcListFromSpcNoiseFits()
             
-        calc_fname = os.path.join(self.m_tmpDirPath, "output/redshift.csv".format())
+        calc_fname = os.path.join(self.m_workspace, "output/redshift.csv".format())
         nProcessedSpectra = file_len(calc_fname)
         nToProcessSpectra = file_len(_spclistPath)
         progressPercentage = float(nProcessedSpectra)/float(nToProcessSpectra)*100.0
@@ -686,7 +810,7 @@ class AProcessGui(QtGui.QWidget):
         _noisePath = str(self.leNoiseFits.text())
 
 
-        spclistPath = os.path.join(self.m_tmpDirPath, "spclist.spectrumlist")
+        spclistPath = os.path.join(self.m_workspace, "spclist.spectrumlist")
         f = open(spclistPath, 'w')
         f.write("{}\t{}".format(_spcPath, _noisePath))
         f.close()
@@ -758,7 +882,7 @@ class AProcessGui(QtGui.QWidget):
     def saveConfigFile(self):
         tag = "saveConfigFile"
         _str = self.prepareConfigString()
-        configFilePath = os.path.join(self.m_tmpDirPath, "config_tmp.txt")
+        configFilePath = os.path.join(self.m_workspace, "config_tmp.txt")
         f = open(configFilePath, 'w')
         f.write(_str)
         f.close()
@@ -784,7 +908,7 @@ class AProcessGui(QtGui.QWidget):
                 _strRef += "{}\t-1\t-1\t-1\t-1\t-1\t-1\t-1\t-1\t-1\t-1\t-1\t-1\t-1\n".format(dataname)
         f.close()
         
-        fPath = os.path.join(self.m_tmpDirPath, "ref_tmp.txt")
+        fPath = os.path.join(self.m_workspace, "ref_tmp.txt")
         fref = open(fPath, 'w')
         fref.write(_strRef)
         fref.close()
@@ -797,11 +921,11 @@ class AProcessGui(QtGui.QWidget):
         t.start()
     
     def execAmazedFcn(self, config_fname):
-        bashCommand = "~/gitlab/amazed/bin/amazed-0.0.0 -c {}".format(config_fname)
+        bashCommand = "{} -c {}".format(self.amazed_bin_path, config_fname)#self.amazed_bin_path = "~/gitlab/amazed/bin/amazed-0.0.0"
         os.system(bashCommand) 
         
     def bt_show(self):
-        frefpath = os.path.join(self.m_tmpDirPath, "ref_tmp.txt")
+        frefpath = os.path.join(self.m_workspace, "ref_tmp.txt")
         self.aviewWindow = aviewgui.AViewGui(parent=None, init_resdir=self.m_outputPath, init_refpath=frefpath)
         self.aviewWindow.show()
         return
