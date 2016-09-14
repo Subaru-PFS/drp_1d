@@ -31,9 +31,9 @@ class Catalog(object):
         self.linegroup = -1
         self.linenominalamp = -1
         
-        self.conversion = "toAir"
+        #self.conversion = "toAir"
         #self.conversion = "toVacuum"#"toAir"
-        #self.conversion = ""
+        self.conversion = ""
         
         self.load()
         

@@ -65,6 +65,8 @@ public:
     void fitWithModelSelection(Float64 redshift, const TFloat64Range& lambdaRange, CLineModelResult::SLineModelSolution &modelSolution);
     void SetFittingMethod(std::string fitMethod);
 
+    Float64 GetRedshift();
+
     void reinitModel();
     void refreshModel();
     void reinitModelUnderElements(std::vector<Int32> filterEltsIdx, Int32 lineIdx=-1 );

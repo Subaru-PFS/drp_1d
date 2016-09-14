@@ -2487,6 +2487,12 @@ Float64 CLineModelElementList::GetVelocitySup()
     return 800.0;
 }
 
+
+Float64 CLineModelElementList::GetRedshift()
+{
+    return m_Redshift;
+}
+
 Int32 CLineModelElementList::ApplyVelocityBound()
 {
 
