@@ -325,30 +325,22 @@ class AProcessGui(QtWidgets.QWidget):
         #self.settings.clear() 
 
         #some directories settings
-        _workspace = str(self.settings.value("workspacePath"))
-        if not (_workspace=="None" or _workspace==""):
-            self.bt_setWorkspace(_workspace)   
-        else:
-            self.bt_setWorkspace("/var/tmp/amazed")
-        #print("ProcessGui: using workspace = {}".format(self.m_workspace))
- 
+        _workspace = self.settings.value("workspacePath", defaultValue = "/var/tmp/amazed", type=str)
+        self.bt_setWorkspace(_workspace)    
          
-        self.amazed_bin_path = "/home/aschmitt/gitlab/amazed/bin/amazed-0.0.0"
-        _amazed_bin_path = str(self.settings.value("amazedBinPath"))
-        if not (_amazed_bin_path=="None" or _amazed_bin_path=="") :
-            self.bt_setAmazedBinPath(_amazed_bin_path)
-        else:
-            self.bt_setAmazedBinPath("/home/aschmitt/gitlab/amazed/bin/amazed-0.0.0") 
-        #print("ProcessGui: using amazed bin path = {}".format(self.amazed_bin_path))
+        _amazed_bin_path = self.settings.value("amazedBinPath", defaultValue = "/home/aschmitt/gitlab/amazed/bin/amazed-0.0.0", type=str)
+        self.bt_setAmazedBinPath(_amazed_bin_path)
         print("\n")
              
         #Set spclist path from settings
-        _spclistPath = self.settings.value("spclistPath")
-        self.leSpclist.setText(_spclistPath)      
-        if _spclistPath=="":
-            self.enableCtrls(False)
-        _spcDirPath = self.settings.value("spcDirPath")
-        self.leSpcdir.setText(_spcDirPath) 
+        _spclistPath = self.settings.value("spclistPath", defaultValue="", type=str)
+        print("Settings: _spclistPath = {}".format(_spclistPath))
+        self.setSpclist(_spclistPath)
+            
+        _spcDirPath = self.settings.value("spcDirPath", defaultValue="", type=str)
+        print("Settings: _spcDirPath = {}".format(_spcDirPath))
+        self.setSpcdir(_spcDirPath)
+        
         _ck_useSpcList = self.settings.value("enableSpectrumlist")
         _ck_useSpcListBool = _ck_useSpcList=="True"
         if _ck_useSpcListBool:        
@@ -359,9 +351,11 @@ class AProcessGui(QtWidgets.QWidget):
             self.ckSpcFits.toggle()
             self.ckSpcFits.toggle()
             self.ckSpcFits.toggle()
-        _spcFitsPath = self.settings.value("spcFitsPath")
-        self.leSpcFits.setText(_spcFitsPath)
-        _noiseFitsPath = self.settings.value("noiseFitsPath")
+        _spcFitsPath = self.settings.value("spcFitsPath", defaultValue="", type=str)
+        print("Settings: _spcFitsPath = {}".format(_spcFitsPath))
+        self.setSpcFits(_spcFitsPath)
+        
+        _noiseFitsPath = self.settings.value("noiseFitsPath", defaultValue="", type=str)
         self.leNoiseFits.setText(_noiseFitsPath) 
         
             
@@ -397,11 +391,18 @@ class AProcessGui(QtWidgets.QWidget):
         return
    
     def bt_setSpclist(self):
+        self.setSpclist()
+           
+    def setSpclist(self, newPath=None):
         tag = "setSpclist"
-        _spclistDefault = os.path.abspath(str(self.leSpclist.text()))
-        #_spclistDefault = _spclistDefault[:_spclistDefault.index(os.sep)] if os.sep in _spclistDefault else _spclistDefault
-        
-        _spclistPath, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Select File",_spclistDefault)
+        if newPath==None:
+            _spclistDefault = os.path.abspath(str(self.leSpclist.text()))
+            #_spclistDefault = _spclistDefault[:_spclistDefault.index(os.sep)] if os.sep in _spclistDefault else _spclistDefault
+            
+            _spclistPath, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Select File",_spclistDefault)
+        else:
+            _spclistPath = newPath
+            
         if os.path.exists(_spclistPath):
             #check the diff file is present, if not, do something...
             print("{}: _spclistPath = {}".format(tag, _spclistPath))
@@ -439,15 +440,23 @@ class AProcessGui(QtWidgets.QWidget):
                 self.ckSpcFits.toggle()
         
             
-   
     def bt_setSpcFits(self):
+        self.setSpcFits()
+        
+    def setSpcFits(self, newName=None):
         tag = "setSpcFits"
         
         _spcDirPath = str(self.leSpcdir.text())
-        _SpcFitsDefault = _spcDirPath
+            
+        if newName==None:
+            _SpcFitsDefault = _spcDirPath
+            
+            _SpcFitsPath, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Select File",_SpcFitsDefault)
+            _SpcFitsName = os.path.split(_SpcFitsPath)[1]
+        else:
+            _SpcFitsName = newName
+            
         
-        _SpcFitsPath, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Select File",_SpcFitsDefault)
-        _SpcFitsName = os.path.split(_SpcFitsPath)[1]
         _SpcFitsPath = os.path.join(_spcDirPath , _SpcFitsName)
         if os.path.exists(_SpcFitsPath):
             #check the diff file is present, if not, do something...
@@ -457,9 +466,11 @@ class AProcessGui(QtWidgets.QWidget):
             
             if not _SpcFitsPath == self.settings.value("SpcFitsPath"):
                 _SpcFitsPathPrevious = self.settings.value("SpcFitsPath")
-                self.settings.setValue("SpcFitsPathPrevious", _SpcFitsPathPrevious);
+                self.settings.setValue("SpcFitsPathPrevious", _SpcFitsPathPrevious)
             self.leSpcFits.setText(_SpcFitsName)
-            self.settings.setValue("SpcFitsPath", _SpcFitsName);
+            self.settings.setValue("SpcFitsPath", _SpcFitsName)
+            
+            print("{}: settings SpcFitsPath set to = {}".format(tag, _SpcFitsName))
             self.enableCtrls(True)
         else:
             print("{}: Spectrum fits file not located in spectrum directory. Please update spectrum directory path first.".format(tag))
@@ -539,14 +550,21 @@ class AProcessGui(QtWidgets.QWidget):
         
    
     def bt_setSpcdir(self):
-        tag = "setSpcDir"
+        self.setSpcdir()
         
-        _spcdirDefault = str(self.leSpcdir.text())
-        if not os.path.exists(_spcdirDefault):
-            _spcdirDefault = os.path.abspath(str(self.leSpcdir.text()))
-            #_spcdirDefault = _spcdirDefault[:_spcdirDefault.index(os.sep)] if os.sep in _spcdirDefault else _spcdirDefault
+    def setSpcdir(self, newDir=None):    
+        tag = "setSpcDir"       
+        
+        if newDir==None:
+            _spcdirDefault = str(self.leSpcdir.text())
+            if not os.path.exists(_spcdirDefault):
+                _spcdirDefault = os.path.abspath(str(self.leSpcdir.text()))
+                #_spcdirDefault = _spcdirDefault[:_spcdirDefault.index(os.sep)] if os.sep in _spcdirDefault else _spcdirDefault
+                
+            _spcdirPath = QtWidgets.QFileDialog.getExistingDirectory(self, "Select Spectrum Directory",_spcdirDefault)
+        else:
+            _spcdirPath = newDir
             
-        _spcdirPath = QtWidgets.QFileDialog.getExistingDirectory(self, "Select Spectrum Directory",_spcdirDefault)
         if os.path.exists(_spcdirPath):
             #check the diff file is present, if not, do something...
             print("{}: _spcdirPath = {}".format(tag, _spcdirPath))
@@ -556,7 +574,7 @@ class AProcessGui(QtWidgets.QWidget):
                 _spcdirPathPrevious = self.settings.value("spcdirPath")
                 self.settings.setValue("spcdirPathPrevious", _spcdirPathPrevious);
             self.leSpcdir.setText(_spcdirPath)
-            self.settings.setValue("spcdirPath", _spcdirPath);
+            self.settings.setValue("spcDirPath", _spcdirPath);
             self.enableCtrls(True)
 
     def bt_setSpcdirPrevious(self):
@@ -637,9 +655,9 @@ class AProcessGui(QtWidgets.QWidget):
                 self.ckConvertVac2Air.toggle()
 
    
-    def bt_setTpldir(self, newPath=""):
+    def bt_setTpldir(self, newPath=None):
         tag = "setTpldir"
-        if newPath=="":
+        if newPath==None:
             _TpldirDefault = os.path.abspath(str(self.leTpldir.text()))
             #_TpldirDefault = _TpldirDefault[:_TpldirDefault.index(os.sep)] if os.sep in _TpldirDefault else _TpldirDefault
             
@@ -666,9 +684,9 @@ class AProcessGui(QtWidgets.QWidget):
         self.enableCtrls(True) 
         
         
-    def bt_setParametersFilePath(self, newPath=""):
+    def bt_setParametersFilePath(self, newPath=None):
         tag = "setParametersFilePath"
-        if newPath=="":
+        if newPath==None:
             _MethodParametersDefault = os.path.abspath(str(self.leMethodParametersPath.text()))
             #_MethodParametersDefault = _MethodParametersDefault[:_MethodParametersDefault.index(os.sep)] if os.sep in _MethodParametersDefault else _MethodParametersDefault
             
@@ -707,9 +725,9 @@ class AProcessGui(QtWidgets.QWidget):
             self.settings.setValue("parametersAllDefault", "False");
             
         
-    def bt_setLinecatalogFilePath(self, newPath):
+    def bt_setLinecatalogFilePath(self, newPath=None):
         tag = "setLinecatalogFilePath"
-        if newPath=="":
+        if newPath==None:
             _linecatalogDefault = os.path.abspath(str(self.leLinecatalog.text()))
             #_linecatalogDefault = _linecatalogDefault[:_linecatalogDefault.index(os.sep)] if os.sep in _linecatalogDefault else _linecatalogDefault
             #print("default path = {}".format(_linecatalogDefault))
@@ -749,9 +767,9 @@ class AProcessGui(QtWidgets.QWidget):
             print("    {}".format(self.cbMethod.itemText(count)))
         print("{}: Current index = {}, selection changed to {}".format(tag, i, self.cbMethod.currentText()))
 
-    def bt_setWorkspace(self, newWorkspace=""):
+    def bt_setWorkspace(self, newWorkspace=None):
         tag = "bt_setWorkspace"
-        if newWorkspace=="":
+        if newWorkspace==None:
             _wokspaceDefault = self.m_workspace
             
             _workspace = QtWidgets.QFileDialog.getExistingDirectory(self, "Select working directory",_wokspaceDefault)
@@ -765,9 +783,9 @@ class AProcessGui(QtWidgets.QWidget):
         
         print("{}: Using workspace : {}".format(tag, self.m_workspace))       
     
-    def bt_setAmazedBinPath(self, newBinPath=""):
+    def bt_setAmazedBinPath(self, newBinPath=None):
         tag = "bt_setAmazedBinPath"
-        if newBinPath=="":
+        if newBinPath==None:
             _amazedBinPathDefault = self.amazed_bin_path
             #_TpldirDefault = _TpldirDefault[:_TpldirDefault.index(os.sep)] if os.sep in _TpldirDefault else _TpldirDefault
             

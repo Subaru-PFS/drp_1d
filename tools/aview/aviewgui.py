@@ -35,7 +35,7 @@ class AViewGui(QtWidgets.QWidget):
         super(AViewGui, self).__init__(parent)
         self.parent = parent
         wdg = self#QtGui.QWidget()
-        layout = QtGui.QGridLayout(wdg)     
+        layout = QtWidgets.QGridLayout(wdg)     
         
         
         layoutRow = 0
@@ -43,13 +43,13 @@ class AViewGui(QtWidgets.QWidget):
         separator_ncols = 5
         
         #Add the configuration separator
-        self.lblInputSection = QtGui.QLabel('Load results', wdg) 
+        self.lblInputSection = QtWidgets.QLabel('Load results', wdg) 
         self.lblInputSection.setAlignment(QtCore.Qt.AlignCenter)           
         self.lblInputSection.setFixedHeight(separator_height)
         self.lblInputSection.setProperty("coloredcell", True)
         layout.addWidget(self.lblInputSection, layoutRow, 0, 1, 1) 
         for i in range(1, separator_ncols):
-            lbl = QtGui.QLabel('', wdg)
+            lbl = QtWidgets.QLabel('', wdg)
             if i==separator_ncols-1:
                 lbl.setFixedWidth(100)
             lbl.setProperty("coloredcell", True)
@@ -58,46 +58,46 @@ class AViewGui(QtWidgets.QWidget):
  
         #Add the result dir. setup ctrls
         layoutRow += 1
-        self.lblResdir = QtGui.QLabel(' AMAZED Output Result Dir. ', wdg)
+        self.lblResdir = QtWidgets.QLabel(' AMAZED Output Result Dir. ', wdg)
         layout.addWidget(self.lblResdir, layoutRow, 0, 1, 1)
         
-        self.leResDir = QtGui.QLineEdit(wdg)
+        self.leResDir = QtWidgets.QLineEdit(wdg)
         self.leResDir.setFixedWidth(500) 
         layout.addWidget(self.leResDir, layoutRow, 1, 1, 10)
         
-        self.btnBrowseResdir = QtGui.QPushButton(' Browse ', wdg)
+        self.btnBrowseResdir = QtWidgets.QPushButton(' Browse ', wdg)
         self.btnBrowseResdir.setToolTip('Browse to select the AMAZED output directory...')
         self.btnBrowseResdir.clicked.connect(self.bt_setResultDir)
         layout.addWidget(self.btnBrowseResdir, layoutRow, 2, 1, 1)
         
-        self.btnBrowseResdirPrevious = QtGui.QPushButton(' < ', wdg)
+        self.btnBrowseResdirPrevious = QtWidgets.QPushButton(' < ', wdg)
         self.btnBrowseResdirPrevious.setToolTip('Back to the previous ResDir...')
         self.btnBrowseResdirPrevious.clicked.connect(self.bt_setResultDirPrevious)
         layout.addWidget(self.btnBrowseResdirPrevious, layoutRow, 3, 1, 1)
         
         #Add the failure threshold filter ctrls
         layoutRow += 1
-        self.lblDiffThres = QtGui.QLabel(' Filter by z diff. threshold: ', wdg)
+        self.lblDiffThres = QtWidgets.QLabel(' Filter by z diff. threshold: ', wdg)
         layout.addWidget(self.lblDiffThres, layoutRow, 0, 1, 1)
         
-        self.leDiffThres = QtGui.QLineEdit(wdg)
+        self.leDiffThres = QtWidgets.QLineEdit(wdg)
         self.leDiffThres.setToolTip('Enter threshold value to filter the dataset by the z error value...')
         self.leDiffThres.setFixedWidth(200) 
         layout.addWidget(self.leDiffThres, layoutRow, 1, 1, 10)
         
         #Add the spectrum filter ctrls
         layoutRow += 1
-        self.lblSpcFilter = QtGui.QLabel(' Filter by spectrum name: ', wdg)
+        self.lblSpcFilter = QtWidgets.QLabel(' Filter by spectrum name: ', wdg)
         layout.addWidget(self.lblSpcFilter, layoutRow, 0, 1, 1)
         
-        self.leSpcFilter = QtGui.QLineEdit(wdg)
+        self.leSpcFilter = QtWidgets.QLineEdit(wdg)
         self.leSpcFilter.setToolTip('Enter a tag to filter the dataset by the spectrum name...')
         self.leSpcFilter.setFixedWidth(300) 
         layout.addWidget(self.leSpcFilter, layoutRow, 1, 1, 10)
         
         #Add the show button
         layoutRow += 1
-        self.btnLoad = QtGui.QPushButton('Load Result List', wdg)
+        self.btnLoad = QtWidgets.QPushButton('Load Result List', wdg)
         self.btnLoad.setFixedWidth(500)
         self.btnLoad.setFixedHeight(50)
         self.btnLoad.clicked.connect(self.bt_loadresults)
@@ -105,22 +105,22 @@ class AViewGui(QtWidgets.QWidget):
         
         #Add the result list N
         layoutRow += 1
-        self.lblResultsN = QtGui.QLabel('N Results loaded:', wdg)
+        self.lblResultsN = QtWidgets.QLabel('N Results loaded:', wdg)
         layout.addWidget(self.lblResultsN, layoutRow, 0, 1, 1) 
-        self.leResultsN = QtGui.QLineEdit(wdg)
+        self.leResultsN = QtWidgets.QLineEdit(wdg)
         self.leResultsN.setFixedWidth(100) 
         layout.addWidget(self.leResultsN, layoutRow, 1, 1, 10) 
         self.leResultsN.setEnabled(False)
         
         #Add the result list section separator
         layoutRow += 1
-        self.lblResultListSection = QtGui.QLabel('Browse results', wdg) 
+        self.lblResultListSection = QtWidgets.QLabel('Browse results', wdg) 
         self.lblResultListSection.setAlignment(QtCore.Qt.AlignCenter)           
         self.lblResultListSection.setFixedHeight(separator_height)
         self.lblResultListSection.setProperty("coloredcell", True)
         layout.addWidget(self.lblResultListSection, layoutRow, 0, 1, 1) 
         for i in range(1, separator_ncols):
-            lbl = QtGui.QLabel('', wdg)
+            lbl = QtWidgets.QLabel('', wdg)
             if i==separator_ncols-1:
                 lbl.setFixedWidth(100)
             lbl.setProperty("coloredcell", True)
@@ -128,49 +128,49 @@ class AViewGui(QtWidgets.QWidget):
         
         #Add the result index
         layoutRow += 1
-        self.lblResultIndex = QtGui.QLabel('Result #', wdg)
+        self.lblResultIndex = QtWidgets.QLabel('Result #', wdg)
         layout.addWidget(self.lblResultIndex, layoutRow, 0, 1, 1) 
-        self.leResultIndex = QtGui.QLineEdit(wdg)
+        self.leResultIndex = QtWidgets.QLineEdit(wdg)
         self.leResultIndex.setFixedWidth(100) 
         layout.addWidget(self.leResultIndex, layoutRow, 1, 1, 2) 
 
-        self.btnSetResultPrevious = QtGui.QPushButton(' < ', wdg)
+        self.btnSetResultPrevious = QtWidgets.QPushButton(' < ', wdg)
         self.btnSetResultPrevious.setToolTip('Got to the previous Result in the list...')
         self.btnSetResultPrevious.clicked.connect(self.bt_previousResultIndex)
         layout.addWidget(self.btnSetResultPrevious, layoutRow, 2, 1, 1)
-        self.btnSetResultNext = QtGui.QPushButton(' > ', wdg)
+        self.btnSetResultNext = QtWidgets.QPushButton(' > ', wdg)
         self.btnSetResultNext.setToolTip('Go to the next Result in the list...')
         self.btnSetResultNext.clicked.connect(self.bt_nextResultIndex)
         layout.addWidget(self.btnSetResultNext, layoutRow, 3, 1, 1)
         #Add the result name 
         layoutRow += 1
-        self.lblResultName = QtGui.QLabel('        - name', wdg)
+        self.lblResultName = QtWidgets.QLabel('        - name', wdg)
         layout.addWidget(self.lblResultName, layoutRow, 0, 1, 1) 
-        self.leResultSpcName = QtGui.QLineEdit(wdg)
+        self.leResultSpcName = QtWidgets.QLineEdit(wdg)
         self.leResultSpcName.setFixedWidth(500) 
         layout.addWidget(self.leResultSpcName, layoutRow, 1, 1, 2) 
         self.leResultSpcName.setEnabled(False)
         #Add the result zdiff
         layoutRow += 1
-        self.lblResultZdiff = QtGui.QLabel('        - zdiff', wdg)
+        self.lblResultZdiff = QtWidgets.QLabel('        - zdiff', wdg)
         layout.addWidget(self.lblResultZdiff, layoutRow, 0, 1, 1) 
-        self.leResultSpcZdiff = QtGui.QLineEdit(wdg)
+        self.leResultSpcZdiff = QtWidgets.QLineEdit(wdg)
         self.leResultSpcZdiff.setFixedWidth(300) 
         layout.addWidget(self.leResultSpcZdiff, layoutRow, 1, 1, 2) 
         self.leResultSpcZdiff.setEnabled(False)
         #Add the result zcalc 
         layoutRow += 1
-        self.lblResultZcalc = QtGui.QLabel('        - zcalc', wdg)
+        self.lblResultZcalc = QtWidgets.QLabel('        - zcalc', wdg)
         layout.addWidget(self.lblResultZcalc, layoutRow, 0, 1, 1) 
-        self.leResultSpcZcalc = QtGui.QLineEdit(wdg)
+        self.leResultSpcZcalc = QtWidgets.QLineEdit(wdg)
         self.leResultSpcZcalc.setFixedWidth(100) 
         layout.addWidget(self.leResultSpcZcalc, layoutRow, 1, 1, 2) 
         self.leResultSpcZcalc.setEnabled(False)
         #Add the result zref
         layoutRow += 1
-        self.lblResultZref = QtGui.QLabel('        - zref', wdg)
+        self.lblResultZref = QtWidgets.QLabel('        - zref', wdg)
         layout.addWidget(self.lblResultZref, layoutRow, 0, 1, 1) 
-        self.leResultSpcZref = QtGui.QLineEdit(wdg)
+        self.leResultSpcZref = QtWidgets.QLineEdit(wdg)
         self.leResultSpcZref.setFixedWidth(100) 
         layout.addWidget(self.leResultSpcZref, layoutRow, 1, 1, 2) 
         self.leResultSpcZref.setEnabled(False)  
@@ -178,11 +178,11 @@ class AViewGui(QtWidgets.QWidget):
         
         #Add the show parameters section separator
                 
-        self.lblShowParametersSection = QtGui.QLabel('----------', wdg)
+        self.lblShowParametersSection = QtWidgets.QLabel('----------', wdg)
         layout.addWidget(self.lblShowParametersSection, 15, 0, 1, 1) 
         
         #Add the show button
-        self.btn = QtGui.QPushButton('Show', wdg)
+        self.btn = QtWidgets.QPushButton('Show', wdg)
         self.btn.setFixedWidth(500)
         self.btn.setFixedHeight(50)
         self.btn.clicked.connect(self.bt_showAViewWidget)
@@ -190,16 +190,16 @@ class AViewGui(QtWidgets.QWidget):
         layout.addWidget(self.btn, 16, 1, 1, 1)
 
         #Add the extremum choice ctrls
-        self.lblExtremumChoice = QtGui.QLabel(' Extremum: ', wdg)
+        self.lblExtremumChoice = QtWidgets.QLabel(' Extremum: ', wdg)
         layout.addWidget(self.lblExtremumChoice, 18, 0, 1, 1)
         
-        self.leExtremumChoice = QtGui.QLineEdit(wdg)
+        self.leExtremumChoice = QtWidgets.QLineEdit(wdg)
         self.leExtremumChoice.setToolTip('Enter the extremum num to be selected for display...')
         self.leExtremumChoice.setFixedWidth(100) 
         self.leExtremumChoice.setEnabled(False)
         layout.addWidget(self.leExtremumChoice, 18, 1, 1, 10)
         
-        self.ckExtremumChoiceOverride = QtGui.QCheckBox('Extremum Override', wdg)
+        self.ckExtremumChoiceOverride = QtWidgets.QCheckBox('Extremum Override', wdg)
         self.ckExtremumChoiceOverride.stateChanged.connect(self.ck_extremumOverride)
         layout.addWidget(self.ckExtremumChoiceOverride, 18, 2, 1, 10)
         #self.ckExtremumChoiceOverride.toggle()
@@ -211,7 +211,7 @@ class AViewGui(QtWidgets.QWidget):
 
         #Set path from settings
         self.settings = QtCore.QSettings("amazed", "aviewgui")
-        _resDir = self.settings.value("resDir").toString()
+        _resDir = self.settings.value("resDir", defaultValue = "", type=str)
         self.leResDir.setText(_resDir)      
         if _resDir=="":
             self.enableCtrls(False)
@@ -247,8 +247,8 @@ class AViewGui(QtWidgets.QWidget):
             if not init_refPath=="":
                 _refzfilepath = init_refPath
             else:
-                _refzfilepathDefault = self.settings.value("refzfilepath").toString()
-                _refzfilepath = str(QtGui.QFileDialog.getOpenFileName(self, "Select Reference Redshift list file", _refzfilepathDefault))
+                _refzfilepathDefault = self.settings.value("refzfilepath", defaultValue = "", type=str)
+                _refzfilepath = str(QtWidgets.QFileDialog.getOpenFileName(self, "Select Reference Redshift list file", _refzfilepathDefault))
             if os.path.exists(_refzfilepath) :
                 if os.path.isdir(statsPath)==False:
                     os.mkdir( statsPath, 0755 );
@@ -304,8 +304,8 @@ class AViewGui(QtWidgets.QWidget):
             print("diff file not found... computing the diff file is necessary: please select the reference redshift file list in order continue !")
             calcFile = os.path.join(_resDir, "redshift.csv") 
             
-            _refzfilepathDefault = self.settings.value("refzfilepath").toString()
-            _refzfilepath = str(QtGui.QFileDialog.getOpenFileName(self, "Select Reference Redshift list file", _refzfilepathDefault))
+            _refzfilepathDefault = self.settings.value("refzfilepath", defaultValue = "", type=str)
+            _refzfilepath = str(QtWidgets.QFileDialog.getOpenFileName(self, "Select Reference Redshift list file", _refzfilepathDefault))
             if os.path.exists(_refzfilepath) :
                 if os.path.isdir(statsPath)==False:
                     os.mkdir( statsPath, 0755 );
@@ -383,21 +383,21 @@ class AViewGui(QtWidgets.QWidget):
         _resDirDefault = os.path.abspath(str(self.leResDir.text()))
         _resDirDefault = _resDirDefault[:_resDirDefault.index(os.sep)] if os.sep in _resDirDefault else _resDirDefault
         
-        _resDir = str(QtGui.QFileDialog.getExistingDirectory(self, "Select Directory",_resDirDefault))
+        _resDir = str(QtWidgets.QFileDialog.getExistingDirectory(self, "Select Directory",_resDirDefault))
         if os.path.exists(_resDir):
             #check the diff file is present, if not, do something...
             print("_resDir = {}".format(_resDir))
-            print("previous from settings = {}".format(self.settings.value("resDir").toString()))
+            print("previous from settings = {}".format(self.settings.value("resDir", defaultValue = "", type=str)))
             
-            if not _resDir == self.settings.value("resDir").toString():
-                _resDirPrevious = self.settings.value("resDir").toString()
+            if not _resDir == self.settings.value("resDir", defaultValue = "", type=str):
+                _resDirPrevious = self.settings.value("resDir", defaultValue = "", type=str)
                 self.settings.setValue("resDirPrevious", _resDirPrevious);
             self.leResDir.setText(_resDir)
             self.settings.setValue("resDir", _resDir);
             self.enableCtrls(True)
         
     def bt_setResultDirPrevious(self):
-        _resDirPrevious = self.settings.value("resDirPrevious").toString()
+        _resDirPrevious = self.settings.value("resDirPrevious", defaultValue = "", type=str)
         self.leResDir.setText(_resDirPrevious)
         self.settings.setValue("resDir", _resDirPrevious);
         self.enableCtrls(True)
@@ -466,7 +466,7 @@ class AViewGui(QtWidgets.QWidget):
                 _abscurpath = os.path.realpath(os.path.abspath(os.path.join(_abscurpath,subfolder)))  
  
 def main():
-    app = QtGui.QApplication(sys.argv)
+    app = QtWidgets.QApplication(sys.argv)
     ins = ObjectAViewGui()
     ex = AViewGui()
     sys.exit(app.exec_())
