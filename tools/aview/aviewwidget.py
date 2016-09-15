@@ -60,10 +60,11 @@ class Graph(FigureCanvas):
 class candidateListWidget(QtWidgets.QListWidget):
     def __init__(self, parent=None):
         self.parent = parent
-        QtGui.QListWidget.__init__(self)
+        QtWidgets.QListWidget.__init__(self)
         
     def Clicked(self, item):
-        k = item.data(QtCore.Qt.UserRole).toPyObject()
+        #k = item.data(QtCore.Qt.UserRole).toPyObject()
+        k = item.data(QtCore.Qt.UserRole)
         print("candidateListWidget: you clicked = {}".format(k))        
         self.parent.plotCandidate(zClick=-1, iextremaredshift=k)
       
@@ -89,28 +90,28 @@ class AViewWidget(QtWidgets.QWidget):
         pal.setColor(role, QtGui.QColor(255, 255, 255))
         self.setPalette(pal)
       
-        layout = QtGui.QGridLayout(wdg) 
+        layout = QtWidgets.QGridLayout(wdg) 
         layoutRow = 0
         
         #Add the redshift manual override
-        layoutRedshift = QtGui.QHBoxLayout()
-        self.lblRedshiftChoice = QtGui.QLabel('Redshift: ', wdg)
+        layoutRedshift = QtWidgets.QHBoxLayout()
+        self.lblRedshiftChoice = QtWidgets.QLabel('Redshift: ', wdg)
         layoutRedshift.addWidget(self.lblRedshiftChoice)
         
-        self.leRedshiftChoice = QtGui.QLineEdit(wdg)
+        self.leRedshiftChoice = QtWidgets.QLineEdit(wdg)
         self.leRedshiftChoice.setToolTip('Enter the manual redshift to be used for display...')
         self.leRedshiftChoice.editingFinished.connect(self.le_handleEditingFinished)
         #self.leRedshiftChoice.setFixedHeight(30) 
         self.leRedshiftChoice.setEnabled(False)
         layoutRedshift.addWidget(self.leRedshiftChoice)
         
-        self.ckRedshiftChoiceOverride = QtGui.QCheckBox('Redshift Override', wdg)        
+        self.ckRedshiftChoiceOverride = QtWidgets.QCheckBox('Redshift Override', wdg)        
         #self.ckRedshiftChoiceOverride.setFixedHeight(30) 
         self.ckRedshiftChoiceOverride.stateChanged.connect(self.ck_redshiftOverride)
         layoutRedshift.addWidget(self.ckRedshiftChoiceOverride)
 
         #set the layout    
-        layoutLeftColumn = QtGui.QVBoxLayout()
+        layoutLeftColumn = QtWidgets.QVBoxLayout()
         #canddidates list
         self.lst_Candidates = candidateListWidget(self)
         self.lst_Candidates.setWindowTitle('Redshift Candidates')
@@ -120,7 +121,7 @@ class AViewWidget(QtWidgets.QWidget):
         layoutLeftColumn.addWidget(self.lst_Candidates) 
         self.populateCandidatesList()
         #chi2plot
-        self.layoutChi2Plot = QtGui.QVBoxLayout()
+        self.layoutChi2Plot = QtWidgets.QVBoxLayout()
         #add chisquare.py figure
         self.loadMeritPlot(self.iextremaredshift)
         #self.layoutChi2Plot.addWidget(self.toolbarChi2)
@@ -128,21 +129,21 @@ class AViewWidget(QtWidgets.QWidget):
         layoutLeftColumn.addLayout(self.layoutChi2Plot)
         
         #adding separators
-        lbl = QtGui.QLabel('', wdg)
+        lbl = QtWidgets.QLabel('', wdg)
         lbl.setProperty("coloredcell", True)
         lbl.setFixedHeight(5)
         layoutLeftColumn.addWidget(lbl)         
-        lbl = QtGui.QLabel('', wdg)
+        lbl = QtWidgets.QLabel('', wdg)
         layoutLeftColumn.addWidget(lbl) 
 
         layoutLeftColumn.addLayout(layoutRedshift)
-        v_widget = QtGui.QWidget()
+        v_widget = QtWidgets.QWidget()
         v_widget.setLayout(layoutLeftColumn)
         v_widget.setFixedWidth(500)
         
         layout.addWidget(v_widget, layoutRow, 1, 1, 1)
         
-        lbl = QtGui.QLabel('', wdg)
+        lbl = QtWidgets.QLabel('', wdg)
         lbl.setFixedWidth(5)
         lbl.setProperty("coloredcell", True)
         layout.addWidget(lbl, layoutRow, 2, 1, 1) 
@@ -163,7 +164,7 @@ class AViewWidget(QtWidgets.QWidget):
         #self.toolbarAView = NavigationToolbar(self.canvasAView, self)
 
         # set the layout
-        self.layoutAviewPlot = QtGui.QVBoxLayout()
+        self.layoutAviewPlot = QtWidgets.QVBoxLayout()
         self.loadAViewPlot(self.layoutAviewPlot)
         #self.layoutAviewPlot.addWidget(self.canvasAView)
         layout.addLayout(self.layoutAviewPlot, layoutRow, 3, 1, 1)        
@@ -201,7 +202,7 @@ class AViewWidget(QtWidgets.QWidget):
         return ind
         
     def plotCandidate(self, zClick=-1, iextremaredshift=-1):
-        QtGui.QApplication.setOverrideCursor(QtGui.QCursor(QtCore.Qt.WaitCursor))
+        QtWidgets.QApplication.setOverrideCursor(QtGui.QCursor(QtCore.Qt.WaitCursor))
         
         if self.ckRedshiftChoiceOverride.isChecked():
             self.ckRedshiftChoiceOverride.toggle()        
@@ -230,7 +231,7 @@ class AViewWidget(QtWidgets.QWidget):
     def populateCandidatesList(self):
         for k, zcand in enumerate(self.zvalCandidates):
             tplname = os.path.split(self.tplpathCandidates[k])[1]
-            item = QtGui.QListWidgetItem("C{:<5}{:<12}{}".format(k, zcand, tplname))
+            item = QtWidgets.QListWidgetItem("C{:<5}{:<12}{}".format(k, zcand, tplname))
             data = k
             item.setData(QtCore.Qt.UserRole, data)
 
@@ -367,7 +368,7 @@ class AViewWidget(QtWidgets.QWidget):
         #set the list candidates current row
         self.lst_Candidates.setCurrentRow( self.iextremaredshift );
         
-        QtGui.QApplication.restoreOverrideCursor()
+        QtWidgets.QApplication.restoreOverrideCursor()
         print('{}: finished\n\n'.format(tag))
         
     def closeEvent(self, event):
@@ -377,7 +378,7 @@ class AViewWidget(QtWidgets.QWidget):
         
 def main():
     print("\nAViewWidget\n")
-    app = QtGui.QApplication(sys.argv)
+    app = QtWidgets.QApplication(sys.argv)
     ins = ObjectAViewWidget(parent=app)
     ex = AViewWidget(ins)
     
