@@ -326,10 +326,10 @@ class AProcessGui(QtWidgets.QWidget):
 
         #some directories settings
         _workspace = self.settings.value("workspacePath", defaultValue = "/var/tmp/amazed", type=str)
-        self.bt_setWorkspace(_workspace)    
+        self.setWorkspace(_workspace)    
          
         _amazed_bin_path = self.settings.value("amazedBinPath", defaultValue = "/home/aschmitt/gitlab/amazed/bin/amazed-0.0.0", type=str)
-        self.bt_setAmazedBinPath(_amazed_bin_path)
+        self.setAmazedBinPath(_amazed_bin_path)
         print("\n")
              
         #Set spclist path from settings
@@ -351,9 +351,9 @@ class AProcessGui(QtWidgets.QWidget):
             self.ckSpcFits.toggle()
             self.ckSpcFits.toggle()
             self.ckSpcFits.toggle()
-        _spcFitsPath = self.settings.value("spcFitsPath", defaultValue="", type=str)
-        print("Settings: _spcFitsPath = {}".format(_spcFitsPath))
-        self.setSpcFits(_spcFitsPath)
+        _spcFitsName = self.settings.value("spcFitsName", defaultValue="", type=str)
+        print("Settings: _spcFitsName = {}".format(_spcFitsName))
+        self.setSpcFits(_spcFitsName)
         
         _noiseFitsPath = self.settings.value("noiseFitsPath", defaultValue="", type=str)
         self.leNoiseFits.setText(_noiseFitsPath) 
@@ -456,21 +456,21 @@ class AProcessGui(QtWidgets.QWidget):
         else:
             _SpcFitsName = newName
             
-        
+        #print("_SpcFitsName = {}".format(_SpcFitsName))
         _SpcFitsPath = os.path.join(_spcDirPath , _SpcFitsName)
         if os.path.exists(_SpcFitsPath):
+            current_settings_value = self.settings.value("spcFitsName")
             #check the diff file is present, if not, do something...
-            print("{}: _SpcFitsName = {}".format(tag, _SpcFitsName))
-            print("{}: previous from settings = {}".format(tag, self.settings.value("SpcFitsPath")))
-            
-            
-            if not _SpcFitsPath == self.settings.value("SpcFitsPath"):
-                _SpcFitsPathPrevious = self.settings.value("SpcFitsPath")
-                self.settings.setValue("SpcFitsPathPrevious", _SpcFitsPathPrevious)
+            #print("{}: _SpcFitsName = {}".format(tag, _SpcFitsName))
+            #print("{}: previous from settings = {}".format(tag, current_settings_value))
+
+            if not _SpcFitsName == current_settings_value:
+                _SpcFitsNamePrevious = current_settings_value
+                self.settings.setValue("spcFitsNamePrevious", _SpcFitsNamePrevious)
             self.leSpcFits.setText(_SpcFitsName)
-            self.settings.setValue("SpcFitsPath", _SpcFitsName)
+            self.settings.setValue("spcFitsName", _SpcFitsName) 
+            #print("{}: settings SpcFitsName set to = {}".format(tag, _SpcFitsName))
             
-            print("{}: settings SpcFitsPath set to = {}".format(tag, _SpcFitsName))
             self.enableCtrls(True)
         else:
             print("{}: Spectrum fits file not located in spectrum directory. Please update spectrum directory path first.".format(tag))
@@ -482,6 +482,7 @@ class AProcessGui(QtWidgets.QWidget):
 
 
     def bt_setSpcFitsPrevious(self):
+        return
         _SpcFitsPathPrevious = self.settings.value("SpcFitsPathPrevious")
         self.leSpcFits.setText(_SpcFitsPathPrevious)
         self.settings.setValue("SpcFitsPath", _SpcFitsPathPrevious);
@@ -523,16 +524,17 @@ class AProcessGui(QtWidgets.QWidget):
         _NoiseFitsName = os.path.split(_NoiseFitsPath)[1]
         _NoiseFitsPath = os.path.join(_spcDirPath , _NoiseFitsName)
         if os.path.exists(_NoiseFitsPath):
+            current_settings_value = self.settings.value("noiseFitsPath")
             #check the diff file is present, if not, do something...
             print("{}: _NoiseFitsName = {}".format(tag, _NoiseFitsName))
-            print("{}: previous from settings = {}".format(tag, self.settings.value("NoiseFitsPath")))
+            print("{}: previous from settings = {}".format(tag, current_settings_value))
             
             
-            if not _NoiseFitsPath == self.settings.value("NoiseFitsPath"):
-                _NoiseFitsPathPrevious = self.settings.value("NoiseFitsPath")
-                self.settings.setValue("NoiseFitsPathPrevious", _NoiseFitsPathPrevious);
+            if not _NoiseFitsPath == current_settings_value:
+                _NoiseFitsPathPrevious = current_settings_value
+                self.settings.setValue("noiseFitsPathPrevious", _NoiseFitsPathPrevious);
             self.leNoiseFits.setText(_NoiseFitsName)
-            self.settings.setValue("NoiseFitsPath", _NoiseFitsName);
+            self.settings.setValue("noiseFitsPath", _NoiseFitsName);
             self.enableCtrls(True)
         else:
             print("{}: Noise fits file not located in spectrum directory. Please update spectrum directory path first.".format(tag))
@@ -642,7 +644,7 @@ class AProcessGui(QtWidgets.QWidget):
                     valStr = lineStr.replace(keyword, "")
                     print("{}: Found {} {}".format(tag, keyword, valStr))
                     tplPath = os.path.abspath(os.path.join(_configFileDir, valStr))
-                    self.bt_setTpldir(tplPath)
+                    self.setTpldir(tplPath)
         f.close()
         
         if convertToAirFound:
@@ -655,7 +657,10 @@ class AProcessGui(QtWidgets.QWidget):
                 self.ckConvertVac2Air.toggle()
 
    
-    def bt_setTpldir(self, newPath=None):
+    def bt_setTpldir(self):
+        self.setTpldir()
+        
+    def setTpldir(self, newPath=None):
         tag = "setTpldir"
         if newPath==None:
             _TpldirDefault = os.path.abspath(str(self.leTpldir.text()))
@@ -666,21 +671,22 @@ class AProcessGui(QtWidgets.QWidget):
             _TpldirPath = newPath
             
         if os.path.exists(_TpldirPath):
+            current_settings_value = self.settings.value("tplDirPath")
             #check the diff file is present, if not, do something...
             print("{}: _TpldirPath = {}".format(tag, _TpldirPath))
-            print("{}: previous from settings = {}".format(tag, self.settings.value("TpldirPath")))
+            print("{}: previous from settings = {}".format(tag, current_settings_value))
             
-            if not _TpldirPath == self.settings.value("TpldirPath"):
-                _TpldirPathPrevious = self.settings.value("TpldirPath")
+            if not _TpldirPath == current_settings_value:
+                _TpldirPathPrevious = current_settings_value
                 self.settings.setValue("TpldirPathPrevious", _TpldirPathPrevious);
             self.leTpldir.setText(_TpldirPath)
-            self.settings.setValue("TpldirPath", _TpldirPath);
+            self.settings.setValue("tplDirPath", _TpldirPath);
             self.enableCtrls(True)
 
     def bt_setTpldirPrevious(self):
         _TpldirPathPrevious = self.settings.value("TpldirPathPrevious")
         self.leTpldir.setText(_TpldirPathPrevious)
-        self.settings.setValue("TpldirPath", _TpldirPathPrevious);
+        self.settings.setValue("tplDirPath", _TpldirPathPrevious);
         self.enableCtrls(True) 
         
         
@@ -768,6 +774,9 @@ class AProcessGui(QtWidgets.QWidget):
         print("{}: Current index = {}, selection changed to {}".format(tag, i, self.cbMethod.currentText()))
 
     def bt_setWorkspace(self, newWorkspace=None):
+        self.setWorkspace()
+        
+    def setWorkspace(self, newWorkspace=None):
         tag = "bt_setWorkspace"
         if newWorkspace==None:
             _wokspaceDefault = self.m_workspace
@@ -784,6 +793,9 @@ class AProcessGui(QtWidgets.QWidget):
         print("{}: Using workspace : {}".format(tag, self.m_workspace))       
     
     def bt_setAmazedBinPath(self, newBinPath=None):
+        self.setAmazedBinPath()
+        
+    def setAmazedBinPath(self, newBinPath=None):
         tag = "bt_setAmazedBinPath"
         if newBinPath==None:
             _amazedBinPathDefault = self.amazed_bin_path
