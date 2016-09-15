@@ -73,7 +73,7 @@ std::string CContinuumDF::temporaryPath ( const CSpectrum& s, UInt32 nall)
 	bfs::path temporaPath0 = bfs::unique_path();
 	if (m_optclus)
 	{ temporaPath0="/home/sjamal/AMAZED_run_pdf/code/cpf_gitLAM/amazed/tempoData"/temporaPath0;
-	} else { temporaPath0="../tempoData"/temporaPath0;}
+    } else { temporaPath0="./tempoData"/temporaPath0;}
 
 	bfs::create_directories(temporaPath0);
 	bfs::path tm0 = temporaPath0/"extendedData.fits";
@@ -116,7 +116,7 @@ Bool CContinuumDF::RemoveContinuum ( const CSpectrum& s, CSpectrumFluxAxis& noCo
 	bfs::path temporaPath = bfs::unique_path();
 	if (m_optclus)
 	{ temporaPath="/home/sjamal/AMAZED_run_pdf/code/cpf_gitLAM/amazed/tempoData"/temporaPath;
-	} else  { temporaPath="../tempoData"/temporaPath;}
+    } else  { temporaPath="./tempoData"/temporaPath;}
 
 	bfs::create_directories(temporaPath);
 
