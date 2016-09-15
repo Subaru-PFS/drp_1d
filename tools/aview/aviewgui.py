@@ -5,7 +5,7 @@ Created on Sat Jul 25 11:21:31 2015
 @author: aschmitt
 """
  
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtGui, QtCore, QtWidgets
 import sys
 import os
 import inspect
@@ -30,7 +30,7 @@ class ObjectAViewGui(object):
         self.parent = parent
  
  
-class AViewGui(QtGui.QWidget):
+class AViewGui(QtWidgets.QWidget):
     def __init__(self, parent=None, init_resdir="", init_refpath=""):
         super(AViewGui, self).__init__(parent)
         self.parent = parent

@@ -18,15 +18,11 @@ import shutil
 
 import numpy as np
 
-from matplotlib.backends import qt_compat
-use_pyside = qt_compat.QT_API == qt_compat.QT_API_PYSIDE
-if use_pyside:
-    from PySide import QtGui, QtCore
-else:
-    from PyQt4 import QtGui, QtCore
+#from matplotlib.backends import qt_compat
+from PyQt5 import QtGui, QtCore, QtWidgets
     
-from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas    
-from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas    
+from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 
@@ -61,7 +57,7 @@ class Graph(FigureCanvas):
             self.parent.plotCandidate(_x)
 
 
-class candidateListWidget(QtGui.QListWidget):
+class candidateListWidget(QtWidgets.QListWidget):
     def __init__(self, parent=None):
         self.parent = parent
         QtGui.QListWidget.__init__(self)
@@ -76,7 +72,7 @@ class ObjectAViewWidget(object):
         self.value = []
         self.parent = parent
         
-class AViewWidget(QtGui.QWidget):
+class AViewWidget(QtWidgets.QWidget):
     def __init__(self, parent=None, resParser=None, resList=[], resIdx=-1, iextremaredshift=-1):
         super(AViewWidget, self).__init__()
         self.resParser = resParser

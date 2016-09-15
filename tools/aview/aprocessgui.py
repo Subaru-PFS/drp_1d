@@ -6,7 +6,7 @@ Created on Fri Sep  2 09:06:12 2016
 """
 
  
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtGui, QtCore, QtWidgets
 import sys
 import os
 import inspect
@@ -38,36 +38,25 @@ def file_len(fname):
     else:
         return 0
         
-class AProcessGui(QtGui.QWidget):
+class AProcessGui(QtWidgets.QWidget):
     def __init__(self, obj):
         super(AProcessGui, self).__init__()
         self.obj = obj
         wdg = self#QtGui.QWidget()
-        layout = QtGui.QGridLayout(wdg)    
-        
-        #some directories settings
-        self.m_workspace = "/var/tmp/amazed"
-        print("ProcessGui: using workspace = {}".format(self.m_workspace))
-        if os.path.exists(self.m_workspace):
-            shutil.rmtree(self.m_workspace) 
-        os.mkdir(self.m_workspace) 
-        self.m_outputPath = os.path.join(self.m_workspace, "output")  
-        self.amazed_bin_path = "/home/aschmitt/gitlab/amazed/bin/amazed-0.0.0"
-        print("ProcessGui: using amazed bin path = {}".format(self.amazed_bin_path))
-        print("\n")
+        layout = QtWidgets.QGridLayout(wdg)    
         
         layoutRow = 0
         separator_height = 20        
         separator_ncols = 5
         
         #Add the configuration separator
-        self.lblInputSection = QtGui.QLabel('Input', wdg) 
+        self.lblInputSection = QtWidgets.QLabel('Input', wdg) 
         self.lblInputSection.setAlignment(QtCore.Qt.AlignCenter)           
         self.lblInputSection.setFixedHeight(separator_height)
         self.lblInputSection.setProperty("coloredcell", True)
         layout.addWidget(self.lblInputSection, layoutRow, 0, 1, 1) 
         for i in range(1, separator_ncols):
-            lbl = QtGui.QLabel('', wdg)
+            lbl = QtWidgets.QLabel('', wdg)
             if i==separator_ncols-1:
                 lbl.setFixedWidth(100)
             lbl.setProperty("coloredcell", True)
@@ -76,39 +65,39 @@ class AProcessGui(QtGui.QWidget):
         
         #Add the spectrumdir setup ctrls
         layoutRow += 1
-        self.lblapcdirPath = QtGui.QLabel('Spectrum directory path', wdg)
+        self.lblapcdirPath = QtWidgets.QLabel('Spectrum directory path', wdg)
         layout.addWidget(self.lblapcdirPath, layoutRow, 0, 1, 1)
         
-        self.leSpcdir = QtGui.QLineEdit(wdg)
+        self.leSpcdir = QtWidgets.QLineEdit(wdg)
         self.leSpcdir.setFixedWidth(500) 
         layout.addWidget(self.leSpcdir, layoutRow, 1, 1, 10)
         
-        self.btnBrowseSpcdir = QtGui.QPushButton(' Browse ', wdg)
+        self.btnBrowseSpcdir = QtWidgets.QPushButton(' Browse ', wdg)
         self.btnBrowseSpcdir.setToolTip('Browse to select the spectrum directory ...')
         self.btnBrowseSpcdir.clicked.connect(self.bt_setSpcdir)
         layout.addWidget(self.btnBrowseSpcdir, layoutRow, 2, 1, 1)
         
-        self.btnBrowseSpcdirPrevious = QtGui.QPushButton(' < ', wdg)
+        self.btnBrowseSpcdirPrevious = QtWidgets.QPushButton(' < ', wdg)
         self.btnBrowseSpcdirPrevious.setToolTip('Back to the previous directory path...')
         self.btnBrowseSpcdirPrevious.clicked.connect(self.bt_setSpcdirPrevious)
         layout.addWidget(self.btnBrowseSpcdirPrevious, layoutRow, 3, 1, 1)
         
         #Add the spectrumlist setup ctrls
         layoutRow += 1
-        self.ckSpclist = QtGui.QCheckBox('Spectrum LIST path', wdg)
+        self.ckSpclist = QtWidgets.QCheckBox('Spectrum LIST path', wdg)
         self.ckSpclist.stateChanged.connect(self.ck_Spclist)
         layout.addWidget(self.ckSpclist, layoutRow, 0, 1, 1)
         
-        self.leSpclist = QtGui.QLineEdit(wdg)
+        self.leSpclist = QtWidgets.QLineEdit(wdg)
         self.leSpclist.setFixedWidth(500) 
         layout.addWidget(self.leSpclist, layoutRow, 1, 1, 10)
         
-        self.btnBrowseSpclist = QtGui.QPushButton(' Browse ', wdg)
+        self.btnBrowseSpclist = QtWidgets.QPushButton(' Browse ', wdg)
         self.btnBrowseSpclist.setToolTip('Browse to select the spectrumlist file...')
         self.btnBrowseSpclist.clicked.connect(self.bt_setSpclist)
         layout.addWidget(self.btnBrowseSpclist, layoutRow, 2, 1, 1)
         
-        self.btnBrowseSpclistPrevious = QtGui.QPushButton(' < ', wdg)
+        self.btnBrowseSpclistPrevious = QtWidgets.QPushButton(' < ', wdg)
         self.btnBrowseSpclistPrevious.setToolTip('Back to the previous file path...')
         self.btnBrowseSpclistPrevious.clicked.connect(self.bt_setSpclistPrevious)
         layout.addWidget(self.btnBrowseSpclistPrevious, layoutRow, 3, 1, 1) 
@@ -116,39 +105,39 @@ class AProcessGui(QtGui.QWidget):
                 
         #Add the spectrum fits setup ctrls
         layoutRow += 1
-        self.ckSpcFits= QtGui.QCheckBox('Spectrum .FITS name', wdg)
+        self.ckSpcFits= QtWidgets.QCheckBox('Spectrum .FITS name', wdg)
         self.ckSpcFits.stateChanged.connect(self.ck_SpcFits)
         layout.addWidget(self.ckSpcFits, layoutRow, 0, 1, 1)
         
-        self.leSpcFits = QtGui.QLineEdit(wdg)
+        self.leSpcFits = QtWidgets.QLineEdit(wdg)
         self.leSpcFits.setFixedWidth(400) 
         layout.addWidget(self.leSpcFits, layoutRow, 1, 1, 10)
         
-        self.btnBrowseSpcFits = QtGui.QPushButton(' Browse ', wdg)
+        self.btnBrowseSpcFits = QtWidgets.QPushButton(' Browse ', wdg)
         self.btnBrowseSpcFits.setToolTip('Browse to select the spectrum file...')
         self.btnBrowseSpcFits.clicked.connect(self.bt_setSpcFits)
         layout.addWidget(self.btnBrowseSpcFits, layoutRow, 2, 1, 1)
         
-        self.btnBrowseSpcFitsPrevious = QtGui.QPushButton(' < ', wdg)
+        self.btnBrowseSpcFitsPrevious = QtWidgets.QPushButton(' < ', wdg)
         self.btnBrowseSpcFitsPrevious.setToolTip('Back to the previous file path...')
         self.btnBrowseSpcFitsPrevious.clicked.connect(self.bt_setSpcFitsPrevious)
         layout.addWidget(self.btnBrowseSpcFitsPrevious, layoutRow, 3, 1, 1) 
                         
         #Add the noise fits setup ctrls
         layoutRow += 1
-        self.lblNoiseFits= QtGui.QLabel('     + Noise .FITS name', wdg)
+        self.lblNoiseFits= QtWidgets.QLabel('     + Noise .FITS name', wdg)
         layout.addWidget(self.lblNoiseFits, layoutRow, 0, 1, 1)
         
-        self.leNoiseFits = QtGui.QLineEdit(wdg)
+        self.leNoiseFits = QtWidgets.QLineEdit(wdg)
         self.leNoiseFits.setFixedWidth(400) 
         layout.addWidget(self.leNoiseFits, layoutRow, 1, 1, 10)
         
-        self.btnBrowseNoiseFits = QtGui.QPushButton(' Browse ', wdg)
+        self.btnBrowseNoiseFits = QtWidgets.QPushButton(' Browse ', wdg)
         self.btnBrowseNoiseFits.setToolTip('Browse to select the spectrum file...')
         self.btnBrowseNoiseFits.clicked.connect(self.bt_setNoiseFits)
         layout.addWidget(self.btnBrowseNoiseFits, layoutRow, 2, 1, 1)
         
-        self.btnBrowseNoiseFitsPrevious = QtGui.QPushButton(' < ', wdg)
+        self.btnBrowseNoiseFitsPrevious = QtWidgets.QPushButton(' < ', wdg)
         self.btnBrowseNoiseFitsPrevious.setToolTip('Back to the previous file path...')
         self.btnBrowseNoiseFitsPrevious.clicked.connect(self.bt_setNoiseFitsPrevious)
         layout.addWidget(self.btnBrowseNoiseFitsPrevious, layoutRow, 3, 1, 1) 
@@ -156,20 +145,20 @@ class AProcessGui(QtGui.QWidget):
 
         #Add the configuration separator
         layoutRow += 1        
-        self.lblConfigurationSection = QtGui.QLabel('Configuration', wdg)
+        self.lblConfigurationSection = QtWidgets.QLabel('Configuration', wdg)
         self.lblConfigurationSection.setAlignment(QtCore.Qt.AlignCenter)             
         self.lblConfigurationSection.setFixedHeight(separator_height)  
         self.lblConfigurationSection.setProperty("coloredcell", True)  
         layout.addWidget(self.lblConfigurationSection, layoutRow, 0, 1, 1)
         for i in range(1, separator_ncols):
-            lbl = QtGui.QLabel('', wdg)
+            lbl = QtWidgets.QLabel('', wdg)
             lbl.setProperty("coloredcell", True)
             layout.addWidget(lbl, layoutRow, i, 1, 1)         
  
 
         #Add the import config button        
         layoutRow += 1
-        self.btnImportFromConfigFile = QtGui.QPushButton(' Import ', wdg)
+        self.btnImportFromConfigFile = QtWidgets.QPushButton(' Import ', wdg)
         self.btnImportFromConfigFile.setToolTip('Import config/parameters from existing config.txt file')
         self.btnImportFromConfigFile.clicked.connect(self.bt_importConfigFile)
         layout.addWidget(self.btnImportFromConfigFile, layoutRow, 0, 1, 1)  
@@ -177,9 +166,9 @@ class AProcessGui(QtGui.QWidget):
 
         #Add the method selection        
         layoutRow += 1
-        self.lblMethodCombo = QtGui.QLabel('Method', wdg)
+        self.lblMethodCombo = QtWidgets.QLabel('Method', wdg)
         layout.addWidget(self.lblMethodCombo, layoutRow, 0, 1, 1)
-        self.cbMethod = QtGui.QComboBox()
+        self.cbMethod = QtWidgets.QComboBox()
         self.cbMethod.addItem("linemodel")
         self.cbMethod.addItem("chisquare2solve")
         #self.cbMethod.addItem("amazed0_2")
@@ -189,29 +178,29 @@ class AProcessGui(QtGui.QWidget):
                 
         #Add the linecatalog file ctrls
         layoutRow += 1
-        self.lblLinecatalogPath = QtGui.QLabel('Lines catalog path', wdg)
+        self.lblLinecatalogPath = QtWidgets.QLabel('Lines catalog path', wdg)
         layout.addWidget(self.lblLinecatalogPath, layoutRow, 0, 1, 1)
         
-        self.leLinecatalog = QtGui.QLineEdit(wdg)
+        self.leLinecatalog = QtWidgets.QLineEdit(wdg)
         self.leLinecatalog.setFixedWidth(500) 
         layout.addWidget(self.leLinecatalog, layoutRow, 1, 1, 10)
         
-        self.btnBrowseLinecatalog = QtGui.QPushButton(' Browse ', wdg)
+        self.btnBrowseLinecatalog = QtWidgets.QPushButton(' Browse ', wdg)
         self.btnBrowseLinecatalog.setToolTip('Browse to select the linecatalog file...')
         self.btnBrowseLinecatalog.clicked.connect(self.bt_setLinecatalogFilePath)
         layout.addWidget(self.btnBrowseLinecatalog, layoutRow, 2, 1, 1)
         
-        self.btnBrowseLinecatalogPrevious = QtGui.QPushButton(' < ', wdg)
+        self.btnBrowseLinecatalogPrevious = QtWidgets.QPushButton(' < ', wdg)
         self.btnBrowseLinecatalogPrevious.setToolTip('Back to the previous file path...')
         self.btnBrowseLinecatalogPrevious.clicked.connect(self.bt_setLinecatalogFilePathPrevious)
         layout.addWidget(self.btnBrowseLinecatalogPrevious, layoutRow, 3, 1, 1)  
 
         #Add the lince catalog convert to air toggle
         layoutRow += 1
-        self.lblConvertVac2Air = QtGui.QLabel('Convert VACUUM->AIR', wdg)
+        self.lblConvertVac2Air = QtWidgets.QLabel('Convert VACUUM->AIR', wdg)
         layout.addWidget(self.lblConvertVac2Air, layoutRow, 0, 1, 1)
         
-        self.ckConvertVac2Air = QtGui.QCheckBox('Enable conversion', wdg)
+        self.ckConvertVac2Air = QtWidgets.QCheckBox('Enable conversion', wdg)
         self.ckConvertVac2Air.setFixedWidth(150) 
         self.ckConvertVac2Air.stateChanged.connect(self.ck_convertVac2Air)
         layout.addWidget(self.ckConvertVac2Air, layoutRow, 1, 1, 10)
@@ -219,19 +208,19 @@ class AProcessGui(QtGui.QWidget):
         
         #Add the template directory setup ctrls
         layoutRow += 1
-        self.lblTpldirPath = QtGui.QLabel('Templates directory path', wdg)
+        self.lblTpldirPath = QtWidgets.QLabel('Templates directory path', wdg)
         layout.addWidget(self.lblTpldirPath, layoutRow, 0, 1, 1)
         
-        self.leTpldir = QtGui.QLineEdit(wdg)
+        self.leTpldir = QtWidgets.QLineEdit(wdg)
         self.leTpldir.setFixedWidth(500) 
         layout.addWidget(self.leTpldir, layoutRow, 1, 1, 10)
         
-        self.btnBrowseTpldir = QtGui.QPushButton(' Browse ', wdg)
+        self.btnBrowseTpldir = QtWidgets.QPushButton(' Browse ', wdg)
         self.btnBrowseTpldir.setToolTip('Browse to select the spectrum directory ...')
         self.btnBrowseTpldir.clicked.connect(self.bt_setTpldir)
         layout.addWidget(self.btnBrowseTpldir, layoutRow, 2, 1, 1)
         
-        self.btnBrowseTpldirPrevious = QtGui.QPushButton(' < ', wdg)
+        self.btnBrowseTpldirPrevious = QtWidgets.QPushButton(' < ', wdg)
         self.btnBrowseTpldirPrevious.setToolTip('Back to the previous directory path...')
         self.btnBrowseTpldirPrevious.clicked.connect(self.bt_setTpldirPrevious)
         layout.addWidget(self.btnBrowseTpldirPrevious, layoutRow, 3, 1, 1)
@@ -239,24 +228,24 @@ class AProcessGui(QtGui.QWidget):
         
         #Add the parameters file ctrls
         layoutRow += 1
-        self.lblMethodParametersPath = QtGui.QLabel('Parameters file (.json) path', wdg)
+        self.lblMethodParametersPath = QtWidgets.QLabel('Parameters file (.json) path', wdg)
         layout.addWidget(self.lblMethodParametersPath, layoutRow, 0, 1, 1)
         
-        self.leMethodParametersPath = QtGui.QLineEdit(wdg)
+        self.leMethodParametersPath = QtWidgets.QLineEdit(wdg)
         self.leMethodParametersPath.setFixedWidth(500) 
         layout.addWidget(self.leMethodParametersPath, layoutRow, 1, 1, 10)
         
-        self.btnBrowseMethodParameters = QtGui.QPushButton(' Browse ', wdg)
+        self.btnBrowseMethodParameters = QtWidgets.QPushButton(' Browse ', wdg)
         self.btnBrowseMethodParameters.setToolTip('Browse to select the parameters file...')
         self.btnBrowseMethodParameters.clicked.connect(self.bt_setParametersFilePath)
         layout.addWidget(self.btnBrowseMethodParameters, layoutRow, 2, 1, 1)
         
-        self.btnBrowseMethodParametersPrevious = QtGui.QPushButton(' < ', wdg)
+        self.btnBrowseMethodParametersPrevious = QtWidgets.QPushButton(' < ', wdg)
         self.btnBrowseMethodParametersPrevious.setToolTip('Back to the previous file path...')
         self.btnBrowseMethodParametersPrevious.clicked.connect(self.bt_setParametersFilePathPrevious)
         layout.addWidget(self.btnBrowseMethodParametersPrevious, layoutRow, 3, 1, 1)        
         
-        self.ckParametersAllDefaults = QtGui.QCheckBox('all defaults', wdg)
+        self.ckParametersAllDefaults = QtWidgets.QCheckBox('all defaults', wdg)
         self.ckParametersAllDefaults.setFixedWidth(150) 
         self.ckParametersAllDefaults.stateChanged.connect(self.ck_parametersAllDefaults)
         layout.addWidget(self.ckParametersAllDefaults, layoutRow, 4, 1, 10)
@@ -265,39 +254,39 @@ class AProcessGui(QtGui.QWidget):
                 
         #Add the thread count setup ctrls
         layoutRow += 1
-        self.lblProcThreadCount = QtGui.QLabel('Processing thread count', wdg)
+        self.lblProcThreadCount = QtWidgets.QLabel('Processing thread count', wdg)
         layout.addWidget(self.lblProcThreadCount, layoutRow, 0, 1, 1)
         
-        self.leProcThreadCount = QtGui.QLineEdit(wdg)
+        self.leProcThreadCount = QtWidgets.QLineEdit(wdg)
         self.leProcThreadCount.setFixedWidth(50) 
         layout.addWidget(self.leProcThreadCount, layoutRow, 1, 1, 10)
         
         #Add the processing section separator
         layoutRow += 1
-        self.lblProcessingCtrlsSection = QtGui.QLabel('Processing', wdg)    
+        self.lblProcessingCtrlsSection = QtWidgets.QLabel('Processing', wdg)    
         self.lblProcessingCtrlsSection.setAlignment(QtCore.Qt.AlignCenter)         
         self.lblProcessingCtrlsSection.setFixedHeight(separator_height)  
         self.lblProcessingCtrlsSection.setProperty("coloredcell", True)  
         layout.addWidget(self.lblProcessingCtrlsSection, layoutRow, 0, 1, 1)
         for i in range(1, separator_ncols):
-            lbl = QtGui.QLabel('', wdg)
+            lbl = QtWidgets.QLabel('', wdg)
             lbl.setProperty("coloredcell", True)
             layout.addWidget(lbl, layoutRow, i, 1, 1)         
  
         #Add the processing settings buttons : amazed bin selection 
         layoutRow += 1
-        self.layoutProcessLeftCol= QtGui.QVBoxLayout()
-        self.btnSetWorkDirPath = QtGui.QPushButton(' Workspace ', wdg)
+        self.layoutProcessLeftCol= QtWidgets.QVBoxLayout()
+        self.btnSetWorkDirPath = QtWidgets.QPushButton(' Workspace ', wdg)
         self.btnSetWorkDirPath.setToolTip('Set the working directory (ex: /usr/tmp/amazed)')
         self.btnSetWorkDirPath.clicked.connect(self.bt_setWorkspace)
         self.layoutProcessLeftCol.addWidget(self.btnSetWorkDirPath) 
         
-        self.btnSetAmazedBinPath = QtGui.QPushButton(' Amazed Bin Path ', wdg)
+        self.btnSetAmazedBinPath = QtWidgets.QPushButton(' Amazed Bin Path ', wdg)
         self.btnSetAmazedBinPath.setToolTip('Set AMAZED bin path (ex: /home/user/amazed/amazed-0.2.5)')
         self.btnSetAmazedBinPath.clicked.connect(self.bt_setAmazedBinPath)
         self.layoutProcessLeftCol.addWidget(self.btnSetAmazedBinPath) 
         
-        self.btnPrintAmazedUsage = QtGui.QPushButton(' Amazed usage ', wdg)
+        self.btnPrintAmazedUsage = QtWidgets.QPushButton(' Amazed usage ', wdg)
         self.btnPrintAmazedUsage.setToolTip('Print AMAZED usage in the console')
         self.btnPrintAmazedUsage.clicked.connect(self.bt_printAmazedBinUsage)
         self.layoutProcessLeftCol.addWidget(self.btnPrintAmazedUsage) 
@@ -305,14 +294,14 @@ class AProcessGui(QtGui.QWidget):
         
         
         #Add the process button
-        self.btnProcess = QtGui.QPushButton('Start Processing', wdg)
+        self.btnProcess = QtWidgets.QPushButton('Start Processing', wdg)
         self.btnProcess.setFixedWidth(500)
         self.btnProcess.setFixedHeight(100)
         self.btnProcess.clicked.connect(self.bt_process)
         self.btnProcess.setToolTip('Process with the selected parameters/configuration...')
         layout.addWidget(self.btnProcess, layoutRow, 1, 1, 1)
 
-        self.btnShow = QtGui.QPushButton('AView', wdg)
+        self.btnShow = QtWidgets.QPushButton('AView', wdg)
         self.btnShow.setFixedHeight(100)
         self.btnShow.clicked.connect(self.bt_show)
         self.btnShow.setToolTip('Start aview to display the results')
@@ -321,7 +310,7 @@ class AProcessGui(QtGui.QWidget):
 
         #Progress bar        
         layoutRow += 1
-        self.barProgress = QtGui.QProgressBar(self)
+        self.barProgress = QtWidgets.QProgressBar(self)
         layout.addWidget(self.barProgress, layoutRow, 1, 1, 1)
         #self.progress.setGeometry(200, 80, 250, 20)
 
@@ -333,15 +322,34 @@ class AProcessGui(QtGui.QWidget):
         
         ### INITIAL POPULATE       
         self.settings = QtCore.QSettings("amazed", "aprocessgui")  
-        self.settings.clear()              
+        #self.settings.clear() 
+
+        #some directories settings
+        _workspace = str(self.settings.value("workspacePath"))
+        if not (_workspace=="None" or _workspace==""):
+            self.bt_setWorkspace(_workspace)   
+        else:
+            self.bt_setWorkspace("/var/tmp/amazed")
+        #print("ProcessGui: using workspace = {}".format(self.m_workspace))
+ 
+         
+        self.amazed_bin_path = "/home/aschmitt/gitlab/amazed/bin/amazed-0.0.0"
+        _amazed_bin_path = str(self.settings.value("amazedBinPath"))
+        if not (_amazed_bin_path=="None" or _amazed_bin_path=="") :
+            self.bt_setAmazedBinPath(_amazed_bin_path)
+        else:
+            self.bt_setAmazedBinPath("/home/aschmitt/gitlab/amazed/bin/amazed-0.0.0") 
+        #print("ProcessGui: using amazed bin path = {}".format(self.amazed_bin_path))
+        print("\n")
+             
         #Set spclist path from settings
-        _spclistPath = self.settings.value("spclistPath").toString()
+        _spclistPath = self.settings.value("spclistPath")
         self.leSpclist.setText(_spclistPath)      
         if _spclistPath=="":
             self.enableCtrls(False)
-        _spcDirPath = self.settings.value("spcDirPath").toString()
+        _spcDirPath = self.settings.value("spcDirPath")
         self.leSpcdir.setText(_spcDirPath) 
-        _ck_useSpcList = self.settings.value("enableSpectrumlist").toString()
+        _ck_useSpcList = self.settings.value("enableSpectrumlist")
         _ck_useSpcListBool = _ck_useSpcList=="True"
         if _ck_useSpcListBool:        
             self.ckSpclist.toggle()   
@@ -351,20 +359,20 @@ class AProcessGui(QtGui.QWidget):
             self.ckSpcFits.toggle()
             self.ckSpcFits.toggle()
             self.ckSpcFits.toggle()
-        _spcFitsPath = self.settings.value("spcFitsPath").toString()
+        _spcFitsPath = self.settings.value("spcFitsPath")
         self.leSpcFits.setText(_spcFitsPath)
-        _noiseFitsPath = self.settings.value("noiseFitsPath").toString()
+        _noiseFitsPath = self.settings.value("noiseFitsPath")
         self.leNoiseFits.setText(_noiseFitsPath) 
         
             
         #templates dir path        
-        _tplDirPath = self.settings.value("tplDirPath").toString()
+        _tplDirPath = self.settings.value("tplDirPath")
         self.leTpldir.setText(_tplDirPath) 
         #Set parameters file path from settings
-        _ParametersFilePath = self.settings.value("ParametersFilePath").toString()
+        _ParametersFilePath = self.settings.value("ParametersFilePath")
         self.leMethodParametersPath.setText(_ParametersFilePath)
         #set checbox all default parameters from settings
-        _cb_parametersAllDefault = self.settings.value("parametersAllDefault").toString()
+        _cb_parametersAllDefault = self.settings.value("parametersAllDefault")
         _cb_parametersAllDefaultBool = _cb_parametersAllDefault=="True"
         #print("_cb_parametersAllDefault = {}".format(_cb_parametersAllDefault))
         #self.ck_parametersAllDefaults(_cb_parametersAllDefaultBool)           
@@ -372,9 +380,9 @@ class AProcessGui(QtGui.QWidget):
             self.ckParametersAllDefaults.toggle()
         
         #Set linecatalog file path from settings
-        _linecatalogFilePath = self.settings.value("linecatalogPath").toString()
+        _linecatalogFilePath = self.settings.value("linecatalogPath")
         self.leLinecatalog.setText(_linecatalogFilePath)  
-        _cb_convertVac2Air = self.settings.value("linecatalogConvertToAir").toString()
+        _cb_convertVac2Air = self.settings.value("linecatalogConvertToAir")
         _cb_convertVac2AirBool = _cb_convertVac2Air=="True"
         if _cb_convertVac2AirBool:        
             self.ckConvertVac2Air.toggle()
@@ -393,21 +401,21 @@ class AProcessGui(QtGui.QWidget):
         _spclistDefault = os.path.abspath(str(self.leSpclist.text()))
         #_spclistDefault = _spclistDefault[:_spclistDefault.index(os.sep)] if os.sep in _spclistDefault else _spclistDefault
         
-        _spclistPath = str(QtGui.QFileDialog.getOpenFileName(self, "Select File",_spclistDefault))
+        _spclistPath, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Select File",_spclistDefault)
         if os.path.exists(_spclistPath):
             #check the diff file is present, if not, do something...
             print("{}: _spclistPath = {}".format(tag, _spclistPath))
-            print("{}: previous from settings = {}".format(tag, self.settings.value("spclistPath").toString()))
+            print("{}: previous from settings = {}".format(tag, self.settings.value("spclistPath")))
             
-            if not _spclistPath == self.settings.value("spclistPath").toString():
-                _spclistPathPrevious = self.settings.value("spclistPath").toString()
+            if not _spclistPath == self.settings.value("spclistPath"):
+                _spclistPathPrevious = self.settings.value("spclistPath")
                 self.settings.setValue("spclistPathPrevious", _spclistPathPrevious);
             self.leSpclist.setText(_spclistPath)
             self.settings.setValue("spclistPath", _spclistPath);
             self.enableCtrls(True)
 
     def bt_setSpclistPrevious(self):
-        _spclistPathPrevious = self.settings.value("spclistPathPrevious").toString()
+        _spclistPathPrevious = self.settings.value("spclistPathPrevious")
         self.leSpclist.setText(_spclistPathPrevious)
         self.settings.setValue("spclistPath", _spclistPathPrevious);
         self.enableCtrls(True) 
@@ -438,32 +446,32 @@ class AProcessGui(QtGui.QWidget):
         _spcDirPath = str(self.leSpcdir.text())
         _SpcFitsDefault = _spcDirPath
         
-        _SpcFitsPath = str(QtGui.QFileDialog.getOpenFileName(self, "Select File",_SpcFitsDefault))
+        _SpcFitsPath, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Select File",_SpcFitsDefault)
         _SpcFitsName = os.path.split(_SpcFitsPath)[1]
         _SpcFitsPath = os.path.join(_spcDirPath , _SpcFitsName)
         if os.path.exists(_SpcFitsPath):
             #check the diff file is present, if not, do something...
             print("{}: _SpcFitsName = {}".format(tag, _SpcFitsName))
-            print("{}: previous from settings = {}".format(tag, self.settings.value("SpcFitsPath").toString()))
+            print("{}: previous from settings = {}".format(tag, self.settings.value("SpcFitsPath")))
             
             
-            if not _SpcFitsPath == self.settings.value("SpcFitsPath").toString():
-                _SpcFitsPathPrevious = self.settings.value("SpcFitsPath").toString()
+            if not _SpcFitsPath == self.settings.value("SpcFitsPath"):
+                _SpcFitsPathPrevious = self.settings.value("SpcFitsPath")
                 self.settings.setValue("SpcFitsPathPrevious", _SpcFitsPathPrevious);
             self.leSpcFits.setText(_SpcFitsName)
             self.settings.setValue("SpcFitsPath", _SpcFitsName);
             self.enableCtrls(True)
         else:
             print("{}: Spectrum fits file not located in spectrum directory. Please update spectrum directory path first.".format(tag))
-            msg = QtGui.QMessageBox()
-            msg.setText("Spectrum fits file not located in spectrum directory. Please update spectrum directory path first.")   
-            msg.setWindowTitle("Error")	
-            msg.setWindowTitle("MessageBox demo")
-            retval = msg.exec_()
+            #msg = QtGui.QMessageBox()
+            #msg.setText("Spectrum fits file not located in spectrum directory. Please update spectrum directory path first.")   
+            #msg.setWindowTitle("Error")	
+            #msg.setWindowTitle("MessageBox demo")
+            #retval = msg.exec_()
 
 
     def bt_setSpcFitsPrevious(self):
-        _SpcFitsPathPrevious = self.settings.value("SpcFitsPathPrevious").toString()
+        _SpcFitsPathPrevious = self.settings.value("SpcFitsPathPrevious")
         self.leSpcFits.setText(_SpcFitsPathPrevious)
         self.settings.setValue("SpcFitsPath", _SpcFitsPathPrevious);
         self.enableCtrls(True) 
@@ -500,17 +508,17 @@ class AProcessGui(QtGui.QWidget):
         _spcDirPath = str(self.leSpcdir.text())
         _NoiseFitsDefault = _spcDirPath
         
-        _NoiseFitsPath = str(QtGui.QFileDialog.getOpenFileName(self, "Select File",_NoiseFitsDefault))
+        _NoiseFitsPath, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Select File",_NoiseFitsDefault)
         _NoiseFitsName = os.path.split(_NoiseFitsPath)[1]
         _NoiseFitsPath = os.path.join(_spcDirPath , _NoiseFitsName)
         if os.path.exists(_NoiseFitsPath):
             #check the diff file is present, if not, do something...
             print("{}: _NoiseFitsName = {}".format(tag, _NoiseFitsName))
-            print("{}: previous from settings = {}".format(tag, self.settings.value("NoiseFitsPath").toString()))
+            print("{}: previous from settings = {}".format(tag, self.settings.value("NoiseFitsPath")))
             
             
-            if not _NoiseFitsPath == self.settings.value("NoiseFitsPath").toString():
-                _NoiseFitsPathPrevious = self.settings.value("NoiseFitsPath").toString()
+            if not _NoiseFitsPath == self.settings.value("NoiseFitsPath"):
+                _NoiseFitsPathPrevious = self.settings.value("NoiseFitsPath")
                 self.settings.setValue("NoiseFitsPathPrevious", _NoiseFitsPathPrevious);
             self.leNoiseFits.setText(_NoiseFitsName)
             self.settings.setValue("NoiseFitsPath", _NoiseFitsName);
@@ -524,7 +532,7 @@ class AProcessGui(QtGui.QWidget):
             retval = msg.exec_()
 
     def bt_setNoiseFitsPrevious(self):
-        _NoiseFitsPathPrevious = self.settings.value("NoiseFitsPathPrevious").toString()
+        _NoiseFitsPathPrevious = self.settings.value("NoiseFitsPathPrevious")
         self.leNoiseFits.setText(_NoiseFitsPathPrevious)
         self.settings.setValue("NoiseFitsPath", _NoiseFitsPathPrevious);
         self.enableCtrls(True) 
@@ -538,21 +546,21 @@ class AProcessGui(QtGui.QWidget):
             _spcdirDefault = os.path.abspath(str(self.leSpcdir.text()))
             #_spcdirDefault = _spcdirDefault[:_spcdirDefault.index(os.sep)] if os.sep in _spcdirDefault else _spcdirDefault
             
-        _spcdirPath = str(QtGui.QFileDialog.getExistingDirectory(self, "Select Spectrum Directory",_spcdirDefault))
+        _spcdirPath = QtWidgets.QFileDialog.getExistingDirectory(self, "Select Spectrum Directory",_spcdirDefault)
         if os.path.exists(_spcdirPath):
             #check the diff file is present, if not, do something...
             print("{}: _spcdirPath = {}".format(tag, _spcdirPath))
-            print("{}: previous from settings = {}".format(tag, self.settings.value("spcdirPath").toString()))
+            print("{}: previous from settings = {}".format(tag, self.settings.value("spcdirPath")))
             
-            if not _spcdirPath == self.settings.value("spcdirPath").toString():
-                _spcdirPathPrevious = self.settings.value("spcdirPath").toString()
+            if not _spcdirPath == self.settings.value("spcdirPath"):
+                _spcdirPathPrevious = self.settings.value("spcdirPath")
                 self.settings.setValue("spcdirPathPrevious", _spcdirPathPrevious);
             self.leSpcdir.setText(_spcdirPath)
             self.settings.setValue("spcdirPath", _spcdirPath);
             self.enableCtrls(True)
 
     def bt_setSpcdirPrevious(self):
-        _spcDirPathPrevious = self.settings.value("spcDirPathPrevious").toString()
+        _spcDirPathPrevious = self.settings.value("spcDirPathPrevious")
         self.leSpcdir.setText(_spcDirPathPrevious)
         self.settings.setValue("spcDirPath", _spcDirPathPrevious);
         self.enableCtrls(True) 
@@ -564,7 +572,7 @@ class AProcessGui(QtGui.QWidget):
         _configFilePathDefault = "/home/aschmitt/Documents/amazed/amazed_v0.2_implementation/data-0.2.4/config_example.txt"
         #_TpldirDefault = _TpldirDefault[:_TpldirDefault.index(os.sep)] if os.sep in _TpldirDefault else _TpldirDefault
         
-        _configFilePath = str(QtGui.QFileDialog.getOpenFileName(self, "Select config.txt file",_configFilePathDefault))
+        _configFilePath, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Select config.txt file",_configFilePathDefault)
         _configFileDir = os.path.split(_configFilePath)[0]
         print("config dir = {}".format(_configFileDir))
         
@@ -573,6 +581,7 @@ class AProcessGui(QtGui.QWidget):
             return
             
         print("{}: importing from {}".format(tag, _configFilePath))
+        convertToAirFound = False
         f = open(_configFilePath)
         for line in f:
             lineStr = line.strip()
@@ -597,72 +606,90 @@ class AProcessGui(QtGui.QWidget):
                     valStr = lineStr.replace(keyword, "")
                     print("{}: Found {} {}".format(tag, keyword, valStr))
                     lcatPath = os.path.abspath(os.path.join(_configFileDir, valStr))
-                    self.leLinecatalog.setText(lcatPath)
+                    self.bt_setLinecatalogFilePath(lcatPath)
                 keyword = "linecatalog-convert="
                 if keyword in lineStr:
                     valStr = lineStr.replace(keyword, "")
                     print("{}: Found {} {}".format(tag, keyword, valStr))
+                    convertToAirFound = True
+                    
                 keyword = "parameters="
                 if keyword in lineStr:
                     valStr = lineStr.replace(keyword, "")
                     print("{}: Found {} {}".format(tag, keyword, valStr))
-                    lcatPath = os.path.abspath(os.path.join(_configFileDir, valStr))
-                    self.leMethodParametersPath.setText(lcatPath)
+                    paramPath = os.path.abspath(os.path.join(_configFileDir, valStr))
+                    self.bt_setParametersFilePath(paramPath)
                 keyword = "templatedir="
                 if keyword in lineStr:
                     valStr = lineStr.replace(keyword, "")
                     print("{}: Found {} {}".format(tag, keyword, valStr))
-                    lcatPath = os.path.abspath(os.path.join(_configFileDir, valStr))
-                    self.leTpldir.setText(lcatPath)
-
-                
+                    tplPath = os.path.abspath(os.path.join(_configFileDir, valStr))
+                    self.bt_setTpldir(tplPath)
         f.close()
-   
-    def bt_setTpldir(self):
-        tag = "setTpldir"
-        _TpldirDefault = os.path.abspath(str(self.leTpldir.text()))
-        #_TpldirDefault = _TpldirDefault[:_TpldirDefault.index(os.sep)] if os.sep in _TpldirDefault else _TpldirDefault
         
-        _TpldirPath = str(QtGui.QFileDialog.getExistingDirectory(self, "Select Templates directory",_TpldirDefault))
+        if convertToAirFound:
+            self.settings.setValue("linecatalogConvertToAir", "True");
+            if not self.ckConvertVac2Air.isChecked():        
+                self.ckConvertVac2Air.toggle()
+        else:
+            self.settings.setValue("linecatalogConvertToAir", "False");
+            if self.ckConvertVac2Air.isChecked():        
+                self.ckConvertVac2Air.toggle()
+
+   
+    def bt_setTpldir(self, newPath=""):
+        tag = "setTpldir"
+        if newPath=="":
+            _TpldirDefault = os.path.abspath(str(self.leTpldir.text()))
+            #_TpldirDefault = _TpldirDefault[:_TpldirDefault.index(os.sep)] if os.sep in _TpldirDefault else _TpldirDefault
+            
+            _TpldirPath = QtWidgets.QFileDialog.getExistingDirectory(self, "Select Templates directory",_TpldirDefault)
+        else:
+            _TpldirPath = newPath
+            
         if os.path.exists(_TpldirPath):
             #check the diff file is present, if not, do something...
             print("{}: _TpldirPath = {}".format(tag, _TpldirPath))
-            print("{}: previous from settings = {}".format(tag, self.settings.value("TpldirPath").toString()))
+            print("{}: previous from settings = {}".format(tag, self.settings.value("TpldirPath")))
             
-            if not _TpldirPath == self.settings.value("TpldirPath").toString():
-                _TpldirPathPrevious = self.settings.value("TpldirPath").toString()
+            if not _TpldirPath == self.settings.value("TpldirPath"):
+                _TpldirPathPrevious = self.settings.value("TpldirPath")
                 self.settings.setValue("TpldirPathPrevious", _TpldirPathPrevious);
             self.leTpldir.setText(_TpldirPath)
             self.settings.setValue("TpldirPath", _TpldirPath);
             self.enableCtrls(True)
 
     def bt_setTpldirPrevious(self):
-        _TpldirPathPrevious = self.settings.value("TpldirPathPrevious").toString()
+        _TpldirPathPrevious = self.settings.value("TpldirPathPrevious")
         self.leTpldir.setText(_TpldirPathPrevious)
         self.settings.setValue("TpldirPath", _TpldirPathPrevious);
         self.enableCtrls(True) 
         
         
-    def bt_setParametersFilePath(self):
+    def bt_setParametersFilePath(self, newPath=""):
         tag = "setParametersFilePath"
-        _MethodParametersDefault = os.path.abspath(str(self.leMethodParametersPath.text()))
-        #_MethodParametersDefault = _MethodParametersDefault[:_MethodParametersDefault.index(os.sep)] if os.sep in _MethodParametersDefault else _MethodParametersDefault
-        
-        _MethodParametersPath = str(QtGui.QFileDialog.getOpenFileName(self, "Select File",_MethodParametersDefault))
+        if newPath=="":
+            _MethodParametersDefault = os.path.abspath(str(self.leMethodParametersPath.text()))
+            #_MethodParametersDefault = _MethodParametersDefault[:_MethodParametersDefault.index(os.sep)] if os.sep in _MethodParametersDefault else _MethodParametersDefault
+            
+            _MethodParametersPath, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Select File",_MethodParametersDefault)
+        else:
+            _MethodParametersPath = newPath
+            
         if os.path.exists(_MethodParametersPath):
             #check the diff file is present, if not, do something...
             print("{}: _MethodParametersPath = {}".format(tag, _MethodParametersPath))
-            print("{}: previous from settings = {}".format(tag, self.settings.value("ParametersFilePath").toString()))
+            print("{}: previous from settings = {}".format(tag, self.settings.value("ParametersFilePath")))
             
-            if not _MethodParametersPath == self.settings.value("ParametersFilePath").toString():
-                _MethodParametersPathPrevious = self.settings.value("ParametersFilePath").toString()
+            if not _MethodParametersPath == self.settings.value("ParametersFilePath"):
+                _MethodParametersPathPrevious = self.settings.value("ParametersFilePath")
                 self.settings.setValue("ParametersFilePathPrevious", _MethodParametersPathPrevious);
             self.leMethodParametersPath.setText(_MethodParametersPath)
             self.settings.setValue("ParametersFilePath", _MethodParametersPath);
             self.enableCtrls(True)
 
     def bt_setParametersFilePathPrevious(self):
-        _MethodParametersPathPrevious = self.settings.value("ParametersFilePathPrevious").toString()
+        _MethodParametersPathPrevious = self.settings.value("ParametersFilePathPrevious")
         self.leMethodParametersPath.setText(_MethodParametersPathPrevious)
         self.settings.setValue("ParametersFilePath", _MethodParametersPathPrevious);
         self.enableCtrls(True) 
@@ -680,27 +707,31 @@ class AProcessGui(QtGui.QWidget):
             self.settings.setValue("parametersAllDefault", "False");
             
         
-    def bt_setLinecatalogFilePath(self):
+    def bt_setLinecatalogFilePath(self, newPath):
         tag = "setLinecatalogFilePath"
-        _linecatalogDefault = os.path.abspath(str(self.leLinecatalog.text()))
-        #_linecatalogDefault = _linecatalogDefault[:_linecatalogDefault.index(os.sep)] if os.sep in _linecatalogDefault else _linecatalogDefault
-        #print("default path = {}".format(_linecatalogDefault))
-                
-        _linecatalogPath = str(QtGui.QFileDialog.getOpenFileName(self, "Select File",_linecatalogDefault))
+        if newPath=="":
+            _linecatalogDefault = os.path.abspath(str(self.leLinecatalog.text()))
+            #_linecatalogDefault = _linecatalogDefault[:_linecatalogDefault.index(os.sep)] if os.sep in _linecatalogDefault else _linecatalogDefault
+            #print("default path = {}".format(_linecatalogDefault))
+                    
+            _linecatalogPath, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Select File",_linecatalogDefault)
+        else:
+            _linecatalogPath = newPath
+            
         if os.path.exists(_linecatalogPath):
             #check the diff file is present, if not, do something...
             print("{}: _linecatalogPath = {}".format(tag, _linecatalogPath))
-            print("{}: previous from settings = {}".format(tag, self.settings.value("linecatalogPath").toString()))
+            print("{}: previous from settings = {}".format(tag, self.settings.value("linecatalogPath")))
             
-            if not _linecatalogPath == self.settings.value("linecatalogPath").toString():
-                _linecatalogPathPrevious = self.settings.value("linecatalogPath").toString()
+            if not _linecatalogPath == self.settings.value("linecatalogPath"):
+                _linecatalogPathPrevious = self.settings.value("linecatalogPath")
                 self.settings.setValue("linecatalogPathPrevious", _linecatalogPathPrevious);
             self.leLinecatalog.setText(_linecatalogPath)
             self.settings.setValue("linecatalogPath", _linecatalogPath);
             self.enableCtrls(True)
 
     def bt_setLinecatalogFilePathPrevious(self):
-        _linecatalogPathPrevious = self.settings.value("linecatalogPathPrevious").toString()
+        _linecatalogPathPrevious = self.settings.value("linecatalogPathPrevious")
         self.leLinecatalog.setText(_linecatalogPathPrevious)
         self.settings.setValue("linecatalogPath", _linecatalogPathPrevious);
         self.enableCtrls(True)
@@ -718,28 +749,35 @@ class AProcessGui(QtGui.QWidget):
             print("    {}".format(self.cbMethod.itemText(count)))
         print("{}: Current index = {}, selection changed to {}".format(tag, i, self.cbMethod.currentText()))
 
-    def bt_setWorkspace(self):
+    def bt_setWorkspace(self, newWorkspace=""):
         tag = "bt_setWorkspace"
-        _wokspaceDefault = self.m_workspace
-        
-        _workspace = str(QtGui.QFileDialog.getExistingDirectory(self, "Select working directory",_wokspaceDefault))
+        if newWorkspace=="":
+            _wokspaceDefault = self.m_workspace
+            
+            _workspace = QtWidgets.QFileDialog.getExistingDirectory(self, "Select working directory",_wokspaceDefault)
+        else:
+            _workspace = newWorkspace
         if os.path.exists(_workspace):
             self.m_workspace = _workspace
+            self.settings.setValue("workspacePath", self.m_workspace);
         else:
             print("{}: ERROR: Unable to set workspace {}".format(tag, _workspace))
         
         print("{}: Using workspace : {}".format(tag, self.m_workspace))       
     
-    def bt_setAmazedBinPath(self):
+    def bt_setAmazedBinPath(self, newBinPath=""):
         tag = "bt_setAmazedBinPath"
-        
-        print("{}: Using amazed_bin_path : {}".format(tag, self.amazed_bin_path))
-        _amazedBinPathDefault = self.amazed_bin_path
-        #_TpldirDefault = _TpldirDefault[:_TpldirDefault.index(os.sep)] if os.sep in _TpldirDefault else _TpldirDefault
-        
-        _amazedBinPath = str(QtGui.QFileDialog.getOpenFileName(self, "Select AMAZED binary (amazed-x-x-x)",_amazedBinPathDefault))
+        if newBinPath=="":
+            _amazedBinPathDefault = self.amazed_bin_path
+            #_TpldirDefault = _TpldirDefault[:_TpldirDefault.index(os.sep)] if os.sep in _TpldirDefault else _TpldirDefault
+            
+            _amazedBinPath, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Select AMAZED binary (amazed-x-x-x)",_amazedBinPathDefault)
+        else:
+            _amazedBinPath = newBinPath
+            
         if os.path.exists(_amazedBinPath):
             self.amazed_bin_path = _amazedBinPath
+            self.settings.setValue("amazedBinPath", self.amazed_bin_path);
         else:
             print("{}: ERROR: Unable to set amazed_bin_path {}".format(tag, _amazedBinPath))
         
@@ -752,7 +790,20 @@ class AProcessGui(QtGui.QWidget):
 
     def bt_process(self):
         tag = ""
-        self.completed = 0        
+        self.completed = 0  
+
+        #init workspace  
+        enable_reinit_workspace= False     
+        if enable_reinit_workspace:
+            if os.path.exists(self.m_workspace):
+                shutil.rmtree(self.m_workspace) 
+            os.mkdir(self.m_workspace) 
+        else:
+            if not os.path.exists(self.m_workspace):
+                os.mkdir(self.m_workspace)
+        
+        #init output path
+        self.m_outputPath = os.path.join(self.m_workspace, "output") 
                 
         if self.ckSpclist.isChecked():
             _spclistPath = str(self.leSpclist.text())
@@ -782,7 +833,10 @@ class AProcessGui(QtGui.QWidget):
         self.btnShow.setEnabled(True)
         print("Process finished.")
         return
-        
+
+    def msgbtn(i):
+        print("Button pressed is:".format(i.text()))        
+    
     def getProgress(self):
 
         config_output_fname = os.path.join(self.m_workspace, "output/config.txt".format())  
@@ -932,7 +986,7 @@ class AProcessGui(QtGui.QWidget):
         
 def main():
     print("\n")
-    app = QtGui.QApplication(sys.argv)
+    app = QtWidgets.QApplication(sys.argv)
     ins = ObjectAProcessGui(parent=app)
     ex = AProcessGui(ins)
     sys.exit(app.exec_())
