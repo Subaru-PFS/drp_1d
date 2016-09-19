@@ -146,6 +146,7 @@ class AViewGui(QtWidgets.QWidget):
         self.lblResultIndex = QtWidgets.QLabel('Result #', wdg)
         layout.addWidget(self.lblResultIndex, layoutRow, 0, 1, 1) 
         self.leResultIndex = QtWidgets.QLineEdit(wdg)
+        self.leResultIndex.editingFinished.connect(self.leResultIndex_handleEditingFinished)
         self.leResultIndex.setFixedWidth(100) 
         layout.addWidget(self.leResultIndex, layoutRow, 1, 1, 2) 
 
@@ -306,6 +307,14 @@ class AViewGui(QtWidgets.QWidget):
         self.leResultIndex.setText(str(current_index-1))
         self.refreshResultDetails()
         
+    def leResultIndex_handleEditingFinished(self):
+        if self.leResultIndex.isModified():
+            iManual = float(self.leResultIndex.text())
+            
+            self.refreshResultDetails()
+            print 'Editing Finished: using imanual = {}'.format(iManual)
+        self.leResultIndex.setModified(False)
+        
         
     #deprecated...
     def bt_showDialog(self):
@@ -404,7 +413,7 @@ class AViewGui(QtWidgets.QWidget):
     def setResultDir(self, newPath=None):
         if newPath==None:
             _resDirDefault = os.path.abspath(str(self.leResDir.text()))
-            _resDirDefault = _resDirDefault[:_resDirDefault.index(os.sep)] if os.sep in _resDirDefault else _resDirDefault
+            #_resDirDefault = _resDirDefault[:_resDirDefault.index(os.sep)] if os.sep in _resDirDefault else _resDirDefault
             
             _resDir = str(QtWidgets.QFileDialog.getExistingDirectory(self, "Select Directory",_resDirDefault))
         else:
