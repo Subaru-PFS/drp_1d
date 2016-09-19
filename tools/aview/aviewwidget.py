@@ -113,7 +113,10 @@ class AViewWidget(QtWidgets.QWidget):
         
         #Add the navigation shortcuts
         layoutResNavigation = QtWidgets.QHBoxLayout()
+        self.lblNavigate = QtWidgets.QLabel('Navigate: ', wdg)
+        layoutResNavigation.addWidget(self.lblNavigate)
         self.btnNavReprocess = QtWidgets.QPushButton(' Go to re-process ', wdg)
+        self.btnNavReprocess.clicked.connect(self.bt_setNavReprocess)
         layoutResNavigation.addWidget(self.btnNavReprocess)
         self.btnNavNext = QtWidgets.QPushButton(' Next ', wdg)
         self.btnNavNext.clicked.connect(self.bt_setNavNextResult)
@@ -378,6 +381,9 @@ class AViewWidget(QtWidgets.QWidget):
     def bt_setNavNextResult(self):
         #self.close()
         self.parent.aviewwidget_nextResult()
+        
+    def bt_setNavReprocess(self):
+        self.parent.aviewwidget_reprocess()
         
     def closeEvent(self, event):
         print "AviewWidget: Closing"

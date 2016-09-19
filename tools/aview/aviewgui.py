@@ -14,6 +14,7 @@ import time
 
 import aview
 import aviewwidget
+import aprocessgui
 import resultstat
 import resparser
 
@@ -38,10 +39,9 @@ class AViewGui(QtWidgets.QWidget):
         wdg = self#QtGui.QWidget()
         layout = QtWidgets.QGridLayout(wdg)     
         
-        
         layoutRow = 0
         separator_height = 20        
-        separator_ncols = 7
+        separator_ncols = 4
         
         #Add the configuration separator
         self.lblInputSection = QtWidgets.QLabel('Load results', wdg) 
@@ -76,15 +76,19 @@ class AViewGui(QtWidgets.QWidget):
         self.btnBrowseResdirPrevious.clicked.connect(self.bt_setResultDirPrevious)
         layout.addWidget(self.btnBrowseResdirPrevious, layoutRow, 3, 1, 1)
         
+        #Add the favorite results ctrls
+        layoutRow += 1
+        layoutFavorites = QtWidgets.QHBoxLayout()        
         self.btnSetResdirFavorite = QtWidgets.QPushButton(' Set as Favorite ', wdg)
         self.btnSetResdirFavorite.setToolTip('Set the favorite ResDir...')
         self.btnSetResdirFavorite.clicked.connect(self.bt_setResultDirFavorite)
-        layout.addWidget(self.btnSetResdirFavorite, layoutRow, 4, 1, 1)
+        layoutFavorites.addWidget(self.btnSetResdirFavorite)
         
-        self.btnLoadResdirFavorite = QtWidgets.QPushButton(' Load Favorite ', wdg)
-        self.btnLoadResdirFavorite.setToolTip('Load favorite ResDir...')
+        self.btnLoadResdirFavorite = QtWidgets.QPushButton(' Retrieve Favorite ', wdg)
+        self.btnLoadResdirFavorite.setToolTip('Retrieve favorite ResDir...')
         self.btnLoadResdirFavorite.clicked.connect(self.bt_loadResultDirFavorite)
-        layout.addWidget(self.btnLoadResdirFavorite, layoutRow, 5, 1, 1)
+        layoutFavorites.addWidget(self.btnLoadResdirFavorite)
+        layout.addLayout(layoutFavorites, layoutRow, 1, 1, 1)
         
         #Add the failure threshold filter ctrls
         layoutRow += 1
@@ -391,6 +395,7 @@ class AViewGui(QtWidgets.QWidget):
             self.AViewWidget.show()
         except:
             print("ERROR: Unable to show this result... (i={})".format(_spcIdx))
+            print("NB: Maybe this source hasn't been processed successfully by amazed...(cf. zcalc=-1)".format())
             
    
     def bt_setResultDir(self):
@@ -503,6 +508,18 @@ class AViewGui(QtWidgets.QWidget):
         time.sleep(1.0)
         self.bt_showAViewWidget()
         QtWidgets.QApplication.restoreOverrideCursor()
+        
+        
+    def aviewwidget_reprocess(self):
+        self.AViewWidget.close()
+        
+        _resDir = str(self.leResDir.text())
+        _spcName = str(self.leResultSpcName.text())
+        _initReprocessData = [_resDir, _spcName]
+        
+        self.aprocessWindow = aprocessgui.AProcessGui(obj=None, initReprocess=_initReprocessData)
+        self.aprocessWindow.show()
+    
  
 def main():
     app = QtWidgets.QApplication(sys.argv)

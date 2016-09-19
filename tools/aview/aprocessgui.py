@@ -39,7 +39,7 @@ def file_len(fname):
         return 0
         
 class AProcessGui(QtWidgets.QWidget):
-    def __init__(self, obj):
+    def __init__(self, obj=None, initReprocess=None):
         super(AProcessGui, self).__init__()
         self.obj = obj
         wdg = self#QtGui.QWidget()
@@ -383,6 +383,14 @@ class AProcessGui(QtWidgets.QWidget):
         #set the thread count        
         self.leProcThreadCount.setText("1") 
         self.btnShow.setEnabled(False)
+        
+        #OPTIONALLY populate from external Result Directory and Spectrum Tag
+        if not initReprocess==None:
+            _resDir = initReprocess[0]
+            _spcTag = initReprocess[1]
+            #_resDir = "/home/aschmitt/data/keck/amazed/res_20160914_cosm4n1_linemodel_wavelets8_nosuperstrong"
+            #_spcTag = "spec1d.m4-n1.005.COSMOS-1450404_F"
+            self.initForReprocess( _resDir, _spcTag)
             
         wdg.setStyleSheet("*[coloredcell=\"true\"] {background-color:rgb(215,215,215);}")
         self.show()
@@ -515,13 +523,21 @@ class AProcessGui(QtWidgets.QWidget):
             
    
     def bt_setNoiseFits(self):
+        self.setNoiseFits()
+           
+    def setNoiseFits(self, newName=None):
         tag = "setNoiseFits"
         
         _spcDirPath = str(self.leSpcdir.text())
-        _NoiseFitsDefault = _spcDirPath
         
-        _NoiseFitsPath, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Select File",_NoiseFitsDefault)
-        _NoiseFitsName = os.path.split(_NoiseFitsPath)[1]
+        if newName==None:
+            _NoiseFitsDefault = _spcDirPath
+            
+            _NoiseFitsPath, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Select File",_NoiseFitsDefault)
+            _NoiseFitsName = os.path.split(_NoiseFitsPath)[1]
+        else:
+            _NoiseFitsName = newName
+            
         _NoiseFitsPath = os.path.join(_spcDirPath , _NoiseFitsName)
         if os.path.exists(_NoiseFitsPath):
             current_settings_value = self.settings.value("noiseFitsPath")
@@ -584,15 +600,50 @@ class AProcessGui(QtWidgets.QWidget):
         self.leSpcdir.setText(_spcDirPathPrevious)
         self.settings.setValue("spcDirPath", _spcDirPathPrevious);
         self.enableCtrls(True) 
+
         
+    def initForReprocess(self, resDir, spcTag):
+        """
+        Initialize the dialog/ctrls with custom parameters coming from an existing batch.
+        """
+        #self.setInputSpcToReprocess()
+        _resParser = resparser.ResParser(resDir)
+
+        #retrieve config params to ui controls
+        _configPath = _resParser.configpath        
+        self.importConfigFile(_configPath)
+        #override parameters .json from the resdir
+        newParamsPath = os.path.join(self.m_workspace, "params_reprocess.json")
+        shutil.copyfile(_resParser.parameterspath, newParamsPath)
+        self.setParametersFilePath(newParamsPath)
+
+        #retrieve spectrum directory to ui controls
+        _spcDir = _resParser.getConfigVal('spectrumdir')
+        self.setSpcdir(_spcDir)
+        
+        #retrieve/set spectrum/noise fits path
+        splListLine = _resParser.getSpectrumlistline(spcTag)
+        _SpcFits = splListLine[0]
+        self.setSpcFits(_SpcFits)
+        _SpcNoise = splListLine[1]
+        self.setNoiseFits(_SpcNoise)
+           
        
     def bt_importConfigFile(self):
-        tag = "bt_importConfigFile"
-        
+                
         _configFilePathDefault = "/home/aschmitt/Documents/amazed/amazed_v0.2_implementation/data-0.2.4/config_example.txt"
         #_TpldirDefault = _TpldirDefault[:_TpldirDefault.index(os.sep)] if os.sep in _TpldirDefault else _TpldirDefault
-        
         _configFilePath, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Select config.txt file",_configFilePathDefault)
+        
+        self.importConfigFile(_configFilePath)
+               
+    def importConfigFile(self, configPath):
+        """
+        Import the config settings from a file to the UI controls. (except for inputs (spectrum dir, spectrum list) that are not imported)
+        """
+        tag = "bt_importConfigFile"
+
+        _configFilePath = configPath
         _configFileDir = os.path.split(_configFilePath)[0]
         print("config dir = {}".format(_configFileDir))
         
@@ -638,7 +689,7 @@ class AProcessGui(QtWidgets.QWidget):
                     valStr = lineStr.replace(keyword, "")
                     print("{}: Found {} {}".format(tag, keyword, valStr))
                     paramPath = os.path.abspath(os.path.join(_configFileDir, valStr))
-                    self.bt_setParametersFilePath(paramPath)
+                    self.setParametersFilePath(paramPath)
                 keyword = "templatedir="
                 if keyword in lineStr:
                     valStr = lineStr.replace(keyword, "")
@@ -691,6 +742,9 @@ class AProcessGui(QtWidgets.QWidget):
         
         
     def bt_setParametersFilePath(self, newPath=None):
+        self.setParametersFilePath()
+                
+    def setParametersFilePath(self, newPath=None):
         tag = "setParametersFilePath"
         if newPath==None:
             _MethodParametersDefault = os.path.abspath(str(self.leMethodParametersPath.text()))
