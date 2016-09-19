@@ -10,6 +10,7 @@ import sys
 import os
 import inspect
 import glob
+import time
 
 import aview
 import aviewwidget
@@ -40,7 +41,7 @@ class AViewGui(QtWidgets.QWidget):
         
         layoutRow = 0
         separator_height = 20        
-        separator_ncols = 5
+        separator_ncols = 7
         
         #Add the configuration separator
         self.lblInputSection = QtWidgets.QLabel('Load results', wdg) 
@@ -74,6 +75,16 @@ class AViewGui(QtWidgets.QWidget):
         self.btnBrowseResdirPrevious.setToolTip('Back to the previous ResDir...')
         self.btnBrowseResdirPrevious.clicked.connect(self.bt_setResultDirPrevious)
         layout.addWidget(self.btnBrowseResdirPrevious, layoutRow, 3, 1, 1)
+        
+        self.btnSetResdirFavorite = QtWidgets.QPushButton(' Set as Favorite ', wdg)
+        self.btnSetResdirFavorite.setToolTip('Set the favorite ResDir...')
+        self.btnSetResdirFavorite.clicked.connect(self.bt_setResultDirFavorite)
+        layout.addWidget(self.btnSetResdirFavorite, layoutRow, 4, 1, 1)
+        
+        self.btnLoadResdirFavorite = QtWidgets.QPushButton(' Load Favorite ', wdg)
+        self.btnLoadResdirFavorite.setToolTip('Load favorite ResDir...')
+        self.btnLoadResdirFavorite.clicked.connect(self.bt_loadResultDirFavorite)
+        layout.addWidget(self.btnLoadResdirFavorite, layoutRow, 5, 1, 1)
         
         #Add the failure threshold filter ctrls
         layoutRow += 1
@@ -353,7 +364,7 @@ class AViewGui(QtWidgets.QWidget):
         
         
     def bt_showAViewWidget(self):
-        
+        tag = "bt_showAViewWidget"
         _resDir = str(self.leResDir.text())
         
         _spcName = str(self.leResultSpcName.text())
@@ -375,15 +386,25 @@ class AViewGui(QtWidgets.QWidget):
             
         _resParser = resparser.ResParser(_resDir)
 
-        self.AViewWidget = aviewwidget.AViewWidget(parent=None, resParser=_resParser, resList=self.resList, resIdx=_spcIdx, iextremaredshift=_iextremaredshift)
-        self.AViewWidget.show()
-        
-    
+        try:
+            self.AViewWidget = aviewwidget.AViewWidget(parent=self, resParser=_resParser, resList=self.resList, resIdx=_spcIdx, iextremaredshift=_iextremaredshift)
+            self.AViewWidget.show()
+        except:
+            print("ERROR: Unable to show this result... (i={})".format(_spcIdx))
+            
+   
     def bt_setResultDir(self):
-        _resDirDefault = os.path.abspath(str(self.leResDir.text()))
-        _resDirDefault = _resDirDefault[:_resDirDefault.index(os.sep)] if os.sep in _resDirDefault else _resDirDefault
-        
-        _resDir = str(QtWidgets.QFileDialog.getExistingDirectory(self, "Select Directory",_resDirDefault))
+        self.setResultDir()
+    
+    def setResultDir(self, newPath=None):
+        if newPath==None:
+            _resDirDefault = os.path.abspath(str(self.leResDir.text()))
+            _resDirDefault = _resDirDefault[:_resDirDefault.index(os.sep)] if os.sep in _resDirDefault else _resDirDefault
+            
+            _resDir = str(QtWidgets.QFileDialog.getExistingDirectory(self, "Select Directory",_resDirDefault))
+        else:
+            _resDir = newPath
+            
         if os.path.exists(_resDir):
             #check the diff file is present, if not, do something...
             print("_resDir = {}".format(_resDir))
@@ -401,6 +422,15 @@ class AViewGui(QtWidgets.QWidget):
         self.leResDir.setText(_resDirPrevious)
         self.settings.setValue("resDir", _resDirPrevious);
         self.enableCtrls(True)
+        
+    def bt_setResultDirFavorite(self):
+        _path = str(self.leResDir.text())
+        if os.path.exists(_path):
+            self.settings.setValue("resDirFavorite", _path)
+    
+    def bt_loadResultDirFavorite(self):
+        _path = self.settings.value("resDirFavorite", defaultValue = "", type=str)
+        self.setResultDir(_path)
         
     def ck_extremumOverride(self, state):
         if state == QtCore.Qt.Checked:
@@ -463,7 +493,16 @@ class AViewGui(QtWidgets.QWidget):
                 continueDown = False
                 print("SETTING CURRENT DIRECTORY: _amazedDir = {}".format(_amazedDir))
             else:
-                _abscurpath = os.path.realpath(os.path.abspath(os.path.join(_abscurpath,subfolder)))  
+                _abscurpath = os.path.realpath(os.path.abspath(os.path.join(_abscurpath,subfolder))) 
+    
+    def aviewwidget_nextResult(self):
+        self.AViewWidget.close()
+        QtWidgets.QApplication.setOverrideCursor(QtGui.QCursor(QtCore.Qt.WaitCursor))
+        self.bt_nextResultIndex()
+        self.repaint()
+        time.sleep(1.0)
+        self.bt_showAViewWidget()
+        QtWidgets.QApplication.restoreOverrideCursor()
  
 def main():
     app = QtWidgets.QApplication(sys.argv)

@@ -109,6 +109,16 @@ class AViewWidget(QtWidgets.QWidget):
         #self.ckRedshiftChoiceOverride.setFixedHeight(30) 
         self.ckRedshiftChoiceOverride.stateChanged.connect(self.ck_redshiftOverride)
         layoutRedshift.addWidget(self.ckRedshiftChoiceOverride)
+        
+        
+        #Add the navigation shortcuts
+        layoutResNavigation = QtWidgets.QHBoxLayout()
+        self.btnNavReprocess = QtWidgets.QPushButton(' Go to re-process ', wdg)
+        layoutResNavigation.addWidget(self.btnNavReprocess)
+        self.btnNavNext = QtWidgets.QPushButton(' Next ', wdg)
+        self.btnNavNext.clicked.connect(self.bt_setNavNextResult)
+        layoutResNavigation.addWidget(self.btnNavNext)
+        
 
         #set the layout    
         layoutLeftColumn = QtWidgets.QVBoxLayout()
@@ -133,10 +143,18 @@ class AViewWidget(QtWidgets.QWidget):
         lbl.setProperty("coloredcell", True)
         lbl.setFixedHeight(5)
         layoutLeftColumn.addWidget(lbl)         
-        lbl = QtWidgets.QLabel('', wdg)
-        layoutLeftColumn.addWidget(lbl) 
+        #lbl = QtWidgets.QLabel('', wdg)
+        #layoutLeftColumn.addWidget(lbl) 
 
         layoutLeftColumn.addLayout(layoutRedshift)
+        #add seperator
+        lbl = QtWidgets.QLabel('', wdg)
+        lbl.setProperty("coloredcell", True)
+        lbl.setFixedHeight(5)
+        layoutLeftColumn.addWidget(lbl) 
+        
+        layoutLeftColumn.addLayout(layoutResNavigation)
+        
         v_widget = QtWidgets.QWidget()
         v_widget.setLayout(layoutLeftColumn)
         v_widget.setFixedWidth(500)
@@ -147,21 +165,6 @@ class AViewWidget(QtWidgets.QWidget):
         lbl.setFixedWidth(5)
         lbl.setProperty("coloredcell", True)
         layout.addWidget(lbl, layoutRow, 2, 1, 1) 
-        
-        #add aviewplot.py figure
-        #self.loadAViewPlot()
-        #self.figureAView = Figure()
-        # a figure instance to plot on
-        #figureAView = plt.figure()
-        #plt.plot(range(100))
-
-        # this is the Canvas Widget that displays the `figure`
-        # it takes the `figure` instance as a parameter to __init__
-        #self.canvasAView = Graph(self, figureAView, graphType="aview")
-
-        # this is the Navigation widget
-        # it takes the Canvas widget and a parent
-        #self.toolbarAView = NavigationToolbar(self.canvasAView, self)
 
         # set the layout
         self.layoutAviewPlot = QtWidgets.QVBoxLayout()
@@ -370,9 +373,14 @@ class AViewWidget(QtWidgets.QWidget):
         
         QtWidgets.QApplication.restoreOverrideCursor()
         print('{}: finished\n\n'.format(tag))
+    
+        
+    def bt_setNavNextResult(self):
+        #self.close()
+        self.parent.aviewwidget_nextResult()
         
     def closeEvent(self, event):
-        print "AviewGui: Closing main widget"
+        print "AviewWidget: Closing"
         self.canvasChi2.ax.cla()
         #super(MainWidget, self).closeEvent(event)
         

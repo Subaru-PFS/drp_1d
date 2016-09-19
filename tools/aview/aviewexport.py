@@ -36,8 +36,10 @@ def export(resDir, spcName, iextremaredshift):
         _diffthres = diffthres
         _failureindex = indice
         _resDir = resDir
-        aview.plotRes(_resDir, _spcName, _tplpath, _redshift, _iextremaredshift, _diffthres, _failureindex, enablePlot=False)
-        
+        try:
+            aview.plotRes(_resDir, _spcName, _tplpath, _redshift, _iextremaredshift, _diffthres, _failureindex, enablePlot=False)
+        except:
+            pass
 
 def StartFromCommandLine( argv ) :	
     usage = """usage: %prog [options]

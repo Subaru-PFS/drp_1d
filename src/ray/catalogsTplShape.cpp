@@ -26,7 +26,7 @@ CRayCatalogsTplShape::~CRayCatalogsTplShape()
 
 Bool CRayCatalogsTplShape::Init()
 {
-    std::string dirPath = "/home/aschmitt/data/vuds/VUDS_flag3_4/amazed/linecatalogs/linecatalogs_tplshape_ExtendedTemplatesMarch2016_v2_20160828_B10I";
+    std::string dirPath = "/home/aschmitt/data/vuds/VUDS_flag3_4/amazed/linecatalogs/linecatalogs_tplshape_ExtendedTemplatesMarch2016_v2_20160916_B10I2";
     Load(dirPath.c_str());
     //Bool catalogsAreAligned = AreCatalogsAligned(restRayList, typeFilter, forceFilter);
     return true;
