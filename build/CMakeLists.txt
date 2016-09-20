@@ -33,7 +33,7 @@ SET( cpf-redshift_THIRDPARTY_INCLUDE_DIR ${ROOT_DIR}/thirdparty/include/ )
 SET( cpf-redshift_LINK_DIR ${ROOT_DIR}/lib/ )
 SET( cpf-redshift_THIRDPARTY_LINK_DIR ${ROOT_DIR}/thirdparty/lib/ )
 
-SET( cpf-redshift_THIRDPARTY_LIBS cfitsio pthread boost_filesystem boost_system boost_thread boost_timer boost_chrono  boost_program_options boost_regex  gsl gslcblas)
+SET( cpf-redshift_THIRDPARTY_LIBS cfitsio pthread boost_filesystem boost_system boost_thread boost_timer boost_chrono  boost_program_options boost_regex  libgsl.a libgslcblas.a)
 
 #--------------------------------------------------------
 # Preprocessor and linker path
