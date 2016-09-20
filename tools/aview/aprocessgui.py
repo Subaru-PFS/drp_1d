@@ -5,7 +5,7 @@ Created on Fri Sep  2 09:06:12 2016
 @author: aschmitt
 """
 
- 
+from PyQt5.QtCore import QObject
 from PyQt5 import QtGui, QtCore, QtWidgets
 import sys
 import os
@@ -13,8 +13,11 @@ import inspect
 import glob
 import time
 import threading
-
 import shutil
+
+#import mpl only to force Qt5Agg
+import matplotlib as mpl
+mpl.use('Qt5Agg')
 
 import aview
 import resultstat

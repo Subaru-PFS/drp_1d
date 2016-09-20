@@ -9,7 +9,8 @@ import sys
 import optparse
 
 import matplotlib as mpl
-mpl.rcParams.update(mpl.rcParamsDefault)
+mpl.use('Qt5Agg')
+#mpl.rcParams.update(mpl.rcParamsDefault)
 
 import matplotlib.pyplot as pp
 #import seaborn as sns

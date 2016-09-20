@@ -5,6 +5,11 @@ Created on Sat Jul 25 11:21:31 2015
 @author: aschmitt
 """
  
+
+#import mpl only to force Qt5Agg
+import matplotlib as mpl
+mpl.use('Qt5Agg')
+
 from PyQt5 import QtGui, QtCore, QtWidgets
 import sys
 import os
@@ -267,7 +272,7 @@ class AViewGui(QtWidgets.QWidget):
                 _refzfilepath = str(QtWidgets.QFileDialog.getOpenFileName(self, "Select Reference Redshift list file", _refzfilepathDefault))
             if os.path.exists(_refzfilepath) :
                 if os.path.isdir(statsPath)==False:
-                    os.mkdir( statsPath, 0755 );
+                    os.mkdir( statsPath, mode=755 );
                 self.settings.setValue("refzfilepath", _refzfilepath)
                 processAmazedOutputStats.setPFSRefFileType()
                 processAmazedOutputStats.ProcessDiff( _refzfilepath, calcFile, diffPath , reftype='pfs')
@@ -312,7 +317,7 @@ class AViewGui(QtWidgets.QWidget):
             iManual = float(self.leResultIndex.text())
             
             self.refreshResultDetails()
-            print 'Editing Finished: using imanual = {}'.format(iManual)
+            print('Editing Finished: using imanual = {}'.format(iManual))
         self.leResultIndex.setModified(False)
         
         
@@ -332,7 +337,7 @@ class AViewGui(QtWidgets.QWidget):
             _refzfilepath = str(QtWidgets.QFileDialog.getOpenFileName(self, "Select Reference Redshift list file", _refzfilepathDefault))
             if os.path.exists(_refzfilepath) :
                 if os.path.isdir(statsPath)==False:
-                    os.mkdir( statsPath, 0755 );
+                    os.mkdir( statsPath, 755 );
                 self.settings.setValue("refzfilepath", _refzfilepath)
                 processAmazedOutputStats.setPFSRefFileType()
                 processAmazedOutputStats.ProcessDiff( _refzfilepath, calcFile, diffPath )

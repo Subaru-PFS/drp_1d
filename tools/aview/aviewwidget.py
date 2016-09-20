@@ -18,9 +18,14 @@ import shutil
 
 import numpy as np
 
+
+#import mpl only to force Qt5Agg
+import matplotlib as mpl
+mpl.use('Qt5Agg')
+
 #from matplotlib.backends import qt_compat
 from PyQt5 import QtGui, QtCore, QtWidgets
-    
+
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas    
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
