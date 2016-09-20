@@ -33,6 +33,7 @@ public:
 
     Bool Add( const CRay& r );
     Bool Load( const char* filePath );
+    Bool Save( const char* filePath );
     const TRayVector& GetList() const;
     const TRayVector GetFilteredList(Int32 typeFilter = -1, Int32 forceFilter=-1) const;
     const std::vector<CRayCatalog::TRayVector> ConvertToGroupList( TRayVector filteredList ) const;

@@ -23,7 +23,7 @@ public:
 
      std::shared_ptr<COperatorResult> Compute(const CSpectrum& spectrum, const CTemplate& tpl,
                                     const TFloat64Range& lambdaRange, const TFloat64List& redshifts,
-                                    Float64 overlapThreshold , std::string opt_interp);
+                                    Float64 overlapThreshold , std::string opt_interp, Int32 opt_extinction=0 );
 
     const COperatorResult* ExportChi2versusAZ( const CSpectrum& spectrum, const CTemplate& tpl,
                                     const TFloat64Range& lambdaRange, const TFloat64List& redshifts,
@@ -35,7 +35,7 @@ private:
 
     Void BasicFit(const CSpectrum& spectrum, const CTemplate& tpl, Float64 *pfgTplBuffer,
                    const TFloat64Range& lambdaRange, Float64 redshift, Float64 overlapThreshold,
-                   Float64& overlapRate, Float64& chiSquare, Float64 &fittingAmplitude, EStatus& status, std::string opt_interp, Float64 forcedAmplitude=-1);
+                   Float64& overlapRate, Float64& chiSquare, Float64 &fittingAmplitude, EStatus& status, std::string opt_interp, Float64 forcedAmplitude=-1, Int32 opt_extinction=0 );
 
     CTemplate       m_templateRebined_bf; //buffer
     CMask           m_mskRebined_bf; //buffer

@@ -110,6 +110,7 @@ Bool CMethodChisquare2Solve::Solve( CDataStore& resultStore, const CSpectrum& sp
     Int32 _spctype = spctype;
     Int32 _spctypetab[3] = {CChisquare2SolveResult::nType_raw, CChisquare2SolveResult::nType_noContinuum, CChisquare2SolveResult::nType_continuumOnly};
 
+    Int32 opt_extinction = 0;
 
     //case: nType_all
     if(spctype == CChisquare2SolveResult::nType_all){
@@ -135,6 +136,9 @@ Bool CMethodChisquare2Solve::Solve( CDataStore& resultStore, const CSpectrum& sp
             tplfluxAxis.Subtract(tplWithoutCont.GetFluxAxis());
             CSpectrumFluxAxis& tfluxAxisPtr = _tpl.GetFluxAxis();
             tfluxAxisPtr = tplfluxAxis;
+
+            opt_extinction = 1; //enable extinction for continuum fitting only
+
             scopeStr = "chisquare_continuum";
         }else if(_spctype == CChisquare2SolveResult::nType_raw){
             // use full spectrum
@@ -158,7 +162,7 @@ Bool CMethodChisquare2Solve::Solve( CDataStore& resultStore, const CSpectrum& sp
         // Compute merit function
         COperatorChiSquare2 chiSquare;
         //CRef<CChisquareResult>  chisquareResult = (CChisquareResult*)chiSquare.ExportChi2versusAZ( _spc, _tpl, lambdaRange, redshifts, overlapThreshold );
-        auto  chisquareResult = std::dynamic_pointer_cast<CChisquareResult>( chiSquare.Compute( _spc, _tpl, lambdaRange, redshifts, overlapThreshold, opt_interp ) );
+        auto  chisquareResult = std::dynamic_pointer_cast<CChisquareResult>( chiSquare.Compute( _spc, _tpl, lambdaRange, redshifts, overlapThreshold, opt_interp, opt_extinction ) );
 
         if( !chisquareResult )
         {

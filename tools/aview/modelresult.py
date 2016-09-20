@@ -4,10 +4,13 @@
 """
 
 import os
+import sys
 import re
 import random
 import matplotlib.pyplot as pp
 import numpy as np
+
+import argparse
 
 class ModelResult(object):
     def __init__(self, modelpath):
@@ -30,6 +33,8 @@ class ModelResult(object):
         
         lineid = []
         amplitude = []
+        error = []
+        errorfit = []
                 
         f = open(filename)
         for line in f:            
@@ -47,6 +52,8 @@ class ModelResult(object):
                     
                     lineid.append(float(data[3]))
                     amplitude.append(float(data[5])) 
+                    error.append(float(data[6])) 
+                    errorfit.append(float(data[7]))
             if lineStr.startswith('#lya asymfit params = {'):
                 data = re.split("widthCoeff=", lineStr)
                 data = re.split(", alpha=", data[1])
@@ -75,7 +82,9 @@ class ModelResult(object):
         self.lineforce = range(0,self.n)
         self.linetype = range(0,self.n)  
         self.lineid = range(0,self.n)   
-        self.lineamplitude = range(0,self.n)  
+        self.lineamplitude = range(0,self.n) 
+        self.lineerror = range(0,self.n)  
+        self.lineerrorfit = range(0,self.n)  
         for x in range(0,self.n):
             self.linelambda[x] = linelambda[x]
             self.linename[x] = name[x]
@@ -83,6 +92,10 @@ class ModelResult(object):
             self.linetype[x] = linetype[x]
             self.lineid[x] = lineid[x]
             self.lineamplitude[x] = amplitude[x]
+            self.lineerror[x] = error[x]
+            self.lineerrorfit[x] = errorfit[x]
+            #print("error loaded = {}".format(error[x]))
+                
 
     def save(self, outputPath):
         text_file = open(outputPath, "w")
@@ -97,30 +110,50 @@ class ModelResult(object):
     
         
     def plot(self):
+        
+        #plotValue = self.lineerror 
+        #plotValue = [a/self.lineerror[i] for i, a in enumerate(self.lineamplitude)]
+        plotValue = self.lineamplitude 
+        enableYRescaleAuto = 1
+        
         amax = 0.0
         emax = 0.0
         for k in range(self.n):
-            if amax < self.lineamplitude[k] and self.linetype[k] == "A":
-                amax = self.lineamplitude[k]
-            if emax < self.lineamplitude[k] and self.linetype[k] == "E":
-                emax = self.lineamplitude[k]
+            if amax < plotValue[k] and self.linetype[k] == "A":
+                amax = plotValue[k]
+            if emax < plotValue[k] and self.linetype[k] == "E":
+                emax = plotValue[k]
         aemax = max(amax, emax)
-        plotrange = 1000.0
-        coeffAmp = plotrange/aemax
-        
+        #aemax = 2.45435e-17
+        #aemax = 1e-18
+        print("aemax = {}".format(aemax))
+        if amax==0 and not emax==0 :
+            amax = emax/20.0
+        if emax==0 and not amax==0 :
+            emax = amax/20.0
+            
+        if enableYRescaleAuto:
+            plotrange = 1000.0
+            coeffAmp = plotrange/aemax
+            ymarginValue = 200
+        else:
+            coeffAmp = 1.0
+            ymarginValue = aemax/5.0
+            
         pp.figure(figsize=(10,8))
         linesaxisticks = []
         linesaxistickspos = []
         for k in range(self.n):
-            if self.lineamplitude[k] <=0.0:
+            if plotValue[k] <=0.0:
                 continue
             lbl = "{} - {}A".format(self.linename[k],self.linelambda[k])
             linesaxisticks.append(lbl)
             linesaxistickspos.append(self.linelambda[k])
             x = self.linelambda[k]
-            y = self.lineamplitude[k]*coeffAmp
+            y = plotValue[k]*coeffAmp
             ccolor = 'b'
-            ymargintext = 200+random.random()*250.0
+            
+            ymargintext = ymarginValue+random.random()*ymarginValue*1.25
             alpha= y/emax/coeffAmp/3.0*2.0+0.3
             if self.linetype[k] == "A":
                 y=-y
@@ -130,13 +163,19 @@ class ModelResult(object):
             #print("x = {}".format(x))
             #print("y = {}".format(y))
             pp.plot((x, x), (0, y), label=self.linename[k], color=ccolor, linewidth = 3.0)
-            pp.plot((x, x), (0, y+ymargintext), label=self.linename[k], linestyle = 'dashed', color=ccolor , alpha= alpha)
-            pp.text(x, y+ymargintext, '{0}'.format(self.linename[k]), color=ccolor, alpha= alpha)
+            if 1:
+                pp.plot((x, x), (0, y+ymargintext), label=self.linename[k], linestyle = 'dashed', color=ccolor , alpha= alpha)
+                pp.text(x, y+ymargintext, '{0}'.format(self.linename[k]), color=ccolor, alpha= alpha)
         
         
         #pp.xticks(linesaxistickspos, linesaxisticks, rotation=45,verticalalignment='top')        
         
-        pp.ylim([-plotrange*amax/aemax - 500, plotrange*emax/aemax + 500])
+        if enableYRescaleAuto:
+            pp.ylim([-plotrange*amax/aemax - 500, plotrange*emax/aemax + 500])
+        if 1:
+            valf = ymarginValue*3.0
+            pp.ylim([-valf, valf])
+            
         pp.grid(True) # Affiche la grille
         #pp.legend(('spectrum','shifted template'), 'lower left', shadow = True)
         pp.xlabel('Rest Wavelength (Angstrom)')
@@ -266,6 +305,57 @@ class ModelResult(object):
         print("MEAN ( {} highest EL amps ) = {}".format(nhighestValid, outVal))
         return outVal  
         
+    def getNLinesStrong(self, z=1.0, linetypefilter='E', thresSNR=3.0, thresRelAmp=3.0):
+        print("\n")
+        print("Linemodel-result: (N highest peaks)")
+        m_instrumentResolutionEmpiricalFactor = 230.0/325.0/2.35;
+        R=250;
+        validLinesIdx = []
+        validLinesSnr = []
+        skipnextline = 0
+        for k in range(self.n): 
+            if skipnextline:
+                skipnextline = 0
+                continue
+            if self.lineerror[k]>0 and self.lineerrorfit[k]>0.0 and self.linetype[k] == linetypefilter:
+                
+                #check if the line doublet have higher amplitude than the individual lines        
+                instrumentSigma = self.linelambda[k]*(1+z)/R*m_instrumentResolutionEmpiricalFactor;
+                sigma = instrumentSigma
+                print("line {}, name={}, sigma={}".format(k, self.linename[k], sigma))
+                if k+1 < self.n:
+                    diffLambda = abs(self.linelambda[k+1]*(1+z)-self.linelambda[k]*(1+z))
+                else:
+                    diffLambda = 1e32
+                if k+1 < self.n and diffLambda<sigma:
+                    print("name = {} : diff lambda with doublet is {}".format(self.linename[k], diffLambda))
+                    doublet_amp = self.lineamplitude[k]+self.lineamplitude[k+1]
+                    doublet_error = np.mean([self.lineerror[k], self.lineerror[k+1]])
+                    doublet_errorfit = np.mean([self.lineerrorfit[k], self.lineerrorfit[k+1]])
+                    snr = doublet_amp/doublet_error
+                    snrfit = doublet_amp/doublet_errorfit
+                    if snr >= thresSNR and snrfit>=thresSNR:
+                        validLinesIdx.append(k)
+                        validLinesSnr.append(snr)
+                        #skip the next line
+                        skipnextline = 1
+                else:
+                    snr = self.lineamplitude[k]/self.lineerror[k]
+                    snrfit = self.lineamplitude[k]/self.lineerrorfit[k]
+                    if snr >= thresSNR and snrfit>=thresSNR:
+                        validLinesIdx.append(k)
+                        validLinesSnr.append(snr)
+                    
+        print("Linemodel-result: (N highest peaks), found {} valid lines".format(len(validLinesIdx)))
+        
+        for i,k in enumerate(validLinesIdx):
+            print("line {}, idx={}: lambda={}, name={}, amp={}, error={}, snr={}".format(i, k, self.linename[k], self.linelambda[k], self.lineamplitude[k], self.lineerror[k], validLinesSnr[i]))
+        
+        print("\n")
+        
+        outN = len(validLinesIdx)
+        return outN
+        
     def getAmplitude(self, strTag, linetypeTag):
         for k in range(self.n):
             if self.linetype[k] == linetypeTag:
@@ -278,21 +368,45 @@ class ModelResult(object):
         for k in range(self.n):
             if self.lineamplitude[k] > 0.0:
                 self.lineamplitude[k] *= coeff
-            
+           
+           
+def StartFromCommandLine( argv ) :	
+    parser = argparse.ArgumentParser()
+    
+    parser.add_argument("-i", "--model", dest="modelPath", default="",
+                    help="path to the model to be loaded")          
           
+    options = parser.parse_args()
+    print options
+
+    if os.path.exists(options.modelPath) :
+        mpath = os.path.abspath(options.modelPath)
+        print('using full path: {0}'.format(mpath))
+        m = ModelResult(mpath)
+
+        if 0:
+            name_out = "201605022133_id0_z1.12688_mag20.7_sfr10.0_linemodel_amps_modified.csv"
+            mpath_out = os.path.join(path,name_out)
+            m.applyWeight(0.333)
+            m.save(mpath_out)
+    
+        m.getAmplitudeMeanNhighest() 
+        m.getNLinesStrong()
+        m.plot()
+    else :
+        print("Error: invalid argument count")
+        exit()
+    
+    
+    
+def Main( argv ) :	
+    try:
+        StartFromCommandLine( argv )
+    except (KeyboardInterrupt):
+        exit()
+
+ 
 if __name__ == '__main__':
-    path = "/home/aschmitt/gitlab/cpf-redshift/tools/simulation/templates_lines"
-    name = "201605022133_id0_z1.12688_mag20.7_sfr10.0_linemodel_amps.csv"
-    mpath = os.path.join(path,name)
-    print('using full path: {0}'.format(mpath))
-    m = ModelResult(mpath)
-
-    if 0:
-        name_out = "201605022133_id0_z1.12688_mag20.7_sfr10.0_linemodel_amps_modified.csv"
-        mpath_out = os.path.join(path,name_out)
-        m.applyWeight(0.333)
-        m.save(mpath_out)
-
-    m.getAmplitudeMeanNhighest() 
-    m.plot()
+    print "ModelResult"
+    Main( sys.argv )
     

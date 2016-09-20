@@ -109,6 +109,24 @@ Void CRuleOIIRatioRange::Correct( CLineModelElementList& LineModelElementList )
         }
       Float64 corrected1 = (amp1*w1 + amp2*w2*R)/(w1+w2);
       Float64 corrected2 = corrected1/R;
+
+      {
+          //log the correction
+          Float64 correctedA = corrected1;
+          Float64 correctedB = corrected2;
+          if(i1==iB)
+          {
+              correctedA = corrected2;
+              correctedB = corrected1;
+          }
+          std::string strTmp0 = boost::str( (boost::format("correct - %-10s") % "RATIO_RANGE" ));
+          Logs.append(strTmp0.c_str());
+          std::string strTmp1 = boost::str( (boost::format("\n\tline=%-10s, previousAmp=%.4e, correctedAmp=%.4e") % m_LineA % ampA % correctedA) );
+          Logs.append(strTmp1.c_str());
+          std::string strTmp2 = boost::str( (boost::format("\n\tline=%-10s, previousAmp=%.4e, correctedAmp=%.4e") % m_LineB % ampB % correctedB) );
+          Logs.append(strTmp2.c_str());
+      }
+
       LineModelElementList.m_Elements[i1]->SetFittedAmplitude( corrected1, er1 );
       LineModelElementList.m_Elements[i2]->SetFittedAmplitude( corrected2, er2 );
     }

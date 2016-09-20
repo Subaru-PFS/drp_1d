@@ -70,12 +70,13 @@ public:
     virtual Int32 FindElementIndex(std::string LineTagStr)=0;
 
     std::vector<Int32> m_LineCatalogIndexes;
-    Float64 GetLineWidth(Float64 lambda, Float64 z, Bool isEmission);
-    Float64 GetLineProfile(std::string profile, Float64 xc, Float64 c);
+    Float64 GetLineWidth(Float64 lambda, Float64 z, Bool isEmission, std::string profile);
+    Float64 GetLineProfile(std::string profile, Float64 x, Float64 x0, Float64 c);
     Float64 GetLineProfileDerivSigma(std::string profile, Float64 x, Float64 x0, Float64 sigma);
     Float64 GetNSigmaSupport(std::string profile);
 
 protected:
+    Bool LoadDataExtinction();
 
 
     std::string m_LineWidthType;
@@ -98,6 +99,12 @@ protected:
     Float64 m_asymfit_sigma_coeff;
     Float64 m_asymfit_alpha;
     Float64 m_asymfit_delta;
+
+
+    Float64* m_dataExtinctionFlux;
+    Float64 m_dataStepLambda = 0.1;
+    Float64 m_dataN = 3000;
+
 private:
 
 

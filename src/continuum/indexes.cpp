@@ -39,9 +39,10 @@ CContinuumIndexes::TContinuumIndexList CContinuumIndexes::getIndexes(const CSpec
         TFloat64Range rangeA = TFloat64Range( restLambdaRanges_A[i].GetBegin()*(z+1), restLambdaRanges_A[i].GetEnd()*(z+1) );
         TFloat64Range rangeB = TFloat64Range( restLambdaRanges_B[i].GetBegin()*(z+1), restLambdaRanges_B[i].GetEnd()*(z+1) );
         Float64 Fa = NAN;
-        bool retA = spectrum.GetMeanFluxInRange( rangeA, Fa );
+        Float64 std = NAN;
+        bool retA = spectrum.GetMeanAndStdFluxInRange( rangeA, Fa, std );
         Float64 Fb = NAN;
-        bool retB = spectrum.GetMeanFluxInRange( rangeB, Fb );
+        bool retB = spectrum.GetMeanAndStdFluxInRange( rangeB, Fb, std );
 
         Float64 a;
         Float64 b;
@@ -67,3 +68,23 @@ CContinuumIndexes::TContinuumIndexList CContinuumIndexes::getIndexes(const CSpec
 
     return indexesList;
 }
+
+
+/**
+ * Calculates the spectrum and continuum std for a given spectrum and continuum
+ *
+ */
+CContinuumIndexes::SContinuumRelevance CContinuumIndexes::getRelevance(const CSpectrum& spectrum, const CSpectrum& continuum)
+{
+    Float64 Fa = NAN;
+    Float64 stdS = NAN;
+    Float64 stdC = NAN;
+    bool retA = spectrum.GetMeanAndStdFluxInRange( spectrum.GetLambdaRange(), Fa, stdS );
+    bool retB = continuum.GetMeanAndStdFluxInRange( continuum.GetLambdaRange(), Fa, stdC );
+
+    SContinuumRelevance relevance;
+    relevance.StdSpectrum = stdS;
+    relevance.StdContinuum = stdC;
+    return relevance;
+}
+

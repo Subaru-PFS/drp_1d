@@ -101,4 +101,78 @@ BOOST_AUTO_TEST_CASE( OIIRatioRange1 )
 }
 
 
+std::vector<Float64> getLinemodelFittedAmplitudes(std::string spc, std::string noise, std::string ctlgPath, bool enableSuperStrongRule){
+
+    CProcessFlowContext ctx;
+    CProcessFlow processFlow;
+
+
+    TFloat64Range redshiftRange = TFloat64Range( 0.0, 0.0 );
+    TFloat64Range spcLambdaRange = TFloat64Range( 2000.0, 12000.0 );
+
+    std::shared_ptr<CParameterStore> params = std::shared_ptr<CParameterStore>( new CParameterStore() );
+    params->Set( "lambdaRange", spcLambdaRange);
+    params->Set( "redshiftRange",  redshiftRange);
+    params->Set( "redshiftStep", 0.01);
+    params->Set( "smoothWidth", (Int64)0 );
+    params->Set( "templateCategoryList", TStringList { "galaxy" } );
+    params->Set( "method", "linemodel");
+
+    Bool retVal = ctx.Init( spc.c_str(), noise.c_str(), NULL, ctlgPath.c_str(),params );
+    BOOST_CHECK( retVal == true );
+
+
+    if(enableSuperStrongRule){
+        ctx.GetDataStore().SetScopedParam("linemodelsolve.linemodel.rules", "superstrong");
+    }else{
+        ctx.GetDataStore().SetScopedParam("linemodelsolve.linemodel.rules", "no");
+    }
+
+    retVal = processFlow.Process( ctx );
+    BOOST_CHECK( retVal == true );
+
+    // Create redshift initial list by spanning redshift acdross the given range, with the given delta
+    Float64 redshiftStep = 0.01;
+    TFloat64List redshifts = redshiftRange.SpreadOver( redshiftStep );
+
+    CLineModelSolve Solve;
+    std::shared_ptr<const CLineModelSolveResult> solveResult = Solve.Compute(ctx.GetDataStore(), ctx.GetSpectrum(), ctx.GetSpectrumWithoutContinuum(), ctx.GetRayCatalog(),
+                                                                 spcLambdaRange, redshifts);
+
+
+    std::string scope = "linemodelsolve.linemodel_fit_extrema_0";
+    auto results = ctx.GetDataStore().GetGlobalResult(scope.c_str());
+
+    std::vector<Float64> amps;
+    if(!results.expired()){
+        std::shared_ptr<const CModelFittingResult> result = std::dynamic_pointer_cast<const CModelFittingResult>( results.lock() );
+
+        amps = result->GetLineModelSolution().Amplitudes;
+    }
+    return amps;
+}
+
+
+BOOST_AUTO_TEST_CASE( OIIIMultilineSuperstrongRule )
+{
+    std::string spc, noise, ctlg;
+    Float64 oiii_ratio;
+    std::vector<Float64> amplis;
+
+    //TEST 1 : initially oii = 2.0, oiiia = 30.0 and oiiib = 10.0
+    spc = "../test/data/LinemodelRulesTestCase/simu_rules_multiline_superstong_1.fits";
+    noise = "../test/data/LinemodelRulesTestCase/simu_rules_multiline_superstong_1_noise.fits";
+    ctlg = "../test/data/LinemodelRulesTestCase/raycatalog_test_elmultilinesuperstong.txt";
+    amplis = getLinemodelFittedAmplitudes(spc, noise, ctlg, 0); //rule disabled, get amplitudes
+    oiii_ratio = amplis[0]/amplis[1];
+    BOOST_CHECK_MESSAGE( oiii_ratio < 3.01 && oiii_ratio > 2.99, "Multiline-Superstrong: 1st test (no rule) failed = leads to a oiii nominal ratio not conserved" );
+
+    amplis = getLinemodelFittedAmplitudes(spc, noise, ctlg, 1); //rule enabled, get amplitudes
+    oiii_ratio = amplis[0]/amplis[1];
+    BOOST_CHECK_MESSAGE( oiii_ratio < 3.01 && oiii_ratio > 2.99, "Multiline-Superstrong: 2nd test (superstrong rule) failed = leads to a oiii nominal ratio not conserved" );
+    //ratio = getLinemodelDoubletRatio(spc, noise, 1); //rule enabled, get ratio
+    //BOOST_CHECK_CLOSE_FRACTION( 2.0, ratio, 0.1);
+
+}
+
 BOOST_AUTO_TEST_SUITE_END()

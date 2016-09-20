@@ -35,7 +35,7 @@ public:
     virtual ~COperator();
 
     virtual  std::shared_ptr<COperatorResult> Compute( const CSpectrum& spectrum, const CTemplate& tpl,
-                                            const TFloat64Range& lambdaRange, const TFloat64List& redshifts, Float64 overlapThreshold, std::string opt_interp) = 0;
+                                            const TFloat64Range& lambdaRange, const TFloat64List& redshifts, Float64 overlapThreshold, std::string opt_interp, Int32 opt_extinction) = 0;
 
 protected:
 

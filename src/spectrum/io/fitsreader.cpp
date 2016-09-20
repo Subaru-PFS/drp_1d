@@ -31,13 +31,13 @@ Bool CSpectrumIOFitsReader::Read2( fitsfile* fptr, CSpectrum& spectrum )
 {
     Int32 status = 0;
     Int32 length = 0;
-    Int32 hdunum = 0;
+    Int32 hdunum = 2;
     Int32 hdutype = 0;
     Int32 nullval = 0;
     Int32 anynul = 0;
 
     // Move to second hdu
-    if( fits_movabs_hdu( fptr, 2, &hdutype, &status ) )
+    if( fits_movabs_hdu( fptr, hdunum, &hdutype, &status ) )
         return false;
 
     // Check type

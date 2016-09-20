@@ -8,6 +8,7 @@
 #include <epic/redshift/linemodel/elementlist.h>
 #include <epic/redshift/linemodel/modelspectrumresult.h>
 #include <epic/redshift/linemodel/modelfittingresult.h>
+#include <epic/redshift/linemodel/modelrulesresult.h>
 #include <epic/redshift/common/mask.h>
 
 #include <epic/redshift/spectrum/spectrum.h>
@@ -53,7 +54,7 @@ public:
 private:
 
     Void ModelFit(NSEpic::CLineModelElementList &model, const TFloat64Range& lambdaRange, Float64 redshift,
-                  Float64& chiSquare, CLineModelResult::SLineModelSolution &modelSolution, Int32 contreest_iterations);
+                  Float64& chiSquare, CLineModelResult::SLineModelSolution &modelSolution, Int32 contreest_iterations, bool enableLogging);
 
     void ComputeArea1(CLineModelResult& results);
     void ComputeArea2(CLineModelResult& results);
@@ -65,6 +66,8 @@ private:
 
     std::vector<std::shared_ptr<CModelSpectrumResult>  > m_savedModelSpectrumResults;
     std::vector<std::shared_ptr<CModelFittingResult>  > m_savedModelFittingResults;
+    std::vector<std::shared_ptr<CModelRulesResult>  > m_savedModelRulesResults;
+
 };
 
 

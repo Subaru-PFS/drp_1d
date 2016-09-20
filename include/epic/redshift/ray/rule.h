@@ -21,10 +21,12 @@ namespace NSEpic
     void Apply( CLineModelElementList& LineModelElementList );
     virtual Bool Check( CLineModelElementList& LineModelElementList ) = 0;
     virtual void SetUp( Bool EnabledArgument, ... ) = 0;
+    std::string GetLogs();
   private:
     virtual void Correct( CLineModelElementList& LineModelElementList ) = 0;
   protected:
     // Library of common methods:
+    std::string Logs;
   };
 }
 

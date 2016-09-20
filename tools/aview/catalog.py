@@ -163,7 +163,7 @@ class Catalog(object):
         for k in range(len(self.linesx)):
             #x = self.linesx[k]*(1+self.z)
             x = self.linesx[k]
-            pp.plot((x, x), (-1000,1000) , 'r-', label=self.linesname[k] )
+            pp.plot((x, x), (-100000,100000) , 'r-', label=self.linesname[k] )
             #pp.text(x, self.ymax*0.75, '{0}'.format(self.linesname[k]))
             pp.text(x, 900, '{0}'.format(self.linesname[k]))
         
@@ -293,6 +293,17 @@ class Catalog(object):
         
         return {"lambda":_linelambda, "lambdarest":_linelambdarest, "name":_linename,
                 "force":_lineforce, "type":_linetype} 
+                
+    def getMaskOutsideLines(self, lambdavect, z, dlambdaAroundLine=100.0):
+        mask = np.ones((len(lambdavect)))
+        coeff= 1.0+z
+        for k, l in enumerate(lambdavect):
+            for x in range(0,self.n):
+                linelambda = self.linelambda[x]*coeff
+                if abs(l-linelambda)<dlambdaAroundLine:
+                    mask[k]=0
+                    break
+        return mask
 
     def getAmbiguityZ(self, zreference, zmin, zmax, lineTypeFilter=-1, lineForceFilterReference=-1, lineForceFilterFail=-1):
         print("getting ambiguity for type = {}, refForce = {}, failforce = {}".format(lineTypeFilter, lineForceFilterReference, lineForceFilterFail))
@@ -402,9 +413,9 @@ def StartFromCommandLine( argv ) :
         #print(c.getShiftedCatalog(1.0, "E"))
         
         #c.plot()
-        c.plotInZplane()  
+        #c.plotInZplane()  
         
-        #print("the REDMINE (copy/paste) generated table is:\n{}".format(c.getRedmineTableString()))
+        print("the REDMINE (copy/paste) generated table is:\n{}".format(c.getRedmineTableString()))
         #print("the LATEX (copy/paste) generated table is:\n{}".format(c.getLatexTableString()))
         
         #lmResPath = "/home/aschmitt/code/python/linemodel_tplshape/amazed/output/spectrum_tpl_NEW_Im_extended.dat_TF/linemodelsolve.linemodel_fit_extrema_0.csv"

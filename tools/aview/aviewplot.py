@@ -9,7 +9,8 @@ import sys
 import optparse
 
 import matplotlib as mpl
-mpl.rcParams.update(mpl.rcParamsDefault)
+mpl.use('Qt5Agg')
+#mpl.rcParams.update(mpl.rcParamsDefault)
 
 import matplotlib.pyplot as pp
 #import seaborn as sns
@@ -18,6 +19,7 @@ import matplotlib.pyplot as pp
 #sns.set_style("whitegrid")
 from matplotlib import gridspec
 from matplotlib.ticker import MultipleLocator, FormatStrFormatter
+import lineid_plot
 
 import numpy as np
 
@@ -63,7 +65,7 @@ class AViewPlot(object):
         
         self.load()
         if enablePlot:
-            self.plot()
+            self.plot(enableReturnFig=False)
         
     def load(self):
         self.s = sp.Spectrum(self.spath) 
@@ -92,6 +94,18 @@ class AViewPlot(object):
             self.t = sp.Spectrum(self.tpath, stype='template')
             if self.forceTplDoNotRedShift:
                 tplStr = "model"
+                
+                #optionally remove continuum from that model
+                if True and not self.scontinuumpath=="":
+                    waveErrThreshold = 0.01
+                    for k in range(self.scontinuum.n):
+                        if abs(self.t.xvect[k] - self.scontinuum.xvect[k]) > waveErrThreshold:
+                            print("\nERROR: wave vector not aligned !: aborting...")
+                            print("\nERROR: info: xvect[{}]={}, conti.xvect[{}]={}".format(k, self.t.xvect[k], k, self.scontinuum.xvect[k]))
+                            return
+                        self.t.yvect[k] -=  self.scontinuum.yvect[k]
+                    titleStr += "(NoCont.)"
+                
             else:
                 tplStr = "tpl"
             titleStr += ("{}={}\n".format(tplStr, self.t.name))
@@ -99,7 +113,7 @@ class AViewPlot(object):
         titleStr += "z={}".format(self.z)
         self.name = titleStr
         
-    def plot(self):
+    def plot(self, enableReturnFig=False):
         #prepare plot vects  
         self.sxvect = self.s.xvect
         self.syvect = self.s.yvect
@@ -128,6 +142,50 @@ class AViewPlot(object):
             self.ymax = max(self.syvect)
         print("INFO: Ampl. factor used is {}".format(A))
 
+        #compute ranges  
+        if not self.exportAutoDisplaysPath == "":
+            print("INFO: computing ranges for auto display")
+            self.xmin = self.exportAuto_lambda_min
+            self.xmax = self.exportAuto_lambda_max
+            ixminSpc = self.s.getWavelengthIndex(self.xmin)
+            ixmaxSpc = self.s.getWavelengthIndex(self.xmax)
+            ixminTpl = self.t.getWavelengthIndex(self.xmin)
+            ixmaxTpl = self.t.getWavelengthIndex(self.xmax)
+            #print("exportAutoDisplaysPath: self.xmin={}".format(self.xmin))
+            #print("exportAutoDisplaysPath: self.xmax={}".format(self.xmax))
+            #print("exportAutoDisplaysPath: ixmin={}".format(ixmin))
+            #print("exportAutoDisplaysPath: ixmax={}".format(ixmax))
+            if ixmaxSpc - ixminSpc < 2:
+                return
+            
+            if not self.forcePlotNoTemplate:
+                print("computes ranges with template")
+                if 0: #hybrid range
+                    alpha = 0.33
+                    ymintpl = min(self.tyvect[ixminTpl:ixmaxTpl])
+                    yminspc = min(self.syvect[ixminSpc:ixmaxSpc])
+                    self.ymin = min(ymintpl, (ymintpl+alpha*yminspc)/(1.0+alpha))
+                    ymaxtpl = max(self.tyvect[ixminTpl:ixmaxTpl])
+                    ymaxspc = max(self.syvect[ixminSpc:ixmaxSpc])
+                    self.ymax = max(ymaxtpl, (ymaxtpl+alpha*ymaxspc)/(1.0+alpha))
+                if 0: #spc+tpl range
+                    self.ymin = min(min(self.syvect[ixminSpc:ixmaxSpc]), min(self.tyvect[ixminTpl:ixmaxTpl]))
+                    self.ymax = max(max(self.syvect[ixminSpc:ixmaxSpc]), max(self.tyvect[ixminTpl:ixmaxTpl]))
+                    
+                if 0: #tpl min
+                    self.ymin = min(self.tyvect[ixminTpl:ixmaxTpl])
+                    self.ymax = max(self.tyvect[ixminTpl:ixmaxTpl])
+                if 1: #spc min
+                    self.ymin = min(self.syvect[ixminSpc:ixmaxSpc])
+                    self.ymax = max(self.syvect[ixminSpc:ixmaxSpc])
+            else:
+                print("computes ranges without template")
+                self.ymin = min(self.syvect[ixminSpc:ixmaxSpc])
+                self.ymax = max(self.syvect[ixminSpc:ixmaxSpc])
+                
+        yrange = self.ymax-self.ymin
+        xxrange = self.xmax-self.xmin
+        print("Plotting aviewplot: ymin={}, ymax={}".format(self.ymin, self.ymax))
 
         #prepare noise vects
         if not self.forcePlotNoNoise:
@@ -136,7 +194,8 @@ class AViewPlot(object):
         
         
         
-        #prepare lines
+        #prepare lines        
+        lines_label_method = 0 #0 = subplot with labels, #1 = using lineid_plot on main spc view
         if not self.forcePlotNoLines:
             #self.linesx = []
             #self.linesx.append(6564)
@@ -158,12 +217,17 @@ class AViewPlot(object):
         
         
         #do the plotting
-        fig = pp.figure( "aview", figsize=(15,15))
-        gs = gridspec.GridSpec(3, 1, height_ratios=[12,2,2])
-        ax1 = pp.subplot(gs[0]) # main plotting area = spectrum
-        #ax1.plot(...)
-        ax2 = pp.subplot(gs[1], sharex=ax1)  # noise plotting area
-        ax3 = pp.subplot(gs[2], sharex=ax1)   # lines tag area     
+        fig = pp.figure( "aview", figsize=(16,15))
+        if lines_label_method==0:
+            gs = gridspec.GridSpec(3, 1, height_ratios=[12,2,2])
+            ax1 = pp.subplot(gs[0]) # main plotting area = spectrum
+            #ax1.plot(...)
+            ax2 = pp.subplot(gs[1], sharex=ax1)  # noise plotting area
+            ax3 = pp.subplot(gs[2], sharex=ax1)   # lines tag area  
+        elif lines_label_method == 1:
+            gs = gridspec.GridSpec(2, 1, height_ratios=[12,2])
+            ax1 = pp.subplot(gs[0]) # main plotting area = spectrum
+            ax2 = pp.subplot(gs[1], sharex=ax1)  # noise plotting area
         
         gs.update(wspace=0.05, hspace=0.1) # set the spacing between axes. 
         # SPECTRUM
@@ -187,13 +251,40 @@ class AViewPlot(object):
             else:
                 ax2.plot(self.nyvect, 'k', label='noise')
 
-        # make ax2 nice
-        pp.setp(ax2.get_xticklabels(), visible=False)
-        #pp.setp(ax2.get_yticklabels(), visible=False)
-        #ax2.get_yaxis().set_visible(False)
-        #ax2.get_xaxis().set_visible(False)
-                
+        if lines_label_method==0:
+            # make ax2 nice
+            pp.setp(ax2.get_xticklabels(), visible=False)
+            #pp.setp(ax2.get_yticklabels(), visible=False)
+            #ax2.get_yaxis().set_visible(False)
+            #ax2.get_xaxis().set_visible(False)              
+
+        #APPLY x,y range
+        limmargy_up = 0.35
+        limmargy_down = 0.15
+        limmargx = 0.02
+        ax1.set_ylim([self.ymin - yrange*limmargy_down,self.ymax+yrange*limmargy_up])
+        ax1.set_xlim([self.xmin - xxrange*limmargx,self.xmax + xxrange*limmargx])
+        #ax2.set_ylim([0, 10])
+        #ax2.set_xlim([self.xmin,self.xmax])
+        if lines_label_method==0:
+            ax3.set_ylim([0, 10])
+            #ax3.set_xlim([self.xmin,self.xmax])
+        #ax1.ylim([self.ymin*(1-np.sign(self.ymin)*limmarg),self.ymax*(1+limmarg)])
+        #ax1.xlim([self.xmin,self.xmax])             
+             
         # LINES     
+        line_wave = []
+        line_label = []
+        line_type = []
+        #line_arrow_tips = []
+        ak = lineid_plot.initial_annotate_kwargs()
+        #print(ak)
+        #ak['arrowprops']['arrowstyle'] = "->"
+        pk = lineid_plot.initial_plot_kwargs()
+        #print(pk)
+        label_max_size = 12
+        lposOffsetE = 0
+        lposOffsetA = 0
         if not self.forcePlotNoLines:
             for k in range(len(self.linesx)):
                 #x = self.linesx[k]*(1+self.z)
@@ -203,47 +294,136 @@ class AViewPlot(object):
                 if self.linestype[k]=='E':
                     cstyle = 'b-'
                     ccolor = 'b'
-                    lpos = 4
+                    lpos = 5 + lposOffsetE
                     lstyle = 'dashdot'
                 elif self.linestype[k]=='A':
                     cstyle = 'r-'
                     ccolor = 'r'
-                    lpos = 2
+                    lpos = 1 + lposOffsetA
                     lstyle = 'dashed'
-                ax1.plot((x, x), (-1000,1000) , cstyle, linestyle = lstyle, label=self.linesname[k] )
-                #pp.text(x, self.ymax*0.75, '{0}'.format(self.linesname[k]))
-                #print("testlinepos = {0}".format(self.t.getWeightedFlux(self.linesxrest[k], self.s.ysum / self.t.ysum)*2.0))
-                if 0 and not self.forcePlotNoTemplate:
-                    ytext = self.t.getWeightedFlux(self.linesxrest[k], A)*2.0
-                    #print ytext
-                    try:
-                        pp.text(x, ytext , '{0}'.format(self.linesname[k]))
-                    except:
-                        pp.text(x, self.ymax*0.75, '{0}'.format(self.linesname[k]))
-                else:
-                    #showLine = self.linesforce[k]=='S'
-                    showLine = True
-                    if showLine:
-                        #pp.text(x, self.ymax*0.75, '{0}:{1:.2f}'.format(self.linesname[k], x))
-                        ax3.plot((x, x), (lpos+4, 10) , cstyle, linestyle = lstyle, label=self.linesname[k] )
-                        annotation = ax3.text(x, lpos, '{0}'.format(self.linesname[k]), color=ccolor)
+                if lines_label_method==0: #old method
+                    ax1.plot((x, x), (-100000,100000) , cstyle, linestyle = lstyle, alpha=0.45, label=self.linesname[k] )
+                    #pp.text(x, self.ymax*0.75, '{0}'.format(self.linesname[k]))
+                    #print("testlinepos = {0}".format(self.t.getWeightedFlux(self.linesxrest[k], self.s.ysum / self.t.ysum)*2.0))
+                    if 0 and not self.forcePlotNoTemplate:
+                        ytext = self.t.getWeightedFlux(self.linesxrest[k], A)*2.0
+                        #print ytext
+                        try:
+                            pp.text(x, ytext , '{0}'.format(self.linesname[k]))
+                        except:
+                            pp.text(x, self.ymax*0.75, '{0}'.format(self.linesname[k]))
+                    else:
+                        #showLine = self.linesforce[k]=='S'
+                        showLine = True
+                        if showLine:
+                            #pp.text(x, self.ymax*0.75, '{0}:{1:.2f}'.format(self.linesname[k], x))
+                            ax3.plot((x, x), (lpos+2, 10) , cstyle, linestyle = lstyle, alpha=0.45, label=self.linesname[k] )
+                            annotation = ax3.text(x, lpos, '{0}'.format(self.linesname[k]), color=ccolor, alpha = 0.85)
+                            if self.linestype[k]=='E':
+                                lposOffsetE += 1
+                                if lposOffsetE>3:
+                                    lposOffsetE=0
+                            elif self.linestype[k]=='A':
+                                lposOffsetA += 1
+                                if lposOffsetA>3:
+                                    lposOffsetA=0
+                elif lines_label_method==1: #new method with lineid_plot
+                    line_wave.append(self.linesx[k])
                     
-        # make ax3 nice
-        ax3.get_yaxis().set_visible(False)
+                    if len(self.linesname[k])>label_max_size:
+                        labelStr = "{}...{}".format(self.linesname[k][:label_max_size], self.linesname[k][-1:])
+                        #print(labelStr)
+                    else:
+                        labelStr = self.linesname[k]
+                    line_label.append(labelStr)
+                    line_type.append(self.linestype[k])
+                    #if self.linestype[k]=='E':
+                    #    pos = self.ymax + yrange*0.1
+                    #elif self.linestype[k]=='A':
+                    #    pos = self.ymin - yrange*0.25
+                    #line_arrow_tips.append(pos)
+                    
+            if lines_label_method==1:
+                
+                #pk['color'] = '#f89393'
+                arrow_tip_position_abs = self.ymin-yrange*self.ymax-yrange*limmargy_up/4.0
+                arrow_tip_position_em = self.ymax+yrange*self.ymax+yrange*limmargy_up/4.0
+                
+                arrow_base_position_list_em = [f+yrange*0.075 for f in self.syvect]
+                arrow_base_position_list_abs = [f-yrange*0.075 for f in self.syvect]
+                print("arrow_base_position_list_em shape={}".format(len(arrow_base_position_list_em)))
+
+                arrow_tip_position_list = []
+                arrow_base_position_list = []                
+                for i, l in enumerate(line_wave):
+                    if 1:#line_type[i]=='E':                    
+                        tip = arrow_tip_position_em
+                        base = arrow_base_position_list_em[i]
+                    else:
+                        tip = arrow_tip_position_abs
+                        base = arrow_base_position_list_abs[i]
+                        
+                    arrow_tip_position_list.append(tip)
+                    arrow_base_position_list.append(base)
+                
+                print("arrow_base_position_list shape={}".format(len(arrow_base_position_list)))
+                lineid_plot.plot_line_ids(self.sxvect,
+                                            arrow_base_position_list_em,
+                                            line_wave, line_label, 
+                                            arrow_tip=arrow_tip_position_em, 
+                                            annotate_kwargs=ak, plot_kwargs=pk, 
+                                            ax=ax1)                
+ 
+                for i in ax1.texts:
+                    tag = i.get_label()
+                    #tag = str(i.get_label())[0:-4]
+                    #tag.replace('_num', '')
+                    knum = tag.find("_num")
+                    if knum>0:
+                        #print('ktag = {}'.format(knum))
+                        tag = tag[0:knum]
+                    #print('tag_texts={}'.format(tag))
+                    kline = line_label.index(tag)
+                    if line_type[kline]=='E':
+                        #ccolor = 'b'
+                        ccolor = '#5f71f5' 
+                    elif line_type[kline]=='A':
+                        #ccolor = 'r'
+                        ccolor = '#f83f3f'
+                    i.set_color(ccolor)  
+                    #i.set_rotation(0)
+                for i in ax1.lines:
+                    try:
+                        tag = str(i.get_label())
+                        tag = i.get_label()
+                        knum = tag.find("_line")
+                        if knum>0:
+                            #print('ktag = {}'.format(knum))
+                            tag = tag[0:knum]
+                        knum = tag.find("_num")
+                        if knum>0:
+                            #print('ktag = {}'.format(knum))
+                            tag = tag[0:knum]
+                        #tag = str(i.get_label())[0:-4]
+                        #tag.replace('_num', '')
+                        #print('tag={}'.format(tag))
+                        kline = line_label.index(tag)
+                        if line_type[kline]=='E':
+                            #ccolor = 'b'
+                            ccolor = '#8995f5'                           
+                        elif line_type[kline]=='A':
+                            #ccolor = 'r'
+                            ccolor = '#f89393'
+                        i.set_color(ccolor)  
+                        #i.set_rotation(0)
+                    except:
+                        continue
+                        
+        if lines_label_method==0:
+            # make ax3 nice
+            ax3.get_yaxis().set_visible(False)
                
-               
-        #apply x,y range
-        limmarg = 0.2;        
-        yrange = self.ymax-self.ymin
-        ax1.set_ylim([self.ymin - yrange*limmarg,self.ymax+yrange*limmarg])
-        ax1.set_xlim([self.xmin,self.xmax])
-        #ax2.set_ylim([0, 10])
-        ax2.set_xlim([self.xmin,self.xmax])
-        ax3.set_ylim([0, 10])
-        ax3.set_xlim([self.xmin,self.xmax])
-        #ax1.ylim([self.ymin*(1-np.sign(self.ymin)*limmarg),self.ymax*(1+limmarg)])
-        #ax1.xlim([self.xmin,self.xmax])
-        
+                      
         #ax1.xaxis.set_major_locator(MultipleLocator(20))
         #ax1.xaxis.set_major_formatter(FormatStrFormatter('%d'))
         #ax1.xaxis.set_minor_locator(MultipleLocator(5))
@@ -257,8 +437,8 @@ class AViewPlot(object):
         if not self.forcePlotNoNoise:
             useReducedNoise = True
             if useReducedNoise:
-                nmean = np.mean([a for a in self.nyvect if a>0.0])
-                nstd = np.std([a for a in self.nyvect if a>0.0])
+                nmean = np.mean([a for a in self.nyvect if a>0.0 and np.isfinite(a)])
+                nstd = np.std([a for a in self.nyvect if a>0.0 and np.isfinite(a)])
                 print("noise nmean={}, nstd={}".format(nmean, nstd))
                 reducedNyvect = [a for a in self.nyvect if abs(a-nmean)<2*nstd and a>0.0]
                 if len(reducedNyvect)>2:
@@ -281,13 +461,21 @@ class AViewPlot(object):
             ax2.yaxis.grid(True,'minor')
             
             ax2.set_ylim([nmin, nmax])
-        ax3.xaxis.grid(True,'major')
-        ax3.yaxis.grid(False,'major')
-        #pp.legend(('spectrum','shifted template'), 'lower left', shadow = True)
-        if not self.forcePlotXIndex:
-             ax3.set_xlabel('Angstrom')
+            
+        if lines_label_method==0:
+            ax3.xaxis.grid(True,'major')
+            ax3.yaxis.grid(False,'major')
+            #pp.legend(('spectrum','shifted template'), 'lower left', shadow = True)
+            if not self.forcePlotXIndex:
+                ax3.set_xlabel('Angstrom')
+            else:
+                ax3.set_xlabel('index')
         else:
-            ax3.set_xlabel('index')
+            if not self.forcePlotXIndex:
+                ax2.set_xlabel('Angstrom')
+            else:
+                ax2.set_xlabel('index')
+            
         ax1.set_ylabel('Flux')
         ax2.set_ylabel('Noise')
         ax1.set_title(self.name) # Titre
@@ -295,51 +483,57 @@ class AViewPlot(object):
         
         if not self.exportAutoDisplaysPath == "":
             print("INFO: exporting auto display")
-            self.xmin = self.exportAuto_lambda_min
-            self.xmax = self.exportAuto_lambda_max
-            ixmin = self.s.getWavelengthIndex(self.xmin)
-            ixmax = self.s.getWavelengthIndex(self.xmax)
-            #print("exportAutoDisplaysPath: self.xmin={}".format(self.xmin))
-            #print("exportAutoDisplaysPath: self.xmax={}".format(self.xmax))
-            #print("exportAutoDisplaysPath: ixmin={}".format(ixmin))
-            #print("exportAutoDisplaysPath: ixmax={}".format(ixmax))
-            if ixmax - ixmin < 2:
-                return
-            
-            if not self.forcePlotNoTemplate:
-                if 1: #hybrid range
-                    alpha = 0.33
-                    ymintpl = min(self.tyvect[ixmin:ixmax])
-                    yminspc = min(self.syvect[ixmin:ixmax])
-                    self.ymin = min(ymintpl, (ymintpl+alpha*yminspc)/(1.0+alpha))
-                    ymaxtpl = max(self.tyvect[ixmin:ixmax])
-                    ymaxspc = max(self.syvect[ixmin:ixmax])
-                    self.ymax = max(ymaxtpl, (ymaxtpl+alpha*ymaxspc)/(1.0+alpha))
-                if 0: #spc+tpl range
-                    self.ymin = min(min(self.syvect[ixmin:ixmax]), min(self.tyvect[ixmin:ixmax]))
-                    self.ymax = max(max(self.syvect[ixmin:ixmax]), max(self.tyvect[ixmin:ixmax]))
-                    
-                if 0: #tpl min
-                    self.ymin = min(self.tyvect[ixmin:ixmax])
-                    self.ymax = max(self.tyvect[ixmin:ixmax])
-                if 0: #spc min
-                    self.ymin = min(self.tyvect[ixmin:ixmax])
-                    self.ymax = max(self.tyvect[ixmin:ixmax])
-            else:
-                self.ymin = min(self.syvect[ixmin:ixmax])
-                self.ymax = max(self.syvect[ixmin:ixmax])
-            
-            ax1.set_xlim([self.xmin,self.xmax])
-            ax2.set_xlim([self.xmin,self.xmax])
-            ax3.set_xlim([self.xmin,self.xmax]) 
-            yrange = self.ymax-self.ymin
-            ax1.set_ylim([self.ymin - yrange*limmarg*1.0,self.ymax+yrange*limmarg])
-            
+            if 0:
+                self.xmin = self.exportAuto_lambda_min
+                self.xmax = self.exportAuto_lambda_max
+                ixmin = self.s.getWavelengthIndex(self.xmin)
+                ixmax = self.s.getWavelengthIndex(self.xmax)
+                #print("exportAutoDisplaysPath: self.xmin={}".format(self.xmin))
+                #print("exportAutoDisplaysPath: self.xmax={}".format(self.xmax))
+                #print("exportAutoDisplaysPath: ixmin={}".format(ixmin))
+                #print("exportAutoDisplaysPath: ixmax={}".format(ixmax))
+                if ixmax - ixmin < 2:
+                    return
+                
+                if not self.forcePlotNoTemplate:
+                    if 1: #hybrid range
+                        alpha = 0.33
+                        ymintpl = min(self.tyvect[ixmin:ixmax])
+                        yminspc = min(self.syvect[ixmin:ixmax])
+                        self.ymin = min(ymintpl, (ymintpl+alpha*yminspc)/(1.0+alpha))
+                        ymaxtpl = max(self.tyvect[ixmin:ixmax])
+                        ymaxspc = max(self.syvect[ixmin:ixmax])
+                        self.ymax = max(ymaxtpl, (ymaxtpl+alpha*ymaxspc)/(1.0+alpha))
+                    if 0: #spc+tpl range
+                        self.ymin = min(min(self.syvect[ixmin:ixmax]), min(self.tyvect[ixmin:ixmax]))
+                        self.ymax = max(max(self.syvect[ixmin:ixmax]), max(self.tyvect[ixmin:ixmax]))
+                        
+                    if 0: #tpl min
+                        self.ymin = min(self.tyvect[ixmin:ixmax])
+                        self.ymax = max(self.tyvect[ixmin:ixmax])
+                    if 0: #spc min
+                        self.ymin = min(self.tyvect[ixmin:ixmax])
+                        self.ymax = max(self.tyvect[ixmin:ixmax])
+                else:
+                    self.ymin = min(self.syvect[ixmin:ixmax])
+                    self.ymax = max(self.syvect[ixmin:ixmax])
+                
+                xxrange = self.xmax-self.xmin
+                ax1.set_xlim([self.xmin - xxrange*limmargx,self.xmax + xxrange*limmargx])
+                #ax2.set_xlim([self.xmin,self.xmax])
+                #if lines_label_method==0:
+                    #ax3.set_xlim([self.xmin,self.xmax]) 
+                yrange = self.ymax-self.ymin
+                ax1.set_ylim([self.ymin - yrange*limmargy_down*1.0,self.ymax+yrange*limmargy_up])
+                
             outFigFile = os.path.join(self.exportAutoDisplaysPath, 'aview_{}_z{}_zoom{}.png'.format(self.spcname, self.z, self.exportAuto_name))
             #pp.savefig( outFigFile, bbox_inches='tight')
             pp.savefig( outFigFile)
             #pp.savefig('ExempleTrace') # sauvegarde du fichier ExempleTrace.png
             #pp.tight_layout()
+        elif enableReturnFig:
+            #gs.tight_layout(fig)
+            return fig
         else:
             print("INFO: showing figure")
             pp.show()
@@ -390,14 +584,14 @@ class AViewPlot(object):
         
         # add OII_Hgamma to the pool of displayed ranges
         displays_lambdas_rest_center.append(4000)
-        displays_lambdas_rest_min.append(3695)
+        displays_lambdas_rest_min.append(3615)
         displays_lambdas_rest_max.append(4380)
         displays_names.append("OII_Hgamma") 
         
         # add OII to the pool of displayed ranges
         displays_lambdas_rest_center.append(4000)
-        displays_lambdas_rest_min.append(3665)
-        displays_lambdas_rest_max.append(3800)
+        displays_lambdas_rest_min.append(3610)
+        displays_lambdas_rest_max.append(3820)
         displays_names.append("OII")
         
 #        # add OIII to the pool of displayed ranges
@@ -424,8 +618,9 @@ class AViewPlot(object):
         displays_lambdas_rest_max.append(4050)
         displays_names.append("CaH_CaK")
         
-        
-        for a in range(len(displays_lambdas_rest_center)):
+        ndisp = len(displays_lambdas_rest_center)
+        #ndisp = 1
+        for a in range(ndisp):
             self.exportAuto_lambda_center = displays_lambdas_rest_center[a]*zplus1
             self.exportAuto_lambda_min = displays_lambdas_rest_min[a]*zplus1
             self.exportAuto_lambda_max = displays_lambdas_rest_max[a]*zplus1
@@ -433,9 +628,10 @@ class AViewPlot(object):
             
             _max = max(self.s.getWavelengthMin(),self.exportAuto_lambda_min)
             _min = min(self.s.getWavelengthMax(),self.exportAuto_lambda_max)
-            overlapMin = _max-_min
-            #print("overlapRange = {}".format(overlapMin))
-            if overlapMin <= 2:
+            overlapRange = _max-_min
+            print("overlapRange = {}".format(overlapRange))
+            minOverlapRate = 0.66
+            if overlapRange <= -(self.exportAuto_lambda_max-self.exportAuto_lambda_min)*minOverlapRate:
                 print("exporting auto display for lambda rest = {}, with z = {}".format(displays_lambdas_rest_center[a], self.z))
                 self.plot()
        

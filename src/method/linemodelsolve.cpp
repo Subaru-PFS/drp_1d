@@ -8,8 +8,18 @@
 #include <epic/redshift/extremum/extremum.h>
 #include <epic/redshift/processflow/datastore.h>
 
+
+#include <boost/tokenizer.hpp>
+#include <boost/lexical_cast.hpp>
+#include <string>
+#include <fstream>
+#include <iostream>
+
+
 using namespace NSEpic;
 using namespace std;
+using namespace boost;
+
 
 /** 
  * \brief Empty constructor.
@@ -45,7 +55,7 @@ const std::string CLineModelSolve::GetDescription()
     desc.append("\tparam: linemodel.velocityemission = <float value>\n");
     desc.append("\tparam: linemodel.velocityabsorption = <float value>\n");
     desc.append("\tparam: linemodel.continuumreestimation = {""no"", ""onlyextrema"", ""always""}\n");
-    desc.append("\tparam: linemodel.rules = {""all"", ""balmer"", ""strongweak"", ""oiiratio"", ""ciiiratio"", ""no""}\n");
+    desc.append("\tparam: linemodel.rules = {""all"", ""balmer"", ""strongweak"", ""superstrong"", ""oiiratio"", ""ciiiratio"", ""no""}\n");
     desc.append("\tparam: linemodel.extremacount = <float value>\n");
     desc.append("\tparam: linemodel.velocityfit = {""yes"", ""no""}\n");
     desc.append("\tparam: linemodel.fastfitlargegridstep = <float value>, deactivated if negative or zero\n");
@@ -124,6 +134,88 @@ std::shared_ptr<const CLineModelSolveResult> CLineModelSolve::Compute( CDataStor
 
 /**
  * \brief
+ * Retrieve the true-velocities from a hardcoded ref file path
+ **/
+Int32 getVelocitiesFromRefFile( const char* filePath, std::string spcid, Float64& elv, Float64& alv )
+{
+    ifstream file;
+
+    file.open( filePath, ifstream::in );
+    if( file.rdstate() & ios_base::failbit )
+        return false;
+
+    string line;
+
+    // Read file line by line
+    while( getline( file, line ) )
+    {
+        // remove comments
+        if(line.compare(0,1,"#",1)==0){
+            continue;
+        }
+        char_separator<char> sep(" \t");
+
+        // Tokenize each line
+        typedef tokenizer< char_separator<char> > ttokenizer;
+        ttokenizer tok( line, sep );
+
+        // Check if it's not a comment
+        ttokenizer::iterator it = tok.begin();
+        if( it != tok.end() && *it != "#" )
+        {
+            string name;
+            if( it != tok.end() )
+            {
+                name = *it;
+            }
+            std::size_t foundstr = name.find(spcid.c_str());
+            if (foundstr==std::string::npos){
+                continue;
+            }
+
+            // Found the correct spectrum ID: now read the ref values
+            Int32 nskip = 7;
+            for(Int32 i=0; i<nskip; i++)
+            {
+                ++it;
+            }
+            if( it != tok.end() )
+            {
+
+                elv = 0.0;
+                try
+                {
+                    elv = lexical_cast<double>(*it);
+                }
+                catch (bad_lexical_cast)
+                {
+                    elv = 0.0;
+                    return false;
+                }
+            }
+            ++it;
+            if( it != tok.end() )
+            {
+                alv = 0.0;
+                try
+                {
+                    alv = lexical_cast<double>(*it);
+                }
+                catch (bad_lexical_cast)
+                {
+                    alv = 0.0;
+                    return false;
+                }
+
+            }
+        }
+    }
+
+    return true;
+}
+
+/**
+ * \brief
  * Create a continuum object by subtracting spcWithoutCont from the spc.
  * Configure the opt_XXX variables from the dataStore scope parameters.
  * LogInfo the opt_XXX values.
@@ -147,6 +239,23 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
     sfluxAxisPtr = spcfluxAxis;
 
 
+//    //Hack: load the simulated true-velocities
+//    if(false)
+//    {
+//        Float64 elv = 0.0;
+//        Float64 alv = 0.0;
+//        namespace fs = boost::filesystem;
+//        fs::path refFilePath("/home/aschmitt/data/simu_linemodel/simulm_20160513/simulation_pfswlinemodel_20160513_10spcperbin/refz.txt");
+//        if ( fs::exists(refFilePath) )
+//        {
+//            std::string spcSubStringId = spc.GetName().substr(0, 20);
+//            getVelocitiesFromRefFile( refFilePath.c_str(), spcSubStringId, elv, alv);
+//        }
+//        Float64 offsetv = 0.0;
+//        m_opt_velocity_emission = elv+offsetv;
+//        m_opt_velocity_absorption = alv+offsetv;
+//        Log.LogInfo( "Linemodel - hack - Loaded velocities for spc %s : elv=%4.1f, alv=%4.1f", spc.GetName().c_str(), elv, alv);
+//    }
 
     // Compute merit function
     COperatorLineModel linemodel;
@@ -183,3 +292,4 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
 
     return true;
 }
+

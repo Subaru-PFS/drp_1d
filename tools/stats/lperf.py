@@ -13,26 +13,67 @@ import numpy as np
 import scipy as sp
   
 import PIL
-  
-def exportPerformances(dataDiff, outputDirectory):
 
+### List of all the existing presets for z, mag, sfr bins
+list_presets = ["simulm201606", "simueuclid2016"]
+
+def getZBinsLimits(bins_type):
+    if bins_type == "simulm201606":
+        n_zbins_1 = 10
+        n_zbins_2 = 1
+        z_bins_limits_1 = np.linspace(0, 5.0, n_zbins_1+1, endpoint=True)
+        z_bins_limits_2 = np.linspace(6.0, 7.0, n_zbins_2+1, endpoint=True)
+        z_bins_limits = np.concatenate((z_bins_limits_1, z_bins_limits_2), axis=0)
+        #z_bins_limits = [0.0, 3.0, 6.0]
+    elif bins_type == "simueuclid2016":
+        z_bins_limits = [0.95, 1.1, 1.25, 1.4]
+    return z_bins_limits
+    
+def getMagBinsLimits(bins_type):
+    if bins_type == "simulm201606":
+        #mag_bins_limits = np.linspace(16.0, 30.0, n_mag_bins+1, endpoint=True)
+        mag_bins_limits = [20.0, 21.0, 22.0, 23.0, 24.0, 25.0, 26.0, 27.0, 28.0, 30.0]
+        #mag_bins_limits = [20.0, 21.0, 22.0, 23.0, 24.0, 25.0, 26.0]
+    elif bins_type == "simueuclid2016":
+        mag_bins_limits = [0.0, 23.0, 23.5, 24.0, 50.0]
+    return mag_bins_limits
+        
+def getSfrBinsLimits(bins_type):
+    """
+    Define the sfr bins depending on the bins_type arg. 
+    WARNING: SFR bins should be define in decreasing order
+    """
+    if bins_type == "simulm201606":    
+        #n_sfr_bins = 4
+        #sfr_bins_limits = np.logspace(-1.0, 3.0, n_sfr_bins+1, endpoint=True)
+        n_sfr_bins = 3
+        sfr_bins_limits = np.logspace(-1.0, 2.0, n_sfr_bins+1, endpoint=True)
+        sfr_bins_limits = [a for a in sfr_bins_limits[::-1]]
+    elif bins_type == "simueuclid2016":
+        sfr_bins_limits = [100.0, 20.0, 5.0, 0]
+    return sfr_bins_limits
+    
+
+  
+def exportPerformances(dataDiff, outputDirectory, preset):
+    #check if preset exists
+    if preset not in list_presets:
+        print("ERROR: exporting perf. - unable to find this preset ({}), aborting...".format(preset))
+        return
+        
     # dataDiff expected cols are:
-    #Spectrum ID	MAGI	ZREF	ZFLAG	ZCALC	MERIT	TPL	METHOD    SNR	SFR E(B-V) Sigma DIFF
+    #Spectrum ID	MAGI	ZREF	ZFLAG	ZCALC	MERIT	TPL	METHOD    SNR	SFR E(B-V) Sigma ... DIFF
     izref = 2
 
     print '\n\nexportPerformances:'
-    n_zbins_1 = 10
-    n_zbins_2 = 1
-    z_bins_limits_1 = np.linspace(0, 5.0, n_zbins_1+1, endpoint=True)
-    z_bins_limits_2 = np.linspace(6.0, 7.0, n_zbins_2+1, endpoint=True)
-    z_bins_limits = np.concatenate((z_bins_limits_1, z_bins_limits_2), axis=0)
-    #z_bins_limits = [0.0, 3.0, 6.0]
+    z_bins_limits = getZBinsLimits(preset)
     n_zbins = len(z_bins_limits)-1
     print 'the z bins limits are: ' + str(z_bins_limits)  
     
 
     n = len(dataDiff)
     print("datadiff n = {}".format(n))
+    logStr = ""
     for izbin in range(len(z_bins_limits)-1):
         zmin = z_bins_limits[izbin]
         zmax = z_bins_limits[izbin+1]
@@ -43,7 +84,15 @@ def exportPerformances(dataDiff, outputDirectory):
                 zbin_dataset.append(dataDiff[x])
                 #print("line kept is {}".format(dataDiff[x]))
         print("\n\nThis z bin n = {}, in [{}, {}]".format(len(zbin_dataset), zmin, zmax ))
-        plotMagSFRPerformanceMatrix(zbin_dataset, zmin, zmax, 1e-3, 0.8, outputDirectory)
+        logStr += plotMagSFRPerformanceMatrix(zbin_dataset, zmin, zmax, 1e-3, 0.8, outputDirectory, preset=preset)
+
+    #export log        
+    outTxtFile = os.path.join(outputDirectory,"performance" + '.txt') 
+    fout = open(outTxtFile, "w")
+    fout.write(logStr)
+    fout.close()
+    
+    #merge images to form Image-Matrix summary
     mergeImagesInFolder(outputDirectory, ncols = 4)
       
 def mergeImagesInFolder(dir_path, ncols):
@@ -89,26 +138,21 @@ def mergeImagesInFolder(dir_path, ncols):
     merged_image.save(os.path.join(dir_path, merge_image_name))
      
      
-def plotMagSFRPerformanceMatrix(bin_dataset, zmin, zmax, catastrophic_failure_threshold, success_rate_thres, outdir, enableExport=True):    
+def plotMagSFRPerformanceMatrix(bin_dataset, zmin, zmax, catastrophic_failure_threshold, success_rate_thres, outdir, preset, enableExport=True):    
     """
     bin_dataset : expected cols are  [ #Spectrum ID	MAGI	ZREF	ZFLAG	ZCALC	MERIT	TPL	METHOD    SNR	SFR E(B-V) Sigma DIFF ]
     success_rate_thres : should be in range [0; 1]
     """
 
-    #mag_bins_limits = np.linspace(16.0, 30.0, n_mag_bins+1, endpoint=True)
-    mag_bins_limits = [20.0, 21.0, 22.0, 23.0, 24.0, 25.0, 26.0, 27.0, 28.0, 30.0]
-    #mag_bins_limits = [20.0, 21.0, 22.0, 23.0, 24.0, 25.0, 26.0]
+    mag_bins_limits = getMagBinsLimits(preset)
     n_mag_bins = len(mag_bins_limits)-1
     print 'the mag bins limits are: ' + str(mag_bins_limits)  
     imag = 1
     mag_axis_ticks = ["{:.1f}".format(a) for a in mag_bins_limits[::]]
     mag_axis_ticks_inds = [int(a)-0.5 for a in range(n_mag_bins)[::]]
     
-    #n_sfr_bins = 4
-    #sfr_bins_limits = np.logspace(-1.0, 3.0, n_sfr_bins+1, endpoint=True)
-    n_sfr_bins = 3
-    sfr_bins_limits = np.logspace(-1.0, 2.0, n_sfr_bins+1, endpoint=True)
-    sfr_bins_limits = [a for a in sfr_bins_limits[::-1]]
+    sfr_bins_limits = getSfrBinsLimits(preset)
+    n_sfr_bins = len(sfr_bins_limits)-1
     print 'the sfr bins limits are: ' + str(sfr_bins_limits) 
     isfr = 9
     sfr_axis_ticks = ["{:.1f}".format(a) for a in sfr_bins_limits[::]]
@@ -118,6 +162,7 @@ def plotMagSFRPerformanceMatrix(bin_dataset, zmin, zmax, catastrophic_failure_th
     matrix = np.zeros((n_mag_bins,n_sfr_bins))
     n_matrix = np.zeros((n_mag_bins,n_sfr_bins))
     success_rate_matrix = np.zeros((n_mag_bins,n_sfr_bins)) 
+    logStr = ""
     for imbin in range(n_mag_bins):
         m_bin_dataset = []
         for x in range(n):
@@ -126,18 +171,24 @@ def plotMagSFRPerformanceMatrix(bin_dataset, zmin, zmax, catastrophic_failure_th
             #print("mag = {}".format(mag))
             #print("mag bin min = {}".format(mag_bins_limits[imbin]))
             #print("mag bin max = {}".format(mag_bins_limits[imbin+1]))
-            if mag >= mag_bins_limits[imbin] and mag < mag_bins_limits[imbin+1]:
+            if mag > mag_bins_limits[imbin] and mag <= mag_bins_limits[imbin+1]:
                 m_bin_dataset.append(bin_dataset[x])
                 #print("line kept is {}".format(bin_dataset[x]))
                 
         n_mag = len(m_bin_dataset)
+        #print("found mag bin count = {}".format(n_mag))
         for isfrbin in range(n_sfr_bins):
             sfr_bin_dataset = []
             for x in range(n_mag):
                 sfr = m_bin_dataset[x][isfr]
+                #print("sfr = {}".format(sfr))
+                #print("sfr bin min = {}".format(sfr_bins_limits[isfrbin]))
+                #print("sfr bin max = {}".format(sfr_bins_limits[isfrbin+1]))
                 if sfr < sfr_bins_limits[isfrbin] and sfr >= sfr_bins_limits[isfrbin+1]:
                     sfr_bin_dataset.append(m_bin_dataset[x])
                  
+            
+            #print("found sfr bin count = {}".format(len(sfr_bin_dataset) ))
             n_matrix[imbin][isfrbin] = len(sfr_bin_dataset) 
             success_rate_matrix[imbin][isfrbin] = getSuccessRate(sfr_bin_dataset, catastrophic_failure_threshold)            
             
@@ -149,6 +200,13 @@ def plotMagSFRPerformanceMatrix(bin_dataset, zmin, zmax, catastrophic_failure_th
                 matrix[imbin][isfrbin] = 1
             s = np.log( (success_rate_matrix[imbin][isfrbin]-success_rate_thres)/(1-success_rate_thres) +1)
             matrix[imbin][isfrbin] = (s + np.sign(s)*1.5)
+            binLogStr = "\nzbin = [{:<8}, {:<8}], magbin = [{:<6}, {:<6}], sfrbin = [{:<8}, {:<8}] : ncount = {:<8}, success_rate={:<8}".format(zmin, zmax, 
+                                             mag_bins_limits[imbin], mag_bins_limits[imbin+1], 
+                                            sfr_bins_limits[isfrbin], sfr_bins_limits[isfrbin+1], 
+                                            n_matrix[imbin][isfrbin], success_rate_matrix[imbin][isfrbin])
+            print("{}".format(binLogStr))
+            logStr += binLogStr
+            
             
             
     pp.clf()
@@ -231,7 +289,7 @@ def plotMagSFRPerformanceMatrix(bin_dataset, zmin, zmax, catastrophic_failure_th
     
     pp.xlabel('MAG')
     pp.ylabel('SFR')
-    name1 = "Performance matrix for {} spectra in z range [ {:.1f} ; {:.1f} ]\nFailure threshold dz/z > {}\nSuccess(Blue) strict(>) threshold: {}%".format(n, zmin, zmax, catastrophic_failure_threshold, int(success_rate_thres*100))
+    name1 = "Performance matrix for {} spectra in z range [ {:.2f} ; {:.2f} ]\nFailure threshold dz/z > {}\nSuccess(Blue) strict(>) threshold: {}%".format(n, zmin, zmax, catastrophic_failure_threshold, int(success_rate_thres*100))
     pp.title(name1)
     
     #pp.colorbar()
@@ -246,13 +304,15 @@ def plotMagSFRPerformanceMatrix(bin_dataset, zmin, zmax, catastrophic_failure_th
         pp.savefig( outFigFile, bbox_inches='tight')
     else:
         pp.show() 
+        
+    return logStr
   
       
 def getSuccessRate(datasetdiff, catastrophic_failure_threshold):
-    idiff = 12
     n_total = len(datasetdiff)
     if n_total == 0:
         return 0.0
+    idiff = len(datasetdiff[0])-1
     n_success = 0
     for e in datasetdiff:
         if abs(e[idiff]) < catastrophic_failure_threshold:

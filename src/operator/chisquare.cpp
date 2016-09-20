@@ -165,7 +165,7 @@ Void COperatorChiSquare::BasicFit( const CSpectrum& spectrum, const CTemplate& t
 
  std::shared_ptr<COperatorResult>  COperatorChiSquare::Compute(const CSpectrum& spectrum, const CTemplate& tpl,
                           const TFloat64Range& lambdaRange, const TFloat64List& redshifts,
-                          Float64 overlapThreshold , string opt_interp_unused)
+                          Float64 overlapThreshold , string opt_interp_unused, Int32 opt_extinction_unused)
 {
 
     if( spectrum.GetSpectralAxis().IsInLinearScale() == false || tpl.GetSpectralAxis().IsInLinearScale() == false )

@@ -14,6 +14,8 @@
 #include <epic/redshift/linemodel/element.h>
 #include <epic/redshift/linemodel/singleline.h>
 
+#include <epic/redshift/ray/catalogsTplShape.h>
+
 #include <boost/shared_ptr.hpp>
 
 #include <memory>
@@ -59,9 +61,11 @@ public:
     Float64 GetVelocitySup();
     Int32 ApplyVelocityBound();
 
-    Float64 fit(Float64 redshift, const TFloat64Range& lambdaRange, CLineModelResult::SLineModelSolution &modelSolution, Int32 contreest_iterations=0);
+    Float64 fit(Float64 redshift, const TFloat64Range& lambdaRange, CLineModelResult::SLineModelSolution &modelSolution, Int32 contreest_iterations=0, bool enableLogging=0);
     void fitWithModelSelection(Float64 redshift, const TFloat64Range& lambdaRange, CLineModelResult::SLineModelSolution &modelSolution);
     void SetFittingMethod(std::string fitMethod);
+
+    Float64 GetRedshift();
 
     void reinitModel();
     void refreshModel();
@@ -91,12 +95,14 @@ public:
     std::vector<Int32> getOverlappingElements(Int32 ind , std::vector<Int32> excludedInd, Float64 overlapThres=0.1);
     CRayCatalog::TRayVector m_RestRayList;
 
+    TStringList GetModelRulesLog();
+
 private:
 
     Int32 fitAmplitudesHybrid(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& spcFluxAxisNoContinuum, Float64 redshift);
     void fitAmplitudesSimplex();
     Int32 fitAmplitudesLmfit(std::vector<Int32> EltsIdx, const CSpectrumFluxAxis &fluxAxis, std::vector<Float64> &ampsfitted, Int32 lineType);
-    Int32 fitAmplitudesLinSolve(std::vector<Int32> EltsIdx, const CSpectrumSpectralAxis &spectralAxis, const CSpectrumFluxAxis &fluxAxis, std::vector<Float64> &ampsfitted);
+    Int32 fitAmplitudesLinSolve(std::vector<Int32> EltsIdx, const CSpectrumSpectralAxis &spectralAxis, const CSpectrumFluxAxis &fluxAxis, std::vector<Float64> &ampsfitted, std::vector<Float64> &errorsfitted);
 
     Int32 setLyaProfile( Float64 redshift, const CSpectrumSpectralAxis& spectralAxis );
 
@@ -111,11 +117,10 @@ private:
     void addSingleLine(const CRay &r, Int32 index, Float64 nominalWidth);
     void addDoubleLine(const CRay &r1, const CRay &r2, Int32 index1, Int32 index2, Float64 nominalWidth, Float64 a1, Float64 a2);
 
-    void applyRules();
-    Void ApplyStrongHigherWeakRule( Int32 lineType );
-    Float64 FindHighestStrongLineAmp( Int32 lineType, Float64 &er);
-
+    void applyRules(bool enableLogs=false);
     CRegulament* m_Regulament;
+
+    CRayCatalogsTplShape* m_CatalogTplShape;
 
     Float64 m_Redshift;
 

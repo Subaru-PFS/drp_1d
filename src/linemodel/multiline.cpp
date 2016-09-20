@@ -105,7 +105,7 @@ void CMultiLine::prepareSupport(const CSpectrumSpectralAxis& spectralAxis, Float
     m_OutsideLambdaRangeList.resize(m_Rays.size());
     for(Int32 i=0; i<m_Rays.size(); i++){
         Float64 mu = m_Rays[i].GetPosition()*(1+redshift);
-        Float64 c = GetLineWidth(mu, redshift, m_Rays[i].GetIsEmission());
+        Float64 c = GetLineWidth(mu, redshift, m_Rays[i].GetIsEmission(), m_profile[i]);
         Float64 winsize = GetNSigmaSupport(m_profile[i])*c;
 
         Float64 lambda_start = mu-winsize/2.0;
@@ -225,7 +225,7 @@ TInt32Range CMultiLine::getSupportSubElt(Int32 subeIdx)
 Float64 CMultiLine::GetWidth(Int32 subeIdx, Float64 redshift)
 {
     Float64 mu = m_Rays[subeIdx].GetPosition()*(1+redshift);
-    Float64 c = GetLineWidth(mu, redshift, m_Rays[subeIdx].GetIsEmission());
+    Float64 c = GetLineWidth(mu, redshift, m_Rays[subeIdx].GetIsEmission(), m_profile[subeIdx]);
     return c;
 }
 
@@ -352,7 +352,7 @@ void CMultiLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const C
     for(Int32 k2=0; k2<nRays; k2++)
       {
         mBuffer_mu[k2] = m_Rays[k2].GetPosition()*(1+redshift);
-        mBuffer_c[k2] = GetLineWidth(mBuffer_mu[k2], redshift, m_Rays[k2].GetIsEmission());
+        mBuffer_c[k2] = GetLineWidth(mBuffer_mu[k2], redshift, m_Rays[k2].GetIsEmission(), m_profile[k2]);
       }
 
     for(Int32 k=0; k<nRays; k++)
@@ -383,7 +383,7 @@ void CMultiLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const C
                 {
                     continue;
                 }
-                yg += m_SignFactors[k2] * m_NominalAmplitudes[k2] * GetLineProfile(m_profile[k2], x-mBuffer_mu[k2], mBuffer_c[k2]);
+                yg += m_SignFactors[k2] * m_NominalAmplitudes[k2] * GetLineProfile(m_profile[k2], x, mBuffer_mu[k2], mBuffer_c[k2]);
             }
             num++;
             err2 = 1.0 / (error[i] * error[i]);
@@ -407,13 +407,13 @@ void CMultiLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const C
             continue;
         }
         m_FittedAmplitudes[k] = A*m_NominalAmplitudes[k];
-        if(A==0)
+//        if(A==0)
+//        {
+//            m_FittedAmplitudeErrorSigmas[k] = 0.0; //why would this be useful ?
+//        }
+//        else
         {
-            m_FittedAmplitudeErrorSigmas[k] = 0.0;
-        }
-        else
-        {
-            m_FittedAmplitudeErrorSigmas[k] = 1.0/sqrt(sumGauss);
+            m_FittedAmplitudeErrorSigmas[k] = m_NominalAmplitudes[k]*1.0/sqrt(sumGauss);
         }
     }
     return;
@@ -502,9 +502,9 @@ Float64 CMultiLine::getModelAtLambda( Float64 lambda, Float64 redshift, Int32 kR
         }
         Float64 A = m_FittedAmplitudes[k2];
         Float64 mu = m_Rays[k2].GetPosition()*(1+redshift);
-        Float64 c = GetLineWidth(mu, redshift, m_Rays[k2].GetIsEmission());
+        Float64 c = GetLineWidth(mu, redshift, m_Rays[k2].GetIsEmission(), m_profile[k2]);
 
-        Yi += m_SignFactors[k2] * A * GetLineProfile(m_profile[k2], x-mu, c);
+        Yi += m_SignFactors[k2] * A * GetLineProfile(m_profile[k2], x, mu, c);
     }
     return Yi;
 }
@@ -525,9 +525,9 @@ Float64 CMultiLine::GetModelDerivAmplitudeAtLambda(Float64 lambda, Float64 redsh
         }
 
         Float64 mu = m_Rays[k2].GetPosition()*(1+redshift);
-        Float64 c = GetLineWidth(mu, redshift, m_Rays[k2].GetIsEmission());
+        Float64 c = GetLineWidth(mu, redshift, m_Rays[k2].GetIsEmission(), m_profile[k2]);
 
-        Yi += m_SignFactors[k2] * GetLineProfile(m_profile[k2], x-mu, c);
+        Yi += m_SignFactors[k2] * GetLineProfile(m_profile[k2], x, mu, c);
     }
     return Yi;
 }
@@ -549,7 +549,7 @@ Float64 CMultiLine::GetModelDerivSigmaAtLambda(Float64 lambda, Float64 redshift 
 
         Float64 A = m_FittedAmplitudes[k2];
         Float64 mu = m_Rays[k2].GetPosition()*(1+redshift);
-        Float64 c = GetLineWidth(mu, redshift, m_Rays[k2].GetIsEmission());
+        Float64 c = GetLineWidth(mu, redshift, m_Rays[k2].GetIsEmission(), m_profile[k2]);
 
         Yi += m_SignFactors[k2] * A * GetLineProfileDerivSigma(m_profile[k2], x, mu, c);
     }
@@ -617,6 +617,13 @@ void CMultiLine::LimitFittedAmplitude(Int32 subeIdx, Float64 limit)
     if(m_FittedAmplitudes[subeIdx] > limit)
       {
         m_FittedAmplitudes[subeIdx] = std::max(0.0, limit);
+
+        //now update the amplitude of the other lines
+        Float64 amplitudeRef = m_FittedAmplitudes[subeIdx]/m_NominalAmplitudes[subeIdx];
+        for(Int32 k=0; k<m_Rays.size(); k++)
+        {
+            m_FittedAmplitudes[k] = m_NominalAmplitudes[k]*amplitudeRef;
+        }
       }
     return;
 }

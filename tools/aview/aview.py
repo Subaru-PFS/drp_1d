@@ -3,6 +3,11 @@
 Created on Sun Jul 26 11:26:41 2015
 
 @author: aschmitt
+
+This is a simple command line interface that automatically retrieves and plots
+amazed results:
+- merit curve (using chisquare.py) 
+- spectrum vs model (aviewplot.py)
 """
 
 __all__ = ['plotRes']

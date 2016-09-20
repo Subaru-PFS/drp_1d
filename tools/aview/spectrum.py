@@ -79,8 +79,8 @@ class Spectrum(object):
             stop
             
         self.n = len(xvect)
-        self.yvect = yvect
-        self.xvect = xvect
+        self.yvect = [a for a in yvect]
+        self.xvect = [a for a in xvect]
         self.ysum = 0.0
         for x in range(0,self.n):
             self.ysum += self.yvect[x]
@@ -90,6 +90,7 @@ class Spectrum(object):
         return scopy
         
     def load(self):
+        print("\nPATH = {}\n".format(self.spath))
         hdulist = fits.open(self.spath) 
         print("\nHDULIST = \n{}\n".format(hdulist))
         try:
@@ -379,15 +380,7 @@ class Spectrum(object):
             self.xvect[x] = wave[x]
             self.yvect[x] = flux[x]
             self.ysum += self.yvect[x]   
-            
-    def saveTpl(self, outputfullpath):
-        filename = outputfullpath
-        f = open(filename, "w")
 
-        f.write("# lambda\tflux\n")
-        for x in range(0,self.n):        
-            f.write(" " + str(self.xvect[x]) + " " + str(self.yvect[x]) + "\n")
-        f.close()
         
         
     def __str__(self):
@@ -395,11 +388,14 @@ class Spectrum(object):
         a = a + ("    type = {0}\n".format(self.stype))
         a = a + ("    n = {0}\n".format(self.n))
         a = a + ("    dlambda = {0}\n".format(self.getResolution()))
+        a = a + ("    dlambdaMax = {0}, dlambdaMin = {1}\n".format(self.getMaxMinLambdaSteps()[0], self.getMaxMinLambdaSteps()[1]))
         a = a + ("    lambda min = {}, lambda max = {}\n".format(self.getWavelengthMin(), self.getWavelengthMax()))
         a = a + ("    flux min = {}, flux max = {}\n".format(self.getFluxMin(),self.getFluxMax()))
         a = a + ("    flux mean = {}\n".format(np.mean(self.yvect)))
         a = a + ("    flux std = {}, flux std 6000_8000 = {}\n".format(np.std(self.yvect), self.GetFluxStd6000_8000()))
         a = a + ("    magI = {}\n".format(self.getMagIAB()))
+        a = a + ("    flux has NaN indexes = {}\n".format([k for k, f in enumerate(self.yvect) if np.isnan(f)]))
+        a = a + ("    flux has in indexes = {}\n".format([k for k, f in enumerate(self.yvect) if np.isinf(f)]))
         
         a = a + ("\n")
         
@@ -407,7 +403,7 @@ class Spectrum(object):
         
     def plot(self, saveFullDirPath="", lstyle="r-+"):
         pp.ion()
-        self.fig = pp.figure(1)
+        self.fig = pp.figure("Spectrum")
         #self.fig = sns.pyplot.figure(1)
         self.canvas = self.fig.canvas
         self.ax = self.fig.add_subplot(111)
@@ -434,6 +430,38 @@ class Spectrum(object):
                 self.startEventHandling()
             else:
                 pp.show(1)
+            
+        print '\n'  
+        
+    def plotLambda(self, opt_deriv=False, lstyle="r-+"):
+        pp.ion()
+        self.fig = pp.figure(1)
+        #self.fig = sns.pyplot.figure(1)
+        self.canvas = self.fig.canvas
+        self.ax = self.fig.add_subplot(111)
+
+        #pp.plot(self.xvect, self.yvect, "x-")
+        xplot = self.xvect
+        self.ax.plot(xplot, lstyle, label = "wave")
+
+        #find best linear grid on lambda
+        
+        x = range(len(xplot))
+        y = xplot
+        z = np.polyfit(x, y, 1)
+        linearRegMiddle = np.poly1d(z)   
+        self.ax.plot(linearRegMiddle(x), label = "lin reg")
+        
+
+        #pp.grid(True) # Affiche la grille
+        self.ax.xaxis.grid(True,'major')
+        self.ax.yaxis.grid(True,'major')
+        
+        pp.xlabel('index')
+        pp.ylabel('Lambda')
+        pp.title(self.name) # Titre
+        pp.legend()
+        pp.show(1)
             
         print '\n'
         
@@ -838,7 +866,14 @@ class Spectrum(object):
         for x in range(0,self.n-1):
             dl += self.xvect[x+1]-self.xvect[x]
         dl /= self.n
-        return dl
+        return dl  
+        
+    def getMaxMinLambdaSteps(self):
+        dls = []
+        for x in range(0,self.n-1):
+            dl = self.xvect[x+1]-self.xvect[x]
+            dls.append(dl)
+        return np.max(dls), np.min(dls)
         
     def getShiftedX(self, z):
         coeff= 1+z
@@ -919,7 +954,7 @@ class Spectrum(object):
             smoothed2[i+decInit]=smoothed[len(smoothed)-1]
         return smoothed2 
         
-    def extendWavelengthRangeRed(self, wavelengthSup):
+    def extendWavelengthRangeRed(self, wavelengthSup, overridingExtensionValue=None):
         i1 = self.n-2;
         i2 = self.n-1;
         x1 = self.xvect[i1];
@@ -940,8 +975,12 @@ class Spectrum(object):
         k = 1
         x = x2
         while(x<wavelengthSup and k<1e6):
-            x = x2 + k*xstep
-            y = coefficients1[1] + coefficients1[0]*x #y2# + k*ystep
+            if overridingExtensionValue==None:
+                x = x2 + k*xstep
+                y = coefficients1[1] + coefficients1[0]*x #y2# + k*ystep
+            else:
+                x = x2 + k*xstep
+                y = overridingExtensionValue
             #y = moyenne
             print("INFO (extension Red): new sample at x = {} and y = {}".format(x, y))            
             self.xvect.append(x)
@@ -1199,7 +1238,7 @@ class Spectrum(object):
             if it>20:
                 coeffStep = 1.+dMThreshold
         print("Mag found (n={} iterations) is {}".format(it, mag))
-
+        return mag
 
         
     def getMagIAB(self):
@@ -1309,10 +1348,20 @@ class Spectrum(object):
         print ""
     
         return destfileout
+        
+            
+    def saveTpl(self, outputfullpath):
+        filename = outputfullpath
+        f = open(filename, "w")
+
+        f.write("# lambda\tflux\n")
+        for x in range(0,self.n):        
+            f.write(" " + str(self.xvect[x]) + " " + str(self.yvect[x]) + "\n")
+        f.close()
             
 
 def StartFromCommandLine( argv ) :	
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     
     parser.add_argument("-s", "--spc", dest="spcPath", default="",
                     help="path to the fits spectrum to be plotted")
@@ -1325,7 +1374,7 @@ def StartFromCommandLine( argv ) :
                         help="path to the other fits spectrum to be plotted",  
                         dest="otherspcPath", default="")
     parser.add_argument("-e", "--export", 
-                        help="export to fits format (no, yes)",  
+                        help="export to fits format (no, yes), or export to tpl (tpl)",  
                         dest="export", default="no")
     parser.add_argument("-y", "--otherspctype", help="type of other spc",  
                         dest="otherspcType", default="template")
@@ -1344,6 +1393,10 @@ def StartFromCommandLine( argv ) :
     if os.path.exists(options.spcPath) :
         print('using full path: {0}'.format(options.spcPath))
         s = Spectrum(options.spcPath, options.spcType, snorm=False)
+        
+        #s.plotLambda()
+        #exit()
+        
         #s.applyRedshift(0.25)
         
 #        z = 7.26
@@ -1366,8 +1419,14 @@ def StartFromCommandLine( argv ) :
 #                s.saveTpl(soutputpath)
 #                WarningKeyStr = raw_input("\n\nINFO: Modifications applied: saved to {}".format(soutputpath))
 #                                        
-            if options.export == "yes":
-                #s.applyLambdaCrop(7500, 9000)
+            if options.export == "tpl":
+                
+                path = os.path.split(options.spcPath)[0]
+                nameWext = os.path.split(options.spcPath)[1]
+                s.saveTpl(os.path.join(path, "{}.txt".format(nameWext)))
+            elif options.export == "yes":
+                #s.interpolate(dx=0.1) #high sampling for the synthesis process
+                #s.applyLambdaCrop(930, 1230)
                 #s.applyWeight(1e-18)
                 #s.setMagIAB(20)        
         
