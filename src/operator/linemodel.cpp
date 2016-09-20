@@ -35,7 +35,7 @@ using namespace std;
  **/
 COperatorLineModel::COperatorLineModel()
 {
-    mSumLogErr=0.0;
+    mSumLogErr=0.0; //unused
 }
 
 /**
