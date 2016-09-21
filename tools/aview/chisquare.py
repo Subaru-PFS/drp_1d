@@ -8,6 +8,9 @@ import os, sys
 import math
 import optparse
 
+import matplotlib as mpl
+#mpl.use('Qt5Agg')
+
 import matplotlib.pyplot as pp
 #pp.style.use('ggplot')
 #import seaborn as sns
@@ -141,8 +144,8 @@ class ResultChisquare(object):
         self.n = len(wave)
         #print('len wave = {0}'.format(self.n))
         #---- default xaxis index array
-        self.xvect = range(0,self.n)
-        self.yvect = range(0,self.n) 
+        self.xvect = list(range(0,self.n))
+        self.yvect = list(range(0,self.n)) 
         for x in range(0,self.n):
             self.xvect[x] = wave[x]
             #self.yvect[x] = math.exp(-flux[x]/2.0)
@@ -299,7 +302,7 @@ class ResultChisquare(object):
         else:
             return fig
             
-        print '\n'
+        print('\n')
         
     def plotCompare(self, other_spc):
         #find limits
@@ -360,7 +363,7 @@ class ResultChisquare(object):
             
         pp.legend(loc=0)
         pp.show()
-        print '\n'
+        print('\n')
 
     def getSplineContinuum(self):
         x = np.copy(self.xvect)

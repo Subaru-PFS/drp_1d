@@ -7,6 +7,10 @@ import os
 import sys
 import re
 import random
+
+import matplotlib as mpl
+mpl.use('Qt5Agg')
+
 import matplotlib.pyplot as pp
 import numpy as np
 
@@ -377,7 +381,7 @@ def StartFromCommandLine( argv ) :
                     help="path to the model to be loaded")          
           
     options = parser.parse_args()
-    print options
+    print(options)
 
     if os.path.exists(options.modelPath) :
         mpath = os.path.abspath(options.modelPath)
@@ -407,6 +411,6 @@ def Main( argv ) :
 
  
 if __name__ == '__main__':
-    print "ModelResult"
+    print("ModelResult")
     Main( sys.argv )
     

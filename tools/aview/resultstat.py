@@ -13,6 +13,8 @@ import math
 import time
 
 import matplotlib as mpl
+mpl.use('Qt5Agg')
+
 #mpl.use('Agg') #disable showing the mpl windows
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm

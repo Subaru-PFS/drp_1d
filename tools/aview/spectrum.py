@@ -13,9 +13,12 @@ import argparse
 import random
 import math
 
-from bokeh.plotting import figure, output_file, show
+#bokeh disabled for now...
+#from bokeh.plotting import figure, output_file, show
         
-import matplotlib as mpl
+#import matplotlib as mpl
+#mpl.use('Qt5Agg')
+
 #mpl.rcParams.update(mpl.rcParamsDefault)        
 
 import matplotlib.pyplot as pp
@@ -280,7 +283,7 @@ class Spectrum(object):
     def loadhplana(self):
         print("Loading hplana fits")
         hdulist = fits.open(self.spath) 
-        print hdulist
+        print(hdulist)
         
         scidata = hdulist[0].data
         sciheader = hdulist[0].header
@@ -309,7 +312,7 @@ class Spectrum(object):
     def loadmuseraw(self):
         print("Loading muse (raw, non splitted) fits")
         hdulist = fits.open(self.spath) 
-        print hdulist
+        print(hdulist)
 
         if 1: #loading data  
             print("Loading DATA")
@@ -373,8 +376,8 @@ class Spectrum(object):
         self.n = len(wave)
         #print('len wave = {0}'.format(self.n))
         #---- default xaxis index array
-        self.xvect = range(0,self.n)
-        self.yvect = range(0,self.n)
+        self.xvect = list(range(0,self.n))
+        self.yvect = list(range(0,self.n))
         self.ysum = 0.0    
         for x in range(0,self.n):
             self.xvect[x] = wave[x]
@@ -431,7 +434,7 @@ class Spectrum(object):
             else:
                 pp.show(1)
             
-        print '\n'  
+        print('\n')  
         
     def plotLambda(self, opt_deriv=False, lstyle="r-+"):
         pp.ion()
@@ -463,7 +466,7 @@ class Spectrum(object):
         pp.legend()
         pp.show(1)
             
-        print '\n'
+        print('\n')
         
     def plotCompare(self, other_spc, amplitude = 1.0, modellinetype = "-bo", exportPath="", other_spc_list=None):
         self.fig = pp.figure( "spectrumview", figsize=(15,11))
@@ -511,7 +514,7 @@ class Spectrum(object):
             pp.close()
             pp.clf()
             
-        print '\n'
+        print('\n')
 
         
     def startEventHandling(self):
@@ -837,29 +840,29 @@ class Spectrum(object):
             self.ysum = ysum
             self.n -= 1
 
-     
-    def exportPlotCompareBokeh(self, other_spc, amplitude = 1.0, fname = "spectrum_comparison"):
-        # output to static HTML file
-        output_file(fname + ".html", title=fname)
-
-        ylabel = 'flux'
-        if not self.forcePlotXIndex:
-            xlabel = 'angstrom'
-        else:
-            xlabel = 'index'
-            
-        # create a new plot with a title and axis labels
-        TOOLS="resize,crosshair,pan,wheel_zoom,box_zoom,reset,box_select,lasso_select"
-        TOOLS="resize,crosshair,pan,wheel_zoom,box_zoom,reset"
-        p = figure(tools=TOOLS, title=fname, x_axis_label= xlabel, y_axis_label=ylabel)
-
-        # add a line renderer with legend and line thickness
-        p.line(self.xvect, self.yvect, legend="Spectrum", line_width=1, line_color="black")
-        yother = [a*amplitude for a in other_spc.yvect]
-        p.line(other_spc.xvect, yother, legend="Model", line_width=2, line_color="blue", line_dash=[4, 4])
-
-        # show the results
-        show(p)
+#bokeh disabled for now...
+#    def exportPlotCompareBokeh(self, other_spc, amplitude = 1.0, fname = "spectrum_comparison"):
+#        # output to static HTML file
+#        output_file(fname + ".html", title=fname)
+#
+#        ylabel = 'flux'
+#        if not self.forcePlotXIndex:
+#            xlabel = 'angstrom'
+#        else:
+#            xlabel = 'index'
+#            
+#        # create a new plot with a title and axis labels
+#        TOOLS="resize,crosshair,pan,wheel_zoom,box_zoom,reset,box_select,lasso_select"
+#        TOOLS="resize,crosshair,pan,wheel_zoom,box_zoom,reset"
+#        p = figure(tools=TOOLS, title=fname, x_axis_label= xlabel, y_axis_label=ylabel)
+#
+#        # add a line renderer with legend and line thickness
+#        p.line(self.xvect, self.yvect, legend="Spectrum", line_width=1, line_color="black")
+#        yother = [a*amplitude for a in other_spc.yvect]
+#        p.line(other_spc.xvect, yother, legend="Model", line_width=2, line_color="blue", line_dash=[4, 4])
+#
+#        # show the results
+#        show(p)
     
     def getResolution(self):
         dl = 0.0;
@@ -1345,7 +1348,7 @@ class Spectrum(object):
             hdu_noise = pyfits.BinTableHDU.from_columns(cols_noise)
             hdu_noise.writeto(destfileoutnoise)
             
-        print ""
+        print("")
     
         return destfileout
         
@@ -1388,7 +1391,7 @@ def StartFromCommandLine( argv ) :
 
     options = parser.parse_args()
 
-    print options
+    print(options)
 
     if os.path.exists(options.spcPath) :
         print('using full path: {0}'.format(options.spcPath))
@@ -1460,7 +1463,7 @@ def Main( argv ) :
 
  
 if __name__ == '__main__':
-    print "Spectrum"
+    print("Spectrum")
     Main( sys.argv )
            
    

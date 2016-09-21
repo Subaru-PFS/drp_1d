@@ -9,6 +9,9 @@ import re
 import optparse
 from astropy.io import fits
 
+import matplotlib as mpl
+#mpl.use('Qt5Agg')
+
 import matplotlib.pyplot as pp
 from matplotlib.ticker import MultipleLocator, FormatStrFormatter
 import numpy as np
@@ -205,7 +208,7 @@ class Catalog(object):
         decimateZAxisN = int(nz/25.0)
         zaxisticks = ["{:.1f}".format(a) for a in zaxis[::decimateZAxisN]]
         zaxisticksinds = [int(a) for a in range(nz)[::decimateZAxisN]]
-        print zaxisticksinds
+        print(zaxisticksinds)
                 
         print("zaxis : n={}".format(len(zaxis)))
         matrix = np.zeros((nz, nlines))
@@ -431,7 +434,7 @@ def Main( argv ) :
         exit()  
             
 if __name__ == '__main__':
-    print "Catalog"
+    print("Catalog")
     Main( sys.argv )
         
 #if __name__ == '__main__':

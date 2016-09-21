@@ -7,6 +7,10 @@ Created on Fri Aug  7 16:21:16 2015
 import sys
 import os
 import optparse
+
+import matplotlib as mpl
+mpl.use('Qt5Agg')
+
 import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
 import numpy as np
