@@ -13,6 +13,8 @@
 #include <boost/test/unit_test.hpp>
 
 #include <boost/property_tree/ptree.hpp>
+#include <math.h>
+
 
 using namespace NSEpic;
 
@@ -82,7 +84,7 @@ void checkAmplitudeAndVelocityFit(std::string spectrumPath, std::string noisePat
     {
         velocity = model.GetVelocityAbsorption();
     }
-    BOOST_CHECK_SMALL( abs(velocity - fittedVelocityRef), 50); //todo: check with more precision ?
+    BOOST_CHECK_SMALL( fabs(velocity - fittedVelocityRef), 50.0); //todo: check with more precision ?
 
 }
 
