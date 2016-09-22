@@ -48,7 +48,7 @@ you can build either in *Debug* or *Release* mode
   make package`
 
   Note :
-  if you don't specify any *-DCMAKE_BUILD_TYPE=xxxxx* , it will build  by default in Release mode
+  if you don't specify any **-DCMAKE_BUILD_TYPE=xxxxx** , it will build  by default in Release mode
   
 
 
