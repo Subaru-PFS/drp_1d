@@ -195,6 +195,14 @@ class ResultList(object):
         return redshifts
     
     def getZCandidatesFromAmazedChi2Extrema(self, indice=0, chi2Type = "raw", nextrema = 5, enableZrangePerTpl=False):
+        """
+        retrieve the amazed intermediate results redshift candidates
+        - nextrema is the number of candidates to retrieve by order of merit
+        - for template fitting [chi2, linemodel-tplshape] (there are n merit functions to consider), the nextrema first 
+            extrema are extracted by merit for each templates and ordered in a 
+            global list, which is then cropped to contain only nextrema values
+            todo: maybe the extrema duplicates should be removed, eg. if abs(zTpl1-zTpl2)<threshold tbd
+        """
         redshiftslist = []
         meritslist = []        
         spcName = self.list[indice].name

@@ -312,6 +312,7 @@ class ModelResult(object):
     def getNLinesStrong(self, z=1.0, linetypefilter='E', thresSNR=3.0, thresRelAmp=3.0):
         print("\n")
         print("Linemodel-result: (N highest peaks)")
+        print("thresSNR = {}".format(thresSNR))
         m_instrumentResolutionEmpiricalFactor = 230.0/325.0/2.35;
         R=250;
         validLinesIdx = []
@@ -332,7 +333,7 @@ class ModelResult(object):
                 else:
                     diffLambda = 1e32
                 if k+1 < self.n and diffLambda<sigma:
-                    print("name = {} : diff lambda with doublet is {}".format(self.linename[k], diffLambda))
+                    print("name = {} : diff lambda with doublet is {} (thres={})".format(self.linename[k], diffLambda, sigma))
                     doublet_amp = self.lineamplitude[k]+self.lineamplitude[k+1]
                     doublet_error = np.mean([self.lineerror[k], self.lineerror[k+1]])
                     doublet_errorfit = np.mean([self.lineerrorfit[k], self.lineerrorfit[k+1]])
@@ -346,6 +347,7 @@ class ModelResult(object):
                 else:
                     snr = self.lineamplitude[k]/self.lineerror[k]
                     snrfit = self.lineamplitude[k]/self.lineerrorfit[k]
+                    print("SNR = {}, SNRFit = {}".format(snr, snrfit))
                     if snr >= thresSNR and snrfit>=thresSNR:
                         validLinesIdx.append(k)
                         validLinesSnr.append(snr)

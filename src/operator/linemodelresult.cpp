@@ -233,65 +233,56 @@ Void CLineModelResult::SaveLine( const CDataStore& store, std::ostream& stream )
 
 Int32 CLineModelResult::GetNLinesOverCutThreshold(Int32 extremaIdx, Float64 snrThres, Float64 fitThres) const
 {
-  if( Extrema.size()<=extremaIdx )
+    if( Extrema.size()<=extremaIdx )
     {
-      return 0;
+        return 0;
     }
-  Int32 nSol=0;
-  Int32 solutionIdx=0;
-  for ( UInt32 i2=0; i2<LineModelSolutions.size(); i2++)
+    Int32 nSol=0;
+    Int32 solutionIdx=0;
+    for ( UInt32 i2=0; i2<LineModelSolutions.size(); i2++)
     {
-      if( Redshifts[i2]==Extrema[extremaIdx] )
-	{
-	  solutionIdx = i2;
-	  break;
-	}
+        if( Redshifts[i2]==Extrema[extremaIdx] )
+        {
+            solutionIdx = i2;
+            break;
+        }
     }
-  std::vector<Int32> indexesSols;
-  for ( UInt32 j=0; j<LineModelSolutions[solutionIdx].Amplitudes.size(); j++)
+    std::vector<Int32> indexesSols;
+    for ( UInt32 j=0; j<LineModelSolutions[solutionIdx].Amplitudes.size(); j++)
     {
-      //skip if already sol
-      bool alreadysol = false;
-      for( Int32 i=0; i<indexesSols.size(); i++ )
-	{
-	  if( LineModelSolutions[solutionIdx].ElementId[j]==indexesSols[i] )
-	    {
-	      alreadysol=true;
-	      break;
-	    }
-	}
-      if( alreadysol )
-	{
-	  continue;
-	}
-      if( !LineModelSolutions[solutionIdx].Rays[j].GetIsStrong() )
-	{
-	  continue;
-	}
-      
-      Float64 noise = LineModelSolutions[solutionIdx].Errors[j];
-      if( noise>0 )
-	{
-	  Float64 snr = LineModelSolutions[solutionIdx].Amplitudes[j]/noise;
-	  Float64 Fittingsnr = LineModelSolutions[solutionIdx].Amplitudes[j]/LineModelSolutions[solutionIdx].FittingError[j];
-	  if( snr>=snrThres && Fittingsnr>=fitThres )
-	    {
-	      nSol++;
-	      indexesSols.push_back(LineModelSolutions[solutionIdx].ElementId[j]);
-	    }
-	}
-      /*
-	else{
-	//WARNING: this is a quick fix to deal with the case when errors are set to 0 by the linmodel operator...
-	//todo: remove that fix and correct the linemodel operator to avoid this case
-	if(LineModelSolutions[solutionIdx].Amplitudes[j]>0.0){
-	nSol++;
-	indexesSols.push_back(LineModelSolutions[solutionIdx].ElementId[j]);
-	}
-	}
-      //*/
+        //skip if already sol
+        bool alreadysol = false;
+        for( Int32 i=0; i<indexesSols.size(); i++ )
+        {
+            if( LineModelSolutions[solutionIdx].ElementId[j]==indexesSols[i] )
+            {
+                alreadysol=true;
+                break;
+            }
+        }
+        if( alreadysol )
+        {
+            continue;
+        }
+        if( !LineModelSolutions[solutionIdx].Rays[j].GetIsStrong() )
+        {
+            continue;
+        }
+
+        Float64 noise = LineModelSolutions[solutionIdx].Errors[j];
+        if( noise>0 )
+        {
+            Float64 snr = LineModelSolutions[solutionIdx].Amplitudes[j]/noise;
+            Float64 Fittingsnr = LineModelSolutions[solutionIdx].Amplitudes[j]/LineModelSolutions[solutionIdx].FittingError[j];
+            if( snr>=snrThres && Fittingsnr>=fitThres )
+            {
+                nSol++;
+                indexesSols.push_back(LineModelSolutions[solutionIdx].ElementId[j]);
+            }
+        }
+
     }
-  return nSol;
+    return nSol;
 }
 
 /**
