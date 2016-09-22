@@ -9,12 +9,11 @@ http://gitlab.oamp.dev/epic/epic_core/tree/develop/README
 
 ## Clone Git repository:
 
-  `git clone git@gitlab.oamp.dev:epic/epic_redshift.git $ROOT_DIR`
+`git clone git@gitlab.oamp.dev:epic/epic_redshift.git $ROOT_DIR`
 
 ## Build and install third party library by running the buildandinstall.sh script:
 
-`
- cd $ROOT_DIR/tools/
+`cd $ROOT_DIR/tools/
  python ./buildandinstallthirdparty.py`
 
 Please note that each tool has its own dependency list. If a tool fails to build, remove the relevant files from $ROOT_DIR/thirdparty, install the missing dependency and try again.
