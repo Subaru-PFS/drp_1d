@@ -16,7 +16,7 @@ http://gitlab.oamp.dev/epic/epic_core/tree/develop/README
 `cd $ROOT_DIR/tools/
  python ./buildandinstallthirdparty.py`
 
-Please note that each tool has its own dependency list. If a tool fails to build, remove the relevant files from $ROOT_DIR/thirdparty, install the missing dependency and try again.
+  Please note that each tool has its own dependency list. If a tool fails to build, remove the relevant files from $ROOT_DIR/thirdparty, install the missing dependency and try again.
 
 The "doxygen" tool requires at least flex and bison to work.
 
@@ -36,7 +36,7 @@ you can build either in *Debug* or *Release* mode
   make install
   make package
   `
-
+  
 ### example : build in Release  mode
   `
   cd ROOT_AMAZED
@@ -47,8 +47,9 @@ you can build either in *Debug* or *Release* mode
   make install
   make package`
 
-Note :
-if you don't specify any *-DCMAKE_BUILD_TYPE=xxxxx* , it will build by default in Release mode
+  Note :
+  if you don't specify any *-DCMAKE_BUILD_TYPE=xxxxx* , it will build  by default in Release mode
+  
 
 
 # III. Additional documentation
