@@ -14,6 +14,8 @@ import glob
 import time
 import threading
 import shutil
+import argparse
+
 
 #import mpl only to force Qt5Agg
 import matplotlib as mpl
@@ -42,7 +44,7 @@ def file_len(fname):
         return 0
         
 class AProcessGui(QtWidgets.QWidget):
-    def __init__(self, obj=None, initReprocess=None):
+    def __init__(self, obj=None, initReprocess=None, reset=False):
         super(AProcessGui, self).__init__()
         self.obj = obj
         wdg = self#QtGui.QWidget()
@@ -325,7 +327,8 @@ class AProcessGui(QtWidgets.QWidget):
         
         ### INITIAL POPULATE       
         self.settings = QtCore.QSettings("amazed", "aprocessgui")  
-        #self.settings.clear() 
+        if reset:
+            self.settings.clear() 
 
         #some directories settings
         _workspace = self.settings.value("workspacePath", defaultValue = "/var/tmp/amazed", type=str)
@@ -841,11 +844,16 @@ class AProcessGui(QtWidgets.QWidget):
             _workspace = QtWidgets.QFileDialog.getExistingDirectory(self, "Select working directory",_wokspaceDefault)
         else:
             _workspace = newWorkspace
+        
+        if not os.path.exists(_workspace):
+            os.mkdir(_workspace, 755)
+                
         if os.path.exists(_workspace):
             self.m_workspace = _workspace
             self.settings.setValue("workspacePath", self.m_workspace);
         else:
             print("{}: ERROR: Unable to set workspace {}".format(tag, _workspace))
+            exit()
         
         print("{}: Using workspace : {}".format(tag, self.m_workspace))       
     
@@ -876,7 +884,9 @@ class AProcessGui(QtWidgets.QWidget):
         os.system(bashCommand) 
 
     def bt_process(self):
-        tag = ""
+        tag = "process"
+        print("")
+        print("{}: starting...".format(tag))
         self.completed = 0  
 
         #init workspace  
@@ -884,10 +894,10 @@ class AProcessGui(QtWidgets.QWidget):
         if enable_reinit_workspace:
             if os.path.exists(self.m_workspace):
                 shutil.rmtree(self.m_workspace) 
-            os.mkdir(self.m_workspace) 
+            os.mkdir(self.m_workspace, 755) 
         else:
             if not os.path.exists(self.m_workspace):
-                os.mkdir(self.m_workspace)
+                os.mkdir(self.m_workspace, 755)
         
         #init output path
         self.m_outputPath = os.path.join(self.m_workspace, "output") 
@@ -1071,14 +1081,37 @@ class AProcessGui(QtWidgets.QWidget):
         self.aviewWindow.show()
         return
         
-def main():
+def mainLaunch(reset=False):
     print("\n")
     app = QtWidgets.QApplication(sys.argv)
     ins = ObjectAProcessGui(parent=app)
-    ex = AProcessGui(ins)
+    ex = AProcessGui(obj=ins, initReprocess=None, reset=reset)
     sys.exit(app.exec_())
  
+
+def StartFromCommandLine( argv ) :	
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    
+    parser.add_argument("-r", "--reset", dest="reset", default="no",
+                    help="reset switch for the settings, yes to reinit all settings")
+
+
+    options = parser.parse_args()
+
+    #print(options)
+    _reset = options.reset == "yes"
+    mainLaunch(reset=_reset)
+
+
+def Main( argv ) :	
+    try:
+        StartFromCommandLine( argv )
+    except (KeyboardInterrupt):
+        exit()
+
+ 
 if __name__ == '__main__':
-    main()
+    print("AProcessGUI")
+    Main( sys.argv )
         
         
