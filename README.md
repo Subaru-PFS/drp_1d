@@ -27,7 +27,7 @@ Build process uses cmake tool
 you can build either in *Debug* or *Release* mode
 
 ### example : build in Debug mode
-  ```
+  `
   cd ROOT_AMAZED
   mkdir build-debug
   cd build-debug
@@ -35,7 +35,7 @@ you can build either in *Debug* or *Release* mode
   make
   make install
   make package
-  ```
+  `
 
 ### example : build in Release  mode
   `
