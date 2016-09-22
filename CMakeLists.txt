@@ -1,10 +1,14 @@
 CMAKE_MINIMUM_REQUIRED (VERSION 2.8) 
 PROJECT( cpf-redshift ) 
 
+# extra path for modules
+SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake)
+include(SetupVar) 
+
 #--------------------------------------------------------
 # Setup shortcut acces directory
 #--------------------------------------------------------
-SET( ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/.." )
+SET( ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}" )
 
 SET( CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${ROOT_DIR}/lib )
 SET( CMAKE_LIBRARY_OUTPUT_DIRECTORY ${ROOT_DIR}/lib )
@@ -16,13 +20,6 @@ SET( CMAKE_RUNTIME_OUTPUT_DIRECTORY ${ROOT_DIR}/bin )
 #--------------------------------------------------------
 FILE (STRINGS ${ROOT_DIR}/VERSION VERSION)
 MESSAGE( STATUS "Version used: ${VERSION}" )
-
-#--------------------------------------------------------
-# Compiler options
-#--------------------------------------------------------
-SET( CMAKE_CXX_FLAGS "-O3 -std=c++11 -Wno-deprecated -Werror=return-type")
-
-SET( CMAKE_CXX_FLAGS_DEBUG "-O0 -g -DDEBUG_BUILD")
 
 #--------------------------------------------------------
 # Exported configuration variables
@@ -50,7 +47,7 @@ FILE (STRINGS ${ROOT_DIR}/VERSION VERSION_NUMBER)
 #--------------------------------------------------------
 # Compile library
 #--------------------------------------------------------
-SET( LIB_NAME cpf-redshift )
+SET( LIB_NAME cpf-redshift${EXT} )
 
 FILE( GLOB_RECURSE LIB_SOURCE_FILES ${ROOT_DIR}/src/*.cpp )
 
@@ -59,7 +56,7 @@ ADD_LIBRARY( ${LIB_NAME} STATIC ${LIB_SOURCE_FILES} )
 #--------------------------------------------------------
 # Compile test
 #--------------------------------------------------------
-SET( TEST_NAME cpf-redshift-test )
+SET( TEST_NAME cpf-redshift-test${EXT} )
   
 FILE( GLOB_RECURSE TEST_SOURCE_FILES ${ROOT_DIR}/test/*.cpp )
 
@@ -73,7 +70,7 @@ TARGET_LINK_LIBRARIES( ${TEST_NAME} ${LIB_NAME}  ${cpf-redshift_THIRDPARTY_LIBS}
 #--------------------------------------------------------
 INSTALL( TARGETS ${LIB_NAME} ARCHIVE DESTINATION lib )
 INSTALL( DIRECTORY ${ROOT_DIR}/include/ DESTINATION include )
-INSTALL( FILES  ${CMAKE_CURRENT_SOURCE_DIR}/cpf-redshift-config.cmake DESTINATION cmake )
+INSTALL( FILES  ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cpf-redshift-config.cmake DESTINATION cmake )
 
 #--------------------------------------------------------
 # Package deployement and config
@@ -82,15 +79,15 @@ INCLUDE ( CMakePackageConfigHelpers )
 
 # Configure config file (this is used by find_package to find where the library is)
 CONFIGURE_PACKAGE_CONFIG_FILE( 
-       ${CMAKE_CURRENT_SOURCE_DIR}/cpf-redshift-config.cmake.in
-       ${CMAKE_CURRENT_SOURCE_DIR}/cpf-redshift-config.cmake
+       ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cpf-redshift-config.cmake.in
+       ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cpf-redshift-config.cmake
        INSTALL_DESTINATION cmake
         )
 
 # Configure version file (this is used by find_package to determine a matching version)
 CONFIGURE_FILE( 
-       ${CMAKE_CURRENT_SOURCE_DIR}/cpf-redshift-config-version.cmake.in
-       ${CMAKE_CURRENT_SOURCE_DIR}/cpf-redshift-config-version.cmake
+       ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cpf-redshift-config-version.cmake.in
+       ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cpf-redshift-config-version.cmake
        @ONLY
         )
 
