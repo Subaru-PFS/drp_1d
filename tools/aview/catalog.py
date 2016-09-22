@@ -42,6 +42,8 @@ class Catalog(object):
         
     def load(self):
         filename = self.spath
+        if not os.path.exists(filename):
+            print("{}: filepath does not exist !".format(self.logTagStr))
         name = []
         linelambda = []
         force = []

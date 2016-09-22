@@ -251,8 +251,18 @@ class ResultList(object):
             sortId=np.argsort(meritsUnsorted)
             if chi2Type == "corr":
                 sortId = sortId[::-1]
-            redshifts = [redshiftsUnsorted[b] for b in sortId]
-            merits = [meritsUnsorted[b] for b in sortId]
+            redshifts_all = [redshiftsUnsorted[b] for b in sortId]
+            merits_all = [meritsUnsorted[b] for b in sortId]
+
+            if len(redshifts_all)>nextrema:
+                redshifts = [a for i, a in enumerate(redshifts_all) if i < nextrema]
+                merits = [a for i, a in enumerate(merits_all) if i < nextrema]
+            else:
+                redshifts = redshifts_all
+                merits = merits_all
+            #print("getZCandidatesFromAmazedChi2Extrema, len(redshifts={}".format(len(redshifts))) 
+            
+            
         elif nextrema == 0:
             redshiftsUnsorted = list((redshiftslist))
             meritsUnsorted = list((meritslist))
@@ -2211,7 +2221,7 @@ def plotContinuumIndexes(resDir, diffthres, spcName=""):
     
     
     enablePlot = 1
-    enableExport = 0
+    enableExport = 1
     enablePlotZref = 1
     enablePlotZwrong = 0
     enablePlotLineSeparation = 1
@@ -2297,7 +2307,11 @@ def plotContinuumIndexes(resDir, diffthres, spcName=""):
         plt.title(titleStr)
         
         if enableExport:
-            outFigFile = os.path.join(outdir, 'closestz_{}_nextrema{}_hist.png'.format(chi2Type, nextrema))
+            outdir = os.path.join(resList.analysisoutputdir, "continuum_indexes")
+            if not os.path.exists(outdir):
+                os.makedirs(outdir)
+                
+            outFigFile = os.path.join(outdir, 'continuum_indexes.png'.format())
             plt.savefig( outFigFile, bbox_inches='tight')
         if enablePlot:
             plt.show() 
