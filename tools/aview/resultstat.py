@@ -262,7 +262,7 @@ class ResultList(object):
             redshifts_all = [redshiftsUnsorted[b] for b in sortId]
             merits_all = [meritsUnsorted[b] for b in sortId]
 
-            if len(redshifts_all)>nextrema:
+            if False and len(redshifts_all)>nextrema: #disabled the final list crop to nextrema 
                 redshifts = [a for i, a in enumerate(redshifts_all) if i < nextrema]
                 merits = [a for i, a in enumerate(merits_all) if i < nextrema]
             else:

@@ -14,6 +14,8 @@ import glob
 import time
 import threading
 import shutil
+import argparse
+
 
 #import mpl only to force Qt5Agg
 import matplotlib as mpl
@@ -42,7 +44,7 @@ def file_len(fname):
         return 0
         
 class AProcessGui(QtWidgets.QWidget):
-    def __init__(self, obj=None, initReprocess=None):
+    def __init__(self, obj=None, initReprocess=None, reset=False):
         super(AProcessGui, self).__init__()
         self.obj = obj
         wdg = self#QtGui.QWidget()
@@ -325,7 +327,8 @@ class AProcessGui(QtWidgets.QWidget):
         
         ### INITIAL POPULATE       
         self.settings = QtCore.QSettings("amazed", "aprocessgui")  
-        #self.settings.clear() 
+        if reset:
+            self.settings.clear() 
 
         #some directories settings
         _workspace = self.settings.value("workspacePath", defaultValue = "/var/tmp/amazed", type=str)
@@ -625,6 +628,8 @@ class AProcessGui(QtWidgets.QWidget):
         self.setSpcdir(_spcDir)
         
         #retrieve/set spectrum/noise fits path
+        if self.ckSpclist.isChecked():
+            self.ckSpclist.toggle()
         splListLine = _resParser.getSpectrumlistline(spcTag)
         _SpcFits = splListLine[0]
         self.setSpcFits(_SpcFits)
@@ -841,11 +846,16 @@ class AProcessGui(QtWidgets.QWidget):
             _workspace = QtWidgets.QFileDialog.getExistingDirectory(self, "Select working directory",_wokspaceDefault)
         else:
             _workspace = newWorkspace
+        
+        if not os.path.exists(_workspace):
+            os.mkdir(_workspace, 0o755)
+                
         if os.path.exists(_workspace):
             self.m_workspace = _workspace
             self.settings.setValue("workspacePath", self.m_workspace);
         else:
             print("{}: ERROR: Unable to set workspace {}".format(tag, _workspace))
+            exit()
         
         print("{}: Using workspace : {}".format(tag, self.m_workspace))       
     
@@ -876,7 +886,9 @@ class AProcessGui(QtWidgets.QWidget):
         os.system(bashCommand) 
 
     def bt_process(self):
-        tag = ""
+        tag = "process"
+        print("")
+        print("{}: starting...".format(tag))
         self.completed = 0  
 
         #init workspace  
@@ -884,13 +896,17 @@ class AProcessGui(QtWidgets.QWidget):
         if enable_reinit_workspace:
             if os.path.exists(self.m_workspace):
                 shutil.rmtree(self.m_workspace) 
-            os.mkdir(self.m_workspace) 
+            os.mkdir(self.m_workspace, 0o755) 
         else:
             if not os.path.exists(self.m_workspace):
-                os.mkdir(self.m_workspace)
+                os.mkdir(self.m_workspace, 0o755)
         
         #init output path
         self.m_outputPath = os.path.join(self.m_workspace, "output") 
+        enable_reinit_output= True
+        if enable_reinit_output:
+            if os.path.exists(self.m_outputPath):
+                shutil.rmtree(self.m_outputPath) 
                 
         if self.ckSpclist.isChecked():
             _spclistPath = str(self.leSpclist.text())
@@ -899,7 +915,10 @@ class AProcessGui(QtWidgets.QWidget):
         self.saveEmptyRefFile(_spclistPath)
 
             
-        _configFilePath = self.saveConfigFile()        
+        _configFilePath = self.saveConfigFile()   
+        if not os.path.exists(_configFilePath):
+            print("{}: Unable to create config file... aborting".format(tag))
+            return
         
         while self.completed <= 1.0: #run the first x percent initially
             self.completed += 0.0001
@@ -971,12 +990,15 @@ class AProcessGui(QtWidgets.QWidget):
             _str += "input={}\n".format(os.path.abspath(_spclistPath))
         else:
             print("{}: ERROR: Spectrumlist file path is not valid, aborting...".format(tag))
+            return ""
+            
         #add the input directory
         _spcDirPath = str(self.leSpcdir.text())
         if os.path.exists(_spcDirPath):
             _str += "spectrumdir={}\n".format(os.path.abspath(_spcDirPath))
         else:
             print("{}: ERROR: Spectrum directory path is not valid, aborting...".format(tag))
+            return ""
             
         
         #add the method line
@@ -989,6 +1011,7 @@ class AProcessGui(QtWidgets.QWidget):
             _str += "linecatalog={}\n".format(os.path.abspath(_linecatalogPath))
         else:
             print("{}: ERROR: linecatalog file path is not valid, aborting...".format(tag))
+            return ""
         #add the line catalog conversion to AIR
         if self.ckConvertVac2Air.isChecked():
             _str += "linecatalog-convert=\n"
@@ -1000,6 +1023,7 @@ class AProcessGui(QtWidgets.QWidget):
             _str += "templatedir={}\n".format(os.path.abspath(_tplDirPath))
         else:
             print("{}: ERROR: Templates directory path is not valid, aborting...".format(tag))
+            return ""
             
         #add the parameters file line
         if not self.ckParametersAllDefaults.isChecked():
@@ -1007,7 +1031,8 @@ class AProcessGui(QtWidgets.QWidget):
             if os.path.exists(_parametersPath):
                 _str += "parameters={}\n".format(os.path.abspath(_parametersPath))
             else:
-                print("{}: ERROR: linecatalog file path is not valid, aborting...".format(tag))
+                print("{}: ERROR: parameters file path is not valid, aborting...".format(tag))
+                return ""
         
         #add the ourput dir 
         _str += "output={}\n".format(self.m_outputPath)       
@@ -1023,6 +1048,8 @@ class AProcessGui(QtWidgets.QWidget):
     def saveConfigFile(self):
         tag = "saveConfigFile"
         _str = self.prepareConfigString()
+        if _str == "":
+            return ""
         configFilePath = os.path.join(self.m_workspace, "config_tmp.txt")
         f = open(configFilePath, 'w')
         f.write(_str)
@@ -1046,6 +1073,7 @@ class AProcessGui(QtWidgets.QWidget):
                 #print len(data)
                 dataname = str(data[0]).replace(".fits", "").replace(".FITS", "")
                 dataNames.append(dataname)
+                _strRef += "#(typePFS)id   Z   MAG   fileID   E(B-V)   SFR   Sigma\n"
                 _strRef += "{}\t-1\t-1\t-1\t-1\t-1\t-1\t-1\t-1\t-1\t-1\t-1\t-1\t-1\n".format(dataname)
         f.close()
         
@@ -1071,14 +1099,37 @@ class AProcessGui(QtWidgets.QWidget):
         self.aviewWindow.show()
         return
         
-def main():
+def mainLaunch(reset=False):
     print("\n")
     app = QtWidgets.QApplication(sys.argv)
     ins = ObjectAProcessGui(parent=app)
-    ex = AProcessGui(ins)
+    ex = AProcessGui(obj=ins, initReprocess=None, reset=reset)
     sys.exit(app.exec_())
  
+
+def StartFromCommandLine( argv ) :	
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    
+    parser.add_argument("-r", "--reset", dest="reset", default="no",
+                    help="reset switch for the settings, yes to reinit all settings")
+
+
+    options = parser.parse_args()
+
+    #print(options)
+    _reset = options.reset == "yes"
+    mainLaunch(reset=_reset)
+
+
+def Main( argv ) :	
+    try:
+        StartFromCommandLine( argv )
+    except (KeyboardInterrupt):
+        exit()
+
+ 
 if __name__ == '__main__':
-    main()
+    print("AProcessGUI")
+    Main( sys.argv )
         
         
