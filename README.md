@@ -28,7 +28,7 @@ you can build either in *Debug* or *Release* mode
 
 ### example : build in Debug mode
   `
-  cd ROOT_AMAZED
+  cd $ROOT_DIR
   mkdir build-debug
   cd build-debug
   cmake .. -DCMAKE_BUILD_TYPE=Debug
@@ -39,7 +39,7 @@ you can build either in *Debug* or *Release* mode
   
 ### example : build in Release  mode
   `
-  cd ROOT_AMAZED
+  cd $ROOT_DIR
   mkdir build
   cd build
   cmake .. -DCMAKE_BUILD_TYPE=Release

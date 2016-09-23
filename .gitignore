@@ -1,12 +1,11 @@
 ###############################################
 # Ignore files created by cmake
 ###############################################
-build/CMakeCache.txt
-build/CMakeFiles/
-build/Makefile
-build/*.cmake
-build/SYSTEM_*
-build/install_manifest.txt
+build/
+build-debug/
+
+cmake/cpf-redshift-config-version.cmake
+cmake/cpf-redshift-config.cmake
 
 *.creator.user*
 *.config
@@ -42,3 +41,5 @@ pkgconfig
 
 # Python cache files
 *.pyc
+
+
