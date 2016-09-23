@@ -577,7 +577,7 @@ def ProcessStats( fname, zRange, magRange,  sfrRange, enablePlot = False ):
     outputDirectory = os.path.join(_baseOutputDirectory, "stats_magmin{}magmax{}_zmin{}zmax{}_sfrmin{}sfrmax{}".format(magRange[0], magRange[1], zRange[0], zRange[1], sfrRange[0], sfrRange[1]))
     if os.path.exists( outputDirectory ) == False :        
         print("makedir: Output dir: "+outputDirectory)
-        os.mkdir( outputDirectory, 0755 )        
+        os.mkdir( outputDirectory, 0o755 )        
         
     n = (len(data))
     n2 = len(data[0])
@@ -809,7 +809,7 @@ def processPerformance( fname, opt_preset ):
     outputDirectory = os.path.join(_baseOutputDirectory, "performances".format())
     if os.path.exists( outputDirectory ) == False :        
         print("makedir: Output dir: "+outputDirectory)
-        os.mkdir( outputDirectory, 0755 )
+        os.mkdir( outputDirectory, 0o755 )
         
     lperf.exportPerformances(dataDiff, outputDirectory, preset=opt_preset)
 
@@ -1062,7 +1062,7 @@ def StartFromCommandLine( argv ) :
             outputFullpathFailuresSeqFile = outputPath + filenameFailuresSeqFile
             outputFullpathFailuresRefFile = outputPath + filenameFailuresRefFile
             if os.path.isdir(outputPath)==False:
-                os.mkdir( outputPath, 0755 );
+                os.mkdir( outputPath, 0o755 );
     
             if options.type == 'vvds1':
     	       print "Info: Using VVDS1 reference data file type"

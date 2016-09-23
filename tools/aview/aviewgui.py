@@ -272,7 +272,7 @@ class AViewGui(QtWidgets.QWidget):
                 _refzfilepath = str(QtWidgets.QFileDialog.getOpenFileName(self, "Select Reference Redshift list file", _refzfilepathDefault))
             if os.path.exists(_refzfilepath) :
                 if os.path.isdir(statsPath)==False:
-                    os.mkdir( statsPath, 755 );
+                    os.mkdir( statsPath, 0o755 );
                 self.settings.setValue("refzfilepath", _refzfilepath)
                 processAmazedOutputStats.setPFSRefFileType()
                 processAmazedOutputStats.ProcessDiff( _refzfilepath, calcFile, diffPath , reftype='pfs')
@@ -337,7 +337,7 @@ class AViewGui(QtWidgets.QWidget):
             _refzfilepath = str(QtWidgets.QFileDialog.getOpenFileName(self, "Select Reference Redshift list file", _refzfilepathDefault))
             if os.path.exists(_refzfilepath) :
                 if os.path.isdir(statsPath)==False:
-                    os.mkdir( statsPath, 755 );
+                    os.mkdir( statsPath, 0o755 );
                 self.settings.setValue("refzfilepath", _refzfilepath)
                 processAmazedOutputStats.setPFSRefFileType()
                 processAmazedOutputStats.ProcessDiff( _refzfilepath, calcFile, diffPath )

@@ -268,6 +268,10 @@ Int32 CLineModelResult::GetNLinesOverCutThreshold(Int32 extremaIdx, Float64 snrT
         {
             continue;
         }
+        if( !LineModelSolutions[solutionIdx].Rays[j].GetIsEmission() )
+        {
+            continue;
+        }
 
         Float64 noise = LineModelSolutions[solutionIdx].Errors[j];
         if( noise>0 )
