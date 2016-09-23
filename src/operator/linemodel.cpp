@@ -596,9 +596,9 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
         result->Extrema[i] = z;
         //result->IsLocalExtrema[i]=isLocalExtrema[i];
 
-        static Float64 cutThres = 6.0;
+        static Float64 cutThres = 3.0;
         Int32 nValidLines = result->GetNLinesOverCutThreshold(i, cutThres, cutThres);
-        result->Posterior[i] = m/Float64(1+nValidLines);
+        result->Posterior[i] = nValidLines;//m/Float64(1+nValidLines);
         result->LogArea[i] = -DBL_MAX;
         result->LogAreaCorrectedExtrema[i] = -1.0;
 
