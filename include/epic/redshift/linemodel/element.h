@@ -30,6 +30,7 @@ public:
     virtual void prepareSupport(const CSpectrumSpectralAxis& spectralAxis, Float64 redshift, const TFloat64Range& lambdaRange)=0;
     virtual TInt32RangeList getSupport()=0;
     virtual TInt32Range getSupportSubElt(Int32 subeIdx)=0;
+    virtual TInt32Range getTheoreticalSupportSubElt(Int32 subeIdx)=0;
 
     virtual void fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis, Float64  redshift, Int32 lineIdx=-1 ) =0;
     virtual Float64 getModelAtLambda( Float64 lambda, Float64 redshift, Int32 kRaySupport=-1 )=0;

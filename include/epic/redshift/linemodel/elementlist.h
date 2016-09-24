@@ -78,6 +78,8 @@ public:
     Int32 getSpcNSamples(const TFloat64Range& lambdaRange);
     Float64 getLeastSquareMerit(const TFloat64Range &lambdaRange);
     Float64 getLeastSquareMeritUnderElements();
+    Float64 getCumulSNRStrongEL();
+    Float64 getCumulSNROnRange( TInt32Range idxRange );
     Float64 getModelErrorUnderElement(Int32 eltId);
     Float64 getContinuumMeanUnderElement(Int32 eltId);
     CLineModelResult::SLineModelSolution GetModelSolution();

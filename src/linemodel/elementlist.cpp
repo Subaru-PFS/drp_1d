@@ -2123,6 +2123,135 @@ Float64 CLineModelElementList::getModelErrorUnderElement( Int32 eltId )
 }
 
 
+/**
+ * \brief Returns the cumulative SNR under the Strong Emission Lines
+ * 1. retrieve the lines support
+ * 2. process each
+ **/
+Float64 CLineModelElementList::getCumulSNRStrongEL()
+{
+    Float64 snr=0.0;
+
+    //Retrieve all the liens supports in a list of range
+    TInt32RangeList supportList;
+    std::vector<Int32> validEltsIdx = GetModelValidElementsIndexes();
+    for( UInt32 iValidElts=0; iValidElts<validEltsIdx.size(); iValidElts++ )
+    {
+        Int32 iElts = validEltsIdx[iValidElts];
+        UInt32 nlines =  m_Elements[iElts]->GetRays().size();
+        for(UInt32 lineIdx=0; lineIdx<nlines; lineIdx++)
+        {
+            if( !m_RestRayList[m_Elements[iElts]->m_LineCatalogIndexes[lineIdx]].GetIsStrong() ){
+                continue;
+            }
+            if( !m_RestRayList[m_Elements[iElts]->m_LineCatalogIndexes[lineIdx]].GetIsEmission() ){
+                continue;
+            }
+
+            TInt32Range support = m_Elements[iElts]->getTheoreticalSupportSubElt(lineIdx);
+            supportList.push_back(support);
+        }
+    }
+
+    //merge overlapping ranges
+    TInt32RangeList nonOverlappingSupportList;
+    std::vector<Int32> processedSupport;
+    for(UInt32 k=0; k<supportList.size(); k++)
+    {
+        //skip if already fitted
+        bool alreadyProcessed=false;
+        for(Int32 i=0; i<processedSupport.size(); i++)
+        {
+            if(k == processedSupport[i])
+            {
+                alreadyProcessed=true;
+                break;
+            }
+        }
+        if(alreadyProcessed)
+        {
+            continue;
+        }
+
+
+        processedSupport.push_back(k);
+        TInt32Range support = TInt32Range( supportList[k].GetBegin(), supportList[k].GetEnd());
+
+        for(UInt32 l=0; l<supportList.size(); l++)
+        {
+            //skip if already fitted
+            bool alreadyProcessed=false;
+            for(Int32 i=0; i<processedSupport.size(); i++)
+            {
+                if(l == processedSupport[i])
+                {
+                    alreadyProcessed=true;
+                    break;
+                }
+            }
+            if(alreadyProcessed)
+            {
+                continue;
+            }
+
+            //try if current range is bluer than l and overlaps ?
+            Float64 xinf = support.GetBegin();
+            Float64 xsup = support.GetEnd();
+            Float64 yinf = supportList[l].GetBegin();
+            Float64 ysup = supportList[l].GetEnd();
+            Float64 max = std::max(xinf,yinf);
+            Float64 min = std::min(xsup,ysup);
+            if( max-min < 0 ){
+                processedSupport.push_back(l);
+                support.SetBegin(std::min(xinf,yinf));
+                support.SetEnd(std::max(xsup,ysup));
+            }
+        }
+        nonOverlappingSupportList.push_back(support);
+    }
+
+    //process SNR on the non overlapping ranges
+    for(UInt32 k=0; k<nonOverlappingSupportList.size(); k++)
+    {
+        snr += getCumulSNROnRange(nonOverlappingSupportList[k]);
+    }
+
+    return snr;
+}
+
+/**
+ * \brief Returns the cumulative SNR on the idxRange
+ **/
+Float64 CLineModelElementList::getCumulSNROnRange( TInt32Range idxRange  )
+{
+    Int32 n = idxRange.GetEnd() - idxRange.GetBegin() +1;
+    if(n<2){
+        return -1;
+    }
+
+    const CSpectrumFluxAxis& modelFluxAxis = m_SpectrumModel->GetFluxAxis();
+    const Float64* Ymodel = modelFluxAxis.GetSamples();
+
+    Int32 idx = 0;
+    Float64 maxAmp = 0.0;
+    Float64 sumM = 0.0;
+    for(Int32 i = 0; i < n; i++)
+    {
+        idx = i + idxRange.GetBegin();
+        Float64 amp = Ymodel[idx]-m_ContinuumFluxAxis[idx]; //using only the no-continuum component to estimate SNR
+        if(maxAmp<amp)
+        {
+            maxAmp = amp;
+        }
+        sumM +=  m_ErrorNoContinuum[idx];
+    }
+    Float64 Err = sumM/Float64(n);
+    Float64 rangeSNR = maxAmp/Err;
+
+    return rangeSNR;
+}
+
+
 Float64 CLineModelElementList::getContinuumMeanUnderElement(Int32 eltId)
 {
     Int32 n = 0;

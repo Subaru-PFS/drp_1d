@@ -92,6 +92,32 @@ Float64 CMultiLine::GetSignFactor(Int32 subeIdx)
 }
 
 /**
+ * \brief Returns the theoretical support range for the line
+ **/
+TInt32Range CMultiLine::GetTheoreticalSupport(Int32 subeIdx, const CSpectrumSpectralAxis& spectralAxis, Float64 redshift,  const TFloat64Range &lambdaRange)
+{
+    Int32 i = subeIdx;
+    TInt32Range supportRange;
+    Float64 mu = m_Rays[i].GetPosition()*(1+redshift);
+    Float64 c = GetLineWidth(mu, redshift, m_Rays[i].GetIsEmission(), m_profile[i]);
+    Float64 winsize = GetNSigmaSupport(m_profile[i])*c;
+
+    Float64 lambda_start = mu-winsize/2.0;
+    if(lambda_start < lambdaRange.GetBegin()){
+        lambda_start = lambdaRange.GetBegin();
+    }
+    supportRange.SetBegin(spectralAxis.GetIndexAtWaveLength(lambda_start));
+
+    Float64 lambda_end = mu+winsize/2.0;
+    if(lambda_end > lambdaRange.GetEnd()){
+        lambda_end = lambdaRange.GetEnd();
+    }
+    supportRange.SetEnd(spectralAxis.GetIndexAtWaveLength(lambda_end));
+
+    return supportRange;
+}
+
+/**
  * \brief Limits each m_Rays element within the argument lambdaRange, and sets the m_FittedAmplitudes to -1.
  * Sets the global outside lambda range.
  * Inits the fitted amplitude values.
@@ -100,28 +126,24 @@ void CMultiLine::prepareSupport(const CSpectrumSpectralAxis& spectralAxis, Float
 {    
     m_OutsideLambdaRange=true;
     m_RayIsActiveOnSupport.resize( m_Rays.size() , std::vector<Int32>( m_Rays.size() , 0.0 ) );
-    m_Start.resize(m_Rays.size());
-    m_End.resize(m_Rays.size());
+    m_StartNoOverlap.resize(m_Rays.size());
+    m_EndNoOverlap.resize(m_Rays.size());
+    m_StartTheoretical.resize(m_Rays.size());
+    m_EndTheoretical.resize(m_Rays.size());
     m_OutsideLambdaRangeList.resize(m_Rays.size());
     for(Int32 i=0; i<m_Rays.size(); i++){
+        TInt32Range supportRange = GetTheoreticalSupport(i, spectralAxis, redshift, lambdaRange);
+        m_StartTheoretical[i] = supportRange.GetBegin();
+        m_EndTheoretical[i] = supportRange.GetEnd();
+        m_StartNoOverlap[i] = supportRange.GetBegin();
+        m_EndNoOverlap[i] = supportRange.GetEnd();
+
+
         Float64 mu = m_Rays[i].GetPosition()*(1+redshift);
         Float64 c = GetLineWidth(mu, redshift, m_Rays[i].GetIsEmission(), m_profile[i]);
         Float64 winsize = GetNSigmaSupport(m_profile[i])*c;
-
-        Float64 lambda_start = mu-winsize/2.0;
-        if(lambda_start < lambdaRange.GetBegin()){
-            lambda_start = lambdaRange.GetBegin();
-        }
-        m_Start[i] = spectralAxis.GetIndexAtWaveLength(lambda_start);
-
-        Float64 lambda_end = mu+winsize/2.0;
-        if(lambda_end > lambdaRange.GetEnd()){
-            lambda_end = lambdaRange.GetEnd();
-        }
-        m_End[i] = spectralAxis.GetIndexAtWaveLength(lambda_end);
-
         Int32 minLineOverlap = m_OutsideLambdaRangeOverlapThreshold*winsize;
-        if( m_Start[i] >= (spectralAxis.GetSamplesCount()-1-minLineOverlap) || m_End[i] <=minLineOverlap){
+        if( m_StartNoOverlap[i] >= (spectralAxis.GetSamplesCount()-1-minLineOverlap) || m_EndNoOverlap[i] <=minLineOverlap){
             m_OutsideLambdaRangeList[i]=true;
         }else{
             m_OutsideLambdaRangeList[i]=false;
@@ -145,8 +167,8 @@ void CMultiLine::prepareSupport(const CSpectrumSpectralAxis& spectralAxis, Float
             if(i==j){
                 continue;
             }
-            if(m_Rays[i].GetPosition()<m_Rays[j].GetPosition() && m_Start[j]<=m_End[i]){
-                m_Start[j]=m_End[i]+1;
+            if(m_Rays[i].GetPosition()<m_Rays[j].GetPosition() && m_StartNoOverlap[j]<=m_EndNoOverlap[i]){
+                m_StartNoOverlap[j]=m_EndNoOverlap[i]+1;
                 //set the rays active on the overlapping support
                 m_RayIsActiveOnSupport[i][j] = 1;
                 m_RayIsActiveOnSupport[j][i] = 1;
@@ -198,7 +220,7 @@ TInt32RangeList CMultiLine::getSupport()
 	      {
                 continue;
 	      }
-            support.push_back(TInt32Range(m_Start[i], m_End[i]));
+            support.push_back(TInt32Range(m_StartNoOverlap[i], m_EndNoOverlap[i]));
 	  }
       }
     return support;
@@ -214,7 +236,22 @@ TInt32Range CMultiLine::getSupportSubElt(Int32 subeIdx)
         if(m_OutsideLambdaRangeList[subeIdx]){
             support = TInt32Range(-1, -1);
         }
-        support = TInt32Range(m_Start[subeIdx], m_End[subeIdx]);
+        support = TInt32Range(m_StartNoOverlap[subeIdx], m_EndNoOverlap[subeIdx]);
+    }
+    return support;
+}
+
+/**
+ * \brief Returns the theoretical support of the line (sub-element).
+ **/
+TInt32Range CMultiLine::getTheoreticalSupportSubElt(Int32 subeIdx)
+{
+    TInt32Range support;
+    if(m_OutsideLambdaRange==false){
+        if(m_OutsideLambdaRangeList[subeIdx]){
+            support = TInt32Range(-1, -1);
+        }
+        support = TInt32Range(m_StartTheoretical[subeIdx], m_EndTheoretical[subeIdx]);
     }
     return support;
 }
@@ -367,7 +404,7 @@ void CMultiLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const C
         }
 
         //A estimation
-        for ( Int32 i = m_Start[k]; i <= m_End[k]; i++)
+        for ( Int32 i = m_StartNoOverlap[k]; i <= m_EndNoOverlap[k]; i++)
         {
             y = flux[i];
             x = spectral[i];
@@ -443,7 +480,7 @@ void CMultiLine::addToSpectrumModel( const CSpectrumSpectralAxis& modelspectralA
             continue;
         }
 
-        for ( Int32 i = m_Start[k]; i <= m_End[k]; i++)
+        for ( Int32 i = m_StartNoOverlap[k]; i <= m_EndNoOverlap[k]; i++)
       {
             Float64 lambda = spectral[i];
             Float64 Yi=getModelAtLambda(lambda, redshift, k);
@@ -467,7 +504,7 @@ void CMultiLine::addToSpectrumModelDerivSigma( const CSpectrumSpectralAxis& mode
             continue;
         }
 
-        for ( Int32 i = m_Start[k]; i <= m_End[k]; i++)
+        for ( Int32 i = m_StartNoOverlap[k]; i <= m_EndNoOverlap[k]; i++)
         {
             Float64 lambda = spectral[i];
             Float64 Yi=GetModelDerivSigmaAtLambda(lambda, redshift);
@@ -580,7 +617,7 @@ void CMultiLine::initSpectrumModel( CSpectrumFluxAxis &modelfluxAxis, CSpectrumF
             continue;
         }
 
-        for ( Int32 i = m_Start[k]; i <= m_End[k]; i++)
+        for ( Int32 i = m_StartNoOverlap[k]; i <= m_EndNoOverlap[k]; i++)
 	  {
             flux[i] = continuumfluxAxis[i];
 	  }

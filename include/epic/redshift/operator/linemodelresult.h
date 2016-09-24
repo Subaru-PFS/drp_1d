@@ -53,6 +53,7 @@ public:
     TFloat64List            Extrema;    // z extrema
     TFloat64List            ExtremaExtendedRedshifts;    // z range around extrema
     TFloat64List            Posterior;    // z extrema
+    TFloat64List            StrongELSNR;
     TFloat64List            LogArea;    // log area for each extrema
     TFloat64List            LogAreaCorrectedExtrema;    //corrected z for each extrema
     TFloat64List            SigmaZ; //sigmaz for each extrema

@@ -1071,7 +1071,9 @@ class AProcessGui(QtWidgets.QWidget):
                     data = lineStr.split(" ")
                 data = [r for r in data if r != '']
                 #print len(data)
-                dataname = str(data[0]).replace(".fits", "").replace(".FITS", "")
+                dataname = str(data[0])
+                if dataname.endswith(".fits") or dataname.endswith(".FITS"):
+                    dataname = dataname[:-5]
                 dataNames.append(dataname)
                 _strRef += "#(typePFS)id   Z   MAG   fileID   E(B-V)   SFR   Sigma\n"
                 _strRef += "{}\t-1\t-1\t-1\t-1\t-1\t-1\t-1\t-1\t-1\t-1\t-1\t-1\t-1\n".format(dataname)

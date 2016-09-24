@@ -162,6 +162,17 @@ TInt32Range CSingleLine::getSupportSubElt( Int32 subeIdx )
 }
 
 /**
+ * Calls getSupportSubElt()
+ */
+TInt32Range CSingleLine::getTheoreticalSupportSubElt( Int32 subeIdx )
+{
+     return getSupportSubElt(subeIdx);
+}
+
+
+
+
+/**
  * /brief Fits a gaussian considering the flux in a width calculated by the prepareSupport method.
  * Sets m_FittedAmplitude and m_FittedAmplitudeErrorSigma based on the parameters.
  */

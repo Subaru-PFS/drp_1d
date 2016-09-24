@@ -67,6 +67,13 @@ class ModelResult(object):
                 data = re.split(" }", data[1])
                 self.lya_delta = float(data[0]) 
             if lineStr.startswith('#linemodel solution '):
+                data = re.split("for z = ", lineStr)
+                data = re.split(", velocityEmission = ", data[1])
+                try:
+                    self.z = float(data[0]) 
+                except:
+                    self.z = -1
+                    
                 data = re.split("velocityEmission = ", lineStr)
                 data = re.split(", velocityAbsorption = ", data[1])
                 try:
@@ -113,12 +120,17 @@ class ModelResult(object):
         text_file.close()             
     
         
-    def plot(self):
+    def plot(self, plotType='amplitudes'):
         
         #plotValue = self.lineerror 
-        #plotValue = [a/self.lineerror[i] for i, a in enumerate(self.lineamplitude)]
-        plotValue = self.lineamplitude 
-        enableYRescaleAuto = 1
+        if plotType=='amplitudes':
+            ylabelStr = "Amplitude"
+            plotValue = self.lineamplitude 
+        elif plotType=='snr':
+            ylabelStr = "SNR"
+            plotValue = [a/self.lineerror[i] for i, a in enumerate(self.lineamplitude)]
+        #
+        enableYRescaleAuto = 0
         
         amax = 0.0
         emax = 0.0
@@ -183,8 +195,9 @@ class ModelResult(object):
         pp.grid(True) # Affiche la grille
         #pp.legend(('spectrum','shifted template'), 'lower left', shadow = True)
         pp.xlabel('Rest Wavelength (Angstrom)')
-        pp.ylabel('Amplitude (x{:.3})'.format(coeffAmp))
-        pp.title(self.name) # Titre
+        pp.ylabel('{} (x{:.3})'.format(ylabelStr, coeffAmp))
+        titleStr = "{} at z={}".format(self.name, self.z)
+        pp.title(titleStr) # Titre
         #pp.savefig('ExempleTrace') # sauvegarde du fichier ExempleTrace.png
         pp.show()
 
@@ -361,6 +374,17 @@ class ModelResult(object):
         
         outN = len(validLinesIdx)
         return outN
+    
+    def getStrongLinesCumulSNR(self, linetypeTag='E'):
+        sumSnr = 0.0
+        for k in range(self.n):
+            if self.lineamplitude[k] > 0.0 and self.linetype[k] == linetypeTag:
+                if self.lineforce[k] == 'S':
+                    snr = self.lineamplitude[k]/self.lineerror[k]
+                    sumSnr += min(snr, 5)  
+                    print("line = {}, snr = {}".format(self.linename[k], snr))
+        print('Strong Lines Cumul. SNR = {}'.format(sumSnr))
+        return sumSnr
         
     def getAmplitude(self, strTag, linetypeTag):
         for k in range(self.n):
@@ -398,7 +422,9 @@ def StartFromCommandLine( argv ) :
     
         m.getAmplitudeMeanNhighest() 
         m.getNLinesStrong()
-        m.plot()
+        m.getStrongLinesCumulSNR()
+        #m.plot(plotType='amplitudes')
+        m.plot(plotType='snr')
     else :
         print("Error: invalid argument count")
         exit()

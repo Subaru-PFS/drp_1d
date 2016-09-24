@@ -31,6 +31,7 @@ Void CLineModelResult::ResizeExtremaResults(Int32 size)
 {
     Extrema.resize(size);
     Posterior.resize(size);
+    StrongELSNR.resize(size);
     LogArea.resize(size);
     LogAreaCorrectedExtrema.resize(size);
     SigmaZ.resize(size);
@@ -217,6 +218,17 @@ Void CLineModelResult::Save( const CDataStore& store, std::ostream& stream ) con
                 stream <<  ContinuumIndexes[i][kci].Break << "\t";
             }
             stream << ">";
+        }
+        stream << "}" << std::endl;
+    }
+
+
+    // save StrongELSNR list, on 1 line
+    if(StrongELSNR.size()>0){
+        stream <<  "#StrongELSNR for each extrema = {";
+        for ( int i=0; i<StrongELSNR.size(); i++)
+        {
+            stream <<  StrongELSNR[i] << "\t";
         }
         stream << "}" << std::endl;
     }

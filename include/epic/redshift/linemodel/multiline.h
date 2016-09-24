@@ -31,7 +31,9 @@ public:
 
     void prepareSupport(const CSpectrumSpectralAxis& spectralAxis, Float64 redshift, const TFloat64Range& lambdaRange);
     TInt32RangeList getSupport();
+    TInt32Range GetTheoreticalSupport(Int32 subeIdx, const CSpectrumSpectralAxis& spectralAxis, Float64 redshift,  const TFloat64Range &lambdaRange);
     TInt32Range getSupportSubElt(Int32 subeIdx);
+    TInt32Range getTheoreticalSupportSubElt(Int32 subeIdx);
 
     void fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis, Float64  redshift, Int32 lineIdx=-1 );
     Float64 getModelAtLambda(Float64 lambda, Float64 redshift , Int32 kRaySupport);
@@ -64,8 +66,10 @@ private:
     std::vector<std::string>    m_profile;
 
 
-    std::vector<Int32>          m_Start;
-    std::vector<Int32>          m_End;
+    std::vector<Int32>          m_StartNoOverlap;
+    std::vector<Int32>          m_EndNoOverlap;
+    std::vector<Int32>          m_StartTheoretical;
+    std::vector<Int32>          m_EndTheoretical;
 
     std::vector<bool>           m_OutsideLambdaRangeList;
 };

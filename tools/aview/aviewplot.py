@@ -217,7 +217,14 @@ class AViewPlot(object):
         
         
         #do the plotting
-        fig = pp.figure( "aview", figsize=(16,15))
+        if enableReturnFig:
+            width = 16
+            height = 15
+        else:
+            width = 14
+            height = 11
+        
+        fig = pp.figure( "aview", figsize=(width, height))
         if lines_label_method==0:
             gs = gridspec.GridSpec(3, 1, height_ratios=[12,2,2])
             ax1 = pp.subplot(gs[0]) # main plotting area = spectrum
