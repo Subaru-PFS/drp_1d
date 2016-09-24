@@ -44,7 +44,8 @@ class ResultChisquare(object):
         self.amazed_logarea = []
         self.amazed_sigmaz = [] 
         self.amazed_fitamplitude = []
-        self.amazed_continuumIndexes = []      
+        self.amazed_continuumIndexes = [] 
+        self.amazed_StrongELSNR = []     
         
         #self.cpath = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/RayCatalogs/raycatalogamazedvacuum.txt"
         self.cpath = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/linecatalogs/linecatalogamazedair_B.txt"
@@ -139,6 +140,14 @@ class ResultChisquare(object):
                         #print("d = {}".format(d))
                         extremaContIndexes.append(float(d))
                     amazed_continuumIndexesBreak.append(extremaContIndexes)
+            elif not lineStr.find("StrongELSNR for each extrema =") == -1:
+                beg = lineStr.find("{")
+                end = lineStr.find("}")  
+                dataStr = lineStr[beg+1:end]
+                data = dataStr.split("\t")
+                data = [d for d in data if len(d.strip(" "))>0]
+                for d in data:
+                    self.amazed_StrongELSNR.append(float(d))
                 
         f.close()
         self.n = len(wave)
@@ -188,8 +197,13 @@ class ResultChisquare(object):
                 sigmaz = self.amazed_sigmaz[z]
             except:
                 pass
+            strongELSNR = -1
+            try:
+                strongELSNR = self.amazed_StrongELSNR[z]
+            except:
+                pass
             
-            a = a + ("    zcandidate_{}\tz = {}\t\tlogarea = {}\t\tsigmaz = {}\n".format( z, extrema, logarea, sigmaz )) 
+            a = a + ("    zcandidate_{}\tz = {}\t\tlogarea = {}\t\tsigmaz = {}\t\tstrongELSNR = {}\n".format( z, extrema, logarea, sigmaz, strongELSNR )) 
             
         a = a + ("\n")
         
@@ -216,6 +230,8 @@ class ResultChisquare(object):
             return -1.0;      
     
     def plot(self, showContinuumEstimate=False, showExtrema=False, showAmbiguities=False, enablePlot=True, exportPath="", enableReturnFig=False):
+        showStrongElPriors = True
+        
         #find limits
         cmin = +1e6;
         cmax = -1e6;
@@ -226,7 +242,8 @@ class ResultChisquare(object):
             if cmax <  self.yvect[x] and self.yvect[x]<thres:
                 cmax = self.yvect[x]
         #overrride cmax
-        cmax = self.getMeanValue()
+        #cmax = self.getMeanValue()
+        cmax = self.getFluxMedian()
             
         range_ori = (cmax-cmin)
         cmax = cmax+0.1*range_ori
@@ -256,7 +273,18 @@ class ResultChisquare(object):
                     idx = np.argmin(minivect)
                     chimin = self.yvect[idx]*1.0
                     chimax = self.yvect[idx]*1.0
-                    pp.plot((x, x), (chimin, chimax) , 'ro', label="Extremum_{}".format(k) )
+                    pp.plot((x, x), (chimin, chimax) , 'ro', label="Extremum_{}".format(k) ) 
+            if showStrongElPriors:
+                linesy = self.get_StrongELSnrPrior()
+                print("chi2: loaded priors = {}".format(linesy))
+                for k in range(len(linesx)):
+                    x = linesx[k]
+                    minivect = [np.abs(a-x) for a in self.xvect]
+                    if len(minivect)>0:
+                        idx = np.argmin(minivect)
+                        chimin = self.yvect[idx] - linesy[k]
+                        chimax = self.yvect[idx]
+                        pp.plot((x, x), (chimin, chimax) , 'g-+', label="SnrPrior_{}".format(k) )
         if showAmbiguities and len(self.amazed_extrema)>0:
             zrefamb = self.amazed_extrema[0]
             #zrefamb = 1.064
@@ -668,6 +696,11 @@ class ResultChisquare(object):
         
         return area, zminParabolicfit
 
+    def get_StrongELSnrPrior(self):
+        coeff = 10.0
+        priors = [a*coeff for a in self.amazed_StrongELSNR]
+        return priors
+        
             
 
 def StartFromCommandLine( argv ) :	
@@ -685,7 +718,7 @@ def StartFromCommandLine( argv ) :
         print(s) 
         
         if options.chi2Path2 == "":    
-            s.plot()
+            s.plot(showContinuumEstimate=False, showExtrema=True, showAmbiguities=False)
         else:
             s2 = ResultChisquare(options.chi2Path2) 
             s.plotCompare(s2) 
@@ -702,88 +735,8 @@ def Main( argv ) :
         
  
 if __name__ == '__main__':
-    
+    print("Chisquare")
     if 1:
         Main( sys.argv )
         
-        
-    # plot single chisquare
-    if 0:
-        path = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/res_20150807_chi2_fullResults/sc_020088969_F02P016_vmM1_red_21_1_atm_clean/StarBurst3.txt"
-        path = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/res_20150820_chi2_fullResults/sc_020086471_F02P016_vmM1_red_107_1_atm_clean/NEW_Im_extended_blue.dat"
-        #path = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/res_20150818_corr_fullResults/sc_020086471_F02P016_vmM1_red_107_1_atm_clean/NEW_Im_extended_blue.dat"        
-        #path = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/res_20150819_chi2nocontinuum/sc_020086397_F02P016_vmM1_red_31_1_atm_clean/StarBurst1.txt"
-        
-        #path = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/res_20150813_chi2_fullResults/sc_020089640_F02P019_vmM1_red_93_1_atm_clean/sadataExtensionData.dat"
-        #path = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/res_20150820_chi2_fullResults/sc_020099390_F02P021_M1_red_13_1_atm_clean/EdataExtensionData.dat"
-
-        # all chi2type fail        
-        #path = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/res_20150824_chi2corr_fullResults/sc_020175739_F02P027_vmM1_red_105_1_atm_clean/NEW_Im_extended_blue.dat"
-        
-        # chi2nocont vs corr
-        #path = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/res_20150824_chi2corr_fullResults/sc_020115875_F02P019_vmM1_red_33_1_atm_clean/EW_SB2extended.dat"
-        #path = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/res_20150824_chi2corr_fullResults/sc_020189280_F02P018_vmM1_red_27_1_atm_clean/StarBurst3.txt"
-        # chi2 failure #24
-        #path = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/res_20150824_chi2corr_fullResults/sc_020189280_F02P018_vmM1_red_27_1_atm_clean/vvds_reddestdataExtensionData.dat"
-        # chi2 failure #25
-        #path = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/res_20150824_chi2corr_fullResults/sc_020190895_F02P029_vmM1_red_92_1_atm_clean/EdataExtensionData.dat"
-        # chi2 failure #27        
-        #path = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/res_20150824_chi2corr_fullResults/sc_020196560_F02P041_vmM1_red_35_1_atm_clean/sadataExtensionData.dat"
-        #path = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/res_20150824_chi2corr_fullResults/sc_020196560_F02P041_vmM1_red_35_1_atm_clean/NEW_Im_extended.dat"
-        #path = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/res_20150824_chi2corr_fullResults/sc_020196560_F02P041_vmM1_red_35_1_atm_clean/NEW_E_extendeddataExtensionData.dat"
-        
-    
-        #path = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/res_20150824_chi2corr_fullResults/sc_020215270_F02P027_vmM1_red_113_2_atm_clean/NEW_Im_extended_blue.dat"
-        #path = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/res_20150824_chi2corr_fullResults/sc_020215270_F02P027_vmM1_red_113_2_atm_clean/NEW_Im_extended_blue.dat"
-        #path = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/res_20150820_chi2_fullResults/sc_020086397_F02P016_vmM1_red_31_1_atm_clean/NEW_Im_extended_blue.dat"
-
-        #path = "/home/aschmitt/data/pfs/pfs_reallyjustline/amazed/output/EZ_fits-W-F_2" 
-        #path = "/home/aschmitt/data/pfs/pfs_reallyjustline/amazed/res_20150923_linemodel_analysis/res_20150924_linemodel_singlelines_norules/EZ_fits-W-F_2"
-        #path = "/home/aschmitt/data/pfs/pfs_reallyjustline/amazed/output/EZ_fits-W-F_18"
-        
-        path = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/output/sc_020183098_F02P032_M1_red_6_1_atm_clean"
-        path = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/output/sc_020086397_F02P016_vmM1_red_31_1_atm_clean"
-        #path = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/output/sc_020086471_F02P016_vmM1_red_107_1_atm_clean"
-        path = "/home/aschmitt/data/vvds/vvds2/cesam_vvds_z0_F02_DEEP/amazed/output/sc_020088688_F02P021_M1_red_7_1_atm_clean"
-        #path = "/home/aschmitt/data/pfs/pfs_lbg/amazed/output/EZ_fits-W-TF_211/NEW_Im_extended_blue.dat" 
-        #path = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/output/sc_020175721_F02P030_vmM1_red_120_1_atm_clean/EdataExtensionData.dat" 
-        #path =  "/home/aschmitt/data/pfs/pfs_testsimu_20151009/amazed/output/470026900000130.2-0.4_20_20.5_EZ_fits-W-TF_0"
-        
-        name = "chisquare2solve.chisquare_continuum.csv"
-        name = "correlationsolve.correlation.csv"
-        #name = "chisquare2solve.chisquare_nocontinuum.csv"
-        name = "linemodelsolve.linemodel.csv"
-        #name = "dtreeBsolve.linemodel.csv"
-        #name = "chisquare2solve.chisquare.csv"
-        
-        
-        spath = os.path.join(path,name)
-        print('using full path: {0}'.format(spath))
-        chi = ResultChisquare(spath)
-        print(chi) 
-        chi.plot(showContinuumEstimate=False, showExtrema=True, showAmbiguities=False)
-        
-    # compare chisquares
-    if 0:          
-        path = "/home/aschmitt/data/pfs/pfs2_simu20151118_jenny/amazed/res_20160209_results_batch6_fev2016/res_20160224_linemodel_velocityfit_balmer0_F_ErrF/16000010000158vacLine_F"
-        #path = "/home/aschmitt/data/pfs/pfs2_simu20151118_jenny/amazed/output/54000015007903vacLine_F"
-        name = "linemodelsolve.linemodel.csv"
-        spath = os.path.join(path,name)
-        print('using full path: {0}'.format(spath))
-        chi1 = ResultChisquare(spath)
-        print(chi1)
-        #chi1.plot()
-        
-        path = "/home/aschmitt/data/pfs/pfs2_simu20151118_jenny/amazed/res_20160209_results_batch6_fev2016/res_20160224_linemodel_balmer0_F_ErrF/16000010000158vacLine_F"
-        #path = "/home/aschmitt/data/pfs/pfs2_simu20151118_jenny/amazed/output_largegrid/54000015007903vacLine_F"
-        name = "linemodelsolve.linemodel.csv"
-        spath = os.path.join(path,name)
-        print('using full path: {0}'.format(spath))
-        chi2 = ResultChisquare(spath)        
-        print(chi2)
-
-
-        #chi2.getFluxExtrema(10)
-        #chi1.getParabolicFitArea(1.3455)
-        chi1.plotCompare(chi2)
-        #chi1.plot(True)
+      
