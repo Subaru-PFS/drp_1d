@@ -42,6 +42,7 @@ private:
     Bool DecisionalTree7( CProcessFlowContext& ctx );
     Bool DecisionalTreeA( CProcessFlowContext& ctx );
     Bool DecisionalTreeB( CProcessFlowContext& ctx );
+    Bool DecisionalTreeC( CProcessFlowContext& ctx );
 
 };
 

@@ -41,6 +41,8 @@
 #include <epic/redshift/method/dtreeasolveresult.h>
 #include <epic/redshift/method/dtreebsolve.h>
 #include <epic/redshift/method/dtreebsolveresult.h>
+#include <epic/redshift/method/dtreecsolve.h>
+#include <epic/redshift/method/dtreecsolveresult.h>
 #include <epic/redshift/method/linematching2solve.h>
 #include <epic/redshift/method/linemodelsolve.h>
 #include <epic/redshift/method/linemodelsolveresult.h>
@@ -125,6 +127,9 @@ Bool CProcessFlow::Process( CProcessFlowContext& ctx )
 
     if(methodName  == "amazed0_2" )
         return DecisionalTreeB( ctx );
+
+    if(methodName  == "amazed0_3" )
+        return DecisionalTreeC( ctx );
 
     Log.LogError("Problem found while parsing the method parameter !");
     return false;
@@ -555,7 +560,39 @@ Bool CProcessFlow::DecisionalTreeB( CProcessFlowContext& ctx )
     }
 
     return true;
+}
 
+Bool CProcessFlow::DecisionalTreeC( CProcessFlowContext& ctx )
+{
+    TFloat64Range lambdaRange;
+    TFloat64Range redshiftRange;
+    Float64       redshiftStep;
+    TStringList     templateCategoryList;
+
+    ctx.GetParameterStore().Get( "lambdaRange", lambdaRange );
+    ctx.GetParameterStore().Get( "redshiftRange", redshiftRange );
+    ctx.GetParameterStore().Get( "redshiftStep", redshiftStep );
+    ctx.GetParameterStore().Get( "templateCategoryList", templateCategoryList );
+
+    const CSpectrumSpectralAxis& spcSpectralAxis = ctx.GetSpectrum().GetSpectralAxis();
+    TFloat64Range spcLambdaRange;
+    spcSpectralAxis.ClampLambdaRange( lambdaRange, spcLambdaRange );
+
+    Log.LogInfo( "Processing dtreec for spc:%s (LambdaRange: %.2f-%.2f:%.2f)", ctx.GetSpectrum().GetName().c_str(),
+            spcLambdaRange.GetBegin(), spcLambdaRange.GetEnd(), ctx.GetSpectrum().GetResolution());
+
+    // Create redshift initial list by spanning redshift acdross the given range, with the given delta
+    TFloat64List redshifts = redshiftRange.SpreadOver( redshiftStep );
+    DebugAssert( redshifts.size() > 0 );
+
+    COperatorDTreeCSolve Solve;
+    std::shared_ptr<const CDTreeCSolveResult> solveResult = Solve.Compute( ctx.GetDataStore(), ctx.GetSpectrum(), ctx.GetSpectrumWithoutContinuum(),
+                                                                        ctx.GetTemplateCatalog(), templateCategoryList, ctx.GetRayCatalog(),
+                                                                        spcLambdaRange, redshifts);
+
+    if( solveResult ) {
+        ctx.GetDataStore().StoreScopedGlobalResult( "redshiftresult", solveResult );
+    }
 
     return true;
 }
