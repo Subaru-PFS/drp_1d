@@ -101,9 +101,29 @@ class AViewGui(QtWidgets.QWidget):
         layout.addWidget(self.lblDiffThres, layoutRow, 0, 1, 1)
         
         self.leDiffThres = QtWidgets.QLineEdit(wdg)
-        self.leDiffThres.setToolTip('Enter threshold value to filter the dataset by the z error value...')
+        self.leDiffThres.setToolTip('Enter threshold value to filter the dataset by the z error value (ex. 0.01)...')
         self.leDiffThres.setFixedWidth(200) 
-        layout.addWidget(self.leDiffThres, layoutRow, 1, 1, 10)
+        layout.addWidget(self.leDiffThres, layoutRow, 1, 1, 10)  
+        
+        #Add the zref range threshold filter ctrls
+        layoutRow += 1
+        self.lblzrefrange = QtWidgets.QLabel(' Filter by zref range: ', wdg)
+        layout.addWidget(self.lblzrefrange, layoutRow, 0, 1, 1)
+        
+        layoutZrange = QtWidgets.QHBoxLayout() 
+        self.lezrefrangemin = QtWidgets.QLineEdit(wdg)
+        self.lezrefrangemin.setToolTip('Enter zref min value...')
+        self.lezrefrangemin.setFixedWidth(100) 
+        layoutZrange.addWidget(self.lezrefrangemin)
+
+        self.lezrefrangemax = QtWidgets.QLineEdit(wdg)
+        self.lezrefrangemax.setToolTip('Enter zref max value...')
+        self.lezrefrangemax.setFixedWidth(100) 
+        layoutZrange.addWidget(self.lezrefrangemax)
+        #add empty label to fill the hbox
+        lbl = QtWidgets.QLabel(' ', wdg)
+        layoutZrange.addWidget(lbl)
+        layout.addLayout(layoutZrange, layoutRow, 1, 1, 10) 
         
         #Add the spectrum filter ctrls
         layoutRow += 1
@@ -284,7 +304,22 @@ class AViewGui(QtWidgets.QWidget):
         if _diffthres=="":
             _diffthres = -1
         
-        self.resList = resultstat.ResultList(_resDir, diffthreshold=float(_diffthres), opt='brief') 
+        try:
+            _zrefmin = float(str(self.lezrefrangemin.text()))
+            if not (_zrefmin >0.0 and _zrefmin < 20.0):
+                _zrefmin = -1.0
+        except:
+            print("ERROR with zref min value, please check your input ! (using zrefmin=-1)")
+            _zrefmin = -1
+        try:
+            _zrefmax = float(str(self.lezrefrangemax.text()))
+            if not (_zrefmax >0.0 and _zrefmax < 20.0):
+                _zrefmax = 20.0
+        except:
+            print("ERROR with zref max value, please check your input ! (using zrefmax=20)")
+            _zrefmax = 20.0
+            
+        self.resList = resultstat.ResultList(_resDir, diffthreshold=float(_diffthres), opt='brief',  zrefmin=_zrefmin, zrefmax=_zrefmax) 
         self.leResultsN.setText(str(self.resList.n))
         #init result index to 1 (first index)
         self.leResultIndex.setText(str(1))
@@ -410,6 +445,7 @@ class AViewGui(QtWidgets.QWidget):
         except:
             print("ERROR: Unable to show this result... (i={})".format(_spcIdx))
             print("NB: Maybe this source hasn't been processed successfully by amazed...(cf. zcalc=-1)".format())
+            print("NB: Could be another problem too...".format())
             
    
     def bt_setResultDir(self):
