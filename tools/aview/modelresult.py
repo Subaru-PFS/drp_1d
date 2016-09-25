@@ -381,7 +381,7 @@ class ModelResult(object):
             if self.lineamplitude[k] > 0.0 and self.linetype[k] == linetypeTag:
                 if self.lineforce[k] == 'S':
                     snr = self.lineamplitude[k]/self.lineerror[k]
-                    sumSnr += min(snr, 5)  
+                    sumSnr += snr#min(snr, 5)  
                     print("line = {}, snr = {}".format(self.linename[k], snr))
         print('Strong Lines Cumul. SNR = {}'.format(sumSnr))
         return sumSnr

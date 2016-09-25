@@ -2210,13 +2210,48 @@ Float64 CLineModelElementList::getCumulSNRStrongEL()
         nonOverlappingSupportList.push_back(support);
     }
 
+    TFloat64List snrList;
+    Float64 sumSNR = 0.0;
     //process SNR on the non overlapping ranges
     for(UInt32 k=0; k<nonOverlappingSupportList.size(); k++)
     {
-        snr += getCumulSNROnRange(nonOverlappingSupportList[k]);
+        snrList.push_back(getCumulSNROnRange(nonOverlappingSupportList[k]));
+        sumSNR += snrList[k];
+    }
+    std::sort( snrList.rbegin(), snrList.rend() );
+
+    //compute the snr metric
+    std::vector<Int32> snrIsrelevantList;
+    for(UInt32 k=0; k<snrList.size(); k++)
+    {
+        snrIsrelevantList.push_back(0);
+    }
+    Float64 thresRatio = 0.8;
+    Float64 curRatio = 0.0;
+    for(UInt32 k=0; k<snrList.size(); k++)
+    {
+        // relevant if snr>8.0
+        if(snrList[k]>8.0)
+        {
+            snrIsrelevantList[k]=1;
+        }
+
+        // relevant if contributes to the 'thresRatio'*100 percent (ex. 80%) of the SumSNR value
+        curRatio += snrList[k]/sumSNR;
+        if(curRatio<=thresRatio)
+        {
+            snrIsrelevantList[k]=1;
+        }
     }
 
-    return snr;
+    Float64 sumIsRelevant = 0.0;
+    for(UInt32 k=0; k<snrIsrelevantList.size(); k++)
+    {
+        sumIsRelevant += snrIsrelevantList[k];
+    }
+
+    Float64 snrMetric = sumSNR*sumIsRelevant;
+    return snrMetric;
 }
 
 /**

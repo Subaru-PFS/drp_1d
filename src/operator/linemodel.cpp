@@ -623,11 +623,11 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
     //ComputeArea2(*result);
 
 
-    if(result->Extrema.size()>0){
-        Log.LogInfo( "LineModel Solution: best z found = %.5f", result->Extrema[0]);
-    }else{
-        Log.LogInfo( "LineModel Solution: no extrema found...");
-    }
+//    if(result->Extrema.size()>0){
+//        Log.LogInfo( "LineModel Solution: best z found = %.5f", result->Extrema[0]);
+//    }else{
+//        Log.LogInfo( "LineModel Solution: no extrema found...");
+//    }
 
    /*
    //  //saving the best model for viewing

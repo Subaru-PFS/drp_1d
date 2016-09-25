@@ -33,7 +33,7 @@ Void CLineModelSolveResult::Save( const CDataStore& store, std::ostream& stream 
     Float64 merit;
     std::string tplName;
 
-    GetBestRedshift( store, redshift, merit );
+    GetBestRedshiftWithStrongELSnrPrior( store, redshift, merit );
 
     stream <<  "#Redshifts\tMerit\tTemplate"<< std::endl;
     stream << redshift << "\t"
@@ -50,7 +50,7 @@ Void CLineModelSolveResult::SaveLine( const CDataStore& store, std::ostream& str
     Float64 merit;
     std::string tplName;
 
-    GetBestRedshift( store, redshift, merit );
+    GetBestRedshiftWithStrongELSnrPrior( store, redshift, merit );
 
     stream  << store.GetSpectrumName() << "\t"
 	    << redshift << "\t"
@@ -113,14 +113,45 @@ Bool CLineModelSolveResult::GetBestRedshiftLogArea( const CDataStore& store, Flo
       {
         auto lineModelResult = std::dynamic_pointer_cast<const CLineModelResult>( results.lock() );
         for( Int32 i=0; i<lineModelResult->LogArea.size(); i++ )
-	  {
+      {
             if( lineModelResult->LogArea[i] > tmpMerit )
             {
                 tmpMerit = lineModelResult->LogArea[i];
                 tmpRedshift = lineModelResult->LogAreaCorrectedExtrema[i];
             }
-	  }
       }
+      }
+
+    redshift = tmpRedshift;
+    merit = tmpMerit;
+    return true;
+}
+
+/**
+ * \brief Searches all the extrema results for the lowest, using the StrongELSnrPrior to correct the initial Chi2 value
+ **/
+Bool CLineModelSolveResult::GetBestRedshiftWithStrongELSnrPrior( const CDataStore& store, Float64& redshift, Float64& merit ) const
+{
+    std::string scope = store.GetScope( *this ) + "linemodelsolve.linemodel";
+    auto results = store.GetGlobalResult( scope.c_str() );
+
+    Float64 tmpMerit = DBL_MAX ;
+    Float64 tmpRedshift = 0.0;
+
+    if(!results.expired())
+    {
+        auto lineModelResult = std::dynamic_pointer_cast<const CLineModelResult>( results.lock() );
+        for( Int32 i=0; i<lineModelResult->Extrema.size(); i++ )
+        {
+            Float64 coeff =10.0;
+            Float64 correctedMerit = lineModelResult->GetExtremaMerit(i)-coeff*lineModelResult->StrongELSNR[i];
+            if( correctedMerit < tmpMerit )
+            {
+                tmpMerit = correctedMerit;
+                tmpRedshift = lineModelResult->Extrema[i];
+            }
+        }
+    }
 
     redshift = tmpRedshift;
     merit = tmpMerit;
