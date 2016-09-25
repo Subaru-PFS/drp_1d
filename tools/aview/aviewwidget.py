@@ -282,10 +282,14 @@ class AViewWidget(QtWidgets.QWidget):
         chi2path = chipathlist[0]
         
         chi2 = chisq.ResultChisquare(chi2path)
-        self.figureChi2 = chi2.plot(showContinuumEstimate=False, showExtrema=True, showAmbiguities=False, enablePlot=False, exportPath="", enableReturnFig=True)       
+        try:
+            self.figureChi2 = chi2.plot(showContinuumEstimate=False, showExtrema=True, showAmbiguities=False, enablePlot=False, exportPath="", enableReturnFig=True)       
+        except:
+            print("unable to load the merit curve plot...")
+            self.figureChi2 = plt.plot()
         self.canvasChi2 = Graph(self, self.figureChi2, graphType="merit")
-        self.canvasChi2.setFixedHeight(475.0)
-        self.canvasChi2.setFixedWidth(475.0)
+        self.canvasChi2.setFixedHeight(550.0)
+        self.canvasChi2.setFixedWidth(500.0)
         self.canvasChi2.setToolTip("Double left-click on the extrema (red circles) to display")
         
         try:

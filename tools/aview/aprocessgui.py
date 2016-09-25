@@ -116,6 +116,7 @@ class AProcessGui(QtWidgets.QWidget):
         
         self.leSpcFits = QtWidgets.QLineEdit(wdg)
         self.leSpcFits.setFixedWidth(400) 
+        self.leSpcFits.editingFinished.connect(self.leSpcFits_handleEditingFinished)
         layout.addWidget(self.leSpcFits, layoutRow, 1, 1, 10)
         
         self.btnBrowseSpcFits = QtWidgets.QPushButton(' Browse ', wdg)
@@ -135,6 +136,7 @@ class AProcessGui(QtWidgets.QWidget):
         
         self.leNoiseFits = QtWidgets.QLineEdit(wdg)
         self.leNoiseFits.setFixedWidth(400) 
+        self.leNoiseFits.editingFinished.connect(self.leNoiseFits_handleEditingFinished)
         layout.addWidget(self.leNoiseFits, layoutRow, 1, 1, 10)
         
         self.btnBrowseNoiseFits = QtWidgets.QPushButton(' Browse ', wdg)
@@ -453,7 +455,10 @@ class AProcessGui(QtWidgets.QWidget):
             if not self.ckSpcFits.isChecked():
                 self.ckSpcFits.toggle()
         
-            
+    def leSpcFits_handleEditingFinished(self):
+        _name = str(self.leSpcFits.text())
+        self.setSpcFits(_name)
+    
     def bt_setSpcFits(self):
         self.setSpcFits()
         
@@ -527,6 +532,9 @@ class AProcessGui(QtWidgets.QWidget):
             if not self.ckSpclist.isChecked():
                 self.ckSpclist.toggle()
             
+    def leNoiseFits_handleEditingFinished(self):
+        _name = str(self.leNoiseFits.text())
+        self.setNoiseFits(_name)
    
     def bt_setNoiseFits(self):
         self.setNoiseFits()
