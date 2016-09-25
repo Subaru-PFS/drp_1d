@@ -246,8 +246,8 @@ class ResultChisquare(object):
         cmax = self.getFluxMedian()
             
         range_ori = (cmax-cmin)
-        cmax = cmax+0.1*range_ori
-        cmin = cmin-0.1*range_ori
+        cmax = cmax+0.05*range_ori
+        cmin = cmin-0.2*range_ori
         
         
         fig = pp.figure("chi2")
@@ -317,8 +317,9 @@ class ResultChisquare(object):
         pp.ylim([cmin,cmax])
         #pp.savefig('ExempleTrace') # sauvegarde du fichier ExempleTrace.png
         
-        fig.tight_layout()
+        
         if not enableReturnFig:
+            fig.tight_layout()
             if enablePlot:
                 pp.show()
             else:
