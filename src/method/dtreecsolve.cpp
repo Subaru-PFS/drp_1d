@@ -235,8 +235,6 @@ Bool COperatorDTreeCSolve::Solve(CDataStore &dataStore, const CSpectrum &spc, co
 
 Bool COperatorDTreeCSolve::GetCombinedRedshift(CDataStore& store)
 {
-    std::shared_ptr<CChisquareResult> resultCombined = std::shared_ptr<CChisquareResult>( new CChisquareResult() );
-
     std::string scope = "dtreeCsolve.linemodel";
     auto results = std::dynamic_pointer_cast<const CLineModelResult>( store.GetGlobalResult(scope.c_str()).lock() );
 
@@ -261,6 +259,21 @@ Bool COperatorDTreeCSolve::GetCombinedRedshift(CDataStore& store)
 
     //*
     //***********************************************************
+    //retrieve the extrema results indexes
+    std::vector<Int32> idxLMResultsExtrema;
+    for( Int32 i=0; i<zcomb.size(); i++ )
+    {
+        for( Int32 iExtrema=0; iExtrema<results->Extrema.size(); iExtrema++ )
+        {
+            if(results->Extrema[iExtrema] == zcomb[i]){
+                idxLMResultsExtrema.push_back(iExtrema);
+                break;
+            }
+        }
+    }
+
+    //*
+    //***********************************************************
     //retrieve linemodel values
     TFloat64List chi2lm;
 
@@ -275,6 +288,7 @@ Bool COperatorDTreeCSolve::GetCombinedRedshift(CDataStore& store)
         }
     }
     //Log.LogInfo( "dtreeCsolve : chi2lm size=%d", chi2lm.size());
+    //*/
 
     //*
     //***********************************************************
@@ -309,59 +323,81 @@ Bool COperatorDTreeCSolve::GetCombinedRedshift(CDataStore& store)
     }
 
 
-    /*
-    // save all merits in a temp. txt file
-    FILE* f = fopen( "dtreec_merits_dbg.txt", "w+" );
-    for( Int32 i=0; i<results->Redshifts.size(); i++ )
-    {
-        fprintf( f, "%i %f %f %f %f\n", i, results->Extrema[i], results->GetExtremaMerit(i)/((float)results->nSpcSamples), chi2nc[i], chi2continuum[i] );//*1e12);
-    }
-    fclose( f );
-    //*/
-
-    //save the combined chisquare result
-    resultCombined->ChiSquare.resize( zcomb.size() );
-    resultCombined->Redshifts.resize( zcomb.size() );
-    resultCombined->Overlap.resize( zcomb.size() );
-
-    /*
-    // compute the average log likelihood
-    for( Int32 i=0; i<zcomb.size(); i++ )
-    {
-        chi2lm[i] = chi2lm[i]/(float)results->nSpcSamples;
-        chi2continuum[i] = chi2continuum[i]/(float)results->nSpcSamples;
-    }
-    */
 
     //*
     //***********************************************************
-    // Estimate the combined chisquare result
+    //Estimate the continuum prior
+    std::shared_ptr<CChisquareResult> resultPriorContinuum = std::shared_ptr<CChisquareResult>( new CChisquareResult() );
+    resultPriorContinuum->ChiSquare.resize( zcomb.size() );
+    resultPriorContinuum->Redshifts.resize( zcomb.size() );
+    resultPriorContinuum->Overlap.resize( zcomb.size() );
 
     //Set the coefficients
-    Float64 lmCoeff = 1.0;
     Float64 chi2cCoeff = 1.0;
-
-
+    /*
     // coeffs for Keck
     lmCoeff = 1.0;
     chi2cCoeff = 2e-3;
     //*/
+    // coeffs for VUDS F34
+    chi2cCoeff = 2e-2;
+    //*/
 
-    //Do the actual combination
     for( Int32 i=0; i<zcomb.size(); i++ )
     {
         Float64 post = DBL_MAX;
-        post = lmCoeff*chi2lm[i] + chi2cCoeff*chi2continuum[i];
+        post = chi2cCoeff*chi2continuum[i];
+
+        resultPriorContinuum->ChiSquare[i] = post;
+        resultPriorContinuum->Redshifts[i] = zcomb[i];
+        resultPriorContinuum->Overlap[i] = -1.0;
+    }
+    if( resultPriorContinuum ) {
+        store.StoreScopedGlobalResult( "priorContinuum", resultPriorContinuum );
+    }
+
+    //*
+    //***********************************************************
+    //Estimate the SELSP prior (strong EL SNR prior)
+    std::shared_ptr<CChisquareResult> resultPriorSELSP = std::shared_ptr<CChisquareResult>( new CChisquareResult() );
+    resultPriorSELSP->ChiSquare.resize( zcomb.size() );
+    resultPriorSELSP->Redshifts.resize( zcomb.size() );
+    resultPriorSELSP->Overlap.resize( zcomb.size() );
+
+    for( Int32 i=0; i<zcomb.size(); i++ )
+    {
+        Float64 coeff =10.0;
+        Float64 post = -coeff*results->StrongELSNR[idxLMResultsExtrema[i]];
+
+        resultPriorSELSP->ChiSquare[i] = post;
+        resultPriorSELSP->Redshifts[i] = zcomb[i];
+        resultPriorSELSP->Overlap[i] = -1.0;
+    }
+    if( resultPriorSELSP ) {
+        store.StoreScopedGlobalResult( "priorStrongELSnrP", resultPriorSELSP );
+    }
+
+    //*
+    //***********************************************************
+    //Estimate the combined merit curve
+    std::shared_ptr<CChisquareResult> resultCombined = std::shared_ptr<CChisquareResult>( new CChisquareResult() );
+    resultCombined->ChiSquare.resize( zcomb.size() );
+    resultCombined->Redshifts.resize( zcomb.size() );
+    resultCombined->Overlap.resize( zcomb.size() );
+
+    for( Int32 i=0; i<zcomb.size(); i++ )
+    {
+        Float64 post = chi2lm[i] + resultPriorSELSP->ChiSquare[i] + resultPriorContinuum->ChiSquare[i];
 
         resultCombined->ChiSquare[i] = post;
         resultCombined->Redshifts[i] = zcomb[i];
         resultCombined->Overlap[i] = -1.0;
-
     }
 
     if( resultCombined ) {
         store.StoreScopedGlobalResult( "resultdtreeCCombined", resultCombined );
     }
+    //*/
 
     return true;
     //*/

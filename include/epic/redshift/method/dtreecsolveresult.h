@@ -28,7 +28,7 @@ public:
     Void SaveLine( const CDataStore& store, std::ostream& stream ) const;
 
     Bool GetBestRedshift( const CDataStore& store, Float64& redshift, Float64& merit, std::string& dtreepath) const;
-    Bool GetBestRedshiftWithStrongELSnrPrior( const CDataStore& store, Float64& redshift, Float64& merit, std::string &dtreepath ) const;
+    //Bool GetBestRedshiftWithStrongELSnrPrior( const CDataStore& store, Float64& redshift, Float64& merit, std::string &dtreepath ) const; Deprecated, to be deleted
 
 };
 

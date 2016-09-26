@@ -29,7 +29,7 @@ Void CDTreeCSolveResult::Save( const CDataStore& store, std::ostream& stream ) c
     std::string tplName;
     std::string dtreepath;
 
-    GetBestRedshiftWithStrongELSnrPrior( store, redshift, merit, dtreepath );
+    GetBestRedshift( store, redshift, merit, dtreepath );
 
     stream <<  "#Redshifts\tMerit\tTemplate"<< std::endl;
 
@@ -47,7 +47,7 @@ Void CDTreeCSolveResult::SaveLine( const CDataStore& store, std::ostream& stream
     std::string tplName;
     std::string dtreepath;
 
-    GetBestRedshiftWithStrongELSnrPrior( store, redshift, merit, dtreepath );
+    GetBestRedshift( store, redshift, merit, dtreepath );
 
     stream  << store.GetSpectrumName() << "\t"
                 << redshift << "\t"
@@ -93,52 +93,52 @@ Bool CDTreeCSolveResult::GetBestRedshift(const CDataStore& store, Float64& redsh
     //*/
 }
 
-/**
- * \brief Searches all the extrema results for the lowest, using the StrongELSnrPrior to correct the initial combined merit curve
- **/
-Bool CDTreeCSolveResult::GetBestRedshiftWithStrongELSnrPrior( const CDataStore& store, Float64& redshift, Float64& merit, std::string &dtreepath ) const
-{
-    // combined merit curve minimum
-    std::string scope_lincomb = store.GetScope( *this ) + "dtreeCsolve.resultdtreeCCombined";
-    auto _results_lincomb = store.GetGlobalResult(scope_lincomb.c_str());
-    auto meritResult_lincomb = std::dynamic_pointer_cast<const CChisquareResult>(_results_lincomb.lock());
+///**
+// * \brief Searches all the extrema results for the lowest, using the StrongELSnrPrior to correct the initial combined merit curve
+// **/
+//Bool CDTreeCSolveResult::GetBestRedshiftWithStrongELSnrPrior( const CDataStore& store, Float64& redshift, Float64& merit, std::string &dtreepath ) const
+//{
+//    // combined merit curve minimum
+//    std::string scope_lincomb = store.GetScope( *this ) + "dtreeCsolve.resultdtreeCCombined";
+//    auto _results_lincomb = store.GetGlobalResult(scope_lincomb.c_str());
+//    auto meritResult_lincomb = std::dynamic_pointer_cast<const CChisquareResult>(_results_lincomb.lock());
 
-    std::string scope = store.GetScope( *this ) + "dtreeCsolve.linemodel";
-    auto results = store.GetGlobalResult( scope.c_str() );
+//    std::string scope = store.GetScope( *this ) + "dtreeCsolve.linemodel";
+//    auto results = store.GetGlobalResult( scope.c_str() );
 
-    Float64 tmpMerit = DBL_MAX ;
-    Float64 tmpRedshift = 0.0;
+//    Float64 tmpMerit = DBL_MAX ;
+//    Float64 tmpRedshift = 0.0;
 
-    if(!results.expired())
-    {
-        auto lineModelResult = std::dynamic_pointer_cast<const CLineModelResult>( results.lock() );
-        for( Int32 i=0; i<lineModelResult->Extrema.size(); i++ )
-        {
-            //find lincomb corresponding index
-            Float64 idxLinComb = -1.0;
-            Float64 meritLinComb = DBL_MAX;
-            for( Int32 ilc=0; ilc<meritResult_lincomb->ChiSquare.size(); ilc++ )
-            {
-                if( lineModelResult->Extrema[i] == meritResult_lincomb->Redshifts[ilc])
-                {
-                    idxLinComb=ilc;
-                    meritLinComb = meritResult_lincomb->ChiSquare[ilc];
-                }
-            }
+//    if(!results.expired())
+//    {
+//        auto lineModelResult = std::dynamic_pointer_cast<const CLineModelResult>( results.lock() );
+//        for( Int32 i=0; i<lineModelResult->Extrema.size(); i++ )
+//        {
+//            //find lincomb corresponding index
+//            Float64 idxLinComb = -1.0;
+//            Float64 meritLinComb = DBL_MAX;
+//            for( Int32 ilc=0; ilc<meritResult_lincomb->ChiSquare.size(); ilc++ )
+//            {
+//                if( lineModelResult->Extrema[i] == meritResult_lincomb->Redshifts[ilc])
+//                {
+//                    idxLinComb=ilc;
+//                    meritLinComb = meritResult_lincomb->ChiSquare[ilc];
+//                }
+//            }
 
-            Float64 coeff =10.0;
-            Float64 correctedMerit = meritLinComb-coeff*lineModelResult->StrongELSNR[i];
-            if( correctedMerit < tmpMerit )
-            {
-                tmpMerit = correctedMerit;
-                tmpRedshift = lineModelResult->Extrema[i];
-            }
-        }
-    }
+//            Float64 coeff =10.0;
+//            Float64 correctedMerit = meritLinComb-coeff*lineModelResult->StrongELSNR[i];
+//            if( correctedMerit < tmpMerit )
+//            {
+//                tmpMerit = correctedMerit;
+//                tmpRedshift = lineModelResult->Extrema[i];
+//            }
+//        }
+//    }
 
-    redshift = tmpRedshift;
-    merit = tmpMerit;
-    dtreepath = "0.0";
-    return true;
-}
+//    redshift = tmpRedshift;
+//    merit = tmpMerit;
+//    dtreepath = "0.0";
+//    return true;
+//}
 
