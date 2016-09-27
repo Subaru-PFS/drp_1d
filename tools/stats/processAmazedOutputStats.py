@@ -1,3 +1,4 @@
+# v4.0    2016-09-25 added ariadne type and pickled outputs
 # v3.0    2016-07-06 added stats support for euclid-simu dataset type.
 # v2.1	2015-07-06 stats hist saved (txt export) in 2 different bin sizes
 # v2.02	2015-06-19 stats histograms different colors with methods/templates subsets
@@ -23,6 +24,7 @@ import random
 import matplotlib.pyplot as pp
 import matplotlib.cm as cm
 from matplotlib.patches import Rectangle
+import pickle as pl
 
 import lstats
 import lperf
@@ -75,6 +77,9 @@ def setPFSRefFileType():
     iRefSigma = 6
     
 def setKeckRefFileType():
+    """
+    This corresponds to the Keck scientists reference files, ex. refz_vlebrun_cos-m4n1.txt
+    """
     global iRefID, iRefZ, iRefMag, iRefFlag, iRefSFR, iRefEBmV, iRefSigma
     iRefID = 3
     iRefZ = 1
@@ -103,39 +108,59 @@ def setSIMUEuclid2016RefFileType():
     iRefEBmV = 4
     iRefISM = -1
     iRefSigma = 6
-    iRefLogHalpha = 7
+    iRefLogHalpha = 7    
+    
+def setAriadneRefFileType():
+    global iRefZ, iRefMag, iRefFlag, iRefSFR, iRefEBmV, iRefSigma, iRefLogHalpha
+    iRefZ = 1
+    iRefMag = -1
+    iRefFlag = -1
+    iRefSFR = -1
+    iRefEBmV = -1
+    iRefISM = -1
+    iRefSigma = -1
+    iRefLogHalpha = -1   
+    
+def setNoRefFileType():
+    global iRefZ, iRefMag, iRefFlag, iRefSFR, iRefEBmV, iRefSigma, iRefLogHalpha
+    iRefZ = -1
+    iRefMag = -1
+    iRefFlag = -1
+    iRefSFR = -1
+    iRefEBmV = -1
+    iRefISM = -1
+    iRefSigma = -1
+    iRefLogHalpha = -1
+    
+    
     
 
 def ProcessDiff( refFile, calcFile, outFile, reftype ) :
     global iRefID, iRefZ, iRefMag, iRefFlag, iRefSFR, iRefEBmV, iRefSigma, iRefLogHalpha   
-     
 
-    #*************** open ref file
-    if 0:     
-        fref = open(refFile, 'r')
-        dataRefStr = fref.read()
-        fref.close()
-        dataRef = ascii.read(dataRefStr)
-    else:
-        dataRef = loadRef( refFile, reftype );
-    dataRef_names = [a[iRefID] for a in dataRef]
-    print("ProcessDiff : Dataref N = {}".format(len(dataRef)))    
-    print("ProcessDiff : Dataref, first elt: {}".format(dataRef[0]))
-    #print("ProcessDiff : Dataref, second elt: {}\n".format(dataRef[1]))
 
     #*************** open calc file
-    if 0: 
-        fcalc = open(calcFile, 'r')
-        dataCalcStr = fcalc.read()
-        fcalc.close()
-        #dataCalc = ascii.read(dataCalcStr)
-        #dataCalc = ascii.read(calcFile, data_start=1, delimiter='\t');
-        #dataCalc = np.loadtxt(calcFile, delimiter='\t', usecols=(1, 3), unpack=True)
-        dataCalc_raw = ascii.read(dataCalcStr, data_start=0, delimiter="\t")
-        #print dataCalc[0]
-    else:
-        dataCalc_raw = loadCalc( calcFile );
+    dataCalc_raw = loadCalc( calcFile );
     dataCalc_names_raw = [a[0] for a in dataCalc_raw]
+        
+    #*************** open ref file
+    if reftype=="no":
+        ncols = 10
+        iRefID = 0
+        dataRef = []
+        for a in dataCalc_raw:
+            data = []
+            data.append(a[0])
+            for k in range(1, ncols):
+                data.append(-1)
+            dataRef.append(data)        
+        dataRef_names = [a[iRefID] for a in dataRef]
+    else:
+        dataRef = loadRef( refFile, reftype );
+        dataRef_names = [a[iRefID] for a in dataRef]
+        print("ProcessDiff : Dataref N = {}".format(len(dataRef)))    
+        print("ProcessDiff : Dataref, first elt: {}".format(dataRef[0]))
+        #print("ProcessDiff : Dataref, second elt: {}\n".format(dataRef[1]))
     
     ## PFS specific: filter dataCalc_names_raw to exclude ambiguity due to input fits names
     for i,x in enumerate(dataCalc_names_raw):
@@ -226,41 +251,46 @@ def ProcessDiff( refFile, calcFile, outFile, reftype ) :
     else:
         dataSnr = []
         
-    ### try to open external data file :it has to be placed in the ref file directory
-    externalFile = os.path.join(os.path.dirname(os.path.abspath(refFile)), "external.csv")
-    print("Externalfile = {}".format(externalFile))
-    if 1 and os.path.exists(externalFile):
-        fext = open(externalFile, 'r')
-        dataExtStr = fext.read()
-        fext.close()
-        dataExt_raw = ascii.read(dataExtStr)
-        dataExt_names = [a[0].replace("SPC_fits-W-TF_", "").replace(".fits", "") for a in dataExt_raw]
-        print("dataExt, first elt: {}".format(dataExt_raw[0]))
-        #*************** reorder ext data by filename
-        inds = []
-        #readonlyN = 300;
-        for s in dataRef_names:#[0:readonlyN]:
-            #remove extension .fits from pandora results
-            #s = s[0:-5]
-            print("dataRef_names entry: {}".format(s))
-            print("dataExt_names first entry: {}".format(dataExt_names[0]))
-        
-            #p = [i for i,x in enumerate(dataSnr_names) if str(s) == x] # PFS batch 1 to 5
-            p = [i for i,x in enumerate(dataExt_names) if str(s) in x]# PFS batch 6 onwards
-            if len(p) == 1:
-                #print("p={}".format(p))
-                #print("x={}".format(dataSnr_names[p[0]]))
-                print "OK : index found : ref={0} and snr={1}".format(s,dataExt_names[p[0]])
-                inds.append(p[0])
-            else:
-                inds.append(-1)
-                print "ERROR : index not found : {0}".format(s)
-                stop
-        #print inds
-        dataExt = [dataExt_raw[i] for i in inds]
-        # end re-order
+    enableExt = False
+    if enableExt:
+        ### try to open external data file :it has to be placed in the ref file directory
+        externalFile = os.path.join(os.path.dirname(os.path.abspath(refFile)), "external.csv")
+        print("Externalfile = {}".format(externalFile))
+        if os.path.exists(externalFile):
+            fext = open(externalFile, 'r')
+            dataExtStr = fext.read()
+            fext.close()
+            dataExt_raw = ascii.read(dataExtStr)
+            dataExt_names = [a[0].replace("SPC_fits-W-TF_", "").replace(".fits", "") for a in dataExt_raw]
+            print("dataExt, first elt: {}".format(dataExt_raw[0]))
+            #*************** reorder ext data by filename
+            inds = []
+            #readonlyN = 300;
+            for s in dataRef_names:#[0:readonlyN]:
+                #remove extension .fits from pandora results
+                #s = s[0:-5]
+                print("dataRef_names entry: {}".format(s))
+                print("dataExt_names first entry: {}".format(dataExt_names[0]))
+            
+                #p = [i for i,x in enumerate(dataSnr_names) if str(s) == x] # PFS batch 1 to 5
+                p = [i for i,x in enumerate(dataExt_names) if str(s) in x]# PFS batch 6 onwards
+                if len(p) == 1:
+                    #print("p={}".format(p))
+                    #print("x={}".format(dataSnr_names[p[0]]))
+                    print "OK : index found : ref={0} and snr={1}".format(s,dataExt_names[p[0]])
+                    inds.append(p[0])
+                else:
+                    inds.append(-1)
+                    print "ERROR : index not found : {0}".format(s)
+                    stop
+            #print inds
+            dataExt = [dataExt_raw[i] for i in inds]
+            # end re-order
+        else:
+            print('EXT file not found')
+            dataExt = []        
     else:
-        print('EXT file not found')
+        print('INFO: processDiff, EXT disabled')
         dataExt = []
     
     
@@ -569,7 +599,12 @@ def loadDiff(fname):
     f.close()
     return dataArray
 
-def ProcessStats( fname, zRange, magRange,  sfrRange, enablePlot = False ):
+def ProcessStats( fname, zRange, magRange,  sfrRange, enablePlot = False, exportType="png" ):
+    """
+    Process the stats plots
+    - using the ranges (zRange, magRange,  sfrRange) to crop the input data (in fname)
+    - export as exporType (choose between, 'png', 'pickle', 'pngpickle')
+    """
     data = loadDiff( fname );
     
     
@@ -676,7 +711,13 @@ def ProcessStats( fname, zRange, magRange,  sfrRange, enablePlot = False ):
     pp.ylabel('(zcalc-zref)/(1+zref)')
     pp.xlabel('z reference')
     pp.title('All spectra included') # Titre
-    pp.savefig( os.path.join(outputDirectory, 'filteredset_relzerr.png'), bbox_inches='tight')
+    
+    export_name_withoutExt = os.path.join(outputDirectory, 'filteredset_relzerr')
+    if "png" in exportType:
+        pp.savefig( "{}.png".format(export_name_withoutExt) , bbox_inches='tight')
+    if "pickle" in exportType:
+        pl.dump(fig,file("{}.pickle".format(export_name_withoutExt),'w'))
+        
     # plot zoom 1
     zoomedRange = 0.005
     nmissing = 0
@@ -689,7 +730,11 @@ def ProcessStats( fname, zRange, magRange,  sfrRange, enablePlot = False ):
     if nmissing>1:
         spcStr = "spectra"
     pp.title('{}/{} {} outside displayed range'.format(nmissing,nSelected, spcStr)) # Titre
-    pp.savefig( os.path.join(outputDirectory, 'filteredset_relzerr_zoom_1.png'), bbox_inches='tight')
+
+    export_name_withoutExt = os.path.join(outputDirectory, 'filteredset_relzerr_zoom_1')
+    if "png" in exportType:
+        pp.savefig( "{}.png".format(export_name_withoutExt) , bbox_inches='tight')
+        
     # plot zoom 2
     zoomedRange = 0.0005
     nmissing = 0
@@ -702,7 +747,11 @@ def ProcessStats( fname, zRange, magRange,  sfrRange, enablePlot = False ):
     if nmissing>1:
         spcStr = "spectra"
     pp.title('{}/{} {} outside displayed range'.format(nmissing,nSelected,spcStr)) # Titre
-    pp.savefig( os.path.join(outputDirectory, 'filteredset_relzerr_zoom_2.png'), bbox_inches='tight')
+    
+    export_name_withoutExt = os.path.join(outputDirectory, 'filteredset_relzerr_zoom_2')
+    if "png" in exportType:
+        pp.savefig( "{}.png".format(export_name_withoutExt) , bbox_inches='tight')
+
     if enablePlot:
         pp.show()
         
@@ -714,7 +763,13 @@ def ProcessStats( fname, zRange, magRange,  sfrRange, enablePlot = False ):
     pp.ylabel('zcalc')
     pp.xlabel('zref')
     pp.title('All spectra included') # Titre
-    pp.savefig( os.path.join(outputDirectory, 'filteredset_zcalc-vs-zref.png'), bbox_inches='tight')
+    
+    export_name_withoutExt = os.path.join(outputDirectory, 'filteredset_zcalc-vs-zref')
+    if "png" in exportType:
+        pp.savefig( "{}.png".format(export_name_withoutExt) , bbox_inches='tight')
+    if "pickle" in exportType:
+        pl.dump(fig,file("{}.pickle".format(export_name_withoutExt),'w'))
+        
         
     # plot Histograms
     # ******* large bins histogram
@@ -730,74 +785,74 @@ def ProcessStats( fname, zRange, magRange,  sfrRange, enablePlot = False ):
     processHistogram( yvect, vectErrorBins, foutpath)
 
     # ******* plot hist
-    outFigFile = outputDirectory + '/' +'stats_hist.png'
-    plotHist(yvect, outFigFile)
+    outFigFileNoExt = outputDirectory + '/' +'stats_hist'
+    plotHist(yvect, outFigFileNoExt, exportType=exportType)
 
     nPercentileDepth = 2
     # ******* plot mag hist
-    if 1:
+    if 1 and not np.all(np.array(mvect)==-1.0):
         print("Plotting versus Mag")
         outFileNoExt = 'stats_versusMag_hist' 
         outFilepathNoExt = os.path.join(outputDirectory,outFileNoExt)
         outdir = outputDirectory
-        lstats.PlotAmazedVersusBinsHistogram(yvect, mvect, outdir, outFilepathNoExt, enablePlot=enablePlot, enableExport=1, mtype='MAG', nPercentileDepth=nPercentileDepth)
+        lstats.PlotAmazedVersusBinsHistogram(yvect, mvect, outdir, outFilepathNoExt, enablePlot=enablePlot, enableExport=1, exportType=exportType, mtype='MAG', nPercentileDepth=nPercentileDepth)
 
     # ******* plot snr hist       
-    if 1:
+    if 1 and not np.all(np.array(snrvect)==-1.0):
         print("Plotting versus Noise")
         outFileNoExt = 'stats_versusNoise_hist' 
         outFilepathNoExt = os.path.join(outputDirectory,outFileNoExt)
         outdir = outputDirectory
-        lstats.PlotAmazedVersusBinsHistogram(yvect, snrvect, outdir, outFilepathNoExt, enablePlot=enablePlot, enableExport=1, mtype='SNR', nPercentileDepth=nPercentileDepth) 
+        lstats.PlotAmazedVersusBinsHistogram(yvect, snrvect, outdir, outFilepathNoExt, enablePlot=enablePlot, enableExport=1, exportType=exportType, mtype='SNR', nPercentileDepth=nPercentileDepth) 
 
     # ******* plot redshift hist       
-    if 1:
+    if 1 and not np.all(np.array(zref)==-1.0):
         print("Plotting versus redshift")
         outFileNoExt = 'stats_versusRedshift_hist'
         outFilepathNoExt = os.path.join(outputDirectory,outFileNoExt) 
         outdir = outputDirectory
-        lstats.PlotAmazedVersusBinsHistogram(yvect, zref, outdir, outFilepathNoExt, enablePlot=enablePlot, enableExport=1, mtype='REDSHIFT', nPercentileDepth=nPercentileDepth) 
+        lstats.PlotAmazedVersusBinsHistogram(yvect, zref, outdir, outFilepathNoExt, enablePlot=enablePlot, enableExport=1, exportType=exportType, mtype='REDSHIFT', nPercentileDepth=nPercentileDepth) 
         
     # ******* plot sfr hist       
-    if 1:
+    if 1 and not np.all(np.array(sfrvect)==-1.0):
         print("Plotting versus sfr")
         outFileNoExt = 'stats_versusSFR_hist' 
         outFilepathNoExt = os.path.join(outputDirectory,outFileNoExt)
         outdir = outputDirectory
-        lstats.PlotAmazedVersusBinsHistogram(yvect, sfrvect, outdir, outFilepathNoExt, enablePlot=enablePlot, enableExport=1, mtype='SFR', nPercentileDepth=nPercentileDepth) 
+        lstats.PlotAmazedVersusBinsHistogram(yvect, sfrvect, outdir, outFilepathNoExt, enablePlot=enablePlot, enableExport=1, exportType=exportType, mtype='SFR', nPercentileDepth=nPercentileDepth) 
 
     # ******* plot EBmV hist       
-    if 1:
+    if 1 and not np.all(np.array(ebmvvect)==-1.0):
         print("Plotting versus ebmv")
         outFileNoExt = 'stats_versusEBMV_hist' 
         outFilepathNoExt = os.path.join(outputDirectory,outFileNoExt)
         outdir = outputDirectory
-        lstats.PlotAmazedVersusBinsHistogram(yvect, ebmvvect, outdir, outFilepathNoExt, enablePlot=enablePlot, enableExport=1, mtype='EBMV', nPercentileDepth=nPercentileDepth) 
+        lstats.PlotAmazedVersusBinsHistogram(yvect, ebmvvect, outdir, outFilepathNoExt, enablePlot=enablePlot, enableExport=1, exportType=exportType, mtype='EBMV', nPercentileDepth=nPercentileDepth) 
 
     # ******* plot Sigma hist       
-    if 1:
+    if 1 and not np.all(np.array(sigmavect)==-1.0):
         print("Plotting versus sigma")
         outFileNoExt = 'stats_versusSigma_hist' 
         outFilepathNoExt = os.path.join(outputDirectory,outFileNoExt)
         outdir = outputDirectory
-        lstats.PlotAmazedVersusBinsHistogram(yvect, sigmavect, outdir, outFilepathNoExt, enablePlot=enablePlot, enableExport=1, mtype='SIGMA', nPercentileDepth=nPercentileDepth) 
+        lstats.PlotAmazedVersusBinsHistogram(yvect, sigmavect, outdir, outFilepathNoExt, enablePlot=enablePlot, enableExport=1, exportType=exportType, mtype='SIGMA', nPercentileDepth=nPercentileDepth) 
 
     # ******* plot logHalpha hist       
-    if 1:
+    if 1 and not np.all(np.array(fhalphavect)==-1.0):
         print("Plotting versus logfhalpha")
         outFileNoExt = 'stats_versusLogFHAlpha_hist' 
         outFilepathNoExt = os.path.join(outputDirectory,outFileNoExt)
         outdir = outputDirectory
-        lstats.PlotAmazedVersusBinsHistogram(yvect, fhalphavect, outdir, outFilepathNoExt, enablePlot=enablePlot, enableExport=1, mtype='LOGFHALPHA', nPercentileDepth=nPercentileDepth) 
+        lstats.PlotAmazedVersusBinsHistogram(yvect, fhalphavect, outdir, outFilepathNoExt, enablePlot=enablePlot, enableExport=1, exportType=exportType, mtype='LOGFHALPHA', nPercentileDepth=nPercentileDepth) 
 
 
     # ******* plot ext hist       
-    if 1:
+    if 1 and not np.all(np.array(extvect)==-1.0):
         print("Plotting versus ExtValue")
         outFileNoExt = 'stats_versusExt_hist' 
         outFilepathNoExt = os.path.join(outputDirectory,outFileNoExt)
         outdir = outputDirectory
-        lstats.PlotAmazedVersusBinsHistogram(yvect, extvect, outdir, outFilepathNoExt, enablePlot=enablePlot, enableExport=1, mtype='EXT', nPercentileDepth=nPercentileDepth) 
+        lstats.PlotAmazedVersusBinsHistogram(yvect, extvect, outdir, outFilepathNoExt, enablePlot=enablePlot, enableExport=1, exportType=exportType, mtype='EXT', nPercentileDepth=nPercentileDepth) 
 
 
     print '\n'
@@ -839,7 +894,7 @@ def processHistogram(yvect, bins, outFile=""):
         fout.close()
     return ybins
 
-def plotHist(yvect, outFigFile):
+def plotHist(yvect, outFigFileNoExt, exportType="png" ):
     subsets_enable = False
     ######### plot
     fig = pp.figure('Amazed performance stats')
@@ -863,7 +918,12 @@ def plotHist(yvect, outFigFile):
     pp.ylabel(ylabel)
     pp.xlabel('abs( (zcalc-zref)/(1+zref) )')
     #pp.title('Amazed performance stats') # Titre
-    pp.savefig( outFigFile, bbox_inches='tight') # sauvegarde du fichier ExempleTrace.png
+    
+    export_name_withoutExt = outFigFileNoExt
+    if "png" in exportType:
+        pp.savefig( "{}.png".format(export_name_withoutExt) , bbox_inches='tight')
+    if "pickle" in exportType:
+        pl.dump(fig,file("{}.pickle".format(export_name_withoutExt),'w'))
     #pp.show()
     
     if subsets_enable == False:    
@@ -1026,6 +1086,8 @@ def StartFromCommandLine( argv ) :
     parser.add_option(u"-c", u"--calc", help="calculated redshift values",  dest="calcFile", default="output.txt")
     parser.add_option(u"-t", u"--type", help="reference redshift values type, choose between 'vvds1', 'vvds2' or 'pfs', 'vuds', 'simulm', 'simueuclid2016'",  dest="type", default="vvds")
     parser.add_option(u"-d", u"--diff", help="diff file (overrides the use of --ref, --calc and --type)",  dest="diffFile", default="")
+
+    parser.add_option(u"-e", u"--exporttype", help="export figures type, choose between 'png', 'pickle', or 'pngpickle'",  dest="exporttype", default="png")
     
     parser.add_option(u"-m", u"--magRange", help="magnitude range filter for the histograms",  dest="magRange", default="-1.0 50.0")
     parser.add_option(u"-s", u"--sfrRange", help="sfr range filter for the histograms",  dest="sfrRange", default="-1.0 10000.0")
@@ -1088,6 +1150,9 @@ def StartFromCommandLine( argv ) :
             elif options.type == 'simueuclid2016':
                 print "Info: Using SimuEuclid2016 reference data file type"            
                 setSIMUEuclid2016RefFileType()
+            elif options.type == 'ariadne':
+                print "Info: Using Ariadne reference data file type"            
+                setAriadneRefFileType()
             else:
                 print("Info: No reference file type given (--type), using vvds by default.")
     
@@ -1110,7 +1175,7 @@ def StartFromCommandLine( argv ) :
             sfrRange = [-1.0, 10000.0]
             sfrRange[0] = float(options.sfrRange.split(" ")[0])
             sfrRange[1] = float(options.sfrRange.split(" ")[1])        
-            ProcessStats( outputFullpathDiff, zRange, magRange, sfrRange )
+            ProcessStats( outputFullpathDiff, zRange, magRange, sfrRange, enablePlot = False, exportType=options.exporttype )
         
         if  options.computeLevel == "full" or options.computeLevel == "perf":        
             processPerformance( outputFullpathDiff, opt_preset = options.perfpreset )

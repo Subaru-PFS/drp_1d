@@ -8,6 +8,7 @@ import os
 
 import matplotlib.pyplot as pp
 from matplotlib import gridspec
+import pickle as pl
 import numpy as np
 import scipy as sp
 
@@ -204,7 +205,7 @@ def PlotAmazedVersusNoiseHistogram(yvect, mvect, outdir, outFileNoExt, enableExp
             pp.show()    
     
   
-def PlotAmazedVersusBinsHistogram(yvect, mvect, outdir, outFileNoExt, enablePlot=0, enableExport=1, mtype='REDSHIFT', nPercentileDepth=2):
+def PlotAmazedVersusBinsHistogram(yvect, mvect, outdir, outFileNoExt, enablePlot=0, enableExport=1, exportType="png", mtype='REDSHIFT', nPercentileDepth=2):
     if mtype=='SNR':
         print '\n\nPlotAmazedVersusNoiseHistogram:'
         vectBins = np.logspace(-3, 3, 30, endpoint=True)
@@ -378,8 +379,11 @@ def PlotAmazedVersusBinsHistogram(yvect, mvect, outdir, outFileNoExt, enablePlot
         ax2.set_title(name1)
         
         if enableExport:
-            outFigFile = os.path.join(outdir,outFileNoExt + '.png')
-            pp.savefig( outFigFile, bbox_inches='tight') #
+            export_name_withoutExt = os.path.join(outdir,outFileNoExt)
+            if "png" in exportType:
+                pp.savefig( "{}.png".format(export_name_withoutExt) , bbox_inches='tight')
+            if "pickle" in exportType:
+                pl.dump(fig,file("{}.pickle".format(export_name_withoutExt),'w'))
         if enablePlot:
             pp.show()  
             
