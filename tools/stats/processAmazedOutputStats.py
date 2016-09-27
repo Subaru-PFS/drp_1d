@@ -1,4 +1,4 @@
-# v4.0    2016-09-25 added ariadne type and pickled outputs
+# v4.0    2016-09-27 added ariadne type and pickled outputs
 # v3.0    2016-07-06 added stats support for euclid-simu dataset type.
 # v2.1	2015-07-06 stats hist saved (txt export) in 2 different bin sizes
 # v2.02	2015-06-19 stats histograms different colors with methods/templates subsets
@@ -10,11 +10,14 @@
 # v1.21 2015-04-10 set stats files output path to calculated input file path
 # v1.2 	2015-04-09 diff graphs normalized by 1+z
 # v1.1 	2015-03-31
-#!/usr/bin/python
+# -*- coding: utf-8 -*-
+"""
+@author: alain.schmitt@lam.fr
+"""
 
 import sys
 import os
-import optparse
+import argparse
 
 from astropy.io import ascii
 import numpy as np
@@ -1072,32 +1075,52 @@ def ProcessFailuresSeqFile( fname, refFile, fnameFailuresSeqFile, fnameFailureRe
     
     fFailuresRefFile.close()
     
-    
-    
-    
     print '\n'
+    
+def exportLog(outdir, refFile, refType, magRange, zRange, sfrRange):
+    tag = "stats_magmin{}magmax{}_zmin{}zmax{}_sfrmin{}sfrmax{}".format(magRange[0], magRange[1], zRange[0], zRange[1], sfrRange[0], sfrRange[1])
+    fpath = os.path.join(outdir, "log_{}.txt".format(tag))
+    f=open(fpath, 'w')
+    f.write("ref: {}\n".format(refFile))
+    f.write("type: {}\n".format(refType))
+    f.close()
+    
+    
+    
 
 def StartFromCommandLine( argv ) :
     global subsets_enable	
-    usage = """usage: %prog [options]
-    ex: python ./processAmazedOutputStats.py --ref=referenceRedshifts.txt --calc=amazedRedshifts.txt --type='vvds2' """
-    parser = optparse.OptionParser(usage=usage)
-    parser.add_option(u"-r", u"--ref", help="reference redshift values",  dest="refFile", default="referenceRedshifts.txt")
-    parser.add_option(u"-c", u"--calc", help="calculated redshift values",  dest="calcFile", default="output.txt")
-    parser.add_option(u"-t", u"--type", help="reference redshift values type, choose between 'vvds1', 'vvds2' or 'pfs', 'vuds', 'simulm', 'simueuclid2016'",  dest="type", default="vvds")
-    parser.add_option(u"-d", u"--diff", help="diff file (overrides the use of --ref, --calc and --type)",  dest="diffFile", default="")
 
-    parser.add_option(u"-e", u"--exporttype", help="export figures type, choose between 'png', 'pickle', or 'pngpickle'",  dest="exporttype", default="png")
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     
-    parser.add_option(u"-m", u"--magRange", help="magnitude range filter for the histograms",  dest="magRange", default="-1.0 50.0")
-    parser.add_option(u"-s", u"--sfrRange", help="sfr range filter for the histograms",  dest="sfrRange", default="-1.0 10000.0")
-    parser.add_option(u"-z", u"--zRange", help="redshift range filter for the histograms",  dest="zRange", default="-1.0 20.0")
-
-    parser.add_option(u"-p", u"--perfpreset", help="performance matrix preset, choose between 'simulm201606', 'simueuclid2016'",  dest="perfpreset", default="simulm201606")
+    parser.add_argument("-r", "--ref", dest="refFile", default="reference.txt",
+                    help="path to the reference file")
+    parser.add_argument("-c", "--calc", dest="calcFile", default="redshift.csv",
+                    help="path to the calculated redshift values")
+    parser.add_argument("-t", "--type", dest="type", default="vvds",
+                    help="reference file type, choose between 'vvds1', 'vvds2' or 'pfs', 'vuds', 'simulm', 'simueuclid2016', 'keck', 'no'")
+                    
+    parser.add_argument("-d", "--diff", dest="diffFile", default="",
+                    help="diff file (overrides the use of --ref, --calc and --type)")
+                    
+    parser.add_argument("-e", "--exporttype", dest="exporttype", default="png",
+                    help="figures export type, choose between 'png', 'pickle', or 'pngpickle'")
+                    
+    parser.add_argument("-m", "--magRange", dest="magRange", default="-1.0 50.0",
+                    help="magnitude range filter for the histograms")
+    parser.add_argument("-s", "--sfrRange", dest="sfrRange", default="-1.0 10000.0",
+                    help="sfr range filter for the histograms")
+    parser.add_argument("-z", "--zRange", dest="zRange", default="-1.0 20.0",
+                    help="redshift range filter for the histograms")
     
+    parser.add_argument("-p", "--perfpreset", dest="perfpreset", default="simulm201606",
+                    help="performance matrix preset, choose between 'simulm201606', 'simueuclid2016'")
     
-    parser.add_option(u"-l", u"--computeLvl", help="compute level, choose between 'brief' or 'full'",  dest="computeLevel", default="brief")
-    (options, args) = parser.parse_args()
+    parser.add_argument("-l", "--computeLvl", dest="computeLevel", default="brief",
+                    help="compute level, choose between 'brief' or 'full'")
+    
+       
+    options = parser.parse_args()
 
     print "\n"
     if os.path.isdir(options.calcFile):
@@ -1112,77 +1135,76 @@ def StartFromCommandLine( argv ) :
 
     subsets_enable = False;
 
-    if( len( args ) == 0 ) :
-        if options.diffFile == "":
-            filenameDiff = "diff.txt"
-            filenameFailures = "failures.txt"
-            filenameFailuresSeqFile = "failures.spectrumlist"
-            filenameFailuresRefFile = "failures_ref.txt"
-            outputPath =  os.path.dirname(os.path.abspath(options.calcFile)) + '/' + "stats/"
-            outputFullpathDiff = outputPath + filenameDiff
-            outputFullpathFailures = outputPath + filenameFailures
-            outputFullpathFailuresSeqFile = outputPath + filenameFailuresSeqFile
-            outputFullpathFailuresRefFile = outputPath + filenameFailuresRefFile
-            if os.path.isdir(outputPath)==False:
-                os.mkdir( outputPath, 0o755 );
-    
-            if options.type == 'vvds1':
-    	       print "Info: Using VVDS1 reference data file type"
-    	       setVVDSRefFileType()
-            elif options.type == 'vvds2':
-                print "Info: Using VVDS2 reference data file type"
-                setVVDS2RefFileType()
-            elif options.type == 'pfs':
-                print "Info: Using PFS reference data file type"
-                setPFSRefFileType()
-            elif options.type == 'keck':
-                print "Info: Using KECK reference data file type"
-                setKeckRefFileType()
-            elif options.type == 'muse':
-                print "Info: Using MUSE reference data file type"            
-                setMuseRefFileType()
-            elif options.type == 'vuds':
-                print "Info: Using VUDS reference data file type"            
-                setVUDSRefFileType()
-            elif options.type == 'simulm':
-                print "Info: Using SimuLM reference data file type"            
-                setSIMULMRefFileType()
-            elif options.type == 'simueuclid2016':
-                print "Info: Using SimuEuclid2016 reference data file type"            
-                setSIMUEuclid2016RefFileType()
-            elif options.type == 'ariadne':
-                print "Info: Using Ariadne reference data file type"            
-                setAriadneRefFileType()
-            else:
-                print("Info: No reference file type given (--type), using vvds by default.")
-    
-            ProcessDiff( options.refFile, options.calcFile, outputFullpathDiff, options.type )
-            ProcessFailures( outputFullpathDiff, outputFullpathFailures)
-            ProcessFailuresSeqFile( outputFullpathDiff, options.refFile, outputFullpathFailuresSeqFile, outputFullpathFailuresRefFile)
+    if options.diffFile == "":
+        filenameDiff = "diff.txt"
+        filenameFailures = "failures.txt"
+        filenameFailuresSeqFile = "failures.spectrumlist"
+        filenameFailuresRefFile = "failures_ref.txt"
+        outputPath =  os.path.dirname(os.path.abspath(options.calcFile)) + '/' + "stats/"
+        outputFullpathDiff = outputPath + filenameDiff
+        outputFullpathFailures = outputPath + filenameFailures
+        outputFullpathFailuresSeqFile = outputPath + filenameFailuresSeqFile
+        outputFullpathFailuresRefFile = outputPath + filenameFailuresRefFile
+        if os.path.isdir(outputPath)==False:
+            os.mkdir( outputPath, 0o755 );
+
+        if options.type == 'vvds1':
+	       print "Info: Using VVDS1 reference data file type"
+	       setVVDSRefFileType()
+        elif options.type == 'vvds2':
+            print "Info: Using VVDS2 reference data file type"
+            setVVDS2RefFileType()
+        elif options.type == 'pfs':
+            print "Info: Using PFS reference data file type"
+            setPFSRefFileType()
+        elif options.type == 'keck':
+            print "Info: Using KECK reference data file type"
+            setKeckRefFileType()
+        elif options.type == 'muse':
+            print "Info: Using MUSE reference data file type"            
+            setMuseRefFileType()
+        elif options.type == 'vuds':
+            print "Info: Using VUDS reference data file type"            
+            setVUDSRefFileType()
+        elif options.type == 'simulm':
+            print "Info: Using SimuLM reference data file type"            
+            setSIMULMRefFileType()
+        elif options.type == 'simueuclid2016':
+            print "Info: Using SimuEuclid2016 reference data file type"            
+            setSIMUEuclid2016RefFileType()
+        elif options.type == 'ariadne':
+            print "Info: Using Ariadne reference data file type"            
+            setAriadneRefFileType()
         else:
-            if os.path.exists(options.diffFile):
-                outputFullpathDiff = options.diffFile
-            else:
-                print("ERROR: Cannot find diff file, aborting: {}".format(options.diffFile))
-        
-        if  options.computeLevel == "full" or options.computeLevel == "hist":
-            zRange = [-1.0, 20.0]
-            zRange[0] = float(options.zRange.split(" ")[0])
-            zRange[1] = float(options.zRange.split(" ")[1])
-            magRange = [-1.0, 40.0]
-            magRange[0] = float(options.magRange.split(" ")[0])
-            magRange[1] = float(options.magRange.split(" ")[1])
-            sfrRange = [-1.0, 10000.0]
-            sfrRange[0] = float(options.sfrRange.split(" ")[0])
-            sfrRange[1] = float(options.sfrRange.split(" ")[1])        
-            ProcessStats( outputFullpathDiff, zRange, magRange, sfrRange, enablePlot = False, exportType=options.exporttype )
-        
-        if  options.computeLevel == "full" or options.computeLevel == "perf":        
-            processPerformance( outputFullpathDiff, opt_preset = options.perfpreset )
-            
-    else :
-        print("Error: invalid argument count")
-        exit()
+            print("Info: No reference file type given (--type), using vvds by default.")
+
+        ProcessDiff( options.refFile, options.calcFile, outputFullpathDiff, options.type )
+        ProcessFailures( outputFullpathDiff, outputFullpathFailures)
+        ProcessFailuresSeqFile( outputFullpathDiff, options.refFile, outputFullpathFailuresSeqFile, outputFullpathFailuresRefFile)
+    else:
+        if os.path.exists(options.diffFile):
+            outputFullpathDiff = options.diffFile
+        else:
+            print("ERROR: Cannot find diff file, aborting: {}".format(options.diffFile))
+    
+    zRange = [-1.0, 20.0]
+    zRange[0] = float(options.zRange.split(" ")[0])
+    zRange[1] = float(options.zRange.split(" ")[1])
+    magRange = [-1.0, 40.0]
+    magRange[0] = float(options.magRange.split(" ")[0])
+    magRange[1] = float(options.magRange.split(" ")[1])
+    sfrRange = [-1.0, 10000.0]
+    sfrRange[0] = float(options.sfrRange.split(" ")[0])
+    sfrRange[1] = float(options.sfrRange.split(" ")[1]) 
+    
+    if  options.computeLevel == "full" or options.computeLevel == "hist":       
+        ProcessStats( outputFullpathDiff, zRange, magRange, sfrRange, enablePlot = False, exportType=options.exporttype )
+    
+    if  options.computeLevel == "full" or options.computeLevel == "perf":        
+        processPerformance( outputFullpathDiff, opt_preset = options.perfpreset )
+          
+    exportLog(outputPath, options.refFile, options.type, magRange, zRange, sfrRange)
+
 
 
 def Main( argv ) :	
