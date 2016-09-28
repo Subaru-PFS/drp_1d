@@ -186,7 +186,7 @@ def plotRes(resDir, spcName, tplpath, redshift, iextremaredshift, diffthres, fai
     print('**********\n\n')
     
     # PLOT Spectrum/tpl/lines view
-    scontinuumpath = s.getAutoContinuumFullPath(spcName)
+    scontinuumpath = s.getContinuumPath(spcName, methodForced='auto')
     #scontinuumpath = ""
     avp1 = avp.AViewPlot(spath, npath, tpath, cpath, zval, forceTplAmplitude=forceTplAmplitude, forceTplDoNotRedShift = forceTplDoNotRedShift, enablePlot=enablePlot, scontinuumpath=scontinuumpath)
     if enablePlot==False:

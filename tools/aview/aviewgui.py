@@ -441,6 +441,7 @@ class AViewGui(QtWidgets.QWidget):
 
         try:
             self.AViewWidget = aviewwidget.AViewWidget(parent=self, resParser=_resParser, resList=self.resList, resIdx=_spcIdx, iextremaredshift=_iextremaredshift)
+            print("AviewWidget created.")            
             self.AViewWidget.show()
         except:
             print("ERROR: Unable to show this result... (i={})".format(_spcIdx))

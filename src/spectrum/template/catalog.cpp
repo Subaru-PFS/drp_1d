@@ -3,6 +3,7 @@
 #include <epic/redshift/spectrum/template/template.h>
 #include <epic/redshift/continuum/median.h>
 #include <epic/redshift/continuum/irregularsamplingmedian.h>
+#include <epic/redshift/continuum/waveletsdf.h>
 
 #include <epic/core/log/log.h>
 
@@ -18,10 +19,12 @@ using namespace boost::filesystem;
 /**
  * Variable instantiator constructor.
  */
-CTemplateCatalog::CTemplateCatalog( string cremovalmethod, Float64 mediankernelsize )
+CTemplateCatalog::CTemplateCatalog(string cremovalmethod, Float64 mediankernelsize , Float64 waveletsScales, string waveletsDFBinPath)
 {
     m_continuumRemovalMethod = cremovalmethod;
     m_continuumRemovalMedianKernelWidth = mediankernelsize;
+    m_continuumRemovalWaveletsNScales = waveletsScales;
+    m_continuumRemovalWaveletsBinPath = waveletsDFBinPath;
 }
 
 /**
@@ -130,6 +133,12 @@ Bool CTemplateCatalog::Add( std::shared_ptr<CTemplate> r )
         continuum.SetMedianKernelWidth( m_continuumRemovalMedianKernelWidth );
         tmplWithoutCont->RemoveContinuum( continuum );
       }
+    else if( m_continuumRemovalMethod== "waveletsDF")
+    {
+        CContinuumDF continuum(m_continuumRemovalWaveletsBinPath);
+        tmplWithoutCont->SetDecompScales(m_continuumRemovalWaveletsNScales);
+        tmplWithoutCont->RemoveContinuum( continuum );
+    }
     else
       {
         CContinuumIrregularSamplingMedian continuum;
@@ -179,7 +188,7 @@ Bool CTemplateCatalog::Load( const char* dirPath )
 
     if ( !exists( dirPath ) )
       {
-	Log.LogError ( "Path %s does not exist.", dirPath );
+    Log.LogError ( "Path %s does not exist.", dirPath );
         return false;
       }
 
@@ -193,6 +202,47 @@ Bool CTemplateCatalog::Load( const char* dirPath )
 
             std::string category = (*it).generic_string();
             LoadCategory( itr->path(), category );
+        }
+    }
+    return true;
+}
+
+/**
+ * Save catalog in the dirPath.
+ */
+Bool CTemplateCatalog::Save( const char* dirPath, Bool saveWithoutContinuum )
+{
+    if ( !exists( dirPath ) )
+      {
+    Log.LogError ( "Path %s does not exist.", dirPath );
+        return false;
+      }
+
+    path dirBase (dirPath);
+    TStringList tplCategoryList = GetCategoryList();
+    for( UInt32 i=0; i<tplCategoryList.size(); i++ )
+    {
+        std::string category = tplCategoryList[i];
+        path dirCategory (category);
+        path dirCategoryFull = dirBase / dirCategory;
+        create_directories(dirCategoryFull);
+
+        for( UInt32 j=0; j<GetTemplateCount( category ); j++ )
+        {
+            const CTemplate& tpl = GetTemplate( category, j );
+            const CTemplate& tplWithoutCOntinuum = GetTemplateWithoutContinuum( category, j );
+
+            std::string filePath = tpl.GetName();
+            path file (filePath.c_str());
+            path full_path = dirCategoryFull / file;
+            if(saveWithoutContinuum)
+            {
+                tplWithoutCOntinuum.Save( full_path.c_str() );
+            }
+            else
+            {
+                tpl.Save( full_path.c_str() );
+            }
         }
     }
     return true;

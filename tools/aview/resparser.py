@@ -23,7 +23,9 @@ class ResParser(object):
         self.redshiftpath = os.path.join(self.respath,"redshift.csv")
         self.configpath = os.path.join(self.respath,"config.txt") 
         self.parameterspath = os.path.join(self.respath,"parameters.json") 
-        self.linecatalogpath = os.path.join(self.respath,"linecatalog.txt") 
+        self.linecatalogpath = os.path.join(self.respath,"linecatalog.txt")
+        self.templatespath = os.path.join(self.respath,"templates") 
+        self.templates_nocontinuum_path = os.path.join(self.respath,"templates_nocontinuum") 
         # template categories
         self.config_tplCategories = ['emission', 'galaxy', 'qso', 'star']
         # in stats directory
@@ -474,8 +476,37 @@ class ResParser(object):
         elif method == "decisionaltreeb" or method.lower() == "amazed0_2":
             #not supported
             pass
+        elif method == "amazed0_3" or method.lower() == "amazed0_3":
+            #not supported
+            [chipathlist, chinamelist] = self.getAutoChi2FullPath(spcnametag)
+            chi = chisq.ResultChisquare(chipathlist[0], stype=os.path.splitext(chinamelist[0])[0])
+            [redshifts, merits] = chi.getXYSortedByY()            
+            print("resparser: getAutoCandidatesList (method={}): found n redshifts={}".format(method, len(redshifts)))
+            
+            chi_linemodel = chisq.ResultChisquare(chipathlist[1], stype=os.path.splitext(chinamelist[1])[0])
+            
+            idx_model = -1
+            thres = 5e-4
+            for idxExtrema in range(len(redshifts)):
+                print("C{} = {}".format(idxExtrema, redshifts[idxExtrema]))
+                for iLM in range(len(chi_linemodel.amazed_extrema)):
+                    print("zLM_cand = {}".format(chi_linemodel.amazed_extrema[iLM]))
+                    if np.abs(chi_linemodel.amazed_extrema[iLM] - redshifts[idxExtrema])<thres:
+                        idx_model = iLM
+                        print("C{}: idxModel = {}".format(idxExtrema, idx_model))
+                        break
+                if not idx_model==-1:
+                    name = "dtreeCsolve.linemodel_spc_extrema_{}.csv".format(idx_model)                    
+                    print("C{}: pathModel = {}".format(idxExtrema, name))
+                    tplpath = os.path.join(path,name)
+                    
+                    tplpaths.append(tplpath)
+                    forceTplAmplitudes.append(1.0)
+                    forceTplDoNotRedShifts.append(1)
+            
         elif method == "chisquaresolve" or method == "chisquare2solve":
             spcComponent = self.getParameterVal(method, 'spectrum', 'component') 
+            print("INFO: for method {}, using spectrum component: {}".format(method, spcComponent))
             zList, meritList, tplList, ampsList = self.getCandidatesFromAmazedChi2Extrema(spcnametag, chi2Type=spcComponent) 
             
             print("\nDEBUG: Candidates found:")
@@ -483,7 +514,7 @@ class ResParser(object):
                 print("cand. #{}: z={:15}, merit={:15}, tpl={:25}, amp={:25}".format(k, zList[k], meritList[k], tplList[k], ampsList[k]))
                 
                 redshifts.append(zList[k])
-                tplpath = self.getTplFullPath(tplList[k])
+                tplpath = self.getTplFullPath(tplList[k], spcComponent)
                 tplpaths.append(tplpath)
                 forceTplAmplitudes.append(ampsList[k])
                 forceTplDoNotRedShift = 0
@@ -494,14 +525,86 @@ class ResParser(object):
             
             
                     
-        return redshifts, tplpaths, forceTplAmplitudes, forceTplDoNotRedShifts        
+        return redshifts, tplpaths, forceTplAmplitudes, forceTplDoNotRedShifts 
         
-    def getTplFullPath(self, tplnametag):
+    def getContinuumPath(self, spcnametag, methodForced='auto'):
+        continuumPath = ""
+        
+        #determine the method
+        if methodForced=='auto':
+            method = self.getConfigVal('method')
+            print("method found in config is: {}".format(method))      
+        else:
+            method = methodForced
+            print("method forced is: {}".format(method)) 
+            
+        #determine the component of the method
+        spcComponent = 'raw'
+        if method == "linemodel":
+            spcComponent = "raw"
+        elif method == "linemodeltplshape":
+            spcComponent = "raw"
+        elif method == "decisionaltreeb" or method.lower() == "amazed0_2":
+            spcComponent = "raw"
+        elif method == "amazed0_3" or method.lower() == "amazed0_3":
+            spcComponent = "raw"
+        elif method == "chisquaresolve" or method == "chisquare2solve":
+            spcComponent = self.getParameterVal(method, 'spectrum', 'component') 
+        
+        #determine the continuum path
+        if spcComponent=="nocontinuum":
+            print("looking for continuum path using spcnametag = {}".format(spcnametag))
+            if os.path.splitext(spcnametag)[1].lower()==".fits":
+                spcnametag = os.path.splitext(spcnametag)[0]
+                print("spcnametag modified = {}".format(spcnametag))
+            path = os.path.join(self.respath, spcnametag)
+        
+            cdirpath = os.path.join(path, self.continuumrelpath)
+            onlyfiles = [f for f in os.listdir(cdirpath) if os.path.isfile(os.path.join(cdirpath, f)) and "baseline" in f]
+            if len(onlyfiles)==1:
+                continuumPath = os.path.join(cdirpath, onlyfiles[0])
+                print("\nINFO: Found a suitable continuum file for this method-spectrum pair : {}".format(continuumPath))
+            else:
+                print("\nWARNING: Could not find a unique continuum file in the standard directory... aborting...\n")
+                stop
+        else:
+            continuumPath = ""
+        
+        return continuumPath
+        
+                
+    def getTplFullPathList(self, component='raw'):
+        """
+        returns the list of templates full paths
+        - component='raw' or 'nocontinuum'
+        """
+        tplPathList = []
+        #tplRootPath = self.getConfigVal('templatedir') //deprecated: look for 
+        #the templates in the path defined in the config file
+        if component=='raw':
+            tplRootPath = self.templatespath
+        elif component=='nocontinuum':
+            tplRootPath = self.templates_nocontinuum_path
+            
+        for cat in self.config_tplCategories:
+            tplPath = os.path.join(tplRootPath, cat)
+            if os.path.exists(tplPath):
+                for file in sorted(os.listdir(tplPath)):
+                    tplPathList.append(os.path.join(tplPath, file)) 
+        return tplPathList
+        
+    def getTplFullPath(self, tplnametag, component='raw'):
         """
         """
         tplnametag_noext = self.getWithoutExt(tplnametag)
         strVal = ""
-        tplRootPath = self.getConfigVal('templatedir')
+        #tplRootPath = self.getConfigVal('templatedir') //deprecated: look for 
+        #the templates in the path defined in the config file
+        if component=='raw':
+            tplRootPath = self.templatespath
+        elif component=='nocontinuum':
+            tplRootPath = self.templates_nocontinuum_path
+            
         for cat in self.config_tplCategories:
             tplPath = os.path.join(tplRootPath, cat)
             if os.path.exists(tplPath):
@@ -653,6 +756,17 @@ class ResParser(object):
             name = "linemodeltplshapesolve.linemodel.csv"  
             chipath.append(os.path.join(pathTplChi,name))
             chiname.append(name)
+                    
+        elif method.lower() == "amazed0_3":
+            #name = "dtreeCsolve.linemodel.csv"
+            name = "dtreeCsolve.resultdtreeCCombined.csv"
+            #name = "dtreeBsolve.linemodel.csv"    
+            chipath.append(os.path.join(path,name))
+            chiname.append(name)
+            
+            name = "dtreeCsolve.linemodel.csv"    
+            chipath.append(os.path.join(path,name))
+            chiname.append(name)
             
         elif method == "decisionaltreeb" or method.lower() == "amazed0_2":
             
@@ -690,46 +804,6 @@ class ResParser(object):
                 chiname.append(name)
 
         return chipath, chiname
-    
-    def getAutoContinuumFullPath(self, spcnametag):
-        """
-        get the continuum full path for a given spectrum. Dedicated to remove 
-        the continuum from the spectrum only for a given set of methods (chi2nc)
-        for the other methods, this function returns "".
-        """ 
-        if os.path.splitext(spcnametag)[1].lower()==".fits":
-            spcnametag = os.path.splitext(spcnametag)[0]
-        method = self.getConfigVal('method')
-        print("method found in config is: {}".format(method))
-        path = os.path.join(self.respath, spcnametag)
-        #, chi2type="raw"
-        scontinuumpath = ""
-
-        enableContinuumPath = False            
-            
-        if method == "chisquaresolve" or method == "chisquare2solve":
-            spcComponent = self.getParameterVal('chisquare2solve', 'spectrum', 'component')
-            print('component parameter found = {}'.format(spcComponent))
-            if spcComponent=="nocontinuum":
-                enableContinuumPath = True
-        if method == "linemodeltplshape":
-            enableContinuumPath = True
-            enableContinuumPath = False
-        
-        if enableContinuumPath:
-            cdirpath = os.path.join(path, self.continuumrelpath)
-            onlyfiles = [f for f in os.listdir(cdirpath) if os.path.isfile(os.path.join(cdirpath, f))]
-            if len(onlyfiles)==1:
-                scontinuumpath = os.path.join(cdirpath, onlyfiles[0])
-                print("\nINFO: Found a suitable continuum file for this method-spectrum pair : {}".format(scontinuumpath))
-            else:
-                print("\nWARNING: Could not find a unique continuum file in the standard directory... aborting...\n")
-                stop
-        else:
-            scontinuumpath = ""
-            
-        return scontinuumpath
-
          
     def getChi2FullPath(self, spcnametag, tplnametag, chi2type="raw"):
         """
@@ -864,19 +938,7 @@ class ResParser(object):
             chi2 = self.getChi2Val(spcnametag, zcalc, tplName, chi2type)
             chi2list.append(chi2)
         return chi2list
-        
-    def getTplFullPathList(self):
-        """
-        returns the list of templates full paths
-        """
-        tplPathList = []
-        tplRootPath = self.getConfigVal('templatedir')
-        for cat in self.config_tplCategories:
-            tplPath = os.path.join(tplRootPath, cat)
-            if os.path.exists(tplPath):
-                for file in sorted(os.listdir(tplPath)):
-                    tplPathList.append(os.path.join(tplPath, file)) 
-        return tplPathList
+
         
     def getDetectedLineCatalogPath(self, spcnametag):
         """

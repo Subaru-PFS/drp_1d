@@ -9,7 +9,7 @@ import math
 import optparse
 
 import matplotlib as mpl
-#mpl.use('Qt5Agg')
+mpl.use('Qt5Agg')
 
 import matplotlib.pyplot as pp
 #pp.style.use('ggplot')
@@ -222,6 +222,16 @@ class ResultChisquare(object):
         
         
         return a
+        
+    def getXYSortedByY(self):
+        x = self.xvect
+        y = self.yvect
+        
+        sortId=np.argsort(y)
+        
+        x=[x[s] for s in sortId]
+        y=[y[s] for s in sortId]
+        return [x, y]
       
     def getExtrema(self, idx):
         if idx < len(self.amazed_extrema):
@@ -277,14 +287,15 @@ class ResultChisquare(object):
             if showStrongElPriors:
                 linesy = self.get_StrongELSnrPrior()
                 print("chi2: loaded priors = {}".format(linesy))
-                for k in range(len(linesx)):
-                    x = linesx[k]
-                    minivect = [np.abs(a-x) for a in self.xvect]
-                    if len(minivect)>0:
-                        idx = np.argmin(minivect)
-                        chimin = self.yvect[idx] - linesy[k]
-                        chimax = self.yvect[idx]
-                        pp.plot((x, x), (chimin, chimax) , 'g-+', label="SnrPrior_{}".format(k) )
+                if len(linesy) == len(linesx):
+                    for k in range(len(linesx)):
+                        x = linesx[k]
+                        minivect = [np.abs(a-x) for a in self.xvect]
+                        if len(minivect)>0:
+                            idx = np.argmin(minivect)
+                            chimin = self.yvect[idx] - linesy[k]
+                            chimax = self.yvect[idx]
+                            pp.plot((x, x), (chimin, chimax) , 'g-+', label="SnrPrior_{}".format(k) )
         if showAmbiguities and len(self.amazed_extrema)>0:
             zrefamb = self.amazed_extrema[0]
             #zrefamb = 1.064
@@ -353,7 +364,7 @@ class ResultChisquare(object):
             tl.set_color(selfColor)
     
         otherColor = 'b'
-        if 1:
+        if 0:
             ax2 = ax1.twinx() 
             if 1:
                 ax2.plot(self.xvect, self.yvect, otherColor, linestyle = "-", linewidth = 1.0, label=self.label)
@@ -373,7 +384,7 @@ class ResultChisquare(object):
             for tl in ax2.get_yticklabels():
                 tl.set_color(otherColor)
         else:
-            ax1.plot(self.xvect, self.yvect, otherColor, linestyle = "-", linewidth = 1.0, label=self.label)
+            ax1.plot(self.xvect, self.yvect, otherColor, linestyle = "", marker='v', markersize=9, linewidth = 2.0, label=self.label)
 
         pp.grid(True) # Affiche la grille
         if 0:

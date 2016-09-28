@@ -27,6 +27,11 @@ import resparser
 import aviewgui
 
 
+#default settings
+#global_setting_default_amazed_bin_path = "/home/aschmitt/gitlab/amazed/bin/amazed-0.0.0"
+global_setting_default_amazed_bin_path = "amazed-0.2.4"
+global_setting_default_workspace= "/tmp/amazed"
+
 class ObjectAProcessGui(object):
     def __init__(self, parent=None):
         self.value = []
@@ -44,8 +49,9 @@ def file_len(fname):
         return 0
         
 class AProcessGui(QtWidgets.QWidget):
-    def __init__(self, obj=None, initReprocess=None, reset=False):
+    def __init__(self, obj=None, initReprocess=None, reset=False, amazeddemodatadir=""):
         super(AProcessGui, self).__init__()
+        global global_setting_default_amazed_bin_path, global_setting_default_workspace
         self.obj = obj
         wdg = self#QtGui.QWidget()
         layout = QtWidgets.QGridLayout(wdg)    
@@ -179,6 +185,7 @@ class AProcessGui(QtWidgets.QWidget):
         self.cbMethod.addItem("linemodel")
         self.cbMethod.addItem("chisquare2solve")
         #self.cbMethod.addItem("amazed0_2")
+        self.cbMethod.addItem("amazed0_3")
         self.cbMethod.currentIndexChanged.connect(self.cb_method_selectionchange)
         layout.addWidget(self.cbMethod, layoutRow, 1, 1, 1)  
         
@@ -280,20 +287,27 @@ class AProcessGui(QtWidgets.QWidget):
             lbl.setProperty("coloredcell", True)
             layout.addWidget(lbl, layoutRow, i, 1, 1)         
  
+        #Add the amazed bin setting        
+        layoutRow += 1        
+        self.lblAmazedBinPath = QtWidgets.QLabel('Amazed Bin Path', wdg)
+        layout.addWidget(self.lblAmazedBinPath, layoutRow, 0, 1, 1)
+        self.leAmazedBinPath = QtWidgets.QLineEdit(wdg)
+        self.leAmazedBinPath.setFixedWidth(500) 
+        layout.addWidget(self.leAmazedBinPath, layoutRow, 1, 1, 10)
+        self.btnSetAmazedBinPath = QtWidgets.QPushButton(' Browse ', wdg)
+        self.btnSetAmazedBinPath.setToolTip('Set AMAZED bin path (ex: amazed-0.2.5 or ~/gitlab/amazed/amazed-0.0.0) for linux users')
+        self.btnSetAmazedBinPath.clicked.connect(self.bt_setAmazedBinPath)        
+        layout.addWidget(self.btnSetAmazedBinPath, layoutRow, 2, 1, 1)
+        
         #Add the processing settings buttons : amazed bin selection 
         layoutRow += 1
         self.layoutProcessLeftCol= QtWidgets.QVBoxLayout()
-        self.btnSetWorkDirPath = QtWidgets.QPushButton(' Workspace ', wdg)
+        self.btnSetWorkDirPath = QtWidgets.QPushButton(' Set Workspace ', wdg)
         self.btnSetWorkDirPath.setToolTip('Set the working directory (ex: /usr/tmp/amazed)')
         self.btnSetWorkDirPath.clicked.connect(self.bt_setWorkspace)
         self.layoutProcessLeftCol.addWidget(self.btnSetWorkDirPath) 
         
-        self.btnSetAmazedBinPath = QtWidgets.QPushButton(' Amazed Bin Path ', wdg)
-        self.btnSetAmazedBinPath.setToolTip('Set AMAZED bin path (ex: /home/user/amazed/amazed-0.2.5)')
-        self.btnSetAmazedBinPath.clicked.connect(self.bt_setAmazedBinPath)
-        self.layoutProcessLeftCol.addWidget(self.btnSetAmazedBinPath) 
-        
-        self.btnPrintAmazedUsage = QtWidgets.QPushButton(' Amazed usage ', wdg)
+        self.btnPrintAmazedUsage = QtWidgets.QPushButton(' Print Amazed usage ', wdg)
         self.btnPrintAmazedUsage.setToolTip('Print AMAZED usage in the console')
         self.btnPrintAmazedUsage.clicked.connect(self.bt_printAmazedBinUsage)
         self.layoutProcessLeftCol.addWidget(self.btnPrintAmazedUsage) 
@@ -303,13 +317,13 @@ class AProcessGui(QtWidgets.QWidget):
         #Add the process button
         self.btnProcess = QtWidgets.QPushButton('Start Processing', wdg)
         self.btnProcess.setFixedWidth(500)
-        self.btnProcess.setFixedHeight(100)
+        self.btnProcess.setFixedHeight(60)
         self.btnProcess.clicked.connect(self.bt_process)
         self.btnProcess.setToolTip('Process with the selected parameters/configuration...')
         layout.addWidget(self.btnProcess, layoutRow, 1, 1, 1)
 
         self.btnShow = QtWidgets.QPushButton('AView', wdg)
-        self.btnShow.setFixedHeight(100)
+        self.btnShow.setFixedHeight(60)
         self.btnShow.clicked.connect(self.bt_show)
         self.btnShow.setToolTip('Start aview to display the results')
         layout.addWidget(self.btnShow, layoutRow, 2, 1, 1)
@@ -333,10 +347,10 @@ class AProcessGui(QtWidgets.QWidget):
             self.settings.clear() 
 
         #some directories settings
-        _workspace = self.settings.value("workspacePath", defaultValue = "/var/tmp/amazed", type=str)
+        _workspace = self.settings.value("workspacePath", defaultValue = global_setting_default_workspace, type=str)
         self.setWorkspace(_workspace)    
          
-        _amazed_bin_path = self.settings.value("amazedBinPath", defaultValue = "/home/aschmitt/gitlab/amazed/bin/amazed-0.0.0", type=str)
+        _amazed_bin_path = self.settings.value("amazedBinPath", defaultValue = global_setting_default_amazed_bin_path, type=str)
         self.setAmazedBinPath(_amazed_bin_path)
         print("\n")
              
@@ -391,6 +405,29 @@ class AProcessGui(QtWidgets.QWidget):
         #set the thread count        
         self.leProcThreadCount.setText("1") 
         self.btnShow.setEnabled(False)
+
+        #populate from demo data directory
+        if not amazeddemodatadir=="":
+            configPath = os.path.join(amazeddemodatadir, "config_example.txt")
+            self.importConfigFile(configPath)
+#            #template catalog
+#            tplCatPath = os.path.join(amazeddemodatadir, "templates")
+#            self.setTpldir(tplCatPath)
+#            #line catalog
+#            lcatPath = os.path.join(amazeddemodatadir, "linecatalog.txt")
+#            self.setLinecatalogFilePath(lcatPath)
+#            #parameters
+#            paramsPath = os.path.join(amazeddemodatadir, "parameters.json")
+#            self.setParametersFilePath(paramsPath)
+            #spc directory
+            spcDirPath = os.path.join(amazeddemodatadir, "spectrum")
+            self.setSpcdir(spcDirPath)
+            #spc spectrumlist
+            spclist = os.path.join(amazeddemodatadir, "input.spectrumlist")
+            self.setSpclist(spclist)
+            if not self.ckSpclist.isChecked():
+                self.ckSpclist.toggle()
+            
         
         #OPTIONALLY populate from external Result Directory and Spectrum Tag
         if not initReprocess==None:
@@ -693,7 +730,7 @@ class AProcessGui(QtWidgets.QWidget):
                     valStr = lineStr.replace(keyword, "")
                     print("{}: Found {} {}".format(tag, keyword, valStr))
                     lcatPath = os.path.abspath(os.path.join(_configFileDir, valStr))
-                    self.bt_setLinecatalogFilePath(lcatPath)
+                    self.setLinecatalogFilePath(lcatPath)
                 keyword = "linecatalog-convert="
                 if keyword in lineStr:
                     valStr = lineStr.replace(keyword, "")
@@ -801,7 +838,10 @@ class AProcessGui(QtWidgets.QWidget):
             self.settings.setValue("parametersAllDefault", "False");
             
         
-    def bt_setLinecatalogFilePath(self, newPath=None):
+    def bt_setLinecatalogFilePath(self):
+        self.setLinecatalogFilePath()
+                
+    def setLinecatalogFilePath(self, newPath=None):
         tag = "setLinecatalogFilePath"
         if newPath==None:
             _linecatalogDefault = os.path.abspath(str(self.leLinecatalog.text()))
@@ -852,6 +892,8 @@ class AProcessGui(QtWidgets.QWidget):
             _wokspaceDefault = self.m_workspace
             
             _workspace = QtWidgets.QFileDialog.getExistingDirectory(self, "Select working directory",_wokspaceDefault)
+            if _workspace == "":
+                return
         else:
             _workspace = newWorkspace
         
@@ -880,12 +922,13 @@ class AProcessGui(QtWidgets.QWidget):
         else:
             _amazedBinPath = newBinPath
             
-        if os.path.exists(_amazedBinPath):
+        if "amazed" in _amazedBinPath:# os.path.exists(_amazedBinPath):
             self.amazed_bin_path = _amazedBinPath
             self.settings.setValue("amazedBinPath", self.amazed_bin_path);
         else:
             print("{}: ERROR: Unable to set amazed_bin_path {}".format(tag, _amazedBinPath))
         
+        self.leAmazedBinPath.setText(self.amazed_bin_path)
         print("{}: Using amazed_bin_path : {}".format(tag, self.amazed_bin_path))
         
     def bt_printAmazedBinUsage(self):
@@ -1109,26 +1152,34 @@ class AProcessGui(QtWidgets.QWidget):
         self.aviewWindow.show()
         return
         
-def mainLaunch(reset=False):
+def mainLaunch(reset=False, amazeddemodatadir=""):
     print("\n")
     app = QtWidgets.QApplication(sys.argv)
     ins = ObjectAProcessGui(parent=app)
-    ex = AProcessGui(obj=ins, initReprocess=None, reset=reset)
+    ex = AProcessGui(obj=ins, initReprocess=None, reset=reset, amazeddemodatadir=amazeddemodatadir)
     sys.exit(app.exec_())
  
 
 def StartFromCommandLine( argv ) :	
-    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser = argparse.ArgumentParser()
     
-    parser.add_argument("-r", "--reset", dest="reset", default="no",
+    parser.add_argument("-r", "--reset", dest="reset", action='store_true',
                     help="reset switch for the settings, yes to reinit all settings")
-
+    parser.add_argument("-d", "--demoDataDirectory", 
+                        help="path to the amazed demo data directory (ex. data-0.2.4/)",  
+                        dest="amazeddemodatadir", default="")
 
     options = parser.parse_args()
 
     #print(options)
-    _reset = options.reset == "yes"
-    mainLaunch(reset=_reset)
+    _reset = options.reset
+    if _reset:
+        print("INFO: found reset option: interface will be resetted now.")
+    _amazeddatadir = options.amazeddemodatadir
+    if not os.path.exists(_amazeddatadir):
+        print("WARNING: --amazedDataDirectory does not exit. ignoring argument")
+        _amazeddatadir = ""
+    mainLaunch(reset=_reset, amazeddemodatadir=_amazeddatadir)
 
 
 def Main( argv ) :	

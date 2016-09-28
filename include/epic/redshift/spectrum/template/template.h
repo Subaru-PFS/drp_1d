@@ -21,6 +21,7 @@ public:
 
     const std::string&  GetCategory() const;
     const std::string&  GetName() const;
+    Bool Save(const char *filePath ) const;
 
 private:
 

@@ -225,11 +225,16 @@ bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath,
     std::string medianRemovalMethod;
     paramStore->Get( "continuumRemoval.method", medianRemovalMethod, "IrregularSamplingMedian" );
     //disable the continuum removal :
-    medianRemovalMethod = "noRontinuumRemovalforTemplates";
+    //medianRemovalMethod = "noRontinuumRemovalforTemplates";
 
     Float64 opt_medianKernelWidth;
     paramStore->Get( "continuumRemoval.medianKernelWidth", opt_medianKernelWidth, 75 );
-    std::shared_ptr<CTemplateCatalog> templateCatalog = std::shared_ptr<CTemplateCatalog>( new CTemplateCatalog( medianRemovalMethod, opt_medianKernelWidth) );
+    Int64 opt_nscales;
+    paramStore->Get( "continuumRemoval.decompScales", opt_nscales, 8);
+    std::string dfBinPath;
+    paramStore->Get( "continuumRemoval.binPath", dfBinPath, "absolute_path_to_df_binaries_here");
+
+    std::shared_ptr<CTemplateCatalog> templateCatalog = std::shared_ptr<CTemplateCatalog>( new CTemplateCatalog( medianRemovalMethod, opt_medianKernelWidth, opt_nscales, dfBinPath) );
     std::shared_ptr<CRayCatalog> rayCatalog = std::shared_ptr<CRayCatalog>(new CRayCatalog);
 
 

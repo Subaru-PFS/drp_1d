@@ -355,6 +355,9 @@ class AViewWidget(QtWidgets.QWidget):
         forceTplAmplitude = forceTplAmplitudeCandidate
         forceTplDoNotRedShift = forceTplDoNotRedShiftCandidate
         
+        spectrumContinuumPath = self.resParser.getContinuumPath(_sname, methodForced='auto')
+        print("using continuum path = {}".format(spectrumContinuumPath))
+        #print("Z for aviewplot = {}".format(z))
         avp = aviewplot.AViewPlot(spath, 
                                                npath, 
                                                tpath, 
@@ -363,7 +366,7 @@ class AViewWidget(QtWidgets.QWidget):
                                                forceTplAmplitude=forceTplAmplitude, 
                                                forceTplDoNotRedShift=forceTplDoNotRedShift, 
                                                enablePlot=False, 
-                                               scontinuumpath = "") 
+                                               scontinuumpath = spectrumContinuumPath) 
                                                
         figureAView = avp.plot(enableReturnFig=True)
         self.canvasAView = FigureCanvas(figureAView)  
