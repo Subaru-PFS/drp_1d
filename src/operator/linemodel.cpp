@@ -558,6 +558,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
         {
             // CModelSpectrumResult
             std::shared_ptr<CModelSpectrumResult>  resultspcmodel = std::shared_ptr<CModelSpectrumResult>( new CModelSpectrumResult(model.GetModelSpectrum()) );
+            //std::shared_ptr<CModelSpectrumResult>  resultspcmodel = std::shared_ptr<CModelSpectrumResult>( new CModelSpectrumResult(model.GetObservedSpectrumWithLinesRemoved()) );
             m_savedModelSpectrumResults.push_back(resultspcmodel);
 
             // CModelFittingResult

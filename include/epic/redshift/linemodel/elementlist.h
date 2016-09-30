@@ -85,6 +85,7 @@ public:
     Float64 getContinuumMeanUnderElement(Int32 eltId);
     CLineModelResult::SLineModelSolution GetModelSolution();
     const CSpectrum&    GetModelSpectrum() const;
+    const CSpectrum&    GetObservedSpectrumWithLinesRemoved() const;
     const CSpectrumFluxAxis&    GetModelContinuum() const;
     Float64 getModelFluxVal(Int32 idx) const;
     Float64 getModelFluxDerivEltVal(Int32 DerivEltIdx, Int32 idx) const;
@@ -97,6 +98,7 @@ public:
     Int32 FindElementIndex(std::string LineTagStr, Int32 linetype=-1, Int32& lineIdx=defaultIdx);
     std::vector<Int32> getOverlappingElements(Int32 ind , std::vector<Int32> excludedInd, Float64 overlapThres=0.1);
     CRayCatalog::TRayVector m_RestRayList;
+    std::shared_ptr<CSpectrum>  m_SpcCorrectedUnderLines;  //observed spectrum corrected under the lines
 
     TStringList GetModelRulesLog();
 

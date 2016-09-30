@@ -75,6 +75,7 @@ CLineModelElementList::CLineModelElementList( const CSpectrum& spectrum,
 
     m_RestRayList = restRayList;
     m_SpectrumModel = std::shared_ptr<CSpectrum>( new CSpectrum(spectrum) );
+    m_SpcCorrectedUnderLines = std::shared_ptr<CSpectrum>( new CSpectrum(spectrum) );
     Int32 spectrumSampleCount = spectrum.GetSampleCount();
     m_SpcFluxAxis.SetSize( spectrumSampleCount );
     m_SpcContinuumFluxAxis = spectrumContinuum.GetFluxAxis();
@@ -156,6 +157,29 @@ CLineModelElementList::~CLineModelElementList()
 const CSpectrum& CLineModelElementList::GetModelSpectrum() const
 {
     return *m_SpectrumModel;
+}
+
+/**
+ * \brief Returns a pointer to a spectrum containing the observed spectrum with the fitted lines subtracted
+ **/
+const CSpectrum& CLineModelElementList::GetObservedSpectrumWithLinesRemoved() const
+{
+    const CSpectrumSpectralAxis& spectralAxis = m_SpectrumModel->GetSpectralAxis();
+    const CSpectrumFluxAxis& modelFluxAxis = m_SpectrumModel->GetFluxAxis();
+
+    //create new spectrum, which is corrected under the lines
+    //std::shared_ptr<CSpectrum> spcCorrectedUnderLines= std::shared_ptr<CSpectrum>( new CSpectrum(*m_SpectrumModel));
+    //CSpectrum spcCorrectedUnderLines(*m_SpectrumModel);
+    CSpectrumFluxAxis& fluxAxisNothingUnderLines = m_SpcCorrectedUnderLines->GetFluxAxis();
+    Float64* Y = fluxAxisNothingUnderLines.GetSamples();
+
+    for( Int32 t=0;t<spectralAxis.GetSamplesCount();t++)
+    {
+        Y[t] = m_SpcFluxAxis[t]-modelFluxAxis[t]+m_ContinuumFluxAxis[t];
+    }
+
+    return *m_SpcCorrectedUnderLines;
+    //return *m_SpectrumModel;;
 }
 
 /**

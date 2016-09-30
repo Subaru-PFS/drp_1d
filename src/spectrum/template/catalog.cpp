@@ -128,23 +128,35 @@ Bool CTemplateCatalog::Add( std::shared_ptr<CTemplate> r )
     *tmplWithoutCont = *r;
 
     if( m_continuumRemovalMethod == "Median" )
-      {
+    {
         CContinuumMedian continuum;
         continuum.SetMedianKernelWidth( m_continuumRemovalMedianKernelWidth );
         tmplWithoutCont->RemoveContinuum( continuum );
-      }
+    }
+    else if( m_continuumRemovalMethod== "IrregularSamplingMedian")
+    {
+        CContinuumIrregularSamplingMedian continuum;
+        continuum.SetMedianKernelWidth( m_continuumRemovalMedianKernelWidth );
+        tmplWithoutCont->RemoveContinuum( continuum );
+    }
     else if( m_continuumRemovalMethod== "waveletsDF")
     {
         CContinuumDF continuum(m_continuumRemovalWaveletsBinPath);
         tmplWithoutCont->SetDecompScales(m_continuumRemovalWaveletsNScales);
         tmplWithoutCont->RemoveContinuum( continuum );
     }
-    else
-      {
-        CContinuumIrregularSamplingMedian continuum;
-        continuum.SetMedianKernelWidth( m_continuumRemovalMedianKernelWidth );
-        tmplWithoutCont->RemoveContinuum( continuum );
-      }
+    else if( m_continuumRemovalMethod == "zero" )
+    {
+        CSpectrumFluxAxis& fluxAxis = tmplWithoutCont->GetFluxAxis();
+        for(Int32 k=0; k<fluxAxis.GetSamplesCount(); k++)
+        {
+            fluxAxis[k] = 0.0;
+        }
+    }
+    else if( m_continuumRemovalMethod == "raw" )
+    {
+        //nothing to do, tmplWithoutCont already set to r
+    }
 
     tmplWithoutCont->ConvertToLogScale();
 
