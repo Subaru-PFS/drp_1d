@@ -788,6 +788,7 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
         refreshModel();
         modelSolution = GetModelSolution();
     }
+
     Float64 merit = getLeastSquareMerit(lambdaRange);
 
     //Float64 tplshapePriorCoeff = m_CatalogTplShape->GetBestFit( modelSolution.Rays, modelSolution.Amplitudes,  );
@@ -1998,7 +1999,7 @@ Float64 CLineModelElementList::getLeastSquareMerit(const TFloat64Range& lambdaRa
     Float64 diff = 0.0;
 
     Float64 imin = spcSpectralAxis.GetIndexAtWaveLength(lambdaRange.GetBegin());
-    Float64 imax = spcSpectralAxis.GetIndexAtWaveLength(lambdaRange.GetEnd());   
+    Float64 imax = spcSpectralAxis.GetIndexAtWaveLength(lambdaRange.GetEnd());
     for( UInt32 j=imin; j<imax; j++ )
     {
         numDevs++;
@@ -2122,6 +2123,51 @@ Float64 CLineModelElementList::getModelErrorUnderElement( Int32 eltId )
     return sqrt(fit/sumErr);
 }
 
+
+/**
+ * \brief Returns the Stronger Multiple Emission Lines Amplitude Coefficient (SMELAC)
+ * 1. retrieve the lines amplitudes list for the Strong, and the Weak lines
+ * 2. TODO: estimate the coefficient to be used as prior to penalise solutions with less Strong lines
+ **/
+Float64 CLineModelElementList::getStrongerMultipleELAmpCoeff()
+{
+    TFloat64List AmpsStrong;
+    TFloat64List AmpsWeak;
+    Float64 sumAmps = 0.0;
+
+    //Retrieve all the lines amplitudes in two lists (1 Strong, 1 weak)
+    std::vector<Int32> validEltsIdx = GetModelValidElementsIndexes();
+    for( UInt32 iValidElts=0; iValidElts<validEltsIdx.size(); iValidElts++ )
+    {
+        Int32 iElts = validEltsIdx[iValidElts];
+        UInt32 nlines =  m_Elements[iElts]->GetRays().size();
+        for(UInt32 lineIdx=0; lineIdx<nlines; lineIdx++)
+        {
+            if( !m_RestRayList[m_Elements[iElts]->m_LineCatalogIndexes[lineIdx]].GetIsEmission() ){
+                continue;
+            }
+
+            Float64 amp = m_Elements[iElts]->GetFittedAmplitude(lineIdx);
+            sumAmps += amp;
+            if( m_RestRayList[m_Elements[iElts]->m_LineCatalogIndexes[lineIdx]].GetIsStrong() )
+            {
+                AmpsStrong.push_back(amp);
+            }
+            else
+            {
+                AmpsWeak.push_back(amp);
+            }
+        }
+    }
+
+    Float64 sumAmpsStrong = 0.0;
+    for(UInt32 k=0; k<AmpsStrong.size(); k++)
+    {
+        sumAmpsStrong += AmpsStrong[k];
+    }
+
+    return sumAmpsStrong;
+}
 
 /**
  * \brief Returns the cumulative SNR under the Strong Emission Lines

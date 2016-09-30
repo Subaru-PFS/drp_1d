@@ -599,7 +599,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
         static Float64 cutThres = 3.0;
         Int32 nValidLines = result->GetNLinesOverCutThreshold(i, cutThres, cutThres);
         result->Posterior[i] = nValidLines;//m/Float64(1+nValidLines);
-        Float64 cumulStrongELSNR = model.getCumulSNRStrongEL();
+        Float64 cumulStrongELSNR = model.getCumulSNRStrongEL(); //getStrongerMultipleELAmpCoeff();
         result->StrongELSNR[i] = cumulStrongELSNR;
 
         result->LogArea[i] = -DBL_MAX;
