@@ -187,33 +187,34 @@ Bool CRayCatalog::Load( const char* filePath )
             }
 
             std::string profileName = "SYM";
+            std::string groupName = "-1";
+            Float64 nominalAmplitude = 1.0;
             if(ver>=0.3){
                 // Parse profile name
                 ++it;
                 if( it != tok.end() ){
                     profileName = *it;
                 }
-            }
 
-            std::string groupName = "-1";
-            Float64 nominalAmplitude = 1.0;
-            // Parse group name
-            ++it;
-            if( it != tok.end() )
-	      {
-                groupName = *it;
-                // Parse group line nominal amplitude
+
+                // Parse group name
                 ++it;
                 if( it != tok.end() )
-		  {
-                    try
+                {
+                    groupName = *it;
+                    // Parse group line nominal amplitude
+                    ++it;
+                    if( it != tok.end() )
                     {
-                        nominalAmplitude = lexical_cast<double>(*it);
-                    }
-                    catch (bad_lexical_cast)
-                    {
-		      Log.LogError( "Unable to read nominal amplitude value from file, setting as default (1.0)." );
-		      nominalAmplitude = 1.0;
+                        try
+                        {
+                            nominalAmplitude = lexical_cast<double>(*it);
+                        }
+                        catch (bad_lexical_cast)
+                        {
+                            Log.LogError( "Unable to read nominal amplitude value from file, setting as default (1.0)." );
+                            nominalAmplitude = 1.0;
+                        }
                     }
                 }
             }

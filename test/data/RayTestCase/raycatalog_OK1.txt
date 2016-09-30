@@ -5,4 +5,4 @@
 
 10320   [SII]			E	W
 6562.8  Halpha			E	S
-4101.7  Hdelta			E	 
+4101.7  Hdelta			E	W 
