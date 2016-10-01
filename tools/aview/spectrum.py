@@ -29,6 +29,7 @@ import matplotlib.pyplot as pp
 
 import numpy as np
 from scipy import interpolate
+from scipy.signal import savgol_filter
 
 
 class Spectrum(object):
@@ -399,6 +400,7 @@ class Spectrum(object):
         a = a + ("    magI = {}\n".format(self.getMagIAB()))
         a = a + ("    flux has NaN indexes = {}\n".format([k for k, f in enumerate(self.yvect) if np.isnan(f)]))
         a = a + ("    flux has in indexes = {}\n".format([k for k, f in enumerate(self.yvect) if np.isinf(f)]))
+        a = a + ("    flux norm is = {}\n".format(self.getFluxNorm()))
         
         a = a + ("\n")
         
@@ -909,6 +911,18 @@ class Spectrum(object):
     def getFluxMean(self):
         return np.mean(self.yvect)
         
+    def getFluxNorm(self, lambdaMin=-1, lambdaMax=-1):
+        if lambdaMin<0:
+            imin = 0
+        else:
+            imin = self.getWavelengthIndex(lambdaMin)
+        if lambdaMax<0:
+            imax = self.n
+        else:
+            imax = self.getWavelengthIndex(lambdaMax)
+        npy = np.array(self.yvect)
+        return np.linalg.norm(npy[imin:imax])
+        
     def GetFluxStd6000_8000(self):
         imin = self.getWavelengthIndex(6000)
         imax = self.getWavelengthIndex(8000)
@@ -955,7 +969,16 @@ class Spectrum(object):
             smoothed2[i+decInit]=smoothed[i]
         for i in range(len(smoothed), len(signal)-decInit):  
             smoothed2[i+decInit]=smoothed[len(smoothed)-1]
-        return smoothed2 
+        return smoothed2         
+        
+    def smoothSavitskyGolay(self, winSizeAngstrom=100, degree=2): 
+        inputSpc = np.array(self.yvect)
+        winSize = int(winSizeAngstrom/self.getResolution())
+        if winSize/2.0 == int(winSize/2.0):
+            winSize+=1
+        print("savgol using winsize = {}".format(winSize))
+        filtered = savgol_filter(inputSpc, winSize, degree)
+        self.yvect = list(filtered)
         
     def extendWavelengthRangeRed(self, wavelengthSup, overridingExtensionValue=None):
         i1 = self.n-2;
@@ -1440,6 +1463,14 @@ def StartFromCommandLine( argv ) :
             s.plot()
         else:
             s2 = Spectrum(options.otherspcPath, options.otherspcType, snorm=False)
+            
+            if 0: #savgol model without lines and save it
+                #s2.smoothSavitskyGolay(400, 3.0)
+                s2.smoothSavitskyGolay()
+                s2.correctZeros()
+                #soutputpath = options.otherspcPath+"_savgol.dat"
+                #s2.saveTpl(soutputpath)
+            
             if len(options.otherNspcPath) == 0:
                 s.plotCompare(s2, 1.0, modellinetype = "b-")
             else:

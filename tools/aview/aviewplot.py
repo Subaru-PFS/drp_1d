@@ -140,7 +140,8 @@ class AViewPlot(object):
             self.xmax = self.sxvect[self.s.n-1]       
             self.ymin = min(self.syvect)
             self.ymax = max(self.syvect)
-        print("INFO: Ampl. factor used is {}".format(A))
+        print("INFO: tpl Ampl. factor used is {}".format(A))
+        print("INFO: tpl Ampl.*Norm [{}; {}]A is {}".format(self.xmin, self.xmax, A*self.t.getFluxNorm(self.xmin, self.xmax)))
 
         #compute ranges  
         if not self.exportAutoDisplaysPath == "":

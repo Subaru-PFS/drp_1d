@@ -140,6 +140,12 @@ class AViewWidget(QtWidgets.QWidget):
         self.populateCandidatesList()
         #chi2plot
         self.layoutChi2Plot = QtWidgets.QVBoxLayout()
+        #add the chi2 operator merit plot combo selection
+        self.cbChi2Selection = QtWidgets.QComboBox()
+        self.cbChi2Selection.currentIndexChanged.connect(self.cb_chi2Selection_selectionchange)
+        self.cbChi2SelectedIndex = -1
+        self.layoutChi2Plot.addWidget(self.cbChi2Selection)  
+        
         #add chisquare.py figure
         self.loadMeritPlot(self.iextremaredshift)
         #self.layoutChi2Plot.addWidget(self.toolbarChi2)
@@ -176,6 +182,13 @@ class AViewWidget(QtWidgets.QWidget):
 
         # set the layout
         self.layoutAviewPlot = QtWidgets.QVBoxLayout()
+        self.cbAviewPlotSelection = QtWidgets.QComboBox()
+        self.cbAviewPlotSelection.currentIndexChanged.connect(self.cb_aviewplotselection_selectionchange)
+        for a in self.candid_displayParamsBundle:
+            op_name = a['operator']
+            self.cbAviewPlotSelection.addItem(op_name)
+            
+        self.layoutAviewPlot.addWidget(self.cbAviewPlotSelection)
         self.loadAViewPlot(self.layoutAviewPlot)
         #self.layoutAviewPlot.addWidget(self.canvasAView)
         layout.addLayout(self.layoutAviewPlot, layoutRow, 3, 1, 1)        
@@ -187,6 +200,26 @@ class AViewWidget(QtWidgets.QWidget):
                     
         wdg.setStyleSheet("*[coloredcell=\"true\"] {background-color:rgb(215,215,215);}")
         self.show()
+        
+    def cb_aviewplotselection_selectionchange(self, i):
+        tag = "cb_aviewplotselection_selectionchange"
+        print("{}, Items in the list are :".format(tag))
+        for count in range(self.cbAviewPlotSelection.count()):
+            print("    {}".format(self.cbAviewPlotSelection.itemText(count)))
+        print("{}: Current index = {}, selection changed to {}".format(tag, i, self.cbAviewPlotSelection.currentText()))
+        if not i==self.candid_displayParamsBundleIdx:
+            self.candid_displayParamsBundleIdx = i
+            self.plotCandidate()
+            
+    def cb_chi2Selection_selectionchange(self,i):
+        tag = "cb_chi2Selection_selectionchange"
+        print("{}, Items in the list are :".format(tag))
+        for count in range(self.cbChi2Selection.count()):
+            print("    {}".format(self.cbChi2Selection.itemText(count)))
+        print("{}: Current index = {}, selection changed to {}".format(tag, i, self.cbChi2Selection.currentText()))
+        if not i==self.cbChi2SelectedIndex and not self.cbChi2SelectedIndex==-1:
+            self.cbChi2SelectedIndex = i
+            self.plotCandidate()
         
     def ck_redshiftOverride(self, state):
         if state == QtCore.Qt.Checked:
@@ -206,7 +239,7 @@ class AViewWidget(QtWidgets.QWidget):
         self.leRedshiftChoice.setModified(False)
         
     def getClosestCandidateIdx(self, zClick):
-        zArray = np.array(self.zvalCandidates)
+        zArray = np.array(self.candid_zvalCandidates)
         zArrayDiff = np.abs(zArray-zClick)
         ind = np.argmin(zArrayDiff)
         
@@ -240,8 +273,9 @@ class AViewWidget(QtWidgets.QWidget):
         self.loadAViewPlot(self.layoutAviewPlot)
         
     def populateCandidatesList(self):
-        for k, zcand in enumerate(self.zvalCandidates):
-            tplname = os.path.split(self.tplpathCandidates[k])[1]
+        for k, zcand in enumerate(self.candid_zvalCandidates):
+            tplPath = self.candid_displayParamsBundle[self.candid_displayParamsBundleIdx]['tplPaths'][k]
+            tplname = os.path.split(tplPath)[1]
             item = QtWidgets.QListWidgetItem("C{:<5}{:<12}{}".format(k, zcand, tplname))
             data = k
             item.setData(QtCore.Qt.UserRole, data)
@@ -251,20 +285,19 @@ class AViewWidget(QtWidgets.QWidget):
     def initCandidatesList(self):
         tag = "initCandidatesList"
         # 
-        self.zvalCandidates = []
-        self.tplpathCandidates = []
-        self.forceTplAmplitudeCandidates = []
-        self.forceTplDoNotRedShiftCandidate = []
+        self.candid_zvalCandidates = []
+        self.candid_displayParamsBundle = []        
+        self.candid_displayParamsBundleIdx = 0
     
-        _sname = self.resList.list[self.resIdx].name
-        self.zvalCandidates, self.tplpathCandidates, self.forceTplAmplitudeCandidates, self.forceTplDoNotRedShiftCandidates = self.resParser.getAutoCandidatesList(_sname)
-        print("{}: {} candidates loaded".format(tag, len(self.zvalCandidates)))
+        spcnametag = self.resList.list[self.resIdx].name
+        self.candid_zvalCandidates, self.candid_displayParamsBundle = self.resParser.getAutoCandidatesList(spcnametag)
+        print("{}: {} candidates loaded".format(tag, len(self.candid_zvalCandidates)))
         
- 
         
     def loadMeritPlot(self, idxCandidate=-1):
         tag = "loadMeritPlot"
-                        
+        print("{}: idxCandidate={}".format(tag, idxCandidate))
+        #reset the merit plot canvas if already existing
         try:
             self.canvasChi2.ax.cla()
             self.layoutChi2Plot.removeWidget(self.canvasChi2)
@@ -272,16 +305,36 @@ class AViewWidget(QtWidgets.QWidget):
         except:
             pass
         
+        #retrieve the chisquare data PATH
         _sname = self.resList.list[self.resIdx].name
-        #chi2path = "/home/aschmitt/tmp/output/sc_530002397_F53P002_join_A_125_1_atm_clean/linemodelsolve.linemodel.csv"
         if idxCandidate==-1:
             tplnametag = ""
         else:
-            tplnametag = os.path.split(self.tplpathCandidates[idxCandidate])[1]
+            #find the first 'chi2' displayParamsBundleIdx in order to extract the template name: 
+            displayParamsBundleIdx_chi2 = 0
+            for a in range(len(self.candid_displayParamsBundle)):
+                if 'chi2' in self.candid_displayParamsBundle[a]['operator']:
+                    displayParamsBundleIdx_chi2 = a
+                    break
+            
+            tplPath = self.candid_displayParamsBundle[displayParamsBundleIdx_chi2]['tplPaths'][idxCandidate]
+            tplnametag = os.path.split(tplPath)[1]
+        print("looking for the chi2 path using the tplnameteg = {}".format(tplnametag))
         [chipathlist, chinamelist] = self.resParser.getAutoChi2FullPath(_sname, tplnametag)
-        chi2path = chipathlist[0]
-        
+
+        #select the merit curve w. regard to the combobox
+        if self.cbChi2SelectedIndex==-1:      
+            self.cbChi2Selection.clear()
+            for name in chinamelist:
+                self.cbChi2Selection.addItem(name)
+            self.cbChi2SelectedIndex=0
+            
+        #actually load the chi2 data
+        print("using cbChi2SelectedIndex={}".format(self.cbChi2SelectedIndex))
+        chi2path = chipathlist[self.cbChi2SelectedIndex]
         chi2 = chisq.ResultChisquare(chi2path)
+        
+        #plot the merit curve in the canvas
         try:
             self.figureChi2 = chi2.plot(showContinuumEstimate=False, showExtrema=True, showAmbiguities=False, enablePlot=False, exportPath="", enableReturnFig=True)       
         except:
@@ -292,6 +345,7 @@ class AViewWidget(QtWidgets.QWidget):
         self.canvasChi2.setFixedWidth(500.0)
         self.canvasChi2.setToolTip("Double left-click on the extrema (red circles) to display")
         
+        #refresh the toolbar canvas
         try:
             self.toolbarChi2
             self.layoutChi2Plot.removeWidget(self.toolbarChi2)
@@ -307,20 +361,17 @@ class AViewWidget(QtWidgets.QWidget):
     def loadAViewPlot(self, layout, zManual=-1):
         tag = "loadAViewPlot"
         
+        #reset the aview plot canvas if already existing
         try:
             self.layoutAviewPlot.removeWidget(self.canvasAView)
             self.canvasAView.setParent(None)
         except:
             pass
         
-        #QObjectCleanupHandler().add(self.canvasAView())
-        #self.layoutAviewPlot.addWidget(self.canvasAView)
-        _sname = self.resList.list[self.resIdx].name
-        #spath = "/home/aschmitt/data/vuds/VUDS_flag3_4/VUDS_flag3_4/ECDFS/spec1d_spec1dnoise/sc_530002397_F53P002_join_A_125_1_atm_clean.fits"
-        spath = self.resParser.getSpcFullPath(_sname)
-        #npath = "/home/aschmitt/data/vuds/VUDS_flag3_4/VUDS_flag3_4/ECDFS/spec1d_spec1dnoise/sc_530002397_F53P002_join_A_125_1_noise.fits"
-        npath = self.resParser.getNoiseFullPath(_sname)
         
+        _sname = self.resList.list[self.resIdx].name
+        spath = self.resParser.getSpcFullPath(_sname)
+        npath = self.resParser.getNoiseFullPath(_sname)
 
         if not self.iextremaredshift == -1: 
             idxExtrema = int(self.iextremaredshift)
@@ -329,10 +380,11 @@ class AViewWidget(QtWidgets.QWidget):
         print('{}: retrieve tpl-model path - using idxExtrema: {}'.format(tag, idxExtrema))
             
         # todo, when idxExtrema is -1, z should be found from the "zval = s.getRedshiftVal(spcName)"
-        zvalCandidate = self.zvalCandidates[idxExtrema]
-        tplpathCandidate = self.tplpathCandidates[idxExtrema]
-        forceTplAmplitudeCandidate = self.forceTplAmplitudeCandidates[idxExtrema]
-        forceTplDoNotRedShiftCandidate = self.forceTplDoNotRedShiftCandidates[idxExtrema]
+        zvalCandidate = self.candid_zvalCandidates[idxExtrema]
+        tplpathCandidate =  self.candid_displayParamsBundle[self.candid_displayParamsBundleIdx]['tplPaths'][idxExtrema]
+
+        forceTplAmplitudeCandidate = self.candid_displayParamsBundle[self.candid_displayParamsBundleIdx]['forceTplAmplitudes'][idxExtrema]
+        forceTplDoNotRedShiftCandidate = self.candid_displayParamsBundle[self.candid_displayParamsBundleIdx]['forceTplDoNotRedShifts'][idxExtrema]
         print("{}: full tpl-model path: {}".format(tag, tplpathCandidate))
         if not os.path.exists(tplpathCandidate):
             print("{}: tplPath does not exist : reset tpl-model path = {}".format(tag, tplpathCandidate))

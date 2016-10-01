@@ -16,6 +16,7 @@ import os
 import inspect
 import glob
 import time
+import traceback
 
 import aview
 import aviewwidget
@@ -439,13 +440,19 @@ class AViewGui(QtWidgets.QWidget):
             
         _resParser = resparser.ResParser(_resDir)
 
+        #self.AViewWidget = aviewwidget.AViewWidget(parent=self, resParser=_resParser, resList=self.resList, resIdx=_spcIdx, iextremaredshift=_iextremaredshift)
         try:
             self.AViewWidget = aviewwidget.AViewWidget(parent=self, resParser=_resParser, resList=self.resList, resIdx=_spcIdx, iextremaredshift=_iextremaredshift)
             print("AviewWidget created.")            
             self.AViewWidget.show()
-        except:
+        except Exception as e:
+            if 1:
+                print( e )
+                traceback.print_exc()
+            print("\n".format())
             print("ERROR: Unable to show this result... (i={})".format(_spcIdx))
             print("NB: Maybe this source hasn't been processed successfully by amazed...(cf. zcalc=-1)".format())
+            print("NB: Maybe the intermediate results are missing for this spectrum...".format())
             print("NB: Could be another problem too...".format())
             
    

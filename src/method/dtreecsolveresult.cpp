@@ -29,7 +29,7 @@ Void CDTreeCSolveResult::Save( const CDataStore& store, std::ostream& stream ) c
     std::string tplName;
     std::string dtreepath;
 
-    GetBestRedshift( store, redshift, merit, dtreepath );
+    GetBestRedshift( store, redshift, merit, tplName, dtreepath );
 
     stream <<  "#Redshifts\tMerit\tTemplate"<< std::endl;
 
@@ -47,7 +47,7 @@ Void CDTreeCSolveResult::SaveLine( const CDataStore& store, std::ostream& stream
     std::string tplName;
     std::string dtreepath;
 
-    GetBestRedshift( store, redshift, merit, dtreepath );
+    GetBestRedshift( store, redshift, merit, tplName, dtreepath );
 
     stream  << store.GetSpectrumName() << "\t"
                 << redshift << "\t"
@@ -61,7 +61,7 @@ Void CDTreeCSolveResult::SaveLine( const CDataStore& store, std::ostream& stream
 }
 
 
-Bool CDTreeCSolveResult::GetBestRedshift(const CDataStore& store, Float64& redshift, Float64& merit , std::string &dtreepath) const
+Bool CDTreeCSolveResult::GetBestRedshift(const CDataStore& store, Float64& redshift, Float64& merit , std::string &tplName, std::string &dtreepath) const
 {
     //*
     // combined merit curve minimum
@@ -82,6 +82,7 @@ Bool CDTreeCSolveResult::GetBestRedshift(const CDataStore& store, Float64& redsh
         {
             tmpMerit = post;
             tmpRedshift = meritResult->Redshifts[i];
+            tplName = GetBestContinuumTplNameAtRedshift( store, tmpRedshift);
         }
     }
 
@@ -93,52 +94,47 @@ Bool CDTreeCSolveResult::GetBestRedshift(const CDataStore& store, Float64& redsh
     //*/
 }
 
-///**
-// * \brief Searches all the extrema results for the lowest, using the StrongELSnrPrior to correct the initial combined merit curve
-// **/
-//Bool CDTreeCSolveResult::GetBestRedshiftWithStrongELSnrPrior( const CDataStore& store, Float64& redshift, Float64& merit, std::string &dtreepath ) const
-//{
-//    // combined merit curve minimum
-//    std::string scope_lincomb = store.GetScope( *this ) + "dtreeCsolve.resultdtreeCCombined";
-//    auto _results_lincomb = store.GetGlobalResult(scope_lincomb.c_str());
-//    auto meritResult_lincomb = std::dynamic_pointer_cast<const CChisquareResult>(_results_lincomb.lock());
 
-//    std::string scope = store.GetScope( *this ) + "dtreeCsolve.linemodel";
-//    auto results = store.GetGlobalResult( scope.c_str() );
+std::string CDTreeCSolveResult::GetBestContinuumTplNameAtRedshift( const CDataStore& store, Float64 z) const
+{
+    // combined merit curve minimum
+    std::string scope = store.GetScope( *this ) + "dtreeCsolve.chisquare2solve.chisquare_continuum";
 
-//    Float64 tmpMerit = DBL_MAX ;
-//    Float64 tmpRedshift = 0.0;
 
-//    if(!results.expired())
-//    {
-//        auto lineModelResult = std::dynamic_pointer_cast<const CLineModelResult>( results.lock() );
-//        for( Int32 i=0; i<lineModelResult->Extrema.size(); i++ )
-//        {
-//            //find lincomb corresponding index
-//            Float64 idxLinComb = -1.0;
-//            Float64 meritLinComb = DBL_MAX;
-//            for( Int32 ilc=0; ilc<meritResult_lincomb->ChiSquare.size(); ilc++ )
-//            {
-//                if( lineModelResult->Extrema[i] == meritResult_lincomb->Redshifts[ilc])
-//                {
-//                    idxLinComb=ilc;
-//                    meritLinComb = meritResult_lincomb->ChiSquare[ilc];
-//                }
-//            }
+    TOperatorResultMap meritResults = store.GetPerTemplateResult(scope.c_str());
 
-//            Float64 coeff =10.0;
-//            Float64 correctedMerit = meritLinComb-coeff*lineModelResult->StrongELSNR[i];
-//            if( correctedMerit < tmpMerit )
-//            {
-//                tmpMerit = correctedMerit;
-//                tmpRedshift = lineModelResult->Extrema[i];
-//            }
-//        }
-//    }
+    std::string tplName = "";
 
-//    redshift = tmpRedshift;
-//    merit = tmpMerit;
-//    dtreepath = "0.0";
-//    return true;
-//}
 
+    //find best merit for this z
+    Float64 iz = -1;
+    Float64 tmpMerit = DBL_MAX ;
+    for( TOperatorResultMap::const_iterator it = meritResults.begin(); it != meritResults.end(); it++ )
+    {
+        auto meritResult = std::dynamic_pointer_cast<const CChisquareResult>((*it).second);
+
+        iz = -1;
+        if(iz<0)
+        {
+            Float64 minzdiff = DBL_MAX;
+            for( Int32 i=0; i<meritResult->Redshifts.size(); i++ )
+            {
+                Float64 diff = fabs(meritResult->Redshifts[i]-z);
+                if(minzdiff>diff)
+                {
+                    minzdiff = diff;
+                    iz = i;
+                }
+            }
+        }
+
+        if( tmpMerit > meritResult->ChiSquare[iz]){
+            tmpMerit = meritResult->ChiSquare[iz];
+            tplName = (*it).first;
+        }
+
+    }
+
+    return tplName;
+
+}

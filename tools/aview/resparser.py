@@ -42,6 +42,10 @@ class ResParser(object):
             self.chisquarerelpath = "dtreeBsolve.chisquare2solve.chisquare.csv" 
             self.chisquarencrelpath = "dtreeBsolve.chisquare2solve.chisquare_nocontinuum.csv"
             self.chisquarecrelpath = "dtreeBsolve.chisquare2solve.chisquare_continuum.csv" 
+        elif methodParam=="decisionaltreec" or methodParam=="amazed0_3":
+            self.chisquarerelpath = "dtreeCsolve.chisquare2solve.chisquare.csv" 
+            self.chisquarencrelpath = "dtreeCsolve.chisquare2solve.chisquare_nocontinuum.csv"
+            self.chisquarecrelpath = "dtreeCsolve.chisquare2solve.chisquare_continuum.csv" 
         else:
             self.chisquarerelpath = "chisquare2solve.chisquare.csv" 
             self.chisquarencrelpath = "chisquare2solve.chisquare_nocontinuum.csv"
@@ -304,7 +308,8 @@ class ResParser(object):
                     break
         f.close()
         return strVal
-        
+
+  
     def getCandidatesFromAmazedChi2Extrema(self, spcnametag, chi2Type = "raw", nextrema=10):
         """
         todo: replace the code in resultstat:getZCandidatesFromAmazedChi2Extrema using this function
@@ -353,6 +358,11 @@ class ResParser(object):
                     continue
             print("amazed_extrema found = {}".format(redshiftstpl))
             
+            if np.all(np.array(redshiftstpl)==0.0):
+                continue            
+            if len(chi2.xvect)==0: #in this case, it seems that all merits are at DBL_MAX, thus ignored by chisquare.py load()
+                continue
+                
             
             meritstpl = []
             npx = np.copy(chi2.xvect)
@@ -369,6 +379,8 @@ class ResParser(object):
                     ampslist.append(ampstpl[b])
                 meritslist.append(meritstpl[b])
                 tplNameList.append(tplNameTag)
+            print("amazed_extrema merits found = {}".format(meritstpl))
+            
             
         if nextrema > 0:
             redshiftsUnsorted = list((redshiftslist))
@@ -413,13 +425,18 @@ class ResParser(object):
         
         return redshifts, merits, templates, amps
         
+        
     def getAutoCandidate(self, spcnametag, idxExtrema=0):
         """
         This function retrieves the candidate params for a given spectrum and a given extrema_index
         returned tuple: (z, tplPath, forceTplAmplitude, forceTplDoNotRedShift) 
         """ 
-        
-        zvalCandidates, tplpathCandidates, forceTplAmplitudeCandidates, forceTplDoNotRedShiftCandidates = self.getAutoCandidatesList(spcnametag)
+        zvalCandidates, displayParamsBundle = self.getAutoCandidatesList(spcnametag)
+        #unwrap the displayParams: using first operator by default:
+        idOperator = 0
+        tplpathCandidates = displayParamsBundle[idOperator]['tplPaths']
+        forceTplAmplitudeCandidates = displayParamsBundle[idOperator]['forceTplAmplitudes']
+        forceTplDoNotRedShiftCandidates = displayParamsBundle[idOperator]['forceTplDoNotRedShifts'] 
                     
         redshift = zvalCandidates[idxExtrema]
         tplpath = tplpathCandidates[idxExtrema]
@@ -433,22 +450,34 @@ class ResParser(object):
     def getAutoCandidatesList(self, spcnametag):
         """
         This function retrieves the candidate params for a given spectrum and a given extrema_index
-        returned tuple: (z, tplPath, forceTplAmplitude, forceTplDoNotRedShift) 
+        returned tuple: 
+            - redshiftt, <list>
+            - displayParamsBundle[nOperators]{'dictionnary'} which keys are : 
+                * operator, <string> = name of the operator for this bundle
+                * tplPath, <list>
+                * forceTplAmplitude,  <list> 
+                * forceTplDoNotRedShift, <list>
         """ 
+        tag = "getAutoCandidatesList"
         if os.path.splitext(spcnametag)[1].lower()==".fits":
             spcnametag = os.path.splitext(spcnametag)[0]
         method = self.getConfigVal('method')
-        print("method found in config is: {}".format(method))
+        print("{}: method found in config is: {}".format(tag, method))
         path = os.path.join(self.respath, spcnametag)
 
+        #returning a redshifts list + a displayParamsBundle[nOperators]{'dictionnary'}
+
         redshifts = []
-        tplpaths = []
-        forceTplAmplitudes = []
-        forceTplDoNotRedShifts = []
+        displayParamsBundle = []
+        
         if method == "linemodel":
             #find redshift
             [chipathlist, chinamelist] = self.getAutoChi2FullPath(spcnametag)
             chi = chisq.ResultChisquare(chipathlist[0], stype=os.path.splitext(chinamelist[0])[0])
+            
+            tplpaths = []
+            forceTplAmplitudes = []
+            forceTplDoNotRedShifts = []
             
             idxExtrema = 0
             _stop = False
@@ -468,7 +497,16 @@ class ResParser(object):
                     idxExtrema += 1
                 else:
                     _stop = True
-                
+            
+            #create the outputs
+            d = {}
+            d['operator'] = 'linemodel'
+            d['tplPaths'] = tplpaths
+            d['forceTplAmplitudes'] = forceTplAmplitudes
+            d['forceTplDoNotRedShifts'] = forceTplDoNotRedShifts
+            displayParamsBundle.append(d)
+            
+            
      
         elif method == "linemodeltplshape":
             #not supported
@@ -477,37 +515,94 @@ class ResParser(object):
             #not supported
             pass
         elif method == "amazed0_3" or method.lower() == "amazed0_3":
-            #not supported
-            [chipathlist, chinamelist] = self.getAutoChi2FullPath(spcnametag)
-            chi = chisq.ResultChisquare(chipathlist[0], stype=os.path.splitext(chinamelist[0])[0])
-            [redshifts, merits] = chi.getXYSortedByY()            
-            print("resparser: getAutoCandidatesList (method={}): found n redshifts={}".format(method, len(redshifts)))
-            
-            chi_linemodel = chisq.ResultChisquare(chipathlist[1], stype=os.path.splitext(chinamelist[1])[0])
-            
-            idx_model = -1
-            thres = 5e-4
-            for idxExtrema in range(len(redshifts)):
-                print("C{} = {}".format(idxExtrema, redshifts[idxExtrema]))
-                for iLM in range(len(chi_linemodel.amazed_extrema)):
-                    print("zLM_cand = {}".format(chi_linemodel.amazed_extrema[iLM]))
-                    if np.abs(chi_linemodel.amazed_extrema[iLM] - redshifts[idxExtrema])<thres:
-                        idx_model = iLM
-                        print("C{}: idxModel = {}".format(idxExtrema, idx_model))
-                        break
-                if not idx_model==-1:
-                    name = "dtreeCsolve.linemodel_spc_extrema_{}.csv".format(idx_model)                    
-                    print("C{}: pathModel = {}".format(idxExtrema, name))
-                    tplpath = os.path.join(path,name)
+            #linemodel results
+            if 1:
+                [chipathlist, chinamelist] = self.getAutoChi2FullPath(spcnametag)
+                chi = chisq.ResultChisquare(chipathlist[0], stype=os.path.splitext(chinamelist[0])[0])
+                [redshifts, merits] = chi.getXYSortedByY()            
+                print("resparser: getAutoCandidatesList (method={}): found n redshifts={}".format(method, len(redshifts)))
+                
+                chi_linemodel = chisq.ResultChisquare(chipathlist[1], stype=os.path.splitext(chinamelist[1])[0])
+                            
+                tplpaths = []
+                forceTplAmplitudes = []
+                forceTplDoNotRedShifts = []
+                
+                idx_model = -1
+                thres = 5e-4
+                for idxExtrema in range(len(redshifts)):
+                    print("C{} = {}".format(idxExtrema, redshifts[idxExtrema]))
+                    for iLM in range(len(chi_linemodel.amazed_extrema)):
+                        print("zLM_cand = {}".format(chi_linemodel.amazed_extrema[iLM]))
+                        if np.abs(chi_linemodel.amazed_extrema[iLM] - redshifts[idxExtrema])<thres:
+                            idx_model = iLM
+                            print("C{}: idxModel = {}".format(idxExtrema, idx_model))
+                            break
+                    if not idx_model==-1:
+                        name = "dtreeCsolve.linemodel_spc_extrema_{}.csv".format(idx_model)                    
+                        print("C{}: pathModel = {}".format(idxExtrema, name))
+                        tplpath = os.path.join(path,name)
+                        
+                        tplpaths.append(tplpath)
+                        forceTplAmplitudes.append(1.0)
+                        forceTplDoNotRedShifts.append(1)
+                        
+                #create the outputs
+                d = {}
+                d['operator'] = 'linemodel'
+                d['tplPaths'] = tplpaths
+                d['forceTplAmplitudes'] = forceTplAmplitudes
+                d['forceTplDoNotRedShifts'] = forceTplDoNotRedShifts
+                displayParamsBundle.append(d)
                     
+            #chi2nc results
+            if 1:
+                print("get component now")
+                spcComponent = self.getParameterVal('dtreeCsolve', 'chisquare', 'spectrum', 'component') 
+                print("INFO: for method {}, using spectrum component: {}".format(method, spcComponent))
+                zList, meritList, tplList, ampsList = self.getCandidatesFromAmazedChi2Extrema(spcnametag, chi2Type=spcComponent) 
+                
+                #find the indexes correspondance between redshifts and zList
+                indexesZ = []
+                for j, b in enumerate(redshifts):
+                    npZList = np.array(zList)
+                    xfind = np.abs(npZList-b)
+                    ind = np.argmin(xfind)
+                    indexesZ.append(ind)
+                
+                print("\nDEBUG: Candidates found:")
+                
+                tplpaths = []
+                forceTplAmplitudes = []
+                forceTplDoNotRedShifts = []
+                
+                for j, b in enumerate(redshifts):
+                    k = indexesZ[j]
+                    print("cand. #{}: z={:15}, merit={:15}, tpl={:25}, amp={:25}".format(k, zList[k], meritList[k], tplList[k], ampsList[k]))
+                    
+                    #redshifts.append(zList[k])
+                    tplpath = self.getTplFullPath(tplList[k], spcComponent)
                     tplpaths.append(tplpath)
-                    forceTplAmplitudes.append(1.0)
-                    forceTplDoNotRedShifts.append(1)
-            
+                    forceTplAmplitudes.append(ampsList[k])
+                    forceTplDoNotRedShift = 0
+                    forceTplDoNotRedShifts.append(forceTplDoNotRedShift)
+                    
+                #create the outputs
+                d = {}
+                d['operator'] = 'chi2'
+                d['tplPaths'] = tplpaths
+                d['forceTplAmplitudes'] = forceTplAmplitudes
+                d['forceTplDoNotRedShifts'] = forceTplDoNotRedShifts
+                displayParamsBundle.append(d)
+                
         elif method == "chisquaresolve" or method == "chisquare2solve":
             spcComponent = self.getParameterVal(method, 'spectrum', 'component') 
             print("INFO: for method {}, using spectrum component: {}".format(method, spcComponent))
             zList, meritList, tplList, ampsList = self.getCandidatesFromAmazedChi2Extrema(spcnametag, chi2Type=spcComponent) 
+            
+            tplpaths = []
+            forceTplAmplitudes = []
+            forceTplDoNotRedShifts = []
             
             print("\nDEBUG: Candidates found:")
             for k in range(len(zList)):
@@ -520,12 +615,18 @@ class ResParser(object):
                 forceTplDoNotRedShift = 0
                 forceTplDoNotRedShifts.append(forceTplDoNotRedShift)
                 
+            #create the outputs
+            d = {}
+            d['operator'] = 'chi2'
+            d['tplPaths'] = tplpaths
+            d['forceTplAmplitudes'] = forceTplAmplitudes
+            d['forceTplDoNotRedShifts'] = forceTplDoNotRedShifts
+            displayParamsBundle.append(d)
+            
             print("\n")
             
-            
-            
-                    
-        return redshifts, tplpaths, forceTplAmplitudes, forceTplDoNotRedShifts 
+     
+        return redshifts, displayParamsBundle
         
     def getContinuumPath(self, spcnametag, methodForced='auto'):
         continuumPath = ""
@@ -600,7 +701,7 @@ class ResParser(object):
         strVal = ""
         #tplRootPath = self.getConfigVal('templatedir') //deprecated: look for 
         #the templates in the path defined in the config file
-        if component=='raw':
+        if component=='raw' or component=='continuum':
             tplRootPath = self.templatespath
         elif component=='nocontinuum':
             tplRootPath = self.templates_nocontinuum_path
@@ -758,16 +859,46 @@ class ResParser(object):
             chiname.append(name)
                     
         elif method.lower() == "amazed0_3":
+                        
+            #
             #name = "dtreeCsolve.linemodel.csv"
             name = "dtreeCsolve.resultdtreeCCombined.csv"
             #name = "dtreeBsolve.linemodel.csv"    
             chipath.append(os.path.join(path,name))
             chiname.append(name)
             
+            #
             name = "dtreeCsolve.linemodel.csv"    
             chipath.append(os.path.join(path,name))
             chiname.append(name)
+                        
+            #
+            name = "dtreeCsolve.priorContinuum.csv"
+            chipath.append(os.path.join(path,name))
+            chiname.append(name)
             
+            #
+            if tplnametag=="":
+                tplnametag = self.getRedshiftTpl(spcnametag)
+            pathTplChi = os.path.join(path, tplnametag)
+            spcComponent = self.getParameterVal('dtreeCsolve', 'chisquare', 'spectrum', 'component')
+            print('component parameter found = {}'.format(spcComponent))
+            if spcComponent=="nocontinuum":
+                name = "dtreeCsolve.chisquare2solve.chisquare_nocontinuum.csv"
+            if spcComponent=="continuum":
+                name = "dtreeCsolve.chisquare2solve.chisquare_continuum.csv"
+            if spcComponent=="raw":
+                name = "dtreeCsolve.chisquare2solve.chisquare.csv"
+            chipath.append(os.path.join(pathTplChi,name))
+            chiname.append(name)
+                     
+            #
+            name = "dtreeCsolve.priorStrongELSnrP.csv"
+            chipath.append(os.path.join(path,name))
+            chiname.append(name)
+            
+                        
+                        
         elif method == "decisionaltreeb" or method.lower() == "amazed0_2":
             
             if 1:

@@ -52,6 +52,8 @@ const std::string COperatorDTreeCSolve::GetDescription()
     desc.append("\tparam: chisquare.overlapthreshold = <float value>\n");
     desc.append("\tparam: chisquare.redshiftsupport = {""full"", ""extremaextended""}\n");
     desc.append("\tparam: chisquare.interpolation = {""precomputedfinegrid"", ""lin""}\n");
+    desc.append("\tparam: chisquare.spectrum.component = {""raw"", ""continuum"", ""nocontinuum""}\n");
+
 
     return desc;
 
@@ -155,25 +157,34 @@ Bool COperatorDTreeCSolve::Solve(CDataStore &dataStore, const CSpectrum &spc, co
     }
 
 
+
     //*
     //_///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    // compute chisquare continuum
+    // compute chisquare
     if( result->Extrema.size() == 0 )
     {
         return false;
     }
-    Log.LogInfo( "dtreeCsolve: Computing the template fitting with continuum");
-
     Float64 overlapThreshold;
     dataStore.GetScopedParam( "chisquare.overlapthreshold", overlapThreshold, 1.0 );
-
     std::string opt_interp;
     dataStore.GetScopedParam( "chisquare.interpolation", opt_interp, "precomputedfinegrid" );
+    std::string opt_spcComponent;
+    dataStore.GetScopedParam( "chisquare.spectrum.component", opt_spcComponent, "continuum" );
 
-    std::string spcComponent = "continuum";
+    std::string scopeStr = "chisquare";
+    if(opt_spcComponent == "continuum"){
+        scopeStr = "chisquare_continuum";
+    }else if(opt_spcComponent == "raw"){
+        scopeStr = "chisquare";
+    }else if(opt_spcComponent == "nocontinuum"){
+        scopeStr = "chisquare_nocontinuum";
+    }
+
+
+    Log.LogInfo( "dtreeCsolve: Computing the template fitting : %s", scopeStr.c_str());
+
     CMethodChisquare2Solve chiSolve;
-
-
     std::vector<Float64> redshiftsChi2Continuum;
     /*
     Int32 enableFastContinuumFitLargeGrid = 1;
@@ -202,6 +213,8 @@ Bool COperatorDTreeCSolve::Solve(CDataStore &dataStore, const CSpectrum &spc, co
         redshiftsChi2Continuum=redshiftsChi2;
     }
     //*/
+
+
     //*
     //Compute the tpl fitting only on the candidates/extrema
     for( Int32 i=0; i<result->Extrema.size(); i++ )
@@ -214,7 +227,8 @@ Bool COperatorDTreeCSolve::Solve(CDataStore &dataStore, const CSpectrum &spc, co
     //*/
     auto chisolveResultcontinuum = chiSolve.Compute( dataStore, spc, spcWithoutCont,
                                                                         tplCatalog, tplCategoryList,
-                                                                        lambdaRange, redshiftsChi2Continuum, overlapThreshold, spcComponent, opt_interp);
+                                                                        lambdaRange, redshiftsChi2Continuum, overlapThreshold, opt_spcComponent, opt_interp);
+
     if( !chisolveResultcontinuum )
     {
         Log.LogInfo( "dtreeCsolve: Failed to compute tpl fitting continuum");
@@ -223,17 +237,17 @@ Bool COperatorDTreeCSolve::Solve(CDataStore &dataStore, const CSpectrum &spc, co
     //_///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //*/
 
+
+
     // Calculate the Combination //////////////////////////////////////////////////
-    GetCombinedRedshift(dataStore);
-
+    GetCombinedRedshift(dataStore, scopeStr);
     // /////////////////////////////////////////////////////////////////////////////
-
 
     return true;
 }
 
 
-Bool COperatorDTreeCSolve::GetCombinedRedshift(CDataStore& store)
+Bool COperatorDTreeCSolve::GetCombinedRedshift(CDataStore& store, std::string scopeStr)
 {
     std::string scope = "dtreeCsolve.linemodel";
     auto results = std::dynamic_pointer_cast<const CLineModelResult>( store.GetGlobalResult(scope.c_str()).lock() );
@@ -299,7 +313,7 @@ Bool COperatorDTreeCSolve::GetCombinedRedshift(CDataStore& store)
     TFloat64List zcontinuum_calcGrid;
     Float64 minchi2continuum= DBL_MAX;
 
-    chi2continuum_calcGrid = GetBestRedshiftChi2List(store, "chisquare_continuum", minchi2continuum, zcontinuum_calcGrid);
+    chi2continuum_calcGrid = GetBestRedshiftChi2List(store, scopeStr, minchi2continuum, zcontinuum_calcGrid);
 
     //option 1: interpolate the continuum results on the continuum fit grid
     if(false){
@@ -340,7 +354,7 @@ Bool COperatorDTreeCSolve::GetCombinedRedshift(CDataStore& store)
     chi2cCoeff = 2e-3;
     //*/
     // coeffs for VUDS F34
-    chi2cCoeff = 2e-2;
+    chi2cCoeff = 5e-1;
     //*/
 
     for( Int32 i=0; i<zcomb.size(); i++ )

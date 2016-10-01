@@ -7,6 +7,7 @@
 #include <epic/redshift/common/mask.h>
 #include <epic/redshift/operator/chisquareresult.h>
 #include <epic/redshift/extremum/extremum.h>
+#include <epic/core/common/quicksort.h>
 
 #include <epic/core/log/log.h>
 
@@ -350,33 +351,55 @@ std::shared_ptr<COperatorResult> COperatorChiSquare2::Compute(const CSpectrum& s
 
     // extrema
     Int32 extremumCount = 10;
-    TPointList extremumList;
-    TFloat64Range redshiftsRange(result->Redshifts[0], result->Redshifts[result->Redshifts.size()-1]);
-    CExtremum extremum( redshiftsRange, extremumCount, true);
-    extremum.Find( result->Redshifts, result->ChiSquare, extremumList );
-    // Refine Extremum with a second maximum search around the z candidates:
-    // This corresponds to the finer xcorrelation in EZ Pandora (in standard_DP fctn in SolveKernel.py)
-    Float64 radius = 0.001;
-    for( Int32 i=0; i<extremumList.size(); i++ )
+    if(result->Redshifts.size()>extremumCount)
     {
-        Float64 x = extremumList[i].X;
-        Float64 left_border = max(redshiftsRange.GetBegin(), x-radius);
-        Float64 right_border=min(redshiftsRange.GetEnd(), x+radius);
+        TPointList extremumList;
+        TFloat64Range redshiftsRange(result->Redshifts[0], result->Redshifts[result->Redshifts.size()-1]);
+        CExtremum extremum( redshiftsRange, extremumCount, true);
+        extremum.Find( result->Redshifts, result->ChiSquare, extremumList );
+        // Refine Extremum with a second maximum search around the z candidates:
+        // This corresponds to the finer xcorrelation in EZ Pandora (in standard_DP fctn in SolveKernel.py)
+        Float64 radius = 0.001;
+        for( Int32 i=0; i<extremumList.size(); i++ )
+        {
+            Float64 x = extremumList[i].X;
+            Float64 left_border = max(redshiftsRange.GetBegin(), x-radius);
+            Float64 right_border=min(redshiftsRange.GetEnd(), x+radius);
 
-        TPointList extremumListFine;
-        TFloat64Range rangeFine = TFloat64Range( left_border, right_border );
-        CExtremum extremumFine( rangeFine , 1, true);
-        extremumFine.Find( result->Redshifts, result->ChiSquare, extremumListFine );
-        if(extremumListFine.size()>0){
-            extremumList[i] = extremumListFine[0];
+            TPointList extremumListFine;
+            TFloat64Range rangeFine = TFloat64Range( left_border, right_border );
+            CExtremum extremumFine( rangeFine , 1, true);
+            extremumFine.Find( result->Redshifts, result->ChiSquare, extremumListFine );
+            if(extremumListFine.size()>0){
+                extremumList[i] = extremumListFine[0];
+            }
         }
-    }
-    // store extrema results
-    result->Extrema.resize( extremumCount );
-    for( Int32 i=0; i<extremumList.size(); i++ )
-    {
+        // store extrema results
+        result->Extrema.resize( extremumCount );
+        for( Int32 i=0; i<extremumList.size(); i++ )
+        {
 
-        result->Extrema[i] = extremumList[i].X;
+            result->Extrema[i] = extremumList[i].X;
+        }
+    }else
+    {
+        // store extrema results
+        result->Extrema.resize( result->Redshifts.size() );
+        TFloat64List tmpX;
+        TFloat64List tmpY;
+        for( Int32 i=0; i<result->Redshifts.size(); i++ )
+        {
+            tmpX.push_back(result->Redshifts[i]);
+            tmpY.push_back(result->ChiSquare[i]);
+        }
+        // sort the results by merit
+        CQuickSort<Float64> sort;
+        vector<Int32> sortedIndexes( result->Redshifts.size() );
+        sort.SortIndexes( tmpY.data(), sortedIndexes.data(), sortedIndexes.size() );
+        for( Int32 i=0; i<result->Redshifts.size(); i++ )
+        {
+            result->Extrema[i] = tmpX[sortedIndexes[i]];
+        }
     }
 
     free(precomputedFineGridTplFlux);
