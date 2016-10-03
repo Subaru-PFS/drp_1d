@@ -31,7 +31,7 @@
 #include <gsl/gsl_blas.h>
 #include <gsl/gsl_multifit_nlin.h>
 #include "lmfitfunctions.c"
-#include </home/aschmitt/gitlab/cpf-redshift/src/gaussianfit/lbfgsb.c>
+#include "../gaussianfit/lbfgsb.c"
 
 
 
