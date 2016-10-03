@@ -560,7 +560,7 @@ static integer c__11 = 11;
                     iwhere[i__] = 2;
                 }
             } else {
-                if (abs(neggi) <= 0.) {
+                if (std::abs(neggi) <= 0.) {
                     iwhere[i__] = -3;
                 }
             }
@@ -601,7 +601,7 @@ static integer c__11 = 11;
                 /*                x(i) + d(i) is not bounded. */
                 --nfree;
                 iorder[nfree] = i__;
-                if (abs(neggi) > 0.) {
+                if (std::abs(neggi) > 0.) {
                     bnded = FALSE_;
                 }
             }
@@ -1796,7 +1796,7 @@ L30:
             }
         }
         /* Computing MAX */
-        d__1 = *sbgnrm, d__2 = abs(gi);
+        d__1 = *sbgnrm, d__2 = std::abs(gi);
         *sbgnrm = std::max(d__1,d__2);
         /* L15: */
     }
