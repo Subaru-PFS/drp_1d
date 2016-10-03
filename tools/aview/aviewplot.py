@@ -19,12 +19,16 @@ import matplotlib.pyplot as pp
 #sns.set_style("whitegrid")
 from matplotlib import gridspec
 from matplotlib.ticker import MultipleLocator, FormatStrFormatter
-import lineid_plot
+
 
 import numpy as np
 
 import spectrum as sp
 import catalog as ctlg
+
+lines_label_method = 0 #0 = subplot with labels, #1 = using lineid_plot package on main spc view
+if lines_label_method==1:
+    import lineid_plot
 
 
 class AViewPlot(object):
@@ -196,7 +200,6 @@ class AViewPlot(object):
         
         
         #prepare lines        
-        lines_label_method = 0 #0 = subplot with labels, #1 = using lineid_plot on main spc view
         if not self.forcePlotNoLines:
             #self.linesx = []
             #self.linesx.append(6564)
@@ -284,13 +287,14 @@ class AViewPlot(object):
         line_wave = []
         line_label = []
         line_type = []
-        #line_arrow_tips = []
-        ak = lineid_plot.initial_annotate_kwargs()
-        #print(ak)
-        #ak['arrowprops']['arrowstyle'] = "->"
-        pk = lineid_plot.initial_plot_kwargs()
-        #print(pk)
-        label_max_size = 12
+        if lines_label_method==1:
+            #line_arrow_tips = []
+            ak = lineid_plot.initial_annotate_kwargs()
+            #print(ak)
+            #ak['arrowprops']['arrowstyle'] = "->"
+            pk = lineid_plot.initial_plot_kwargs()
+            #print(pk)
+            label_max_size = 12
         lposOffsetE = 0
         lposOffsetA = 0
         if not self.forcePlotNoLines:

@@ -29,7 +29,7 @@ import aviewgui
 
 #default settings
 #global_setting_default_amazed_bin_path = "/home/aschmitt/gitlab/amazed/bin/amazed-0.0.0"
-global_setting_default_amazed_bin_path = "amazed-0.2.4"
+global_setting_default_amazed_bin_path = "amazed-0.2.5"
 global_setting_default_workspace= "/tmp/amazed"
 
 class ObjectAProcessGui(object):
