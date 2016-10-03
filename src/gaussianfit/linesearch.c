@@ -394,7 +394,7 @@ the sufficient decrease and curvature condition.
         *task = WARNING_STPMIN;
     }
     /*     Test for convergence. */
-    if (*f <= ftest && abs(*g) <= *gtol * (-ginit)) {
+    if (*f <= ftest && std::abs(*g) <= *gtol * (-ginit)) {
         *task = CONVERGENCE;
     }
     /*     Test for termination. */
@@ -429,11 +429,11 @@ the sufficient decrease and curvature condition.
     }
     /*     Decide if a bisection step is needed. */
     if (brackt) {
-        if ((d__1 = sty - stx, abs(d__1)) >= width1 * .66) {
+        if ((d__1 = sty - stx, std::abs(d__1)) >= width1 * .66) {
             *stp = stx + (sty - stx) * .5;
         }
         width1 = width;
-        width = (d__1 = sty - stx, abs(d__1));
+        width = (d__1 = sty - stx, std::abs(d__1));
     }
     /*     Set the minimum and maximum steps allowed for stp. */
     if (brackt) {
@@ -590,7 +590,7 @@ L1000:
 
         ********** 
         */
-        sgnd = *dp * (*dx / abs(*dx));
+        sgnd = *dp * (*dx / std::abs(*dx));
     /*     First case: A higher function value. The minimum is bracketed. */
     /*     If the cubic step is closer to stx than the quadratic step, the */
     /*     cubic step is taken, otherwise the average of the cubic and */
@@ -598,7 +598,7 @@ L1000:
     if (*fp > *fx) {
         theta = (*fx - *fp) * 3. / (*stp - *stx) + *dx + *dp;
         /* Computing MAX */
-        d__1 = abs(theta), d__2 = abs(*dx), d__1 = std::max(d__1,d__2), d__2 = abs(
+        d__1 = std::abs(theta), d__2 = std::abs(*dx), d__1 = std::max(d__1,d__2), d__2 = std::abs(
                 *dp);
         s = std::max(d__1,d__2);
         /* Computing 2nd power */
@@ -613,7 +613,7 @@ L1000:
         stpc = *stx + r__ * (*stp - *stx);
         stpq = *stx + *dx / ((*fx - *fp) / (*stp - *stx) + *dx) / 2. * (*stp 
                 - *stx);
-        if ((d__1 = stpc - *stx, abs(d__1)) < (d__2 = stpq - *stx, abs(d__2)))
+        if ((d__1 = stpc - *stx, std::abs(d__1)) < (d__2 = stpq - *stx, std::abs(d__2)))
         {
             stpf = stpc;
         } else {
@@ -627,7 +627,7 @@ L1000:
     } else if (sgnd < 0.) {
         theta = (*fx - *fp) * 3. / (*stp - *stx) + *dx + *dp;
         /* Computing MAX */
-        d__1 = abs(theta), d__2 = abs(*dx), d__1 = std::max(d__1,d__2), d__2 = abs(
+        d__1 = std::abs(theta), d__2 = std::abs(*dx), d__1 = std::max(d__1,d__2), d__2 = std::abs(
                 *dp);
         s = std::max(d__1,d__2);
         /* Computing 2nd power */
@@ -641,7 +641,7 @@ L1000:
         r__ = p / q;
         stpc = *stp + r__ * (*stx - *stp);
         stpq = *stp + *dp / (*dp - *dx) * (*stx - *stp);
-        if ((d__1 = stpc - *stp, abs(d__1)) > (d__2 = stpq - *stp, abs(d__2)))
+        if ((d__1 = stpc - *stp, std::abs(d__1)) > (d__2 = stpq - *stp, std::abs(d__2)))
         {
             stpf = stpc;
         } else {
@@ -650,14 +650,14 @@ L1000:
         *brackt = TRUE_;
         /*     Third case: A lower function value, derivatives of the same sign, */
         /*     and the magnitude of the derivative decreases. */
-    } else if (abs(*dp) < abs(*dx)) {
+    } else if (std::abs(*dp) < std::abs(*dx)) {
         /*        The cubic step is computed only if the cubic tends to infinity */
         /*        in the direction of the step or if the minimum of the cubic */
         /*        is beyond stp. Otherwise the cubic step is defined to be the */
         /*        secant step. */
         theta = (*fx - *fp) * 3. / (*stp - *stx) + *dx + *dp;
         /* Computing MAX */
-        d__1 = abs(theta), d__2 = abs(*dx), d__1 = std::max(d__1,d__2), d__2 = abs(
+        d__1 = std::abs(theta), d__2 = std::abs(*dx), d__1 = std::max(d__1,d__2), d__2 = std::abs(
                 *dp);
         s = std::max(d__1,d__2);
         /*        The case gamma = 0 only arises if the cubic does not tend */
@@ -685,7 +685,7 @@ L1000:
             /*           A minimizer has been bracketed. If the cubic step is */
             /*           closer to stp than the secant step, the cubic step is */
             /*           taken, otherwise the secant step is taken. */
-            if ((d__1 = stpc - *stp, abs(d__1)) < (d__2 = stpq - *stp, abs(
+            if ((d__1 = stpc - *stp, std::abs(d__1)) < (d__2 = stpq - *stp, std::abs(
                             d__2))) {
                 stpf = stpc;
             } else {
@@ -704,7 +704,7 @@ L1000:
             /*           A minimizer has not been bracketed. If the cubic step is */
             /*           farther from stp than the secant step, the cubic step is */
             /*           taken, otherwise the secant step is taken. */
-            if ((d__1 = stpc - *stp, abs(d__1)) > (d__2 = stpq - *stp, abs(
+            if ((d__1 = stpc - *stp, std::abs(d__1)) > (d__2 = stpq - *stp, std::abs(
                             d__2))) {
                 stpf = stpc;
             } else {
@@ -721,8 +721,8 @@ L1000:
         if (*brackt) {
             theta = (*fp - *fy) * 3. / (*sty - *stp) + *dy + *dp;
             /* Computing MAX */
-            d__1 = abs(theta), d__2 = abs(*dy), d__1 = std::max(d__1,d__2), d__2 =
-                abs(*dp);
+            d__1 = std::abs(theta), d__2 = std::abs(*dy), d__1 = std::max(d__1,d__2), d__2 =
+                std::abs(*dp);
             s = std::max(d__1,d__2);
             /* Computing 2nd power */
             d__1 = theta / s;

@@ -947,7 +947,7 @@ L777:
         goto L999;
     }
     /* Computing MAX */
-    d__1 = abs(fold), d__2 = abs(*f), d__1 = std::max(d__1,d__2);
+    d__1 = std::abs(fold), d__2 = std::abs(*f), d__1 = std::max(d__1,d__2);
     ddum = std::max(d__1,1.);
     if (fold - *f <= tol * ddum) {
         /*                                        terminate the algorithm. */
