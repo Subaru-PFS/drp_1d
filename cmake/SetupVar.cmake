@@ -14,7 +14,7 @@ endif()
 
 SET( CMAKE_CXX_FLAGS_RELEASE "-O3")
 
-SET( CMAKE_CXX_FLAGS_DEBUG "-O -g -DDEBUG_BUILD")
+SET( CMAKE_CXX_FLAGS_DEBUG " -g -DDEBUG_BUILD")
 
 add_definitions("-std=c++11 -Wno-deprecated -Werror=return-type")
 

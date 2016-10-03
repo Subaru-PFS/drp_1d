@@ -137,7 +137,7 @@ Bool CMethodChisquare2Solve::Solve( CDataStore& resultStore, const CSpectrum& sp
             CSpectrumFluxAxis& tfluxAxisPtr = _tpl.GetFluxAxis();
             tfluxAxisPtr = tplfluxAxis;
 
-            opt_extinction = 1; //enable extinction for continuum fitting only
+            //opt_extinction = 1; //enable extinction for continuum fitting only
 
             scopeStr = "chisquare_continuum";
         }else if(_spctype == CChisquare2SolveResult::nType_raw){

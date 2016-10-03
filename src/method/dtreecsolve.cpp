@@ -354,7 +354,7 @@ Bool COperatorDTreeCSolve::GetCombinedRedshift(CDataStore& store, std::string sc
     chi2cCoeff = 2e-3;
     //*/
     // coeffs for VUDS F34
-    chi2cCoeff = 5e-1;
+    chi2cCoeff = 2e-2;
     //*/
 
     for( Int32 i=0; i<zcomb.size(); i++ )
