@@ -185,7 +185,7 @@ class AProcessGui(QtWidgets.QWidget):
         self.cbMethod.addItem("linemodel")
         self.cbMethod.addItem("chisquare2solve")
         #self.cbMethod.addItem("amazed0_2")
-        #self.cbMethod.addItem("amazed0_3")
+        self.cbMethod.addItem("amazed0_3")
         self.cbMethod.currentIndexChanged.connect(self.cb_method_selectionchange)
         layout.addWidget(self.cbMethod, layoutRow, 1, 1, 1)  
         

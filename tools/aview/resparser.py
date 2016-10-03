@@ -465,8 +465,8 @@ class ResParser(object):
         print("{}: method found in config is: {}".format(tag, method))
         path = os.path.join(self.respath, spcnametag)
 
-        #returning a redshifts list + a displayParamsBundle[nOperators]{'dictionnary'}
-
+        enableVerbose = 0
+            
         redshifts = []
         displayParamsBundle = []
         
@@ -533,7 +533,8 @@ class ResParser(object):
                 for idxExtrema in range(len(redshifts)):
                     print("C{} = {}".format(idxExtrema, redshifts[idxExtrema]))
                     for iLM in range(len(chi_linemodel.amazed_extrema)):
-                        print("zLM_cand = {}".format(chi_linemodel.amazed_extrema[iLM]))
+                        if enableVerbose:
+                            print("zLM_cand = {}".format(chi_linemodel.amazed_extrema[iLM]))
                         if np.abs(chi_linemodel.amazed_extrema[iLM] - redshifts[idxExtrema])<thres:
                             idx_model = iLM
                             print("C{}: idxModel = {}".format(idxExtrema, idx_model))

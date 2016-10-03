@@ -34,6 +34,7 @@ const std::string CMethodChisquare2Solve::GetDescription()
     desc.append("\tparam: chisquare2solve.spectrum.component = {""raw"", ""nocontinuum"", ""continuum"", ""all""}\n");
     desc.append("\tparam: chisquare2solve.overlapThreshold = <float value>\n");
     desc.append("\tparam: chisquare.interpolation = {""precomputedfinegrid"", ""lin""}\n");
+    desc.append("\tparam: chisquare.extinction = {""yes"", ""no""}\n");
 
 
     return desc;
@@ -43,7 +44,7 @@ const std::string CMethodChisquare2Solve::GetDescription()
 
 std::shared_ptr<const CChisquare2SolveResult> CMethodChisquare2Solve::Compute(  CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
                                                         const CTemplateCatalog& tplCatalog, const TStringList& tplCategoryList,
-                                                        const TFloat64Range& lambdaRange, const TFloat64List& redshifts, Float64 overlapThreshold, std::string spcComponent, std::string opt_interp)
+                                                        const TFloat64Range& lambdaRange, const TFloat64List& redshifts, Float64 overlapThreshold, std::string spcComponent, std::string opt_interp, std::string opt_extinction)
 {
     Bool storeResult = false;
 
@@ -83,7 +84,7 @@ std::shared_ptr<const CChisquare2SolveResult> CMethodChisquare2Solve::Compute(  
 
             const CTemplate& tplWithoutCont = tplCatalog.GetTemplateWithoutContinuum( category, j );
 
-            Solve( resultStore, spc, spcWithoutCont, tpl, tplWithoutCont, lambdaRange, redshifts, overlapThreshold, _type, opt_interp);
+            Solve( resultStore, spc, spcWithoutCont, tpl, tplWithoutCont, lambdaRange, redshifts, overlapThreshold, _type, opt_interp, opt_extinction);
 
             storeResult = true;
         }
@@ -101,7 +102,7 @@ std::shared_ptr<const CChisquare2SolveResult> CMethodChisquare2Solve::Compute(  
 }
 
 Bool CMethodChisquare2Solve::Solve( CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont, const CTemplate& tpl, const CTemplate& tplWithoutCont,
-                               const TFloat64Range& lambdaRange, const TFloat64List& redshifts, Float64 overlapThreshold, Int32 spctype, std::string opt_interp )
+                               const TFloat64Range& lambdaRange, const TFloat64List& redshifts, Float64 overlapThreshold, Int32 spctype, std::string opt_interp, std::string opt_extinction )
 {
     CSpectrum _spc;
     CTemplate _tpl;
@@ -110,7 +111,12 @@ Bool CMethodChisquare2Solve::Solve( CDataStore& resultStore, const CSpectrum& sp
     Int32 _spctype = spctype;
     Int32 _spctypetab[3] = {CChisquare2SolveResult::nType_raw, CChisquare2SolveResult::nType_noContinuum, CChisquare2SolveResult::nType_continuumOnly};
 
-    Int32 opt_extinction = 0;
+
+    Int32 enable_extinction = 0; //TODO: extinction should be deactivated for nocontinuum anyway ? TBD
+    if(opt_extinction=="yes")
+    {
+        enable_extinction = 1;
+    }
 
     //case: nType_all
     if(spctype == CChisquare2SolveResult::nType_all){
@@ -137,7 +143,6 @@ Bool CMethodChisquare2Solve::Solve( CDataStore& resultStore, const CSpectrum& sp
             CSpectrumFluxAxis& tfluxAxisPtr = _tpl.GetFluxAxis();
             tfluxAxisPtr = tplfluxAxis;
 
-            //opt_extinction = 1; //enable extinction for continuum fitting only
 
             scopeStr = "chisquare_continuum";
         }else if(_spctype == CChisquare2SolveResult::nType_raw){
@@ -162,7 +167,7 @@ Bool CMethodChisquare2Solve::Solve( CDataStore& resultStore, const CSpectrum& sp
         // Compute merit function
         COperatorChiSquare2 chiSquare;
         //CRef<CChisquareResult>  chisquareResult = (CChisquareResult*)chiSquare.ExportChi2versusAZ( _spc, _tpl, lambdaRange, redshifts, overlapThreshold );
-        auto  chisquareResult = std::dynamic_pointer_cast<CChisquareResult>( chiSquare.Compute( _spc, _tpl, lambdaRange, redshifts, overlapThreshold, opt_interp, opt_extinction ) );
+        auto  chisquareResult = std::dynamic_pointer_cast<CChisquareResult>( chiSquare.Compute( _spc, _tpl, lambdaRange, redshifts, overlapThreshold, opt_interp, enable_extinction ) );
 
         if( !chisquareResult )
         {

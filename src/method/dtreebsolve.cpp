@@ -72,6 +72,7 @@ const std::string COperatorDTreeBSolve::GetDescription()
     desc.append("\tparam: chisquare.overlapthreshold = <float value>\n");
     desc.append("\tparam: chisquare.redshiftsupport = {""full"", ""extremaextended""}\n");
     desc.append("\tparam: chisquare.interpolation = {""precomputedfinegrid"", ""lin""}\n");
+    desc.append("\tparam: chisquare.extinction = {""no"", ""yes""}\n");
 
     return desc;
 
@@ -213,6 +214,8 @@ Bool COperatorDTreeBSolve::Solve(CDataStore &dataStore, const CSpectrum &spc, co
 //    }
     std::string opt_interp;
     dataStore.GetScopedParam( "chisquare.interpolation", opt_interp, "precomputedfinegrid" );
+    std::string opt_extinction;
+    dataStore.GetScopedParam( "chisquare.extinction", opt_extinction, "no" );
 
     TFloat64List redshiftsChi2;
     if(opt_redshiftsupport == "full"){
@@ -227,7 +230,7 @@ Bool COperatorDTreeBSolve::Solve(CDataStore &dataStore, const CSpectrum &spc, co
     CMethodChisquare2Solve chiSolve;
     auto chisolveResultnc = chiSolve.Compute( dataStore, spc, spcWithoutCont,
                                                                         tplCatalog, tplCategoryList,
-                                                                        lambdaRange, redshiftsChi2, overlapThreshold, spcComponent, opt_interp);
+                                                                        lambdaRange, redshiftsChi2, overlapThreshold, spcComponent, opt_interp, opt_extinction);
     if( chisolveResultnc ) {
         dataStore.StoreScopedGlobalResult( "redshiftresult", chisolveResultnc );
     }

@@ -268,11 +268,13 @@ Bool CProcessFlow::Chisquare( CProcessFlowContext& ctx, const std::string& Categ
     ctx.GetDataStore().GetScopedParam( "chisquare2solve.spectrum.component", opt_spcComponent, "raw" );
     std::string opt_interp;
     ctx.GetDataStore().GetScopedParam( "chisquare2solve.interpolation", opt_interp, "precomputedfinegrid" );
+    std::string opt_extinction;
+    ctx.GetDataStore().GetScopedParam( "chisquare2solve.extinction", opt_extinction, "yes" );
 
     CMethodChisquare2Solve solve;
     std::shared_ptr< const CChisquare2SolveResult> solveResult = solve.Compute( ctx.GetDataStore(), ctx.GetSpectrum(), ctx.GetSpectrumWithoutContinuum(),
                                                                         ctx.GetTemplateCatalog(), filteredTemplateCategoryList,
-                                                                        spcLambdaRange, redshifts, overlapThreshold, opt_spcComponent, opt_interp);
+                                                                        spcLambdaRange, redshifts, overlapThreshold, opt_spcComponent, opt_interp, opt_extinction);
 
     if( solveResult ) {
         ctx.GetDataStore().StoreScopedGlobalResult( "redshiftresult", solveResult );
