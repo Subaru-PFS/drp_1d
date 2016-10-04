@@ -15,6 +15,7 @@ import time
 import threading
 import shutil
 import argparse
+from sys import platform
 
 
 #import mpl only to force Qt5Agg
@@ -27,9 +28,18 @@ import resparser
 import aviewgui
 
 
+
 #default settings
 #global_setting_default_amazed_bin_path = "/home/aschmitt/gitlab/amazed/bin/amazed-0.0.0"
-global_setting_default_amazed_bin_path = "amazed-0.2.5"
+if platform == "linux" or platform == "linux2":
+    # linux
+    global_setting_default_amazed_bin_path = "amazed-0.2.5"
+elif platform == "darwin":
+    # OS X
+    global_setting_default_amazed_bin_path = "/Applications/amazed-0.2.5.app/Contents/MacOS/amazed-0.2.5"
+elif platform == "win32":
+    # Windows...
+    print("ERROR: this platform is not supported ({})".format(platform))
 global_setting_default_workspace= "/tmp/amazed"
 
 class ObjectAProcessGui(object):
