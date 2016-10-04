@@ -405,8 +405,9 @@ class Spectrum(object):
         
         return a
         
-    def plot(self, saveFullDirPath="", lstyle="r-+"):
-        pp.ion()
+    def plot(self, saveFullDirPath="", lstyle="r-+", disableEventHandling=False):
+        if disableEventHandling:
+            pp.ion()
         self.fig = pp.figure("Spectrum")
         #self.fig = sns.pyplot.figure(1)
         self.canvas = self.fig.canvas
@@ -430,10 +431,10 @@ class Spectrum(object):
             saveFullPath = os.path.join(saveFullDirPath, self.name + str(".png"))
             pp.savefig(saveFullPath) # sauvegarde du fichier ExempleTrace.png
         else:
-            if 1:
+            if not disableEventHandling:
                 self.startEventHandling()
             else:
-                pp.show(1)
+                self.fig.show(1)
             
         print('\n')  
         

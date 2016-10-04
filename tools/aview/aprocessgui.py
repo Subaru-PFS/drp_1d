@@ -572,7 +572,7 @@ class AProcessGui(QtWidgets.QWidget):
         spath = os.path.join(_spcDirPath, _spcName)
         print("Showing Spectrum : {}".format(spath))
         spc = spectrum.Spectrum(spath)
-        spc.plot(lstyle="b-")
+        spc.plot(lstyle="b-", disableEventHandling=True)
     
     def ck_SpcFits(self, state):        
         if state == QtCore.Qt.Checked:                
@@ -652,7 +652,7 @@ class AProcessGui(QtWidgets.QWidget):
         spath = os.path.join(_spcDirPath, _noiseName)
         print("Showing Noise Spectrum : {}".format(spath))
         spc = spectrum.Spectrum(spath)
-        spc.plot(lstyle="k-")
+        spc.plot(lstyle="k-", disableEventHandling=True)
         
    
     def bt_setSpcdir(self):
