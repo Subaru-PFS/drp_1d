@@ -259,8 +259,8 @@ class AViewGui(QtWidgets.QWidget):
             self.enableCtrls(False)
             
         #Set spc filter
-        self.leSpcFilter.setText("Not implement yet...")
-        self.leSpcFilter.setEnabled(False)
+        self.leSpcFilter.setText("")
+        #self.leSpcFilter.setEnabled(False)
             
         #Set zdiff Threshold
         self.leDiffThres.setText("")
@@ -314,7 +314,8 @@ class AViewGui(QtWidgets.QWidget):
                 processAmazedOutputStats.ProcessDiff( _refzfilepath, calcFile, diffPath , reftype='no')
                 
         
-        _spcName = str(self.leSpcFilter.text()) #todo: filter the results by name tag
+        _spcName = str(self.leSpcFilter.text())
+        print("INFO: using spcName filter = {}".format(_spcName))
         _diffthres = str(self.leDiffThres.text())
         if _diffthres=="":
             _diffthres = -1
@@ -334,7 +335,7 @@ class AViewGui(QtWidgets.QWidget):
             print("ERROR with zref max value, please check your input ! (using zrefmax=20)")
             _zrefmax = 20.0
             
-        self.resList = resultstat.ResultList(_resDir, diffthreshold=float(_diffthres), opt='brief',  zrefmin=_zrefmin, zrefmax=_zrefmax) 
+        self.resList = resultstat.ResultList(_resDir, spcName=_spcName, diffthreshold=float(_diffthres), opt='brief',  zrefmin=_zrefmin, zrefmax=_zrefmax) 
         self.leResultsN.setText(str(self.resList.n))
         #init result index to 1 (first index)
         self.leResultIndex.setText(str(1))
