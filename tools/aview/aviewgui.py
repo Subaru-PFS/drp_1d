@@ -269,12 +269,15 @@ class AViewGui(QtWidgets.QWidget):
         #auto load from inputs args
         if not init_resdir=="" and not init_refpath=="":
             self.leResDir.setText(init_resdir) 
-            self.bt_loadresults(init_refpath)
+            self.loadresults(init_refpath)
             
         wdg.setStyleSheet("*[coloredcell=\"true\"] {background-color:rgb(215,215,215);}")
         self.show()
  
-    def bt_loadresults(self, init_refPath=""):
+    def bt_loadresults(self):
+        self.loadresults()
+
+    def loadresults(self, init_refPath=""):
         self.setCurrentDir()
     
         _resDir = str(self.leResDir.text())
@@ -287,18 +290,29 @@ class AViewGui(QtWidgets.QWidget):
             calcFile = os.path.join(_resDir, "redshift.csv") 
             
             if not init_refPath=="":
+                print("-using init_refPath={}".format(init_refPath))
                 _refzfilepath = init_refPath
             else:
+                print("-browse path: select ref file path...".format())
                 _refzfilepathDefault = self.settings.value("refzfilepath", defaultValue = "", type=str)
                 _refzfilepath = str(QtWidgets.QFileDialog.getOpenFileName(self, "Select Reference Redshift list file", _refzfilepathDefault))
+                
             if os.path.exists(_refzfilepath) :
+                print("Selected zref file found... processing with pfs type !")
+                
                 if os.path.isdir(statsPath)==False:
                     os.mkdir( statsPath, 0o755 );
                 self.settings.setValue("refzfilepath", _refzfilepath)
                 processAmazedOutputStats.setPFSRefFileType()
                 processAmazedOutputStats.ProcessDiff( _refzfilepath, calcFile, diffPath , reftype='pfs')
             else:
-                print("Selected zref file does not exist...")
+                print("Selected zref file does not exist... processing without refFile !")
+                
+                if os.path.isdir(statsPath)==False:
+                    os.mkdir( statsPath, 0o755 );
+                processAmazedOutputStats.setNoRefFileType()
+                processAmazedOutputStats.ProcessDiff( _refzfilepath, calcFile, diffPath , reftype='no')
+                
         
         _spcName = str(self.leSpcFilter.text()) #todo: filter the results by name tag
         _diffthres = str(self.leDiffThres.text())
