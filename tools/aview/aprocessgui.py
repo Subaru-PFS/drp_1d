@@ -293,10 +293,11 @@ class AProcessGui(QtWidgets.QWidget):
         layout.addWidget(self.lblAmazedBinPath, layoutRow, 0, 1, 1)
         self.leAmazedBinPath = QtWidgets.QLineEdit(wdg)
         self.leAmazedBinPath.setFixedWidth(500) 
+        self.leAmazedBinPath.editingFinished.connect(self.le_amazedbinpath_handleEditingFinished)
         layout.addWidget(self.leAmazedBinPath, layoutRow, 1, 1, 10)
         self.btnSetAmazedBinPath = QtWidgets.QPushButton(' Browse ', wdg)
         self.btnSetAmazedBinPath.setToolTip('Set AMAZED bin path (ex: amazed-0.2.5 or ~/gitlab/amazed/amazed-0.0.0) for linux users')
-        self.btnSetAmazedBinPath.clicked.connect(self.bt_setAmazedBinPath)        
+        self.btnSetAmazedBinPath.clicked.connect(self.bt_setAmazedBinPath) 
         layout.addWidget(self.btnSetAmazedBinPath, layoutRow, 2, 1, 1)
         
         #Add the processing settings buttons : amazed bin selection 
@@ -911,6 +912,10 @@ class AProcessGui(QtWidgets.QWidget):
     
     def bt_setAmazedBinPath(self, newBinPath=None):
         self.setAmazedBinPath()
+        
+    def le_amazedbinpath_handleEditingFinished(self):
+        newBinPath = self.leAmazedBinPath.text()
+        self.setAmazedBinPath(newBinPath)
         
     def setAmazedBinPath(self, newBinPath=None):
         tag = "bt_setAmazedBinPath"
