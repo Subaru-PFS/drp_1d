@@ -26,6 +26,7 @@ import aview
 import resultstat
 import resparser
 import aviewgui
+import spectrum
 
 
 
@@ -144,6 +145,11 @@ class AProcessGui(QtWidgets.QWidget):
         self.btnBrowseSpcFitsPrevious.setToolTip('Back to the previous file path...')
         self.btnBrowseSpcFitsPrevious.clicked.connect(self.bt_setSpcFitsPrevious)
         layout.addWidget(self.btnBrowseSpcFitsPrevious, layoutRow, 3, 1, 1) 
+        
+        self.btnShowSpcFits = QtWidgets.QPushButton(' show ', wdg)
+        self.btnShowSpcFits.setToolTip('show the spectrum...')
+        self.btnShowSpcFits.clicked.connect(self.bt_showSpcFits)
+        layout.addWidget(self.btnShowSpcFits, layoutRow, 4, 1, 1) 
                         
         #Add the noise fits setup ctrls
         layoutRow += 1
@@ -165,6 +171,10 @@ class AProcessGui(QtWidgets.QWidget):
         self.btnBrowseNoiseFitsPrevious.clicked.connect(self.bt_setNoiseFitsPrevious)
         layout.addWidget(self.btnBrowseNoiseFitsPrevious, layoutRow, 3, 1, 1) 
         
+        self.btnShowNoiseFits = QtWidgets.QPushButton(' show ', wdg)
+        self.btnShowNoiseFits.setToolTip('show the noise spectrum...')
+        self.btnShowNoiseFits.clicked.connect(self.bt_showNoiseFits)
+        layout.addWidget(self.btnShowNoiseFits, layoutRow, 4, 1, 1) 
 
         #Add the configuration separator
         layoutRow += 1        
@@ -221,11 +231,12 @@ class AProcessGui(QtWidgets.QWidget):
 
         #Add the lince catalog convert to air toggle
         layoutRow += 1
-        self.lblConvertVac2Air = QtWidgets.QLabel('Convert VACUUM->AIR', wdg)
+        self.lblConvertVac2Air = QtWidgets.QLabel('Convert catalog: VACUUM->AIR', wdg)
         layout.addWidget(self.lblConvertVac2Air, layoutRow, 0, 1, 1)
         
-        self.ckConvertVac2Air = QtWidgets.QCheckBox('Enable conversion', wdg)
-        self.ckConvertVac2Air.setFixedWidth(150) 
+        self.ckConvertVac2Air = QtWidgets.QCheckBox('Enable catalog wavelengths conversion', wdg)
+        self.ckConvertVac2Air.setFixedWidth(350) 
+        self.ckConvertVac2Air.setToolTip('Checked = AIR wavelengths, Un-checked = VACUUM wavelengths')
         self.ckConvertVac2Air.stateChanged.connect(self.ck_convertVac2Air)
         layout.addWidget(self.ckConvertVac2Air, layoutRow, 1, 1, 10)
         
@@ -555,6 +566,13 @@ class AProcessGui(QtWidgets.QWidget):
         self.settings.setValue("SpcFitsPath", _SpcFitsPathPrevious);
         self.enableCtrls(True) 
         
+    def bt_showSpcFits(self):
+        _spcDirPath = str(self.leSpcdir.text())
+        _spcName = str(self.leSpcFits.text())
+        spath = os.path.join(_spcDirPath, _spcName)
+        print("Showing Spectrum : {}".format(spath))
+        spc = spectrum.Spectrum(spath)
+        spc.plot(lstyle="b-")
     
     def ck_SpcFits(self, state):        
         if state == QtCore.Qt.Checked:                
@@ -627,6 +645,14 @@ class AProcessGui(QtWidgets.QWidget):
         self.leNoiseFits.setText(_NoiseFitsPathPrevious)
         self.settings.setValue("NoiseFitsPath", _NoiseFitsPathPrevious);
         self.enableCtrls(True) 
+        
+    def bt_showNoiseFits(self):
+        _spcDirPath = str(self.leSpcdir.text())
+        _noiseName = str(self.leNoiseFits.text())
+        spath = os.path.join(_spcDirPath, _noiseName)
+        print("Showing Noise Spectrum : {}".format(spath))
+        spc = spectrum.Spectrum(spath)
+        spc.plot(lstyle="k-")
         
    
     def bt_setSpcdir(self):
