@@ -8,7 +8,6 @@ Created on Sat Jul 25 11:44:49 2015
 import os
 import sys
 from astropy.io import fits
-import pyfits
 import argparse
 import random
 import math
@@ -1349,13 +1348,13 @@ class Spectrum(object):
         #print("col1={}".format(a1))
         a2 = np.copy(self.yvect)
         #print("col2={}".format(a2))
-        col1 = pyfits.Column(name='wave', format='E', array=a1)
-        col2 = pyfits.Column(name='flux', format='E', array=a2)
-        cols_spc = pyfits.ColDefs([col1, col2])
- 
+        col1 = fits.Column(name='wave', format='E', array=a1)
+        col2 = fits.Column(name='flux', format='E', array=a2)
+        cols_spc = fits.ColDefs([col1, col2])
+
         #INFO: This shortcut will automatically create a minimal primary HDU with no data and prepend it to the table HDU to create a valid FITS file.
         # from https://pythonhosted.org/pyfits/ 
-        hdu_new = pyfits.BinTableHDU.from_columns(cols_spc)
+        hdu_new = fits.BinTableHDU.from_columns(cols_spc)
         hdu_new.writeto(destfileout)
         
         if exportNoiseSpectrum:
@@ -1366,9 +1365,9 @@ class Spectrum(object):
                 print("Spectrum deleting existing fits: {}".format(destfileoutnoise))
                 os.remove(destfileoutnoise)   
             
-            colnoise = pyfits.Column(name='noise', format='E', array=anoise)
-            cols_noise = pyfits.ColDefs([col1, colnoise])
-            hdu_noise = pyfits.BinTableHDU.from_columns(cols_noise)
+            colnoise = fits.Column(name='noise', format='E', array=anoise)
+            cols_noise = fits.ColDefs([col1, colnoise])
+            hdu_noise = fits.BinTableHDU.from_columns(cols_noise)
             hdu_noise.writeto(destfileoutnoise)
             
         print("")
