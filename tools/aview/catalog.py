@@ -185,16 +185,16 @@ class Catalog(object):
             #EUCLID
             obs_lambda_min = 12500.0
             obs_lambda_max = 18500.0
-        if 1:        
+        if 0:        
             #PFS
             obs_lambda_min = 3800.0
             obs_lambda_max = 12600.0
-        if 0:        
+        if 1:        
             #VVDS
-            obs_lambda_min = 3600.0
+            obs_lambda_min = 5800.0
             obs_lambda_max = 9400.0
 
-        filter_type = "A"
+        filter_type = "E"
         filter_force = -1
         ctlg_rest = self.getShiftedCatalog(0.0, filter_type, filter_force)       
         nlines = len(ctlg_rest['lambda']) 
@@ -418,9 +418,9 @@ def StartFromCommandLine( argv ) :
         #print(c.getShiftedCatalog(1.0, "E"))
         
         #c.plot()
-        #c.plotInZplane()  
+        c.plotInZplane()  
         
-        print("the REDMINE (copy/paste) generated table is:\n{}".format(c.getRedmineTableString()))
+        #print("the REDMINE (copy/paste) generated table is:\n{}".format(c.getRedmineTableString()))
         #print("the LATEX (copy/paste) generated table is:\n{}".format(c.getLatexTableString()))
         
         #lmResPath = "/home/aschmitt/code/python/linemodel_tplshape/amazed/output/spectrum_tpl_NEW_Im_extended.dat_TF/linemodelsolve.linemodel_fit_extrema_0.csv"

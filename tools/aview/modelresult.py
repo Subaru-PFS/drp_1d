@@ -423,8 +423,8 @@ def StartFromCommandLine( argv ) :
         m.getAmplitudeMeanNhighest() 
         m.getNLinesStrong()
         m.getStrongLinesCumulSNR()
-        #m.plot(plotType='amplitudes')
-        m.plot(plotType='snr')
+        m.plot(plotType='amplitudes')
+        #m.plot(plotType='snr')
     else :
         print("Error: invalid argument count")
         exit()
