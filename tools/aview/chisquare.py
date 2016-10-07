@@ -265,13 +265,15 @@ class ResultChisquare(object):
         fig = pp.figure("chi2")
         titleStr = self.name
         if self.n < thresShortMeritCurve: #enable marker when there are only few samples
-            marker='+'
+            marker='o'
+            linestyle=''
         else:
             marker=""
+            linestyle='-'
         if not self.forcePlotXIndex:
-            pp.plot(self.xvect, self.yvect, marker=marker)
+            pp.plot(self.xvect, self.yvect, linestyle=linestyle, marker=marker)
         else:
-            pp.plot(self.yvect, marker=marker)
+            pp.plot(self.yvect, linestyle=linestyle, marker=marker)
 
         if showContinuumEstimate:
             chi1cont = self.getSplineContinuum()

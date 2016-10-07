@@ -202,7 +202,19 @@ class Reference(object):
                 if self.iRefLogHalpha!=-1:
                     _loghalpha = str(data[self.iRefLogHalpha])
                 self.loghalphas.append(_loghalpha)
-                
+              
+    def getSFR(self, idList):
+        sfrList = []
+        for _idTarget in idList:
+            found=False
+            for k, _idThis in enumerate(self.ids):
+                if _idThis in _idTarget:
+                    sfrList.append(self.sfrs[k])
+                    found = True
+            if found == False:
+                print("COuld not find id = {}".format(_idTarget))
+                stop
+        return sfrList
     
     def plot(self):
         plt.figure()
