@@ -745,11 +745,13 @@ class ResParser(object):
             print("WARNING: unable to find spectrumlistline for the tag: {}".format(spcnametag))
             strVal = ""
         if len(spectrumlistline) == 1:
+            print("WARNING: only 1 item in the spectrumlist line: {}".format())
             strVal = ""
         if len(spectrumlistline) == 2:
             noisetag = spectrumlistline[1]
             noisetag_noext = self.getWithoutExt(noisetag)
             spcPath = self.getConfigVal('spectrumdir')
+            print("using spcdir = {}".format(spcPath))
             if os.path.exists(spcPath):
                 for file in sorted(os.listdir(spcPath)):
                     #print("file: {}".format(file))
@@ -757,6 +759,8 @@ class ResParser(object):
                     if noisetag_noext == self.getWithoutExt(file):
                         strVal = os.path.join(spcPath, file)
                         break
+            else:
+                print("ERROR: spcdir doesn't exist !".format())
         
         return strVal
                 
