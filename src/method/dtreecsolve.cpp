@@ -336,7 +336,11 @@ Bool COperatorDTreeCSolve::GetCombinedRedshift(CDataStore& store, std::string sc
             }
         }
     }else{//option 2
-        chi2continuum = chi2continuum_calcGrid;
+        for(Int32 k=0; k<chi2continuum_calcGrid.size(); k++)
+        {
+            Float64 chi2cSigmaCoeff = 1.0;//0.12;
+            chi2continuum.push_back(chi2continuum_calcGrid[k]*chi2cSigmaCoeff);
+        }
     }
 
 
@@ -348,22 +352,10 @@ Bool COperatorDTreeCSolve::GetCombinedRedshift(CDataStore& store, std::string sc
     resultPriorContinuum->ChiSquare.resize( zcomb.size() );
     resultPriorContinuum->Redshifts.resize( zcomb.size() );
     resultPriorContinuum->Overlap.resize( zcomb.size() );
-
-    //Set the coefficients
-    Float64 chi2cCoeff = 1.0;
-    /*
-    // coeffs for Keck
-    lmCoeff = 1.0;
-    chi2cCoeff = 2e-3;
-    //*/
-    // coeffs for VUDS F34
-    chi2cCoeff = 2e-2;
-    //*/
-
     for( Int32 i=0; i<zcomb.size(); i++ )
     {
         Float64 post = DBL_MAX;
-        post = chi2cCoeff*chi2continuum[i];
+        post = chi2continuum[i];
 
         resultPriorContinuum->ChiSquare[i] = post;
         resultPriorContinuum->Redshifts[i] = zcomb[i];
@@ -371,6 +363,50 @@ Bool COperatorDTreeCSolve::GetCombinedRedshift(CDataStore& store, std::string sc
     }
     if( resultPriorContinuum ) {
         store.StoreScopedGlobalResult( "priorContinuum", resultPriorContinuum );
+    }
+
+    //Prepare combination coefficients
+    Int32 combineOption = 1; //1 = bayes, 0 = linear
+
+    //Set the coefficients
+    Float64 lmCoeff = 1.0;
+    Float64 chi2cCoeff = 1.0;
+    if(combineOption==1) //bayesian combination
+    {
+
+        Log.LogInfo( "dtreeCsolve : Bayesian combination");
+        lmCoeff = 1.0;
+        chi2cCoeff = 1e-24;
+
+        //logcoeff
+        lmCoeff = -2.0*log(lmCoeff);
+        chi2cCoeff = -2.0*log(chi2cCoeff);
+
+        //override the log coeff: see it as a penality: +> values penalize more
+        lmCoeff = 0.0;//-6.85e3;
+        Float64 dtd = results->dTransposeDNocontinuum;
+        chi2cCoeff = 3e-6*dtd*dtd-0.23*dtd;//poly_1
+
+        //chi2cCoeff = -3.9e3;//-1.14e3;
+        chi2cCoeff = 1.0e6; //Coeff NUL
+        chi2cCoeff = -1e3;
+
+
+        Log.LogInfo( "dtreeCsolve : lmCoeff=%f", lmCoeff);
+        Log.LogInfo( "dtreeCsolve : chi2cCoeff=%f", chi2cCoeff);
+    }
+    else //linear combination
+    {
+        Log.LogInfo( "dtreeCsolve : linear combination");
+        /*
+        // coeffs for Keck
+        lmCoeff = 1.0;
+        chi2cCoeff = 2e-3;
+        //*/
+        // coeffs for VUDS F34
+        lmCoeff = 1.0;
+        chi2cCoeff = 0.0;//2e-2;
+        //*/
     }
 
     //*
@@ -385,6 +421,7 @@ Bool COperatorDTreeCSolve::GetCombinedRedshift(CDataStore& store, std::string sc
     {
         Float64 coeff =10.0;
         Float64 post = -coeff*results->StrongELSNR[idxLMResultsExtrema[i]];
+        post = 0.0; //deactivate this prior
 
         resultPriorSELSP->ChiSquare[i] = post;
         resultPriorSELSP->Redshifts[i] = zcomb[i];
@@ -392,6 +429,32 @@ Bool COperatorDTreeCSolve::GetCombinedRedshift(CDataStore& store, std::string sc
     }
     if( resultPriorSELSP ) {
         store.StoreScopedGlobalResult( "priorStrongELSnrP", resultPriorSELSP );
+    }
+
+
+    //Rescale coefficient
+    Float64 minChi2WithCoeffs = DBL_MAX; //overall chi2 minimum for rescaling
+    if(combineOption==1) //bayesian combination
+    {
+        std::string methodForMin = "";
+        //find the rescaling value
+        for( Int32 i=0; i<zcomb.size(); i++ )
+        {
+            Float64 lmVal = chi2lm[i] + resultPriorSELSP->ChiSquare[i] + lmCoeff;
+            if(lmVal < minChi2WithCoeffs)
+            {
+                minChi2WithCoeffs = lmVal;
+                methodForMin = "lm";
+            }
+            Float64 cVal = chi2continuum[i]+chi2cCoeff;
+            if( cVal < minChi2WithCoeffs)
+            {
+                minChi2WithCoeffs = cVal;
+                methodForMin = "chi2c";
+            }
+        }
+        Log.LogInfo( "dtreeCsolve : minChi2WithCoeffs=%f", minChi2WithCoeffs);
+        Log.LogInfo( "dtreeCsolve : methodForMin=%s", methodForMin.c_str());
     }
 
     //*
@@ -404,7 +467,24 @@ Bool COperatorDTreeCSolve::GetCombinedRedshift(CDataStore& store, std::string sc
 
     for( Int32 i=0; i<zcomb.size(); i++ )
     {
-        Float64 post = chi2lm[i] + resultPriorSELSP->ChiSquare[i] + resultPriorContinuum->ChiSquare[i];
+        Float64 post = DBL_MAX;
+        if(combineOption==1) //bayesian combination
+        {
+            Float64 valf = 1.0;
+            valf = chi2lm[i] + resultPriorSELSP->ChiSquare[i] - minChi2WithCoeffs + lmCoeff;
+            Float64 lmLikelihood = exp(-valf/2.0);
+
+            valf = chi2continuum[i]+chi2cCoeff-minChi2WithCoeffs;
+            Float64 chi2continuumLikelihood = exp(-valf/2.0);
+
+            post = -log((lmLikelihood + chi2continuumLikelihood));
+            //post = -log(lmLikelihood);
+            //post = valf;
+        }
+        else //linear combination
+        {
+            post = lmCoeff*(chi2lm[i] + resultPriorSELSP->ChiSquare[i]) + chi2cCoeff*resultPriorContinuum->ChiSquare[i];
+        }
 
         resultCombined->ChiSquare[i] = post;
         resultCombined->Redshifts[i] = zcomb[i];
