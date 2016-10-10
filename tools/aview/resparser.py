@@ -59,6 +59,8 @@ class ResParser(object):
             self.linemodelrelpath = "linemodeltplshapesolve.linemodel.csv" 
         if methodParam=="decisionaltreeb" or methodParam=="amazed0_2":
             self.linemodelrelpath = "dtreeBsolve.linemodel.csv" 
+        if methodParam=="amazed0_3":
+            self.linemodelrelpath = "dtreeCsolve.linemodel.csv" 
                 
         self.displaysOutputPath = os.path.join(self.respath,"displays")
            
@@ -527,6 +529,7 @@ class ResParser(object):
                 tplpaths = []
                 forceTplAmplitudes = []
                 forceTplDoNotRedShifts = []
+                meritsExtrema = []
                 
                 idx_model = -1
                 thres = 5e-4
@@ -547,13 +550,15 @@ class ResParser(object):
                         tplpaths.append(tplpath)
                         forceTplAmplitudes.append(1.0)
                         forceTplDoNotRedShifts.append(1)
-                        
+                        meritsExtrema.append(chi_linemodel.getMeritExtremum(idx_model))
+                
                 #create the outputs
                 d = {}
                 d['operator'] = 'linemodel'
                 d['tplPaths'] = tplpaths
                 d['forceTplAmplitudes'] = forceTplAmplitudes
                 d['forceTplDoNotRedShifts'] = forceTplDoNotRedShifts
+                d['merits'] = meritsExtrema
                 displayParamsBundle.append(d)
                     
             #chi2nc results
@@ -576,6 +581,7 @@ class ResParser(object):
                 tplpaths = []
                 forceTplAmplitudes = []
                 forceTplDoNotRedShifts = []
+                merits = []
                 
                 for j, b in enumerate(redshifts):
                     k = indexesZ[j]
@@ -587,6 +593,9 @@ class ResParser(object):
                     forceTplAmplitudes.append(ampsList[k])
                     forceTplDoNotRedShift = 0
                     forceTplDoNotRedShifts.append(forceTplDoNotRedShift)
+                    merit = meritList[k]
+                    merits.append(merit)
+                    
                     
                 #create the outputs
                 d = {}
@@ -594,6 +603,7 @@ class ResParser(object):
                 d['tplPaths'] = tplpaths
                 d['forceTplAmplitudes'] = forceTplAmplitudes
                 d['forceTplDoNotRedShifts'] = forceTplDoNotRedShifts
+                d['merits'] = merits
                 displayParamsBundle.append(d)
                 
         elif method == "chisquaresolve" or method == "chisquare2solve":

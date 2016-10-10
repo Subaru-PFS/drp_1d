@@ -11,6 +11,7 @@ import optparse
 import numpy as np
 import math
 import time
+import traceback
 
 import matplotlib as mpl
 mpl.use('Qt5Agg')
@@ -1152,6 +1153,130 @@ class ResultList(object):
                     print("this solution fails ilm={}, ic={}  : z={}, zref={}".format(ilinemodel, icontinuum, zbest, self.list[indice].zref) )
                     
         return _map
+        
+    
+    def getBayesCombinationCoeff(self, indice=0, enablePlot=0, chi2dontloadThres=-1, zthres=0.01):       
+        spcName = self.list[indice].name
+        print("spcname = {}".format(spcName))
+        respa = rp.ResParser(self.dir)
+        
+
+        candid_zvalCandidates, candid_displayParamsBundle = respa.getAutoCandidatesList(spcName)
+        lm_candid_displayParamsBundleIdx = 0
+        chi2_candid_displayParamsBundleIdx = 1
+
+        #get dtranspose
+        filepaths, filenames = respa.getAutoChi2FullPath(spcName)
+        filepath = filepaths[1] #1=linemodel
+        print("Found chi2 filepath: {}".format(filepath))
+        if not os.path.exists(filepath):
+            print("Problem while retrieving chi2 filepath.. using: {}".format(filepath))
+            stoooooop
+        else:
+            print("using Chi2 file path : ".format(filepath))
+            chi2 = chisq.ResultChisquare(filepath)
+            dtransposeDNoContinuum = chi2.getFluxMedian()        
+        
+        #converting to numpy arrays
+        z_lm = np.array(candid_zvalCandidates)
+        nz = len(z_lm)
+        print("z_lm = {}".format(z_lm))
+        chi2_lm = np.array(candid_displayParamsBundle[lm_candid_displayParamsBundleIdx]['merits'])
+        print("chi2_lm = {}".format(chi2_lm))
+        chi2_continuum = np.array(candid_displayParamsBundle[chi2_candid_displayParamsBundleIdx]['merits'])
+        print("chi2_continuum = {}".format(chi2_continuum))       
+        
+        if enablePlot==1:
+            #plot chi2
+            fig = plt.figure('dtreeb - chi2s')
+            ax = fig.add_subplot(111)
+            ax.plot(z_lm, chi2_lm, label='linemodel', linestyle = "dashed")
+            ax.plot(z_lm, chi2_continuum, label='chi2')
+            plt.grid(True)
+            plt.legend()
+            plt.ylabel('Chi2')
+            plt.xlabel('z')
+            name1 = "Chi2 for {}".format(spcName)
+            plt.title(name1)
+            plt.show()
+         
+        #range for coeffs
+        #coeff for sigma compensation (=chi2cSigmaCoeff)
+        #coeff_sigmacoeff_min = 0.5
+        #coeff_sigmacoeff_max = 1.0
+        #coeff_sigmacoeff_step = .25
+        #n_sigmacoeff = int((coeff_sigmacoeff_max-coeff_sigmacoeff_min+coeff_sigmacoeff_step)/float(coeff_sigmacoeff_step))
+        coeff_sigmacoeff = np.linspace(0.2, 3.5, 5)  
+        n_sigmacoeff = len(coeff_sigmacoeff)
+        print("n_sigmacoeff = {}".format(n_sigmacoeff))
+        print("coeff_sigmacoeff = {}".format(coeff_sigmacoeff))
+        
+        #coeff for bayes combination chi2cCoeff
+        #coeff_bcoeff_min = -1e4
+        #coeff_bcoeff_max = 0.0
+        #coeff_bcoeff_step = 100.0
+        #n_bcoeff= int((coeff_bcoeff_max-coeff_bcoeff_min+coeff_bcoeff_step)/float(abs(coeff_bcoeff_step)))
+        #coeff_bcoeff = 1e4 - (1e4-np.logspace(1.0, 4.0, 20))
+        #coeff_bcoeff = np.logspace(-4.0, 0.0, 20)
+        coeff_bcoeff = []
+        neg_list = - 6.*(np.logspace(1, 3, 20))
+        for a in neg_list[::-1]:
+            coeff_bcoeff.append(a)
+        coeff_bcoeff.append(0.0)
+        pos_list = 5.0*np.logspace(1, 4, 25)
+        for a in pos_list:
+            coeff_bcoeff.append(a)
+        
+        #coeff_bcoeff = np.linspace(0.0, 1e4, 50)
+        n_bcoeff = len(coeff_bcoeff)
+        print("n_bcoeff = {}".format(n_bcoeff))
+        print("coeff_bcoeff = {}".format(coeff_bcoeff))
+        
+        _map = np.zeros((n_sigmacoeff, n_bcoeff))
+        
+        merit = np.zeros((nz))
+
+        #loop on the sigma and b coeffs to estimate zcalc for each of these coeffs combination
+        verbose = 0
+        for i_s, coeff_sigma in enumerate(coeff_sigmacoeff):
+            print "."
+            for i_b, coeff_b in enumerate(coeff_bcoeff):
+                coeff_b_negative = -coeff_b
+                #coeff_b_negative = -dtransposeDNoContinuum*coeff_b
+                if verbose:
+                    print("this solution uses : coeff_sigma={}, coeff_b={:.1f}".format(coeff_sigma, coeff_b) )
+                #continue
+                
+                if 1: 
+                    mini_lm = np.min(chi2_lm) 
+                    mini_chi2 = np.min(chi2_continuum*coeff_sigma+coeff_b_negative) 
+                    mini_global = np.min([ mini_lm, mini_chi2 ])
+                    if verbose:
+                        print("normalizing chisquare curves: mini global = {}".format(mini_global))
+                    
+                    valDenom = chi2_lm - mini_global
+                    likelihood_lm = np.exp(-valDenom/2.0)
+                    valDenom = chi2_continuum + coeff_b_negative - mini_global
+                    likelihood_chi2 = np.exp(-valDenom/2.0)
+                    merit = -np.log( likelihood_lm + likelihood_chi2 )
+                    if verbose:
+                        print("combined merit = {}".format(merit))
+                                        
+                izbest = np.argmin(merit)
+                if verbose:
+                    print("izbest = {}".format(izbest))
+                zbest = z_lm[izbest]
+                if(np.abs(zbest - self.list[indice].zref ) < zthres):
+                    _map[i_s,i_b] = 1
+                    if verbose:
+                        print("this solution works i_s={}, i_b={}  : z={}, zref={}".format(i_s, i_b, zbest, self.list[indice].zref) )
+                else:          
+                    _map[i_s,i_b] = 0
+                    if verbose:
+                        print("this solution fails i_s={}, i_b={}  : z={}, zref={}".format(i_s, i_b, zbest, self.list[indice].zref) )
+                
+                    
+        return _map, coeff_sigmacoeff, coeff_bcoeff, dtransposeDNoContinuum
     
     def plotReducedZcandidates(self, chi2Type="raw", extremaType="amazed"):
         zrchi, mrchi = self.getReducedZcandidates(chi2Type="raw")
@@ -1944,6 +2069,194 @@ def plotChi2CombinationCoeff2DMap(resDir, diffthres, spcName="", methodName="", 
             np.savetxt(outtxtFile, cumulcoeffmap)
             outFullMapFile = os.path.join(outdir, 'fullcoeffmap_{}.dat'.format(tag))
             np.save(outFullMapFile, fullcoeffmap)
+
+def estimateCombinationCoeffMap(resDir, diffthres, spcName="", enableExport=True):
+    #options
+    dont_skip_no_spc = 1
+    enable_intermediate_plots = 0
+    zthres=0.01
+    
+    print('using amazed results full path: {0}'.format(resDir))
+    resList = ResultList(resDir, diffthreshold=diffthres, opt='brief', spcName=spcName)
+    if resList.n <1:
+        print('No results loaded...')
+        return   
+        
+ 
+    success_begin_points = []
+    success_end_points = []
+    success_range = [] 
+    coeffMapCumulative = None
+    #plt.ion()
+    for k in range(resList.n):
+        print("processing result #{}/{}".format(k+1, resList.n))
+        print("zref ={}".format(resList.list[k].zref))
+        try:
+            #coeffmap = resList.getChi2CombinationCoeff2DMap(k, enablePlot=enablePlot, chi2dontloadThres=chi2dontloadThres,  zthres=zthres, opt_combination=opt_combination)
+            coeffMap, sigma_coeff, b_coeff, dtdnc = resList.getBayesCombinationCoeff(indice=k, enablePlot=0, chi2dontloadThres=-1, zthres=zthres)
+        except Exception as e:
+            traceback.print_exc()
+            if dont_skip_no_spc:
+                stop
+            else:
+                continue
+
+        idx_sigma = coeffMap.shape[0]-1
+        print("using idx_sigma = {}".format(idx_sigma))
+        print("using sigma = {}".format(sigma_coeff[idx_sigma]))
+        success = False
+        success_end_reached = False
+        for kr, c in enumerate(coeffMap[idx_sigma]):
+            print("for kr={}, dtd={}, c={}".format(kr, dtdnc, c))
+            point = [dtdnc, b_coeff[kr]]
+            if c==1 and success==False:
+                #point = [dtdnc, b_coeff[k]*dtdnc]
+                print("adding point = {}".format(point))
+                success_begin_point = point
+                success = True
+            elif c==0 and success==True:
+                success_end_point = previous_point
+                success_end_reached = True
+                break
+            
+            previous_point = point
+                
+        if success==True and not success_end_reached:
+            success_end_point = point
+            
+        if success == True:
+            success_begin_points.append(success_begin_point)
+            success_end_points.append(success_end_point)
+            success_range.append([resList.list[k].name, dtdnc, success_begin_point[1], success_end_point[1]])
+        else:
+            success_range.append([resList.list[k].name, dtdnc, -1, -1])
+            
+        #check concordance between begin and end points
+        if not len(success_begin_points) == len(success_end_points) :
+            print("begin and end points have not the same dimension...")
+            stooooop
+            
+
+        #print("coeff = {}".format(coeffMap))
+        if coeffMapCumulative==None:
+            coeffMapCumulative=np.zeros((coeffMap.shape[0],  coeffMap.shape[1]))
+        
+        coeffMapCumulative = np.add(coeffMapCumulative, coeffMap)
+        plt.clf()
+        plt.close()
+        fig = plt.figure('dtreec {} coeff map'.format("sigma, b"), figsize=(9, 8))
+        ax = fig.add_subplot(111)
+        cmap = plt.get_cmap('RdYlGn') 
+        ncolors = 20 #min(20,k+2)
+        cmap = cmap_discretize(cmap, ncolors) 
+
+        i = ax.matshow(np.transpose(coeffMapCumulative), interpolation='nearest', aspect='equal', cmap=cmap)
+
+        plt.xlabel('sigma coeff')
+        plt.ylabel('b coeff')
+        name1 = "combination coeff map \nzThreshold = {}\n(processed idx={}/{})".format(zthres, k+1, resList.n)
+        plt.title(name1)
+        #plt.legend(legendz)
+        #plt.grid()
+        #i = ax.imshow(image, interpolation='nearest')
+        #if k==0:
+        #    fig.colorbar(i)
+        cbar = fig.colorbar(i)
+        cbmax = np.amax(coeffMapCumulative)
+        i.set_clim(vmin=cbmax-ncolors-0.5, vmax=cbmax+0.5)
+        cbar.set_ticks(np.linspace(cbmax-ncolors, cbmax, ncolors))
+        cbar.set_ticklabels(range(int(cbmax-ncolors), int(cbmax)))
+        plt.draw()
+        
+        if enableExport:    
+            tag = "dtreec_{}_sigma{:.2f}_coeff_zthres{}".format("sigma_b", sigma_coeff[idx_sigma], zthres)
+            outdir = os.path.join(resList.analysisoutputdir, tag)
+            if not os.path.exists(outdir):
+                print("creating outputdir {}".format(outdir))
+                os.makedirs(outdir)   
+            outFigFile = os.path.join(outdir, 'coeffmapcumulative.png')
+            plt.savefig( outFigFile, bbox_inches='tight') # sauvegarde du fichier ExempleTrace.png
+            
+            outtxtFile = os.path.join(outdir, 'success_range_{}.txt'.format(tag))
+            f = open(outtxtFile, 'w')
+            for a in success_range:
+                for b in a:
+                    f.write("{}\t".format(b))
+                f.write('\n')
+            f.close()
+            
+            
+
+        if enable_intermediate_plots:
+            #NOTE: in order to deactivate showing this window at each iteration, use Agg (see imports)
+            plt.clf()
+            plt.close()
+            
+            fig = plt.figure('dtreec continuum sigma-coeff/b-coeff'.format(), figsize=(9, 8))
+            ax = fig.add_subplot(111)
+            ax.plot(b_coeff, np.transpose(coeffMap), label=b_coeff)     
+            ax.xaxis.grid('True')
+            ax.yaxis.grid('True')
+            ax.yaxis.grid('True')
+            ax.set_xscale('log')
+            ax.set_ylim([-0.2, 1.2])
+            #legend ?
+            ax.set_title("spc name = {}".format(resList.list[k].name))
+            plt.show()
+            
+        #display, plot coeff plots
+        if 1:
+            plt.clf()
+            plt.close()
+            
+            fig = plt.figure('dtreec coeff points'.format(), figsize=(16, 8))
+            ax = fig.add_subplot(111)
+            xx = [a[0] for a in success_begin_points]
+            yy = [a[1] for a in success_begin_points]
+            ax.plot(xx, yy, 'xb')   
+#            xx = [a[0] for a in failure_beginning_points]
+#            yy = [a[1] for a in failure_beginning_points]
+#            ax.plot(xx, yy, 'xr')   
+            xx = [a[0] for a in success_end_points]
+            yy = [a[1] for a in success_end_points]
+            ax.plot(xx, yy, 'xr')  
+            
+            for a in range(len(success_begin_points)):
+                x = success_begin_points[a][0]
+                y1 = b_coeff[0]
+                y2 = success_begin_points[a][1]
+                z1 = success_end_points[a][1]
+                z2 = b_coeff[len(b_coeff)-1]
+                
+                plt.plot((x, x), (y1,y2) , '-', color='lavender', label="{}_low".format(a) )
+                plt.plot((x, x), (z1,z2) , '-', color='salmon', label="{}_up".format(a) )
+            
+            ax.xaxis.grid('True')
+            ax.yaxis.grid('True')
+            ax.yaxis.grid('True')
+            #ax.set_xscale('log')
+            #ax.set_ylim([-0.2, 1.2])
+            ax.set_title("sigma_coeff={}\nspc in stats = {}/{}".format(sigma_coeff[idx_sigma], len(success_begin_points), k+1))
+            plt.draw()
+            if enableExport:    
+                outdir = os.path.join(resList.analysisoutputdir, tag)
+                if not os.path.exists(outdir):
+                    print("creating outputdir {}".format(outdir))
+                    os.makedirs(outdir)   
+                outFigFile = os.path.join(outdir, 'coeffpoints.png')
+                plt.savefig( outFigFile, bbox_inches='tight') # sauvegarde du fichier ExempleTrace.png
+                
+            
+            outtxtFile = os.path.join(outdir, 'success_range_{}.txt'.format(tag))
+            f = open(outtxtFile, 'w')
+            for a in success_range:
+                for b in a:
+                    f.write("{}\t".format(b))
+                f.write('\n')
+            f.close()
+
+        time.sleep(0.05)
+        
    
 def plotReducedZcandidates(resDir):
     print('using amazed results full path: {0}'.format(resDir))
@@ -2663,6 +2976,7 @@ def StartFromCommandLine( argv ) :
         20. Compare failures\n\
         \n\
         30. Plot 2D Combination Merit Coeff map\n\
+        31. Estimate amazed03 coeff map\n\
         35. Plot continuum indexes (only for linemodel)\n\
         36. Export SVM table\n\
         37. Export continuum Relevance\n\
@@ -2795,6 +3109,14 @@ def StartFromCommandLine( argv ) :
             if not (methodStr == "No" or methodStr == "no"):
                 methodName = methodStr
             plotChi2CombinationCoeff2DMap(options.resDir, float(options.diffthres), spcName, methodName)
+                            
+        elif choice == 31:
+            spcName = ""
+            spcStr = raw_input("Do you want to enter a spectrum name to filter the results ? (press enter to skip) :")
+            if not (spcStr == "No" or spcStr == "no"):
+                spcName = spcStr
+
+            estimateCombinationCoeffMap(options.resDir, float(options.diffthres), spcName)
             
                 
         elif choice == 35:

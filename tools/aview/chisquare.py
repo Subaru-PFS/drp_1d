@@ -721,6 +721,15 @@ class ResultChisquare(object):
         priors = [a*coeff for a in self.amazed_StrongELSNR]
         return priors
         
+    def getMeritExtremum(self, idxExtremum):
+        z = self.amazed_extrema[idxExtremum]
+        print("searching merit for extrema_idx = {}, z={}".format(idxExtremum, z))
+        ind = np.argmin(np.abs(np.array(self.xvect)-z))
+        merit = self.yvect[ind]
+        
+        print("Found merit for chi2_idx = {}, merit={}".format(ind, merit))
+        return merit
+        
             
 
 def StartFromCommandLine( argv ) :	

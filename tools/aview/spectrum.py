@@ -124,6 +124,8 @@ class Spectrum(object):
         elif self.stype == 'undefspc' and n2 < 2:
             self.stype='vvds'
             self.loadvvds()
+            
+        print("spc n = {}".format(self.n))
 
     def loadpfs(self):
         hdulist = fits.open(self.spath) 
