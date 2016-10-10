@@ -233,6 +233,26 @@ Void CLineModelResult::Save( const CDataStore& store, std::ostream& stream ) con
         stream << "}" << std::endl;
     }
 
+    // save dTransposeDNocontinuum, on 1 line
+    if(StrongELSNR.size()>0){
+        stream <<  "#dTransposeDNocontinuum for each extrema = {";
+        for ( int i=0; i<StrongELSNR.size(); i++)
+        {
+            stream <<  dTransposeDNocontinuum << "\t";
+        }
+        stream << "}" << std::endl;
+    }
+
+    // save dTransposeD, on 1 line
+    if(StrongELSNR.size()>0){
+        stream <<  "#dTransposeD for each extrema = {";
+        for ( int i=0; i<StrongELSNR.size(); i++)
+        {
+            stream <<  dTransposeD << "\t";
+        }
+        stream << "}" << std::endl;
+    }
+
 }
 
 /**

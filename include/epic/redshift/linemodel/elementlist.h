@@ -40,8 +40,9 @@ public:
 
     void LoadContinuum();
     void PrepareContinuum(Float64 z);
-
     void EstimateSpectrumContinuum();
+
+    Float64 EstimateDTransposeD(const TFloat64Range& lambdaRange, std::__cxx11::string spcComponent);
 
     Int32 GetNElements();
     Int32 GetModelValidElementsNDdl();
@@ -135,6 +136,7 @@ private:
     CSpectrumFluxAxis m_spcFluxAxisNoContinuum; //observed spectrum for line fitting
     Float64* m_ErrorNoContinuum;
     CSpectrumFluxAxis m_SpcFluxAxisModelDerivSigma;
+    Float64 m_dTransposeDNocontinuum; //the dtd (maximum chisquare value)
 
     Float64*          m_precomputedFineGridContinuumFlux;   //PFG buffer for model continuum
     CSpectrumFluxAxis m_ContinuumFluxAxis;  //rebined model continuum

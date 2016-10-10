@@ -124,17 +124,6 @@ CLineModelElementList::CLineModelElementList( const CSpectrum& spectrum,
     }
     m_precomputedFineGridContinuumFlux = NULL;
 
-    if ( false )// Debug only: export continuum.
-    {
-        FILE* fspc = fopen( "lm_continuum_dbg.txt", "w+" );
-        Float64 coeffSaveSpc = 1e16;
-        for(UInt32 i=0; i<spectrumSampleCount; i++)
-        {
-            fprintf( fspc, "%f %f %f\n", m_SpectrumModel->GetSpectralAxis()[i], (m_SpcFluxAxis[i])*coeffSaveSpc, (m_ContinuumFluxAxis[i])*coeffSaveSpc);
-        }
-        fclose( fspc );
-    }
-
     // "New style" rules initialization:
     m_Regulament = new CRegulament ( );
     m_Regulament->CreateRulesFromJSONFiles( );
@@ -852,8 +841,9 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
     modelSolution = GetModelSolution();
 
     //correct lines amplitude with tplshapePrior (tpl-corr): Warning: Rules must all be deactivated
-    if(0)
+    if(1)
     {
+        //Log.LogInfo( "LineModel Infos: TPLCORR");
         std::vector<Float64> correctedAmplitudes;
         correctedAmplitudes.resize(modelSolution.Amplitudes.size());
         Float64 fitTplShape = m_CatalogTplShape->GetBestFit( modelSolution.Rays, modelSolution.Amplitudes, modelSolution.Errors, correctedAmplitudes );
@@ -1288,34 +1278,34 @@ L111EList:
                 mmy[i] = Yi - y[i];
                 f += mmy[i]*mmy[i];
             }
-            f /= float(nsamples);
+            //f /= float(nsamples);
 
-            /*        Compute gradient g for the sample problem. */
-            //g[]=...
-            refreshModelDerivSigmaUnderElements(filteredEltsIdx);
-            for (Int32 iElt = 0; iElt < filteredEltsIdx.size(); iElt++)
-            {
-                g[iElt]=0.0;
-            }
-            for (Int32 i = 0; i < nsamples; i++)
-            {
-                for (Int32 iElt = 0; iElt < filteredEltsIdx.size(); iElt++)
-                {
-                    Float64 dm = getModelFluxDerivEltVal(filteredEltsIdx[iElt], xInds[i]);
-                    Float64 grad = 2*dm*mmy[i];
-                    g[iElt] += grad;
-                }
-                //*
-                Int32 iElt = filteredEltsIdx.size();
-                Float64 dm = getModelFluxDerivSigmaVal(xInds[i])*normFactor;
-                Float64 grad = 2*dm*mmy[i];
-                g[iElt] += grad;
-                //*/
-            }
-            for (Int32 iElt = 0; iElt < nddl; iElt++)
-            {
-                g[iElt] /= float(nsamples);
-            }
+//            //*        Compute gradient g for the sample problem. */
+//            //g[]=...
+//            refreshModelDerivSigmaUnderElements(filteredEltsIdx);
+//            for (Int32 iElt = 0; iElt < filteredEltsIdx.size(); iElt++)
+//            {
+//                g[iElt]=0.0;
+//            }
+//            for (Int32 i = 0; i < nsamples; i++)
+//            {
+//                for (Int32 iElt = 0; iElt < filteredEltsIdx.size(); iElt++)
+//                {
+//                    Float64 dm = getModelFluxDerivEltVal(filteredEltsIdx[iElt], xInds[i]);
+//                    Float64 grad = 2*dm*mmy[i];
+//                    g[iElt] += grad;
+//                }
+//                //*
+//                Int32 iElt = filteredEltsIdx.size();
+//                Float64 dm = getModelFluxDerivSigmaVal(xInds[i])*normFactor;
+//                Float64 grad = 2*dm*mmy[i];
+//                g[iElt] += grad;
+//                //*/
+//            }
+//            for (Int32 iElt = 0; iElt < nddl; iElt++)
+//            {
+//                g[iElt] /= float(nsamples);
+//            }
         }
         /*          go back to the minimization routine. */
         goto L111EList;
@@ -3192,3 +3182,44 @@ void CLineModelElementList::EstimateSpectrumContinuum()
         //Y2[t] = m_SpcContinuumFluxAxis[t];
     }
 }
+
+/**
+ * \brief this function estimates the dtd value withing the wavelength range
+ **/
+Float64 CLineModelElementList::EstimateDTransposeD(const TFloat64Range& lambdaRange, std::string spcComponent)
+{
+    const CSpectrumSpectralAxis& spcSpectralAxis = m_SpectrumModel->GetSpectralAxis();
+    const CSpectrumFluxAxis& spcFluxAxis = m_SpcFluxAxis;
+    const CSpectrumFluxAxis& spcFluxAxisNoContinuum = m_spcFluxAxisNoContinuum;
+
+    Int32 numDevs = 0;
+    Float64 dtd = 0.0;
+    const Float64* Yspc = spcFluxAxis.GetSamples();
+    const Float64* YspcNoContinuum = spcFluxAxisNoContinuum.GetSamples();
+    Float64 diff = 0.0;
+
+    Float64 imin = spcSpectralAxis.GetIndexAtWaveLength(lambdaRange.GetBegin());
+    Float64 imax = spcSpectralAxis.GetIndexAtWaveLength(lambdaRange.GetEnd());
+    for( UInt32 j=imin; j<imax; j++ )
+    {
+        numDevs++;
+        if(spcComponent=="nocontinuum")
+        {
+            diff = YspcNoContinuum[j];
+        }else
+        {
+            diff = Yspc[j];
+        }
+        dtd += (diff*diff) / (m_ErrorNoContinuum[j]*m_ErrorNoContinuum[j]);
+    }
+    Log.LogDebug( "CLineModelElementList::EstimateDTransposeD val = %f", dtd );
+
+    if(spcComponent=="nocontinuum")
+    {
+        m_dTransposeDNocontinuum = dtd;
+    }
+
+    return dtd;
+}
+
+
