@@ -72,9 +72,12 @@ Bool COperatorCorrelationSolve::Solve( CDataStore& resultStore, const CSpectrum&
     TFloat64List redshifts = redshiftsRange.SpreadOver( redshiftStep );
     DebugAssert( redshifts.size() > 0 );
 
+    // prepare the unused masks
+    std::vector<CMask> maskList;
+
     // Compute correlation factor at each of those redshifts
     COperatorCorrelation correlation;
-    auto result = dynamic_pointer_cast<CCorrelationResult>( correlation.Compute( spcWithoutCont, tplWithoutCont, lambdaRange, redshifts, overlapThreshold ) );
+    auto result = dynamic_pointer_cast<CCorrelationResult>( correlation.Compute( spcWithoutCont, tplWithoutCont, lambdaRange, redshifts, overlapThreshold, maskList ) );
 
     if( !result )
     {

@@ -70,10 +70,12 @@ Bool COperatorFullSolve::SolveBrute( CDataStore& resultStore, const CSpectrum& s
     TFloat64List redshifts = redshiftRange.SpreadOver( redshiftStep );
     DebugAssert( redshifts.size() > 0 );
 
+    // prepare the unused masks
+    std::vector<CMask> maskList;
 
     // Compute correlation factor at each of those redshifts
     COperatorCorrelation correlation;
-    auto correlationResult = correlation.Compute( spcWithoutCont, tplWithoutCont, lambdaRange, redshifts, overlapThreshold );
+    auto correlationResult = correlation.Compute( spcWithoutCont, tplWithoutCont, lambdaRange, redshifts, overlapThreshold, maskList);
 
     if( !correlationResult )
     {
@@ -85,7 +87,7 @@ Bool COperatorFullSolve::SolveBrute( CDataStore& resultStore, const CSpectrum& s
     }
 
     COperatorChiSquare meritChiSquare;
-    auto chisquareResult =meritChiSquare.Compute( spc, tpl, lambdaRange, redshifts, overlapThreshold );
+    auto chisquareResult =meritChiSquare.Compute( spc, tpl, lambdaRange, redshifts, overlapThreshold, maskList);
     if( !chisquareResult )
     {
         //Log.LogInfo( "Failed to compute chi square value");

@@ -1172,6 +1172,12 @@ class Spectrum(object):
         for i,x in enumerate(self.xvect):
             self.yvect[i] *= weighting[i]
     
+    
+    def addGaussianLine(self, glambda, gsigma, gamp):
+        for x in range(0,self.n):
+            gausskernel = gamp * np.exp((-(self.xvect[x]-glambda)**2.0)/(2.0*gsigma**2))
+            self.yvect[x] += gausskernel
+    
     def correctZeros(self, replacementValue=1e-24):
         for x in range(0,self.n):
             if self.yvect[x]<replacementValue:

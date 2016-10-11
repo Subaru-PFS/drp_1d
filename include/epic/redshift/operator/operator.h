@@ -4,6 +4,7 @@
 #include <epic/core/common/datatypes.h>
 #include <epic/core/common/range.h>
 #include <epic/redshift/processflow/result.h>
+#include <epic/redshift/common/mask.h>
 
 #include <vector>
 
@@ -34,8 +35,14 @@ public:
     COperator();
     virtual ~COperator();
 
-    virtual  std::shared_ptr<COperatorResult> Compute( const CSpectrum& spectrum, const CTemplate& tpl,
-                                            const TFloat64Range& lambdaRange, const TFloat64List& redshifts, Float64 overlapThreshold, std::string opt_interp, Int32 opt_extinction) = 0;
+    virtual  std::shared_ptr<COperatorResult> Compute( const CSpectrum& spectrum,
+                                                       const CTemplate& tpl,
+                                            const TFloat64Range& lambdaRange,
+                                                       const TFloat64List& redshifts,
+                                                       Float64 overlapThreshold,
+                                                       std::vector<CMask> additional_spcMasks,
+                                                       std::string opt_interp,
+                                                       Int32 opt_extinction) = 0;
 
 protected:
 

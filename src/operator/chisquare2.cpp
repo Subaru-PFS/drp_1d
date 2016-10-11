@@ -39,7 +39,7 @@ COperatorChiSquare2::~COperatorChiSquare2()
 
 Void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& tpl, Float64* pfgTplBuffer,
                                 const TFloat64Range& lambdaRange, Float64 redshift, Float64 overlapThreshold,
-                                Float64& overlapRate, Float64& chiSquare, Float64& fittingAmplitude, EStatus& status , std::string opt_interp, Float64 forcedAmplitude, Int32 opt_extinction)
+                                Float64& overlapRate, Float64& chiSquare, Float64& fittingAmplitude, EStatus& status , std::string opt_interp, Float64 forcedAmplitude, Int32 opt_extinction, CMask spcMaskAdditional)
 {
     chiSquare = boost::numeric::bounds<float>::highest();
     fittingAmplitude = -1.0;
@@ -55,6 +55,13 @@ Void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& t
 
     const CSpectrumSpectralAxis& tplSpectralAxis = tpl.GetSpectralAxis();
     const CSpectrumFluxAxis& tplFluxAxis = tpl.GetFluxAxis();
+
+
+    if(spcMaskAdditional.GetMasksCount()!=spcFluxAxis.GetSamplesCount())
+    {
+        status = nStatus_DataError;
+        return ;
+    }
 
     // Compute clamped lambda range over spectrum
     TFloat64Range spcLambdaRange;
@@ -179,20 +186,22 @@ Void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& t
     //if(0)
     while( j<spcSpectralAxis.GetSamplesCount() && Xspc[j] <= currentRange.GetEnd() )
     {
-        numDevs++;
-        err2 = 1.0 / (error[j] * error[j]);
-        //EZ formulation
-        //sumYDevs+=Yspc[j]*err2;
-        //sumXDevs+=Ytpl[j]*err2;
-        //sumYDevs+=Yspc[j];
-        //sumXDevs+=Ytpl[j];
+        if(spcMaskAdditional[j]){
+            numDevs++;
+            err2 = 1.0 / (error[j] * error[j]);
+            //EZ formulation
+            //sumYDevs+=Yspc[j]*err2;
+            //sumXDevs+=Ytpl[j]*err2;
+            //sumYDevs+=Yspc[j];
+            //sumXDevs+=Ytpl[j];
 
-        // Tonry&Davis formulation
-        sumCross+=Yspc[j]*Ytpl[j]*err2;
-        sumT+=Ytpl[j]*Ytpl[j]*err2;
-        //sumCross+=Yspc[j]*Ytpl[j];
-        //sumT+=Ytpl[j]*Ytpl[j];
-        sumS+= Yspc[j]*Yspc[j]*err2;
+            // Tonry&Davis formulation
+            sumCross+=Yspc[j]*Ytpl[j]*err2;
+            sumT+=Ytpl[j]*Ytpl[j]*err2;
+            //sumCross+=Yspc[j]*Ytpl[j];
+            //sumT+=Ytpl[j]*Ytpl[j];
+            sumS+= Yspc[j]*Yspc[j]*err2;
+        }
 
         j++;
     }
@@ -250,10 +259,13 @@ Void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& t
     status = nStatus_OK;
 }
 
-
+/**
+ * \brief
+ *
+ **/
 std::shared_ptr<COperatorResult> COperatorChiSquare2::Compute(const CSpectrum& spectrum, const CTemplate& tpl,
                           const TFloat64Range& lambdaRange, const TFloat64List& redshifts,
-                          Float64 overlapThreshold , std::string opt_interp, Int32 opt_extinction)
+                          Float64 overlapThreshold , std::vector<CMask> additional_spcMasks, std::string opt_interp, Int32 opt_extinction)
 {
 
     if( spectrum.GetSpectralAxis().IsInLinearScale() == false || tpl.GetSpectralAxis().IsInLinearScale() == false )
@@ -343,10 +355,39 @@ std::shared_ptr<COperatorResult> COperatorChiSquare2::Compute(const CSpectrum& s
 
     result->Redshifts = sortedRedshifts;
 
+    CMask additional_spcMask(spectrum.GetSampleCount());
+    CMask default_spcMask(spectrum.GetSampleCount());
+    //default mask
+    for(Int32 km=0; km<default_spcMask.GetMasksCount(); km++)
+    {
+        default_spcMask[km] = 1.0;
+    }
 
     for (Int32 i=0;i<sortedRedshifts.size();i++)
     {
-        BasicFit( spectrum, tpl, precomputedFineGridTplFlux, lambdaRange, result->Redshifts[i], overlapThreshold, result->Overlap[i], result->ChiSquare[i], result->FitAmplitude[i], result->Status[i], opt_interp, -1, opt_extinction);
+        //default mask
+        if(additional_spcMasks.size()!=sortedRedshifts.size())
+        {
+            additional_spcMask = default_spcMask;
+        }else{
+            //masks from the input masks list
+            additional_spcMask = additional_spcMasks[i];
+        }
+
+        BasicFit( spectrum,
+                  tpl,
+                  precomputedFineGridTplFlux,
+                  lambdaRange,
+                  result->Redshifts[i],
+                  overlapThreshold,
+                  result->Overlap[i],
+                  result->ChiSquare[i],
+                  result->FitAmplitude[i],
+                  result->Status[i],
+                  opt_interp,
+                  -1,
+                  opt_extinction,
+                  additional_spcMask);
     }
 
     // extrema
