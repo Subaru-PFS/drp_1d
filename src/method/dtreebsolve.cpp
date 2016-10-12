@@ -227,10 +227,14 @@ Bool COperatorDTreeBSolve::Solve(CDataStore &dataStore, const CSpectrum &spc, co
     }
 
     std::string spcComponent = "nocontinuum";
+
+    // prepare the unused masks
+    std::vector<CMask> maskList;
+
     CMethodChisquare2Solve chiSolve;
     auto chisolveResultnc = chiSolve.Compute( dataStore, spc, spcWithoutCont,
                                                                         tplCatalog, tplCategoryList,
-                                                                        lambdaRange, redshiftsChi2, overlapThreshold, spcComponent, opt_interp, opt_extinction);
+                                                                        lambdaRange, redshiftsChi2, overlapThreshold, maskList, spcComponent, opt_interp, opt_extinction);
     if( chisolveResultnc ) {
         dataStore.StoreScopedGlobalResult( "redshiftresult", chisolveResultnc );
     }
@@ -266,7 +270,7 @@ Bool COperatorDTreeBSolve::Solve(CDataStore &dataStore, const CSpectrum &spc, co
     //*/
     auto chisolveResultcontinuum = chiSolve.Compute( dataStore, spc, spcWithoutCont,
                                                                         tplCatalog, tplCategoryList,
-                                                                        lambdaRange, redshiftsChi2Continuum, overlapThreshold, spcComponent, opt_interp);
+                                                                        lambdaRange, redshiftsChi2Continuum, overlapThreshold, maskList, spcComponent, opt_interp);
     //_///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //*/
 

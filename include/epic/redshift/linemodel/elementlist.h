@@ -75,6 +75,8 @@ public:
     void refreshModelDerivSigmaUnderElements(std::vector<Int32> filterEltsIdx);
 
     void setModelSpcObservedOnSupportZeroOutside(const TFloat64Range &lambdaRange);
+    CMask getOutsideLinesMask();
+
 
     Int32 getSpcNSamples(const TFloat64Range& lambdaRange);
     Float64 getLeastSquareMerit(const TFloat64Range &lambdaRange);

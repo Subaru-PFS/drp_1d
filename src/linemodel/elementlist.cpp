@@ -985,6 +985,30 @@ void CLineModelElementList::setModelSpcObservedOnSupportZeroOutside(  const TFlo
     }
 }
 
+
+/**
+ * \brief Creates and returns a Mask with 0 in the lines support, 1 under the lines
+ **/
+CMask CLineModelElementList::getOutsideLinesMask()
+{
+    CMask _mask;
+    //initialize the model spectrum
+    const CSpectrumSpectralAxis& spectralAxis = m_SpectrumModel->GetSpectralAxis();
+    _mask.SetSize(spectralAxis.GetSamplesCount());
+
+    std::vector<Int32> validEltsIdx = GetModelValidElementsIndexes();
+    std::vector<Int32> supportIdxes = getSupportIndexes( validEltsIdx );
+    for( UInt32 i=0; i<spectralAxis.GetSamplesCount(); i++ )
+    {
+        _mask[i]=1;
+    }
+    for( UInt32 i=0; i<supportIdxes.size(); i++ )
+    {
+        _mask[supportIdxes[i]] = 0;
+    }
+    return _mask;
+}
+
 /**
  * \brief Tries to fit subelements considering their overlap.
  * For each entry in GetModelValidElementsIndexes:

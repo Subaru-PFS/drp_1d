@@ -59,6 +59,7 @@ Void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& t
 
     if(spcMaskAdditional.GetMasksCount()!=spcFluxAxis.GetSamplesCount())
     {
+        Log.LogInfo("Chisquare2, spcMaskAdditional has not the same size as the spectrum vector... aborting!");
         status = nStatus_DataError;
         return ;
     }
@@ -343,8 +344,20 @@ std::shared_ptr<COperatorResult> COperatorChiSquare2::Compute(const CSpectrum& s
     fclose( f );
     //*/
 
-    TFloat64List sortedRedshifts = redshifts;
-    std::sort(sortedRedshifts.begin(), sortedRedshifts.end());
+    //sort the redshift and keep track of the indexes
+    TFloat64List sortedRedshifts;
+    TFloat64List sortedIndexes;
+    // This is a vector of {value,index} pairs
+    vector<pair<Float64,Int32> > vp;
+    vp.reserve(redshifts.size());
+    for (Int32 i = 0 ; i < redshifts.size() ; i++) {
+        vp.push_back(make_pair(redshifts[i], i));
+    }
+    std::sort(vp.begin(), vp.end());
+    for (Int32 i = 0 ; i < vp.size() ; i++) {
+        sortedRedshifts.push_back(vp[i].first);
+        sortedIndexes.push_back(vp[i].second);
+    }
 
     std::shared_ptr<CChisquareResult> result = std::shared_ptr<CChisquareResult>( new CChisquareResult() );
     result->ChiSquare.resize( sortedRedshifts.size() );
@@ -362,16 +375,22 @@ std::shared_ptr<COperatorResult> COperatorChiSquare2::Compute(const CSpectrum& s
     {
         default_spcMask[km] = 1.0;
     }
+    bool useDefaultMask = 0;
+    if(additional_spcMasks.size()!=sortedRedshifts.size())
+    {
+        Log.LogInfo("Chisquare2, using default mask (size=%d), size didn't match the input redshift vector (%d) !)", additional_spcMasks.size(), sortedRedshifts.size());
+        useDefaultMask=true;
+    }
 
     for (Int32 i=0;i<sortedRedshifts.size();i++)
     {
         //default mask
-        if(additional_spcMasks.size()!=sortedRedshifts.size())
+        if(useDefaultMask)
         {
             additional_spcMask = default_spcMask;
         }else{
             //masks from the input masks list
-            additional_spcMask = additional_spcMasks[i];
+            additional_spcMask = additional_spcMasks[sortedIndexes[i]];
         }
 
         BasicFit( spectrum,

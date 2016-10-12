@@ -646,6 +646,9 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
         CContinuumIndexes continuumIndexes;
         result->ContinuumIndexes[i] = continuumIndexes.getIndexes( spectrum, z );
 
+        //save the outsideLinesMask
+        result->OutsideLinesMask[i] = model.getOutsideLinesMask();
+
     }
 
     //ComputeArea2(*result);

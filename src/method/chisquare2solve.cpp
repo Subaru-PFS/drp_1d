@@ -42,9 +42,18 @@ const std::string CMethodChisquare2Solve::GetDescription()
 }
 
 
-std::shared_ptr<const CChisquare2SolveResult> CMethodChisquare2Solve::Compute(  CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
-                                                        const CTemplateCatalog& tplCatalog, const TStringList& tplCategoryList,
-                                                        const TFloat64Range& lambdaRange, const TFloat64List& redshifts, Float64 overlapThreshold, std::string spcComponent, std::string opt_interp, std::string opt_extinction)
+std::shared_ptr<const CChisquare2SolveResult> CMethodChisquare2Solve::Compute(CDataStore& resultStore,
+                                                                              const CSpectrum& spc,
+                                                                              const CSpectrum& spcWithoutCont,
+                                                                              const CTemplateCatalog& tplCatalog,
+                                                                              const TStringList& tplCategoryList,
+                                                                              const TFloat64Range& lambdaRange,
+                                                                              const TFloat64List& redshifts,
+                                                                              Float64 overlapThreshold,
+                                                                              std::vector<CMask> maskList,
+                                                                              std::string spcComponent,
+                                                                              std::string opt_interp,
+                                                                              std::string opt_extinction)
 {
     Bool storeResult = false;
 
@@ -60,7 +69,6 @@ std::shared_ptr<const CChisquare2SolveResult> CMethodChisquare2Solve::Compute(  
     }else if(spcComponent=="all"){
         _type = CChisquare2SolveResult::nType_all;
     }
-
 
     for( UInt32 i=0; i<tplCategoryList.size(); i++ )
     {
@@ -84,7 +92,7 @@ std::shared_ptr<const CChisquare2SolveResult> CMethodChisquare2Solve::Compute(  
 
             const CTemplate& tplWithoutCont = tplCatalog.GetTemplateWithoutContinuum( category, j );
 
-            Solve( resultStore, spc, spcWithoutCont, tpl, tplWithoutCont, lambdaRange, redshifts, overlapThreshold, _type, opt_interp, opt_extinction);
+            Solve( resultStore, spc, spcWithoutCont, tpl, tplWithoutCont, lambdaRange, redshifts, overlapThreshold, maskList, _type, opt_interp, opt_extinction);
 
             storeResult = true;
         }
@@ -101,8 +109,18 @@ std::shared_ptr<const CChisquare2SolveResult> CMethodChisquare2Solve::Compute(  
     return NULL;
 }
 
-Bool CMethodChisquare2Solve::Solve( CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont, const CTemplate& tpl, const CTemplate& tplWithoutCont,
-                               const TFloat64Range& lambdaRange, const TFloat64List& redshifts, Float64 overlapThreshold, Int32 spctype, std::string opt_interp, std::string opt_extinction )
+Bool CMethodChisquare2Solve::Solve(CDataStore& resultStore,
+                                    const CSpectrum& spc,
+                                    const CSpectrum& spcWithoutCont,
+                                    const CTemplate& tpl,
+                                    const CTemplate& tplWithoutCont,
+                                    const TFloat64Range& lambdaRange,
+                                    const TFloat64List& redshifts,
+                                    Float64 overlapThreshold,
+                                    std::vector<CMask> maskList,
+                                    Int32 spctype,
+                                    std::string opt_interp,
+                                    std::string opt_extinction )
 {
     CSpectrum _spc;
     CTemplate _tpl;
@@ -163,9 +181,6 @@ Bool CMethodChisquare2Solve::Solve( CDataStore& resultStore, const CSpectrum& sp
             tfluxAxisPtr = tplfluxAxis;
             scopeStr = "chisquare_nocontinuum";
         }
-
-        // prepare the unused masks
-        std::vector<CMask> maskList;
 
         // Compute merit function
         COperatorChiSquare2 chiSquare;

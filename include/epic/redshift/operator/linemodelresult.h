@@ -60,6 +60,7 @@ public:
     std::vector<SLineModelSolution> LineModelSolutions; //linemodel for each extrema
     TFloat64List            bic;    // bayesian information criterion for each extrema
     std::vector<CContinuumIndexes::TContinuumIndexList> ContinuumIndexes; //continuum indexes for each extrema
+    std::vector<CMask>      OutsideLinesMask; //Mask with 0 under the lines and 1 anywhere else
 
     COperator::TStatusList  Status;
     CRayCatalog::TRayVector restRayList;

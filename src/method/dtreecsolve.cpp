@@ -227,10 +227,15 @@ Bool COperatorDTreeCSolve::Solve(CDataStore &dataStore, const CSpectrum &spc, co
     std::sort(redshiftsChi2Continuum.begin(), redshiftsChi2Continuum.end());
     //*/
 
+    // prepare the chi2 addictional masks using the linemodel support
+    std::vector<CMask> maskList = result->OutsideLinesMask;
+    Log.LogInfo( "dtreeCsolve: maskList size is %d", maskList.size());
+
+
     //*/
     auto chisolveResultcontinuum = chiSolve.Compute( dataStore, spc, spcWithoutCont,
                                                                         tplCatalog, tplCategoryList,
-                                                                        lambdaRange, redshiftsChi2Continuum, overlapThreshold, opt_spcComponent, opt_interp, opt_extinction);
+                                                                        lambdaRange, redshiftsChi2Continuum, overlapThreshold, maskList, opt_spcComponent, opt_interp, opt_extinction);
 
     if( !chisolveResultcontinuum )
     {
@@ -289,6 +294,7 @@ Bool COperatorDTreeCSolve::GetCombinedRedshift(CDataStore& store, std::string sc
         }
     }
 
+
     //*
     //***********************************************************
     //retrieve linemodel values
@@ -338,8 +344,23 @@ Bool COperatorDTreeCSolve::GetCombinedRedshift(CDataStore& store, std::string sc
     }else{//option 2
         for(Int32 k=0; k<chi2continuum_calcGrid.size(); k++)
         {
-            Float64 chi2cSigmaCoeff = 1.0;//0.12;
+            Float64 chi2cSigmaCoeff = 0.1;//1.0;//0.12;
             chi2continuum.push_back(chi2continuum_calcGrid[k]*chi2cSigmaCoeff);
+        }
+    }
+
+    //*
+    //***********************************************************
+    //retrieve the chi2cont results indexes
+    std::vector<Int32> idxChi2Results;
+    for( Int32 i=0; i<zcomb.size(); i++ )
+    {
+        for( Int32 iCont=0; iCont<zcontinuum_calcGrid.size(); iCont++ )
+        {
+            if(zcontinuum_calcGrid[iCont] == zcomb[i]){
+                idxChi2Results.push_back(iCont);
+                break;
+            }
         }
     }
 
@@ -355,7 +376,7 @@ Bool COperatorDTreeCSolve::GetCombinedRedshift(CDataStore& store, std::string sc
     for( Int32 i=0; i<zcomb.size(); i++ )
     {
         Float64 post = DBL_MAX;
-        post = chi2continuum[i];
+        post = chi2continuum[idxChi2Results[i]];
 
         resultPriorContinuum->ChiSquare[i] = post;
         resultPriorContinuum->Redshifts[i] = zcomb[i];
@@ -389,7 +410,7 @@ Bool COperatorDTreeCSolve::GetCombinedRedshift(CDataStore& store, std::string sc
 
         //chi2cCoeff = -3.9e3;//-1.14e3;
         chi2cCoeff = 1.0e6; //Coeff NUL
-        chi2cCoeff = -1e3;
+        chi2cCoeff = -1.e3;
 
 
         Log.LogInfo( "dtreeCsolve : lmCoeff=%f", lmCoeff);
@@ -446,7 +467,7 @@ Bool COperatorDTreeCSolve::GetCombinedRedshift(CDataStore& store, std::string sc
                 minChi2WithCoeffs = lmVal;
                 methodForMin = "lm";
             }
-            Float64 cVal = chi2continuum[i]+chi2cCoeff;
+            Float64 cVal = chi2continuum[idxChi2Results[i]]+chi2cCoeff;
             if( cVal < minChi2WithCoeffs)
             {
                 minChi2WithCoeffs = cVal;
@@ -474,7 +495,7 @@ Bool COperatorDTreeCSolve::GetCombinedRedshift(CDataStore& store, std::string sc
             valf = chi2lm[i] + resultPriorSELSP->ChiSquare[i] - minChi2WithCoeffs + lmCoeff;
             Float64 lmLikelihood = exp(-valf/2.0);
 
-            valf = chi2continuum[i]+chi2cCoeff-minChi2WithCoeffs;
+            valf = chi2continuum[idxChi2Results[i]]+chi2cCoeff-minChi2WithCoeffs;
             Float64 chi2continuumLikelihood = exp(-valf/2.0);
 
             post = -log((lmLikelihood + chi2continuumLikelihood));

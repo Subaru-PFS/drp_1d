@@ -271,10 +271,13 @@ Bool CProcessFlow::Chisquare( CProcessFlowContext& ctx, const std::string& Categ
     std::string opt_extinction;
     ctx.GetDataStore().GetScopedParam( "chisquare2solve.extinction", opt_extinction, "yes" );
 
+    // prepare the unused masks
+    std::vector<CMask> maskList;
+
     CMethodChisquare2Solve solve;
     std::shared_ptr< const CChisquare2SolveResult> solveResult = solve.Compute( ctx.GetDataStore(), ctx.GetSpectrum(), ctx.GetSpectrumWithoutContinuum(),
                                                                         ctx.GetTemplateCatalog(), filteredTemplateCategoryList,
-                                                                        spcLambdaRange, redshifts, overlapThreshold, opt_spcComponent, opt_interp, opt_extinction);
+                                                                        spcLambdaRange, redshifts, overlapThreshold, maskList, opt_spcComponent, opt_interp, opt_extinction);
 
     if( solveResult ) {
         ctx.GetDataStore().StoreScopedGlobalResult( "redshiftresult", solveResult );

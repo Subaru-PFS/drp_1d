@@ -37,6 +37,7 @@ Void CLineModelResult::ResizeExtremaResults(Int32 size)
     SigmaZ.resize(size);
     bic.resize(size);
     ContinuumIndexes.resize(size);
+    OutsideLinesMask.resize(size);
 
 }
 
