@@ -171,7 +171,7 @@ class AViewWidget(QtWidgets.QWidget):
         
         v_widget = QtWidgets.QWidget()
         v_widget.setLayout(layoutLeftColumn)
-        v_widget.setFixedWidth(500)
+        #v_widget.setFixedWidth(500)
         
         layout.addWidget(v_widget, layoutRow, 1, 1, 1)
         
@@ -197,7 +197,10 @@ class AViewWidget(QtWidgets.QWidget):
         #wdg.setLayout(layoutAviewPlot)     
         #self.setLayout(layoutAviewPlot)        
         self.setWindowTitle('AViewWidget')   
-                    
+
+        screen = QtWidgets.QDesktopWidget().screenGeometry()
+        wdg.setGeometry(screen.width()*0.05, screen.height()*0.1, screen.width()*0.75, screen.height()*0.75) 
+                                               
         wdg.setStyleSheet("*[coloredcell=\"true\"] {background-color:rgb(215,215,215);}")
         self.show()
         
@@ -341,8 +344,8 @@ class AViewWidget(QtWidgets.QWidget):
             print("unable to load the merit curve plot...")
             self.figureChi2 = plt.plot()
         self.canvasChi2 = Graph(self, self.figureChi2, graphType="merit")
-        self.canvasChi2.setFixedHeight(550.0)
-        self.canvasChi2.setFixedWidth(500.0)
+        #self.canvasChi2.setFixedHeight(550.0)
+        #self.canvasChi2.setFixedWidth(500.0)
         self.canvasChi2.setToolTip("Double left-click on the extrema (red circles) to display")
         
         #refresh the toolbar canvas
@@ -459,6 +462,7 @@ def main():
     app = QtWidgets.QApplication(sys.argv)
     ins = ObjectAViewWidget(parent=app)
     ex = AViewWidget(ins)
+    
     
     #w = 1280; h = 720
 #    w = 1920; h = 1200
