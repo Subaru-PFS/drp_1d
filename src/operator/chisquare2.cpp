@@ -180,13 +180,13 @@ Void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& t
     Float64 err2 = 0.0;
     Float64 fit = 0;
     Int32 numDevs = 0;
+    Int32 numDevsFull = 0;
     const Float64* error = spcFluxAxis.GetError();
-
-
 
     //if(0)
     while( j<spcSpectralAxis.GetSamplesCount() && Xspc[j] <= currentRange.GetEnd() )
     {
+        numDevsFull++;
         if(spcMaskAdditional[j]){
             numDevs++;
             err2 = 1.0 / (error[j] * error[j]);
@@ -213,6 +213,7 @@ Void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& t
         status = nStatus_DataError;
         return;
     }
+
 
     //Float64 ampl = 1.0;
     //Float64 ampl = sumYDevs / sumXDevs; //EZ formulation
@@ -254,6 +255,9 @@ Void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& t
     // Chi square reduct: it can introduces some problem?
     //fit /= numDevs;
 
+    //mask correction coefficient for the masked samples
+    Float64 maskedSamplesCorrection = (Float64)numDevsFull/(Float64)numDevs;
+    fit *= maskedSamplesCorrection;
 
     chiSquare = fit;
     fittingAmplitude = ampl;
@@ -378,7 +382,7 @@ std::shared_ptr<COperatorResult> COperatorChiSquare2::Compute(const CSpectrum& s
     bool useDefaultMask = 0;
     if(additional_spcMasks.size()!=sortedRedshifts.size())
     {
-        Log.LogInfo("Chisquare2, using default mask (size=%d), size didn't match the input redshift vector (%d) !)", additional_spcMasks.size(), sortedRedshifts.size());
+        Log.LogInfo("Chisquare2, using default mask, masks-list size (%d) didn't match the input redshift-list (%d) !)", additional_spcMasks.size(), sortedRedshifts.size());
         useDefaultMask=true;
     }
 

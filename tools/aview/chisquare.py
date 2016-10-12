@@ -232,6 +232,16 @@ class ResultChisquare(object):
         x=[x[s] for s in sortId]
         y=[y[s] for s in sortId]
         return [x, y]
+        
+    def getXYExtremaSortedByY(self):
+        x = self.amazed_extrema
+        y = [self.getExtrema(k) for k, a in enumerate(x)]
+        
+        sortId=np.argsort(y)
+        
+        x=[x[s] for s in sortId]
+        y=[y[s] for s in sortId]
+        return [x, y]
       
     def getExtrema(self, idx):
         if idx < len(self.amazed_extrema):

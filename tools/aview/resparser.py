@@ -520,12 +520,17 @@ class ResParser(object):
             #linemodel results
             if 1:
                 [chipathlist, chinamelist] = self.getAutoChi2FullPath(spcnametag)
-                chi = chisq.ResultChisquare(chipathlist[0], stype=os.path.splitext(chinamelist[0])[0])
-                [redshifts, merits] = chi.getXYSortedByY()            
-                print("resparser: getAutoCandidatesList (method={}): found n redshifts={}".format(method, len(redshifts)))
-                
+
                 chi_linemodel = chisq.ResultChisquare(chipathlist[1], stype=os.path.splitext(chinamelist[1])[0])
-                            
+                                            
+                if 0: #using candidates list from combined chisquare file
+                    _name = os.path.splitext(chinamelist[0])[0]
+                    chi = chisq.ResultChisquare(chipathlist[0], stype=_name, dontloadThres=1e31)
+                    [redshifts, merits] = chi.getXYSortedByY()            
+                else: #using linemodel candidates list
+                    [redshifts, merits] = chi_linemodel.getXYExtremaSortedByY()  
+                print("resparser: getAutoCandidatesList (method={}): found n redshifts={}".format(method, len(redshifts)))
+                    
                 tplpaths = []
                 forceTplAmplitudes = []
                 forceTplDoNotRedShifts = []

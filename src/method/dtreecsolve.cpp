@@ -228,7 +228,7 @@ Bool COperatorDTreeCSolve::Solve(CDataStore &dataStore, const CSpectrum &spc, co
     //*/
 
     // prepare the chi2 addictional masks using the linemodel support
-    std::vector<CMask> maskList = result->OutsideLinesMask;
+    std::vector<CMask> maskList;// = result->OutsideLinesMask;
     Log.LogInfo( "dtreeCsolve: maskList size is %d", maskList.size());
 
 
@@ -344,7 +344,7 @@ Bool COperatorDTreeCSolve::GetCombinedRedshift(CDataStore& store, std::string sc
     }else{//option 2
         for(Int32 k=0; k<chi2continuum_calcGrid.size(); k++)
         {
-            Float64 chi2cSigmaCoeff = 0.1;//1.0;//0.12;
+            Float64 chi2cSigmaCoeff = 1.0;//0.12;
             chi2continuum.push_back(chi2continuum_calcGrid[k]*chi2cSigmaCoeff);
         }
     }
@@ -410,7 +410,7 @@ Bool COperatorDTreeCSolve::GetCombinedRedshift(CDataStore& store, std::string sc
 
         //chi2cCoeff = -3.9e3;//-1.14e3;
         chi2cCoeff = 1.0e6; //Coeff NUL
-        chi2cCoeff = -1.e3;
+        chi2cCoeff = -1e-2;
 
 
         Log.LogInfo( "dtreeCsolve : lmCoeff=%f", lmCoeff);

@@ -171,7 +171,7 @@ class AViewWidget(QtWidgets.QWidget):
         
         v_widget = QtWidgets.QWidget()
         v_widget.setLayout(layoutLeftColumn)
-        #v_widget.setFixedWidth(500)
+        v_widget.setFixedWidth(500)
         
         layout.addWidget(v_widget, layoutRow, 1, 1, 1)
         
