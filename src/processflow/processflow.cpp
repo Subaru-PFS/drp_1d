@@ -391,6 +391,23 @@ Bool CProcessFlow::LineModelSolve( CProcessFlowContext& ctx )
     TFloat64Range redshiftRange;
     Float64       redshiftStep;
 
+    std::string CategoryFilter="all";
+    // Remove Star category, and filter the list with regard to input variable CategoryFilter
+    TStringList templateCategoryList;
+    ctx.GetParameterStore().Get( "templateCategoryList", templateCategoryList );
+    TStringList   filteredTemplateCategoryList;
+    for( UInt32 i=0; i<templateCategoryList.size(); i++ )
+    {
+        std::string category = templateCategoryList[i];
+        if( category == "star" )
+        {
+        }
+        else if(CategoryFilter == "all" || CategoryFilter == category)
+        {
+            filteredTemplateCategoryList.push_back( category );
+        }
+    }
+
     ctx.GetParameterStore().Get( "lambdaRange", lambdaRange );
     ctx.GetParameterStore().Get( "redshiftRange", redshiftRange );
     ctx.GetParameterStore().Get( "redshiftStep", redshiftStep );
@@ -409,6 +426,8 @@ Bool CProcessFlow::LineModelSolve( CProcessFlowContext& ctx )
     std::shared_ptr<const CLineModelSolveResult> solveResult = Solve.Compute( ctx.GetDataStore(),
                                           ctx.GetSpectrum(),
                                           ctx.GetSpectrumWithoutContinuum(),
+                                          ctx.GetTemplateCatalog(),
+                                          filteredTemplateCategoryList,
                                           ctx.GetRayCatalog(),
                                           spcLambdaRange,
                                           redshifts );

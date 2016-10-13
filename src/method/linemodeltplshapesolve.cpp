@@ -237,7 +237,7 @@ std::shared_ptr<const CLineModelTplshapeSolveResult> CLineModelTplshapeSolve::Co
                 }
             }
 
-            Solve( dataStore, _spc, _spcContinuum, tpl, lineCatalog, lambdaRange, redshifts);
+            Solve( dataStore, _spc, _spcContinuum, tplCatalog, tplCategoryList, tpl, lineCatalog, lambdaRange, redshifts);
             storeResult = true;
         }
     }
@@ -256,6 +256,8 @@ std::shared_ptr<const CLineModelTplshapeSolveResult> CLineModelTplshapeSolve::Co
 Bool CLineModelTplshapeSolve::Solve( CDataStore& dataStore,
 			     const CSpectrum& spc,
                  const CSpectrum& spcCont,
+                 const CTemplateCatalog& tplCatalog,
+                 const TStringList& tplCategoryList,
                  const CTemplate& tpl,
                  const CRayCatalog& lineCatalog,
                  const TFloat64Range& lambdaRange,
@@ -267,6 +269,8 @@ Bool CLineModelTplshapeSolve::Solve( CDataStore& dataStore,
     auto  result = linemodel.Compute( dataStore,
                                       spc,
                                       spcCont,
+                                      tplCatalog,
+                                      tplCategoryList,
                                       lineCatalog,
                                       m_opt_linetypefilter,
                                       m_opt_lineforcefilter,

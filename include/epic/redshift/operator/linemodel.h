@@ -30,7 +30,7 @@ public:
 
     std::shared_ptr<COperatorResult> Compute(CDataStore &dataStore,
                                               const CSpectrum& spectrum,
-                                              const CSpectrum &spectrumContinuum,
+                                              const CSpectrum &spectrumContinuum, const CTemplateCatalog &tplCatalog, const TStringList &tplCategoryList,
                                               const CRayCatalog& restraycatalog,
                                               const std::string &opt_lineTypeFilter,
                                               const std::string &opt_lineForceFilter,

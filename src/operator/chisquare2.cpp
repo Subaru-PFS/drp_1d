@@ -267,6 +267,7 @@ Void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& t
 /**
  * \brief
  *
+ * input: if additional_spcMasks size is 0, no additional mask will be used, otherwise its size should match the redshifts list size
  **/
 std::shared_ptr<COperatorResult> COperatorChiSquare2::Compute(const CSpectrum& spectrum, const CTemplate& tpl,
                           const TFloat64Range& lambdaRange, const TFloat64List& redshifts,
@@ -279,62 +280,68 @@ std::shared_ptr<COperatorResult> COperatorChiSquare2::Compute(const CSpectrum& s
         //return NULL;
     }
 
+
     // Pre-Allocate the rebined template and mask with regard to the spectrum size
     m_templateRebined_bf.GetSpectralAxis().SetSize(spectrum.GetSampleCount());
     m_templateRebined_bf.GetFluxAxis().SetSize(spectrum.GetSampleCount());
     m_mskRebined_bf.SetSize(spectrum.GetSampleCount());
     m_shiftedTplSpectralAxis_bf.SetSize( tpl.GetSampleCount());
 
-    //*/
-    // Precalculate a fine grid template to be used for the 'closest value' rebin method
-    Int32 n = tpl.GetSampleCount();
-    CSpectrumFluxAxis tplFluxAxis = tpl.GetFluxAxis();
-    CSpectrumSpectralAxis tplSpectralAxis = tpl.GetSpectralAxis();
-    //Float64 dLambdaTgt =  1.0 * ( spectrum.GetMeanResolution()*0.9 )/( 1+sortedRedshifts[sortedRedshifts.size()-1] );
-    Float64 dLambdaTgt =  0.1;
-    //Float64 lmin = tplSpectralAxis[0];
-    Float64 lmin = 0;
-    Float64 lmax = tplSpectralAxis[n-1];
-    Int32 nTgt = (lmax-lmin)/dLambdaTgt + 2.0/dLambdaTgt;
+    Float64* precomputedFineGridTplFlux;
+    if(opt_interp=="precomputedfinegrid"){
+        //*/
+        // Precalculate a fine grid template to be used for the 'closest value' rebin method
+        Int32 n = tpl.GetSampleCount();
+        CSpectrumFluxAxis tplFluxAxis = tpl.GetFluxAxis();
+        CSpectrumSpectralAxis tplSpectralAxis = tpl.GetSpectralAxis();
+        //Float64 dLambdaTgt =  1.0 * ( spectrum.GetMeanResolution()*0.9 )/( 1+sortedRedshifts[sortedRedshifts.size()-1] );
+        Float64 dLambdaTgt =  0.1;
+        //Float64 lmin = tplSpectralAxis[0];
+        Float64 lmin = 0;
+        Float64 lmax = tplSpectralAxis[n-1];
+        Int32 nTgt = (lmax-lmin)/dLambdaTgt + 2.0/dLambdaTgt;
 
-    // pfg with std::vector
-    //CTemplate       templateFine;
-    //templateFine.GetSpectralAxis().SetSize(nTgt);
-    //templateFine.GetFluxAxis().SetSize(nTgt);
-    //Float64* precomputedFineGridTplFlux = templateFine.GetFluxAxis().GetSamples();
-    // pfg with malloc
-    Float64* precomputedFineGridTplFlux = (Float64*)malloc(nTgt*sizeof(Float64));
-    // pfg with static array => doesn't work
-    //nTgt = 999999;
-    //Float64 precomputedFineGridTplFlux[999999];
-    //Log.LogInfo( "nTgt: %d samples", nTgt);
+        // pfg with std::vector
+        //CTemplate       templateFine;
+        //templateFine.GetSpectralAxis().SetSize(nTgt);
+        //templateFine.GetFluxAxis().SetSize(nTgt);
+        //Float64* precomputedFineGridTplFlux = templateFine.GetFluxAxis().GetSamples();
+        // pfg with malloc
+        precomputedFineGridTplFlux = (Float64*)malloc(nTgt*sizeof(Float64));
+        // pfg with static array => doesn't work
+        //nTgt = 999999;
+        //Float64 precomputedFineGridTplFlux[999999];
+        //Log.LogInfo( "nTgt: %d samples", nTgt);
 
-    //inialise and allocate the gsl objects
-    Float64* Ysrc = tplFluxAxis.GetSamples();
-    Float64* Xsrc = tplSpectralAxis.GetSamples();
-    // linear
-    //gsl_interp *interpolation = gsl_interp_alloc (gsl_interp_linear,n);
-    //gsl_interp_init(interpolation, Xsrc, Ysrc, n);
-    //gsl_interp_accel * accelerator =  gsl_interp_accel_alloc();
+        //inialise and allocate the gsl objects
+        Float64* Ysrc = tplFluxAxis.GetSamples();
+        Float64* Xsrc = tplSpectralAxis.GetSamples();
+        // linear
+        //gsl_interp *interpolation = gsl_interp_alloc (gsl_interp_linear,n);
+        //gsl_interp_init(interpolation, Xsrc, Ysrc, n);
+        //gsl_interp_accel * accelerator =  gsl_interp_accel_alloc();
 
-    //spline
-    gsl_spline *spline = gsl_spline_alloc (gsl_interp_cspline, n);
-    gsl_spline_init (spline, Xsrc, Ysrc, n);
-    gsl_interp_accel * accelerator =  gsl_interp_accel_alloc();
+        //spline
+        gsl_spline *spline = gsl_spline_alloc (gsl_interp_cspline, n);
+        gsl_spline_init (spline, Xsrc, Ysrc, n);
+        gsl_interp_accel * accelerator =  gsl_interp_accel_alloc();
 
-    Int32 k = 0;
-    Float64 x = 0.0;
-    for(k=0; k<nTgt; k++){
-        x = lmin + k*dLambdaTgt;
-        if(x < tplSpectralAxis[0] || x > tplSpectralAxis[n-1]){
-            precomputedFineGridTplFlux[k] = 0.0;
-        }else{
-            //precomputedFineGridTplFlux[k] = gsl_interp_eval(interpolation, Xsrc, Ysrc, x, accelerator);
-            precomputedFineGridTplFlux[k] = gsl_spline_eval (spline, x, accelerator);
+        Int32 k = 0;
+        Float64 x = 0.0;
+        for(k=0; k<nTgt; k++){
+            x = lmin + k*dLambdaTgt;
+            if(x < tplSpectralAxis[0] || x > tplSpectralAxis[n-1]){
+                precomputedFineGridTplFlux[k] = 0.0;
+            }else{
+                //precomputedFineGridTplFlux[k] = gsl_interp_eval(interpolation, Xsrc, Ysrc, x, accelerator);
+                precomputedFineGridTplFlux[k] = gsl_spline_eval (spline, x, accelerator);
+            }
         }
-    }
-    //*/
 
+        gsl_spline_free (spline);
+        gsl_interp_accel_free (accelerator);
+        //*/
+    }
     /*//debug:
     // save templateFine
     FILE* f = fopen( "template_fine.txt", "w+" );
@@ -382,8 +389,11 @@ std::shared_ptr<COperatorResult> COperatorChiSquare2::Compute(const CSpectrum& s
     bool useDefaultMask = 0;
     if(additional_spcMasks.size()!=sortedRedshifts.size())
     {
-        Log.LogInfo("Chisquare2, using default mask, masks-list size (%d) didn't match the input redshift-list (%d) !)", additional_spcMasks.size(), sortedRedshifts.size());
         useDefaultMask=true;
+    }
+    if(additional_spcMasks.size()!=sortedRedshifts.size() && additional_spcMasks.size()!=0)
+    {
+        Log.LogError("Chisquare2, using default mask, masks-list size (%d) didn't match the input redshift-list (%d) !)", additional_spcMasks.size(), sortedRedshifts.size());
     }
 
     for (Int32 i=0;i<sortedRedshifts.size();i++)
@@ -466,7 +476,9 @@ std::shared_ptr<COperatorResult> COperatorChiSquare2::Compute(const CSpectrum& s
         }
     }
 
-    free(precomputedFineGridTplFlux);
+    if(opt_interp=="precomputedfinegrid"){
+        free(precomputedFineGridTplFlux);
+    }
     return result;
 
 }

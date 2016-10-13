@@ -16,6 +16,8 @@
 #include <epic/core/debug/assert.h>
 #include <epic/core/log/log.h>
 
+#include <epic/redshift/operator/chisquare2.h>
+
 #include <math.h>
 #include <boost/numeric/conversion/bounds.hpp>
 #include <boost/format.hpp>
@@ -45,6 +47,8 @@ using namespace NSEpic;
  **/
 CLineModelElementList::CLineModelElementList( const CSpectrum& spectrum,
 					      const CSpectrum &spectrumContinuum,
+                          const CTemplateCatalog& tplCatalog,
+                          const TStringList& tplCategoryList,
 					      const CRayCatalog::TRayVector& restRayList,
 					      const std::string& opt_fittingmethod,
 					      const std::string& opt_continuumcomponent,
@@ -54,6 +58,11 @@ CLineModelElementList::CLineModelElementList( const CSpectrum& spectrum,
 					      const Float64 velocityAbsorption,
 					      const std::string& opt_rules )
 {
+    //memebers for chi2 continuum fitting
+    m_tplCatalog = tplCatalog;
+    m_tplCategoryList = tplCategoryList;
+    m_inputSpc = std::shared_ptr<CSpectrum>( new CSpectrum(spectrum) );
+
     m_ContinuumComponent = opt_continuumcomponent;
     m_LineWidthType = widthType;
     m_resolution = resolution;
@@ -109,7 +118,7 @@ CLineModelElementList::CLineModelElementList( const CSpectrum& spectrum,
             m_SpcFluxAxis[i] = m_spcFluxAxisNoContinuum[i];
         }
     }
-    if( m_ContinuumComponent == "fromspectrum" )
+    if( m_ContinuumComponent == "fromspectrum" || m_ContinuumComponent == "tplfit")
     {
         //the continuum is set to the SpcContinuum and the observed spectrum is the raw spectrum
         CSpectrumFluxAxis& modelFluxAxis = m_SpectrumModel->GetFluxAxis();
@@ -123,6 +132,11 @@ CLineModelElementList::CLineModelElementList( const CSpectrum& spectrum,
         }
     }
     m_precomputedFineGridContinuumFlux = NULL;
+
+    if(m_ContinuumComponent == "tplfit")
+    {
+        InitFitContinuum();
+    }
 
     // "New style" rules initialization:
     m_Regulament = new CRegulament ( );
@@ -293,99 +307,150 @@ void CLineModelElementList::LoadCatalogSingleLines(const CRayCatalog::TRayVector
 }
 
 /**
- * \brief Generates a continuum flux grid interpolating values from the spectrum.
- * If the template file does not exist, return.
- * Allocate memory for the fine grid.
- * Using GSL create an spline interpolator for the fine grid.
- * Generate the fine grid with interpolated values.
+ * \brief Init the buffers for loadFitContinuum (outside/before the z loop)
  **/
-void CLineModelElementList::LoadContinuum()
+void CLineModelElementList::InitFitContinuum()
 {
-    //path p( templatePath );
-    //path name = p.leaf();
-    //std::string templatePath = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/Templates/ExtendedGalaxyEL2/emission/NEW_Im_extended.dat";
-    //std::string templatePath = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/Templates/ExtendedGalaxyEL2/galaxy/EW_SB2extended.dat";
-    //std::string templatePath = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/Templates/ExtendedGalaxyEL2/galaxy/BulgedataExtensionData.dat";
+    CSpectrumSpectralAxis& spectralAxis = m_SpectrumModel->GetSpectralAxis();
 
-    //std::string templatePath = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/Templates/linemodel/emission/NEW_Im_extended_blue_continuum.txt";
-    //std::string templatePath = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/Templates/linemodel/emission/NEW_Im_extended_continuum.txt";
-    //std::string templatePath = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/Templates/linemodel/galaxy/EW_SB2extended.txt";
-    //std::string templatePath = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/Templates/linemodel/galaxy/BulgedataExtensionData.txt";
+    m_fitContinuum_dLambdaTgt =  0.1; //should be sufficient for the continuum
+    m_fitContinuum_lmin = 0;
+    m_fitContinuum_lmax = spectralAxis[spectralAxis.GetSamplesCount()-1];
+    m_fitContinuum_nTgt = (m_fitContinuum_lmax-m_fitContinuum_lmin)/m_fitContinuum_dLambdaTgt + 2.0/m_fitContinuum_dLambdaTgt;
+    m_precomputedFineGridContinuumFlux = (Float64*)malloc(m_fitContinuum_nTgt*sizeof(Float64));
+}
 
-    //std::string templatePath = "/home/aschmitt/data/pfs/pfs_testsimu_20151009/47002690000013_flam.txt";
+/**
+ * \brief Generates a continuum from the fitting with a set of templates : uses the chisquare2 operator
+ **/
+void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange)
+{
+    //hardcoded parameters
+    std::string opt_interp = "lin"; //"precomputedfinegrid";
+    Int32 opt_extinction = 0;
+    Float64 overlapThreshold = 1.0;
+    std::vector<CMask> maskList;//(1,getOutsideLinesMask());
+    std::vector<Float64> redshifts(1, m_Redshift);
 
-    std::string templatePath = "/home/aschmitt/gitlab/cpf-redshift/tools/simulation/templates/NEW_Sbc_extended_extMarch2016corrected20160426_interp0429.dat";
+    Float64 bestMerit = DBL_MAX;
+    Float64 bestFitAmplitude = -1.0;
+    std::string bestTplName="";
 
-    //CRef<CTemplate> tmpl = new CTemplate();
-    CTemplate tpl;
-    CSpectrumIOGenericReader asciiReader;
-    if( !asciiReader.Read( templatePath.c_str(), tpl ) ) {
-        Log.LogError("Fail to read/load template: %s", templatePath.c_str());
-        return;
-    }
+    for( UInt32 i=0; i<m_tplCategoryList.size(); i++ )
+    {
+        std::string category = m_tplCategoryList[i];
 
-//    //save as a spectrum
-//    CSpectrumIOFitsWriter writer;
-//    Bool retVal1 = writer.Write( "tplexported.fits",  tpl);
+        for( UInt32 j=0; j<m_tplCatalog.GetTemplateCount( category ); j++ )
+        {
+            const CTemplate& tpl = m_tplCatalog.GetTemplate( category, j );
 
+            Float64 merit = DBL_MAX;
+            Float64 fitAmplitude = -1.0;
+            Bool ret = SolveContinuum( *m_inputSpc, tpl, lambdaRange, redshifts, overlapThreshold, maskList, opt_interp, opt_extinction, merit, fitAmplitude);
 
-//    //create a continuum tpl
-//    if(1)
-//    {
-//        // Remove continuum
-//        CContinuumIrregularSamplingMedian continuum;
-//        CSpectrumFluxAxis fluxAxisWithoutContinuumCalc;
-
-//        Int32 retVal = continuum.RemoveContinuum( tpl, fluxAxisWithoutContinuumCalc );
-//        CSpectrumFluxAxis fluxAxis = tpl.GetFluxAxis();
-//        fluxAxis.Subtract(fluxAxisWithoutContinuumCalc);
-//        CSpectrumSpectralAxis tplSpectralAxis = tpl.GetSpectralAxis();
-//        //*//debug:
-//        // save continuum tpl and xmad,  flux data
-//        FILE* f = fopen( "continuum_tpl_dbg.txt", "w+" );
-//        for( Int32 t=0;t<fluxAxisWithoutContinuumCalc.GetSamplesCount();t++)
-//        {
-//            fprintf( f, "%f %f\n", t, tplSpectralAxis[t], fluxAxis[t]);//*1e12);
-//        }
-//        fclose( f );
-//        //*/
-//        return;
-//    }
-
-
-    // Precalculate a fine grid template to be used for the 'closest value' rebin method
-    Int32 n = tpl.GetSampleCount();
-    CSpectrumFluxAxis tplFluxAxis = tpl.GetFluxAxis();
-    CSpectrumSpectralAxis tplSpectralAxis = tpl.GetSpectralAxis();
-    Float64 dLambdaTgt =  0.1; //should be sufficient for the continuum
-
-    Float64 lmin = 0;
-    Float64 lmax = tplSpectralAxis[n-1];
-    Int32 nTgt = (lmax-lmin)/dLambdaTgt + 2.0/dLambdaTgt;
-    m_precomputedFineGridContinuumFlux = (Float64*)malloc(nTgt*sizeof(Float64));
-    //inialise and allocate the gsl objects
-    Float64* Ysrc = tplFluxAxis.GetSamples();
-    Float64* Xsrc = tplSpectralAxis.GetSamples();
-    //spline
-    gsl_spline *spline = gsl_spline_alloc (gsl_interp_cspline, n);
-    gsl_spline_init (spline, Xsrc, Ysrc, n);
-    gsl_interp_accel * accelerator =  gsl_interp_accel_alloc();
-    Int32 k = 0;
-    Float64 x = 0.0;
-    for(k=0; k<nTgt; k++){
-        x = lmin + k*dLambdaTgt;
-        if(x < tplSpectralAxis[0] || x > tplSpectralAxis[n-1]){
-            m_precomputedFineGridContinuumFlux[k] = 0.0; //todo, make sure this is never used in the next steps...
-        }else{
-            m_precomputedFineGridContinuumFlux[k] = gsl_spline_eval (spline, x, accelerator);
+            if(ret && merit<bestMerit)
+            {
+                bestMerit = merit;
+                bestFitAmplitude = fitAmplitude;
+                bestTplName = tpl.GetName();
+            }
         }
     }
+    if(bestTplName!="")
+    {
+        m_fitContinuum_tplName = bestTplName;
+        m_fitContinuum_tplFitAmplitude = bestFitAmplitude;
+        //Log.LogInfo( "For z=%.5f : Best continuum tpl found: %s", m_Redshift, bestTplName.c_str());
+        //
+        //Retrieve the best template
+        for( UInt32 i=0; i<m_tplCategoryList.size(); i++ )
+        {
+            std::string category = m_tplCategoryList[i];
+
+            for( UInt32 j=0; j<m_tplCatalog.GetTemplateCount( category ); j++ )
+            {
+                const CTemplate& tpl = m_tplCatalog.GetTemplate( category, j );
+
+                if(tpl.GetName()==bestTplName)
+                {
+                    // Precalculate a fine grid template to be used for the 'closest value' rebin method
+                    Int32 n = tpl.GetSampleCount();
+                    CSpectrumFluxAxis tplFluxAxis = tpl.GetFluxAxis();
+                    CSpectrumSpectralAxis tplSpectralAxis = tpl.GetSpectralAxis();
+
+                    //inialise and allocate the gsl objects
+                    Float64* Ysrc = tplFluxAxis.GetSamples();
+                    Float64* Xsrc = tplSpectralAxis.GetSamples();
+                    //spline
+                    gsl_spline *spline = gsl_spline_alloc (gsl_interp_cspline, n);
+                    gsl_spline_init (spline, Xsrc, Ysrc, n);
+                    gsl_interp_accel * accelerator =  gsl_interp_accel_alloc();
+                    Int32 k = 0;
+                    Float64 x = 0.0;
+                    for(k=0; k<m_fitContinuum_nTgt; k++){
+                        x = m_fitContinuum_lmin + k*m_fitContinuum_dLambdaTgt;
+                        if(x < tplSpectralAxis[0] || x > tplSpectralAxis[n-1]){
+                            m_precomputedFineGridContinuumFlux[k] = 0.0;
+                        }else{
+                            m_precomputedFineGridContinuumFlux[k] = m_fitContinuum_tplFitAmplitude*gsl_spline_eval (spline, x, accelerator);
+                        }
+                    }
+                    gsl_spline_free (spline);
+                    gsl_interp_accel_free (accelerator);
+                }
+            }
+        }
+    }
+}
+
+Bool CLineModelElementList::SolveContinuum(const CSpectrum& spectrum,
+                                           const CTemplate& tpl,
+                                           const TFloat64Range& lambdaRange,
+                                           const TFloat64List& redshifts,
+                                           Float64 overlapThreshold,
+                                           std::vector<CMask> maskList,
+                                           std::string opt_interp,
+                                           Int32 opt_extinction,
+                                           Float64& merit,
+                                           Float64& fitAmplitude)
+{
+    // Compute merit function
+    COperatorChiSquare2 chiSquare;
+    //CRef<CChisquareResult>  chisquareResult = (CChisquareResult*)chiSquare.ExportChi2versusAZ( _spc, _tpl, lambdaRange, redshifts, overlapThreshold );
+    auto  chisquareResult = std::dynamic_pointer_cast<CChisquareResult>( chiSquare.Compute( spectrum, tpl, lambdaRange, redshifts, overlapThreshold, maskList, opt_interp, opt_extinction ) );
+    if( !chisquareResult )
+    {
+
+        //Log.LogInfo( "Failed to compute chi square value");
+        return false;
+    }else{
+        // Store results
+        merit = chisquareResult->ChiSquare[0];
+        fitAmplitude = chisquareResult->FitAmplitude[0];
+        return true;
+    }
+
+}
+
+std::string CLineModelElementList::getFitContinuum_tplName()
+{
+    return m_fitContinuum_tplName;
+}
+
+Float64 CLineModelElementList::getFitContinuum_tplAmplitude()
+{
+    return m_fitContinuum_tplFitAmplitude;
+}
+
+void CLineModelElementList::SetContinuumComponent(std::string component)
+{
+    m_ContinuumComponent = component;
 }
 
 /**
  * \brief This function prepares the continuum for use in the fit with the line elements.
  * Rebin with PFG buffer
- * Find and apply amplitude factor from cross-corr
+ * Find and apply amplitude factor from previously fitted tpl
  **/
 void CLineModelElementList::PrepareContinuum(Float64 z)
 {
@@ -450,45 +515,7 @@ void CLineModelElementList::PrepareContinuum(Float64 z)
         j++;
     }
 
-
-    //fit the continuum
-    const CSpectrumSpectralAxis& spectralAxis = m_SpectrumModel->GetSpectralAxis();
-    const Float64* flux = m_SpcContinuumFluxAxis.GetSamples();
-
-    const Float64* spectral = spectralAxis.GetSamples();
-
-    Float64 sumCross = 0.0;
-    Float64 sumGauss = 0.0;
-    Float64 err2 = 0.0;
-    Int32 num = 0;
-
-    Float64 x=0.0;
-    Float64 y=0.0;
-    Float64 yg=0.0;
-
-    //A estimation
-    for ( Int32 i = 0; i<targetSpectralAxis.GetSamplesCount(); i++)
-    {
-        y = flux[i];
-        x = spectral[i];
-        yg = Yrebin[i];
-
-        num++;
-        err2 = 1.0 / (m_ErrorNoContinuum[i] * m_ErrorNoContinuum[i]);
-        sumCross += yg*y*err2;
-        sumGauss += yg*yg*err2;
-    }
-
-    if ( num==0 || sumGauss==0 )
-    {
-        return;
-    }
-
-    Float64 A = std::max(0.0, sumCross / sumGauss);
-    for ( Int32 i = 0; i<targetSpectralAxis.GetSamplesCount(); i++)
-    {
-        Yrebin[i] *=A;
-    }
+    return;
 }
 
 /**
@@ -509,10 +536,6 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
 {
     m_Redshift = redshift;
 
-    if(m_ContinuumComponent != "nocontinuum"){
-        //prepare the continuum
-        PrepareContinuum(redshift);
-    }
 
     //initialize the model spectrum
     const CSpectrumSpectralAxis& spectralAxis = m_SpectrumModel->GetSpectralAxis();
@@ -524,6 +547,14 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
         m_Elements[iElts]->prepareSupport(spectralAxis, redshift, lambdaRange);
     }
 
+    if(m_ContinuumComponent == "tplfit") //the support has to be already computed when LoadFitContinuum() is called
+    {
+        LoadFitContinuum(lambdaRange);
+    }
+    if(m_ContinuumComponent != "nocontinuum"){
+        //prepare the continuum
+        PrepareContinuum(redshift);
+    }
     //EstimateSpectrumContinuum();
 
     if(m_ContinuumComponent == "nocontinuum")
@@ -868,7 +899,6 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
     if(m_ContinuumComponent == "nocontinuum"){
         reinitModel();
     }
-
     return merit;
 }
 

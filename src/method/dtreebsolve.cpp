@@ -142,6 +142,8 @@ Bool COperatorDTreeBSolve::Solve(CDataStore &dataStore, const CSpectrum &spc, co
     auto result = dynamic_pointer_cast<CLineModelResult>(linemodel.Compute(dataStore,
                                                                            spc,
                                                                            _spcContinuum,
+                                                                           tplCatalog,
+                                                                           tplCategoryList,
                                                                            restRayCatalog,
                                                                            opt_linetypefilter,
                                                                            opt_lineforcefilter,

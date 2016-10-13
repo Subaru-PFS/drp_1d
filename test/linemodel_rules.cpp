@@ -37,6 +37,11 @@ Float64 getLinemodelDoubletRatio(std::string spc, std::string noise, bool enable
     Bool retVal = ctx.Init( spc.c_str(), noise.c_str(), NULL, "../test/data/LinemodelRulesTestCase/raycatalog_test_elratiorules.txt",params );
     BOOST_CHECK( retVal == true );
 
+    //these tplcatalog related variables are unused here.
+    CTemplateCatalog tplCatalog;
+    Bool rValue = tplCatalog.Load( "../test/data/templatecatalog/" );
+    TStringList tplCategories;
+
 
     if(enableRatioRule){
         ctx.GetDataStore().SetScopedParam("linemodelsolve.linemodel.rules", "oiiratio");
@@ -52,8 +57,14 @@ Float64 getLinemodelDoubletRatio(std::string spc, std::string noise, bool enable
     TFloat64List redshifts = redshiftRange.SpreadOver( redshiftStep );
 
     CLineModelSolve Solve;
-    std::shared_ptr<const CLineModelSolveResult> solveResult = Solve.Compute(ctx.GetDataStore(), ctx.GetSpectrum(), ctx.GetSpectrumWithoutContinuum(), ctx.GetRayCatalog(),
-                                                                 spcLambdaRange, redshifts);
+    std::shared_ptr<const CLineModelSolveResult> solveResult = Solve.Compute(ctx.GetDataStore(),
+                                                                             ctx.GetSpectrum(),
+                                                                             ctx.GetSpectrumWithoutContinuum(),
+                                                                             tplCatalog,
+                                                                             tplCategories,
+                                                                             ctx.GetRayCatalog(),
+                                                                             spcLambdaRange,
+                                                                             redshifts);
 
 
     std::string scope = "linemodelsolve.linemodel_fit_extrema_0";
@@ -131,13 +142,25 @@ std::vector<Float64> getLinemodelFittedAmplitudes(std::string spc, std::string n
     retVal = processFlow.Process( ctx );
     BOOST_CHECK( retVal == true );
 
+
+    //these tplcatalog related variables are unused here.
+    CTemplateCatalog tplCatalog;
+    Bool rValue = tplCatalog.Load( "../test/data/templatecatalog/" );
+    TStringList tplCategories;
+
     // Create redshift initial list by spanning redshift acdross the given range, with the given delta
     Float64 redshiftStep = 0.01;
     TFloat64List redshifts = redshiftRange.SpreadOver( redshiftStep );
 
     CLineModelSolve Solve;
-    std::shared_ptr<const CLineModelSolveResult> solveResult = Solve.Compute(ctx.GetDataStore(), ctx.GetSpectrum(), ctx.GetSpectrumWithoutContinuum(), ctx.GetRayCatalog(),
-                                                                 spcLambdaRange, redshifts);
+    std::shared_ptr<const CLineModelSolveResult> solveResult = Solve.Compute(ctx.GetDataStore(),
+                                                                             ctx.GetSpectrum(),
+                                                                             ctx.GetSpectrumWithoutContinuum(),
+                                                                             tplCatalog,
+                                                                             tplCategories,
+                                                                             ctx.GetRayCatalog(),
+                                                                             spcLambdaRange,
+                                                                             redshifts);
 
 
     std::string scope = "linemodelsolve.linemodel_fit_extrema_0";

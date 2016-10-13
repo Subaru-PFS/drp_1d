@@ -63,7 +63,12 @@ void checkAmplitudeAndVelocityFit(std::string spectrumPath, std::string noisePat
     std::string opt_rules = "no";
 
 
-    CLineModelElementList model(spectrum, spectrumContinuum, lineList, opt_fittingmethod, opt_continuumcomponent, opt_lineWidthType, opt_resolution, opt_velocityEmission, opt_velocityAbsorption, opt_rules);
+    //these tplcatalog related variables are unused here.
+    CTemplateCatalog tplCatalog;
+    Bool retValue = tplCatalog.Load( "../test/data/templatecatalog/" );
+    TStringList tplCategories;
+
+    CLineModelElementList model(spectrum, spectrumContinuum, tplCatalog, tplCategories, lineList, opt_fittingmethod, opt_continuumcomponent, opt_lineWidthType, opt_resolution, opt_velocityEmission, opt_velocityAbsorption, opt_rules);
     TFloat64Range lambdaRange = TFloat64Range( 100.0, 12000.0 );
     CLineModelResult::SLineModelSolution modelSolution;
     Float64 merit = model.fit(z, lambdaRange, modelSolution);

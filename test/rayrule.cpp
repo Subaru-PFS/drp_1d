@@ -110,9 +110,17 @@ CLineModelElementList GetData ( void )
   Float64 emissionVelocity = 100.0;
   Float64 absorptionVelocity = 300.0;
   std::string opt_rules = "all";
+
+  //these tplcatalog related variables are unused here.
+  CTemplateCatalog tplCatalog;
+  Bool retValue = tplCatalog.Load( "../test/data/templatecatalog/" );
+  TStringList tplCategories;
+
   //* Segmentation fault
   CLineModelElementList ReferenceArgument = CLineModelElementList ( ctx.GetSpectrum(),
 								    ctx.GetSpectrumWithoutContinuum(),
+                                                                    tplCatalog,
+                                                                    tplCategories,
 								    ctx.GetRayCatalog().GetList(),
 								    std::string( "hybrid" ),
 								    std::string( "fromspectrum" ),

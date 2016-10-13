@@ -49,7 +49,7 @@ const std::string CLineModelSolve::GetDescription()
     desc.append("\tparam: linemodel.linetypefilter = {""no"", ""E"", ""A""}\n");
     desc.append("\tparam: linemodel.lineforcefilter = {""no"", ""S""}\n");
     desc.append("\tparam: linemodel.fittingmethod = {""hybrid"", ""individual""}\n");
-    desc.append("\tparam: linemodel.continuumcomponent = {""fromspectrum"", ""nocontinuum"", ""zero""}\n");
+    desc.append("\tparam: linemodel.continuumcomponent = {""fromspectrum"", ""tplfit"", ""nocontinuum"", ""zero""}\n");
     desc.append("\tparam: linemodel.linewidthtype = {""instrumentdriven"", ""combined"", ""nispsim2016"", ""fixed""}\n");
     desc.append("\tparam: linemodel.instrumentresolution = <float value>\n");
     desc.append("\tparam: linemodel.velocityemission = <float value>\n");
@@ -105,6 +105,7 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
         Log.LogInfo( "    -velocity fit: %s", m_opt_velocityfit.c_str());
     }
     Log.LogInfo( "    -rules: %s", m_opt_rules.c_str());
+    Log.LogInfo( "    -continuumcomponent: %s", m_opt_continuumcomponent.c_str());
     Log.LogInfo( "    -continuumreestimation: %s", m_opt_continuumreest.c_str());
     Log.LogInfo( "    -extremacount: %.3f", m_opt_extremacount);
     Log.LogInfo( "    -fastfitlargegridstep: %.6f", m_opt_twosteplargegridstep);
@@ -120,6 +121,8 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
 std::shared_ptr<const CLineModelSolveResult> CLineModelSolve::Compute( CDataStore& dataStore,
 								       const CSpectrum& spc,
 								       const CSpectrum& spcWithoutCont,
+                                       const CTemplateCatalog& tplCatalog,
+                                       const TStringList& tplCategoryList,
 								       const CRayCatalog& restraycatalog,
 								       const TFloat64Range& lambdaRange,
 								       const TFloat64List& redshifts )
@@ -128,7 +131,7 @@ std::shared_ptr<const CLineModelSolveResult> CLineModelSolve::Compute( CDataStor
     CDataStore::CAutoScope resultScope( dataStore, "linemodelsolve" );
 
     PopulateParameters( dataStore );
-    Solve( dataStore, spc, spcWithoutCont, restraycatalog, lambdaRange, redshifts);
+    Solve( dataStore, spc, spcWithoutCont, tplCatalog, tplCategoryList, restraycatalog, lambdaRange, redshifts);
     return std::shared_ptr<const CLineModelSolveResult>( new CLineModelSolveResult() );
 }
 
@@ -225,8 +228,10 @@ Int32 getVelocitiesFromRefFile( const char* filePath, std::string spcid, Float64
 Bool CLineModelSolve::Solve( CDataStore& dataStore,
 			     const CSpectrum& spc,
 			     const CSpectrum& spcWithoutCont,
+                 const CTemplateCatalog& tplCatalog,
+                 const TStringList& tplCategoryList,
 			     const CRayCatalog& restraycatalog,
-                             const TFloat64Range& lambdaRange,
+                 const TFloat64Range& lambdaRange,
 			     const TFloat64List& redshifts )
 {
     std::string scopeStr = "linemodel";
@@ -262,6 +267,8 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
     auto  result = linemodel.Compute( dataStore,
 				      _spc,
                       _spcContinuum,
+                      tplCatalog,
+                      tplCategoryList,
 				      restraycatalog,
                       m_opt_linetypefilter,
                       m_opt_lineforcefilter,

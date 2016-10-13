@@ -16,6 +16,8 @@
 
 #include <epic/redshift/ray/catalogsTplShape.h>
 
+#include <epic/redshift/spectrum/template/catalog.h>
+
 #include <boost/shared_ptr.hpp>
 
 #include <memory>
@@ -31,16 +33,43 @@ class CLineModelElementList
 
 public:
 
-    CLineModelElementList(const CSpectrum& spectrum, const CSpectrum& spectrumNoContinuum, const CRayCatalog::TRayVector& restRayList, const std::string& opt_fittingmethod, const std::string &opt_continuumcomponent, const std::string& lineWidthType, const Float64 resolution, const Float64 velocityEmission, const Float64 velocityAbsorption, const std::string &opt_rules);
+    CLineModelElementList(const CSpectrum& spectrum,
+                          const CSpectrum& spectrumNoContinuum,
+                          const CTemplateCatalog& tplCatalog,
+                          const TStringList& tplCategoryList,
+                          const CRayCatalog::TRayVector& restRayList,
+                          const std::string& opt_fittingmethod,
+                          const std::string &opt_continuumcomponent,
+                          const std::string& lineWidthType,
+                          const Float64 resolution,
+                          const Float64 velocityEmission,
+                          const Float64 velocityAbsorption,
+                          const std::string &opt_rules);
+
     ~CLineModelElementList();
 
     void LoadCatalog(const CRayCatalog::TRayVector& restRayList);
     void LoadCatalogSingleLines(const CRayCatalog::TRayVector& restRayList);
     void LogCatalogInfos();
 
-    void LoadContinuum();
     void PrepareContinuum(Float64 z);
     void EstimateSpectrumContinuum();
+
+    void InitFitContinuum();
+    void LoadFitContinuum(const TFloat64Range& lambdaRange);
+    Bool SolveContinuum(const CSpectrum& spectrum,
+                        const CTemplate& tpl,
+                        const TFloat64Range& lambdaRange,
+                        const TFloat64List& redshifts,
+                        Float64 overlapThreshold,
+                        std::vector<CMask> maskList,
+                        std::string opt_interp,
+                        Int32 opt_extinction,
+                        Float64 &merit,
+                        Float64& fitAmplitude);    
+    std::string getFitContinuum_tplName();
+    Float64 getFitContinuum_tplAmplitude();
+    void SetContinuumComponent(std::string component);
 
     Float64 EstimateDTransposeD(const TFloat64Range& lambdaRange, std::__cxx11::string spcComponent);
 
@@ -154,6 +183,18 @@ private:
     std::string m_fittingmethod;
     std::vector<Int32> m_elementsDisabledIndexes;
     std::string m_rulesoption;
+
+    std::shared_ptr<CSpectrum> m_inputSpc;
+    CTemplateCatalog m_tplCatalog;
+    TStringList m_tplCategoryList;
+
+    Float64 m_fitContinuum_dLambdaTgt;
+    Float64 m_fitContinuum_lmin;
+    Float64 m_fitContinuum_lmax;
+    Int32 m_fitContinuum_nTgt;
+    std::string m_fitContinuum_tplName;
+    Float64 m_fitContinuum_tplFitAmplitude;
+
 };
 
 }
