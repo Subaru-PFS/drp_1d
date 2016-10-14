@@ -133,10 +133,13 @@ CLineModelElementList::CLineModelElementList( const CSpectrum& spectrum,
     }
     m_precomputedFineGridContinuumFlux = NULL;
 
+    //*
+    //WARNING: HACK, first pass with continuum from spectrum.
     if(m_ContinuumComponent == "tplfit")
     {
         InitFitContinuum();
     }
+    //*/
 
     // "New style" rules initialization:
     m_Regulament = new CRegulament ( );

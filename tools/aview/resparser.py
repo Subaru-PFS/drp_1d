@@ -25,7 +25,8 @@ class ResParser(object):
         self.parameterspath = os.path.join(self.respath,"parameters.json") 
         self.linecatalogpath = os.path.join(self.respath,"linecatalog.txt")
         self.templatespath = os.path.join(self.respath,"templates") 
-        self.templates_nocontinuum_path = os.path.join(self.respath,"templates_nocontinuum") 
+        self.templates_nocontinuum_path = os.path.join(self.respath,"templates_nocontinuum")
+        self.spectrumlist = os.path.join(self.respath,"input.spectrumlist") 
         # template categories
         self.config_tplCategories = ['emission', 'galaxy', 'qso', 'star']
         # in stats directory
@@ -246,7 +247,8 @@ class ResParser(object):
         returns the string array (1xi, with i in {1,2}) of the field corresponding to the tag in the spectrumlist file 
         """
         outVal = ""
-        filename = self.getConfigVal('input')
+        #filename = self.getConfigVal('input') #deprecated
+        filename = self.spectrumlist
         f = open(filename)
         #print filename
         for line in f:
