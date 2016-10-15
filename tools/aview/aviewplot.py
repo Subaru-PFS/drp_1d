@@ -193,9 +193,30 @@ class AViewPlot(object):
         print("Plotting aviewplot: ymin={}, ymax={}".format(self.ymin, self.ymax))
 
         #prepare noise vects
-        if not self.forcePlotNoNoise:
-            self.nxvect = self.noise.xvect
-            self.nyvect = self.noise.yvect
+        if 0:
+            if not self.forcePlotNoNoise:
+                self.nxvect = self.noise.xvect
+                self.nyvect = self.noise.yvect
+                ax2Label = 'Noise'                
+                useReducedAx2Range = True
+                ax2Color = 'k'
+        else:
+            #prepare fitError vects
+            tplInterp = self.t.copy()
+            if not self.forceTplDoNotRedShift:
+                tplInterp.applyRedshift(self.z)
+            tplInterp.interpolateOnGrid(self.sxvect)
+            tplInterpYvect = tplInterp.getWeightedY(A)
+            self.nxvect = []
+            self.nyvect = []
+            for k in range(len(self.sxvect)):
+                self.nxvect.append(self.sxvect[k])
+                yts2 = (self.syvect[k]-tplInterpYvect[k])**2/self.noise.yvect[k]**2
+                self.nyvect.append(np.sqrt(yts2))
+            #self.nyvect = tplInterp.smoothGaussian(self.nyvect, 50) 
+            ax2Label = 'Fit Err'       
+            useReducedAx2Range = False
+            ax2Color = 'b'
         
         
         
@@ -242,9 +263,15 @@ class AViewPlot(object):
         
         gs.update(wspace=0.05, hspace=0.1) # set the spacing between axes. 
         # SPECTRUM
-        spcColor = '0.6'
+        spcColor = 'k'
+        #errorColor = 'k'
+        #nSigma = 12.75 #90% confidence interval bilateral
         if not self.forcePlotXIndex:
-            ax1.plot(self.sxvect, self.syvect, color = spcColor, label='Flux')
+            ax1.plot(self.sxvect, self.syvect, color = spcColor, linewidth = 1, alpha=0.25, label='Flux')
+            #if not self.forcePlotNoNoise:
+                #error_low = np.array(self.syvect) - nSigma*np.array(self.nyvect)
+                #error_high = np.array(self.syvect) + nSigma*np.array(self.nyvect)
+                #ax1.fill_between(self.nxvect, error_low, error_high, color = errorColor, alpha=0.1, label="Error")
         else:
             ax1.plot(self.syvect, color = spcColor, label='Flux')
         if not self.forcePlotNoTemplate:
@@ -258,9 +285,9 @@ class AViewPlot(object):
         # NOISE
         if not self.forcePlotNoNoise:
             if not self.forcePlotXIndex:
-                ax2.plot(self.nxvect, self.nyvect, 'k', label='noise')
+                ax2.plot(self.nxvect, self.nyvect, ax2Color, label='noise')
             else:
-                ax2.plot(self.nyvect, 'k', label='noise')
+                ax2.plot(self.nyvect, ax2Color, label='noise')
 
         if lines_label_method==0:
             # make ax2 nice
@@ -314,7 +341,7 @@ class AViewPlot(object):
                     lpos = 1 + lposOffsetA
                     lstyle = 'dashed'
                 if lines_label_method==0: #old method
-                    ax1.plot((x, x), (-100000,100000) , cstyle, linestyle = lstyle, alpha=0.45, label=self.linesname[k] )
+                    ax1.plot((x, x), (-100000,100000) , cstyle, linestyle = lstyle, alpha=0.35, label=self.linesname[k] )
                     #pp.text(x, self.ymax*0.75, '{0}'.format(self.linesname[k]))
                     #print("testlinepos = {0}".format(self.t.getWeightedFlux(self.linesxrest[k], self.s.ysum / self.t.ysum)*2.0))
                     if 0 and not self.forcePlotNoTemplate:
@@ -329,8 +356,8 @@ class AViewPlot(object):
                         showLine = True
                         if showLine:
                             #pp.text(x, self.ymax*0.75, '{0}:{1:.2f}'.format(self.linesname[k], x))
-                            ax3.plot((x, x), (lpos+2, 10) , cstyle, linestyle = lstyle, alpha=0.45, label=self.linesname[k] )
-                            annotation = ax3.text(x, lpos, '{0}'.format(self.linesname[k]), color=ccolor, alpha = 0.85)
+                            ax3.plot((x, x), (lpos+2, 10) , cstyle, linestyle = lstyle, alpha=0.35, label=self.linesname[k] )
+                            annotation = ax3.text(x, lpos, '{0}'.format(self.linesname[k]), color=ccolor, alpha = 0.7)
                             if self.linestype[k]=='E':
                                 lposOffsetE += 1
                                 if lposOffsetE>3:
@@ -447,8 +474,7 @@ class AViewPlot(object):
         
         #set the Noise axis
         if not self.forcePlotNoNoise:
-            useReducedNoise = True
-            if useReducedNoise:
+            if useReducedAx2Range:
                 nmean = np.mean([a for a in self.nyvect if a>0.0 and np.isfinite(a)])
                 nstd = np.std([a for a in self.nyvect if a>0.0 and np.isfinite(a)])
                 print("noise nmean={}, nstd={}".format(nmean, nstd))
@@ -489,7 +515,7 @@ class AViewPlot(object):
                 ax2.set_xlabel('index')
             
         ax1.set_ylabel('Flux')
-        ax2.set_ylabel('Noise')
+        ax2.set_ylabel(ax2Label)
         ax1.set_title(self.name) # Titre
         
         

@@ -1090,6 +1090,20 @@ class Spectrum(object):
         
         self.ysum = 0.0
         for x in range(0,self.n):
+            self.ysum += self.yvect[x]    
+            
+    def interpolateOnGrid(self, newXVect):
+        x = np.copy(self.xvect)
+        y = np.copy(self.yvect)
+        f = interpolate.interp1d(x, y, bounds_error=False, fill_value=0.0)
+
+        self.xvect = newXVect
+                
+        self.yvect = f(self.xvect) 
+        self.n = len(self.yvect)
+        
+        self.ysum = 0.0
+        for x in range(0,self.n):
             self.ysum += self.yvect[x]
         
     def applyWeight(self, w):
