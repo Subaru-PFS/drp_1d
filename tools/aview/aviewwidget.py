@@ -31,7 +31,16 @@ from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as Navigatio
 from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 
+#print(plt.style.available)
+
 plt.style.use('ggplot')
+#plt.style.use('seaborn-white')
+#plt.style.use('seaborn-darkgrid')
+#[u'seaborn-darkgrid', u'seaborn-notebook', u'classic', u'seaborn-ticks', u'grayscale', u'bmh', 
+#u'seaborn-talk', u'dark_background', u'ggplot', u'fivethirtyeight', u'seaborn-colorblind', 
+#u'seaborn-deep', u'seaborn-whitegrid', u'seaborn-bright', u'seaborn-poster', u'seaborn-muted', 
+#u'seaborn-paper', u'seaborn-white', u'seaborn-pastel', u'seaborn-dark', u'seaborn-dark-palette']
+
 #plt.rcParams['axes.facecolor']='w'
 #plt.style.use('seaborn-white')
 #import seaborn as sns
@@ -199,7 +208,7 @@ class AViewWidget(QtWidgets.QWidget):
         self.setWindowTitle('AViewWidget')   
 
         screen = QtWidgets.QDesktopWidget().screenGeometry()
-        wdg.setGeometry(screen.width()*0.05, screen.height()*0.1, screen.width()*0.75, screen.height()*0.75) 
+        wdg.setGeometry(screen.width()*0.2, screen.height()*0.1, screen.width()*0.75, screen.height()*0.75) 
                                                
         wdg.setStyleSheet("*[coloredcell=\"true\"] {background-color:rgb(215,215,215);}")
         self.show()
@@ -295,8 +304,7 @@ class AViewWidget(QtWidgets.QWidget):
         spcnametag = self.resList.list[self.resIdx].name
         self.candid_zvalCandidates, self.candid_displayParamsBundle = self.resParser.getAutoCandidatesList(spcnametag)
         print("{}: {} candidates loaded".format(tag, len(self.candid_zvalCandidates)))
-        
-        
+                
     def loadMeritPlot(self, idxCandidate=-1):
         tag = "loadMeritPlot"
         print("{}: idxCandidate={}".format(tag, idxCandidate))

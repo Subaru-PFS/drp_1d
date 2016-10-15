@@ -321,6 +321,7 @@ class ResParser(object):
         output tuple: redshifts, merits, templates
         NB: Only works for Chisquare for now: todo !
         """
+        verbose = 1
         enableZrangePerTpl = False #not supported right now, zrange per template has to be made accessible from this class
         redshiftslist = []
         meritslist = []  
@@ -336,6 +337,7 @@ class ResParser(object):
 
         nextremaPerTpl = max(1,nextrema)
         for a in range(len(tplpaths)):
+            #load chisquare result file
             print("tplPath = {}".format(a))
             tplNameTag = os.path.basename(tplpaths[a])
             filepath = self.getChi2FullPath(spcnametag, tplNameTag, chi2Type)
@@ -346,6 +348,7 @@ class ResParser(object):
                 print("using Chi2 file path : {}".format(filepath))
             chi2 = chisq.ResultChisquare(filepath)
             
+            #retrieve z and fit_amplitudes for extrema-tpl
             if not enableZrangePerTpl:
                 redshiftstpl = chi2.amazed_extrema
                 ampstpl = chi2.amazed_fitamplitude
@@ -367,14 +370,22 @@ class ResParser(object):
             if len(chi2.xvect)==0: #in this case, it seems that all merits are at DBL_MAX, thus ignored by chisquare.py load()
                 continue
                 
-            
+            #retrieve the merits list for this template
+            thresMinFind = 1e-4
             meritstpl = []
             npx = np.copy(chi2.xvect)
             for b in range(nextremaPerTpl):
                 xfind = np.abs(npx-redshiftstpl[b])
                 ind = np.argmin(xfind)
-                meritstpl.append(chi2.yvect[ind])
-                #print("merit for z={} : {}".format(redshiftstpl[b], chi2.yvect[ind]))
+                if ind>=0 and np.abs(redshiftstpl[b]-chi2.xvect[ind])<thresMinFind:
+                    meritstpl.append(chi2.yvect[ind])
+                    print("merit for z={} : {}".format(redshiftstpl[b], chi2.yvect[ind]))
+                else:
+                    meritstpl.append(np.inf)
+                    print("merit for z={} : {}".format(redshiftstpl[b], np.inf))
+            print("amazed_extrema merits found = {}".format(meritstpl))
+            
+            #populate these tpl-results in the global list
             for b in range(nextremaPerTpl):
                 redshiftslist.append(redshiftstpl[b])
                 if chi2Type=='linemodeltplshape':
@@ -383,9 +394,11 @@ class ResParser(object):
                     ampslist.append(ampstpl[b])
                 meritslist.append(meritstpl[b])
                 tplNameList.append(tplNameTag)
-            print("amazed_extrema merits found = {}".format(meritstpl))
-            
-            
+                
+        if verbose:
+            for i, a in enumerate(redshiftslist):
+                print("full unsorted list: z={}, merit={}, tpl={}".format(redshiftslist[i], meritslist[i], tplNameList[i]))  
+                        
         if nextrema > 0:
             redshiftsUnsorted = list((redshiftslist))
             ampsUnsorted = list((ampslist))
@@ -426,7 +439,11 @@ class ResParser(object):
                 amps = [ampsUnsorted[sortId[0]]]
                 merits = [meritsUnsorted[sortId[0]]]
                 templates = [tplNameUnsorted[sortId[0]]]
-        
+                
+        if verbose:
+            for i, a in enumerate(redshifts):
+                print("unique-sorted list: z={}, merit={}, tpl={}".format(redshifts[i], merits[i], templates[i]))
+            
         return redshifts, merits, templates, amps
         
         
@@ -568,7 +585,7 @@ class ResParser(object):
                 d['merits'] = meritsExtrema
                 displayParamsBundle.append(d)
                     
-            #chi2nc results
+            #chi2 results
             if 1:
                 print("get component now")
                 spcComponent = self.getParameterVal('dtreeCsolve', 'chisquare', 'spectrum', 'component') 

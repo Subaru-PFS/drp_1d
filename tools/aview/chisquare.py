@@ -53,6 +53,7 @@ class ResultChisquare(object):
         self.load(dontloadThres=dontloadThres)
         
     def load(self, dontloadThres=1e31):
+        verbose = 0
         filename = self.spath
         wave = []
         flux = []
@@ -166,7 +167,9 @@ class ResultChisquare(object):
         for x in range(0,nconti):
             self.amazed_continuumIndexes.append({'color': amazed_continuumIndexesColor[x], 'break': amazed_continuumIndexesBreak[x]})
             
-            
+        if verbose:
+            for i, a in enumerate(self.xvect):
+                print("chi2 file loaded x,y: z={}, merit={}".format(self.xvect[i], self.yvect[i]))
 
         #print("Extrema found : {0}".format(self.amazed_extrema))
         print("loaded chi2 : {0}".format((filename)))
@@ -235,7 +238,7 @@ class ResultChisquare(object):
         
     def getXYExtremaSortedByY(self):
         x = self.amazed_extrema
-        y = [self.getExtrema(k) for k, a in enumerate(x)]
+        y = [self.getMeritExtremum(k) for k, a in enumerate(x)]
         
         sortId=np.argsort(y)
         
