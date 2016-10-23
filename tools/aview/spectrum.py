@@ -40,16 +40,19 @@ class Spectrum(object):
         self.stype = stype
         if self.stype == "" or self.stype == "-1":
             self.stype = 'undefspc'
-        print("type = {0}".format(stype))
-        print("norm = {0}".format(snorm))
+        print("{}: type = {}".format(self.logTagStr, stype))
+        print("{}: norm = {}".format(self.logTagStr, snorm))
         self.snorm = snorm
         self.n = -1
         self.xvect = -1
         self.yvect = -1
         self.ysum = 0
         self.forcePlotXIndex = False
+        
         if(self.stype == 'template'):
-            self.loadTpl() 
+            self.loadTpl(idxWave=0, idxFlux=1)
+        elif(self.stype == 'template-w0f2'):
+            self.loadTpl(idxWave=0, idxFlux=2) 
         elif(self.stype == 'pfs2reech'):
             self.loadpfs2reech() 
         elif(self.stype == 'pfs2'):
@@ -93,7 +96,7 @@ class Spectrum(object):
         return scopy
         
     def load(self):
-        print("\nPATH = {}\n".format(self.spath))
+        print("\nSPC PATH = {}\n".format(self.spath))
         hdulist = fits.open(self.spath) 
         print("\nHDULIST = \n{}\n".format(hdulist))
         try:
@@ -345,7 +348,8 @@ class Spectrum(object):
             self.yvect[x] = scidata[x]
             self.ysum += self.yvect[x]
     
-    def loadTpl(self):
+    def loadTpl(self, idxWave=0, idxFlux=1):
+        idxMax = np.max([idxWave, idxFlux])
         filename = self.spath
         wave = []
         flux = []
@@ -357,23 +361,26 @@ class Spectrum(object):
                 data = lineStr.split(" ")
                 data = [r for r in data if r != '']
                 #print len(data)
-                if(len(data) >=2):
+                if(len(data) > idxMax):
                     # fill the list                
                     #print data[0]
                     #print data[1]
-                    wave.append(float(data[0]))
-                    flux.append(float(data[1]))
+                    wave.append(float(data[idxWave]))
+                    flux.append(float(data[idxFlux]))
                 else:
                     #try to separate the values with \t instead...
                     data = lineStr.split("\t")
                     data = [r for r in data if r != '']
                     #print len(data)
-                    if(len(data) >=2):
+                    if(len(data) > idxMax):
                         # fill the list                
                         #print data[0]
                         #print data[1]
-                        wave.append(float(data[0]))
-                        flux.append(float(data[1]))
+                        wave.append(float(data[idxWave]))
+                        flux.append(float(data[idxFlux]))
+                    else:
+                        print("ERROR: unable to load this template line !, aborting loading this file...")
+                        stop
         f.close()
         self.n = len(wave)
         #print('len wave = {0}'.format(self.n))
@@ -1195,6 +1202,16 @@ class Spectrum(object):
     def correctZeros(self, replacementValue=1e-24):
         for x in range(0,self.n):
             if self.yvect[x]<replacementValue:
+                self.yvect[x]=replacementValue 
+    
+    def correctZerosNegativeWithMaxValue(self, maxCoeff=10.):
+        """
+        replaces the values at zero by the max value *coeff (useful for bad values in the variance spectra)
+        """
+        maxVal = np.max(np.array(self.yvect))
+        replacementValue = maxVal*maxCoeff
+        for x in range(0,self.n):
+            if self.yvect[x]<=0:
                 self.yvect[x]=replacementValue   
                 
     def setToZero(self):
@@ -1415,7 +1432,7 @@ def StartFromCommandLine( argv ) :
                     help="path to the fits spectrum to be plotted")
     parser.add_argument("-t", "--type", 
                         help="type of spectrum, can be in teh following list \
-                        {template, vvds, pfs, pfs2, muse, hplana, euclid, pfs2reech, euclid_sim_noise}",  
+                        {template, template-w0f2, vvds, pfs, pfs2, muse, hplana, euclid, pfs2reech, euclid_sim_noise}",  
                         dest="spcType",     
                         default="")                
     parser.add_argument("-o", "--otherspc", 
@@ -1466,7 +1483,10 @@ def StartFromCommandLine( argv ) :
 #                soutputpath = options.spcPath+"modified.dat"
 #                s.saveTpl(soutputpath)
 #                WarningKeyStr = raw_input("\n\nINFO: Modifications applied: saved to {}".format(soutputpath))
-#                                        
+#                        
+
+            #s.smoothSavitskyGolay(winSizeAngstrom=100, degree=3)
+                
             if options.export == "tpl":
                 
                 path = os.path.split(options.spcPath)[0]
@@ -1486,10 +1506,10 @@ def StartFromCommandLine( argv ) :
         else:
             s2 = Spectrum(options.otherspcPath, options.otherspcType, snorm=False)
             
-            if 0: #savgol model without lines and save it
+            if 1: #savgol model without lines and save it
                 #s2.smoothSavitskyGolay(400, 3.0)
-                s2.smoothSavitskyGolay()
-                s2.correctZeros()
+                s2.smoothSavitskyGolay(winSizeAngstrom=100, degree=3)
+                #s2.correctZeros()
                 #soutputpath = options.otherspcPath+"_savgol.dat"
                 #s2.saveTpl(soutputpath)
             

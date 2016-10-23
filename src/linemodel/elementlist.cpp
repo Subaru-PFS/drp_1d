@@ -875,7 +875,7 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
     modelSolution = GetModelSolution();
 
     //correct lines amplitude with tplshapePrior (tpl-corr): Warning: Rules must all be deactivated
-    if(1)
+    if(0)
     {
         //Log.LogInfo( "LineModel Infos: TPLCORR");
         std::vector<Float64> correctedAmplitudes;
@@ -3068,9 +3068,9 @@ Float64 CLineModelElementList::GetVelocityInfFromInstrumentResolution()
     Float64 vel = c/m_resolution/tolCoeff;
     Float64 roundingVal = 10.0;
     vel = Float64(Int32(vel/roundingVal))*roundingVal;
-    if(vel<40.0){
-        vel=40;
-    }
+//    if(vel<5.0){
+//        vel=5.0;
+//    }
     return vel;
 }
 

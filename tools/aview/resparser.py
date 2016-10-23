@@ -554,6 +554,7 @@ class ResParser(object):
                 forceTplAmplitudes = []
                 forceTplDoNotRedShifts = []
                 meritsExtrema = []
+                dtdExtrema = chi_linemodel.amazed_dTransposeD[0]
                 
                 idx_model = -1
                 thres = 5e-4
@@ -583,6 +584,7 @@ class ResParser(object):
                 d['forceTplAmplitudes'] = forceTplAmplitudes
                 d['forceTplDoNotRedShifts'] = forceTplDoNotRedShifts
                 d['merits'] = meritsExtrema
+                d['dTransposeD'] = dtdExtrema
                 displayParamsBundle.append(d)
                     
             #chi2 results

@@ -193,7 +193,7 @@ class AViewPlot(object):
         print("Plotting aviewplot: ymin={}, ymax={}".format(self.ymin, self.ymax))
 
         #prepare noise vects
-        if 0:
+        if 1:
             if not self.forcePlotNoNoise:
                 self.nxvect = self.noise.xvect
                 self.nyvect = self.noise.yvect

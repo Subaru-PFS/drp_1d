@@ -154,7 +154,89 @@ Void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& t
 
         }
     }
+
+    /*/
+    // Optionally Apply some DUST
+    bool opt_dust = true;
+    if(opt_dust)
+    {
+        Float64 coeffWeightDust = 0.5; //0 dust is applied fully, 1 dust not applied
+        Float64 coeffA = 0.195;
+        Float64 coeffB = -0.828;
+
+        Float64 z = redshift;
+        for(Int32 k=0; k<itplTplSpectralAxis.GetSamplesCount(); k++)
+        {
+            if(Xtpl[k] < currentRange.GetBegin()){
+                continue;
+            }
+            if(Xtpl[k] > currentRange.GetEnd()){
+                continue;
+            }
+
+            Float64 restLambda = Xtpl[k]/(1.0+z);
+            Float64 coeffDust = 0.0;
+            if(restLambda > 900.0)
+            {
+                coeffDust = coeffA*log(restLambda-900)+coeffB;
+            }
+
+            Ytpl[k] *= (1.0-(1.0-coeffWeightDust)*coeffDust);
+
+        }
+    }
     //*/
+
+    /*/
+    // Optionally mask pixels far from the breaks
+    bool opt_onlyBreaks = false;
+    if(opt_onlyBreaks)
+    {
+        //add the ranges to be processed
+        TFloat64RangeList restLambdaRanges_A;
+        TFloat64RangeList restLambdaRanges_B;
+
+        restLambdaRanges_A.push_back(TFloat64Range( 1043.0, 1174.0 )); //Lya, A
+        restLambdaRanges_B.push_back(TFloat64Range( 1304.0, 1369.0 )); //Lya, B
+
+        restLambdaRanges_A.push_back(TFloat64Range( 3200.0, 3600.0 )); //OII, A
+        restLambdaRanges_B.push_back(TFloat64Range( 4000.0, 4200.0 )); //OII, B
+
+        restLambdaRanges_A.push_back(TFloat64Range( 4290.0, 4830.0 )); //OIII, A
+        restLambdaRanges_B.push_back(TFloat64Range( 5365.0, 5635.0 )); //OIII, B
+
+        restLambdaRanges_A.push_back(TFloat64Range( 5632.0, 6341.0 )); //Halpha, A
+        restLambdaRanges_B.push_back(TFloat64Range( 7043.0, 7397.6 )); //Halpha, B
+
+        Float64 z = redshift;
+        for(Int32 k=0; k<itplTplSpectralAxis.GetSamplesCount(); k++)
+        {
+            if(Xtpl[k] < currentRange.GetBegin()){
+                continue;
+            }
+            if(Xtpl[k] > currentRange.GetEnd()){
+                continue;
+            }
+
+            Float64 restLambda = Xtpl[k]/(1.0+z);
+            bool inBreakRange=false;
+            for(Int32 kRanges=0; kRanges<restLambdaRanges_A.size(); kRanges++)
+            {
+                if(restLambda>=restLambdaRanges_A[kRanges].GetBegin() && restLambda<=restLambdaRanges_B[kRanges].GetEnd())
+                {
+                    inBreakRange = true;
+                    break;
+                }
+            }
+            if(!inBreakRange)
+            {
+                spcMaskAdditional[k]=false;
+            }
+
+        }
+    }
+    //*/
+
 
     // j cursor move over spectrum
     Int32 j = 0;
@@ -201,6 +283,7 @@ Void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& t
             sumT+=Ytpl[j]*Ytpl[j]*err2;
             //sumCross+=Yspc[j]*Ytpl[j];
             //sumT+=Ytpl[j]*Ytpl[j];
+
             sumS+= Yspc[j]*Yspc[j]*err2;
         }
 
@@ -255,9 +338,11 @@ Void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& t
     // Chi square reduct: it can introduces some problem?
     //fit /= numDevs;
 
+    //*
     //mask correction coefficient for the masked samples
     Float64 maskedSamplesCorrection = (Float64)numDevsFull/(Float64)numDevs;
     fit *= maskedSamplesCorrection;
+    //*/
 
     chiSquare = fit;
     fittingAmplitude = ampl;

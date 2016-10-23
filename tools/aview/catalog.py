@@ -41,6 +41,8 @@ class Catalog(object):
         self.load()
         
     def load(self):
+        
+        print("\nCATALOG PATH = {}\n".format(self.spath))
         filename = self.spath
         if not os.path.exists(filename):
             print("{}: filepath does not exist !".format(self.logTagStr))
@@ -418,7 +420,7 @@ def StartFromCommandLine( argv ) :
         #print(c.getShiftedCatalog(1.0, "E"))
         
         #c.plot()
-        c.plotInZplane()  
+        #c.plotInZplane()  
         
         #print("the REDMINE (copy/paste) generated table is:\n{}".format(c.getRedmineTableString()))
         #print("the LATEX (copy/paste) generated table is:\n{}".format(c.getLatexTableString()))

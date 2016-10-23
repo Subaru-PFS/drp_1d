@@ -570,7 +570,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
 
         // reestimate the model (eventually with continuum reestimation) on the extrema selected
         if(opt_continuumreest == "always" || opt_continuumreest == "onlyextrema"){
-            contreest_iterations = 10;
+            contreest_iterations = 3; //10;
         }else{
             contreest_iterations  = 0;
         }

@@ -45,7 +45,9 @@ class ResultChisquare(object):
         self.amazed_sigmaz = [] 
         self.amazed_fitamplitude = []
         self.amazed_continuumIndexes = [] 
-        self.amazed_StrongELSNR = []     
+        self.amazed_StrongELSNR = [] 
+        self.amazed_dTransposeD = []
+        self.amazed_dTransposeDNoContinuum = []
         
         #self.cpath = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/RayCatalogs/raycatalogamazedvacuum.txt"
         self.cpath = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/linecatalogs/linecatalogamazedair_B.txt"
@@ -149,6 +151,22 @@ class ResultChisquare(object):
                 data = [d for d in data if len(d.strip(" "))>0]
                 for d in data:
                     self.amazed_StrongELSNR.append(float(d))
+            elif not lineStr.find("dTransposeD for each extrema =") == -1:
+                beg = lineStr.find("{")
+                end = lineStr.find("}")  
+                dataStr = lineStr[beg+1:end]
+                data = dataStr.split("\t")
+                data = [d for d in data if len(d.strip(" "))>0]
+                for d in data:
+                    self.amazed_dTransposeD.append(float(d))
+            elif not lineStr.find("dTransposeDNocontinuum for each extrema =") == -1:
+                beg = lineStr.find("{")
+                end = lineStr.find("}")  
+                dataStr = lineStr[beg+1:end]
+                data = dataStr.split("\t")
+                data = [d for d in data if len(d.strip(" "))>0]
+                for d in data:
+                    self.amazed_dTransposeDNoContinuum.append(float(d))
                 
         f.close()
         self.n = len(wave)
