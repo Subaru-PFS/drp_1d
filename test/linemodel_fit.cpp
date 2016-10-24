@@ -36,14 +36,14 @@ void checkAmplitudeAndVelocityFit(std::string spectrumPath, std::string noisePat
 
 
     // get continuum
-    CContinuumIrregularSamplingMedian continuum;
-    CSpectrumFluxAxis fluxAxisWithoutContinuumCalc;
-    Int32 retValCont = continuum.RemoveContinuum( spectrum, fluxAxisWithoutContinuumCalc );
+    //CContinuumIrregularSamplingMedian continuum;
+    //CSpectrumFluxAxis fluxAxisWithoutContinuumCalc;
+    //Int32 retValCont = continuum.RemoveContinuum( spectrum, fluxAxisWithoutContinuumCalc );
     CSpectrum spectrumContinuum = spectrum;
     CSpectrumFluxAxis& continuumFluxAxis = spectrumContinuum.GetFluxAxis();
     for(UInt32 i=0; i<continuumFluxAxis.GetSamplesCount(); i++){
-        continuumFluxAxis[i] -= fluxAxisWithoutContinuumCalc[i];
-        //continuumFluxAxis[i] = 0.0;
+        //continuumFluxAxis[i] -= fluxAxisWithoutContinuumCalc[i];
+        continuumFluxAxis[i] = 0.0;
     }
 
 
@@ -56,7 +56,7 @@ void checkAmplitudeAndVelocityFit(std::string spectrumPath, std::string noisePat
 
 
     std::string opt_continuumcomponent = "fromspectrum";
-    std::string opt_lineWidthType = "combined";
+    std::string opt_lineWidthType = "velocitydriven";
     Float64 opt_resolution = 2350;
     Float64 opt_velocityEmission = initVelocity;
     Float64 opt_velocityAbsorption = initVelocity;
@@ -219,7 +219,7 @@ BOOST_AUTO_TEST_CASE( LinemodelFit_lbfgsfit_1EmissionLine )
 
     std::string opt_fittingmethod = "lbfgsfit";//"hybrid";//
     Int32 lineTypeFilter = CRay::nType_Emission;
-    Float64 initialVelocity = 250.0;
+    Float64 initialVelocity = 150.0;
     Int32 forceFilter = CRay::nForce_Strong;
 
     std::vector<Float64> ampsRef;

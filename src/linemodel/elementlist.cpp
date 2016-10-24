@@ -865,6 +865,15 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
         }
     }
 
+    //set all the amplitudes to 1.0
+    if(m_fittingmethod=="ones")
+    {
+        for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
+        {
+            m_Elements[iElts]->SetFittedAmplitude(1.0, 1.0);
+        }
+    }
+
 
     //Apply rules,
     applyRules( enableLogging );
@@ -1337,28 +1346,28 @@ L111EList:
             }
             //f /= float(nsamples);
 
-//            //*        Compute gradient g for the sample problem. */
-//            //g[]=...
-//            refreshModelDerivSigmaUnderElements(filteredEltsIdx);
-//            for (Int32 iElt = 0; iElt < filteredEltsIdx.size(); iElt++)
-//            {
-//                g[iElt]=0.0;
-//            }
-//            for (Int32 i = 0; i < nsamples; i++)
-//            {
-//                for (Int32 iElt = 0; iElt < filteredEltsIdx.size(); iElt++)
-//                {
-//                    Float64 dm = getModelFluxDerivEltVal(filteredEltsIdx[iElt], xInds[i]);
-//                    Float64 grad = 2*dm*mmy[i];
-//                    g[iElt] += grad;
-//                }
-//                //*
-//                Int32 iElt = filteredEltsIdx.size();
-//                Float64 dm = getModelFluxDerivSigmaVal(xInds[i])*normFactor;
-//                Float64 grad = 2*dm*mmy[i];
-//                g[iElt] += grad;
-//                //*/
-//            }
+            //*        Compute gradient g for the sample problem. */
+            //g[]=...
+            refreshModelDerivSigmaUnderElements(filteredEltsIdx);
+            for (Int32 iElt = 0; iElt < filteredEltsIdx.size(); iElt++)
+            {
+                g[iElt]=0.0;
+            }
+            for (Int32 i = 0; i < nsamples; i++)
+            {
+                for (Int32 iElt = 0; iElt < filteredEltsIdx.size(); iElt++)
+                {
+                    Float64 dm = getModelFluxDerivEltVal(filteredEltsIdx[iElt], xInds[i]);
+                    Float64 grad = 2*dm*mmy[i];
+                    g[iElt] += grad;
+                }
+                //*
+                Int32 iElt = filteredEltsIdx.size();
+                Float64 dm = getModelFluxDerivSigmaVal(xInds[i])*normFactor;
+                Float64 grad = 2*dm*mmy[i];
+                g[iElt] += grad;
+                //*/
+            }
 //            for (Int32 iElt = 0; iElt < nddl; iElt++)
 //            {
 //                g[iElt] /= float(nsamples);
