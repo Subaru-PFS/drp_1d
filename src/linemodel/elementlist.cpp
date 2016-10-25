@@ -1309,7 +1309,7 @@ L111EList:
             //g[1] = 0;
         }
 
-        if(1){
+        if(0){
 
             /*        the minimization routine has returned to request the */
             /*        function f and gradient g values at the current x. */
@@ -1373,6 +1373,9 @@ L111EList:
 //                g[iElt] /= float(nsamples);
 //            }
         }
+
+        Int32 ret = estimateMeanSqFluxAndGradient(x, normFactor, filteredEltsIdx, xInds, lineType, y, mmy, f, g);
+
         /*          go back to the minimization routine. */
         goto L111EList;
     }
@@ -1395,10 +1398,10 @@ L111EList:
     //
 
 
-//    //free allocated memory
-//    free(y);
-//    free(weights);
-//    free(x);
+    //free allocated memory
+    free(y);
+    free(weights);
+    free(x);
 
 //    free(wa);
 //    free(iwa);
@@ -1407,6 +1410,81 @@ L111EList:
 //    free(lower);
 //    free(nbd);
 
+
+    return 0;
+}
+
+/**
+ * @brief CLineModelElementList::estimateMeanSqFluxAndGradient
+ * @param varPack: the variables of the model being fitted
+ * @param normFactor
+ * @param filteredEltsIdx: index of the elements included in the fit, also sets the size of varPack (n=nElts+1)
+ * @param xInds: indexes of the samples where the data of the model is fitted
+ * @param lineType: E or A
+ * @param fluxdata: data to be fitted (already reshaped, no need to use xInds for this vector)
+ * @param msqBuffer: buffer for fast computing of the meansquare
+ * @param f: output meansquare residual
+ * @param g: output meansquare gradient residual
+ * @return
+ */
+Int32 CLineModelElementList::estimateMeanSqFluxAndGradient(const Float64* varPack,
+                                                           const Float64 normFactor,
+                                                           std::vector<Int32> filteredEltsIdx,
+                                                           std::vector<Int32> xInds,
+                                                           Int32 lineType,
+                                                           Float64* fluxdata,
+                                                           Float64* msqBuffer,
+                                                           Float64& f,
+                                                           Float64* g)
+{
+    // update the linemodel amplitudes
+    for (Int32 iElt = 0; iElt < filteredEltsIdx.size(); iElt++)
+    {
+        Float64 amp = varPack[iElt]/normFactor;
+        SetElementAmplitude(filteredEltsIdx[iElt], amp, 0.0);
+    }
+    // update the linemodel velocity/linewidth
+    Int32 idxVelocity = filteredEltsIdx.size();
+    Float64 velocity = varPack[idxVelocity];
+    if(lineType==CRay::nType_Emission)
+    {
+        SetVelocityEmission(velocity);
+    }else
+    {
+        SetVelocityAbsorption(velocity);
+    }
+
+    Int32 nsamples = xInds.size();
+    // retrieve the model
+    refreshModelUnderElements(filteredEltsIdx);
+    f = 0.0;
+    for (Int32 i = 0; i < nsamples; i++)
+    {
+        Float64 Yi = getModelFluxVal(xInds[i])*normFactor;
+        msqBuffer[i] = Yi - fluxdata[i];
+        f += msqBuffer[i]*msqBuffer[i];
+    }
+
+    refreshModelDerivSigmaUnderElements(filteredEltsIdx);
+    for (Int32 iElt = 0; iElt < filteredEltsIdx.size(); iElt++)
+    {
+        g[iElt]=0.0;
+    }
+    for (Int32 i = 0; i < nsamples; i++)
+    {
+        for (Int32 iElt = 0; iElt < filteredEltsIdx.size(); iElt++)
+        {
+            Float64 dm = getModelFluxDerivEltVal(filteredEltsIdx[iElt], xInds[i]);
+            Float64 grad = 2*dm*msqBuffer[i];
+            g[iElt] += grad;
+        }
+        //*
+        Int32 iElt = filteredEltsIdx.size();
+        Float64 dm = getModelFluxDerivSigmaVal(xInds[i])*normFactor;
+        Float64 grad = 2*dm*msqBuffer[i];
+        g[iElt] += grad;
+        //*/
+    }
 
     return 0;
 }

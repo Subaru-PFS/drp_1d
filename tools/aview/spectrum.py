@@ -1506,7 +1506,7 @@ def StartFromCommandLine( argv ) :
         else:
             s2 = Spectrum(options.otherspcPath, options.otherspcType, snorm=False)
             
-            if 1: #savgol model without lines and save it
+            if 0: #savgol model without lines and save it
                 #s2.smoothSavitskyGolay(400, 3.0)
                 s2.smoothSavitskyGolay(winSizeAngstrom=100, degree=3)
                 #s2.correctZeros()

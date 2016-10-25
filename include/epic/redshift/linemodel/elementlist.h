@@ -122,6 +122,16 @@ public:
     Float64 getModelFluxVal(Int32 idx) const;
     Float64 getModelFluxDerivEltVal(Int32 DerivEltIdx, Int32 idx) const;
     Float64 getModelFluxDerivSigmaVal(Int32 idx) const;
+    Int32 estimateMeanSqFluxAndGradient(const Float64* varPack,
+                                        const Float64 normFactor,
+                                        std::vector<Int32> filteredEltsIdx,
+                                        std::vector<Int32> xInds,
+                                        Int32 lineType,
+                                        Float64 *fluxdata,
+                                        Float64* msqBuffer,
+                                        Float64& f,
+                                        Float64* g);
+
 
     std::vector<boost::shared_ptr<CLineModelElement>  > m_Elements;
     std::shared_ptr<CSpectrum>  m_SpectrumModel;  //model

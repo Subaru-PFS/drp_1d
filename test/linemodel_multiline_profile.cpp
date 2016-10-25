@@ -31,14 +31,20 @@ BOOST_AUTO_TEST_SUITE(LinemodelMultilineProfile)
  * @param lambdas: a set of wavelengths where the flux will be tested with regard to a reference
  * @param refProfileFluxValues: n reference flux values corresponding to the wavelengths in lambdas
  * @param enableGradientCheck
- * @param refProfileDerivAmplitudeValues: m reference gradient values corresponding to each element in the catalog (first d_amps, then d_velocity)
- */
+ * @param refProfileDerivAmplitudeValues: n*m reference gradient values corresponding to each element in the catalog (first d_amps, then d_velocity)
+ * @param enableGradientMeansquareCheck
+ * @param refProfileMeansquareValue: reference meansquare residual float value
+ * @param refProfileGradientMeansquareValues: m reference meansquare gradient values corresponding to each element in the catalog (first d_amps, then d_velocity)
+*/
 void checkProfileValue(std::string linecatalogPath,
                        Float64 opt_velocityEmission,
                        std::vector<Float64> lambdas,
                        std::vector<Float64> refProfileFluxValues,
                        bool enableGradientCheck,
-                       std::vector<std::vector<Float64> >  refProfileGradientValues)
+                       std::vector<std::vector<Float64> >  refProfileGradientValues,
+                       bool enableGradientMeansquareCheck,
+                       Float64   refProfileMeansquareValue,
+                       std::vector<Float64>   refProfileGradientMeansquareValues)
 {
     //some input params
     std::string spectrumPath = "../test/data/LinemodelProfileTestCase/signalnoise_4lines_sig400_6000A_10000A.fits";       //unused, only needed for linemodel initialization
@@ -144,6 +150,54 @@ void checkProfileValue(std::string linecatalogPath,
             BOOST_CHECK_SMALL( abs(val - refDerivVelValue), 1e-4);
         }
     }
+
+
+    if(enableGradientMeansquareCheck)
+    {
+
+        CSpectrumFluxAxis spcFluxAxis = spectrum.GetFluxAxis();
+        //some allocations
+        Int32 nsamples = lambdas.size();
+        Int32 nddl = validEltsIdx.size()+1; //amps+velocity
+        Float64 normFactor = 1.0;
+        //input model variables
+        Float64* margs = (Float64*) calloc( nddl, sizeof( Float64 ) );
+        for (Int32 i = 0; i < nddl-1; i++)
+        {
+            margs[i] = 1.0;
+        }
+        margs[nddl-1] = opt_velocityEmission;
+        //output variables
+        Float64 f=0.0;
+        Float64* g = (Float64*) calloc( nddl, sizeof( Float64 ) );
+        //buffer for calculation of the gradient
+        Float64* mmy = (Float64*) calloc( nsamples, sizeof( Float64 ) );
+        //prepare fluxdata
+        Float64* fluxdata = (Float64*) calloc( nsamples, sizeof( Float64 ) );
+        std::vector<Int32> xInds;
+        const Float64* flux = spcFluxAxis.GetSamples();
+        for (Int32 i = 0; i < nsamples; i++)
+        {
+            xInds.push_back(i); //the support is the full wavelength range for this test
+            fluxdata[i] = flux[i]*normFactor;
+        }
+
+
+        Int32 ret = model.estimateMeanSqFluxAndGradient(margs, normFactor, validEltsIdx, xInds, lineTypeFilter, fluxdata, mmy, f, g);
+        //BOOST_CHECK_SMALL( abs(f - refProfileMeansquareValue), 1e-4);
+        BOOST_CHECK_CLOSE_FRACTION( f, refProfileMeansquareValue, 1e-3);
+
+
+
+        //check if esimated meansquare gradient residuals have the same values as the reference
+        for (Int32 i = 0; i < refProfileGradientMeansquareValues.size(); i++)
+        {
+            Float64 val = g[i];
+            Float64 refValue = refProfileGradientMeansquareValues[i];
+            //BOOST_CHECK_SMALL( abs(val - refValue), 1e-4);
+            BOOST_CHECK_CLOSE_FRACTION( val, refValue, 1e-3);
+        }
+    }
 }
 
 //*
@@ -162,9 +216,11 @@ BOOST_AUTO_TEST_CASE( Linemodel_multiline_profile_sym_value_center )
 
     std::vector<Float64> refProfileValue(4, 1.0);
     std::vector<std::vector<Float64> >  gradResidualMatrix( lambda.size(), std::vector<Float64>(5, 0.0) );
+    std::vector<Float64> gradResidualMeansquareMatrix(4, 1.0); //unused
+    Float64 refProfileMeansquareValue=1.0; //unused
 
     Float64 opt_velocityEmission = 100.0;
-    checkProfileValue(linecatalogPath, opt_velocityEmission, lambda, refProfileValue, false, gradResidualMatrix);
+    checkProfileValue(linecatalogPath, opt_velocityEmission, lambda, refProfileValue, false, gradResidualMatrix, false, refProfileMeansquareValue, gradResidualMeansquareMatrix);
 }
 //*/
 
@@ -194,6 +250,7 @@ BOOST_AUTO_TEST_CASE( Linemodel_multiline_profile_sym_value_fullwavelengthrange 
     }
 
     //load gradient reference values from CSV file
+    bool enableGradientCheck = true;
     std::vector<std::vector<Float64> >  gradResidualMatrix( lambda.size(), std::vector<Float64>(5, 0.0) );
     std::string gradResidual_filePath = "../test/data/LinemodelProfileTestCase/gradResidual_signalnoise4lines_sig400_6000A_10000A_m100_a1.0.txt";
     std::ifstream file;
@@ -226,11 +283,80 @@ BOOST_AUTO_TEST_CASE( Linemodel_multiline_profile_sym_value_fullwavelengthrange 
             kLine++;
         }
     }
+    file.close();
     BOOST_CHECK( kLine==lambda.size() );
 
-    bool enableGradientCheck = true;
+    //init meansquare gradient values (hardcoded)
+    bool enableGradientMeansquareCheck=true;
+    //load meansquare value
+    Float64 refProfileMeansquareValue=0.0;
+    std::string meansquare_filePath = "../test/data/LinemodelProfileTestCase/residualMeanSquare_signalnoise4lines_sig400_6000A_10000A_m100_a1.0.txt";
+    file.open( meansquare_filePath, std::ifstream::in );
+    fileOpenFailed = file.rdstate() & std::ios_base::failbit;
+    BOOST_CHECK( !fileOpenFailed );
+    kLine = 0;
+    while( getline( file, line ) )
+    {
+        boost::char_separator<char> sep(" \t");
+        // Tokenize each line
+        typedef boost::tokenizer< boost::char_separator<char> > ttokenizer;
+        ttokenizer tok( line, sep );
+        ttokenizer::iterator it = tok.begin();
+        if( it != tok.end() )
+        {
+            // Parse line
+            double val = 0.0;
+            while( it != tok.end() )
+            {
+                val = boost::lexical_cast<double>(*it);
+                refProfileMeansquareValue = val;
+                ++it;
+            }
+            kLine++;
+        }
+    }
+    file.close();
+
+    //load gradientMeansquare value
+    std::vector<Float64> refProfileGradientMeansquareValues(5, 0.0);
+    std::string gradientMeansquare_filePath = "../test/data/LinemodelProfileTestCase/gradResidualMeanSquare_signalnoise4lines_sig400_6000A_10000A_m100_a1.0.txt";
+    file.open( gradientMeansquare_filePath, std::ifstream::in );
+    fileOpenFailed = file.rdstate() & std::ios_base::failbit;
+    BOOST_CHECK( !fileOpenFailed );
+    kLine = 0;
+    while( getline( file, line ) )
+    {
+        boost::char_separator<char> sep(" \t");
+        // Tokenize each line
+        typedef boost::tokenizer< boost::char_separator<char> > ttokenizer;
+        ttokenizer tok( line, sep );
+        ttokenizer::iterator it = tok.begin();
+        if( it != tok.end() )
+        {
+            // Parse line
+            double val = 0.0;
+            while( it != tok.end() )
+            {
+                val = boost::lexical_cast<double>(*it);
+                refProfileGradientMeansquareValues[kLine] = val;
+                ++it;
+            }
+            kLine++;
+        }
+    }
+    file.close();
+
+
     Float64 opt_velocityEmission = 100.0;
-    checkProfileValue(linecatalogPath, opt_velocityEmission, lambda, refProfileValue, enableGradientCheck, gradResidualMatrix);
+    checkProfileValue(linecatalogPath,
+                      opt_velocityEmission,
+                      lambda,
+                      refProfileValue,
+                      enableGradientCheck,
+                      gradResidualMatrix,
+                      enableGradientMeansquareCheck,
+                      refProfileMeansquareValue,
+                      refProfileGradientMeansquareValues);
 }
 //*/
 

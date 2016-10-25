@@ -36,6 +36,7 @@ import matplotlib.pyplot as plt
 plt.style.use('ggplot')
 #plt.style.use('seaborn-white')
 #plt.style.use('seaborn-darkgrid')
+#plt.style.use('seaborn-dark-palette')
 #[u'seaborn-darkgrid', u'seaborn-notebook', u'classic', u'seaborn-ticks', u'grayscale', u'bmh', 
 #u'seaborn-talk', u'dark_background', u'ggplot', u'fivethirtyeight', u'seaborn-colorblind', 
 #u'seaborn-deep', u'seaborn-whitegrid', u'seaborn-bright', u'seaborn-poster', u'seaborn-muted', 
