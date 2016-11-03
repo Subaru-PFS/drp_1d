@@ -219,7 +219,7 @@ BOOST_AUTO_TEST_CASE( LinemodelFit_lbfgsfit_1EmissionLine )
 
     std::string opt_fittingmethod = "lbfgsfit";//"hybrid";//
     Int32 lineTypeFilter = CRay::nType_Emission;
-    Float64 initialVelocity = 150.0;
+    Float64 initialVelocity = 500.0;
     Int32 forceFilter = CRay::nForce_Strong;
 
     std::vector<Float64> ampsRef;
