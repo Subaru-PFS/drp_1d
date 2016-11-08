@@ -554,6 +554,7 @@ class ResParser(object):
                 forceTplAmplitudes = []
                 forceTplDoNotRedShifts = []
                 meritsExtrema = []
+                tplcorrTplnameExtrema = []
                 try:
                     dtdExtrema = chi_linemodel.amazed_dTransposeD[0]
                 except:
@@ -579,6 +580,7 @@ class ResParser(object):
                         forceTplAmplitudes.append(1.0)
                         forceTplDoNotRedShifts.append(1)
                         meritsExtrema.append(chi_linemodel.getMeritExtremum(idx_model))
+                        tplcorrTplnameExtrema.append(chi_linemodel.amazed_FittedTplcorrTplName[idx_model])
                 
                 #create the outputs
                 d = {}
@@ -588,6 +590,7 @@ class ResParser(object):
                 d['forceTplDoNotRedShifts'] = forceTplDoNotRedShifts
                 d['merits'] = meritsExtrema
                 d['dTransposeD'] = dtdExtrema
+                d['tplcorrTplnameExtrema'] = tplcorrTplnameExtrema
                 displayParamsBundle.append(d)
                     
             #chi2 results
@@ -595,36 +598,75 @@ class ResParser(object):
                 print("get component now")
                 spcComponent = self.getParameterVal('dtreeCsolve', 'chisquare', 'spectrum', 'component') 
                 print("INFO: for method {}, using spectrum component: {}".format(method, spcComponent))
-                zList, meritList, tplList, ampsList = self.getCandidatesFromAmazedChi2Extrema(spcnametag, chi2Type=spcComponent) 
                 
-                #find the indexes correspondance between redshifts and zList
-                indexesZ = []
-                for j, b in enumerate(redshifts):
-                    npZList = np.array(zList)
-                    xfind = np.abs(npZList-b)
-                    ind = np.argmin(xfind)
-                    indexesZ.append(ind)
-                
-                print("\nDEBUG: Candidates found:")
-                
-                tplpaths = []
-                forceTplAmplitudes = []
-                forceTplDoNotRedShifts = []
-                merits = []
-                
-                for j, b in enumerate(redshifts):
-                    k = indexesZ[j]
-                    print("cand. #{}: z={:15}, merit={:15}, tpl={:25}, amp={:25}".format(k, zList[k], meritList[k], tplList[k], ampsList[k]))
+                getContinuumMeritType = 0
+                #0 = get the best merit for each redshift
+                #1 = get the continuum value for a given tplname (retrieved from the line ratios tpl for example: tpl-corr or tpl-shape for example)
+                if getContinuumMeritType==0:
+                    zList, meritList, tplList, ampsList = self.getCandidatesFromAmazedChi2Extrema(spcnametag, chi2Type=spcComponent) 
                     
-                    #redshifts.append(zList[k])
-                    tplpath = self.getTplFullPath(tplList[k], spcComponent)
-                    tplpaths.append(tplpath)
-                    forceTplAmplitudes.append(ampsList[k])
-                    forceTplDoNotRedShift = 0
-                    forceTplDoNotRedShifts.append(forceTplDoNotRedShift)
-                    merit = meritList[k]
-                    merits.append(merit)
+                    #find the indexes correspondance between redshifts and zList
+                    indexesZ = []
+                    for j, b in enumerate(redshifts):
+                        npZList = np.array(zList)
+                        xfind = np.abs(npZList-b)
+                        ind = np.argmin(xfind)
+                        indexesZ.append(ind)
                     
+                    print("\nDEBUG: Candidates found:")
+                    
+                    tplpaths = []
+                    forceTplAmplitudes = []
+                    forceTplDoNotRedShifts = []
+                    merits = []
+                    tplNums = [] #unused
+                    
+                    for j, b in enumerate(redshifts):
+                        k = indexesZ[j]
+                        print("cand. #{}: z={:15}, merit={:15}, tpl={:25}, amp={:25}".format(k, zList[k], meritList[k], tplList[k], ampsList[k]))
+                        
+                        #redshifts.append(zList[k])
+                        tplpath = self.getTplFullPath(tplList[k], spcComponent)
+                        tplpaths.append(tplpath)
+                        forceTplAmplitudes.append(ampsList[k])
+                        forceTplDoNotRedShift = 0
+                        forceTplDoNotRedShifts.append(forceTplDoNotRedShift)
+                        merit = meritList[k]
+                        merits.append(merit)
+                elif getContinuumMeritType==1:
+                    tplpaths = []
+                    forceTplAmplitudes = []
+                    forceTplDoNotRedShifts = []
+                    merits = []
+                    tplNums = []
+                        
+                    for j, thisRedshift in enumerate(redshifts):
+                        
+                        #find template name for this candidate
+                        thisCandidateTplName = ""
+                        thisCandidateTplPath = ""
+                        nameTag = displayParamsBundle[0]['tplcorrTplnameExtrema'][j]
+                        tplList = self.getTplFullPathList()
+                        ntpl = len(tplList)
+                        for x in range(ntpl):
+                            thisCandidateTplPath = tplList[x]
+                            tplNameRaw= os.path.basename(tplList[x])
+                            tplName = tplNameRaw.replace("_nolinessavgol", "")
+                            if tplName in nameTag:
+                                thisCandidateTplName = tplName
+                                thisCandidateTplNameRaw = tplNameRaw
+                                thisCandidateTplNum = x
+                                break
+                        
+                        tplpaths.append(thisCandidateTplPath)
+                        forceTplDoNotRedShift = 0
+                        forceTplDoNotRedShifts.append(forceTplDoNotRedShift)
+                        forceTplAmplitudes.append(1.0)
+                        
+                        thisCandidateChi2 = self.getChi2Val(spcnametag, thisRedshift, tplName=thisCandidateTplNameRaw, chi2type=spcComponent)
+                        merits.append(thisCandidateChi2)
+                        
+                        tplNums.append(thisCandidateTplNum)
                     
                 #create the outputs
                 d = {}
@@ -633,6 +675,7 @@ class ResParser(object):
                 d['forceTplAmplitudes'] = forceTplAmplitudes
                 d['forceTplDoNotRedShifts'] = forceTplDoNotRedShifts
                 d['merits'] = merits
+                d['tplNums'] = tplNums
                 displayParamsBundle.append(d)
                 
         elif method == "chisquaresolve" or method == "chisquare2solve":

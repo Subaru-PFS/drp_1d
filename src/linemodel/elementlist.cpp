@@ -521,6 +521,11 @@ void CLineModelElementList::PrepareContinuum(Float64 z)
     return;
 }
 
+std::string CLineModelElementList::getTplCorr_bestTplName()
+{
+    return m_tplcorrBestTplName;
+}
+
 /**
  * \brief Prepares the context and fits the Linemodel to the spectrum, returning the merit of the fit.
  * Prepare the continuum.
@@ -889,7 +894,8 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
         //Log.LogInfo( "LineModel Infos: TPLCORR");
         std::vector<Float64> correctedAmplitudes;
         correctedAmplitudes.resize(modelSolution.Amplitudes.size());
-        Float64 fitTplShape = m_CatalogTplShape->GetBestFit( modelSolution.Rays, modelSolution.Amplitudes, modelSolution.Errors, correctedAmplitudes );
+        std::string bestTplName = "";
+        Float64 fitTplShape = m_CatalogTplShape->GetBestFit( modelSolution.Rays, modelSolution.Amplitudes, modelSolution.Errors, correctedAmplitudes, bestTplName);
         for( UInt32 iRestRay=0; iRestRay<m_RestRayList.size(); iRestRay++ )
         {
             Int32 eIdx = FindElementIndex(iRestRay);
@@ -900,6 +906,9 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
         }
         refreshModel();
         modelSolution = GetModelSolution();
+        m_tplcorrBestTplName = bestTplName;
+    }else{
+        m_tplcorrBestTplName = "None";
     }
 
     Float64 merit = getLeastSquareMerit(lambdaRange);

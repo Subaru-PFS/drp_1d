@@ -341,13 +341,18 @@ class AViewGui(QtWidgets.QWidget):
         self.leResultIndex.setText(str(1))
         self.refreshResultDetails()
 
-    def refreshResultDetails(self):
-        current_index = int(self.leResultIndex.text() )-1
-        self.leResultSpcName.setText(self.resList.list[current_index].name)
-        self.leResultSpcZdiff.setText(str(self.resList.list[current_index].zdiff))
-        self.leResultSpcZcalc.setText("{:.5}".format(self.resList.list[current_index].zcalc))
-        self.leResultSpcZref.setText("{:.5}".format(self.resList.list[current_index].zref))
-        
+    def refreshResultDetails(self, reinit=False):
+        if not reinit:
+            current_index = int(self.leResultIndex.text() )-1
+            self.leResultSpcName.setText(self.resList.list[current_index].name)
+            self.leResultSpcZdiff.setText(str(self.resList.list[current_index].zdiff))
+            self.leResultSpcZcalc.setText("{:.5}".format(self.resList.list[current_index].zcalc))
+            self.leResultSpcZref.setText("{:.5}".format(self.resList.list[current_index].zref))
+        else:
+            self.leResultSpcName.setText("")
+            self.leResultSpcZdiff.setText("")
+            self.leResultSpcZcalc.setText("")
+            self.leResultSpcZref.setText("")
     
     def bt_nextResultIndex(self):
         current_index = int(self.leResultIndex.text() )
@@ -472,6 +477,7 @@ class AViewGui(QtWidgets.QWidget):
             
    
     def bt_setResultDir(self):
+        self.refreshResultDetails(reinit=True) 
         self.setResultDir()
     
     def setResultDir(self, newPath=None):

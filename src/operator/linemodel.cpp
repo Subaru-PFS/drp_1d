@@ -674,7 +674,8 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
         result->FittedTplName[i] = model.getFitContinuum_tplName();
         result->FittedTplAmplitude[i] = model.getFitContinuum_tplAmplitude();
 
-
+        //save the tplcorr results
+        result->FittedTplcorrTplName[i] = model.getTplCorr_bestTplName();
     }
 
     //ComputeArea2(*result);

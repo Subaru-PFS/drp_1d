@@ -155,6 +155,16 @@ class AViewWidget(QtWidgets.QWidget):
         self.cbChi2Selection.currentIndexChanged.connect(self.cb_chi2Selection_selectionchange)
         self.cbChi2SelectedIndex = -1
         self.layoutChi2Plot.addWidget(self.cbChi2Selection)  
+        #add the tpl selcetion override for the chi2plot        
+        self.cbChi2ModelSelection = QtWidgets.QComboBox()
+        self.cbChi2ModelSelection.currentIndexChanged.connect(self.cb_chi2ModelSelection_selectionchange)
+        self.cbChi2ModelSelectedIndex = -1
+        self.layoutChi2Plot.addWidget(self.cbChi2ModelSelection)  
+        self.populateChi2ModelCombo()
+        if '.chisquare' in self.cbChi2Selection.currentText():
+            self.cbChi2ModelSelection.setEnabled(True)
+        else:
+            self.cbChi2ModelSelection.setEnabled(False)
         
         #add chisquare.py figure
         self.loadMeritPlot(self.iextremaredshift)
@@ -231,8 +241,34 @@ class AViewWidget(QtWidgets.QWidget):
             print("    {}".format(self.cbChi2Selection.itemText(count)))
         print("{}: Current index = {}, selection changed to {}".format(tag, i, self.cbChi2Selection.currentText()))
         if not i==self.cbChi2SelectedIndex and not self.cbChi2SelectedIndex==-1:
+            #if the selection corresponds to a chi2:
+            if '.chisquare' in self.cbChi2Selection.currentText():
+                self.cbChi2ModelSelection.setEnabled(True)
+            else:
+                self.cbChi2ModelSelection.setEnabled(False)
             self.cbChi2SelectedIndex = i
             self.plotCandidate()
+            
+    def cb_chi2ModelSelection_selectionchange(self,i):
+        tag = "cb_chi2modelSelection_selectionchange"
+        print("{}, Items in the list are :".format(tag))
+        for count in range(self.cbChi2ModelSelection.count()):
+            print("    {}".format(self.cbChi2ModelSelection.itemText(count)))
+        print("{}: Current index = {}, selection changed to {}".format(tag, i, self.cbChi2ModelSelection.currentText()))
+        if not i==self.cbChi2ModelSelectedIndex and not self.cbChi2ModelSelectedIndex==-1:
+            self.cbChi2ModelSelectedIndex = i
+            self.plotCandidate( zClick=-1, iextremaredshift=-1, tplNameOverride=self.cbChi2ModelSelection.currentText())    
+            
+    def cb_chi2ModelSelection_setselection(self, tplname):
+        tag = "cb_chi2ModelSelection_setselection"
+        #print("{}, Items in the list are :".format(tag))
+        for count, name in enumerate(range(self.cbChi2ModelSelection.count())):
+            if name==tplname:
+                self.cbChi2ModelSelectedIndex = count
+                self.cbChi2ModelSelection.SetSelection()
+            print("    {}".format(self.cbChi2ModelSelection.itemText(count)))
+        print("{}: Current index = {}, selection set to {}".format(tag, i, self.cbChi2ModelSelection.currentText()))
+        
         
     def ck_redshiftOverride(self, state):
         if state == QtCore.Qt.Checked:
@@ -258,7 +294,7 @@ class AViewWidget(QtWidgets.QWidget):
         
         return ind
         
-    def plotCandidate(self, zClick=-1, iextremaredshift=-1):
+    def plotCandidate(self, zClick=-1, iextremaredshift=-1, tplNameOverride=""):
         QtWidgets.QApplication.setOverrideCursor(QtGui.QCursor(QtCore.Qt.WaitCursor))
         
         if self.ckRedshiftChoiceOverride.isChecked():
@@ -274,7 +310,7 @@ class AViewWidget(QtWidgets.QWidget):
             self.iextremaredshift = iextremaredshift               
           
         #refresh meritplot
-        self.loadMeritPlot(self.iextremaredshift)               
+        self.loadMeritPlot(self.iextremaredshift, tplNameOverride=tplNameOverride)               
                 
         #refresh aviewplot
         #self.layoutAviewPlot.removeWidget(self.canvasAView)
@@ -284,7 +320,18 @@ class AViewWidget(QtWidgets.QWidget):
         #    self.layoutAviewPlot.itemAt(i).widget().deleteLater()
         #self.show()
         self.loadAViewPlot(self.layoutAviewPlot)
-        
+
+
+    def populateChi2ModelCombo(self):
+        self.cbChi2ModelSelection.clear()
+
+        tplPathList = self.resParser.getTplFullPathList(component='raw')
+            
+        for k, tplPath in enumerate(tplPathList):
+            tplname = os.path.split(tplPath)[1]
+            self.cbChi2ModelSelection.addItem(tplname)
+        self.cbChi2ModelSelectedIndex=0
+
     def populateCandidatesList(self):
         for k, zcand in enumerate(self.candid_zvalCandidates):
             tplPath = self.candid_displayParamsBundle[self.candid_displayParamsBundleIdx]['tplPaths'][k]
@@ -306,7 +353,7 @@ class AViewWidget(QtWidgets.QWidget):
         self.candid_zvalCandidates, self.candid_displayParamsBundle = self.resParser.getAutoCandidatesList(spcnametag)
         print("{}: {} candidates loaded".format(tag, len(self.candid_zvalCandidates)))
                 
-    def loadMeritPlot(self, idxCandidate=-1):
+    def loadMeritPlot(self, idxCandidate=-1, tplNameOverride=""):
         tag = "loadMeritPlot"
         print("{}: idxCandidate={}".format(tag, idxCandidate))
         #reset the merit plot canvas if already existing
@@ -331,6 +378,9 @@ class AViewWidget(QtWidgets.QWidget):
             
             tplPath = self.candid_displayParamsBundle[displayParamsBundleIdx_chi2]['tplPaths'][idxCandidate]
             tplnametag = os.path.split(tplPath)[1]
+            if not tplNameOverride=="":
+                tplnametag = tplNameOverride
+                print("INFO: overriding the tpl for merit plot with tpl named : {}".format(tplnametag))
         print("looking for the chi2 path using the tplnameteg = {}".format(tplnametag))
         [chipathlist, chinamelist] = self.resParser.getAutoChi2FullPath(_sname, tplnametag)
 

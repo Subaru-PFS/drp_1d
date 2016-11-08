@@ -107,6 +107,9 @@ Bool CRayCatalogsTplShape::Load( const char* dirPath )
             continue;
         }
         m_RayCatalogList.push_back(lineCatalog);
+
+        fs::path name(tplshapeCatalogList[k].c_str());
+        m_RayCatalogNames.push_back(name.filename().c_str());
     }
     Log.LogDebug( "CRayCatalogsTplShape - Loaded %d tplshaped catalogs", m_RayCatalogList.size());
 
@@ -117,7 +120,7 @@ Bool CRayCatalogsTplShape::Load( const char* dirPath )
  * \brief Calculates the best fit between the linemodel fitted amplitudes and the tplShaped catalogs
  *
  **/
-Float64 CRayCatalogsTplShape::GetBestFit( const CRayCatalog::TRayVector& restRayList, std::vector<Float64> fittedAmplitudes, std::vector<Float64> fittedErrors, std::vector<Float64>& amplitudesCorrected  )
+Float64 CRayCatalogsTplShape::GetBestFit( const CRayCatalog::TRayVector& restRayList, std::vector<Float64> fittedAmplitudes, std::vector<Float64> fittedErrors, std::vector<Float64>& amplitudesCorrected, std::string& bestTplName  )
 {
     Float64 coeffMin = -1;
     std::vector<Int32> mask;
@@ -175,6 +178,7 @@ Float64 CRayCatalogsTplShape::GetBestFit( const CRayCatalog::TRayVector& restRay
             {
                 coeffMin = fit;
                 bestFitAmplitudes = ampsCorrected;
+                bestTplName = m_RayCatalogNames[iCatalogs];
             }
         }
 

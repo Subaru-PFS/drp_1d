@@ -39,6 +39,7 @@ private:
 
     Bool GetCombinedRedshift(CDataStore& store, std::string scopeStr);
     TFloat64List GetBestRedshiftChi2List(CDataStore& store, std::string scopeStr, Float64 &minmerit, TFloat64List &zList);
+    TFloat64List GetChi2ListForGivenTemplateName(CDataStore& store, std::string scopeStr, TFloat64List givenRedshifts, std::vector<std::string> givenTplNames);
 
 };
 

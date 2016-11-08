@@ -324,7 +324,42 @@ Bool COperatorDTreeCSolve::GetCombinedRedshift(CDataStore& store, std::string sc
     TFloat64List zcontinuum_calcGrid;
     Float64 minchi2continuum= DBL_MAX;
 
-    chi2continuum_calcGrid = GetBestRedshiftChi2List(store, scopeStr, minchi2continuum, zcontinuum_calcGrid);
+    Int32 getContinuumMeritType = 0;
+    //0 = get the best merit for each redshift
+    //1 = get the continuum value for a given tplname (retrieved from the line ratios tpl for example: tpl-corr or tpl-shape for example)
+    std::vector<Int32> idxChi2Results;
+    if(getContinuumMeritType==0)
+    {
+        chi2continuum_calcGrid = GetBestRedshiftChi2List(store, scopeStr, minchi2continuum, zcontinuum_calcGrid);
+
+        //retrieve the chi2cont results indexes
+        for( Int32 i=0; i<zcomb.size(); i++ )
+        {
+            for( Int32 iCont=0; iCont<zcontinuum_calcGrid.size(); iCont++ )
+            {
+                if(zcontinuum_calcGrid[iCont] == zcomb[i]){
+                    idxChi2Results.push_back(iCont);
+                    break;
+                }
+            }
+        }
+    }
+    else if(getContinuumMeritType==1)
+    {
+        //populate the tpl names
+        std::vector<std::string> givenTplNames;
+        for( Int32 iExtrema=0; iExtrema<results->Extrema.size(); iExtrema++ )
+        {
+            givenTplNames.push_back(results->FittedTplcorrTplName[idxLMResultsExtrema[iExtrema]]);
+        }
+        chi2continuum_calcGrid = GetChi2ListForGivenTemplateName( store, scopeStr, zcomb, givenTplNames);
+
+        //retrieve the chi2cont results indexes
+        for( Int32 i=0; i<zcomb.size(); i++ )
+        {
+            idxChi2Results.push_back(i);
+        }
+    }
 
     //option 1: interpolate the continuum results on the continuum fit grid
     if(false){
@@ -351,20 +386,6 @@ Bool COperatorDTreeCSolve::GetCombinedRedshift(CDataStore& store, std::string sc
         }
     }
 
-    //*
-    //***********************************************************
-    //retrieve the chi2cont results indexes
-    std::vector<Int32> idxChi2Results;
-    for( Int32 i=0; i<zcomb.size(); i++ )
-    {
-        for( Int32 iCont=0; iCont<zcontinuum_calcGrid.size(); iCont++ )
-        {
-            if(zcontinuum_calcGrid[iCont] == zcomb[i]){
-                idxChi2Results.push_back(iCont);
-                break;
-            }
-        }
-    }
 
 
 
@@ -412,7 +433,7 @@ Bool COperatorDTreeCSolve::GetCombinedRedshift(CDataStore& store, std::string sc
 
         //chi2cCoeff = -3.9e3;//-1.14e3;
         chi2cCoeff = 1.0e6; //Coeff NUL
-        chi2cCoeff = -1e-2;
+        chi2cCoeff = -1.0e2;
 
 
         Log.LogInfo( "dtreeCsolve : lmCoeff=%f", lmCoeff);
@@ -560,6 +581,53 @@ TFloat64List COperatorDTreeCSolve::GetBestRedshiftChi2List( CDataStore& store, s
         }
     }
 
+    return meritList;
+
+}
+
+TFloat64List COperatorDTreeCSolve::GetChi2ListForGivenTemplateName( CDataStore& store, std::string scopeStr, TFloat64List givenRedshifts, std::vector<std::string> givenTplNames)
+{
+    std::string scope = "dtreeCsolve.chisquare2solve.";
+    scope.append(scopeStr.c_str());
+
+    TOperatorResultMap meritResults = store.GetPerTemplateResult(scope.c_str());
+
+    TFloat64List meritList;
+
+    for(Int32 iGivenZ=0; iGivenZ<givenRedshifts.size(); iGivenZ++)
+    {
+        Float64 merit = -1.0;
+        //find merit for each z and tpl name
+        for( TOperatorResultMap::const_iterator it = meritResults.begin(); it != meritResults.end(); it++ )
+        {
+            auto meritResult = std::dynamic_pointer_cast<const CChisquareResult>((*it).second);
+            std::string tplName = (*it).first;
+            size_t f = tplName.find("_nolinessavgol");
+            tplName.replace(f, std::string("_nolinessavgol").length(), "");
+            bool tplNameFound = givenTplNames[iGivenZ].find(tplName) != std::string::npos;
+            if(!tplNameFound)
+            {
+                continue;
+            }
+            for( Int32 i=0; i<meritResult->ChiSquare.size(); i++ )
+            {
+                if( givenRedshifts[iGivenZ] == meritResult->Redshifts[i] ){
+                    merit = meritResult->ChiSquare[i];
+                    break;
+                }
+            }
+        }
+        meritList.push_back(merit);
+        if( merit==-1 )
+        {
+            Log.LogError( "dtreeCsolve : Could not find Chi2 result for z=%f, and tpl=%s", givenRedshifts[iGivenZ], givenTplNames[iGivenZ].c_str());
+        }
+    }
+
+    if( meritList.size()!=givenRedshifts.size() )
+    {
+        Log.LogError( "dtreeCsolve : Could not populate merit list for given tpl names list");
+    }
     return meritList;
 
 }

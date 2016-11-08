@@ -73,6 +73,9 @@ public:
 
     Float64 EstimateDTransposeD(const TFloat64Range& lambdaRange, std::__cxx11::string spcComponent);
 
+
+    std::string getTplCorr_bestTplName();
+
     Int32 GetNElements();
     Int32 GetModelValidElementsNDdl();
     Int32 GetModelNonZeroElementsNDdl();
@@ -197,6 +200,7 @@ private:
     std::shared_ptr<CSpectrum> m_inputSpc;
     CTemplateCatalog m_tplCatalog;
     TStringList m_tplCategoryList;
+    std::string m_tplcorrBestTplName;
 
     Float64 m_fitContinuum_dLambdaTgt;
     Float64 m_fitContinuum_lmin;
