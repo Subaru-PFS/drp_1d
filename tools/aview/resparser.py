@@ -530,8 +530,41 @@ class ResParser(object):
             
      
         elif method == "linemodeltplshape":
-            #not supported
-            pass
+            chi2type = method
+            spcComponent = 'raw'
+            #print("INFO: for method {}, using spectrum component: {}".format(method, spcComponent))
+            zList, meritList, tplList, ampsList = self.getCandidatesFromAmazedChi2Extrema(spcnametag, chi2Type=chi2type) 
+            
+            tplpaths = []
+            forceTplAmplitudes = []
+            forceTplDoNotRedShifts = []
+            
+            print("\nDEBUG: Candidates found:")
+            for k in range(len(zList)):
+                print("cand. #{}: z={:15}, merit={:15}, tpl={:25}, amp={:25}".format(k, zList[k], meritList[k], tplList[k], ampsList[k]))
+                
+                redshifts.append(zList[k])
+                #tplpath = self.getTplFullPath(tplList[k], spcComponent)
+                tplnametag = tplList[k]
+                spath = os.path.join(self.respath, spcnametag)
+                dirpath = os.path.join(spath, tplnametag)
+                tplpath = os.path.join(dirpath, "linemodeltplshapesolve.linemodel_spc_extrema_{}.csv".format(0))                 
+                
+                
+                tplpaths.append(tplpath)
+                forceTplAmplitudes.append(ampsList[k])
+                forceTplDoNotRedShift = 1
+                forceTplDoNotRedShifts.append(forceTplDoNotRedShift)
+                
+            #create the outputs
+            d = {}
+            d['operator'] = 'linemodeltplshape'
+            d['tplPaths'] = tplpaths
+            d['forceTplAmplitudes'] = forceTplAmplitudes
+            d['forceTplDoNotRedShifts'] = forceTplDoNotRedShifts
+            displayParamsBundle.append(d)
+            
+            print("\n")
         elif method == "decisionaltreeb" or method.lower() == "amazed0_2":
             #not supported
             pass

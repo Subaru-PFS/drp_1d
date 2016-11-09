@@ -353,8 +353,8 @@ BOOST_AUTO_TEST_CASE( LinemodelFit_lmfit_4EmissionLinesF )
 //    Float64 emissionVelocityRef = 400.0;
 //    Float64 z = 0.0;
 
-//    Float64 initialVelocity = 50.0;
-//    for(Int32 kV=0; kV<5; kV++)
+//    Float64 initialVelocity = 100.0;
+//    for(Int32 kV=0; kV<1; kV++)
 //    {
 //        BOOST_TEST_MESSAGE( "LinemodelFit_lbfgsfit_4EmissionLinesF: initial velocity: " << initialVelocity );
 //        checkAmplitudeAndVelocityFit(spectrumPath, noisePath, linecatalogPath, opt_fittingmethod, lineTypeFilter, forceFilter, initialVelocity, z, ampsRef, emissionVelocityRef);

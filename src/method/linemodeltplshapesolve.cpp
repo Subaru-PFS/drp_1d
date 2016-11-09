@@ -65,7 +65,7 @@ const std::string CLineModelTplshapeSolve::GetDescription()
 Bool CLineModelTplshapeSolve::PopulateParameters( CDataStore& dataStore )
 {
     dataStore.GetScopedParam( "linemodel.linetypefilter", m_opt_linetypefilter, "no" );
-    dataStore.GetScopedParam( "linemodel.lineforcefilter", m_opt_lineforcefilter, "S" );
+    dataStore.GetScopedParam( "linemodel.lineforcefilter", m_opt_lineforcefilter, "no" );
     dataStore.GetScopedParam( "linemodel.fittingmethod", m_opt_fittingmethod, "hybrid" );
     dataStore.GetScopedParam( "linemodel.continuumcomponent", m_opt_continuumcomponent, "fromspectrum" );
     dataStore.GetScopedParam( "linemodel.linewidthtype", m_opt_lineWidthType, "combined" );
@@ -91,6 +91,7 @@ Bool CLineModelTplshapeSolve::PopulateParameters( CDataStore& dataStore )
         Log.LogInfo( "    -instrumentresolution: %.2f", m_opt_resolution);
     }
     Log.LogInfo( "    -rules: %s", m_opt_rules.c_str());
+    Log.LogInfo( "    -continuumcomponent: %s", m_opt_continuumcomponent.c_str());
     Log.LogInfo( "    -continuumreestimation: %s", m_opt_continuumreest.c_str());
     Log.LogInfo( "    -extremacount: %.3f", m_opt_extremacount);
 
