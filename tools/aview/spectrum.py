@@ -1495,7 +1495,7 @@ def StartFromCommandLine( argv ) :
             elif options.export == "yes":
                 #s.interpolate(dx=0.1) #high sampling for the synthesis process
                 #s.applyLambdaCrop(930, 1230)
-                #s.applyWeight(1e-18)
+                #s.applyWeight(1e-17)
                 #s.setMagIAB(20)        
         
                 path = os.path.split(options.spcPath)[0]

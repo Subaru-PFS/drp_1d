@@ -690,6 +690,12 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
     //fit the amplitude of all elements together (but Emission or Absorption separately) with iterative   solver: lmfit
     if(m_fittingmethod=="lmfit")
     {
+        //initial guess from individual fit
+        for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
+        {
+            m_Elements[iElts]->fitAmplitude(spectralAxis, m_spcFluxAxisNoContinuum, redshift);
+        }
+
         std::vector<Float64> ampsfitted;
         Int32 retVal;
         Int32 lineType;
@@ -745,6 +751,12 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
     //fit the amplitude of all elements together (but Emission or Absorption separately) with solver: lbfgs
     if(m_fittingmethod=="lbfgsfit")
     {
+        //initial guess from individual fit
+        for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
+        {
+            m_Elements[iElts]->fitAmplitude(spectralAxis, m_spcFluxAxisNoContinuum, redshift);
+        }
+
         std::vector<Float64> ampsfitted;
         Int32 retVal;
         Int32 lineType;
@@ -1183,7 +1195,7 @@ Int32 CLineModelElementList::fitAmplitudesHybrid( const CSpectrumSpectralAxis& s
  */
 Int32 CLineModelElementList::fitAmplitudesLBFGS(std::vector<Int32> filteredEltsIdx, const CSpectrumFluxAxis& fluxAxis, std::vector<Float64>& ampsfitted, Int32 lineType)
 {
-    Bool verbose = false;
+    Bool verbose = true;
 
     // populate the DOF with the n elements to be fitted
     Int32 nddl = filteredEltsIdx.size();
@@ -1201,7 +1213,7 @@ Int32 CLineModelElementList::fitAmplitudesLBFGS(std::vector<Int32> filteredEltsI
 
     // retrieve the data to be fitted on the support
     Float64* y = (Float64*) calloc( nsamples, sizeof( Float64 ) );
-    Float64* weights = (Float64*) calloc( nsamples, sizeof( Float64 ) ); //unused for now! TODO
+    //Float64* weights = (Float64*) calloc( nsamples, sizeof( Float64 ) ); //unused for now! TODO
     const Float64* flux = fluxAxis.GetSamples();
     Float64 ei;
     Int32 idx = 0;
@@ -1209,7 +1221,7 @@ Int32 CLineModelElementList::fitAmplitudesLBFGS(std::vector<Int32> filteredEltsI
     {
         idx = xInds[i];
         ei = m_ErrorNoContinuum[idx]*normFactor;
-        weights[i] = 1.0 / (ei * ei);
+        //weights[i] = 1.0 / (ei * ei);
         y[i] = flux[idx]*normFactor;
     }
 
@@ -1219,9 +1231,9 @@ Int32 CLineModelElementList::fitAmplitudesLBFGS(std::vector<Int32> filteredEltsI
 
     //lbfgs internal variables alloc. (wa and iwa)
     Int32 nmax = nddl;
-    Int32 mmax = 20;
-    Int32 waSize = (2*mmax + 5)*nmax + 11*mmax^2 + 8*mmax;
-    Float64* wa = (Float64*) calloc( waSize*2.0, sizeof( Float64 ) );
+    Int32 mmax = 100;
+    Int32 waSize = (2*mmax + 5)*nmax + 12*mmax^2 + 12*mmax;
+    Float64* wa = (Float64*) calloc( waSize, sizeof( Float64 ) );
     integer* iwa = (integer*) calloc( 3*nmax, sizeof( integer ) );
 
 
@@ -1229,13 +1241,13 @@ Int32 CLineModelElementList::fitAmplitudesLBFGS(std::vector<Int32> filteredEltsI
     integer iprint = 1;
     /*     iprint = 101; */
     /*     We specify the tolerances in the stopping criteria. */
-    Float64 factr = 1e7;
-    Float64 pgtol = 1e-5;
+    Float64 factr = 1e7; //1e7 for moderate accuracy, 10 for high accuracy
+    Float64 pgtol = 1e-5;//2.22e-9;//
     /*     We specify the dimension n of the sample problem and the number */
     /*        m of limited memory corrections stored.  (n and m should not */
     /*        exceed the limits nmax and mmax respectively.) */
     static integer n = nddl;
-    integer m = 12;
+    integer m = 50;
 
     //set the bounds
     static Float64* lower = (Float64*) calloc( nddl, sizeof( Float64 ) );
@@ -1252,30 +1264,42 @@ Int32 CLineModelElementList::fitAmplitudesLBFGS(std::vector<Int32> filteredEltsI
         upper[i]=10.0; //unused
     }
     Int32 idVelocity = filteredEltsIdx.size();
-    nbd[idVelocity] = 2;//1 = only lower bound
-    lower[idVelocity]=40.0;
-    upper[idVelocity]=700.0;
+    nbd[idVelocity] = 2;//2 = lower AND upper bound
+    lower[idVelocity] = 20.0;
+    upper[idVelocity] = 800.0;
 
     /*     We now define the starting point. */
     Float64* x = (Float64*) calloc( nddl, sizeof( Float64 ) );
+    //double* x = (double*) calloc( nddl, sizeof( double ) );
+    //Float64* x = (Float64*) malloc( nddl*sizeof( Float64 ) );
+    //initialize lmfit with previously estimated individual/hybrid fit method
     for(Int32 i=0; i<filteredEltsIdx.size(); i++)
     {
-        x[i] = 0.0;
+        //Float64 ampInitGuess = m_Elements[filteredEltsIdx[i]]->GetElementAmplitude();
+        Float64 ampInitGuess = 0.0;
+        if(verbose)
+        {
+            Log.LogInfo( "LineModel LBFGS fit: set init guess amp [%d] = %.1f ", filteredEltsIdx[i], ampInitGuess);
+            fprintf(stderr, "lbfgs fit: set init guess amp [%d] = %.1f\n", filteredEltsIdx[i], ampInitGuess);
+        }
+        x[i] = ampInitGuess*normFactor;
     }
-    x[idVelocity] = 200.0;
 
-    //debug with linear regression example
-    if(0)
+    if(lineType==CRay::nType_Emission)
     {
-        n=1;
-        nbd[0]=1; //1 = only lower bound
-        lower[0] = 0.;
-        upper[0] = 100.;
+        x[idVelocity] = GetVelocityEmission();
+    }else
+    {
+        x[idVelocity] = GetVelocityAbsorption();
 
-        //nbd[1]=2;
-        //lower[1] = 1.;
-        //upper[1] = 1000.;
     }
+    //x[idVelocity] = 200.0;
+
+    if(verbose)
+    {
+        fprintf(stderr, "lbfgs fit: set velocity init guess = %f\n", x[idVelocity]);
+    }
+
 
     static integer taskValue;
     static integer *task=&taskValue; /* must initialize !! */
@@ -1296,93 +1320,6 @@ L111EList:
     setulb(&n, &m, x, lower, upper, nbd, &f, g, &factr, &pgtol, wa, iwa, task, &iprint, csave, lsave, isave, dsave);
     if ( IS_FG(*task) ) {
 
-        //debug with linear regression example
-        if(0)
-        {//try ax+b, a=51, b=888
-            Float64 a=51.;
-            Float64 b=888.;
-
-            Float64 _x1 = 10;
-            Float64 _y1 = a*_x1;
-            //Float64 _y1 = a*_x1+b;
-            //Float64 _x2 = 20;
-            //Float64 _y2 = a*_x2+b;
-
-            f = 0.0;
-            f += (_y1 - _x1*x[0]);
-            //f += _x1*x[0]+x[1] - _y1;
-            //f += _x2*x[0]+x[1] - _y2;
-
-
-            g[0] = 2*x[0]*_x1*_x1 - 2*_y1*_x1;
-            //g[1] = 0;
-        }
-
-        if(0){
-
-            /*        the minimization routine has returned to request the */
-            /*        function f and gradient g values at the current x. */
-
-            /*        Compute function value f for the sample problem. */
-            //f[]=...
-            // update the linemodel amplitudes
-            for (Int32 iElt = 0; iElt < filteredEltsIdx.size(); iElt++)
-            {
-                Float64 amp = x[iElt]/normFactor;
-                SetElementAmplitude(filteredEltsIdx[iElt], amp, 0.0);
-            }
-            //*
-            // update the linemodel velocity/linewidth
-            Int32 idxVelocity = filteredEltsIdx.size();
-            Float64 velocity = x[idxVelocity];
-            if(lineType==CRay::nType_Emission)
-            {
-                SetVelocityEmission(velocity);
-            }else
-            {
-                SetVelocityAbsorption(velocity);
-            }
-            //*/
-
-            // retrieve the model
-            refreshModelUnderElements(filteredEltsIdx);
-            f = 0.0;
-            for (Int32 i = 0; i < nsamples; i++)
-            {
-                Float64 Yi = getModelFluxVal(xInds[i])*normFactor;
-                mmy[i] = Yi - y[i];
-                f += mmy[i]*mmy[i];
-            }
-            //f /= float(nsamples);
-
-            //*        Compute gradient g for the sample problem. */
-            //g[]=...
-            refreshModelDerivSigmaUnderElements(filteredEltsIdx);
-            for (Int32 iElt = 0; iElt < filteredEltsIdx.size(); iElt++)
-            {
-                g[iElt]=0.0;
-            }
-            for (Int32 i = 0; i < nsamples; i++)
-            {
-                for (Int32 iElt = 0; iElt < filteredEltsIdx.size(); iElt++)
-                {
-                    Float64 dm = getModelFluxDerivEltVal(filteredEltsIdx[iElt], xInds[i]);
-                    Float64 grad = 2*dm*mmy[i];
-                    g[iElt] += grad;
-                }
-                //*
-                Int32 iElt = filteredEltsIdx.size();
-                Float64 dm = getModelFluxDerivSigmaVal(xInds[i])*normFactor;
-                Float64 grad = 2*dm*mmy[i];
-                g[iElt] += grad;
-                //*/
-            }
-//            for (Int32 iElt = 0; iElt < nddl; iElt++)
-//            {
-//                g[iElt] /= float(nsamples);
-//            }
-        }
-
         Int32 ret = estimateMeanSqFluxAndGradient(x, normFactor, filteredEltsIdx, xInds, lineType, y, mmy, f, g);
 
         /*          go back to the minimization routine. */
@@ -1402,15 +1339,22 @@ L111EList:
     for (Int32 iElt = 0; iElt < filteredEltsIdx.size(); iElt++)
     {
         Float64 amp = x[iElt]/normFactor;
+        if(verbose)
+        {
+            Log.LogInfo( "LineModel lbfgs fit: set amp [] = %.1f ", filteredEltsIdx[iElt], amp);
+        }
         SetElementAmplitude(filteredEltsIdx[iElt], amp, 0.0);
+
     }
     //
 
+    //return 0;
 
     //free allocated memory
-    free(y);
-    free(weights);
-    free(x);
+    //free(y);
+    //free(mmy);
+    //free(weights);
+    //free(x);
 
 //    free(wa);
 //    free(iwa);
@@ -1540,7 +1484,7 @@ void print_state (size_t iter, gsl_multifit_fdfsolver * s)
 Int32 CLineModelElementList::fitAmplitudesLmfit(std::vector<Int32> filteredEltsIdx, const CSpectrumFluxAxis& fluxAxis, std::vector<Float64>& ampsfitted, Int32 lineType)
 {
     //http://www.gnu.org/software/gsl/manual/html_node/Example-programs-for-Nonlinear-Least_002dSquares-Fitting.html
-    Bool verbose = false;
+    Bool verbose = true;
 
 
 
@@ -1595,10 +1539,16 @@ Int32 CLineModelElementList::fitAmplitudesLmfit(std::vector<Int32> filteredEltsI
     gsl_multifit_function_fdf f;
 
     Float64* x_init = (Float64*) calloc( p, sizeof( Float64 ) );
-    //TODO: initialize lmfit with individual/hybrid fit method
+    //initialize lmfit with previously estimated individual/hybrid fit method
     for(Int32 kp=0; kp<nddl; kp++)
     {
-        x_init[kp] = 0;
+        Float64 ampInitGuess = m_Elements[filteredEltsIdx[kp]]->GetElementAmplitude();
+        //Float64 ampInitGuess = 0;
+        if(verbose)
+        {
+            Log.LogInfo( "LineModel LMfit: set init guess amp [%d] = %.1f ", filteredEltsIdx[kp], ampInitGuess);
+        }
+        x_init[kp] = ampInitGuess*normFactor;
     }
     if(lineType==CRay::nType_Emission)
     {
@@ -1616,8 +1566,8 @@ Int32 CLineModelElementList::fitAmplitudesLmfit(std::vector<Int32> filteredEltsI
     gsl_vector *res_f;
     double chi, chi0;
 
-    const double xtol = 1e-12;
-    const double gtol = 1e-12;
+    const double xtol = 1e-8;
+    const double gtol = 1e-8;
     const double ftol = 0.0;
     Int32 maxIterations = 250;
 
@@ -1651,7 +1601,7 @@ Int32 CLineModelElementList::fitAmplitudesLmfit(std::vector<Int32> filteredEltsI
     res_f = gsl_multifit_fdfsolver_residual(s);
     chi0 = gsl_blas_dnrm2(res_f);
 
-    /* solve the system with a maximum of 50 iterations */
+    /* solve the system with a maximum of maxIterations iterations */
     status = gsl_multifit_fdfsolver_driver(s, maxIterations, xtol, gtol, ftol, &info);
 
     gsl_multifit_fdfsolver_jac(s, J);

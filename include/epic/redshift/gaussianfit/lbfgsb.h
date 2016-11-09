@@ -31,12 +31,26 @@ typedef long int logical;
 //#ifndef abs
 //#define abs(x) ((x) >= 0 ? (x) : -(x))
 //#endif
+//C++ version
+template<typename T> inline const T abs(T const & x)
+{
+    return ((x) >= 0 ? (x) : -(x));
+}
+
 //#ifndef min
 //#define min(a,b) ((a) <= (b) ? (a) : (b))
 //#endif
+template<typename T> inline const T min(T const & a, T const & b)
+{
+    return ((a) <= (b) ? (a) : (b));
+}
 //#ifndef max
 //#define max(a,b) ((a) >= (b) ? (a) : (b))
 //#endif
+template<typename T> inline const T max(T const & a, T const & b)
+{
+    return ((a) >= (b) ? (a) : (b));
+}
 
 
 
