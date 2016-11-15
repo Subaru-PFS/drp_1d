@@ -67,6 +67,10 @@ class Spectrum(object):
             self.loadmuse() 
         elif(self.stype == 'euclid_sim_noise'):
             self.loadeuclidSimNoise() 
+        elif(self.stype == 'euclid_sim_siroct2016_flux'):
+            self.loadeuclidSimSirOct2016(readtable="COMBINED_CONTSUB", readcol="F")
+        elif(self.stype == 'euclid_sim_siroct2016_noise'):
+            self.loadeuclidSimSirOct2016(readtable="COMBINED",readcol="ErrF") 
         elif(self.stype == 'empty'):
             pass 
         else:
@@ -175,6 +179,82 @@ class Spectrum(object):
             self.xvect[x] = scidata[x][0]
             self.yvect[x] = scidata[x][2]
             self.ysum += self.yvect[x]
+        
+    def loadeuclidSimSirOct2016(self, readtable="COMBINED_CONTSUB", readcol="F"):
+        #readcol="F", in order to read the FLUXES
+        #readcol="ErrF", in order to read the NOISE
+    
+        verbose = False
+        hdulist = fits.open(self.spath) 
+        
+        if verbose:
+            print("\nHDULIST = \n{}\n".format(hdulist))
+
+        if readtable=="COMBINED":
+            #second table should be named COMBINED, and contain the data 
+            idxBinTable = 2
+        elif readtable=="COMBINED_CONTSUB":
+            #second table should be named COMBINED, and contain the data without continuum
+            idxBinTable = 3
+            
+        try:
+            scidata = hdulist[idxBinTable].data
+            sciheader = hdulist[idxBinTable].header
+            if verbose:
+                print("Spectrum LOAD : Loaded bintable #{}".format(idxBinTable))
+        except:
+            print("Spectrum LOAD : failed to load bintable #{}, abort...".format(idxBinTable))
+            return
+            
+        if verbose:
+            print("\nSpectrum LOAD : scidata = \n{}\n".format(scidata))
+            print("\nSpectrum LOAD : sciheader = \n{}\n".format(sciheader))
+            print("\nSpectrum LOAD : sciheader name = \n{}\n".format(sciheader['EXTNAME']))
+            
+        if not sciheader['EXTNAME'] == readtable:
+            print("failed to find the {} bintable, found : {}, abort...".format(readtable, sciheader['EXTNAME']))
+            return
+            
+        #check the col names
+        idxWaves = 0
+        idxFluxes = 1
+        idxNoise = 2
+        if not 'WAVES' in sciheader['TTYPE1']:
+            print("failed to find the 'WAVES' bintable, found : {}, abort...".format(sciheader['TTYPE1']))
+            return
+        if not 'FLUXES' in sciheader['TTYPE2'] and readcol=="F":
+            print("failed to find the 'FLUXES' bintable, found : {}, abort...".format(sciheader['TTYPE2']))
+            return
+        if not 'NOISE' in sciheader['TTYPE3'] and readcol=="ErrF":
+            print("failed to find the 'NOISE' bintable, found : {}, abort...".format(sciheader['TTYPE3']))
+            return
+            
+        if verbose:
+            print("\nSpectrum LOAD : Successfully found idxWaves and (idxFluxes or idxNoise)\n")
+
+        if readcol=="F":   
+            idxF = idxFluxes
+        elif readcol=="ErrF":
+            idxF = idxNoise
+        else:
+            print("failed to parse the data flag (F or ErrF) found : {}, abort...".format(readcol))
+            
+        print("Spectrum LOAD : Reading type={}, F col = {}".format(self.stype, idxF))
+            
+        self.n = scidata.shape[0]
+        #print('{0} - n = {1}'.format(self.logTagStr, self.n))
+    
+        #---- default xaxis index array
+        self.xvect = range(0,self.n)
+        self.yvect = range(0,self.n)
+        self.ysum = 0.0
+        for x in range(0,self.n):
+            #print scidata[x]
+            self.xvect[x] = scidata[x][idxWaves]
+            self.yvect[x] = scidata[x][idxF]
+            self.ysum += self.yvect[x]
+            
+        
     
     #same as pfs but with xaxis in nm instead of Angstrom
     def loadpfs2(self):
@@ -978,16 +1058,29 @@ class Spectrum(object):
             smoothed2[i+decInit]=smoothed[i]
         for i in range(len(smoothed), len(signal)-decInit):  
             smoothed2[i+decInit]=smoothed[len(smoothed)-1]
-        return smoothed2         
+        return smoothed2  
         
-    def smoothSavitskyGolay(self, winSizeAngstrom=100, degree=2): 
-        inputSpc = np.array(self.yvect)
+        
+        
+    def getSmoothSavitskyGolay(self, winSizeAngstrom=100, degree=2): 
+        inputYvect = self.yvect
+        
+        inputSpc = np.array(inputYvect)
         winSize = int(winSizeAngstrom/self.getResolution())
         if winSize/2.0 == int(winSize/2.0):
             winSize+=1
         print("savgol using winsize = {}".format(winSize))
         filtered = savgol_filter(inputSpc, winSize, degree)
-        self.yvect = list(filtered)
+        yvect = list(filtered)
+        
+        return yvect
+        
+    def smoothSavitskyGolay(self, winSizeAngstrom=100, degree=2): 
+        self.yvect = self.getSmoothSavitskyGolay(winSizeAngstrom=winSizeAngstrom, degree=degree)
+        
+    def removeContinuumSavgol(self, winSizeAngstrom=100, degree=2): 
+        smoothYvect = self.getSmoothSavitskyGolay(winSizeAngstrom=winSizeAngstrom, degree=degree)
+        self.yvect = [self.yvect[k]-smoothYvect[k] for k, a in enumerate(self.yvect)]
         
     def extendWavelengthRangeRed(self, wavelengthSup, overridingExtensionValue=None):
         i1 = self.n-2;
@@ -1432,7 +1525,7 @@ def StartFromCommandLine( argv ) :
                     help="path to the fits spectrum to be plotted")
     parser.add_argument("-t", "--type", 
                         help="type of spectrum, can be in teh following list \
-                        {template, template-w0f2, vvds, pfs, pfs2, muse, hplana, euclid, pfs2reech, euclid_sim_noise}",  
+                        {template, template-w0f2, vvds, pfs, pfs2, muse, hplana, euclid, pfs2reech, euclid_sim_noise, euclid_sim_siroct2016_flux, euclid_sim_siroct2016_noise}",  
                         dest="spcType",     
                         default="")                
     parser.add_argument("-o", "--otherspc", 
@@ -1484,8 +1577,8 @@ def StartFromCommandLine( argv ) :
 #                s.saveTpl(soutputpath)
 #                WarningKeyStr = raw_input("\n\nINFO: Modifications applied: saved to {}".format(soutputpath))
 #                        
-
-            #s.smoothSavitskyGolay(winSizeAngstrom=100, degree=3)
+            #s.removeContinuumSavgol(winSizeAngstrom=400, degree=2)
+            #s.smoothSavitskyGolay(winSizeAngstrom=400, degree=2)
                 
             if options.export == "tpl":
                 

@@ -138,14 +138,14 @@ class AViewPlot(object):
             #self.xmax = max(self.sxvect[self.s.n-1], self.txvect[self.t.n-1])        
             self.ymin = min(min(self.syvect), min(self.tyvect))
             self.ymax = max(max(self.syvect), max(self.tyvect))
+            print("INFO: tpl Ampl. factor used is {}".format(A))
+            print("INFO: tpl Ampl.*Norm [{}; {}]A is {}".format(self.xmin, self.xmax, A*self.t.getFluxNorm(self.xmin, self.xmax)))
         else:
             A = 1.0
             self.xmin = self.sxvect[0]
             self.xmax = self.sxvect[self.s.n-1]       
             self.ymin = min(self.syvect)
             self.ymax = max(self.syvect)
-        print("INFO: tpl Ampl. factor used is {}".format(A))
-        print("INFO: tpl Ampl.*Norm [{}; {}]A is {}".format(self.xmin, self.xmax, A*self.t.getFluxNorm(self.xmin, self.xmax)))
 
         #compute ranges  
         if not self.exportAutoDisplaysPath == "":
@@ -200,6 +200,11 @@ class AViewPlot(object):
                 ax2Label = 'Noise'                
                 useReducedAx2Range = True
                 ax2Color = 'k'
+            else:
+                ax2Label = '-'                
+                useReducedAx2Range = False
+                ax2Color = 'k'
+                
         else:
             #prepare fitError vects
             tplInterp = self.t.copy()
@@ -518,6 +523,8 @@ class AViewPlot(object):
         ax2.set_ylabel(ax2Label)
         ax1.set_title(self.name) # Titre
         
+        if not self.forcePlotNoTemplate:
+            ax1.legend(labels = ['spc', 'model'])
         
         if not self.exportAutoDisplaysPath == "":
             print("INFO: exporting auto display")
