@@ -613,7 +613,12 @@ class ResParser(object):
                         forceTplAmplitudes.append(1.0)
                         forceTplDoNotRedShifts.append(1)
                         meritsExtrema.append(chi_linemodel.getMeritExtremum(idx_model))
-                        tplcorrTplnameExtrema.append(chi_linemodel.amazed_FittedTplcorrTplName[idx_model])
+                        try:
+                            tplcorrTplnameExtrema.append(chi_linemodel.amazed_FittedTplcorrTplName[idx_model])
+                        except:
+                            tplcorrTplnameExtrema.append("")
+                            
+                            
                 
                 #create the outputs
                 d = {}

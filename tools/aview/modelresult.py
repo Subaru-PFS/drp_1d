@@ -120,7 +120,7 @@ class ModelResult(object):
         text_file.close()             
     
         
-    def plot(self, plotType='amplitudes'):
+    def plot(self, plotType='amplitudes', exportPath=""):
         
         #plotValue = self.lineerror 
         if plotType=='amplitudes':
@@ -188,7 +188,7 @@ class ModelResult(object):
         
         if enableYRescaleAuto:
             pp.ylim([-plotrange*amax/aemax - 500, plotrange*emax/aemax + 500])
-        if 1:
+        if 0:
             valf = ymarginValue*3.0
             pp.ylim([-valf, valf])
             
@@ -198,8 +198,11 @@ class ModelResult(object):
         pp.ylabel('{} (x{:.3})'.format(ylabelStr, coeffAmp))
         titleStr = "{} at z={}".format(self.name, self.z)
         pp.title(titleStr) # Titre
-        #pp.savefig('ExempleTrace') # sauvegarde du fichier ExempleTrace.png
-        pp.show()
+        if exportPath=="":
+            pp.show()
+        else:
+            pp.savefig("{}".format(exportPath))
+            
 
     def randomAmplitudes(self, coeffE=1.0, coeffA=0.5):
 	#coeffE = continuum independent value: this is the 'SFR=100.0' line amplitude

@@ -157,7 +157,7 @@ class Catalog(object):
         return a
         
     def plot(self): 
-        shiftedctlg = c.getShiftedCatalog(0.0, "A", -1)
+        shiftedctlg = self.getShiftedCatalog(0.0, "A", -1)
         #print(shiftedctlg)
         self.linesx = shiftedctlg['lambda']
         self.linesxrest = shiftedctlg['lambdarest']
@@ -181,7 +181,25 @@ class Catalog(object):
         pp.title(self.name) # Titre
         #pp.savefig('ExempleTrace') # sauvegarde du fichier ExempleTrace.png
         pp.show()
+        
     
+    def plotNominalAmpsAsModelResult(self, name="catalog", exportPath=""): 
+        #create temp catalog file
+        tmpFilePath = '/tmp/{}.txt'.format(name) 
+        f = open(tmpFilePath, 'w')
+        f.write("#linemodel solution 0 for z = 0.0, velocityEmission = 100.000000, velocityAbsorption = 100.000000, merit = 100.0{\n")
+        hdrStr = "#type	#force	#Name_____________	#elt_ID	#lambda_rest	#amp_____	#err_____	#err_fit_____\n"
+        f.write(hdrStr)
+        
+        for k in range(len(self.linelambda)):
+            lStr = "{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t".format(self.linetype[k], self.lineforce[k], self.linename[k], k, self.linelambda[k], self.linenominalamp[k], -1, -1 )
+            f.write("{}\n".format(lStr))            
+        f.close()
+        
+        mres = modelresult.ModelResult(tmpFilePath)
+        mres.plot(exportPath=exportPath)
+
+        
     def plotInZplane(self):
         if 0:
             #EUCLID
@@ -389,6 +407,21 @@ class Catalog(object):
         #outpath = os.path.join(path,name)
         #self.save(outpath)
             
+    def applyShapeFromDictionnary(self, dictionnary):
+        
+        for x in range(0,self.n):
+            self.linenominalamp[x] = 0.0
+            
+        for x in range(0,self.n):
+            self.linegroup[x] = "shape"
+            a = dictionnary[self.linename[x]]
+            #print("amp in dictionnary for {} is : {}".format(self.linename[x], a))
+            if np.isnan(a):
+                a = 0.0
+            #print("using : {}".format(a))
+            self.linenominalamp[x] = a
+            self.lineprofile[x] = "SYM"            
+            
     def getComparisonDistance(self, otherCatalog):
         if not otherCatalog.n == self.n:
             print("Error: the catalogs must be the same size")
@@ -421,6 +454,7 @@ def StartFromCommandLine( argv ) :
         
         #c.plot()
         #c.plotInZplane()  
+        c.plotNominalAmpsAsModelResult()
         
         #print("the REDMINE (copy/paste) generated table is:\n{}".format(c.getRedmineTableString()))
         #print("the LATEX (copy/paste) generated table is:\n{}".format(c.getLatexTableString()))
