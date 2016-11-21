@@ -19,6 +19,8 @@ import sys
 import os
 import argparse
 
+from string import ascii_uppercase
+
 from astropy.io import ascii
 import numpy as np
 
@@ -581,7 +583,7 @@ def loadDiff(fname):
             data = lineStr.split("\t")
             data = [r for r in data if r != '']
             #print len(data)
-            if(len(data) == 15): #Spectrum ID	MAGI	ZREF	ZFLAG	ZCALC	MERIT	TPL	METHOD    SNR	SFR E(B-V) Sigma LogHalpha ExtValue DIFF
+            if(len(data) == 15): #Spectrum ID	MAGI	ZREF	ZFLAG ZCALC MERIT TPL	METHOD    SNR	SFR E(B-V) Sigma LogHalpha ExtValue DIFF
                 d0 = str(data[0])
                 d1 = float(data[1])
                 d2 = float(data[2])
@@ -1076,7 +1078,81 @@ def ProcessFailuresSeqFile( fname, refFile, fnameFailuresSeqFile, fnameFailureRe
     fFailuresRefFile.close()
     
     print '\n'
+
+def ProcessStars( fname, enablePlot = False, exportType="png" ):
+    """
+    Process the stars hist plots
+    - export as exporType (choose between, 'png', 'pickle', 'pngpickle') : TODO 
+    """
+    spcIdIdx = 0
+    tplIdx = 6
     
+    data = loadDiff( fname );
+    
+    _baseOutputDirectory = os.path.dirname(os.path.abspath(fname))
+    outputDirectory = os.path.join(_baseOutputDirectory, "stars".format())
+    if os.path.exists( outputDirectory ) == False :        
+        print("makedir: Output dir: "+outputDirectory)
+        os.mkdir( outputDirectory, 0o755 )        
+        
+    n = (len(data))
+    n2 = len(data[0])
+    print "INFO: processing stars: n=" + str(n) + ", n2=" + str(n2)
+    
+    #find the stars and tpl type letter from spc/tpl name first letter
+    starTypes = []
+    tplTypes = []
+    for x in range(0,n): 
+        spcName = data[x][spcIdIdx]
+        _starType = spcName[0]
+        starTypes.append(_starType)
+        
+        tplName = data[x][tplIdx]
+        _tplType = tplName[0]
+        tplTypes.append(_tplType)
+    
+    #compare stars type with template type
+    sameTypes = []
+    for x in range(0,n):
+        sameTypes.append(0)
+        if starTypes[x] == tplTypes[x]:
+            sameTypes[x] = 1
+        
+    #export detailed comparison
+    fnameAscii = os.path.join(outputDirectory, "comparison_star_type.txt".format())
+    f = open(fnameAscii, 'w')
+    f.write("{}\t{}\t{}\t{}\t{}".format("spc", "spc-Type", "tpl", "tpl-type", "sameType"))
+    f.write("\n")
+    for x in range(0,n):
+        f.write("{}\t{}\t{}\t{}\t{}".format(data[x][spcIdIdx], starTypes[x], data[x][tplIdx], tplTypes[x], sameTypes[x]))
+        f.write("\n")
+    f.close()
+    
+    #print stats
+    nTot = n
+    nSuccess = np.sum(np.array(sameTypes))
+    success_rate = float(nSuccess)/float(nTot)
+    print("INFO: Stars overall success rate is {:.2f} percent ({}/{})".format(success_rate*100.0, nSuccess, nTot))
+    print("\n")    
+    
+    #plot per star-type statistics
+    typesCategoriesUnsorted = list(set(starTypes))
+    alphabet_string_MorganKeenan = "OBAFGKM" 
+    alphabet_string = alphabet_string_MorganKeenan
+    for a in ascii_uppercase:
+        if a not in alphabet_string:
+            #print("adding letter : {} to the alphabet".format(a))
+            alphabet_string = "{}{}".format(alphabet_string, a)
+    alphabet = {c: i for i, c in enumerate(alphabet_string)}
+    print("sorting alphabet is {}".format(alphabet))
+    typesCategories = sorted(typesCategoriesUnsorted, key=lambda word: [alphabet.get(c, ord(c)) for c in word])    
+    print("Star categories found N = {}".format(len(typesCategories)))
+    print("Star categories found = {}".format(typesCategories))
+    
+    for cat in typesCategories:
+        pass
+    
+   
 def exportLog(outdir, refFile, refType, magRange, zRange, sfrRange):
     tag = "stats_magmin{}magmax{}_zmin{}zmax{}_sfrmin{}sfrmax{}".format(magRange[0], magRange[1], zRange[0], zRange[1], sfrRange[0], sfrRange[1])
     fpath = os.path.join(outdir, "log_{}.txt".format(tag))
@@ -1117,7 +1193,7 @@ def StartFromCommandLine( argv ) :
                     help="performance matrix preset, choose between 'simulm201606', 'simueuclid2016'")
     
     parser.add_argument("-l", "--computeLvl", dest="computeLevel", default="brief",
-                    help="compute level, choose between 'brief' or 'full'")
+                    help="compute level, choose between 'brief', 'hist' or 'full', or 'stars'")
     
        
     options = parser.parse_args()
@@ -1202,6 +1278,9 @@ def StartFromCommandLine( argv ) :
     
     if  options.computeLevel == "full" or options.computeLevel == "perf":        
         processPerformance( outputFullpathDiff, opt_preset = options.perfpreset )
+        
+    if  options.computeLevel == "stars": #under developement, assumes the spectrum name's first character contains the star type for these statistics        
+        ProcessStars( outputFullpathDiff )
           
     exportLog(outputPath, options.refFile, options.type, magRange, zRange, sfrRange)
 

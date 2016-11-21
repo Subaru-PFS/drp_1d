@@ -35,7 +35,7 @@ using namespace std;
 COperatorChiSquare2::COperatorChiSquare2()
 {
     //load calzetti data
-    Float64 Ndata = 99390;
+    Float64 Ndata = 1e5;
     m_dataCalzetti = (Float64 *) malloc(Ndata* sizeof(Float64));
 
     std::string filePath = "/home/aschmitt/gitlab/cpf-redshift/calib/SB_calzetti.dl1.txt";

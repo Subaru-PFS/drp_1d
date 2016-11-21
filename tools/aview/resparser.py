@@ -398,7 +398,7 @@ class ResParser(object):
                     try:
                         ebmvlist.append(ebmvtpl[b])
                     except:
-                        ebmvlist.append(0.0)
+                        ebmvlist.append(-1.0)
                 meritslist.append(meritstpl[b])
                 tplNameList.append(tplNameTag)
                 
@@ -597,6 +597,7 @@ class ResParser(object):
                     
                 tplpaths = []
                 forceTplAmplitudes = []
+                forceTplDustCoeffs = []
                 forceTplDoNotRedShifts = []
                 meritsExtrema = []
                 tplcorrTplnameExtrema = []
@@ -623,6 +624,7 @@ class ResParser(object):
                         
                         tplpaths.append(tplpath)
                         forceTplAmplitudes.append(1.0)
+                        forceTplDustCoeffs.append(-1.0)
                         forceTplDoNotRedShifts.append(1)
                         meritsExtrema.append(chi_linemodel.getMeritExtremum(idx_model))
                         try:
@@ -637,6 +639,7 @@ class ResParser(object):
                 d['operator'] = 'linemodel'
                 d['tplPaths'] = tplpaths
                 d['forceTplAmplitudes'] = forceTplAmplitudes
+                d['forceTplDustCoeff'] = forceTplDustCoeffs
                 d['forceTplDoNotRedShifts'] = forceTplDoNotRedShifts
                 d['merits'] = meritsExtrema
                 d['dTransposeD'] = dtdExtrema

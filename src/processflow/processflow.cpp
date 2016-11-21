@@ -236,7 +236,7 @@ Bool CProcessFlow::Chisquare( CProcessFlowContext& ctx, const std::string& Categ
     TFloat64Range spcLambdaRange;
     spcSpectralAxis.ClampLambdaRange( lambdaRange, spcLambdaRange );
 
-    Log.LogInfo( "Process Chisquare (LambdaRange: %f-%f:%f)",
+    Log.LogInfo( "Process Chisquare for spc:%s (LambdaRange: %f-%f:%f)", ctx.GetSpectrum().GetName().c_str(),
                  spcLambdaRange.GetBegin(), spcLambdaRange.GetEnd(), ctx.GetSpectrum().GetResolution());
 
 
@@ -269,7 +269,7 @@ Bool CProcessFlow::Chisquare( CProcessFlowContext& ctx, const std::string& Categ
     std::string opt_interp;
     ctx.GetDataStore().GetScopedParam( "chisquare2solve.interpolation", opt_interp, "precomputedfinegrid" );
     std::string opt_extinction;
-    ctx.GetDataStore().GetScopedParam( "chisquare2solve.extinction", opt_extinction, "yes" );
+    ctx.GetDataStore().GetScopedParam( "chisquare2solve.extinction", opt_extinction, "no" );
 
     // prepare the unused masks
     std::vector<CMask> maskList;
