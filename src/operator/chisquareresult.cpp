@@ -132,6 +132,24 @@ Void CChisquareResult::Save( const CDataStore& store, std::ostream& stream ) con
             }
             stream << "}" << std::endl;
         }
+
+        if(FitDustCoeff.size()>0){
+            stream <<  "#Extrema FitDustCoeff = {";
+            for ( int i=0; i<Extrema.size(); i++)
+            {
+                Int32 idx=0;
+                for ( UInt32 i2=0; i2<Redshifts.size(); i2++)
+                {
+                    if(Redshifts[i2] == Extrema[i]){
+                        idx = i2;
+                        break;
+                    }
+                }
+
+                stream << std::setprecision(16) << "\t" << std::scientific <<   FitDustCoeff[idx] << "\t";
+            }
+            stream << "}" << std::endl;
+        }
     }
 }
 

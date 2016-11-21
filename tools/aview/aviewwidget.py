@@ -336,7 +336,7 @@ class AViewWidget(QtWidgets.QWidget):
         for k, zcand in enumerate(self.candid_zvalCandidates):
             tplPath = self.candid_displayParamsBundle[self.candid_displayParamsBundleIdx]['tplPaths'][k]
             tplname = os.path.split(tplPath)[1]
-            item = QtWidgets.QListWidgetItem("C{:<5}{:<12}{}".format(k, zcand, tplname))
+            item = QtWidgets.QListWidgetItem("C{:<8}{:<15}{}".format(k, zcand, tplname))
             data = k
             item.setData(QtCore.Qt.UserRole, data)
 
@@ -446,6 +446,8 @@ class AViewWidget(QtWidgets.QWidget):
         tplpathCandidate =  self.candid_displayParamsBundle[self.candid_displayParamsBundleIdx]['tplPaths'][idxExtrema]
 
         forceTplAmplitudeCandidate = self.candid_displayParamsBundle[self.candid_displayParamsBundleIdx]['forceTplAmplitudes'][idxExtrema]
+        forceTplDustCoeffCandidate = self.candid_displayParamsBundle[self.candid_displayParamsBundleIdx]['forceTplDustCoeff'][idxExtrema]
+        
         forceTplDoNotRedShiftCandidate = self.candid_displayParamsBundle[self.candid_displayParamsBundleIdx]['forceTplDoNotRedShifts'][idxExtrema]
         print("{}: full tpl-model path: {}".format(tag, tplpathCandidate))
         if not os.path.exists(tplpathCandidate):
@@ -456,7 +458,6 @@ class AViewWidget(QtWidgets.QWidget):
 
         #tpath = "/home/aschmitt/data/vuds/VUDS_flag3_4/amazed/templates/ExtendedTemplatesMarch2016_v2/emission/NEW-Sbc-extended.txt"
         #tpath = "/home/aschmitt/tmp/output/sc_530002397_F53P002_join_A_125_1_atm_clean/linemodelsolve.linemodel_spc_extrema_0.csv"
-        tpath = tplpathCandidate
         
         cpath = self.resParser.getCatalogFullPath()
         if not os.path.exists(cpath):
@@ -466,19 +467,18 @@ class AViewWidget(QtWidgets.QWidget):
             z = zvalCandidate
         else:
             z = zManual
-        forceTplAmplitude = forceTplAmplitudeCandidate
-        forceTplDoNotRedShift = forceTplDoNotRedShiftCandidate
         
         spectrumContinuumPath = self.resParser.getContinuumPath(_sname, methodForced='auto')
         print("using continuum path = {}".format(spectrumContinuumPath))
         #print("Z for aviewplot = {}".format(z))
         avp = aviewplot.AViewPlot(spath, 
                                                npath, 
-                                               tpath, 
+                                               tplpathCandidate, 
                                                cpath, 
                                                z, 
-                                               forceTplAmplitude=forceTplAmplitude, 
-                                               forceTplDoNotRedShift=forceTplDoNotRedShift, 
+                                               forceTplAmplitude=forceTplAmplitudeCandidate, 
+                                               forceTplDustCoeff=forceTplDustCoeffCandidate,
+                                               forceTplDoNotRedShift=forceTplDoNotRedShiftCandidate, 
                                                enablePlot=False, 
                                                scontinuumpath = spectrumContinuumPath) 
                                                

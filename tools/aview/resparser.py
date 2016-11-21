@@ -325,7 +325,8 @@ class ResParser(object):
         enableZrangePerTpl = False #not supported right now, zrange per template has to be made accessible from this class
         redshiftslist = []
         meritslist = []  
-        ampslist = []   
+        ampslist = [] 
+        ebmvlist = []   
         tplNameList = []
         
         if not chi2Type=='linemodel':
@@ -352,6 +353,7 @@ class ResParser(object):
             if not enableZrangePerTpl:
                 redshiftstpl = chi2.amazed_extrema
                 ampstpl = chi2.amazed_fitamplitude
+                ebmvtpl = chi2.amazed_fitDustCoeff
                 
                 if len(redshiftstpl)<nextremaPerTpl:
                     print("number of amazed_extrema found is too small = n={}, vs nextrema={}".format(len(redshiftstpl), nextremaPerTpl))
@@ -390,8 +392,13 @@ class ResParser(object):
                 redshiftslist.append(redshiftstpl[b])
                 if chi2Type=='linemodeltplshape':
                     ampslist.append(1.0)
+                    ebmvlist.append(0.0)
                 else:
                     ampslist.append(ampstpl[b])
+                    try:
+                        ebmvlist.append(ebmvtpl[b])
+                    except:
+                        ebmvlist.append(0.0)
                 meritslist.append(meritstpl[b])
                 tplNameList.append(tplNameTag)
                 
@@ -402,6 +409,7 @@ class ResParser(object):
         if nextrema > 0:
             redshiftsUnsorted = list((redshiftslist))
             ampsUnsorted = list((ampslist))
+            ebmvsUnsorted = list((ebmvlist))
             meritsUnsorted = list((meritslist))
             tplNameUnsorted = list((tplNameList))
             sortId=np.argsort(meritsUnsorted)
@@ -409,6 +417,7 @@ class ResParser(object):
                 sortId = sortId[::-1]
             redshiftsNonUnique = [redshiftsUnsorted[b] for b in sortId]
             ampsNonUnique = [ampsUnsorted[b] for b in sortId]
+            ebmvsNonUnique = [ebmvsUnsorted[b] for b in sortId]
             meritsNonUnique = [meritsUnsorted[b] for b in sortId]
             templatesNonUnique = [tplNameUnsorted[b] for b in sortId]
 
@@ -420,7 +429,8 @@ class ResParser(object):
                 znewlist.append(redshiftsNonUnique[kz])  
                 inewlist.append(kz)                                         
             redshifts = [redshiftsNonUnique[b] for b in inewlist]           
-            amps = [ampsNonUnique[b] for b in inewlist]
+            amps = [ampsNonUnique[b] for b in inewlist]          
+            ebmvs = [ebmvsNonUnique[b] for b in inewlist]
             merits = [meritsNonUnique[b] for b in inewlist]
             templates = [templatesNonUnique[b] for b in inewlist]
             
@@ -432,11 +442,13 @@ class ResParser(object):
             if chi2Type == "corr":
                 redshifts = [redshiftsUnsorted[sortId[len(sortId)-1]]]
                 amps = [ampsUnsorted[sortId[len(sortId)-1]]]
+                ebmvs = [ebmvsUnsorted[sortId[len(sortId)-1]]]
                 merits = [meritsUnsorted[sortId[len(sortId)-1]]]
                 templates = [tplNameUnsorted[sortId[len(sortId)-1]]]
             else:
                 redshifts = [redshiftsUnsorted[sortId[0]]]
                 amps = [ampsUnsorted[sortId[0]]]
+                ebmvs = [ebmvsUnsorted[sortId[0]]]
                 merits = [meritsUnsorted[sortId[0]]]
                 templates = [tplNameUnsorted[sortId[0]]]
                 
@@ -444,7 +456,7 @@ class ResParser(object):
             for i, a in enumerate(redshifts):
                 print("unique-sorted list: z={}, merit={}, tpl={}".format(redshifts[i], merits[i], templates[i]))
             
-        return redshifts, merits, templates, amps
+        return redshifts, merits, templates, amps, ebmvs
         
         
     def getAutoCandidate(self, spcnametag, idxExtrema=0):
@@ -533,7 +545,7 @@ class ResParser(object):
             chi2type = method
             spcComponent = 'raw'
             #print("INFO: for method {}, using spectrum component: {}".format(method, spcComponent))
-            zList, meritList, tplList, ampsList = self.getCandidatesFromAmazedChi2Extrema(spcnametag, chi2Type=chi2type) 
+            zList, meritList, tplList, ampsList, ebmvList = self.getCandidatesFromAmazedChi2Extrema(spcnametag, chi2Type=chi2type) 
             
             tplpaths = []
             forceTplAmplitudes = []
@@ -641,7 +653,7 @@ class ResParser(object):
                 #0 = get the best merit for each redshift
                 #1 = get the continuum value for a given tplname (retrieved from the line ratios tpl for example: tpl-corr or tpl-shape for example)
                 if getContinuumMeritType==0:
-                    zList, meritList, tplList, ampsList = self.getCandidatesFromAmazedChi2Extrema(spcnametag, chi2Type=spcComponent) 
+                    zList, meritList, tplList, ampsList, ebmvList = self.getCandidatesFromAmazedChi2Extrema(spcnametag, chi2Type=spcComponent) 
                     
                     #find the indexes correspondance between redshifts and zList
                     indexesZ = []
@@ -655,6 +667,7 @@ class ResParser(object):
                     
                     tplpaths = []
                     forceTplAmplitudes = []
+                    forceTplDustCoeffs = []
                     forceTplDoNotRedShifts = []
                     merits = []
                     tplNums = [] #unused
@@ -667,6 +680,7 @@ class ResParser(object):
                         tplpath = self.getTplFullPath(tplList[k], spcComponent)
                         tplpaths.append(tplpath)
                         forceTplAmplitudes.append(ampsList[k])
+                        forceTplDustCoeffs.append(ebmvList[k])
                         forceTplDoNotRedShift = 0
                         forceTplDoNotRedShifts.append(forceTplDoNotRedShift)
                         merit = meritList[k]
@@ -674,6 +688,7 @@ class ResParser(object):
                 elif getContinuumMeritType==1:
                     tplpaths = []
                     forceTplAmplitudes = []
+                    forceTplDustCoeffs = []
                     forceTplDoNotRedShifts = []
                     merits = []
                     tplNums = []
@@ -711,6 +726,7 @@ class ResParser(object):
                 d['operator'] = 'chi2'
                 d['tplPaths'] = tplpaths
                 d['forceTplAmplitudes'] = forceTplAmplitudes
+                d['forceTplDustCoeff'] = forceTplDustCoeffs
                 d['forceTplDoNotRedShifts'] = forceTplDoNotRedShifts
                 d['merits'] = merits
                 d['tplNums'] = tplNums
@@ -719,10 +735,11 @@ class ResParser(object):
         elif method == "chisquaresolve" or method == "chisquare2solve":
             spcComponent = self.getParameterVal(method, 'spectrum', 'component') 
             print("INFO: for method {}, using spectrum component: {}".format(method, spcComponent))
-            zList, meritList, tplList, ampsList = self.getCandidatesFromAmazedChi2Extrema(spcnametag, chi2Type=spcComponent) 
+            zList, meritList, tplList, ampsList, ebmvList = self.getCandidatesFromAmazedChi2Extrema(spcnametag, chi2Type=spcComponent) 
             
             tplpaths = []
             forceTplAmplitudes = []
+            forceTplDustCoeffs = []
             forceTplDoNotRedShifts = []
             
             print("\nDEBUG: Candidates found:")
@@ -735,13 +752,18 @@ class ResParser(object):
                 forceTplAmplitudes.append(ampsList[k])
                 forceTplDoNotRedShift = 0
                 forceTplDoNotRedShifts.append(forceTplDoNotRedShift)
+                forceTplDustCoeffs.append(ebmvList[k])
+                
                 
             #create the outputs
             d = {}
             d['operator'] = 'chi2'
             d['tplPaths'] = tplpaths
             d['forceTplAmplitudes'] = forceTplAmplitudes
-            d['forceTplDoNotRedShifts'] = forceTplDoNotRedShifts
+            d['forceTplDustCoeff'] = forceTplDustCoeffs 
+            d['forceTplDoNotRedShifts'] = forceTplDoNotRedShifts 
+
+            
             displayParamsBundle.append(d)
             
             print("\n")

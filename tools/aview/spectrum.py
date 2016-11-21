@@ -473,7 +473,21 @@ class Spectrum(object):
             self.yvect[x] = flux[x]
             self.ysum += self.yvect[x]   
 
-        
+    def saveForCppHarcodedArray(self, outputPath):
+        f = open(outputPath, 'w')
+        f.write("static const Float64 arr[] = {\n")
+        #print("static const Float64 arr[] = {")
+        k = 0
+        for a in self.yvect:
+            #print("{}, ".format(a))
+            f.write("{}\n".format(a))
+#            f.write("{}, ".format(a))
+#            k += 1
+#            if k>20:
+#                f.write("\n")
+#                k = 0
+        #print("}\n\n")
+        f.write("\n}\n\n")
         
     def __str__(self):
         a = "\nSpectrum: {0}\n".format(self.name)
@@ -1032,6 +1046,17 @@ class Spectrum(object):
                 break
         return i
         
+    def getSquareError(self, otherSpc, otherAmp=1.0):
+        a = self.yvect
+        
+        #interpolate other on this
+        x = np.copy(otherSpc.xvect)
+        y = np.copy(otherSpc.yvect)*otherAmp
+        f = interpolate.interp1d(x, y, bounds_error=False, fill_value=0.0)
+        b = f(self.xvect) 
+        
+        squareErr = np.sum(np.square(np.array(a)-np.array(b))) 
+        return squareErr
         
     def smoothGaussian(self,signal,degree=5):  
         window=degree*2-1  
@@ -1285,7 +1310,20 @@ class Spectrum(object):
         
         for i,x in enumerate(self.xvect):
             self.yvect[i] *= weighting[i]
-    
+            
+    def applyCalzettiAttenuation(self, ebmv):
+        self.yvect *= self.getCalzettiAttenuation(ebmv) 
+          
+    def getCalzettiAttenuation(self, ebmv):
+        datpath = "/home/aschmitt/gitlab/cpf-redshift/tools/aview/SB_calzetti.dat" #should be in the same folder as this python code
+        t = np.loadtxt(datpath)
+        print("t shape is {}".format(t.shape))   
+        x = t[:, 0] 
+        y = t[:, 1]   
+        f = interpolate.interp1d(x, y, bounds_error=True, fill_value=0.0)     
+        y_resampled = f(self.xvect) 
+        extinction = np.ones(self.n) * 10**(-0.4*y_resampled*ebmv)
+        return extinction
     
     def addGaussianLine(self, glambda, gsigma, gamp):
         for x in range(0,self.n):
@@ -1552,6 +1590,12 @@ def StartFromCommandLine( argv ) :
         print('using full path: {0}'.format(options.spcPath))
         s = Spectrum(options.spcPath, options.spcType, snorm=False)
         
+        #s.applyLambdaCrop(100, 30000)
+        #s.interpolate(dx=1)
+        #path = os.path.split(options.spcPath)[0]
+        #nameWext = os.path.split(options.spcPath)[1]
+        #s.saveForCppHarcodedArray(os.path.join(path, "{}_forHardcodedArray.txt".format(nameWext)))
+
         #s.plotLambda()
         #exit()
         

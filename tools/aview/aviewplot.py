@@ -22,6 +22,8 @@ from matplotlib.ticker import MultipleLocator, FormatStrFormatter
 
 
 import numpy as np
+from scipy import interpolate
+
 
 import spectrum as sp
 import catalog as ctlg
@@ -32,7 +34,7 @@ if lines_label_method==1:
 
 
 class AViewPlot(object):
-    def __init__(self, spath, npath, tpath, cpath, z, forceTplAmplitude=-1.0, forceTplDoNotRedShift = 0, enablePlot=True, scontinuumpath = ""):
+    def __init__(self, spath, npath, tpath, cpath, z, forceTplAmplitude=-1.0, forceTplDustCoeff=0.0, forceTplDoNotRedShift = 0, enablePlot=True, scontinuumpath = ""):
         self.spath = spath
         self.scontinuumpath = scontinuumpath
         
@@ -44,6 +46,7 @@ class AViewPlot(object):
         self.spcname = "-"
         
         self.forceTplAmplitude = forceTplAmplitude;
+        self.forceTplDustCoeff = forceTplDustCoeff;
         self.forceTplDoNotRedShift = forceTplDoNotRedShift;
         
         self.forcePlotXIndex = False
@@ -109,10 +112,19 @@ class AViewPlot(object):
                             return
                         self.t.yvect[k] -=  self.scontinuum.yvect[k]
                     titleStr += "(NoCont.)"
-                
+                                    
             else:
                 tplStr = "tpl"
+                #optionnally apply some Dust attenuation (calzetti)
+                if self.forceTplDustCoeff>0.0:
+                    print("INFO: Applying Calzetti Attenuation with EBMV = {}".format(self.forceTplDustCoeff))
+                    self.t.applyCalzettiAttenuation(self.forceTplDustCoeff)
+                else:
+                    print("INFO: No Calzetti DUST attenuation applied".format())
+
+                    
             titleStr += ("{}={}\n".format(tplStr, self.t.name))
+            
                      
         titleStr += "z={}".format(self.z)
         self.name = titleStr
@@ -521,10 +533,15 @@ class AViewPlot(object):
             
         ax1.set_ylabel('Flux')
         ax2.set_ylabel(ax2Label)
-        ax1.set_title(self.name) # Titre
+        fullTitle = "{}\na={}, ebmv={}".format(self.name, A, self.forceTplDustCoeff)
+        ax1.set_title(fullTitle) # Titre
         
         if not self.forcePlotNoTemplate:
             ax1.legend(labels = ['spc', 'model'])
+            
+        #print the total lst-sq error
+        sqErr = np.sqrt(self.s.getSquareError(self.t, A))
+        print("INFO: estimated approx. lst-sq error = {}".format(sqErr))
         
         if not self.exportAutoDisplaysPath == "":
             print("INFO: exporting auto display")
@@ -691,6 +708,7 @@ def StartFromCommandLine( argv ) :
     parser.add_option(u"-z", u"--redshift", help="z to be plotted",  dest="redshift", default="-1")
     parser.add_option(u"-m", u"--redshifttpl", help="force do not plot redshift",  dest="redshifttpl", default="0")
     parser.add_option(u"-a", u"--tplamp", help="amp. to be used to rescale the template",  dest="tplamp", default="-1")
+    parser.add_option(u"-e", u"--tplebmvcoeff", help="ebmv coeff. to be used to weight the tpl",  dest="tplebmv", default="0.0")
     
     
     (options, args) = parser.parse_args()
@@ -698,7 +716,7 @@ def StartFromCommandLine( argv ) :
     if( len( args ) == 0 ) :
         forceTplDoNotRedShift = bool(int(options.redshifttpl))
         print("forceTplDoNotRedShift = {}".format(forceTplDoNotRedShift))
-        avp = AViewPlot(options.spcPath, options.noisePath, options.tplpath, options.ctlgPath, float(options.redshift), float(options.tplamp), forceTplDoNotRedShift = forceTplDoNotRedShift )
+        avp = AViewPlot(options.spcPath, options.noisePath, options.tplpath, options.ctlgPath, float(options.redshift), forceTplAmplitude=float(options.tplamp), forceTplDustCoeff=float(options.tplebmv), forceTplDoNotRedShift = forceTplDoNotRedShift )
         
         exit()
     else:
@@ -714,77 +732,3 @@ if __name__ == '__main__':
     print "Catalog"
     Main( sys.argv )
         
-#if __name__ == '__main__':
-#    if 0:
-#        path = "/home/aschmitt/data/pfs/pfs_lbg/lbgabs_1K_2z3_20J22.5"
-#        name = "EZ_fits-W-F_9.fits"
-#        spath = os.path.join(path,name)
-#        print('using full path s: {0}'.format(spath))
-#    
-#        name = "EZ_fits-W-F_9.fits"
-#        tpath = os.path.join(path,name)
-#        print('using full path t: {0}'.format(tpath))
-#        
-#        avp = AViewPlot(spath, tpath, 0.1)
-#    
-#    if 0:
-#        spath = "/home/aschmitt/data/vvds/vvds2/cesam_vvds_z0_F02_DEEP/1D/sc_020086957_F02P018_vmM1_red_88_1_atm_clean.fits"
-#        print('Spc path is: {0}'.format(spath))
-#        zval = 4.8
-#        print('Redshift is: {0}'.format(zval))
-#        #print(s.getRedshiftTpl(spcName))
-#        tpath = "/home/aschmitt/data/vvds/vvds2/cesam_vvds_z0_F02_DEEP/amazed/Templates/Default/qso/SDSS_AGN.txt"
-#        tpath = "/home/aschmitt/data/vvds/vvds2/cesam_vvds_z0_F02_DEEP/amazed/Templates/Default/galaxy/ave_Lya_no.txt"
-#        print('Tpl path is: {0}'.format(tpath) )  
-#        cpath = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/RayCatalogs/raycatalogamazedvacuum.txt"
-#        print('Catalog path is: {0}'.format(cpath) )  
-#        
-#        #overrride zval
-#        #zval = 2.11605 #for pfs lbg abs, EZ_fits-W-F_9
-#        #zval = 1.1714 #for vvds1 'sc_020086397_F02P016_vmM1_red_31_1_atm_clean'
-#        #zval = 1.355
-#        #zval = 1.075
-#        avp = AViewPlot(spath, tpath, cpath, zval)
-#        
-#    if 1:
-#        spath = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/1D/sc_020086471_F02P016_vmM1_red_107_1_atm_clean.fits"
-#        spath = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/1D/sc_020135682_F02P019_vmM1_red_99_1_atm_clean.fits"
-#        print('Spc path is: {0}'.format(spath))
-#        zval = 1.1247
-#        print('Redshift is: {0}'.format(zval))
-#        #print(s.getRedshiftTpl(spcName))
-#        tpath = "/home/aschmitt/data/pfs/pfs_lbg/amazed/Templates/ExtendedGalaxyEL2/emission/NEW_Im_extended_blue.dat"
-#        tpath = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/Templates/ExtendedGalaxyEL2/emission/NEW_Im_extended_blue.dat"
-#        tpath = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/Templates/linemodel/emission/NEW_Im_extended_blue_continuum.txt"
-#        print('Tpl path is: {0}'.format(tpath) )  
-#        
-#        cpath = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/linecatalogs/linecatalogamazedair_B5.txt"
-#        print('Catalog path is: {0}'.format(cpath) )  
-#        
-#        #overrride zval
-#        #zval = 2.11605 #for pfs lbg abs, EZ_fits-W-F_9
-#        #zval = 1.1714 #for vvds1 'sc_020086397_F02P016_vmM1_red_31_1_atm_clean'
-#        #zval = 1.355
-#        #zval = 1.075
-#        avp = AViewPlot(spath, "", tpath, cpath, zval)
-#    
-#    if 0:
-#        spath = "/home/aschmitt/data/pfs/pfs_testsimu_20151009/470026900000130.2-0.4_20_20.5_/470026900000130.2-0.4_20_20.5_EZ_fits-W-TF_0.fits"
-#        print('Spc path is: {0}'.format(spath))
-#        npath = "/home/aschmitt/data/pfs/pfs_testsimu_20151009/470026900000130.2-0.4_20_20.5_/470026900000130.2-0.4_20_20.5_EZ_fits-W-ErrF_0.fits"
-#        print('Noise path is: {0}'.format(npath))
-#        
-#        zval = 0.3375
-#        print('Redshift is: {0}'.format(zval))
-#        #print(s.getRedshiftTpl(spcName))
-#        tpath = ""
-#        print('Tpl path is: {0}'.format(tpath) )  
-#        cpath = "/home/aschmitt/data/pfs/pfs_testsimu_20151009/amazed/linecatalogs/linecatalogamazedvacuum_B5.txt"
-#        print('Catalog path is: {0}'.format(cpath) )  
-#        
-#        #overrride zval
-#        #zval = 2.11605 #for pfs lbg abs, EZ_fits-W-F_9
-#        #zval = 1.1714 #for vvds1 'sc_020086397_F02P016_vmM1_red_31_1_atm_clean'
-#        #zval = 1.355
-#        #zval = 1.075
-#        avp = AViewPlot(spath, npath, tpath, cpath, zval)

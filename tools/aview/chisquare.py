@@ -44,6 +44,7 @@ class ResultChisquare(object):
         self.amazed_logarea = []
         self.amazed_sigmaz = [] 
         self.amazed_fitamplitude = []
+        self.amazed_fitDustCoeff = []
         self.amazed_continuumIndexes = [] 
         self.amazed_StrongELSNR = [] 
         self.amazed_dTransposeD = []
@@ -110,6 +111,14 @@ class ResultChisquare(object):
                 data = [d for d in data if len(d.strip(" "))>0]
                 for d in data:
                     self.amazed_fitamplitude.append(float(d))
+            elif not lineStr.find("Extrema FitDustCoeff = {") == -1:
+                beg = lineStr.find("{")
+                end = lineStr.find("}")  
+                dataStr = lineStr[beg+1:end]
+                data = dataStr.split("\t")
+                data = [d for d in data if len(d.strip(" "))>0]
+                for d in data:
+                    self.amazed_fitDustCoeff.append(float(d))                    
             elif not lineStr.find("ContinuumIndexes Color for each extrema = {") == -1:
                 beg = lineStr.find("{")
                 end = lineStr.find("}")  
