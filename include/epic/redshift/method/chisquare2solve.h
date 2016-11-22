@@ -5,6 +5,8 @@
 #include <epic/core/common/datatypes.h>
 #include <epic/redshift/method/chisquare2solveresult.h>
 #include <epic/redshift/spectrum/template/template.h>
+#include <epic/redshift/operator/chisquare2.h>
+
 
 namespace NSEpic
 {
@@ -36,6 +38,7 @@ private:
 
     Bool Solve(CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont, const CTemplate& tpl, const CTemplate& tplWithoutCont,
                                    const TFloat64Range& lambdaRange, const TFloat64List& redshifts, Float64 overlapThreshold , std::vector<CMask> maskList, Int32 spctype=CChisquare2SolveResult::nType_raw, std::string opt_interp="lin", std::string opt_extinction="no", std::string opt_dustFitting="no");
+    COperatorChiSquare2* m_chiSquareOperator;
 };
 
 

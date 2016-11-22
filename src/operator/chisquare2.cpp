@@ -35,8 +35,8 @@ using namespace std;
 COperatorChiSquare2::COperatorChiSquare2()
 {
     //load calzetti data
-    Float64 Ndata = 1e5;
-    m_dataCalzetti = (Float64 *) malloc(Ndata* sizeof(Float64));
+    m_NdataCalzetti = 1e5;
+    m_dataCalzetti = (Float64 *) malloc(m_NdataCalzetti* sizeof(Float64));
 
     std::string filePath = "/home/aschmitt/gitlab/cpf-redshift/calib/SB_calzetti.dl1.txt";
     std::ifstream file;
@@ -59,13 +59,33 @@ COperatorChiSquare2::COperatorChiSquare2()
             iss >> x >> y;
             m_dataCalzetti[kLine] = y;
             kLine++;
-            if(kLine>=Ndata)
+            if(kLine>=m_NdataCalzetti)
             {
                 break;
             }
         }
     }
     file.close();
+
+    //Allocate buffer for Ytpl reinit during Dust-fit loop
+    m_YtplRawBufferMaxBufferSize = 10*1e6; //allows array from 0A to 100000A with dl=0.01
+    m_YtplRawBuffer = (Float64 *) malloc(m_YtplRawBufferMaxBufferSize* sizeof(Float64));
+
+    //precomte the dust-coeff table
+    m_nDustCoeff = 10;
+    m_dustCoeffStep = 0.1;
+    m_dustCoeffStart = 0.0;
+    m_dataDustCoeff = (Float64 *) malloc(m_nDustCoeff*m_NdataCalzetti * sizeof(Float64));
+    for(Int32 kDust=0; kDust<m_nDustCoeff; kDust++)
+    {
+
+        Float64 coeffEBMV = m_dustCoeffStart + m_dustCoeffStep*(Float64)kDust;
+        for(Int32 kCalzetti=0; kCalzetti<m_NdataCalzetti; kCalzetti++)
+        {
+            m_dataDustCoeff[Int32(kDust*m_NdataCalzetti+kCalzetti)] = pow(10.0, -0.4*m_dataCalzetti[kCalzetti]*coeffEBMV);
+        }
+
+    }
 
 }
 
@@ -165,39 +185,47 @@ Void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& t
 
 
     //save Tpl Flux without dust or any other weighting
-    Float64* YtplRaw;
     bool ytpl_modified = false;
 
     // Optionally Apply some Calzetti Extinction for DUST
     bool opt_dust_calzetti = opt_dustFitting;
-    Int32 nDustCoeff = 10;
-    Float64 dustCoeffStep = 0.1;
-    Float64 dustCoeffStart = 0.0;
+
 
     if(!opt_dust_calzetti)
     {
-        nDustCoeff = 1;
+        m_nDustCoeff = 1;
     }else{
-        YtplRaw = (Float64 *) malloc(itplTplSpectralAxis.GetSamplesCount()* sizeof(Float64));
+        if(m_YtplRawBufferMaxBufferSize<itplTplSpectralAxis.GetSamplesCount())
+        {
+            Log.LogError( "chisquare operator: rebinned tpl size > buffer size for dust-fit ! Aborting.");
+            status = nStatus_DataError;
+            return ;
+        }
         for(Int32 k=0; k<itplTplSpectralAxis.GetSamplesCount(); k++)
         {
-            YtplRaw[k] = Ytpl[k];
+            m_YtplRawBuffer[k] = Ytpl[k];
         }
     }
 
     //loop on the EBMV dust coeff
-    for(Int32 kDust=0; kDust<nDustCoeff; kDust++)
+    for(Int32 kDust=0; kDust<m_nDustCoeff; kDust++)
     {
         if(ytpl_modified)
         {
             //re-init flux tpl without dust and other weightin
             for(Int32 k=0; k<itplTplSpectralAxis.GetSamplesCount(); k++)
             {
-                Ytpl[k] = YtplRaw[k];
+                if(Xtpl[k] < currentRange.GetBegin()){
+                    continue;
+                }
+                if(Xtpl[k] > currentRange.GetEnd()){
+                    continue;
+                }
+                Ytpl[k] = m_YtplRawBuffer[k];
             }
         }
 
-        Float64 coeffEBMV = dustCoeffStart + dustCoeffStep*(Float64)kDust;
+        Float64 coeffEBMV = m_dustCoeffStart + m_dustCoeffStep*(Float64)kDust;
         //Log.LogInfo("Chisquare2, fitting with dust coeff value: %f", coeffEBMV);
 
         Float64 z = redshift;
@@ -214,7 +242,8 @@ Void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& t
             if(restLambda >= 100.0)
             {
                 Int32 kCalzetti = Int32(restLambda-100.0);
-                coeffDust = pow(10.0, -0.4*m_dataCalzetti[kCalzetti]*coeffEBMV);
+                //coeffDust = pow(10.0, -0.4*m_dataCalzetti[kCalzetti]*coeffEBMV);
+                coeffDust = m_dataDustCoeff[Int32(kDust*m_NdataCalzetti+kCalzetti)];
             }
 
             Ytpl[k] *= coeffDust;
@@ -450,8 +479,6 @@ Void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& t
     }
 
     status = nStatus_OK;
-    free(YtplRaw);
-
 }
 
 /**

@@ -43,6 +43,14 @@ private:
     CSpectrumSpectralAxis m_shiftedTplSpectralAxis_bf; //buffer
 
     Float64 *m_dataCalzetti;
+    Float64 m_NdataCalzetti;
+    Float64* m_YtplRawBuffer;
+    Int32 m_YtplRawBufferMaxBufferSize;
+    Int32 m_nDustCoeff;
+    Float64 m_dustCoeffStep;
+    Float64 m_dustCoeffStart;
+    Float64* m_dataDustCoeff;
+
     
 };
 

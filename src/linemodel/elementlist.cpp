@@ -16,8 +16,6 @@
 #include <epic/core/debug/assert.h>
 #include <epic/core/log/log.h>
 
-#include <epic/redshift/operator/chisquare2.h>
-
 #include <math.h>
 #include <boost/numeric/conversion/bounds.hpp>
 #include <boost/format.hpp>
@@ -140,6 +138,7 @@ CLineModelElementList::CLineModelElementList( const CSpectrum& spectrum,
         InitFitContinuum();
     }
     //*/
+    m_chiSquareOperator = new COperatorChiSquare2();
 
     // "New style" rules initialization:
     m_Regulament = new CRegulament ( );
@@ -331,6 +330,7 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange)
     //hardcoded parameters
     std::string opt_interp = "lin"; //"precomputedfinegrid";
     Int32 opt_extinction = 0;
+    Int32 opt_dustFit = 1;
     Float64 overlapThreshold = 1.0;
     std::vector<CMask> maskList;//(1,getOutsideLinesMask());
     std::vector<Float64> redshifts(1, m_Redshift);
@@ -349,7 +349,7 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange)
 
             Float64 merit = DBL_MAX;
             Float64 fitAmplitude = -1.0;
-            Bool ret = SolveContinuum( *m_inputSpc, tpl, lambdaRange, redshifts, overlapThreshold, maskList, opt_interp, opt_extinction, merit, fitAmplitude);
+            Bool ret = SolveContinuum( *m_inputSpc, tpl, lambdaRange, redshifts, overlapThreshold, maskList, opt_interp, opt_extinction, opt_dustFit, merit, fitAmplitude);
 
             if(ret && merit<bestMerit)
             {
@@ -403,6 +403,8 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange)
                 }
             }
         }
+    }else{
+        Log.LogError( "Failed to load and fit continuum");
     }
 }
 
@@ -414,13 +416,14 @@ Bool CLineModelElementList::SolveContinuum(const CSpectrum& spectrum,
                                            std::vector<CMask> maskList,
                                            std::string opt_interp,
                                            Int32 opt_extinction,
+                                           Int32 opt_dustFit,
                                            Float64& merit,
                                            Float64& fitAmplitude)
 {
     // Compute merit function
-    COperatorChiSquare2 chiSquare;
+
     //CRef<CChisquareResult>  chisquareResult = (CChisquareResult*)chiSquare.ExportChi2versusAZ( _spc, _tpl, lambdaRange, redshifts, overlapThreshold );
-    auto  chisquareResult = std::dynamic_pointer_cast<CChisquareResult>( chiSquare.Compute( spectrum, tpl, lambdaRange, redshifts, overlapThreshold, maskList, opt_interp, opt_extinction ) );
+    auto  chisquareResult = std::dynamic_pointer_cast<CChisquareResult>( m_chiSquareOperator->Compute( spectrum, tpl, lambdaRange, redshifts, overlapThreshold, maskList, opt_interp, opt_extinction, opt_dustFit ) );
     if( !chisquareResult )
     {
 
@@ -901,7 +904,7 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
     modelSolution = GetModelSolution();
 
     //correct lines amplitude with tplshapePrior (tpl-corr): Warning: Rules must all be deactivated
-    if(0)
+    if(1)
     {
         //Log.LogInfo( "LineModel Infos: TPLCORR");
         std::vector<Float64> correctedAmplitudes;

@@ -510,6 +510,7 @@ class ResParser(object):
             
             tplpaths = []
             forceTplAmplitudes = []
+            forceTplDustCoeffs = []
             forceTplDoNotRedShifts = []
             
             idxExtrema = 0
@@ -526,6 +527,7 @@ class ResParser(object):
                     redshifts.append(redshift)
                     tplpaths.append(tplpath)
                     forceTplAmplitudes.append(forceTplAmplitude)
+                    forceTplDustCoeffs.append(-1.0)
                     forceTplDoNotRedShifts.append(forceTplDoNotRedShift)
                     idxExtrema += 1
                 else:
@@ -536,6 +538,7 @@ class ResParser(object):
             d['operator'] = 'linemodel'
             d['tplPaths'] = tplpaths
             d['forceTplAmplitudes'] = forceTplAmplitudes
+            d['forceTplDustCoeff'] = forceTplDustCoeffs
             d['forceTplDoNotRedShifts'] = forceTplDoNotRedShifts
             displayParamsBundle.append(d)
             

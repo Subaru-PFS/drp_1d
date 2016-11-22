@@ -19,6 +19,7 @@ import matplotlib.pyplot as pp
 #sns.set_style("whitegrid")
 from matplotlib import gridspec
 from matplotlib.ticker import MultipleLocator, FormatStrFormatter
+pp.style.use('ggplot')
 
 
 import numpy as np

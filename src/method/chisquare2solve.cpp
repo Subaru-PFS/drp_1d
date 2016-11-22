@@ -4,7 +4,6 @@
 #include <epic/redshift/spectrum/template/catalog.h>
 #include <epic/redshift/operator/correlation.h>
 #include <epic/redshift/operator/chisquare.h>
-#include <epic/redshift/operator/chisquare2.h>
 #include <epic/redshift/extremum/extremum.h>
 #include <epic/redshift/processflow/datastore.h>
 
@@ -16,7 +15,7 @@ using namespace std;
 
 CMethodChisquare2Solve::CMethodChisquare2Solve()
 {
-
+    m_chiSquareOperator = new COperatorChiSquare2();
 }
 
 CMethodChisquare2Solve::~CMethodChisquare2Solve()
@@ -193,9 +192,8 @@ Bool CMethodChisquare2Solve::Solve(CDataStore& resultStore,
         }
 
         // Compute merit function
-        COperatorChiSquare2 chiSquare;
         //CRef<CChisquareResult>  chisquareResult = (CChisquareResult*)chiSquare.ExportChi2versusAZ( _spc, _tpl, lambdaRange, redshifts, overlapThreshold );
-        auto  chisquareResult = std::dynamic_pointer_cast<CChisquareResult>( chiSquare.Compute( _spc, _tpl, lambdaRange, redshifts, overlapThreshold, maskList, opt_interp, enable_extinction, enable_dustFitting ) );
+        auto  chisquareResult = std::dynamic_pointer_cast<CChisquareResult>( m_chiSquareOperator->Compute( _spc, _tpl, lambdaRange, redshifts, overlapThreshold, maskList, opt_interp, enable_extinction, enable_dustFitting ) );
 
         if( !chisquareResult )
         {

@@ -10,6 +10,8 @@
 #include <epic/redshift/ray/catalog.h>
 #include <epic/redshift/spectrum/spectrum.h>
 
+#include <epic/redshift/operator/chisquare2.h>
+
 #include <epic/redshift/operator/linemodelresult.h>
 #include <epic/redshift/linemodel/element.h>
 #include <epic/redshift/linemodel/singleline.h>
@@ -65,8 +67,9 @@ public:
                         std::vector<CMask> maskList,
                         std::string opt_interp,
                         Int32 opt_extinction,
+                        Int32 opt_dustFit,
                         Float64 &merit,
-                        Float64& fitAmplitude);    
+                        Float64& fitAmplitude);
     std::string getFitContinuum_tplName();
     Float64 getFitContinuum_tplAmplitude();
     void SetContinuumComponent(std::string component);
@@ -202,6 +205,7 @@ private:
     TStringList m_tplCategoryList;
     std::string m_tplcorrBestTplName;
 
+    COperatorChiSquare2* m_chiSquareOperator;
     Float64 m_fitContinuum_dLambdaTgt;
     Float64 m_fitContinuum_lmin;
     Float64 m_fitContinuum_lmax;

@@ -472,6 +472,10 @@ class Spectrum(object):
             self.xvect[x] = wave[x]
             self.yvect[x] = flux[x]
             self.ysum += self.yvect[x]   
+            
+    def convertFromHzToAngstrom(self):
+        for x in range(0,self.n):
+            self.xvect[x] = 3e8/self.xvect[x]*1e10
 
     def saveForCppHarcodedArray(self, outputPath):
         f = open(outputPath, 'w')
@@ -1589,6 +1593,10 @@ def StartFromCommandLine( argv ) :
     if os.path.exists(options.spcPath) :
         print('using full path: {0}'.format(options.spcPath))
         s = Spectrum(options.spcPath, options.spcType, snorm=False)
+        
+        #s.convertFromHzToAngstrom()
+        #for k in range(len(s.yvect)):
+        #    s.yvect[k] = 1e-3
         
         #s.applyLambdaCrop(100, 30000)
         #s.interpolate(dx=1)
