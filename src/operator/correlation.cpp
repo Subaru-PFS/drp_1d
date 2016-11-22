@@ -50,7 +50,7 @@ Float64 COperatorCorrelation::GetComputationDuration() const
                                                                    Float64 overlapThreshold,
                                                                    std::vector<CMask> additional_spcMasks_unused,
                                                                    std::string opt_interp_unused,
-                                                                   Int32 opt_extinction_unused)
+                                                                   Int32 opt_extinction_unused, Int32 opt_dustFitting_unused)
  {
     Bool retVal;
 

@@ -42,7 +42,8 @@ public:
                                                        Float64 overlapThreshold,
                                                        std::vector<CMask> additional_spcMasks,
                                                        std::string opt_interp,
-                                                       Int32 opt_extinction) = 0;
+                                                       Int32 opt_extinction,
+                                                       Int32 opt_dustFitting) = 0;
 
 protected:
 

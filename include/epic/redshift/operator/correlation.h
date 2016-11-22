@@ -33,7 +33,8 @@ public:
                                               Float64 overlap,
                                               std::vector<CMask> additional_spcMasks_unused,
                                               std::string opt_interp_unused="lin",
-                                              Int32 opt_extinction_unused=0 );
+                                              Int32 opt_extinction_unused=0 ,
+                                              Int32 opt_dustFitting_unused=0 );
 
     Float64 GetComputationDuration() const;
 

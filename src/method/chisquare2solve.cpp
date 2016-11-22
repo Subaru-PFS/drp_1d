@@ -35,6 +35,7 @@ const std::string CMethodChisquare2Solve::GetDescription()
     desc.append("\tparam: chisquare2solve.overlapThreshold = <float value>\n");
     desc.append("\tparam: chisquare.interpolation = {""precomputedfinegrid"", ""lin""}\n");
     desc.append("\tparam: chisquare.extinction = {""yes"", ""no""}\n");
+    desc.append("\tparam: chisquare.dustfit = {""yes"", ""no""}\n");
 
 
     return desc;
@@ -53,7 +54,8 @@ std::shared_ptr<const CChisquare2SolveResult> CMethodChisquare2Solve::Compute(CD
                                                                               std::vector<CMask> maskList,
                                                                               std::string spcComponent,
                                                                               std::string opt_interp,
-                                                                              std::string opt_extinction)
+                                                                              std::string opt_extinction,
+                                                                              std::string opt_dustFit)
 {
     Bool storeResult = false;
 
@@ -92,7 +94,7 @@ std::shared_ptr<const CChisquare2SolveResult> CMethodChisquare2Solve::Compute(CD
 
             const CTemplate& tplWithoutCont = tplCatalog.GetTemplateWithoutContinuum( category, j );
 
-            Solve( resultStore, spc, spcWithoutCont, tpl, tplWithoutCont, lambdaRange, redshifts, overlapThreshold, maskList, _type, opt_interp, opt_extinction);
+            Solve( resultStore, spc, spcWithoutCont, tpl, tplWithoutCont, lambdaRange, redshifts, overlapThreshold, maskList, _type, opt_interp, opt_extinction, opt_dustFit);
 
             storeResult = true;
         }
@@ -120,7 +122,8 @@ Bool CMethodChisquare2Solve::Solve(CDataStore& resultStore,
                                     std::vector<CMask> maskList,
                                     Int32 spctype,
                                     std::string opt_interp,
-                                    std::string opt_extinction )
+                                   std::string opt_extinction,
+                                   std::string opt_dustFitting )
 {
     CSpectrum _spc;
     CTemplate _tpl;
@@ -135,6 +138,13 @@ Bool CMethodChisquare2Solve::Solve(CDataStore& resultStore,
     {
         enable_extinction = 1;
     }
+    Int32 enable_dustFitting = 0;
+    if(opt_dustFitting=="yes")
+    {
+        enable_dustFitting = 1;
+    }
+
+
 
     //case: nType_all
     if(spctype == CChisquare2SolveResult::nType_all){
@@ -185,7 +195,7 @@ Bool CMethodChisquare2Solve::Solve(CDataStore& resultStore,
         // Compute merit function
         COperatorChiSquare2 chiSquare;
         //CRef<CChisquareResult>  chisquareResult = (CChisquareResult*)chiSquare.ExportChi2versusAZ( _spc, _tpl, lambdaRange, redshifts, overlapThreshold );
-        auto  chisquareResult = std::dynamic_pointer_cast<CChisquareResult>( chiSquare.Compute( _spc, _tpl, lambdaRange, redshifts, overlapThreshold, maskList, opt_interp, enable_extinction ) );
+        auto  chisquareResult = std::dynamic_pointer_cast<CChisquareResult>( chiSquare.Compute( _spc, _tpl, lambdaRange, redshifts, overlapThreshold, maskList, opt_interp, enable_extinction, enable_dustFitting ) );
 
         if( !chisquareResult )
         {

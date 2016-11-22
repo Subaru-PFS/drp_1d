@@ -29,6 +29,14 @@ import random
 import matplotlib.pyplot as pp
 import matplotlib.cm as cm
 from matplotlib.patches import Rectangle
+from matplotlib import gridspec
+
+#pp.style.use('seaborn-darkgrid')
+pp.style.use('seaborn-white')
+#pp.style.use('ggplot')
+#import seaborn as sns
+#sns.set_context("paper")
+
 import pickle as pl
 
 import lstats
@@ -1130,27 +1138,94 @@ def ProcessStars( fname, enablePlot = False, exportType="png" ):
     
     #print stats
     nTot = n
-    nSuccess = np.sum(np.array(sameTypes))
-    success_rate = float(nSuccess)/float(nTot)
-    print("INFO: Stars overall success rate is {:.2f} percent ({}/{})".format(success_rate*100.0, nSuccess, nTot))
+    nSuccessTot = np.sum(np.array(sameTypes))
+    success_rate_tot = float(nSuccessTot)/float(nTot)
+    print("INFO: Stars overall success rate is {:.2f} percent ({}/{})".format(success_rate_tot*100.0, nSuccessTot, nTot))
     print("\n")    
     
     #plot per star-type statistics
     typesCategoriesUnsorted = list(set(starTypes))
-    alphabet_string_MorganKeenan = "OBAFGKM" 
-    alphabet_string = alphabet_string_MorganKeenan
+    alphabet_string_harvard = "OBAFGKM" 
+    colors_rgb_harvard = ['#9db4ff', '#afc3ff', '#cad8ff', '#edeeff', '#fff4e8', '#ffd7ae', '#ffbb7b']
+    alphabet_string = alphabet_string_harvard
     for a in ascii_uppercase:
         if a not in alphabet_string:
             #print("adding letter : {} to the alphabet".format(a))
             alphabet_string = "{}{}".format(alphabet_string, a)
+            colors_rgb_harvard.append('#0000ff')
     alphabet = {c: i for i, c in enumerate(alphabet_string)}
     print("sorting alphabet is {}".format(alphabet))
     typesCategories = sorted(typesCategoriesUnsorted, key=lambda word: [alphabet.get(c, ord(c)) for c in word])    
     print("Star categories found N = {}".format(len(typesCategories)))
     print("Star categories found = {}".format(typesCategories))
     
+    success_rate_perCat = []
+    count_perCat = []
+    successCount_perCat = []
     for cat in typesCategories:
-        pass
+        indexesThisCat = [i for i, a in enumerate(starTypes) if a==cat]
+        starTypesCat = [starTypes[k] for k in indexesThisCat]
+        tplTypesCat = [tplTypes[k] for k in indexesThisCat]
+        nTotThisCat = len(indexesThisCat)
+        nSuccess = np.sum(np.array(starTypesCat)==np.array(tplTypesCat))
+        success_rate_perCat.append(float(nSuccess)/float(nTotThisCat))
+        count_perCat.append(nTotThisCat)
+        successCount_perCat.append(nSuccess)
+        print("Cat={} : nsuccess={}/{}, successRate = {:.2f}".format(cat, nSuccess, nTotThisCat, success_rate_perCat[-1]))
+    
+    fig = pp.figure( "aview", figsize=(12, 8))
+    gs = gridspec.GridSpec(2, 1, height_ratios=[12,4])
+    ax1 = pp.subplot(gs[0]) # main plotting area = success rate
+    ax2 = pp.subplot(gs[1])  # count
+    gs.update(wspace=0.05, hspace=0.1) # set the spacing between axes. 
+            
+    N = len(typesCategories)
+    ind = np.arange(N)    # the x locations for the groups
+    width = 0.8
+    percent = ax1.bar(ind, 100.*np.array(success_rate_perCat), width, color=colors_rgb_harvard, alpha=1.0)
+    residue = ax1.bar(ind, 100.-100.*np.array(success_rate_perCat), bottom=100.*np.array(success_rate_perCat), width=width, color="k", alpha=0.05)    
+    ax1.set_title("Star Categories Fitting\nOverall success rate is {:.1f}% (nsuccess={}/{})".format(success_rate_tot*100.0, nSuccessTot, nTot))
+    #pp.legend((percent[0]), ('success', 'Women'))
+    #ax1.grid()
+    #ax1.set_xticks(ind + width/2., typesCategories)
+    pp.setp(ax1.get_xticklabels(), visible=False)
+    ax1.set_ylabel('Success rate (%)')
+    for rect in percent:
+        height = rect.get_height()
+        if height<50:
+            position = height + 2
+        else:
+            position = height - 6
+
+        ax1.text(rect.get_x() + rect.get_width()/2., position, "{} %".format(int(height)),
+                ha='center', va='bottom')
+            
+
+    count = ax2.bar(ind, count_perCat, width, color = 'k', alpha=0.5)  
+    #ax2.grid()
+    ax2.set_xticks(ind + width/2., typesCategories)
+    #pp.setp(ax2.get_xticklabels(), visible=True)
+    #pp.sca(axes[1, 1])
+    pp.xticks(ind + width/2., typesCategories)
+    ax2.set_ylabel('Count')
+    maxCount = np.max(count_perCat)
+    print("maxCount = {}".format(maxCount))
+    for rect in count:
+        height = rect.get_height()
+        if height<0.5*maxCount:
+            position = height + 0.04*maxCount
+        else:
+            position = height - 0.16*maxCount
+
+        ax2.text(rect.get_x() + rect.get_width()/2., position, "{}".format(int(height)),
+                ha='center', va='bottom')
+                
+    export_name_withoutExt = os.path.join(outputDirectory, 'star_categories_success_hist')
+    if "png" in exportType:
+        pp.savefig( "{}.png".format(export_name_withoutExt) , bbox_inches='tight')
+
+    if enablePlot:
+        pp.show()
     
    
 def exportLog(outdir, refFile, refType, magRange, zRange, sfrRange):

@@ -77,7 +77,7 @@ COperatorChiSquare2::~COperatorChiSquare2()
 
 Void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& tpl, Float64* pfgTplBuffer,
                                 const TFloat64Range& lambdaRange, Float64 redshift, Float64 overlapThreshold,
-                                Float64& overlapRate, Float64& chiSquare, Float64& fittingAmplitude, Float64 &fittingDustCoeff, EStatus& status , std::string opt_interp, Float64 forcedAmplitude, Int32 opt_extinction, CMask spcMaskAdditional)
+                                Float64& overlapRate, Float64& chiSquare, Float64& fittingAmplitude, Float64 &fittingDustCoeff, EStatus& status , std::string opt_interp, Float64 forcedAmplitude, Int32 opt_extinction, Int32 opt_dustFitting, CMask spcMaskAdditional)
 {
     chiSquare = boost::numeric::bounds<float>::highest();
     fittingAmplitude = -1.0;
@@ -169,7 +169,7 @@ Void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& t
     bool ytpl_modified = false;
 
     // Optionally Apply some Calzetti Extinction for DUST
-    bool opt_dust_calzetti = true;
+    bool opt_dust_calzetti = opt_dustFitting;
     Int32 nDustCoeff = 10;
     Float64 dustCoeffStep = 0.1;
     Float64 dustCoeffStart = 0.0;
@@ -461,7 +461,7 @@ Void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& t
  **/
 std::shared_ptr<COperatorResult> COperatorChiSquare2::Compute(const CSpectrum& spectrum, const CTemplate& tpl,
                           const TFloat64Range& lambdaRange, const TFloat64List& redshifts,
-                          Float64 overlapThreshold , std::vector<CMask> additional_spcMasks, std::string opt_interp, Int32 opt_extinction)
+                          Float64 overlapThreshold , std::vector<CMask> additional_spcMasks, std::string opt_interp, Int32 opt_extinction, Int32 opt_dustFitting)
 {
 
     if( spectrum.GetSpectralAxis().IsInLinearScale() == false || tpl.GetSpectralAxis().IsInLinearScale() == false )
@@ -612,6 +612,7 @@ std::shared_ptr<COperatorResult> COperatorChiSquare2::Compute(const CSpectrum& s
                   opt_interp,
                   -1,
                   opt_extinction,
+                  opt_dustFitting,
                   additional_spcMask);
     }
 
