@@ -69,7 +69,8 @@ public:
                         Int32 opt_extinction,
                         Int32 opt_dustFit,
                         Float64 &merit,
-                        Float64& fitAmplitude);
+                        Float64& fitAmplitude,
+                        Float64 &fitDustCoeff);
     std::string getFitContinuum_tplName();
     Float64 getFitContinuum_tplAmplitude();
     void SetContinuumComponent(std::string component);
@@ -212,6 +213,7 @@ private:
     Int32 m_fitContinuum_nTgt;
     std::string m_fitContinuum_tplName;
     Float64 m_fitContinuum_tplFitAmplitude;
+    Float64 m_fitContinuum_tplFitDustCoeff;
 
 };
 

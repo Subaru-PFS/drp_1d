@@ -28,6 +28,7 @@ public:
     const COperatorResult* ExportChi2versusAZ( const CSpectrum& spectrum, const CTemplate& tpl,
                                     const TFloat64Range& lambdaRange, const TFloat64List& redshifts,
                                     Float64 overlapThreshold );
+    const Float64*  getDustCoeff(Float64 dustCoeff, Float64 maxLambda);
 
 
 

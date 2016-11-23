@@ -703,6 +703,48 @@ std::shared_ptr<COperatorResult> COperatorChiSquare2::Compute(const CSpectrum& s
 
 }
 
+
+/* @brief COperatorChiSquare2::getDustCoeff: get the dust coeff at a fixed resolution of 1A
+* @param dustCoeff
+* @param maxLambda
+* @return
+*/
+const Float64*  COperatorChiSquare2::getDustCoeff(Float64 dustCoeff, Float64 maxLambda)
+{
+    //find kDust
+    Int32 idxDust = -1;
+    for(Int32 kDust=0; kDust<m_nDustCoeff; kDust++)
+    {
+        Float64 coeffEBMV = m_dustCoeffStart + m_dustCoeffStep*(Float64)kDust;
+        if(dustCoeff==coeffEBMV)
+        {
+            idxDust = kDust;
+            break;
+        }
+    }
+    if(idxDust<0)
+    {
+        return 0;
+    }
+
+    Int32 nSamples = maxLambda+1; //+1 for security
+    Float64* dustCoeffs = (Float64*)malloc(nSamples*sizeof(Float64));
+
+    for(Int32 kl=0; kl<nSamples; kl++)
+    {
+        Float64 restLambda = kl;
+        Float64 coeffDust = 1.0;
+        if(restLambda >= 100.0)
+        {
+            Int32 kCalzetti = Int32(restLambda-100.0);
+            coeffDust = m_dataDustCoeff[Int32(idxDust*m_NdataCalzetti+kCalzetti)];
+        }
+        dustCoeffs[kl] = coeffDust;
+    }
+    return dustCoeffs;
+}
+
+
 const COperatorResult* COperatorChiSquare2::ExportChi2versusAZ(const CSpectrum& spectrum, const CTemplate& tpl,
                           const TFloat64Range& lambdaRange, const TFloat64List& redshifts,
                           Float64 overlapThreshold )

@@ -131,7 +131,7 @@ CLineModelElementList::CLineModelElementList( const CSpectrum& spectrum,
     }
     m_precomputedFineGridContinuumFlux = NULL;
 
-    //*
+    /*
     //WARNING: HACK, first pass with continuum from spectrum.
     if(m_ContinuumComponent == "tplfit")
     {
@@ -337,6 +337,7 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange)
 
     Float64 bestMerit = DBL_MAX;
     Float64 bestFitAmplitude = -1.0;
+    Float64 bestFitDustCoeff = -1.0;
     std::string bestTplName="";
 
     for( UInt32 i=0; i<m_tplCategoryList.size(); i++ )
@@ -349,12 +350,14 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange)
 
             Float64 merit = DBL_MAX;
             Float64 fitAmplitude = -1.0;
-            Bool ret = SolveContinuum( *m_inputSpc, tpl, lambdaRange, redshifts, overlapThreshold, maskList, opt_interp, opt_extinction, opt_dustFit, merit, fitAmplitude);
+            Float64 fitDustCoeff = -1.0;
+            Bool ret = SolveContinuum( *m_inputSpc, tpl, lambdaRange, redshifts, overlapThreshold, maskList, opt_interp, opt_extinction, opt_dustFit, merit, fitAmplitude, fitDustCoeff);
 
             if(ret && merit<bestMerit)
             {
                 bestMerit = merit;
                 bestFitAmplitude = fitAmplitude;
+                bestFitDustCoeff = fitDustCoeff;
                 bestTplName = tpl.GetName();
             }
         }
@@ -363,6 +366,7 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange)
     {
         m_fitContinuum_tplName = bestTplName;
         m_fitContinuum_tplFitAmplitude = bestFitAmplitude;
+        m_fitContinuum_tplFitDustCoeff = bestFitDustCoeff;
         //Log.LogInfo( "For z=%.5f : Best continuum tpl found: %s", m_Redshift, bestTplName.c_str());
         //
         //Retrieve the best template
@@ -381,9 +385,17 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange)
                     CSpectrumFluxAxis tplFluxAxis = tpl.GetFluxAxis();
                     CSpectrumSpectralAxis tplSpectralAxis = tpl.GetSpectralAxis();
 
-                    //inialise and allocate the gsl objects
+                    //inialize and allocate the gsl objects
                     Float64* Ysrc = tplFluxAxis.GetSamples();
                     Float64* Xsrc = tplSpectralAxis.GetSamples();
+                    //apply dust attenuation
+                    const Float64* dustCoeffArray = m_chiSquareOperator->getDustCoeff(m_fitContinuum_tplFitDustCoeff, Xsrc[n-1]);
+                    Float64 lambda = 0.0;
+                    for(Int32 ktpl=0; ktpl<n; ktpl++)
+                    {
+                        lambda = Xsrc[ktpl];
+                        Ysrc[ktpl]*=dustCoeffArray[Int32(lambda)];
+                    }
                     //spline
                     gsl_spline *spline = gsl_spline_alloc (gsl_interp_cspline, n);
                     gsl_spline_init (spline, Xsrc, Ysrc, n);
@@ -418,7 +430,8 @@ Bool CLineModelElementList::SolveContinuum(const CSpectrum& spectrum,
                                            Int32 opt_extinction,
                                            Int32 opt_dustFit,
                                            Float64& merit,
-                                           Float64& fitAmplitude)
+                                           Float64& fitAmplitude,
+                                           Float64& fitDustCoeff)
 {
     // Compute merit function
 
@@ -433,6 +446,7 @@ Bool CLineModelElementList::SolveContinuum(const CSpectrum& spectrum,
         // Store results
         merit = chisquareResult->ChiSquare[0];
         fitAmplitude = chisquareResult->FitAmplitude[0];
+        fitDustCoeff = chisquareResult->FitDustCoeff[0];
         return true;
     }
 
@@ -904,7 +918,7 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
     modelSolution = GetModelSolution();
 
     //correct lines amplitude with tplshapePrior (tpl-corr): Warning: Rules must all be deactivated
-    if(1)
+    if(0)
     {
         //Log.LogInfo( "LineModel Infos: TPLCORR");
         std::vector<Float64> correctedAmplitudes;
