@@ -33,6 +33,7 @@ from scipy.signal import savgol_filter
 
 class Spectrum(object):
     def __init__(self, spath, stype='undefspc', snorm=False, label=""):
+        self.c_light = 2.99792458e8
         self.logTagStr = "Spectrum"
         self.spath = spath
         self.name = os.path.basename(spath)
@@ -475,7 +476,11 @@ class Spectrum(object):
             
     def convertFromHzToAngstrom(self):
         for x in range(0,self.n):
-            self.xvect[x] = 3e8/self.xvect[x]*1e10
+            self.xvect[x] = self.c_light/self.xvect[x]*1e10
+    def convertFromFnuToFlambda(self):
+        for x in range(0,self.n):
+            self.yvect[x] = self.c_light*self.yvect[x]/(self.xvect[x]**2)
+        
 
     def saveForCppHarcodedArray(self, outputPath):
         f = open(outputPath, 'w')
