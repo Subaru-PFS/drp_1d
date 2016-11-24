@@ -682,7 +682,11 @@ def ProcessStats( fname, zRange, magRange,  sfrRange, enablePlot = False, export
         zref[x] = (data[indsForHist[x]][2])
         zcalc[x] = (data[indsForHist[x]][4])
         
-        yvect[x] = abs(data[indsForHist[x]][n2-1])/(1+zref[x])
+        if not zref[x]==-1:
+            yvect[x] = abs(data[indsForHist[x]][n2-1])/(1+zref[x])
+        else:
+            yvect[x] = -1
+            
         
     # export the filtered list
     foutpath = outputDirectory + '/' + 'stats_subset_list.txt'
@@ -716,7 +720,12 @@ def ProcessStats( fname, zRange, magRange,  sfrRange, enablePlot = False, export
     # plot the filtered list scatter zrelerr = f(1+zref)
     relerrorvect = range(0,nSelected)
     for x in range(0,nSelected):
-        relerrorvect[x] = (zcalc[x] - zref[x])/(1+zref[x])
+        if not zref[x]==-1:
+            relerrorvect[x] = (zcalc[x] - zref[x])/(1+zref[x])
+        else:
+            relerrorvect[x] = -1
+            
+        
     fig = pp.figure('filtered dataset z relative error')
     pp.plot(zref, relerrorvect, 'x')
     pp.grid(True) # Affiche la grille

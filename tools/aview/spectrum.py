@@ -18,9 +18,11 @@ import math
 #import matplotlib as mpl
 #mpl.use('Qt5Agg')
 
+
 #mpl.rcParams.update(mpl.rcParamsDefault)        
 
-import matplotlib.pyplot as pp
+import matplotlib.pyplot as pp        
+pp.style.use('ggplot')
 #import seaborn as sns
 #sns.set_context("paper")
 #sns.set_context("poster")
@@ -1556,6 +1558,7 @@ class Spectrum(object):
         
             
     def saveTpl(self, outputfullpath):
+        print("Spectrum exporting to ascii: {}".format(outputfullpath))
         filename = outputfullpath
         f = open(filename, "w")
 
@@ -1603,7 +1606,7 @@ def StartFromCommandLine( argv ) :
         #for k in range(len(s.yvect)):
         #    s.yvect[k] = 1e-3
         
-        #s.applyLambdaCrop(100, 30000)
+        #s.applyLambdaCrop(3000, 12000)
         #s.interpolate(dx=1)
         #path = os.path.split(options.spcPath)[0]
         #nameWext = os.path.split(options.spcPath)[1]
