@@ -177,7 +177,7 @@ Bool COperatorDTreeCSolve::Solve(CDataStore &dataStore, const CSpectrum &spc, co
     std::string opt_extinction;
     dataStore.GetScopedParam( "chisquare.extinction", opt_extinction, "no" );
     std::string opt_dustFit;
-    dataStore.GetScopedParam( "chisquare.dustfit", opt_dustFit, "no" );
+    dataStore.GetScopedParam( "chisquare.dustfit", opt_dustFit, "yes" );
 
     std::string scopeStr = "chisquare";
     if(opt_spcComponent == "continuum"){
@@ -477,6 +477,67 @@ Bool COperatorDTreeCSolve::GetCombinedRedshift(CDataStore& store, std::string sc
         store.StoreScopedGlobalResult( "priorStrongELSnrP", resultPriorSELSP );
     }
 
+    //*
+    //***********************************************************
+    //Estimate the CI prior (continuum_indexes prior)
+    // this prior should only generate penalities (+. values) for the unlikely solutions regarding cont. indexes
+    std::shared_ptr<CChisquareResult> resultPriorCI = std::shared_ptr<CChisquareResult>( new CChisquareResult() );
+    resultPriorCI->ChiSquare.resize( zcomb.size() );
+    resultPriorCI->Redshifts.resize( zcomb.size() );
+    resultPriorCI->Overlap.resize( zcomb.size() );
+
+    for( Int32 i=0; i<zcomb.size(); i++ )
+    {
+        Float64 coeff = results->dTransposeDNocontinuum;
+        Float64 post=0.0;
+
+        Int32 kci=0;
+        //*
+        //Lya
+        kci=0;
+        Float64 colorLya = results->ContinuumIndexes[idxLMResultsExtrema[i]][kci].Color;
+        Float64 breakLya = results->ContinuumIndexes[idxLMResultsExtrema[i]][kci].Break;
+        if(colorLya<-1.0 || breakLya>1.0 || (colorLya<0.25 && breakLya>-0.25))
+        {
+            post+=coeff;
+        }
+        //*/
+        //OII
+        kci = 1;
+        Float64 colorOII = results->ContinuumIndexes[idxLMResultsExtrema[i]][kci].Color;
+        Float64 breakOII = results->ContinuumIndexes[idxLMResultsExtrema[i]][kci].Break;
+        if(colorOII<-1.0 || breakOII>1.0 || (colorOII<0.5 && breakOII>0.0))
+        {
+            post+=coeff;
+        }
+        //OIII
+        kci = 2;
+        Float64 colorOIII = results->ContinuumIndexes[idxLMResultsExtrema[i]][kci].Color;
+        Float64 breakOIII = results->ContinuumIndexes[idxLMResultsExtrema[i]][kci].Break;
+        if(colorOIII>0.7 || (colorOIII>0.25 && breakOIII<-0.5))
+        {
+            post+=coeff;
+        }
+        //Ha
+        kci = 3;
+        Float64 colorHa = results->ContinuumIndexes[idxLMResultsExtrema[i]][kci].Color;
+        Float64 breakHa = results->ContinuumIndexes[idxLMResultsExtrema[i]][kci].Break;
+        if(colorHa>0.4 || (colorHa>0.0 && breakHa>0.5))
+        {
+            post+=coeff;
+        }
+
+
+        //post = 0.0; //deactivate this prior
+
+        resultPriorCI->ChiSquare[i] = post;
+        resultPriorCI->Redshifts[i] = zcomb[i];
+        resultPriorCI->Overlap[i] = -1.0;
+    }
+    if( resultPriorCI ) {
+        store.StoreScopedGlobalResult( "priorContIndexes", resultPriorCI );
+    }
+
 
     //Rescale coefficient
     Float64 minChi2WithCoeffs = DBL_MAX; //overall chi2 minimum for rescaling
@@ -517,7 +578,7 @@ Bool COperatorDTreeCSolve::GetCombinedRedshift(CDataStore& store, std::string sc
         if(combineOption==1) //bayesian combination
         {
             Float64 valf = 1.0;
-            valf = chi2lm[i] + resultPriorSELSP->ChiSquare[i] - minChi2WithCoeffs + lmCoeff;
+            valf = chi2lm[i] + resultPriorSELSP->ChiSquare[i] - minChi2WithCoeffs + lmCoeff + resultPriorCI->ChiSquare[i];
             Float64 lmLikelihood = exp(-valf/2.0);
 
             valf = chi2continuum[idxChi2Results[i]]+chi2cCoeff-minChi2WithCoeffs;
@@ -529,7 +590,7 @@ Bool COperatorDTreeCSolve::GetCombinedRedshift(CDataStore& store, std::string sc
         }
         else //linear combination
         {
-            post = lmCoeff*(chi2lm[i] + resultPriorSELSP->ChiSquare[i]) + chi2cCoeff*resultPriorContinuum->ChiSquare[i];
+            post = lmCoeff*(chi2lm[i] + resultPriorSELSP->ChiSquare[i]) + chi2cCoeff*resultPriorContinuum->ChiSquare[i] + resultPriorCI->ChiSquare[i];
         }
 
         resultCombined->ChiSquare[i] = post;
