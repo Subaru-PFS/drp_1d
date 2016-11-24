@@ -54,7 +54,7 @@ const std::string COperatorDTreeCSolve::GetDescription()
     desc.append("\tparam: chisquare.interpolation = {""precomputedfinegrid"", ""lin""}\n");
     desc.append("\tparam: chisquare.spectrum.component = {""raw"", ""continuum"", ""nocontinuum""}\n");
     desc.append("\tparam: chisquare.extinction = {""no"", ""yes""}\n");
-
+    desc.append("\tparam: chisquare.dustfit = {""yes"", ""no""}\n");
 
     return desc;
 
@@ -176,6 +176,8 @@ Bool COperatorDTreeCSolve::Solve(CDataStore &dataStore, const CSpectrum &spc, co
     dataStore.GetScopedParam( "chisquare.spectrum.component", opt_spcComponent, "continuum" );
     std::string opt_extinction;
     dataStore.GetScopedParam( "chisquare.extinction", opt_extinction, "no" );
+    std::string opt_dustFit;
+    dataStore.GetScopedParam( "chisquare.dustfit", opt_dustFit, "no" );
 
     std::string scopeStr = "chisquare";
     if(opt_spcComponent == "continuum"){
@@ -237,7 +239,7 @@ Bool COperatorDTreeCSolve::Solve(CDataStore &dataStore, const CSpectrum &spc, co
     //*/
     auto chisolveResultcontinuum = chiSolve.Compute( dataStore, spc, spcWithoutCont,
                                                                         tplCatalog, tplCategoryList,
-                                                                        lambdaRange, redshiftsChi2Continuum, overlapThreshold, maskList, opt_spcComponent, opt_interp, opt_extinction);
+                                                                        lambdaRange, redshiftsChi2Continuum, overlapThreshold, maskList, opt_spcComponent, opt_interp, opt_extinction, opt_dustFit);
 
     if( !chisolveResultcontinuum )
     {
@@ -433,7 +435,7 @@ Bool COperatorDTreeCSolve::GetCombinedRedshift(CDataStore& store, std::string sc
 
         //chi2cCoeff = -3.9e3;//-1.14e3;
         chi2cCoeff = 1.0e6; //Coeff NUL
-        chi2cCoeff = -1.0e2;
+        chi2cCoeff = -5.0e2;
 
 
         Log.LogInfo( "dtreeCsolve : lmCoeff=%f", lmCoeff);

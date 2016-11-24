@@ -2117,8 +2117,8 @@ def estimateCombinationCoeffMap(resDir, diffthres, spcName="", enableExport=True
         success_end_reached = False
         for kr, c in enumerate(coeffMap[idx_sigma]):
             print("for kr={}, dtdnc={}, dtd={}, c={}".format(kr, xval, yval, c))
-            #point = [xval, b_coeff[kr]]
-            point = [yval, b_coeff[kr]]
+            point = [xval, b_coeff[kr]]
+            #point = [yval, b_coeff[kr]]
             if c==1 and success==False:
                 #point = [xval, b_coeff[k]*xval]
                 print("adding point = {}".format(point))

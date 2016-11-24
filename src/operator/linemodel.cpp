@@ -217,7 +217,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
     Log.LogInfo( "Linemodel: processing");
 
     //WARNING: HACK, first pass with continuum from spectrum.
-    model.SetContinuumComponent("fromspectrum");
+    //model.SetContinuumComponent("fromspectrum");
     //
     Int32 indexLargeGrid = 0;
     boost::chrono::thread_clock::time_point start_mainloop = boost::chrono::thread_clock::now();
@@ -235,8 +235,8 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
         }
     }
     //WARNING: HACK, first pass with continuum from spectrum.
-    model.SetContinuumComponent(opt_continuumcomponent);
-    model.InitFitContinuum();
+    //model.SetContinuumComponent(opt_continuumcomponent);
+    //model.InitFitContinuum();
     //
     boost::chrono::thread_clock::time_point stop_mainloop = boost::chrono::thread_clock::now();
     Float64 duration_mainloop = boost::chrono::duration_cast<boost::chrono::microseconds>(stop_mainloop - start_mainloop).count();

@@ -131,7 +131,7 @@ CLineModelElementList::CLineModelElementList( const CSpectrum& spectrum,
     }
     m_precomputedFineGridContinuumFlux = NULL;
 
-    /*
+    //*
     //WARNING: HACK, first pass with continuum from spectrum.
     if(m_ContinuumComponent == "tplfit")
     {
@@ -918,7 +918,7 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
     modelSolution = GetModelSolution();
 
     //correct lines amplitude with tplshapePrior (tpl-corr): Warning: Rules must all be deactivated
-    if(0)
+    if(1)
     {
         //Log.LogInfo( "LineModel Infos: TPLCORR");
         std::vector<Float64> correctedAmplitudes;
