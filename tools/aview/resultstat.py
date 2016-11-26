@@ -1209,7 +1209,7 @@ class ResultList(object):
         #coeff_sigmacoeff_max = 1.0
         #coeff_sigmacoeff_step = .25
         #n_sigmacoeff = int((coeff_sigmacoeff_max-coeff_sigmacoeff_min+coeff_sigmacoeff_step)/float(coeff_sigmacoeff_step))
-        coeff_sigmacoeff = np.linspace(0.2, 2.0, 5)  
+        coeff_sigmacoeff = np.linspace(0.5, 16.0, 5)  
         n_sigmacoeff = len(coeff_sigmacoeff)
         print("n_sigmacoeff = {}".format(n_sigmacoeff))
         print("coeff_sigmacoeff = {}".format(coeff_sigmacoeff))
@@ -2110,7 +2110,7 @@ def estimateCombinationCoeffMap(resDir, diffthres, spcName="", enableExport=True
             else:
                 continue
 
-        idx_sigma = 2#coeffMap.shape[0]-1
+        idx_sigma = coeffMap.shape[0]-1
         print("using idx_sigma = {}".format(idx_sigma))
         print("using sigma = {}".format(sigma_coeff[idx_sigma]))
         success = False
@@ -2705,7 +2705,9 @@ def plotContinuumIndexes(resDir, diffthres, spcName=""):
         print("inds extrema for zwrong found = {}".format(indsZwrongExtrema))
         if len(indsZrefExtremum)>0 or len(indsZwrongExtrema)>0:
             filepaths, filenames = s.getAutoChi2FullPath(resList.list[k].name)
-            filepath = filepaths[0]
+            filepath = filepaths[0] #0 for linemodel method
+            filepath = filepaths[1] #1 for amazed03 method
+            
             print("Found chi2 filepath: {}".format(filepath))
             if not os.path.exists(filepath):
                 print("Problem while retrieving chi2 filepath.. using: {}".format(filepath))
@@ -2746,6 +2748,8 @@ def plotContinuumIndexes(resDir, diffthres, spcName=""):
         idx_continuum_index_OII = 1
         idx_continuum_index_OIII = 2
         idx_continuum_index_Ha = 3
+        idx_continuum_index_CIV = 4
+        idx_continuum_index_CIII = 5
         
         fig = plt.figure('continuum indexes'.format())
         ax = fig.add_subplot(111)
@@ -2777,6 +2781,18 @@ def plotContinuumIndexes(resDir, diffthres, spcName=""):
             print("3. xvect={}".format(xvect))
             print("3. yvect={}".format(yvect))
             ax.plot(xvect, yvect, 'xr', label='zref Ha')
+            
+            xvect = [a['break'][idx_continuum_index_CIV] for a in continuumIndexesZrefList if not np.isnan(a['break'][idx_continuum_index_CIV]) and not np.isnan(a['color'][idx_continuum_index_CIV])]
+            yvect = [a['color'][idx_continuum_index_CIV] for a in continuumIndexesZrefList if not np.isnan(a['break'][idx_continuum_index_CIV]) and not np.isnan(a['color'][idx_continuum_index_CIV])]
+            print("4. xvect={}".format(xvect))
+            print("4. yvect={}".format(yvect))
+            ax.plot(xvect, yvect, 'xm', label='zref CIV')
+            
+            xvect = [a['break'][idx_continuum_index_CIII] for a in continuumIndexesZrefList if not np.isnan(a['break'][idx_continuum_index_CIII]) and not np.isnan(a['color'][idx_continuum_index_CIII])]
+            yvect = [a['color'][idx_continuum_index_CIII] for a in continuumIndexesZrefList if not np.isnan(a['break'][idx_continuum_index_CIII]) and not np.isnan(a['color'][idx_continuum_index_CIII])]
+            print("5. xvect={}".format(xvect))
+            print("5. yvect={}".format(yvect))
+            ax.plot(xvect, yvect, 'xy', label='zref CIII')
         
         if enablePlotZwrong:
             #xvect = range(len(continuumIndexesZwrongList))

@@ -435,7 +435,7 @@ Bool COperatorDTreeCSolve::GetCombinedRedshift(CDataStore& store, std::string sc
 
         //chi2cCoeff = -3.9e3;//-1.14e3;
         chi2cCoeff = 1.0e6; //Coeff NUL
-        chi2cCoeff = -5.0e2;
+        chi2cCoeff = -0.5e3;
 
 
         Log.LogInfo( "dtreeCsolve : lmCoeff=%f", lmCoeff);
@@ -497,7 +497,7 @@ Bool COperatorDTreeCSolve::GetCombinedRedshift(CDataStore& store, std::string sc
         kci=0;
         Float64 colorLya = results->ContinuumIndexes[idxLMResultsExtrema[i]][kci].Color;
         Float64 breakLya = results->ContinuumIndexes[idxLMResultsExtrema[i]][kci].Break;
-        if(colorLya<-1.0 || breakLya>1.0 || (colorLya<0.25 && breakLya>-0.25))
+        if(colorLya<-1.0 || breakLya>1.0 || (colorLya<-0.25 && breakLya>0.25))
         {
             post+=coeff;
         }
@@ -506,7 +506,7 @@ Bool COperatorDTreeCSolve::GetCombinedRedshift(CDataStore& store, std::string sc
         kci = 1;
         Float64 colorOII = results->ContinuumIndexes[idxLMResultsExtrema[i]][kci].Color;
         Float64 breakOII = results->ContinuumIndexes[idxLMResultsExtrema[i]][kci].Break;
-        if(colorOII<-1.0 || breakOII>1.0 || (colorOII<0.5 && breakOII>0.0))
+        if(colorOII<-1.0 || breakOII>1.0 || (colorOII<-0.5 && breakOII>0.0))
         {
             post+=coeff;
         }
@@ -523,6 +523,14 @@ Bool COperatorDTreeCSolve::GetCombinedRedshift(CDataStore& store, std::string sc
         Float64 colorHa = results->ContinuumIndexes[idxLMResultsExtrema[i]][kci].Color;
         Float64 breakHa = results->ContinuumIndexes[idxLMResultsExtrema[i]][kci].Break;
         if(colorHa>0.4 || (colorHa>0.0 && breakHa>0.5))
+        {
+            post+=coeff;
+        }
+        //CIV
+        kci = 4;
+        Float64 colorCIV = results->ContinuumIndexes[idxLMResultsExtrema[i]][kci].Color;
+        Float64 breakCIV = results->ContinuumIndexes[idxLMResultsExtrema[i]][kci].Break;
+        if(colorCIV>1.0 || breakCIV<-1.5)
         {
             post+=coeff;
         }

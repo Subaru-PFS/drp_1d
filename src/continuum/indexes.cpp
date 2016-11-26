@@ -20,6 +20,7 @@ CContinuumIndexes::TContinuumIndexList CContinuumIndexes::getIndexes(const CSpec
     TFloat64RangeList restLambdaRanges_B;
 
     //add the ranges to be processed
+    //usually corresponds to 0.858, 0.966 for A, and 1.073, 1.127 for B
     restLambdaRanges_A.push_back(TFloat64Range( 1043.0, 1174.0 )); //Lya, A
     restLambdaRanges_B.push_back(TFloat64Range( 1304.0, 1369.0 )); //Lya, B
 
@@ -31,6 +32,13 @@ CContinuumIndexes::TContinuumIndexList CContinuumIndexes::getIndexes(const CSpec
 
     restLambdaRanges_A.push_back(TFloat64Range( 5632.0, 6341.0 )); //Halpha, A
     restLambdaRanges_B.push_back(TFloat64Range( 7043.0, 7397.6 )); //Halpha, B
+
+    restLambdaRanges_A.push_back(TFloat64Range( 1329.0, 1497.0 )); //CIV, A
+    restLambdaRanges_B.push_back(TFloat64Range( 1663.0, 1746.0 )); //CIV, B
+
+    restLambdaRanges_A.push_back(TFloat64Range( 1637.0, 1843.0 )); //CIII, A
+    restLambdaRanges_B.push_back(TFloat64Range( 2047.0, 2150.0 )); //CIII, B
+
 
     Int32 nIndexes = restLambdaRanges_A.size();
     CContinuumIndexes::TContinuumIndexList indexesList;

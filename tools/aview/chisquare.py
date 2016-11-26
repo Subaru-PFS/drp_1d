@@ -246,7 +246,7 @@ class ResultChisquare(object):
             
         a = a + ("\n")
         
-        a = a + ("    contIndexes = {:<20}\t{:<20}\t{:<20}\t{:<20}\n".format("Lya", "OII", "OIII", "Halpha"))
+        a = a + ("    contIndexes = {:<20}\t{:<20}\t{:<20}\t{:<20}\t{:<20}\t{:<20}\n".format("Lya", "OII", "OIII", "Halpha", "CIV", "CIII"))
         for z in range(len(self.amazed_continuumIndexes)):
             dataColor = self.amazed_continuumIndexes[z]['color']
             dataBreak = self.amazed_continuumIndexes[z]['break']
