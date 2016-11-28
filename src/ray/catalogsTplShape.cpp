@@ -116,8 +116,68 @@ Bool CRayCatalogsTplShape::Load( const char* dirPath )
     return true;
 }
 
+CRayCatalog::TRayVector CRayCatalogsTplShape::GetRestLinesList( const Int32 index )
+{
+    Int32 typeFilter=-1;
+    Int32 forceFilter=-1;
+
+    CRayCatalog::TRayVector restRayList = m_RayCatalogList[index].GetFilteredList( typeFilter, forceFilter);
+    return restRayList;
+}
+
+Int32 CRayCatalogsTplShape::GetCatalogsCount()
+{
+    return m_RayCatalogList.size();
+}
+
+std::string CRayCatalogsTplShape::GetCatalogName(Int32 idx)
+{
+    return m_RayCatalogNames[idx];
+}
+
+
+Bool CRayCatalogsTplShape::SetMultilineNominalAmplitudes(CLineModelElementList &LineModelElementList, Int32 iCatalog)
+{
+    //first set all amplitudes to 0.0
+    for( UInt32 iElts=0; iElts<LineModelElementList.m_Elements.size(); iElts++ )
+    {
+        //get the max nominal amplitude
+        Int32 nRays = LineModelElementList.m_Elements[iElts]->GetSize();
+        for(UInt32 j=0; j<nRays; j++){
+            LineModelElementList.m_Elements[iElts]->SetNominalAmplitude(j, 0.0);
+        }
+    }
+
+    //loop the amplitudes in the iLine_st catalog
+    CRayCatalog::TRayVector currentCatalogLineList = m_RayCatalogList[iCatalog].GetList();
+    Int32 nLines = currentCatalogLineList.size();
+    for(Int32 kL=0; kL<nLines; kL++)
+    {
+        Float64 nominalAmp = currentCatalogLineList[kL].GetNominalAmplitude();
+        //find line in the elementList
+        for( UInt32 iElts=0; iElts<LineModelElementList.m_Elements.size(); iElts++ )
+        {
+            //get the max nominal amplitude
+            Int32 nRays = LineModelElementList.m_Elements[iElts]->GetSize();
+            for(UInt32 j=0; j<nRays; j++){
+
+                if(LineModelElementList.m_RestRayList[LineModelElementList.m_Elements[iElts]->m_LineCatalogIndexes[j]].GetName() == currentCatalogLineList[kL].GetName())
+                {
+                    LineModelElementList.m_Elements[iElts]->SetNominalAmplitude(j, nominalAmp);
+                }
+
+            }
+
+
+        }
+
+    }
+    return true;
+}
+
+
 /**
- * \brief Calculates the best fit between the linemodel fitted amplitudes and the tplShaped catalogs
+ * \brief Calculates the best fit between the linemodel fitted amplitudes and the tplShaped catalogs: (for lm-rigidity=tplcorr)
  *
  **/
 Float64 CRayCatalogsTplShape::GetBestFit( const CRayCatalog::TRayVector& restRayList, std::vector<Float64> fittedAmplitudes, std::vector<Float64> fittedErrors, std::vector<Float64>& amplitudesCorrected, std::string& bestTplName  )

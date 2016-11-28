@@ -329,6 +329,18 @@ Float64 CLineModelElement::GetAsymfitDelta()
     return m_asymfit_delta;
 }
 
+Float64 CLineModelElement::GetSumCross()
+{
+    return m_sumCross;
+}
+
+Float64 CLineModelElement::GetSumGauss()
+{
+    return m_sumGauss;
+}
+
+
+
 /**
  * Laod the extinction residue data.
  */

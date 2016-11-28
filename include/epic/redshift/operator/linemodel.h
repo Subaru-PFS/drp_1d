@@ -46,7 +46,8 @@ public:
                                               const std::string &opt_continuumreest="no",
                                               const std::string &opt_rules="all",
                                               const std::string &opt_velocityFitting="no",
-                                              const Float64 &opt_twosteplargegridstep=0.001);
+                                              const Float64 &opt_twosteplargegridstep=0.001,
+                                             const std::string &opt_rigidity="rules");
 
     void storeGlobalModelResults( CDataStore &dataStore );
     void storePerTemplateModelResults( CDataStore &dataStore, const CTemplate& tpl );

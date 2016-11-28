@@ -110,6 +110,8 @@ CLineModelElementList GetData ( void )
   Float64 emissionVelocity = 100.0;
   Float64 absorptionVelocity = 300.0;
   std::string opt_rules = "all";
+  std::string opt_rigidity = "rules";
+
 
   //these tplcatalog related variables are unused here.
   CTemplateCatalog tplCatalog;
@@ -128,7 +130,8 @@ CLineModelElementList GetData ( void )
 								    resolution,
 								    emissionVelocity,
 								    absorptionVelocity,
-								    opt_rules );
+                                                                    opt_rules,
+                                                                    opt_rigidity);
   ReferenceArgument.LoadCatalog ( ctx.GetRayCatalog().GetList() );
   return ReferenceArgument;
 }

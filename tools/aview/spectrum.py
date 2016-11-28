@@ -474,7 +474,11 @@ class Spectrum(object):
         for x in range(0,self.n):
             self.xvect[x] = wave[x]
             self.yvect[x] = flux[x]
-            self.ysum += self.yvect[x]   
+            self.ysum += self.yvect[x]  
+            
+    def printIdxWaveFlux(self):
+        for a in range(self.n):
+            print("{:<10}{:<20}{:<30}".format(a, self.xvect[a], self.yvect[a]))
             
     def convertFromHzToAngstrom(self):
         for x in range(0,self.n):
@@ -1601,7 +1605,7 @@ def StartFromCommandLine( argv ) :
     if os.path.exists(options.spcPath) :
         print('using full path: {0}'.format(options.spcPath))
         s = Spectrum(options.spcPath, options.spcType, snorm=False)
-        
+        s.printIdxWaveFlux()
         #s.convertFromHzToAngstrom()
         #for k in range(len(s.yvect)):
         #    s.yvect[k] = 1e-3

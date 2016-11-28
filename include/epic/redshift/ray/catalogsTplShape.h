@@ -4,6 +4,7 @@
 #include <epic/core/common/datatypes.h>
 #include <epic/redshift/ray/ray.h>
 #include <epic/redshift/ray/catalog.h>
+#include <epic/redshift/linemodel/elementlist.h>
 
 
 #include <boost/format.hpp>
@@ -28,6 +29,10 @@ public:
     Bool Load( const char* dirPath );
     //Bool AreCatalogsAligned( const CRayCatalog::TRayVector& restRayList, Int32 typeFilter, Int32 forceFilter  );
     Float64 GetBestFit(const CRayCatalog::TRayVector& restRayList, std::vector<Float64> fittedAmplitudes, std::vector<Float64> fittedErrors, std::vector<Float64> &amplitudesCorrected , std::__cxx11::string &bestTplName);
+    CRayCatalog::TRayVector GetRestLinesList( const Int32 index );
+    Int32 GetCatalogsCount();
+    std::string GetCatalogName(Int32 idx);
+    Bool SetMultilineNominalAmplitudes(CLineModelElementList& LineModelElementList, Int32 iLine);
 
 private:
     Float64 GetFit(std::vector<Float64> ampsLM, std::vector<Float64> errLM, std::vector<Float64> ampsTPL , std::vector<Float64> &ampsCorrected);

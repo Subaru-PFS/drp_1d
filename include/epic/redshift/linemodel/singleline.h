@@ -46,6 +46,7 @@ public:
     void addToSpectrumModelDerivSigma(const CSpectrumSpectralAxis& modelspectralAxis, CSpectrumFluxAxis& modelfluxAxis, Float64 redshift );
     void initSpectrumModel( CSpectrumFluxAxis& modelfluxAxis, CSpectrumFluxAxis& continuumfluxAxis, Int32 lineIdx=-1 );
     Float64 GetNominalAmplitude(Int32 subeIdx);
+    bool SetNominalAmplitude(Int32 subeIdx, Float64 nominalamp);
     Float64 GetFittedAmplitude(Int32 subeIdx);
     Float64 GetFittedAmplitudeErrorSigma(Int32 subeIdx);
     Float64 GetElementAmplitude();

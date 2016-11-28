@@ -93,6 +93,7 @@ void checkProfileValue(std::string linecatalogPath,
     Float64 opt_resolution = 2350; //unused with velocity driven linewidth
     Float64 opt_velocityAbsorption = 100.0; //unused
     std::string opt_rules = "no";
+    std::string opt_rigidity = "rules";
 
 
     //these tplcatalog related variables are unused here.
@@ -100,7 +101,7 @@ void checkProfileValue(std::string linecatalogPath,
     Bool retValue = tplCatalog.Load( "../test/data/templatecatalog/" );
     TStringList tplCategories;
 
-    CLineModelElementList model(spectrum, spectrumContinuum, tplCatalog, tplCategories, lineList, opt_fittingmethod, opt_continuumcomponent, opt_lineWidthType, opt_resolution, opt_velocityEmission, opt_velocityAbsorption, opt_rules);
+    CLineModelElementList model(spectrum, spectrumContinuum, tplCatalog, tplCategories, lineList, opt_fittingmethod, opt_continuumcomponent, opt_lineWidthType, opt_resolution, opt_velocityEmission, opt_velocityAbsorption, opt_rules, opt_rigidity);
     TFloat64Range lambdaRange = TFloat64Range( 100.0, 12000.0 );
     CLineModelResult::SLineModelSolution modelSolution;
     Float64 merit = model.fit(z, lambdaRange, modelSolution);

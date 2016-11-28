@@ -16,8 +16,6 @@
 #include <epic/redshift/linemodel/element.h>
 #include <epic/redshift/linemodel/singleline.h>
 
-#include <epic/redshift/ray/catalogsTplShape.h>
-
 #include <epic/redshift/spectrum/template/catalog.h>
 
 #include <boost/shared_ptr.hpp>
@@ -29,6 +27,7 @@ namespace NSEpic
 {
   static Int32 defaultIdx = -1;
   class CRegulament;
+  class CRayCatalogsTplShape;
   
 class CLineModelElementList
 {
@@ -46,12 +45,14 @@ public:
                           const Float64 resolution,
                           const Float64 velocityEmission,
                           const Float64 velocityAbsorption,
-                          const std::string &opt_rules);
+                          const std::string &opt_rules,
+                          const std::string &opt_rigidity);
 
     ~CLineModelElementList();
 
     void LoadCatalog(const CRayCatalog::TRayVector& restRayList);
     void LoadCatalogSingleLines(const CRayCatalog::TRayVector& restRayList);
+    void LoadCatalogOneMultiline(const CRayCatalog::TRayVector& restRayList);
     void LogCatalogInfos();
 
     void PrepareContinuum(Float64 z);
@@ -115,6 +116,7 @@ public:
 
 
     Int32 getSpcNSamples(const TFloat64Range& lambdaRange);
+    Float64 getLeastSquareMeritFast();
     Float64 getLeastSquareMerit(const TFloat64Range &lambdaRange);
     Float64 getLeastSquareMeritUnderElements();
     Float64 getStrongerMultipleELAmpCoeff();
@@ -200,6 +202,7 @@ private:
     std::string m_fittingmethod;
     std::vector<Int32> m_elementsDisabledIndexes;
     std::string m_rulesoption;
+    std::string m_rigidity;
 
     std::shared_ptr<CSpectrum> m_inputSpc;
     CTemplateCatalog m_tplCatalog;

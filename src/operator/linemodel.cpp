@@ -80,7 +80,8 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
                                   const std::string& opt_continuumreest,
                                   const std::string& opt_rules,
                                   const std::string& opt_velocityFitting,
-                                  const Float64 &opt_twosteplargegridstep)
+                                  const Float64 &opt_twosteplargegridstep,
+                                  const std::string& opt_rigidity)
 {
     if( spectrum.GetSpectralAxis().IsInLinearScale()==false )
     {
@@ -175,7 +176,8 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
                                  opt_resolution,
                                  opt_velocityEmission,
                                  opt_velocityAbsorption,
-                                 opt_rules );
+                                 opt_rules,
+                                 opt_rigidity);
     Log.LogInfo( "Linemodel: initialized");
 
 //    //hack, zero outside of the support  ///////////////////////////////////////////////////////////////////////////////////////////

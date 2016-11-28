@@ -156,47 +156,122 @@ void CMultiLine::prepareSupport(const CSpectrumSpectralAxis& spectralAxis, Float
         m_RayIsActiveOnSupport[i][i] = 1;
     }
 
-    for(Int32 i=0; i<m_Rays.size(); i++){
-        if(m_OutsideLambdaRangeList[i]){
-            continue;
-        }
-        for(Int32 j=0; j<m_Rays.size(); j++){
-            if(m_OutsideLambdaRangeList[j]){
+    bool supportNoOverlap_has_duplicates=true;
+    Int32 x1=0;
+    Int32 y1=0;
+    Int32 x2=0;
+    Int32 y2=0;
+    Int32 icmpt=0;
+    Int32 ncmpt=20;
+    while(supportNoOverlap_has_duplicates && icmpt<ncmpt)
+    {
+        icmpt++;
+        for(Int32 i=0; i<m_Rays.size(); i++){
+            if(m_OutsideLambdaRangeList[i]){
                 continue;
             }
-            if(i==j){
+            if(m_StartNoOverlap[i]>m_EndNoOverlap[i])
+            {
                 continue;
             }
-            if(m_Rays[i].GetPosition()<m_Rays[j].GetPosition() && m_StartNoOverlap[j]<=m_EndNoOverlap[i]){
-                m_StartNoOverlap[j]=m_EndNoOverlap[i]+1;
-                //set the rays active on the overlapping support
-                m_RayIsActiveOnSupport[i][j] = 1;
-                m_RayIsActiveOnSupport[j][i] = 1;
-                //append all the previously overlapping rays as active on the support
-                for(Int32 i2=0; i2<i; i2++){
-                    if(m_OutsideLambdaRangeList[i2]){
-                        continue;
+            for(Int32 j=0; j<m_Rays.size(); j++){
+                if(m_OutsideLambdaRangeList[j]){
+                    continue;
+                }
+                if(m_StartNoOverlap[j]>m_EndNoOverlap[j])
+                {
+                    continue;
+                }
+                if(i==j){
+                    continue;
+                }
+                bool rayActiveSupportToBeCorrected=false;
+                //
+                x1 = m_StartNoOverlap[i];
+                x2 = m_EndNoOverlap[i];
+                y1 = m_StartNoOverlap[j];
+                y2 = m_EndNoOverlap[j];
+                Int32 max = std::max(x1,y1);
+                Int32 min = std::min(x2,y2);
+                if( max-min < 0 )
+                {
+                    m_StartNoOverlap[i]=std::min(x1,y1);
+                    m_EndNoOverlap[i]=std::max(x2,y2);
+                    m_StartNoOverlap[j]=m_EndNoOverlap[i]; //deactivate j when end is start -1
+                    m_EndNoOverlap[j]=m_EndNoOverlap[i]-1; //deactivate j
+
+                    rayActiveSupportToBeCorrected = true;
+                }
+
+                if(rayActiveSupportToBeCorrected)
+                {
+                    //set the rays active on the overlapping support
+                    m_RayIsActiveOnSupport[i][j] = 1;
+                    m_RayIsActiveOnSupport[j][i] = 1;
+                    //append all the previously overlapping rays as active on the support
+                    for(Int32 i2=0; i2<m_Rays.size(); i2++){
+                        if(m_OutsideLambdaRangeList[i2]){
+                            continue;
+                        }
+                        if(m_RayIsActiveOnSupport[i][i2] == 1)
+                        {
+                            m_RayIsActiveOnSupport[i2][j] = 1;
+                            m_RayIsActiveOnSupport[j][i2] = 1;
+                        }
                     }
-                    if(m_RayIsActiveOnSupport[i][i2] == 1)
-                    {
-                        m_RayIsActiveOnSupport[i2][j] = 1;
-                        m_RayIsActiveOnSupport[j][i2] = 1;
+                    //append all the previously overlapping rays as active on the support
+                    for(Int32 j2=0; j2<m_Rays.size(); j2++){
+                        if(m_OutsideLambdaRangeList[j2]){
+                            continue;
+                        }
+                        if(m_RayIsActiveOnSupport[j][j2] == 1)
+                        {
+                            m_RayIsActiveOnSupport[j2][i] = 1;
+                            m_RayIsActiveOnSupport[i][j2] = 1;
+                        }
                     }
                 }
-                //append all the previously overlapping rays as active on the support
-                for(Int32 j2=0; j2<j; j2++){
-                    if(m_OutsideLambdaRangeList[j2]){
-                        continue;
-                    }
-                    if(m_RayIsActiveOnSupport[j][j2] == 1)
-                    {
-                        m_RayIsActiveOnSupport[j2][i] = 1;
-                        m_RayIsActiveOnSupport[i][j2] = 1;
-                    }
+            }
+        }
+
+        supportNoOverlap_has_duplicates = false;
+
+        //check that there are no overlapping sub-supports in the list
+        for(Int32 i=0; i<m_Rays.size(); i++)
+        {
+            if(supportNoOverlap_has_duplicates)
+            {
+                break;
+            }
+            if(m_OutsideLambdaRangeList[i])
+            {
+                continue;
+            }
+            for(Int32 j=0; j<m_Rays.size(); j++)
+            {
+                if(m_OutsideLambdaRangeList[j])
+                {
+                    continue;
+                }
+                if(i==j){
+                    continue;
+                }
+
+                x1 = m_StartNoOverlap[i];
+                x2 = m_EndNoOverlap[i];
+                y1 = m_StartNoOverlap[j];
+                y2 = m_EndNoOverlap[j];
+                Int32 max = std::max(x1,y1);
+                Int32 min = std::min(x2,y2);
+                if( max-min < 0 )
+                {
+                    supportNoOverlap_has_duplicates=true;
+                    break;
                 }
             }
         }
     }
+
 
     //init the fitted amplitude values
     for(Int32 k=0; k<m_Rays.size(); k++){
@@ -315,6 +390,15 @@ Float64 CMultiLine::GetNominalAmplitude(Int32 subeIdx)
 }
 
 /**
+ * \brief Set the nominal amplitude with index subeIdx.
+ **/
+bool CMultiLine::SetNominalAmplitude(Int32 subeIdx, Float64 nominalamp)
+{
+    m_NominalAmplitudes[subeIdx]=nominalamp;
+    return true;
+}
+
+/**
  * \brief If outside lambda range, sets fitted amplitudes and errors to -1. If inside, sets each ray's fitted amplitude and error to -1 if ray outside lambda range, or amplitude to A * nominal amplitude and error to SNR * nominal amplitude.
  **/
 void CMultiLine::SetFittedAmplitude(Float64 A, Float64 SNR)
@@ -361,6 +445,9 @@ void CMultiLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const C
 {
     Float64 nRays = m_Rays.size();
 
+    m_sumCross = 0.0;
+    m_sumGauss = 0.0;
+
     for(Int32 k=0; k<nRays; k++)
       {
         m_FittedAmplitudes[k] = -1.0;
@@ -379,8 +466,7 @@ void CMultiLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const C
     Float64 x = 0.0;
     Float64 yg = 0.0;
 
-    Float64 sumCross = 0.0;
-    Float64 sumGauss = 0.0;
+
     Float64 err2 = 0.0;
     Int32 num = 0;
 
@@ -424,18 +510,20 @@ void CMultiLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const C
             }
             num++;
             err2 = 1.0 / (error[i] * error[i]);
-            sumCross += yg*y*err2;
-            sumGauss += yg*yg*err2;
+            m_sumCross += yg*y*err2;
+            m_sumGauss += yg*yg*err2;
         }
 
       }
 
-    if ( num==0 || sumGauss==0 )
+    if ( num==0 || m_sumGauss==0 )
       {
         return;
       }
 
-    Float64 A = std::max(0.0, sumCross / sumGauss);
+    m_sumCross = std::max(0.0, m_sumCross);
+    Float64 A = m_sumCross / m_sumGauss;
+    //Float64 A = std::max(0.0, m_sumCross / m_sumGauss);
 
     for(Int32 k=0; k<nRays; k++)
     {
@@ -450,7 +538,7 @@ void CMultiLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const C
 //        }
 //        else
         {
-            m_FittedAmplitudeErrorSigmas[k] = m_NominalAmplitudes[k]*1.0/sqrt(sumGauss);
+            m_FittedAmplitudeErrorSigmas[k] = m_NominalAmplitudes[k]*1.0/sqrt(m_sumGauss);
         }
     }
     return;

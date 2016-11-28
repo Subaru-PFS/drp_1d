@@ -50,6 +50,7 @@ const std::string CLineModelSolve::GetDescription()
     desc.append("\tparam: linemodel.lineforcefilter = {""no"", ""S""}\n");
     desc.append("\tparam: linemodel.fittingmethod = {""hybrid"", ""individual""}\n");
     desc.append("\tparam: linemodel.continuumcomponent = {""fromspectrum"", ""tplfit"", ""nocontinuum"", ""zero""}\n");
+    desc.append("\tparam: linemodel.rigidity = {""rules"", ""tplcorr"", ""tplshape""}\n");
     desc.append("\tparam: linemodel.linewidthtype = {""instrumentdriven"", ""velocitydriven"", ""combined"", ""nispsim2016"", ""fixed""}\n");
     desc.append("\tparam: linemodel.instrumentresolution = <float value>\n");
     desc.append("\tparam: linemodel.velocityemission = <float value>\n");
@@ -78,6 +79,7 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
     dataStore.GetScopedParam( "linemodel.fittingmethod", m_opt_fittingmethod, "hybrid" );
     dataStore.GetScopedParam( "linemodel.fastfitlargegridstep", m_opt_twosteplargegridstep, 0.001 );
     dataStore.GetScopedParam( "linemodel.continuumcomponent", m_opt_continuumcomponent, "fromspectrum" );
+    dataStore.GetScopedParam( "linemodel.rigidity", m_opt_rigidity, "rules" );
     dataStore.GetScopedParam( "linemodel.linewidthtype", m_opt_lineWidthType, "velocitydriven" );
     dataStore.GetScopedParam( "linemodel.instrumentresolution", m_opt_resolution, 2350.0 );
     dataStore.GetScopedParam( "linemodel.velocityemission", m_opt_velocity_emission, 100.0 );
@@ -87,6 +89,16 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
     dataStore.GetScopedParam( "linemodel.rules", m_opt_rules, "all" );
     dataStore.GetScopedParam( "linemodel.extremacount", m_opt_extremacount, 10.0 );
 
+    //Auto-correct fitting method
+    //std::string forcefittingmethod = "ones";
+    std::string forcefittingmethod = "individual";
+    if(m_opt_rigidity=="tplshape" && m_opt_fittingmethod != forcefittingmethod)
+    {
+        m_opt_fittingmethod = forcefittingmethod;
+        dataStore.SetScopedParam("linemodel.fittingmethod", m_opt_fittingmethod);
+        Log.LogInfo( "LineModel fitting method auto-correct due to tplshape rigidity");
+
+    }
     Log.LogInfo( "Linemodel parameters:");
     Log.LogInfo( "    -linetypefilter: %s", m_opt_linetypefilter.c_str());
     Log.LogInfo( "    -lineforcefilter: %s", m_opt_lineforcefilter.c_str());
@@ -109,6 +121,7 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
         Log.LogInfo( "    -velocity fit: %s", m_opt_velocityfit.c_str());
     }
     Log.LogInfo( "    -rules: %s", m_opt_rules.c_str());
+    Log.LogInfo( "    -rigidity: %s", m_opt_rigidity.c_str());
     Log.LogInfo( "    -continuumcomponent: %s", m_opt_continuumcomponent.c_str());
     Log.LogInfo( "    -continuumreestimation: %s", m_opt_continuumreest.c_str());
     Log.LogInfo( "    -extremacount: %.3f", m_opt_extremacount);
@@ -288,7 +301,8 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
                       m_opt_continuumreest,
                       m_opt_rules,
                       m_opt_velocityfit,
-                      m_opt_twosteplargegridstep);
+                      m_opt_twosteplargegridstep,
+                      m_opt_rigidity);
 
     if( !result )
     {

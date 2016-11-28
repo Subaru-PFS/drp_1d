@@ -42,6 +42,7 @@ public:
     virtual void initSpectrumModel( CSpectrumFluxAxis& modelfluxAxis, CSpectrumFluxAxis& continuumfluxAxis, Int32 lineIdx=-1 )=0;
 
     virtual Float64 GetNominalAmplitude(Int32 subeIdx)=0;
+    virtual bool SetNominalAmplitude(Int32 subeIdx, Float64 nominalamp)=0;
     virtual Float64 GetFittedAmplitude(Int32 subeIdx)=0;
     virtual Float64 GetFittedAmplitudeErrorSigma(Int32 subeIdx)=0;
     virtual Float64 GetElementAmplitude()=0;
@@ -76,6 +77,9 @@ public:
     Float64 GetLineProfileDerivSigma(std::string profile, Float64 x, Float64 x0, Float64 sigma);
     Float64 GetNSigmaSupport(std::string profile);
 
+    Float64 GetSumCross();
+    Float64 GetSumGauss();
+
 protected:
     Bool LoadDataExtinction();
 
@@ -106,8 +110,10 @@ protected:
     Float64 m_dataStepLambda = 0.1;
     Float64 m_dataN = 3000;
 
-private:
+    Float64 m_sumCross = 0.0;
+    Float64 m_sumGauss = 0.0;
 
+private:
 
 
 };

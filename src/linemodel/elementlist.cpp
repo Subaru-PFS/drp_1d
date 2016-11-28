@@ -4,6 +4,7 @@
 #include <epic/redshift/linemodel/modelfittingresult.h>
 #include <epic/redshift/gaussianfit/multigaussianfit.h>
 #include <epic/redshift/ray/regulament.h>
+#include <epic/redshift/ray/catalogsTplShape.h>
 
 #include <gsl/gsl_multifit.h>
 #include <epic/redshift/spectrum/io/genericreader.h>
@@ -43,18 +44,19 @@ using namespace NSEpic;
  * Sets many state variables.
  * Sets the continuum either as a nocontinuum or a fromspectrum.
  **/
-CLineModelElementList::CLineModelElementList( const CSpectrum& spectrum,
-					      const CSpectrum &spectrumContinuum,
+CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
+                          const CSpectrum &spectrumContinuum,
                           const CTemplateCatalog& tplCatalog,
                           const TStringList& tplCategoryList,
-					      const CRayCatalog::TRayVector& restRayList,
-					      const std::string& opt_fittingmethod,
-					      const std::string& opt_continuumcomponent,
-					      const std::string& widthType,
-					      const Float64 resolution,
-					      const Float64 velocityEmission,
-					      const Float64 velocityAbsorption,
-					      const std::string& opt_rules )
+                          const CRayCatalog::TRayVector& restRayList,
+                          const std::string& opt_fittingmethod,
+                          const std::string& opt_continuumcomponent,
+                          const std::string& widthType,
+                          const Float64 resolution,
+                          const Float64 velocityEmission,
+                          const Float64 velocityAbsorption,
+                          const std::string& opt_rules,
+                          const std::string &opt_rigidity)
 {
     //memebers for chi2 continuum fitting
     m_tplCatalog = tplCatalog;
@@ -70,6 +72,7 @@ CLineModelElementList::CLineModelElementList( const CSpectrum& spectrum,
     m_velocityAbsorptionInit = m_velocityAbsorption;
     m_fittingmethod = opt_fittingmethod;
     m_rulesoption = opt_rules;
+    m_rigidity = opt_rigidity;
 
     // to be deleted: nominal width
     //m_nominalWidthDefaultEmission = 3.4;//3.4; //suited to PFS RJLcont simulations
@@ -77,11 +80,6 @@ CLineModelElementList::CLineModelElementList( const CSpectrum& spectrum,
     m_nominalWidthDefaultAbsorption = m_nominalWidthDefaultEmission;
     // end: to be deleted
 
-    Log.LogDebug( "About to load catalog." );
-    LoadCatalog(restRayList);
-    //LogCatalogInfos();
-
-    m_RestRayList = restRayList;
     m_SpectrumModel = std::shared_ptr<CSpectrum>( new CSpectrum(spectrum) );
     m_SpcCorrectedUnderLines = std::shared_ptr<CSpectrum>( new CSpectrum(spectrum) );
     Int32 spectrumSampleCount = spectrum.GetSampleCount();
@@ -145,9 +143,29 @@ CLineModelElementList::CLineModelElementList( const CSpectrum& spectrum,
     m_Regulament->CreateRulesFromJSONFiles( );
     m_Regulament->EnableRulesAccordingToParameters ( m_rulesoption );
 
-    //TplShapePrior initialization
+    //tplshape catalog initialization : used for rigidities tplcorr and tplshape
     m_CatalogTplShape = new CRayCatalogsTplShape();
     m_CatalogTplShape->Init();
+
+    Log.LogDebug( "About to load catalog." );
+    if(m_rigidity != "tplshape")
+    {
+        m_RestRayList = restRayList;
+
+        //load the regular catalog
+        LoadCatalog(restRayList);
+        //LogCatalogInfos();
+    }else{
+        m_RestRayList = restRayList;
+
+        //load the regular catalog
+        LoadCatalogOneMultiline(restRayList);
+        //load the fully constrained catalog (first in the list) from the tpl-shaped catalogs
+        m_CatalogTplShape->SetMultilineNominalAmplitudes( *this, 0 );
+        //m_RestRayList = m_CatalogTplShape->GetRestLinesList(0);
+        //LoadCatalog(m_RestRayList);
+        LogCatalogInfos();
+    }
 }
 
 /**
@@ -264,6 +282,25 @@ void CLineModelElementList::LoadCatalog(const CRayCatalog::TRayVector& restRayLi
         {
             m_Elements.push_back(boost::shared_ptr<CLineModelElement> (new CMultiLine(lines, m_LineWidthType, m_resolution, m_velocityEmission, m_velocityEmission, amps, m_nominalWidthDefaultAbsorption, inds)));
         }
+    }
+}
+
+void CLineModelElementList::LoadCatalogOneMultiline(const CRayCatalog::TRayVector& restRayList)
+{
+
+    std::vector<CRay> lines;
+    std::vector<Float64> amps;
+    std::vector<Int32> inds;
+    for(Int32 ir=0; ir<restRayList.size(); ir++)
+    {
+        inds.push_back(ir);
+        amps.push_back(restRayList[ir].GetNominalAmplitude());
+        lines.push_back(restRayList[ir]);
+    }
+
+    if(lines.size()>0)
+    {
+        m_Elements.push_back(boost::shared_ptr<CLineModelElement> (new CMultiLine(lines, m_LineWidthType, m_resolution, m_velocityEmission, m_velocityEmission, amps, m_nominalWidthDefaultAbsorption, inds)));
     }
 }
 
@@ -594,277 +631,295 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
         }
     }
 
-    //prepare the Lya width and asym coefficients if the asymfit profile option is met
-    setLyaProfile(redshift, spectralAxis);
-
-
-    //generate random amplitudes
-    if(m_fittingmethod=="random")
+    Float64 merit = m_dTransposeDNocontinuum;
+    Int32 ifitting=0; //multiple fitting steps for rigidity=tplshape
+    Int32 nfitting=1;
+    Int32 savedIdxFitted;
+    Float64 savedFittedAmp; //for rigidity=tplshape
+    Float64 savedFittedAmpError; //for rigidity=tplshape
+    if(m_rigidity=="tplshape")
     {
-        srand(time(0));
-        Float64 randNumFloat = (Float64) rand() / (Float64) (RAND_MAX);
-        for(Int32 irand=0; irand<(int)(randNumFloat*100); irand++)
-        {
-            rand();
-        }
-
-        Float64 coeffAmpEmission = pow(10.0, randNumFloat*3.0-1.0);
-        randNumFloat = (Float64) rand() / (Float64) (RAND_MAX);
-        Float64 coeffAmpAbsorption = pow(10.0, randNumFloat*1.0-1.0);
-        Log.LogInfo( "\nLineModel simulation: coeffAmpEmission = %.2f", coeffAmpEmission);
-        Log.LogInfo( "LineModel simulation: coeffAmpAbsorption = %.2f", coeffAmpAbsorption);
-        //fit the model amplitudes individually
-        for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
-        {
-            Float64 meanContinuum = getContinuumMeanUnderElement(iElts);
-            Float64 err = 1e-22;
-            Float64 amax = meanContinuum;
-            if(m_RestRayList[m_Elements[iElts]->m_LineCatalogIndexes[0]].GetType() == CRay::nType_Absorption)
-            {
-                amax = meanContinuum*0.5*coeffAmpAbsorption;
-            }else{
-                amax = meanContinuum*coeffAmpEmission;
-            }
-            randNumFloat = (Float64) rand() / (Float64) (RAND_MAX);
-            Float64 a = randNumFloat*amax;
-            if(a<0.0){
-                a=0.0;
-            }
-            //get the max nominal amplitude
-            Int32 nRays = m_Elements[iElts]->GetSize();
-            Float64 maxNominalAmp = -1.0;
-            for(UInt32 j=0; j<nRays; j++){
-                if(maxNominalAmp<m_Elements[iElts]->GetNominalAmplitude(j))
-                {
-                    maxNominalAmp = m_Elements[iElts]->GetNominalAmplitude(j);
-                }
-            }
-
-            SetElementAmplitude(iElts, a/maxNominalAmp, err);
-        }
+        nfitting=m_CatalogTplShape->GetCatalogsCount();
     }
 
-    //generate amplitudes from existing linemodel fit solution file .csv
-    if(m_fittingmethod=="fromfile")
+    while(ifitting<nfitting)
     {
-        CModelFittingResult result;
-        std::string linemodelFitResultsPath = "/home/aschmitt/gitlab/cpf-redshift/tools/simulation"; //this is the simulation folder absolute path !
-        linemodelFitResultsPath.append("/amazed/linecatalogs/linemodelsolve.linemodel_fit_extrema_0.csv");
-
-        Log.LogInfo("\nLineModel fitting from File: loading: %s", linemodelFitResultsPath.c_str());
-        result.Load(linemodelFitResultsPath.c_str());
-        if(result.GetLineModelSolution().Amplitudes.size()<2)
+        if(m_rigidity!="tplshape")
         {
-            Log.LogError( "\nLineModel fitting from File: unable to load from file: %s", linemodelFitResultsPath.c_str());
+            //prepare the Lya width and asym coefficients if the asymfit profile option is met
+            setLyaProfile(redshift, spectralAxis);
+        }else{
+            m_CatalogTplShape->SetMultilineNominalAmplitudes( *this, ifitting );
         }
 
-        for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
+        //generate random amplitudes
+        if(m_fittingmethod=="random")
         {
-            Float64 meanContinuum = getContinuumMeanUnderElement(iElts);
+            srand(time(0));
+            Float64 randNumFloat = (Float64) rand() / (Float64) (RAND_MAX);
+            for(Int32 irand=0; irand<(int)(randNumFloat*100); irand++)
+            {
+                rand();
+            }
 
-            //get the max nominal amplitude
-            Int32 nRays = m_Elements[iElts]->GetSize();
-            Float64 nominalAmp = -1.0;
-            Float64 err=1.5*1e-20; //not used
-            for(UInt32 j=0; j<nRays; j++){
-                Int32 lineIndex = m_Elements[iElts]->m_LineCatalogIndexes[j];
-                nominalAmp = m_Elements[iElts]->GetNominalAmplitude(j);
-                Float64 a = result.GetLineModelSolution().Amplitudes[lineIndex];
-
+            Float64 coeffAmpEmission = pow(10.0, randNumFloat*3.0-1.0);
+            randNumFloat = (Float64) rand() / (Float64) (RAND_MAX);
+            Float64 coeffAmpAbsorption = pow(10.0, randNumFloat*1.0-1.0);
+            Log.LogInfo( "\nLineModel simulation: coeffAmpEmission = %.2f", coeffAmpEmission);
+            Log.LogInfo( "LineModel simulation: coeffAmpAbsorption = %.2f", coeffAmpAbsorption);
+            //fit the model amplitudes individually
+            for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
+            {
+                Float64 meanContinuum = getContinuumMeanUnderElement(iElts);
+                Float64 err = 1e-22;
+                Float64 amax = meanContinuum;
                 if(m_RestRayList[m_Elements[iElts]->m_LineCatalogIndexes[0]].GetType() == CRay::nType_Absorption)
                 {
-                    Float64 ampFitted = meanContinuum*a/nominalAmp;
-                    SetElementAmplitude(iElts, ampFitted, err);
+                    amax = meanContinuum*0.5*coeffAmpAbsorption;
                 }else{
-                    Float64 ampFitted = a/nominalAmp;
-                    SetElementAmplitude(iElts, ampFitted, err);
+                    amax = meanContinuum*coeffAmpEmission;
                 }
-
-            }
-
-
-        }
-
-    }
-
-
-    //fit the amplitudes of each element independently
-    if(m_fittingmethod=="individual")
-    {
-        //fit the model amplitudes individually
-        for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
-        {
-            m_Elements[iElts]->fitAmplitude(spectralAxis, m_spcFluxAxisNoContinuum, redshift);
-        }
-    }
-
-    //fit the amplitude of all elements together with iterative solver: Nelder Mead Simplex
-    if(0){
-        //fit the amplitudes together
-        fitAmplitudesSimplex();
-    }
-
-    //fit the amplitude of all elements together (but Emission or Absorption separately) with iterative   solver: lmfit
-    if(m_fittingmethod=="lmfit")
-    {
-        //initial guess from individual fit
-        for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
-        {
-            m_Elements[iElts]->fitAmplitude(spectralAxis, m_spcFluxAxisNoContinuum, redshift);
-        }
-
-        std::vector<Float64> ampsfitted;
-        Int32 retVal;
-        Int32 lineType;
-
-        for(Int32 iLineType = 0; iLineType<2; iLineType++)
-        {
-            if(iLineType==0)
-            {
-                Log.LogInfo( "\nLineModel Infos: Lmfit ABSORPTION, for z = %.4f", m_Redshift);
-                lineType = CRay::nType_Absorption;
-            }else{
-                Log.LogInfo( "\nLineModel Infos: Lmfit EMISSION, for z = %.4f", m_Redshift);
-                lineType = CRay::nType_Emission;
-            }
-            retVal = 0;
-            std::vector<Int32> validEltsIdx = GetModelValidElementsIndexes();
-            std::vector<Int32> filteredEltsIdx;
-            for (Int32 iElt = 0; iElt < validEltsIdx.size(); iElt++)
-            {
-                if(m_RestRayList[m_Elements[validEltsIdx[iElt]]->m_LineCatalogIndexes[0]].GetType() != lineType)
-                {
-                    continue;
+                randNumFloat = (Float64) rand() / (Float64) (RAND_MAX);
+                Float64 a = randNumFloat*amax;
+                if(a<0.0){
+                    a=0.0;
                 }
-                filteredEltsIdx.push_back(validEltsIdx[iElt]);
-            }
-
-
-            Int32 previousValidEltsSizeEltsSize = filteredEltsIdx.size()+1;
-            while( (retVal!=1 || retVal!=-1) && filteredEltsIdx.size()>0 && filteredEltsIdx.size()!=previousValidEltsSizeEltsSize)
-            {
-
-                Log.LogInfo( "LineModel Infos: Lmfit IN filteredEltsIdx.size() = %d", filteredEltsIdx.size());
-                Log.LogInfo( "LineModel Infos: Lmfit previousValidEltsSizeEltsSize = %d", previousValidEltsSizeEltsSize);
-                previousValidEltsSizeEltsSize = filteredEltsIdx.size();
-                retVal = fitAmplitudesLmfit(filteredEltsIdx, m_spcFluxAxisNoContinuum, ampsfitted, lineType);
-                Log.LogInfo( "LineModel Infos: Lmfit retVal = %d", retVal);
-                Log.LogInfo( "LineModel Infos: Lmfit ampsfitted.size() = %d", ampsfitted.size());
-                if(retVal==0 && filteredEltsIdx.size()==ampsfitted.size()){
-                    for(Int32 ie=filteredEltsIdx.size()-1; ie>=0; ie--)
+                //get the max nominal amplitude
+                Int32 nRays = m_Elements[iElts]->GetSize();
+                Float64 maxNominalAmp = -1.0;
+                for(UInt32 j=0; j<nRays; j++){
+                    if(maxNominalAmp<m_Elements[iElts]->GetNominalAmplitude(j))
                     {
-                        if(ampsfitted[ie]<=0.0)
-                        {
-                            Log.LogInfo( "LineModel Infos: erasing i= %d", ie);
-                            filteredEltsIdx.erase(filteredEltsIdx.begin() + ie);
-                        }
+                        maxNominalAmp = m_Elements[iElts]->GetNominalAmplitude(j);
                     }
                 }
-                Log.LogInfo( "LineModel Infos: Lmfit OUT, validEltsIdx.size() = %d", filteredEltsIdx.size());
+
+                SetElementAmplitude(iElts, a/maxNominalAmp, err);
             }
         }
-    }
 
-    //fit the amplitude of all elements together (but Emission or Absorption separately) with solver: lbfgs
-    if(m_fittingmethod=="lbfgsfit")
-    {
-        //initial guess from individual fit
-        for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
+        //generate amplitudes from existing linemodel fit solution file .csv
+        if(m_fittingmethod=="fromfile")
         {
-            m_Elements[iElts]->fitAmplitude(spectralAxis, m_spcFluxAxisNoContinuum, redshift);
-        }
+            CModelFittingResult result;
+            std::string linemodelFitResultsPath = "/home/aschmitt/gitlab/cpf-redshift/tools/simulation"; //this is the simulation folder absolute path !
+            linemodelFitResultsPath.append("/amazed/linecatalogs/linemodelsolve.linemodel_fit_extrema_0.csv");
 
-        std::vector<Float64> ampsfitted;
-        Int32 retVal;
-        Int32 lineType;
-
-        for(Int32 iLineType = 0; iLineType<2; iLineType++)
-        {
-            if(iLineType==0)
+            Log.LogInfo("\nLineModel fitting from File: loading: %s", linemodelFitResultsPath.c_str());
+            result.Load(linemodelFitResultsPath.c_str());
+            if(result.GetLineModelSolution().Amplitudes.size()<2)
             {
-                Log.LogInfo( "\nLineModel Infos: LBFGS ABSORPTION, for z = %.4f", m_Redshift);
-                lineType = CRay::nType_Absorption;
-            }else{
-                Log.LogInfo( "\nLineModel Infos: LBFGS EMISSION, for z = %.4f", m_Redshift);
-                lineType = CRay::nType_Emission;
-            }
-            retVal = 0;
-            std::vector<Int32> validEltsIdx = GetModelValidElementsIndexes();
-            std::vector<Int32> filteredEltsIdx;
-            for (Int32 iElt = 0; iElt < validEltsIdx.size(); iElt++)
-            {
-                if(m_RestRayList[m_Elements[validEltsIdx[iElt]]->m_LineCatalogIndexes[0]].GetType() != lineType)
-                {
-                    continue;
-                }
-                filteredEltsIdx.push_back(validEltsIdx[iElt]);
+                Log.LogError( "\nLineModel fitting from File: unable to load from file: %s", linemodelFitResultsPath.c_str());
             }
 
-
-            Int32 previousValidEltsSizeEltsSize = filteredEltsIdx.size()+1;
-            while( (retVal!=1 || retVal!=-1) && filteredEltsIdx.size()>0 && filteredEltsIdx.size()!=previousValidEltsSizeEltsSize)
+            for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
             {
+                Float64 meanContinuum = getContinuumMeanUnderElement(iElts);
 
-                Log.LogInfo( "LineModel Infos: LBFGS IN filteredEltsIdx.size() = %d", filteredEltsIdx.size());
-                Log.LogInfo( "LineModel Infos: LBFGS previousValidEltsSizeEltsSize = %d", previousValidEltsSizeEltsSize);
-                previousValidEltsSizeEltsSize = filteredEltsIdx.size();
-                retVal = fitAmplitudesLBFGS(filteredEltsIdx, m_spcFluxAxisNoContinuum, ampsfitted, lineType);
-                Log.LogInfo( "LineModel Infos: LBFGS retVal = %d", retVal);
-                Log.LogInfo( "LineModel Infos: LBFGS ampsfitted.size() = %d", ampsfitted.size());
-                if(retVal==0 && filteredEltsIdx.size()==ampsfitted.size()){
-                    for(Int32 ie=filteredEltsIdx.size()-1; ie>=0; ie--)
+                //get the max nominal amplitude
+                Int32 nRays = m_Elements[iElts]->GetSize();
+                Float64 nominalAmp = -1.0;
+                Float64 err=1.5*1e-20; //not used
+                for(UInt32 j=0; j<nRays; j++){
+                    Int32 lineIndex = m_Elements[iElts]->m_LineCatalogIndexes[j];
+                    nominalAmp = m_Elements[iElts]->GetNominalAmplitude(j);
+                    Float64 a = result.GetLineModelSolution().Amplitudes[lineIndex];
+
+                    if(m_RestRayList[m_Elements[iElts]->m_LineCatalogIndexes[0]].GetType() == CRay::nType_Absorption)
                     {
-                        if(ampsfitted[ie]<=0.0)
+                        Float64 ampFitted = meanContinuum*a/nominalAmp;
+                        SetElementAmplitude(iElts, ampFitted, err);
+                    }else{
+                        Float64 ampFitted = a/nominalAmp;
+                        SetElementAmplitude(iElts, ampFitted, err);
+                    }
+
+                }
+
+
+            }
+
+        }
+
+
+        //fit the amplitudes of each element independently
+        if(m_fittingmethod=="individual")
+        {
+            //fit the model amplitudes individually
+            for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
+            {
+                m_Elements[iElts]->fitAmplitude(spectralAxis, m_spcFluxAxisNoContinuum, redshift);
+            }
+        }
+
+
+        //fit the amplitude of all elements together with iterative solver: Nelder Mead Simplex
+        if(0){
+            //fit the amplitudes together
+            fitAmplitudesSimplex();
+        }
+
+        //fit the amplitude of all elements together (but Emission or Absorption separately) with iterative   solver: lmfit
+        if(m_fittingmethod=="lmfit")
+        {
+            //initial guess from individual fit
+            for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
+            {
+                m_Elements[iElts]->fitAmplitude(spectralAxis, m_spcFluxAxisNoContinuum, redshift);
+            }
+
+            std::vector<Float64> ampsfitted;
+            Int32 retVal;
+            Int32 lineType;
+
+            for(Int32 iLineType = 0; iLineType<2; iLineType++)
+            {
+                if(iLineType==0)
+                {
+                    Log.LogInfo( "\nLineModel Infos: Lmfit ABSORPTION, for z = %.4f", m_Redshift);
+                    lineType = CRay::nType_Absorption;
+                }else{
+                    Log.LogInfo( "\nLineModel Infos: Lmfit EMISSION, for z = %.4f", m_Redshift);
+                    lineType = CRay::nType_Emission;
+                }
+                retVal = 0;
+                std::vector<Int32> validEltsIdx = GetModelValidElementsIndexes();
+                std::vector<Int32> filteredEltsIdx;
+                for (Int32 iElt = 0; iElt < validEltsIdx.size(); iElt++)
+                {
+                    if(m_RestRayList[m_Elements[validEltsIdx[iElt]]->m_LineCatalogIndexes[0]].GetType() != lineType)
+                    {
+                        continue;
+                    }
+                    filteredEltsIdx.push_back(validEltsIdx[iElt]);
+                }
+
+
+                Int32 previousValidEltsSizeEltsSize = filteredEltsIdx.size()+1;
+                while( (retVal!=1 || retVal!=-1) && filteredEltsIdx.size()>0 && filteredEltsIdx.size()!=previousValidEltsSizeEltsSize)
+                {
+
+                    Log.LogInfo( "LineModel Infos: Lmfit IN filteredEltsIdx.size() = %d", filteredEltsIdx.size());
+                    Log.LogInfo( "LineModel Infos: Lmfit previousValidEltsSizeEltsSize = %d", previousValidEltsSizeEltsSize);
+                    previousValidEltsSizeEltsSize = filteredEltsIdx.size();
+                    retVal = fitAmplitudesLmfit(filteredEltsIdx, m_spcFluxAxisNoContinuum, ampsfitted, lineType);
+                    Log.LogInfo( "LineModel Infos: Lmfit retVal = %d", retVal);
+                    Log.LogInfo( "LineModel Infos: Lmfit ampsfitted.size() = %d", ampsfitted.size());
+                    if(retVal==0 && filteredEltsIdx.size()==ampsfitted.size()){
+                        for(Int32 ie=filteredEltsIdx.size()-1; ie>=0; ie--)
                         {
-                            Log.LogInfo( "LineModel Infos: erasing i= %d", ie);
-                            filteredEltsIdx.erase(filteredEltsIdx.begin() + ie);
+                            if(ampsfitted[ie]<=0.0)
+                            {
+                                Log.LogInfo( "LineModel Infos: erasing i= %d", ie);
+                                filteredEltsIdx.erase(filteredEltsIdx.begin() + ie);
+                            }
                         }
                     }
+                    Log.LogInfo( "LineModel Infos: Lmfit OUT, validEltsIdx.size() = %d", filteredEltsIdx.size());
                 }
-                Log.LogInfo( "LineModel Infos: LBFGS OUT, validEltsIdx.size() = %d", filteredEltsIdx.size());
             }
         }
-    }
 
-    //fit the amplitude of all elements together with linear solver: gsl_multifit_wlinear
-    if(m_fittingmethod=="svd")
-    {
-        std::vector<Int32> validEltsIdx = GetModelValidElementsIndexes();
-        std::vector<Float64> ampsfitted;
-        std::vector<Float64> errorsfitted;
-        fitAmplitudesLinSolve(validEltsIdx, spectralAxis, m_spcFluxAxisNoContinuum, ampsfitted, errorsfitted);
-    }
-
-    //fit the amplitudes of each element independently, unless there is overlap
-    if(m_fittingmethod=="hybrid")
-    {
-        fitAmplitudesHybrid(spectralAxis, m_spcFluxAxisNoContinuum, redshift);
-
-        //apply a continuum iterative re-estimation with lines removed from the initial spectrum
-        Int32 nIt = contreest_iterations;
-        Int32 it=0;
-        while(it<nIt){
-            applyRules();
-
-            //*
-            //iterative continuum estimation :: RAW SLOW METHOD
-            refreshModel();
-            EstimateSpectrumContinuum();
-
-            for(UInt32 i=0; i<modelFluxAxis.GetSamplesCount(); i++){
-                modelFluxAxis[i] = m_ContinuumFluxAxis[i];
-                m_spcFluxAxisNoContinuum[i] = m_SpcFluxAxis[i]-m_ContinuumFluxAxis[i];
+        //fit the amplitude of all elements together (but Emission or Absorption separately) with solver: lbfgs
+        if(m_fittingmethod=="lbfgsfit")
+        {
+            //initial guess from individual fit
+            for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
+            {
+                m_Elements[iElts]->fitAmplitude(spectralAxis, m_spcFluxAxisNoContinuum, redshift);
             }
-            //*/
 
-            /*
+            std::vector<Float64> ampsfitted;
+            Int32 retVal;
+            Int32 lineType;
+
+            for(Int32 iLineType = 0; iLineType<2; iLineType++)
+            {
+                if(iLineType==0)
+                {
+                    Log.LogInfo( "\nLineModel Infos: LBFGS ABSORPTION, for z = %.4f", m_Redshift);
+                    lineType = CRay::nType_Absorption;
+                }else{
+                    Log.LogInfo( "\nLineModel Infos: LBFGS EMISSION, for z = %.4f", m_Redshift);
+                    lineType = CRay::nType_Emission;
+                }
+                retVal = 0;
+                std::vector<Int32> validEltsIdx = GetModelValidElementsIndexes();
+                std::vector<Int32> filteredEltsIdx;
+                for (Int32 iElt = 0; iElt < validEltsIdx.size(); iElt++)
+                {
+                    if(m_RestRayList[m_Elements[validEltsIdx[iElt]]->m_LineCatalogIndexes[0]].GetType() != lineType)
+                    {
+                        continue;
+                    }
+                    filteredEltsIdx.push_back(validEltsIdx[iElt]);
+                }
+
+
+                Int32 previousValidEltsSizeEltsSize = filteredEltsIdx.size()+1;
+                while( (retVal!=1 || retVal!=-1) && filteredEltsIdx.size()>0 && filteredEltsIdx.size()!=previousValidEltsSizeEltsSize)
+                {
+
+                    Log.LogInfo( "LineModel Infos: LBFGS IN filteredEltsIdx.size() = %d", filteredEltsIdx.size());
+                    Log.LogInfo( "LineModel Infos: LBFGS previousValidEltsSizeEltsSize = %d", previousValidEltsSizeEltsSize);
+                    previousValidEltsSizeEltsSize = filteredEltsIdx.size();
+                    retVal = fitAmplitudesLBFGS(filteredEltsIdx, m_spcFluxAxisNoContinuum, ampsfitted, lineType);
+                    Log.LogInfo( "LineModel Infos: LBFGS retVal = %d", retVal);
+                    Log.LogInfo( "LineModel Infos: LBFGS ampsfitted.size() = %d", ampsfitted.size());
+                    if(retVal==0 && filteredEltsIdx.size()==ampsfitted.size()){
+                        for(Int32 ie=filteredEltsIdx.size()-1; ie>=0; ie--)
+                        {
+                            if(ampsfitted[ie]<=0.0)
+                            {
+                                Log.LogInfo( "LineModel Infos: erasing i= %d", ie);
+                                filteredEltsIdx.erase(filteredEltsIdx.begin() + ie);
+                            }
+                        }
+                    }
+                    Log.LogInfo( "LineModel Infos: LBFGS OUT, validEltsIdx.size() = %d", filteredEltsIdx.size());
+                }
+            }
+        }
+
+        //fit the amplitude of all elements together with linear solver: gsl_multifit_wlinear
+        if(m_fittingmethod=="svd")
+        {
+            std::vector<Int32> validEltsIdx = GetModelValidElementsIndexes();
+            std::vector<Float64> ampsfitted;
+            std::vector<Float64> errorsfitted;
+            fitAmplitudesLinSolve(validEltsIdx, spectralAxis, m_spcFluxAxisNoContinuum, ampsfitted, errorsfitted);
+        }
+
+        //fit the amplitudes of each element independently, unless there is overlap
+        if(m_fittingmethod=="hybrid")
+        {
+            fitAmplitudesHybrid(spectralAxis, m_spcFluxAxisNoContinuum, redshift);
+
+            //apply a continuum iterative re-estimation with lines removed from the initial spectrum
+            Int32 nIt = contreest_iterations;
+            Int32 it=0;
+            while(it<nIt){
+                applyRules();
+
+                //*
+                //iterative continuum estimation :: RAW SLOW METHOD
+                refreshModel();
+                EstimateSpectrumContinuum();
+
+                for(UInt32 i=0; i<modelFluxAxis.GetSamplesCount(); i++){
+                    modelFluxAxis[i] = m_ContinuumFluxAxis[i];
+                    m_spcFluxAxisNoContinuum[i] = m_SpcFluxAxis[i]-m_ContinuumFluxAxis[i];
+                }
+                //*/
+
+                /*
             //iterative continuum estimation approx: APPROX. METHOD
             std::vector<Int32> validEltsIdx = GetModelValidElementsIndexes();
             std::vector<Int32> refreshIdxs = ReestimateContinuumApprox(validEltsIdx);
             refreshModelAfterContReestimation(refreshIdxs, modelFluxAxis, spcFluxAxisNoContinuum);
             //*/
 
-            /*
+                /*
             //iterative continuum estimation approx: FAST METHOD
             std::vector<Int32> validEltsIdx = GetModelValidElementsIndexes();
             std::vector<Int32> highSNRvalidEltsIdx;
@@ -894,60 +949,132 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
             //*/
 
 
-            fitAmplitudesHybrid(spectralAxis, m_spcFluxAxisNoContinuum, redshift);
-            it++;
+                fitAmplitudesHybrid(spectralAxis, m_spcFluxAxisNoContinuum, redshift);
+                it++;
+            }
         }
+
+        //set all the amplitudes to 1.0
+        if(m_fittingmethod=="ones")
+        {
+            for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
+            {
+                m_Elements[iElts]->SetFittedAmplitude(1.0, 1.0);
+            }
+        }
+
+        if(m_rigidity=="rules")
+        {
+            //Apply rules,
+            applyRules( enableLogging );
+
+            refreshModel();
+            //create spectrum model
+            modelSolution = GetModelSolution();            
+            m_tplcorrBestTplName = "None";
+
+            merit = getLeastSquareMerit(lambdaRange);
+        }
+
+
+        //correct lines amplitude with tplshapePrior (tpl-corr): Warning: Rules must all be deactivated
+        if(m_rigidity=="tplcorr")
+        {
+            refreshModel();
+            //create spectrum model
+            modelSolution = GetModelSolution();
+            //Log.LogInfo( "LineModel Infos: TPLCORR");
+            std::vector<Float64> correctedAmplitudes;
+            correctedAmplitudes.resize(modelSolution.Amplitudes.size());
+            std::string bestTplName = "";
+            Float64 fitTplShape = m_CatalogTplShape->GetBestFit( modelSolution.Rays, modelSolution.Amplitudes, modelSolution.Errors, correctedAmplitudes, bestTplName);
+            for( UInt32 iRestRay=0; iRestRay<m_RestRayList.size(); iRestRay++ )
+            {
+                Int32 eIdx = FindElementIndex(iRestRay);
+                Int32 subeIdx = m_Elements[eIdx]->FindElementIndex(iRestRay);
+                Float64 er = m_Elements[eIdx]->GetFittedAmplitudeErrorSigma(subeIdx); //not modifying the fitting error for now
+                Float64 nominalAmp = m_Elements[eIdx]->GetNominalAmplitude(subeIdx);
+                m_Elements[eIdx]->SetFittedAmplitude(correctedAmplitudes[iRestRay]/nominalAmp, er);
+            }
+            refreshModel();
+            modelSolution = GetModelSolution();
+            m_tplcorrBestTplName = bestTplName;
+
+            merit = getLeastSquareMerit(lambdaRange);
+        }
+
+        if(m_rigidity=="tplshape")
+        {
+            Float64 _merit;
+            if(enableLogging)
+            {
+                refreshModel();
+                //create spectrum model
+                modelSolution = GetModelSolution();
+                _merit = getLeastSquareMerit(lambdaRange);
+                //_merit = getLeastSquareMeritFast();
+            }else{
+                _merit = getLeastSquareMeritFast();
+            }
+
+            if(merit>_merit)
+            {
+                merit=_merit;
+
+                savedIdxFitted = ifitting;
+                bool savedAmp=false;
+                for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
+                {
+
+                    Int32 nRays = m_Elements[iElts]->GetSize();
+                    for(UInt32 j=0; j<nRays; j++){
+                        if(savedAmp)
+                        {
+                            break;
+                        }
+                        Float64 amp = m_Elements[iElts]->GetFittedAmplitude(j);
+                        if(amp>0.0)
+                        {
+
+                            Float64 amp_error = m_Elements[iElts]->GetFittedAmplitudeErrorSigma(j);
+                            Float64 nominal_amp = m_Elements[iElts]->GetNominalAmplitude(j);
+                            savedFittedAmp = amp/nominal_amp;
+                            savedFittedAmpError = amp_error/nominal_amp;
+
+                            savedAmp=true;
+                            break;
+                        }
+                    }
+                }
+
+
+                m_tplcorrBestTplName = m_CatalogTplShape->GetCatalogName(savedIdxFitted);
+            }
+
+
+        }
+
+        //if(m_rigidity=="tplcorr")
+        //{
+        //  Float64 tplshapePriorCoeff = m_CatalogTplShape->GetBestFit( modelSolution.Rays, modelSolution.Amplitudes,  );
+        //  Log.LogDebug( "Linemodel: tplshapePriorCoeff = %f", tplshapePriorCoeff);
+        //  merit = sqrt(merit*merit/2.0-log(tplshapePriorCoeff));
+        //}
+
+        if(m_ContinuumComponent == "nocontinuum"){
+            reinitModel();
+        }
+
+        ifitting++;
     }
 
-    //set all the amplitudes to 1.0
-    if(m_fittingmethod=="ones")
+    if(m_rigidity=="tplshape" && enableLogging)
     {
-        for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
-        {
-            m_Elements[iElts]->SetFittedAmplitude(1.0, 1.0);
-        }
-    }
-
-
-    //Apply rules,
-    applyRules( enableLogging );
-
-    refreshModel();
-
-    //create spectrum model
-    modelSolution = GetModelSolution();
-
-    //correct lines amplitude with tplshapePrior (tpl-corr): Warning: Rules must all be deactivated
-    if(1)
-    {
-        //Log.LogInfo( "LineModel Infos: TPLCORR");
-        std::vector<Float64> correctedAmplitudes;
-        correctedAmplitudes.resize(modelSolution.Amplitudes.size());
-        std::string bestTplName = "";
-        Float64 fitTplShape = m_CatalogTplShape->GetBestFit( modelSolution.Rays, modelSolution.Amplitudes, modelSolution.Errors, correctedAmplitudes, bestTplName);
-        for( UInt32 iRestRay=0; iRestRay<m_RestRayList.size(); iRestRay++ )
-        {
-            Int32 eIdx = FindElementIndex(iRestRay);
-            Int32 subeIdx = m_Elements[eIdx]->FindElementIndex(iRestRay);
-            Float64 er = m_Elements[eIdx]->GetFittedAmplitudeErrorSigma(subeIdx); //not modifying the fitting error for now
-            Float64 nominalAmp = m_Elements[eIdx]->GetNominalAmplitude(subeIdx);
-            m_Elements[eIdx]->SetFittedAmplitude(correctedAmplitudes[iRestRay]/nominalAmp, er);
-        }
+        m_CatalogTplShape->SetMultilineNominalAmplitudes( *this, savedIdxFitted );
+        Log.LogInfo( "Linemodel: tplshape = %d (%s), and A=%f", savedIdxFitted, m_tplcorrBestTplName.c_str(), savedFittedAmp);
+        m_Elements[0]->SetFittedAmplitude(savedFittedAmp, savedFittedAmpError);
         refreshModel();
         modelSolution = GetModelSolution();
-        m_tplcorrBestTplName = bestTplName;
-    }else{
-        m_tplcorrBestTplName = "None";
-    }
-
-    Float64 merit = getLeastSquareMerit(lambdaRange);
-
-    //Float64 tplshapePriorCoeff = m_CatalogTplShape->GetBestFit( modelSolution.Rays, modelSolution.Amplitudes,  );
-    //Log.LogDebug( "Linemodel: tplshapePriorCoeff = %f", tplshapePriorCoeff);
-    //merit = sqrt(merit*merit/2.0-log(tplshapePriorCoeff));
-
-    if(m_ContinuumComponent == "nocontinuum"){
-        reinitModel();
     }
     return merit;
 }
@@ -2453,6 +2580,31 @@ Float64 CLineModelElementList::getLeastSquareMerit(const TFloat64Range& lambdaRa
 //            Log.LogDebug( "CLineModelElementList::getLeastSquareMerit m_ErrorNoContinuum[%d] = %f", j, m_ErrorNoContinuum[j] );
 //        }
     }
+    Log.LogDebug( "CLineModelElementList::getLeastSquareMerit fit = %f", fit );
+    return fit;
+}
+
+
+/**
+ * \brief Get the squared difference by fast method proposed by D. Vibert
+ **/
+Float64 CLineModelElementList::getLeastSquareMeritFast()
+{
+    Float64 fit = m_dTransposeDNocontinuum;
+    Float64 num = 0.0;
+    Float64 denom = 0.0;
+    for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
+    {
+        Float64 sumCross = m_Elements[iElts]->GetSumCross();
+
+        Float64 sumGauss = m_Elements[iElts]->GetSumGauss();
+        if(sumGauss>0.0)
+        {
+            num += sumCross*sumCross;
+            denom += sumGauss;
+        }
+    }
+    fit -= num/denom;
     Log.LogDebug( "CLineModelElementList::getLeastSquareMerit fit = %f", fit );
     return fit;
 }
