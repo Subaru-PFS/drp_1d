@@ -644,7 +644,7 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
 
     while(ifitting<nfitting)
     {
-        if(m_rigidity!="tplshape")
+        if(m_rigidity!="tplshape" || ifitting==0)
         {
             //prepare the Lya width and asym coefficients if the asymfit profile option is met
             setLyaProfile(redshift, spectralAxis);
@@ -2282,13 +2282,13 @@ Int32 CLineModelElementList::setLyaProfile(Float64 redshift , const CSpectrumSpe
         Float64 widthCoeffMin = 1.0;
         Float64 widthCoeffMax = 4.0;
         Int32 nWidthSteps = int((widthCoeffMax-widthCoeffMin)/widthCoeffStep+0.5);
-        Float64 asymCoeffStep = 0.5;
+        Float64 asymCoeffStep = 1.0;//0.5;
         Float64 asymCoeffMin = 0.0;
-        Float64 asymCoeffMax = 2.5;
+        Float64 asymCoeffMax = 2.0;//2.5;
         Int32 nAsymSteps = int((asymCoeffMax-asymCoeffMin)/asymCoeffStep+0.5);
         Float64 deltaStep = 0.5;
         Float64 deltaMin = 0.0;
-        Float64 deltaMax = 4.0;
+        Float64 deltaMax = 0.0;//4.0;
         Int32 nDeltaSteps = int((deltaMax-deltaMin)/deltaStep+0.5);
 
         Float64 bestWidth = widthCoeffMin;
@@ -2312,8 +2312,14 @@ Int32 CLineModelElementList::setLyaProfile(Float64 redshift , const CSpectrumSpe
 
                     idxLineLyaE = -1;
                     m_Elements[idxLyaE]->fitAmplitude(spectralAxis, m_spcFluxAxisNoContinuum, redshift, idxLineLyaE);
-                    refreshModelUnderElements(filterEltsIdxLya, idxLineLyaE);
-                    Float64 m = getModelErrorUnderElement(idxLyaE);
+                    Float64 m=m_dTransposeDNocontinuum;
+                    if(0)
+                    {
+                        refreshModelUnderElements(filterEltsIdxLya, idxLineLyaE);
+                        m = getModelErrorUnderElement(idxLyaE);
+                    }else{
+                        m = getLeastSquareMeritFast(idxLineLyaE);
+                    }
                     if( m<meritMin )
                     {
                         meritMin = m;
@@ -2588,13 +2594,17 @@ Float64 CLineModelElementList::getLeastSquareMerit(const TFloat64Range& lambdaRa
 /**
  * \brief Get the squared difference by fast method proposed by D. Vibert
  **/
-Float64 CLineModelElementList::getLeastSquareMeritFast()
+Float64 CLineModelElementList::getLeastSquareMeritFast(Int32 idxLine)
 {
     Float64 fit = m_dTransposeDNocontinuum;
     Float64 num = 0.0;
     Float64 denom = 0.0;
     for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
     {
+        if(idxLine!=-1 && idxLine!=iElts)
+        {
+            continue;
+        }
         Float64 sumCross = m_Elements[iElts]->GetSumCross();
 
         Float64 sumGauss = m_Elements[iElts]->GetSumGauss();

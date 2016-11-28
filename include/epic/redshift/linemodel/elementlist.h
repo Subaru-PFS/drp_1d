@@ -116,7 +116,7 @@ public:
 
 
     Int32 getSpcNSamples(const TFloat64Range& lambdaRange);
-    Float64 getLeastSquareMeritFast();
+    Float64 getLeastSquareMeritFast(Int32 idxLine=-1);
     Float64 getLeastSquareMerit(const TFloat64Range &lambdaRange);
     Float64 getLeastSquareMeritUnderElements();
     Float64 getStrongerMultipleELAmpCoeff();
