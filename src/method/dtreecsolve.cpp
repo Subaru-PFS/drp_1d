@@ -98,6 +98,17 @@ Bool COperatorDTreeCSolve::Solve(CDataStore &dataStore, const CSpectrum &spc, co
     std::string opt_continuumcomponent;
     //dataStore.GetScopedParam( "linemodel.continuumcomponent", opt_continuumcomponent, "nocontinuum" );
     dataStore.GetScopedParam( "linemodel.continuumcomponent", opt_continuumcomponent, "fromspectrum" );
+    std::string opt_rigidity;
+    dataStore.GetScopedParam( "linemodel.rigidity", opt_rigidity, "tplshape" );
+    //Auto-correct fitting method
+    std::string forcefittingmethod = "individual";
+    if(opt_rigidity=="tplshape" && opt_fittingmethod != forcefittingmethod)
+    {
+        opt_fittingmethod = forcefittingmethod;
+        dataStore.SetScopedParam("linemodel.fittingmethod", opt_fittingmethod);
+        Log.LogInfo( "LineModel fitting method auto-correct due to tplshape rigidity");
+
+    }
     std::string opt_lineWidthType;
     dataStore.GetScopedParam( "linemodel.linewidthtype", opt_lineWidthType, "combined" );
     Float64 opt_resolution;
@@ -142,7 +153,8 @@ Bool COperatorDTreeCSolve::Solve(CDataStore &dataStore, const CSpectrum &spc, co
                                                                            opt_continuumreest,
                                                                            opt_rules,
                                                                            opt_velocityfit,
-                                                                           opt_twosteplargegridstep) );
+                                                                           opt_twosteplargegridstep,
+                                                                           opt_rigidity) );
 
     /*
     Todo: this is the place to decide wether there is a candidate robust enough

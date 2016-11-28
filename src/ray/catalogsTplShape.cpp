@@ -175,6 +175,43 @@ Bool CRayCatalogsTplShape::SetMultilineNominalAmplitudes(CLineModelElementList &
     return true;
 }
 
+Bool CRayCatalogsTplShape::SetLyaProfile(CLineModelElementList &LineModelElementList, Int32 iCatalog)
+{
+    std::string lyaTag = "LyAE";
+    //loop the amplitudes in the iLine_st catalog in order to find Lya
+    CRayCatalog::TRayVector currentCatalogLineList = m_RayCatalogList[iCatalog].GetList();
+    Int32 nLines = currentCatalogLineList.size();
+    for(Int32 kL=0; kL<nLines; kL++)
+    {
+        if(! (currentCatalogLineList[kL].GetName()==lyaTag.c_str()))
+        {
+            continue;
+        }
+        std::string targetProfile = currentCatalogLineList[kL].GetProfile();
+
+        //find line Lya in the elementList
+        for( UInt32 iElts=0; iElts<LineModelElementList.m_Elements.size(); iElts++ )
+        {
+            //get the max nominal amplitude
+            Int32 nRays = LineModelElementList.m_Elements[iElts]->GetSize();
+            for(UInt32 j=0; j<nRays; j++){
+
+                if(LineModelElementList.m_RestRayList[LineModelElementList.m_Elements[iElts]->m_LineCatalogIndexes[j]].GetName() == lyaTag.c_str())
+                {
+
+                    LineModelElementList.m_RestRayList[LineModelElementList.m_Elements[iElts]->m_LineCatalogIndexes[j]].SetProfile(targetProfile);
+                    break;
+                }
+
+            }
+
+
+        }
+
+    }
+    return true;
+}
+
 
 /**
  * \brief Calculates the best fit between the linemodel fitted amplitudes and the tplShaped catalogs: (for lm-rigidity=tplcorr)

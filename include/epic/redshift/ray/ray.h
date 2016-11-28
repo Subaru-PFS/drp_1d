@@ -41,6 +41,8 @@ public:
     Int32               GetForce() const;
     Int32               GetType() const;
     std::string         GetProfile() const;
+    bool                SetProfile(std::string profile);
+
     Float64             GetPosition() const;
     Float64             GetAmplitude() const;
     Float64             GetWidth() const;

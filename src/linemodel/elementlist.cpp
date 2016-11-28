@@ -640,15 +640,19 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
     if(m_rigidity=="tplshape")
     {
         nfitting=m_CatalogTplShape->GetCatalogsCount();
+
     }
 
     while(ifitting<nfitting)
     {
-        if(m_rigidity!="tplshape" || ifitting==0)
+        if(m_rigidity!="tplshape")
         {
             //prepare the Lya width and asym coefficients if the asymfit profile option is met
             setLyaProfile(redshift, spectralAxis);
         }else{
+            m_CatalogTplShape->SetLyaProfile(*this, ifitting);
+            //prepare the Lya width and asym coefficients if the asymfit profile option is met
+            setLyaProfile(redshift, spectralAxis);
             m_CatalogTplShape->SetMultilineNominalAmplitudes( *this, ifitting );
         }
 
@@ -1073,6 +1077,11 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
         m_CatalogTplShape->SetMultilineNominalAmplitudes( *this, savedIdxFitted );
         Log.LogInfo( "Linemodel: tplshape = %d (%s), and A=%f", savedIdxFitted, m_tplcorrBestTplName.c_str(), savedFittedAmp);
         m_Elements[0]->SetFittedAmplitude(savedFittedAmp, savedFittedAmpError);
+        //Lya
+        m_CatalogTplShape->SetLyaProfile(*this, savedIdxFitted);
+        //prepare the Lya width and asym coefficients if the asymfit profile option is met
+        setLyaProfile(redshift, spectralAxis);
+
         refreshModel();
         modelSolution = GetModelSolution();
     }

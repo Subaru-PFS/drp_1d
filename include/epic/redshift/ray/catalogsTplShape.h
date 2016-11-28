@@ -33,6 +33,8 @@ public:
     Int32 GetCatalogsCount();
     std::string GetCatalogName(Int32 idx);
     Bool SetMultilineNominalAmplitudes(CLineModelElementList& LineModelElementList, Int32 iLine);
+    Bool SetLyaProfile(CLineModelElementList &LineModelElementList, Int32 iCatalog);
+
 
 private:
     Float64 GetFit(std::vector<Float64> ampsLM, std::vector<Float64> errLM, std::vector<Float64> ampsTPL , std::vector<Float64> &ampsCorrected);
