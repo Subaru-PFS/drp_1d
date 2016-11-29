@@ -174,8 +174,9 @@ Bool CProcessFlow::Blindsolve( CProcessFlowContext& ctx, const std::string&  Cat
 
     if( blindsolveResult ) {
         ctx.GetDataStore().StoreScopedGlobalResult( "redshiftresult", blindsolveResult );
+    }else{
+        return false;
     }
-
     return true;
 }
 
@@ -216,8 +217,9 @@ Bool CProcessFlow::Correlation( CProcessFlowContext& ctx,  const std::string&  C
 
     if( solveResult ) {
         ctx.GetDataStore().StoreScopedGlobalResult( "redshiftresult", solveResult );
+    }else{
+        return false;
     }
-
     return true;
 }
 
@@ -283,8 +285,9 @@ Bool CProcessFlow::Chisquare( CProcessFlowContext& ctx, const std::string& Categ
 
     if( solveResult ) {
         ctx.GetDataStore().StoreScopedGlobalResult( "redshiftresult", solveResult );
+    }else{
+        return false;
     }
-
     return true;
 }
 
@@ -328,8 +331,9 @@ Bool CProcessFlow::Fullsolve( CProcessFlowContext& ctx, const std::string& Categ
 
     if( solveResult ) {
         ctx.GetDataStore().StoreScopedGlobalResult( "redshiftresult", solveResult );
+    }else{
+        return false;
     }
-
     return true;
 }
 
@@ -354,9 +358,9 @@ Bool CProcessFlow::LineMatching( CProcessFlowContext& ctx )
 
     if( solveResult ) {
         ctx.GetDataStore().StoreScopedGlobalResult( "redshiftresult", solveResult );
+    }else{
+        return false;
     }
-
-
     return true;
 }
 
@@ -382,8 +386,9 @@ Bool CProcessFlow::LineMatching2( CProcessFlowContext& ctx )
 
     if( solveResult ) {
         ctx.GetDataStore().StoreScopedGlobalResult( "redshiftresult", solveResult );
+    }else{
+        return false;
     }
-
     return true;
 }
 
@@ -436,8 +441,9 @@ Bool CProcessFlow::LineModelSolve( CProcessFlowContext& ctx )
 
     if( solveResult ) {
         ctx.GetDataStore().StoreScopedGlobalResult( "redshiftresult", solveResult );
+    }else{
+        return false;
     }
-
     return true;
 }
 
@@ -489,8 +495,9 @@ Bool CProcessFlow::LineModelTplshapeSolve( CProcessFlowContext& ctx, const std::
 
     if( solveResult ) {
         ctx.GetDataStore().StoreScopedGlobalResult( "redshiftresult", solveResult );
+    }else{
+        return false;
     }
-
     return true;
 }
 
@@ -515,8 +522,9 @@ Bool CProcessFlow::DecisionalTree7( CProcessFlowContext& ctx )
 
     if( solveResult ) {
         ctx.GetDataStore().StoreScopedGlobalResult( "redshiftresult", solveResult );
+    }else{
+        return false;
     }
-
     return true;
 }
 
@@ -547,8 +555,9 @@ Bool CProcessFlow::DecisionalTreeA( CProcessFlowContext& ctx )
 
     if( solveResult ) {
         ctx.GetDataStore().StoreScopedGlobalResult( "redshiftresult", solveResult );
+    }else{
+        return false;
     }
-
     return true;
 }
 
@@ -583,8 +592,9 @@ Bool CProcessFlow::DecisionalTreeB( CProcessFlowContext& ctx )
 
     if( solveResult ) {
         ctx.GetDataStore().StoreScopedGlobalResult( "redshiftresult", solveResult );
+    }else{
+        return false;
     }
-
     return true;
 }
 
@@ -618,7 +628,8 @@ Bool CProcessFlow::DecisionalTreeC( CProcessFlowContext& ctx )
 
     if( solveResult ) {
         ctx.GetDataStore().StoreScopedGlobalResult( "redshiftresult", solveResult );
+    }else{
+        return false;
     }
-
     return true;
 }

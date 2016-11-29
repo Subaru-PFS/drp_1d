@@ -1209,7 +1209,7 @@ class ResultList(object):
         #coeff_sigmacoeff_max = 1.0
         #coeff_sigmacoeff_step = .25
         #n_sigmacoeff = int((coeff_sigmacoeff_max-coeff_sigmacoeff_min+coeff_sigmacoeff_step)/float(coeff_sigmacoeff_step))
-        coeff_sigmacoeff = np.linspace(0.5, 16.0, 5)  
+        coeff_sigmacoeff = np.linspace(0.5, 2.5, 5)  
         n_sigmacoeff = len(coeff_sigmacoeff)
         print("n_sigmacoeff = {}".format(n_sigmacoeff))
         print("coeff_sigmacoeff = {}".format(coeff_sigmacoeff))
@@ -2110,7 +2110,7 @@ def estimateCombinationCoeffMap(resDir, diffthres, spcName="", enableExport=True
             else:
                 continue
 
-        idx_sigma = coeffMap.shape[0]-1
+        idx_sigma = 1#coeffMap.shape[0]-1
         print("using idx_sigma = {}".format(idx_sigma))
         print("using sigma = {}".format(sigma_coeff[idx_sigma]))
         success = False

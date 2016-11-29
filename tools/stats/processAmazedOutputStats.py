@@ -1096,12 +1096,35 @@ def ProcessFailuresSeqFile( fname, refFile, fnameFailuresSeqFile, fnameFailureRe
     
     print '\n'
 
+def findCatDistance(type1, type2):
+    if type1 == "C" or type1 == "N":
+        _type = type2
+        type2 = type1
+        type1 = _type
+    if type2 == "C" or type2 == "N":
+        if type1=="K" or type1=="M":
+            return 0
+        elif type1=="G":
+            return 1
+        else:
+            return np.inf
+    
+    catOrdered = ["O", "B", "A", "F", "G", "K", "M"]
+    itype1 = catOrdered.index(type1)
+    itype2 = catOrdered.index(type2)
+    diff = itype1 - itype2
+    return diff
+    
+        
+
+    
 def ProcessStars( fname, enablePlot = False, exportType="png" ):
     """
     Process the stars hist plots
     - export as exporType (choose between, 'png', 'pickle', 'pngpickle') : TODO 
     """
-    spcIdIdx = 0
+    #indexes of the colum in the diff file
+    spcIdIdx = 0 
     tplIdx = 6
     
     data = loadDiff( fname );
@@ -1130,18 +1153,24 @@ def ProcessStars( fname, enablePlot = False, exportType="png" ):
     
     #compare stars type with template type
     sameTypes = []
+    catDistance = []
     for x in range(0,n):
         sameTypes.append(0)
+        catDistance.append(np.nan)
         if starTypes[x] == tplTypes[x]:
             sameTypes[x] = 1
+            catDistance[x] = 0
+        else:
+            d = findCatDistance(starTypes[x], tplTypes[x])
+            catDistance[x] = d
         
     #export detailed comparison
     fnameAscii = os.path.join(outputDirectory, "comparison_star_type.txt".format())
     f = open(fnameAscii, 'w')
-    f.write("{}\t{}\t{}\t{}\t{}".format("spc", "spc-Type", "tpl", "tpl-type", "sameType"))
+    f.write("{}\t{}\t{}\t{}\t{}\t{}".format("spc", "spc-Type", "tpl", "tpl-type", "sameType", "typeDistance"))
     f.write("\n")
     for x in range(0,n):
-        f.write("{}\t{}\t{}\t{}\t{}".format(data[x][spcIdIdx], starTypes[x], data[x][tplIdx], tplTypes[x], sameTypes[x]))
+        f.write("{}\t{}\t{}\t{}\t{}\t{}".format(data[x][spcIdIdx], starTypes[x], data[x][tplIdx], tplTypes[x], sameTypes[x], catDistance[x]))
         f.write("\n")
     f.close()
     
@@ -1150,7 +1179,13 @@ def ProcessStars( fname, enablePlot = False, exportType="png" ):
     nSuccessTot = np.sum(np.array(sameTypes))
     success_rate_tot = float(nSuccessTot)/float(nTot)
     print("INFO: Stars overall success rate is {:.2f} percent ({}/{})".format(success_rate_tot*100.0, nSuccessTot, nTot))
-    print("\n")    
+       
+    #enlarged stats
+    OneCatDistanceSuccess = [abs(a)<=1 for a in catDistance]
+    nOneCatDistanceSuccess_tot = np.sum(np.array(OneCatDistanceSuccess))
+    OneCatDistanceSuccessRate_tot = float(nOneCatDistanceSuccess_tot)/float(nTot)
+    print("INFO: Stars 1-category-difference-max success rate is {:.2f} percent ({}/{})".format(OneCatDistanceSuccessRate_tot*100.0, nOneCatDistanceSuccess_tot, nTot))
+    print("\n") 
     
     #plot per star-type statistics
     typesCategoriesUnsorted = list(set(starTypes))
@@ -1193,7 +1228,7 @@ def ProcessStars( fname, enablePlot = False, exportType="png" ):
     width = 0.8
     percent = ax1.bar(ind, 100.*np.array(success_rate_perCat), width, color=colors_rgb_harvard, alpha=1.0)
     residue = ax1.bar(ind, 100.-100.*np.array(success_rate_perCat), bottom=100.*np.array(success_rate_perCat), width=width, color="k", alpha=0.05)    
-    ax1.set_title("Star Categories Fitting\nOverall success rate is {:.1f}% (nsuccess={}/{})".format(success_rate_tot*100.0, nSuccessTot, nTot))
+    ax1.set_title("Star Categories Fitting\nOverall success rate is {:.1f}% (nsuccess={}/{})\n1-cat-diff success rate is {:.1f}% (nsuccess={}/{})".format(success_rate_tot*100.0, nSuccessTot, nTot, OneCatDistanceSuccessRate_tot*100.0, nOneCatDistanceSuccess_tot, nTot))
     #pp.legend((percent[0]), ('success', 'Women'))
     #ax1.grid()
     #ax1.set_xticks(ind + width/2., typesCategories)
