@@ -32,7 +32,7 @@ from matplotlib.patches import Rectangle
 from matplotlib import gridspec
 
 #pp.style.use('seaborn-darkgrid')
-pp.style.use('seaborn-white')
+#pp.style.use('seaborn-white')
 #pp.style.use('ggplot')
 #import seaborn as sns
 #sns.set_context("paper")

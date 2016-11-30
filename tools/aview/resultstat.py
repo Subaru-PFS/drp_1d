@@ -22,8 +22,9 @@ import matplotlib.cm as cm
 import matplotlib.colors as mcolors
 from mpl_toolkits.mplot3d import Axes3D
 
-
-
+from scipy.interpolate import griddata
+from scipy import ndimage
+import scipy.optimize as opt
 from scipy import interpolate
 
 subfolder = "../stats"
@@ -2659,6 +2660,16 @@ def compareFailures(resDir, refresdir, diffthreshold=0.01, zrefmin=-1, zrefmax=2
     refresList = ResultList(refresdir, diffthreshold=diffthreshold, opt='brief', spcName="", methodName="", zrefmin=zrefmin, zrefmax=zrefmax)
     resList.getFailuresComparison(refresList)
   
+#def twoD_Gaussian((x, y), amplitude, xo, yo, sigma_x, sigma_y, theta, offset):
+#    xo = float(xo)
+#    yo = float(yo)    
+#    a = (np.cos(theta)**2)/(2*sigma_x**2) + (np.sin(theta)**2)/(2*sigma_y**2)
+#    b = -(np.sin(2*theta))/(4*sigma_x**2) + (np.sin(2*theta))/(4*sigma_y**2)
+#    c = (np.sin(theta)**2)/(2*sigma_x**2) + (np.cos(theta)**2)/(2*sigma_y**2)
+#    g = offset + amplitude*np.exp( - (a*((x-xo)**2) + 2*b*(x-xo)*(y-yo) 
+#                            + c*((y-yo)**2)))
+#    return g.ravel()
+    
 def plotContinuumIndexes(resDir, diffthres, spcName=""):
     print('using amazed results full path: {0}'.format(resDir))
     print('using spc filter by name: {}'.format(spcName))
@@ -2736,7 +2747,7 @@ def plotContinuumIndexes(resDir, diffthres, spcName=""):
     print("\nINFO-SKIPPED: nskipped zref = {}".format(nSkippedZref))
     
     
-    enablePlot = 1
+    enablePlot = 0
     enableExport = 1
     enablePlotZref = 1
     enablePlotZwrong = 0
@@ -2751,7 +2762,7 @@ def plotContinuumIndexes(resDir, diffthres, spcName=""):
         idx_continuum_index_CIV = 4
         idx_continuum_index_CIII = 5
         
-        fig = plt.figure('continuum indexes'.format())
+        fig = plt.figure('continuum indexes'.format(), figsize=(16,12))
         ax = fig.add_subplot(111)
         
         if enablePlotZref:
@@ -2843,6 +2854,108 @@ def plotContinuumIndexes(resDir, diffthres, spcName=""):
                 
             outFigFile = os.path.join(outdir, 'continuum_indexes.png'.format())
             plt.savefig( outFigFile, bbox_inches='tight')
+            
+            #export all continuum indexes in files
+            for k in range(6):
+                fPath = os.path.join(outdir, "scatter_ycolor_xbreak_{}.csv".format(k))
+                xvect = [a['break'][k] for a in continuumIndexesZrefList if not np.isnan(a['break'][k]) and not np.isnan(a['color'][k])]
+                yvect = [a['color'][k] for a in continuumIndexesZrefList if not np.isnan(a['break'][k]) and not np.isnan(a['color'][k])]
+                f = open(fPath, 'w')
+                for kx, x in enumerate(xvect):
+                    f.write("{}\t{}\n".format(xvect[kx], yvect[kx]))
+                f.close()
+                
+                #generate heat map
+                xvect.append(-4)
+                yvect.append(-2)
+                xvect.append(-4)
+                yvect.append(3)
+                xvect.append(2)
+                yvect.append(-2)
+                heatmap, xedges, yedges = np.histogram2d(xvect, yvect, bins=50)
+                extent = [xedges[0], xedges[-1], yedges[0], yedges[-1]]
+                
+                heatmap_blurred = ndimage.gaussian_filter(heatmap, sigma=2)
+                maxi = np.max(heatmap_blurred)
+                print("maxi = {}".format(maxi))
+                heatmap_blurred = heatmap_blurred/maxi
+                #interp on reg fixed grid
+                step = 0.1
+                xmin = -3
+                xmax = 2
+                n = (xmax-xmin)/step
+                grid_x, grid_y = np.mgrid[xmin: xmax: step, xmin: xmax: step]
+                print("shape: gridx={}, gridy={}".format(grid_x.shape, grid_y.shape))
+                points = []
+                values = []
+                n1 = len(heatmap_blurred)
+                n2 = len(heatmap_blurred[0])
+                step1 = xedges[1]-xedges[0]
+                step2 = yedges[1]-yedges[0]
+                for k1 in range(n1):
+                    for k2 in range(n2):
+                        points.append((k1*step1+xedges[0], k2*step2+yedges[0]))
+                        values.append(heatmap_blurred[k1][k2])
+                heatmap_blurred_fixedtbl = griddata(points, values, (grid_x, grid_y), method='linear', fill_value=0.0)
+                extentfixed = [xmin, xmax, xmin, xmax]
+                        
+                #plt.figure()
+                plt.matshow(heatmap.T, extent=extent, interpolation='nearest', origin='lower')
+                plt.ylabel('color')
+                plt.xlabel('break')
+                plt.colorbar()
+                outFigFileHmap = os.path.join(outdir, "heatmap_ycolor_xbreak_{}.png".format(k))
+                plt.savefig( outFigFileHmap, bbox_inches='tight')
+                
+                plt.matshow(heatmap_blurred.T, extent=extent, interpolation='nearest', origin='lower')
+                plt.ylabel('color')
+                plt.xlabel('break')
+                plt.colorbar()
+                outFigFileHmap = os.path.join(outdir, "heatmap_ycolor_xbreak__blurred_{}.png".format(k))
+                plt.savefig( outFigFileHmap, bbox_inches='tight')
+                #plt.show()
+                
+                plt.matshow(heatmap_blurred_fixedtbl.T, extent=extentfixed, interpolation='nearest', origin='lower')
+                plt.ylabel('color')
+                plt.xlabel('break')
+                plt.colorbar()
+                outFigFileHmap = os.path.join(outdir, "heatmap_ycolor_xbreak__blurred_fixedtbl_{}.png".format(k))
+                plt.savefig( outFigFileHmap, bbox_inches='tight')
+                #plt.show()
+
+                outFileConfigHmap = os.path.join(outdir, "heatmap_ycolor_xbreak__blurred_fixedgrid_{}.cfg".format(k)) 
+                f = open(outFileConfigHmap, 'w')
+                f.write("{}\t{}\t{}".format(xmin, xmax, step))
+                f.write("\n")
+                f.write("{}\t{}\t{}".format(xmin, xmax, step))
+                f.close()
+                
+                outFiledataHmap = os.path.join(outdir, "heatmap_ycolor_xbreak__blurred_fixedgrid_{}.dat".format(k)) 
+                f = open(outFiledataHmap, 'w')
+                for xd in range(len(heatmap_blurred_fixedtbl)):
+                    for yd in range(len(heatmap_blurred_fixedtbl[0])):
+                        f.write("{}\t".format(heatmap_blurred_fixedtbl[xd][yd]))
+                    f.write("\n")
+                f.close()
+                
+#                #fit
+#                # add some noise to the data and try to fit the data generated beforehand
+#                #initial_guess = (10,0,0,1,1,0,1)
+#                #popt, pcov = opt.curve_fit(twoD_Gaussian, (xedges, yedges), data_noisy, p0=initial_guess)
+#                if 0:                
+#                    #create data
+#                    x = np.linspace(0, 200, 201)
+#                    y = np.linspace(0, 200, 201)
+#                    x, y = np.meshgrid(x, y)
+#                    data = twoD_Gaussian((x, y), 10.0,0.1,0.1,1.0,1.0,0.1,1.0)
+#                    # plot twoD_Gaussian data generated above
+#                    #plt.figure()
+#                    plt.imshow(data.reshape(201, 201))
+#                    plt.colorbar()
+
+            
+                
+            
         if enablePlot:
             plt.show() 
 
