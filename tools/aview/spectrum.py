@@ -35,7 +35,8 @@ from scipy.signal import savgol_filter
 
 class Spectrum(object):
     def __init__(self, spath, stype='undefspc', snorm=False, label=""):
-        self.c_light = 2.99792458e8
+        self.c_light_km = 2.99792458e5
+        self.c_light_m = self.c_light_km*1e3
         self.logTagStr = "Spectrum"
         self.spath = spath
         self.name = os.path.basename(spath)
@@ -482,10 +483,10 @@ class Spectrum(object):
             
     def convertFromHzToAngstrom(self):
         for x in range(0,self.n):
-            self.xvect[x] = self.c_light/self.xvect[x]*1e10
+            self.xvect[x] = self.c_light_m/self.xvect[x]*1e10
     def convertFromFnuToFlambda(self):
         for x in range(0,self.n):
-            self.yvect[x] = self.c_light*self.yvect[x]/(self.xvect[x]**2)
+            self.yvect[x] = self.c_light_km*1e13*self.yvect[x]/(self.xvect[x]**2)
         
 
     def saveForCppHarcodedArray(self, outputPath):
@@ -1473,12 +1474,12 @@ class Spectrum(object):
         return mag
     
     def getFNU(self):
-        c_cm_s = 3e18
+        c_ang_s = 3e18
         yvect = np.array(self.yvect)
         
         for x in range(self.n):
             #self.yvect[x] = self.yvect[x]*3.34*1e4*self.xvect[x]**2
-            yvect[x] = self.yvect[x]/c_cm_s*(self.xvect[x]**2)
+            yvect[x] = self.yvect[x]/c_ang_s*(self.xvect[x]**2)
             
         return yvect
 
@@ -1605,7 +1606,7 @@ def StartFromCommandLine( argv ) :
     if os.path.exists(options.spcPath) :
         print('using full path: {0}'.format(options.spcPath))
         s = Spectrum(options.spcPath, options.spcType, snorm=False)
-        s.printIdxWaveFlux()
+        #s.printIdxWaveFlux()
         #s.convertFromHzToAngstrom()
         #for k in range(len(s.yvect)):
         #    s.yvect[k] = 1e-3

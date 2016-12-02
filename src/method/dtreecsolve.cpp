@@ -11,6 +11,7 @@
 #include <epic/redshift/method/chisquare2solve.h>
 
 #include <epic/redshift/operator/linemodel.h>
+#include <epic/redshift/continuum/indexes_prior.h>
 
 
 #include <float.h>
@@ -498,62 +499,94 @@ Bool COperatorDTreeCSolve::GetCombinedRedshift(CDataStore& store, std::string sc
     resultPriorCI->Redshifts.resize( zcomb.size() );
     resultPriorCI->Overlap.resize( zcomb.size() );
 
+//    //method1: Rough prior
+//    for( Int32 i=0; i<zcomb.size(); i++ )
+//    {
+//        Float64 coeff = results->dTransposeDNocontinuum;
+//        Float64 post=0.0;
+
+//        Int32 kci=0;
+//        //*
+//        //Lya
+//        kci=0;
+//        Float64 colorLya = results->ContinuumIndexes[idxLMResultsExtrema[i]][kci].Color;
+//        Float64 breakLya = results->ContinuumIndexes[idxLMResultsExtrema[i]][kci].Break;
+//        if(colorLya<-1.0 || breakLya>1.0 || (colorLya<-0.25 && breakLya>0.25))
+//        {
+//            post+=coeff;
+//        }
+//        //*/
+//        //OII
+//        kci = 1;
+//        Float64 colorOII = results->ContinuumIndexes[idxLMResultsExtrema[i]][kci].Color;
+//        Float64 breakOII = results->ContinuumIndexes[idxLMResultsExtrema[i]][kci].Break;
+//        if(colorOII<-1.0 || breakOII>1.0 || (colorOII<-0.5 && breakOII>0.0))
+//        {
+//            post+=coeff;
+//        }
+//        //OIII
+//        kci = 2;
+//        Float64 colorOIII = results->ContinuumIndexes[idxLMResultsExtrema[i]][kci].Color;
+//        Float64 breakOIII = results->ContinuumIndexes[idxLMResultsExtrema[i]][kci].Break;
+//        if(colorOIII>0.7 || (colorOIII>0.25 && breakOIII<-0.5))
+//        {
+//            post+=coeff;
+//        }
+//        //Ha
+//        kci = 3;
+//        Float64 colorHa = results->ContinuumIndexes[idxLMResultsExtrema[i]][kci].Color;
+//        Float64 breakHa = results->ContinuumIndexes[idxLMResultsExtrema[i]][kci].Break;
+//        if(colorHa>0.4 || (colorHa>0.0 && breakHa>0.5))
+//        {
+//            post+=coeff;
+//        }
+//        //CIV
+//        kci = 4;
+//        Float64 colorCIV = results->ContinuumIndexes[idxLMResultsExtrema[i]][kci].Color;
+//        Float64 breakCIV = results->ContinuumIndexes[idxLMResultsExtrema[i]][kci].Break;
+//        if(colorCIV>1.0 || breakCIV<-1.5)
+//        {
+//            post+=coeff;
+//        }
+
+
+//        //post = 0.0; //deactivate this prior
+
+//        resultPriorCI->ChiSquare[i] = post;
+//        resultPriorCI->Redshifts[i] = zcomb[i];
+//        resultPriorCI->Overlap[i] = -1.0;
+//    }
+    //method2: color/break map prior
+    CContinuumIndexesPrior contIndexesPriorData;
+    contIndexesPriorData.Init();
     for( Int32 i=0; i<zcomb.size(); i++ )
     {
-        Float64 coeff = results->dTransposeDNocontinuum;
         Float64 post=0.0;
-
-        Int32 kci=0;
-        //*
-        //Lya
-        kci=0;
-        Float64 colorLya = results->ContinuumIndexes[idxLMResultsExtrema[i]][kci].Color;
-        Float64 breakLya = results->ContinuumIndexes[idxLMResultsExtrema[i]][kci].Break;
-        if(colorLya<-1.0 || breakLya>1.0 || (colorLya<-0.25 && breakLya>0.25))
-        {
-            post+=coeff;
-        }
-        //*/
-        //OII
-        kci = 1;
-        Float64 colorOII = results->ContinuumIndexes[idxLMResultsExtrema[i]][kci].Color;
-        Float64 breakOII = results->ContinuumIndexes[idxLMResultsExtrema[i]][kci].Break;
-        if(colorOII<-1.0 || breakOII>1.0 || (colorOII<-0.5 && breakOII>0.0))
-        {
-            post+=coeff;
-        }
-        //OIII
-        kci = 2;
-        Float64 colorOIII = results->ContinuumIndexes[idxLMResultsExtrema[i]][kci].Color;
-        Float64 breakOIII = results->ContinuumIndexes[idxLMResultsExtrema[i]][kci].Break;
-        if(colorOIII>0.7 || (colorOIII>0.25 && breakOIII<-0.5))
-        {
-            post+=coeff;
-        }
-        //Ha
-        kci = 3;
-        Float64 colorHa = results->ContinuumIndexes[idxLMResultsExtrema[i]][kci].Color;
-        Float64 breakHa = results->ContinuumIndexes[idxLMResultsExtrema[i]][kci].Break;
-        if(colorHa>0.4 || (colorHa>0.0 && breakHa>0.5))
-        {
-            post+=coeff;
-        }
-        //CIV
-        kci = 4;
-        Float64 colorCIV = results->ContinuumIndexes[idxLMResultsExtrema[i]][kci].Color;
-        Float64 breakCIV = results->ContinuumIndexes[idxLMResultsExtrema[i]][kci].Break;
-        if(colorCIV>1.0 || breakCIV<-1.5)
-        {
-            post+=coeff;
-        }
+        Float64 coeff = resultPriorContinuum->ChiSquare[i];//results->dTransposeDNocontinuum/50.0; //resultPriorContinuum->ChiSquare[i]
+        Float64 weight = 1.0;
+        Float64 offset = 0.0;
 
 
-        //post = 0.0; //deactivate this prior
+        for(Int32 kci=0; kci<results->ContinuumIndexes[idxLMResultsExtrema[i]].size();kci++)
+        {
+            //deactivate selected indexes
+            if(kci==3)
+            {
+                continue;
+            }
+            Float64 Color = results->ContinuumIndexes[idxLMResultsExtrema[i]][kci].Color;
+            Float64 Break = results->ContinuumIndexes[idxLMResultsExtrema[i]][kci].Break;
+            Float64 heatmap_val = contIndexesPriorData.GetHeatmapVal( kci, Color, Break);
 
+            post += (1.0-heatmap_val)*coeff;
+            //post = 0.0; //deactivate this prior
+        }
         resultPriorCI->ChiSquare[i] = post;
         resultPriorCI->Redshifts[i] = zcomb[i];
         resultPriorCI->Overlap[i] = -1.0;
     }
+
+
     if( resultPriorCI ) {
         store.StoreScopedGlobalResult( "priorContIndexes", resultPriorCI );
     }

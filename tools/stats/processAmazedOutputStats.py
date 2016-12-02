@@ -740,6 +740,23 @@ def ProcessStats( fname, zRange, magRange,  sfrRange, enablePlot = False, export
     if "pickle" in exportType:
         pl.dump(fig,file("{}.pickle".format(export_name_withoutExt),'w'))
         
+    # plot zoom 0
+    zoomedRange = 0.05
+    nmissing = 0
+    for x in range(0,nSelected):
+        if abs(relerrorvect[x])>zoomedRange:
+            nmissing += 1
+    pp.ylim([-zoomedRange, zoomedRange])
+    #pp.show()
+    spcStr = "spectrum"
+    if nmissing>1:
+        spcStr = "spectra"
+    pp.title('{}/{} {} outside displayed range'.format(nmissing,nSelected, spcStr)) # Titre
+
+    export_name_withoutExt = os.path.join(outputDirectory, 'filteredset_relzerr_zoom_0')
+    if "png" in exportType:
+        pp.savefig( "{}.png".format(export_name_withoutExt) , bbox_inches='tight')
+            
     # plot zoom 1
     zoomedRange = 0.005
     nmissing = 0

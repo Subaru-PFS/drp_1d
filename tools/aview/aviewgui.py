@@ -230,6 +230,12 @@ class AViewGui(QtWidgets.QWidget):
         self.btn.clicked.connect(self.bt_showAViewWidget)
         self.btn.setToolTip('Display the Chi2/spectrum/fitted template/linemodel results successively...')
         layout.addWidget(self.btn, 16, 1, 1, 1)
+        self.btnReprocess = QtWidgets.QPushButton('Reprocess', wdg)
+        self.btnReprocess.setFixedWidth(100)
+        self.btnReprocess.setFixedHeight(50)
+        self.btnReprocess.clicked.connect(self.bt_reprocess)
+        self.btnReprocess.setToolTip('Reprocess this source...')
+        layout.addWidget(self.btnReprocess, 16, 2, 1, 1)
 
         #Add the extremum choice ctrls
         self.lblExtremumChoice = QtWidgets.QLabel(' Extremum: ', wdg)
@@ -475,7 +481,9 @@ class AViewGui(QtWidgets.QWidget):
             print("NB: Maybe the intermediate results are missing for this spectrum...".format())
             print("NB: Could be another problem too...".format())
             
-   
+    def bt_reprocess(self):
+        self.aviewwidget_reprocess()
+        
     def bt_setResultDir(self):
         self.refreshResultDetails(reinit=True) 
         self.setResultDir()
@@ -590,11 +598,16 @@ class AViewGui(QtWidgets.QWidget):
         
         
     def aviewwidget_reprocess(self):
-        self.AViewWidget.close()
+        try:
+            self.AViewWidget.close()
+        except:
+            pass
         
         _resDir = str(self.leResDir.text())
         _spcName = str(self.leResultSpcName.text())
         _initReprocessData = [_resDir, _spcName]
+        print("AVIEWGUI: reprocess with : _resDir={}".format(_resDir))
+        print("AVIEWGUI: reprocess with : _spcName={}".format(_spcName))
         
         self.aprocessWindow = aprocessgui.AProcessGui(obj=None, initReprocess=_initReprocessData)
         self.aprocessWindow.show()
