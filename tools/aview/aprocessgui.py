@@ -704,6 +704,9 @@ class AProcessGui(QtWidgets.QWidget):
         newParamsPath = os.path.join(self.m_workspace, "params_reprocess.json")
         shutil.copyfile(_resParser.parameterspath, newParamsPath)
         self.setParametersFilePath(newParamsPath)
+        self.setParamIntermediateResults()
+        #self.setParamDecompScales()
+        #self.setParamContinuum()
 
         #retrieve spectrum directory to ui controls
         _spcDir = _resParser.getConfigVal('spectrumdir')
@@ -717,6 +720,39 @@ class AProcessGui(QtWidgets.QWidget):
         self.setSpcFits(_SpcFits)
         _SpcNoise = splListLine[1]
         self.setNoiseFits(_SpcNoise)
+        
+    def setParamIntermediateResults(self, val="all"):
+        _parametersPath = str(self.leMethodParametersPath.text())
+        f = open(_parametersPath,'r')
+        contents = f.read()
+        replaced_contents = contents.replace('"SaveIntermediateResults": "no"', '"SaveIntermediateResults": "{}"'.format(val))
+        f.close()
+        f = open(_parametersPath,'w')
+        f.write(replaced_contents)
+        f.close()
+        
+            
+    def setParamDecompScales(self, val="7"):
+        _parametersPath = str(self.leMethodParametersPath.text())
+        f = open(_parametersPath,'r')
+        contents = f.read()
+        replaced_contents = contents.replace('"decompScales": "6"', '"decompScales": "{}"'.format(val))
+        f.close()
+        f = open(_parametersPath,'w')
+        f.write(replaced_contents)
+        f.close()
+        
+    def setParamContinuum(self):
+        _parametersPath = str(self.leMethodParametersPath.text())
+        f = open(_parametersPath,'r')
+        contents = f.read()
+        replaced_contents = contents.replace('"method": "waveletsDF"', '"method": "zero"'.format())
+        f.close()
+        f = open(_parametersPath,'w')
+        f.write(replaced_contents)
+        f.close()
+        
+        
            
        
     def bt_importConfigFile(self):

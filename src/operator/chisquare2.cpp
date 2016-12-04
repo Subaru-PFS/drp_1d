@@ -117,7 +117,7 @@ Void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& t
 
     if(spcMaskAdditional.GetMasksCount()!=spcFluxAxis.GetSamplesCount())
     {
-        Log.LogInfo("Chisquare2, spcMaskAdditional has not the same size as the spectrum vector... aborting!");
+        Log.LogInfo("Chisquare2, spcMaskAdditional does not have the same size as the spectrum flux vector... (%d vs %d), aborting!", spcMaskAdditional.GetMasksCount(), spcFluxAxis.GetSamplesCount());
         status = nStatus_DataError;
         return ;
     }
