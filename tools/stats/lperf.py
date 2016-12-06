@@ -280,10 +280,10 @@ def plotMagSFRPerformanceMatrix(bin_dataset, zmin, zmax, catastrophic_failure_th
                     color_count = 'black'
                 else:
                     color_count = 'white'
-                pp.text(mag_axis_ticks_inds[imbin]+0.5, sfr_axis_ticks_inds[isfrbin]+0.5, c, va='center', ha='center',fontsize=14, color=color_count)
+                pp.text(mag_axis_ticks_inds[imbin]+0.5, sfr_axis_ticks_inds[isfrbin]+0.5, c, va='center', ha='center',fontsize=10, color=color_count)
                 per = "{}%".format(int(100*success_rate_matrix[imbin][isfrbin]+0.5)) 
                 #print("drawing text {} at ({},{})".format(c, mag_axis_ticks_inds[imbin], sfr_axis_ticks_inds[isfrbin]))
-                pp.text(mag_axis_ticks_inds[imbin]+0.5, sfr_axis_ticks_inds[isfrbin]+0.7, per, va='center', ha='center',fontsize=12, color=color_per)
+                pp.text(mag_axis_ticks_inds[imbin]+0.5, sfr_axis_ticks_inds[isfrbin]+0.7, per, va='center', ha='center',fontsize=16, color=color_per)
     
     #pp.subplots_adjust(bottom=0.15)
     

@@ -391,7 +391,7 @@ Bool COperatorDTreeBSolve::GetCombinedRedshift(CDataStore& store)
     //*
     //***********************************************************
     // Estimate the combined chisquare result
-    Int32 combineOption = 1; //1 = bayes, 0 = linear
+    Int32 combineOption = 0; //1 = bayes, 0 = linear
 
     //Set the coefficients
     Float64 lmCoeff = 1.0;
@@ -414,13 +414,13 @@ Bool COperatorDTreeBSolve::GetCombinedRedshift(CDataStore& store)
     }
     else //linear combination
     {
-        /*
+        //*
         // coeffs for PFS simu dec 2015.
-        lmCoeff = 75.0/((float)results->nSpcSamples);
+        lmCoeff = 75.0;
         chi2ncCoeff = 100.0;
         chi2cCoeff = 50.0;
         //*/
-        //*
+        /*
         // coeffs for VVDS deep, udeep and VUDS
         lmCoeff = 12.0;
         chi2ncCoeff = 100.0;

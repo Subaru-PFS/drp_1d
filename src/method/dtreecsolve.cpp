@@ -100,7 +100,7 @@ Bool COperatorDTreeCSolve::Solve(CDataStore &dataStore, const CSpectrum &spc, co
     //dataStore.GetScopedParam( "linemodel.continuumcomponent", opt_continuumcomponent, "nocontinuum" );
     dataStore.GetScopedParam( "linemodel.continuumcomponent", opt_continuumcomponent, "fromspectrum" );
     std::string opt_rigidity;
-    dataStore.GetScopedParam( "linemodel.rigidity", opt_rigidity, "tplshape" );
+    dataStore.GetScopedParam( "linemodel.rigidity", opt_rigidity, "rules" );
     //Auto-correct fitting method
     std::string forcefittingmethod = "individual";
     if(opt_rigidity=="tplshape" && opt_fittingmethod != forcefittingmethod)
@@ -447,8 +447,9 @@ Bool COperatorDTreeCSolve::GetCombinedRedshift(CDataStore& store, std::string sc
         chi2cCoeff = 3e-6*dtd*dtd-0.23*dtd;//poly_1
 
         //chi2cCoeff = -3.9e3;//-1.14e3;
-        chi2cCoeff = 1.0e6; //Coeff NUL
-        chi2cCoeff = -0.5e3;
+        //chi2cCoeff = 1.0e6; //Coeff NUL
+        //chi2cCoeff = -0.5e3;
+        chi2cCoeff = 5e3; //low weight for pfs test
 
 
         Log.LogInfo( "dtreeCsolve : lmCoeff=%f", lmCoeff);
@@ -579,8 +580,10 @@ Bool COperatorDTreeCSolve::GetCombinedRedshift(CDataStore& store, std::string sc
             Float64 heatmap_val = contIndexesPriorData.GetHeatmapVal( kci, Color, Break);
 
             post += (1.0-heatmap_val)*coeff;
-            //post = 0.0; //deactivate this prior
+
         }
+        post = 0.0; //deactivate this prior
+
         resultPriorCI->ChiSquare[i] = post;
         resultPriorCI->Redshifts[i] = zcomb[i];
         resultPriorCI->Overlap[i] = -1.0;

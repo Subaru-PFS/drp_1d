@@ -539,6 +539,8 @@ class Spectrum(object):
         self.ax.xaxis.grid(True,'major')
         self.ax.yaxis.grid(True,'major')
         
+        #self.ax.set_ylim([-4.51e-18, 7.01e-18])
+        
         #pp.legend(('cos','sin'), 'upper right', shadow = True)
         if not self.forcePlotXIndex:
              pp.xlabel('angstrom')
