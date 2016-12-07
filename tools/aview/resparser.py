@@ -580,9 +580,7 @@ class ResParser(object):
             displayParamsBundle.append(d)
             
             print("\n")
-        elif method == "decisionaltreeb" or method.lower() == "amazed0_2":
-            #not supported
-            pass
+
         elif method == "amazed0_3" or method.lower() == "amazed0_3":
             #linemodel results
             if 1:
@@ -653,6 +651,163 @@ class ResParser(object):
             if 1:
                 print("get component now")
                 spcComponent = self.getParameterVal('dtreeCsolve', 'chisquare', 'spectrum', 'component') 
+                print("INFO: for method {}, using spectrum component: {}".format(method, spcComponent))
+                
+                getContinuumMeritType = 0
+                #0 = get the best merit for each redshift
+                #1 = get the continuum value for a given tplname (retrieved from the line ratios tpl for example: tpl-corr or tpl-shape for example)
+                if getContinuumMeritType==0:
+                    zList, meritList, tplList, ampsList, ebmvList = self.getCandidatesFromAmazedChi2Extrema(spcnametag, chi2Type=spcComponent) 
+                    
+                    #find the indexes correspondance between redshifts and zList
+                    indexesZ = []
+                    for j, b in enumerate(redshifts):
+                        npZList = np.array(zList)
+                        xfind = np.abs(npZList-b)
+                        ind = np.argmin(xfind)
+                        indexesZ.append(ind)
+                    
+                    print("\nDEBUG: Candidates found:")
+                    
+                    tplpaths = []
+                    forceTplAmplitudes = []
+                    forceTplDustCoeffs = []
+                    forceTplDoNotRedShifts = []
+                    merits = []
+                    tplNums = [] #unused
+                    
+                    for j, b in enumerate(redshifts):
+                        k = indexesZ[j]
+                        print("cand. #{}: z={:15}, merit={:15}, tpl={:25}, amp={:25}".format(k, zList[k], meritList[k], tplList[k], ampsList[k]))
+                        
+                        #redshifts.append(zList[k])
+                        tplpath = self.getTplFullPath(tplList[k], spcComponent)
+                        tplpaths.append(tplpath)
+                        forceTplAmplitudes.append(ampsList[k])
+                        forceTplDustCoeffs.append(ebmvList[k])
+                        forceTplDoNotRedShift = 0
+                        forceTplDoNotRedShifts.append(forceTplDoNotRedShift)
+                        merit = meritList[k]
+                        merits.append(merit)
+                elif getContinuumMeritType==1:
+                    tplpaths = []
+                    forceTplAmplitudes = []
+                    forceTplDustCoeffs = []
+                    forceTplDoNotRedShifts = []
+                    merits = []
+                    tplNums = []
+                        
+                    for j, thisRedshift in enumerate(redshifts):
+                        
+                        #find template name for this candidate
+                        thisCandidateTplName = ""
+                        thisCandidateTplPath = ""
+                        nameTag = displayParamsBundle[0]['tplcorrTplnameExtrema'][j]
+                        tplList = self.getTplFullPathList()
+                        ntpl = len(tplList)
+                        for x in range(ntpl):
+                            thisCandidateTplPath = tplList[x]
+                            tplNameRaw= os.path.basename(tplList[x])
+                            tplName = tplNameRaw.replace("_nolinessavgol", "")
+                            if tplName in nameTag:
+                                thisCandidateTplName = tplName
+                                thisCandidateTplNameRaw = tplNameRaw
+                                thisCandidateTplNum = x
+                                break
+                        
+                        tplpaths.append(thisCandidateTplPath)
+                        forceTplDoNotRedShift = 0
+                        forceTplDoNotRedShifts.append(forceTplDoNotRedShift)
+                        forceTplAmplitudes.append(1.0)
+                        
+                        thisCandidateChi2 = self.getChi2Val(spcnametag, thisRedshift, tplName=thisCandidateTplNameRaw, chi2type=spcComponent)
+                        merits.append(thisCandidateChi2)
+                        
+                        tplNums.append(thisCandidateTplNum)
+                    
+                #create the outputs
+                d = {}
+                d['operator'] = 'chi2'
+                d['tplPaths'] = tplpaths
+                d['forceTplAmplitudes'] = forceTplAmplitudes
+                d['forceTplDustCoeff'] = forceTplDustCoeffs
+                d['forceTplDoNotRedShifts'] = forceTplDoNotRedShifts
+                d['merits'] = merits
+                d['tplNums'] = tplNums
+                displayParamsBundle.append(d)
+                
+        #todo: improve this dirty copy/paste code from method=amazed0_3        
+        elif method == "amazed0_2" or method.lower() == "amazed0_2":
+            print("retrieving results for amazed0_2 method")
+            #linemodel results
+            if 1:
+                [chipathlist, chinamelist] = self.getAutoChi2FullPath(spcnametag)
+
+                chi_linemodel = chisq.ResultChisquare(chipathlist[3], stype=os.path.splitext(chinamelist[3])[0])
+                                            
+                if 0: #using candidates list from combined chisquare file
+                    _name = os.path.splitext(chinamelist[0])[0]
+                    chi = chisq.ResultChisquare(chipathlist[0], stype=_name, dontloadThres=1e31)
+                    [redshifts, merits] = chi.getXYSortedByY()            
+                else: #using linemodel candidates list
+                    [redshifts, merits] = chi_linemodel.getXYExtremaSortedByY()  
+                print("resparser: getAutoCandidatesList (method={}): found n redshifts={}".format(method, len(redshifts)))
+                
+                tplpaths = []
+                forceTplAmplitudes = []
+                forceTplDustCoeffs = []
+                forceTplDoNotRedShifts = []
+                meritsExtrema = []
+                tplcorrTplnameExtrema = []
+                try:
+                    dtdExtrema = chi_linemodel.amazed_dTransposeD[0]
+                except:
+                    dtdExtrema = -1.0
+                
+                idx_model = -1
+                thres = 5e-4
+                for idxExtrema in range(len(redshifts)):
+                    print("C{} = {}".format(idxExtrema, redshifts[idxExtrema]))
+                    for iLM in range(len(chi_linemodel.amazed_extrema)):
+                        if enableVerbose:
+                            print("zLM_cand = {}".format(chi_linemodel.amazed_extrema[iLM]))
+                        if np.abs(chi_linemodel.amazed_extrema[iLM] - redshifts[idxExtrema])<thres:
+                            idx_model = iLM
+                            print("C{}: idxModel = {}".format(idxExtrema, idx_model))
+                            break
+                    if not idx_model==-1:
+                        name = "dtreeBsolve.linemodel_spc_extrema_{}.csv".format(idx_model)                    
+                        print("C{}: pathModel = {}".format(idxExtrema, name))
+                        tplpath = os.path.join(path,name)
+                        
+                        tplpaths.append(tplpath)
+                        forceTplAmplitudes.append(1.0)
+                        forceTplDustCoeffs.append(-1.0)
+                        forceTplDoNotRedShifts.append(1)
+                        meritsExtrema.append(chi_linemodel.getMeritExtremum(idx_model))
+                        try:
+                            tplcorrTplnameExtrema.append(chi_linemodel.amazed_FittedTplcorrTplName[idx_model])
+                        except:
+                            tplcorrTplnameExtrema.append("")
+                            
+                            
+                
+                #create the outputs
+                d = {}
+                d['operator'] = 'linemodel'
+                d['tplPaths'] = tplpaths
+                d['forceTplAmplitudes'] = forceTplAmplitudes
+                d['forceTplDustCoeff'] = forceTplDustCoeffs
+                d['forceTplDoNotRedShifts'] = forceTplDoNotRedShifts
+                d['merits'] = meritsExtrema
+                d['dTransposeD'] = dtdExtrema
+                d['tplcorrTplnameExtrema'] = tplcorrTplnameExtrema
+                displayParamsBundle.append(d)
+                    
+            #chi2 results
+            if 1:
+                print("get component now")
+                spcComponent = "continuum" 
                 print("INFO: for method {}, using spectrum component: {}".format(method, spcComponent))
                 
                 getContinuumMeritType = 0

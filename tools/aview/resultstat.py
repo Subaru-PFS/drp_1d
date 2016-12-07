@@ -127,7 +127,7 @@ class ResultList(object):
             
             elvelocity = line[11]
             
-            enableShowDetails = True
+            enableShowDetails = False
             if enableShowDetails:
                 print('name is: {0}'.format(name))
                 print('zref is: {0}'.format(zref))
@@ -151,22 +151,28 @@ class ResultList(object):
             accepted = True
             if not (spcName=="" or spcName==name): 
                 accepted = False
-                print("Rejected by name")
+                if enableShowDetails:
+                    print("Rejected by name")
             if not (methodName=="" or methodName==method):  
                 accepted = False
-                print("Rejected by methodName")
+                if enableShowDetails:
+                    print("Rejected by methodName")
             if not abs(zdiff)>=self.diffthreshold:
                 accepted = False
-                print("Rejected by diffthreshold")
+                if enableShowDetails:
+                    print("Rejected by diffthreshold")
             if not (zref>=self.zrefmin and zref<=self.zrefmax):
                 accepted = False
-                print("Rejected by zref")
+                if enableShowDetails:
+                    print("Rejected by zref")
             if not (magref>=self.magrefmin and magref<=self.magrefmax):
                 accepted = False
-                print("Rejected by magref")
+                if enableShowDetails:
+                    print("Rejected by magref")
             if not (sfrref>=self.sfrrefmin and sfrref<=self.sfrrefmax):
                 accepted = False
-                print("Rejected by sfrref")
+                if enableShowDetails:
+                    print("Rejected by sfrref")
                 
             if accepted:
                 refValues = {'elvelocity': elvelocity}
@@ -1980,7 +1986,12 @@ def colorbar_index(ncolors, cmap):
       
 def plotChi2CombinationCoeff2DMap(resDir, diffthres, spcName="", methodName="", enableExport=True):
     print('using amazed results full path: {0}'.format(resDir))
-    resList = ResultList(resDir, diffthreshold=diffthres, opt='brief', spcName=spcName, methodName=methodName)
+    zrefmin=0.2
+    zrefmax=2.5
+    magrefmin=0.0
+    magrefmax=23
+    
+    resList = ResultList(resDir, diffthreshold=diffthres, opt='brief', spcName=spcName, methodName=methodName, zrefmin=zrefmin, zrefmax=zrefmax, magrefmin=magrefmin, magrefmax=magrefmax)
     if resList.n <1:
         print('No results loaded...')
         return
@@ -1989,7 +2000,7 @@ def plotChi2CombinationCoeff2DMap(resDir, diffthres, spcName="", methodName="", 
     fullcoeffmap = np.ones((resList.n,nPtsPerAxis,nPtsPerAxis))*-1
     
     ## parameters :
-    opt_combination = 1 #0=lincomb, 1=bayescomb 
+    opt_combination = 0 #0=lincomb, 1=bayescomb 
     zthres = 0.01
     enableDirectPlottingDebugMode = 0
     dont_skip_no_spc = 0

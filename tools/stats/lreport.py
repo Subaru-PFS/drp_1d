@@ -74,16 +74,18 @@ class Report(object):
         self.setTexPath("tpl_tobereplaced_fig_histversus_sigma", self.histVersusSigmaPath)
         
         #fill the configuration table
-        self.spectrumlist = os.path.split(self.getConfigVal('input'))[1].replace("_", "\_")
-        self.setTexPath("tpl_tobereplaced_param_spclist", self.spectrumlist)
-        self.spcPath = os.path.split(self.getConfigVal('spectrumdir'))[1].replace("_", "\_")
-        self.setTexPath("tpl_tobereplaced_param_spcdir", self.spcPath)
+        self.spectrumlist = os.path.split(self.getConfigVal('input'))[1]
+        self.setTexPath("tpl_tobereplaced_param_spclist", self.spectrumlist, stype="text")
+        self.spcPath = os.path.split(self.getConfigVal('spectrumdir'))[1]
+        self.setTexPath("tpl_tobereplaced_param_spcdir", self.spcPath, stype="text")
         self.methodParam = self.getParameterVal('method')
-        self.setTexPath("tpl_tobereplaced_param_method", self.methodParam)
+        self.setTexPath("tpl_tobereplaced_param_method", self.methodParam, stype="text")
         self.spcCount = "-"
-        self.setTexPath("tpl_tobereplaced_param_spccount", self.spcCount)
+        self.setTexPath("tpl_tobereplaced_param_spccount", self.spcCount, stype="text")
         self.continuumRemovalMethod = self.getParameterVal('continuumRemoval', 'method')
-        self.setTexPath("tpl_tobereplaced_param_continuummethod", self.continuumRemovalMethod)
+        self.setTexPath("tpl_tobereplaced_param_continuummethod", self.continuumRemovalMethod, stype="text")
+        
+        #params path for the annexe...
         self.setTexPath("tpl_tobereplaced_jsonparamsfullpath", self.parameterspath)
 
         
@@ -147,7 +149,10 @@ class Report(object):
         _toPath = destinationDirPath
         shutil.copytree(_fromPath, _toPath)
         
-    def setTexPath(self, tplString, destString):
+    def setTexPath(self, tplString, destString, stype="path"):
+        if not stype=="path":
+            destString = destString.replace("_", "\_")
+        
         _path = self.texFilePath
         f = open(_path,'r')
         contents = f.read()
