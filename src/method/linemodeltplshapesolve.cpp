@@ -272,6 +272,7 @@ Bool CLineModelTplshapeSolve::Solve( CDataStore& dataStore,
                                       spcCont,
                                       tplCatalog,
                                       tplCategoryList,
+                                      "", //no calibration path needed for this method
                                       lineCatalog,
                                       m_opt_linetypefilter,
                                       m_opt_lineforcefilter,

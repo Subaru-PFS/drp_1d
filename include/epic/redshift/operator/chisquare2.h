@@ -18,7 +18,7 @@ class COperatorChiSquare2 : public COperator
 
 public:
 
-    COperatorChiSquare2();
+    COperatorChiSquare2( std::string calibrationPath );
     ~COperatorChiSquare2();
 
      std::shared_ptr<COperatorResult> Compute(const CSpectrum& spectrum, const CTemplate& tpl,

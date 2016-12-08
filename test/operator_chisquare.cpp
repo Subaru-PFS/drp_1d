@@ -74,7 +74,9 @@ void UtilChisquareTestFit( const char* spectraPath, const char* noisePath, const
     }
     additional_spcMasks.push_back(spcMask);
 
-    COperatorChiSquare2 chi;
+    std::string calibrationPath = "../test/data/Operator_ChisquareTestCase/calibration";
+
+    COperatorChiSquare2 chi(calibrationPath);
     auto r = std::dynamic_pointer_cast<CChisquareResult>( chi.Compute( s, t, TFloat64Range( 920, 9000 ), redshifts, 1.0, additional_spcMasks, "precomputedfinegrid", 0 ) );
     BOOST_CHECK( r != NULL );
 

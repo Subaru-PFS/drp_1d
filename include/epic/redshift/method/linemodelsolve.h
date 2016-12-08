@@ -20,7 +20,7 @@ class CLineModelSolve
 
 public:
 
-    CLineModelSolve();
+    CLineModelSolve(std::string calibrationPath="");
     ~CLineModelSolve();
 
     const std::string GetDescription();
@@ -50,7 +50,7 @@ private:
     Float64 m_opt_extremacount;
     Float64 m_opt_twosteplargegridstep;
 
-
+    std::string m_calibrationPath;
 };
 
 

@@ -15,7 +15,7 @@ class CContinuumIndexesPrior
 {
 public:
 
-    bool Init();
+    bool Init(std::string calibrationPath);
     Float64 GetHeatmapVal( Int32 _index, Float64 _color, Float64 _break);
 
     typedef std::vector<std::vector<Float64>> TContinuumIndexData;

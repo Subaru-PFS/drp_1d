@@ -13,9 +13,9 @@
 using namespace NSEpic;
 using namespace std;
 
-CMethodChisquare2Solve::CMethodChisquare2Solve()
+CMethodChisquare2Solve::CMethodChisquare2Solve( std::string calibrationPath )
 {
-    m_chiSquareOperator = new COperatorChiSquare2();
+    m_chiSquareOperator = new COperatorChiSquare2( calibrationPath );
 }
 
 CMethodChisquare2Solve::~CMethodChisquare2Solve()

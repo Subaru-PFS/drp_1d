@@ -111,6 +111,7 @@ CLineModelElementList GetData ( void )
   Float64 absorptionVelocity = 300.0;
   std::string opt_rules = "all";
   std::string opt_rigidity = "rules";
+  std::string unused_calibrationPath="";
 
 
   //these tplcatalog related variables are unused here.
@@ -123,6 +124,7 @@ CLineModelElementList GetData ( void )
 								    ctx.GetSpectrumWithoutContinuum(),
                                                                     tplCatalog,
                                                                     tplCategories,
+                                                                    unused_calibrationPath,
 								    ctx.GetRayCatalog().GetList(),
 								    std::string( "hybrid" ),
 								    std::string( "fromspectrum" ),

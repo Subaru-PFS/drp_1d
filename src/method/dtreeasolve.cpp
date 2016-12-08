@@ -34,8 +34,10 @@ using namespace NSEpic;
 using namespace std;
 
 
-COperatorDTreeASolve::COperatorDTreeASolve()
+COperatorDTreeASolve::COperatorDTreeASolve(string calibrationPath)
 {
+    m_calibrationPath = calibrationPath;
+
     // Peak Detection
     m_winsize = 250.0;
     m_cut = 1.5;
@@ -122,7 +124,7 @@ Bool COperatorDTreeASolve::Solve(CDataStore &resultStore, const CSpectrum &spc, 
             TFloat64List redshifts = redshiftRange.SpreadOver( redshiftStep );
             DebugAssert( redshifts.size() > 0 );
 
-            CMethodChisquare2Solve chiSolve;
+            CMethodChisquare2Solve chiSolve(m_calibrationPath);
             auto chisolveResult = chiSolve.Compute( resultStore, spc, spcWithoutCont,
                                                                                 tplCatalog, tplCategoryList,
                                                                                 lambdaRange, redshifts, overlapThreshold, maskList );
@@ -150,7 +152,7 @@ Bool COperatorDTreeASolve::Solve(CDataStore &resultStore, const CSpectrum &spc, 
             TFloat64List redshifts = redshiftRange.SpreadOver( redshiftStep );
             DebugAssert( redshifts.size() > 0 );
 
-            CMethodChisquare2Solve chiSolve;
+            CMethodChisquare2Solve chiSolve(m_calibrationPath);
             auto chisolveResult = chiSolve.Compute( resultStore, spc, spcWithoutCont,
                                                                                 tplCatalog, tplCategoryList,
                                                                                 lambdaRange, redshifts, overlapThreshold, maskList );
@@ -184,7 +186,7 @@ Bool COperatorDTreeASolve::Solve(CDataStore &resultStore, const CSpectrum &spc, 
                 TFloat64List redshifts = redshiftRange.SpreadOver( redshiftStep );
                 DebugAssert( redshifts.size() > 0 );
 
-                CMethodChisquare2Solve chiSolve;
+                CMethodChisquare2Solve chiSolve(m_calibrationPath);
                 auto chisolveResult = chiSolve.Compute( resultStore, spc, spcWithoutCont,
                                                                                     tplCatalog, tplCategoryList,
                                                                                     lambdaRange, redshifts, overlapThreshold, maskList );
@@ -202,7 +204,7 @@ Bool COperatorDTreeASolve::Solve(CDataStore &resultStore, const CSpectrum &spc, 
             TFloat64List redshifts = redshiftRange.SpreadOver( redshiftStep );
             DebugAssert( redshifts.size() > 0 );
 
-            CMethodChisquare2Solve chiSolve;
+            CMethodChisquare2Solve chiSolve(m_calibrationPath);
             auto chisolveResult = chiSolve.Compute( resultStore, spc, spcWithoutCont,
                                                                                 tplCatalog, tplCategoryList,
                                                                                 lambdaRange, redshifts, overlapThreshold, maskList );
@@ -224,7 +226,7 @@ Bool COperatorDTreeASolve::Solve(CDataStore &resultStore, const CSpectrum &spc, 
         TFloat64List redshifts = rayMatchingResult->GetExtendedRedshiftCandidatesOverNumber(0, redshiftStep, 0.01);
         Log.LogInfo( "DTreeA - (n candidates = %d)", redshifts.size());
         { //chisolve with emission templates only
-            CMethodChisquare2Solve chiSolve;
+            CMethodChisquare2Solve chiSolve(m_calibrationPath);
             auto chisolveResult = chiSolve.Compute( resultStore, spc, spcWithoutCont,
                                                                                 tplCatalog, filteredTemplateCategoryList,
                                                                                 lambdaRange, redshifts, overlapThreshold, maskList );
@@ -242,7 +244,7 @@ Bool COperatorDTreeASolve::Solve(CDataStore &resultStore, const CSpectrum &spc, 
         TFloat64List redshifts = redshiftRange.SpreadOver( redshiftStep );
         DebugAssert( redshifts.size() > 0 );
 
-        CMethodChisquare2Solve chiSolve;
+        CMethodChisquare2Solve chiSolve(m_calibrationPath);
         auto chisolveResult = chiSolve.Compute( resultStore, spc, spcWithoutCont,
                                                                             tplCatalog, tplCategoryList,
                                                                             lambdaRange, redshifts, overlapThreshold, maskList );

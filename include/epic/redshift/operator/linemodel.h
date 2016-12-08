@@ -30,7 +30,10 @@ public:
 
     std::shared_ptr<COperatorResult> Compute(CDataStore &dataStore,
                                               const CSpectrum& spectrum,
-                                              const CSpectrum &spectrumContinuum, const CTemplateCatalog &tplCatalog, const TStringList &tplCategoryList,
+                                              const CSpectrum &spectrumContinuum,
+                                              const CTemplateCatalog &tplCatalog,
+                                              const TStringList &tplCategoryList,
+                                              const std::string opt_calibrationPath,
                                               const CRayCatalog& restraycatalog,
                                               const std::string &opt_lineTypeFilter,
                                               const std::string &opt_lineForceFilter,
@@ -47,7 +50,7 @@ public:
                                               const std::string &opt_rules="all",
                                               const std::string &opt_velocityFitting="no",
                                               const Float64 &opt_twosteplargegridstep=0.001,
-                                             const std::string &opt_rigidity="rules");
+                                              const std::string &opt_rigidity="rules");
 
     void storeGlobalModelResults( CDataStore &dataStore );
     void storePerTemplateModelResults( CDataStore &dataStore, const CTemplate& tpl );

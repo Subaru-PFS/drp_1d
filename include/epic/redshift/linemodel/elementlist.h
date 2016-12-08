@@ -38,6 +38,7 @@ public:
                           const CSpectrum& spectrumNoContinuum,
                           const CTemplateCatalog& tplCatalog,
                           const TStringList& tplCategoryList,
+                          const std::string calibrationPath,
                           const CRayCatalog::TRayVector& restRayList,
                           const std::string& opt_fittingmethod,
                           const std::string &opt_continuumcomponent,

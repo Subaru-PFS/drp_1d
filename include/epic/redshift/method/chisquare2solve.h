@@ -24,7 +24,7 @@ class CMethodChisquare2Solve
  public:
 
 
-    CMethodChisquare2Solve();
+    CMethodChisquare2Solve( std::string calibrationPath="" );
     ~CMethodChisquare2Solve();
     const std::string GetDescription();
 

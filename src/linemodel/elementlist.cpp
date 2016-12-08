@@ -48,6 +48,7 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
                           const CSpectrum &spectrumContinuum,
                           const CTemplateCatalog& tplCatalog,
                           const TStringList& tplCategoryList,
+                          const std::string calibrationPath,
                           const CRayCatalog::TRayVector& restRayList,
                           const std::string& opt_fittingmethod,
                           const std::string& opt_continuumcomponent,
@@ -134,9 +135,10 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
     if(m_ContinuumComponent == "tplfit")
     {
         InitFitContinuum();
+        m_chiSquareOperator = new COperatorChiSquare2(calibrationPath);
     }
     //*/
-    m_chiSquareOperator = new COperatorChiSquare2();
+
 
     // "New style" rules initialization:
     m_Regulament = new CRegulament ( );
@@ -145,7 +147,6 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
 
     //tplshape catalog initialization : used for rigidities tplcorr and tplshape
     m_CatalogTplShape = new CRayCatalogsTplShape();
-    m_CatalogTplShape->Init();
 
     Log.LogDebug( "About to load catalog." );
     if(m_rigidity != "tplshape")
@@ -157,11 +158,17 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
         //LogCatalogInfos();
     }else{
         m_RestRayList = restRayList;
-
         //load the regular catalog
         LoadCatalogOneMultiline(restRayList);
-        //load the fully constrained catalog (first in the list) from the tpl-shaped catalogs
-        m_CatalogTplShape->SetMultilineNominalAmplitudes( *this, 0 );
+        bool ret = m_CatalogTplShape->Init(calibrationPath);
+        if(!ret)
+        {
+            Log.LogError("Unable to initialize the the tpl-shape catalogs. aborting...");
+            return;
+        }
+        m_CatalogTplShape->InitLineCorrespondingAmplitudes(*this);
+        m_CatalogTplShape->SetMultilineNominalAmplitudesFast( *this, 0 );
+        //m_CatalogTplShape->SetMultilineNominalAmplitudes( *this, 0 );
         //m_RestRayList = m_CatalogTplShape->GetRestLinesList(0);
         //LoadCatalog(m_RestRayList);
         LogCatalogInfos();
@@ -653,7 +660,8 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
             m_CatalogTplShape->SetLyaProfile(*this, ifitting);
             //prepare the Lya width and asym coefficients if the asymfit profile option is met
             setLyaProfile(redshift, spectralAxis);
-            m_CatalogTplShape->SetMultilineNominalAmplitudes( *this, ifitting );
+            //m_CatalogTplShape->SetMultilineNominalAmplitudes( *this, ifitting );
+            m_CatalogTplShape->SetMultilineNominalAmplitudesFast( *this, ifitting );
         }
 
         //generate random amplitudes
@@ -1074,7 +1082,8 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
 
     if(m_rigidity=="tplshape" && enableLogging)
     {
-        m_CatalogTplShape->SetMultilineNominalAmplitudes( *this, savedIdxFitted );
+        //m_CatalogTplShape->SetMultilineNominalAmplitudes( *this, savedIdxFitted );
+        m_CatalogTplShape->SetMultilineNominalAmplitudesFast( *this, savedIdxFitted );
         Log.LogInfo( "Linemodel: tplshape = %d (%s), and A=%f", savedIdxFitted, m_tplcorrBestTplName.c_str(), savedFittedAmp);
         m_Elements[0]->SetFittedAmplitude(savedFittedAmp, savedFittedAmpError);
         //Lya

@@ -29,62 +29,65 @@
 #define NOT_OVERLAP_VALUE NAN
 #include <stdio.h>
 
+namespace bfs = boost::filesystem;
 using namespace NSEpic;
 using namespace std;
 
-COperatorChiSquare2::COperatorChiSquare2()
+COperatorChiSquare2::COperatorChiSquare2( std::string calibrationPath )
 {
     //load calzetti data
-    m_NdataCalzetti = 1e5;
-    m_dataCalzetti = (Float64 *) malloc(m_NdataCalzetti* sizeof(Float64));
-
-    std::string filePath = "/home/aschmitt/gitlab/cpf-redshift/calib/SB_calzetti.dl1.txt";
+    bfs::path calibrationFolder( calibrationPath.c_str() );
+    std::string filePath = (calibrationFolder.append( "SB_calzetti.dl1.txt" )).string();
     std::ifstream file;
     file.open( filePath, std::ifstream::in );
     bool fileOpenFailed = file.rdstate() & std::ios_base::failbit;
     if(fileOpenFailed)
     {
-        Log.LogError("Chisquare2, unable to load the calzetti calib. file... aborting!");
-    }
-
-    std::string line;
-    // Read file line by line
-    Int32 kLine = 0;
-    while( getline( file, line ) )
+        //Log.LogError("Chisquare2, unable to load the calzetti calib. file... aborting!");
+    }else
     {
-        if( !boost::starts_with( line, "#" ) )
+        m_NdataCalzetti = 1e5;
+        m_dataCalzetti = (Float64 *) malloc(m_NdataCalzetti* sizeof(Float64));
+
+        std::string line;
+        // Read file line by line
+        Int32 kLine = 0;
+        while( getline( file, line ) )
         {
-            std::istringstream iss( line );
-            Float64 x, y;
-            iss >> x >> y;
-            m_dataCalzetti[kLine] = y;
-            kLine++;
-            if(kLine>=m_NdataCalzetti)
+            if( !boost::starts_with( line, "#" ) )
             {
-                break;
+                std::istringstream iss( line );
+                Float64 x, y;
+                iss >> x >> y;
+                m_dataCalzetti[kLine] = y;
+                kLine++;
+                if(kLine>=m_NdataCalzetti)
+                {
+                    break;
+                }
             }
         }
-    }
-    file.close();
+        file.close();
 
-    //Allocate buffer for Ytpl reinit during Dust-fit loop
-    m_YtplRawBufferMaxBufferSize = 10*1e6; //allows array from 0A to 100000A with dl=0.01
-    m_YtplRawBuffer = (Float64 *) malloc(m_YtplRawBufferMaxBufferSize* sizeof(Float64));
+        //Allocate buffer for Ytpl reinit during Dust-fit loop
+        m_YtplRawBufferMaxBufferSize = 10*1e6; //allows array from 0A to 100000A with dl=0.01
+        m_YtplRawBuffer = (Float64 *) malloc(m_YtplRawBufferMaxBufferSize* sizeof(Float64));
 
-    //precomte the dust-coeff table
-    m_nDustCoeff = 10;
-    m_dustCoeffStep = 0.1;
-    m_dustCoeffStart = 0.0;
-    m_dataDustCoeff = (Float64 *) malloc(m_nDustCoeff*m_NdataCalzetti * sizeof(Float64));
-    for(Int32 kDust=0; kDust<m_nDustCoeff; kDust++)
-    {
-
-        Float64 coeffEBMV = m_dustCoeffStart + m_dustCoeffStep*(Float64)kDust;
-        for(Int32 kCalzetti=0; kCalzetti<m_NdataCalzetti; kCalzetti++)
+        //precomte the dust-coeff table
+        m_nDustCoeff = 10;
+        m_dustCoeffStep = 0.1;
+        m_dustCoeffStart = 0.0;
+        m_dataDustCoeff = (Float64 *) malloc(m_nDustCoeff*m_NdataCalzetti * sizeof(Float64));
+        for(Int32 kDust=0; kDust<m_nDustCoeff; kDust++)
         {
-            m_dataDustCoeff[Int32(kDust*m_NdataCalzetti+kCalzetti)] = pow(10.0, -0.4*m_dataCalzetti[kCalzetti]*coeffEBMV);
-        }
 
+            Float64 coeffEBMV = m_dustCoeffStart + m_dustCoeffStep*(Float64)kDust;
+            for(Int32 kCalzetti=0; kCalzetti<m_NdataCalzetti; kCalzetti++)
+            {
+                m_dataDustCoeff[Int32(kDust*m_NdataCalzetti+kCalzetti)] = pow(10.0, -0.4*m_dataCalzetti[kCalzetti]*coeffEBMV);
+            }
+
+        }
     }
 
 }
@@ -490,6 +493,11 @@ std::shared_ptr<COperatorResult> COperatorChiSquare2::Compute(const CSpectrum& s
                           const TFloat64Range& lambdaRange, const TFloat64List& redshifts,
                           Float64 overlapThreshold , std::vector<CMask> additional_spcMasks, std::string opt_interp, Int32 opt_extinction, Int32 opt_dustFitting)
 {
+    if(!m_dataCalzetti)
+    {
+        Log.LogError("Chisquare2, no calzetti calib. file loaded... aborting!");
+        return NULL;
+    }
 
     if( spectrum.GetSpectralAxis().IsInLinearScale() == false || tpl.GetSpectralAxis().IsInLinearScale() == false )
     {

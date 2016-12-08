@@ -20,9 +20,9 @@ using namespace NSEpic;
 using namespace std;
 
 
-COperatorDTreeCSolve::COperatorDTreeCSolve()
+COperatorDTreeCSolve::COperatorDTreeCSolve( std::string calibrationPath)
 {
-
+    m_calibrationPath = calibrationPath;
 }
 
 COperatorDTreeCSolve::~COperatorDTreeCSolve()
@@ -139,6 +139,7 @@ Bool COperatorDTreeCSolve::Solve(CDataStore &dataStore, const CSpectrum &spc, co
                                                                            _spcContinuum,
                                                                            tplCatalog,
                                                                            tplCategoryList,
+                                                                           m_calibrationPath,
                                                                            restRayCatalog,
                                                                            opt_linetypefilter,
                                                                            opt_lineforcefilter,
@@ -204,7 +205,7 @@ Bool COperatorDTreeCSolve::Solve(CDataStore &dataStore, const CSpectrum &spc, co
 
     Log.LogInfo( "dtreeCsolve: Computing the template fitting : %s", scopeStr.c_str());
 
-    CMethodChisquare2Solve chiSolve;
+    CMethodChisquare2Solve chiSolve(m_calibrationPath);
     std::vector<Float64> redshiftsChi2Continuum;
     /*
     Int32 enableFastContinuumFitLargeGrid = 1;
@@ -559,7 +560,7 @@ Bool COperatorDTreeCSolve::GetCombinedRedshift(CDataStore& store, std::string sc
 //    }
     //method2: color/break map prior
     CContinuumIndexesPrior contIndexesPriorData;
-    contIndexesPriorData.Init();
+    contIndexesPriorData.Init(m_calibrationPath);
     for( Int32 i=0; i<zcomb.size(); i++ )
     {
         Float64 post=0.0;

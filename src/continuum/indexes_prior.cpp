@@ -51,9 +51,11 @@ Float64 CContinuumIndexesPrior::GetHeatmapVal( Int32 _index, Float64 _color, Flo
 /**
  * Init
  */
-bool CContinuumIndexesPrior::Init()
+bool CContinuumIndexesPrior::Init( std::string calibrationPath )
 {
-    std::string ciprior_path = "/home/aschmitt/gitlab/cpf-redshift/calib/continuu_indexes_prior_map_20161130";
+    bfs::path calibrationFolder( calibrationPath.c_str() );
+    std::string ciprior_path = (calibrationFolder.append( "continuu_indexes_prior_map_20161130" )).string();
+
     //std::string cfg_basename = "heatmap_ycolor_xbreak__blurred_fixedgrid_"; unused, harcoded cfg for now
     m_tbl_color_step = 0.1;
     m_tbl_color_min = -3.0;

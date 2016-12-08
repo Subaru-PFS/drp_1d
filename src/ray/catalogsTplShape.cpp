@@ -9,6 +9,7 @@
 #include <fstream>
 #include <iostream>
 
+namespace bfs = boost::filesystem;
 using namespace NSEpic;
 using namespace std;
 using namespace boost;
@@ -24,51 +25,19 @@ CRayCatalogsTplShape::~CRayCatalogsTplShape()
 
 }
 
-Bool CRayCatalogsTplShape::Init()
+Bool CRayCatalogsTplShape::Init( std::string calibrationPath)
 {
-    std::string dirPath = "/home/aschmitt/gitlab/cpf-redshift/calib/linecatalogs_tplshape_ExtendedTemplatesMarch2016_v2_20160916_B10I2_mod";
-    Load(dirPath.c_str());
-    //Bool catalogsAreAligned = AreCatalogsAligned(restRayList, typeFilter, forceFilter);
+    bfs::path calibrationFolder( calibrationPath.c_str() );
+    std::string dirPath = (calibrationFolder.append( "linecatalogs_tplshape_ExtendedTemplatesMarch2016_v2_20160916_B10I2_mod" )).string();
+
+    bool ret = Load(dirPath.c_str());
+    if(!ret)
+    {
+        Log.LogError("Unable to load the tpl-shape catalogs. aborting...");
+        return false;
+    }
     return true;
 }
-
-//**
-// * \brief DEPRECATED
-// * loops on the catalogstplshape and check if every one is aligned with the variable restRayList
-// * NB: aligned means that the same line is accessed with a given list index
-// * Non alignment can happen if the amazed catalog loaded (restRayList) is different than the tplShapedCatalogs.
-// **/
-//Bool CRayCatalogsTplShape::AreCatalogsAligned( const CRayCatalog::TRayVector& restRayList, Int32 typeFilter, Int32 forceFilter )
-//{
-//    Bool aligned=true;
-//    for(UInt32 iCatalogs=0; iCatalogs<m_RayCatalogList.size(); iCatalogs++)
-//    {
-//        CRayCatalog::TRayVector currentCatalogLineList = m_RayCatalogList[iCatalogs].GetFilteredList( typeFilter, forceFilter);
-
-//        for( UInt32 iRestRay=0; iRestRay<restRayList.size(); iRestRay++ )
-//        {
-//            if(restRayList[iRestRay].GetType() != currentCatalogLineList[iRestRay].GetType()){
-//                aligned=false;
-//                break;
-//            }
-//            if(restRayList[iRestRay].GetName() != currentCatalogLineList[iRestRay].GetName()){
-//                aligned=false;
-//                break;
-//            }
-//            Float64 thres=1e-4;
-//            Float64 positionDiff = abs(restRayList[iRestRay].GetPosition()-currentCatalogLineList[iRestRay].GetPosition());
-//            if( positionDiff>thres ){
-//                aligned=false;
-//                break;
-//            }
-//        }
-//        if(!aligned)
-//        {
-//            break;
-//        }
-//    }
-//    return aligned;
-//}
 
 
 Bool CRayCatalogsTplShape::Load( const char* dirPath )
@@ -92,6 +61,10 @@ Bool CRayCatalogsTplShape::Load( const char* dirPath )
           tplshapeCatalogList.push_back(dir_iter->path().c_str());
         }
       }
+    }
+    if(tplshapeCatalogList.size()<1)
+    {
+        return false;
     }
     Log.LogDebug( "CRayCatalogsTplShape - Found %d tplshaped catalogs", tplshapeCatalogList.size());
 
@@ -135,7 +108,75 @@ std::string CRayCatalogsTplShape::GetCatalogName(Int32 idx)
     return m_RayCatalogNames[idx];
 }
 
+Bool CRayCatalogsTplShape::InitLineCorrespondingAmplitudes(CLineModelElementList &LineModelElementList)
+{
+    //first set all corresponding amplitudes to 0.0;
+    UInt32 iElts=0; //WARNING: considering the linemodel with only 1 elt: typical for tplshape rigidity. todo: generalize to multi-elements
+    Int32 nRays = LineModelElementList.m_Elements[iElts]->GetSize();
 
+    for(Int32 k=0; k<GetCatalogsCount(); k++)
+    {
+        std::vector<Float64> thisCatLinesCorresp;
+        for(UInt32 j=0; j<nRays; j++){
+            thisCatLinesCorresp.push_back(0.0);
+        }
+        m_RayCatalogLinesCorrespondingNominalAmp.push_back(thisCatLinesCorresp);
+    }
+
+    //now set the non-zero amp correspondences
+    for(Int32 iCatalog=0; iCatalog<GetCatalogsCount(); iCatalog++)
+    {
+        CRayCatalog::TRayVector currentCatalogLineList = m_RayCatalogList[iCatalog].GetList();
+        for(Int32 kL=0; kL<currentCatalogLineList.size(); kL++)
+        {
+            Float64 nominalAmp = currentCatalogLineList[kL].GetNominalAmplitude();
+            //find line in the elementList
+            UInt32 iElts=0; //WARNING: considering the linemodel with only 1 elt: typical for tplshape rigidity. todo: generalize to multi-elements
+
+            Int32 nRays = LineModelElementList.m_Elements[iElts]->GetSize();
+            for(UInt32 j=0; j<nRays; j++){
+
+                if(LineModelElementList.m_RestRayList[LineModelElementList.m_Elements[iElts]->m_LineCatalogIndexes[j]].GetName() == currentCatalogLineList[kL].GetName())
+                {
+                    m_RayCatalogLinesCorrespondingNominalAmp[iCatalog][j]=nominalAmp;
+                }
+            }
+        }
+    }
+
+    return 0;
+}
+
+/**
+ * @brief CRayCatalogsTplShape::SetMultilineNominalAmplitudesFast
+ * This method sets the linemodel unique elt nominal amplitudes to the corresponding value of the iCatalog st catalog.
+ * INFO: fast method, InitLineCorrespondence() should have been called previously with the same LineModelElementList arg.
+ * @param LineModelElementList
+ * @param iCatalog
+ * @return
+ */
+Bool CRayCatalogsTplShape::SetMultilineNominalAmplitudesFast(CLineModelElementList &LineModelElementList, Int32 iCatalog)
+{
+    Float64 nominalAmp = 0.0;
+    for( UInt32 iElts=0; iElts<1; iElts++ ) //WARNING: considering the linemodel with only 1 elt: typical for tplshape rigidity. todo: generalize to multi-elements
+    {
+        Int32 nRays = LineModelElementList.m_Elements[iElts]->GetSize();
+        for(UInt32 j=0; j<nRays; j++){
+            nominalAmp = m_RayCatalogLinesCorrespondingNominalAmp[iCatalog][j];
+            LineModelElementList.m_Elements[iElts]->SetNominalAmplitude(j, nominalAmp);
+        }
+    }
+    return true;
+}
+
+/**
+ * @brief CRayCatalogsTplShape::SetMultilineNominalAmplitudes
+ * This method sets the linemodel unique elt nominal amplitudes to the corresponding value of the iCatalog st catalog.
+ * INFO: slow method
+ * @param LineModelElementList
+ * @param iCatalog
+ * @return
+ */
 Bool CRayCatalogsTplShape::SetMultilineNominalAmplitudes(CLineModelElementList &LineModelElementList, Int32 iCatalog)
 {
     //first set all amplitudes to 0.0

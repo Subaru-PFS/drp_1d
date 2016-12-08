@@ -24,9 +24,9 @@ using namespace boost;
 /** 
  * \brief Empty constructor.
  **/
-CLineModelSolve::CLineModelSolve()
+CLineModelSolve::CLineModelSolve(string calibrationPath)
 {
-
+    m_calibrationPath = calibrationPath;
 }
 
 /**
@@ -286,6 +286,7 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
                       _spcContinuum,
                       tplCatalog,
                       tplCategoryList,
+                      m_calibrationPath,
 				      restraycatalog,
                       m_opt_linetypefilter,
                       m_opt_lineforcefilter,

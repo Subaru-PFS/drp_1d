@@ -21,7 +21,7 @@ class COperatorDTree7Solve
 
 public:
 
-    COperatorDTree7Solve();
+    COperatorDTree7Solve(std::string calibrationPath="");
     ~COperatorDTree7Solve();
 
     const std::string GetDescription();
@@ -53,6 +53,9 @@ private:
                               Int32 correlationExtremumCount, Float64 overlapThreshold );
 
     TStringList getFilteredTplCategory( const TStringList& tplCategoryListIn, const std::string& CategoryFilter);
+
+    std::string m_calibrationPath;
+
 };
 
 

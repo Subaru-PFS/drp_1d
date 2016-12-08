@@ -39,9 +39,9 @@ using namespace NSEpic;
 using namespace std;
 
 
-COperatorDTreeBSolve::COperatorDTreeBSolve()
+COperatorDTreeBSolve::COperatorDTreeBSolve( std::string calibrationPath )
 {
-
+    m_calibrationPath = calibrationPath;
 }
 
 COperatorDTreeBSolve::~COperatorDTreeBSolve()
@@ -144,6 +144,7 @@ Bool COperatorDTreeBSolve::Solve(CDataStore &dataStore, const CSpectrum &spc, co
                                                                            _spcContinuum,
                                                                            tplCatalog,
                                                                            tplCategoryList,
+                                                                           m_calibrationPath,
                                                                            restRayCatalog,
                                                                            opt_linetypefilter,
                                                                            opt_lineforcefilter,
@@ -233,7 +234,7 @@ Bool COperatorDTreeBSolve::Solve(CDataStore &dataStore, const CSpectrum &spc, co
     // prepare the unused masks
     std::vector<CMask> maskList;
 
-    CMethodChisquare2Solve chiSolve;
+    CMethodChisquare2Solve chiSolve(m_calibrationPath);
     auto chisolveResultnc = chiSolve.Compute( dataStore, spc, spcWithoutCont,
                                                                         tplCatalog, tplCategoryList,
                                                                         lambdaRange, redshiftsChi2, overlapThreshold, maskList, spcComponent, opt_interp, opt_extinction);
