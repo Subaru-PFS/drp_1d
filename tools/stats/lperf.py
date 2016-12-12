@@ -15,7 +15,7 @@ import scipy as sp
 import PIL
 
 ### List of all the existing presets for z, mag, sfr bins
-list_presets = ["simulm201606", "simueuclid2016"]
+list_presets = ["simulm201606", "simueuclid2016", "simupfs2016"]
 
 def getZBinsLimits(bins_type):
     if bins_type == "simulm201606":
@@ -27,6 +27,8 @@ def getZBinsLimits(bins_type):
         #z_bins_limits = [0.0, 3.0, 6.0]
     elif bins_type == "simueuclid2016":
         z_bins_limits = [0.95, 1.1, 1.25, 1.4]
+    elif bins_type == "simupfs2016":
+        z_bins_limits = [0.2, 0.8, 1.2, 1.8, 2.5]
     return z_bins_limits
     
 def getMagBinsLimits(bins_type):
@@ -36,6 +38,8 @@ def getMagBinsLimits(bins_type):
         #mag_bins_limits = [20.0, 21.0, 22.0, 23.0, 24.0, 25.0, 26.0]
     elif bins_type == "simueuclid2016":
         mag_bins_limits = [0.0, 23.0, 23.5, 24.0, 50.0]
+    elif bins_type == "simupfs2016":
+        mag_bins_limits = [0.0, 19.0, 20.5, 21.5, 22.0, 22.5, 23.0, 50.0]
     return mag_bins_limits
         
 def getSfrBinsLimits(bins_type):
@@ -51,11 +55,13 @@ def getSfrBinsLimits(bins_type):
         sfr_bins_limits = [a for a in sfr_bins_limits[::-1]]
     elif bins_type == "simueuclid2016":
         sfr_bins_limits = [100.0, 20.0, 5.0, 0]
+    elif bins_type == "simupfs2016":
+        sfr_bins_limits = [100.0, 20.0, 10.0, 5.0, 0]
     return sfr_bins_limits
     
 
   
-def exportPerformances(dataDiff, outputDirectory, preset):
+def exportPerformances(dataDiff, outputDirectory, preset, zRange, magRange, sfrRange):
     #check if preset exists
     if preset not in list_presets:
         print("ERROR: exporting perf. - unable to find this preset ({}), aborting...".format(preset))
@@ -64,6 +70,8 @@ def exportPerformances(dataDiff, outputDirectory, preset):
     # dataDiff expected cols are:
     #Spectrum ID	MAGI	ZREF	ZFLAG	ZCALC	MERIT	TPL	METHOD    SNR	SFR E(B-V) Sigma ... DIFF
     izref = 2
+    imag = 1
+    isfr = 9
 
     print '\n\nexportPerformances:'
     z_bins_limits = getZBinsLimits(preset)
@@ -80,6 +88,17 @@ def exportPerformances(dataDiff, outputDirectory, preset):
         zbin_dataset = []
         for x in range(n):
             zref = dataDiff[x][izref]
+            mag = dataDiff[x][imag]
+            sfr = dataDiff[x][isfr]
+            #filtering by the z, mag and sfr ranges
+            
+            if mag < magRange[0] or mag > magRange[1] :
+                continue
+            if zref < zRange[0] or zref > zRange[1] :
+                continue
+            if sfr < sfrRange[0] or sfr > sfrRange[1] :
+                continue
+                
             if zref >= zmin and zref < zmax :
                 zbin_dataset.append(dataDiff[x])
                 #print("line kept is {}".format(dataDiff[x]))
@@ -289,7 +308,7 @@ def plotMagSFRPerformanceMatrix(bin_dataset, zmin, zmax, catastrophic_failure_th
     
     pp.xlabel('MAG')
     pp.ylabel('SFR')
-    name1 = "Performance matrix for {} spectra in z range [ {:.2f} ; {:.2f} ]\nFailure threshold dz/z > {}\nSuccess(Blue) strict(>) threshold: {}%".format(n, zmin, zmax, catastrophic_failure_threshold, int(success_rate_thres*100))
+    name1 = "Performance matrix for {} spectra in z range [ {:.2f} ; {:.2f} ]\nFailure threshold dz/(1+z) > {}\nSuccess(Blue) strict(>) threshold: {}%".format(n, zmin, zmax, catastrophic_failure_threshold, int(success_rate_thres*100))
     pp.title(name1)
     
     #pp.colorbar()
@@ -313,9 +332,11 @@ def getSuccessRate(datasetdiff, catastrophic_failure_threshold):
     if n_total == 0:
         return 0.0
     idiff = len(datasetdiff[0])-1
+    izref = 2
+    
     n_success = 0
     for e in datasetdiff:
-        if abs(e[idiff]) < catastrophic_failure_threshold:
+        if abs(e[idiff]/(1+e[izref])) < catastrophic_failure_threshold:
             n_success += 1
     
     rate = float(n_success)/float(n_total)

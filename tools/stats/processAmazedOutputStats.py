@@ -624,7 +624,7 @@ def ProcessStats( fname, zRange, magRange,  sfrRange, enablePlot = False, export
     
     
     _baseOutputDirectory = os.path.dirname(os.path.abspath(fname))
-    outputDirectory = os.path.join(_baseOutputDirectory, "stats_magmin{}magmax{}_zmin{}zmax{}_sfrmin{}sfrmax{}".format(magRange[0], magRange[1], zRange[0], zRange[1], sfrRange[0], sfrRange[1]))
+    outputDirectory = os.path.join(_baseOutputDirectory, "stats_mag{}-{}_z{}-{}_sfr{}-{}".format(magRange[0], magRange[1], zRange[0], zRange[1], sfrRange[0], sfrRange[1]))
     if os.path.exists( outputDirectory ) == False :        
         print("makedir: Output dir: "+outputDirectory)
         os.mkdir( outputDirectory, 0o755 )        
@@ -903,16 +903,27 @@ def ProcessStats( fname, zRange, magRange,  sfrRange, enablePlot = False, export
     print '\n'
     return globalSuccessRateValue
 
-def processPerformance( fname, opt_preset ):
+def processPerformance( fname, opt_preset, zRange, magRange, sfrRange ):
+    """
+    - call the exportPerformances function
+    - using the ranges (zRange, magRange,  sfrRange) to crop the input data (in fname)
+    """
     dataDiff = loadDiff( fname );
     
     _baseOutputDirectory = os.path.dirname(os.path.abspath(fname))
-    outputDirectory = os.path.join(_baseOutputDirectory, "performances".format())
+    outputDirectory = os.path.join(_baseOutputDirectory,
+                                   "performances_mag{}-{}_z{}-{}_sfr{}-{}".format(
+                                   magRange[0], magRange[1],
+                                   zRange[0], zRange[1],
+                                   sfrRange[0], sfrRange[1]))
     if os.path.exists( outputDirectory ) == False :        
         print("makedir: Output dir: "+outputDirectory)
         os.mkdir( outputDirectory, 0o755 )
         
-    lperf.exportPerformances(dataDiff, outputDirectory, preset=opt_preset)
+    lperf.exportPerformances(dataDiff, outputDirectory, preset=opt_preset, 
+                             zRange=zRange, 
+                             magRange=magRange, 
+                             sfrRange=sfrRange)
 
 def processHistogram(yvect, bins, outFile=""):
     n = len(yvect)
@@ -1364,15 +1375,18 @@ def ProcessStars( fname, enablePlot = False, exportType="png" ):
     if enablePlot:
         pp.show()
     
-def processReport(statsDir, outputDir, globalSuccessRateValue, parametersFilePath, configPath):
-    lreport.Report(statsDir, outputDir, 
+def processReport(statsDir, globalSuccessRateValue, parametersFilePath, configPath, zRange, magRange, sfrRange ):
+    lreport.Report(statsDir, 
                    globalSuccessRateValue=globalSuccessRateValue, 
                    parametersFilePath=parametersFilePath,
-                   configPath=configPath)
+                   configPath=configPath, 
+                   zRange=zRange, 
+                   magRange=magRange, 
+                   sfrRange=sfrRange )
     
    
 def exportLog(outdir, refFile, refType, magRange, zRange, sfrRange):
-    tag = "stats_magmin{}magmax{}_zmin{}zmax{}_sfrmin{}sfrmax{}".format(magRange[0], magRange[1], zRange[0], zRange[1], sfrRange[0], sfrRange[1])
+    tag = "stats_mag{}-{}_z{}-{}_sfr{}-{}".format(magRange[0], magRange[1], zRange[0], zRange[1], sfrRange[0], sfrRange[1])
     fpath = os.path.join(outdir, "log_{}.txt".format(tag))
     f=open(fpath, 'w')
     f.write("ref: {}\n".format(refFile))
@@ -1408,7 +1422,7 @@ def StartFromCommandLine( argv ) :
                     help="redshift range filter for the histograms")
     
     parser.add_argument("-p", "--perfpreset", dest="perfpreset", default="simulm201606",
-                    help="performance matrix preset, choose between 'simulm201606', 'simueuclid2016'")
+                    help="performance matrix preset, choose between 'simulm201606', 'simueuclid2016', 'simupfs2016'")
     
     parser.add_argument("-l", "--computeLvl", dest="computeLevel", default="brief",
                     help="compute level, choose between 'brief', 'hist' or 'full', or 'stars'")
@@ -1440,8 +1454,7 @@ def StartFromCommandLine( argv ) :
         outputFullpathFailures = outputPath + filenameFailures
         outputFullpathFailuresSeqFile = outputPath + filenameFailuresSeqFile
         outputFullpathFailuresRefFile = outputPath + filenameFailuresRefFile
-        outputFullpathReportDir = os.path.join(outputPath, "report")
-        
+                
         if os.path.isdir(outputPath)==False:
             os.mkdir( outputPath, 0o755 );
 
@@ -1498,7 +1511,10 @@ def StartFromCommandLine( argv ) :
         globalSuccessRateValue=ProcessStats( outputFullpathDiff, zRange, magRange, sfrRange, enablePlot = False, exportType=options.exporttype )
     
     if  options.computeLevel == "full" or options.computeLevel == "perf":        
-        processPerformance( outputFullpathDiff, opt_preset = options.perfpreset )
+        processPerformance( outputFullpathDiff, opt_preset = options.perfpreset, 
+                             zRange=zRange, 
+                             magRange=magRange, 
+                             sfrRange=sfrRange )
         
     if  options.computeLevel == "stars": #under developement, assumes the spectrum name's first character contains the star type for these statistics        
         ProcessStars( outputFullpathDiff )
@@ -1508,10 +1524,13 @@ def StartFromCommandLine( argv ) :
     if  options.computeLevel == "full":
         parametersFilePath = os.path.join(amazedOutputDir, "parameters.json") 
         configPath = os.path.join(amazedOutputDir, "config.txt") 
-        processReport(outputPath, outputFullpathReportDir, 
+        processReport(outputPath,
                       globalSuccessRateValue=globalSuccessRateValue, 
                       parametersFilePath=parametersFilePath,
-                      configPath=configPath)
+                      configPath=configPath, 
+                      zRange=zRange, 
+                      magRange=magRange, 
+                      sfrRange=sfrRange )
 
 
 def Main( argv ) :	

@@ -21,13 +21,20 @@ import json
 
 
 class Report(object):
-    def __init__(self, statsDirPath, outputDirPath, globalSuccessRateValue, parametersFilePath, configPath):
+    def __init__(self, statsDirPath, globalSuccessRateValue, parametersFilePath, configPath, zRange, magRange, sfrRange ):
         self.statsdirpath = statsDirPath
-        self.outputdirpath = outputDirPath
+        self.outputdirpath = os.path.join(statsDirPath, "report_mag{}-{}_z{}-{}_sfr{}-{}".format(
+                                                      magRange[0], magRange[1],
+                                                      zRange[0], zRange[1], 
+                                                      sfrRange[0], sfrRange[1]))
         self.parameterspath = parametersFilePath
         self.configpath = configPath
         self.templateDirPath = "/home/aschmitt/gitlab/cpf-redshift/tools/stats/latex_empty3"
         self.texFilePath = os.path.join(self.outputdirpath, "report_template.tex")
+        self.datasetstatsfilter = "mag=[{}:{}], z=[{}:{}], sfr=[{}:{}]".format(
+                                                      magRange[0], magRange[1],
+                                                      zRange[0], zRange[1], 
+                                                      sfrRange[0], sfrRange[1])
         
         #init report directory with template
         self.makeOutputDirFromTemplate(self.outputdirpath)
@@ -35,11 +42,22 @@ class Report(object):
         #define the document details
         self.doc_date = time.strftime("%d/%m/%Y")  
         self.setTexPath("tpl_tobereplaced_formatteddate", self.doc_date) 
-
+        self.outputPdfName = "report_mag{}-{}_z{}-{}_sfr{}-{}.pdf".format(
+                                                      magRange[0], magRange[1],
+                                                      zRange[0], zRange[1], 
+                                                      sfrRange[0], sfrRange[1])
         
         #define figures relative paths
-        self.perfMatrixSummaryPath = os.path.join(self.statsdirpath, 'performances', 'performance.png')
-        stats_subset_path = 'stats_magmin-1.0magmax50.0_zmin-1.0zmax20.0_sfrmin-1.0sfrmax10000.0'
+        self.perfMatrixSummaryPath = os.path.join(self.statsdirpath,
+                                                  "performances_mag{}-{}_z{}-{}_sfr{}-{}".format(
+                                                      magRange[0], magRange[1],
+                                                      zRange[0], zRange[1], 
+                                                      sfrRange[0], sfrRange[1]),
+                                                  'performance.png')
+        stats_subset_path = "stats_mag{}-{}_z{}-{}_sfr{}-{}".format(
+                                                      magRange[0], magRange[1],
+                                                      zRange[0], zRange[1], 
+                                                      sfrRange[0], sfrRange[1])
         self.successrateGlobalPath = os.path.join(self.statsdirpath, "{}".format(stats_subset_path), 'stats_hist.png')
         self.scatterplotGlobalPath = os.path.join(self.statsdirpath, "{}".format(stats_subset_path), 'filteredset_relzerr.png')
         self.scatterplotzcamczrefGlobalPath = os.path.join(self.statsdirpath, "{}".format(stats_subset_path), 'filteredset_zcalc-vs-zref.png')
@@ -80,10 +98,15 @@ class Report(object):
         self.setTexPath("tpl_tobereplaced_param_spcdir", self.spcPath, stype="text")
         self.methodParam = self.getParameterVal('method')
         self.setTexPath("tpl_tobereplaced_param_method", self.methodParam, stype="text")
+        
+        self.setTexPath("tpl_tobereplaced_param_binfilter", self.datasetstatsfilter, stype="text")
         self.spcCount = "-"
         self.setTexPath("tpl_tobereplaced_param_spccount", self.spcCount, stype="text")
         self.continuumRemovalMethod = self.getParameterVal('continuumRemoval', 'method')
         self.setTexPath("tpl_tobereplaced_param_continuummethod", self.continuumRemovalMethod, stype="text")
+        
+        
+        
         
         #params path for the annexe...
         self.setTexPath("tpl_tobereplaced_jsonparamsfullpath", self.parameterspath)
@@ -163,11 +186,17 @@ class Report(object):
         f.close()
         
     def makePdf(self):
+        template_name_noext = "report_template"        
         
         cwd = os.getcwd()
         os.chdir(self.outputdirpath)
-        bashCommand = "pdflatex  --shell-escape report_template.tex".format()
+        bashCommand = "pdflatex  --shell-escape {}.tex".format(template_name_noext)
         os.system(bashCommand) 
+        time.sleep( 2 )
+        #rename according to zmagsfr ranges
+        print("report: moving {}.pdf to {}".format(template_name_noext, self.outputPdfName))
+        shutil.move("{}.pdf".format(template_name_noext), self.outputPdfName)
+        
         os.chdir(cwd)
      
 
