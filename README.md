@@ -3,7 +3,7 @@
 
 ## Build and install (Unix and unix like):
 
-1. Clone Git repository:
+#### 1. Clone Git repository:
 
 Create a project folder :
 
@@ -14,7 +14,7 @@ Clone the cpf-redshift repository :
 
 	git clone git@gitlab.lam.fr:CPF/cpf-redshift.git
 
-2. Build and install third party library by running the buildandinstall.sh script:
+#### 2. Build and install third party library by running the buildandinstall.sh script:
 
 Execute the script in cpf-redshift/tools :
 
@@ -25,7 +25,7 @@ Please note that each tool has its own dependency list. If a tool fails to build
 
 The "doxygen" tool requires at least flex and bison to work.
 
-3. Create makefiles:
+#### 3. Create makefiles:
 
 Build process uses cmake tool
 
