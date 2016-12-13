@@ -12,7 +12,7 @@ Create a project folder :
 
 Clone the cpf-redshift repository :
 
-	git@gitlab.lam.fr:CPF/cpf-redshift.git
+	git clone git@gitlab.lam.fr:CPF/cpf-redshift.git
 
 2. Build and install third party library by running the buildandinstall.sh script:
 
