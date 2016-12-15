@@ -118,7 +118,8 @@ class ResultList(object):
             zref = line[2]
 
             magref = line[1]
-            sfrref = line[9]            
+            sfrref = line[9] 
+            ebmvref = line[10]            
             
             zcalc = line[4]
             zdiff = line[4]-line[2]
@@ -175,7 +176,7 @@ class ResultList(object):
                     print("Rejected by sfrref")
                 
             if accepted:
-                refValues = {'elvelocity': elvelocity}
+                refValues = {'elvelocity': elvelocity, 'mag': magref, 'sfr': sfrref, 'ebmv': ebmvref}
                 res = Result(name, zref, zcalc, zdiff, chi2, chi2nc, chi2PerTplZcalc, chi2PerTplZref, chi2ncPerTplZref, refValues)
                 self.list.append(res)
                 self.n +=1
@@ -1989,7 +1990,7 @@ def plotChi2CombinationCoeff2DMap(resDir, diffthres, spcName="", methodName="", 
     zrefmin=0.2
     zrefmax=2.5
     magrefmin=0.0
-    magrefmax=23
+    magrefmax=23.3
     
     resList = ResultList(resDir, diffthreshold=diffthres, opt='brief', spcName=spcName, methodName=methodName, zrefmin=zrefmin, zrefmax=zrefmax, magrefmin=magrefmin, magrefmax=magrefmax)
     if resList.n <1:

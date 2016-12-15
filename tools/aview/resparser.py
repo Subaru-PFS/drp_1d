@@ -1217,10 +1217,12 @@ class ResParser(object):
                 
            
             if 1:
-                tplnametag = "EW_SB2extended.dat"
-                tplnametag = "NEW_Sbc_extended.dat"
-                #tplnametag = "NEW_Im_extended_blue.dat"NEW_Sbc_extended
-                tplnametag = self.getChi2BestTpl(spcnametag, chi2type="continuum")
+                if tplnametag=="":
+                    #tplnametag = self.getRedshiftTpl(spcnametag)
+                    #tplnametag = "EW_SB2extended.dat"
+                    #tplnametag = "NEW_Sbc_extended.dat"
+                    #tplnametag = "NEW_Im_extended_blue.dat"NEW_Sbc_extended
+                    tplnametag = self.getChi2BestTpl(spcnametag, chi2type="continuum")
                 
                 print("tpl name tag found = {}".format(tplnametag))
                 pathTplChi = os.path.join(path, tplnametag)
@@ -1228,7 +1230,8 @@ class ResParser(object):
                 chipath.append(os.path.join(pathTplChi,name))
                 chiname.append(name)            
             if 1:
-                tplnametag = self.getChi2BestTpl(spcnametag, chi2type="nocontinuum")
+                if tplnametag=="":
+                    tplnametag = self.getChi2BestTpl(spcnametag, chi2type="nocontinuum")
                 
                 print("tpl name tag found = {}".format(tplnametag))
                 pathTplChi = os.path.join(path, tplnametag)

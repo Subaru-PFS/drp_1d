@@ -1422,7 +1422,7 @@ def StartFromCommandLine( argv ) :
                     help="redshift range filter for the histograms")
     
     parser.add_argument("-p", "--perfpreset", dest="perfpreset", default="simulm201606",
-                    help="performance matrix preset, choose between 'simulm201606', 'simueuclid2016', 'simupfs2016'")
+                    help="performance matrix preset, choose between 'simulm201606', 'simueuclid2016', 'simueuclid2016shiftedforoii', 'simupfs2016'")
     
     parser.add_argument("-l", "--computeLvl", dest="computeLevel", default="brief",
                     help="compute level, choose between 'brief', 'hist' or 'full', or 'stars'")

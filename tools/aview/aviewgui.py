@@ -153,6 +153,7 @@ class AViewGui(QtWidgets.QWidget):
         layout.addWidget(self.leResultsN, layoutRow, 1, 1, 10) 
         self.leResultsN.setEnabled(False)
         
+        ######### Result Details Section ###############################################
         #Add the result list section separator
         layoutRow += 1
         self.lblResultListSection = QtWidgets.QLabel('Browse results', wdg) 
@@ -216,40 +217,64 @@ class AViewGui(QtWidgets.QWidget):
         self.leResultSpcZref.setFixedWidth(100) 
         layout.addWidget(self.leResultSpcZref, layoutRow, 1, 1, 2) 
         self.leResultSpcZref.setEnabled(False)  
+        #Add the result mag
+        layoutRow += 1
+        self.lblResultMagref = QtWidgets.QLabel('        - mag', wdg)
+        layout.addWidget(self.lblResultMagref, layoutRow, 0, 1, 1) 
+        self.leResultSpcMagref = QtWidgets.QLineEdit(wdg)
+        self.leResultSpcMagref.setFixedWidth(100) 
+        layout.addWidget(self.leResultSpcMagref, layoutRow, 1, 1, 2) 
+        self.leResultSpcMagref.setEnabled(False) 
+        #Add the result sfr
+        layoutRow += 1
+        self.lblResultSfrref = QtWidgets.QLabel('        - sfr', wdg)
+        layout.addWidget(self.lblResultSfrref, layoutRow, 0, 1, 1) 
+        self.leResultSpcSfrref = QtWidgets.QLineEdit(wdg)
+        self.leResultSpcSfrref.setFixedWidth(100) 
+        layout.addWidget(self.leResultSpcSfrref, layoutRow, 1, 1, 2) 
+        self.leResultSpcSfrref.setEnabled(False)  
+        #Add the result ebmv
+        layoutRow += 1
+        self.lblResultEbmvref = QtWidgets.QLabel('        - ebmv', wdg)
+        layout.addWidget(self.lblResultEbmvref, layoutRow, 0, 1, 1) 
+        self.leResultSpcEbmvref = QtWidgets.QLineEdit(wdg)
+        self.leResultSpcEbmvref.setFixedWidth(100) 
+        layout.addWidget(self.leResultSpcEbmvref, layoutRow, 1, 1, 2) 
+        self.leResultSpcEbmvref.setEnabled(False)  
 
-        
-        #Add the show parameters section separator
-                
-        self.lblShowParametersSection = QtWidgets.QLabel('----------', wdg)
-        layout.addWidget(self.lblShowParametersSection, 15, 0, 1, 1) 
-        
+
+        ######### SHOW section ###############################################    
+        layoutRow += 1    
         #Add the show button
+        layoutRow += 1
         self.btn = QtWidgets.QPushButton('Show', wdg)
         self.btn.setFixedWidth(500)
         self.btn.setFixedHeight(50)
         self.btn.clicked.connect(self.bt_showAViewWidget)
         self.btn.setToolTip('Display the Chi2/spectrum/fitted template/linemodel results successively...')
-        layout.addWidget(self.btn, 16, 1, 1, 1)
+        layout.addWidget(self.btn, layoutRow, 1, 1, 1)
         self.btnReprocess = QtWidgets.QPushButton('Reprocess', wdg)
         self.btnReprocess.setFixedWidth(100)
         self.btnReprocess.setFixedHeight(50)
         self.btnReprocess.clicked.connect(self.bt_reprocess)
         self.btnReprocess.setToolTip('Reprocess this source...')
-        layout.addWidget(self.btnReprocess, 16, 2, 1, 1)
+        layout.addWidget(self.btnReprocess, layoutRow, 2, 1, 1)
 
         #Add the extremum choice ctrls
+        layoutRow += 1
+        layoutRow += 1
         self.lblExtremumChoice = QtWidgets.QLabel(' Extremum: ', wdg)
-        layout.addWidget(self.lblExtremumChoice, 18, 0, 1, 1)
+        layout.addWidget(self.lblExtremumChoice, layoutRow, 0, 1, 1)
         
         self.leExtremumChoice = QtWidgets.QLineEdit(wdg)
         self.leExtremumChoice.setToolTip('Enter the extremum num to be selected for display...')
         self.leExtremumChoice.setFixedWidth(100) 
         self.leExtremumChoice.setEnabled(False)
-        layout.addWidget(self.leExtremumChoice, 18, 1, 1, 10)
+        layout.addWidget(self.leExtremumChoice, layoutRow, 1, 1, 10)
         
         self.ckExtremumChoiceOverride = QtWidgets.QCheckBox('Extremum Override', wdg)
         self.ckExtremumChoiceOverride.stateChanged.connect(self.ck_extremumOverride)
-        layout.addWidget(self.ckExtremumChoiceOverride, 18, 2, 1, 10)
+        layout.addWidget(self.ckExtremumChoiceOverride, layoutRow, 2, 1, 10)
         #self.ckExtremumChoiceOverride.toggle()
         
         #self.setCentralWidget(wdg)
@@ -354,11 +379,17 @@ class AViewGui(QtWidgets.QWidget):
             self.leResultSpcZdiff.setText(str(self.resList.list[current_index].zdiff))
             self.leResultSpcZcalc.setText("{:.5}".format(self.resList.list[current_index].zcalc))
             self.leResultSpcZref.setText("{:.5}".format(self.resList.list[current_index].zref))
+            self.leResultSpcMagref.setText("{:.5}".format(self.resList.list[current_index].refValues['mag']))
+            self.leResultSpcSfrref.setText("{:.5}".format(self.resList.list[current_index].refValues['sfr']))
+            self.leResultSpcEbmvref.setText("{:.5}".format(self.resList.list[current_index].refValues['ebmv']))
         else:
             self.leResultSpcName.setText("")
             self.leResultSpcZdiff.setText("")
             self.leResultSpcZcalc.setText("")
             self.leResultSpcZref.setText("")
+            self.leResultSpcMagref.setText("")
+            self.leResultSpcSfrref.setText("")
+            self.leResultSpcEbmvref.setText("")
     
     def bt_nextResultIndex(self):
         current_index = int(self.leResultIndex.text() )

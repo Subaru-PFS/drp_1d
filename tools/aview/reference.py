@@ -35,7 +35,7 @@ class Reference(object):
         self.sfrs = []
         self.ebmvs = []
         self.sigmas = []
-        self.loghalphas= []
+        self.loghalphas = []
 
         # idx variables, default for VVDS
         self.nRefValues = 7
@@ -49,7 +49,12 @@ class Reference(object):
         self.iRefLogHalpha = -1        
         
         if self.rtype=="pfs":
-            self.setPFSRefFileType()
+            self.setPFSRefFileType()        
+        elif self.rtype=="simueuclid2016":
+            self.setSIMUEuclid2016RefFileType()
+        else:
+            print("Type not understood. Please check the ref. type arg., aborting...")
+            exit()
             
         self.load()
 
@@ -185,22 +190,22 @@ class Reference(object):
                 
                 _sfr = -1
                 if self.iRefSFR!=-1:
-                    _sfr = str(data[self.iRefSFR])
+                    _sfr = float(data[self.iRefSFR])
                 self.sfrs.append(_sfr)
                 
                 _ebmv = -1
                 if self.iRefEBmV!=-1:
-                    _ebmv = str(data[self.iRefEBmV])
+                    _ebmv = float(data[self.iRefEBmV])
                 self.ebmvs.append(_ebmv)
                 
                 _sigma = -1
                 if self.iRefSigma!=-1:
-                    _sigma = str(data[self.iRefSigma])
+                    _sigma = float(data[self.iRefSigma])
                 self.sigmas.append(_sigma)
                 
                 _loghalpha = -1
                 if self.iRefLogHalpha!=-1:
-                    _loghalpha = str(data[self.iRefLogHalpha])
+                    _loghalpha = float(data[self.iRefLogHalpha])
                 self.loghalphas.append(_loghalpha)
               
     def getSFR(self, idList):
@@ -215,6 +220,70 @@ class Reference(object):
                 print("COuld not find id = {}".format(_idTarget))
                 stop
         return sfrList
+        
+    def filterIdList(self, idList, magmin=-1, magmax=50, zmin=-1, zmax=50, sfrmin=-1, sfrmax=1e6):
+        """
+        return a list of indexes with the mag, redshift and sfr matching the filter range
+        """
+        print("about ot filter with zmin={}, zmax={}, magmin={}, magmax={}, sfrmin={}, sfrmax={}".format(zmin, zmax, magmin, magmax, sfrmin, sfrmax))
+        indexes = []
+        for k, _idTarget in enumerate(idList):
+            #print("idTarget={}".format(_idTarget))
+            found=False
+            for kThis, _idThis in enumerate(self.ids):
+                #print("_idThis={}".format(_idThis))
+                if _idThis in _idTarget:
+                    #print("_idThis={} matching found".format(_idThis))
+                    #print("redshift={}".format(self.redshifts[kThis]))
+                    #print("mag={}".format(self.mags[kThis]))
+                    #print("sfr={}".format(self.sfrs[kThis]))
+                    
+                    if self.mags[kThis]>=magmin and self.mags[kThis]<=magmax:
+                        if self.redshifts[kThis]>=zmin and self.redshifts[kThis]<=zmax:
+                            #print("sfr k = {}".format(self.sfrs[kThis]))
+                            #print("sfr k = {}".format(type(self.sfrs[kThis])))
+                            #print("sfrmin = {}".format(sfrmin))
+                            #print("sfrmax = {}".format(sfrmax))
+                            #print("sfrmax = {}".format(type(sfrmax)))
+                            if self.sfrs[kThis]<=sfrmax and self.sfrs[kThis]>=sfrmin:
+                                indexes.append(k)
+                                found = True
+                    
+                if found:
+                    break
+        
+        return indexes
+        
+    def export(self, outputFilePath):
+        """
+        export in the euclidsim2016 format by default, coz it's the most exhaustive format
+        """
+        f = open(outputFilePath, 'w')
+        f.write("#id   z_true   ref_mag_r01   spcid   ebv   sfr   sigma   logf_halpha_ext   logf_hbeta_ext   logf_o2_ext   logf_o3_ext   logf_n2_ext   logf_s2_ext")
+        f.write("\n")        
+        for k, _idThis in enumerate(self.ids):            
+            f.write("{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(
+            self.ids[k], 
+            self.redshifts[k], 
+            self.mags[k],
+            -1,
+            self.ebmvs[-1],
+            self.sfrs[k], 
+            self.sigmas[k],
+            self.loghalphas[k],
+            -1,
+            -1,
+            -1,
+            -1,
+            -1))
+            
+        f.close()
+        
+    def convertRedshift(self, initialLbda=6562.8, finalLbda=3200.0):
+        for k, _id in enumerate(self.ids):            
+            newRedshift = (1+self.redshifts[k])*initialLbda/finalLbda-1
+            self.redshifts[k] = newRedshift
+        
     
     def plot(self):
         plt.figure()
@@ -242,6 +311,16 @@ def StartFromCommandLine( argv ) :
         print('using full path: {0}'.format(rpath))
         ref = Reference(rpath, options.type)
 
+        enableConvertAndExport = False
+        if enableConvertAndExport:
+            ref.convertRedshift()
+            exportFileName = "{}_convertedzforoii.txt".format(os.path.splitext(os.path.basename(rpath))[0])
+            exportFilePath = os.path.join(os.path.split(rpath)[0], exportFileName)
+            print("export path is {}".format(exportFilePath))
+            if os.path.exists(exportFilePath):
+                print("Export path already exists, aborting export...")
+            else:
+                ref.export(exportFilePath)
         
         ref.plot()
     else :

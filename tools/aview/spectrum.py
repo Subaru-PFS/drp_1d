@@ -550,7 +550,9 @@ class Spectrum(object):
         pp.title(self.name) # Titre
         if not saveFullDirPath == "":
             saveFullPath = os.path.join(saveFullDirPath, self.name + str(".png"))
-            pp.savefig(saveFullPath) # sauvegarde du fichier ExempleTrace.png
+            pp.savefig(saveFullPath)
+            pp.close()
+            pp.clf()
         else:
             if not disableEventHandling:
                 self.startEventHandling()
@@ -591,12 +593,15 @@ class Spectrum(object):
             
         print('\n')
         
-    def plotCompare(self, other_spc, amplitude = 1.0, modellinetype = "-bo", exportPath="", other_spc_list=None):
+    def plotCompare(self, other_spc, amplitude = 1.0, modellinetype = "-bo", exportPath="", other_spc_list=None, label1="", label2=""):
         self.fig = pp.figure( "spectrumview", figsize=(15,11))
         
-        lbl = self.label
-        if lbl=="":
-            lbl = self.name
+        if label1=="":
+            lbl = self.label
+            if lbl=="":
+                lbl = self.name
+        else:
+            lbl = label1
         spcColor = '0.6'
         self.canvas = self.fig.canvas
         self.ax = self.fig.add_subplot(111)
@@ -604,9 +609,12 @@ class Spectrum(object):
         #pp.plot(self.xvect, self.yvect, "x-")
         self.ax.plot(self.xvect, self.yvect,  color=spcColor, label=lbl)
         yother = [a*amplitude for a in other_spc.yvect]
-        lbl = other_spc.label
-        if lbl=="":
-            lbl = other_spc.name
+        if label2=="":
+            lbl = other_spc.label
+            if lbl=="":
+                lbl = other_spc.name
+        else:
+            lbl = label2
         self.ax.plot(other_spc.xvect, yother, modellinetype, label=lbl)
         if not other_spc_list==None:
             for i, o2 in enumerate(other_spc_list):
@@ -1608,6 +1616,8 @@ def StartFromCommandLine( argv ) :
     if os.path.exists(options.spcPath) :
         print('using full path: {0}'.format(options.spcPath))
         s = Spectrum(options.spcPath, options.spcType, snorm=False)
+               
+        #s.applyWeight(1e-17)
         #s.printIdxWaveFlux()
         #s.convertFromHzToAngstrom()
         #for k in range(len(s.yvect)):
@@ -1655,7 +1665,7 @@ def StartFromCommandLine( argv ) :
             elif options.export == "yes":
                 #s.interpolate(dx=0.1) #high sampling for the synthesis process
                 #s.applyLambdaCrop(930, 1230)
-                #s.applyWeight(1e-17)
+                
                 #s.setMagIAB(20)        
         
                 path = os.path.split(options.spcPath)[0]

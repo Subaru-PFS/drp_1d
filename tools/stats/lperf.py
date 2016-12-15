@@ -15,7 +15,7 @@ import scipy as sp
 import PIL
 
 ### List of all the existing presets for z, mag, sfr bins
-list_presets = ["simulm201606", "simueuclid2016", "simupfs2016"]
+list_presets = ["simulm201606", "simueuclid2016", "simueuclid2016shiftedforoii", "simupfs2016"]
 
 def getZBinsLimits(bins_type):
     if bins_type == "simulm201606":
@@ -27,6 +27,8 @@ def getZBinsLimits(bins_type):
         #z_bins_limits = [0.0, 3.0, 6.0]
     elif bins_type == "simueuclid2016":
         z_bins_limits = [0.95, 1.1, 1.25, 1.4]
+    elif bins_type == "simueuclid2016shiftedforoii":
+        z_bins_limits = [2.9, 3.35, 3.7, 4.0]
     elif bins_type == "simupfs2016":
         z_bins_limits = [0.2, 0.8, 1.2, 1.8, 2.5]
     return z_bins_limits
@@ -37,6 +39,8 @@ def getMagBinsLimits(bins_type):
         mag_bins_limits = [20.0, 21.0, 22.0, 23.0, 24.0, 25.0, 26.0, 27.0, 28.0, 30.0]
         #mag_bins_limits = [20.0, 21.0, 22.0, 23.0, 24.0, 25.0, 26.0]
     elif bins_type == "simueuclid2016":
+        mag_bins_limits = [0.0, 23.0, 23.5, 24.0, 50.0]
+    elif bins_type == "simueuclid2016shiftedforoii":
         mag_bins_limits = [0.0, 23.0, 23.5, 24.0, 50.0]
     elif bins_type == "simupfs2016":
         mag_bins_limits = [0.0, 19.0, 20.5, 21.5, 22.0, 22.5, 23.0, 50.0]
@@ -54,6 +58,8 @@ def getSfrBinsLimits(bins_type):
         sfr_bins_limits = np.logspace(-1.0, 2.0, n_sfr_bins+1, endpoint=True)
         sfr_bins_limits = [a for a in sfr_bins_limits[::-1]]
     elif bins_type == "simueuclid2016":
+        sfr_bins_limits = [100.0, 20.0, 5.0, 0]
+    elif bins_type == "simueuclid2016shiftedforoii":
         sfr_bins_limits = [100.0, 20.0, 5.0, 0]
     elif bins_type == "simupfs2016":
         sfr_bins_limits = [100.0, 20.0, 10.0, 5.0, 0]
