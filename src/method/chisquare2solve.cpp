@@ -189,6 +189,8 @@ Bool CMethodChisquare2Solve::Solve(CDataStore& resultStore,
             CSpectrumFluxAxis& tfluxAxisPtr = _tpl.GetFluxAxis();
             tfluxAxisPtr = tplfluxAxis;
             scopeStr = "chisquare_nocontinuum";
+            //
+            enable_dustFitting = 0;
         }
 
         // Compute merit function

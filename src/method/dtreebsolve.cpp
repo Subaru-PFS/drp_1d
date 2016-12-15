@@ -219,6 +219,8 @@ Bool COperatorDTreeBSolve::Solve(CDataStore &dataStore, const CSpectrum &spc, co
     dataStore.GetScopedParam( "chisquare.interpolation", opt_interp, "precomputedfinegrid" );
     std::string opt_extinction;
     dataStore.GetScopedParam( "chisquare.extinction", opt_extinction, "no" );
+    std::string opt_dustFit;
+    dataStore.GetScopedParam( "chisquare.dustfit", opt_dustFit, "no" );
 
     TFloat64List redshiftsChi2;
     if(opt_redshiftsupport == "full"){
@@ -235,9 +237,12 @@ Bool COperatorDTreeBSolve::Solve(CDataStore &dataStore, const CSpectrum &spc, co
     std::vector<CMask> maskList;
 
     CMethodChisquare2Solve chiSolve(m_calibrationPath);
+    //achtung: override overlap threshold for chi2nocontinuum:
+    Float64 overlapThresholdNC=overlapThreshold;
+    overlapThresholdNC = 1.0;
     auto chisolveResultnc = chiSolve.Compute( dataStore, spc, spcWithoutCont,
                                                                         tplCatalog, tplCategoryList,
-                                                                        lambdaRange, redshiftsChi2, overlapThreshold, maskList, spcComponent, opt_interp, opt_extinction);
+                                                                        lambdaRange, redshiftsChi2, overlapThresholdNC, maskList, spcComponent, opt_interp, opt_extinction, opt_dustFit);
     if( chisolveResultnc ) {
         dataStore.StoreScopedGlobalResult( "redshiftresult", chisolveResultnc );
     }
@@ -273,7 +278,7 @@ Bool COperatorDTreeBSolve::Solve(CDataStore &dataStore, const CSpectrum &spc, co
     //*/
     auto chisolveResultcontinuum = chiSolve.Compute( dataStore, spc, spcWithoutCont,
                                                                         tplCatalog, tplCategoryList,
-                                                                        lambdaRange, redshiftsChi2Continuum, overlapThreshold, maskList, spcComponent, opt_interp);
+                                                                        lambdaRange, redshiftsChi2Continuum, overlapThreshold, maskList, spcComponent, opt_interp, opt_extinction, opt_dustFit);
     //_///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //*/
 

@@ -166,7 +166,7 @@ Void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& t
     overlapRate = spcSpectralAxis.IntersectMaskAndComputeOverlapRate( lambdaRange, itplMask );
 
     // Check for overlap rate
-    if( overlapRate < overlapThreshold )
+    if( overlapRate < overlapThreshold || overlapRate<=0.0 )
     {
         status = nStatus_NoOverlap;
         return ;
@@ -198,6 +198,7 @@ Void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& t
     {
         m_nDustCoeff = 1;
     }else{
+        m_nDustCoeff = 10; //achting double initialization fo the dust coeff.
         if(m_YtplRawBufferMaxBufferSize<itplTplSpectralAxis.GetSamplesCount())
         {
             Log.LogError( "chisquare operator: rebinned tpl size > buffer size for dust-fit ! Aborting.");
@@ -471,6 +472,11 @@ Void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& t
         //mask correction coefficient for the masked samples
         Float64 maskedSamplesCorrection = (Float64)numDevsFull/(Float64)numDevs;
         fit *= maskedSamplesCorrection;
+        //*/
+
+        /*
+        Float64 overlapCorrection = 1.0/overlapRate;
+        fit *= overlapCorrection;
         //*/
 
         if(fit<chiSquare)

@@ -278,6 +278,11 @@ Bool CProcessFlow::Chisquare( CProcessFlowContext& ctx, const std::string& Categ
     std::string opt_calibrationPath;
     ctx.GetDataStore().GetScopedParam( "calibrationPath", opt_calibrationPath, "calibration" );
 
+    Log.LogInfo( "Process Chisquare using overlapThreshold: %.3f", overlapThreshold);
+    Log.LogInfo( "Process Chisquare using component: %s", opt_spcComponent.c_str());
+    Log.LogInfo( "Process Chisquare using extinction: %s", opt_extinction.c_str());
+    Log.LogInfo( "Process Chisquare using dust-fit: %s", opt_dustFit.c_str());
+
     // prepare the unused masks
     std::vector<CMask> maskList;
 
