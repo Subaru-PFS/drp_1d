@@ -75,6 +75,18 @@ class Spectrumlist(object):
                     else:                        
                         f.write("{}\n".format(self.fvect[k]))
                         
+    def splitIntoSubsets(self, subsetCount, outputDirPath):
+        """
+        Split the spectrumlist into N subsets with subsetCount items in each subsets
+        """
+        iCountSubset = 0
+        iCountInSubset = 0
+        for k, f in enumerate(self.fvect):
+            if iCountInSubset==0:
+                subsetFilename = "".format(self.name)
+                f = open()
+        
+                        
         
         
 def StartFromCommandLine( argv ) :	

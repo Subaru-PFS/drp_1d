@@ -94,7 +94,7 @@ Float64 CMultiLine::GetSignFactor(Int32 subeIdx)
 /**
  * \brief Returns the theoretical support range for the line
  **/
-TInt32Range CMultiLine::GetTheoreticalSupport(Int32 subeIdx, const CSpectrumSpectralAxis& spectralAxis, Float64 redshift,  const TFloat64Range &lambdaRange)
+TInt32Range CMultiLine::EstimateTheoreticalSupport(Int32 subeIdx, const CSpectrumSpectralAxis& spectralAxis, Float64 redshift,  const TFloat64Range &lambdaRange)
 {
     Int32 i = subeIdx;
     TInt32Range supportRange;
@@ -114,6 +114,12 @@ TInt32Range CMultiLine::GetTheoreticalSupport(Int32 subeIdx, const CSpectrumSpec
     }
     supportRange.SetEnd(spectralAxis.GetIndexAtWaveLength(lambda_end));
 
+    //correct the end value if not higher or equal to the begin value
+    if(supportRange.GetEnd()<supportRange.GetBegin())
+    {
+        supportRange.SetEnd(supportRange.GetBegin()-1);
+    }
+
     return supportRange;
 }
 
@@ -132,21 +138,28 @@ void CMultiLine::prepareSupport(const CSpectrumSpectralAxis& spectralAxis, Float
     m_EndTheoretical.resize(m_Rays.size());
     m_OutsideLambdaRangeList.resize(m_Rays.size());
     for(Int32 i=0; i<m_Rays.size(); i++){
-        TInt32Range supportRange = GetTheoreticalSupport(i, spectralAxis, redshift, lambdaRange);
+        TInt32Range supportRange = EstimateTheoreticalSupport(i, spectralAxis, redshift, lambdaRange);
         m_StartTheoretical[i] = supportRange.GetBegin();
         m_EndTheoretical[i] = supportRange.GetEnd();
         m_StartNoOverlap[i] = supportRange.GetBegin();
         m_EndNoOverlap[i] = supportRange.GetEnd();
 
-
-        Float64 mu = m_Rays[i].GetPosition()*(1+redshift);
-        Float64 c = GetLineWidth(mu, redshift, m_Rays[i].GetIsEmission(), m_profile[i]);
-        Float64 winsize = GetNSigmaSupport(m_profile[i])*c;
-        Int32 minLineOverlap = m_OutsideLambdaRangeOverlapThreshold*winsize;
-        if( m_StartNoOverlap[i] >= (spectralAxis.GetSamplesCount()-1-minLineOverlap) || m_EndNoOverlap[i] <=minLineOverlap){
+        if(supportRange.GetBegin()>supportRange.GetEnd()) //in this case the line is completely outside the lambdarange
+        {
             m_OutsideLambdaRangeList[i]=true;
-        }else{
-            m_OutsideLambdaRangeList[i]=false;
+        }else{  //in this case the line is completely inside the lambdarange or with partial overlap
+            Float64 mu = m_Rays[i].GetPosition()*(1+redshift);
+            Float64 c = GetLineWidth(mu, redshift, m_Rays[i].GetIsEmission(), m_profile[i]);
+            Float64 winsize = GetNSigmaSupport(m_profile[i])*c;
+            Int32 minLineOverlap = m_OutsideLambdaRangeOverlapThreshold*winsize;
+            Float64 startLbda = spectralAxis[m_StartNoOverlap[i]];
+            Float64 endLbda = spectralAxis[m_EndNoOverlap[i]];
+
+            if( startLbda >= (lambdaRange.GetEnd()-minLineOverlap) || endLbda<=(lambdaRange.GetBegin()+minLineOverlap) ){
+                m_OutsideLambdaRangeList[i]=true;
+            }else{
+                m_OutsideLambdaRangeList[i]=false;
+            }
         }
 
         // set the global outside lambda range
@@ -306,13 +319,15 @@ TInt32RangeList CMultiLine::getSupport()
  **/
 TInt32Range CMultiLine::getSupportSubElt(Int32 subeIdx)
 {
+    /*
     TInt32Range support;
     if(m_OutsideLambdaRange==false){
-        if(m_OutsideLambdaRangeList[subeIdx]){
-            support = TInt32Range(-1, -1);
+        if( !m_OutsideLambdaRangeList[subeIdx] ){
+            support = TInt32Range(m_StartNoOverlap[subeIdx], m_EndNoOverlap[subeIdx]);
         }
-        support = TInt32Range(m_StartNoOverlap[subeIdx], m_EndNoOverlap[subeIdx]);
     }
+    */
+    TInt32Range support = TInt32Range(m_StartNoOverlap[subeIdx], m_EndNoOverlap[subeIdx]);
     return support;
 }
 
@@ -321,13 +336,15 @@ TInt32Range CMultiLine::getSupportSubElt(Int32 subeIdx)
  **/
 TInt32Range CMultiLine::getTheoreticalSupportSubElt(Int32 subeIdx)
 {
+    /*
     TInt32Range support;
     if(m_OutsideLambdaRange==false){
-        if(m_OutsideLambdaRangeList[subeIdx]){
-            support = TInt32Range(-1, -1);
+        if( !m_OutsideLambdaRangeList[subeIdx] ){
+            support = TInt32Range(m_StartTheoretical[subeIdx], m_EndTheoretical[subeIdx]);
         }
-        support = TInt32Range(m_StartTheoretical[subeIdx], m_EndTheoretical[subeIdx]);
     }
+    */
+    TInt32Range support = TInt32Range(m_StartTheoretical[subeIdx], m_EndTheoretical[subeIdx]);
     return support;
 }
 

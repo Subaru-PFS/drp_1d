@@ -587,6 +587,19 @@ std::string CLineModelElementList::getTplCorr_bestTplName()
     return m_tplcorrBestTplName;
 }
 
+Bool CLineModelElementList::initModelAtZ(Float64 redshift, const TFloat64Range& lambdaRange, const CSpectrumSpectralAxis &spectralAxis)
+{
+    m_Redshift = redshift;
+
+    //prepare the elements support
+    for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
+    {
+        m_Elements[iElts]->prepareSupport(spectralAxis, redshift, lambdaRange);
+    }
+
+    return true;
+}
+
 /**
  * \brief Prepares the context and fits the Linemodel to the spectrum, returning the merit of the fit.
  * Prepare the continuum.
@@ -603,18 +616,11 @@ std::string CLineModelElementList::getTplCorr_bestTplName()
  **/
 Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambdaRange, CLineModelResult::SLineModelSolution& modelSolution, Int32 contreest_iterations, bool enableLogging)
 {
-    m_Redshift = redshift;
-
-
     //initialize the model spectrum
     const CSpectrumSpectralAxis& spectralAxis = m_SpectrumModel->GetSpectralAxis();
     CSpectrumFluxAxis& modelFluxAxis = m_SpectrumModel->GetFluxAxis();
 
-    //prepare the elements
-    for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
-    {
-        m_Elements[iElts]->prepareSupport(spectralAxis, redshift, lambdaRange);
-    }
+    initModelAtZ(redshift, lambdaRange, spectralAxis);
 
     if(m_ContinuumComponent == "tplfit") //the support has to be already computed when LoadFitContinuum() is called
     {
@@ -2227,7 +2233,7 @@ Int32 CLineModelElementList::fitAmplitudesLinSolve( std::vector<Int32> EltsIdx, 
 * @param redshift, spectralAxis
 * @return 1 if successfully fitted, 0 if error, 2 if Lya not present, 3 if Lya not configured to be fitted in the catalog
 */
-Int32 CLineModelElementList::setLyaProfile(Float64 redshift , const CSpectrumSpectralAxis &spectralAxis)
+Int32 CLineModelElementList::setLyaProfile(Float64 redshift, const CSpectrumSpectralAxis &spectralAxis)
 {
     //1. retrieve the Lya index
     std::string lyaTag = "LyAE";

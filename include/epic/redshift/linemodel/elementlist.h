@@ -100,6 +100,8 @@ public:
     Float64 GetVelocitySup();
     Int32 ApplyVelocityBound();
 
+    Bool initModelAtZ(Float64 redshift, const TFloat64Range& lambdaRange, const CSpectrumSpectralAxis &spectralAxis);
+
     Float64 fit(Float64 redshift, const TFloat64Range& lambdaRange, CLineModelResult::SLineModelSolution &modelSolution, Int32 contreest_iterations=0, bool enableLogging=0);
     void fitWithModelSelection(Float64 redshift, const TFloat64Range& lambdaRange, CLineModelResult::SLineModelSolution &modelSolution);
     void SetFittingMethod(std::string fitMethod);
