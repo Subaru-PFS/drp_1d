@@ -229,7 +229,6 @@ Bool CProcessFlow::Chisquare( CProcessFlowContext& ctx, const std::string& Categ
     TFloat64Range lambdaRange;
     TFloat64Range redshiftRange;
     Float64       redshiftStep;
-
     ctx.GetParameterStore().Get( "lambdaRange", lambdaRange );
     ctx.GetParameterStore().Get( "redshiftRange", redshiftRange );
     ctx.GetParameterStore().Get( "redshiftStep", redshiftStep );
@@ -275,9 +274,6 @@ Bool CProcessFlow::Chisquare( CProcessFlowContext& ctx, const std::string& Categ
     std::string opt_dustFit;
     ctx.GetDataStore().GetScopedParam( "chisquare2solve.dustfit", opt_dustFit, "no" );
 
-    std::string opt_calibrationPath;
-    ctx.GetDataStore().GetScopedParam( "calibrationPath", opt_calibrationPath, "calibration" );
-
     Log.LogInfo( "Process Chisquare using overlapThreshold: %.3f", overlapThreshold);
     Log.LogInfo( "Process Chisquare using component: %s", opt_spcComponent.c_str());
     Log.LogInfo( "Process Chisquare using extinction: %s", opt_extinction.c_str());
@@ -285,8 +281,10 @@ Bool CProcessFlow::Chisquare( CProcessFlowContext& ctx, const std::string& Categ
 
     // prepare the unused masks
     std::vector<CMask> maskList;
-
-    CMethodChisquare2Solve solve(opt_calibrationPath);
+    //retrieve the calibration dir path
+    std::string calibrationDirPath;
+    ctx.GetParameterStore().Get( "calibrationDir", calibrationDirPath );
+    CMethodChisquare2Solve solve(calibrationDirPath);
     std::shared_ptr< const CChisquare2SolveResult> solveResult = solve.Compute( ctx.GetDataStore(), ctx.GetSpectrum(), ctx.GetSpectrumWithoutContinuum(),
                                                                         ctx.GetTemplateCatalog(), filteredTemplateCategoryList,
                                                                         spcLambdaRange, redshifts, overlapThreshold, maskList, opt_spcComponent, opt_interp, opt_extinction, opt_dustFit);
@@ -427,9 +425,6 @@ Bool CProcessFlow::LineModelSolve( CProcessFlowContext& ctx )
     ctx.GetParameterStore().Get( "redshiftRange", redshiftRange );
     ctx.GetParameterStore().Get( "redshiftStep", redshiftStep );
 
-    std::string opt_calibrationPath;
-    ctx.GetDataStore().GetScopedParam( "calibrationPath", opt_calibrationPath, "calibration" );
-
     TFloat64Range spcLambdaRange;
     ctx.GetSpectrum().GetSpectralAxis().ClampLambdaRange( lambdaRange, spcLambdaRange );
 
@@ -440,7 +435,11 @@ Bool CProcessFlow::LineModelSolve( CProcessFlowContext& ctx )
     TFloat64List redshifts = redshiftRange.SpreadOver( redshiftStep );
     DebugAssert( redshifts.size() > 0 );
 
-    CLineModelSolve Solve(opt_calibrationPath);
+
+    //retrieve the calibration dir path
+    std::string calibrationDirPath;
+    ctx.GetParameterStore().Get( "calibrationDir", calibrationDirPath );
+    CLineModelSolve Solve(calibrationDirPath);
     std::shared_ptr<const CLineModelSolveResult> solveResult = Solve.Compute( ctx.GetDataStore(),
                                           ctx.GetSpectrum(),
                                           ctx.GetSpectrumWithoutContinuum(),
@@ -526,10 +525,10 @@ Bool CProcessFlow::DecisionalTree7( CProcessFlowContext& ctx )
     ctx.GetParameterStore().Get( "redshiftStep", redshiftStep );
     ctx.GetParameterStore().Get( "templateCategoryList", templateCategoryList );
 
-    std::string opt_calibrationPath;
-    ctx.GetDataStore().GetScopedParam( "calibrationPath", opt_calibrationPath, "calibration" );
-
-    COperatorDTree7Solve Solve(opt_calibrationPath);
+    //retrieve the calibration dir path
+    std::string calibrationDirPath;
+    ctx.GetParameterStore().Get( "calibrationDir", calibrationDirPath );
+    COperatorDTree7Solve Solve(calibrationDirPath);
     std::shared_ptr<CDTree7SolveResult> solveResult = Solve.Compute( ctx.GetDataStore(), ctx.GetSpectrum(), ctx.GetSpectrumWithoutContinuum(),
                                                                         ctx.GetTemplateCatalog(), templateCategoryList, ctx.GetRayCatalog(),
                                                                         lambdaRange, redshiftRange, redshiftStep);
@@ -560,10 +559,10 @@ Bool CProcessFlow::DecisionalTreeA( CProcessFlowContext& ctx )
     ctx.GetParameterStore().Get( "overlapThreshold", overlapThreshold );
     ctx.GetParameterStore().Get( "templateCategoryList", templateCategoryList );
 
-    std::string opt_calibrationPath;
-    ctx.GetDataStore().GetScopedParam( "calibrationPath", opt_calibrationPath, "calibration" );
-
-    COperatorDTreeASolve Solve(opt_calibrationPath);
+    //retrieve the calibration dir path
+    std::string calibrationDirPath;
+    ctx.GetParameterStore().Get( "calibrationDir", calibrationDirPath );
+    COperatorDTreeASolve Solve(calibrationDirPath);
     std::shared_ptr<const CDTreeASolveResult> solveResult = Solve.Compute( ctx.GetDataStore(), ctx.GetSpectrum(), ctx.GetSpectrumWithoutContinuum(),
                                                                         ctx.GetTemplateCatalog(), templateCategoryList, ctx.GetRayCatalog(),
                                                                         lambdaRange, redshiftRange, redshiftStep,
@@ -584,14 +583,10 @@ Bool CProcessFlow::DecisionalTreeB( CProcessFlowContext& ctx )
     TFloat64Range redshiftRange;
     Float64       redshiftStep;
     TStringList     templateCategoryList;
-
     ctx.GetParameterStore().Get( "lambdaRange", lambdaRange );
     ctx.GetParameterStore().Get( "redshiftRange", redshiftRange );
     ctx.GetParameterStore().Get( "redshiftStep", redshiftStep );
     ctx.GetParameterStore().Get( "templateCategoryList", templateCategoryList );
-
-    std::string opt_calibrationPath;
-    ctx.GetDataStore().GetScopedParam( "calibrationPath", opt_calibrationPath, "calibration" );
 
     const CSpectrumSpectralAxis& spcSpectralAxis = ctx.GetSpectrum().GetSpectralAxis();
     TFloat64Range spcLambdaRange;
@@ -604,7 +599,10 @@ Bool CProcessFlow::DecisionalTreeB( CProcessFlowContext& ctx )
     TFloat64List redshifts = redshiftRange.SpreadOver( redshiftStep );
     DebugAssert( redshifts.size() > 0 );
 
-    COperatorDTreeBSolve Solve(opt_calibrationPath);
+    //retrieve the calibration dir path
+    std::string calibrationDirPath;
+    ctx.GetParameterStore().Get( "calibrationDir", calibrationDirPath );
+    COperatorDTreeBSolve Solve(calibrationDirPath);
     std::shared_ptr<const CDTreeBSolveResult> solveResult = Solve.Compute( ctx.GetDataStore(), ctx.GetSpectrum(), ctx.GetSpectrumWithoutContinuum(),
                                                                         ctx.GetTemplateCatalog(), templateCategoryList, ctx.GetRayCatalog(),
                                                                         spcLambdaRange, redshifts);
@@ -629,8 +627,6 @@ Bool CProcessFlow::DecisionalTreeC( CProcessFlowContext& ctx )
     ctx.GetParameterStore().Get( "redshiftStep", redshiftStep );
     ctx.GetParameterStore().Get( "templateCategoryList", templateCategoryList );
 
-    std::string opt_calibrationPath;
-    ctx.GetDataStore().GetScopedParam( "calibrationPath", opt_calibrationPath, "calibration" );
 
     const CSpectrumSpectralAxis& spcSpectralAxis = ctx.GetSpectrum().GetSpectralAxis();
     TFloat64Range spcLambdaRange;
@@ -643,7 +639,10 @@ Bool CProcessFlow::DecisionalTreeC( CProcessFlowContext& ctx )
     TFloat64List redshifts = redshiftRange.SpreadOver( redshiftStep );
     DebugAssert( redshifts.size() > 0 );
 
-    COperatorDTreeCSolve Solve(opt_calibrationPath);
+    //retrieve the calibration dir path
+    std::string calibrationDirPath;
+    ctx.GetParameterStore().Get( "calibrationDir", calibrationDirPath );
+    COperatorDTreeCSolve Solve(calibrationDirPath);
     std::shared_ptr<const CDTreeCSolveResult> solveResult = Solve.Compute( ctx.GetDataStore(), ctx.GetSpectrum(), ctx.GetSpectrumWithoutContinuum(),
                                                                         ctx.GetTemplateCatalog(), templateCategoryList, ctx.GetRayCatalog(),
                                                                         spcLambdaRange, redshifts);
