@@ -7,14 +7,6 @@ Created on Fri Dec  9 20:12:38 2016
 
 import os
 import sys
-import re
-import random
-
-import matplotlib as mpl
-mpl.use('Qt5Agg')
-
-import matplotlib.pyplot as plt
-import numpy as np
 
 import argparse
 
@@ -79,12 +71,48 @@ class Spectrumlist(object):
         """
         Split the spectrumlist into N subsets with subsetCount items in each subsets
         """
+        verbose = 0
+        print("INFO: writing subsets with count: {}".format(subsetCount))
+        print("INFO: writing subsets files in directory: {}".format(outputDirPath))
         iCountSubset = 0
         iCountInSubset = 0
-        for k, f in enumerate(self.fvect):
+        for k, f in enumerate(self.fvect): 
+            if verbose:                        
+                print("INFO: k={}".format(k))
+                print("INFO: iCountInSubset={}, subsetCount={}".format(iCountInSubset, subsetCount))
+                print("type iCountInSubset={}".format(type(iCountInSubset)))
+                print("type subsetCount={}".format(type(subsetCount)))
+            if iCountInSubset==subsetCount:
+                if verbose:
+                    print("INFO: switching subset file, iCountSubset={}".format(iCountSubset))
+                fsub.close()
+                iCountInSubset = 0
+                iCountSubset+=1
+                if verbose:
+                    print("INFO: switching subset file, after inc. iCountSubset={}".format(iCountSubset))
+                
             if iCountInSubset==0:
-                subsetFilename = "".format(self.name)
-                f = open()
+                name_noext = os.path.splitext(self.name)[0]
+                subsetFilename = "{}_{}.spectrumlist".format(name_noext, iCountSubset)
+                subsetFilePath = os.path.join(outputDirPath, subsetFilename)
+                fsub = open(subsetFilePath, 'w')
+                print("INFO: opening subset file: {}".format(subsetFilename))
+                
+            if len(self.errfvect) == len(self.fvect):
+                fsub.write("{}\t{}\n".format(self.fvect[k], self.errfvect[k]))
+            else:                        
+                fsub.write("{}\n".format(self.fvect[k]))
+            
+            if verbose:
+                print("INFO: inc. iCountInSubset={}".format(iCountInSubset))
+            iCountInSubset+=1
+            if verbose:
+                print("INFO: after inc. iCountInSubset={}".format(iCountInSubset))
+        
+        try:
+            fsub.close()
+        except:
+            pass
         
                         
         
@@ -96,6 +124,8 @@ def StartFromCommandLine( argv ) :
                     help="path to the list file to be loaded") 
                     
     #options to filter the spectrumlist
+    parser.add_argument("-f", "--filter", dest="filter", action='store_true',
+                    help="enable spectrumlist filtering")
     parser.add_argument("-r", "--refPath", dest="refPath", default="",
                     help="path to the reference file to be loaded")    
                     
@@ -104,16 +134,28 @@ def StartFromCommandLine( argv ) :
     parser.add_argument("-s", "--sfrRange", dest="sfrRange", default="-1.0 10000.0",
                     help="sfr range filter for the histograms")
     parser.add_argument("-z", "--zRange", dest="zRange", default="-1.0 20.0",
-                    help="redshift range filter for the histograms")          
+                    help="redshift range filter for the histograms")   
+                    
+    #option to split the spectrumlist
+    
+    parser.add_argument("-d", "--divide", dest="divide", action='store_true',
+                    help="enable spectrumlist dividing/splitting into subsets")
+    parser.add_argument("-n", "--dividecount", dest="dividecount", default=100,
+                    help="dividing/splitting count") 
           
     options = parser.parse_args()
     #print(options)
 
     if os.path.exists(options.listPath) :
         rpath = os.path.abspath(options.listPath)
-        print('using full path: {0}'.format(rpath))
+        print('using full path: {}'.format(rpath))
         spclist = Spectrumlist(rpath)
-        if os.path.exists(options.refPath):
+ 
+        if options.filter:
+            if not os.path.exists(options.refPath):
+                print("ERROR: ref path does not exit, aborting...".format(options.refPath))
+            else:
+                print('filtering using ref. path: {}'.format(options.refPath))
             zRange = [-1.0, 20.0]
             zRange[0] = float(options.zRange.split(" ")[0])
             zRange[1] = float(options.zRange.split(" ")[1])
@@ -125,6 +167,14 @@ def StartFromCommandLine( argv ) :
             sfrRange[1] = float(options.sfrRange.split(" ")[1]) 
             
             spclist.filterSpectrumList(options.refPath, magmin=magRange[0], magmax=magRange[1], zmin=zRange[0], zmax=zRange[1], sfrmin=sfrRange[0], sfrmax=sfrRange[1])
+        elif options.divide :
+            dirpath = os.path.split(options.listPath)[0]
+            rpath = os.path.abspath(dirpath)
+            outputPath = os.path.join(rpath, "spectrumlist_subs_{}".format(options.dividecount))
+            if not os.path.exists(outputPath):
+                os.mkdir(outputPath)
+            print('splitting using full path: {}'.format(outputPath))
+            spclist.splitIntoSubsets(int(options.dividecount), outputPath)
     else :
         print("Error: invalid arguments")
         exit()
