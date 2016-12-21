@@ -77,7 +77,7 @@ public:
     Float64 getFitContinuum_tplAmplitude();
     void SetContinuumComponent(std::string component);
 
-    Float64 EstimateDTransposeD(const TFloat64Range& lambdaRange, std::__cxx11::string spcComponent);
+    Float64 EstimateDTransposeD(const TFloat64Range& lambdaRange, std::string spcComponent);
 
 
     std::string getTplCorr_bestTplName();
