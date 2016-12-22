@@ -684,34 +684,6 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
 
     //ComputeArea2(*result);
 
-
-//    if(result->Extrema.size()>0){
-//        Log.LogInfo( "LineModel Solution: best z found = %.5f", result->Extrema[0]);
-//    }else{
-//        Log.LogInfo( "LineModel Solution: no extrema found...");
-//    }
-
-   /*
-   //  //saving the best model for viewing
-    if(result->Extrema.size()>0){
-        Float64 _chi=0.0;
-        CLineModelResult::SLineModelSolution _lineModelSolution;
-        ModelFit( spectrum, model, result->restRayList, lambdaRange, result->Extrema[0], _chi, _lineModelSolution);
-        //*
-        //CSpectrumFluxAxis& sfluxAxisPtr = model.GetFluxAxis();
-        //CSpectrumFluxAxis& modelFluxAxis = model.GetFluxAxis();
-        //sfluxAxisPtr = modelFluxAxis;
-        CSpectrum spcmodel = model.GetModelSpectrum();
-
-        CSpectrumIOFitsWriter writer;
-        Bool retVal1 = writer.Write( "model.fits",  spcmodel);
-
-        if(retVal1){
-            CSpectrum s(spectrum);
-            Bool retVal2 = writer.Write( "spectrum.fits",  s);
-        }
-    }
-    //*/
     return result;
 
 }

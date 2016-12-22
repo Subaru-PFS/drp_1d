@@ -124,7 +124,7 @@ void checkProfileValue(std::string linecatalogPath,
         Float64 profileValue = model.getModelFluxVal(iLambda);
         Float64 refFluxValue = refProfileFluxValues[k];
         //BOOST_CHECK_CLOSE_FRACTION( profileValue, refFluxValue, 1e-5);
-        BOOST_CHECK_SMALL( abs(profileValue - refFluxValue), 1e-3);
+        BOOST_CHECK_SMALL( std::abs(profileValue - refFluxValue), 1e-3);
     }
 
     if(enableGradientCheck)
@@ -137,7 +137,7 @@ void checkProfileValue(std::string linecatalogPath,
                 Float64 iLambda = spcSpectralAxis.GetIndexAtWaveLength(lambdas[k]);
                 Float64 val = model.getModelFluxDerivEltVal(validEltsIdx[iElt], iLambda);
                 Float64 refDerivAmpValue = refProfileGradientValues[k][iElt];
-                BOOST_CHECK_SMALL( abs(val - refDerivAmpValue), 1e-5);
+                BOOST_CHECK_SMALL( std::abs(val - refDerivAmpValue), 1e-5);
             }
 
         }
@@ -149,7 +149,7 @@ void checkProfileValue(std::string linecatalogPath,
             Float64 iLambda = spcSpectralAxis.GetIndexAtWaveLength(lambdas[k]);
             Float64 val = model.getModelFluxDerivSigmaVal(iLambda);
             Float64 refDerivVelValue = refProfileGradientValues[k][idxVelGradient];
-            BOOST_CHECK_SMALL( abs(val - refDerivVelValue), 1e-4);
+            BOOST_CHECK_SMALL( std::abs(val - refDerivVelValue), 1e-4);
         }
     }
 

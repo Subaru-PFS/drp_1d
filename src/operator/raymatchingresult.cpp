@@ -71,7 +71,7 @@ Void CRayMatchingResult::SaveSolutionSetToStream( std::ostream& stream,  TSoluti
 	{
 	  std::string strMNUM= "";
 	  TSolutionSet currentSet = selectedResults[iSol];
-	  sprintf( tmpChar, "%d", currentSet.size() );
+      sprintf( tmpChar, "%d", (Int32)currentSet.size() );
 	  strMNUM.append( tmpChar );
 	  std::string strZ= "";
 	  sprintf( tmpChar, "%.10f", GetMeanRedshiftSolution( currentSet ) );

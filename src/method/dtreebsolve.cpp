@@ -371,16 +371,6 @@ Bool COperatorDTreeBSolve::GetCombinedRedshift(CDataStore& store)
     }
     //Log.LogInfo( "dtreeBsolve : chi2lm size=%d", chi2lm.size());
 
-    /*
-    // save all merits in a temp. txt file
-    FILE* f = fopen( "dtreeb_merits_dbg.txt", "w+" );
-    for( Int32 i=0; i<results->Redshifts.size(); i++ )
-    {
-        fprintf( f, "%i %f %f %f %f\n", i, results->Extrema[i], results->GetExtremaMerit(i)/((float)results->nSpcSamples), chi2nc[i], chi2continuum[i] );//*1e12);
-    }
-    fclose( f );
-    //*/
-
     //save the combined chisquare result
     resultCombined->ChiSquare.resize( znc.size() );
     resultCombined->Redshifts.resize( znc.size() );
