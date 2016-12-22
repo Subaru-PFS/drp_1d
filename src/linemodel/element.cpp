@@ -379,6 +379,7 @@ Bool CLineModelElement::LoadDataExtinction()
             }
         }
     }
+    file.close();
     if(i<m_dataN)
     {
         Log.LogError( "Read: linemodel- extinction residue: data not read successfully" );

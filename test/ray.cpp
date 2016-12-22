@@ -70,7 +70,7 @@ NSEpic::TFloat64List UtilLoadDetectedRayPositions( const char* filePath ){
 
         }
     }
-
+    file.close();
 
     return posList;
 }
@@ -125,7 +125,7 @@ NSEpic::TFloat64List UtilLoadRayMatchingResults( const char* filePath ){
         }
     }
 
-
+    file.close();
     return zList;
 }
 

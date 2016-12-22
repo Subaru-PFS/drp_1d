@@ -220,7 +220,8 @@ Bool CContinuumDF::RemoveContinuum ( const CSpectrum& s, CSpectrumFluxAxis& noCo
 	estimatedBaseline =new float[nn];
 
 
-	fits_close_file(fptr2, &status);
+    //fits_close_file(fptr2, &status);
+    fits_close_file(fptr2BIS, &status);
 
 
 	CSpectrum s_baseline;

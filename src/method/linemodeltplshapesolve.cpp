@@ -327,7 +327,7 @@ Bool CLineModelTplshapeSolve::LoadVelocities( const char* filePath, Float64& elv
         }
         readNums++;
     }
-
+    file.close();
     if(readNums!=2)
     {
         return false;

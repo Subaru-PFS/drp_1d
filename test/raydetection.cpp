@@ -79,7 +79,7 @@ NSEpic::TFloat64List UtilLoadDetectedRayPositions( const char* filePath ){
 
         }
     }
-
+    file.close();
 
     return posList;
 }

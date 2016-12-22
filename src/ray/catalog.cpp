@@ -111,7 +111,9 @@ Bool CRayCatalog::Load( const char* filePath )
 
     file.open( filePath, ifstream::in );
     if( file.rdstate() & ios_base::failbit )
+    {
         return false;
+    }
 
     string line;
 
@@ -224,6 +226,7 @@ Bool CRayCatalog::Load( const char* filePath )
 	      }
         }
     }
+    file.close();
 
     return true;
 }
@@ -268,7 +271,7 @@ Bool CRayCatalog::Save( const char* filePath )
         file << std::endl;
 
     }
-
+    file.close();
     return true;
 }
 

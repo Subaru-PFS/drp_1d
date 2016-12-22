@@ -79,7 +79,7 @@ Bool CSpectrumIOAsciiReader::Read( const char* filePath, CSpectrum& spectrum )
 	  i++;
         }
     }
-
+  file.close();
   Log.LogDebug ( "File contents read as ASCII characters." );
   return true;
 }

@@ -230,7 +230,7 @@ Int32 getVelocitiesFromRefFile( const char* filePath, std::string spcid, Float64
             }
         }
     }
-
+    file.close();
     return true;
 }
 
