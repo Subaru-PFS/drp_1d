@@ -20,7 +20,7 @@ CMethodChisquare2Solve::CMethodChisquare2Solve( std::string calibrationPath )
 
 CMethodChisquare2Solve::~CMethodChisquare2Solve()
 {
-
+    delete m_chiSquareOperator;
 }
 
 

@@ -33,7 +33,7 @@ public:
     typedef std::vector<EStatus> TStatusList;
 
     COperator();
-    virtual ~COperator();
+    virtual ~COperator()=0;
 
     virtual  std::shared_ptr<COperatorResult> Compute( const CSpectrum& spectrum,
                                                        const CTemplate& tpl,

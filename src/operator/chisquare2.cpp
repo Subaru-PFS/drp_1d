@@ -47,7 +47,7 @@ COperatorChiSquare2::COperatorChiSquare2( std::string calibrationPath )
     }else
     {
         m_NdataCalzetti = 1e5;
-        m_dataCalzetti = (Float64 *) malloc(m_NdataCalzetti* sizeof(Float64));
+        m_dataCalzetti = new Float64 [(int)m_NdataCalzetti]();
 
         std::string line;
         // Read file line by line
@@ -72,12 +72,14 @@ COperatorChiSquare2::COperatorChiSquare2( std::string calibrationPath )
         //Allocate buffer for Ytpl reinit during Dust-fit loop
         m_YtplRawBufferMaxBufferSize = 10*1e6; //allows array from 0A to 100000A with dl=0.01
         m_YtplRawBuffer = (Float64 *) malloc(m_YtplRawBufferMaxBufferSize* sizeof(Float64));
+        m_YtplRawBuffer = new Float64[(int)m_YtplRawBufferMaxBufferSize]();
 
         //precomte the dust-coeff table
         m_nDustCoeff = 10;
         m_dustCoeffStep = 0.1;
         m_dustCoeffStart = 0.0;
-        m_dataDustCoeff = (Float64 *) malloc(m_nDustCoeff*m_NdataCalzetti * sizeof(Float64));
+        m_dataDustCoeff = new Float64[(int)(m_nDustCoeff*m_NdataCalzetti)]();
+
         for(Int32 kDust=0; kDust<m_nDustCoeff; kDust++)
         {
 
@@ -94,7 +96,9 @@ COperatorChiSquare2::COperatorChiSquare2( std::string calibrationPath )
 
 COperatorChiSquare2::~COperatorChiSquare2()
 {
-
+    delete[] m_dataCalzetti;
+    delete[] m_YtplRawBuffer;
+    delete[] m_dataDustCoeff;
 }
 
 
@@ -539,6 +543,11 @@ std::shared_ptr<COperatorResult> COperatorChiSquare2::Compute(const CSpectrum& s
         //Float64* precomputedFineGridTplFlux = templateFine.GetFluxAxis().GetSamples();
         // pfg with malloc
         precomputedFineGridTplFlux = (Float64*)malloc(nTgt*sizeof(Float64));
+        if(precomputedFineGridTplFlux == NULL)
+        {
+            Log.LogError("Chisquare2, unable to allocate the precomputed fine grid buffer... aborting!");
+            return NULL;
+        }
         // pfg with static array => doesn't work
         //nTgt = 999999;
         //Float64 precomputedFineGridTplFlux[999999];
@@ -743,6 +752,11 @@ const Float64*  COperatorChiSquare2::getDustCoeff(Float64 dustCoeff, Float64 max
 
     Int32 nSamples = maxLambda+1; //+1 for security
     Float64* dustCoeffs = (Float64*)malloc(nSamples*sizeof(Float64));
+    if(dustCoeffs == NULL)
+    {
+        Log.LogError("Chisquare2, unable to allocate the dust-coeffs... aborting!");
+        return NULL;
+    }
 
     for(Int32 kl=0; kl<nSamples; kl++)
     {
