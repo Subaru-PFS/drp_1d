@@ -10,7 +10,11 @@ import sys
 
 import argparse
 
-import reference
+try:
+    import reference
+except ImportError:
+    print("Import ERROR: unable to load the reference package. some functionnalities will be unavailable...")
+
 
 class Spectrumlist(object):
     def __init__(self, path):
@@ -76,6 +80,7 @@ class Spectrumlist(object):
         print("INFO: writing subsets files in directory: {}".format(outputDirPath))
         iCountSubset = 0
         iCountInSubset = 0
+        subsetFilePathList = []
         for k, f in enumerate(self.fvect): 
             if verbose:                        
                 print("INFO: k={}".format(k))
@@ -95,6 +100,7 @@ class Spectrumlist(object):
                 name_noext = os.path.splitext(self.name)[0]
                 subsetFilename = "{}_{}.spectrumlist".format(name_noext, iCountSubset)
                 subsetFilePath = os.path.join(outputDirPath, subsetFilename)
+                subsetFilePathList.append(subsetFilePath)
                 fsub = open(subsetFilePath, 'w')
                 print("INFO: opening subset file: {}".format(subsetFilename))
                 
@@ -114,6 +120,7 @@ class Spectrumlist(object):
         except:
             pass
         
+        return subsetFilePathList
                         
         
         
