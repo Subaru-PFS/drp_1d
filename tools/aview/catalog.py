@@ -200,8 +200,8 @@ class Catalog(object):
         mres.plot(exportPath=exportPath)
 
         
-    def plotInZplane(self):
-        if 0:
+    def plotInZplane(self, enableNominalAmpColors=False, overrideCatalogName=""):
+        if 1:
             #EUCLID
             obs_lambda_min = 12500.0
             obs_lambda_max = 18500.0
@@ -209,7 +209,7 @@ class Catalog(object):
             #PFS
             obs_lambda_min = 3800.0
             obs_lambda_max = 12600.0
-        if 1:        
+        if 0:        
             #VVDS
             obs_lambda_min = 5800.0
             obs_lambda_max = 9400.0
@@ -237,13 +237,19 @@ class Catalog(object):
 
         for iz,z in enumerate(zaxis):
             ctlg = self.getShiftedCatalog(z, filter_type, filter_force)
+            max_nominal_amp = np.max(np.array(ctlg['nominalamp']))
+            
             print("Processing for z={}".format(z))
             #print("catalog = {}".format(ctlg))
             for ic in range(nlines):
-                a = ctlg['lambda'][ic]
+                lbda = ctlg['lambda'][ic]
+                amp = ctlg['nominalamp'][ic]
                 #print("lambda for line={} and z={} is: lambda={}".format(ctlg['name'][ic],z,ctlg['lambda'][ic])) 
-                if a >= obs_lambda_min and a<=obs_lambda_max:
-                    matrix[iz,ic] = 1.0
+                if lbda >= obs_lambda_min and lbda<=obs_lambda_max:
+                    if not enableNominalAmpColors:
+                        matrix[iz,ic] = 1.0
+                    else:
+                        matrix[iz,ic] = (amp/max_nominal_amp)**0.25+0.5
                 else:
                     matrix[iz,ic] = -0.50
         
@@ -262,7 +268,11 @@ class Catalog(object):
         
         pp.xlabel('z')
         pp.ylabel('LINE')
-        name1 = "catalog: {}\nLines presence = f(z) for observed spectrum in [{:.1f}A - {:.1f}A]\nblack=present, white=absent".format(self.name, obs_lambda_min, obs_lambda_max)
+        if overrideCatalogName=="":
+            ctlgName = self.name
+        else:
+            ctlgName = overrideCatalogName
+        name1 = "catalog: {}\nLines presence = f(z) for observed spectrum in [{:.1f}A - {:.1f}A]\nblack=present, white=absent".format(ctlgName, obs_lambda_min, obs_lambda_max)
         pp.title(name1)
         
         
@@ -315,9 +325,11 @@ class Catalog(object):
         _linename = [x for i,x in enumerate(self.linename) if i in inds]
         _lineforce = [x for i,x in enumerate(self.lineforce) if i in inds]
         _linetype = [x for i,x in enumerate(self.linetype) if i in inds]
+        _linenominalamp = [x for i,x in enumerate(self.linenominalamp) if i in inds]
+        
         
         return {"lambda":_linelambda, "lambdarest":_linelambdarest, "name":_linename,
-                "force":_lineforce, "type":_linetype} 
+                "force":_lineforce, "type":_linetype, "nominalamp":_linenominalamp} 
                 
     def getMaskOutsideLines(self, lambdavect, z, dlambdaAroundLine=100.0):
         mask = np.ones((len(lambdavect)))
@@ -453,10 +465,10 @@ def StartFromCommandLine( argv ) :
         #print(c.getShiftedCatalog(1.0, "E"))
         
         #c.plot()
-        #c.plotInZplane()  
-        c.plotNominalAmpsAsModelResult()
+        #c.plotInZplane(enableNominalAmpColors=True, overrideCatalogName="B13B")  
+        #c.plotNominalAmpsAsModelResult()
         
-        #print("the REDMINE (copy/paste) generated table is:\n{}".format(c.getRedmineTableString()))
+        print("the REDMINE (copy/paste) generated table is:\n{}".format(c.getRedmineTableString()))
         #print("the LATEX (copy/paste) generated table is:\n{}".format(c.getLatexTableString()))
         
         #lmResPath = "/home/aschmitt/code/python/linemodel_tplshape/amazed/output/spectrum_tpl_NEW_Im_extended.dat_TF/linemodelsolve.linemodel_fit_extrema_0.csv"
