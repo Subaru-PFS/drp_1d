@@ -2714,7 +2714,7 @@ def plotContinuumIndexes(resDir, diffthres, spcName=""):
         redshifts, merits = resList.getZCandidatesFromAmazedChi2Extrema(k, chi2Type="linemodel", nextrema=thres_extremasearch_id, enableZrangePerTpl=False)
         print("redshifts: {}".format(redshifts))       
         print("merits: {}".format(merits))  
-        thres_zref_zerr = 1e-1
+        thres_zref_zerr = 1e-2
         indsZrefExtremum = [i for i,z in enumerate(redshifts) if abs(z-zref)<thres_zref_zerr]
         if 0: #keep only the potential Ha/OII ambiguities
             thres_zwrong_zerr_min = 0.05*(1+zref)
@@ -2762,7 +2762,7 @@ def plotContinuumIndexes(resDir, diffthres, spcName=""):
     enablePlot = 0
     enableExport = 1
     enablePlotZref = 1
-    enablePlotZwrong = 0
+    enablePlotZwrong = 1
     enablePlotLineSeparation = 1
     
     if enablePlot or enableExport:
@@ -2774,8 +2774,11 @@ def plotContinuumIndexes(resDir, diffthres, spcName=""):
         idx_continuum_index_CIV = 4
         idx_continuum_index_CIII = 5
         
-        fig = plt.figure('continuum indexes'.format(), figsize=(16,12))
+        fig = plt.figure('continuum indexes - zref'.format(), figsize=(16,12))
         ax = fig.add_subplot(111)
+        
+        figWrong = plt.figure('continuum indexes - zwrong'.format(), figsize=(16,12))
+        axWrong = figWrong.add_subplot(111)
         
         if enablePlotZref:
             #xvect = range(len(continuumIndexesZrefList))
@@ -2816,7 +2819,16 @@ def plotContinuumIndexes(resDir, diffthres, spcName=""):
             print("5. xvect={}".format(xvect))
             print("5. yvect={}".format(yvect))
             ax.plot(xvect, yvect, 'xy', label='zref CIII')
-        
+            
+            ax.xaxis.grid(True,'major')
+            ax.yaxis.grid(True,'major')
+            ax.legend()
+            ax.set_ylabel('color')
+            ax.set_xlabel('break')
+            titleStr = "Continuum Indexes - zref, nSkippedZref = {}/{}".format(nSkippedZref, nres)
+            ax.set_title(titleStr)
+            
+            
         if enablePlotZwrong:
             #xvect = range(len(continuumIndexesZwrongList))
             #xvect = zrefZwrongList
@@ -2824,27 +2836,38 @@ def plotContinuumIndexes(resDir, diffthres, spcName=""):
             yvect = [a['color'][idx_continuum_index_OII] for a in continuumIndexesZwrongList if not np.isnan(a['break'][idx_continuum_index_OII]) and not np.isnan(a['color'][idx_continuum_index_OII])]
             print("4. xvect={}".format(xvect))
             print("4. yvect={}".format(yvect))
-            ax.plot(xvect, yvect, 'vb', label='zwrong OII')
+            axWrong.plot(xvect, yvect, 'vb', label='zwrong OII')
             
             
             xvect = [a['break'][idx_continuum_index_OIII] for a in continuumIndexesZwrongList if not np.isnan(a['break'][idx_continuum_index_OIII]) and not np.isnan(a['color'][idx_continuum_index_OIII])]
             yvect = [a['color'][idx_continuum_index_OIII] for a in continuumIndexesZwrongList if not np.isnan(a['break'][idx_continuum_index_OIII]) and not np.isnan(a['color'][idx_continuum_index_OIII])]
             print("5. xvect={}".format(xvect))
             print("5. yvect={}".format(yvect))
-            ax.plot(xvect, yvect, 'vg', label='zwrong OIII')
+            axWrong.plot(xvect, yvect, 'vg', label='zwrong OIII')
             
             xvect = [a['break'][idx_continuum_index_Ha] for a in continuumIndexesZwrongList if not np.isnan(a['break'][idx_continuum_index_Ha]) and not np.isnan(a['color'][idx_continuum_index_Ha])]
             yvect = [a['color'][idx_continuum_index_Ha] for a in continuumIndexesZwrongList if not np.isnan(a['break'][idx_continuum_index_Ha]) and not np.isnan(a['color'][idx_continuum_index_Ha])]
             print("6. xvect={}".format(xvect))
             print("6. yvect={}".format(yvect))
-            ax.plot(xvect, yvect, 'vr',label='zwrong Ha')
+            axWrong.plot(xvect, yvect, 'vr',label='zwrong Ha')
+            
+            axWrong.xaxis.grid(True,'major')
+            axWrong.yaxis.grid(True,'major')
+            axWrong.legend()
+            axWrong.set_ylabel('color')
+            axWrong.set_xlabel('break')
+            titleStr = "Continuum Indexes - zwrong, nSkippedZref = {}/{}".format(nSkippedZref, nres)
+            axWrong.set_title(titleStr)
             
         if enablePlotLineSeparation:
             a = 1.0
             b = 0.25
             xvect = [-1.0, 0.0, 1.0]
             yvect = [a*x+b for x in xvect]
-            ax.plot(xvect, yvect, 'k-', linestyle = "dashed", label='line: a={}, b={}'.format(a, b))
+            if enablePlotZref:
+                ax.plot(xvect, yvect, 'k-', linestyle = "dashed", label='line: a={}, b={}'.format(a, b))
+            if enablePlotZref:
+                axWrong.plot(xvect, yvect, 'k-', linestyle = "dashed", label='line: a={}, b={}'.format(a, b))
         
         #plt.xlim([1e-5, 10])
         #plt.ylim([0, 100])
@@ -2852,20 +2875,24 @@ def plotContinuumIndexes(resDir, diffthres, spcName=""):
         #ind = np.arange(len(OY))
         #pp.plot(xvect, yvect, 'x')
         #ax.set_xscale('log')
-        plt.grid(True) # Affiche la grille
-        plt.legend()
-        plt.ylabel('color')
-        plt.xlabel('break')
-        titleStr = "Continuum Indexes, nSkippedZref = {}/{}".format(nSkippedZref, nres)
-        plt.title(titleStr)
+        #plt.grid(True) # Affiche la grille
+        #plt.legend()
+        #plt.ylabel('color')
+        #plt.xlabel('break')
+        #titleStr = "Continuum Indexes, nSkippedZref = {}/{}".format(nSkippedZref, nres)
+        #plt.title(titleStr)
         
         if enableExport:
             outdir = os.path.join(resList.analysisoutputdir, "continuum_indexes")
             if not os.path.exists(outdir):
                 os.makedirs(outdir)
                 
-            outFigFile = os.path.join(outdir, 'continuum_indexes.png'.format())
-            plt.savefig( outFigFile, bbox_inches='tight')
+            if enablePlotZref:
+                outFigFile = os.path.join(outdir, 'continuum_indexes_zref.png'.format())
+                fig.savefig( outFigFile, bbox_inches='tight')
+            if enablePlotZwrong:
+                outFigFile = os.path.join(outdir, 'continuum_indexes_zwrong.png'.format())
+                figWrong.savefig( outFigFile, bbox_inches='tight')
             
             #export all continuum indexes in files
             for k in range(6):

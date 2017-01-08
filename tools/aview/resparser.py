@@ -1032,7 +1032,7 @@ class ResParser(object):
             for file in sorted(os.listdir(spcPath)):
                 #print("file: {}".format(file))
                 #print("self.getWithoutExt(file): {}".format(self.getWithoutExt(file)))
-                if spcnametag_noext == self.getWithoutExt(file):
+                if spcnametag_noext == self.getWithoutExt(file) and (file.endswith('.fits') or file.endswith('.FITS')):
                     strVal = os.path.join(spcPath, file)
                     break
                     
@@ -1043,7 +1043,8 @@ class ResParser(object):
         """
         #print("getNoiseFullPath: spcnametag: {}".format(spcnametag))
         spectrumlistline = self.getSpectrumlistline(spcnametag)
-        print("getNoiseFullPath: spcnametag: {}".format(spectrumlistline))
+        print("getNoiseFullPath: spectrumlistline: {}".format(spectrumlistline))
+        print("getNoiseFullPath: spectrumlistline size: {}".format(len(spectrumlistline)))
         if len(spectrumlistline) == 0:
             print("WARNING: unable to find spectrumlistline for the tag: {}".format(spcnametag))
             strVal = ""

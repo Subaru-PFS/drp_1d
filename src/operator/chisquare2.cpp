@@ -666,6 +666,32 @@ std::shared_ptr<COperatorResult> COperatorChiSquare2::Compute(const CSpectrum& s
                   additional_spcMask);
     }
 
+    //overlap warning
+    Float64 overlapValidInfZ = -1;
+    for (Int32 i=0;i<sortedRedshifts.size();i++)
+    {
+        if(result->Overlap[i]>=overlapThreshold && overlapValidInfZ==-1)
+        {
+            overlapValidInfZ=sortedRedshifts[i];
+            break;
+        }
+    }
+    Float64 overlapValidSupZ = -1;
+    for (Int32 i=sortedRedshifts.size()-1;i>=0;i--)
+    {
+        if(result->Overlap[i]>=overlapThreshold && overlapValidSupZ==-1)
+        {
+            overlapValidSupZ=sortedRedshifts[i];
+            break;
+        }
+    }
+    if(overlapValidInfZ!=sortedRedshifts[0] || overlapValidSupZ!=sortedRedshifts[sortedRedshifts.size()-1])
+    {
+        Log.LogInfo("Chisquare2, overlap warning for %s: minz=%.3f, maxz=%.3f", tpl.GetName().c_str(), overlapValidInfZ, overlapValidSupZ);
+    }
+
+
+
     // extrema
     Int32 extremumCount = 10;
     if(result->Redshifts.size()>extremumCount)

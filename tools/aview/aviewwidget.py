@@ -433,10 +433,12 @@ class AViewWidget(QtWidgets.QWidget):
         
         _sname = self.resList.list[self.resIdx].name
         spath = self.resParser.getSpcFullPath(_sname)
+        print("spc full path found is {}".format(spath))
         try:
             npath = self.resParser.getNoiseFullPath(_sname)
         except:
             npath = ""
+        print("noise full path found is {}".format(npath))
             
         if not self.iextremaredshift == -1: 
             idxExtrema = int(self.iextremaredshift)

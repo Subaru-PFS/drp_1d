@@ -2306,13 +2306,13 @@ Int32 CLineModelElementList::setLyaProfile(Float64 redshift, const CSpectrumSpec
         Float64 widthCoeffMin = 1.0;
         Float64 widthCoeffMax = 4.0;
         Int32 nWidthSteps = int((widthCoeffMax-widthCoeffMin)/widthCoeffStep+0.5);
-        Float64 asymCoeffStep = 1.0;//0.5;
+        Float64 asymCoeffStep = 0.5;
         Float64 asymCoeffMin = 0.0;
-        Float64 asymCoeffMax = 2.0;//2.5;
+        Float64 asymCoeffMax = 2.5;
         Int32 nAsymSteps = int((asymCoeffMax-asymCoeffMin)/asymCoeffStep+0.5);
         Float64 deltaStep = 0.5;
         Float64 deltaMin = 0.0;
-        Float64 deltaMax = 0.0;//4.0;
+        Float64 deltaMax = 4.0;
         Int32 nDeltaSteps = int((deltaMax-deltaMin)/deltaStep+0.5);
 
         Float64 bestWidth = widthCoeffMin;
@@ -2710,6 +2710,10 @@ Float64 CLineModelElementList::getLeastSquareMeritUnderElements()
  **/
 Float64 CLineModelElementList::getModelErrorUnderElement( Int32 eltId )
 {
+    if(eltId<0)
+    {
+        return -1.0;
+    }
     const CSpectrumFluxAxis& spcFluxAxis = m_SpcFluxAxis;
     const CSpectrumFluxAxis& modelFluxAxis = m_SpectrumModel->GetFluxAxis();
 
@@ -3081,10 +3085,19 @@ CLineModelResult::SLineModelSolution CLineModelElementList::GetModelSolution()
         Int32 eIdx = FindElementIndex(iRestRay);
         Int32 subeIdx = m_Elements[eIdx]->FindElementIndex(iRestRay);
         modelSolution.Rays.push_back(m_RestRayList[iRestRay]);
-        modelSolution.ElementId.push_back( eIdx );
-        modelSolution.Amplitudes.push_back(m_Elements[eIdx]->GetFittedAmplitude(subeIdx));
-        modelSolution.Errors.push_back(m_Elements[eIdx]->GetFittedAmplitudeErrorSigma(subeIdx));
-        modelSolution.FittingError.push_back(getModelErrorUnderElement(eIdx));
+
+        if(eIdx==-1 || subeIdx==-1)
+        {
+            modelSolution.ElementId.push_back( eIdx );
+            modelSolution.Amplitudes.push_back(m_Elements[eIdx]->GetFittedAmplitude(subeIdx));
+            modelSolution.Errors.push_back(-1.0);
+            modelSolution.FittingError.push_back(-1.0);
+        }else{
+            modelSolution.ElementId.push_back( eIdx );
+            modelSolution.Amplitudes.push_back(m_Elements[eIdx]->GetFittedAmplitude(subeIdx));
+            modelSolution.Errors.push_back(m_Elements[eIdx]->GetFittedAmplitudeErrorSigma(subeIdx));
+            modelSolution.FittingError.push_back(getModelErrorUnderElement(eIdx));
+        }
 
         //modelSolution.Widths.push_back(-1.0);
         //modelSolution.OutsideLambdaRange.push_back(true);
