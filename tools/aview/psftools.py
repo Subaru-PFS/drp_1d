@@ -126,33 +126,93 @@ class PsfTools(object):
         #print("wl support for the kernel is {}".format(wlvect))
         return kervect, wlvect
         
+def processSpc(spcpath, stype, enableExport, resolution, dx):
+    
+    spc = sp.Spectrum(spath = spcpath, stype=stype)
+    #spc.applyLambdaCrop(2000, 12000)
+    psft = PsfTools(psftype="instrument")
+    spcMod = psft.applyResolution(spc, R=resolution)
+    spcMod.interpolate(dx=dx)
+    spc.plotCompare(spcMod, modellinetype = "-b+")
+    
+    if enableExport:
+        path = os.path.split(spcpath)[0]
+        print("export: path = {}".format(path))
+        nameWext = os.path.split(spcpath)[1]
+        print("export: nameWext = {}".format(nameWext))
+        newName = "{}_convolvedR{}".format(os.path.splitext(nameWext)[0], resolution)
+        print("export: new name = {}".format(newName))
+        if 0:        
+            spcMod.exportFits(path, name=newName, addNoise=False, exportNoiseSpectrum=False)
+        else:
+            fullpath = os.path.join(path, "{}.dat".format(newName))
+            spcMod.applyLambdaCrop(1950, 11950)
+            spcMod.saveTpl(fullpath)
+        
+        
+def processDir(dirPath, stype, enableExport, resolution, dx):
+    fileList = listFiles(dirPath, stype)
+    for _file in fileList:
+        print("\n")
+        print("INFO: processing file: {}".format(_file))
+        fullPath = os.path.join(dirPath, _file)
+        processSpc(spcpath=fullPath, stype=stype, enableExport=enableExport, resolution=resolution, dx=dx)
+
+def listFiles(f1Directory, stype, exclstring="xrfctgrefardtasrdtrdsatrdtartcomplicatedstring"):
+    """
+    Scans input directories and build files list whose shape is Nx1
+    """
+    fileList = []
+    if stype=="template":
+        ext1 = '.dat'
+        ext2 = '.txt'
+    else:
+        ext1 = '.fits'
+        ext2 = '.FITS'
+    
+ 
+    for i,file in enumerate(sorted(os.listdir(f1Directory))):
+        if (file.endswith(ext1) or file.endswith(ext2)) and exclstring not in file:  
+            a1 = str(file)
+            #print("file found ={}".format(a1))
+            fileList.append(a1)
+    return fileList  
 
 def StartFromCommandLine( argv ) :	
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     
-    parser.add_argument("-s", "--spc", dest="spcPath", default="",
-                    help="path to the fits spectrum to be plotted")
+    parser.add_argument("-i", "--inputPath", dest="inputPath", default="",
+                    help="path to the input spectrum or directory to be processed : plotted, etc...")    
+    parser.add_argument("-t", "--type", 
+                        help="type of spectrum, can be in teh following list \
+                        {template, template-w0f2, vvds, pfs, pfs2, muse, hplana, euclid, pfs2reech, euclid_sim_noise, euclid_sim_siroct2016_flux, euclid_sim_siroct2016_noise}",  
+                        dest="spcType",     
+                        default="") 
     parser.add_argument("-e", "--export", dest="export", action='store_true',
                     help="enable export of the convolved spectrum")
+                    
+                    
+    parser.add_argument("-r", "--resolution", dest="resolution", default="5000",
+                    help="instrument resolution")
+    parser.add_argument("-d", "--deltalambda", dest="deltalambda", default="0.6",
+                    help="wavelength sampling")
+                    
     options = parser.parse_args()
                     
+    resolution = float(options.resolution)
+    dx = float(options.deltalambda)
+    print("INFO: using r={}".format(resolution))
+    print("INFO: using dlambda={}".format(dx))
 
-    if os.path.exists(options.spcPath):
-        spc = sp.Spectrum(spath = options.spcPath)
-        psft = PsfTools(psftype="instrument")
-        spcMod = psft.applyResolution(spc, R=300.0)
-        spcMod.interpolate(dx=0.6)
-        spc.plotCompare(spcMod, modellinetype = "-b+")
-        
-        if options.export:
-            path = os.path.split(options.spcPath)[0]
-            print("export: path = {}".format(path))
-            nameWext = os.path.split(options.spcPath)[1]
-            print("export: nameWext = {}".format(nameWext))
-            newName = "{}_convolved".format(os.path.splitext(nameWext)[0])
-            print("export: new name = {}".format(newName))
-            spcMod.exportFits(path, name=newName, addNoise=False, exportNoiseSpectrum=False)
-
+    if os.path.exists(options.inputPath):
+        if os.path.isdir(options.inputPath):
+            processDir(dirPath=options.inputPath, stype=options.spcType, enableExport=options.export,
+                   resolution=resolution, dx=dx)
+        elif os.path.isfile(options.inputPath):
+            processSpc(spcpath=options.inputPath, stype=options.spcType, enableExport=options.export,
+                   resolution=resolution, dx=dx)
+        else:
+            print("ERROR: input was not a file, nor a directory... aborting")
     else :
         print("Error: invalid argument count")
         exit()
@@ -166,5 +226,5 @@ def Main( argv ) :
 
  
 if __name__ == '__main__':
-    print("Spectrum")
+    print("psftools")
     Main( sys.argv )
