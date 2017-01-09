@@ -11,33 +11,47 @@ import time
 import argparse
 
 
-#cmd_subfolder = os.path.abspath("/home/aschmitt/gitlab/cpf-redshift/tools/aview/") #use locally
-#cmd_subfolder = os.path.abspath("/home/aschmitt/amazed_cluster/gitlab/cpf-redshift/tools/aview/") #use on hermes
-#if cmd_subfolder not in sys.path:
-#    print("inserting sys path : cmd_subfolder = {}".format(cmd_subfolder))
-#    sys.path.insert(0, cmd_subfolder)
-#import spectrum
+try:
+    cmd_subfolder = os.path.abspath("/home/aschmitt/gitlab/cpf-redshift/tools/aview/") #use locally
+    #cmd_subfolder = os.path.abspath("/home/aschmitt/amazed_cluster/gitlab/cpf-redshift/tools/aview/") #use on hermes
+    if cmd_subfolder not in sys.path:
+        print("inserting sys path : cmd_subfolder = {}".format(cmd_subfolder))
+        sys.path.insert(0, cmd_subfolder)
+    import reference
+except ImportError:
+    print("Import ERROR: unable to load the reference package. some functionnalities will be unavailable...")
+
 import spectrumlist
 
 
 
 class processHelper(object):
-    def __init__(self, confpath, binpath, rootoutputpath, dividecount):
+    def __init__(self, confpath, binpath, rootoutputpath, dividecount, opt_bracketing, refpath):
         self.logTagStr = "processHelper"
         self.configPath = confpath
         self.binPath = binpath
         self.baseoutputpath = rootoutputpath
+        
+        self.refPath = refpath
+        if self.refPath == "":
+            self.enableProcessAtZ = 0
+        else:
+            self.enableProcessAtZ = 1
+        if self.enableProcessAtZ and not dividecount==1:
+            print("ERROR: incompatible options : enableProcessAtZ and dividecount!=1. Aborting.")
+            return
+        if self.enableProcessAtZ:
+            self.refcatalog = reference.Reference(self.refPath)
 
         self.proc_date = time.strftime("%Y%m%d")          
 
-        #self.opt_bracketing = "" #no bracketing
-        self.opt_bracketing = "method" 
+        self.opt_bracketing = opt_bracketing #choices = "", "method"
         self.bracketing_templatesRootPath = "/home/aschmitt/amazed_cluster/calibration/templates/"
         
         self.loadConfig()
         
         #prepare the working dir
-        self.work_process_dir = os.path.abspath("work_process")
+        self.work_process_dir = os.path.abspath("process-work")
         if not os.path.exists(self.work_process_dir):
             os.mkdir(self.work_process_dir)        
         
@@ -54,6 +68,8 @@ class processHelper(object):
                 os.mkdir(self.baseoutputpath)
         else:
             self.subspclists=[]
+            
+        self.ready = True
             
                               
     def getConfigVal(self, tag):
@@ -164,7 +180,22 @@ class processHelper(object):
             
         #warning, hardcoded: always use only 1 proc. thread        
         argStr = "{} --thread-count {}".format(argStr, "1")
-        
+
+        if self.enableProcessAtZ:
+            #Warning: hardcoded read first spc entry in the spclist, assuming it's the spc nametag 
+            fspc = open(splListPath)
+            for line in fspc:
+                lineStr = line.strip()
+                if not lineStr.startswith('#'):
+                    data = lineStr.split("\t")
+                    if len(data)<2:
+                        data = lineStr.split(" ")
+                    data = [r for r in data if r != '']
+                    spcName = data[0]
+                    break
+            zprocess = self.refcatalog.getRedshift(spcName)
+            zstep = 1e-6
+            argStr = """{} --redshiftrange "{} {} {}" """.format(argStr, zprocess, zprocess, zstep) #ex, format: redshiftrange=0.0 5.0 0.0001
            
         outputName_base = "amazed_{}_m-{}_p-{}".format(self.proc_date, argMethod, argParamsLabel)
         if overrideSpclistIndex==-1:
@@ -202,15 +233,20 @@ class processHelper(object):
         process on the local machine
         """
         print("doProcessLocal...")
-        print("WARNING: LOCAL processing is DEPRECATED! not up to date !!!!, aborting...")
-        return        
+        if not self.ready:
+            print("processhelper not ready, aborting...")
+            return
+        #print("WARNING: LOCAL processing is DEPRECATED! not up to date !!!!, aborting...")
+        #return        
         
         if self.opt_bracketing == "method":
-            bracketing = self.prepareBracketing()        
+            bracketing = self.prepareBracketing()  
+            nproc = len(bracketing["method"])
         else:
             bracketing = ""
+            nproc=1
                         
-        for k in range(len(bracketing["method"])):  
+        for k in range(nproc):  
             if bracketing=="":              
                 argStr = self.prepareArgumentString()
             else:
@@ -221,7 +257,7 @@ class processHelper(object):
             print("INFO: bashCommand is {}".format(bashCommand))
             os.system(bashCommand) 
     
-    def doProcessQsub(self, dryrun=False):
+    def doProcess(self, dryrun=False, enableLocal=False):
         """
         prepare the .sh files to be sent to be qsub'd to the cluster
         1. prepare bracketing parameters
@@ -231,7 +267,9 @@ class processHelper(object):
         5. export the recombine info for post-processing recombination of the spclist-subsets
         """
         print("doProcessQsub...")
-        
+        if not self.ready:
+            print("processhelper not ready, aborting...")
+            return
         
         if self.opt_bracketing == "method":
             bracketing = self.prepareBracketing()    
@@ -251,52 +289,67 @@ class processHelper(object):
             
                 if len(self.subspclists)==0:
                     overrideSpclist=""
+                    overrideSpclistIndex = -1
                 else:
                     overrideSpclist=self.subspclists[ksubs]
+                    overrideSpclistIndex = ksubs
                     
                 if bracketing=="":              
-                    argStr = self.prepareArgumentString(overrideSpclist=overrideSpclist)
+                    argStr = self.prepareArgumentString(overrideSpclist=overrideSpclist,
+                                                        overrideSpclistIndex = overrideSpclistIndex)
                 else:
                     argStr = self.prepareArgumentString(overrideMethod = bracketing["method"][k], 
                                                         overrideParamFile = bracketing["parameters"][k], 
                                                         overrideTemplatesCtlg = bracketing["templates"][k],
                                                         overrideSpclist = overrideSpclist,
-                                                        overrideSpclistIndex = ksubs)
+                                                        overrideSpclistIndex = overrideSpclistIndex)
                 #print("INFO: arg string is {}".format(argStr))
                 
-                fpbsname = "pbs_{}_{}.sh".format(k, ksubs)
-                fpbspath = os.path.join(self.work_process_dir, fpbsname)
-                f = open(fpbspath, 'w')
-                #f.write("#PBS -t	1")
-                #f.write("\n")
-                f.write("#PBS -N amazed_{}_{}".format(k, ksubs))
-                f.write("\n")
-                f.write("#PBS -l nodes=1:ppn=1")
-                f.write("\n")
-                f.write("#PBS -l walltime=319:00:00")
-                f.write("\n")
-                f.write("\n")
-                f.write("cd $PBS_O_WORKDIR")
-                f.write("\n")
-                #f.write("taskID=$PBS_ARRAYID")
-                #f.write("\n")
-                f.write("\n")
-                f.write("logErr={}".format(os.path.join(self.baseoutputpath, "logErr_{}-{}.txt".format(k, ksubs) )))
-                f.write("\n")
-                f.write("logOut={}".format(os.path.join(self.baseoutputpath, "logOut_{}-{}.txt".format(k, ksubs) )))
-                f.write("\n")
-                f.write("\n")
-                
-                argStr = "{} 2>${{logErr}}>${{logOut}}".format(argStr)
-    
-                f.write("{} {}".format(self.binPath, argStr))
-                f.write("\n")
-                
-                #f.write("")
-                f.close()            
-                       
+                #creating .sh file
+                if not enableLocal: #cluster PBS files
+                    fpbsname = "pbs_{}_{}.sh".format(k, ksubs)
+                    fpbspath = os.path.join(self.work_process_dir, fpbsname)
+                    f = open(fpbspath, 'w')
+                    #f.write("#PBS -t	1")
+                    #f.write("\n")
+                    f.write("#PBS -N amazed_{}_{}".format(k, ksubs))
+                    f.write("\n")
+                    f.write("#PBS -l nodes=1:ppn=1")
+                    f.write("\n")
+                    f.write("#PBS -l walltime=319:00:00")
+                    f.write("\n")
+                    f.write("\n")
+                    f.write("cd $PBS_O_WORKDIR")
+                    f.write("\n")
+                    #f.write("taskID=$PBS_ARRAYID")
+                    #f.write("\n")
+                    f.write("\n")
+                    f.write("logErr={}".format(os.path.join(self.baseoutputpath, "logErr_{}-{}.txt".format(k, ksubs) )))
+                    f.write("\n")
+                    f.write("logOut={}".format(os.path.join(self.baseoutputpath, "logOut_{}-{}.txt".format(k, ksubs) )))
+                    f.write("\n")
+                    f.write("\n")
+                    
+                    argStr = "{} 2>${{logErr}}>${{logOut}}".format(argStr)
+        
+                    f.write("{} {}".format(self.binPath, argStr))
+                    f.write("\n")
+                    
+                    #f.write("")
+                    f.close()  
+                else: #local bash files
+                    fshname = "amazed-proc_{}_{}.sh".format(k, ksubs)
+                    fshpath = os.path.join(self.work_process_dir, fshname)
+                    f = open(fshpath, 'w')
+                    f.write("{} {}".format(self.binPath, argStr))
+                    f.write("\n")
+                    f.close() 
+                    
                 if not dryrun:
-                    bashCommand = "qsub {}".format(fpbspath)
+                    if not enableLocal:
+                        bashCommand = "qsub {}".format(fpbspath)
+                    else:
+                        bashCommand = "bash {}".format(fshpath)
                     print("INFO: bashCommand is {}\n\n".format(bashCommand))
                     os.system(bashCommand) 
                     
@@ -318,14 +371,19 @@ def StartFromCommandLine( argv ) :
                     help="enable spectrumlist dividing/splitting into subsets")
     parser.add_argument("-n", "--dividecount", dest="dividecount", default=100,
                     help="dividing/splitting count") 
-    parser.add_argument("-o", "--outputPath", dest="outputPath", default="output_process",
+    parser.add_argument("-o", "--outputPath", dest="outputPath", default="process-output",
                     help="path to the root output path") 
                     
     #option to do it local or qsub
     parser.add_argument("-l", "--local", dest="local", action='store_true',
                     help="enable process locally, default (False) is to send the jobs to the cluster through qsub")
-                    
-                    
+                 
+    parser.add_argument("-m", "--methodBracketing", dest="methodBracketing", default="",
+                help="bracketing of the parameters : choose between '' or 'method'") 
+                
+    parser.add_argument("-r", "--refPath", dest="refPath", default="",
+                help="path to the reference file, used for processing at z for each source. Forces spclist splitting with count=1") 
+    
                     
     options = parser.parse_args()
     #print(options)
@@ -333,23 +391,36 @@ def StartFromCommandLine( argv ) :
     if os.path.exists(options.configPath) :
         rpath = os.path.abspath(options.configPath)
         print('INFO: using config full path: {}'.format(rpath))
+        
         rbinpath = os.path.abspath(options.binPath)
-
+        if not os.path.exists(rbinpath):
+            print("ERROR: amazed binary file not found. Aborting")
+            exit()
+        else:
+            print('INFO: using bin full path: {}'.format(rbinpath))
+        
         routputpath = os.path.abspath(options.outputPath)
         if not os.path.exists(routputpath):
             os.mkdir(routputpath)
+        print('INFO: using output full path: {}'.format(routputpath))
         
-        if options.divide:
+        if options.divide and options.refPath=="":
             dividecount = options.dividecount
+        elif not options.refPath=="":
+            print("INFO: ref file path has been provided: spclist splitting forced with dividecount=1")
+            dividecount = 1
+            rrefPath = options.refPath
+            if not os.path.exists(rrefPath):
+                print("ERROR: reference file not found. Aborting")
+                exit()
         else:
-            dividecount =-1
+            dividecount = -1
             
-        cp = processHelper(confpath=rpath, binpath=rbinpath, rootoutputpath=routputpath, dividecount=dividecount)
+        opt_bracketing = options.methodBracketing
+        print("INFO: cmdline arg bracketing = {}".format(opt_bracketing))
+        cp = processHelper(confpath=rpath, binpath=rbinpath, rootoutputpath=routputpath, dividecount=dividecount, opt_bracketing=opt_bracketing, refpath=rrefPath)
             
-        if not options.local:
-            cp.doProcessQsub()
-        else:
-            cp.doProcessLocal()
+        cp.doProcess(dryrun=False, enableLocal=options.local)
     else :
         print("Error: invalid arguments")
         exit()

@@ -2701,8 +2701,9 @@ def plotContinuumIndexes(resDir, diffthres, spcName=""):
     continuumIndexesZwrongList = []
     zrefZwrongList = []
     
-    thres_extrema_id = 10
-    thres_extremasearch_id = 10
+    #if processAmazedatZ has been used, both of these has to be 1
+    thres_extrema_id = 1#10
+    thres_extremasearch_id = 1#10
     
     nSkippedZref = 0
     #nres = 20
@@ -2729,7 +2730,7 @@ def plotContinuumIndexes(resDir, diffthres, spcName=""):
         if len(indsZrefExtremum)>0 or len(indsZwrongExtrema)>0:
             filepaths, filenames = s.getAutoChi2FullPath(resList.list[k].name)
             filepath = filepaths[0] #0 for linemodel method
-            filepath = filepaths[1] #1 for amazed03 method
+            #filepath = filepaths[1] #1 for amazed03 method
             
             print("Found chi2 filepath: {}".format(filepath))
             if not os.path.exists(filepath):

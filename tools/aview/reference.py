@@ -283,6 +283,31 @@ class Reference(object):
         for k, _id in enumerate(self.ids):            
             newRedshift = (1+self.redshifts[k])*initialLbda/finalLbda-1
             self.redshifts[k] = newRedshift
+    
+    def getRedshift(self, idTag):
+        """
+        return the redshift value for the input id (=nameTag)
+        """
+        index = self.findIdx(idTag)
+        z = self.redshifts[index]
+        return z
+        
+    def findIdx(self, idNameTag):
+        """
+        returns the idx of the ref entry corresponding to the input id/nameTag
+        """
+        p = [i for i,x in enumerate(self.ids) if str(x) in idNameTag] 
+        if len(p) == 1:
+            #print "OK : index found : ref={0} and calc={1}".format(s,p)
+            return p[0]
+        elif len(p) > 1:
+            print "ERROR : multiple index found for a given nametag!!".format()
+            print "ERROR : idNameTag = {}\n".format(idNameTag)
+            stop
+        else:
+            print "ERROR : index not found for idNameTag={} in the reference ids list!!".format(idNameTag)
+            stop
+        
         
     
     def plot(self):

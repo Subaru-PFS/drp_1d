@@ -85,7 +85,9 @@ class processRecombine(object):
         source_path = os.path.join(subpathsList[0], "templates_nocontinuum")
         dest_path = os.path.join(outputPath, "templates_nocontinuum")
         shutil.copytree(source_path, dest_path)
-    
+        
+        #copy intermediate results if any
+        self.copyIntermediateResultsDirs(subpathsList, outputPath, spcfileName="input.spectrumlist")
         
     def recombineAll(self):
         for f in self.flist:
@@ -114,16 +116,31 @@ class processRecombine(object):
             fout.write(l)
             fout.write('\n')
         fout.close()
-            
+          
+    def copyIntermediateResultsDirs(self, subpathsList, outPath, spcfileName):
+        """
+        """
+        for dirpath in subpathsList:
+            fpath = os.path.join(dirpath, spcfileName)
+            f = open(fpath, 'r')
+            for line in f:
+                lineStr = line.strip()
+                if not lineStr.startswith('#'):
+                    spcName = lineStr.split(" ")[0]
+                    spcNameNoExt = os.path.splitext(spcName)[0]
+                    source_path = os.path.join(dirpath, spcNameNoExt)
+                    dest_path = os.path.join(outPath, spcNameNoExt)
+                    shutil.copytree(source_path, dest_path)
+            f.close()
         
         
 def StartFromCommandLine( argv ) :	
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     
 
-    parser.add_argument("-p", "--path", dest="path", default="./output_process/output_subsets",
+    parser.add_argument("-p", "--path", dest="path", default="./process-output/output_subsets",
                     help="path to the subset output directory to be combined")
-    parser.add_argument("-o", "--outputpath", dest="outpath", default="./output_process/",
+    parser.add_argument("-o", "--outputpath", dest="outpath", default="./process-output/",
                     help="path to the destination output directory to fill with merged data") 
     
                     
