@@ -62,13 +62,19 @@ CContinuumIndexes::TContinuumIndexList CContinuumIndexes::getIndexes(const CSpec
         sci.Break = NAN;
         sci.Color = NAN;
 
-        if(Fb != 0.0 && retA && retB)
+        if(Fb > 0.0 && Fa > 0.0 && retA && retB)
         {
             sci.Color = -2.5*log10(Fa/Fb);
+        }else if(Fb<=0.0 && Fa > 0.0 && retA && retB)
+        {
+            sci.Color = -6.0;
         }
-        if(Fc != 0.0 && retB && retC)
+        if(Fc > 0.0 && Fb > 0.0 && retB && retC)
         {
             sci.Break = -2.5*log10(Fb/Fc);
+        }else if(Fc<=0.0 && Fb > 0.0 && retB && retC)
+        {
+            sci.Break = -6.0;
         }
 
         indexesList.push_back(sci);
