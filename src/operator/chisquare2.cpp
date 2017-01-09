@@ -44,6 +44,7 @@ COperatorChiSquare2::COperatorChiSquare2( std::string calibrationPath )
     if(fileOpenFailed)
     {
         //Log.LogError("Chisquare2, unable to load the calzetti calib. file... aborting!");
+        calzettiInitFailed = true;
     }else
     {
         m_NdataCalzetti = 1e5;
@@ -90,15 +91,20 @@ COperatorChiSquare2::COperatorChiSquare2( std::string calibrationPath )
             }
 
         }
+
+        calzettiInitFailed = false;
     }
 
 }
 
 COperatorChiSquare2::~COperatorChiSquare2()
 {
-    delete[] m_dataCalzetti;
-    delete[] m_YtplRawBuffer;
-    delete[] m_dataDustCoeff;
+    if(!calzettiInitFailed)
+    {
+        delete[] m_dataCalzetti;
+        delete[] m_YtplRawBuffer;
+        delete[] m_dataDustCoeff;
+    }
 }
 
 

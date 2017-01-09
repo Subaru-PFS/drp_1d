@@ -51,7 +51,7 @@ private:
     Float64 m_dustCoeffStep;
     Float64 m_dustCoeffStart;
     Float64* m_dataDustCoeff;
-
+    bool calzettiInitFailed;
     
 };
 
