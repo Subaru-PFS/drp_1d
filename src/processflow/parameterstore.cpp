@@ -211,7 +211,7 @@ Bool CParameterStore::Set( const std::string& name, const TFloat64List& v )
         array.push_back( std::make_pair( "", item) );
     }
 
-    m_PropertyTree.add_child( name, array );
+    m_PropertyTree.put_child( name, array );
     return true;
 }
 
@@ -228,7 +228,7 @@ Bool CParameterStore::Set( const std::string& name, const TStringList& v )
         array.push_back( std::make_pair( "", item) );
     }
 
-    m_PropertyTree.add_child( name, array );
+    m_PropertyTree.put_child( name, array );
     return true;
 }
 
@@ -256,7 +256,7 @@ Bool CParameterStore::Set( const std::string& name, const TInt64List& v )
         array.push_back( std::make_pair( "", item) );
     }
 
-    m_PropertyTree.add_child( name, array );
+    m_PropertyTree.put_child( name, array );
     return true;
 }
 
@@ -273,7 +273,7 @@ Bool CParameterStore::Set( const std::string& name, const TBoolList& v )
         array.push_back( std::make_pair( "", item) );
     }
 
-    m_PropertyTree.add_child( name, array );
+    m_PropertyTree.put_child( name, array );
     return true;
 }
 
