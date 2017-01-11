@@ -593,7 +593,7 @@ class Spectrum(object):
             
         print('\n')
         
-    def plotCompare(self, other_spc, amplitude = 1.0, modellinetype = "-bo", exportPath="", other_spc_list=None, label1="", label2=""):
+    def plotCompare(self, other_spc, amplitude = 1.0, modellinetype = "-bo", exportPath="", other_spc_list=None, label1="", label2="", title_suffix=""):
         self.fig = pp.figure( "spectrumview", figsize=(15,11))
         
         if label1=="":
@@ -633,7 +633,10 @@ class Spectrum(object):
         else:
             pp.xlabel('index')
         pp.ylabel('Flux')
-        pp.title(self.name) # Titre
+        title = self.name
+        if not title_suffix=="":
+            title = "{}\n{}".format(title, title_suffix)
+        pp.title(title) # Titre
         if exportPath=="":
             if 1:
                 self.other_spc = other_spc

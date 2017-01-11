@@ -10,8 +10,9 @@ import argparse
 import re
 
 import spectrum
+import reference
 
-def export(spcListPath, suffix, enableOverlay, othersuffix, otherpath):
+def export(spcListPath, suffix, enableOverlay, othersuffix, otherpath, refpath):
     
     print('using spclist full path: {}'.format(spcListPath))
     f = open(spcListPath)
@@ -30,6 +31,13 @@ def export(spcListPath, suffix, enableOverlay, othersuffix, otherpath):
     print("spcList size = {}".format(len(spcList)))
     if len(spcList)<1:
          return
+         
+    #load catalog information if any
+    enableRefFile = False
+    if not refpath=="":
+        if os.path.exists(refpath):
+            refCatalog = reference.Reference(referencepath=refpath, rtype="pfs")
+            enableRefFile = True
 
     basePath = os.path.split(spcListPath)[0]
     displaySpcPath = os.path.join(basePath, "display")
@@ -48,13 +56,18 @@ def export(spcListPath, suffix, enableOverlay, othersuffix, otherpath):
                 print("exporting to : {}".format(spcExportPathFull))
                 
                 # some specifics for PFS sim2016
-                s1.applyWeight(1e-17)
+                #s1.applyWeight(1e-17)
                 s2.applyLambdaCrop(3800, 12600)
-                label1 = "Flux with 2H instrument signature"
+                label1 = "Flux with 3H instrument signature"
                 label2 = "True Flux"
+                title_overide = ""
+                if enableRefFile:
+                    idxobj = refCatalog.findIdx(eTFName)
+                    if not idxobj == -1:
+                        title_override = refCatalog.getTag(idxobj)
                 ######
         
-                s1.plotCompare(s2, 1.0, modellinetype = "k-", exportPath=spcExportPathFull, label2=label2, label1=label1)
+                s1.plotCompare(s2, 1.0, modellinetype = "k-", exportPath=spcExportPathFull, label2=label2, label1=label1, title_suffix=title_override)
             else:
                 s1.plot(saveFullDirPath = displaySpcPath, lstyle="b-")
         except (KeyboardInterrupt, SystemExit):
@@ -81,14 +94,18 @@ def StartFromCommandLine( argv ) :
     parser.add_argument("-o", "--otherSuffix", dest="othersuffix", default="_TF.",
                     help="suffix of the overlay spectrum, so that '_F.' will be replaced by this suffix")
     parser.add_argument("-p", "--otherPath", dest="otherpath", default="./",
-                    help="path of the other spc to be overlaid")    
+                    help="path of the other spc to be overlaid") 
+    
+    #catalog information                
+    parser.add_argument("-r", "--refPath", dest="refpath", default="",
+                    help="path of the ref file for catalog information")    
 
     options = parser.parse_args()    
     print(options)
     enableOverlay = options.addOverlay
     
     if os.path.exists(options.spcList):
-        export(options.spcList, options.suffix, enableOverlay, options.othersuffix, options.otherpath)
+        export(options.spcList, options.suffix, enableOverlay, options.othersuffix, options.otherpath, refpath=options.refpath)
     else :
         print("Error: invalid input arguments")
         exit()

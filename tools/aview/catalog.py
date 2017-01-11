@@ -466,9 +466,9 @@ def StartFromCommandLine( argv ) :
         
         #c.plot()
         #c.plotInZplane(enableNominalAmpColors=True, overrideCatalogName="B13B")  
-        #c.plotNominalAmpsAsModelResult()
+        c.plotNominalAmpsAsModelResult()
         
-        print("the REDMINE (copy/paste) generated table is:\n{}".format(c.getRedmineTableString()))
+        #print("the REDMINE (copy/paste) generated table is:\n{}".format(c.getRedmineTableString()))
         #print("the LATEX (copy/paste) generated table is:\n{}".format(c.getLatexTableString()))
         
         #lmResPath = "/home/aschmitt/code/python/linemodel_tplshape/amazed/output/spectrum_tpl_NEW_Im_extended.dat_TF/linemodelsolve.linemodel_fit_extrema_0.csv"

@@ -28,7 +28,8 @@ CRayCatalogsTplShape::~CRayCatalogsTplShape()
 Bool CRayCatalogsTplShape::Init( std::string calibrationPath)
 {
     bfs::path calibrationFolder( calibrationPath.c_str() );
-    std::string dirPath = (calibrationFolder.append( "linecatalogs_tplshape_ExtendedTemplatesMarch2016_v2_20160916_B10I2_mod" )).string();
+    //std::string dirPath = (calibrationFolder.append( "linecatalogs_tplshape_ExtendedTemplatesMarch2016_v2_20160916_B10I2_mod" )).string();
+    std::string dirPath = (calibrationFolder.append( "linecatalogs_tplshape_ExtendedTemplatesMarch2016_B13B_mod20170110" )).string();
 
     bool ret = Load(dirPath.c_str());
     if(!ret)

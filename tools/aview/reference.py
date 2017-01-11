@@ -13,6 +13,7 @@ import random
 
 import matplotlib as mpl
 mpl.use('Qt5Agg')
+#mpl.use('Agg') #deactivate display for cluster use
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -48,10 +49,13 @@ class Reference(object):
         self.iRefSigma = -1
         self.iRefLogHalpha = -1        
         
+        print("INFO: loading ref. with rtype = {}".format(self.rtype))
         if self.rtype=="pfs":
             self.setPFSRefFileType()        
         elif self.rtype=="simueuclid2016":
             self.setSIMUEuclid2016RefFileType()
+        elif self.rtype=="vvds":
+            self.setVVDSRefFileType()
         else:
             print("Type not understood. Please check the ref. type arg., aborting...")
             exit()
@@ -74,11 +78,16 @@ class Reference(object):
         self.iRefMag = 5
         self.iRefFlag = 4  
         
-    def setVVDSRefFileType(self):
+    def setVVDSRefFileType(self):        
         self.nRefValues = 7
+        self.iRefID = 0
         self.iRefZ = 4
         self.iRefMag = 6
         self.iRefFlag = 5
+        self.iRefSFR = -1
+        self.iRefEBmV = -1
+        self.iRefSigma = -1
+        self.iRefLogHalpha = -1 
     
     def setVVDS2RefFileType(self):
         self.nRefValues = 7
@@ -289,6 +298,8 @@ class Reference(object):
         return the redshift value for the input id (=nameTag)
         """
         index = self.findIdx(idTag)
+        if index == -1:
+            stop
         z = self.redshifts[index]
         return z
         
@@ -303,12 +314,17 @@ class Reference(object):
         elif len(p) > 1:
             print "ERROR : multiple index found for a given nametag!!".format()
             print "ERROR : idNameTag = {}\n".format(idNameTag)
-            stop
+            return -1
         else:
             print "ERROR : index not found for idNameTag={} in the reference ids list!!".format(idNameTag)
-            stop
+            return -1
         
-        
+    def getTag(self, idx):
+        """
+        returns a string tag with obj description for plotting
+        """
+        str_ = "z={:.5f} mag={:.2f}, sfr={:.3f}".format(self.redshifts[idx], self.mags[idx], self.sfrs[idx])
+        return str_
     
     def plot(self):
         plt.figure()

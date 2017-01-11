@@ -12,8 +12,8 @@ import argparse
 
 
 try:
-    cmd_subfolder = os.path.abspath("/home/aschmitt/gitlab/cpf-redshift/tools/aview/") #use locally
-    #cmd_subfolder = os.path.abspath("/home/aschmitt/amazed_cluster/gitlab/cpf-redshift/tools/aview/") #use on hermes
+    #cmd_subfolder = os.path.abspath("/home/aschmitt/gitlab/cpf-redshift/tools/aview/") #use locally
+    cmd_subfolder = os.path.abspath("/home/aschmitt/amazed_cluster/gitlab/cpf-redshift/tools/aview/") #use on hermes
     if cmd_subfolder not in sys.path:
         print("inserting sys path : cmd_subfolder = {}".format(cmd_subfolder))
         sys.path.insert(0, cmd_subfolder)
@@ -404,6 +404,7 @@ def StartFromCommandLine( argv ) :
             os.mkdir(routputpath)
         print('INFO: using output full path: {}'.format(routputpath))
         
+        rrefPath = ""
         if options.divide and options.refPath=="":
             dividecount = options.dividecount
         elif not options.refPath=="":
