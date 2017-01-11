@@ -8,7 +8,7 @@
 #include <epic/redshift/spectrum/io/fitsreader.h>
 #include <epic/redshift/spectrum/io/genericreader.h>
 #include <epic/redshift/extremum/extremum.h>
-#include <epic/redshift/continuum/irregularsamplingmedian.h>
+#include <epic/redshift/continuum/median.h>
 #include <epic/redshift/noise/fromfile.h>
 
 #include <fstream>
@@ -144,11 +144,11 @@ void UtilCorrelationMatchWithEZ( const char* spectraPath, const char* noisePath,
     BOOST_CHECK( retVal );
 
     {
-        CContinuumIrregularSamplingMedian continuum;
+        CContinuumMedian continuum;
         s.RemoveContinuum( continuum );
     }
     {
-        CContinuumIrregularSamplingMedian continuum;
+        CContinuumMedian continuum;
         t.RemoveContinuum(continuum);
     }
 

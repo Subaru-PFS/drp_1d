@@ -20,7 +20,7 @@ CContinuumIrregularSamplingMedian::CContinuumIrregularSamplingMedian()
     m_MeanSmoothAmplitude = 75;     // Angstrom
     m_MedianSmoothCycles = 5;
     m_MedianSmoothAmplitude = 75;   // Angstrom
-    m_Even = false;
+    m_Even = true;
 }
 
 /**
