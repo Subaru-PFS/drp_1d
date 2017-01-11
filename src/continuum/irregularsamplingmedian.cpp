@@ -20,7 +20,7 @@ CContinuumIrregularSamplingMedian::CContinuumIrregularSamplingMedian()
     m_MeanSmoothAmplitude = 75;     // Angstrom
     m_MedianSmoothCycles = 5;
     m_MedianSmoothAmplitude = 75;   // Angstrom
-    m_Even = false;
+    m_Even = true;
 }
 
 /**
@@ -277,6 +277,16 @@ Bool CContinuumIrregularSamplingMedian::ProcessRemoveContinuum( const CSpectrum&
         EvenMirror( fluxAxis.GetSamples()+k0, nd, nreflex, ysmoobig.data() );
     else
         OddMirror( fluxAxis.GetSamples()+k0, nd, nreflex, ysmoobig.data() );
+
+    /*//debug:
+    // save reflex data
+    FILE* f = fopen( "median_even_dbg.txt", "w+" );
+    for( Int32 t=0;t<ysmoobig.size();t++)
+    {
+        fprintf( f, "%d %f\n", t, ysmoobig[t]*1e17);
+    }
+    fclose( f );
+    //*/
 
 
     {

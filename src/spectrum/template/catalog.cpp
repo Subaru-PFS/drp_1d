@@ -137,6 +137,7 @@ Bool CTemplateCatalog::Add( std::shared_ptr<CTemplate> r )
     {
         CContinuumIrregularSamplingMedian continuum;
         continuum.SetMedianKernelWidth( m_continuumRemovalMedianKernelWidth );
+        continuum.SetMeanKernelWidth( m_continuumRemovalMedianKernelWidth );
         tmplWithoutCont->RemoveContinuum( continuum );
     }
     else if( m_continuumRemovalMethod== "waveletsDF")
