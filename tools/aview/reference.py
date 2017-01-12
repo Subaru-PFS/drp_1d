@@ -12,8 +12,11 @@ import re
 import random
 
 import matplotlib as mpl
-mpl.use('Qt5Agg')
-#mpl.use('Agg') #deactivate display for cluster use
+if "DISPLAY" in os.environ:
+    mpl.use('Qt5Agg')
+else:
+    mpl.use('Agg')
+    print("WARNING: No display available, Agg backend used as fallback")
 
 import matplotlib.pyplot as plt
 import numpy as np

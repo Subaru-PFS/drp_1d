@@ -28,6 +28,7 @@ import spectrumlist
 class processHelper(object):
     def __init__(self, confpath, binpath, rootoutputpath, dividecount, opt_bracketing, refpath):
         self.logTagStr = "processHelper"
+        self.ready = False
         self.configPath = confpath
         self.binPath = binpath
         self.baseoutputpath = rootoutputpath
@@ -48,7 +49,10 @@ class processHelper(object):
         self.opt_bracketing = opt_bracketing #choices = "", "method"
         self.bracketing_templatesRootPath = "/home/aschmitt/amazed_cluster/calibration/templates/"
         
-        self.loadConfig()
+        ret = self.loadConfig()
+        if not ret:
+            print("ERROR: load config failed.")
+            return
         
         #prepare the working dir
         self.work_process_dir = os.path.abspath("process-work")
@@ -96,19 +100,40 @@ class processHelper(object):
         print("INFO: Loading config file...")
         self.config_spclistPath = self.getConfigVal("input")
         print("INFO: input is : {}".format(self.config_spclistPath))
+        if not os.path.exists(self.config_spclistPath):
+            print("ERROR: spclist file does not exist! Aborting...")
+            return False
+            
         self.config_spcdir = self.getConfigVal("spectrumdir")
         print("INFO: spectrum dir. is : {}".format(self.config_spcdir))
+        if not os.path.exists(self.config_spcdir):
+            print("ERROR: spcdir file does not exist! Aborting...")
+            return False
+            
         self.config_method = self.getConfigVal("method")
         print("INFO: method is : {}".format(self.config_method))
         self.config_templatedir = self.getConfigVal("templatedir")
         print("INFO: templatedir is : {}".format(self.config_templatedir))
+        if not os.path.exists(self.config_templatedir):
+            print("ERROR: templatedir file does not exist! Aborting...")
+            return False
+            
         self.config_linecatalog = self.getConfigVal("linecatalog")
         print("INFO: linecatalog is : {}".format(self.config_linecatalog))
+        if not os.path.exists(self.config_linecatalog):
+            print("ERROR: linecatalog file does not exist! Aborting...")
+            return False
+            
         self.config_linecatalogconvert = "not found" not in self.getConfigVal("linecatalog-convert")
         print("INFO: linecatalogconvert is : {}".format(self.config_linecatalogconvert))
         
         self.config_parametersPath = self.getConfigVal("parameters")
         print("INFO: parameters path is : {}".format(self.config_parametersPath))
+        if not os.path.exists(self.config_parametersPath):
+            print("ERROR: parameters file does not exist! Aborting...")
+            return False
+        
+        return True
 
     def prepareBracketing(self):
         """
@@ -226,36 +251,6 @@ class processHelper(object):
                 fout.write("{}".format(outPathSub))
                 fout.write("\n")
             fout.close()
-            
-
-    def doProcessLocal(self):
-        """
-        process on the local machine
-        """
-        print("doProcessLocal...")
-        if not self.ready:
-            print("processhelper not ready, aborting...")
-            return
-        #print("WARNING: LOCAL processing is DEPRECATED! not up to date !!!!, aborting...")
-        #return        
-        
-        if self.opt_bracketing == "method":
-            bracketing = self.prepareBracketing()  
-            nproc = len(bracketing["method"])
-        else:
-            bracketing = ""
-            nproc=1
-                        
-        for k in range(nproc):  
-            if bracketing=="":              
-                argStr = self.prepareArgumentString()
-            else:
-                argStr = self.prepareArgumentString(overrideMethod = bracketing["method"][k], overrideParamFile = bracketing["parameters"][k])
-            #print("INFO: arg string is {}".format(argStr))
-            
-            bashCommand = "{} {}".format(self.binPath, argStr)
-            print("INFO: bashCommand is {}".format(bashCommand))
-            os.system(bashCommand) 
     
     def doProcess(self, dryrun=False, enableLocal=False):
         """
