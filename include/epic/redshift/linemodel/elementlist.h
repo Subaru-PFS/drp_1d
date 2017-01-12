@@ -156,6 +156,8 @@ public:
 
     TStringList GetModelRulesLog();
 
+    Int32 setPassMode(Int32 iPass);
+
 private:
 
     Int32 fitAmplitudesHybrid(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& spcFluxAxisNoContinuum, Float64 redshift);
@@ -164,7 +166,7 @@ private:
     Int32 fitAmplitudesLinSolve(std::vector<Int32> EltsIdx, const CSpectrumSpectralAxis &spectralAxis, const CSpectrumFluxAxis &fluxAxis, std::vector<Float64> &ampsfitted, std::vector<Float64> &errorsfitted);
     Int32 fitAmplitudesLBFGS(std::vector<Int32> filteredEltsIdx, const CSpectrumFluxAxis& fluxAxis, std::vector<Float64>& ampsfitted, Int32 lineType);
 
-
+    bool m_forceDisableLyaFitting;
     Int32 setLyaProfile( Float64 redshift, const CSpectrumSpectralAxis& spectralAxis );
 
     std::vector<Int32> getSupportIndexes(std::vector<Int32> EltsIdx);

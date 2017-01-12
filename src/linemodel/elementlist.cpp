@@ -183,6 +183,25 @@ CLineModelElementList::~CLineModelElementList()
 }
 
 /**
+ * @brief setPassMode
+ * @param iPass
+ * set the fitting parameters according the the iPass argument.
+ * @return
+ */
+Int32 CLineModelElementList::setPassMode(Int32 iPass)
+{
+    if(iPass==1)
+    {
+        m_forceDisableLyaFitting = true;
+    }
+    if(iPass==2)
+    {
+        m_forceDisableLyaFitting = false;
+    }
+    return true;
+}
+
+/**
  * \brief Returns a pointer to m_SpectrumModel.
  **/
 const CSpectrum& CLineModelElementList::GetModelSpectrum() const
@@ -660,11 +679,15 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
     {
         if(m_rigidity!="tplshape")
         {
-            //prepare the Lya width and asym coefficients if the asymfit profile option is met
-            setLyaProfile(redshift, spectralAxis);
+            if(!m_forceDisableLyaFitting)
+            {
+                //prepare the Lya width and asym coefficients if the asymfit profile option is met
+                setLyaProfile(redshift, spectralAxis);
+            }
         }else{
             m_CatalogTplShape->SetLyaProfile(*this, ifitting);
             //prepare the Lya width and asym coefficients if the asymfit profile option is met
+            //INFO: tpl-shape are always ASYMFIXED for the lyaE profile, as of 2016-01-11
             setLyaProfile(redshift, spectralAxis);
             //m_CatalogTplShape->SetMultilineNominalAmplitudes( *this, ifitting );
             m_CatalogTplShape->SetMultilineNominalAmplitudesFast( *this, ifitting );

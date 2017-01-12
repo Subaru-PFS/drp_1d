@@ -220,6 +220,10 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
 
     Log.LogInfo( "Linemodel: processing");
 
+    //Set model parameters to FIRST-PASS
+    model.setPassMode(1);
+    Log.LogInfo( "Linemodel: first-pass mode");
+
     //WARNING: HACK, first pass with continuum from spectrum.
     //model.SetContinuumComponent("fromspectrum");
     //
@@ -321,6 +325,11 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
     //*/
     //TPointList extremumListExtended = extremumList;
    //todo: remove duplicate redshifts from the extended extrema list
+
+
+    //Set model parameters to SECOND-PASS
+    model.setPassMode(2);
+    Log.LogInfo( "Linemodel: second-pass mode");
 
     std::vector<Float64> extrema_velocityEL;
     std::vector<Float64> extrema_velocityAL;
