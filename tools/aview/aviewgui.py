@@ -126,6 +126,26 @@ class AViewGui(QtWidgets.QWidget):
         layoutZrange.addWidget(lbl)
         layout.addLayout(layoutZrange, layoutRow, 1, 1, 10) 
         
+        #Add the sfrref range threshold filter ctrls
+        layoutRow += 1
+        self.lblsfrrange = QtWidgets.QLabel(' Filter by sfr range: ', wdg)
+        layout.addWidget(self.lblsfrrange, layoutRow, 0, 1, 1)
+        
+        layoutSFRrange = QtWidgets.QHBoxLayout() 
+        self.lesfrrangemin = QtWidgets.QLineEdit(wdg)
+        self.lesfrrangemin.setToolTip('Enter sfr min value...')
+        self.lesfrrangemin.setFixedWidth(100) 
+        layoutSFRrange.addWidget(self.lesfrrangemin)
+
+        self.lesfrrangemax = QtWidgets.QLineEdit(wdg)
+        self.lesfrrangemax.setToolTip('Enter sfr max value...')
+        self.lesfrrangemax.setFixedWidth(100) 
+        layoutSFRrange.addWidget(self.lesfrrangemax)
+        #add empty label to fill the hbox
+        lbl = QtWidgets.QLabel(' ', wdg)
+        layoutSFRrange.addWidget(lbl)
+        layout.addLayout(layoutSFRrange, layoutRow, 1, 1, 10) 
+        
         #Add the spectrum filter ctrls
         layoutRow += 1
         self.lblSpcFilter = QtWidgets.QLabel(' Filter by spectrum name: ', wdg)
@@ -216,32 +236,35 @@ class AViewGui(QtWidgets.QWidget):
         self.leResultSpcZref = QtWidgets.QLineEdit(wdg)
         self.leResultSpcZref.setFixedWidth(100) 
         layout.addWidget(self.leResultSpcZref, layoutRow, 1, 1, 2) 
-        self.leResultSpcZref.setEnabled(False)  
-        #Add the result mag
+        self.leResultSpcZref.setEnabled(False) 
+        #Mag, sfr, ebmv info        
         layoutRow += 1
-        self.lblResultMagref = QtWidgets.QLabel('        - mag', wdg)
-        layout.addWidget(self.lblResultMagref, layoutRow, 0, 1, 1) 
+        layout_magsfrebmv = QtWidgets.QHBoxLayout()   
+        #Add the result mag
+        self.lblResultMagref = QtWidgets.QLabel(' mag =', wdg)
+        layout_magsfrebmv.addWidget(self.lblResultMagref)
         self.leResultSpcMagref = QtWidgets.QLineEdit(wdg)
         self.leResultSpcMagref.setFixedWidth(100) 
-        layout.addWidget(self.leResultSpcMagref, layoutRow, 1, 1, 2) 
-        self.leResultSpcMagref.setEnabled(False) 
+        layout_magsfrebmv.addWidget(self.leResultSpcMagref) 
+        self.leResultSpcMagref.setEnabled(False)  
         #Add the result sfr
-        layoutRow += 1
-        self.lblResultSfrref = QtWidgets.QLabel('        - sfr', wdg)
-        layout.addWidget(self.lblResultSfrref, layoutRow, 0, 1, 1) 
+        self.lblResultSfrref = QtWidgets.QLabel(' sfr =', wdg)
+        layout_magsfrebmv.addWidget(self.lblResultSfrref)
         self.leResultSpcSfrref = QtWidgets.QLineEdit(wdg)
         self.leResultSpcSfrref.setFixedWidth(100) 
-        layout.addWidget(self.leResultSpcSfrref, layoutRow, 1, 1, 2) 
+        layout_magsfrebmv.addWidget(self.leResultSpcSfrref)
         self.leResultSpcSfrref.setEnabled(False)  
         #Add the result ebmv
-        layoutRow += 1
-        self.lblResultEbmvref = QtWidgets.QLabel('        - ebmv', wdg)
-        layout.addWidget(self.lblResultEbmvref, layoutRow, 0, 1, 1) 
+        self.lblResultEbmvref = QtWidgets.QLabel(' ebmv =', wdg)
+        layout_magsfrebmv.addWidget(self.lblResultEbmvref)
         self.leResultSpcEbmvref = QtWidgets.QLineEdit(wdg)
         self.leResultSpcEbmvref.setFixedWidth(100) 
-        layout.addWidget(self.leResultSpcEbmvref, layoutRow, 1, 1, 2) 
+        layout_magsfrebmv.addWidget(self.leResultSpcEbmvref)
         self.leResultSpcEbmvref.setEnabled(False)  
-
+        #add empty label to fill the hbox
+        lbl = QtWidgets.QLabel(' ', wdg)
+        layout_magsfrebmv.addWidget(lbl)
+        layout.addLayout(layout_magsfrebmv, layoutRow, 1, 1, 1)
 
         ######### SHOW section ###############################################    
         layoutRow += 1    
@@ -351,6 +374,7 @@ class AViewGui(QtWidgets.QWidget):
         if _diffthres=="":
             _diffthres = -1
         
+        #filter by zref
         try:
             _zrefmin = float(str(self.lezrefrangemin.text()))
             if not (_zrefmin >0.0 and _zrefmin < 20.0):
@@ -364,9 +388,27 @@ class AViewGui(QtWidgets.QWidget):
                 _zrefmax = 20.0
         except:
             print("ERROR with zref max value, please check your input ! (using zrefmax=20)")
-            _zrefmax = 20.0
+            _zrefmax = 20.0   
             
-        self.resList = resultstat.ResultList(_resDir, spcName=_spcName, diffthreshold=float(_diffthres), opt='brief',  zrefmin=_zrefmin, zrefmax=_zrefmax) 
+        #filter by zref
+        try:
+            _sfrrefmin = float(str(self.lesfrrangemin.text()))
+            if not (_sfrrefmin >0.0 and _sfrrefmin < 1000.0):
+                _sfrrefmin = -1.0
+        except:
+            print("ERROR with sfr min value, please check your input ! (using sfrrefmin=-1)")
+            _sfrrefmin = -1
+        try:
+            _sfrrefmax = float(str(self.lesfrrangemax.text()))
+            if not (_sfrrefmax >0.0 and _sfrrefmax < 20.0):
+                _sfrrefmax = 20.0
+        except:
+            print("ERROR with sfr max value, please check your input ! (using sfrrefmax=20)")
+            _sfrrefmax = 20.0
+            
+        self.resList = resultstat.ResultList(_resDir, spcName=_spcName, diffthreshold=float(_diffthres), opt='brief',  
+                                             zrefmin=_zrefmin, zrefmax=_zrefmax, 
+                                             sfrrefmin=_sfrrefmin, sfrrefmax=_sfrrefmax) 
         self.leResultsN.setText(str(self.resList.n))
         #init result index to 1 (first index)
         self.leResultIndex.setText(str(1))
