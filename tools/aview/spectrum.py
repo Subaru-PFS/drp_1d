@@ -1136,7 +1136,10 @@ class Spectrum(object):
         smoothYvect = self.getSmoothSavitskyGolay(winSizeAngstrom=winSizeAngstrom, degree=degree)
         self.yvect = [self.yvect[k]-smoothYvect[k] for k, a in enumerate(self.yvect)]
         
-    def extendWavelengthRangeRed(self, wavelengthSup, overridingExtensionValue=None):
+    def extendWavelengthRangeRed(self, wavelengthSup, overridingExtensionValue=None, fitMethod='lin', fitRangeInSamples=200.0):
+        """
+        fitMethod can be : lin, exp
+        """
         i1 = self.n-2;
         i2 = self.n-1;
         x1 = self.xvect[i1];
@@ -1146,20 +1149,35 @@ class Spectrum(object):
         xstep = x2-x1
         ystep = y2-y1  
         #use a poly1 fit
-        NRangeforfit = 200
+        NRangeforfit = fitRangeInSamples #warning number of samples (todo=convert in Angstrom)
         xv = self.xvect[self.n-NRangeforfit:self.n-1]
         yv = self.yvect[self.n-NRangeforfit:self.n-1]       
         coefficients1 = np.polyfit(xv,yv,1)
         print("linfit coeff.: 0 = {0}, 1 = {1}".format(coefficients1[0], coefficients1[1]))
         moyenne = np.mean(yv)
         
+        #exp fit coeff
+        if fitMethod=='exp':
+            xxv = xv
+            yyv = np.log(yv)
+            coefficients_exp = np.polyfit(xxv,yyv,1)
+            print("expfit coeff.: 0 = {0}, 1 = {1}".format(coefficients_exp[0], coefficients_exp[1]))
+            pp.figure()
+            pp.plot(xxv, yyv)
+            pp.show()
+            
         
         k = 1
         x = x2
         while(x<wavelengthSup and k<1e6):
             if overridingExtensionValue==None:
                 x = x2 + k*xstep
-                y = coefficients1[1] + coefficients1[0]*x #y2# + k*ystep
+                if fitMethod=='lin':
+                    y = coefficients1[1] + coefficients1[0]*x #y2# + k*ystep
+                elif fitMethod=='exp':
+                    y = np.exp(coefficients_exp[1])*np.exp(coefficients_exp[0]*x) 
+                #if y<0:
+                #    y=0.0
             else:
                 x = x2 + k*xstep
                 y = overridingExtensionValue
@@ -1616,11 +1634,13 @@ def StartFromCommandLine( argv ) :
 
     print(options)
 
+    normalize_all = False
+
     if os.path.exists(options.spcPath) :
         print('using full path: {0}'.format(options.spcPath))
-        s = Spectrum(options.spcPath, options.spcType, snorm=False)
+        s = Spectrum(options.spcPath, options.spcType, snorm=normalize_all)
                
-        #s.applyWeight(1e-17)
+        #s.applyWeight(0.9)
         #s.printIdxWaveFlux()
         #s.convertFromHzToAngstrom()
         #for k in range(len(s.yvect)):
@@ -1648,6 +1668,15 @@ def StartFromCommandLine( argv ) :
 #        s.applyLyaExtinctionMeiksin()
 #        soutputpath = options.spcPath+"modified.dat"
 #        s.saveTpl(soutputpath)
+
+        #tpl extension
+        #s.extendWavelengthRangeBlue(100.0)
+        #s.applyLambdaCrop(912, 30000)
+        #s.applyLambdaCrop(100, 7990)
+        #s.applyLambdaCrop(100, 8000)
+        #s.applyLambdaCrop(100, 9770)
+        #s.applyLambdaCrop(100, 9930)
+        #s.extendWavelengthRangeRed(20000., fitMethod='exp', fitRangeInSamples=2000)
         
         if options.otherspcPath == "":
 #            if 0:            
@@ -1677,7 +1706,7 @@ def StartFromCommandLine( argv ) :
             print(s) 
             s.plot()
         else:
-            s2 = Spectrum(options.otherspcPath, options.otherspcType, snorm=False)
+            s2 = Spectrum(options.otherspcPath, options.otherspcType, snorm=normalize_all)
             
             if 0: #savgol model without lines and save it
                 #s2.smoothSavitskyGolay(400, 3.0)
@@ -1692,7 +1721,7 @@ def StartFromCommandLine( argv ) :
                 others_list = []
                 for o in options.otherNspcPath:
                     print("o = {}".format(o))
-                    others_list.append(Spectrum(o, options.otherNspcType, snorm=False))
+                    others_list.append(Spectrum(o, options.otherNspcType, snorm=normalize_all))
                 
                 s.plotCompare(s2, 1.0, modellinetype = "b-+", exportPath="", other_spc_list=others_list)
             
