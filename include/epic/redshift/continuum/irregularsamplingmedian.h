@@ -33,7 +33,7 @@ private:
 
     Int32   MeanSmooth( const Float64 *y, Int32 N, Int32 n, Float64 *y_out );
 
-    Int32   OddMirror( const Float64* y_input, Int32 N, Int32 Nreflex, Float64* y_out );
+    Int32   OddMirror( const Float64* y_input, Int32 N, Int32 Nreflex, Float64 y_input_begin_val, Float64 y_input_end_val, Float64* y_out );
     Int32   EvenMirror( const Float64* y_input, Int32 N, Int32 Nreflex, Float64* y_out );
 
     Int32   m_MeanSmoothAmplitude;
