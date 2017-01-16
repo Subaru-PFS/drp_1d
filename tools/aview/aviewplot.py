@@ -346,7 +346,8 @@ class AViewPlot(object):
             for k in range(len(self.linesx)):
                 #x = self.linesx[k]*(1+self.z)
                 x = self.linesx[k]
-                if x<self.xmin or x>self.xmax :
+                lbda_margin_lines = 25*(1.0+self.z)
+                if x<self.xmin-lbda_margin_lines or x>self.xmax+lbda_margin_lines :
                     continue
                 if self.linestype[k]=='E':
                     cstyle = 'b-'

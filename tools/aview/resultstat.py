@@ -1217,7 +1217,8 @@ class ResultList(object):
         #coeff_sigmacoeff_max = 1.0
         #coeff_sigmacoeff_step = .25
         #n_sigmacoeff = int((coeff_sigmacoeff_max-coeff_sigmacoeff_min+coeff_sigmacoeff_step)/float(coeff_sigmacoeff_step))
-        coeff_sigmacoeff = np.linspace(0.5, 2.5, 5)  
+        #coeff_sigmacoeff = np.linspace(0.5, 2.5, 5) 
+        coeff_sigmacoeff = [0.1, 0.5, 1.0, 5.0, 10., 100., 500.] 
         n_sigmacoeff = len(coeff_sigmacoeff)
         print("n_sigmacoeff = {}".format(n_sigmacoeff))
         print("coeff_sigmacoeff = {}".format(coeff_sigmacoeff))
@@ -1230,11 +1231,11 @@ class ResultList(object):
         #coeff_bcoeff = 1e4 - (1e4-np.logspace(1.0, 4.0, 20))
         #coeff_bcoeff = np.logspace(-4.0, 0.0, 20)
         coeff_bcoeff = []
-        neg_list = - 6.*(np.logspace(1, 3, 20))
+        neg_list = - 6.*(np.logspace(1, 3, 10))
         for a in neg_list[::-1]:
             coeff_bcoeff.append(a)
         coeff_bcoeff.append(0.0)
-        pos_list = 15.*np.logspace(1, 3, 25)
+        pos_list = 100.*np.logspace(1, 3, 30)
         for a in pos_list:
             coeff_bcoeff.append(a)
         
@@ -1281,7 +1282,7 @@ class ResultList(object):
                 if verbose:
                     print("izbest = {}".format(izbest))
                 zbest = z_lm[izbest]
-                if(np.abs(zbest - self.list[indice].zref ) < zthres):
+                if(np.abs(zbest - self.list[indice].zref )/(1.+self.list[indice].zref) < zthres):
                     _map[i_s,i_b] = 1
                     if verbose:
                         print("this solution works i_s={}, i_b={}  : z={}, zref={}".format(i_s, i_b, zbest, self.list[indice].zref) )
@@ -2094,7 +2095,7 @@ def estimateCombinationCoeffMap(resDir, diffthres, spcName="", enableExport=True
     #options
     dont_skip_no_spc = 1
     enable_intermediate_plots = 0
-    zthres=0.01
+    zthres=0.001
     
     print('using amazed results full path: {0}'.format(resDir))
     resList = ResultList(resDir, diffthreshold=diffthres, opt='brief', spcName=spcName)
@@ -2123,7 +2124,7 @@ def estimateCombinationCoeffMap(resDir, diffthres, spcName="", enableExport=True
             else:
                 continue
 
-        idx_sigma = 1#coeffMap.shape[0]-1
+        idx_sigma = 2#coeffMap.shape[0]-1
         print("using idx_sigma = {}".format(idx_sigma))
         print("using sigma = {}".format(sigma_coeff[idx_sigma]))
         success = False
@@ -2170,14 +2171,24 @@ def estimateCombinationCoeffMap(resDir, diffthres, spcName="", enableExport=True
         fig = plt.figure('dtreec {} coeff map'.format("sigma, b"), figsize=(9, 8))
         ax = fig.add_subplot(111)
         cmap = plt.get_cmap('RdYlGn') 
-        ncolors = 20 #min(20,k+2)
+        ncolors = 200 #min(20,k+2)
         cmap = cmap_discretize(cmap, ncolors) 
 
-        i = ax.matshow(np.transpose(coeffMapCumulative), interpolation='nearest', aspect='equal', cmap=cmap)
+        i = ax.matshow(np.transpose(coeffMapCumulative), interpolation='nearest', aspect='auto', cmap=cmap)
+        
+        xaxisticksinds = range(len(sigma_coeff))
+        xaxisticks = ["{:.1f}".format(a) for a in sigma_coeff]
+        plt.xticks(xaxisticksinds, xaxisticks, rotation='horizontal',verticalalignment='bottom') 
+        
+        yaxisticksinds = range(len(b_coeff))
+        yaxisticks = ["{:.1e}".format(a) for a in b_coeff]
+        plt.yticks(yaxisticksinds, yaxisticks, rotation='horizontal',verticalalignment='bottom')
+        #plt.yticks(range(nlines), linesaxisticks, rotation='horizontal',verticalalignment='bottom')
+        
 
         plt.xlabel('sigma coeff')
         plt.ylabel('b coeff')
-        name1 = "combination coeff map \nzThreshold = {}\n(processed idx={}/{})".format(zthres, k+1, resList.n)
+        name1 = "Combination map - dataset optimized\nrelzErr-Threshold = {}\n(processed idx={}/{})".format(zthres, k+1, resList.n)
         plt.title(name1)
         #plt.legend(legendz)
         #plt.grid()
@@ -2187,12 +2198,14 @@ def estimateCombinationCoeffMap(resDir, diffthres, spcName="", enableExport=True
         cbar = fig.colorbar(i)
         cbmax = np.amax(coeffMapCumulative)
         i.set_clim(vmin=cbmax-ncolors-0.5, vmax=cbmax+0.5)
-        cbar.set_ticks(np.linspace(cbmax-ncolors, cbmax, ncolors))
-        cbar.set_ticklabels(range(int(cbmax-ncolors), int(cbmax)))
+        ncolorticksmaxcbar = 20+1
+        cbarticks = np.linspace(cbmax-ncolors, cbmax, ncolorticksmaxcbar)
+        cbar.set_ticks(cbarticks)
+        cbar.set_ticklabels(["{:.1f}".format(a) for a in cbarticks])
         plt.draw()
         
         if enableExport:    
-            tag = "dtreec_{}_sigma{:.2f}_coeff_zthres{}".format("sigma_b", sigma_coeff[idx_sigma], zthres)
+            tag = "dtreec_coeffoptim_b{}-sigma{:.2f}_relzerrthres{}".format("varying", sigma_coeff[idx_sigma], zthres)
             outdir = os.path.join(resList.analysisoutputdir, tag)
             if not os.path.exists(outdir):
                 print("creating outputdir {}".format(outdir))
@@ -2729,8 +2742,8 @@ def plotContinuumIndexes(resDir, diffthres, spcName=""):
         print("inds extrema for zwrong found = {}".format(indsZwrongExtrema))
         if len(indsZrefExtremum)>0 or len(indsZwrongExtrema)>0:
             filepaths, filenames = s.getAutoChi2FullPath(resList.list[k].name)
-            filepath = filepaths[0] #0 for linemodel method
-            #filepath = filepaths[1] #1 for amazed03 method
+            #filepath = filepaths[0] #0 for linemodel method
+            filepath = filepaths[1] #1 for amazed03 method
             
             print("Found chi2 filepath: {}".format(filepath))
             if not os.path.exists(filepath):
