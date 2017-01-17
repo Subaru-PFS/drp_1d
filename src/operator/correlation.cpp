@@ -43,10 +43,15 @@ Float64 COperatorCorrelation::GetComputationDuration() const
  * Compute correlation factor between spectrum and tpl for each value specified in redshifts.
  * \note Spectrum AND template MUST be in log scale
  */
- std::shared_ptr<COperatorResult> COperatorCorrelation::Compute(   const CSpectrum& spectrum, const CTemplate& tpl,
-                                      const TFloat64Range& lambdaRange, const TFloat64List& redshifts,
-                                      Float64 overlapThreshold, std::string opt_interp_unused, Int32 opt_extinction_unused )
-{
+ std::shared_ptr<COperatorResult> COperatorCorrelation::Compute(const CSpectrum& spectrum,
+                                                                   const CTemplate& tpl,
+                                                                   const TFloat64Range& lambdaRange,
+                                                                   const TFloat64List& redshifts,
+                                                                   Float64 overlapThreshold,
+                                                                   std::vector<CMask> additional_spcMasks_unused,
+                                                                   std::string opt_interp_unused,
+                                                                   Int32 opt_extinction_unused, Int32 opt_dustFitting_unused)
+ {
     Bool retVal;
 
     // Input spectrum MUST be in log scales

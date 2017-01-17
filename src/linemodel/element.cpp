@@ -38,8 +38,8 @@ CLineModelElement::CLineModelElement(const std::string& widthType, const Float64
     m_asymfit_delta = 0.0;
 
     m_OutsideLambdaRange = true;
-    m_OutsideLambdaRangeOverlapThreshold = 0.1;
-    //example: 0.1 means 10% of the line is allowed to be outside the spectrum with the line still considered inside the lambda range
+    m_OutsideLambdaRangeOverlapThreshold = 0.1; //10% overlap minimum in order to keep the line
+    //example: 0.1 means 90% of the line is allowed to be outside the spectrum with the line still considered inside the lambda range
 
     //LoadDataExtinction(); //uncomment if this line profile is used
 }
@@ -99,8 +99,15 @@ Float64 CLineModelElement::GetLineWidth(Float64 redshiftedlambda, Float64 z, Boo
         Float64 c = 300000.0;
         Float64 pfsSimuCompensationFactor = 1.0;
         velocitySigma = pfsSimuCompensationFactor*v/c*redshiftedlambda;//, useless /(1+z)*(1+z);
-
         instrumentSigma = redshiftedlambda/m_Resolution*m_instrumentResolutionEmpiricalFactor;
+    }else if( m_LineWidthType == "velocitydriven"){
+        Float64 v = m_VelocityEmission;
+        if(!isEmission){
+            v = m_VelocityAbsorption;
+        }
+        Float64 c = 300000.0;
+        Float64 pfsSimuCompensationFactor = 1.0;
+        velocitySigma = pfsSimuCompensationFactor*v/c*redshiftedlambda;//, useless /(1+z)*(1+z);
     }else if( m_LineWidthType == "nispsim2016"){
         instrumentSigma = (redshiftedlambda*8.121e-4 + 7.4248)/2.35;
         Float64 v = m_VelocityEmission;
@@ -131,6 +138,10 @@ Float64 CLineModelElement::GetLineProfile(std::string profile, Float64 x, Float6
         sigma = sigma*coeff;
         const Float64 xsurc = xc/sigma;
         val = exp(-0.5*xsurc*xsurc);
+    }else if(profile=="LAU"){
+        const Float64 xsurc = xc/sigma;
+        const Float64 x = xsurc*2.0;
+        val = 1.0/(1+x*x);
     }else if(profile=="ASYM"){
         const Float64 coeff = m_asym_sigma_coeff;
 
@@ -252,6 +263,8 @@ Float64 CLineModelElement::GetNSigmaSupport(std::string profile)
 
     if(profile=="SYM"){
         val = nominal;
+    }else if(profile=="LAU"){
+        val = nominal*2.0;
     }else if(profile=="ASYM"){
         val = nominal*m_asym_sigma_coeff;
     }else if(profile=="ASYM2"){
@@ -316,6 +329,18 @@ Float64 CLineModelElement::GetAsymfitDelta()
     return m_asymfit_delta;
 }
 
+Float64 CLineModelElement::GetSumCross()
+{
+    return m_sumCross;
+}
+
+Float64 CLineModelElement::GetSumGauss()
+{
+    return m_sumGauss;
+}
+
+
+
 /**
  * Laod the extinction residue data.
  */
@@ -354,6 +379,7 @@ Bool CLineModelElement::LoadDataExtinction()
             }
         }
     }
+    file.close();
     if(i<m_dataN)
     {
         Log.LogError( "Read: linemodel- extinction residue: data not read successfully" );

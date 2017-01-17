@@ -65,7 +65,7 @@ const std::string CLineModelTplshapeSolve::GetDescription()
 Bool CLineModelTplshapeSolve::PopulateParameters( CDataStore& dataStore )
 {
     dataStore.GetScopedParam( "linemodel.linetypefilter", m_opt_linetypefilter, "no" );
-    dataStore.GetScopedParam( "linemodel.lineforcefilter", m_opt_lineforcefilter, "S" );
+    dataStore.GetScopedParam( "linemodel.lineforcefilter", m_opt_lineforcefilter, "no" );
     dataStore.GetScopedParam( "linemodel.fittingmethod", m_opt_fittingmethod, "hybrid" );
     dataStore.GetScopedParam( "linemodel.continuumcomponent", m_opt_continuumcomponent, "fromspectrum" );
     dataStore.GetScopedParam( "linemodel.linewidthtype", m_opt_lineWidthType, "combined" );
@@ -91,6 +91,7 @@ Bool CLineModelTplshapeSolve::PopulateParameters( CDataStore& dataStore )
         Log.LogInfo( "    -instrumentresolution: %.2f", m_opt_resolution);
     }
     Log.LogInfo( "    -rules: %s", m_opt_rules.c_str());
+    Log.LogInfo( "    -continuumcomponent: %s", m_opt_continuumcomponent.c_str());
     Log.LogInfo( "    -continuumreestimation: %s", m_opt_continuumreest.c_str());
     Log.LogInfo( "    -extremacount: %.3f", m_opt_extremacount);
 
@@ -237,7 +238,7 @@ std::shared_ptr<const CLineModelTplshapeSolveResult> CLineModelTplshapeSolve::Co
                 }
             }
 
-            Solve( dataStore, _spc, _spcContinuum, tpl, lineCatalog, lambdaRange, redshifts);
+            Solve( dataStore, _spc, _spcContinuum, tplCatalog, tplCategoryList, tpl, lineCatalog, lambdaRange, redshifts);
             storeResult = true;
         }
     }
@@ -256,6 +257,8 @@ std::shared_ptr<const CLineModelTplshapeSolveResult> CLineModelTplshapeSolve::Co
 Bool CLineModelTplshapeSolve::Solve( CDataStore& dataStore,
 			     const CSpectrum& spc,
                  const CSpectrum& spcCont,
+                 const CTemplateCatalog& tplCatalog,
+                 const TStringList& tplCategoryList,
                  const CTemplate& tpl,
                  const CRayCatalog& lineCatalog,
                  const TFloat64Range& lambdaRange,
@@ -267,6 +270,9 @@ Bool CLineModelTplshapeSolve::Solve( CDataStore& dataStore,
     auto  result = linemodel.Compute( dataStore,
                                       spc,
                                       spcCont,
+                                      tplCatalog,
+                                      tplCategoryList,
+                                      "", //no calibration path needed for this method
                                       lineCatalog,
                                       m_opt_linetypefilter,
                                       m_opt_lineforcefilter,
@@ -321,7 +327,7 @@ Bool CLineModelTplshapeSolve::LoadVelocities( const char* filePath, Float64& elv
         }
         readNums++;
     }
-
+    file.close();
     if(readNums!=2)
     {
         return false;

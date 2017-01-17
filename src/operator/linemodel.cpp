@@ -63,6 +63,9 @@ COperatorLineModel::~COperatorLineModel()
 std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataStore,
                                   const CSpectrum& spectrum,
                                   const CSpectrum& spectrumContinuum,
+                                  const CTemplateCatalog& tplCatalog,
+                                  const TStringList& tplCategoryList,
+                                  const std::string opt_calibrationPath,
                                   const CRayCatalog& restraycatalog,
                                   const std::string& opt_lineTypeFilter,
                                   const std::string& opt_lineForceFilter,
@@ -78,7 +81,8 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
                                   const std::string& opt_continuumreest,
                                   const std::string& opt_rules,
                                   const std::string& opt_velocityFitting,
-                                  const Float64 &opt_twosteplargegridstep)
+                                  const Float64 &opt_twosteplargegridstep,
+                                  const std::string& opt_rigidity)
 {
     if( spectrum.GetSpectralAxis().IsInLinearScale()==false )
     {
@@ -164,6 +168,9 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
 
     CLineModelElementList model( spectrum,
                                  spectrumContinuum,
+                                 tplCatalog,
+                                 tplCategoryList,
+                                 opt_calibrationPath,
                                  restRayList,
                                  opt_fittingmethod,
                                  opt_continuumcomponent,
@@ -171,7 +178,8 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
                                  opt_resolution,
                                  opt_velocityEmission,
                                  opt_velocityAbsorption,
-                                 opt_rules );
+                                 opt_rules,
+                                 opt_rigidity);
     Log.LogInfo( "Linemodel: initialized");
 
 //    //hack, zero outside of the support  ///////////////////////////////////////////////////////////////////////////////////////////
@@ -196,8 +204,9 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
 //    return NULL;
 //    // end of hack //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    //model.LoadContinuum(); //in order to use a fit with continuum
     result->nSpcSamples = model.getSpcNSamples(lambdaRange);
+    result->dTransposeDNocontinuum = model.EstimateDTransposeD(lambdaRange, "nocontinuum");
+    result->dTransposeD = model.EstimateDTransposeD(lambdaRange, "raw");
     PrecomputeLogErr( spectrum );
     Int32 contreest_iterations = 0;
     if( opt_continuumreest == "always" )
@@ -209,6 +218,15 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
         contreest_iterations = 0;
     }
 
+    Log.LogInfo( "Linemodel: processing");
+
+    //Set model parameters to FIRST-PASS
+    model.setPassMode(1);
+    Log.LogInfo( "Linemodel: first-pass mode");
+
+    //WARNING: HACK, first pass with continuum from spectrum.
+    //model.SetContinuumComponent("fromspectrum");
+    //
     Int32 indexLargeGrid = 0;
     boost::chrono::thread_clock::time_point start_mainloop = boost::chrono::thread_clock::now();
     for (Int32 i=0;i<nResults;i++)
@@ -224,6 +242,10 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
             result->LineModelSolutions[i] = result->LineModelSolutions[i-1];
         }
     }
+    //WARNING: HACK, first pass with continuum from spectrum.
+    //model.SetContinuumComponent(opt_continuumcomponent);
+    //model.InitFitContinuum();
+    //
     boost::chrono::thread_clock::time_point stop_mainloop = boost::chrono::thread_clock::now();
     Float64 duration_mainloop = boost::chrono::duration_cast<boost::chrono::microseconds>(stop_mainloop - start_mainloop).count();
     Log.LogInfo( "Linemodel: main z loop done in %.4e sec", duration_mainloop/1e6);
@@ -279,6 +301,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
     //TBoolList isLocalExtrema;
     for( Int32 i=0; i<extremumList.size(); i++ )
     {
+        Log.LogInfo("Linemodel: Raw extr #%d, z_e.X=%f, m_e.Y=%f", i, extremumList[i].X, extremumList[i].Y);
         Float64 x = extremumList[i].X;
         Float64 left_border = max(redshiftsRange.GetBegin(), x-extensionradius);
         Float64 right_border=min(redshiftsRange.GetEnd(), x+extensionradius);
@@ -302,6 +325,11 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
     //*/
     //TPointList extremumListExtended = extremumList;
    //todo: remove duplicate redshifts from the extended extrema list
+
+
+    //Set model parameters to SECOND-PASS
+    model.setPassMode(2);
+    Log.LogInfo( "Linemodel: second-pass mode");
 
     std::vector<Float64> extrema_velocityEL;
     std::vector<Float64> extrema_velocityAL;
@@ -463,6 +491,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
             //model.SetFittingMethod("nofit");
             extremumList2[i].Y = DBL_MAX;
             extremumList2[i].X = result->Redshifts[idx];
+            Int32 idx2 = idx;
             for (Int32 iz=0;iz<result->Redshifts.size();iz++)
             {
                 if(result->Redshifts[iz] >= left_border && result->Redshifts[iz] <= right_border){
@@ -471,10 +500,14 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
                     {
                         extremumList2[i].X = result->Redshifts[iz];
                         extremumList2[i].Y = result->ChiSquare[iz];
+                        idx2 = iz;
                     }
                 }
             }
             //model.SetFittingMethod(opt_fittingmethod);
+
+            Log.LogInfo("Linemodel: Recomputed extr #%d, idx=%d, z_e.X=%f, m_e.Y=%f", i, idx2, extremumList2[i].X, extremumList2[i].Y);
+
         }
     }else
     {
@@ -545,11 +578,12 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
             Log.LogInfo( "Problem. could not find extrema solution index...");
             continue;
         }
+        Log.LogInfo("Linemodel: Saving extr #%d, idx=%d, z=%f, m=%f", i, idx, result->Redshifts[idx], result->ChiSquare[idx]);
 
 
         // reestimate the model (eventually with continuum reestimation) on the extrema selected
         if(opt_continuumreest == "always" || opt_continuumreest == "onlyextrema"){
-            contreest_iterations = 10;
+            contreest_iterations = 3; //10;
         }else{
             contreest_iterations  = 0;
         }
@@ -572,10 +606,12 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
             model.SetVelocityAbsorption(extrema_velocityALOrdered[i]);
         }
 
-
-
         ModelFit( model, lambdaRange, result->Redshifts[idx], result->ChiSquare[idx], result->LineModelSolutions[idx], contreest_iterations, true);
-        m = result->ChiSquare[idx];
+        if(m!=result->ChiSquare[idx])
+        {
+            Log.LogInfo("Linemodel: m (%f for idx=%d) !=chi2 (%f) ", m, idx, result->ChiSquare[idx]);
+        }
+        m = result->ChiSquare[idx];//result->ChiSquare[idx];
 
         //save the model result
         static Int32 maxModelSave = extremumCount;
@@ -644,38 +680,19 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
         CContinuumIndexes continuumIndexes;
         result->ContinuumIndexes[i] = continuumIndexes.getIndexes( spectrum, z );
 
+        //save the outsideLinesMask
+        result->OutsideLinesMask[i] = model.getOutsideLinesMask();
+
+        //save the continuum tpl fitting results
+        result->FittedTplName[i] = model.getFitContinuum_tplName();
+        result->FittedTplAmplitude[i] = model.getFitContinuum_tplAmplitude();
+
+        //save the tplcorr results
+        result->FittedTplcorrTplName[i] = model.getTplCorr_bestTplName();
     }
 
     //ComputeArea2(*result);
 
-
-//    if(result->Extrema.size()>0){
-//        Log.LogInfo( "LineModel Solution: best z found = %.5f", result->Extrema[0]);
-//    }else{
-//        Log.LogInfo( "LineModel Solution: no extrema found...");
-//    }
-
-   /*
-   //  //saving the best model for viewing
-    if(result->Extrema.size()>0){
-        Float64 _chi=0.0;
-        CLineModelResult::SLineModelSolution _lineModelSolution;
-        ModelFit( spectrum, model, result->restRayList, lambdaRange, result->Extrema[0], _chi, _lineModelSolution);
-        //*
-        //CSpectrumFluxAxis& sfluxAxisPtr = model.GetFluxAxis();
-        //CSpectrumFluxAxis& modelFluxAxis = model.GetFluxAxis();
-        //sfluxAxisPtr = modelFluxAxis;
-        CSpectrum spcmodel = model.GetModelSpectrum();
-
-        CSpectrumIOFitsWriter writer;
-        Bool retVal1 = writer.Write( "model.fits",  spcmodel);
-
-        if(retVal1){
-            CSpectrum s(spectrum);
-            Bool retVal2 = writer.Write( "spectrum.fits",  s);
-        }
-    }
-    //*/
     return result;
 
 }

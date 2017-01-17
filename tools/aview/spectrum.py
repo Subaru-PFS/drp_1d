@@ -8,7 +8,6 @@ Created on Sat Jul 25 11:44:49 2015
 import os
 import sys
 from astropy.io import fits
-import pyfits
 import argparse
 import random
 import math
@@ -19,9 +18,11 @@ import math
 #import matplotlib as mpl
 #mpl.use('Qt5Agg')
 
+
 #mpl.rcParams.update(mpl.rcParamsDefault)        
 
-import matplotlib.pyplot as pp
+import matplotlib.pyplot as pp        
+pp.style.use('ggplot')
 #import seaborn as sns
 #sns.set_context("paper")
 #sns.set_context("poster")
@@ -34,6 +35,8 @@ from scipy.signal import savgol_filter
 
 class Spectrum(object):
     def __init__(self, spath, stype='undefspc', snorm=False, label=""):
+        self.c_light_km = 2.99792458e5
+        self.c_light_m = self.c_light_km*1e3
         self.logTagStr = "Spectrum"
         self.spath = spath
         self.name = os.path.basename(spath)
@@ -41,16 +44,19 @@ class Spectrum(object):
         self.stype = stype
         if self.stype == "" or self.stype == "-1":
             self.stype = 'undefspc'
-        print("type = {0}".format(stype))
-        print("norm = {0}".format(snorm))
+        print("{}: type = {}".format(self.logTagStr, stype))
+        print("{}: norm = {}".format(self.logTagStr, snorm))
         self.snorm = snorm
         self.n = -1
         self.xvect = -1
         self.yvect = -1
         self.ysum = 0
         self.forcePlotXIndex = False
+        
         if(self.stype == 'template'):
-            self.loadTpl() 
+            self.loadTpl(idxWave=0, idxFlux=1)
+        elif(self.stype == 'template-w0f2'):
+            self.loadTpl(idxWave=0, idxFlux=2) 
         elif(self.stype == 'pfs2reech'):
             self.loadpfs2reech() 
         elif(self.stype == 'pfs2'):
@@ -65,6 +71,10 @@ class Spectrum(object):
             self.loadmuse() 
         elif(self.stype == 'euclid_sim_noise'):
             self.loadeuclidSimNoise() 
+        elif(self.stype == 'euclid_sim_siroct2016_flux'):
+            self.loadeuclidSimSirOct2016(readtable="COMBINED_CONTSUB", readcol="F")
+        elif(self.stype == 'euclid_sim_siroct2016_noise'):
+            self.loadeuclidSimSirOct2016(readtable="COMBINED",readcol="ErrF") 
         elif(self.stype == 'empty'):
             pass 
         else:
@@ -94,7 +104,7 @@ class Spectrum(object):
         return scopy
         
     def load(self):
-        print("\nPATH = {}\n".format(self.spath))
+        print("\nSPC PATH = {}\n".format(self.spath))
         hdulist = fits.open(self.spath) 
         print("\nHDULIST = \n{}\n".format(hdulist))
         try:
@@ -125,6 +135,8 @@ class Spectrum(object):
         elif self.stype == 'undefspc' and n2 < 2:
             self.stype='vvds'
             self.loadvvds()
+            
+        print("spc n = {}".format(self.n))
 
     def loadpfs(self):
         hdulist = fits.open(self.spath) 
@@ -171,6 +183,82 @@ class Spectrum(object):
             self.xvect[x] = scidata[x][0]
             self.yvect[x] = scidata[x][2]
             self.ysum += self.yvect[x]
+        
+    def loadeuclidSimSirOct2016(self, readtable="COMBINED_CONTSUB", readcol="F"):
+        #readcol="F", in order to read the FLUXES
+        #readcol="ErrF", in order to read the NOISE
+    
+        verbose = False
+        hdulist = fits.open(self.spath) 
+        
+        if verbose:
+            print("\nHDULIST = \n{}\n".format(hdulist))
+
+        if readtable=="COMBINED":
+            #second table should be named COMBINED, and contain the data 
+            idxBinTable = 2
+        elif readtable=="COMBINED_CONTSUB":
+            #second table should be named COMBINED, and contain the data without continuum
+            idxBinTable = 3
+            
+        try:
+            scidata = hdulist[idxBinTable].data
+            sciheader = hdulist[idxBinTable].header
+            if verbose:
+                print("Spectrum LOAD : Loaded bintable #{}".format(idxBinTable))
+        except:
+            print("Spectrum LOAD : failed to load bintable #{}, abort...".format(idxBinTable))
+            return
+            
+        if verbose:
+            print("\nSpectrum LOAD : scidata = \n{}\n".format(scidata))
+            print("\nSpectrum LOAD : sciheader = \n{}\n".format(sciheader))
+            print("\nSpectrum LOAD : sciheader name = \n{}\n".format(sciheader['EXTNAME']))
+            
+        if not sciheader['EXTNAME'] == readtable:
+            print("failed to find the {} bintable, found : {}, abort...".format(readtable, sciheader['EXTNAME']))
+            return
+            
+        #check the col names
+        idxWaves = 0
+        idxFluxes = 1
+        idxNoise = 2
+        if not 'WAVES' in sciheader['TTYPE1']:
+            print("failed to find the 'WAVES' bintable, found : {}, abort...".format(sciheader['TTYPE1']))
+            return
+        if not 'FLUXES' in sciheader['TTYPE2'] and readcol=="F":
+            print("failed to find the 'FLUXES' bintable, found : {}, abort...".format(sciheader['TTYPE2']))
+            return
+        if not 'NOISE' in sciheader['TTYPE3'] and readcol=="ErrF":
+            print("failed to find the 'NOISE' bintable, found : {}, abort...".format(sciheader['TTYPE3']))
+            return
+            
+        if verbose:
+            print("\nSpectrum LOAD : Successfully found idxWaves and (idxFluxes or idxNoise)\n")
+
+        if readcol=="F":   
+            idxF = idxFluxes
+        elif readcol=="ErrF":
+            idxF = idxNoise
+        else:
+            print("failed to parse the data flag (F or ErrF) found : {}, abort...".format(readcol))
+            
+        print("Spectrum LOAD : Reading type={}, F col = {}".format(self.stype, idxF))
+            
+        self.n = scidata.shape[0]
+        #print('{0} - n = {1}'.format(self.logTagStr, self.n))
+    
+        #---- default xaxis index array
+        self.xvect = range(0,self.n)
+        self.yvect = range(0,self.n)
+        self.ysum = 0.0
+        for x in range(0,self.n):
+            #print scidata[x]
+            self.xvect[x] = scidata[x][idxWaves]
+            self.yvect[x] = scidata[x][idxF]
+            self.ysum += self.yvect[x]
+            
+        
     
     #same as pfs but with xaxis in nm instead of Angstrom
     def loadpfs2(self):
@@ -344,7 +432,8 @@ class Spectrum(object):
             self.yvect[x] = scidata[x]
             self.ysum += self.yvect[x]
     
-    def loadTpl(self):
+    def loadTpl(self, idxWave=0, idxFlux=1):
+        idxMax = np.max([idxWave, idxFlux])
         filename = self.spath
         wave = []
         flux = []
@@ -356,23 +445,26 @@ class Spectrum(object):
                 data = lineStr.split(" ")
                 data = [r for r in data if r != '']
                 #print len(data)
-                if(len(data) >=2):
+                if(len(data) > idxMax):
                     # fill the list                
                     #print data[0]
                     #print data[1]
-                    wave.append(float(data[0]))
-                    flux.append(float(data[1]))
+                    wave.append(float(data[idxWave]))
+                    flux.append(float(data[idxFlux]))
                 else:
                     #try to separate the values with \t instead...
                     data = lineStr.split("\t")
                     data = [r for r in data if r != '']
                     #print len(data)
-                    if(len(data) >=2):
+                    if(len(data) > idxMax):
                         # fill the list                
                         #print data[0]
                         #print data[1]
-                        wave.append(float(data[0]))
-                        flux.append(float(data[1]))
+                        wave.append(float(data[idxWave]))
+                        flux.append(float(data[idxFlux]))
+                    else:
+                        print("ERROR: unable to load this template line !, aborting loading this file...")
+                        stop
         f.close()
         self.n = len(wave)
         #print('len wave = {0}'.format(self.n))
@@ -383,9 +475,35 @@ class Spectrum(object):
         for x in range(0,self.n):
             self.xvect[x] = wave[x]
             self.yvect[x] = flux[x]
-            self.ysum += self.yvect[x]   
-
+            self.ysum += self.yvect[x]  
+            
+    def printIdxWaveFlux(self):
+        for a in range(self.n):
+            print("{:<10}{:<20}{:<30}".format(a, self.xvect[a], self.yvect[a]))
+            
+    def convertFromHzToAngstrom(self):
+        for x in range(0,self.n):
+            self.xvect[x] = self.c_light_m/self.xvect[x]*1e10
+    def convertFromFnuToFlambda(self):
+        for x in range(0,self.n):
+            self.yvect[x] = self.c_light_km*1e13*self.yvect[x]/(self.xvect[x]**2)
         
+
+    def saveForCppHarcodedArray(self, outputPath):
+        f = open(outputPath, 'w')
+        f.write("static const Float64 arr[] = {\n")
+        #print("static const Float64 arr[] = {")
+        k = 0
+        for a in self.yvect:
+            #print("{}, ".format(a))
+            f.write("{}\n".format(a))
+#            f.write("{}, ".format(a))
+#            k += 1
+#            if k>20:
+#                f.write("\n")
+#                k = 0
+        #print("}\n\n")
+        f.write("\n}\n\n")
         
     def __str__(self):
         a = "\nSpectrum: {0}\n".format(self.name)
@@ -406,8 +524,9 @@ class Spectrum(object):
         
         return a
         
-    def plot(self, saveFullDirPath="", lstyle="r-+"):
-        pp.ion()
+    def plot(self, saveFullDirPath="", lstyle="r-+", disableEventHandling=False):
+        if disableEventHandling:
+            pp.ion()
         self.fig = pp.figure("Spectrum")
         #self.fig = sns.pyplot.figure(1)
         self.canvas = self.fig.canvas
@@ -420,6 +539,8 @@ class Spectrum(object):
         self.ax.xaxis.grid(True,'major')
         self.ax.yaxis.grid(True,'major')
         
+        #self.ax.set_ylim([-4.51e-18, 7.01e-18])
+        
         #pp.legend(('cos','sin'), 'upper right', shadow = True)
         if not self.forcePlotXIndex:
              pp.xlabel('angstrom')
@@ -429,12 +550,14 @@ class Spectrum(object):
         pp.title(self.name) # Titre
         if not saveFullDirPath == "":
             saveFullPath = os.path.join(saveFullDirPath, self.name + str(".png"))
-            pp.savefig(saveFullPath) # sauvegarde du fichier ExempleTrace.png
+            pp.savefig(saveFullPath)
+            pp.close()
+            pp.clf()
         else:
-            if 1:
+            if not disableEventHandling:
                 self.startEventHandling()
             else:
-                pp.show(1)
+                self.fig.show(1)
             
         print('\n')  
         
@@ -470,12 +593,15 @@ class Spectrum(object):
             
         print('\n')
         
-    def plotCompare(self, other_spc, amplitude = 1.0, modellinetype = "-bo", exportPath="", other_spc_list=None):
+    def plotCompare(self, other_spc, amplitude = 1.0, modellinetype = "-bo", exportPath="", other_spc_list=None, label1="", label2="", title_suffix=""):
         self.fig = pp.figure( "spectrumview", figsize=(15,11))
         
-        lbl = self.label
-        if lbl=="":
-            lbl = self.name
+        if label1=="":
+            lbl = self.label
+            if lbl=="":
+                lbl = self.name
+        else:
+            lbl = label1
         spcColor = '0.6'
         self.canvas = self.fig.canvas
         self.ax = self.fig.add_subplot(111)
@@ -483,9 +609,12 @@ class Spectrum(object):
         #pp.plot(self.xvect, self.yvect, "x-")
         self.ax.plot(self.xvect, self.yvect,  color=spcColor, label=lbl)
         yother = [a*amplitude for a in other_spc.yvect]
-        lbl = other_spc.label
-        if lbl=="":
-            lbl = other_spc.name
+        if label2=="":
+            lbl = other_spc.label
+            if lbl=="":
+                lbl = other_spc.name
+        else:
+            lbl = label2
         self.ax.plot(other_spc.xvect, yother, modellinetype, label=lbl)
         if not other_spc_list==None:
             for i, o2 in enumerate(other_spc_list):
@@ -504,7 +633,10 @@ class Spectrum(object):
         else:
             pp.xlabel('index')
         pp.ylabel('Flux')
-        pp.title(self.name) # Titre
+        title = self.name
+        if not title_suffix=="":
+            title = "{}\n{}".format(title, title_suffix)
+        pp.title(title) # Titre
         if exportPath=="":
             if 1:
                 self.other_spc = other_spc
@@ -943,6 +1075,17 @@ class Spectrum(object):
                 break
         return i
         
+    def getSquareError(self, otherSpc, otherAmp=1.0):
+        a = self.yvect
+        
+        #interpolate other on this
+        x = np.copy(otherSpc.xvect)
+        y = np.copy(otherSpc.yvect)*otherAmp
+        f = interpolate.interp1d(x, y, bounds_error=False, fill_value=0.0)
+        b = f(self.xvect) 
+        
+        squareErr = np.sum(np.square(np.array(a)-np.array(b))) 
+        return squareErr
         
     def smoothGaussian(self,signal,degree=5):  
         window=degree*2-1  
@@ -969,18 +1112,34 @@ class Spectrum(object):
             smoothed2[i+decInit]=smoothed[i]
         for i in range(len(smoothed), len(signal)-decInit):  
             smoothed2[i+decInit]=smoothed[len(smoothed)-1]
-        return smoothed2         
+        return smoothed2  
         
-    def smoothSavitskyGolay(self, winSizeAngstrom=100, degree=2): 
-        inputSpc = np.array(self.yvect)
+        
+        
+    def getSmoothSavitskyGolay(self, winSizeAngstrom=100, degree=2): 
+        inputYvect = self.yvect
+        
+        inputSpc = np.array(inputYvect)
         winSize = int(winSizeAngstrom/self.getResolution())
         if winSize/2.0 == int(winSize/2.0):
             winSize+=1
         print("savgol using winsize = {}".format(winSize))
         filtered = savgol_filter(inputSpc, winSize, degree)
-        self.yvect = list(filtered)
+        yvect = list(filtered)
         
-    def extendWavelengthRangeRed(self, wavelengthSup, overridingExtensionValue=None):
+        return yvect
+        
+    def smoothSavitskyGolay(self, winSizeAngstrom=100, degree=2): 
+        self.yvect = self.getSmoothSavitskyGolay(winSizeAngstrom=winSizeAngstrom, degree=degree)
+        
+    def removeContinuumSavgol(self, winSizeAngstrom=100, degree=2): 
+        smoothYvect = self.getSmoothSavitskyGolay(winSizeAngstrom=winSizeAngstrom, degree=degree)
+        self.yvect = [self.yvect[k]-smoothYvect[k] for k, a in enumerate(self.yvect)]
+        
+    def extendWavelengthRangeRed(self, wavelengthSup, overridingExtensionValue=None, fitMethod='lin', fitRangeInSamples=200.0):
+        """
+        fitMethod can be : lin, exp
+        """
         i1 = self.n-2;
         i2 = self.n-1;
         x1 = self.xvect[i1];
@@ -990,20 +1149,35 @@ class Spectrum(object):
         xstep = x2-x1
         ystep = y2-y1  
         #use a poly1 fit
-        NRangeforfit = 200
+        NRangeforfit = fitRangeInSamples #warning number of samples (todo=convert in Angstrom)
         xv = self.xvect[self.n-NRangeforfit:self.n-1]
         yv = self.yvect[self.n-NRangeforfit:self.n-1]       
         coefficients1 = np.polyfit(xv,yv,1)
         print("linfit coeff.: 0 = {0}, 1 = {1}".format(coefficients1[0], coefficients1[1]))
         moyenne = np.mean(yv)
         
+        #exp fit coeff
+        if fitMethod=='exp':
+            xxv = xv
+            yyv = np.log(yv)
+            coefficients_exp = np.polyfit(xxv,yyv,1)
+            print("expfit coeff.: 0 = {0}, 1 = {1}".format(coefficients_exp[0], coefficients_exp[1]))
+            pp.figure()
+            pp.plot(xxv, yyv)
+            pp.show()
+            
         
         k = 1
         x = x2
         while(x<wavelengthSup and k<1e6):
             if overridingExtensionValue==None:
                 x = x2 + k*xstep
-                y = coefficients1[1] + coefficients1[0]*x #y2# + k*ystep
+                if fitMethod=='lin':
+                    y = coefficients1[1] + coefficients1[0]*x #y2# + k*ystep
+                elif fitMethod=='exp':
+                    y = np.exp(coefficients_exp[1])*np.exp(coefficients_exp[0]*x) 
+                #if y<0:
+                #    y=0.0
             else:
                 x = x2 + k*xstep
                 y = overridingExtensionValue
@@ -1082,6 +1256,20 @@ class Spectrum(object):
         if not offsetx==0.0:
             for k in range(len(self.xvect)-1):
                 self.xvect[k] = self.xvect[k] + offsetx
+                
+        self.yvect = f(self.xvect) 
+        self.n = len(self.yvect)
+        
+        self.ysum = 0.0
+        for x in range(0,self.n):
+            self.ysum += self.yvect[x]    
+            
+    def interpolateOnGrid(self, newXVect):
+        x = np.copy(self.xvect)
+        y = np.copy(self.yvect)
+        f = interpolate.interp1d(x, y, bounds_error=False, fill_value=0.0)
+
+        self.xvect = newXVect
                 
         self.yvect = f(self.xvect) 
         self.n = len(self.yvect)
@@ -1169,10 +1357,39 @@ class Spectrum(object):
         
         for i,x in enumerate(self.xvect):
             self.yvect[i] *= weighting[i]
+            
+    def applyCalzettiAttenuation(self, ebmv):
+        self.yvect *= self.getCalzettiAttenuation(ebmv) 
+          
+    def getCalzettiAttenuation(self, ebmv):
+        datpath = "/home/aschmitt/gitlab/cpf-redshift/tools/aview/SB_calzetti.dat" #should be in the same folder as this python code
+        t = np.loadtxt(datpath)
+        print("t shape is {}".format(t.shape))   
+        x = t[:, 0] 
+        y = t[:, 1]   
+        f = interpolate.interp1d(x, y, bounds_error=True, fill_value=0.0)     
+        y_resampled = f(self.xvect) 
+        extinction = np.ones(self.n) * 10**(-0.4*y_resampled*ebmv)
+        return extinction
+    
+    def addGaussianLine(self, glambda, gsigma, gamp):
+        for x in range(0,self.n):
+            gausskernel = gamp * np.exp((-(self.xvect[x]-glambda)**2.0)/(2.0*gsigma**2))
+            self.yvect[x] += gausskernel
     
     def correctZeros(self, replacementValue=1e-24):
         for x in range(0,self.n):
             if self.yvect[x]<replacementValue:
+                self.yvect[x]=replacementValue 
+    
+    def correctZerosNegativeWithMaxValue(self, maxCoeff=10.):
+        """
+        replaces the values at zero by the max value *coeff (useful for bad values in the variance spectra)
+        """
+        maxVal = np.max(np.array(self.yvect))
+        replacementValue = maxVal*maxCoeff
+        for x in range(0,self.n):
+            if self.yvect[x]<=0:
                 self.yvect[x]=replacementValue   
                 
     def setToZero(self):
@@ -1288,12 +1505,12 @@ class Spectrum(object):
         return mag
     
     def getFNU(self):
-        c_cm_s = 3e18
+        c_ang_s = 3e18
         yvect = np.array(self.yvect)
         
         for x in range(self.n):
             #self.yvect[x] = self.yvect[x]*3.34*1e4*self.xvect[x]**2
-            yvect[x] = self.yvect[x]/c_cm_s*(self.xvect[x]**2)
+            yvect[x] = self.yvect[x]/c_ang_s*(self.xvect[x]**2)
             
         return yvect
 
@@ -1349,13 +1566,13 @@ class Spectrum(object):
         #print("col1={}".format(a1))
         a2 = np.copy(self.yvect)
         #print("col2={}".format(a2))
-        col1 = pyfits.Column(name='wave', format='E', array=a1)
-        col2 = pyfits.Column(name='flux', format='E', array=a2)
-        cols_spc = pyfits.ColDefs([col1, col2])
- 
+        col1 = fits.Column(name='wave', format='E', array=a1)
+        col2 = fits.Column(name='flux', format='E', array=a2)
+        cols_spc = fits.ColDefs([col1, col2])
+
         #INFO: This shortcut will automatically create a minimal primary HDU with no data and prepend it to the table HDU to create a valid FITS file.
         # from https://pythonhosted.org/pyfits/ 
-        hdu_new = pyfits.BinTableHDU.from_columns(cols_spc)
+        hdu_new = fits.BinTableHDU.from_columns(cols_spc)
         hdu_new.writeto(destfileout)
         
         if exportNoiseSpectrum:
@@ -1366,9 +1583,9 @@ class Spectrum(object):
                 print("Spectrum deleting existing fits: {}".format(destfileoutnoise))
                 os.remove(destfileoutnoise)   
             
-            colnoise = pyfits.Column(name='noise', format='E', array=anoise)
-            cols_noise = pyfits.ColDefs([col1, colnoise])
-            hdu_noise = pyfits.BinTableHDU.from_columns(cols_noise)
+            colnoise = fits.Column(name='noise', format='E', array=anoise)
+            cols_noise = fits.ColDefs([col1, colnoise])
+            hdu_noise = fits.BinTableHDU.from_columns(cols_noise)
             hdu_noise.writeto(destfileoutnoise)
             
         print("")
@@ -1377,6 +1594,7 @@ class Spectrum(object):
         
             
     def saveTpl(self, outputfullpath):
+        print("Spectrum exporting to ascii: {}".format(outputfullpath))
         filename = outputfullpath
         f = open(filename, "w")
 
@@ -1393,7 +1611,7 @@ def StartFromCommandLine( argv ) :
                     help="path to the fits spectrum to be plotted")
     parser.add_argument("-t", "--type", 
                         help="type of spectrum, can be in teh following list \
-                        {template, vvds, pfs, pfs2, muse, hplana, euclid, pfs2reech, euclid_sim_noise}",  
+                        {template, template-w0f2, vvds, pfs, pfs2, muse, hplana, euclid, pfs2reech, euclid_sim_noise, euclid_sim_siroct2016_flux, euclid_sim_siroct2016_noise}",  
                         dest="spcType",     
                         default="")                
     parser.add_argument("-o", "--otherspc", 
@@ -1416,10 +1634,24 @@ def StartFromCommandLine( argv ) :
 
     print(options)
 
+    normalize_all = False
+
     if os.path.exists(options.spcPath) :
         print('using full path: {0}'.format(options.spcPath))
-        s = Spectrum(options.spcPath, options.spcType, snorm=False)
+        s = Spectrum(options.spcPath, options.spcType, snorm=normalize_all)
+               
+        #s.applyWeight(0.9)
+        #s.printIdxWaveFlux()
+        #s.convertFromHzToAngstrom()
+        #for k in range(len(s.yvect)):
+        #    s.yvect[k] = 1e-3
         
+        #s.applyLambdaCrop(3000, 12000)
+        #s.interpolate(dx=1)
+        #path = os.path.split(options.spcPath)[0]
+        #nameWext = os.path.split(options.spcPath)[1]
+        #s.saveForCppHarcodedArray(os.path.join(path, "{}_forHardcodedArray.txt".format(nameWext)))
+
         #s.plotLambda()
         #exit()
         
@@ -1436,6 +1668,15 @@ def StartFromCommandLine( argv ) :
 #        s.applyLyaExtinctionMeiksin()
 #        soutputpath = options.spcPath+"modified.dat"
 #        s.saveTpl(soutputpath)
+
+        #tpl extension
+        #s.extendWavelengthRangeBlue(100.0)
+        #s.applyLambdaCrop(912, 30000)
+        #s.applyLambdaCrop(100, 7990)
+        #s.applyLambdaCrop(100, 8000)
+        #s.applyLambdaCrop(100, 9770)
+        #s.applyLambdaCrop(100, 9930)
+        #s.extendWavelengthRangeRed(20000., fitMethod='exp', fitRangeInSamples=2000)
         
         if options.otherspcPath == "":
 #            if 0:            
@@ -1444,7 +1685,10 @@ def StartFromCommandLine( argv ) :
 #                soutputpath = options.spcPath+"modified.dat"
 #                s.saveTpl(soutputpath)
 #                WarningKeyStr = raw_input("\n\nINFO: Modifications applied: saved to {}".format(soutputpath))
-#                                        
+#                        
+            #s.removeContinuumSavgol(winSizeAngstrom=400, degree=2)
+            #s.smoothSavitskyGolay(winSizeAngstrom=400, degree=2)
+                
             if options.export == "tpl":
                 
                 path = os.path.split(options.spcPath)[0]
@@ -1453,7 +1697,7 @@ def StartFromCommandLine( argv ) :
             elif options.export == "yes":
                 #s.interpolate(dx=0.1) #high sampling for the synthesis process
                 #s.applyLambdaCrop(930, 1230)
-                #s.applyWeight(1e-18)
+                
                 #s.setMagIAB(20)        
         
                 path = os.path.split(options.spcPath)[0]
@@ -1462,12 +1706,12 @@ def StartFromCommandLine( argv ) :
             print(s) 
             s.plot()
         else:
-            s2 = Spectrum(options.otherspcPath, options.otherspcType, snorm=False)
+            s2 = Spectrum(options.otherspcPath, options.otherspcType, snorm=normalize_all)
             
             if 0: #savgol model without lines and save it
                 #s2.smoothSavitskyGolay(400, 3.0)
-                s2.smoothSavitskyGolay()
-                s2.correctZeros()
+                s2.smoothSavitskyGolay(winSizeAngstrom=100, degree=3)
+                #s2.correctZeros()
                 #soutputpath = options.otherspcPath+"_savgol.dat"
                 #s2.saveTpl(soutputpath)
             
@@ -1477,7 +1721,7 @@ def StartFromCommandLine( argv ) :
                 others_list = []
                 for o in options.otherNspcPath:
                     print("o = {}".format(o))
-                    others_list.append(Spectrum(o, options.otherNspcType, snorm=False))
+                    others_list.append(Spectrum(o, options.otherNspcType, snorm=normalize_all))
                 
                 s.plotCompare(s2, 1.0, modellinetype = "b-+", exportPath="", other_spc_list=others_list)
             

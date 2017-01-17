@@ -44,8 +44,12 @@ class ResultChisquare(object):
         self.amazed_logarea = []
         self.amazed_sigmaz = [] 
         self.amazed_fitamplitude = []
+        self.amazed_fitDustCoeff = []
         self.amazed_continuumIndexes = [] 
-        self.amazed_StrongELSNR = []     
+        self.amazed_StrongELSNR = [] 
+        self.amazed_dTransposeD = []
+        self.amazed_dTransposeDNoContinuum = []
+        self.amazed_FittedTplcorrTplName = []
         
         #self.cpath = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/RayCatalogs/raycatalogamazedvacuum.txt"
         self.cpath = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/linecatalogs/linecatalogamazedair_B.txt"
@@ -53,6 +57,7 @@ class ResultChisquare(object):
         self.load(dontloadThres=dontloadThres)
         
     def load(self, dontloadThres=1e31):
+        verbose = 0
         filename = self.spath
         wave = []
         flux = []
@@ -106,6 +111,14 @@ class ResultChisquare(object):
                 data = [d for d in data if len(d.strip(" "))>0]
                 for d in data:
                     self.amazed_fitamplitude.append(float(d))
+            elif not lineStr.find("Extrema FitDustCoeff = {") == -1:
+                beg = lineStr.find("{")
+                end = lineStr.find("}")  
+                dataStr = lineStr[beg+1:end]
+                data = dataStr.split("\t")
+                data = [d for d in data if len(d.strip(" "))>0]
+                for d in data:
+                    self.amazed_fitDustCoeff.append(float(d))                    
             elif not lineStr.find("ContinuumIndexes Color for each extrema = {") == -1:
                 beg = lineStr.find("{")
                 end = lineStr.find("}")  
@@ -148,6 +161,30 @@ class ResultChisquare(object):
                 data = [d for d in data if len(d.strip(" "))>0]
                 for d in data:
                     self.amazed_StrongELSNR.append(float(d))
+            elif not lineStr.find("dTransposeD for each extrema =") == -1:
+                beg = lineStr.find("{")
+                end = lineStr.find("}")  
+                dataStr = lineStr[beg+1:end]
+                data = dataStr.split("\t")
+                data = [d for d in data if len(d.strip(" "))>0]
+                for d in data:
+                    self.amazed_dTransposeD.append(float(d))
+            elif not lineStr.find("dTransposeDNocontinuum for each extrema =") == -1:
+                beg = lineStr.find("{")
+                end = lineStr.find("}")  
+                dataStr = lineStr[beg+1:end]
+                data = dataStr.split("\t")
+                data = [d for d in data if len(d.strip(" "))>0]
+                for d in data:
+                    self.amazed_dTransposeDNoContinuum.append(float(d))
+            elif not lineStr.find("FittedTplcorrTplName for each extrema =") == -1:
+                beg = lineStr.find("{")
+                end = lineStr.find("}")  
+                dataStr = lineStr[beg+1:end]
+                data = dataStr.split("\t")
+                data = [d for d in data if len(d.strip(" "))>0]
+                for d in data:
+                    self.amazed_FittedTplcorrTplName.append(d)
                 
         f.close()
         self.n = len(wave)
@@ -166,7 +203,9 @@ class ResultChisquare(object):
         for x in range(0,nconti):
             self.amazed_continuumIndexes.append({'color': amazed_continuumIndexesColor[x], 'break': amazed_continuumIndexesBreak[x]})
             
-            
+        if verbose:
+            for i, a in enumerate(self.xvect):
+                print("chi2 file loaded x,y: z={}, merit={}".format(self.xvect[i], self.yvect[i]))
 
         #print("Extrema found : {0}".format(self.amazed_extrema))
         print("loaded chi2 : {0}".format((filename)))
@@ -207,7 +246,7 @@ class ResultChisquare(object):
             
         a = a + ("\n")
         
-        a = a + ("    contIndexes = {:<20}\t{:<20}\t{:<20}\t{:<20}\n".format("Lya", "OII", "OIII", "Halpha"))
+        a = a + ("    contIndexes = {:<20}\t{:<20}\t{:<20}\t{:<20}\t{:<20}\t{:<20}\n".format("Lya", "OII", "OIII", "Halpha", "CIV", "CIII"))
         for z in range(len(self.amazed_continuumIndexes)):
             dataColor = self.amazed_continuumIndexes[z]['color']
             dataBreak = self.amazed_continuumIndexes[z]['break']
@@ -226,6 +265,16 @@ class ResultChisquare(object):
     def getXYSortedByY(self):
         x = self.xvect
         y = self.yvect
+        
+        sortId=np.argsort(y)
+        
+        x=[x[s] for s in sortId]
+        y=[y[s] for s in sortId]
+        return [x, y]
+        
+    def getXYExtremaSortedByY(self):
+        x = self.amazed_extrema
+        y = [self.getMeritExtremum(k) for k, a in enumerate(x)]
         
         sortId=np.argsort(y)
         
@@ -265,13 +314,15 @@ class ResultChisquare(object):
         fig = pp.figure("chi2")
         titleStr = self.name
         if self.n < thresShortMeritCurve: #enable marker when there are only few samples
-            marker='+'
+            marker='o'
+            linestyle=''
         else:
             marker=""
+            linestyle='-'
         if not self.forcePlotXIndex:
-            pp.plot(self.xvect, self.yvect, marker=marker)
+            pp.plot(self.xvect, self.yvect, linestyle=linestyle, marker=marker)
         else:
-            pp.plot(self.yvect, marker=marker)
+            pp.plot(self.yvect, linestyle=linestyle, marker=marker)
 
         if showContinuumEstimate:
             chi1cont = self.getSplineContinuum()
@@ -718,6 +769,15 @@ class ResultChisquare(object):
         coeff = 10.0
         priors = [a*coeff for a in self.amazed_StrongELSNR]
         return priors
+        
+    def getMeritExtremum(self, idxExtremum):
+        z = self.amazed_extrema[idxExtremum]
+        print("searching merit for extrema_idx = {}, z={}".format(idxExtremum, z))
+        ind = np.argmin(np.abs(np.array(self.xvect)-z))
+        merit = self.yvect[ind]
+        
+        print("Found merit for chi2_idx = {}, merit={}".format(ind, merit))
+        return merit
         
             
 

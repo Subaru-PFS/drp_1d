@@ -92,9 +92,12 @@ Bool COperatorBlindSolve::BlindSolve( CDataStore& resultStore, const CSpectrum& 
     TFloat64List redshifts = redshiftsRange.SpreadOver( redshiftStep );
     DebugAssert( redshifts.size() > 0 );
 
+    // prepare the unused masks
+    std::vector<CMask> maskList;
+
     // Compute correlation factor at each of those redshifts
     COperatorCorrelation correlation;
-    std::shared_ptr<const CCorrelationResult> correlationResult = dynamic_pointer_cast<const CCorrelationResult> ( correlation.Compute( spcWithoutCont, tplWithoutCont, lambdaRange, redshifts, overlapThreshold ) );
+    std::shared_ptr<const CCorrelationResult> correlationResult = dynamic_pointer_cast<const CCorrelationResult> ( correlation.Compute( spcWithoutCont, tplWithoutCont, lambdaRange, redshifts, overlapThreshold, maskList ) );
 
     if( !correlationResult )
     {
@@ -141,7 +144,7 @@ Bool COperatorBlindSolve::BlindSolve( CDataStore& resultStore, const CSpectrum& 
     }
 
     COperatorChiSquare meritChiSquare;
-    auto chisquareResult = dynamic_pointer_cast<const CChisquareResult>( meritChiSquare.Compute( spc, tpl, lambdaRange, extremumRedshifts, overlapThreshold ) );
+    auto chisquareResult = dynamic_pointer_cast<const CChisquareResult>( meritChiSquare.Compute( spc, tpl, lambdaRange, extremumRedshifts, overlapThreshold, maskList ) );
     if( !chisquareResult )
     {
         return false;

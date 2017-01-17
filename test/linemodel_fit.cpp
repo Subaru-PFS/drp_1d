@@ -36,14 +36,14 @@ void checkAmplitudeAndVelocityFit(std::string spectrumPath, std::string noisePat
 
 
     // get continuum
-    CContinuumIrregularSamplingMedian continuum;
-    CSpectrumFluxAxis fluxAxisWithoutContinuumCalc;
-    Int32 retValCont = continuum.RemoveContinuum( spectrum, fluxAxisWithoutContinuumCalc );
+    //CContinuumIrregularSamplingMedian continuum;
+    //CSpectrumFluxAxis fluxAxisWithoutContinuumCalc;
+    //Int32 retValCont = continuum.RemoveContinuum( spectrum, fluxAxisWithoutContinuumCalc );
     CSpectrum spectrumContinuum = spectrum;
     CSpectrumFluxAxis& continuumFluxAxis = spectrumContinuum.GetFluxAxis();
     for(UInt32 i=0; i<continuumFluxAxis.GetSamplesCount(); i++){
-        continuumFluxAxis[i] -= fluxAxisWithoutContinuumCalc[i];
-        //continuumFluxAxis[i] = 0.0;
+        //continuumFluxAxis[i] -= fluxAxisWithoutContinuumCalc[i];
+        continuumFluxAxis[i] = 0.0;
     }
 
 
@@ -56,14 +56,22 @@ void checkAmplitudeAndVelocityFit(std::string spectrumPath, std::string noisePat
 
 
     std::string opt_continuumcomponent = "fromspectrum";
-    std::string opt_lineWidthType = "combined";
-    Float64 opt_resolution = 2350;
+    std::string opt_lineWidthType = "velocitydriven";
+    Float64 opt_resolution = 2350; //unused with velocity driven linewidth
     Float64 opt_velocityEmission = initVelocity;
     Float64 opt_velocityAbsorption = initVelocity;
     std::string opt_rules = "no";
+    std::string opt_rigidity = "rules";
+    std::string unused_calibrationPath="";
 
 
-    CLineModelElementList model(spectrum, spectrumContinuum, lineList, opt_fittingmethod, opt_continuumcomponent, opt_lineWidthType, opt_resolution, opt_velocityEmission, opt_velocityAbsorption, opt_rules);
+
+    //these tplcatalog related variables are unused here.
+    CTemplateCatalog tplCatalog;
+    Bool retValue = tplCatalog.Load( "../test/data/templatecatalog/" );
+    TStringList tplCategories;
+
+    CLineModelElementList model(spectrum, spectrumContinuum, tplCatalog, tplCategories, unused_calibrationPath, lineList, opt_fittingmethod, opt_continuumcomponent, opt_lineWidthType, opt_resolution, opt_velocityEmission, opt_velocityAbsorption, opt_rules, opt_rigidity);
     TFloat64Range lambdaRange = TFloat64Range( 100.0, 12000.0 );
     CLineModelResult::SLineModelSolution modelSolution;
     Float64 merit = model.fit(z, lambdaRange, modelSolution);
@@ -72,7 +80,7 @@ void checkAmplitudeAndVelocityFit(std::string spectrumPath, std::string noisePat
     for(Int32 k=0; k<ampsRef.size(); k++)
     {
         Float64 amp_fitted = modelSolution.Amplitudes[k];
-        BOOST_CHECK_CLOSE_FRACTION( amp_fitted, ampsRef[k], 0.15);
+        BOOST_CHECK_CLOSE_FRACTION( amp_fitted, ampsRef[k], 0.05);
     }
 
 
@@ -84,105 +92,61 @@ void checkAmplitudeAndVelocityFit(std::string spectrumPath, std::string noisePat
     {
         velocity = model.GetVelocityAbsorption();
     }
-    BOOST_CHECK_SMALL( fabs(velocity - fittedVelocityRef), 50.0); //todo: check with more precision ?
+    BOOST_CHECK_SMALL( fabs(velocity - fittedVelocityRef), 15.0); //todo: check with more precision ?
 
 }
 
-BOOST_AUTO_TEST_CASE( LinemodelFit_lmfit_velocity_synthetic2lines_no_normalization )
-{
-    std::string spectrumPath = "../test/data/LinemodelFitTestCase/simu_fit_synth_3.fits";
-    std::string noisePath    = "../test/data/LinemodelFitTestCase/simu_fit_synth_3_noise.fits";
-    std::string linecatalogPath = "../test/data/LinemodelFitTestCase/linecatalog_test_linemodel_fit_synth_b.txt";
 
-    std::string opt_fittingmethod = "lmfit";
-    Int32 lineTypeFilter = CRay::nType_Emission;
-    Float64 initialVelocity = 100.0;
-    Int32 forceFilter = CRay::nForce_Strong;
+//BOOST_AUTO_TEST_CASE( LinemodelFit_lmfit_velocity_pfsbatch6_emission_sym_single )
+//{
+//    std::string spectrumPath = "../test/data/LinemodelFitTestCase/55016588000024vacLine_TF.fits";
+//    std::string noisePath = "../test/data/LinemodelFitTestCase/55016588000024vacLine_ErrF.fits";
+//    std::string linecatalogPath = "../test/data/LinemodelFitTestCase/linecatalog_b9_emission_sym_single.txt";
 
-    std::vector<Float64> ampsRef;
-    ampsRef.push_back(1.0);
-    ampsRef.push_back(3.0);
-    ampsRef.push_back(4.0);
-    ampsRef.push_back(1.0);
+//    std::string opt_fittingmethod = "lmfit";
+//    Int32 lineTypeFilter = CRay::nType_Emission;
+//    Float64 initialVelocity = 100.0;
+//    Int32 forceFilter = CRay::nForce_Strong;
 
-    Float64 emissionVelocityRef = 377.0;
-    Float64 z = 0.0;
-    checkAmplitudeAndVelocityFit(spectrumPath, noisePath, linecatalogPath, opt_fittingmethod, lineTypeFilter, forceFilter, initialVelocity, z, ampsRef, emissionVelocityRef);
-}
+//    std::vector<Float64> ampsRef;
+//    ampsRef.push_back(-1);
+//    ampsRef.push_back(1.25*1e-18);
+//    ampsRef.push_back(2.79*1e-19);
+//    ampsRef.push_back(6.9*1e-19);
+//    ampsRef.push_back(3.8*1e-19);
+//    ampsRef.push_back(3.8*1e-19);
 
+//    Float64 emissionVelocityRef = 250.0;
+//    Float64 z = 0.954114;
+//    checkAmplitudeAndVelocityFit(spectrumPath, noisePath, linecatalogPath, opt_fittingmethod, lineTypeFilter, forceFilter, initialVelocity, z, ampsRef, emissionVelocityRef);
 
-BOOST_AUTO_TEST_CASE( LinemodelFit_lmfit_velocity_synthetic2lines_normalization )
-{
-    std::string spectrumPath = "../test/data/LinemodelFitTestCase/simu_fit_synth_3_weak.fits";
-    std::string noisePath    = "../test/data/LinemodelFitTestCase/simu_fit_synth_3_weak_noise.fits";
-    std::string linecatalogPath = "../test/data/LinemodelFitTestCase/linecatalog_test_linemodel_fit_synth_b.txt";
+//}
 
-    std::string opt_fittingmethod = "lmfit";
-    Int32 lineTypeFilter = CRay::nType_Emission;
-    Float64 initialVelocity = 100.0;
-    Int32 forceFilter = CRay::nForce_Strong;
+//BOOST_AUTO_TEST_CASE( LinemodelFit_lmfit_velocity_pfsbatch6_absorption_sym_single )
+//{
+//    std::string spectrumPath = "../test/data/LinemodelFitTestCase/10000663000008vacLine_TF.fits";
+//    std::string noisePath = "../test/data/LinemodelFitTestCase/10000663000008vacLine_ErrF.fits";
+//    std::string linecatalogPath = "../test/data/LinemodelFitTestCase/linecatalog_b9_absorption_sym_single.txt";
 
-    std::vector<Float64> ampsRef;
-    ampsRef.push_back(1.0*1e-17);
-    ampsRef.push_back(3.0*1e-17);
-    ampsRef.push_back(4.0*1e-17);
-    ampsRef.push_back(1.0*1e-17);
+//    std::string opt_fittingmethod = "lmfit";
+//    Int32 lineTypeFilter = CRay::nType_Absorption;
+//    Float64 initialVelocity = 100.0;
+//    Int32 forceFilter = -1;
 
-    Float64 emissionVelocityRef = 377.0;
-    Float64 z = 0.0;
-    checkAmplitudeAndVelocityFit(spectrumPath, noisePath, linecatalogPath, opt_fittingmethod, lineTypeFilter, forceFilter, initialVelocity, z, ampsRef, emissionVelocityRef);
-}
+//    std::vector<Float64> ampsRef;
+//    ampsRef.push_back(1.97e-16);
+//    ampsRef.push_back(2.38e-16);
+//    ampsRef.push_back(1.8e-16);
+//    ampsRef.push_back(1.97e-16);
+//    ampsRef.push_back(1.86e-16);
+//    ampsRef.push_back(1.51e-16);
+//    ampsRef.push_back(1.43e-16);
 
-BOOST_AUTO_TEST_CASE( LinemodelFit_lmfit_velocity_pfsbatch6_emission_sym_single )
-{
-    std::string spectrumPath = "../test/data/LinemodelFitTestCase/55016588000024vacLine_TF.fits";
-    std::string noisePath = "../test/data/LinemodelFitTestCase/55016588000024vacLine_ErrF.fits";
-    std::string linecatalogPath = "../test/data/LinemodelFitTestCase/linecatalog_b9_emission_sym_single.txt";
+//    Float64 absorptionVelocityRef = 775.0;
+//    Float64 z = 0.0772;
+//    checkAmplitudeAndVelocityFit(spectrumPath, noisePath, linecatalogPath, opt_fittingmethod, lineTypeFilter, forceFilter, initialVelocity, z, ampsRef, absorptionVelocityRef);
 
-    std::string opt_fittingmethod = "lmfit";
-    Int32 lineTypeFilter = CRay::nType_Emission;
-    Float64 initialVelocity = 100.0;
-    Int32 forceFilter = CRay::nForce_Strong;
-
-    std::vector<Float64> ampsRef;
-    ampsRef.push_back(-1);
-    ampsRef.push_back(1.25*1e-18);
-    ampsRef.push_back(2.79*1e-19);
-    ampsRef.push_back(6.9*1e-19);
-    ampsRef.push_back(3.8*1e-19);
-    ampsRef.push_back(3.8*1e-19);
-
-    Float64 emissionVelocityRef = 250.0;
-    Float64 z = 0.954114;
-    checkAmplitudeAndVelocityFit(spectrumPath, noisePath, linecatalogPath, opt_fittingmethod, lineTypeFilter, forceFilter, initialVelocity, z, ampsRef, emissionVelocityRef);
-
-}
-
-BOOST_AUTO_TEST_CASE( LinemodelFit_lmfit_velocity_pfsbatch6_absorption_sym_single )
-{
-    std::string spectrumPath = "../test/data/LinemodelFitTestCase/10000663000008vacLine_TF.fits";
-    std::string noisePath = "../test/data/LinemodelFitTestCase/10000663000008vacLine_ErrF.fits";
-    std::string linecatalogPath = "../test/data/LinemodelFitTestCase/linecatalog_b9_absorption_sym_single.txt";
-
-    std::string opt_fittingmethod = "lmfit";
-    Int32 lineTypeFilter = CRay::nType_Absorption;
-    Float64 initialVelocity = 100.0;
-    Int32 forceFilter = -1;
-
-    std::vector<Float64> ampsRef;
-    ampsRef.push_back(1.97e-16);
-    ampsRef.push_back(2.38e-16);
-    ampsRef.push_back(1.8e-16);
-    ampsRef.push_back(1.97e-16);
-    ampsRef.push_back(1.86e-16);
-    ampsRef.push_back(1.51e-16);
-    ampsRef.push_back(1.43e-16);
-
-    Float64 absorptionVelocityRef = 775.0;
-    Float64 z = 0.0772;
-    checkAmplitudeAndVelocityFit(spectrumPath, noisePath, linecatalogPath, opt_fittingmethod, lineTypeFilter, forceFilter, initialVelocity, z, ampsRef, absorptionVelocityRef);
-
-}
+//}
 
 //BOOST_AUTO_TEST_CASE( LinemodelFit_lmfit_velocity_pfshighz_emission_asym_single )
 //{
@@ -206,65 +170,200 @@ BOOST_AUTO_TEST_CASE( LinemodelFit_lmfit_velocity_pfsbatch6_absorption_sym_singl
 //}
 
 
-//BOOST_AUTO_TEST_CASE( LinemodelFit_lbfgsfit_1EmissionLine )
+BOOST_AUTO_TEST_CASE( LinemodelFit_lmfit_1EmissionLineF )
+{
+    std::string spectrumPath = "../test/data/LinemodelFitTestCase/signalnoise_4lines_sig400_6000A_10000A.fits";
+    std::string noisePath    = "../test/data/LinemodelFitTestCase/noise_4lines_sig400_6000A_10000A.fits";
+    std::string linecatalogPath = "../test/data/LinemodelFitTestCase/linecatalog_test_linemodel_profile_1EL.txt";
+
+    std::string opt_fittingmethod = "lmfit";
+    Int32 lineTypeFilter = CRay::nType_Emission;
+    Int32 forceFilter = CRay::nForce_Strong;
+
+    std::vector<Float64> ampsRef;
+    ampsRef.push_back(1.0);
+
+    Float64 emissionVelocityRef = 400.0;
+    Float64 z = 0.0;
+
+    Float64 initialVelocity = 50.0;
+    for(Int32 kV=0; kV<5; kV++)
+    {
+        BOOST_TEST_MESSAGE( "LinemodelFit_lmfit_1EmissionLineF: initial velocity: " << initialVelocity );
+        checkAmplitudeAndVelocityFit(spectrumPath, noisePath, linecatalogPath, opt_fittingmethod, lineTypeFilter, forceFilter, initialVelocity, z, ampsRef, emissionVelocityRef);
+        initialVelocity += 100.0;
+    }
+
+}
+
+BOOST_AUTO_TEST_CASE( LinemodelFit_lmfit_4UnitaryEmissionLinesTF )
+{
+    std::string spectrumPath = "../test/data/LinemodelFitTestCase/signal_4lines_sig100_6000A_10000A_a1.0.fits";
+    std::string noisePath    = "../test/data/LinemodelFitTestCase/noise_4lines_sig400_6000A_10000A.fits";
+    std::string linecatalogPath = "../test/data/LinemodelFitTestCase/linecatalog_test_linemodel_profile_4EL.txt";
+
+    std::string opt_fittingmethod = "lmfit";
+    Int32 lineTypeFilter = CRay::nType_Emission;
+    Int32 forceFilter = CRay::nForce_Strong;
+
+    std::vector<Float64> ampsRef;
+    ampsRef.push_back(1.0);
+    ampsRef.push_back(1.0);
+    ampsRef.push_back(1.0);
+    ampsRef.push_back(1.0);
+
+    Float64 emissionVelocityRef = 100.0;
+    Float64 z = 0.0;
+
+    Float64 initialVelocity = 50.0;
+    for(Int32 kV=0; kV<5; kV++)
+    {
+        BOOST_TEST_MESSAGE( "LinemodelFit_lmfit_4UnitaryEmissionLinesTF: initial velocity: " << initialVelocity );
+        checkAmplitudeAndVelocityFit(spectrumPath, noisePath, linecatalogPath, opt_fittingmethod, lineTypeFilter, forceFilter, initialVelocity, z, ampsRef, emissionVelocityRef);
+        initialVelocity += 100.0;
+    }
+}
+
+BOOST_AUTO_TEST_CASE( LinemodelFit_lmfit_4UnitaryEmissionLinesTF_normalisation )
+{
+    std::string spectrumPath = "../test/data/LinemodelFitTestCase/signal_4lines_sig100_6000A_10000A_a1.0_1em17.fits";
+    std::string noisePath    = "../test/data/LinemodelFitTestCase/noise_4lines_sig400_6000A_10000A_1em17.fits";
+    std::string linecatalogPath = "../test/data/LinemodelFitTestCase/linecatalog_test_linemodel_profile_4EL.txt";
+
+    std::string opt_fittingmethod = "lmfit";
+    Int32 lineTypeFilter = CRay::nType_Emission;
+    Int32 forceFilter = CRay::nForce_Strong;
+
+    std::vector<Float64> ampsRef;
+    ampsRef.push_back(1.0e-17);
+    ampsRef.push_back(1.0e-17);
+    ampsRef.push_back(1.0e-17);
+    ampsRef.push_back(1.0e-17);
+
+    Float64 emissionVelocityRef = 100.0;
+    Float64 z = 0.0;
+
+    Float64 initialVelocity = 50.0;
+    for(Int32 kV=0; kV<5; kV++)
+    {
+        BOOST_TEST_MESSAGE( "LinemodelFit_lmfit_4UnitaryEmissionLinesTF_normalisation: initial velocity: " << initialVelocity );
+        checkAmplitudeAndVelocityFit(spectrumPath, noisePath, linecatalogPath, opt_fittingmethod, lineTypeFilter, forceFilter, initialVelocity, z, ampsRef, emissionVelocityRef);
+        initialVelocity += 100.0;
+    }
+}
+
+BOOST_AUTO_TEST_CASE( LinemodelFit_lmfit_4EmissionLinesF )
+{
+    std::string spectrumPath = "../test/data/LinemodelFitTestCase/signalnoise_4lines_sig400_6000A_10000A.fits";
+    std::string noisePath    = "../test/data/LinemodelFitTestCase/noise_4lines_sig400_6000A_10000A.fits";
+    std::string linecatalogPath = "../test/data/LinemodelFitTestCase/linecatalog_test_linemodel_profile_4EL.txt";
+
+    std::string opt_fittingmethod = "lmfit";
+    Int32 lineTypeFilter = CRay::nType_Emission;
+    Int32 forceFilter = CRay::nForce_Strong;
+
+    std::vector<Float64> ampsRef;
+    ampsRef.push_back(1.0);
+    ampsRef.push_back(3.0);
+    ampsRef.push_back(4.0);
+    ampsRef.push_back(0.1);
+
+    Float64 emissionVelocityRef = 400.0;
+    Float64 z = 0.0;
+
+    Float64 initialVelocity = 50.0;
+    for(Int32 kV=0; kV<5; kV++)
+    {
+        BOOST_TEST_MESSAGE( "LinemodelFit_lmfit_4EmissionLinesF: initial velocity: " << initialVelocity );
+        checkAmplitudeAndVelocityFit(spectrumPath, noisePath, linecatalogPath, opt_fittingmethod, lineTypeFilter, forceFilter, initialVelocity, z, ampsRef, emissionVelocityRef);
+        initialVelocity += 100.0;
+    }
+
+}
+
+
+//BOOST_AUTO_TEST_CASE( LinemodelFit_lbfgsfit_4UnitaryEmissionLinesTF )
 //{
-//    std::string spectrumPath = "../test/data/LinemodelFitTestCase/simu_fit_synth_3.fits";
-//    std::string noisePath    = "../test/data/LinemodelFitTestCase/simu_fit_synth_3_noise.fits";
-//    std::string linecatalogPath = "../test/data/LinemodelFitTestCase/linecatalog_test_linemodel_fit_synth_1line.txt";
+//    std::string spectrumPath = "../test/data/LinemodelFitTestCase/signal_4lines_sig100_6000A_10000A_a1.0.fits";
+//    std::string noisePath    = "../test/data/LinemodelFitTestCase/noise_4lines_sig400_6000A_10000A.fits";
+//    std::string linecatalogPath = "../test/data/LinemodelFitTestCase/linecatalog_test_linemodel_profile_4EL.txt";
+
+//    std::string opt_fittingmethod = "lbfgsfit";
+//    Int32 lineTypeFilter = CRay::nType_Emission;
+//    Int32 forceFilter = CRay::nForce_Strong;
+
+//    std::vector<Float64> ampsRef;
+//    ampsRef.push_back(1.0);
+//    ampsRef.push_back(1.0);
+//    ampsRef.push_back(1.0);
+//    ampsRef.push_back(1.0);
+
+//    Float64 emissionVelocityRef = 100.0;
+//    Float64 z = 0.0;
+
+//    Float64 initialVelocity = 50.0;
+//    for(Int32 kV=0; kV<5; kV++)
+//    {
+//        BOOST_TEST_MESSAGE( "LinemodelFit_lbfgsfit_4UnitaryEmissionLinesTF: initial velocity: " << initialVelocity );
+//        checkAmplitudeAndVelocityFit(spectrumPath, noisePath, linecatalogPath, opt_fittingmethod, lineTypeFilter, forceFilter, initialVelocity, z, ampsRef, emissionVelocityRef);
+//        initialVelocity += 100.0;
+//    }
+//}
+
+//BOOST_AUTO_TEST_CASE( LinemodelFit_lbfgsfit_1EmissionLineF )
+//{
+//    std::string spectrumPath = "../test/data/LinemodelFitTestCase/signalnoise_4lines_sig400_6000A_10000A.fits";
+//    std::string noisePath    = "../test/data/LinemodelFitTestCase/noise_4lines_sig400_6000A_10000A.fits";
+//    std::string linecatalogPath = "../test/data/LinemodelFitTestCase/linecatalog_test_linemodel_profile_1EL.txt";
 
 //    std::string opt_fittingmethod = "lbfgsfit";//"hybrid";//
 //    Int32 lineTypeFilter = CRay::nType_Emission;
-//    Float64 initialVelocity = 250.0;
 //    Int32 forceFilter = CRay::nForce_Strong;
 
 //    std::vector<Float64> ampsRef;
 //    ampsRef.push_back(1.0);
 
-//    Float64 emissionVelocityRef = 380;//377.0;
+//    Float64 emissionVelocityRef = 400.0;
 //    Float64 z = 0.0;
-//    checkAmplitudeAndVelocityFit(spectrumPath, noisePath, linecatalogPath, opt_fittingmethod, lineTypeFilter, forceFilter, initialVelocity, z, ampsRef, emissionVelocityRef);
+
+//    Float64 initialVelocity = 450.0;
+//    for(Int32 kV=0; kV<1; kV++)
+//    {
+//        BOOST_TEST_MESSAGE( "LinemodelFit_lbfgsfit_1EmissionLineF: initial velocity: " << initialVelocity );
+//        checkAmplitudeAndVelocityFit(spectrumPath, noisePath, linecatalogPath, opt_fittingmethod, lineTypeFilter, forceFilter, initialVelocity, z, ampsRef, emissionVelocityRef);
+//        initialVelocity += 400.0;
+//    }
+
 //}
 
-//BOOST_AUTO_TEST_CASE( LinemodelFit_lbfgsfit_2EmissionLines )
+
+//BOOST_AUTO_TEST_CASE( LinemodelFit_lbfgsfit_4EmissionLinesF )
 //{
-//    std::string spectrumPath = "../test/data/LinemodelFitTestCase/simu_fit_synth_3.fits";
-//    std::string noisePath    = "../test/data/LinemodelFitTestCase/simu_fit_synth_3_noise.fits";
-//    std::string linecatalogPath = "../test/data/LinemodelFitTestCase/linecatalog_test_linemodel_fit_synth_2lines.txt";
+//    std::string spectrumPath = "../test/data/LinemodelFitTestCase/signalnoise_4lines_sig400_6000A_10000A.fits";
+//    std::string noisePath    = "../test/data/LinemodelFitTestCase/noise_4lines_sig400_6000A_10000A.fits";
+//    std::string linecatalogPath = "../test/data/LinemodelFitTestCase/linecatalog_test_linemodel_profile_4EL.txt";
 
-//    std::string opt_fittingmethod = "lbfgsfit";//"hybrid";//
+//    std::string opt_fittingmethod = "lbfgsfit";
 //    Int32 lineTypeFilter = CRay::nType_Emission;
-//    Float64 initialVelocity = 250.0;
-//    Int32 forceFilter = CRay::nForce_Strong;
-
-//    std::vector<Float64> ampsRef;
-//    ampsRef.push_back(3.0);
-//    ampsRef.push_back(1.0);
-
-//    Float64 emissionVelocityRef = 377.0;
-//    Float64 z = 0.0;
-//    checkAmplitudeAndVelocityFit(spectrumPath, noisePath, linecatalogPath, opt_fittingmethod, lineTypeFilter, forceFilter, initialVelocity, z, ampsRef, emissionVelocityRef);
-//}
-
-//BOOST_AUTO_TEST_CASE( LinemodelFit_lbfgsfit_4EmissionLines )
-//{
-//    std::string spectrumPath = "../test/data/LinemodelFitTestCase/simu_fit_synth_3.fits";
-//    std::string noisePath    = "../test/data/LinemodelFitTestCase/simu_fit_synth_3_noise.fits";
-//    std::string linecatalogPath = "../test/data/LinemodelFitTestCase/linecatalog_test_linemodel_fit_synth_b.txt";
-
-//    std::string opt_fittingmethod = "lbfgsfit";//"hybrid";//
-//    Int32 lineTypeFilter = CRay::nType_Emission;
-//    Float64 initialVelocity = 250.0;
 //    Int32 forceFilter = CRay::nForce_Strong;
 
 //    std::vector<Float64> ampsRef;
 //    ampsRef.push_back(1.0);
 //    ampsRef.push_back(3.0);
 //    ampsRef.push_back(4.0);
-//    ampsRef.push_back(1.0);
+//    ampsRef.push_back(0.1);
 
-//    Float64 emissionVelocityRef = 377.0;
+//    Float64 emissionVelocityRef = 400.0;
 //    Float64 z = 0.0;
-//    checkAmplitudeAndVelocityFit(spectrumPath, noisePath, linecatalogPath, opt_fittingmethod, lineTypeFilter, forceFilter, initialVelocity, z, ampsRef, emissionVelocityRef);
+
+//    Float64 initialVelocity = 100.0;
+//    for(Int32 kV=0; kV<1; kV++)
+//    {
+//        BOOST_TEST_MESSAGE( "LinemodelFit_lbfgsfit_4EmissionLinesF: initial velocity: " << initialVelocity );
+//        checkAmplitudeAndVelocityFit(spectrumPath, noisePath, linecatalogPath, opt_fittingmethod, lineTypeFilter, forceFilter, initialVelocity, z, ampsRef, emissionVelocityRef);
+//        initialVelocity += 100.0;
+//    }
+
 //}
 
 BOOST_AUTO_TEST_SUITE_END()

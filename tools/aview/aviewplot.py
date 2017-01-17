@@ -19,16 +19,23 @@ import matplotlib.pyplot as pp
 #sns.set_style("whitegrid")
 from matplotlib import gridspec
 from matplotlib.ticker import MultipleLocator, FormatStrFormatter
-import lineid_plot
+pp.style.use('ggplot')
+
 
 import numpy as np
+from scipy import interpolate
+
 
 import spectrum as sp
 import catalog as ctlg
 
+lines_label_method = 0 #0 = subplot with labels, #1 = using lineid_plot package on main spc view
+if lines_label_method==1:
+    import lineid_plot
+
 
 class AViewPlot(object):
-    def __init__(self, spath, npath, tpath, cpath, z, forceTplAmplitude=-1.0, forceTplDoNotRedShift = 0, enablePlot=True, scontinuumpath = ""):
+    def __init__(self, spath, npath, tpath, cpath, z, forceTplAmplitude=-1.0, forceTplDustCoeff=0.0, forceTplDoNotRedShift = 0, enablePlot=True, scontinuumpath = ""):
         self.spath = spath
         self.scontinuumpath = scontinuumpath
         
@@ -40,6 +47,7 @@ class AViewPlot(object):
         self.spcname = "-"
         
         self.forceTplAmplitude = forceTplAmplitude;
+        self.forceTplDustCoeff = forceTplDustCoeff;
         self.forceTplDoNotRedShift = forceTplDoNotRedShift;
         
         self.forcePlotXIndex = False
@@ -105,10 +113,19 @@ class AViewPlot(object):
                             return
                         self.t.yvect[k] -=  self.scontinuum.yvect[k]
                     titleStr += "(NoCont.)"
-                
+                                    
             else:
                 tplStr = "tpl"
+                #optionnally apply some Dust attenuation (calzetti)
+                if self.forceTplDustCoeff>0.0:
+                    print("INFO: Applying Calzetti Attenuation with EBMV = {}".format(self.forceTplDustCoeff))
+                    self.t.applyCalzettiAttenuation(self.forceTplDustCoeff)
+                else:
+                    print("INFO: No Calzetti DUST attenuation applied".format())
+
+                    
             titleStr += ("{}={}\n".format(tplStr, self.t.name))
+            
                      
         titleStr += "z={}".format(self.z)
         self.name = titleStr
@@ -134,14 +151,14 @@ class AViewPlot(object):
             #self.xmax = max(self.sxvect[self.s.n-1], self.txvect[self.t.n-1])        
             self.ymin = min(min(self.syvect), min(self.tyvect))
             self.ymax = max(max(self.syvect), max(self.tyvect))
+            print("INFO: tpl Ampl. factor used is {}".format(A))
+            print("INFO: tpl Ampl.*Norm [{}; {}]A is {}".format(self.xmin, self.xmax, A*self.t.getFluxNorm(self.xmin, self.xmax)))
         else:
             A = 1.0
             self.xmin = self.sxvect[0]
             self.xmax = self.sxvect[self.s.n-1]       
             self.ymin = min(self.syvect)
             self.ymax = max(self.syvect)
-        print("INFO: tpl Ampl. factor used is {}".format(A))
-        print("INFO: tpl Ampl.*Norm [{}; {}]A is {}".format(self.xmin, self.xmax, A*self.t.getFluxNorm(self.xmin, self.xmax)))
 
         #compute ranges  
         if not self.exportAutoDisplaysPath == "":
@@ -189,14 +206,39 @@ class AViewPlot(object):
         print("Plotting aviewplot: ymin={}, ymax={}".format(self.ymin, self.ymax))
 
         #prepare noise vects
-        if not self.forcePlotNoNoise:
-            self.nxvect = self.noise.xvect
-            self.nyvect = self.noise.yvect
+        if 1:
+            if not self.forcePlotNoNoise:
+                self.nxvect = self.noise.xvect
+                self.nyvect = self.noise.yvect
+                ax2Label = 'Noise'                
+                useReducedAx2Range = True
+                ax2Color = 'k'
+            else:
+                ax2Label = '-'                
+                useReducedAx2Range = False
+                ax2Color = 'k'
+                
+        else:
+            #prepare fitError vects
+            tplInterp = self.t.copy()
+            if not self.forceTplDoNotRedShift:
+                tplInterp.applyRedshift(self.z)
+            tplInterp.interpolateOnGrid(self.sxvect)
+            tplInterpYvect = tplInterp.getWeightedY(A)
+            self.nxvect = []
+            self.nyvect = []
+            for k in range(len(self.sxvect)):
+                self.nxvect.append(self.sxvect[k])
+                yts2 = (self.syvect[k]-tplInterpYvect[k])**2/self.noise.yvect[k]**2
+                self.nyvect.append(np.sqrt(yts2))
+            #self.nyvect = tplInterp.smoothGaussian(self.nyvect, 50) 
+            ax2Label = 'Fit Err'       
+            useReducedAx2Range = False
+            ax2Color = 'b'
         
         
         
         #prepare lines        
-        lines_label_method = 0 #0 = subplot with labels, #1 = using lineid_plot on main spc view
         if not self.forcePlotNoLines:
             #self.linesx = []
             #self.linesx.append(6564)
@@ -239,9 +281,15 @@ class AViewPlot(object):
         
         gs.update(wspace=0.05, hspace=0.1) # set the spacing between axes. 
         # SPECTRUM
-        spcColor = '0.6'
+        spcColor = 'k'
+        #errorColor = 'k'
+        #nSigma = 12.75 #90% confidence interval bilateral
         if not self.forcePlotXIndex:
-            ax1.plot(self.sxvect, self.syvect, color = spcColor, label='Flux')
+            ax1.plot(self.sxvect, self.syvect, color = spcColor, linewidth = 1, alpha=0.25, label='Flux')
+            #if not self.forcePlotNoNoise:
+                #error_low = np.array(self.syvect) - nSigma*np.array(self.nyvect)
+                #error_high = np.array(self.syvect) + nSigma*np.array(self.nyvect)
+                #ax1.fill_between(self.nxvect, error_low, error_high, color = errorColor, alpha=0.1, label="Error")
         else:
             ax1.plot(self.syvect, color = spcColor, label='Flux')
         if not self.forcePlotNoTemplate:
@@ -255,9 +303,9 @@ class AViewPlot(object):
         # NOISE
         if not self.forcePlotNoNoise:
             if not self.forcePlotXIndex:
-                ax2.plot(self.nxvect, self.nyvect, 'k', label='noise')
+                ax2.plot(self.nxvect, self.nyvect, ax2Color, label='noise')
             else:
-                ax2.plot(self.nyvect, 'k', label='noise')
+                ax2.plot(self.nyvect, ax2Color, label='noise')
 
         if lines_label_method==0:
             # make ax2 nice
@@ -284,20 +332,22 @@ class AViewPlot(object):
         line_wave = []
         line_label = []
         line_type = []
-        #line_arrow_tips = []
-        ak = lineid_plot.initial_annotate_kwargs()
-        #print(ak)
-        #ak['arrowprops']['arrowstyle'] = "->"
-        pk = lineid_plot.initial_plot_kwargs()
-        #print(pk)
-        label_max_size = 12
+        if lines_label_method==1:
+            #line_arrow_tips = []
+            ak = lineid_plot.initial_annotate_kwargs()
+            #print(ak)
+            #ak['arrowprops']['arrowstyle'] = "->"
+            pk = lineid_plot.initial_plot_kwargs()
+            #print(pk)
+            label_max_size = 12
         lposOffsetE = 0
         lposOffsetA = 0
         if not self.forcePlotNoLines:
             for k in range(len(self.linesx)):
                 #x = self.linesx[k]*(1+self.z)
                 x = self.linesx[k]
-                if x<self.xmin or x>self.xmax :
+                lbda_margin_lines = 25*(1.0+self.z)
+                if x<self.xmin-lbda_margin_lines or x>self.xmax+lbda_margin_lines :
                     continue
                 if self.linestype[k]=='E':
                     cstyle = 'b-'
@@ -310,7 +360,7 @@ class AViewPlot(object):
                     lpos = 1 + lposOffsetA
                     lstyle = 'dashed'
                 if lines_label_method==0: #old method
-                    ax1.plot((x, x), (-100000,100000) , cstyle, linestyle = lstyle, alpha=0.45, label=self.linesname[k] )
+                    ax1.plot((x, x), (-100000,100000) , cstyle, linestyle = lstyle, alpha=0.35, label=self.linesname[k] )
                     #pp.text(x, self.ymax*0.75, '{0}'.format(self.linesname[k]))
                     #print("testlinepos = {0}".format(self.t.getWeightedFlux(self.linesxrest[k], self.s.ysum / self.t.ysum)*2.0))
                     if 0 and not self.forcePlotNoTemplate:
@@ -325,8 +375,8 @@ class AViewPlot(object):
                         showLine = True
                         if showLine:
                             #pp.text(x, self.ymax*0.75, '{0}:{1:.2f}'.format(self.linesname[k], x))
-                            ax3.plot((x, x), (lpos+2, 10) , cstyle, linestyle = lstyle, alpha=0.45, label=self.linesname[k] )
-                            annotation = ax3.text(x, lpos, '{0}'.format(self.linesname[k]), color=ccolor, alpha = 0.85)
+                            ax3.plot((x, x), (lpos+2, 10) , cstyle, linestyle = lstyle, alpha=0.35, label=self.linesname[k] )
+                            annotation = ax3.text(x, lpos, '{0}'.format(self.linesname[k]), color=ccolor, alpha = 0.7)
                             if self.linestype[k]=='E':
                                 lposOffsetE += 1
                                 if lposOffsetE>3:
@@ -443,8 +493,7 @@ class AViewPlot(object):
         
         #set the Noise axis
         if not self.forcePlotNoNoise:
-            useReducedNoise = True
-            if useReducedNoise:
+            if useReducedAx2Range:
                 nmean = np.mean([a for a in self.nyvect if a>0.0 and np.isfinite(a)])
                 nstd = np.std([a for a in self.nyvect if a>0.0 and np.isfinite(a)])
                 print("noise nmean={}, nstd={}".format(nmean, nstd))
@@ -485,9 +534,16 @@ class AViewPlot(object):
                 ax2.set_xlabel('index')
             
         ax1.set_ylabel('Flux')
-        ax2.set_ylabel('Noise')
-        ax1.set_title(self.name) # Titre
+        ax2.set_ylabel(ax2Label)
+        fullTitle = "{}\na={}, ebmv={}".format(self.name, A, self.forceTplDustCoeff)
+        ax1.set_title(fullTitle) # Titre
         
+        if not self.forcePlotNoTemplate:
+            ax1.legend(labels = ['spc', 'model'])
+            
+        #print the total lst-sq error
+        sqErr = np.sqrt(self.s.getSquareError(self.t, A))
+        print("INFO: estimated approx. lst-sq error = {}".format(sqErr))
         
         if not self.exportAutoDisplaysPath == "":
             print("INFO: exporting auto display")
@@ -626,6 +682,12 @@ class AViewPlot(object):
         displays_lambdas_rest_max.append(4050)
         displays_names.append("CaH_CaK")
         
+        # add Ca to the pool of displayed ranges
+        displays_lambdas_rest_center.append(8500)
+        displays_lambdas_rest_min.append(8000)
+        displays_lambdas_rest_max.append(9000)
+        displays_names.append("CaII_triplet")
+        
         ndisp = len(displays_lambdas_rest_center)
         #ndisp = 1
         for a in range(ndisp):
@@ -654,6 +716,7 @@ def StartFromCommandLine( argv ) :
     parser.add_option(u"-z", u"--redshift", help="z to be plotted",  dest="redshift", default="-1")
     parser.add_option(u"-m", u"--redshifttpl", help="force do not plot redshift",  dest="redshifttpl", default="0")
     parser.add_option(u"-a", u"--tplamp", help="amp. to be used to rescale the template",  dest="tplamp", default="-1")
+    parser.add_option(u"-e", u"--tplebmvcoeff", help="ebmv coeff. to be used to weight the tpl",  dest="tplebmv", default="0.0")
     
     
     (options, args) = parser.parse_args()
@@ -661,7 +724,7 @@ def StartFromCommandLine( argv ) :
     if( len( args ) == 0 ) :
         forceTplDoNotRedShift = bool(int(options.redshifttpl))
         print("forceTplDoNotRedShift = {}".format(forceTplDoNotRedShift))
-        avp = AViewPlot(options.spcPath, options.noisePath, options.tplpath, options.ctlgPath, float(options.redshift), float(options.tplamp), forceTplDoNotRedShift = forceTplDoNotRedShift )
+        avp = AViewPlot(options.spcPath, options.noisePath, options.tplpath, options.ctlgPath, float(options.redshift), forceTplAmplitude=float(options.tplamp), forceTplDustCoeff=float(options.tplebmv), forceTplDoNotRedShift = forceTplDoNotRedShift )
         
         exit()
     else:
@@ -677,77 +740,3 @@ if __name__ == '__main__':
     print "Catalog"
     Main( sys.argv )
         
-#if __name__ == '__main__':
-#    if 0:
-#        path = "/home/aschmitt/data/pfs/pfs_lbg/lbgabs_1K_2z3_20J22.5"
-#        name = "EZ_fits-W-F_9.fits"
-#        spath = os.path.join(path,name)
-#        print('using full path s: {0}'.format(spath))
-#    
-#        name = "EZ_fits-W-F_9.fits"
-#        tpath = os.path.join(path,name)
-#        print('using full path t: {0}'.format(tpath))
-#        
-#        avp = AViewPlot(spath, tpath, 0.1)
-#    
-#    if 0:
-#        spath = "/home/aschmitt/data/vvds/vvds2/cesam_vvds_z0_F02_DEEP/1D/sc_020086957_F02P018_vmM1_red_88_1_atm_clean.fits"
-#        print('Spc path is: {0}'.format(spath))
-#        zval = 4.8
-#        print('Redshift is: {0}'.format(zval))
-#        #print(s.getRedshiftTpl(spcName))
-#        tpath = "/home/aschmitt/data/vvds/vvds2/cesam_vvds_z0_F02_DEEP/amazed/Templates/Default/qso/SDSS_AGN.txt"
-#        tpath = "/home/aschmitt/data/vvds/vvds2/cesam_vvds_z0_F02_DEEP/amazed/Templates/Default/galaxy/ave_Lya_no.txt"
-#        print('Tpl path is: {0}'.format(tpath) )  
-#        cpath = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/RayCatalogs/raycatalogamazedvacuum.txt"
-#        print('Catalog path is: {0}'.format(cpath) )  
-#        
-#        #overrride zval
-#        #zval = 2.11605 #for pfs lbg abs, EZ_fits-W-F_9
-#        #zval = 1.1714 #for vvds1 'sc_020086397_F02P016_vmM1_red_31_1_atm_clean'
-#        #zval = 1.355
-#        #zval = 1.075
-#        avp = AViewPlot(spath, tpath, cpath, zval)
-#        
-#    if 1:
-#        spath = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/1D/sc_020086471_F02P016_vmM1_red_107_1_atm_clean.fits"
-#        spath = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/1D/sc_020135682_F02P019_vmM1_red_99_1_atm_clean.fits"
-#        print('Spc path is: {0}'.format(spath))
-#        zval = 1.1247
-#        print('Redshift is: {0}'.format(zval))
-#        #print(s.getRedshiftTpl(spcName))
-#        tpath = "/home/aschmitt/data/pfs/pfs_lbg/amazed/Templates/ExtendedGalaxyEL2/emission/NEW_Im_extended_blue.dat"
-#        tpath = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/Templates/ExtendedGalaxyEL2/emission/NEW_Im_extended_blue.dat"
-#        tpath = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/Templates/linemodel/emission/NEW_Im_extended_blue_continuum.txt"
-#        print('Tpl path is: {0}'.format(tpath) )  
-#        
-#        cpath = "/home/aschmitt/data/vvds/vvds1/cesam_vvds_spAll_F02_1D_1426869922_SURVEY_DEEP/results_amazed/linecatalogs/linecatalogamazedair_B5.txt"
-#        print('Catalog path is: {0}'.format(cpath) )  
-#        
-#        #overrride zval
-#        #zval = 2.11605 #for pfs lbg abs, EZ_fits-W-F_9
-#        #zval = 1.1714 #for vvds1 'sc_020086397_F02P016_vmM1_red_31_1_atm_clean'
-#        #zval = 1.355
-#        #zval = 1.075
-#        avp = AViewPlot(spath, "", tpath, cpath, zval)
-#    
-#    if 0:
-#        spath = "/home/aschmitt/data/pfs/pfs_testsimu_20151009/470026900000130.2-0.4_20_20.5_/470026900000130.2-0.4_20_20.5_EZ_fits-W-TF_0.fits"
-#        print('Spc path is: {0}'.format(spath))
-#        npath = "/home/aschmitt/data/pfs/pfs_testsimu_20151009/470026900000130.2-0.4_20_20.5_/470026900000130.2-0.4_20_20.5_EZ_fits-W-ErrF_0.fits"
-#        print('Noise path is: {0}'.format(npath))
-#        
-#        zval = 0.3375
-#        print('Redshift is: {0}'.format(zval))
-#        #print(s.getRedshiftTpl(spcName))
-#        tpath = ""
-#        print('Tpl path is: {0}'.format(tpath) )  
-#        cpath = "/home/aschmitt/data/pfs/pfs_testsimu_20151009/amazed/linecatalogs/linecatalogamazedvacuum_B5.txt"
-#        print('Catalog path is: {0}'.format(cpath) )  
-#        
-#        #overrride zval
-#        #zval = 2.11605 #for pfs lbg abs, EZ_fits-W-F_9
-#        #zval = 1.1714 #for vvds1 'sc_020086397_F02P016_vmM1_red_31_1_atm_clean'
-#        #zval = 1.355
-#        #zval = 1.075
-#        avp = AViewPlot(spath, npath, tpath, cpath, zval)

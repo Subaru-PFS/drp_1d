@@ -117,6 +117,7 @@ bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath,
         Float64 opt_medianKernelWidth;
         paramStore->Get( "continuumRemoval.medianKernelWidth", opt_medianKernelWidth, 75 );
         continuum.SetMedianKernelWidth(opt_medianKernelWidth);
+        continuum.SetMeanKernelWidth(opt_medianKernelWidth);
         m_SpectrumWithoutContinuum->RemoveContinuum( continuum );
 
     }else if( medianRemovalMethod== "Median")

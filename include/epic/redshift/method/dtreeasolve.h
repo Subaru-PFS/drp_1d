@@ -20,7 +20,7 @@ class COperatorDTreeASolve
 
 public:
 
-    COperatorDTreeASolve();
+    COperatorDTreeASolve(std::string calibrationPath);
     ~COperatorDTreeASolve();
 
     std::shared_ptr<const CDTreeASolveResult> Compute(CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
@@ -49,6 +49,8 @@ private:
                               Int32 correlationExtremumCount, Float64 overlapThreshold );
 
     TStringList getFilteredTplCategory( const TStringList& tplCategoryListIn, const std::string& CategoryFilter);
+
+    std::string m_calibrationPath;
 };
 
 

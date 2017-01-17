@@ -31,7 +31,7 @@ public:
 
     void prepareSupport(const CSpectrumSpectralAxis& spectralAxis, Float64 redshift, const TFloat64Range& lambdaRange);
     TInt32RangeList getSupport();
-    TInt32Range GetTheoreticalSupport(Int32 subeIdx, const CSpectrumSpectralAxis& spectralAxis, Float64 redshift,  const TFloat64Range &lambdaRange);
+    TInt32Range EstimateTheoreticalSupport(Int32 subeIdx, const CSpectrumSpectralAxis& spectralAxis, Float64 redshift,  const TFloat64Range &lambdaRange);
     TInt32Range getSupportSubElt(Int32 subeIdx);
     TInt32Range getTheoreticalSupportSubElt(Int32 subeIdx);
 
@@ -46,6 +46,7 @@ public:
     Float64 GetFittedAmplitude(Int32 subeIdx);
     Float64 GetFittedAmplitudeErrorSigma(Int32 subeIdx);
     Float64 GetNominalAmplitude(Int32 subeIdx);
+    bool SetNominalAmplitude(Int32 subeIdx, Float64 nominalamp);
     Float64 GetElementAmplitude();
     void SetFittedAmplitude(Float64 A, Float64 SNR);
     void LimitFittedAmplitude(Int32 subeIdx, Float64 limit);

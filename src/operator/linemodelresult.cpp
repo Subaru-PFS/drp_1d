@@ -37,7 +37,10 @@ Void CLineModelResult::ResizeExtremaResults(Int32 size)
     SigmaZ.resize(size);
     bic.resize(size);
     ContinuumIndexes.resize(size);
-
+    OutsideLinesMask.resize(size);
+    FittedTplName.resize(size);
+    FittedTplAmplitude.resize(size);
+    FittedTplcorrTplName.resize(size);
 }
 
 
@@ -229,6 +232,56 @@ Void CLineModelResult::Save( const CDataStore& store, std::ostream& stream ) con
         for ( int i=0; i<StrongELSNR.size(); i++)
         {
             stream <<  StrongELSNR[i] << "\t";
+        }
+        stream << "}" << std::endl;
+    }
+
+    // save dTransposeDNocontinuum, on 1 line
+    if(StrongELSNR.size()>0){
+        stream <<  "#dTransposeDNocontinuum for each extrema = {";
+        for ( int i=0; i<StrongELSNR.size(); i++)
+        {
+            stream <<  dTransposeDNocontinuum << "\t";
+        }
+        stream << "}" << std::endl;
+    }
+
+    // save dTransposeD, on 1 line
+    if(StrongELSNR.size()>0){
+        stream <<  "#dTransposeD for each extrema = {";
+        for ( int i=0; i<StrongELSNR.size(); i++)
+        {
+            stream <<  dTransposeD << "\t";
+        }
+        stream << "}" << std::endl;
+    }
+
+    // save FittedTplName, on 1 line
+    if(FittedTplName.size()>0){
+        stream <<  "#FittedTplName for each extrema = {";
+        for ( int i=0; i<FittedTplName.size(); i++)
+        {
+            stream <<  FittedTplName[i] << "\t";
+        }
+        stream << "}" << std::endl;
+    }
+
+    // save FittedTplAmplitude, on 1 line
+    if(FittedTplAmplitude.size()>0){
+        stream <<  "#FittedTplAmplitude for each extrema = {";
+        for ( int i=0; i<FittedTplAmplitude.size(); i++)
+        {
+            stream <<  FittedTplAmplitude[i] << "\t";
+        }
+        stream << "}" << std::endl;
+    }
+
+    // save FittedTplcorrTplName, on 1 line
+    if(FittedTplcorrTplName.size()>0){
+        stream <<  "#FittedTplcorrTplName for each extrema = {";
+        for ( int i=0; i<FittedTplcorrTplName.size(); i++)
+        {
+            stream <<  FittedTplcorrTplName[i] << "\t";
         }
         stream << "}" << std::endl;
     }

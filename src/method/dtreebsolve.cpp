@@ -39,9 +39,9 @@ using namespace NSEpic;
 using namespace std;
 
 
-COperatorDTreeBSolve::COperatorDTreeBSolve()
+COperatorDTreeBSolve::COperatorDTreeBSolve( std::string calibrationPath )
 {
-
+    m_calibrationPath = calibrationPath;
 }
 
 COperatorDTreeBSolve::~COperatorDTreeBSolve()
@@ -142,6 +142,9 @@ Bool COperatorDTreeBSolve::Solve(CDataStore &dataStore, const CSpectrum &spc, co
     auto result = dynamic_pointer_cast<CLineModelResult>(linemodel.Compute(dataStore,
                                                                            spc,
                                                                            _spcContinuum,
+                                                                           tplCatalog,
+                                                                           tplCategoryList,
+                                                                           m_calibrationPath,
                                                                            restRayCatalog,
                                                                            opt_linetypefilter,
                                                                            opt_lineforcefilter,
@@ -216,6 +219,8 @@ Bool COperatorDTreeBSolve::Solve(CDataStore &dataStore, const CSpectrum &spc, co
     dataStore.GetScopedParam( "chisquare.interpolation", opt_interp, "precomputedfinegrid" );
     std::string opt_extinction;
     dataStore.GetScopedParam( "chisquare.extinction", opt_extinction, "no" );
+    std::string opt_dustFit;
+    dataStore.GetScopedParam( "chisquare.dustfit", opt_dustFit, "no" );
 
     TFloat64List redshiftsChi2;
     if(opt_redshiftsupport == "full"){
@@ -227,10 +232,17 @@ Bool COperatorDTreeBSolve::Solve(CDataStore &dataStore, const CSpectrum &spc, co
     }
 
     std::string spcComponent = "nocontinuum";
-    CMethodChisquare2Solve chiSolve;
+
+    // prepare the unused masks
+    std::vector<CMask> maskList;
+
+    CMethodChisquare2Solve chiSolve(m_calibrationPath);
+    //achtung: override overlap threshold for chi2nocontinuum:
+    Float64 overlapThresholdNC=overlapThreshold;
+    overlapThresholdNC = 1.0;
     auto chisolveResultnc = chiSolve.Compute( dataStore, spc, spcWithoutCont,
                                                                         tplCatalog, tplCategoryList,
-                                                                        lambdaRange, redshiftsChi2, overlapThreshold, spcComponent, opt_interp, opt_extinction);
+                                                                        lambdaRange, redshiftsChi2, overlapThresholdNC, maskList, spcComponent, opt_interp, opt_extinction, opt_dustFit);
     if( chisolveResultnc ) {
         dataStore.StoreScopedGlobalResult( "redshiftresult", chisolveResultnc );
     }
@@ -266,7 +278,7 @@ Bool COperatorDTreeBSolve::Solve(CDataStore &dataStore, const CSpectrum &spc, co
     //*/
     auto chisolveResultcontinuum = chiSolve.Compute( dataStore, spc, spcWithoutCont,
                                                                         tplCatalog, tplCategoryList,
-                                                                        lambdaRange, redshiftsChi2Continuum, overlapThreshold, spcComponent, opt_interp);
+                                                                        lambdaRange, redshiftsChi2Continuum, overlapThreshold, maskList, spcComponent, opt_interp, opt_extinction, opt_dustFit);
     //_///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //*/
 
@@ -359,16 +371,6 @@ Bool COperatorDTreeBSolve::GetCombinedRedshift(CDataStore& store)
     }
     //Log.LogInfo( "dtreeBsolve : chi2lm size=%d", chi2lm.size());
 
-    /*
-    // save all merits in a temp. txt file
-    FILE* f = fopen( "dtreeb_merits_dbg.txt", "w+" );
-    for( Int32 i=0; i<results->Redshifts.size(); i++ )
-    {
-        fprintf( f, "%i %f %f %f %f\n", i, results->Extrema[i], results->GetExtremaMerit(i)/((float)results->nSpcSamples), chi2nc[i], chi2continuum[i] );//*1e12);
-    }
-    fclose( f );
-    //*/
-
     //save the combined chisquare result
     resultCombined->ChiSquare.resize( znc.size() );
     resultCombined->Redshifts.resize( znc.size() );
@@ -385,7 +387,7 @@ Bool COperatorDTreeBSolve::GetCombinedRedshift(CDataStore& store)
     //*
     //***********************************************************
     // Estimate the combined chisquare result
-    Int32 combineOption = 1; //1 = bayes, 0 = linear
+    Int32 combineOption = 0; //1 = bayes, 0 = linear
 
     //Set the coefficients
     Float64 lmCoeff = 1.0;
@@ -408,13 +410,13 @@ Bool COperatorDTreeBSolve::GetCombinedRedshift(CDataStore& store)
     }
     else //linear combination
     {
-        /*
+        //*
         // coeffs for PFS simu dec 2015.
-        lmCoeff = 75.0/((float)results->nSpcSamples);
+        lmCoeff = 75.0;
         chi2ncCoeff = 100.0;
         chi2cCoeff = 50.0;
         //*/
-        //*
+        /*
         // coeffs for VVDS deep, udeep and VUDS
         lmCoeff = 12.0;
         chi2ncCoeff = 100.0;

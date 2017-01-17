@@ -20,7 +20,7 @@ CContinuumIrregularSamplingMedian::CContinuumIrregularSamplingMedian()
     m_MeanSmoothAmplitude = 75;     // Angstrom
     m_MedianSmoothCycles = 5;
     m_MedianSmoothAmplitude = 75;   // Angstrom
-    m_Even = false;
+    m_Even = true;
 }
 
 /**
@@ -88,7 +88,7 @@ Int32 CContinuumIrregularSamplingMedian::MedianSmooth( const Float64 *y, Int32 n
  * Reflects on border this array
  * y_out extended array
  */
-Int32 CContinuumIrregularSamplingMedian::OddMirror( const Float64* y_input, Int32 N, Int32 Nreflex, Float64* y_out )
+Int32 CContinuumIrregularSamplingMedian::OddMirror( const Float64* y_input, Int32 N, Int32 Nreflex, Float64 y_input_begin_val, Float64 y_input_end_val, Float64* y_out )
 {
     Int32 j;
 
@@ -96,10 +96,11 @@ Int32 CContinuumIrregularSamplingMedian::OddMirror( const Float64* y_input, Int3
     {
         *( y_out+j+Nreflex ) = *( y_input+j );
     }
+
     for( j=0; j<Nreflex; j++ )
     {
-        *( y_out+Nreflex-j-1 ) = 2**( y_input+0 )-*( y_input+j );
-        *( y_out+N+Nreflex+j ) = 2**( y_input+N-1 )-*( y_input+N-j-1 );
+        *( y_out+Nreflex-j-1 ) = 2*y_input_begin_val-*( y_input+j );
+        *( y_out+N+Nreflex+j ) = 2*y_input_end_val-*( y_input+N-j-1 );
     }
     return 0;
 }
@@ -274,9 +275,49 @@ Bool CContinuumIrregularSamplingMedian::ProcessRemoveContinuum( const CSpectrum&
     // if m_Even==1 reflects spectrum as an m_Even function
     // if m_Even==0 reflacts spectrum as an odd function
     if( m_Even )
+    {
         EvenMirror( fluxAxis.GetSamples()+k0, nd, nreflex, ysmoobig.data() );
-    else
-        OddMirror( fluxAxis.GetSamples()+k0, nd, nreflex, ysmoobig.data() );
+    }else{
+        //estimate lin fit border values for odd reflex robustness
+        //begin
+        const CSpectrumSpectralAxis& spectralAxis = s.GetSpectralAxis();
+        Int32 kBeginSup = k0+nreflex;
+        if(kBeginSup>k1){
+            kBeginSup = k1;
+        }
+        TFloat64Range rangeBegin = TFloat64Range( spectralAxis[k0], spectralAxis[kBeginSup] );
+        Float64 a;
+        Float64 b;
+        bool retBegin = s.GetLinearRegInRange( rangeBegin,  a, b);
+        Float64 FBegin = *(fluxAxis.GetSamples()+k0);
+        if(retBegin){
+            Float64 wlBegin = spectralAxis[k0];
+            FBegin = wlBegin*a + b;
+        }
+        //end
+        Int32 kEndInf = k1-nreflex-1;
+        if(kEndInf<k0){
+            kEndInf = k0;
+        }
+        TFloat64Range rangeEnd = TFloat64Range( spectralAxis[kEndInf], spectralAxis[k1] );
+        bool retEnd = s.GetLinearRegInRange( rangeEnd,  a, b);
+        Float64 FEnd = *(fluxAxis.GetSamples()+k1);
+        if(retEnd){
+            Float64 wlEnd = spectralAxis[k1];
+            FEnd = wlEnd*a + b;
+        }
+
+        OddMirror( fluxAxis.GetSamples()+k0, nd, nreflex, FBegin, FEnd, ysmoobig.data() );
+    }
+    //*//debug:
+    // save reflex data
+    FILE* f = fopen( "median_even_dbg.txt", "w+" );
+    for( Int32 t=0;t<ysmoobig.size();t++)
+    {
+        fprintf( f, "%d %f\n", t, ysmoobig[t]*1e17);
+    }
+    fclose( f );
+    //*/
 
 
     {

@@ -13,9 +13,9 @@ using namespace NSEpic;
 using namespace std;
 
 
-CMethodChisquareSolve::CMethodChisquareSolve()
+CMethodChisquareSolve::CMethodChisquareSolve(string calibrationPath)
 {
-
+    m_calibrationPath = calibrationPath;
 }
 
 CMethodChisquareSolve::~CMethodChisquareSolve()
@@ -84,10 +84,12 @@ Bool CMethodChisquareSolve::Solve( CDataStore& dataStore, const CSpectrum& spc, 
         _spc = spcWithoutCont;
         _tpl = tplWithoutCont;
     }
+    // prepare the unused masks
+    std::vector<CMask> maskList;
 
     // Compute merit function
-    COperatorChiSquare2 chiSquare;
-    auto  chisquareResult = chiSquare.Compute( _spc, _tpl, lambdaRange, redshifts, overlapThreshold, opt_interp);
+    COperatorChiSquare2 chiSquare(m_calibrationPath);
+    auto  chisquareResult = chiSquare.Compute( _spc, _tpl, lambdaRange, redshifts, overlapThreshold, maskList, opt_interp);
     if( !chisquareResult )
     {
         //Log.LogInfo( "Failed to compute chi square value");

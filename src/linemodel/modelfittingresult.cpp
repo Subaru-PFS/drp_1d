@@ -165,6 +165,7 @@ Void CModelFittingResult::Load( const char* filePath )
 
         }
     }
+    file.close();
 }
 
 

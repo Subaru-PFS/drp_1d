@@ -78,6 +78,6 @@ Bool CTemplate::Save( const char* filePath ) const
         file.precision(10);
         file<< fluxAxis[i] << std::endl;
     }
-
+    file.close();
     return true;
 }

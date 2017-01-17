@@ -19,18 +19,30 @@ import sys
 import os
 import argparse
 
+from string import ascii_uppercase
+
 from astropy.io import ascii
 import numpy as np
 
 from astropy.io import fits
 import random
+import matplotlib as mpl
 import matplotlib.pyplot as pp
 import matplotlib.cm as cm
 from matplotlib.patches import Rectangle
+from matplotlib import gridspec
+
+#pp.style.use('seaborn-darkgrid')
+#pp.style.use('seaborn-white')
+#pp.style.use('ggplot')
+#import seaborn as sns
+#sns.set_context("paper")
+
 import pickle as pl
 
 import lstats
 import lperf
+import lreport
 
 # global variables, default for VVDS
 iRefID = 0
@@ -581,7 +593,7 @@ def loadDiff(fname):
             data = lineStr.split("\t")
             data = [r for r in data if r != '']
             #print len(data)
-            if(len(data) == 15): #Spectrum ID	MAGI	ZREF	ZFLAG	ZCALC	MERIT	TPL	METHOD    SNR	SFR E(B-V) Sigma LogHalpha ExtValue DIFF
+            if(len(data) == 15): #Spectrum ID	MAGI	ZREF	ZFLAG ZCALC MERIT TPL	METHOD    SNR	SFR E(B-V) Sigma LogHalpha ExtValue DIFF
                 d0 = str(data[0])
                 d1 = float(data[1])
                 d2 = float(data[2])
@@ -612,7 +624,7 @@ def ProcessStats( fname, zRange, magRange,  sfrRange, enablePlot = False, export
     
     
     _baseOutputDirectory = os.path.dirname(os.path.abspath(fname))
-    outputDirectory = os.path.join(_baseOutputDirectory, "stats_magmin{}magmax{}_zmin{}zmax{}_sfrmin{}sfrmax{}".format(magRange[0], magRange[1], zRange[0], zRange[1], sfrRange[0], sfrRange[1]))
+    outputDirectory = os.path.join(_baseOutputDirectory, "stats_mag{}-{}_z{}-{}_sfr{}-{}".format(magRange[0], magRange[1], zRange[0], zRange[1], sfrRange[0], sfrRange[1]))
     if os.path.exists( outputDirectory ) == False :        
         print("makedir: Output dir: "+outputDirectory)
         os.mkdir( outputDirectory, 0o755 )        
@@ -672,7 +684,11 @@ def ProcessStats( fname, zRange, magRange,  sfrRange, enablePlot = False, export
         zref[x] = (data[indsForHist[x]][2])
         zcalc[x] = (data[indsForHist[x]][4])
         
-        yvect[x] = abs(data[indsForHist[x]][n2-1])/(1+zref[x])
+        if not zref[x]==-1:
+            yvect[x] = abs(data[indsForHist[x]][n2-1])/(1+zref[x])
+        else:
+            yvect[x] = -1
+            
         
     # export the filtered list
     foutpath = outputDirectory + '/' + 'stats_subset_list.txt'
@@ -706,7 +722,12 @@ def ProcessStats( fname, zRange, magRange,  sfrRange, enablePlot = False, export
     # plot the filtered list scatter zrelerr = f(1+zref)
     relerrorvect = range(0,nSelected)
     for x in range(0,nSelected):
-        relerrorvect[x] = (zcalc[x] - zref[x])/(1+zref[x])
+        if not zref[x]==-1:
+            relerrorvect[x] = (zcalc[x] - zref[x])/(1+zref[x])
+        else:
+            relerrorvect[x] = -1
+            
+        
     fig = pp.figure('filtered dataset z relative error')
     pp.plot(zref, relerrorvect, 'x')
     pp.grid(True) # Affiche la grille
@@ -721,6 +742,23 @@ def ProcessStats( fname, zRange, magRange,  sfrRange, enablePlot = False, export
     if "pickle" in exportType:
         pl.dump(fig,file("{}.pickle".format(export_name_withoutExt),'w'))
         
+    # plot zoom 0
+    zoomedRange = 0.05
+    nmissing = 0
+    for x in range(0,nSelected):
+        if abs(relerrorvect[x])>zoomedRange:
+            nmissing += 1
+    pp.ylim([-zoomedRange, zoomedRange])
+    #pp.show()
+    spcStr = "spectrum"
+    if nmissing>1:
+        spcStr = "spectra"
+    pp.title('{}/{} {} outside displayed range'.format(nmissing,nSelected, spcStr)) # Titre
+
+    export_name_withoutExt = os.path.join(outputDirectory, 'filteredset_relzerr_zoom_0')
+    if "png" in exportType:
+        pp.savefig( "{}.png".format(export_name_withoutExt) , bbox_inches='tight')
+            
     # plot zoom 1
     zoomedRange = 0.005
     nmissing = 0
@@ -779,7 +817,11 @@ def ProcessStats( fname, zRange, magRange,  sfrRange, enablePlot = False, export
     vectErrorBins = [0.00001, 0.0001, 0.0005, 0.001, 0.005, 0.01, 0.1, 1.0, 10.0]
     print 'the rough bins are: ' + str(vectErrorBins)
     foutpath = outputDirectory + '/' + 'stats_brief.txt'
-    processHistogram( yvect, vectErrorBins, foutpath)
+    ybins = processHistogram( yvect, vectErrorBins, foutpath)
+    globalSuccessRateValue = []
+    i1em3 = 3
+    globalSuccessRateValue.append(vectErrorBins[i1em3])
+    globalSuccessRateValue.append(ybins[i1em3])
 
     # ******* fine bins histogram
     vectErrorBins = np.logspace(-5, 1, 50, endpoint=True)
@@ -793,7 +835,7 @@ def ProcessStats( fname, zRange, magRange,  sfrRange, enablePlot = False, export
 
     nPercentileDepth = 2
     # ******* plot mag hist
-    if 1 and not np.all(np.array(mvect)==-1.0):
+    if 1 :#and not np.all(np.array(mvect)==-1.0):
         print("Plotting versus Mag")
         outFileNoExt = 'stats_versusMag_hist' 
         outFilepathNoExt = os.path.join(outputDirectory,outFileNoExt)
@@ -809,7 +851,7 @@ def ProcessStats( fname, zRange, magRange,  sfrRange, enablePlot = False, export
         lstats.PlotAmazedVersusBinsHistogram(yvect, snrvect, outdir, outFilepathNoExt, enablePlot=enablePlot, enableExport=1, exportType=exportType, mtype='SNR', nPercentileDepth=nPercentileDepth) 
 
     # ******* plot redshift hist       
-    if 1 and not np.all(np.array(zref)==-1.0):
+    if 1 :#and not np.all(np.array(zref)==-1.0):
         print("Plotting versus redshift")
         outFileNoExt = 'stats_versusRedshift_hist'
         outFilepathNoExt = os.path.join(outputDirectory,outFileNoExt) 
@@ -817,7 +859,7 @@ def ProcessStats( fname, zRange, magRange,  sfrRange, enablePlot = False, export
         lstats.PlotAmazedVersusBinsHistogram(yvect, zref, outdir, outFilepathNoExt, enablePlot=enablePlot, enableExport=1, exportType=exportType, mtype='REDSHIFT', nPercentileDepth=nPercentileDepth) 
         
     # ******* plot sfr hist       
-    if 1 and not np.all(np.array(sfrvect)==-1.0):
+    if 1 :#and not np.all(np.array(sfrvect)==-1.0):
         print("Plotting versus sfr")
         outFileNoExt = 'stats_versusSFR_hist' 
         outFilepathNoExt = os.path.join(outputDirectory,outFileNoExt)
@@ -825,7 +867,7 @@ def ProcessStats( fname, zRange, magRange,  sfrRange, enablePlot = False, export
         lstats.PlotAmazedVersusBinsHistogram(yvect, sfrvect, outdir, outFilepathNoExt, enablePlot=enablePlot, enableExport=1, exportType=exportType, mtype='SFR', nPercentileDepth=nPercentileDepth) 
 
     # ******* plot EBmV hist       
-    if 1 and not np.all(np.array(ebmvvect)==-1.0):
+    if 1 :#and not np.all(np.array(ebmvvect)==-1.0):
         print("Plotting versus ebmv")
         outFileNoExt = 'stats_versusEBMV_hist' 
         outFilepathNoExt = os.path.join(outputDirectory,outFileNoExt)
@@ -833,7 +875,7 @@ def ProcessStats( fname, zRange, magRange,  sfrRange, enablePlot = False, export
         lstats.PlotAmazedVersusBinsHistogram(yvect, ebmvvect, outdir, outFilepathNoExt, enablePlot=enablePlot, enableExport=1, exportType=exportType, mtype='EBMV', nPercentileDepth=nPercentileDepth) 
 
     # ******* plot Sigma hist       
-    if 1 and not np.all(np.array(sigmavect)==-1.0):
+    if 1 :#and not np.all(np.array(sigmavect)==-1.0):
         print("Plotting versus sigma")
         outFileNoExt = 'stats_versusSigma_hist' 
         outFilepathNoExt = os.path.join(outputDirectory,outFileNoExt)
@@ -841,7 +883,7 @@ def ProcessStats( fname, zRange, magRange,  sfrRange, enablePlot = False, export
         lstats.PlotAmazedVersusBinsHistogram(yvect, sigmavect, outdir, outFilepathNoExt, enablePlot=enablePlot, enableExport=1, exportType=exportType, mtype='SIGMA', nPercentileDepth=nPercentileDepth) 
 
     # ******* plot logHalpha hist       
-    if 1 and not np.all(np.array(fhalphavect)==-1.0):
+    if 1 :#and not np.all(np.array(fhalphavect)==-1.0):
         print("Plotting versus logfhalpha")
         outFileNoExt = 'stats_versusLogFHAlpha_hist' 
         outFilepathNoExt = os.path.join(outputDirectory,outFileNoExt)
@@ -859,17 +901,29 @@ def ProcessStats( fname, zRange, magRange,  sfrRange, enablePlot = False, export
 
 
     print '\n'
+    return globalSuccessRateValue
 
-def processPerformance( fname, opt_preset ):
+def processPerformance( fname, opt_preset, zRange, magRange, sfrRange ):
+    """
+    - call the exportPerformances function
+    - using the ranges (zRange, magRange,  sfrRange) to crop the input data (in fname)
+    """
     dataDiff = loadDiff( fname );
     
     _baseOutputDirectory = os.path.dirname(os.path.abspath(fname))
-    outputDirectory = os.path.join(_baseOutputDirectory, "performances".format())
+    outputDirectory = os.path.join(_baseOutputDirectory,
+                                   "performances_mag{}-{}_z{}-{}_sfr{}-{}".format(
+                                   magRange[0], magRange[1],
+                                   zRange[0], zRange[1],
+                                   sfrRange[0], sfrRange[1]))
     if os.path.exists( outputDirectory ) == False :        
         print("makedir: Output dir: "+outputDirectory)
         os.mkdir( outputDirectory, 0o755 )
         
-    lperf.exportPerformances(dataDiff, outputDirectory, preset=opt_preset)
+    lperf.exportPerformances(dataDiff, outputDirectory, preset=opt_preset, 
+                             zRange=zRange, 
+                             magRange=magRange, 
+                             sfrRange=sfrRange)
 
 def processHistogram(yvect, bins, outFile=""):
     n = len(yvect)
@@ -1076,9 +1130,263 @@ def ProcessFailuresSeqFile( fname, refFile, fnameFailuresSeqFile, fnameFailureRe
     fFailuresRefFile.close()
     
     print '\n'
+
+def findCatDistance(type1, type2):
+    if type1 == "C" or type1 == "N":
+        _type = type2
+        type2 = type1
+        type1 = _type
+    if type2 == "C" or type2 == "N":
+        if type1=="K" or type1=="M":
+            return 0
+        elif type1=="G":
+            return 1
+        else:
+            return np.inf
     
+    catOrdered = ["O", "B", "A", "F", "G", "K", "M"]
+    itype1 = catOrdered.index(type1)
+    itype2 = catOrdered.index(type2)
+    diff = itype1 - itype2
+    return diff
+    
+        
+
+    
+def ProcessStars( fname, enablePlot = False, exportType="png" ):
+    """
+    Process the stars hist plots
+    - export as exporType (choose between, 'png', 'pickle', 'pngpickle') : TODO 
+    """
+    #indexes of the colum in the diff file
+    spcIdIdx = 0 
+    tplIdx = 6
+    
+    data = loadDiff( fname );
+    
+    _baseOutputDirectory = os.path.dirname(os.path.abspath(fname))
+    outputDirectory = os.path.join(_baseOutputDirectory, "stars".format())
+    if os.path.exists( outputDirectory ) == False :        
+        print("makedir: Output dir: "+outputDirectory)
+        os.mkdir( outputDirectory, 0o755 )        
+        
+    n = (len(data))
+    n2 = len(data[0])
+    print "INFO: processing stars: n=" + str(n) + ", n2=" + str(n2)
+    
+    #find the stars and tpl type letter from spc/tpl name first letter
+    starTypes = []
+    tplTypes = []
+    for x in range(0,n): 
+        spcName = data[x][spcIdIdx]
+        _starType = spcName[0]
+        starTypes.append(_starType)
+        
+        tplName = data[x][tplIdx]
+        _tplType = tplName[0]
+        tplTypes.append(_tplType)
+    
+    #compare stars type with template type
+    sameTypes = []
+    catDistance = []
+    for x in range(0,n):
+        sameTypes.append(0)
+        catDistance.append(np.nan)
+        if starTypes[x] == tplTypes[x]:
+            sameTypes[x] = 1
+            catDistance[x] = 0
+        else:
+            d = findCatDistance(starTypes[x], tplTypes[x])
+            catDistance[x] = d
+        
+    #export detailed comparison
+    fnameAscii = os.path.join(outputDirectory, "comparison_star_type.txt".format())
+    f = open(fnameAscii, 'w')
+    f.write("{}\t{}\t{}\t{}\t{}\t{}".format("spc", "spc-Type", "tpl", "tpl-type", "sameType", "typeDistance"))
+    f.write("\n")
+    for x in range(0,n):
+        f.write("{}\t{}\t{}\t{}\t{}\t{}".format(data[x][spcIdIdx], starTypes[x], data[x][tplIdx], tplTypes[x], sameTypes[x], catDistance[x]))
+        f.write("\n")
+    f.close()
+    
+    #print stats
+    nTot = n
+    nSuccessTot = np.sum(np.array(sameTypes))
+    success_rate_tot = float(nSuccessTot)/float(nTot)
+    print("INFO: Stars overall success rate is {:.2f} percent ({}/{})".format(success_rate_tot*100.0, nSuccessTot, nTot))
+       
+    #enlarged stats
+    OneCatDistanceSuccess = [abs(a)<=1 for a in catDistance]
+    nOneCatDistanceSuccess_tot = np.sum(np.array(OneCatDistanceSuccess))
+    OneCatDistanceSuccessRate_tot = float(nOneCatDistanceSuccess_tot)/float(nTot)
+    print("INFO: Stars 1-category-difference-max success rate is {:.2f} percent ({}/{})".format(OneCatDistanceSuccessRate_tot*100.0, nOneCatDistanceSuccess_tot, nTot))
+    print("\n") 
+    
+    #plot per star-type statistics
+    typesCategoriesUnsorted = list(set(starTypes))
+    alphabet_string_harvard = "OBAFGKM" 
+    colors_rgb_harvard = ['#9db4ff', '#afc3ff', '#cad8ff', '#edeeff', '#fff4e8', '#ffd7ae', '#ffbb7b']
+    alphabet_string = alphabet_string_harvard
+    for a in ascii_uppercase:
+        if a not in alphabet_string:
+            #print("adding letter : {} to the alphabet".format(a))
+            alphabet_string = "{}{}".format(alphabet_string, a)
+            colors_rgb_harvard.append('#000000')
+    alphabet = {c: i for i, c in enumerate(alphabet_string)}
+    print("sorting alphabet is {}".format(alphabet))
+    typesCategories = sorted(typesCategoriesUnsorted, key=lambda word: [alphabet.get(c, ord(c)) for c in word])    
+    print("Star categories found N = {}".format(len(typesCategories)))
+    print("Star categories found = {}".format(typesCategories))
+    N = len(typesCategories)
+    
+    success_rate_perCat = []
+    count_perCat = []
+    successCount_perCat = []
+    for kcat, cat in enumerate(typesCategories):
+        indexesThisCat = [i for i, a in enumerate(starTypes) if a==cat]
+        starTypesCat = [starTypes[k] for k in indexesThisCat]
+        tplTypesCat = [tplTypes[k] for k in indexesThisCat]
+        nTotThisCat = len(indexesThisCat)
+        nSuccess = np.sum(np.array(starTypesCat)==np.array(tplTypesCat))
+        success_rate_perCat.append(float(nSuccess)/float(nTotThisCat))
+        count_perCat.append(nTotThisCat)
+        successCount_perCat.append(nSuccess)
+        print("Cat={} : nsuccess={}/{}, successRate = {:.2f}".format(cat, nSuccess, nTotThisCat, success_rate_perCat[-1]))
+ 
+    nFittedInCat_perCat = np.zeros((N, N))  
+    print("nFittedInCat_perCat.shape = {}".format(nFittedInCat_perCat.shape))     
+    for k, starcat in enumerate(starTypes):
+        iCat = np.where(np.array(typesCategories)==starcat)[0][0]
+        iCat2 = np.where(np.array(typesCategories)==tplTypes[k])[0][0] 
+        print("for k={}, iCat={}, and iCat2={}".format(k, iCat, iCat2))
+        nFittedInCat_perCat[iCat][iCat2] +=1.0/count_perCat[iCat]
+    
+    #figure 1 ################################################################
+    fig = pp.figure( "stars success rate", figsize=(12, 8))
+    gs = gridspec.GridSpec(2, 1, height_ratios=[12,4])
+    ax1 = pp.subplot(gs[0]) # main plotting area = success rate
+    ax2 = pp.subplot(gs[1])  # count
+    gs.update(wspace=0.05, hspace=0.1) # set the spacing between axes. 
+            
+    ind = np.arange(N)    # the x locations for the groups
+    width = 0.8
+    percent = ax1.bar(ind, 100.*np.array(success_rate_perCat), width, color=colors_rgb_harvard, alpha=1.0)
+    residue = ax1.bar(ind, 100.-100.*np.array(success_rate_perCat), bottom=100.*np.array(success_rate_perCat), width=width, color="k", alpha=0.05)    
+    ax1.set_title("Star Categories Fitting\nOverall success rate is {:.1f}% (nsuccess={}/{})\n1-cat-diff success rate is {:.1f}% (nsuccess={}/{})".format(success_rate_tot*100.0, nSuccessTot, nTot, OneCatDistanceSuccessRate_tot*100.0, nOneCatDistanceSuccess_tot, nTot))
+    #pp.legend((percent[0]), ('success', 'Women'))
+    #ax1.grid()
+    #ax1.set_xticks(ind + width/2., typesCategories)
+    pp.setp(ax1.get_xticklabels(), visible=False)
+    ax1.set_ylabel('Success rate (%)')
+    for rect in percent:
+        height = rect.get_height()
+        if height<50:
+            position = height + 2
+        else:
+            position = height - 6
+
+        ax1.text(rect.get_x() + rect.get_width()/2., position, "{} %".format(int(height)),
+                ha='center', va='bottom')
+            
+
+    count = ax2.bar(ind, count_perCat, width, color = 'k', alpha=0.5)  
+    #ax2.grid()
+    ax2.set_xticks(ind + width/2., typesCategories)
+    #pp.setp(ax2.get_xticklabels(), visible=True)
+    #pp.sca(axes[1, 1])
+    pp.xticks(ind + width/2., typesCategories)
+    ax2.set_ylabel('Count')
+    maxCount = np.max(count_perCat)
+    print("maxCount = {}".format(maxCount))
+    for rect in count:
+        height = rect.get_height()
+        if height<0.5*maxCount:
+            position = height + 0.04*maxCount
+        else:
+            position = height - 0.16*maxCount
+
+        ax2.text(rect.get_x() + rect.get_width()/2., position, "{}".format(int(height)),
+                ha='center', va='bottom')
+                
+    export_name_withoutExt = os.path.join(outputDirectory, 'star_categories_success_hist')
+    if "png" in exportType:
+        pp.savefig( "{}.png".format(export_name_withoutExt) , bbox_inches='tight')
+
+    if enablePlot:
+        pp.show()
+        
+    #figure 2 ################################################################
+    fig = pp.figure( "stars category fitting", figsize=(11, 10))
+    gs = gridspec.GridSpec(2, 1, height_ratios=[16,4])
+    ax1 = pp.subplot(gs[0]) # main plotting area = success rate
+    ax2 = pp.subplot(gs[1])  # count
+    gs.update(wspace=0.05, hspace=0.1) # set the spacing between axes.
+    
+    #cmap = pp.get_cmap('seismic')
+    cmap = pp.get_cmap('Greys')
+    cmapMaxVal = 1.0
+    cmin = -0.0
+    cmax = cmapMaxVal
+    
+    ax1.imshow(np.transpose(nFittedInCat_perCat)**0.33, interpolation='nearest',aspect='auto', clim=(cmin, cmax), cmap=cmap, alpha=0.8)
+    
+    for kcat, cat in enumerate(typesCategories): 
+        for kcat2, cat2 in enumerate(typesCategories): 
+            c = "{:.0f}%".format(nFittedInCat_perCat[kcat][kcat2]*100.0)
+            ax1.text(ind[kcat], ind[kcat2], c, va='center', ha='center',fontsize=10, color='w')
+    
+    ax1.grid()
+    
+    ax2.xaxis.set_label_text("Reference Category")
+    ax1.xaxis.set_ticks(np.arange(N))
+    ax1.xaxis.set_ticklabels(typesCategories)
+    ax1.yaxis.set_label_text("Fitted Category")
+    ax1.yaxis.set_ticks(np.arange(N))
+    ax1.yaxis.set_ticklabels(typesCategories)
+    ax1.set_title("Star Categories Fitting\nOverall success rate is {:.1f}% (nsuccess={}/{})\n1-cat-diff success rate is {:.1f}% (nsuccess={}/{})\n".format(success_rate_tot*100.0, nSuccessTot, nTot, OneCatDistanceSuccessRate_tot*100.0, nOneCatDistanceSuccess_tot, nTot))
+
+    
+            
+    width = 1.0
+    count = ax2.bar(ind, count_perCat, width, color=colors_rgb_harvard, alpha=0.75)  
+    ax2.grid()
+    ax2.xaxis.set_ticks(ind + width/2.)
+    ax2.xaxis.set_ticklabels(typesCategories)
+    pp.setp(ax2.get_xticklabels(), visible=False)
+    #pp.sca(axes[1, 1])
+    #pp.xticks(ind + width/2., typesCategories)
+    ax2.set_ylabel('Count')
+    maxCount = np.max(count_perCat)
+    print("maxCount = {}".format(maxCount))
+    for rect in count:
+        height = rect.get_height()
+        if height<0.5*maxCount:
+            position = height + 0.04*maxCount
+        else:
+            position = height - 0.16*maxCount
+
+        ax2.text(rect.get_x() + rect.get_width()/2., position, "{}".format(int(height)),
+                ha='center', va='bottom')
+                
+    export_name_withoutExt = os.path.join(outputDirectory, 'star_categories_fitting_matrix')
+    if "png" in exportType:
+        pp.savefig( "{}.png".format(export_name_withoutExt) , bbox_inches='tight')
+
+    if enablePlot:
+        pp.show()
+    
+def processReport(statsDir, globalSuccessRateValue, parametersFilePath, configPath, zRange, magRange, sfrRange ):
+    lreport.Report(statsDir, 
+                   globalSuccessRateValue=globalSuccessRateValue, 
+                   parametersFilePath=parametersFilePath,
+                   configPath=configPath, 
+                   zRange=zRange, 
+                   magRange=magRange, 
+                   sfrRange=sfrRange )
+    
+   
 def exportLog(outdir, refFile, refType, magRange, zRange, sfrRange):
-    tag = "stats_magmin{}magmax{}_zmin{}zmax{}_sfrmin{}sfrmax{}".format(magRange[0], magRange[1], zRange[0], zRange[1], sfrRange[0], sfrRange[1])
+    tag = "stats_mag{}-{}_z{}-{}_sfr{}-{}".format(magRange[0], magRange[1], zRange[0], zRange[1], sfrRange[0], sfrRange[1])
     fpath = os.path.join(outdir, "log_{}.txt".format(tag))
     f=open(fpath, 'w')
     f.write("ref: {}\n".format(refFile))
@@ -1114,10 +1422,10 @@ def StartFromCommandLine( argv ) :
                     help="redshift range filter for the histograms")
     
     parser.add_argument("-p", "--perfpreset", dest="perfpreset", default="simulm201606",
-                    help="performance matrix preset, choose between 'simulm201606', 'simueuclid2016'")
+                    help="performance matrix preset, choose between 'simulm201606', 'simueuclid2016', 'simueuclid2016shiftedforoii', 'simupfs2016'")
     
     parser.add_argument("-l", "--computeLvl", dest="computeLevel", default="brief",
-                    help="compute level, choose between 'brief' or 'full'")
+                    help="compute level, choose between 'brief', 'hist' or 'full', or 'stars'")
     
        
     options = parser.parse_args()
@@ -1140,11 +1448,13 @@ def StartFromCommandLine( argv ) :
         filenameFailures = "failures.txt"
         filenameFailuresSeqFile = "failures.spectrumlist"
         filenameFailuresRefFile = "failures_ref.txt"
-        outputPath =  os.path.dirname(os.path.abspath(options.calcFile)) + '/' + "stats/"
+        amazedOutputDir = os.path.dirname(os.path.abspath(options.calcFile))
+        outputPath =  os.path.join(amazedOutputDir, "stats/")
         outputFullpathDiff = outputPath + filenameDiff
         outputFullpathFailures = outputPath + filenameFailures
         outputFullpathFailuresSeqFile = outputPath + filenameFailuresSeqFile
         outputFullpathFailuresRefFile = outputPath + filenameFailuresRefFile
+                
         if os.path.isdir(outputPath)==False:
             os.mkdir( outputPath, 0o755 );
 
@@ -1198,13 +1508,29 @@ def StartFromCommandLine( argv ) :
     sfrRange[1] = float(options.sfrRange.split(" ")[1]) 
     
     if  options.computeLevel == "full" or options.computeLevel == "hist":       
-        ProcessStats( outputFullpathDiff, zRange, magRange, sfrRange, enablePlot = False, exportType=options.exporttype )
+        globalSuccessRateValue=ProcessStats( outputFullpathDiff, zRange, magRange, sfrRange, enablePlot = False, exportType=options.exporttype )
     
     if  options.computeLevel == "full" or options.computeLevel == "perf":        
-        processPerformance( outputFullpathDiff, opt_preset = options.perfpreset )
+        processPerformance( outputFullpathDiff, opt_preset = options.perfpreset, 
+                             zRange=zRange, 
+                             magRange=magRange, 
+                             sfrRange=sfrRange )
+        
+    if  options.computeLevel == "stars": #under developement, assumes the spectrum name's first character contains the star type for these statistics        
+        ProcessStars( outputFullpathDiff )
           
     exportLog(outputPath, options.refFile, options.type, magRange, zRange, sfrRange)
-
+    
+    if  options.computeLevel == "full":
+        parametersFilePath = os.path.join(amazedOutputDir, "parameters.json") 
+        configPath = os.path.join(amazedOutputDir, "config.txt") 
+        processReport(outputPath,
+                      globalSuccessRateValue=globalSuccessRateValue, 
+                      parametersFilePath=parametersFilePath,
+                      configPath=configPath, 
+                      zRange=zRange, 
+                      magRange=magRange, 
+                      sfrRange=sfrRange )
 
 
 def Main( argv ) :	

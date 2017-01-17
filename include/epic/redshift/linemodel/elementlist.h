@@ -10,11 +10,13 @@
 #include <epic/redshift/ray/catalog.h>
 #include <epic/redshift/spectrum/spectrum.h>
 
+#include <epic/redshift/operator/chisquare2.h>
+
 #include <epic/redshift/operator/linemodelresult.h>
 #include <epic/redshift/linemodel/element.h>
 #include <epic/redshift/linemodel/singleline.h>
 
-#include <epic/redshift/ray/catalogsTplShape.h>
+#include <epic/redshift/spectrum/template/catalog.h>
 
 #include <boost/shared_ptr.hpp>
 
@@ -25,23 +27,60 @@ namespace NSEpic
 {
   static Int32 defaultIdx = -1;
   class CRegulament;
+  class CRayCatalogsTplShape;
   
 class CLineModelElementList
 {
 
 public:
 
-    CLineModelElementList(const CSpectrum& spectrum, const CSpectrum& spectrumNoContinuum, const CRayCatalog::TRayVector& restRayList, const std::string& opt_fittingmethod, const std::string &opt_continuumcomponent, const std::string& lineWidthType, const Float64 resolution, const Float64 velocityEmission, const Float64 velocityAbsorption, const std::string &opt_rules);
+    CLineModelElementList(const CSpectrum& spectrum,
+                          const CSpectrum& spectrumNoContinuum,
+                          const CTemplateCatalog& tplCatalog,
+                          const TStringList& tplCategoryList,
+                          const std::string calibrationPath,
+                          const CRayCatalog::TRayVector& restRayList,
+                          const std::string& opt_fittingmethod,
+                          const std::string &opt_continuumcomponent,
+                          const std::string& lineWidthType,
+                          const Float64 resolution,
+                          const Float64 velocityEmission,
+                          const Float64 velocityAbsorption,
+                          const std::string &opt_rules,
+                          const std::string &opt_rigidity);
+
     ~CLineModelElementList();
 
     void LoadCatalog(const CRayCatalog::TRayVector& restRayList);
     void LoadCatalogSingleLines(const CRayCatalog::TRayVector& restRayList);
+    void LoadCatalogOneMultiline(const CRayCatalog::TRayVector& restRayList);
     void LogCatalogInfos();
 
-    void LoadContinuum();
     void PrepareContinuum(Float64 z);
-
     void EstimateSpectrumContinuum();
+
+    void InitFitContinuum();
+    void LoadFitContinuum(const TFloat64Range& lambdaRange);
+    Bool SolveContinuum(const CSpectrum& spectrum,
+                        const CTemplate& tpl,
+                        const TFloat64Range& lambdaRange,
+                        const TFloat64List& redshifts,
+                        Float64 overlapThreshold,
+                        std::vector<CMask> maskList,
+                        std::string opt_interp,
+                        Int32 opt_extinction,
+                        Int32 opt_dustFit,
+                        Float64 &merit,
+                        Float64& fitAmplitude,
+                        Float64 &fitDustCoeff);
+    std::string getFitContinuum_tplName();
+    Float64 getFitContinuum_tplAmplitude();
+    void SetContinuumComponent(std::string component);
+
+    Float64 EstimateDTransposeD(const TFloat64Range& lambdaRange, std::string spcComponent);
+
+
+    std::string getTplCorr_bestTplName();
 
     Int32 GetNElements();
     Int32 GetModelValidElementsNDdl();
@@ -61,6 +100,8 @@ public:
     Float64 GetVelocitySup();
     Int32 ApplyVelocityBound();
 
+    Bool initModelAtZ(Float64 redshift, const TFloat64Range& lambdaRange, const CSpectrumSpectralAxis &spectralAxis);
+
     Float64 fit(Float64 redshift, const TFloat64Range& lambdaRange, CLineModelResult::SLineModelSolution &modelSolution, Int32 contreest_iterations=0, bool enableLogging=0);
     void fitWithModelSelection(Float64 redshift, const TFloat64Range& lambdaRange, CLineModelResult::SLineModelSolution &modelSolution);
     void SetFittingMethod(std::string fitMethod);
@@ -74,8 +115,11 @@ public:
     void refreshModelDerivSigmaUnderElements(std::vector<Int32> filterEltsIdx);
 
     void setModelSpcObservedOnSupportZeroOutside(const TFloat64Range &lambdaRange);
+    CMask getOutsideLinesMask();
+
 
     Int32 getSpcNSamples(const TFloat64Range& lambdaRange);
+    Float64 getLeastSquareMeritFast(Int32 idxLine=-1);
     Float64 getLeastSquareMerit(const TFloat64Range &lambdaRange);
     Float64 getLeastSquareMeritUnderElements();
     Float64 getStrongerMultipleELAmpCoeff();
@@ -90,6 +134,16 @@ public:
     Float64 getModelFluxVal(Int32 idx) const;
     Float64 getModelFluxDerivEltVal(Int32 DerivEltIdx, Int32 idx) const;
     Float64 getModelFluxDerivSigmaVal(Int32 idx) const;
+    Int32 estimateMeanSqFluxAndGradient(const Float64* varPack,
+                                        const Float64 normFactor,
+                                        std::vector<Int32> filteredEltsIdx,
+                                        std::vector<Int32> xInds,
+                                        Int32 lineType,
+                                        Float64 *fluxdata,
+                                        Float64* msqBuffer,
+                                        Float64& f,
+                                        Float64* g);
+
 
     std::vector<boost::shared_ptr<CLineModelElement>  > m_Elements;
     std::shared_ptr<CSpectrum>  m_SpectrumModel;  //model
@@ -102,6 +156,8 @@ public:
 
     TStringList GetModelRulesLog();
 
+    Int32 setPassMode(Int32 iPass);
+
 private:
 
     Int32 fitAmplitudesHybrid(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& spcFluxAxisNoContinuum, Float64 redshift);
@@ -110,7 +166,7 @@ private:
     Int32 fitAmplitudesLinSolve(std::vector<Int32> EltsIdx, const CSpectrumSpectralAxis &spectralAxis, const CSpectrumFluxAxis &fluxAxis, std::vector<Float64> &ampsfitted, std::vector<Float64> &errorsfitted);
     Int32 fitAmplitudesLBFGS(std::vector<Int32> filteredEltsIdx, const CSpectrumFluxAxis& fluxAxis, std::vector<Float64>& ampsfitted, Int32 lineType);
 
-
+    bool m_forceDisableLyaFitting;
     Int32 setLyaProfile( Float64 redshift, const CSpectrumSpectralAxis& spectralAxis );
 
     std::vector<Int32> getSupportIndexes(std::vector<Int32> EltsIdx);
@@ -135,6 +191,7 @@ private:
     CSpectrumFluxAxis m_spcFluxAxisNoContinuum; //observed spectrum for line fitting
     Float64* m_ErrorNoContinuum;
     CSpectrumFluxAxis m_SpcFluxAxisModelDerivSigma;
+    Float64 m_dTransposeDNocontinuum; //the dtd (maximum chisquare value)
 
     Float64*          m_precomputedFineGridContinuumFlux;   //PFG buffer for model continuum
     CSpectrumFluxAxis m_ContinuumFluxAxis;  //rebined model continuum
@@ -150,6 +207,22 @@ private:
     std::string m_fittingmethod;
     std::vector<Int32> m_elementsDisabledIndexes;
     std::string m_rulesoption;
+    std::string m_rigidity;
+
+    std::shared_ptr<CSpectrum> m_inputSpc;
+    CTemplateCatalog m_tplCatalog;
+    TStringList m_tplCategoryList;
+    std::string m_tplcorrBestTplName;
+
+    COperatorChiSquare2* m_chiSquareOperator;
+    Float64 m_fitContinuum_dLambdaTgt;
+    Float64 m_fitContinuum_lmin;
+    Float64 m_fitContinuum_lmax;
+    Int32 m_fitContinuum_nTgt;
+    std::string m_fitContinuum_tplName;
+    Float64 m_fitContinuum_tplFitAmplitude;
+    Float64 m_fitContinuum_tplFitDustCoeff;
+
 };
 
 }

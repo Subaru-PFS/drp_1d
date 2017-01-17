@@ -11,6 +11,7 @@
 #include <epic/redshift/method/chisquare2solve.h>
 
 #include <epic/redshift/operator/linemodel.h>
+#include <epic/redshift/continuum/indexes_prior.h>
 
 
 #include <float.h>
@@ -19,9 +20,9 @@ using namespace NSEpic;
 using namespace std;
 
 
-COperatorDTreeCSolve::COperatorDTreeCSolve()
+COperatorDTreeCSolve::COperatorDTreeCSolve( std::string calibrationPath)
 {
-
+    m_calibrationPath = calibrationPath;
 }
 
 COperatorDTreeCSolve::~COperatorDTreeCSolve()
@@ -54,7 +55,7 @@ const std::string COperatorDTreeCSolve::GetDescription()
     desc.append("\tparam: chisquare.interpolation = {""precomputedfinegrid"", ""lin""}\n");
     desc.append("\tparam: chisquare.spectrum.component = {""raw"", ""continuum"", ""nocontinuum""}\n");
     desc.append("\tparam: chisquare.extinction = {""no"", ""yes""}\n");
-
+    desc.append("\tparam: chisquare.dustfit = {""yes"", ""no""}\n");
 
     return desc;
 
@@ -98,6 +99,17 @@ Bool COperatorDTreeCSolve::Solve(CDataStore &dataStore, const CSpectrum &spc, co
     std::string opt_continuumcomponent;
     //dataStore.GetScopedParam( "linemodel.continuumcomponent", opt_continuumcomponent, "nocontinuum" );
     dataStore.GetScopedParam( "linemodel.continuumcomponent", opt_continuumcomponent, "fromspectrum" );
+    std::string opt_rigidity;
+    dataStore.GetScopedParam( "linemodel.rigidity", opt_rigidity, "rules" );
+    //Auto-correct fitting method
+    std::string forcefittingmethod = "individual";
+    if(opt_rigidity=="tplshape" && opt_fittingmethod != forcefittingmethod)
+    {
+        opt_fittingmethod = forcefittingmethod;
+        dataStore.SetScopedParam("linemodel.fittingmethod", opt_fittingmethod);
+        Log.LogInfo( "LineModel fitting method auto-correct due to tplshape rigidity");
+
+    }
     std::string opt_lineWidthType;
     dataStore.GetScopedParam( "linemodel.linewidthtype", opt_lineWidthType, "combined" );
     Float64 opt_resolution;
@@ -125,6 +137,9 @@ Bool COperatorDTreeCSolve::Solve(CDataStore &dataStore, const CSpectrum &spc, co
     auto result = dynamic_pointer_cast<CLineModelResult>(linemodel.Compute(dataStore,
                                                                            spc,
                                                                            _spcContinuum,
+                                                                           tplCatalog,
+                                                                           tplCategoryList,
+                                                                           m_calibrationPath,
                                                                            restRayCatalog,
                                                                            opt_linetypefilter,
                                                                            opt_lineforcefilter,
@@ -140,7 +155,8 @@ Bool COperatorDTreeCSolve::Solve(CDataStore &dataStore, const CSpectrum &spc, co
                                                                            opt_continuumreest,
                                                                            opt_rules,
                                                                            opt_velocityfit,
-                                                                           opt_twosteplargegridstep) );
+                                                                           opt_twosteplargegridstep,
+                                                                           opt_rigidity) );
 
     /*
     Todo: this is the place to decide wether there is a candidate robust enough
@@ -174,6 +190,8 @@ Bool COperatorDTreeCSolve::Solve(CDataStore &dataStore, const CSpectrum &spc, co
     dataStore.GetScopedParam( "chisquare.spectrum.component", opt_spcComponent, "continuum" );
     std::string opt_extinction;
     dataStore.GetScopedParam( "chisquare.extinction", opt_extinction, "no" );
+    std::string opt_dustFit;
+    dataStore.GetScopedParam( "chisquare.dustfit", opt_dustFit, "yes" );
 
     std::string scopeStr = "chisquare";
     if(opt_spcComponent == "continuum"){
@@ -187,7 +205,7 @@ Bool COperatorDTreeCSolve::Solve(CDataStore &dataStore, const CSpectrum &spc, co
 
     Log.LogInfo( "dtreeCsolve: Computing the template fitting : %s", scopeStr.c_str());
 
-    CMethodChisquare2Solve chiSolve;
+    CMethodChisquare2Solve* chiSolve= new CMethodChisquare2Solve(m_calibrationPath);
     std::vector<Float64> redshiftsChi2Continuum;
     /*
     Int32 enableFastContinuumFitLargeGrid = 1;
@@ -227,10 +245,15 @@ Bool COperatorDTreeCSolve::Solve(CDataStore &dataStore, const CSpectrum &spc, co
     std::sort(redshiftsChi2Continuum.begin(), redshiftsChi2Continuum.end());
     //*/
 
+    // prepare the chi2 addictional masks using the linemodel support
+    std::vector<CMask> maskList;// = result->OutsideLinesMask;
+    Log.LogInfo( "dtreeCsolve: maskList size is %d", maskList.size());
+
+
     //*/
-    auto chisolveResultcontinuum = chiSolve.Compute( dataStore, spc, spcWithoutCont,
+    auto chisolveResultcontinuum = chiSolve->Compute( dataStore, spc, spcWithoutCont,
                                                                         tplCatalog, tplCategoryList,
-                                                                        lambdaRange, redshiftsChi2Continuum, overlapThreshold, opt_spcComponent, opt_interp, opt_extinction);
+                                                                        lambdaRange, redshiftsChi2Continuum, overlapThreshold, maskList, opt_spcComponent, opt_interp, opt_extinction, opt_dustFit);
 
     if( !chisolveResultcontinuum )
     {
@@ -246,6 +269,7 @@ Bool COperatorDTreeCSolve::Solve(CDataStore &dataStore, const CSpectrum &spc, co
     GetCombinedRedshift(dataStore, scopeStr);
     // /////////////////////////////////////////////////////////////////////////////
 
+    delete chiSolve;
     return true;
 }
 
@@ -289,6 +313,7 @@ Bool COperatorDTreeCSolve::GetCombinedRedshift(CDataStore& store, std::string sc
         }
     }
 
+
     //*
     //***********************************************************
     //retrieve linemodel values
@@ -316,7 +341,42 @@ Bool COperatorDTreeCSolve::GetCombinedRedshift(CDataStore& store, std::string sc
     TFloat64List zcontinuum_calcGrid;
     Float64 minchi2continuum= DBL_MAX;
 
-    chi2continuum_calcGrid = GetBestRedshiftChi2List(store, scopeStr, minchi2continuum, zcontinuum_calcGrid);
+    Int32 getContinuumMeritType = 0;
+    //0 = get the best merit for each redshift
+    //1 = get the continuum value for a given tplname (retrieved from the line ratios tpl for example: tpl-corr or tpl-shape for example)
+    std::vector<Int32> idxChi2Results;
+    if(getContinuumMeritType==0)
+    {
+        chi2continuum_calcGrid = GetBestRedshiftChi2List(store, scopeStr, minchi2continuum, zcontinuum_calcGrid);
+
+        //retrieve the chi2cont results indexes
+        for( Int32 i=0; i<zcomb.size(); i++ )
+        {
+            for( Int32 iCont=0; iCont<zcontinuum_calcGrid.size(); iCont++ )
+            {
+                if(zcontinuum_calcGrid[iCont] == zcomb[i]){
+                    idxChi2Results.push_back(iCont);
+                    break;
+                }
+            }
+        }
+    }
+    else if(getContinuumMeritType==1)
+    {
+        //populate the tpl names
+        std::vector<std::string> givenTplNames;
+        for( Int32 iExtrema=0; iExtrema<results->Extrema.size(); iExtrema++ )
+        {
+            givenTplNames.push_back(results->FittedTplcorrTplName[idxLMResultsExtrema[iExtrema]]);
+        }
+        chi2continuum_calcGrid = GetChi2ListForGivenTemplateName( store, scopeStr, zcomb, givenTplNames);
+
+        //retrieve the chi2cont results indexes
+        for( Int32 i=0; i<zcomb.size(); i++ )
+        {
+            idxChi2Results.push_back(i);
+        }
+    }
 
     //option 1: interpolate the continuum results on the continuum fit grid
     if(false){
@@ -336,8 +396,13 @@ Bool COperatorDTreeCSolve::GetCombinedRedshift(CDataStore& store, std::string sc
             }
         }
     }else{//option 2
-        chi2continuum = chi2continuum_calcGrid;
+        for(Int32 k=0; k<chi2continuum_calcGrid.size(); k++)
+        {
+            Float64 chi2cSigmaCoeff = 1.0;//0.12;
+            chi2continuum.push_back(chi2continuum_calcGrid[k]*chi2cSigmaCoeff);
+        }
     }
+
 
 
 
@@ -348,22 +413,10 @@ Bool COperatorDTreeCSolve::GetCombinedRedshift(CDataStore& store, std::string sc
     resultPriorContinuum->ChiSquare.resize( zcomb.size() );
     resultPriorContinuum->Redshifts.resize( zcomb.size() );
     resultPriorContinuum->Overlap.resize( zcomb.size() );
-
-    //Set the coefficients
-    Float64 chi2cCoeff = 1.0;
-    /*
-    // coeffs for Keck
-    lmCoeff = 1.0;
-    chi2cCoeff = 2e-3;
-    //*/
-    // coeffs for VUDS F34
-    chi2cCoeff = 2e-2;
-    //*/
-
     for( Int32 i=0; i<zcomb.size(); i++ )
     {
         Float64 post = DBL_MAX;
-        post = chi2cCoeff*chi2continuum[i];
+        post = chi2continuum[idxChi2Results[i]];
 
         resultPriorContinuum->ChiSquare[i] = post;
         resultPriorContinuum->Redshifts[i] = zcomb[i];
@@ -371,6 +424,51 @@ Bool COperatorDTreeCSolve::GetCombinedRedshift(CDataStore& store, std::string sc
     }
     if( resultPriorContinuum ) {
         store.StoreScopedGlobalResult( "priorContinuum", resultPriorContinuum );
+    }
+
+    //Prepare combination coefficients
+    Int32 combineOption = 1; //1 = bayes, 0 = linear
+
+    //Set the coefficients
+    Float64 lmCoeff = 1.0;
+    Float64 chi2cCoeff = 1.0;
+    if(combineOption==1) //bayesian combination
+    {
+
+        Log.LogInfo( "dtreeCsolve : Bayesian combination");
+        lmCoeff = 1.0;
+        chi2cCoeff = 1e-24;
+
+        //logcoeff
+        lmCoeff = -2.0*log(lmCoeff);
+        chi2cCoeff = -2.0*log(chi2cCoeff);
+
+        //override the log coeff: see it as a penality: +> values penalize more
+        lmCoeff = 0.0;//-6.85e3;
+        Float64 dtd = results->dTransposeDNocontinuum;
+        chi2cCoeff = 3e-6*dtd*dtd-0.23*dtd;//poly_1
+
+        //chi2cCoeff = -3.9e3;//-1.14e3;
+        //chi2cCoeff = 1.0e6; //Coeff NUL
+        //chi2cCoeff = -0.5e3;
+        chi2cCoeff = 5e3; //low weight for pfs test
+
+
+        Log.LogInfo( "dtreeCsolve : lmCoeff=%f", lmCoeff);
+        Log.LogInfo( "dtreeCsolve : chi2cCoeff=%f", chi2cCoeff);
+    }
+    else //linear combination
+    {
+        Log.LogInfo( "dtreeCsolve : linear combination");
+        /*
+        // coeffs for Keck
+        lmCoeff = 1.0;
+        chi2cCoeff = 2e-3;
+        //*/
+        // coeffs for VUDS F34
+        lmCoeff = 1.0;
+        chi2cCoeff = 0.0;//2e-2;
+        //*/
     }
 
     //*
@@ -385,6 +483,7 @@ Bool COperatorDTreeCSolve::GetCombinedRedshift(CDataStore& store, std::string sc
     {
         Float64 coeff =10.0;
         Float64 post = -coeff*results->StrongELSNR[idxLMResultsExtrema[i]];
+        post = 0.0; //deactivate this prior
 
         resultPriorSELSP->ChiSquare[i] = post;
         resultPriorSELSP->Redshifts[i] = zcomb[i];
@@ -392,6 +491,135 @@ Bool COperatorDTreeCSolve::GetCombinedRedshift(CDataStore& store, std::string sc
     }
     if( resultPriorSELSP ) {
         store.StoreScopedGlobalResult( "priorStrongELSnrP", resultPriorSELSP );
+    }
+
+    //*
+    //***********************************************************
+    //Estimate the CI prior (continuum_indexes prior)
+    // this prior should only generate penalities (+. values) for the unlikely solutions regarding cont. indexes
+    std::shared_ptr<CChisquareResult> resultPriorCI = std::shared_ptr<CChisquareResult>( new CChisquareResult() );
+    resultPriorCI->ChiSquare.resize( zcomb.size() );
+    resultPriorCI->Redshifts.resize( zcomb.size() );
+    resultPriorCI->Overlap.resize( zcomb.size() );
+
+//    //method1: Rough prior
+//    for( Int32 i=0; i<zcomb.size(); i++ )
+//    {
+//        Float64 coeff = results->dTransposeDNocontinuum;
+//        Float64 post=0.0;
+
+//        Int32 kci=0;
+//        //*
+//        //Lya
+//        kci=0;
+//        Float64 colorLya = results->ContinuumIndexes[idxLMResultsExtrema[i]][kci].Color;
+//        Float64 breakLya = results->ContinuumIndexes[idxLMResultsExtrema[i]][kci].Break;
+//        if(colorLya<-1.0 || breakLya>1.0 || (colorLya<-0.25 && breakLya>0.25))
+//        {
+//            post+=coeff;
+//        }
+//        //*/
+//        //OII
+//        kci = 1;
+//        Float64 colorOII = results->ContinuumIndexes[idxLMResultsExtrema[i]][kci].Color;
+//        Float64 breakOII = results->ContinuumIndexes[idxLMResultsExtrema[i]][kci].Break;
+//        if(colorOII<-1.0 || breakOII>1.0 || (colorOII<-0.5 && breakOII>0.0))
+//        {
+//            post+=coeff;
+//        }
+//        //OIII
+//        kci = 2;
+//        Float64 colorOIII = results->ContinuumIndexes[idxLMResultsExtrema[i]][kci].Color;
+//        Float64 breakOIII = results->ContinuumIndexes[idxLMResultsExtrema[i]][kci].Break;
+//        if(colorOIII>0.7 || (colorOIII>0.25 && breakOIII<-0.5))
+//        {
+//            post+=coeff;
+//        }
+//        //Ha
+//        kci = 3;
+//        Float64 colorHa = results->ContinuumIndexes[idxLMResultsExtrema[i]][kci].Color;
+//        Float64 breakHa = results->ContinuumIndexes[idxLMResultsExtrema[i]][kci].Break;
+//        if(colorHa>0.4 || (colorHa>0.0 && breakHa>0.5))
+//        {
+//            post+=coeff;
+//        }
+//        //CIV
+//        kci = 4;
+//        Float64 colorCIV = results->ContinuumIndexes[idxLMResultsExtrema[i]][kci].Color;
+//        Float64 breakCIV = results->ContinuumIndexes[idxLMResultsExtrema[i]][kci].Break;
+//        if(colorCIV>1.0 || breakCIV<-1.5)
+//        {
+//            post+=coeff;
+//        }
+
+
+//        //post = 0.0; //deactivate this prior
+
+//        resultPriorCI->ChiSquare[i] = post;
+//        resultPriorCI->Redshifts[i] = zcomb[i];
+//        resultPriorCI->Overlap[i] = -1.0;
+//    }
+    //method2: color/break map prior
+    CContinuumIndexesPrior contIndexesPriorData;
+    contIndexesPriorData.Init(m_calibrationPath);
+    for( Int32 i=0; i<zcomb.size(); i++ )
+    {
+        Float64 post=0.0;
+        Float64 coeff = resultPriorContinuum->ChiSquare[i];//results->dTransposeDNocontinuum/50.0; //resultPriorContinuum->ChiSquare[i]
+        Float64 weight = 1.0;
+        Float64 offset = 0.0;
+
+
+        for(Int32 kci=0; kci<results->ContinuumIndexes[idxLMResultsExtrema[i]].size();kci++)
+        {
+            //deactivate selected indexes
+            if(kci==3)
+            {
+                continue;
+            }
+            Float64 Color = results->ContinuumIndexes[idxLMResultsExtrema[i]][kci].Color;
+            Float64 Break = results->ContinuumIndexes[idxLMResultsExtrema[i]][kci].Break;
+            Float64 heatmap_val = contIndexesPriorData.GetHeatmapVal( kci, Color, Break);
+
+            post += (1.0-heatmap_val)*coeff;
+
+        }
+        post = 0.0; //deactivate this prior
+
+        resultPriorCI->ChiSquare[i] = post;
+        resultPriorCI->Redshifts[i] = zcomb[i];
+        resultPriorCI->Overlap[i] = -1.0;
+    }
+
+
+    if( resultPriorCI ) {
+        store.StoreScopedGlobalResult( "priorContIndexes", resultPriorCI );
+    }
+
+
+    //Rescale coefficient
+    Float64 minChi2WithCoeffs = DBL_MAX; //overall chi2 minimum for rescaling
+    if(combineOption==1) //bayesian combination
+    {
+        std::string methodForMin = "";
+        //find the rescaling value
+        for( Int32 i=0; i<zcomb.size(); i++ )
+        {
+            Float64 lmVal = chi2lm[i] + resultPriorSELSP->ChiSquare[i] + lmCoeff;
+            if(lmVal < minChi2WithCoeffs)
+            {
+                minChi2WithCoeffs = lmVal;
+                methodForMin = "lm";
+            }
+            Float64 cVal = chi2continuum[idxChi2Results[i]]+chi2cCoeff;
+            if( cVal < minChi2WithCoeffs)
+            {
+                minChi2WithCoeffs = cVal;
+                methodForMin = "chi2c";
+            }
+        }
+        Log.LogInfo( "dtreeCsolve : minChi2WithCoeffs=%f", minChi2WithCoeffs);
+        Log.LogInfo( "dtreeCsolve : methodForMin=%s", methodForMin.c_str());
     }
 
     //*
@@ -404,7 +632,24 @@ Bool COperatorDTreeCSolve::GetCombinedRedshift(CDataStore& store, std::string sc
 
     for( Int32 i=0; i<zcomb.size(); i++ )
     {
-        Float64 post = chi2lm[i] + resultPriorSELSP->ChiSquare[i] + resultPriorContinuum->ChiSquare[i];
+        Float64 post = DBL_MAX;
+        if(combineOption==1) //bayesian combination
+        {
+            Float64 valf = 1.0;
+            valf = chi2lm[i] + resultPriorSELSP->ChiSquare[i] - minChi2WithCoeffs + lmCoeff + resultPriorCI->ChiSquare[i];
+            Float64 lmLikelihood = exp(-valf/2.0);
+
+            valf = chi2continuum[idxChi2Results[i]]+chi2cCoeff-minChi2WithCoeffs;
+            Float64 chi2continuumLikelihood = exp(-valf/2.0);
+
+            post = -log((lmLikelihood + chi2continuumLikelihood));
+            //post = -log(lmLikelihood);
+            //post = valf;
+        }
+        else //linear combination
+        {
+            post = lmCoeff*(chi2lm[i] + resultPriorSELSP->ChiSquare[i]) + chi2cCoeff*resultPriorContinuum->ChiSquare[i] + resultPriorCI->ChiSquare[i];
+        }
 
         resultCombined->ChiSquare[i] = post;
         resultCombined->Redshifts[i] = zcomb[i];
@@ -457,6 +702,53 @@ TFloat64List COperatorDTreeCSolve::GetBestRedshiftChi2List( CDataStore& store, s
         }
     }
 
+    return meritList;
+
+}
+
+TFloat64List COperatorDTreeCSolve::GetChi2ListForGivenTemplateName( CDataStore& store, std::string scopeStr, TFloat64List givenRedshifts, std::vector<std::string> givenTplNames)
+{
+    std::string scope = "dtreeCsolve.chisquare2solve.";
+    scope.append(scopeStr.c_str());
+
+    TOperatorResultMap meritResults = store.GetPerTemplateResult(scope.c_str());
+
+    TFloat64List meritList;
+
+    for(Int32 iGivenZ=0; iGivenZ<givenRedshifts.size(); iGivenZ++)
+    {
+        Float64 merit = -1.0;
+        //find merit for each z and tpl name
+        for( TOperatorResultMap::const_iterator it = meritResults.begin(); it != meritResults.end(); it++ )
+        {
+            auto meritResult = std::dynamic_pointer_cast<const CChisquareResult>((*it).second);
+            std::string tplName = (*it).first;
+            size_t f = tplName.find("_nolinessavgol");
+            tplName.replace(f, std::string("_nolinessavgol").length(), "");
+            bool tplNameFound = givenTplNames[iGivenZ].find(tplName) != std::string::npos;
+            if(!tplNameFound)
+            {
+                continue;
+            }
+            for( Int32 i=0; i<meritResult->ChiSquare.size(); i++ )
+            {
+                if( givenRedshifts[iGivenZ] == meritResult->Redshifts[i] ){
+                    merit = meritResult->ChiSquare[i];
+                    break;
+                }
+            }
+        }
+        meritList.push_back(merit);
+        if( merit==-1 )
+        {
+            Log.LogError( "dtreeCsolve : Could not find Chi2 result for z=%f, and tpl=%s", givenRedshifts[iGivenZ], givenTplNames[iGivenZ].c_str());
+        }
+    }
+
+    if( meritList.size()!=givenRedshifts.size() )
+    {
+        Log.LogError( "dtreeCsolve : Could not populate merit list for given tpl names list");
+    }
     return meritList;
 
 }

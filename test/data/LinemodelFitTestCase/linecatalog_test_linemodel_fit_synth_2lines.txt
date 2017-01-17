@@ -1,6 +1,0 @@
-#version:0.3.0						
-#Emission	lines	list			
-#lambda	Name	type	force	profile	group	nominal_ampl		
-8400.00	B8400	E	S	SYM		
-7400.00	D7400	E	S	SYM
-

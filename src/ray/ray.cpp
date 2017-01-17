@@ -76,6 +76,12 @@ std::string CRay::GetProfile() const
     return m_Profile;
 }
 
+bool CRay::SetProfile(std::string profile)
+{
+    m_Profile = profile;
+    return true;
+}
+
 Int32 CRay::GetForce() const
 {
     return m_Force;

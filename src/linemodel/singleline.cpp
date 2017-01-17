@@ -460,6 +460,13 @@ Float64 CSingleLine::GetNominalAmplitude(Int32 subeIdx){
 }
 
 /**
+ * \brief Returns 1.0.
+ */
+bool CSingleLine::SetNominalAmplitude(Int32 subeIdx, Float64 nominalamp){
+    return true;
+}
+
+/**
  * \brief Returns m_FittedAmplitude.
  */
 Float64 CSingleLine::GetElementAmplitude(){

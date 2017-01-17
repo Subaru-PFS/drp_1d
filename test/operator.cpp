@@ -8,7 +8,7 @@
 #include <epic/redshift/spectrum/io/fitsreader.h>
 #include <epic/redshift/spectrum/io/genericreader.h>
 #include <epic/redshift/extremum/extremum.h>
-#include <epic/redshift/continuum/irregularsamplingmedian.h>
+#include <epic/redshift/continuum/median.h>
 #include <epic/redshift/noise/fromfile.h>
 
 #include <fstream>
@@ -47,7 +47,9 @@ BOOST_AUTO_TEST_CASE(CorrelationAtZEqualZero)
 
     Float64 redshiftDelta = 0.0001;
     redshifts = TFloat64Range( 0.0, 3.0 ).SpreadOver( redshiftDelta );
-    auto r = std::dynamic_pointer_cast<CCorrelationResult>( correlation.Compute( s, t, lambdaRange, redshifts, 0.99 ) );
+    // prepare the unused masks
+    std::vector<CMask> maskList;
+    auto r = std::dynamic_pointer_cast<CCorrelationResult>( correlation.Compute( s, t, lambdaRange, redshifts, 0.99, maskList ) );
     BOOST_CHECK( r != NULL );
 
 
@@ -95,8 +97,10 @@ BOOST_AUTO_TEST_CASE(CorrelationAtGivenZ)
 
     //CRedshifts redshifts( &z, 1 );
 
+    // prepare the unused masks
+    std::vector<CMask> maskList;
     COperatorCorrelation correlation;
-    auto r = std::dynamic_pointer_cast<CCorrelationResult>( correlation.Compute( s, t, lambdaRange, redshifts, 0.7 ) );
+    auto r = std::dynamic_pointer_cast<CCorrelationResult>( correlation.Compute( s, t, lambdaRange, redshifts, 0.7, maskList ) );
     BOOST_CHECK( r != NULL );
 
     const TFloat64List& results = r->Correlation;
@@ -140,11 +144,11 @@ void UtilCorrelationMatchWithEZ( const char* spectraPath, const char* noisePath,
     BOOST_CHECK( retVal );
 
     {
-        CContinuumIrregularSamplingMedian continuum;
+        CContinuumMedian continuum;
         s.RemoveContinuum( continuum );
     }
     {
-        CContinuumIrregularSamplingMedian continuum;
+        CContinuumMedian continuum;
         t.RemoveContinuum(continuum);
     }
 
@@ -155,8 +159,10 @@ void UtilCorrelationMatchWithEZ( const char* spectraPath, const char* noisePath,
     Float64 redshiftDelta = 0.0001;
     TFloat64List redshifts = TFloat64Range( 0.0, 2.0 ).SpreadOver( redshiftDelta );
 
+    // prepare the unused masks
+    std::vector<CMask> maskList;
     COperatorCorrelation correlation;
-    auto r = std::dynamic_pointer_cast<CCorrelationResult>( correlation.Compute( s, t, TFloat64Range( 5600, 7000 ), redshifts, 1.0 ) );
+    auto r = std::dynamic_pointer_cast<CCorrelationResult>( correlation.Compute( s, t, TFloat64Range( 5600, 7000 ), redshifts, 1.0, maskList ) );
     BOOST_CHECK( r != NULL );
 
     CCorrelationResult referenceResult;
@@ -239,8 +245,10 @@ void UtilChisquareMatchWithEZ( const char* spectraPath, const char* noisePath, c
     Float64 redshiftDelta = 0.0001;
     TFloat64List redshifts = TFloat64Range( 0.0, 2.0 ).SpreadOver( redshiftDelta );
 
+    // prepare the unused masks
+    std::vector<CMask> maskList;
     COperatorChiSquare chi;
-    auto r = std::dynamic_pointer_cast<CChisquareResult>( chi.Compute( s, t, TFloat64Range( 5600, 7000 ), redshifts, 1.0 ) );
+    auto r = std::dynamic_pointer_cast<CChisquareResult>( chi.Compute( s, t, TFloat64Range( 5600, 7000 ), redshifts, 1.0, maskList ) );
     BOOST_CHECK( r != NULL );
 
     CChisquareResult referenceResult;

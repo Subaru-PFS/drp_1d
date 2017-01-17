@@ -15,6 +15,7 @@ import time
 import threading
 import shutil
 import argparse
+from sys import platform
 
 
 #import mpl only to force Qt5Agg
@@ -25,11 +26,21 @@ import aview
 import resultstat
 import resparser
 import aviewgui
+import spectrum
+
 
 
 #default settings
 #global_setting_default_amazed_bin_path = "/home/aschmitt/gitlab/amazed/bin/amazed-0.0.0"
-global_setting_default_amazed_bin_path = "amazed-0.2.4"
+if platform == "linux" or platform == "linux2":
+    # linux
+    global_setting_default_amazed_bin_path = "amazed-0.2.5"
+elif platform == "darwin":
+    # OS X
+    global_setting_default_amazed_bin_path = "/Applications/amazed-0.2.5.app/Contents/MacOS/amazed-0.2.5"
+elif platform == "win32":
+    # Windows...
+    print("ERROR: this platform is not supported ({})".format(platform))
 global_setting_default_workspace= "/tmp/amazed"
 
 class ObjectAProcessGui(object):
@@ -134,6 +145,11 @@ class AProcessGui(QtWidgets.QWidget):
         self.btnBrowseSpcFitsPrevious.setToolTip('Back to the previous file path...')
         self.btnBrowseSpcFitsPrevious.clicked.connect(self.bt_setSpcFitsPrevious)
         layout.addWidget(self.btnBrowseSpcFitsPrevious, layoutRow, 3, 1, 1) 
+        
+        self.btnShowSpcFits = QtWidgets.QPushButton(' show ', wdg)
+        self.btnShowSpcFits.setToolTip('show the spectrum...')
+        self.btnShowSpcFits.clicked.connect(self.bt_showSpcFits)
+        layout.addWidget(self.btnShowSpcFits, layoutRow, 4, 1, 1) 
                         
         #Add the noise fits setup ctrls
         layoutRow += 1
@@ -155,6 +171,10 @@ class AProcessGui(QtWidgets.QWidget):
         self.btnBrowseNoiseFitsPrevious.clicked.connect(self.bt_setNoiseFitsPrevious)
         layout.addWidget(self.btnBrowseNoiseFitsPrevious, layoutRow, 3, 1, 1) 
         
+        self.btnShowNoiseFits = QtWidgets.QPushButton(' show ', wdg)
+        self.btnShowNoiseFits.setToolTip('show the noise spectrum...')
+        self.btnShowNoiseFits.clicked.connect(self.bt_showNoiseFits)
+        layout.addWidget(self.btnShowNoiseFits, layoutRow, 4, 1, 1) 
 
         #Add the configuration separator
         layoutRow += 1        
@@ -184,7 +204,7 @@ class AProcessGui(QtWidgets.QWidget):
         self.cbMethod = QtWidgets.QComboBox()
         self.cbMethod.addItem("linemodel")
         self.cbMethod.addItem("chisquare2solve")
-        #self.cbMethod.addItem("amazed0_2")
+        self.cbMethod.addItem("amazed0_2")
         self.cbMethod.addItem("amazed0_3")
         self.cbMethod.currentIndexChanged.connect(self.cb_method_selectionchange)
         layout.addWidget(self.cbMethod, layoutRow, 1, 1, 1)  
@@ -211,11 +231,12 @@ class AProcessGui(QtWidgets.QWidget):
 
         #Add the lince catalog convert to air toggle
         layoutRow += 1
-        self.lblConvertVac2Air = QtWidgets.QLabel('Convert VACUUM->AIR', wdg)
+        self.lblConvertVac2Air = QtWidgets.QLabel('Convert catalog: VACUUM->AIR', wdg)
         layout.addWidget(self.lblConvertVac2Air, layoutRow, 0, 1, 1)
         
-        self.ckConvertVac2Air = QtWidgets.QCheckBox('Enable conversion', wdg)
-        self.ckConvertVac2Air.setFixedWidth(150) 
+        self.ckConvertVac2Air = QtWidgets.QCheckBox('Enable catalog wavelengths conversion', wdg)
+        self.ckConvertVac2Air.setFixedWidth(350) 
+        self.ckConvertVac2Air.setToolTip('Checked = AIR wavelengths, Un-checked = VACUUM wavelengths')
         self.ckConvertVac2Air.stateChanged.connect(self.ck_convertVac2Air)
         layout.addWidget(self.ckConvertVac2Air, layoutRow, 1, 1, 10)
         
@@ -293,10 +314,11 @@ class AProcessGui(QtWidgets.QWidget):
         layout.addWidget(self.lblAmazedBinPath, layoutRow, 0, 1, 1)
         self.leAmazedBinPath = QtWidgets.QLineEdit(wdg)
         self.leAmazedBinPath.setFixedWidth(500) 
+        self.leAmazedBinPath.editingFinished.connect(self.le_amazedbinpath_handleEditingFinished)
         layout.addWidget(self.leAmazedBinPath, layoutRow, 1, 1, 10)
         self.btnSetAmazedBinPath = QtWidgets.QPushButton(' Browse ', wdg)
         self.btnSetAmazedBinPath.setToolTip('Set AMAZED bin path (ex: amazed-0.2.5 or ~/gitlab/amazed/amazed-0.0.0) for linux users')
-        self.btnSetAmazedBinPath.clicked.connect(self.bt_setAmazedBinPath)        
+        self.btnSetAmazedBinPath.clicked.connect(self.bt_setAmazedBinPath) 
         layout.addWidget(self.btnSetAmazedBinPath, layoutRow, 2, 1, 1)
         
         #Add the processing settings buttons : amazed bin selection 
@@ -544,6 +566,13 @@ class AProcessGui(QtWidgets.QWidget):
         self.settings.setValue("SpcFitsPath", _SpcFitsPathPrevious);
         self.enableCtrls(True) 
         
+    def bt_showSpcFits(self):
+        _spcDirPath = str(self.leSpcdir.text())
+        _spcName = str(self.leSpcFits.text())
+        spath = os.path.join(_spcDirPath, _spcName)
+        print("Showing Spectrum : {}".format(spath))
+        spc = spectrum.Spectrum(spath)
+        spc.plot(lstyle="b-", disableEventHandling=True)
     
     def ck_SpcFits(self, state):        
         if state == QtCore.Qt.Checked:                
@@ -617,6 +646,14 @@ class AProcessGui(QtWidgets.QWidget):
         self.settings.setValue("NoiseFitsPath", _NoiseFitsPathPrevious);
         self.enableCtrls(True) 
         
+    def bt_showNoiseFits(self):
+        _spcDirPath = str(self.leSpcdir.text())
+        _noiseName = str(self.leNoiseFits.text())
+        spath = os.path.join(_spcDirPath, _noiseName)
+        print("Showing Noise Spectrum : {}".format(spath))
+        spc = spectrum.Spectrum(spath)
+        spc.plot(lstyle="k-", disableEventHandling=True)
+        
    
     def bt_setSpcdir(self):
         self.setSpcdir()
@@ -667,6 +704,9 @@ class AProcessGui(QtWidgets.QWidget):
         newParamsPath = os.path.join(self.m_workspace, "params_reprocess.json")
         shutil.copyfile(_resParser.parameterspath, newParamsPath)
         self.setParametersFilePath(newParamsPath)
+        self.setParamIntermediateResults()
+        #self.setParamDecompScales()
+        #self.setParamContinuum()
 
         #retrieve spectrum directory to ui controls
         _spcDir = _resParser.getConfigVal('spectrumdir')
@@ -680,6 +720,39 @@ class AProcessGui(QtWidgets.QWidget):
         self.setSpcFits(_SpcFits)
         _SpcNoise = splListLine[1]
         self.setNoiseFits(_SpcNoise)
+        
+    def setParamIntermediateResults(self, val="all"):
+        _parametersPath = str(self.leMethodParametersPath.text())
+        f = open(_parametersPath,'r')
+        contents = f.read()
+        replaced_contents = contents.replace('"SaveIntermediateResults": "no"', '"SaveIntermediateResults": "{}"'.format(val))
+        f.close()
+        f = open(_parametersPath,'w')
+        f.write(replaced_contents)
+        f.close()
+        
+            
+    def setParamDecompScales(self, val="7"):
+        _parametersPath = str(self.leMethodParametersPath.text())
+        f = open(_parametersPath,'r')
+        contents = f.read()
+        replaced_contents = contents.replace('"decompScales": "6"', '"decompScales": "{}"'.format(val))
+        f.close()
+        f = open(_parametersPath,'w')
+        f.write(replaced_contents)
+        f.close()
+        
+    def setParamContinuum(self):
+        _parametersPath = str(self.leMethodParametersPath.text())
+        f = open(_parametersPath,'r')
+        contents = f.read()
+        replaced_contents = contents.replace('"method": "waveletsDF"', '"method": "zero"'.format())
+        f.close()
+        f = open(_parametersPath,'w')
+        f.write(replaced_contents)
+        f.close()
+        
+        
            
        
     def bt_importConfigFile(self):
@@ -911,6 +984,10 @@ class AProcessGui(QtWidgets.QWidget):
     
     def bt_setAmazedBinPath(self, newBinPath=None):
         self.setAmazedBinPath()
+        
+    def le_amazedbinpath_handleEditingFinished(self):
+        newBinPath = self.leAmazedBinPath.text()
+        self.setAmazedBinPath(newBinPath)
         
     def setAmazedBinPath(self, newBinPath=None):
         tag = "bt_setAmazedBinPath"

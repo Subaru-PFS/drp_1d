@@ -33,7 +33,8 @@ Void CLineModelSolveResult::Save( const CDataStore& store, std::ostream& stream 
     Float64 merit;
     std::string tplName;
 
-    GetBestRedshiftWithStrongELSnrPrior( store, redshift, merit );
+    //GetBestRedshiftWithStrongELSnrPrior( store, redshift, merit );
+    GetBestRedshift( store, redshift, merit );
 
     stream <<  "#Redshifts\tMerit\tTemplate"<< std::endl;
     stream << redshift << "\t"
@@ -50,7 +51,8 @@ Void CLineModelSolveResult::SaveLine( const CDataStore& store, std::ostream& str
     Float64 merit;
     std::string tplName;
 
-    GetBestRedshiftWithStrongELSnrPrior( store, redshift, merit );
+    //GetBestRedshiftWithStrongELSnrPrior( store, redshift, merit );
+    GetBestRedshift( store, redshift, merit );
 
     stream  << store.GetSpectrumName() << "\t"
 	    << redshift << "\t"

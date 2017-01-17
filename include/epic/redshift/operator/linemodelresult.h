@@ -60,10 +60,16 @@ public:
     std::vector<SLineModelSolution> LineModelSolutions; //linemodel for each extrema
     TFloat64List            bic;    // bayesian information criterion for each extrema
     std::vector<CContinuumIndexes::TContinuumIndexList> ContinuumIndexes; //continuum indexes for each extrema
+    std::vector<CMask>      OutsideLinesMask; //Mask with 0 under the lines and 1 anywhere else
+    std::vector<std::string>      FittedTplName; //Name of the best template fitted for continuum
+    TFloat64List      FittedTplAmplitude; //Amplitude for the best template fitted for continuum
+    std::vector<std::string>      FittedTplcorrTplName; //Name of the best template fitted for tplcorr
 
     COperator::TStatusList  Status;
     CRayCatalog::TRayVector restRayList;
     Int32 nSpcSamples;
+    Int32 dTransposeDNocontinuum;
+    Int32 dTransposeD;
 
 
 };
