@@ -5,6 +5,7 @@
 #include <boost/tokenizer.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/algorithm/string/replace.hpp>
 #include <string>
 #include <fstream>
 #include <iostream>
@@ -17,6 +18,8 @@ using namespace boost;
 
 CRayCatalogsTplShape::CRayCatalogsTplShape()
 {
+    // old relpath = "linecatalogs_tplshape_ExtendedTemplatesMarch2016_v2_20160916_B10I2_mod"
+    tplshapedcatalog_relpath = "linecatalogs_tplshape_ExtendedTemplatesMarch2016_B13B_mod20170110";
 
 }
 
@@ -25,11 +28,16 @@ CRayCatalogsTplShape::~CRayCatalogsTplShape()
 
 }
 
+Bool CRayCatalogsTplShape::SetTplctlgRelPath( const char* relPath )
+{
+    tplshapedcatalog_relpath = relPath;
+    return true;
+}
+
 Bool CRayCatalogsTplShape::Init( std::string calibrationPath)
 {
     bfs::path calibrationFolder( calibrationPath.c_str() );
-    //std::string dirPath = (calibrationFolder.append( "linecatalogs_tplshape_ExtendedTemplatesMarch2016_v2_20160916_B10I2_mod" )).string();
-    std::string dirPath = (calibrationFolder.append( "linecatalogs_tplshape_ExtendedTemplatesMarch2016_B13B_mod20170110" )).string();
+    std::string dirPath = (calibrationFolder.append( tplshapedcatalog_relpath.c_str() )).string();
 
     bool ret = Load(dirPath.c_str());
     if(!ret)
@@ -69,6 +77,24 @@ Bool CRayCatalogsTplShape::Load( const char* dirPath )
     }
     Log.LogDebug( "CRayCatalogsTplShape - Found %d tplshaped catalogs", tplshapeCatalogList.size());
 
+    //load the velocities list for all the catalogs
+    fs::path tplshapeVelocitiesDir = tplshapeCatalogDir/"velocities/";
+    std::vector<std::string> tplshapeVelocitiesList;
+    if ( fs::exists(tplshapeVelocitiesDir) && fs::is_directory(tplshapeVelocitiesDir))
+    {
+      for( fs::directory_iterator dir_iter(tplshapeVelocitiesDir) ; dir_iter != end_iter ; ++dir_iter)
+      {
+        if (fs::is_regular_file(dir_iter->status()) )
+        {
+          tplshapeVelocitiesList.push_back(dir_iter->path().c_str());
+        }
+      }
+    }else{
+        Log.LogError( "CRayCatalogsTplShape - ERROR - unable to find velocities directory");
+    }
+    Log.LogInfo( "CRayCatalogsTplShape - Found %d tplshaped velocities files", tplshapeVelocitiesList.size());
+
+
 
     //Load the linecatalog-tplshaped in the list
     for(Int32 k=0; k<tplshapeCatalogList.size(); k++)
@@ -84,8 +110,77 @@ Bool CRayCatalogsTplShape::Load( const char* dirPath )
 
         fs::path name(tplshapeCatalogList[k].c_str());
         m_RayCatalogNames.push_back(name.filename().c_str());
+
+        //find the velocities-tplshaped corresponding to the tpl-shaped catalog
+        Int32 kvel = -1;
+        std::string tplname = name.filename().c_str();
+        boost::replace_all( tplname, "_catalog.txt", "_velocities.txt");
+        for(Int32 k=0; k<tplshapeVelocitiesList.size(); k++)
+        {
+            std::string velname = tplshapeVelocitiesList[k];
+            std::size_t foundstra = velname.find(tplname.c_str());
+            if (foundstra==std::string::npos){
+                continue;
+            }
+            kvel = k;
+        }
+
+        if(kvel<0)
+        {
+            Log.LogError( "Failed to match tplshape-catalog with tplshape-velocities files: %s", tplname.c_str());
+            return false;
+        }
+        m_ELvelocities.push_back(200.0);
+        m_ABSvelocities.push_back(200.0);
+        bool ret = LoadVelocities(tplshapeVelocitiesList[kvel].c_str(), k);
+        if( !ret )
+        {
+            Log.LogError( "Failed to load tplshape velocities: %s", tplshapeVelocitiesList[kvel].c_str());
+            return false;
+        }
+
+
     }
-    Log.LogDebug( "CRayCatalogsTplShape - Loaded %d tplshaped catalogs", m_RayCatalogList.size());
+    Log.LogInfo( "CRayCatalogsTplShape - Loaded %d tplshaped catalogs", m_RayCatalogList.size());
+
+    return true;
+}
+
+bool CRayCatalogsTplShape::LoadVelocities( const char* filePath, Int32 k )
+{
+    Float64 elv=100.0;
+    Float64 alv=300.0;
+
+    ifstream file;
+    file.open( filePath, ifstream::in );
+    if( file.rdstate() & ios_base::failbit ){
+        return false;
+    }
+    string line;
+
+    // Read file line by line
+    Int32 readNums = 0;
+    while( getline( file, line ) )
+    {
+        if(readNums==0)
+        {
+            elv = std::stod(line);
+        }else if(readNums==1)
+        {
+            alv = std::stod(line);
+        }
+        readNums++;
+    }
+    file.close();
+    if(readNums!=2)
+    {
+        return false;
+    }
+
+
+    Log.LogDebug( "CRayCatalogsTplShape k=%d - Set elv=%.1f, alv=%.1f", k, elv, alv);
+    m_ELvelocities[k] = elv;
+    m_ABSvelocities[k] = alv;
 
     return true;
 }
@@ -108,6 +203,14 @@ std::string CRayCatalogsTplShape::GetCatalogName(Int32 idx)
 {
     return m_RayCatalogNames[idx];
 }
+
+Bool CRayCatalogsTplShape::GetCatalogVelocities(Int32 idx, Float64& elv, Float64& alv )
+{
+    elv = m_ELvelocities[idx];
+    alv = m_ABSvelocities[idx];
+    return true;
+}
+
 
 Bool CRayCatalogsTplShape::InitLineCorrespondingAmplitudes(CLineModelElementList &LineModelElementList)
 {

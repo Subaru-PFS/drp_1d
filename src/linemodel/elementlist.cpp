@@ -691,6 +691,8 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
             setLyaProfile(redshift, spectralAxis);
             //m_CatalogTplShape->SetMultilineNominalAmplitudes( *this, ifitting );
             m_CatalogTplShape->SetMultilineNominalAmplitudesFast( *this, ifitting );
+            //Set the velocities from templates: todo auto switch when velfit is ON
+            //m_CatalogTplShape->GetCatalogVelocities(ifitting, m_velocityEmission, m_velocityAbsorption);
         }
 
         //generate random amplitudes
@@ -1113,6 +1115,10 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
     {
         //m_CatalogTplShape->SetMultilineNominalAmplitudes( *this, savedIdxFitted );
         m_CatalogTplShape->SetMultilineNominalAmplitudesFast( *this, savedIdxFitted );
+
+        //Set the velocities from templates: todo auto switch when velfit is ON
+        //m_CatalogTplShape->GetCatalogVelocities(savedIdxFitted, m_velocityEmission, m_velocityAbsorption);
+
         Log.LogInfo( "Linemodel: tplshape = %d (%s), and A=%f", savedIdxFitted, m_tplcorrBestTplName.c_str(), savedFittedAmp);
         m_Elements[0]->SetFittedAmplitude(savedFittedAmp, savedFittedAmpError);
         //Lya
