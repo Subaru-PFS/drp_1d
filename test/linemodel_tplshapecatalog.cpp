@@ -11,7 +11,7 @@ BOOST_AUTO_TEST_SUITE(LinemodelTplshapecatalog)
 
 BOOST_AUTO_TEST_CASE( LoadCatalogAndVelocities )
 {
-    std::string calibrationPath = "/home/aschmitt/gitlab/cpf-redshift/test/data/LinemodelTplshapeCtlgTestCase/calibrationPath1";
+    std::string calibrationPath = "../test/data/LinemodelTplshapeCtlgTestCase/calibrationPath1";
     std::string relPath = "linecatalogs_tplshape_ExtendedTemplatesMarch2016_B13B_mod20170110_3";
     CRayCatalogsTplShape* catalogTplShape = new CRayCatalogsTplShape();
     catalogTplShape->SetTplctlgRelPath(relPath.c_str());
