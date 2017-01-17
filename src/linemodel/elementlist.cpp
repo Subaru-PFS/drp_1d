@@ -1681,7 +1681,7 @@ void print_state (size_t iter, gsl_multifit_fdfsolver * s)
 Int32 CLineModelElementList::fitAmplitudesLmfit(std::vector<Int32> filteredEltsIdx, const CSpectrumFluxAxis& fluxAxis, std::vector<Float64>& ampsfitted, Int32 lineType)
 {
     //http://www.gnu.org/software/gsl/manual/html_node/Example-programs-for-Nonlinear-Least_002dSquares-Fitting.html
-    Bool verbose = true;
+    Bool verbose = false;
 
 
 
