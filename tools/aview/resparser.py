@@ -469,15 +469,17 @@ class ResParser(object):
         idOperator = 0
         tplpathCandidates = displayParamsBundle[idOperator]['tplPaths']
         forceTplAmplitudeCandidates = displayParamsBundle[idOperator]['forceTplAmplitudes']
+        forceTplEbmvs = displayParamsBundle[idOperator]['forceTplDustCoeff']
         forceTplDoNotRedShiftCandidates = displayParamsBundle[idOperator]['forceTplDoNotRedShifts'] 
                     
         redshift = zvalCandidates[idxExtrema]
         tplpath = tplpathCandidates[idxExtrema]
         forceTplAmplitude = forceTplAmplitudeCandidates[idxExtrema]
+        forceTplEbmv = forceTplEbmvs[idxExtrema]
         forceTplDoNotRedShift = forceTplDoNotRedShiftCandidates[idxExtrema]
         
                 
-        return redshift, tplpath, forceTplAmplitude, forceTplDoNotRedShift
+        return redshift, tplpath, forceTplAmplitude, forceTplEbmv, forceTplDoNotRedShift
         
     
     def getAutoCandidatesList(self, spcnametag):

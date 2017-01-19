@@ -99,13 +99,14 @@ def plotRes(resDir, spcName, tplpath, redshift, iextremaredshift, diffthres, fai
         print('retrieve tpl-model path - using idxExtrema: {}'.format(idxExtrema))
             
         # todo, when idxExtrema is -1, z should be found from the "zval = s.getRedshiftVal(spcName)"
-        zvalCandidate, tplpathCandidate, forceTplAmplitudeCandidate, forceTplDoNotRedShiftCandidate = s.getAutoCandidate(spcName, idxExtrema)
+        zvalCandidate, tplpathCandidate, forceTplAmplitudeCandidate, forceTplEbmv, forceTplDoNotRedShiftCandidate = s.getAutoCandidate(spcName, idxExtrema)
         print("full tpl-model path: {}".format(tplpathCandidate))
         if not os.path.exists(tplpathCandidate):
             print("does not exist : reset tpl-model path = {}".format(""))
             tplpathCandidate = ""
             forceTplAmplitudeCandidate = -1
             forceTplDoNotRedShiftCandidate = 0
+            forceTplEbmv = 0.0
 #        #else:
 #         #   try:
 #                #forceTplAmplitude = chi.amazed_fitamplitude[idxExtrema]
@@ -130,6 +131,7 @@ def plotRes(resDir, spcName, tplpath, redshift, iextremaredshift, diffthres, fai
     print('AVIEW: Redshift is: {0}'.format(zval))
     #print(s.getRedshiftTpl(spcName))
     
+
     if tplpath == "":
         tpath = tplpathCandidate
         forceTplAmplitude = forceTplAmplitudeCandidate
@@ -188,7 +190,7 @@ def plotRes(resDir, spcName, tplpath, redshift, iextremaredshift, diffthres, fai
     # PLOT Spectrum/tpl/lines view
     scontinuumpath = s.getContinuumPath(spcName, methodForced='auto')
     #scontinuumpath = ""
-    avp1 = avp.AViewPlot(spath, npath, tpath, cpath, zval, forceTplAmplitude=forceTplAmplitude, forceTplDoNotRedShift = forceTplDoNotRedShift, enablePlot=enablePlot, scontinuumpath=scontinuumpath)
+    avp1 = avp.AViewPlot(spath, npath, tpath, cpath, zval, forceTplAmplitude=forceTplAmplitude, forceTplDustCoeff=forceTplEbmv, forceTplDoNotRedShift = forceTplDoNotRedShift, enablePlot=enablePlot, scontinuumpath=scontinuumpath)
     if enablePlot==False:
         avp1.exportDisplays(displaySpcPath);
 
