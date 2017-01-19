@@ -26,7 +26,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-#include <gsl/gsl_rng.h>
+//#include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_blas.h>
@@ -129,7 +129,7 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
         }
     }
     m_precomputedFineGridContinuumFlux = NULL;
-
+    m_chiSquareOperator = NULL;
     //*
     //WARNING: HACK, first pass with continuum from spectrum.
     if(m_ContinuumComponent == "tplfit")
@@ -180,6 +180,15 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
  **/
 CLineModelElementList::~CLineModelElementList()
 {
+    //Log.LogInfo("Linemodel: Elementlist destructor call");
+    if(m_precomputedFineGridContinuumFlux)
+    {
+        delete[] m_precomputedFineGridContinuumFlux;
+    }
+    if(m_chiSquareOperator)
+    {
+        delete m_chiSquareOperator;
+    }
 }
 
 /**
@@ -382,7 +391,7 @@ void CLineModelElementList::InitFitContinuum()
     m_fitContinuum_lmin = 0;
     m_fitContinuum_lmax = spectralAxis[spectralAxis.GetSamplesCount()-1];
     m_fitContinuum_nTgt = (m_fitContinuum_lmax-m_fitContinuum_lmin)/m_fitContinuum_dLambdaTgt + 2.0/m_fitContinuum_dLambdaTgt;
-    m_precomputedFineGridContinuumFlux = (Float64*)malloc(m_fitContinuum_nTgt*sizeof(Float64));
+    m_precomputedFineGridContinuumFlux = new Float64 [(int)m_fitContinuum_nTgt]();
 }
 
 /**
@@ -390,10 +399,15 @@ void CLineModelElementList::InitFitContinuum()
  **/
 void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange)
 {
+    if(m_precomputedFineGridContinuumFlux == NULL)
+    {
+        Log.LogError("Elementlist, cannot loadfitcontinuum without precomputedFineGridTplFlux... aborting!");
+        return;
+    }
     //hardcoded parameters
     std::string opt_interp = "lin"; //"precomputedfinegrid";
-    Int32 opt_extinction = 0;
-    Int32 opt_dustFit = 1;
+    Int32 opt_extinction = 1;
+    Int32 opt_dustFit = 0;
     Float64 overlapThreshold = 1.0;
     std::vector<CMask> maskList;//(1,getOutsideLinesMask());
     std::vector<Float64> redshifts(1, m_Redshift);
@@ -446,11 +460,11 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange)
                     // Precalculate a fine grid template to be used for the 'closest value' rebin method
                     Int32 n = tpl.GetSampleCount();
                     CSpectrumFluxAxis tplFluxAxis = tpl.GetFluxAxis();
-                    CSpectrumSpectralAxis tplSpectralAxis = tpl.GetSpectralAxis();
+                    const CSpectrumSpectralAxis& tplSpectralAxis = tpl.GetSpectralAxis();
 
                     //inialize and allocate the gsl objects
                     Float64* Ysrc = tplFluxAxis.GetSamples();
-                    Float64* Xsrc = tplSpectralAxis.GetSamples();
+                    const Float64* Xsrc = tplSpectralAxis.GetSamples();
                     //apply dust attenuation
                     const Float64* dustCoeffArray = m_chiSquareOperator->getDustCoeff(m_fitContinuum_tplFitDustCoeff, Xsrc[n-1]);
                     Float64 lambda = 0.0;
@@ -459,6 +473,7 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange)
                         lambda = Xsrc[ktpl];
                         Ysrc[ktpl]*=dustCoeffArray[Int32(lambda)];
                     }
+                    delete dustCoeffArray;
                     //spline
                     gsl_spline *spline = gsl_spline_alloc (gsl_interp_cspline, n);
                     gsl_spline_init (spline, Xsrc, Ysrc, n);
@@ -1758,8 +1773,8 @@ Int32 CLineModelElementList::fitAmplitudesLmfit(std::vector<Int32> filteredEltsI
 
     gsl_vector_view x = gsl_vector_view_array (x_init, p);
     gsl_vector_view w = gsl_vector_view_array(weights, n);
-    const gsl_rng_type * type;
-    gsl_rng * r;
+    //const gsl_rng_type * type;
+    //gsl_rng * r;
     gsl_vector *res_f;
     double chi, chi0;
 
@@ -1768,10 +1783,10 @@ Int32 CLineModelElementList::fitAmplitudesLmfit(std::vector<Int32> filteredEltsI
     const double ftol = 0.0;
     Int32 maxIterations = 250;
 
-    gsl_rng_env_setup();
+    //gsl_rng_env_setup();
 
-    type = gsl_rng_default;
-    r = gsl_rng_alloc (type);
+    //type = gsl_rng_default;
+    //r = gsl_rng_alloc (type);
 
     f.f = &lmfit_f;
     f.df = &lmfit_df;
@@ -1909,7 +1924,7 @@ Int32 CLineModelElementList::fitAmplitudesLmfit(std::vector<Int32> filteredEltsI
     gsl_multifit_fdfsolver_free (s);
     gsl_matrix_free (covar);
     gsl_matrix_free (J);
-    gsl_rng_free (r);
+    //gsl_rng_free (r);
 
     return sameSign;
 }

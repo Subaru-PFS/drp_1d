@@ -76,7 +76,7 @@ COperatorChiSquare2::COperatorChiSquare2( std::string calibrationPath )
         m_YtplRawBuffer = new Float64[(int)m_YtplRawBufferMaxBufferSize]();
 
         //precomte the dust-coeff table
-        m_nDustCoeff = 10;
+        m_nDustCoeff = 10; //achtung double initialization fo the dust coeff
         m_dustCoeffStep = 0.1;
         m_dustCoeffStart = 0.0;
         m_dataDustCoeff = new Float64[(int)(m_nDustCoeff*m_NdataCalzetti)]();
@@ -208,7 +208,7 @@ Void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& t
     {
         m_nDustCoeff = 1;
     }else{
-        m_nDustCoeff = 10; //achting double initialization fo the dust coeff.
+        m_nDustCoeff = 10; //achtung double initialization fo the dust coeff.
         if(m_YtplRawBufferMaxBufferSize<itplTplSpectralAxis.GetSamplesCount())
         {
             Log.LogError( "chisquare operator: rebinned tpl size > buffer size for dust-fit ! Aborting.");
@@ -783,12 +783,8 @@ const Float64*  COperatorChiSquare2::getDustCoeff(Float64 dustCoeff, Float64 max
     }
 
     Int32 nSamples = maxLambda+1; //+1 for security
-    Float64* dustCoeffs = (Float64*)malloc(nSamples*sizeof(Float64));
-    if(dustCoeffs == NULL)
-    {
-        Log.LogError("Chisquare2, unable to allocate the dust-coeffs... aborting!");
-        return NULL;
-    }
+    Float64* dustCoeffs = new Float64 [(int)nSamples]();
+
 
     for(Int32 kl=0; kl<nSamples; kl++)
     {
