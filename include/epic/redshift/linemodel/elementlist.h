@@ -215,6 +215,9 @@ private:
     std::string m_tplcorrBestTplName;
 
     COperatorChiSquare2* m_chiSquareOperator;
+    Int32 m_fitContinuum_dustfit;
+    Int32 m_fitContinuum_igm;
+
     Float64 m_fitContinuum_dLambdaTgt;
     Float64 m_fitContinuum_lmin;
     Float64 m_fitContinuum_lmax;

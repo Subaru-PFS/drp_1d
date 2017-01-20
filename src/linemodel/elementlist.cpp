@@ -75,6 +75,9 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
     m_rulesoption = opt_rules;
     m_rigidity = opt_rigidity;
 
+    m_fitContinuum_dustfit = 1;
+    m_fitContinuum_igm = 1;
+
     // to be deleted: nominal width
     //m_nominalWidthDefaultEmission = 3.4;//3.4; //suited to PFS RJLcont simulations
     m_nominalWidthDefaultEmission = 1.15;// suited to new pfs simulations
@@ -136,6 +139,9 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
     {
         InitFitContinuum();
         m_chiSquareOperator = new COperatorChiSquare2(calibrationPath);
+
+        Log.LogInfo( "Elementlist: fitContinuum_dustfit = %d", m_fitContinuum_dustfit );
+        Log.LogInfo( "Elementlist: fitContinuum_igm = %d", m_fitContinuum_igm );
     }
     //*/
 
@@ -406,8 +412,8 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange)
     }
     //hardcoded parameters
     std::string opt_interp = "lin"; //"precomputedfinegrid";
-    Int32 opt_extinction = 1;
-    Int32 opt_dustFit = 0;
+    Int32 opt_extinction = m_fitContinuum_igm;
+    Int32 opt_dustFit = m_fitContinuum_dustfit;
     Float64 overlapThreshold = 1.0;
     std::vector<CMask> maskList;//(1,getOutsideLinesMask());
     std::vector<Float64> redshifts(1, m_Redshift);
@@ -584,7 +590,7 @@ void CLineModelElementList::PrepareContinuum(Float64 z)
         k = (int)(Xtgt[j]*Coeffk+0.5);
 
         //* Optionally Apply some extinction
-        if(0)
+        if(m_fitContinuum_igm)
         {
             coeffUnder1216 = 1.0;
             if(k*0.1 < 1216.0)
