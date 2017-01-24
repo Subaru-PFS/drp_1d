@@ -348,6 +348,8 @@ Bool COperatorDTreeCSolve::GetCombinedRedshift(CDataStore& store, std::string sc
     if(getContinuumMeritType==0)
     {
         chi2continuum_calcGrid = GetBestRedshiftChi2List(store, scopeStr, minchi2continuum, zcontinuum_calcGrid);
+        //chi2continuum_calcGrid = GetMargChi2List(store, scopeStr, minchi2continuum, zcontinuum_calcGrid);
+
 
         //retrieve the chi2cont results indexes
         for( Int32 i=0; i<zcomb.size(); i++ )
@@ -452,6 +454,7 @@ Bool COperatorDTreeCSolve::GetCombinedRedshift(CDataStore& store, std::string sc
         //chi2cCoeff = 1.0e6; //Coeff NUL
         //chi2cCoeff = -0.5e3;
         chi2cCoeff = 5e3; //low weight for pfs test
+        chi2cCoeff = -1e3; //simulm
 
 
         Log.LogInfo( "dtreeCsolve : lmCoeff=%f", lmCoeff);
@@ -666,7 +669,15 @@ Bool COperatorDTreeCSolve::GetCombinedRedshift(CDataStore& store, std::string sc
 
 }
 
-
+/**
+ * @brief COperatorDTreeCSolve::GetBestRedshiftChi2List
+ * get the best chi2 result (between all template), with the corresponding redshift list
+ * @param store
+ * @param scopeStr
+ * @param minmerit
+ * @param zList
+ * @return
+ */
 TFloat64List COperatorDTreeCSolve::GetBestRedshiftChi2List( CDataStore& store, std::string scopeStr,  Float64& minmerit, TFloat64List& zList)
 {
     std::string scope = "dtreeCsolve.chisquare2solve.";
@@ -700,6 +711,68 @@ TFloat64List COperatorDTreeCSolve::GetBestRedshiftChi2List( CDataStore& store, s
                 minmerit = meritResult->ChiSquare[i];
             }
         }
+    }
+
+    return meritList;
+
+}
+
+
+TFloat64List COperatorDTreeCSolve::GetMargChi2List( CDataStore& store, std::string scopeStr,  Float64& minmerit, TFloat64List& zList)
+{
+    std::string scope = "dtreeCsolve.chisquare2solve.";
+    scope.append(scopeStr.c_str());
+
+    TOperatorResultMap meritResults = store.GetPerTemplateResult(scope.c_str());
+
+    TFloat64List minmeritList;
+    //init meritresults
+    TOperatorResultMap::const_iterator it0 = meritResults.begin();
+    {
+        auto meritResult = std::dynamic_pointer_cast<const CChisquareResult> ( (*it0).second );
+        for( Int32 i=0; i<meritResult->ChiSquare.size(); i++ )
+        {
+            minmeritList.push_back(DBL_MAX);
+            zList.push_back(meritResult->Redshifts[i]);
+        }
+    }
+
+    //find best merit for each tpl
+    for( TOperatorResultMap::const_iterator it = meritResults.begin(); it != meritResults.end(); it++ )
+    {
+        auto meritResult = std::dynamic_pointer_cast<const CChisquareResult>((*it).second);
+        for( Int32 i=0; i<meritResult->ChiSquare.size(); i++ )
+        {
+            if( minmeritList[i] > meritResult->ChiSquare[i]){
+                minmeritList[i] = meritResult->ChiSquare[i];
+            }
+        }
+    }
+
+    //compute marg merit
+    TFloat64List likelihoodList(minmeritList.size(), 0.0);
+    minmerit = DBL_MAX;
+    for( TOperatorResultMap::const_iterator it = meritResults.begin(); it != meritResults.end(); it++ )
+    {
+        auto meritResult = std::dynamic_pointer_cast<const CChisquareResult>((*it).second);
+        for( Int32 i=0; i<meritResult->ChiSquare.size(); i++ )
+        {
+            Float64 valf = 1.0;
+            valf = meritResult->ChiSquare[i]-minmeritList[i];
+            Float64 likelihood = exp(-valf/2.0);
+            likelihoodList[i] += likelihood;
+
+            if( minmerit > meritResult->ChiSquare[i]){
+                minmerit = meritResult->ChiSquare[i];
+            }
+        }
+    }
+
+
+    TFloat64List meritList(minmeritList.size(), 0.0);
+    for( Int32 i=0; i<likelihoodList.size(); i++ )
+    {
+        meritList[i] = -2.0*log(likelihoodList[i]) + minmeritList[i];
     }
 
     return meritList;

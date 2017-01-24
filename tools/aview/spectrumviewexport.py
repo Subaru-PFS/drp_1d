@@ -13,6 +13,8 @@ import spectrum
 import reference
 
 def export(spcListPath, suffix, enableOverlay, othersuffix, otherpath, refpath):
+    spctype = "pfs"
+    #spctype = "template"    
     
     print('using spclist full path: {}'.format(spcListPath))
     f = open(spcListPath)
@@ -27,6 +29,10 @@ def export(spcListPath, suffix, enableOverlay, othersuffix, otherpath, refpath):
             if(len(data) ==2):
                 _name  = data[0]
                 _noise =  data[1]
+                spcList.append([_name, _noise])
+            if(len(data) ==1):
+                _name  = data[0]
+                _noise =  ""
                 spcList.append([_name, _noise])
     print("spcList size = {}".format(len(spcList)))
     if len(spcList)<1:
@@ -46,7 +52,7 @@ def export(spcListPath, suffix, enableOverlay, othersuffix, otherpath, refpath):
     
     for e in spcList:
         try:
-            s1 = spectrum.Spectrum(e[0])
+            s1 = spectrum.Spectrum(e[0], stype=spctype)
             if enableOverlay:
                 eTFTmp = e[0].replace(suffix, othersuffix)
                 eTFName = os.path.split(eTFTmp)[1]
@@ -55,12 +61,16 @@ def export(spcListPath, suffix, enableOverlay, othersuffix, otherpath, refpath):
                 spcExportPathFull = os.path.join(displaySpcPath, "{}.png".format(e[0]))
                 print("exporting to : {}".format(spcExportPathFull))
                 
+                label1 = ""
+                label2 = ""
+                title_overide = ""
+                
                 # some specifics for PFS sim2016
                 #s1.applyWeight(1e-17)
-                s2.applyLambdaCrop(3800, 12600)
-                label1 = "Flux with 3H instrument signature"
-                label2 = "True Flux"
-                title_overide = ""
+                if 1:
+                    s2.applyLambdaCrop(3800, 12600)
+                    label1 = "Flux with 3H instrument signature"
+                    label2 = "True Flux"
                 if enableRefFile:
                     idxobj = refCatalog.findIdx(eTFName)
                     if not idxobj == -1:

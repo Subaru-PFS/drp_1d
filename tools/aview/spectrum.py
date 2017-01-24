@@ -31,7 +31,22 @@ pp.style.use('ggplot')
 import numpy as np
 from scipy import interpolate
 from scipy.signal import savgol_filter
+from scipy.signal import medfilt
+from scipy.optimize import curve_fit
 
+            
+def fblackbody(lbda, a, t):
+    """
+    DEV. not tested, not working for now
+    """
+    lbda_cm = lbda*1e8  
+        
+    h = 6.63e-34 #j.s
+    k = 1.38e-23 #J.K-1
+    c = 3.0e8 #m.s-1
+    c_cm = 3.0e10
+    val = a/( (lbda_cm**5)*(np.exp(h*c_cm/(k*t*lbda_cm))-1))
+    return val
 
 class Spectrum(object):
     def __init__(self, spath, stype='undefspc', snorm=False, label=""):
@@ -476,6 +491,43 @@ class Spectrum(object):
             self.xvect[x] = wave[x]
             self.yvect[x] = flux[x]
             self.ysum += self.yvect[x]  
+            
+    def fitAmplitudeToRef(self, otherspc):
+        """
+        1. find the common lbda range
+        2. resample the cropped self.yvect to do the fitting. 
+        3. find the amplitude coeff for this to fit otherspc
+        4. apply the amplitude coeff to this
+        """
+        minLbda = np.max([self.xvect[1], otherspc.xvect[1]])
+        maxLbda = np.min([self.xvect[self.n-2], otherspc.xvect[otherspc.n-2]])
+        print("fitAmplitudeToref: lmin={}, lamx={}".format(minLbda, maxLbda))
+        
+        idxMinThis = self.getWavelengthIndex(minLbda)
+        idxMinOther = otherspc.getWavelengthIndex(minLbda)+1 #security sample for the other xvectcropped
+        idxMaxThis = self.getWavelengthIndex(maxLbda)
+        idxMaxOther = otherspc.getWavelengthIndex(maxLbda)-1 #security sample for the other xvectcropped
+        
+        xthisVect = np.array(self.xvect)
+        ythisVect = np.array(self.yvect)
+
+        x = xthisVect[idxMinThis:idxMaxThis]
+        #print("xThisVectCropped = {}".format(x))
+        y = ythisVect[idxMinThis:idxMaxThis]
+        f = interpolate.interp1d(x, y)
+         
+        xotherVect = np.array(otherspc.xvect)
+        xOtherVectCropped = xotherVect[idxMinOther:idxMaxOther]
+        otherVect = np.array(otherspc.yvect)
+        #print("xOtherVectCropped = {}".format(xOtherVectCropped))
+              
+        thisVect = f(xOtherVectCropped)
+        sumThis = np.sum(thisVect)
+        sumOther = np.sum(otherVect[idxMinOther:idxMaxOther])
+        
+        a = sumOther/sumThis
+        print("fitAmplitudeToref: applying amplitude weighting a={}".format(a))
+        self.applyWeight(a)
             
     def printIdxWaveFlux(self):
         for a in range(self.n):
@@ -1129,8 +1181,100 @@ class Spectrum(object):
         
         return yvect
         
-    def smoothSavitskyGolay(self, winSizeAngstrom=100, degree=2): 
-        self.yvect = self.getSmoothSavitskyGolay(winSizeAngstrom=winSizeAngstrom, degree=degree)
+    def getSmoothMedianFilter(self, winSizeAngstrom=100):
+        inputYvect = self.yvect
+        
+        inputSpc = np.array(inputYvect)
+        winSize = int(winSizeAngstrom/self.getResolution())
+        if winSize/2.0 == int(winSize/2.0):
+            winSize+=1
+        print("median using winsize = {}".format(winSize))
+        filtered = medfilt(inputSpc, winSize)
+        yvect = list(filtered)
+        
+        return yvect
+
+    def getSmoothHanning(self, winSizeAngstrom=100, window='hanning', direction=1):
+        window_len = int(winSizeAngstrom/self.getResolution())
+        if window_len/2.0 == int(window_len/2.0):
+            window_len+=1
+        print("hanning using winsize = {}".format(window_len))
+        
+        """smooth the data using a window with requested size.
+    
+        This method is based on the convolution of a scaled window with the signal.
+        The signal is prepared by introducing reflected copies of the signal
+        (with the window size) in both ends so that transient parts are minimized
+        in the begining and end part of the output signal.
+    
+        input:
+            x: the input signal
+            window_len: the dimension of the smoothing window; should be an odd integer
+            window: the type of window from 'flat', 'hanning', 'hamming', 'bartlett', 'blackman'
+                flat window will produce a moving average smoothing.
+    
+        output:
+            the smoothed signal
+    
+        example:
+    
+        t=linspace(-2,2,0.1)
+        x=sin(t)+randn(len(t))*0.1
+        y=smooth(x)
+    
+        see also:
+    
+        numpy.hanning, numpy.hamming, numpy.bartlett, numpy.blackman, numpy.convolve
+        scipy.signal.lfilter
+    
+        TODO: the window parameter could be the window itself if an array instead of a string
+        NOTE: length(output) != length(input), to correct this: return y[(window_len/2-1):-(window_len/2)] instead of just y.
+        """
+        x = np.array(self.yvect)
+        if direction==-1:
+            x = x[::-1]
+        if x.ndim != 1:
+            raise ValueError, "smooth only accepts 1 dimension arrays."
+    
+        if x.size < window_len:
+            raise ValueError, "Input vector needs to be bigger than window size."
+    
+    
+        if window_len<3:
+            return x
+            stop
+    
+    
+        if not window in ['flat', 'hanning', 'hamming', 'bartlett', 'blackman']:
+            raise ValueError, "Window is on of 'flat', 'hanning', 'hamming', 'bartlett', 'blackman'"
+    
+    
+        s=np.r_[x[window_len-1:0:-1],x,x[-1:-window_len:-1]]
+        #print(len(s))
+        if window == 'flat': #moving average
+            w=np.ones(window_len,'d')
+        else:
+            w=eval('np.'+window+'(window_len)')
+    
+        y=np.convolve(w/w.sum(),s,mode='valid')
+        if direction==-1:
+            y = y[::-1]
+        return y        
+        
+        
+    def smoothSavitskyGolay(self, winSizeAngstrom=100, degree=2, nloop=1): 
+        for k in range(nloop):
+            self.yvect = self.getSmoothSavitskyGolay(winSizeAngstrom=winSizeAngstrom, degree=degree)
+        
+    def smoothMedian(self, winSizeAngstrom=100, nloop=1): 
+        for k in range(nloop):
+            self.yvect = self.getSmoothMedianFilter(winSizeAngstrom=winSizeAngstrom)
+            
+    def smoothHanning(self, winSizeAngstrom=100, nloop=1): 
+        for k in range(nloop):
+            #self.yvect = self.getSmoothHanning(winSizeAngstrom=winSizeAngstrom/2.0, direction=1)
+            self.yvect = self.getSmoothHanning(winSizeAngstrom=winSizeAngstrom/2.0, direction=-1)
+    
         
     def removeContinuumSavgol(self, winSizeAngstrom=100, degree=2): 
         smoothYvect = self.getSmoothSavitskyGolay(winSizeAngstrom=winSizeAngstrom, degree=degree)
@@ -1246,6 +1390,33 @@ class Spectrum(object):
             k=k+1
         if k>=1e6:
             print("WARNING: stopping extension, max iteration reached")
+
+        
+        
+    def fitBlackBody(self, exportFitted=True, lbda_max=14000):
+        """
+        DEV. not tested, not working for now
+        """
+        xdata = np.array(self.xvect)
+        ydata = np.array(self.yvect)
+        popt, pcov = curve_fit(fblackbody, xdata, ydata)
+        
+        print("fitBlackBody = {}".format(popt))
+        T_fitted = popt[0]
+        A_fitted = popt[1]
+        T_fitted = 10000.0
+        A_fitted = 1.0
+        if exportFitted:
+            path = os.path.split(self.spath)[0]
+            nameWext = os.path.split(self.spath)[1]
+            name="{}_blackbody".format(os.path.splitext(nameWext)[0])
+            
+            scopy = Spectrum(self.spath, self.stype, self.snorm)
+            yvect = [fblackbody(k, A_fitted, T_fitted) for k in self.xvect]
+            scopy.setData(self.xvect, yvect)
+            scopy.exportFits(path, name=name, addNoise=False, exportNoiseSpectrum=False, addNameSuffix=False )
+            
+        return T_fitted          
             
     def interpolate(self, dx=1.0, offsetx=0.0):
         x = np.copy(self.xvect)
@@ -1635,12 +1806,15 @@ def StartFromCommandLine( argv ) :
     print(options)
 
     normalize_all = False
+    plotCompare_normalize_to_s2 = False
 
     if os.path.exists(options.spcPath) :
         print('using full path: {0}'.format(options.spcPath))
         s = Spectrum(options.spcPath, options.spcType, snorm=normalize_all)
                
-        #s.applyWeight(0.9)
+        #tbb = s.fitBlackBody(exportFitted=True, lbda_max=14000)
+        
+        #s.applyWeight(1.17)
         #s.printIdxWaveFlux()
         #s.convertFromHzToAngstrom()
         #for k in range(len(s.yvect)):
@@ -1707,6 +1881,9 @@ def StartFromCommandLine( argv ) :
             s.plot()
         else:
             s2 = Spectrum(options.otherspcPath, options.otherspcType, snorm=normalize_all)
+            
+            if plotCompare_normalize_to_s2:
+                s.fitAmplitudeToRef(s2)
             
             if 0: #savgol model without lines and save it
                 #s2.smoothSavitskyGolay(400, 3.0)
