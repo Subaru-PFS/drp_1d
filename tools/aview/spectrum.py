@@ -80,16 +80,20 @@ class Spectrum(object):
             self.loadpfs2() 
         elif(self.stype == 'vvds'):
             self.loadvvds() 
-        elif(self.stype == 'pfs'):
+        elif(self.stype == 'pfs' or self.stype=='amazed_default'):
             self.loadpfs() 
         elif(self.stype == 'muse'):
             self.loadmuse() 
-        elif(self.stype == 'euclid_sim_noise'):
+        elif(self.stype == 'euclid_sim_noise'): #for euclid simulations from AXESIM-July2016
             self.loadeuclidSimNoise() 
-        elif(self.stype == 'euclid_sim_siroct2016_flux'):
+        elif(self.stype == 'euclid_sim_siroct2016_flux'): #for euclid simulations from OUSIR-Oct2016
             self.loadeuclidSimSirOct2016(readtable="COMBINED_CONTSUB", readcol="F")
-        elif(self.stype == 'euclid_sim_siroct2016_noise'):
+        elif(self.stype == 'euclid_sim_siroct2016_noise'): #for euclid simulations from OUSIR-Oct2016
             self.loadeuclidSimSirOct2016(readtable="COMBINED",readcol="ErrF") 
+        elif(self.stype == 'euclid_axesim_jan2017_flux'): #for euclid simulations from AXESIM-Jan2017
+            self.loadeuclidAxesimJan2017(readtable="SPC1D",readcol="F") 
+        elif(self.stype == 'euclid_axesim_jan2017_noise'): #for euclid simulations from AXESIM-Jan2017
+            self.loadeuclidAxesimJan2017(readtable="SPC1D",readcol="ErrF") 
         elif(self.stype == 'empty'):
             pass 
         else:
@@ -245,6 +249,86 @@ class Spectrum(object):
             print("failed to find the 'FLUXES' bintable, found : {}, abort...".format(sciheader['TTYPE2']))
             return
         if not 'NOISE' in sciheader['TTYPE3'] and readcol=="ErrF":
+            print("failed to find the 'NOISE' bintable, found : {}, abort...".format(sciheader['TTYPE3']))
+            return
+            
+        if verbose:
+            print("\nSpectrum LOAD : Successfully found idxWaves and (idxFluxes or idxNoise)\n")
+
+        if readcol=="F":   
+            idxF = idxFluxes
+        elif readcol=="ErrF":
+            idxF = idxNoise
+        else:
+            print("failed to parse the data flag (F or ErrF) found : {}, abort...".format(readcol))
+            
+        print("Spectrum LOAD : Reading type={}, F col = {}".format(self.stype, idxF))
+            
+        self.n = scidata.shape[0]
+        #print('{0} - n = {1}'.format(self.logTagStr, self.n))
+    
+        #---- default xaxis index array
+        self.xvect = range(0,self.n)
+        self.yvect = range(0,self.n)
+        self.ysum = 0.0
+        for x in range(0,self.n):
+            #print scidata[x]
+            self.xvect[x] = scidata[x][idxWaves]
+            self.yvect[x] = scidata[x][idxF]
+            self.ysum += self.yvect[x]
+            
+            
+    def loadeuclidAxesimJan2017(self, readtable="SPC1D", readcol="F"):
+        #readcol="F", in order to read the FLUXES
+        #readcol="ErrF", in order to read the NOISE
+    
+        verbose = False
+        hdulist = fits.open(self.spath) 
+        
+        if verbose:
+            print("\nHDULIST = \n{}\n".format(hdulist))
+
+        #find the correct table, based on the readtable arg.
+        ntables = len(hdulist)
+        if verbose:
+            print("INFO: found n tables = {}".format(ntables))
+        idxBinTable = -1
+        for k in range(ntables):
+            if hdulist[k].header['EXTNAME'] == readtable:
+                idxBinTable = k
+        if idxBinTable==-1:
+            print("ERROR: Unable to load readtable={}, aborting...".format(readtable))
+            return
+        if verbose:
+            print("INFO: found idxBinTable = {}".format(idxBinTable))
+            
+        try:
+            scidata = hdulist[idxBinTable].data
+            sciheader = hdulist[idxBinTable].header
+            if verbose:
+                print("Spectrum LOAD : Loaded bintable #{}".format(idxBinTable))
+        except:
+            print("Spectrum LOAD : failed to load bintable #{}, abort...".format(idxBinTable))
+            return
+            
+        if 0 and verbose:
+            print("\nSpectrum LOAD : scidata = \n{}\n".format(scidata))
+            print("\nSpectrum LOAD : sciheader = \n{}\n".format(sciheader))
+            print("\nSpectrum LOAD : sciheader name = \n{}\n".format(sciheader['EXTNAME']))
+            
+
+            
+        #check the col names
+        idxWaves = 0
+        idxFluxes = 1
+        idxNoise = 2
+        if not 'wave' in sciheader['TTYPE1']:
+            print("failed to find the 'WAVES' bintable, found : {}, abort...".format(sciheader['TTYPE1']))
+            return
+        if not 'flux' in sciheader['TTYPE2'] and readcol=="F":
+            print("failed to find the 'FLUXES' bintable, found : {}, abort...".format(sciheader['TTYPE2']))
+            return
+        if not 'error' in sciheader['TTYPE3'] and readcol=="ErrF":
             print("failed to find the 'NOISE' bintable, found : {}, abort...".format(sciheader['TTYPE3']))
             return
             
@@ -1294,8 +1378,8 @@ class Spectrum(object):
         ystep = y2-y1  
         #use a poly1 fit
         NRangeforfit = fitRangeInSamples #warning number of samples (todo=convert in Angstrom)
-        xv = self.xvect[self.n-NRangeforfit:self.n-1]
-        yv = self.yvect[self.n-NRangeforfit:self.n-1]       
+        xv = np.array(self.xvect)[self.n-NRangeforfit:self.n-1]
+        yv = np.array(self.yvect)[self.n-NRangeforfit:self.n-1]       
         coefficients1 = np.polyfit(xv,yv,1)
         print("linfit coeff.: 0 = {0}, 1 = {1}".format(coefficients1[0], coefficients1[1]))
         moyenne = np.mean(yv)
@@ -1782,7 +1866,7 @@ def StartFromCommandLine( argv ) :
                     help="path to the fits spectrum to be plotted")
     parser.add_argument("-t", "--type", 
                         help="type of spectrum, can be in teh following list \
-                        {template, template-w0f2, vvds, pfs, pfs2, muse, hplana, euclid, pfs2reech, euclid_sim_noise, euclid_sim_siroct2016_flux, euclid_sim_siroct2016_noise}",  
+                        {template, template-w0f2, vvds, pfs, pfs2, muse, hplana, euclid, pfs2reech, euclid_sim_noise, euclid_sim_siroct2016_flux, euclid_sim_siroct2016_noise, euclid_axesim_jan2017_flux, euclid_axesim_jan2017_noise}",  
                         dest="spcType",     
                         default="")                
     parser.add_argument("-o", "--otherspc", 

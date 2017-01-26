@@ -634,11 +634,11 @@ class AProcessGui(QtWidgets.QWidget):
             self.enableCtrls(True)
         else:
             print("{}: Noise fits file not located in spectrum directory. Please update spectrum directory path first.".format(tag))
-            msg = QtGui.QMessageBox()
-            msg.setText("Noise fits file not located in spectrum directory. Please update spectrum directory path first.")   
-            msg.setWindowTitle("Error")	
-            msg.setWindowTitle("MessageBox demo")
-            retval = msg.exec_()
+            #msg = QtGui.QMessageBox()
+            #msg.setText("Noise fits file not located in spectrum directory. Please update spectrum directory path first.")   
+            #msg.setWindowTitle("Error")	
+            #msg.setWindowTitle("MessageBox demo")
+            #retval = msg.exec_()
 
     def bt_setNoiseFitsPrevious(self):
         _NoiseFitsPathPrevious = self.settings.value("NoiseFitsPathPrevious")

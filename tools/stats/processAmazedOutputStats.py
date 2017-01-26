@@ -389,16 +389,28 @@ def ProcessDiff( refFile, calcFile, outFile, reftype ) :
     
     f.close()
 
-    if 0:
+    enablePlotSubsets = 0
+    if enablePlotSubsets:
         #*************** create subsets
         subset_index = 3 # index = 4 is the method, index = 3 is the tpl, 
-        subset_nmax = 12 # max num of subset shown in figure
+        subset_nmax = 30 # max num of subset shown in figure
         data_label_subset = [a[subset_index] for a in dataCalc]
         s = set(data_label_subset)
-        data_subsets = []
+        X = []
+        Y = []
         for a in s:
             #print (a)
+            #data_subsets_unsorted.append([a, data_label_subset.count(a)])
+            X.append(a)
+            Y.append(data_label_subset.count(a))
+        
+
+        sortedlist = [x for (y,x) in sorted(zip(Y,X), reverse=True)]
+        data_subsets = []
+        for a in sortedlist:
             data_subsets.append([a, data_label_subset.count(a)])
+            
+
         #sorted_hist = sorted(hist, key=lambda hist: hist[0])
         print("subsets = {0}".format(data_subsets))
     
@@ -406,17 +418,65 @@ def ProcessDiff( refFile, calcFile, outFile, reftype ) :
         xvect = range(0,n)
         yvect = range(0,n)  
         for k in range(0,n):
-        	xvect[k] = dataRef[k][iRefZ]
-    	yvect[k] = (dataCalc[k][1]-dataRef[k][iRefZ])/(1+dataRef[k][iRefZ])
+            xvect[k] = dataRef[k][iRefZ]
+            yvect[k] = (dataCalc[k][1]-dataRef[k][iRefZ])/(1+dataRef[k][iRefZ])
         fig = pp.figure('Amazed output')
         ax = fig.add_subplot(111)
-        color_ = ['r', 'g', 'b', 'y','c', 'm', 'y', 'k', 'r', 'g', 'b', 'y']
+        
+        color_seq = ['r', 'g', 'b', 'y','c', 'm', 'k']
+        #ncolors_seq = 9
+        #color_seq = cm.hsv(np.linspace(0,1,ncolors_seq+2))
+        color_seq_offset = 0
+        color_ = ['k' for cc in range(len(data_subsets))]
+        for k in range(len(data_subsets)):
+            if 1:            
+                if k<color_seq_offset:
+                    color_[k] = 'k'
+                elif k < len(color_seq)+color_seq_offset:
+                    color_[k]=color_seq[k-color_seq_offset]
+            #print("data_subset {} = {}".format(k, data_subsets[k][0]))
+            if 0:                
+                if data_subsets[k][0]=="Rebinned-EW-SB2extended.txt":
+                    #print("k = {}".format(k))
+                    color_[k] = 'm'
+                if data_subsets[k][0]=="Rebinned-NEW-E-extendeddataExtensionData.txt":
+                    #print("k = {}".format(k))
+                    color_[k] = 'r'
+                if data_subsets[k][0]=="NEW-Sbc-extended.txt":
+                    #print("k = {}".format(k))
+                    color_[k] = 'g'
+                if data_subsets[k][0]=="COMBINE-ave-BX-highblue-AND-StarBurst3.txt":
+                    #print("k = {}".format(k))
+                    color_[k] = 'b'
+                if data_subsets[k][0]=="COMBINE-ave-Lya-emstr-AND-StarBurst3.txt":
+                    #print("k = {}".format(k))
+                    color_[k] = 'c'
+                if data_subsets[k][0]=="NEW-Im-extended.txt":
+                    #print("k = {}".format(k))
+                    color_[k] = 'y'
+                if data_subsets[k][0]=="NEW-Im-extended-blue.txt":
+                    #print("k = {}".format(k))
+                    color_[k] = 'y'
+                if data_subsets[k][0]=="COMBINE-ave-Lya-emstr-AND-StarBurst1.txt":
+                    #print("k = {}".format(k))
+                    color_[k] = 'y'
+                if data_subsets[k][0]=="COMBINE-ave-BX-highblue-AND-StarBurst1.txt":
+                    #print("k = {}".format(k))
+                    color_[k] = 'y'
+                if "StarBurst1" in data_subsets[k][0]:
+                    color_[k] = 'y'
+                    
+                    
+            
+                
         #n=max(len(s),5)
         #color_=cm.rainbow(np.linspace(0,1,n))
         mylegend = [a[0] for a in data_subsets]
         for k in range(min(len(data_subsets),subset_nmax)):
+            #if not data_subsets[k][0]=="Rebinned-NEW-E-extendeddataExtensionData.txt":
+            #    continue
             inds = [i for i,x in enumerate(data_label_subset) if x==data_subsets[k][0]]
-    	#print("indices found are {0}".format(inds))
+            #print("indices found are {0}".format(inds))
             xv = [xvect[i] for i in inds ]
             yv = [yvect[i] for i in inds ]
             ax.plot(xv, yv, 'x', label=mylegend[k], color=color_[k])
@@ -1489,8 +1549,8 @@ def StartFromCommandLine( argv ) :
             print("Info: No reference file type given (--type), using vvds by default.")
 
         ProcessDiff( options.refFile, options.calcFile, outputFullpathDiff, options.type )
-        ProcessFailures( outputFullpathDiff, outputFullpathFailures)
-        ProcessFailuresSeqFile( outputFullpathDiff, options.refFile, outputFullpathFailuresSeqFile, outputFullpathFailuresRefFile)
+        #ProcessFailures( outputFullpathDiff, outputFullpathFailures)
+        #ProcessFailuresSeqFile( outputFullpathDiff, options.refFile, outputFullpathFailuresSeqFile, outputFullpathFailuresRefFile)
     else:
         if os.path.exists(options.diffFile):
             outputFullpathDiff = options.diffFile

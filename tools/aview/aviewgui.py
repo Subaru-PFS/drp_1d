@@ -104,7 +104,27 @@ class AViewGui(QtWidgets.QWidget):
         self.leDiffThres = QtWidgets.QLineEdit(wdg)
         self.leDiffThres.setToolTip('Enter threshold value to filter the dataset by the z error value (ex. 0.01)...')
         self.leDiffThres.setFixedWidth(200) 
-        layout.addWidget(self.leDiffThres, layoutRow, 1, 1, 10)  
+        layout.addWidget(self.leDiffThres, layoutRow, 1, 1, 10) 
+        
+        #Add the relzerr range threshold filter ctrls
+        layoutRow += 1
+        self.lblrelzerrrange = QtWidgets.QLabel(' Filter by relzerr range: ', wdg)
+        layout.addWidget(self.lblrelzerrrange, layoutRow, 0, 1, 1)
+        
+        layoutRelZErrrange = QtWidgets.QHBoxLayout() 
+        self.lerelzerrrangemin = QtWidgets.QLineEdit(wdg)
+        self.lerelzerrrangemin.setToolTip('Enter zerr min value...')
+        self.lerelzerrrangemin.setFixedWidth(100) 
+        layoutRelZErrrange.addWidget(self.lerelzerrrangemin)
+
+        self.lerelzerrrangemax = QtWidgets.QLineEdit(wdg)
+        self.lerelzerrrangemax.setToolTip('Enter zerr max value...')
+        self.lerelzerrrangemax.setFixedWidth(100) 
+        layoutRelZErrrange.addWidget(self.lerelzerrrangemax)
+        #add empty label to fill the hbox
+        lbl = QtWidgets.QLabel(' ', wdg)
+        layoutRelZErrrange.addWidget(lbl)
+        layout.addLayout(layoutRelZErrrange, layoutRow, 1, 1, 10) 
         
         #Add the zref range threshold filter ctrls
         layoutRow += 1
@@ -213,14 +233,25 @@ class AViewGui(QtWidgets.QWidget):
         self.leResultSpcName.setFixedWidth(500) 
         layout.addWidget(self.leResultSpcName, layoutRow, 1, 1, 2) 
         self.leResultSpcName.setEnabled(False)
-        #Add the result zdiff
+        #Add the result zdiff and relzerr
         layoutRow += 1
-        self.lblResultZdiff = QtWidgets.QLabel('        - zdiff', wdg)
-        layout.addWidget(self.lblResultZdiff, layoutRow, 0, 1, 1) 
+        layout_zerr = QtWidgets.QHBoxLayout()
+        self.lblResultZdiff = QtWidgets.QLabel(' zdiff =', wdg)
+        layout_zerr.addWidget(self.lblResultZdiff) 
         self.leResultSpcZdiff = QtWidgets.QLineEdit(wdg)
-        self.leResultSpcZdiff.setFixedWidth(300) 
-        layout.addWidget(self.leResultSpcZdiff, layoutRow, 1, 1, 2) 
+        self.leResultSpcZdiff.setFixedWidth(150) 
+        layout_zerr.addWidget(self.leResultSpcZdiff) 
         self.leResultSpcZdiff.setEnabled(False)
+        self.lblResultRelZerr = QtWidgets.QLabel(' relzerr =', wdg)
+        layout_zerr.addWidget(self.lblResultRelZerr) 
+        self.leResultSpcRelZerr = QtWidgets.QLineEdit(wdg)
+        self.leResultSpcRelZerr.setFixedWidth(150) 
+        layout_zerr.addWidget(self.leResultSpcRelZerr) 
+        self.leResultSpcRelZerr.setEnabled(False)
+        #add empty label to fill the hbox
+        lbl = QtWidgets.QLabel(' ', wdg)
+        layout_zerr.addWidget(lbl)
+        layout.addLayout(layout_zerr, layoutRow, 1, 1, 1)
         #Add the result zcalc 
         layoutRow += 1
         self.lblResultZcalc = QtWidgets.QLabel('        - zcalc', wdg)
@@ -373,6 +404,24 @@ class AViewGui(QtWidgets.QWidget):
         _diffthres = str(self.leDiffThres.text())
         if _diffthres=="":
             _diffthres = -1
+
+
+            
+        #filter by relzerr
+        try:
+            _relzerrmin = float(str(self.lerelzerrrangemin.text()))
+            if not (_relzerrmin >-10.0 and _relzerrmin < 10.0):
+                _relzerrmin = -10.0
+        except:
+            print("ERROR with relzerr min value, please check your input ! (using relzerrmin=-10)")
+            _relzerrmin = -10
+        try:
+            _relzerrmax = float(str(self.lerelzerrrangemax.text()))
+            if not (_relzerrmax >-10.0 and _relzerrmax < 10.0):
+                _relzerrmax = 10.0
+        except:
+            print("ERROR with relzerr max value, please check your input ! (using relzerrmax=10)")
+            _relzerrmax = 10.0        
         
         #filter by zref
         try:
@@ -390,7 +439,7 @@ class AViewGui(QtWidgets.QWidget):
             print("ERROR with zref max value, please check your input ! (using zrefmax=20)")
             _zrefmax = 20.0   
             
-        #filter by zref
+        #filter by sfr
         try:
             _sfrrefmin = float(str(self.lesfrrangemin.text()))
             if not (_sfrrefmin >0.0 and _sfrrefmin < 1000.0):
@@ -400,15 +449,16 @@ class AViewGui(QtWidgets.QWidget):
             _sfrrefmin = -1
         try:
             _sfrrefmax = float(str(self.lesfrrangemax.text()))
-            if not (_sfrrefmax >0.0 and _sfrrefmax < 20.0):
-                _sfrrefmax = 20.0
+            if not (_sfrrefmax >0.0 and _sfrrefmax < 1000.0):
+                _sfrrefmax = 1000.0
         except:
-            print("ERROR with sfr max value, please check your input ! (using sfrrefmax=20)")
-            _sfrrefmax = 20.0
+            print("ERROR with sfr max value, please check your input ! (using sfrrefmax=1000)")
+            _sfrrefmax = 1000.0
             
         self.resList = resultstat.ResultList(_resDir, spcName=_spcName, diffthreshold=float(_diffthres), opt='brief',  
                                              zrefmin=_zrefmin, zrefmax=_zrefmax, 
-                                             sfrrefmin=_sfrrefmin, sfrrefmax=_sfrrefmax) 
+                                             sfrrefmin=_sfrrefmin, sfrrefmax=_sfrrefmax,
+                                             relzerrmin=_relzerrmin, relzerrmax=_relzerrmax) 
         self.leResultsN.setText(str(self.resList.n))
         #init result index to 1 (first index)
         self.leResultIndex.setText(str(1))
@@ -418,7 +468,16 @@ class AViewGui(QtWidgets.QWidget):
         if not reinit:
             current_index = int(self.leResultIndex.text() )-1
             self.leResultSpcName.setText(self.resList.list[current_index].name)
-            self.leResultSpcZdiff.setText(str(self.resList.list[current_index].zdiff))
+            self.leResultSpcZdiff.setText("{:.5}".format(self.resList.list[current_index].zdiff))
+            
+            relzerr = -1.
+            zref = self.resList.list[current_index].zref            
+            if zref !=-1.:
+                relzerr = (self.resList.list[current_index].zcalc-zref)/(1+zref)
+            self.leResultSpcRelZerr.setText("{:.5}".format(relzerr))
+            
+            
+            
             self.leResultSpcZcalc.setText("{:.5}".format(self.resList.list[current_index].zcalc))
             self.leResultSpcZref.setText("{:.5}".format(self.resList.list[current_index].zref))
             self.leResultSpcMagref.setText("{:.5}".format(self.resList.list[current_index].refValues['mag']))

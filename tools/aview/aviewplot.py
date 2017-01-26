@@ -688,6 +688,12 @@ class AViewPlot(object):
         displays_lambdas_rest_max.append(9000)
         displays_names.append("CaII_triplet")
         
+        # add MgII2800 doublet
+        displays_lambdas_rest_center.append(8500)
+        displays_lambdas_rest_min.append(2540)
+        displays_lambdas_rest_max.append(2980)
+        displays_names.append("MgII2800_doublet") 
+        
         ndisp = len(displays_lambdas_rest_center)
         #ndisp = 1
         for a in range(ndisp):

@@ -22,6 +22,7 @@ import matplotlib.cm as cm
 import matplotlib.colors as mcolors
 from mpl_toolkits.mplot3d import Axes3D
 
+import numpy as np
 from scipy.interpolate import griddata
 from scipy import ndimage
 import scipy.optimize as opt
@@ -73,11 +74,17 @@ class Result(object):
         return rate;
                 
 class ResultList(object):
-    def __init__(self, dir, diffthreshold=-1, opt='full', spcName="", methodName="", zrefmin=-1, zrefmax=20, magrefmin=-100.0, magrefmax=100, sfrrefmin=-1.0, sfrrefmax=1e4):
+    def __init__(self, dir, diffthreshold=-1, opt='full', spcName="", methodName="",
+                 zrefmin=-1, zrefmax=20,
+                 magrefmin=-100.0, magrefmax=100,
+                 sfrrefmin=-1.0, sfrrefmax=1e4,
+                 relzerrmin=-10, relzerrmax=10):
         self.logTagStr = "ResultList"
         self.dir = dir
         self.name = os.path.basename(self.dir)
-        self.diffthreshold = diffthreshold  
+        self.diffthreshold = diffthreshold 
+        self.relzerrmin = relzerrmin
+        self.relzerrmax = relzerrmax
         self.zrefmin = zrefmin
         self.zrefmax = zrefmax
         self.magrefmin = magrefmin
@@ -123,6 +130,11 @@ class ResultList(object):
             
             zcalc = line[4]
             zdiff = line[4]-line[2]
+            if zref!=-1:
+                relzerr = (zcalc-zref)/(1+zref)
+            else:
+                relzerr = -1
+                
             #print('zcalc is: {0}'.format(zcalc)) 
             method = line[6]
             
@@ -174,7 +186,11 @@ class ResultList(object):
                 accepted = False
                 if enableShowDetails:
                     print("Rejected by sfrref")
-                
+            if not (relzerr>=self.relzerrmin and relzerr<=self.relzerrmax):
+                accepted = False
+                if enableShowDetails:
+                    print("Rejected by relzerr")
+                    
             if accepted:
                 refValues = {'elvelocity': elvelocity, 'mag': magref, 'sfr': sfrref, 'ebmv': ebmvref}
                 res = Result(name, zref, zcalc, zdiff, chi2, chi2nc, chi2PerTplZcalc, chi2PerTplZref, chi2ncPerTplZref, refValues)
@@ -2093,12 +2109,16 @@ def plotChi2CombinationCoeff2DMap(resDir, diffthres, spcName="", methodName="", 
 
 def estimateCombinationCoeffMap(resDir, diffthres, spcName="", enableExport=True):
     #options
-    dont_skip_no_spc = 1
+    dont_skip_no_spc = 0
     enable_intermediate_plots = 0
     zthres=0.001
     
     print('using amazed results full path: {0}'.format(resDir))
-    resList = ResultList(resDir, diffthreshold=diffthres, opt='brief', spcName=spcName)
+    zrefmin=0.0
+    zrefmax=2.5
+    magrefmin=0.0
+    magrefmax=23.3
+    resList = ResultList(resDir, diffthreshold=diffthres, opt='brief', spcName=spcName, zrefmin=zrefmin, zrefmax=zrefmax, magrefmin=magrefmin, magrefmax=magrefmax)
     if resList.n <1:
         print('No results loaded...')
         return   
@@ -2171,7 +2191,7 @@ def estimateCombinationCoeffMap(resDir, diffthres, spcName="", enableExport=True
         fig = plt.figure('dtreec {} coeff map'.format("sigma, b"), figsize=(9, 8))
         ax = fig.add_subplot(111)
         cmap = plt.get_cmap('RdYlGn') 
-        ncolors = 200 #min(20,k+2)
+        ncolors = 20 #min(20,k+2)
         cmap = cmap_discretize(cmap, ncolors) 
 
         i = ax.matshow(np.transpose(coeffMapCumulative), interpolation='nearest', aspect='auto', cmap=cmap)
