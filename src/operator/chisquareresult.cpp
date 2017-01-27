@@ -5,6 +5,7 @@
 #include <string>
 #include <fstream>
 #include <iomanip>      // std::setprecision
+#include <boost/algorithm/string/predicate.hpp>
 
 using namespace NSEpic;
 
@@ -32,69 +33,72 @@ Void CChisquareResult::Load( std::istream& stream )
     // Read file line by line
     while( std::getline( stream, line ) )
     {
-        boost::char_separator<char> sep(" \t");
-
-        // Tokenize each line
-        typedef boost::tokenizer< boost::char_separator<char> > ttokenizer;
-        ttokenizer tok( line, sep );
-
-        // Check if it's not a comment
-        ttokenizer::iterator it = tok.begin();
-        if( it != tok.end() && *it != "#" )
+        if( !boost::starts_with( line, "#" ) )
         {
-            // Parse position
-            Float64 r = 0.0;
-            try
-            {
-                r = boost::lexical_cast<Float64>(*it);
-            }
-            catch (boost::bad_lexical_cast)
-            {
-                return;
-            }
+            boost::char_separator<char> sep(" \t");
 
-            // Parse name
-            ++it;
-            Float64 c = 0.0;
+            // Tokenize each line
+            typedef boost::tokenizer< boost::char_separator<char> > ttokenizer;
+            ttokenizer tok( line, sep );
+
+            // Check if it's not a comment
+            ttokenizer::iterator it = tok.begin();
             if( it != tok.end() )
             {
+                // Parse redshift
+                Float64 r = 0.0;
                 try
                 {
-                    c = boost::lexical_cast<Float64>(*it);
+                    r = boost::lexical_cast<Float64>(*it);
                 }
                 catch (boost::bad_lexical_cast)
                 {
                     return;
                 }
-            }
-            else
-            {
-                return;
-            }
 
-            // Parse name
-            ++it;
-            Float64 o = 0.0;
-            if( it != tok.end() )
-            {
-                try
+                // Parse merit
+                ++it;
+                Float64 c = 0.0;
+                if( it != tok.end() )
                 {
-                    o = boost::lexical_cast<Float64>(*it);
+                    try
+                    {
+                        c = boost::lexical_cast<Float64>(*it);
+                    }
+                    catch (boost::bad_lexical_cast)
+                    {
+                        return;
+                    }
                 }
-                catch (boost::bad_lexical_cast)
+                else
                 {
                     return;
                 }
-            }
-            else
-            {
-                return;
-            }
 
-            Redshifts.push_back( r );
-            ChiSquare.push_back( c );
-            Overlap.push_back( o );
-            Status.push_back( COperator::nStatus_OK );
+                // Parse overlap
+                ++it;
+                Float64 o = 0.0;
+                if( it != tok.end() )
+                {
+                    try
+                    {
+                        o = boost::lexical_cast<Float64>(*it);
+                    }
+                    catch (boost::bad_lexical_cast)
+                    {
+                        o = -1.0;
+                    }
+                }
+                else
+                {
+                    o = -1.0;
+                }
+
+                Redshifts.push_back( r );
+                ChiSquare.push_back( c );
+                Overlap.push_back( o );
+                Status.push_back( COperator::nStatus_OK );
+            }
         }
     }
 }
