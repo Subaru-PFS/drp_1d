@@ -10,6 +10,7 @@ import os
 import sys
 import re
 import random
+import inspect
 
 import matplotlib as mpl
 if "DISPLAY" in os.environ:
@@ -20,6 +21,14 @@ else:
 
 import matplotlib.pyplot as plt
 import numpy as np
+
+subfolder = "../stats"
+cmd_subfolder = os.path.realpath(os.path.abspath(os.path.join(os.path.split(inspect.getfile( inspect.currentframe() ))[0],subfolder)))
+if cmd_subfolder not in sys.path:
+    #print("inserting sys path : cmd_subfolder = {}".format(cmd_subfolder))
+    sys.path.insert(0, cmd_subfolder)
+     
+import lstats
 
 import argparse
 
@@ -335,7 +344,22 @@ class Reference(object):
         plt.grid()
         plt.xlabel("#")
         plt.ylabel("reference {}".format("redshift"))
-        plt.show()
+        plt.show() 
+        
+    def plotHistHalphaFlux(self):
+        mvect = self.loghalphas
+        yvect = [1.0 for a in range(len(mvect))]
+        
+        print("Plotting versus logfhalpha")
+        outputDirectory = os.path.split(self.referencepath)[0]
+        outFileNoExt = 'stats_versusLogFHAlpha_hist' 
+        outFilepathNoExt = os.path.join(outputDirectory,outFileNoExt)
+        outdir = outputDirectory
+        enablePlot = 1
+        nPercentileDepth = 1
+        exportType = 'png'
+        lstats.PlotAmazedVersusBinsHistogram(yvect, mvect, outdir, outFilepathNoExt, enablePlot=enablePlot, enableExport=1, exportType=exportType, mtype='LOGFHALPHA', nPercentileDepth=nPercentileDepth) 
+
         
         
 def StartFromCommandLine( argv ) :	
@@ -367,6 +391,7 @@ def StartFromCommandLine( argv ) :
                 ref.export(exportFilePath)
         
         ref.plot()
+        ref.plotHistHalphaFlux()
     else :
         print("Error: invalid arguments")
         exit()

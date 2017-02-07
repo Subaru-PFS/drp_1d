@@ -78,7 +78,8 @@ class ResultList(object):
                  zrefmin=-1, zrefmax=20,
                  magrefmin=-100.0, magrefmax=100,
                  sfrrefmin=-1.0, sfrrefmax=1e4,
-                 relzerrmin=-10, relzerrmax=10):
+                 relzerrmin=-10, relzerrmax=10,
+                 lfhalpharefmin=-20, lfhalpharefmax=0):
         self.logTagStr = "ResultList"
         self.dir = dir
         self.name = os.path.basename(self.dir)
@@ -91,6 +92,8 @@ class ResultList(object):
         self.magrefmax = magrefmax
         self.sfrrefmin = sfrrefmin
         self.sfrrefmax = sfrrefmax
+        self.lfhalpharefmin = lfhalpharefmin
+        self.lfhalpharefmax = lfhalpharefmax
         
         self.opt = opt
         self.statsdir = ""
@@ -126,7 +129,8 @@ class ResultList(object):
 
             magref = line[1]
             sfrref = line[9] 
-            ebmvref = line[10]            
+            ebmvref = line[10]  
+            lfhalpharef = line[12]
             
             zcalc = line[4]
             zdiff = line[4]-line[2]
@@ -186,13 +190,17 @@ class ResultList(object):
                 accepted = False
                 if enableShowDetails:
                     print("Rejected by sfrref")
+            if not (lfhalpharef>=self.lfhalpharefmin and lfhalpharef<=self.lfhalpharefmax):
+                accepted = False
+                if enableShowDetails:
+                    print("Rejected by lfhalpharef")
             if not (relzerr>=self.relzerrmin and relzerr<=self.relzerrmax):
                 accepted = False
                 if enableShowDetails:
                     print("Rejected by relzerr")
                     
             if accepted:
-                refValues = {'elvelocity': elvelocity, 'mag': magref, 'sfr': sfrref, 'ebmv': ebmvref}
+                refValues = {'elvelocity': elvelocity, 'mag': magref, 'sfr': sfrref, 'ebmv': ebmvref, 'lfhalpha': lfhalpharef}
                 res = Result(name, zref, zcalc, zdiff, chi2, chi2nc, chi2PerTplZcalc, chi2PerTplZref, chi2ncPerTplZref, refValues)
                 self.list.append(res)
                 self.n +=1
@@ -201,6 +209,32 @@ class ResultList(object):
                 print('{0}/{1} results loaded\n'.format(self.n,x+1))
                 
         print('{0} results loaded.'.format(self.n))
+
+    def plotScatter(self, opt="zcalc"):
+        """
+        opt can be : zcalc, relzerr
+        """
+        zref = [a.zref for a in self.list]
+        zcalc = [a.zcalc for a in self.list]
+        
+        
+        
+        fig = plt.figure('Filtered results scatter plot')
+        if opt=="zcalc":
+            plt.title('filtered dataset zcalc=f(zref)')
+            plt.plot(zref, zcalc, 'x')
+            plt.grid(True) # Affiche la grille
+            plt.ylabel('zcalc')
+        else:
+            plt.title('filtered dataset relzerr=f(zref)')
+            relzerr = [(zcalc[k]-zr)/(1+zr) for k, zr in enumerate(zref)]
+            plt.plot(zref, relzerr, 'x')
+            plt.grid(True) # Affiche la grille
+            plt.ylabel('(zcalc-zref)/(1+zref)')
+            
+        
+        plt.xlabel('zref')
+        plt.show()
         
     def getZCandidatesFromDiff(self, indice=0):
         return [self.list[indice].zref, self.list[indice].zcalc]

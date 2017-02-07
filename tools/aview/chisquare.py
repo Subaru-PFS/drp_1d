@@ -324,13 +324,17 @@ class ResultChisquare(object):
         else:
             pp.plot(self.yvect, linestyle=linestyle, marker=marker)
 
-        showPolynomialFit = True
+        showPolynomialFit = False
         if showPolynomialFit:
             z_ = 2.6238
             x_ = np.linspace(2.0, 3.0, 10000)
             c0 = 15057.
             c1 = 19658.5
             c2 = 3.50123e7
+            
+            c0 = 15064.
+            c1 = 0.0
+            c2 = 4.21e7
             val_z = c0 + c1*z_ + c2*z_**2
             print("for z={}, val = {}".format(z_, val_z))
             y_ = c0 + c1*(x_-z_) + c2*(x_-z_)**2

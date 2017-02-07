@@ -80,14 +80,15 @@ class Spectrum(object):
             self.loadpfs2() 
         elif(self.stype == 'vvds'):
             self.loadvvds() 
-        elif(self.stype == 'pfs' or self.stype=='amazed_default'):
+        elif(self.stype == 'pfs' or self.stype=='amazed-default'):
             self.loadpfs() 
         elif(self.stype == 'muse'):
             self.loadmuse() 
         elif(self.stype == 'euclid_sim_noise'): #for euclid simulations from AXESIM-July2016
             self.loadeuclidSimNoise() 
         elif(self.stype == 'euclid_sim_siroct2016_flux'): #for euclid simulations from OUSIR-Oct2016
-            self.loadeuclidSimSirOct2016(readtable="COMBINED_CONTSUB", readcol="F")
+            #self.loadeuclidSimSirOct2016(readtable="COMBINED_CONTSUB", readcol="F")
+            self.loadeuclidSimSirOct2016(readtable="COMBINED", readcol="F")
         elif(self.stype == 'euclid_sim_siroct2016_noise'): #for euclid simulations from OUSIR-Oct2016
             self.loadeuclidSimSirOct2016(readtable="COMBINED",readcol="ErrF") 
         elif(self.stype == 'euclid_axesim_jan2017_flux'): #for euclid simulations from AXESIM-Jan2017

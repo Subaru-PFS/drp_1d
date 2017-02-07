@@ -620,7 +620,10 @@ def loadCalc(fname):
             #print lineStr
             data = lineStr.split("\t")
             data = [r for r in data if r != '']
-            #print len(data)
+            if len(data)<2:
+                data = lineStr.split(" ")
+                
+            #print("READ CALC: n={}".format(len(data)))
             if(len(data) == 4): #linematching for example
                 d0 = str(data[0])
                 d1 = float(data[1])
@@ -745,7 +748,7 @@ def ProcessStats( fname, zRange, magRange,  sfrRange, enablePlot = False, export
         zcalc[x] = (data[indsForHist[x]][4])
         
         if not zref[x]==-1:
-            yvect[x] = abs(data[indsForHist[x]][n2-1])/(1+zref[x])
+            yvect[x] = abs(zcalc[x]-zref[x])/(1+zref[x])
         else:
             yvect[x] = -1
             
@@ -795,6 +798,7 @@ def ProcessStats( fname, zRange, magRange,  sfrRange, enablePlot = False, export
     pp.ylabel('(zcalc-zref)/(1+zref)')
     pp.xlabel('z reference')
     pp.title('All spectra included') # Titre
+    pp.ylim([-1, 2.5])
     
     export_name_withoutExt = os.path.join(outputDirectory, 'filteredset_relzerr')
     if "png" in exportType:

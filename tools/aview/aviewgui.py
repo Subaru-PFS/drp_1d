@@ -126,6 +126,26 @@ class AViewGui(QtWidgets.QWidget):
         layoutRelZErrrange.addWidget(lbl)
         layout.addLayout(layoutRelZErrrange, layoutRow, 1, 1, 10) 
         
+        #Add the mag range threshold filter ctrls
+        layoutRow += 1
+        self.lblmagrange = QtWidgets.QLabel(' Filter by mag range: ', wdg)
+        layout.addWidget(self.lblmagrange, layoutRow, 0, 1, 1)
+        
+        layoutMagrange = QtWidgets.QHBoxLayout() 
+        self.lemagrangemin = QtWidgets.QLineEdit(wdg)
+        self.lemagrangemin.setToolTip('Enter mag min value...')
+        self.lemagrangemin.setFixedWidth(100) 
+        layoutMagrange.addWidget(self.lemagrangemin)
+
+        self.lemagrangemax = QtWidgets.QLineEdit(wdg)
+        self.lemagrangemax.setToolTip('Enter mag max value...')
+        self.lemagrangemax.setFixedWidth(100) 
+        layoutMagrange.addWidget(self.lemagrangemax)
+        #add empty label to fill the hbox
+        lbl = QtWidgets.QLabel(' ', wdg)
+        layoutMagrange.addWidget(lbl)
+        layout.addLayout(layoutMagrange, layoutRow, 1, 1, 10) 
+        
         #Add the zref range threshold filter ctrls
         layoutRow += 1
         self.lblzrefrange = QtWidgets.QLabel(' Filter by zref range: ', wdg)
@@ -166,6 +186,26 @@ class AViewGui(QtWidgets.QWidget):
         layoutSFRrange.addWidget(lbl)
         layout.addLayout(layoutSFRrange, layoutRow, 1, 1, 10) 
         
+        #Add the lfhalpha range threshold filter ctrls
+        layoutRow += 1
+        self.lbllfhalpharange = QtWidgets.QLabel(' Filter by lfhalpha range: ', wdg)
+        layout.addWidget(self.lbllfhalpharange, layoutRow, 0, 1, 1)
+        
+        layoutlfhalpharange = QtWidgets.QHBoxLayout() 
+        self.lelfhalpharangemin = QtWidgets.QLineEdit(wdg)
+        self.lelfhalpharangemin.setToolTip('Enter lfhalpha min value...')
+        self.lelfhalpharangemin.setFixedWidth(100) 
+        layoutlfhalpharange.addWidget(self.lelfhalpharangemin)
+
+        self.lelfhalpharangemax = QtWidgets.QLineEdit(wdg)
+        self.lelfhalpharangemax.setToolTip('Enter lfhalpha max value...')
+        self.lelfhalpharangemax.setFixedWidth(100) 
+        layoutlfhalpharange.addWidget(self.lelfhalpharangemax)
+        #add empty label to fill the hbox
+        lbl = QtWidgets.QLabel(' ', wdg)
+        layoutlfhalpharange.addWidget(lbl)
+        layout.addLayout(layoutlfhalpharange, layoutRow, 1, 1, 10) 
+        
         #Add the spectrum filter ctrls
         layoutRow += 1
         self.lblSpcFilter = QtWidgets.QLabel(' Filter by spectrum name: ', wdg)
@@ -188,11 +228,24 @@ class AViewGui(QtWidgets.QWidget):
         layoutRow += 1
         self.lblResultsN = QtWidgets.QLabel('N Results loaded:', wdg)
         layout.addWidget(self.lblResultsN, layoutRow, 0, 1, 1) 
+        layout_nresultsloaded = QtWidgets.QHBoxLayout()
         self.leResultsN = QtWidgets.QLineEdit(wdg)
         self.leResultsN.setFixedWidth(100) 
-        layout.addWidget(self.leResultsN, layoutRow, 1, 1, 10) 
         self.leResultsN.setEnabled(False)
+        layout_nresultsloaded.addWidget(self.leResultsN) 
+        #Add the show scatter button
+        self.btnShowScatter = QtWidgets.QPushButton('zcalc/zref scatter plot', wdg)
+        self.btnShowScatter.clicked.connect(self.bt_plotZcalcScatter)
+        layout_nresultsloaded.addWidget(self.btnShowScatter)
+        self.btnShowRelzerrScatter = QtWidgets.QPushButton('relzerr/zref scatter plot', wdg)
+        self.btnShowRelzerrScatter.clicked.connect(self.bt_plotRelzerrScatter)
+        layout_nresultsloaded.addWidget(self.btnShowRelzerrScatter)
+        layout.addLayout(layout_nresultsloaded, layoutRow, 1, 1, 1)
         
+        ######### Seperator ###############################################
+        layoutRow += 1    
+        lblSep = QtWidgets.QLabel('', wdg) 
+        layout.addWidget(lblSep, layoutRow, 0, 1, 1) 
         ######### Result Details Section ###############################################
         #Add the result list section separator
         layoutRow += 1
@@ -296,6 +349,22 @@ class AViewGui(QtWidgets.QWidget):
         lbl = QtWidgets.QLabel(' ', wdg)
         layout_magsfrebmv.addWidget(lbl)
         layout.addLayout(layout_magsfrebmv, layoutRow, 1, 1, 1)
+        #LFluxHalpha info        
+        layoutRow += 1
+        layout_lineflux = QtWidgets.QHBoxLayout()   
+        #Add the result mag
+        self.lblResultMagref = QtWidgets.QLabel(' LFHalpha =', wdg)
+        layout_lineflux.addWidget(self.lblResultMagref)
+        self.leResultSpcLFHaref = QtWidgets.QLineEdit(wdg)
+        self.leResultSpcLFHaref.setFixedWidth(100) 
+        layout_lineflux.addWidget(self.leResultSpcLFHaref) 
+        self.leResultSpcLFHaref.setEnabled(False)  
+        #Add the next flux info
+        #...
+        #add empty label to fill the hbox
+        lbl = QtWidgets.QLabel(' ', wdg)
+        layout_lineflux.addWidget(lbl)
+        layout.addLayout(layout_lineflux, layoutRow, 1, 1, 1)
 
         ######### SHOW section ###############################################    
         layoutRow += 1    
@@ -423,6 +492,25 @@ class AViewGui(QtWidgets.QWidget):
             print("ERROR with relzerr max value, please check your input ! (using relzerrmax=10)")
             _relzerrmax = 10.0        
         
+        
+        
+        #filter by mag
+        try:
+            _magmin = float(str(self.lemagrangemin.text()))
+            if not (_magmin >0.0 and _magmin < 50.0):
+                _magmin = -1.0
+        except:
+            print("ERROR with mag min value, please check your input ! (using magmin=-1)")
+            _magmin = -1
+        try:
+            _magmax = float(str(self.lemagrangemax.text()))
+            if not (_magmax >0.0 and _magmax < 50.0):
+                _magmax = 50.0
+        except:
+            print("ERROR with mag max value, please check your input ! (using magmax=50)")
+            _magmax = 50.0   
+            
+        
         #filter by zref
         try:
             _zrefmin = float(str(self.lezrefrangemin.text()))
@@ -453,17 +541,41 @@ class AViewGui(QtWidgets.QWidget):
                 _sfrrefmax = 1000.0
         except:
             print("ERROR with sfr max value, please check your input ! (using sfrrefmax=1000)")
-            _sfrrefmax = 1000.0
+            _sfrrefmax = 1000.0 
+            
+        #filter by lfhalpha
+        try:
+            _lfhalpharefmin = float(str(self.lelfhalpharangemin.text()))
+            if not (_lfhalpharefmin > -20.0 and _lfhalpharefmin < 0.0):
+                _lfhalpharefmin = -20.0
+        except:
+            print("ERROR with lfhalpha min value, please check your input ! (using lfhalpharefmin=-20)")
+            _lfhalpharefmin = -20
+        try:
+            _lfhalpharefmax = float(str(self.lelfhalpharangemax.text()))
+            if not (_lfhalpharefmax > -20.0 and _lfhalpharefmax < 0.0):
+                _lfhalpharefmax = 0.0
+        except:
+            print("ERROR with lfhalpha max value, please check your input ! (using lfhalpharefmax=0)")
+            _lfhalpharefmax = 0.0
             
         self.resList = resultstat.ResultList(_resDir, spcName=_spcName, diffthreshold=float(_diffthres), opt='brief',  
                                              zrefmin=_zrefmin, zrefmax=_zrefmax, 
+                                             magrefmin=_magmin, magrefmax=_magmax, 
                                              sfrrefmin=_sfrrefmin, sfrrefmax=_sfrrefmax,
+                                             lfhalpharefmin=_lfhalpharefmin, lfhalpharefmax=_lfhalpharefmax,
                                              relzerrmin=_relzerrmin, relzerrmax=_relzerrmax) 
         self.leResultsN.setText(str(self.resList.n))
         #init result index to 1 (first index)
         self.leResultIndex.setText(str(1))
         self.refreshResultDetails()
 
+ 
+    def bt_plotZcalcScatter(self):
+        self.resList.plotScatter(opt="zcalc")
+    def bt_plotRelzerrScatter(self):
+        self.resList.plotScatter(opt="relzerr")
+        
     def refreshResultDetails(self, reinit=False):
         if not reinit:
             current_index = int(self.leResultIndex.text() )-1
@@ -483,6 +595,9 @@ class AViewGui(QtWidgets.QWidget):
             self.leResultSpcMagref.setText("{:.5}".format(self.resList.list[current_index].refValues['mag']))
             self.leResultSpcSfrref.setText("{:.5}".format(self.resList.list[current_index].refValues['sfr']))
             self.leResultSpcEbmvref.setText("{:.5}".format(self.resList.list[current_index].refValues['ebmv']))
+            self.leResultSpcLFHaref.setText("{:.5}".format(self.resList.list[current_index].refValues['lfhalpha']))
+            
+            
         else:
             self.leResultSpcName.setText("")
             self.leResultSpcZdiff.setText("")
@@ -491,6 +606,8 @@ class AViewGui(QtWidgets.QWidget):
             self.leResultSpcMagref.setText("")
             self.leResultSpcSfrref.setText("")
             self.leResultSpcEbmvref.setText("")
+            self.leResultSpcLFHaref.setText("")
+            
     
     def bt_nextResultIndex(self):
         current_index = int(self.leResultIndex.text() )

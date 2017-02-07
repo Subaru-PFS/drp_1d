@@ -205,7 +205,14 @@ def PlotAmazedVersusNoiseHistogram(yvect, mvect, outdir, outFileNoExt, enableExp
             pp.show()    
     
   
-def PlotAmazedVersusBinsHistogram(yvect, mvect, outdir, outFileNoExt, enablePlot=0, enableExport=1, exportType="png", mtype='REDSHIFT', nPercentileDepth=2):
+def PlotAmazedVersusBinsHistogram(yvect, mvect, outdir, outFileNoExt, enablePlot=0, enableExport=1, exportType="png", mtype='REDSHIFT', nPercentileDepth=2, onlyHistorCount=0):
+    """
+    INPUTS:
+    - yvect is the rel error absolute value
+    - mvect is the bin value
+    - ...
+    - onlyHistorCount: 0=show hist and count, 1=show only hist, 2 show only count
+    """
     if mtype=='SNR':
         print '\n\nPlotAmazedVersusNoiseHistogram:'
         vectBins = np.logspace(-3, 3, 30, endpoint=True)
@@ -318,7 +325,8 @@ def PlotAmazedVersusBinsHistogram(yvect, mvect, outdir, outFileNoExt, enablePlot
             #ax2.fill_between(vectBins, ybinsVERYLOW, ybinsVERYHIGH, alpha=0.2, label="zerror, 5%-95% prctile")
         
         ax1.plot(vectBins, ynbins, 'k+', label="Number of spectra")
-        d = sp.zeros(len(ynbins))        
+        d = sp.zeros(len(ynbins)) 
+        totalCount = np.sum(ynbins)
         ax1.bar(vectBars, ynbins, bottom=np.zeros((nbins)), width = widthbins, label="count", alpha=0.4, color='k')
         #ax1.fill_between(vectBins, ynbins, where=ynbins>=d, interpolate=True, color='black', alpha=0.4)
         #ax1.fill_between(vectBins, ynbins, where=ynbins<=d, interpolate=True, color='red')
@@ -367,7 +375,9 @@ def PlotAmazedVersusBinsHistogram(yvect, mvect, outdir, outFileNoExt, enablePlot
         #r = Rectangle((0, 0), 1, 1) # creates rectangle patch for legend use.
         #pp.legend(r, ["z error, median", "zerror, 25%-75% prctile"],shadow=True,fancybox=True) 
         #pp.legend(shadow=True,fancybox=True, loc='center right', ncol=1)
-        ax1.set_ylabel('COUNT', fontsize=16)
+        
+        titleStrCount = "COUNT ({:})".format(int(totalCount))
+        ax1.set_ylabel(titleStrCount, fontsize=16)
         #ax2.set_ylabel('$| z_{calc} - z_{ref} |$', fontsize=18)
         ax2.set_ylabel('| zcalc - zref |/(1+zref)', fontsize=18)
         ax1.set_xlabel('{}'.format(mtype), fontsize=18)
