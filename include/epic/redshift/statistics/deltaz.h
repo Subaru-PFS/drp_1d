@@ -2,6 +2,8 @@
 #define _REDSHIFT_RAY_DELTAZ_
 
 #include <epic/core/common/datatypes.h>
+#include <epic/core/common/range.h>
+
 
 #include <string>
 
@@ -21,7 +23,8 @@ public:
     CDeltaz();
     ~CDeltaz();
 
-    Float64 Compute(TFloat64List merits, TFloat64List redshifts, Float64 redshift);
+    Int32 Compute(TFloat64List merits, TFloat64List redshifts, Float64 redshift, TFloat64Range redshiftRange, Float64 &deltaz);
+    Float64 Compute3ddl(TFloat64List merits, TFloat64List redshifts, Float64 redshift, TFloat64Range redshiftRange);
 
 private:
 

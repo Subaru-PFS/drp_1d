@@ -568,21 +568,30 @@ Bool COperatorDTreeCSolve::GetCombinedRedshift(CDataStore& store, std::string sc
     for( Int32 i=0; i<zcomb.size(); i++ )
     {
         Float64 post=0.0;
-        Float64 coeff = resultPriorContinuum->ChiSquare[i];//results->dTransposeDNocontinuum/50.0; //resultPriorContinuum->ChiSquare[i]
+        Float64 coeff = results->dTransposeDNocontinuum/50.0;//resultPriorContinuum->ChiSquare[i];//results->dTransposeDNocontinuum/50.0; //resultPriorContinuum->ChiSquare[i]
         Float64 weight = 1.0;
         Float64 offset = 0.0;
 
 
         for(Int32 kci=0; kci<results->ContinuumIndexes[idxLMResultsExtrema[i]].size();kci++)
         {
-            //deactivate selected indexes
-            if(kci==3)
+            //activate selected indexes
+            if(kci!=3 && kci!=1)
             {
                 continue;
             }
             Float64 Color = results->ContinuumIndexes[idxLMResultsExtrema[i]][kci].Color;
             Float64 Break = results->ContinuumIndexes[idxLMResultsExtrema[i]][kci].Break;
             Float64 heatmap_val = contIndexesPriorData.GetHeatmapVal( kci, Color, Break);
+            if(Color>Break && kci==3 || Color<=Break && kci==1){
+                heatmap_val = 0.0;
+            }else{
+                heatmap_val = 1.0;
+            }
+            if(Color!=Color || Break!=Break)
+            {
+                heatmap_val = 1.0;
+            }
 
             post += (1.0-heatmap_val)*coeff;
 
