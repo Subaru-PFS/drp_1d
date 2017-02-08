@@ -656,6 +656,8 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
 
 
         result->Extrema[i] = z;
+        result->ExtremaMerit[i] = m;
+
         //result->IsLocalExtrema[i]=isLocalExtrema[i];
 
         static Float64 cutThres = 3.0;

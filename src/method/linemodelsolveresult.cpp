@@ -78,17 +78,18 @@ Bool CLineModelSolveResult::GetBestRedshift( const CDataStore& store, Float64& r
     Float64 tmpRedshift = 0.0;
 
     if( !results.expired() )
-      {
+    {
         auto lineModelResult = std::dynamic_pointer_cast<const CLineModelResult>( results.lock() );
-        for( Int32 i=0; i<lineModelResult->ChiSquare.size(); i++ )
-	  {
-            if( lineModelResult->ChiSquare[i] < tmpMerit )
-	      {
-                tmpMerit = lineModelResult->ChiSquare[i];
-                tmpRedshift = lineModelResult->Redshifts[i];
-	      }
-	  }
-      }
+        for( Int32 i=0; i<lineModelResult->Extrema.size(); i++ )
+        {
+            Float64 merit = lineModelResult->GetExtremaMerit(i);
+            if( merit < tmpMerit )
+            {
+                tmpMerit = merit;
+                tmpRedshift = lineModelResult->Extrema[i];
+            }
+        }
+    }
 
     redshift = tmpRedshift;
     merit = tmpMerit;

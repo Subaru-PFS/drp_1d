@@ -38,8 +38,8 @@ CLineModelElement::CLineModelElement(const std::string& widthType, const Float64
     m_asymfit_delta = 0.0;
 
     m_OutsideLambdaRange = true;
-    m_OutsideLambdaRangeOverlapThreshold = 0.1; //10% overlap minimum in order to keep the line
-    //example: 0.1 means 90% of the line is allowed to be outside the spectrum with the line still considered inside the lambda range
+    m_OutsideLambdaRangeOverlapThreshold = 0.33; //33% overlap minimum in order to keep the line
+    //example: 0.33 means 66% of the line is allowed to be outside the spectrum with the line still considered inside the lambda range
 
     //LoadDataExtinction(); //uncomment if this line profile is used
 }
