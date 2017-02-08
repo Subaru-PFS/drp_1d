@@ -148,6 +148,16 @@ Void CLineModelResult::Save( const CDataStore& store, std::ostream& stream ) con
         stream << "}" << std::endl;
     }
 
+    // save extremaMerit list, on 1 line
+    if(ExtremaMerit.size()>0){
+        stream <<  "#ExtremaMerit for z = {";
+        for ( int i=0; i<ExtremaMerit.size(); i++)
+        {
+            stream <<  ExtremaMerit[i] << "\t";
+        }
+        stream << "}" << std::endl;
+    }
+
     // save bic list, on 1 line
     if(bic.size()>0){
         stream <<  "#BIC for each extrema = {";

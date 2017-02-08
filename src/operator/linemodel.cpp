@@ -413,9 +413,9 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
                     Int32 nSteps = (int)((vSupLim-vInfLim)/vStep);
 
 
-                    Float64 dzInfLim = -3e-4;
-                    Float64 dzSupLim = 3e-4;
-                    Float64 dzStep = 3e-4;
+                    Float64 dzInfLim = -4e-4;
+                    Float64 dzSupLim = 4e-4;
+                    Float64 dzStep = 2e-4;
                     Int32 nDzSteps = (int)((dzSupLim-dzInfLim)/dzStep);
 
                     for(Int32 iLineType = 0; iLineType<2; iLineType++)
