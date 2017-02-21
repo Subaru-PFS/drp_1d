@@ -217,6 +217,7 @@ private:
     COperatorChiSquare2* m_chiSquareOperator;
     Int32 m_fitContinuum_dustfit;
     Int32 m_fitContinuum_igm;
+    Int32 m_fitContinuum_observedFrame;
 
     Float64 m_fitContinuum_dLambdaTgt;
     Float64 m_fitContinuum_lmin;

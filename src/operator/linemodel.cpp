@@ -7,6 +7,7 @@
 #include <epic/redshift/operator/chisquareresult.h>
 #include <epic/redshift/operator/spectraFluxResult.h>
 #include <epic/redshift/extremum/extremum.h>
+#include <epic/redshift/statistics/deltaz.h>
 #include <epic/redshift/spectrum/io/fitswriter.h>
 #include <epic/core/log/log.h>
 
@@ -657,6 +658,12 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
 
         result->Extrema[i] = z;
         result->ExtremaMerit[i] = m;
+        CDeltaz deltaz;
+        Float64 dz=-1.;
+        Float64 zRangeHalf = 0.005;
+        TFloat64Range range = TFloat64Range(z-zRangeHalf, z+zRangeHalf);
+        Int32 ret = deltaz.Compute(result->ChiSquare, result->Redshifts, z, range, dz);
+        result->DeltaZ[i] = dz;
 
         //result->IsLocalExtrema[i]=isLocalExtrema[i];
 

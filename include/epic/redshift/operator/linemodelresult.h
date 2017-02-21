@@ -51,7 +51,9 @@ public:
     TFloat64List            ChiSquare;  // chi2
 
     TFloat64List            Extrema;    // z extrema
-    TFloat64List            ExtremaMerit;    // z extrema
+    TFloat64List            ExtremaMerit;    // z extrema merit
+    TFloat64List            DeltaZ;    // z extrema delta z
+
     TFloat64List            ExtremaExtendedRedshifts;    // z range around extrema
     TFloat64List            Posterior;    // z extrema
     TFloat64List            StrongELSNR;

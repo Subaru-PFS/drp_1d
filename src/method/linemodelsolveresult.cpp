@@ -32,14 +32,17 @@ Void CLineModelSolveResult::Save( const CDataStore& store, std::ostream& stream 
     Float64 redshift;
     Float64 merit;
     std::string tplName;
+    Float64 sigma;
 
     //GetBestRedshiftWithStrongELSnrPrior( store, redshift, merit );
-    GetBestRedshift( store, redshift, merit );
+    GetBestRedshift( store, redshift, merit, sigma );
 
     stream <<  "#Redshifts\tMerit\tTemplate"<< std::endl;
     stream << redshift << "\t"
 	   << merit << "\t"
-	   << tplName << std::endl;
+       << tplName << "\t"
+       << "LineModelSolve" << "\t"
+       << sigma << std::endl;
 }
 
 /**
@@ -50,15 +53,17 @@ Void CLineModelSolveResult::SaveLine( const CDataStore& store, std::ostream& str
     Float64 redshift;
     Float64 merit;
     std::string tplName;
+    Float64 sigma;
 
     //GetBestRedshiftWithStrongELSnrPrior( store, redshift, merit );
-    GetBestRedshift( store, redshift, merit );
+    GetBestRedshift( store, redshift, merit, sigma );
 
     stream  << store.GetSpectrumName() << "\t"
 	    << redshift << "\t"
 	    << merit << "\t"
 	    << tplName << "\t"
-	    << "LineModelSolve" << std::endl;
+        << "LineModelSolve" << "\t"
+        << sigma << std::endl;
 }
 
 /**
@@ -69,13 +74,14 @@ Void CLineModelSolveResult::SaveLine( const CDataStore& store, std::ostream& str
  *   if this entry is less than the temporary merit, update the temporary merit and redshift values with the result stored in this entry.
  * Set the redshift and merit referenced arguments with the best values found.
  **/
-Bool CLineModelSolveResult::GetBestRedshift( const CDataStore& store, Float64& redshift, Float64& merit ) const
+Bool CLineModelSolveResult::GetBestRedshift( const CDataStore& store, Float64& redshift, Float64& merit, Float64& sigma ) const
 {
     std::string scope = store.GetScope( *this ) + "linemodelsolve.linemodel";
     auto results = store.GetGlobalResult( scope.c_str() );
 
     Float64 tmpMerit = DBL_MAX;
     Float64 tmpRedshift = 0.0;
+    Float64 tmpSigma = -1.0;
 
     if( !results.expired() )
     {
@@ -87,12 +93,14 @@ Bool CLineModelSolveResult::GetBestRedshift( const CDataStore& store, Float64& r
             {
                 tmpMerit = merit;
                 tmpRedshift = lineModelResult->Extrema[i];
+                tmpSigma = lineModelResult->DeltaZ[i];
             }
         }
     }
 
     redshift = tmpRedshift;
     merit = tmpMerit;
+    sigma = tmpSigma;
     return true;
 }
 

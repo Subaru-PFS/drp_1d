@@ -29,6 +29,8 @@ CDeltaz::~CDeltaz()
  */
 Int32 CDeltaz::Compute(TFloat64List merits, TFloat64List redshifts, Float64 redshift, TFloat64Range redshiftRange, Float64& sigma)
 {
+    Bool verbose = false;
+
     sigma = -1.0;
 
     //find indexes: iz, izmin and izmax
@@ -73,7 +75,9 @@ Int32 CDeltaz::Compute(TFloat64List merits, TFloat64List redshifts, Float64 reds
     {
         xi = redshifts[i+izmin];
         yi = merits[i+izmin]-y0;
-        fprintf (stderr, "  x = %+.5e,  y = %+.5e\n",xi, yi);
+        if(verbose){
+            fprintf (stderr, "  x = %+.5e,  y = %+.5e\n",xi, yi);
+        }
         ei = 1.0; //todo, estimate weighting ?
         gsl_matrix_set (X, i, 0, (xi-x0)*(xi-x0));
 
@@ -92,7 +96,7 @@ Int32 CDeltaz::Compute(TFloat64List merits, TFloat64List redshifts, Float64 reds
 
     sigma = sqrt(1.0/C(0));
 
-    if(1){
+    if(verbose){
         Log.LogInfo("Center Redshift: %g", x0);
         Log.LogInfo("# best fit: Y = %g + %g X + %g X^2\n", y0, 0.0, C(0));
         fprintf (stderr, "# best fit: Y = %g + %g X + %g X^2\n", y0, 0.0, C(0));

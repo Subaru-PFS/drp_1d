@@ -77,6 +77,7 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
 
     m_fitContinuum_dustfit = 1;
     m_fitContinuum_igm = 1;
+    m_fitContinuum_observedFrame = 0;
 
     // to be deleted: nominal width
     //m_nominalWidthDefaultEmission = 3.4;//3.4; //suited to PFS RJLcont simulations
@@ -142,6 +143,7 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
 
         Log.LogInfo( "Elementlist: fitContinuum_dustfit = %d", m_fitContinuum_dustfit );
         Log.LogInfo( "Elementlist: fitContinuum_igm = %d", m_fitContinuum_igm );
+        Log.LogInfo( "Elementlist: fitContinuum_observedFrame = %d", m_fitContinuum_observedFrame );
     }
     //*/
 
@@ -416,7 +418,12 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange)
     Int32 opt_dustFit = m_fitContinuum_dustfit;
     Float64 overlapThreshold = 1.0;
     std::vector<CMask> maskList;//(1,getOutsideLinesMask());
+
+
     std::vector<Float64> redshifts(1, m_Redshift);
+    if(m_fitContinuum_observedFrame){
+        redshifts[0] = 0.0;
+    }
 
     Float64 bestMerit = DBL_MAX;
     Float64 bestFitAmplitude = -1.0;
@@ -668,7 +675,11 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
     }
     if(m_ContinuumComponent != "nocontinuum"){
         //prepare the continuum
-        PrepareContinuum(redshift);
+        if(m_fitContinuum_observedFrame){
+            PrepareContinuum(0.0);
+        }else{
+            PrepareContinuum(redshift);
+        }
     }
     //EstimateSpectrumContinuum();
 

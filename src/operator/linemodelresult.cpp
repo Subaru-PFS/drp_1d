@@ -31,6 +31,7 @@ Void CLineModelResult::ResizeExtremaResults(Int32 size)
 {
     Extrema.resize(size);
     ExtremaMerit.resize(size);
+    DeltaZ.resize(size);
     Posterior.resize(size);
     StrongELSNR.resize(size);
     LogArea.resize(size);
@@ -154,6 +155,16 @@ Void CLineModelResult::Save( const CDataStore& store, std::ostream& stream ) con
         for ( int i=0; i<ExtremaMerit.size(); i++)
         {
             stream <<  ExtremaMerit[i] << "\t";
+        }
+        stream << "}" << std::endl;
+    }
+
+    // save extrema Deltaz list, on 1 line
+    if(DeltaZ.size()>0){
+        stream <<  "#ExtremaDeltaZ for z = {";
+        for ( int i=0; i<DeltaZ.size(); i++)
+        {
+            stream <<  DeltaZ[i] << "\t";
         }
         stream << "}" << std::endl;
     }
