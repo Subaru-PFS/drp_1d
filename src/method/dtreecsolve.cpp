@@ -69,20 +69,25 @@ std::shared_ptr<const CDTreeCSolveResult> COperatorDTreeCSolve::Compute( CDataSt
 
     CDataStore::CAutoScope resultScope( resultStore, "dtreeCsolve" );
 
+    std::string scopeStr = "chisquare";
     storeResult = Solve(resultStore, spc, spcWithoutCont,
                                        tplCatalog, tplCategoryList, restRayCatalog,
-                                       lambdaRange, redshifts );
+                                       lambdaRange, redshifts, scopeStr );
 
     //storeResult = true;
     if( storeResult )
     {
-        return std::shared_ptr<const CDTreeCSolveResult>( new CDTreeCSolveResult() );
+        //return std::shared_ptr<const CDTreeCSolveResult>( new CDTreeCSolveResult() );
+        std::shared_ptr< CDTreeCSolveResult>  solveResult = std::shared_ptr<CDTreeCSolveResult>( new CDTreeCSolveResult() );
+        solveResult->m_chi2ScopeStr = scopeStr;
+        return solveResult;
+
     }
 
     return NULL;
 }
 
-Bool COperatorDTreeCSolve::Solve(CDataStore &dataStore, const CSpectrum &spc, const CSpectrum &spcWithoutCont, const CTemplateCatalog &tplCatalog, const TStringList &tplCategoryList, const CRayCatalog &restRayCatalog, const TFloat64Range &lambdaRange, const TFloat64List &redshifts)
+Bool COperatorDTreeCSolve::Solve(CDataStore &dataStore, const CSpectrum &spc, const CSpectrum &spcWithoutCont, const CTemplateCatalog &tplCatalog, const TStringList &tplCategoryList, const CRayCatalog &restRayCatalog, const TFloat64Range &lambdaRange, const TFloat64List &redshifts, string &scopeStr)
 {
     CSpectrum _spcContinuum = spc;
     CSpectrumFluxAxis spcfluxAxis = _spcContinuum.GetFluxAxis();
@@ -193,7 +198,7 @@ Bool COperatorDTreeCSolve::Solve(CDataStore &dataStore, const CSpectrum &spc, co
     std::string opt_dustFit;
     dataStore.GetScopedParam( "chisquare.dustfit", opt_dustFit, "yes" );
 
-    std::string scopeStr = "chisquare";
+    //std::string scopeStr = "chisquare";
     if(opt_spcComponent == "continuum"){
         scopeStr = "chisquare_continuum";
     }else if(opt_spcComponent == "raw"){

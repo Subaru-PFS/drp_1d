@@ -150,7 +150,7 @@ Void CChisquareResult::Save( const CDataStore& store, std::ostream& stream ) con
                     }
                 }
 
-                stream << std::setprecision(16) << "\t" << std::scientific <<   FitDustCoeff[idx] << "\t";
+                stream << std::setprecision(4) << "\t" << std::defaultfloat <<   FitDustCoeff[idx] << "\t";
             }
             stream << "}" << std::endl;
         }
