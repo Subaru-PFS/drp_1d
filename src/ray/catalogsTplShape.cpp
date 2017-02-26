@@ -261,6 +261,9 @@ Bool CRayCatalogsTplShape::InitLineCorrespondingAmplitudes(CLineModelElementList
  */
 Bool CRayCatalogsTplShape::SetMultilineNominalAmplitudesFast(CLineModelElementList &LineModelElementList, Int32 iCatalog)
 {
+    if(iCatalog<0){
+        return false;
+    }
     Float64 nominalAmp = 0.0;
     for( UInt32 iElts=0; iElts<1; iElts++ ) //WARNING: considering the linemodel with only 1 elt: typical for tplshape rigidity. todo: generalize to multi-elements
     {
@@ -322,6 +325,9 @@ Bool CRayCatalogsTplShape::SetMultilineNominalAmplitudes(CLineModelElementList &
 
 Bool CRayCatalogsTplShape::SetLyaProfile(CLineModelElementList &LineModelElementList, Int32 iCatalog)
 {
+    if(iCatalog<0){
+        return false;
+    }
     std::string lyaTag = "LyAE";
     //loop the amplitudes in the iLine_st catalog in order to find Lya
     CRayCatalog::TRayVector currentCatalogLineList = m_RayCatalogList[iCatalog].GetList();

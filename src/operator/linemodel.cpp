@@ -658,12 +658,17 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
 
         result->Extrema[i] = z;
         result->ExtremaMerit[i] = m;
+
+        //computing errz (or deltaz, dz...): should probably be computed in linemodelresult.cpp instead ?
         CDeltaz deltaz;
         Float64 dz=-1.;
         Float64 zRangeHalf = 0.005;
         TFloat64Range range = TFloat64Range(z-zRangeHalf, z+zRangeHalf);
         Int32 ret = deltaz.Compute(result->ChiSquare, result->Redshifts, z, range, dz);
         result->DeltaZ[i] = dz;
+
+        //store the model norm
+        result->mTransposeM[i] = model.EstimateMTransposeM(lambdaRange);
 
         //result->IsLocalExtrema[i]=isLocalExtrema[i];
 

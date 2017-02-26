@@ -32,6 +32,7 @@ Void CLineModelResult::ResizeExtremaResults(Int32 size)
     Extrema.resize(size);
     ExtremaMerit.resize(size);
     DeltaZ.resize(size);
+    mTransposeM.resize(size);
     Posterior.resize(size);
     StrongELSNR.resize(size);
     LogArea.resize(size);
@@ -130,7 +131,7 @@ Void CLineModelResult::Load( std::istream& stream )
  **/
 Void CLineModelResult::Save( const CDataStore& store, std::ostream& stream ) const
 {
-    stream <<  "#Redshifts\tChiSquare\tOverlap"<< std::endl;
+    stream <<  "#Redshifts\tChiSquare"<< std::endl;
     for ( int i=0; i<Redshifts.size(); i++)
     {
         stream <<  Redshifts[i] << std::setprecision(32) << "\t" << std::scientific << ChiSquare[i] << std::fixed << std::endl;
@@ -165,6 +166,16 @@ Void CLineModelResult::Save( const CDataStore& store, std::ostream& stream ) con
         for ( int i=0; i<DeltaZ.size(); i++)
         {
             stream <<  DeltaZ[i] << "\t";
+        }
+        stream << "}" << std::endl;
+    }
+
+    // save extrema mTransposeM list, on 1 line
+    if(mTransposeM.size()>0){
+        stream <<  "#mTransposeM for z = {";
+        for ( int i=0; i<mTransposeM.size(); i++)
+        {
+            stream <<  mTransposeM[i] << "\t";
         }
         stream << "}" << std::endl;
     }

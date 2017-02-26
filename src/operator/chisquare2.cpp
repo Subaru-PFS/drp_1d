@@ -76,9 +76,9 @@ COperatorChiSquare2::COperatorChiSquare2( std::string calibrationPath )
         m_YtplRawBuffer = new Float64[(int)m_YtplRawBufferMaxBufferSize]();
 
         //precomte the dust-coeff table
-        m_nDustCoeff = 20.0;
+        m_nDustCoeff = 10.0;
         m_dustCoeffStep = 0.1;
-        m_dustCoeffStart = -1.0;
+        m_dustCoeffStart = 0.0;
         m_dataDustCoeff = new Float64[(int)(m_nDustCoeff*m_NdataCalzetti)]();
 
         for(Int32 kDust=0; kDust<m_nDustCoeff; kDust++)

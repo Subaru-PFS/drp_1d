@@ -78,6 +78,7 @@ public:
     void SetContinuumComponent(std::string component);
 
     Float64 EstimateDTransposeD(const TFloat64Range& lambdaRange, std::string spcComponent);
+    Float64 EstimateMTransposeM(const TFloat64Range& lambdaRange);
 
 
     std::string getTplCorr_bestTplName();

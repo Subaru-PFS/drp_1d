@@ -417,7 +417,13 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange)
     Int32 opt_extinction = m_fitContinuum_igm;
     Int32 opt_dustFit = m_fitContinuum_dustfit;
     Float64 overlapThreshold = 1.0;
-    std::vector<CMask> maskList;//(1,getOutsideLinesMask());
+
+    bool ignoreLinesSupport=false;
+    std::vector<CMask> maskList;
+    if(ignoreLinesSupport){
+        maskList.resize(1);
+        maskList[0]=getOutsideLinesMask();
+    }
 
 
     std::vector<Float64> redshifts(1, m_Redshift);
@@ -675,7 +681,7 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
     }
     if(m_ContinuumComponent != "nocontinuum"){
         //prepare the continuum
-        if(m_fitContinuum_observedFrame){
+        if(m_ContinuumComponent == "tplfit" && m_fitContinuum_observedFrame){
             PrepareContinuum(0.0);
         }else{
             PrepareContinuum(redshift);
@@ -695,10 +701,10 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
         }
     }
 
-    Float64 merit = m_dTransposeDNocontinuum;
+    Float64 merit = DBL_MAX;//m_dTransposeDNocontinuum;
     Int32 ifitting=0; //multiple fitting steps for rigidity=tplshape
     Int32 nfitting=1;
-    Int32 savedIdxFitted;
+    Int32 savedIdxFitted=-1;
     Float64 savedFittedAmp; //for rigidity=tplshape
     Float64 savedFittedAmpError; //for rigidity=tplshape
     if(m_rigidity=="tplshape")
@@ -1146,7 +1152,11 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
     if(m_rigidity=="tplshape" && enableLogging)
     {
         //m_CatalogTplShape->SetMultilineNominalAmplitudes( *this, savedIdxFitted );
-        m_CatalogTplShape->SetMultilineNominalAmplitudesFast( *this, savedIdxFitted );
+        bool retSetMultiAmplFast = m_CatalogTplShape->SetMultilineNominalAmplitudesFast( *this, savedIdxFitted );
+        if( !retSetMultiAmplFast ){
+            Log.LogError( "Linemodel: tplshape, Unable to set Multiline NominalAmplitudes from Tplshape !");
+        }
+
 
         //Set the velocities from templates: todo auto switch when velfit is ON
         //m_CatalogTplShape->GetCatalogVelocities(savedIdxFitted, m_velocityEmission, m_velocityAbsorption);
@@ -1154,7 +1164,11 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
         Log.LogInfo( "Linemodel: tplshape = %d (%s), and A=%f", savedIdxFitted, m_tplcorrBestTplName.c_str(), savedFittedAmp);
         m_Elements[0]->SetFittedAmplitude(savedFittedAmp, savedFittedAmpError);
         //Lya
-        m_CatalogTplShape->SetLyaProfile(*this, savedIdxFitted);
+        bool retLyaProfile = m_CatalogTplShape->SetLyaProfile(*this, savedIdxFitted);
+        if( !retLyaProfile ){
+            Log.LogError( "Linemodel: tplshape, Unable to retrieve Lya Profile from Tplshape !");
+        }
+
         //prepare the Lya width and asym coefficients if the asymfit profile option is met
         setLyaProfile(redshift, spectralAxis);
 
@@ -3600,6 +3614,35 @@ Float64 CLineModelElementList::EstimateDTransposeD(const TFloat64Range& lambdaRa
     }
 
     return dtd;
+}
+
+/**
+ * \brief this function estimates the mtm value withing the wavelength range
+ **/
+Float64 CLineModelElementList::EstimateMTransposeM(const TFloat64Range& lambdaRange)
+{
+    const CSpectrumSpectralAxis& spcSpectralAxis = m_SpectrumModel->GetSpectralAxis();
+    const CSpectrumFluxAxis& spcFluxAxis = m_SpectrumModel->GetFluxAxis();
+
+    Int32 numDevs = 0;
+    Float64 mtm = 0.0;
+    const Float64* Yspc = spcFluxAxis.GetSamples();
+    Float64 diff = 0.0;
+
+    Float64 imin = spcSpectralAxis.GetIndexAtWaveLength(lambdaRange.GetBegin());
+    Float64 imax = spcSpectralAxis.GetIndexAtWaveLength(lambdaRange.GetEnd());
+    for( UInt32 j=imin; j<imax; j++ )
+    {
+        numDevs++;
+        {
+            diff = Yspc[j];
+        }
+        mtm += (diff*diff) / (m_ErrorNoContinuum[j]*m_ErrorNoContinuum[j]);
+    }
+    //Log.LogDebug( "CLineModelElementList::EstimateMTransposeM val = %f", mtm );
+
+
+    return mtm;
 }
 
 
