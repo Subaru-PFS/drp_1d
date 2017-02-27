@@ -326,13 +326,17 @@ Bool COperatorDTreeCSolve::GetCombinedRedshift(CDataStore& store, std::string sc
 
     for( Int32 i=0; i<zcomb.size(); i++ )
     {
-        for( Int32 iall=0; iall<results->Redshifts.size(); iall++ )
+        for( Int32 iExtrema=0; iExtrema<results->Extrema.size(); iExtrema++ )
         {
-            if(results->Redshifts[iall] == zcomb[i]){
-                chi2lm.push_back(results->ChiSquare[iall]);
-                break;
-            }
+            chi2lm.push_back(results->ExtremaMerit[idxLMResultsExtrema[iExtrema]]);
         }
+//        for( Int32 iall=0; iall<results->Redshifts.size(); iall++ )
+//        {
+//            if(results->Redshifts[iall] == zcomb[i]){
+//                chi2lm.push_back(results->ChiSquare[iall]);
+//                break;
+//            }
+//        }
     }
     //Log.LogInfo( "dtreeCsolve : chi2lm size=%d", chi2lm.size());
     //*/
