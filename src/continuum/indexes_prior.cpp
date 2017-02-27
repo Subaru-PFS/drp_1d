@@ -75,7 +75,8 @@ bool CContinuumIndexesPrior::Init( std::string calibrationPath )
         TContinuumIndexData _contIndexData;
         Float64 maxVal = 0.0;
         std::string filename = boost::str(boost::format("%s%d.dat") %dat_basename %iIndex);
-        std::string filePath = bfs::path( ciprior_path ).append( filename).string();
+        //std::string filePath = bfs::path( ciprior_path ).append( filename).string();
+        std::string filePath = (bfs::path( ciprior_path )/filename).string();
         std::ifstream file;
         file.open( filePath, std::ifstream::in );
         bool fileOpenFailed = file.rdstate() & std::ios_base::failbit;
