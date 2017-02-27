@@ -145,7 +145,8 @@ Bool CContinuumDF::RemoveContinuum ( const CSpectrum& s, CSpectrumFluxAxis& noCo
         binPath = "/home/sjamal/AMAZED_run_pdf/code/cpf_gitLAM/amazed/extern/mr1d_filter_modified";
     } else  {
         binPath = m_dfBinPath;
-        binPath.append("mr1d_filter_modified");
+        //binPath.append("mr1d_filter_modified");
+        binPath = binPath/"mr1d_filter_modified";
     }
 	filePath = binPath.string(); //= "../extern/mr1d_filter_modified";
 
@@ -170,7 +171,9 @@ Bool CContinuumDF::RemoveContinuum ( const CSpectrum& s, CSpectrumFluxAxis& noCo
         binPathSpline = "/home/sjamal/AMAZED_run_pdf/code/cpf_gitLAM/amazed/extern/mr1d_trans_modified"; //mr1d_trans";
     } else {
         binPathSpline = m_dfBinPath;
-        binPathSpline.append("mr1d_trans_modified");
+        //binPathSpline.append("mr1d_trans_modified");
+        binPathSpline = binPathSpline/"mr1d_trans_modified";
+
     } //mr1d_trans");
     filePathSpline = binPathSpline.string();
 
