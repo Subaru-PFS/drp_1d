@@ -37,7 +37,8 @@ Bool CRayCatalogsTplShape::SetTplctlgRelPath( const char* relPath )
 Bool CRayCatalogsTplShape::Init( std::string calibrationPath)
 {
     bfs::path calibrationFolder( calibrationPath.c_str() );
-    std::string dirPath = (calibrationFolder.append( tplshapedcatalog_relpath.c_str() )).string();
+    //std::string dirPath = (calibrationFolder.append( tplshapedcatalog_relpath.c_str() )).string();
+    std::string dirPath = (calibrationFolder/tplshapedcatalog_relpath.c_str()).string();
 
     bool ret = Load(dirPath.c_str());
     if(!ret)

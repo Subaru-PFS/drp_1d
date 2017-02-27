@@ -55,7 +55,8 @@ bool CContinuumIndexesPrior::Init( std::string calibrationPath )
 {
     bfs::path calibrationFolder( calibrationPath.c_str() );
     //std::string ciprior_path = (calibrationFolder.append( "continuu_indexes_prior_map_20161130" )).string();
-    std::string ciprior_path = (calibrationFolder.append( "continuum_indexes_prior_map_201612_eucsimuHaOii" )).string();
+    //std::string ciprior_path = (calibrationFolder.append( "continuum_indexes_prior_map_201612_eucsimuHaOii" )).string();
+    std::string ciprior_path = (calibrationFolder/"continuum_indexes_prior_map_201612_eucsimuHaOii").string();
 
 
     //std::string cfg_basename = "heatmap_ycolor_xbreak__blurred_fixedgrid_"; unused, harcoded cfg for now
