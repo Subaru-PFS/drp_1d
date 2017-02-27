@@ -31,12 +31,14 @@ Void CDTreeCSolveResult::Save( const CDataStore& store, std::ostream& stream ) c
 
     GetBestRedshift( store, redshift, merit, tplName, dtreepath );
 
-    stream <<  "#Redshifts\tMerit\tTemplate"<< std::endl;
+    stream <<  "#Redshifts\tMerit\tTemplate\tMethod\tDeltaz"<< std::endl;
 
     stream  << redshift << "\t"
                 << merit << "\t"
                 << tplName << "\t"
-                   << "dtreec_" << dtreepath.c_str() << std::endl;
+                   << "dtreec_" << dtreepath.c_str() << "\t"
+                   << "-1" << "\t" //deltaz
+                   << std::endl;
 
 }
 
@@ -53,7 +55,9 @@ Void CDTreeCSolveResult::SaveLine( const CDataStore& store, std::ostream& stream
                 << redshift << "\t"
                 << merit << "\t"
                 << tplName << "\t"
-                << "dtreec_" << dtreepath.c_str() << std::endl;
+                << "dtreec_" << dtreepath.c_str() << "\t"
+                << "-1" << "\t" //deltaz
+                << std::endl;
 
 
 
@@ -98,7 +102,7 @@ Bool CDTreeCSolveResult::GetBestRedshift(const CDataStore& store, Float64& redsh
 std::string CDTreeCSolveResult::GetBestContinuumTplNameAtRedshift( const CDataStore& store, Float64 z) const
 {
     // combined merit curve minimum
-    std::string scope = store.GetScope( *this ) + "dtreeCsolve.chisquare2solve.chisquare_continuum";
+    std::string scope = store.GetScope( *this ) + "dtreeCsolve.chisquare2solve." + m_chi2ScopeStr.c_str();
 
 
     TOperatorResultMap meritResults = store.GetPerTemplateResult(scope.c_str());

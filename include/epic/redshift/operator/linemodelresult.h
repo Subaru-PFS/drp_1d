@@ -47,16 +47,25 @@ public:
     Int32 GetNLinesOverCutThreshold(Int32 extremaIdx, Float64 snrThres, Float64 fitThres) const;
     Float64 GetExtremaMerit(Int32 extremaIdx) const;
 
+    //Full Merit curve
     TFloat64List            Redshifts;  // z axis
     TFloat64List            ChiSquare;  // chi2
 
+    //Extrema results
     TFloat64List            Extrema;    // z extrema
+    TFloat64List            ExtremaMerit;    // extrema merit
+    TFloat64List            DeltaZ;    // extrema delta z
+    TFloat64List            mTransposeM;    // extrema model norm
+
+    //Deprecated?
     TFloat64List            ExtremaExtendedRedshifts;    // z range around extrema
     TFloat64List            Posterior;    // z extrema
-    TFloat64List            StrongELSNR;
     TFloat64List            LogArea;    // log area for each extrema
     TFloat64List            LogAreaCorrectedExtrema;    //corrected z for each extrema
     TFloat64List            SigmaZ; //sigmaz for each extrema
+
+    //
+    TFloat64List            StrongELSNR;
     std::vector<SLineModelSolution> LineModelSolutions; //linemodel for each extrema
     TFloat64List            bic;    // bayesian information criterion for each extrema
     std::vector<CContinuumIndexes::TContinuumIndexList> ContinuumIndexes; //continuum indexes for each extrema
@@ -65,11 +74,12 @@ public:
     TFloat64List      FittedTplAmplitude; //Amplitude for the best template fitted for continuum
     std::vector<std::string>      FittedTplcorrTplName; //Name of the best template fitted for tplcorr
 
+    //
     COperator::TStatusList  Status;
     CRayCatalog::TRayVector restRayList;
     Int32 nSpcSamples;
-    Int32 dTransposeDNocontinuum;
-    Int32 dTransposeD;
+    Float64 dTransposeDNocontinuum;
+    Float64 dTransposeD;
 
 
 };

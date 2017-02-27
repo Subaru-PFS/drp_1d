@@ -45,7 +45,7 @@ Float64 CContinuumIndexesPrior::GetHeatmapVal( Int32 _index, Float64 _color, Flo
     Int32 icolor = (Int32)((_color-m_tbl_color_min)/m_tbl_color_step);
     Int32 ibreak = (Int32)((_break-m_tbl_break_min)/m_tbl_break_step);
     Float64 val = m_ciprior_table[_index][icolor][ibreak];
-    return val;
+    return val/m_ciprior_max[_index];
 }
 
 /**
@@ -54,7 +54,9 @@ Float64 CContinuumIndexesPrior::GetHeatmapVal( Int32 _index, Float64 _color, Flo
 bool CContinuumIndexesPrior::Init( std::string calibrationPath )
 {
     bfs::path calibrationFolder( calibrationPath.c_str() );
-    std::string ciprior_path = (calibrationFolder.append( "continuu_indexes_prior_map_20161130" )).string();
+    //std::string ciprior_path = (calibrationFolder.append( "continuu_indexes_prior_map_20161130" )).string();
+    std::string ciprior_path = (calibrationFolder.append( "continuum_indexes_prior_map_201612_eucsimuHaOii" )).string();
+
 
     //std::string cfg_basename = "heatmap_ycolor_xbreak__blurred_fixedgrid_"; unused, harcoded cfg for now
     m_tbl_color_step = 0.1;
@@ -70,7 +72,7 @@ bool CContinuumIndexesPrior::Init( std::string calibrationPath )
     for(Int32 iIndex=0; iIndex<m_nIndexes; iIndex++)
     {
         TContinuumIndexData _contIndexData;
-
+        Float64 maxVal = 0.0;
         std::string filename = boost::str(boost::format("%s%d.dat") %dat_basename %iIndex);
         std::string filePath = bfs::path( ciprior_path ).append( filename).string();
         std::ifstream file;
@@ -95,6 +97,10 @@ bool CContinuumIndexesPrior::Init( std::string calibrationPath )
                 while( getline(csvStream, csvElement, '\t') )
                 {
                     Float64 val = (Float64)std::atof(csvElement.c_str());
+                    if(maxVal<val)
+                    {
+                        maxVal = val;
+                    }
                     csvColumn.push_back(val);
                 }
                 if(csvColumn.size()!=m_tbl_break_n)
@@ -113,6 +119,7 @@ bool CContinuumIndexesPrior::Init( std::string calibrationPath )
         }
         file.close();
 
+        m_ciprior_max.push_back(maxVal);
         m_ciprior_table.push_back(_contIndexData);
     }
 

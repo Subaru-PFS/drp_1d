@@ -7,6 +7,7 @@
 #include <epic/redshift/operator/chisquareresult.h>
 #include <epic/redshift/operator/spectraFluxResult.h>
 #include <epic/redshift/extremum/extremum.h>
+#include <epic/redshift/statistics/deltaz.h>
 #include <epic/redshift/spectrum/io/fitswriter.h>
 #include <epic/core/log/log.h>
 
@@ -413,9 +414,9 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
                     Int32 nSteps = (int)((vSupLim-vInfLim)/vStep);
 
 
-                    Float64 dzInfLim = -3e-4;
-                    Float64 dzSupLim = 3e-4;
-                    Float64 dzStep = 3e-4;
+                    Float64 dzInfLim = -4e-4;
+                    Float64 dzSupLim = 4e-4;
+                    Float64 dzStep = 2e-4;
                     Int32 nDzSteps = (int)((dzSupLim-dzInfLim)/dzStep);
 
                     for(Int32 iLineType = 0; iLineType<2; iLineType++)
@@ -656,6 +657,19 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
 
 
         result->Extrema[i] = z;
+        result->ExtremaMerit[i] = m;
+
+        //computing errz (or deltaz, dz...): should probably be computed in linemodelresult.cpp instead ?
+        CDeltaz deltaz;
+        Float64 dz=-1.;
+        Float64 zRangeHalf = 0.005;
+        TFloat64Range range = TFloat64Range(z-zRangeHalf, z+zRangeHalf);
+        Int32 ret = deltaz.Compute(result->ChiSquare, result->Redshifts, z, range, dz);
+        result->DeltaZ[i] = dz;
+
+        //store the model norm
+        result->mTransposeM[i] = model.EstimateMTransposeM(lambdaRange);
+
         //result->IsLocalExtrema[i]=isLocalExtrema[i];
 
         static Float64 cutThres = 3.0;

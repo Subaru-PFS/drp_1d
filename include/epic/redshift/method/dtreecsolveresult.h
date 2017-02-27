@@ -30,7 +30,7 @@ public:
     Bool GetBestRedshift(const CDataStore& store, Float64& redshift, Float64& merit, std::string &tplName, std::string& dtreepath) const;
     std::string GetBestContinuumTplNameAtRedshift( const CDataStore& store, Float64 z) const;
 
-
+    std::string m_chi2ScopeStr;
 };
 
 

@@ -76,7 +76,7 @@ COperatorChiSquare2::COperatorChiSquare2( std::string calibrationPath )
         m_YtplRawBuffer = new Float64[(int)m_YtplRawBufferMaxBufferSize]();
 
         //precomte the dust-coeff table
-        m_nDustCoeff = 10; //achtung double initialization fo the dust coeff
+        m_nDustCoeff = 10.0;
         m_dustCoeffStep = 0.1;
         m_dustCoeffStart = 0.0;
         m_dataDustCoeff = new Float64[(int)(m_nDustCoeff*m_NdataCalzetti)]();
@@ -204,11 +204,12 @@ Void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& t
     bool opt_dust_calzetti = opt_dustFitting;
 
 
+    Int32 nDustCoeffs=1;
     if(!opt_dust_calzetti)
     {
-        m_nDustCoeff = 1;
+        nDustCoeffs = 1;
     }else{
-        m_nDustCoeff = 10; //achtung double initialization fo the dust coeff.
+        nDustCoeffs = m_nDustCoeff;
         if(m_YtplRawBufferMaxBufferSize<itplTplSpectralAxis.GetSamplesCount())
         {
             Log.LogError( "chisquare operator: rebinned tpl size > buffer size for dust-fit ! Aborting.");
@@ -222,7 +223,7 @@ Void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& t
     }
 
     //loop on the EBMV dust coeff
-    for(Int32 kDust=0; kDust<m_nDustCoeff; kDust++)
+    for(Int32 kDust=0; kDust<nDustCoeffs; kDust++)
     {
         if(ytpl_modified)
         {

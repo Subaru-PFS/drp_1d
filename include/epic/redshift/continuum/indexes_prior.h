@@ -33,6 +33,7 @@ private:
     Int32 m_tbl_break_n;
 
     std::vector<TContinuumIndexData> m_ciprior_table;
+    std::vector<Float64> m_ciprior_max;
 };
 
 }

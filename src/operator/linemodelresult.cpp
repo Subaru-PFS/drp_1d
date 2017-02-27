@@ -30,6 +30,9 @@ CLineModelResult::~CLineModelResult()
 Void CLineModelResult::ResizeExtremaResults(Int32 size)
 {
     Extrema.resize(size);
+    ExtremaMerit.resize(size);
+    DeltaZ.resize(size);
+    mTransposeM.resize(size);
     Posterior.resize(size);
     StrongELSNR.resize(size);
     LogArea.resize(size);
@@ -128,7 +131,7 @@ Void CLineModelResult::Load( std::istream& stream )
  **/
 Void CLineModelResult::Save( const CDataStore& store, std::ostream& stream ) const
 {
-    stream <<  "#Redshifts\tChiSquare\tOverlap"<< std::endl;
+    stream <<  "#Redshifts\tChiSquare"<< std::endl;
     for ( int i=0; i<Redshifts.size(); i++)
     {
         stream <<  Redshifts[i] << std::setprecision(32) << "\t" << std::scientific << ChiSquare[i] << std::fixed << std::endl;
@@ -143,6 +146,36 @@ Void CLineModelResult::Save( const CDataStore& store, std::ostream& stream ) con
 //                continue;
 //            }
             stream <<  Extrema[i] << "\t";
+        }
+        stream << "}" << std::endl;
+    }
+
+    // save extremaMerit list, on 1 line
+    if(ExtremaMerit.size()>0){
+        stream <<  "#ExtremaMerit for z = {";
+        for ( int i=0; i<ExtremaMerit.size(); i++)
+        {
+            stream <<  ExtremaMerit[i] << "\t";
+        }
+        stream << "}" << std::endl;
+    }
+
+    // save extrema Deltaz list, on 1 line
+    if(DeltaZ.size()>0){
+        stream <<  "#ExtremaDeltaZ for z = {";
+        for ( int i=0; i<DeltaZ.size(); i++)
+        {
+            stream <<  DeltaZ[i] << "\t";
+        }
+        stream << "}" << std::endl;
+    }
+
+    // save extrema mTransposeM list, on 1 line
+    if(mTransposeM.size()>0){
+        stream <<  "#mTransposeM for z = {";
+        for ( int i=0; i<mTransposeM.size(); i++)
+        {
+            stream <<  mTransposeM[i] << "\t";
         }
         stream << "}" << std::endl;
     }
@@ -357,29 +390,14 @@ Int32 CLineModelResult::GetNLinesOverCutThreshold(Int32 extremaIdx, Float64 snrT
 /**
  * \brief Returns the value of the ChiSquare of the Extrema indexed by the argument extremaIdx - if it is a valid index.
  * Let result be -1.
- * If the argument extremaIdx can be an index of Extrema:
- *   Find the first Redshift corresponding to the Extrema with the index extremaIdx.
- *   Set the result to the ChiSquare with the corresponding index.
  * Return the result.
  **/
 Float64 CLineModelResult::GetExtremaMerit( Int32 extremaIdx ) const
 {
-  Float64 outVal=-1.0;
-  if( Extrema.size()>extremaIdx )
+    Float64 outVal=-1.0;
+    if( Extrema.size()>extremaIdx && ExtremaMerit.size()>extremaIdx )
     {
-      Int32 solutionIdx=-1;
-      for ( UInt32 i2=0; i2<Redshifts.size(); i2++)
-        {
-	  if(Redshifts[i2] == Extrema[extremaIdx]){
-	    solutionIdx = i2;
-	    break;
-	  }
-        }
-      if( solutionIdx==-1 )
-	{
-	  return -1;
-	}
-      outVal = ChiSquare[solutionIdx];
+        outVal = ExtremaMerit[extremaIdx];
     }
     return outVal;
 }

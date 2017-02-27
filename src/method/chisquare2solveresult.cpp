@@ -110,7 +110,9 @@ Void CChisquare2SolveResult::SaveLine( const CDataStore& store, std::ostream& st
                 << redshift << "\t"
                 << merit << "\t"
                 << tplName << "\t"
-                << "Chisquare2Solve_" << tmpChar << std::endl;
+                << "Chisquare2Solve_" << tmpChar << "\t"
+                << "-1" << "\t" //deltaz
+                << std::endl;
 
 }
 

@@ -311,7 +311,7 @@ class processHelper(object):
                     f.write("\n")
                     f.write("#PBS -l nodes=1:ppn=1")
                     f.write("\n")
-                    f.write("#PBS -l walltime=319:00:00")
+                    f.write("#PBS -l walltime=20:00:00")
                     f.write("\n")
                     f.write("\n")
                     f.write("cd $PBS_O_WORKDIR")
@@ -324,8 +324,11 @@ class processHelper(object):
                     f.write("logOut={}".format(os.path.join(self.baseoutputpath, "logOut_{}-{}.txt".format(k, ksubs) )))
                     f.write("\n")
                     f.write("\n")
+                    f.write("hostname>${logOut}")
+		    f.write("date>${logOut}")
                     
-                    argStr = "{} 2>${{logErr}}>${{logOut}}".format(argStr)
+                    f.write("\n")
+                    argStr = "{} 2>${{logErr}}>>${{logOut}}".format(argStr)
         
                     f.write("{} {}".format(self.binPath, argStr))
                     f.write("\n")

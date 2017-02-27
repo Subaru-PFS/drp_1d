@@ -69,20 +69,25 @@ std::shared_ptr<const CDTreeCSolveResult> COperatorDTreeCSolve::Compute( CDataSt
 
     CDataStore::CAutoScope resultScope( resultStore, "dtreeCsolve" );
 
+    std::string scopeStr = "chisquare";
     storeResult = Solve(resultStore, spc, spcWithoutCont,
                                        tplCatalog, tplCategoryList, restRayCatalog,
-                                       lambdaRange, redshifts );
+                                       lambdaRange, redshifts, scopeStr );
 
     //storeResult = true;
     if( storeResult )
     {
-        return std::shared_ptr<const CDTreeCSolveResult>( new CDTreeCSolveResult() );
+        //return std::shared_ptr<const CDTreeCSolveResult>( new CDTreeCSolveResult() );
+        std::shared_ptr< CDTreeCSolveResult>  solveResult = std::shared_ptr<CDTreeCSolveResult>( new CDTreeCSolveResult() );
+        solveResult->m_chi2ScopeStr = scopeStr;
+        return solveResult;
+
     }
 
     return NULL;
 }
 
-Bool COperatorDTreeCSolve::Solve(CDataStore &dataStore, const CSpectrum &spc, const CSpectrum &spcWithoutCont, const CTemplateCatalog &tplCatalog, const TStringList &tplCategoryList, const CRayCatalog &restRayCatalog, const TFloat64Range &lambdaRange, const TFloat64List &redshifts)
+Bool COperatorDTreeCSolve::Solve(CDataStore &dataStore, const CSpectrum &spc, const CSpectrum &spcWithoutCont, const CTemplateCatalog &tplCatalog, const TStringList &tplCategoryList, const CRayCatalog &restRayCatalog, const TFloat64Range &lambdaRange, const TFloat64List &redshifts, string &scopeStr)
 {
     CSpectrum _spcContinuum = spc;
     CSpectrumFluxAxis spcfluxAxis = _spcContinuum.GetFluxAxis();
@@ -193,7 +198,7 @@ Bool COperatorDTreeCSolve::Solve(CDataStore &dataStore, const CSpectrum &spc, co
     std::string opt_dustFit;
     dataStore.GetScopedParam( "chisquare.dustfit", opt_dustFit, "yes" );
 
-    std::string scopeStr = "chisquare";
+    //std::string scopeStr = "chisquare";
     if(opt_spcComponent == "continuum"){
         scopeStr = "chisquare_continuum";
     }else if(opt_spcComponent == "raw"){
@@ -568,21 +573,30 @@ Bool COperatorDTreeCSolve::GetCombinedRedshift(CDataStore& store, std::string sc
     for( Int32 i=0; i<zcomb.size(); i++ )
     {
         Float64 post=0.0;
-        Float64 coeff = resultPriorContinuum->ChiSquare[i];//results->dTransposeDNocontinuum/50.0; //resultPriorContinuum->ChiSquare[i]
+        Float64 coeff = results->dTransposeDNocontinuum/50.0;//resultPriorContinuum->ChiSquare[i];//results->dTransposeDNocontinuum/50.0; //resultPriorContinuum->ChiSquare[i]
         Float64 weight = 1.0;
         Float64 offset = 0.0;
 
 
         for(Int32 kci=0; kci<results->ContinuumIndexes[idxLMResultsExtrema[i]].size();kci++)
         {
-            //deactivate selected indexes
-            if(kci==3)
+            //activate selected indexes
+            if(kci!=3 && kci!=1)
             {
                 continue;
             }
             Float64 Color = results->ContinuumIndexes[idxLMResultsExtrema[i]][kci].Color;
             Float64 Break = results->ContinuumIndexes[idxLMResultsExtrema[i]][kci].Break;
             Float64 heatmap_val = contIndexesPriorData.GetHeatmapVal( kci, Color, Break);
+            if(Color>Break && kci==3 || Color<=Break && kci==1){
+                heatmap_val = 0.0;
+            }else{
+                heatmap_val = 1.0;
+            }
+            if(Color!=Color || Break!=Break)
+            {
+                heatmap_val = 1.0;
+            }
 
             post += (1.0-heatmap_val)*coeff;
 
