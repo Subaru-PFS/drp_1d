@@ -464,6 +464,7 @@ Bool COperatorDTreeCSolve::GetCombinedRedshift(CDataStore& store, std::string sc
         //chi2cCoeff = -0.5e3;
         chi2cCoeff = 5e3; //low weight for pfs test
         chi2cCoeff = -1e3; //simulm
+        chi2cCoeff = 0.0; //simuPFS6
 
 
         Log.LogInfo( "dtreeCsolve : lmCoeff=%f", lmCoeff);
@@ -626,7 +627,8 @@ Bool COperatorDTreeCSolve::GetCombinedRedshift(CDataStore& store, std::string sc
         //find the rescaling value
         for( Int32 i=0; i<zcomb.size(); i++ )
         {
-            Float64 lmVal = chi2lm[i] + resultPriorSELSP->ChiSquare[i] + lmCoeff;
+            //Float64 lmVal = chi2lm[i] + resultPriorSELSP->ChiSquare[i] + lmCoeff;
+            Float64 lmVal = chi2lm[i] + lmCoeff;
             if(lmVal < minChi2WithCoeffs)
             {
                 minChi2WithCoeffs = lmVal;
@@ -636,6 +638,7 @@ Bool COperatorDTreeCSolve::GetCombinedRedshift(CDataStore& store, std::string sc
             if( cVal < minChi2WithCoeffs)
             {
                 minChi2WithCoeffs = cVal;
+                //chi2cCoeff += minChi2WithCoeffs-cVal; //test, cap the chi2cCoeff by the chi2lmMinVal
                 methodForMin = "chi2c";
             }
         }
@@ -657,11 +660,19 @@ Bool COperatorDTreeCSolve::GetCombinedRedshift(CDataStore& store, std::string sc
         if(combineOption==1) //bayesian combination
         {
             Float64 valf = 1.0;
-            valf = chi2lm[i] + resultPriorSELSP->ChiSquare[i] - minChi2WithCoeffs + lmCoeff + resultPriorCI->ChiSquare[i];
-            Float64 lmLikelihood = exp(-valf/2.0);
+
+            //valf = chi2lm[i] + resultPriorSELSP->ChiSquare[i] - minChi2WithCoeffs + lmCoeff + resultPriorCI->ChiSquare[i]; //with priorSELPS+priorCI
+            valf = chi2lm[i] - minChi2WithCoeffs + lmCoeff; //with no prior
+            Float64 lmLikelihood = std::exp(-valf/2.0);
+            if(lmLikelihood==INFINITY){
+                Log.LogError( "dtreeCsolve : ERROR - chi2lm exp. overflow");
+            }
 
             valf = chi2continuum[idxChi2Results[i]]+chi2cCoeff-minChi2WithCoeffs;
-            Float64 chi2continuumLikelihood = exp(-valf/2.0);
+            Float64 chi2continuumLikelihood = std::exp(-valf/2.0);
+            if(lmLikelihood==INFINITY){
+                Log.LogError( "dtreeCsolve : ERROR - chi2continuum exp. overflow");
+            }
 
             post = -log((lmLikelihood + chi2continuumLikelihood));
             //post = -log(lmLikelihood);
