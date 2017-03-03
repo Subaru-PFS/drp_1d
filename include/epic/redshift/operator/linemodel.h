@@ -50,7 +50,9 @@ public:
                                               const std::string &opt_rules="all",
                                               const std::string &opt_velocityFitting="no",
                                               const Float64 &opt_twosteplargegridstep=0.001,
-                                              const std::string &opt_rigidity="rules");
+                                              const std::string &opt_rigidity="rules",
+                                              const Float64 &opt_velocityfitmin=20,
+                                              const Float64 &opt_velocityfitmax=800);
 
     void storeGlobalModelResults( CDataStore &dataStore );
     void storePerTemplateModelResults( CDataStore &dataStore, const CTemplate& tpl );

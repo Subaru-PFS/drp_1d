@@ -44,6 +44,7 @@ const std::string COperatorDTreeCSolve::GetDescription()
     desc.append("\tparam: linemodel.instrumentresolution = <float value>\n");
     desc.append("\tparam: linemodel.velocityemission = <float value>\n");
     desc.append("\tparam: linemodel.velocityabsorption = <float value>\n");
+    desc.append("\tparam: linemodel.velocityfit = {""yes"", ""no""}\n");
 
     desc.append("\tparam: linemodel.rules = {""all"", ""no""}\n");
     desc.append("\tparam: linemodel.continuumreestimation = {""no"", ""onlyextrema"", ""always""}\n");

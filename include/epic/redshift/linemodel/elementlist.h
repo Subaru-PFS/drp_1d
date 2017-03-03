@@ -98,8 +98,7 @@ public:
     Float64 GetVelocityEmission();
     Float64 GetVelocityAbsorption();
     Float64 GetVelocityInfFromInstrumentResolution();
-    Float64 GetVelocitySup();
-    Int32 ApplyVelocityBound();
+    Int32 ApplyVelocityBound(Float64 inf, Float64 sup);
 
     Bool initModelAtZ(Float64 redshift, const TFloat64Range& lambdaRange, const CSpectrumSpectralAxis &spectralAxis);
 

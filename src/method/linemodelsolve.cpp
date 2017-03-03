@@ -59,6 +59,8 @@ const std::string CLineModelSolve::GetDescription()
     desc.append("\tparam: linemodel.rules = {""all"", ""balmer"", ""strongweak"", ""superstrong"", ""oiiratio"", ""ciiiratio"", ""no""}\n");
     desc.append("\tparam: linemodel.extremacount = <float value>\n");
     desc.append("\tparam: linemodel.velocityfit = {""yes"", ""no""}\n");
+    desc.append("\tparam: linemodel.velocityfitmin = <float value>\n");
+    desc.append("\tparam: linemodel.velocityfitmax = <float value>\n");
     desc.append("\tparam: linemodel.fastfitlargegridstep = <float value>, deactivated if negative or zero\n");
 
 
@@ -85,6 +87,8 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
     dataStore.GetScopedParam( "linemodel.velocityemission", m_opt_velocity_emission, 100.0 );
     dataStore.GetScopedParam( "linemodel.velocityabsorption", m_opt_velocity_absorption, 300.0 );
     dataStore.GetScopedParam( "linemodel.velocityfit", m_opt_velocityfit, "yes" );
+    dataStore.GetScopedParam( "linemodel.velocityfitmin", m_opt_velocity_fit_min, 20.0 );
+    dataStore.GetScopedParam( "linemodel.velocityfitmax", m_opt_velocity_fit_max, 800.0 );
     dataStore.GetScopedParam( "linemodel.continuumreestimation", m_opt_continuumreest, "no" );
     dataStore.GetScopedParam( "linemodel.rules", m_opt_rules, "all" );
     dataStore.GetScopedParam( "linemodel.extremacount", m_opt_extremacount, 10.0 );
@@ -120,8 +124,16 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
         Log.LogInfo( "    -velocity absorption: %.2f", m_opt_velocity_absorption);
         Log.LogInfo( "    -velocity fit: %s", m_opt_velocityfit.c_str());
     }
-    Log.LogInfo( "    -rules: %s", m_opt_rules.c_str());
+    if(m_opt_velocityfit=="yes"){
+        Log.LogInfo( "    -velocity fit min : %.1f", m_opt_velocity_fit_min);
+        Log.LogInfo( "    -velocity fit max : %.1f", m_opt_velocity_fit_max);
+    }
+
     Log.LogInfo( "    -rigidity: %s", m_opt_rigidity.c_str());
+    if(m_opt_rigidity=="rules"){
+        Log.LogInfo( "    -rules: %s", m_opt_rules.c_str());
+    }
+
     Log.LogInfo( "    -continuumcomponent: %s", m_opt_continuumcomponent.c_str());
     Log.LogInfo( "    -continuumreestimation: %s", m_opt_continuumreest.c_str());
     Log.LogInfo( "    -extremacount: %.3f", m_opt_extremacount);
@@ -155,6 +167,7 @@ std::shared_ptr<const CLineModelSolveResult> CLineModelSolve::Compute( CDataStor
 /**
  * \brief
  * Retrieve the true-velocities from a hardcoded ref file path
+ * nb: this is a hack for development purposes
  **/
 Int32 getVelocitiesFromRefFile( const char* filePath, std::string spcid, Float64& elv, Float64& alv )
 {
@@ -303,7 +316,9 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
                       m_opt_rules,
                       m_opt_velocityfit,
                       m_opt_twosteplargegridstep,
-                      m_opt_rigidity);
+                      m_opt_rigidity,
+                      m_opt_velocity_fit_min,
+                      m_opt_velocity_fit_max);
 
     if( !result )
     {

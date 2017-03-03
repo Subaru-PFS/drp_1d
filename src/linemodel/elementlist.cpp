@@ -3411,24 +3411,18 @@ Float64 CLineModelElementList::GetVelocityInfFromInstrumentResolution()
     return vel;
 }
 
-Float64 CLineModelElementList::GetVelocitySup()
-{
-    return 800.0;
-}
-
-
 Float64 CLineModelElementList::GetRedshift()
 {
     return m_Redshift;
 }
 
-Int32 CLineModelElementList::ApplyVelocityBound()
+Int32 CLineModelElementList::ApplyVelocityBound(Float64 inf, Float64 sup)
 {
 
     Int32 corrected=false;
-    static Float64 velInfFromInstrument = GetVelocityInfFromInstrumentResolution();
-    static Float64 velSupEmission = GetVelocitySup();
-    static Float64 velSupAbsorption = GetVelocitySup();
+    static Float64 velInfFromInstrument = inf;//GetVelocityInfFromInstrumentResolution();
+    static Float64 velSupEmission = sup;
+    static Float64 velSupAbsorption = sup;
 
     Float64 vel;
     vel = GetVelocityEmission();

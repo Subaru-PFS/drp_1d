@@ -83,7 +83,9 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
                                   const std::string& opt_rules,
                                   const std::string& opt_velocityFitting,
                                   const Float64 &opt_twosteplargegridstep,
-                                  const std::string& opt_rigidity)
+                                  const std::string& opt_rigidity,
+                                  const Float64 &opt_velocityfitmin,
+                                  const Float64 &opt_velocityfitmax)
 {
     if( spectrum.GetSpectralAxis().IsInLinearScale()==false )
     {
@@ -387,7 +389,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
 
                     model.SetFittingMethod(opt_fittingmethod);
                     model.ResetElementIndexesDisabled();
-                    Int32 velocityHasBeenReset = model.ApplyVelocityBound();
+                    Int32 velocityHasBeenReset = model.ApplyVelocityBound(opt_velocityfitmin, opt_velocityfitmax);
                     enableManualStepVelocityFit = velocityHasBeenReset;
                 }
 
@@ -401,15 +403,22 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
 
                     model.SetFittingMethod(opt_fittingmethod);
                     model.ResetElementIndexesDisabled();
-                    Int32 velocityHasBeenReset = model.ApplyVelocityBound();
+                    Int32 velocityHasBeenReset = model.ApplyVelocityBound(opt_velocityfitmin, opt_velocityfitmax);
                     enableManualStepVelocityFit = velocityHasBeenReset;
                 }
 
                 if(enableManualStepVelocityFit){
                     //fit the emission and absorption width by minimizing the linemodel merit with linemodel "hybrid" fitting method
                     model.SetFittingMethod("hybrid");
-                    Float64 vInfLim = model.GetVelocityInfFromInstrumentResolution();
-                    Float64 vSupLim = model.GetVelocitySup();
+                    Float64 vInfLim = opt_velocityfitmin;
+                    //eventually limit the min velocity from Instr. Resolution
+                    if(opt_lineWidthType=="combined"){
+                        Float64 infVelInstr = model.GetVelocityInfFromInstrumentResolution();
+                        if(infVelInstr>vInfLim){
+                            vInfLim=infVelInstr;
+                        }
+                    }
+                    Float64 vSupLim = opt_velocityfitmax;
                     Float64 vStep = 20.0;
                     Int32 nSteps = (int)((vSupLim-vInfLim)/vStep);
 
