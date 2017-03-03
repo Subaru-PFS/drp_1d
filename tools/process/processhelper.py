@@ -33,6 +33,10 @@ class processHelper(object):
         self.binPath = binpath
         self.baseoutputpath = rootoutputpath
         
+        self.logsPath = os.path.join(self.baseoutputpath, "cluster_logs")
+        if not os.path.exists(self.logsPath):
+            os.mkdir(self.logsPath)
+            
         self.refPath = refpath
         if self.refPath == "":
             self.enableProcessAtZ = 0
@@ -252,7 +256,7 @@ class processHelper(object):
                 fout.write("\n")
             fout.close()
     
-    def doProcess(self, dryrun=False, enableLocal=False):
+    def doProcess(self, dryrun=False, local="local"):
         """
         prepare the .sh files to be sent to be qsub'd to the cluster
         1. prepare bracketing parameters
@@ -301,13 +305,15 @@ class processHelper(object):
                 #print("INFO: arg string is {}".format(argStr))
                 
                 #creating .sh file
-                if not enableLocal: #cluster PBS files
+                logepath = os.path.join(self.logsPath, "logErr_{}-{}.txt".format(k, ksubs) )
+                logopath = os.path.join(self.logsPath, "logOut_{}-{}.txt".format(k, ksubs) )
+                if local=="cluster_lam": #cluster PBS files
                     fpbsname = "pbs_{}_{}.sh".format(k, ksubs)
                     fpbspath = os.path.join(self.work_process_dir, fpbsname)
                     f = open(fpbspath, 'w')
                     #f.write("#PBS -t	1")
                     #f.write("\n")
-                    f.write("#PBS -N amazed_{}_{}".format(k, ksubs))
+                    f.write("#PBS -N amz_{}_{}".format(k, ksubs))
                     f.write("\n")
                     f.write("#PBS -l nodes=1:ppn=1")
                     f.write("\n")
@@ -319,13 +325,14 @@ class processHelper(object):
                     #f.write("taskID=$PBS_ARRAYID")
                     #f.write("\n")
                     f.write("\n")
-                    f.write("logErr={}".format(os.path.join(self.baseoutputpath, "logErr_{}-{}.txt".format(k, ksubs) )))
+                    f.write("logErr={}".format(logepath))
                     f.write("\n")
-                    f.write("logOut={}".format(os.path.join(self.baseoutputpath, "logOut_{}-{}.txt".format(k, ksubs) )))
+                    f.write("logOut={}".format(logopath))
                     f.write("\n")
                     f.write("\n")
                     f.write("hostname>${logOut}")
-		    f.write("date>${logOut}")
+                    f.write("\n")
+                    f.write("date>${logOut}")
                     
                     f.write("\n")
                     argStr = "{} 2>${{logErr}}>>${{logOut}}".format(argStr)
@@ -335,6 +342,21 @@ class processHelper(object):
                     
                     #f.write("")
                     f.close()  
+                elif local=="cluster_in2p3":
+                    fpbsname = "pbs_{}_{}.sh".format(k, ksubs)
+                    fpbspath = os.path.join(self.work_process_dir, fpbsname)
+                    f = open(fpbspath, 'w')
+                    
+                    f.write("\n")
+        
+                    f.write("cd /sps/euclid/Users/schmitt/amazed_cluster")
+                    f.write("\n")
+                    
+                    f.write("{} {}".format(self.binPath, argStr))
+                    f.write("\n")
+                    
+                    #f.write("")
+                    f.close() 
                 else: #local bash files
                     fshname = "amazed-proc_{}_{}.sh".format(k, ksubs)
                     fshpath = os.path.join(self.work_process_dir, fshname)
@@ -344,8 +366,28 @@ class processHelper(object):
                     f.close() 
                     
                 if not dryrun:
-                    if not enableLocal:
+                    if local=="cluster_lam":
                         bashCommand = "qsub {}".format(fpbspath)
+                    elif local=="cluster_in2p3":
+                        options = "-l sps=1"
+                        options += " " ##
+                        options = "-l os=cl7"
+                        options += " " ##
+                        
+                        
+                        options += "-P P_euclid_spe"
+                        options += " " ##
+                        options += "-N amz_{}_{}".format(k, ksubs)
+                        options += " " ##
+                        #options += "-cwd {}".format()
+                        options += " " ##
+                        options += "-e {}".format(logepath)
+                        options += " " ##
+                        options += "-o {}".format(logopath)
+                        options += " " ##
+                        
+                        bashCommand = "qsub {} {}".format(options, fpbspath)
+                        
                     else:
                         bashCommand = "bash {}".format(fshpath)
                     print("INFO: bashCommand is {}\n\n".format(bashCommand))
@@ -373,8 +415,8 @@ def StartFromCommandLine( argv ) :
                     help="path to the root output path") 
                     
     #option to do it local or qsub
-    parser.add_argument("-l", "--local", dest="local", action='store_true',
-                    help="enable process locally, default (False) is to send the jobs to the cluster through qsub")
+    parser.add_argument("-l", "--local", dest="local", default='cluster_lam',
+                    help="local (run locally), 'cluster_lam' or 'cluster_in2p3' to run on a cluster through qsub")
                  
     parser.add_argument("-m", "--methodBracketing", dest="methodBracketing", default="",
                 help="bracketing of the parameters : choose between '' or 'method'") 
@@ -419,7 +461,7 @@ def StartFromCommandLine( argv ) :
         print("INFO: cmdline arg bracketing = {}".format(opt_bracketing))
         cp = processHelper(confpath=rpath, binpath=rbinpath, rootoutputpath=routputpath, dividecount=dividecount, opt_bracketing=opt_bracketing, refpath=rrefPath)
             
-        cp.doProcess(dryrun=False, enableLocal=options.local)
+        cp.doProcess(dryrun=False, local=options.local)
     else :
         print("Error: invalid arguments")
         exit()

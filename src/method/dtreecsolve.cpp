@@ -464,7 +464,7 @@ Bool COperatorDTreeCSolve::GetCombinedRedshift(CDataStore& store, std::string sc
         //chi2cCoeff = -0.5e3;
         chi2cCoeff = 5e3; //low weight for pfs test
         chi2cCoeff = -1e3; //simulm
-        chi2cCoeff = 0.0; //simuPFS6
+        chi2cCoeff = -85.0; //simuPFS6
 
 
         Log.LogInfo( "dtreeCsolve : lmCoeff=%f", lmCoeff);
