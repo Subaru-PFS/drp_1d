@@ -3420,7 +3420,7 @@ Int32 CLineModelElementList::ApplyVelocityBound(Float64 inf, Float64 sup)
 {
 
     Int32 corrected=false;
-    static Float64 velInfFromInstrument = inf;//GetVelocityInfFromInstrumentResolution();
+    static Float64 velInfFromInstrument = inf;
     static Float64 velSupEmission = sup;
     static Float64 velSupAbsorption = sup;
 

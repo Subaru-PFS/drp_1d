@@ -140,12 +140,6 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
         }
     }
 
-
-    bool enableVelocityFitting = true;
-    if(opt_velocityFitting != "yes"){
-        enableVelocityFitting = false;
-    }
-
     Int32 typeFilter = -1;
     if(opt_lineTypeFilter == "A"){
         typeFilter = CRay::nType_Absorption;
@@ -184,6 +178,26 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
                                  opt_rules,
                                  opt_rigidity);
     Log.LogInfo( "Linemodel: initialized");
+
+    //setup velocity fitting
+    bool enableVelocityFitting = true;
+    Float64 velfitMin = opt_velocityfitmin;
+    Float64 velfitMax = opt_velocityfitmax;
+    if(opt_velocityFitting != "yes"){
+        enableVelocityFitting = false;
+    }else{
+        if(opt_lineWidthType=="combined"){
+
+            Float64 infVelInstr = model.GetVelocityInfFromInstrumentResolution();
+            if(velfitMin<infVelInstr){
+                velfitMin=infVelInstr;
+                Log.LogInfo( "Linemodel: velocity fitting min bound auto set from resolution");
+            }
+        }
+
+        Log.LogInfo( "Linemodel: velocity fitting bounds: min=%.1f - max=%.1f", velfitMin, velfitMax);
+    }
+
 
 //    //hack, zero outside of the support  ///////////////////////////////////////////////////////////////////////////////////////////
 //    model.setModelSpcObservedOnSupportZeroOutside(lambdaRange);
@@ -389,7 +403,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
 
                     model.SetFittingMethod(opt_fittingmethod);
                     model.ResetElementIndexesDisabled();
-                    Int32 velocityHasBeenReset = model.ApplyVelocityBound(opt_velocityfitmin, opt_velocityfitmax);
+                    Int32 velocityHasBeenReset = model.ApplyVelocityBound(velfitMin, velfitMax);
                     enableManualStepVelocityFit = velocityHasBeenReset;
                 }
 
@@ -403,22 +417,15 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
 
                     model.SetFittingMethod(opt_fittingmethod);
                     model.ResetElementIndexesDisabled();
-                    Int32 velocityHasBeenReset = model.ApplyVelocityBound(opt_velocityfitmin, opt_velocityfitmax);
+                    Int32 velocityHasBeenReset = model.ApplyVelocityBound(velfitMin, velfitMax);
                     enableManualStepVelocityFit = velocityHasBeenReset;
                 }
 
                 if(enableManualStepVelocityFit){
                     //fit the emission and absorption width by minimizing the linemodel merit with linemodel "hybrid" fitting method
                     model.SetFittingMethod("hybrid");
-                    Float64 vInfLim = opt_velocityfitmin;
-                    //eventually limit the min velocity from Instr. Resolution
-                    if(opt_lineWidthType=="combined"){
-                        Float64 infVelInstr = model.GetVelocityInfFromInstrumentResolution();
-                        if(infVelInstr>vInfLim){
-                            vInfLim=infVelInstr;
-                        }
-                    }
-                    Float64 vSupLim = opt_velocityfitmax;
+                    Float64 vInfLim = velfitMin;
+                    Float64 vSupLim = velfitMax;
                     Float64 vStep = 20.0;
                     Int32 nSteps = (int)((vSupLim-vInfLim)/vStep);
 
