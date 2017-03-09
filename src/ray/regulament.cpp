@@ -64,7 +64,7 @@ Bool CRegulament::CreateRulesFromJSONFiles( void )
   m_RulesVector.push_back( dynamic_cast<CRule*>( ARule7 ) );
 
   CRuleOIIRatioRange* ARule9 = new CRuleOIIRatioRange( );
-  ARule9->SetUp( True, CRay::nType_Emission, "[OII]3726", "[OII]3729", 2.0 );
+  ARule9->SetUp( True, CRay::nType_Emission, "[OII]3726", "[OII]3729", 2.5 );
 
   m_RulesVector.push_back( dynamic_cast<CRule*>( ARule9 ) );
   CRuleStrongHigherThanWeak* ARule10 = new CRuleStrongHigherThanWeak( );

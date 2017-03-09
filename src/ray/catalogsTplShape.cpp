@@ -19,8 +19,9 @@ using namespace boost;
 CRayCatalogsTplShape::CRayCatalogsTplShape()
 {
     // old relpath = "linecatalogs_tplshape_ExtendedTemplatesMarch2016_v2_20160916_B10I2_mod"
-    tplshapedcatalog_relpath = "linecatalogs_tplshape_ExtendedTemplatesMarch2016_B13B_mod20170110";
-
+    //tplshapedcatalog_relpath = "linecatalogs_tplshape_ExtendedTemplatesMarch2016_B13B_mod20170110";
+    tplshapedcatalog_relpath = "linecatalogs_tplshape_ExtendedTemplatesMarch2016_B13D_mod2";
+    Log.LogInfo( "CRayCatalogsTplShape - Loaded tplshape catalog : %s", tplshapedcatalog_relpath.c_str());
 }
 
 CRayCatalogsTplShape::~CRayCatalogsTplShape()

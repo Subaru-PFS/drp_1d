@@ -31,7 +31,7 @@ Void CLineModelSolveResult::Save( const CDataStore& store, std::ostream& stream 
 {
     Float64 redshift;
     Float64 merit;
-    std::string tplName;
+    std::string tplName="-1";
     Float64 sigma;
 
     //GetBestRedshiftWithStrongELSnrPrior( store, redshift, merit );
@@ -52,7 +52,7 @@ Void CLineModelSolveResult::SaveLine( const CDataStore& store, std::ostream& str
 {
     Float64 redshift;
     Float64 merit;
-    std::string tplName;
+    std::string tplName="-1";
     Float64 sigma;
 
     //GetBestRedshiftWithStrongELSnrPrior( store, redshift, merit );
