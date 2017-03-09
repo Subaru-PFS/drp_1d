@@ -26,7 +26,7 @@ import spectrumlist
 
 
 class processHelper(object):
-    def __init__(self, confpath, binpath, rootoutputpath, dividecount, opt_bracketing, refpath):
+    def __init__(self, confpath, binpath, rootoutputpath, dividecount, opt_bracketing, bracketing_templatesRootPath, refpath):
         self.logTagStr = "processHelper"
         self.ready = False
         self.configPath = confpath
@@ -51,7 +51,7 @@ class processHelper(object):
         self.proc_date = time.strftime("%Y%m%d")          
 
         self.opt_bracketing = opt_bracketing #choices = "", "method"
-        self.bracketing_templatesRootPath = "/home/aschmitt/amazed_cluster/calibration/templates/"
+        self.bracketing_templatesRootPath = bracketing_templatesRootPath
         
         ret = self.loadConfig()
         if not ret:
@@ -147,6 +147,13 @@ class processHelper(object):
             bracketing_method=["linemodel", "linemodel", "amazed0_3", "amazed0_1", "chisquare2solve", "chisquare2solve"]
             bracketing_parameterFilePath=["lm_rules.json", "lm_tplshape.json", "amazed0_3.json", "amazed0_1.json", "chi2_nc.json", "chi2_raw.json"]
             bracketing_templateCtlNames=["ExtendedTemplatesMarch2016_v2", "ExtendedTemplatesMarch2016_v2", "ContinuumTemplates_simulm2016", "ExtendedTemplatesMarch2016_v2", "ExtendedTemplatesMarch2016_v2", "ExtendedTemplatesMarch2016_v2"]   
+            bracketing_templateCtlPath = []            
+            for k in range(len(bracketing_templateCtlNames)):
+                bracketing_templateCtlPath.append(os.path.join(self.bracketing_templatesRootPath, bracketing_templateCtlNames[k]))
+        elif self.opt_bracketing=="method-euclid":
+            bracketing_method=["linemodel", "linemodel", "linemodel", "amazed0_1", "chisquare2solve", "chisquare2solve"]
+            bracketing_parameterFilePath=["fullmodel_elv370alv530.json", "fullmodel.json", "linemodel_elv370alv530.json", "amazed0_1.json", "chi2_nc.json", "chi2_raw.json"]
+            bracketing_templateCtlNames=["ContinuumTemplates_simulm2016Extended_dustfree201702", "ContinuumTemplates_simulm2016Extended_dustfree201702", "ContinuumTemplates_simulm2016Extended_dustfree201702", "ExtendedTemplatesJan2017_v3", "ExtendedTemplatesJan2017_v3", "ExtendedTemplatesJan2017_v3"]   
             bracketing_templateCtlPath = []            
             for k in range(len(bracketing_templateCtlNames)):
                 bracketing_templateCtlPath.append(os.path.join(self.bracketing_templatesRootPath, bracketing_templateCtlNames[k]))
@@ -270,7 +277,7 @@ class processHelper(object):
             print("processhelper not ready, aborting...")
             return
         
-        if self.opt_bracketing == "method":
+        if self.opt_bracketing == "method" or self.opt_bracketing == "method-euclid":
             bracketing = self.prepareBracketing()    
             nproc = len(bracketing["method"])
         else:
@@ -332,7 +339,7 @@ class processHelper(object):
                     f.write("\n")
                     f.write("hostname>${logOut}")
                     f.write("\n")
-                    f.write("date>${logOut}")
+                    f.write("date>>${logOut}")
                     
                     f.write("\n")
                     argStr = "{} 2>${{logErr}}>>${{logOut}}".format(argStr)
@@ -371,7 +378,7 @@ class processHelper(object):
                     elif local=="cluster_in2p3":
                         options = "-l sps=1"
                         options += " " ##
-                        options = "-l os=cl7"
+                        options += "-l os=cl7"
                         options += " " ##
                         
                         
@@ -392,6 +399,9 @@ class processHelper(object):
                         bashCommand = "bash {}".format(fshpath)
                     print("INFO: bashCommand is {}\n\n".format(bashCommand))
                     os.system(bashCommand) 
+                    
+                    #try to sleep n seconds in order to avoid problems at submission
+                    time.sleep(1.0)
                     
         if not len(self.subspclists)==0: 
             self.exportSubRecombineInfo()
@@ -419,7 +429,10 @@ def StartFromCommandLine( argv ) :
                     help="local (run locally), 'cluster_lam' or 'cluster_in2p3' to run on a cluster through qsub")
                  
     parser.add_argument("-m", "--methodBracketing", dest="methodBracketing", default="",
-                help="bracketing of the parameters : choose between '' or 'method'") 
+                help="bracketing of the parameters : choose between '' or 'method' or 'method-euclid'") 
+                
+    parser.add_argument("-t", "--bracketingTemplatesRootPath", dest="brackTemplatesRootPath", default="/home/aschmitt/amazed_cluster/calibration/templates/",
+                help="path to the templates root path used for the bracketing")
                 
     parser.add_argument("-r", "--refPath", dest="refPath", default="",
                 help="path to the reference file, used for processing at z for each source. Forces spclist splitting with count=1") 
@@ -456,10 +469,18 @@ def StartFromCommandLine( argv ) :
                 exit()
         else:
             dividecount = -1
-            
+                       
         opt_bracketing = options.methodBracketing
         print("INFO: cmdline arg bracketing = {}".format(opt_bracketing))
-        cp = processHelper(confpath=rpath, binpath=rbinpath, rootoutputpath=routputpath, dividecount=dividecount, opt_bracketing=opt_bracketing, refpath=rrefPath)
+        
+        bracketing_templatesRootPath = ""
+        if not opt_bracketing=="":
+            bracketing_templatesRootPath = os.path.abspath(options.brackTemplatesRootPath)
+            if not os.path.exists(bracketing_templatesRootPath):
+                print("ERROR: bracketing templates root path not found: {}\nAborting".format(bracketing_templatesRootPath))
+                exit()
+                
+        cp = processHelper(confpath=rpath, binpath=rbinpath, rootoutputpath=routputpath, dividecount=dividecount, opt_bracketing=opt_bracketing, bracketing_templatesRootPath=bracketing_templatesRootPath, refpath=rrefPath)
             
         cp.doProcess(dryrun=False, local=options.local)
     else :

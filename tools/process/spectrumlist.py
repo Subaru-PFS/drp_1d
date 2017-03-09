@@ -106,7 +106,9 @@ class Spectrumlist(object):
                 
             if len(self.errfvect) == len(self.fvect):
                 fsub.write("{}\t{}\n".format(self.fvect[k], self.errfvect[k]))
-            else:                        
+            else:
+                print("WARNING: no noise spectrum used in the spectrumlist !!")
+                stop                        
                 fsub.write("{}\n".format(self.fvect[k]))
             
             if verbose:
