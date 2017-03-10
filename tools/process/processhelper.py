@@ -231,7 +231,9 @@ class processHelper(object):
                     break
             zprocess = self.refcatalog.getRedshift(spcName)
             zstep = 1e-6
-            argStr = """{} --redshiftrange "{} {} {}" """.format(argStr, zprocess, zprocess, zstep) #ex, format: redshiftrange=0.0 5.0 0.0001
+            zrangehalf = 0.0
+            #zrangehalf = 1e-3 #enable exploring the redshift range around zref
+            argStr = """{} --redshiftrange "{} {} {}" """.format(argStr, zprocess-zrangehalf, zprocess+zrangehalf, zstep) #ex, format: redshiftrange=0.0 5.0 0.0001
            
         outputName_base = "amazed_{}_m-{}_p-{}".format(self.proc_date, argMethod, argParamsLabel)
         if overrideSpclistIndex==-1:

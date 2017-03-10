@@ -5,12 +5,18 @@ Created on Mon Jan  2 13:32:17 2017
 @author: aschmitt
 """
 
+### python 3 compatibility imports ###
+#from __future__ import division, print_function
+#from future_builtins import *
+#from builtins import range
+#from future.builtins.disabled import apply, cmp, file, raw_input, xrange
+### ##### # ############# ####### ###
+
 import os
 import sys
 import time
 import argparse
 import shutil
-
 
 
 
@@ -57,40 +63,46 @@ class processRecombine(object):
         #merge redshift.csv files
         self.mergeCsvFiles(subpathsList, outputPath, fileName="redshift.csv")
         
-        #merge input spectrumlist files
-        self.mergeCsvFiles(subpathsList, outputPath, fileName="input.spectrumlist")
-        
         #merge log files
         self.mergeCsvFiles(subpathsList, outputPath, fileName="log.txt")
+
+        try:        
+            #merge input spectrumlist files
+            self.mergeCsvFiles(subpathsList, outputPath, fileName="input.spectrumlist")         
+            
+            #copy json file from first subset #0, supposing the file is similar for the other subsets results
+            source_path = os.path.join(subpathsList[0], "parameters.json")
+            dest_path = os.path.join(outputPath, "parameters.json")
+            shutil.copy(source_path, dest_path)
+            
+            #copy linecatalog file from first subset #0, supposing the file is similar for the other subsets results
+            source_path = os.path.join(subpathsList[0], "linecatalog.txt")
+            dest_path = os.path.join(outputPath, "linecatalog.txt")
+            shutil.copy(source_path, dest_path)
+            
+            #copy config file from first subset #0, supposing the file is similar for the other subsets results
+            #WARNING: todo this direct copy could lead to pb...
+            source_path = os.path.join(subpathsList[0], "config.txt")
+            dest_path = os.path.join(outputPath, "config.txt")
+            shutil.copy(source_path, dest_path)
+            
+            #copy templates folder from first subset #0, supposing the file is similar for the other subsets results
+            source_path = os.path.join(subpathsList[0], "templates")
+            dest_path = os.path.join(outputPath, "templates")
+            shutil.copytree(source_path, dest_path)
+            
+            #copy templates folder from first subset #0, supposing the file is similar for the other subsets results
+            source_path = os.path.join(subpathsList[0], "templates_nocontinuum")
+            dest_path = os.path.join(outputPath, "templates_nocontinuum")
+            shutil.copytree(source_path, dest_path)
+            
+            #copy intermediate results if any
+            self.copyIntermediateResultsDirs(subpathsList, outputPath, spcfileName="input.spectrumlist")
+            
+        except:
+            print("WARNING: unable to merge some output files. Skipping that operation !")
+            raw_input("\n\nWARNING: unable to merge some output files. will skip that operation.\nPress any key to continue...".format())
         
-        #copy json file from first subset #0, supposing the file is similar for the other subsets results
-        source_path = os.path.join(subpathsList[0], "parameters.json")
-        dest_path = os.path.join(outputPath, "parameters.json")
-        shutil.copy(source_path, dest_path)
-        
-        #copy linecatalog file from first subset #0, supposing the file is similar for the other subsets results
-        source_path = os.path.join(subpathsList[0], "linecatalog.txt")
-        dest_path = os.path.join(outputPath, "linecatalog.txt")
-        shutil.copy(source_path, dest_path)
-        
-        #copy config file from first subset #0, supposing the file is similar for the other subsets results
-        #WARNING: todo this direct copy could lead to pb...
-        source_path = os.path.join(subpathsList[0], "config.txt")
-        dest_path = os.path.join(outputPath, "config.txt")
-        shutil.copy(source_path, dest_path)
-        
-        #copy templates folder from first subset #0, supposing the file is similar for the other subsets results
-        source_path = os.path.join(subpathsList[0], "templates")
-        dest_path = os.path.join(outputPath, "templates")
-        shutil.copytree(source_path, dest_path)
-        
-        #copy templates folder from first subset #0, supposing the file is similar for the other subsets results
-        source_path = os.path.join(subpathsList[0], "templates_nocontinuum")
-        dest_path = os.path.join(outputPath, "templates_nocontinuum")
-        shutil.copytree(source_path, dest_path)
-        
-        #copy intermediate results if any
-        self.copyIntermediateResultsDirs(subpathsList, outputPath, spcfileName="input.spectrumlist")
         
     def recombineAll(self):
         for f in self.flist:
