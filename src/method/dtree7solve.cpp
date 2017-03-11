@@ -148,8 +148,11 @@ Bool COperatorDTree7Solve::SolveDecisionalTree7(CDataStore &dataStore, const CSp
                                                                                 correlationExtremumCount, overlapThreshold );
             if( blindsolveResult ) {
                 dataStore.StoreScopedGlobalResult( "redshiftresult", blindsolveResult );
+                return true;
+            }else{
+                Log.LogInfo( "DTree7 - failed (dtreepathnum=%.2f)",  m_dtreepathnum);
+                return false;
             }
-            return true;
         }
     }
 
@@ -172,8 +175,11 @@ Bool COperatorDTree7Solve::SolveDecisionalTree7(CDataStore &dataStore, const CSp
                                                                                 correlationExtremumCount, overlapThreshold );
             if( blindsolveResult ) {
                 dataStore.StoreScopedGlobalResult( "redshiftresult", blindsolveResult );
+                return true;
+            }else{
+                Log.LogInfo( "DTree7 - failed (dtreepathnum=%.2f)",  m_dtreepathnum);
+                return false;
             }
-            return true;
         }
     }
 
@@ -196,8 +202,11 @@ Bool COperatorDTree7Solve::SolveDecisionalTree7(CDataStore &dataStore, const CSp
                                                                                     correlationExtremumCount, overlapThreshold );
                 if( blindsolveResult ) {
                     dataStore.StoreScopedGlobalResult( "redshiftresult", blindsolveResult );
+                    return true;
+                }else{
+                    Log.LogInfo( "DTree7 - failed (dtreepathnum=%.2f)",  m_dtreepathnum);
+                    return false;
                 }
-                return true;
             }
         }
     }else{
@@ -211,8 +220,11 @@ Bool COperatorDTree7Solve::SolveDecisionalTree7(CDataStore &dataStore, const CSp
                                                                                 correlationExtremumCount, overlapThreshold );
             if( blindsolveResult ) {
                 dataStore.StoreScopedGlobalResult( "redshiftresult", blindsolveResult );
+                return true;
+            }else{
+                Log.LogInfo( "DTree7 - failed (dtreepathnum=%.2f)",  m_dtreepathnum);
+                return false;
             }
-            return true;
         }
     }
 
@@ -239,8 +251,11 @@ Bool COperatorDTree7Solve::SolveDecisionalTree7(CDataStore &dataStore, const CSp
                                                                                 lambdaRange, roundedRedshift, overlapThreshold );
             if( chisolveResult ) {
                 dataStore.StoreScopedGlobalResult( "redshiftresult", chisolveResult );
+                return true;
+            }else{
+                Log.LogInfo( "DTree7 - failed (dtreepathnum=%.2f)",  m_dtreepathnum);
+                return false;
             }
-            return true;
         }
     }
 
@@ -267,8 +282,11 @@ Bool COperatorDTree7Solve::SolveDecisionalTree7(CDataStore &dataStore, const CSp
                                                                                     lambdaRange, roundedRedshift, overlapThreshold );
                 if( chisolveResult ) {
                     dataStore.StoreScopedGlobalResult( "redshiftresult", chisolveResult );
+                    return true;
+                }else{
+                    Log.LogInfo( "DTree7 - failed (dtreepathnum=%.2f)",  m_dtreepathnum);
+                    return false;
                 }
-                return true;
             }
         }else{
             Log.LogInfo( "DTree7 - Not match found with strong lines, switching to ProcessWithoutEL (EZ: only_correlation_... equivalent)");
@@ -281,8 +299,11 @@ Bool COperatorDTree7Solve::SolveDecisionalTree7(CDataStore &dataStore, const CSp
                                                                                 overlapThreshold );
                 if( solveResult ) {
                     dataStore.StoreScopedGlobalResult( "redshiftresult", solveResult );
+                    return true;
+                }else{
+                    Log.LogInfo( "DTree7 - failed (dtreepathnum=%.2f)",  m_dtreepathnum);
+                    return false;
                 }
-                return true;
             }
         }
     }
@@ -297,8 +318,11 @@ Bool COperatorDTree7Solve::SolveDecisionalTree7(CDataStore &dataStore, const CSp
                                                                             correlationExtremumCount, overlapThreshold );
         if( blindsolveResult ) {
             dataStore.StoreScopedGlobalResult( "redshiftresult", blindsolveResult );
+            return true;
+        }else{
+            Log.LogInfo( "DTree7 - failed (dtreepathnum=%.2f)",  m_dtreepathnum);
+            return false;
         }
-        return true;
     }
 }
 
