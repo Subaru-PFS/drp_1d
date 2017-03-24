@@ -124,9 +124,12 @@ Int32 CDeltaz::Compute(TFloat64List merits, TFloat64List redshifts, Float64 reds
     return 0;
 }
 
-
-Float64 CDeltaz::Compute3ddl(TFloat64List merits, TFloat64List redshifts, Float64 redshift, TFloat64Range redshiftRange)
+//todo : merge with previous function instead of duplicating code...
+Int32 CDeltaz::Compute3ddl(TFloat64List merits, TFloat64List redshifts, Float64 redshift, TFloat64Range redshiftRange, Float64& sigma)
 {
+    sigma = -1.0; //default value
+    Bool verbose = false;
+
     //find iz, izmin and izmax
     Int32 izmin= -1;
     Int32 iz= -1;
@@ -146,7 +149,7 @@ Float64 CDeltaz::Compute3ddl(TFloat64List merits, TFloat64List redshifts, Float6
     }
 
     if(izmin == -1 || izmax == -1){
-        return -1.0;
+        return 1;
     }
 
     //quadratic fit
@@ -169,8 +172,10 @@ Float64 CDeltaz::Compute3ddl(TFloat64List merits, TFloat64List redshifts, Float6
     {
         xi = redshifts[i+izmin];
         yi = merits[i+izmin];
-        fprintf (stderr, "  y = %+.5e ]\n", yi);
-        fprintf (stderr, "  x = %+.5e ]\n", xi);
+        if(verbose){
+            fprintf (stderr, "  y = %+.5e ]\n", yi);
+            fprintf (stderr, "  x = %+.5e ]\n", xi);
+        }
         ei = 1.0; //todo, estimate weighting ?
         gsl_matrix_set (X, i, 0, 1.0);
         gsl_matrix_set (X, i, 1, xi-x0);
@@ -190,13 +195,13 @@ Float64 CDeltaz::Compute3ddl(TFloat64List merits, TFloat64List redshifts, Float6
 #define COV(i,j) (gsl_matrix_get(cov,(i),(j)))
 
     double zcorr = x0-C(1)/(2.0*C(2));
-    double sigma = sqrt(1.0/C(2));
+    sigma = sqrt(1.0/C(2));
 
     //Float64 a = (Float64)(C(0));
     //Float64 b2sur4c = (Float64)(C(1)*C(1)/((Float64)(4.0*C(2))));
     //Float64 logK = ( -(a - b2sur4c)/2.0 );
     //Float64 logarea = log(sigma) + logK + log(2.0*M_PI);
-    if(1){
+    if(verbose){
         Log.LogInfo("Center Redshift: %g", x0);
         Log.LogInfo("# best fit: Y = %g + %g X + %g X^2", C(0), C(1), C(2));
         fprintf (stderr, "# best fit: Y = %g + %g X + %g X^2\n", C(0), C(1), C(2));
@@ -232,5 +237,5 @@ Float64 CDeltaz::Compute3ddl(TFloat64List merits, TFloat64List redshifts, Float6
     //results.SigmaZ[indz] = sigma;
     //results.LogAreaCorrectedExtrema[indz] = zcorr;
 
-    return sigma;
+    return 0;
 }

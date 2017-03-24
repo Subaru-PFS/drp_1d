@@ -138,7 +138,7 @@ Float64 CLineModelElement::GetLineProfile(std::string profile, Float64 x, Float6
         sigma = sigma*coeff;
         const Float64 xsurc = xc/sigma;
         val = exp(-0.5*xsurc*xsurc);
-    }else if(profile=="LAU"){
+    }else if(profile=="LOR"){
         const Float64 xsurc = xc/sigma;
         const Float64 x = xsurc*2.0;
         val = 1.0/(1+x*x);
@@ -263,7 +263,7 @@ Float64 CLineModelElement::GetNSigmaSupport(std::string profile)
 
     if(profile=="SYM"){
         val = nominal;
-    }else if(profile=="LAU"){
+    }else if(profile=="LOR"){
         val = nominal*2.0;
     }else if(profile=="ASYM"){
         val = nominal*m_asym_sigma_coeff;

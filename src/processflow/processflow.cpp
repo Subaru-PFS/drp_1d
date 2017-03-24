@@ -68,6 +68,8 @@ CProcessFlow::~CProcessFlow()
 
 Bool CProcessFlow::Process( CProcessFlowContext& ctx )
 {
+    Log.LogInfo("<proc-spc><%s>", ctx.GetSpectrum().GetName().c_str());
+
     if(1)
     {
         //Check if the Spectrum is valid on the lambdarange
