@@ -1087,7 +1087,7 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
         if(m_rigidity=="tplshape")
         {
             Float64 _merit;
-            if(enableLogging)
+            if(enableLogging || m_ContinuumComponent == "tplfit")
             {
                 refreshModel();
                 //create spectrum model
