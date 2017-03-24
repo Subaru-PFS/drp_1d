@@ -84,13 +84,23 @@ class processHelper(object):
         """
         returns the string value of the field corresponding to the tag in the config file 
         """
+        verbose=0
         strVal = "not found"
         filename = self.configPath
         f = open(filename)
         for line in f:
             lineStr = line.strip()
+            if lineStr.startswith("#"):
+                continue
+            if verbose:
+                print("DEBUG: lineStr = {}".format(lineStr))
             data = lineStr.split("=")
+            if verbose:
+                print("DEBUG: data splitted = {}".format(data))            
+                print("DEBUG: len(data) = {}".format(len(data)))
             if(len(data) >=2):
+                if verbose:
+                    print("DEBUG: tag={}".format(tag))
                 if(tag == data[0]):
                     strVal = data[1]
                     break
@@ -120,6 +130,12 @@ class processHelper(object):
         print("INFO: templatedir is : {}".format(self.config_templatedir))
         if not os.path.exists(self.config_templatedir):
             print("ERROR: templatedir file does not exist! Aborting...")
+            return False
+        
+        self.config_calibrationdir = self.getConfigVal("calibrationdir")
+        print("INFO: calibrationdir is : {}".format(self.config_calibrationdir))
+        if not os.path.exists(self.config_calibrationdir):
+            print("ERROR: calibration file does not exist! Aborting...")
             return False
             
         self.config_linecatalog = self.getConfigVal("linecatalog")
@@ -151,9 +167,24 @@ class processHelper(object):
             for k in range(len(bracketing_templateCtlNames)):
                 bracketing_templateCtlPath.append(os.path.join(self.bracketing_templatesRootPath, bracketing_templateCtlNames[k]))
         elif self.opt_bracketing=="method-euclid":
-            bracketing_method=["linemodel", "linemodel", "linemodel", "amazed0_1", "chisquare2solve", "chisquare2solve"]
-            bracketing_parameterFilePath=["fullmodel_elv370alv530.json", "fullmodel.json", "linemodel_elv370alv530.json", "amazed0_1.json", "chi2_nc.json", "chi2_raw.json"]
-            bracketing_templateCtlNames=["ContinuumTemplates_simulm2016Extended_dustfree201702", "ContinuumTemplates_simulm2016Extended_dustfree201702", "ContinuumTemplates_simulm2016Extended_dustfree201702", "ExtendedTemplatesJan2017_v3", "ExtendedTemplatesJan2017_v3", "ExtendedTemplatesJan2017_v3"]   
+            bracketing_method=["linemodel", 
+                               "linemodel", 
+                               "linemodel", 
+                               "blindsolve", 
+                               "chisquare2solve", 
+                               "chisquare2solve"]
+            bracketing_parameterFilePath=["fullmodel_elv370alv530.json", 
+                                          "fullmodel.json", 
+                                          "linemodel_elv370alv530.json", 
+                                          "blindsolve.json", 
+                                          "chi2_nc.json", 
+                                          "chi2_raw.json"]
+            bracketing_templateCtlNames=["ContinuumTemplates_simulm2016Extended_dustfree201702", 
+                                         "ContinuumTemplates_simulm2016Extended_dustfree201702", 
+                                         "ContinuumTemplates_simulm2016Extended_dustfree201702", 
+                                         "ExtendedTemplatesJan2017_v3", 
+                                         "ExtendedTemplatesJan2017_v3", 
+                                         "ExtendedTemplatesJan2017_v3"]   
             bracketing_templateCtlPath = []            
             for k in range(len(bracketing_templateCtlNames)):
                 bracketing_templateCtlPath.append(os.path.join(self.bracketing_templatesRootPath, bracketing_templateCtlNames[k]))
@@ -198,6 +229,10 @@ class processHelper(object):
         else:
             argTpl = overrideTemplatesCtlg
         argStr = "{} --templatedir {}".format(argStr, argTpl)
+        
+        argCalib = self.config_calibrationdir
+        argStr = "{} --calibrationdir {}".format(argStr, argCalib)
+        
         
         argStr = "{} --linecatalog {}".format(argStr, self.config_linecatalog)
         if self.config_linecatalogconvert:
@@ -342,6 +377,7 @@ class processHelper(object):
                     f.write("hostname>${logOut}")
                     f.write("\n")
                     f.write("date>>${logOut}")
+                    f.write("\n")
                     
                     f.write("\n")
                     argStr = "{} 2>${{logErr}}>>${{logOut}}".format(argStr)
@@ -403,7 +439,7 @@ class processHelper(object):
                     os.system(bashCommand) 
                     
                     #try to sleep n seconds in order to avoid problems at submission
-                    time.sleep(1.0)
+                    time.sleep(0.25)
                     
         if not len(self.subspclists)==0: 
             self.exportSubRecombineInfo()

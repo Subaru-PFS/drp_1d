@@ -56,49 +56,65 @@ class processRecombine(object):
         #create this config merged output path
         name = os.path.split(infoFilePath)[1]
         name_noext = os.path.splitext(name)[0]
-        outputPath = os.path.join(self.outputPath, name_noext)
-        if not os.path.exists(outputPath):
-            os.mkdir(outputPath)
+        datasetOutputPath = os.path.join(self.outputPath, name_noext)
+        if not os.path.exists(datasetOutputPath):
+            os.mkdir(datasetOutputPath)
             
         #merge redshift.csv files
-        self.mergeCsvFiles(subpathsList, outputPath, fileName="redshift.csv")
+        self.mergeCsvFiles(subpathsList, datasetOutputPath, fileName="redshift.csv")
         
         #merge log files
-        self.mergeCsvFiles(subpathsList, outputPath, fileName="log.txt")
+        self.mergeCsvFiles(subpathsList, datasetOutputPath, fileName="log.txt")
 
         try:        
             #merge input spectrumlist files
-            self.mergeCsvFiles(subpathsList, outputPath, fileName="input.spectrumlist")         
+            self.mergeCsvFiles(subpathsList, datasetOutputPath, fileName="input.spectrumlist")         
             
             #copy json file from first subset #0, supposing the file is similar for the other subsets results
             source_path = os.path.join(subpathsList[0], "parameters.json")
-            dest_path = os.path.join(outputPath, "parameters.json")
+            dest_path = os.path.join(datasetOutputPath, "parameters.json")
             shutil.copy(source_path, dest_path)
             
             #copy linecatalog file from first subset #0, supposing the file is similar for the other subsets results
             source_path = os.path.join(subpathsList[0], "linecatalog.txt")
-            dest_path = os.path.join(outputPath, "linecatalog.txt")
+            dest_path = os.path.join(datasetOutputPath, "linecatalog.txt")
             shutil.copy(source_path, dest_path)
             
             #copy config file from first subset #0, supposing the file is similar for the other subsets results
             #WARNING: todo this direct copy could lead to pb...
             source_path = os.path.join(subpathsList[0], "config.txt")
-            dest_path = os.path.join(outputPath, "config.txt")
+            dest_path = os.path.join(datasetOutputPath, "config.txt")
             shutil.copy(source_path, dest_path)
             
             #copy templates folder from first subset #0, supposing the file is similar for the other subsets results
             source_path = os.path.join(subpathsList[0], "templates")
-            dest_path = os.path.join(outputPath, "templates")
+            dest_path = os.path.join(datasetOutputPath, "templates")
             shutil.copytree(source_path, dest_path)
             
             #copy templates folder from first subset #0, supposing the file is similar for the other subsets results
             source_path = os.path.join(subpathsList[0], "templates_nocontinuum")
-            dest_path = os.path.join(outputPath, "templates_nocontinuum")
+            dest_path = os.path.join(datasetOutputPath, "templates_nocontinuum")
             shutil.copytree(source_path, dest_path)
             
             #copy intermediate results if any
-            self.copyIntermediateResultsDirs(subpathsList, outputPath, spcfileName="input.spectrumlist")
-            
+            self.copyIntermediateResultsDirs(subpathsList, datasetOutputPath, spcfileName="input.spectrumlist")
+
+            #copy the cluster logs into the merged folder
+            try:
+                source_path = os.path.join(self.outputPath, "cluster_logs") #warning hardcoded, but not critical to avoid this...
+                dest_path = os.path.join(datasetOutputPath, "cluster_logs")
+                shutil.copytree(source_path, dest_path)
+            except:
+                print("INFO: skipped cluster_logs directory while recombining. Folder not found")
+
+            #estimate per spectrum processing time stats
+            try:
+                clusterLogsDirPath= os.path.join(self.outputPath, "cluster_logs") #warning hardcoded, but not critical to avoid this...
+                self.estimatePerSpectrumProcTime(clusterLogsDirPath, datasetOutputPath)
+            except:
+                print("INFO/Warning: skipped per spectrum processing time stats")
+
+                
         except:
             print("WARNING: unable to merge some output files. Skipping that operation !")
             raw_input("\n\nWARNING: unable to merge some output files. will skip that operation.\nPress any key to continue...".format())
@@ -150,7 +166,42 @@ class processRecombine(object):
                     except:
                         print("ERROR: unable to copy intermediate files for: {}".format(spcNameNoExt))
             f.close()
+            
+    def estimatePerSpectrumProcTime(self, clusterLogDirPath, datasetOutputPath):
+        """
+        Look into the cluster log files and extract the processing time automatically
+        current: uses some tags in the log files to find 'nspc' and 'proctime'. 
+        current: (more): node identification is supposed to be the first line in the log file (from processhelper)
+        """
+        verbose = 1
+        filOutPath = os.path.join(datasetOutputPath, "logProc.txt")
+        fileOut = open(filOutPath, 'w')        
+        fileOut.write("logSubset\tnodeName\tproctimesec\tnspc\tperSpcTime\n".format())
         
+        #loop on the logOur files
+        for i,file in enumerate(sorted(os.listdir(clusterLogDirPath))):
+            if file.startswith("logOut"):  
+                fullPath = os.path.join(clusterLogDirPath, clusterLogDirPath, file)
+                if verbose:
+                    print("INFO: estimating proc. time from: {}".format(file))
+                # read nodeID, nSpc, processing time
+                flog = open(fullPath)
+                nodeStr = None 
+                proctimeSeconds = -1  
+                nSpc = 0
+                for line in flog:
+                    if nodeStr==None:                    
+                        nodeStr=line.rstrip()
+                    if "<proc-spc>" in line:
+                        nSpc+=1
+                    if "<proctime-seconds>" in line:
+                        lineSplit = line.split("<proctime-seconds><")
+                        if len(lineSplit)>1:
+                            proctimeSeconds=int(lineSplit[1].split(">")[0])
+                fileOut.write("{}\t{}\t{}\t{}\t{:.1f}\n".format(str(file), nodeStr, proctimeSeconds, nSpc, float(proctimeSeconds)/float(nSpc)))
+        fileOut.close()
+        
+        return
         
 def StartFromCommandLine( argv ) :	
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
