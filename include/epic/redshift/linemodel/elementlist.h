@@ -72,13 +72,17 @@ public:
                         Int32 opt_dustFit,
                         Float64 &merit,
                         Float64& fitAmplitude,
-                        Float64 &fitDustCoeff);
+                        Float64 &fitDustCoeff,
+                        Float64& fitDtM,
+                        Float64& fitMtM);
     std::string getFitContinuum_tplName();
     Float64 getFitContinuum_tplAmplitude();
     void SetContinuumComponent(std::string component);
 
+    Bool initDtd(const TFloat64Range& lambdaRange);
     Float64 EstimateDTransposeD(const TFloat64Range& lambdaRange, std::string spcComponent);
     Float64 EstimateMTransposeM(const TFloat64Range& lambdaRange);
+    Float64 getDTransposeD(const TFloat64Range& lambdaRange, std::string spcComponent);
 
 
     std::string getTplCorr_bestTplName();
@@ -191,7 +195,9 @@ private:
     CSpectrumFluxAxis m_spcFluxAxisNoContinuum; //observed spectrum for line fitting
     Float64* m_ErrorNoContinuum;
     CSpectrumFluxAxis m_SpcFluxAxisModelDerivSigma;
-    Float64 m_dTransposeDNocontinuum; //the dtd (maximum chisquare value)
+    Float64 m_dTransposeDNocontinuum; //the cached dtd (maximum chisquare value)
+    Float64 m_dTransposeDRaw; //the cached dtd (maximum chisquare value)
+    TFloat64Range m_dTransposeDLambdaRange; //the lambdaRange used to computed cached dTransposeD values
 
     Float64*          m_precomputedFineGridContinuumFlux;   //PFG buffer for model continuum
     CSpectrumFluxAxis m_ContinuumFluxAxis;  //rebined model continuum
@@ -226,6 +232,8 @@ private:
     std::string m_fitContinuum_tplName;
     Float64 m_fitContinuum_tplFitAmplitude;
     Float64 m_fitContinuum_tplFitDustCoeff;
+    Float64 m_fitContinuum_tplFitDtM;
+    Float64 m_fitContinuum_tplFitMtM;
 
 };
 

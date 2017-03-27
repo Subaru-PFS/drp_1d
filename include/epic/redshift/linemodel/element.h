@@ -79,6 +79,7 @@ public:
 
     Float64 GetSumCross();
     Float64 GetSumGauss();
+    Float64 GetFitAmplitude();
 
 protected:
     Bool LoadDataExtinction();
@@ -112,6 +113,7 @@ protected:
 
     Float64 m_sumCross = 0.0;
     Float64 m_sumGauss = 0.0;
+    Float64 m_fitAmplitude = 0.0;
 
 private:
 

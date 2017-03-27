@@ -111,7 +111,14 @@ COperatorChiSquare2::~COperatorChiSquare2()
 
 Void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& tpl, Float64* pfgTplBuffer,
                                 const TFloat64Range& lambdaRange, Float64 redshift, Float64 overlapThreshold,
-                                Float64& overlapRate, Float64& chiSquare, Float64& fittingAmplitude, Float64 &fittingDustCoeff, EStatus& status , std::string opt_interp, Float64 forcedAmplitude, Int32 opt_extinction, Int32 opt_dustFitting, CMask spcMaskAdditional)
+                                   Float64& overlapRate,
+                                   Float64& chiSquare,
+                                   Float64& fittingAmplitude,
+                                   Float64& fittingDtM,
+                                   Float64& fittingMtM,
+                                   Float64 &fittingDustCoeff,
+                                   EStatus& status,
+                                   std::string opt_interp, Float64 forcedAmplitude, Int32 opt_extinction, Int32 opt_dustFitting, CMask spcMaskAdditional)
 {
     chiSquare = boost::numeric::bounds<float>::highest();
     fittingAmplitude = -1.0;
@@ -496,6 +503,9 @@ Void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& t
             chiSquare = fit;
             fittingDustCoeff = coeffEBMV;
             fittingAmplitude = ampl;
+            fittingDtM = sumCross;
+            fittingMtM = sumT;
+
         }
     }
 
@@ -622,6 +632,8 @@ std::shared_ptr<COperatorResult> COperatorChiSquare2::Compute(const CSpectrum& s
     result->ChiSquare.resize( sortedRedshifts.size() );
     result->FitAmplitude.resize( sortedRedshifts.size() );
     result->FitDustCoeff.resize( sortedRedshifts.size() );
+    result->FitDtM.resize( sortedRedshifts.size() );
+    result->FitMtM.resize( sortedRedshifts.size() );
     result->Redshifts.resize( sortedRedshifts.size() );
     result->Overlap.resize( sortedRedshifts.size() );
     result->Status.resize( sortedRedshifts.size() );
@@ -665,6 +677,8 @@ std::shared_ptr<COperatorResult> COperatorChiSquare2::Compute(const CSpectrum& s
                   result->Overlap[i],
                   result->ChiSquare[i],
                   result->FitAmplitude[i],
+                  result->FitDtM[i],
+                  result->FitMtM[i],
                   result->FitDustCoeff[i],
                   result->Status[i],
                   opt_interp,
@@ -927,6 +941,8 @@ const COperatorResult* COperatorChiSquare2::ExportChi2versusAZ(const CSpectrum& 
     CChisquareResult* result = new CChisquareResult();
     result->ChiSquare.resize( sortedRedshifts.size() );
     result->FitAmplitude.resize( sortedRedshifts.size() );
+    result->FitDtM.resize( sortedRedshifts.size() );
+    result->FitMtM.resize( sortedRedshifts.size() );
     result->FitDustCoeff.resize( sortedRedshifts.size() );
     result->Redshifts.resize( sortedRedshifts.size() );
     result->Overlap.resize( sortedRedshifts.size() );
@@ -956,7 +972,15 @@ const COperatorResult* COperatorChiSquare2::ExportChi2versusAZ(const CSpectrum& 
         for (Int32 j=0;j<sortedAmplitudes.size();j++)
         {
             Float64 ampl = sortedAmplitudes[j];
-            BasicFit( spectrum, tpl, precomputedFineGridTplFlux, lambdaRange, result->Redshifts[i], overlapThreshold, result->Overlap[i], result->ChiSquare[i], result->FitAmplitude[i], result->FitDustCoeff[i], result->Status[i], "lin", ampl );
+            BasicFit( spectrum, tpl, precomputedFineGridTplFlux, lambdaRange, result->Redshifts[i], overlapThreshold,
+                      result->Overlap[i],
+                      result->ChiSquare[i],
+                      result->FitAmplitude[i],
+                      result->FitDtM[i],
+                      result->FitMtM[i],
+                      result->FitDustCoeff[i],
+                      result->Status[i], "lin", ampl );
+
             fprintf( f, "%.15e", result->ChiSquare[i]);
             if(j<sortedAmplitudes.size()-1){
                 fprintf( f, "\t");

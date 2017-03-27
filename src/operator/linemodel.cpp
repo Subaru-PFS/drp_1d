@@ -222,8 +222,9 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
 //    // end of hack //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     result->nSpcSamples = model.getSpcNSamples(lambdaRange);
-    result->dTransposeDNocontinuum = model.EstimateDTransposeD(lambdaRange, "nocontinuum");
-    result->dTransposeD = model.EstimateDTransposeD(lambdaRange, "raw");
+    result->dTransposeDNocontinuum = model.getDTransposeD(lambdaRange, "nocontinuum");
+    result->dTransposeD = model.getDTransposeD(lambdaRange, "raw");
+
     PrecomputeLogErr( spectrum );
     Int32 contreest_iterations = 0;
     if( opt_continuumreest == "always" )

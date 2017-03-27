@@ -540,6 +540,7 @@ void CMultiLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const C
 
     m_sumCross = std::max(0.0, m_sumCross);
     Float64 A = m_sumCross / m_sumGauss;
+    m_fitAmplitude = A; //todo: warning m_fitAmplitude should be updated when modifying sub-elements amplitudes: ex. rules.
     //Float64 A = std::max(0.0, m_sumCross / m_sumGauss);
 
     for(Int32 k=0; k<nRays; k++)

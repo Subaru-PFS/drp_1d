@@ -181,6 +181,8 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
         //LoadCatalog(m_RestRayList);
         LogCatalogInfos();
     }
+
+    //init the DtD for least-square compuations
 }
 
 /**
@@ -434,6 +436,8 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange)
     Float64 bestMerit = DBL_MAX;
     Float64 bestFitAmplitude = -1.0;
     Float64 bestFitDustCoeff = -1.0;
+    Float64 bestFitDtM = -1.0;
+    Float64 bestFitMtM = -1.0;
     std::string bestTplName="";
 
     for( UInt32 i=0; i<m_tplCategoryList.size(); i++ )
@@ -447,13 +451,17 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange)
             Float64 merit = DBL_MAX;
             Float64 fitAmplitude = -1.0;
             Float64 fitDustCoeff = -1.0;
-            Bool ret = SolveContinuum( *m_inputSpc, tpl, lambdaRange, redshifts, overlapThreshold, maskList, opt_interp, opt_extinction, opt_dustFit, merit, fitAmplitude, fitDustCoeff);
+            Float64 fitDtM = -1.0;
+            Float64 fitMtM = -1.0;
+            Bool ret = SolveContinuum( *m_inputSpc, tpl, lambdaRange, redshifts, overlapThreshold, maskList, opt_interp, opt_extinction, opt_dustFit, merit, fitAmplitude, fitDustCoeff, fitDtM, fitMtM);
 
             if(ret && merit<bestMerit)
             {
                 bestMerit = merit;
                 bestFitAmplitude = fitAmplitude;
                 bestFitDustCoeff = fitDustCoeff;
+                bestFitDtM = fitDtM;
+                bestFitMtM = fitMtM;
                 bestTplName = tpl.GetName();
             }
         }
@@ -463,6 +471,8 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange)
         m_fitContinuum_tplName = bestTplName;
         m_fitContinuum_tplFitAmplitude = bestFitAmplitude;
         m_fitContinuum_tplFitDustCoeff = bestFitDustCoeff;
+        m_fitContinuum_tplFitDtM = bestFitDtM;
+        m_fitContinuum_tplFitMtM = bestFitMtM;
         //Log.LogInfo( "For z=%.5f : Best continuum tpl found: %s", m_Redshift, bestTplName.c_str());
         //
         //Retrieve the best template
@@ -490,7 +500,7 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange)
                     for(Int32 ktpl=0; ktpl<n; ktpl++)
                     {
                         lambda = Xsrc[ktpl];
-                        Ysrc[ktpl]*=dustCoeffArray[Int32(lambda)];
+                        Ysrc[ktpl]*=dustCoeffArray[Int32(lambda)]; //dust coeff is rounded at the nearest 1 angstrom value
                     }
                     delete dustCoeffArray;
                     //spline
@@ -528,7 +538,9 @@ Bool CLineModelElementList::SolveContinuum(const CSpectrum& spectrum,
                                            Int32 opt_dustFit,
                                            Float64& merit,
                                            Float64& fitAmplitude,
-                                           Float64& fitDustCoeff)
+                                           Float64& fitDustCoeff,
+                                           Float64& fitDtM,
+                                           Float64& fitMtM)
 {
     // Compute merit function
 
@@ -544,6 +556,8 @@ Bool CLineModelElementList::SolveContinuum(const CSpectrum& spectrum,
         merit = chisquareResult->ChiSquare[0];
         fitAmplitude = chisquareResult->FitAmplitude[0];
         fitDustCoeff = chisquareResult->FitDustCoeff[0];
+        fitDtM = chisquareResult->FitDtM[0];
+        fitMtM = chisquareResult->FitMtM[0];
         return true;
     }
 
@@ -653,6 +667,14 @@ Bool CLineModelElementList::initModelAtZ(Float64 redshift, const TFloat64Range& 
     return true;
 }
 
+Bool CLineModelElementList::initDtd(const TFloat64Range& lambdaRange)
+{
+    m_dTransposeDLambdaRange = lambdaRange;
+    m_dTransposeDNocontinuum = EstimateDTransposeD(lambdaRange, "nocontinuum");
+    m_dTransposeDRaw = EstimateDTransposeD(lambdaRange, "raw");
+    return true;
+}
+
 /**
  * \brief Prepares the context and fits the Linemodel to the spectrum, returning the merit of the fit.
  * Prepare the continuum.
@@ -674,6 +696,11 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
     CSpectrumFluxAxis& modelFluxAxis = m_SpectrumModel->GetFluxAxis();
 
     initModelAtZ(redshift, lambdaRange, spectralAxis);
+
+    if(! (m_dTransposeDLambdaRange.GetBegin()==lambdaRange.GetBegin() && m_dTransposeDLambdaRange.GetEnd()==lambdaRange.GetEnd() ) )
+    {
+        initDtd(lambdaRange);
+    }
 
     if(m_ContinuumComponent == "tplfit") //the support has to be already computed when LoadFitContinuum() is called
     {
@@ -1087,7 +1114,8 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
         if(m_rigidity=="tplshape")
         {
             Float64 _merit;
-            if(enableLogging || m_ContinuumComponent == "tplfit")
+            //if(enableLogging || m_ContinuumComponent == "tplfit")
+            if(enableLogging)
             {
                 refreshModel();
                 //create spectrum model
@@ -2695,25 +2723,33 @@ Float64 CLineModelElementList::getLeastSquareMerit(const TFloat64Range& lambdaRa
  **/
 Float64 CLineModelElementList::getLeastSquareMeritFast(Int32 idxLine)
 {
-    Float64 fit = m_dTransposeDNocontinuum;
-    Float64 num = 0.0;
-    Float64 denom = 0.0;
+    Float64 fit;
+
+    if( m_ContinuumComponent=="tplfit" )
+    {
+        fit = m_dTransposeDRaw;
+
+        Float64 term1 = m_fitContinuum_tplFitAmplitude*m_fitContinuum_tplFitAmplitude*m_fitContinuum_tplFitMtM;
+        Float64 term2 = - 2.*m_fitContinuum_tplFitAmplitude*m_fitContinuum_tplFitDtM;
+        fit += term1 + term2;
+    }else{
+        fit = m_dTransposeDNocontinuum;
+    }
+
     for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
     {
         if(idxLine!=-1 && idxLine!=iElts)
         {
             continue;
         }
-        Float64 sumCross = m_Elements[iElts]->GetSumCross();
-
-        Float64 sumGauss = m_Elements[iElts]->GetSumGauss();
-        if(sumGauss>0.0)
-        {
-            num += sumCross*sumCross;
-            denom += sumGauss;
-        }
+        Float64 dtm = m_Elements[iElts]->GetSumCross();
+        Float64 mtm = m_Elements[iElts]->GetSumGauss();
+        Float64 a = m_Elements[iElts]->GetFitAmplitude();
+        Float64 term1 = a*a*mtm;
+        Float64 term2 = - 2.*a*dtm;
+        fit += term1 + term2;
     }
-    fit -= num/denom;
+
     Log.LogDebug( "CLineModelElementList::getLeastSquareMerit fit = %f", fit );
     return fit;
 }
@@ -3571,6 +3607,27 @@ void CLineModelElementList::EstimateSpectrumContinuum()
     }
 }
 
+
+/**
+ * \brief this function returns the dtd value withing the wavelength range for a given spcComponent
+ *
+ **/
+Float64 CLineModelElementList::getDTransposeD(const TFloat64Range& lambdaRange, std::string spcComponent)
+{
+    if(! (m_dTransposeDLambdaRange.GetBegin()==lambdaRange.GetBegin() && m_dTransposeDLambdaRange.GetEnd()==lambdaRange.GetEnd() ) )
+    {
+        initDtd(lambdaRange);
+    }
+
+    if(spcComponent=="nocontinuum")
+    {
+        return m_dTransposeDNocontinuum;
+    }else
+    {
+        return m_dTransposeDRaw;
+    }
+}
+
 /**
  * \brief this function estimates the dtd value withing the wavelength range
  **/
@@ -3584,7 +3641,7 @@ Float64 CLineModelElementList::EstimateDTransposeD(const TFloat64Range& lambdaRa
     Float64 dtd = 0.0;
     const Float64* Yspc = spcFluxAxis.GetSamples();
     const Float64* YspcNoContinuum = spcFluxAxisNoContinuum.GetSamples();
-    Float64 diff = 0.0;
+    Float64 flux = 0.0;
 
     Float64 imin = spcSpectralAxis.GetIndexAtWaveLength(lambdaRange.GetBegin());
     Float64 imax = spcSpectralAxis.GetIndexAtWaveLength(lambdaRange.GetEnd());
@@ -3593,19 +3650,14 @@ Float64 CLineModelElementList::EstimateDTransposeD(const TFloat64Range& lambdaRa
         numDevs++;
         if(spcComponent=="nocontinuum")
         {
-            diff = YspcNoContinuum[j];
+            flux = YspcNoContinuum[j];
         }else
         {
-            diff = Yspc[j];
+            flux = Yspc[j];
         }
-        dtd += (diff*diff) / (m_ErrorNoContinuum[j]*m_ErrorNoContinuum[j]);
+        dtd += (flux*flux) / (m_ErrorNoContinuum[j]*m_ErrorNoContinuum[j]);
     }
     Log.LogDebug( "CLineModelElementList::EstimateDTransposeD val = %f", dtd );
-
-    if(spcComponent=="nocontinuum")
-    {
-        m_dTransposeDNocontinuum = dtd;
-    }
 
     return dtd;
 }

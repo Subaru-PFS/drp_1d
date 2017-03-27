@@ -1,0 +1,52 @@
+{
+    "lambdaRange":
+    [
+        "3800",
+        "13600"
+    ],
+    "redshiftRange":
+    [
+        "0.0772",
+        "0.0772"
+    ],
+    "redshiftStep": "0.0001",
+    "smoothWidth": "0",
+    "method": "linemodel",
+    "templateCategoryList":
+    [
+        "emission",
+        "galaxy",
+        "star",
+        "qso"
+    ],
+    "continuumRemoval":
+    {
+        "method": "IrregularSamplingMedian",
+        "medianKernelWidth": "150",
+        "binPath": "~\/amazed_cluster\/gitlab\/amazed\/extern\/df_centos\/",
+        "decompScales": "6"
+    },
+    "linemodelsolve":
+    {
+        "linemodel":
+        {
+            "linetypefilter": "E",
+            "lineforcefilter": "S",
+            "fittingmethod": "individual",
+            "continuumcomponent": "fromspectrum",
+            "linewidthtype": "velocitydriven",
+            "instrumentresolution": "5000",
+            "velocityemission": "100",
+            "velocityabsorption": "500",
+            "continuumreestimation": "no",
+            "rules": "all",
+            "extremacount": "10",
+            "velocityfit": "no",
+            "velocityfitmin": "250",
+            "velocityfitmax": "550",
+            "rigidity": "tplshape",
+            "fastfitlargegridstep": "0.001"
+        }
+    },
+    "SaveIntermediateResults": "all"
+}

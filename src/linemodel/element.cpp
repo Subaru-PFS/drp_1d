@@ -339,6 +339,11 @@ Float64 CLineModelElement::GetSumGauss()
     return m_sumGauss;
 }
 
+Float64 CLineModelElement::GetFitAmplitude()
+{
+    return m_fitAmplitude;
+}
+
 
 
 /**

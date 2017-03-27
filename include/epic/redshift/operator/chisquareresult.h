@@ -24,6 +24,8 @@ public:
     TFloat64List            ChiSquare;
     TFloat64List            FitAmplitude;
     TFloat64List            FitDustCoeff;
+    TFloat64List            FitDtM;
+    TFloat64List            FitMtM;
     TFloat64List            Overlap;
     TFloat64List            Extrema;
     COperator::TStatusList  Status;
