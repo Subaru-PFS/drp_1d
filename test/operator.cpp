@@ -258,6 +258,7 @@ void UtilChisquareMatchWithEZ( const char* spectraPath, const char* noisePath, c
 
     referenceResult.Load( input );
 
+    Float64 maxDiffFraction = 0.0;
     for( Int32 i=0; i<referenceResult.ChiSquare.size(); i++ )
     {
         if( boost::math::isnan( referenceResult.ChiSquare[i] ) )
@@ -266,13 +267,20 @@ void UtilChisquareMatchWithEZ( const char* spectraPath, const char* noisePath, c
         }
         else
         {
-            BOOST_CHECK_CLOSE_FRACTION( referenceResult.ChiSquare[i], r->ChiSquare[i], 0.00001 );
+            Float64 absdifffrac = std::abs(referenceResult.ChiSquare[i] - r->ChiSquare[i])/std::abs(referenceResult.ChiSquare[i]);
+            if(absdifffrac>maxDiffFraction)
+            {
+                maxDiffFraction=absdifffrac;
+            }
+
         }
 
 
-        BOOST_CHECK_CLOSE_FRACTION( referenceResult.Redshifts[i], r->Redshifts[i], 0.00001 );
-        BOOST_CHECK_CLOSE_FRACTION( referenceResult.Overlap[i], r->Overlap[i], 0.00001 );
+        BOOST_CHECK_MESSAGE( std::abs(referenceResult.Redshifts[i] - r->Redshifts[i])<=redshiftDelta, "redshift values shift comparison with reference" );
+        BOOST_CHECK_MESSAGE( std::abs(referenceResult.Overlap[i] - r->Overlap[i])<0.01, "overlap values shift comparison with reference"  );
     }
+    Float64 diffThreshold = 1e-3;
+    BOOST_CHECK_MESSAGE( maxDiffFraction < diffThreshold, "Found differences higher than frc. threshold !" );
 
 }
 
