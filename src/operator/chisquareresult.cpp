@@ -46,7 +46,7 @@ Void CChisquareResult::Load( std::istream& stream )
             if( it != tok.end() )
             {
                 // Parse redshift
-                Float64 r = 0.0;
+                Float64 r = -1.0;
                 try
                 {
                     r = boost::lexical_cast<Float64>(*it);
@@ -58,7 +58,7 @@ Void CChisquareResult::Load( std::istream& stream )
 
                 // Parse merit
                 ++it;
-                Float64 c = 0.0;
+                Float64 c = DBL_MAX;
                 if( it != tok.end() )
                 {
                     try
@@ -77,7 +77,7 @@ Void CChisquareResult::Load( std::istream& stream )
 
                 // Parse overlap
                 ++it;
-                Float64 o = 0.0;
+                Float64 o = -1.0;
                 if( it != tok.end() )
                 {
                     try

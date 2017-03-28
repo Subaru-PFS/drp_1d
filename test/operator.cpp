@@ -243,12 +243,13 @@ void UtilChisquareMatchWithEZ( const char* spectraPath, const char* noisePath, c
     BOOST_CHECK( retVal );
 
     Float64 redshiftDelta = 0.0001;
-    TFloat64List redshifts = TFloat64Range( 0.0, 2.0 ).SpreadOver( redshiftDelta );
+    TFloat64List redshifts = TFloat64Range( 0.0, 5.0 ).SpreadOver( redshiftDelta );
+    Float64 overlapThres = 1.0;
 
     // prepare the unused masks
     std::vector<CMask> maskList;
     COperatorChiSquare chi;
-    auto r = std::dynamic_pointer_cast<CChisquareResult>( chi.Compute( s, t, TFloat64Range( 5600, 7000 ), redshifts, 1.0, maskList ) );
+    auto r = std::dynamic_pointer_cast<CChisquareResult>( chi.Compute( s, t, TFloat64Range( 0., 10000. ), redshifts, overlapThres, maskList ) );
     BOOST_CHECK( r != NULL );
 
     CChisquareResult referenceResult;
@@ -258,30 +259,51 @@ void UtilChisquareMatchWithEZ( const char* spectraPath, const char* noisePath, c
 
     referenceResult.Load( input );
 
-    Float64 maxDiffFraction = 0.0;
+    Bool redshiftsOK = true;
+    Bool overlapsOK = true;
+    Int32 nOverlaptested = 0;
+    Int32 nRedshiftstested = 0;
+    Int32 nChisquaretested = 0;
+
     for( Int32 i=0; i<referenceResult.ChiSquare.size(); i++ )
     {
-        if( boost::math::isnan( referenceResult.ChiSquare[i] ) )
+        if(std::abs(referenceResult.Redshifts[i] - r->Redshifts[i])>redshiftDelta)
         {
-            BOOST_CHECK( boost::math::isnan( r->ChiSquare[i] ) );
+            redshiftsOK = false;
+            break;
+        }else
+        {
+            nOverlaptested++;
         }
-        else
+
+        if(std::abs(referenceResult.Overlap[i] - r->Overlap[i])>0.5)
         {
-            Float64 absdifffrac = std::abs(referenceResult.ChiSquare[i] - r->ChiSquare[i])/std::abs(referenceResult.ChiSquare[i]);
-            if(absdifffrac>maxDiffFraction)
+            overlapsOK = false;
+            break;
+        }else
+        {
+            nRedshiftstested++;
+        }
+
+        if(r->Overlap[i]>=overlapThres && referenceResult.Overlap[i]>=overlapThres)
+        {
+            if( boost::math::isnan( referenceResult.ChiSquare[i] ) )
             {
-                maxDiffFraction=absdifffrac;
+                BOOST_CHECK( boost::math::isnan( r->ChiSquare[i] ) );
             }
-
+            else
+            {
+                BOOST_CHECK_CLOSE_FRACTION( referenceResult.ChiSquare[i], r->ChiSquare[i], 0.00001 );
+                nChisquaretested++;
+            }
         }
 
-
-        BOOST_CHECK_MESSAGE( std::abs(referenceResult.Redshifts[i] - r->Redshifts[i])<=redshiftDelta, "redshift values shift comparison with reference" );
-        BOOST_CHECK_MESSAGE( std::abs(referenceResult.Overlap[i] - r->Overlap[i])<0.01, "overlap values shift comparison with reference"  );
     }
-    Float64 diffThreshold = 1e-3;
-    BOOST_CHECK_MESSAGE( maxDiffFraction < diffThreshold, "Found differences higher than frc. threshold !" );
-
+    BOOST_CHECK_MESSAGE( redshiftsOK, "redshift values shift comparison with reference, FAILED" );
+    BOOST_CHECK_MESSAGE( overlapsOK, "overlap values shift comparison with reference, FAILED" );
+    BOOST_CHECK_MESSAGE( nOverlaptested>50000, "PB, less than 50000 overlap values tested" );
+    BOOST_CHECK_MESSAGE( nRedshiftstested>50000, "PB, less than 50000 redshift values tested" );
+    BOOST_CHECK_MESSAGE( nChisquaretested>20000, "PB, less than 30000 merit values tested" );
 }
 
 BOOST_AUTO_TEST_CASE(ChisquareMatchWithEZ)
