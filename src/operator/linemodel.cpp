@@ -683,6 +683,10 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
         TFloat64Range range = TFloat64Range(z-zRangeHalf, z+zRangeHalf);
         //Int32 ret = deltaz.Compute(result->ChiSquare, result->Redshifts, z, range, dz);
         Int32 ret = deltaz.Compute3ddl(result->ChiSquare, result->Redshifts, z, range, dz);
+        if(ret!=0)
+        {
+            Log.LogError("Linemodel: Deltaz computation failed");
+        }
         result->DeltaZ[i] = dz;
 
         //store the model norm

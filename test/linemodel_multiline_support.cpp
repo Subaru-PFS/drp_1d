@@ -199,7 +199,7 @@ BOOST_AUTO_TEST_CASE( Linemodel_multiline_support_1EL_borderOverlap12percent )
     Float64 redshift = 0.0;
 
     bool targetSupportSizeZero = false; //support should NOT be zero because the line is 12% inside the lambda range
-    bool targetOustideLambdaRangeTrue = false;
+    bool targetOustideLambdaRangeTrue = true; //outsidelambdarange should be true because the line is 1% inside the lambda range only. The threshold is set to 33% in the code.
     checkSupport(linecatalogPath, spectrumPath, noisePath, lambdaRange, redshift, targetSupportSizeZero, targetOustideLambdaRangeTrue);
 }
 
@@ -218,7 +218,7 @@ BOOST_AUTO_TEST_CASE( Linemodel_multiline_support_1EL_borderOverlap1percent )
     Float64 redshift = 0.0;
 
     bool targetSupportSizeZero = false; //support should NOT be zero
-    bool targetOustideLambdaRangeTrue = true; //outsidelambdarange should be true because the line is 1% inside the lambda range only. The threshold is set to 10% in the code.
+    bool targetOustideLambdaRangeTrue = true; //outsidelambdarange should be true because the line is 1% inside the lambda range only. The threshold is set to 33% in the code.
     checkSupport(linecatalogPath, spectrumPath, noisePath, lambdaRange, redshift, targetSupportSizeZero, targetOustideLambdaRangeTrue);
 }
 

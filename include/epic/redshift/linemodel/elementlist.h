@@ -60,7 +60,7 @@ public:
     void EstimateSpectrumContinuum();
 
     void InitFitContinuum();
-    void LoadFitContinuum(const TFloat64Range& lambdaRange);
+    Int32 LoadFitContinuum(const TFloat64Range& lambdaRange);
     Bool SolveContinuum(const CSpectrum& spectrum,
                         const CTemplate& tpl,
                         const TFloat64Range& lambdaRange,

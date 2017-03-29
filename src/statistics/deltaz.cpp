@@ -159,6 +159,10 @@ Int32 CDeltaz::Compute3ddl(TFloat64List merits, TFloat64List redshifts, Float64 
     gsl_vector *y, *w, *c;
 
     n = izmax - izmin +1;
+    if(n<3)
+    {
+        return 1;
+    }
 
     X = gsl_matrix_alloc (n, 3);
     y = gsl_vector_alloc (n);

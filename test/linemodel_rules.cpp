@@ -23,7 +23,7 @@ Float64 getLinemodelDoubletRatio(std::string spc, std::string noise, bool enable
     CProcessFlow processFlow;
 
 
-    TFloat64Range redshiftRange = TFloat64Range( 0.0, 0.1 );
+    TFloat64Range redshiftRange = TFloat64Range( -0.1, 0.1 );
     TFloat64Range spcLambdaRange = TFloat64Range( 3800.0, 12000.0 );
 
     std::shared_ptr<CParameterStore> params = std::shared_ptr<CParameterStore>( new CParameterStore() );
@@ -53,7 +53,7 @@ Float64 getLinemodelDoubletRatio(std::string spc, std::string noise, bool enable
     BOOST_CHECK( retVal == true );
 
     // Create redshift initial list by spanning redshift acdross the given range, with the given delta
-    Float64 redshiftStep = 0.01;
+    Float64 redshiftStep = 0.001;
     TFloat64List redshifts = redshiftRange.SpreadOver( redshiftStep );
 
     CLineModelSolve Solve;
@@ -89,19 +89,21 @@ BOOST_AUTO_TEST_CASE( OIIRatioRange1 )
     std::string spc, noise;
     Float64 ratio;
 
-    //TEST 1 : initially A1 = 3*A2, oiiratiorange rule should modify both amplitudes to get a ratio = 2.0
+    Float64 OIIRatioRangeLimit = 2.5; //this threshold has to be set according the regulament.cpp value
+
+    //TEST 1 : initially A1 = 3*A2, oiiratiorange rule should modify both amplitudes to get a ratio = OIIRatioRangeLimit
     spc = "../test/data/LinemodelRulesTestCase/simu_rules_ratiorange_1.fits";
     noise = "../test/data/LinemodelRulesTestCase/simu_rules_ratiorange_1_noise.fits";
     ratio = getLinemodelDoubletRatio(spc, noise, 0); //rule disabled, get ratio
-    BOOST_CHECK_MESSAGE( ratio > 2.0, "RatioRange: 1st spectrum control test failed = leads to a ratio not > 2.0" );
+    BOOST_CHECK_MESSAGE( ratio > OIIRatioRangeLimit, "RatioRange: 1st spectrum control test failed = leads to a ratio not > OIIRatioRangeLimit" );
     ratio = getLinemodelDoubletRatio(spc, noise, 1); //rule enabled, get ratio
-    BOOST_CHECK_CLOSE_FRACTION( 2.0, ratio, 0.1);
+    BOOST_CHECK_CLOSE_FRACTION( OIIRatioRangeLimit, ratio, 0.1);
 
     //TEST 2 : same as Test 1, but initially A2 = 3*A1
     spc = "../test/data/LinemodelRulesTestCase/simu_rules_ratiorange_2.fits";
     noise = "../test/data/LinemodelRulesTestCase/simu_rules_ratiorange_2_noise.fits";
     ratio = getLinemodelDoubletRatio(spc, noise, 1);
-    BOOST_CHECK_CLOSE_FRACTION( 0.5, ratio, 0.1 );
+    BOOST_CHECK_CLOSE_FRACTION( 1./OIIRatioRangeLimit, ratio, 0.1 );
 
     //TEST 3 : A1 = 1.5*A2, so that the ratio should be unchanged
     spc = "../test/data/LinemodelRulesTestCase/simu_rules_ratiorange_3.fits";

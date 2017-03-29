@@ -407,12 +407,12 @@ void CLineModelElementList::InitFitContinuum()
 /**
  * \brief Generates a continuum from the fitting with a set of templates : uses the chisquare2 operator
  **/
-void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange)
+Int32 CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange)
 {
     if(m_precomputedFineGridContinuumFlux == NULL)
     {
         Log.LogError("Elementlist, cannot loadfitcontinuum without precomputedFineGridTplFlux... aborting!");
-        return;
+        return -1;
     }
     //hardcoded parameters
     std::string opt_interp = "lin"; //"precomputedfinegrid";
@@ -524,7 +524,10 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange)
         }
     }else{
         Log.LogError( "Failed to load and fit continuum");
+        return -1;
     }
+
+    return 0;
 }
 
 Bool CLineModelElementList::SolveContinuum(const CSpectrum& spectrum,
@@ -704,7 +707,12 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
 
     if(m_ContinuumComponent == "tplfit") //the support has to be already computed when LoadFitContinuum() is called
     {
-        LoadFitContinuum(lambdaRange);
+        Int32 retLoadFitCont = LoadFitContinuum(lambdaRange);
+        if(retLoadFitCont!=0)
+        {
+            Log.LogError( "LineModel Error: Unable to loadFit continuum, aborting");
+            return -1;
+        }
     }
     if(m_ContinuumComponent != "nocontinuum"){
         //prepare the continuum
