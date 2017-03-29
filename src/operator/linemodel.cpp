@@ -677,15 +677,18 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
         result->ExtremaMerit[i] = m;
 
         //computing errz (or deltaz, dz...): should probably be computed in linemodelresult.cpp instead ?
-        CDeltaz deltaz;
         Float64 dz=-1.;
-        Float64 zRangeHalf = 0.005;
-        TFloat64Range range = TFloat64Range(z-zRangeHalf, z+zRangeHalf);
-        //Int32 ret = deltaz.Compute(result->ChiSquare, result->Redshifts, z, range, dz);
-        Int32 ret = deltaz.Compute3ddl(result->ChiSquare, result->Redshifts, z, range, dz);
-        if(ret!=0)
+        if(result->Redshifts.size()>1)
         {
-            Log.LogError("Linemodel: Deltaz computation failed");
+            CDeltaz deltaz;
+            Float64 zRangeHalf = 0.005;
+            TFloat64Range range = TFloat64Range(z-zRangeHalf, z+zRangeHalf);
+            //Int32 ret = deltaz.Compute(result->ChiSquare, result->Redshifts, z, range, dz);
+            Int32 ret = deltaz.Compute3ddl(result->ChiSquare, result->Redshifts, z, range, dz);
+            if(ret!=0)
+            {
+                Log.LogError("Linemodel: Deltaz computation failed");
+            }
         }
         result->DeltaZ[i] = dz;
 

@@ -23,13 +23,13 @@ Float64 getLinemodelDoubletRatio(std::string spc, std::string noise, bool enable
     CProcessFlow processFlow;
 
 
-    TFloat64Range redshiftRange = TFloat64Range( -0.1, 0.1 );
+    TFloat64Range redshiftRange = TFloat64Range( 0.0, 0.0 );
     TFloat64Range spcLambdaRange = TFloat64Range( 3800.0, 12000.0 );
 
     std::shared_ptr<CParameterStore> params = std::shared_ptr<CParameterStore>( new CParameterStore() );
     params->Set( "lambdaRange", spcLambdaRange);
     params->Set( "redshiftRange",  redshiftRange);
-    params->Set( "redshiftStep", 0.01);
+    params->Set( "redshiftStep", 0.1);
     params->Set( "smoothWidth", (Int64)0 );
     params->Set( "templateCategoryList", TStringList { "galaxy" } );
     params->Set( "method", "linemodel");
