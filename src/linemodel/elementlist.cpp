@@ -77,6 +77,7 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
 
     m_fitContinuum_dustfit = 1;
     m_fitContinuum_igm = 1;
+    m_fitContinuum_outsidelinesmask = 0;
     m_fitContinuum_observedFrame = 0;
 
     // to be deleted: nominal width
@@ -143,6 +144,7 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
 
         Log.LogInfo( "Elementlist: fitContinuum_dustfit = %d", m_fitContinuum_dustfit );
         Log.LogInfo( "Elementlist: fitContinuum_igm = %d", m_fitContinuum_igm );
+        Log.LogInfo( "Elementlist: fitContinuum_outsidelinesmask = %d", m_fitContinuum_outsidelinesmask );
         Log.LogInfo( "Elementlist: fitContinuum_observedFrame = %d", m_fitContinuum_observedFrame );
     }
     //*/
@@ -420,7 +422,7 @@ Int32 CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange)
     Int32 opt_dustFit = m_fitContinuum_dustfit;
     Float64 overlapThreshold = 1.0;
 
-    bool ignoreLinesSupport=false;
+    bool ignoreLinesSupport=m_fitContinuum_outsidelinesmask;
     std::vector<CMask> maskList;
     if(ignoreLinesSupport){
         maskList.resize(1);

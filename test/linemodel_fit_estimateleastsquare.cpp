@@ -9,6 +9,8 @@
 #include <epic/redshift/noise/fromfile.h>
 #include <epic/redshift/linemodel/modelfittingresult.h>
 #include <epic/redshift/linemodel/elementlist.h>
+#include <epic/redshift/linemodel/templatesortho.h>
+
 
 #include <boost/test/unit_test.hpp>
 
@@ -79,13 +81,44 @@ void checkLeastSquareFast(std::string spectrumPath, std::string noisePath, std::
     CTemplateCatalog tplCatalog;
     Bool retValue = tplCatalog.Load( "../test/data/LinemodelFitEstimateLeastSquareTestCase/ContinuumTemplates_simulm2016Extended_dustfree201702_1/" );
     BOOST_CHECK( retValue == true);
-    TStringList tplCategories;
+    TStringList tplCategories = TStringList { "galaxy" };
 
-    CLineModelElementList model(spectrum, spectrumContinuum, tplCatalog, tplCategories, opt_calibrationPath, lineList, opt_fittingmethod, opt_continuumcomponent, opt_lineWidthType, opt_resolution, opt_velocityEmission, opt_velocityAbsorption, opt_rules, opt_rigidity);
+    //prepare continuum templates catalog
+    CTemplatesOrthogonalization tplOrtho(tplCatalog,
+                                         tplCategories,
+                                         opt_calibrationPath,
+                                         lineList,
+                                         opt_fittingmethod,
+                                         opt_continuumcomponent,
+                                         opt_lineWidthType,
+                                         opt_resolution,
+                                         opt_velocityEmission,
+                                         opt_velocityAbsorption,
+                                         opt_rules,
+                                         opt_rigidity);
+    CTemplateCatalog orthoTplCatalog = tplOrtho.getOrthogonalTplCatalog();
+
+
+    CLineModelElementList model(spectrum, spectrumContinuum, orthoTplCatalog, tplCategories, opt_calibrationPath, lineList, opt_fittingmethod, opt_continuumcomponent, opt_lineWidthType, opt_resolution, opt_velocityEmission, opt_velocityAbsorption, opt_rules, opt_rigidity);
     TFloat64Range lambdaRange = TFloat64Range( 3800.0, 12600.0 );
     CLineModelResult::SLineModelSolution modelSolution;
-    Float64 merit = model.fit(z, lambdaRange, modelSolution);
+    Float64 contreest_iterations = 0;
+    Bool enableLogging=true;
+    Float64 merit = model.fit(z, lambdaRange, modelSolution, contreest_iterations, enableLogging);
     //BOOST_TEST_MESSAGE( "Merit = " << merit );
+
+    //*//debug:
+    model.refreshModel();
+    CSpectrum spcModel = model.GetModelSpectrum();
+    FILE* f = fopen( "estimateleastsquarefast_model_dbg.txt", "w+" );
+    for( Int32 t=0;t<spcModel.GetSampleCount();t++)
+    {
+        fprintf( f, "%f %e\n", spcModel.GetSpectralAxis()[t], spcModel.GetFluxAxis()[t]);
+    }
+    fclose( f );
+    CLineModelResult::SLineModelSolution solution = model.GetModelSolution();
+    //*/
+
 
     Float64 lstSqFast = model.getLeastSquareMeritFast();
     BOOST_TEST_MESSAGE( "rigidity=" << opt_rigidity << ", continuum=" << opt_continuumcomponent << ", Lst-sq-fast = " << lstSqFast );
@@ -108,21 +141,28 @@ BOOST_AUTO_TEST_CASE( LinemodelFit_EstimateLstSq_tplshape_pfsbatch6 )
     std::string spectrumPath = "../test/data/LinemodelFitEstimateLeastSquareTestCase/10000663000008vacLine_TF.fits";
     std::string noisePath = "../test/data/LinemodelFitEstimateLeastSquareTestCase/10000663000008vacLine_ErrF.fits";
     std::string linecatalogPath = "../test/data/LinemodelFitEstimateLeastSquareTestCase/linecatalogamazedvacuum_B13D.txt";
+    std::string linecatalogPath_NoLinesInLbdaRange = "../test/data/LinemodelFitEstimateLeastSquareTestCase/linecatalogamazedvacuum_NoLinesInWavelengthRange.txt"; //only 1 line outside the wavelength range
+
 
     std::string opt_fittingmethod = "individual";
     Int32 lineTypeFilter = CRay::nType_Emission;
     Float64 initialVelocity = 100.0;
     Int32 forceFilter = CRay::nForce_Strong;
 
-    Float64 z = 0.954114;
+    Float64 z = 0.077164;
+    std::string opt_continuumcomponent = "fromspectrum";
+
+    //test the linemodel tplshape, without lines fitted (catalog has no lines in the lbda range)
+    opt_continuumcomponent = "fromspectrum";
+    checkLeastSquareFast(spectrumPath, noisePath, linecatalogPath_NoLinesInLbdaRange, opt_fittingmethod, opt_continuumcomponent, lineTypeFilter, forceFilter, initialVelocity, z);
 
     //test the linemodel tplshape
-    std::string opt_continuumcomponent = "fromspectrum";
+    opt_continuumcomponent = "fromspectrum";
     checkLeastSquareFast(spectrumPath, noisePath, linecatalogPath, opt_fittingmethod, opt_continuumcomponent, lineTypeFilter, forceFilter, initialVelocity, z);
 
     //test the fullmodel tplshape
-    opt_continuumcomponent = "tplfit";
-    checkLeastSquareFast(spectrumPath, noisePath, linecatalogPath, opt_fittingmethod, opt_continuumcomponent, lineTypeFilter, forceFilter, initialVelocity, z);
+    //opt_continuumcomponent = "tplfit";
+    //checkLeastSquareFast(spectrumPath, noisePath, linecatalogPath, opt_fittingmethod, opt_continuumcomponent, lineTypeFilter, forceFilter, initialVelocity, z);
 
 }
 

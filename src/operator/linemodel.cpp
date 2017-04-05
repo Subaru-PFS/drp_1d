@@ -1,4 +1,5 @@
 #include <epic/redshift/operator/linemodel.h>
+#include <epic/redshift/linemodel/templatesortho.h>
 #include <epic/redshift/spectrum/axis.h>
 #include <epic/redshift/spectrum/spectrum.h>
 #include <epic/redshift/spectrum/template/template.h>
@@ -154,6 +155,22 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
     CRayCatalog::TRayVector restRayList = restraycatalog.GetFilteredList( typeFilter, forceFilter);
     Log.LogDebug( "restRayList.size() = %d", restRayList.size() );
 
+    //prepare continuum templates catalog
+    CTemplatesOrthogonalization tplOrtho(tplCatalog,
+                                         tplCategoryList,
+                                         opt_calibrationPath,
+                                         restRayList,
+                                         opt_fittingmethod,
+                                         opt_continuumcomponent,
+                                         opt_lineWidthType,
+                                         opt_resolution,
+                                         opt_velocityEmission,
+                                         opt_velocityAbsorption,
+                                         opt_rules,
+                                         opt_rigidity);
+    CTemplateCatalog orthoTplCatalog = tplOrtho.getOrthogonalTplCatalog();
+
+
     Int32 nResults = sortedRedshifts.size();
     auto result = std::shared_ptr<CLineModelResult>( new CLineModelResult() );
     result->ChiSquare.resize( nResults );
@@ -165,7 +182,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
 
     CLineModelElementList model( spectrum,
                                  spectrumContinuum,
-                                 tplCatalog,
+                                 orthoTplCatalog,
                                  tplCategoryList,
                                  opt_calibrationPath,
                                  restRayList,
