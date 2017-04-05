@@ -744,6 +744,8 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
     Int32 savedIdxFitted=-1;
     Float64 savedFittedAmp; //for rigidity=tplshape
     Float64 savedFittedAmpError; //for rigidity=tplshape
+    Float64 savedMtD; //for rigidity=tplshape
+    Float64 savedMtM; //for rigidity=tplshape
     if(m_rigidity=="tplshape")
     {
         nfitting=m_CatalogTplShape->GetCatalogsCount();
@@ -1152,14 +1154,15 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
                             break;
                         }
                         Float64 amp = m_Elements[iElts]->GetFittedAmplitude(j);
-                        if(amp>0.0)
+                        if(amp>0.0 && !m_Elements[iElts]->IsOutsideLambdaRange(j))
                         {
 
                             Float64 amp_error = m_Elements[iElts]->GetFittedAmplitudeErrorSigma(j);
                             Float64 nominal_amp = m_Elements[iElts]->GetNominalAmplitude(j);
                             savedFittedAmp = amp/nominal_amp;
                             savedFittedAmpError = amp_error/nominal_amp;
-
+                            savedMtD = m_Elements[iElts]->GetSumCross();
+                            savedMtM = m_Elements[iElts]->GetSumGauss();
                             savedAmp=true;
                             break;
                         }
@@ -1201,6 +1204,8 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
 
         Log.LogInfo( "Linemodel: tplshape = %d (%s), and A=%f", savedIdxFitted, m_tplcorrBestTplName.c_str(), savedFittedAmp);
         m_Elements[0]->SetFittedAmplitude(savedFittedAmp, savedFittedAmpError);
+        m_Elements[0]->SetSumCross(savedMtD);
+        m_Elements[0]->SetSumGauss(savedMtM);
         //Lya
         bool retLyaProfile = m_CatalogTplShape->SetLyaProfile(*this, savedIdxFitted);
         if( !retLyaProfile ){

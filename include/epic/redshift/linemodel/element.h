@@ -78,7 +78,9 @@ public:
     Float64 GetNSigmaSupport(std::string profile);
 
     Float64 GetSumCross();
+    void SetSumCross(Float64 val);
     Float64 GetSumGauss();
+    void SetSumGauss(Float64 val);
     Float64 GetFitAmplitude();
 
 protected:

@@ -421,34 +421,35 @@ bool CMultiLine::SetNominalAmplitude(Int32 subeIdx, Float64 nominalamp)
 void CMultiLine::SetFittedAmplitude(Float64 A, Float64 SNR)
 {
     if(m_OutsideLambdaRange)
-      {
+    {
         for(Int32 k=0; k<m_Rays.size(); k++)
-	  {
-	    // This separation in distinct negative values is to facilitate unit testing. All negative amplitudes should be considered invalid.
-	    if( A<0 )
-	      {
-		m_FittedAmplitudes[k] = A;
-		m_FittedAmplitudeErrorSigmas[k] = A;
-	      }
-	    else
-	      {
-		m_FittedAmplitudes[k] = -1 -A;
-		m_FittedAmplitudeErrorSigmas[k] = -1 -A;
-	      }
-		
-	  }
+        {
+            // This separation in distinct negative values is to facilitate unit testing. All negative amplitudes should be considered invalid.
+            if( A<0 )
+            {
+                m_FittedAmplitudes[k] = A;
+                m_FittedAmplitudeErrorSigmas[k] = A;
+            }
+            else
+            {
+                m_FittedAmplitudes[k] = -1 -A;
+                m_FittedAmplitudeErrorSigmas[k] = -1 -A;
+            }
+
+        }
         return;
-      }
+    }
     A = std::max(0.0, A);
+    m_fitAmplitude = A;
     for(Int32 k=0; k<m_Rays.size(); k++)
-      {
-	if(m_OutsideLambdaRangeList[k])
-	  {
-	    m_FittedAmplitudes[k] = -1;
-	  }
-	m_FittedAmplitudes[k] = A*m_NominalAmplitudes[k];
-	m_FittedAmplitudeErrorSigmas[k] = SNR*m_NominalAmplitudes[k]; //todo: check correct formulation for Error
-      }
+    {
+        if(m_OutsideLambdaRangeList[k])
+        {
+            m_FittedAmplitudes[k] = -1;
+        }
+        m_FittedAmplitudes[k] = A*m_NominalAmplitudes[k];
+        m_FittedAmplitudeErrorSigmas[k] = SNR*m_NominalAmplitudes[k]; //todo: check correct formulation for Error
+    }
 }
 
 /**

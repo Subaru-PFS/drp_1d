@@ -334,9 +334,19 @@ Float64 CLineModelElement::GetSumCross()
     return m_sumCross;
 }
 
+void CLineModelElement::SetSumCross(Float64 val)
+{
+    m_sumCross=val;
+}
+
 Float64 CLineModelElement::GetSumGauss()
 {
     return m_sumGauss;
+}
+
+void CLineModelElement::SetSumGauss(Float64 val)
+{
+    m_sumGauss=val;
 }
 
 Float64 CLineModelElement::GetFitAmplitude()
