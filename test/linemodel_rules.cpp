@@ -34,7 +34,8 @@ Float64 getLinemodelDoubletRatio(std::string spc, std::string noise, bool enable
     params->Set( "templateCategoryList", TStringList { "galaxy" } );
     params->Set( "method", "linemodel");
 
-    Bool retVal = ctx.Init( spc.c_str(), noise.c_str(), NULL, "../test/data/LinemodelRulesTestCase/raycatalog_test_elratiorules.txt",params );
+    std::string procID = "processing_id_unused";
+    Bool retVal = ctx.Init( spc.c_str(), noise.c_str(), procID, NULL, "../test/data/LinemodelRulesTestCase/raycatalog_test_elratiorules.txt",params );
     BOOST_CHECK( retVal == true );
 
     //these tplcatalog related variables are unused here.
@@ -131,7 +132,9 @@ std::vector<Float64> getLinemodelFittedAmplitudes(std::string spc, std::string n
     params->Set( "templateCategoryList", TStringList { "galaxy" } );
     params->Set( "method", "linemodel");
 
-    Bool retVal = ctx.Init( spc.c_str(), noise.c_str(), NULL, ctlgPath.c_str(),params );
+
+    std::string procID = "processing_id_unused";
+    Bool retVal = ctx.Init( spc.c_str(), noise.c_str(), procID, NULL, ctlgPath.c_str(),params );
     BOOST_CHECK( retVal == true );
 
 

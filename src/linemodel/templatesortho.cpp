@@ -97,21 +97,6 @@ Int32 CTemplatesOrthogonalization::OrthogonalizeTemplate(const CTemplate& inputT
     TStringList tplCategoryListUnused;
 
 
-    CLineModelElementList model( spectrum,
-                                 spectrumContinuumZero,
-                                 tplCatalogUnused,
-                                 tplCategoryListUnused,
-                                 opt_calibrationPath,
-                                 restRayList,
-                                 opt_fittingmethod,
-                                 opt_continuumcomponent,
-                                 opt_lineWidthType,
-                                 opt_resolution,
-                                 opt_velocityEmission,
-                                 opt_velocityAbsorption,
-                                 opt_rules,
-                                 opt_rigidity);
-
 
     std::shared_ptr<CTemplate> tplOrtho = std::shared_ptr<CTemplate>( new CTemplate( inputTemplate.GetName().c_str(), inputTemplate.GetCategory() ) );
     *tplOrtho = inputTemplate; //todo: check if this is a true copy of the samples
@@ -119,6 +104,21 @@ Int32 CTemplatesOrthogonalization::OrthogonalizeTemplate(const CTemplate& inputT
     bool enableModelSubtraction = false;
     if(enableModelSubtraction){
         //Compute linemodel on the template
+        CLineModelElementList model( spectrum,
+                                     spectrumContinuumZero,
+                                     tplCatalogUnused,
+                                     tplCategoryListUnused,
+                                     opt_calibrationPath,
+                                     restRayList,
+                                     opt_fittingmethod,
+                                     opt_continuumcomponent,
+                                     opt_lineWidthType,
+                                     opt_resolution,
+                                     opt_velocityEmission,
+                                     opt_velocityAbsorption,
+                                     opt_rules,
+                                     opt_rigidity);
+
         Float64 redshift = 0.0;
         TLambdaRange lambdaRange = inputTemplate.GetLambdaRange();
         Float64 contreest_iterations = 0;

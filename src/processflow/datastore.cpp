@@ -58,6 +58,16 @@ Void CDataStore::SetSpectrumName( const std::string& name )
     m_SpectrumName = name;
 }
 
+const std::string& CDataStore::GetProcessingID() const
+{
+    return m_ProcessingID;
+}
+
+Void CDataStore::SetProcessingID( const std::string& valStr )
+{
+    m_ProcessingID = valStr;
+}
+
 Void  CDataStore::SaveRedshiftResult( const boost::filesystem::path& dir )
 {
     m_ResultStore.SaveRedshiftResult( *this, dir );

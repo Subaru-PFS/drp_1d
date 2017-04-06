@@ -33,11 +33,11 @@ public:
     CProcessFlowContext();
     ~CProcessFlowContext();
 
-    bool Init( const char* spectrumPath, const char* noisePath,
+    bool Init(const char* spectrumPath, const char* noisePath, std::string processingID,
                const char* tempalteCatalogPath, const char* rayCatalogPath,
                std::shared_ptr<CParameterStore> paramStore  );
 
-    bool Init( const char* spectrumPath, const char* noisePath,
+    bool Init(const char* spectrumPath, const char* noisePath, std::string processingID,
                std::shared_ptr<const CTemplateCatalog> templateCatalog,
                std::shared_ptr<const CRayCatalog> rayCatalog,
                std::shared_ptr<CParameterStore> paramStore  );

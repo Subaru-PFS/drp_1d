@@ -59,6 +59,7 @@ Void CLineModelSolveResult::SaveLine( const CDataStore& store, std::ostream& str
     GetBestRedshift( store, redshift, merit, sigma );
 
     stream  << store.GetSpectrumName() << "\t"
+        << store.GetProcessingID() << "\t"
 	    << redshift << "\t"
 	    << merit << "\t"
 	    << tplName << "\t"

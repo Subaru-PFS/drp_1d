@@ -45,6 +45,7 @@ CProcessFlowContext::~CProcessFlowContext()
 }
 
 bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath,
+                                const std::string processingID,
                                 std::shared_ptr<const CTemplateCatalog> templateCatalog,
                                 std::shared_ptr<const CRayCatalog> rayCatalog,
                                 std::shared_ptr<CParameterStore> paramStore  )
@@ -194,6 +195,7 @@ bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath,
 
     m_DataStore = std::shared_ptr<CDataStore>( new CDataStore( *m_ResultStore, *m_ParameterStore ) );
     m_DataStore->SetSpectrumName( bfs::path( spectrumPath ).stem().string() );
+    m_DataStore->SetProcessingID( processingID );
 
     // Save the baseline in store
     std::shared_ptr<CSpectraFluxResult> baselineResult = (std::shared_ptr<CSpectraFluxResult>) new CSpectraFluxResult();
@@ -219,7 +221,7 @@ bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath,
     return true;
 }
 
-bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath,
+bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath, std::string processingID,
                                 const char* templateCatalogPath, const char* rayCatalogPath,
                                 std::shared_ptr<CParameterStore> paramStore )
 {
@@ -270,7 +272,7 @@ bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath,
         }
     }
 
-    return Init( spectrumPath, noisePath, templateCatalog, rayCatalog, paramStore );
+    return Init( spectrumPath, noisePath, processingID, templateCatalog, rayCatalog, paramStore );
 
 }
 

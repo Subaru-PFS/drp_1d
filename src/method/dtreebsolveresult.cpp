@@ -51,6 +51,7 @@ Void CDTreeBSolveResult::SaveLine( const CDataStore& store, std::ostream& stream
     GetBestRedshift( store, redshift, merit, dtreepath );
 
     stream  << store.GetSpectrumName() << "\t"
+            << store.GetProcessingID() << "\t"
                 << redshift << "\t"
                 << merit << "\t"
                 << tplName << "\t"

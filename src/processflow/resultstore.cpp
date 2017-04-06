@@ -111,22 +111,35 @@ std::weak_ptr<const COperatorResult> COperatorResultStore::GetGlobalResult( cons
     return std::weak_ptr<const COperatorResult>();
 }
 
-void COperatorResultStore::CreateResultStorage( std::fstream& stream, const bfs::path& path, const bfs::path& baseDir ) const
+/**
+ * @brief COperatorResultStore::CreateResultStorage
+ *
+ * @return 0 if already exists, 1 if just created, -1 if error
+ */
+Int32 COperatorResultStore::CreateResultStorage( std::fstream& stream, const bfs::path& path, const bfs::path& baseDir ) const
 {
+    Int32 ret = -1;
+
     bfs::path outputFilePath = bfs::path( baseDir );
     outputFilePath /= path.string();
 
     std::fstream outputFile;
 
     if( bfs::exists( outputFilePath.parent_path() ) == false )
+    {
         bfs::create_directories( outputFilePath.parent_path() );
+        ret = 1;
+    }else{
+        ret = 0;
+    }
 
     stream.open( outputFilePath.string().c_str(), std::fstream::out | std::fstream::app);
     if( stream.rdstate() & std::ios_base::failbit )
     {
-        return ;
+        return -1;
     }
 
+    return ret;
 }
 
 void COperatorResultStore::SaveRedshiftResult( const CDataStore& store, const bfs::path& dir )
@@ -135,7 +148,12 @@ void COperatorResultStore::SaveRedshiftResult( const CDataStore& store, const bf
     {
         std::fstream outputStream;
         // Save result at root of output directory
-        CreateResultStorage( outputStream, bfs::path( "redshift.csv" ), dir );
+        Int32 ret = CreateResultStorage( outputStream, bfs::path( "redshift.csv" ), dir );
+
+        if(ret=1)
+        {
+            outputStream <<  "#Spectrum\tProcessingID\tRedshift\tMerit\tTemplate\tMethod\tDeltaz"<< std::endl;
+        }
 
         auto  result = GetGlobalResult( "redshiftresult" ).lock();
         if(result){
@@ -144,29 +162,21 @@ void COperatorResultStore::SaveRedshiftResult( const CDataStore& store, const bf
     }
 }
 
-void COperatorResultStore::SaveRedshiftResultHeader(  const bfs::path& dir )
+void COperatorResultStore::SaveRedshiftResultError(  const std::string spcName,  const std::string processingID, const bfs::path& dir )
 {
     // Append best redshift result line to output file
     {
         std::fstream outputStream;
         // Save result at root of output directory
-        CreateResultStorage( outputStream, bfs::path( "redshift.csv" ), dir );
+        Int32 ret = CreateResultStorage( outputStream, bfs::path( "redshift.csv" ), dir );
+
+        if(ret=1)
+        {
+            outputStream <<  "#Spectrum\tProcessingID\tRedshift\tMerit\tTemplate\tMethod\tDeltaz"<< std::endl;
+        }
 
 
-        outputStream <<  "#Spectrum\tRedshifts\tMerit\tTemplate\tMethod/Path"<< std::endl;
-    }
-}
-
-void COperatorResultStore::SaveRedshiftResultError(  const std::string spcName, const bfs::path& dir )
-{
-    // Append best redshift result line to output file
-    {
-        std::fstream outputStream;
-        // Save result at root of output directory
-        CreateResultStorage( outputStream, bfs::path( "redshift.csv" ), dir );
-
-
-        outputStream <<  spcName << "\t-1\t-1\t-1\t-1\t-1"<< std::endl;
+        outputStream <<  spcName << "\t" << processingID << "\t-1\t-1\t-1\t-1\t-1"<< std::endl;
     }
 }
 

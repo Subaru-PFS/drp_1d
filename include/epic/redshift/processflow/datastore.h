@@ -38,6 +38,8 @@ public:
 
     const std::string&  GetSpectrumName() const;
     Void                SetSpectrumName( const std::string& name );
+    const std::string&  GetProcessingID() const;
+    Void                SetProcessingID( const std::string& valStr );
 
     std::string         GetCurrentScopeName() const;
 
@@ -97,6 +99,7 @@ protected:
     CParameterStore&                 m_ParameterStore;
 
     std::string                     m_SpectrumName;
+    std::string                     m_ProcessingID;
 
     TScopeStack                     m_ScopeStack;
 

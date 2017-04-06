@@ -96,6 +96,7 @@ Void CChisquareSolveResult::SaveLine( const CDataStore& store, std::ostream& str
     GetBestRedshift( store, redshift, merit, tplName );
 
     stream  << store.GetSpectrumName() << "\t"
+            << store.GetProcessingID() << "\t"
                 << redshift << "\t"
                 << merit << "\t"
                 << tplName << "\t"

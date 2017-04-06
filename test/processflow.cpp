@@ -26,7 +26,8 @@ BOOST_AUTO_TEST_CASE( ProcessShifted1 )
     params->Set( "templateCategoryList", TStringList { "galaxy" } );
     params->Set( "method", "blindsolve");
 
-    Bool retVal = ctx.Init( "../test/data/ProcessFlowTestCase/lbgabs_1K_2z3_20J22.5__EZ_fits-W-F_0.fits", NULL, "../test/data/ProcessFlowTestCase/template_shifted1/", NULL, params );
+    std::string procID = "lbgabs_1K_2z3_20J22.5__EZ_fits-W-F_0";
+    Bool retVal = ctx.Init( "../test/data/ProcessFlowTestCase/lbgabs_1K_2z3_20J22.5__EZ_fits-W-F_0.fits", NULL, procID, "../test/data/ProcessFlowTestCase/template_shifted1/", NULL, params );
     BOOST_CHECK( retVal == true );
 
     retVal = processFlow.Process( ctx );
@@ -55,7 +56,8 @@ BOOST_AUTO_TEST_CASE( ProcessShifted2 )
     params->Set( "templateCategoryList",  TStringList { "galaxy" } );
     params->Set( "method", "blindsolve");
 
-    Bool retVal = ctx.Init( "../test/data/ProcessFlowTestCase/lbgabs_1K_2z3_20J22.5__EZ_fits-W-F_206.fits", NULL, "../test/data/ProcessFlowTestCase/template_shifted2/", NULL, params );
+    std::string procID = "processing_id_unused";
+    Bool retVal = ctx.Init( "../test/data/ProcessFlowTestCase/lbgabs_1K_2z3_20J22.5__EZ_fits-W-F_206.fits", NULL, procID, "../test/data/ProcessFlowTestCase/template_shifted2/", NULL, params );
     BOOST_CHECK( retVal == true );
 
     retVal = processFlow.Process( ctx );
@@ -84,7 +86,9 @@ BOOST_AUTO_TEST_CASE( ProcessShiftedDecimated )
     params->Set( "templateCategoryList", TStringList { "galaxy" } );
     params->Set( "method", "blindsolve");
 
-    Bool retVal = ctx.Init( "../test/data/ProcessFlowTestCase/lbgabs_1K_2z3_20J22.5__EZ_fits-W-F_0.fits", NULL, "../test/data/ProcessFlowTestCase/template_shifted_decimated/", NULL, params );
+
+    std::string procID = "processing_id_unused";
+    Bool retVal = ctx.Init( "../test/data/ProcessFlowTestCase/lbgabs_1K_2z3_20J22.5__EZ_fits-W-F_0.fits", NULL, procID, "../test/data/ProcessFlowTestCase/template_shifted_decimated/", NULL, params );
     BOOST_CHECK( retVal == true );
 
     retVal = processFlow.Process( ctx );
