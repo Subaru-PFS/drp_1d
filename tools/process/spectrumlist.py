@@ -25,6 +25,7 @@ class Spectrumlist(object):
 
         self.fvect = []
         self.errfvect = []
+        self.procidvect = []
             
         self.load()
  
@@ -45,10 +46,15 @@ class Spectrumlist(object):
                 #    data = lineStr.split(" ")
                 #data = [r for r in data if r != '']
                 self.fvect.append(data[0])
-                if len(data)>=2:
+                if len(data)>=3:
                     self.errfvect.append(data[1])
+                    self.procidvect.append(data[2])
+                else:
+                    print("ERROR: invalid spectrumlist. Less than 3 columns found. Aborting")
+                    break
         print("Spctrumlist loaded n F = {}".format(len(self.fvect)))
         print("Spctrumlist loaded n ErrF = {}".format(len(self.errfvect)))
+        print("Spctrumlist loaded n procID = {}".format(len(self.procidvect)))
         
               
         
@@ -66,8 +72,8 @@ class Spectrumlist(object):
             f = open(outputFileFullPath, 'w')
             for k, idThis in enumerate(self.fvect):
                 if k in indexes:
-                    if len(self.errfvect) == len(self.fvect):
-                        f.write("{}\t{}\n".format(self.fvect[k], self.errfvect[k]))
+                    if len(self.errfvect) == len(self.fvect) and len(self.procidvect) == len(self.fvect):
+                        f.write("{}\t{}\t{}\n".format(self.fvect[k], self.errfvect[k], self.procidvect[k]))
                     else:                        
                         f.write("{}\n".format(self.fvect[k]))
                         
@@ -104,8 +110,8 @@ class Spectrumlist(object):
                 fsub = open(subsetFilePath, 'w')
                 print("INFO: opening subset file: {}".format(subsetFilename))
                 
-            if len(self.errfvect) == len(self.fvect):
-                fsub.write("{}\t{}\n".format(self.fvect[k], self.errfvect[k]))
+            if len(self.errfvect) == len(self.fvect) and len(self.procidvect) == len(self.fvect):
+                fsub.write("{}\t{}\t{}\n".format(self.fvect[k], self.errfvect[k], self.procidvect[k]))
             else:
                 print("WARNING: no noise spectrum used in the spectrumlist !!")
                 stop                        
