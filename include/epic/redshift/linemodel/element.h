@@ -83,6 +83,7 @@ public:
     void SetSumGauss(Float64 val);
     Float64 GetFitAmplitude();
 
+    std::vector<CRay>       m_Rays; //only used in multiline for now... tbd: should be moved elsewhere ?
 protected:
     Bool LoadDataExtinction();
 

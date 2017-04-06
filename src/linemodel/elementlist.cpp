@@ -5,6 +5,7 @@
 #include <epic/redshift/gaussianfit/multigaussianfit.h>
 #include <epic/redshift/ray/regulament.h>
 #include <epic/redshift/ray/catalogsTplShape.h>
+#include <epic/redshift/ray/catalogsOffsets.h>
 
 #include <gsl/gsl_multifit.h>
 #include <epic/redshift/spectrum/io/genericreader.h>
@@ -184,7 +185,17 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
         LogCatalogInfos();
     }
 
-    //init the DtD for least-square compuations
+    //init catalog offsets
+    CRayCatalogsOffsets* ctlgOffsets = new CRayCatalogsOffsets();
+    bool ret = ctlgOffsets->Init(calibrationPath);
+    if(!ret)
+    {
+        Log.LogError("Unable to initialize the the offsets catalog. aborting...");
+        return;
+    }else
+    {
+        ctlgOffsets->SetLinesOffsets( *this);
+    }
 }
 
 /**

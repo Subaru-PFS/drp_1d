@@ -6,7 +6,7 @@ using namespace std;
 
 CRay::CRay()
 {
-
+    m_Offset = 0.0;
 }
 
 CRay::CRay(const string& name, Float64 pos, UInt32 type, std::string profile, UInt32 force, Float64 amp, Float64 width, Float64 cut , Float64 posErr, Float64 sigmaErr, Float64 ampErr, const std::string& groupName, Float64 nominalAmp)
@@ -29,6 +29,8 @@ CRay::CRay(const string& name, Float64 pos, UInt32 type, std::string profile, UI
 
     m_GroupName = groupName;
     m_NominalAmplitude = nominalAmp;
+
+    m_Offset = 0.0;
 
 }
 
@@ -90,6 +92,17 @@ Int32 CRay::GetForce() const
 Float64 CRay::GetPosition() const
 {
     return m_Pos;
+}
+
+Float64 CRay::GetOffset() const
+{
+    return m_Offset;
+}
+
+bool CRay::SetOffset(Float64 val)
+{
+    m_Offset = val;
+    return true;
 }
 
 Float64 CRay::GetAmplitude() const

@@ -44,6 +44,9 @@ public:
     bool                SetProfile(std::string profile);
 
     Float64             GetPosition() const;
+    Float64             GetOffset() const;
+    bool                SetOffset(Float64 val);
+
     Float64             GetAmplitude() const;
     Float64             GetWidth() const;
     Float64             GetCut() const;
@@ -67,6 +70,7 @@ private:
     std::string     m_Profile;
     Int32           m_Force;
     Float64         m_Pos;
+    Float64         m_Offset;
     Float64         m_Amp;
     Float64         m_Width;
     Float64         m_Cut;

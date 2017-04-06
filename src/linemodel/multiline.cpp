@@ -23,6 +23,8 @@ CMultiLine::CMultiLine( std::vector<CRay> rs,
 			std::vector<Int32> catalogIndexes ) : CLineModelElement ( widthType, resolution, velocityEmission, velocityAbsorption )
 {
     m_ElementType = "CMultiLine";
+    m_c_kms = 300000.0; //to be defined in a better location ?
+
     m_Rays = rs;
 
     Int32 nRays = m_Rays.size();
@@ -489,10 +491,10 @@ void CMultiLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const C
     Int32 num = 0;
 
 
-
     for(Int32 k2=0; k2<nRays; k2++)
       {
-        mBuffer_mu[k2] = m_Rays[k2].GetPosition()*(1+redshift);
+        Float64 dzOffset = m_Rays[k2].GetOffset()/m_c_kms;
+        mBuffer_mu[k2] = m_Rays[k2].GetPosition()*(1+redshift)*(1+dzOffset);
         mBuffer_c[k2] = GetLineWidth(mBuffer_mu[k2], redshift, m_Rays[k2].GetIsEmission(), m_profile[k2]);
       }
 
@@ -645,7 +647,8 @@ Float64 CMultiLine::getModelAtLambda( Float64 lambda, Float64 redshift, Int32 kR
             continue;
         }
         Float64 A = m_FittedAmplitudes[k2];
-        Float64 mu = m_Rays[k2].GetPosition()*(1+redshift);
+        Float64 dzOffset = m_Rays[k2].GetOffset()/m_c_kms;
+        Float64 mu = m_Rays[k2].GetPosition()*(1+redshift)*(1+dzOffset);
         Float64 c = GetLineWidth(mu, redshift, m_Rays[k2].GetIsEmission(), m_profile[k2]);
 
         Yi += m_SignFactors[k2] * A * GetLineProfile(m_profile[k2], x, mu, c);
@@ -668,7 +671,8 @@ Float64 CMultiLine::GetModelDerivAmplitudeAtLambda(Float64 lambda, Float64 redsh
             continue;
         }
 
-        Float64 mu = m_Rays[k2].GetPosition()*(1+redshift);
+        Float64 dzOffset = m_Rays[k2].GetOffset()/m_c_kms;
+        Float64 mu = m_Rays[k2].GetPosition()*(1+redshift)*(1+dzOffset);
         Float64 c = GetLineWidth(mu, redshift, m_Rays[k2].GetIsEmission(), m_profile[k2]);
 
         Yi += m_SignFactors[k2] * GetLineProfile(m_profile[k2], x, mu, c);
@@ -692,7 +696,8 @@ Float64 CMultiLine::GetModelDerivSigmaAtLambda(Float64 lambda, Float64 redshift 
         }
 
         Float64 A = m_FittedAmplitudes[k2];
-        Float64 mu = m_Rays[k2].GetPosition()*(1+redshift);
+        Float64 dzOffset = m_Rays[k2].GetOffset()/m_c_kms;
+        Float64 mu = m_Rays[k2].GetPosition()*(1+redshift)*(1+dzOffset);
         Float64 c = GetLineWidth(mu, redshift, m_Rays[k2].GetIsEmission(), m_profile[k2]);
 
         Yi += m_SignFactors[k2] * A * GetLineProfileDerivSigma(m_profile[k2], x, mu, c);

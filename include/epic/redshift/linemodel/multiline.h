@@ -55,7 +55,6 @@ public:
 private:
     Int32 FindElementIndex(std::string LineTagStr);
 
-    std::vector<CRay>       m_Rays;
     std::vector<std::vector<Int32>>     m_RayIsActiveOnSupport;
     std::vector<Float64>    m_SignFactors;
     std::vector<Float64>        m_FittedAmplitudes;
@@ -73,6 +72,9 @@ private:
     std::vector<Int32>          m_EndTheoretical;
 
     std::vector<bool>           m_OutsideLambdaRangeList;
+
+    //constant
+    Float64 m_c_kms;
 };
 
 }
