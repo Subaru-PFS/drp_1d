@@ -186,7 +186,7 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
     }
 
     //init catalog offsets
-    CRayCatalogsOffsets* ctlgOffsets = new CRayCatalogsOffsets();
+    CLineCatalogsOffsets* ctlgOffsets = new CLineCatalogsOffsets();
     bool ret = ctlgOffsets->Init(calibrationPath);
     if(!ret)
     {
@@ -194,7 +194,7 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
         return;
     }else
     {
-        ctlgOffsets->SetLinesOffsets( *this);
+        ctlgOffsets->SetLinesOffsets( *this, 0);
     }
 }
 

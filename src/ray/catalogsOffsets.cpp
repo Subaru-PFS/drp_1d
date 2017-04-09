@@ -16,46 +16,78 @@ using namespace std;
 using namespace boost;
 
 
-CRayCatalogsOffsets::CRayCatalogsOffsets()
+CLineCatalogsOffsets::CLineCatalogsOffsets()
 {
-    m_Catalog_relpath = "linecatalogs_offsets/linecatalogoffset_uvstackspfs10k_20170407.txt";
-    Log.LogInfo( "CRayCatalogsOffsets - Loaded catalog : %s", m_Catalog_relpath.c_str());
+    m_Catalogs_relpath = "linecatalogs_offsets/offsetsCatalogs_20170410_m300"; //path to the fixed offset catalog
+    Log.LogInfo( "CLineCatalogsOffsets - directory : %s", m_Catalogs_relpath.c_str());
 }
 
-CRayCatalogsOffsets::~CRayCatalogsOffsets()
+CLineCatalogsOffsets::~CLineCatalogsOffsets()
 {
 
 }
 
-Bool CRayCatalogsOffsets::SetCtlgRelPath( const char* relPath )
+Bool CLineCatalogsOffsets::SetCtlgRelPath( const char* relPath )
 {
-    m_Catalog_relpath = relPath;
+    m_Catalogs_relpath = relPath;
     return true;
 }
 
-Bool CRayCatalogsOffsets::Init( std::string calibrationPath)
+Bool CLineCatalogsOffsets::Init( std::string calibrationPath)
 {
     bfs::path calibrationFolder( calibrationPath.c_str() );
-    std::string dirPath = (calibrationFolder/m_Catalog_relpath.c_str()).string();
+    std::string dirPath = (calibrationFolder/m_Catalogs_relpath.c_str()).string();
 
     bool ret = Load(dirPath.c_str());
     if(!ret)
     {
-        Log.LogError("Unable to load the offset catalog. aborting...");
+        Log.LogError("Unable to load the offset catalogs. aborting...");
         return false;
     }else{
-        Log.LogInfo("Loaded %d lines offsets", m_Offsets.size());
+        Log.LogInfo("Loaded %d lines offsets catalogs", m_OffsetsCatalog.size());
     }
     return true;
 }
 
+Bool CLineCatalogsOffsets::Load( const char* dirPath )
+{
+    m_OffsetsCatalog.clear();
 
-Bool CRayCatalogsOffsets::Load( const char* filePath )
+    //load the catalogs list from the directory
+    namespace fs = boost::filesystem;
+    fs::path catalogDir(dirPath);
+
+    fs::directory_iterator end_iter;
+    std::vector<std::string> catalogList;
+    if ( fs::exists(catalogDir) && fs::is_directory(catalogDir))
+    {
+      for( fs::directory_iterator dir_iter(catalogDir) ; dir_iter != end_iter ; ++dir_iter)
+      {
+        if (fs::is_regular_file(dir_iter->status()) )
+        {
+          catalogList.push_back(dir_iter->path().c_str());
+        }
+      }
+    }
+    if(catalogList.size()<1)
+    {
+        return false;
+    }
+    Log.LogDebug( "CLineCatalogsOffsets - Found %d offsets catalogs", catalogList.size());
+
+    //Load the catalogs in the list
+    for(Int32 k=0; k<catalogList.size(); k++)
+    {
+        LoadCatalog( catalogList[k].c_str() );
+    }
+
+    return true;
+}
+
+Bool CLineCatalogsOffsets::LoadCatalog( const char* filePath )
 {
 
-    // Clear current catalog list
-    m_Offsets.clear();
-    m_Names.clear();
+    SOffsetsCatalog newCatalog;
 
     ifstream file;
     file.open( filePath, ifstream::in );
@@ -63,6 +95,9 @@ Bool CRayCatalogsOffsets::Load( const char* filePath )
     {
         return false;
     }
+
+    std::string catalogPath = filePath;
+    newCatalog.filePath = catalogPath;
 
     string line;
     // Read file line by line
@@ -107,26 +142,31 @@ Bool CRayCatalogsOffsets::Load( const char* filePath )
                 }
             }
 
-            m_Offsets.push_back(offset);
-            m_Names.push_back(name);
+            newCatalog.Offsets.push_back(offset);
+            newCatalog.Names.push_back(name);
 
         }
     }
     file.close();
 
+    m_OffsetsCatalog.push_back(newCatalog);
+
     return true;
 }
 
-Bool CRayCatalogsOffsets::SetLinesOffsets(CLineModelElementList &LineModelElementList)
+Bool CLineCatalogsOffsets::SetLinesOffsets(CLineModelElementList &LineModelElementList, Int32 index)
 {
-    //first set all offsets to 0.0 ?
+    Int32 nLines = m_OffsetsCatalog[index].Offsets.size();
+    if(index>=nLines)
+    {
+        return false;
+    }
 
     //loop the offsets in the catalog
-    Int32 nLines = m_Offsets.size();
     for(Int32 kL=0; kL<nLines; kL++)
     {
-        Float64 offset = m_Offsets[kL];
-        std::string name = m_Names[kL];
+        Float64 offset = m_OffsetsCatalog[index].Offsets[kL];
+        std::string name = m_OffsetsCatalog[index].Names[kL];
         //find line in the elementList
         for( UInt32 iElts=0; iElts<LineModelElementList.m_Elements.size(); iElts++ )
         {

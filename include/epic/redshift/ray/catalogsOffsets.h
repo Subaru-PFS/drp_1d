@@ -19,22 +19,30 @@ namespace NSEpic
  * /ingroup Redshift
 
  */
-class CRayCatalogsOffsets
+class CLineCatalogsOffsets
 {
 
 public:
-    CRayCatalogsOffsets();
-    ~CRayCatalogsOffsets();
+
+    struct SOffsetsCatalog
+    {
+        std::string filePath;
+        std::vector<Float64> Offsets;
+        std::vector<std::string> Names;
+    };
+
+    CLineCatalogsOffsets();
+    ~CLineCatalogsOffsets();
     Bool Init(std::string calibrationPath);
     Bool SetCtlgRelPath( const char* relPath );
 
-    Bool Load( const char* filePath );
-    Bool SetLinesOffsets(CLineModelElementList &LineModelElementList);
+    Bool Load( const char* dirPath );
+    Bool LoadCatalog( const char* filePath );
+    Bool SetLinesOffsets(CLineModelElementList &LineModelElementList, Int32 index);
 
 private:
-    std::string m_Catalog_relpath;
-    std::vector<Float64> m_Offsets;
-    std::vector<std::string> m_Names;
+    std::string m_Catalogs_relpath;
+    std::vector<SOffsetsCatalog> m_OffsetsCatalog;
 
 };
 
