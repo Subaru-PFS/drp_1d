@@ -128,6 +128,10 @@ Int32 COperatorResultStore::CreateResultStorage( std::fstream& stream, const bfs
     if( bfs::exists( outputFilePath.parent_path() ) == false )
     {
         bfs::create_directories( outputFilePath.parent_path() );
+    }
+
+    if( bfs::exists( outputFilePath ) == false )
+    {
         ret = 1;
     }else{
         ret = 0;
@@ -150,10 +154,12 @@ void COperatorResultStore::SaveRedshiftResult( const CDataStore& store, const bf
         // Save result at root of output directory
         Int32 ret = CreateResultStorage( outputStream, bfs::path( "redshift.csv" ), dir );
 
-        if(ret=1)
+        //*
+        if(ret==1)
         {
             outputStream <<  "#Spectrum\tProcessingID\tRedshift\tMerit\tTemplate\tMethod\tDeltaz"<< std::endl;
         }
+        //*/
 
         auto  result = GetGlobalResult( "redshiftresult" ).lock();
         if(result){
@@ -170,7 +176,7 @@ void COperatorResultStore::SaveRedshiftResultError(  const std::string spcName, 
         // Save result at root of output directory
         Int32 ret = CreateResultStorage( outputStream, bfs::path( "redshift.csv" ), dir );
 
-        if(ret=1)
+        if(ret==1)
         {
             outputStream <<  "#Spectrum\tProcessingID\tRedshift\tMerit\tTemplate\tMethod\tDeltaz"<< std::endl;
         }
