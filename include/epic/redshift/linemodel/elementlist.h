@@ -82,7 +82,9 @@ public:
     Bool initDtd(const TFloat64Range& lambdaRange);
     Float64 EstimateDTransposeD(const TFloat64Range& lambdaRange, std::string spcComponent);
     Float64 EstimateMTransposeM(const TFloat64Range& lambdaRange);
+    Float64 EstimateLikelihoodCstLog(const TFloat64Range& lambdaRange);
     Float64 getDTransposeD(const TFloat64Range& lambdaRange, std::string spcComponent);
+    Float64 getLikelihood_cstLog(const TFloat64Range& lambdaRange);
 
 
     std::string getTplCorr_bestTplName();
@@ -198,6 +200,7 @@ private:
     Float64 m_dTransposeDNocontinuum; //the cached dtd (maximum chisquare value)
     Float64 m_dTransposeDRaw; //the cached dtd (maximum chisquare value)
     TFloat64Range m_dTransposeDLambdaRange; //the lambdaRange used to computed cached dTransposeD values
+    Float64 m_likelihood_cstLog; // constant term for the Likelihood calculation
 
     Float64*          m_precomputedFineGridContinuumFlux;   //PFG buffer for model continuum
     CSpectrumFluxAxis m_ContinuumFluxAxis;  //rebined model continuum

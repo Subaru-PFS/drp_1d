@@ -456,6 +456,18 @@ Bool CProcessFlow::LineModelSolve( CProcessFlowContext& ctx )
     }else{
         return false;
     }
+
+    /*
+    // todo: call the qualz object as done in zbayes branch from S. Jamal.
+    bool enableQualz = false;
+    if ( enableQualz )
+    {
+        CQualz solve2;
+        std::shared_ptr<const CQualzResult> solve2Result = solve2.Compute( ctx.GetDataStore(), ctx.GetClassifierStore(), redshiftRange, redshiftStep );
+    }
+    */
+
+
     return true;
 }
 

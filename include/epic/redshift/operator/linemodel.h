@@ -66,10 +66,6 @@ private:
     void ComputeArea2(CLineModelResult& results);
     Float64 FitBayesWidth( CSpectrumSpectralAxis& spectralAxis, CSpectrumFluxAxis& fluxAxis, Float64 z, Int32 start, Int32 end);
 
-    Float64 PrecomputeLogErr(const CSpectrum& spectrum);
-
-    Float64 mSumLogErr;
-
     std::vector<std::shared_ptr<CModelSpectrumResult>  > m_savedModelSpectrumResults;
     std::vector<std::shared_ptr<CModelFittingResult>  > m_savedModelFittingResults;
     std::vector<std::shared_ptr<CModelRulesResult>  > m_savedModelRulesResults;

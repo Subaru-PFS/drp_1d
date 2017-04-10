@@ -9,6 +9,9 @@
 #include <epic/redshift/operator/spectraFluxResult.h>
 #include <epic/redshift/extremum/extremum.h>
 #include <epic/redshift/statistics/deltaz.h>
+#include <epic/redshift/statistics/pdfz.h>
+#include <epic/redshift/operator/pdfMargZLogResult.h>
+
 #include <epic/redshift/spectrum/io/fitswriter.h>
 #include <epic/core/log/log.h>
 
@@ -33,11 +36,10 @@ using namespace NSEpic;
 using namespace std;
 
 /**
- * \brief Attributes 0 to mSumLogErr.
  **/
 COperatorLineModel::COperatorLineModel()
 {
-    mSumLogErr=0.0; //unused
+
 }
 
 /**
@@ -55,7 +57,6 @@ COperatorLineModel::~COperatorLineModel()
  * Get the list of rest lines filtered by type and force.
  * Create a CLineModelResult object, resize its members and populate it with the filtered list.
  * Create an ElementList object.
- * Call PrecomputeLogErr on the argument spectrum.
  * For each sorted redshift value, call ModelFit.
  * Find the extrema in the set of per-redshift results.
  * Refine Extremum with a second maximum search around the z candidates.
@@ -242,7 +243,6 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
     result->dTransposeDNocontinuum = model.getDTransposeD(lambdaRange, "nocontinuum");
     result->dTransposeD = model.getDTransposeD(lambdaRange, "raw");
 
-    PrecomputeLogErr( spectrum );
     Int32 contreest_iterations = 0;
     if( opt_continuumreest == "always" )
     {
@@ -749,6 +749,27 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
 
     //ComputeArea2(*result);
 
+    /* ------------------------  COMPUTE POSTMARG PDF  --------------------------  */
+    auto postmargZResult = std::shared_ptr<CPdfMargZLogResult>(new CPdfMargZLogResult());
+    CPdfz pdfz;
+    Float64 cstLog = model.getLikelihood_cstLog(lambdaRange);
+    TFloat64List logProba;
+    Int32 retPdfz = pdfz.Compute(result->ChiSquare, result->Redshifts, cstLog, logProba);
+    if(retPdfz!=0)
+    {
+        Log.LogError("Linemodel: Pdfz computation failed");
+    }
+    postmargZResult->countTPL = result->Redshifts.size(); // assumed 1 model per z
+    postmargZResult->Redshifts.resize(result->Redshifts.size());
+    postmargZResult->valProbaLog.resize(result->Redshifts.size());
+    for ( UInt32 k=0; k<result->Redshifts.size(); k++)
+    {
+            postmargZResult->Redshifts[k] = result->Redshifts[k] ;
+            postmargZResult->valProbaLog[k] = logProba[k];
+    }
+    dataStore.StoreScopedGlobalResult( "zPDF/logposterior.pdf", postmargZResult);
+
+
     return result;
 
 }
@@ -1034,7 +1055,7 @@ Void COperatorLineModel::ModelFit(CLineModelElementList& model, const TFloat64Ra
 {
     chiSquare = boost::numeric::bounds<float>::highest();
     Float64 fit = model.fit( redshift, lambdaRange, modelSolution, contreest_iterations, enableLogging );
-    chiSquare = fit;// + mSumLogErr;
+    chiSquare = fit;
     Log.LogDebug( "ModelFit: Chi2 = %f", fit );
 }
 
@@ -1102,26 +1123,3 @@ Float64 COperatorLineModel::FitBayesWidth( CSpectrumSpectralAxis& spectralAxis, 
     return minc;
 }
 
-/**
- * \brief Returns the result of an error sum calulation.
- **/
-Float64 COperatorLineModel::PrecomputeLogErr(const CSpectrum& spectrum)
-{
-    const CSpectrumSpectralAxis& spcSpectralAxis = spectrum.GetSpectralAxis();
-    const CSpectrumFluxAxis& spcFluxAxis = spectrum.GetFluxAxis();
-
-    Int32 numDevs = 0;
-    Float64 logerrsum = 0.0;
-    const Float64* error = spcFluxAxis.GetError();
-    for( UInt32 j=0; j<spcSpectralAxis.GetSamplesCount(); j++ )
-    {
-        numDevs++;
-        logerrsum += log(error[j]);
-    }
-    logerrsum *= 2.0;
-    logerrsum += (Float64)numDevs*log(2*M_PI);
-
-    mSumLogErr = logerrsum;
-
-    return mSumLogErr;
-}

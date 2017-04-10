@@ -688,6 +688,7 @@ Bool CLineModelElementList::initDtd(const TFloat64Range& lambdaRange)
     m_dTransposeDLambdaRange = lambdaRange;
     m_dTransposeDNocontinuum = EstimateDTransposeD(lambdaRange, "nocontinuum");
     m_dTransposeDRaw = EstimateDTransposeD(lambdaRange, "raw");
+    m_likelihood_cstLog = EstimateLikelihoodCstLog(lambdaRange);
     return true;
 }
 
@@ -3655,6 +3656,20 @@ Float64 CLineModelElementList::getDTransposeD(const TFloat64Range& lambdaRange, 
 }
 
 /**
+ * \brief this function returns the dtd value withing the wavelength range for a given spcComponent
+ *
+ **/
+Float64 CLineModelElementList::getLikelihood_cstLog(const TFloat64Range& lambdaRange)
+{
+    if(! (m_dTransposeDLambdaRange.GetBegin()==lambdaRange.GetBegin() && m_dTransposeDLambdaRange.GetEnd()==lambdaRange.GetEnd() ) )
+    {
+        initDtd(lambdaRange);
+    }
+
+    return m_likelihood_cstLog;
+}
+
+/**
  * \brief this function estimates the dtd value withing the wavelength range
  **/
 Float64 CLineModelElementList::EstimateDTransposeD(const TFloat64Range& lambdaRange, std::string spcComponent)
@@ -3715,6 +3730,31 @@ Float64 CLineModelElementList::EstimateMTransposeM(const TFloat64Range& lambdaRa
 
 
     return mtm;
+}
+
+/**
+ * \brief this function estimates the likelihood_cstLog term withing the wavelength range
+ **/
+Float64 CLineModelElementList::EstimateLikelihoodCstLog(const TFloat64Range& lambdaRange)
+{
+    const CSpectrumSpectralAxis& spcSpectralAxis = m_SpectrumModel->GetSpectralAxis();
+
+    Int32 numDevs = 0;
+    Float64 cstLog = 0.0;
+    Float64 sumLogNoise = 0.0;
+
+    Float64 imin = spcSpectralAxis.GetIndexAtWaveLength(lambdaRange.GetBegin());
+    Float64 imax = spcSpectralAxis.GetIndexAtWaveLength(lambdaRange.GetEnd());
+    for( UInt32 j=imin; j<imax; j++ )
+    {
+        numDevs++;
+        sumLogNoise += log( m_ErrorNoContinuum[j] );
+    }
+    //Log.LogDebug( "CLineModelElementList::EstimateMTransposeM val = %f", mtm );
+
+    cstLog = -numDevs*0.5*log(2*M_PI) - sumLogNoise;
+
+    return cstLog;
 }
 
 
