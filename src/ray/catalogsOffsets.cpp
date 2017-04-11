@@ -18,7 +18,8 @@ using namespace boost;
 
 CLineCatalogsOffsets::CLineCatalogsOffsets()
 {
-    m_Catalogs_relpath = "linecatalogs_offsets/offsetsCatalogs_20170410_m300"; //path to the fixed offset catalog
+    //m_Catalogs_relpath = "linecatalogs_offsets/offsetsCatalogs_20170410_m300"; //path to the fixed offset catalog
+    m_Catalogs_relpath = "linecatalogs_offsets/offsetsCatalogs_20170410_steidel"; //path to the steidel offset as of 2017-02 pfs10k simus.
     Log.LogInfo( "CLineCatalogsOffsets - directory : %s", m_Catalogs_relpath.c_str());
 }
 
@@ -35,6 +36,7 @@ Bool CLineCatalogsOffsets::SetCtlgRelPath( const char* relPath )
 
 Bool CLineCatalogsOffsets::Init( std::string calibrationPath)
 {
+    m_Calibration_path = calibrationPath;
     bfs::path calibrationFolder( calibrationPath.c_str() );
     std::string dirPath = (calibrationFolder/m_Catalogs_relpath.c_str()).string();
 
@@ -61,13 +63,13 @@ Bool CLineCatalogsOffsets::Load( const char* dirPath )
     std::vector<std::string> catalogList;
     if ( fs::exists(catalogDir) && fs::is_directory(catalogDir))
     {
-      for( fs::directory_iterator dir_iter(catalogDir) ; dir_iter != end_iter ; ++dir_iter)
-      {
-        if (fs::is_regular_file(dir_iter->status()) )
+        for( fs::directory_iterator dir_iter(catalogDir) ; dir_iter != end_iter ; ++dir_iter)
         {
-          catalogList.push_back(dir_iter->path().c_str());
+            if (fs::is_regular_file(dir_iter->status()) )
+            {
+                catalogList.push_back(dir_iter->path().c_str());
+            }
         }
-      }
     }
     if(catalogList.size()<1)
     {
@@ -161,6 +163,15 @@ Bool CLineCatalogsOffsets::SetLinesOffsets(CLineModelElementList &LineModelEleme
     {
         return false;
     }
+    //first reset all offsets
+    for( UInt32 iElts=0; iElts<LineModelElementList.m_Elements.size(); iElts++ )
+    {
+        Int32 nRays = LineModelElementList.m_Elements[iElts]->GetSize();
+        for(UInt32 j=0; j<nRays; j++){
+            LineModelElementList.m_Elements[iElts]->m_Rays[j].SetOffset(0.0);
+        }
+    }
+
 
     //loop the offsets in the catalog
     for(Int32 kL=0; kL<nLines; kL++)
@@ -186,4 +197,111 @@ Bool CLineCatalogsOffsets::SetLinesOffsets(CLineModelElementList &LineModelEleme
     }
     return true;
 }
+
+Bool CLineCatalogsOffsets::SetLinesOffsetsAutoSelectStack(CLineModelElementList &LineModelElementList, std::string spectrumName)
+{
+    Int32 offsetCtlgIndex = AutoSelectStackFromReferenceFile(spectrumName);
+    if(offsetCtlgIndex>=0)
+    {
+        bfs::path ctlgPath( m_OffsetsCatalog[offsetCtlgIndex].filePath.c_str() );
+        std::string ctlgFileStackNameWExt = ctlgPath.filename().string();
+        Log.LogInfo( "CLineCatalogsOffsets: AutoSetUVStack from = %s", ctlgFileStackNameWExt.c_str() );
+        SetLinesOffsets(LineModelElementList, offsetCtlgIndex);
+    }
+
+    return true;
+}
+
+
+Int32 CLineCatalogsOffsets::AutoSelectStackFromReferenceFile(std::string spectrumName)
+{
+    std::string stack_name = "";
+
+    std::string reference_stacks_relpath = "linecatalogs_offsets/reference_pfs10k_uvstacks.txt";
+    bfs::path calibrationFolder( m_Calibration_path.c_str() );
+    std::string filePath = (calibrationFolder/reference_stacks_relpath.c_str()).string();
+
+    ifstream file;
+    file.open( filePath, ifstream::in );
+    if( file.rdstate() & ios_base::failbit )
+    {
+        return -1;
+    }
+
+    string line;
+    // Read file line by line
+    while( getline( file, line ) )
+    {
+        // remove comments
+        if(line.compare(0,1,"#",1)==0){
+            continue;
+        }
+        char_separator<char> sep(" \t");
+
+        // Tokenize each line
+        typedef tokenizer< char_separator<char> > ttokenizer;
+        ttokenizer tok( line, sep );
+
+        // Check if it's not a comment
+        ttokenizer::iterator it = tok.begin();
+        if( it != tok.end() && *it != "#" )
+        {
+            string name;
+            if( it != tok.end() )
+            {
+                name = *it;
+            }
+            else
+            {
+                return -1;
+            }
+            //check string inclusion
+            std::size_t foundstra = spectrumName.find(name.c_str());
+            if (foundstra==std::string::npos){
+                continue;
+            }
+
+            ++it;
+            if( it != tok.end() )
+            {
+                try
+                {
+                    stack_name = (*it);
+                }
+                catch (bad_lexical_cast)
+                {
+                    Log.LogError( "Unable to read stackname value from file, aborting" );
+                    return -1;
+                }
+            }
+
+            //stack name found, break
+            break;
+
+        }
+    }
+    file.close();
+
+    if(stack_name=="")
+    {
+        return -1;
+    }
+    //find the corresponding index
+    Int32 nCtlg = m_OffsetsCatalog.size();
+    Int32 iCtlg = -1;
+    for(Int32 k=0; k<nCtlg; k++)
+    {
+        bfs::path ctlgPath( m_OffsetsCatalog[k].filePath.c_str() );
+        std::string ctlgFileStackNameWExt = ctlgPath.filename().string();
+        size_t lastindex = ctlgFileStackNameWExt.find_last_of(".");
+        std::string ctlgFileStackName = ctlgFileStackNameWExt.substr(0, lastindex);
+        if(stack_name==ctlgFileStackName)
+        {
+           iCtlg = k;
+        }
+    }
+
+    return iCtlg;
+}
+
 

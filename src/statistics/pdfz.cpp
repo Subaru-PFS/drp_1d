@@ -77,7 +77,6 @@ Int32 CPdfz::Compute(TFloat64List merits, TFloat64List redshifts, Float64 cstLog
     {
         Float64 modifiedEXPO = exp(smallVALUES[k]-maxi);
         sumModifiedExp += modifiedEXPO;
-        //logEvidence;
     }
     Float64 logEvidence = cstLog + maxi + log(sumModifiedExp);
 

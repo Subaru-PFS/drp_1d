@@ -194,7 +194,12 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
         return;
     }else
     {
-        ctlgOffsets->SetLinesOffsets( *this, 0);
+        // load static offset catalog, idx=0
+        //ctlgOffsets->SetLinesOffsets( *this, 0);
+
+        // load auto stack, hack from reference catalog
+        std::string spcName = m_inputSpc->GetName();
+        ctlgOffsets->SetLinesOffsetsAutoSelectStack(*this, spcName);
     }
 }
 
