@@ -157,7 +157,7 @@ void COperatorResultStore::SaveRedshiftResult( const CDataStore& store, const bf
         //*
         if(ret==1)
         {
-            outputStream <<  "#Spectrum\tProcessingID\tRedshift\tMerit\tTemplate\tMethod\tDeltaz"<< std::endl;
+            outputStream <<  "#Spectrum\tProcessingID\tRedshift\tMerit\tTemplate\tMethod\tDeltaz\tReliability"<< std::endl;
         }
         //*/
 
@@ -178,7 +178,7 @@ void COperatorResultStore::SaveRedshiftResultError(  const std::string spcName, 
 
         if(ret==1)
         {
-            outputStream <<  "#Spectrum\tProcessingID\tRedshift\tMerit\tTemplate\tMethod\tDeltaz"<< std::endl;
+            outputStream <<  "#Spectrum\tProcessingID\tRedshift\tMerit\tTemplate\tMethod\tDeltaz\tReliability"<< std::endl;
         }
 
 
@@ -186,6 +186,20 @@ void COperatorResultStore::SaveRedshiftResultError(  const std::string spcName, 
     }
 }
 
+Void COperatorResultStore::SaveReliabilityResult( const CDataStore& store, const bfs::path& dir )
+{
+    // Append best redshift result line to output file
+    {
+        std::fstream outputStream;
+        // Save result at root of output directory
+        CreateResultStorage( outputStream, bfs::path( "redshiftreliability.csv" ), dir );
+
+        auto  result = GetGlobalResult( "zReliability/result.zpredict" ).lock();
+        if(result){
+            result->SaveLine( store, outputStream );
+        }
+    }
+}
 
 
 Void COperatorResultStore::SaveAllResults( const CDataStore& store, const bfs::path& dir ) const

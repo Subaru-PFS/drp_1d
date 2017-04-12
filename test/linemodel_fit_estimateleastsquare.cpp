@@ -100,12 +100,12 @@ void checkLeastSquareFast(std::string spectrumPath, std::string noisePath, std::
 
 
     CLineModelElementList model(spectrum, spectrumContinuum, orthoTplCatalog, tplCategories, opt_calibrationPath, lineList, opt_fittingmethod, opt_continuumcomponent, opt_lineWidthType, opt_resolution, opt_velocityEmission, opt_velocityAbsorption, opt_rules, opt_rigidity);
-    TFloat64Range lambdaRange = TFloat64Range( 3800.0, 12600.0 );
+    TFloat64Range lambdaRange = TFloat64Range( 3900.0, 12500.0 );
     CLineModelResult::SLineModelSolution modelSolution;
     Float64 contreest_iterations = 0;
     Bool enableLogging=true;
     Float64 merit = model.fit(z, lambdaRange, modelSolution, contreest_iterations, enableLogging);
-    //BOOST_TEST_MESSAGE( "Merit = " << merit );
+    BOOST_TEST_MESSAGE( "Merit = " << merit );
 
     //*//debug:
     model.refreshModel();

@@ -147,7 +147,7 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
  * Call Solve.
  * Return a pointer to an empty CLineModelSolveResult. (The results for Linemodel will reside in the linemodel.linemodel result).
  **/
-std::shared_ptr<const CLineModelSolveResult> CLineModelSolve::Compute( CDataStore& dataStore,
+std::shared_ptr<CLineModelSolveResult> CLineModelSolve::Compute( CDataStore& dataStore,
 								       const CSpectrum& spc,
 								       const CSpectrum& spcWithoutCont,
                                        const CTemplateCatalog& tplCatalog,
@@ -161,7 +161,7 @@ std::shared_ptr<const CLineModelSolveResult> CLineModelSolve::Compute( CDataStor
 
     PopulateParameters( dataStore );
     Solve( dataStore, spc, spcWithoutCont, tplCatalog, tplCategoryList, restraycatalog, lambdaRange, redshifts);
-    return std::shared_ptr<const CLineModelSolveResult>( new CLineModelSolveResult() );
+    return std::shared_ptr<CLineModelSolveResult>( new CLineModelSolveResult() );
 }
 
 /**

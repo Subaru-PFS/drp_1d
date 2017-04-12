@@ -73,6 +73,12 @@ Void  CDataStore::SaveRedshiftResult( const boost::filesystem::path& dir )
     m_ResultStore.SaveRedshiftResult( *this, dir );
 }
 
+
+Void CDataStore::SaveReliabilityResult( const boost::filesystem::path& dir )
+{
+	m_ResultStore.SaveReliabilityResult( *this, dir );
+}
+
 Void  CDataStore::SaveAllResults( const boost::filesystem::path& dir ) const
 {
     m_ResultStore.SaveAllResults( *this, dir );

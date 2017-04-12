@@ -433,7 +433,7 @@ Int32 CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange)
         return -1;
     }
     //hardcoded parameters
-    std::string opt_interp = "lin"; //"precomputedfinegrid";
+    std::string opt_interp = "precomputedfinegrid"; // "lin"; //
     Int32 opt_extinction = m_fitContinuum_igm;
     Int32 opt_dustFit = m_fitContinuum_dustfit;
     Float64 overlapThreshold = 1.0;

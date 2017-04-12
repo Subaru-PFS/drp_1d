@@ -4,6 +4,8 @@
 #include <epic/redshift/spectrum/template/template.h>
 #include <epic/redshift/processflow/datastore.h>
 
+#include <epic/redshift/reliability/zclassifierstore.h>
+
 #include <map>
 #include <string>
 #include <memory>
@@ -20,6 +22,7 @@ class CRayCatalog;
 class CParameterStore;
 class COperatorResultStore;
 class CDataStore;
+class CClassifierStore;
 
 /**
  * \ingroup Redshift
@@ -35,12 +38,14 @@ public:
 
     bool Init(const char* spectrumPath, const char* noisePath, std::string processingID,
                const char* tempalteCatalogPath, const char* rayCatalogPath,
-               std::shared_ptr<CParameterStore> paramStore  );
+               std::shared_ptr<CParameterStore> paramStore,
+	       std::shared_ptr<CClassifierStore> zqualStore  );
 
     bool Init(const char* spectrumPath, const char* noisePath, std::string processingID,
                std::shared_ptr<const CTemplateCatalog> templateCatalog,
                std::shared_ptr<const CRayCatalog> rayCatalog,
-               std::shared_ptr<CParameterStore> paramStore  );
+               std::shared_ptr<CParameterStore> paramStore,
+	       std::shared_ptr<CClassifierStore> zqualStore  );
 
     const CSpectrum&                GetSpectrum() const;
     const CSpectrum&                GetSpectrumWithoutContinuum() const;
@@ -50,6 +55,7 @@ public:
     CParameterStore&                GetParameterStore();
     COperatorResultStore&           GetResultStore();
     CDataStore&                     GetDataStore();
+    CClassifierStore&               GetClassifierStore();
 
 private:
 
@@ -63,6 +69,7 @@ private:
     std::shared_ptr<COperatorResultStore>      m_ResultStore;
 
     std::shared_ptr<CDataStore>                m_DataStore;
+    std::shared_ptr<CClassifierStore>                 m_ClassifierStore;
 
 };
 

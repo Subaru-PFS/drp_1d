@@ -49,6 +49,8 @@
 #include <epic/redshift/method/linemodeltplshapesolve.h>
 #include <epic/redshift/method/linemodeltplshapesolveresult.h>
 
+#include <epic/redshift/reliability/zqual.h>
+
 #include <boost/algorithm/string.hpp>
 #include <stdio.h>
 #include <float.h>
@@ -442,7 +444,7 @@ Bool CProcessFlow::LineModelSolve( CProcessFlowContext& ctx )
     std::string calibrationDirPath;
     ctx.GetParameterStore().Get( "calibrationDir", calibrationDirPath );
     CLineModelSolve Solve(calibrationDirPath);
-    std::shared_ptr<const CLineModelSolveResult> solveResult = Solve.Compute( ctx.GetDataStore(),
+    std::shared_ptr<CLineModelSolveResult> solveResult = Solve.Compute( ctx.GetDataStore(),
                                           ctx.GetSpectrum(),
                                           ctx.GetSpectrumWithoutContinuum(),
                                           ctx.GetTemplateCatalog(),
@@ -451,22 +453,31 @@ Bool CProcessFlow::LineModelSolve( CProcessFlowContext& ctx )
                                           spcLambdaRange,
                                           redshifts );
 
+    //*
+    // todo: call the qualz object as done in zbayes branch from S. Jamal.
+    bool enableQualz = true;
+    if ( enableQualz )
+    {
+        Log.LogInfo( "Processing reliability for Line Model method");
+        CQualz solve2;
+        std::shared_ptr<const CQualzResult> solve2Result = solve2.Compute( ctx.GetDataStore(), ctx.GetClassifierStore(), redshiftRange, redshiftStep );
+
+        if(solve2Result)
+        {
+            std::string predLabel="";
+            bool retPredLabel = solve2Result->GetPredictedLabel( ctx.GetDataStore(), predLabel );
+            solveResult->SetReliabilityLabel(predLabel);
+        }
+    }
+    //*/
+
+
+    //finally save the linemodel results with (optionally) the zqual label
     if( solveResult ) {
         ctx.GetDataStore().StoreScopedGlobalResult( "redshiftresult", solveResult );
     }else{
         return false;
     }
-
-    /*
-    // todo: call the qualz object as done in zbayes branch from S. Jamal.
-    bool enableQualz = false;
-    if ( enableQualz )
-    {
-        CQualz solve2;
-        std::shared_ptr<const CQualzResult> solve2Result = solve2.Compute( ctx.GetDataStore(), ctx.GetClassifierStore(), redshiftRange, redshiftStep );
-    }
-    */
-
 
     return true;
 }

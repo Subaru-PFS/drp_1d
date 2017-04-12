@@ -48,8 +48,11 @@ bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath,
                                 const std::string processingID,
                                 std::shared_ptr<const CTemplateCatalog> templateCatalog,
                                 std::shared_ptr<const CRayCatalog> rayCatalog,
-                                std::shared_ptr<CParameterStore> paramStore  )
+                                std::shared_ptr<CParameterStore> paramStore,
+                                std::shared_ptr<CClassifierStore> zqualStore  )
 {
+    m_ClassifierStore=zqualStore;
+
     m_Spectrum = std::shared_ptr<CSpectrum>( new CSpectrum() );
     m_Spectrum->SetName(bfs::path( spectrumPath ).stem().string().c_str() );
     //Log.LogInfo("Setting spectrum name: (%s)", bfs::path( spectrumPath ).stem().string().c_str() );
@@ -223,7 +226,8 @@ bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath,
 
 bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath, std::string processingID,
                                 const char* templateCatalogPath, const char* rayCatalogPath,
-                                std::shared_ptr<CParameterStore> paramStore )
+                                std::shared_ptr<CParameterStore> paramStore,
+		   	        std::shared_ptr<CClassifierStore> zqualStore )
 {
     std::string medianRemovalMethod;
     paramStore->Get( "continuumRemoval.method", medianRemovalMethod, "IrregularSamplingMedian" );
@@ -272,7 +276,7 @@ bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath,
         }
     }
 
-    return Init( spectrumPath, noisePath, processingID, templateCatalog, rayCatalog, paramStore );
+    return Init( spectrumPath, noisePath, processingID, templateCatalog, rayCatalog, paramStore, zqualStore );
 
 }
 
@@ -284,6 +288,11 @@ CParameterStore& CProcessFlowContext::GetParameterStore()
 COperatorResultStore&  CProcessFlowContext::GetResultStore()
 {
     return *m_ResultStore;
+}
+
+CClassifierStore& CProcessFlowContext::GetClassifierStore()
+{
+        return *m_ClassifierStore;
 }
 
 

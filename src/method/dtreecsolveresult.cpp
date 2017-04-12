@@ -58,7 +58,7 @@ Void CDTreeCSolveResult::SaveLine( const CDataStore& store, std::ostream& stream
                 << tplName << "\t"
                 << "dtreec_" << dtreepath.c_str() << "\t"
                 << "-1" << "\t" //deltaz
-                << std::endl;
+                << "-1" << std::endl; //reliability label
 
 
 

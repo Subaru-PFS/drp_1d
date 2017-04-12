@@ -13,7 +13,7 @@ using namespace NSEpic;
  **/
 CLineModelSolveResult::CLineModelSolveResult()
 {
-
+    m_ReliabilityLabel = "-1";
 }
 
 /**
@@ -64,7 +64,8 @@ Void CLineModelSolveResult::SaveLine( const CDataStore& store, std::ostream& str
 	    << merit << "\t"
 	    << tplName << "\t"
         << "LineModelSolve" << "\t"
-        << sigma << std::endl;
+        << sigma << "\t"
+        << m_ReliabilityLabel << std::endl;
 }
 
 /**
@@ -168,6 +169,11 @@ Bool CLineModelSolveResult::GetBestRedshiftWithStrongELSnrPrior( const CDataStor
     redshift = tmpRedshift;
     merit = tmpMerit;
     return true;
+}
+
+Void CLineModelSolveResult::SetReliabilityLabel( std::string lbl )
+{
+    m_ReliabilityLabel = lbl;
 }
 
 

@@ -37,6 +37,14 @@ public:
     Bool GetBestRedshiftLogArea( const CDataStore& store, Float64& redshift, Float64& merit ) const;
     Bool GetBestRedshiftWithStrongELSnrPrior( const CDataStore& store, Float64& redshift, Float64& merit ) const;
 
+
+    Void SetReliabilityLabel( std::string lbl );
+
+
+private:
+    std::string m_ReliabilityLabel;
+
+
 };
 
 

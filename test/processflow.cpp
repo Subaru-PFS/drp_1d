@@ -27,7 +27,7 @@ BOOST_AUTO_TEST_CASE( ProcessShifted1 )
     params->Set( "method", "blindsolve");
 
     std::string procID = "lbgabs_1K_2z3_20J22.5__EZ_fits-W-F_0";
-    Bool retVal = ctx.Init( "../test/data/ProcessFlowTestCase/lbgabs_1K_2z3_20J22.5__EZ_fits-W-F_0.fits", NULL, procID, "../test/data/ProcessFlowTestCase/template_shifted1/", NULL, params );
+    Bool retVal = ctx.Init( "../test/data/ProcessFlowTestCase/lbgabs_1K_2z3_20J22.5__EZ_fits-W-F_0.fits", NULL, procID, "../test/data/ProcessFlowTestCase/template_shifted1/", NULL, params, NULL );
     BOOST_CHECK( retVal == true );
 
     retVal = processFlow.Process( ctx );
@@ -57,7 +57,7 @@ BOOST_AUTO_TEST_CASE( ProcessShifted2 )
     params->Set( "method", "blindsolve");
 
     std::string procID = "processing_id_unused";
-    Bool retVal = ctx.Init( "../test/data/ProcessFlowTestCase/lbgabs_1K_2z3_20J22.5__EZ_fits-W-F_206.fits", NULL, procID, "../test/data/ProcessFlowTestCase/template_shifted2/", NULL, params );
+    Bool retVal = ctx.Init( "../test/data/ProcessFlowTestCase/lbgabs_1K_2z3_20J22.5__EZ_fits-W-F_206.fits", NULL, procID, "../test/data/ProcessFlowTestCase/template_shifted2/", NULL, params, NULL );
     BOOST_CHECK( retVal == true );
 
     retVal = processFlow.Process( ctx );
@@ -88,7 +88,7 @@ BOOST_AUTO_TEST_CASE( ProcessShiftedDecimated )
 
 
     std::string procID = "processing_id_unused";
-    Bool retVal = ctx.Init( "../test/data/ProcessFlowTestCase/lbgabs_1K_2z3_20J22.5__EZ_fits-W-F_0.fits", NULL, procID, "../test/data/ProcessFlowTestCase/template_shifted_decimated/", NULL, params );
+    Bool retVal = ctx.Init( "../test/data/ProcessFlowTestCase/lbgabs_1K_2z3_20J22.5__EZ_fits-W-F_0.fits", NULL, procID, "../test/data/ProcessFlowTestCase/template_shifted_decimated/", NULL, params, NULL );
     BOOST_CHECK( retVal == true );
 
     retVal = processFlow.Process( ctx );

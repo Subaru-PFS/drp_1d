@@ -87,6 +87,7 @@ public:
 
     Void                            SaveRedshiftResultHeader( const boost::filesystem::path& dir );
     Void                            SaveRedshiftResult( const boost::filesystem::path& dir );
+    Void                            SaveReliabilityResult( const boost::filesystem::path& dir );
     Void                            SaveAllResults( const boost::filesystem::path& dir ) const;
 
 
