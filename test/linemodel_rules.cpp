@@ -35,7 +35,8 @@ Float64 getLinemodelDoubletRatio(std::string spc, std::string noise, bool enable
     params->Set( "method", "linemodel");
 
     std::string procID = "processing_id_unused";
-    Bool retVal = ctx.Init( spc.c_str(), noise.c_str(), procID, NULL, "../test/data/LinemodelRulesTestCase/raycatalog_test_elratiorules.txt", params, NULL );
+    std::shared_ptr<CClassifierStore> classifStore = std::shared_ptr<CClassifierStore>( new CClassifierStore() );
+    Bool retVal = ctx.Init( spc.c_str(), noise.c_str(), procID, NULL, "../test/data/LinemodelRulesTestCase/raycatalog_test_elratiorules.txt", params, classifStore );
     BOOST_CHECK( retVal == true );
 
     //these tplcatalog related variables are unused here.
@@ -134,7 +135,8 @@ std::vector<Float64> getLinemodelFittedAmplitudes(std::string spc, std::string n
 
 
     std::string procID = "processing_id_unused";
-    Bool retVal = ctx.Init( spc.c_str(), noise.c_str(), procID, NULL, ctlgPath.c_str(), params, NULL );
+    std::shared_ptr<CClassifierStore> classifStore = std::shared_ptr<CClassifierStore>( new CClassifierStore() );
+    Bool retVal = ctx.Init( spc.c_str(), noise.c_str(), procID, NULL, ctlgPath.c_str(), params, classifStore );
     BOOST_CHECK( retVal == true );
 
 
