@@ -37,8 +37,7 @@ COperatorChiSquare2::COperatorChiSquare2( std::string calibrationPath )
 {
     //load calzetti data
     bfs::path calibrationFolder( calibrationPath.c_str() );
-    //std::string filePath = (calibrationFolder.append( "SB_calzetti.dl1.txt" )).string();
-    std::string filePath = (calibrationFolder/"SB_calzetti.dl1.txt").string();
+    std::string filePath = (calibrationFolder/"ism"/"SB_calzetti.dl1.txt").string();
     std::ifstream file;
     file.open( filePath, std::ifstream::in );
     bool fileOpenFailed = file.rdstate() & std::ios_base::failbit;
