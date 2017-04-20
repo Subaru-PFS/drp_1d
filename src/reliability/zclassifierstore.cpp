@@ -30,7 +30,7 @@ using namespace NSEpic;
 /*  --------------------------------------------------------------------- */
 CClassifierStore::CClassifierStore()
 {
-
+    m_isInitialized = false;
 }
 
 CClassifierStore::~CClassifierStore()
@@ -77,7 +77,7 @@ Bool CClassifierStore::Load ( const char* directoryPath )
 
 		// LOAD CODING MATRIX
 		dirPath = directoryPath;
-		dirPath.append("zClassifier_codingMatrix.dat");
+		dirPath=dirPath/"zClassifier_codingMatrix.dat";
 		rows = GetNbClasses();
 		cols = GetNbLearners();
 		gsl_matrix* codMat = gsl_matrix_alloc(rows,cols);
@@ -97,7 +97,7 @@ Bool CClassifierStore::Load ( const char* directoryPath )
 
 		// LOAD SIGMOID PARAMS & BIAS
 		dirPath = directoryPath;
-		dirPath.append("zClassifier_learnersParams.dat");
+		dirPath=dirPath/"zClassifier_learnersParams.dat";
 		cols = 3; // SLOPE ; INTERCEPT; BIAS
 		rows=GetNbLearners();
 		params_L = gsl_matrix_alloc(rows, cols);
@@ -121,7 +121,7 @@ Bool CClassifierStore::Load ( const char* directoryPath )
 			dirPath = directoryPath;
 			nbLearner = boost::lexical_cast<std::string>(key_learner+1); //= std::to_string(key_learner);
 			name = "sv"+nbLearner+"/sv"+nbLearner+"_vectors.dat";
-			dirPath.append(name);
+			dirPath=dirPath/name;
 			rows = temp_sv[i];
 			cols = GetNbFeatures()+ 1+ 1; // the matrix contains the vector Alpha, the vector SVlabels and the matrix SVectors
 			sv_vectors = gsl_matrix_alloc(rows,cols);
@@ -135,7 +135,7 @@ Bool CClassifierStore::Load ( const char* directoryPath )
 			// LOAD PARAMS
 			dirPath = directoryPath;
 			name = "sv"+nbLearner+"/sv"+nbLearner+"_params.dat";
-			dirPath.append(name);
+			dirPath=dirPath/name;
 			rows = GetNbFeatures();
 			cols = 3;
 			sv_params = gsl_matrix_alloc(rows,cols);
@@ -205,6 +205,7 @@ Bool CClassifierStore::Load ( const char* directoryPath )
 
 	}
 
+    m_isInitialized = true;
 	return true;
 }
 
@@ -217,7 +218,7 @@ Bool CClassifierStore::Load_params ( const char* directoryPath)
 
 	// LOAD GLOBAL PARAMS
 	dirPath = directoryPath;
-	dirPath.append("zClassifier_params_ova.dat");
+	dirPath=dirPath/"zClassifier_params_ova.dat";
 	rows = 8+1; // nbFeatures; nbClass; nbLearners; size each SVectors ; NAN (to dismiss)
 	params = gsl_vector_alloc(rows);
 	f = fopen( dirPath.c_str(), "r");
@@ -246,7 +247,7 @@ Bool CClassifierStore::Load_params ( const char* directoryPath)
 
 	// LOAD LEARNERS_WEIGHT
 	dirPath = directoryPath;
-	dirPath.append("zClassifier_learnersWeight.dat");
+	dirPath=dirPath/"zClassifier_learnersWeight.dat";
 	rows = GetNbLearners()+1;
 	params = gsl_vector_alloc(rows);
 	f = fopen( dirPath.c_str(), "r");

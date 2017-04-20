@@ -458,15 +458,22 @@ Bool CProcessFlow::LineModelSolve( CProcessFlowContext& ctx )
     bool enableQualz = true;
     if ( enableQualz )
     {
-        Log.LogInfo( "Processing reliability for Line Model method");
-        CQualz solve2;
-        std::shared_ptr<const CQualzResult> solve2Result = solve2.Compute( ctx.GetDataStore(), ctx.GetClassifierStore(), redshiftRange, redshiftStep );
-
-        if(solve2Result)
+        CClassifierStore classifStore = ctx.GetClassifierStore();
+        if(!classifStore.m_isInitialized)
         {
-            std::string predLabel="";
-            bool retPredLabel = solve2Result->GetPredictedLabel( ctx.GetDataStore(), predLabel );
-            solveResult->SetReliabilityLabel(predLabel);
+            Log.LogWarning( "Reliability not initialized. Skipped.");
+        }else
+        {
+            Log.LogInfo( "Processing reliability for Line Model method");
+            CQualz solve2;
+            std::shared_ptr<const CQualzResult> solve2Result = solve2.Compute( ctx.GetDataStore(), classifStore, redshiftRange, redshiftStep );
+
+            if(solve2Result)
+            {
+                std::string predLabel="";
+                bool retPredLabel = solve2Result->GetPredictedLabel( ctx.GetDataStore(), predLabel );
+                solveResult->SetReliabilityLabel(predLabel);
+            }
         }
     }
     //*/

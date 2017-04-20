@@ -55,6 +55,11 @@ CTemplatesOrthogonalization::CTemplatesOrthogonalization(const CTemplateCatalog&
         }
     }
 
+    std::shared_ptr<CTemplateCatalog> tplCatalogPtr = std::shared_ptr<CTemplateCatalog>( new CTemplateCatalog(m_tplCatalogOrthogonal) );
+//    std::shared_ptr<CTemplate> tplOrtho = std::shared_ptr<CTemplate>( new CTemplate( inputTemplate.GetName().c_str(), inputTemplate.GetCategory() ) );
+
+    m_tplOrthoStore.Add(tplCatalogPtr);
+
 }
 
 /**
@@ -126,11 +131,17 @@ Int32 CTemplatesOrthogonalization::OrthogonalizeTemplate(const CTemplate& inputT
         CLineModelResult::SLineModelSolution modelSolution;
         Float64 fit = model.fit( redshift, lambdaRange, modelSolution, contreest_iterations, enableLogging );
 
+        //get mtm and dtm cumulative vector and store it
+        std::vector<Float64> lbda;
+        std::vector<Float64> mtmCumul;
+        Int32 ret = model.getMTransposeMCumulative(lambdaRange, lbda, mtmCumul);
+
+
         //Subtract the fitted model from the original template
         model.refreshModel();
         CSpectrum modelSpc = model.GetModelSpectrum();
-        //*//debug:
-        FILE* f = fopen( "tplortho_orthomodel_dbg.txt", "w+" );
+        /*//debug:
+        FILE* f = fopen( "templatesortho_fittedmodel_dbg.txt", "w+" );
         for( Int32 t=0;t<modelSpc.GetSampleCount();t++)
         {
             fprintf( f, "%f %e\n", modelSpc.GetSpectralAxis()[t], modelSpc.GetFluxAxis()[t]);
@@ -143,6 +154,15 @@ Int32 CTemplatesOrthogonalization::OrthogonalizeTemplate(const CTemplate& inputT
         for(UInt32 i=0; i<continuumOrthoFluxAxis.GetSamplesCount(); i++){
             continuumOrthoFluxAxis[i] -= modelFluxAxis[i];
         }
+        /*//debug:
+        FILE* f2 = fopen( "templatesortho_orthotemplate_dbg.txt", "w+" );
+        for( Int32 t=0;t<modelSpc.GetSampleCount();t++)
+        {
+            fprintf( f2, "%f %e\n", modelSpc.GetSpectralAxis()[t], continuumOrthoFluxAxis[t]);
+        }
+        fclose( f2 );
+        //*/
+
     }
 
 
@@ -155,3 +175,9 @@ CTemplateCatalog CTemplatesOrthogonalization::getOrthogonalTplCatalog()
 {
     return m_tplCatalogOrthogonal;
 }
+
+CTemplatesOrthoStore CTemplatesOrthogonalization::getOrthogonalTplStore()
+{
+    return m_tplOrthoStore;
+}
+

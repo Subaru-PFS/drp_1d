@@ -1,5 +1,6 @@
 #include <epic/redshift/operator/linemodel.h>
 #include <epic/redshift/linemodel/templatesortho.h>
+#include <epic/redshift/linemodel/templatesorthostore.h>
 #include <epic/redshift/spectrum/axis.h>
 #include <epic/redshift/spectrum/spectrum.h>
 #include <epic/redshift/spectrum/template/template.h>
@@ -169,7 +170,10 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
                                          opt_velocityAbsorption,
                                          opt_rules,
                                          opt_rigidity);
-    CTemplateCatalog orthoTplCatalog = tplOrtho.getOrthogonalTplCatalog();
+    //CTemplateCatalog orthoTplCatalog = tplOrtho.getOrthogonalTplCatalog();
+    CTemplatesOrthoStore orthoTplStore = tplOrtho.getOrthogonalTplStore();
+    Int32 ctlgIdx = 0; //only on ortho config for now
+    std::shared_ptr<CTemplateCatalog> orthoTplCatalog = orthoTplStore.getTplCatalog(ctlgIdx);
 
 
     Int32 nResults = sortedRedshifts.size();
@@ -183,7 +187,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
 
     CLineModelElementList model( spectrum,
                                  spectrumContinuum,
-                                 orthoTplCatalog,
+                                 *orthoTplCatalog,
                                  tplCategoryList,
                                  opt_calibrationPath,
                                  restRayList,

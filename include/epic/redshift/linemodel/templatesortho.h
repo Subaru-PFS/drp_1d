@@ -1,5 +1,5 @@
-#ifndef TEMPLATESORTHO_H
-#define TEMPLATESORTHO_H
+#ifndef _REDSHIFT_LINEMODEL_TEMPLATES_ORTHO_
+#define _REDSHIFT_LINEMODEL_TEMPLATES_ORTHO_
 
 #include <epic/core/common/range.h>
 #include <epic/redshift/common/datatypes.h>
@@ -17,6 +17,7 @@
 #include <epic/redshift/linemodel/singleline.h>
 
 #include <epic/redshift/spectrum/template/catalog.h>
+#include <epic/redshift/linemodel/templatesorthostore.h>
 
 #include <boost/shared_ptr.hpp>
 
@@ -46,6 +47,7 @@ public:
     ~CTemplatesOrthogonalization();
 
     CTemplateCatalog getOrthogonalTplCatalog();
+    CTemplatesOrthoStore getOrthogonalTplStore();
 
 private:
 
@@ -61,7 +63,8 @@ private:
                                 const std::string &opt_rigidity);
 
 
-    CTemplateCatalog m_tplCatalogOrthogonal;
+    CTemplateCatalog m_tplCatalogOrthogonal; //todo: bound to disappear when the tplorthostore is fully implemented
+    CTemplatesOrthoStore m_tplOrthoStore;
 
 };
 

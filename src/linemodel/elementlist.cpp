@@ -3738,6 +3738,40 @@ Float64 CLineModelElementList::EstimateMTransposeM(const TFloat64Range& lambdaRa
 }
 
 /**
+ * \brief this function estimates the mtm value withing the wavelength range
+ **/
+Int32 CLineModelElementList::getMTransposeMCumulative(const TFloat64Range& lambdaRange, std::vector<Float64> lbda, std::vector<Float64> mtmCumul)
+{
+    mtmCumul.clear();
+    lbda.clear();
+    const CSpectrumSpectralAxis& spcSpectralAxis = m_SpectrumModel->GetSpectralAxis();
+    const CSpectrumFluxAxis& spcFluxAxis = m_SpectrumModel->GetFluxAxis();
+
+    Int32 numDevs = 0;
+    Float64 mtm = 0.0;
+    const Float64* Yspc = spcFluxAxis.GetSamples();
+    Float64 diff = 0.0;
+
+    Float64 imin = spcSpectralAxis.GetIndexAtWaveLength(lambdaRange.GetBegin());
+    Float64 imax = spcSpectralAxis.GetIndexAtWaveLength(lambdaRange.GetEnd());
+    for( UInt32 j=imin; j<imax; j++ )
+    {
+        numDevs++;
+        {
+            diff = Yspc[j];
+        }
+        mtm += (diff*diff) / (m_ErrorNoContinuum[j]*m_ErrorNoContinuum[j]);
+        lbda.push_back(spcSpectralAxis[j]);
+        mtmCumul.push_back(mtm);
+    }
+    //Log.LogDebug( "CLineModelElementList::EstimateMTransposeM val = %f", mtm );
+
+
+    return 0;
+}
+
+
+/**
  * \brief this function estimates the likelihood_cstLog term withing the wavelength range
  **/
 Float64 CLineModelElementList::EstimateLikelihoodCstLog(const TFloat64Range& lambdaRange)

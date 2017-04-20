@@ -85,6 +85,7 @@ public:
     Float64 EstimateLikelihoodCstLog(const TFloat64Range& lambdaRange);
     Float64 getDTransposeD(const TFloat64Range& lambdaRange, std::string spcComponent);
     Float64 getLikelihood_cstLog(const TFloat64Range& lambdaRange);
+    Int32 getMTransposeMCumulative(const TFloat64Range& lambdaRange, std::vector<Float64> lbda, std::vector<Float64> mtmCumul);
 
 
     std::string getTplCorr_bestTplName();

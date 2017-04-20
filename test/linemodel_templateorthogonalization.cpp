@@ -126,7 +126,7 @@ Float64 processOrtho(std::string spectrumPath, std::string noisePath, std::strin
     BOOST_TEST_MESSAGE( "enableOrtho=" << enableOrtho << ",cAmp=" << cAmp );
 
 
-    //*//debug:
+    /*//debug:
     CSpectrum spcModel = model.GetModelSpectrum();
     FILE* f = fopen( "tplortho_model_dbg.txt", "w+" );
     for( Int32 t=0;t<spcModel.GetSampleCount();t++)
@@ -149,7 +149,8 @@ Float64 processOrtho(std::string spectrumPath, std::string noisePath, std::strin
 ***/
 BOOST_AUTO_TEST_CASE( Linemodel_tplorthogonalization )
 {
-    std::string spectrumPath = "../test/data/Linemodel_tplorthogalization/simu_fm_tplortho_synth_5k8k_ha.fits";
+    std::string spectrumPath_z0 = "../test/data/Linemodel_tplorthogalization/simu_fm_tplortho_synth_5k8k_ha.fits";
+    std::string spectrumPath_z0p9 = "../test/data/Linemodel_tplorthogalization/simu_fm_tplortho_synth_5k8k_ha_z0.9.fits";
     std::string noisePath = "../test/data/Linemodel_tplorthogalization/simu_fm_tplortho_synth_ha_5k8k_noise.fits";
     std::string linecatalogPath = "../test/data/Linemodel_tplorthogalization/linecatalog_b.txt";
 
@@ -165,14 +166,21 @@ BOOST_AUTO_TEST_CASE( Linemodel_tplorthogonalization )
 
     //test the fullmodel without ortho: amp should be too high due to the presence of high amplitude line
     enableOrtho = false;
-    continuumAmp = processOrtho(spectrumPath, noisePath, linecatalogPath, opt_fittingmethod, lineTypeFilter, forceFilter, initialVelocity, z, enableOrtho);
+    continuumAmp = processOrtho(spectrumPath_z0, noisePath, linecatalogPath, opt_fittingmethod, lineTypeFilter, forceFilter, initialVelocity, z, enableOrtho);
     BOOST_CHECK( continuumAmp<1e-21 == false);
 
-    //test the fullmodel with ortho
-    //enableOrtho = true;
-    //continuumAmp = processOrtho(spectrumPath, noisePath, linecatalogPath, opt_fittingmethod, lineTypeFilter, forceFilter, initialVelocity, z, enableOrtho);
-    //BOOST_CHECK( continuumAmp<1e-21 == true);
+    /* //deactivate for now, until the ortho is fully implemented
+    //test the fullmodel with ortho at z=0
+    enableOrtho = true;
+    continuumAmp = processOrtho(spectrumPath_z0, noisePath, linecatalogPath, opt_fittingmethod, lineTypeFilter, forceFilter, initialVelocity, z, enableOrtho);
+    BOOST_CHECK( continuumAmp<1e-21 == true);
 
+    //test the fullmodel with ortho at z=0.9
+    z = 0.9;
+    enableOrtho = true;
+    continuumAmp = processOrtho(spectrumPath_z0p9, noisePath, linecatalogPath, opt_fittingmethod, lineTypeFilter, forceFilter, initialVelocity, z, enableOrtho);
+    BOOST_CHECK( continuumAmp<1e-21 == true);
+    //*/
 }
 
 BOOST_AUTO_TEST_SUITE_END()

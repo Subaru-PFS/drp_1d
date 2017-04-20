@@ -107,7 +107,7 @@ void checkLeastSquareFast(std::string spectrumPath, std::string noisePath, std::
     Float64 merit = model.fit(z, lambdaRange, modelSolution, contreest_iterations, enableLogging);
     BOOST_TEST_MESSAGE( "Merit = " << merit );
 
-    //*//debug:
+    /*//debug:
     model.refreshModel();
     CSpectrum spcModel = model.GetModelSpectrum();
     FILE* f = fopen( "estimateleastsquarefast_model_dbg.txt", "w+" );

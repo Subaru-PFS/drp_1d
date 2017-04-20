@@ -48,6 +48,7 @@ public:
 
 	Bool Load ( const char* dirPath );
 	Bool Load_params( const char* dirPath );
+    Bool m_isInitialized;
 
 	Void DisplayQ ( const gsl_matrix* m );
 
