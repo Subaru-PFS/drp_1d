@@ -24,11 +24,36 @@ CPdfz::~CPdfz()
  * @param redshifts
  * ...
  *
- * @return 0: success, 1:problem,
+ * @return 0: success, 1:problem, 2:dz not constant
  */
 Int32 CPdfz::Compute(TFloat64List merits, TFloat64List redshifts, Float64 cstLog, TFloat64List& logPdf)
 {
     logPdf.clear();
+
+    //check if the z step is constant. If not, pdf cannot be estimated by the current method.
+    Float64 reldzThreshold = 0.05; //relative difference accepted
+    bool constantdz = true;
+    Float64 mindz = DBL_MAX;
+    Float64 maxdz = -DBL_MAX;
+    for ( UInt32 k=1; k<redshifts.size(); k++)
+    {
+        Float64 diff = redshifts[k]-redshifts[k-1];
+        if(mindz > diff)
+        {
+            mindz = diff;
+        }
+        if(maxdz < diff)
+        {
+            maxdz = diff;
+        }
+    }
+    Float64 zstep = (maxdz+mindz)/2.0;
+    if(abs(maxdz-mindz)/zstep>reldzThreshold)
+    {
+        constantdz = false;
+        return 2;
+    }
+
     logPdf.resize(redshifts.size());
     Float64 logPrior = 0; //log(1.0)
 
@@ -78,7 +103,7 @@ Int32 CPdfz::Compute(TFloat64List merits, TFloat64List redshifts, Float64 cstLog
         Float64 modifiedEXPO = exp(smallVALUES[k]-maxi);
         sumModifiedExp += modifiedEXPO;
     }
-    Float64 logEvidence = cstLog + maxi + log(sumModifiedExp);
+    Float64 logEvidence = cstLog + maxi + log(sumModifiedExp) + log(zstep);
 
 
 
