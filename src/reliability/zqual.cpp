@@ -362,18 +362,41 @@ Bool CQualz::ExtractFeaturesPDF( CDataStore& resultStore, const TFloat64Range& r
 	}*/
 
 
-	//m_doTEST = true;
-	if ( m_doTEST ) { // .m file
-		loc_z=2.3559e-05;
-		loc_fracz=9.8242e-01;
-		zdispersion=1.0000e+00;
-		zskewness= 0 ;
-		zkurtosis=9.8242e-01;
-		pzmap= 1.9000e-03  ;
-		cr_nbz=1.0000e+00 ;
-		cr_dz=9.7126e-01 ;
-		cr_cumpz=1.0000e+00;
+	if ( m_doTEST ) {  // .m file
+		/*
+	    'Std P(z|D,I)'
+	    'P(z_{MAP 1d}|D,I)'
+	    '#z\in CR_{95%}'
+	    '\Deltaz\in CR_{95%}'
+	    'Sum P(z\in CR_{95%} | D, I)'
+	    '\Deltaz\in Crit_{.1%}'
+	    'Sum P(z\in Crit_{.1%} | D, I)'
+	    '#dist Peaks_{pdf}'
+	    '#km Peak_{pdf} ~MAPz1d'
+		*/
+		zdispersion=5.8595e-05;
+		pzmap= 6.2780e-01  ;
+		cr_nbz=3.0000e+00  ;
+		cr_dz=2.0000e-04   ;
+		cr_cumpz=9.8888e-01  ;
+		//2.0000e-03 ;
+		r2_cumpz=1.0000e+00;
+		dist_peaks.Y=6.2780e-01;
+		significant_peaks=1.0000e+00;
 	}
+
+	/*
+		std::string desc_3 = "std_p(z|D,I) ";							//2
+		std::string desc_6 = "p(zmap_1d|D,I)";						//5
+		std::string desc_7 = "#z_in_R1";									//6
+		std::string desc_8 = "dz_in_R1";									//7
+		std::string desc_9 = "sum_p(z_in_R1|D,I)";					//8
+		std::string desc_10 = "sum_p(z_in_R2|D,I)";				//9
+		std::string desc_12 = "dist_(2peaks_in_proba";			//11
+		std::string desc_13 = "#km_peaks_1d";						//12
+
+		TInt64List selected = { 2, 5, 6, 7, 8, -1, 9, 11, 12 };
+	 */
 
 	m_zfeatures.resize(13);
 	m_zfeatures[0] = loc_z;
@@ -717,32 +740,82 @@ Void CQualz::ProjectPDF ( CClassifierStore& classifierStore )
 /*  ------------------------------------------------------------------------------------------------------ */
 Void CQualz::GetLabelPred ( CClassifierStore& classifierStore )
 {
+	Int32 opt_predL = 1;
+
 	Int32 ind_min =0;
-	Float64 s, dist, delta_min = INFINITY;
+	Float64 dist, delta_min = INFINITY;
+	Int32 ind_max =0;
+	Float64 delta_max = -INFINITY;
 
-	gsl_vector* delta;
-	delta = gsl_vector_alloc( classifierStore.GetNbClasses() );
+	if ( opt_predL ==1 )  {
+		// OPTION 1 : 	argmin LOSS FUNCTION ( QUADRATIC )
+		// distance (class i ) = mean( (1 - getTimes( CODING_MATRIX , 2*SCORE - 1 ) ).^2 ) / 2;
+		gsl_vector* delta;
+		delta = gsl_vector_alloc( classifierStore.GetNbClasses() );
 
-	for ( Int32 id_class=0; id_class<classifierStore.GetNbClasses(); id_class++) {
-		dist = 0.0;
-		s = 0;
+		gsl_vector* sc2;
+		sc2 = gsl_vector_alloc(m_score->size);
 		for ( Int32 id_lrn=0; id_lrn<classifierStore.GetNbLearners(); id_lrn++) {
-			double m = gsl_matrix_get( classifierStore.GetCodingMatrix(), id_class, id_lrn );
-			dist = ( m - m_binaryPred->data[id_lrn] );			// DECODE (ECOC)
-			s += dist*dist;
+			sc2->data[id_lrn] =  2* m_score->data[id_lrn] -1;
 		}
-		delta->data[id_class] = sqrt(s);
-		if ( delta->data[id_class] < delta_min) {
-			ind_min = id_class;
-			delta_min = delta->data[id_class];
+		gsl_matrix* prodM = GetTimesKL ( classifierStore.GetCodingMatrix() , sc2 );
+		gsl_matrix_scale (prodM, -1);
+		gsl_matrix_add_constant (prodM, 1);
+		gsl_matrix* prodM_ = gsl_matrix_alloc( prodM->size1, prodM->size2 );
+		gsl_matrix_memcpy( prodM_, prodM );
+		gsl_matrix_mul_elements (prodM_, prodM);
+
+		for ( Int32 id_class=0; id_class<classifierStore.GetNbClasses(); id_class++) {
+			dist = 0.0;
+			/*
+			Float64 s = 0, m_binaryPred = 0;
+			for ( Int32 id_lrn=0; id_lrn<classifierStore.GetNbLearners(); id_lrn++) {
+				double m = gsl_matrix_get( classifierStore.GetCodingMatrix(), id_class, id_lrn );
+				m_binaryPred = gsl_vector_alloc( classifierStore.GetNbLearners() );
+				if ( m_score->data[id_lrn] <=0) {
+					m_binaryPred = -1;
+				} else {
+					m_binaryPred = +1;
+				}
+				dist = ( m - m_binaryPred );			// DECODE (ECOC)
+				s += dist*dist;
+			}
+			delta->data[id_class] = sqrt(s); 		// minimizing the euclidean function
+			 */
+			for ( Int32 id_lrn=0; id_lrn<classifierStore.GetNbLearners(); id_lrn++) {
+				double m = gsl_matrix_get( prodM_, id_class, id_lrn );
+				dist += m;
+			}
+			delta->data[id_class] = dist /2 ;
+			if ( delta->data[id_class] < delta_min) {
+				ind_min = id_class;
+				delta_min = delta->data[id_class];
+			}
 		}
+		m_idpredLabel = ind_min + 1;  // the class_id start from 1 -> K classes
+
+		m_predProba = m_posterior->data[ind_min];
+		m_predLabel = classifierStore.GetLabel( ind_min );
+
+		gsl_vector_free(delta);
+		gsl_vector_free(sc2);
+		gsl_matrix_free(prodM);
+		gsl_matrix_free(prodM_);
+
+	} else if ( opt_predL == 2 ) {
+		// OPTION 2:		argmax  posterior probabilities
+		for ( Int32 id_class=0; id_class<classifierStore.GetNbClasses(); id_class++) {
+			if ( m_posterior->data[id_class] > delta_max) {
+				ind_max = id_class;
+				delta_max = m_posterior->data[id_class];
+			}
+		}
+		m_idpredLabel = ind_max + 1;  // the class_id start from 1 -> K classes
+
+		m_predProba = m_posterior->data[ ind_max ];
+		m_predLabel = classifierStore.GetLabel( ind_max );
+
 	}
-	m_idpredLabel = ind_min + 1;  // the class_id start from 1 -> K classes
-
-	m_predProba = m_posterior->data[ind_min];
-	m_predLabel = classifierStore.GetLabel( ind_min );
-
-	gsl_vector_free(delta);
 
 }
 
@@ -755,8 +828,6 @@ Void CQualz::GetLabelPred ( CClassifierStore& classifierStore )
 Void CQualz::GetScorePred ( CClassifierStore& classifierStore )
 {
 	Int32 i, j, M,P;
-	m_binaryPred = gsl_vector_alloc( classifierStore.GetNbLearners() );
-
 
 	auto mapLearners = classifierStore.GetLearners();
 	CClassifierStore::MapLearners::const_iterator it = mapLearners.begin();
@@ -835,22 +906,10 @@ Void CQualz::GetScorePred ( CClassifierStore& classifierStore )
 		if ( disp_details ) {
 			std::cout
 			<< "SCORE LEARNER _= " << learner_id<<"    "
-			<<learner_score <<std::endl;
+			<<learner_sc <<std::endl;
 		}
 		// UPDATE SCORE FOR EACH LEARNER
 		m_score->data[learner_id -1] = learner_score;
-		if ( learner_sc <=0) {
-			m_binaryPred->data[learner_id-1] = -1;
-		} else {
-			m_binaryPred->data[learner_id-1] = +1;
-		}
-
-		if ( disp_details ) {
-			std::cout
-			<< "m_binaryPred->data[learner_id-1]  " <<learner_id-1<<"  =  "
-			<<m_binaryPred->data[learner_id-1]  <<std::endl;
-		}
-
 
 	}
 }

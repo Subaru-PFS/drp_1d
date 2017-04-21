@@ -38,7 +38,7 @@ public:
 
 	Bool disp_details = false;   // display temporary results for each learnerwhen computing the score
 	Bool disp_time    = true;    // display time of full process (zFeature + zProject)
-	Bool m_doTEST   = 0;    // matlab check
+	Bool m_doTEST   = 0;         // matlab check
 
 	boost::posix_time::time_duration T0, T1;
 
@@ -92,7 +92,6 @@ protected:
 	gsl_vector* m_Xc;
 	gsl_vector* m_score;
 	gsl_vector* m_posterior;
-	gsl_vector* m_binaryPred; 	// prediction y_0 for each learner {-1; 1}
 
 };
 
