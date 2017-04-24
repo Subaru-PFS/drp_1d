@@ -72,7 +72,9 @@ public:
     std::vector<CMask>      OutsideLinesMask; //Mask with 0 under the lines and 1 anywhere else
     std::vector<std::string>      FittedTplName; //Name of the best template fitted for continuum
     TFloat64List      FittedTplAmplitude; //Amplitude for the best template fitted for continuum
-    std::vector<std::string>      FittedTplcorrTplName; //Name of the best template fitted for tplcorr
+    TFloat64List      FittedTplDustCoeff; //Calzetti dustcoeff for the best template fitted for continuum
+    std::vector<Int32>      FittedTplMeiksinIdx; //Meiksin igm index for the best template fitted for continuum
+    std::vector<std::string>      FittedTplcorrTplName; //Name of the best template fitted for tplcorr/tplshape
 
     //
     COperator::TStatusList  Status;

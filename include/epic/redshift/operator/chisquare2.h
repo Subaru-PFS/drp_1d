@@ -9,6 +9,7 @@
 
 #include <epic/redshift/spectrum/spectrum.h>
 #include <epic/redshift/spectrum/template/template.h>
+#include <epic/redshift/spectrum/fluxcorrectionmeiksin.h>
 
 namespace NSEpic
 {
@@ -29,7 +30,7 @@ public:
                                     const TFloat64Range& lambdaRange, const TFloat64List& redshifts,
                                     Float64 overlapThreshold );
     const Float64*  getDustCoeff(Float64 dustCoeff, Float64 maxLambda);
-
+    const Float64*  getMeiksinCoeff(Int32 meiksinIdx, Float64 redshift, Float64 maxLambda);
 
 
 private:
@@ -41,6 +42,7 @@ private:
                   Float64& fittingDtM,
                   Float64& fittingMtM,
                   Float64 &fittingDustCoeff,
+                  Float64 &fittingMeiksinIdx,
                   EStatus& status, std::string opt_interp, Float64 forcedAmplitude=-1, Int32 opt_extinction=0, Int32 opt_dustFitting=0, CMask spcMaskAdditional=CMask() );
 
     // buffers for the precomputed fine grid template
@@ -48,6 +50,7 @@ private:
     CMask           m_mskRebined_bf; //buffer
     CSpectrumSpectralAxis m_shiftedTplSpectralAxis_bf; //buffer
 
+    // ISM Calzetti
     Float64 *m_dataCalzetti;
     Float64 m_NdataCalzetti;
     Float64* m_YtplRawBuffer;
@@ -58,6 +61,8 @@ private:
     Float64* m_dataDustCoeff;
     bool calzettiInitFailed;
     
+    //IGM meiksin
+    CSpectrumFluxCorrectionMeiksin* m_igmCorrectionMeiksin;
 };
 
 

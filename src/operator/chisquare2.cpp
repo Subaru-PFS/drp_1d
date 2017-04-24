@@ -43,7 +43,7 @@ COperatorChiSquare2::COperatorChiSquare2( std::string calibrationPath )
     bool fileOpenFailed = file.rdstate() & std::ios_base::failbit;
     if(fileOpenFailed)
     {
-        //Log.LogError("Chisquare2, unable to load the calzetti calib. file... aborting!");
+        Log.LogError("Chisquare2, unable to load the calzetti calib. file: %s... aborting!", filePath.c_str());
         calzettiInitFailed = true;
     }else
     {
@@ -95,6 +95,10 @@ COperatorChiSquare2::COperatorChiSquare2( std::string calibrationPath )
         calzettiInitFailed = false;
     }
 
+    //IGM
+    m_igmCorrectionMeiksin = new CSpectrumFluxCorrectionMeiksin();
+    m_igmCorrectionMeiksin->Init(calibrationPath);
+
 }
 
 COperatorChiSquare2::~COperatorChiSquare2()
@@ -116,6 +120,7 @@ Void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& t
                                    Float64& fittingDtM,
                                    Float64& fittingMtM,
                                    Float64 &fittingDustCoeff,
+                                   Float64 &fittingMeiksinIdx,
                                    EStatus& status,
                                    std::string opt_interp, Float64 forcedAmplitude, Int32 opt_extinction, Int32 opt_dustFitting, CMask spcMaskAdditional)
 {
@@ -206,6 +211,10 @@ Void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& t
 
     //save Tpl Flux without dust or any other weighting
     bool ytpl_modified = false;
+    for(Int32 k=0; k<itplTplSpectralAxis.GetSamplesCount(); k++)
+    {
+        m_YtplRawBuffer[k] = Ytpl[k];
+    }
 
     // Optionally Apply some Calzetti Extinction for DUST
     bool opt_dust_calzetti = opt_dustFitting;
@@ -223,18 +232,36 @@ Void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& t
             status = nStatus_DataError;
             return ;
         }
-        for(Int32 k=0; k<itplTplSpectralAxis.GetSamplesCount(); k++)
-        {
-            m_YtplRawBuffer[k] = Ytpl[k];
-        }
     }
 
-    //loop on the EBMV dust coeff
-    for(Int32 kDust=0; kDust<nDustCoeffs; kDust++)
+    //Loop on the meiksin Idx
+    for(Int32 kMeiksin=0; kMeiksin<m_igmCorrectionMeiksin->GetIdxCount(); kMeiksin++)
     {
-        if(ytpl_modified)
+        Int32 meiksinIdx = kMeiksin; //index for the Meiksin curve (0-6; 3 being the median extinction value)
+
+
+        //Loop on the EBMV dust coeff
+        for(Int32 kDust=0; kDust<nDustCoeffs; kDust++)
         {
-            //re-init flux tpl without dust and other weightin
+            if(ytpl_modified)
+            {
+                //re-init flux tpl without dust and other weightin
+                for(Int32 k=0; k<itplTplSpectralAxis.GetSamplesCount(); k++)
+                {
+                    if(Xtpl[k] < currentRange.GetBegin()){
+                        continue;
+                    }
+                    if(Xtpl[k] > currentRange.GetEnd()){
+                        continue;
+                    }
+                    Ytpl[k] = m_YtplRawBuffer[k];
+                }
+            }
+
+            Float64 coeffEBMV = m_dustCoeffStart + m_dustCoeffStep*(Float64)kDust;
+            //Log.LogInfo("Chisquare2, fitting with dust coeff value: %f", coeffEBMV);
+
+            Float64 z = redshift;
             for(Int32 k=0; k<itplTplSpectralAxis.GetSamplesCount(); k++)
             {
                 if(Xtpl[k] < currentRange.GetBegin()){
@@ -243,38 +270,22 @@ Void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& t
                 if(Xtpl[k] > currentRange.GetEnd()){
                     continue;
                 }
-                Ytpl[k] = m_YtplRawBuffer[k];
+                Float64 restLambda = Xtpl[k]/(1.0+z);
+                Float64 coeffDust = 1.0;
+                if(restLambda >= 100.0)
+                {
+                    Int32 kCalzetti = Int32(restLambda-100.0);
+                    //coeffDust = pow(10.0, -0.4*m_dataCalzetti[kCalzetti]*coeffEBMV);
+                    coeffDust = m_dataDustCoeff[Int32(kDust*m_NdataCalzetti+kCalzetti)];
+                }
+
+                Ytpl[k] *= coeffDust;
             }
-        }
-
-        Float64 coeffEBMV = m_dustCoeffStart + m_dustCoeffStep*(Float64)kDust;
-        //Log.LogInfo("Chisquare2, fitting with dust coeff value: %f", coeffEBMV);
-
-        Float64 z = redshift;
-        for(Int32 k=0; k<itplTplSpectralAxis.GetSamplesCount(); k++)
-        {
-            if(Xtpl[k] < currentRange.GetBegin()){
-                continue;
-            }
-            if(Xtpl[k] > currentRange.GetEnd()){
-                continue;
-            }
-            Float64 restLambda = Xtpl[k]/(1.0+z);
-            Float64 coeffDust = 1.0;
-            if(restLambda >= 100.0)
-            {
-                Int32 kCalzetti = Int32(restLambda-100.0);
-                //coeffDust = pow(10.0, -0.4*m_dataCalzetti[kCalzetti]*coeffEBMV);
-                coeffDust = m_dataDustCoeff[Int32(kDust*m_NdataCalzetti+kCalzetti)];
-            }
-
-            Ytpl[k] *= coeffDust;
-        }
-        ytpl_modified = true;
+            ytpl_modified = true;
 
 
 
-        //* Optionally Apply some extinction
+            /* DEPRECATED: Optionally Apply some extinction - SIMPLE IGM EXTINCTION correction assuming original flux at z=3
         if(opt_extinction)
         {
             Float64 coeffUnder1216 = 1.0;
@@ -302,8 +313,47 @@ Void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& t
 
             }
         }
+        //*/
 
-        /*/
+            //Meiksin IGM extinction
+            if(opt_extinction)
+            {
+                Int32 redshiftIdx = m_igmCorrectionMeiksin->GetRedshiftIndex(redshift); //index for IGM Meiksin redshift range
+
+                Float64 coeffIGM = 1.0;
+                Float64 z = redshift;
+                for(Int32 k=0; k<itplTplSpectralAxis.GetSamplesCount(); k++)
+                {
+                    if(Xtpl[k] < currentRange.GetBegin()){
+                        continue;
+                    }
+                    if(Xtpl[k] > currentRange.GetEnd()){
+                        continue;
+                    }
+
+                    Float64 restLambda = Xtpl[k]/(1.0+z);
+                    if(restLambda <= m_igmCorrectionMeiksin->GetLambdaMax())
+                    {
+                        Int32 kLbdaMeiksin = 0;
+                        if(restLambda >= m_igmCorrectionMeiksin->GetLambdaMin())
+                        {
+                            kLbdaMeiksin = Int32(restLambda-m_igmCorrectionMeiksin->GetLambdaMin());
+                        }else //if lambda lower than min meiksin value, use lower meiksin value
+                        {
+                            kLbdaMeiksin = 0;
+                        }
+
+                        coeffIGM = m_igmCorrectionMeiksin->m_corrections[redshiftIdx].fluxcorr[meiksinIdx][kLbdaMeiksin];
+                        Ytpl[k] *= coeffIGM;
+                    }
+
+                }
+            }
+            //*/
+
+
+
+            /*/
     // Optionally Apply some DUST
     bool opt_dust = true;
     if(opt_dust)
@@ -335,7 +385,7 @@ Void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& t
     }
     //*/
 
-        /*/
+            /*/
     // Optionally mask pixels far from the breaks
     bool opt_onlyBreaks = false;
     if(opt_onlyBreaks)
@@ -386,84 +436,84 @@ Void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& t
     //*/
 
 
-        // j cursor move over spectrum
-        Int32 j = 0;
-        while( j < spcSpectralAxis.GetSamplesCount() && Xspc[j] < currentRange.GetBegin() )
-            j++;
+            // j cursor move over spectrum
+            Int32 j = 0;
+            while( j < spcSpectralAxis.GetSamplesCount() && Xspc[j] < currentRange.GetBegin() )
+                j++;
 
-        // k cursor move over template
-        Int32 k = 0;
-        while( k < itplTplSpectralAxis.GetSamplesCount() && Xtpl[k] < currentRange.GetBegin() )
-            k++;
+            // k cursor move over template
+            Int32 k = 0;
+            while( k < itplTplSpectralAxis.GetSamplesCount() && Xtpl[k] < currentRange.GetBegin() )
+                k++;
 
-        Int32 jStart = j;
-        Int32 kStart = k;
+            Int32 jStart = j;
+            Int32 kStart = k;
 
-        //EZ formulation
-        //Float64 sumXDevs = 0.0;
-        //Float64 sumYDevs = 0.0;
-        // Tonry&Davis formulation
-        Float64 sumCross = 0.0;
-        Float64 sumT = 0.0;
-        Float64 sumS = 0.0;
+            //EZ formulation
+            //Float64 sumXDevs = 0.0;
+            //Float64 sumYDevs = 0.0;
+            // Tonry&Davis formulation
+            Float64 sumCross = 0.0;
+            Float64 sumT = 0.0;
+            Float64 sumS = 0.0;
 
-        Float64 err2 = 0.0;
-        Float64 fit = 0;
-        Int32 numDevs = 0;
-        Int32 numDevsFull = 0;
-        const Float64* error = spcFluxAxis.GetError();
+            Float64 err2 = 0.0;
+            Float64 fit = 0;
+            Int32 numDevs = 0;
+            Int32 numDevsFull = 0;
+            const Float64* error = spcFluxAxis.GetError();
 
-        //if(0)
-        while( j<spcSpectralAxis.GetSamplesCount() && Xspc[j] <= currentRange.GetEnd() )
-        {
-            numDevsFull++;
-            if(spcMaskAdditional[j]){
-                numDevs++;
-                err2 = 1.0 / (error[j] * error[j]);
-                //EZ formulation
-                //sumYDevs+=Yspc[j]*err2;
-                //sumXDevs+=Ytpl[j]*err2;
-                //sumYDevs+=Yspc[j];
-                //sumXDevs+=Ytpl[j];
+            //if(0)
+            while( j<spcSpectralAxis.GetSamplesCount() && Xspc[j] <= currentRange.GetEnd() )
+            {
+                numDevsFull++;
+                if(spcMaskAdditional[j]){
+                    numDevs++;
+                    err2 = 1.0 / (error[j] * error[j]);
+                    //EZ formulation
+                    //sumYDevs+=Yspc[j]*err2;
+                    //sumXDevs+=Ytpl[j]*err2;
+                    //sumYDevs+=Yspc[j];
+                    //sumXDevs+=Ytpl[j];
 
-                // Tonry&Davis formulation
-                sumCross+=Yspc[j]*Ytpl[j]*err2;
-                sumT+=Ytpl[j]*Ytpl[j]*err2;
-                //sumCross+=Yspc[j]*Ytpl[j];
-                //sumT+=Ytpl[j]*Ytpl[j];
+                    // Tonry&Davis formulation
+                    sumCross+=Yspc[j]*Ytpl[j]*err2;
+                    sumT+=Ytpl[j]*Ytpl[j]*err2;
+                    //sumCross+=Yspc[j]*Ytpl[j];
+                    //sumT+=Ytpl[j]*Ytpl[j];
 
-                sumS+= Yspc[j]*Yspc[j]*err2;
+                    sumS+= Yspc[j]*Yspc[j]*err2;
+                }
+
+                j++;
             }
 
-            j++;
-        }
-
-        //if ( numDevs==0 || sumYDevs==0 || sumXDevs==0 ) //EZ formulation
-        if ( numDevs==0 || sumCross==0 || sumT==0 ) // Tonry&Davis formulation
-        {
-            status = nStatus_DataError;
-            return;
-        }
+            //if ( numDevs==0 || sumYDevs==0 || sumXDevs==0 ) //EZ formulation
+            if ( numDevs==0 || sumCross==0 || sumT==0 ) // Tonry&Davis formulation
+            {
+                status = nStatus_DataError;
+                return;
+            }
 
 
-        //Float64 ampl = 1.0;
-        //Float64 ampl = sumYDevs / sumXDevs; //EZ formulation
-        //Float64 ampl = sumT; //EZ formulation
-        Float64 ampl = max(0.0, sumCross / sumT); // Tonry&Davis formulation
-        if(forcedAmplitude !=-1){
-            ampl = forcedAmplitude;
-        }
+            //Float64 ampl = 1.0;
+            //Float64 ampl = sumYDevs / sumXDevs; //EZ formulation
+            //Float64 ampl = sumT; //EZ formulation
+            Float64 ampl = max(0.0, sumCross / sumT); // Tonry&Davis formulation
+            if(forcedAmplitude !=-1){
+                ampl = forcedAmplitude;
+            }
 
-        j = jStart;
-        k = kStart;
+            j = jStart;
+            k = kStart;
 
-        fit=0;
+            fit=0;
 
-        //* //1. fast method: D. Vibert, Amazed methods improvements, 10/06/2015
-        fit = sumS - sumCross*ampl;
-        //*/
+            //* //1. fast method: D. Vibert, Amazed methods improvements, 10/06/2015
+            fit = sumS - sumCross*ampl;
+            //*/
 
-        /*/ //2. old method: least squares loop
+            /*/ //2. old method: least squares loop
     Float64 s = 0;
     Float64 diff = 0;
     while( j<spcSpectralAxis.GetSamplesCount() && Xspc[j] <= currentRange.GetEnd() )
@@ -483,28 +533,30 @@ Void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& t
     }
     //*/
 
-        // Chi square reduct: it can introduces some problem?
-        //fit /= numDevs;
+            // Chi square reduct: it can introduces some problem?
+            //fit /= numDevs;
 
-        //*
-        //mask correction coefficient for the masked samples
-        Float64 maskedSamplesCorrection = (Float64)numDevsFull/(Float64)numDevs;
-        fit *= maskedSamplesCorrection;
-        //*/
+            //*
+            //mask correction coefficient for the masked samples
+            Float64 maskedSamplesCorrection = (Float64)numDevsFull/(Float64)numDevs;
+            fit *= maskedSamplesCorrection;
+            //*/
 
-        /*
+            /*
         Float64 overlapCorrection = 1.0/overlapRate;
         fit *= overlapCorrection;
         //*/
 
-        if(fit<chiSquare)
-        {
-            chiSquare = fit;
-            fittingDustCoeff = coeffEBMV;
-            fittingAmplitude = ampl;
-            fittingDtM = sumCross;
-            fittingMtM = sumT;
+            if(fit<chiSquare)
+            {
+                chiSquare = fit;
+                fittingDustCoeff = coeffEBMV;
+                fittingMeiksinIdx = meiksinIdx;
+                fittingAmplitude = ampl;
+                fittingDtM = sumCross;
+                fittingMtM = sumT;
 
+            }
         }
     }
 
@@ -631,6 +683,7 @@ std::shared_ptr<COperatorResult> COperatorChiSquare2::Compute(const CSpectrum& s
     result->ChiSquare.resize( sortedRedshifts.size() );
     result->FitAmplitude.resize( sortedRedshifts.size() );
     result->FitDustCoeff.resize( sortedRedshifts.size() );
+    result->FitMeiksinIdx.resize( sortedRedshifts.size() );
     result->FitDtM.resize( sortedRedshifts.size() );
     result->FitMtM.resize( sortedRedshifts.size() );
     result->Redshifts.resize( sortedRedshifts.size() );
@@ -679,6 +732,7 @@ std::shared_ptr<COperatorResult> COperatorChiSquare2::Compute(const CSpectrum& s
                   result->FitDtM[i],
                   result->FitMtM[i],
                   result->FitDustCoeff[i],
+                  result->FitMeiksinIdx[i],
                   result->Status[i],
                   opt_interp,
                   -1,
@@ -815,6 +869,49 @@ const Float64*  COperatorChiSquare2::getDustCoeff(Float64 dustCoeff, Float64 max
     return dustCoeffs;
 }
 
+/**
+ * @brief COperatorChiSquare2::getMeiksinCoeff: get the IGM Meiksin coeff at a fixed resolution of 1A
+ * @param dustCoeff
+ * @param maxLambda
+ * @return
+ */
+const Float64*  COperatorChiSquare2::getMeiksinCoeff(Int32 meiksinIdx, Float64 redshift, Float64 maxLambda)
+{
+    if(meiksinIdx<0 || meiksinIdx>m_igmCorrectionMeiksin->GetIdxCount()-1)
+    {
+        return 0;
+    }
+
+    //find redshiftIdx from redshift value
+   Int32 redshiftIdx = m_igmCorrectionMeiksin->GetRedshiftIndex(redshift);
+
+    Int32 nSamples = maxLambda+1; //+1 for security
+    Float64* meiksinCoeffs = new Float64 [(int)nSamples]();
+
+
+    for(Int32 kl=0; kl<nSamples; kl++)
+    {
+        Float64 restLambda = kl;
+        Float64 coeffIGM = 1.0;
+        if(restLambda <= m_igmCorrectionMeiksin->GetLambdaMax())
+        {
+            Int32 kLbdaMeiksin = 0;
+            if(restLambda >= m_igmCorrectionMeiksin->GetLambdaMin())
+            {
+                kLbdaMeiksin = Int32(restLambda-m_igmCorrectionMeiksin->GetLambdaMin());
+            }else //if lambda lower than min meiksin value, use lower meiksin value
+            {
+                kLbdaMeiksin = 0;
+            }
+
+            coeffIGM = m_igmCorrectionMeiksin->m_corrections[redshiftIdx].fluxcorr[meiksinIdx][kLbdaMeiksin];
+
+        }
+        meiksinCoeffs[kl] = coeffIGM;
+    }
+    return meiksinCoeffs;
+}
+
 
 const COperatorResult* COperatorChiSquare2::ExportChi2versusAZ(const CSpectrum& spectrum, const CTemplate& tpl,
                           const TFloat64Range& lambdaRange, const TFloat64List& redshifts,
@@ -943,6 +1040,7 @@ const COperatorResult* COperatorChiSquare2::ExportChi2versusAZ(const CSpectrum& 
     result->FitDtM.resize( sortedRedshifts.size() );
     result->FitMtM.resize( sortedRedshifts.size() );
     result->FitDustCoeff.resize( sortedRedshifts.size() );
+    result->FitMeiksinIdx.resize( sortedRedshifts.size() );
     result->Redshifts.resize( sortedRedshifts.size() );
     result->Overlap.resize( sortedRedshifts.size() );
     result->Status.resize( sortedRedshifts.size() );
@@ -978,6 +1076,7 @@ const COperatorResult* COperatorChiSquare2::ExportChi2versusAZ(const CSpectrum& 
                       result->FitDtM[i],
                       result->FitMtM[i],
                       result->FitDustCoeff[i],
+                      result->FitMeiksinIdx[i],
                       result->Status[i], "lin", ampl );
 
             fprintf( f, "%.15e", result->ChiSquare[i]);

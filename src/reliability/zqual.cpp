@@ -127,7 +127,7 @@ Bool CQualz::ExtractFeaturesPDF( CDataStore& resultStore, const TFloat64Range& r
 	nanVector = CheckPDF(logzpdf1d->valProbaLog);
 
 	SPoint dist_peaks;
-	Int32 significant_peaks = 0;
+    Int32 significant_peaks = 0;
 	Float64 lbins = log ( redshiftStep );
 	Float64 zmap, pzmap, cr_dz, cr_nbz ,cr_cumpz, r2_cumpz;
 	Float64 zmean, zdispersion, zskewness, zskewness2, zkurtosis, loc_z, loc_fracz;
@@ -157,7 +157,7 @@ Bool CQualz::ExtractFeaturesPDF( CDataStore& resultStore, const TFloat64Range& r
 			if ( extremumList.size()==0) {
 				dist_peaks.X = NAN;	// distance in z between the two first best peaks in zPDF
 				dist_peaks.Y = NAN; // distance in pz
-				significant_peaks = NAN;
+                significant_peaks = NAN;
 				nanVector = true;
 			} else {
 				dist_peaks.X = 0;	// distance in z between the two first best peaks in zPDF

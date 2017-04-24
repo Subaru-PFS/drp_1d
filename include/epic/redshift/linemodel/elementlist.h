@@ -73,10 +73,13 @@ public:
                         Float64 &merit,
                         Float64& fitAmplitude,
                         Float64 &fitDustCoeff,
+                        Int32 &fitMeiksinIdx,
                         Float64& fitDtM,
                         Float64& fitMtM);
     std::string getFitContinuum_tplName();
     Float64 getFitContinuum_tplAmplitude();
+    Float64 getFitContinuum_tplIsmDustCoeff();
+    Float64 getFitContinuum_tplIgmMeiksinIdx();
     void SetContinuumComponent(std::string component);
 
     Bool initDtd(const TFloat64Range& lambdaRange);
@@ -237,6 +240,7 @@ private:
     std::string m_fitContinuum_tplName;
     Float64 m_fitContinuum_tplFitAmplitude;
     Float64 m_fitContinuum_tplFitDustCoeff;
+    Int32 m_fitContinuum_tplFitMeiksinIdx;
     Float64 m_fitContinuum_tplFitDtM;
     Float64 m_fitContinuum_tplFitMtM;
 

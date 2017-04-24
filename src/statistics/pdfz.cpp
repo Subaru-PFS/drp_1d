@@ -24,11 +24,17 @@ CPdfz::~CPdfz()
  * @param redshifts
  * ...
  *
- * @return 0: success, 1:problem, 2:dz not constant
+ * @return 0: success, 1:problem, 2:dz not constant, 3 not enough z values
  */
 Int32 CPdfz::Compute(TFloat64List merits, TFloat64List redshifts, Float64 cstLog, TFloat64List& logPdf)
 {
     logPdf.clear();
+
+    //check if there is more than 2 reshifts values
+    if(redshifts.size()<=2)
+    {
+        return 2;
+    }
 
     //check if the z step is constant. If not, pdf cannot be estimated by the current method.
     Float64 reldzThreshold = 0.05; //relative difference accepted

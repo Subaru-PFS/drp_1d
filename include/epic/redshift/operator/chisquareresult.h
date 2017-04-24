@@ -24,6 +24,7 @@ public:
     TFloat64List            ChiSquare;
     TFloat64List            FitAmplitude;
     TFloat64List            FitDustCoeff;
+    TFloat64List            FitMeiksinIdx;
     TFloat64List            FitDtM;
     TFloat64List            FitMtM;
     TFloat64List            Overlap;

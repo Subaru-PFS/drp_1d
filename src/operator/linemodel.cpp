@@ -746,6 +746,8 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
         //save the continuum tpl fitting results
         result->FittedTplName[i] = model.getFitContinuum_tplName();
         result->FittedTplAmplitude[i] = model.getFitContinuum_tplAmplitude();
+        result->FittedTplDustCoeff[i] = model.getFitContinuum_tplIsmDustCoeff();
+        result->FittedTplMeiksinIdx[i] = model.getFitContinuum_tplIgmMeiksinIdx();
 
         //save the tplcorr results
         result->FittedTplcorrTplName[i] = model.getTplCorr_bestTplName();
@@ -762,17 +764,17 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
     if(retPdfz!=0)
     {
         Log.LogError("Linemodel: Pdfz computation failed");
-    }
-    postmargZResult->countTPL = result->Redshifts.size(); // assumed 1 model per z
-    postmargZResult->Redshifts.resize(result->Redshifts.size());
-    postmargZResult->valProbaLog.resize(result->Redshifts.size());
-    for ( UInt32 k=0; k<result->Redshifts.size(); k++)
-    {
+    }else{
+        postmargZResult->countTPL = result->Redshifts.size(); // assumed 1 model per z
+        postmargZResult->Redshifts.resize(result->Redshifts.size());
+        postmargZResult->valProbaLog.resize(result->Redshifts.size());
+        for ( UInt32 k=0; k<result->Redshifts.size(); k++)
+        {
             postmargZResult->Redshifts[k] = result->Redshifts[k] ;
             postmargZResult->valProbaLog[k] = logProba[k];
+        }
+        dataStore.StoreScopedGlobalResult( "zPDF/logposterior.logMargP_Z_data", postmargZResult); //need to store this pdf with this exact same name so that zqual can load it. see zqual.cpp/ExtractFeaturesPDF
     }
-    dataStore.StoreScopedGlobalResult( "zPDF/logposterior.logMargP_Z_data", postmargZResult); //need to store this pdf with this exact same name so that zqual can load it. see zqual.cpp/ExtractFeaturesPDF
-
 
     return result;
 

@@ -195,11 +195,11 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
     }else
     {
         // load static offset catalog, idx=0
-        //ctlgOffsets->SetLinesOffsets( *this, 0);
+        ctlgOffsets->SetLinesOffsets( *this, 0);
 
         // load auto stack, hack from reference catalog
-        std::string spcName = m_inputSpc->GetName();
-        ctlgOffsets->SetLinesOffsetsAutoSelectStack(*this, spcName);
+        //std::string spcName = m_inputSpc->GetName();
+        //ctlgOffsets->SetLinesOffsetsAutoSelectStack(*this, spcName);
     }
 }
 
@@ -454,6 +454,7 @@ Int32 CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange)
     Float64 bestMerit = DBL_MAX;
     Float64 bestFitAmplitude = -1.0;
     Float64 bestFitDustCoeff = -1.0;
+    Int32 bestFitMeiksinIdx = -1;
     Float64 bestFitDtM = -1.0;
     Float64 bestFitMtM = -1.0;
     std::string bestTplName="";
@@ -469,15 +470,17 @@ Int32 CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange)
             Float64 merit = DBL_MAX;
             Float64 fitAmplitude = -1.0;
             Float64 fitDustCoeff = -1.0;
+            Int32 fitMeiksinIdx = -1;
             Float64 fitDtM = -1.0;
             Float64 fitMtM = -1.0;
-            Bool ret = SolveContinuum( *m_inputSpc, tpl, lambdaRange, redshifts, overlapThreshold, maskList, opt_interp, opt_extinction, opt_dustFit, merit, fitAmplitude, fitDustCoeff, fitDtM, fitMtM);
+            Bool ret = SolveContinuum( *m_inputSpc, tpl, lambdaRange, redshifts, overlapThreshold, maskList, opt_interp, opt_extinction, opt_dustFit, merit, fitAmplitude, fitDustCoeff, fitMeiksinIdx, fitDtM, fitMtM);
 
             if(ret && merit<bestMerit)
             {
                 bestMerit = merit;
                 bestFitAmplitude = fitAmplitude;
                 bestFitDustCoeff = fitDustCoeff;
+                bestFitMeiksinIdx = fitMeiksinIdx;
                 bestFitDtM = fitDtM;
                 bestFitMtM = fitMtM;
                 bestTplName = tpl.GetName();
@@ -489,6 +492,7 @@ Int32 CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange)
         m_fitContinuum_tplName = bestTplName;
         m_fitContinuum_tplFitAmplitude = bestFitAmplitude;
         m_fitContinuum_tplFitDustCoeff = bestFitDustCoeff;
+        m_fitContinuum_tplFitMeiksinIdx = bestFitMeiksinIdx;
         m_fitContinuum_tplFitDtM = bestFitDtM;
         m_fitContinuum_tplFitMtM = bestFitMtM;
         //Log.LogInfo( "For z=%.5f : Best continuum tpl found: %s", m_Redshift, bestTplName.c_str());
@@ -514,13 +518,18 @@ Int32 CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange)
                     const Float64* Xsrc = tplSpectralAxis.GetSamples();
                     //apply dust attenuation
                     const Float64* dustCoeffArray = m_chiSquareOperator->getDustCoeff(m_fitContinuum_tplFitDustCoeff, Xsrc[n-1]);
+                    //apply igm meiksin extinction
+                    const Float64* meiksinCoeffArray = m_chiSquareOperator->getMeiksinCoeff(m_fitContinuum_tplFitMeiksinIdx, m_Redshift, Xsrc[n-1]);
+
                     Float64 lambda = 0.0;
                     for(Int32 ktpl=0; ktpl<n; ktpl++)
                     {
                         lambda = Xsrc[ktpl];
                         Ysrc[ktpl]*=dustCoeffArray[Int32(lambda)]; //dust coeff is rounded at the nearest 1 angstrom value
+                        Ysrc[ktpl]*=meiksinCoeffArray[Int32(lambda)]; //igm meiksin coeff is rounded at the nearest 1 angstrom value
                     }
                     delete dustCoeffArray;
+                    delete meiksinCoeffArray;
                     //spline
                     gsl_spline *spline = gsl_spline_alloc (gsl_interp_cspline, n);
                     gsl_spline_init (spline, Xsrc, Ysrc, n);
@@ -560,6 +569,7 @@ Bool CLineModelElementList::SolveContinuum(const CSpectrum& spectrum,
                                            Float64& merit,
                                            Float64& fitAmplitude,
                                            Float64& fitDustCoeff,
+                                           Int32& fitMeiksinIdx,
                                            Float64& fitDtM,
                                            Float64& fitMtM)
 {
@@ -577,6 +587,7 @@ Bool CLineModelElementList::SolveContinuum(const CSpectrum& spectrum,
         merit = chisquareResult->ChiSquare[0];
         fitAmplitude = chisquareResult->FitAmplitude[0];
         fitDustCoeff = chisquareResult->FitDustCoeff[0];
+        fitMeiksinIdx = chisquareResult->FitMeiksinIdx[0];
         fitDtM = chisquareResult->FitDtM[0];
         fitMtM = chisquareResult->FitMtM[0];
         return true;
@@ -592,6 +603,16 @@ std::string CLineModelElementList::getFitContinuum_tplName()
 Float64 CLineModelElementList::getFitContinuum_tplAmplitude()
 {
     return m_fitContinuum_tplFitAmplitude;
+}
+
+Float64 CLineModelElementList::getFitContinuum_tplIsmDustCoeff()
+{
+    return m_fitContinuum_tplFitDustCoeff;
+}
+
+Float64 CLineModelElementList::getFitContinuum_tplIgmMeiksinIdx()
+{
+    return m_fitContinuum_tplFitMeiksinIdx;
 }
 
 void CLineModelElementList::SetContinuumComponent(std::string component)
