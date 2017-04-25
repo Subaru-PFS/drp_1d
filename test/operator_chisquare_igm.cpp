@@ -19,13 +19,14 @@ using namespace NSEpic;
 BOOST_AUTO_TEST_SUITE(Operator_Chisquare_igm)
 
 
-void UtilChisquareTestFit( const char* spectraPath, const char* noisePath, const char* tplPath, bool disableMask, const Float64 targetFittedAmplitude )
+void UtilChisquareTestFit( const char* spectraPath, const char* noisePath, const char* tplPath, bool disableMask, const Float64 redshift, const Float64 targetFittedAmplitude, const Float64 targetFittedMeiksinIdx )
 {
     Bool retVal;
     CSpectrum s;
     CTemplate t;
 
-    Float64 z = 0.0;
+    Float64 z = redshift;
+    BOOST_TEST_MESSAGE( "  Redshift = " << redshift );
 
     // Load spectrum and templates
     CSpectrumIOGenericReader reader;
@@ -43,7 +44,7 @@ void UtilChisquareTestFit( const char* spectraPath, const char* noisePath, const
     BOOST_CHECK( retVal );
 
     Float64 redshiftDelta = 0.0001;
-    TFloat64List redshifts = TFloat64Range( 0.0, 0.0 ).SpreadOver( redshiftDelta );
+    TFloat64List redshifts = TFloat64Range( z, z ).SpreadOver( redshiftDelta );
 
     //building the mask
     Int32 sampleCount = s.GetFluxAxis().GetSamplesCount();
@@ -51,72 +52,68 @@ void UtilChisquareTestFit( const char* spectraPath, const char* noisePath, const
     CMask spcMask = Mask();
     spcMask.SetSize(sampleCount);
 
-    //TBD: Remove all additional masks for this test...
-    Float64 mean = -1.0;
-    Float64 std = -1.0;
-    s.GetMeanAndStdFluxInRange(TFloat64Range( 920, 9000 ), mean, std);
-    Float64 thres = mean*0.5;
-
-    for(Int32 km=0; km<spcMask.GetMasksCount(); km++)
-    {
-        if(!disableMask)
-        {
-            if(s.GetFluxAxis()[km]>thres)
-            {
-                spcMask[km]=0.0;
-            }else
-            {
-                spcMask[km]=1.0;
-            }
-        }else{
-            spcMask[km]=1.0;
-        }
-    }
-    additional_spcMasks.push_back(spcMask);
-    // end TBD
-
-
     std::string calibrationPath = "../test/data/Operator_Chisquare_igmTestCase/calibration";
 
     COperatorChiSquare2 chi(calibrationPath);
-    auto r = std::dynamic_pointer_cast<CChisquareResult>( chi.Compute( s, t, TFloat64Range( 920, 9000 ), redshifts, 1.0, additional_spcMasks, "precomputedfinegrid", 0 ) );
+    auto r = std::dynamic_pointer_cast<CChisquareResult>( chi.Compute( s, t, TFloat64Range( 200, 20000 ), redshifts, 1.0, additional_spcMasks, "precomputedfinegrid", 1 ) );
     BOOST_CHECK( r != NULL );
+    BOOST_CHECK( r->Status[0] == COperatorChiSquare2::nStatus_OK );
 
     Float64 fit_amplitude = r->FitAmplitude[0];
     BOOST_CHECK_CLOSE_FRACTION( targetFittedAmplitude, fit_amplitude, 0.1 );
-//    CChisquareResult referenceResult;
 
-//    std::ifstream input( resultPath );
-//    BOOST_CHECK( input.is_open() );
+    Float64 fit_lstSquare = r->ChiSquare[0];
+    BOOST_CHECK( fit_lstSquare < 0.01 );
+    BOOST_TEST_MESSAGE( "  Lst-Square = " << fit_lstSquare );
 
-//    referenceResult.Load( input );
-
-//    for( Int32 i=0; i<referenceResult.ChiSquare.size(); i++ )
-//    {
-//        if( boost::math::isnan( referenceResult.ChiSquare[i] ) )
-//        {
-//            BOOST_CHECK( boost::math::isnan( r->ChiSquare[i] ) );
-//        }
-//        else
-//        {
-//            BOOST_CHECK_CLOSE_FRACTION( referenceResult.ChiSquare[i], r->ChiSquare[i], 0.00001 );
-//        }
+    Float64 fit_meiksinIdx = r->FitMeiksinIdx[0];
+    BOOST_TEST_MESSAGE( "  RefIdx = " << targetFittedMeiksinIdx << ", Meiksin Idx = " << fit_meiksinIdx );
+    BOOST_CHECK( targetFittedMeiksinIdx == fit_meiksinIdx );
 
 
-//        BOOST_CHECK_CLOSE_FRACTION( referenceResult.Redshifts[i], r->Redshifts[i], 0.00001 );
-//        BOOST_CHECK_CLOSE_FRACTION( referenceResult.Overlap[i], r->Overlap[i], 0.00001 );
-//    }
 
 }
 
-BOOST_AUTO_TEST_CASE(ChisquareMaskTest)
+BOOST_AUTO_TEST_CASE(ChisquareTestCstFlux)
 {
-    //reference test
-    UtilChisquareTestFit( "../test/data/Operator_Chisquare_igmTestCase/fits_chisquare_igm_cstflux/spc_synth_constant1p0_meiksin-z3c5.fits",
-                            "../test/data/Operator_Chisquare_igmTestCase/fits_chisquare_igm_cstflux/spc_synth_constant0p5_ErrF.fits",
-                            "../test/data/Operator_Chisquare_igmTestCase/fits_chisquare_igm_cstflux/template_constantflux.dat", //constant template f=1.0 for all lambda
+    Int32 targetFitMeiksinId = 5;
+    Float64 z = 0.0;
+
+    //*
+    //z=0 test
+    targetFitMeiksinId = 5;
+    z = 0.0;
+    UtilChisquareTestFit( "../test/data/Operator_Chisquare_igmTestCase/fits_chisquare_igm_cstflux/spc_synth_z0_constant1p0_meiksin-z2c5.fits",
+                            "../test/data/Operator_Chisquare_igmTestCase/fits_chisquare_igm_cstflux/spc_synth_z0_constant0p5_ErrF.fits",
+                            "../test/data/Operator_Chisquare_igmTestCase/fits_chisquare_igm_cstflux/templates/galaxy/template_constantflux.dat", //constant template f=1.0 for all lambda
                             true,
-                            2.0);
+                            z,
+                            1.0,
+                            targetFitMeiksinId);
+    //*/
+
+    //z=2.75 test
+    targetFitMeiksinId = 5;
+    z = 2.75;
+    UtilChisquareTestFit( "../test/data/Operator_Chisquare_igmTestCase/fits_chisquare_igm_cstflux/spc_synth_z2p75_constant1p0_meiksin-z3c5.fits",
+                            "../test/data/Operator_Chisquare_igmTestCase/fits_chisquare_igm_cstflux/spc_synth_z2p75_constant0p5_ErrF.fits",
+                            "../test/data/Operator_Chisquare_igmTestCase/fits_chisquare_igm_cstflux/templates/galaxy/template_constantflux.dat", //constant template f=1.0 for all lambda
+                            true,
+                            z,
+                            1.0,
+                            targetFitMeiksinId);
+
+    //z=4.75 test
+    targetFitMeiksinId = 1;
+    z = 4.75;
+    UtilChisquareTestFit( "../test/data/Operator_Chisquare_igmTestCase/fits_chisquare_igm_cstflux/spc_synth_z4p75_constant1p0_meiksin-z5c1.fits",
+                            "../test/data/Operator_Chisquare_igmTestCase/fits_chisquare_igm_cstflux/spc_synth_z4p75_constant0p5_ErrF.fits",
+                            "../test/data/Operator_Chisquare_igmTestCase/fits_chisquare_igm_cstflux/templates/galaxy/template_constantflux.dat", //constant template f=1.0 for all lambda
+                            true,
+                            z,
+                            1.0,
+                            targetFitMeiksinId);
+
 }
 
 

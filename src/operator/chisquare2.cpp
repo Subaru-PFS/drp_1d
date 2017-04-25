@@ -219,7 +219,6 @@ Void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& t
     // Optionally Apply some Calzetti Extinction for DUST
     bool opt_dust_calzetti = opt_dustFitting;
 
-
     Int32 nDustCoeffs=1;
     if(!opt_dust_calzetti)
     {
@@ -234,9 +233,21 @@ Void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& t
         }
     }
 
-    //Loop on the meiksin Idx
-    for(Int32 kMeiksin=0; kMeiksin<m_igmCorrectionMeiksin->GetIdxCount(); kMeiksin++)
+    //Optionally apply some IGM absorption
+    Int32 nIGMCoeffs=1;
+    if(opt_extinction)
     {
+        nIGMCoeffs = m_igmCorrectionMeiksin->GetIdxCount();
+    }
+
+    //Loop on the meiksin Idx
+    Bool igmLoopUseless_WavelengthRange = false;
+    for(Int32 kMeiksin=0; kMeiksin<nIGMCoeffs; kMeiksin++)
+    {
+        if(igmLoopUseless_WavelengthRange)
+        {
+            break;
+        }
         Int32 meiksinIdx = kMeiksin; //index for the Meiksin curve (0-6; 3 being the median extinction value)
 
 
@@ -322,6 +333,7 @@ Void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& t
 
                 Float64 coeffIGM = 1.0;
                 Float64 z = redshift;
+                Bool igmCorrectionAppliedOnce = false;
                 for(Int32 k=0; k<itplTplSpectralAxis.GetSamplesCount(); k++)
                 {
                     if(Xtpl[k] < currentRange.GetBegin()){
@@ -345,8 +357,12 @@ Void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& t
 
                         coeffIGM = m_igmCorrectionMeiksin->m_corrections[redshiftIdx].fluxcorr[meiksinIdx][kLbdaMeiksin];
                         Ytpl[k] *= coeffIGM;
+                        igmCorrectionAppliedOnce = true;
                     }
-
+                }
+                if(!igmCorrectionAppliedOnce)
+                {
+                    igmLoopUseless_WavelengthRange = true;
                 }
             }
             //*/
