@@ -240,6 +240,15 @@ Void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& t
         nIGMCoeffs = m_igmCorrectionMeiksin->GetIdxCount();
     }
 
+    Bool option_igmFastProcessing = false; //todo: find a way to unit-test this acceleration
+    //Prepare the wavelengthRange Limits
+    Float64 lbda_min = currentRange.GetBegin();
+    Float64 lbda_max = currentRange.GetEnd();
+    std::vector<Float64> sumCross_outsideIGM(nDustCoeffs, 0.0);
+    std::vector<Float64>  sumT_outsideIGM(nDustCoeffs, 0.0);
+    std::vector<Float64>  sumS_outsideIGM(nDustCoeffs, 0.0);
+
+
     //Loop on the meiksin Idx
     Bool igmLoopUseless_WavelengthRange = false;
     for(Int32 kMeiksin=0; kMeiksin<nIGMCoeffs; kMeiksin++)
@@ -250,6 +259,17 @@ Void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& t
         }
         Int32 meiksinIdx = kMeiksin; //index for the Meiksin curve (0-6; 3 being the median extinction value)
 
+        if(option_igmFastProcessing && kMeiksin>0)
+        {
+            lbda_max = m_igmCorrectionMeiksin->GetLambdaMax()*(1+redshift);
+            if(lbda_max>currentRange.GetEnd())
+            {
+                lbda_max = currentRange.GetEnd();
+            }
+
+        }else{
+            lbda_max = currentRange.GetEnd();
+        }
 
         //Loop on the EBMV dust coeff
         for(Int32 kDust=0; kDust<nDustCoeffs; kDust++)
@@ -259,10 +279,10 @@ Void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& t
                 //re-init flux tpl without dust and other weightin
                 for(Int32 k=0; k<itplTplSpectralAxis.GetSamplesCount(); k++)
                 {
-                    if(Xtpl[k] < currentRange.GetBegin()){
+                    if(Xtpl[k] < lbda_min){
                         continue;
                     }
-                    if(Xtpl[k] > currentRange.GetEnd()){
+                    if(Xtpl[k] > lbda_max){
                         continue;
                     }
                     Ytpl[k] = m_YtplRawBuffer[k];
@@ -275,10 +295,10 @@ Void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& t
             Float64 z = redshift;
             for(Int32 k=0; k<itplTplSpectralAxis.GetSamplesCount(); k++)
             {
-                if(Xtpl[k] < currentRange.GetBegin()){
+                if(Xtpl[k] < lbda_min){
                     continue;
                 }
-                if(Xtpl[k] > currentRange.GetEnd()){
+                if(Xtpl[k] > lbda_max){
                     continue;
                 }
                 Float64 restLambda = Xtpl[k]/(1.0+z);
@@ -294,38 +314,6 @@ Void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& t
             }
             ytpl_modified = true;
 
-
-
-            /* DEPRECATED: Optionally Apply some extinction - SIMPLE IGM EXTINCTION correction assuming original flux at z=3
-        if(opt_extinction)
-        {
-            Float64 coeffUnder1216 = 1.0;
-            Float64 z = redshift;
-            for(Int32 k=0; k<itplTplSpectralAxis.GetSamplesCount(); k++)
-            {
-                if(Xtpl[k] < currentRange.GetBegin()){
-                    continue;
-                }
-                if(Xtpl[k] > currentRange.GetEnd()){
-                    continue;
-                }
-
-                Float64 restLambda = Xtpl[k]/(1.0+z);
-                if(restLambda < 1216.0)
-                {
-                    coeffUnder1216 = 1.0;
-                    if(z>=3.5)
-                    {
-                        coeffUnder1216 = -0.33*z+2.16;
-                    }
-
-                    Ytpl[k] *= coeffUnder1216;
-                }
-
-            }
-        }
-        //*/
-
             //Meiksin IGM extinction
             if(opt_extinction)
             {
@@ -336,10 +324,10 @@ Void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& t
                 Bool igmCorrectionAppliedOnce = false;
                 for(Int32 k=0; k<itplTplSpectralAxis.GetSamplesCount(); k++)
                 {
-                    if(Xtpl[k] < currentRange.GetBegin()){
+                    if(Xtpl[k] < lbda_min){
                         continue;
                     }
-                    if(Xtpl[k] > currentRange.GetEnd()){
+                    if(Xtpl[k] > lbda_max){
                         continue;
                     }
 
@@ -368,39 +356,6 @@ Void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& t
             //*/
 
 
-
-            /*/
-    // Optionally Apply some DUST
-    bool opt_dust = true;
-    if(opt_dust)
-    {
-        Float64 coeffWeightDust = 0.5; //0 dust is applied fully, 1 dust not applied
-        Float64 coeffA = 0.195;
-        Float64 coeffB = -0.828;
-
-        Float64 z = redshift;
-        for(Int32 k=0; k<itplTplSpectralAxis.GetSamplesCount(); k++)
-        {
-            if(Xtpl[k] < currentRange.GetBegin()){
-                continue;
-            }
-            if(Xtpl[k] > currentRange.GetEnd()){
-                continue;
-            }
-
-            Float64 restLambda = Xtpl[k]/(1.0+z);
-            Float64 coeffDust = 0.0;
-            if(restLambda > 900.0)
-            {
-                coeffDust = coeffA*log(restLambda-900)+coeffB;
-            }
-
-            Ytpl[k] *= (1.0-(1.0-coeffWeightDust)*coeffDust);
-
-        }
-    }
-    //*/
-
             /*/
     // Optionally mask pixels far from the breaks
     bool opt_onlyBreaks = false;
@@ -425,10 +380,10 @@ Void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& t
         Float64 z = redshift;
         for(Int32 k=0; k<itplTplSpectralAxis.GetSamplesCount(); k++)
         {
-            if(Xtpl[k] < currentRange.GetBegin()){
+            if(Xtpl[k] < lbda_min){
                 continue;
             }
-            if(Xtpl[k] > currentRange.GetEnd()){
+            if(Xtpl[k] > lbda_max){
                 continue;
             }
 
@@ -454,12 +409,12 @@ Void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& t
 
             // j cursor move over spectrum
             Int32 j = 0;
-            while( j < spcSpectralAxis.GetSamplesCount() && Xspc[j] < currentRange.GetBegin() )
+            while( j < spcSpectralAxis.GetSamplesCount() && Xspc[j] < lbda_min )
                 j++;
 
             // k cursor move over template
             Int32 k = 0;
-            while( k < itplTplSpectralAxis.GetSamplesCount() && Xtpl[k] < currentRange.GetBegin() )
+            while( k < itplTplSpectralAxis.GetSamplesCount() && Xtpl[k] < lbda_min )
                 k++;
 
             Int32 jStart = j;
@@ -473,6 +428,10 @@ Void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& t
             Float64 sumT = 0.0;
             Float64 sumS = 0.0;
 
+            Float64 sumCross_IGM = -1.0;
+            Float64 sumT_IGM = -1.0;
+            Float64 sumS_IGM = -1.0;
+
             Float64 err2 = 0.0;
             Float64 fit = 0;
             Int32 numDevs = 0;
@@ -480,7 +439,7 @@ Void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& t
             const Float64* error = spcFluxAxis.GetError();
 
             //if(0)
-            while( j<spcSpectralAxis.GetSamplesCount() && Xspc[j] <= currentRange.GetEnd() )
+            while( j<spcSpectralAxis.GetSamplesCount() && Xspc[j] <= lbda_max )
             {
                 numDevsFull++;
                 if(spcMaskAdditional[j]){
@@ -499,9 +458,35 @@ Void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& t
                     //sumT+=Ytpl[j]*Ytpl[j];
 
                     sumS+= Yspc[j]*Yspc[j]*err2;
+
+                    if(option_igmFastProcessing && kMeiksin==0)
+                    {
+                        //store intermediate sums for IGM range
+                        if(sumCross_IGM==-1)
+                        {
+                            if(Xspc[j]>=m_igmCorrectionMeiksin->GetLambdaMax()*(1+redshift))
+                            {
+                                sumCross_IGM = sumCross;
+                                sumT_IGM = sumT;
+                                sumS_IGM = sumS;
+                            }
+                        }
+                    }
                 }
 
                 j++;
+            }
+            if(option_igmFastProcessing && kMeiksin==0)
+            {
+                sumCross_outsideIGM[kDust] = sumCross-sumCross_IGM;
+                sumT_outsideIGM[kDust] = sumT-sumT_IGM;
+                sumS_outsideIGM[kDust] = sumS-sumS_IGM;
+            }
+            if(option_igmFastProcessing && kMeiksin>0)
+            {
+                sumCross += sumCross_outsideIGM[kDust];
+                sumT += sumT_outsideIGM[kDust];
+                sumS += sumS_outsideIGM[kDust];
             }
 
             //if ( numDevs==0 || sumYDevs==0 || sumXDevs==0 ) //EZ formulation
@@ -532,7 +517,7 @@ Void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& t
             /*/ //2. old method: least squares loop
     Float64 s = 0;
     Float64 diff = 0;
-    while( j<spcSpectralAxis.GetSamplesCount() && Xspc[j] <= currentRange.GetEnd() )
+    while( j<spcSpectralAxis.GetSamplesCount() && Xspc[j] <= lbda_max )
     {
         int k=j;
         {
