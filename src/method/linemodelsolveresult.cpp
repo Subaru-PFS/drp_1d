@@ -94,7 +94,8 @@ Bool CLineModelSolveResult::GetBestRedshift( const CDataStore& store, Float64& r
             if( merit < tmpMerit )
             {
                 tmpMerit = merit;
-                tmpRedshift = lineModelResult->Extrema[i];
+                //tmpRedshift = lineModelResult->Extrema[i];
+                tmpRedshift = lineModelResult->ExtremaLastPass[i];
                 tmpSigma = lineModelResult->DeltaZ[i];
             }
         }

@@ -697,6 +697,8 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
         result->Extrema[i] = z;
         result->ExtremaMerit[i] = m;
 
+        result->ExtremaLastPass[i] = z; //refined extremum is initialized here.
+
         //computing errz (or deltaz, dz...): should probably be computed in linemodelresult.cpp instead ?
         Float64 dz=-1.;
         if(result->Redshifts.size()>1)
@@ -778,6 +780,134 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
 
     return result;
 
+}
+
+/**
+ * @brief COperatorLineModel::processPass
+ * @return
+ */
+std::shared_ptr<COperatorResult> COperatorLineModel::computeWithUltimPass(CDataStore &dataStore,
+                                  const CSpectrum& spectrum,
+                                  const CSpectrum& spectrumContinuum,
+                                  const CTemplateCatalog& tplCatalog,
+                                  const TStringList& tplCategoryList,
+                                  const std::string opt_calibrationPath,
+                                  const CRayCatalog& restraycatalog,
+                                  const std::string& opt_lineTypeFilter,
+                                  const std::string& opt_lineForceFilter,
+                                  const TFloat64Range& lambdaRange,
+                                  const TFloat64List& redshifts,
+                                  const Int32 opt_extremacount,
+                                  const std::string& opt_fittingmethod,
+                                  const std::string& opt_continuumcomponent,
+                                  const std::string& opt_lineWidthType,
+                                  const Float64 opt_resolution,
+                                  const Float64 opt_velocityEmission,
+                                  const Float64 opt_velocityAbsorption,
+                                  const std::string& opt_continuumreest,
+                                  const std::string& opt_rules,
+                                  const std::string& opt_velocityFitting,
+                                  const Float64 &opt_twosteplargegridstep,
+                                  const std::string& opt_rigidity,
+                                  const Float64 &opt_velocityfitmin,
+                                  const Float64 &opt_velocityfitmax)
+{
+    auto result = std::dynamic_pointer_cast<CLineModelResult>(Compute( dataStore,
+                            spectrum,
+                            spectrumContinuum,
+                            tplCatalog,
+                            tplCategoryList,
+                            opt_calibrationPath,
+                            restraycatalog,
+                            opt_lineTypeFilter,
+                            opt_lineForceFilter,
+                            lambdaRange,
+                            redshifts,
+                            opt_extremacount,
+                            opt_fittingmethod,
+                            opt_continuumcomponent,
+                            opt_lineWidthType,
+                            opt_resolution,
+                            opt_velocityEmission,
+                            opt_velocityAbsorption,
+                            opt_continuumreest,
+                            opt_rules,
+                            opt_velocityFitting,
+                            opt_twosteplargegridstep,
+                            opt_rigidity,
+                            opt_velocityfitmin,
+                            opt_velocityfitmax));
+
+    if(result && opt_rigidity=="tplshape")
+    {
+       Log.LogInfo("Linemodel - Last Pass: begin");
+       //
+       //do the last pass on the 1st extremum range
+       //
+       Float64 halfRange = 1e-3;
+       Float64 lastPassStep = 1e-4;
+       //find the best extremum redhift
+       Float64 bestRedshift=-1;
+       Float64 bestMerit=DBL_MAX;
+       Int32 bestIndex=-1;
+       for(Int32 k=0; k<result->Extrema.size(); k++)
+       {
+            if(bestMerit>result->ExtremaMerit[k])
+            {
+                bestMerit = result->ExtremaMerit[k];
+                bestRedshift = result->Extrema[k];
+                bestIndex = k;
+            }
+       }
+       Log.LogInfo("Linemodel - Last Pass: around extrema z = %.5f", bestRedshift);
+       Float64 z=bestRedshift-halfRange;
+       std::vector<Float64> lastPassRedshifts;
+       if(z<redshifts[0])
+       {
+           z=redshifts[0];
+       }
+       while(z<bestRedshift+halfRange)
+       {
+           lastPassRedshifts.push_back(z);
+           z+=lastPassStep;
+       }
+       Log.LogInfo("Linemodel - Last Pass: range zmin=%.5f, zmax=%.5f", lastPassRedshifts[0], lastPassRedshifts[lastPassRedshifts.size()-1]);
+
+
+       std::string opt_rigidity_lastPass = "rules";
+       Int32 opt_extremacount_lastPass = 1;
+       auto lastPassResult = std::dynamic_pointer_cast<CLineModelResult>(Compute( dataStore,
+                               spectrum,
+                               spectrumContinuum,
+                               tplCatalog,
+                               tplCategoryList,
+                               opt_calibrationPath,
+                               restraycatalog,
+                               opt_lineTypeFilter,
+                               opt_lineForceFilter,
+                               lambdaRange,
+                               lastPassRedshifts,
+                               opt_extremacount_lastPass,
+                               opt_fittingmethod,
+                               opt_continuumcomponent,
+                               opt_lineWidthType,
+                               opt_resolution,
+                               opt_velocityEmission,
+                               opt_velocityAbsorption,
+                               opt_continuumreest,
+                               opt_rules,
+                               opt_velocityFitting,
+                               opt_twosteplargegridstep,
+                               opt_rigidity_lastPass,
+                               opt_velocityfitmin,
+                               opt_velocityfitmax));
+        Float64 refinedExtremum = lastPassResult->Extrema[0];
+        Log.LogInfo("Linemodel - Last Pass: found refined z=%.5f", refinedExtremum);
+
+        result->ExtremaLastPass[bestIndex] = refinedExtremum;
+    }
+
+    return result;
 }
 
 ///

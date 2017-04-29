@@ -54,6 +54,32 @@ public:
                                               const Float64 &opt_velocityfitmin=20,
                                               const Float64 &opt_velocityfitmax=800);
 
+    std::shared_ptr<COperatorResult> computeWithUltimPass(CDataStore &dataStore,
+                                      const CSpectrum& spectrum,
+                                      const CSpectrum& spectrumContinuum,
+                                      const CTemplateCatalog& tplCatalog,
+                                      const TStringList& tplCategoryList,
+                                      const std::string opt_calibrationPath,
+                                      const CRayCatalog& restraycatalog,
+                                      const std::string& opt_lineTypeFilter,
+                                      const std::string& opt_lineForceFilter,
+                                      const TFloat64Range& lambdaRange,
+                                      const TFloat64List& redshifts,
+                                      const Int32 opt_extremacount,
+                                      const std::string& opt_fittingmethod,
+                                      const std::string& opt_continuumcomponent,
+                                      const std::string& opt_lineWidthType,
+                                      const Float64 opt_resolution,
+                                      const Float64 opt_velocityEmission,
+                                      const Float64 opt_velocityAbsorption,
+                                      const std::string& opt_continuumreest,
+                                      const std::string& opt_rules,
+                                      const std::string& opt_velocityFitting,
+                                      const Float64 &opt_twosteplargegridstep,
+                                      const std::string& opt_rigidity,
+                                      const Float64 &opt_velocityfitmin,
+                                      const Float64 &opt_velocityfitmax);
+
     void storeGlobalModelResults( CDataStore &dataStore );
     void storePerTemplateModelResults( CDataStore &dataStore, const CTemplate& tpl );
 

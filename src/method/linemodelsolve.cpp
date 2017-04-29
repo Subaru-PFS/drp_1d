@@ -294,7 +294,7 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
 
     // Compute merit function
     COperatorLineModel linemodel;
-    auto  result = linemodel.Compute( dataStore,
+    auto  result = linemodel.computeWithUltimPass( dataStore,
 				      _spc,
                       _spcContinuum,
                       tplCatalog,
