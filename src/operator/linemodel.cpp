@@ -838,7 +838,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::computeWithUltimPass(CDataS
                             opt_velocityfitmin,
                             opt_velocityfitmax));
 
-    if(false && result && opt_rigidity=="tplshape")
+    if(result && opt_rigidity=="tplshape")
     {
        Log.LogInfo("Linemodel - Last Pass: begin");
        //
