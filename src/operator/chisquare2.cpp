@@ -449,8 +449,6 @@ Void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& t
                         }
                     }
                 }
-
-                j++;
             }
             if(option_igmFastProcessing && kMeiksin==0)
             {
