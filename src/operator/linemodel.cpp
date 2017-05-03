@@ -40,7 +40,7 @@ using namespace std;
  **/
 COperatorLineModel::COperatorLineModel()
 {
-
+    m_maxModelSaveCount = 5;
 }
 
 /**
@@ -653,7 +653,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
         m = result->ChiSquare[idx];//result->ChiSquare[idx];
 
         //save the model result
-        static Int32 maxModelSave = extremumCount;
+        static Int32 maxModelSave = std::min(m_maxModelSaveCount, extremumCount);
         if( savedModels<maxModelSave /*&& isLocalExtrema[i]*/)
         {
             // CModelSpectrumResult
@@ -838,7 +838,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::computeWithUltimPass(CDataS
                             opt_velocityfitmin,
                             opt_velocityfitmax));
 
-    if(result && opt_rigidity=="tplshape")
+    if(false && result && opt_rigidity=="tplshape")
     {
        Log.LogInfo("Linemodel - Last Pass: begin");
        //
@@ -852,6 +852,10 @@ std::shared_ptr<COperatorResult> COperatorLineModel::computeWithUltimPass(CDataS
        Int32 bestIndex=-1;
        for(Int32 k=0; k<result->Extrema.size(); k++)
        {
+           Log.LogInfo("Linemodel - Last Pass: k = %d", k);
+           Log.LogInfo("Linemodel - Last Pass: result->Extrema[k] = %.5f", result->Extrema[k]);
+           Log.LogInfo("Linemodel - Last Pass: result->ExtremaMerit[k] = %.5f", result->ExtremaMerit[k]);
+
             if(bestMerit>result->ExtremaMerit[k])
             {
                 bestMerit = result->ExtremaMerit[k];
@@ -876,6 +880,9 @@ std::shared_ptr<COperatorResult> COperatorLineModel::computeWithUltimPass(CDataS
 
        std::string opt_rigidity_lastPass = "rules";
        Int32 opt_extremacount_lastPass = 1;
+
+       Int32 maxSaveBackup = m_maxModelSaveCount;
+       m_maxModelSaveCount = 0;
        auto lastPassResult = std::dynamic_pointer_cast<CLineModelResult>(Compute( dataStore,
                                spectrum,
                                spectrumContinuum,
@@ -901,10 +908,14 @@ std::shared_ptr<COperatorResult> COperatorLineModel::computeWithUltimPass(CDataS
                                opt_rigidity_lastPass,
                                opt_velocityfitmin,
                                opt_velocityfitmax));
+
+        m_maxModelSaveCount = maxSaveBackup;
         Float64 refinedExtremum = lastPassResult->Extrema[0];
         Log.LogInfo("Linemodel - Last Pass: found refined z=%.5f", refinedExtremum);
 
         result->ExtremaLastPass[bestIndex] = refinedExtremum;
+    }else{
+        Log.LogInfo("Linemodel - Last Pass: failed to do linemodel, rigidity=%s", opt_rigidity.c_str());
     }
 
     return result;

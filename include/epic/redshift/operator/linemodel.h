@@ -83,6 +83,9 @@ public:
     void storeGlobalModelResults( CDataStore &dataStore );
     void storePerTemplateModelResults( CDataStore &dataStore, const CTemplate& tpl );
 
+
+    Int32 m_maxModelSaveCount;
+
 private:
 
     Void ModelFit(NSEpic::CLineModelElementList &model, const TFloat64Range& lambdaRange, Float64 redshift,
