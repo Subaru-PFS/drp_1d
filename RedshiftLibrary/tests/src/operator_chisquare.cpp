@@ -74,7 +74,7 @@ void UtilChisquareTestFit( const char* spectraPath, const char* noisePath, const
     }
     additional_spcMasks.push_back(spcMask);
 
-    std::string calibrationPath = "../test/data/Operator_ChisquareTestCase/calibration";
+    std::string calibrationPath = "../RedshiftLibrary/tests/src/data/Operator_ChisquareTestCase/calibration";
 
     COperatorChiSquare2 chi(calibrationPath);
     auto r = std::dynamic_pointer_cast<CChisquareResult>( chi.Compute( s, t, TFloat64Range( 920, 9000 ), redshifts, 1.0, additional_spcMasks, "precomputedfinegrid", 0 ) );
@@ -110,17 +110,17 @@ void UtilChisquareTestFit( const char* spectraPath, const char* noisePath, const
 BOOST_AUTO_TEST_CASE(ChisquareMaskTest)
 {
     //reference test to see if the fitting works without mask and none needed
-    UtilChisquareTestFit( "../test/data/Operator_ChisquareTestCase/fits_chisquare_mask_test_20161010/spc_synth_continuumsbc_F.fits",
-                            "../test/data/Operator_ChisquareTestCase/fits_chisquare_mask_test_20161010/spc_synth_continuumsbc_ErrF.fits",
-                            "../test/data/Operator_ChisquareTestCase/fits_chisquare_mask_test_20161010/NEW_Sbc_extended_extMarch2016corrected20160426_interp0429.dat",
+    UtilChisquareTestFit( "../RedshiftLibrary/tests/src/data/Operator_ChisquareTestCase/fits_chisquare_mask_test_20161010/spc_synth_continuumsbc_F.fits",
+                            "../RedshiftLibrary/tests/src/data/Operator_ChisquareTestCase/fits_chisquare_mask_test_20161010/spc_synth_continuumsbc_ErrF.fits",
+                            "../RedshiftLibrary/tests/src/data/Operator_ChisquareTestCase/fits_chisquare_mask_test_20161010/NEW_Sbc_extended_extMarch2016corrected20160426_interp0429.dat",
                             true,
                             91.0);
 
     // now same test with the big/wide lines disturbing the fit
 
-    UtilChisquareTestFit( "../test/data/Operator_ChisquareTestCase/fits_chisquare_mask_test_20161010/spc_synth_continuumsbc_linesLyaOIIHalphaXXL_F.fits",
-                            "../test/data/Operator_ChisquareTestCase/fits_chisquare_mask_test_20161010/spc_synth_continuumsbc_linesLyaOIIHalphaXXL_ErrF.fits",
-                            "../test/data/Operator_ChisquareTestCase/fits_chisquare_mask_test_20161010/NEW_Sbc_extended_extMarch2016corrected20160426_interp0429.dat",
+    UtilChisquareTestFit( "../RedshiftLibrary/tests/src/data/Operator_ChisquareTestCase/fits_chisquare_mask_test_20161010/spc_synth_continuumsbc_linesLyaOIIHalphaXXL_F.fits",
+                            "../RedshiftLibrary/tests/src/data/Operator_ChisquareTestCase/fits_chisquare_mask_test_20161010/spc_synth_continuumsbc_linesLyaOIIHalphaXXL_ErrF.fits",
+                            "../RedshiftLibrary/tests/src/data/Operator_ChisquareTestCase/fits_chisquare_mask_test_20161010/NEW_Sbc_extended_extMarch2016corrected20160426_interp0429.dat",
                             false,
                             91.0);
 }

@@ -68,7 +68,7 @@ void checkAmplitudeAndVelocityFit(std::string spectrumPath, std::string noisePat
 
     //these tplcatalog related variables are unused here.
     CTemplateCatalog tplCatalog;
-    Bool retValue = tplCatalog.Load( "../test/data/templatecatalog/" );
+    Bool retValue = tplCatalog.Load( "../RedshiftLibrary/tests/src/data/templatecatalog/" );
     TStringList tplCategories;
 
     CLineModelElementList model(spectrum, spectrumContinuum, tplCatalog, tplCategories, unused_calibrationPath, lineList, opt_fittingmethod, opt_continuumcomponent, opt_lineWidthType, opt_resolution, opt_velocityEmission, opt_velocityAbsorption, opt_rules, opt_rigidity);
@@ -99,9 +99,9 @@ void checkAmplitudeAndVelocityFit(std::string spectrumPath, std::string noisePat
 
 //BOOST_AUTO_TEST_CASE( LinemodelFit_lmfit_velocity_pfsbatch6_emission_sym_single )
 //{
-//    std::string spectrumPath = "../test/data/LinemodelFitTestCase/55016588000024vacLine_TF.fits";
-//    std::string noisePath = "../test/data/LinemodelFitTestCase/55016588000024vacLine_ErrF.fits";
-//    std::string linecatalogPath = "../test/data/LinemodelFitTestCase/linecatalog_b9_emission_sym_single.txt";
+//    std::string spectrumPath = "../RedshiftLibrary/tests/src/data/LinemodelFitTestCase/55016588000024vacLine_TF.fits";
+//    std::string noisePath = "../RedshiftLibrary/tests/src/data/LinemodelFitTestCase/55016588000024vacLine_ErrF.fits";
+//    std::string linecatalogPath = "../RedshiftLibrary/tests/src/data/LinemodelFitTestCase/linecatalog_b9_emission_sym_single.txt";
 
 //    std::string opt_fittingmethod = "lmfit";
 //    Int32 lineTypeFilter = CRay::nType_Emission;
@@ -124,9 +124,9 @@ void checkAmplitudeAndVelocityFit(std::string spectrumPath, std::string noisePat
 
 //BOOST_AUTO_TEST_CASE( LinemodelFit_lmfit_velocity_pfsbatch6_absorption_sym_single )
 //{
-//    std::string spectrumPath = "../test/data/LinemodelFitTestCase/10000663000008vacLine_TF.fits";
-//    std::string noisePath = "../test/data/LinemodelFitTestCase/10000663000008vacLine_ErrF.fits";
-//    std::string linecatalogPath = "../test/data/LinemodelFitTestCase/linecatalog_b9_absorption_sym_single.txt";
+//    std::string spectrumPath = "../RedshiftLibrary/tests/src/data/LinemodelFitTestCase/10000663000008vacLine_TF.fits";
+//    std::string noisePath = "../RedshiftLibrary/tests/src/data/LinemodelFitTestCase/10000663000008vacLine_ErrF.fits";
+//    std::string linecatalogPath = "../RedshiftLibrary/tests/src/data/LinemodelFitTestCase/linecatalog_b9_absorption_sym_single.txt";
 
 //    std::string opt_fittingmethod = "lmfit";
 //    Int32 lineTypeFilter = CRay::nType_Absorption;
@@ -150,9 +150,9 @@ void checkAmplitudeAndVelocityFit(std::string spectrumPath, std::string noisePat
 
 //BOOST_AUTO_TEST_CASE( LinemodelFit_lmfit_velocity_pfshighz_emission_asym_single )
 //{
-//    std::string spectrumPath = "../test/data/LinemodelFitTestCase/lya/spec_lines_oc_z5.70_ew50_fwhm10_nb25.0mag_TF.fits";
-//    std::string noisePath = "../test/data/LinemodelFitTestCase/lya/spec_lines_oc_z5.70_ew50_fwhm10_nb25.0mag_ErrF.fits";
-//    std::string linecatalogPath = "../test/data/LinemodelFitTestCase/linecatalog_b9_emission_asym_single.txt";
+//    std::string spectrumPath = "../RedshiftLibrary/tests/src/data/LinemodelFitTestCase/lya/spec_lines_oc_z5.70_ew50_fwhm10_nb25.0mag_TF.fits";
+//    std::string noisePath = "../RedshiftLibrary/tests/src/data/LinemodelFitTestCase/lya/spec_lines_oc_z5.70_ew50_fwhm10_nb25.0mag_ErrF.fits";
+//    std::string linecatalogPath = "../RedshiftLibrary/tests/src/data/LinemodelFitTestCase/linecatalog_b9_emission_asym_single.txt";
 
 //    std::string opt_fittingmethod = "lmfit";
 //    //std::string opt_fittingmethod = "individual";
@@ -172,9 +172,9 @@ void checkAmplitudeAndVelocityFit(std::string spectrumPath, std::string noisePat
 
 BOOST_AUTO_TEST_CASE( LinemodelFit_lmfit_1EmissionLineF )
 {
-    std::string spectrumPath = "../test/data/LinemodelFitTestCase/signalnoise_4lines_sig400_6000A_10000A.fits";
-    std::string noisePath    = "../test/data/LinemodelFitTestCase/noise_4lines_sig400_6000A_10000A.fits";
-    std::string linecatalogPath = "../test/data/LinemodelFitTestCase/linecatalog_test_linemodel_profile_1EL.txt";
+    std::string spectrumPath = "../RedshiftLibrary/tests/src/data/LinemodelFitTestCase/signalnoise_4lines_sig400_6000A_10000A.fits";
+    std::string noisePath    = "../RedshiftLibrary/tests/src/data/LinemodelFitTestCase/noise_4lines_sig400_6000A_10000A.fits";
+    std::string linecatalogPath = "../RedshiftLibrary/tests/src/data/LinemodelFitTestCase/linecatalog_test_linemodel_profile_1EL.txt";
 
     std::string opt_fittingmethod = "lmfit";
     Int32 lineTypeFilter = CRay::nType_Emission;
@@ -198,9 +198,9 @@ BOOST_AUTO_TEST_CASE( LinemodelFit_lmfit_1EmissionLineF )
 
 BOOST_AUTO_TEST_CASE( LinemodelFit_lmfit_4UnitaryEmissionLinesTF )
 {
-    std::string spectrumPath = "../test/data/LinemodelFitTestCase/signal_4lines_sig100_6000A_10000A_a1.0.fits";
-    std::string noisePath    = "../test/data/LinemodelFitTestCase/noise_4lines_sig400_6000A_10000A.fits";
-    std::string linecatalogPath = "../test/data/LinemodelFitTestCase/linecatalog_test_linemodel_profile_4EL.txt";
+    std::string spectrumPath = "../RedshiftLibrary/tests/src/data/LinemodelFitTestCase/signal_4lines_sig100_6000A_10000A_a1.0.fits";
+    std::string noisePath    = "../RedshiftLibrary/tests/src/data/LinemodelFitTestCase/noise_4lines_sig400_6000A_10000A.fits";
+    std::string linecatalogPath = "../RedshiftLibrary/tests/src/data/LinemodelFitTestCase/linecatalog_test_linemodel_profile_4EL.txt";
 
     std::string opt_fittingmethod = "lmfit";
     Int32 lineTypeFilter = CRay::nType_Emission;
@@ -226,9 +226,9 @@ BOOST_AUTO_TEST_CASE( LinemodelFit_lmfit_4UnitaryEmissionLinesTF )
 
 BOOST_AUTO_TEST_CASE( LinemodelFit_lmfit_4UnitaryEmissionLinesTF_normalisation )
 {
-    std::string spectrumPath = "../test/data/LinemodelFitTestCase/signal_4lines_sig100_6000A_10000A_a1.0_1em17.fits";
-    std::string noisePath    = "../test/data/LinemodelFitTestCase/noise_4lines_sig400_6000A_10000A_1em17.fits";
-    std::string linecatalogPath = "../test/data/LinemodelFitTestCase/linecatalog_test_linemodel_profile_4EL.txt";
+    std::string spectrumPath = "../RedshiftLibrary/tests/src/data/LinemodelFitTestCase/signal_4lines_sig100_6000A_10000A_a1.0_1em17.fits";
+    std::string noisePath    = "../RedshiftLibrary/tests/src/data/LinemodelFitTestCase/noise_4lines_sig400_6000A_10000A_1em17.fits";
+    std::string linecatalogPath = "../RedshiftLibrary/tests/src/data/LinemodelFitTestCase/linecatalog_test_linemodel_profile_4EL.txt";
 
     std::string opt_fittingmethod = "lmfit";
     Int32 lineTypeFilter = CRay::nType_Emission;
@@ -254,9 +254,9 @@ BOOST_AUTO_TEST_CASE( LinemodelFit_lmfit_4UnitaryEmissionLinesTF_normalisation )
 
 BOOST_AUTO_TEST_CASE( LinemodelFit_lmfit_4EmissionLinesF )
 {
-    std::string spectrumPath = "../test/data/LinemodelFitTestCase/signalnoise_4lines_sig400_6000A_10000A.fits";
-    std::string noisePath    = "../test/data/LinemodelFitTestCase/noise_4lines_sig400_6000A_10000A.fits";
-    std::string linecatalogPath = "../test/data/LinemodelFitTestCase/linecatalog_test_linemodel_profile_4EL.txt";
+    std::string spectrumPath = "../RedshiftLibrary/tests/src/data/LinemodelFitTestCase/signalnoise_4lines_sig400_6000A_10000A.fits";
+    std::string noisePath    = "../RedshiftLibrary/tests/src/data/LinemodelFitTestCase/noise_4lines_sig400_6000A_10000A.fits";
+    std::string linecatalogPath = "../RedshiftLibrary/tests/src/data/LinemodelFitTestCase/linecatalog_test_linemodel_profile_4EL.txt";
 
     std::string opt_fittingmethod = "lmfit";
     Int32 lineTypeFilter = CRay::nType_Emission;
@@ -284,9 +284,9 @@ BOOST_AUTO_TEST_CASE( LinemodelFit_lmfit_4EmissionLinesF )
 
 //BOOST_AUTO_TEST_CASE( LinemodelFit_lbfgsfit_4UnitaryEmissionLinesTF )
 //{
-//    std::string spectrumPath = "../test/data/LinemodelFitTestCase/signal_4lines_sig100_6000A_10000A_a1.0.fits";
-//    std::string noisePath    = "../test/data/LinemodelFitTestCase/noise_4lines_sig400_6000A_10000A.fits";
-//    std::string linecatalogPath = "../test/data/LinemodelFitTestCase/linecatalog_test_linemodel_profile_4EL.txt";
+//    std::string spectrumPath = "../RedshiftLibrary/tests/src/data/LinemodelFitTestCase/signal_4lines_sig100_6000A_10000A_a1.0.fits";
+//    std::string noisePath    = "../RedshiftLibrary/tests/src/data/LinemodelFitTestCase/noise_4lines_sig400_6000A_10000A.fits";
+//    std::string linecatalogPath = "../RedshiftLibrary/tests/src/data/LinemodelFitTestCase/linecatalog_test_linemodel_profile_4EL.txt";
 
 //    std::string opt_fittingmethod = "lbfgsfit";
 //    Int32 lineTypeFilter = CRay::nType_Emission;
@@ -312,9 +312,9 @@ BOOST_AUTO_TEST_CASE( LinemodelFit_lmfit_4EmissionLinesF )
 
 //BOOST_AUTO_TEST_CASE( LinemodelFit_lbfgsfit_1EmissionLineF )
 //{
-//    std::string spectrumPath = "../test/data/LinemodelFitTestCase/signalnoise_4lines_sig400_6000A_10000A.fits";
-//    std::string noisePath    = "../test/data/LinemodelFitTestCase/noise_4lines_sig400_6000A_10000A.fits";
-//    std::string linecatalogPath = "../test/data/LinemodelFitTestCase/linecatalog_test_linemodel_profile_1EL.txt";
+//    std::string spectrumPath = "../RedshiftLibrary/tests/src/data/LinemodelFitTestCase/signalnoise_4lines_sig400_6000A_10000A.fits";
+//    std::string noisePath    = "../RedshiftLibrary/tests/src/data/LinemodelFitTestCase/noise_4lines_sig400_6000A_10000A.fits";
+//    std::string linecatalogPath = "../RedshiftLibrary/tests/src/data/LinemodelFitTestCase/linecatalog_test_linemodel_profile_1EL.txt";
 
 //    std::string opt_fittingmethod = "lbfgsfit";//"hybrid";//
 //    Int32 lineTypeFilter = CRay::nType_Emission;
@@ -339,9 +339,9 @@ BOOST_AUTO_TEST_CASE( LinemodelFit_lmfit_4EmissionLinesF )
 
 //BOOST_AUTO_TEST_CASE( LinemodelFit_lbfgsfit_4EmissionLinesF )
 //{
-//    std::string spectrumPath = "../test/data/LinemodelFitTestCase/signalnoise_4lines_sig400_6000A_10000A.fits";
-//    std::string noisePath    = "../test/data/LinemodelFitTestCase/noise_4lines_sig400_6000A_10000A.fits";
-//    std::string linecatalogPath = "../test/data/LinemodelFitTestCase/linecatalog_test_linemodel_profile_4EL.txt";
+//    std::string spectrumPath = "../RedshiftLibrary/tests/src/data/LinemodelFitTestCase/signalnoise_4lines_sig400_6000A_10000A.fits";
+//    std::string noisePath    = "../RedshiftLibrary/tests/src/data/LinemodelFitTestCase/noise_4lines_sig400_6000A_10000A.fits";
+//    std::string linecatalogPath = "../RedshiftLibrary/tests/src/data/LinemodelFitTestCase/linecatalog_test_linemodel_profile_4EL.txt";
 
 //    std::string opt_fittingmethod = "lbfgsfit";
 //    Int32 lineTypeFilter = CRay::nType_Emission;

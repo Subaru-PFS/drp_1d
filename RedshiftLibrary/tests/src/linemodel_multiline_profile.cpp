@@ -47,8 +47,8 @@ void checkProfileValue(std::string linecatalogPath,
                        std::vector<Float64>   refProfileGradientMeansquareValues)
 {
     //some input params
-    std::string spectrumPath = "../test/data/LinemodelProfileTestCase/signalnoise_4lines_sig400_6000A_10000A.fits";       //unused, only needed for linemodel initialization
-    std::string noisePath    = "../test/data/LinemodelProfileTestCase/noise_4lines_sig400_6000A_10000A.fits";     //unused, only needed for linemodel initialization
+    std::string spectrumPath = "../RedshiftLibrary/tests/src/data/LinemodelProfileTestCase/signalnoise_4lines_sig400_6000A_10000A.fits";       //unused, only needed for linemodel initialization
+    std::string noisePath    = "../RedshiftLibrary/tests/src/data/LinemodelProfileTestCase/noise_4lines_sig400_6000A_10000A.fits";     //unused, only needed for linemodel initialization
     Int32 lineTypeFilter = CRay::nType_Emission;
     Int32 forceFilter = CRay::nForce_Strong;
     std::string opt_fittingmethod = "ones"; //all the elements amplitudes set to 1.0
@@ -99,7 +99,7 @@ void checkProfileValue(std::string linecatalogPath,
 
     //these tplcatalog related variables are unused here.
     CTemplateCatalog tplCatalog;
-    Bool retValue = tplCatalog.Load( "../test/data/templatecatalog/" );
+    Bool retValue = tplCatalog.Load( "../RedshiftLibrary/tests/src/data/templatecatalog/" );
     TStringList tplCategories;
 
     CLineModelElementList model(spectrum, spectrumContinuum, tplCatalog, tplCategories, unused_calibrationPath, lineList, opt_fittingmethod, opt_continuumcomponent, opt_lineWidthType, opt_resolution, opt_velocityEmission, opt_velocityAbsorption, opt_rules, opt_rigidity);
@@ -208,7 +208,7 @@ void checkProfileValue(std::string linecatalogPath,
 //-> deriv amp value must be 1.0
 BOOST_AUTO_TEST_CASE( Linemodel_multiline_profile_sym_value_center )
 {
-    std::string linecatalogPath = "../test/data/LinemodelProfileTestCase/linecatalog_test_linemodel_profile_4EL.txt";
+    std::string linecatalogPath = "../RedshiftLibrary/tests/src/data/LinemodelProfileTestCase/linecatalog_test_linemodel_profile_4EL.txt";
 
     std::vector<Float64> lambda;
     lambda.push_back(8600.00);
@@ -230,7 +230,7 @@ BOOST_AUTO_TEST_CASE( Linemodel_multiline_profile_sym_value_center )
 //test the sym profile on a the full 6000A to 10000A wavelength range
 BOOST_AUTO_TEST_CASE( Linemodel_multiline_profile_sym_value_fullwavelengthrange )
 {
-    std::string linecatalogPath = "../test/data/LinemodelProfileTestCase/linecatalog_test_linemodel_profile_4EL.txt";
+    std::string linecatalogPath = "../RedshiftLibrary/tests/src/data/LinemodelProfileTestCase/linecatalog_test_linemodel_profile_4EL.txt";
 
     //init lambda table
     std::vector<Float64> lambda;
@@ -240,7 +240,7 @@ BOOST_AUTO_TEST_CASE( Linemodel_multiline_profile_sym_value_fullwavelengthrange 
     }
 
     //init refProfileValue from fits file
-    std::string signalRefFluxPath = "../test/data/LinemodelProfileTestCase/signal_4lines_sig100_6000A_10000A_a1.0.fits";
+    std::string signalRefFluxPath = "../RedshiftLibrary/tests/src/data/LinemodelProfileTestCase/signal_4lines_sig100_6000A_10000A_a1.0.fits";
     CSpectrumIOFitsReader reader;
     CSpectrum spectrum;
     Bool retVal = reader.Read( signalRefFluxPath.c_str(), spectrum);
@@ -254,7 +254,7 @@ BOOST_AUTO_TEST_CASE( Linemodel_multiline_profile_sym_value_fullwavelengthrange 
     //load gradient reference values from CSV file
     bool enableGradientCheck = true;
     std::vector<std::vector<Float64> >  gradResidualMatrix( lambda.size(), std::vector<Float64>(5, 0.0) );
-    std::string gradResidual_filePath = "../test/data/LinemodelProfileTestCase/gradResidual_signalnoise4lines_sig400_6000A_10000A_m100_a1.0.txt";
+    std::string gradResidual_filePath = "../RedshiftLibrary/tests/src/data/LinemodelProfileTestCase/gradResidual_signalnoise4lines_sig400_6000A_10000A_m100_a1.0.txt";
     std::ifstream file;
     file.open( gradResidual_filePath, std::ifstream::in );
     bool fileOpenFailed = file.rdstate() & std::ios_base::failbit;
@@ -292,7 +292,7 @@ BOOST_AUTO_TEST_CASE( Linemodel_multiline_profile_sym_value_fullwavelengthrange 
     bool enableGradientMeansquareCheck=true;
     //load meansquare value
     Float64 refProfileMeansquareValue=0.0;
-    std::string meansquare_filePath = "../test/data/LinemodelProfileTestCase/residualMeanSquare_signalnoise4lines_sig400_6000A_10000A_m100_a1.0.txt";
+    std::string meansquare_filePath = "../RedshiftLibrary/tests/src/data/LinemodelProfileTestCase/residualMeanSquare_signalnoise4lines_sig400_6000A_10000A_m100_a1.0.txt";
     file.open( meansquare_filePath, std::ifstream::in );
     fileOpenFailed = file.rdstate() & std::ios_base::failbit;
     BOOST_CHECK( !fileOpenFailed );
@@ -321,7 +321,7 @@ BOOST_AUTO_TEST_CASE( Linemodel_multiline_profile_sym_value_fullwavelengthrange 
 
     //load gradientMeansquare value
     std::vector<Float64> refProfileGradientMeansquareValues(5, 0.0);
-    std::string gradientMeansquare_filePath = "../test/data/LinemodelProfileTestCase/gradResidualMeanSquare_signalnoise4lines_sig400_6000A_10000A_m100_a1.0.txt";
+    std::string gradientMeansquare_filePath = "../RedshiftLibrary/tests/src/data/LinemodelProfileTestCase/gradResidualMeanSquare_signalnoise4lines_sig400_6000A_10000A_m100_a1.0.txt";
     file.open( gradientMeansquare_filePath, std::ifstream::in );
     fileOpenFailed = file.rdstate() & std::ios_base::failbit;
     BOOST_CHECK( !fileOpenFailed );

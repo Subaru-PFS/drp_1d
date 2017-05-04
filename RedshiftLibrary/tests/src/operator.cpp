@@ -32,9 +32,9 @@ BOOST_AUTO_TEST_CASE(CorrelationAtZEqualZero)
 
     CSpectrumIOFitsReader reader;
 
-    retVal = reader.Read( "../test/data/OperatorTestCase/spectrum1_z_1.2299.fits", s );
+    retVal = reader.Read( "../RedshiftLibrary/tests/src/data/OperatorTestCase/spectrum1_z_1.2299.fits", s );
     BOOST_CHECK( retVal );
-    retVal = reader.Read( "../test/data/OperatorTestCase/spectrum1_z_1.2299.fits", t );
+    retVal = reader.Read( "../RedshiftLibrary/tests/src/data/OperatorTestCase/spectrum1_z_1.2299.fits", t );
     BOOST_CHECK( retVal );
 
     s.ConvertToLogScale();
@@ -77,9 +77,9 @@ BOOST_AUTO_TEST_CASE(CorrelationAtGivenZ)
 
     CSpectrumIOFitsReader reader;
 
-    retVal = reader.Read( "../test/data/OperatorTestCase/spectrum1_z_1.2299.fits", s );
+    retVal = reader.Read( "../RedshiftLibrary/tests/src/data/OperatorTestCase/spectrum1_z_1.2299.fits", s );
     BOOST_CHECK( retVal );
-    retVal = reader.Read( "../test/data/OperatorTestCase/spectrum1_z_1.2299.fits", t );
+    retVal = reader.Read( "../RedshiftLibrary/tests/src/data/OperatorTestCase/spectrum1_z_1.2299.fits", t );
     BOOST_CHECK( retVal );
 
     // Shift template back to rest pose
@@ -193,27 +193,27 @@ void UtilCorrelationMatchWithEZ( const char* spectraPath, const char* noisePath,
 BOOST_AUTO_TEST_CASE(CorrelationMatchWithEZ)
 {
 
-    UtilCorrelationMatchWithEZ( "../test/data/OperatorTestCase/fromVVDSDeep/spectra/sc_020086397_F02P016_vmM1_red_31_1_atm_clean.fits",
+    UtilCorrelationMatchWithEZ( "../RedshiftLibrary/tests/src/data/OperatorTestCase/fromVVDSDeep/spectra/sc_020086397_F02P016_vmM1_red_31_1_atm_clean.fits",
                             NULL,
-                            "../test/data/OperatorTestCase/fromVVDSDeep/template/galaxy/zcosmos_red.txt",
-                            "../test/data/OperatorTestCase/fromVVDSDeep/results_nonoise/sc_020086397_F02P016_vmM1_red_31_1_atm_clean.csv" );
+                            "../RedshiftLibrary/tests/src/data/OperatorTestCase/fromVVDSDeep/template/galaxy/zcosmos_red.txt",
+                            "../RedshiftLibrary/tests/src/data/OperatorTestCase/fromVVDSDeep/results_nonoise/sc_020086397_F02P016_vmM1_red_31_1_atm_clean.csv" );
 /*
-    UtilCorrelationMatchWithEZ( "../test/data/OperatorTestCase/fromVVDSDeep/spectra/sc_020100776_F02P017_vmM1_red_129_1_atm_clean.fits",
+    UtilCorrelationMatchWithEZ( "../RedshiftLibrary/tests/src/data/OperatorTestCase/fromVVDSDeep/spectra/sc_020100776_F02P017_vmM1_red_129_1_atm_clean.fits",
                             NULL,
-                            "../test/data/OperatorTestCase/fromVVDSDeep/template/galaxy/zcosmos_red.txt",
-                            "../test/data/OperatorTestCase/fromVVDSDeep/results_nonoise/sc_020100776_F02P017_vmM1_red_129_1_atm_clean.csv" );
+                            "../RedshiftLibrary/tests/src/data/OperatorTestCase/fromVVDSDeep/template/galaxy/zcosmos_red.txt",
+                            "../RedshiftLibrary/tests/src/data/OperatorTestCase/fromVVDSDeep/results_nonoise/sc_020100776_F02P017_vmM1_red_129_1_atm_clean.csv" );
 
 
-    UtilCorrelationMatchWithEZ( "../test/data/OperatorTestCase/fromVVDSDeep/spectra/sc_020088501_F02P017_vmM1_red_82_1_atm_clean.fits",
-                            "../test/data/OperatorTestCase/fromVVDSDeep/spectra/sc_020088501_F02P017_vmM1_red_82_1_noise.fits",
-                            "../test/data/OperatorTestCase/fromVVDSDeep/template/galaxy/zcosmos_red.txt",
-                            "../test/data/OperatorTestCase/fromVVDSDeep/results_withnoise/sc_020088501_F02P017_vmM1_red_82_1_atm_clean.csv" );
+    UtilCorrelationMatchWithEZ( "../RedshiftLibrary/tests/src/data/OperatorTestCase/fromVVDSDeep/spectra/sc_020088501_F02P017_vmM1_red_82_1_atm_clean.fits",
+                            "../RedshiftLibrary/tests/src/data/OperatorTestCase/fromVVDSDeep/spectra/sc_020088501_F02P017_vmM1_red_82_1_noise.fits",
+                            "../RedshiftLibrary/tests/src/data/OperatorTestCase/fromVVDSDeep/template/galaxy/zcosmos_red.txt",
+                            "../RedshiftLibrary/tests/src/data/OperatorTestCase/fromVVDSDeep/results_withnoise/sc_020088501_F02P017_vmM1_red_82_1_atm_clean.csv" );
 
 
-    UtilCorrelationMatchWithEZ( "../test/data/OperatorTestCase/fromVVDSDeep/spectra/sc_020123432_F02P019_vmM1_red_72_1_atm_clean.fits",
-                            "../test/data/OperatorTestCase/fromVVDSDeep/spectra/sc_020123432_F02P019_vmM1_red_72_1_noise.fits",
-                            "../test/data/OperatorTestCase/fromVVDSDeep/template/galaxy/zcosmos_red.txt",
-                            "../test/data/OperatorTestCase/fromVVDSDeep/results_withnoise/sc_020123432_F02P019_vmM1_red_72_1_atm_clean.csv" );
+    UtilCorrelationMatchWithEZ( "../RedshiftLibrary/tests/src/data/OperatorTestCase/fromVVDSDeep/spectra/sc_020123432_F02P019_vmM1_red_72_1_atm_clean.fits",
+                            "../RedshiftLibrary/tests/src/data/OperatorTestCase/fromVVDSDeep/spectra/sc_020123432_F02P019_vmM1_red_72_1_noise.fits",
+                            "../RedshiftLibrary/tests/src/data/OperatorTestCase/fromVVDSDeep/template/galaxy/zcosmos_red.txt",
+                            "../RedshiftLibrary/tests/src/data/OperatorTestCase/fromVVDSDeep/results_withnoise/sc_020123432_F02P019_vmM1_red_72_1_atm_clean.csv" );
                             */
 
 }
@@ -308,16 +308,16 @@ void UtilChisquareMatchWithEZ( const char* spectraPath, const char* noisePath, c
 
 BOOST_AUTO_TEST_CASE(ChisquareMatchWithEZ)
 {
-    UtilChisquareMatchWithEZ( "../test/data/OperatorTestCase/fromVVDSDeep/spectra/sc_020088501_F02P017_vmM1_red_82_1_atm_clean.fits",
-                            "../test/data/OperatorTestCase/fromVVDSDeep/spectra/sc_020088501_F02P017_vmM1_red_82_1_noise.fits",
-                            "../test/data/OperatorTestCase/fromVVDSDeep/template/galaxy/zcosmos_red.txt",
-                            "../test/data/OperatorTestCase/fromVVDSDeep/chisquare_results_withnoise/sc_020088501_F02P017_vmM1_red_82_1_atm_clean.csv" );
+    UtilChisquareMatchWithEZ( "../RedshiftLibrary/tests/src/data/OperatorTestCase/fromVVDSDeep/spectra/sc_020088501_F02P017_vmM1_red_82_1_atm_clean.fits",
+                            "../RedshiftLibrary/tests/src/data/OperatorTestCase/fromVVDSDeep/spectra/sc_020088501_F02P017_vmM1_red_82_1_noise.fits",
+                            "../RedshiftLibrary/tests/src/data/OperatorTestCase/fromVVDSDeep/template/galaxy/zcosmos_red.txt",
+                            "../RedshiftLibrary/tests/src/data/OperatorTestCase/fromVVDSDeep/chisquare_results_withnoise/sc_020088501_F02P017_vmM1_red_82_1_atm_clean.csv" );
 
 
-    UtilChisquareMatchWithEZ( "../test/data/OperatorTestCase/fromVVDSDeep/spectra/sc_020123432_F02P019_vmM1_red_72_1_atm_clean.fits",
-                            "../test/data/OperatorTestCase/fromVVDSDeep/spectra/sc_020123432_F02P019_vmM1_red_72_1_noise.fits",
-                            "../test/data/OperatorTestCase/fromVVDSDeep/template/galaxy/zcosmos_red.txt",
-                            "../test/data/OperatorTestCase/fromVVDSDeep/chisquare_results_withnoise/sc_020123432_F02P019_vmM1_red_72_1_atm_clean.csv" );
+    UtilChisquareMatchWithEZ( "../RedshiftLibrary/tests/src/data/OperatorTestCase/fromVVDSDeep/spectra/sc_020123432_F02P019_vmM1_red_72_1_atm_clean.fits",
+                            "../RedshiftLibrary/tests/src/data/OperatorTestCase/fromVVDSDeep/spectra/sc_020123432_F02P019_vmM1_red_72_1_noise.fits",
+                            "../RedshiftLibrary/tests/src/data/OperatorTestCase/fromVVDSDeep/template/galaxy/zcosmos_red.txt",
+                            "../RedshiftLibrary/tests/src/data/OperatorTestCase/fromVVDSDeep/chisquare_results_withnoise/sc_020123432_F02P019_vmM1_red_72_1_atm_clean.csv" );
 }
 
 

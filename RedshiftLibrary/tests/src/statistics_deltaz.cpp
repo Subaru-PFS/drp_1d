@@ -43,7 +43,7 @@ BOOST_AUTO_TEST_CASE(Deltaz)
     Float64 zRangeHalf = 0.005;
     TFloat64Range redshiftRange = TFloat64Range( center_redshift-zRangeHalf, center_redshift+zRangeHalf );
 
-    DeltazTestCompute( "../test/data/DeltazTestCase/simulm201605_tplshapeconttplfit_linemodelsolve.linemodel.csv", center_redshift, redshiftRange);
+    DeltazTestCompute( "../RedshiftLibrary/tests/src/data/DeltazTestCase/simulm201605_tplshapeconttplfit_linemodelsolve.linemodel.csv", center_redshift, redshiftRange);
 
 }
 

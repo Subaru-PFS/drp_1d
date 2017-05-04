@@ -16,7 +16,7 @@ BOOST_AUTO_TEST_CASE(VVDSReadValidFile)
 
     CSpectrum s;
 
-    Bool retVal = reader.Read( "../test/data/SpectrumioTestCase/spectrum1_z_1.2299.fits", s );
+    Bool retVal = reader.Read( "../RedshiftLibrary/tests/src/data/SpectrumioTestCase/spectrum1_z_1.2299.fits", s );
     BOOST_CHECK( retVal == true );
 
     BOOST_CHECK( s.GetSampleCount() == 11391 );
@@ -30,7 +30,7 @@ BOOST_AUTO_TEST_CASE(VVDSReadInvalidFile)
 
     CSpectrum s;
 
-    Bool rValue = reader.Read( "../test/data/SpectrumioTestCase/invalidspectrum1.fits", s );
+    Bool rValue = reader.Read( "../RedshiftLibrary/tests/src/data/SpectrumioTestCase/invalidspectrum1.fits", s );
 
     BOOST_CHECK( rValue == false );
     BOOST_CHECK( s.GetSampleCount() == 0 );

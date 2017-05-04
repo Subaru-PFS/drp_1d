@@ -36,12 +36,12 @@ Float64 getLinemodelDoubletRatio(std::string spc, std::string noise, bool enable
 
     std::string procID = "processing_id_unused";
     std::shared_ptr<CClassifierStore> classifStore = std::shared_ptr<CClassifierStore>( new CClassifierStore() );
-    Bool retVal = ctx.Init( spc.c_str(), noise.c_str(), procID, NULL, "../test/data/LinemodelRulesTestCase/raycatalog_test_elratiorules.txt", params, classifStore );
+    Bool retVal = ctx.Init( spc.c_str(), noise.c_str(), procID, NULL, "../RedshiftLibrary/tests/src/data/LinemodelRulesTestCase/raycatalog_test_elratiorules.txt", params, classifStore );
     BOOST_CHECK( retVal == true );
 
     //these tplcatalog related variables are unused here.
     CTemplateCatalog tplCatalog;
-    Bool rValue = tplCatalog.Load( "../test/data/templatecatalog/" );
+    Bool rValue = tplCatalog.Load( "../RedshiftLibrary/tests/src/data/templatecatalog/" );
     TStringList tplCategories;
 
 
@@ -94,22 +94,22 @@ BOOST_AUTO_TEST_CASE( OIIRatioRange1 )
     Float64 OIIRatioRangeLimit = 2.5; //this threshold has to be set according the regulament.cpp value
 
     //TEST 1 : initially A1 = 3*A2, oiiratiorange rule should modify both amplitudes to get a ratio = OIIRatioRangeLimit
-    spc = "../test/data/LinemodelRulesTestCase/simu_rules_ratiorange_1.fits";
-    noise = "../test/data/LinemodelRulesTestCase/simu_rules_ratiorange_1_noise.fits";
+    spc = "../RedshiftLibrary/tests/src/data/LinemodelRulesTestCase/simu_rules_ratiorange_1.fits";
+    noise = "../RedshiftLibrary/tests/src/data/LinemodelRulesTestCase/simu_rules_ratiorange_1_noise.fits";
     ratio = getLinemodelDoubletRatio(spc, noise, 0); //rule disabled, get ratio
     BOOST_CHECK_MESSAGE( ratio > OIIRatioRangeLimit, "RatioRange: 1st spectrum control test failed = leads to a ratio not > OIIRatioRangeLimit" );
     ratio = getLinemodelDoubletRatio(spc, noise, 1); //rule enabled, get ratio
     BOOST_CHECK_CLOSE_FRACTION( OIIRatioRangeLimit, ratio, 0.1);
 
     //TEST 2 : same as Test 1, but initially A2 = 3*A1
-    spc = "../test/data/LinemodelRulesTestCase/simu_rules_ratiorange_2.fits";
-    noise = "../test/data/LinemodelRulesTestCase/simu_rules_ratiorange_2_noise.fits";
+    spc = "../RedshiftLibrary/tests/src/data/LinemodelRulesTestCase/simu_rules_ratiorange_2.fits";
+    noise = "../RedshiftLibrary/tests/src/data/LinemodelRulesTestCase/simu_rules_ratiorange_2_noise.fits";
     ratio = getLinemodelDoubletRatio(spc, noise, 1);
     BOOST_CHECK_CLOSE_FRACTION( 1./OIIRatioRangeLimit, ratio, 0.1 );
 
     //TEST 3 : A1 = 1.5*A2, so that the ratio should be unchanged
-    spc = "../test/data/LinemodelRulesTestCase/simu_rules_ratiorange_3.fits";
-    noise = "../test/data/LinemodelRulesTestCase/simu_rules_ratiorange_3_noise.fits";
+    spc = "../RedshiftLibrary/tests/src/data/LinemodelRulesTestCase/simu_rules_ratiorange_3.fits";
+    noise = "../RedshiftLibrary/tests/src/data/LinemodelRulesTestCase/simu_rules_ratiorange_3_noise.fits";
     Float64 ratioIN = getLinemodelDoubletRatio(spc, noise, 0);
     Float64 ratioMOD = getLinemodelDoubletRatio(spc, noise, 1);
     BOOST_CHECK_MESSAGE( ratioIN == ratioMOD, "RatioRange: 3rd spectrum test failed = rule should not have been applied in this case" );
@@ -152,7 +152,7 @@ std::vector<Float64> getLinemodelFittedAmplitudes(std::string spc, std::string n
 
     //these tplcatalog related variables are unused here.
     CTemplateCatalog tplCatalog;
-    Bool rValue = tplCatalog.Load( "../test/data/templatecatalog/" );
+    Bool rValue = tplCatalog.Load( "../RedshiftLibrary/tests/src/data/templatecatalog/" );
     TStringList tplCategories;
 
     // Create redshift initial list by spanning redshift acdross the given range, with the given delta
@@ -190,9 +190,9 @@ BOOST_AUTO_TEST_CASE( OIIIMultilineSuperstrongRule )
     std::vector<Float64> amplis;
 
     //TEST 1 : initially oii = 2.0, oiiia = 30.0 and oiiib = 10.0
-    spc = "../test/data/LinemodelRulesTestCase/simu_rules_multiline_superstong_1.fits";
-    noise = "../test/data/LinemodelRulesTestCase/simu_rules_multiline_superstong_1_noise.fits";
-    ctlg = "../test/data/LinemodelRulesTestCase/raycatalog_test_elmultilinesuperstong.txt";
+    spc = "../RedshiftLibrary/tests/src/data/LinemodelRulesTestCase/simu_rules_multiline_superstong_1.fits";
+    noise = "../RedshiftLibrary/tests/src/data/LinemodelRulesTestCase/simu_rules_multiline_superstong_1_noise.fits";
+    ctlg = "../RedshiftLibrary/tests/src/data/LinemodelRulesTestCase/raycatalog_test_elmultilinesuperstong.txt";
     amplis = getLinemodelFittedAmplitudes(spc, noise, ctlg, 0); //rule disabled, get amplitudes
     oiii_ratio = amplis[0]/amplis[1];
     BOOST_CHECK_MESSAGE( oiii_ratio < 3.01 && oiii_ratio > 2.99, "Multiline-Superstrong: 1st test (no rule) failed = leads to a oiii nominal ratio not conserved" );

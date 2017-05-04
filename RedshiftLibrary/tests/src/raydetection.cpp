@@ -92,9 +92,9 @@ BOOST_AUTO_TEST_CASE(EzValidationTest)
     return;
 
     UInt32 nSpectraToBeTested = 5;
-    std::string spectraPath = "../test/data/RayDetectionTestCase/fromVVDSDeep/spectra/";
-    std::string refresults_nonoise_Path = "../test/data/RayDetectionTestCase/fromVVDSDeep/results_nonoise/";
-    std::string refresults_withnoise_Path = "../test/data/RayDetectionTestCase/fromVVDSDeep/results_withnoise/";
+    std::string spectraPath = "../RedshiftLibrary/tests/src/data/RayDetectionTestCase/fromVVDSDeep/spectra/";
+    std::string refresults_nonoise_Path = "../RedshiftLibrary/tests/src/data/RayDetectionTestCase/fromVVDSDeep/results_nonoise/";
+    std::string refresults_withnoise_Path = "../RedshiftLibrary/tests/src/data/RayDetectionTestCase/fromVVDSDeep/results_withnoise/";
 
 
     for(int kspectrum=0; kspectrum<nSpectraToBeTested; kspectrum++){
@@ -187,7 +187,7 @@ BOOST_AUTO_TEST_CASE(EzValidationTest)
 BOOST_AUTO_TEST_CASE(SyntheticValidationTest)
 // load synthetic spectra and check if the lines are correctly detected
 {
-    std::string spectraPath = "../test/data/RayDetectionTestCase/raydetection_simu_7lines.fits";
+    std::string spectraPath = "../RedshiftLibrary/tests/src/data/RayDetectionTestCase/raydetection_simu_7lines.fits";
 //    0#1000 : reference line = detected
 //    #2000 : negative line = NOT detected
 //    #3000 : very thin line = NOT detected

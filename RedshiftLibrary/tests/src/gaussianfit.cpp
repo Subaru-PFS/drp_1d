@@ -15,7 +15,7 @@ BOOST_AUTO_TEST_CASE(TestFit1)
     CSpectrumIOFitsReader reader;
     CSpectrum spectrum;
 
-    Bool retVal = reader.Read( "../test/data/GaussianfitTestCase/gaussian.fits", spectrum );
+    Bool retVal = reader.Read( "../RedshiftLibrary/tests/src/data/GaussianfitTestCase/gaussian.fits", spectrum );
     BOOST_CHECK( retVal == true );
 
 
@@ -44,7 +44,7 @@ BOOST_AUTO_TEST_CASE(TestFit1_1em17)
     CSpectrumIOFitsReader reader;
     CSpectrum spectrum;
 
-    Bool retVal = reader.Read( "../test/data/GaussianfitTestCase/gaussian_1em17.fits", spectrum );
+    Bool retVal = reader.Read( "../RedshiftLibrary/tests/src/data/GaussianfitTestCase/gaussian_1em17.fits", spectrum );
     BOOST_CHECK( retVal == true );
 
 
@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE(TestFit1_1em18_noisy)
     CSpectrumIOFitsReader reader;
     CSpectrum spectrum;
 
-    Bool retVal = reader.Read( "../test/data/GaussianfitTestCase/gaussian_1em18_noisy.fits", spectrum );
+    Bool retVal = reader.Read( "../RedshiftLibrary/tests/src/data/GaussianfitTestCase/gaussian_1em18_noisy.fits", spectrum );
     BOOST_CHECK( retVal == true );
 
 
@@ -103,7 +103,7 @@ BOOST_AUTO_TEST_CASE(TestFit2)
     CSpectrumIOFitsReader reader;
     CSpectrum spectrum;
 
-    Bool retVal = reader.Read( "../test/data/GaussianfitTestCase/flat.fits", spectrum );
+    Bool retVal = reader.Read( "../RedshiftLibrary/tests/src/data/GaussianfitTestCase/flat.fits", spectrum );
     BOOST_CHECK( retVal == true );
 
 

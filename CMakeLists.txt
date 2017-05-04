@@ -58,7 +58,7 @@ ADD_LIBRARY( ${LIB_NAME} STATIC ${LIB_SOURCE_FILES} )
 #--------------------------------------------------------
 SET( TEST_NAME cpf-redshift-test${EXT} )
   
-FILE( GLOB_RECURSE TEST_SOURCE_FILES ${ROOT_DIR}/test/*.cpp )
+FILE( GLOB_RECURSE TEST_SOURCE_FILES ${ROOT_DIR}/RedshiftLibrary/tests/src/*.cpp )
 
 ADD_EXECUTABLE( ${TEST_NAME} ${TEST_SOURCE_FILES} )
 

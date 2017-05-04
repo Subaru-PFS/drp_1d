@@ -69,12 +69,12 @@ Float64 processOrtho(std::string spectrumPath, std::string noisePath, std::strin
     Float64 opt_velocityAbsorption = initVelocity;
     std::string opt_rules = "no";
     std::string opt_rigidity = "rules";
-    std::string opt_calibrationPath= "../test/data/Linemodel_tplorthogalization/calibration";
+    std::string opt_calibrationPath= "../RedshiftLibrary/tests/src/data/Linemodel_tplorthogalization/calibration";
 
 
     //these tplcatalog related variables are unused here.
     CTemplateCatalog tplCatalog;
-    std::string templatesPath= "../test/data/Linemodel_tplorthogalization/templates/";
+    std::string templatesPath= "../RedshiftLibrary/tests/src/data/Linemodel_tplorthogalization/templates/";
     BOOST_TEST_MESSAGE( "Loading templates from " << templatesPath );
     Bool retValue = tplCatalog.Load(templatesPath.c_str());
     BOOST_CHECK( retValue == true);
@@ -149,10 +149,10 @@ Float64 processOrtho(std::string spectrumPath, std::string noisePath, std::strin
 ***/
 BOOST_AUTO_TEST_CASE( Linemodel_tplorthogonalization )
 {
-    std::string spectrumPath_z0 = "../test/data/Linemodel_tplorthogalization/simu_fm_tplortho_synth_5k8k_ha.fits";
-    std::string spectrumPath_z0p9 = "../test/data/Linemodel_tplorthogalization/simu_fm_tplortho_synth_5k8k_ha_z0.9.fits";
-    std::string noisePath = "../test/data/Linemodel_tplorthogalization/simu_fm_tplortho_synth_ha_5k8k_noise.fits";
-    std::string linecatalogPath = "../test/data/Linemodel_tplorthogalization/linecatalog_b.txt";
+    std::string spectrumPath_z0 = "../RedshiftLibrary/tests/src/data/Linemodel_tplorthogalization/simu_fm_tplortho_synth_5k8k_ha.fits";
+    std::string spectrumPath_z0p9 = "../RedshiftLibrary/tests/src/data/Linemodel_tplorthogalization/simu_fm_tplortho_synth_5k8k_ha_z0.9.fits";
+    std::string noisePath = "../RedshiftLibrary/tests/src/data/Linemodel_tplorthogalization/simu_fm_tplortho_synth_ha_5k8k_noise.fits";
+    std::string linecatalogPath = "../RedshiftLibrary/tests/src/data/Linemodel_tplorthogalization/linecatalog_b.txt";
 
     std::string opt_fittingmethod = "individual";
     Int32 lineTypeFilter = CRay::nType_Emission;
