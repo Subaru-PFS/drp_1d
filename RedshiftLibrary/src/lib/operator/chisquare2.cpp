@@ -274,12 +274,12 @@ Void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& t
         //find samples limits
         Int32 kStart = -1;
         Int32 kEnd = -1;
-        for(Int32 k=0; k<itplTplSpectralAxis.GetSamplesCount(); k++)
+        for(Int32 k=0; k<spcSpectralAxis.GetSamplesCount(); k++)
         {
-            if(Xtpl[k] >= lbda_min && kStart==-1){
+            if(Xspc[k] >= lbda_min && kStart==-1){
                 kStart=k;
             }
-            if(Xtpl[k] <= lbda_max){
+            if(Xspc[k] <= lbda_max){
                 kEnd=k;
             }
 
