@@ -1,12 +1,12 @@
 #ifndef _REDSHIFT_OPERATOR_CORRELATION_
 #define _REDSHIFT_OPERATOR_CORRELATION_
 
-#include <epic/core/common/datatypes.h>
-#include <epic/core/common/range.h>
-#include <epic/redshift/spectrum/fluxaxis.h>
-#include <epic/redshift/spectrum/spectralaxis.h>
-#include <epic/redshift/operator/operator.h>
-#include <epic/redshift/operator/correlationresult.h>
+#include <RedshiftLibrary/common/datatypes.h>
+#include <RedshiftLibrary/common/range.h>
+#include <RedshiftLibrary/spectrum/fluxaxis.h>
+#include <RedshiftLibrary/spectrum/spectralaxis.h>
+#include <RedshiftLibrary/operator/operator.h>
+#include <RedshiftLibrary/operator/correlationresult.h>
 
 
 namespace NSEpic

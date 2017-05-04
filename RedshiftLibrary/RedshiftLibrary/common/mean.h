@@ -1,7 +1,7 @@
 #ifndef _REDSHIFT_COMMON_MEAN__
 #define _REDSHIFT_COMMON_MEAN__
 
-#include <epic/core/common/datatypes.h>
+#include <RedshiftLibrary/common/datatypes.h>
 
 using namespace std;
 
@@ -27,7 +27,7 @@ private:
     
 };
     
-#include <epic/redshift/common/mean.hpp>
+#include <RedshiftLibrary/common/mean.hpp>
 
 }
 

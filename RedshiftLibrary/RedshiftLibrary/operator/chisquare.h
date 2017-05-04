@@ -1,10 +1,10 @@
 #ifndef _REDSHIFT_OPERATOR_CHISQUARE_
 #define _REDSHIFT_OPERATOR_CHISQUARE_
 
-#include <epic/core/common/datatypes.h>
-#include <epic/core/common/range.h>
-#include <epic/redshift/operator/operator.h>
-#include <epic/redshift/operator/chisquareresult.h>
+#include <RedshiftLibrary/common/datatypes.h>
+#include <RedshiftLibrary/common/range.h>
+#include <RedshiftLibrary/operator/operator.h>
+#include <RedshiftLibrary/operator/chisquareresult.h>
 
 namespace NSEpic
 {

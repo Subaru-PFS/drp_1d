@@ -1,7 +1,7 @@
 #ifndef _REDSHIFT_CONTINUUM_MEDIAN_
 #define _REDSHIFT_CONTINUUM_MEDIAN_
 
-#include <epic/redshift/continuum/continuum.h>
+#include <RedshiftLibrary/continuum/continuum.h>
 
 namespace NSEpic
 {

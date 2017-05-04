@@ -1,7 +1,7 @@
 #ifndef _REDSHIFT_CONTINUUM_IRREGULARSMAPLINGMEDIAN_
 #define _REDSHIFT_CONTINUUM_IRREGULARSMAPLINGMEDIAN_
 
-#include <epic/redshift/continuum/continuum.h>
+#include <RedshiftLibrary/continuum/continuum.h>
 
 namespace NSEpic
 {

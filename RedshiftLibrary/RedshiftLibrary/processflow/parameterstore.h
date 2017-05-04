@@ -1,8 +1,8 @@
 #ifndef _REDSHIFT_METHOD_PARAMETERSTORE_
 #define _REDSHIFT_METHOD_PARAMETERSTORE_
 
-#include <epic/core/common/datatypes.h>
-#include <epic/core/common/range.h>
+#include <RedshiftLibrary/common/datatypes.h>
+#include <RedshiftLibrary/common/range.h>
 #include <boost/property_tree/ptree.hpp>
 
 namespace NSEpic

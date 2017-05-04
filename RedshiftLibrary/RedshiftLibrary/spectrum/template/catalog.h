@@ -1,8 +1,8 @@
 #ifndef _REDSHIFT_SPECTRUM_TEMPLATE_CATALOG_
 #define _REDSHIFT_SPECTRUM_TEMPLATE_CATALOG_
 
-#include <epic/core/common/datatypes.h>
-#include <epic/redshift/spectrum/template/template.h>
+#include <RedshiftLibrary/common/datatypes.h>
+#include <RedshiftLibrary/spectrum/template/template.h>
 
 #include <boost/filesystem.hpp>
 #include <vector>

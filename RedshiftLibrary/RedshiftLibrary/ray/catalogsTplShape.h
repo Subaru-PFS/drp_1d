@@ -1,10 +1,10 @@
 #ifndef _REDSHIFT_RAY_CATALOGSTPLSHAPE_
 #define _REDSHIFT_RAY_CATALOGSTPLSHAPE_
 
-#include <epic/core/common/datatypes.h>
-#include <epic/redshift/ray/ray.h>
-#include <epic/redshift/ray/catalog.h>
-#include <epic/redshift/linemodel/elementlist.h>
+#include <RedshiftLibrary/common/datatypes.h>
+#include <RedshiftLibrary/ray/ray.h>
+#include <RedshiftLibrary/ray/catalog.h>
+#include <RedshiftLibrary/linemodel/elementlist.h>
 
 
 #include <boost/format.hpp>

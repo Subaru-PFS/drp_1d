@@ -1,8 +1,8 @@
 #ifndef _REDSHIFT_NOISE_FROMFILE_
 #define _REDSHIFT_NOISE_FROMFILE_
 
-#include <epic/core/common/datatypes.h>
-#include <epic/redshift/noise/noise.h>
+#include <RedshiftLibrary/common/datatypes.h>
+#include <RedshiftLibrary/noise/noise.h>
 
 #include <memory>
 

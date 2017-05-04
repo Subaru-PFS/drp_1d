@@ -1,9 +1,9 @@
 #ifndef _REDSHIFT_METHOD_CHISQUARESOLVE_
 #define _REDSHIFT_METHOD_CHISQUARESOLVE_
 
-#include <epic/core/common/datatypes.h>
-#include <epic/redshift/method/chisquaresolveresult.h>
-#include <epic/redshift/spectrum/template/template.h>
+#include <RedshiftLibrary/common/datatypes.h>
+#include <RedshiftLibrary/method/chisquaresolveresult.h>
+#include <RedshiftLibrary/spectrum/template/template.h>
 
 namespace NSEpic
 {

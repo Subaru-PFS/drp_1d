@@ -1,9 +1,9 @@
 #ifndef _REDSHIFT_SPECTRUM_SPECTRALAXIS_
 #define _REDSHIFT_SPECTRUM_SPECTRALAXIS_
 
-#include <epic/redshift/common/datatypes.h>
-#include <epic/redshift/spectrum/axis.h>
-#include <epic/core/common/range.h>
+#include <RedshiftLibrary/common/datatypes.h>
+#include <RedshiftLibrary/spectrum/axis.h>
+#include <RedshiftLibrary/common/range.h>
 
 #include <vector>
 

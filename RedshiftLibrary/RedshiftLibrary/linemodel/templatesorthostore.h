@@ -2,9 +2,9 @@
 #define _REDSHIFT_LINEMODEL_TEMPLATES_ORTHO_STORE_
 
 
-#include <epic/core/common/datatypes.h>
-#include <epic/redshift/spectrum/template/template.h>
-#include <epic/redshift/spectrum/template/catalog.h>
+#include <RedshiftLibrary/common/datatypes.h>
+#include <RedshiftLibrary/spectrum/template/template.h>
+#include <RedshiftLibrary/spectrum/template/catalog.h>
 
 
 #include <boost/filesystem.hpp>

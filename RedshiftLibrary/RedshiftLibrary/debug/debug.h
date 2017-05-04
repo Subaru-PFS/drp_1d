@@ -1,7 +1,7 @@
 #ifndef _CORE_DEBUG_DEBUG_
 #define _CORE_DEBUG_DEBUG_
 
-#include <epic/core/common/datatypes.h>
+#include <RedshiftLibrary/common/datatypes.h>
 
 #include <stdio.h>
 

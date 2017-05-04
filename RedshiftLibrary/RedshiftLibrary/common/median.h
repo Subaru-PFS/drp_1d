@@ -1,8 +1,8 @@
 #ifndef _REDSHIFT_COMMON_MEDIAN__
 #define _REDSHIFT_COMMON_MEDIAN__
 
-#include <epic/core/common/datatypes.h>
-#include <epic/core/common/quicksort.h>
+#include <RedshiftLibrary/common/datatypes.h>
+#include <RedshiftLibrary/common/quicksort.h>
 
 #include <algorithm>
 #include <vector>
@@ -41,7 +41,7 @@ private:
 
 };
     
-#include <epic/redshift/common/median.hpp>
+#include <RedshiftLibrary/common/median.hpp>
 
 }
 

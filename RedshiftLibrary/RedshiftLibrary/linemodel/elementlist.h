@@ -1,22 +1,22 @@
 #ifndef ELEMENTLIST_H
 #define ELEMENTLIST_H
 
-#include <epic/core/common/range.h>
-#include <epic/redshift/common/datatypes.h>
+#include <RedshiftLibrary/common/range.h>
+#include <RedshiftLibrary/common/datatypes.h>
 
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_matrix.h>
 
-#include <epic/redshift/ray/catalog.h>
-#include <epic/redshift/spectrum/spectrum.h>
+#include <RedshiftLibrary/ray/catalog.h>
+#include <RedshiftLibrary/spectrum/spectrum.h>
 
-#include <epic/redshift/operator/chisquare2.h>
+#include <RedshiftLibrary/operator/chisquare2.h>
 
-#include <epic/redshift/operator/linemodelresult.h>
-#include <epic/redshift/linemodel/element.h>
-#include <epic/redshift/linemodel/singleline.h>
+#include <RedshiftLibrary/operator/linemodelresult.h>
+#include <RedshiftLibrary/linemodel/element.h>
+#include <RedshiftLibrary/linemodel/singleline.h>
 
-#include <epic/redshift/spectrum/template/catalog.h>
+#include <RedshiftLibrary/spectrum/template/catalog.h>
 
 #include <boost/shared_ptr.hpp>
 

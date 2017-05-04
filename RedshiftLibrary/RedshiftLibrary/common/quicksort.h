@@ -1,7 +1,7 @@
 #ifndef _CORE_COMMON_QUICKSORT_
 #define _CORE_COMMON_QUICKSORT_
 
-#include <epic/core/common/datatypes.h>
+#include <RedshiftLibrary/common/datatypes.h>
 
 #include <algorithm>
 #include <vector>
@@ -34,7 +34,7 @@ private:
 
 };
     
-#include <epic/core/common/quicksort.hpp>
+#include <RedshiftLibrary/common/quicksort.hpp>
 
 }
 

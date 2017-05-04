@@ -1,8 +1,8 @@
 #ifndef _REDSHIFT_RAY_CATALOG_
 #define _REDSHIFT_RAY_CATALOG_
 
-#include <epic/core/common/datatypes.h>
-#include <epic/redshift/ray/ray.h>
+#include <RedshiftLibrary/common/datatypes.h>
+#include <RedshiftLibrary/ray/ray.h>
 
 #include <vector>
 #include <string>

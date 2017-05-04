@@ -1,10 +1,10 @@
 #ifndef _REDSHIFT_OPERATOR_PEAKDETECTION_
 #define _REDSHIFT_OPERATOR_PEAKDETECTION_
 
-#include <epic/core/common/datatypes.h>
-#include <epic/core/common/range.h>
+#include <RedshiftLibrary/common/datatypes.h>
+#include <RedshiftLibrary/common/range.h>
 
-#include <epic/redshift/spectrum/spectralaxis.h>
+#include <RedshiftLibrary/spectrum/spectralaxis.h>
 
 namespace NSEpic
 {

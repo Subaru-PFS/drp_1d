@@ -1,9 +1,9 @@
 #ifndef _REDSHIFT_OPERATOR_PDFZPREDICTRESULT_
 #define _REDSHIFT_OPERATOR_PDFZPREDICTRESULT_
 
-#include <epic/redshift/processflow/result.h>
-#include <epic/redshift/operator/operator.h>
-#include <epic/core/common/datatypes.h>
+#include <RedshiftLibrary/processflow/result.h>
+#include <RedshiftLibrary/operator/operator.h>
+#include <RedshiftLibrary/common/datatypes.h>
 
 #include <gsl/gsl_linalg.h>
 #include <gsl/gsl_matrix.h>

@@ -1,9 +1,9 @@
 #ifndef _REDSHIFT_RAY_REGULAMENT_
 #define _REDSHIFT_RAY_REGULAMENT_
 
-#include <epic/core/common/datatypes.h>
-#include <epic/redshift/linemodel/elementlist.h>
-#include <epic/redshift/ray/rule.h>
+#include <RedshiftLibrary/common/datatypes.h>
+#include <RedshiftLibrary/linemodel/elementlist.h>
+#include <RedshiftLibrary/ray/rule.h>
 
 #include <boost/format.hpp>
 

@@ -1,7 +1,7 @@
 #ifndef _CORE_COMMON_SINGLETON_
 #define _CORE_COMMON_SINGLETON_
 
-#include <epic/core/common/datatypes.h>
+#include <RedshiftLibrary/common/datatypes.h>
 
 namespace NSEpic
 {

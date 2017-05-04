@@ -1,8 +1,8 @@
 #ifndef _REDSHIFT_OPERATOR_RESULTSTORE_
 #define _REDSHIFT_OPERATOR_RESULTSTORE_
 
-#include <epic/core/common/datatypes.h>
-#include <epic/redshift/processflow/result.h>
+#include <RedshiftLibrary/common/datatypes.h>
+#include <RedshiftLibrary/processflow/result.h>
 
 #include <boost/filesystem.hpp>
 #include <vector>

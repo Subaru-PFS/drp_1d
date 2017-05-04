@@ -1,7 +1,7 @@
 #ifndef _CORE_DEBUG_ASSERT_
 #define _CORE_DEBUG_ASSERT_
 
-#include <epic/core/debug/debug.h>
+#include <RedshiftLibrary/debug/debug.h>
 
 #ifdef DEBUG_BUILD
 

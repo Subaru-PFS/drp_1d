@@ -1,7 +1,7 @@
 #ifndef _REDSHIFT_RAY_RAY_
 #define _REDSHIFT_RAY_RAY_
 
-#include <epic/core/common/datatypes.h>
+#include <RedshiftLibrary/common/datatypes.h>
 
 #include <string>
 

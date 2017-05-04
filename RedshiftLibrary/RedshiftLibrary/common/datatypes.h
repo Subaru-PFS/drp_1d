@@ -1,7 +1,7 @@
 #ifndef _CORE_REDSHIFT_DATATYPES_
 #define _CORE_REDSHIFT_DATATYPES_
 
-#include <epic/core/common/datatypes.h>
+#include <RedshiftLibrary/common/datatypes.h>
 
 #include <vector>
 #include <string>

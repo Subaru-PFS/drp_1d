@@ -1,11 +1,11 @@
 #ifndef _REDSHIFT_RAY_MATCHING_
 #define _REDSHIFT_RAY_MATCHING_
 
-#include <epic/core/common/datatypes.h>
-#include <epic/core/common/range.h>
-#include <epic/redshift/operator/raymatchingresult.h>
-#include <epic/redshift/ray/ray.h>
-#include <epic/redshift/ray/catalog.h>
+#include <RedshiftLibrary/common/datatypes.h>
+#include <RedshiftLibrary/common/range.h>
+#include <RedshiftLibrary/operator/raymatchingresult.h>
+#include <RedshiftLibrary/ray/ray.h>
+#include <RedshiftLibrary/ray/catalog.h>
 
 namespace NSEpic
 {

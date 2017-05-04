@@ -1,12 +1,12 @@
 #ifndef _REDSHIFT_PROCESSFLOW_PROCESSFLOW_
 #define _REDSHIFT_PROCESSFLOW_PROCESSFLOW_
 
-#include <epic/core/common/datatypes.h>
-#include <epic/core/common/range.h>
-#include <epic/redshift/processflow/processflow.h>
+#include <RedshiftLibrary/common/datatypes.h>
+#include <RedshiftLibrary/common/range.h>
+#include <RedshiftLibrary/processflow/processflow.h>
 
-#include <epic/redshift/spectrum/template/template.h>
-#include <epic/redshift/spectrum/template/catalog.h>
+#include <RedshiftLibrary/spectrum/template/template.h>
+#include <RedshiftLibrary/spectrum/template/catalog.h>
 
 namespace NSEpic
 {

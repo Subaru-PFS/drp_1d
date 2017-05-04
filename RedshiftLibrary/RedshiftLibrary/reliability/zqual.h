@@ -3,24 +3,24 @@
 
 #define EPS_TOL 2.2204e-16
 
-#include <epic/core/common/datatypes.h>
-#include <epic/redshift/operator/operator.h>
-#include <epic/redshift/processflow/result.h>
+#include <RedshiftLibrary/common/datatypes.h>
+#include <RedshiftLibrary/operator/operator.h>
+#include <RedshiftLibrary/processflow/result.h>
 
-#include <epic/core/log/log.h>
-#include <epic/core/debug/assert.h>
-#include <epic/redshift/processflow/datastore.h>
-#include <epic/redshift/processflow/resultstore.h>
+#include <RedshiftLibrary/log/log.h>
+#include <RedshiftLibrary/debug/assert.h>
+#include <RedshiftLibrary/processflow/datastore.h>
+#include <RedshiftLibrary/processflow/resultstore.h>
 
 #include <vector>
 #include <gsl/gsl_matrix.h>
 #include <boost/unordered_map.hpp>
 
-#include <epic/redshift/reliability/pdfzFeatureResult.h>
-#include <epic/redshift/operator/pdfMargZLogResult.h>
+#include <RedshiftLibrary/reliability/pdfzFeatureResult.h>
+#include <RedshiftLibrary/operator/pdfMargZLogResult.h>
 
-#include <epic/redshift/reliability/zqualresult.h>
-#include <epic/redshift/reliability/zclassifierstore.h>
+#include <RedshiftLibrary/reliability/zqualresult.h>
+#include <RedshiftLibrary/reliability/zclassifierstore.h>
 
 namespace NSEpic
 {

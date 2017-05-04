@@ -1,11 +1,11 @@
 #ifndef _REDSHIFT_RAY_RULES_
 #define _REDSHIFT_RAY_RULES_
 
-#include <epic/core/common/datatypes.h>
+#include <RedshiftLibrary/common/datatypes.h>
 
-#include <epic/redshift/spectrum/spectrum.h>
-#include <epic/redshift/operator/raymatchingresult.h>
-#include <epic/redshift/ray/catalog.h>
+#include <RedshiftLibrary/spectrum/spectrum.h>
+#include <RedshiftLibrary/operator/raymatchingresult.h>
+#include <RedshiftLibrary/ray/catalog.h>
 
 #include <string>
 

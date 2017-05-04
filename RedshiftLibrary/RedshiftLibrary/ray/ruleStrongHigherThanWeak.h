@@ -1,10 +1,10 @@
 #ifndef _REDSHIFT_RAY_RULESTRONGHIGHERTHANWEAK_
 #define _REDSHIFT_RAY_RULESTRONGHIGHERTHANWEAK_
 
-#include <epic/core/common/datatypes.h>
+#include <RedshiftLibrary/common/datatypes.h>
 #include <boost/format.hpp>
-#include <epic/redshift/linemodel/elementlist.h>
-#include <epic/redshift/ray/rule.h>
+#include <RedshiftLibrary/linemodel/elementlist.h>
+#include <RedshiftLibrary/ray/rule.h>
 
 namespace NSEpic
 {

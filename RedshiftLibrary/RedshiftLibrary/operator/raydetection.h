@@ -1,11 +1,11 @@
 #ifndef _REDSHIFT_OPERATOR_RAYDETECTION_
 #define _REDSHIFT_OPERATOR_RAYDETECTION_
 
-#include <epic/core/common/datatypes.h>
-#include <epic/core/common/range.h>
+#include <RedshiftLibrary/common/datatypes.h>
+#include <RedshiftLibrary/common/range.h>
 
-#include <epic/redshift/operator/raydetectionresult.h>
-#include <epic/redshift/spectrum/spectralaxis.h>
+#include <RedshiftLibrary/operator/raydetectionresult.h>
+#include <RedshiftLibrary/spectrum/spectralaxis.h>
 
 namespace NSEpic
 {

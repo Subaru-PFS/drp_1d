@@ -1,10 +1,10 @@
 #ifndef _REDSHIFT_OPERATOR_RAYMATCHINGRESULT_
 #define _REDSHIFT_OPERATOR_RAYMATCHINGRESULT_
 
-#include <epic/core/common/datatypes.h>
-#include <epic/redshift/processflow/result.h>
-#include <epic/redshift/ray/catalog.h>
-#include <epic/redshift/spectrum/spectrum.h>
+#include <RedshiftLibrary/common/datatypes.h>
+#include <RedshiftLibrary/processflow/result.h>
+#include <RedshiftLibrary/ray/catalog.h>
+#include <RedshiftLibrary/spectrum/spectrum.h>
 
 #include <vector>
 

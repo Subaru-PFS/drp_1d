@@ -1,7 +1,7 @@
 #ifndef _CORE_COMMON_THREADPOOL_
 #define _CORE_COMMON_THREADPOOL_
 
-#include <epic/core/common/datatypes.h>
+#include <RedshiftLibrary/common/datatypes.h>
 
 #include <boost/thread.hpp>
 #include <boost/asio.hpp>

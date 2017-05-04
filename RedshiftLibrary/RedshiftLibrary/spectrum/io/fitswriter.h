@@ -1,8 +1,8 @@
 #ifndef _REDSHIFT_SPECTRUM_IO_FITSWRITER_
 #define _REDSHIFT_SPECTRUM_IO_FITSWRITER_
 
-#include <epic/core/common/datatypes.h>
-#include <epic/redshift/spectrum/io/writer.h>
+#include <RedshiftLibrary/common/datatypes.h>
+#include <RedshiftLibrary/spectrum/io/writer.h>
 
 #include <vector>
 #include <fitsio.h>

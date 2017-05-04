@@ -1,9 +1,9 @@
 #ifndef _REDSHIFT_OPERATOR_CHISQUARERESULT_
 #define _REDSHIFT_OPERATOR_CHISQUARERESULT_
 
-#include <epic/redshift/processflow/result.h>
-#include <epic/core/common/datatypes.h>
-#include <epic/redshift/operator/operator.h>
+#include <RedshiftLibrary/processflow/result.h>
+#include <RedshiftLibrary/common/datatypes.h>
+#include <RedshiftLibrary/operator/operator.h>
 
 namespace NSEpic
 {

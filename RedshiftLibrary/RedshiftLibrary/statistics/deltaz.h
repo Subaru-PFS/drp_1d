@@ -1,8 +1,8 @@
 #ifndef _REDSHIFT_RAY_DELTAZ_
 #define _REDSHIFT_RAY_DELTAZ_
 
-#include <epic/core/common/datatypes.h>
-#include <epic/core/common/range.h>
+#include <RedshiftLibrary/common/datatypes.h>
+#include <RedshiftLibrary/common/range.h>
 
 
 #include <string>

@@ -1,15 +1,15 @@
 #ifndef _REDSHIFT_OPERATOR_CHISQUARE2_
 #define _REDSHIFT_OPERATOR_CHISQUARE2_
 
-#include <epic/core/common/datatypes.h>
-#include <epic/core/common/range.h>
-#include <epic/redshift/operator/operator.h>
-#include <epic/redshift/operator/chisquareresult.h>
-#include <epic/redshift/common/mask.h>
+#include <RedshiftLibrary/common/datatypes.h>
+#include <RedshiftLibrary/common/range.h>
+#include <RedshiftLibrary/operator/operator.h>
+#include <RedshiftLibrary/operator/chisquareresult.h>
+#include <RedshiftLibrary/common/mask.h>
 
-#include <epic/redshift/spectrum/spectrum.h>
-#include <epic/redshift/spectrum/template/template.h>
-#include <epic/redshift/spectrum/fluxcorrectionmeiksin.h>
+#include <RedshiftLibrary/spectrum/spectrum.h>
+#include <RedshiftLibrary/spectrum/template/template.h>
+#include <RedshiftLibrary/spectrum/fluxcorrectionmeiksin.h>
 
 namespace NSEpic
 {

@@ -1,18 +1,18 @@
 #ifndef _REDSHIFT_OPERATOR_LINEMODEL_
 #define _REDSHIFT_OPERATOR_LINEMODEL_
 
-#include <epic/core/common/datatypes.h>
-#include <epic/core/common/range.h>
-#include <epic/redshift/operator/operator.h>
-#include <epic/redshift/operator/linemodelresult.h>
-#include <epic/redshift/linemodel/elementlist.h>
-#include <epic/redshift/linemodel/modelspectrumresult.h>
-#include <epic/redshift/linemodel/modelfittingresult.h>
-#include <epic/redshift/linemodel/modelrulesresult.h>
-#include <epic/redshift/common/mask.h>
+#include <RedshiftLibrary/common/datatypes.h>
+#include <RedshiftLibrary/common/range.h>
+#include <RedshiftLibrary/operator/operator.h>
+#include <RedshiftLibrary/operator/linemodelresult.h>
+#include <RedshiftLibrary/linemodel/elementlist.h>
+#include <RedshiftLibrary/linemodel/modelspectrumresult.h>
+#include <RedshiftLibrary/linemodel/modelfittingresult.h>
+#include <RedshiftLibrary/linemodel/modelrulesresult.h>
+#include <RedshiftLibrary/common/mask.h>
 
-#include <epic/redshift/spectrum/spectrum.h>
-#include <epic/redshift/ray/catalog.h>
+#include <RedshiftLibrary/spectrum/spectrum.h>
+#include <RedshiftLibrary/ray/catalog.h>
 
 namespace NSEpic
 {

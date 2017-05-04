@@ -1,12 +1,12 @@
 #ifndef _REDSHIFT_OPERATOR_LINEMODELRESULT_
 #define _REDSHIFT_OPERATOR_LINEMODELRESULT_
 
-#include <epic/redshift/processflow/result.h>
-#include <epic/core/common/datatypes.h>
-#include <epic/redshift/operator/operator.h>
+#include <RedshiftLibrary/processflow/result.h>
+#include <RedshiftLibrary/common/datatypes.h>
+#include <RedshiftLibrary/operator/operator.h>
 
-#include <epic/redshift/ray/catalog.h>
-#include <epic/redshift/continuum/indexes.h>
+#include <RedshiftLibrary/ray/catalog.h>
+#include <RedshiftLibrary/continuum/indexes.h>
 
 namespace NSEpic
 {

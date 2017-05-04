@@ -2,14 +2,14 @@
 #define ELEMENT_H
 
 
-#include <epic/core/common/range.h>
-#include <epic/redshift/common/datatypes.h>
+#include <RedshiftLibrary/common/range.h>
+#include <RedshiftLibrary/common/datatypes.h>
 
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_matrix.h>
 
-#include <epic/redshift/spectrum/spectrum.h>
-#include <epic/redshift/ray/catalog.h>
+#include <RedshiftLibrary/spectrum/spectrum.h>
+#include <RedshiftLibrary/ray/catalog.h>
 
 namespace NSEpic
 {

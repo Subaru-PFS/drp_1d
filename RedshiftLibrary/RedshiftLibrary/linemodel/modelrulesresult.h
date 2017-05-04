@@ -2,9 +2,9 @@
 #define _REDSHIFT_LINEMODEL_MODELRULESRESULT_
 
 
-#include <epic/redshift/processflow/result.h>
-#include <epic/core/common/datatypes.h>
-#include <epic/redshift/operator/operator.h>
+#include <RedshiftLibrary/processflow/result.h>
+#include <RedshiftLibrary/common/datatypes.h>
+#include <RedshiftLibrary/operator/operator.h>
 
 
 namespace NSEpic

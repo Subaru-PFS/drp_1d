@@ -2,10 +2,10 @@
 #define _REDSHIFT_METHOD_CHISQUARE2SOLVE_
 
 
-#include <epic/core/common/datatypes.h>
-#include <epic/redshift/method/chisquare2solveresult.h>
-#include <epic/redshift/spectrum/template/template.h>
-#include <epic/redshift/operator/chisquare2.h>
+#include <RedshiftLibrary/common/datatypes.h>
+#include <RedshiftLibrary/method/chisquare2solveresult.h>
+#include <RedshiftLibrary/spectrum/template/template.h>
+#include <RedshiftLibrary/operator/chisquare2.h>
 
 
 namespace NSEpic

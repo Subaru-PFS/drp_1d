@@ -1,9 +1,9 @@
 #ifndef _REDSHIFT_OPERATOR_PDFZFEATURERESULT_
 #define _REDSHIFT_OPERATOR_PDFZFEATURERESULT_
 
-#include <epic/redshift/processflow/result.h>
-#include <epic/redshift/operator/operator.h>
-#include <epic/core/common/datatypes.h>
+#include <RedshiftLibrary/processflow/result.h>
+#include <RedshiftLibrary/operator/operator.h>
+#include <RedshiftLibrary/common/datatypes.h>
 
 #include <boost/unordered_map.hpp>
 

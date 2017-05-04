@@ -1,9 +1,9 @@
 #ifndef _REDSHIFT_OPERATOR_CORRELATIONSOLVE_
 #define _REDSHIFT_OPERATOR_CORRELATIONSOLVE_
 
-#include <epic/core/common/datatypes.h>
-#include <epic/redshift/method/correlationsolveresult.h>
-#include <epic/redshift/spectrum/template/template.h>
+#include <RedshiftLibrary/common/datatypes.h>
+#include <RedshiftLibrary/method/correlationsolveresult.h>
+#include <RedshiftLibrary/spectrum/template/template.h>
 
 namespace NSEpic
 {

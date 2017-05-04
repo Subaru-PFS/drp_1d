@@ -1,14 +1,14 @@
 #ifndef _REDSHIFT_GAUSSIANFIT_MULTIGAUSSIANFIT_
 #define _REDSHIFT_GAUSSIANFIT_MULTIGAUSSIANFIT_
 
-#include <epic/core/common/range.h>
-#include <epic/redshift/common/datatypes.h>
+#include <RedshiftLibrary/common/range.h>
+#include <RedshiftLibrary/common/datatypes.h>
 
 
-#include <epic/redshift/linemodel/elementlist.h>
+#include <RedshiftLibrary/linemodel/elementlist.h>
 
-#include <epic/redshift/spectrum/fluxaxis.h>
-#include <epic/redshift/spectrum/spectralaxis.h>
+#include <RedshiftLibrary/spectrum/fluxaxis.h>
+#include <RedshiftLibrary/spectrum/spectralaxis.h>
 
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_matrix.h>

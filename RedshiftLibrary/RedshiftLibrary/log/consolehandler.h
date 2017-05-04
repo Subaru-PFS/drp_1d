@@ -1,8 +1,8 @@
 #ifndef _CORE_LOG_CONSOLEHANDLER_
 #define _CORE_LOG_CONSOLEHANDLER_
 
-#include <epic/core/common/datatypes.h>
-#include <epic/core/log/handler.h>
+#include <RedshiftLibrary/common/datatypes.h>
+#include <RedshiftLibrary/log/handler.h>
 
 namespace NSEpic
 {

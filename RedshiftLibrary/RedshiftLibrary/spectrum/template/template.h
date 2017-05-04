@@ -1,8 +1,8 @@
 #ifndef _REDSHIFT_SPECTRUM_TEMPLATE_TEMPLATE_
 #define _REDSHIFT_SPECTRUM_TEMPLATE_TEMPLATE_
 
-#include <epic/core/common/datatypes.h>
-#include <epic/redshift/spectrum/spectrum.h>
+#include <RedshiftLibrary/common/datatypes.h>
+#include <RedshiftLibrary/spectrum/spectrum.h>
 
 #include <string>
 #include <map>

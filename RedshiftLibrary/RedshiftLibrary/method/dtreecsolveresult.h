@@ -1,10 +1,10 @@
 #ifndef _REDSHIFT_OPERATOR_DTREECSOLVERESULT_
 #define _REDSHIFT_OPERATOR_DTREECSOLVERESULT_
 
-#include <epic/redshift/processflow/result.h>
-#include <epic/core/common/datatypes.h>
-#include <epic/redshift/ray/catalog.h>
-#include <epic/redshift/processflow/result.h>
+#include <RedshiftLibrary/processflow/result.h>
+#include <RedshiftLibrary/common/datatypes.h>
+#include <RedshiftLibrary/ray/catalog.h>
+#include <RedshiftLibrary/processflow/result.h>
 
 #include <vector>
 

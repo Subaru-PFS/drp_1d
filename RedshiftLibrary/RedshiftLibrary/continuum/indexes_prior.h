@@ -1,7 +1,7 @@
 #ifndef _REDSHIFT_CONTINUUM_INDEXES_PRIOR
 #define _REDSHIFT_CONTINUUM_INDEXES_PRIOR
 
-#include <epic/core/common/datatypes.h>
+#include <RedshiftLibrary/common/datatypes.h>
 #include <gsl/gsl_vector.h>
 #include <boost/format.hpp>
 

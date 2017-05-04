@@ -1,9 +1,9 @@
 #ifndef _REDSHIFT_OPERATOR_BLINDSOLVE_
 #define _REDSHIFT_OPERATOR_BLINDSOLVE_
 
-#include <epic/core/common/datatypes.h>
-#include <epic/redshift/method/blindsolveresult.h>
-#include <epic/redshift/spectrum/template/template.h>
+#include <RedshiftLibrary/common/datatypes.h>
+#include <RedshiftLibrary/method/blindsolveresult.h>
+#include <RedshiftLibrary/spectrum/template/template.h>
 
 namespace NSEpic
 {

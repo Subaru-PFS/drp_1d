@@ -1,7 +1,7 @@
 #ifndef _CORE_LOG_HANDLER_
 #define _CORE_LOG_HANDLER_
 
-#include <epic/core/common/datatypes.h>
+#include <RedshiftLibrary/common/datatypes.h>
 
 namespace NSEpic
 {

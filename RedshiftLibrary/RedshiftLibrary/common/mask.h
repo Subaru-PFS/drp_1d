@@ -1,8 +1,8 @@
 #ifndef _REDSHIFT_COMMON_WEIGHTS_
 #define _REDSHIFT_COMMON_WEIGHTS_
 
-#include <epic/redshift/common/datatypes.h>
-#include <epic/core/common/range.h>
+#include <RedshiftLibrary/common/datatypes.h>
+#include <RedshiftLibrary/common/range.h>
 
 namespace NSEpic
 {

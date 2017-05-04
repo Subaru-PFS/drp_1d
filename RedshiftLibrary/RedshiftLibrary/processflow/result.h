@@ -1,7 +1,7 @@
 #ifndef _REDSHIFT_OPERATOR_RESULT_
 #define _REDSHIFT_OPERATOR_RESULT_
 
-#include <epic/core/common/datatypes.h>
+#include <RedshiftLibrary/common/datatypes.h>
 
 #include <vector>
 #include <ostream>

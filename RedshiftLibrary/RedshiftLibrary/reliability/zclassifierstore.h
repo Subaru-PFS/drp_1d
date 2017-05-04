@@ -1,7 +1,7 @@
 #ifndef _REDSHIFT_RELIABILITY_ZCLASSIFIERSTORE_
 #define _REDSHIFT_RELIABILITY_ZCLASSIFIERSTORE_
 
-#include <epic/core/common/datatypes.h>
+#include <RedshiftLibrary/common/datatypes.h>
 
 #include <vector>
 #include <gsl/gsl_matrix.h>

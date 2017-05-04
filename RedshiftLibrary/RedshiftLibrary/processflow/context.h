@@ -1,10 +1,10 @@
 #ifndef _REDSHIFT_PROCESSFLOW_CONTEXT_
 #define _REDSHIFT_PROCESSFLOW_CONTEXT_
 
-#include <epic/redshift/spectrum/template/template.h>
-#include <epic/redshift/processflow/datastore.h>
+#include <RedshiftLibrary/spectrum/template/template.h>
+#include <RedshiftLibrary/processflow/datastore.h>
 
-#include <epic/redshift/reliability/zclassifierstore.h>
+#include <RedshiftLibrary/reliability/zclassifierstore.h>
 
 #include <map>
 #include <string>

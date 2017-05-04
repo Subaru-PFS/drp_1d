@@ -1,9 +1,9 @@
 #ifndef _REDSHIFT_OPERATOR_CHISQUARE2SOLVERESULT_
 #define _REDSHIFT_OPERATOR_CHISQUARE2SOLVERESULT_
 
-#include <epic/redshift/processflow/result.h>
-#include <epic/core/common/datatypes.h>
-#include <epic/redshift/ray/catalog.h>
+#include <RedshiftLibrary/processflow/result.h>
+#include <RedshiftLibrary/common/datatypes.h>
+#include <RedshiftLibrary/ray/catalog.h>
 
 #include <vector>
 

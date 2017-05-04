@@ -1,9 +1,9 @@
 #ifndef _REDSHIFT_OPERATOR_DTREEBSOLVE_
 #define _REDSHIFT_OPERATOR_DTREEBSOLVE_
 
-#include <epic/core/common/datatypes.h>
-#include <epic/redshift/method/dtreebsolveresult.h>
-#include <epic/redshift/spectrum/template/template.h>
+#include <RedshiftLibrary/common/datatypes.h>
+#include <RedshiftLibrary/method/dtreebsolveresult.h>
+#include <RedshiftLibrary/spectrum/template/template.h>
 
 namespace NSEpic
 {

@@ -1,7 +1,7 @@
 #ifndef _REDSHIFT_SPECTRUM_IO_READER_
 #define _REDSHIFT_SPECTRUM_IO_READER_
 
-#include <epic/core/common/datatypes.h>
+#include <RedshiftLibrary/common/datatypes.h>
 
 #include <vector>
 

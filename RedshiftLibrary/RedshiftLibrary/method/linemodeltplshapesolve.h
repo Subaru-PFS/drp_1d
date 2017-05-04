@@ -1,9 +1,9 @@
 #ifndef _REDSHIFT_OPERATOR_LINEMODELTPLSHAPESOLVE_
 #define _REDSHIFT_OPERATOR_LINEMODELTPLSHAPESOLVE_
 
-#include <epic/core/common/datatypes.h>
-#include <epic/redshift/method/linemodeltplshapesolveresult.h>
-#include <epic/redshift/spectrum/template/template.h>
+#include <RedshiftLibrary/common/datatypes.h>
+#include <RedshiftLibrary/method/linemodeltplshapesolveresult.h>
+#include <RedshiftLibrary/spectrum/template/template.h>
 
 namespace NSEpic
 {

@@ -1,10 +1,10 @@
 #ifndef _REDSHIFT_SPECTRUM_SPECTRUM_
 #define _REDSHIFT_SPECTRUM_SPECTRUM_
 
-#include <epic/core/common/range.h>
-#include <epic/redshift/spectrum/fluxaxis.h>
-#include <epic/redshift/spectrum/spectralaxis.h>
-#include <epic/redshift/continuum/continuum.h>
+#include <RedshiftLibrary/common/range.h>
+#include <RedshiftLibrary/spectrum/fluxaxis.h>
+#include <RedshiftLibrary/spectrum/spectralaxis.h>
+#include <RedshiftLibrary/continuum/continuum.h>
 
 #include <string>
 

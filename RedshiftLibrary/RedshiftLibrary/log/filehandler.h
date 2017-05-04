@@ -1,8 +1,8 @@
 #ifndef _CORE_LOG_FILEHANDLER_
 #define _CORE_LOG_FILEHANDLER_
 
-#include <epic/core/common/datatypes.h>
-#include <epic/core/log/handler.h>
+#include <RedshiftLibrary/common/datatypes.h>
+#include <RedshiftLibrary/log/handler.h>
 
 #include <fstream>
 

@@ -1,8 +1,8 @@
 #ifndef _REDSHIFT_SPECTRUM_FLUXCORRECTIONMEIKSIN_
 #define _REDSHIFT_SPECTRUM_FLUXCORRECTIONMEIKSIN_
 
-#include <epic/core/common/datatypes.h>
-#include <epic/core/common/range.h>
+#include <RedshiftLibrary/common/datatypes.h>
+#include <RedshiftLibrary/common/range.h>
 
 #include <boost/format.hpp>
 

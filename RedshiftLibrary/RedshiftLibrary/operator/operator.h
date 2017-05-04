@@ -1,10 +1,10 @@
 #ifndef _REDSHIFT_OPERATOR_OPERATOR_
 #define _REDSHIFT_OPERATOR_OPERATOR_
 
-#include <epic/core/common/datatypes.h>
-#include <epic/core/common/range.h>
-#include <epic/redshift/processflow/result.h>
-#include <epic/redshift/common/mask.h>
+#include <RedshiftLibrary/common/datatypes.h>
+#include <RedshiftLibrary/common/range.h>
+#include <RedshiftLibrary/processflow/result.h>
+#include <RedshiftLibrary/common/mask.h>
 
 #include <vector>
 

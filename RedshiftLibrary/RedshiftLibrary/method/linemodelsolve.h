@@ -1,9 +1,9 @@
 #ifndef _REDSHIFT_OPERATOR_LINEMODELMATCHINGSOLVE_
 #define _REDSHIFT_OPERATOR_LINEMODELMATCHINGSOLVE_
 
-#include <epic/core/common/datatypes.h>
-#include <epic/redshift/method/linemodelsolveresult.h>
-#include <epic/redshift/spectrum/template/template.h>
+#include <RedshiftLibrary/common/datatypes.h>
+#include <RedshiftLibrary/method/linemodelsolveresult.h>
+#include <RedshiftLibrary/spectrum/template/template.h>
 
 namespace NSEpic
 {
