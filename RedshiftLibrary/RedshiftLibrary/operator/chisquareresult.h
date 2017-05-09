@@ -27,6 +27,8 @@ public:
     TFloat64List            FitMeiksinIdx;
     TFloat64List            FitDtM;
     TFloat64List            FitMtM;
+    Float64                 CstLog;
+
     TFloat64List            Overlap;
     TFloat64List            Extrema;
     COperator::TStatusList  Status;

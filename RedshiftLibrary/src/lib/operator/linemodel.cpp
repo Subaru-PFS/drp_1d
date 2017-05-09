@@ -775,7 +775,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
             postmargZResult->Redshifts[k] = result->Redshifts[k] ;
             postmargZResult->valProbaLog[k] = logProba[k];
         }
-        dataStore.StoreScopedGlobalResult( "zPDF/logposterior.logMargP_Z_data", postmargZResult); //need to store this pdf with this exact same name so that zqual can load it. see zqual.cpp/ExtractFeaturesPDF
+        dataStore.StoreGlobalResult( "zPDF/logposterior.logMargP_Z_data", postmargZResult); //need to store this pdf with this exact same name so that zqual can load it. see zqual.cpp/ExtractFeaturesPDF
     }
 
     return result;

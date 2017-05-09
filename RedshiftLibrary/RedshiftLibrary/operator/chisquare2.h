@@ -63,6 +63,9 @@ private:
     
     //IGM meiksin
     CSpectrumFluxCorrectionMeiksin* m_igmCorrectionMeiksin;
+
+    //Likelihood
+    Float64 EstimateLikelihoodCstLog(const CSpectrum& spectrum, const TFloat64Range& lambdaRange);
 };
 
 

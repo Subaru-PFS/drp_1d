@@ -38,7 +38,10 @@ private:
 
     Bool Solve(CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont, const CTemplate& tpl, const CTemplate& tplWithoutCont,
                                    const TFloat64Range& lambdaRange, const TFloat64List& redshifts, Float64 overlapThreshold , std::vector<CMask> maskList, Int32 spctype=CChisquare2SolveResult::nType_raw, std::string opt_interp="lin", std::string opt_extinction="no", std::string opt_dustFitting="no");
+    Int32 CombinePDF(CDataStore& store, std::string scopeStr);
+
     COperatorChiSquare2* m_chiSquareOperator;
+
 };
 
 

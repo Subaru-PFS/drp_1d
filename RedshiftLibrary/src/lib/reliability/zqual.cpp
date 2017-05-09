@@ -114,7 +114,7 @@ Bool CQualz::Solve( CDataStore& resultStore, CClassifierStore& classifierStore, 
 /*  ------------------------------------------------------------------------------------------------------ */
 Bool CQualz::ExtractFeaturesPDF( CDataStore& resultStore, const TFloat64Range& redshiftRange, Float64& redshiftStep )
 {
-    std::string scope_res = "linemodelsolve.zPDF/logposterior.logMargP_Z_data";
+    std::string scope_res = "zPDF/logposterior.logMargP_Z_data";
     auto results =  resultStore.GetGlobalResult( scope_res.c_str() );
 	auto logzpdf1d = std::dynamic_pointer_cast<const CPdfMargZLogResult>( results.lock() );
 

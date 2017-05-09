@@ -1,12 +1,14 @@
 #include <RedshiftLibrary/method/chisquare2solve.h>
 
+#include <RedshiftLibrary/log/log.h>
 #include <RedshiftLibrary/debug/assert.h>
 #include <RedshiftLibrary/spectrum/template/catalog.h>
 #include <RedshiftLibrary/operator/correlation.h>
 #include <RedshiftLibrary/operator/chisquare.h>
 #include <RedshiftLibrary/extremum/extremum.h>
 #include <RedshiftLibrary/processflow/datastore.h>
-
+#include <RedshiftLibrary/statistics/pdfz.h>
+#include <RedshiftLibrary/operator/pdfMargZLogResult.h>
 
 #include <RedshiftLibrary/spectrum/io/fitswriter.h>
 
@@ -59,14 +61,18 @@ std::shared_ptr<const CChisquare2SolveResult> CMethodChisquare2Solve::Compute(CD
     Bool storeResult = false;
 
     CDataStore::CAutoScope resultScope( resultStore, "chisquare2solve" );
+    std::string scopeStr = "chisquare";
 
     Int32 _type;
     if(spcComponent=="raw"){
        _type = CChisquare2SolveResult::nType_raw;
+       scopeStr = "chisquare";
     }else if(spcComponent=="nocontinuum"){
        _type = CChisquare2SolveResult::nType_noContinuum;
+       scopeStr = "chisquare_nocontinuum";
     }else if(spcComponent=="continuum"){
         _type = CChisquare2SolveResult::nType_continuumOnly;
+        scopeStr = "chisquare_continuum";
     }else if(spcComponent=="all"){
         _type = CChisquare2SolveResult::nType_all;
     }
@@ -78,19 +84,6 @@ std::shared_ptr<const CChisquare2SolveResult> CMethodChisquare2Solve::Compute(CD
         for( UInt32 j=0; j<tplCatalog.GetTemplateCount( category ); j++ )
         {
             const CTemplate& tpl = tplCatalog.GetTemplate( category, j );
-
-            /*
-            //optionnally export the templates into fits files
-            if(1){
-                CSpectrum spctpl= CSpectrum(tpl);
-                std::string tplName = tpl.GetName();
-                tplName.append(".fits");
-
-                CSpectrumIOFitsWriter writer;
-                Bool retValueExportTpl = writer.Write( tplName.c_str(),  spctpl);
-            }
-            //*/
-
             const CTemplate& tplWithoutCont = tplCatalog.GetTemplateWithoutContinuum( category, j );
 
             Solve( resultStore, spc, spcWithoutCont, tpl, tplWithoutCont, lambdaRange, redshifts, overlapThreshold, maskList, _type, opt_interp, opt_extinction, opt_dustFit);
@@ -104,6 +97,9 @@ std::shared_ptr<const CChisquare2SolveResult> CMethodChisquare2Solve::Compute(CD
     {
         std::shared_ptr< CChisquare2SolveResult>  ChisquareSolveResult = std::shared_ptr< CChisquare2SolveResult>( new CChisquare2SolveResult() );
         ChisquareSolveResult->m_type = _type;
+
+        CombinePDF(resultStore, scopeStr);
+
         return ChisquareSolveResult;
     }
 
@@ -209,3 +205,86 @@ Bool CMethodChisquare2Solve::Solve(CDataStore& resultStore,
 
     return true;
 }
+
+Int32 CMethodChisquare2Solve::CombinePDF(CDataStore &store, std::string scopeStr )
+{
+    std::string scope = "chisquare2solve.";
+    scope.append(scopeStr.c_str());
+
+    TOperatorResultMap meritResults = store.GetPerTemplateResult(scope.c_str());
+
+    auto postmargZResult = std::shared_ptr<CPdfMargZLogResult>(new CPdfMargZLogResult());
+    Bool initPostMarg = false;
+    std::vector<UInt32> nSum;
+
+    for( TOperatorResultMap::const_iterator it = meritResults.begin(); it != meritResults.end(); it++ )
+    {
+        auto meritResult = std::dynamic_pointer_cast<const CChisquareResult>( (*it).second );
+
+        //Todo: Check if the status is OK ?
+        //meritResult->Status[i] == COperator::nStatus_OK
+
+        CPdfz pdfz;
+        TFloat64List logProba;
+        Int32 retPdfz = pdfz.Compute(meritResult->ChiSquare, meritResult->Redshifts, meritResult->CstLog, logProba);
+        if(retPdfz!=0)
+        {
+            Log.LogError("chisquare2solve: Pdfz computation failed for tpl %s", (*it).first);
+        }else{
+            if(!initPostMarg)
+            {
+                nSum.resize(meritResult->Redshifts.size());
+                postmargZResult->countTPL = meritResult->Redshifts.size(); // assumed 1 model per z
+                postmargZResult->Redshifts.resize(meritResult->Redshifts.size());
+                postmargZResult->valProbaLog.resize(meritResult->Redshifts.size());
+                for ( UInt32 k=0; k<meritResult->Redshifts.size(); k++)
+                {
+                    postmargZResult->Redshifts[k] = meritResult->Redshifts[k] ;
+                    postmargZResult->valProbaLog[k] = log(0.0);
+                    nSum[k] = 0;
+                }
+                initPostMarg = true;
+            }else
+            {
+                //check if the redshift bins are the same
+                for ( UInt32 k=0; k<meritResult->Redshifts.size(); k++)
+                {
+                    if(postmargZResult->Redshifts[k] != meritResult->Redshifts[k])
+                    {
+                        Log.LogError("chisquare2solve: Pdfz computation (z-bins comparison) failed for tpl %s", (*it).first);
+                        break;
+                    }
+                }
+            }
+            for ( UInt32 k=0; k<meritResult->Redshifts.size(); k++)
+            {
+                if(meritResult->Status[k]== COperator::nStatus_OK)
+                {
+                    Float64 valProba = exp(postmargZResult->valProbaLog[k]);
+                    Float64 valProbaAdd = exp(logProba[k]);
+                    postmargZResult->valProbaLog[k] = log( valProba + valProbaAdd );
+                    nSum[k]++;
+                }
+            }
+        }
+
+
+    }
+
+    //THIS DOES NOT ALLOW Marginalization with coverage<100% for ALL templates
+    for ( UInt32 k=0; k<postmargZResult->Redshifts.size(); k++)
+    {
+        if(nSum[k]==meritResults.size())
+        {
+            postmargZResult->valProbaLog[k] -= log(nSum[k]);
+        }else{
+            postmargZResult->valProbaLog[k] = NAN;
+        }
+    }
+    store.StoreGlobalResult( "zPDF/logposterior.logMargP_Z_data", postmargZResult); //need to store this pdf with this exact same name so that zqual can load it. see zqual.cpp/ExtractFeaturesPDF
+
+    return 0;
+}
+
+
+

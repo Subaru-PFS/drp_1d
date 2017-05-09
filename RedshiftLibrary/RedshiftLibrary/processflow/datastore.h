@@ -80,6 +80,7 @@ public:
 
     Void                            StoreScopedPerTemplateResult( const CTemplate& t, const std::string& name, std::shared_ptr<const COperatorResult>  result );
     Void                            StoreScopedGlobalResult( const std::string& name, std::shared_ptr<const COperatorResult>  result );
+    Void                            StoreGlobalResult( const std::string& name, std::shared_ptr<const COperatorResult>  result );
 
     std::weak_ptr<const COperatorResult>          GetPerTemplateResult( const CTemplate& t, const std::string& name ) const;
     TOperatorResultMap              GetPerTemplateResult( const std::string& name ) const;

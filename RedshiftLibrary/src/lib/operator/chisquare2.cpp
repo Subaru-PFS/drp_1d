@@ -711,7 +711,8 @@ std::shared_ptr<COperatorResult> COperatorChiSquare2::Compute(const CSpectrum& s
         Log.LogInfo("Chisquare2, overlap warning for %s: minz=%.3f, maxz=%.3f", tpl.GetName().c_str(), overlapValidInfZ, overlapValidSupZ);
     }
 
-
+    //estimate CstLog for PDF estimation
+    result->CstLog = EstimateLikelihoodCstLog(spectrum, lambdaRange);
 
     // extrema
     Int32 extremumCount = 10;
@@ -1039,4 +1040,30 @@ const COperatorResult* COperatorChiSquare2::ExportChi2versusAZ(const CSpectrum& 
     free(precomputedFineGridTplFlux);
     return result;
 
+}
+
+/**
+ * \brief this function estimates the likelihood_cstLog term withing the wavelength range
+ **/
+Float64 COperatorChiSquare2::EstimateLikelihoodCstLog(const CSpectrum& spectrum, const TFloat64Range& lambdaRange)
+{
+    const CSpectrumSpectralAxis& spcSpectralAxis = spectrum.GetSpectralAxis();
+    const Float64* error = spectrum.GetFluxAxis().GetError();
+
+    Int32 numDevs = 0;
+    Float64 cstLog = 0.0;
+    Float64 sumLogNoise = 0.0;
+
+    Float64 imin = spcSpectralAxis.GetIndexAtWaveLength(lambdaRange.GetBegin());
+    Float64 imax = spcSpectralAxis.GetIndexAtWaveLength(lambdaRange.GetEnd());
+    for( UInt32 j=imin; j<imax; j++ )
+    {
+        numDevs++;
+        sumLogNoise += log( error[j] );
+    }
+    //Log.LogDebug( "CLineModelElementList::EstimateMTransposeM val = %f", mtm );
+
+    cstLog = -numDevs*0.5*log(2*M_PI) - sumLogNoise;
+
+    return cstLog;
 }

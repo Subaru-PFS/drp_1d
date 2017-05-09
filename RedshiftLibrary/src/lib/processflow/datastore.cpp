@@ -94,6 +94,10 @@ Void CDataStore::StoreScopedGlobalResult( const std::string& name, std::shared_p
     m_ResultStore.StoreGlobalResult( GetCurrentScopeName(), name, result );
 }
 
+Void CDataStore::StoreGlobalResult( const std::string& name, std::shared_ptr<const COperatorResult> result )
+{
+    m_ResultStore.StoreGlobalResult( "", name, result );
+}
 
 std::weak_ptr<const COperatorResult>  CDataStore::GetPerTemplateResult( const CTemplate& t, const std::string& name ) const
 {
