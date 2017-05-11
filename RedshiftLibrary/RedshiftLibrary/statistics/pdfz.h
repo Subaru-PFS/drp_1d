@@ -23,7 +23,7 @@ public:
     CPdfz();
     ~CPdfz();
 
-    Int32 Compute(TFloat64List merits, TFloat64List redshifts, Float64 cstLog, TFloat64List &logPdf);
+    Int32 Compute(TFloat64List merits, TFloat64List redshifts, Float64 cstLog, TFloat64List &logPdf, Float64 &logEvidence);
 
 private:
 

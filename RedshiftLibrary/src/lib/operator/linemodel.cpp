@@ -762,7 +762,8 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
     CPdfz pdfz;
     Float64 cstLog = model.getLikelihood_cstLog(lambdaRange);
     TFloat64List logProba;
-    Int32 retPdfz = pdfz.Compute(result->ChiSquare, result->Redshifts, cstLog, logProba);
+    Float64 logEvidence;
+    Int32 retPdfz = pdfz.Compute(result->ChiSquare, result->Redshifts, cstLog, logProba, logEvidence);
     if(retPdfz!=0)
     {
         Log.LogError("Linemodel: Pdfz computation failed");

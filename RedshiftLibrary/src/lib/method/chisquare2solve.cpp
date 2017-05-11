@@ -11,7 +11,7 @@
 #include <RedshiftLibrary/operator/pdfMargZLogResult.h>
 
 #include <RedshiftLibrary/spectrum/io/fitswriter.h>
-
+#include <float.h>
 using namespace NSEpic;
 using namespace std;
 
@@ -217,6 +217,9 @@ Int32 CMethodChisquare2Solve::CombinePDF(CDataStore &store, std::string scopeStr
     Bool initPostMarg = false;
     std::vector<UInt32> nSum;
 
+    Float64 MaxiLogEvidence = -DBL_MAX;
+    TFloat64List LogEvidences;
+    Float64 sumModifiedEvidences = 0;
     for( TOperatorResultMap::const_iterator it = meritResults.begin(); it != meritResults.end(); it++ )
     {
         auto meritResult = std::dynamic_pointer_cast<const CChisquareResult>( (*it).second );
@@ -226,7 +229,36 @@ Int32 CMethodChisquare2Solve::CombinePDF(CDataStore &store, std::string scopeStr
 
         CPdfz pdfz;
         TFloat64List logProba;
-        Int32 retPdfz = pdfz.Compute(meritResult->ChiSquare, meritResult->Redshifts, meritResult->CstLog, logProba);
+        Float64 logEvidence;
+        Int32 retPdfz = pdfz.Compute(meritResult->ChiSquare, meritResult->Redshifts, meritResult->CstLog, logProba, logEvidence);
+        if(retPdfz!=0)
+        {
+            Log.LogError("chisquare2solve: Pdfz computation failed for tpl %s", (*it).first);
+        }else{
+            LogEvidences.push_back(logEvidence);
+            if(MaxiLogEvidence<logEvidence){
+                MaxiLogEvidence=logEvidence;
+            }
+        }
+    }
+    //Using computational trick to sum the evidences
+    for(Int32 k=0; k<LogEvidences.size(); k++)
+    {
+        sumModifiedEvidences += exp(LogEvidences[k]-MaxiLogEvidence);
+    }
+    Float64 logSumEvidence = MaxiLogEvidence + log(sumModifiedEvidences);
+
+    for( TOperatorResultMap::const_iterator it = meritResults.begin(); it != meritResults.end(); it++ )
+    {
+        auto meritResult = std::dynamic_pointer_cast<const CChisquareResult>( (*it).second );
+
+        //Todo: Check if the status is OK ?
+        //meritResult->Status[i] == COperator::nStatus_OK
+
+        CPdfz pdfz;
+        TFloat64List logProba;
+        Float64 logEvidence;
+        Int32 retPdfz = pdfz.Compute(meritResult->ChiSquare, meritResult->Redshifts, meritResult->CstLog, logProba, logEvidence);
         if(retPdfz!=0)
         {
             Log.LogError("chisquare2solve: Pdfz computation failed for tpl %s", (*it).first);
@@ -261,7 +293,7 @@ Int32 CMethodChisquare2Solve::CombinePDF(CDataStore &store, std::string scopeStr
                 if(meritResult->Status[k]== COperator::nStatus_OK)
                 {
                     Float64 valProba = exp(postmargZResult->valProbaLog[k]);
-                    Float64 valProbaAdd = exp(logProba[k]);
+                    Float64 valProbaAdd = exp(logProba[k]+logEvidence-logSumEvidence);
                     postmargZResult->valProbaLog[k] = log( valProba + valProbaAdd );
                     nSum[k]++;
                 }
@@ -274,11 +306,10 @@ Int32 CMethodChisquare2Solve::CombinePDF(CDataStore &store, std::string scopeStr
     //THIS DOES NOT ALLOW Marginalization with coverage<100% for ALL templates
     for ( UInt32 k=0; k<postmargZResult->Redshifts.size(); k++)
     {
-        if(nSum[k]==meritResults.size())
+        if(nSum[k]!=meritResults.size())
         {
-            postmargZResult->valProbaLog[k] -= log(nSum[k]);
-        }else{
             postmargZResult->valProbaLog[k] = NAN;
+            Log.LogError("chisquare2solve: Pdfz computation failed. Not all templates have 100% coverage for all redshifts!");
         }
     }
     store.StoreGlobalResult( "zPDF/logposterior.logMargP_Z_data", postmargZResult); //need to store this pdf with this exact same name so that zqual can load it. see zqual.cpp/ExtractFeaturesPDF

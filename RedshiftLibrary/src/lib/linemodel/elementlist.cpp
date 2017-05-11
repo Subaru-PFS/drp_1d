@@ -76,8 +76,8 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
     m_rulesoption = opt_rules;
     m_rigidity = opt_rigidity;
 
-    m_fitContinuum_dustfit = 1;
-    m_fitContinuum_igm = 1;
+    m_fitContinuum_dustfit = 0;
+    m_fitContinuum_igm = 0;
     m_fitContinuum_outsidelinesmask = 0;
     m_fitContinuum_observedFrame = 0;
 

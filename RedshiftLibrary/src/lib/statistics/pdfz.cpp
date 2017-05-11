@@ -26,8 +26,9 @@ CPdfz::~CPdfz()
  *
  * @return 0: success, 1:problem, 2:dz not constant, 3 not enough z values
  */
-Int32 CPdfz::Compute(TFloat64List merits, TFloat64List redshifts, Float64 cstLog, TFloat64List& logPdf)
+Int32 CPdfz::Compute(TFloat64List merits, TFloat64List redshifts, Float64 cstLog, TFloat64List& logPdf, Float64 &logEvidence)
 {
+    Bool verbose = false;
     logPdf.clear();
 
     //check if there is more than 2 reshifts values
@@ -61,7 +62,7 @@ Int32 CPdfz::Compute(TFloat64List merits, TFloat64List redshifts, Float64 cstLog
     }
 
     logPdf.resize(redshifts.size());
-    Float64 logPrior = 0; //log(1.0)
+    Float64 logPrior = log(1.0/redshifts.size()); //log(1.0)
 
     /* ------------------------------------------------------------------
     * NOTE (copied from dev_bayes branch by S. Jamal):
@@ -109,9 +110,15 @@ Int32 CPdfz::Compute(TFloat64List merits, TFloat64List redshifts, Float64 cstLog
         Float64 modifiedEXPO = exp(smallVALUES[k]-maxi);
         sumModifiedExp += modifiedEXPO;
     }
-    Float64 logEvidence = cstLog + maxi + log(sumModifiedExp) + log(zstep);
+    logEvidence = cstLog + maxi + log(sumModifiedExp) + log(zstep);
 
-
+    if(verbose)
+    {
+        Log.LogInfo("chisquare2solve: Pdfz computation: using cstLog=%f", cstLog);
+        Log.LogInfo("chisquare2solve: Pdfz computation: using logEvidence=%f", logEvidence);
+        Log.LogInfo("chisquare2solve: Pdfz computation: using  log(zstep)=%f",  log(zstep));
+        Log.LogInfo("chisquare2solve: Pdfz computation: using  logPrior=%f",  logPrior);
+    }
 
     for ( UInt32 k=0; k<redshifts.size(); k++)
     {
