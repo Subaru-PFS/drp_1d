@@ -233,7 +233,7 @@ Int32 CMethodChisquare2Solve::CombinePDF(CDataStore &store, std::string scopeStr
         Int32 retPdfz = pdfz.Compute(meritResult->ChiSquare, meritResult->Redshifts, meritResult->CstLog, logProba, logEvidence);
         if(retPdfz!=0)
         {
-            Log.LogError("chisquare2solve: Pdfz computation failed for tpl %s", (*it).first);
+            Log.LogError("chisquare2solve: Pdfz computation failed for tpl %s", (*it).first.c_str());
         }else{
             LogEvidences.push_back(logEvidence);
             if(MaxiLogEvidence<logEvidence){
@@ -261,7 +261,7 @@ Int32 CMethodChisquare2Solve::CombinePDF(CDataStore &store, std::string scopeStr
         Int32 retPdfz = pdfz.Compute(meritResult->ChiSquare, meritResult->Redshifts, meritResult->CstLog, logProba, logEvidence);
         if(retPdfz!=0)
         {
-            Log.LogError("chisquare2solve: Pdfz computation failed for tpl %s", (*it).first);
+            Log.LogError("chisquare2solve: Pdfz computation failed for tpl %s", (*it).first.c_str());
         }else{
             if(!initPostMarg)
             {
@@ -283,7 +283,7 @@ Int32 CMethodChisquare2Solve::CombinePDF(CDataStore &store, std::string scopeStr
                 {
                     if(postmargZResult->Redshifts[k] != meritResult->Redshifts[k])
                     {
-                        Log.LogError("chisquare2solve: Pdfz computation (z-bins comparison) failed for tpl %s", (*it).first);
+                        Log.LogError("chisquare2solve: Pdfz computation (z-bins comparison) failed for tpl %s", (*it).first.c_str());
                         break;
                     }
                 }
