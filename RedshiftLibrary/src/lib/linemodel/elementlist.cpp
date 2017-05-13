@@ -1173,6 +1173,7 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
                 _merit = getLeastSquareMerit(lambdaRange);
                 //_merit = getLeastSquareMeritFast();
             }else{
+                //_merit = getLeastSquareMerit(lambdaRange);
                 _merit = getLeastSquareMeritFast();
             }
 

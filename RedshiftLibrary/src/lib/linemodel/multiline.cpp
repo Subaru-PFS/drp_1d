@@ -100,7 +100,8 @@ TInt32Range CMultiLine::EstimateTheoreticalSupport(Int32 subeIdx, const CSpectru
 {
     Int32 i = subeIdx;
     TInt32Range supportRange;
-    Float64 mu = m_Rays[i].GetPosition()*(1+redshift);
+    Float64 dzOffset = m_Rays[i].GetOffset()/m_c_kms;
+    Float64 mu = m_Rays[i].GetPosition()*(1+redshift)*(1+dzOffset);
     Float64 c = GetLineWidth(mu, redshift, m_Rays[i].GetIsEmission(), m_profile[i]);
     Float64 winsize = GetNSigmaSupport(m_profile[i])*c;
 
@@ -150,7 +151,9 @@ void CMultiLine::prepareSupport(const CSpectrumSpectralAxis& spectralAxis, Float
         {
             m_OutsideLambdaRangeList[i]=true;
         }else{  //in this case the line is completely inside the lambdarange or with partial overlap
-            Float64 mu = m_Rays[i].GetPosition()*(1+redshift);
+
+            Float64 dzOffset = m_Rays[i].GetOffset()/m_c_kms;
+            Float64 mu = m_Rays[i].GetPosition()*(1+redshift)*(1+dzOffset);
             Float64 c = GetLineWidth(mu, redshift, m_Rays[i].GetIsEmission(), m_profile[i]);
             Float64 winsize = GetNSigmaSupport(m_profile[i])*c;
             Int32 minLineOverlap = m_OutsideLambdaRangeOverlapThreshold*winsize;
