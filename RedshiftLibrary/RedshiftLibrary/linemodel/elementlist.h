@@ -17,6 +17,7 @@
 #include <RedshiftLibrary/linemodel/singleline.h>
 
 #include <RedshiftLibrary/spectrum/template/catalog.h>
+#include <RedshiftLibrary/linemodel/templatesfitstore.h>
 
 #include <boost/shared_ptr.hpp>
 
@@ -81,6 +82,7 @@ public:
     Float64 getFitContinuum_tplIsmDustCoeff();
     Float64 getFitContinuum_tplIgmMeiksinIdx();
     void SetContinuumComponent(std::string component);
+    Int32 SetFitContinuum_FitStore(CTemplatesFitStore* fitStore);
 
     Bool initDtd(const TFloat64Range& lambdaRange);
     Float64 EstimateDTransposeD(const TFloat64Range& lambdaRange, std::string spcComponent);
@@ -237,6 +239,8 @@ private:
     Float64 m_fitContinuum_lmin;
     Float64 m_fitContinuum_lmax;
     Int32 m_fitContinuum_nTgt;
+    CTemplatesFitStore* m_fitContinuum_tplfitStore;
+    Int32 m_fitContinuum_option;
     std::string m_fitContinuum_tplName;
     Float64 m_fitContinuum_tplFitAmplitude;
     Float64 m_fitContinuum_tplFitDustCoeff;

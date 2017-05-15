@@ -138,17 +138,25 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
     m_chiSquareOperator = NULL;
     //*
     //WARNING: HACK, first pass with continuum from spectrum.
+    m_fitContinuum_tplfitStore = NULL;
+    m_fitContinuum_option = 0; //0=interactive fitting, 1=use precomputed fit store
+    //NB: fitContinuum_option: this is the initialization (default value), eventually overriden in SetFitContinuum_FitStore() when a fitStore gets available
     if(m_ContinuumComponent == "tplfit")
     {
         InitFitContinuum();
         m_chiSquareOperator = new COperatorChiSquare2(calibrationPath);
 
-        Log.LogInfo( "Elementlist: fitContinuum_dustfit = %d", m_fitContinuum_dustfit );
-        Log.LogInfo( "Elementlist: fitContinuum_igm = %d", m_fitContinuum_igm );
-        Log.LogInfo( "Elementlist: fitContinuum_outsidelinesmask = %d", m_fitContinuum_outsidelinesmask );
-        Log.LogInfo( "Elementlist: fitContinuum_observedFrame = %d", m_fitContinuum_observedFrame );
+        if(0)
+        {
+            Log.LogInfo( "Elementlist: fitContinuum_dustfit = %d", m_fitContinuum_dustfit );
+            Log.LogInfo( "Elementlist: fitContinuum_igm = %d", m_fitContinuum_igm );
+            Log.LogInfo( "Elementlist: fitContinuum_outsidelinesmask = %d", m_fitContinuum_outsidelinesmask );
+            Log.LogInfo( "Elementlist: fitContinuum_observedFrame = %d", m_fitContinuum_observedFrame );
+        }
     }
     //*/
+
+
 
 
     // "New style" rules initialization:
@@ -432,24 +440,6 @@ Int32 CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange)
         Log.LogError("Elementlist, cannot loadfitcontinuum without precomputedFineGridTplFlux... aborting!");
         return -1;
     }
-    //hardcoded parameters
-    std::string opt_interp = "precomputedfinegrid"; // "lin"; //
-    Int32 opt_extinction = m_fitContinuum_igm;
-    Int32 opt_dustFit = m_fitContinuum_dustfit;
-    Float64 overlapThreshold = 1.0;
-
-    bool ignoreLinesSupport=m_fitContinuum_outsidelinesmask;
-    std::vector<CMask> maskList;
-    if(ignoreLinesSupport){
-        maskList.resize(1);
-        maskList[0]=getOutsideLinesMask();
-    }
-
-
-    std::vector<Float64> redshifts(1, m_Redshift);
-    if(m_fitContinuum_observedFrame){
-        redshifts[0] = 0.0;
-    }
 
     Float64 bestMerit = DBL_MAX;
     Float64 bestFitAmplitude = -1.0;
@@ -459,34 +449,68 @@ Int32 CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange)
     Float64 bestFitMtM = -1.0;
     std::string bestTplName="";
 
-    for( UInt32 i=0; i<m_tplCategoryList.size(); i++ )
-    {
-        std::string category = m_tplCategoryList[i];
+    if(m_fitContinuum_option==0){
+        //hardcoded parameters
+        std::string opt_interp = "precomputedfinegrid"; // "lin"; //
+        Int32 opt_extinction = m_fitContinuum_igm;
+        Int32 opt_dustFit = m_fitContinuum_dustfit;
+        Float64 overlapThreshold = 1.0;
 
-        for( UInt32 j=0; j<m_tplCatalog.GetTemplateCount( category ); j++ )
+        bool ignoreLinesSupport=m_fitContinuum_outsidelinesmask;
+        std::vector<CMask> maskList;
+        if(ignoreLinesSupport){
+            maskList.resize(1);
+            maskList[0]=getOutsideLinesMask();
+        }
+
+
+        std::vector<Float64> redshifts(1, m_Redshift);
+        if(m_fitContinuum_observedFrame){
+            redshifts[0] = 0.0;
+        }
+
+        for( UInt32 i=0; i<m_tplCategoryList.size(); i++ )
         {
-            const CTemplate& tpl = m_tplCatalog.GetTemplate( category, j );
+            std::string category = m_tplCategoryList[i];
 
-            Float64 merit = DBL_MAX;
-            Float64 fitAmplitude = -1.0;
-            Float64 fitDustCoeff = -1.0;
-            Int32 fitMeiksinIdx = -1;
-            Float64 fitDtM = -1.0;
-            Float64 fitMtM = -1.0;
-            Bool ret = SolveContinuum( *m_inputSpc, tpl, lambdaRange, redshifts, overlapThreshold, maskList, opt_interp, opt_extinction, opt_dustFit, merit, fitAmplitude, fitDustCoeff, fitMeiksinIdx, fitDtM, fitMtM);
-
-            if(ret && merit<bestMerit)
+            for( UInt32 j=0; j<m_tplCatalog.GetTemplateCount( category ); j++ )
             {
-                bestMerit = merit;
-                bestFitAmplitude = fitAmplitude;
-                bestFitDustCoeff = fitDustCoeff;
-                bestFitMeiksinIdx = fitMeiksinIdx;
-                bestFitDtM = fitDtM;
-                bestFitMtM = fitMtM;
-                bestTplName = tpl.GetName();
+                const CTemplate& tpl = m_tplCatalog.GetTemplate( category, j );
+
+                Float64 merit = DBL_MAX;
+                Float64 fitAmplitude = -1.0;
+                Float64 fitDustCoeff = -1.0;
+                Int32 fitMeiksinIdx = -1;
+                Float64 fitDtM = -1.0;
+                Float64 fitMtM = -1.0;
+                Bool ret = SolveContinuum( *m_inputSpc, tpl, lambdaRange, redshifts, overlapThreshold, maskList, opt_interp, opt_extinction, opt_dustFit, merit, fitAmplitude, fitDustCoeff, fitMeiksinIdx, fitDtM, fitMtM);
+
+                if(ret && merit<bestMerit)
+                {
+                    bestMerit = merit;
+                    bestFitAmplitude = fitAmplitude;
+                    bestFitDustCoeff = fitDustCoeff;
+                    bestFitMeiksinIdx = fitMeiksinIdx;
+                    bestFitDtM = fitDtM;
+                    bestFitMtM = fitMtM;
+                    bestTplName = tpl.GetName();
+                }
             }
         }
+    }else if(m_fitContinuum_option==1){
+        CTemplatesFitStore::TemplateFitValues fitValues = m_fitContinuum_tplfitStore->GetFitValues(m_Redshift);
+        bestMerit = fitValues.merit;
+        bestFitAmplitude = fitValues.fitAmplitude;
+        bestFitDustCoeff = fitValues.fitDustCoeff;
+        bestFitMeiksinIdx = fitValues.fitMeiksinIdx;
+        bestFitDtM = fitValues.fitDtM;
+        bestFitMtM = fitValues.fitMtM;
+        bestTplName = fitValues.tplName;
+    }else{
+        Log.LogError("Elementlist, cannot parse fitContinuum_option... aborting!");
+        return -1;
     }
+
     if(bestTplName!="")
     {
         m_fitContinuum_tplName = bestTplName;
@@ -618,6 +642,15 @@ Float64 CLineModelElementList::getFitContinuum_tplIgmMeiksinIdx()
 void CLineModelElementList::SetContinuumComponent(std::string component)
 {
     m_ContinuumComponent = component;
+}
+
+
+Int32 CLineModelElementList::SetFitContinuum_FitStore(CTemplatesFitStore* fitStore)
+{
+    m_fitContinuum_option = 1; //enable use of the fit store
+    Log.LogInfo( "Elementlist: enabling fitContinuum store.");
+    m_fitContinuum_tplfitStore = fitStore;
+    return 1;
 }
 
 /**

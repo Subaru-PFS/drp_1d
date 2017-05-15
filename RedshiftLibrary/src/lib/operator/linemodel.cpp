@@ -6,12 +6,14 @@
 #include <RedshiftLibrary/spectrum/template/template.h>
 #include <RedshiftLibrary/spectrum/tools.h>
 #include <RedshiftLibrary/common/mask.h>
+#include <RedshiftLibrary/operator/chisquare2.h>
 #include <RedshiftLibrary/operator/chisquareresult.h>
 #include <RedshiftLibrary/operator/spectraFluxResult.h>
 #include <RedshiftLibrary/extremum/extremum.h>
 #include <RedshiftLibrary/statistics/deltaz.h>
 #include <RedshiftLibrary/statistics/pdfz.h>
 #include <RedshiftLibrary/operator/pdfMargZLogResult.h>
+#include <RedshiftLibrary/linemodel/templatesfitstore.h>
 
 #include <RedshiftLibrary/spectrum/io/fitswriter.h>
 #include <RedshiftLibrary/log/log.h>
@@ -220,6 +222,88 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
         Log.LogInfo( "Linemodel: velocity fitting bounds: min=%.1f - max=%.1f", velfitMin, velfitMax);
     }
 
+    //fit continuum
+    if(opt_continuumcomponent == "tplfit")
+    {
+        Float64 redshiftStep = 1e-3;
+        Float64 minRedshift = sortedRedshifts[0];
+        Float64 maxRedshift = sortedRedshifts[sortedRedshifts.size()-1];
+        Log.LogInfo( "Linemodel: continuum tpl fitting: step=%.5f, min=%.1f, max=%.1f", redshiftStep, minRedshift, maxRedshift);
+
+        CTemplatesFitStore* tplfitStore = new CTemplatesFitStore(minRedshift, maxRedshift, redshiftStep);
+        std::vector<Float64> redshiftsTplFit = tplfitStore->GetRedshiftList();
+        Log.LogInfo( "Linemodel: continuum tpl redshift list n=%d", redshiftsTplFit.size());
+        std::vector<std::shared_ptr<CChisquareResult>> chisquareResultsAllTpl;
+        std::vector<std::string> chisquareResultsTplName;
+
+        COperatorChiSquare2* chiSquareOperator;
+        chiSquareOperator = new COperatorChiSquare2(opt_calibrationPath); //todo, delete this operator when done...
+        std::string opt_interp = "precomputedfinegrid"; // "lin"; //
+        Int32 opt_dustFit = 1;
+        Int32 opt_extinction = 1;
+        Log.LogInfo( "linemodel: precomputing-fitContinuum_dustfit = %d", opt_dustFit );
+        Log.LogInfo( "linemodel: precomputing-fitContinuum_igm = %d", opt_extinction );
+
+        Float64 overlapThreshold = 1.0;
+        bool ignoreLinesSupport=0;
+        std::vector<CMask> maskList; //can't get the lines support BEFORE initializing the model
+
+        for( UInt32 i=0; i<tplCategoryList.size(); i++ )
+        {
+            std::string category = tplCategoryList[i];
+
+            for( UInt32 j=0; j<orthoTplCatalog->GetTemplateCount( category ); j++ )
+            {
+                const CTemplate& tpl = orthoTplCatalog->GetTemplate( category, j );
+
+                auto  chisquareResult = std::dynamic_pointer_cast<CChisquareResult>( chiSquareOperator->Compute( spectrum, tpl, lambdaRange, redshiftsTplFit, overlapThreshold, maskList, opt_interp, opt_extinction, opt_dustFit ) );
+                if( !chisquareResult )
+                {
+                    Log.LogInfo( "Linemodel failed to compute chi square value for tpl=%s", tpl.GetName().c_str());
+                }else{
+                    chisquareResultsAllTpl.push_back(chisquareResult);
+                    chisquareResultsTplName.push_back(tpl.GetName());
+                }
+            }
+        }
+        delete chiSquareOperator;
+
+        //fill the results with Best Values
+        Int32 nTplFitResults = redshiftsTplFit.size();
+        for (Int32 i=0;i<nTplFitResults;i++)
+        {
+            Float64 redshift = redshiftsTplFit[i];
+            Float64 bestMerit = DBL_MAX;
+            Float64 bestFitAmplitude;
+            Float64 bestFitDustCoeff;
+            Int32   bestFitMeiksinIdx;
+            Float64 bestFitDtM;
+            Float64 bestFitMtM;
+            std::string bestTplName;
+
+            for( UInt32 j=0; j<chisquareResultsAllTpl.size(); j++ )
+            {
+                auto chisquareResult = std::dynamic_pointer_cast<CChisquareResult>( chisquareResultsAllTpl[j] );
+                Float64 merit = chisquareResult->ChiSquare[i];
+
+
+                if(merit<bestMerit)
+                {
+                    bestMerit = merit;
+                    bestFitAmplitude = chisquareResult->FitAmplitude[i];
+                    bestFitDustCoeff = chisquareResult->FitDustCoeff[i];
+                    bestFitMeiksinIdx = chisquareResult->FitMeiksinIdx[i];
+                    bestFitDtM = chisquareResult->FitDtM[i];
+                    bestFitMtM = chisquareResult->FitMtM[i];
+                    bestTplName = chisquareResultsTplName[j];
+                }
+            }
+            tplfitStore->Add(redshift, bestMerit, bestFitAmplitude, bestFitDustCoeff, bestFitMeiksinIdx, bestFitDtM, bestFitMtM, bestTplName);
+        }
+
+        //Set tplFitStore if needed
+        model.SetFitContinuum_FitStore(tplfitStore);
+    }
 
 //    //hack, zero outside of the support  ///////////////////////////////////////////////////////////////////////////////////////////
 //    model.setModelSpcObservedOnSupportZeroOutside(lambdaRange);
