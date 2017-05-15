@@ -223,8 +223,10 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
     }
 
     //fit continuum
-    if(opt_continuumcomponent == "tplfit")
+    bool enableFitContinuumPrecomputed = true;
+    if(enableFitContinuumPrecomputed && opt_continuumcomponent == "tplfit")
     {
+        boost::chrono::thread_clock::time_point start_tplfitprecompute = boost::chrono::thread_clock::now();
         Float64 redshiftStep = 1e-3;
         Float64 minRedshift = sortedRedshifts[0];
         Float64 maxRedshift = sortedRedshifts[sortedRedshifts.size()-1];
@@ -303,6 +305,13 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
 
         //Set tplFitStore if needed
         model.SetFitContinuum_FitStore(tplfitStore);
+
+        boost::chrono::thread_clock::time_point stop_tplfitprecompute = boost::chrono::thread_clock::now();
+        Float64 duration_tplfitprecompute = boost::chrono::duration_cast<boost::chrono::microseconds>(stop_tplfitprecompute - start_tplfitprecompute).count();
+        Float64 duration_tplfit_seconds = duration_tplfitprecompute/1e6;
+        Log.LogInfo( "Linemodel: tplfit-precompute done in %.4e sec", duration_tplfit_seconds);
+        Log.LogInfo("<proc-lm-tplfit><%d>", (Int32)duration_tplfit_seconds);
+
     }
 
 //    //hack, zero outside of the support  ///////////////////////////////////////////////////////////////////////////////////////////
@@ -371,7 +380,9 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
     //
     boost::chrono::thread_clock::time_point stop_mainloop = boost::chrono::thread_clock::now();
     Float64 duration_mainloop = boost::chrono::duration_cast<boost::chrono::microseconds>(stop_mainloop - start_mainloop).count();
-    Log.LogInfo( "Linemodel: main z loop done in %.4e sec", duration_mainloop/1e6);
+    Float64 duration_firstpass_seconds = duration_mainloop/1e6;
+    Log.LogInfo( "Linemodel: first-pass done in %.4e sec", duration_firstpass_seconds);
+    Log.LogInfo("<proc-lm-fistpass><%d>", (Int32)duration_firstpass_seconds);
 
     // extrema
     Int32 extremumCount = opt_extremacount;
