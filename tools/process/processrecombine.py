@@ -157,14 +157,13 @@ class processRecombine(object):
             for line in f:
                 lineStr = line.strip()
                 if not lineStr.startswith('#'):
-                    spcName = lineStr.split("\t")[0]
-                    spcNameNoExt = os.path.splitext(spcName)[0]
-                    source_path = os.path.join(dirpath, spcNameNoExt)
-                    dest_path = os.path.join(outPath, spcNameNoExt)
+                    procTag = lineStr.split("\t")[2]
+                    source_path = os.path.join(dirpath, procTag)
+                    dest_path = os.path.join(outPath, procTag)
                     try:
                         shutil.copytree(source_path, dest_path)
                     except:
-                        print("ERROR: unable to copy intermediate files for: {}".format(spcNameNoExt))
+                        print("ERROR: unable to copy intermediate files for: {}".format(procTag))
             f.close()
             
     def estimatePerSpectrumProcTime(self, clusterLogDirPath, datasetOutputPath):
