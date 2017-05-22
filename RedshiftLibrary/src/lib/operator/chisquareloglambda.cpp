@@ -274,12 +274,12 @@ Void COperatorChiSquareLogLambda::BasicFit(const CSpectrum& spectrum, const CTem
         //find samples limits
         Int32 kStart = -1;
         Int32 kEnd = -1;
-        for(Int32 k=0; k<itplTplSpectralAxis.GetSamplesCount(); k++)
+        for(Int32 k=0; k<spcSpectralAxis.GetSamplesCount(); k++)
         {
-            if(Xtpl[k] >= lbda_min && kStart==-1){
+            if(Xspc[k] >= lbda_min && kStart==-1){
                 kStart=k;
             }
-            if(Xtpl[k] <= lbda_max){
+            if(Xspc[k] <= lbda_max){
                 kEnd=k;
             }
 
@@ -449,8 +449,6 @@ Void COperatorChiSquareLogLambda::BasicFit(const CSpectrum& spectrum, const CTem
                         }
                     }
                 }
-
-                j++;
             }
             if(option_igmFastProcessing && kMeiksin==0)
             {
@@ -713,7 +711,8 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(const CSpe
         Log.LogInfo("Chisquare2, overlap warning for %s: minz=%.3f, maxz=%.3f", tpl.GetName().c_str(), overlapValidInfZ, overlapValidSupZ);
     }
 
-
+    //estimate CstLog for PDF estimation
+    result->CstLog = EstimateLikelihoodCstLog(spectrum, lambdaRange);
 
     // extrema
     Int32 extremumCount = 10;
