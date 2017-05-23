@@ -14,7 +14,6 @@
 
 #include <RedshiftLibrary/operator/linemodelresult.h>
 #include <RedshiftLibrary/linemodel/element.h>
-#include <RedshiftLibrary/linemodel/singleline.h>
 
 #include <RedshiftLibrary/spectrum/template/catalog.h>
 #include <RedshiftLibrary/linemodel/templatesfitstore.h>
@@ -53,7 +52,6 @@ public:
     ~CLineModelElementList();
 
     void LoadCatalog(const CRayCatalog::TRayVector& restRayList);
-    void LoadCatalogSingleLines(const CRayCatalog::TRayVector& restRayList);
     void LoadCatalogOneMultiline(const CRayCatalog::TRayVector& restRayList);
     void LogCatalogInfos();
 
@@ -172,10 +170,10 @@ public:
 
 private:
 
-    Int32 fitAmplitudesHybrid(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& spcFluxAxisNoContinuum, Float64 redshift);
+    Int32 fitAmplitudesHybrid(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& spcFluxAxisNoContinuum, const CSpectrumFluxAxis &continuumfluxAxis, Float64 redshift);
     void fitAmplitudesSimplex();
     Int32 fitAmplitudesLmfit(std::vector<Int32> EltsIdx, const CSpectrumFluxAxis &fluxAxis, std::vector<Float64> &ampsfitted, Int32 lineType);
-    Int32 fitAmplitudesLinSolve(std::vector<Int32> EltsIdx, const CSpectrumSpectralAxis &spectralAxis, const CSpectrumFluxAxis &fluxAxis, std::vector<Float64> &ampsfitted, std::vector<Float64> &errorsfitted);
+    Int32 fitAmplitudesLinSolve(std::vector<Int32> EltsIdx, const CSpectrumSpectralAxis &spectralAxis, const CSpectrumFluxAxis &fluxAxis, const CSpectrumFluxAxis& continuumfluxAxis, std::vector<Float64> &ampsfitted, std::vector<Float64> &errorsfitted);
     Int32 fitAmplitudesLBFGS(std::vector<Int32> filteredEltsIdx, const CSpectrumFluxAxis& fluxAxis, std::vector<Float64>& ampsfitted, Int32 lineType);
 
     bool m_forceDisableLyaFitting;
@@ -189,7 +187,6 @@ private:
 
     std::vector<Int32> findLineIdxInCatalog(const CRayCatalog::TRayVector& restRayList, std::string strTag, Int32 type);
 
-    void addSingleLine(const CRay &r, Int32 index, Float64 nominalWidth);
     void addDoubleLine(const CRay &r1, const CRay &r2, Int32 index1, Int32 index2, Float64 nominalWidth, Float64 a1, Float64 a2);
 
     void applyRules(bool enableLogs=false);

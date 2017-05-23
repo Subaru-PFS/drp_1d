@@ -1,5 +1,4 @@
 #include <RedshiftLibrary/linemodel/elementlist.h>
-#include <RedshiftLibrary/linemodel/singleline.h>
 #include <RedshiftLibrary/linemodel/multiline.h>
 #include <RedshiftLibrary/linemodel/modelfittingresult.h>
 #include <RedshiftLibrary/gaussianfit/multigaussianfit.h>
@@ -399,21 +398,6 @@ void CLineModelElementList::LogCatalogInfos()
         }
     }
     Log.LogInfo( "\n");
-}
-
-/**
- * \brief For each ray in the argument that has not an element associated, associate a singleline to it.
- **/
-void CLineModelElementList::LoadCatalogSingleLines(const CRayCatalog::TRayVector& restRayList)
-{
-    //Load the rest of the single lines
-    for( UInt32 iRestRay=0; iRestRay<restRayList.size(); iRestRay++ )
-    {
-        if ( FindElementIndex(iRestRay)==-1 )
-        {
-            addSingleLine(restRayList[iRestRay], iRestRay, m_nominalWidthDefaultEmission);
-        }
-    }
 }
 
 /**
@@ -939,7 +923,7 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
             //fit the model amplitudes individually
             for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
             {
-                m_Elements[iElts]->fitAmplitude(spectralAxis, m_spcFluxAxisNoContinuum, redshift);
+                m_Elements[iElts]->fitAmplitude(spectralAxis, m_spcFluxAxisNoContinuum, m_ContinuumFluxAxis, redshift);
             }
         }
 
@@ -956,7 +940,7 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
             //initial guess from individual fit
             for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
             {
-                m_Elements[iElts]->fitAmplitude(spectralAxis, m_spcFluxAxisNoContinuum, redshift);
+                m_Elements[iElts]->fitAmplitude(spectralAxis, m_spcFluxAxisNoContinuum, m_ContinuumFluxAxis, redshift);
             }
 
             std::vector<Float64> ampsfitted;
@@ -1017,7 +1001,7 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
             //initial guess from individual fit
             for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
             {
-                m_Elements[iElts]->fitAmplitude(spectralAxis, m_spcFluxAxisNoContinuum, redshift);
+                m_Elements[iElts]->fitAmplitude(spectralAxis, m_spcFluxAxisNoContinuum, m_ContinuumFluxAxis, redshift);
             }
 
             std::vector<Float64> ampsfitted;
@@ -1078,13 +1062,13 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
             std::vector<Int32> validEltsIdx = GetModelValidElementsIndexes();
             std::vector<Float64> ampsfitted;
             std::vector<Float64> errorsfitted;
-            fitAmplitudesLinSolve(validEltsIdx, spectralAxis, m_spcFluxAxisNoContinuum, ampsfitted, errorsfitted);
+            fitAmplitudesLinSolve(validEltsIdx, spectralAxis, m_spcFluxAxisNoContinuum, m_ContinuumFluxAxis, ampsfitted, errorsfitted);
         }
 
         //fit the amplitudes of each element independently, unless there is overlap
         if(m_fittingmethod=="hybrid")
         {
-            fitAmplitudesHybrid(spectralAxis, m_spcFluxAxisNoContinuum, redshift);
+            fitAmplitudesHybrid(spectralAxis, m_spcFluxAxisNoContinuum, m_ContinuumFluxAxis, redshift);
 
             //apply a continuum iterative re-estimation with lines removed from the initial spectrum
             Int32 nIt = contreest_iterations;
@@ -1140,7 +1124,7 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
             //*/
 
 
-                fitAmplitudesHybrid(spectralAxis, m_spcFluxAxisNoContinuum, redshift);
+                fitAmplitudesHybrid(spectralAxis, m_spcFluxAxisNoContinuum, m_ContinuumFluxAxis, redshift);
                 it++;
             }
         }
@@ -1339,7 +1323,7 @@ void CLineModelElementList::refreshModel()
     //create spectrum model
     for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
     {
-        m_Elements[iElts]->addToSpectrumModel(spectralAxis, modelFluxAxis, m_Redshift);
+        m_Elements[iElts]->addToSpectrumModel(spectralAxis, modelFluxAxis, m_ContinuumFluxAxis, m_Redshift);
     }
 }
 
@@ -1357,7 +1341,7 @@ void CLineModelElementList::refreshModelUnderElements(std::vector<Int32> filterE
     for( UInt32 i=0; i<filterEltsIdx.size(); i++ )
     {
         iElts = filterEltsIdx[i];
-        m_Elements[iElts]->addToSpectrumModel(spectralAxis, modelFluxAxis, m_Redshift, lineIdx);
+        m_Elements[iElts]->addToSpectrumModel(spectralAxis, modelFluxAxis, m_ContinuumFluxAxis, m_Redshift, lineIdx);
     }
 }
 
@@ -1448,7 +1432,7 @@ CMask CLineModelElementList::getOutsideLinesMask()
  *           For each non-negative subelement, if the amplitude fitted is greater than 0, call fitAmplitude on its entry. Else, SetElementAmplitude to 0.
  *   Update the index of already-fitted subelements.
  **/
-Int32 CLineModelElementList::fitAmplitudesHybrid( const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& spcFluxAxisNoContinuum, Float64 redshift)
+Int32 CLineModelElementList::fitAmplitudesHybrid(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& spcFluxAxisNoContinuum, const CSpectrumFluxAxis &continuumfluxAxis, Float64 redshift)
 {
   std::vector<Int32> validEltsIdx = GetModelValidElementsIndexes();
   std::vector<Int32> indexesFitted;
@@ -1483,13 +1467,13 @@ Int32 CLineModelElementList::fitAmplitudesHybrid( const CSpectrumSpectralAxis& s
     */
       if(overlappingInds.size()<2)
       {
-          m_Elements[iElts]->fitAmplitude(spectralAxis, spcFluxAxisNoContinuum, redshift);
+          m_Elements[iElts]->fitAmplitude(spectralAxis, spcFluxAxisNoContinuum, m_ContinuumFluxAxis, redshift);
       }
       else
       {
           std::vector<Float64> ampsfitted;
           std::vector<Float64> errorsfitted;
-          Int32 retVal = fitAmplitudesLinSolve(overlappingInds, spectralAxis, spcFluxAxisNoContinuum, ampsfitted, errorsfitted);
+          Int32 retVal = fitAmplitudesLinSolve(overlappingInds, spectralAxis, spcFluxAxisNoContinuum, m_ContinuumFluxAxis, ampsfitted, errorsfitted);
           // if all the amplitudes fitted don't have the same sign, do it separately
           std::vector<Int32> overlappingIndsSameSign;
           if(retVal!=1)
@@ -1509,18 +1493,18 @@ Int32 CLineModelElementList::fitAmplitudesHybrid( const CSpectrumSpectralAxis& s
               //fit the rest of the overlapping elements (same sign) together
               if(overlappingIndsSameSign.size()==1)
               {
-                  m_Elements[overlappingIndsSameSign[0]]->fitAmplitude(spectralAxis, spcFluxAxisNoContinuum, redshift);
+                  m_Elements[overlappingIndsSameSign[0]]->fitAmplitude(spectralAxis, spcFluxAxisNoContinuum, m_ContinuumFluxAxis, redshift);
               }else if(overlappingIndsSameSign.size()>1){
                   //                    for(Int32 ifit=0; ifit<overlappingIndsSameSign.size(); ifit++)
                   //                    {
                   //                        SetElementAmplitude(overlappingIndsSameSign[ifit], 0.0, 0.0);
                   //                    }
-                  Int32 retVal2 = fitAmplitudesLinSolve(overlappingIndsSameSign, spectralAxis, spcFluxAxisNoContinuum, ampsfitted, errorsfitted);
+                  Int32 retVal2 = fitAmplitudesLinSolve(overlappingIndsSameSign, spectralAxis, spcFluxAxisNoContinuum, m_ContinuumFluxAxis, ampsfitted, errorsfitted);
                   if(retVal2!=1){
                       for(Int32 ifit=0; ifit<overlappingIndsSameSign.size(); ifit++)
                       {
                           if(ampsfitted[ifit]>0){
-                              m_Elements[overlappingIndsSameSign[ifit]]->fitAmplitude(spectralAxis, spcFluxAxisNoContinuum, redshift);
+                              m_Elements[overlappingIndsSameSign[ifit]]->fitAmplitude(spectralAxis, spcFluxAxisNoContinuum, m_ContinuumFluxAxis, redshift);
                           }else{
                               SetElementAmplitude(overlappingIndsSameSign[ifit], 0.0, errorsfitted[ifit]);
                           }
@@ -2278,7 +2262,7 @@ std::vector<Int32> CLineModelElementList::getOverlappingElements(Int32 ind, std:
  * \brief Use GSL to fit linearly the elements listed in argument EltsIdx.
  * If size of argument EltsIdx is less than 1 return -1.
  **/
-Int32 CLineModelElementList::fitAmplitudesLinSolve( std::vector<Int32> EltsIdx, const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis, std::vector<Float64>& ampsfitted, std::vector<Float64>& errorsfitted)
+Int32 CLineModelElementList::fitAmplitudesLinSolve( std::vector<Int32> EltsIdx, const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis, const CSpectrumFluxAxis& continuumfluxAxis, std::vector<Float64>& ampsfitted, std::vector<Float64>& errorsfitted)
 {
     boost::chrono::thread_clock::time_point start_prep = boost::chrono::thread_clock::now();
 
@@ -2334,7 +2318,7 @@ Int32 CLineModelElementList::fitAmplitudesLinSolve( std::vector<Int32> EltsIdx, 
 
         for (Int32 iddl = 0; iddl < nddl; iddl++)
         {
-            fval =  m_Elements[EltsIdx[iddl]]->getModelAtLambda(xi, m_Redshift);
+            fval =  m_Elements[EltsIdx[iddl]]->getModelAtLambda(xi, continuumfluxAxis[idx], m_Redshift);
             gsl_matrix_set (X, i, iddl, fval);
         }
 
@@ -2525,7 +2509,7 @@ Int32 CLineModelElementList::setLyaProfile(Float64 redshift, const CSpectrumSpec
                     m_Elements[idxLyaE]->SetAsymfitAlphaCoeff(asymAlphaCoeff);
 
                     idxLineLyaE = -1;
-                    m_Elements[idxLyaE]->fitAmplitude(spectralAxis, m_spcFluxAxisNoContinuum, redshift, idxLineLyaE);
+                    m_Elements[idxLyaE]->fitAmplitude(spectralAxis, m_spcFluxAxisNoContinuum, m_ContinuumFluxAxis, redshift, idxLineLyaE);
                     Float64 m=m_dTransposeDNocontinuum;
                     if(0)
                     {
@@ -2610,7 +2594,7 @@ std::vector<Int32> CLineModelElementList::ReestimateContinuumUnderLines(std::vec
     }
     for(Int32 idx=0; idx<EltsIdx.size(); idx++){
         Int32 eltIdx = EltsIdx[idx];
-        m_Elements[eltIdx]->addToSpectrumModel(spectralAxis, modelFluxAxisTmp, m_Redshift);
+        m_Elements[eltIdx]->addToSpectrumModel(spectralAxis, modelFluxAxisTmp, m_ContinuumFluxAxis, m_Redshift);
 
     }
 
@@ -3217,16 +3201,6 @@ std::vector<int> CLineModelElementList::findLineIdxInCatalog(const CRayCatalog::
         }
     }
     return indexes;
-}
-
-/**
- * \brief Adds an entry to m_Elements as a CSingleLine constructed from the arguments.
- **/
-void CLineModelElementList::addSingleLine(const CRay &r, Int32 index, Float64 nominalWidth)
-{
-    std::vector<Int32> a;
-    a.push_back(index);
-    m_Elements.push_back(boost::shared_ptr<CLineModelElement> (new CSingleLine(r, m_LineWidthType, m_resolution, m_velocityEmission, m_velocityAbsorption, nominalWidth, a)));
 }
 
 /**

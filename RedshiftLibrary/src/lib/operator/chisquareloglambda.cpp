@@ -712,7 +712,7 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(const CSpe
     }
 
     //estimate CstLog for PDF estimation
-    result->CstLog = EstimateLikelihoodCstLog(spectrum, lambdaRange);
+    result->CstLog = 0.0;//Todo: check how to estimate that value for loglambda// EstimateLikelihoodCstLog(spectrum, lambdaRange);
 
     // extrema
     Int32 extremumCount = 10;

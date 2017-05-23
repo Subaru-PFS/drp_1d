@@ -42,7 +42,7 @@ using namespace std;
  **/
 COperatorLineModel::COperatorLineModel()
 {
-    m_maxModelSaveCount = 5;
+    m_maxModelSaveCount = 10;
 }
 
 /**

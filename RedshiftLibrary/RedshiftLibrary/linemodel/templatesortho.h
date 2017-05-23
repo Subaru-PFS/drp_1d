@@ -14,7 +14,6 @@
 
 #include <RedshiftLibrary/operator/linemodelresult.h>
 #include <RedshiftLibrary/linemodel/element.h>
-#include <RedshiftLibrary/linemodel/singleline.h>
 
 #include <RedshiftLibrary/spectrum/template/catalog.h>
 #include <RedshiftLibrary/linemodel/templatesorthostore.h>

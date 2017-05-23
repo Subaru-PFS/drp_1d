@@ -464,7 +464,7 @@ void CMultiLine::SetFittedAmplitude(Float64 A, Float64 SNR)
  * A estimation.
  * Loop for the signal synthesis.
  **/
-void CMultiLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis, Float64  redshift, Int32 lineIdx )
+void CMultiLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& noContinuumfluxAxis, CSpectrumFluxAxis &continuumfluxAxis, Float64  redshift, Int32 lineIdx )
 {
     Float64 nRays = m_Rays.size();
 
@@ -481,13 +481,15 @@ void CMultiLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const C
       {
         return;
       }
-    const Float64* flux = fluxAxis.GetSamples();
+    const Float64* fluxNoContinuum = noContinuumfluxAxis.GetSamples();
     const Float64* spectral = spectralAxis.GetSamples();
-    const Float64* error = fluxAxis.GetError();
+    const Float64* error = noContinuumfluxAxis.GetError();
+    const Float64* fluxContinuum = continuumfluxAxis.GetSamples();
 
     Float64 y = 0.0;
     Float64 x = 0.0;
     Float64 yg = 0.0;
+    Float64 c = 1.0;
 
 
     Float64 err2 = 0.0;
@@ -515,7 +517,8 @@ void CMultiLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const C
         //A estimation
         for ( Int32 i = m_StartNoOverlap[k]; i <= m_EndNoOverlap[k]; i++)
         {
-            y = flux[i];
+            c = fluxContinuum[i];
+            y = fluxNoContinuum[i];
             x = spectral[i];
 
             yg = 0.0;
@@ -529,7 +532,12 @@ void CMultiLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const C
                 {
                     continue;
                 }
-                yg += m_SignFactors[k2] * m_NominalAmplitudes[k2] * GetLineProfile(m_profile[k2], x, mBuffer_mu[k2], mBuffer_c[k2]);
+
+                if(m_SignFactors[k2]==-1){
+                    yg += m_SignFactors[k2] * c * m_NominalAmplitudes[k2] * GetLineProfile(m_profile[k2], x, mBuffer_mu[k2], mBuffer_c[k2]);
+                }else{
+                    yg += m_SignFactors[k2] * m_NominalAmplitudes[k2] * GetLineProfile(m_profile[k2], x, mBuffer_mu[k2], mBuffer_c[k2]);
+                }
             }
             num++;
             err2 = 1.0 / (error[i] * error[i]);
@@ -556,6 +564,14 @@ void CMultiLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const C
             continue;
         }
         m_FittedAmplitudes[k] = A*m_NominalAmplitudes[k];
+
+        // limit the absorption to 0.0-1.0, so that it's never <0
+        /*
+        if(m_SignFactors[k]==-1 && m_FittedAmplitudes[k]>1.0){
+            m_FittedAmplitudes[k]=1.0;
+        }
+        */
+
 //        if(A==0)
 //        {
 //            m_FittedAmplitudeErrorSigmas[k] = 0.0; //why would this be useful ?
@@ -571,7 +587,7 @@ void CMultiLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const C
 /**
  * \brief Adds to the model's flux, at each ray not outside lambda range, the value contained in the corresponding lambda for each catalog line.
  **/
-void CMultiLine::addToSpectrumModel( const CSpectrumSpectralAxis& modelspectralAxis, CSpectrumFluxAxis& modelfluxAxis, Float64 redshift, Int32 lineIdx )
+void CMultiLine::addToSpectrumModel( const CSpectrumSpectralAxis& modelspectralAxis, CSpectrumFluxAxis& modelfluxAxis, CSpectrumFluxAxis &continuumfluxAxis, Float64 redshift, Int32 lineIdx )
 {
     if(m_OutsideLambdaRange)
       {
@@ -595,7 +611,7 @@ void CMultiLine::addToSpectrumModel( const CSpectrumSpectralAxis& modelspectralA
         for ( Int32 i = m_StartNoOverlap[k]; i <= m_EndNoOverlap[k]; i++)
       {
             Float64 lambda = spectral[i];
-            Float64 Yi=getModelAtLambda(lambda, redshift, k);
+            Float64 Yi=getModelAtLambda(lambda, redshift, continuumfluxAxis[i], k);
             flux[i] += Yi;
         }
     }
@@ -629,7 +645,7 @@ void CMultiLine::addToSpectrumModelDerivSigma( const CSpectrumSpectralAxis& mode
 /**
  * \brief Returns the sum of the amplitude of each ray on redshifted lambda.
  **/
-Float64 CMultiLine::getModelAtLambda( Float64 lambda, Float64 redshift, Int32 kRaySupport)
+Float64 CMultiLine::getModelAtLambda(Float64 lambda, Float64 redshift, Float64 continuumFlux, Int32 kRaySupport)
 {
     if(m_OutsideLambdaRange)
       {
@@ -649,12 +665,19 @@ Float64 CMultiLine::getModelAtLambda( Float64 lambda, Float64 redshift, Int32 kR
         {
             continue;
         }
+
         Float64 A = m_FittedAmplitudes[k2];
         Float64 dzOffset = m_Rays[k2].GetOffset()/m_c_kms;
         Float64 mu = m_Rays[k2].GetPosition()*(1+redshift)*(1+dzOffset);
-        Float64 c = GetLineWidth(mu, redshift, m_Rays[k2].GetIsEmission(), m_profile[k2]);
+        Float64 sigma = GetLineWidth(mu, redshift, m_Rays[k2].GetIsEmission(), m_profile[k2]);
 
-        Yi += m_SignFactors[k2] * A * GetLineProfile(m_profile[k2], x, mu, c);
+        //*
+        if(m_SignFactors[k2]==-1){
+            Yi += m_SignFactors[k2] * continuumFlux * A * GetLineProfile(m_profile[k2], x, mu, sigma);
+        }else{
+            Yi += m_SignFactors[k2] * A * GetLineProfile(m_profile[k2], x, mu, sigma);
+        }
+        //*/
     }
     return Yi;
 }
