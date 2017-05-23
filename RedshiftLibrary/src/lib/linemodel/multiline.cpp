@@ -464,7 +464,7 @@ void CMultiLine::SetFittedAmplitude(Float64 A, Float64 SNR)
  * A estimation.
  * Loop for the signal synthesis.
  **/
-void CMultiLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& noContinuumfluxAxis, CSpectrumFluxAxis &continuumfluxAxis, Float64  redshift, Int32 lineIdx )
+void CMultiLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& noContinuumfluxAxis, const CSpectrumFluxAxis &continuumfluxAxis, Float64  redshift, Int32 lineIdx )
 {
     Float64 nRays = m_Rays.size();
 
@@ -648,9 +648,9 @@ void CMultiLine::addToSpectrumModelDerivSigma( const CSpectrumSpectralAxis& mode
 Float64 CMultiLine::getModelAtLambda(Float64 lambda, Float64 redshift, Float64 continuumFlux, Int32 kRaySupport)
 {
     if(m_OutsideLambdaRange)
-      {
+    {
         return 0.0;
-      }
+    }
     Float64 Yi=0.0;
 
     Float64 x = lambda;
@@ -658,9 +658,9 @@ Float64 CMultiLine::getModelAtLambda(Float64 lambda, Float64 redshift, Float64 c
     for(Int32 k2=0; k2<m_Rays.size(); k2++) //loop on rays
     {
         if(m_OutsideLambdaRangeList[k2])
-	  {
+        {
             continue;
-	  }
+        }
         if( kRaySupport>=0 && m_RayIsActiveOnSupport[k2][kRaySupport]==0 )
         {
             continue;

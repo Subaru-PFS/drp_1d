@@ -32,7 +32,7 @@ public:
     virtual TInt32Range getSupportSubElt(Int32 subeIdx)=0;
     virtual TInt32Range getTheoreticalSupportSubElt(Int32 subeIdx)=0;
 
-    virtual void fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis, CSpectrumFluxAxis &continuumfluxAxis, Float64  redshift, Int32 lineIdx=-1 ) =0;
+    virtual void fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis, const CSpectrumFluxAxis &continuumfluxAxis, Float64  redshift, Int32 lineIdx=-1 ) =0;
     virtual Float64 getModelAtLambda( Float64 lambda, Float64 redshift, Float64 continuumFlux, Int32 kRaySupport=-1 )=0;
     virtual Float64 GetModelDerivAmplitudeAtLambda( Float64 lambda, Float64 redshift )=0;
     virtual Float64 GetModelDerivSigmaAtLambda( Float64 lambda, Float64 redshift )=0;

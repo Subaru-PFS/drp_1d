@@ -63,7 +63,7 @@ Bool CRegulament::CreateRulesFromJSONFiles( void )
   ARule7->SetUp( True, CRay::nType_Emission, std::string( "H10" ).c_str(), std::string( "H11" ).c_str(), 1.1 );
   m_RulesVector.push_back( dynamic_cast<CRule*>( ARule7 ) );
 
-  CRuleOIIRatioRange* ARule9 = new CRuleOIIRatioRange( );
+  CRuleRatioRange* ARule9 = new CRuleRatioRange( );
   ARule9->SetUp( True, CRay::nType_Emission, "[OII]3726", "[OII]3729", 2.5 );
 
   m_RulesVector.push_back( dynamic_cast<CRule*>( ARule9 ) );
@@ -75,7 +75,7 @@ Bool CRegulament::CreateRulesFromJSONFiles( void )
   m_RulesVector.push_back( dynamic_cast<CRule*>( ARule11 ) );
 
 
-  CRuleOIIRatioRange* ARule13 = new CRuleOIIRatioRange( );
+  CRuleRatioRange* ARule13 = new CRuleRatioRange( );
   ARule13->SetUp( True, CRay::nType_Emission, "[CIII]1907", "[CIII]1909", 2.0 );
   m_RulesVector.push_back( dynamic_cast<CRule*>( ARule13 ) );
 

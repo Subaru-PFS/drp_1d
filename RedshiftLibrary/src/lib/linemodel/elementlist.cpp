@@ -350,7 +350,7 @@ void CLineModelElementList::LoadCatalog(const CRayCatalog::TRayVector& restRayLi
         }
         if(lines.size()>0)
         {
-            m_Elements.push_back(boost::shared_ptr<CLineModelElement> (new CMultiLine(lines, m_LineWidthType, m_resolution, m_velocityEmission, m_velocityEmission, amps, m_nominalWidthDefaultAbsorption, inds)));
+            m_Elements.push_back(boost::shared_ptr<CLineModelElement> (new CMultiLine(lines, m_LineWidthType, m_resolution, m_velocityEmission, m_velocityAbsorption, amps, m_nominalWidthDefaultAbsorption, inds)));
         }
     }
 }
@@ -370,7 +370,7 @@ void CLineModelElementList::LoadCatalogOneMultiline(const CRayCatalog::TRayVecto
 
     if(lines.size()>0)
     {
-        m_Elements.push_back(boost::shared_ptr<CLineModelElement> (new CMultiLine(lines, m_LineWidthType, m_resolution, m_velocityEmission, m_velocityEmission, amps, m_nominalWidthDefaultAbsorption, inds)));
+        m_Elements.push_back(boost::shared_ptr<CLineModelElement> (new CMultiLine(lines, m_LineWidthType, m_resolution, m_velocityEmission, m_velocityAbsorption, amps, m_nominalWidthDefaultAbsorption, inds)));
     }
 }
 
@@ -1467,13 +1467,13 @@ Int32 CLineModelElementList::fitAmplitudesHybrid(const CSpectrumSpectralAxis& sp
     */
       if(overlappingInds.size()<2)
       {
-          m_Elements[iElts]->fitAmplitude(spectralAxis, spcFluxAxisNoContinuum, m_ContinuumFluxAxis, redshift);
+          m_Elements[iElts]->fitAmplitude(spectralAxis, spcFluxAxisNoContinuum, continuumfluxAxis, redshift);
       }
       else
       {
           std::vector<Float64> ampsfitted;
           std::vector<Float64> errorsfitted;
-          Int32 retVal = fitAmplitudesLinSolve(overlappingInds, spectralAxis, spcFluxAxisNoContinuum, m_ContinuumFluxAxis, ampsfitted, errorsfitted);
+          Int32 retVal = fitAmplitudesLinSolve(overlappingInds, spectralAxis, spcFluxAxisNoContinuum, continuumfluxAxis, ampsfitted, errorsfitted);
           // if all the amplitudes fitted don't have the same sign, do it separately
           std::vector<Int32> overlappingIndsSameSign;
           if(retVal!=1)
@@ -1493,18 +1493,18 @@ Int32 CLineModelElementList::fitAmplitudesHybrid(const CSpectrumSpectralAxis& sp
               //fit the rest of the overlapping elements (same sign) together
               if(overlappingIndsSameSign.size()==1)
               {
-                  m_Elements[overlappingIndsSameSign[0]]->fitAmplitude(spectralAxis, spcFluxAxisNoContinuum, m_ContinuumFluxAxis, redshift);
+                  m_Elements[overlappingIndsSameSign[0]]->fitAmplitude(spectralAxis, spcFluxAxisNoContinuum, continuumfluxAxis, redshift);
               }else if(overlappingIndsSameSign.size()>1){
                   //                    for(Int32 ifit=0; ifit<overlappingIndsSameSign.size(); ifit++)
                   //                    {
                   //                        SetElementAmplitude(overlappingIndsSameSign[ifit], 0.0, 0.0);
                   //                    }
-                  Int32 retVal2 = fitAmplitudesLinSolve(overlappingIndsSameSign, spectralAxis, spcFluxAxisNoContinuum, m_ContinuumFluxAxis, ampsfitted, errorsfitted);
+                  Int32 retVal2 = fitAmplitudesLinSolve(overlappingIndsSameSign, spectralAxis, spcFluxAxisNoContinuum, continuumfluxAxis, ampsfitted, errorsfitted);
                   if(retVal2!=1){
                       for(Int32 ifit=0; ifit<overlappingIndsSameSign.size(); ifit++)
                       {
                           if(ampsfitted[ifit]>0){
-                              m_Elements[overlappingIndsSameSign[ifit]]->fitAmplitude(spectralAxis, spcFluxAxisNoContinuum, m_ContinuumFluxAxis, redshift);
+                              m_Elements[overlappingIndsSameSign[ifit]]->fitAmplitude(spectralAxis, spcFluxAxisNoContinuum, continuumfluxAxis, redshift);
                           }else{
                               SetElementAmplitude(overlappingIndsSameSign[ifit], 0.0, errorsfitted[ifit]);
                           }
@@ -2266,6 +2266,9 @@ Int32 CLineModelElementList::fitAmplitudesLinSolve( std::vector<Int32> EltsIdx, 
 {
     boost::chrono::thread_clock::time_point start_prep = boost::chrono::thread_clock::now();
 
+    bool verbose = false;
+    Int32 idx = 0;
+
     Int32 nddl = EltsIdx.size();
     if(nddl<1){
         return -1;
@@ -2305,21 +2308,39 @@ Int32 CLineModelElementList::fitAmplitudesLinSolve( std::vector<Int32> EltsIdx, 
     c = gsl_vector_alloc (nddl);
     cov = gsl_matrix_alloc (nddl, nddl);
 
-    //
-    //todo: normalize, center...
-    //
-    Int32 idx = 0;
+    // Normalize
+    Float64 maxabsval = DBL_MIN;
+    for (i = 0; i < n; i++)
+    {
+        idx = xInds[i];
+        if(maxabsval<std::abs(flux[idx]))
+        {
+            maxabsval=std::abs(flux[idx]);
+        }
+    }
+    Float64 normFactor = 1.0/maxabsval;
+    if(verbose)
+    {
+        fprintf(stderr, "normFactor = '%.3e'\n", normFactor);
+    }
+
+    // Prepare the fit data
     for (i = 0; i < n; i++)
     {
         idx = xInds[i];
         xi = spectral[idx];
-        yi = flux[idx];
-        ei = m_ErrorNoContinuum[idx];
+        yi = flux[idx]*normFactor;
+        ei = m_ErrorNoContinuum[idx]*normFactor;
 
         for (Int32 iddl = 0; iddl < nddl; iddl++)
         {
-            fval =  m_Elements[EltsIdx[iddl]]->getModelAtLambda(xi, continuumfluxAxis[idx], m_Redshift);
+            fval =  m_Elements[EltsIdx[iddl]]->getModelAtLambda(xi, m_Redshift, continuumfluxAxis[idx]);
             gsl_matrix_set (X, i, iddl, fval);
+
+            if(verbose)
+            {
+                fprintf(stderr, "fval = '%.3e'\n", fval);
+            }
         }
 
         gsl_vector_set (y, i, yi);
@@ -2342,37 +2363,54 @@ Int32 CLineModelElementList::fitAmplitudesLinSolve( std::vector<Int32> EltsIdx, 
     Float64 duration_fit = boost::chrono::duration_cast<boost::chrono::microseconds>(stop_fit - start_fit).count();
     //Log.LogInfo( "LineModel linear fit: prep = %.3f - fit = %.3f", duration_prep, duration_fit);
 
-//#define C(i) (gsl_vector_get(c,(i)))
-//#define COV(i,j) (gsl_matrix_get(cov,(i),(j)))
-//    if(0){
-//        Log.LogInfo("# best fit: Y = %g X1 + %g X2 ...", C(0), C(1));
-//        Log.LogInfo("# covariance matrix:\n");
-//        Log.LogInfo("[ %+.5e, %+.5e \n", COV(0,0), COV(0,1));
-//        Log.LogInfo("  %+.5e, %+.5e \n", COV(1,0), COV(1,1));
+    if(verbose)
+    {
+#define C(i) (gsl_vector_get(c,(i)))
+#define COV(i,j) (gsl_matrix_get(cov,(i),(j)))
+        if(1){
+            Log.LogInfo("# best fit: Y = %g X1 + %g X2 ...", C(0), C(1));
+            Log.LogInfo("# covariance matrix:");
+            Log.LogInfo("[");
+            Log.LogInfo("  %+.5e, %+.5e", COV(0,0), COV(0,1));
+            Log.LogInfo("  %+.5e, %+.5e", COV(1,0), COV(1,1));
 
-////        Log.LogInfo("[ %+.5e, %+.5e, %+.5e  \n", COV(0,0), COV(0,1), COV(0,2));
-////        Log.LogInfo("  %+.5e, %+.5e, %+.5e  \n", COV(1,0), COV(1,1), COV(1,2));
-////        Log.LogInfo("  %+.5e, %+.5e, %+.5e ]\n", COV(2,0), COV(2,1), COV(2,2));
+            //        Log.LogInfo("[ %+.5e, %+.5e, %+.5e  \n", COV(0,0), COV(0,1), COV(0,2));
+            //        Log.LogInfo("  %+.5e, %+.5e, %+.5e  \n", COV(1,0), COV(1,1), COV(1,2));
+            //        Log.LogInfo("  %+.5e, %+.5e, %+.5e ]\n", COV(2,0), COV(2,1), COV(2,2));
 
-//        Log.LogInfo("# chisq/n = %g", chisq/n);
-//    }
+            Log.LogInfo("]");
+            Log.LogInfo("# chisq/n = %g", chisq/n);
+        }
+
+        for (Int32 iddl = 0; iddl < nddl; iddl++)
+        {
+            Float64 a = gsl_vector_get(c,iddl)/normFactor;
+            if(verbose)
+            {
+                Log.LogInfo("# Found amplitude %d: %+.5e", iddl, a);
+            }
+        }
+    }
 
     Int32 sameSign = 1;
-    Float64 a0 = gsl_vector_get(c,0);
+    Float64 a0 = gsl_vector_get(c,0)/normFactor;
     for (Int32 iddl = 1; iddl < nddl; iddl++)
     {
-        Float64 a = gsl_vector_get(c,iddl);
+        Float64 a = gsl_vector_get(c,iddl)/normFactor;
         Float64 product = a0*a;
         if(product<0){
             sameSign = 0;
         }
     }
 
-
+    if(verbose)
+    {
+        Log.LogInfo("# Found amplitudes with sameSign=%d", sameSign);
+    }
     if(sameSign){
         for (Int32 iddl = 0; iddl < nddl; iddl++)
         {
-            Float64 a = gsl_vector_get(c,iddl);
+            Float64 a = gsl_vector_get(c,iddl)/normFactor;
             Float64 cova = gsl_matrix_get(cov,iddl,iddl);
             Float64 sigma = sqrt(cova);
             SetElementAmplitude(EltsIdx[iddl], a, sigma);
@@ -2383,7 +2421,7 @@ Int32 CLineModelElementList::fitAmplitudesLinSolve( std::vector<Int32> EltsIdx, 
         errorsfitted.resize(nddl);
         for (Int32 iddl = 0; iddl < nddl; iddl++)
         {
-            Float64 a = gsl_vector_get(c,iddl);
+            Float64 a = gsl_vector_get(c,iddl)/normFactor;
             Float64 cova = gsl_matrix_get(cov,iddl,iddl);
             Float64 sigma = sqrt(cova);
             ampsfitted[iddl] = (a);

@@ -11,7 +11,7 @@ namespace NSEpic
   /**
    * \ingroup Redshift
    */
-  class CRuleOIIRatioRange : public CRule
+  class CRuleRatioRange : public CRule
   {
   public:
     Bool Check( CLineModelElementList& LineModelElementList );
