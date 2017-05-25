@@ -53,6 +53,7 @@ public:
 
     void LoadCatalog(const CRayCatalog::TRayVector& restRayList);
     void LoadCatalogOneMultiline(const CRayCatalog::TRayVector& restRayList);
+    void LoadCatalogTwoMultilinesAE(const CRayCatalog::TRayVector& restRayList);
     void LogCatalogInfos();
 
     void PrepareContinuum(Float64 z);

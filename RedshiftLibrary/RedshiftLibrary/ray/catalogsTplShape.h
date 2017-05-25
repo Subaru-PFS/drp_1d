@@ -48,7 +48,7 @@ private:
 
     std::vector<std::string> m_RayCatalogNames;
     std::vector<CRayCatalog> m_RayCatalogList;
-    std::vector<std::vector<Float64>> m_RayCatalogLinesCorrespondingNominalAmp;
+    std::vector<std::vector<std::vector<Float64>>> m_RayCatalogLinesCorrespondingNominalAmp;
     std::vector<Float64> m_ELvelocities;
     std::vector<Float64> m_ABSvelocities;
 

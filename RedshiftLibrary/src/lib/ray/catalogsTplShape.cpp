@@ -220,34 +220,37 @@ Bool CRayCatalogsTplShape::GetCatalogVelocities(Int32 idx, Float64& elv, Float64
 Bool CRayCatalogsTplShape::InitLineCorrespondingAmplitudes(CLineModelElementList &LineModelElementList)
 {
     //first set all corresponding amplitudes to 0.0;
-    UInt32 iElts=0; //WARNING: considering the linemodel with only 1 elt: typical for tplshape rigidity. todo: generalize to multi-elements
-    Int32 nRays = LineModelElementList.m_Elements[iElts]->GetSize();
-
-    for(Int32 k=0; k<GetCatalogsCount(); k++)
+    for( UInt32 iElts=0; iElts<LineModelElementList.m_Elements.size(); iElts++ )
     {
-        std::vector<Float64> thisCatLinesCorresp;
-        for(UInt32 j=0; j<nRays; j++){
-            thisCatLinesCorresp.push_back(0.0);
-        }
-        m_RayCatalogLinesCorrespondingNominalAmp.push_back(thisCatLinesCorresp);
-    }
+        std::vector<std::vector<Float64>> thisElementLinesCorresp;
 
-    //now set the non-zero amp correspondences
-    for(Int32 iCatalog=0; iCatalog<GetCatalogsCount(); iCatalog++)
-    {
-        CRayCatalog::TRayVector currentCatalogLineList = m_RayCatalogList[iCatalog].GetList();
-        for(Int32 kL=0; kL<currentCatalogLineList.size(); kL++)
+        Int32 nRays = LineModelElementList.m_Elements[iElts]->GetSize();
+
+        for(Int32 k=0; k<GetCatalogsCount(); k++)
         {
-            Float64 nominalAmp = currentCatalogLineList[kL].GetNominalAmplitude();
-            //find line in the elementList
-            UInt32 iElts=0; //WARNING: considering the linemodel with only 1 elt: typical for tplshape rigidity. todo: generalize to multi-elements
-
-            Int32 nRays = LineModelElementList.m_Elements[iElts]->GetSize();
+            std::vector<Float64> thisCatLinesCorresp;
             for(UInt32 j=0; j<nRays; j++){
+                thisCatLinesCorresp.push_back(0.0);
+            }
+            thisElementLinesCorresp.push_back(thisCatLinesCorresp);
+        }
+        m_RayCatalogLinesCorrespondingNominalAmp.push_back(thisElementLinesCorresp);
 
-                if(LineModelElementList.m_RestRayList[LineModelElementList.m_Elements[iElts]->m_LineCatalogIndexes[j]].GetName() == currentCatalogLineList[kL].GetName())
-                {
-                    m_RayCatalogLinesCorrespondingNominalAmp[iCatalog][j]=nominalAmp;
+        //now set the non-zero amp correspondences
+        for(Int32 iCatalog=0; iCatalog<GetCatalogsCount(); iCatalog++)
+        {
+            CRayCatalog::TRayVector currentCatalogLineList = m_RayCatalogList[iCatalog].GetList();
+            for(Int32 kL=0; kL<currentCatalogLineList.size(); kL++)
+            {
+                Float64 nominalAmp = currentCatalogLineList[kL].GetNominalAmplitude();
+                //find line in the elementList
+                Int32 nRays = LineModelElementList.m_Elements[iElts]->GetSize();
+                for(UInt32 j=0; j<nRays; j++){
+
+                    if(LineModelElementList.m_RestRayList[LineModelElementList.m_Elements[iElts]->m_LineCatalogIndexes[j]].GetName() == currentCatalogLineList[kL].GetName())
+                    {
+                        m_RayCatalogLinesCorrespondingNominalAmp[iElts][iCatalog][j]=nominalAmp;
+                    }
                 }
             }
         }
@@ -270,11 +273,11 @@ Bool CRayCatalogsTplShape::SetMultilineNominalAmplitudesFast(CLineModelElementLi
         return false;
     }
     Float64 nominalAmp = 0.0;
-    for( UInt32 iElts=0; iElts<1; iElts++ ) //WARNING: considering the linemodel with only 1 elt: typical for tplshape rigidity. todo: generalize to multi-elements
+    for( UInt32 iElts=0; iElts<LineModelElementList.m_Elements.size(); iElts++ )
     {
         Int32 nRays = LineModelElementList.m_Elements[iElts]->GetSize();
         for(UInt32 j=0; j<nRays; j++){
-            nominalAmp = m_RayCatalogLinesCorrespondingNominalAmp[iCatalog][j];
+            nominalAmp = m_RayCatalogLinesCorrespondingNominalAmp[iElts][iCatalog][j];
             LineModelElementList.m_Elements[iElts]->SetNominalAmplitude(j, nominalAmp);
         }
     }

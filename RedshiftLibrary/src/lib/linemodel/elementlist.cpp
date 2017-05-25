@@ -176,8 +176,10 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
         //LogCatalogInfos();
     }else{
         m_RestRayList = restRayList;
-        //load the regular catalog
-        LoadCatalogOneMultiline(restRayList);
+        //load the tplshape catalog with only 1 element for all lines
+        //LoadCatalogOneMultiline(restRayList);
+        //load the tplshape catalog with 2 elements: 1 for the Em lines + 1 for the Abs lines
+        LoadCatalogTwoMultilinesAE(restRayList);
         bool ret = m_CatalogTplShape->Init(calibrationPath);
         if(!ret)
         {
@@ -371,6 +373,31 @@ void CLineModelElementList::LoadCatalogOneMultiline(const CRayCatalog::TRayVecto
     if(lines.size()>0)
     {
         m_Elements.push_back(boost::shared_ptr<CLineModelElement> (new CMultiLine(lines, m_LineWidthType, m_resolution, m_velocityEmission, m_velocityAbsorption, amps, m_nominalWidthDefaultAbsorption, inds)));
+    }
+}
+
+void CLineModelElementList::LoadCatalogTwoMultilinesAE(const CRayCatalog::TRayVector& restRayList)
+{
+    std::vector<CRay::EType> types = { CRay::nType_Absorption, CRay::nType_Emission };
+
+    for(Int32 iType=0; iType<2; iType++)
+    {
+        std::vector<CRay> lines;
+        std::vector<Float64> amps;
+        std::vector<Int32> inds;
+        for(Int32 ir=0; ir<restRayList.size(); ir++)
+        {
+            if( restRayList[ir].GetType() == types[iType]){
+                inds.push_back(ir);
+                amps.push_back(restRayList[ir].GetNominalAmplitude());
+                lines.push_back(restRayList[ir]);
+            }
+        }
+
+        if(lines.size()>0)
+        {
+            m_Elements.push_back(boost::shared_ptr<CLineModelElement> (new CMultiLine(lines, m_LineWidthType, m_resolution, m_velocityEmission, m_velocityAbsorption, amps, m_nominalWidthDefaultAbsorption, inds)));
+        }
     }
 }
 
@@ -796,11 +823,11 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
     Float64 merit = DBL_MAX;//m_dTransposeDNocontinuum;
     Int32 ifitting=0; //multiple fitting steps for rigidity=tplshape
     Int32 nfitting=1;
-    Int32 savedIdxFitted=-1;
-    Float64 savedFittedAmp; //for rigidity=tplshape
-    Float64 savedFittedAmpError; //for rigidity=tplshape
-    Float64 savedMtD; //for rigidity=tplshape
-    Float64 savedMtM; //for rigidity=tplshape
+    Int32 savedIdxFitted=-1; //for rigidity=tplshape
+    std::vector<Float64> savedFittedAmp(m_Elements.size(), 0.0); //for rigidity=tplshape
+    std::vector<Float64> savedFittedAmpError(m_Elements.size(), 0.0);//for rigidity=tplshape
+    std::vector<Float64> savedMtD(m_Elements.size(), 0.0); //for rigidity=tplshape
+    std::vector<Float64> savedMtM(m_Elements.size(), 0.0); //for rigidity=tplshape
     if(m_rigidity=="tplshape")
     {
         nfitting=m_CatalogTplShape->GetCatalogsCount();
@@ -1199,9 +1226,9 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
                 merit=_merit;
 
                 savedIdxFitted = ifitting;
-                bool savedAmp=false;
                 for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
                 {
+                    bool savedAmp=false;
 
                     Int32 nRays = m_Elements[iElts]->GetSize();
                     for(UInt32 j=0; j<nRays; j++){
@@ -1215,10 +1242,10 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
 
                             Float64 amp_error = m_Elements[iElts]->GetFittedAmplitudeErrorSigma(j);
                             Float64 nominal_amp = m_Elements[iElts]->GetNominalAmplitude(j);
-                            savedFittedAmp = amp/nominal_amp;
-                            savedFittedAmpError = amp_error/nominal_amp;
-                            savedMtD = m_Elements[iElts]->GetSumCross();
-                            savedMtM = m_Elements[iElts]->GetSumGauss();
+                            savedFittedAmp[iElts] = amp/nominal_amp;
+                            savedFittedAmpError[iElts] = amp_error/nominal_amp;
+                            savedMtD[iElts] = m_Elements[iElts]->GetSumCross();
+                            savedMtM[iElts] = m_Elements[iElts]->GetSumGauss();
                             savedAmp=true;
                             break;
                         }
@@ -1258,10 +1285,13 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
         //Set the velocities from templates: todo auto switch when velfit is ON
         //m_CatalogTplShape->GetCatalogVelocities(savedIdxFitted, m_velocityEmission, m_velocityAbsorption);
 
-        Log.LogInfo( "Linemodel: tplshape = %d (%s), and A=%f", savedIdxFitted, m_tplcorrBestTplName.c_str(), savedFittedAmp);
-        m_Elements[0]->SetFittedAmplitude(savedFittedAmp, savedFittedAmpError);
-        m_Elements[0]->SetSumCross(savedMtD);
-        m_Elements[0]->SetSumGauss(savedMtM);
+        for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
+        {
+            Log.LogInfo( "Linemodel: tplshape = %d (%s), and A=%f", savedIdxFitted, m_tplcorrBestTplName.c_str(), savedFittedAmp[iElts]);
+            m_Elements[iElts]->SetFittedAmplitude(savedFittedAmp[iElts], savedFittedAmpError[iElts]);
+            m_Elements[iElts]->SetSumCross(savedMtD[iElts]);
+            m_Elements[iElts]->SetSumGauss(savedMtM[iElts]);
+        }
         //Lya
         bool retLyaProfile = m_CatalogTplShape->SetLyaProfile(*this, savedIdxFitted);
         if( !retLyaProfile ){
