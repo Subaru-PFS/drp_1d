@@ -174,7 +174,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
                                          opt_rigidity);
     //CTemplateCatalog orthoTplCatalog = tplOrtho.getOrthogonalTplCatalog();
     CTemplatesOrthoStore orthoTplStore = tplOrtho.getOrthogonalTplStore();
-    Int32 ctlgIdx = 0; //only on ortho config for now
+    Int32 ctlgIdx = 0; //only one ortho config for now
     std::shared_ptr<CTemplateCatalog> orthoTplCatalog = orthoTplStore.getTplCatalog(ctlgIdx);
 
 

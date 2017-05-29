@@ -63,6 +63,8 @@ CMultiLine::CMultiLine( std::vector<CRay> rs,
         m_profile[k2] = m_Rays[k2].GetProfile();
     }
 
+    m_absLinesLimit = 1.0; //-1: disable the ABS lines amplitude cut, any other value is used as a limit for the abs line coeff (typically: 1.0)
+
     SetFittedAmplitude(-1, -1);
 }
 
@@ -453,6 +455,12 @@ void CMultiLine::SetFittedAmplitude(Float64 A, Float64 SNR)
             m_FittedAmplitudes[k] = -1;
         }
         m_FittedAmplitudes[k] = A*m_NominalAmplitudes[k];
+        // limit the absorption to 0.0-1.0, so that it's never <0
+        //*
+        if(m_SignFactors[k]==-1 && m_absLinesLimit>0.0 && m_FittedAmplitudes[k]>m_absLinesLimit){
+            m_FittedAmplitudes[k]=m_absLinesLimit;
+        }
+        //*/
         m_FittedAmplitudeErrorSigmas[k] = SNR*m_NominalAmplitudes[k]; //todo: check correct formulation for Error
     }
 }
@@ -566,11 +574,11 @@ void CMultiLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const C
         m_FittedAmplitudes[k] = A*m_NominalAmplitudes[k];
 
         // limit the absorption to 0.0-1.0, so that it's never <0
-        /*
-        if(m_SignFactors[k]==-1 && m_FittedAmplitudes[k]>1.0){
-            m_FittedAmplitudes[k]=1.0;
+        //*
+        if(m_SignFactors[k]==-1 && m_absLinesLimit>0.0 && m_FittedAmplitudes[k]>m_absLinesLimit){
+            m_FittedAmplitudes[k]=m_absLinesLimit;
         }
-        */
+        //*/
 
 //        if(A==0)
 //        {

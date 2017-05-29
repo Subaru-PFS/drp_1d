@@ -61,6 +61,8 @@ private:
     std::vector<Float64>        m_FittedAmplitudeErrorSigmas;
     std::vector<Float64>        m_NominalAmplitudes;
 
+    Float64 m_absLinesLimit;
+
     std::vector<Float64>        mBuffer_mu;
     std::vector<Float64>        mBuffer_c;
     std::vector<std::string>    m_profile;
