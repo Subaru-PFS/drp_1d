@@ -67,13 +67,23 @@ void CRule2SingleLinesAmplitude::Correct( CLineModelElementList& LineModelElemen
 
       if( !(ampA<=0.0 && ampB<=0.0) )
       {
-          /*
+          //*
           //Method 0, limit the weakest line's amplitude, no noise taken into account
           Float64 maxB = (m_Coefficient*ampA);
-          LineModelElementList.m_Elements[iB]->LimitFittedAmplitude(0, maxB);
+          if(maxB==std::min(maxB, ampB))
+          {
+              LineModelElementList.m_Elements[iB]->LimitFittedAmplitude(0, maxB);
+              //log the correction
+              {
+                  std::string strTmp0 = boost::str( (boost::format("correct - %-10s") % "2_SINGLE_LINES_AMPLITUDE" ));
+                  Logs.append(strTmp0.c_str());
+                  std::string strTmp = boost::str( (boost::format("\n\tlineWeak=%-10s, lineStrong=%-10s, previousAmp=%.4e, correctedAmp=%.4e") % m_LineB % m_LineA % ampB % maxB) );
+                  Logs.append(strTmp.c_str());
+              }
+          }
           //*/
 
-          //*
+          /*
           //Method 1, limit the weakest line's amplitude, only the strongest line's noise is taken into account
           Float64 maxB = (m_Coefficient*ampA) + (erA*nSigma*m_Coefficient);
           if(maxB==std::min(maxB, ampB))

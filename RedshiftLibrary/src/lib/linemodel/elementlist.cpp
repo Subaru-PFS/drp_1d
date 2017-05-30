@@ -1106,7 +1106,11 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
                 //*
                 //iterative continuum estimation :: RAW SLOW METHOD
                 refreshModel();
-                EstimateSpectrumContinuum();
+                Int32 enhanceABS = 0;
+                if(nIt>2*it && nIt>3.0){
+                    enhanceABS = 1;
+                }
+                EstimateSpectrumContinuum(enhanceABS);
 
                 for(UInt32 i=0; i<modelFluxAxis.GetSamplesCount(); i++){
                     modelFluxAxis[i] = m_ContinuumFluxAxis[i];
@@ -3611,7 +3615,7 @@ Int32 CLineModelElementList::ApplyVelocityBound(Float64 inf, Float64 sup)
 /**
  * \brief this function estimates the continuum after removal(interpolation) of the flux samples under the lines for a given redshift 
  **/
-void CLineModelElementList::EstimateSpectrumContinuum()
+void CLineModelElementList::EstimateSpectrumContinuum( Int32 opt_enhance_abs )
 {
     std::vector<Int32> validEltsIdx = GetModelValidElementsIndexes();
     std::vector<Int32> xInds = getSupportIndexes( validEltsIdx );
@@ -3650,6 +3654,17 @@ void CLineModelElementList::EstimateSpectrumContinuum()
     for(UInt32 i=0; i<spcmodel4linefitting.GetFluxAxis().GetSamplesCount(); i++){
         spcmodel4linefitting.GetFluxAxis()[i] = spcmodel4linefitting.GetFluxAxis()[i]-m_ContinuumFluxAxis[i];
     }
+    //optionnaly enhance the abs model component
+    if(opt_enhance_abs){
+        for( Int32 t=0;t<spectralAxis.GetSamplesCount();t++)
+        {
+            if(spcmodel4linefitting.GetFluxAxis()[t]<0.0)
+            {
+                spcmodel4linefitting.GetFluxAxis()[t] *= 2.0;
+            }
+        }
+    }
+    // subtract the lines component
     for( Int32 t=0;t<spectralAxis.GetSamplesCount();t++)
     {
         Y[t] = m_SpcFluxAxis[t]-spcmodel4linefitting.GetFluxAxis()[t];
@@ -3672,7 +3687,7 @@ void CLineModelElementList::EstimateSpectrumContinuum()
     if(1)
     {
         CContinuumIrregularSamplingMedian continuum;
-        Float64 opt_medianKernelWidth = 150;
+        Float64 opt_medianKernelWidth = 75; //or 150?
         continuum.SetMedianKernelWidth(opt_medianKernelWidth);
         Int32 retVal = continuum.RemoveContinuum( spcCorrectedUnderLines, fluxAxisWithoutContinuumCalc );
     }else

@@ -37,9 +37,9 @@ Bool CRegulament::CreateRulesFromJSONFiles( void )
   // To be removed once JSON code is in <--
   Bool True = true;
 
-  CRuleBalmerLinearSolver* ARule8 = new CRuleBalmerLinearSolver( );
-  ARule8->SetUp( True );
-  m_RulesVector.push_back( dynamic_cast<CRule*>( ARule8 ) );
+  //CRuleBalmerLinearSolver* ARule8 = new CRuleBalmerLinearSolver( );
+  //ARule8->SetUp( True );
+  //m_RulesVector.push_back( dynamic_cast<CRule*>( ARule8 ) );
 
   CRule2SingleLinesAmplitude* ARule1 = new CRule2SingleLinesAmplitude( );
   ARule1->SetUp( True, CRay::nType_Emission, std::string( "Halpha" ).c_str(), std::string( "Hbeta" ).c_str(), 1.0/2.86*1.1 );
@@ -62,6 +62,26 @@ Bool CRegulament::CreateRulesFromJSONFiles( void )
   CRule2SingleLinesAmplitude* ARule7 = new CRule2SingleLinesAmplitude( );
   ARule7->SetUp( True, CRay::nType_Emission, std::string( "H10" ).c_str(), std::string( "H11" ).c_str(), 1.1 );
   m_RulesVector.push_back( dynamic_cast<CRule*>( ARule7 ) );
+
+  CRule2SingleLinesAmplitude* ARule2A = new CRule2SingleLinesAmplitude( );
+  ARule2A->SetUp( True, CRay::nType_Emission, std::string( "HbetaA" ).c_str(), std::string( "Hgamma" ).c_str(), 1.1 );
+  m_RulesVector.push_back( dynamic_cast<CRule*>( ARule2A ) );
+  CRule2SingleLinesAmplitude* ARule3A = new CRule2SingleLinesAmplitude( );
+  ARule3A->SetUp( True, CRay::nType_Emission, std::string( "HgammaA" ).c_str(), std::string( "Hdelta" ).c_str(), 1.1 );
+  m_RulesVector.push_back( dynamic_cast<CRule*>( ARule3A ) );
+  CRule2SingleLinesAmplitude* ARule4A = new CRule2SingleLinesAmplitude( );
+  ARule4A->SetUp( True, CRay::nType_Emission, std::string( "HdeltaA" ).c_str(), std::string( "H8" ).c_str(), 1.1 );
+  m_RulesVector.push_back( dynamic_cast<CRule*>( ARule4A ) );
+  CRule2SingleLinesAmplitude* ARule5A = new CRule2SingleLinesAmplitude( );
+  ARule5A->SetUp( True, CRay::nType_Emission, std::string( "H8A" ).c_str(), std::string( "H9A" ).c_str(), 1.1 );
+  m_RulesVector.push_back( dynamic_cast<CRule*>( ARule5A ) );
+  CRule2SingleLinesAmplitude* ARule6A = new CRule2SingleLinesAmplitude( );
+  ARule6A->SetUp( True, CRay::nType_Emission, std::string( "H9A" ).c_str(), std::string( "H10A" ).c_str(), 1.1 );
+  m_RulesVector.push_back( dynamic_cast<CRule*>( ARule6A ) );
+  CRule2SingleLinesAmplitude* ARule7A = new CRule2SingleLinesAmplitude( );
+  ARule7A->SetUp( True, CRay::nType_Emission, std::string( "H10A" ).c_str(), std::string( "H11A" ).c_str(), 1.1 );
+  m_RulesVector.push_back( dynamic_cast<CRule*>( ARule7A ) );
+
 
   CRuleRatioRange* ARule9 = new CRuleRatioRange( );
   ARule9->SetUp( True, CRay::nType_Emission, "[OII]3726", "[OII]3729", 2.5 );

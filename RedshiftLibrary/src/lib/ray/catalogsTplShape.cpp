@@ -23,7 +23,7 @@ CRayCatalogsTplShape::CRayCatalogsTplShape()
     //tplshapedcatalog_relpath = "linecatalogs_tplshape_ExtendedTemplatesMarch2016_B13D_mod2";
 
     bfs::path tplshapeRelPath( "linecatalogs_tplshapes" );
-    tplshapedcatalog_relpath = (tplshapeRelPath/"linecatalogs_tplshape_ExtendedTemplatesJan2017v3_20170524_B13F_v2").string();
+    tplshapedcatalog_relpath = (tplshapeRelPath/"linecatalogs_tplshape_ExtendedTemplatesJan2017v3_20170524_B13F_v1").string();
     Log.LogInfo( "CRayCatalogsTplShape - Loaded tplshape catalog : %s", tplshapedcatalog_relpath.c_str());
 }
 

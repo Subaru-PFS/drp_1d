@@ -63,7 +63,7 @@ CMultiLine::CMultiLine( std::vector<CRay> rs,
         m_profile[k2] = m_Rays[k2].GetProfile();
     }
 
-    m_absLinesLimit = 1.0; //-1: disable the ABS lines amplitude cut, any other value is used as a limit for the abs line coeff (typically: 1.0)
+    m_absLinesLimit = -1.0; //-1: disable the ABS lines amplitude cut, any other value is used as a limit for the abs line coeff (typically: 1.0)
 
     SetFittedAmplitude(-1, -1);
 }
