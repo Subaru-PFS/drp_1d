@@ -95,6 +95,13 @@ Float64 CMultiLine::GetSignFactor(Int32 subeIdx)
     return m_SignFactors[subeIdx];
 }
 
+bool CMultiLine::SetAbsLinesLimit(Float64 limit)
+{
+    m_absLinesLimit = limit;
+    return true;
+}
+
+
 /**
  * \brief Returns the theoretical support range for the line
  **/

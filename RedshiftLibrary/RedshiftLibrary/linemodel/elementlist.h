@@ -117,6 +117,8 @@ public:
     void fitWithModelSelection(Float64 redshift, const TFloat64Range& lambdaRange, CLineModelResult::SLineModelSolution &modelSolution);
     void SetFittingMethod(std::string fitMethod);
 
+    void SetAbsLinesLimit(Float64 limit);
+
     Float64 GetRedshift();
 
     void reinitModel();

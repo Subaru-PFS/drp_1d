@@ -52,6 +52,8 @@ public:
     void LimitFittedAmplitude(Int32 subeIdx, Float64 limit);
     bool IsOutsideLambdaRange(Int32 subeIdx);
 
+    bool SetAbsLinesLimit(Float64 limit);
+
 private:
     Int32 FindElementIndex(std::string LineTagStr);
 

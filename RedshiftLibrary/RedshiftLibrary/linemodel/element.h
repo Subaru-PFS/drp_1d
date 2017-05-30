@@ -49,6 +49,8 @@ public:
     virtual void SetFittedAmplitude(Float64 A, Float64 SNR)=0;
     virtual void LimitFittedAmplitude(Int32 subeIdx, Float64 limit)=0;
 
+    virtual bool SetAbsLinesLimit(Float64 limit)=0;
+
     void SetVelocityEmission(Float64 vel);
     Float64 GetVelocityEmission();
     void SetVelocityAbsorption(Float64 vel);

@@ -1316,6 +1316,14 @@ void CLineModelElementList::SetFittingMethod(std::string fitMethod)
     m_fittingmethod = fitMethod;
 }
 
+void CLineModelElementList::SetAbsLinesLimit(Float64 limit)
+{
+    for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
+    {
+        m_Elements[iElts]->SetAbsLinesLimit(limit);
+    }
+}
+
 /**
  * \brief Init the whole spectrum model with continuum.
  **/

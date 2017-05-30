@@ -350,6 +350,11 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
         contreest_iterations = 0;
     }
 
+    //Set model parameter: abs lines limit
+    Float64 absLinesLimit = 1.0; //-1 to disable, 1.0 is typical
+    model.SetAbsLinesLimit(absLinesLimit);
+    Log.LogInfo( "Linemodel: set abs lines limit to %f", absLinesLimit);
+
     Log.LogInfo( "Linemodel: processing");
 
     //Set model parameters to FIRST-PASS
