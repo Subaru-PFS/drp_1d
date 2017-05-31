@@ -177,9 +177,9 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
     }else{
         m_RestRayList = restRayList;
         //load the tplshape catalog with only 1 element for all lines
-        //LoadCatalogOneMultiline(restRayList);
+        LoadCatalogOneMultiline(restRayList);
         //load the tplshape catalog with 2 elements: 1 for the Em lines + 1 for the Abs lines
-        LoadCatalogTwoMultilinesAE(restRayList);
+        //LoadCatalogTwoMultilinesAE(restRayList);
         bool ret = m_CatalogTplShape->Init(calibrationPath);
         if(!ret)
         {

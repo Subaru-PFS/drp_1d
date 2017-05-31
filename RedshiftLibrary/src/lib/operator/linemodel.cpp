@@ -351,9 +351,9 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
     }
 
     //Set model parameter: abs lines limit
-    Float64 absLinesLimit = 1.0; //-1 to disable, 1.0 is typical
+    Float64 absLinesLimit = -1.0; //-1 to disable, 1.0 is typical
     model.SetAbsLinesLimit(absLinesLimit);
-    Log.LogInfo( "Linemodel: set abs lines limit to %f", absLinesLimit);
+    Log.LogInfo( "Linemodel: set abs lines limit to %f (ex: -1 means disabled)", absLinesLimit);
 
     Log.LogInfo( "Linemodel: processing");
 
