@@ -1106,9 +1106,9 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
                 //*
                 //iterative continuum estimation :: RAW SLOW METHOD
                 refreshModel();
-                Int32 enhanceABS = 0;
+                Float64 enhanceABS = 0;
                 if(nIt>2*it && nIt>3.0){
-                    enhanceABS = 1;
+                    enhanceABS = 2.0-((Float64)it*0.33);
                 }
                 EstimateSpectrumContinuum(enhanceABS);
 
@@ -3623,7 +3623,7 @@ Int32 CLineModelElementList::ApplyVelocityBound(Float64 inf, Float64 sup)
 /**
  * \brief this function estimates the continuum after removal(interpolation) of the flux samples under the lines for a given redshift 
  **/
-void CLineModelElementList::EstimateSpectrumContinuum( Int32 opt_enhance_abs )
+void CLineModelElementList::EstimateSpectrumContinuum( Float64 opt_enhance_abs )
 {
     std::vector<Int32> validEltsIdx = GetModelValidElementsIndexes();
     std::vector<Int32> xInds = getSupportIndexes( validEltsIdx );
@@ -3663,12 +3663,12 @@ void CLineModelElementList::EstimateSpectrumContinuum( Int32 opt_enhance_abs )
         spcmodel4linefitting.GetFluxAxis()[i] = spcmodel4linefitting.GetFluxAxis()[i]-m_ContinuumFluxAxis[i];
     }
     //optionnaly enhance the abs model component
-    if(opt_enhance_abs){
+    if(opt_enhance_abs>0.0){
         for( Int32 t=0;t<spectralAxis.GetSamplesCount();t++)
         {
             if(spcmodel4linefitting.GetFluxAxis()[t]<0.0)
             {
-                spcmodel4linefitting.GetFluxAxis()[t] *= 2.0;
+                spcmodel4linefitting.GetFluxAxis()[t] *= opt_enhance_abs;
             }
         }
     }
