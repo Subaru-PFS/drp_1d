@@ -309,7 +309,9 @@ Int32 CMethodChisquare2Solve::CombinePDF(CDataStore &store, std::string scopeStr
         if(nSum[k]!=meritResults.size())
         {
             postmargZResult->valProbaLog[k] = NAN;
-            Log.LogError("chisquare2solve: Pdfz computation failed. Not all templates have 100% coverage for all redshifts!");
+            Log.LogError("chisquare2solve: Pdfz computation failed. For z=%f, nSum=%d", postmargZResult->Redshifts[k], nSum[k]);
+            Log.LogError("chisquare2solve: Pdfz computation failed. For z=%f, meritResults.size()=%d", postmargZResult->Redshifts[k], meritResults.size());
+            Log.LogError("chisquare2solve: Pdfz computation failed. Not all templates have 100 percent coverage for all redshifts!");
         }
     }
     store.StoreGlobalResult( "zPDF/logposterior.logMargP_Z_data", postmargZResult); //need to store this pdf with this exact same name so that zqual can load it. see zqual.cpp/ExtractFeaturesPDF

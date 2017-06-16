@@ -463,23 +463,29 @@ Void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& t
                 sumS += sumS_outsideIGM[kDust];
             }
 
-            if ( numDevs==0 || sumCross==0 || sumT==0 )
+            if ( numDevs==0 )
             {
                 status = nStatus_DataError;
                 return;
             }
 
-
-
-            Float64 ampl = max(0.0, sumCross / sumT);
-            if(forcedAmplitude !=-1){
-                ampl = forcedAmplitude;
+            Float64 ampl = 0.0;
+            if( sumT==0 )
+            {
+                ampl = 0.0;
+                fit = sumS;
+                //status = nStatus_DataError;
+                //return;
+            }else{
+                ampl = max(0.0, sumCross / sumT);
+                if(forcedAmplitude !=-1){
+                    ampl = forcedAmplitude;
+                }
+                //* //1. fast method: D. Vibert, Amazed methods improvements, 10/06/2015
+                fit = sumS - sumCross*ampl;
             }
 
-            fit=0;
 
-            //* //1. fast method: D. Vibert, Amazed methods improvements, 10/06/2015
-            fit = sumS - sumCross*ampl;
             //*/
 
             /*

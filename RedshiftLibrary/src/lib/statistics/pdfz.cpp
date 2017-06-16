@@ -31,7 +31,7 @@ Int32 CPdfz::Compute(TFloat64List merits, TFloat64List redshifts, Float64 cstLog
     Bool verbose = false;
     logPdf.clear();
 
-    //check if there is more than 2 reshifts values
+    //check if there is more than 2 redshifts values
     if(redshifts.size()<=2)
     {
         return 2;
