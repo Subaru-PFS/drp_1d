@@ -28,7 +28,7 @@ namespace NSEpic
   static Int32 defaultIdx = -1;
   class CRegulament;
   class CRayCatalogsTplShape;
-  
+
 class CLineModelElementList
 {
 
@@ -61,6 +61,7 @@ public:
 
     void InitFitContinuum();
     Int32 LoadFitContinuum(const TFloat64Range& lambdaRange);
+    Int32 ApplyFitContinuum(const CTemplate& tpl, Float64 fitAmplitude, Float64 fitDustCoeff, Float64 fitDtM, Float64 fitMtM))
     Bool SolveContinuum(const CSpectrum& spectrum,
                         const CTemplate& tpl,
                         const TFloat64Range& lambdaRange,
@@ -77,6 +78,7 @@ public:
                         Float64& fitMtM);
     std::string getFitContinuum_tplName();
     Float64 getFitContinuum_tplAmplitude();
+    void setFitContinuum_tplAmplitude(Float64 tplAmp);
     void SetContinuumComponent(std::string component);
 
     Bool initDtd(const TFloat64Range& lambdaRange);
@@ -166,7 +168,7 @@ private:
 
     Int32 fitAmplitudesHybrid(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& spcFluxAxisNoContinuum, Float64 redshift);
     void fitAmplitudesSimplex();
-    Int32 fitAmplitudesLmfit(std::vector<Int32> EltsIdx, const CSpectrumFluxAxis &fluxAxis, std::vector<Float64> &ampsfitted, Int32 lineType);
+    Int32 fitAmplitudesLmfit(std::vector<Int32> EltsIdx, const CSpectrumFluxAxis &fluxAxis, std::vector<Float64> &ampsfitted, Int32 lineType,const CTemplate& tpl);
     Int32 fitAmplitudesLinSolve(std::vector<Int32> EltsIdx, const CSpectrumSpectralAxis &spectralAxis, const CSpectrumFluxAxis &fluxAxis, std::vector<Float64> &ampsfitted, std::vector<Float64> &errorsfitted);
     Int32 fitAmplitudesLBFGS(std::vector<Int32> filteredEltsIdx, const CSpectrumFluxAxis& fluxAxis, std::vector<Float64>& ampsfitted, Int32 lineType);
 

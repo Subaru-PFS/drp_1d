@@ -14,6 +14,7 @@ struct lmfitdata {
     std::vector<Int32> linemodel_samples_indexes;
     Float64 normFactor;
     Int32 lineType;
+    CTemplate tpl;
 };
 
 int
@@ -28,6 +29,11 @@ lmfit_f (const gsl_vector * x, void *data,
     std::vector<Int32> samples_indexes = ((struct lmfitdata *)data)->linemodel_samples_indexes;
     Float64 normFactor = ((struct lmfitdata *)data)->normFactor;
     Int32 lineType = ((struct lmfitdata *)data)->lineType;
+    CTemplate tpl = ((struct lmfitdata *)data)->tpl;
+
+    Int32 idxTplAmp = elts_indexes.size()+1;
+    Float64 tplAmp= gsl_vector_get (x, idxTplAmp);
+    linemodel.setFitContinuum_tplAmplitude( tplAmp)
 
     for (Int32 iElt = 0; iElt < elts_indexes.size(); iElt++)
     {
@@ -46,10 +52,18 @@ lmfit_f (const gsl_vector * x, void *data,
     }
     linemodel->refreshModelUnderElements(elts_indexes);
 
+
+    const CSpectrumFluxAxis& tplFluxAxis = tpl->GetFluxAxis();
     for (Int32 i = 0; i < n; i++)
     {
+
         Float64 Yi = linemodel->getModelFluxVal(samples_indexes[i])*normFactor;
-        gsl_vector_set (f, i, Yi - y[i]);
+        Float64 err = Yi - y[i]
+        // TODO : add condition for fullmodel
+        if(1){
+          err += tplAmp * tplFluxAxis[samples_indexes[i]]* normFactor
+        }
+        gsl_vector_set (f, i, err);
     }
 
     return GSL_SUCCESS;
@@ -67,6 +81,10 @@ lmfit_df (const gsl_vector * x, void *data,
     Float64 normFactor = ((struct lmfitdata *)data)->normFactor;
     Int32 lineType = ((struct lmfitdata *)data)->lineType;
 
+    Int32 idxTplAmp = elts_indexes.size()+1;
+    Float64 tplAmp= gsl_vector_get (x, idxTplAmp);
+    linemodel.setFitContinuum_tplAmplitude( tplAmp)
+
     for (Int32 iElt = 0; iElt < elts_indexes.size(); iElt++)
     {
         Float64 amp = gsl_vector_get (x, iElt)/normFactor;
@@ -83,16 +101,23 @@ lmfit_df (const gsl_vector * x, void *data,
         linemodel->SetVelocityAbsorption(velocity);
     }
     linemodel->refreshModelDerivSigmaUnderElements(elts_indexes);
-
+    const CSpectrumFluxAxis& tplFluxAxis = tpl->GetFluxAxis();
     for (Int32 i = 0; i < n; i++)
     {
         for (Int32 iElt = 0; iElt < elts_indexes.size(); iElt++)
         {
-            Float64 dval = linemodel->getModelFluxDerivEltVal(elts_indexes[iElt], samples_indexes[i]);
+            //TODO : demander confirmation pour l'ajout du normfactor
+            Float64 dval = linemodel->getModelFluxDerivEltVal(elts_indexes[iElt], samples_indexes[i])*normFactor;
             gsl_matrix_set (J, i, iElt, dval);
         }
         Float64 dval = linemodel->getModelFluxDerivSigmaVal(samples_indexes[i])*normFactor;
         gsl_matrix_set (J, i, idxVelocity, dval);
+
+        // TODO : add condition for fullmodel
+        if(1){
+
+          gsl_matrix_set (J, i, idxTplAmp, tplFluxAxis[samples_indexes[i]]);
+        }
     }
 
     return GSL_SUCCESS;
