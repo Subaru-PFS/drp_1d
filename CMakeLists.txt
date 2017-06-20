@@ -24,7 +24,7 @@ MESSAGE( STATUS "Version used: ${VERSION}" )
 #--------------------------------------------------------
 # Exported configuration variables
 #--------------------------------------------------------
-SET( cpf-redshift_INCLUDE_DIR ${ROOT_DIR}/include/ )
+SET( cpf-redshift_INCLUDE_DIR ${ROOT_DIR}/RedshiftLibrary/ )
 SET( cpf-redshift_THIRDPARTY_INCLUDE_DIR ${ROOT_DIR}/thirdparty/include/ )
 
 SET( cpf-redshift_LINK_DIR ${ROOT_DIR}/lib/ )
@@ -49,7 +49,7 @@ FILE (STRINGS ${ROOT_DIR}/VERSION VERSION_NUMBER)
 #--------------------------------------------------------
 SET( LIB_NAME cpf-redshift${EXT} )
 
-FILE( GLOB_RECURSE LIB_SOURCE_FILES ${ROOT_DIR}/src/*.cpp )
+FILE( GLOB_RECURSE LIB_SOURCE_FILES ${ROOT_DIR}/RedshiftLibrary/src/lib/*.cpp )
 
 ADD_LIBRARY( ${LIB_NAME} STATIC ${LIB_SOURCE_FILES} )
 
@@ -58,7 +58,7 @@ ADD_LIBRARY( ${LIB_NAME} STATIC ${LIB_SOURCE_FILES} )
 #--------------------------------------------------------
 SET( TEST_NAME cpf-redshift-test${EXT} )
   
-FILE( GLOB_RECURSE TEST_SOURCE_FILES ${ROOT_DIR}/test/*.cpp )
+FILE( GLOB_RECURSE TEST_SOURCE_FILES ${ROOT_DIR}/RedshiftLibrary/tests/src/*.cpp )
 
 ADD_EXECUTABLE( ${TEST_NAME} ${TEST_SOURCE_FILES} )
 
@@ -69,7 +69,7 @@ TARGET_LINK_LIBRARIES( ${TEST_NAME} ${LIB_NAME}  ${cpf-redshift_THIRDPARTY_LIBS}
 # Install directive
 #--------------------------------------------------------
 INSTALL( TARGETS ${LIB_NAME} ARCHIVE DESTINATION lib )
-INSTALL( DIRECTORY ${ROOT_DIR}/include/ DESTINATION include )
+INSTALL( DIRECTORY ${ROOT_DIR}/RedshiftLibrary/ DESTINATION RedshiftLibrary )
 INSTALL( FILES  ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cpf-redshift-config.cmake DESTINATION cmake )
 
 #--------------------------------------------------------

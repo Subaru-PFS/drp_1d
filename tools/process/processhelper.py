@@ -135,7 +135,14 @@ class processHelper(object):
         self.config_calibrationdir = self.getConfigVal("calibrationdir")
         print("INFO: calibrationdir is : {}".format(self.config_calibrationdir))
         if not os.path.exists(self.config_calibrationdir):
-            print("ERROR: calibration file does not exist! Aborting...")
+            print("ERROR: calibration dir does not exist! Aborting...")
+            return False
+            
+                
+        self.config_zclassifierdir = self.getConfigVal("zclassifierdir")
+        print("INFO: reliabilitydir is : {}".format(self.config_zclassifierdir))
+        if not os.path.exists(self.config_zclassifierdir):
+            print("ERROR: zclassifierdir dir does not exist! Aborting...")
             return False
             
         self.config_linecatalog = self.getConfigVal("linecatalog")
@@ -232,7 +239,9 @@ class processHelper(object):
         
         argCalib = self.config_calibrationdir
         argStr = "{} --calibrationdir {}".format(argStr, argCalib)
-        
+
+        argreliability = self.config_zclassifierdir        
+        argStr = "{} --zclassifierdir {}".format(argStr, argreliability)
         
         argStr = "{} --linecatalog {}".format(argStr, self.config_linecatalog)
         if self.config_linecatalogconvert:
