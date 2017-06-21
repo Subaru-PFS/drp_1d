@@ -12,6 +12,8 @@
 #include <RedshiftLibrary/spectrum/fluxcorrectionmeiksin.h>
 #include <RedshiftLibrary/spectrum/fluxcorrectioncalzetti.h>
 
+#include <fftw3.h>
+
 namespace NSEpic
 {
 
@@ -39,6 +41,7 @@ private:
                   std::vector<Int32> ismEbmvCoeffs=std::vector<Int32>(1, 0),
                   CMask spcMaskAdditional=CMask());
     Int32 EstimateXtY(const Float64 *X, const Float64 *Y, UInt32 nx, UInt32 ny, UInt32 nshifts, std::vector<Float64>& XtY);
+    Int32 InitFFT(Int32 n);
     Int32 EstimateXtYSlow(const Float64* X, const Float64* Y, UInt32 nX, UInt32 nShifts, std::vector<Float64>& XtY);
     Int32 EstimateMtMFast(const Float64* X, const Float64* Y, UInt32 nX, UInt32 nShifts, std::vector<Float64>& XtY);
 
@@ -49,6 +52,19 @@ private:
     CTemplate       m_templateRebinedLog;
     CMask           m_mskRebinedLog;
     CSpectrum       m_spectrumRebinedLog;
+    //buffers for fft computation
+    Int32 m_nPaddedSamples;
+    fftw_complex *inSpc;
+    fftw_complex *outSpc;
+    fftw_plan pSpc;
+    fftw_complex *inTpl;
+    fftw_complex *inTpl_padded;
+    fftw_complex *outTpl;
+    fftw_plan pTpl;
+    fftw_complex* outCombined;
+    fftw_complex* inCombined;
+    fftw_plan pBackward ;
+
 
     //ISM Calzetti
     CSpectrumFluxCorrectionCalzetti* m_ismCorrectionCalzetti;

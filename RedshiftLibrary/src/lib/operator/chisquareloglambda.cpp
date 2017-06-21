@@ -24,7 +24,6 @@
 #include <boost/filesystem/fstream.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 
-#include <fftw3.h>
 
 #include <assert.h>
 
@@ -49,6 +48,13 @@ COperatorChiSquareLogLambda::COperatorChiSquareLogLambda( std::string calibratio
 
 COperatorChiSquareLogLambda::~COperatorChiSquareLogLambda()
 {
+
+    fftw_destroy_plan(pSpc);
+    fftw_free(inSpc); fftw_free(outSpc);
+    fftw_destroy_plan(pTpl);
+    fftw_free(inTpl_padded);
+    fftw_free(inTpl); fftw_free(outTpl);
+    fftw_destroy_plan(pBackward);
 }
 
 
@@ -99,33 +105,16 @@ Int32 COperatorChiSquareLogLambda::EstimateXtY(const Float64* X, const Float64* 
     //Processing the FFT
     Int32 nSpc = nx;
     Int32 nTpl = ny;
-    //Int32 nPadded = (Int32)std::max((Float64)(ny*2.0-1), (Float64)(nx*2.0-1));
-    //Int32 nPadded = nshifts;
-    Int32 nPadded = (Int32)(nTpl*2.0);
+    Int32 nPadded = m_nPaddedSamples;
 
-    /*
-    //next power of two
-    Float64 maxnsamples = (Int32)std::max((Float64)(ny), (Float64)(nx));;
-    int power = 1;
-    while(std::pow(2, power) < maxnsamples)
-    {
-        power*=2;
-    }
-    Int32 nPadded = std::pow(2, power);
-    //*/
     Int32 nPadBeforeSpc = nPadded-nSpc;//(Int32)nPadded/2.0;
     Int32 nPadBeforeTpl = 0;
 
-    Log.LogInfo("ChisquareLog, FitAllz: Processing spc-fft with n=%d, padded to n=%d", nSpc, nPadded);
-    fftw_complex *inSpc;
-    fftw_complex *outSpc;
-    inSpc = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * nPadded);
-    outSpc = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * nPadded);
-    fftw_plan pSpc = fftw_plan_dft_1d(nPadded, inSpc, outSpc, FFTW_FORWARD, FFTW_ESTIMATE);
-    if(inSpc==0)
+    if(verbose)
     {
-        Log.LogError("ChisquareLog, FitAllz: Unable to allocate inSpc");
+        Log.LogInfo("ChisquareLog, FitAllz: Processing spc-fft with n=%d, padded to n=%d", nSpc, nPadded);
     }
+
 //    for(Int32 k=0; k<nSpc; k++)
 //    {
 //        inSpc[k][0] = X[k];
@@ -162,12 +151,12 @@ Int32 COperatorChiSquareLogLambda::EstimateXtY(const Float64* X, const Float64* 
         }
         fclose( f_fftinput );
     }
-    if(outSpc==0)
-    {
-        Log.LogError("ChisquareLog, FitAllz: Unable to allocate outSpc");
-    }
+
     fftw_execute(pSpc);
-    Log.LogInfo("ChisquareLog, FitAllz: spc-fft done");
+    if(verbose)
+    {
+        Log.LogInfo("ChisquareLog, FitAllz: spc-fft done");
+    }
     if(verbose)
     {
         // save spc-fft data
@@ -179,22 +168,9 @@ Int32 COperatorChiSquareLogLambda::EstimateXtY(const Float64* X, const Float64* 
         fclose( f_fftoutput );
     }
 
-
-    Log.LogInfo("ChisquareLog, FitAllz: Processing tpl-fft with n=%d, padded to n=%d", nTpl, nPadded);
-    fftw_complex *inTpl;
-    fftw_complex *inTpl_padded;
-    fftw_complex *outTpl;
-    inTpl_padded = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * nPadded);
-    inTpl = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * nPadded);
-    outTpl = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * nPadded);
-    fftw_plan pTpl = fftw_plan_dft_1d(nPadded, inTpl, outTpl, FFTW_FORWARD, FFTW_ESTIMATE);
-    if(inTpl_padded==0)
+    if(verbose)
     {
-        Log.LogError("ChisquareLog, FitAllz: Unable to allocate inTpl_padded");
-    }
-    if(inTpl==0)
-    {
-        Log.LogError("ChisquareLog, FitAllz: Unable to allocate inTpl");
+        Log.LogInfo("ChisquareLog, FitAllz: Processing tpl-fft with n=%d, padded to n=%d", nTpl, nPadded);
     }
     //    for(Int32 k=0; k<nTpl; k++)
     //    {
@@ -227,10 +203,7 @@ Int32 COperatorChiSquareLogLambda::EstimateXtY(const Float64* X, const Float64* 
         inTpl[k][0] = inTpl_padded[k][0];//inTpl_padded[nPadded-1-k][0];//
         inTpl[k][1] = 0.0;
     }
-    if(outTpl==0)
-    {
-        Log.LogError("ChisquareLog, FitAllz: Unable to allocate outTpl");
-    }
+
     if(verbose)
     {
         // save tpl input data
@@ -242,7 +215,10 @@ Int32 COperatorChiSquareLogLambda::EstimateXtY(const Float64* X, const Float64* 
         fclose( f_fftinput );
     }
     fftw_execute(pTpl);
-    Log.LogInfo("ChisquareLog, FitAllz: tpl-fft done");
+    if(verbose)
+    {
+        Log.LogInfo("ChisquareLog, FitAllz: tpl-fft done");
+    }
     if(verbose)
     {
         // save tpl-fft data
@@ -256,13 +232,6 @@ Int32 COperatorChiSquareLogLambda::EstimateXtY(const Float64* X, const Float64* 
 
 
     //Multiplying the FFT outputs
-    fftw_complex* outCombined = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * nPadded);
-    fftw_complex* inCombined = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * nPadded);
-    fftw_plan pBackward = fftw_plan_dft_1d(nPadded, outCombined, inCombined, FFTW_BACKWARD, FFTW_ESTIMATE);
-    if(outCombined==0)
-    {
-        Log.LogError("ChisquareLog, FitAllz: Unable to allocate outCombined");
-    }
     for(Int32 k=0; k<nPadded; k++)
     {
         outCombined[k][0] = (outTpl[k][0]*outSpc[k][0]-outTpl[k][1]*outSpc[k][1]);
@@ -276,7 +245,10 @@ Int32 COperatorChiSquareLogLambda::EstimateXtY(const Float64* X, const Float64* 
         Log.LogError("ChisquareLog, FitAllz: Unable to allocate inCombined");
     }
     fftw_execute(pBackward);
-    Log.LogInfo("ChisquareLog, FitAllz: backward-fft done");
+    if(verbose)
+    {
+        Log.LogInfo("ChisquareLog, FitAllz: backward-fft done");
+    }
     XtY.resize(nshifts);
     Int32 offsetSamples = 0.0;//nPadded/2.0;//nSpc;//(nTpl+nSpc);
     for (Int32 k=0; k<nshifts; k++)
@@ -306,17 +278,61 @@ Int32 COperatorChiSquareLogLambda::EstimateXtY(const Float64* X, const Float64* 
     }
 
 
-
-    fftw_destroy_plan(pSpc);
-    fftw_free(inSpc); fftw_free(outSpc);
-    fftw_destroy_plan(pTpl);
-    fftw_free(inTpl_padded);
-    fftw_free(inTpl); fftw_free(outTpl);
-    fftw_destroy_plan(pBackward);
-
     return 0;
 }
 
+Int32 COperatorChiSquareLogLambda::InitFFT(Int32 nPadded)
+{
+    inSpc = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * nPadded);
+    outSpc = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * nPadded);
+    pSpc = fftw_plan_dft_1d(nPadded, inSpc, outSpc, FFTW_FORWARD, FFTW_ESTIMATE);
+    if(inSpc==0)
+    {
+        Log.LogError("ChisquareLog, InitFFT: Unable to allocate inSpc");
+        return -1;
+    }
+    if(outSpc==0)
+    {
+        Log.LogError("ChisquareLog, InitFFT: Unable to allocate inSpc");
+        return -1;
+    }
+
+    inTpl_padded = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * nPadded);
+    inTpl = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * nPadded);
+    outTpl = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * nPadded);
+    pTpl = fftw_plan_dft_1d(nPadded, inTpl, outTpl, FFTW_FORWARD, FFTW_ESTIMATE);
+    if(inTpl_padded==0)
+    {
+        Log.LogError("ChisquareLog, InitFFT: Unable to allocate inTpl_padded");
+        return -1;
+    }
+    if(inTpl==0)
+    {
+        Log.LogError("ChisquareLog, InitFFT: Unable to allocate inTpl");
+        return -1;
+    }
+    if(outTpl==0)
+    {
+        Log.LogError("ChisquareLog, InitFFT: Unable to allocate outTpl");
+        return -1;
+    }
+
+    outCombined = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * nPadded);
+    inCombined = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * nPadded);
+    pBackward= fftw_plan_dft_1d(nPadded, outCombined, inCombined, FFTW_BACKWARD, FFTW_ESTIMATE);
+    if(outCombined==0)
+    {
+        Log.LogError("ChisquareLog, InitFFT: Unable to allocate outCombined");
+        return -1;
+    }
+    if(inCombined==0)
+    {
+        Log.LogError("ChisquareLog, InitFFT: Unable to allocate inCombined");
+        return -1;
+    }
+
+    return 0;
+}
 
 /**
  * @brief COperatorChiSquareLogLambda::FitAllz
@@ -373,6 +389,18 @@ Int32 COperatorChiSquareLogLambda::FitAllz(const TFloat64Range& lambdaRange,
     //
     Int32 nshifts = tplRebinedSpectralAxis.GetSamplesCount()-spectrumRebinedSpectralAxis.GetSamplesCount();
     //Int32 nshifts = tplRebinedSpectralAxis.GetSamplesCount()*2.0;
+    m_nPaddedSamples = (Int32)tplRebinedSpectralAxis.GetSamplesCount()*2.0;
+    /*
+    //next power of two
+    Float64 maxnsamples = (Int32)std::max((Float64)(ny), (Float64)(nx));;
+    int power = 1;
+    while(std::pow(2, power) < maxnsamples)
+    {
+        power*=2;
+    }
+    Int32 nPadded = std::pow(2, power);
+    //*/
+    InitFFT(m_nPaddedSamples);
 
     //prepare z array
     std::vector<Float64> z_vect(nshifts, 0.0);
@@ -755,8 +783,8 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(const CSpe
 
     std::string rebinMethod = "spline";
     Int32 enableLogRebin = 1;
-    Bool verboseLogRebin = 1;
-    Bool verboseExportLogRebin = 1;
+    Bool verboseLogRebin = 0;
+    Bool verboseExportLogRebin = 0;
     if(enableLogRebin==1){
 
         // Create the Spectrum Log-Rebined spectral axis
