@@ -16,6 +16,8 @@ public:
     CChisquareResult();
     virtual ~CChisquareResult();
 
+    Void Init( UInt32 n );
+
     Void Save( const CDataStore& store, std::ostream& stream ) const;
     Void SaveLine( const CDataStore& store, std::ostream& stream ) const;
     Void Load( std::istream& stream );

@@ -19,6 +19,18 @@ CChisquareResult::~CChisquareResult()
 
 }
 
+Void CChisquareResult::Init( UInt32 n )
+{
+    ChiSquare.resize( n );
+    FitAmplitude.resize( n );
+    FitDustCoeff.resize( n );
+    FitMeiksinIdx.resize( n );
+    FitDtM.resize( n );
+    FitMtM.resize( n );
+    Redshifts.resize( n );
+    Overlap.resize( n );
+    Status.resize( n );
+}
 
 Void CChisquareResult::Load( std::istream& stream )
 {

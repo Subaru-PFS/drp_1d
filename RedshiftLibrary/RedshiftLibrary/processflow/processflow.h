@@ -34,6 +34,8 @@ private:
     Bool Blindsolve(CProcessFlowContext& ctx , const std::string& CategoryFilter = "all");
     Bool Fullsolve(CProcessFlowContext& ctx ,  const std::string& CategoryFilter = "all");
     Bool Chisquare(CProcessFlowContext& ctx , const std::string& CategoryFilter = "all");
+    Bool ChisquareLog(CProcessFlowContext& ctx , const std::string& CategoryFilter = "all");
+
     Bool Correlation(CProcessFlowContext& ctx , const std::string& CategoryFilter = "all");
     Bool LineMatching( CProcessFlowContext& ctx );
     Bool LineMatching2( CProcessFlowContext& ctx );

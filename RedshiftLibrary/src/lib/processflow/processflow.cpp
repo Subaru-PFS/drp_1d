@@ -32,6 +32,7 @@
 
 #include <RedshiftLibrary/method/chisquaresolve.h>
 #include <RedshiftLibrary/method/chisquare2solve.h>
+#include <RedshiftLibrary/method/chisquarelogsolve.h>
 #include <RedshiftLibrary/method/fullsolve.h>
 #include <RedshiftLibrary/method/correlationsolve.h>
 #include <RedshiftLibrary/method/linematchingsolve.h>
@@ -104,6 +105,11 @@ Bool CProcessFlow::Process( CProcessFlowContext& ctx )
 
     if(methodName  == "chisquare2solve" )
         return Chisquare( ctx );
+
+    if(methodName  == "chisquarelogsolve" )
+    {
+        return ChisquareLog( ctx );
+    }
 
     if(methodName  == "linematching" )
         return LineMatching( ctx );
@@ -290,6 +296,79 @@ Bool CProcessFlow::Chisquare( CProcessFlowContext& ctx, const std::string& Categ
     ctx.GetParameterStore().Get( "calibrationDir", calibrationDirPath );
     CMethodChisquare2Solve solve(calibrationDirPath);
     std::shared_ptr< const CChisquare2SolveResult> solveResult = solve.Compute( ctx.GetDataStore(), ctx.GetSpectrum(), ctx.GetSpectrumWithoutContinuum(),
+                                                                        ctx.GetTemplateCatalog(), filteredTemplateCategoryList,
+                                                                        spcLambdaRange, redshifts, overlapThreshold, maskList, opt_spcComponent, opt_interp, opt_extinction, opt_dustFit);
+
+    if( solveResult ) {
+        ctx.GetDataStore().StoreScopedGlobalResult( "redshiftresult", solveResult );
+    }else{
+        return false;
+    }
+    return true;
+}
+
+Bool CProcessFlow::ChisquareLog( CProcessFlowContext& ctx, const std::string& CategoryFilter)
+{
+    TFloat64Range lambdaRange;
+    TFloat64Range redshiftRange;
+    Float64       redshiftStep;
+    ctx.GetParameterStore().Get( "lambdaRange", lambdaRange );
+    ctx.GetParameterStore().Get( "redshiftRange", redshiftRange );
+    ctx.GetParameterStore().Get( "redshiftStep", redshiftStep );
+
+    const CSpectrumSpectralAxis& spcSpectralAxis = ctx.GetSpectrum().GetSpectralAxis();
+    TFloat64Range spcLambdaRange;
+    spcSpectralAxis.ClampLambdaRange( lambdaRange, spcLambdaRange );
+
+    Log.LogInfo( "Process ChisquareLog for spc:%s (LambdaRange: %f-%f:%f)", ctx.GetSpectrum().GetName().c_str(),
+                 spcLambdaRange.GetBegin(), spcLambdaRange.GetEnd(), ctx.GetSpectrum().GetResolution());
+
+
+    // Remove Star category, and filter the list with regard to input variable CategoryFilter
+    TStringList templateCategoryList;
+    ctx.GetParameterStore().Get( "templateCategoryList", templateCategoryList );
+    TStringList   filteredTemplateCategoryList;
+    for( UInt32 i=0; i<templateCategoryList.size(); i++ )
+    {
+        std::string category = templateCategoryList[i];
+        if( category == "star" )
+        {
+        }
+        else if(CategoryFilter == "all" || CategoryFilter == category)
+        {
+            filteredTemplateCategoryList.push_back( category );
+        }
+    }
+
+
+
+    // Create redshift initial list by spanning redshift acdross the given range, with the given delta
+    TFloat64List redshifts = redshiftRange.SpreadOver( redshiftStep );
+    DebugAssert( redshifts.size() > 0 );
+
+    Float64 overlapThreshold;
+    ctx.GetParameterStore().Get( "chisquarelogsolve.overlapThreshold", overlapThreshold, 1.0);
+    std::string opt_spcComponent;
+    ctx.GetDataStore().GetScopedParam( "chisquarelogsolve.spectrum.component", opt_spcComponent, "raw" );
+    std::string opt_interp;
+    ctx.GetDataStore().GetScopedParam( "chisquarelogsolve.interpolation", opt_interp, "precomputedfinegrid" );
+    std::string opt_extinction;
+    ctx.GetDataStore().GetScopedParam( "chisquarelogsolve.extinction", opt_extinction, "no" );
+    std::string opt_dustFit;
+    ctx.GetDataStore().GetScopedParam( "chisquarelogsolve.dustfit", opt_dustFit, "no" );
+
+    Log.LogInfo( "Process Chisquare using overlapThreshold: %.3f", overlapThreshold);
+    Log.LogInfo( "Process Chisquare using component: %s", opt_spcComponent.c_str());
+    Log.LogInfo( "Process Chisquare using extinction: %s", opt_extinction.c_str());
+    Log.LogInfo( "Process Chisquare using dust-fit: %s", opt_dustFit.c_str());
+
+    // prepare the unused masks
+    std::vector<CMask> maskList;
+    //retrieve the calibration dir path
+    std::string calibrationDirPath;
+    ctx.GetParameterStore().Get( "calibrationDir", calibrationDirPath );
+    CMethodChisquareLogSolve solve(calibrationDirPath);
+    std::shared_ptr< const CChisquareLogSolveResult> solveResult = solve.Compute( ctx.GetDataStore(), ctx.GetSpectrum(), ctx.GetSpectrumWithoutContinuum(),
                                                                         ctx.GetTemplateCatalog(), filteredTemplateCategoryList,
                                                                         spcLambdaRange, redshifts, overlapThreshold, maskList, opt_spcComponent, opt_interp, opt_extinction, opt_dustFit);
 

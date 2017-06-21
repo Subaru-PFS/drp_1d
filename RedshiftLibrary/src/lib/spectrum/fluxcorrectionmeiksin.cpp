@@ -150,6 +150,17 @@ Int32 CSpectrumFluxCorrectionMeiksin::GetRedshiftIndex(Float64 z)
     return index;
 }
 
+/**
+ * @brief CSpectrumFluxCorrectionMeiksin::GetSegmentsStartRedshiftList
+ * Hardcoded for meiksin files as of 2017-06-13.
+ * @return
+ */
+std::vector<Float64> CSpectrumFluxCorrectionMeiksin::GetSegmentsStartRedshiftList()
+{
+    std::vector<Float64> zstartlist={0.0, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0, 6.5};
+    return zstartlist;
+}
+
 Float64 CSpectrumFluxCorrectionMeiksin::GetLambdaMin()
 {
     return m_LambdaMin;
@@ -161,3 +172,45 @@ Float64 CSpectrumFluxCorrectionMeiksin::GetLambdaMax()
 }
 
 
+/**
+ * @brief CSpectrumFluxCorrectionMeiksin::getMeiksinCoeff: get the IGM Meiksin coeff at a fixed resolution of 1A
+ * @param dustCoeff
+ * @param maxLambda
+ * @return
+ */
+const Float64*  CSpectrumFluxCorrectionMeiksin::getMeiksinCoeff(Int32 meiksinIdx, Float64 redshift, Float64 maxLambda)
+{
+    if(meiksinIdx<0 || meiksinIdx>GetIdxCount()-1)
+    {
+        return 0;
+    }
+
+    //find redshiftIdx from redshift value
+   Int32 redshiftIdx = GetRedshiftIndex(redshift);
+
+    Int32 nSamples = maxLambda+1; //+1 for security
+    Float64* meiksinCoeffs = new Float64 [(int)nSamples]();
+
+
+    for(Int32 kl=0; kl<nSamples; kl++)
+    {
+        Float64 restLambda = kl;
+        Float64 coeffIGM = 1.0;
+        if(restLambda <= GetLambdaMax())
+        {
+            Int32 kLbdaMeiksin = 0;
+            if(restLambda >= GetLambdaMin())
+            {
+                kLbdaMeiksin = Int32(restLambda-GetLambdaMin());
+            }else //if lambda lower than min meiksin value, use lower meiksin value
+            {
+                kLbdaMeiksin = 0;
+            }
+
+            coeffIGM = m_corrections[redshiftIdx].fluxcorr[meiksinIdx][kLbdaMeiksin];
+
+        }
+        meiksinCoeffs[kl] = coeffIGM;
+    }
+    return meiksinCoeffs;
+}

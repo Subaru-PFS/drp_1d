@@ -123,13 +123,23 @@ Bool CSpectrumFluxAxis::Rebin( const TFloat64Range& range, const CSpectrumFluxAx
 ///
 /// * This rebin method targets processing speed:
 /// - it uses already allocated rebinedFluxAxis, rebinedSpectralAxis and rebinedMask
-/// - linear interpolation is performed
+/// - opt_interp = 'lin' : linear interpolation is performed
+/// - opt_interp = 'precomputedfinegrid' : nearest grid point interpolation is performed using pfgTplBuffer which is the precomputed fine grid
+/// - opt_interp = 'spline' : GSL/spline interpolation is performed (TODO - not tested)
+/// - opt_interp = 'ngp' : nearest grid point is performed (TODO - not tested)
 ///
 Bool CSpectrumFluxAxis::Rebin2( const TFloat64Range& range, const CSpectrumFluxAxis& sourceFluxAxis, const Float64* pfgTplBuffer, Float64 sourcez, const CSpectrumSpectralAxis& sourceSpectralAxis, const CSpectrumSpectralAxis& targetSpectralAxis,
                                CSpectrumFluxAxis& rebinedFluxAxis, CSpectrumSpectralAxis& rebinedSpectralAxis, CMask& rebinedMask , const std::string opt_interp )
 {
     if( sourceFluxAxis.GetSamplesCount() != sourceSpectralAxis.GetSamplesCount() )
+    {
         return false;
+    }
+
+    if(pfgTplBuffer==0 && opt_interp=="precomputedfinegrid")
+    {
+        return false;
+    }
 
     //the spectral axis should be in the same scale
     TFloat64Range logIntersectedLambdaRange( log( range.GetBegin() ), log( range.GetEnd() ) );
@@ -189,9 +199,7 @@ Bool CSpectrumFluxAxis::Rebin2( const TFloat64Range& range, const CSpectrumFluxA
             k++;
         }
         //*/
-    }
-
-    if(opt_interp=="precomputedfinegrid"){
+    }else if(opt_interp=="precomputedfinegrid"){
         //* // Precomputed FINE GRID nearest sample, 20150801
         Int32 k = 0;
         Float64 dl = 0.1;
@@ -209,58 +217,57 @@ Bool CSpectrumFluxAxis::Rebin2( const TFloat64Range& range, const CSpectrumFluxA
 
         }
         //*/
-    }
+    }else if(opt_interp=="spline"){
+        //* // GSL method spline
+        //initialise and allocate the gsl objects
+        Int32 n = sourceSpectralAxis.GetSamplesCount();
+        //lin
+        //gsl_interp *interpolation = gsl_interp_alloc (gsl_interp_linear,n);
+        //gsl_interp_init(interpolation, Xsrc, Ysrc, n);
+        //gsl_interp_accel * accelerator =  gsl_interp_accel_alloc();
+        //spline
+        gsl_spline *spline = gsl_spline_alloc (gsl_interp_cspline, n);
+        gsl_spline_init (spline, Xsrc, Ysrc, n);
+        gsl_interp_accel * accelerator =  gsl_interp_accel_alloc();
 
-    /* // GSL method
-    //inialise and allocate the gsl objects
-    Int32 n = sourceSpectralAxis.GetSamplesCount();
-    //lin
-    //gsl_interp *interpolation = gsl_interp_alloc (gsl_interp_linear,n);
-    //gsl_interp_init(interpolation, Xsrc, Ysrc, n);
-    //gsl_interp_accel * accelerator =  gsl_interp_accel_alloc();
-    //spline
-    gsl_spline *spline = gsl_spline_alloc (gsl_interp_cspline, n);
-    gsl_spline_init (spline, Xsrc, Ysrc, n);
-    gsl_interp_accel * accelerator =  gsl_interp_accel_alloc();
-
-    Int32 k = 0;
-    // For each sample in the valid lambda range interval.
-    while( j<targetSpectralAxis.GetSamplesCount() && Xtgt[j] <= currentRange.GetEnd() )
-    {
+        // For each sample in the valid lambda range interval.
+        while( j<targetSpectralAxis.GetSamplesCount() && Xtgt[j] <= currentRange.GetEnd() )
+        {
             Xrebin[j] = Xtgt[j];
             //Yrebin[j] = gsl_interp_eval(interpolation, Xsrc, Ysrc, Xrebin[j], accelerator);
             Yrebin[j] = gsl_spline_eval (spline, Xrebin[j], accelerator);
             rebinedMask[j] = 1;
 
             j++;
+        }
+        //*/
+    }else if(opt_interp=="ngp"){
+        //* //nearest sample, lookup
+        Int32 k = 0;
+        Int32 kprev = 0;
+        Int32 n = sourceSpectralAxis.GetSamplesCount();
+        //    Int32 jmax = gsl_interp_bsearch (Xtgt, currentRange.GetEnd(), 0, targetSpectralAxis.GetSamplesCount());
+        //    for(k=j; k<=jmax; k++){
+        
+        //        Xrebin[k] = Xtgt[k];
+        //        Yrebin[k] = 0;
+        //        rebinedMask[k] = 1;
+        //    }
+        // For each sample in the valid lambda range interval.
+        while( j<targetSpectralAxis.GetSamplesCount() && Xtgt[j] <= currentRange.GetEnd() )
+        {
+            k = gsl_interp_bsearch (Xsrc, Xtgt[j], kprev, n);
+            kprev = k;
+            // closest value
+            Xrebin[j] = Xtgt[j];
+            Yrebin[j] = Ysrc[k];
+            
+            rebinedMask[j] = 1;
+            j++;
+        }
+        //return false;
+        //*/
     }
-    //*/
-
-    /* //nearest sample, lookup
-    Int32 k = 0;
-    Int32 kprev = 0;
-    Int32 n = sourceSpectralAxis.GetSamplesCount();
-//    Int32 jmax = gsl_interp_bsearch (Xtgt, currentRange.GetEnd(), 0, targetSpectralAxis.GetSamplesCount());
-//    for(k=j; k<=jmax; k++){
-
-//        Xrebin[k] = Xtgt[k];
-//        Yrebin[k] = 0;
-//        rebinedMask[k] = 1;
-//    }
-    // For each sample in the valid lambda range interval.
-    while( j<targetSpectralAxis.GetSamplesCount() && Xtgt[j] <= currentRange.GetEnd() )
-    {
-        k = gsl_interp_bsearch (Xsrc, Xtgt[j], kprev, n);
-        kprev = k;
-        // closest value
-        Xrebin[j] = Xtgt[j];
-        Yrebin[j] = Ysrc[k];
-
-        rebinedMask[j] = 1;
-        j++;
-    }
-    //return false;
-    //*/
 
     while( j < targetSpectralAxis.GetSamplesCount() )
     {

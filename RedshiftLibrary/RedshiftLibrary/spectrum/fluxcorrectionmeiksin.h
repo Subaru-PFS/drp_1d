@@ -37,6 +37,10 @@ public:
     Int32 GetIdxCount();
     Int32 GetRedshiftIndex(Float64 z);
 
+    std::vector<Float64> GetSegmentsStartRedshiftList();
+
+    const Float64*  getMeiksinCoeff(Int32 meiksinIdx, Float64 redshift, Float64 maxLambda);
+
 
     Float64 GetLambdaMin();
     Float64 GetLambdaMax();

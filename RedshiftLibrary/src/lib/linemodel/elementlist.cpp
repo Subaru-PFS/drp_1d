@@ -696,32 +696,12 @@ void CLineModelElementList::PrepareContinuum(Float64 z)
     Int32 k = 0;
     Float64 dl = 0.1;
     Float64 Coeffk = 1.0/dl/(1+z);
-    Float64 coeffUnder1216 = 1.0;
     // For each sample in the target spectrum
     while( j<targetSpectralAxis.GetSamplesCount() && Xtgt[j] <= currentRange.GetEnd() )
     {
         k = (int)(Xtgt[j]*Coeffk+0.5);
 
-        //* Optionally Apply some extinction
-        if(m_fitContinuum_igm)
-        {
-            coeffUnder1216 = 1.0;
-            if(k*0.1 < 1216.0)
-            {
-                if(z>=4.0 && z<5.0)
-                {
-                    coeffUnder1216 = 0.5;
-                }else if(z>=5.0 && z<6.0)
-                {
-                    coeffUnder1216 = 1.0/3.5;
-                }else if(z>=6.0){
-                    coeffUnder1216 = 1.0/1e16;
-                }
-            }
-        }
-        //*/
-
-        Yrebin[j] = coeffUnder1216*m_precomputedFineGridContinuumFlux[k];
+        Yrebin[j] = m_precomputedFineGridContinuumFlux[k];
         j++;
 
     }
@@ -1868,7 +1848,7 @@ void print_state (size_t iter, gsl_multifit_fdfsolver * s)
 Int32 CLineModelElementList::fitAmplitudesLmfit(std::vector<Int32> filteredEltsIdx, const CSpectrumFluxAxis& fluxAxis, std::vector<Float64>& ampsfitted, Int32 lineType)
 {
     //http://www.gnu.org/software/gsl/manual/html_node/Example-programs-for-Nonlinear-Least_002dSquares-Fitting.html
-    Bool verbose = false;
+    Bool verbose = true;
 
 
 

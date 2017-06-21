@@ -7,6 +7,7 @@
 #include <RedshiftLibrary/spectrum/tools.h>
 #include <RedshiftLibrary/common/mask.h>
 #include <RedshiftLibrary/operator/chisquare2.h>
+#include <RedshiftLibrary/operator/chisquareloglambda.h>
 #include <RedshiftLibrary/operator/chisquareresult.h>
 #include <RedshiftLibrary/operator/spectraFluxResult.h>
 #include <RedshiftLibrary/extremum/extremum.h>
@@ -238,11 +239,19 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
         std::vector<std::shared_ptr<CChisquareResult>> chisquareResultsAllTpl;
         std::vector<std::string> chisquareResultsTplName;
 
+        /*
+        COperatorChiSquareLogLambda* chiSquareOperator;
+        chiSquareOperator = new COperatorChiSquareLogLambda(opt_calibrationPath); //todo, delete this operator when done...
+        //*/
+
+        //*
         COperatorChiSquare2* chiSquareOperator;
         chiSquareOperator = new COperatorChiSquare2(opt_calibrationPath); //todo, delete this operator when done...
+        //*/
+
         std::string opt_interp = "precomputedfinegrid"; // "lin"; //
         Int32 opt_dustFit = 1;
-        Int32 opt_extinction = 1;
+        Int32 opt_extinction = 0;
         Log.LogInfo( "linemodel: precomputing-fitContinuum_dustfit = %d", opt_dustFit );
         Log.LogInfo( "linemodel: precomputing-fitContinuum_igm = %d", opt_extinction );
 
