@@ -288,6 +288,7 @@ Bool CProcessFlow::Chisquare( CProcessFlowContext& ctx, const std::string& Categ
     Log.LogInfo( "Process Chisquare using component: %s", opt_spcComponent.c_str());
     Log.LogInfo( "Process Chisquare using extinction: %s", opt_extinction.c_str());
     Log.LogInfo( "Process Chisquare using dust-fit: %s", opt_dustFit.c_str());
+    Log.LogInfo( "..." );
 
     // prepare the unused masks
     std::vector<CMask> maskList;
@@ -361,6 +362,7 @@ Bool CProcessFlow::ChisquareLog( CProcessFlowContext& ctx, const std::string& Ca
     Log.LogInfo( "Process Chisquare using component: %s", opt_spcComponent.c_str());
     Log.LogInfo( "Process Chisquare using extinction: %s", opt_extinction.c_str());
     Log.LogInfo( "Process Chisquare using dust-fit: %s", opt_dustFit.c_str());
+    Log.LogInfo( "..." );
 
     // prepare the unused masks
     std::vector<CMask> maskList;

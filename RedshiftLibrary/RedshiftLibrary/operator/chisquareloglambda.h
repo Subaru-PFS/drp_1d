@@ -52,6 +52,8 @@ private:
     CTemplate       m_templateRebinedLog;
     CMask           m_mskRebinedLog;
     CSpectrum       m_spectrumRebinedLog;
+    CSpectrumFluxAxis m_errorRebinedLog;
+
     //buffers for fft computation
     Int32 m_nPaddedSamples;
     fftw_complex *inSpc;

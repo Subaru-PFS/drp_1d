@@ -81,7 +81,7 @@ Bool CSpectrumFluxCorrectionCalzetti::Init( std::string calibrationPath )
         for(Int32 kDust=0; kDust<m_nDustCoeff; kDust++)
         {
 
-            Float64 coeffEBMV = m_dustCoeffStart + m_dustCoeffStep*(Float64)kDust;
+            Float64 coeffEBMV = GetEbmvValue(kDust);
             for(Int32 kCalzetti=0; kCalzetti<m_NdataCalzetti; kCalzetti++)
             {
                 m_dataDustCoeff[Int32(kDust*m_NdataCalzetti+kCalzetti)] = pow(10.0, -0.4*m_dataCalzetti[kCalzetti]*coeffEBMV);
@@ -94,6 +94,11 @@ Bool CSpectrumFluxCorrectionCalzetti::Init( std::string calibrationPath )
     return true;
 }
 
+Float64 CSpectrumFluxCorrectionCalzetti::GetEbmvValue(Int32 k)
+{
+    Float64 coeffEBMV = m_dustCoeffStart + m_dustCoeffStep*(Float64)k;
+    return coeffEBMV;
+}
 
 Float64 CSpectrumFluxCorrectionCalzetti::getDustCoeff( Int32 kDust, Float64 restLambda )
 {
@@ -117,7 +122,7 @@ const Float64*  CSpectrumFluxCorrectionCalzetti::getDustCoeff(Float64 dustCoeff,
     Int32 idxDust = -1;
     for(Int32 kDust=0; kDust<m_nDustCoeff; kDust++)
     {
-        Float64 coeffEBMV = m_dustCoeffStart + m_dustCoeffStep*(Float64)kDust;
+        Float64 coeffEBMV =  GetEbmvValue(kDust);
         if(dustCoeff==coeffEBMV)
         {
             idxDust = kDust;

@@ -276,21 +276,6 @@ Bool CSpectrumFluxAxis::Rebin2( const TFloat64Range& range, const CSpectrumFluxA
         j++;
     }
 
-    /*//debug:
-    // save rebinedtpl
-    if(sourcez==0.5){
-        FILE* f = fopen( "template_rebined.txt", "w+" );
-        for(Int32 m=0; m<targetSpectralAxis.GetSamplesCount(); m++){
-            if( Yrebin[m] < 0.0001 ){
-                fprintf( f, "%e %e\n", Xrebin[m], Yrebin[m]);
-            }else{
-                fprintf( f, "%f %f\n", Xrebin[m], Yrebin[m]);
-            }
-        }
-        fclose( f );
-    }
-    //*/
-
     return true;
 }
 

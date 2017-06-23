@@ -30,6 +30,7 @@ public:
     Float64 GetLambdaMax();
     Int32 GetNPrecomputedDustCoeffs();
 
+    Float64 GetEbmvValue(Int32 k);
 
     Float64 getDustCoeff(Int32 kDust, Float64 restLambda );
 

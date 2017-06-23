@@ -172,6 +172,7 @@ Void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& t
     //CSpectrumFluxAxis::Rebin( intersectedLambdaRange, tplFluxAxis, shiftedTplSpectralAxis, spcSpectralAxis, itplTplFluxAxis, itplTplSpectralAxis, itplMask );
     CSpectrumFluxAxis::Rebin2( intersectedLambdaRange, tplFluxAxis, pfgTplBuffer, redshift, m_shiftedTplSpectralAxis_bf, spcSpectralAxis, itplTplFluxAxis, itplTplSpectralAxis, itplMask, opt_interp );
 
+
     /*//overlapRate, Method 1
     CMask mask;
     spcSpectralAxis.GetMask( lambdaRange, mask );
@@ -207,6 +208,19 @@ Void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& t
     if(spcSpectralAxis.IsInLinearScale()){
         currentRange = intersectedLambdaRange;
     }
+
+
+
+    /*//debug:
+    // save rebinedtpl
+    if(redshift==0.0){
+        FILE* f = fopen( "chisquare2_template_rebined.txt", "w+" );
+        for(Int32 m=0; m<itplTplSpectralAxis.GetSamplesCount(); m++){
+            fprintf( f, "%e %e\n", Xtpl[m], Ytpl[m]);
+        }
+        fclose( f );
+    }
+    //*/
 
 
     //save Tpl Flux without dust or any other weighting
@@ -486,6 +500,15 @@ Void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& t
             }
 
 
+            //*/
+
+            /*
+            if(redshift==0.0)
+            {
+                Log.LogInfo( "chisquare2 operator: for z=%f dtd = %e", redshift, sumS);
+                Log.LogInfo( "chisquare2 operator: for z=%f dtm = %e", redshift, sumCross);
+                Log.LogInfo( "chisquare2 operator: for z=%f mtm = %e", redshift, sumT);
+            }
             //*/
 
             /*

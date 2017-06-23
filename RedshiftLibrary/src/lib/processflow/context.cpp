@@ -175,6 +175,7 @@ bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath,
             spcFluxAxis[k] = m_Spectrum->GetFluxAxis()[k];
         }
     }
+    Log.LogInfo("===============================================");
 
     //process continuum relevance
     CContinuumIndexes continuumIndexes;
