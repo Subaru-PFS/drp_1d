@@ -152,18 +152,15 @@ Int32 COperatorChiSquareLogLambda::EstimateXtY(const Float64* X, const Float64* 
     {
         for(Int32 k=0; k<nPadBeforeSpc; k++)
         {
-            inSpc[k][0] = 0.0;
-            inSpc[k][1] = 0.0;
+            inSpc[k] = 0.0;
         }
         for(Int32 k=nPadBeforeSpc; k<nPadBeforeSpc+nSpc; k++)
         {
-            inSpc[k][0] = X[nSpc-(k-nPadBeforeSpc)];//X[k-nPadBeforeSpc];
-            inSpc[k][1] = 0.0;
+            inSpc[k] = X[nSpc-(k-nPadBeforeSpc)];//X[k-nPadBeforeSpc];
         }
         for(Int32 k=nPadBeforeSpc+nSpc; k<nPadded; k++)
         {
-            inSpc[k][0] = 0.0;
-            inSpc[k][1] = 0.0;
+            inSpc[k] = 0.0;
         }
         if(verbose)
         {
@@ -171,7 +168,7 @@ Int32 COperatorChiSquareLogLambda::EstimateXtY(const Float64* X, const Float64* 
             FILE* f_fftinput = fopen( "loglbda_fitallz_xfftInput_dbg.txt", "w+" );
             for( Int32 t=0;t<nPadded;t++)
             {
-                fprintf( f_fftinput, "%f\t%e\n", (Float64)t, inSpc[t][0]);
+                fprintf( f_fftinput, "%f\t%e\n", (Float64)t, inSpc[t]);
             }
             fclose( f_fftinput );
         }
@@ -260,24 +257,20 @@ Int32 COperatorChiSquareLogLambda::EstimateXtY(const Float64* X, const Float64* 
     //    }
     for(Int32 k=0; k<nPadBeforeTpl; k++)
     {
-        inTpl_padded[k][0] = 0.0;
-        inTpl_padded[k][1] = 0.0;
+        inTpl_padded[k] = 0.0;
     }
     for(Int32 k=nPadBeforeTpl; k<nPadBeforeTpl+nTpl; k++)
     {
-        inTpl_padded[k][0] = Y[k-nPadBeforeTpl];
-        inTpl_padded[k][1] = 0.0;
+        inTpl_padded[k] = Y[k-nPadBeforeTpl];
     }
     for(Int32 k=nPadBeforeTpl+nTpl; k<nPadded; k++)
     {
-        inTpl_padded[k][0] = 0.0;
-        inTpl_padded[k][1] = 0.0;
+        inTpl_padded[k] = 0.0;
     }
 
     for(Int32 k=0; k<nPadded; k++)
     {
-        inTpl[k][0] = inTpl_padded[k][0];//inTpl_padded[nPadded-1-k][0];//
-        inTpl[k][1] = 0.0;
+        inTpl[k] = inTpl_padded[k];//inTpl_padded[nPadded-1-k][0];//
     }
 
     if(verbose)
@@ -286,7 +279,7 @@ Int32 COperatorChiSquareLogLambda::EstimateXtY(const Float64* X, const Float64* 
         FILE* f_fftinput = fopen( "loglbda_fitallz_yfftInput_dbg.txt", "w+" );
         for( Int32 t=0;t<nPadded;t++)
         {
-            fprintf( f_fftinput, "%f\t%e\n", (Float64)t, inTpl[t][0]);
+            fprintf( f_fftinput, "%f\t%e\n", (Float64)t, inTpl[t]);
         }
         fclose( f_fftinput );
     }
@@ -339,7 +332,7 @@ Int32 COperatorChiSquareLogLambda::EstimateXtY(const Float64* X, const Float64* 
             IndexCyclic-=nPadded;
         }
 
-        XtY[k] = inCombined[IndexCyclic][0]/nPadded;
+        XtY[k] = inCombined[IndexCyclic]/nPadded;
     }
 
     if(verbose)
@@ -359,9 +352,9 @@ Int32 COperatorChiSquareLogLambda::EstimateXtY(const Float64* X, const Float64* 
 
 Int32 COperatorChiSquareLogLambda::InitFFT(Int32 nPadded)
 {
-    inSpc = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * nPadded);
+    inSpc = (Float64*) fftw_malloc(sizeof(Float64) * nPadded);
     outSpc = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * nPadded);
-    pSpc = fftw_plan_dft_1d(nPadded, inSpc, outSpc, FFTW_FORWARD, FFTW_ESTIMATE);
+    pSpc = fftw_plan_dft_r2c_1d(nPadded, inSpc, outSpc, FFTW_ESTIMATE);
     if(inSpc==0)
     {
         Log.LogError("ChisquareLog, InitFFT: Unable to allocate inSpc");
@@ -373,10 +366,10 @@ Int32 COperatorChiSquareLogLambda::InitFFT(Int32 nPadded)
         return -1;
     }
 
-    inTpl_padded = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * nPadded);
-    inTpl = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * nPadded);
+    inTpl_padded = (Float64*) fftw_malloc(sizeof(Float64) * nPadded);
+    inTpl = (Float64*) fftw_malloc(sizeof(Float64) * nPadded);
     outTpl = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * nPadded);
-    pTpl = fftw_plan_dft_1d(nPadded, inTpl, outTpl, FFTW_FORWARD, FFTW_ESTIMATE);
+    pTpl = fftw_plan_dft_r2c_1d(nPadded, inTpl, outTpl, FFTW_ESTIMATE);
     if(inTpl_padded==0)
     {
         Log.LogError("ChisquareLog, InitFFT: Unable to allocate inTpl_padded");
@@ -394,8 +387,8 @@ Int32 COperatorChiSquareLogLambda::InitFFT(Int32 nPadded)
     }
 
     outCombined = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * nPadded);
-    inCombined = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * nPadded);
-    pBackward= fftw_plan_dft_1d(nPadded, outCombined, inCombined, FFTW_BACKWARD, FFTW_ESTIMATE);
+    inCombined = (Float64*) fftw_malloc(sizeof(Float64) * nPadded);
+    pBackward= fftw_plan_dft_c2r_1d(nPadded, outCombined, inCombined, FFTW_ESTIMATE);
     if(outCombined==0)
     {
         Log.LogError("ChisquareLog, InitFFT: Unable to allocate outCombined");
@@ -1327,7 +1320,7 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(const CSpe
     }
 
     //estimate CstLog for PDF estimation
-    result->CstLog = 0.0;//Todo: check how to estimate that value for loglambda// EstimateLikelihoodCstLog(spectrum, lambdaRange);
+    result->CstLog = EstimateLikelihoodCstLog(m_spectrumRebinedLog, lambdaRange); //0.0;//Todo: check how to estimate that value for loglambda//
 
     // extrema
     Int32 extremumCount = 10;
@@ -1388,6 +1381,33 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(const CSpe
 
     return result;
 
+}
+
+
+/**
+ * \brief this function estimates the likelihood_cstLog term withing the wavelength range
+ **/
+Float64 COperatorChiSquareLogLambda::EstimateLikelihoodCstLog(const CSpectrum& spectrum, const TFloat64Range& lambdaRange)
+{
+    const CSpectrumSpectralAxis& spcSpectralAxis = spectrum.GetSpectralAxis();
+    const Float64* error = spectrum.GetFluxAxis().GetError();
+
+    Int32 numDevs = 0;
+    Float64 cstLog = 0.0;
+    Float64 sumLogNoise = 0.0;
+
+    Float64 imin = spcSpectralAxis.GetIndexAtWaveLength(lambdaRange.GetBegin());
+    Float64 imax = spcSpectralAxis.GetIndexAtWaveLength(lambdaRange.GetEnd());
+    for( UInt32 j=imin; j<imax; j++ )
+    {
+        numDevs++;
+        sumLogNoise += log( error[j] );
+    }
+    //Log.LogDebug( "CLineModelElementList::EstimateMTransposeM val = %f", mtm );
+
+    cstLog = -numDevs*0.5*log(2*M_PI) - sumLogNoise;
+
+    return cstLog;
 }
 
 const Float64*  COperatorChiSquareLogLambda::getDustCoeff(Float64 dustCoeff, Float64 maxLambda)

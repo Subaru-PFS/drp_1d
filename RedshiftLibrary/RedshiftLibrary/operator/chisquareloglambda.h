@@ -57,15 +57,15 @@ private:
 
     //buffers for fft computation
     Int32 m_nPaddedSamples;
-    fftw_complex *inSpc;
+    Float64 *inSpc;
     fftw_complex *outSpc;
     fftw_plan pSpc;
-    fftw_complex *inTpl;
-    fftw_complex *inTpl_padded;
+    Float64 *inTpl;
+    Float64 *inTpl_padded;
     fftw_complex *outTpl;
     fftw_plan pTpl;
     fftw_complex* outCombined;
-    fftw_complex* inCombined;
+    Float64* inCombined;
     fftw_plan pBackward ;
     fftw_complex* precomputedFFT_spcFluxOverErr2;
     fftw_complex* precomputedFFT_spcOneOverErr2;
@@ -76,6 +76,9 @@ private:
 
     //IGM meiksin
     CSpectrumFluxCorrectionMeiksin* m_igmCorrectionMeiksin;
+
+    //Likelihood
+    Float64 EstimateLikelihoodCstLog(const CSpectrum& spectrum, const TFloat64Range& lambdaRange);
 };
 
 
