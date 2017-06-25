@@ -44,6 +44,16 @@ COperatorChiSquareLogLambda::COperatorChiSquareLogLambda( std::string calibratio
     m_igmCorrectionMeiksin = new CSpectrumFluxCorrectionMeiksin();
     m_igmCorrectionMeiksin->Init(calibrationPath);
 
+    inSpc=0;
+    outSpc=0;
+    inTpl=0;
+    inTpl_padded=0;
+    outTpl=0;
+    outCombined=0;
+    inCombined=0;
+    precomputedFFT_spcFluxOverErr2=0;
+    precomputedFFT_spcOneOverErr2=0;
+
 }
 
 COperatorChiSquareLogLambda::~COperatorChiSquareLogLambda()
@@ -55,6 +65,8 @@ COperatorChiSquareLogLambda::~COperatorChiSquareLogLambda()
     fftw_free(inTpl_padded);
     fftw_free(inTpl); fftw_free(outTpl);
     fftw_destroy_plan(pBackward);
+    freeFFTPrecomputedBuffers();
+
 }
 
 
@@ -99,7 +111,7 @@ Int32 COperatorChiSquareLogLambda::EstimateMtMFast(const Float64 *X, const Float
     return 0;
 }
 
-Int32 COperatorChiSquareLogLambda::EstimateXtY(const Float64* X, const Float64* Y, UInt32 nx, UInt32 ny, UInt32 nshifts, std::vector<Float64>& XtY)
+Int32 COperatorChiSquareLogLambda::EstimateXtY(const Float64* X, const Float64* Y, UInt32 nx, UInt32 ny, UInt32 nshifts, std::vector<Float64>& XtY, Int32 precomputedFFT)
 {
     bool verbose = false;
     //Processing the FFT
@@ -126,47 +138,111 @@ Int32 COperatorChiSquareLogLambda::EstimateXtY(const Float64* X, const Float64* 
 //        inSpc[k][1] = 0.0;
 //    }
 
-    for(Int32 k=0; k<nPadBeforeSpc; k++)
+    bool computeSpcFFT = true;
+    if(precomputedFFT==0 && precomputedFFT_spcFluxOverErr2!=0)
     {
-        inSpc[k][0] = 0.0;
-        inSpc[k][1] = 0.0;
+        computeSpcFFT = false;
     }
-    for(Int32 k=nPadBeforeSpc; k<nPadBeforeSpc+nSpc; k++)
+    if(precomputedFFT==1 && precomputedFFT_spcOneOverErr2!=0)
     {
-        inSpc[k][0] = X[nSpc-(k-nPadBeforeSpc)];//X[k-nPadBeforeSpc];
-        inSpc[k][1] = 0.0;
-    }
-    for(Int32 k=nPadBeforeSpc+nSpc; k<nPadded; k++)
-    {
-        inSpc[k][0] = 0.0;
-        inSpc[k][1] = 0.0;
-    }
-    if(verbose)
-    {
-        // save spc-input data
-        FILE* f_fftinput = fopen( "loglbda_fitallz_xfftInput_dbg.txt", "w+" );
-        for( Int32 t=0;t<nPadded;t++)
-        {
-            fprintf( f_fftinput, "%f\t%e\n", (Float64)t, inSpc[t][0]);
-        }
-        fclose( f_fftinput );
+        computeSpcFFT = false;
     }
 
-    fftw_execute(pSpc);
-    if(verbose)
+    if(computeSpcFFT)
     {
-        Log.LogInfo("ChisquareLog, FitAllz: spc-fft done");
-    }
-    if(verbose)
-    {
-        // save spc-fft data
-        FILE* f_fftoutput = fopen( "loglbda_fitallz_xfftOutput_dbg.txt", "w+" );
-        for( Int32 t=0;t<nPadded;t++)
+        for(Int32 k=0; k<nPadBeforeSpc; k++)
         {
-            fprintf( f_fftoutput, "%f\t%e\n", (Float64)t, outSpc[t][0]*outSpc[t][0]+outSpc[t][1]*outSpc[t][1]);
+            inSpc[k][0] = 0.0;
+            inSpc[k][1] = 0.0;
         }
-        fclose( f_fftoutput );
+        for(Int32 k=nPadBeforeSpc; k<nPadBeforeSpc+nSpc; k++)
+        {
+            inSpc[k][0] = X[nSpc-(k-nPadBeforeSpc)];//X[k-nPadBeforeSpc];
+            inSpc[k][1] = 0.0;
+        }
+        for(Int32 k=nPadBeforeSpc+nSpc; k<nPadded; k++)
+        {
+            inSpc[k][0] = 0.0;
+            inSpc[k][1] = 0.0;
+        }
+        if(verbose)
+        {
+            // save spc-input data
+            FILE* f_fftinput = fopen( "loglbda_fitallz_xfftInput_dbg.txt", "w+" );
+            for( Int32 t=0;t<nPadded;t++)
+            {
+                fprintf( f_fftinput, "%f\t%e\n", (Float64)t, inSpc[t][0]);
+            }
+            fclose( f_fftinput );
+        }
+
+        fftw_execute(pSpc);
+        if(verbose)
+        {
+            Log.LogInfo("ChisquareLog, FitAllz: spc-fft done");
+        }
+        if(verbose)
+        {
+            // save spc-fft data
+            FILE* f_fftoutput = fopen( "loglbda_fitallz_xfftOutput_dbg.txt", "w+" );
+            for( Int32 t=0;t<nPadded;t++)
+            {
+                fprintf( f_fftoutput, "%f\t%e\n", (Float64)t, outSpc[t][0]*outSpc[t][0]+outSpc[t][1]*outSpc[t][1]);
+            }
+            fclose( f_fftoutput );
+        }
+
+        //save computed FFT into precomputed buffer
+        if(precomputedFFT==0)
+        {
+            precomputedFFT_spcFluxOverErr2 = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * nPadded);
+            if(precomputedFFT_spcFluxOverErr2==0)
+            {
+                Log.LogError("ChisquareLog, InitFFT: Unable to allocate precomputedFFT_spcFluxOverErr2");
+                return -1;
+            }
+            for(Int32 k=0; k<nPadded; k++)
+            {
+                precomputedFFT_spcFluxOverErr2[k][0] = outSpc[k][0];
+                precomputedFFT_spcFluxOverErr2[k][1] = outSpc[k][1];
+            }
+        }
+        if(precomputedFFT==1)
+        {
+
+            precomputedFFT_spcOneOverErr2 = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * nPadded);
+            if(precomputedFFT_spcOneOverErr2==0)
+            {
+                Log.LogError("ChisquareLog, InitFFT: Unable to allocate precomputedFFT_spcOneOverErr2");
+                return -1;
+            }for(Int32 k=0; k<nPadded; k++)
+            {
+                precomputedFFT_spcOneOverErr2[k][0] = outSpc[k][0];
+                precomputedFFT_spcOneOverErr2[k][1] = outSpc[k][1];
+            }
+        }
+
+    }else{
+        if(precomputedFFT==0)
+        {
+            for(Int32 k=0; k<nPadded; k++)
+            {
+                outSpc[k][0] = precomputedFFT_spcFluxOverErr2[k][0];
+                outSpc[k][1] = precomputedFFT_spcFluxOverErr2[k][1];
+            }
+        }
+        if(precomputedFFT==1)
+        {
+            for(Int32 k=0; k<nPadded; k++)
+            {
+                outSpc[k][0] = precomputedFFT_spcOneOverErr2[k][0];
+                outSpc[k][1] = precomputedFFT_spcOneOverErr2[k][1];
+            }
+        }
+
+
     }
+
 
     if(verbose)
     {
@@ -331,8 +407,28 @@ Int32 COperatorChiSquareLogLambda::InitFFT(Int32 nPadded)
         return -1;
     }
 
+    //reinit fft precomputed buffers
+    freeFFTPrecomputedBuffers();
+
+
     return 0;
 }
+
+void COperatorChiSquareLogLambda::freeFFTPrecomputedBuffers()
+{
+    if( !precomputedFFT_spcFluxOverErr2==0 )
+    {
+        fftw_free(precomputedFFT_spcFluxOverErr2);
+        precomputedFFT_spcFluxOverErr2=0;
+    }
+    if( !precomputedFFT_spcOneOverErr2==0 )
+    {
+        fftw_free(precomputedFFT_spcOneOverErr2);
+        precomputedFFT_spcOneOverErr2=0;
+    }
+
+}
+
 
 /**
  * @brief COperatorChiSquareLogLambda::FitAllz
@@ -392,13 +488,13 @@ Int32 COperatorChiSquareLogLambda::FitAllz(const TFloat64Range& lambdaRange,
     m_nPaddedSamples = (Int32)tplRebinedSpectralAxis.GetSamplesCount()*2.0;
     /*
     //next power of two
-    Float64 maxnsamples = (Int32)std::max((Float64)(ny), (Float64)(nx));;
+    Float64 maxnsamples = (Int32)(tplRebinedSpectralAxis.GetSamplesCount()*2.0);
     int power = 1;
     while(std::pow(2, power) < maxnsamples)
     {
         power*=2;
     }
-    Int32 nPadded = std::pow(2, power);
+    Int32 m_nPaddedSamples = std::pow(2, power);
     //*/
     InitFFT(m_nPaddedSamples);
 
@@ -460,6 +556,7 @@ Int32 COperatorChiSquareLogLambda::FitAllz(const TFloat64Range& lambdaRange,
         nIGM=1;
         enableIGM = false;
     }
+
     for(Int32 kIGM=0; kIGM<nIGM; kIGM++)
     {
 //        if(enableIGM)
@@ -511,7 +608,13 @@ Int32 COperatorChiSquareLogLambda::FitAllz(const TFloat64Range& lambdaRange,
 
             // Estimate DtM
             std::vector<Float64> dtm_vec;
-            EstimateXtY(spcRebinedFluxOverErr2, tplRebinedFlux, spectrumRebinedFluxAxis.GetSamplesCount(), tplRebinedFluxAxis.GetSamplesCount(), nshifts, dtm_vec);
+            EstimateXtY( spcRebinedFluxOverErr2,
+                         tplRebinedFlux,
+                         spectrumRebinedFluxAxis.GetSamplesCount(),
+                         tplRebinedFluxAxis.GetSamplesCount(),
+                         nshifts,
+                         dtm_vec,
+                         0);
             //EstimateXtYSlow(spcRebinedFluxOverErr2, tplRebinedFlux, spectrumRebinedFluxAxis.GetSamplesCount(), nshifts, dtm_vec);
 
             if(verboseExportFitAllz)
@@ -527,7 +630,13 @@ Int32 COperatorChiSquareLogLambda::FitAllz(const TFloat64Range& lambdaRange,
 
             // Estimate MtM
             std::vector<Float64> mtm_vec;
-            EstimateXtY(oneSpcRebinedFluxOverErr2, tpl2RebinedFlux, spectrumRebinedFluxAxis.GetSamplesCount(),tplRebinedFluxAxis.GetSamplesCount(), nshifts, mtm_vec);
+            EstimateXtY( oneSpcRebinedFluxOverErr2,
+                         tpl2RebinedFlux,
+                         spectrumRebinedFluxAxis.GetSamplesCount(),
+                         tplRebinedFluxAxis.GetSamplesCount(),
+                         nshifts,
+                         mtm_vec,
+                         1);
             //EstimateXtYSlow(oneSpcRebinedFluxOverErr2, tpl2RebinedFlux, spectrumRebinedFluxAxis.GetSamplesCount(), nshifts, mtm_vec);
             //EstimateMtMFast(oneSpcRebinedFluxOverErr2, tpl2RebinedFlux, spectrumRebinedFluxAxis.GetSamplesCount(), nshifts, mtm_vec);
 

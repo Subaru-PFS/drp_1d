@@ -40,13 +40,14 @@ private:
                   std::vector<Int32> igmMeiksinCoeffs=std::vector<Int32>(1, 0),
                   std::vector<Int32> ismEbmvCoeffs=std::vector<Int32>(1, 0),
                   CMask spcMaskAdditional=CMask());
-    Int32 EstimateXtY(const Float64 *X, const Float64 *Y, UInt32 nx, UInt32 ny, UInt32 nshifts, std::vector<Float64>& XtY);
+    Int32 EstimateXtY(const Float64 *X, const Float64 *Y, UInt32 nx, UInt32 ny, UInt32 nshifts, std::vector<Float64>& XtY, Int32 precomputedFFT=-1);
     Int32 InitFFT(Int32 n);
     Int32 EstimateXtYSlow(const Float64* X, const Float64* Y, UInt32 nX, UInt32 nShifts, std::vector<Float64>& XtY);
     Int32 EstimateMtMFast(const Float64* X, const Float64* Y, UInt32 nX, UInt32 nShifts, std::vector<Float64>& XtY);
 
     Int32 InterpolateResult(const Float64* in, const Float64* inGrid, const Float64* tgtGrid, Int32 n, Int32 tgtn, std::vector<Float64>& out, Float64 defaultValue);
 
+    void freeFFTPrecomputedBuffers();
 
     //log grid template
     CTemplate       m_templateRebinedLog;
@@ -66,6 +67,8 @@ private:
     fftw_complex* outCombined;
     fftw_complex* inCombined;
     fftw_plan pBackward ;
+    fftw_complex* precomputedFFT_spcFluxOverErr2;
+    fftw_complex* precomputedFFT_spcOneOverErr2;
 
 
     //ISM Calzetti
