@@ -466,6 +466,7 @@ Int32 COperatorChiSquareLogLambda::FitAllz(const TFloat64Range& lambdaRange,
         }
     }
     zindexesFullLstSquare.erase( std::unique( zindexesFullLstSquare.begin(), zindexesFullLstSquare.end() ), zindexesFullLstSquare.end() );
+    Float64 redshiftValueMeiksin = result->Redshifts[0];
     if(verboseLogFitAllz)
     {
         Log.LogInfo("ChisquareLog, FitAllz: indexes for full LstSquare calculation, count = %d", zindexesFullLstSquare.size());
@@ -478,6 +479,7 @@ Int32 COperatorChiSquareLogLambda::FitAllz(const TFloat64Range& lambdaRange,
                 zmin = result->Redshifts[zindexesFullLstSquare[k]+1];
             }
         }
+        Log.LogInfo("ChisquareLog, FitAllz: redshiftValueMeiksin = %f", redshiftValueMeiksin);
         Log.LogInfo("ChisquareLog, FitAllz: spc[0] = %f", spectrumRebinedSpectralAxis[0]);
         Log.LogInfo("ChisquareLog, FitAllz: spc[max] = %f", spectrumRebinedSpectralAxis[spectrumRebinedSpectralAxis.GetSamplesCount()-1]);
         Log.LogInfo("ChisquareLog, FitAllz: tpl[0]*zmax = %f", tplRebinedSpectralAxis[0]*(1.0+result->Redshifts[result->Redshifts.size()-1]));
@@ -544,10 +546,12 @@ Int32 COperatorChiSquareLogLambda::FitAllz(const TFloat64Range& lambdaRange,
     }
 
     Float64* tplRebinedFluxRaw = tplRebinedFluxAxis.GetSamples();
+    Float64* tplRebinedFluxIgm = new Float64 [(int)tplRebinedFluxAxis.GetSamplesCount()]();
     Float64* tplRebinedFlux = new Float64 [(int)tplRebinedFluxAxis.GetSamplesCount()]();
     Float64* tpl2RebinedFlux = new Float64 [(int)tplRebinedFluxAxis.GetSamplesCount()]();
     for(Int32 j=0; j<tplRebinedFluxAxis.GetSamplesCount(); j++)
     {
+        tplRebinedFluxIgm[j] = tplRebinedFluxRaw[j];
         tplRebinedFlux[j] = tplRebinedFluxRaw[j];
         tpl2RebinedFlux[j] = tplRebinedFlux[j]*tplRebinedFlux[j];
     }
@@ -563,10 +567,53 @@ Int32 COperatorChiSquareLogLambda::FitAllz(const TFloat64Range& lambdaRange,
 
     for(Int32 kIGM=0; kIGM<nIGM; kIGM++)
     {
-//        if(enableIGM)
-//        {
-//            Int32 kmeiksin = igmMeiksinCoeffs[kIGM];
-//        }
+
+        if(verboseLogFitAllz && enableIGM)
+        {
+            Log.LogInfo("ChisquareLog, FitAllz: IGM index=%d", kIGM);
+        }
+
+        if(enableIGM)
+        {
+            Int32 redshiftIdx = m_igmCorrectionMeiksin->GetRedshiftIndex(redshiftValueMeiksin); //index for IGM Meiksin redshift range
+            Int32 meiksinIdx = igmMeiksinCoeffs[kIGM];
+
+            for(Int32 j=0; j<tplRebinedFluxAxis.GetSamplesCount(); j++)
+            {
+                Float64 coeffIGM = 1.0;
+                Float64 restLambda = tplRebinedSpectralAxis[j];
+                if(restLambda <= m_igmCorrectionMeiksin->GetLambdaMax())
+                {
+                    Int32 kLbdaMeiksin = 0;
+                    if(restLambda >= m_igmCorrectionMeiksin->GetLambdaMin())
+                    {
+                        kLbdaMeiksin = Int32(restLambda-m_igmCorrectionMeiksin->GetLambdaMin());
+                    }else //if lambda lower than min meiksin value, use lower meiksin value
+                    {
+                        kLbdaMeiksin = 0;
+                    }
+
+                    coeffIGM = m_igmCorrectionMeiksin->m_corrections[redshiftIdx].fluxcorr[meiksinIdx][kLbdaMeiksin];
+                    //if(verboseLogFitAllz)
+                    //{
+                    //    Log.LogInfo("ChisquareLog, FitAllz: coeffIGM=%f", coeffIGM);
+                    //}
+                }
+
+                tplRebinedFluxIgm[j] = tplRebinedFluxRaw[j]*coeffIGM;
+                tplRebinedFlux[j] = tplRebinedFluxIgm[j];
+                tpl2RebinedFlux[j] = tplRebinedFlux[j]*tplRebinedFlux[j];
+            }
+
+        }else{
+            for(Int32 j=0; j<tplRebinedFluxAxis.GetSamplesCount(); j++)
+            {
+                tplRebinedFluxIgm[j] = tplRebinedFluxRaw[j];
+                tplRebinedFlux[j] = tplRebinedFluxIgm[j];
+                tpl2RebinedFlux[j] = tplRebinedFlux[j]*tplRebinedFlux[j];
+            }
+
+        }
 
         bool enableISM = true;
         UInt32 nISM = ismEbmvCoeffs.size();
@@ -577,10 +624,6 @@ Int32 COperatorChiSquareLogLambda::FitAllz(const TFloat64Range& lambdaRange,
         }
         for(Int32 kISM=0; kISM<nISM; kISM++)
         {
-            if(verboseLogFitAllz && enableIGM)
-            {
-                Log.LogInfo("ChisquareLog, FitAllz: IGM index=%d", kIGM);
-            }
             if(verboseLogFitAllz && enableISM)
             {
                 Log.LogInfo("ChisquareLog, FitAllz: ISM index =%d", kISM);
@@ -604,7 +647,7 @@ Int32 COperatorChiSquareLogLambda::FitAllz(const TFloat64Range& lambdaRange,
                         ebmvDustCoeff = m_ismCorrectionCalzetti->getDustCoeff( kDustCalzetti, restLambda);
                     }
 
-                    tplRebinedFlux[j] = tplRebinedFluxRaw[j]*ebmvDustCoeff;
+                    tplRebinedFlux[j] = tplRebinedFluxIgm[j]*ebmvDustCoeff;
 
                     tpl2RebinedFlux[j] = tplRebinedFlux[j]*tplRebinedFlux[j];
                 }
@@ -700,9 +743,12 @@ Int32 COperatorChiSquareLogLambda::FitAllz(const TFloat64Range& lambdaRange,
                     }else{
                         bestISMCoeff[k] = -1;
                     }
-                    bestIGMIdx[k] = -1;
-
-                    //TODO: finish extracting the best Fit values
+                    if(enableIGM)
+                    {
+                        bestIGMIdx[k] = igmMeiksinCoeffs[kIGM];
+                    }else{
+                        bestIGMIdx[k] = -1;
+                    }
                 }
             }
 
@@ -774,7 +820,6 @@ Int32 COperatorChiSquareLogLambda::FitAllz(const TFloat64Range& lambdaRange,
         result->ChiSquare[iz] = bestChi2[z_vect.size()-1-k];
         //*/
 
-        //TODO: finish extracting the best Fit values
         result->Overlap[iz] = 1.0;
         result->FitAmplitude[iz] = ampreversed_array[k];
         result->FitDtM[iz] = dtmreversed_array[k];
@@ -866,6 +911,8 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(const CSpe
                           const TFloat64Range& lambdaRange, const TFloat64List& redshifts,
                           Float64 overlapThreshold , std::vector<CMask> additional_spcMasks, std::string opt_interp, Int32 opt_extinction, Int32 opt_dustFitting)
 {
+    Log.LogInfo("ChisquareLog, starting computation for template: %s", tpl.GetName().c_str());
+
 
     if( opt_dustFitting && m_ismCorrectionCalzetti->calzettiInitFailed)
     {
