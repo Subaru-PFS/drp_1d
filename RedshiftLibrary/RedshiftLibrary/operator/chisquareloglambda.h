@@ -40,10 +40,24 @@ private:
                   std::vector<Int32> igmMeiksinCoeffs=std::vector<Int32>(1, 0),
                   std::vector<Int32> ismEbmvCoeffs=std::vector<Int32>(1, 0),
                   CMask spcMaskAdditional=CMask());
+
+    Int32 FitRangez(Float64* spectrumRebinedLambda,
+                    Float64* spectrumRebinedFluxRaw,
+                    Float64 *error,
+                    Float64* tplRebinedLambda,
+                    Float64* tplRebinedFluxRaw,
+                    UInt32 nSpc,
+                    UInt32 nTpl,
+                    std::shared_ptr<CChisquareResult> result,
+                    std::vector<Int32> igmMeiksinCoeffs,
+                    std::vector<Int32> ismEbmvCoeffs);
+
     Int32 EstimateXtY(const Float64 *X, const Float64 *Y, UInt32 nx, UInt32 ny, UInt32 nshifts, std::vector<Float64>& XtY, Int32 precomputedFFT=-1);
     Int32 InitFFT(Int32 n);
     Int32 EstimateXtYSlow(const Float64* X, const Float64* Y, UInt32 nX, UInt32 nShifts, std::vector<Float64>& XtY);
     Int32 EstimateMtMFast(const Float64* X, const Float64* Y, UInt32 nX, UInt32 nShifts, std::vector<Float64>& XtY);
+
+    TInt32Range FindTplSpectralIndex(const Float64 *spcLambda, const Float64* tplLambda, UInt32 nSpc, UInt32 nTpl, TFloat64Range redshiftrange, Float64 redshiftStep);
 
     Int32 InterpolateResult(const Float64* in, const Float64* inGrid, const Float64* tgtGrid, Int32 n, Int32 tgtn, std::vector<Float64>& out, Float64 defaultValue);
 
