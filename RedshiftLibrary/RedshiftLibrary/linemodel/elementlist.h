@@ -20,6 +20,8 @@
 
 #include <boost/shared_ptr.hpp>
 
+#include <RedshiftLibrary/linemodel/lmfitcontroller.h>
+
 #include <memory>
 
 
@@ -28,7 +30,7 @@ namespace NSEpic
   static Int32 defaultIdx = -1;
   class CRegulament;
   class CRayCatalogsTplShape;
-  
+
 class CLineModelElementList
 {
 
@@ -61,6 +63,7 @@ public:
 
     void InitFitContinuum();
     Int32 LoadFitContinuum(const TFloat64Range& lambdaRange);
+    Int32 ApplyContinuumOnGrid(const CTemplate& tpl, Float64 fitAmplitude, Float64 fitDustCoeff, Float64 fitDtM, Float64 fitMtM);
     Bool SolveContinuum(const CSpectrum& spectrum,
                         const CTemplate& tpl,
                         const TFloat64Range& lambdaRange,
@@ -81,6 +84,7 @@ public:
     void setFitContinuum_tplAmplitude(Float64 tplAmp);
     Float64 getFitContinuum_tplIsmDustCoeff();
     Float64 getFitContinuum_tplIgmMeiksinIdx();
+    Float64* getPrecomputedGridContinuumFlux();
     void SetContinuumComponent(std::string component);
     Int32 SetFitContinuum_FitStore(CTemplatesFitStore* fitStore);
 
@@ -125,6 +129,7 @@ public:
     void reinitModel();
     void refreshModel();
     void reinitModelUnderElements(std::vector<Int32> filterEltsIdx, Int32 lineIdx=-1 );
+    void refreshModelInitAllGrid();
     void refreshModelUnderElements(std::vector<Int32> filterEltsIdx, Int32 lineIdx=-1 );
     void refreshModelDerivSigmaUnderElements(std::vector<Int32> filterEltsIdx);
 
@@ -148,6 +153,8 @@ public:
     Float64 getModelFluxVal(Int32 idx) const;
     Float64 getModelFluxDerivEltVal(Int32 DerivEltIdx, Int32 idx) const;
     Float64 getModelFluxDerivSigmaVal(Int32 idx) const;
+    Float64 getModelFluxDerivSigmaValEmi(Int32 idx) const;
+    Float64 getModelFluxDerivSigmaValAbs(Int32 idx) const;
     Int32 estimateMeanSqFluxAndGradient(const Float64* varPack,
                                         const Float64 normFactor,
                                         std::vector<Int32> filteredEltsIdx,
@@ -176,7 +183,7 @@ private:
 
     Int32 fitAmplitudesHybrid(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& spcFluxAxisNoContinuum, const CSpectrumFluxAxis &continuumfluxAxis, Float64 redshift);
     void fitAmplitudesSimplex();
-    Int32 fitAmplitudesLmfit(std::vector<Int32> EltsIdx, const CSpectrumFluxAxis &fluxAxis, std::vector<Float64> &ampsfitted, Int32 lineType,const CTemplate& tpl);
+    Int32 fitAmplitudesLmfit( const CSpectrumFluxAxis& fluxAxis, CLmfitController * controller);
     Int32 fitAmplitudesLinSolve(std::vector<Int32> EltsIdx, const CSpectrumSpectralAxis &spectralAxis, const CSpectrumFluxAxis &fluxAxis, const CSpectrumFluxAxis& continuumfluxAxis, std::vector<Float64> &ampsfitted, std::vector<Float64> &errorsfitted);
     Int32 fitAmplitudesLBFGS(std::vector<Int32> filteredEltsIdx, const CSpectrumFluxAxis& fluxAxis, std::vector<Float64>& ampsfitted, Int32 lineType);
 
@@ -203,13 +210,14 @@ private:
     CSpectrumFluxAxis m_SpcFluxAxis;    //observed spectrum
     CSpectrumFluxAxis m_spcFluxAxisNoContinuum; //observed spectrum for line fitting
     Float64* m_ErrorNoContinuum;
-    CSpectrumFluxAxis m_SpcFluxAxisModelDerivSigma;
+    CSpectrumFluxAxis m_SpcFluxAxisModelDerivSigmaEmi;
+    CSpectrumFluxAxis m_SpcFluxAxisModelDerivSigmaAbs;
     Float64 m_dTransposeDNocontinuum; //the cached dtd (maximum chisquare value)
     Float64 m_dTransposeDRaw; //the cached dtd (maximum chisquare value)
     TFloat64Range m_dTransposeDLambdaRange; //the lambdaRange used to computed cached dTransposeD values
     Float64 m_likelihood_cstLog; // constant term for the Likelihood calculation
 
-    Float64*          m_precomputedFineGridContinuumFlux;   //PFG buffer for model continuum
+    Float64*          m_observeGridContinuumFlux;   //the continuum spectre without the amplitude coeff; m_ContinuumFLux = amp * m_observeGridContinuumFlux
     CSpectrumFluxAxis m_ContinuumFluxAxis;  //rebined model continuum
     std::string m_ContinuumComponent;
     std::string m_LineWidthType;

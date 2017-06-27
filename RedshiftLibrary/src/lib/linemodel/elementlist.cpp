@@ -34,6 +34,9 @@
 #include "lmfitfunctions.c"
 #include "../gaussianfit/lbfgsb.c"
 
+#include <numeric>
+
+
 
 
 using namespace NSEpic;
@@ -92,7 +95,8 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
     m_SpcFluxAxis.SetSize( spectrumSampleCount );
     m_SpcContinuumFluxAxis = spectrumContinuum.GetFluxAxis();
     m_ContinuumFluxAxis.SetSize( spectrumSampleCount );
-    m_SpcFluxAxisModelDerivSigma.SetSize( spectrumSampleCount );
+    m_SpcFluxAxisModelDerivSigmaEmi.SetSize( spectrumSampleCount );
+    m_SpcFluxAxisModelDerivSigmaAbs.SetSize( spectrumSampleCount );
     CSpectrumFluxAxis& modelFluxAxis = m_SpectrumModel->GetFluxAxis();
     const CSpectrumFluxAxis& spectrumFluxAxis = spectrum.GetFluxAxis();
     m_spcFluxAxisNoContinuum.SetSize( spectrumSampleCount );
@@ -133,14 +137,14 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
             m_SpcFluxAxis[i] = spectrumFluxAxis[i];
         }
     }
-    m_precomputedFineGridContinuumFlux = NULL;
+    m_observeGridContinuumFlux = NULL;
     m_chiSquareOperator = NULL;
     //*
     //WARNING: HACK, first pass with continuum from spectrum.
     m_fitContinuum_tplfitStore = NULL;
     m_fitContinuum_option = 0; //0=interactive fitting, 1=use precomputed fit store
     //NB: fitContinuum_option: this is the initialization (default value), eventually overriden in SetFitContinuum_FitStore() when a fitStore gets available
-    if(m_ContinuumComponent == "tplfit")
+    if(m_ContinuumComponent == "tplfit" ||opt_fittingmethod == "lmfit" )
     {
         InitFitContinuum();
         m_chiSquareOperator = new COperatorChiSquare2(calibrationPath);
@@ -218,9 +222,9 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
 CLineModelElementList::~CLineModelElementList()
 {
     //Log.LogInfo("Linemodel: Elementlist destructor call");
-    if(m_precomputedFineGridContinuumFlux)
+    if(m_observeGridContinuumFlux)
     {
-        delete[] m_precomputedFineGridContinuumFlux;
+        delete[] m_observeGridContinuumFlux;
     }
     if(m_chiSquareOperator)
     {
@@ -313,11 +317,32 @@ Float64 CLineModelElementList::getModelFluxDerivEltVal(Int32 DerivEltIdx, Int32 
     return -1.0;
 }
 
-
+/*
+Change on this function, m_SpcFluxAxisModelDerivSigma has been remove,
+replace by m_SpcFluxAxisModelDerivSigmaEmi and m_SpcFluxAxisModelDerivSigmaAbs
+*/
 Float64 CLineModelElementList::getModelFluxDerivSigmaVal(Int32 idx) const
 {
-    if(idx<m_SpcFluxAxisModelDerivSigma.GetSamplesCount()){
-        return m_SpcFluxAxisModelDerivSigma[idx];
+    if(idx<m_SpcFluxAxisModelDerivSigmaEmi.GetSamplesCount()){
+        return m_SpcFluxAxisModelDerivSigmaEmi[idx]+ m_SpcFluxAxisModelDerivSigmaAbs[idx];
+    }
+
+    return -1.0;
+}
+
+Float64 CLineModelElementList::getModelFluxDerivSigmaValEmi(Int32 idx) const
+{
+    if(idx<m_SpcFluxAxisModelDerivSigmaEmi.GetSamplesCount()){
+        return m_SpcFluxAxisModelDerivSigmaEmi[idx];
+    }
+
+    return -1.0;
+}
+
+Float64 CLineModelElementList::getModelFluxDerivSigmaValAbs(Int32 idx) const
+{
+    if(idx<m_SpcFluxAxisModelDerivSigmaAbs.GetSamplesCount()){
+        return m_SpcFluxAxisModelDerivSigmaAbs[idx];
     }
 
     return -1.0;
@@ -434,11 +459,12 @@ void CLineModelElementList::InitFitContinuum()
 {
     CSpectrumSpectralAxis& spectralAxis = m_SpectrumModel->GetSpectralAxis();
 
-    m_fitContinuum_dLambdaTgt =  0.1; //should be sufficient for the continuum
+
     m_fitContinuum_lmin = 0;
-    m_fitContinuum_lmax = spectralAxis[spectralAxis.GetSamplesCount()-1];
-    m_fitContinuum_nTgt = (m_fitContinuum_lmax-m_fitContinuum_lmin)/m_fitContinuum_dLambdaTgt + 2.0/m_fitContinuum_dLambdaTgt;
-    m_precomputedFineGridContinuumFlux = new Float64 [(int)m_fitContinuum_nTgt]();
+    //m_fitContinuum_dLambdaTgt =  0.1; //should be sufficient for the continuum = spectralAxis[spectralAxis.GetSamplesCount()-1];
+    m_fitContinuum_nTgt = spectralAxis.GetSamplesCount();//(m_fitContinuum_lmax-m_fitContinuum_lmin)/m_fitContinuum_dLambdaTgt + 2.0/m_fitContinuum_dLambdaTgt;
+    m_fitContinuum_dLambdaTgt =  (m_fitContinuum_lmax-m_fitContinuum_lmin)/m_fitContinuum_nTgt; //should be sufficient for the continuum
+    m_observeGridContinuumFlux = new Float64 [(int)m_fitContinuum_nTgt]();
 }
 
 /**
@@ -446,9 +472,9 @@ void CLineModelElementList::InitFitContinuum()
  **/
 Int32 CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange)
 {
-    if(m_precomputedFineGridContinuumFlux == NULL)
+    if(m_observeGridContinuumFlux == NULL)
     {
-        Log.LogError("Elementlist, cannot loadfitcontinuum without precomputedFineGridTplFlux... aborting!");
+        Log.LogError("Elementlist, cannot loadfitcontinuum without precomputedGridTplFlux... aborting!");
         return -1;
     }
 
@@ -469,10 +495,10 @@ Int32 CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange)
 
         bool ignoreLinesSupport=m_fitContinuum_outsidelinesmask;
         std::vector<CMask> maskList;
-        if(ignoreLinesSupport){
+//        if(ignoreLinesSupport){
             maskList.resize(1);
             maskList[0]=getOutsideLinesMask();
-        }
+//        }
 
 
         std::vector<Float64> redshifts(1, m_Redshift);
@@ -505,7 +531,6 @@ Int32 CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange)
                     bestFitDtM = fitDtM;
                     bestFitMtM = fitMtM;
                     bestTplName = tpl.GetName();
-		  bestTpl = tpl;
                 }
             }
         }
@@ -525,11 +550,6 @@ Int32 CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange)
 
     if(bestTplName!="")
     {
-        m_fitContinuum_tplName = bestTplName;
-        m_fitContinuum_tplFitAmplitude = bestFitAmplitude;
-        m_fitContinuum_tplFitDustCoeff = bestFitDustCoeff;
-        m_fitContinuum_tplFitDtM = bestFitDtM;
-        m_fitContinuum_tplFitMtM = bestFitMtM;
         //Log.LogInfo( "For z=%.5f : Best continuum tpl found: %s", m_Redshift, bestTplName.c_str());
         //
         //Retrieve the best template
@@ -543,39 +563,7 @@ Int32 CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange)
 
                 if(tpl.GetName()==bestTplName)
                 {
-                    // Precalculate a fine grid template to be used for the 'closest value' rebin method
-                    Int32 n = tpl.GetSampleCount();
-                    CSpectrumFluxAxis tplFluxAxis = tpl.GetFluxAxis();
-                    const CSpectrumSpectralAxis& tplSpectralAxis = tpl.GetSpectralAxis();
-
-                    //inialize and allocate the gsl objects
-                    Float64* Ysrc = tplFluxAxis.GetSamples();
-                    const Float64* Xsrc = tplSpectralAxis.GetSamples();
-                    //apply dust attenuation
-                    const Float64* dustCoeffArray = m_chiSquareOperator->getDustCoeff(m_fitContinuum_tplFitDustCoeff, Xsrc[n-1]);
-                    Float64 lambda = 0.0;
-                    for(Int32 ktpl=0; ktpl<n; ktpl++)
-                    {
-                        lambda = Xsrc[ktpl];
-                        Ysrc[ktpl]*=dustCoeffArray[Int32(lambda)]; //dust coeff is rounded at the nearest 1 angstrom value
-                    }
-                    delete dustCoeffArray;
-                    //spline
-                    gsl_spline *spline = gsl_spline_alloc (gsl_interp_cspline, n);
-                    gsl_spline_init (spline, Xsrc, Ysrc, n);
-                    gsl_interp_accel * accelerator =  gsl_interp_accel_alloc();
-                    Int32 k = 0;
-                    Float64 x = 0.0;
-                    for(k=0; k<m_fitContinuum_nTgt; k++){
-                        x = m_fitContinuum_lmin + k*m_fitContinuum_dLambdaTgt;
-                        if(x < tplSpectralAxis[0] || x > tplSpectralAxis[n-1]){
-                            m_precomputedFineGridContinuumFlux[k] = 0.0;
-                        }else{
-                            m_precomputedFineGridContinuumFlux[k] = m_fitContinuum_tplFitAmplitude*gsl_spline_eval (spline, x, accelerator);
-                        }
-                    }
-                    gsl_spline_free (spline);
-                    gsl_interp_accel_free (accelerator);
+                  ApplyContinuumOnGrid(tpl, bestFitAmplitude, bestFitDustCoeff, bestFitDtM, bestFitMtM);
                 }
             }
         }
@@ -589,18 +577,24 @@ Int32 CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange)
 
 void CLineModelElementList::setFitContinuum_tplAmplitude(Float64 tplAmp){
   m_fitContinuum_tplFitAmplitude = tplAmp;
+  for (Int32 k=0; k<m_ContinuumFluxAxis.GetSamplesCount(); k++){
+    m_ContinuumFluxAxis[k] = m_observeGridContinuumFlux[k]*tplAmp;
+
+  }
 }
 
 /**
-Apply the template continuum by interpolating the grid
+Apply the template continuum by interpolating the grid as define in Init COntinuum
+At the end of the function m_observeGridContinuumFlux is set with interpolate value, without the continuum amplitude coefficient
 **/
-Int32 CLineModelElementList::ApplyContinuum(const CTemplate& tpl, Float64 fitAmplitude, Float64 fitDustCoeff, Float64 fitDtM, Float64 fitMtM){
+Int32 CLineModelElementList::ApplyContinuumOnGrid(const CTemplate& tpl, Float64 fitAmplitude, Float64 fitDustCoeff, Float64 fitDtM, Float64 fitMtM){
   m_fitContinuum_tplName = tpl.GetName();
   m_fitContinuum_tplFitAmplitude = fitAmplitude;
   m_fitContinuum_tplFitDustCoeff = fitDustCoeff;
   m_fitContinuum_tplFitDtM = fitDtM;
   m_fitContinuum_tplFitMtM = fitMtM;
-  // Precalculate a fine grid template to be used for the 'closest value' rebin method
+
+
   Int32 n = tpl.GetSampleCount();
   CSpectrumFluxAxis tplFluxAxis = tpl.GetFluxAxis();
   const CSpectrumSpectralAxis& tplSpectralAxis = tpl.GetSpectralAxis();
@@ -615,6 +609,7 @@ Int32 CLineModelElementList::ApplyContinuum(const CTemplate& tpl, Float64 fitAmp
   {
       lambda = Xsrc[ktpl];
       Ysrc[ktpl]*=dustCoeffArray[Int32(lambda)]; //dust coeff is rounded at the nearest 1 angstrom value
+       //Log.LogInfo("Dust Coef %0.1f %0.6f",lambda,dustCoeffArray[Int32(lambda)]);
   }
   delete dustCoeffArray;
   //spline
@@ -623,14 +618,29 @@ Int32 CLineModelElementList::ApplyContinuum(const CTemplate& tpl, Float64 fitAmp
   gsl_interp_accel * accelerator =  gsl_interp_accel_alloc();
   Int32 k = 0;
   Float64 x = 0.0;
-  for(k=0; k<m_fitContinuum_nTgt; k++){
-      x = m_fitContinuum_lmin + k*m_fitContinuum_dLambdaTgt;
+  const CSpectrumSpectralAxis& spcSpectralAxis = m_SpectrumModel->GetSpectralAxis();
+
+  for(k=0; k<spcSpectralAxis.GetSamplesCount(); k++){
+      x = spcSpectralAxis[k]/(1+m_Redshift);
       if(x < tplSpectralAxis[0] || x > tplSpectralAxis[n-1]){
-          m_precomputedFineGridContinuumFlux[k] = 0.0;
+          m_observeGridContinuumFlux[k] = 0.0;
       }else{
-          m_precomputedFineGridContinuumFlux[k] = m_fitContinuum_tplFitAmplitude*gsl_spline_eval (spline, x, accelerator);
+          m_observeGridContinuumFlux[k] = gsl_spline_eval (spline, x, accelerator);//m_fitContinuum_tplFitAmplitude*
+
       }
+      /*//debug:
+      // save reflex data
+      FILE* f = fopen( "observegrid.txt", "w+" );
+      for( Int32 t=0;t<spcSpectralAxis.GetSamplesCount();t++)
+      {
+          fprintf( f, "%f %f\n", spcSpectralAxis[t], m_observeGridContinuumFlux[t]);
+      }
+      fclose( f );
+      //*/
+  setFitContinuum_tplAmplitude(fitAmplitude);
   }
+
+
   gsl_spline_free (spline);
   gsl_interp_accel_free (accelerator);
   return 0;
@@ -694,6 +704,10 @@ Float64 CLineModelElementList::getFitContinuum_tplIgmMeiksinIdx()
     return m_fitContinuum_tplFitMeiksinIdx;
 }
 
+Float64*  CLineModelElementList::getPrecomputedGridContinuumFlux(){
+    return m_observeGridContinuumFlux;
+}
+
 void CLineModelElementList::SetContinuumComponent(std::string component)
 {
     m_ContinuumComponent = component;
@@ -719,7 +733,7 @@ void CLineModelElementList::PrepareContinuum(Float64 z)
     const Float64* Xtgt = targetSpectralAxis.GetSamples();
     Float64* Yrebin = m_ContinuumFluxAxis.GetSamples();
 
-    if(m_precomputedFineGridContinuumFlux == NULL){
+    if(m_observeGridContinuumFlux == NULL){
         for ( Int32 i = 0; i<targetSpectralAxis.GetSamplesCount(); i++)
         {
             Yrebin[i] = m_SpcContinuumFluxAxis[i];
@@ -727,55 +741,9 @@ void CLineModelElementList::PrepareContinuum(Float64 z)
         return;
     }
 
-    TFloat64Range currentRange(Xtgt[0], Xtgt[targetSpectralAxis.GetSamplesCount()-1]);
 
-    // Move cursors up to lambda range start
-    Int32 j = 0;
-    while( j<targetSpectralAxis.GetSamplesCount() && Xtgt[j] < currentRange.GetBegin() )
-    {
-        Yrebin[j] = 0.0;
-        j++;
-    }
-    //* // Precomputed FINE GRID nearest sample,
-    Int32 k = 0;
-    Float64 dl = 0.1;
-    Float64 Coeffk = 1.0/dl/(1+z);
-    Float64 coeffUnder1216 = 1.0;
-    // For each sample in the target spectrum
-    while( j<targetSpectralAxis.GetSamplesCount() && Xtgt[j] <= currentRange.GetEnd() )
-    {
-        k = (int)(Xtgt[j]*Coeffk+0.5);
 
-        //* Optionally Apply some extinction
-        if(m_fitContinuum_igm)
-        {
-            coeffUnder1216 = 1.0;
-            if(k*0.1 < 1216.0)
-            {
-                if(z>=4.0 && z<5.0)
-                {
-                    coeffUnder1216 = 0.5;
-                }else if(z>=5.0 && z<6.0)
-                {
-                    coeffUnder1216 = 1.0/3.5;
-                }else if(z>=6.0){
-                    coeffUnder1216 = 1.0/1e16;
-                }
-            }
-        }
-        //*/
-
-        Yrebin[j] = coeffUnder1216*m_precomputedFineGridContinuumFlux[k];
-        j++;
-
-    }
-    //*/
-    while( j < targetSpectralAxis.GetSamplesCount() )
-    {
-        Yrebin[j] = 0.0;
-        j++;
-    }
-
+    setFitContinuum_tplAmplitude(m_fitContinuum_tplFitAmplitude);
     return;
 }
 
@@ -1008,92 +976,177 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
         //fit the amplitude of all elements together (but Emission or Absorption separately) with iterative   solver: lmfit
         if(m_fittingmethod=="lmfit")
         {
-          for( UInt32 i=0; i<m_tplCategoryList.size(); i++ )
-          {
+            Log.LogInfo( "Linemodel: Fitting method lmfit");
+//            InitFitContinuum();
+
+
+//            Int32 retLoadFitCont = LoadFitContinuum(lambdaRange);
+//            if(retLoadFitCont!=0)
+//            {
+//              Log.LogError( "LineModel Error: Unable to loadFit continuum, aborting");
+//              return -1;
+//            }
+            Float64 bestMerit = DBL_MAX;
+            std::shared_ptr<CLmfitController> bestController;// at each run of lmfit we create a controller, we keep the best evaluation
+
+            for( UInt32 i=0; i<m_tplCategoryList.size(); i++ )
+            {
               std::string category = m_tplCategoryList[i];
 
-              for( UInt32 j=0; j<m_tplCatalog.GetTemplateCount( category ); j++ )
+              for( UInt32 j=0; j<m_tplCatalog.GetTemplateCount( category ) ; j++ )
               {
                   const CTemplate& tpl = m_tplCatalog.GetTemplate( category, j );
-                  Float64 merit = DBL_MAX;
-                  Float64 fitAmplitude = -1.0;
-                  Float64 fitDustCoeff = -1.0;
-                  Float64 fitDtM = -1.0;
-                  Float64 fitMtM = -1.0;
-                  std::vector<Float64> redshifts(1, redshift);
-                  std::string opt_interp = "lin"; //"precomputedfinegrid";
-                  Int32 opt_extinction = m_fitContinuum_igm;
-                  Int32 opt_dustFit = m_fitContinuum_dustfit;
-                  Float64 overlapThreshold = 1.0;
-                  Bool ret = SolveContinuum( *m_inputSpc, tpl, lambdaRange, redshifts, overlapThreshold, maskList, opt_interp, opt_extinction, opt_dustFit, merit, fitAmplitude, fitDustCoeff, fitDtM, fitMtM);
+
+
+                  //if(tpl.GetName()==m_fitContinuum_tplName){
+                  //setFitContinuum_tplAmplitude(1.0);
 
 
 
-                  ApplyContinuum(tpl, fitAmplitude, fitDustCoeff, fitDtM, fitMtM);
-                  for(UInt32 i=0; i<m_ContinuumFluxAxis.GetSamplesCount(); i++)
+            //                  const CTemplate& tpl = m_tplCatalog.GetTemplate( category, j );
+                 Float64 merit = DBL_MAX;
+
+                 Float64 fitContinuumAmplitude = -1.0;
+                 Float64 fitDustCoeff = -1.0;
+                 Int32 fitMeiksinIdx = -1;
+                 Float64 fitDtM = -1.0;
+                 Float64 fitMtM = -1.0;
+                 Float64 overlapThreshold = 1.0;
+                 Float64 fitVelocity = -1.0;
+
+                 bool ignoreLinesSupport=m_fitContinuum_outsidelinesmask;
+                 std::vector<CMask> maskList;
+                 if(ignoreLinesSupport){
+                     maskList.resize(1);
+                     maskList[0]=getOutsideLinesMask();
+                 }
+                 std::vector<Float64> redshifts(1, redshift);
+                 std::string opt_interp = "precomputedfinegrid"; //"lin";
+                 Int32 opt_extinction = m_fitContinuum_igm;
+                 Int32 opt_dustFit = m_fitContinuum_dustfit;
+
+                 InitFitContinuum();
+                 if(m_observeGridContinuumFlux == NULL)
+                 {
+                     Log.LogError("Elementlist, cannot SolveContinuum without m_observeGridContinuumFlux... aborting!");
+                     return -1;
+                 }
+                 Bool ret = SolveContinuum( *m_inputSpc, tpl, lambdaRange, redshifts, overlapThreshold, maskList, opt_interp, opt_extinction, opt_dustFit, merit, fitContinuumAmplitude, fitDustCoeff, fitMeiksinIdx, fitDtM, fitMtM);
+
+                 Log.LogInfo("LMfit : Continuum Amp set Init at %0.00f", fitContinuumAmplitude);
+                 Log.LogInfo("Lmfit: solve succes %s", (ret? "t": "f"));
+                 ApplyContinuumOnGrid(tpl, fitContinuumAmplitude, 0., 0., 0.);
+
+                 for(UInt32 i=0; i<m_ContinuumFluxAxis.GetSamplesCount(); i++)
                   {
-                      m_spcFluxAxisNoContinuum[i] = m_SpcFluxAxis[i]-m_ContinuumFluxAxis[i];
+                        m_spcFluxAxisNoContinuum[i] = m_SpcFluxAxis[i]-m_ContinuumFluxAxis[i];
                   }
+                  //*//debug
+                  // export for debug
+                  FILE* fspc = fopen( "Continuum.txt", "w+" );
+                  for( Int32 t=0;t<m_ContinuumFluxAxis.GetSamplesCount();t++)
+                  {
+                      fprintf( fspc, "%f %f %f\n", spectralAxis[t],m_ContinuumFluxAxis[t]);//*1e12);
+                  }
+                  fclose( fspc );
+                  //*/
+
                   //initial guess from individual fit
-                  // TODO : iclure le continumum dans le premier fit des raies
+
                   for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
                   {
-                      m_Elements[iElts]->fitAmplitude(spectralAxis, m_spcFluxAxisNoContinuum, redshift);
+                    m_Elements[iElts]->fitAmplitude(spectralAxis, m_spcFluxAxisNoContinuum,m_ContinuumFluxAxis , redshift);
                   }
 
-                  std::vector<Float64> ampsfitted;
-                  Int32 retVal;
-                  Int32 lineType;
 
-                  //TODO change iLineType = 0 for use ABSORPTION
-                  for(Int32 iLineType = 1; iLineType<2; iLineType++)
+                  CLmfitController *controller = new CLmfitController(tpl);
+
+
+
+                  // adding element base on configuration
+                  std::vector<Int32> validEltsIdx = GetModelValidElementsIndexes();
+                  for (Int32 iElt = 0; iElt < validEltsIdx.size(); iElt++)
                   {
-                      if(iLineType==0)
-                      {
-                          Log.LogInfo( "\nLineModel Infos: Lmfit ABSORPTION, for z = %.4f", m_Redshift);
-                          lineType = CRay::nType_Absorption;
-                      }else{
-                          Log.LogInfo( "\nLineModel Infos: Lmfit EMISSION, for z = %.4f", m_Redshift);
-                          lineType = CRay::nType_Emission;
-                      }
-                      retVal = 0;
-                      std::vector<Int32> validEltsIdx = GetModelValidElementsIndexes();
-                      std::vector<Int32> filteredEltsIdx;
-                      for (Int32 iElt = 0; iElt < validEltsIdx.size(); iElt++)
-                      {
-                          if(m_RestRayList[m_Elements[validEltsIdx[iElt]]->m_LineCatalogIndexes[0]].GetType() != lineType)
-                          {
-                              continue;
-                          }
-                          filteredEltsIdx.push_back(validEltsIdx[iElt]);
-                      }
-
-
-                      Int32 previousValidEltsSizeEltsSize = filteredEltsIdx.size()+1;
-                      while( (retVal!=1 || retVal!=-1) && filteredEltsIdx.size()>0 && filteredEltsIdx.size()!=previousValidEltsSizeEltsSize)
-                      {
-
-                          Log.LogInfo( "LineModel Infos: Lmfit IN filteredEltsIdx.size() = %d", filteredEltsIdx.size());
-                          Log.LogInfo( "LineModel Infos: Lmfit previousValidEltsSizeEltsSize = %d", previousValidEltsSizeEltsSize);
-                          previousValidEltsSizeEltsSize = filteredEltsIdx.size();
-                          retVal = fitAmplitudesLmfit(filteredEltsIdx, m_SpcFluxAxis, ampsfitted, lineType, tpl);
-                          Log.LogInfo( "LineModel Infos: Lmfit retVal = %d", retVal);
-                          Log.LogInfo( "LineModel Infos: Lmfit ampsfitted.size() = %d", ampsfitted.size());
-                          if(retVal==0 && filteredEltsIdx.size()==ampsfitted.size()){
-                              for(Int32 ie=filteredEltsIdx.size()-1; ie>=0; ie--)
-                              {
-                                  if(ampsfitted[ie]<=0.0)
-                                  {
-                                      Log.LogInfo( "LineModel Infos: erasing i= %d", ie);
-                                      filteredEltsIdx.erase(filteredEltsIdx.begin() + ie);
-                                  }
-                              }
-                          }
-                          Log.LogInfo( "LineModel Infos: Lmfit OUT, validEltsIdx.size() = %d", filteredEltsIdx.size());
-                      }
+                    if(controller->isLineTypeVelocityFitted(m_RestRayList[m_Elements[validEltsIdx[iElt]]->m_LineCatalogIndexes[0]].GetType()))
+                    {
+                        controller->addElement(validEltsIdx[iElt]);
+                    }
                   }
-                }
+
+                  controller->calculatedIndices();
+                  bool NegVal = true;
+                  bool deleteController = true;
+                  while( NegVal)
+                  {
+
+                    //Log.LogInfo( "LineModel Infos: Lmfit IN filteredEltsIdx.size() = %d", filteredEltsIdx.size());
+                    //Log.LogInfo( "LineModel Infos: Lmfit previousValidEltsSizeEltsSize = %d", previousValidEltsSizeEltsSize);
+                    //previousValidEltsSizeEltsSize = filteredEltsIdx.size();
+                    Int32 retVal = fitAmplitudesLmfit(m_SpcFluxAxis, controller);
+                    //Log.LogInfo( "LineModel Infos: Lmfit retVal = %d", retVal);
+                    //Log.LogInfo( "LineModel Infos: Lmfit ampsLinefitted.size() = %d", ampsLinefitted.size());
+
+                    NegVal = controller->removeNegAmpLine();
+                    //Log.LogInfo( "LineModel Infos: Lmfit NegVal = %s", (NegVal?"t":"f") );
+                    //Log.LogInfo( "LineModel Infos: Lmfit merit = %.0f ; bestMerit : %.0f ", controller->getMerit(), bestMerit );
+                    if(retVal==0 && !NegVal && controller->getMerit()< bestMerit ){
+
+                      bestMerit = controller->getMerit();
+                      bestController = std::shared_ptr<CLmfitController>( controller);
+                      deleteController = false;
+                      //Log.LogInfo("Pointeur best Controller setted");
+                    }
+
+                    //Log.LogInfo( "LineModel Infos: Lmfit OUT, validEltsIdx.size() = %d", filteredEltsIdx.size());
+                  }
+                  if(deleteController){
+                      delete controller;
+                    }
+
+              }
+                    //}
+
             }
+            //We set the best model found
+            if(bestController){
+              if(bestController->isContinuumFitted()){
+                const CTemplate* tpl = bestController->getTemplate();
+                m_fitContinuum_tplName = tpl->GetName();
+                  ApplyContinuumOnGrid(*tpl, bestController->getContinuumAmp(), 0., 0., 0.);
+                  //setFitContinuum_tplAmplitude(  bestController->getContinuumAmp());
+              }
+              std::vector<Int32> bestFilteredEltsIdx = bestController->getFilteredIdx();
+
+              for (Int32 iElt = 0; iElt < bestFilteredEltsIdx.size(); iElt++)
+              {
+                  Float64 amp = bestController->getLineAmp(iElt);
+                  Float64 ampErr = bestController->getLineAmpErr(iElt);
+                  Log.LogInfo("Lmfit : amp [%] = %.1f", iElt, amp);
+                  SetElementAmplitude(bestFilteredEltsIdx[iElt], amp, ampErr);
+              }
+              if(bestController->isEmissionVelocityFitted()){
+                SetVelocityEmission(bestController->getEmissionVelocity());
+              }
+              if(bestController->isAbsorptionVelocityFitted()){
+                SetVelocityAbsorption(bestController->getAbsorptionVelocity());
+               }
+
+                          /*//debug
+                          // export for debug
+                          FILE* fspc = fopen( "end_lmfit_dbg.txt", "w+" );
+                          Float64 coeffSaveSpc = 1e16;
+                          for( Int32 t=0;t<m_ContinuumFluxAxis.GetSamplesCount();t++)
+                          {
+                              fprintf( fspc, "%f %f %f\n", spectralAxis[t],m_ContinuumFluxAxis[t]);//*1e12);
+                          }
+                          fclose( fspc );
+                          //*/
+            }else{
+              Log.LogError( "LineModel Lmfit: not able to fit values");
+
+              return -1;
+            }
+
         }
 
         //fit the amplitude of all elements together (but Emission or Absorption separately) with solver: lbfgs
@@ -1250,7 +1303,7 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
 
             refreshModel();
             //create spectrum model
-            modelSolution = GetModelSolution();            
+            modelSolution = GetModelSolution();
             m_tplcorrBestTplName = "None";
 
             merit = getLeastSquareMerit(lambdaRange);
@@ -1434,8 +1487,37 @@ void CLineModelElementList::reinitModelUnderElements(std::vector<Int32>  filterE
 void CLineModelElementList::refreshModel()
 {
     reinitModel();
+
     const CSpectrumSpectralAxis& spectralAxis = m_SpectrumModel->GetSpectralAxis();
     CSpectrumFluxAxis& modelFluxAxis = m_SpectrumModel->GetFluxAxis();
+
+
+    //create spectrum model
+    for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
+    {
+        m_Elements[iElts]->addToSpectrumModel(spectralAxis, modelFluxAxis, m_ContinuumFluxAxis, m_Redshift);
+    }
+}
+/**
+
+/**
+ * \brief refreshing all the grid and Adds a new model to each m_Elements entry .
+ * Calls iterate on model flux to set it equal to continuum.
+ * For each entry in m_Elements, addToSpectrumModel using the reinitModel output as arguments.
+ **/
+void CLineModelElementList::refreshModelInitAllGrid()
+{
+
+    const CSpectrumSpectralAxis& spectralAxis = m_SpectrumModel->GetSpectralAxis();
+    CSpectrumFluxAxis& modelFluxAxis = m_SpectrumModel->GetFluxAxis();
+
+    for(Int32 k= 0;k<modelFluxAxis.GetSamplesCount();k++){
+      modelFluxAxis[k] = m_ContinuumFluxAxis[k];
+    }
+
+    for(Int32 k= 0;k<modelFluxAxis.GetSamplesCount();k++){
+      modelFluxAxis[k] = m_ContinuumFluxAxis[k];
+    }
     //create spectrum model
     for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
     {
@@ -1466,9 +1548,11 @@ void CLineModelElementList::refreshModelDerivSigmaUnderElements(std::vector<Int3
 {
     const CSpectrumSpectralAxis& spectralAxis = m_SpectrumModel->GetSpectralAxis();
     std::vector<Int32> supportIdxes = getSupportIndexes( filterEltsIdx );
+
     for( UInt32 i=0; i<supportIdxes.size(); i++ )
     {
-        m_SpcFluxAxisModelDerivSigma[supportIdxes[i]]=0.0;
+        m_SpcFluxAxisModelDerivSigmaEmi[supportIdxes[i]]=0.0;
+        m_SpcFluxAxisModelDerivSigmaAbs[supportIdxes[i]]=0.0;
     }
 
     //create spectrum model partial derivate vs sigma
@@ -1476,7 +1560,8 @@ void CLineModelElementList::refreshModelDerivSigmaUnderElements(std::vector<Int3
     for( UInt32 i=0; i<filterEltsIdx.size(); i++ )
     {
         iElts = filterEltsIdx[i];
-        m_Elements[iElts]->addToSpectrumModelDerivSigma(spectralAxis, m_SpcFluxAxisModelDerivSigma, m_Redshift);
+        m_Elements[iElts]->addToSpectrumModelDerivSigma(spectralAxis, m_SpcFluxAxisModelDerivSigmaEmi,  m_Redshift, true);
+        m_Elements[iElts]->addToSpectrumModelDerivSigma(spectralAxis, m_SpcFluxAxisModelDerivSigmaAbs,  m_Redshift, false);
     }
 }
 
@@ -1891,6 +1976,7 @@ Int32 CLineModelElementList::estimateMeanSqFluxAndGradient(const Float64* varPac
         }
         //*
         Int32 iElt = filteredEltsIdx.size();
+        //getModelFluxDerivSigmaVal change for LMFit, emssion and aborption have there own deriv sigma value
         Float64 dm = getModelFluxDerivSigmaVal(xInds[i])*normFactor;
         Float64 grad = 2*dm*msqBuffer[i];
         g[iElt] += grad;
@@ -1939,26 +2025,33 @@ void print_state (size_t iter, gsl_multifit_fdfsolver * s)
 }
 
 
-Int32 CLineModelElementList::fitAmplitudesLmfit(std::vector<Int32> filteredEltsIdx, const CSpectrumFluxAxis& fluxAxis, std::vector<Float64>& ampsfitted, Int32 lineType)
+Int32 CLineModelElementList::fitAmplitudesLmfit( const CSpectrumFluxAxis& fluxAxis, CLmfitController* controller)
+//std::vector<Float64>& ampsfitted, std::vector<Float64>& ampsErrfitted, Float64& velocityFitted, Float64& continuumAmpFitted, Float64& merit, Int32 lineType
 {
     //http://www.gnu.org/software/gsl/manual/html_node/Example-programs-for-Nonlinear-Least_002dSquares-Fitting.html
-    Bool verbose = false;
+    Bool verbose = true;
 
-
-
+    if(verbose)
+    {
+        Log.LogInfo( "fitAmplitudesLmfit");
+    }
+    std::vector<Int32> filteredEltsIdx= controller->getFilteredIdx();
     Int32 nddl = filteredEltsIdx.size();
     if(nddl<1){
         return -1;
     }
-    //TODO add condition to know if we use full model or line model
-    if(0){
-        std::vector<Int32> xInds = getSupportIndexes( filteredEltsIdx );
+
+    std::vector<Int32> xInds;
+    if(! controller->isContinuumFitted()){
+        xInds = getSupportIndexes( filteredEltsIdx );
     }else{
-        std::vector<int> xInds(fluxAxis.size());
-        std::iota(std::begin(xInds), std::end(xInds), 0)
+        xInds=  std::vector<Int32>(fluxAxis.GetSamplesCount());
+        //boost::push_back(xInds, fluxAxis.GetSamplesCount());
+        std::iota(std::begin(xInds), std::end(xInds), 0);
     }
 
     const Float64* flux = fluxAxis.GetSamples();
+    Float64 amplitudeContinuumInit = m_fitContinuum_tplFitAmplitude;
 
     //create gsl solver object
     const gsl_multifit_fdfsolver_type *T = gsl_multifit_fdfsolver_lmsder;
@@ -1966,40 +2059,43 @@ Int32 CLineModelElementList::fitAmplitudesLmfit(std::vector<Int32> filteredEltsI
     int status, info;
     size_t i;
     size_t n; //n samples on the support, /* number of data points to fit */
-    size_t p = nddl+2; //DOF = n amplitudes to fit (1 for each element) + 1 (EL velocity) +1 Amplitude Template
+    size_t p = controller->getNumberParameters(); //DOF = n amplitudes to fit (1 for each element) + 1 (EL velocity) +1 Amplitude Template
 
     n = xInds.size();
     if(n<nddl){
-        ampsfitted.resize(nddl);
-        for (Int32 iddl = 0; iddl < nddl; iddl++)
-        {
-            ampsfitted[iddl] = 0.0;
-        }
         return -1;
     }
 
+    //set the norm factor
     Int32 idx = 0;
     Float64 maxabsval = DBL_MIN;
-    for (i = 0; i < n; i++)
-    {
-        idx = xInds[i];
+    Float64 normFactor;
+    if(controller->needCalculateNormFactor()){
+      for (i = 0; i < n; i++)
+      {
+          idx = xInds[i];
 
-        if(maxabsval<std::abs(flux[idx]))
-        {
-            maxabsval=std::abs(flux[idx]);
-        }
+          if(maxabsval<std::abs(flux[idx]))
+          {
+              maxabsval=std::abs(flux[idx]);
+          }
+      }
+      normFactor = 1.0/maxabsval;
+      controller->setNormFactor(normFactor);
+    }else{
+      // the norm factor is the same as the last call
+      normFactor=controller->getNormFactor();
     }
-    Float64 normFactor = 1.0/maxabsval;
 
     if(verbose)
     {
-        fprintf(stderr, "normFactor = '%.3e'\n", normFactor);
+        Log.LogInfo("normFactor = '%.3e'", normFactor);
     }
 
     gsl_matrix *J = gsl_matrix_alloc(n, p);
     gsl_matrix *covar = gsl_matrix_alloc (p, p);
     double y[n], weights[n];
-    struct lmfitdata d = {n,y,this, filteredEltsIdx, xInds, normFactor, lineType, tpl};
+    struct lmfitdata d = {n,y,this, xInds, m_observeGridContinuumFlux, controller};
     gsl_multifit_function_fdf f;
 
     Float64* x_init = (Float64*) calloc( p, sizeof( Float64 ) );
@@ -2014,15 +2110,35 @@ Int32 CLineModelElementList::fitAmplitudesLmfit(std::vector<Int32> filteredEltsI
         }
         x_init[kp] = ampInitGuess*normFactor;
     }
-    if(lineType==CRay::nType_Emission)
+    if(controller->isEmissionVelocityFitted())
     {
-        x_init[nddl] = GetVelocityEmission();
-    }else
+        x_init[controller->getIndEmissionVel()] = GetVelocityEmission();
+        if(verbose){
+             Log.LogInfo( "LineModel LMfit: set init guess Emission velocity = %.1f ", x_init[controller->getIndEmissionVel()]);
+        }
+    }
+    if(controller->isAbsorptionVelocityFitted())
     {
-        x_init[nddl] = GetVelocityAbsorption();
+        x_init[controller->getIndAbsorptionVel()] = GetVelocityAbsorption();
+        if(verbose){
+             Log.LogInfo( "LineModel LMfit: set init guess Absorption velocity = %.1f ", x_init[controller->getIndAbsorptionVel()]);
+        }
 
     }
-    x_init[nddl+1]= getFitContinuum_tplAmplitude();
+    if(controller->isContinuumFitted()){
+      x_init[controller->getIndContinuumAmp()]= getFitContinuum_tplAmplitude()*normFactor;
+      if(verbose){
+           Log.LogInfo( "LineModel LMfit: set init guess continuum amp = %.1f ", getFitContinuum_tplAmplitude());
+      }
+    }
+
+    if(controller->isRedshiftFitted()){
+      x_init[controller->getIndRedshift()]= m_Redshift;
+      if(verbose){
+           Log.LogInfo( "LineModel LMfit: set init guess redshift= %.1f ", m_Redshift);
+      }
+    }
+
 
     gsl_vector_view x = gsl_vector_view_array (x_init, p);
     gsl_vector_view w = gsl_vector_view_array(weights, n);
@@ -2080,98 +2196,117 @@ Int32 CLineModelElementList::fitAmplitudesLmfit(std::vector<Int32> filteredEltsI
 #define FIT(i) gsl_vector_get(s->x, i)
 #define ERR(i) sqrt(gsl_matrix_get(covar,i,i))
 
-        fprintf(stderr, "summary from method '%s'\n",
+        Log.LogInfo( "summary from method '%s'",
                 gsl_multifit_fdfsolver_name(s));
-        fprintf(stderr, "number of iterations: %zu\n",
+        Log.LogInfo( "number of iterations: %zu",
                 gsl_multifit_fdfsolver_niter(s));
-        fprintf(stderr, "function evaluations: %zu\n", f.nevalf);
-        fprintf(stderr, "Jacobian evaluations: %zu\n", f.nevaldf);
-        fprintf(stderr, "reason for stopping: %s\n",
+        Log.LogInfo("function evaluations: %zu", f.nevalf);
+        Log.LogInfo("Jacobian evaluations: %zu", f.nevaldf);
+        Log.LogInfo( "reason for stopping: %s",
                 (info == 1) ? "small step size" : "small gradient");
-        fprintf(stderr, "initial |f(x)| = %g\n", chi0);
-        fprintf(stderr, "final   |f(x)| = %g\n", chi);
+        Log.LogInfo( "initial |f(x)| = %g", chi0);
+        Log.LogInfo("final   |f(x)| = %g", chi);
 
         {
             double dof = n - p;
             double c = GSL_MAX_DBL(1, chi / sqrt(dof));
 
-            fprintf(stderr, "chisq/dof = %g\n",  pow(chi, 2.0) / dof);
+            Log.LogInfo( "chisq/dof = %g",  pow(chi, 2.0) / dof);
 
             for(Int32 k=0; k<p; k++)
             {
                 if(FIT(k)<1e-3)
                 {
-                    fprintf (stderr, "A %d     = %.3e +/- %.8f\n", k, FIT(k), c*ERR(k));
+                    Log.LogInfo ("A %d     = %.3e +/- %.8f", k, FIT(k), c*ERR(k));
                 }else{
-                    fprintf (stderr, "A %d     = %.5f +/- %.8f\n", k, FIT(k), c*ERR(k));
+                    Log.LogInfo ( "A %d     = %.5f +/- %.8f", k, FIT(k), c*ERR(k));
                 }
 
             }
         }
-        fprintf (stderr, "status = %s (%d)\n", gsl_strerror (status), status);
+        Log.LogInfo ( "status = %s (%d)", gsl_strerror (status), status);
     }
 
-
-    Int32 sameSign = 1;
-    Float64 a0 = gsl_vector_get(s->x,0)/normFactor;
-    for (Int32 iddl = 1; iddl < nddl; iddl++)
+    //=======================Result treament ====================
+    Int32 ampPos = 1;
+    controller->resizeAmpsLine();
+    Float64 dof = n - p;
+    Float64 c = GSL_MAX_DBL(1, chi / sqrt(dof));
+    for (Int32 iddl = 0; iddl < nddl; iddl++)
     {
         Float64 a = gsl_vector_get(s->x,iddl)/normFactor;
-        Float64 product = a0*a;
-        if(product<0){
-            sameSign = 0;
+        Float64 sigma = c*sqrt(gsl_matrix_get(covar,iddl,iddl))/normFactor;
+        if(a<0){
+            ampPos = 0;
+        }
+        controller->setAmpLine(iddl, a,sigma);
+        if(verbose){
+          Log.LogInfo( "LineModel Infos: Lmfit set final amp [%] = %.1f with err = %.1f", iddl, a, sigma);
         }
     }
 
-    // finally populate the fitting results to the linemodel
-    if(sameSign && status==0)
+    // Analyse if result is good or not
+    if(controller->isContinuumFitted()){
+      Float64 continuumTplAmp = gsl_vector_get(s->x,controller->getIndContinuumAmp())/normFactor;
+      if(continuumTplAmp<0){
+        ampPos =0;
+      }
+    }
+
+    Int32 outputStatus=0;
+
+
+    // finally populate the fitting results to the output
+    if(ampPos && status==0)
     {
-        Float64 dof = n - p;
-        Float64 c = GSL_MAX_DBL(1, chi / sqrt(dof));
-//        for (Int32 iddl = 0; iddl < nddl; iddl++)
-//        {
-//            Float64 a = gsl_vector_get(s->x,iddl)/normFactor;
-//            Float64 sigma = c*sqrt(gsl_matrix_get(covar,iddl,iddl))/normFactor;
-//            if(a<0.0){
-//                a=0.0;
-//            }
-//            SetElementAmplitude(filteredEltsIdx[iddl], a, sigma);
-//        }
-        Float64 vel = gsl_vector_get(s->x,nddl);
-        Float64 errVel = c*sqrt(gsl_matrix_get(covar,nddl,nddl));
-
-
-        Log.LogInfo( "LineModel Infos: Lmfit velocity found = %.1f with err = %.1f", vel, errVel);
-
-        if(vel>errVel*2.0){
-            if(lineType==CRay::nType_Emission)
-            {
-                SetVelocityEmission(vel);
-            }else
-            {
-                SetVelocityAbsorption(vel);
-            }
-        }else{
-            if(lineType==CRay::nType_Emission)
-            {
-                Log.LogInfo( "LineModel Infos: Lmfit velocity Emission reset = %.1f ", m_velocityEmissionInit);
-                SetVelocityEmission(m_velocityEmissionInit);
-            }else
-            {
-                Log.LogInfo( "LineModel Infos: Lmfit velocity Absorption reset = %.1f ", m_velocityAbsorptionInit);
-                SetVelocityAbsorption(m_velocityAbsorptionInit);
-            }
+        controller->setMerit(chi);
+        Log.LogInfo("LineModel Lmfit: Resultat accepted");
+        if(controller->isContinuumFitted()){
+          Int32 continuumId = controller->getIndContinuumAmp();
+          Float64 continuumTplAmp = gsl_vector_get(s->x,continuumId)/normFactor;
+          Float64 continuumTplAmpErr = c*sqrt(gsl_matrix_get(covar,continuumId,continuumId))/normFactor;
+          controller->setContinummAmp(continuumTplAmp, continuumTplAmpErr);
+          if(verbose){
+            Log.LogInfo("LineModel Lmfit:  continuumTplAmp calculated =%.3f err =%.3f", continuumTplAmp, continuumTplAmpErr);
+          }
         }
+
+        if(controller->isEmissionVelocityFitted()){
+          Int32 id = controller->getIndEmissionVel();
+          Float64 vel = gsl_vector_get(s->x,id);
+          Float64 errVel = c*sqrt(gsl_matrix_get(covar,id,id));
+          controller->setVelocityEmission(vel, errVel);
+          if(verbose) {
+            Log.LogInfo( "LineModel Infos: Lmfit Emission velocity found = %.1f with err = %.1f", vel, errVel);
+          }
+        }
+        //TODO ajouter des condition sur les err?
+        if(controller->isAbsorptionVelocityFitted()){
+          Int32 id = controller->getIndAbsorptionVel();
+          Float64 vel = gsl_vector_get(s->x,id);
+          Float64 errVel = c*sqrt(gsl_matrix_get(covar,id,id));
+          controller->setVelocityAbsorption(vel, errVel);
+          if(verbose) {
+            Log.LogInfo( "LineModel Infos: Lmfit Absorption velocity found = %.1f with err = %.1f", vel, errVel);
+          }
+        }
+
+        outputStatus = 0;
     }else{
-        ampsfitted.resize(nddl);
-        for (Int32 iddl = 0; iddl < nddl; iddl++)
-        {
-            Float64 a = gsl_vector_get(s->x,iddl)/normFactor;
-            ampsfitted[iddl] = (a);
+        Log.LogInfo("LineModel Lmfit: Resultat dump");
+        controller->setMerit(DBL_MAX);
+
+        if(controller->isEmissionVelocityFitted()){
+          controller->setVelocityEmission(m_velocityEmissionInit, 0);
         }
 
-        SetVelocityAbsorption(m_velocityAbsorptionInit);
-        SetVelocityEmission(m_velocityEmissionInit);
+        if(controller->isAbsorptionVelocityFitted()){
+          controller->setVelocityEmission(m_velocityAbsorptionInit, 0);
+        }
+        if(controller->isContinuumFitted()){
+          controller->setContinummAmp(amplitudeContinuumInit, 0);
+        }
+        outputStatus = 1;
     }
 
     gsl_multifit_fdfsolver_free (s);
@@ -2179,11 +2314,11 @@ Int32 CLineModelElementList::fitAmplitudesLmfit(std::vector<Int32> filteredEltsI
     gsl_matrix_free (J);
     //gsl_rng_free (r);
 
-    return sameSign;
+    return outputStatus;
 }
 
 /**
- * \brief Returns a sorted set of line indices present in the supports of the argument. 
+ * \brief Returns a sorted set of line indices present in the supports of the argument.
  * For each EltsIdx entry, if the entry is not outside lambda range, get the support of each subelement.
  * For each selected support, get the line index. Sort this list and remove multiple entries. Return this clean list.
  **/
@@ -2221,7 +2356,7 @@ std::vector<Int32> CLineModelElementList::getSupportIndexes( std::vector<Int32> 
 }
 
 /**
- * \brief Returns a sorted set of line indices present in the supports of the argument. 
+ * \brief Returns a sorted set of line indices present in the supports of the argument.
  * Create a vector named indexes.
  * If the argument ind is an index to m_Elements that IsOutSideLambdaRange, return indexes.
  * For each entry in m_Elements:
@@ -3702,7 +3837,7 @@ Int32 CLineModelElementList::ApplyVelocityBound(Float64 inf, Float64 sup)
 
 
 /**
- * \brief this function estimates the continuum after removal(interpolation) of the flux samples under the lines for a given redshift 
+ * \brief this function estimates the continuum after removal(interpolation) of the flux samples under the lines for a given redshift
  **/
 void CLineModelElementList::EstimateSpectrumContinuum( Int32 opt_enhance_abs )
 {
@@ -3996,5 +4131,3 @@ Float64 CLineModelElementList::EstimateLikelihoodCstLog(const TFloat64Range& lam
 
     return cstLog;
 }
-
-

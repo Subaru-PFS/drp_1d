@@ -106,7 +106,7 @@ Int32 CTemplatesOrthogonalization::OrthogonalizeTemplate(const CTemplate& inputT
     std::shared_ptr<CTemplate> tplOrtho = std::shared_ptr<CTemplate>( new CTemplate( inputTemplate.GetName().c_str(), inputTemplate.GetCategory() ) );
     *tplOrtho = inputTemplate; //todo: check if this is a true copy of the samples
 
-    bool enableModelSubtraction = false;
+    bool enableModelSubtraction = true;
     if(enableModelSubtraction){
         //Compute linemodel on the template
         CLineModelElementList model( spectrum,

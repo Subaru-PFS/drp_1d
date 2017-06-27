@@ -141,7 +141,7 @@ TInt32Range CMultiLine::EstimateTheoreticalSupport(Int32 subeIdx, const CSpectru
  * Inits the fitted amplitude values.
  **/
 void CMultiLine::prepareSupport(const CSpectrumSpectralAxis& spectralAxis, Float64 redshift, const TFloat64Range &lambdaRange)
-{    
+{
     m_OutsideLambdaRange=true;
     m_RayIsActiveOnSupport.resize( m_Rays.size() , std::vector<Int32>( m_Rays.size() , 0.0 ) );
     m_StartNoOverlap.resize(m_Rays.size());
@@ -633,7 +633,7 @@ void CMultiLine::addToSpectrumModel( const CSpectrumSpectralAxis& modelspectralA
   return;
 }
 
-void CMultiLine::addToSpectrumModelDerivSigma( const CSpectrumSpectralAxis& modelspectralAxis, CSpectrumFluxAxis& modelfluxAxis, Float64 redshift )
+void CMultiLine::addToSpectrumModelDerivSigma( const CSpectrumSpectralAxis& modelspectralAxis, CSpectrumFluxAxis& modelfluxAxis, Float64 redshift , bool emissionRay)
 {
     if(m_OutsideLambdaRange){
         return;
@@ -650,7 +650,7 @@ void CMultiLine::addToSpectrumModelDerivSigma( const CSpectrumSpectralAxis& mode
         for ( Int32 i = m_StartNoOverlap[k]; i <= m_EndNoOverlap[k]; i++)
         {
             Float64 lambda = spectral[i];
-            Float64 Yi=GetModelDerivSigmaAtLambda(lambda, redshift);
+            Float64 Yi=GetModelDerivSigmaAtLambda(lambda, redshift, emissionRay);
             flux[i] += Yi;
         }
     }
@@ -721,7 +721,7 @@ Float64 CMultiLine::GetModelDerivAmplitudeAtLambda(Float64 lambda, Float64 redsh
     return Yi;
 }
 
-Float64 CMultiLine::GetModelDerivSigmaAtLambda(Float64 lambda, Float64 redshift )
+Float64 CMultiLine::GetModelDerivSigmaAtLambda(Float64 lambda, Float64 redshift,bool emissionRay )
 {
     if(m_OutsideLambdaRange){
         return 0.0;
@@ -735,6 +735,10 @@ Float64 CMultiLine::GetModelDerivSigmaAtLambda(Float64 lambda, Float64 redshift 
         if(m_OutsideLambdaRangeList[k2]){
             continue;
         }
+				if((emissionRay  ^ m_Rays[k2].GetIsEmission())){
+					continue;
+				}
+
 
         Float64 A = m_FittedAmplitudes[k2];
         Float64 dzOffset = m_Rays[k2].GetOffset()/m_c_kms;
