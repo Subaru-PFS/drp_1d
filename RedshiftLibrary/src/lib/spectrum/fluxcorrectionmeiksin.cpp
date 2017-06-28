@@ -171,6 +171,29 @@ Float64 CSpectrumFluxCorrectionMeiksin::GetLambdaMax()
     return m_LambdaMax;
 }
 
+Float64 CSpectrumFluxCorrectionMeiksin::getCoeff(Int32 meiksinIdx, Float64 redshift, Float64 restLambda)
+{
+    Int32 redshiftIdx = GetRedshiftIndex(redshift); //index for IGM Meiksin redshift range
+    Float64 coeffIGM = 1.0;
+    if(restLambda <= GetLambdaMax())
+    {
+        Int32 kLbdaMeiksin = 0;
+        if(restLambda >= GetLambdaMin())
+        {
+            kLbdaMeiksin = Int32(restLambda-GetLambdaMin()+0.5);
+        }else //if lambda lower than min meiksin value, use lower meiksin value
+        {
+            kLbdaMeiksin = 0;
+        }
+
+        coeffIGM = m_corrections[redshiftIdx].fluxcorr[meiksinIdx][kLbdaMeiksin];
+        //if(verboseLogFitFitRangez)
+        //{
+        //    Log.LogInfo("ChisquareLog, FitAllz: coeffIGM=%f", coeffIGM);
+        //}
+    }
+    return coeffIGM;
+}
 
 /**
  * @brief CSpectrumFluxCorrectionMeiksin::getMeiksinCoeff: get the IGM Meiksin coeff at a fixed resolution of 1A

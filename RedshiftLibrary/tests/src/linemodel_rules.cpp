@@ -46,7 +46,7 @@ Float64 getLinemodelDoubletRatio(std::string spc, std::string noise, bool enable
 
 
     if(enableRatioRule){
-        ctx.GetDataStore().SetScopedParam("linemodelsolve.linemodel.rules", "oiiratio");
+        ctx.GetDataStore().SetScopedParam("linemodelsolve.linemodel.rules", "ratiorange");
     }else{
         ctx.GetDataStore().SetScopedParam("linemodelsolve.linemodel.rules", "no");
     }
@@ -94,6 +94,7 @@ BOOST_AUTO_TEST_CASE( OIIRatioRange1 )
     Float64 OIIRatioRangeLimit = 2.5; //this threshold has to be set according the regulament.cpp value
 
     //TEST 1 : initially A1 = 3*A2, oiiratiorange rule should modify both amplitudes to get a ratio = OIIRatioRangeLimit
+    BOOST_MESSAGE("\nOIIRatioRange1_test1: 2 lines + both amps modified");
     spc = "../RedshiftLibrary/tests/src/data/LinemodelRulesTestCase/simu_rules_ratiorange_1.fits";
     noise = "../RedshiftLibrary/tests/src/data/LinemodelRulesTestCase/simu_rules_ratiorange_1_noise.fits";
     ratio = getLinemodelDoubletRatio(spc, noise, 0); //rule disabled, get ratio
@@ -102,12 +103,14 @@ BOOST_AUTO_TEST_CASE( OIIRatioRange1 )
     BOOST_CHECK_CLOSE_FRACTION( OIIRatioRangeLimit, ratio, 0.1);
 
     //TEST 2 : same as Test 1, but initially A2 = 3*A1
+    BOOST_MESSAGE("\nOIIRatioRange1_test2: 2 lines + both amps modified");
     spc = "../RedshiftLibrary/tests/src/data/LinemodelRulesTestCase/simu_rules_ratiorange_2.fits";
     noise = "../RedshiftLibrary/tests/src/data/LinemodelRulesTestCase/simu_rules_ratiorange_2_noise.fits";
     ratio = getLinemodelDoubletRatio(spc, noise, 1);
     BOOST_CHECK_CLOSE_FRACTION( 1./OIIRatioRangeLimit, ratio, 0.1 );
 
     //TEST 3 : A1 = 1.5*A2, so that the ratio should be unchanged
+    BOOST_MESSAGE("\nOIIRatioRange1_test3: 2 lines + both amps shoub be unchanged");
     spc = "../RedshiftLibrary/tests/src/data/LinemodelRulesTestCase/simu_rules_ratiorange_3.fits";
     noise = "../RedshiftLibrary/tests/src/data/LinemodelRulesTestCase/simu_rules_ratiorange_3_noise.fits";
     Float64 ratioIN = getLinemodelDoubletRatio(spc, noise, 0);

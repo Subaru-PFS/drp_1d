@@ -1848,7 +1848,7 @@ void print_state (size_t iter, gsl_multifit_fdfsolver * s)
 Int32 CLineModelElementList::fitAmplitudesLmfit(std::vector<Int32> filteredEltsIdx, const CSpectrumFluxAxis& fluxAxis, std::vector<Float64>& ampsfitted, Int32 lineType)
 {
     //http://www.gnu.org/software/gsl/manual/html_node/Example-programs-for-Nonlinear-Least_002dSquares-Fitting.html
-    Bool verbose = true;
+    Bool verbose = false;
 
 
 
@@ -3284,7 +3284,7 @@ void CLineModelElementList::addDoubleLine(const CRay &r1, const CRay &r2, Int32 
  * /brief Calls the rules' methods depending on the JSON options.
  * If m_rulesoption is "no", do nothing.
  * If either "balmer" or "all" is in the rules string, call ApplyBalmerRuleLinSolve.
- * If "all" or "oiiratio" is in the rules string, call ApplyAmplitudeRatioRangeRule parameterized for OII.
+ * If "all" or "ratiorange" is in the rules string, call ApplyAmplitudeRatioRangeRule parameterized for OII.
  * If "all" or "strongweak" is in the rules string, call ApplyStrongHigherWeakRule for emission and then for absorption.
  **/
 void CLineModelElementList::applyRules( bool enableLogs )

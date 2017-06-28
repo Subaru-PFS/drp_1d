@@ -34,8 +34,10 @@ namespace bfs = boost::filesystem;
 using namespace NSEpic;
 using namespace std;
 
-COperatorChiSquareLogLambda::COperatorChiSquareLogLambda( std::string calibrationPath )
+COperatorChiSquareLogLambda::COperatorChiSquareLogLambda(std::string calibrationPath , bool opt_spcrebin)
 {   
+    m_opt_spcrebin = opt_spcrebin;
+
     //ISM
     m_ismCorrectionCalzetti = new CSpectrumFluxCorrectionCalzetti();
     m_ismCorrectionCalzetti->Init(calibrationPath);
@@ -58,15 +60,16 @@ COperatorChiSquareLogLambda::COperatorChiSquareLogLambda( std::string calibratio
 
 COperatorChiSquareLogLambda::~COperatorChiSquareLogLambda()
 {
-
-    fftw_destroy_plan(pSpc);
-    fftw_free(inSpc); fftw_free(outSpc);
-    fftw_destroy_plan(pTpl);
-    fftw_free(inTpl_padded);
-    fftw_free(inTpl); fftw_free(outTpl);
-    fftw_destroy_plan(pBackward);
-    freeFFTPrecomputedBuffers();
-
+    if(inSpc)
+    {
+        fftw_destroy_plan(pSpc);
+        fftw_free(inSpc); fftw_free(outSpc);
+        fftw_destroy_plan(pTpl);
+        fftw_free(inTpl_padded);
+        fftw_free(inTpl); fftw_free(outTpl);
+        fftw_destroy_plan(pBackward);
+        freeFFTPrecomputedBuffers();
+    }
 }
 
 
@@ -456,7 +459,7 @@ Int32 COperatorChiSquareLogLambda::FitAllz(const TFloat64Range& lambdaRange,
     //prepare list of redshifts that need a full lbdarange lst-square calculation
     TInt32RangeList izrangelist;
     std::vector<Int32> zindexesFullLstSquare;
-    if(enableIGM)
+    if(enableIGM && result->Redshifts.size()>1)
     {
         zindexesFullLstSquare.push_back(0); //first index is always a mandatory full Lstsq Calculation case
         std::vector<Float64> zlistsegments = m_igmCorrectionMeiksin->GetSegmentsStartRedshiftList();
@@ -493,7 +496,7 @@ Int32 COperatorChiSquareLogLambda::FitAllz(const TFloat64Range& lambdaRange,
             }
         }
         //add the last range until result->Redshifts.size()-1 if necessary
-        if(izrangelist[izrangelist.size()-1].GetEnd() < result->Redshifts.size()-1)
+        if(izrangelist.size()==0 || izrangelist[izrangelist.size()-1].GetEnd() < result->Redshifts.size()-1)
         {
             if(izrangelist.size()>0)
             {
@@ -540,13 +543,32 @@ Int32 COperatorChiSquareLogLambda::FitAllz(const TFloat64Range& lambdaRange,
         //prepare the zrange-result container
         std::shared_ptr<CChisquareResult> subresult = std::shared_ptr<CChisquareResult>( new CChisquareResult() );
         TFloat64Range zrange = TFloat64Range(result->Redshifts[izrangelist[k].GetBegin()], result->Redshifts[izrangelist[k].GetEnd()]);
-        Float64 redshiftStep =  result->Redshifts[izrangelist[k].GetBegin()+1]-result->Redshifts[izrangelist[k].GetBegin()];
-        TFloat64List subRedshifts = zrange.SpreadOver( redshiftStep );
-        subresult->Init(subRedshifts.size());
-        subresult->Redshifts = subRedshifts;
+        TInt32Range ilbda;
+        if(result->Redshifts.size()>1)
+        {
+            Float64 redshiftStep =  result->Redshifts[izrangelist[k].GetBegin()+1]-result->Redshifts[izrangelist[k].GetBegin()];
+            TFloat64List subRedshifts = zrange.SpreadOver( redshiftStep );
+            subresult->Init(subRedshifts.size());
+            subresult->Redshifts = subRedshifts;
 
-        //slice the template
-        TInt32Range ilbda = FindTplSpectralIndex(spectrumRebinedLambda, tplRebinedLambdaGlobal, spectrumRebinedSpectralAxis.GetSamplesCount(), tplRebinedSpectralAxis.GetSamplesCount(), zrange, redshiftStep);
+            //slice the template
+            ilbda = FindTplSpectralIndex( spectrumRebinedLambda,
+                                                      tplRebinedLambdaGlobal,
+                                                      spectrumRebinedSpectralAxis.GetSamplesCount(),
+                                                      tplRebinedSpectralAxis.GetSamplesCount(),
+                                                      zrange,
+                                                      redshiftStep);
+        }else{
+            ilbda=TInt32Range(0, tplRebinedSpectralAxis.GetSamplesCount()-1);
+            subresult->Init(1);
+            subresult->Redshifts = result->Redshifts;
+        }
+        if(ilbda.GetBegin()==-1 || ilbda.GetEnd()==-1)
+        {
+            Log.LogError("ChisquareLog, FitAllz: Can't find tpl indexes");
+            return -1;
+        }
+
         if(verboseLogFitAllz)
         {
             Log.LogInfo("ChisquareLog, FitAllz: zrange min=%f, max=%f", zrange.GetBegin(), zrange.GetEnd());
@@ -610,8 +632,6 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64* spectrumRebinedLambda,
                                              std::vector<Int32> igmMeiksinCoeffs,
                                              std::vector<Int32> ismEbmvCoeffs)
 {
-    bool verboseLogFitFitRangez = false;
-    bool verboseExportFitRangez = false;
 
     Float64 redshiftValueMeiksin = result->Redshifts[0];
     if(verboseLogFitFitRangez)
@@ -715,30 +735,13 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64* spectrumRebinedLambda,
 
         if(enableIGM)
         {
-            Int32 redshiftIdx = m_igmCorrectionMeiksin->GetRedshiftIndex(redshiftValueMeiksin); //index for IGM Meiksin redshift range
+
             Int32 meiksinIdx = igmMeiksinCoeffs[kIGM];
 
             for(Int32 j=0; j<nTpl; j++)
             {
-                Float64 coeffIGM = 1.0;
                 Float64 restLambda = tplRebinedLambda[j];
-                if(restLambda <= m_igmCorrectionMeiksin->GetLambdaMax())
-                {
-                    Int32 kLbdaMeiksin = 0;
-                    if(restLambda >= m_igmCorrectionMeiksin->GetLambdaMin())
-                    {
-                        kLbdaMeiksin = Int32(restLambda-m_igmCorrectionMeiksin->GetLambdaMin());
-                    }else //if lambda lower than min meiksin value, use lower meiksin value
-                    {
-                        kLbdaMeiksin = 0;
-                    }
-
-                    coeffIGM = m_igmCorrectionMeiksin->m_corrections[redshiftIdx].fluxcorr[meiksinIdx][kLbdaMeiksin];
-                    //if(verboseLogFitFitRangez)
-                    //{
-                    //    Log.LogInfo("ChisquareLog, FitAllz: coeffIGM=%f", coeffIGM);
-                    //}
-                }
+                Float64 coeffIGM = m_igmCorrectionMeiksin->getCoeff(meiksinIdx, redshiftValueMeiksin, restLambda);
 
                 tplRebinedFluxIgm[j] = tplRebinedFluxRaw[j]*coeffIGM;
                 tplRebinedFlux[j] = tplRebinedFluxIgm[j];
@@ -788,6 +791,24 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64* spectrumRebinedLambda,
                     tplRebinedFlux[j] = tplRebinedFluxIgm[j]*ebmvDustCoeff;
 
                     tpl2RebinedFlux[j] = tplRebinedFlux[j]*tplRebinedFlux[j];
+                }
+            }
+
+            if(verboseExportFitRangez_model)
+            {
+                if( (enableISM && exportISMIdx==ismEbmvCoeffs[kISM]) || (!enableISM))
+                {
+                    if( (enableIGM && exportIGMIdx==igmMeiksinCoeffs[kIGM]) || (!enableIGM) )
+                    {
+
+                        // save chi2 data
+                        FILE* f = fopen( "loglbda_model_dbg.txt", "w+" );
+                        for(Int32 j=0; j<nTpl; j++)
+                        {
+                            fprintf( f, "%f\t%e\n", tplRebinedLambda[j], tplRebinedFlux[j]);
+                        }
+                        fclose( f );
+                    }
                 }
             }
 
@@ -938,6 +959,7 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64* spectrumRebinedLambda,
         mtmreversed_array[t] = bestFitMtm[z_vect.size()-1-t];
         ismCoeffreversed_array[t] = bestISMCoeff[z_vect.size()-1-t];
         igmIdxreversed_array[t] = bestIGMIdx[z_vect.size()-1-t];
+        //Log.LogInfo("ChisquareLog, FitAllz: interpolating z result, for z=%f, chi2reversed_array=%f", zreversed_array[t], chi2reversed_array[t]);
     }
 
     Int32 k = 0;
@@ -954,6 +976,7 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64* spectrumRebinedLambda,
         {
             Log.LogInfo("ChisquareLog, FitAllz: interpolating z result, kshift=%f", k);
             Log.LogInfo("ChisquareLog, FitAllz: interpolating z result, zcalc=%f, kfound=%d, zfound=%f", result->Redshifts[iz], k, z_vect[z_vect.size()-1-k]);
+            Log.LogInfo("ChisquareLog, FitAllz: interpolating z result, bestChi2=%f", bestChi2[z_vect.size()-1-k]);
         }
         // closest value
         result->ChiSquare[iz] = bestChi2[z_vect.size()-1-k];
@@ -1070,6 +1093,11 @@ TInt32Range COperatorChiSquareLogLambda::FindTplSpectralIndex(const Float64* spc
         Log.LogError("ChisquareLog, Problem with tpl indexes for zranges, found ilbdamax=%d", ilbdamax);
         return TInt32Range(-1, -1);
     }
+    if(ilbdamin > ilbdamax)
+    {
+        Log.LogError("ChisquareLog, Problem with tpl indexes for zranges, found ilbdamin=%d > ilbdamax=%d", ilbdamin, ilbdamax);
+        return TInt32Range(-1, -1);
+    }
 
     return TInt32Range(ilbdamin, ilbdamax);
 }
@@ -1161,12 +1189,6 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(const CSpe
     }
 
 
-    Int32 enableObservedSpcLogRebin = 0;
-    Bool verboseLogRebin = 0;
-    Bool verboseExportLogRebin = 0;
-    std::string rebinMethod = "spline";
-
-
     // Create/Retrieve the spectrum log-lambda spectral axis
     Int32 lbdaMinIdx = spectrum.GetSpectralAxis().GetIndexAtWaveLength(lambdaRange.GetBegin());
     Int32 lbdaMaxIdx = spectrum.GetSpectralAxis().GetIndexAtWaveLength(lambdaRange.GetEnd());
@@ -1190,7 +1212,7 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(const CSpe
     m_errorRebinedLog.SetSize(m_spectrumRebinedLog.GetSampleCount());
 
 
-    if(enableObservedSpcLogRebin==1){
+    if(m_opt_spcrebin){
 
         Log.LogInfo("ChisquareLog, Log-regular lambda resampling ON");
 

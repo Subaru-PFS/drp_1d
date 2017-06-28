@@ -22,18 +22,39 @@ class COperatorChiSquareLogLambda : public COperator
 
 public:
 
-    COperatorChiSquareLogLambda( std::string calibrationPath );
+    COperatorChiSquareLogLambda( std::string calibrationPath, bool opt_spcrebin=false );
     ~COperatorChiSquareLogLambda();
 
-     std::shared_ptr<COperatorResult> Compute(const CSpectrum& spectrum, const CTemplate& tpl,
-                                    const TFloat64Range& lambdaRange, const TFloat64List& redshifts,
-                                    Float64 overlapThreshold, std::vector<CMask> additional_spcMasks, std::string opt_interp, Int32 opt_extinction=0, Int32 opt_dustFitting=0);
+    std::shared_ptr<COperatorResult> Compute( const CSpectrum& spectrum,
+                                              const CTemplate& tpl,
+                                              const TFloat64Range& lambdaRange,
+                                              const TFloat64List& redshifts,
+                                              Float64 overlapThreshold,
+                                              std::vector<CMask> additional_spcMasks,
+                                              std::string opt_interp,
+                                              Int32 opt_extinction=0,
+                                              Int32 opt_dustFitting=0);
 
     const Float64*  getDustCoeff(Float64 dustCoeff, Float64 maxLambda);
     const Float64*  getMeiksinCoeff(Int32 meiksinIdx, Float64 redshift, Float64 maxLambda);
 
 
 private:
+
+    //hardcoded config: REBIN
+    Bool verboseLogRebin = 0;
+    Bool verboseExportLogRebin = 0;
+    std::string rebinMethod = "spline";
+
+    //hardcoded config: FIT_RANGEZ
+    bool verboseLogFitFitRangez = false;
+    bool verboseExportFitRangez = false;
+    bool verboseExportFitRangez_model = false;
+    UInt32 exportIGMIdx = 5;
+    UInt32 exportISMIdx = -1;
+
+
+
 
     Int32 FitAllz(const TFloat64Range& lambdaRange,
                   std::shared_ptr<CChisquareResult> result,
@@ -62,6 +83,8 @@ private:
     Int32 InterpolateResult(const Float64* in, const Float64* inGrid, const Float64* tgtGrid, Int32 n, Int32 tgtn, std::vector<Float64>& out, Float64 defaultValue);
 
     void freeFFTPrecomputedBuffers();
+
+    bool m_opt_spcrebin;
 
     //log grid template
     CTemplate       m_templateRebinedLog;

@@ -39,6 +39,8 @@ public:
 
     std::vector<Float64> GetSegmentsStartRedshiftList();
 
+    Float64  getCoeff(Int32 meiksinIdx, Float64 redshift, Float64 restLambda);
+
     const Float64*  getMeiksinCoeff(Int32 meiksinIdx, Float64 redshift, Float64 maxLambda);
 
 

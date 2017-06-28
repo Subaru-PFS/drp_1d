@@ -17,7 +17,8 @@ using namespace std;
 
 CMethodChisquareLogSolve::CMethodChisquareLogSolve( std::string calibrationPath )
 {
-    m_chiSquareOperator = new COperatorChiSquareLogLambda( calibrationPath );
+    bool enableLogRebin = true;
+    m_chiSquareOperator = new COperatorChiSquareLogLambda( calibrationPath, enableLogRebin );
 }
 
 CMethodChisquareLogSolve::~CMethodChisquareLogSolve()
