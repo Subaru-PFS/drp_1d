@@ -37,6 +37,7 @@ using namespace std;
 COperatorChiSquareLogLambda::COperatorChiSquareLogLambda(std::string calibrationPath , bool opt_spcrebin)
 {   
     m_opt_spcrebin = opt_spcrebin;
+    Log.LogInfo("ChisquareLog, Contructor: Spectrum REBIN-LOG enabled=%d", m_opt_spcrebin);
 
     //ISM
     m_ismCorrectionCalzetti = new CSpectrumFluxCorrectionCalzetti();
