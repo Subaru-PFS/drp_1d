@@ -56,8 +56,10 @@ Bool CSpectrumFluxCorrectionMeiksin::Init( std::string calibrationPath )
         if(!ret)
         {
             Log.LogError("Unable to load the Meiksin flux correction data. aborting...");
+            meiksinInitFailed = true;
             return false;
         }
+        meiksinInitFailed = false;
     }
     return true;
 }

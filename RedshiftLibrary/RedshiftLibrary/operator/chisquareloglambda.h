@@ -53,6 +53,10 @@ private:
     UInt32 exportIGMIdx = 5;
     UInt32 exportISMIdx = -1;
 
+    //hardcoded config: XTY_FFT
+    bool verboseLogXtYFFT = false;
+    bool verboseExportXtYFFT = false;
+
 
 
 
@@ -82,11 +86,12 @@ private:
 
     Int32 InterpolateResult(const Float64* in, const Float64* inGrid, const Float64* tgtGrid, Int32 n, Int32 tgtn, std::vector<Float64>& out, Float64 defaultValue);
 
+    void freeFFTPlans();
     void freeFFTPrecomputedBuffers();
 
     bool m_opt_spcrebin;
 
-    //log grid template
+    //log grid data
     CTemplate       m_templateRebinedLog;
     CMask           m_mskRebinedLog;
     CSpectrum       m_spectrumRebinedLog;
