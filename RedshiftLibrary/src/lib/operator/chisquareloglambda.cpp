@@ -872,7 +872,7 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64* spectrumRebinedLambda,
 
             // Estimate MtM
             std::vector<Float64> mtm_vec;
-            /*
+            //*
             EstimateXtY( oneSpcRebinedFluxOverErr2,
                          tpl2RebinedFlux,
                          nSpc,
@@ -881,7 +881,7 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64* spectrumRebinedLambda,
                          mtm_vec,
                          1);
             //*/
-            EstimateXtYSlow(oneSpcRebinedFluxOverErr2, tpl2RebinedFlux, nSpc, nshifts, mtm_vec);
+            //EstimateXtYSlow(oneSpcRebinedFluxOverErr2, tpl2RebinedFlux, nSpc, nshifts, mtm_vec);
             //EstimateMtMFast(oneSpcRebinedFluxOverErr2, tpl2RebinedFlux, nSpc, nshifts, mtm_vec);
 
             if(verboseExportFitRangez)
