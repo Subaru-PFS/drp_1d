@@ -41,7 +41,8 @@ public:
                                 const Float64 velocityEmission,
                                 const Float64 velocityAbsorption,
                                 const std::string &opt_rules,
-                                const std::string &opt_rigidity);
+                                const std::string &opt_rigidity,
+                                bool enableOrtho=false);
 
     ~CTemplatesOrthogonalization();
 
@@ -49,6 +50,8 @@ public:
     CTemplatesOrthoStore getOrthogonalTplStore();
 
 private:
+
+    bool m_enableOrtho;
 
     Int32 OrthogonalizeTemplate(const CTemplate& inputTemplate,
                                 const std::string calibrationPath,

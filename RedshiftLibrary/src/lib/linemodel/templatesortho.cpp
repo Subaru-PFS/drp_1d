@@ -17,8 +17,11 @@ CTemplatesOrthogonalization::CTemplatesOrthogonalization(const CTemplateCatalog&
                                                          const Float64 velocityEmission,
                                                          const Float64 velocityAbsorption,
                                                          const std::string& opt_rules,
-                                                         const std::string& opt_rigidity)
+                                                         const std::string& opt_rigidity,
+                                                         bool enableOrtho)
 {
+
+    m_enableOrtho = enableOrtho;
 
     for( UInt32 i=0; i<tplCategoryList.size(); i++ )
     {
@@ -106,7 +109,7 @@ Int32 CTemplatesOrthogonalization::OrthogonalizeTemplate(const CTemplate& inputT
     std::shared_ptr<CTemplate> tplOrtho = std::shared_ptr<CTemplate>( new CTemplate( inputTemplate.GetName().c_str(), inputTemplate.GetCategory() ) );
     *tplOrtho = inputTemplate; //todo: check if this is a true copy of the samples
 
-    bool enableModelSubtraction = false;
+    bool enableModelSubtraction = m_enableOrtho;
     if(enableModelSubtraction){
         //Compute linemodel on the template
         CLineModelElementList model( spectrum,

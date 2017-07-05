@@ -160,6 +160,9 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
     CRayCatalog::TRayVector restRayList = restraycatalog.GetFilteredList( typeFilter, forceFilter);
     Log.LogDebug( "restRayList.size() = %d", restRayList.size() );
 
+    bool enableOrtho = false;
+    Log.LogInfo( "linemodel: TemplatesOrthogonalization enabled = %d", enableOrtho );
+
     //prepare continuum templates catalog
     CTemplatesOrthogonalization tplOrtho(tplCatalog,
                                          tplCategoryList,
@@ -172,7 +175,8 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
                                          opt_velocityEmission,
                                          opt_velocityAbsorption,
                                          opt_rules,
-                                         opt_rigidity);
+                                         opt_rigidity,
+                                         enableOrtho);
     //CTemplateCatalog orthoTplCatalog = tplOrtho.getOrthogonalTplCatalog();
     CTemplatesOrthoStore orthoTplStore = tplOrtho.getOrthogonalTplStore();
     Int32 ctlgIdx = 0; //only one ortho config for now
