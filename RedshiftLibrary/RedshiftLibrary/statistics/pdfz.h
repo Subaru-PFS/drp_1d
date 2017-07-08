@@ -23,7 +23,10 @@ public:
     CPdfz();
     ~CPdfz();
 
-    Int32 Compute(TFloat64List merits, TFloat64List redshifts, Float64 cstLog, TFloat64List &logPdf, Float64 &logEvidence);
+    Int32 Compute(TFloat64List merits, TFloat64List redshifts, Float64 cstLog, TFloat64List zPrior, TFloat64List &logPdf, Float64 &logEvidence);
+    std::vector<Float64> GetConstantLogZPrior(UInt32 nredshifts);
+    std::vector<Float64> GetStrongLinePresenceLogZPrior(std::vector<bool> linePresence);
+
 
 private:
 

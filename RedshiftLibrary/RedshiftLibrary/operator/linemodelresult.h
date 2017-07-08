@@ -45,7 +45,9 @@ public:
     Void Load( std::istream& stream );
 
     Int32 GetNLinesOverCutThreshold(Int32 extremaIdx, Float64 snrThres, Float64 fitThres) const;
+    std::vector<bool> GetStrongLinesPresence( UInt32 filterType=0 ) const;
     Float64 GetExtremaMerit(Int32 extremaIdx) const;
+    UInt32 GetExtremaIndex(UInt32 extremaIdx) const;
 
     //Full Merit curve
     TFloat64List            Redshifts;  // z axis

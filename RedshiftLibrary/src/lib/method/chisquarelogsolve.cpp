@@ -231,7 +231,9 @@ Int32 CMethodChisquareLogSolve::CombinePDF(CDataStore &store, std::string scopeS
         CPdfz pdfz;
         TFloat64List logProba;
         Float64 logEvidence;
-        Int32 retPdfz = pdfz.Compute(meritResult->ChiSquare, meritResult->Redshifts, meritResult->CstLog, logProba, logEvidence);
+
+        std::vector<Float64> zPrior=pdfz.GetConstantLogZPrior(meritResult->Redshifts.size());
+        Int32 retPdfz = pdfz.Compute(meritResult->ChiSquare, meritResult->Redshifts, meritResult->CstLog, zPrior, logProba, logEvidence);
         if(retPdfz!=0)
         {
             Log.LogError("chisquarelogsolve: Pdfz computation failed for tpl %s", (*it).first.c_str());
@@ -259,7 +261,8 @@ Int32 CMethodChisquareLogSolve::CombinePDF(CDataStore &store, std::string scopeS
         CPdfz pdfz;
         TFloat64List logProba;
         Float64 logEvidence;
-        Int32 retPdfz = pdfz.Compute(meritResult->ChiSquare, meritResult->Redshifts, meritResult->CstLog, logProba, logEvidence);
+        std::vector<Float64> zPrior=pdfz.GetConstantLogZPrior(meritResult->Redshifts.size());
+        Int32 retPdfz = pdfz.Compute(meritResult->ChiSquare, meritResult->Redshifts, meritResult->CstLog, zPrior, logProba, logEvidence);
         if(retPdfz!=0)
         {
             Log.LogError("chisquarelogsolve: Pdfz computation failed for tpl %s", (*it).first.c_str());

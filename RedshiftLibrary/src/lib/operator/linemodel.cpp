@@ -14,6 +14,7 @@
 #include <RedshiftLibrary/statistics/deltaz.h>
 #include <RedshiftLibrary/statistics/pdfz.h>
 #include <RedshiftLibrary/operator/pdfMargZLogResult.h>
+#include <RedshiftLibrary/operator/pdfLogresult.h>
 #include <RedshiftLibrary/linemodel/templatesfitstore.h>
 
 #include <RedshiftLibrary/spectrum/io/fitswriter.h>
@@ -255,7 +256,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
 
         std::string opt_interp = "precomputedfinegrid"; // "lin"; //
         Int32 opt_dustFit = 1;
-        Int32 opt_extinction = 0;
+        Int32 opt_extinction = 1;
         Log.LogInfo( "linemodel: precomputing-fitContinuum_dustfit = %d", opt_dustFit );
         Log.LogInfo( "linemodel: precomputing-fitContinuum_igm = %d", opt_extinction );
 
@@ -871,12 +872,33 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
     //ComputeArea2(*result);
 
     /* ------------------------  COMPUTE POSTMARG PDF  --------------------------  */
-    auto postmargZResult = std::shared_ptr<CPdfMargZLogResult>(new CPdfMargZLogResult());
+    Log.LogInfo("Linemodel: Pdfz computation");
+    std::shared_ptr<CPdfMargZLogResult> postmargZResult = std::shared_ptr<CPdfMargZLogResult>(new CPdfMargZLogResult());
     CPdfz pdfz;
     Float64 cstLog = model.getLikelihood_cstLog(lambdaRange);
     TFloat64List logProba;
     Float64 logEvidence;
-    Int32 retPdfz = pdfz.Compute(result->ChiSquare, result->Redshifts, cstLog, logProba, logEvidence);
+
+    bool zPriorStrongLinePresence = true;
+    std::shared_ptr<CPdfLogResult> zPrior = std::shared_ptr<CPdfLogResult>(new CPdfLogResult());
+    zPrior->SetSize(result->Redshifts.size());
+    for ( UInt32 k=0; k<result->Redshifts.size(); k++)
+    {
+        zPrior->Redshifts[k] = result->Redshifts[k];
+    }
+    if(zPriorStrongLinePresence)
+    {
+        Log.LogInfo("Linemodel: Pdfz computation: StrongLinePresence prior enabled");
+        UInt32 lineTypeFilter = 1;// for emission lines only
+        std::vector<bool> strongLinePresence = result->GetStrongLinesPresence(lineTypeFilter);
+        zPrior->valProbaLog = pdfz.GetStrongLinePresenceLogZPrior(strongLinePresence);
+    }else{
+        Log.LogInfo("Linemodel: Pdfz computation: StrongLinePresence prior disabled");
+        zPrior->valProbaLog = pdfz.GetConstantLogZPrior(result->Redshifts.size());
+    }
+    dataStore.StoreGlobalResult( "zPDF/logprior.logP_Z_data", zPrior);
+
+    Int32 retPdfz = pdfz.Compute(result->ChiSquare, result->Redshifts, cstLog, zPrior->valProbaLog, logProba, logEvidence);
     if(retPdfz!=0)
     {
         Log.LogError("Linemodel: Pdfz computation failed");

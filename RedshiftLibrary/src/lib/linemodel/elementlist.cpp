@@ -696,11 +696,14 @@ void CLineModelElementList::PrepareContinuum(Float64 z)
     Int32 k = 0;
     Float64 dl = 0.1;
     Float64 Coeffk = 1.0/dl/(1+z);
+    // optionally mix with spcContinuum
+    //Float64 alpha = 0.5;
     // For each sample in the target spectrum
     while( j<targetSpectralAxis.GetSamplesCount() && Xtgt[j] <= currentRange.GetEnd() )
     {
         k = (int)(Xtgt[j]*Coeffk+0.5);
 
+        //Yrebin[j] = alpha*m_precomputedFineGridContinuumFlux[k]+(1-alpha)*m_SpcContinuumFluxAxis[j];
         Yrebin[j] = m_precomputedFineGridContinuumFlux[k];
         j++;
 
@@ -1192,12 +1195,12 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
         if(m_rigidity=="tplshape")
         {
             Float64 _merit;
+            modelSolution = GetModelSolution();
             //if(enableLogging || m_ContinuumComponent == "tplfit")
             if(enableLogging)
             {
                 refreshModel();
                 //create spectrum model
-                modelSolution = GetModelSolution();
                 _merit = getLeastSquareMerit(lambdaRange);
                 //_merit = getLeastSquareMeritFast();
             }else{
@@ -3324,11 +3327,13 @@ CLineModelResult::SLineModelSolution CLineModelElementList::GetModelSolution()
             modelSolution.Amplitudes.push_back(m_Elements[eIdx]->GetFittedAmplitude(subeIdx));
             modelSolution.Errors.push_back(-1.0);
             modelSolution.FittingError.push_back(-1.0);
+            modelSolution.OutsideLambdaRange.push_back(true);
         }else{
             modelSolution.ElementId.push_back( eIdx );
             modelSolution.Amplitudes.push_back(m_Elements[eIdx]->GetFittedAmplitude(subeIdx));
             modelSolution.Errors.push_back(m_Elements[eIdx]->GetFittedAmplitudeErrorSigma(subeIdx));
             modelSolution.FittingError.push_back(getModelErrorUnderElement(eIdx));
+            modelSolution.OutsideLambdaRange.push_back(m_Elements[eIdx]->IsOutsideLambdaRange(subeIdx));
         }
 
         //modelSolution.Widths.push_back(-1.0);

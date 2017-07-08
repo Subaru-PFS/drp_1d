@@ -5,6 +5,9 @@
 #include <stdio.h>
 #include <float.h>
 #include <math.h>
+#include <RedshiftLibrary/log/log.h>
+#include <RedshiftLibrary/operator/pdfMargZLogResult.h>
+
 
 using namespace NSEpic;
 
@@ -35,7 +38,8 @@ Void CLineModelSolveResult::Save( const CDataStore& store, std::ostream& stream 
     Float64 sigma;
 
     //GetBestRedshiftWithStrongELSnrPrior( store, redshift, merit );
-    GetBestRedshift( store, redshift, merit, sigma );
+    //GetBestRedshift( store, redshift, merit, sigma );
+    GetBestRedshiftFromPdf( store, redshift, merit, sigma );
 
     stream <<  "#Redshifts\tMerit\tTemplate"<< std::endl;
     stream << redshift << "\t"
@@ -56,7 +60,9 @@ Void CLineModelSolveResult::SaveLine( const CDataStore& store, std::ostream& str
     Float64 sigma;
 
     //GetBestRedshiftWithStrongELSnrPrior( store, redshift, merit );
-    GetBestRedshift( store, redshift, merit, sigma );
+    //GetBestRedshift( store, redshift, merit, sigma );
+    GetBestRedshiftFromPdf( store, redshift, merit, sigma );
+    Log.LogInfo( "Linemodelsolve-result: extracting best redshift from PDF");
 
     stream  << store.GetSpectrumName() << "\t"
         << store.GetProcessingID() << "\t"
@@ -93,6 +99,76 @@ Bool CLineModelSolveResult::GetBestRedshift( const CDataStore& store, Float64& r
             Float64 merit = lineModelResult->GetExtremaMerit(i);
             if( merit < tmpMerit )
             {
+                tmpMerit = merit;
+                //tmpRedshift = lineModelResult->Extrema[i];
+                tmpRedshift = lineModelResult->ExtremaLastPass[i];
+                tmpSigma = lineModelResult->DeltaZ[i];
+            }
+        }
+    }
+
+    redshift = tmpRedshift;
+    merit = tmpMerit;
+    sigma = tmpSigma;
+    return true;
+}
+
+/**
+ * \brief Searches the best_z = argmax(pdf)
+ * output: redshift = argmax(pdf)
+ * output: merit = chi2(redshift)
+ * output: sigma = deltaz(redshift)
+ *
+ **/
+Bool CLineModelSolveResult::GetBestRedshiftFromPdf( const CDataStore& store, Float64& redshift, Float64& merit, Float64& sigma ) const
+{
+    std::string scope = store.GetScope( *this ) + "linemodelsolve.linemodel";
+    auto results_chi2 = store.GetGlobalResult( scope.c_str() );
+
+    std::string scope_res = "zPDF/logposterior.logMargP_Z_data";
+    auto results_pdf =  store.GetGlobalResult( scope_res.c_str() );
+    auto logzpdf1d = std::dynamic_pointer_cast<const CPdfMargZLogResult>( results_pdf.lock() );
+
+    if(!logzpdf1d)
+    {
+        Log.LogError( "GetBestRedshiftFromPdf: no pdf results retrieved from scope: %s", scope_res.c_str());
+        return false;
+    }
+
+
+
+    Float64 tmpProbaLog = -DBL_MAX;
+    Float64 tmpMerit = DBL_MAX;
+    Float64 tmpRedshift = 0.0;
+    Float64 tmpSigma = -1.0;
+
+    if( !results_chi2.expired() )
+    {
+        auto lineModelResult = std::dynamic_pointer_cast<const CLineModelResult>( results_chi2.lock() );
+
+
+        if(logzpdf1d->Redshifts.size() != lineModelResult->Redshifts.size())
+        {
+            Log.LogError( "GetBestRedshiftFromPdf: pdf samplecount != chisquare samplecount");
+            return false;
+        }
+
+        for( Int32 i=0; i<lineModelResult->Extrema.size(); i++ )
+        {
+            UInt32 solIdx = lineModelResult->GetExtremaIndex(i);
+            if(solIdx<0 || solIdx>=logzpdf1d->valProbaLog.size())
+            {
+                Log.LogError( "GetBestRedshiftFromPdf: pdf proba value not found for extremumIndex = %d", i);
+                return false;
+            }
+
+            Float64 probaLog = logzpdf1d->valProbaLog[solIdx];
+
+            Float64 merit = lineModelResult->GetExtremaMerit(i);
+            //if( merit < tmpMerit )
+            if(probaLog>tmpProbaLog)
+            {
+                tmpProbaLog = probaLog;
                 tmpMerit = merit;
                 //tmpRedshift = lineModelResult->Extrema[i];
                 tmpRedshift = lineModelResult->ExtremaLastPass[i];

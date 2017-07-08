@@ -422,6 +422,54 @@ Int32 CLineModelResult::GetNLinesOverCutThreshold(Int32 extremaIdx, Float64 snrT
 }
 
 /**
+ * @brief CLineModelResult::GetStrongLinesPresence
+ * @param filterType: 1: emission only, 2 abs only, else: no filter
+ * @return: a list of boolean values indicating if a strong is present (not outsidelambdarange for that z) for each redshift
+ */
+std::vector<bool> CLineModelResult::GetStrongLinesPresence( UInt32 filterType ) const
+{
+
+    std::vector<bool> strongIsPresent(LineModelSolutions.size(), false);
+    for ( UInt32 solutionIdx=0; solutionIdx<LineModelSolutions.size(); solutionIdx++)
+    {
+        strongIsPresent[solutionIdx] = false;
+
+        for ( UInt32 j=0; j<LineModelSolutions[solutionIdx].Amplitudes.size(); j++)
+        {
+            if( !LineModelSolutions[solutionIdx].Rays[j].GetIsStrong() )
+            {
+                continue;
+            }
+
+            if(filterType==1)
+            {
+                if( !LineModelSolutions[solutionIdx].Rays[j].GetIsEmission() )
+                {
+                    continue;
+                }
+            }else if(filterType==2)
+            {
+                if( LineModelSolutions[solutionIdx].Rays[j].GetIsEmission() )
+                {
+                    continue;
+                }
+            }
+
+            if(!LineModelSolutions[solutionIdx].OutsideLambdaRange[j])
+            {
+                strongIsPresent[solutionIdx] = true;
+                break;
+            }
+        }
+    }
+
+    return strongIsPresent;
+}
+
+
+
+
+/**
  * \brief Returns the value of the ChiSquare of the Extrema indexed by the argument extremaIdx - if it is a valid index.
  * Let result be -1.
  * Return the result.
@@ -435,3 +483,21 @@ Float64 CLineModelResult::GetExtremaMerit( Int32 extremaIdx ) const
     }
     return outVal;
 }
+
+UInt32 CLineModelResult::GetExtremaIndex(UInt32 extremaIdx) const
+{
+    UInt32 solutionIdx=-1;
+    if( Extrema.size()>extremaIdx && extremaIdx>=0 )
+    {
+        for ( UInt32 i2=0; i2<LineModelSolutions.size(); i2++)
+        {
+            if( Redshifts[i2]==Extrema[extremaIdx] )
+            {
+                solutionIdx = i2;
+                break;
+            }
+        }
+    }
+    return solutionIdx;
+}
+
