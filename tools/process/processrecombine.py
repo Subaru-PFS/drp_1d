@@ -61,10 +61,12 @@ class processRecombine(object):
             os.mkdir(datasetOutputPath)
             
         #merge redshift.csv files
-        self.mergeCsvFiles(subpathsList, datasetOutputPath, fileName="redshift.csv")
+        self.mergeCsvFiles(subpathsList, datasetOutputPath, fileName="redshift.csv", verbose=True)
+        print("WARNING: redshift.csv has been recombined!")
         
         #merge log files
         self.mergeCsvFiles(subpathsList, datasetOutputPath, fileName="log.txt")
+        print("WARNING: log.txt has been recombined!")
 
         try:        
             #merge input spectrumlist files
@@ -115,8 +117,9 @@ class processRecombine(object):
                 print("INFO/Warning: skipped per spectrum processing time stats")
 
                 
-        except:
-            print("WARNING: unable to merge some output files. Skipping that operation !")
+        except Exception as e:
+            raise e
+            print("WARNING: unable to merge some intermediate output files. Skipping that operation !")
             raw_input("\n\nWARNING: unable to merge some output files. will skip that operation.\nPress any key to continue...".format())
         
         
@@ -125,20 +128,29 @@ class processRecombine(object):
             print("INFO: recombining from subsets: {}".format(f))
             self.recombine(f)
             
-    def mergeCsvFiles(self, subpathsList, outPath, fileName):
+    def mergeCsvFiles(self, subpathsList, outPath, fileName, verbose=False):
         """
         input:  - subpathsList is a list of directories containing the 'fileName' file
                 - outPath is a directory where the merged 'fileName' csv will be saved 
         """
         allLines = []
-        
+        headerCopied = False
         for dirpath in subpathsList:
             fpath = os.path.join(dirpath, fileName)
             f = open(fpath, 'r')
+            if f==0:
+                print("ERROR: unable to open file = {}".format(fpath))
+            n=0
             for line in f:
                 lineStr = line.strip()
                 if not lineStr.startswith('#'):
                     allLines.append(lineStr)
+                    n+=1
+                elif not headerCopied:
+                    headerCopied = True
+                    allLines.append(lineStr)
+            if verbose:
+                print("INFO-merge: f={}, found lines n={}".format(fpath, n))            
             f.close()
             
         fFilePath = os.path.join(outPath, fileName)
