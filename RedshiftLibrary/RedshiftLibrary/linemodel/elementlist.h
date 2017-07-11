@@ -57,7 +57,7 @@ public:
     void LogCatalogInfos();
 
     void PrepareContinuum(Float64 z);
-    void EstimateSpectrumContinuum(Float64 opt_enhance_abs=0);
+    void EstimateSpectrumContinuum(Float64 opt_enhance_lines=0);
 
     void InitFitContinuum();
     Int32 LoadFitContinuum(const TFloat64Range& lambdaRange);

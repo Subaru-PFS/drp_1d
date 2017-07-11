@@ -13,10 +13,11 @@ import argparse
 
 try:
     #cmd_subfolder = os.path.abspath("/home/aschmitt/gitlab/cpf-redshift/tools/aview/") #use locally
-    cmd_subfolder = os.path.abspath("/home/aschmitt/amazed_cluster/gitlab/cpf-redshift/tools/aview/") #use on hermes
+    cmd_subfolder = os.path.abspath("/home/aschmitt/amazed_cluster/gitlab/cpf-redshift/tools/aview_hardcopy/") #use on hermes
     if cmd_subfolder not in sys.path:
         print("inserting sys path : cmd_subfolder = {}".format(cmd_subfolder))
         sys.path.insert(0, cmd_subfolder)
+        
     import reference
 except ImportError:
     print("Import ERROR: unable to load the reference package. some functionnalities will be unavailable...")
@@ -46,7 +47,7 @@ class processHelper(object):
             print("ERROR: incompatible options : enableProcessAtZ and dividecount!=1. Aborting.")
             return
         if self.enableProcessAtZ:
-            self.refcatalog = reference.Reference(self.refPath)
+            self.refcatalog = reference.Reference(referencepath=self.refPath, rtype="simple")
 
         self.proc_date = time.strftime("%Y%m%d")          
 

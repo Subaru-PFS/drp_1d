@@ -39,7 +39,7 @@ class Spectrumlist(object):
         f = open(self.path)
         for line in f:
             lineStr = line.strip()
-            if not lineStr.startswith('#'):
+            if not lineStr.startswith('#') and not lineStr=="":
                 #print lineStr
                 data = lineStr.split("\t")
                 #if len(data)<2:
@@ -55,6 +55,11 @@ class Spectrumlist(object):
         print("Spctrumlist loaded n F = {}".format(len(self.fvect)))
         print("Spctrumlist loaded n ErrF = {}".format(len(self.errfvect)))
         print("Spctrumlist loaded n procID = {}".format(len(self.procidvect)))
+        
+        if len(self.fvect) != len(self.errfvect):
+            print("ERROR: spectrumlist found with f list not the same len as ErrF")
+        if len(self.fvect) != len(self.procidvect):
+            print("ERROR: spectrumlist found with f list not the same len as procidvect")
         
               
         

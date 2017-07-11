@@ -38,8 +38,18 @@ Void CLineModelSolveResult::Save( const CDataStore& store, std::ostream& stream 
     Float64 sigma;
 
     //GetBestRedshiftWithStrongELSnrPrior( store, redshift, merit );
-    //GetBestRedshift( store, redshift, merit, sigma );
-    GetBestRedshiftFromPdf( store, redshift, merit, sigma );
+    if(m_bestRedshiftMethod==0)
+    {
+        GetBestRedshift( store, redshift, merit, sigma );
+        Log.LogInfo( "Linemodelsolve-result: extracting best redshift from chi2 extrema");
+    }else if(m_bestRedshiftMethod==2)
+    {
+        GetBestRedshiftFromPdf( store, redshift, merit, sigma );
+        Log.LogInfo( "Linemodelsolve-result: extracting best redshift from PDF");
+    }else{
+        Log.LogError( "Linemodelsolve-result: can't parse best redshift estimation method");
+    }
+
 
     stream <<  "#Redshifts\tMerit\tTemplate"<< std::endl;
     stream << redshift << "\t"
@@ -59,10 +69,19 @@ Void CLineModelSolveResult::SaveLine( const CDataStore& store, std::ostream& str
     std::string tplName="-1";
     Float64 sigma;
 
+
     //GetBestRedshiftWithStrongELSnrPrior( store, redshift, merit );
-    //GetBestRedshift( store, redshift, merit, sigma );
-    GetBestRedshiftFromPdf( store, redshift, merit, sigma );
-    Log.LogInfo( "Linemodelsolve-result: extracting best redshift from PDF");
+    if(m_bestRedshiftMethod==0)
+    {
+        GetBestRedshift( store, redshift, merit, sigma );
+        Log.LogInfo( "Linemodelsolve-result: extracting best redshift from chi2 extrema");
+    }else if(m_bestRedshiftMethod==2)
+    {
+        GetBestRedshiftFromPdf( store, redshift, merit, sigma );
+        Log.LogInfo( "Linemodelsolve-result: extracting best redshift from PDF");
+    }else{
+        Log.LogError( "Linemodelsolve-result: can't parse best redshift estimation method");
+    }
 
     stream  << store.GetSpectrumName() << "\t"
         << store.GetProcessingID() << "\t"

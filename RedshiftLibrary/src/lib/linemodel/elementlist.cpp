@@ -1089,11 +1089,11 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
                 //*
                 //iterative continuum estimation :: RAW SLOW METHOD
                 refreshModel();
-                Float64 enhanceABS = 0;
+                Float64 enhanceLines = 0;
                 if(nIt>2*it && nIt>3.0){
-                    enhanceABS = 2.0-((Float64)it*0.33);
+                    enhanceLines = 2.0-((Float64)it*0.33);
                 }
-                EstimateSpectrumContinuum(enhanceABS);
+                EstimateSpectrumContinuum(enhanceLines);
 
                 for(UInt32 i=0; i<modelFluxAxis.GetSamplesCount(); i++){
                     modelFluxAxis[i] = m_ContinuumFluxAxis[i];
@@ -3608,7 +3608,7 @@ Int32 CLineModelElementList::ApplyVelocityBound(Float64 inf, Float64 sup)
 /**
  * \brief this function estimates the continuum after removal(interpolation) of the flux samples under the lines for a given redshift 
  **/
-void CLineModelElementList::EstimateSpectrumContinuum( Float64 opt_enhance_abs )
+void CLineModelElementList::EstimateSpectrumContinuum( Float64 opt_enhance_lines )
 {
     std::vector<Int32> validEltsIdx = GetModelValidElementsIndexes();
     std::vector<Int32> xInds = getSupportIndexes( validEltsIdx );
@@ -3648,12 +3648,19 @@ void CLineModelElementList::EstimateSpectrumContinuum( Float64 opt_enhance_abs )
         spcmodel4linefitting.GetFluxAxis()[i] = spcmodel4linefitting.GetFluxAxis()[i]-m_ContinuumFluxAxis[i];
     }
     //optionnaly enhance the abs model component
-    if(opt_enhance_abs>0.0){
+    if(opt_enhance_lines>0.0){
+
+        bool filterOnlyAbs = false;
         for( Int32 t=0;t<spectralAxis.GetSamplesCount();t++)
         {
-            if(spcmodel4linefitting.GetFluxAxis()[t]<0.0)
+            if(filterOnlyAbs)
             {
-                spcmodel4linefitting.GetFluxAxis()[t] *= opt_enhance_abs;
+                if(spcmodel4linefitting.GetFluxAxis()[t]<0.0)
+                {
+                    spcmodel4linefitting.GetFluxAxis()[t] *= opt_enhance_lines;
+                }
+            }else{
+                spcmodel4linefitting.GetFluxAxis()[t] *= opt_enhance_lines;
             }
         }
     }

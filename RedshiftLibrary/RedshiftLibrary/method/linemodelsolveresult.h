@@ -45,6 +45,7 @@ public:
 private:
     std::string m_ReliabilityLabel;
 
+    UInt32 m_bestRedshiftMethod = 0;
 
 };
 
