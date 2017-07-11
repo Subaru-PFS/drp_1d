@@ -23,6 +23,7 @@ public:
         std::vector<CRay> Rays;
         std::vector<Float64> Errors;    //noise sigma
         std::vector<Float64> FittingError;    //ModelLeastSquare error under each line
+        std::vector<Float64> CenterContinuumFlux;    //Continuum flux value at the center of each line
 
         std::vector<Float64> Widths;
         std::vector<Bool> OutsideLambdaRange;

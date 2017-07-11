@@ -35,6 +35,9 @@ public:
     TInt32Range getSupportSubElt(Int32 subeIdx);
     TInt32Range getTheoreticalSupportSubElt(Int32 subeIdx);
 
+
+    Float64 GetContinuumAtCenterProfile(Int32 subeIdx, const CSpectrumSpectralAxis& spectralAxis, Float64 redshift, CSpectrumFluxAxis &continuumfluxAxis);
+
     void fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis, const CSpectrumFluxAxis &continuumfluxAxis, Float64  redshift, Int32 lineIdx=-1 );
     Float64 getModelAtLambda(Float64 lambda, Float64 redshift, Float64 continuumFlux, Int32 kRaySupport);
     Float64 GetModelDerivAmplitudeAtLambda( Float64 lambda, Float64 redshift );

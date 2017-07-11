@@ -101,6 +101,33 @@ bool CMultiLine::SetAbsLinesLimit(Float64 limit)
     return true;
 }
 
+/**
+ * @brief GetContinuumAtCenterProfile
+ * @param subeIdx
+ * @param spectralAxis
+ * @param redshift
+ * @param lambdaRange
+ * @param continuumfluxAxis
+ * @return the continuum flux val at the sub element center wavelength. Error returns -999/-9999 if center profile not in range
+ *
+ */
+Float64 CMultiLine::GetContinuumAtCenterProfile(Int32 subeIdx, const CSpectrumSpectralAxis& spectralAxis, Float64 redshift, CSpectrumFluxAxis &continuumfluxAxis)
+{
+    Int32 i = subeIdx;
+    Float64 dzOffset = m_Rays[i].GetOffset()/m_c_kms;
+    Float64 mu = m_Rays[i].GetPosition()*(1+redshift)*(1+dzOffset);
+
+    Int32 IdxCenterProfile = spectralAxis.GetIndexAtWaveLength(mu);
+    if(IdxCenterProfile<0 || IdxCenterProfile>continuumfluxAxis.GetSamplesCount()-1)
+    {
+        return -9999.0;
+    }
+
+    Float64 cont = continuumfluxAxis[IdxCenterProfile];
+
+    return cont;
+}
+
 
 /**
  * \brief Returns the theoretical support range for the line

@@ -3327,12 +3327,15 @@ CLineModelResult::SLineModelSolution CLineModelElementList::GetModelSolution()
             modelSolution.Amplitudes.push_back(m_Elements[eIdx]->GetFittedAmplitude(subeIdx));
             modelSolution.Errors.push_back(-1.0);
             modelSolution.FittingError.push_back(-1.0);
+            modelSolution.CenterContinuumFlux.push_back(-1.0);
             modelSolution.OutsideLambdaRange.push_back(true);
         }else{
             modelSolution.ElementId.push_back( eIdx );
             modelSolution.Amplitudes.push_back(m_Elements[eIdx]->GetFittedAmplitude(subeIdx));
             modelSolution.Errors.push_back(m_Elements[eIdx]->GetFittedAmplitudeErrorSigma(subeIdx));
             modelSolution.FittingError.push_back(getModelErrorUnderElement(eIdx));
+            Float64 cont = m_Elements[eIdx]->GetContinuumAtCenterProfile(subeIdx, m_SpectrumModel->GetSpectralAxis(), m_Redshift, m_ContinuumFluxAxis);
+            modelSolution.CenterContinuumFlux.push_back(cont);
             modelSolution.OutsideLambdaRange.push_back(m_Elements[eIdx]->IsOutsideLambdaRange(subeIdx));
         }
 
