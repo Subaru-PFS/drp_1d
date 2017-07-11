@@ -158,6 +158,7 @@ void CMultiLine::prepareSupport(const CSpectrumSpectralAxis& spectralAxis, Float
 
         if(supportRange.GetBegin()>supportRange.GetEnd()) //in this case the line is completely outside the lambdarange
         {
+            //Log.LogInfo("m_OutsideLambdaRangeList cause 1 for i %d", i);
             m_OutsideLambdaRangeList[i]=true;
         }else{  //in this case the line is completely inside the lambdarange or with partial overlap
 
@@ -170,6 +171,7 @@ void CMultiLine::prepareSupport(const CSpectrumSpectralAxis& spectralAxis, Float
             Float64 endLbda = spectralAxis[m_EndNoOverlap[i]];
 
             if( startLbda >= (lambdaRange.GetEnd()-minLineOverlap) || endLbda<=(lambdaRange.GetBegin()+minLineOverlap) ){
+                //Log.LogInfo("m_OutsideLambdaRangeList cause 2 for i %d", i);
                 m_OutsideLambdaRangeList[i]=true;
             }else{
                 m_OutsideLambdaRangeList[i]=false;
@@ -633,7 +635,7 @@ void CMultiLine::addToSpectrumModel( const CSpectrumSpectralAxis& modelspectralA
   return;
 }
 
-void CMultiLine::addToSpectrumModelDerivSigma( const CSpectrumSpectralAxis& modelspectralAxis, CSpectrumFluxAxis& modelfluxAxis, Float64 redshift , bool emissionRay)
+void CMultiLine::addToSpectrumModelDerivVel( const CSpectrumSpectralAxis& modelspectralAxis, CSpectrumFluxAxis& modelfluxAxis,  CSpectrumFluxAxis& continuumfluxAxis, Float64 redshift , bool emissionRay)
 {
     if(m_OutsideLambdaRange){
         return;
@@ -646,12 +648,25 @@ void CMultiLine::addToSpectrumModelDerivSigma( const CSpectrumSpectralAxis& mode
         if(m_OutsideLambdaRangeList[k]){
             continue;
         }
+				if((emissionRay  ^ m_Rays[k].GetIsEmission())){
+					continue;
+				}
 
         for ( Int32 i = m_StartNoOverlap[k]; i <= m_EndNoOverlap[k]; i++)
         {
-            Float64 lambda = spectral[i];
-            Float64 Yi=GetModelDerivSigmaAtLambda(lambda, redshift, emissionRay);
-            flux[i] += Yi;
+
+            Float64 x = spectral[i];
+						Float64 A = m_FittedAmplitudes[k];
+						Float64 dzOffset = m_Rays[k].GetOffset()/m_c_kms;
+		        Float64 mu = m_Rays[k].GetPosition()*(1+redshift)*(1+dzOffset);
+						Float64 sigma = GetLineWidth(mu, redshift, m_Rays[k].GetIsEmission(), m_profile[k]);
+
+						if(m_SignFactors[k]==-1){
+              	flux[i] += m_SignFactors[k] * A * continuumfluxAxis[i] * GetLineProfileDerivVel(m_profile[k], x, mu, sigma,  m_Rays[k].GetIsEmission());
+		        }else{
+		            flux[i] += m_SignFactors[k] * A * GetLineProfileDerivVel(m_profile[k], x, mu, sigma,  m_Rays[k].GetIsEmission());
+		        }
+
         }
     }
   return;
@@ -697,7 +712,7 @@ Float64 CMultiLine::getModelAtLambda(Float64 lambda, Float64 redshift, Float64 c
     return Yi;
 }
 
-Float64 CMultiLine::GetModelDerivAmplitudeAtLambda(Float64 lambda, Float64 redshift )
+Float64 CMultiLine::GetModelDerivAmplitudeAtLambda(Float64 lambda, Float64 redshift, Float64 continuumFlux )
 {
     if(m_OutsideLambdaRange){
         return 0.0;
@@ -714,39 +729,72 @@ Float64 CMultiLine::GetModelDerivAmplitudeAtLambda(Float64 lambda, Float64 redsh
 
         Float64 dzOffset = m_Rays[k2].GetOffset()/m_c_kms;
         Float64 mu = m_Rays[k2].GetPosition()*(1+redshift)*(1+dzOffset);
-        Float64 c = GetLineWidth(mu, redshift, m_Rays[k2].GetIsEmission(), m_profile[k2]);
+				Float64 sigma = GetLineWidth(mu, redshift, m_Rays[k2].GetIsEmission(), m_profile[k2]);
 
-        Yi += m_SignFactors[k2] * GetLineProfile(m_profile[k2], x, mu, c);
+				if(m_SignFactors[k2]==-1){
+            Yi += m_SignFactors[k2] * continuumFlux * GetLineProfile(m_profile[k2], x, mu, sigma);
+        }else{
+            Yi += m_SignFactors[k2] * GetLineProfile(m_profile[k2], x, mu, sigma);
+        }
     }
     return Yi;
 }
 
-Float64 CMultiLine::GetModelDerivSigmaAtLambda(Float64 lambda, Float64 redshift,bool emissionRay )
-{
-    if(m_OutsideLambdaRange){
-        return 0.0;
-    }
-    Float64 Yi=0.0;
+Float64  CMultiLine::GetModelDerivContinuumAmpAtLambda(Float64 lambda, Float64 redshift, Float64 continuumFluxUnscale  ){
+	if(m_OutsideLambdaRange){
+			return 0.0;
+	}
+	Float64 Yi=0.0;
 
-    Float64 x = lambda;
+	Float64 x = lambda;
 
-    for(Int32 k2=0; k2<m_Rays.size(); k2++) //loop on rays
-    {
-        if(m_OutsideLambdaRangeList[k2]){
-            continue;
-        }
-				if((emissionRay  ^ m_Rays[k2].GetIsEmission())){
+	for(Int32 k2=0; k2<m_Rays.size(); k2++) //loop on rays
+	{
+			if(m_OutsideLambdaRangeList[k2]){
 					continue;
-				}
+			}
 
+			if(m_SignFactors[k2]==1){
+				continue;
+			}
 
-        Float64 A = m_FittedAmplitudes[k2];
-        Float64 dzOffset = m_Rays[k2].GetOffset()/m_c_kms;
-        Float64 mu = m_Rays[k2].GetPosition()*(1+redshift)*(1+dzOffset);
-        Float64 c = GetLineWidth(mu, redshift, m_Rays[k2].GetIsEmission(), m_profile[k2]);
+			Float64 A = m_FittedAmplitudes[k2];
+			Float64 dzOffset = m_Rays[k2].GetOffset()/m_c_kms;
+			Float64 mu = m_Rays[k2].GetPosition()*(1+redshift)*(1+dzOffset);
+			Float64 sigma = GetLineWidth(mu, redshift, m_Rays[k2].GetIsEmission(), m_profile[k2]);
 
-        Yi += m_SignFactors[k2] * A * GetLineProfileDerivSigma(m_profile[k2], x, mu, c);
-    }
+			Yi += m_SignFactors[k2] *continuumFluxUnscale* A * GetLineProfile(m_profile[k2], x, mu, sigma);
+
+	}
+	return Yi;
+}
+
+Float64 CMultiLine::GetModelDerivZAtLambda(Float64 lambda, Float64 redshift, Float64 continuumFlux, Float64 continuumFluxDerivZ){
+	if(m_OutsideLambdaRange){
+			return 0.0;
+	}
+	Float64 Yi=0.0;
+
+	Float64 x = lambda;
+
+	for(Int32 k2=0; k2<m_Rays.size(); k2++) //loop on rays
+	{
+			if(m_OutsideLambdaRangeList[k2]){
+					continue;
+			}
+			Float64 A = m_FittedAmplitudes[k2];
+			Float64 dzOffset = m_Rays[k2].GetOffset()/m_c_kms;
+			Float64 mu = m_Rays[k2].GetPosition()*(1+redshift)*(1+dzOffset);
+      Float64 lamdba0 = m_Rays[k2].GetPosition() * (1+dzOffset);
+      Float64 sigma = GetLineWidth(mu, redshift, m_Rays[k2].GetIsEmission(), m_profile[k2]);
+
+			if(m_SignFactors[k2]==1){
+					Yi += m_SignFactors[k2] * A * GetLineProfileDerivZ(m_profile[k2], x, lamdba0, redshift, sigma);
+			}else{
+				Yi += m_SignFactors[k2] * A * continuumFlux * GetLineProfileDerivZ(m_profile[k2], x, lamdba0, redshift, sigma)
+						+ m_SignFactors[k2] * A * continuumFluxDerivZ * GetLineProfile(m_profile[k2], x, mu, sigma);
+			}
+	}
     return Yi;
 }
 

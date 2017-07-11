@@ -4,26 +4,55 @@
 #include <RedshiftLibrary/spectrum/template/template.h>
 
 using namespace NSEpic;
-
-CLmfitController::CLmfitController(const CTemplate& tpl
+/*
+This class is use to drive  levenberg marquardt fitting.
+Each instance correpond to one tentatie of fiiting. It has parameters of fitting, like which parameters need to be fit.
+It's also store the results of the fitting, in order to temporize the moment when the model is set.
+*/
+CLmfitController::CLmfitController(
+          const CTemplate& tpl,
+          bool continumLoaded,
+          bool continuumfit,
+          bool emissionVelFit,
+          bool absorptionVelFit
       ){
     m_tpl = &tpl;
+    m_continumLoaded = continumLoaded;
+    m_continuumfit = continuumfit;
+    m_emissionVelFit = emissionVelFit;
+    m_absorptionVelFit = absorptionVelFit;
+}
+
+CLmfitController::CLmfitController(
+          bool emissionVelFit,
+          bool absorptionVelFit
+      ){
+    m_tpl = NULL;
+    m_continumLoaded = true;
+    m_continuumfit = false;
+    m_emissionVelFit = emissionVelFit;
+    m_absorptionVelFit = absorptionVelFit;
 }
 
 bool CLmfitController::isEmissionVelocityFitted(){
-  return true;
+  return m_emissionVelFit;
 }
 
 bool CLmfitController::isAbsorptionVelocityFitted(){
-  return false;
+  return m_absorptionVelFit;
 }
 
+// is the continuum fitted by lmfit
 bool CLmfitController::isContinuumFitted(){
-  return false;
+  return m_continuumfit;
+}
+
+bool  CLmfitController::isContinuumLoaded(){
+  return m_continumLoaded;
 }
 
 bool CLmfitController::isRedshiftFitted(){
-  return false;
+  return true;;
 }
 
 
@@ -94,6 +123,51 @@ void CLmfitController::calculatedIndices(){
   }
 
 }
+
+//======================================================================================
+//Transform the variable from the model value to the value use in lmfit.
+// if modif here modif the inverse function : modeltolm<-> lmtomodel and the df function in lmfitfunction (the jacobian is the derivided by lmvalue of the variable)
+Float64 CLmfitController::lineAmp_LmToModel(Float64 lmLineAmp){
+  return lmLineAmp*lmLineAmp;
+  // return lmLineAmp;
+}
+
+Float64 CLmfitController::lineAmp_ModelToLm(Float64 modelLineAmp){
+  return sqrt(modelLineAmp);
+  // return modelLineAmp;
+}
+
+Float64 CLmfitController::emiVel_LmToModel(Float64 lmEmiVel){
+  return lmEmiVel*lmEmiVel/m_normEmiFactor;
+  // return lmEmiVel/m_normEmiFactor;
+}
+
+Float64 CLmfitController::emiVel_ModelToLm(Float64 modelEmiVel){
+  return sqrt(modelEmiVel* m_normEmiFactor);
+  // return modelEmiVel*m_normEmiFactor;
+}
+
+Float64 CLmfitController::absVel_LmToModel(Float64 lmAbsVel){
+  return lmAbsVel*lmAbsVel/m_normAbsFactor;
+  // return lmAbsVel/m_normAbsFactor;
+}
+
+Float64 CLmfitController::absVel_ModelToLm(Float64 modelAbsVel){
+  return sqrt(modelAbsVel* m_normAbsFactor);
+  // return modelAbsVel*m_normAbsFactor;
+}
+
+Float64 CLmfitController::continuumAmp_LmToModel(Float64 lmContinuumAmp){
+  return lmContinuumAmp*lmContinuumAmp;
+  // return lmContinuumAmp;
+}
+
+Float64 CLmfitController::continuumAmp_ModelToLm(Float64 lmContinuumAmp){
+  return sqrt(lmContinuumAmp);
+  // return lmContinuumAmp;
+}
+
+//======================================================================================
 /*
 Parse all the amplitude of element and look if some are neg. Those are remove from the fitting
 return true if at least one line is removed
@@ -104,7 +178,7 @@ bool CLmfitController::removeNegAmpLine(){
   {
       if(m_ampsLinefitted[ie]<0.0)
       {
-          Log.LogInfo( "LineModel Infos: erasing i= %d", ie);
+          //Log.LogInfo( "LineModel Infos: erasing i= %d", ie);
           m_filteredEltsIdx.erase(m_filteredEltsIdx.begin() + ie);
 
           m_NegAmpRemoved = true;
@@ -124,6 +198,26 @@ void CLmfitController::setNormFactor(Float64 normFactor){
 Float64 CLmfitController::getNormFactor(){
   return m_normFactor;
 }
+
+void CLmfitController::setNormEmiFactor(Float64 normEmiFactor){
+
+   m_normEmiFactor = normEmiFactor;
+}
+
+Float64 CLmfitController::getNormEmiFactor(){
+  return m_normEmiFactor;
+}
+
+
+void CLmfitController::setNormAbsFactor(Float64 normAbsFactor){
+
+   m_normAbsFactor = normAbsFactor;
+}
+
+Float64 CLmfitController::getNormAbsFactor(){
+  return m_normAbsFactor;
+}
+
 
 bool CLmfitController::needCalculateNormFactor(){
   if(!m_normFactorSetted){
@@ -171,6 +265,11 @@ void  CLmfitController::setVelocityEmission(Float64 val,Float64  valErr){
   m_velErrEm= valErr;
 }
 
+void CLmfitController::setRedshift(Float64 redshift, Float64 redshiftErr){
+  m_redshift = redshift;
+  m_redshiftErr = redshiftErr;
+}
+
 Float64  CLmfitController::getEmissionVelocity(){
   return m_velEm;
 }
@@ -181,6 +280,10 @@ Float64  CLmfitController::getAbsorptionVelocity(){
 
 Float64 CLmfitController::getContinuumAmp(){
   return m_continuumAmp;
+}
+
+Float64 CLmfitController::getRedshift(){
+  return m_redshift;
 }
 void CLmfitController::setMerit(Float64 merit){
   m_merit = merit;

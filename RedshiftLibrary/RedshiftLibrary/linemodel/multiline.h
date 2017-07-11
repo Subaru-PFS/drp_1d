@@ -37,11 +37,13 @@ public:
 
     void fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis, const CSpectrumFluxAxis &continuumfluxAxis, Float64  redshift, Int32 lineIdx=-1 );
     Float64 getModelAtLambda(Float64 lambda, Float64 redshift, Float64 continuumFlux, Int32 kRaySupport);
-    Float64 GetModelDerivAmplitudeAtLambda( Float64 lambda, Float64 redshift );
-    Float64 GetModelDerivSigmaAtLambda( Float64 lambda, Float64 redshift, bool emissionRay );
+    Float64 GetModelDerivAmplitudeAtLambda( Float64 lambda, Float64 redshift, Float64 continuumFlux  );
+    Float64 GetModelDerivContinuumAmpAtLambda(Float64 lambda, Float64 redshift, Float64 continuumFluxUnscale );
+    Float64 GetModelDerivZAtLambda(Float64 lambda, Float64 redshift, Float64 continuumFlux,  Float64 continuumFluxDerivZ);
+
 
     void addToSpectrumModel( const CSpectrumSpectralAxis& modelspectralAxis, CSpectrumFluxAxis& modelfluxAxis, CSpectrumFluxAxis &continuumfluxAxis, Float64 redshift, Int32 lineIdx=-1 );
-    void addToSpectrumModelDerivSigma( const CSpectrumSpectralAxis& modelspectralAxis, CSpectrumFluxAxis& modelfluxAxis, Float64 redshift, bool emissionRay );
+    void addToSpectrumModelDerivVel( const CSpectrumSpectralAxis& modelspectralAxis, CSpectrumFluxAxis& modelfluxAxis, CSpectrumFluxAxis& continuumFluxAxis, Float64 redshift, bool emissionRay );
     void initSpectrumModel(CSpectrumFluxAxis &modelfluxAxis , CSpectrumFluxAxis &continuumfluxAxis, Int32 lineIdx=-1 );
     Float64 GetFittedAmplitude(Int32 subeIdx);
     Float64 GetFittedAmplitudeErrorSigma(Int32 subeIdx);

@@ -54,6 +54,8 @@ public:
                                               const Float64 &opt_velocityfitmin=20,
                                               const Float64 &opt_velocityfitmax=800);
 
+
+
     std::shared_ptr<COperatorResult> computeWithUltimPass(CDataStore &dataStore,
                                       const CSpectrum& spectrum,
                                       const CSpectrum& spectrumContinuum,

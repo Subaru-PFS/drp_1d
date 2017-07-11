@@ -223,7 +223,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
     }
 
     //fit continuum
-    bool enableFitContinuumPrecomputed = true;
+    bool enableFitContinuumPrecomputed = false;
     if(enableFitContinuumPrecomputed && opt_continuumcomponent == "tplfit")
     {
         boost::chrono::thread_clock::time_point start_tplfitprecompute = boost::chrono::thread_clock::now();
@@ -478,11 +478,18 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
     TPointList extremumList2;
     extremumList2.resize(extremumList.size());
 
+    bool modelInfoSave = false;
+    std::vector<std::shared_ptr<CModelSpectrumResult>  > savedModelSpectrumResults_lmfit;
+    std::vector<std::shared_ptr<CModelFittingResult>  > savedModelFittingResults_lmfit;
+    std::vector<std::shared_ptr<CModelRulesResult>  > savedModelRulesResults_lmfit;
+    std::vector<  std::shared_ptr<CSpectraFluxResult>> savedBaselineResult_lmfit;
+
     //recompute the fine grid results around the extrema
     if(enableFastFitLargeGrid==1 || enableVelocityFitting)
     {
         for( Int32 i=0; i<extremumList.size(); i++ )
         {
+            Log.LogInfo("New extrema %d", i);
             Float64 z = extremumList[i].X;
             Float64 m = extremumList[i].Y;
 
@@ -508,20 +515,50 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
                 contreest_iterations  = 0;
             }
 
-
-            ModelFit( model, lambdaRange, result->Redshifts[idx], result->ChiSquare[idx], result->LineModelSolutions[idx], contreest_iterations, false);
+            model.LoadModelSolution(result->LineModelSolutions[idx]);
+            //ModelFit( model, lambdaRange, result->Redshifts[idx], result->ChiSquare[idx], result->LineModelSolutions[idx], contreest_iterations, false);
             m = result->ChiSquare[idx];
             if(enableVelocityFitting){
-                Bool enableManualStepVelocityFit = true;
-                Bool enableLMVelocityFit = false;
+                Bool enableManualStepVelocityFit = false;
+                Bool enableLMVelocityFit = true;
                 Bool enableLBFGSVelocityFit = false;
                 if(enableLMVelocityFit){
                     //fit the emission and absorption width using the linemodel lmfit strategy
                     model.SetFittingMethod("lmfit");
                     model.SetElementIndexesDisabledAuto();
                     Float64 meritTmp;
-                    ModelFit( model, lambdaRange, result->Redshifts[idx], meritTmp, result->LineModelSolutions[idx], contreest_iterations, false);
+                    Log.LogInfo("Lm fit for extrema %d", i);
+                    ModelFit( model, lambdaRange, result->Redshifts[idx], meritTmp, result->LineModelSolutions[idx], contreest_iterations, true);
+                    modelInfoSave = true;
+                    // CModelSpectrumResult
+                    std::shared_ptr<CModelSpectrumResult>  resultspcmodel = std::shared_ptr<CModelSpectrumResult>( new CModelSpectrumResult(model.GetModelSpectrum()) );
+                    //std::shared_ptr<CModelSpectrumResult>  resultspcmodel = std::shared_ptr<CModelSpectrumResult>( new CModelSpectrumResult(model.GetObservedSpectrumWithLinesRemoved()) );
+                    savedModelSpectrumResults_lmfit.push_back(resultspcmodel);
+                    // CModelFittingResult
+                    std::shared_ptr<CModelFittingResult>  resultfitmodel = std::shared_ptr<CModelFittingResult>( new CModelFittingResult(result->LineModelSolutions[idx], result->Redshifts[idx], result->ChiSquare[idx], result->restRayList, model.GetVelocityEmission(), model.GetVelocityAbsorption()) );
+                    savedModelFittingResults_lmfit.push_back(resultfitmodel);
+                    // CModelRulesResult
+                    std::shared_ptr<CModelRulesResult>  resultrulesmodel = std::shared_ptr<CModelRulesResult>( new CModelRulesResult( model.GetModelRulesLog() ));
+                    savedModelRulesResults_lmfit.push_back(resultrulesmodel);
 
+
+                    std::shared_ptr<CSpectraFluxResult> baselineResult_lmfit = (std::shared_ptr<CSpectraFluxResult>) new CSpectraFluxResult();
+                    baselineResult_lmfit->m_optio = 0;
+                    const CSpectrumFluxAxis& modelContinuumFluxAxis = model.GetModelContinuum();
+                    UInt32 len = modelContinuumFluxAxis.GetSamplesCount();
+
+                    baselineResult_lmfit->fluxes.resize(len);
+                    baselineResult_lmfit->wavel.resize(len);
+                    for( Int32 k=0; k<len; k++ )
+                    {
+                        baselineResult_lmfit->fluxes[k] = modelContinuumFluxAxis[k];
+                        baselineResult_lmfit->wavel[k]  = (spectrum.GetSpectralAxis())[k];
+                    }
+                    savedBaselineResult_lmfit.push_back(baselineResult_lmfit);
+
+                    z = result->LineModelSolutions[idx].Redshift;
+                    result->lmfitPass.push_back(z);
+                    //result->Redshifts[idx] = z;
 
                     model.SetFittingMethod(opt_fittingmethod);
                     model.ResetElementIndexesDisabled();
@@ -625,15 +662,17 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
             extrema_velocityAL[i]=model.GetVelocityAbsorption();
 
             //finally compute the redshifts on the extended ExtremaExtendedRedshifts values
+
             Float64 left_border = max(redshiftsRange.GetBegin(), z-extensionradius);
             Float64 right_border=min(redshiftsRange.GetEnd(), z+extensionradius);
             //model.SetFittingMethod("nofit");
-            extremumList2[i].Y = DBL_MAX;
+            extremumList2[i].Y = result->ChiSquare[idx];
             extremumList2[i].X = result->Redshifts[idx];
             Int32 idx2 = idx;
             for (Int32 iz=0;iz<result->Redshifts.size();iz++)
             {
                 if(result->Redshifts[iz] >= left_border && result->Redshifts[iz] <= right_border){
+                  Log.LogInfo("Fit for Extended redshift %d, z = %f", iz, result->Redshifts[iz]);
                     ModelFit( model, lambdaRange, result->Redshifts[iz], result->ChiSquare[iz], result->LineModelSolutions[iz], contreest_iterations, false);
                     if(result->ChiSquare[iz]< extremumList2[i].Y)
                     {
@@ -663,6 +702,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
     std::vector<Float64> extrema_velocityELOrdered;
     std::vector<Float64> extrema_velocityALOrdered;
     extremumCount = extremumList2.size();
+    std::vector<Int32> indiceList2;
     for(Int32 ie=0; ie<extremumCount; ie++)
     {
         Int32 iYmin=0;
@@ -681,6 +721,14 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
         extrema_velocityEL.erase(extrema_velocityEL.begin() + iYmin);
         extrema_velocityALOrdered.push_back(extrema_velocityAL[iYmin]);
         extrema_velocityAL.erase(extrema_velocityAL.begin() + iYmin);
+        //founding the initial index in extrenumList2
+        for(Int32 ie2=0; ie2<indiceList2.size(); ie2++)
+        {
+            if(iYmin>=indiceList2[ie2]){
+                iYmin++;
+            }
+        }
+        indiceList2.push_back(iYmin);
     }
     if( extremumListOrdered.size() == 0 )
     {
@@ -745,6 +793,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
             model.SetVelocityAbsorption(extrema_velocityALOrdered[i]);
         }
 
+        model.LoadModelSolution( result->LineModelSolutions[idx]);
         ModelFit( model, lambdaRange, result->Redshifts[idx], result->ChiSquare[idx], result->LineModelSolutions[idx], contreest_iterations, true);
         if(m!=result->ChiSquare[idx])
         {
@@ -754,8 +803,20 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
 
         //save the model result
         static Int32 maxModelSave = std::min(m_maxModelSaveCount, extremumCount);
+        Int32 saveNLinemodelContinua = 1;
         if( savedModels<maxModelSave /*&& isLocalExtrema[i]*/)
         {
+          if(modelInfoSave){
+            Log.LogInfo("Save model store during lm_fit");
+            m_savedModelSpectrumResults.push_back(savedModelSpectrumResults_lmfit[indiceList2[i]]);
+            m_savedModelFittingResults.push_back(savedModelFittingResults_lmfit[indiceList2[i]]);
+            m_savedModelRulesResults.push_back(savedModelRulesResults_lmfit[indiceList2[i]]);
+            if( savedModels < saveNLinemodelContinua && contreest_iterations>0)
+            {
+              std::string nameBaselineStr = (boost::format("linemodel_continuum_extrema_%1%") % savedModels).str();
+              dataStore.StoreScopedGlobalResult(nameBaselineStr.c_str(), savedBaselineResult_lmfit[indiceList2[i]]);
+          }
+          }else{
             // CModelSpectrumResult
             std::shared_ptr<CModelSpectrumResult>  resultspcmodel = std::shared_ptr<CModelSpectrumResult>( new CModelSpectrumResult(model.GetModelSpectrum()) );
             //std::shared_ptr<CModelSpectrumResult>  resultspcmodel = std::shared_ptr<CModelSpectrumResult>( new CModelSpectrumResult(model.GetObservedSpectrumWithLinesRemoved()) );
@@ -769,7 +830,8 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
             std::shared_ptr<CModelRulesResult>  resultrulesmodel = std::shared_ptr<CModelRulesResult>( new CModelRulesResult( model.GetModelRulesLog() ));
             m_savedModelRulesResults.push_back(resultrulesmodel);
 
-            Int32 saveNLinemodelContinua = 1;
+
+
             if( savedModels < saveNLinemodelContinua && contreest_iterations>0)
             {
                 // Save the reestimated continuum, only the first extrema
@@ -789,8 +851,8 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
                 std::string nameBaselineStr = (boost::format("linemodel_continuum_extrema_%1%") % savedModels).str();
                 dataStore.StoreScopedGlobalResult(nameBaselineStr.c_str(), baselineResult);
             }
-
-            savedModels++;
+          }
+          savedModels++;
         }
 
 
@@ -882,6 +944,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
     return result;
 
 }
+
 
 /**
  * @brief COperatorLineModel::processPass
@@ -1370,4 +1433,3 @@ Float64 COperatorLineModel::FitBayesWidth( CSpectrumSpectralAxis& spectralAxis, 
     }
     return minc;
 }
-

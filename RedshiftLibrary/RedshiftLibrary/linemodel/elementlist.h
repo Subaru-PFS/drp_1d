@@ -23,8 +23,6 @@
 #include <RedshiftLibrary/linemodel/lmfitcontroller.h>
 
 #include <memory>
-
-
 namespace NSEpic
 {
   static Int32 defaultIdx = -1;
@@ -56,14 +54,16 @@ public:
     void LoadCatalog(const CRayCatalog::TRayVector& restRayList);
     void LoadCatalogOneMultiline(const CRayCatalog::TRayVector& restRayList);
     void LoadCatalogTwoMultilinesAE(const CRayCatalog::TRayVector& restRayList);
+
     void LogCatalogInfos();
 
     void PrepareContinuum(Float64 z);
     void EstimateSpectrumContinuum(Int32 opt_enhance_abs=0);
 
-    void InitFitContinuum();
+    Int32 LoadFitContinuumOneTemplate(const TFloat64Range& lambdaRange, const CTemplate& tpl);
     Int32 LoadFitContinuum(const TFloat64Range& lambdaRange);
-    Int32 ApplyContinuumOnGrid(const CTemplate& tpl, Float64 fitAmplitude, Float64 fitDustCoeff, Float64 fitDtM, Float64 fitMtM);
+    void setRedshift(Float64 redshift, bool reinterpolatedContinuum);
+    Int32 ApplyContinuumOnGrid(const CTemplate& tpl);
     Bool SolveContinuum(const CSpectrum& spectrum,
                         const CTemplate& tpl,
                         const TFloat64Range& lambdaRange,
@@ -119,6 +119,8 @@ public:
     Bool initModelAtZ(Float64 redshift, const TFloat64Range& lambdaRange, const CSpectrumSpectralAxis &spectralAxis);
 
     Float64 fit(Float64 redshift, const TFloat64Range& lambdaRange, CLineModelResult::SLineModelSolution &modelSolution, Int32 contreest_iterations=0, bool enableLogging=0);
+
+    std::vector<CLmfitController*> createLmfitControllers( const TFloat64Range& lambdaRange);
     void fitWithModelSelection(Float64 redshift, const TFloat64Range& lambdaRange, CLineModelResult::SLineModelSolution &modelSolution);
     void SetFittingMethod(std::string fitMethod);
 
@@ -131,7 +133,9 @@ public:
     void reinitModelUnderElements(std::vector<Int32> filterEltsIdx, Int32 lineIdx=-1 );
     void refreshModelInitAllGrid();
     void refreshModelUnderElements(std::vector<Int32> filterEltsIdx, Int32 lineIdx=-1 );
-    void refreshModelDerivSigmaUnderElements(std::vector<Int32> filterEltsIdx);
+    void refreshModelDerivVelUnderElements(std::vector<Int32> filterEltsIdx);
+    void refreshModelDerivVelAbsorptionUnderElements(std::vector<Int32> filterEltsIdx);
+    void refreshModelDerivVelEmissionUnderElements(std::vector<Int32> filterEltsIdx);
 
     void setModelSpcObservedOnSupportZeroOutside(const TFloat64Range &lambdaRange);
     CMask getOutsideLinesMask();
@@ -146,15 +150,20 @@ public:
     Float64 getCumulSNROnRange( TInt32Range idxRange );
     Float64 getModelErrorUnderElement(Int32 eltId);
     Float64 getContinuumMeanUnderElement(Int32 eltId);
+    Int32 LoadModelSolution(const CLineModelResult::SLineModelSolution&  modelSolution);
     CLineModelResult::SLineModelSolution GetModelSolution();
     const CSpectrum&    GetModelSpectrum() const;
     const CSpectrum&    GetObservedSpectrumWithLinesRemoved() const;
     const CSpectrumFluxAxis&    GetModelContinuum() const;
     Float64 getModelFluxVal(Int32 idx) const;
     Float64 getModelFluxDerivEltVal(Int32 DerivEltIdx, Int32 idx) const;
-    Float64 getModelFluxDerivSigmaVal(Int32 idx) const;
-    Float64 getModelFluxDerivSigmaValEmi(Int32 idx) const;
-    Float64 getModelFluxDerivSigmaValAbs(Int32 idx) const;
+    Float64 getModelFluxDerivContinuumAmpEltVal(Int32 DerivEltIdx, Int32 idx) const;
+    Float64 getModelFluxDerivZContinuumVal(Int32 idx)const;
+    //void calculateUnscaleContinuumDerivZ();
+    Float64 getModelFluxDerivZEltVal(Int32 DerivEltIdx, Int32 idx, Float64 continuumFluxDerivZ) const;
+    Float64 getModelFluxDerivVelVal(Int32 idx) const;
+    Float64 getModelFluxDerivVelEmissionVal(Int32 idx) const;
+    Float64 getModelFluxDerivVelAbsorptionVal(Int32 idx) const;
     Int32 estimateMeanSqFluxAndGradient(const Float64* varPack,
                                         const Float64 normFactor,
                                         std::vector<Int32> filteredEltsIdx,
@@ -198,6 +207,7 @@ private:
 
     std::vector<Int32> findLineIdxInCatalog(const CRayCatalog::TRayVector& restRayList, std::string strTag, Int32 type);
 
+
     void addDoubleLine(const CRay &r1, const CRay &r2, Int32 index1, Int32 index2, Float64 nominalWidth, Float64 a1, Float64 a2);
 
     void applyRules(bool enableLogs=false);
@@ -210,14 +220,15 @@ private:
     CSpectrumFluxAxis m_SpcFluxAxis;    //observed spectrum
     CSpectrumFluxAxis m_spcFluxAxisNoContinuum; //observed spectrum for line fitting
     Float64* m_ErrorNoContinuum;
-    CSpectrumFluxAxis m_SpcFluxAxisModelDerivSigmaEmi;
-    CSpectrumFluxAxis m_SpcFluxAxisModelDerivSigmaAbs;
+    CSpectrumFluxAxis m_SpcFluxAxisModelDerivVelEmi;
+    CSpectrumFluxAxis m_SpcFluxAxisModelDerivVelAbs;
     Float64 m_dTransposeDNocontinuum; //the cached dtd (maximum chisquare value)
     Float64 m_dTransposeDRaw; //the cached dtd (maximum chisquare value)
     TFloat64Range m_dTransposeDLambdaRange; //the lambdaRange used to computed cached dTransposeD values
     Float64 m_likelihood_cstLog; // constant term for the Likelihood calculation
 
     Float64*          m_observeGridContinuumFlux;   //the continuum spectre without the amplitude coeff; m_ContinuumFLux = amp * m_observeGridContinuumFlux
+    Float64* m_unscaleContinuumFluxAxisDerivZ;
     CSpectrumFluxAxis m_ContinuumFluxAxis;  //rebined model continuum
     std::string m_ContinuumComponent;
     std::string m_LineWidthType;
@@ -228,6 +239,7 @@ private:
     Float64 m_velocityAbsorptionInit;
     Float64 m_nominalWidthDefaultEmission;
     Float64 m_nominalWidthDefaultAbsorption;
+    std::string m_calibrationPath;
     std::string m_fittingmethod;
     std::vector<Int32> m_elementsDisabledIndexes;
     std::string m_rulesoption;
@@ -244,10 +256,6 @@ private:
     Int32 m_fitContinuum_outsidelinesmask;
     Int32 m_fitContinuum_observedFrame;
 
-    Float64 m_fitContinuum_dLambdaTgt;
-    Float64 m_fitContinuum_lmin;
-    Float64 m_fitContinuum_lmax;
-    Int32 m_fitContinuum_nTgt;
     CTemplatesFitStore* m_fitContinuum_tplfitStore;
     Int32 m_fitContinuum_option;
     std::string m_fitContinuum_tplName;
@@ -257,6 +265,11 @@ private:
     Float64 m_fitContinuum_tplFitDtM;
     Float64 m_fitContinuum_tplFitMtM;
 
+    bool m_lmfit_noContinuumTemplate;
+    bool m_lmfit_bestTemplate;
+    bool m_lmfit_fitContinuum;
+    bool m_lmfit_fitEmissionVelocity;
+    bool m_lmfit_fitAbsorptionVelocity;
 };
 
 }

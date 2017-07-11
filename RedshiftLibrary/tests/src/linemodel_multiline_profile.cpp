@@ -115,7 +115,7 @@ void checkProfileValue(std::string linecatalogPath,
         validEltsIdx.push_back(iElt);
     }
 
-    model.refreshModelDerivSigmaUnderElements(validEltsIdx);
+    model.refreshModelDerivVelUnderElements(validEltsIdx);
 
     //check the flux values
     for(Int32 k=0; k<lambdas.size(); k++)
@@ -147,7 +147,7 @@ void checkProfileValue(std::string linecatalogPath,
         for(Int32 k=0; k<lambdas.size(); k++)
         {
             Float64 iLambda = spcSpectralAxis.GetIndexAtWaveLength(lambdas[k]);
-            Float64 val = model.getModelFluxDerivSigmaVal(iLambda);
+            Float64 val = model.getModelFluxDerivVelVal(iLambda);
             Float64 refDerivVelValue = refProfileGradientValues[k][idxVelGradient];
             BOOST_CHECK_SMALL( std::abs(val - refDerivVelValue), 1e-4);
         }

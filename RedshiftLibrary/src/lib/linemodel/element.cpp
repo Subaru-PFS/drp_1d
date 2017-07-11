@@ -175,19 +175,63 @@ Float64 CLineModelElement::GetLineProfile(std::string profile, Float64 x, Float6
     return val;
 }
 
+Float64 CLineModelElement::GetLineProfileDerivZ(std::string profile, Float64 x, Float64 lambda0, Float64 redshift, Float64 sigma){
+  Float64 xc = x-lambda0*(1+redshift);
+  Float64 val=0.0;
+  if(profile=="SYM"){
+      const Float64 xsurc = xc/sigma;
+      val = lambda0 /sigma * xsurc * exp(-0.5*xsurc*xsurc);
+  }else{
+    Log.LogError("Deriv for Z not IMPLEMENTED");
+  }
+  return val;
+}
+
+Float64 CLineModelElement::GetLineProfileDerivVel(std::string profile, Float64 x, Float64 x0, Float64 sigma, Bool isEmission){
+  if( m_LineWidthType == "instrumentdriven"){
+      return 0.0;
+  }else if( m_LineWidthType == "fixed"){
+      return 0.0;
+  }else if( m_LineWidthType == "combined"){
+      Float64 v = m_VelocityEmission;
+      if(!isEmission){
+          v = m_VelocityAbsorption;
+      }
+      Float64 c = 300000.0;
+      Float64 pfsSimuCompensationFactor = 1.0;
+      Float64 v_to_sigma = pfsSimuCompensationFactor/c*x0; //velocity sigma = v_to_sigma * v
+      return v_to_sigma * v_to_sigma * v /sigma * GetLineProfileDerivSigma(profile,x,x0,sigma);
+    }else if( m_LineWidthType == "velocitydriven"){
+      Float64 c = 300000.0;
+      Float64 pfsSimuCompensationFactor = 1.0;
+        Float64 v_to_sigma = pfsSimuCompensationFactor/c*x0;
+        return v_to_sigma* GetLineProfileDerivSigma(profile, x,x0,sigma);
+    }else if( m_LineWidthType == "nispsim2016"){
+      Float64 v = m_VelocityEmission;
+      if(!isEmission){
+          v = m_VelocityAbsorption;
+      }
+      Float64 c = 300000.0;
+      Float64 pfsSimuCompensationFactor = 1.0;
+      Float64 v_to_sigma = pfsSimuCompensationFactor/c*x0; //velocity sigma = v_to_sigma * v
+      return v_to_sigma * v_to_sigma * v /sigma * GetLineProfileDerivSigma(profile, x,x0,sigma);
+    }
+    return 0.0;
+}
+
 Float64 CLineModelElement::GetLineProfileDerivSigma(std::string profile, Float64 x, Float64 x0, Float64 sigma)
 {
     Float64 val=0.0;
-    Float64 cel = 300000.0;
+    //Float64 cel = 300000.0;
     Float64 xc = x-x0;
     if(profile=="SYM"){
         const Float64 xsurc = xc/sigma;
-        val = xc*xc /cel *x0 /(sigma*sigma*sigma) * exp(-0.5*xsurc*xsurc);
+        val = xc*xc  /(sigma*sigma*sigma) * exp(-0.5*xsurc*xsurc);
     }else if(profile=="SYMXL"){
         const Float64 coeff = m_symxl_sigma_coeff;
         sigma = sigma*coeff;
         const Float64 xsurc = xc/sigma;
-        val = xc*xc /cel *x0 /(sigma*sigma*sigma) * exp(-0.5*xsurc*xsurc);
+        val = xc*xc/(sigma*sigma*sigma) * exp(-0.5*xsurc*xsurc);
     }else if(profile=="ASYM"){
         const Float64 coeff = m_asym_sigma_coeff;
 
@@ -195,12 +239,12 @@ Float64 CLineModelElement::GetLineProfileDerivSigma(std::string profile, Float64
         const Float64 xsurc = xc/sigma;
         const Float64 alpha = m_asym_alpha;
         const Float64 valsym = exp(-0.5*xsurc*xsurc);
-        const Float64 valsymd = xc*xc /cel *x0 /(sigma*sigma*sigma) * exp(-0.5*xsurc*xsurc);
+        const Float64 valsymd = xc*xc/(sigma*sigma*sigma) * exp(-0.5*xsurc*xsurc);
 
         const Float64 valasym = (1.0+erf(alpha/sqrt(2.0)*xsurc));
         const Float64 arg = alpha*xc/sqrt(2)/sigma;
         //const Float64 valasymd = -alpha/sqrt(2*M_PI)*xc /(sigma*sigma) /cel*x0*exp(-arg*arg);
-        const Float64 valasymd = -alpha*sqrt(2)/sqrt(M_PI)*xc /(sigma*sigma) /cel*x0*exp(-arg*arg);
+        const Float64 valasymd = -alpha*sqrt(2)/sqrt(M_PI)*xc /(sigma*sigma)*exp(-arg*arg);
         val = valsym*valasymd+valsymd*valasym;
         //val = valsymd;
 
@@ -214,12 +258,12 @@ Float64 CLineModelElement::GetLineProfileDerivSigma(std::string profile, Float64
         const Float64 xsurc = xc/sigma;
         const Float64 alpha = m_asym2_alpha;
         const Float64 valsym = exp(-0.5*xsurc*xsurc);
-        const Float64 valsymd = xc*xc /cel *x0 /(sigma*sigma*sigma) * exp(-0.5*xsurc*xsurc);
+        const Float64 valsymd = xc*xc /(sigma*sigma*sigma) * exp(-0.5*xsurc*xsurc);
 
         const Float64 valasym = (1.0+erf(alpha/sqrt(2.0)*xsurc));
         const Float64 arg = alpha*xc/sqrt(2)/sigma;
         //const Float64 valasymd = -alpha/sqrt(2*M_PI)*xc /(sigma*sigma) /cel*x0*exp(-arg*arg);
-        const Float64 valasymd = -alpha*sqrt(2)/sqrt(M_PI)*xc /(sigma*sigma) /cel*x0*exp(-arg*arg);
+        const Float64 valasymd = -alpha*sqrt(2)/sqrt(M_PI)*xc /(sigma*sigma)*exp(-arg*arg);
         val = valsym*valasymd+valsymd*valasym;
         //val = valsymd;
 
@@ -234,12 +278,12 @@ Float64 CLineModelElement::GetLineProfileDerivSigma(std::string profile, Float64
         const Float64 xsurc = xcd/sigma;
         const Float64 alpha = m_asymfit_alpha;
         const Float64 valsym = exp(-0.5*xsurc*xsurc);
-        const Float64 valsymd = xcd*xcd /cel *x0 /(sigma*sigma*sigma) * exp(-0.5*xsurc*xsurc);
+        const Float64 valsymd = xcd*xcd  /(sigma*sigma*sigma) * exp(-0.5*xsurc*xsurc);
 
         const Float64 valasym = (1.0+erf(alpha/sqrt(2.0)*xsurc));
         const Float64 arg = alpha*xcd/sqrt(2)/sigma;
         //const Float64 valasymd = -alpha/sqrt(2*M_PI)*xcd /(sigma*sigma) /cel*x0*exp(-arg*arg);
-        const Float64 valasymd = -alpha*sqrt(2)/sqrt(M_PI)*xcd /(sigma*sigma) /cel*x0*exp(-arg*arg);
+        const Float64 valasymd = -alpha*sqrt(2)/sqrt(M_PI)*xcd /(sigma*sigma)*exp(-arg*arg);
         val = valsym*valasymd+valsymd*valasym;
         //val = valsymd;
 

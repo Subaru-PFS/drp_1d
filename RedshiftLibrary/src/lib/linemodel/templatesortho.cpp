@@ -36,12 +36,14 @@ CTemplatesOrthogonalization::CTemplatesOrthogonalization(const CTemplateCatalog&
             if(enableOverride){
                 rigidity = "rules";
                 rules = "no";
+
             }
+            std::string opt_fittingmethod2 = "hybrid";
 
             Int32 ret = OrthogonalizeTemplate(tpl,
                                   calibrationPath,
                                   restRayList,
-                                  opt_fittingmethod,
+                                  opt_fittingmethod2,
                                   widthType,
                                   resolution,
                                   velocityEmission,
@@ -106,7 +108,7 @@ Int32 CTemplatesOrthogonalization::OrthogonalizeTemplate(const CTemplate& inputT
     std::shared_ptr<CTemplate> tplOrtho = std::shared_ptr<CTemplate>( new CTemplate( inputTemplate.GetName().c_str(), inputTemplate.GetCategory() ) );
     *tplOrtho = inputTemplate; //todo: check if this is a true copy of the samples
 
-    bool enableModelSubtraction = true;
+    bool enableModelSubtraction = false;
     if(enableModelSubtraction){
         //Compute linemodel on the template
         CLineModelElementList model( spectrum,
@@ -127,7 +129,7 @@ Int32 CTemplatesOrthogonalization::OrthogonalizeTemplate(const CTemplate& inputT
         Float64 redshift = 0.0;
         TLambdaRange lambdaRange = inputTemplate.GetLambdaRange();
         Float64 contreest_iterations = 0;
-        Bool enableLogging=false;
+        Bool enableLogging=true;
         CLineModelResult::SLineModelSolution modelSolution;
         Float64 fit = model.fit( redshift, lambdaRange, modelSolution, contreest_iterations, enableLogging );
 
