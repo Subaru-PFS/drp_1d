@@ -768,7 +768,39 @@ Float64  CMultiLine::GetModelDerivContinuumAmpAtLambda(Float64 lambda, Float64 r
 	}
 	return Yi;
 }
+/* Given the value of the partial deriv of the flux of this multiline at the given lamda when
+ * The continuum is not a variable of z
+ */
+Float64 CMultiLine::GetModelDerivZAtLambdaNoContinuum(Float64 lambda, Float64 redshift, Float64 continuumFlux){
+    if(m_OutsideLambdaRange){
+            return 0.0;
+    }
+    Float64 Yi=0.0;
 
+    Float64 x = lambda;
+
+    for(Int32 k2=0; k2<m_Rays.size(); k2++) //loop on rays
+    {
+        if(m_OutsideLambdaRangeList[k2]){
+                continue;
+        }
+        Float64 A = m_FittedAmplitudes[k2];
+        Float64 dzOffset = m_Rays[k2].GetOffset()/m_c_kms;
+        Float64 mu = m_Rays[k2].GetPosition()*(1+redshift)*(1+dzOffset);
+        Float64 lamdba0 = m_Rays[k2].GetPosition() * (1+dzOffset);
+        Float64 sigma = GetLineWidth(mu, redshift, m_Rays[k2].GetIsEmission(), m_profile[k2]);
+
+        if(m_SignFactors[k2]==1){
+            Yi += m_SignFactors[k2] * A * GetLineProfileDerivZ(m_profile[k2], x, lamdba0, redshift, sigma);
+        }else{
+            Yi += m_SignFactors[k2] * A * continuumFlux * GetLineProfileDerivZ(m_profile[k2], x, lamdba0, redshift, sigma);
+        }
+    }
+    return Yi;
+}
+/* Given the value of the partial deriv of the flux of this multiline at the given lamda when
+ * The continuum is a variable of z
+ */
 Float64 CMultiLine::GetModelDerivZAtLambda(Float64 lambda, Float64 redshift, Float64 continuumFlux, Float64 continuumFluxDerivZ){
 	if(m_OutsideLambdaRange){
 			return 0.0;
@@ -779,21 +811,21 @@ Float64 CMultiLine::GetModelDerivZAtLambda(Float64 lambda, Float64 redshift, Flo
 
 	for(Int32 k2=0; k2<m_Rays.size(); k2++) //loop on rays
 	{
-			if(m_OutsideLambdaRangeList[k2]){
-					continue;
-			}
-			Float64 A = m_FittedAmplitudes[k2];
-			Float64 dzOffset = m_Rays[k2].GetOffset()/m_c_kms;
-			Float64 mu = m_Rays[k2].GetPosition()*(1+redshift)*(1+dzOffset);
-      Float64 lamdba0 = m_Rays[k2].GetPosition() * (1+dzOffset);
-      Float64 sigma = GetLineWidth(mu, redshift, m_Rays[k2].GetIsEmission(), m_profile[k2]);
+        if(m_OutsideLambdaRangeList[k2]){
+                continue;
+        }
+        Float64 A = m_FittedAmplitudes[k2];
+        Float64 dzOffset = m_Rays[k2].GetOffset()/m_c_kms;
+        Float64 mu = m_Rays[k2].GetPosition()*(1+redshift)*(1+dzOffset);
+        Float64 lamdba0 = m_Rays[k2].GetPosition() * (1+dzOffset);
+        Float64 sigma = GetLineWidth(mu, redshift, m_Rays[k2].GetIsEmission(), m_profile[k2]);
 
-			if(m_SignFactors[k2]==1){
-					Yi += m_SignFactors[k2] * A * GetLineProfileDerivZ(m_profile[k2], x, lamdba0, redshift, sigma);
-			}else{
-				Yi += m_SignFactors[k2] * A * continuumFlux * GetLineProfileDerivZ(m_profile[k2], x, lamdba0, redshift, sigma)
-						+ m_SignFactors[k2] * A * continuumFluxDerivZ * GetLineProfile(m_profile[k2], x, mu, sigma);
-			}
+        if(m_SignFactors[k2]==1){
+            Yi += m_SignFactors[k2] * A * GetLineProfileDerivZ(m_profile[k2], x, lamdba0, redshift, sigma);
+        }else{
+            Yi += m_SignFactors[k2] * A * continuumFlux * GetLineProfileDerivZ(m_profile[k2], x, lamdba0, redshift, sigma)
+                    + m_SignFactors[k2] * A * continuumFluxDerivZ * GetLineProfile(m_profile[k2], x, mu, sigma);
+        }
 	}
     return Yi;
 }

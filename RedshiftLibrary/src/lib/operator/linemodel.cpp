@@ -223,7 +223,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
     }
 
     //fit continuum
-    bool enableFitContinuumPrecomputed = false;
+    bool enableFitContinuumPrecomputed = true;
     if(enableFitContinuumPrecomputed && opt_continuumcomponent == "tplfit")
     {
         boost::chrono::thread_clock::time_point start_tplfitprecompute = boost::chrono::thread_clock::now();
@@ -241,8 +241,8 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
         COperatorChiSquare2* chiSquareOperator;
         chiSquareOperator = new COperatorChiSquare2(opt_calibrationPath); //todo, delete this operator when done...
         std::string opt_interp = "precomputedfinegrid"; // "lin"; //
-        Int32 opt_dustFit = 1;
-        Int32 opt_extinction = 1;
+        Int32 opt_dustFit = 0;
+        Int32 opt_extinction = 0;
         Log.LogInfo( "linemodel: precomputing-fitContinuum_dustfit = %d", opt_dustFit );
         Log.LogInfo( "linemodel: precomputing-fitContinuum_igm = %d", opt_extinction );
 
@@ -489,7 +489,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
     {
         for( Int32 i=0; i<extremumList.size(); i++ )
         {
-            Log.LogInfo("New extrema %d", i);
+            //Log.LogInfo("New extrema %d", i);
             Float64 z = extremumList[i].X;
             Float64 m = extremumList[i].Y;
 
@@ -527,7 +527,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
                     model.SetFittingMethod("lmfit");
                     model.SetElementIndexesDisabledAuto();
                     Float64 meritTmp;
-                    Log.LogInfo("Lm fit for extrema %d", i);
+                    //Log.LogInfo("Lm fit for extrema %d", i);
                     ModelFit( model, lambdaRange, result->Redshifts[idx], meritTmp, result->LineModelSolutions[idx], contreest_iterations, true);
                     modelInfoSave = true;
                     // CModelSpectrumResult

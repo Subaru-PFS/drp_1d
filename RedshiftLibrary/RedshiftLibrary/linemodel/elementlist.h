@@ -160,6 +160,7 @@ public:
     Float64 getModelFluxDerivContinuumAmpEltVal(Int32 DerivEltIdx, Int32 idx) const;
     Float64 getModelFluxDerivZContinuumVal(Int32 idx)const;
     //void calculateUnscaleContinuumDerivZ();
+    Float64 getModelFluxDerivZEltValNoContinuum(Int32 DerivEltIdx, Int32 idx) const;
     Float64 getModelFluxDerivZEltVal(Int32 DerivEltIdx, Int32 idx, Float64 continuumFluxDerivZ) const;
     Float64 getModelFluxDerivVelVal(Int32 idx) const;
     Float64 getModelFluxDerivVelEmissionVal(Int32 idx) const;

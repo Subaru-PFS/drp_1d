@@ -26,6 +26,7 @@ class CLmfitController{
     bool isContinuumFitted();
     bool isLineTypeVelocityFitted(Int32 lineType);
     bool isContinuumLoaded();
+    bool isNoContinuum();
     void resizeAmpsLine();
     void setAmpLine(Int32 idx, Float64 amp, Float64 ampErr);
     std::vector<Int32>  getFilteredIdx();
@@ -73,6 +74,7 @@ class CLmfitController{
 
     bool m_continumLoaded ;
     bool m_continuumfit;
+    bool m_noContinuum;
     bool m_emissionVelFit;
     bool m_absorptionVelFit ;
     std::vector<Float64> m_ampsLinefitted;

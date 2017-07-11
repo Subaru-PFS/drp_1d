@@ -39,6 +39,7 @@ public:
     Float64 getModelAtLambda(Float64 lambda, Float64 redshift, Float64 continuumFlux, Int32 kRaySupport);
     Float64 GetModelDerivAmplitudeAtLambda( Float64 lambda, Float64 redshift, Float64 continuumFlux  );
     Float64 GetModelDerivContinuumAmpAtLambda(Float64 lambda, Float64 redshift, Float64 continuumFluxUnscale );
+    Float64 GetModelDerivZAtLambdaNoContinuum(Float64 lambda, Float64 redshift, Float64 continuumFlux);
     Float64 GetModelDerivZAtLambda(Float64 lambda, Float64 redshift, Float64 continuumFlux,  Float64 continuumFluxDerivZ);
 
 

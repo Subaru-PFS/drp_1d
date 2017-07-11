@@ -379,6 +379,24 @@ Float64 CLineModelElementList::getModelFluxDerivZContinuumVal(Int32 idx)const{
 //
 // }
 
+/*
+ * Calculate the partial deriv of the flux by z, when the continuum is not a variable of z
+ */
+Float64 CLineModelElementList::getModelFluxDerivZEltValNoContinuum(Int32 DerivEltIdx, Int32 idx) const{
+  CSpectrumSpectralAxis& spectralAxis = m_SpectrumModel->GetSpectralAxis();
+  Int32 iElts=DerivEltIdx;
+  if(idx<spectralAxis.GetSamplesCount())
+  {
+      Float64 derivateVal = m_Elements[iElts]->GetModelDerivZAtLambdaNoContinuum(spectralAxis[idx], m_Redshift, m_ContinuumFluxAxis[idx]);
+      return derivateVal;
+  }
+
+  return -1.0;
+}
+
+/*
+ * Calculate the partial deriv of the flux by z, when the continuum is a variable of z, the partial deriv of z of the continuum at this lambda is given by continuumFluxDerivZ
+ */
 Float64 CLineModelElementList::getModelFluxDerivZEltVal(Int32 DerivEltIdx, Int32 idx, Float64 continuumFluxDerivZ) const{
   CSpectrumSpectralAxis& spectralAxis = m_SpectrumModel->GetSpectralAxis();
   Int32 iElts=DerivEltIdx;
@@ -1128,18 +1146,9 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
             for( UInt32 i=0; i<controllers.size(); i++ )
             {
               CLmfitController *controller = controllers[i];
-              if(!controller->isContinuumLoaded()){
+              if(!controller->isNoContinuum() && !controller->isContinuumLoaded()){
                 LoadFitContinuumOneTemplate(lambdaRange, *controller->getTemplate());
               }
-              /*// export for debug
-              FILE* fspc = fopen( "Continuum.txt", "w+" );
-              for( Int32 t=0;t<m_ContinuumFluxAxis.GetSamplesCount();t++)
-              {
-                  fprintf( fspc, "%f %f\n", spectralAxis[t], m_ContinuumFluxAxis[t]);//*1e12);
-              }
-              fclose( fspc );
-              //*/
-
               // adding element base on configuration
               std::vector<Int32> validEltsIdx = GetModelValidElementsIndexes();
               for (Int32 iElt = 0; iElt < validEltsIdx.size(); iElt++)
@@ -1173,8 +1182,6 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
 
             //We set the best model found
             if(bestController){
-
-
               if(bestController->isContinuumFitted()){
                 if(bestController->isRedshiftFitted()){
                     m_Redshift = bestController->getRedshift();
@@ -2317,7 +2324,6 @@ Int32 CLineModelElementList::fitAmplitudesLmfit( const CSpectrumFluxAxis& fluxAx
 
     if(controller->isRedshiftFitted()){
       x_init[controller->getIndRedshift()]= m_Redshift;
-      // calculateUnscaleContinuumDerivZ();
       if(verbose){
            Log.LogInfo( "LineModel LMfit: set init guess redshift= %f ", m_Redshift);
       }

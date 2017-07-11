@@ -17,6 +17,7 @@ CLmfitController::CLmfitController(
           bool absorptionVelFit
       ){
     m_tpl = &tpl;
+    m_noContinuum = false;
     m_continumLoaded = continumLoaded;
     m_continuumfit = continuumfit;
     m_emissionVelFit = emissionVelFit;
@@ -28,6 +29,7 @@ CLmfitController::CLmfitController(
           bool absorptionVelFit
       ){
     m_tpl = NULL;
+    m_noContinuum = true;
     m_continumLoaded = true;
     m_continuumfit = false;
     m_emissionVelFit = emissionVelFit;
@@ -49,6 +51,10 @@ bool CLmfitController::isContinuumFitted(){
 
 bool  CLmfitController::isContinuumLoaded(){
   return m_continumLoaded;
+}
+
+bool CLmfitController::isNoContinuum(){
+    return m_noContinuum;
 }
 
 bool CLmfitController::isRedshiftFitted(){

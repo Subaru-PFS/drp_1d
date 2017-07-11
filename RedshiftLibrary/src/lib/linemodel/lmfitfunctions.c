@@ -5,6 +5,10 @@
 #include <RedshiftLibrary/log/log.h>
 namespace NSEpic
 {
+/*
+ This class is use by the soler lmfit, it is compose of two callback functions
+ the first one (lmfit_f) return a vector : for each lmadba the difference between model and flux
+ * */
 class CLineModelElementList;
 
 
@@ -33,9 +37,10 @@ lmfit_f (const gsl_vector * x, void *data,
 
     if(controller->isRedshiftFitted()){
       Float64 redshift = gsl_vector_get(x, controller-> getIndRedshift());
-      linemodel->setRedshift(redshift , false);
-      if(!controller->isContinuumFitted()){
-        linemodel->setFitContinuum_tplAmplitude(linemodel->getFitContinuum_tplAmplitude());
+      linemodel->setRedshift(redshift , !controller->isNoContinuum());
+      if(!controller->isNoContinuum() && !controller->isContinuumFitted()){
+        // a continuum is fit by linemodel , but not by lmfit
+         linemodel->setFitContinuum_tplAmplitude(linemodel->getFitContinuum_tplAmplitude());
       }
     }
 
@@ -99,8 +104,9 @@ lmfit_df (const gsl_vector * x, void *data,
       Float64 redshift = gsl_vector_get(x, controller-> getIndRedshift());
       //Log.LogInfo("redshift value %f", redshift);
       linemodel->setRedshift(redshift ,false );
-      if(!controller->isContinuumFitted()){
-        linemodel->setFitContinuum_tplAmplitude(linemodel->getFitContinuum_tplAmplitude());
+      if(!controller->isNoContinuum() && !controller->isContinuumFitted()){
+        // a continuum is fit by linemodel , but not by lmfit
+         linemodel->setFitContinuum_tplAmplitude(linemodel->getFitContinuum_tplAmplitude());
       }
     }
 
@@ -166,17 +172,24 @@ lmfit_df (const gsl_vector * x, void *data,
         }
 
         if(controller->isRedshiftFitted()){
-          Float64 dvalContinuum = linemodel->getModelFluxDerivZContinuumVal(samples_indexes[i] );
-          Float64 dval = dvalContinuum;
-          for (Int32 iElt = 0; iElt < elts_indexes.size(); iElt++)
-          {
-            for (Int32 iElt = 0; iElt < elts_indexes.size(); iElt++)
-            {
-              dval += linemodel-> getModelFluxDerivZEltVal(elts_indexes[iElt], samples_indexes[i], dvalContinuum);
-            }
+          if(!controller->isNoContinuum()){
+              Float64 dvalContinuum = linemodel->getModelFluxDerivZContinuumVal(samples_indexes[i] );
+              Float64 dval = dvalContinuum;
+              for (Int32 iElt = 0; iElt < elts_indexes.size(); iElt++)
+              {
+                 dval += linemodel-> getModelFluxDerivZEltVal(elts_indexes[iElt], samples_indexes[i], dvalContinuum);
+              }
+              dval = dval * normFactor;
+              gsl_matrix_set (J, i, controller->getIndRedshift(),dval);
+           }else{
+              Float64 dval = 0.;
+              for (Int32 iElt = 0; iElt < elts_indexes.size(); iElt++)
+              {
+                 dval += linemodel-> getModelFluxDerivZEltValNoContinuum(elts_indexes[iElt], samples_indexes[i]);
+              }
+              dval = dval * normFactor;
+              gsl_matrix_set (J, i, controller->getIndRedshift(),dval);
           }
-          dval = dval * normFactor;
-          gsl_matrix_set (J, i, controller->getIndRedshift(),dval);
         }
     }
 
