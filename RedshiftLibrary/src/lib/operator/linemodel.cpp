@@ -672,7 +672,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
             for (Int32 iz=0;iz<result->Redshifts.size();iz++)
             {
                 if(result->Redshifts[iz] >= left_border && result->Redshifts[iz] <= right_border){
-                  Log.LogInfo("Fit for Extended redshift %d, z = %f", iz, result->Redshifts[iz]);
+                 //Log.LogInfo("Fit for Extended redshift %d, z = %f", iz, result->Redshifts[iz]);
                     ModelFit( model, lambdaRange, result->Redshifts[iz], result->ChiSquare[iz], result->LineModelSolutions[iz], contreest_iterations, false);
                     if(result->ChiSquare[iz]< extremumList2[i].Y)
                     {
@@ -729,6 +729,14 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
             }
         }
         indiceList2.push_back(iYmin);
+    }
+    if(modelInfoSave){
+        TFloat64List OrderedLMZ;
+        for(Int32 ie2=0; ie2<indiceList2.size(); ie2++)
+        {
+            OrderedLMZ.push_back(result->lmfitPass[indiceList2[ie2]]);
+        }
+        result->lmfitPass = OrderedLMZ;
     }
     if( extremumListOrdered.size() == 0 )
     {
@@ -793,8 +801,10 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
             model.SetVelocityAbsorption(extrema_velocityALOrdered[i]);
         }
 
-        model.LoadModelSolution( result->LineModelSolutions[idx]);
-        ModelFit( model, lambdaRange, result->Redshifts[idx], result->ChiSquare[idx], result->LineModelSolutions[idx], contreest_iterations, true);
+
+        if(!modelInfoSave){
+            ModelFit( model, lambdaRange, result->Redshifts[idx], result->ChiSquare[idx], result->LineModelSolutions[idx], contreest_iterations, true);
+        }
         if(m!=result->ChiSquare[idx])
         {
             Log.LogInfo("Linemodel: m (%f for idx=%d) !=chi2 (%f) ", m, idx, result->ChiSquare[idx]);
@@ -860,6 +870,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
         result->ExtremaMerit[i] = m;
 
         result->ExtremaLastPass[i] = z; //refined extremum is initialized here.
+
 
         //computing errz (or deltaz, dz...): should probably be computed in linemodelresult.cpp instead ?
         Float64 dz=-1.;
