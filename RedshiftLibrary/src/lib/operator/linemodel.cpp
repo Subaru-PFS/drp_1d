@@ -417,6 +417,8 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
         Log.LogInfo("Line Model, only 1 redshift calculated, only 1 extremum");
     }else
     {
+        Log.LogInfo("Line Model, ChiSquare min val = %e", result->GetMinChiSquare() );
+        Log.LogInfo("Line Model, ChiSquare max val = %e", result->GetMaxChiSquare() );
         CExtremum extremum( redshiftsRange, extremumCount, true, 2);
         extremum.Find( result->Redshifts, result->ChiSquare, extremumList );
         if( extremumList.size() == 0 )
@@ -454,7 +456,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
     //TBoolList isLocalExtrema;
     for( Int32 i=0; i<extremumList.size(); i++ )
     {
-        Log.LogInfo("Linemodel: Raw extr #%d, z_e.X=%f, m_e.Y=%f", i, extremumList[i].X, extremumList[i].Y);
+        Log.LogInfo("Linemodel: Raw extr #%d, z_e.X=%f, m_e.Y=%e", i, extremumList[i].X, extremumList[i].Y);
         Float64 x = extremumList[i].X;
         Float64 left_border = max(redshiftsRange.GetBegin(), x-extensionradius);
         Float64 right_border=min(redshiftsRange.GetEnd(), x+extensionradius);

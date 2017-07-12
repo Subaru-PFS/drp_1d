@@ -501,3 +501,28 @@ UInt32 CLineModelResult::GetExtremaIndex(UInt32 extremaIdx) const
     return solutionIdx;
 }
 
+Float64 CLineModelResult::GetMinChiSquare() const
+{
+    Float64 min=DBL_MAX;
+    for ( int i=0; i<Redshifts.size(); i++)
+    {
+        if(min>ChiSquare[i])
+        {
+            min= ChiSquare[i];
+        }
+    }
+    return min;
+}
+
+Float64 CLineModelResult::GetMaxChiSquare() const
+{
+    Float64 max=-DBL_MAX;
+    for ( int i=0; i<Redshifts.size(); i++)
+    {
+        if(max<ChiSquare[i])
+        {
+            max= ChiSquare[i];
+        }
+    }
+    return max;
+}

@@ -52,6 +52,10 @@ public:
     Float64 GetExtremaMerit(Int32 extremaIdx) const;
     UInt32 GetExtremaIndex(UInt32 extremaIdx) const;
 
+    Float64 GetMinChiSquare() const;
+    Float64 GetMaxChiSquare() const;
+
+
     //Full Merit curve
     TFloat64List            Redshifts;  // z axis
     TFloat64List            ChiSquare;  // chi2
