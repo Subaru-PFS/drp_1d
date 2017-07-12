@@ -2205,7 +2205,7 @@ Int32 CLineModelElementList::fitAmplitudesLmfit( const CSpectrumFluxAxis& fluxAx
 
     if(verbose)
     {
-        Log.LogInfo( "fitAmplitudesLmfit");
+        //Log.LogInfo( "fitAmplitudesLmfit");
     }
     std::vector<Int32> filteredEltsIdx= controller->getFilteredIdx();
     Int32 nddl = filteredEltsIdx.size();
@@ -2267,7 +2267,7 @@ Int32 CLineModelElementList::fitAmplitudesLmfit( const CSpectrumFluxAxis& fluxAx
 
     if(verbose)
     {
-        Log.LogInfo("normFactor = '%.3e'", normFactor);
+        //Log.LogInfo("normFactor = '%.3e'", normFactor);
     }
 
     gsl_matrix *J = gsl_matrix_alloc(n, p);
