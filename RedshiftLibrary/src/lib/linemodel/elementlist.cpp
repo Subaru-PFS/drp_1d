@@ -3329,7 +3329,7 @@ CLineModelResult::SLineModelSolution CLineModelElementList::GetModelSolution()
             modelSolution.FittingError.push_back(-1.0);
             modelSolution.CenterContinuumFlux.push_back(-1.0);
             modelSolution.Sigmas.push_back(-1.0);
-            modelSolution.EquWidths.push_back(-1.0);
+            modelSolution.Fluxs.push_back(-1.0);
             modelSolution.OutsideLambdaRange.push_back(true);
         }else{
             modelSolution.ElementId.push_back( eIdx );
@@ -3342,7 +3342,7 @@ CLineModelResult::SLineModelSolution CLineModelElementList::GetModelSolution()
             Float64 sigma = m_Elements[eIdx]->GetWidth(subeIdx, m_Redshift);
             Float64 ew = amp*sigma*sqrt(2*M_PI);
             modelSolution.Sigmas.push_back(sigma);
-            modelSolution.EquWidths.push_back(ew);
+            modelSolution.Fluxs.push_back(ew);
             modelSolution.OutsideLambdaRange.push_back(m_Elements[eIdx]->IsOutsideLambdaRange(subeIdx));
         }
 
