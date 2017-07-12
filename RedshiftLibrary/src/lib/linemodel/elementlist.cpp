@@ -3328,14 +3328,21 @@ CLineModelResult::SLineModelSolution CLineModelElementList::GetModelSolution()
             modelSolution.Errors.push_back(-1.0);
             modelSolution.FittingError.push_back(-1.0);
             modelSolution.CenterContinuumFlux.push_back(-1.0);
+            modelSolution.Sigmas.push_back(-1.0);
+            modelSolution.EquWidths.push_back(-1.0);
             modelSolution.OutsideLambdaRange.push_back(true);
         }else{
             modelSolution.ElementId.push_back( eIdx );
-            modelSolution.Amplitudes.push_back(m_Elements[eIdx]->GetFittedAmplitude(subeIdx));
+            Float64 amp = m_Elements[eIdx]->GetFittedAmplitude(subeIdx);
+            modelSolution.Amplitudes.push_back(amp);
             modelSolution.Errors.push_back(m_Elements[eIdx]->GetFittedAmplitudeErrorSigma(subeIdx));
             modelSolution.FittingError.push_back(getModelErrorUnderElement(eIdx));
             Float64 cont = m_Elements[eIdx]->GetContinuumAtCenterProfile(subeIdx, m_SpectrumModel->GetSpectralAxis(), m_Redshift, m_ContinuumFluxAxis);
             modelSolution.CenterContinuumFlux.push_back(cont);
+            Float64 sigma = m_Elements[eIdx]->GetWidth(subeIdx, m_Redshift);
+            Float64 ew = amp*sigma*sqrt(2*M_PI);
+            modelSolution.Sigmas.push_back(sigma);
+            modelSolution.EquWidths.push_back(ew);
             modelSolution.OutsideLambdaRange.push_back(m_Elements[eIdx]->IsOutsideLambdaRange(subeIdx));
         }
 
