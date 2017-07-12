@@ -1546,6 +1546,9 @@ Int32 CLineModelElementList::fitAmplitudesHybrid(const CSpectrumSpectralAxis& sp
       }
 
   }
+
+  improveBalmerFit();
+
   return 0;
 }
 
@@ -3306,6 +3309,66 @@ TStringList CLineModelElementList::GetModelRulesLog()
 {
   return m_Regulament->GetLogs();
 }
+
+// return error: 1=can't find element index, 2=Abs_width not high enough compared to Em_width
+Int32 CLineModelElementList::improveBalmerFit()
+{
+    std::vector<std::string> linetagsE;
+    linetagsE.push_back( "Hbeta" );
+    linetagsE.push_back( "Hgamma" );
+    linetagsE.push_back( "Hdelta" );
+    std::vector<std::string> linetagsA;
+    linetagsA.push_back( "HbetaA" );
+    linetagsA.push_back( "HgammaA" );
+    linetagsA.push_back( "HdeltaA" );
+
+    if(linetagsE.size()!=linetagsA.size())
+    {
+        return -1;
+    }
+
+    for( Int32 itag=0; itag<linetagsE.size(); itag++)
+    {
+        std::string tagE = linetagsE[itag];
+        std::string tagA = linetagsA[itag];
+
+        UInt32 ilineE = FindElementIndex( tagE, CRay::nType_Emission );
+        UInt32 ilineA = FindElementIndex( tagA, CRay::nType_Absorption );
+        // Were the lines indexes found ?
+        if(ilineE<0 || ilineA<0)
+        {
+            continue;
+        }
+        // for now only allow this process if Em and Abs line are single lines
+        if(m_Elements[ilineE]->m_Rays.size()>1 || m_Elements[ilineA]->m_Rays.size()>1)
+        {
+            continue;
+        }
+        UInt32 subeIdxE = 0;
+        UInt32 subeIdxA = 0;
+
+
+        //try if the width is significantly different: abs > em
+        Float64 AbsVSEmWidthCoeffThreshold = 2.0;
+        Float64 sigmaE = m_Elements[ilineE]->GetWidth(subeIdxE, m_Redshift);
+        Float64 sigmaA = m_Elements[ilineA]->GetWidth(subeIdxA, m_Redshift);
+        if(sigmaA<AbsVSEmWidthCoeffThreshold*sigmaE)
+        {
+            continue;
+        }
+
+        //simulatneous fit with linsolve
+        std::vector<Int32> eltsIdx;
+        eltsIdx.push_back(ilineA);
+        eltsIdx.push_back(ilineE);
+        std::vector<Float64> ampsfitted;
+        std::vector<Float64> errorsfitted;
+        fitAmplitudesLinSolve(eltsIdx, m_SpectrumModel->GetSpectralAxis(), m_spcFluxAxisNoContinuum, m_ContinuumFluxAxis, ampsfitted, errorsfitted);
+    }
+
+    return 0;
+}
+
 
 
 /**
