@@ -3358,12 +3358,32 @@ Int32 CLineModelElementList::improveBalmerFit()
         }
 
         //simulatneous fit with linsolve
+        Float64 modelErr_init = getModelErrorUnderElement(ilineA);
+        Float64 ampA = m_Elements[ilineA]->GetFittedAmplitude(0);
+        Float64 amp_errorA = m_Elements[ilineA]->GetFittedAmplitudeErrorSigma(0);
+        Float64 ampE = m_Elements[ilineE]->GetFittedAmplitude(0);
+        Float64 amp_errorE = m_Elements[ilineE]->GetFittedAmplitudeErrorSigma(0);
+
         std::vector<Int32> eltsIdx;
         eltsIdx.push_back(ilineA);
         eltsIdx.push_back(ilineE);
         std::vector<Float64> ampsfitted;
         std::vector<Float64> errorsfitted;
         fitAmplitudesLinSolve(eltsIdx, m_SpectrumModel->GetSpectralAxis(), m_spcFluxAxisNoContinuum, m_ContinuumFluxAxis, ampsfitted, errorsfitted);
+
+        //decide if the fit is better than previous amps
+        std::vector<Int32> elts;
+        elts.push_back(ilineA);
+        elts.push_back(ilineE);
+        refreshModelUnderElements(elts);
+        Float64 modelErr_withfit = getModelErrorUnderElement(ilineA);
+        if(modelErr_withfit>modelErr_init)
+        {
+            Float64 nominal_ampA = m_Elements[ilineA]->GetNominalAmplitude(0);
+            Float64 nominal_ampE = m_Elements[ilineE]->GetNominalAmplitude(0);
+            m_Elements[ilineA]->SetFittedAmplitude(ampA/nominal_ampA, amp_errorA/nominal_ampA);
+            m_Elements[ilineE]->SetFittedAmplitude(ampE/nominal_ampE, amp_errorE/nominal_ampE);
+        }
     }
 
     return 0;
