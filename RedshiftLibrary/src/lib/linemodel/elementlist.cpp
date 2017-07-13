@@ -2440,7 +2440,7 @@ Int32 CLineModelElementList::fitAmplitudesLinSolve( std::vector<Int32> EltsIdx, 
         {
             Float64 a = gsl_vector_get(c,iddl)/normFactor;
             Float64 cova = gsl_matrix_get(cov,iddl,iddl);
-            Float64 sigma = sqrt(cova);
+            Float64 sigma = sqrt(cova)/normFactor;
             SetElementAmplitude(EltsIdx[iddl], a, sigma);
         }
         //refreshModel();
@@ -2451,7 +2451,7 @@ Int32 CLineModelElementList::fitAmplitudesLinSolve( std::vector<Int32> EltsIdx, 
         {
             Float64 a = gsl_vector_get(c,iddl)/normFactor;
             Float64 cova = gsl_matrix_get(cov,iddl,iddl);
-            Float64 sigma = sqrt(cova);
+            Float64 sigma = sqrt(cova)/normFactor;
             ampsfitted[iddl] = (a);
             errorsfitted[iddl] = (sigma);
         }
