@@ -3413,19 +3413,28 @@ CLineModelResult::SLineModelSolution CLineModelElementList::GetModelSolution()
             modelSolution.CenterContinuumFlux.push_back(-1.0);
             modelSolution.Sigmas.push_back(-1.0);
             modelSolution.Fluxs.push_back(-1.0);
+            modelSolution.FluxErrors.push_back(-1.0);
             modelSolution.OutsideLambdaRange.push_back(true);
         }else{
             modelSolution.ElementId.push_back( eIdx );
             Float64 amp = m_Elements[eIdx]->GetFittedAmplitude(subeIdx);
             modelSolution.Amplitudes.push_back(amp);
-            modelSolution.Errors.push_back(m_Elements[eIdx]->GetFittedAmplitudeErrorSigma(subeIdx));
+            Float64 ampError = m_Elements[eIdx]->GetFittedAmplitudeErrorSigma(subeIdx);
+            modelSolution.Errors.push_back(ampError);
             modelSolution.FittingError.push_back(getModelErrorUnderElement(eIdx));
             Float64 cont = m_Elements[eIdx]->GetContinuumAtCenterProfile(subeIdx, m_SpectrumModel->GetSpectralAxis(), m_Redshift, m_ContinuumFluxAxis);
             modelSolution.CenterContinuumFlux.push_back(cont);
             Float64 sigma = m_Elements[eIdx]->GetWidth(subeIdx, m_Redshift);
-            Float64 ew = amp*sigma*sqrt(2*M_PI);
+            Float64 flux = -1; amp*sigma*sqrt(2*M_PI);
+            Float64 fluxError = -1; ampError*sigma*sqrt(2*M_PI);
+            if(amp>=0)
+            {
+                flux = amp*sigma*sqrt(2*M_PI);
+                fluxError = ampError*sigma*sqrt(2*M_PI);
+            }
             modelSolution.Sigmas.push_back(sigma);
-            modelSolution.Fluxs.push_back(ew);
+            modelSolution.Fluxs.push_back(flux);
+            modelSolution.FluxErrors.push_back(fluxError);
             modelSolution.OutsideLambdaRange.push_back(m_Elements[eIdx]->IsOutsideLambdaRange(subeIdx));
         }
 
