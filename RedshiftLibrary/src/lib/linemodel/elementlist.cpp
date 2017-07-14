@@ -278,6 +278,58 @@ const CSpectrum& CLineModelElementList::GetObservedSpectrumWithLinesRemoved() co
     //return *m_SpectrumModel;;
 }
 
+
+
+/**
+ * @brief GetContinuumError
+ * Estimate the error on the continuum in a given window around the line center.
+ * 1. calculate the observed spectrum flux with lines subtracted (fitted line model)
+ * 2. estimate the std in a window corresponding to the sliding median window size (default/hardcoded=150A)
+ * @param subeIdx
+ * @param spectralAxis
+ * @param spectrumfluxAxis
+ * @param redshift
+ * @param continuumfluxAxis
+ * @return -1: zero samples found for error estimation, -9: not enough samples found for error estimation
+ */
+Float64 CLineModelElementList::GetContinuumError(Int32 eIdx, Int32 subeIdx)
+{
+    Int32 nMinValueForErrorEstimation=10;
+
+    const CSpectrum& noLinesSpectrum = GetObservedSpectrumWithLinesRemoved();
+    const CSpectrumFluxAxis& noLinesFluxAxis = noLinesSpectrum.GetFluxAxis();
+    const CSpectrumSpectralAxis& spectralAxis = m_SpectrumModel->GetSpectralAxis();
+    TFloat64Range lambdaRange = spectralAxis.GetLambdaRange(); //using the full wavelength range for this error estimation
+    Float64 winsizeAngstrom = 150.;
+
+    Float64 mu = m_Elements[eIdx]->GetObservedPosition(subeIdx, m_Redshift);
+    TInt32Range indexRange = m_Elements[eIdx]->EstimateIndexRange(subeIdx,
+                                                                    spectralAxis,
+                                                                    m_Redshift,
+                                                                    lambdaRange,
+                                                                    winsizeAngstrom);
+
+    //estimate sum square error between continuum and nolines-spectrum
+    Float64 sum=0.0;
+    UInt32 nsum = 0;
+    for( Int32 t=indexRange.GetBegin();t<indexRange.GetEnd();t++)
+    {
+        Float64 diff = noLinesFluxAxis[t]-m_ContinuumFluxAxis[t];
+        sum += diff*diff;
+        nsum++;
+    }
+
+    Float64 error = -1.;
+    if(nsum<nMinValueForErrorEstimation || nsum<1)
+    {
+        return -9.;
+    }else{
+        error = sqrt(sum/nsum);
+    }
+
+    return error;
+}
+
 /**
  * \brief Returns a pointer to the (re-)estimated continuum flux.
  **/
@@ -2088,9 +2140,9 @@ Int32 CLineModelElementList::fitAmplitudesLmfit(std::vector<Int32> filteredEltsI
 }
 
 /**
- * \brief Returns a sorted set of line indices present in the supports of the argument. 
+ * \brief Returns a sorted set of samples indices present in the supports of the argument.
  * For each EltsIdx entry, if the entry is not outside lambda range, get the support of each subelement.
- * For each selected support, get the line index. Sort this list and remove multiple entries. Return this clean list.
+ * For each selected support, get the sample index. Sort this list and remove multiple entries. Return this clean list.
  **/
 std::vector<Int32> CLineModelElementList::getSupportIndexes( std::vector<Int32> EltsIdx )
 {
@@ -3411,6 +3463,7 @@ CLineModelResult::SLineModelSolution CLineModelElementList::GetModelSolution()
             modelSolution.Errors.push_back(-1.0);
             modelSolution.FittingError.push_back(-1.0);
             modelSolution.CenterContinuumFlux.push_back(-1.0);
+            modelSolution.ContinuumError.push_back(-1.0);
             modelSolution.Sigmas.push_back(-1.0);
             modelSolution.Fluxs.push_back(-1.0);
             modelSolution.FluxErrors.push_back(-1.0);
@@ -3424,9 +3477,10 @@ CLineModelResult::SLineModelSolution CLineModelElementList::GetModelSolution()
             modelSolution.FittingError.push_back(getModelErrorUnderElement(eIdx));
             Float64 cont = m_Elements[eIdx]->GetContinuumAtCenterProfile(subeIdx, m_SpectrumModel->GetSpectralAxis(), m_Redshift, m_ContinuumFluxAxis);
             modelSolution.CenterContinuumFlux.push_back(cont);
+            modelSolution.ContinuumError.push_back(GetContinuumError(eIdx, subeIdx));
             Float64 sigma = m_Elements[eIdx]->GetWidth(subeIdx, m_Redshift);
-            Float64 flux = -1; amp*sigma*sqrt(2*M_PI);
-            Float64 fluxError = -1; ampError*sigma*sqrt(2*M_PI);
+            Float64 flux = -1;
+            Float64 fluxError = -1;
             if(amp>=0)
             {
                 flux = amp*sigma*sqrt(2*M_PI);

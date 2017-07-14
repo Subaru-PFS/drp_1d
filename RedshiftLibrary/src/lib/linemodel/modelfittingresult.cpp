@@ -58,7 +58,7 @@ Void CModelFittingResult::Save( const CDataStore& store, std::ostream& stream ) 
             stream << ", velocityEmission = " <<  VelocityEmission;
             stream << ", velocityAbsorption = " <<  VelocityAbsorption;
             stream << ", merit = " <<  Merit << "{" <<  std::endl;
-            stream << "#type\t#force\t#Name_____________\t#elt_ID\t#lambda_rest\t#amp_____\t#err_____\t#err_fit_____\t#sigma_____\t#flux_____\t#flux_err_____\t#center_cont_flux_____\n";
+            stream << "#type\t#force\t#Name_____________\t#elt_ID\t#lambda_rest\t#amp_____\t#err_____\t#err_fit_____\t#sigma_____\t#flux_____\t#flux_err_____\t#center_cont_flux_____\t#cont_err_____\n";
             for ( UInt32 j=0; j<LineModelSolution.Amplitudes.size(); j++)
             {
                 std::string typeStr="";
@@ -89,7 +89,8 @@ Void CModelFittingResult::Save( const CDataStore& store, std::ostream& stream ) 
                 stream << std::scientific << std::setprecision(5) <<  LineModelSolution.Sigmas[j] << "\t";
                 stream << std::scientific << std::setprecision(5) <<  LineModelSolution.Fluxs[j] << "\t";
                 stream << std::scientific << std::setprecision(5) <<  LineModelSolution.FluxErrors[j] << "\t";
-                stream << std::scientific << std::setprecision(5) <<  LineModelSolution.CenterContinuumFlux[j] << std::endl;
+                stream << std::scientific << std::setprecision(5) <<  LineModelSolution.CenterContinuumFlux[j] << "\t";
+                stream << std::scientific << std::setprecision(5) <<  LineModelSolution.ContinuumError[j] << std::endl;
             }
             stream << "#}" << std::endl;
 

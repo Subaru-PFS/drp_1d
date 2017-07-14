@@ -31,6 +31,9 @@ public:
     virtual TInt32RangeList getSupport()=0;
     virtual TInt32Range getSupportSubElt(Int32 subeIdx)=0;
     virtual TInt32Range getTheoreticalSupportSubElt(Int32 subeIdx)=0;
+
+    virtual TInt32Range EstimateIndexRange(Int32 subeIdx, const CSpectrumSpectralAxis& spectralAxis, Float64 redshift,  const TFloat64Range &lambdaRange, Float64 winsizeAngstrom)=0;
+
     virtual Float64 GetContinuumAtCenterProfile(Int32 subeIdx, const CSpectrumSpectralAxis& spectralAxis, Float64 redshift, CSpectrumFluxAxis &continuumfluxAxis)=0;
 
 
@@ -66,6 +69,7 @@ public:
     Float64 GetAsymfitDelta();
 
     virtual Float64 GetSignFactor(Int32 subeIdx)=0;
+    virtual Float64 GetObservedPosition(Int32 subeIdx, Float64 redshift)=0;
     virtual Float64 GetWidth(Int32 subeIdx, Float64 redshift)=0;
     Int32 GetSize();
     virtual std::vector<CRay> GetRays()=0;

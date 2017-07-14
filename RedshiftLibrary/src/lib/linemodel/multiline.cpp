@@ -113,9 +113,7 @@ bool CMultiLine::SetAbsLinesLimit(Float64 limit)
  */
 Float64 CMultiLine::GetContinuumAtCenterProfile(Int32 subeIdx, const CSpectrumSpectralAxis& spectralAxis, Float64 redshift, CSpectrumFluxAxis &continuumfluxAxis)
 {
-    Int32 i = subeIdx;
-    Float64 dzOffset = m_Rays[i].GetOffset()/m_c_kms;
-    Float64 mu = m_Rays[i].GetPosition()*(1+redshift)*(1+dzOffset);
+    Float64 mu = GetObservedPosition(subeIdx, redshift);
 
     Int32 IdxCenterProfile = spectralAxis.GetIndexAtWaveLength(mu);
     if(IdxCenterProfile<0 || IdxCenterProfile>continuumfluxAxis.GetSamplesCount()-1)
@@ -134,12 +132,23 @@ Float64 CMultiLine::GetContinuumAtCenterProfile(Int32 subeIdx, const CSpectrumSp
  **/
 TInt32Range CMultiLine::EstimateTheoreticalSupport(Int32 subeIdx, const CSpectrumSpectralAxis& spectralAxis, Float64 redshift,  const TFloat64Range &lambdaRange)
 {
-    Int32 i = subeIdx;
+    Float64 mu = GetObservedPosition(subeIdx, redshift);
+    Float64 c = GetLineWidth(mu, redshift, m_Rays[subeIdx].GetIsEmission(), m_profile[subeIdx]);
+    Float64 winsize = GetNSigmaSupport(m_profile[subeIdx])*c;
+
+    TInt32Range supportRange = EstimateIndexRange(subeIdx, spectralAxis, redshift, lambdaRange, winsize);
+
+    return supportRange;
+}
+
+/**
+ * \brief Returns the index range for a given window size (Angstrom)
+ **/
+TInt32Range CMultiLine::EstimateIndexRange(Int32 subeIdx, const CSpectrumSpectralAxis& spectralAxis, Float64 redshift,  const TFloat64Range &lambdaRange, Float64 winsizeAngstrom)
+{
     TInt32Range supportRange;
-    Float64 dzOffset = m_Rays[i].GetOffset()/m_c_kms;
-    Float64 mu = m_Rays[i].GetPosition()*(1+redshift)*(1+dzOffset);
-    Float64 c = GetLineWidth(mu, redshift, m_Rays[i].GetIsEmission(), m_profile[i]);
-    Float64 winsize = GetNSigmaSupport(m_profile[i])*c;
+    Float64 mu = GetObservedPosition(subeIdx, redshift);
+    Float64 winsize = winsizeAngstrom;
 
     Float64 lambda_start = mu-winsize/2.0;
     if(lambda_start < lambdaRange.GetBegin()){
@@ -188,8 +197,7 @@ void CMultiLine::prepareSupport(const CSpectrumSpectralAxis& spectralAxis, Float
             m_OutsideLambdaRangeList[i]=true;
         }else{  //in this case the line is completely inside the lambdarange or with partial overlap
 
-            Float64 dzOffset = m_Rays[i].GetOffset()/m_c_kms;
-            Float64 mu = m_Rays[i].GetPosition()*(1+redshift)*(1+dzOffset);
+            Float64 mu = GetObservedPosition(i, redshift);
             Float64 c = GetLineWidth(mu, redshift, m_Rays[i].GetIsEmission(), m_profile[i]);
             Float64 winsize = GetNSigmaSupport(m_profile[i])*c;
             Int32 minLineOverlap = m_OutsideLambdaRangeOverlapThreshold*winsize;
@@ -394,9 +402,19 @@ TInt32Range CMultiLine::getTheoreticalSupportSubElt(Int32 subeIdx)
  **/
 Float64 CMultiLine::GetWidth(Int32 subeIdx, Float64 redshift)
 {
-    Float64 mu = m_Rays[subeIdx].GetPosition()*(1+redshift);
+    Float64 mu = GetObservedPosition(subeIdx, redshift);
     Float64 c = GetLineWidth(mu, redshift, m_Rays[subeIdx].GetIsEmission(), m_profile[subeIdx]);
     return c;
+}
+
+/**
+ * \brief Get the observed position of the sub-element subeIdx for a given redshift
+ **/
+Float64 CMultiLine::GetObservedPosition(Int32 subeIdx, Float64 redshift)
+{
+    Float64 dzOffset = m_Rays[subeIdx].GetOffset()/m_c_kms;
+    Float64 mu = m_Rays[subeIdx].GetPosition()*(1+redshift)*(1+dzOffset);
+    return mu;
 }
 
 /**
@@ -540,8 +558,7 @@ void CMultiLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const C
 
     for(Int32 k2=0; k2<nRays; k2++)
       {
-        Float64 dzOffset = m_Rays[k2].GetOffset()/m_c_kms;
-        mBuffer_mu[k2] = m_Rays[k2].GetPosition()*(1+redshift)*(1+dzOffset);
+        mBuffer_mu[k2] = GetObservedPosition(k2, redshift);
         mBuffer_c[k2] = GetLineWidth(mBuffer_mu[k2], redshift, m_Rays[k2].GetIsEmission(), m_profile[k2]);
       }
 
@@ -709,8 +726,7 @@ Float64 CMultiLine::getModelAtLambda(Float64 lambda, Float64 redshift, Float64 c
         }
 
         Float64 A = m_FittedAmplitudes[k2];
-        Float64 dzOffset = m_Rays[k2].GetOffset()/m_c_kms;
-        Float64 mu = m_Rays[k2].GetPosition()*(1+redshift)*(1+dzOffset);
+        Float64 mu = GetObservedPosition(k2, redshift);
         Float64 sigma = GetLineWidth(mu, redshift, m_Rays[k2].GetIsEmission(), m_profile[k2]);
 
         //*
@@ -739,8 +755,7 @@ Float64 CMultiLine::GetModelDerivAmplitudeAtLambda(Float64 lambda, Float64 redsh
             continue;
         }
 
-        Float64 dzOffset = m_Rays[k2].GetOffset()/m_c_kms;
-        Float64 mu = m_Rays[k2].GetPosition()*(1+redshift)*(1+dzOffset);
+        Float64 mu = GetObservedPosition(k2, redshift);
         Float64 c = GetLineWidth(mu, redshift, m_Rays[k2].GetIsEmission(), m_profile[k2]);
 
         Yi += m_SignFactors[k2] * GetLineProfile(m_profile[k2], x, mu, c);
@@ -764,8 +779,7 @@ Float64 CMultiLine::GetModelDerivSigmaAtLambda(Float64 lambda, Float64 redshift 
         }
 
         Float64 A = m_FittedAmplitudes[k2];
-        Float64 dzOffset = m_Rays[k2].GetOffset()/m_c_kms;
-        Float64 mu = m_Rays[k2].GetPosition()*(1+redshift)*(1+dzOffset);
+        Float64 mu = GetObservedPosition(k2, redshift);
         Float64 c = GetLineWidth(mu, redshift, m_Rays[k2].GetIsEmission(), m_profile[k2]);
 
         Yi += m_SignFactors[k2] * A * GetLineProfileDerivSigma(m_profile[k2], x, mu, c);

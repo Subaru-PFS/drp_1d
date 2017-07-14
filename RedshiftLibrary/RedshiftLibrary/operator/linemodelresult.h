@@ -24,6 +24,7 @@ public:
         std::vector<Float64> Errors;    //noise sigma
         std::vector<Float64> FittingError;    //ModelLeastSquare error under each line
         std::vector<Float64> CenterContinuumFlux;    //Continuum flux value at the center of each line
+        std::vector<Float64> ContinuumError;    //Continuum error value for each line
         std::vector<Float64> Sigmas;    //width for each line
         std::vector<Float64> Fluxs;    //Flux for each line
         std::vector<Float64> FluxErrors;    //Flux error for each line
