@@ -59,8 +59,10 @@ public:
 
     const std::string&       	    GetFullPath() const;
     const Int32                     GetDecompScales() const;
+    const Float64                   GetMedianWinsize() const;
     void 			    SetFullPath(const char* nameP);
     void 			    SetDecompScales(Int32 decompScales);
+    void 			    SetMedianWinsize(Float64 winsize);
 
 private:
 
@@ -69,6 +71,7 @@ private:
     CSpectrumSpectralAxis           m_SpectralAxis;
     std::string                     m_FullPath;
     Int32                           m_nbScales;
+    Float64                         m_medianWindowSize;
 };
 
 inline

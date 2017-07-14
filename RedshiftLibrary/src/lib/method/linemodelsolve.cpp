@@ -247,6 +247,78 @@ Int32 getVelocitiesFromRefFile( const char* filePath, std::string spcid, Float64
     return true;
 }
 
+
+/**
+ * \brief
+ * Retrieve the true-redshift from a hardcoded ref file path
+ * nb: this is a hack for development purposes/line measurement at zref
+ **/
+Int32 getValueFromRefFile( const char* filePath, std::string spcid, Int32 colID, Float64& zref )
+{
+    ifstream file;
+
+    file.open( filePath, ifstream::in );
+    if( file.rdstate() & ios_base::failbit )
+        return false;
+
+    string line;
+
+    // Read file line by line
+    while( getline( file, line ) )
+    {
+        // remove comments
+        if(line.compare(0,1,"#",1)==0){
+            continue;
+        }
+        char_separator<char> sep(" \t");
+
+        // Tokenize each line
+        typedef tokenizer< char_separator<char> > ttokenizer;
+        ttokenizer tok( line, sep );
+
+        // Check if it's not a comment
+        ttokenizer::iterator it = tok.begin();
+        if( it != tok.end() && *it != "#" )
+        {
+            string name;
+            if( it != tok.end() )
+            {
+                name = *it;
+            }
+            std::size_t foundstr = name.find(spcid.c_str());
+            if (foundstr==std::string::npos){
+                continue;
+            }
+
+            // Found the correct spectrum ID: now read the ref values
+            Int32 nskip = colID-1;
+            for(Int32 i=0; i<nskip; i++)
+            {
+                ++it;
+            }
+            if( it != tok.end() )
+            {
+
+                zref = 0.0;
+                try
+                {
+                    zref = lexical_cast<double>(*it);
+                    return true;
+                }
+                catch (bad_lexical_cast)
+                {
+                    zref = 0.0;
+                    return false;
+                }
+            }
+
+        }
+    }
+    file.close();
+    return true;
+}
+
+
 /**
  * \brief
  * Create a continuum object by subtracting spcWithoutCont from the spc.
@@ -268,29 +340,54 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
 
     CSpectrum _spc = spc;
     CSpectrum _spcContinuum = spc;
+    _spcContinuum.SetMedianWinsize(spcWithoutCont.GetMedianWinsize());
+    _spcContinuum.SetDecompScales(spcWithoutCont.GetDecompScales());
     CSpectrumFluxAxis spcfluxAxis = _spcContinuum.GetFluxAxis();
     spcfluxAxis.Subtract( spcWithoutCont.GetFluxAxis() );
     CSpectrumFluxAxis& sfluxAxisPtr = _spcContinuum.GetFluxAxis();
     sfluxAxisPtr = spcfluxAxis;
 
 
-//    //Hack: load the simulated true-velocities
-//    if(false)
-//    {
-//        Float64 elv = 0.0;
-//        Float64 alv = 0.0;
-//        namespace fs = boost::filesystem;
-//        fs::path refFilePath("/home/aschmitt/data/simu_linemodel/simulm_20160513/simulation_pfswlinemodel_20160513_10spcperbin/refz.txt");
-//        if ( fs::exists(refFilePath) )
-//        {
-//            std::string spcSubStringId = spc.GetName().substr(0, 20);
-//            getVelocitiesFromRefFile( refFilePath.c_str(), spcSubStringId, elv, alv);
-//        }
-//        Float64 offsetv = 0.0;
-//        m_opt_velocity_emission = elv+offsetv;
-//        m_opt_velocity_absorption = alv+offsetv;
-//        Log.LogInfo( "Linemodel - hack - Loaded velocities for spc %s : elv=%4.1f, alv=%4.1f", spc.GetName().c_str(), elv, alv);
-//    }
+    //    //Hack: load the simulated true-velocities
+    //    if(false)
+    //    {
+    //        Float64 elv = 0.0;
+    //        Float64 alv = 0.0;
+    //        namespace fs = boost::filesystem;
+    //        fs::path refFilePath("/home/aschmitt/data/simu_linemodel/simulm_20160513/simulation_pfswlinemodel_20160513_10spcperbin/refz.txt");
+    //        if ( fs::exists(refFilePath) )
+    //        {
+    //            std::string spcSubStringId = spc.GetName().substr(0, 20);
+    //            getVelocitiesFromRefFile( refFilePath.c_str(), spcSubStringId, elv, alv);
+    //        }
+    //        Float64 offsetv = 0.0;
+    //        m_opt_velocity_emission = elv+offsetv;
+    //        m_opt_velocity_absorption = alv+offsetv;
+    //        Log.LogInfo( "Linemodel - hack - Loaded velocities for spc %s : elv=%4.1f, alv=%4.1f", spc.GetName().c_str(), elv, alv);
+    //    }
+
+    //Hack: load the zref values
+    std::vector<Float64> _redshifts;
+    if(true)
+    {
+        Log.LogInfo( "Linemodel - hacking zref enabled");
+        Float64 zref = 0.0;
+        namespace fs = boost::filesystem;
+        fs::path refFilePath("/home/aschmitt/amazed_cluster/datasets/sdss/sdss_201707/SDSS_spectra_bg10k/reference_SDSS_spectra_bg10k.txt");
+        Int32 substring_start = 3;
+        Int32 substring_end = 15;
+        if ( fs::exists(refFilePath) )
+        {
+            std::string spcSubStringId = spc.GetName().substr(substring_start, substring_end);
+            Log.LogInfo( "Linemodel - hack - using substring %s", spcSubStringId.c_str());
+            Int32 colId = 2;
+            getValueFromRefFile( refFilePath.c_str(), spcSubStringId, colId, zref);
+        }
+        _redshifts.push_back(zref);
+        Log.LogInfo( "Linemodel - hack - Loaded zref for spc %s : zref=%f", spc.GetName().c_str(), zref);
+    }else{
+        _redshifts = redshifts;
+    }
 
     // Compute merit function
     COperatorLineModel linemodel;
@@ -304,7 +401,7 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
                       m_opt_linetypefilter,
                       m_opt_lineforcefilter,
 				      lambdaRange,
-				      redshifts,
+                      _redshifts,
                       m_opt_extremacount,
                       m_opt_fittingmethod,
                       m_opt_continuumcomponent,

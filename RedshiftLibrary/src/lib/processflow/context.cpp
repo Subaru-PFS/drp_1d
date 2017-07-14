@@ -123,7 +123,7 @@ bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath,
         continuum.SetMedianKernelWidth(opt_medianKernelWidth);
         continuum.SetMeanKernelWidth(opt_medianKernelWidth);
         m_SpectrumWithoutContinuum->RemoveContinuum( continuum );
-
+        m_SpectrumWithoutContinuum->SetMedianWinsize(opt_medianKernelWidth);
     }else if( medianRemovalMethod== "Median")
     {
         nameBaseline = "preprocess/baselineMedian";
@@ -132,6 +132,7 @@ bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath,
         paramStore->Get( "continuumRemoval.medianKernelWidth", opt_medianKernelWidth, 75 );
         continuum.SetMedianKernelWidth(opt_medianKernelWidth);
         m_SpectrumWithoutContinuum->RemoveContinuum( continuum );
+        m_SpectrumWithoutContinuum->SetMedianWinsize(opt_medianKernelWidth);
 
     }else if( medianRemovalMethod== "waveletsDF")
     {

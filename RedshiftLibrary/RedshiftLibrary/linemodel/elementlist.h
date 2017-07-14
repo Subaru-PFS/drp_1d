@@ -213,6 +213,7 @@ private:
 
     Float64*          m_precomputedFineGridContinuumFlux;   //PFG buffer for model continuum
     CSpectrumFluxAxis m_ContinuumFluxAxis;  //rebined model continuum
+    Float64 m_ContinuumWinsize;
     std::string m_ContinuumComponent;
     std::string m_LineWidthType;
     Float64 m_resolution;

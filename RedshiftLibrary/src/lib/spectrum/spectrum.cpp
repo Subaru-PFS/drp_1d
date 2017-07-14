@@ -14,6 +14,8 @@ using namespace NSEpic;
 
 CSpectrum::CSpectrum()
 {
+    m_medianWindowSize = -1;
+    m_nbScales = -1;
 
 }
 
@@ -52,6 +54,9 @@ CSpectrum::CSpectrum(const CSpectrum& other, TFloat64List mask)
 
     m_SpectralAxis = *_SpectralAxis;
     m_FluxAxis = *_FluxAxis;
+
+    m_medianWindowSize = other.GetMedianWinsize();
+    m_nbScales = other.GetDecompScales();
 }
 
 CSpectrum::~CSpectrum()
@@ -63,6 +68,9 @@ CSpectrum& CSpectrum::operator=(const CSpectrum& other)
 {
     m_SpectralAxis = other.GetSpectralAxis();
     m_FluxAxis = other.GetFluxAxis();
+    m_medianWindowSize = other.GetMedianWinsize();
+    m_nbScales = other.GetDecompScales();
+
     return *this;
 }
 
@@ -244,6 +252,11 @@ const Int32 CSpectrum::GetDecompScales() const
       return m_nbScales;
 }
 
+const Float64 CSpectrum::GetMedianWinsize() const
+{
+      return m_medianWindowSize;
+}
+
 void CSpectrum::SetFullPath(const char* nameP)
 {
 	m_FullPath = nameP;
@@ -251,5 +264,10 @@ void CSpectrum::SetFullPath(const char* nameP)
 
 void CSpectrum::SetDecompScales( Int32 decompScales )
 {
-	m_nbScales = decompScales;
+    m_nbScales = decompScales;
+}
+
+void CSpectrum::SetMedianWinsize( Float64 winsize )
+{
+    m_medianWindowSize = winsize;
 }

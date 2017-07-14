@@ -91,6 +91,9 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
     Int32 spectrumSampleCount = spectrum.GetSampleCount();
     m_SpcFluxAxis.SetSize( spectrumSampleCount );
     m_SpcContinuumFluxAxis = spectrumContinuum.GetFluxAxis();
+    m_ContinuumWinsize = spectrumContinuum.GetMedianWinsize();
+    Log.LogInfo("Continuum winsize found is %f A", m_ContinuumWinsize);
+
     m_ContinuumFluxAxis.SetSize( spectrumSampleCount );
     m_SpcFluxAxisModelDerivSigma.SetSize( spectrumSampleCount );
     CSpectrumFluxAxis& modelFluxAxis = m_SpectrumModel->GetFluxAxis();
@@ -290,17 +293,21 @@ const CSpectrum& CLineModelElementList::GetObservedSpectrumWithLinesRemoved() co
  * @param spectrumfluxAxis
  * @param redshift
  * @param continuumfluxAxis
- * @return -1: zero samples found for error estimation, -9: not enough samples found for error estimation
+ * @return -1: zero samples found for error estimation, -9: not enough samples found for error estimation, -99: bad continuum winsize
  */
 Float64 CLineModelElementList::GetContinuumError(Int32 eIdx, Int32 subeIdx)
 {
+    if(m_ContinuumWinsize<=0)
+    {
+        return -99;
+    }
     Int32 nMinValueForErrorEstimation=10;
 
     const CSpectrum& noLinesSpectrum = GetObservedSpectrumWithLinesRemoved();
     const CSpectrumFluxAxis& noLinesFluxAxis = noLinesSpectrum.GetFluxAxis();
     const CSpectrumSpectralAxis& spectralAxis = m_SpectrumModel->GetSpectralAxis();
     TFloat64Range lambdaRange = spectralAxis.GetLambdaRange(); //using the full wavelength range for this error estimation
-    Float64 winsizeAngstrom = 150.;
+    Float64 winsizeAngstrom = m_ContinuumWinsize;
 
     Float64 mu = m_Elements[eIdx]->GetObservedPosition(subeIdx, m_Redshift);
     TInt32Range indexRange = m_Elements[eIdx]->EstimateIndexRange(subeIdx,
@@ -3891,7 +3898,7 @@ void CLineModelElementList::EstimateSpectrumContinuum( Float64 opt_enhance_lines
     if(1)
     {
         CContinuumIrregularSamplingMedian continuum;
-        Float64 opt_medianKernelWidth = 75; //or 150?
+        Float64 opt_medianKernelWidth = m_ContinuumWinsize;
         continuum.SetMedianKernelWidth(opt_medianKernelWidth);
         Int32 retVal = continuum.RemoveContinuum( spcCorrectedUnderLines, fluxAxisWithoutContinuumCalc );
     }else
