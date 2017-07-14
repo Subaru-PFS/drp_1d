@@ -144,6 +144,7 @@ public:
     const CSpectrum&    GetModelSpectrum() const;
     const CSpectrum&    GetObservedSpectrumWithLinesRemoved() const;
     Float64 GetContinuumError(Int32 eIdx, Int32 subeIdx);
+    Float64 GetFluxDirectIntegration(Int32 eIdx, Int32 subeIdx);
     const CSpectrumFluxAxis&    GetModelContinuum() const;
     Float64 getModelFluxVal(Int32 idx) const;
     Float64 getModelFluxDerivEltVal(Int32 DerivEltIdx, Int32 idx) const;

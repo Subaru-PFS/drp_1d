@@ -338,7 +338,52 @@ const CSpectrumFluxAxis &CLineModelElementList::GetModelContinuum() const
     return m_ContinuumFluxAxis;
 }
 
+/**
+ * @brief CLineModelElementList::GetFluxDirectIntegration
+ * Integrates the flux (F-continuum) in a lbda range around the center observed wavelength of the line.
+ * The wavelength range is defined by the instrument resolution and a hardcoded nsigma factor
+ * @param eIdx
+ * @param subeIdx
+ * @return
+ */
+Float64 CLineModelElementList::GetFluxDirectIntegration(Int32 eIdx, Int32 subeIdx)
+{
+    Float64 nsigma = 10.; //total range: ie. range will be mu-nsigma/2; mu+nsigma/2
 
+    const CSpectrumSpectralAxis& spectralAxis = m_SpectrumModel->GetSpectralAxis();
+    TFloat64Range lambdaRange = spectralAxis.GetLambdaRange(); //using the full wavelength range for this error estimation
+
+    Float64 mu = m_Elements[eIdx]->GetObservedPosition(subeIdx, m_Redshift);
+    Float64 instrumentSigma = mu/m_resolution;
+    Float64 winsizeAngstrom = instrumentSigma*nsigma;
+    TInt32Range indexRange = m_Elements[eIdx]->EstimateIndexRange(subeIdx,
+                                                                    spectralAxis,
+                                                                    m_Redshift,
+                                                                    lambdaRange,
+                                                                    winsizeAngstrom);
+
+    //estimate the integrated flux between obs. spectrum and continuum: trapezoidal intg
+    Float64 sum=0.0;
+    UInt32 nsum = 0;
+    for( Int32 t=indexRange.GetBegin();t<indexRange.GetEnd()-1;t++)
+    {
+        Float64 fa = m_SpcFluxAxis[t]-m_ContinuumFluxAxis[t];
+        Float64 fb = m_SpcFluxAxis[t+1]-m_ContinuumFluxAxis[t+1];
+
+        Float64 diff = (spectralAxis[t+1]-spectralAxis[t])*(fb+fa)*0.5;
+        sum += diff;
+        nsum++;
+    }
+
+    Float64 fluxdi = 0.;
+    if(nsum>0)
+    {
+        fluxdi = sum;
+    }
+
+    return fluxdi;
+
+}
 
 Float64 CLineModelElementList::getModelFluxVal(Int32 idx) const
 {
@@ -3467,6 +3512,7 @@ CLineModelResult::SLineModelSolution CLineModelElementList::GetModelSolution()
             modelSolution.Sigmas.push_back(-1.0);
             modelSolution.Fluxs.push_back(-1.0);
             modelSolution.FluxErrors.push_back(-1.0);
+            modelSolution.FluxDirectIntegration.push_back(-1.0);
             modelSolution.OutsideLambdaRange.push_back(true);
         }else{
             modelSolution.ElementId.push_back( eIdx );
@@ -3481,6 +3527,7 @@ CLineModelResult::SLineModelSolution CLineModelElementList::GetModelSolution()
             Float64 sigma = m_Elements[eIdx]->GetWidth(subeIdx, m_Redshift);
             Float64 flux = -1;
             Float64 fluxError = -1;
+            Float64 fluxDI = GetFluxDirectIntegration(eIdx, subeIdx);
             if(amp>=0)
             {
                 flux = amp*sigma*sqrt(2*M_PI);
@@ -3489,6 +3536,7 @@ CLineModelResult::SLineModelSolution CLineModelElementList::GetModelSolution()
             modelSolution.Sigmas.push_back(sigma);
             modelSolution.Fluxs.push_back(flux);
             modelSolution.FluxErrors.push_back(fluxError);
+            modelSolution.FluxDirectIntegration.push_back(fluxDI);
             modelSolution.OutsideLambdaRange.push_back(m_Elements[eIdx]->IsOutsideLambdaRange(subeIdx));
         }
 
