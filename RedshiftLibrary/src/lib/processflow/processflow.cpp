@@ -542,7 +542,7 @@ Bool CProcessFlow::LineModelSolve( CProcessFlowContext& ctx )
         Log.LogWarning( "Reliability skipped - no redshift results found");
         enableQualz = false;
     }
-    if ( enableQualz && redshifts.size()>2 )
+    if ( enableQualz && solveResult->isPdfValid(ctx.GetDataStore()) )
     {
         CClassifierStore classifStore = ctx.GetClassifierStore();
         if(!classifStore.m_isInitialized)
