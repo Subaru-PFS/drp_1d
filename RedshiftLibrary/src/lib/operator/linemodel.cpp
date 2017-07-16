@@ -246,7 +246,8 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
 
         /*
         COperatorChiSquareLogLambda* chiSquareOperator;
-        chiSquareOperator = new COperatorChiSquareLogLambda(opt_calibrationPath); //todo, delete this operator when done...
+        bool enableLogRebin = true;
+        chiSquareOperator = new COperatorChiSquareLogLambda(opt_calibrationPath, enableLogRebin); //todo, delete this operator when done...
         //*/
 
         //*
@@ -881,7 +882,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
     TFloat64List logProba;
     Float64 logEvidence;
 
-    bool zPriorStrongLinePresence = true;
+    bool zPriorStrongLinePresence = false;
     std::shared_ptr<CPdfLogResult> zPrior = std::shared_ptr<CPdfLogResult>(new CPdfLogResult());
     zPrior->SetSize(result->Redshifts.size());
     for ( UInt32 k=0; k<result->Redshifts.size(); k++)

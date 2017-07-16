@@ -22,7 +22,7 @@ class COperatorChiSquareLogLambda : public COperator
 
 public:
 
-    COperatorChiSquareLogLambda( std::string calibrationPath, bool opt_spcrebin=false );
+    COperatorChiSquareLogLambda( std::string calibrationPath, bool opt_spcrebin );
     ~COperatorChiSquareLogLambda();
 
     std::shared_ptr<COperatorResult> Compute( const CSpectrum& spectrum,
@@ -44,7 +44,7 @@ private:
     //hardcoded config: REBIN
     Bool verboseLogRebin = 0;
     Bool verboseExportLogRebin = 0;
-    std::string rebinMethod = "spline";
+    std::string rebinMethod = "lin";
 
     //hardcoded config: FIT_RANGEZ
     bool verboseLogFitFitRangez = false;

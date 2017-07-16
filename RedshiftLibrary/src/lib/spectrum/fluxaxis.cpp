@@ -248,7 +248,7 @@ Bool CSpectrumFluxAxis::Rebin2( const TFloat64Range& range, const CSpectrumFluxA
         Int32 n = sourceSpectralAxis.GetSamplesCount();
         //    Int32 jmax = gsl_interp_bsearch (Xtgt, currentRange.GetEnd(), 0, targetSpectralAxis.GetSamplesCount());
         //    for(k=j; k<=jmax; k++){
-        
+
         //        Xrebin[k] = Xtgt[k];
         //        Yrebin[k] = 0;
         //        rebinedMask[k] = 1;
@@ -261,7 +261,7 @@ Bool CSpectrumFluxAxis::Rebin2( const TFloat64Range& range, const CSpectrumFluxA
             // closest value
             Xrebin[j] = Xtgt[j];
             Yrebin[j] = Ysrc[k];
-            
+
             rebinedMask[j] = 1;
             j++;
         }
@@ -272,6 +272,102 @@ Bool CSpectrumFluxAxis::Rebin2( const TFloat64Range& range, const CSpectrumFluxA
     while( j < targetSpectralAxis.GetSamplesCount() )
     {
         rebinedMask[j] = 0;
+        Yrebin[j] = 0.0;
+        j++;
+    }
+
+    return true;
+}
+
+Bool CSpectrumFluxAxis::RebinVarianceWeighted( const CSpectrumFluxAxis& sourceFluxAxis, const CSpectrumSpectralAxis& sourceSpectralAxis, const CSpectrumFluxAxis& sourceError,
+                                               const CSpectrumSpectralAxis& targetSpectralAxis,
+                                               CSpectrumFluxAxis& rebinedFluxAxis, CSpectrumSpectralAxis& rebinedSpectralAxis, CSpectrumFluxAxis& rebinedError,
+                                               const std::string opt_interp )
+{
+    if( sourceFluxAxis.GetSamplesCount() != sourceSpectralAxis.GetSamplesCount() )
+    {
+        return false;
+    }
+
+    //only linear interpolation supported for now
+    if(opt_interp!="lin")
+    {
+        return false;
+    }
+
+    TFloat64Range currentRange = targetSpectralAxis.GetLambdaRange();
+
+    //rebinedFluxAxis.SetSize( targetSpectralAxis.GetSamplesCount() );
+    //rebinedSpectralAxis.SetSize( targetSpectralAxis.GetSamplesCount() );
+    //rebinedMask.SetSize( targetSpectralAxis.GetSamplesCount() );
+
+    const Float64* Xsrc = sourceSpectralAxis.GetSamples();
+    const Float64* Ysrc = sourceFluxAxis.GetSamples();
+    const Float64* Errsrc = sourceError.GetSamples();
+    const Float64* Xtgt = targetSpectralAxis.GetSamples();
+    Float64* Yrebin = rebinedFluxAxis.GetSamples();
+    Float64* Errrebin = rebinedError.GetSamples();
+    Float64* Xrebin = rebinedSpectralAxis.GetSamples();
+
+    // Move cursors up to lambda range start
+    Int32 j = 0;
+    while( j<targetSpectralAxis.GetSamplesCount() && Xtgt[j] < currentRange.GetBegin() )
+    {
+        Yrebin[j] = 0.0;
+        j++;
+    }
+
+
+    if(opt_interp=="lin"){
+        Int32 k = 0;
+        Float64 t = 0.0;
+        Float64 varianceCompensation=1.;
+        Float64 xStepCompensation=1.;
+        Float64 xSrcStep=1.;
+        Float64 xDestStep=1.;
+        // For each sample in the valid lambda range interval.
+        while( k<sourceSpectralAxis.GetSamplesCount()-1 && Xsrc[k] <= currentRange.GetEnd() )
+        {
+            // For each sample in the target spectrum that are in between two continous source sample
+            while( j<targetSpectralAxis.GetSamplesCount() && Xtgt[j] <= Xsrc[k+1] )
+            {
+                // perform linear interpolation of the flux
+                xSrcStep = ( Xsrc[k+1] - Xsrc[k] );
+                t = ( Xtgt[j] - Xsrc[k] ) / xSrcStep;
+                varianceCompensation = (Errsrc[k]*Errsrc[k])/(Errsrc[k+1]*Errsrc[k+1]+Errsrc[k]*Errsrc[k]); //to be verified and tested!
+                t*=varianceCompensation;
+
+                Xrebin[j] = Xsrc[k] + xSrcStep * t;
+                Yrebin[j] = Ysrc[k] + ( Ysrc[k+1] - Ysrc[k] ) * t;
+
+
+                Errrebin[j] = Errsrc[k] + ( Errsrc[k+1] - Errsrc[k] ) * t;
+                //*
+                if(j<targetSpectralAxis.GetSamplesCount()-1)
+                {
+                    xDestStep = Xtgt[j+1]-Xtgt[j];
+                    xStepCompensation = xSrcStep/xDestStep;
+                }else if(j>0){
+                    xDestStep = Xtgt[j]-Xtgt[j-1];
+                    xStepCompensation = xSrcStep/xDestStep;
+                }else{
+                    xStepCompensation = 1.0;
+                }
+                Errrebin[j] *= sqrt(xStepCompensation);
+                //*/
+
+                // closest value
+                //Xrebin[j] = Xsrc[k];
+                //Yrebin[j] = Ysrc[k];
+                j++;
+            }
+
+            k++;
+        }
+    }
+
+    while( j < targetSpectralAxis.GetSamplesCount() )
+    {
         Yrebin[j] = 0.0;
         j++;
     }
