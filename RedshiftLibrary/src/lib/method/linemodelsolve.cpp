@@ -368,7 +368,7 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
 
     //Hack: load the zref values
     std::vector<Float64> _redshifts;
-    if(true)
+    if(false)
     {
         Log.LogInfo( "Linemodel - hacking zref enabled");
         Float64 zref = 0.0;
