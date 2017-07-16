@@ -233,7 +233,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
     if(enableFitContinuumPrecomputed && opt_continuumcomponent == "tplfit")
     {
         boost::chrono::thread_clock::time_point start_tplfitprecompute = boost::chrono::thread_clock::now();
-        Float64 redshiftStep = 1e-3;
+        Float64 redshiftStep = 1.5e-4;
         Float64 minRedshift = sortedRedshifts[0];
         Float64 maxRedshift = sortedRedshifts[sortedRedshifts.size()-1];
         Log.LogInfo( "Linemodel: continuum tpl fitting: step=%.5f, min=%.1f, max=%.1f", redshiftStep, minRedshift, maxRedshift);
@@ -244,15 +244,15 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
         std::vector<std::shared_ptr<CChisquareResult>> chisquareResultsAllTpl;
         std::vector<std::string> chisquareResultsTplName;
 
-        /*
+        //*
         COperatorChiSquareLogLambda* chiSquareOperator;
         bool enableLogRebin = true;
-        chiSquareOperator = new COperatorChiSquareLogLambda(opt_calibrationPath, enableLogRebin); //todo, delete this operator when done...
+        chiSquareOperator = new COperatorChiSquareLogLambda(opt_calibrationPath, enableLogRebin);
         //*/
 
-        //*
+        /*
         COperatorChiSquare2* chiSquareOperator;
-        chiSquareOperator = new COperatorChiSquare2(opt_calibrationPath); //todo, delete this operator when done...
+        chiSquareOperator = new COperatorChiSquare2(opt_calibrationPath);
         //*/
 
         std::string opt_interp = "precomputedfinegrid"; // "lin"; //

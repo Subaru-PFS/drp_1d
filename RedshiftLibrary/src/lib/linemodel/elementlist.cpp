@@ -665,10 +665,16 @@ Int32 CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange)
                     {
                         lambda = Xsrc[ktpl];
                         Ysrc[ktpl]*=dustCoeffArray[Int32(lambda)]; //dust coeff is rounded at the nearest 1 angstrom value
-                        Ysrc[ktpl]*=meiksinCoeffArray[Int32(lambda)]; //igm meiksin coeff is rounded at the nearest 1 angstrom value
                     }
                     delete dustCoeffArray;
-                    delete meiksinCoeffArray;
+                    if(meiksinCoeffArray!=0)
+                    {
+                        for(Int32 ktpl=0; ktpl<n; ktpl++)
+                        {
+                            Ysrc[ktpl]*=meiksinCoeffArray[Int32(lambda)]; //igm meiksin coeff is rounded at the nearest 1 angstrom value
+                        }
+                        delete meiksinCoeffArray;
+                    }
                     //spline
                     gsl_spline *spline = gsl_spline_alloc (gsl_interp_cspline, n);
                     gsl_spline_init (spline, Xsrc, Ysrc, n);
