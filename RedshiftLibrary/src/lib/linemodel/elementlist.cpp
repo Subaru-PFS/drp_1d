@@ -614,6 +614,10 @@ Int32 CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange)
         }
     }else if(m_fitContinuum_option==1){
         CTemplatesFitStore::TemplateFitValues fitValues = m_fitContinuum_tplfitStore->GetFitValues(m_Redshift);
+        if(fitValues.tplName=="")
+        {
+            return -1;
+        }
         bestMerit = fitValues.merit;
         bestFitAmplitude = fitValues.fitAmplitude;
         bestFitDustCoeff = fitValues.fitDustCoeff;

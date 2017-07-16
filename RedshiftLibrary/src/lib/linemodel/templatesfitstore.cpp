@@ -52,6 +52,13 @@ bool CTemplatesFitStore::Add(Float64 redshift, Float64 merit, Float64 fitAmplitu
 
 CTemplatesFitStore::TemplateFitValues CTemplatesFitStore::GetFitValues(Float64 redshiftVal)
 {
+    if(redshiftVal<m_minRedshift)
+    {
+        SValues sval;
+        sval.tplName="";
+        return sval;
+    }
+
     Int32 idx = (redshiftVal-m_minRedshift)/m_stepRedshift;
 
     return m_fitValues[idx];

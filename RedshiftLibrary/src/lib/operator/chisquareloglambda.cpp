@@ -1044,7 +1044,7 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64* spectrumRebinedLambda,
     }
 
     //*
-    Log.LogInfo("ChisquareLog, FitAllz: interpolating (lin) z result from n=%d (min=%f, max=%f) to n=%d (min=%f, max=%f)", z_vect.size(),  z_vect[0],  z_vect[z_vect.size()-1],
+    Log.LogInfo("ChisquareLog, FitAllz: interpolating (lin) z result from n=%d (min=%f, max=%f) to n=%d (min=%f, max=%f)", z_vect.size(),  zreversed_array[0],  zreversed_array[z_vect.size()-1],
             result->Redshifts.size(),
             result->Redshifts[0],
             result->Redshifts[result->Redshifts.size()-1]);

@@ -570,7 +570,16 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
 
 
                     Float64 dzInfLim = -4e-4;
+                    if(result->Redshifts[idx]+dzInfLim<result->Redshifts[0])
+                    {
+                        dzInfLim = result->Redshifts[0]-result->Redshifts[idx];
+                    }
                     Float64 dzSupLim = 4e-4;
+                    if(result->Redshifts[idx]+dzSupLim>result->Redshifts[result->Redshifts.size()-1])
+                    {
+                        dzSupLim = result->Redshifts[result->Redshifts.size()-1]-result->Redshifts[idx];
+                    }
+
                     Float64 dzStep = 2e-4;
                     Int32 nDzSteps = (int)((dzSupLim-dzInfLim)/dzStep);
 
