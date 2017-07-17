@@ -140,24 +140,27 @@ lmfit_df (const gsl_vector * x, void *data,
       linemodel->refreshModelDerivVelEmissionUnderElements(elts_indexes);
     }
     //linemodel->refreshModel();
+    Float64 normAmpLine = controller->getNormAmpLine();
     for (Int32 i = 0; i < n; i++)
     {
         for (Int32 iElt = 0; iElt < elts_indexes.size(); iElt++)
         {
 
-            Float64 dval = linemodel->getModelFluxDerivEltVal(elts_indexes[iElt], samples_indexes[i])*normFactor*2*gsl_vector_get (x, iElt);
+            Float64 dval = linemodel->getModelFluxDerivEltVal(elts_indexes[iElt], samples_indexes[i])*normFactor/normAmpLine*2*gsl_vector_get (x, iElt);
             gsl_matrix_set (J, i, iElt, dval);
         }
 
         if(controller->isEmissionVelocityFitted()){
-            Float64 normEmiFactor = controller->getNormEmiFactor();
+          Float64 normEmiFactor = controller->getNormEmiFactor();
           Float64 dval = linemodel->getModelFluxDerivVelEmissionVal(samples_indexes[i])*normFactor/normEmiFactor*2*gsl_vector_get (x, controller->getIndEmissionVel());
+          //Log.LogInfo("Deriv sigma Emi for i %d = %f",i, dval);
           gsl_matrix_set (J, i, controller->getIndEmissionVel(), dval);
         }
 
         if(controller->isAbsorptionVelocityFitted()){
           Float64 normAbsFactor = controller->getNormAbsFactor();
           Float64 dval = linemodel->getModelFluxDerivVelAbsorptionVal(samples_indexes[i])*normFactor/normAbsFactor*2*gsl_vector_get (x, controller->getIndAbsorptionVel());
+          //Log.LogInfo("Deriv sigma Abs for i %d = %f",i, dval);
           gsl_matrix_set (J, i, controller->getIndAbsorptionVel(), dval);
         }
 

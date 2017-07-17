@@ -181,8 +181,34 @@ Float64 CLineModelElement::GetLineProfileDerivZ(std::string profile, Float64 x, 
   if(profile=="SYM"){
       const Float64 xsurc = xc/sigma;
       val = lambda0 /sigma * xsurc * exp(-0.5*xsurc*xsurc);
+  }else if (profile == "SYMXL"){
+      const Float64 coeff = m_symxl_sigma_coeff;
+      sigma = sigma*coeff;
+      const Float64 xsurc = xc/sigma;
+      val = lambda0 /sigma * xsurc * exp(-0.5*xsurc*xsurc);
+    }else if(profile == "ASYM"){
+      const Float64 coeff = m_asym_sigma_coeff;
+      sigma = sigma*coeff;
+      const Float64 xsurc = xc/sigma;
+      const Float64 alpha = m_asym_alpha;
+      val = lambda0 /sigma * xsurc * exp(-0.5*xsurc*xsurc) *(1.0+erf(alpha/sqrt(2.0)*xsurc)) -alpha * lambda0 /sqrt(2*M_PI) /sigma * exp(-(1+alpha*alpha)/2 * xsurc * xsurc);
+    }else if (profile == "ASYM2"){
+      const Float64 coeff = m_asym2_sigma_coeff;
+      sigma = sigma*coeff;
+      const Float64 xsurc = xc/sigma;
+      const Float64 alpha = m_asym2_alpha;
+      val = lambda0 /sigma * xsurc * exp(-0.5*xsurc*xsurc) *(1.0+erf(alpha/sqrt(2.0)*xsurc)) -alpha * lambda0 /sqrt(2*M_PI) /sigma * exp(-(1+alpha*alpha)/2 * xsurc * xsurc);
+    }else if(profile=="ASYMFIT" || profile.find("ASYMFIXED")!=std::string::npos){
+      const Float64 coeff = m_asymfit_sigma_coeff;
+      const Float64 xcd = xc+m_asymfit_delta;
+
+      sigma = sigma*coeff;
+      const Float64 xsurc = xcd/sigma;
+      const Float64 alpha = m_asymfit_alpha;
+      val = lambda0 /sigma * xsurc * exp(-0.5*xsurc*xsurc) *(1.0+erf(alpha/sqrt(2.0)*xsurc)) -alpha * lambda0 /sqrt(2*M_PI) /sigma * exp(-(1+alpha*alpha)/2 * xsurc * xsurc);
+
   }else{
-    Log.LogError("Deriv for Z not IMPLEMENTED");
+    Log.LogError("Deriv for Z not IMPLEMENTED for profile %s", profile.c_str());
   }
   return val;
 }

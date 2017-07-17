@@ -51,6 +51,7 @@ public:
     Float64 GetNominalAmplitude(Int32 subeIdx);
     bool SetNominalAmplitude(Int32 subeIdx, Float64 nominalamp);
     Float64 GetElementAmplitude();
+    void SetFittedAmplitude(Int32 subeIdx, Float64 A, Float64 SNR);
     void SetFittedAmplitude(Float64 A, Float64 SNR);
     void LimitFittedAmplitude(Int32 subeIdx, Float64 limit);
     bool IsOutsideLambdaRange(Int32 subeIdx);

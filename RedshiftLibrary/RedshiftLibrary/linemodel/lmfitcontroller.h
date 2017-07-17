@@ -31,6 +31,8 @@ class CLmfitController{
     void setAmpLine(Int32 idx, Float64 amp, Float64 ampErr);
     std::vector<Int32>  getFilteredIdx();
     bool removeNegAmpLine();
+    void setNormAmpLine(Float64 normAmpLine);
+    Float64 getNormAmpLine();
     void setNormFactor(Float64 normFactor);
     Float64 getNormFactor();
     void setNormEmiFactor(Float64 normEmiFactor);
@@ -81,6 +83,7 @@ class CLmfitController{
     std::vector<Float64> m_ampErrLineFitted;
     bool m_normFactorSetted;
     Float64 m_normFactor;
+    Float64 m_normAmpLine;
     Float64 m_normEmiFactor;
     Float64 m_normAbsFactor;
     Float64 m_continuumAmp;

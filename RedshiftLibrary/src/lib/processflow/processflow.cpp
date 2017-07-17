@@ -453,7 +453,7 @@ Bool CProcessFlow::LineModelSolve( CProcessFlowContext& ctx )
                                           spcLambdaRange,
                                           redshifts );
 
-    //*
+    /*
     // todo: call the qualz object as done in zbayes branch from S. Jamal.
     bool enableQualz = true;
     if ( enableQualz && redshifts.size()>2 )

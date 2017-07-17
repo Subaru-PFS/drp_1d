@@ -49,6 +49,7 @@ public:
     virtual Float64 GetFittedAmplitude(Int32 subeIdx)=0;
     virtual Float64 GetFittedAmplitudeErrorSigma(Int32 subeIdx)=0;
     virtual Float64 GetElementAmplitude()=0;
+    virtual void SetFittedAmplitude(Int32 subeIdx, Float64 A, Float64 SNR)=0;
     virtual void SetFittedAmplitude(Float64 A, Float64 SNR)=0;
     virtual void LimitFittedAmplitude(Int32 subeIdx, Float64 limit)=0;
 

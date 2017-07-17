@@ -525,9 +525,9 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
                 if(enableLMVelocityFit){
                     //fit the emission and absorption width using the linemodel lmfit strategy
                     model.SetFittingMethod("lmfit");
-                    model.SetElementIndexesDisabledAuto();
+                    //model.SetElementIndexesDisabledAuto();
                     Float64 meritTmp;
-                    //Log.LogInfo("Lm fit for extrema %d", i);
+                    Log.LogInfo("Lm fit for extrema %d", i);
                     ModelFit( model, lambdaRange, result->Redshifts[idx], meritTmp, result->LineModelSolutions[idx], contreest_iterations, true);
                     modelInfoSave = true;
                     // CModelSpectrumResult

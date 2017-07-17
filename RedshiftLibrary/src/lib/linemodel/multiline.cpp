@@ -411,7 +411,14 @@ Float64 CMultiLine::GetElementAmplitude()
     {
       return -1;
     }
-  return m_FittedAmplitudes[0]/m_NominalAmplitudes[0];
+  for(Int32 k=0; k<m_Rays.size(); k++)
+  {
+      if(!m_OutsideLambdaRangeList[k] && m_NominalAmplitudes[k]!= 0.0)
+      {
+          return m_FittedAmplitudes[k]/m_NominalAmplitudes[k];
+      }
+  }
+  return -1;
 }
 
 /**
@@ -429,6 +436,23 @@ bool CMultiLine::SetNominalAmplitude(Int32 subeIdx, Float64 nominalamp)
 {
     m_NominalAmplitudes[subeIdx]=nominalamp;
     return true;
+}
+
+void CMultiLine::SetFittedAmplitude(Int32 subeIdx, Float64 A, Float64 SNR)
+{
+    if(m_OutsideLambdaRangeList[subeIdx])
+    {
+        m_FittedAmplitudes[subeIdx] = -1;
+    }
+    m_FittedAmplitudes[subeIdx] = A*m_NominalAmplitudes[subeIdx];
+    // limit the absorption to 0.0-1.0, so that it's never <0
+    //*
+    if(m_SignFactors[subeIdx]==-1 && m_absLinesLimit>0.0 && m_FittedAmplitudes[subeIdx]>m_absLinesLimit){
+        m_FittedAmplitudes[subeIdx]=m_absLinesLimit;
+    }
+    //*/
+    m_FittedAmplitudeErrorSigmas[subeIdx] = SNR*m_NominalAmplitudes[subeIdx]; //todo: check correct formulation for Error
+
 }
 
 /**
@@ -648,24 +672,24 @@ void CMultiLine::addToSpectrumModelDerivVel( const CSpectrumSpectralAxis& models
         if(m_OutsideLambdaRangeList[k]){
             continue;
         }
-				if((emissionRay  ^ m_Rays[k].GetIsEmission())){
-					continue;
-				}
+        if((emissionRay  ^ m_Rays[k].GetIsEmission())){
+            continue;
+        }
 
         for ( Int32 i = m_StartNoOverlap[k]; i <= m_EndNoOverlap[k]; i++)
         {
 
             Float64 x = spectral[i];
-						Float64 A = m_FittedAmplitudes[k];
-						Float64 dzOffset = m_Rays[k].GetOffset()/m_c_kms;
-		        Float64 mu = m_Rays[k].GetPosition()*(1+redshift)*(1+dzOffset);
-						Float64 sigma = GetLineWidth(mu, redshift, m_Rays[k].GetIsEmission(), m_profile[k]);
+            Float64 A = m_FittedAmplitudes[k];
+            Float64 dzOffset = m_Rays[k].GetOffset()/m_c_kms;
+            Float64 mu = m_Rays[k].GetPosition()*(1+redshift)*(1+dzOffset);
+            Float64 sigma = GetLineWidth(mu, redshift, m_Rays[k].GetIsEmission(), m_profile[k]);
 
-						if(m_SignFactors[k]==-1){
-              	flux[i] += m_SignFactors[k] * A * continuumfluxAxis[i] * GetLineProfileDerivVel(m_profile[k], x, mu, sigma,  m_Rays[k].GetIsEmission());
-		        }else{
-		            flux[i] += m_SignFactors[k] * A * GetLineProfileDerivVel(m_profile[k], x, mu, sigma,  m_Rays[k].GetIsEmission());
-		        }
+            if(m_SignFactors[k]==-1){
+                flux[i] += m_SignFactors[k] * A * continuumfluxAxis[i] * GetLineProfileDerivVel(m_profile[k], x, mu, sigma,  m_Rays[k].GetIsEmission());
+            }else{
+                flux[i] += m_SignFactors[k] * A * GetLineProfileDerivVel(m_profile[k], x, mu, sigma,  m_Rays[k].GetIsEmission());
+            }
 
         }
     }
