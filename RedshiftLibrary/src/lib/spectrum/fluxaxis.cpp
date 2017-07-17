@@ -321,7 +321,7 @@ Bool CSpectrumFluxAxis::RebinVarianceWeighted( const CSpectrumFluxAxis& sourceFl
     if(opt_interp=="lin"){
         Int32 k = 0;
         Float64 t = 0.0;
-        Float64 varianceCompensation=1.;
+        //Float64 varianceCompensation=1.;
         Float64 xStepCompensation=1.;
         Float64 xSrcStep=1.;
         Float64 xDestStep=1.;
@@ -334,14 +334,13 @@ Bool CSpectrumFluxAxis::RebinVarianceWeighted( const CSpectrumFluxAxis& sourceFl
                 // perform linear interpolation of the flux
                 xSrcStep = ( Xsrc[k+1] - Xsrc[k] );
                 t = ( Xtgt[j] - Xsrc[k] ) / xSrcStep;
-                varianceCompensation = (Errsrc[k]*Errsrc[k])/(Errsrc[k+1]*Errsrc[k+1]+Errsrc[k]*Errsrc[k]); //to be verified and tested!
-                t*=varianceCompensation;
+                //varianceCompensation = (Errsrc[k]*Errsrc[k])/(Errsrc[k+1]*Errsrc[k+1]+Errsrc[k]*Errsrc[k]); //to be verified and tested!
+                //t*=varianceCompensation;
 
                 Xrebin[j] = Xsrc[k] + xSrcStep * t;
                 Yrebin[j] = Ysrc[k] + ( Ysrc[k+1] - Ysrc[k] ) * t;
 
-
-                Errrebin[j] = Errsrc[k] + ( Errsrc[k+1] - Errsrc[k] ) * t;
+                Errrebin[j] = sqrt(Errsrc[k]*Errsrc[k] + ( Errsrc[k+1]*Errsrc[k+1] - Errsrc[k]*Errsrc[k] ) * t*t);
                 //*
                 if(j<targetSpectralAxis.GetSamplesCount()-1)
                 {
