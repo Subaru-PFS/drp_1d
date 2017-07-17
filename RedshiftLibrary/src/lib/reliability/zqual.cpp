@@ -71,7 +71,7 @@ Bool CQualz::Solve( CDataStore& resultStore, CClassifierStore& classifierStore, 
 	 * ********************************************************************** */
 	{
 		startTime = boost::posix_time::microsec_clock::local_time();
-		ExtractFeaturesPDF ( resultStore, redshiftRange, redshiftStep );
+        bool ExtractDone = ExtractFeaturesPDF ( resultStore, redshiftRange, redshiftStep );
 		T0 = boost::posix_time::microsec_clock::local_time() - startTime;
 	}
 
@@ -1475,5 +1475,3 @@ gsl_vector* CQualz::GetSumKL ( gsl_matrix* m, Bool opt_row)
 
 	return result;
 }
-
-

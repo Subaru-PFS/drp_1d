@@ -38,6 +38,10 @@ public:
         Float64 LyaAlpha;
         Float64 LyaDelta;
 
+        Float64 AbsorptionVelocity;
+        Float64 EmissionVelocity;
+        Float64 Redshift;
+
         Int32 nDDL;
     };
 
@@ -69,6 +73,7 @@ public:
     TFloat64List            DeltaZ;    // extrema delta z
     TFloat64List            mTransposeM;    // extrema model norm
     TFloat64List            ExtremaLastPass; //z extrema with more precision
+    TFloat64List            lmfitPass;// z found with lmfit
 
     //Deprecated?
     TFloat64List            ExtremaExtendedRedshifts;    // z range around extrema

@@ -39,10 +39,13 @@ public:
 
     virtual void fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis, const CSpectrumFluxAxis &continuumfluxAxis, Float64  redshift, Int32 lineIdx=-1 ) =0;
     virtual Float64 getModelAtLambda( Float64 lambda, Float64 redshift, Float64 continuumFlux, Int32 kRaySupport=-1 )=0;
-    virtual Float64 GetModelDerivAmplitudeAtLambda( Float64 lambda, Float64 redshift )=0;
-    virtual Float64 GetModelDerivSigmaAtLambda( Float64 lambda, Float64 redshift )=0;
+    virtual Float64 GetModelDerivAmplitudeAtLambda( Float64 lambda, Float64 redshift, Float64 continuumFlux  )=0;
+    virtual Float64 GetModelDerivContinuumAmpAtLambda(Float64 lambda, Float64 redshift, Float64 continuumFluxUnscale  )=0;
+    virtual Float64 GetModelDerivZAtLambdaNoContinuum(Float64 lambda, Float64 redshift, Float64 continuumFlux)=0;
+    virtual Float64 GetModelDerivZAtLambda(Float64 lambda, Float64 redshift, Float64 continuumFlux, Float64 continuumFluxDerivZ)=0;
+
     virtual void addToSpectrumModel( const CSpectrumSpectralAxis& modelspectralAxis, CSpectrumFluxAxis& modelfluxAxis, CSpectrumFluxAxis &continuumfluxAxis, Float64 redshift, Int32 lineIdx=-1 )=0;
-    virtual void addToSpectrumModelDerivSigma( const CSpectrumSpectralAxis& modelspectralAxis, CSpectrumFluxAxis& modelfluxAxis, Float64 redshift )=0;
+    virtual void addToSpectrumModelDerivVel( const CSpectrumSpectralAxis& modelspectralAxis, CSpectrumFluxAxis& modelfluxAxis, CSpectrumFluxAxis& continuumFluxAxis, Float64 redshift , bool emissionRay)=0;
 
     virtual void initSpectrumModel( CSpectrumFluxAxis& modelfluxAxis, CSpectrumFluxAxis& continuumfluxAxis, Int32 lineIdx=-1 )=0;
 
@@ -51,6 +54,7 @@ public:
     virtual Float64 GetFittedAmplitude(Int32 subeIdx)=0;
     virtual Float64 GetFittedAmplitudeErrorSigma(Int32 subeIdx)=0;
     virtual Float64 GetElementAmplitude()=0;
+    virtual void SetFittedAmplitude(Int32 subeIdx, Float64 A, Float64 SNR)=0;
     virtual void SetFittedAmplitude(Float64 A, Float64 SNR)=0;
     virtual void LimitFittedAmplitude(Int32 subeIdx, Float64 limit)=0;
 
@@ -82,6 +86,8 @@ public:
     std::vector<Int32> m_LineCatalogIndexes;
     Float64 GetLineWidth(Float64 lambda, Float64 z, Bool isEmission, std::string profile);
     Float64 GetLineProfile(std::string profile, Float64 x, Float64 x0, Float64 c);
+    Float64 GetLineProfileDerivVel(std::string profile, Float64 x, Float64 x0, Float64 sigma, Bool isEmission);
+    Float64 GetLineProfileDerivZ(std::string profile, Float64 x, Float64 mu0, Float64 redshift, Float64 sigma);
     Float64 GetLineProfileDerivSigma(std::string profile, Float64 x, Float64 x0, Float64 sigma);
     Float64 GetNSigmaSupport(std::string profile);
 
@@ -140,4 +146,3 @@ private:
 
 
 #endif // ELEMENT_H
-

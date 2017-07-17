@@ -34,6 +34,7 @@ Void CLineModelResult::ResizeExtremaResults(Int32 size)
     DeltaZ.resize(size);
     mTransposeM.resize(size);
     ExtremaLastPass.resize(size);
+    lmfitPass.resize(size);
     Posterior.resize(size);
     StrongELSNR.resize(size);
     LogArea.resize(size);
@@ -189,6 +190,16 @@ Void CLineModelResult::Save( const CDataStore& store, std::ostream& stream ) con
         for ( int i=0; i<ExtremaLastPass.size(); i++)
         {
             stream <<  ExtremaLastPass[i] << "\t";
+        }
+        stream << "}" << std::endl;
+    }
+
+    // save lmfitPass list, on 1 line
+    if(lmfitPass.size()>0){
+        stream <<  "#lmfitPass for z = {";
+        for ( int i=0; i<lmfitPass.size(); i++)
+        {
+            stream <<  lmfitPass[i] << "\t";
         }
         stream << "}" << std::endl;
     }

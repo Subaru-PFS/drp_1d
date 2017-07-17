@@ -454,7 +454,14 @@ Float64 CMultiLine::GetElementAmplitude()
     {
       return -1;
     }
-  return m_FittedAmplitudes[0]/m_NominalAmplitudes[0];
+  for(Int32 k=0; k<m_Rays.size(); k++)
+  {
+      if(!m_OutsideLambdaRangeList[k] && m_NominalAmplitudes[k]!= 0.0)
+      {
+          return m_FittedAmplitudes[k]/m_NominalAmplitudes[k];
+      }
+  }
+  return -1;
 }
 
 /**
@@ -472,6 +479,24 @@ bool CMultiLine::SetNominalAmplitude(Int32 subeIdx, Float64 nominalamp)
 {
     m_NominalAmplitudes[subeIdx]=nominalamp;
     return true;
+}
+
+//WARNING: setfittedamplitude should not be applied to sub element individually ?
+void CMultiLine::SetFittedAmplitude(Int32 subeIdx, Float64 A, Float64 SNR)
+{
+    if(m_OutsideLambdaRangeList[subeIdx])
+    {
+        m_FittedAmplitudes[subeIdx] = -1;
+    }
+    m_FittedAmplitudes[subeIdx] = A*m_NominalAmplitudes[subeIdx];
+    // limit the absorption to 0.0-1.0, so that it's never <0
+    //*
+    if(m_SignFactors[subeIdx]==-1 && m_absLinesLimit>0.0 && m_FittedAmplitudes[subeIdx]>m_absLinesLimit){
+        m_FittedAmplitudes[subeIdx]=m_absLinesLimit;
+    }
+    //*/
+    m_FittedAmplitudeErrorSigmas[subeIdx] = SNR*m_NominalAmplitudes[subeIdx]; //todo: check correct formulation for Error
+
 }
 
 /**
@@ -677,7 +702,7 @@ void CMultiLine::addToSpectrumModel( const CSpectrumSpectralAxis& modelspectralA
   return;
 }
 
-void CMultiLine::addToSpectrumModelDerivSigma( const CSpectrumSpectralAxis& modelspectralAxis, CSpectrumFluxAxis& modelfluxAxis, Float64 redshift )
+void CMultiLine::addToSpectrumModelDerivVel( const CSpectrumSpectralAxis& modelspectralAxis, CSpectrumFluxAxis& modelfluxAxis,  CSpectrumFluxAxis& continuumfluxAxis, Float64 redshift , bool emissionRay)
 {
     if(m_OutsideLambdaRange){
         return;
@@ -690,12 +715,24 @@ void CMultiLine::addToSpectrumModelDerivSigma( const CSpectrumSpectralAxis& mode
         if(m_OutsideLambdaRangeList[k]){
             continue;
         }
+        if((emissionRay  ^ m_Rays[k].GetIsEmission())){
+            continue;
+        }
 
         for ( Int32 i = m_StartNoOverlap[k]; i <= m_EndNoOverlap[k]; i++)
         {
-            Float64 lambda = spectral[i];
-            Float64 Yi=GetModelDerivSigmaAtLambda(lambda, redshift);
-            flux[i] += Yi;
+
+            Float64 x = spectral[i];
+            Float64 A = m_FittedAmplitudes[k];
+            Float64 mu = GetObservedPosition(k, redshift);
+            Float64 sigma = GetLineWidth(mu, redshift, m_Rays[k].GetIsEmission(), m_profile[k]);
+
+            if(m_SignFactors[k]==-1){
+                flux[i] += m_SignFactors[k] * A * continuumfluxAxis[i] * GetLineProfileDerivVel(m_profile[k], x, mu, sigma,  m_Rays[k].GetIsEmission());
+            }else{
+                flux[i] += m_SignFactors[k] * A * GetLineProfileDerivVel(m_profile[k], x, mu, sigma,  m_Rays[k].GetIsEmission());
+            }
+
         }
     }
   return;
@@ -740,7 +777,7 @@ Float64 CMultiLine::getModelAtLambda(Float64 lambda, Float64 redshift, Float64 c
     return Yi;
 }
 
-Float64 CMultiLine::GetModelDerivAmplitudeAtLambda(Float64 lambda, Float64 redshift )
+Float64 CMultiLine::GetModelDerivAmplitudeAtLambda(Float64 lambda, Float64 redshift, Float64 continuumFlux )
 {
     if(m_OutsideLambdaRange){
         return 0.0;
@@ -756,15 +793,49 @@ Float64 CMultiLine::GetModelDerivAmplitudeAtLambda(Float64 lambda, Float64 redsh
         }
 
         Float64 mu = GetObservedPosition(k2, redshift);
-        Float64 c = GetLineWidth(mu, redshift, m_Rays[k2].GetIsEmission(), m_profile[k2]);
+	Float64 sigma = GetLineWidth(mu, redshift, m_Rays[k2].GetIsEmission(), m_profile[k2]);
 
-        Yi += m_SignFactors[k2] * GetLineProfile(m_profile[k2], x, mu, c);
+				if(m_SignFactors[k2]==-1){
+            Yi += m_SignFactors[k2] * m_NominalAmplitudes[k2] * continuumFlux * GetLineProfile(m_profile[k2], x, mu, sigma);
+        }else{
+            Yi += m_SignFactors[k2] * m_NominalAmplitudes[k2] * GetLineProfile(m_profile[k2], x, mu, sigma);
+        }
     }
     return Yi;
 }
 
-Float64 CMultiLine::GetModelDerivSigmaAtLambda(Float64 lambda, Float64 redshift )
-{
+Float64  CMultiLine::GetModelDerivContinuumAmpAtLambda(Float64 lambda, Float64 redshift, Float64 continuumFluxUnscale  ){
+	if(m_OutsideLambdaRange){
+			return 0.0;
+	}
+	Float64 Yi=0.0;
+
+	Float64 x = lambda;
+
+	for(Int32 k2=0; k2<m_Rays.size(); k2++) //loop on rays
+	{
+			if(m_OutsideLambdaRangeList[k2]){
+					continue;
+			}
+
+			if(m_SignFactors[k2]==1){
+				continue;
+			}
+
+			Float64 A = m_FittedAmplitudes[k2];
+			Float64 dzOffset = m_Rays[k2].GetOffset()/m_c_kms;
+			Float64 mu = m_Rays[k2].GetPosition()*(1+redshift)*(1+dzOffset);
+			Float64 sigma = GetLineWidth(mu, redshift, m_Rays[k2].GetIsEmission(), m_profile[k2]);
+
+			Yi += m_SignFactors[k2] *continuumFluxUnscale* A * GetLineProfile(m_profile[k2], x, mu, sigma);
+
+	}
+	return Yi;
+}
+/* Given the value of the partial deriv of the flux of this multiline at the given lamda when
+ * The continuum is not a variable of z
+ */
+Float64 CMultiLine::GetModelDerivZAtLambdaNoContinuum(Float64 lambda, Float64 redshift, Float64 continuumFlux){
     if(m_OutsideLambdaRange){
         return 0.0;
     }
@@ -777,13 +848,47 @@ Float64 CMultiLine::GetModelDerivSigmaAtLambda(Float64 lambda, Float64 redshift 
         if(m_OutsideLambdaRangeList[k2]){
             continue;
         }
-
         Float64 A = m_FittedAmplitudes[k2];
         Float64 mu = GetObservedPosition(k2, redshift);
-        Float64 c = GetLineWidth(mu, redshift, m_Rays[k2].GetIsEmission(), m_profile[k2]);
+        Float64 lamdba0 = m_Rays[k2].GetPosition() * (1+dzOffset);
+        Float64 sigma = GetLineWidth(mu, redshift, m_Rays[k2].GetIsEmission(), m_profile[k2]);
 
-        Yi += m_SignFactors[k2] * A * GetLineProfileDerivSigma(m_profile[k2], x, mu, c);
+        if(m_SignFactors[k2]==1){
+            Yi += m_SignFactors[k2] * A * GetLineProfileDerivZ(m_profile[k2], x, lamdba0, redshift, sigma);
+        }else{
+            Yi += m_SignFactors[k2] * A * continuumFlux * GetLineProfileDerivZ(m_profile[k2], x, lamdba0, redshift, sigma);
+        }
     }
+    return Yi;
+}
+/* Given the value of the partial deriv of the flux of this multiline at the given lamda when
+ * The continuum is a variable of z
+ */
+Float64 CMultiLine::GetModelDerivZAtLambda(Float64 lambda, Float64 redshift, Float64 continuumFlux, Float64 continuumFluxDerivZ){
+	if(m_OutsideLambdaRange){
+			return 0.0;
+	}
+	Float64 Yi=0.0;
+
+	Float64 x = lambda;
+
+	for(Int32 k2=0; k2<m_Rays.size(); k2++) //loop on rays
+	{
+        if(m_OutsideLambdaRangeList[k2]){
+                continue;
+        }
+        Float64 A = m_FittedAmplitudes[k2];
+        Float64 mu = GetObservedPosition(k2, redshift);
+        Float64 lamdba0 = m_Rays[k2].GetPosition() * (1+dzOffset);
+        Float64 sigma = GetLineWidth(mu, redshift, m_Rays[k2].GetIsEmission(), m_profile[k2]);
+
+        if(m_SignFactors[k2]==1){
+            Yi += m_SignFactors[k2] * A * GetLineProfileDerivZ(m_profile[k2], x, lamdba0, redshift, sigma);
+        }else{
+            Yi += m_SignFactors[k2] * A * continuumFlux * GetLineProfileDerivZ(m_profile[k2], x, lamdba0, redshift, sigma)
+                    + m_SignFactors[k2] * A * continuumFluxDerivZ * GetLineProfile(m_profile[k2], x, mu, sigma);
+        }
+	}
     return Yi;
 }
 

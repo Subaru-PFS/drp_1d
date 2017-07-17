@@ -39,12 +39,14 @@ CTemplatesOrthogonalization::CTemplatesOrthogonalization(const CTemplateCatalog&
             if(enableOverride){
                 rigidity = "rules";
                 rules = "no";
+
             }
+            std::string opt_fittingmethod2 = "hybrid";
 
             Int32 ret = OrthogonalizeTemplate(tpl,
                                   calibrationPath,
                                   restRayList,
-                                  opt_fittingmethod,
+                                  opt_fittingmethod2,
                                   widthType,
                                   resolution,
                                   velocityEmission,
@@ -130,7 +132,7 @@ Int32 CTemplatesOrthogonalization::OrthogonalizeTemplate(const CTemplate& inputT
         Float64 redshift = 0.0;
         TLambdaRange lambdaRange = inputTemplate.GetLambdaRange();
         Float64 contreest_iterations = 0;
-        Bool enableLogging=false;
+        Bool enableLogging=true;
         CLineModelResult::SLineModelSolution modelSolution;
         Float64 fit = model.fit( redshift, lambdaRange, modelSolution, contreest_iterations, enableLogging );
 
