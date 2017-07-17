@@ -146,12 +146,12 @@ void CLmfitController::calculatedIndices(){
 // if modif here modif the inverse function : modeltolm<-> lmtomodel and the df function in lmfitfunction (the jacobian is the derivided by lmvalue of the variable)
 Float64 CLmfitController::lineAmp_LmToModel(Float64 lmLineAmp){
   return lmLineAmp*lmLineAmp/m_normAmpLine;
-  // return lmLineAmp;
+  //return lmLineAmp;
 }
 
 Float64 CLmfitController::lineAmp_ModelToLm(Float64 modelLineAmp){
   return sqrt(modelLineAmp*m_normAmpLine);
-  // return modelLineAmp;
+  //return modelLineAmp;
 }
 
 Float64 CLmfitController::emiVel_LmToModel(Float64 lmEmiVel){

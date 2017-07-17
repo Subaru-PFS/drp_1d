@@ -756,9 +756,9 @@ Float64 CMultiLine::GetModelDerivAmplitudeAtLambda(Float64 lambda, Float64 redsh
 				Float64 sigma = GetLineWidth(mu, redshift, m_Rays[k2].GetIsEmission(), m_profile[k2]);
 
 				if(m_SignFactors[k2]==-1){
-            Yi += m_SignFactors[k2] * continuumFlux * GetLineProfile(m_profile[k2], x, mu, sigma);
+            Yi += m_SignFactors[k2] * m_NominalAmplitudes[k2] * continuumFlux * GetLineProfile(m_profile[k2], x, mu, sigma);
         }else{
-            Yi += m_SignFactors[k2] * GetLineProfile(m_profile[k2], x, mu, sigma);
+            Yi += m_SignFactors[k2] * m_NominalAmplitudes[k2] * GetLineProfile(m_profile[k2], x, mu, sigma);
         }
     }
     return Yi;

@@ -143,9 +143,9 @@ lmfit_df (const gsl_vector * x, void *data,
     Float64 normAmpLine = controller->getNormAmpLine();
     for (Int32 i = 0; i < n; i++)
     {
+
         for (Int32 iElt = 0; iElt < elts_indexes.size(); iElt++)
         {
-
             Float64 dval = linemodel->getModelFluxDerivEltVal(elts_indexes[iElt], samples_indexes[i])*normFactor/normAmpLine*2*gsl_vector_get (x, iElt);
             gsl_matrix_set (J, i, iElt, dval);
         }
@@ -195,6 +195,26 @@ lmfit_df (const gsl_vector * x, void *data,
           }
         }
     }
+    //*
+    // export for debug
+    FILE* fspc = fopen( "model_flux.txt", "w+" );
+    for (Int32 i = 0; i < n; i++)
+    {
+        fprintf( fspc, "%d %f\n", samples_indexes[i], linemodel->getModelFluxVal(samples_indexes[i])*normFactor);//*1e12);
+    }
+    fclose( fspc );
+    //*/
+
+     //*
+     // export for debug
+     fspc = fopen( "model_derivsigmaAbs.txt", "w+" );
+     for (Int32 i = 0; i < n; i++)
+     {
+         Float64 normAbsFactor = controller->getNormAbsFactor();
+         fprintf( fspc, "%d %f\n", samples_indexes[i],linemodel->getModelFluxDerivVelAbsorptionVal(samples_indexes[i])*normFactor/normAbsFactor*2*gsl_vector_get (x, controller->getIndAbsorptionVel()));//*1e12);
+     }
+     fclose( fspc );
+     //*/
 
     return GSL_SUCCESS;
 }

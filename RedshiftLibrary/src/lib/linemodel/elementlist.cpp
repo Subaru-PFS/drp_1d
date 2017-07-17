@@ -1154,7 +1154,7 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
             for( UInt32 i=0; i<controllers.size(); i++ )
             {
               CLmfitController *controller = controllers[i];
-              Log.LogInfo("Continuum Template use : %s", controller->getTemplate()->GetName().c_str());
+              //Log.LogInfo("Continuum Template use : %s", controller->getTemplate()->GetName().c_str());
               if(!controller->isNoContinuum() && !controller->isContinuumLoaded()){
                 LoadFitContinuumOneTemplate(lambdaRange, *controller->getTemplate());
               }
@@ -2299,15 +2299,15 @@ Int32 CLineModelElementList::fitAmplitudesLmfit( const CSpectrumFluxAxis& fluxAx
         }
     }
     controller->setNormAmpLine(1.0);
-    if(bestAmpLine>0.){
-        controller->setNormAmpLine(1/bestAmpLine);//setNormAmpLine(controller->lineAmp_LmToModel(bestAmpLine));
-        if(verbose){
-            Log.LogInfo("Lmfit : normAmpLine : %f", controller->getNormAmpLine());
-        }
-    }
+//    if(bestAmpLine>0.){
+//        controller->setNormAmpLine(1/bestAmpLine);//setNormAmpLine(controller->lineAmp_LmToModel(bestAmpLine));
+//        if(verbose){
+//            Log.LogInfo("Lmfit : normAmpLine : %f", controller->getNormAmpLine());
+//        }
+//    }
     for(Int32 kp=0; kp<nddl; kp++)
     {
-        Float64 ampInitGuess = m_Elements[filteredEltsIdx[kp]]->GetElementAmplitude();
+        Float64 ampInitGuess = m_Elements[filteredEltsIdx[kp]]->GetElementAmplitude();//std::max(m_Elements[filteredEltsIdx[kp]]->GetElementAmplitude() *1.5, bestAmpLine*0.001) ;
         if(ampInitGuess <0.){
             Log.LogInfo("Amp negative %d , set to 0",ampInitGuess );
             ampInitGuess = 0.;
@@ -2365,9 +2365,9 @@ Int32 CLineModelElementList::fitAmplitudesLmfit( const CSpectrumFluxAxis& fluxAx
     gsl_vector *res_f;
     double chi, chi0;
 
-    const double xtol = 1e-10;
-    const double gtol = 1e-10;
-    const double ftol =1-10;
+    const double xtol = 1e-8;
+    const double gtol = 1e-8;
+    const double ftol =1-8;
     Int32 maxIterations = 250;
 
     //gsl_rng_env_setup();
