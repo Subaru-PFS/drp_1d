@@ -256,8 +256,8 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
         //*/
 
         std::string opt_interp = "precomputedfinegrid"; // "lin"; //
-        Int32 opt_dustFit = 0;
-        Int32 opt_extinction = 0;
+        Int32 opt_dustFit = 1;
+        Int32 opt_extinction = 1;
         Log.LogInfo( "linemodel: precomputing-fitContinuum_dustfit = %d", opt_dustFit );
         Log.LogInfo( "linemodel: precomputing-fitContinuum_igm = %d", opt_extinction );
 
