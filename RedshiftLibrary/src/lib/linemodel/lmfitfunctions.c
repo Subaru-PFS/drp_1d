@@ -195,7 +195,7 @@ lmfit_df (const gsl_vector * x, void *data,
           }
         }
     }
-    //*
+    /*
     // export for debug
     FILE* fspc = fopen( "model_flux.txt", "w+" );
     for (Int32 i = 0; i < n; i++)
@@ -205,7 +205,7 @@ lmfit_df (const gsl_vector * x, void *data,
     fclose( fspc );
     //*/
 
-     //*
+     /*
      // export for debug
      fspc = fopen( "model_derivsigmaAbs.txt", "w+" );
      for (Int32 i = 0; i < n; i++)

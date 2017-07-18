@@ -823,14 +823,13 @@ const Float64*  COperatorChiSquare2::getDustCoeff(Float64 dustCoeff, Float64 max
         }
     }
 
-    Int32 nSamples = maxLambda+1; //+1 for security
-    Float64* dustCoeffs = new Float64 [(int)nSamples]();
-
     if(idxDust<0)
     {
-        return dustCoeffs;
+        return 0;
     }
 
+    Int32 nSamples = maxLambda+1; //+1 for security
+    Float64* dustCoeffs = new Float64 [(int)nSamples]();
 
 
     for(Int32 kl=0; kl<nSamples; kl++)

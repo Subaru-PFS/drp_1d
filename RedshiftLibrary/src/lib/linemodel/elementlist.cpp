@@ -858,55 +858,59 @@ void CLineModelElementList::setRedshift(Float64 redshift, bool reinterpolatedCon
 Apply the template continuum by interpolating the grid as define in Init COntinuum
 **/
 Int32 CLineModelElementList::ApplyContinuumOnGrid(const CTemplate& tpl){
-  m_fitContinuum_tplName = tpl.GetName();
+    m_fitContinuum_tplName = tpl.GetName();
 
 
-  Int32 n = tpl.GetSampleCount();
-  CSpectrumFluxAxis tplFluxAxis = tpl.GetFluxAxis();
-  const CSpectrumSpectralAxis& tplSpectralAxis = tpl.GetSpectralAxis();
+    Int32 n = tpl.GetSampleCount();
+    CSpectrumFluxAxis tplFluxAxis = tpl.GetFluxAxis();
+    const CSpectrumSpectralAxis& tplSpectralAxis = tpl.GetSpectralAxis();
 
-  //inialize and allocate the gsl objects
-  Float64* Ysrc = tplFluxAxis.GetSamples();
-  const Float64* Xsrc = tplSpectralAxis.GetSamples();
-  //apply dust attenuation
-  const Float64* dustCoeffArray = m_chiSquareOperator->getDustCoeff(m_fitContinuum_tplFitDustCoeff, Xsrc[n-1]);
-   //apply igm meiksin extinction
-   const Float64* meiksinCoeffArray = m_chiSquareOperator->getMeiksinCoeff(m_fitContinuum_tplFitMeiksinIdx, m_Redshift, Xsrc[n-1]);
+    //inialize and allocate the gsl objects
+    Float64* Ysrc = tplFluxAxis.GetSamples();
+    const Float64* Xsrc = tplSpectralAxis.GetSamples();
+    //apply dust attenuation
+    const Float64* dustCoeffArray = m_chiSquareOperator->getDustCoeff(m_fitContinuum_tplFitDustCoeff, Xsrc[n-1]);
+    //apply igm meiksin extinction
+    const Float64* meiksinCoeffArray = m_chiSquareOperator->getMeiksinCoeff(m_fitContinuum_tplFitMeiksinIdx, m_Redshift, Xsrc[n-1]);
 
-  Float64 lambda = 0.0;
-  for(Int32 ktpl=0; ktpl<n; ktpl++)
-  {
-      lambda = Xsrc[ktpl];
-      Ysrc[ktpl]*=dustCoeffArray[Int32(lambda)]; //dust coeff is rounded at the nearest 1 angstrom value
-       //Log.LogInfo("Dust Coef %0.1f %0.6f",lambda,dustCoeffArray[Int32(lambda)]);
-  }
-  delete dustCoeffArray;
-  if(meiksinCoeffArray!=0)
-{
-for(Int32 ktpl=0; ktpl<n; ktpl++)
-{
-    Ysrc[ktpl]*=meiksinCoeffArray[Int32(lambda)]; //igm meiksin coeff is rounded at the nearest 1 angstrom value
-}
-delete meiksinCoeffArray;
-}
+    if(dustCoeffArray!=0)
+    {
+        Float64 lambda = 0.0;
+        for(Int32 ktpl=0; ktpl<n; ktpl++)
+        {
+            lambda = Xsrc[ktpl];
+            Ysrc[ktpl]*=dustCoeffArray[Int32(lambda)]; //dust coeff is rounded at the nearest 1 angstrom value
+        }
+        delete dustCoeffArray;
+    }
+    if(meiksinCoeffArray!=0)
+    {
+        Float64 lambda = 0.0;
+        for(Int32 ktpl=0; ktpl<n; ktpl++)
+        {
+            lambda = Xsrc[ktpl];
+            Ysrc[ktpl]*=meiksinCoeffArray[Int32(lambda)]; //igm meiksin coeff is rounded at the nearest 1 angstrom value
+        }
+        delete meiksinCoeffArray;
+    }
 
-  //spline
-  gsl_spline *spline = gsl_spline_alloc (gsl_interp_cspline, n);
-  gsl_spline_init (spline, Xsrc, Ysrc, n);
-  gsl_interp_accel * accelerator =  gsl_interp_accel_alloc();
-  Int32 k = 0;
-  Float64 x = 0.0;
-  const CSpectrumSpectralAxis& spcSpectralAxis = m_SpectrumModel->GetSpectralAxis();
+    //spline
+    gsl_spline *spline = gsl_spline_alloc (gsl_interp_cspline, n);
+    gsl_spline_init (spline, Xsrc, Ysrc, n);
+    gsl_interp_accel * accelerator =  gsl_interp_accel_alloc();
+    Int32 k = 0;
+    Float64 x = 0.0;
+    const CSpectrumSpectralAxis& spcSpectralAxis = m_SpectrumModel->GetSpectralAxis();
 
-  for(k=0; k<spcSpectralAxis.GetSamplesCount(); k++){
-      x = spcSpectralAxis[k]/(1+m_Redshift);
-      if(x < tplSpectralAxis[0] || x > tplSpectralAxis[n-1]){
-          m_observeGridContinuumFlux[k] = 0.0;
-      }else{
-          m_observeGridContinuumFlux[k] = gsl_spline_eval (spline, x, accelerator);//m_fitContinuum_tplFitAmplitude*
+    for(k=0; k<spcSpectralAxis.GetSamplesCount(); k++){
+        x = spcSpectralAxis[k]/(1+m_Redshift);
+        if(x < tplSpectralAxis[0] || x > tplSpectralAxis[n-1]){
+            m_observeGridContinuumFlux[k] = 0.0;
+        }else{
+            m_observeGridContinuumFlux[k] = gsl_spline_eval (spline, x, accelerator);//m_fitContinuum_tplFitAmplitude*
 
-      }
-      /*//debug:
+        }
+        /*//debug:
       // save reflex data
       FILE* f = fopen( "observegrid.txt", "w+" );
       for( Int32 t=0;t<spcSpectralAxis.GetSamplesCount();t++)
@@ -916,7 +920,7 @@ delete meiksinCoeffArray;
       fclose( f );
       //*/
 
-  }
+    }
 
 
 

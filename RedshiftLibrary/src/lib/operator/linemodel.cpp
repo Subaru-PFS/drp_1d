@@ -535,11 +535,13 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
             model.LoadModelSolution(result->LineModelSolutions[idx]);
             //ModelFit( model, lambdaRange, result->Redshifts[idx], result->ChiSquare[idx], result->LineModelSolutions[idx], contreest_iterations, false);
             m = result->ChiSquare[idx];
-            if(enableVelocityFitting){
-                Bool enableManualStepVelocityFit = false;
-                Bool enableLMVelocityFit = true;
+            if(enableVelocityFitting)
+            {
+                Bool enableManualStepVelocityFit = true;
+                Bool enableLMVelocityFit = false;
                 Bool enableLBFGSVelocityFit = false;
-                if(enableLMVelocityFit){
+                if(enableLMVelocityFit)
+                {
                     //fit the emission and absorption width using the linemodel lmfit strategy
                     model.SetFittingMethod("lmfit");
                     //model.SetElementIndexesDisabledAuto();
@@ -692,7 +694,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
             Float64 left_border = max(redshiftsRange.GetBegin(), z-extensionradius);
             Float64 right_border=min(redshiftsRange.GetEnd(), z+extensionradius);
             //model.SetFittingMethod("nofit");
-            extremumList2[i].Y = result->ChiSquare[idx];
+            extremumList2[i].Y = DBL_MAX;
             extremumList2[i].X = result->Redshifts[idx];
             Int32 idx2 = idx;
             for (Int32 iz=0;iz<result->Redshifts.size();iz++)
