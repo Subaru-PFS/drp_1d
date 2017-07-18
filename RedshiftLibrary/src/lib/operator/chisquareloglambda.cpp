@@ -49,11 +49,14 @@ COperatorChiSquareLogLambda::COperatorChiSquareLogLambda(std::string calibration
 
     inSpc=0;
     outSpc=0;
+    pSpc=0;
     inTpl=0;
     inTpl_padded=0;
+    pTpl=0;
     outTpl=0;
     outCombined=0;
     inCombined=0;
+    pBackward=0;
     precomputedFFT_spcFluxOverErr2=0;
     precomputedFFT_spcOneOverErr2=0;
 
@@ -61,6 +64,8 @@ COperatorChiSquareLogLambda::COperatorChiSquareLogLambda(std::string calibration
 
 COperatorChiSquareLogLambda::~COperatorChiSquareLogLambda()
 {
+    delete m_ismCorrectionCalzetti;
+    delete m_igmCorrectionMeiksin;
     freeFFTPlans();
 }
 
@@ -239,7 +244,6 @@ Int32 COperatorChiSquareLogLambda::EstimateXtY(const Float64* X, const Float64* 
 
     }
 
-
     if(verboseLogXtYFFT)
     {
         Log.LogInfo("ChisquareLog, FitAllz: Processing tpl-fft with n=%d, padded to n=%d", nTpl, nPadded);
@@ -298,7 +302,6 @@ Int32 COperatorChiSquareLogLambda::EstimateXtY(const Float64* X, const Float64* 
         fclose( f_fftoutput );
     }
 
-
     //Multiplying the FFT outputs
     for(Int32 k=0; k<nPadded; k++)
     {
@@ -308,15 +311,14 @@ Int32 COperatorChiSquareLogLambda::EstimateXtY(const Float64* X, const Float64* 
         //outCombined[k][0] = (outTpl[k][0]*outSpc[k][0]+outTpl[k][1]*outSpc[k][1]);
         //outCombined[k][1] = (outTpl[k][0]*outSpc[k][1]-outTpl[k][1]*outSpc[k][0]);
     }
-    if(inCombined==0)
-    {
-        Log.LogError("ChisquareLog, FitAllz: Unable to allocate inCombined");
-    }
+
     fftw_execute(pBackward);
     if(verboseLogXtYFFT)
     {
         Log.LogInfo("ChisquareLog, FitAllz: backward-fft done");
     }
+
+
     XtY.resize(nshifts);
     Int32 offsetSamples = 0;//nPadded/2.0;//nSpc;//(nTpl+nSpc);
     for (Int32 k=0; k<nshifts; k++)
@@ -344,7 +346,6 @@ Int32 COperatorChiSquareLogLambda::EstimateXtY(const Float64* X, const Float64* 
         }
         fclose( f_fftoutput );
     }
-
 
     return 0;
 }
@@ -425,23 +426,57 @@ void COperatorChiSquareLogLambda::freeFFTPrecomputedBuffers()
 
 void COperatorChiSquareLogLambda::freeFFTPlans()
 {
-    if(inSpc)
+    if(pSpc)
     {
         fftw_destroy_plan(pSpc);
         pSpc=0;
-        fftw_free(inSpc); fftw_free(outSpc);
+    }
+    if(inSpc)
+    {
+        fftw_free(inSpc);
         inSpc=0;
+    }
+    if(outSpc)
+    {
+        fftw_free(outSpc);
         outSpc=0;
+    }
+    if(pTpl)
+    {
         fftw_destroy_plan(pTpl);
         pTpl=0;
+    }
+    if(inTpl_padded)
+    {
         fftw_free(inTpl_padded);
         inTpl_padded=0;
-        fftw_free(inTpl); fftw_free(outTpl);
+    }
+    if(inTpl)
+    {
+        fftw_free(inTpl);
         inTpl=0;
+    }
+    if(outTpl)
+    {
+        fftw_free(outTpl);
         outTpl=0;
+    }
+    if(pBackward)
+    {
         fftw_destroy_plan(pBackward);
         pBackward=0;
     }
+    if(inCombined)
+    {
+        fftw_free(inCombined);
+        inCombined=0;
+    }
+    if(outCombined)
+    {
+        fftw_free(outCombined);
+        outCombined=0;
+    }
+
 
     freeFFTPrecomputedBuffers();
 }
@@ -609,6 +644,7 @@ Int32 COperatorChiSquareLogLambda::FitAllz(const TFloat64Range& lambdaRange,
         }
 
 
+        //*
         FitRangez(spectrumRebinedLambda,
                   spectrumRebinedFluxRaw,
                   error,
@@ -619,6 +655,7 @@ Int32 COperatorChiSquareLogLambda::FitAllz(const TFloat64Range& lambdaRange,
                   subresult,
                   igmMeiksinCoeffs,
                   ismEbmvCoeffs);
+        //*/
 
         //copy subresults into global results
         for (UInt32 isubz=0;isubz<subresult->Redshifts.size();isubz++)
@@ -770,7 +807,6 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64* spectrumRebinedLambda,
         }
     }
 
-
     for(Int32 kIGM=0; kIGM<nIGM; kIGM++)
     {
 
@@ -867,6 +903,7 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64* spectrumRebinedLambda,
                          nTpl,
                          nshifts,
                          dtm_vec,
+                         //-1);
                          0);
             //*/
             //EstimateXtYSlow(spcRebinedFluxOverErr2, tplRebinedFlux, nSpc, nshifts, dtm_vec);
@@ -891,6 +928,7 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64* spectrumRebinedLambda,
                          nTpl,
                          nshifts,
                          mtm_vec,
+                         //-1);
                          1);
             //*/
             //EstimateXtYSlow(oneSpcRebinedFluxOverErr2, tpl2RebinedFlux, nSpc, nshifts, mtm_vec);
@@ -1071,7 +1109,10 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64* spectrumRebinedLambda,
     delete[] oneSpcRebinedFluxOverErr2;
     delete[] tplRebinedFlux;
     delete[] tpl2RebinedFlux;
+    delete[] tplRebinedFluxIgm;
 
+
+    freeFFTPlans();
     return 0;
 }
 
@@ -1650,12 +1691,13 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(const CSpe
         ismEbmvCoeffs.clear();
     }
 
-
+    //*
     Int32 retFit = FitAllz(lambdaRange, result, igmMeiksinCoeffs, ismEbmvCoeffs);
     if(retFit!=0)
     {
         Log.LogError("ChisquareLog, FitAllz failed with error %d", retFit);
     }
+    //*/
     //**************** End Fitting at all redshifts ****************//
 
 

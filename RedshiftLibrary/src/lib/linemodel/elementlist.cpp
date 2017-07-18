@@ -168,14 +168,14 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
         }
     }
 
-    //if(opt_fittingmethod=="lmfit"){
+    if(opt_fittingmethod=="lmfit"){
       m_lmfit_noContinuumTemplate = (m_ContinuumComponent == "fromspectrum");
       m_lmfit_bestTemplate = true;
       m_lmfit_fitContinuum = true;
       m_lmfit_fitEmissionVelocity = true;
       m_lmfit_fitAbsorptionVelocity = true;
       Log.LogInfo("Lmfit parameters : tplAlreadyFit %d ; dobestTemplate %d, fitContinuum %d, fitEmissionVelocity %d, fitAbsorptionVelocity %d",m_lmfit_noContinuumTemplate, m_lmfit_bestTemplate, m_lmfit_fitContinuum, m_lmfit_fitEmissionVelocity, m_lmfit_fitAbsorptionVelocity );
-    //}
+    }
     //*/
 
 

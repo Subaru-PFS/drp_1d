@@ -182,7 +182,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
     CTemplatesOrthoStore orthoTplStore = tplOrtho.getOrthogonalTplStore();
     Int32 ctlgIdx = 0; //only one ortho config for now
     std::shared_ptr<CTemplateCatalog> orthoTplCatalog = orthoTplStore.getTplCatalog(ctlgIdx);
-
+    Log.LogInfo( "Linemodel: Templates store prepared.");
 
     Int32 nResults = sortedRedshifts.size();
     auto result = std::shared_ptr<CLineModelResult>( new CLineModelResult() );
@@ -621,6 +621,15 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
 
                     Float64 dzStep = 2e-4;
                     Int32 nDzSteps = (int)((dzSupLim-dzInfLim)/dzStep);
+                    if(nDzSteps==0)
+                    {
+                        nDzSteps=1;
+                        dzInfLim = 0.;
+                        dzSupLim = 0.;
+                    }
+                    Log.LogInfo( "\nLineModel Infos: dzInfLim n=%e", dzInfLim);
+                    Log.LogInfo( "\nLineModel Infos: dzSupLim n=%e", dzSupLim);
+                    Log.LogInfo( "\nLineModel Infos: manualStep n=%d", nDzSteps);
 
                     for(Int32 iLineType = 0; iLineType<2; iLineType++)
                     {

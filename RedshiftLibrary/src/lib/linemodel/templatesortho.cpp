@@ -95,24 +95,24 @@ Int32 CTemplatesOrthogonalization::OrthogonalizeTemplate(const CTemplate& inputT
                             const std::string &opt_rigidity)
 {
 
-    std::string opt_continuumcomponent = "fromspectrum";
-    CSpectrum spectrum = CSpectrum(inputTemplate);
-    CSpectrum spectrumContinuumZero = CSpectrum(inputTemplate);
-    CSpectrumFluxAxis& continuumZeroFluxAxis = spectrumContinuumZero.GetFluxAxis();
-    for(UInt32 i=0; i<continuumZeroFluxAxis.GetSamplesCount(); i++){
-        continuumZeroFluxAxis[i] = 0.0; //put zero as continuum here
-    }
-
-    CTemplateCatalog tplCatalogUnused;
-    TStringList tplCategoryListUnused;
-
-
-
     std::shared_ptr<CTemplate> tplOrtho = std::shared_ptr<CTemplate>( new CTemplate( inputTemplate.GetName().c_str(), inputTemplate.GetCategory() ) );
     *tplOrtho = inputTemplate; //todo: check if this is a true copy of the samples
 
     bool enableModelSubtraction = m_enableOrtho;
     if(enableModelSubtraction){
+
+        std::string opt_continuumcomponent = "fromspectrum";
+        CSpectrum spectrum = CSpectrum(inputTemplate);
+        CSpectrum spectrumContinuumZero = CSpectrum(inputTemplate);
+        CSpectrumFluxAxis& continuumZeroFluxAxis = spectrumContinuumZero.GetFluxAxis();
+        for(UInt32 i=0; i<continuumZeroFluxAxis.GetSamplesCount(); i++){
+            continuumZeroFluxAxis[i] = 0.0; //put zero as continuum here
+        }
+
+        CTemplateCatalog tplCatalogUnused;
+        TStringList tplCategoryListUnused;
+
+
         //Compute linemodel on the template
         CLineModelElementList model( spectrum,
                                      spectrumContinuumZero,
@@ -169,7 +169,6 @@ Int32 CTemplatesOrthogonalization::OrthogonalizeTemplate(const CTemplate& inputT
         //*/
 
     }
-
 
 
     m_tplCatalogOrthogonal.Add(tplOrtho);

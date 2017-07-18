@@ -65,7 +65,7 @@ private:
                                 const std::string &opt_rigidity);
 
 
-    CTemplateCatalog m_tplCatalogOrthogonal; //todo: bound to disappear when the tplorthostore is fully implemented
+    CTemplateCatalog m_tplCatalogOrthogonal = CTemplateCatalog("zero"); //note: no need to estimate continuum free templates here, //note2: todo: bound to disappear when the tplorthostore is fully implemented
     CTemplatesOrthoStore m_tplOrthoStore;
 
 };
