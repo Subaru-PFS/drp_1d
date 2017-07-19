@@ -59,7 +59,7 @@ const std::string COperatorDTreeBSolve::GetDescription()
     desc.append("\tparam: linemodel.lineforcefilter = {""no"", ""S""}\n");
     desc.append("\tparam: linemodel.fittingmethod = {""hybrid"", ""individual""}\n");
     desc.append("\tparam: linemodel.continuumcomponent = {""fromspectrum"", ""nocontinuum"", ""zero""}\n");
-    desc.append("\tparam: linemodel.linewidthtype = {""instrumentdriven"", ""combined"",  ""nispsim2016"", ""fixed""}\n");
+    desc.append("\tparam: linemodel.linewidthtype = {""instrumentdriven"", ""velocitydriven"",  ""combined"",  ""nispvsspsf201707"", ""fixed""}\n");
     desc.append("\tparam: linemodel.instrumentresolution = <float value>\n");
     desc.append("\tparam: linemodel.velocityemission = <float value>\n");
     desc.append("\tparam: linemodel.velocityabsorption = <float value>\n");

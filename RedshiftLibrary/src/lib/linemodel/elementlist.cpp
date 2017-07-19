@@ -3966,8 +3966,8 @@ Int32 CLineModelElementList::improveBalmerFit()
         std::string tagE = linetagsE[itag];
         std::string tagA = linetagsA[itag];
 
-        UInt32 ilineE = FindElementIndex( tagE, CRay::nType_Emission );
-        UInt32 ilineA = FindElementIndex( tagA, CRay::nType_Absorption );
+        Int32 ilineE = FindElementIndex( tagE, CRay::nType_Emission );
+        Int32 ilineA = FindElementIndex( tagA, CRay::nType_Absorption );
         // Were the lines indexes found ?
         if(ilineE<0 || ilineA<0)
         {
@@ -3978,8 +3978,8 @@ Int32 CLineModelElementList::improveBalmerFit()
         {
             continue;
         }
-        UInt32 subeIdxE = 0;
-        UInt32 subeIdxA = 0;
+        Int32 subeIdxE = 0;
+        Int32 subeIdxA = 0;
 
 
         //try if the width is significantly different: abs > em

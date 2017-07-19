@@ -107,6 +107,7 @@ protected:
     Float64 m_Resolution;
     Float64 m_VelocityEmission;
     Float64 m_VelocityAbsorption;
+    Float64 m_SourceSizeDispersion;  //source size in the dispersion direction (sigma arcsec)
     Float64 m_instrumentResolutionEmpiricalFactor;
 
     Float64 m_OutsideLambdaRangeOverlapThreshold;

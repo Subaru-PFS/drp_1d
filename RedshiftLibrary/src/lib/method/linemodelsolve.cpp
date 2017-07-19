@@ -51,7 +51,7 @@ const std::string CLineModelSolve::GetDescription()
     desc.append("\tparam: linemodel.fittingmethod = {""hybrid"", ""individual""}\n");
     desc.append("\tparam: linemodel.continuumcomponent = {""fromspectrum"", ""tplfit"", ""nocontinuum"", ""zero""}\n");
     desc.append("\tparam: linemodel.rigidity = {""rules"", ""tplcorr"", ""tplshape""}\n");
-    desc.append("\tparam: linemodel.linewidthtype = {""instrumentdriven"", ""velocitydriven"", ""combined"", ""nispsim2016"", ""fixed""}\n");
+    desc.append("\tparam: linemodel.linewidthtype = {""instrumentdriven"", ""velocitydriven"",  ""combined"",  ""nispvsspsf201707"", ""fixed""}\n");
     desc.append("\tparam: linemodel.instrumentresolution = <float value>\n");
     desc.append("\tparam: linemodel.velocityemission = <float value>\n");
     desc.append("\tparam: linemodel.velocityabsorption = <float value>\n");
@@ -116,6 +116,11 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
     }else if(m_opt_lineWidthType=="instrumentdriven"){
         Log.LogInfo( "    -instrumentresolution: %.2f", m_opt_resolution);
     }else if(m_opt_lineWidthType=="velocitydriven"){
+        Log.LogInfo( "    -velocity emission: %.2f", m_opt_velocity_emission);
+        Log.LogInfo( "    -velocity absorption: %.2f", m_opt_velocity_absorption);
+        Log.LogInfo( "    -velocity fit: %s", m_opt_velocityfit.c_str());
+    }else if(m_opt_lineWidthType=="nispvsspsf201707"){
+        Log.LogInfo( "    -source size: hardcoded");
         Log.LogInfo( "    -velocity emission: %.2f", m_opt_velocity_emission);
         Log.LogInfo( "    -velocity absorption: %.2f", m_opt_velocity_absorption);
         Log.LogInfo( "    -velocity fit: %s", m_opt_velocityfit.c_str());
@@ -373,12 +378,13 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
         Log.LogInfo( "Linemodel - hacking zref enabled");
         Float64 zref = 0.0;
         namespace fs = boost::filesystem;
-        fs::path refFilePath("/home/aschmitt/amazed_cluster/datasets/sdss/sdss_201707/SDSS_spectra_bg10k/reference_SDSS_spectra_bg10k.txt");
-        Int32 substring_start = 3;
-        Int32 substring_end = 15;
+        //fs::path refFilePath("/home/aschmitt/amazed_cluster/datasets/sdss/sdss_201707/SDSS_spectra_bg10k/reference_SDSS_spectra_bg10k.txt");
+	fs::path refFilePath("/sps/euclid/Users/schmitt/amazed_cluster/datasets/sdss/sdss_201707/reference_SDSS_spectra_bg10k.txt");
+        Int32 substring_start = 5;
+        Int32 substring_n = 15;
         if ( fs::exists(refFilePath) )
         {
-            std::string spcSubStringId = spc.GetName().substr(substring_start, substring_end);
+            std::string spcSubStringId = spc.GetName().substr(substring_start, substring_n);
             Log.LogInfo( "Linemodel - hack - using substring %s", spcSubStringId.c_str());
             Int32 colId = 2;
             getValueFromRefFile( refFilePath.c_str(), spcSubStringId, colId, zref);
