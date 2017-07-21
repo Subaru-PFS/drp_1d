@@ -374,7 +374,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
 
     //Set model parameters to FIRST-PASS
     model.setPassMode(1);
-    Log.LogInfo( "Linemodel: first-pass mode");
+    Log.LogInfo( "\nLinemodel: first-pass mode");
 
     //WARNING: HACK, first pass with continuum from spectrum.
     //model.SetContinuumComponent("fromspectrum");
@@ -485,7 +485,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
 
     //Set model parameters to SECOND-PASS
     model.setPassMode(2);
-    Log.LogInfo( "Linemodel: second-pass mode");
+    Log.LogInfo( "\nLinemodel: second-pass mode");
 
     std::vector<Float64> extrema_velocityEL;
     std::vector<Float64> extrema_velocityAL;
@@ -627,9 +627,9 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
                         dzInfLim = 0.;
                         dzSupLim = 0.;
                     }
-                    Log.LogInfo( "\nLineModel Infos: dzInfLim n=%e", dzInfLim);
-                    Log.LogInfo( "\nLineModel Infos: dzSupLim n=%e", dzSupLim);
-                    Log.LogInfo( "\nLineModel Infos: manualStep n=%d", nDzSteps);
+                    Log.LogInfo( "LineModel Infos: dzInfLim n=%e", dzInfLim);
+                    Log.LogInfo( "LineModel Infos: dzSupLim n=%e", dzSupLim);
+                    Log.LogInfo( "LineModel Infos: manualStep n=%d", nDzSteps);
 
                     for(Int32 iLineType = 0; iLineType<2; iLineType++)
                     {
@@ -638,7 +638,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
                             Log.LogInfo( "\nLineModel Infos: manualStep velocity fit ABSORPTION, for z = %.4f", result->Redshifts[idx]);
 
                         }else{
-                            Log.LogInfo( "\nLineModel Infos: manualStep velocity fit EMISSION, for z = %.4f", result->Redshifts[idx]);
+                            Log.LogInfo( "LineModel Infos: manualStep velocity fit EMISSION, for z = %.4f", result->Redshifts[idx]);
 
                         }
 
