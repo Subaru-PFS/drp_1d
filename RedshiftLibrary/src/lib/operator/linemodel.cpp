@@ -992,7 +992,6 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
         Log.LogInfo("Linemodel: Pdfz computation: StrongLinePresence prior disabled");
         zPrior->valProbaLog = pdfz.GetConstantLogZPrior(result->Redshifts.size());
     }
-    dataStore.StoreGlobalResult( "zPDF/logprior.logP_Z_data", zPrior);
 
     Int32 retPdfz = pdfz.Compute(result->ChiSquare, result->Redshifts, cstLog, zPrior->valProbaLog, logProba, logEvidence);
     if(retPdfz!=0)
@@ -1008,6 +1007,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
             postmargZResult->valProbaLog[k] = logProba[k];
         }
         dataStore.StoreGlobalResult( "zPDF/logposterior.logMargP_Z_data", postmargZResult); //need to store this pdf with this exact same name so that zqual can load it. see zqual.cpp/ExtractFeaturesPDF
+        dataStore.StoreGlobalResult( "zPDF/logprior.logP_Z_data", zPrior);
     }
 
     return result;

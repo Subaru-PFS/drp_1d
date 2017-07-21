@@ -695,11 +695,13 @@ std::shared_ptr<COperatorResult> COperatorChiSquare2::Compute(const CSpectrum& s
             additional_spcMask = additional_spcMasks[sortedIndexes[i]];
         }
 
+        Float64 redshift = result->Redshifts[i];
+
         BasicFit( spectrum,
                   tpl,
                   precomputedFineGridTplFlux,
                   lambdaRange,
-                  result->Redshifts[i],
+                  redshift,
                   overlapThreshold,
                   result->Overlap[i],
                   result->ChiSquare[i],
