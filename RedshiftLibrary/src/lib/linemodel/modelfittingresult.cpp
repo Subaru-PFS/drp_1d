@@ -22,7 +22,7 @@ CModelFittingResult::CModelFittingResult()
 /**
  * \brief Attributes values to member variables according to arguments.
  **/
-CModelFittingResult::CModelFittingResult( CLineModelResult::SLineModelSolution _lineModelSolution,
+CModelFittingResult::CModelFittingResult( CLineModelSolution _lineModelSolution,
                                           Float64 _redshift,
                                           Float64 _merit,
                                           CRayCatalog::TRayVector _restRayList,

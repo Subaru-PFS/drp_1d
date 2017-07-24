@@ -113,16 +113,16 @@ Bool CLineModelSolveResult::GetBestRedshift( const CDataStore& store, Float64& r
     if( !results.expired() )
     {
         auto lineModelResult = std::dynamic_pointer_cast<const CLineModelResult>( results.lock() );
-        for( Int32 i=0; i<lineModelResult->Extrema.size(); i++ )
+        for( Int32 i=0; i<lineModelResult->ExtremaResult.Extrema.size(); i++ )
         {
             Float64 merit = lineModelResult->GetExtremaMerit(i);
             if( merit < tmpMerit )
             {
                 tmpMerit = merit;
                 //tmpRedshift = lineModelResult->Extrema[i];
-                tmpRedshift = lineModelResult->ExtremaLastPass[i];
+                tmpRedshift = lineModelResult->ExtremaResult.ExtremaLastPass[i];
                 //tmpRedshift = lineModelResult->lmfitPass[i];
-                tmpSigma = lineModelResult->DeltaZ[i];
+                tmpSigma = lineModelResult->ExtremaResult.DeltaZ[i];
             }
         }
     }
@@ -197,7 +197,7 @@ Bool CLineModelSolveResult::GetBestRedshiftFromPdf( const CDataStore& store, Flo
             return false;
         }
 
-        for( Int32 i=0; i<lineModelResult->Extrema.size(); i++ )
+        for( Int32 i=0; i<lineModelResult->ExtremaResult.Extrema.size(); i++ )
         {
             UInt32 solIdx = lineModelResult->GetExtremaIndex(i);
             if(solIdx<0 || solIdx>=logzpdf1d->valProbaLog.size())
@@ -215,8 +215,8 @@ Bool CLineModelSolveResult::GetBestRedshiftFromPdf( const CDataStore& store, Flo
                 tmpProbaLog = probaLog;
                 tmpMerit = merit;
                 //tmpRedshift = lineModelResult->Extrema[i];
-                tmpRedshift = lineModelResult->ExtremaLastPass[i];
-                tmpSigma = lineModelResult->DeltaZ[i];
+                tmpRedshift = lineModelResult->ExtremaResult.ExtremaLastPass[i];
+                tmpSigma = lineModelResult->ExtremaResult.DeltaZ[i];
             }
         }
     }
@@ -246,12 +246,12 @@ Bool CLineModelSolveResult::GetBestRedshiftLogArea( const CDataStore& store, Flo
     if(!results.expired())
       {
         auto lineModelResult = std::dynamic_pointer_cast<const CLineModelResult>( results.lock() );
-        for( Int32 i=0; i<lineModelResult->LogArea.size(); i++ )
+        for( Int32 i=0; i<lineModelResult->ExtremaResult.LogArea.size(); i++ )
       {
-            if( lineModelResult->LogArea[i] > tmpMerit )
+            if( lineModelResult->ExtremaResult.LogArea[i] > tmpMerit )
             {
-                tmpMerit = lineModelResult->LogArea[i];
-                tmpRedshift = lineModelResult->LogAreaCorrectedExtrema[i];
+                tmpMerit = lineModelResult->ExtremaResult.LogArea[i];
+                tmpRedshift = lineModelResult->ExtremaResult.LogAreaCorrectedExtrema[i];
             }
       }
       }
@@ -275,14 +275,14 @@ Bool CLineModelSolveResult::GetBestRedshiftWithStrongELSnrPrior( const CDataStor
     if(!results.expired())
     {
         auto lineModelResult = std::dynamic_pointer_cast<const CLineModelResult>( results.lock() );
-        for( Int32 i=0; i<lineModelResult->Extrema.size(); i++ )
+        for( Int32 i=0; i<lineModelResult->ExtremaResult.Extrema.size(); i++ )
         {
             Float64 coeff =10.0;
-            Float64 correctedMerit = lineModelResult->GetExtremaMerit(i)-coeff*lineModelResult->StrongELSNR[i];
+            Float64 correctedMerit = lineModelResult->GetExtremaMerit(i)-coeff*lineModelResult->ExtremaResult.StrongELSNR[i];
             if( correctedMerit < tmpMerit )
             {
                 tmpMerit = correctedMerit;
-                tmpRedshift = lineModelResult->Extrema[i];
+                tmpRedshift = lineModelResult->ExtremaResult.Extrema[i];
             }
         }
     }

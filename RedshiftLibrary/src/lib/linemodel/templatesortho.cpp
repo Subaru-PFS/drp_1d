@@ -133,7 +133,7 @@ Int32 CTemplatesOrthogonalization::OrthogonalizeTemplate(const CTemplate& inputT
         TLambdaRange lambdaRange = inputTemplate.GetLambdaRange();
         Float64 contreest_iterations = 0;
         Bool enableLogging=true;
-        CLineModelResult::SLineModelSolution modelSolution;
+        CLineModelSolution modelSolution;
         Float64 fit = model.fit( redshift, lambdaRange, modelSolution, contreest_iterations, enableLogging );
 
         //get mtm and dtm cumulative vector and store it

@@ -184,7 +184,7 @@ Bool COperatorDTreeCSolve::Solve(CDataStore &dataStore, const CSpectrum &spc, co
     //*
     //_///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // compute chisquare
-    if( result->Extrema.size() == 0 )
+    if( result->ExtremaResult.Extrema.size() == 0 )
     {
         return false;
     }
@@ -244,9 +244,9 @@ Bool COperatorDTreeCSolve::Solve(CDataStore &dataStore, const CSpectrum &spc, co
 
     //*
     //Compute the tpl fitting only on the candidates/extrema
-    for( Int32 i=0; i<result->Extrema.size(); i++ )
+    for( Int32 i=0; i<result->ExtremaResult.Extrema.size(); i++ )
     {
-        redshiftsChi2Continuum.push_back(result->Extrema[i]);
+        redshiftsChi2Continuum.push_back(result->ExtremaResult.Extrema[i]);
     }
     std::sort(redshiftsChi2Continuum.begin(), redshiftsChi2Continuum.end());
     //*/
@@ -289,9 +289,9 @@ Bool COperatorDTreeCSolve::GetCombinedRedshift(CDataStore& store, std::string sc
     //*
     //Create the combined grid: extrema only
     TFloat64List zcomb;
-    for( Int32 i=0; i<results->Extrema.size(); i++ )
+    for( Int32 i=0; i<results->ExtremaResult.Extrema.size(); i++ )
     {
-        zcomb.push_back(results->Extrema[i]);
+        zcomb.push_back(results->ExtremaResult.Extrema[i]);
     }
     std::sort(zcomb.begin(), zcomb.end());
     //*/
@@ -310,9 +310,9 @@ Bool COperatorDTreeCSolve::GetCombinedRedshift(CDataStore& store, std::string sc
     std::vector<Int32> idxLMResultsExtrema;
     for( Int32 i=0; i<zcomb.size(); i++ )
     {
-        for( Int32 iExtrema=0; iExtrema<results->Extrema.size(); iExtrema++ )
+        for( Int32 iExtrema=0; iExtrema<results->ExtremaResult.Extrema.size(); iExtrema++ )
         {
-            if(results->Extrema[iExtrema] == zcomb[i]){
+            if(results->ExtremaResult.Extrema[iExtrema] == zcomb[i]){
                 idxLMResultsExtrema.push_back(iExtrema);
                 break;
             }
@@ -327,9 +327,9 @@ Bool COperatorDTreeCSolve::GetCombinedRedshift(CDataStore& store, std::string sc
 
     for( Int32 i=0; i<zcomb.size(); i++ )
     {
-        for( Int32 iExtrema=0; iExtrema<results->Extrema.size(); iExtrema++ )
+        for( Int32 iExtrema=0; iExtrema<results->ExtremaResult.Extrema.size(); iExtrema++ )
         {
-            chi2lm.push_back(results->ExtremaMerit[idxLMResultsExtrema[iExtrema]]);
+            chi2lm.push_back(results->ExtremaResult.ExtremaMerit[idxLMResultsExtrema[iExtrema]]);
         }
 //        for( Int32 iall=0; iall<results->Redshifts.size(); iall++ )
 //        {
@@ -377,9 +377,9 @@ Bool COperatorDTreeCSolve::GetCombinedRedshift(CDataStore& store, std::string sc
     {
         //populate the tpl names
         std::vector<std::string> givenTplNames;
-        for( Int32 iExtrema=0; iExtrema<results->Extrema.size(); iExtrema++ )
+        for( Int32 iExtrema=0; iExtrema<results->ExtremaResult.Extrema.size(); iExtrema++ )
         {
-            givenTplNames.push_back(results->FittedTplcorrTplName[idxLMResultsExtrema[iExtrema]]);
+            givenTplNames.push_back(results->ExtremaResult.FittedTplshapeName[idxLMResultsExtrema[iExtrema]]);
         }
         chi2continuum_calcGrid = GetChi2ListForGivenTemplateName( store, scopeStr, zcomb, givenTplNames);
 
@@ -496,7 +496,7 @@ Bool COperatorDTreeCSolve::GetCombinedRedshift(CDataStore& store, std::string sc
     for( Int32 i=0; i<zcomb.size(); i++ )
     {
         Float64 coeff =10.0;
-        Float64 post = -coeff*results->StrongELSNR[idxLMResultsExtrema[i]];
+        Float64 post = -coeff*results->ExtremaResult.StrongELSNR[idxLMResultsExtrema[i]];
         post = 0.0; //deactivate this prior
 
         resultPriorSELSP->ChiSquare[i] = post;
@@ -584,15 +584,15 @@ Bool COperatorDTreeCSolve::GetCombinedRedshift(CDataStore& store, std::string sc
         Float64 offset = 0.0;
 
 
-        for(Int32 kci=0; kci<results->ContinuumIndexes[idxLMResultsExtrema[i]].size();kci++)
+        for(Int32 kci=0; kci<results->ExtremaResult.ContinuumIndexes[idxLMResultsExtrema[i]].size();kci++)
         {
             //activate selected indexes
             if(kci!=3 && kci!=1)
             {
                 continue;
             }
-            Float64 Color = results->ContinuumIndexes[idxLMResultsExtrema[i]][kci].Color;
-            Float64 Break = results->ContinuumIndexes[idxLMResultsExtrema[i]][kci].Break;
+            Float64 Color = results->ExtremaResult.ContinuumIndexes[idxLMResultsExtrema[i]][kci].Color;
+            Float64 Break = results->ExtremaResult.ContinuumIndexes[idxLMResultsExtrema[i]][kci].Break;
             Float64 heatmap_val = contIndexesPriorData.GetHeatmapVal( kci, Color, Break);
             if(Color>Break && kci==3 || Color<=Break && kci==1){
                 heatmap_val = 0.0;

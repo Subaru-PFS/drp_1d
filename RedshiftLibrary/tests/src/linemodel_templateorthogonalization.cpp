@@ -118,7 +118,7 @@ Float64 processOrtho(std::string spectrumPath, std::string noisePath, std::strin
                                 opt_rigidity);
 
     TFloat64Range lambdaRange = TFloat64Range( 1000.0, 20000.0 );
-    CLineModelResult::SLineModelSolution modelSolution;
+    CLineModelSolution modelSolution;
     Float64 merit = model.fit(z, lambdaRange, modelSolution);
     BOOST_TEST_MESSAGE( "enableOrtho=" << enableOrtho << ", Merit = " << merit );
 
@@ -136,7 +136,7 @@ Float64 processOrtho(std::string spectrumPath, std::string noisePath, std::strin
     fclose( f );
     //*/
 
-    CLineModelResult::SLineModelSolution solution = model.GetModelSolution();
+    CLineModelSolution solution = model.GetModelSolution();
     BOOST_TEST_MESSAGE( "linemodel solution amplitude=" << solution.Amplitudes[0] );
 
     return cAmp;

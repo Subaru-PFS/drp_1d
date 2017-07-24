@@ -200,7 +200,7 @@ Bool COperatorDTreeBSolve::Solve(CDataStore &dataStore, const CSpectrum &spc, co
     //*
     //_///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // compute chisquares
-    if( result->Extrema.size() == 0 )
+    if( result->ExtremaResult.Extrema.size() == 0 )
     {
         return false;
     }
@@ -226,9 +226,9 @@ Bool COperatorDTreeBSolve::Solve(CDataStore &dataStore, const CSpectrum &spc, co
     if(opt_redshiftsupport == "full"){
         redshiftsChi2 = redshifts;
     }else if(opt_redshiftsupport == "extremaextended"){
-        redshiftsChi2= result->ExtremaExtendedRedshifts;
+        redshiftsChi2= result->ExtremaResult.ExtremaExtendedRedshifts;
     }else{
-        redshiftsChi2= result->Extrema;
+        redshiftsChi2= result->ExtremaResult.Extrema;
     }
 
     std::string spcComponent = "nocontinuum";

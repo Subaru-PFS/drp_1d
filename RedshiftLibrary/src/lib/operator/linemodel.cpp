@@ -453,8 +453,6 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
     //*
     // extend z around the extrema
     Float64 extensionradius = 0.005;
-    //TPointList extremumListExtended;
-    //TBoolList isLocalExtrema;
     for( Int32 i=0; i<extremumList.size(); i++ )
     {
         Log.LogInfo("Linemodel: Raw extr #%d, z_e.X=%f, m_e.Y=%e", i, extremumList[i].X, extremumList[i].Y);
@@ -465,21 +463,11 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
         for (Int32 i=0;i<result->Redshifts.size();i++)
         {
             if(result->Redshifts[i] >= left_border && result->Redshifts[i] <= right_border){
-                result->ExtremaExtendedRedshifts.push_back(result->Redshifts[i]);
-                //SPoint pt;
-                //pt.X = result->Redshifts[i];
-                //pt.Y = result->ChiSquare[i];
-                //extremumListExtended.push_back(pt);
-                //Bool isExtrema = false;
-                //if( x == pt.X){
-                //    isExtrema = true;
-                //}
-                //isLocalExtrema.push_back(isExtrema);
+                result->ExtremaResult.ExtremaExtendedRedshifts.push_back(result->Redshifts[i]);
             }
         }
     }
     //*/
-    //TPointList extremumListExtended = extremumList;
    //todo: remove duplicate redshifts from the extended extrema list
 
 
@@ -576,7 +564,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
                     savedBaselineResult_lmfit.push_back(baselineResult_lmfit);
 
                     z = result->LineModelSolutions[idx].Redshift;
-                    result->lmfitPass.push_back(z);
+                    result->ExtremaResult.lmfitPass.push_back(z);
                     //result->Redshifts[idx] = z;
 
                     model.SetFittingMethod(opt_fittingmethod);
@@ -698,8 +686,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
             extrema_velocityEL[i]=model.GetVelocityEmission();
             extrema_velocityAL[i]=model.GetVelocityAbsorption();
 
-            //finally compute the redshifts on the extended ExtremaExtendedRedshifts values
-
+            //finally compute the redshifts on the z-range around the extremum
             Float64 left_border = max(redshiftsRange.GetBegin(), z-extensionradius);
             Float64 right_border=min(redshiftsRange.GetEnd(), z+extensionradius);
             //model.SetFittingMethod("nofit");
@@ -771,9 +758,9 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
         TFloat64List OrderedLMZ;
         for(Int32 ie2=0; ie2<indiceList2.size(); ie2++)
         {
-            OrderedLMZ.push_back(result->lmfitPass[indiceList2[ie2]]);
+            OrderedLMZ.push_back(result->ExtremaResult.lmfitPass[indiceList2[ie2]]);
         }
-        result->lmfitPass = OrderedLMZ;
+        result->ExtremaResult.lmfitPass = OrderedLMZ;
     }
     if( extremumListOrdered.size() == 0 )
     {
@@ -782,11 +769,11 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
 
     Log.LogInfo("Line Model, Store extrema results");
     // store extrema results
-    result->ResizeExtremaResults(extremumCount);
+    result->ExtremaResult.Resize(extremumCount);
 
-    Int32 start = spectrum.GetSpectralAxis().GetIndexAtWaveLength(lambdaRange.GetBegin());
-    Int32 end = spectrum.GetSpectralAxis().GetIndexAtWaveLength(lambdaRange.GetEnd());
-    Int32 nsamples = end - start + 1;
+    //Int32 start = spectrum.GetSpectralAxis().GetIndexAtWaveLength(lambdaRange.GetBegin());
+    //Int32 end = spectrum.GetSpectralAxis().GetIndexAtWaveLength(lambdaRange.GetEnd());
+    //Int32 nsamples = end - start + 1;
     Int32 savedModels = 0;
     m_savedModelSpectrumResults.clear();
     m_savedModelFittingResults.clear();
@@ -851,7 +838,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
         //save the model result
         static Int32 maxModelSave = std::min(m_maxModelSaveCount, extremumCount);
         Int32 saveNLinemodelContinua = 1;
-        if( savedModels<maxModelSave /*&& isLocalExtrema[i]*/)
+        if( savedModels<maxModelSave )
         {
           if(modelInfoSave){
             Log.LogInfo("Save model store during lm_fit");
@@ -903,10 +890,10 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
         }
 
 
-        result->Extrema[i] = z;
-        result->ExtremaMerit[i] = m;
+        result->ExtremaResult.Extrema[i] = z;
+        result->ExtremaResult.ExtremaMerit[i] = m;
 
-        result->ExtremaLastPass[i] = z; //refined extremum is initialized here.
+        result->ExtremaResult.ExtremaLastPass[i] = z; //refined extremum is initialized here.
 
 
         //computing errz (or deltaz, dz...): should probably be computed in linemodelresult.cpp instead ?
@@ -923,21 +910,19 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
                 Log.LogError("Linemodel: Deltaz computation failed");
             }
         }
-        result->DeltaZ[i] = dz;
+        result->ExtremaResult.DeltaZ[i] = dz;
 
         //store the model norm
-        result->mTransposeM[i] = model.EstimateMTransposeM(lambdaRange);
-
-        //result->IsLocalExtrema[i]=isLocalExtrema[i];
+        result->ExtremaResult.mTransposeM[i] = model.EstimateMTransposeM(lambdaRange);
 
         static Float64 cutThres = 3.0;
         Int32 nValidLines = result->GetNLinesOverCutThreshold(i, cutThres, cutThres);
-        result->Posterior[i] = nValidLines;//m/Float64(1+nValidLines);
+        result->ExtremaResult.Posterior[i] = nValidLines;//m/Float64(1+nValidLines);
         Float64 cumulStrongELSNR = model.getCumulSNRStrongEL(); //getStrongerMultipleELAmpCoeff();
-        result->StrongELSNR[i] = cumulStrongELSNR;
+        result->ExtremaResult.StrongELSNR[i] = cumulStrongELSNR;
 
-        result->LogArea[i] = -DBL_MAX;
-        result->LogAreaCorrectedExtrema[i] = -1.0;
+        result->ExtremaResult.LogArea[i] = -DBL_MAX;
+        result->ExtremaResult.LogAreaCorrectedExtrema[i] = -1.0;
 
 
         Int32 nddl = model.GetNElements(); //get the total number of elements in the model
@@ -945,24 +930,24 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
 
         //result->bic[i] = m + nddl*log(nsamples); //BIC
         Float64 aic = m + 2*nddl; //AIC
-        result->bic[i] = aic;
+        result->ExtremaResult.bic[i] = aic;
         //result->bic[i] = aic + (2*nddl*(nddl+1) )/(nsamples-nddl-1);  //AICc, better when nsamples small
 
         //compute continuum indexes
         CContinuumIndexes continuumIndexes;
-        result->ContinuumIndexes[i] = continuumIndexes.getIndexes( spectrum, z );
+        result->ExtremaResult.ContinuumIndexes[i] = continuumIndexes.getIndexes( spectrum, z );
 
         //save the outsideLinesMask
-        result->OutsideLinesMask[i] = model.getOutsideLinesMask();
+        result->ExtremaResult.OutsideLinesMask[i] = model.getOutsideLinesMask();
 
         //save the continuum tpl fitting results
-        result->FittedTplName[i] = model.getFitContinuum_tplName();
-        result->FittedTplAmplitude[i] = model.getFitContinuum_tplAmplitude();
-        result->FittedTplDustCoeff[i] = model.getFitContinuum_tplIsmDustCoeff();
-        result->FittedTplMeiksinIdx[i] = model.getFitContinuum_tplIgmMeiksinIdx();
+        result->ExtremaResult.FittedTplName[i] = model.getFitContinuum_tplName();
+        result->ExtremaResult.FittedTplAmplitude[i] = model.getFitContinuum_tplAmplitude();
+        result->ExtremaResult.FittedTplDustCoeff[i] = model.getFitContinuum_tplIsmDustCoeff();
+        result->ExtremaResult.FittedTplMeiksinIdx[i] = model.getFitContinuum_tplIgmMeiksinIdx();
 
         //save the tplcorr results
-        result->FittedTplcorrTplName[i] = model.getTplCorr_bestTplName();
+        result->ExtremaResult.FittedTplshapeName[i] = model.getTplCorr_bestTplName();
     }
 
     //ComputeArea2(*result);
@@ -1083,16 +1068,16 @@ std::shared_ptr<COperatorResult> COperatorLineModel::computeWithUltimPass(CDataS
        Float64 bestRedshift=-1;
        Float64 bestMerit=DBL_MAX;
        Int32 bestIndex=-1;
-       for(Int32 k=0; k<result->Extrema.size(); k++)
+       for(Int32 k=0; k<result->ExtremaResult.Extrema.size(); k++)
        {
            Log.LogInfo("Linemodel - Last Pass: k = %d", k);
-           Log.LogInfo("Linemodel - Last Pass: result->Extrema[k] = %.5f", result->Extrema[k]);
-           Log.LogInfo("Linemodel - Last Pass: result->ExtremaMerit[k] = %.5f", result->ExtremaMerit[k]);
+           Log.LogInfo("Linemodel - Last Pass: result->Extrema[k] = %.5f", result->ExtremaResult.Extrema[k]);
+           Log.LogInfo("Linemodel - Last Pass: result->ExtremaMerit[k] = %.5f", result->ExtremaResult.ExtremaMerit[k]);
 
-            if(bestMerit>result->ExtremaMerit[k])
+            if(bestMerit>result->ExtremaResult.ExtremaMerit[k])
             {
-                bestMerit = result->ExtremaMerit[k];
-                bestRedshift = result->Extrema[k];
+                bestMerit = result->ExtremaResult.ExtremaMerit[k];
+                bestRedshift = result->ExtremaResult.Extrema[k];
                 bestIndex = k;
             }
        }
@@ -1143,10 +1128,10 @@ std::shared_ptr<COperatorResult> COperatorLineModel::computeWithUltimPass(CDataS
                                opt_velocityfitmax));
 
         m_maxModelSaveCount = maxSaveBackup;
-        Float64 refinedExtremum = lastPassResult->Extrema[0];
+        Float64 refinedExtremum = lastPassResult->ExtremaResult.Extrema[0];
         Log.LogInfo("Linemodel - Last Pass: found refined z=%.5f", refinedExtremum);
 
-        result->ExtremaLastPass[bestIndex] = refinedExtremum;
+        result->ExtremaResult.ExtremaLastPass[bestIndex] = refinedExtremum;
     }else{
         Log.LogInfo("Linemodel - Last Pass: failed to do linemodel, rigidity=%s", opt_rigidity.c_str());
     }
@@ -1246,7 +1231,7 @@ void COperatorLineModel::ComputeArea1(CLineModelResult& results)
     Float64 winsize = 0.0025;
     Float64 inclusionThresRatio = 0.25;
     Int32 iz0=0;
-    for( Int32 i=0; i<results.Extrema.size(); i++ )
+    for( Int32 i=0; i<results.ExtremaResult.Extrema.size(); i++ )
     {
         //find iz, izmin and izmax
         Int32 izmin= -1;
@@ -1254,16 +1239,16 @@ void COperatorLineModel::ComputeArea1(CLineModelResult& results)
         Int32 izmax= -1;
         for( Int32 i2=0; i2<results.Redshifts.size(); i2++ )
         {
-            if(iz == -1 && (results.Extrema[i]) <= results.Redshifts[i2]){
+            if(iz == -1 && (results.ExtremaResult.Extrema[i]) <= results.Redshifts[i2]){
                 iz = i2;
                 if(i==0){
                     iz0=iz;
                 }
             }
-            if(izmin == -1 && (results.Extrema[i] - winsize/2.0) <= results.Redshifts[i2]){
+            if(izmin == -1 && (results.ExtremaResult.Extrema[i] - winsize/2.0) <= results.Redshifts[i2]){
                 izmin = i2;
             }
-            if(izmax == -1 && (results.Extrema[i] + winsize/2.0) <= results.Redshifts[i2]){
+            if(izmax == -1 && (results.ExtremaResult.Extrema[i] + winsize/2.0) <= results.Redshifts[i2]){
                 izmax = i2;
                 break;
             }
@@ -1290,7 +1275,7 @@ void COperatorLineModel::ComputeArea1(CLineModelResult& results)
         Float64 gaussWidthErr;
         fitter.GetResultsError( gaussAmpErr, gaussPosErr, gaussWidthErr );
         */
-        Float64 gaussWidth = FitBayesWidth( spcSpectralAxis, spcFluxAxis, results.Extrema[i], izmin, izmax);
+        Float64 gaussWidth = FitBayesWidth( spcSpectralAxis, spcFluxAxis, results.ExtremaResult.Extrema[i], izmin, izmax);
         Float64 gaussAmp = spcFluxAxis[iz];
 
         Float64 intsize = 0.001;
@@ -1298,12 +1283,12 @@ void COperatorLineModel::ComputeArea1(CLineModelResult& results)
         for( Int32 i2=izmin; i2<izmax; i2++ )
         {
             Float64 x = spcSpectralAxis[i2];
-            Float64 Yi = gaussAmp * exp (-1.*(x-results.Extrema[i])*(x-results.Extrema[i])/(2*gaussWidth*gaussWidth));
+            Float64 Yi = gaussAmp * exp (-1.*(x-results.ExtremaResult.Extrema[i])*(x-results.ExtremaResult.Extrema[i])/(2*gaussWidth*gaussWidth));
             area += Yi;
         }
 
         //Float64 area = gaussAmp*gaussWidth*sqrt(2.0*3.141592654);
-        results.LogArea[i] = area;
+        results.ExtremaResult.LogArea[i] = area;
     }
 }
 
@@ -1323,7 +1308,7 @@ void COperatorLineModel::ComputeArea2(CLineModelResult& results)
     Float64 winsize = 0.001;
     Float64 inclusionThresRatio = 0.01;
     Int32 iz0=0;
-    for( Int32 indz=0; indz<results.Extrema.size(); indz++ )
+    for( Int32 indz=0; indz<results.ExtremaResult.Extrema.size(); indz++ )
     {
         //find iz, izmin and izmax
         Int32 izmin= -1;
@@ -1331,16 +1316,16 @@ void COperatorLineModel::ComputeArea2(CLineModelResult& results)
         Int32 izmax= -1;
         for( Int32 i2=0; i2<results.Redshifts.size(); i2++ )
         {
-            if(iz == -1 && (results.Extrema[indz]) <= results.Redshifts[i2]){
+            if(iz == -1 && (results.ExtremaResult.Extrema[indz]) <= results.Redshifts[i2]){
                 iz = i2;
                 if(indz==0){
                     iz0=iz;
                 }
             }
-            if(izmin == -1 && (results.Extrema[indz] - winsize/2.0) <= results.Redshifts[i2]){
+            if(izmin == -1 && (results.ExtremaResult.Extrema[indz] - winsize/2.0) <= results.Redshifts[i2]){
                 izmin = i2;
             }
-            if(izmax == -1 && (results.Extrema[indz] + winsize/2.0) <= results.Redshifts[i2]){
+            if(izmax == -1 && (results.ExtremaResult.Extrema[indz] + winsize/2.0) <= results.Redshifts[i2]){
                 izmax = i2;
                 break;
             }
@@ -1369,7 +1354,7 @@ void COperatorLineModel::ComputeArea2(CLineModelResult& results)
         c = gsl_vector_alloc (3);
         cov = gsl_matrix_alloc (3, 3);
 
-        double x0 = results.Extrema[indz];
+        double x0 = results.ExtremaResult.Extrema[indz];
         for (i = 0; i < n; i++)
         {
             xi = results.Redshifts[i+izmin];
@@ -1399,7 +1384,7 @@ void COperatorLineModel::ComputeArea2(CLineModelResult& results)
         Float64 logK = ( -(a - b2sur4c)/2.0 );
         Float64 logarea = log(sigma) + logK + log(2.0*M_PI);
         if(0){
-            Log.LogInfo("Extrema: %g", results.Extrema[indz]);
+            Log.LogInfo("Extrema: %g", results.ExtremaResult.Extrema[indz]);
             Log.LogInfo("# best fit: Y = %g + %g X + %g X^2", C(0), C(1), C(2));
 	    if( false ) //debug
 	      {
@@ -1421,9 +1406,9 @@ void COperatorLineModel::ComputeArea2(CLineModelResult& results)
         gsl_vector_free (c);
         gsl_matrix_free (cov);
 
-        results.LogArea[indz] = logarea;
-        results.SigmaZ[indz] = sigma;
-        results.LogAreaCorrectedExtrema[indz] = zcorr;
+        results.ExtremaResult.LogArea[indz] = logarea;
+        results.ExtremaResult.SigmaZ[indz] = sigma;
+        results.ExtremaResult.LogAreaCorrectedExtrema[indz] = zcorr;
     }
 }
 
@@ -1431,7 +1416,7 @@ void COperatorLineModel::ComputeArea2(CLineModelResult& results)
  * \brief Calls model.fit() and sets the chisquare to the return value of that method.
  **/
 Void COperatorLineModel::ModelFit(CLineModelElementList& model, const TFloat64Range& lambdaRange, Float64 redshift,
-                  Float64& chiSquare, CLineModelResult::SLineModelSolution& modelSolution, Int32 contreest_iterations, bool enableLogging)
+                  Float64& chiSquare, CLineModelSolution& modelSolution, Int32 contreest_iterations, bool enableLogging)
 {
     chiSquare = boost::numeric::bounds<float>::highest();
     Float64 fit = model.fit( redshift, lambdaRange, modelSolution, contreest_iterations, enableLogging );

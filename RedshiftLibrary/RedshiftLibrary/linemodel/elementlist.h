@@ -118,10 +118,10 @@ public:
 
     Bool initModelAtZ(Float64 redshift, const TFloat64Range& lambdaRange, const CSpectrumSpectralAxis &spectralAxis);
 
-    Float64 fit(Float64 redshift, const TFloat64Range& lambdaRange, CLineModelResult::SLineModelSolution &modelSolution, Int32 contreest_iterations=0, bool enableLogging=0);
+    Float64 fit(Float64 redshift, const TFloat64Range& lambdaRange, CLineModelSolution &modelSolution, Int32 contreest_iterations=0, bool enableLogging=0);
 
     std::vector<CLmfitController*> createLmfitControllers( const TFloat64Range& lambdaRange);
-    void fitWithModelSelection(Float64 redshift, const TFloat64Range& lambdaRange, CLineModelResult::SLineModelSolution &modelSolution);
+    void fitWithModelSelection(Float64 redshift, const TFloat64Range& lambdaRange, CLineModelSolution &modelSolution);
     void SetFittingMethod(std::string fitMethod);
 
     void SetAbsLinesLimit(Float64 limit);
@@ -150,8 +150,8 @@ public:
     Float64 getCumulSNROnRange( TInt32Range idxRange );
     Float64 getModelErrorUnderElement(Int32 eltId);
     Float64 getContinuumMeanUnderElement(Int32 eltId);
-    Int32 LoadModelSolution(const CLineModelResult::SLineModelSolution&  modelSolution);
-    CLineModelResult::SLineModelSolution GetModelSolution();
+    Int32 LoadModelSolution(const CLineModelSolution&  modelSolution);
+    CLineModelSolution GetModelSolution();
     const CSpectrum&    GetModelSpectrum() const;
     const CSpectrum&    GetObservedSpectrumWithLinesRemoved() const;
     Float64 GetContinuumError(Int32 eIdx, Int32 subeIdx);

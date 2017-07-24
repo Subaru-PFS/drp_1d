@@ -21,7 +21,7 @@ class CModelFittingResult : public COperatorResult
 
 public:
 
-    CModelFittingResult(CLineModelResult::SLineModelSolution _lineModelSolution, Float64 _redshift, Float64 _merit, CRayCatalog::TRayVector _restRayList, Float64 _velEmission=-1.0, Float64 _velAbsorption=-1.0 );
+    CModelFittingResult(CLineModelSolution _lineModelSolution, Float64 _redshift, Float64 _merit, CRayCatalog::TRayVector _restRayList, Float64 _velEmission=-1.0, Float64 _velAbsorption=-1.0 );
     CModelFittingResult();
     virtual ~CModelFittingResult();
 
@@ -29,12 +29,12 @@ public:
     Void SaveLine( const CDataStore& store, std::ostream& stream ) const;
     Void Load( const char* filePath );
 
-    const CLineModelResult::SLineModelSolution& GetLineModelSolution() const;
+    const CLineModelSolution& GetLineModelSolution() const;
 
 
 private:
 
-    CLineModelResult::SLineModelSolution LineModelSolution;
+    CLineModelSolution LineModelSolution;
     Float64 Redshift;
     Float64 Merit;
 
@@ -44,7 +44,7 @@ private:
 };
 
 inline
-const CLineModelResult::SLineModelSolution& CModelFittingResult::GetLineModelSolution() const
+const CLineModelSolution& CModelFittingResult::GetLineModelSolution() const
 {
     return LineModelSolution;
 }

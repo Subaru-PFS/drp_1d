@@ -104,7 +104,7 @@ void checkProfileValue(std::string linecatalogPath,
 
     CLineModelElementList model(spectrum, spectrumContinuum, tplCatalog, tplCategories, unused_calibrationPath, lineList, opt_fittingmethod, opt_continuumcomponent, opt_lineWidthType, opt_resolution, opt_velocityEmission, opt_velocityAbsorption, opt_rules, opt_rigidity);
     TFloat64Range lambdaRange = TFloat64Range( 100.0, 12000.0 );
-    CLineModelResult::SLineModelSolution modelSolution;
+    CLineModelSolution modelSolution;
     Float64 merit = model.fit(z, lambdaRange, modelSolution);
 
     CSpectrumSpectralAxis spcSpectralAxis = spectrum.GetSpectralAxis();

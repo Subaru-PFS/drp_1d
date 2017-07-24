@@ -27,29 +27,6 @@ CLineModelResult::~CLineModelResult()
 
 }
 
-Void CLineModelResult::ResizeExtremaResults(Int32 size)
-{
-    Extrema.resize(size);
-    ExtremaMerit.resize(size);
-    DeltaZ.resize(size);
-    mTransposeM.resize(size);
-    ExtremaLastPass.resize(size);
-    lmfitPass.resize(size);
-    Posterior.resize(size);
-    StrongELSNR.resize(size);
-    LogArea.resize(size);
-    LogAreaCorrectedExtrema.resize(size);
-    SigmaZ.resize(size);
-    bic.resize(size);
-    ContinuumIndexes.resize(size);
-    OutsideLinesMask.resize(size);
-    FittedTplName.resize(size);
-    FittedTplAmplitude.resize(size);
-    FittedTplDustCoeff.resize(size);
-    FittedTplMeiksinIdx.resize(size);
-    FittedTplcorrTplName.resize(size);
-}
-
 
 /**
  * \brief Attempts to read the redshift and chisquare values stored in the argument stream.
@@ -141,226 +118,19 @@ Void CLineModelResult::Save( const CDataStore& store, std::ostream& stream ) con
         stream <<  Redshifts[i] << std::setprecision(32) << "\t" << std::scientific << ChiSquare[i] << std::fixed << std::endl;
     }
 
-    // save extrema list, on 1 line
-    if(Extrema.size()>0){
-        stream <<  "#Extrema for z = {";
-        for ( int i=0; i<Extrema.size(); i++)
-        {
-//            if(!IsLocalExtrema[i]){
-//                continue;
-//            }
-            stream <<  Extrema[i] << "\t";
-        }
-        stream << "}" << std::endl;
-    }
-
-    // save extremaMerit list, on 1 line
-    if(ExtremaMerit.size()>0){
-        stream <<  "#ExtremaMerit for z = {";
-        for ( int i=0; i<ExtremaMerit.size(); i++)
-        {
-            stream <<  ExtremaMerit[i] << "\t";
-        }
-        stream << "}" << std::endl;
-    }
-
-    // save extrema Deltaz list, on 1 line
-    if(DeltaZ.size()>0){
-        stream <<  "#ExtremaDeltaZ for z = {";
-        for ( int i=0; i<DeltaZ.size(); i++)
-        {
-            stream <<  DeltaZ[i] << "\t";
-        }
-        stream << "}" << std::endl;
-    }
-
-    // save extrema mTransposeM list, on 1 line
-    if(mTransposeM.size()>0){
-        stream <<  "#mTransposeM for z = {";
-        for ( int i=0; i<mTransposeM.size(); i++)
-        {
-            stream <<  mTransposeM[i] << "\t";
-        }
-        stream << "}" << std::endl;
-    }
-
-    // save ExtremaLastPass list, on 1 line
-    if(ExtremaLastPass.size()>0){
-        stream <<  "#ExtremaLastPass for z = {";
-        for ( int i=0; i<ExtremaLastPass.size(); i++)
-        {
-            stream <<  ExtremaLastPass[i] << "\t";
-        }
-        stream << "}" << std::endl;
-    }
-
-    // save lmfitPass list, on 1 line
-    if(lmfitPass.size()>0){
-        stream <<  "#lmfitPass for z = {";
-        for ( int i=0; i<lmfitPass.size(); i++)
-        {
-            stream <<  lmfitPass[i] << "\t";
-        }
-        stream << "}" << std::endl;
-    }
-
-    // save bic list, on 1 line
-    if(bic.size()>0){
-        stream <<  "#BIC for each extrema = {";
-        for ( int i=0; i<bic.size(); i++)
-        {
-//            if(!IsLocalExtrema[i]){
-//                continue;
-//            }
-            stream <<  bic[i] << "\t";
-        }
-        stream << "}" << std::endl;
-    }
-
-    // save posterior list, on 1 line
-    if(Posterior.size()>0){
-        stream <<  "#POSTERIOR for each extrema = {";
-        for ( int i=0; i<Posterior.size(); i++)
-        {
-//            if(!IsLocalExtrema[i]){
-//                continue;
-//            }
-            stream <<  Posterior[i] << "\t";
-        }
-        stream << "}" << std::endl;
-    }
-
-    // save SigmaZ list, on 1 line
-    if(Extrema.size()>0){
-        stream <<  "#SigmaZ for each extrema = {";
-        for ( int i=0; i<SigmaZ.size(); i++)
-        {
-//            if(!IsLocalExtrema[i]){
-//                continue;
-//            }
-            stream <<  SigmaZ[i] << "\t";
-        }
-        stream << "}" << std::endl;
-    }
-
-    // save LogArea list, on 1 line
-    if(Extrema.size()>0){
-        stream <<  "#LogArea for each extrema = {";
-        for ( int i=0; i<LogArea.size(); i++)
-        {
-//            if(!IsLocalExtrema[i]){
-//                continue;
-//            }
-            stream <<  LogArea[i] << "\t";
-        }
-        stream << "}" << std::endl;
-    }
-
-    // save ContinuumIndexes list, on 1 line
-    if(Extrema.size()>0){
-        stream <<  "#ContinuumIndexes Color for each extrema = {";
-        for ( int i=0; i<ContinuumIndexes.size(); i++)
-        {
-            stream << "<";
-            for(Int32 kci=0; kci<ContinuumIndexes[i].size(); kci++)
-            {
-                stream <<  ContinuumIndexes[i][kci].Color << "\t";
-            }
-            stream << ">";
-        }
-        stream << "}" << std::endl;
-        stream <<  "#ContinuumIndexes Break for each extrema = {";
-        for ( int i=0; i<ContinuumIndexes.size(); i++)
-        {
-            stream << "<";
-            for(Int32 kci=0; kci<ContinuumIndexes[i].size(); kci++)
-            {
-                stream <<  ContinuumIndexes[i][kci].Break << "\t";
-            }
-            stream << ">";
-        }
-        stream << "}" << std::endl;
-    }
-
-
-    // save StrongELSNR list, on 1 line
-    if(StrongELSNR.size()>0){
-        stream <<  "#StrongELSNR for each extrema = {";
-        for ( int i=0; i<StrongELSNR.size(); i++)
-        {
-            stream <<  StrongELSNR[i] << "\t";
-        }
-        stream << "}" << std::endl;
-    }
+    ExtremaResult.Save(store, stream);
 
     // save dTransposeDNocontinuum, on 1 line
-    if(StrongELSNR.size()>0){
-        stream <<  "#dTransposeDNocontinuum for each extrema = {";
-        for ( int i=0; i<StrongELSNR.size(); i++)
-        {
-            stream <<  dTransposeDNocontinuum << "\t";
-        }
+    if(true){
+        stream <<  "#dTransposeDNocontinuum = {";
+        stream <<  dTransposeDNocontinuum << "\t";
         stream << "}" << std::endl;
     }
 
     // save dTransposeD, on 1 line
-    if(StrongELSNR.size()>0){
-        stream <<  "#dTransposeD for each extrema = {";
-        for ( int i=0; i<StrongELSNR.size(); i++)
-        {
-            stream <<  dTransposeD << "\t";
-        }
-        stream << "}" << std::endl;
-    }
-
-    // save FittedTplName, on 1 line
-    if(FittedTplName.size()>0){
-        stream <<  "#FittedTplName for each extrema = {";
-        for ( int i=0; i<FittedTplName.size(); i++)
-        {
-            stream <<  FittedTplName[i] << "\t";
-        }
-        stream << "}" << std::endl;
-    }
-
-    // save FittedTplAmplitude, on 1 line
-    if(FittedTplAmplitude.size()>0){
-        stream <<  "#FittedTplAmplitude for each extrema = {";
-        for ( int i=0; i<FittedTplAmplitude.size(); i++)
-        {
-            stream <<  FittedTplAmplitude[i] << "\t";
-        }
-        stream << "}" << std::endl;
-    }
-
-    // save FittedTplDustCoeff, on 1 line
-    if(FittedTplDustCoeff.size()>0){
-        stream <<  "#FittedTplDustCoeff for each extrema = {";
-        stream << std::setprecision(3);
-        for ( int i=0; i<FittedTplDustCoeff.size(); i++)
-        {
-            stream <<  FittedTplDustCoeff[i] << "\t";
-        }
-        stream << "}" << std::endl;
-    }
-
-    // save FittedTplMeiksinIdx, on 1 line
-    if(FittedTplMeiksinIdx.size()>0){
-        stream <<  "#FittedTplMeiksinIdx for each extrema = {";
-        for ( int i=0; i<FittedTplMeiksinIdx.size(); i++)
-        {
-            stream <<  FittedTplMeiksinIdx[i] << "\t";
-        }
-        stream << "}" << std::endl;
-    }
-
-    // save FittedTplcorrTplName, on 1 line
-    if(FittedTplcorrTplName.size()>0){
-        stream <<  "#FittedTplcorrTplName for each extrema = {";
-        for ( int i=0; i<FittedTplcorrTplName.size(); i++)
-        {
-            stream <<  FittedTplcorrTplName[i] << "\t";
-        }
+    if(true){
+        stream <<  "#dTransposeD = {";
+        stream <<  dTransposeD << "\t";
         stream << "}" << std::endl;
     }
 
@@ -376,7 +146,7 @@ Void CLineModelResult::SaveLine( const CDataStore& store, std::ostream& stream )
 
 Int32 CLineModelResult::GetNLinesOverCutThreshold(Int32 extremaIdx, Float64 snrThres, Float64 fitThres) const
 {
-    if( Extrema.size()<=extremaIdx )
+    if( ExtremaResult.Extrema.size()<=extremaIdx )
     {
         return 0;
     }
@@ -384,7 +154,7 @@ Int32 CLineModelResult::GetNLinesOverCutThreshold(Int32 extremaIdx, Float64 snrT
     Int32 solutionIdx=0;
     for ( UInt32 i2=0; i2<LineModelSolutions.size(); i2++)
     {
-        if( Redshifts[i2]==Extrema[extremaIdx] )
+        if( Redshifts[i2]==ExtremaResult.Extrema[extremaIdx] )
         {
             solutionIdx = i2;
             break;
@@ -488,9 +258,9 @@ std::vector<bool> CLineModelResult::GetStrongLinesPresence( UInt32 filterType ) 
 Float64 CLineModelResult::GetExtremaMerit( Int32 extremaIdx ) const
 {
     Float64 outVal=-1.0;
-    if( Extrema.size()>extremaIdx && ExtremaMerit.size()>extremaIdx )
+    if( ExtremaResult.Extrema.size()>extremaIdx && ExtremaResult.ExtremaMerit.size()>extremaIdx )
     {
-        outVal = ExtremaMerit[extremaIdx];
+        outVal = ExtremaResult.ExtremaMerit[extremaIdx];
     }
     return outVal;
 }
@@ -498,11 +268,11 @@ Float64 CLineModelResult::GetExtremaMerit( Int32 extremaIdx ) const
 UInt32 CLineModelResult::GetExtremaIndex(UInt32 extremaIdx) const
 {
     UInt32 solutionIdx=-1;
-    if( Extrema.size()>extremaIdx && extremaIdx>=0 )
+    if( ExtremaResult.Extrema.size()>extremaIdx && extremaIdx>=0 )
     {
         for ( UInt32 i2=0; i2<LineModelSolutions.size(); i2++)
         {
-            if( Redshifts[i2]==Extrema[extremaIdx] )
+            if( Redshifts[i2]==ExtremaResult.Extrema[extremaIdx] )
             {
                 solutionIdx = i2;
                 break;

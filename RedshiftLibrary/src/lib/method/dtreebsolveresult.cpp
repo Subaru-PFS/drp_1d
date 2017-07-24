@@ -81,9 +81,6 @@ Bool CDTreeBSolveResult::GetBestRedshift(const CDataStore& store, Float64& redsh
         Int32 maxNStrong = 0;
         for( Int32 iE=0; iE<results->Extrema.size(); iE++ )
         {
-//            if(!results->IsLocalExtrema[iE]){
-//                continue;
-//            }
 
 
             //print for debug

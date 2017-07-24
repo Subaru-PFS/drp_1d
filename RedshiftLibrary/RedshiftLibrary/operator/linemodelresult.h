@@ -7,43 +7,15 @@
 
 #include <RedshiftLibrary/ray/catalog.h>
 #include <RedshiftLibrary/continuum/indexes.h>
+#include <RedshiftLibrary/linemodel/linemodelextremaresult.h>
+#include <RedshiftLibrary/linemodel/linemodelsolution.h>
 
 namespace NSEpic
 {
 
 class CLineModelResult : public COperatorResult
 {
-
 public:
-
-    struct SLineModelSolution
-    {
-        std::vector<Float64> ElementId;     //id of the linemodel element it is part of
-        std::vector<Float64> Amplitudes;
-        std::vector<CRay> Rays;
-        std::vector<Float64> Errors;    //noise sigma
-        std::vector<Float64> FittingError;    //ModelLeastSquare error under each line
-        std::vector<Float64> CenterContinuumFlux;    //Continuum flux value at the center of each line
-        std::vector<Float64> ContinuumError;    //Continuum error value for each line
-        std::vector<Float64> Sigmas;    //width for each line
-        std::vector<Float64> Fluxs;    //Flux for each line
-        std::vector<Float64> FluxErrors;    //Flux error for each line
-        std::vector<Float64> FluxDirectIntegration;    //Flux obtained by direct integration for each line
-
-        std::vector<Float64> Widths;
-        std::vector<Bool> OutsideLambdaRange;
-        std::vector<TInt32Range> fittingIndexRange;
-
-        Float64 LyaWidthCoeff;
-        Float64 LyaAlpha;
-        Float64 LyaDelta;
-
-        Float64 AbsorptionVelocity;
-        Float64 EmissionVelocity;
-        Float64 Redshift;
-
-        Int32 nDDL;
-    };
 
     CLineModelResult();
     virtual ~CLineModelResult();
@@ -67,32 +39,10 @@ public:
     TFloat64List            Redshifts;  // z axis
     TFloat64List            ChiSquare;  // chi2
 
+    std::vector<CLineModelSolution> LineModelSolutions;
+
     //Extrema results
-    TFloat64List            Extrema;    // z extrema
-    TFloat64List            ExtremaMerit;    // extrema merit
-    TFloat64List            DeltaZ;    // extrema delta z
-    TFloat64List            mTransposeM;    // extrema model norm
-    TFloat64List            ExtremaLastPass; //z extrema with more precision
-    TFloat64List            lmfitPass;// z found with lmfit
-
-    //Deprecated?
-    TFloat64List            ExtremaExtendedRedshifts;    // z range around extrema
-    TFloat64List            Posterior;    // z extrema
-    TFloat64List            LogArea;    // log area for each extrema
-    TFloat64List            LogAreaCorrectedExtrema;    //corrected z for each extrema
-    TFloat64List            SigmaZ; //sigmaz for each extrema
-
-    //
-    TFloat64List            StrongELSNR;
-    std::vector<SLineModelSolution> LineModelSolutions; //linemodel for each extrema
-    TFloat64List            bic;    // bayesian information criterion for each extrema
-    std::vector<CContinuumIndexes::TContinuumIndexList> ContinuumIndexes; //continuum indexes for each extrema
-    std::vector<CMask>      OutsideLinesMask; //Mask with 0 under the lines and 1 anywhere else
-    std::vector<std::string>      FittedTplName; //Name of the best template fitted for continuum
-    TFloat64List      FittedTplAmplitude; //Amplitude for the best template fitted for continuum
-    TFloat64List      FittedTplDustCoeff; //Calzetti dustcoeff for the best template fitted for continuum
-    std::vector<Int32>      FittedTplMeiksinIdx; //Meiksin igm index for the best template fitted for continuum
-    std::vector<std::string>      FittedTplcorrTplName; //Name of the best template fitted for tplcorr/tplshape
+    CLineModelExtremaResult ExtremaResult;
 
     //
     COperator::TStatusList  Status;

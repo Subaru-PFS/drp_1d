@@ -91,7 +91,7 @@ public:
 private:
 
     Void ModelFit(NSEpic::CLineModelElementList &model, const TFloat64Range& lambdaRange, Float64 redshift,
-                  Float64& chiSquare, CLineModelResult::SLineModelSolution &modelSolution, Int32 contreest_iterations, bool enableLogging);
+                  Float64& chiSquare, CLineModelSolution &modelSolution, Int32 contreest_iterations, bool enableLogging);
 
     void ComputeArea1(CLineModelResult& results);
     void ComputeArea2(CLineModelResult& results);

@@ -1067,7 +1067,7 @@ Bool CLineModelElementList::initDtd(const TFloat64Range& lambdaRange)
  * Create spectrum model.
  * Return merit.
  **/
-Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambdaRange, CLineModelResult::SLineModelSolution& modelSolution, Int32 contreest_iterations, bool enableLogging)
+Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambdaRange, CLineModelSolution& modelSolution, Int32 contreest_iterations, bool enableLogging)
 {
     //initialize the model spectrum
     const CSpectrumSpectralAxis& spectralAxis = m_SpectrumModel->GetSpectralAxis();
@@ -3907,7 +3907,7 @@ TStringList CLineModelElementList::GetModelRulesLog()
 Reset all the model value to the previous solution found.
 return 0 if every was ok; else -1
 */
-Int32 CLineModelElementList::LoadModelSolution(const CLineModelResult::SLineModelSolution&  modelSolution){
+Int32 CLineModelElementList::LoadModelSolution(const CLineModelSolution&  modelSolution){
   if(m_RestRayList.size() != modelSolution.Rays.size() ){
     Log.LogError("Unable to load the model solution because m_restRayList has not the same size as the number of ray in  modelSolution");
     return -1;
@@ -4028,9 +4028,9 @@ Int32 CLineModelElementList::improveBalmerFit()
 /**
  * \brief Returns a SLineModelSolution object populated with the current solutions.
  **/
-CLineModelResult::SLineModelSolution CLineModelElementList::GetModelSolution()
+CLineModelSolution CLineModelElementList::GetModelSolution()
 {
-    CLineModelResult::SLineModelSolution modelSolution;
+    CLineModelSolution modelSolution;
     modelSolution.nDDL = GetModelNonZeroElementsNDdl();
     for( UInt32 iRestRay=0; iRestRay<m_RestRayList.size(); iRestRay++ )
     {
