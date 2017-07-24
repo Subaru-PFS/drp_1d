@@ -35,65 +35,13 @@ using namespace std;
 
 COperatorChiSquare2::COperatorChiSquare2( std::string calibrationPath )
 {
-    //load calzetti data
-    bfs::path calibrationFolder( calibrationPath.c_str() );
-    std::string filePath = (calibrationFolder/"ism"/"SB_calzetti.dl1.txt").string();
-    std::ifstream file;
-    file.open( filePath, std::ifstream::in );
-    bool fileOpenFailed = file.rdstate() & std::ios_base::failbit;
-    if(fileOpenFailed)
-    {
-        Log.LogError("Chisquare2, unable to load the calzetti calib. file: %s... aborting!", filePath.c_str());
-        calzettiInitFailed = true;
-    }else
-    {
-        m_NdataCalzetti = 1e5;
-        m_dataCalzetti = new Float64 [(int)m_NdataCalzetti]();
 
-        std::string line;
-        // Read file line by line
-        Int32 kLine = 0;
-        while( getline( file, line ) )
-        {
-            if( !boost::starts_with( line, "#" ) )
-            {
-                std::istringstream iss( line );
-                Float64 x, y;
-                iss >> x >> y;
-                m_dataCalzetti[kLine] = y;
-                kLine++;
-                if(kLine>=m_NdataCalzetti)
-                {
-                    break;
-                }
-            }
-        }
-        file.close();
-
-        //Allocate buffer for Ytpl reinit during Dust-fit loop
-        m_YtplRawBufferMaxBufferSize = 10*1e6; //allows array from 0A to 100000A with dl=0.01
-        m_YtplRawBuffer = (Float64 *) malloc(m_YtplRawBufferMaxBufferSize* sizeof(Float64));
-        m_YtplRawBuffer = new Float64[(int)m_YtplRawBufferMaxBufferSize]();
-
-        //precomte the dust-coeff table
-        m_nDustCoeff = 10.0;
-        m_dustCoeffStep = 0.1;
-        m_dustCoeffStart = 0.0;
-        m_dataDustCoeff = new Float64[(int)(m_nDustCoeff*m_NdataCalzetti)]();
-
-        for(Int32 kDust=0; kDust<m_nDustCoeff; kDust++)
-        {
-
-            Float64 coeffEBMV = m_dustCoeffStart + m_dustCoeffStep*(Float64)kDust;
-            for(Int32 kCalzetti=0; kCalzetti<m_NdataCalzetti; kCalzetti++)
-            {
-                m_dataDustCoeff[Int32(kDust*m_NdataCalzetti+kCalzetti)] = pow(10.0, -0.4*m_dataCalzetti[kCalzetti]*coeffEBMV);
-            }
-
-        }
-
-        calzettiInitFailed = false;
-    }
+    //ISM
+    m_ismCorrectionCalzetti = new CSpectrumFluxCorrectionCalzetti();
+    m_ismCorrectionCalzetti->Init(calibrationPath);
+    //Allocate buffer for Ytpl reinit during Dust-fit loop
+    m_YtplRawBufferMaxBufferSize = 10*1e6; //allows array from 0A to 100000A with dl=0.01
+    m_YtplRawBuffer = new Float64[(int)m_YtplRawBufferMaxBufferSize]();
 
     //IGM
     m_igmCorrectionMeiksin = new CSpectrumFluxCorrectionMeiksin();
@@ -103,12 +51,9 @@ COperatorChiSquare2::COperatorChiSquare2( std::string calibrationPath )
 
 COperatorChiSquare2::~COperatorChiSquare2()
 {
-    if(!calzettiInitFailed)
-    {
-        delete[] m_dataCalzetti;
-        delete[] m_YtplRawBuffer;
-        delete[] m_dataDustCoeff;
-    }
+    delete[] m_YtplRawBuffer;
+    delete m_ismCorrectionCalzetti;
+    delete m_igmCorrectionMeiksin;
 }
 
 
@@ -238,7 +183,7 @@ Void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& t
     {
         nDustCoeffs = 1;
     }else{
-        nDustCoeffs = m_nDustCoeff;
+        nDustCoeffs = m_ismCorrectionCalzetti->GetNPrecomputedDustCoeffs();
         if(m_YtplRawBufferMaxBufferSize<itplTplSpectralAxis.GetSamplesCount())
         {
             Log.LogError( "chisquare operator: rebinned tpl size > buffer size for dust-fit ! Aborting.");
@@ -316,19 +261,14 @@ Void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& t
                 }
             }
 
-            Float64 coeffEBMV = m_dustCoeffStart + m_dustCoeffStep*(Float64)kDust;
+            Float64 coeffEBMV = m_ismCorrectionCalzetti->GetEbmvValue(kDust);
             //Log.LogInfo("Chisquare2, fitting with dust coeff value: %f", coeffEBMV);
 
             Float64 z = redshift;
             for(Int32 k=kStart; k<=kEnd; k++)
             {
                 Float64 restLambda = Xtpl[k]/(1.0+z);
-                Float64 coeffDust = 1.0;
-                if(restLambda >= 100.0)
-                {
-                    Int32 kCalzetti = Int32(restLambda-100.0);
-                    coeffDust = m_dataDustCoeff[Int32(kDust*m_NdataCalzetti+kCalzetti)];
-                }
+                Float64 coeffDust = m_ismCorrectionCalzetti->getDustCoeff( kDust, restLambda);
 
                 Ytpl[k] *= coeffDust;
             }
@@ -547,9 +487,18 @@ std::shared_ptr<COperatorResult> COperatorChiSquare2::Compute(const CSpectrum& s
                           const TFloat64Range& lambdaRange, const TFloat64List& redshifts,
                           Float64 overlapThreshold , std::vector<CMask> additional_spcMasks, std::string opt_interp, Int32 opt_extinction, Int32 opt_dustFitting)
 {
-    if(!m_dataCalzetti)
+    Log.LogInfo("Chisquare2, starting computation for template: %s", tpl.GetName().c_str());
+
+
+    if( opt_dustFitting && m_ismCorrectionCalzetti->calzettiInitFailed)
     {
         Log.LogError("Chisquare2, no calzetti calib. file loaded... aborting!");
+        return NULL;
+    }
+
+    if( opt_extinction && m_igmCorrectionMeiksin->meiksinInitFailed)
+    {
+        Log.LogError("Chisquare2, no meiksin calib. file loaded... aborting!");
         return NULL;
     }
 
@@ -815,9 +764,9 @@ const Float64*  COperatorChiSquare2::getDustCoeff(Float64 dustCoeff, Float64 max
 {
     //find kDust
     Int32 idxDust = -1;
-    for(Int32 kDust=0; kDust<m_nDustCoeff; kDust++)
+    for(Int32 kDust=0; kDust<m_ismCorrectionCalzetti->GetNPrecomputedDustCoeffs(); kDust++)
     {
-        Float64 coeffEBMV = m_dustCoeffStart + m_dustCoeffStep*(Float64)kDust;
+        Float64 coeffEBMV = m_ismCorrectionCalzetti->GetEbmvValue(kDust);
         if(dustCoeff==coeffEBMV)
         {
             idxDust = kDust;
@@ -837,12 +786,7 @@ const Float64*  COperatorChiSquare2::getDustCoeff(Float64 dustCoeff, Float64 max
     for(Int32 kl=0; kl<nSamples; kl++)
     {
         Float64 restLambda = kl;
-        Float64 coeffDust = 1.0;
-        if(restLambda >= 100.0)
-        {
-            Int32 kCalzetti = Int32(restLambda-100.0);
-            coeffDust = m_dataDustCoeff[Int32(idxDust*m_NdataCalzetti+kCalzetti)];
-        }
+        Float64 coeffDust = m_ismCorrectionCalzetti->getDustCoeff( idxDust, restLambda);
         dustCoeffs[kl] = coeffDust;
     }
     return dustCoeffs;

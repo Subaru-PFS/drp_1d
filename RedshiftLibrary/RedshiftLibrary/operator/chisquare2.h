@@ -10,6 +10,7 @@
 #include <RedshiftLibrary/spectrum/spectrum.h>
 #include <RedshiftLibrary/spectrum/template/template.h>
 #include <RedshiftLibrary/spectrum/fluxcorrectionmeiksin.h>
+#include <RedshiftLibrary/spectrum/fluxcorrectioncalzetti.h>
 
 namespace NSEpic
 {
@@ -50,17 +51,12 @@ private:
     CMask           m_mskRebined_bf; //buffer
     CSpectrumSpectralAxis m_shiftedTplSpectralAxis_bf; //buffer
 
-    // ISM Calzetti
-    Float64 *m_dataCalzetti;
-    Float64 m_NdataCalzetti;
+    //ISM Calzetti
     Float64* m_YtplRawBuffer;
     Int32 m_YtplRawBufferMaxBufferSize;
-    Int32 m_nDustCoeff;
-    Float64 m_dustCoeffStep;
-    Float64 m_dustCoeffStart;
-    Float64* m_dataDustCoeff;
-    bool calzettiInitFailed;
-    
+
+    CSpectrumFluxCorrectionCalzetti* m_ismCorrectionCalzetti;
+
     //IGM meiksin
     CSpectrumFluxCorrectionMeiksin* m_igmCorrectionMeiksin;
 
