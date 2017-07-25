@@ -57,6 +57,7 @@ public:
     Int32 nSpcSamples;
     Float64 dTransposeDNocontinuum;
     Float64 dTransposeD;
+    Float64 cstLog;
 
 
 };

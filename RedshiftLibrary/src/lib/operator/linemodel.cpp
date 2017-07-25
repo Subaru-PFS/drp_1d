@@ -351,6 +351,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
     result->nSpcSamples = model.getSpcNSamples(lambdaRange);
     result->dTransposeDNocontinuum = model.getDTransposeD(lambdaRange, "nocontinuum");
     result->dTransposeD = model.getDTransposeD(lambdaRange, "raw");
+    result->cstLog = model.getLikelihood_cstLog(lambdaRange);
 
     Int32 contreest_iterations = 0;
     if( opt_continuumreest == "always" )
@@ -382,16 +383,15 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
     {
         if(enableFastFitLargeGrid==0 || i==0 || result->Redshifts[i] == largeGridRedshifts[indexLargeGrid])
         {
-            TFloat64List chisquareTplshape;
-            result->ChiSquare[i] = model.fit( result->Redshifts[i], lambdaRange, result->LineModelSolutions[i], chisquareTplshape, contreest_iterations, false );
-            result->SetChisquareTplshapeResult(i , chisquareTplshape);
+            result->ChiSquare[i] = model.fit( result->Redshifts[i], lambdaRange, result->LineModelSolutions[i], contreest_iterations, false );
+            result->SetChisquareTplshapeResult(i , model.GetChisquareTplshape());
             Log.LogDebug( "Z interval %d: Chi2 = %f", i, result->ChiSquare[i] );
             indexLargeGrid++;
             //Log.LogInfo( "\nLineModel Infos: large grid step %d", i);
         }else{
             result->ChiSquare[i] = result->ChiSquare[i-1] + 1e-2;
             result->LineModelSolutions[i] = result->LineModelSolutions[i-1];
-            result->SetChisquareTplshapeResult( i, result->GetChisquareTplshapeResult(i));
+            result->SetChisquareTplshapeResult( i, result->GetChisquareTplshapeResult(i-1));
         }
     }
     //WARNING: HACK, first pass with continuum from spectrum.
@@ -534,9 +534,8 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
                     model.SetFittingMethod("lmfit");
                     //model.SetElementIndexesDisabledAuto();
                     Float64 meritTmp;
-                    TFloat64List chisquareTplshape;
                     Log.LogInfo("Lm fit for extrema %d", i);
-                    meritTmp = model.fit( result->Redshifts[idx], lambdaRange, result->LineModelSolutions[idx], chisquareTplshape, contreest_iterations, true );
+                    meritTmp = model.fit( result->Redshifts[idx], lambdaRange, result->LineModelSolutions[idx], contreest_iterations, true );
                     modelInfoSave = true;
                     // CModelSpectrumResult
                     std::shared_ptr<CModelSpectrumResult>  resultspcmodel = std::shared_ptr<CModelSpectrumResult>( new CModelSpectrumResult(model.GetModelSpectrum()) );
@@ -579,8 +578,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
                     model.SetFittingMethod("lbfgsfit");
                     //model.SetElementIndexesDisabledAuto();
                     Float64 meritTmp;
-                    TFloat64List chisquareTplshape;
-                    meritTmp = model.fit( result->Redshifts[idx], lambdaRange, result->LineModelSolutions[idx], chisquareTplshape, contreest_iterations, false );
+                    meritTmp = model.fit( result->Redshifts[idx], lambdaRange, result->LineModelSolutions[idx], contreest_iterations, false );
 
                     model.SetFittingMethod(opt_fittingmethod);
                     model.ResetElementIndexesDisabled();
@@ -648,8 +646,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
                                     model.SetVelocityEmission(vTest);
                                 }
                                 Float64 meritv;
-                                TFloat64List chisquareTplshape;
-                                meritv = model.fit( result->Redshifts[idx]+dzTest, lambdaRange, result->LineModelSolutions[idx], chisquareTplshape, contreest_iterations, false );
+                                meritv = model.fit( result->Redshifts[idx]+dzTest, lambdaRange, result->LineModelSolutions[idx], contreest_iterations, false );
 
                                 //meritv = model.getLeastSquareMeritUnderElements();
                                 //todo: eventually use the merit under the elements with a BIC estimator taking the n samples in the support for each velocity solution...
@@ -700,9 +697,8 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
             {
                 if(result->Redshifts[iz] >= left_border && result->Redshifts[iz] <= right_border){
                     //Log.LogInfo("Fit for Extended redshift %d, z = %f", iz, result->Redshifts[iz]);
-                    TFloat64List chisquareTplshape;
-                    result->ChiSquare[iz] = model.fit( result->Redshifts[iz], lambdaRange, result->LineModelSolutions[iz], chisquareTplshape, contreest_iterations, false );
-                    result->SetChisquareTplshapeResult(iz , chisquareTplshape);
+                    result->ChiSquare[iz] = model.fit( result->Redshifts[iz], lambdaRange, result->LineModelSolutions[iz], contreest_iterations, false );
+                    result->SetChisquareTplshapeResult(iz , model.GetChisquareTplshape());
                     if(result->ChiSquare[iz]< extremumList2[i].Y)
                     {
                         extremumList2[i].X = result->Redshifts[iz];
@@ -832,9 +828,8 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
 
 
         if(!modelInfoSave){
-            TFloat64List chisquareTplshape;
-            result->ChiSquare[idx] = model.fit( result->Redshifts[idx], lambdaRange, result->LineModelSolutions[idx], chisquareTplshape, contreest_iterations, true );
-            result->SetChisquareTplshapeResult(idx , chisquareTplshape);
+            result->ChiSquare[idx] = model.fit( result->Redshifts[idx], lambdaRange, result->LineModelSolutions[idx], contreest_iterations, true );
+            result->SetChisquareTplshapeResult(idx , model.GetChisquareTplshape());
         }
         if(m!=result->ChiSquare[idx])
         {
@@ -960,52 +955,103 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
     //ComputeArea2(*result);
 
     /* ------------------------  COMPUTE POSTMARG PDF  --------------------------  */
-    Log.LogInfo("Linemodel: Pdfz computation");
-    std::shared_ptr<CPdfMargZLogResult> postmargZResult = std::shared_ptr<CPdfMargZLogResult>(new CPdfMargZLogResult());
-    CPdfz pdfz;
-    Float64 cstLog = model.getLikelihood_cstLog(lambdaRange);
-    TFloat64List logProba;
-    Float64 logEvidence;
+    std::string opt_combinePdf = "marg";
+    //std::string opt_combinePdf = "bestchi2";
+    CombinePDF(dataStore, result, opt_rigidity, opt_combinePdf);
 
-    bool zPriorStrongLinePresence = false;
-    std::shared_ptr<CPdfLogResult> zPrior = std::shared_ptr<CPdfLogResult>(new CPdfLogResult());
-    zPrior->SetSize(result->Redshifts.size());
-    for ( UInt32 k=0; k<result->Redshifts.size(); k++)
+    //Save chisquareTplshape results
+    for(Int32 km=0; km<result->ChiSquareTplshapes.size(); km++)
     {
-        zPrior->Redshifts[k] = result->Redshifts[k];
-    }
-    if(zPriorStrongLinePresence)
-    {
-        Log.LogInfo("Linemodel: Pdfz computation: StrongLinePresence prior enabled");
-        UInt32 lineTypeFilter = 1;// for emission lines only
-        std::vector<bool> strongLinePresence = result->GetStrongLinesPresence(lineTypeFilter);
-        zPrior->valProbaLog = pdfz.GetStrongLinePresenceLogZPrior(strongLinePresence);
-    }else{
-        Log.LogInfo("Linemodel: Pdfz computation: StrongLinePresence prior disabled");
-        zPrior->valProbaLog = pdfz.GetConstantLogZPrior(result->Redshifts.size());
-    }
-
-    Int32 retPdfz = pdfz.Compute(result->ChiSquare, result->Redshifts, cstLog, zPrior->valProbaLog, logProba, logEvidence);
-    if(retPdfz!=0)
-    {
-        Log.LogError("Linemodel: Pdfz computation failed");
-    }else{
-        postmargZResult->countTPL = result->Redshifts.size(); // assumed 1 model per z
-        postmargZResult->Redshifts.resize(result->Redshifts.size());
-        postmargZResult->valProbaLog.resize(result->Redshifts.size());
-        for ( UInt32 k=0; k<result->Redshifts.size(); k++)
+        std::shared_ptr<CLineModelResult> result_chisquaretplshape = std::shared_ptr<CLineModelResult>( new CLineModelResult() );
+        result_chisquaretplshape->Init( result->Redshifts, result->restRayList, 0);
+        for(Int32 kz=0; kz<result->Redshifts.size(); kz++)
         {
-            postmargZResult->Redshifts[k] = result->Redshifts[k] ;
-            postmargZResult->valProbaLog[k] = logProba[k];
+            result_chisquaretplshape->ChiSquare[kz] = result->ChiSquareTplshapes[km][kz];
         }
-        dataStore.StoreGlobalResult( "zPDF/logposterior.logMargP_Z_data", postmargZResult); //need to store this pdf with this exact same name so that zqual can load it. see zqual.cpp/ExtractFeaturesPDF
-        dataStore.StoreGlobalResult( "zPDF/logprior.logP_Z_data", zPrior);
-    }
 
+        std::string resname = (boost::format("linemodel_chisquaretplshape_%d") % km).str();
+        dataStore.StoreScopedGlobalResult( resname.c_str(), result_chisquaretplshape );
+    }
     return result;
 
 }
 
+Int32 COperatorLineModel::CombinePDF(CDataStore &store, std::shared_ptr<CLineModelResult> result, std::string opt_rigidity, std::string opt_combine)
+{
+    Log.LogInfo("Linemodel: Pdfz computation");
+    std::shared_ptr<CPdfMargZLogResult> postmargZResult = std::shared_ptr<CPdfMargZLogResult>(new CPdfMargZLogResult());
+    CPdfz pdfz;
+    Float64 cstLog = result->cstLog;
+    TFloat64List logProba;
+    Float64 logEvidence;
+
+    Int32 retPdfz=-1;
+    if(opt_rigidity!="tplshape" || opt_combine=="bestchi2")
+    {
+        if(opt_rigidity!="tplshape")
+        {
+            Log.LogInfo("Linemodel: Pdfz computation - simple (no combination)");
+        }
+        if(opt_combine=="bestchi2")
+        {
+            Log.LogInfo("Linemodel: Pdfz computation - simple (method=bestchi2)");
+        }
+        bool zPriorStrongLinePresence = false;
+        std::shared_ptr<CPdfLogResult> zPrior = std::shared_ptr<CPdfLogResult>(new CPdfLogResult());
+        zPrior->SetSize(result->Redshifts.size());
+        for ( UInt32 k=0; k<result->Redshifts.size(); k++)
+        {
+            zPrior->Redshifts[k] = result->Redshifts[k];
+        }
+        if(zPriorStrongLinePresence)
+        {
+            Log.LogInfo("Linemodel: Pdfz computation: StrongLinePresence prior enabled");
+            UInt32 lineTypeFilter = 1;// for emission lines only
+            std::vector<bool> strongLinePresence = result->GetStrongLinesPresence(lineTypeFilter);
+            zPrior->valProbaLog = pdfz.GetStrongLinePresenceLogZPrior(strongLinePresence);
+        }else{
+            Log.LogInfo("Linemodel: Pdfz computation: StrongLinePresence prior disabled");
+            zPrior->valProbaLog = pdfz.GetConstantLogZPrior(result->Redshifts.size());
+        }
+
+        retPdfz = pdfz.Compute(result->ChiSquare, result->Redshifts, cstLog, zPrior->valProbaLog, logProba, logEvidence);
+        if(retPdfz==0){
+            store.StoreGlobalResult( "zPDF/logprior.logP_Z_data", zPrior);
+
+            postmargZResult->countTPL = result->Redshifts.size(); // assumed 1 model per z
+            postmargZResult->Redshifts.resize(result->Redshifts.size());
+            postmargZResult->valProbaLog.resize(result->Redshifts.size());
+            for ( UInt32 k=0; k<result->Redshifts.size(); k++)
+            {
+                postmargZResult->Redshifts[k] = result->Redshifts[k] ;
+                postmargZResult->valProbaLog[k] = logProba[k];
+            }
+        }
+    }
+    else{
+
+        Log.LogInfo("Linemodel: Pdfz computation - combination: method=%s, n=%d", opt_combine.c_str(), result->ChiSquareTplshapes.size());
+        std::vector<TFloat64List> priorsTplshapes;
+        for(Int32 k=0; k<result->ChiSquareTplshapes.size(); k++)
+        {
+            TFloat64List _prior = pdfz.GetConstantLogZPrior(result->Redshifts.size());
+            priorsTplshapes.push_back(_prior);
+        }
+
+        retPdfz = pdfz.Marginalize( result->Redshifts, result->ChiSquareTplshapes, priorsTplshapes, cstLog, postmargZResult);
+
+    }
+
+
+    if(retPdfz!=0)
+    {
+        Log.LogError("Linemodel: Pdfz computation failed");
+    }else{
+        store.StoreGlobalResult( "zPDF/logposterior.logMargP_Z_data", postmargZResult); //need to store this pdf with this exact same name so that zqual can load it. see zqual.cpp/ExtractFeaturesPDF
+    }
+
+    return 0;
+}
 
 /**
  * @brief COperatorLineModel::processPass

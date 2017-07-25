@@ -11,18 +11,3 @@
 using namespace NSEpic;
 
 
-/**
- * \brief Empty constructor.
- **/
-CLineModelSolution::CLineModelSolution()
-{
-
-}
-
-/**
- * \brief Empty destructor.
- **/
-CLineModelSolution::~CLineModelSolution()
-{
-
-}

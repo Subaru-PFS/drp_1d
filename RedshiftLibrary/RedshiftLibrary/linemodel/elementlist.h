@@ -98,6 +98,7 @@ public:
 
     std::string getTplshape_bestTplName();
     Int32 getTplshape_count();
+    std::vector<Float64> GetChisquareTplshape();
 
     Int32 GetNElements();
     Int32 GetModelValidElementsNDdl();
@@ -118,7 +119,7 @@ public:
 
     Bool initModelAtZ(Float64 redshift, const TFloat64Range& lambdaRange, const CSpectrumSpectralAxis &spectralAxis);
 
-    Float64 fit(Float64 redshift, const TFloat64Range& lambdaRange, CLineModelSolution &modelSolution, TFloat64List chisquareTplshape=TFloat64List(), Int32 contreest_iterations=0, bool enableLogging=0);
+    Float64 fit(Float64 redshift, const TFloat64Range& lambdaRange, CLineModelSolution &modelSolution, Int32 contreest_iterations=0, bool enableLogging=0);
 
     std::vector<CLmfitController*> createLmfitControllers( const TFloat64Range& lambdaRange);
     void fitWithModelSelection(Float64 redshift, const TFloat64Range& lambdaRange, CLineModelSolution &modelSolution);
@@ -218,6 +219,7 @@ private:
     CRegulament* m_Regulament;
 
     CRayCatalogsTplShape* m_CatalogTplShape;
+    std::vector<Float64> m_ChisquareTplshape;
 
     Float64 m_Redshift;
 

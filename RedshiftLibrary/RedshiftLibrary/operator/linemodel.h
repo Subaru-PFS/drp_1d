@@ -82,6 +82,9 @@ public:
                                       const Float64 &opt_velocityfitmin,
                                       const Float64 &opt_velocityfitmax);
 
+    Int32 CombinePDF(CDataStore &store, std::shared_ptr<CLineModelResult> result, std::string opt_rigidity, std::string opt_combine);
+
+
     void storeGlobalModelResults( CDataStore &dataStore );
     void storePerTemplateModelResults( CDataStore &dataStore, const CTemplate& tpl );
 

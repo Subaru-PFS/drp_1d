@@ -215,6 +215,8 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
         //m_RestRayList = m_CatalogTplShape->GetRestLinesList(0);
         //LoadCatalog(m_RestRayList);
         LogCatalogInfos();
+
+        m_ChisquareTplshape.resize(m_CatalogTplShape->GetCatalogsCount());
     }
 
     //init catalog offsets
@@ -1036,6 +1038,11 @@ Int32 CLineModelElementList::getTplshape_count()
     return m_CatalogTplShape->GetCatalogsCount();
 }
 
+std::vector<Float64> CLineModelElementList::GetChisquareTplshape()
+{
+    return m_ChisquareTplshape;
+}
+
 Bool CLineModelElementList::initModelAtZ(Float64 redshift, const TFloat64Range& lambdaRange, const CSpectrumSpectralAxis &spectralAxis)
 {
     m_Redshift = redshift;
@@ -1072,7 +1079,7 @@ Bool CLineModelElementList::initDtd(const TFloat64Range& lambdaRange)
  * Create spectrum model.
  * Return merit.
  **/
-Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambdaRange, CLineModelSolution& modelSolution, TFloat64List chisquareTplshape, Int32 contreest_iterations, bool enableLogging)
+Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambdaRange, CLineModelSolution& modelSolution, Int32 contreest_iterations, bool enableLogging)
 {
     //initialize the model spectrum
     const CSpectrumSpectralAxis& spectralAxis = m_SpectrumModel->GetSpectralAxis();
@@ -1132,7 +1139,6 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
     if(m_rigidity=="tplshape")
     {
         nfitting=m_CatalogTplShape->GetCatalogsCount();
-        chisquareTplshape.resize(nfitting);
     }
 
     while(ifitting<nfitting)
@@ -1558,7 +1564,7 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
                 //_merit = getLeastSquareMerit(lambdaRange);
                 _merit = getLeastSquareMeritFast();
             }
-            chisquareTplshape[ifitting] = merit;
+            m_ChisquareTplshape[ifitting] = _merit;
 
             if(merit>_merit)
             {

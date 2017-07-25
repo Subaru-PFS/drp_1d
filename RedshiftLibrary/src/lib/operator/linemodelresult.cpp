@@ -52,7 +52,7 @@ Int32 CLineModelResult::Init( std::vector<Float64> redshifts, CRayCatalog::TRayV
     //init the tplshape chisquare results
     for(Int32 k=0; k<nTplshapes; k++)
     {
-        TFloat64List _chi2tpl(nTplshapes, DBL_MAX);
+        TFloat64List _chi2tpl(nResults, DBL_MAX);
         ChiSquareTplshapes.push_back(_chi2tpl);
     }
 

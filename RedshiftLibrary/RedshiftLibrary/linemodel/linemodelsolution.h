@@ -12,14 +12,8 @@ namespace NSEpic
 {
 
 
-class CLineModelSolution
+struct CLineModelSolution
 {
-
-public:
-
-    CLineModelSolution();
-    ~CLineModelSolution();
-
 
     std::vector<Float64> ElementId;     //id of the linemodel element it is part of
     std::vector<Float64> Amplitudes;
