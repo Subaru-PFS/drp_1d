@@ -20,7 +20,7 @@ public:
     CLineModelResult();
     virtual ~CLineModelResult();
 
-    Void ResizeExtremaResults(Int32 size);
+    Int32 Init(std::vector<Float64> redshifts, CRayCatalog::TRayVector restRays, Int32 nTplshapes);
 
     Void Save( const CDataStore& store, std::ostream& stream ) const;
     Void SaveLine( const CDataStore& store, std::ostream& stream ) const;
@@ -34,10 +34,17 @@ public:
     Float64 GetMinChiSquare() const;
     Float64 GetMaxChiSquare() const;
 
+    Int32 ResizeChisquareTplShapes( Int32 nTplshapes, Int32 nRedshifts );
+    Int32 SetChisquareTplshapeResult( Int32 index, TFloat64List chisquareTplshape );
+    TFloat64List GetChisquareTplshapeResult( Int32 index );
 
-    //Full Merit curve
+
+
+    //Merit results
     TFloat64List            Redshifts;  // z axis
-    TFloat64List            ChiSquare;  // chi2
+    TFloat64List            ChiSquare;  // min chi2
+
+    std::vector<TFloat64List> ChiSquareTplshapes; // full chi2 results (for each tplshape if needed)
 
     std::vector<CLineModelSolution> LineModelSolutions;
 

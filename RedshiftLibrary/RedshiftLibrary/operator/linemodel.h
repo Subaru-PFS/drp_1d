@@ -90,9 +90,6 @@ public:
 
 private:
 
-    Void ModelFit(NSEpic::CLineModelElementList &model, const TFloat64Range& lambdaRange, Float64 redshift,
-                  Float64& chiSquare, CLineModelSolution &modelSolution, Int32 contreest_iterations, bool enableLogging);
-
     void ComputeArea1(CLineModelResult& results);
     void ComputeArea2(CLineModelResult& results);
     Float64 FitBayesWidth( CSpectrumSpectralAxis& spectralAxis, CSpectrumFluxAxis& fluxAxis, Float64 z, Int32 start, Int32 end);

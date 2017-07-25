@@ -104,7 +104,8 @@ void checkLeastSquareFast(std::string spectrumPath, std::string noisePath, std::
     CLineModelSolution modelSolution;
     Float64 contreest_iterations = 0;
     Bool enableLogging=true;
-    Float64 merit = model.fit(z, lambdaRange, modelSolution, contreest_iterations, enableLogging);
+    TFloat64List chisquareTplshape;
+    Float64 merit = model.fit(z, lambdaRange, modelSolution, chisquareTplshape, contreest_iterations, enableLogging);
     BOOST_TEST_MESSAGE( "Merit = " << merit );
 
     /*//debug:

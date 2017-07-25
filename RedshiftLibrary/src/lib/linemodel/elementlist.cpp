@@ -1026,9 +1026,14 @@ void CLineModelElementList::PrepareContinuum(Float64 z)
     return;
 }
 
-std::string CLineModelElementList::getTplCorr_bestTplName()
+std::string CLineModelElementList::getTplshape_bestTplName()
 {
-    return m_tplcorrBestTplName;
+    return m_tplshapeBestTplName;
+}
+
+Int32 CLineModelElementList::getTplshape_count()
+{
+    return m_CatalogTplShape->GetCatalogsCount();
 }
 
 Bool CLineModelElementList::initModelAtZ(Float64 redshift, const TFloat64Range& lambdaRange, const CSpectrumSpectralAxis &spectralAxis)
@@ -1067,7 +1072,7 @@ Bool CLineModelElementList::initDtd(const TFloat64Range& lambdaRange)
  * Create spectrum model.
  * Return merit.
  **/
-Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambdaRange, CLineModelSolution& modelSolution, Int32 contreest_iterations, bool enableLogging)
+Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambdaRange, CLineModelSolution& modelSolution, TFloat64List chisquareTplshape, Int32 contreest_iterations, bool enableLogging)
 {
     //initialize the model spectrum
     const CSpectrumSpectralAxis& spectralAxis = m_SpectrumModel->GetSpectralAxis();
@@ -1127,7 +1132,7 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
     if(m_rigidity=="tplshape")
     {
         nfitting=m_CatalogTplShape->GetCatalogsCount();
-
+        chisquareTplshape.resize(nfitting);
     }
 
     while(ifitting<nfitting)
@@ -1507,7 +1512,7 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
             refreshModel();
             //create spectrum model
             modelSolution = GetModelSolution();
-            m_tplcorrBestTplName = "None";
+            m_tplshapeBestTplName = "None";
 
             merit = getLeastSquareMerit(lambdaRange);
         }
@@ -1534,7 +1539,7 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
             }
             refreshModel();
             modelSolution = GetModelSolution();
-            m_tplcorrBestTplName = bestTplName;
+            m_tplshapeBestTplName = bestTplName;
 
             merit = getLeastSquareMerit(lambdaRange);
         }
@@ -1553,6 +1558,7 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
                 //_merit = getLeastSquareMerit(lambdaRange);
                 _merit = getLeastSquareMeritFast();
             }
+            chisquareTplshape[ifitting] = merit;
 
             if(merit>_merit)
             {
@@ -1586,10 +1592,8 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
                 }
 
                 modelSolution = GetModelSolution();
-                m_tplcorrBestTplName = m_CatalogTplShape->GetCatalogName(savedIdxFitted);
+                m_tplshapeBestTplName = m_CatalogTplShape->GetCatalogName(savedIdxFitted);
             }
-
-
         }
 
         //if(m_rigidity=="tplcorr")
@@ -1620,7 +1624,7 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
 
         for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
         {
-            Log.LogInfo( "Linemodel: tplshape = %d (%s), and A=%f", savedIdxFitted, m_tplcorrBestTplName.c_str(), savedFittedAmp[iElts]);
+            Log.LogInfo( "Linemodel: tplshape = %d (%s), and A=%f", savedIdxFitted, m_tplshapeBestTplName.c_str(), savedFittedAmp[iElts]);
             m_Elements[iElts]->SetFittedAmplitude(savedFittedAmp[iElts], savedFittedAmpError[iElts]);
             m_Elements[iElts]->SetSumCross(savedMtD[iElts]);
             m_Elements[iElts]->SetSumGauss(savedMtM[iElts]);

@@ -96,8 +96,8 @@ public:
     Float64 getLikelihood_cstLog(const TFloat64Range& lambdaRange);
     Int32 getMTransposeMCumulative(const TFloat64Range& lambdaRange, std::vector<Float64> lbda, std::vector<Float64> mtmCumul);
 
-
-    std::string getTplCorr_bestTplName();
+    std::string getTplshape_bestTplName();
+    Int32 getTplshape_count();
 
     Int32 GetNElements();
     Int32 GetModelValidElementsNDdl();
@@ -118,7 +118,7 @@ public:
 
     Bool initModelAtZ(Float64 redshift, const TFloat64Range& lambdaRange, const CSpectrumSpectralAxis &spectralAxis);
 
-    Float64 fit(Float64 redshift, const TFloat64Range& lambdaRange, CLineModelSolution &modelSolution, Int32 contreest_iterations=0, bool enableLogging=0);
+    Float64 fit(Float64 redshift, const TFloat64Range& lambdaRange, CLineModelSolution &modelSolution, TFloat64List chisquareTplshape=TFloat64List(), Int32 contreest_iterations=0, bool enableLogging=0);
 
     std::vector<CLmfitController*> createLmfitControllers( const TFloat64Range& lambdaRange);
     void fitWithModelSelection(Float64 redshift, const TFloat64Range& lambdaRange, CLineModelSolution &modelSolution);
@@ -253,7 +253,7 @@ private:
     std::shared_ptr<CSpectrum> m_inputSpc;
     CTemplateCatalog m_tplCatalog;
     TStringList m_tplCategoryList;
-    std::string m_tplcorrBestTplName;
+    std::string m_tplshapeBestTplName;
 
     COperatorChiSquare2* m_chiSquareOperator;
     Int32 m_fitContinuum_dustfit;

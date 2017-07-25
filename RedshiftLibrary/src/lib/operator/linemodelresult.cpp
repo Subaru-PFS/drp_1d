@@ -27,6 +27,79 @@ CLineModelResult::~CLineModelResult()
 
 }
 
+/**
+ * @brief CLineModelResult::Init
+ * Initializes the linemodel results, by:
+ *  - setting the redshift grid
+ *  - setting the size of chisquare vectors
+ * @param redshifts
+ * @param restRays
+ * @param nTplshapes
+ * @return
+ */
+Int32 CLineModelResult::Init( std::vector<Float64> redshifts, CRayCatalog::TRayVector restRays, Int32 nTplshapes )
+{
+    Int32 err = 0;
+
+    Int32 nResults = redshifts.size();
+    Status.resize( nResults );
+    ChiSquare.resize( nResults );
+    Redshifts.resize( nResults );
+    Redshifts = redshifts;
+    restRayList = restRays;
+    LineModelSolutions.resize( nResults );
+
+    //init the tplshape chisquare results
+    for(Int32 k=0; k<nTplshapes; k++)
+    {
+        TFloat64List _chi2tpl(nTplshapes, DBL_MAX);
+        ChiSquareTplshapes.push_back(_chi2tpl);
+    }
+
+    return err;
+}
+
+Int32 CLineModelResult::SetChisquareTplshapeResult( Int32 index, TFloat64List chisquareTplshape )
+{
+    if(index>=Redshifts.size())
+    {
+        return -1;
+    }
+    if(chisquareTplshape.size()!=ChiSquareTplshapes.size())
+    {
+        return -2;
+    }
+    if(chisquareTplshape.size()<1)
+    {
+        return -3;
+    }
+
+    for(Int32 k=0; k<chisquareTplshape.size(); k++)
+    {
+        ChiSquareTplshapes[k][index] = chisquareTplshape[k];
+    }
+    return 0;
+}
+
+TFloat64List CLineModelResult::GetChisquareTplshapeResult( Int32 index )
+{
+    TFloat64List chisquareTplshape;
+    if(index>=Redshifts.size())
+    {
+        return chisquareTplshape;
+    }
+    if(ChiSquareTplshapes.size()<1)
+    {
+        return chisquareTplshape;
+    }
+
+    for(Int32 k=0; k<ChiSquareTplshapes.size(); k++)
+    {
+        chisquareTplshape.push_back(ChiSquareTplshapes[k][index]);
+    }
+
+    return chisquareTplshape;
+}
 
 /**
  * \brief Attempts to read the redshift and chisquare values stored in the argument stream.
