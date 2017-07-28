@@ -56,6 +56,8 @@ Int32 CLineModelResult::Init( std::vector<Float64> redshifts, CRayCatalog::TRayV
         ChiSquareTplshapes.push_back(_chi2tpl);
     }
 
+    ChiSquareContinuum.resize( nResults );
+
     return err;
 }
 

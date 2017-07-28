@@ -385,6 +385,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
         {
             result->ChiSquare[i] = model.fit( result->Redshifts[i], lambdaRange, result->LineModelSolutions[i], contreest_iterations, false );
             result->SetChisquareTplshapeResult(i , model.GetChisquareTplshape());
+            result->ChiSquareContinuum[i] = model.getLeastSquareContinuumMeritFast();
             Log.LogDebug( "Z interval %d: Chi2 = %f", i, result->ChiSquare[i] );
             indexLargeGrid++;
             //Log.LogInfo( "\nLineModel Infos: large grid step %d", i);
@@ -392,6 +393,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
             result->ChiSquare[i] = result->ChiSquare[i-1] + 1e-2;
             result->LineModelSolutions[i] = result->LineModelSolutions[i-1];
             result->SetChisquareTplshapeResult( i, result->GetChisquareTplshapeResult(i-1));
+            result->ChiSquareContinuum[i] = model.getLeastSquareContinuumMeritFast();
         }
     }
     //WARNING: HACK, first pass with continuum from spectrum.
@@ -699,6 +701,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
                     //Log.LogInfo("Fit for Extended redshift %d, z = %f", iz, result->Redshifts[iz]);
                     result->ChiSquare[iz] = model.fit( result->Redshifts[iz], lambdaRange, result->LineModelSolutions[iz], contreest_iterations, false );
                     result->SetChisquareTplshapeResult(iz , model.GetChisquareTplshape());
+                    result->ChiSquareContinuum[iz] = model.getLeastSquareContinuumMeritFast();
                     if(result->ChiSquare[iz]< extremumList2[i].Y)
                     {
                         extremumList2[i].X = result->Redshifts[iz];
@@ -830,6 +833,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
         if(!modelInfoSave){
             result->ChiSquare[idx] = model.fit( result->Redshifts[idx], lambdaRange, result->LineModelSolutions[idx], contreest_iterations, true );
             result->SetChisquareTplshapeResult(idx , model.GetChisquareTplshape());
+            result->ChiSquareContinuum[idx] = model.getLeastSquareContinuumMeritFast();
         }
         if(m!=result->ChiSquare[idx])
         {
@@ -945,6 +949,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
         //save the continuum tpl fitting results
         result->ExtremaResult.FittedTplName[i] = model.getFitContinuum_tplName();
         result->ExtremaResult.FittedTplAmplitude[i] = model.getFitContinuum_tplAmplitude();
+        result->ExtremaResult.FittedTplMerit[i] = model.getFitContinuum_tplMerit();
         result->ExtremaResult.FittedTplDustCoeff[i] = model.getFitContinuum_tplIsmDustCoeff();
         result->ExtremaResult.FittedTplMeiksinIdx[i] = model.getFitContinuum_tplIgmMeiksinIdx();
 
@@ -959,6 +964,8 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
     //std::string opt_combinePdf = "bestchi2";
     CombinePDF(dataStore, result, opt_rigidity, opt_combinePdf);
 
+    SaveContinuumPDF(dataStore, result);
+
     //Save chisquareTplshape results
     for(Int32 km=0; km<result->ChiSquareTplshapes.size(); km++)
     {
@@ -969,12 +976,63 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
             result_chisquaretplshape->ChiSquare[kz] = result->ChiSquareTplshapes[km][kz];
         }
 
-        std::string resname = (boost::format("linemodel_chisquaretplshape_%d") % km).str();
+        std::string resname = (boost::format("linemodel_chisquaretplshape/linemodel_chisquaretplshape_%d") % km).str();
         dataStore.StoreScopedGlobalResult( resname.c_str(), result_chisquaretplshape );
     }
     return result;
 
 }
+
+Int32 COperatorLineModel::SaveContinuumPDF(CDataStore &store, std::shared_ptr<CLineModelResult> result)
+{
+    Log.LogInfo("Linemodel: continuum Pdfz computation");
+    std::shared_ptr<CPdfMargZLogResult> postmargZResult = std::shared_ptr<CPdfMargZLogResult>(new CPdfMargZLogResult());
+    CPdfz pdfz;
+    Float64 cstLog = result->cstLog;
+    TFloat64List logProba;
+    Float64 logEvidence;
+
+    Int32 retPdfz=-1;
+
+    bool zPriorStrongLinePresence = false;
+    std::shared_ptr<CPdfLogResult> zPrior = std::shared_ptr<CPdfLogResult>(new CPdfLogResult());
+    zPrior->SetSize(result->Redshifts.size());
+    for ( UInt32 k=0; k<result->Redshifts.size(); k++)
+    {
+        zPrior->Redshifts[k] = result->Redshifts[k];
+    }
+    if(zPriorStrongLinePresence)
+    {
+        Log.LogInfo("Linemodel: Pdfz computation: StrongLinePresence prior enabled");
+        UInt32 lineTypeFilter = 1;// for emission lines only
+        std::vector<bool> strongLinePresence = result->GetStrongLinesPresence(lineTypeFilter);
+        zPrior->valProbaLog = pdfz.GetStrongLinePresenceLogZPrior(strongLinePresence);
+    }else{
+        Log.LogInfo("Linemodel: Pdfz computation: StrongLinePresence prior disabled");
+        zPrior->valProbaLog = pdfz.GetConstantLogZPrior(result->Redshifts.size());
+    }
+
+    retPdfz = pdfz.Compute(result->ChiSquareContinuum, result->Redshifts, cstLog, zPrior->valProbaLog, logProba, logEvidence);
+    if(retPdfz==0){
+        store.StoreGlobalResult( "zPDF/logpriorcontinuum.logP_Z_data", zPrior);
+
+        postmargZResult->countTPL = result->Redshifts.size(); // assumed 1 model per z
+        postmargZResult->Redshifts.resize(result->Redshifts.size());
+        postmargZResult->valProbaLog.resize(result->Redshifts.size());
+        for ( UInt32 k=0; k<result->Redshifts.size(); k++)
+        {
+            postmargZResult->Redshifts[k] = result->Redshifts[k] ;
+            postmargZResult->valProbaLog[k] = logProba[k];
+        }
+
+        store.StoreGlobalResult( "zPDF/logposteriorcontinuum.logMargP_Z_data", postmargZResult);
+    }else{
+        Log.LogError("Linemodel: Pdfz computation for continuum FAILED!");
+    }
+
+    return 0;
+}
+
 
 Int32 COperatorLineModel::CombinePDF(CDataStore &store, std::shared_ptr<CLineModelResult> result, std::string opt_rigidity, std::string opt_combine)
 {

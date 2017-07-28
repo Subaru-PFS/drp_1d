@@ -83,6 +83,7 @@ public:
                                       const Float64 &opt_velocityfitmax);
 
     Int32 CombinePDF(CDataStore &store, std::shared_ptr<CLineModelResult> result, std::string opt_rigidity, std::string opt_combine);
+    Int32 SaveContinuumPDF(CDataStore &store, std::shared_ptr<CLineModelResult> result);
 
 
     void storeGlobalModelResults( CDataStore &dataStore );

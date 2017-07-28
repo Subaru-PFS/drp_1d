@@ -45,6 +45,7 @@ Void CLineModelExtremaResult::Resize(Int32 size)
     OutsideLinesMask.resize(size);
     FittedTplName.resize(size);
     FittedTplAmplitude.resize(size);
+    FittedTplMerit.resize(size);
     FittedTplDustCoeff.resize(size);
     FittedTplMeiksinIdx.resize(size);
     FittedTplshapeName.resize(size);
@@ -217,6 +218,16 @@ Void CLineModelExtremaResult::Save( const CDataStore& store, std::ostream& strea
         for ( int i=0; i<FittedTplAmplitude.size(); i++)
         {
             stream <<  FittedTplAmplitude[i] << "\t";
+        }
+        stream << "}" << std::endl;
+    }
+
+    // save FittedTplMerit, on 1 line
+    if(FittedTplMerit.size()>0){
+        stream <<  "#FittedTplMerit for each extrema = {";
+        for ( int i=0; i<FittedTplMerit.size(); i++)
+        {
+            stream <<  FittedTplMerit[i] << "\t";
         }
         stream << "}" << std::endl;
     }

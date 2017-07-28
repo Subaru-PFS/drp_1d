@@ -45,6 +45,7 @@ public:
     TFloat64List            ChiSquare;  // min chi2
 
     std::vector<TFloat64List> ChiSquareTplshapes; // full chi2 results (for each tplshape if needed)
+    TFloat64List ChiSquareContinuum; // chi2 result for the continuum
 
     std::vector<CLineModelSolution> LineModelSolutions;
 

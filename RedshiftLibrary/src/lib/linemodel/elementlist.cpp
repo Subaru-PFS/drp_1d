@@ -797,15 +797,16 @@ Int32 CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange)
 
                 if(tpl.GetName()==bestTplName)
                 {
- 		  m_fitContinuum_tplFitAmplitude = bestFitAmplitude;
-                  m_fitContinuum_tplFitDustCoeff = bestFitDustCoeff;
-                  
+                    m_fitContinuum_tplFitAmplitude = bestFitAmplitude;
+                    m_fitContinuum_tplFitMerit = bestMerit;
+                    m_fitContinuum_tplFitDustCoeff = bestFitDustCoeff;
 
-                  ApplyContinuumOnGrid(tpl);
 
-                  m_fitContinuum_tplFitDtM = bestFitDtM;
-                  m_fitContinuum_tplFitMtM = bestFitMtM;
-                  setFitContinuum_tplAmplitude(bestFitAmplitude);
+                    ApplyContinuumOnGrid(tpl);
+
+                    m_fitContinuum_tplFitDtM = bestFitDtM;
+                    m_fitContinuum_tplFitMtM = bestFitMtM;
+                    setFitContinuum_tplAmplitude(bestFitAmplitude);
 
                 }
             }
@@ -977,6 +978,11 @@ std::string CLineModelElementList::getFitContinuum_tplName()
 Float64 CLineModelElementList::getFitContinuum_tplAmplitude()
 {
     return m_fitContinuum_tplFitAmplitude;
+}
+
+Float64 CLineModelElementList::getFitContinuum_tplMerit()
+{
+    return m_fitContinuum_tplFitMerit;
 }
 
 Float64 CLineModelElementList::getFitContinuum_tplIsmDustCoeff()
@@ -3465,16 +3471,7 @@ Float64 CLineModelElementList::getLeastSquareMeritFast(Int32 idxLine)
 {
     Float64 fit;
 
-    if( m_ContinuumComponent=="tplfit" )
-    {
-        fit = m_dTransposeDRaw;
-
-        Float64 term1 = m_fitContinuum_tplFitAmplitude*m_fitContinuum_tplFitAmplitude*m_fitContinuum_tplFitMtM;
-        Float64 term2 = - 2.*m_fitContinuum_tplFitAmplitude*m_fitContinuum_tplFitDtM;
-        fit += term1 + term2;
-    }else{
-        fit = m_dTransposeDNocontinuum;
-    }
+    fit = getLeastSquareContinuumMeritFast();
 
     for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
     {
@@ -3491,6 +3488,24 @@ Float64 CLineModelElementList::getLeastSquareMeritFast(Int32 idxLine)
     }
 
     Log.LogDebug( "CLineModelElementList::getLeastSquareMerit fit = %f", fit );
+    return fit;
+}
+
+Float64 CLineModelElementList::getLeastSquareContinuumMeritFast()
+{
+    Float64 fit;
+
+    if( m_ContinuumComponent=="tplfit" )
+    {
+        fit = m_dTransposeDRaw;
+
+        Float64 term1 = m_fitContinuum_tplFitAmplitude*m_fitContinuum_tplFitAmplitude*m_fitContinuum_tplFitMtM;
+        Float64 term2 = - 2.*m_fitContinuum_tplFitAmplitude*m_fitContinuum_tplFitDtM;
+        fit += term1 + term2;
+    }else{
+        fit = m_dTransposeDNocontinuum;
+    }
+
     return fit;
 }
 

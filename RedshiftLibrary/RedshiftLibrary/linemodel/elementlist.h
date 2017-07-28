@@ -81,6 +81,7 @@ public:
                         Float64& fitMtM);
     std::string getFitContinuum_tplName();
     Float64 getFitContinuum_tplAmplitude();
+    Float64 getFitContinuum_tplMerit();
     void setFitContinuum_tplAmplitude(Float64 tplAmp);
     Float64 getFitContinuum_tplIsmDustCoeff();
     Float64 getFitContinuum_tplIgmMeiksinIdx();
@@ -144,6 +145,7 @@ public:
 
     Int32 getSpcNSamples(const TFloat64Range& lambdaRange);
     Float64 getLeastSquareMeritFast(Int32 idxLine=-1);
+    Float64 getLeastSquareContinuumMeritFast();
     Float64 getLeastSquareMerit(const TFloat64Range &lambdaRange);
     Float64 getLeastSquareMeritUnderElements();
     Float64 getStrongerMultipleELAmpCoeff();
@@ -267,6 +269,7 @@ private:
     Int32 m_fitContinuum_option;
     std::string m_fitContinuum_tplName;
     Float64 m_fitContinuum_tplFitAmplitude;
+    Float64 m_fitContinuum_tplFitMerit;
     Float64 m_fitContinuum_tplFitDustCoeff;
     Int32 m_fitContinuum_tplFitMeiksinIdx;
     Float64 m_fitContinuum_tplFitDtM;
