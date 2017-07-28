@@ -241,13 +241,13 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
         std::vector<std::shared_ptr<CChisquareResult>> chisquareResultsAllTpl;
         std::vector<std::string> chisquareResultsTplName;
 
-        //*
+        /*
         COperatorChiSquareLogLambda* chiSquareOperator;
         bool enableLogRebin = true;
         chiSquareOperator = new COperatorChiSquareLogLambda(opt_calibrationPath, enableLogRebin);
         //*/
 
-        /*
+        //*
         COperatorChiSquare2* chiSquareOperator;
         chiSquareOperator = new COperatorChiSquare2(opt_calibrationPath);
         //*/
@@ -898,6 +898,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
 
         result->ExtremaResult.Extrema[i] = z;
         result->ExtremaResult.ExtremaMerit[i] = m;
+        result->ExtremaResult.ExtremaMeritContinuum[i] = model.getLeastSquareContinuumMeritFast();
 
         result->ExtremaResult.ExtremaLastPass[i] = z; //refined extremum is initialized here.
 

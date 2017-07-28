@@ -29,6 +29,7 @@ public:
     //Extrema results
     TFloat64List            Extrema;    // z extrema
     TFloat64List            ExtremaMerit;    // extrema merit
+    TFloat64List            ExtremaMeritContinuum; //extrema merit for continuum
     TFloat64List            DeltaZ;    // extrema delta z
     TFloat64List            mTransposeM;    // extrema model norm
     TFloat64List            ExtremaLastPass; //z extrema with more precision

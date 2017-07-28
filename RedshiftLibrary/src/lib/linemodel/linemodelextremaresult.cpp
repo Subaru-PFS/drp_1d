@@ -31,6 +31,7 @@ Void CLineModelExtremaResult::Resize(Int32 size)
 {
     Extrema.resize(size);
     ExtremaMerit.resize(size);
+    ExtremaMeritContinuum.resize(size);
     DeltaZ.resize(size);
     mTransposeM.resize(size);
     ExtremaLastPass.resize(size);
@@ -81,6 +82,16 @@ Void CLineModelExtremaResult::Save( const CDataStore& store, std::ostream& strea
         for ( int i=0; i<ExtremaMerit.size(); i++)
         {
             stream <<  ExtremaMerit[i] << "\t";
+        }
+        stream << "}" << std::endl;
+    }
+
+    // save extremaMeritContinuum list, on 1 line
+    if(ExtremaMeritContinuum.size()>0){
+        stream <<  "#ExtremaMeritContinuum for z = {";
+        for ( int i=0; i<ExtremaMeritContinuum.size(); i++)
+        {
+            stream <<  ExtremaMeritContinuum[i] << "\t";
         }
         stream << "}" << std::endl;
     }
