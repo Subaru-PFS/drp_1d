@@ -148,6 +148,7 @@ public:
     Float64 getLeastSquareContinuumMeritFast();
     Float64 getLeastSquareMerit(const TFloat64Range &lambdaRange);
     Float64 getLeastSquareMeritUnderElements();
+    Float64 getScaleMargCorrection(Int32 idxLine=-1);
     Float64 getStrongerMultipleELAmpCoeff();
     Float64 getCumulSNRStrongEL();
     Float64 getCumulSNROnRange( TInt32Range idxRange );

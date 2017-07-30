@@ -3509,6 +3509,35 @@ Float64 CLineModelElementList::getLeastSquareContinuumMeritFast()
     return fit;
 }
 
+
+
+/**
+ * \brief Get the scale marginalization correction
+ **/
+Float64 CLineModelElementList::getScaleMargCorrection(Int32 idxLine)
+{
+    Float64 corr=0.0;
+
+    //corr = getContinuumScaleMargCorrection();
+
+
+    for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
+    {
+        if(idxLine!=-1 && idxLine!=iElts)
+        {
+            continue;
+        }
+        if(m_Elements[iElts]->IsOutsideLambdaRange() == true){
+            continue;
+        }
+
+        Float64 mtm = m_Elements[iElts]->GetSumGauss();
+        corr += log(mtm);
+    }
+
+    return corr;
+}
+
 /**
  * \brief Returns the number of spectral samples between lambdaRange.
  **/

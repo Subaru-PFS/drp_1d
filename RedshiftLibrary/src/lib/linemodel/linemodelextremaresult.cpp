@@ -34,6 +34,8 @@ Void CLineModelExtremaResult::Resize(Int32 size)
     ExtremaMeritContinuum.resize(size);
     DeltaZ.resize(size);
     mTransposeM.resize(size);
+    CorrScaleMarg.resize(size);
+    NDof.resize(size);
     ExtremaLastPass.resize(size);
     lmfitPass.resize(size);
     Posterior.resize(size);
@@ -112,6 +114,26 @@ Void CLineModelExtremaResult::Save( const CDataStore& store, std::ostream& strea
         for ( int i=0; i<mTransposeM.size(); i++)
         {
             stream <<  mTransposeM[i] << "\t";
+        }
+        stream << "}" << std::endl;
+    }
+
+    // save NDof list, on 1 line
+    if(NDof.size()>0){
+        stream <<  "#NDof for z = {";
+        for ( int i=0; i<NDof.size(); i++)
+        {
+            stream <<  NDof[i] << "\t";
+        }
+        stream << "}" << std::endl;
+    }
+
+    // save CorrScaleMarg list, on 1 line
+    if(CorrScaleMarg.size()>0){
+        stream <<  "#CorrScaleMarg for z = {";
+        for ( int i=0; i<CorrScaleMarg.size(); i++)
+        {
+            stream <<  CorrScaleMarg[i] << "\t";
         }
         stream << "}" << std::endl;
     }

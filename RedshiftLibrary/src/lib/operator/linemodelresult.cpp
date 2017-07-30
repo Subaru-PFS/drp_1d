@@ -181,7 +181,6 @@ Void CLineModelResult::Load( std::istream& stream )
  * Print each redshift and chisquare values.
  * Print each Extrema as a comment.
  * Print each BIC as a comment.
- * Print each POSTERIOR as a comment.
  * Print each SigmaZ as a comment.
  * Print each LogArea as a comment.
  **/

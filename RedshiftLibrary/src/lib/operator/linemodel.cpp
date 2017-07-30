@@ -922,6 +922,10 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
         //store the model norm
         result->ExtremaResult.mTransposeM[i] = model.EstimateMTransposeM(lambdaRange);
 
+        //scale marginalization correction
+        Float64 corrScaleMarg = model.getScaleMargCorrection();//
+        result->ExtremaResult.CorrScaleMarg[i] = corrScaleMarg;
+
         static Float64 cutThres = 3.0;
         Int32 nValidLines = result->GetNLinesOverCutThreshold(i, cutThres, cutThres);
         result->ExtremaResult.Posterior[i] = nValidLines;//m/Float64(1+nValidLines);
@@ -934,10 +938,11 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
 
         Int32 nddl = model.GetNElements(); //get the total number of elements in the model
         nddl = result->LineModelSolutions[idx].nDDL; //override nddl by the actual number of elements in the fitted model
+        result->ExtremaResult.NDof[i] = model.GetModelNonZeroElementsNDdl();
 
-        //result->bic[i] = m + nddl*log(nsamples); //BIC
+        Float64 bic = m + nddl*log(result->nSpcSamples); //BIC
         Float64 aic = m + 2*nddl; //AIC
-        result->ExtremaResult.bic[i] = aic;
+        result->ExtremaResult.bic[i] = bic;
         //result->bic[i] = aic + (2*nddl*(nddl+1) )/(nsamples-nddl-1);  //AICc, better when nsamples small
 
         //compute continuum indexes

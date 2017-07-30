@@ -32,6 +32,8 @@ public:
     TFloat64List            ExtremaMeritContinuum; //extrema merit for continuum
     TFloat64List            DeltaZ;    // extrema delta z
     TFloat64List            mTransposeM;    // extrema model norm
+    TFloat64List            CorrScaleMarg;    // extrema scale marg. correction
+    std::vector<Int32>      NDof;   //non zero elements in the lambdarange
     TFloat64List            ExtremaLastPass; //z extrema with more precision
     TFloat64List            lmfitPass;// z found with lmfit
 

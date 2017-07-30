@@ -390,6 +390,15 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
         fs::path refFilePath("/home/aschmitt/amazed_cluster/datasets/pfs/pfs6b2_201704_sim10k/pfs6b2_reference_20170523_filtSim3h.txt");
         Int32 substring_start = 0;
         Int32 substring_n = 18;
+        std::string strTag = "wlines";
+        std::size_t foundstra = spc.GetName().find(strTag.c_str());
+        if (foundstra!=std::string::npos){
+            substring_n = (Int32)foundstra;
+        }else{
+            Log.LogWarning( "Linemodel - hack - unable to find strTag=%s", strTag.c_str());
+            return false;
+        }
+
         Int32 colId = 2; //starts at 1, so that id_column is usually 1
         //*/
 
@@ -398,6 +407,11 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
             std::string spcSubStringId = spc.GetName().substr(substring_start, substring_n);
             Log.LogInfo( "Linemodel - hack - using substring %s", spcSubStringId.c_str());
             getValueFromRefFile( refFilePath.c_str(), spcSubStringId, colId, zref);
+        }
+        if(zref==-1)
+        {
+            Log.LogWarning( "Linemodel - hack - unable to find zref!");
+            return false;
         }
         _redshifts.push_back(zref);
         Log.LogInfo( "Linemodel - hack - Loaded zref for spc %s : zref=%f", spc.GetName().c_str(), zref);
