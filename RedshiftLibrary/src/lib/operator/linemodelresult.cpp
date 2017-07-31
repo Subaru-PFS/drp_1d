@@ -44,6 +44,7 @@ Int32 CLineModelResult::Init( std::vector<Float64> redshifts, CRayCatalog::TRayV
     Int32 nResults = redshifts.size();
     Status.resize( nResults );
     ChiSquare.resize( nResults );
+    ScaleMargCorrection.resize( nResults );
     Redshifts.resize( nResults );
     Redshifts = redshifts;
     restRayList = restRays;
@@ -54,14 +55,18 @@ Int32 CLineModelResult::Init( std::vector<Float64> redshifts, CRayCatalog::TRayV
     {
         TFloat64List _chi2tpl(nResults, DBL_MAX);
         ChiSquareTplshapes.push_back(_chi2tpl);
+
+        TFloat64List _corr(nResults, 0.0);
+        ScaleMargCorrectionTplshapes.push_back(_corr);
     }
 
     ChiSquareContinuum.resize( nResults );
+    ScaleMargCorrectionContinuum.resize( nResults);
 
     return err;
 }
 
-Int32 CLineModelResult::SetChisquareTplshapeResult( Int32 index, TFloat64List chisquareTplshape )
+Int32 CLineModelResult::SetChisquareTplshapeResult( Int32 index, TFloat64List chisquareTplshape, TFloat64List scaleMargCorrTplshape )
 {
     if(index>=Redshifts.size())
     {
@@ -75,10 +80,15 @@ Int32 CLineModelResult::SetChisquareTplshapeResult( Int32 index, TFloat64List ch
     {
         return -3;
     }
+    if(chisquareTplshape.size()!=scaleMargCorrTplshape.size())
+    {
+        return -4;
+    }
 
     for(Int32 k=0; k<chisquareTplshape.size(); k++)
     {
         ChiSquareTplshapes[k][index] = chisquareTplshape[k];
+        ScaleMargCorrectionTplshapes[k][index] = scaleMargCorrTplshape[k];
     }
     return 0;
 }
@@ -101,6 +111,26 @@ TFloat64List CLineModelResult::GetChisquareTplshapeResult( Int32 index )
     }
 
     return chisquareTplshape;
+}
+
+TFloat64List CLineModelResult::GetScaleMargCorrTplshapeResult( Int32 index )
+{
+    TFloat64List scaleMargCorrTplshape;
+    if(index>=Redshifts.size())
+    {
+        return scaleMargCorrTplshape;
+    }
+    if(ScaleMargCorrectionTplshapes.size()<1)
+    {
+        return scaleMargCorrTplshape;
+    }
+
+    for(Int32 k=0; k<ScaleMargCorrectionTplshapes.size(); k++)
+    {
+        scaleMargCorrTplshape.push_back(ScaleMargCorrectionTplshapes[k][index]);
+    }
+
+    return scaleMargCorrTplshape;
 }
 
 /**

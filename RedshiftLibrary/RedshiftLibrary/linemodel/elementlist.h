@@ -100,6 +100,8 @@ public:
     std::string getTplshape_bestTplName();
     Int32 getTplshape_count();
     std::vector<Float64> GetChisquareTplshape();
+    std::vector<Float64> GetScaleMargTplshape();
+
 
     Int32 GetNElements();
     Int32 GetModelValidElementsNDdl();
@@ -149,6 +151,7 @@ public:
     Float64 getLeastSquareMerit(const TFloat64Range &lambdaRange);
     Float64 getLeastSquareMeritUnderElements();
     Float64 getScaleMargCorrection(Int32 idxLine=-1);
+    Float64 getContinuumScaleMargCorrection();
     Float64 getStrongerMultipleELAmpCoeff();
     Float64 getCumulSNRStrongEL();
     Float64 getCumulSNROnRange( TInt32Range idxRange );
@@ -223,6 +226,7 @@ private:
 
     CRayCatalogsTplShape* m_CatalogTplShape;
     std::vector<Float64> m_ChisquareTplshape;
+    std::vector<Float64> m_ScaleMargCorrTplshape;
 
     Float64 m_Redshift;
 

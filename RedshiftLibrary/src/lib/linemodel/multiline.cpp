@@ -65,7 +65,11 @@ CMultiLine::CMultiLine( std::vector<CRay> rs,
 
     m_absLinesLimit = -1.0; //-1: disable the ABS lines amplitude cut, any other value is used as a limit for the abs line coeff (typically: 1.0)
 
+    m_sumCross = 0.0;
+    m_sumGauss = 0.0;
+
     SetFittedAmplitude(-1, -1);
+
 }
 
 /**

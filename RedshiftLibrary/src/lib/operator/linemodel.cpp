@@ -384,16 +384,20 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
         if(enableFastFitLargeGrid==0 || i==0 || result->Redshifts[i] == largeGridRedshifts[indexLargeGrid])
         {
             result->ChiSquare[i] = model.fit( result->Redshifts[i], lambdaRange, result->LineModelSolutions[i], contreest_iterations, false );
-            result->SetChisquareTplshapeResult(i , model.GetChisquareTplshape());
+            result->ScaleMargCorrection[i] = model.getScaleMargCorrection();
+            result->SetChisquareTplshapeResult(i , model.GetChisquareTplshape(), model.GetScaleMargTplshape());
             result->ChiSquareContinuum[i] = model.getLeastSquareContinuumMeritFast();
+            result->ScaleMargCorrectionContinuum[i] = model.getContinuumScaleMargCorrection();
             Log.LogDebug( "Z interval %d: Chi2 = %f", i, result->ChiSquare[i] );
             indexLargeGrid++;
             //Log.LogInfo( "\nLineModel Infos: large grid step %d", i);
         }else{
             result->ChiSquare[i] = result->ChiSquare[i-1] + 1e-2;
+            result->ScaleMargCorrection[i] = model.getScaleMargCorrection();
             result->LineModelSolutions[i] = result->LineModelSolutions[i-1];
-            result->SetChisquareTplshapeResult( i, result->GetChisquareTplshapeResult(i-1));
+            result->SetChisquareTplshapeResult( i, result->GetChisquareTplshapeResult(i-1), result->GetScaleMargCorrTplshapeResult(i-1));
             result->ChiSquareContinuum[i] = model.getLeastSquareContinuumMeritFast();
+            result->ScaleMargCorrectionContinuum[i] = model.getContinuumScaleMargCorrection();
         }
     }
     //WARNING: HACK, first pass with continuum from spectrum.
@@ -700,8 +704,10 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
                 if(result->Redshifts[iz] >= left_border && result->Redshifts[iz] <= right_border){
                     //Log.LogInfo("Fit for Extended redshift %d, z = %f", iz, result->Redshifts[iz]);
                     result->ChiSquare[iz] = model.fit( result->Redshifts[iz], lambdaRange, result->LineModelSolutions[iz], contreest_iterations, false );
-                    result->SetChisquareTplshapeResult(iz , model.GetChisquareTplshape());
+                    result->ScaleMargCorrection[iz] = model.getScaleMargCorrection();
+                    result->SetChisquareTplshapeResult(iz , model.GetChisquareTplshape(), model.GetScaleMargTplshape());
                     result->ChiSquareContinuum[iz] = model.getLeastSquareContinuumMeritFast();
+                    result->ScaleMargCorrectionContinuum[iz] = model.getContinuumScaleMargCorrection();
                     if(result->ChiSquare[iz]< extremumList2[i].Y)
                     {
                         extremumList2[i].X = result->Redshifts[iz];
@@ -832,8 +838,10 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
 
         if(!modelInfoSave){
             result->ChiSquare[idx] = model.fit( result->Redshifts[idx], lambdaRange, result->LineModelSolutions[idx], contreest_iterations, true );
-            result->SetChisquareTplshapeResult(idx , model.GetChisquareTplshape());
+            result->ScaleMargCorrection[idx] = model.getScaleMargCorrection();
+            result->SetChisquareTplshapeResult(idx , model.GetChisquareTplshape(), model.GetScaleMargTplshape());
             result->ChiSquareContinuum[idx] = model.getLeastSquareContinuumMeritFast();
+            result->ScaleMargCorrectionContinuum[idx] = model.getContinuumScaleMargCorrection();
         }
         if(m!=result->ChiSquare[idx])
         {
@@ -941,7 +949,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
         result->ExtremaResult.NDof[i] = model.GetModelNonZeroElementsNDdl();
 
         Float64 bic = m + nddl*log(result->nSpcSamples); //BIC
-        Float64 aic = m + 2*nddl; //AIC
+        //Float64 aic = m + 2*nddl; //AIC
         result->ExtremaResult.bic[i] = bic;
         //result->bic[i] = aic + (2*nddl*(nddl+1) )/(nsamples-nddl-1);  //AICc, better when nsamples small
 
@@ -966,8 +974,9 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
     //ComputeArea2(*result);
 
     /* ------------------------  COMPUTE POSTMARG PDF  --------------------------  */
-    std::string opt_combinePdf = "marg";
-    //std::string opt_combinePdf = "bestchi2";
+    //std::string opt_combinePdf = "marg";
+    std::string opt_combinePdf = "bestchi2";
+    //std::string opt_combinePdf = "bestproba";
     CombinePDF(dataStore, result, opt_rigidity, opt_combinePdf);
 
     SaveContinuumPDF(dataStore, result);
@@ -983,6 +992,20 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
         }
 
         std::string resname = (boost::format("linemodel_chisquaretplshape/linemodel_chisquaretplshape_%d") % km).str();
+        dataStore.StoreScopedGlobalResult( resname.c_str(), result_chisquaretplshape );
+    }
+
+    //Save scaleMargCorrTplshape results
+    for(Int32 km=0; km<result->ScaleMargCorrectionTplshapes.size(); km++)
+    {
+        std::shared_ptr<CLineModelResult> result_chisquaretplshape = std::shared_ptr<CLineModelResult>( new CLineModelResult() );
+        result_chisquaretplshape->Init( result->Redshifts, result->restRayList, 0);
+        for(Int32 kz=0; kz<result->Redshifts.size(); kz++)
+        {
+            result_chisquaretplshape->ChiSquare[kz] = result->ScaleMargCorrectionTplshapes[km][kz];
+        }
+
+        std::string resname = (boost::format("linemodel_chisquaretplshape/linemodel_scalemargcorrtplshape_%d") % km).str();
         dataStore.StoreScopedGlobalResult( resname.c_str(), result_chisquaretplshape );
     }
     return result;
@@ -1018,7 +1041,13 @@ Int32 COperatorLineModel::SaveContinuumPDF(CDataStore &store, std::shared_ptr<CL
         zPrior->valProbaLog = pdfz.GetConstantLogZPrior(result->Redshifts.size());
     }
 
-    retPdfz = pdfz.Compute(result->ChiSquareContinuum, result->Redshifts, cstLog, zPrior->valProbaLog, logProba, logEvidence);
+    //correct chi2 if necessary: todo add switch
+    TFloat64List logLikelihoodCorrected(result->ChiSquareContinuum.size(), DBL_MAX);
+    for ( UInt32 k=0; k<result->Redshifts.size(); k++)
+    {
+        logLikelihoodCorrected[k] = result->ChiSquareContinuum[k];// + result->ScaleMargCorrectionContinuum[k];
+    }
+    retPdfz = pdfz.Compute(logLikelihoodCorrected, result->Redshifts, cstLog, zPrior->valProbaLog, logProba, logEvidence);
     if(retPdfz==0){
         store.StoreGlobalResult( "zPDF/logpriorcontinuum.logP_Z_data", zPrior);
 
@@ -1078,7 +1107,13 @@ Int32 COperatorLineModel::CombinePDF(CDataStore &store, std::shared_ptr<CLineMod
             zPrior->valProbaLog = pdfz.GetConstantLogZPrior(result->Redshifts.size());
         }
 
-        retPdfz = pdfz.Compute(result->ChiSquare, result->Redshifts, cstLog, zPrior->valProbaLog, logProba, logEvidence);
+        //correct chi2 if necessary: todo add switch
+        TFloat64List logLikelihoodCorrected(result->ChiSquare.size(), DBL_MAX);
+        for ( UInt32 k=0; k<result->Redshifts.size(); k++)
+        {
+            logLikelihoodCorrected[k] = result->ChiSquare[k];// + result->ScaleMargCorrection[k];
+        }
+        retPdfz = pdfz.Compute(logLikelihoodCorrected, result->Redshifts, cstLog, zPrior->valProbaLog, logProba, logEvidence);
         if(retPdfz==0){
             store.StoreGlobalResult( "zPDF/logprior.logP_Z_data", zPrior);
 
@@ -1092,7 +1127,7 @@ Int32 COperatorLineModel::CombinePDF(CDataStore &store, std::shared_ptr<CLineMod
             }
         }
     }
-    else{
+    else if(opt_combine=="bestproba" || opt_combine=="marg"){
 
         Log.LogInfo("Linemodel: Pdfz computation - combination: method=%s, n=%d", opt_combine.c_str(), result->ChiSquareTplshapes.size());
         std::vector<TFloat64List> priorsTplshapes;
@@ -1102,8 +1137,27 @@ Int32 COperatorLineModel::CombinePDF(CDataStore &store, std::shared_ptr<CLineMod
             priorsTplshapes.push_back(_prior);
         }
 
-        retPdfz = pdfz.Marginalize( result->Redshifts, result->ChiSquareTplshapes, priorsTplshapes, cstLog, postmargZResult);
+        //correct chi2 if necessary: todo add switch
+        std::vector<TFloat64List> ChiSquareTplshapesCorrected;
+        for(Int32 k=0; k<result->ChiSquareTplshapes.size(); k++)
+        {
+            TFloat64List logLikelihoodCorrected(result->ChiSquareTplshapes[k].size(), DBL_MAX);
+            for ( UInt32 kz=0; kz<result->Redshifts.size(); kz++)
+            {
+                logLikelihoodCorrected[kz] = result->ChiSquareTplshapes[k][kz];// + result->ScaleMargCorrectionTplshapes[k][kz];
+            }
+            ChiSquareTplshapesCorrected.push_back(logLikelihoodCorrected);
+        }
 
+        if(opt_combine=="marg")
+        {
+            retPdfz = pdfz.Marginalize( result->Redshifts, ChiSquareTplshapesCorrected, priorsTplshapes, cstLog, postmargZResult);
+        }else{
+            retPdfz = pdfz.BestProba( result->Redshifts, ChiSquareTplshapesCorrected, priorsTplshapes, cstLog, postmargZResult);
+        }
+        // todo: store priors for each tplshape model ?
+    }else{
+        Log.LogError("Linemodel: Unable to parse pdf combination method option");
     }
 
 

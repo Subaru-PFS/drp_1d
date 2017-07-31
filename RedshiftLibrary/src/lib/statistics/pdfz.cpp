@@ -174,7 +174,7 @@ std::vector<Float64> CPdfz::GetConstantLogZPrior(UInt32 nredshifts)
         logzPrior[kz] = log(zPrior[kz]);
     }
 
-    return zPrior;
+    return logzPrior;
 }
 
 std::vector<Float64> CPdfz::GetStrongLinePresenceLogZPrior(std::vector<bool> linePresence)
@@ -351,6 +351,138 @@ Int32 CPdfz::Marginalize(TFloat64List redshifts, std::vector<TFloat64List> merit
         }
     }
 
+
+    return 0;
+}
+
+// TODO: problem while estimating best proba. is it best proba for each z ? In that case: what about sum_z P = 1 ?
+Int32 CPdfz::BestProba(TFloat64List redshifts, std::vector<TFloat64List> meritResults, std::vector<TFloat64List> zPriors, Float64 cstLog, std::shared_ptr<CPdfMargZLogResult> postmargZResult)
+{
+    bool verbose = false;
+
+    if(meritResults.size() != zPriors.size())
+    {
+        Log.LogError("Pdfz: Pdfz-bestproba problem. merit.size (%d) != prior.size (%d)", meritResults.size(), zPriors.size());
+        return -9;
+    }
+    if(meritResults.size()<1 || zPriors.size()<1 || redshifts.size()<2)
+    {
+        Log.LogError("Pdfz: Pdfz-bestproba problem. merit.size (%d), prior.size (%d), or redshifts.size (%d) is zero !", meritResults.size(), zPriors.size(), redshifts.size());
+        return -99;
+    }
+
+    Bool initPostMarg = false;
+
+    for(Int32 km=0; km<meritResults.size(); km++)
+    {
+        if(verbose)
+        {
+            Log.LogInfo("Pdfz:-bestproba: processing chi2-result km=%d", km);
+        }
+
+        //Todo: Check if the status is OK ?
+        //meritResult->Status[i] == COperator::nStatus_OK
+
+        CPdfz pdfz;
+        TFloat64List logProba;
+        Float64 logEvidence;
+        Int32 retPdfz = pdfz.Compute(meritResults[km], redshifts, cstLog, zPriors[km], logProba, logEvidence);
+        if(retPdfz!=0)
+        {
+            Log.LogError("Pdfz: Pdfz-bestproba computation failed for result km=%d", km);
+            return -1;
+        }else{
+            if(!initPostMarg)
+            {
+                postmargZResult->countTPL = redshifts.size(); // assumed 1 model per z
+                postmargZResult->Redshifts.resize(redshifts.size());
+                postmargZResult->valProbaLog.resize(redshifts.size());
+                for ( UInt32 k=0; k<redshifts.size(); k++)
+                {
+                    postmargZResult->Redshifts[k] = redshifts[k] ;
+                    postmargZResult->valProbaLog[k] = -DBL_MAX;
+                }
+                initPostMarg = true;
+            }else
+            {
+                //check if the redshift bins are the same
+                for ( UInt32 k=0; k<redshifts.size(); k++)
+                {
+                    if(postmargZResult->Redshifts[k] != redshifts[k])
+                    {
+                        Log.LogError("pdfz: Pdfz-bestproba computation (z-bins comparison) failed for result km=%d", km);
+                        break;
+                    }
+                }
+            }
+            for ( UInt32 k=0; k<redshifts.size(); k++)
+            {
+                if( true /*meritResult->Status[k]== COperator::nStatus_OK*/) //todo: check (temporarily considers status is always OK for linemodel tplshape)
+                {
+                    if(logProba[k]>postmargZResult->valProbaLog[k])
+                    {
+                        postmargZResult->valProbaLog[k]=logProba[k];
+                    }
+                }
+            }
+        }
+    }
+
+    //normalize: sum_z P = 1
+    //1. check if the z step is constant. If not, pdf cannot be estimated by the current method.
+    Float64 reldzThreshold = 0.05; //relative difference accepted
+    bool constantdz = true;
+    Float64 mindz = DBL_MAX;
+    Float64 maxdz = -DBL_MAX;
+    for ( UInt32 k=1; k<redshifts.size(); k++)
+    {
+        Float64 diff = redshifts[k]-redshifts[k-1];
+        if(mindz > diff)
+        {
+            mindz = diff;
+        }
+        if(maxdz < diff)
+        {
+            maxdz = diff;
+        }
+    }
+    Float64 zstep = (maxdz+mindz)/2.0;
+    if(abs(maxdz-mindz)/zstep>reldzThreshold)
+    {
+        constantdz = false;
+        return 2;
+    }
+
+    //2. prepare LogEvidence
+    Float64 maxi = -DBL_MAX;
+    std::vector<Float64> smallVALUES(redshifts.size(), 0.0);
+    for ( UInt32 k=0; k<redshifts.size(); k++)
+    {
+        smallVALUES[k] = postmargZResult->valProbaLog[k];
+        if(maxi<smallVALUES[k])
+        {
+            maxi = smallVALUES[k]; // maxi will be used to avoid underflows when summing exponential of small values
+        }
+    }
+
+    Float64 sumModifiedExp = 0.0;
+    for ( UInt32 k=0; k<redshifts.size(); k++)
+    {
+        Float64 modifiedEXPO = exp(smallVALUES[k]-maxi);
+        sumModifiedExp += modifiedEXPO;
+    }
+    Float64 logEvidence = maxi + log(sumModifiedExp) + log(zstep);
+
+    if(verbose)
+    {
+        Log.LogInfo("Pdfz: Pdfz-bestproba computation: using logEvidence=%e", logEvidence);
+        Log.LogInfo("Pdfz: Pdfz-bestproba computation: using log(zstep)=%e",  log(zstep));
+    }
+
+    for ( UInt32 k=0; k<redshifts.size(); k++)
+    {
+            postmargZResult->valProbaLog[k] = postmargZResult->valProbaLog[k] - logEvidence;
+    }
 
     return 0;
 }

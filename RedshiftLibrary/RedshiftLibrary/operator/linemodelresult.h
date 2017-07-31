@@ -35,17 +35,22 @@ public:
     Float64 GetMaxChiSquare() const;
 
     Int32 ResizeChisquareTplShapes( Int32 nTplshapes, Int32 nRedshifts );
-    Int32 SetChisquareTplshapeResult( Int32 index, TFloat64List chisquareTplshape );
+    Int32 SetChisquareTplshapeResult( Int32 index, TFloat64List chisquareTplshape, TFloat64List scaleMargCorrTplshape );
     TFloat64List GetChisquareTplshapeResult( Int32 index );
+    TFloat64List GetScaleMargCorrTplshapeResult( Int32 index );
+
 
 
 
     //Merit results
     TFloat64List            Redshifts;  // z axis
     TFloat64List            ChiSquare;  // min chi2
+    TFloat64List            ScaleMargCorrection;  // margCorrection for min chi2
 
-    std::vector<TFloat64List> ChiSquareTplshapes; // full chi2 results (for each tplshape if needed)
+    std::vector<TFloat64List> ChiSquareTplshapes; // full chi2 results (for each tplshape)
+    std::vector<TFloat64List> ScaleMargCorrectionTplshapes; // full scale marginalization correction results (for each tplshape)
     TFloat64List ChiSquareContinuum; // chi2 result for the continuum
+    TFloat64List ScaleMargCorrectionContinuum; //  scale marginalization correction result for the continuum
 
     std::vector<CLineModelSolution> LineModelSolutions;
 

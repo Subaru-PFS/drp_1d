@@ -217,6 +217,7 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
         LogCatalogInfos();
 
         m_ChisquareTplshape.resize(m_CatalogTplShape->GetCatalogsCount());
+        m_ScaleMargCorrTplshape.resize(m_CatalogTplShape->GetCatalogsCount());
     }
 
     //init catalog offsets
@@ -1049,6 +1050,11 @@ std::vector<Float64> CLineModelElementList::GetChisquareTplshape()
     return m_ChisquareTplshape;
 }
 
+std::vector<Float64> CLineModelElementList::GetScaleMargTplshape()
+{
+    return m_ScaleMargCorrTplshape;
+}
+
 Bool CLineModelElementList::initModelAtZ(Float64 redshift, const TFloat64Range& lambdaRange, const CSpectrumSpectralAxis &spectralAxis)
 {
     m_Redshift = redshift;
@@ -1571,6 +1577,7 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
                 _merit = getLeastSquareMeritFast();
             }
             m_ChisquareTplshape[ifitting] = _merit;
+            m_ScaleMargCorrTplshape[ifitting] = getScaleMargCorrection();
 
             if(merit>_merit)
             {
@@ -1987,6 +1994,11 @@ Int32 CLineModelElementList::fitAmplitudesHybrid(const CSpectrumSpectralAxis& sp
       }
       else
       {
+          //fit individually: mainly for mtm and dtm estimation
+          for(Int32 ifit=0; ifit<overlappingInds.size(); ifit++)
+          {
+            m_Elements[overlappingInds[ifit]]->fitAmplitude(spectralAxis, spcFluxAxisNoContinuum, continuumfluxAxis, redshift);
+          }
           std::vector<Float64> ampsfitted;
           std::vector<Float64> errorsfitted;
           Int32 retVal = fitAmplitudesLinSolve(overlappingInds, spectralAxis, spcFluxAxisNoContinuum, continuumfluxAxis, ampsfitted, errorsfitted);
@@ -3513,12 +3525,16 @@ Float64 CLineModelElementList::getLeastSquareContinuumMeritFast()
 
 /**
  * \brief Get the scale marginalization correction
+ *
+ * WARNING: (todo-check) for lm-rules or lm-free, if hybrid method was used to fit, mtm and dtm are not estimated for now...
  **/
 Float64 CLineModelElementList::getScaleMargCorrection(Int32 idxLine)
 {
     Float64 corr=0.0;
 
-    //corr = getContinuumScaleMargCorrection();
+    //scale marg for continuum
+    corr += getContinuumScaleMargCorrection();
+
 
 
     for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
@@ -3530,9 +3546,28 @@ Float64 CLineModelElementList::getScaleMargCorrection(Int32 idxLine)
         if(m_Elements[iElts]->IsOutsideLambdaRange() == true){
             continue;
         }
+        if(m_Elements[iElts]->GetElementAmplitude()<=0.0){
+            continue;
+        }
 
         Float64 mtm = m_Elements[iElts]->GetSumGauss();
-        corr += log(mtm);
+        if(mtm>0.0){
+            corr += log(mtm);
+        }
+    }
+
+    return corr;
+}
+
+
+Float64 CLineModelElementList::getContinuumScaleMargCorrection()
+{
+    Float64 corr=0.0;
+
+    //scale marg for continuum
+    if(m_ContinuumComponent == "tplfit") //the support has to be already computed when LoadFitContinuum() is called
+    {
+        corr += log(m_fitContinuum_tplFitMtM);
     }
 
     return corr;

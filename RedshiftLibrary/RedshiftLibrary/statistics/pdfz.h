@@ -29,7 +29,7 @@ public:
     std::vector<Float64> GetStrongLinePresenceLogZPrior(std::vector<bool> linePresence);
 
     Int32 Marginalize(TFloat64List redshifts, std::vector<TFloat64List> meritResults, std::vector<TFloat64List> zPriors, Float64 cstLog, std::shared_ptr<CPdfMargZLogResult> postmargZResult);
-
+    Int32 BestProba(TFloat64List redshifts, std::vector<TFloat64List> meritResults, std::vector<TFloat64List> zPriors, Float64 cstLog, std::shared_ptr<CPdfMargZLogResult> postmargZResult);
 
 
 private:
