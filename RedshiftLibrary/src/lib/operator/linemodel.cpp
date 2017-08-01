@@ -1092,7 +1092,7 @@ Int32 COperatorLineModel::CombinePDF(CDataStore &store, std::shared_ptr<CLineMod
         {
             Log.LogInfo("Linemodel: Pdfz computation - simple (method=bestchi2)");
         }
-        bool zPriorStrongLinePresence = true;
+        bool zPriorStrongLinePresence = false;
         std::shared_ptr<CPdfLogResult> zPrior = std::shared_ptr<CPdfLogResult>(new CPdfLogResult());
         zPrior->SetSize(result->Redshifts.size());
         for ( UInt32 k=0; k<result->Redshifts.size(); k++)

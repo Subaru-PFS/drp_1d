@@ -136,10 +136,12 @@ Int32 CPdfz::Compute(TFloat64List merits, TFloat64List redshifts, Float64 cstLog
     }
 
     Float64 sumModifiedExp = 0.0;
-    for ( UInt32 k=0; k<redshifts.size(); k++)
+    Float64 modifiedEXPO_previous = exp(smallVALUES[0]-maxi);
+    for ( UInt32 k=1; k<redshifts.size(); k++)
     {
         Float64 modifiedEXPO = exp(smallVALUES[k]-maxi);
-        sumModifiedExp += modifiedEXPO;
+        sumModifiedExp += (modifiedEXPO+modifiedEXPO_previous)/2.0;
+        modifiedEXPO_previous = modifiedEXPO;
     }
     logEvidence = cstLog + maxi + log(sumModifiedExp) + log(zstep);
 
