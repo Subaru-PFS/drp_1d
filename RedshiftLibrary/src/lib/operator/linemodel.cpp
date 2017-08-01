@@ -161,7 +161,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
     CRayCatalog::TRayVector restRayList = restraycatalog.GetFilteredList( typeFilter, forceFilter);
     Log.LogDebug( "restRayList.size() = %d", restRayList.size() );
 
-    bool enableOrtho = false;
+    bool enableOrtho = true;
     Log.LogInfo( "linemodel: TemplatesOrthogonalization enabled = %d", enableOrtho );
 
     //prepare continuum templates catalog
@@ -186,7 +186,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
 
     CLineModelElementList model( spectrum,
                                  spectrumContinuum,
-                                 *orthoTplCatalog,
+                                 tplCatalog,//*orthoTplCatalog,//
                                  tplCategoryList,
                                  opt_calibrationPath,
                                  restRayList,
@@ -378,28 +378,38 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
     //model.SetContinuumComponent("fromspectrum");
     //
     Int32 indexLargeGrid = 0;
+    std::vector<Float64> calculatedLargeGridRedshifts;
+    std::vector<Float64> calculatedLargeGridMerits;
     boost::chrono::thread_clock::time_point start_mainloop = boost::chrono::thread_clock::now();
     for (Int32 i=0;i<result->Redshifts.size();i++)
     {
         if(enableFastFitLargeGrid==0 || i==0 || result->Redshifts[i] == largeGridRedshifts[indexLargeGrid])
         {
             result->ChiSquare[i] = model.fit( result->Redshifts[i], lambdaRange, result->LineModelSolutions[i], contreest_iterations, false );
+            calculatedLargeGridRedshifts.push_back(result->Redshifts[i]);
+            calculatedLargeGridMerits.push_back(result->ChiSquare[i]);
             result->ScaleMargCorrection[i] = model.getScaleMargCorrection();
             result->SetChisquareTplshapeResult(i , model.GetChisquareTplshape(), model.GetScaleMargTplshape());
-            result->ChiSquareContinuum[i] = model.getLeastSquareContinuumMeritFast();
+            result->ChiSquareContinuum[i] = model.getLeastSquareContinuumMerit(lambdaRange);//model.getLeastSquareContinuumMeritFast();//
             result->ScaleMargCorrectionContinuum[i] = model.getContinuumScaleMargCorrection();
             Log.LogDebug( "Z interval %d: Chi2 = %f", i, result->ChiSquare[i] );
             indexLargeGrid++;
             //Log.LogInfo( "\nLineModel Infos: large grid step %d", i);
         }else{
-            result->ChiSquare[i] = result->ChiSquare[i-1] + 1e-2;
+            result->ChiSquare[i] = result->ChiSquare[i-1] + 1e-2; //these values will be replaced by the fine grid interpolation below...
             result->ScaleMargCorrection[i] = model.getScaleMargCorrection();
             result->LineModelSolutions[i] = result->LineModelSolutions[i-1];
             result->SetChisquareTplshapeResult( i, result->GetChisquareTplshapeResult(i-1), result->GetScaleMargCorrTplshapeResult(i-1));
-            result->ChiSquareContinuum[i] = model.getLeastSquareContinuumMeritFast();
+            result->ChiSquareContinuum[i] = model.getLeastSquareContinuumMerit(lambdaRange);//model.getLeastSquareContinuumMeritFast();//
             result->ScaleMargCorrectionContinuum[i] = model.getContinuumScaleMargCorrection();
         }
     }
+
+    //now interpolate large grid merit results onto the fine grid
+    interpolateLargeGridOnFineGrid( calculatedLargeGridRedshifts, result->Redshifts, calculatedLargeGridMerits, result->ChiSquare);
+
+
+
     //WARNING: HACK, first pass with continuum from spectrum.
     //model.SetContinuumComponent(opt_continuumcomponent);
     //model.InitFitContinuum();
@@ -706,7 +716,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
                     result->ChiSquare[iz] = model.fit( result->Redshifts[iz], lambdaRange, result->LineModelSolutions[iz], contreest_iterations, false );
                     result->ScaleMargCorrection[iz] = model.getScaleMargCorrection();
                     result->SetChisquareTplshapeResult(iz , model.GetChisquareTplshape(), model.GetScaleMargTplshape());
-                    result->ChiSquareContinuum[iz] = model.getLeastSquareContinuumMeritFast();
+                    result->ChiSquareContinuum[iz] = model.getLeastSquareContinuumMerit(lambdaRange);//model.getLeastSquareContinuumMeritFast();//
                     result->ScaleMargCorrectionContinuum[iz] = model.getContinuumScaleMargCorrection();
                     if(result->ChiSquare[iz]< extremumList2[i].Y)
                     {
@@ -840,7 +850,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
             result->ChiSquare[idx] = model.fit( result->Redshifts[idx], lambdaRange, result->LineModelSolutions[idx], contreest_iterations, true );
             result->ScaleMargCorrection[idx] = model.getScaleMargCorrection();
             result->SetChisquareTplshapeResult(idx , model.GetChisquareTplshape(), model.GetScaleMargTplshape());
-            result->ChiSquareContinuum[idx] = model.getLeastSquareContinuumMeritFast();
+            result->ChiSquareContinuum[idx] = model.getLeastSquareContinuumMerit(lambdaRange);//model.getLeastSquareContinuumMeritFast();//
             result->ScaleMargCorrectionContinuum[idx] = model.getContinuumScaleMargCorrection();
         }
         if(m!=result->ChiSquare[idx])
@@ -906,7 +916,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
 
         result->ExtremaResult.Extrema[i] = z;
         result->ExtremaResult.ExtremaMerit[i] = m;
-        result->ExtremaResult.ExtremaMeritContinuum[i] = model.getLeastSquareContinuumMeritFast();
+        result->ExtremaResult.ExtremaMeritContinuum[i] = model.getLeastSquareContinuumMerit(lambdaRange);//model.getLeastSquareContinuumMeritFast();//
 
         result->ExtremaResult.ExtremaLastPass[i] = z; //refined extremum is initialized here.
 
@@ -1023,23 +1033,16 @@ Int32 COperatorLineModel::SaveContinuumPDF(CDataStore &store, std::shared_ptr<CL
 
     Int32 retPdfz=-1;
 
-    bool zPriorStrongLinePresence = false;
     std::shared_ptr<CPdfLogResult> zPrior = std::shared_ptr<CPdfLogResult>(new CPdfLogResult());
     zPrior->SetSize(result->Redshifts.size());
     for ( UInt32 k=0; k<result->Redshifts.size(); k++)
     {
         zPrior->Redshifts[k] = result->Redshifts[k];
     }
-    if(zPriorStrongLinePresence)
-    {
-        Log.LogInfo("Linemodel: Pdfz computation: StrongLinePresence prior enabled");
-        UInt32 lineTypeFilter = 1;// for emission lines only
-        std::vector<bool> strongLinePresence = result->GetStrongLinesPresence(lineTypeFilter);
-        zPrior->valProbaLog = pdfz.GetStrongLinePresenceLogZPrior(strongLinePresence);
-    }else{
-        Log.LogInfo("Linemodel: Pdfz computation: StrongLinePresence prior disabled");
-        zPrior->valProbaLog = pdfz.GetConstantLogZPrior(result->Redshifts.size());
-    }
+
+    Log.LogInfo("Linemodel: Pdfz computation: StrongLinePresence prior disabled");
+    zPrior->valProbaLog = pdfz.GetConstantLogZPrior(result->Redshifts.size());
+
 
     //correct chi2 if necessary: todo add switch
     TFloat64List logLikelihoodCorrected(result->ChiSquareContinuum.size(), DBL_MAX);
@@ -1089,7 +1092,7 @@ Int32 COperatorLineModel::CombinePDF(CDataStore &store, std::shared_ptr<CLineMod
         {
             Log.LogInfo("Linemodel: Pdfz computation - simple (method=bestchi2)");
         }
-        bool zPriorStrongLinePresence = false;
+        bool zPriorStrongLinePresence = true;
         std::shared_ptr<CPdfLogResult> zPrior = std::shared_ptr<CPdfLogResult>(new CPdfLogResult());
         zPrior->SetSize(result->Redshifts.size());
         for ( UInt32 k=0; k<result->Redshifts.size(); k++)
@@ -1361,6 +1364,36 @@ void COperatorLineModel::storePerTemplateModelResults( CDataStore &dataStore, co
         std::string fname_rules = (boost::format("linemodel_rules_extrema_%1%") % k).str();
         dataStore.StoreScopedPerTemplateResult(  tpl, fname_rules.c_str(), m_savedModelRulesResults[k] );
     }
+
+}
+
+Int32 COperatorLineModel::interpolateLargeGridOnFineGrid(TFloat64List redshiftsLargeGrid, TFloat64List redshiftsFineGrid, TFloat64List meritLargeGrid, TFloat64List& meritFineGrid)
+{
+    //* // GSL method LIN
+    Log.LogInfo( "Linemodel: First-Pass - interp FROM large grid z0=%f to zEnd=%f (n=%d)",  redshiftsLargeGrid[0], redshiftsLargeGrid[redshiftsLargeGrid.size()-1], redshiftsLargeGrid.size());
+    Log.LogInfo( "Linemodel: First-Pass - interp TO fine grid z0=%f to zEnd=%f (n=%d)",  redshiftsFineGrid[0], redshiftsFineGrid[redshiftsFineGrid.size()-1], redshiftsFineGrid.size());
+
+    //initialise and allocate the gsl objects
+    //lin
+    gsl_interp *interpolation = gsl_interp_alloc (gsl_interp_linear,meritLargeGrid.size());
+    gsl_interp_init(interpolation, &(redshiftsLargeGrid.front()), &(meritLargeGrid.front()), meritLargeGrid.size());
+    gsl_interp_accel * accelerator =  gsl_interp_accel_alloc();
+
+    for( Int32 j=0; j<redshiftsFineGrid.size(); j++ )
+    {
+        Float64 Xrebin = redshiftsFineGrid[j];
+        if(Xrebin<redshiftsLargeGrid[0] || Xrebin>redshiftsLargeGrid[redshiftsLargeGrid.size()-1])
+        {
+            continue;
+        }
+        meritFineGrid[j] = gsl_interp_eval(interpolation, &redshiftsLargeGrid.front(), &meritLargeGrid.front(), Xrebin, accelerator); //lin
+    }
+
+    gsl_interp_free(interpolation);
+    gsl_interp_accel_free (accelerator);
+    //*/
+
+    return 0;
 
 }
 

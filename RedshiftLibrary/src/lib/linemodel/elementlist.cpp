@@ -1569,12 +1569,12 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
             if(enableLogging)
             {
                 refreshModel();
-                //create spectrum model
                 _merit = getLeastSquareMerit(lambdaRange);
                 //_merit = getLeastSquareMeritFast();
             }else{
-                //_merit = getLeastSquareMerit(lambdaRange);
-                _merit = getLeastSquareMeritFast();
+                refreshModel();
+                _merit = getLeastSquareMerit(lambdaRange);
+                //_merit = getLeastSquareMeritFast();
             }
             m_ChisquareTplshape[ifitting] = _merit;
             m_ScaleMargCorrTplshape[ifitting] = getScaleMargCorrection();
@@ -3472,6 +3472,28 @@ Float64 CLineModelElementList::getLeastSquareMerit(const TFloat64Range& lambdaRa
 //        }
     }
     Log.LogDebug( "CLineModelElementList::getLeastSquareMerit fit = %f", fit );
+    return fit;
+}
+
+Float64 CLineModelElementList::getLeastSquareContinuumMerit(const TFloat64Range& lambdaRange)
+{
+    const CSpectrumSpectralAxis& spcSpectralAxis = m_SpectrumModel->GetSpectralAxis();
+    const CSpectrumFluxAxis& spcFluxAxis = m_SpcFluxAxis;
+
+    Int32 numDevs = 0;
+    Float64 fit = 0.0;
+    const Float64* YCont = m_ContinuumFluxAxis.GetSamples();
+    const Float64* Yspc = spcFluxAxis.GetSamples();
+    Float64 diff = 0.0;
+
+    Float64 imin = spcSpectralAxis.GetIndexAtWaveLength(lambdaRange.GetBegin());
+    Float64 imax = spcSpectralAxis.GetIndexAtWaveLength(lambdaRange.GetEnd());
+    for( UInt32 j=imin; j<imax; j++ )
+    {
+        numDevs++;
+        diff = (Yspc[j] - YCont[j]);
+        fit += (diff*diff) / (m_ErrorNoContinuum[j]*m_ErrorNoContinuum[j]);
+    }
     return fit;
 }
 

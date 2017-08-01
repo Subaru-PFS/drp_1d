@@ -340,7 +340,12 @@ std::vector<bool> CLineModelResult::GetStrongLinesPresence( UInt32 filterType ) 
                 }
             }
 
-            if(!LineModelSolutions[solutionIdx].OutsideLambdaRange[j])
+            if( LineModelSolutions[solutionIdx].OutsideLambdaRange[j] )
+            {
+                continue;
+            }
+
+            if(LineModelSolutions[solutionIdx].Amplitudes[j]>0.0)
             {
                 strongIsPresent[solutionIdx] = true;
                 break;

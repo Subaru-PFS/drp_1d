@@ -149,6 +149,7 @@ public:
     Float64 getLeastSquareMeritFast(Int32 idxLine=-1);
     Float64 getLeastSquareContinuumMeritFast();
     Float64 getLeastSquareMerit(const TFloat64Range &lambdaRange);
+    Float64 getLeastSquareContinuumMerit(const TFloat64Range &lambdaRange);
     Float64 getLeastSquareMeritUnderElements();
     Float64 getScaleMargCorrection(Int32 idxLine=-1);
     Float64 getContinuumScaleMargCorrection();

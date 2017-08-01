@@ -35,7 +35,7 @@ CTemplatesOrthogonalization::CTemplatesOrthogonalization(const CTemplateCatalog&
             std::string rigidity = opt_rigidity.c_str();
             std::string rules = opt_rules.c_str();
             //temporary options override to be removed when full tpl ortho is implemented
-            Bool enableOverride = false;
+            Bool enableOverride = true;
             if(enableOverride){
                 rigidity = "rules";
                 rules = "no";
