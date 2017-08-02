@@ -208,21 +208,15 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
 
     //setup velocity fitting
     bool enableVelocityFitting = true;
-    Float64 velfitMin = opt_velocityfitmin;
-    Float64 velfitMax = opt_velocityfitmax;
+    Float64 velfitMinE = opt_velocityfitmin;
+    Float64 velfitMaxE = opt_velocityfitmax;
+    Float64 velfitMinA = 150;
+    Float64 velfitMaxA = opt_velocityfitmax;
     if(opt_velocityFitting != "yes"){
         enableVelocityFitting = false;
-    }else{
-        if(opt_lineWidthType=="combined"){
-
-            Float64 infVelInstr = model.GetVelocityInfFromInstrumentResolution();
-            if(velfitMin<infVelInstr){
-                velfitMin=infVelInstr;
-                Log.LogInfo( "Linemodel: velocity fitting min bound auto set from resolution");
-            }
-        }
-
-        Log.LogInfo( "Linemodel: velocity fitting bounds: min=%.1f - max=%.1f", velfitMin, velfitMax);
+    }else{        
+        Log.LogInfo( "Linemodel: velocity fitting bounds for Emission: min=%.1f - max=%.1f", velfitMinE, velfitMaxE);
+        Log.LogInfo( "Linemodel: velocity fitting bounds for Absorption: min=%.1f - max=%.1f", velfitMinA, velfitMaxA);
     }
 
     //fit continuum
@@ -241,22 +235,37 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
         std::vector<std::shared_ptr<CChisquareResult>> chisquareResultsAllTpl;
         std::vector<std::string> chisquareResultsTplName;
 
-        /*
-        COperatorChiSquareLogLambda* chiSquareOperator;
-        bool enableLogRebin = true;
-        chiSquareOperator = new COperatorChiSquareLogLambda(opt_calibrationPath, enableLogRebin);
-        //*/
-
-        //*
-        COperatorChiSquare2* chiSquareOperator;
-        chiSquareOperator = new COperatorChiSquare2(opt_calibrationPath);
-        //*/
-
+        std::string opt_chi2operator = "chisquarelog"; //"chisquare2"; //
+        if(redshiftsTplFit.size()<100 && opt_chi2operator != "chisquare2") // warning arbitrary number of redshifts threshold to consider chisquare2 faster than chisquarelog
+        {
+            opt_chi2operator = "chisquare2";
+            Log.LogInfo( "linemodel: precomputing- auto select chisquare2 operator (faster for few redshifts calc. points)" );
+        }
         std::string opt_interp = "precomputedfinegrid"; // "lin"; //
         Int32 opt_dustFit = 1;
         Int32 opt_extinction = 1;
+        Log.LogInfo( "linemodel: precomputing- with operator = %s", opt_chi2operator.c_str() );
         Log.LogInfo( "linemodel: precomputing-fitContinuum_dustfit = %d", opt_dustFit );
         Log.LogInfo( "linemodel: precomputing-fitContinuum_igm = %d", opt_extinction );
+
+        COperator* chiSquareOperator;
+        if(opt_chi2operator=="chisquarelog")
+        {
+            //*
+            //COperatorChiSquareLogLambda* chiSquareOperator;
+            bool enableLogRebin = true;
+            chiSquareOperator = new COperatorChiSquareLogLambda(opt_calibrationPath, enableLogRebin);
+            //*/
+        }
+        else if(opt_chi2operator=="chisquare2"){
+            //*
+            //COperatorChiSquare2* chiSquareOperator;
+            chiSquareOperator = new COperatorChiSquare2(opt_calibrationPath);
+            //*/
+        }else{
+            Log.LogError( "linemodel: unable to parce chisquare continuum fit operator");
+        }
+
 
         Float64 overlapThreshold = 1.0;
         bool ignoreLinesSupport=0;
@@ -368,6 +377,12 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
     model.SetAbsLinesLimit(absLinesLimit);
     Log.LogInfo( "Linemodel: set abs lines limit to %f (ex: -1 means disabled)", absLinesLimit);
 
+    //Set model parameter: continuum least-square estimation fast
+    //note: this fast method requires continuum templates and linemodels to be orthogonal. The velfit option turns this trickier...
+    Int32 estimateLeastSquareFast = 0;
+    model.SetLeastSquareFastEstimationEnabled(estimateLeastSquareFast);
+    Log.LogInfo( "Linemodel: set estimateLeastSquareFast to %d (ex: 0 means disabled)", estimateLeastSquareFast);
+
     Log.LogInfo( "Linemodel: processing");
 
     //Set model parameters to FIRST-PASS
@@ -390,7 +405,12 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
             calculatedLargeGridMerits.push_back(result->ChiSquare[i]);
             result->ScaleMargCorrection[i] = model.getScaleMargCorrection();
             result->SetChisquareTplshapeResult(i , model.GetChisquareTplshape(), model.GetScaleMargTplshape());
-            result->ChiSquareContinuum[i] = model.getLeastSquareContinuumMerit(lambdaRange);//model.getLeastSquareContinuumMeritFast();//
+            if(estimateLeastSquareFast)
+            {
+                result->ChiSquareContinuum[i] = model.getLeastSquareContinuumMerit(lambdaRange);
+            }else{
+                result->ChiSquareContinuum[i] = model.getLeastSquareContinuumMeritFast();
+            }
             result->ScaleMargCorrectionContinuum[i] = model.getContinuumScaleMargCorrection();
             Log.LogDebug( "Z interval %d: Chi2 = %f", i, result->ChiSquare[i] );
             indexLargeGrid++;
@@ -400,14 +420,21 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
             result->ScaleMargCorrection[i] = model.getScaleMargCorrection();
             result->LineModelSolutions[i] = result->LineModelSolutions[i-1];
             result->SetChisquareTplshapeResult( i, result->GetChisquareTplshapeResult(i-1), result->GetScaleMargCorrTplshapeResult(i-1));
-            result->ChiSquareContinuum[i] = model.getLeastSquareContinuumMerit(lambdaRange);//model.getLeastSquareContinuumMeritFast();//
+            if(estimateLeastSquareFast)
+            {
+                result->ChiSquareContinuum[i] = model.getLeastSquareContinuumMerit(lambdaRange);
+            }else{
+                result->ChiSquareContinuum[i] = model.getLeastSquareContinuumMeritFast();
+            }
             result->ScaleMargCorrectionContinuum[i] = model.getContinuumScaleMargCorrection();
         }
     }
 
     //now interpolate large grid merit results onto the fine grid
-    interpolateLargeGridOnFineGrid( calculatedLargeGridRedshifts, result->Redshifts, calculatedLargeGridMerits, result->ChiSquare);
-
+    if(result->Redshifts.size()>calculatedLargeGridMerits.size() && calculatedLargeGridMerits.size()>1)
+    {
+        interpolateLargeGridOnFineGrid( calculatedLargeGridRedshifts, result->Redshifts, calculatedLargeGridMerits, result->ChiSquare);
+    }
 
 
     //WARNING: HACK, first pass with continuum from spectrum.
@@ -585,7 +612,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
 
                     model.SetFittingMethod(opt_fittingmethod);
                     model.ResetElementIndexesDisabled();
-                    Int32 velocityHasBeenReset = model.ApplyVelocityBound(velfitMin, velfitMax);
+                    Int32 velocityHasBeenReset = model.ApplyVelocityBound(velfitMinE, velfitMaxE);
                     enableManualStepVelocityFit = velocityHasBeenReset;
                 }
 
@@ -598,52 +625,58 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
 
                     model.SetFittingMethod(opt_fittingmethod);
                     model.ResetElementIndexesDisabled();
-                    Int32 velocityHasBeenReset = model.ApplyVelocityBound(velfitMin, velfitMax);
+                    Int32 velocityHasBeenReset = model.ApplyVelocityBound(velfitMinE, velfitMaxE);
                     enableManualStepVelocityFit = velocityHasBeenReset;
                 }
 
                 if(enableManualStepVelocityFit){
                     //fit the emission and absorption width by minimizing the linemodel merit with linemodel "hybrid" fitting method
                     model.SetFittingMethod("hybrid");
-                    Float64 vInfLim = velfitMin;
-                    Float64 vSupLim = velfitMax;
-                    Float64 vStep = 20.0;
-                    Int32 nSteps = (int)((vSupLim-vInfLim)/vStep);
-
-
-                    Float64 dzInfLim = -4e-4;
-                    if(result->Redshifts[idx]+dzInfLim<result->Redshifts[0])
-                    {
-                        dzInfLim = result->Redshifts[0]-result->Redshifts[idx];
-                    }
-                    Float64 dzSupLim = 4e-4;
-                    if(result->Redshifts[idx]+dzSupLim>result->Redshifts[result->Redshifts.size()-1])
-                    {
-                        dzSupLim = result->Redshifts[result->Redshifts.size()-1]-result->Redshifts[idx];
-                    }
-
-                    Float64 dzStep = 2e-4;
-                    Int32 nDzSteps = (int)((dzSupLim-dzInfLim)/dzStep);
-                    if(nDzSteps==0)
-                    {
-                        nDzSteps=1;
-                        dzInfLim = 0.;
-                        dzSupLim = 0.;
-                    }
-                    Log.LogInfo( "LineModel Infos: dzInfLim n=%e", dzInfLim);
-                    Log.LogInfo( "LineModel Infos: dzSupLim n=%e", dzSupLim);
-                    Log.LogInfo( "LineModel Infos: manualStep n=%d", nDzSteps);
 
                     for(Int32 iLineType = 0; iLineType<2; iLineType++)
                     {
+                        Float64 vInfLim;
+                        Float64 vSupLim;
+
                         if(iLineType==0)
                         {
                             Log.LogInfo( "\nLineModel Infos: manualStep velocity fit ABSORPTION, for z = %.4f", result->Redshifts[idx]);
-
+                            vInfLim = velfitMinA;
+                            vSupLim = velfitMaxA;
                         }else{
                             Log.LogInfo( "LineModel Infos: manualStep velocity fit EMISSION, for z = %.4f", result->Redshifts[idx]);
-
+                            vInfLim = velfitMinE;
+                            vSupLim = velfitMaxE;
                         }
+
+                        //Prepare velocity grid to be checked
+                        Float64 vStep = 20.0;
+                        Int32 nSteps = (int)((vSupLim-vInfLim)/vStep);
+
+
+                        Float64 dzInfLim = -4e-4;
+                        if(result->Redshifts[idx]+dzInfLim<result->Redshifts[0])
+                        {
+                            dzInfLim = result->Redshifts[0]-result->Redshifts[idx];
+                        }
+                        Float64 dzSupLim = 4e-4;
+                        if(result->Redshifts[idx]+dzSupLim>result->Redshifts[result->Redshifts.size()-1])
+                        {
+                            dzSupLim = result->Redshifts[result->Redshifts.size()-1]-result->Redshifts[idx];
+                        }
+
+                        Float64 dzStep = 2e-4;
+                        Int32 nDzSteps = (int)((dzSupLim-dzInfLim)/dzStep);
+                        if(nDzSteps==0)
+                        {
+                            nDzSteps=1;
+                            dzInfLim = 0.;
+                            dzSupLim = 0.;
+                        }
+                        Log.LogInfo( "LineModel Infos: dzInfLim n=%e", dzInfLim);
+                        Log.LogInfo( "LineModel Infos: dzSupLim n=%e", dzSupLim);
+                        Log.LogInfo( "LineModel Infos: manualStep n=%d", nDzSteps);
+
 
                         Float64 meritMin = DBL_MAX;
                         Float64 vOptim = -1.0;
@@ -716,7 +749,12 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
                     result->ChiSquare[iz] = model.fit( result->Redshifts[iz], lambdaRange, result->LineModelSolutions[iz], contreest_iterations, false );
                     result->ScaleMargCorrection[iz] = model.getScaleMargCorrection();
                     result->SetChisquareTplshapeResult(iz , model.GetChisquareTplshape(), model.GetScaleMargTplshape());
-                    result->ChiSquareContinuum[iz] = model.getLeastSquareContinuumMerit(lambdaRange);//model.getLeastSquareContinuumMeritFast();//
+                    if(estimateLeastSquareFast)
+                    {
+                        result->ChiSquareContinuum[iz] = model.getLeastSquareContinuumMerit(lambdaRange);
+                    }else{
+                        result->ChiSquareContinuum[iz] = model.getLeastSquareContinuumMeritFast();
+                    }
                     result->ScaleMargCorrectionContinuum[iz] = model.getContinuumScaleMargCorrection();
                     if(result->ChiSquare[iz]< extremumList2[i].Y)
                     {
@@ -850,7 +888,12 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
             result->ChiSquare[idx] = model.fit( result->Redshifts[idx], lambdaRange, result->LineModelSolutions[idx], contreest_iterations, true );
             result->ScaleMargCorrection[idx] = model.getScaleMargCorrection();
             result->SetChisquareTplshapeResult(idx , model.GetChisquareTplshape(), model.GetScaleMargTplshape());
-            result->ChiSquareContinuum[idx] = model.getLeastSquareContinuumMerit(lambdaRange);//model.getLeastSquareContinuumMeritFast();//
+            if(estimateLeastSquareFast)
+            {
+                result->ChiSquareContinuum[idx] = model.getLeastSquareContinuumMerit(lambdaRange);
+            }else{
+                result->ChiSquareContinuum[idx] = model.getLeastSquareContinuumMeritFast();
+            }
             result->ScaleMargCorrectionContinuum[idx] = model.getContinuumScaleMargCorrection();
         }
         if(m!=result->ChiSquare[idx])
@@ -916,7 +959,12 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
 
         result->ExtremaResult.Extrema[i] = z;
         result->ExtremaResult.ExtremaMerit[i] = m;
-        result->ExtremaResult.ExtremaMeritContinuum[i] = model.getLeastSquareContinuumMerit(lambdaRange);//model.getLeastSquareContinuumMeritFast();//
+        if(estimateLeastSquareFast)
+        {
+            result->ExtremaResult.ExtremaMeritContinuum[i] = model.getLeastSquareContinuumMerit(lambdaRange);
+        }else{
+            result->ExtremaResult.ExtremaMeritContinuum[i] = model.getLeastSquareContinuumMeritFast();
+        }
 
         result->ExtremaResult.ExtremaLastPass[i] = z; //refined extremum is initialized here.
 

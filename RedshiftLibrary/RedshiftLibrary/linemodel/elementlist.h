@@ -129,6 +129,7 @@ public:
     void SetFittingMethod(std::string fitMethod);
 
     void SetAbsLinesLimit(Float64 limit);
+    void SetLeastSquareFastEstimationEnabled(Int32 enabled);
 
     Float64 GetRedshift();
 
@@ -264,6 +265,7 @@ private:
     CTemplateCatalog m_tplCatalog;
     TStringList m_tplCategoryList;
     std::string m_tplshapeBestTplName;
+    Int32 m_tplshapeLeastSquareFast = 0;    //for rigidity=tplshape: switch to use fast least square estimation
 
     COperatorChiSquare2* m_chiSquareOperator;
     Int32 m_fitContinuum_dustfit;

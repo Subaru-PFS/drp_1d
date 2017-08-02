@@ -79,6 +79,7 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
     m_rigidity = opt_rigidity;
     m_calibrationPath = calibrationPath;
 
+    //tplfit continuum option: warning, these options not used when using the precomputed continuum fit store
     m_fitContinuum_dustfit = 1;
     m_fitContinuum_igm = 1;
     m_fitContinuum_outsidelinesmask = 0;
@@ -218,6 +219,8 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
 
         m_ChisquareTplshape.resize(m_CatalogTplShape->GetCatalogsCount());
         m_ScaleMargCorrTplshape.resize(m_CatalogTplShape->GetCatalogsCount());
+
+        m_tplshapeLeastSquareFast = false;
     }
 
     //init catalog offsets
@@ -1572,9 +1575,14 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
                 _merit = getLeastSquareMerit(lambdaRange);
                 //_merit = getLeastSquareMeritFast();
             }else{
-                refreshModel();
-                _merit = getLeastSquareMerit(lambdaRange);
-                //_merit = getLeastSquareMeritFast();
+                if(m_tplshapeLeastSquareFast)
+                {
+                    _merit = getLeastSquareMeritFast();
+                }else
+                {
+                    refreshModel();
+                    _merit = getLeastSquareMerit(lambdaRange);
+                }
             }
             m_ChisquareTplshape[ifitting] = _merit;
             m_ScaleMargCorrTplshape[ifitting] = getScaleMargCorrection();
@@ -1728,6 +1736,11 @@ void CLineModelElementList::SetFittingMethod(std::string fitMethod)
         }
       }
    }
+}
+
+void CLineModelElementList::SetLeastSquareFastEstimationEnabled(Int32 enabled)
+{
+    m_tplshapeLeastSquareFast = enabled;
 }
 
 void CLineModelElementList::SetAbsLinesLimit(Float64 limit)
