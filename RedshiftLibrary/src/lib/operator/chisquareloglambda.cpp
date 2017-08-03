@@ -1152,11 +1152,16 @@ Int32 COperatorChiSquareLogLambda::InterpolateResult(const Float64* in, const Fl
 
 TInt32Range COperatorChiSquareLogLambda::FindTplSpectralIndex(const Float64* spcLambda, const Float64* tplLambda, UInt32 nSpc, UInt32 nTpl, TFloat64Range redshiftrange, Float64 redshiftStep)
 {
-    Float64 redshiftMargin = 10.0*redshiftStep;
+    Float64 redshiftMargin = 10.0*redshiftStep; //this redshiftstep margin might be useless now that there are spclambdamargin and tpllambdamargin
+    Float64 spcLambdaMargin = abs(spcLambda[1]-spcLambda[0]);
+    Float64 tplLambdaMargin = abs(tplLambda[1]-tplLambda[0]);
+
     UInt32 ilbdamin=0;
     for(UInt32 k=0; k<nTpl; k++)
     {
-        Float64 _z = (spcLambda[0]-tplLambda[k])/tplLambda[k];
+        Float64 _spcLambda = spcLambda[0]-spcLambdaMargin;
+        Float64 _tplLambda = tplLambda[k]+tplLambdaMargin;
+        Float64 _z = (_spcLambda-_tplLambda)/_tplLambda;
         if(_z>redshiftrange.GetEnd()+redshiftMargin)
         {
             ilbdamin=k;
@@ -1168,7 +1173,9 @@ TInt32Range COperatorChiSquareLogLambda::FindTplSpectralIndex(const Float64* spc
 
     for(UInt32 k=nTpl-1; k>0; k--)
     {
-        Float64 _z = (spcLambda[nSpc-1]-tplLambda[k])/tplLambda[k];
+        Float64 _spcLambda = spcLambda[nSpc-1]+spcLambdaMargin;
+        Float64 _tplLambda = tplLambda[k]-tplLambdaMargin;
+        Float64 _z = (_spcLambda-_tplLambda)/_tplLambda;
         if(_z<redshiftrange.GetBegin()-redshiftMargin)
         {
             ilbdamax=k;
@@ -1176,6 +1183,7 @@ TInt32Range COperatorChiSquareLogLambda::FindTplSpectralIndex(const Float64* spc
             break;
         }
     }
+
 
     if(ilbdamin<0 || ilbdamin>nTpl-1)
     {
