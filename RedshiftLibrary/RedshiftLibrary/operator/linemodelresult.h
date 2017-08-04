@@ -27,7 +27,7 @@ public:
     Void Load( std::istream& stream );
 
     Int32 GetNLinesOverCutThreshold(Int32 extremaIdx, Float64 snrThres, Float64 fitThres) const;
-    std::vector<bool> GetStrongLinesPresence( UInt32 filterType=0 ) const;
+    std::vector<bool> GetStrongLinesPresence( UInt32 filterType, std::vector<CLineModelSolution> linemodelsols ) const;
     Float64 GetExtremaMerit(Int32 extremaIdx) const;
     UInt32 GetExtremaIndex(UInt32 extremaIdx) const;
 
@@ -35,12 +35,10 @@ public:
     Float64 GetMaxChiSquare() const;
 
     Int32 ResizeChisquareTplShapes( Int32 nTplshapes, Int32 nRedshifts );
-    Int32 SetChisquareTplshapeResult( Int32 index, TFloat64List chisquareTplshape, TFloat64List scaleMargCorrTplshape );
+    Int32 SetChisquareTplshapeResult(Int32 index, TFloat64List chisquareTplshape, TFloat64List scaleMargCorrTplshape, std::vector<bool> strongEmissionLinePresentTplshape);
     TFloat64List GetChisquareTplshapeResult( Int32 index );
     TFloat64List GetScaleMargCorrTplshapeResult( Int32 index );
-
-
-
+    std::vector<bool> GetStrongELPresentTplshapeResult( Int32 index );
 
     //Merit results
     TFloat64List            Redshifts;  // z axis
@@ -49,6 +47,7 @@ public:
 
     std::vector<TFloat64List> ChiSquareTplshapes; // full chi2 results (for each tplshape)
     std::vector<TFloat64List> ScaleMargCorrectionTplshapes; // full scale marginalization correction results (for each tplshape)
+    std::vector<std::vector<bool>> StrongELPresentTplshapes; // full strongELPresent results (for each tplshape)
     TFloat64List ChiSquareContinuum; // chi2 result for the continuum
     TFloat64List ScaleMargCorrectionContinuum; //  scale marginalization correction result for the continuum
 
@@ -64,8 +63,6 @@ public:
     Float64 dTransposeDNocontinuum;
     Float64 dTransposeD;
     Float64 cstLog;
-
-
 };
 
 

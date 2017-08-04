@@ -424,7 +424,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
             calculatedLargeGridRedshifts.push_back(result->Redshifts[i]);
             calculatedLargeGridMerits.push_back(result->ChiSquare[i]);
             result->ScaleMargCorrection[i] = model.getScaleMargCorrection();
-            result->SetChisquareTplshapeResult(i , model.GetChisquareTplshape(), model.GetScaleMargTplshape());
+            result->SetChisquareTplshapeResult(i , model.GetChisquareTplshape(), model.GetScaleMargTplshape(), model.GetStrongELPresentTplshape());
             if(estimateLeastSquareFast)
             {
                 result->ChiSquareContinuum[i] = model.getLeastSquareContinuumMerit(lambdaRange);
@@ -439,7 +439,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
             result->ChiSquare[i] = result->ChiSquare[i-1] + 1e-2; //these values will be replaced by the fine grid interpolation below...
             result->ScaleMargCorrection[i] = model.getScaleMargCorrection();
             result->LineModelSolutions[i] = result->LineModelSolutions[i-1];
-            result->SetChisquareTplshapeResult( i, result->GetChisquareTplshapeResult(i-1), result->GetScaleMargCorrTplshapeResult(i-1));
+            result->SetChisquareTplshapeResult( i, result->GetChisquareTplshapeResult(i-1), result->GetScaleMargCorrTplshapeResult(i-1), result->GetStrongELPresentTplshapeResult(i-1));
             if(estimateLeastSquareFast)
             {
                 result->ChiSquareContinuum[i] = model.getLeastSquareContinuumMerit(lambdaRange);
@@ -768,7 +768,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
                     //Log.LogInfo("Fit for Extended redshift %d, z = %f", iz, result->Redshifts[iz]);
                     result->ChiSquare[iz] = model.fit( result->Redshifts[iz], lambdaRange, result->LineModelSolutions[iz], contreest_iterations, false );
                     result->ScaleMargCorrection[iz] = model.getScaleMargCorrection();
-                    result->SetChisquareTplshapeResult(iz , model.GetChisquareTplshape(), model.GetScaleMargTplshape());
+                    result->SetChisquareTplshapeResult(iz , model.GetChisquareTplshape(), model.GetScaleMargTplshape(), model.GetStrongELPresentTplshape());
                     if(estimateLeastSquareFast)
                     {
                         result->ChiSquareContinuum[iz] = model.getLeastSquareContinuumMerit(lambdaRange);
@@ -907,7 +907,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
         if(!modelInfoSave){
             result->ChiSquare[idx] = model.fit( result->Redshifts[idx], lambdaRange, result->LineModelSolutions[idx], contreest_iterations, true );
             result->ScaleMargCorrection[idx] = model.getScaleMargCorrection();
-            result->SetChisquareTplshapeResult(idx , model.GetChisquareTplshape(), model.GetScaleMargTplshape());
+            result->SetChisquareTplshapeResult(idx , model.GetChisquareTplshape(), model.GetScaleMargTplshape(), model.GetStrongELPresentTplshape());
             if(estimateLeastSquareFast)
             {
                 result->ChiSquareContinuum[idx] = model.getLeastSquareContinuumMerit(lambdaRange);
@@ -1113,7 +1113,6 @@ Int32 COperatorLineModel::SaveContinuumPDF(CDataStore &store, std::shared_ptr<CL
         zPrior->Redshifts[k] = result->Redshifts[k];
     }
 
-    Log.LogInfo("Linemodel: Pdfz computation: StrongLinePresence prior disabled");
     zPrior->valProbaLog = pdfz.GetConstantLogZPrior(result->Redshifts.size());
 
 
@@ -1147,6 +1146,15 @@ Int32 COperatorLineModel::SaveContinuumPDF(CDataStore &store, std::shared_ptr<CL
 
 Int32 COperatorLineModel::CombinePDF(CDataStore &store, std::shared_ptr<CLineModelResult> result, std::string opt_rigidity, std::string opt_combine)
 {
+    //hardcoded prior parameter
+    bool zPriorStrongLinePresence = true;
+    if(zPriorStrongLinePresence)
+    {
+        Log.LogInfo("Linemodel: Pdfz computation: StrongLinePresence prior enabled");
+    }else{
+        Log.LogInfo("Linemodel: Pdfz computation: StrongLinePresence prior disabled");
+    }
+
     Log.LogInfo("Linemodel: Pdfz computation");
     std::shared_ptr<CPdfMargZLogResult> postmargZResult = std::shared_ptr<CPdfMargZLogResult>(new CPdfMargZLogResult());
     CPdfz pdfz;
@@ -1165,7 +1173,6 @@ Int32 COperatorLineModel::CombinePDF(CDataStore &store, std::shared_ptr<CLineMod
         {
             Log.LogInfo("Linemodel: Pdfz computation - simple (method=bestchi2)");
         }
-        bool zPriorStrongLinePresence = false;
         std::shared_ptr<CPdfLogResult> zPrior = std::shared_ptr<CPdfLogResult>(new CPdfLogResult());
         zPrior->SetSize(result->Redshifts.size());
         for ( UInt32 k=0; k<result->Redshifts.size(); k++)
@@ -1174,12 +1181,10 @@ Int32 COperatorLineModel::CombinePDF(CDataStore &store, std::shared_ptr<CLineMod
         }
         if(zPriorStrongLinePresence)
         {
-            Log.LogInfo("Linemodel: Pdfz computation: StrongLinePresence prior enabled");
             UInt32 lineTypeFilter = 1;// for emission lines only
-            std::vector<bool> strongLinePresence = result->GetStrongLinesPresence(lineTypeFilter);
+            std::vector<bool> strongLinePresence = result->GetStrongLinesPresence(lineTypeFilter, result->LineModelSolutions);
             zPrior->valProbaLog = pdfz.GetStrongLinePresenceLogZPrior(strongLinePresence);
         }else{
-            Log.LogInfo("Linemodel: Pdfz computation: StrongLinePresence prior disabled");
             zPrior->valProbaLog = pdfz.GetConstantLogZPrior(result->Redshifts.size());
         }
 
@@ -1209,7 +1214,15 @@ Int32 COperatorLineModel::CombinePDF(CDataStore &store, std::shared_ptr<CLineMod
         std::vector<TFloat64List> priorsTplshapes;
         for(Int32 k=0; k<result->ChiSquareTplshapes.size(); k++)
         {
-            TFloat64List _prior = pdfz.GetConstantLogZPrior(result->Redshifts.size());
+            TFloat64List _prior;
+            if(zPriorStrongLinePresence)
+            {
+                std::vector<bool> strongLinePresence = result->StrongELPresentTplshapes[k];
+                _prior = pdfz.GetStrongLinePresenceLogZPrior(strongLinePresence);
+            }else
+            {
+                _prior = pdfz.GetConstantLogZPrior(result->Redshifts.size());
+            }
             priorsTplshapes.push_back(_prior);
         }
 

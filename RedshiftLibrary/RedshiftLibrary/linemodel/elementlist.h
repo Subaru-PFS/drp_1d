@@ -101,6 +101,8 @@ public:
     Int32 getTplshape_count();
     std::vector<Float64> GetChisquareTplshape();
     std::vector<Float64> GetScaleMargTplshape();
+    std::vector<bool> GetStrongELPresentTplshape();
+
 
 
     Int32 GetNElements();
@@ -157,10 +159,11 @@ public:
     Float64 getStrongerMultipleELAmpCoeff();
     Float64 getCumulSNRStrongEL();
     Float64 getCumulSNROnRange( TInt32Range idxRange );
+    bool GetModelStrongEmissionLinePresent();
     Float64 getModelErrorUnderElement(Int32 eltId);
     Float64 getContinuumMeanUnderElement(Int32 eltId);
     Int32 LoadModelSolution(const CLineModelSolution&  modelSolution);
-    CLineModelSolution GetModelSolution();
+    CLineModelSolution GetModelSolution(Int32 opt_level=0);
     const CSpectrum&    GetModelSpectrum() const;
     const CSpectrum&    GetObservedSpectrumWithLinesRemoved() const;
     Float64 GetContinuumError(Int32 eIdx, Int32 subeIdx);
@@ -229,6 +232,7 @@ private:
     CRayCatalogsTplShape* m_CatalogTplShape;
     std::vector<Float64> m_ChisquareTplshape;
     std::vector<Float64> m_ScaleMargCorrTplshape;
+    std::vector<bool> m_StrongELPresentTplshape;
 
     Float64 m_Redshift;
 

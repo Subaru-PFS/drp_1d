@@ -218,6 +218,7 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
 
         m_ChisquareTplshape.resize(m_CatalogTplShape->GetCatalogsCount());
         m_ScaleMargCorrTplshape.resize(m_CatalogTplShape->GetCatalogsCount());
+        m_StrongELPresentTplshape.resize(m_CatalogTplShape->GetCatalogsCount());
 
         m_tplshapeLeastSquareFast = false;
     }
@@ -1057,6 +1058,11 @@ std::vector<Float64> CLineModelElementList::GetScaleMargTplshape()
     return m_ScaleMargCorrTplshape;
 }
 
+std::vector<bool> CLineModelElementList::GetStrongELPresentTplshape()
+{
+    return m_StrongELPresentTplshape;
+}
+
 Bool CLineModelElementList::initModelAtZ(Float64 redshift, const TFloat64Range& lambdaRange, const CSpectrumSpectralAxis &spectralAxis)
 {
     m_Redshift = redshift;
@@ -1525,7 +1531,8 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
 
             refreshModel();
             //create spectrum model
-            modelSolution = GetModelSolution();
+            Int32 modelSolutionLevel = Int32(enableLogging);
+            modelSolution = GetModelSolution(modelSolutionLevel);
             m_tplshapeBestTplName = "None";
 
             merit = getLeastSquareMerit(lambdaRange);
@@ -1579,6 +1586,7 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
             }
             m_ChisquareTplshape[ifitting] = _merit;
             m_ScaleMargCorrTplshape[ifitting] = getScaleMargCorrection();
+            m_StrongELPresentTplshape[ifitting] = GetModelStrongEmissionLinePresent();
 
             if(merit>_merit)
             {
@@ -3866,6 +3874,42 @@ Float64 CLineModelElementList::getCumulSNRStrongEL()
 }
 
 /**
+ * @brief CLineModelElementList::GetModelStrongLinePresent
+ * @return 1 if there is 1 strong emission line present
+ */
+bool CLineModelElementList::GetModelStrongEmissionLinePresent()
+{
+    bool isStrongPresent = false;
+
+    std::vector<Int32> validEltsIdx = GetModelValidElementsIndexes();
+    for( UInt32 iValidElts=0; iValidElts<validEltsIdx.size(); iValidElts++ )
+    {
+        Int32 iElts = validEltsIdx[iValidElts];
+        UInt32 nlines =  m_Elements[iElts]->GetRays().size();
+        for(UInt32 lineIdx=0; lineIdx<nlines; lineIdx++)
+        {
+            if( !m_RestRayList[m_Elements[iElts]->m_LineCatalogIndexes[lineIdx]].GetIsEmission() )
+            {
+                continue;
+            }
+            if( !m_RestRayList[m_Elements[iElts]->m_LineCatalogIndexes[lineIdx]].GetIsStrong() )
+            {
+                continue;
+            }
+
+            Float64 amp = m_Elements[iElts]->GetFittedAmplitude(lineIdx);
+            if( amp>0.0)
+            {
+                isStrongPresent = true;
+                break;
+            }
+        }
+    }
+
+    return isStrongPresent;
+}
+
+/**
  * \brief Returns the cumulative SNR on the idxRange
  **/
 Float64 CLineModelElementList::getCumulSNROnRange( TInt32Range idxRange  )
@@ -4121,19 +4165,21 @@ Int32 CLineModelElementList::improveBalmerFit()
 /**
  * \brief Returns a SLineModelSolution object populated with the current solutions.
  **/
-CLineModelSolution CLineModelElementList::GetModelSolution()
+CLineModelSolution CLineModelElementList::GetModelSolution(Int32 opt_level)
 {
     CLineModelSolution modelSolution;
     modelSolution.nDDL = GetModelNonZeroElementsNDdl();
+    modelSolution.Rays = m_RestRayList;
+    modelSolution.ElementId.resize(m_RestRayList.size());
+
     for( UInt32 iRestRay=0; iRestRay<m_RestRayList.size(); iRestRay++ )
     {
         Int32 eIdx = FindElementIndex(iRestRay);
         Int32 subeIdx = m_Elements[eIdx]->FindElementIndex(iRestRay);
-        modelSolution.Rays.push_back(m_RestRayList[iRestRay]);
+        modelSolution.ElementId[iRestRay] = eIdx;
 
         if(eIdx==-1 || subeIdx==-1)
         {
-            modelSolution.ElementId.push_back( eIdx );
             modelSolution.Amplitudes.push_back(m_Elements[eIdx]->GetFittedAmplitude(subeIdx));
             modelSolution.Errors.push_back(-1.0);
             modelSolution.FittingError.push_back(-1.0);
@@ -4145,28 +4191,40 @@ CLineModelSolution CLineModelElementList::GetModelSolution()
             modelSolution.FluxDirectIntegration.push_back(-1.0);
             modelSolution.OutsideLambdaRange.push_back(true);
         }else{
-            modelSolution.ElementId.push_back( eIdx );
             Float64 amp = m_Elements[eIdx]->GetFittedAmplitude(subeIdx);
             modelSolution.Amplitudes.push_back(amp);
             Float64 ampError = m_Elements[eIdx]->GetFittedAmplitudeErrorSigma(subeIdx);
             modelSolution.Errors.push_back(ampError);
-            modelSolution.FittingError.push_back(getModelErrorUnderElement(eIdx));
-            Float64 cont = m_Elements[eIdx]->GetContinuumAtCenterProfile(subeIdx, m_SpectrumModel->GetSpectralAxis(), m_Redshift, m_ContinuumFluxAxis);
-            modelSolution.CenterContinuumFlux.push_back(cont);
-            modelSolution.ContinuumError.push_back(GetContinuumError(eIdx, subeIdx));
-            Float64 sigma = m_Elements[eIdx]->GetWidth(subeIdx, m_Redshift);
-            Float64 flux = -1;
-            Float64 fluxError = -1;
-            Float64 fluxDI = GetFluxDirectIntegration(eIdx, subeIdx);
-            if(amp>=0)
+            if(opt_level!=0)// brief, to save processing time, do not estimate fluxes and high level line properties
             {
-                flux = amp*sigma*sqrt(2*M_PI);
-                fluxError = ampError*sigma*sqrt(2*M_PI);
+                modelSolution.FittingError.push_back(getModelErrorUnderElement(eIdx));
+                Float64 cont = m_Elements[eIdx]->GetContinuumAtCenterProfile(subeIdx, m_SpectrumModel->GetSpectralAxis(), m_Redshift, m_ContinuumFluxAxis);
+                modelSolution.CenterContinuumFlux.push_back(cont);
+                modelSolution.ContinuumError.push_back(GetContinuumError(eIdx, subeIdx));
+                Float64 sigma = m_Elements[eIdx]->GetWidth(subeIdx, m_Redshift);
+                Float64 flux = -1;
+                Float64 fluxError = -1;
+                Float64 fluxDI = GetFluxDirectIntegration(eIdx, subeIdx);
+                if(amp>=0)
+                {
+                    flux = amp*sigma*sqrt(2*M_PI);
+                    fluxError = ampError*sigma*sqrt(2*M_PI);
+                }
+                modelSolution.Sigmas.push_back(sigma);
+                modelSolution.Fluxs.push_back(flux);
+                modelSolution.FluxErrors.push_back(fluxError);
+                modelSolution.FluxDirectIntegration.push_back(fluxDI);
             }
-            modelSolution.Sigmas.push_back(sigma);
-            modelSolution.Fluxs.push_back(flux);
-            modelSolution.FluxErrors.push_back(fluxError);
-            modelSolution.FluxDirectIntegration.push_back(fluxDI);
+            else{
+                modelSolution.FittingError.push_back(-1.0);
+                modelSolution.CenterContinuumFlux.push_back(-1.0);
+                modelSolution.ContinuumError.push_back(-1.0);
+                modelSolution.Sigmas.push_back(-1.0);
+                modelSolution.Fluxs.push_back(-1.0);
+                modelSolution.FluxErrors.push_back(-1.0);
+                modelSolution.FluxDirectIntegration.push_back(-1.0);
+            }
+
             modelSolution.OutsideLambdaRange.push_back(m_Elements[eIdx]->IsOutsideLambdaRange(subeIdx));
         }
 

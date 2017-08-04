@@ -58,6 +58,9 @@ Int32 CLineModelResult::Init( std::vector<Float64> redshifts, CRayCatalog::TRayV
 
         TFloat64List _corr(nResults, 0.0);
         ScaleMargCorrectionTplshapes.push_back(_corr);
+
+        std::vector<bool> selp(nResults, false);
+        StrongELPresentTplshapes.push_back(selp);
     }
 
     ChiSquareContinuum.resize( nResults );
@@ -66,7 +69,7 @@ Int32 CLineModelResult::Init( std::vector<Float64> redshifts, CRayCatalog::TRayV
     return err;
 }
 
-Int32 CLineModelResult::SetChisquareTplshapeResult( Int32 index, TFloat64List chisquareTplshape, TFloat64List scaleMargCorrTplshape )
+Int32 CLineModelResult::SetChisquareTplshapeResult( Int32 index, TFloat64List chisquareTplshape, TFloat64List scaleMargCorrTplshape, std::vector<bool> strongEmissionLinePresentTplshape )
 {
     if(index>=Redshifts.size())
     {
@@ -84,11 +87,16 @@ Int32 CLineModelResult::SetChisquareTplshapeResult( Int32 index, TFloat64List ch
     {
         return -4;
     }
+    if(chisquareTplshape.size()!=strongEmissionLinePresentTplshape.size())
+    {
+        return -4;
+    }
 
     for(Int32 k=0; k<chisquareTplshape.size(); k++)
     {
         ChiSquareTplshapes[k][index] = chisquareTplshape[k];
         ScaleMargCorrectionTplshapes[k][index] = scaleMargCorrTplshape[k];
+        StrongELPresentTplshapes[k][index] = strongEmissionLinePresentTplshape[k];
     }
     return 0;
 }
@@ -131,6 +139,26 @@ TFloat64List CLineModelResult::GetScaleMargCorrTplshapeResult( Int32 index )
     }
 
     return scaleMargCorrTplshape;
+}
+
+std::vector<bool> CLineModelResult::GetStrongELPresentTplshapeResult( Int32 index )
+{
+    std::vector<bool> strongELPresentTplshape;
+    if(index>=Redshifts.size())
+    {
+        return strongELPresentTplshape;
+    }
+    if(StrongELPresentTplshapes.size()<1)
+    {
+        return strongELPresentTplshape;
+    }
+
+    for(Int32 k=0; k<StrongELPresentTplshapes.size(); k++)
+    {
+        strongELPresentTplshape.push_back(StrongELPresentTplshapes[k][index]);
+    }
+
+    return strongELPresentTplshape;
 }
 
 /**
@@ -306,46 +334,46 @@ Int32 CLineModelResult::GetNLinesOverCutThreshold(Int32 extremaIdx, Float64 snrT
     return nSol;
 }
 
+
 /**
  * @brief CLineModelResult::GetStrongLinesPresence
  * @param filterType: 1: emission only, 2 abs only, else: no filter
  * @return: a list of boolean values indicating if a strong is present (not outsidelambdarange for that z) for each redshift
  */
-std::vector<bool> CLineModelResult::GetStrongLinesPresence( UInt32 filterType ) const
+std::vector<bool> CLineModelResult::GetStrongLinesPresence( UInt32 filterType, std::vector<CLineModelSolution> linemodelsols ) const
 {
-
-    std::vector<bool> strongIsPresent(LineModelSolutions.size(), false);
-    for ( UInt32 solutionIdx=0; solutionIdx<LineModelSolutions.size(); solutionIdx++)
+    std::vector<bool> strongIsPresent(linemodelsols.size(), false);
+    for ( UInt32 solutionIdx=0; solutionIdx<linemodelsols.size(); solutionIdx++)
     {
         strongIsPresent[solutionIdx] = false;
 
-        for ( UInt32 j=0; j<LineModelSolutions[solutionIdx].Amplitudes.size(); j++)
+        for ( UInt32 j=0; j<linemodelsols[solutionIdx].Amplitudes.size(); j++)
         {
-            if( !LineModelSolutions[solutionIdx].Rays[j].GetIsStrong() )
+            if( !linemodelsols[solutionIdx].Rays[j].GetIsStrong() )
             {
                 continue;
             }
 
             if(filterType==1)
             {
-                if( !LineModelSolutions[solutionIdx].Rays[j].GetIsEmission() )
+                if( !linemodelsols[solutionIdx].Rays[j].GetIsEmission() )
                 {
                     continue;
                 }
             }else if(filterType==2)
             {
-                if( LineModelSolutions[solutionIdx].Rays[j].GetIsEmission() )
+                if( linemodelsols[solutionIdx].Rays[j].GetIsEmission() )
                 {
                     continue;
                 }
             }
 
-            if( LineModelSolutions[solutionIdx].OutsideLambdaRange[j] )
+            if( linemodelsols[solutionIdx].OutsideLambdaRange[j] )
             {
                 continue;
             }
 
-            if(LineModelSolutions[solutionIdx].Amplitudes[j]>0.0)
+            if(linemodelsols[solutionIdx].Amplitudes[j]>0.0)
             {
                 strongIsPresent[solutionIdx] = true;
                 break;
