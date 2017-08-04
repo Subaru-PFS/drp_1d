@@ -6,6 +6,7 @@
 #include <RedshiftLibrary/operator/operator.h>
 #include <RedshiftLibrary/operator/linemodelresult.h>
 #include <RedshiftLibrary/linemodel/elementlist.h>
+#include <RedshiftLibrary/linemodel/multimodel.h>
 #include <RedshiftLibrary/linemodel/modelspectrumresult.h>
 #include <RedshiftLibrary/linemodel/modelfittingresult.h>
 #include <RedshiftLibrary/linemodel/modelrulesresult.h>
@@ -52,7 +53,7 @@ public:
                                               const Float64 &opt_twosteplargegridstep=0.001,
                                               const std::string &opt_rigidity="rules",
                                               const Float64 &opt_velocityfitmin=20,
-                                              const Float64 &opt_velocityfitmax=800);
+                                              const Float64 &opt_velocityfitmax=500);
 
 
 

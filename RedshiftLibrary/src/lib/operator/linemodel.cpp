@@ -184,6 +184,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
     std::shared_ptr<CTemplateCatalog> orthoTplCatalog = orthoTplStore.getTplCatalog(ctlgIdx);
     Log.LogInfo( "Linemodel: Templates store prepared.");
 
+    //*
     CLineModelElementList model( spectrum,
                                  spectrumContinuum,
                                  tplCatalog,//*orthoTplCatalog,//
@@ -198,6 +199,25 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
                                  opt_velocityAbsorption,
                                  opt_rules,
                                  opt_rigidity);
+    //*/
+
+
+    /*
+    CMultiModel model( spectrum,
+                                 spectrumContinuum,
+                                 tplCatalog,//*orthoTplCatalog,//
+                                 tplCategoryList,
+                                 opt_calibrationPath,
+                                 restRayList,
+                                 opt_fittingmethod,
+                                 opt_continuumcomponent,
+                                 opt_lineWidthType,
+                                 opt_resolution,
+                                 opt_velocityEmission,
+                                 opt_velocityAbsorption,
+                                 opt_rules,
+                                 opt_rigidity);
+    //*/
 
 
     std::shared_ptr<CLineModelResult> result = std::shared_ptr<CLineModelResult>( new CLineModelResult() );
@@ -1032,39 +1052,44 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
     //ComputeArea2(*result);
 
     /* ------------------------  COMPUTE POSTMARG PDF  --------------------------  */
-    //std::string opt_combinePdf = "marg";
-    std::string opt_combinePdf = "bestchi2";
+    std::string opt_combinePdf = "marg";
+    //std::string opt_combinePdf = "bestchi2";
     //std::string opt_combinePdf = "bestproba";
     CombinePDF(dataStore, result, opt_rigidity, opt_combinePdf);
 
     SaveContinuumPDF(dataStore, result);
 
     //Save chisquareTplshape results
-    for(Int32 km=0; km<result->ChiSquareTplshapes.size(); km++)
+    bool enableSaveChisquareTplshapeResults = false;
+    if(enableSaveChisquareTplshapeResults)
     {
-        std::shared_ptr<CLineModelResult> result_chisquaretplshape = std::shared_ptr<CLineModelResult>( new CLineModelResult() );
-        result_chisquaretplshape->Init( result->Redshifts, result->restRayList, 0);
-        for(Int32 kz=0; kz<result->Redshifts.size(); kz++)
+        for(Int32 km=0; km<result->ChiSquareTplshapes.size(); km++)
         {
-            result_chisquaretplshape->ChiSquare[kz] = result->ChiSquareTplshapes[km][kz];
+            std::shared_ptr<CLineModelResult> result_chisquaretplshape = std::shared_ptr<CLineModelResult>( new CLineModelResult() );
+            result_chisquaretplshape->Init( result->Redshifts, result->restRayList, 0);
+            for(Int32 kz=0; kz<result->Redshifts.size(); kz++)
+            {
+                result_chisquaretplshape->ChiSquare[kz] = result->ChiSquareTplshapes[km][kz];
+            }
+
+            std::string resname = (boost::format("linemodel_chisquaretplshape/linemodel_chisquaretplshape_%d") % km).str();
+            dataStore.StoreScopedGlobalResult( resname.c_str(), result_chisquaretplshape );
         }
 
-        std::string resname = (boost::format("linemodel_chisquaretplshape/linemodel_chisquaretplshape_%d") % km).str();
-        dataStore.StoreScopedGlobalResult( resname.c_str(), result_chisquaretplshape );
-    }
 
-    //Save scaleMargCorrTplshape results
-    for(Int32 km=0; km<result->ScaleMargCorrectionTplshapes.size(); km++)
-    {
-        std::shared_ptr<CLineModelResult> result_chisquaretplshape = std::shared_ptr<CLineModelResult>( new CLineModelResult() );
-        result_chisquaretplshape->Init( result->Redshifts, result->restRayList, 0);
-        for(Int32 kz=0; kz<result->Redshifts.size(); kz++)
+        //Save scaleMargCorrTplshape results
+        for(Int32 km=0; km<result->ScaleMargCorrectionTplshapes.size(); km++)
         {
-            result_chisquaretplshape->ChiSquare[kz] = result->ScaleMargCorrectionTplshapes[km][kz];
-        }
+            std::shared_ptr<CLineModelResult> result_chisquaretplshape = std::shared_ptr<CLineModelResult>( new CLineModelResult() );
+            result_chisquaretplshape->Init( result->Redshifts, result->restRayList, 0);
+            for(Int32 kz=0; kz<result->Redshifts.size(); kz++)
+            {
+                result_chisquaretplshape->ChiSquare[kz] = result->ScaleMargCorrectionTplshapes[km][kz];
+            }
 
-        std::string resname = (boost::format("linemodel_chisquaretplshape/linemodel_scalemargcorrtplshape_%d") % km).str();
-        dataStore.StoreScopedGlobalResult( resname.c_str(), result_chisquaretplshape );
+            std::string resname = (boost::format("linemodel_chisquaretplshape/linemodel_scalemargcorrtplshape_%d") % km).str();
+            dataStore.StoreScopedGlobalResult( resname.c_str(), result_chisquaretplshape );
+        }
     }
     return result;
 

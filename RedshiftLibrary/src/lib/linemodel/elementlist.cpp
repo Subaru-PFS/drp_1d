@@ -1,7 +1,6 @@
 #include <RedshiftLibrary/linemodel/elementlist.h>
 #include <RedshiftLibrary/linemodel/multiline.h>
 #include <RedshiftLibrary/linemodel/modelfittingresult.h>
-#include <RedshiftLibrary/gaussianfit/multigaussianfit.h>
 #include <RedshiftLibrary/ray/regulament.h>
 #include <RedshiftLibrary/ray/catalogsTplShape.h>
 #include <RedshiftLibrary/ray/catalogsOffsets.h>
@@ -1277,12 +1276,6 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
         }
 
 
-        //fit the amplitude of all elements together with iterative solver: Nelder Mead Simplex
-        if(0){
-            //fit the amplitudes together
-            fitAmplitudesSimplex();
-        }
-
         //fit the amplitude of all elements together (but Emission or Absorption separately) with iterative   solver: lmfit
         if(m_fittingmethod=="lmfit")
         {
@@ -2152,7 +2145,7 @@ Int32 CLineModelElementList::fitAmplitudesLBFGS(std::vector<Int32> filteredEltsI
     Int32 idVelocity = filteredEltsIdx.size();
     nbd[idVelocity] = 2;//2 = lower AND upper bound
     lower[idVelocity] = 20.0;
-    upper[idVelocity] = 800.0;
+    upper[idVelocity] = 500.0;
 
     /*     We now define the starting point. */
     Float64* x = (Float64*) calloc( nddl, sizeof( Float64 ) );
@@ -2329,30 +2322,6 @@ Int32 CLineModelElementList::estimateMeanSqFluxAndGradient(const Float64* varPac
     return 0;
 }
 
-
-/**
- * \brief Calls CMultiGaussianFit::Compute with a copy of this object as an argument.
- **/
-void CLineModelElementList::fitAmplitudesSimplex()
-{
-    CMultiGaussianFit fitter;
-
-    Int32 status = fitter.Compute( *this );
-//    if(status!=NSEpic::CMultiGaussianFit::nStatus_Success){
-//        continue;
-//    }
-
-//    Float64 gaussAmp;
-//    Float64 gaussPos;
-//    Float64 gaussWidth;
-//    fitter.GetResults( gaussAmp, gaussPos, gaussWidth );
-//    Float64 gaussAmpErr;
-//    Float64 gaussPosErr;
-//    Float64 gaussWidthErr;
-//    fitter.GetResultsError( gaussAmpErr, gaussPosErr, gaussWidthErr );
-
-
-}
 
 //temporary stuff, dev of the lmfit method: int
 

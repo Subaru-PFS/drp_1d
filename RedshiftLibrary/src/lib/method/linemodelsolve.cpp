@@ -88,7 +88,7 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
     dataStore.GetScopedParam( "linemodel.velocityabsorption", m_opt_velocity_absorption, 300.0 );
     dataStore.GetScopedParam( "linemodel.velocityfit", m_opt_velocityfit, "yes" );
     dataStore.GetScopedParam( "linemodel.velocityfitmin", m_opt_velocity_fit_min, 20.0 );
-    dataStore.GetScopedParam( "linemodel.velocityfitmax", m_opt_velocity_fit_max, 800.0 );
+    dataStore.GetScopedParam( "linemodel.velocityfitmax", m_opt_velocity_fit_max, 500.0 );
     dataStore.GetScopedParam( "linemodel.continuumreestimation", m_opt_continuumreest, "no" );
     dataStore.GetScopedParam( "linemodel.rules", m_opt_rules, "all" );
     dataStore.GetScopedParam( "linemodel.extremacount", m_opt_extremacount, 10.0 );
