@@ -441,6 +441,16 @@ void CLineModelElement::SetSumCross(Float64 val)
     m_sumCross=val;
 }
 
+Float64 CLineModelElement::GetDtmFree()
+{
+    return m_dtmFree;
+}
+
+void CLineModelElement::SetDtmFree(Float64 val)
+{
+    m_dtmFree=val;
+}
+
 Float64 CLineModelElement::GetSumGauss()
 {
     return m_sumGauss;

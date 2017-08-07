@@ -1,7 +1,10 @@
 #include <RedshiftLibrary/linemodel/multimodel.h>
 
+#include <boost/filesystem.hpp>
+#include <RedshiftLibrary/spectrum/io/genericreader.h>
+#include <RedshiftLibrary/noise/fromfile.h>
 
-
+namespace bfs = boost::filesystem;
 using namespace NSEpic;
 
 /**
@@ -23,10 +26,11 @@ CMultiModel::CMultiModel(const CSpectrum& spectrum,
                           const std::string &opt_rigidity)
 {
 
-    Int32 nModels = 4;
+    Int32 nModels = 2;
     for(Int32 km=0; km<nModels; km++)
     {
-        m_models.push_back(std::shared_ptr<CLineModelElementList> (new CLineModelElementList(spectrum,
+        std::shared_ptr<CSpectrum> spcRoll = LoadRollSpectrum(spectrum.GetFullPath(), km+1);
+        m_models.push_back(std::shared_ptr<CLineModelElementList> (new CLineModelElementList(*spcRoll,
                                                                                              spectrumContinuum,
                                                                                              tplCatalog,
                                                                                              tplCategoryList,
@@ -50,6 +54,74 @@ CMultiModel::CMultiModel(const CSpectrum& spectrum,
  **/
 CMultiModel::~CMultiModel()
 {
+}
+
+//temporary hack: probably, all the rolls should be read by the client instead
+std::shared_ptr<CSpectrum> CMultiModel::LoadRollSpectrum(std::string refSpcFullPath, Int32 iRoll)
+{
+    bool verbose=false;
+    std::shared_ptr<CSpectrum> spc = std::shared_ptr<CSpectrum>( new CSpectrum() );
+
+    if(verbose)
+    {
+        Log.LogInfo( "Multimodel: load roll #%d: ref spc full path = %s", iRoll, refSpcFullPath.c_str() );
+    }
+    std::string spcName = bfs::path( refSpcFullPath ).stem().string().c_str();
+    std::string spcPath = bfs::path( refSpcFullPath ).parent_path().string().c_str();
+    if(verbose)
+    {
+        Log.LogInfo( "Multimodel: load roll #%d: ref spc name = %s", iRoll, spcName.c_str() );
+        Log.LogInfo( "Multimodel: load roll #%d: ref spc path = %s", iRoll, spcPath.c_str() );
+    }
+    Int32 substring_start = 0;
+    Int32 substring_n;
+    std::string strTag = "_1_F";
+    std::size_t foundstra = spcName.find(strTag.c_str());
+    if (foundstra!=std::string::npos){
+        substring_n = (Int32)foundstra;
+    }else{
+        Log.LogWarning( "Multimodel - load roll hack - unable to find strTag=%s", strTag.c_str());
+        return spc;
+    }
+
+    std::string newSpcRollName = boost::str(boost::format("%s_%d_F.fits") % spcName.substr(substring_start, substring_n).append("") % iRoll);
+    std::string newNoiseRollName = boost::str(boost::format("%s_%d_ErrF.fits") % spcName.substr(substring_start, substring_n).append("") % iRoll);
+
+    bfs::path newSpcRollPath = bfs::path(spcPath)/bfs::path(newSpcRollName.c_str());
+    bfs::path newNoiseRollPath = bfs::path(spcPath)/bfs::path(newNoiseRollName.c_str());
+
+
+    Log.LogInfo( "Multimodel: load roll #%d: new spc roll path = %s", iRoll, newSpcRollPath.c_str() );
+    Log.LogInfo( "Multimodel: load roll #%d: new noise roll path = %s", iRoll, newNoiseRollPath.c_str() );
+    //
+
+    //Read the fits data
+    CSpectrumIOGenericReader reader;
+    Bool rValue = reader.Read( newSpcRollPath.c_str(), *spc );
+    if( !rValue )
+    {
+        Log.LogError("Failed to read input spectrum file: (%s)", newSpcRollPath.c_str() );
+        spc = NULL;
+        return spc;
+    }
+
+    //add noise
+    {
+        CNoiseFromFile noise;
+        if( ! noise.SetNoiseFilePath( newNoiseRollPath.c_str() ) )
+        {
+            Log.LogError("Failed to load noise spectrum");
+            return spc;
+        }
+
+        if( ! noise.AddNoise( *spc ) )
+        {
+            Log.LogError( "Failed to apply noise from spectrum: %s", newNoiseRollPath );
+            return spc;
+        }
+    }
+
+    return spc;
 }
 
 Int32 CMultiModel::setPassMode(Int32 iPass)
@@ -140,6 +212,31 @@ Float64 CMultiModel::fit(Float64 redshift, const TFloat64Range& lambdaRange, CLi
     {
         valf += m_models[km]->fit(redshift, lambdaRange, modelSolution, contreest_iterations, enableLogging);
     }
+
+    Int32 irefModel = 0;
+    std::vector<Float64> amps;
+    for(Int32 k=0; k<m_models[irefModel]->m_Elements.size(); k++)
+    {
+        Float64 _amp = m_models[irefModel]->m_Elements[k]->GetElementAmplitude();
+        amps.push_back(_amp);
+    }
+
+
+//    for(Int32 km=1; km<m_models.size(); km++)
+//    {
+//        for(Int32 k=0; k<m_models[km]->m_Elements.size(); k++)
+//        {
+//            m_models[km]->m_Elements[k]->SetFittedAmplitude(amps[k], 0.0);
+//        }
+//        m_models[km]->refreshModel();
+//    }
+//    //Get updated merit
+//     valf=0.0;
+//     for(Int32 km=0; km<m_models.size(); km++)
+//     {
+//         valf += m_models[km]->getLeastSquareMerit(lambdaRange);
+//     }
+
     return valf;
 }
 
@@ -193,6 +290,26 @@ std::vector<Float64> CMultiModel::GetScaleMargTplshape()
     return scaleMargtplshape;
 }
 
+//todo: tbd, are these booleans to be combined by OR or AND ?
+std::vector<bool> CMultiModel::GetStrongELPresentTplshape()
+{
+    std::vector<bool> strongElPresentplshape;
+    if(m_models.size()>0)
+    {
+        strongElPresentplshape = m_models[0]->GetStrongELPresentTplshape();
+    }
+    for(Int32 km=1; km<m_models.size(); km++)
+    {
+        std::vector<bool> _strongElPresentplshape = m_models[km]->GetStrongELPresentTplshape();
+        for(Int32 ktpl=0; ktpl<_strongElPresentplshape.size(); ktpl++)
+        {
+            strongElPresentplshape[ktpl] = strongElPresentplshape[ktpl] || _strongElPresentplshape[ktpl];
+        }
+    }
+
+    return strongElPresentplshape;
+}
+
 Float64 CMultiModel::getLeastSquareContinuumMerit(const TFloat64Range& lambdaRange)
 {
     Float64 valf=0.0;
@@ -244,9 +361,9 @@ void CMultiModel::SetFittingMethod(std::string fitMethod)
 //todo: tbd: which model should be returned in this multimodel case ?
 const CSpectrum& CMultiModel::GetModelSpectrum() const
 {
-    if(m_models.size()>0)
+    if(m_models.size()>mIndexExportModel)
     {
-        return m_models[0]->GetModelSpectrum();
+        return m_models[mIndexExportModel]->GetModelSpectrum();
     }
     else
     {

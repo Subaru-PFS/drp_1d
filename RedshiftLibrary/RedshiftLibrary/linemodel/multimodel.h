@@ -42,10 +42,14 @@ public:
 
     ~CMultiModel();
 
+    std::shared_ptr<CSpectrum> LoadRollSpectrum(std::string refSpcFullPath, Int32 iRoll);
+
+
     Int32 getTplshape_count();
     std::string getTplshape_bestTplName();
     std::vector<Float64> GetChisquareTplshape();
     std::vector<Float64> GetScaleMargTplshape();
+    std::vector<bool> GetStrongELPresentTplshape();
     Float64 getLeastSquareContinuumMerit(const TFloat64Range& lambdaRange);
     Float64 getLeastSquareContinuumMeritFast();
     Float64 getContinuumScaleMargCorrection();
@@ -96,6 +100,8 @@ public:
     std::vector<std::shared_ptr<CLineModelElementList>  > m_models;
 
 private:
+
+    Int32 mIndexExportModel = 0;
 
 };
 

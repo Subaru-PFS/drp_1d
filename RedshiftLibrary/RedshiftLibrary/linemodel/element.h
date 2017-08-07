@@ -93,6 +93,8 @@ public:
 
     Float64 GetSumCross();
     void SetSumCross(Float64 val);
+    Float64 GetDtmFree();
+    void SetDtmFree(Float64 val);
     Float64 GetSumGauss();
     void SetSumGauss(Float64 val);
     Float64 GetFitAmplitude();
@@ -131,6 +133,7 @@ protected:
 
     Float64 m_sumCross = 0.0;
     Float64 m_sumGauss = 0.0;
+    Float64 m_dtmFree = 0.0;    //dtmFree is the non-positive-constrained version of sumCross
     Float64 m_fitAmplitude = 0.0;
 
 private:

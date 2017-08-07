@@ -67,6 +67,7 @@ CMultiLine::CMultiLine( std::vector<CRay> rs,
 
     m_sumCross = 0.0;
     m_sumGauss = 0.0;
+    m_dtmFree = 0.0;
 
     SetFittedAmplitude(-1, -1);
 
@@ -559,6 +560,7 @@ void CMultiLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const C
 
     m_sumCross = 0.0;
     m_sumGauss = 0.0;
+    m_dtmFree = 0.0;
 
     for(Int32 k=0; k<nRays; k++)
       {
@@ -629,7 +631,7 @@ void CMultiLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const C
             }
             num++;
             err2 = 1.0 / (error[i] * error[i]);
-            m_sumCross += yg*y*err2;
+            m_dtmFree += yg*y*err2;
             m_sumGauss += yg*yg*err2;
         }
 
@@ -640,7 +642,7 @@ void CMultiLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const C
         return;
       }
 
-    m_sumCross = std::max(0.0, m_sumCross);
+    m_sumCross = std::max(0.0, m_dtmFree);
     Float64 A = m_sumCross / m_sumGauss;
     m_fitAmplitude = A; //todo: warning m_fitAmplitude should be updated when modifying sub-elements amplitudes: ex. rules.
     //Float64 A = std::max(0.0, m_sumCross / m_sumGauss);

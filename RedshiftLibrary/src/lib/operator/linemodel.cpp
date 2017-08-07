@@ -184,7 +184,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
     std::shared_ptr<CTemplateCatalog> orthoTplCatalog = orthoTplStore.getTplCatalog(ctlgIdx);
     Log.LogInfo( "Linemodel: Templates store prepared.");
 
-    //*
+    /*
     CLineModelElementList model( spectrum,
                                  spectrumContinuum,
                                  tplCatalog,//*orthoTplCatalog,//
@@ -202,7 +202,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
     //*/
 
 
-    /*
+    //*
     CMultiModel model( spectrum,
                                  spectrumContinuum,
                                  tplCatalog,//*orthoTplCatalog,//
@@ -415,6 +415,12 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
     Int32 indexLargeGrid = 0;
     std::vector<Float64> calculatedLargeGridRedshifts;
     std::vector<Float64> calculatedLargeGridMerits;
+    std::vector<TFloat64List> calculatedChiSquareTplshapes;
+    for(Int32 k=0; k<result->ChiSquareTplshapes.size(); k++)
+    {
+        TFloat64List _chi2tpl;
+        calculatedChiSquareTplshapes.push_back(_chi2tpl);
+    }
     boost::chrono::thread_clock::time_point start_mainloop = boost::chrono::thread_clock::now();
     for (Int32 i=0;i<result->Redshifts.size();i++)
     {
@@ -425,6 +431,10 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
             calculatedLargeGridMerits.push_back(result->ChiSquare[i]);
             result->ScaleMargCorrection[i] = model.getScaleMargCorrection();
             result->SetChisquareTplshapeResult(i , model.GetChisquareTplshape(), model.GetScaleMargTplshape(), model.GetStrongELPresentTplshape());
+            for(Int32 k=0; k<result->ChiSquareTplshapes.size(); k++)
+            {
+                calculatedChiSquareTplshapes[k].push_back(result->ChiSquareTplshapes[k][i]);
+            }
             if(estimateLeastSquareFast)
             {
                 result->ChiSquareContinuum[i] = model.getLeastSquareContinuumMerit(lambdaRange);
@@ -454,6 +464,10 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
     if(result->Redshifts.size()>calculatedLargeGridMerits.size() && calculatedLargeGridMerits.size()>1)
     {
         interpolateLargeGridOnFineGrid( calculatedLargeGridRedshifts, result->Redshifts, calculatedLargeGridMerits, result->ChiSquare);
+    }
+    for(Int32 kts=0; kts<result->ChiSquareTplshapes.size(); kts++)
+    {
+        interpolateLargeGridOnFineGrid( calculatedLargeGridRedshifts, result->Redshifts, calculatedChiSquareTplshapes[kts], result->ChiSquareTplshapes[kts]);
     }
 
 

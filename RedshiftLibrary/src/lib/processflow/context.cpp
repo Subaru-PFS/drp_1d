@@ -55,6 +55,7 @@ bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath,
 
     m_Spectrum = std::shared_ptr<CSpectrum>( new CSpectrum() );
     m_Spectrum->SetName(bfs::path( spectrumPath ).stem().string().c_str() );
+    m_Spectrum->SetFullPath(bfs::path( spectrumPath ).string().c_str() );
     //Log.LogInfo("Setting spectrum name: (%s)", bfs::path( spectrumPath ).stem().string().c_str() );
 
     CSpectrumIOGenericReader reader;
