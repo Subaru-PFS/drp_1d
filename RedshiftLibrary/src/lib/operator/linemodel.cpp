@@ -184,7 +184,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
     std::shared_ptr<CTemplateCatalog> orthoTplCatalog = orthoTplStore.getTplCatalog(ctlgIdx);
     Log.LogInfo( "Linemodel: Templates store prepared.");
 
-    /*
+    //*
     CLineModelElementList model( spectrum,
                                  spectrumContinuum,
                                  tplCatalog,//*orthoTplCatalog,//
@@ -199,10 +199,13 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
                                  opt_velocityAbsorption,
                                  opt_rules,
                                  opt_rigidity);
+    Float64 setssSizeInit = 0.1;
+    model.SetSourcesizeDispersion(setssSizeInit);
+    Log.LogInfo( "Linemodel: sourcesize init to: ss=%.1f", setssSizeInit);
     //*/
 
 
-    //*
+    /*
     CMultiModel model( spectrum,
                                  spectrumContinuum,
                                  tplCatalog,//*orthoTplCatalog,//
@@ -467,7 +470,10 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
     }
     for(Int32 kts=0; kts<result->ChiSquareTplshapes.size(); kts++)
     {
-        interpolateLargeGridOnFineGrid( calculatedLargeGridRedshifts, result->Redshifts, calculatedChiSquareTplshapes[kts], result->ChiSquareTplshapes[kts]);
+        if(result->Redshifts.size()>calculatedChiSquareTplshapes[kts].size() && calculatedChiSquareTplshapes[kts].size()>1)
+        {
+            interpolateLargeGridOnFineGrid( calculatedLargeGridRedshifts, result->Redshifts, calculatedChiSquareTplshapes[kts], result->ChiSquareTplshapes[kts]);
+        }
     }
 
 

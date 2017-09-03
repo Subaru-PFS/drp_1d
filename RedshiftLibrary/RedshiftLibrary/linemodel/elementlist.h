@@ -121,6 +121,8 @@ public:
     Float64 GetVelocityAbsorption();
     Float64 GetVelocityInfFromInstrumentResolution();
     Int32 ApplyVelocityBound(Float64 inf, Float64 sup);
+    void SetSourcesizeDispersion(Float64 sizeArcsec);
+
 
     Bool initModelAtZ(Float64 redshift, const TFloat64Range& lambdaRange, const CSpectrumSpectralAxis &spectralAxis);
 

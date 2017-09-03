@@ -4427,6 +4427,14 @@ Float64 CLineModelElementList::GetElementAmplitude(Int32 j)
 }
 
 
+void CLineModelElementList::SetSourcesizeDispersion(Float64 sizeArcsec)
+{
+    for(Int32 j=0; j<m_Elements.size(); j++)
+    {
+        m_Elements[j]->SetSourcesizeDispersion(sizeArcsec);
+    }
+}
+
 void CLineModelElementList::SetVelocityEmission(Float64 vel)
 {
     m_velocityEmission = vel;

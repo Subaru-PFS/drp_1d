@@ -123,13 +123,14 @@ Float64 CLineModelElement::GetLineWidth(Float64 redshiftedlambda, Float64 z, Boo
     }else if( m_LineWidthType == "nispvsspsf201707"){
         //+ considers Instrument PSF=f_linearregression(lambda) from MDB-EE50: SpaceSegment.PLM.PLMAsRequired.PLMNISPrEE50rEE80
         //      arcsec/pixel from : SpaceSegment.Instrument.NISP.NISPAsRequired.NISPGRAPSFRefEE50 : (0.355)
-        Float64 arcsecPix = 0.3; //0.3 is the same as in tipsfast
+        Float64 arcsecPix = 0.285; //0.3 is the same as in tipsfast
         //      angstrom/pixel from : SpaceSegment.Instrument.NISP.NISPAsRequired.NISPGRAAverageDlambda
         Float64 angstromPix = 13.4;
         //      Leads to linear regression: sigma_psf = 3.939e-4*wl_angstrom + 2.191
         //+ considers source size in the dispersion direction
         //+ considers velocity
-        instrumentSigma = (redshiftedlambda*3.939e-4 + 2.191);
+        //instrumentSigma = (redshiftedlambda*3.939e-4 + 2.191); //probably a realistic calib.
+        instrumentSigma = 11.; //(approx. 10 or 11?) for tips-fast current version 201708
 
         sourcesizeSigma = m_SourceSizeDispersion*angstromPix/arcsecPix;
 
@@ -194,6 +195,9 @@ Float64 CLineModelElement::GetLineProfile(std::string profile, Float64 x, Float6
         Int32 valI = int( (x/(1.0+z)-dataStartLambda)/m_dataStepLambda );
         return m_dataExtinctionFlux[valI];
     }
+
+    //use sigma normalized profiles
+    val /= sigma;
 
     return val;
 }
@@ -379,6 +383,12 @@ Float64 CLineModelElement::GetNSigmaSupport(std::string profile)
         val = 1.0;
     }
     return val;
+}
+
+
+void CLineModelElement::SetSourcesizeDispersion(Float64 sigma)
+{
+    m_SourceSizeDispersion = sigma;
 }
 
 void CLineModelElement::SetVelocityEmission(Float64 vel)

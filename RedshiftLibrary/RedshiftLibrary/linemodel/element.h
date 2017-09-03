@@ -65,6 +65,8 @@ public:
     void SetVelocityAbsorption(Float64 vel);
     Float64 GetVelocityAbsorption();
 
+    void SetSourcesizeDispersion(Float64 sigma);
+
     void SetAsymfitWidthCoeff(Float64 coeff);
     Float64 GetAsymfitWidthCoeff();
     void SetAsymfitAlphaCoeff(Float64 coeff);

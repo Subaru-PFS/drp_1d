@@ -45,6 +45,11 @@ CMultiModel::CMultiModel(const CSpectrum& spectrum,
                                                                                              opt_rules,
                                                                                              opt_rigidity
                                                                                              )));
+        if(km==0){
+            m_models[km]->SetSourcesizeDispersion(0.1);
+        }else if(km==1){
+            m_models[km]->SetSourcesizeDispersion(0.5);
+        }
     }
 
 }
@@ -75,7 +80,7 @@ std::shared_ptr<CSpectrum> CMultiModel::LoadRollSpectrum(std::string refSpcFullP
     }
     Int32 substring_start = 0;
     Int32 substring_n;
-    std::string strTag = "_1_F";
+    std::string strTag = "_roll1_F";
     std::size_t foundstra = spcName.find(strTag.c_str());
     if (foundstra!=std::string::npos){
         substring_n = (Int32)foundstra;
@@ -84,8 +89,8 @@ std::shared_ptr<CSpectrum> CMultiModel::LoadRollSpectrum(std::string refSpcFullP
         return spc;
     }
 
-    std::string newSpcRollName = boost::str(boost::format("%s_%d_F.fits") % spcName.substr(substring_start, substring_n).append("") % iRoll);
-    std::string newNoiseRollName = boost::str(boost::format("%s_%d_ErrF.fits") % spcName.substr(substring_start, substring_n).append("") % iRoll);
+    std::string newSpcRollName = boost::str(boost::format("%s_roll%d_F.fits") % spcName.substr(substring_start, substring_n).append("") % iRoll);
+    std::string newNoiseRollName = boost::str(boost::format("%s_roll%d_ErrF.fits") % spcName.substr(substring_start, substring_n).append("") % iRoll);
 
     bfs::path newSpcRollPath = bfs::path(spcPath)/bfs::path(newSpcRollName.c_str());
     bfs::path newNoiseRollPath = bfs::path(spcPath)/bfs::path(newNoiseRollName.c_str());
@@ -210,9 +215,12 @@ Float64 CMultiModel::fit(Float64 redshift, const TFloat64Range& lambdaRange, CLi
     Float64 valf=0.0;
     for(Int32 km=0; km<m_models.size(); km++)
     {
-        valf += m_models[km]->fit(redshift, lambdaRange, modelSolution, contreest_iterations, enableLogging);
+        CLineModelSolution _modelSolution;
+        valf += m_models[km]->fit(redshift, lambdaRange, _modelSolution, contreest_iterations, enableLogging);
     }
 
+    /*
+    //set amps from ref model
     Int32 irefModel = 0;
     std::vector<Float64> amps;
     for(Int32 k=0; k<m_models[irefModel]->m_Elements.size(); k++)
@@ -220,22 +228,72 @@ Float64 CMultiModel::fit(Float64 redshift, const TFloat64Range& lambdaRange, CLi
         Float64 _amp = m_models[irefModel]->m_Elements[k]->GetElementAmplitude();
         amps.push_back(_amp);
     }
+    //*/
 
+    //*
+    //set amps from average amp over models
+    std::vector<Float64> amps;
+    for(Int32 k=0; k<m_models[0]->m_Elements.size(); k++)
+    {
+        Int32 nSum = 0;
+        amps.push_back(0.0);
+        for(Int32 km=0; km<m_models.size(); km++)
+        {
+            amps[k] += m_models[km]->m_Elements[k]->GetElementAmplitude();
+            nSum ++;
+        }
+        if(nSum>0)
+        {
+            amps[k]/=nSum;
+        }
+    }
+    //*/
 
-//    for(Int32 km=1; km<m_models.size(); km++)
-//    {
-//        for(Int32 k=0; k<m_models[km]->m_Elements.size(); k++)
-//        {
-//            m_models[km]->m_Elements[k]->SetFittedAmplitude(amps[k], 0.0);
-//        }
-//        m_models[km]->refreshModel();
-//    }
-//    //Get updated merit
-//     valf=0.0;
-//     for(Int32 km=0; km<m_models.size(); km++)
-//     {
-//         valf += m_models[km]->getLeastSquareMerit(lambdaRange);
-//     }
+    /*
+    //set amps from combined chi2 calculation: work in progress...
+    std::vector<Float64> dtm_combined;
+    std::vector<Float64> mtm_combined;
+    for(Int32 k=0; k<m_models[0]->m_Elements.size(); k++)
+    {
+        dtm_combined.push_back(0.0);
+        mtm_combined.push_back(0.0);
+        for(Int32 km=0; km<m_models.size(); km++)
+        {
+            dtm_combined[k] += m_models[km]->m_Elements[k]->GetDtmFree();
+            mtm_combined[k] += m_models[km]->m_Elements[k]->GetSumGauss();
+        }
+    }
+    std::vector<Float64> amps;
+    for(Int32 k=0; k<m_models[0]->m_Elements.size(); k++)
+    {
+        Float64 dtm = std::max(0.0, dtm_combined[k]);
+        Float64 _amp = 0.0;
+        if(mtm_combined[k]>0.0)
+        {
+            dtm/mtm_combined[k];
+        }
+        amps.push_back(_amp);
+    }
+    //*/
+
+    //*
+    for(Int32 km=0; km<m_models.size(); km++)
+    {
+        for(Int32 k=0; k<m_models[km]->m_Elements.size(); k++)
+        {
+            m_models[km]->m_Elements[k]->SetFittedAmplitude(amps[k], 0.0);
+        }
+        m_models[km]->refreshModel();
+    }
+    //Get updated merit
+    valf=0.0;
+    for(Int32 km=0; km<m_models.size(); km++)
+    {
+        valf += m_models[km]->getLeastSquareMerit(lambdaRange);
+    }
+    //*/
+
+    modelSolution=m_models[mIndexExportModel]->GetModelSolution();
 
     return valf;
 }
