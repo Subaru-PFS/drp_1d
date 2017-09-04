@@ -144,7 +144,12 @@ Bool CTemplateCatalog::Add( std::shared_ptr<CTemplate> r )
     {
         CContinuumDF continuum(m_continuumRemovalWaveletsBinPath);
         tmplWithoutCont->SetDecompScales(m_continuumRemovalWaveletsNScales);
-        tmplWithoutCont->RemoveContinuum( continuum );
+        Bool ret = tmplWithoutCont->RemoveContinuum( continuum );
+        if( !ret )
+        {
+            Log.LogError( "Failed to apply continuum substraction for template" );
+            return false;
+        }
     }
     else if( m_continuumRemovalMethod == "zero" )
     {

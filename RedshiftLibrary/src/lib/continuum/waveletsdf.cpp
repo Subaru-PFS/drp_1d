@@ -175,6 +175,9 @@ Bool CContinuumDF::RemoveContinuum ( const CSpectrum& s, CSpectrumFluxAxis& noCo
         binPathSpline = binPathSpline/"mr1d_trans_modified";
 
     } //mr1d_trans");
+    if( !bfs::exists( binPathSpline.string() ) ) {
+        return false;
+    }
     filePathSpline = binPathSpline.string();
 
     //bfs::path binPathSpline = m_dfBinPath;

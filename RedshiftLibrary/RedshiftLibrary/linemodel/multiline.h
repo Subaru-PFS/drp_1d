@@ -56,6 +56,7 @@ public:
     Float64 GetNominalAmplitude(Int32 subeIdx);
     bool SetNominalAmplitude(Int32 subeIdx, Float64 nominalamp);
     Float64 GetElementAmplitude();
+    Float64 GetElementError();
     void SetFittedAmplitude(Int32 subeIdx, Float64 A, Float64 SNR);
     void SetFittedAmplitude(Float64 A, Float64 SNR);
     void LimitFittedAmplitude(Int32 subeIdx, Float64 limit);

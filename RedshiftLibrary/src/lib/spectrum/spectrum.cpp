@@ -79,11 +79,11 @@ Bool CSpectrum::RemoveContinuum(  CContinuum& remover )
 {
     CSpectrumFluxAxis fluxAxisWithoutContinuum;
 
-    remover.RemoveContinuum( *this, fluxAxisWithoutContinuum );
+    Bool ret = remover.RemoveContinuum( *this, fluxAxisWithoutContinuum );
 
     m_FluxAxis = fluxAxisWithoutContinuum;
 
-    return true;
+    return ret;
 }
 
 /**

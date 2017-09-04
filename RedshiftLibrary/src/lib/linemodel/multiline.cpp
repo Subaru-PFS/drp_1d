@@ -469,6 +469,26 @@ Float64 CMultiLine::GetElementAmplitude()
   return -1;
 }
 
+
+/**
+ * \brief Returns -1 if m_OutsideLambdaRange, and the fitted error / nominal amplitude of the first element otherwise.
+ **/
+Float64 CMultiLine::GetElementError()
+{
+  if( m_OutsideLambdaRange )
+    {
+      return -1;
+    }
+  for(Int32 k=0; k<m_Rays.size(); k++)
+  {
+      if(!m_OutsideLambdaRangeList[k] && m_NominalAmplitudes[k]!= 0.0)
+      {
+          return m_FittedAmplitudeErrorSigmas[k]/m_NominalAmplitudes[k];
+      }
+  }
+  return -1;
+}
+
 /**
  * \brief Returns the nominal amplitude with index subeIdx.
  **/

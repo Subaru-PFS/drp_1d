@@ -121,7 +121,7 @@ std::shared_ptr<CSpectrum> CMultiModel::LoadRollSpectrum(std::string refSpcFullP
 
         if( ! noise.AddNoise( *spc ) )
         {
-            Log.LogError( "Failed to apply noise from spectrum: %s", newNoiseRollPath );
+            Log.LogError( "Failed to apply noise from spectrum: %s", newNoiseRollPath.c_str() );
             return spc;
         }
     }
@@ -232,19 +232,25 @@ Float64 CMultiModel::fit(Float64 redshift, const TFloat64Range& lambdaRange, CLi
 
     //*
     //set amps from average amp over models
+    //todo: error weighted average !!
     std::vector<Float64> amps;
     for(Int32 k=0; k<m_models[0]->m_Elements.size(); k++)
     {
-        Int32 nSum = 0;
+        Float64 weightSum = 0;
         amps.push_back(0.0);
         for(Int32 km=0; km<m_models.size(); km++)
         {
-            amps[k] += m_models[km]->m_Elements[k]->GetElementAmplitude();
-            nSum ++;
+            Float64 err = m_models[km]->m_Elements[k]->GetElementError();
+            if(err>0.0)
+            {
+                Float64 weight = 1/(err*err);
+                amps[k] += m_models[km]->m_Elements[k]->GetElementAmplitude()*weight;
+                weightSum += weight;
+            }
         }
-        if(nSum>0)
+        if(weightSum>0.0)
         {
-            amps[k]/=nSum;
+            amps[k]/=weightSum;
         }
     }
     //*/
