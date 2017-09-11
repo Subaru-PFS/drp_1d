@@ -216,9 +216,21 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
         //LoadCatalog(m_RestRayList);
         LogCatalogInfos();
 
+        //Resize tplshape buffers
         m_ChisquareTplshape.resize(m_CatalogTplShape->GetCatalogsCount());
         m_ScaleMargCorrTplshape.resize(m_CatalogTplShape->GetCatalogsCount());
         m_StrongELPresentTplshape.resize(m_CatalogTplShape->GetCatalogsCount());
+        m_FittedAmpTplshape.resize(m_CatalogTplShape->GetCatalogsCount());
+        m_FittedErrorTplshape.resize(m_CatalogTplShape->GetCatalogsCount());
+        m_MtmTplshape.resize(m_CatalogTplShape->GetCatalogsCount());
+        m_DtmTplshape.resize(m_CatalogTplShape->GetCatalogsCount());
+        for(Int32 ktplshape=0; ktplshape<m_CatalogTplShape->GetCatalogsCount(); ktplshape++)
+        {
+            m_FittedAmpTplshape[ktplshape].resize(m_Elements.size());
+            m_FittedErrorTplshape[ktplshape].resize(m_Elements.size());
+            m_MtmTplshape[ktplshape].resize(m_Elements.size());
+            m_DtmTplshape[ktplshape].resize(m_Elements.size());
+        }
 
         m_tplshapeLeastSquareFast = false;
     }
@@ -284,6 +296,17 @@ Int32 CLineModelElementList::setPassMode(Int32 iPass)
 const CSpectrum& CLineModelElementList::GetModelSpectrum() const
 {
     return *m_SpectrumModel;
+}
+
+CSpectrum CLineModelElementList::GetSpectrumModelContinuum() const
+{
+    //std::shared_ptr<CSpectrum> spc = std::shared_ptr<CSpectrum>( new CSpectrum(*m_SpectrumModel) );
+    CSpectrum spc(*m_SpectrumModel);
+    for(Int32 k=0; k<spc.GetSampleCount(); k++)
+    {
+        spc.GetFluxAxis()[k]=m_ContinuumFluxAxis[k];
+    }
+    return spc;
 }
 
 /**
@@ -1076,6 +1099,32 @@ Bool CLineModelElementList::initModelAtZ(Float64 redshift, const TFloat64Range& 
     return true;
 }
 
+Bool CLineModelElementList::initTplshapeModel(Int32 itplshape, Bool enableSetVelocity)
+{
+    m_CatalogTplShape->SetLyaProfile(*this, itplshape);
+
+    //m_CatalogTplShape->SetMultilineNominalAmplitudes( *this, ifitting );
+    m_CatalogTplShape->SetMultilineNominalAmplitudesFast( *this, itplshape );
+
+    if(enableSetVelocity)
+    {
+        //Set the velocities from templates: todo auto switch when velfit is ON
+        m_CatalogTplShape->GetCatalogVelocities(itplshape, m_velocityEmission, m_velocityAbsorption);
+    }
+    return true;
+}
+
+Bool CLineModelElementList::setTplshapeAmplitude(std::vector<Float64> ampsElts, std::vector<Float64> errorsElts)
+{
+    for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
+    {
+        m_Elements[iElts]->SetFittedAmplitude(ampsElts[iElts], errorsElts[iElts]);
+    }
+    return true;
+}
+
+
+
 Bool CLineModelElementList::initDtd(const TFloat64Range& lambdaRange)
 {
     m_dTransposeDLambdaRange = lambdaRange;
@@ -1152,10 +1201,7 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
     Int32 ifitting=0; //multiple fitting steps for rigidity=tplshape
     Int32 nfitting=1;
     Int32 savedIdxFitted=-1; //for rigidity=tplshape
-    std::vector<Float64> savedFittedAmp(m_Elements.size(), 0.0); //for rigidity=tplshape
-    std::vector<Float64> savedFittedAmpError(m_Elements.size(), 0.0);//for rigidity=tplshape
-    std::vector<Float64> savedMtD(m_Elements.size(), 0.0); //for rigidity=tplshape
-    std::vector<Float64> savedMtM(m_Elements.size(), 0.0); //for rigidity=tplshape
+
     if(m_rigidity=="tplshape")
     {
         nfitting=m_CatalogTplShape->GetCatalogsCount();
@@ -1171,14 +1217,10 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
                 setLyaProfile(redshift, spectralAxis);
             }
         }else{
-            m_CatalogTplShape->SetLyaProfile(*this, ifitting);
+            initTplshapeModel(ifitting, false);
             //prepare the Lya width and asym coefficients if the asymfit profile option is met
             //INFO: tpl-shape are always ASYMFIXED for the lyaE profile, as of 2016-01-11
             setLyaProfile(redshift, spectralAxis);
-            //m_CatalogTplShape->SetMultilineNominalAmplitudes( *this, ifitting );
-            m_CatalogTplShape->SetMultilineNominalAmplitudesFast( *this, ifitting );
-            //Set the velocities from templates: todo auto switch when velfit is ON
-            //m_CatalogTplShape->GetCatalogVelocities(ifitting, m_velocityEmission, m_velocityAbsorption);
         }
 
         //generate random amplitudes
@@ -1462,9 +1504,16 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
                 //iterative continuum estimation :: RAW SLOW METHOD
                 refreshModel();
                 Float64 enhanceLines = 0;
-                if(nIt>2*it && nIt>3.0){
+                /*
+                if(nIt>2*it && nIt>3.0 && it<=3){
                     enhanceLines = 2.0-((Float64)it*0.33);
                 }
+                //*/
+                /*
+                if(it==0 && nIt>1){
+                    enhanceLines = 1.5;
+                }
+                */
                 EstimateSpectrumContinuum(enhanceLines);
 
                 for(UInt32 i=0; i<modelFluxAxis.GetSamplesCount(); i++){
@@ -1609,10 +1658,11 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
 
                             Float64 amp_error = m_Elements[iElts]->GetFittedAmplitudeErrorSigma(j);
                             Float64 nominal_amp = m_Elements[iElts]->GetNominalAmplitude(j);
-                            savedFittedAmp[iElts] = amp/nominal_amp;
-                            savedFittedAmpError[iElts] = amp_error/nominal_amp;
-                            savedMtD[iElts] = m_Elements[iElts]->GetSumCross();
-                            savedMtM[iElts] = m_Elements[iElts]->GetSumGauss();
+                            m_FittedAmpTplshape[ifitting][iElts] = amp/nominal_amp;
+                            m_FittedErrorTplshape[ifitting][iElts] = amp_error/nominal_amp;
+                            m_DtmTplshape[ifitting][iElts] = m_Elements[iElts]->GetSumCross();
+                            m_MtmTplshape[ifitting][iElts] = m_Elements[iElts]->GetSumGauss();
+
                             savedAmp=true;
                             break;
                         }
@@ -1649,13 +1699,12 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
 
         //Set the velocities from templates: todo auto switch when velfit is ON
         //m_CatalogTplShape->GetCatalogVelocities(savedIdxFitted, m_velocityEmission, m_velocityAbsorption);
-
         for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
         {
-            Log.LogInfo( "Linemodel: tplshape = %d (%s), and A=%f", savedIdxFitted, m_tplshapeBestTplName.c_str(), savedFittedAmp[iElts]);
-            m_Elements[iElts]->SetFittedAmplitude(savedFittedAmp[iElts], savedFittedAmpError[iElts]);
-            m_Elements[iElts]->SetSumCross(savedMtD[iElts]);
-            m_Elements[iElts]->SetSumGauss(savedMtM[iElts]);
+            Log.LogInfo( "Linemodel: tplshape = %d (%s), and A=%f", savedIdxFitted, m_tplshapeBestTplName.c_str(), m_FittedAmpTplshape[savedIdxFitted][iElts]);
+            m_Elements[iElts]->SetFittedAmplitude(m_FittedAmpTplshape[savedIdxFitted][iElts], m_FittedErrorTplshape[savedIdxFitted][iElts]);
+            m_Elements[iElts]->SetSumCross(m_DtmTplshape[savedIdxFitted][iElts]);
+            m_Elements[iElts]->SetSumGauss(m_MtmTplshape[savedIdxFitted][iElts]);
         }
         //Lya
         bool retLyaProfile = m_CatalogTplShape->SetLyaProfile(*this, savedIdxFitted);
@@ -4595,7 +4644,7 @@ void CLineModelElementList::EstimateSpectrumContinuum( Float64 opt_enhance_lines
     }else
     {
         Int64 nscales = 6;
-        std::string dfBinPath="~/gitlab/amazed/extern/df_linux/";
+        std::string dfBinPath="/home/aschmitt/gitlab/amazed/extern/df_linux/";
         CContinuumDF continuum(dfBinPath);
         spcCorrectedUnderLines.SetDecompScales(nscales);
         Int32 retVal = continuum.RemoveContinuum( spcCorrectedUnderLines, fluxAxisWithoutContinuumCalc );

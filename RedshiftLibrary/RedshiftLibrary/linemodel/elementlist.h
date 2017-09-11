@@ -128,6 +128,9 @@ public:
 
     Float64 fit(Float64 redshift, const TFloat64Range& lambdaRange, CLineModelSolution &modelSolution, Int32 contreest_iterations=0, bool enableLogging=0);
 
+    Bool initTplshapeModel(Int32 itplshape, Bool enableSetVelocity=false);
+    Bool setTplshapeAmplitude(std::vector<Float64> ampsElts, std::vector<Float64> errorsElts);
+
     std::vector<CLmfitController*> createLmfitControllers( const TFloat64Range& lambdaRange);
     void fitWithModelSelection(Float64 redshift, const TFloat64Range& lambdaRange, CLineModelSolution &modelSolution);
     void SetFittingMethod(std::string fitMethod);
@@ -167,6 +170,7 @@ public:
     Int32 LoadModelSolution(const CLineModelSolution&  modelSolution);
     CLineModelSolution GetModelSolution(Int32 opt_level=0);
     const CSpectrum&    GetModelSpectrum() const;
+    CSpectrum GetSpectrumModelContinuum() const;
     const CSpectrum&    GetObservedSpectrumWithLinesRemoved() const;
     Float64 GetContinuumError(Int32 eIdx, Int32 subeIdx);
     Float64 GetFluxDirectIntegration(Int32 eIdx, Int32 subeIdx);
@@ -205,6 +209,14 @@ public:
 
     Int32 setPassMode(Int32 iPass);
 
+
+    CRayCatalogsTplShape* m_CatalogTplShape;
+    std::vector<Float64> m_ChisquareTplshape;
+    std::vector<std::vector<Float64>> m_FittedAmpTplshape;
+    std::vector<std::vector<Float64>> m_FittedErrorTplshape;
+    std::vector<std::vector<Float64>> m_MtmTplshape;
+    std::vector<std::vector<Float64>> m_DtmTplshape;
+
 private:
 
     Int32 fitAmplitudesHybrid(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& spcFluxAxisNoContinuum, const CSpectrumFluxAxis &continuumfluxAxis, Float64 redshift);
@@ -231,8 +243,7 @@ private:
     void applyRules(bool enableLogs=false);
     CRegulament* m_Regulament;
 
-    CRayCatalogsTplShape* m_CatalogTplShape;
-    std::vector<Float64> m_ChisquareTplshape;
+
     std::vector<Float64> m_ScaleMargCorrTplshape;
     std::vector<bool> m_StrongELPresentTplshape;
 

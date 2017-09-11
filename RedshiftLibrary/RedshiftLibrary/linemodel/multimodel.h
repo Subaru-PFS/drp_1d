@@ -5,6 +5,7 @@
 #include <RedshiftLibrary/common/datatypes.h>
 
 #include <math.h>
+#include <float.h>
 
 #include <RedshiftLibrary/spectrum/spectrum.h>
 #include <RedshiftLibrary/spectrum/template/catalog.h>
@@ -101,6 +102,7 @@ public:
 
 private:
 
+    std::string m_opt_rigidity;
     Int32 mIndexExportModel = 0;
 
 };

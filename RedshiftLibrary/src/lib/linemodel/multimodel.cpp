@@ -26,6 +26,8 @@ CMultiModel::CMultiModel(const CSpectrum& spectrum,
                           const std::string &opt_rigidity)
 {
 
+    m_opt_rigidity = opt_rigidity;
+
     Int32 nModels = 2;
     for(Int32 km=0; km<nModels; km++)
     {
@@ -210,16 +212,20 @@ void CMultiModel::SetLeastSquareFastEstimationEnabled(Int32 enabled)
 
 //TODO: this fitting function needs to be fine tuned for this multimodel use case.
 //TBD First-order 0: only use individual fitting method: get the mtm, and dtm values for each model, then estimate the amplitude accordingly for all models
-Float64 CMultiModel::fit(Float64 redshift, const TFloat64Range& lambdaRange, CLineModelSolution& modelSolution, Int32 contreest_iterations, bool enableLogging)
+Float64 CMultiModel::
+fit(Float64 redshift, const TFloat64Range& lambdaRange, CLineModelSolution& modelSolution, Int32 contreest_iterations, bool enableLogging)
 {
-    Float64 valf=0.0;
+    //first individual fitting: get the amps, dtm, mtm calculated
+    Float64 merit=0.0;
     for(Int32 km=0; km<m_models.size(); km++)
     {
         CLineModelSolution _modelSolution;
-        valf += m_models[km]->fit(redshift, lambdaRange, _modelSolution, contreest_iterations, enableLogging);
+        m_models[km]->fit(redshift, lambdaRange, _modelSolution, contreest_iterations, enableLogging);
     }
 
-    /*
+    if(m_opt_rigidity != "tplshape")
+    {
+        /*
     //set amps from ref model
     Int32 irefModel = 0;
     std::vector<Float64> amps;
@@ -230,78 +236,143 @@ Float64 CMultiModel::fit(Float64 redshift, const TFloat64Range& lambdaRange, CLi
     }
     //*/
 
-    //*
-    //set amps from average amp over models
-    //todo: error weighted average !!
-    std::vector<Float64> amps;
-    for(Int32 k=0; k<m_models[0]->m_Elements.size(); k++)
-    {
-        Float64 weightSum = 0;
-        amps.push_back(0.0);
-        for(Int32 km=0; km<m_models.size(); km++)
+        //*
+        //estimate error weighted average amps over models
+        std::vector<Float64> amps;
+        for(Int32 k=0; k<m_models[0]->m_Elements.size(); k++)
         {
-            Float64 err = m_models[km]->m_Elements[k]->GetElementError();
-            if(err>0.0)
+            Float64 weightSum = 0;
+            amps.push_back(0.0);
+            for(Int32 km=0; km<m_models.size(); km++)
             {
-                Float64 weight = 1/(err*err);
-                amps[k] += m_models[km]->m_Elements[k]->GetElementAmplitude()*weight;
-                weightSum += weight;
+                Float64 err = m_models[km]->m_Elements[k]->GetElementError();
+                if(err>0.0)
+                {
+                    Float64 weight = 1/(err*err);
+                    amps[k] += m_models[km]->m_Elements[k]->GetElementAmplitude()*weight;
+                    weightSum += weight;
+                }
+            }
+            if(weightSum>0.0)
+            {
+                amps[k]/=weightSum;
             }
         }
-        if(weightSum>0.0)
-        {
-            amps[k]/=weightSum;
-        }
-    }
-    //*/
+        //*/
 
-    /*
-    //set amps from combined chi2 calculation: work in progress...
-    std::vector<Float64> dtm_combined;
-    std::vector<Float64> mtm_combined;
-    for(Int32 k=0; k<m_models[0]->m_Elements.size(); k++)
-    {
-        dtm_combined.push_back(0.0);
-        mtm_combined.push_back(0.0);
+        /*
+        //set amps from combined chi2 calculation: work in progress...
+        std::vector<Float64> dtm_combined;
+        std::vector<Float64> mtm_combined;
+        for(Int32 k=0; k<m_models[0]->m_Elements.size(); k++)
+        {
+            dtm_combined.push_back(0.0);
+            mtm_combined.push_back(0.0);
+            for(Int32 km=0; km<m_models.size(); km++)
+            {
+                dtm_combined[k] += m_models[km]->m_Elements[k]->GetDtmFree();
+                mtm_combined[k] += m_models[km]->m_Elements[k]->GetSumGauss();
+            }
+        }
+        std::vector<Float64> amps;
+        for(Int32 k=0; k<m_models[0]->m_Elements.size(); k++)
+        {
+            Float64 dtm = std::max(0.0, dtm_combined[k]);
+            Float64 _amp = 0.0;
+            if(mtm_combined[k]>0.0)
+            {
+                dtm/mtm_combined[k];
+            }
+            amps.push_back(_amp);
+        }
+        //*/
+
+        //*
         for(Int32 km=0; km<m_models.size(); km++)
         {
-            dtm_combined[k] += m_models[km]->m_Elements[k]->GetDtmFree();
-            mtm_combined[k] += m_models[km]->m_Elements[k]->GetSumGauss();
+            for(Int32 k=0; k<m_models[km]->m_Elements.size(); k++)
+            {
+                m_models[km]->m_Elements[k]->SetFittedAmplitude(amps[k], 0.0);
+            }
+            m_models[km]->refreshModel();
         }
-    }
-    std::vector<Float64> amps;
-    for(Int32 k=0; k<m_models[0]->m_Elements.size(); k++)
-    {
-        Float64 dtm = std::max(0.0, dtm_combined[k]);
-        Float64 _amp = 0.0;
-        if(mtm_combined[k]>0.0)
+        //Get updated merit
+        Float64 valf=0.0;
+        for(Int32 km=0; km<m_models.size(); km++)
         {
-            dtm/mtm_combined[k];
+            valf += m_models[km]->getLeastSquareMerit(lambdaRange);
         }
-        amps.push_back(_amp);
-    }
-    //*/
+        merit=valf;
+        //*/
+    }else{
+        Int32 nTplshape = m_models[0]->getTplshape_count();
+        std::vector<Float64> chi2tplshape(nTplshape, DBL_MAX);
+        Float64 minChi2Tplshape = DBL_MAX;
 
-    //*
-    for(Int32 km=0; km<m_models.size(); km++)
-    {
-        for(Int32 k=0; k<m_models[km]->m_Elements.size(); k++)
+        for(Int32 kts=0; kts<nTplshape; kts++)
         {
-            m_models[km]->m_Elements[k]->SetFittedAmplitude(amps[k], 0.0);
+
+            //estimate the error weighted average amps over models
+            std::vector<Float64> amps;
+            for(Int32 k=0; k<m_models[0]->m_Elements.size(); k++)
+            {                
+//                //set the tplshape
+//                m_models[km].initTplshapeModel(kts, false);
+//                //set the tplshape amplitude
+//                m_models[km].setTplshapeAmplitude( ampsElts, errorsElts);
+
+                Float64 weightSum = 0;
+                amps.push_back(0.0);
+                for(Int32 km=0; km<m_models.size(); km++)
+                {
+                    Float64 err = m_models[km]->m_FittedErrorTplshape[kts][k];
+                    if(err>0.0)
+                    {
+                        Float64 weight = 1/(err*err);
+                        amps[k] += m_models[km]->m_FittedAmpTplshape[kts][k]*weight;
+                        weightSum += weight;
+                    }
+                }
+                if(weightSum>0.0)
+                {
+                    amps[k]/=weightSum;
+                }
+            }
+
+
+            //re-compute the lst-square and store it for current tplshape
+            for(Int32 km=0; km<m_models.size(); km++)
+            {
+
+                //set the tplshape
+                m_models[km]->initTplshapeModel(kts, false);
+                //set the tplshape amplitude
+                //m_models[km]->setTplshapeAmplitude( ampsElts, errorsElts);
+
+                for(Int32 k=0; k<m_models[km]->m_Elements.size(); k++)
+                {
+                    m_models[km]->m_Elements[k]->SetFittedAmplitude(amps[k], 0.0);
+                }
+                m_models[km]->refreshModel();
+            }
+            //Get updated merit
+            Float64 valf=0.0;
+            for(Int32 km=0; km<m_models.size(); km++)
+            {
+                valf += m_models[km]->getLeastSquareMerit(lambdaRange);
+            }
+            chi2tplshape[kts] = valf;
+            if(minChi2Tplshape>valf)
+            {
+                minChi2Tplshape=valf;
+                modelSolution=m_models[mIndexExportModel]->GetModelSolution();
+            }
         }
-        m_models[km]->refreshModel();
+        merit=minChi2Tplshape;
     }
-    //Get updated merit
-    valf=0.0;
-    for(Int32 km=0; km<m_models.size(); km++)
-    {
-        valf += m_models[km]->getLeastSquareMerit(lambdaRange);
-    }
-    //*/
 
-    modelSolution=m_models[mIndexExportModel]->GetModelSolution();
 
-    return valf;
+    return merit;
 }
 
 //TODO

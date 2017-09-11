@@ -184,7 +184,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
     std::shared_ptr<CTemplateCatalog> orthoTplCatalog = orthoTplStore.getTplCatalog(ctlgIdx);
     Log.LogInfo( "Linemodel: Templates store prepared.");
 
-    /*
+    //*
     CLineModelElementList model( spectrum,
                                  spectrumContinuum,
                                  tplCatalog,//*orthoTplCatalog,//
@@ -205,7 +205,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
     //*/
 
 
-    //*
+    /*
     CMultiModel model( spectrum,
                                  spectrumContinuum,
                                  tplCatalog,//*orthoTplCatalog,//
@@ -603,8 +603,8 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
                 contreest_iterations  = 0;
             }
 
-            model.LoadModelSolution(result->LineModelSolutions[idx]);
-            //model.fit( result->Redshifts[idx], lambdaRange, result->LineModelSolutions[idx], contreest_iterations, false );
+            //model.LoadModelSolution(result->LineModelSolutions[idx]);
+            model.fit( result->Redshifts[idx], lambdaRange, result->LineModelSolutions[idx], contreest_iterations, false );
             m = result->ChiSquare[idx];
             if(enableVelocityFitting)
             {
@@ -900,7 +900,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
 
         // reestimate the model (eventually with continuum reestimation) on the extrema selected
         if(opt_continuumreest == "always" || opt_continuumreest == "onlyextrema"){
-            contreest_iterations = 8; //4
+            contreest_iterations = 1;//8; //4
         }else{
             contreest_iterations  = 0;
         }
@@ -961,6 +961,8 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
             // CModelSpectrumResult
             std::shared_ptr<CModelSpectrumResult>  resultspcmodel = std::shared_ptr<CModelSpectrumResult>( new CModelSpectrumResult(model.GetModelSpectrum()) );
             //std::shared_ptr<CModelSpectrumResult>  resultspcmodel = std::shared_ptr<CModelSpectrumResult>( new CModelSpectrumResult(model.GetObservedSpectrumWithLinesRemoved()) );
+            //std::shared_ptr<CModelSpectrumResult>  resultspcmodel = std::shared_ptr<CModelSpectrumResult>( new CModelSpectrumResult(model.GetSpectrumModelContinuum()) );
+
             m_savedModelSpectrumResults.push_back(resultspcmodel);
 
             // CModelFittingResult
@@ -1072,8 +1074,8 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
     //ComputeArea2(*result);
 
     /* ------------------------  COMPUTE POSTMARG PDF  --------------------------  */
-    std::string opt_combinePdf = "marg";
-    //std::string opt_combinePdf = "bestchi2";
+    //std::string opt_combinePdf = "marg";
+    std::string opt_combinePdf = "bestchi2";
     //std::string opt_combinePdf = "bestproba";
     CombinePDF(dataStore, result, opt_rigidity, opt_combinePdf);
 
