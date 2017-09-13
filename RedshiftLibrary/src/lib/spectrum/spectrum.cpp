@@ -14,8 +14,10 @@ using namespace NSEpic;
 
 CSpectrum::CSpectrum()
 {
+    m_estimationMethod = "";
     m_medianWindowSize = -1;
     m_nbScales = -1;
+    m_dfBinPath = "";
 
 }
 
@@ -55,6 +57,8 @@ CSpectrum::CSpectrum(const CSpectrum& other, TFloat64List mask)
     m_SpectralAxis = *_SpectralAxis;
     m_FluxAxis = *_FluxAxis;
 
+    m_estimationMethod = other.GetContinuumEstimationMethod();
+    m_dfBinPath = other.GetWaveletsDFBinPath();
     m_medianWindowSize = other.GetMedianWinsize();
     m_nbScales = other.GetDecompScales();
 }
@@ -68,6 +72,9 @@ CSpectrum& CSpectrum::operator=(const CSpectrum& other)
 {
     m_SpectralAxis = other.GetSpectralAxis();
     m_FluxAxis = other.GetFluxAxis();
+
+    m_estimationMethod = other.GetContinuumEstimationMethod();
+    m_dfBinPath = other.GetWaveletsDFBinPath();
     m_medianWindowSize = other.GetMedianWinsize();
     m_nbScales = other.GetDecompScales();
 
@@ -257,6 +264,16 @@ const Float64 CSpectrum::GetMedianWinsize() const
       return m_medianWindowSize;
 }
 
+const std::string CSpectrum::GetContinuumEstimationMethod() const
+{
+      return m_estimationMethod;
+}
+
+const std::string CSpectrum::GetWaveletsDFBinPath() const
+{
+      return m_dfBinPath;
+}
+
 void CSpectrum::SetFullPath(const char* nameP)
 {
 	m_FullPath = nameP;
@@ -271,3 +288,15 @@ void CSpectrum::SetMedianWinsize( Float64 winsize )
 {
     m_medianWindowSize = winsize;
 }
+
+void CSpectrum::SetContinuumEstimationMethod( std::string method )
+{
+    m_estimationMethod = method;
+}
+
+void CSpectrum::SetWaveletsDFBinPath(std::string binPath)
+{
+    m_dfBinPath = binPath;
+}
+
+

@@ -347,6 +347,8 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
     CSpectrum _spcContinuum = spc;
     _spcContinuum.SetMedianWinsize(spcWithoutCont.GetMedianWinsize());
     _spcContinuum.SetDecompScales(spcWithoutCont.GetDecompScales());
+    _spcContinuum.SetContinuumEstimationMethod(spcWithoutCont.GetContinuumEstimationMethod());
+    _spcContinuum.SetWaveletsDFBinPath(spcWithoutCont.GetWaveletsDFBinPath());
     CSpectrumFluxAxis spcfluxAxis = _spcContinuum.GetFluxAxis();
     spcfluxAxis.Subtract( spcWithoutCont.GetFluxAxis() );
     CSpectrumFluxAxis& sfluxAxisPtr = _spcContinuum.GetFluxAxis();

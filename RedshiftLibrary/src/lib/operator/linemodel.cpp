@@ -184,7 +184,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
     std::shared_ptr<CTemplateCatalog> orthoTplCatalog = orthoTplStore.getTplCatalog(ctlgIdx);
     Log.LogInfo( "Linemodel: Templates store prepared.");
 
-    //*
+    /*
     CLineModelElementList model( spectrum,
                                  spectrumContinuum,
                                  tplCatalog,//*orthoTplCatalog,//
@@ -205,7 +205,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
     //*/
 
 
-    /*
+    //*
     CMultiModel model( spectrum,
                                  spectrumContinuum,
                                  tplCatalog,//*orthoTplCatalog,//
@@ -943,8 +943,9 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
         m = result->ChiSquare[idx];//result->ChiSquare[idx];
 
         //save the model result
+        //WARNING: saving results TODO: this is currently wrong !! the model saved corresponds to the bestchi2 model. PDFs should be combined prior to exporting the best model for each extrema...
         static Int32 maxModelSave = std::min(m_maxModelSaveCount, extremumCount);
-        Int32 saveNLinemodelContinua = 1;
+        Int32 maxSaveNLinemodelContinua = 1;
         if( savedModels<maxModelSave )
         {
           if(modelInfoSave){
@@ -952,7 +953,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
             m_savedModelSpectrumResults.push_back(savedModelSpectrumResults_lmfit[indiceList2[i]]);
             m_savedModelFittingResults.push_back(savedModelFittingResults_lmfit[indiceList2[i]]);
             m_savedModelRulesResults.push_back(savedModelRulesResults_lmfit[indiceList2[i]]);
-            if( savedModels < saveNLinemodelContinua && contreest_iterations>0)
+            if( savedModels < maxSaveNLinemodelContinua && contreest_iterations>0)
             {
               std::string nameBaselineStr = (boost::format("linemodel_continuum_extrema_%1%") % savedModels).str();
               dataStore.StoreScopedGlobalResult(nameBaselineStr.c_str(), savedBaselineResult_lmfit[indiceList2[i]]);
@@ -975,7 +976,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
 
 
 
-            if( savedModels < saveNLinemodelContinua && contreest_iterations>0)
+            if( savedModels < maxSaveNLinemodelContinua )
             {
                 // Save the reestimated continuum, only the first extrema
                 std::shared_ptr<CSpectraFluxResult> baselineResult = (std::shared_ptr<CSpectraFluxResult>) new CSpectraFluxResult();
@@ -1074,8 +1075,8 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
     //ComputeArea2(*result);
 
     /* ------------------------  COMPUTE POSTMARG PDF  --------------------------  */
-    //std::string opt_combinePdf = "marg";
-    std::string opt_combinePdf = "bestchi2";
+    std::string opt_combinePdf = "marg";
+    //std::string opt_combinePdf = "bestchi2";
     //std::string opt_combinePdf = "bestproba";
     CombinePDF(dataStore, result, opt_rigidity, opt_combinePdf);
 

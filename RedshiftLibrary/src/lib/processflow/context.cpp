@@ -142,6 +142,7 @@ bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath,
         paramStore->Get( "continuumRemoval.decompScales", nscales, 6);
         std::string dfBinPath;
         paramStore->Get( "continuumRemoval.binPath", dfBinPath, "absolute_path_to_df_binaries_here");
+        m_SpectrumWithoutContinuum->SetWaveletsDFBinPath(dfBinPath);
         CContinuumDF continuum(dfBinPath);
         m_SpectrumWithoutContinuum->SetDecompScales(nscales);
         bool ret = m_SpectrumWithoutContinuum->RemoveContinuum( continuum );
@@ -177,6 +178,7 @@ bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath,
             spcFluxAxis[k] = m_Spectrum->GetFluxAxis()[k];
         }
     }
+    m_SpectrumWithoutContinuum->SetContinuumEstimationMethod(medianRemovalMethod);
     Log.LogInfo("===============================================");
 
     //process continuum relevance

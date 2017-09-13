@@ -96,7 +96,7 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
     m_SpcFluxAxis.SetSize( spectrumSampleCount );
     m_SpcContinuumFluxAxis = spectrumContinuum.GetFluxAxis();
     m_ContinuumWinsize = spectrumContinuum.GetMedianWinsize();
-    Log.LogInfo("Continuum winsize found is %f A", m_ContinuumWinsize);
+    Log.LogInfo("Continuum winsize found is %.2f A", m_ContinuumWinsize);
 
     m_ContinuumFluxAxis.SetSize( spectrumSampleCount );
     m_SpcFluxAxisModelDerivVelEmi.SetSize( spectrumSampleCount );

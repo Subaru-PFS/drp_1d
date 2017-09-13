@@ -123,7 +123,7 @@ Float64 CLineModelElement::GetLineWidth(Float64 redshiftedlambda, Float64 z, Boo
     }else if( m_LineWidthType == "nispvsspsf201707"){
         //+ considers Instrument PSF=f_linearregression(lambda) from MDB-EE50: SpaceSegment.PLM.PLMAsRequired.PLMNISPrEE50rEE80
         //      arcsec/pixel from : SpaceSegment.Instrument.NISP.NISPAsRequired.NISPGRAPSFRefEE50 : (0.355)
-        Float64 arcsecPix = 0.285; //0.3 is the same as in tipsfast
+        Float64 arcsecPix = 0.355; //0.3 is the same as in tipsfast
         //      angstrom/pixel from : SpaceSegment.Instrument.NISP.NISPAsRequired.NISPGRAAverageDlambda
         Float64 angstromPix = 13.4;
         //      Leads to linear regression: sigma_psf = 3.939e-4*wl_angstrom + 2.191

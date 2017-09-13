@@ -73,6 +73,7 @@ public:
     Float64 getFitContinuum_tplIgmMeiksinIdx();
 
     const CSpectrum& GetModelSpectrum() const;
+    const CSpectrum GetSpectrumModelContinuum() const;
     const CSpectrumFluxAxis& GetModelContinuum() const;
 
     Float64 GetVelocityEmission();
@@ -103,6 +104,7 @@ public:
 private:
 
     std::string m_opt_rigidity;
+    std::vector<Float64> m_chi2tplshape;
     Int32 mIndexExportModel = 0;
 
 };

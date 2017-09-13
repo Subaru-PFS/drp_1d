@@ -3,6 +3,11 @@
 #include <boost/filesystem.hpp>
 #include <RedshiftLibrary/spectrum/io/genericreader.h>
 #include <RedshiftLibrary/noise/fromfile.h>
+#include <RedshiftLibrary/spectrum/combination.h>
+
+#include <RedshiftLibrary/continuum/median.h>
+#include <RedshiftLibrary/continuum/waveletsdf.h>
+#include <RedshiftLibrary/continuum/irregularsamplingmedian.h>
 
 namespace bfs = boost::filesystem;
 using namespace NSEpic;
@@ -29,11 +34,123 @@ CMultiModel::CMultiModel(const CSpectrum& spectrum,
     m_opt_rigidity = opt_rigidity;
 
     Int32 nModels = 2;
+    std::vector<std::shared_ptr<CSpectrum>> spcRolls;
     for(Int32 km=0; km<nModels; km++)
     {
         std::shared_ptr<CSpectrum> spcRoll = LoadRollSpectrum(spectrum.GetFullPath(), km+1);
-        m_models.push_back(std::shared_ptr<CLineModelElementList> (new CLineModelElementList(*spcRoll,
-                                                                                             spectrumContinuum,
+        spcRolls.push_back(spcRoll);
+    }
+    CSpectrum spcContinuumForMultimodel = CSpectrum(spectrumContinuum);
+
+    Bool enableOverrideContinuumFromCombined=true;
+    //auto-deactivate override of continuum if not estimated from spectrum
+    if(opt_continuumcomponent!="fromspectrum")
+    {
+        enableOverrideContinuumFromCombined = false;
+    }
+    if(enableOverrideContinuumFromCombined)
+    {
+        CSpectrumCombination spcCombination;
+        CSpectrum spcCombined = CSpectrum(*spcRolls[0]);
+        Int32 retComb = spcCombination.Combine(spcRolls, spcCombined);
+        if( retComb !=0 )
+        {
+            Log.LogError( "Multimodel: Unable to combine rolls for continuum estimate override");
+        }
+
+        // Estimate continuum spectrum
+        TFloat64List dumb_mask;
+        for(Int32 km=0; km<spcCombined.GetSampleCount(); km++)
+        {
+            dumb_mask.push_back(1);
+        }
+        std::shared_ptr<CSpectrum> spectrumWithoutContinuum = std::shared_ptr<CSpectrum>( new CSpectrum(spcCombined, dumb_mask) );
+        //*spectrumWithoutContinuum = *spcCombined;
+        std::shared_ptr<CSpectrum> spectrumForContinuumEstimation = std::shared_ptr<CSpectrum>( new CSpectrum(spcCombined, dumb_mask) );
+        //*spectrumForContinuumEstimation = *spcCombined; //NB: could be set to an individual roll instead.
+
+        std::string medianRemovalMethod = spectrumContinuum.GetContinuumEstimationMethod();
+
+        const char*     nameBaseline;		// baseline filename
+        Log.LogInfo( "Continuum estimation: using %s", medianRemovalMethod.c_str() );
+        if( medianRemovalMethod== "IrregularSamplingMedian")
+        {
+            nameBaseline = "preprocess/baselineISMedian";
+            CContinuumIrregularSamplingMedian continuum;
+            Float64 opt_medianKernelWidth=spectrumContinuum.GetMedianWinsize();
+            continuum.SetMedianKernelWidth(opt_medianKernelWidth);
+            continuum.SetMeanKernelWidth(opt_medianKernelWidth);
+            spectrumWithoutContinuum->RemoveContinuum( continuum );
+            spectrumWithoutContinuum->SetMedianWinsize(opt_medianKernelWidth);
+        }else if( medianRemovalMethod== "Median")
+        {
+            nameBaseline = "preprocess/baselineMedian";
+            CContinuumMedian continuum;
+            Float64 opt_medianKernelWidth=spectrumContinuum.GetMedianWinsize();
+            continuum.SetMedianKernelWidth(opt_medianKernelWidth);
+            spectrumWithoutContinuum->RemoveContinuum( continuum );
+            spectrumWithoutContinuum->SetMedianWinsize(opt_medianKernelWidth);
+
+        }else if( medianRemovalMethod== "waveletsDF")
+        {
+            nameBaseline = "preprocess/baselineDF";
+            Int64 nscales=spectrumContinuum.GetDecompScales();
+            std::string dfBinPath=spectrumContinuum.GetWaveletsDFBinPath();
+            CContinuumDF continuum(dfBinPath);
+            spectrumWithoutContinuum->SetDecompScales(nscales);
+            bool ret = spectrumWithoutContinuum->RemoveContinuum( continuum );
+            if( !ret ) //doesn't seem to work. TODO: check that the df errors lead to a ret=false value
+            {
+                Log.LogError( "Failed to apply continuum substraction for multimodel-combined spectrum" );
+                return;
+            }
+        }else if( medianRemovalMethod== "raw")
+        {
+            nameBaseline = "preprocess/baselineRAW";
+            CSpectrumFluxAxis& spcFluxAxis = spectrumWithoutContinuum->GetFluxAxis();
+            spcFluxAxis.SetSize( spectrumForContinuumEstimation->GetSampleCount() );
+            CSpectrumSpectralAxis& spcSpectralAxis = spectrumWithoutContinuum->GetSpectralAxis();
+            spcSpectralAxis.SetSize( spectrumForContinuumEstimation->GetSampleCount()  );
+
+
+            for(Int32 k=0; k<spectrumWithoutContinuum->GetSampleCount(); k++)
+            {
+                spcFluxAxis[k] = 0.0;
+            }
+        }else if( medianRemovalMethod== "zero")
+        {
+            nameBaseline = "preprocess/baselineZERO";
+            CSpectrumFluxAxis& spcFluxAxis = spectrumWithoutContinuum->GetFluxAxis();
+            spcFluxAxis.SetSize( spectrumForContinuumEstimation->GetSampleCount() );
+            CSpectrumSpectralAxis& spcSpectralAxis = spectrumWithoutContinuum->GetSpectralAxis();
+            spcSpectralAxis.SetSize( spectrumForContinuumEstimation->GetSampleCount()  );
+
+
+            for(Int32 k=0; k<spectrumWithoutContinuum->GetSampleCount(); k++)
+            {
+                spcFluxAxis[k] = spectrumForContinuumEstimation->GetFluxAxis()[k];
+            }
+        }
+        spectrumWithoutContinuum->SetContinuumEstimationMethod(medianRemovalMethod);
+
+        spcContinuumForMultimodel = *spectrumForContinuumEstimation;
+        CSpectrumFluxAxis spcfluxAxis = spcContinuumForMultimodel.GetFluxAxis();
+        spcfluxAxis.Subtract( spectrumWithoutContinuum->GetFluxAxis() );
+        CSpectrumFluxAxis& sfluxAxisPtr = spcContinuumForMultimodel.GetFluxAxis();
+        sfluxAxisPtr = spcfluxAxis;
+        spcContinuumForMultimodel.SetMedianWinsize(spectrumWithoutContinuum->GetMedianWinsize());
+        spcContinuumForMultimodel.SetDecompScales(spectrumWithoutContinuum->GetDecompScales());
+        spcContinuumForMultimodel.SetContinuumEstimationMethod(spectrumWithoutContinuum->GetContinuumEstimationMethod());
+        spcContinuumForMultimodel.SetWaveletsDFBinPath(spectrumWithoutContinuum->GetWaveletsDFBinPath());
+        Log.LogInfo("===============================================");
+
+
+    }
+
+    for(Int32 km=0; km<nModels; km++)
+    {
+        m_models.push_back(std::shared_ptr<CLineModelElementList> (new CLineModelElementList(*spcRolls[km],
+                                                                                             spcContinuumForMultimodel,
                                                                                              tplCatalog,
                                                                                              tplCategoryList,
                                                                                              calibrationPath,
@@ -52,6 +169,13 @@ CMultiModel::CMultiModel(const CSpectrum& spectrum,
         }else if(km==1){
             m_models[km]->SetSourcesizeDispersion(0.5);
         }
+    }
+
+    //
+    if(nModels>0 && m_opt_rigidity=="tplshape")
+    {
+        Int32 nTplshape = m_models[0]->getTplshape_count();
+        m_chi2tplshape.resize(nTplshape);
     }
 
 }
@@ -220,116 +344,40 @@ fit(Float64 redshift, const TFloat64Range& lambdaRange, CLineModelSolution& mode
     for(Int32 km=0; km<m_models.size(); km++)
     {
         CLineModelSolution _modelSolution;
-        m_models[km]->fit(redshift, lambdaRange, _modelSolution, contreest_iterations, enableLogging);
+        merit += m_models[km]->fit(redshift, lambdaRange, _modelSolution, contreest_iterations, enableLogging);
+        modelSolution = _modelSolution;
     }
 
-    if(m_opt_rigidity != "tplshape")
-    {
-        /*
-    //set amps from ref model
-    Int32 irefModel = 0;
-    std::vector<Float64> amps;
-    for(Int32 k=0; k<m_models[irefModel]->m_Elements.size(); k++)
-    {
-        Float64 _amp = m_models[irefModel]->m_Elements[k]->GetElementAmplitude();
-        amps.push_back(_amp);
-    }
-    //*/
+    bool enableOverrideMonolinemodelFit = true;
 
-        //*
-        //estimate error weighted average amps over models
-        std::vector<Float64> amps;
-        for(Int32 k=0; k<m_models[0]->m_Elements.size(); k++)
+    if(enableOverrideMonolinemodelFit){
+        if(m_opt_rigidity != "tplshape")
         {
-            Float64 weightSum = 0;
-            amps.push_back(0.0);
-            for(Int32 km=0; km<m_models.size(); km++)
+            /*
+            //set amps from ref model
+            Int32 irefModel = 0;
+            std::vector<Float64> amps;
+            for(Int32 k=0; k<m_models[irefModel]->m_Elements.size(); k++)
             {
-                Float64 err = m_models[km]->m_Elements[k]->GetElementError();
-                if(err>0.0)
-                {
-                    Float64 weight = 1/(err*err);
-                    amps[k] += m_models[km]->m_Elements[k]->GetElementAmplitude()*weight;
-                    weightSum += weight;
-                }
+                Float64 _amp = m_models[irefModel]->m_Elements[k]->GetElementAmplitude();
+                amps.push_back(_amp);
             }
-            if(weightSum>0.0)
-            {
-                amps[k]/=weightSum;
-            }
-        }
-        //*/
+            //*/
 
-        /*
-        //set amps from combined chi2 calculation: work in progress...
-        std::vector<Float64> dtm_combined;
-        std::vector<Float64> mtm_combined;
-        for(Int32 k=0; k<m_models[0]->m_Elements.size(); k++)
-        {
-            dtm_combined.push_back(0.0);
-            mtm_combined.push_back(0.0);
-            for(Int32 km=0; km<m_models.size(); km++)
-            {
-                dtm_combined[k] += m_models[km]->m_Elements[k]->GetDtmFree();
-                mtm_combined[k] += m_models[km]->m_Elements[k]->GetSumGauss();
-            }
-        }
-        std::vector<Float64> amps;
-        for(Int32 k=0; k<m_models[0]->m_Elements.size(); k++)
-        {
-            Float64 dtm = std::max(0.0, dtm_combined[k]);
-            Float64 _amp = 0.0;
-            if(mtm_combined[k]>0.0)
-            {
-                dtm/mtm_combined[k];
-            }
-            amps.push_back(_amp);
-        }
-        //*/
-
-        //*
-        for(Int32 km=0; km<m_models.size(); km++)
-        {
-            for(Int32 k=0; k<m_models[km]->m_Elements.size(); k++)
-            {
-                m_models[km]->m_Elements[k]->SetFittedAmplitude(amps[k], 0.0);
-            }
-            m_models[km]->refreshModel();
-        }
-        //Get updated merit
-        Float64 valf=0.0;
-        for(Int32 km=0; km<m_models.size(); km++)
-        {
-            valf += m_models[km]->getLeastSquareMerit(lambdaRange);
-        }
-        merit=valf;
-        //*/
-    }else{
-        Int32 nTplshape = m_models[0]->getTplshape_count();
-        std::vector<Float64> chi2tplshape(nTplshape, DBL_MAX);
-        Float64 minChi2Tplshape = DBL_MAX;
-
-        for(Int32 kts=0; kts<nTplshape; kts++)
-        {
-
-            //estimate the error weighted average amps over models
+            //*
+            //estimate error weighted average amps over models
             std::vector<Float64> amps;
             for(Int32 k=0; k<m_models[0]->m_Elements.size(); k++)
-            {                
-//                //set the tplshape
-//                m_models[km].initTplshapeModel(kts, false);
-//                //set the tplshape amplitude
-//                m_models[km].setTplshapeAmplitude( ampsElts, errorsElts);
-
+            {
                 Float64 weightSum = 0;
                 amps.push_back(0.0);
                 for(Int32 km=0; km<m_models.size(); km++)
                 {
-                    Float64 err = m_models[km]->m_FittedErrorTplshape[kts][k];
+                    Float64 err = m_models[km]->m_Elements[k]->GetElementError();
                     if(err>0.0)
                     {
-                        Float64 weight = 1/(err*err);
-                        amps[k] += m_models[km]->m_FittedAmpTplshape[kts][k]*weight;
+                        Float64 weight = 1.;//1/(err*err);
+                        amps[k] += m_models[km]->m_Elements[k]->GetElementAmplitude()*weight;
                         weightSum += weight;
                     }
                 }
@@ -338,17 +386,38 @@ fit(Float64 redshift, const TFloat64Range& lambdaRange, CLineModelSolution& mode
                     amps[k]/=weightSum;
                 }
             }
+            //*/
 
+            /*
+            //set amps from combined chi2 calculation: work in progress...
+            std::vector<Float64> dtm_combined;
+            std::vector<Float64> mtm_combined;
+            for(Int32 k=0; k<m_models[0]->m_Elements.size(); k++)
+            {
+                dtm_combined.push_back(0.0);
+                mtm_combined.push_back(0.0);
+                for(Int32 km=0; km<m_models.size(); km++)
+                {
+                    dtm_combined[k] += m_models[km]->m_Elements[k]->GetDtmFree();
+                    mtm_combined[k] += m_models[km]->m_Elements[k]->GetSumGauss();
+                }
+            }
+            std::vector<Float64> amps;
+            for(Int32 k=0; k<m_models[0]->m_Elements.size(); k++)
+            {
+                Float64 dtm = std::max(0.0, dtm_combined[k]);
+                Float64 _amp = 0.0;
+                if(mtm_combined[k]>0.0)
+                {
+                    dtm/mtm_combined[k];
+                }
+                amps.push_back(_amp);
+            }
+            //*/
 
-            //re-compute the lst-square and store it for current tplshape
+            //*
             for(Int32 km=0; km<m_models.size(); km++)
             {
-
-                //set the tplshape
-                m_models[km]->initTplshapeModel(kts, false);
-                //set the tplshape amplitude
-                //m_models[km]->setTplshapeAmplitude( ampsElts, errorsElts);
-
                 for(Int32 k=0; k<m_models[km]->m_Elements.size(); k++)
                 {
                     m_models[km]->m_Elements[k]->SetFittedAmplitude(amps[k], 0.0);
@@ -361,16 +430,136 @@ fit(Float64 redshift, const TFloat64Range& lambdaRange, CLineModelSolution& mode
             {
                 valf += m_models[km]->getLeastSquareMerit(lambdaRange);
             }
-            chi2tplshape[kts] = valf;
-            if(minChi2Tplshape>valf)
-            {
-                minChi2Tplshape=valf;
-                modelSolution=m_models[mIndexExportModel]->GetModelSolution();
-            }
-        }
-        merit=minChi2Tplshape;
-    }
+            merit=valf;
+            //*/
+        }else{
+            Int32 nTplshape = m_models[0]->getTplshape_count();
+            //std::vector<Float64> chi2tplshape(nTplshape, DBL_MAX);
+            Float64 minChi2Tplshape = DBL_MAX;
+            Int32 iBestTplshape = -1;
 
+
+            std::vector<std::vector<Float64>> multifit_amps;
+            for(Int32 kts=0; kts<nTplshape; kts++)
+            {
+
+                /*
+                //estimate the error weighted average amps over models
+                for(Int32 k=0; k<m_models[0]->m_Elements.size(); k++)
+                {
+                    amps.push_back(0.0);
+
+                    Float64 weightSum = 0;
+                    for(Int32 km=0; km<m_models.size(); km++)
+                    {
+                        Float64 err = m_models[km]->m_FittedErrorTplshape[kts][k];
+                        if(err>0.0)
+                        {
+                            Float64 weight = 1/(err*err);
+                            amps[k] += m_models[km]->m_FittedAmpTplshape[kts][k]*weight;
+                            weightSum += weight;
+                        }
+                    }
+                    if(weightSum>0.0)
+                    {
+                        amps[k]/=weightSum;
+                    }
+
+                    if(enableLogging)
+                    {
+                        Log.LogInfo( "Multifit: for tplshape=%d, for kElt=%d found A=%f", kts, k, amps[k] );
+                    }
+                }
+                //*/
+
+                //*
+                //set amps from cumulated dtm, mtm
+                std::vector<Float64> amps(m_models.size(), 0.0);
+                std::vector<Float64> dtm_combined;
+                std::vector<Float64> mtm_combined;
+                for(Int32 k=0; k<m_models[0]->m_Elements.size(); k++)
+                {
+                    dtm_combined.push_back(0.0);
+                    mtm_combined.push_back(0.0);
+                    for(Int32 km=0; km<m_models.size(); km++)
+                    {
+                        dtm_combined[k] += m_models[km]->m_DtmTplshape[kts][k];
+                        mtm_combined[k] += m_models[km]->m_MtmTplshape[kts][k];
+                    }
+                }
+                for(Int32 k=0; k<m_models[0]->m_Elements.size(); k++)
+                {
+                    Float64 dtm = std::max(0.0, dtm_combined[k]);
+                    Float64 _amp = 0.0;
+                    if(mtm_combined[k]>0.0)
+                    {
+                        _amp = dtm/mtm_combined[k];
+                    }
+                    amps[k]=_amp;
+
+                    if(enableLogging)
+                    {
+                        Log.LogInfo( "Multifit: for tplshape=%d, for kElt=%d found A=%f", kts, k, amps[k] );
+                    }
+                }
+                //*/
+
+
+
+                multifit_amps.push_back(amps);
+
+                //re-compute the lst-square and store it for current tplshape
+                for(Int32 km=0; km<m_models.size(); km++)
+                {
+
+                    //set the tplshape
+                    m_models[km]->initTplshapeModel(kts, false);
+                    //set the tplshape amplitude
+                    //m_models[km]->setTplshapeAmplitude( ampsElts, errorsElts);
+
+                    for(Int32 k=0; k<m_models[km]->m_Elements.size(); k++)
+                    {
+                        m_models[km]->m_Elements[k]->SetFittedAmplitude(amps[k], 0.0);
+                    }
+                    m_models[km]->refreshModel();
+                }
+                //Get updated merit
+                Float64 valf=0.0;
+                for(Int32 km=0; km<m_models.size(); km++)
+                {
+                    valf += m_models[km]->getLeastSquareMerit(lambdaRange);
+                }
+
+                if(enableLogging)
+                {
+                    Log.LogInfo( "Multifit: for tplshape=%d, found lst-sq=%f", kts, valf );
+                }
+                m_chi2tplshape[kts] = valf;
+                if(minChi2Tplshape>valf)
+                {
+                    minChi2Tplshape=valf;
+                    iBestTplshape = kts;
+                    modelSolution=m_models[mIndexExportModel]->GetModelSolution();
+                }
+            }
+            merit=minChi2Tplshape;
+
+            //set the model to the min chi2 model, for export
+            if(enableLogging)
+            {
+                for(Int32 km=0; km<m_models.size(); km++)
+                {
+                    m_models[km]->initTplshapeModel(iBestTplshape, false);
+                    for(Int32 k=0; k<m_models[km]->m_Elements.size(); k++)
+                    {
+                        m_models[km]->m_Elements[k]->SetFittedAmplitude(multifit_amps[iBestTplshape][k], 0.0);
+                    }
+                    m_models[km]->refreshModel();
+                }
+            }
+
+        }
+    }
 
     return merit;
 }
@@ -389,6 +578,7 @@ Float64 CMultiModel::getScaleMargCorrection(Int32 idxLine)
 
 std::vector<Float64> CMultiModel::GetChisquareTplshape()
 {
+    /*
     std::vector<Float64> chi2tplshape;
     if(m_models.size()>0)
     {
@@ -402,8 +592,10 @@ std::vector<Float64> CMultiModel::GetChisquareTplshape()
             chi2tplshape[ktpl] += _chi2tplshape[ktpl];
         }
     }
-
     return chi2tplshape;
+    //*/
+
+    return m_chi2tplshape;
 }
 
 std::vector<Float64> CMultiModel::GetScaleMargTplshape()
@@ -493,7 +685,6 @@ void CMultiModel::SetFittingMethod(std::string fitMethod)
     }
 }
 
-//todo: tbd: which model should be returned in this multimodel case ?
 const CSpectrum& CMultiModel::GetModelSpectrum() const
 {
     if(m_models.size()>mIndexExportModel)
@@ -507,11 +698,24 @@ const CSpectrum& CMultiModel::GetModelSpectrum() const
     }
 }
 
+const CSpectrum CMultiModel::GetSpectrumModelContinuum() const
+{
+    if(m_models.size()>mIndexExportModel)
+    {
+        return m_models[mIndexExportModel]->GetSpectrumModelContinuum();
+    }
+    else
+    {
+        std::shared_ptr<CSpectrum> spcDumb=0;
+        return *spcDumb;
+    }
+}
+
 const CSpectrumFluxAxis& CMultiModel::GetModelContinuum() const
 {
-    if(m_models.size()>0)
+    if(m_models.size()>mIndexExportModel)
     {
-        return m_models[0]->GetModelContinuum();
+        return m_models[mIndexExportModel]->GetModelContinuum();
     }
     else
     {
