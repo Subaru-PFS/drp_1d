@@ -196,6 +196,7 @@ Float64 CLineModelElement::GetLineProfile(std::string profile, Float64 x, Float6
         return m_dataExtinctionFlux[valI];
     }
 
+    //WARNING/TODO/CHECK: this allows multimodel to fit the fluxes directly
     //use sigma normalized profiles
     val /= sigma;
 

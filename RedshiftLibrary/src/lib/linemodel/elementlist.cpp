@@ -4632,7 +4632,7 @@ void CLineModelElementList::EstimateSpectrumContinuum( Float64 opt_enhance_lines
     fclose( fspc );
     //*/
 
-    // TODO: use the continuum remover defined in the json instead of this hardcoded choice !
+    // TODO: use the continuum remover defined in the CSpectrum continuum member, with params defined in the smae place
     // Remove continuum
     CSpectrumFluxAxis fluxAxisWithoutContinuumCalc;
     if(1)
