@@ -107,7 +107,7 @@ BOOST_AUTO_TEST_CASE(ChisquareTestCstFlux)
     {
         if(k==0)
         {
-            chisquareOperator="chisquarelog";
+            chisquareOperator="chisquare2";
         }else{
             chisquareOperator="chisquarelog";
         }
