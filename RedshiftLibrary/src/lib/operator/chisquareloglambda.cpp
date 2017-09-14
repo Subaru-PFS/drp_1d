@@ -604,7 +604,7 @@ Int32 COperatorChiSquareLogLambda::FitAllz(const TFloat64Range& lambdaRange,
         {
             Float64 redshiftStep =  result->Redshifts[izrangelist[k].GetBegin()+1]-result->Redshifts[izrangelist[k].GetBegin()];
             TFloat64List subRedshifts = zrange.SpreadOver( redshiftStep );
-            subresult->Init(subRedshifts.size());
+            subresult->Init(subRedshifts.size(), std::max((Int32)ismEbmvCoeffs.size(), 1), std::max((Int32)igmMeiksinCoeffs.size(),1));
             subresult->Redshifts = subRedshifts;
 
             //slice the template
@@ -616,7 +616,7 @@ Int32 COperatorChiSquareLogLambda::FitAllz(const TFloat64Range& lambdaRange,
                                                       redshiftStep);
         }else{
             ilbda=TInt32Range(0, tplRebinedSpectralAxis.GetSamplesCount()-1);
-            subresult->Init(1);
+            subresult->Init(1, std::max((Int32)ismEbmvCoeffs.size(), 1), std::max((Int32)igmMeiksinCoeffs.size(),1));
             subresult->Redshifts = result->Redshifts;
         }
         if(ilbda.GetBegin()==-1 || ilbda.GetEnd()==-1)
@@ -669,6 +669,14 @@ Int32 COperatorChiSquareLogLambda::FitAllz(const TFloat64Range& lambdaRange,
             result->FitDustCoeff[fullResultIdx]    =   subresult->FitDustCoeff[isubz];
             result->FitMeiksinIdx[fullResultIdx]   =   subresult->FitMeiksinIdx[isubz];
             result->Status[fullResultIdx]          =   subresult->Status[isubz];
+
+            for(Int32 kism=0; kism<result->ChiSquareIntermediate[fullResultIdx].size(); kism++)
+            {
+                for(Int32 kigm=0; kigm<result->ChiSquareIntermediate[fullResultIdx][kism].size(); kigm++)
+                {
+                    result->ChiSquareIntermediate[fullResultIdx][kism][kigm] = subresult->ChiSquareIntermediate[isubz][kism][kigm];
+                }
+            }
         }
     }
 
@@ -678,7 +686,21 @@ Int32 COperatorChiSquareLogLambda::FitAllz(const TFloat64Range& lambdaRange,
     return 0;
 }
 
-
+/**
+  // TODO : many vectors allocated in this function. Check if the allocation time is significant, and eventually use preallocated member buffers...
+ * @brief COperatorChiSquareLogLambda::FitRangez
+ * @param spectrumRebinedLambda
+ * @param spectrumRebinedFluxRaw
+ * @param error
+ * @param tplRebinedLambda
+ * @param tplRebinedFluxRaw
+ * @param nSpc
+ * @param nTpl
+ * @param result
+ * @param igmMeiksinCoeffs
+ * @param ismEbmvCoeffs
+ * @return
+ */
 Int32 COperatorChiSquareLogLambda::FitRangez(Float64* spectrumRebinedLambda,
                                              Float64* spectrumRebinedFluxRaw,
                                              Float64* error,
@@ -729,15 +751,6 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64* spectrumRebinedLambda,
         z_vect[t] = (spectrumRebinedLambda[0]-tplRebinedLambda[t])/tplRebinedLambda[t];
     }
 
-    //best fit data
-    std::vector<Float64> bestChi2(nshifts, DBL_MAX);
-    std::vector<Float64> bestFitAmp(nshifts, -1.0);
-    std::vector<Float64> bestFitDtm(nshifts, -1.0);
-    std::vector<Float64> bestFitMtm(nshifts, -1.0);
-    std::vector<Float64> bestISMCoeff(nshifts, -1.0);
-    std::vector<Float64> bestIGMIdx(nshifts, -1.0);
-
-
     // Estimate DtD
     //    std::vector<Float64> dtd_vec;
     //    CSpectrumFluxAxis spcSquareFluxAxis(spectrumRebinedFluxRaw);
@@ -787,7 +800,13 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64* spectrumRebinedLambda,
         tpl2RebinedFlux[j] = tplRebinedFlux[j]*tplRebinedFlux[j];
     }
 
-
+    bool enableISM = true;
+    UInt32 nISM = ismEbmvCoeffs.size();
+    if(nISM==0)
+    {
+        nISM=1;
+        enableISM = false;
+    }
     bool enableIGM = true;
     UInt32 nIGM = igmMeiksinCoeffs.size();
     if(nIGM==0)
@@ -806,6 +825,30 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64* spectrumRebinedLambda,
             Log.LogInfo("ChisquareLog, FitAllz: IGM disabled, min-tpl-lbda=%f", lambdaMinTpl);
         }
     }
+
+    //prepare best fit data buffer
+    std::vector<Float64> bestChi2(nshifts, DBL_MAX);
+    std::vector<Float64> bestFitAmp(nshifts, -1.0);
+    std::vector<Float64> bestFitDtm(nshifts, -1.0);
+    std::vector<Float64> bestFitMtm(nshifts, -1.0);
+    std::vector<Float64> bestISMCoeff(nshifts, -1.0);
+    std::vector<Float64> bestIGMIdx(nshifts, -1.0);
+
+    //prepare intermediate fit data buffer
+    std::vector<std::vector<TFloat64List>> intermediateChi2;
+    for(Int32 k=0; k<nshifts; k++)
+    {
+        std::vector<TFloat64List> _ChiSquareISMList;
+        for(Int32 kism=0; kism<nISM; kism++)
+        {
+
+            TFloat64List _chi2List(nIGM, DBL_MAX);
+            _ChiSquareISMList.push_back(_chi2List);
+
+        }
+        intermediateChi2.push_back(_ChiSquareISMList);
+    }
+
 
     for(Int32 kIGM=0; kIGM<nIGM; kIGM++)
     {
@@ -840,13 +883,7 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64* spectrumRebinedLambda,
 
         }
 
-        bool enableISM = true;
-        UInt32 nISM = ismEbmvCoeffs.size();
-        if(nISM==0)
-        {
-            nISM=1;
-            enableISM = false;
-        }
+
         for(Int32 kISM=0; kISM<nISM; kISM++)
         {
             if(verboseLogFitFitRangez && enableISM)
@@ -977,6 +1014,8 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64* spectrumRebinedLambda,
 
             for(Int32 k=0; k<dtm_vec.size(); k++)
             {
+                intermediateChi2[k][kISM][kIGM] = chi2[k];
+
                 if(bestChi2[k]>chi2[k])
                 {
                     bestChi2[k] = chi2[k];
@@ -1096,6 +1135,38 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64* spectrumRebinedLambda,
                 DBL_MAX);
     //*/
 
+    //*
+    // Interpolating intermediate chisquare results
+    Float64* intermChi2BufferReversed_array = new Float64 [(int)intermediateChi2.size()]();
+    std::vector<Float64> intermChi2BufferRebinned_array(result->Redshifts.size(), boost::numeric::bounds<float>::highest());
+    for(Int32 kism=0; kism<nISM; kism++)
+    {
+        for(Int32 kigm=0; kigm<nIGM; kigm++)
+        {
+            for( Int32 t=0;t<z_vect.size();t++)
+            {
+                intermChi2BufferReversed_array[t] = intermediateChi2[z_vect.size()-1-t][kism][kigm];
+            }
+            Int32 interpIntermRet = InterpolateResult(
+                        intermChi2BufferReversed_array,
+                        zreversed_array,
+                        &result->Redshifts.front(),
+                        z_vect.size(),
+                        result->Redshifts.size(),
+                        intermChi2BufferRebinned_array,
+                        DBL_MAX);
+            for( Int32 t=0;t<result->Redshifts.size();t++)
+            {
+                result->ChiSquareIntermediate[t][kism][kigm] = intermChi2BufferRebinned_array[t];
+            }
+        }
+    }
+
+    delete[] intermChi2BufferReversed_array;
+    //*/
+
+
+
 
     delete[] zreversed_array;
     delete[] chi2reversed_array;
@@ -1104,6 +1175,7 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64* spectrumRebinedLambda,
     delete[] mtmreversed_array;
     delete[] ismCoeffreversed_array;
     delete[] igmIdxreversed_array;
+
 
     delete[] spcRebinedFluxOverErr2;
     delete[] oneSpcRebinedFluxOverErr2;
@@ -1657,17 +1729,6 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(const CSpe
     }
 
 
-    std::shared_ptr<CChisquareResult> result = std::shared_ptr<CChisquareResult>( new CChisquareResult() );
-    result->Init(sortedRedshifts.size());
-    result->Redshifts = sortedRedshifts;
-
-    //WARNING: no additional masks coded for use as of 2017-06-13
-    if(additional_spcMasks.size()!=0)
-    {
-        Log.LogError("ChisquareLog, No additional masks used. Feature not coded for this log-lambda operator!)");
-    }
-
-
     //**************** Fitting at all redshifts ****************//
     //Optionally apply some IGM absorption
     std::vector<Int32> igmMeiksinCoeffs;
@@ -1698,6 +1759,19 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(const CSpe
     }else{
         ismEbmvCoeffs.clear();
     }
+
+
+
+    std::shared_ptr<CChisquareResult> result = std::shared_ptr<CChisquareResult>( new CChisquareResult() );
+    result->Init(sortedRedshifts.size(), std::max((Int32)ismEbmvCoeffs.size(), 1), std::max((Int32)igmMeiksinCoeffs.size(),1));
+    result->Redshifts = sortedRedshifts;
+
+    //WARNING: no additional masks coded for use as of 2017-06-13
+    if(additional_spcMasks.size()!=0)
+    {
+        Log.LogError("ChisquareLog, No additional masks used. Feature not coded for this log-lambda operator!)");
+    }
+
 
     //*
     Int32 retFit = FitAllz(lambdaRange, result, igmMeiksinCoeffs, ismEbmvCoeffs);

@@ -198,7 +198,7 @@ Float64 CLineModelElement::GetLineProfile(std::string profile, Float64 x, Float6
 
     //WARNING/TODO/CHECK: this allows multimodel to fit the fluxes directly
     //use sigma normalized profiles
-    val /= sigma;
+    //val /= sigma;
 
     return val;
 }

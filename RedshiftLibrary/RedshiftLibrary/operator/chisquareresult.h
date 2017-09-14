@@ -16,7 +16,7 @@ public:
     CChisquareResult();
     virtual ~CChisquareResult();
 
-    Void Init( UInt32 n );
+    Void Init( UInt32 n, Int32 nISM, Int32 nIGM);
 
     Void Save( const CDataStore& store, std::ostream& stream ) const;
     Void SaveLine( const CDataStore& store, std::ostream& stream ) const;
@@ -30,6 +30,9 @@ public:
     TFloat64List            FitDtM;
     TFloat64List            FitMtM;
     Float64                 CstLog;
+
+    //intermediate chisquare results
+    std::vector<std::vector<TFloat64List>> ChiSquareIntermediate; // full chi2 results (for each config [Calzetti, Meiksin])
 
     TFloat64List            Overlap;
     TFloat64List            Extrema;

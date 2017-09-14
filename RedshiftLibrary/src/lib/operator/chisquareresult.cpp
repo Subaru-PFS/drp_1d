@@ -19,7 +19,7 @@ CChisquareResult::~CChisquareResult()
 
 }
 
-Void CChisquareResult::Init( UInt32 n )
+Void CChisquareResult::Init(UInt32 n , Int32 nISM, Int32 nIGM)
 {
     ChiSquare.resize( n );
     FitAmplitude.resize( n );
@@ -30,6 +30,19 @@ Void CChisquareResult::Init( UInt32 n )
     Redshifts.resize( n );
     Overlap.resize( n );
     Status.resize( n );
+
+    for(Int32 k=0; k<n; k++)
+    {
+        std::vector<TFloat64List> _ChiSquareISMList;
+        for(Int32 kism=0; kism<nISM; kism++)
+        {
+
+            TFloat64List _chi2List(nIGM, DBL_MAX);
+            _ChiSquareISMList.push_back(_chi2List);
+
+        }
+        ChiSquareIntermediate.push_back(_ChiSquareISMList);
+    }
 }
 
 Void CChisquareResult::Load( std::istream& stream )

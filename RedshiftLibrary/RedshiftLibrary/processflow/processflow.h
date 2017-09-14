@@ -46,6 +46,7 @@ private:
     Bool DecisionalTreeB( CProcessFlowContext& ctx );
     Bool DecisionalTreeC( CProcessFlowContext& ctx );
 
+    Bool isPdfValid(CProcessFlowContext &ctx) const;
 };
 
 

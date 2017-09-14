@@ -67,9 +67,17 @@ Void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& t
                                    Float64 &fittingDustCoeff,
                                    Float64 &fittingMeiksinIdx,
                                    EStatus& status,
+                                   std::vector<TFloat64List>& ChiSquareInterm,
                                    std::string opt_interp, Float64 forcedAmplitude, Int32 opt_extinction, Int32 opt_dustFitting, CMask spcMaskAdditional)
 {
     chiSquare = boost::numeric::bounds<float>::highest();
+    for(Int32 kism=0; kism<ChiSquareInterm.size(); kism++)
+    {
+        for(Int32 kigm=0; kigm<ChiSquareInterm[kism].size(); kigm++)
+        {
+            ChiSquareInterm[kism][kigm] = boost::numeric::bounds<float>::highest();
+        }
+    }
     fittingAmplitude = -1.0;
     overlapRate = 0.0;
     status = nStatus_DataError;
@@ -462,6 +470,8 @@ Void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& t
             fit *= overlapCorrection;
             //*/
 
+            ChiSquareInterm[kDust][kMeiksin] = fit;
+
             if(fit<chiSquare)
             {
                 chiSquare = fit;
@@ -604,16 +614,18 @@ std::shared_ptr<COperatorResult> COperatorChiSquare2::Compute(const CSpectrum& s
     }
 
     std::shared_ptr<CChisquareResult> result = std::shared_ptr<CChisquareResult>( new CChisquareResult() );
-    result->ChiSquare.resize( sortedRedshifts.size() );
-    result->FitAmplitude.resize( sortedRedshifts.size() );
-    result->FitDustCoeff.resize( sortedRedshifts.size() );
-    result->FitMeiksinIdx.resize( sortedRedshifts.size() );
-    result->FitDtM.resize( sortedRedshifts.size() );
-    result->FitMtM.resize( sortedRedshifts.size() );
-    result->Redshifts.resize( sortedRedshifts.size() );
-    result->Overlap.resize( sortedRedshifts.size() );
-    result->Status.resize( sortedRedshifts.size() );
+    Int32 nDustCoeffs=1;
+    if(opt_dustFitting)
+    {
+        nDustCoeffs = m_ismCorrectionCalzetti->GetNPrecomputedDustCoeffs();
+    }
+    Int32 nIGMCoeffs=1;
+    if(opt_extinction)
+    {
+        nIGMCoeffs = m_igmCorrectionMeiksin->GetIdxCount();
+    }
 
+    result->Init(sortedRedshifts.size(), nDustCoeffs, nIGMCoeffs);
     result->Redshifts = sortedRedshifts;
 
     CMask additional_spcMask(spectrum.GetSampleCount());
@@ -660,6 +672,7 @@ std::shared_ptr<COperatorResult> COperatorChiSquare2::Compute(const CSpectrum& s
                   result->FitDustCoeff[i],
                   result->FitMeiksinIdx[i],
                   result->Status[i],
+                  result->ChiSquareIntermediate[i],
                   opt_interp,
                   -1,
                   opt_extinction,
@@ -1000,7 +1013,8 @@ const COperatorResult* COperatorChiSquare2::ExportChi2versusAZ(const CSpectrum& 
                       result->FitMtM[i],
                       result->FitDustCoeff[i],
                       result->FitMeiksinIdx[i],
-                      result->Status[i], "lin", ampl );
+                      result->Status[i],
+                      result->ChiSquareIntermediate[i], "lin", ampl );
 
             fprintf( f, "%.15e", result->ChiSquare[i]);
             if(j<sortedAmplitudes.size()-1){

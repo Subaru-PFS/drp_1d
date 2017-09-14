@@ -542,7 +542,7 @@ Bool CProcessFlow::LineModelSolve( CProcessFlowContext& ctx )
         Log.LogWarning( "Reliability skipped - no redshift results found");
         enableQualz = false;
     }
-    if ( enableQualz && solveResult->isPdfValid(ctx.GetDataStore()) )
+    if ( enableQualz && isPdfValid(ctx) )
     {
         CClassifierStore classifStore = ctx.GetClassifierStore();
         if(!classifStore.m_isInitialized)
@@ -770,5 +770,29 @@ Bool CProcessFlow::DecisionalTreeC( CProcessFlowContext& ctx )
     }else{
         return false;
     }
+    return true;
+}
+
+
+/**
+ * @brief isPdfValid
+ * @return
+ */
+Bool CProcessFlow::isPdfValid(CProcessFlowContext& ctx) const
+{
+    std::string scope_res = "zPDF/logposterior.logMargP_Z_data";
+    auto results_pdf =  ctx.GetDataStore().GetGlobalResult( scope_res.c_str() );
+    auto logzpdf1d = std::dynamic_pointer_cast<const CPdfMargZLogResult>( results_pdf.lock() );
+
+    if(!logzpdf1d)
+    {
+        return false;
+    }
+
+    if(logzpdf1d->Redshifts.size()<2)
+    {
+        return false;
+    }
+
     return true;
 }

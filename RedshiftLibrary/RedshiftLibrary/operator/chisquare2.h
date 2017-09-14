@@ -44,7 +44,9 @@ private:
                   Float64& fittingMtM,
                   Float64 &fittingDustCoeff,
                   Float64 &fittingMeiksinIdx,
-                  EStatus& status, std::string opt_interp, Float64 forcedAmplitude=-1, Int32 opt_extinction=0, Int32 opt_dustFitting=0, CMask spcMaskAdditional=CMask() );
+                  EStatus& status,
+                  std::vector<TFloat64List>& ChiSquareInterm,
+                  std::string opt_interp, Float64 forcedAmplitude=-1, Int32 opt_extinction=0, Int32 opt_dustFitting=0, CMask spcMaskAdditional=CMask() );
 
     // buffers for the precomputed fine grid template
     CTemplate       m_templateRebined_bf; //buffer

@@ -85,16 +85,6 @@ Int32 CSpectrumCombination::Combine( std::vector<std::shared_ptr<CSpectrum>> spc
         combinedNoise[ks] = sqrt(1.0/weightSumSq[ks]);
     }
 
-    /*
-    //check
-    for(Int32 ks=0; ks<nSamples; ks++)
-    {
-        combinedFlux[ks] = 1.0;
-        combinedNoise[ks] = 0.5;
-    }
-    //*/
-
-
     delete[] weightSumSq;
     return 0;
 }

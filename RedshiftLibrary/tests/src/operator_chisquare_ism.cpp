@@ -96,6 +96,7 @@ void UtilChisquareTestFit( const char* spectraPath,
     BOOST_TEST_MESSAGE( "  RefIdx = " << targetFitIsmCalzettiCoeff << ", Calzetti coeff = " << fit_dustCoeff );
     BOOST_CHECK( targetFitIsmCalzettiCoeff == fit_dustCoeff );
 
+    r.reset();
 }
 
 BOOST_AUTO_TEST_CASE(ChisquareTestCstFlux)
@@ -106,7 +107,7 @@ BOOST_AUTO_TEST_CASE(ChisquareTestCstFlux)
     {
         if(k==0)
         {
-            chisquareOperator="chisquare2";
+            chisquareOperator="chisquarelog";
         }else{
             chisquareOperator="chisquarelog";
         }
@@ -137,6 +138,7 @@ BOOST_AUTO_TEST_CASE(ChisquareTestCstFlux)
                               1.0,
                               targetFitIsmCalzetti,
                               chisquareOperator);
+
 
         //z=0 test 2
         targetFitIsmCalzetti = 0.8;
