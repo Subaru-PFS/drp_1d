@@ -200,6 +200,34 @@ Bool CMethodChisquare2Solve::Solve(CDataStore& resultStore,
         }else{
             // Store results
             resultStore.StoreScopedPerTemplateResult( tpl, scopeStr.c_str(), chisquareResult );
+
+            //Save intermediate chisquare results
+            bool enableSaveIntermediateChisquareResults = true;
+            if(enableSaveIntermediateChisquareResults && chisquareResult->ChiSquareIntermediate.size()>0 && chisquareResult->ChiSquareIntermediate.size()==chisquareResult->Redshifts.size())
+            {
+                Int32 nISM = chisquareResult->ChiSquareIntermediate[0].size();
+                if(chisquareResult->ChiSquareIntermediate[0].size()>0)
+                {
+                    Int32 nIGM = chisquareResult->ChiSquareIntermediate[0][0].size();
+
+                    for(Int32 kism=0; kism<nISM; kism++)
+                    {
+                        for(Int32 kigm=0; kigm<nIGM; kigm++)
+                        {
+                            std::shared_ptr<CChisquareResult> result_chisquare_intermediate = std::shared_ptr<CChisquareResult>( new CChisquareResult() );
+                            result_chisquare_intermediate->Init( chisquareResult->Redshifts.size(), 0, 0);
+                            for(Int32 kz=0; kz<chisquareResult->Redshifts.size(); kz++)
+                            {
+                                result_chisquare_intermediate->Redshifts[kz] = chisquareResult->Redshifts[kz];
+                                result_chisquare_intermediate->ChiSquare[kz] = chisquareResult->ChiSquareIntermediate[kz][kism][kigm];
+                            }
+
+                            std::string resname = (boost::format("%s_intermediate_ism%d_igm%d") % scopeStr.c_str() % kism % kigm).str();
+                            resultStore.StoreScopedPerTemplateResult( tpl, resname.c_str(), result_chisquare_intermediate );
+                        }
+                    }
+                }
+            }
         }
     }
 

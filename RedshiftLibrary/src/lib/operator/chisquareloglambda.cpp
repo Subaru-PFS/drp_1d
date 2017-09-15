@@ -801,14 +801,14 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64* spectrumRebinedLambda,
     }
 
     bool enableISM = true;
-    UInt32 nISM = ismEbmvCoeffs.size();
+    Int32 nISM = ismEbmvCoeffs.size();
     if(nISM==0)
     {
         nISM=1;
         enableISM = false;
     }
     bool enableIGM = true;
-    UInt32 nIGM = igmMeiksinCoeffs.size();
+    Int32 nIGM = igmMeiksinCoeffs.size();
     if(nIGM==0)
     {
         nIGM=1;
@@ -816,8 +816,10 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64* spectrumRebinedLambda,
     }
     //disable IGM if the redshift range and lambda range do not make the IGM wavelength appear
     Float64 lambdaMinTpl = tplRebinedLambda[0];
-    if(lambdaMinTpl>1216.)
+    Int32 overrideNIGMTobesaved = -1;
+    if(lambdaMinTpl>1216. && nIGM>1)
     {
+        overrideNIGMTobesaved = nIGM;
         nIGM=1;
         enableIGM = false;
         if(verboseLogFitFitRangez)
@@ -836,13 +838,18 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64* spectrumRebinedLambda,
 
     //prepare intermediate fit data buffer
     std::vector<std::vector<TFloat64List>> intermediateChi2;
+    Int32 nIGMFinal = nIGM;
+    if(overrideNIGMTobesaved>nIGM)
+    {
+        nIGMFinal = overrideNIGMTobesaved;
+    }
     for(Int32 k=0; k<nshifts; k++)
     {
         std::vector<TFloat64List> _ChiSquareISMList;
         for(Int32 kism=0; kism<nISM; kism++)
         {
 
-            TFloat64List _chi2List(nIGM, DBL_MAX);
+            TFloat64List _chi2List(nIGMFinal, DBL_MAX);
             _ChiSquareISMList.push_back(_chi2List);
 
         }
@@ -1015,6 +1022,14 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64* spectrumRebinedLambda,
             for(Int32 k=0; k<dtm_vec.size(); k++)
             {
                 intermediateChi2[k][kISM][kIGM] = chi2[k];
+                //in the case of 1215A is not in the range, no need to recompute with varying IGM coeff.
+                if(overrideNIGMTobesaved>1 && kIGM==0)
+                {
+                    for(Int32 koigm=1; koigm<overrideNIGMTobesaved; koigm++)
+                    {
+                        intermediateChi2[k][kISM][koigm] = chi2[k];
+                    }
+                }
 
                 if(bestChi2[k]>chi2[k])
                 {
@@ -1141,7 +1156,7 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64* spectrumRebinedLambda,
     std::vector<Float64> intermChi2BufferRebinned_array(result->Redshifts.size(), boost::numeric::bounds<float>::highest());
     for(Int32 kism=0; kism<nISM; kism++)
     {
-        for(Int32 kigm=0; kigm<nIGM; kigm++)
+        for(Int32 kigm=0; kigm<nIGMFinal; kigm++)
         {
             for( Int32 t=0;t<z_vect.size();t++)
             {
