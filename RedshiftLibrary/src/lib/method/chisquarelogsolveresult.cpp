@@ -112,7 +112,7 @@ Void CChisquareLogSolveResult::SaveLine( const CDataStore& store, std::ostream& 
                 << tplName << "\t"
                 << "ChisquareLogSolve_" << tmpChar << "\t"
                 << "-1" << "\t" //deltaz
-                << "-1" << std::endl; //reliability label
+                << m_ReliabilityLabel << std::endl;
 
 }
 

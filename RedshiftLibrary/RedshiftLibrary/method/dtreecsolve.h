@@ -25,7 +25,7 @@ public:
 
     const std::string GetDescription();
 
-    std::shared_ptr<const CDTreeCSolveResult> Compute(CDataStore &resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
+    std::shared_ptr<CDTreeCSolveResult> Compute(CDataStore &resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
                                         const CTemplateCatalog& tplCatalog, const TStringList& tplCategoryList, const CRayCatalog &restRayCatalog,
                                         const TFloat64Range& lambdaRange, const TFloat64List& redshifts );
 

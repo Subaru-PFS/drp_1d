@@ -62,7 +62,7 @@ const std::string COperatorDTreeCSolve::GetDescription()
 
 }
 
-std::shared_ptr<const CDTreeCSolveResult> COperatorDTreeCSolve::Compute( CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
+std::shared_ptr<CDTreeCSolveResult> COperatorDTreeCSolve::Compute( CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
                                                         const CTemplateCatalog& tplCatalog, const TStringList &tplCategoryList, const CRayCatalog &restRayCatalog,
                                                         const TFloat64Range& lambdaRange, const TFloat64List &redshifts)
 {

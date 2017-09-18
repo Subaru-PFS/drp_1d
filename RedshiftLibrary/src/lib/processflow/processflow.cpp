@@ -221,6 +221,29 @@ Bool CProcessFlow::Process( CProcessFlowContext& ctx )
                                  maskList,
                                  opt_spcComponent, opt_interp, opt_extinction, opt_dustFit);
 
+    }else if(methodName  == "amazed0_1" ){
+        COperatorDTree7Solve Solve(calibrationDirPath);
+        mResult = Solve.Compute( ctx.GetDataStore(),
+                                 ctx.GetSpectrum(),
+                                 ctx.GetSpectrumWithoutContinuum(),
+                                 ctx.GetTemplateCatalog(),
+                                 templateCategoryList,
+                                 ctx.GetRayCatalog(),
+                                 lambdaRange,
+                                 redshiftRange,
+                                 redshiftStep);
+
+    }else if(methodName  == "amazed0_3" ){
+        COperatorDTreeCSolve Solve(calibrationDirPath);
+        mResult = Solve.Compute( ctx.GetDataStore(),
+                                 ctx.GetSpectrum(),
+                                 ctx.GetSpectrumWithoutContinuum(),
+                                 ctx.GetTemplateCatalog(),
+                                 templateCategoryList,
+                                 ctx.GetRayCatalog(),
+                                 spcLambdaRange,
+                                 redshifts);
+
     }else{
         Log.LogError("Problem found while parsing the method parameter !");
         return false;
@@ -276,9 +299,6 @@ Bool CProcessFlow::Process( CProcessFlowContext& ctx )
 //    if(methodName  == "linematching2" )
 //        return LineMatching2( ctx );
 
-//    if(methodName  == "linemodel" )
-//        return LineModelSolve( ctx );
-
 //    if(methodName  == "linemodeltplshape" )
 //        return LineModelTplshapeSolve( ctx );
 
@@ -288,17 +308,11 @@ Bool CProcessFlow::Process( CProcessFlowContext& ctx )
 //    if(methodName  == "fullsolve" )
 //        return Fullsolve( ctx );
 
-//    if(methodName  == "amazed0_1" )
-//        return DecisionalTree7( ctx );
-
 //    if(methodName  == "decisionaltreea" )
 //        return DecisionalTreeA( ctx );
 
 //    if(methodName  == "amazed0_2" )
 //        return DecisionalTreeB( ctx );
-
-//    if(methodName  == "amazed0_3" )
-//        return DecisionalTreeC( ctx );
 
 }
 

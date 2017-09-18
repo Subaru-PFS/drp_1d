@@ -32,7 +32,6 @@ public:
 
 private:
 
-    Bool ProcessWithoutEL(CProcessFlowContext& ctx , const std::string& CategoryFilter = "all");
     Bool Blindsolve(CProcessFlowContext& ctx , const std::string& CategoryFilter = "all");
     Bool Fullsolve(CProcessFlowContext& ctx ,  const std::string& CategoryFilter = "all");
 
