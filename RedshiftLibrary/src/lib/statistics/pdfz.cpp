@@ -488,3 +488,70 @@ Int32 CPdfz::BestProba(TFloat64List redshifts, std::vector<TFloat64List> meritRe
 
     return 0;
 }
+
+
+Int32 CPdfz::BestChi2(TFloat64List redshifts, std::vector<TFloat64List> meritResults, std::vector<TFloat64List> zPriors, Float64 cstLog, std::shared_ptr<CPdfMargZLogResult> postmargZResult)
+{
+    bool verbose = false;
+
+    if(meritResults.size() != zPriors.size())
+    {
+        Log.LogError("Pdfz: Pdfz-bestchi2 problem. merit.size (%d) != prior.size (%d)", meritResults.size(), zPriors.size());
+        return -9;
+    }
+    if(meritResults.size()<1 || zPriors.size()<1 || redshifts.size()<2)
+    {
+        Log.LogError("Pdfz: Pdfz-bestchi2 problem. merit.size (%d), prior.size (%d), or redshifts.size (%d) is zero !", meritResults.size(), zPriors.size(), redshifts.size());
+        return -99;
+    }
+
+    //build best chi2 vector
+    std::vector<Float64> chi2Min(redshifts.size(), DBL_MAX);
+    for(Int32 km=0; km<meritResults.size(); km++)
+    {
+        if(verbose)
+        {
+            Log.LogInfo("Pdfz:-bestchi2: processing chi2-result km=%d", km);
+        }
+
+        //Todo: Check if the status is OK ?
+        //meritResult->Status[i] == COperator::nStatus_OK
+
+        //Todo: use the priors for the min chi2 search ?
+        for ( UInt32 k=0; k<redshifts.size(); k++)
+        {
+            if( true /*meritResult->Status[k]== COperator::nStatus_OK*/) //todo: check (temporarily considers status is always OK)
+            {
+                if(meritResults[km][k]<chi2Min[k])
+                {
+                    chi2Min[k] = meritResults[km][k];
+                }
+            }
+        }
+
+    }
+
+    //estimate Posterior on the best chi2
+    CPdfz pdfz;
+    TFloat64List logProba;
+    Float64 logEvidence;
+    TFloat64List zprior;
+    zprior = pdfz.GetConstantLogZPrior(redshifts.size());
+    Int32 retPdfz = pdfz.Compute(chi2Min, redshifts, cstLog, zprior, logProba, logEvidence);
+    if(retPdfz!=0)
+    {
+        Log.LogError("Pdfz: Pdfz-bestchi2: Pdfz computation failed");
+        return -1;
+    }else{
+        postmargZResult->countTPL = redshifts.size(); // assumed 1 model per z
+        postmargZResult->Redshifts.resize(redshifts.size());
+        postmargZResult->valProbaLog.resize(redshifts.size());
+        for ( UInt32 k=0; k<redshifts.size(); k++)
+        {
+            postmargZResult->Redshifts[k] = redshifts[k] ;
+            postmargZResult->valProbaLog[k] = logProba[k];
+        }
+    }
+
+    return 0;
+}

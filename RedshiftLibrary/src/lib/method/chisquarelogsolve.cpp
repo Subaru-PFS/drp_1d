@@ -9,6 +9,7 @@
 #include <RedshiftLibrary/processflow/datastore.h>
 #include <RedshiftLibrary/statistics/pdfz.h>
 #include <RedshiftLibrary/operator/pdfMargZLogResult.h>
+#include <RedshiftLibrary/operator/pdfLogresult.h>
 
 #include <RedshiftLibrary/spectrum/io/fitswriter.h>
 #include <float.h>
@@ -99,7 +100,10 @@ std::shared_ptr<const CChisquareLogSolveResult> CMethodChisquareLogSolve::Comput
         std::shared_ptr< CChisquareLogSolveResult>  ChisquareSolveResult = std::shared_ptr< CChisquareLogSolveResult>( new CChisquareLogSolveResult() );
         ChisquareSolveResult->m_type = _type;
 
-        CombinePDF(resultStore, scopeStr);
+        //std::string opt_combinePdf = "marg";
+        std::string opt_combinePdf = "bestchi2";
+        //std::string opt_combinePdf = "bestproba";
+        CombinePDF(resultStore, scopeStr, opt_combinePdf);
 
         return ChisquareSolveResult;
     }
@@ -236,7 +240,90 @@ Bool CMethodChisquareLogSolve::Solve(CDataStore& resultStore,
     return true;
 }
 
-Int32 CMethodChisquareLogSolve::CombinePDF(CDataStore &store, std::string scopeStr )
+
+Int32 CMethodChisquareLogSolve::CombinePDF(CDataStore &store, std::string scopeStr, std::string opt_combine )
+{
+    Log.LogInfo("chisquarelogsolve: Pdfz computation");
+    std::string scope = "chisquarelogsolve.";
+    scope.append(scopeStr.c_str());
+
+    TOperatorResultMap meritResults = store.GetPerTemplateResult(scope.c_str());
+
+    std::shared_ptr<CPdfMargZLogResult> postmargZResult = std::shared_ptr<CPdfMargZLogResult>(new CPdfMargZLogResult());
+    CPdfz pdfz;
+    Float64 cstLog = -1;
+
+    Int32 retPdfz=-1;
+    std::vector<TFloat64List> priors;
+    std::vector<TFloat64List> chiSquares;
+    std::vector<Float64> redshifts;
+    for( TOperatorResultMap::const_iterator it = meritResults.begin(); it != meritResults.end(); it++ )
+    {
+        auto meritResult = std::dynamic_pointer_cast<const CChisquareResult>( (*it).second );
+        Int32 nISM = -1;
+        Int32 nIGM = -1;
+        if(meritResult->ChiSquareIntermediate.size()>0)
+        {
+            nISM = meritResult->ChiSquareIntermediate[0].size();
+            if(meritResult->ChiSquareIntermediate[0].size()>0)
+            {
+                nIGM = meritResult->ChiSquareIntermediate[0][0].size();
+            }
+        }
+        if(cstLog==-1)
+        {
+            cstLog = meritResult->CstLog;
+        }else if ( cstLog != meritResult->CstLog)
+        {
+            Log.LogError("chisquarelogsolve: Found different cstLog values in results... val-1=%f != val-2=%f");
+        }
+        if(redshifts.size()==0)
+        {
+            redshifts = meritResult->Redshifts;
+        }
+
+        for(Int32 kism=0; kism<nISM; kism++)
+        {
+            for(Int32 kigm=0; kigm<nIGM; kigm++)
+            {
+                TFloat64List _prior;
+                _prior = pdfz.GetConstantLogZPrior(meritResult->Redshifts.size());
+                priors.push_back(_prior);
+
+                //correct chi2 for ampl. marg. if necessary: todo add switch, currently deactivated
+                TFloat64List logLikelihoodCorrected(meritResult->ChiSquareIntermediate.size(), DBL_MAX);
+                for ( UInt32 kz=0; kz<meritResult->Redshifts.size(); kz++)
+                {
+                    logLikelihoodCorrected[kz] = meritResult->ChiSquareIntermediate[kz][kism][kigm];// + resultXXX->ScaleMargCorrectionTplshapes[][]?;
+                }
+                chiSquares.push_back(logLikelihoodCorrected);
+            }
+        }
+    }
+
+    if(opt_combine=="marg" && chiSquares.size()>0)
+    {
+        retPdfz = pdfz.Marginalize( redshifts, chiSquares, priors, cstLog, postmargZResult);
+    }else if(opt_combine=="bestchi2")
+    {
+        retPdfz = pdfz.BestChi2( redshifts, chiSquares, priors, cstLog, postmargZResult);
+    }else{
+        Log.LogError("Chisquarelog: Unable to parse pdf combination method option");
+    }
+
+
+    if(retPdfz!=0)
+    {
+        Log.LogError("Chisquarelog: Pdfz computation failed");
+    }else{
+        store.StoreGlobalResult( "zPDF/logposterior.logMargP_Z_data", postmargZResult); //need to store this pdf with this exact same name so that zqual can load it. see zqual.cpp/ExtractFeaturesPDF
+    }
+
+    return retPdfz;
+}
+
+
+Int32 CMethodChisquareLogSolve::CombinePDF_deprecated(CDataStore &store, std::string scopeStr )
 {
     std::string scope = "chisquarelogsolve.";
     scope.append(scopeStr.c_str());
