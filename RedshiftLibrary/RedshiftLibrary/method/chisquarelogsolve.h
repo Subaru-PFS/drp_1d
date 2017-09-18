@@ -28,7 +28,7 @@ class CMethodChisquareLogSolve
     ~CMethodChisquareLogSolve();
     const std::string GetDescription();
 
-    std::shared_ptr<const CChisquareLogSolveResult> Compute(CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
+    std::shared_ptr<CChisquareLogSolveResult> Compute(CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
                                         const CTemplateCatalog& tplCatalog, const TStringList& tplCategoryList,
                                         const TFloat64Range& lambdaRange, const TFloat64List& redshifts, Float64 overlapThreshold, std::vector<CMask> maskList, std::string spcComponent="raw" , std::string opt_interp="lin", std::string opt_extinction="no", std::string opt_dustFit="no");
 
@@ -39,6 +39,8 @@ private:
     Bool Solve(CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont, const CTemplate& tpl, const CTemplate& tplWithoutCont,
                                    const TFloat64Range& lambdaRange, const TFloat64List& redshifts, Float64 overlapThreshold , std::vector<CMask> maskList, Int32 spctype=CChisquareLogSolveResult::nType_raw, std::string opt_interp="lin", std::string opt_extinction="no", std::string opt_dustFitting="no");
     Int32 CombinePDF(CDataStore& store, std::string scopeStr, std::string opt_combine);
+
+    Bool m_opt_enableSaveIntermediateChisquareResults=false;
 
     COperatorChiSquareLogLambda* m_chiSquareOperator;
 

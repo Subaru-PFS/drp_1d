@@ -11,3 +11,10 @@ COperatorResult::~COperatorResult()
 {
 
 }
+
+
+
+Void COperatorResult::SetReliabilityLabel( std::string lbl )
+{
+    m_ReliabilityLabel = lbl;
+}

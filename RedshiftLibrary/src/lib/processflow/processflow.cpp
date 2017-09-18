@@ -73,14 +73,49 @@ Bool CProcessFlow::Process( CProcessFlowContext& ctx )
 {
     Log.LogInfo("<proc-spc><%s>", ctx.GetSpectrum().GetName().c_str());
 
-    if(1)
+    TFloat64Range lambdaRange;
+    TFloat64Range redshiftRange;
+    Float64       redshiftStep;
+
+    ctx.GetParameterStore().Get( "lambdaRange", lambdaRange );
+    ctx.GetParameterStore().Get( "redshiftRange", redshiftRange );
+    ctx.GetParameterStore().Get( "redshiftStep", redshiftStep );
+    TFloat64Range spcLambdaRange;
+    ctx.GetSpectrum().GetSpectralAxis().ClampLambdaRange( lambdaRange, spcLambdaRange );
+
+    Log.LogInfo( "Processing spc:%s (LambdaRange: %f-%f:%f)", ctx.GetSpectrum().GetName().c_str(),
+            spcLambdaRange.GetBegin(), spcLambdaRange.GetEnd(), ctx.GetSpectrum().GetResolution());
+
+    // Create redshift initial list by spanning redshift acdross the given range, with the given delta
+    TFloat64List redshifts = redshiftRange.SpreadOver( redshiftStep );
+    DebugAssert( redshifts.size() > 0 );
+
+    std::string CategoryFilter="all";
+    // Remove Star category, and filter the list with regard to input variable CategoryFilter
+    TStringList templateCategoryList;
+    ctx.GetParameterStore().Get( "templateCategoryList", templateCategoryList );
+    TStringList   filteredTemplateCategoryList;
+    for( UInt32 i=0; i<templateCategoryList.size(); i++ )
+    {
+        std::string category = templateCategoryList[i];
+        if( category == "star" )
+        {
+        }
+        else if(CategoryFilter == "all" || CategoryFilter == category)
+        {
+            filteredTemplateCategoryList.push_back( category );
+        }
+    }
+
+    //retrieve the calibration dir path
+    std::string calibrationDirPath;
+    ctx.GetParameterStore().Get( "calibrationDir", calibrationDirPath );
+
+
+    Bool enableInputSpcCheck = true;
+    if(enableInputSpcCheck)
     {
         //Check if the Spectrum is valid on the lambdarange
-        TFloat64Range lambdaRange;
-        ctx.GetParameterStore().Get( "lambdaRange", lambdaRange );
-        const CSpectrumSpectralAxis& spcSpectralAxis = ctx.GetSpectrum().GetSpectralAxis();
-        TFloat64Range spcLambdaRange;
-        spcSpectralAxis.ClampLambdaRange( lambdaRange, spcLambdaRange );
         const Float64 lmin = spcLambdaRange.GetBegin();
         const Float64 lmax = spcLambdaRange.GetEnd();
         if( !ctx.GetSpectrum().IsFluxValid( lmin, lmax ) ){
@@ -97,52 +132,174 @@ Bool CProcessFlow::Process( CProcessFlowContext& ctx )
 
     std::string methodName;
     ctx.GetParameterStore().Get( "method", methodName );
-
     boost::algorithm::to_lower(methodName);
 
-    if(methodName  == "correlationsolve" )
-        return Correlation( ctx );
+    std::shared_ptr<COperatorResult> mResult;
 
-    if(methodName  == "chisquare2solve" )
-        return Chisquare( ctx );
 
-    if(methodName  == "chisquarelogsolve" )
-    {
-        return ChisquareLog( ctx );
+    if(methodName  == "linemodel" ){
+
+        CLineModelSolve Solve(calibrationDirPath);
+        mResult = Solve.Compute( ctx.GetDataStore(),
+                                 ctx.GetSpectrum(),
+                                 ctx.GetSpectrumWithoutContinuum(),
+                                 ctx.GetTemplateCatalog(),
+                                 filteredTemplateCategoryList,
+                                 ctx.GetRayCatalog(),
+                                 spcLambdaRange,
+                                 redshifts );
+
+
+
+    }else if(methodName  == "chisquare2solve" ){
+        Float64 overlapThreshold;
+        ctx.GetParameterStore().Get( "chisquare2solve.overlapThreshold", overlapThreshold, 1.0);
+        std::string opt_spcComponent;
+        ctx.GetDataStore().GetScopedParam( "chisquare2solve.spectrum.component", opt_spcComponent, "raw" );
+        std::string opt_interp;
+        ctx.GetDataStore().GetScopedParam( "chisquare2solve.interpolation", opt_interp, "precomputedfinegrid" );
+        std::string opt_extinction;
+        ctx.GetDataStore().GetScopedParam( "chisquare2solve.extinction", opt_extinction, "no" );
+        std::string opt_dustFit;
+        ctx.GetDataStore().GetScopedParam( "chisquare2solve.dustfit", opt_dustFit, "no" );
+
+        Log.LogInfo( "Process Chisquare using overlapThreshold: %.3f", overlapThreshold);
+        Log.LogInfo( "Process Chisquare using component: %s", opt_spcComponent.c_str());
+        Log.LogInfo( "Process Chisquare using extinction: %s", opt_extinction.c_str());
+        Log.LogInfo( "Process Chisquare using dust-fit: %s", opt_dustFit.c_str());
+        Log.LogInfo( "..." );
+
+        // prepare the unused masks
+        std::vector<CMask> maskList;
+        //retrieve the calibration dir path
+        std::string calibrationDirPath;
+        ctx.GetParameterStore().Get( "calibrationDir", calibrationDirPath );
+        CMethodChisquare2Solve solve(calibrationDirPath);
+        mResult = solve.Compute( ctx.GetDataStore(),
+                                 ctx.GetSpectrum(),
+                                 ctx.GetSpectrumWithoutContinuum(),
+                                 ctx.GetTemplateCatalog(),
+                                 filteredTemplateCategoryList,
+                                 spcLambdaRange,
+                                 redshifts,
+                                 overlapThreshold,
+                                 maskList,
+                                 opt_spcComponent, opt_interp, opt_extinction, opt_dustFit);
+
+    }else if(methodName  == "chisquarelogsolve" ){
+        Float64 overlapThreshold;
+        ctx.GetParameterStore().Get( "chisquarelogsolve.overlapThreshold", overlapThreshold, 1.0);
+        std::string opt_spcComponent;
+        ctx.GetDataStore().GetScopedParam( "chisquarelogsolve.spectrum.component", opt_spcComponent, "raw" );
+        std::string opt_interp;
+        ctx.GetDataStore().GetScopedParam( "chisquarelogsolve.interpolation", opt_interp, "precomputedfinegrid" );
+        std::string opt_extinction;
+        ctx.GetDataStore().GetScopedParam( "chisquarelogsolve.extinction", opt_extinction, "no" );
+        std::string opt_dustFit;
+        ctx.GetDataStore().GetScopedParam( "chisquarelogsolve.dustfit", opt_dustFit, "no" );
+
+        Log.LogInfo( "Process Chisquare using overlapThreshold: %.3f", overlapThreshold);
+        Log.LogInfo( "Process Chisquare using component: %s", opt_spcComponent.c_str());
+        Log.LogInfo( "Process Chisquare using extinction: %s", opt_extinction.c_str());
+        Log.LogInfo( "Process Chisquare using dust-fit: %s", opt_dustFit.c_str());
+        Log.LogInfo( "..." );
+
+        // prepare the unused masks
+        std::vector<CMask> maskList;
+        //retrieve the calibration dir path
+        std::string calibrationDirPath;
+        ctx.GetParameterStore().Get( "calibrationDir", calibrationDirPath );
+        CMethodChisquareLogSolve solve(calibrationDirPath);
+        mResult = solve.Compute( ctx.GetDataStore(),
+                                 ctx.GetSpectrum(),
+                                 ctx.GetSpectrumWithoutContinuum(),
+                                 ctx.GetTemplateCatalog(),
+                                 filteredTemplateCategoryList,
+                                 spcLambdaRange,
+                                 redshifts,
+                                 overlapThreshold,
+                                 maskList,
+                                 opt_spcComponent, opt_interp, opt_extinction, opt_dustFit);
+
+    }else{
+        Log.LogError("Problem found while parsing the method parameter !");
+        return false;
     }
 
-    if(methodName  == "linematching" )
-        return LineMatching( ctx );
 
-    if(methodName  == "linematching2" )
-        return LineMatching2( ctx );
+    //Process Reliability estimation
+    if(!mResult){
+        Log.LogWarning( "Reliability skipped - no redshift results found");
+    }else if(!isPdfValid(ctx)){
+        Log.LogWarning( "Reliability skipped - no valid pdf result found");
+    }else{
+        CClassifierStore classifStore = ctx.GetClassifierStore();
+        if(!classifStore.m_isInitialized)
+        {
+            Log.LogWarning( "Reliability not initialized. Skipped.");
+        }else
+        {
+            Log.LogInfo( "Processing reliability for Line Model method");
+            CQualz solve2;
+            std::shared_ptr<const CQualzResult> solve2Result = solve2.Compute( ctx.GetDataStore(), classifStore, redshiftRange, redshiftStep );
 
-    if(methodName  == "linemodel" )
-        return LineModelSolve( ctx );
+            if(solve2Result)
+            {
+                std::string predLabel="";
+                bool retPredLabel = solve2Result->GetPredictedLabel( ctx.GetDataStore(), predLabel );
+                if( retPredLabel ) {
+                    mResult->SetReliabilityLabel(predLabel);
+                }else{
+                    Log.LogError( "Unable estimate Reliability");
+                }
+            }
+        }
+    }
 
-    if(methodName  == "linemodeltplshape" )
-        return LineModelTplshapeSolve( ctx );
+    //finally save the linemodel results with (optionally) the zqual label
+    if( mResult ) {
+        ctx.GetDataStore().StoreScopedGlobalResult( "redshiftresult", mResult );
+    }else{
+        Log.LogError( "Unable to store method result.");
+        return false;
+    }
 
-    if(methodName  == "blindsolve" )
-        return Blindsolve( ctx );
+    return true;
 
-    if(methodName  == "fullsolve" )
-        return Fullsolve( ctx );
+   //TODO: remaining methods to be wired in the previous IF/ELSE scheme
+//    if(methodName  == "correlationsolve" )
+//        return Correlation( ctx );
 
-    if(methodName  == "amazed0_1" )
-        return DecisionalTree7( ctx );
+//    if(methodName  == "linematching" )
+//        return LineMatching( ctx );
 
-    if(methodName  == "decisionaltreea" )
-        return DecisionalTreeA( ctx );
+//    if(methodName  == "linematching2" )
+//        return LineMatching2( ctx );
 
-    if(methodName  == "amazed0_2" )
-        return DecisionalTreeB( ctx );
+//    if(methodName  == "linemodel" )
+//        return LineModelSolve( ctx );
 
-    if(methodName  == "amazed0_3" )
-        return DecisionalTreeC( ctx );
+//    if(methodName  == "linemodeltplshape" )
+//        return LineModelTplshapeSolve( ctx );
 
-    Log.LogError("Problem found while parsing the method parameter !");
-    return false;
+//    if(methodName  == "blindsolve" )
+//        return Blindsolve( ctx );
+
+//    if(methodName  == "fullsolve" )
+//        return Fullsolve( ctx );
+
+//    if(methodName  == "amazed0_1" )
+//        return DecisionalTree7( ctx );
+
+//    if(methodName  == "decisionaltreea" )
+//        return DecisionalTreeA( ctx );
+
+//    if(methodName  == "amazed0_2" )
+//        return DecisionalTreeB( ctx );
+
+//    if(methodName  == "amazed0_3" )
+//        return DecisionalTreeC( ctx );
+
 }
 
 
@@ -224,155 +381,6 @@ Bool CProcessFlow::Correlation( CProcessFlowContext& ctx,  const std::string&  C
     std::shared_ptr<const CCorrelationSolveResult> solveResult = solve.Compute( ctx.GetDataStore(), ctx.GetSpectrum(), ctx.GetSpectrumWithoutContinuum(),
                                                                         ctx.GetTemplateCatalog(), filteredTemplateCategoryList,
                                                                         lambdaRange, redshiftRange, redshiftStep );
-
-    if( solveResult ) {
-        ctx.GetDataStore().StoreScopedGlobalResult( "redshiftresult", solveResult );
-    }else{
-        return false;
-    }
-    return true;
-}
-
-
-Bool CProcessFlow::Chisquare( CProcessFlowContext& ctx, const std::string& CategoryFilter)
-{
-    TFloat64Range lambdaRange;
-    TFloat64Range redshiftRange;
-    Float64       redshiftStep;
-    ctx.GetParameterStore().Get( "lambdaRange", lambdaRange );
-    ctx.GetParameterStore().Get( "redshiftRange", redshiftRange );
-    ctx.GetParameterStore().Get( "redshiftStep", redshiftStep );
-
-    const CSpectrumSpectralAxis& spcSpectralAxis = ctx.GetSpectrum().GetSpectralAxis();
-    TFloat64Range spcLambdaRange;
-    spcSpectralAxis.ClampLambdaRange( lambdaRange, spcLambdaRange );
-
-    Log.LogInfo( "Process Chisquare for spc:%s (LambdaRange: %f-%f:%f)", ctx.GetSpectrum().GetName().c_str(),
-                 spcLambdaRange.GetBegin(), spcLambdaRange.GetEnd(), ctx.GetSpectrum().GetResolution());
-
-
-    // Remove Star category, and filter the list with regard to input variable CategoryFilter
-    TStringList templateCategoryList;
-    ctx.GetParameterStore().Get( "templateCategoryList", templateCategoryList );
-    TStringList   filteredTemplateCategoryList;
-    for( UInt32 i=0; i<templateCategoryList.size(); i++ )
-    {
-        std::string category = templateCategoryList[i];
-        if( category == "star" )
-        {
-        }
-        else if(CategoryFilter == "all" || CategoryFilter == category)
-        {
-            filteredTemplateCategoryList.push_back( category );
-        }
-    }
-
-
-
-    // Create redshift initial list by spanning redshift acdross the given range, with the given delta
-    TFloat64List redshifts = redshiftRange.SpreadOver( redshiftStep );
-    DebugAssert( redshifts.size() > 0 );
-
-    Float64 overlapThreshold;
-    ctx.GetParameterStore().Get( "chisquare2solve.overlapThreshold", overlapThreshold, 1.0);
-    std::string opt_spcComponent;
-    ctx.GetDataStore().GetScopedParam( "chisquare2solve.spectrum.component", opt_spcComponent, "raw" );
-    std::string opt_interp;
-    ctx.GetDataStore().GetScopedParam( "chisquare2solve.interpolation", opt_interp, "precomputedfinegrid" );
-    std::string opt_extinction;
-    ctx.GetDataStore().GetScopedParam( "chisquare2solve.extinction", opt_extinction, "no" );
-    std::string opt_dustFit;
-    ctx.GetDataStore().GetScopedParam( "chisquare2solve.dustfit", opt_dustFit, "no" );
-
-    Log.LogInfo( "Process Chisquare using overlapThreshold: %.3f", overlapThreshold);
-    Log.LogInfo( "Process Chisquare using component: %s", opt_spcComponent.c_str());
-    Log.LogInfo( "Process Chisquare using extinction: %s", opt_extinction.c_str());
-    Log.LogInfo( "Process Chisquare using dust-fit: %s", opt_dustFit.c_str());
-    Log.LogInfo( "..." );
-
-    // prepare the unused masks
-    std::vector<CMask> maskList;
-    //retrieve the calibration dir path
-    std::string calibrationDirPath;
-    ctx.GetParameterStore().Get( "calibrationDir", calibrationDirPath );
-    CMethodChisquare2Solve solve(calibrationDirPath);
-    std::shared_ptr< const CChisquare2SolveResult> solveResult = solve.Compute( ctx.GetDataStore(), ctx.GetSpectrum(), ctx.GetSpectrumWithoutContinuum(),
-                                                                        ctx.GetTemplateCatalog(), filteredTemplateCategoryList,
-                                                                        spcLambdaRange, redshifts, overlapThreshold, maskList, opt_spcComponent, opt_interp, opt_extinction, opt_dustFit);
-
-    if( solveResult ) {
-        ctx.GetDataStore().StoreScopedGlobalResult( "redshiftresult", solveResult );
-    }else{
-        return false;
-    }
-    return true;
-}
-
-Bool CProcessFlow::ChisquareLog( CProcessFlowContext& ctx, const std::string& CategoryFilter)
-{
-    TFloat64Range lambdaRange;
-    TFloat64Range redshiftRange;
-    Float64       redshiftStep;
-    ctx.GetParameterStore().Get( "lambdaRange", lambdaRange );
-    ctx.GetParameterStore().Get( "redshiftRange", redshiftRange );
-    ctx.GetParameterStore().Get( "redshiftStep", redshiftStep );
-
-    const CSpectrumSpectralAxis& spcSpectralAxis = ctx.GetSpectrum().GetSpectralAxis();
-    TFloat64Range spcLambdaRange;
-    spcSpectralAxis.ClampLambdaRange( lambdaRange, spcLambdaRange );
-
-    Log.LogInfo( "Process ChisquareLog for spc:%s (LambdaRange: %f-%f:%f)", ctx.GetSpectrum().GetName().c_str(),
-                 spcLambdaRange.GetBegin(), spcLambdaRange.GetEnd(), ctx.GetSpectrum().GetResolution());
-
-
-    // Remove Star category, and filter the list with regard to input variable CategoryFilter
-    TStringList templateCategoryList;
-    ctx.GetParameterStore().Get( "templateCategoryList", templateCategoryList );
-    TStringList   filteredTemplateCategoryList;
-    for( UInt32 i=0; i<templateCategoryList.size(); i++ )
-    {
-        std::string category = templateCategoryList[i];
-        if( category == "star" )
-        {
-        }
-        else if(CategoryFilter == "all" || CategoryFilter == category)
-        {
-            filteredTemplateCategoryList.push_back( category );
-        }
-    }
-
-
-
-    // Create redshift initial list by spanning redshift acdross the given range, with the given delta
-    TFloat64List redshifts = redshiftRange.SpreadOver( redshiftStep );
-    DebugAssert( redshifts.size() > 0 );
-
-    Float64 overlapThreshold;
-    ctx.GetParameterStore().Get( "chisquarelogsolve.overlapThreshold", overlapThreshold, 1.0);
-    std::string opt_spcComponent;
-    ctx.GetDataStore().GetScopedParam( "chisquarelogsolve.spectrum.component", opt_spcComponent, "raw" );
-    std::string opt_interp;
-    ctx.GetDataStore().GetScopedParam( "chisquarelogsolve.interpolation", opt_interp, "precomputedfinegrid" );
-    std::string opt_extinction;
-    ctx.GetDataStore().GetScopedParam( "chisquarelogsolve.extinction", opt_extinction, "no" );
-    std::string opt_dustFit;
-    ctx.GetDataStore().GetScopedParam( "chisquarelogsolve.dustfit", opt_dustFit, "no" );
-
-    Log.LogInfo( "Process Chisquare using overlapThreshold: %.3f", overlapThreshold);
-    Log.LogInfo( "Process Chisquare using component: %s", opt_spcComponent.c_str());
-    Log.LogInfo( "Process Chisquare using extinction: %s", opt_extinction.c_str());
-    Log.LogInfo( "Process Chisquare using dust-fit: %s", opt_dustFit.c_str());
-    Log.LogInfo( "..." );
-
-    // prepare the unused masks
-    std::vector<CMask> maskList;
-    //retrieve the calibration dir path
-    std::string calibrationDirPath;
-    ctx.GetParameterStore().Get( "calibrationDir", calibrationDirPath );
-    CMethodChisquareLogSolve solve(calibrationDirPath);
-    std::shared_ptr< const CChisquareLogSolveResult> solveResult = solve.Compute( ctx.GetDataStore(), ctx.GetSpectrum(), ctx.GetSpectrumWithoutContinuum(),
-                                                                        ctx.GetTemplateCatalog(), filteredTemplateCategoryList,
-                                                                        spcLambdaRange, redshifts, overlapThreshold, maskList, opt_spcComponent, opt_interp, opt_extinction, opt_dustFit);
 
     if( solveResult ) {
         ctx.GetDataStore().StoreScopedGlobalResult( "redshiftresult", solveResult );
@@ -483,97 +491,6 @@ Bool CProcessFlow::LineMatching2( CProcessFlowContext& ctx )
     return true;
 }
 
-Bool CProcessFlow::LineModelSolve( CProcessFlowContext& ctx )
-{
-    TFloat64Range lambdaRange;
-    TFloat64Range redshiftRange;
-    Float64       redshiftStep;
-
-    std::string CategoryFilter="all";
-    // Remove Star category, and filter the list with regard to input variable CategoryFilter
-    TStringList templateCategoryList;
-    ctx.GetParameterStore().Get( "templateCategoryList", templateCategoryList );
-    TStringList   filteredTemplateCategoryList;
-    for( UInt32 i=0; i<templateCategoryList.size(); i++ )
-    {
-        std::string category = templateCategoryList[i];
-        if( category == "star" )
-        {
-        }
-        else if(CategoryFilter == "all" || CategoryFilter == category)
-        {
-            filteredTemplateCategoryList.push_back( category );
-        }
-    }
-
-    ctx.GetParameterStore().Get( "lambdaRange", lambdaRange );
-    ctx.GetParameterStore().Get( "redshiftRange", redshiftRange );
-    ctx.GetParameterStore().Get( "redshiftStep", redshiftStep );
-
-    TFloat64Range spcLambdaRange;
-    ctx.GetSpectrum().GetSpectralAxis().ClampLambdaRange( lambdaRange, spcLambdaRange );
-
-    Log.LogInfo( "Processing Line Model for spc:%s (LambdaRange: %f-%f:%f)", ctx.GetSpectrum().GetName().c_str(),
-            spcLambdaRange.GetBegin(), spcLambdaRange.GetEnd(), ctx.GetSpectrum().GetResolution());
-
-    // Create redshift initial list by spanning redshift acdross the given range, with the given delta
-    TFloat64List redshifts = redshiftRange.SpreadOver( redshiftStep );
-    DebugAssert( redshifts.size() > 0 );
-
-
-    //retrieve the calibration dir path
-    std::string calibrationDirPath;
-    ctx.GetParameterStore().Get( "calibrationDir", calibrationDirPath );
-    CLineModelSolve Solve(calibrationDirPath);
-    std::shared_ptr<CLineModelSolveResult> solveResult = Solve.Compute( ctx.GetDataStore(),
-                                          ctx.GetSpectrum(),
-                                          ctx.GetSpectrumWithoutContinuum(),
-                                          ctx.GetTemplateCatalog(),
-                                          filteredTemplateCategoryList,
-                                          ctx.GetRayCatalog(),
-                                          spcLambdaRange,
-                                          redshifts );
-
-    //*
-    // todo: call the qualz object as done in zbayes branch from S. Jamal.
-    bool enableQualz = true;
-    if(!solveResult && enableQualz)
-    {
-        Log.LogWarning( "Reliability skipped - no redshift results found");
-        enableQualz = false;
-    }
-    if ( enableQualz && isPdfValid(ctx) )
-    {
-        CClassifierStore classifStore = ctx.GetClassifierStore();
-        if(!classifStore.m_isInitialized)
-        {
-            Log.LogWarning( "Reliability not initialized. Skipped.");
-        }else
-        {
-            Log.LogInfo( "Processing reliability for Line Model method");
-            CQualz solve2;
-            std::shared_ptr<const CQualzResult> solve2Result = solve2.Compute( ctx.GetDataStore(), classifStore, redshiftRange, redshiftStep );
-
-            if(solve2Result)
-            {
-                std::string predLabel="";
-                bool retPredLabel = solve2Result->GetPredictedLabel( ctx.GetDataStore(), predLabel );
-                solveResult->SetReliabilityLabel(predLabel);
-            }
-        }
-    }
-    //*/
-
-
-    //finally save the linemodel results with (optionally) the zqual label
-    if( solveResult ) {
-        ctx.GetDataStore().StoreScopedGlobalResult( "redshiftresult", solveResult );
-    }else{
-        return false;
-    }
-
-    return true;
-}
 
 Bool CProcessFlow::LineModelTplshapeSolve( CProcessFlowContext& ctx, const std::string& CategoryFilter )
 {

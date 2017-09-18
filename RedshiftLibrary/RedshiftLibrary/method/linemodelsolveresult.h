@@ -40,11 +40,9 @@ public:
 
     Bool isPdfValid(const CDataStore& store) const;
 
-    Void SetReliabilityLabel( std::string lbl );
-
 
 private:
-    std::string m_ReliabilityLabel;
+
 
     UInt32 m_bestRedshiftMethod = 0;
 

@@ -27,8 +27,11 @@ public:
     virtual Void SaveLine( const CDataStore& store, std::ostream& stream ) const = 0;
     //virtual Void Load( std::istream& stream ) = 0;
 
+    Void SetReliabilityLabel( std::string lbl );
+
 protected:
 
+    std::string m_ReliabilityLabel;
 };
 
 typedef std::vector< std::shared_ptr<COperatorResult> >           TOperatorResultList;

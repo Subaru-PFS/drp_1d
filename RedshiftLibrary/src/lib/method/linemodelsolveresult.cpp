@@ -292,10 +292,5 @@ Bool CLineModelSolveResult::GetBestRedshiftWithStrongELSnrPrior( const CDataStor
     return true;
 }
 
-Void CLineModelSolveResult::SetReliabilityLabel( std::string lbl )
-{
-    m_ReliabilityLabel = lbl;
-}
-
 
 

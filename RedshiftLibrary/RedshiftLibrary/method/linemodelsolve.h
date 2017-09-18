@@ -4,6 +4,7 @@
 #include <RedshiftLibrary/common/datatypes.h>
 #include <RedshiftLibrary/method/linemodelsolveresult.h>
 #include <RedshiftLibrary/spectrum/template/template.h>
+#include <RedshiftLibrary/operator/linemodel.h>
 
 namespace NSEpic
 {
@@ -35,6 +36,10 @@ public:
 
 private:
 
+    Int32 CombinePDF(CDataStore &store, std::shared_ptr<const CLineModelResult> result, std::string opt_rigidity, std::string opt_combine);
+    Int32 SaveContinuumPDF(CDataStore &store, std::shared_ptr<const CLineModelResult> result);
+
+
     std::string m_opt_linetypefilter;
     std::string m_opt_lineforcefilter;
     std::string m_opt_fittingmethod;
@@ -51,6 +56,8 @@ private:
     std::string m_opt_rules;
     Float64 m_opt_extremacount;
     Float64 m_opt_twosteplargegridstep;
+    std::string m_opt_combinePdf;
+    bool m_opt_enableSaveChisquareTplshapeResults;
 
     std::string m_calibrationPath;
 };

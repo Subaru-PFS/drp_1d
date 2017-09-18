@@ -44,7 +44,7 @@ const std::string CMethodChisquare2Solve::GetDescription()
 }
 
 
-std::shared_ptr<const CChisquare2SolveResult> CMethodChisquare2Solve::Compute(CDataStore& resultStore,
+std::shared_ptr<CChisquare2SolveResult> CMethodChisquare2Solve::Compute(CDataStore& resultStore,
                                                                               const CSpectrum& spc,
                                                                               const CSpectrum& spcWithoutCont,
                                                                               const CTemplateCatalog& tplCatalog,
@@ -204,8 +204,7 @@ Bool CMethodChisquare2Solve::Solve(CDataStore& resultStore,
             resultStore.StoreScopedPerTemplateResult( tpl, scopeStr.c_str(), chisquareResult );
 
             //Save intermediate chisquare results
-            bool enableSaveIntermediateChisquareResults = true;
-            if(enableSaveIntermediateChisquareResults && chisquareResult->ChiSquareIntermediate.size()>0 && chisquareResult->ChiSquareIntermediate.size()==chisquareResult->Redshifts.size())
+            if(m_opt_enableSaveIntermediateChisquareResults && chisquareResult->ChiSquareIntermediate.size()>0 && chisquareResult->ChiSquareIntermediate.size()==chisquareResult->Redshifts.size())
             {
                 Int32 nISM = chisquareResult->ChiSquareIntermediate[0].size();
                 if(chisquareResult->ChiSquareIntermediate[0].size()>0)
