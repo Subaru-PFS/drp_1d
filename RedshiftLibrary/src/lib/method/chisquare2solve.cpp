@@ -34,9 +34,9 @@ const std::string CMethodChisquare2Solve::GetDescription()
 
     desc.append("\tparam: chisquare2solve.spectrum.component = {""raw"", ""nocontinuum"", ""continuum"", ""all""}\n");
     desc.append("\tparam: chisquare2solve.overlapThreshold = <float value>\n");
-    desc.append("\tparam: chisquare.interpolation = {""precomputedfinegrid"", ""lin""}\n");
-    desc.append("\tparam: chisquare.extinction = {""yes"", ""no""}\n");
-    desc.append("\tparam: chisquare.dustfit = {""yes"", ""no""}\n");
+    desc.append("\tparam: chisquare2solve.interpolation = {""precomputedfinegrid"", ""lin""}\n");
+    desc.append("\tparam: chisquare2solve.extinction = {""yes"", ""no""}\n");
+    desc.append("\tparam: chisquare2solve.dustfit = {""yes"", ""no""}\n");
 
 
     return desc;
@@ -98,7 +98,9 @@ std::shared_ptr<const CChisquare2SolveResult> CMethodChisquare2Solve::Compute(CD
         std::shared_ptr< CChisquare2SolveResult>  ChisquareSolveResult = std::shared_ptr< CChisquare2SolveResult>( new CChisquare2SolveResult() );
         ChisquareSolveResult->m_type = _type;
 
-        CombinePDF(resultStore, scopeStr);
+        //std::string opt_combinePdf = "marg";
+        std::string opt_combinePdf = "bestchi2";
+        CombinePDF(resultStore, scopeStr, opt_combinePdf);
 
         return ChisquareSolveResult;
     }
@@ -234,119 +236,86 @@ Bool CMethodChisquare2Solve::Solve(CDataStore& resultStore,
     return true;
 }
 
-Int32 CMethodChisquare2Solve::CombinePDF(CDataStore &store, std::string scopeStr )
+
+Int32 CMethodChisquare2Solve::CombinePDF(CDataStore &store, std::string scopeStr, std::string opt_combine )
 {
+    Log.LogInfo("chisquare2solve: Pdfz computation");
     std::string scope = "chisquare2solve.";
     scope.append(scopeStr.c_str());
 
     TOperatorResultMap meritResults = store.GetPerTemplateResult(scope.c_str());
 
-    auto postmargZResult = std::shared_ptr<CPdfMargZLogResult>(new CPdfMargZLogResult());
-    Bool initPostMarg = false;
-    std::vector<UInt32> nSum;
+    std::shared_ptr<CPdfMargZLogResult> postmargZResult = std::shared_ptr<CPdfMargZLogResult>(new CPdfMargZLogResult());
+    CPdfz pdfz;
+    Float64 cstLog = -1;
 
-    Float64 MaxiLogEvidence = -DBL_MAX;
-    TFloat64List LogEvidences;
-    Float64 sumModifiedEvidences = 0;
+    Int32 retPdfz=-1;
+    std::vector<TFloat64List> priors;
+    std::vector<TFloat64List> chiSquares;
+    std::vector<Float64> redshifts;
     for( TOperatorResultMap::const_iterator it = meritResults.begin(); it != meritResults.end(); it++ )
     {
         auto meritResult = std::dynamic_pointer_cast<const CChisquareResult>( (*it).second );
-
-        //Todo: Check if the status is OK ?
-        //meritResult->Status[i] == COperator::nStatus_OK
-
-        CPdfz pdfz;
-        TFloat64List logProba;
-        Float64 logEvidence;
-        std::vector<Float64> zPrior=pdfz.GetConstantLogZPrior(meritResult->Redshifts.size());
-        Int32 retPdfz = pdfz.Compute(meritResult->ChiSquare, meritResult->Redshifts, meritResult->CstLog, zPrior, logProba, logEvidence);
-        if(retPdfz!=0)
+        Int32 nISM = -1;
+        Int32 nIGM = -1;
+        if(meritResult->ChiSquareIntermediate.size()>0)
         {
-            Log.LogError("chisquare2solve: Pdfz computation failed for tpl %s", (*it).first.c_str());
-        }else{
-            LogEvidences.push_back(logEvidence);
-            if(MaxiLogEvidence<logEvidence){
-                MaxiLogEvidence=logEvidence;
+            nISM = meritResult->ChiSquareIntermediate[0].size();
+            if(meritResult->ChiSquareIntermediate[0].size()>0)
+            {
+                nIGM = meritResult->ChiSquareIntermediate[0][0].size();
+            }
+        }
+        if(cstLog==-1)
+        {
+            cstLog = meritResult->CstLog;
+        }else if ( cstLog != meritResult->CstLog)
+        {
+            Log.LogError("chisquare2solve: Found different cstLog values in results... val-1=%f != val-2=%f");
+        }
+        if(redshifts.size()==0)
+        {
+            redshifts = meritResult->Redshifts;
+        }
+
+        for(Int32 kism=0; kism<nISM; kism++)
+        {
+            for(Int32 kigm=0; kigm<nIGM; kigm++)
+            {
+                TFloat64List _prior;
+                _prior = pdfz.GetConstantLogZPrior(meritResult->Redshifts.size());
+                priors.push_back(_prior);
+
+                //correct chi2 for ampl. marg. if necessary: todo add switch, currently deactivated
+                TFloat64List logLikelihoodCorrected(meritResult->ChiSquareIntermediate.size(), DBL_MAX);
+                for ( UInt32 kz=0; kz<meritResult->Redshifts.size(); kz++)
+                {
+                    logLikelihoodCorrected[kz] = meritResult->ChiSquareIntermediate[kz][kism][kigm];// + resultXXX->ScaleMargCorrectionTplshapes[][]?;
+                }
+                chiSquares.push_back(logLikelihoodCorrected);
             }
         }
     }
-    //Using computational trick to sum the evidences
-    for(Int32 k=0; k<LogEvidences.size(); k++)
+
+    if(opt_combine=="marg" && chiSquares.size()>0)
     {
-        sumModifiedEvidences += exp(LogEvidences[k]-MaxiLogEvidence);
-    }
-    Float64 logSumEvidence = MaxiLogEvidence + log(sumModifiedEvidences);
-
-    for( TOperatorResultMap::const_iterator it = meritResults.begin(); it != meritResults.end(); it++ )
+        retPdfz = pdfz.Marginalize( redshifts, chiSquares, priors, cstLog, postmargZResult);
+    }else if(opt_combine=="bestchi2")
     {
-        auto meritResult = std::dynamic_pointer_cast<const CChisquareResult>( (*it).second );
-
-        //Todo: Check if the status is OK ?
-        //meritResult->Status[i] == COperator::nStatus_OK
-
-        CPdfz pdfz;
-        TFloat64List logProba;
-        Float64 logEvidence;
-        std::vector<Float64> zPrior=pdfz.GetConstantLogZPrior(meritResult->Redshifts.size());
-        Int32 retPdfz = pdfz.Compute(meritResult->ChiSquare, meritResult->Redshifts, meritResult->CstLog, zPrior, logProba, logEvidence);
-        if(retPdfz!=0)
-        {
-            Log.LogError("chisquare2solve: Pdfz computation failed for tpl %s", (*it).first.c_str());
-        }else{
-            if(!initPostMarg)
-            {
-                nSum.resize(meritResult->Redshifts.size());
-                postmargZResult->countTPL = meritResult->Redshifts.size(); // assumed 1 model per z
-                postmargZResult->Redshifts.resize(meritResult->Redshifts.size());
-                postmargZResult->valProbaLog.resize(meritResult->Redshifts.size());
-                for ( UInt32 k=0; k<meritResult->Redshifts.size(); k++)
-                {
-                    postmargZResult->Redshifts[k] = meritResult->Redshifts[k] ;
-                    postmargZResult->valProbaLog[k] = log(0.0);
-                    nSum[k] = 0;
-                }
-                initPostMarg = true;
-            }else
-            {
-                //check if the redshift bins are the same
-                for ( UInt32 k=0; k<meritResult->Redshifts.size(); k++)
-                {
-                    if(postmargZResult->Redshifts[k] != meritResult->Redshifts[k])
-                    {
-                        Log.LogError("chisquare2solve: Pdfz computation (z-bins comparison) failed for tpl %s", (*it).first.c_str());
-                        break;
-                    }
-                }
-            }
-            for ( UInt32 k=0; k<meritResult->Redshifts.size(); k++)
-            {
-                if(meritResult->Status[k]== COperator::nStatus_OK)
-                {
-                    Float64 valProba = exp(postmargZResult->valProbaLog[k]);
-                    Float64 valProbaAdd = exp(logProba[k]+logEvidence-logSumEvidence);
-                    postmargZResult->valProbaLog[k] = log( valProba + valProbaAdd );
-                    nSum[k]++;
-                }
-            }
-        }
-
-
+        retPdfz = pdfz.BestChi2( redshifts, chiSquares, priors, cstLog, postmargZResult);
+    }else{
+        Log.LogError("Chisquare2: Unable to parse pdf combination method option");
     }
 
-    //THIS DOES NOT ALLOW Marginalization with coverage<100% for ALL templates
-    for ( UInt32 k=0; k<postmargZResult->Redshifts.size(); k++)
-    {
-        if(nSum[k]!=meritResults.size())
-        {
-            postmargZResult->valProbaLog[k] = NAN;
-            Log.LogError("chisquare2solve: Pdfz computation failed. For z=%f, nSum=%d", postmargZResult->Redshifts[k], nSum[k]);
-            Log.LogError("chisquare2solve: Pdfz computation failed. For z=%f, meritResults.size()=%d", postmargZResult->Redshifts[k], meritResults.size());
-            Log.LogError("chisquare2solve: Pdfz computation failed. Not all templates have 100 percent coverage for all redshifts!");
-        }
-    }
-    store.StoreGlobalResult( "zPDF/logposterior.logMargP_Z_data", postmargZResult); //need to store this pdf with this exact same name so that zqual can load it. see zqual.cpp/ExtractFeaturesPDF
 
-    return 0;
+    if(retPdfz!=0)
+    {
+        Log.LogError("chisquare2: Pdfz computation failed");
+    }else{
+        store.StoreGlobalResult( "zPDF/logposterior.logMargP_Z_data", postmargZResult); //need to store this pdf with this exact same name so that zqual can load it. see zqual.cpp/ExtractFeaturesPDF
+    }
+
+    return retPdfz;
 }
 
 
