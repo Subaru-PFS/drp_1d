@@ -44,7 +44,7 @@ public:
 private:
 
 
-    UInt32 m_bestRedshiftMethod = 0;
+    UInt32 m_bestRedshiftMethod = 2;
 
 };
 

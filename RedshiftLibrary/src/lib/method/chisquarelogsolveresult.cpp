@@ -4,6 +4,9 @@
 #include <RedshiftLibrary/operator/chisquareresult.h>
 #include <stdio.h>
 #include <float.h>
+#include <RedshiftLibrary/log/log.h>
+#include <RedshiftLibrary/operator/pdfMargZLogResult.h>
+
 
 using namespace NSEpic;
 
@@ -101,9 +104,19 @@ Void CChisquareLogSolveResult::SaveLine( const CDataStore& store, std::ostream& 
 
     Float64 redshift;
     Float64 merit;
-    std::string tplName;
+    std::string tplName="";
 
-    GetBestRedshift( store, redshift, merit, tplName );
+    if(m_bestRedshiftMethod==0)
+    {
+        GetBestRedshift( store, redshift, merit, tplName );
+        Log.LogInfo( "Chisquarelogsolve-result: extracting best redshift from chi2 extrema: z=%f", redshift);
+    }else if(m_bestRedshiftMethod==2)
+    {
+        GetBestRedshiftFromPdf( store, redshift, merit );
+        Log.LogInfo( "Chisquarelogsolve-result: extracting best redshift from PDF: z=%f", redshift);
+    }else{
+        Log.LogError( "Chisquarelogsolve-result: can't parse best redshift estimation method");
+    }
 
     stream  << store.GetSpectrumName() << "\t"
             << store.GetProcessingID() << "\t"
@@ -165,4 +178,42 @@ Bool CChisquareLogSolveResult::GetBestRedshift( const CDataStore& store, Float64
 }
 
 
+/**
+ * \brief Searches the best_z = argmax(pdf)
+ * output: redshift = argmax(pdf)
+ * output: merit = chi2(redshift)
+ *
+ **/
+Bool CChisquareLogSolveResult::GetBestRedshiftFromPdf( const CDataStore& store, Float64& redshift, Float64& merit ) const
+{
+    std::string scope_res = "zPDF/logposterior.logMargP_Z_data";
+    auto results_pdf =  store.GetGlobalResult( scope_res.c_str() );
+    std::shared_ptr<const CPdfMargZLogResult> logzpdf1d = std::dynamic_pointer_cast<const CPdfMargZLogResult>( results_pdf.lock() );
+
+    if(!logzpdf1d)
+    {
+        Log.LogError( "GetBestRedshiftFromPdf: no pdf results retrieved from scope: %s", scope_res.c_str());
+        return false;
+    }
+
+
+    Float64 tmpProbaLog = -DBL_MAX;
+    Float64 tmpRedshift = 0.0;
+
+    for( Int32 i=0; i<logzpdf1d->Redshifts.size(); i++ )
+    {
+
+        Float64 probaLog = logzpdf1d->valProbaLog[i];
+        if(probaLog>tmpProbaLog)
+        {
+            tmpProbaLog = probaLog;
+            tmpRedshift = logzpdf1d->Redshifts[i];
+        }
+    }
+
+
+    redshift = tmpRedshift;
+    merit = tmpProbaLog;
+    return true;
+}
 

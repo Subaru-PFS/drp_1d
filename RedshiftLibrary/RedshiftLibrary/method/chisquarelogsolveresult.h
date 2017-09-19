@@ -35,9 +35,11 @@ public:
     Void SaveLine( const CDataStore& store, std::ostream& stream ) const;
     Bool GetBestRedshift( const CDataStore& store, Float64& redshift, Float64& merit, std::string& tplName ) const;
     Bool GetBestRedshiftPerTemplateString( const CDataStore& store, std::string& output ) const;
+    Bool GetBestRedshiftFromPdf(const CDataStore& store, Float64& redshift, Float64& merit) const;
 
     Int32 m_type;
 
+    Int32 m_bestRedshiftMethod = 2;
 };
 
 
