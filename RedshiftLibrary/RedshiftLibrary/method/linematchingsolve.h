@@ -26,7 +26,7 @@ public:
 
     const std::string GetDescription();
 
-    std::shared_ptr<const CLineMatchingSolveResult> Compute(CDataStore& resultStore, const CSpectrum& spc,
+    std::shared_ptr<CLineMatchingSolveResult> Compute(CDataStore& resultStore, const CSpectrum& spc,
                                         const TFloat64Range& lambdaRange, const TFloat64Range& redshiftsRange, Float64 redshiftStep, const CRayCatalog &restRayCatalog);
 
 

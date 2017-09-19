@@ -57,6 +57,8 @@ private:
     Float64 m_opt_extremacount;
     Float64 m_opt_twosteplargegridstep;
     std::string m_opt_combinePdf;
+    std::string m_opt_pdfcombination;
+    std::string m_opt_saveintermediateresults;
     bool m_opt_enableSaveChisquareTplshapeResults;
 
     std::string m_calibrationPath;

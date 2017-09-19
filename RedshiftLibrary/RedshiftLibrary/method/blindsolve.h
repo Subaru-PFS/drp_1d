@@ -25,7 +25,7 @@ public:
 
     const std::string GetDescription();
 
-    std::shared_ptr<const CBlindSolveResult> Compute(   CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
+    std::shared_ptr<CBlindSolveResult> Compute(   CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
                                         const CTemplateCatalog& tplCatalog, const TStringList& tplCategoryList,
                                         const TFloat64Range& lambdaRange, const TFloat64Range& redshiftsRange, Float64 redshiftStep,
                                         Int32 correlationExtremumCount=-1, Float64 overlapThreshold=-1.0  );

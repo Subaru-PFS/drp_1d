@@ -43,6 +43,9 @@ private:
 
     COperatorChiSquare2* m_chiSquareOperator;
 
+
+    std::string m_opt_pdfcombination;
+    std::string m_opt_saveintermediateresults;
     Bool m_opt_enableSaveIntermediateChisquareResults=false;
 
 };

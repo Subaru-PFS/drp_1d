@@ -70,7 +70,7 @@ COperatorLineMatching2Solve::~COperatorLineMatching2Solve()
  * If the dynamic option is true, the line detection is run several times, with the parameters being varied withing physically meaningful values.
  * When either a threshold number of peaks is detected, or all parameters are exhaustively searched, the algorithm continues as normal.
  */
-std::shared_ptr<const CLineMatching2SolveResult> COperatorLineMatching2Solve::Compute( CDataStore& resultStore, 
+std::shared_ptr<CLineMatching2SolveResult> COperatorLineMatching2Solve::Compute( CDataStore& resultStore,
 										       const CSpectrum& spc, 
 										       const TFloat64Range& lambdaRange, 
 										       const TFloat64Range& redshiftsRange, 
@@ -235,15 +235,15 @@ std::shared_ptr<const CLineMatching2SolveResult> COperatorLineMatching2Solve::Co
                   if( bestRedshift != -1.0 )
                   {
                       Log.LogDebug ( "return std::shared_ptr<const CLineMatching2SolveResult>( new CLineMatching2SolveResult() );" );
-                      return std::shared_ptr<const CLineMatching2SolveResult>( new CLineMatching2SolveResult() );
+                      return std::shared_ptr<CLineMatching2SolveResult>( new CLineMatching2SolveResult() );
                   }else if(! m_dynamicLinematching)
                   {
-                      return std::shared_ptr<const CLineMatching2SolveResult>( new CLineMatching2SolveResult() );
+                      return std::shared_ptr<CLineMatching2SolveResult>( new CLineMatching2SolveResult() );
                   }
               } // rayMatchingResult
               else if(! m_dynamicLinematching)
               {
-                  return std::shared_ptr<const CLineMatching2SolveResult>( new CLineMatching2SolveResult() );
+                  return std::shared_ptr<CLineMatching2SolveResult>( new CLineMatching2SolveResult() );
               }
           } // minimumNumberOfPeaks
       } // lineDetectionResult
@@ -316,7 +316,7 @@ std::shared_ptr<const CLineMatching2SolveResult> COperatorLineMatching2Solve::Co
   {
       Log.LogWarning( "Warning. Stopped the linematching dynamic cut loop..." );
   }
-  return std::shared_ptr<const CLineMatching2SolveResult>( new CLineMatching2SolveResult() );
+  return std::shared_ptr<CLineMatching2SolveResult>( new CLineMatching2SolveResult() );
 }
 
 const std::string COperatorLineMatching2Solve::GetDescription()

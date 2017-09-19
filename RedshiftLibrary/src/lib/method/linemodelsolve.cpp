@@ -64,6 +64,8 @@ const std::string CLineModelSolve::GetDescription()
     desc.append("\tparam: linemodel.velocityfitmin = <float value>\n");
     desc.append("\tparam: linemodel.velocityfitmax = <float value>\n");
     desc.append("\tparam: linemodel.fastfitlargegridstep = <float value>, deactivated if negative or zero\n");
+    desc.append("\tparam: linemodel.pdfcombination = {""marg"", ""bestchi2""}\n");
+    desc.append("\tparam: linemodel.saveintermediateresults = {""yes"", ""no""}\n");
 
 
 
@@ -94,6 +96,8 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
     dataStore.GetScopedParam( "linemodel.continuumreestimation", m_opt_continuumreest, "no" );
     dataStore.GetScopedParam( "linemodel.rules", m_opt_rules, "all" );
     dataStore.GetScopedParam( "linemodel.extremacount", m_opt_extremacount, 10.0 );
+    dataStore.GetScopedParam( "linemodel.pdfcombination", m_opt_pdfcombination, "marg");
+    dataStore.GetScopedParam( "linemodel.saveintermediateresults", m_opt_saveintermediateresults, "no");
 
     //Auto-correct fitting method
     //std::string forcefittingmethod = "ones";
@@ -146,13 +150,14 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
     Log.LogInfo( "    -extremacount: %.3f", m_opt_extremacount);
     Log.LogInfo( "    -fastfitlargegridstep: %.6f", m_opt_twosteplargegridstep);
 
+    Log.LogInfo( "    -pdf-combination: %s", m_opt_pdfcombination.c_str()); // "marg";    // "bestchi2";    // "bestproba";
 
-    m_opt_combinePdf = "marg";
-    //std::string m_opt_combinePdf = "bestchi2";
-    //std::string m_opt_combinePdf = "bestproba";
-    Log.LogInfo( "    -pdf-combination: %s", m_opt_combinePdf.c_str());
-
-    m_opt_enableSaveChisquareTplshapeResults = false;
+    if(m_opt_saveintermediateresults=="yes")
+    {
+        m_opt_enableSaveChisquareTplshapeResults = true;
+    }else{
+        m_opt_enableSaveChisquareTplshapeResults = false;
+    }
     Log.LogInfo( "    -save-intermediate-chisquaretplshaperesults: %d", (int)m_opt_enableSaveChisquareTplshapeResults);
 
 

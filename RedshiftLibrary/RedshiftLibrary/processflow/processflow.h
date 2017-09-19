@@ -32,18 +32,6 @@ public:
 
 private:
 
-    Bool Blindsolve(CProcessFlowContext& ctx , const std::string& CategoryFilter = "all");
-    Bool Fullsolve(CProcessFlowContext& ctx ,  const std::string& CategoryFilter = "all");
-
-    Bool Correlation(CProcessFlowContext& ctx , const std::string& CategoryFilter = "all");
-    Bool LineMatching( CProcessFlowContext& ctx );
-    Bool LineMatching2( CProcessFlowContext& ctx );
-    Bool LineModelTplshapeSolve(CProcessFlowContext& ctx , const std::string &CategoryFilter = "all");
-    Bool DecisionalTree7( CProcessFlowContext& ctx );
-    Bool DecisionalTreeA( CProcessFlowContext& ctx );
-    Bool DecisionalTreeB( CProcessFlowContext& ctx );
-    Bool DecisionalTreeC( CProcessFlowContext& ctx );
-
     Bool isPdfValid(CProcessFlowContext &ctx) const;
 };
 

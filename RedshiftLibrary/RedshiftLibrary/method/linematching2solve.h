@@ -25,7 +25,7 @@ public:
     COperatorLineMatching2Solve();
     ~COperatorLineMatching2Solve();
 
-    std::shared_ptr<const CLineMatching2SolveResult> Compute( CDataStore& resultStore, 
+    std::shared_ptr<CLineMatching2SolveResult> Compute( CDataStore& resultStore,
 							      const CSpectrum& spc, 
 							      const TFloat64Range& lambdaRange, 
 							      const TFloat64Range& redshiftsRange, 

@@ -37,6 +37,8 @@ const std::string CMethodChisquare2Solve::GetDescription()
     desc.append("\tparam: chisquare2solve.interpolation = {""precomputedfinegrid"", ""lin""}\n");
     desc.append("\tparam: chisquare2solve.extinction = {""yes"", ""no""}\n");
     desc.append("\tparam: chisquare2solve.dustfit = {""yes"", ""no""}\n");
+    desc.append("\tparam: chisquare2solve.pdfcombination = {""marg"", ""bestchi2""}\n");
+    desc.append("\tparam: chisquare2solve.saveintermediateresults = {""yes"", ""no""}\n");
 
 
     return desc;
@@ -77,6 +79,25 @@ std::shared_ptr<CChisquare2SolveResult> CMethodChisquare2Solve::Compute(CDataSto
         _type = CChisquare2SolveResult::nType_all;
     }
 
+
+    resultStore.GetScopedParam( "pdfcombination", m_opt_pdfcombination, "marg");
+    resultStore.GetScopedParam( "saveintermediateresults", m_opt_saveintermediateresults, "no");
+    if(m_opt_saveintermediateresults=="yes")
+    {
+        m_opt_enableSaveIntermediateChisquareResults = true;
+    }else{
+        m_opt_enableSaveIntermediateChisquareResults = false;
+    }
+
+    Log.LogInfo( "Method parameters:");
+    Log.LogInfo( "    -overlapThreshold: %.3f", overlapThreshold);
+    Log.LogInfo( "    -component: %s", spcComponent.c_str());
+    Log.LogInfo( "    -IGM extinction: %s", opt_extinction.c_str());
+    Log.LogInfo( "    -ISM dust-fit: %s", opt_dustFit.c_str());
+    Log.LogInfo( "    -pdfcombination: %s", m_opt_pdfcombination.c_str());
+    Log.LogInfo( "    -saveintermediateresults: %d", (int)m_opt_enableSaveIntermediateChisquareResults);
+    Log.LogInfo( "");
+
     for( UInt32 i=0; i<tplCategoryList.size(); i++ )
     {
         std::string category = tplCategoryList[i];
@@ -98,9 +119,7 @@ std::shared_ptr<CChisquare2SolveResult> CMethodChisquare2Solve::Compute(CDataSto
         std::shared_ptr< CChisquare2SolveResult>  ChisquareSolveResult = std::shared_ptr< CChisquare2SolveResult>( new CChisquare2SolveResult() );
         ChisquareSolveResult->m_type = _type;
 
-        //std::string opt_combinePdf = "marg";
-        std::string opt_combinePdf = "bestchi2";
-        CombinePDF(resultStore, scopeStr, opt_combinePdf);
+        CombinePDF(resultStore, scopeStr, m_opt_pdfcombination);
 
         return ChisquareSolveResult;
     }

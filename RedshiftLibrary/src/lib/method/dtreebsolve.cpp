@@ -26,7 +26,6 @@
 #include <RedshiftLibrary/operator/raymatchingresult.h>
 
 #include <RedshiftLibrary/method/chisquare2solve.h>
-#include <RedshiftLibrary/method/fullsolve.h>
 #include <RedshiftLibrary/method/correlationsolve.h>
 #include <RedshiftLibrary/method/linematchingsolve.h>
 
@@ -78,7 +77,7 @@ const std::string COperatorDTreeBSolve::GetDescription()
 
 }
 
-std::shared_ptr<const CDTreeBSolveResult> COperatorDTreeBSolve::Compute( CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
+std::shared_ptr<CDTreeBSolveResult> COperatorDTreeBSolve::Compute( CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
                                                         const CTemplateCatalog& tplCatalog, const TStringList &tplCategoryList, const CRayCatalog &restRayCatalog,
                                                         const TFloat64Range& lambdaRange, const TFloat64List &redshifts)
 {
@@ -93,7 +92,7 @@ std::shared_ptr<const CDTreeBSolveResult> COperatorDTreeBSolve::Compute( CDataSt
     //storeResult = true;
     if( storeResult )
     {
-        return std::shared_ptr<const CDTreeBSolveResult>( new CDTreeBSolveResult() );
+        return std::shared_ptr<CDTreeBSolveResult>( new CDTreeBSolveResult() );
     }
 
     return NULL;

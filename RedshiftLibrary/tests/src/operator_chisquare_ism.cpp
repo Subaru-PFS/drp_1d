@@ -79,7 +79,8 @@ void UtilChisquareTestFit( const char* spectraPath,
     else
     {
         bool enableRebinLog = true;
-        COperatorChiSquareLogLambda chi(calibrationPath, enableRebinLog);
+        COperatorChiSquareLogLambda chi(calibrationPath);
+        chi.enableSpcLogRebin(enableRebinLog);
         r = std::dynamic_pointer_cast<CChisquareResult>( chi.Compute( s, t, lambdaRange, redshifts, 1.0, additional_spcMasks, "precomputedfinegrid", enable_IGM, enable_ISM  ) );
         BOOST_CHECK( r != NULL );
         BOOST_CHECK( r->Status[0] == COperatorChiSquareLogLambda::nStatus_OK );

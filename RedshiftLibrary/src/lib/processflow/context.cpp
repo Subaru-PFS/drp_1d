@@ -54,9 +54,18 @@ bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath,
     m_ClassifierStore=zqualStore;
 
     m_Spectrum = std::shared_ptr<CSpectrum>( new CSpectrum() );
-    m_Spectrum->SetName(bfs::path( spectrumPath ).stem().string().c_str() );
+    std::string spcName="";
+    if(spectrumPath!=NULL)
+    {
+        spcName = bfs::path( spectrumPath ).stem().string() ;
+    }
+    std::string noiseName="";
+    if(noisePath!=NULL)
+    {
+        noiseName = bfs::path( noisePath ).stem().string() ;
+    }
+    m_Spectrum->SetName(spcName.c_str());
     m_Spectrum->SetFullPath(bfs::path( spectrumPath ).string().c_str() );
-    //Log.LogInfo("Setting spectrum name: (%s)", bfs::path( spectrumPath ).stem().string().c_str() );
 
     CSpectrumIOGenericReader reader;
     Bool rValue = reader.Read( spectrumPath, *m_Spectrum );
@@ -65,6 +74,8 @@ bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath,
         Log.LogError("Failed to read input spectrum file: (%s)", spectrumPath );
         m_Spectrum = NULL;
         return false;
+    }else{
+        Log.LogInfo("Successfully loaded input spectrum file: (%s)", spcName.c_str() );
     }
 
     // add noise if any or add flat noise
@@ -91,6 +102,8 @@ bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath,
         {
             Log.LogError( "Failed to apply noise from spectrum: %s", noisePath );
             return false;
+        }else{
+            Log.LogInfo("Successfully loaded input noise file:    (%s)", noiseName.c_str() );
         }
     }
 

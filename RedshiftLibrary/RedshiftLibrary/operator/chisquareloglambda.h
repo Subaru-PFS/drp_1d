@@ -22,7 +22,7 @@ class COperatorChiSquareLogLambda : public COperator
 
 public:
 
-    COperatorChiSquareLogLambda( std::string calibrationPath, bool opt_spcrebin );
+    COperatorChiSquareLogLambda(std::string calibrationPath);
     ~COperatorChiSquareLogLambda();
 
     std::shared_ptr<COperatorResult> Compute( const CSpectrum& spectrum,
@@ -38,6 +38,7 @@ public:
     const Float64*  getDustCoeff(Float64 dustCoeff, Float64 maxLambda);
     const Float64*  getMeiksinCoeff(Int32 meiksinIdx, Float64 redshift, Float64 maxLambda);
 
+    void enableSpcLogRebin(Bool enable);
 
 private:
 

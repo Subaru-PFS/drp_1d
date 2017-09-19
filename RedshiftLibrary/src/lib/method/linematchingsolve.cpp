@@ -83,7 +83,7 @@ const std::string COperatorLineMatchingSolve::GetDescription()
 
 }
 
-std::shared_ptr<const CLineMatchingSolveResult> COperatorLineMatchingSolve::Compute(  CDataStore& dataStore, const CSpectrum& spc,
+std::shared_ptr<CLineMatchingSolveResult> COperatorLineMatchingSolve::Compute(  CDataStore& dataStore, const CSpectrum& spc,
                                                                       const TFloat64Range& lambdaRange, const TFloat64Range& redshiftsRange, Float64 redshiftStep, const CRayCatalog& restRayCatalog )
 {
     Bool storeResult = false;
@@ -147,7 +147,7 @@ std::shared_ptr<const CLineMatchingSolveResult> COperatorLineMatchingSolve::Comp
     storeResult = true; //always save a matching result
     if( storeResult )
     {
-        return std::shared_ptr<const CLineMatchingSolveResult>( new CLineMatchingSolveResult() );
+        return std::shared_ptr<CLineMatchingSolveResult>( new CLineMatchingSolveResult() );
     }
 
     return NULL;

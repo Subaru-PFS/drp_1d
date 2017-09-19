@@ -34,10 +34,9 @@ namespace bfs = boost::filesystem;
 using namespace NSEpic;
 using namespace std;
 
-COperatorChiSquareLogLambda::COperatorChiSquareLogLambda(std::string calibrationPath , bool opt_spcrebin)
+COperatorChiSquareLogLambda::COperatorChiSquareLogLambda(std::string calibrationPath)
 {   
-    m_opt_spcrebin = opt_spcrebin;
-    Log.LogInfo("ChisquareLog, Contructor: Spectrum REBIN-LOG enabled=%d", m_opt_spcrebin);
+    m_opt_spcrebin = true;
 
     //ISM
     m_ismCorrectionCalzetti = new CSpectrumFluxCorrectionCalzetti();
@@ -1921,4 +1920,10 @@ const Float64*  COperatorChiSquareLogLambda::getDustCoeff(Float64 dustCoeff, Flo
 const Float64*  COperatorChiSquareLogLambda::getMeiksinCoeff(Int32 meiksinIdx, Float64 redshift, Float64 maxLambda)
 {
     return m_igmCorrectionMeiksin->getMeiksinCoeff(meiksinIdx, redshift, maxLambda);
+}
+
+void COperatorChiSquareLogLambda::enableSpcLogRebin(Bool enable)
+{
+    m_opt_spcrebin = enable;
+    Log.LogInfo("ChisquareLog, Spectrum REBIN-LOG enabled=%d", m_opt_spcrebin);
 }

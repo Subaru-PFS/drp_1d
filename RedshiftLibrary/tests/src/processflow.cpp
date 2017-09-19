@@ -27,8 +27,9 @@ BOOST_AUTO_TEST_CASE( ProcessShifted1 )
     params->Set( "method", "blindsolve");
 
     std::string procID = "lbgabs_1K_2z3_20J22.5__EZ_fits-W-F_0";
-    Bool retVal = ctx.Init( "../RedshiftLibrary/tests/src/data/ProcessFlowTestCase/lbgabs_1K_2z3_20J22.5__EZ_fits-W-F_0.fits", NULL, procID, "../RedshiftLibrary/tests/src/data/ProcessFlowTestCase/template_shifted1/", NULL, params, NULL );
+    Bool retVal = ctx.Init( "../RedshiftLibrary/tests/src/data/ProcessFlowTestCase/lbgabs_1K_2z3_20J22.5__EZ_fits-W-F_0.fits", "../RedshiftLibrary/tests/src/data/ProcessFlowTestCase/lbgabs_1K_2z3_20J22.5__EZ_fits-W-ErrF_0.fits", procID, "../RedshiftLibrary/tests/src/data/ProcessFlowTestCase/template_shifted1/", NULL, params, NULL );
     BOOST_CHECK( retVal == true );
+
 
     retVal = processFlow.Process( ctx );
     BOOST_CHECK( retVal == true );

@@ -268,20 +268,17 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
         Log.LogInfo( "linemodel: precomputing-fitContinuum_dustfit = %d", opt_dustFit );
         Log.LogInfo( "linemodel: precomputing-fitContinuum_igm = %d", opt_extinction );
 
-        COperator* chiSquareOperator;
+        std::shared_ptr<COperator> chiSquareOperator;
         if(opt_chi2operator=="chisquarelog")
         {
-            //*
             //COperatorChiSquareLogLambda* chiSquareOperator;
             bool enableLogRebin = true;
-            chiSquareOperator = new COperatorChiSquareLogLambda(opt_calibrationPath, enableLogRebin);
-            //*/
+            chiSquareOperator = std::shared_ptr<COperatorChiSquareLogLambda>( new COperatorChiSquareLogLambda(opt_calibrationPath));
+            std::shared_ptr<COperatorChiSquareLogLambda> chiSquareLogOperator = std::dynamic_pointer_cast<COperatorChiSquareLogLambda>( chiSquareOperator );
+            chiSquareLogOperator->enableSpcLogRebin(enableLogRebin);
         }
         else if(opt_chi2operator=="chisquare2"){
-            //*
-            //COperatorChiSquare2* chiSquareOperator;
-            chiSquareOperator = new COperatorChiSquare2(opt_calibrationPath);
-            //*/
+            chiSquareOperator = std::shared_ptr<COperatorChiSquare2>( new COperatorChiSquare2(opt_calibrationPath));
         }else{
             Log.LogError( "linemodel: unable to parce chisquare continuum fit operator");
         }
@@ -309,7 +306,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
                 }
             }
         }
-        delete chiSquareOperator;
+        chiSquareOperator.reset();
 
         //fill the results with Best Values
         Int32 nTplFitResults = redshiftsTplFit.size();

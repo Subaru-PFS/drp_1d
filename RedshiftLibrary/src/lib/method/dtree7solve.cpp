@@ -24,7 +24,6 @@
 #include <RedshiftLibrary/operator/raymatchingresult.h>
 
 #include <RedshiftLibrary/method/chisquaresolve.h>
-#include <RedshiftLibrary/method/fullsolve.h>
 #include <RedshiftLibrary/method/correlationsolve.h>
 #include <RedshiftLibrary/method/linematchingsolve.h>
 #include <RedshiftLibrary/method/dtree7solve.h>

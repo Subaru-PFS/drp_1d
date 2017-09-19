@@ -18,8 +18,7 @@ using namespace std;
 
 CMethodChisquareLogSolve::CMethodChisquareLogSolve( std::string calibrationPath )
 {
-    bool enableLogRebin = true;
-    m_chiSquareOperator = new COperatorChiSquareLogLambda( calibrationPath, enableLogRebin );
+    m_chiSquareOperator = new COperatorChiSquareLogLambda( calibrationPath );
 }
 
 CMethodChisquareLogSolve::~CMethodChisquareLogSolve()
@@ -36,9 +35,12 @@ const std::string CMethodChisquareLogSolve::GetDescription()
 
     desc.append("\tparam: chisquarelogsolve.spectrum.component = {""raw"", ""nocontinuum"", ""continuum"", ""all""}\n");
     desc.append("\tparam: chisquarelogsolve.overlapThreshold = <float value>\n");
-    desc.append("\tparam: chisquare.interpolation = {""precomputedfinegrid"", ""lin""}\n");
-    desc.append("\tparam: chisquare.extinction = {""yes"", ""no""}\n");
-    desc.append("\tparam: chisquare.dustfit = {""yes"", ""no""}\n");
+    desc.append("\tparam: chisquarelogsolve.interpolation = {""precomputedfinegrid"", ""lin""}\n");
+    desc.append("\tparam: chisquarelogsolve.extinction = {""yes"", ""no""}\n");
+    desc.append("\tparam: chisquarelogsolve.dustfit = {""yes"", ""no""}\n");
+    desc.append("\tparam: chisquarelogsolve.enablespclogrebin = {""yes"", ""no""}\n");
+    desc.append("\tparam: chisquarelogsolve.pdfcombination = {""marg"", ""bestchi2""}\n");
+    desc.append("\tparam: chisquarelogsolve.saveintermediateresults = {""yes"", ""no""}\n");
 
 
     return desc;
@@ -79,6 +81,32 @@ std::shared_ptr<CChisquareLogSolveResult> CMethodChisquareLogSolve::Compute(CDat
         _type = CChisquareLogSolveResult::nType_all;
     }
 
+    resultStore.GetScopedParam( "pdfcombination", m_opt_pdfcombination, "marg");
+    resultStore.GetScopedParam( "saveintermediateresults", m_opt_saveintermediateresults, "no");
+    if(m_opt_saveintermediateresults=="yes")
+    {
+        m_opt_enableSaveIntermediateChisquareResults = true;
+    }else{
+        m_opt_enableSaveIntermediateChisquareResults = false;
+    }
+    resultStore.GetScopedParam( "enablespclogrebin", m_opt_spclogrebin, "yes");
+
+    Log.LogInfo( "Method parameters:");
+    Log.LogInfo( "    -overlapThreshold: %.3f", overlapThreshold);
+    Log.LogInfo( "    -component: %s", spcComponent.c_str());
+    Log.LogInfo( "    -IGM extinction: %s", opt_extinction.c_str());
+    Log.LogInfo( "    -ISM dust-fit: %s", opt_dustFit.c_str());
+    Log.LogInfo( "    -pdfcombination: %s", m_opt_pdfcombination.c_str());
+    Log.LogInfo( "    -saveintermediateresults: %d", (int)m_opt_enableSaveIntermediateChisquareResults);
+    Log.LogInfo( "");
+
+    if(m_opt_spclogrebin=="yes")
+    {
+        m_chiSquareOperator->enableSpcLogRebin(true);
+    }else{
+        m_chiSquareOperator->enableSpcLogRebin(false);
+    }
+
     for( UInt32 i=0; i<tplCategoryList.size(); i++ )
     {
         std::string category = tplCategoryList[i];
@@ -100,9 +128,7 @@ std::shared_ptr<CChisquareLogSolveResult> CMethodChisquareLogSolve::Compute(CDat
         std::shared_ptr< CChisquareLogSolveResult>  ChisquareSolveResult = std::shared_ptr< CChisquareLogSolveResult>( new CChisquareLogSolveResult() );
         ChisquareSolveResult->m_type = _type;
 
-        //std::string opt_combinePdf = "marg";
-        std::string opt_combinePdf = "bestchi2";
-        CombinePDF(resultStore, scopeStr, opt_combinePdf);
+        CombinePDF(resultStore, scopeStr, m_opt_pdfcombination);
 
         return ChisquareSolveResult;
     }

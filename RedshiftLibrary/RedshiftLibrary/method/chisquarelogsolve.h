@@ -40,7 +40,11 @@ private:
                                    const TFloat64Range& lambdaRange, const TFloat64List& redshifts, Float64 overlapThreshold , std::vector<CMask> maskList, Int32 spctype=CChisquareLogSolveResult::nType_raw, std::string opt_interp="lin", std::string opt_extinction="no", std::string opt_dustFitting="no");
     Int32 CombinePDF(CDataStore& store, std::string scopeStr, std::string opt_combine);
 
+
+    std::string m_opt_pdfcombination;
+    std::string m_opt_saveintermediateresults;
     Bool m_opt_enableSaveIntermediateChisquareResults=false;
+    std::string m_opt_spclogrebin;
 
     COperatorChiSquareLogLambda* m_chiSquareOperator;
 

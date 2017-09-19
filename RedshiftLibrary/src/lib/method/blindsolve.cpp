@@ -35,7 +35,7 @@ const std::string COperatorBlindSolve::GetDescription()
 
 }
 
-std::shared_ptr<const CBlindSolveResult> COperatorBlindSolve::Compute(  CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
+std::shared_ptr<CBlindSolveResult> COperatorBlindSolve::Compute(  CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
                                                         const CTemplateCatalog& tplCatalog, const TStringList& tplCategoryList,
                                                         const TFloat64Range& lambdaRange, const TFloat64Range& redshiftsRange, Float64 redshiftStep,
                                                         Int32 correlationExtremumCount, Float64 overlapThreshold )
@@ -71,7 +71,7 @@ std::shared_ptr<const CBlindSolveResult> COperatorBlindSolve::Compute(  CDataSto
 
     if( storeResult )
     {
-        return  std::shared_ptr<const CBlindSolveResult>( new CBlindSolveResult() );
+        return  std::shared_ptr<CBlindSolveResult>( new CBlindSolveResult() );
     }
 
     return NULL;
