@@ -52,7 +52,13 @@ Int32 CPdfz::Compute(TFloat64List merits, TFloat64List redshifts, Float64 cstLog
 
 
     //check if there is more than 2 redshifts values
-    if(redshifts.size()<=2)
+    if(redshifts.size()==1) //consider this as a success
+    {
+        logPdf.resize(redshifts.size());
+        logPdf[0] = 1.0;
+        logEvidence = 1.0;
+        return 0;
+    }else if(redshifts.size()<1)
     {
         return 2;
     }
@@ -224,7 +230,7 @@ Int32 CPdfz::Marginalize(TFloat64List redshifts, std::vector<TFloat64List> merit
         Log.LogError("Pdfz: Pdfz marginalize problem. merit.size (%d) != prior.size (%d)", meritResults.size(), zPriors.size());
         return -9;
     }
-    if(meritResults.size()<1 || zPriors.size()<1 || redshifts.size()<2)
+    if(meritResults.size()<1 || zPriors.size()<1 || redshifts.size()<1)
     {
         Log.LogError("Pdfz: Pdfz marginalize problem. merit.size (%d), prior.size (%d), or redshifts.size (%d) is zero !", meritResults.size(), zPriors.size(), redshifts.size());
         return -99;
@@ -367,7 +373,7 @@ Int32 CPdfz::BestProba(TFloat64List redshifts, std::vector<TFloat64List> meritRe
         Log.LogError("Pdfz: Pdfz-bestproba problem. merit.size (%d) != prior.size (%d)", meritResults.size(), zPriors.size());
         return -9;
     }
-    if(meritResults.size()<1 || zPriors.size()<1 || redshifts.size()<2)
+    if(meritResults.size()<1 || zPriors.size()<1 || redshifts.size()<1)
     {
         Log.LogError("Pdfz: Pdfz-bestproba problem. merit.size (%d), prior.size (%d), or redshifts.size (%d) is zero !", meritResults.size(), zPriors.size(), redshifts.size());
         return -99;
@@ -499,7 +505,7 @@ Int32 CPdfz::BestChi2(TFloat64List redshifts, std::vector<TFloat64List> meritRes
         Log.LogError("Pdfz: Pdfz-bestchi2 problem. merit.size (%d) != prior.size (%d)", meritResults.size(), zPriors.size());
         return -9;
     }
-    if(meritResults.size()<1 || zPriors.size()<1 || redshifts.size()<2)
+    if(meritResults.size()<1 || zPriors.size()<1 || redshifts.size()<1)
     {
         Log.LogError("Pdfz: Pdfz-bestchi2 problem. merit.size (%d), prior.size (%d), or redshifts.size (%d) is zero !", meritResults.size(), zPriors.size(), redshifts.size());
         return -99;
