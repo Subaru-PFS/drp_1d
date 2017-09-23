@@ -31,7 +31,7 @@ public:
 
 protected:
 
-    std::string m_ReliabilityLabel;
+    std::string m_ReliabilityLabel="-1";
 };
 
 typedef std::vector< std::shared_ptr<COperatorResult> >           TOperatorResultList;

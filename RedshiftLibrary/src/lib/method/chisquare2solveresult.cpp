@@ -25,15 +25,18 @@ Void CChisquare2SolveResult::Save( const CDataStore& store, std::ostream& stream
     Float64 redshift;
     Float64 merit;
     std::string tplName;
+    Float64 dustCoeff;
+    Int32 meiksinIdx;
 
-    GetBestRedshift( store, redshift, merit, tplName );
+    GetBestRedshift( store, redshift, merit, tplName, dustCoeff, meiksinIdx );
 
-    stream <<  "#Redshifts\tMerit\tTemplate"<< std::endl;
+    stream <<  "#Redshifts\tMerit\tTemplate\tdustcoeff\tmeiksinidx"<< std::endl;
 
     stream  << redshift << "\t"
                 << merit << "\t"
-                << tplName << std::endl;
-
+                << tplName << "\t"
+                << std::setprecision(4) << dustCoeff << "\t"
+                << meiksinIdx << std::endl;
 
     stream << std::endl;
     stream << std::endl;
@@ -104,11 +107,15 @@ Void CChisquare2SolveResult::SaveLine( const CDataStore& store, std::ostream& st
 
     Float64 redshift;
     Float64 merit;
-    std::string tplName="";
+    std::string tplName="-1";
+
+    //unused
+    Float64 dustCoeff;
+    Int32 meiksinIdx;
 
     if(m_bestRedshiftMethod==0)
     {
-        GetBestRedshift( store, redshift, merit, tplName );
+        GetBestRedshift( store, redshift, merit, tplName, dustCoeff, meiksinIdx );
         Log.LogInfo( "Chisquare2solve-result: extracting best redshift from chi2 extrema: z=%f", redshift);
     }else if(m_bestRedshiftMethod==2)
     {
@@ -130,7 +137,7 @@ Void CChisquare2SolveResult::SaveLine( const CDataStore& store, std::ostream& st
 
 }
 
-Bool CChisquare2SolveResult::GetBestRedshift( const CDataStore& store, Float64& redshift, Float64& merit, std::string& tplName ) const
+Bool CChisquare2SolveResult::GetBestRedshift( const CDataStore& store, Float64& redshift, Float64& merit, std::string& tplName, Float64& dustCoeff, Int32& meiksinIdx ) const
 {
     std::string scopeStr;
     if(m_type == nType_raw){
@@ -149,7 +156,9 @@ Bool CChisquare2SolveResult::GetBestRedshift( const CDataStore& store, Float64& 
     Int32 maxIndex = 0;
     Float64 tmpMerit = DBL_MAX ;
     Float64 tmpRedshift = 0.0;
-    std::string tmpTplName;
+    std::string tmpTplName = "-1";
+    Float64 tmpDustCoeff = 0.0;
+    Int32 tmpMeiksinIdx = 0;
 
     for( TOperatorResultMap::const_iterator it = meritResults.begin(); it != meritResults.end(); it++ )
     {
@@ -160,6 +169,8 @@ Bool CChisquare2SolveResult::GetBestRedshift( const CDataStore& store, Float64& 
             {
                 tmpMerit = meritResult->ChiSquare[i];
                 tmpRedshift = meritResult->Redshifts[i];
+                tmpDustCoeff = meritResult->FitDustCoeff[i];
+                tmpMeiksinIdx = meritResult->FitMeiksinIdx[i];
                 tmpTplName = (*it).first;
             }
         }
@@ -171,6 +182,8 @@ Bool CChisquare2SolveResult::GetBestRedshift( const CDataStore& store, Float64& 
         redshift = tmpRedshift;
         merit = tmpMerit;
         tplName = tmpTplName;
+        dustCoeff = tmpDustCoeff;
+        meiksinIdx = tmpMeiksinIdx;
         return true;
     }
 

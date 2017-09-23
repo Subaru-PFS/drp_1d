@@ -25,14 +25,18 @@ Void CChisquareLogSolveResult::Save( const CDataStore& store, std::ostream& stre
     Float64 redshift;
     Float64 merit;
     std::string tplName;
+    Float64 dustCoeff;
+    Int32 meiksinIdx;
 
-    GetBestRedshift( store, redshift, merit, tplName );
+    GetBestRedshift( store, redshift, merit, tplName, dustCoeff, meiksinIdx );
 
-    stream <<  "#Redshifts\tMerit\tTemplate"<< std::endl;
+    stream <<  "#Redshifts\tMerit\tTemplate\tdustcoeff\tmeiksinidx"<< std::endl;
 
     stream  << redshift << "\t"
                 << merit << "\t"
-                << tplName << std::endl;
+                << tplName << "\t"
+                << dustCoeff << "\t"
+                << meiksinIdx << std::endl;
 
 
     stream << std::endl;
@@ -104,11 +108,15 @@ Void CChisquareLogSolveResult::SaveLine( const CDataStore& store, std::ostream& 
 
     Float64 redshift;
     Float64 merit;
-    std::string tplName="";
+    std::string tplName="-1";
+
+    //unused
+    Float64 dustCoeff;
+    Int32 meiksinIdx;
 
     if(m_bestRedshiftMethod==0)
     {
-        GetBestRedshift( store, redshift, merit, tplName );
+        GetBestRedshift( store, redshift, merit, tplName, dustCoeff, meiksinIdx );
         Log.LogInfo( "Chisquarelogsolve-result: extracting best redshift from chi2 extrema: z=%f", redshift);
     }else if(m_bestRedshiftMethod==2)
     {
@@ -129,7 +137,7 @@ Void CChisquareLogSolveResult::SaveLine( const CDataStore& store, std::ostream& 
 
 }
 
-Bool CChisquareLogSolveResult::GetBestRedshift( const CDataStore& store, Float64& redshift, Float64& merit, std::string& tplName ) const
+Bool CChisquareLogSolveResult::GetBestRedshift(const CDataStore& store, Float64& redshift, Float64& merit, std::string& tplName, Float64 &dustCoeff, Int32 &meiksinIdx ) const
 {
     std::string scopeStr;
     if(m_type == nType_raw){
@@ -144,11 +152,11 @@ Bool CChisquareLogSolveResult::GetBestRedshift( const CDataStore& store, Float64
     std::string scope = store.GetScope( *this ) + "chisquarelogsolve." + scopeStr.c_str();
     TOperatorResultMap meritResults = store.GetPerTemplateResult(scope.c_str());
 
-
-    Int32 maxIndex = 0;
     Float64 tmpMerit = DBL_MAX ;
     Float64 tmpRedshift = 0.0;
-    std::string tmpTplName;
+    std::string tmpTplName = "-1";
+    Float64 tmpDustCoeff = 0.0;
+    Int32 tmpMeiksinIdx = 0;
 
     for( TOperatorResultMap::const_iterator it = meritResults.begin(); it != meritResults.end(); it++ )
     {
@@ -159,6 +167,8 @@ Bool CChisquareLogSolveResult::GetBestRedshift( const CDataStore& store, Float64
             {
                 tmpMerit = meritResult->ChiSquare[i];
                 tmpRedshift = meritResult->Redshifts[i];
+                tmpDustCoeff = meritResult->FitDustCoeff[i];
+                tmpMeiksinIdx = meritResult->FitMeiksinIdx[i];
                 tmpTplName = (*it).first;
             }
         }
@@ -170,6 +180,8 @@ Bool CChisquareLogSolveResult::GetBestRedshift( const CDataStore& store, Float64
         redshift = tmpRedshift;
         merit = tmpMerit;
         tplName = tmpTplName;
+        dustCoeff = tmpDustCoeff;
+        meiksinIdx = tmpMeiksinIdx;
         return true;
     }
 
