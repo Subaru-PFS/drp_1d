@@ -25,16 +25,18 @@ Void CChisquareLogSolveResult::Save( const CDataStore& store, std::ostream& stre
     Float64 redshift;
     Float64 merit;
     std::string tplName;
+    Float64 amp;
     Float64 dustCoeff;
     Int32 meiksinIdx;
 
-    GetBestRedshift( store, redshift, merit, tplName, dustCoeff, meiksinIdx );
+    GetBestRedshift( store, redshift, merit, tplName, amp, dustCoeff, meiksinIdx );
 
-    stream <<  "#Redshifts\tMerit\tTemplate\tdustcoeff\tmeiksinidx"<< std::endl;
+    stream <<  "#Redshifts\tMerit\tTemplate\tampl\tdustcoeff\tmeiksinidx"<< std::endl;
 
     stream  << redshift << "\t"
                 << merit << "\t"
                 << tplName << "\t"
+                << amp << "\t"
                 << dustCoeff << "\t"
                 << meiksinIdx << std::endl;
 
@@ -111,12 +113,13 @@ Void CChisquareLogSolveResult::SaveLine( const CDataStore& store, std::ostream& 
     std::string tplName="-1";
 
     //unused
+    Float64 amplitude;
     Float64 dustCoeff;
     Int32 meiksinIdx;
 
     if(m_bestRedshiftMethod==0)
     {
-        GetBestRedshift( store, redshift, merit, tplName, dustCoeff, meiksinIdx );
+        GetBestRedshift( store, redshift, merit, tplName, amplitude, dustCoeff, meiksinIdx );
         Log.LogInfo( "Chisquarelogsolve-result: extracting best redshift from chi2 extrema: z=%f", redshift);
     }else if(m_bestRedshiftMethod==2)
     {
@@ -137,7 +140,7 @@ Void CChisquareLogSolveResult::SaveLine( const CDataStore& store, std::ostream& 
 
 }
 
-Bool CChisquareLogSolveResult::GetBestRedshift(const CDataStore& store, Float64& redshift, Float64& merit, std::string& tplName, Float64 &dustCoeff, Int32 &meiksinIdx ) const
+Bool CChisquareLogSolveResult::GetBestRedshift(const CDataStore& store, Float64& redshift, Float64& merit, std::string& tplName, Float64 &amplitude, Float64 &dustCoeff, Int32 &meiksinIdx ) const
 {
     std::string scopeStr;
     if(m_type == nType_raw){
@@ -155,6 +158,7 @@ Bool CChisquareLogSolveResult::GetBestRedshift(const CDataStore& store, Float64&
     Float64 tmpMerit = DBL_MAX ;
     Float64 tmpRedshift = 0.0;
     std::string tmpTplName = "-1";
+    Float64 tmpAmp = 0.0;
     Float64 tmpDustCoeff = 0.0;
     Int32 tmpMeiksinIdx = 0;
 
@@ -167,6 +171,7 @@ Bool CChisquareLogSolveResult::GetBestRedshift(const CDataStore& store, Float64&
             {
                 tmpMerit = meritResult->ChiSquare[i];
                 tmpRedshift = meritResult->Redshifts[i];
+                tmpAmp = meritResult->FitAmplitude[i];
                 tmpDustCoeff = meritResult->FitDustCoeff[i];
                 tmpMeiksinIdx = meritResult->FitMeiksinIdx[i];
                 tmpTplName = (*it).first;
@@ -180,6 +185,7 @@ Bool CChisquareLogSolveResult::GetBestRedshift(const CDataStore& store, Float64&
         redshift = tmpRedshift;
         merit = tmpMerit;
         tplName = tmpTplName;
+        amplitude = tmpAmp;
         dustCoeff = tmpDustCoeff;
         meiksinIdx = tmpMeiksinIdx;
         return true;

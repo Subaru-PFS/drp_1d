@@ -33,7 +33,7 @@ public:
 
     Void Save( const CDataStore& store, std::ostream& stream ) const;
     Void SaveLine( const CDataStore& store, std::ostream& stream ) const;
-    Bool GetBestRedshift(const CDataStore& store, Float64& redshift, Float64& merit, std::string& tplName , Float64& dustCoeff, Int32& meiksinIdx) const;
+    Bool GetBestRedshift(const CDataStore& store, Float64& redshift, Float64& merit, std::string& tplName , Float64& amplitude, Float64& dustCoeff, Int32& meiksinIdx) const;
     Bool GetBestRedshiftPerTemplateString( const CDataStore& store, std::string& output ) const;
     Bool GetBestRedshiftFromPdf(const CDataStore& store, Float64& redshift, Float64& merit) const;
 
