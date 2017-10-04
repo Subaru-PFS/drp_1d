@@ -1,0 +1,6 @@
+# Build all third party dependencies
+FIND_PROGRAM( PYTHON python HINTS /usr/bin )
+EXECUTE_PROCESS( COMMAND pwd )
+EXECUTE_PROCESS( COMMAND ${PYTHON} buildandinstallthirdparty.py
+  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+  RESULT_VARIABLE result )

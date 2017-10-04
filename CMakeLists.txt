@@ -1,9 +1,9 @@
-CMAKE_MINIMUM_REQUIRED (VERSION 2.8) 
-PROJECT( cpf-redshift ) 
+CMAKE_MINIMUM_REQUIRED (VERSION 2.8)
+PROJECT( cpf-redshift )
 
 # extra path for modules
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake)
-include(SetupVar) 
+include(SetupVar)
 
 #--------------------------------------------------------
 # Setup shortcut acces directory
@@ -14,8 +14,10 @@ SET( CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${ROOT_DIR}/lib )
 SET( CMAKE_LIBRARY_OUTPUT_DIRECTORY ${ROOT_DIR}/lib )
 SET( CMAKE_RUNTIME_OUTPUT_DIRECTORY ${ROOT_DIR}/bin )
 
+ADD_SUBDIRECTORY( tools )
+
 #--------------------------------------------------------
-# Parse version, this willbe used later to configure 
+# Parse version, this willbe used later to configure
 # cpf-core-redshift-version.cmake with the appropriate version number
 #--------------------------------------------------------
 FILE (STRINGS ${ROOT_DIR}/VERSION VERSION)
@@ -57,7 +59,7 @@ ADD_LIBRARY( ${LIB_NAME} STATIC ${LIB_SOURCE_FILES} )
 # Compile test
 #--------------------------------------------------------
 SET( TEST_NAME cpf-redshift-test${EXT} )
-  
+
 FILE( GLOB_RECURSE TEST_SOURCE_FILES ${ROOT_DIR}/RedshiftLibrary/tests/src/*.cpp )
 
 ADD_EXECUTABLE( ${TEST_NAME} ${TEST_SOURCE_FILES} )
@@ -78,14 +80,14 @@ INSTALL( FILES  ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cpf-redshift-config.cmake DEST
 INCLUDE ( CMakePackageConfigHelpers )
 
 # Configure config file (this is used by find_package to find where the library is)
-CONFIGURE_PACKAGE_CONFIG_FILE( 
+CONFIGURE_PACKAGE_CONFIG_FILE(
        ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cpf-redshift-config.cmake.in
        ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cpf-redshift-config.cmake
        INSTALL_DESTINATION cmake
         )
 
 # Configure version file (this is used by find_package to determine a matching version)
-CONFIGURE_FILE( 
+CONFIGURE_FILE(
        ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cpf-redshift-config-version.cmake.in
        ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cpf-redshift-config-version.cmake
        @ONLY
