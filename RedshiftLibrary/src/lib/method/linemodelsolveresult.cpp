@@ -222,7 +222,8 @@ Bool CLineModelSolveResult::GetBestRedshiftFromPdf( const CDataStore& store, Flo
     }
 
     redshift = tmpRedshift;
-    merit = tmpMerit;
+    //merit = tmpMerit;
+    merit = tmpProbaLog;
     sigma = tmpSigma;
     return true;
 }
