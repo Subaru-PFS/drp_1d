@@ -196,7 +196,14 @@ class processHelper(object):
             bracketing_templateCtlPath = []            
             for k in range(len(bracketing_templateCtlNames)):
                 bracketing_templateCtlPath.append(os.path.join(self.bracketing_templatesRootPath, bracketing_templateCtlNames[k]))
-                
+        elif self.opt_bracketing=="tplcat_analysis-pfs":
+            bracketing_method=["chisquare2solve", "chisquare2solve", "chisquare2solve", "chisquare2solve", "chisquare2solve", "chisquare2solve"]
+            bracketing_parameterFilePath=["chisquare_rest_lbda4z0.json", "chisquare_rest_lbda4z0p5.json", "chisquare_rest_lbda4z1.json", "chisquare_rest_lbda4z1p5.json", "chisquare_rest_lbda4z2.json", "chisquare_rest_lbda4z2p5.json"]
+            bracketing_templateCtlNames=["BC03_sdss_tremonti21", "BC03_sdss_tremonti21", "BC03_sdss_tremonti21", "BC03_sdss_tremonti21", "BC03_sdss_tremonti21", "BC03_sdss_tremonti21"]   
+            bracketing_templateCtlPath = []            
+            for k in range(len(bracketing_templateCtlNames)):
+                bracketing_templateCtlPath.append(os.path.join(self.bracketing_templatesRootPath, bracketing_templateCtlNames[k]))
+              
         else:
             #toto implement cont. method bracketing or other params...
             pass
@@ -324,7 +331,7 @@ class processHelper(object):
             print("processhelper not ready, aborting...")
             return
         
-        if self.opt_bracketing == "method" or self.opt_bracketing == "method-euclid":
+        if self.opt_bracketing == "method" or self.opt_bracketing == "method-euclid" or self.opt_bracketing == "tplcat_analysis-pfs":
             bracketing = self.prepareBracketing()    
             nproc = len(bracketing["method"])
         else:
@@ -477,7 +484,7 @@ def StartFromCommandLine( argv ) :
                     help="local (run locally), 'cluster_lam' or 'cluster_in2p3' to run on a cluster through qsub")
                  
     parser.add_argument("-m", "--methodBracketing", dest="methodBracketing", default="",
-                help="bracketing of the parameters : choose between '' or 'method' or 'method-euclid'") 
+                help="bracketing of the parameters : choose between '' or 'method' or 'method-euclid' or 'tplcat_analysis-pfs'") 
                 
     parser.add_argument("-t", "--bracketingTemplatesRootPath", dest="brackTemplatesRootPath", default="/home/aschmitt/amazed_cluster/calibration/templates/",
                 help="path to the templates root path used for the bracketing")

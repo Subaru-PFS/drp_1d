@@ -197,7 +197,7 @@ std::shared_ptr<CLineModelSolveResult> CLineModelSolve::Compute( CDataStore& dat
         }
         std::shared_ptr<const CLineModelResult> result = std::dynamic_pointer_cast<const CLineModelResult>( results.lock() );
 
-        CombinePDF(dataStore, result, m_opt_rigidity, m_opt_combinePdf);
+        CombinePDF(dataStore, result, m_opt_rigidity, m_opt_pdfcombination);
 
         SaveContinuumPDF(dataStore, result);
 
