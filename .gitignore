@@ -6,6 +6,10 @@ build-debug/
 
 cmake/cpf-redshift-config-version.cmake
 cmake/cpf-redshift-config.cmake
+CMakeFiles
+CMakeCache.txt
+cmake_install.cmake
+tools/CMakeFiles/
 
 *.creator.user*
 *.config
@@ -26,7 +30,7 @@ docs/html/
 #
 pkgconfig
 
-# 
+#
 *.o
 *.a
 
@@ -41,5 +45,3 @@ pkgconfig
 
 # Python cache files
 *.pyc
-
-
