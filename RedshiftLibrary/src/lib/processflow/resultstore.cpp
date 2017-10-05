@@ -157,7 +157,7 @@ void COperatorResultStore::SaveRedshiftResult( const CDataStore& store, const bf
         //*
         if(ret==1)
         {
-            outputStream <<  "#Spectrum\tProcessingID\tRedshift\tMerit\tTemplate\tMethod\tDeltaz\tReliability"<< std::endl;
+            outputStream <<  "#Spectrum\tProcessingID\tRedshift\tMerit\tTemplate\tMethod\tDeltaz\tReliability\tsnrHa"<< std::endl;
         }
         //*/
 
@@ -178,11 +178,11 @@ void COperatorResultStore::SaveRedshiftResultError(  const std::string spcName, 
 
         if(ret==1)
         {
-            outputStream <<  "#Spectrum\tProcessingID\tRedshift\tMerit\tTemplate\tMethod\tDeltaz\tReliability"<< std::endl;
+            outputStream <<  "#Spectrum\tProcessingID\tRedshift\tMerit\tTemplate\tMethod\tDeltaz\tReliability\tsnrHa"<< std::endl;
         }
 
 
-        outputStream <<  spcName << "\t" << processingID << "\t-1\t-1\t-1\t-1\t-1"<< std::endl;
+        outputStream <<  spcName << "\t" << processingID << "\t-1\t-1\t-1\t-1\t-1\t-1\t-1"<< std::endl;
     }
 }
 

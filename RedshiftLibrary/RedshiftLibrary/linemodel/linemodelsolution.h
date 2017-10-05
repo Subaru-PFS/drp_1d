@@ -27,6 +27,8 @@ struct CLineModelSolution
     std::vector<Float64> FluxErrors;    //Flux error for each line
     std::vector<Float64> FluxDirectIntegration;    //Flux obtained by direct integration for each line
 
+    Float64 snrHa;
+
     std::vector<Float64> Widths;
     std::vector<Bool> OutsideLambdaRange;
     std::vector<TInt32Range> fittingIndexRange;

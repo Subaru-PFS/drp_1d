@@ -1022,6 +1022,9 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
         }
         result->ExtremaResult.DeltaZ[i] = dz;
 
+        //store model Ha SNR
+        result->ExtremaResult.snrHa[i] = result->LineModelSolutions[idx].snrHa;
+
         //store the model norm
         result->ExtremaResult.mTransposeM[i] = model.EstimateMTransposeM(lambdaRange);
 

@@ -38,6 +38,7 @@ Void CLineModelExtremaResult::Resize(Int32 size)
     NDof.resize(size);
     ExtremaLastPass.resize(size);
     lmfitPass.resize(size);
+    snrHa.resize(size);
     Posterior.resize(size);
     StrongELSNR.resize(size);
     LogArea.resize(size);
@@ -154,6 +155,16 @@ Void CLineModelExtremaResult::Save( const CDataStore& store, std::ostream& strea
         for ( int i=0; i<lmfitPass.size(); i++)
         {
             stream <<  lmfitPass[i] << "\t";
+        }
+        stream << "}" << std::endl;
+    }
+
+    // save snrHa list, on 1 line
+    if(snrHa.size()>0){
+        stream <<  "#snrHa for z = {";
+        for ( int i=0; i<snrHa.size(); i++)
+        {
+            stream <<  snrHa[i] << "\t";
         }
         stream << "}" << std::endl;
     }

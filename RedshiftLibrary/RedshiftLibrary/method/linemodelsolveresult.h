@@ -33,10 +33,10 @@ public:
 
     Void Save( const CDataStore& store, std::ostream& stream ) const;
     Void SaveLine( const CDataStore& store, std::ostream& stream ) const;
-    Bool GetBestRedshift(const CDataStore& store, Float64& redshift, Float64& merit , Float64 &sigma) const;
+    Bool GetBestRedshift(const CDataStore& store, Float64& redshift, Float64& merit , Float64 &sigma, Float64 &snrHa) const;
     Bool GetBestRedshiftLogArea( const CDataStore& store, Float64& redshift, Float64& merit ) const;
     Bool GetBestRedshiftWithStrongELSnrPrior( const CDataStore& store, Float64& redshift, Float64& merit ) const;
-    Bool GetBestRedshiftFromPdf( const CDataStore& store, Float64& redshift, Float64& merit, Float64& sigma ) const;
+    Bool GetBestRedshiftFromPdf(const CDataStore& store, Float64& redshift, Float64& merit, Float64& sigma , Float64 &snrHa) const;
 
     Bool isPdfValid(const CDataStore& store) const;
 

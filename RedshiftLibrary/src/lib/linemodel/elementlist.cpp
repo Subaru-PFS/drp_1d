@@ -1716,7 +1716,9 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
         setLyaProfile(redshift, spectralAxis);
 
         refreshModel();
-        modelSolution = GetModelSolution();
+
+        Int32 modelSolutionLevel = Int32(enableLogging);
+        modelSolution = GetModelSolution(modelSolutionLevel);
     }
     return merit;
 }
@@ -4220,6 +4222,7 @@ CLineModelSolution CLineModelElementList::GetModelSolution(Int32 opt_level)
     modelSolution.nDDL = GetModelNonZeroElementsNDdl();
     modelSolution.Rays = m_RestRayList;
     modelSolution.ElementId.resize(m_RestRayList.size());
+    modelSolution.snrHa = -1.0;
 
     for( UInt32 iRestRay=0; iRestRay<m_RestRayList.size(); iRestRay++ )
     {
@@ -4263,6 +4266,17 @@ CLineModelSolution CLineModelElementList::GetModelSolution(Int32 opt_level)
                 modelSolution.Fluxs.push_back(flux);
                 modelSolution.FluxErrors.push_back(fluxError);
                 modelSolution.FluxDirectIntegration.push_back(fluxDI);
+
+                //rough estimation of SNR_Ha, using the given model and fitting method
+                //(warning: Ha flux and error could have been obtained by global fitting of the model, which leads to different results than fitted individually...)
+                if(m_RestRayList[iRestRay].GetName()=="Halpha" && m_RestRayList[iRestRay].GetType()==CRay::nType_Emission)
+                {
+
+                    if(fluxError>0.0)
+                    {
+                        modelSolution.snrHa = flux/fluxError;
+                    }
+                }
             }
             else{
                 modelSolution.FittingError.push_back(-1.0);
