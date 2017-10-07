@@ -855,7 +855,8 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64* spectrumRebinedLambda,
         intermediateChi2.push_back(_ChiSquareISMList);
     }
 
-
+    Int32 errorWhileFitting = 0;
+    //#pragma omp parallel for
     for(Int32 kIGM=0; kIGM<nIGM; kIGM++)
     {
 
@@ -888,6 +889,7 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64* spectrumRebinedLambda,
             }
 
         }
+
 
 
         for(Int32 kISM=0; kISM<nISM; kISM++)
@@ -1000,8 +1002,10 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64* spectrumRebinedLambda,
             // Estimate Chi2
             if( mtm_vec.size()!=dtm_vec.size())
             {
+                errorWhileFitting = 1;
                 Log.LogError("ChisquareLog, FitAllz: xty vectors sizes don't match: dtm size = %d, mtm size = %d", dtm_vec.size(), mtm_vec.size());
-                return 2;
+                //return 2;
+                continue;
             }
             std::vector<Float64> chi2(dtm_vec.size(), DBL_MAX);
             std::vector<Float64> amp(dtm_vec.size(), DBL_MAX);
@@ -1082,6 +1086,10 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64* spectrumRebinedLambda,
         }
     }
 
+    if(errorWhileFitting!=0)
+    {
+        return -2;
+    }
 
     //interpolating on the regular z grid
     Float64* zreversed_array = new Float64 [(int)z_vect.size()]();

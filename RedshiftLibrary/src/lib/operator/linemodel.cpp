@@ -291,7 +291,6 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
         for( UInt32 i=0; i<tplCategoryList.size(); i++ )
         {
             std::string category = tplCategoryList[i];
-
             for( UInt32 j=0; j<orthoTplCatalog->GetTemplateCount( category ); j++ )
             {
                 const CTemplate& tpl = orthoTplCatalog->GetTemplate( category, j );
@@ -306,6 +305,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
                 }
             }
         }
+
         chiSquareOperator.reset();
 
         //fill the results with Best Values
@@ -419,6 +419,8 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
         calculatedChiSquareTplshapes.push_back(_chi2tpl);
     }
     boost::chrono::thread_clock::time_point start_mainloop = boost::chrono::thread_clock::now();
+
+    //#pragma omp parallel for
     for (Int32 i=0;i<result->Redshifts.size();i++)
     {
         if(enableFastFitLargeGrid==0 || i==0 || result->Redshifts[i] == largeGridRedshifts[indexLargeGrid])
@@ -456,6 +458,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
             result->ScaleMargCorrectionContinuum[i] = model.getContinuumScaleMargCorrection();
         }
     }
+
 
     //now interpolate large grid merit results onto the fine grid
     if(result->Redshifts.size()>calculatedLargeGridMerits.size() && calculatedLargeGridMerits.size()>1)
@@ -819,6 +822,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
     std::vector<Float64> extrema_velocityALOrdered;
     extremumCount = extremumList2.size();
     std::vector<Int32> indiceList2;
+
     for(Int32 ie=0; ie<extremumCount; ie++)
     {
         Int32 iYmin=0;

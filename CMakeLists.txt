@@ -34,6 +34,12 @@ SET( cpf-redshift_THIRDPARTY_LINK_DIR ${ROOT_DIR}/thirdparty/lib/ )
 
 SET( cpf-redshift_THIRDPARTY_LIBS cfitsio pthread boost_filesystem boost_system boost_thread boost_timer boost_chrono  boost_program_options boost_regex  libgsl.a libgslcblas.a fftw3.a)
 
+find_package(OpenMP)
+if (OPENMP_FOUND)
+    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+endif()
+
 #--------------------------------------------------------
 # Preprocessor and linker path
 #--------------------------------------------------------

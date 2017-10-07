@@ -625,6 +625,7 @@ void CMultiLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const C
         }
 
         //A estimation
+        //#pragma omp parallel for
         for ( Int32 i = m_StartNoOverlap[k]; i <= m_EndNoOverlap[k]; i++)
         {
             c = fluxContinuum[i];
@@ -632,6 +633,7 @@ void CMultiLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const C
             x = spectral[i];
 
             yg = 0.0;
+
             for(Int32 k2=0; k2<nRays; k2++)
             { //loop for the signal synthesis
                 if(m_OutsideLambdaRangeList[k2])

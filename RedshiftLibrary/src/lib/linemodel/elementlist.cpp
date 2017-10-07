@@ -847,11 +847,14 @@ Int32 CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange)
 }
 
 void CLineModelElementList::setFitContinuum_tplAmplitude(Float64 tplAmp){
-  m_fitContinuum_tplFitAmplitude = tplAmp;
-  for (Int32 k=0; k<m_ContinuumFluxAxis.GetSamplesCount(); k++){
-    m_ContinuumFluxAxis[k] = m_observeGridContinuumFlux[k]*tplAmp;
-    m_spcFluxAxisNoContinuum[k] = m_SpcFluxAxis[k]-m_ContinuumFluxAxis[k];
-  }
+
+    //Float64 alpha = 0.5; //alpha blend = 1: only m_SpcContinuumFluxAxis, alpha=0: only tplfit
+    m_fitContinuum_tplFitAmplitude = tplAmp;
+    for (Int32 k=0; k<m_ContinuumFluxAxis.GetSamplesCount(); k++){
+        //m_ContinuumFluxAxis[k] = (1.-alpha)*m_observeGridContinuumFlux[k]*tplAmp + (alpha)*m_SpcContinuumFluxAxis[k];
+        m_ContinuumFluxAxis[k] = m_observeGridContinuumFlux[k]*tplAmp;
+        m_spcFluxAxisNoContinuum[k] = m_SpcFluxAxis[k]-m_ContinuumFluxAxis[k];
+    }
 }
 
 
@@ -1198,8 +1201,7 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
     }
 
     Float64 merit = DBL_MAX;//m_dTransposeDNocontinuum;
-    Int32 ifitting=0; //multiple fitting steps for rigidity=tplshape
-    Int32 nfitting=1;
+    Int32 nfitting=1; //multiple fitting steps for rigidity=tplshape
     Int32 savedIdxFitted=-1; //for rigidity=tplshape
 
     if(m_rigidity=="tplshape")
@@ -1207,7 +1209,7 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
         nfitting=m_CatalogTplShape->GetCatalogsCount();
     }
 
-    while(ifitting<nfitting)
+    for(Int32 ifitting=0; ifitting<nfitting; ifitting++)
     {
         if(m_rigidity!="tplshape")
         {
@@ -1415,6 +1417,7 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
                //modelSolution = GetModelSolution();
             }else{
               Log.LogError( "LineModel Lmfit: not able to fit values at z %f", m_Redshift);
+              //continue;
               return DBL_MAX;
             }
         }
@@ -1684,8 +1687,6 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
         if(m_ContinuumComponent == "nocontinuum"){
             reinitModel();
         }
-
-        ifitting++;
     }
 
     if(m_rigidity=="tplshape" && enableLogging)
@@ -3492,25 +3493,25 @@ Float64 CLineModelElementList::getLeastSquareMerit(const TFloat64Range& lambdaRa
     const CSpectrumFluxAxis& spcFluxAxis = m_SpcFluxAxis;
     const CSpectrumFluxAxis& modelFluxAxis = m_SpectrumModel->GetFluxAxis();
 
-    Int32 numDevs = 0;
+    //Int32 numDevs = 0;
     Float64 fit = 0.0;
     const Float64* Ymodel = modelFluxAxis.GetSamples();
     const Float64* Yspc = spcFluxAxis.GetSamples();
     Float64 diff = 0.0;
 
-    Float64 imin = spcSpectralAxis.GetIndexAtWaveLength(lambdaRange.GetBegin());
-    Float64 imax = spcSpectralAxis.GetIndexAtWaveLength(lambdaRange.GetEnd());
-    for( UInt32 j=imin; j<imax; j++ )
+    Int32 imin = spcSpectralAxis.GetIndexAtWaveLength(lambdaRange.GetBegin());
+    Int32 imax = spcSpectralAxis.GetIndexAtWaveLength(lambdaRange.GetEnd());
+    for(Int32 j=imin; j<imax; j++)
     {
-        numDevs++;
+        //numDevs++;
         diff = (Yspc[j] - Ymodel[j]);
         fit += (diff*diff) / (m_ErrorNoContinuum[j]*m_ErrorNoContinuum[j]);
-//        if ( 1E6 * diff < m_ErrorNoContinuum[j] )
-//        {
-//            Log.LogDebug( "Warning: noise is at least 6 orders greater than the residue!" );
-//            Log.LogDebug( "CLineModelElementList::getLeastSquareMerit diff = %f", diff );
-//            Log.LogDebug( "CLineModelElementList::getLeastSquareMerit m_ErrorNoContinuum[%d] = %f", j, m_ErrorNoContinuum[j] );
-//        }
+        //        if ( 1E6 * diff < m_ErrorNoContinuum[j] )
+        //        {
+        //            Log.LogDebug( "Warning: noise is at least 6 orders greater than the residue!" );
+        //            Log.LogDebug( "CLineModelElementList::getLeastSquareMerit diff = %f", diff );
+        //            Log.LogDebug( "CLineModelElementList::getLeastSquareMerit m_ErrorNoContinuum[%d] = %f", j, m_ErrorNoContinuum[j] );
+        //        }
     }
     Log.LogDebug( "CLineModelElementList::getLeastSquareMerit fit = %f", fit );
     return fit;
