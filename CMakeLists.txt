@@ -14,7 +14,13 @@ SET( CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${ROOT_DIR}/lib )
 SET( CMAKE_LIBRARY_OUTPUT_DIRECTORY ${ROOT_DIR}/lib )
 SET( CMAKE_RUNTIME_OUTPUT_DIRECTORY ${ROOT_DIR}/bin )
 
-ADD_SUBDIRECTORY( tools )
+IF( DEFINED BUILD_THIRDPARTY )
+  STRING( TOLOWER ${BUILD_THIRDPARTY} __BUILD3RD )
+  IF( __BUILD3RD STREQUAL "true")
+    ADD_SUBDIRECTORY( tools )
+  ENDIF ()
+ENDIF ()
+
 
 #--------------------------------------------------------
 # Parse version, this willbe used later to configure

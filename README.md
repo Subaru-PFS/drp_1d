@@ -25,6 +25,10 @@ Please note that each tool has its own dependency list. If a tool fails to build
 
 The "doxygen" tool requires at least flex and bison to work.
 
+This step can be automatically done with cmake, by adding -DBUILD_THIRDPARTY=true parameter. e.g. :
+
+     cmake . -DBUILD_THIRDPARTY=true
+
 #### 3. Create makefiles:
 
 Build process uses cmake tool
