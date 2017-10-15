@@ -51,7 +51,8 @@ class processRecombine(object):
         for line in f:
             lineStr = line.strip()
             if not lineStr.startswith('#'):
-                subpathsList.append(lineStr)
+                fullPath = os.path.join(self.outputPath, lineStr)
+                subpathsList.append(fullPath)
             
         #create this config merged output path
         name = os.path.split(infoFilePath)[1]

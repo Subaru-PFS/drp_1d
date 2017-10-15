@@ -140,30 +140,6 @@ Bool CLineModelSolveResult::GetBestRedshift( const CDataStore& store, Float64& r
 }
 
 /**
- * @brief CLineModelSolveResult::isPdfValid
- * @return
- */
-Bool CLineModelSolveResult::isPdfValid(const CDataStore& store) const
-{
-    std::string scope_res = "zPDF/logposterior.logMargP_Z_data";
-    auto results_pdf =  store.GetGlobalResult( scope_res.c_str() );
-    auto logzpdf1d = std::dynamic_pointer_cast<const CPdfMargZLogResult>( results_pdf.lock() );
-
-    if(!logzpdf1d)
-    {
-        return false;
-    }
-
-    if(logzpdf1d->Redshifts.size()<2)
-    {
-        return false;
-    }
-
-    return true;
-}
-
-
-/**
  * \brief Searches the best_z = argmax(pdf)
  * output: redshift = argmax(pdf)
  * output: merit = chi2(redshift)

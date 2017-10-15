@@ -72,7 +72,8 @@ class processHelper(object):
             spclist = spectrumlist.Spectrumlist(self.config_spclistPath)
             self.subspclists = spclist.splitIntoSubsets(int(dividecount), outputPath)
             self.subrecombine_info = {}
-            self.baseoutputpath = os.path.join(self.baseoutputpath, "output_subsets")
+            self.subsetsRelPath = "output_subsets"
+            self.baseoutputpath = os.path.join(self.baseoutputpath, self.subsetsRelPath)
             if not os.path.exists(self.baseoutputpath):
                 os.mkdir(self.baseoutputpath)
         else:
@@ -199,7 +200,8 @@ class processHelper(object):
         elif self.opt_bracketing=="tplcat_analysis-pfs":
             bracketing_method=["chisquare2solve", "chisquare2solve", "chisquare2solve", "chisquare2solve", "chisquare2solve", "chisquare2solve"]
             bracketing_parameterFilePath=["chisquare_rest_lbda4z0.json", "chisquare_rest_lbda4z0p5.json", "chisquare_rest_lbda4z1.json", "chisquare_rest_lbda4z1p5.json", "chisquare_rest_lbda4z2.json", "chisquare_rest_lbda4z2p5.json"]
-            bracketing_templateCtlNames=["BC03_sdss_tremonti21", "BC03_sdss_tremonti21", "BC03_sdss_tremonti21", "BC03_sdss_tremonti21", "BC03_sdss_tremonti21", "BC03_sdss_tremonti21"]   
+            #bracketing_templateCtlNames=["BC03_sdss_tremonti21", "BC03_sdss_tremonti21", "BC03_sdss_tremonti21", "BC03_sdss_tremonti21", "BC03_sdss_tremonti21", "BC03_sdss_tremonti21"]
+            bracketing_templateCtlNames=["legac_z0_697", "legac_z0_697", "legac_z0_697", "legac_z0_697", "legac_z0_697", "legac_z0_697"]   
             bracketing_templateCtlPath = []            
             for k in range(len(bracketing_templateCtlNames)):
                 bracketing_templateCtlPath.append(os.path.join(self.bracketing_templatesRootPath, bracketing_templateCtlNames[k]))
@@ -298,9 +300,10 @@ class processHelper(object):
         argStr = "{} --output {}".format(argStr, outputPath)
         
         if not overrideSpclistIndex==-1:
+            relativePath = os.path.join(self.subsetsRelPath, outputName)
             if not outputName_base in self.subrecombine_info.keys():
                 self.subrecombine_info[outputName_base] = []
-            self.subrecombine_info[outputName_base].append(outputPath)
+            self.subrecombine_info[outputName_base].append(relativePath)
             
         return argStr        
         
@@ -378,7 +381,7 @@ class processHelper(object):
                     f.write("\n")
                     f.write("#PBS -l nodes=1:ppn=1")
                     f.write("\n")
-                    f.write("#PBS -l walltime=20:00:00")
+                    f.write("#PBS -l walltime=30:00:00")
                     f.write("\n")
                     f.write("\n")
                     f.write("cd $PBS_O_WORKDIR")

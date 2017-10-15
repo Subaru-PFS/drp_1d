@@ -39,7 +39,7 @@ public:
 
     Int32 m_type;
 
-    Int32 m_bestRedshiftMethod = 2;
+    Int32 m_bestRedshiftMethod = 2; //best chi2, best proba
 
 };
 

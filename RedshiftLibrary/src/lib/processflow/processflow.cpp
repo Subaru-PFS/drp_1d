@@ -292,7 +292,7 @@ Bool CProcessFlow::Process( CProcessFlowContext& ctx )
             Log.LogWarning( "Reliability not initialized. Skipped.");
         }else
         {
-            Log.LogInfo( "Processing reliability for Line Model method");
+            Log.LogInfo( "Processing reliability");
             CQualz solve2;
             std::shared_ptr<const CQualzResult> solve2Result = solve2.Compute( ctx.GetDataStore(), classifStore, redshiftRange, redshiftStep );
 
@@ -309,7 +309,7 @@ Bool CProcessFlow::Process( CProcessFlowContext& ctx )
         }
     }
 
-    //finally save the linemodel results with (optionally) the zqual label
+    //finally save the method results with (optionally) the zqual label
     if( mResult ) {
         ctx.GetDataStore().StoreScopedGlobalResult( "redshiftresult", mResult );
     }else{
@@ -337,6 +337,25 @@ Bool CProcessFlow::isPdfValid(CProcessFlowContext& ctx) const
 
     if(logzpdf1d->Redshifts.size()<2)
     {
+        return false;
+    }
+
+    //is it completely flat ?
+    Float64 minVal=DBL_MAX;
+    Float64 maxVal=-DBL_MAX;
+    for(Int32 k=0; k<logzpdf1d->valProbaLog.size(); k++)
+    {
+        if(logzpdf1d->valProbaLog[k]<minVal)
+        {
+            minVal = logzpdf1d->valProbaLog[k];
+        }
+        if(logzpdf1d->valProbaLog[k]>maxVal)
+        {
+            maxVal = logzpdf1d->valProbaLog[k];
+        }
+    }
+    if(minVal==maxVal){
+        Log.LogError("PDF is flat !");
         return false;
     }
 
