@@ -74,7 +74,7 @@ Bool CSpectrumFluxCorrectionCalzetti::Init( std::string calibrationPath )
 
         //precomte the dust-coeff table
         m_nDustCoeff = 10;
-        m_dustCoeffStep = 0.1;
+        m_dustCoeffStep = 0.05;
         m_dustCoeffStart = 0.0;
         m_dataDustCoeff = new Float64[(int)(m_nDustCoeff*m_NdataCalzetti)]();
 
