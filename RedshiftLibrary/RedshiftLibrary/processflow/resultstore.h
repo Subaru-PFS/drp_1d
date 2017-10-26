@@ -39,7 +39,7 @@ public:
     Void                    SaveRedshiftResultHeader( const boost::filesystem::path& dir );
     Void                    SaveRedshiftResultError( const std::string spcName, const std::string processingID, const boost::filesystem::path& dir );
     Void                    SaveRedshiftResult( const CDataStore& store, const boost::filesystem::path& dir );
-    Void                    SaveAllResults( const CDataStore& store, const boost::filesystem::path& dir ) const;
+    Void                    SaveAllResults(const CDataStore& store, const boost::filesystem::path& dir , const std::string opt) const;
     Void                    SaveReliabilityResult( const CDataStore& store, const boost::filesystem::path& dir );
 
     std::string             GetScope( const COperatorResult&  result) const;
