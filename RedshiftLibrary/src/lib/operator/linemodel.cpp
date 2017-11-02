@@ -88,8 +88,10 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
                                   const std::string& opt_velocityFitting,
                                   const Float64 &opt_twosteplargegridstep,
                                   const std::string& opt_rigidity,
-                                  const Float64 &opt_velocityfitmin,
-                                  const Float64 &opt_velocityfitmax)
+                                 const Float64 &opt_emvelocityfitmin,
+                                 const Float64 &opt_emvelocityfitmax,
+                                 const Float64 &opt_absvelocityfitmin,
+                                 const Float64 &opt_absvelocityfitmax)
 {
     if( spectrum.GetSpectralAxis().IsInLinearScale()==false )
     {
@@ -228,10 +230,13 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
 
     //setup velocity fitting
     bool enableVelocityFitting = true;
-    Float64 velfitMinE = opt_velocityfitmin;
-    Float64 velfitMaxE = opt_velocityfitmax;
-    Float64 velfitMinA = 150;
-    Float64 velfitMaxA = opt_velocityfitmax;
+    Float64 velfitMinE = opt_emvelocityfitmin;
+    Float64 velfitMaxE = opt_emvelocityfitmax;
+    Float64 velfitMinA = opt_absvelocityfitmin;
+    Float64 velfitMaxA = opt_absvelocityfitmin;
+    //HARDCODED - override: no-velocityfitting for abs
+    //velfitMinA = opt_velocityAbsorption;
+    //velfitMaxA = opt_velocityAbsorption;
     if(opt_velocityFitting != "yes"){
         enableVelocityFitting = false;
     }else{        
