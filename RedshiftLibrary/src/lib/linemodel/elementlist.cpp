@@ -1507,7 +1507,7 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
                 //iterative continuum estimation :: RAW SLOW METHOD
                 refreshModel();
                 Float64 enhanceLines = 0;
-                /*
+                //*
                 if(nIt>2*it && nIt>3.0 && it<=3){
                     enhanceLines = 2.0-((Float64)it*0.33);
                 }
@@ -4260,8 +4260,15 @@ CLineModelSolution CLineModelElementList::GetModelSolution(Int32 opt_level)
                 Float64 fluxDI = GetFluxDirectIntegration(eIdx, subeIdx);
                 if(amp>=0)
                 {
-                    flux = amp*sigma*sqrt(2*M_PI);
-                    fluxError = ampError*sigma*sqrt(2*M_PI);
+                    if(m_RestRayList[iRestRay].GetType()==CRay::nType_Emission)
+                    {
+                        flux = amp*sigma*sqrt(2*M_PI);
+                        fluxError = ampError*sigma*sqrt(2*M_PI);
+                    }else{
+                        Float64 _amp = cont*amp;
+                        flux = _amp*sigma*sqrt(2*M_PI);
+                        fluxError = ampError*sigma*sqrt(2*M_PI);
+                    }
                 }
                 modelSolution.Sigmas.push_back(sigma);
                 modelSolution.Fluxs.push_back(flux);

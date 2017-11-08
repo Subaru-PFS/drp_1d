@@ -624,14 +624,14 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
         Log.LogInfo( "Linemodel - hacking zref enabled");
         Float64 zref = -1.0;
         namespace fs = boost::filesystem;
-        /*
-        //fs::path refFilePath("/home/aschmitt/amazed_cluster/datasets/sdss/sdss_201707/SDSS_spectra_bg10k/reference_SDSS_spectra_bg10k.txt");
-        fs::path refFilePath("/sps/euclid/Users/schmitt/amazed_cluster/datasets/sdss/sdss_201707/reference_SDSS_spectra_bg10k.txt");
+        //*
+        fs::path refFilePath("/home/aschmitt/amazed_cluster/datasets/sdss/sdss_201707/reference_SDSS_spectra_bg10k.txt");
+        //fs::path refFilePath("/sps/euclid/Users/schmitt/amazed_cluster/datasets/sdss/sdss_201707/reference_SDSS_spectra_bg10k.txt");
         Int32 substring_start = 5;
         Int32 substring_n = 15;
         Int32 colId = 2; //starts at 1, so that id_column is usually 1
         //*/
-        //*
+        /*
         //fs::path refFilePath("/home/aschmitt/amazed_cluster/datasets/sdss/sdss_201707/SDSS_spectra_bg10k/reference_SDSS_spectra_bg10k.txt");
         fs::path refFilePath("/home/aschmitt/amazed_cluster/datasets/pfs/pfs6b2_201704_sim10k/pfs6b2_reference_20170523_filtSim3h.txt");
         Int32 substring_start = 0;
