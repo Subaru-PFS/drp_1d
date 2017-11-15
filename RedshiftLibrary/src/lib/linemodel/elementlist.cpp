@@ -4137,10 +4137,12 @@ Int32 CLineModelElementList::LoadModelSolution(const CLineModelSolution&  modelS
 Int32 CLineModelElementList::improveBalmerFit()
 {
     std::vector<std::string> linetagsE;
+    linetagsE.push_back( "Halpha" );
     linetagsE.push_back( "Hbeta" );
     linetagsE.push_back( "Hgamma" );
     linetagsE.push_back( "Hdelta" );
     std::vector<std::string> linetagsA;
+    linetagsA.push_back( "HalphaA" );
     linetagsA.push_back( "HbetaA" );
     linetagsA.push_back( "HgammaA" );
     linetagsA.push_back( "HdeltaA" );

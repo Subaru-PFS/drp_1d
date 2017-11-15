@@ -233,7 +233,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
     Float64 velfitMinE = opt_emvelocityfitmin;
     Float64 velfitMaxE = opt_emvelocityfitmax;
     Float64 velfitMinA = opt_absvelocityfitmin;
-    Float64 velfitMaxA = opt_absvelocityfitmin;
+    Float64 velfitMaxA = opt_absvelocityfitmax;
     //HARDCODED - override: no-velocityfitting for abs
     //velfitMinA = opt_velocityAbsorption;
     //velfitMaxA = opt_velocityAbsorption;
