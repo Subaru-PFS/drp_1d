@@ -827,7 +827,7 @@ Int32 CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange)
                     m_fitContinuum_tplFitAmplitude = bestFitAmplitude;
                     m_fitContinuum_tplFitMerit = bestMerit;
                     m_fitContinuum_tplFitDustCoeff = bestFitDustCoeff;
-
+                    m_fitContinuum_tplFitMeiksinIdx = bestFitMeiksinIdx;
 
                     ApplyContinuumOnGrid(tpl);
 
