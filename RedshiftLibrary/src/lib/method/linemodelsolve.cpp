@@ -249,7 +249,7 @@ std::shared_ptr<CLineModelSolveResult> CLineModelSolve::Compute( CDataStore& dat
 Int32 CLineModelSolve::CombinePDF(CDataStore &store, std::shared_ptr<const CLineModelResult> result, std::string opt_rigidity, std::string opt_combine)
 {
     //hardcoded prior parameter
-    bool zPriorStrongLinePresence = true;
+    bool zPriorStrongLinePresence = false;
     if(zPriorStrongLinePresence)
     {
         Log.LogInfo("Linemodel: Pdfz computation: StrongLinePresence prior enabled");

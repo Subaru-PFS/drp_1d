@@ -484,7 +484,7 @@ def StartFromCommandLine( argv ) :
                     
     #option to do it local or qsub
     parser.add_argument("-l", "--local", dest="local", default='cluster_lam',
-                    help="local (run locally), 'cluster_lam' or 'cluster_in2p3' to run on a cluster through qsub")
+                    help="dryrun (skip run), local (run locally), 'cluster_lam' or 'cluster_in2p3' to run on a cluster through qsub")
                  
     parser.add_argument("-m", "--methodBracketing", dest="methodBracketing", default="",
                 help="bracketing of the parameters : choose between '' or 'method' or 'method-euclid' or 'tplcat_analysis-pfs'") 
@@ -540,7 +540,11 @@ def StartFromCommandLine( argv ) :
                 
         cp = processHelper(confpath=rpath, binpath=rbinpath, rootoutputpath=routputpath, dividecount=dividecount, opt_bracketing=opt_bracketing, bracketing_templatesRootPath=bracketing_templatesRootPath, refpath=rrefPath)
             
-        cp.doProcess(dryrun=False, local=options.local)
+        if options.local == "dryrun":
+            dryrun = True
+        else:
+            dryrun=False
+        cp.doProcess(dryrun=dryrun, local=options.local)
     else :
         print("Error: invalid arguments")
         exit()
