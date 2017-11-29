@@ -31,7 +31,7 @@ CRay::CRay(const string& name, Float64 pos, UInt32 type, std::string profile, UI
     m_NominalAmplitude = nominalAmp;
 
     m_Offset = 0.0;
-
+    m_OffsetFit = false;
 }
 
 CRay::~CRay()
@@ -101,7 +101,23 @@ Float64 CRay::GetOffset() const
 
 bool CRay::SetOffset(Float64 val)
 {
-    m_Offset = val;
+    if(m_OffsetFit)
+    {
+        m_Offset = val;
+        return true;
+    }else{
+        return false;
+    }
+}
+
+bool CRay::GetOffsetFitEnabled() const
+{
+    return m_OffsetFit;
+}
+
+bool CRay::EnableOffsetFit(bool val)
+{
+    m_OffsetFit = val;
     return true;
 }
 

@@ -46,6 +46,9 @@ public:
     Float64             GetPosition() const;
     Float64             GetOffset() const;
     bool                SetOffset(Float64 val);
+    bool                GetOffsetFitEnabled() const;
+    bool                EnableOffsetFit(bool val);
+
 
     Float64             GetAmplitude() const;
     Float64             GetWidth() const;
@@ -85,6 +88,9 @@ private:
     //for multiline group
     std::string     m_GroupName;
     Float64         m_NominalAmplitude;
+
+    //for offset fitting
+    bool            m_OffsetFit;
 
 };
 

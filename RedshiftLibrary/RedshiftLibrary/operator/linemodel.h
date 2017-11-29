@@ -88,6 +88,7 @@ public:
     void storeGlobalModelResults( CDataStore &dataStore );
     void storePerTemplateModelResults( CDataStore &dataStore, const CTemplate& tpl );
 
+    bool m_enableWidthFitByGroups;
 
     Int32 m_maxModelSaveCount;
 

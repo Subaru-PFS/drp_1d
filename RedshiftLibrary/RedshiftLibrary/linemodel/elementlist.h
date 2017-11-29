@@ -58,7 +58,7 @@ public:
     void LogCatalogInfos();
 
     void PrepareContinuum(Float64 z);
-    void EstimateSpectrumContinuum(Float64 opt_enhance_lines=0);
+    void EstimateSpectrumContinuum(Float64 opt_enhance_lines, const TFloat64Range &lambdaRange);
 
     Int32 LoadFitContinuumOneTemplate(const TFloat64Range& lambdaRange, const CTemplate& tpl);
     Int32 LoadFitContinuum(const TFloat64Range& lambdaRange);
@@ -117,12 +117,14 @@ public:
 
     void SetVelocityEmission(Float64 vel);
     void SetVelocityAbsorption(Float64 vel);
+    void SetVelocityEmissionOneElement(Float64 vel, Int32 idxElt);
+    void SetVelocityAbsorptionOneElement(Float64 vel, Int32 idxElt);
     Float64 GetVelocityEmission();
     Float64 GetVelocityAbsorption();
     Float64 GetVelocityInfFromInstrumentResolution();
     Int32 ApplyVelocityBound(Float64 inf, Float64 sup);
     void SetSourcesizeDispersion(Float64 sizeArcsec);
-
+    std::vector<std::vector<Int32>> GetModelVelfitGroups(Int32 lineType );
 
     Bool initModelAtZ(Float64 redshift, const TFloat64Range& lambdaRange, const CSpectrumSpectralAxis &spectralAxis);
 
@@ -148,6 +150,10 @@ public:
     void refreshModelDerivVelUnderElements(std::vector<Int32> filterEltsIdx);
     void refreshModelDerivVelAbsorptionUnderElements(std::vector<Int32> filterEltsIdx);
     void refreshModelDerivVelEmissionUnderElements(std::vector<Int32> filterEltsIdx);
+
+    Bool addToSpectrumAmplitudeOffset(CSpectrumFluxAxis &modelfluxAxis);
+    Int32 prepareAmplitudeOffset(const CSpectrumFluxAxis &spcFlux);
+
 
     void setModelSpcObservedOnSupportZeroOutside(const TFloat64Range &lambdaRange);
     CMask getOutsideLinesMask();
@@ -217,6 +223,8 @@ public:
     std::vector<std::vector<Float64>> m_MtmTplshape;
     std::vector<std::vector<Float64>> m_DtmTplshape;
 
+    bool m_enableAmplitudeOffsets;
+
 private:
 
     Int32 fitAmplitudesHybrid(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& spcFluxAxisNoContinuum, const CSpectrumFluxAxis &continuumfluxAxis, Float64 redshift);
@@ -270,8 +278,10 @@ private:
     Float64 m_velocityAbsorption;
     Float64 m_velocityEmissionInit;
     Float64 m_velocityAbsorptionInit;
+
     Float64 m_nominalWidthDefaultEmission;
     Float64 m_nominalWidthDefaultAbsorption;
+
     std::string m_calibrationPath;
     std::string m_fittingmethod;
     std::vector<Int32> m_elementsDisabledIndexes;
@@ -305,6 +315,10 @@ private:
     bool m_lmfit_fitContinuum;
     bool m_lmfit_fitEmissionVelocity;
     bool m_lmfit_fitAbsorptionVelocity;
+
+    std::vector<Float64> m_ampOffsetsA;
+    std::vector<Int32> m_ampOffsetsIdxStart;
+    std::vector<Int32> m_ampOffsetsIdxStop;
 };
 
 }

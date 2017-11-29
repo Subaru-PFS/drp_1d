@@ -243,6 +243,8 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
         Log.LogInfo( "Linemodel: velocity fitting bounds for Emission: min=%.1f - max=%.1f", velfitMinE, velfitMaxE);
         Log.LogInfo( "Linemodel: velocity fitting bounds for Absorption: min=%.1f - max=%.1f", velfitMinA, velfitMaxA);
     }
+    //harcoded fit by groups
+    m_enableWidthFitByGroups = false;
 
     //fit continuum
     bool enableFitContinuumPrecomputed = true;
@@ -675,6 +677,8 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
                     //fit the emission and absorption width by minimizing the linemodel merit with linemodel "hybrid" fitting method
                     model.SetFittingMethod("hybrid");
 
+                    std::vector<std::vector<Int32>> idxVelfitGroups;
+
                     for(Int32 iLineType = 0; iLineType<2; iLineType++)
                     {
                         Float64 vInfLim;
@@ -685,10 +689,22 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
                             Log.LogInfo( "\nLineModel Infos: manualStep velocity fit ABSORPTION, for z = %.4f", result->Redshifts[idx]);
                             vInfLim = velfitMinA;
                             vSupLim = velfitMaxA;
+                            if(m_enableWidthFitByGroups)
+                            {
+                                idxVelfitGroups.clear();
+                                idxVelfitGroups = model.GetModelVelfitGroups(CRay::nType_Absorption);
+                                Log.LogInfo( "\nLineModel Infos: VelfitGroups ABSORPTION, for n = %.d", idxVelfitGroups.size());
+                            }
                         }else{
                             Log.LogInfo( "LineModel Infos: manualStep velocity fit EMISSION, for z = %.4f", result->Redshifts[idx]);
                             vInfLim = velfitMinE;
                             vSupLim = velfitMaxE;
+                            if(m_enableWidthFitByGroups)
+                            {
+                                idxVelfitGroups.clear();
+                                idxVelfitGroups = model.GetModelVelfitGroups(CRay::nType_Emission);
+                                Log.LogInfo( "\nLineModel Infos: VelfitGroups EMISSION, for n = %.d", idxVelfitGroups.size());
+                            }
                         }
 
                         //Prepare velocity grid to be checked
@@ -720,55 +736,100 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
                         Log.LogInfo( "LineModel Infos: manualStep n=%d", nDzSteps);
 
 
-                        Float64 meritMin = DBL_MAX;
-                        Float64 vOptim = -1.0;
-                        Float64 dzOptim = -1.0;
-                        for(Int32 kdz=0; kdz<nDzSteps; kdz++)
+                        for(Int32 kgroup=0; kgroup<idxVelfitGroups.size(); kgroup++)
                         {
-                            Float64 dzTest = dzInfLim+kdz*dzStep;
-                            for(Int32 kv=0; kv<nSteps; kv++)
+                            Float64 meritMin = DBL_MAX;
+                            Float64 vOptim = -1.0;
+                            Float64 dzOptim = -1.0;
+                            for(Int32 kdz=0; kdz<nDzSteps; kdz++)
                             {
-                                Float64 vTest = vInfLim+kv*vStep;
-                                if(iLineType==0)
+                                Float64 dzTest = dzInfLim+kdz*dzStep;
+                                for(Int32 kv=0; kv<nSteps; kv++)
                                 {
-                                    model.SetVelocityAbsorption(vTest);
-                                }else
-                                {
-                                    model.SetVelocityEmission(vTest);
-                                }
-                                Float64 meritv;
-                                meritv = model.fit( result->Redshifts[idx]+dzTest, lambdaRange, result->LineModelSolutions[idx], contreest_iterations, false );
-
-                                //meritv = model.getLeastSquareMeritUnderElements();
-                                //todo: eventually use the merit under the elements with a BIC estimator taking the n samples in the support for each velocity solution...
-
-                                //Log.LogInfo("LineModel Solution: testing velocity: merit=%.1f for velocity = %.1f", meritv, vTest);
-                                if(meritMin>meritv)
-                                {
-                                    meritMin = meritv;
+                                    Float64 vTest = vInfLim+kv*vStep;
                                     if(iLineType==0)
                                     {
-                                        vOptim = model.GetVelocityAbsorption();
+                                        if(m_enableWidthFitByGroups)
+                                        {
+                                            for(Int32 ke=0; ke<idxVelfitGroups[kgroup].size(); ke++)
+                                            {
+                                                model.SetVelocityAbsorptionOneElement(vTest, idxVelfitGroups[kgroup][ke]);
+                                            }
+                                        }else{
+                                            model.SetVelocityAbsorption(vTest);
+                                        }
                                     }else
                                     {
-                                        vOptim = model.GetVelocityEmission();
+                                        if(m_enableWidthFitByGroups)
+                                        {
+                                            for(Int32 ke=0; ke<idxVelfitGroups[kgroup].size(); ke++)
+                                            {
+                                                model.SetVelocityEmissionOneElement(vTest, idxVelfitGroups[kgroup][ke]);
+                                            }
+                                        }else{
+                                            model.SetVelocityEmission(vTest);
+                                        }
                                     }
-                                    dzOptim = dzTest;
+
+                                    //Log.LogInfo( "LineModel Infos: testing v=%f", vTest);
+                                    Float64 meritv;
+                                    meritv = model.fit( result->Redshifts[idx]+dzTest, lambdaRange, result->LineModelSolutions[idx], contreest_iterations, false );
+
+//                                    if(m_enableWidthFitByGroups)
+//                                    {
+//                                        meritv = 0.0;
+//                                        for(Int32 ke=0; ke<idxVelfitGroups[kgroup].size(); ke++)
+//                                        {
+//                                            meritv += model.getModelErrorUnderElement(idxVelfitGroups[kgroup][ke]);
+//                                        }
+//                                    }
+
+                                    //
+
+                                    //Log.LogInfo("LineModel Solution: testing velocity: merit=%.3e for velocity = %.1f", meritv, vTest);
+                                    if(meritMin>meritv)
+                                    {
+                                        meritMin = meritv;
+                                        if(iLineType==0)
+                                        {
+                                            vOptim = model.GetVelocityAbsorption();
+                                        }else
+                                        {
+                                            vOptim = model.GetVelocityEmission();
+                                        }
+                                        dzOptim = dzTest;
+                                    }
                                 }
                             }
-                        }
-                        if(vOptim != -1.0)
-                        {
-                            Log.LogInfo( "LineModel Solution: best Velocity found = %.1f", vOptim);
-                            result->ChiSquare[idx] =  meritMin;
-                            if(iLineType==0)
+                            if(vOptim != -1.0)
                             {
-                                model.SetVelocityAbsorption(vOptim);
-                            }else
-                            {
-                                model.SetVelocityEmission(vOptim);
-                            }
+                                Log.LogInfo( "LineModel Solution: best Velocity found = %.1f", vOptim);
+                                result->ChiSquare[idx] =  meritMin;
+                                if(iLineType==0)
+                                {
+                                    if(m_enableWidthFitByGroups)
+                                    {
+                                        for(Int32 ke=0; ke<idxVelfitGroups[kgroup].size(); ke++)
+                                        {
+                                            model.SetVelocityAbsorptionOneElement(vOptim, idxVelfitGroups[kgroup][ke]);
+                                        }
+                                    }else{
+                                        model.SetVelocityAbsorption(vOptim);
+                                    }
+                                }else
+                                {
+                                    if(m_enableWidthFitByGroups)
+                                    {
+                                        for(Int32 ke=0; ke<idxVelfitGroups[kgroup].size(); ke++)
+                                        {
+                                            model.SetVelocityEmissionOneElement(vOptim, idxVelfitGroups[kgroup][ke]);
+                                        }
+                                    }else{
+                                        model.SetVelocityEmission(vOptim);
+                                    }
+                                }
 
+                            }
                         }
                     }
                     model.SetFittingMethod(opt_fittingmethod);
@@ -909,7 +970,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
         }
 
 
-        if(enableVelocityFitting){
+        if(enableVelocityFitting && extremumCount>1){
 //            ModelFit( model, lambdaRange, result->Redshifts[idx], result->ChiSquare[idx], result->LineModelSolutions[idx], contreest_iterations);
 //            m = result->ChiSquare[idx];
 //            //fit the emission and absorption width using the lindemodel lmfit strategy
