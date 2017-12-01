@@ -243,8 +243,9 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
         Log.LogInfo( "Linemodel: velocity fitting bounds for Emission: min=%.1f - max=%.1f", velfitMinE, velfitMaxE);
         Log.LogInfo( "Linemodel: velocity fitting bounds for Absorption: min=%.1f - max=%.1f", velfitMinA, velfitMaxA);
     }
-    //harcoded fit by groups
-    m_enableWidthFitByGroups = false;
+
+    //enable/disable fit by groups. Once enbled, the velocity fitting groups are defined in the line catalog from v4.0.
+    m_enableWidthFitByGroups = true;
 
     //fit continuum
     bool enableFitContinuumPrecomputed = true;
@@ -693,7 +694,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
                             {
                                 idxVelfitGroups.clear();
                                 idxVelfitGroups = model.GetModelVelfitGroups(CRay::nType_Absorption);
-                                Log.LogInfo( "\nLineModel Infos: VelfitGroups ABSORPTION, for n = %.d", idxVelfitGroups.size());
+                                Log.LogInfo( "\nLineModel Infos: VelfitGroups ABSORPTION - n = %.d", idxVelfitGroups.size());
                             }
                         }else{
                             Log.LogInfo( "LineModel Infos: manualStep velocity fit EMISSION, for z = %.4f", result->Redshifts[idx]);
@@ -703,7 +704,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
                             {
                                 idxVelfitGroups.clear();
                                 idxVelfitGroups = model.GetModelVelfitGroups(CRay::nType_Emission);
-                                Log.LogInfo( "\nLineModel Infos: VelfitGroups EMISSION, for n = %.d", idxVelfitGroups.size());
+                                Log.LogInfo( "\nLineModel Infos: VelfitGroups EMISSION - n = %.d", idxVelfitGroups.size());
                             }
                         }
 

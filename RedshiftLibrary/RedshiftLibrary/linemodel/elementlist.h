@@ -224,6 +224,7 @@ public:
     std::vector<std::vector<Float64>> m_DtmTplshape;
 
     bool m_enableAmplitudeOffsets;
+    bool m_enableLambdaOffsetsFit;
 
 private:
 

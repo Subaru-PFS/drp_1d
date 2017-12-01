@@ -31,7 +31,20 @@ public:
     };
 
     CRay();
-    CRay( const std::string& name, Float64 pos, UInt32 type, std::string profile, UInt32 force, Float64 amp=-1.0, Float64 width=-1.0, Float64 cut=-1.0, Float64 posErr=-1.0, Float64 sigmaErr=-1.0, Float64 ampErr=-1.0, const std::string& groupName="-1", Float64 nominalAmp=1.0 );
+    CRay( const std::string& name,
+          Float64 pos, UInt32 type,
+          std::string profile,
+          UInt32 force,
+          Float64 amp=-1.0,
+          Float64 width=-1.0,
+          Float64 cut=-1.0,
+          Float64 posErr=-1.0,
+          Float64 sigmaErr=-1.0,
+          Float64 ampErr=-1.0,
+          const std::string& groupName="-1",
+          Float64 nominalAmp=1.0,
+          const std::string& velGroupName="-1");
+
     ~CRay();
     bool operator < (const CRay& str) const;
     bool operator != (const CRay& str) const;
@@ -62,6 +75,8 @@ public:
     const std::string&  GetGroupName() const;
     const Float64 GetNominalAmplitude() const;
 
+    const std::string&  GetVelGroupName() const;
+
     Void                Save( std::ostream& stream ) const;
     Void                SaveDescription( std::ostream& stream ) const;
 
@@ -91,6 +106,9 @@ private:
 
     //for offset fitting
     bool            m_OffsetFit;
+
+    //for velocity fitting
+    std::string     m_VelGroupName;
 
 };
 

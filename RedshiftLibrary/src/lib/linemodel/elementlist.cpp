@@ -87,7 +87,8 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
     m_nominalWidthDefaultEmission = 1.15;// suited to new pfs simulations
     m_nominalWidthDefaultAbsorption = m_nominalWidthDefaultEmission;
 
-    m_enableAmplitudeOffsets = false;
+    m_enableAmplitudeOffsets = false; //this is highly experimental for now.
+    m_enableLambdaOffsetsFit = true; //enable lambdaOffsetFit. Once enabled, the offset fixed value or the fitting on/off switch is done through the offset calibration file.
 
     m_SpectrumModel = std::shared_ptr<CSpectrum>( new CSpectrum(spectrum) );
     m_SpcCorrectedUnderLines = std::shared_ptr<CSpectrum>( new CSpectrum(spectrum) );
@@ -2145,8 +2146,12 @@ Int32 CLineModelElementList::fitAmplitudesHybrid(const CSpectrumSpectralAxis& sp
     */
       if(!m_enableAmplitudeOffsets && overlappingInds.size()<2)
       {
-          //m_Elements[iElts]->fitAmplitude(spectralAxis, spcFluxAxisNoContinuum, continuumfluxAxis, redshift);
-          m_Elements[iElts]->fitAmplitudeAndLambdaOffset(spectralAxis, spcFluxAxisNoContinuum, continuumfluxAxis, redshift);
+          if(m_enableLambdaOffsetsFit)
+          {
+              m_Elements[iElts]->fitAmplitudeAndLambdaOffset(spectralAxis, spcFluxAxisNoContinuum, continuumfluxAxis, redshift);
+          }else{
+              m_Elements[iElts]->fitAmplitude(spectralAxis, spcFluxAxisNoContinuum, continuumfluxAxis, redshift);
+          }
       }
       else
       {
@@ -4551,13 +4556,96 @@ std::vector<Int32> CLineModelElementList::GetModelValidElementsIndexes()
 **/
 std::vector<std::vector<Int32>> CLineModelElementList::GetModelVelfitGroups( Int32 lineType )
 {
-    std::vector<std::vector<Int32>> groups;
+    Bool verbose = false;
+
+    std::vector<std::string> tags;
+    std::vector<Int32> nonGroupedLines;
 
     std::vector<Int32> nonZeroIndexes = GetModelValidElementsIndexes();
-
     for(Int32 i=0; i<nonZeroIndexes.size(); i++)
     {
+        Int32 iElts = nonZeroIndexes[i];
+        Int32 nRays = m_Elements[iElts]->GetSize();
+        for(Int32 iSubElts=0; iSubElts<nRays; iSubElts++)
+        {
+            if(lineType == m_Elements[iElts]->m_Rays[iSubElts].GetType())
+            {
+                std::string _tag = m_Elements[iElts]->m_Rays[iSubElts].GetVelGroupName();
+                if(_tag != "-1"){
+                    tags.push_back(_tag);
+                }else{
+                    nonGroupedLines.push_back(iElts);
+                }
+            }
+        }
+    }
+    // create the group tag set by removing duplicates
+    std::sort( tags.begin(), tags.end() );
+    tags.erase( std::unique( tags.begin(), tags.end() ), tags.end() );
+    //*
+    //print the tags
+    for( Int32 itag = 0; itag<tags.size(); itag++){
+        Log.LogInfo("Tag %d/%d = %s", itag+1, tags.size(), tags[itag].c_str());
+    }
+    //*/
 
+    //add the grouped lines
+    std::vector<std::vector<Int32>> groups;
+    std::vector<std::string> groupsTags;
+    for( Int32 itag = 0; itag<tags.size(); itag++)
+    {
+        std::vector<Int32> _group;
+        for(Int32 i=0; i<nonZeroIndexes.size(); i++)
+        {
+            Int32 iElts = nonZeroIndexes[i];
+            Int32 nRays = m_Elements[iElts]->GetSize();
+            for(Int32 iSubElts=0; iSubElts<nRays; iSubElts++)
+            {
+                if(lineType == m_Elements[iElts]->m_Rays[iSubElts].GetType())
+                {
+                    std::string _tag = m_Elements[iElts]->m_Rays[iSubElts].GetVelGroupName();
+                    if(_tag == tags[itag]){
+                        _group.push_back(iElts);
+                    }
+                }
+            }
+        }
+        //add the grouped lines, no duplicates
+        std::sort( _group.begin(), _group.end() );
+        _group.erase( std::unique( _group.begin(), _group.end() ), _group.end() );
+
+        groups.push_back(_group);
+        groupsTags.push_back(tags[itag]);
+    }
+    //add the non grouped lines, no duplicates
+    std::sort( nonGroupedLines.begin(), nonGroupedLines.end() );
+    nonGroupedLines.erase( std::unique( nonGroupedLines.begin(), nonGroupedLines.end() ), nonGroupedLines.end() );
+    for( Int32 i = 0; i<nonGroupedLines.size(); i++)
+    {
+        std::vector<Int32> _group;
+        _group.push_back(nonGroupedLines[i]);
+        groups.push_back(_group);
+        groupsTags.push_back("-1");
+    }
+
+    if(verbose)
+    {
+        //print the groups
+        for( Int32 igr = 0; igr<groups.size(); igr++){
+            Log.LogInfo("Group %d/%d: tag=%s", igr+1, groups.size(), groupsTags[igr].c_str());
+            for(Int32 i=0; i<groups[igr].size(); i++)
+            {
+                Log.LogInfo("\t%d: iElt=%d", i+1, groups[igr][i]);
+            }
+        }
+    }
+
+    //Override velGroups from Catalog: => Individual lines as groups
+    /*
+    std::vector<std::vector<Int32>> groups;
+    std::vector<Int32> nonZeroIndexes = GetModelValidElementsIndexes();
+    for(Int32 i=0; i<nonZeroIndexes.size(); i++)
+    {
         if(lineType == m_Elements[nonZeroIndexes[i]]->m_Rays[0].GetType())
         {
             std::vector<Int32> gr;
@@ -4566,10 +4654,10 @@ std::vector<std::vector<Int32>> CLineModelElementList::GetModelVelfitGroups( Int
             //Log.LogInfo("Group %d, idx=%d", groups.size(), groups[groups.size()-1][0]);
         }
     }
+    //*/
 
     return groups;
 }
-
 
 bool CLineModelElementList::IsElementIndexInDisabledList(Int32 index)
 {
