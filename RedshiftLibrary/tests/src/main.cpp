@@ -1,6 +1,4 @@
-
-#define BOOST_TEST_MAIN
-
+#define BOOST_TEST_MODULE Redshift Determination Library test suite
 #include <boost/test/unit_test.hpp>
 
 #include <RedshiftLibrary/log/log.h>
