@@ -72,8 +72,6 @@ public:
 	const char* rayCatalogPath,
 	std::shared_ptr<CParameterStore> paramStore,
         std::shared_ptr<CClassifierStore> zqualStore  );
-//  CParameterStore&	GetParameterStore();
-//  COperatorResultStore& GetResultStore();
   CDataStore& GetDataStore();
 };
 

@@ -9,6 +9,7 @@ FIND_PACKAGE(Boost REQUIRED COMPONENTS filesystem system thread timer chrono pro
 FIND_PACKAGE(Cfitsio)
 FIND_PACKAGE(GSL)
 FIND_PACKAGE(FFTW)
+
 #--------------------------------------------------------
 # Setup shortcut acces directory
 #--------------------------------------------------------
@@ -17,14 +18,6 @@ SET( ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}" )
 SET( CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${ROOT_DIR}/lib )
 SET( CMAKE_LIBRARY_OUTPUT_DIRECTORY ${ROOT_DIR}/lib )
 SET( CMAKE_RUNTIME_OUTPUT_DIRECTORY ${ROOT_DIR}/bin )
-
-IF( DEFINED BUILD_THIRDPARTY )
-  STRING( TOLOWER ${BUILD_THIRDPARTY} __BUILD3RD )
-  IF( __BUILD3RD STREQUAL "true")
-    ADD_SUBDIRECTORY( tools )
-  ENDIF ()
-ENDIF ()
-
 
 #--------------------------------------------------------
 # Parse version, this willbe used later to configure
@@ -42,7 +35,32 @@ SET( cpf-redshift_THIRDPARTY_INCLUDE_DIR ${ROOT_DIR}/thirdparty/include/ )
 SET( cpf-redshift_LINK_DIR ${ROOT_DIR}/lib/ )
 SET( cpf-redshift_THIRDPARTY_LINK_DIR ${ROOT_DIR}/thirdparty/lib/)
 
-SET( cpf-redshift_THIRDPARTY_LIBS Boost Cfitsio GSL FFTW )
+SET( cpf-redshift_THIRDPARTY_LIBS "")
+
+IF( NOT DEFINED CFITSIO_INCLUDE_DIR )
+  LIST(APPEND cpf-redshift_THIRDPARTY_LIBS cfitsio )
+ENDIF()
+
+IF( NOT DEFINED FFTW_INCLUDE_DIR )
+  LIST(APPEND cpf-redshift_THIRDPARTY_LIBS fftw3 )
+ENDIF()
+
+IF( NOT DEFINED GSL_INCLUDE_DIRS )
+  LIST(APPEND cpf-redshift_THIRDPARTY_LIBS gsl gslcblas)
+ENDIF()
+
+IF( NOT DEFINED Boost_INCLUDE_DIRS )
+  LIST(APPEND cpf-redshift_THIRDPARTY_LIBS pthread boost_filesystem boost_system boost_thread boost_timer boost_chrono boost_program_options boost_regex)
+  SET(tests_THIRDPARTY_LIBS boost_unit_test_framework)
+ENDIF()
+
+IF( DEFINED BUILD_THIRDPARTY )
+  STRING( TOLOWER ${BUILD_THIRDPARTY} __BUILD3RD )
+  IF( __BUILD3RD STREQUAL "true")
+    ADD_SUBDIRECTORY( tools )
+  ENDIF ()
+ENDIF ()
+
 
 #--------------------------------------------------------
 # Preprocessor and linker path
@@ -64,7 +82,15 @@ SET( LIB_NAME cpf-redshift${EXT} )
 FILE( GLOB_RECURSE LIB_SOURCE_FILES ${ROOT_DIR}/RedshiftLibrary/src/lib/*.cpp )
 
 ADD_LIBRARY( ${LIB_NAME} SHARED ${LIB_SOURCE_FILES} )
-TARGET_LINK_LIBRARIES(${LIB_NAME} ${Boost_LIBRARIES} ${CFITSIO_LIBRARIES} ${GSL_LIBRARIES} ${FFTW_LIBRARIES})
+TARGET_LINK_LIBRARIES(${LIB_NAME}
+  ${cpf-redshift_THIRDPARTY_LIBS}
+  ${Boost_filesystem_LIBRARY}
+  ${Boost_system_LIBRARY}
+  ${Boost_thread_LIBRARY}
+  ${Boost_timer_LIBRARY}
+  ${Boost_chrono_LIBRARY}
+  ${Boost_program_options_LIBRARY}
+  ${CFITSIO_LIBRARIES} ${GSL_LIBRARIES} ${FFTW_LIBRARIES})
 
 #--------------------------------------------------------
 # Compile test
@@ -77,7 +103,8 @@ ADD_EXECUTABLE( ${TEST_NAME} ${TEST_SOURCE_FILES} )
 ADD_DEFINITIONS(-DBOOST_TEST_DYN_LINK)
 
 # Supply link librairies
-TARGET_LINK_LIBRARIES( ${TEST_NAME} ${LIB_NAME} ${Boost_LIBRARIES} ${CFITSIO_LIBRARIES} ${GSL_LIBRARIES} ${FFTW_LIBRARIES})
+TARGET_LINK_LIBRARIES( ${TEST_NAME} ${LIB_NAME} ${cpf-redshift_THIRDPARTY_LIBS} ${tests_THIRDPARTY_LIBS}
+  ${Boost_LIBRARIES} ${CFITSIO_LIBRARIES} ${GSL_LIBRARIES} ${FFTW_LIBRARIES})
 
 #--------------------------------------------------------
 # Install directive
@@ -87,6 +114,10 @@ INSTALL( TARGETS ${LIB_NAME} LIBRARY DESTINATION lib )
 INSTALL( DIRECTORY ${ROOT_DIR}/RedshiftLibrary/ DESTINATION RedshiftLibrary )
 INSTALL( FILES  ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cpf-redshift-config.cmake DESTINATION cmake )
 
+
+#--------------------------------------------------------
+# Build python wrapper
+#--------------------------------------------------------
 FIND_PACKAGE(SWIG)
 INCLUDE(${SWIG_USE_FILE})
 FIND_PACKAGE(PythonLibs)
@@ -94,7 +125,14 @@ INCLUDE_DIRECTORIES( ${PYTHON_INCLUDE_DIRS} )
 
 SET_PROPERTY(SOURCE RedshiftLibrary/RedshiftLibrary/redshift.i PROPERTY CPLUSPLUS ON)
 SWIG_ADD_LIBRARY(redshift LANGUAGE python SOURCES RedshiftLibrary/RedshiftLibrary/redshift.i)
-SWIG_LINK_LIBRARIES( redshift ${PYTHON_LIBRARIES} ${Boost_LIBRARIES} ${CFITSIO_LIBRARIES} ${GSL_LIBRARIES} ${FFTW_LIBRARIES} ${LIB_NAME} )
+SWIG_LINK_LIBRARIES( redshift ${PYTHON_LIBRARIES}
+  ${Boost_filesystem_LIBRARY}
+  ${Boost_system_LIBRARY}
+  ${Boost_thread_LIBRARY}
+  ${Boost_timer_LIBRARY}
+  ${Boost_chrono_LIBRARY}
+  ${Boost_program_options_LIBRARY}
+  ${CFITSIO_LIBRARIES} ${GSL_LIBRARIES} ${FFTW_LIBRARIES} ${LIB_NAME} )
 
 #--------------------------------------------------------
 # Package deployement and config

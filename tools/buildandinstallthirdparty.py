@@ -102,7 +102,6 @@ def Main( argv ):
     if options.Dry == True:
         Clear()
 
-
     # CPPUNIT
     libPath = libDict["cppunit"]["path"];
     libSrc = libDict["cppunit"]["src"];
@@ -115,14 +114,14 @@ def Main( argv ):
     libSrc = libDict["gsl"]["src"];
     if DownloadHTTPFile( libSrc, libPath+".tar.gz" ) :
         if ExtractTarGZ( libPath+".tar.gz", libPath ) :
-            os.system( "cd "+libPath+"/ ; ./configure --prefix="+thirdPartyDir+" ; make ; make install ; cd ../" )
-            
+            os.system( "cd "+libPath+"/ ; ./configure --prefix="+thirdPartyDir+" --disable-static ; make ; make install ; cd ../" )
+
     # FFTW
     libPath = libDict["fftw"]["path"];
     libSrc = libDict["fftw"]["src"];
     if DownloadHTTPFile( libSrc, libPath+".tar.gz" ) :
         if ExtractTarGZ( libPath+".tar.gz", libPath ) :
-            os.system( "cd "+libPath+"/ ; ./configure --prefix="+thirdPartyDir+" ; make ; make install ; cd ../" )
+            os.system( "cd "+libPath+"/ ; ./configure --prefix="+thirdPartyDir+" --enable-shared; make ; make install ; cd ../" )
 
     # DOXYGEN
     libPath = libDict["doxygen"]["path"];
@@ -136,7 +135,7 @@ def Main( argv ):
     libSrc = libDict["boost"]["src"];
     if DownloadHTTPFile( libSrc, libPath+".tar.gz" ) :
         if ExtractTarGZ( libPath+".tar.gz", libPath ) :
-            os.system( "cd "+libPath+"/ ; ./bootstrap.sh --with-libraries=test,filesystem,program_options,thread,regex,python,timer,chrono --prefix="+thirdPartyDir+" ; ./b2 link=static install ; cd ../" )
+            os.system( "cd "+libPath+"/ ; ./bootstrap.sh --with-libraries=test,filesystem,program_options,thread,regex,python,timer,chrono --prefix="+thirdPartyDir+" ; ./b2 link=shared install ; cd ../" )
 
     # CFITSIO
     libPath = libDict["cfitsio"]["path"];
