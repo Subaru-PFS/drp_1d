@@ -130,7 +130,9 @@ public:
 
     Float64 fit(Float64 redshift, const TFloat64Range& lambdaRange, CLineModelSolution &modelSolution, Int32 contreest_iterations=0, bool enableLogging=0);
 
-    Bool initTplshapeModel(Int32 itplshape, Bool enableSetVelocity=false);
+    Bool initLambdaOffsets();
+
+    Bool setTplshapeModel(Int32 itplshape, Bool enableSetVelocity=false);
     Bool setTplshapeAmplitude(std::vector<Float64> ampsElts, std::vector<Float64> errorsElts);
 
     std::vector<CLmfitController*> createLmfitControllers( const TFloat64Range& lambdaRange);
@@ -224,6 +226,9 @@ public:
     std::vector<std::vector<Float64>> m_DtmTplshape;
 
     bool m_enableAmplitudeOffsets;
+    Float64 m_LambdaOffsetMin = -400.0;
+    Float64 m_LambdaOffsetMax = 400.0;
+    Float64 m_LambdaOffsetStep = 25.0;
     bool m_enableLambdaOffsetsFit;
 
 private:
@@ -232,6 +237,7 @@ private:
     void fitAmplitudesSimplex();
     Int32 fitAmplitudesLmfit( const CSpectrumFluxAxis& fluxAxis, CLmfitController * controller);
     Int32 fitAmplitudesLinSolve(std::vector<Int32> EltsIdx, const CSpectrumSpectralAxis &spectralAxis, const CSpectrumFluxAxis &fluxAxis, const CSpectrumFluxAxis& continuumfluxAxis, std::vector<Float64> &ampsfitted, std::vector<Float64> &errorsfitted);
+    Int32 fitAmplitudesLinSolveAndLambdaOffset(std::vector<Int32> EltsIdx, const CSpectrumSpectralAxis &spectralAxis, const CSpectrumFluxAxis &fluxAxis, const CSpectrumFluxAxis& continuumfluxAxis, std::vector<Float64> &ampsfitted, std::vector<Float64> &errorsfitted, Bool enableOffsetFitting);
     Int32 fitAmplitudesLBFGS(std::vector<Int32> filteredEltsIdx, const CSpectrumFluxAxis& fluxAxis, std::vector<Float64>& ampsfitted, Int32 lineType);
 
     bool m_forceDisableLyaFitting;
@@ -317,7 +323,9 @@ private:
     bool m_lmfit_fitEmissionVelocity;
     bool m_lmfit_fitAbsorptionVelocity;
 
-    std::vector<Float64> m_ampOffsetsA;
+    std::vector<Float64> m_ampOffsetsX0;
+    std::vector<Float64> m_ampOffsetsX1;
+    std::vector<Float64> m_ampOffsetsX2;
     std::vector<Int32> m_ampOffsetsIdxStart;
     std::vector<Int32> m_ampOffsetsIdxStop;
 };

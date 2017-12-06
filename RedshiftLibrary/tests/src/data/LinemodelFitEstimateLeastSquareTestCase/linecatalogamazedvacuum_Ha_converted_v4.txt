@@ -1,0 +1,3 @@
+#version:0.4.0	(autoconverted)
+#2017-03-06
+6564.61	Halpha	E	S	SYM	-1	-1	-1

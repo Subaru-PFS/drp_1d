@@ -577,22 +577,30 @@ void CMultiLine::SetFittedAmplitude(Float64 A, Float64 SNR)
  * @param redshift
  * @param lineIdx
  */
-void CMultiLine::fitAmplitudeAndLambdaOffset(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& noContinuumfluxAxis, const CSpectrumFluxAxis &continuumfluxAxis, Float64  redshift, Int32 lineIdx )
+void CMultiLine::fitAmplitudeAndLambdaOffset(const CSpectrumSpectralAxis& spectralAxis,
+                                             const CSpectrumFluxAxis& noContinuumfluxAxis,
+                                             const CSpectrumFluxAxis &continuumfluxAxis,
+                                             Float64  redshift,
+                                             Int32 lineIdx,
+                                             bool enableOffsetFitting,
+                                             Float64 step,
+                                             Float64 min,
+                                             Float64 max)
 {
     Float64 nRays = m_Rays.size();
-    Float64 step = 20.0;
-    Float64 min = -400.0;
-    Float64 max = 400.0;
     Int32 nSteps = int((max-min)/step+0.5);
 
     bool atLeastOneOffsetToFit = false;
-    for(Int32 iR=0; iR<nRays; iR++)
+    if(enableOffsetFitting)
     {
-        //check if the line is to be fitted
-        if(m_Rays[iR].GetOffsetFitEnabled())
+        for(Int32 iR=0; iR<nRays; iR++)
         {
-            atLeastOneOffsetToFit = true;
-            break;
+            //check if the line is to be fitted
+            if(m_Rays[iR].GetOffsetFitEnabled())
+            {
+                atLeastOneOffsetToFit = true;
+                break;
+            }
         }
     }
 

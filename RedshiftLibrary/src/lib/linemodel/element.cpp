@@ -382,7 +382,7 @@ Float64 CLineModelElement::GetLineProfileDerivSigma(std::string profile, Float64
 
 Float64 CLineModelElement::GetNSigmaSupport(std::string profile)
 {
-    static Float64 nominal = 8.0;
+    static Float64 nominal = 8;
     Float64 val=nominal;
 
     if(profile=="SYM"){

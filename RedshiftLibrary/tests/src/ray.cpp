@@ -133,16 +133,19 @@ NSEpic::TFloat64List UtilLoadRayMatchingResults( const char* filePath ){
 BOOST_AUTO_TEST_CASE(LoadCatalog)
 {
     CRayCatalog catalog;
-    Bool returnValue;
+    Int32 returnValue;
 
     returnValue = catalog.Load( "../RedshiftLibrary/tests/src/data/RayTestCase/raycatalog_OK1.txt" );
-    BOOST_CHECK( returnValue == true );
+    BOOST_CHECK( returnValue == 1 );
 
     returnValue = catalog.Load( "../RedshiftLibrary/tests/src/data/RayTestCase/raycatalog_NOK1.txt" );
-    BOOST_CHECK( returnValue == false );
+    BOOST_CHECK( returnValue <= 0.0 );
 
-    returnValue = catalog.Load( "../RedshiftLibrary/tests/src/data/RayTestCase/raycatalog_NOK1.txt" );
-    BOOST_CHECK( returnValue == false );
+    returnValue = catalog.Load( "../RedshiftLibrary/tests/src/data/RayTestCase/raycatalog_NOK2.txt" );
+    BOOST_CHECK( returnValue <= 0.0 );
+
+    returnValue = catalog.Load( "../RedshiftLibrary/tests/src/data/RayTestCase/raycatalog_NOK3.txt" );
+    BOOST_CHECK( returnValue <= 0.0 );
 
 }
 
@@ -179,10 +182,10 @@ BOOST_AUTO_TEST_CASE(MatchingTest2_EzValidationTest)
 {
     //load restframe catalog
     CRayCatalog restFrameCatalog;
-    Bool returnValue;
+    Int32 returnValue;
 
     returnValue = restFrameCatalog.Load( "../RedshiftLibrary/tests/src/data/RayTestCase/RayMatchingVVDS/raycatalog.txt" );
-    BOOST_CHECK( returnValue == true );
+    BOOST_CHECK( returnValue == 1 );
 
     //load detected lines results
     TFloat64List rayPosList = UtilLoadDetectedRayPositions("../RedshiftLibrary/tests/src/data/RayTestCase/RayMatchingVVDS/sc_020100776_F02P017_vmM1_red_129_1_atm_clean.fits/detectedRayCatalog.csv");

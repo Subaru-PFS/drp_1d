@@ -201,6 +201,15 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
     Float64 setssSizeInit = 0.1;
     model.SetSourcesizeDispersion(setssSizeInit);
     Log.LogInfo( "Linemodel: sourcesize init to: ss=%.1f", setssSizeInit);
+
+
+    //init catalog offsets
+    Log.LogInfo( "Linemodel: Lambda offsets init");
+    bool offsetsInitRet = model.initLambdaOffsets();
+    if(!offsetsInitRet)
+    {
+        Log.LogError( "Linemodel: Failed to init lambda offsets");
+    }
     //*/
 
 
@@ -677,7 +686,8 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
                 if(enableManualStepVelocityFit){
                     //fit the emission and absorption width by minimizing the linemodel merit with linemodel "hybrid" fitting method
                     model.SetFittingMethod("hybrid");
-
+                    //model.m_enableAmplitudeOffsets = true;
+                    //contreest_iterations = 1;
                     std::vector<std::vector<Int32>> idxVelfitGroups;
 
                     for(Int32 iLineType = 0; iLineType<2; iLineType++)
@@ -834,6 +844,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
                         }
                     }
                     model.SetFittingMethod(opt_fittingmethod);
+                    //model.m_enableAmplitudeOffsets = false;
                 }
             }
             extrema_velocityEL[i]=model.GetVelocityEmission();

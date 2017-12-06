@@ -256,6 +256,10 @@ Int32 CRayCatalog::Load( const char* filePath )
     }
     file.close();
 
+    if(ver<0.0)
+    {
+        return 0;
+    }
     return 1;
 }
 

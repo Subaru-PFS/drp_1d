@@ -1,3 +1,0 @@
-#version:0.3.0	
-#2017-03-06				
-6564.61	Halpha	E	S	SYM	
