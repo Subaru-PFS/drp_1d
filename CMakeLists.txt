@@ -61,6 +61,7 @@ IF( DEFINED BUILD_THIRDPARTY )
   ENDIF ()
 ENDIF ()
 
+MESSAGE("Using third party libraries: " ${cpf-redshift_THIRDPARTY_LIBS})
 
 #--------------------------------------------------------
 # Preprocessor and linker path
@@ -126,12 +127,8 @@ INCLUDE_DIRECTORIES( ${PYTHON_INCLUDE_DIRS} )
 SET_PROPERTY(SOURCE RedshiftLibrary/RedshiftLibrary/redshift.i PROPERTY CPLUSPLUS ON)
 SWIG_ADD_LIBRARY(redshift LANGUAGE python SOURCES RedshiftLibrary/RedshiftLibrary/redshift.i)
 SWIG_LINK_LIBRARIES( redshift ${PYTHON_LIBRARIES}
-  ${Boost_filesystem_LIBRARY}
-  ${Boost_system_LIBRARY}
-  ${Boost_thread_LIBRARY}
-  ${Boost_timer_LIBRARY}
-  ${Boost_chrono_LIBRARY}
-  ${Boost_program_options_LIBRARY}
+  ${cpf-redshift_THIRDPARTY_LIBS}
+  ${Boost_LIBRARIES}
   ${CFITSIO_LIBRARIES} ${GSL_LIBRARIES} ${FFTW_LIBRARIES} ${LIB_NAME} )
 
 #--------------------------------------------------------

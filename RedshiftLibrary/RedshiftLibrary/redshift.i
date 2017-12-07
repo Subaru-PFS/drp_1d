@@ -60,6 +60,7 @@ public:
 class CClassifierStore {
 public:
   CClassifierStore();
+  Bool Load ( const char* dirPath );
 };
 
 class CProcessFlowContext {
@@ -87,6 +88,8 @@ public:
   CDataStore( COperatorResultStore& resultStore, CParameterStore& parameStore );
   Void SaveRedshiftResult( const std::string& dir );
   Void SaveReliabilityResult( const std::string& dir );
+  Void SaveAllResults( const std::string& dir ) const;
+
 };
 
 class COperatorResultStore
