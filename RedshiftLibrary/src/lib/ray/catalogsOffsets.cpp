@@ -18,9 +18,9 @@ using namespace boost;
 
 CLineCatalogsOffsets::CLineCatalogsOffsets()
 {
-    m_Catalogs_relpath = "linecatalogs_offsets/offsetsCatalogs_20171128_fit"; //path to the fit offset catalog
+    //m_Catalogs_relpath = "linecatalogs_offsets/offsetsCatalogs_20171128_fit"; //path to the fit offset catalog, used only for Linemeas for now
     //m_Catalogs_relpath = "linecatalogs_offsets/offsetsCatalogs_20170410_0"; //path to the fixed offset catalog
-    //m_Catalogs_relpath = "linecatalogs_offsets/offsetsCatalogs_20170410_m150"; //path to the fixed offset catalog
+    m_Catalogs_relpath = "linecatalogs_offsets/offsetsCatalogs_20170410_m150"; //path to the fixed offset catalog
     //m_Catalogs_relpath = "linecatalogs_offsets/offsetsCatalogs_20170410_m300"; //path to the fixed offset catalog
     //m_Catalogs_relpath = "linecatalogs_offsets/offsetsCatalogs_20170410_steidel"; //path to the steidel offset as of 2017-02 pfs10k simus.
     Log.LogInfo( "CLineCatalogsOffsets - directory : %s", m_Catalogs_relpath.c_str());
