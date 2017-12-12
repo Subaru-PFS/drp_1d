@@ -118,7 +118,7 @@ public:
   CDataStore( COperatorResultStore& resultStore, CParameterStore& parameStore );
   Void SaveRedshiftResult( const std::string& dir );
   Void SaveReliabilityResult( const std::string& dir );
-  Void SaveAllResults( const std::string& dir ) const;
+  Void SaveAllResults( const std::string& dir, const std::string opt ) const;
 
 };
 

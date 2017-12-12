@@ -63,7 +63,7 @@ def amazed():
         pflow.Process(ctx)
         ctx.GetDataStore().SaveRedshiftResult(args.output_folder)
         #ctx.GetDataStore().SaveReliabilityResult('/tmp/bar')
-        ctx.GetDataStore().SaveAllResults(args.output_folder)
+        ctx.GetDataStore().SaveAllResults(args.output_folder, 'all')
 
 if __name__ == '__main__':
     amazed()
