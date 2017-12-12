@@ -9,7 +9,6 @@ using namespace NSEpic;
 
 BOOST_AUTO_TEST_SUITE(Template)
 
-
 BOOST_AUTO_TEST_CASE(LoadCatalog)
 {
     CTemplateCatalog catalog;
@@ -22,7 +21,6 @@ BOOST_AUTO_TEST_CASE(LoadCatalog)
     BOOST_CHECK( catalog.GetTemplateCount( "star" ) == 1 );
 
 }
-
 
 BOOST_AUTO_TEST_SUITE_END()
 

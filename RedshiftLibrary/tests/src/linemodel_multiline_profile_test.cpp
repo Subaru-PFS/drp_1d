@@ -104,7 +104,7 @@ void checkProfileValue(std::string linecatalogPath,
 
     CLineModelElementList model(spectrum, spectrumContinuum, tplCatalog, tplCategories, unused_calibrationPath, lineList, opt_fittingmethod, opt_continuumcomponent, opt_lineWidthType, opt_resolution, opt_velocityEmission, opt_velocityAbsorption, opt_rules, opt_rigidity);
     TFloat64Range lambdaRange = TFloat64Range( 100.0, 12000.0 );
-    CLineModelResult::SLineModelSolution modelSolution;
+    CLineModelSolution modelSolution;
     Float64 merit = model.fit(z, lambdaRange, modelSolution);
 
     CSpectrumSpectralAxis spcSpectralAxis = spectrum.GetSpectralAxis();
@@ -115,7 +115,7 @@ void checkProfileValue(std::string linecatalogPath,
         validEltsIdx.push_back(iElt);
     }
 
-    model.refreshModelDerivSigmaUnderElements(validEltsIdx);
+    model.refreshModelDerivVelUnderElements(validEltsIdx);
 
     //check the flux values
     for(Int32 k=0; k<lambdas.size(); k++)
@@ -147,7 +147,7 @@ void checkProfileValue(std::string linecatalogPath,
         for(Int32 k=0; k<lambdas.size(); k++)
         {
             Float64 iLambda = spcSpectralAxis.GetIndexAtWaveLength(lambdas[k]);
-            Float64 val = model.getModelFluxDerivSigmaVal(iLambda);
+            Float64 val = model.getModelFluxDerivVelVal(iLambda);
             Float64 refDerivVelValue = refProfileGradientValues[k][idxVelGradient];
             BOOST_CHECK_SMALL( std::abs(val - refDerivVelValue), 1e-4);
         }

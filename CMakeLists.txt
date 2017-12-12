@@ -70,14 +70,21 @@ ADD_LIBRARY( ${LIB_NAME} STATIC ${LIB_SOURCE_FILES} )
 #--------------------------------------------------------
 # Compile test
 #--------------------------------------------------------
+ENABLE_TESTING()
+
 SET( TEST_NAME cpf-redshift-test${EXT} )
 
 FILE( GLOB_RECURSE TEST_SOURCE_FILES ${ROOT_DIR}/RedshiftLibrary/tests/src/*.cpp )
 
-ADD_EXECUTABLE( ${TEST_NAME} ${TEST_SOURCE_FILES} )
+FOREACH(TEST_SOURCE ${TEST_SOURCE_FILES})
+  GET_FILENAME_COMPONENT(TEST_NAME ${TEST_SOURCE} NAME_WE)
+  ADD_EXECUTABLE( ${TEST_NAME} ${TEST_SOURCE} )
+  TARGET_LINK_LIBRARIES( ${TEST_NAME} ${LIB_NAME} boost_unit_test_framework )
+  ADD_TEST(NAME ${TEST_NAME}
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin
+    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/bin/${TEST_NAME} )
+ENDFOREACH(TEST_SOURCE)
 
-# Supply link librairies
-TARGET_LINK_LIBRARIES( ${TEST_NAME} ${LIB_NAME}  ${cpf-redshift_THIRDPARTY_LIBS} boost_unit_test_framework )
 
 #--------------------------------------------------------
 # Install directive

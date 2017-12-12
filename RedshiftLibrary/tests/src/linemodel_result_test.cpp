@@ -32,24 +32,24 @@ BOOST_AUTO_TEST_SUITE(test_line_model_result)
 BOOST_AUTO_TEST_CASE(ResizeExtremaResults){
   CLineModelResult linemodelResult = CLineModelResult();
 
-  linemodelResult.ResizeExtremaResults(2);
-  BOOST_CHECK(linemodelResult.Extrema.size() == 2);
-  BOOST_CHECK(linemodelResult.ExtremaMerit.size() == 2);
-  BOOST_CHECK(linemodelResult.DeltaZ.size() == 2);
-  BOOST_CHECK(linemodelResult.mTransposeM.size() == 2);
-  BOOST_CHECK(linemodelResult.ExtremaLastPass.size() == 2);
-  BOOST_CHECK(linemodelResult.Posterior.size() == 2);
-  BOOST_CHECK(linemodelResult.StrongELSNR.size() == 2);
-  BOOST_CHECK(linemodelResult.LogArea.size() == 2);
-  BOOST_CHECK(linemodelResult.LogAreaCorrectedExtrema.size() == 2);
-  BOOST_CHECK(linemodelResult.SigmaZ.size() == 2);
-  BOOST_CHECK(linemodelResult.bic.size() == 2);
-  BOOST_CHECK(linemodelResult.ContinuumIndexes.size() == 2);
-  BOOST_CHECK(linemodelResult.OutsideLinesMask.size() == 2);
-  BOOST_CHECK(linemodelResult.FittedTplName.size() == 2);
-  BOOST_CHECK(linemodelResult.FittedTplAmplitude.size() == 2);
-  BOOST_CHECK(linemodelResult.FittedTplDustCoeff.size() == 2);
-  BOOST_CHECK(linemodelResult.FittedTplMeiksinIdx.size() == 2);
+  linemodelResult.ExtremaResult.Resize(2);
+  BOOST_CHECK(linemodelResult.ExtremaResult.Extrema.size() == 2);
+  BOOST_CHECK(linemodelResult.ExtremaResult.ExtremaMerit.size() == 2);
+  BOOST_CHECK(linemodelResult.ExtremaResult.DeltaZ.size() == 2);
+  BOOST_CHECK(linemodelResult.ExtremaResult.mTransposeM.size() == 2);
+  BOOST_CHECK(linemodelResult.ExtremaResult.ExtremaLastPass.size() == 2);
+  BOOST_CHECK(linemodelResult.ExtremaResult.Posterior.size() == 2);
+  BOOST_CHECK(linemodelResult.ExtremaResult.StrongELSNR.size() == 2);
+  BOOST_CHECK(linemodelResult.ExtremaResult.LogArea.size() == 2);
+  BOOST_CHECK(linemodelResult.ExtremaResult.LogAreaCorrectedExtrema.size() == 2);
+  BOOST_CHECK(linemodelResult.ExtremaResult.SigmaZ.size() == 2);
+  BOOST_CHECK(linemodelResult.ExtremaResult.bic.size() == 2);
+  BOOST_CHECK(linemodelResult.ExtremaResult.ContinuumIndexes.size() == 2);
+  BOOST_CHECK(linemodelResult.ExtremaResult.OutsideLinesMask.size() == 2);
+  BOOST_CHECK(linemodelResult.ExtremaResult.FittedTplName.size() == 2);
+  BOOST_CHECK(linemodelResult.ExtremaResult.FittedTplAmplitude.size() == 2);
+  BOOST_CHECK(linemodelResult.ExtremaResult.FittedTplDustCoeff.size() == 2);
+  BOOST_CHECK(linemodelResult.ExtremaResult.FittedTplMeiksinIdx.size() == 2);
 
 }
 
@@ -80,24 +80,24 @@ BOOST_AUTO_TEST_CASE(Save){
   std::istream istream(&sbuf);
   linemodelResult.Load(istream);
 
-  linemodelResult.ResizeExtremaResults(1);
-  linemodelResult.Extrema[0]= 0.1;
-  linemodelResult.ExtremaMerit[0]= 0.1;
-  linemodelResult.DeltaZ[0]= 0.1;
-  linemodelResult.mTransposeM[0]= 0.1;
-  linemodelResult.ExtremaLastPass[0]= 0.1;
-  linemodelResult.Posterior[0]= 0.1;
-  linemodelResult.StrongELSNR[0]= 0.1;
-  linemodelResult.LogArea[0]= 0.1;
-  linemodelResult.LogAreaCorrectedExtrema[0]= 0.1;
-  linemodelResult.SigmaZ[0]= 0.1;
-  linemodelResult.bic[0]= 0.1;
-  linemodelResult.ContinuumIndexes[0] = indexesList;
-  linemodelResult.OutsideLinesMask[0]= mask;
-  linemodelResult.FittedTplName[0]= "template";
-  linemodelResult.FittedTplAmplitude[0]= 0.1;
-  linemodelResult.FittedTplDustCoeff[0]= 0.1;
-  linemodelResult.FittedTplMeiksinIdx[0]= 1;
+  linemodelResult.ExtremaResult.Resize(1);
+  linemodelResult.ExtremaResult.Extrema[0]= 0.1;
+  linemodelResult.ExtremaResult.ExtremaMerit[0]= 0.1;
+  linemodelResult.ExtremaResult.DeltaZ[0]= 0.1;
+  linemodelResult.ExtremaResult.mTransposeM[0]= 0.1;
+  linemodelResult.ExtremaResult.ExtremaLastPass[0]= 0.1;
+  linemodelResult.ExtremaResult.Posterior[0]= 0.1;
+  linemodelResult.ExtremaResult.StrongELSNR[0]= 0.1;
+  linemodelResult.ExtremaResult.LogArea[0]= 0.1;
+  linemodelResult.ExtremaResult.LogAreaCorrectedExtrema[0]= 0.1;
+  linemodelResult.ExtremaResult.SigmaZ[0]= 0.1;
+  linemodelResult.ExtremaResult.bic[0]= 0.1;
+  linemodelResult.ExtremaResult.ContinuumIndexes[0] = indexesList;
+  linemodelResult.ExtremaResult.OutsideLinesMask[0]= mask;
+  linemodelResult.ExtremaResult.FittedTplName[0]= "template";
+  linemodelResult.ExtremaResult.FittedTplAmplitude[0]= 0.1;
+  linemodelResult.ExtremaResult.FittedTplDustCoeff[0]= 0.1;
+  linemodelResult.ExtremaResult.FittedTplMeiksinIdx[0]= 1;
   linemodelResult.dTransposeDNocontinuum =0.1;
   linemodelResult.dTransposeD = 0.1;
 
@@ -176,10 +176,10 @@ BOOST_AUTO_TEST_CASE(GetNLinesOverCutThreshold){
   CLineModelResult linemodelResult = CLineModelResult();
   linemodelResult.Redshifts.push_back(0.6);
   linemodelResult.Redshifts.push_back(0.8);
-  linemodelResult.Extrema.push_back(0.8);
-  linemodelResult.Extrema.push_back(0.6);
+  linemodelResult.ExtremaResult.Extrema.push_back(0.8);
+  linemodelResult.ExtremaResult.Extrema.push_back(0.6);
 
-  CLineModelResult::SLineModelSolution s1;
+  CLineModelSolution s1;
   s1.ElementId.push_back(0);
   s1.ElementId.push_back(1);
   s1.ElementId.push_back(2);
@@ -202,7 +202,7 @@ BOOST_AUTO_TEST_CASE(GetNLinesOverCutThreshold){
   s1.FittingError.push_back(2.5);
   linemodelResult.LineModelSolutions.push_back(s1);
 
-  CLineModelResult::SLineModelSolution s2;
+  CLineModelSolution s2;
   s2.ElementId.push_back(0);
   s2.ElementId.push_back(1);
   s2.ElementId.push_back(2);
@@ -242,11 +242,11 @@ BOOST_AUTO_TEST_CASE(GetNLinesOverCutThreshold){
 
 BOOST_AUTO_TEST_CASE(GetExtremaMerit){
   CLineModelResult linemodelResult = CLineModelResult();
-  linemodelResult.ResizeExtremaResults(2);
-  linemodelResult.Extrema[0]= 0.1;
-  linemodelResult.Extrema[1]= 0.3;
-  linemodelResult.ExtremaMerit[0]= 0.2;
-  linemodelResult.ExtremaMerit[1]= 0.4;
+  linemodelResult.ExtremaResult.Resize(2);
+  linemodelResult.ExtremaResult.Extrema[0]= 0.1;
+  linemodelResult.ExtremaResult.Extrema[1]= 0.3;
+  linemodelResult.ExtremaResult.ExtremaMerit[0]= 0.2;
+  linemodelResult.ExtremaResult.ExtremaMerit[1]= 0.4;
 
   BOOST_CHECK_CLOSE(linemodelResult.GetExtremaMerit(1), 0.4,1e-12);
   BOOST_CHECK_CLOSE(linemodelResult.GetExtremaMerit(0), 0.2,1e-12);
@@ -254,37 +254,6 @@ BOOST_AUTO_TEST_CASE(GetExtremaMerit){
 
 }
 
-BOOST_AUTO_TEST_CASE(SaveFloatList){
-  CLineModelResult linemodelResult = CLineModelResult();
-  TFloat64List fl1;
-  fl1.push_back(0.2);
-  fl1.push_back(0.3);
-
-  TFloat64List fl2;
-  std::ostringstream result;
-  result <<"blabla 0.2\t0.3\t}"<<std::endl;
-
-  std::ostringstream result2;
-  result2 <<"blabla }"<<std::endl;
-
-
-
-  std::ostringstream stream1;
-  linemodelResult.SaveFloatList(stream1, fl1, "blabla ", true);
-  BOOST_CHECK_EQUAL(stream1.str(),result.str());
-
-  std::ostringstream stream2;
-  linemodelResult.SaveFloatList(stream2, fl1, "blabla ", false);
-  BOOST_CHECK_EQUAL(stream2.str(),result.str());
-
-  std::ostringstream stream3;
-  linemodelResult.SaveFloatList(stream3, fl2, "blabla ", false);
-  BOOST_CHECK_EQUAL(stream3.str(),result2.str());
-
-  std::ostringstream stream4;
-  linemodelResult.SaveFloatList(stream4, fl2, "blabla ", true);
-  BOOST_CHECK_EQUAL(stream4.str(),"");
-}
 BOOST_AUTO_TEST_CASE(Load){
 
 

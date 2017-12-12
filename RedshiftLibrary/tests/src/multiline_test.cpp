@@ -5,6 +5,7 @@
 #include <time.h>
 #include <iostream>
 #include <stdlib.h>
+#include <cmath>
 #include <boost/test/unit_test.hpp>
 
 using namespace NSEpic;
@@ -110,10 +111,9 @@ BOOST_AUTO_TEST_CASE(prepareSupportSeparated){
     BOOST_CHECK_CLOSE(6010., support0.GetBegin(), precision);
     BOOST_CHECK_CLOSE(6091. ,support0.GetEnd(), precision);
 
-    BOOST_CHECK_CLOSE(0.55905517220910295, element.getModelAtLambda(6061., 0.1,0), precision);
-    BOOST_CHECK_CLOSE(-0.55905517220910295, element.GetModelDerivAmplitudeAtLambda(6061., 0.1), precision);
-    BOOST_CHECK_CLOSE(0.0012855046287363274, element.GetModelDerivSigmaAtLambda(6061., 0.1), precision);
-    BOOST_CHECK_CLOSE(0, element.getModelAtLambda(4811., 0.1,0.), precision);
+    BOOST_CHECK_CLOSE(0.55905517220910295, element.getModelAtLambda(6061., 0.1, 1.0, 0), precision);
+    BOOST_CHECK_CLOSE(-0.55905517220910295, element.GetModelDerivAmplitudeAtLambda(6061., 0.1, 1.0), precision);
+    BOOST_CHECK_CLOSE(0, element.getModelAtLambda(4811., 0.1, 1.0, 0.), precision);
 
     element.SetFittedAmplitude(2.,0.5);
     BOOST_CHECK_CLOSE(2. ,element.GetElementAmplitude(), precision);
@@ -145,9 +145,8 @@ BOOST_AUTO_TEST_CASE(prepareSupportSeparated){
     BOOST_CHECK( element.IsOutsideLambdaRange(1) == true);
     support = element.getSupport();
     BOOST_CHECK(support.size() ==1);
-    BOOST_CHECK_CLOSE(0.55905517220910295, element.getModelAtLambda(6061., 0.1,0), precision);
-    BOOST_CHECK_CLOSE(-0.55905517220910295, element.GetModelDerivAmplitudeAtLambda(6061., 0.1), precision);
-    BOOST_CHECK_CLOSE(0.0012855046287363274, element.GetModelDerivSigmaAtLambda(6061., 0.1), precision);
+    BOOST_CHECK_CLOSE(0.55905517220910295, element.getModelAtLambda(6061., 0.1, 1.0, 0), precision);
+    BOOST_CHECK_CLOSE(-0.55905517220910295, element.GetModelDerivAmplitudeAtLambda(6061., 0.1, 1.0), precision);
 
     element.SetFittedAmplitude(2.,0.5);
     BOOST_CHECK_CLOSE(2. ,element.GetElementAmplitude(), precision);
@@ -208,9 +207,8 @@ BOOST_AUTO_TEST_CASE(prepareSupportJoined){
       BOOST_CHECK_CLOSE(6112., support[1].GetBegin(), precision);
       BOOST_CHECK_CLOSE(6111. ,support[1].GetEnd(), precision);
     }
-    BOOST_CHECK_CLOSE(0.002774683933338204, element.getModelAtLambda(6015., 0.1,0.), precision);
-    BOOST_CHECK_CLOSE(-0.002774683933338204, element.GetModelDerivAmplitudeAtLambda(6015., 0.1), precision);
-    BOOST_CHECK_CLOSE(6.4586262922414493e-05, element.GetModelDerivSigmaAtLambda(6015., 0.1), precision);
+    BOOST_CHECK_CLOSE(0.002774683933338204, element.getModelAtLambda(6015., 0.1, 1.0, 0.), precision);
+    BOOST_CHECK_CLOSE(-0.002774683933338204, element.GetModelDerivAmplitudeAtLambda(6015., 0.1, 1.0), precision);
 
     lambdaRange = TFloat64Range( 3900.0, 6050 );
     element.prepareSupport(spectralAxis,redshift, lambdaRange);
@@ -220,9 +218,8 @@ BOOST_AUTO_TEST_CASE(prepareSupportJoined){
       BOOST_CHECK_CLOSE(6010., support[0].GetBegin(), precision);
       BOOST_CHECK_CLOSE(6050. ,support[0].GetEnd(), precision);
     }
-    BOOST_CHECK_CLOSE(0.0027748494511785626, element.getModelAtLambda(6015., 0.1,0.), precision);
-    BOOST_CHECK_CLOSE(-0.0027748494511785626, element.GetModelDerivAmplitudeAtLambda(6015., 0.1), precision);
-    BOOST_CHECK_CLOSE(6.4596519548314109e-05, element.GetModelDerivSigmaAtLambda(6015., 0.1), precision);
+    BOOST_CHECK_CLOSE(0.0027748494511785626, element.getModelAtLambda(6015., 0.1, 1.0, 0.), precision);
+    BOOST_CHECK_CLOSE(-0.0027748494511785626, element.GetModelDerivAmplitudeAtLambda(6015., 0.1, 1.0), precision);
 
 
     lambdaRange = TFloat64Range( 6040.0, 12500.0 );
@@ -299,7 +296,7 @@ BOOST_AUTO_TEST_CASE(addModel_SupportAll){
 
     //===================================================
 
-    element.addToSpectrumModel(spectralAxis, modelfluxAxis, redshift, -1);
+    element.addToSpectrumModel(spectralAxis, modelfluxAxis, continumfluxAxis, redshift, -1);
     modelSamples = modelfluxAxis.GetSamples();
     BOOST_CHECK_CLOSE(modelSamples[0],0,precision );
     BOOST_CHECK_CLOSE(modelSamples[10],10.178965730921629,precision );
@@ -308,7 +305,9 @@ BOOST_AUTO_TEST_CASE(addModel_SupportAll){
 
     //===================================================
 
-    element.addToSpectrumModelDerivSigma(spectralAxis, sigmaDerivfluxAxis, redshift);
+    element.addToSpectrumModelDerivVel(spectralAxis, sigmaDerivfluxAxis, continumfluxAxis, redshift, 1);
+    // TODO: maybe :
+    // element.addToSpectrumModelDerivVel(spectralAxis, sigmaDerivfluxAxis, continumfluxAxis, redshift, 0);
     sigmaSamples = sigmaDerivfluxAxis.GetSamples();
     BOOST_CHECK_CLOSE(sigmaSamples[0],0,precision );
     BOOST_CHECK_CLOSE(sigmaSamples[10],-1.7529520317772871e-06,precision );
@@ -376,7 +375,7 @@ BOOST_AUTO_TEST_CASE(addModel_SupportPartial){
 
     //===================================================
 
-    element.addToSpectrumModel(spectralAxis, modelfluxAxis, redshift, -1);
+    element.addToSpectrumModel(spectralAxis, modelfluxAxis, continumfluxAxis, redshift, -1);
     BOOST_CHECK_CLOSE(modelSamples[0],0,precision );
     BOOST_CHECK_CLOSE(modelSamples[10],10.178965730921629,precision );
     BOOST_CHECK_CLOSE(modelSamples[20],19.734721200399765,precision );
@@ -386,7 +385,9 @@ BOOST_AUTO_TEST_CASE(addModel_SupportPartial){
 
     //===================================================
 
-    element.addToSpectrumModelDerivSigma(spectralAxis, sigmaDerivfluxAxis, redshift);
+    element.addToSpectrumModelDerivVel(spectralAxis, sigmaDerivfluxAxis, continumfluxAxis, redshift, 1);
+    // TODO: maybe :
+    //element.addToSpectrumModelDerivVel(spectralAxis, sigmaDerivfluxAxis, redshift, 0);
     sigmaSamples = sigmaDerivfluxAxis.GetSamples();
     BOOST_CHECK_CLOSE(sigmaSamples[0],0,precision );
     BOOST_CHECK_CLOSE(sigmaSamples[10],-1.7529520317772871e-06,precision );
@@ -452,21 +453,22 @@ BOOST_AUTO_TEST_CASE(addModel_totalOutside){
 
     //===================================================
 
-    element.addToSpectrumModel(spectralAxis, modelfluxAxis, redshift, -1);
+    element.addToSpectrumModel(spectralAxis, modelfluxAxis, continumfluxAxis, redshift, -1);
     for(Int32 k=0; k<40; k++){
       BOOST_CHECK_CLOSE(modelSamples[k],0,precision );
     }
 
     //===================================================
 
-    element.addToSpectrumModelDerivSigma(spectralAxis, sigmaDerivfluxAxis, redshift);
+    element.addToSpectrumModelDerivVel(spectralAxis, sigmaDerivfluxAxis, continumfluxAxis, redshift, 1);
+    // TODO: maybe : 
+    //element.addToSpectrumModelDerivVel(spectralAxis, sigmaDerivfluxAxis, continumfluxAxis, redshift, 0);
     for(Int32 k=0; k<40; k++){
       BOOST_CHECK_CLOSE(modelSamples[k],0,precision );
     }
 
-    BOOST_CHECK_CLOSE(0.,element.getModelAtLambda(10, 0.1,-1),precision);
-    BOOST_CHECK_CLOSE(0.,element.GetModelDerivAmplitudeAtLambda(0, 0.1),precision);
-    BOOST_CHECK_CLOSE(0.,element.GetModelDerivSigmaAtLambda(0, 0.1),precision);
+    BOOST_CHECK_CLOSE(0.,element.getModelAtLambda(10, 0.1,1.0, -1),precision);
+    BOOST_CHECK_CLOSE(0.,element.GetModelDerivAmplitudeAtLambda(0, 0.1, 1.0),precision);
 }
 
 BOOST_AUTO_TEST_CASE(fitAmplitude){

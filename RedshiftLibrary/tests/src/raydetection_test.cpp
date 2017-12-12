@@ -11,6 +11,7 @@
 
 #include <time.h>
 #include <iostream>
+#include <cmath>
 #include <stdlib.h>
 #include <boost/test/unit_test.hpp>
 
