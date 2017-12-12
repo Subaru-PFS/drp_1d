@@ -1,16 +1,16 @@
 # Absorption lines list
-3968.5	CaH	A   
-3933.7	CaK	A   
-4304.4	Gband	A   
-4861.3  Hbeta	A   
-4340.4  Hgamma	A   
-4101.7  Hdelta	A   
-5175    MgI	A   
-5269    CaFe	A   
-1549.0  CIV1548 A   
-1303.0  OI1302  A   
-1397.0  SiV     A   
-2799.0  MgII	A   
+3968.5	CaH	A
+3933.7	CaK	A
+4304.4	Gband	A
+4861.3  Hbeta	A
+4340.4  Hgamma	A
+4101.7  Hdelta	A
+5175    MgI	A
+5269    CaFe	A
+1549.0  CIV1548 A
+1303.0  OI1302  A
+1397.0  SiV     A
+2799.0  MgII	A
 # Emission lines list
 10320   [SII]			E	W
 6725.0  [SII]doublet		E	W
@@ -18,20 +18,20 @@
 5006.8  [OIIIa]			E	S
 4958.9  [OIIIb]			E	S
 4861.3  Hbeta			E	S
-4340.4  Hgamma			E	 
-4101.7  Hdelta			E	 
+4340.4  Hgamma			E
+4101.7  Hdelta			E
 3727.5  [OII]			E	S
 3425.8  [NeVa]			E	W
 3345.9  [NeVb]			E	W
-2964.0  FeII,Broad_bump_in_AGN	E	 
+2964.0  FeII,Broad_bump_in_AGN	E
 2799.0  MgII			E	W
-2626.0  FeII			E	 
-2142.0  [NII]			E	 
+2626.0  FeII			E
+2142.0  [NII]			E
 1909.0  [CIII]			E	W
-1640.0  HeII			E	 
+1640.0  HeII			E
 1549.0  CIV1548+1550		E	W
-1397.0  SiIV1393+OIV1402	E	 
-1334.5  CII			E	 
-1303.0  OI1302+1304		E	 
-1240.0  NV			E	 
+1397.0  SiIV1393+OIV1402	E
+1334.5  CII			E
+1303.0  OI1302+1304		E
+1240.0  NV			E
 1215.7  LyA			E	S

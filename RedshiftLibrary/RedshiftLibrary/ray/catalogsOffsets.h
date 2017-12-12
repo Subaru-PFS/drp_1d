@@ -28,6 +28,7 @@ public:
     {
         std::string filePath;
         std::vector<Float64> Offsets;
+        std::vector<std::string> FittingMode;
         std::vector<std::string> Names;
     };
 

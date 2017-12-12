@@ -72,7 +72,8 @@ class processHelper(object):
             spclist = spectrumlist.Spectrumlist(self.config_spclistPath)
             self.subspclists = spclist.splitIntoSubsets(int(dividecount), outputPath)
             self.subrecombine_info = {}
-            self.baseoutputpath = os.path.join(self.baseoutputpath, "output_subsets")
+            self.subsetsRelPath = "output_subsets"
+            self.baseoutputpath = os.path.join(self.baseoutputpath, self.subsetsRelPath)
             if not os.path.exists(self.baseoutputpath):
                 os.mkdir(self.baseoutputpath)
         else:
@@ -199,7 +200,8 @@ class processHelper(object):
         elif self.opt_bracketing=="tplcat_analysis-pfs":
             bracketing_method=["chisquare2solve", "chisquare2solve", "chisquare2solve", "chisquare2solve", "chisquare2solve", "chisquare2solve"]
             bracketing_parameterFilePath=["chisquare_rest_lbda4z0.json", "chisquare_rest_lbda4z0p5.json", "chisquare_rest_lbda4z1.json", "chisquare_rest_lbda4z1p5.json", "chisquare_rest_lbda4z2.json", "chisquare_rest_lbda4z2p5.json"]
-            bracketing_templateCtlNames=["BC03_sdss_tremonti21", "BC03_sdss_tremonti21", "BC03_sdss_tremonti21", "BC03_sdss_tremonti21", "BC03_sdss_tremonti21", "BC03_sdss_tremonti21"]   
+            #bracketing_templateCtlNames=["BC03_sdss_tremonti21", "BC03_sdss_tremonti21", "BC03_sdss_tremonti21", "BC03_sdss_tremonti21", "BC03_sdss_tremonti21", "BC03_sdss_tremonti21"]
+            bracketing_templateCtlNames=["legac_z0_697", "legac_z0_697", "legac_z0_697", "legac_z0_697", "legac_z0_697", "legac_z0_697"]   
             bracketing_templateCtlPath = []            
             for k in range(len(bracketing_templateCtlNames)):
                 bracketing_templateCtlPath.append(os.path.join(self.bracketing_templatesRootPath, bracketing_templateCtlNames[k]))
@@ -298,9 +300,10 @@ class processHelper(object):
         argStr = "{} --output {}".format(argStr, outputPath)
         
         if not overrideSpclistIndex==-1:
+            relativePath = os.path.join(self.subsetsRelPath, outputName)
             if not outputName_base in self.subrecombine_info.keys():
                 self.subrecombine_info[outputName_base] = []
-            self.subrecombine_info[outputName_base].append(outputPath)
+            self.subrecombine_info[outputName_base].append(relativePath)
             
         return argStr        
         
@@ -378,7 +381,7 @@ class processHelper(object):
                     f.write("\n")
                     f.write("#PBS -l nodes=1:ppn=1")
                     f.write("\n")
-                    f.write("#PBS -l walltime=20:00:00")
+                    f.write("#PBS -l walltime=30:00:00")
                     f.write("\n")
                     f.write("\n")
                     f.write("cd $PBS_O_WORKDIR")
@@ -481,7 +484,7 @@ def StartFromCommandLine( argv ) :
                     
     #option to do it local or qsub
     parser.add_argument("-l", "--local", dest="local", default='cluster_lam',
-                    help="local (run locally), 'cluster_lam' or 'cluster_in2p3' to run on a cluster through qsub")
+                    help="dryrun (skip run), local (run locally), 'cluster_lam' or 'cluster_in2p3' to run on a cluster through qsub")
                  
     parser.add_argument("-m", "--methodBracketing", dest="methodBracketing", default="",
                 help="bracketing of the parameters : choose between '' or 'method' or 'method-euclid' or 'tplcat_analysis-pfs'") 
@@ -537,7 +540,11 @@ def StartFromCommandLine( argv ) :
                 
         cp = processHelper(confpath=rpath, binpath=rbinpath, rootoutputpath=routputpath, dividecount=dividecount, opt_bracketing=opt_bracketing, bracketing_templatesRootPath=bracketing_templatesRootPath, refpath=rrefPath)
             
-        cp.doProcess(dryrun=False, local=options.local)
+        if options.local == "dryrun":
+            dryrun = True
+        else:
+            dryrun=False
+        cp.doProcess(dryrun=dryrun, local=options.local)
     else :
         print("Error: invalid arguments")
         exit()

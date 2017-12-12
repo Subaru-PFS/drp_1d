@@ -6,6 +6,7 @@
 #include <RedshiftLibrary/spectrum/spectrum.h>
 #include <RedshiftLibrary/log/log.h>
 
+#include <float.h>
 #include <algorithm>
 
 using namespace NSEpic;
@@ -568,6 +569,103 @@ void CMultiLine::SetFittedAmplitude(Float64 A, Float64 SNR)
 }
 
 /**
+ * @brief CMultiLine::fitAmplitudeAndLambdaOffset
+ * Fit the amplitudes and a unique Offset for all lines by using the fitAmplitude() in a loop to tabulate the offset
+ * @param spectralAxis
+ * @param noContinuumfluxAxis
+ * @param continuumfluxAxis
+ * @param redshift
+ * @param lineIdx
+ */
+void CMultiLine::fitAmplitudeAndLambdaOffset(const CSpectrumSpectralAxis& spectralAxis,
+                                             const CSpectrumFluxAxis& noContinuumfluxAxis,
+                                             const CSpectrumFluxAxis &continuumfluxAxis,
+                                             Float64  redshift,
+                                             Int32 lineIdx,
+                                             bool enableOffsetFitting,
+                                             Float64 step,
+                                             Float64 min,
+                                             Float64 max)
+{
+    Float64 nRays = m_Rays.size();
+    Int32 nSteps = int((max-min)/step+0.5);
+
+    bool atLeastOneOffsetToFit = false;
+    if(enableOffsetFitting)
+    {
+        for(Int32 iR=0; iR<nRays; iR++)
+        {
+            //check if the line is to be fitted
+            if(m_Rays[iR].GetOffsetFitEnabled())
+            {
+                atLeastOneOffsetToFit = true;
+                break;
+            }
+        }
+    }
+
+    if(!atLeastOneOffsetToFit)
+    {
+        nSteps = 1;
+    }
+
+    Float64 bestMerit = DBL_MAX;
+    Int32 idxBestMerit = -1;
+    for(Int32 iO=0; iO<nSteps; iO++)
+    {
+        //set offset value
+        if(atLeastOneOffsetToFit)
+        {
+            Float64 offset = min+step*iO;
+            for(Int32 iR=0; iR<nRays; iR++)
+            {
+                if(m_Rays[iR].GetOffsetFitEnabled())
+                {
+                    m_Rays[iR].SetOffset(offset);
+                }
+            }
+        }
+
+        //fit for this offset
+        fitAmplitude(spectralAxis, noContinuumfluxAxis, continuumfluxAxis, redshift, lineIdx );
+
+        //check fitting
+        if(atLeastOneOffsetToFit)
+        {
+            Float64 dtm = GetSumCross();
+            Float64 mtm = GetSumGauss();
+            Float64 a = GetFitAmplitude();
+            Float64 term1 = a*a*mtm;
+            Float64 term2 = - 2.*a*dtm;
+            Float64 fit = term1 + term2;
+            if(fit<bestMerit)
+            {
+                bestMerit = fit;
+                idxBestMerit = iO;
+            }
+        }
+    }
+
+    if(idxBestMerit>=0 && atLeastOneOffsetToFit)
+    {
+        //set offset value
+        if(atLeastOneOffsetToFit)
+        {
+            Float64 offset = min+step*idxBestMerit;
+            for(Int32 iR=0; iR<nRays; iR++)
+            {
+                if(m_Rays[iR].GetOffsetFitEnabled())
+                {
+                    m_Rays[iR].SetOffset(offset);
+                }
+            }
+        }
+        //fit again for this offset
+        fitAmplitude(spectralAxis, noContinuumfluxAxis, continuumfluxAxis, redshift, lineIdx );
+    }
+}
+
+/**
  * \brief Estimates an amplitude and fit the relevant rays using this estimate weighed by each ray's nominal amplitude.
  * Loop for the signal synthesis.
  * Loop for the intervals.
@@ -613,6 +711,7 @@ void CMultiLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const C
         mBuffer_c[k2] = GetLineWidth(mBuffer_mu[k2], redshift, m_Rays[k2].GetIsEmission(), m_profile[k2]);
       }
 
+
     for(Int32 k=0; k<nRays; k++)
       { //loop for the intervals
         if(m_OutsideLambdaRangeList[k])
@@ -625,6 +724,7 @@ void CMultiLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const C
         }
 
         //A estimation
+        //#pragma omp parallel for
         for ( Int32 i = m_StartNoOverlap[k]; i <= m_EndNoOverlap[k]; i++)
         {
             c = fluxContinuum[i];
@@ -632,6 +732,7 @@ void CMultiLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const C
             x = spectral[i];
 
             yg = 0.0;
+
             for(Int32 k2=0; k2<nRays; k2++)
             { //loop for the signal synthesis
                 if(m_OutsideLambdaRangeList[k2])
@@ -700,18 +801,18 @@ void CMultiLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const C
 void CMultiLine::addToSpectrumModel( const CSpectrumSpectralAxis& modelspectralAxis, CSpectrumFluxAxis& modelfluxAxis, CSpectrumFluxAxis &continuumfluxAxis, Float64 redshift, Int32 lineIdx )
 {
     if(m_OutsideLambdaRange)
-      {
+    {
         return;
-      }
+    }
 
     const Float64* spectral = modelspectralAxis.GetSamples();
     Float64* flux = modelfluxAxis.GetSamples();
     for(Int32 k=0; k<m_Rays.size(); k++)
-      { //loop on the interval
+    { //loop on the interval
         if(m_OutsideLambdaRangeList[k])
-	  {
+        {
             continue;
-	  }
+        }
 
         if( lineIdx>-1 && !(m_RayIsActiveOnSupport[k][lineIdx]))
         {
@@ -719,7 +820,7 @@ void CMultiLine::addToSpectrumModel( const CSpectrumSpectralAxis& modelspectralA
         }
 
         for ( Int32 i = m_StartNoOverlap[k]; i <= m_EndNoOverlap[k]; i++)
-      {
+        {
             Float64 lambda = spectral[i];
             Float64 Yi=getModelAtLambda(lambda, redshift, continuumfluxAxis[i], k);
             flux[i] += Yi;

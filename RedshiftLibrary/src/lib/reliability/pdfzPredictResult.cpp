@@ -29,14 +29,14 @@ Void CPdfzPredictResult::Save( const CDataStore& store, std::ostream& stream ) c
 {
     stream << "#Predicted_Label(zReliability) "<<" \t" << m_predLabel.c_str() << std::endl;
 	stream << "#Class \t PosteriorProbability_Prediction" << "\t"<< std::endl;
-	for ( Int32 i = 0; i< m_Labels.size(); i++)
-	{
-		stream
-		<< m_Labels[i] << "\t"
-		<< std::setprecision(10)
-		<< m_posterior->data[i]<< "\t"
-		<< std::endl;
-	}
+    for ( Int32 i = 0; i< m_Labels.size(); i++)
+    {
+        stream
+        << m_Labels[i] << "\t"
+        << std::setprecision(10)
+        << m_posterior->data[i]<< "\t"
+        << std::endl;
+    }
 	stream << "\n#Learner \t Score_Prediction " << "\t"<< std::endl;
 	for ( Int32 i = 0; i< m_score->size; i++)
 	{

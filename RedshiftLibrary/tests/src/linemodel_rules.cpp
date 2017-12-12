@@ -1,7 +1,6 @@
 #include <RedshiftLibrary/common/datatypes.h>
 #include <RedshiftLibrary/spectrum/spectrum.h>
 #include <RedshiftLibrary/method/blindsolveresult.h>
-#include <RedshiftLibrary/processflow/processflow.h>
 #include <RedshiftLibrary/processflow/parameterstore.h>
 #include <RedshiftLibrary/processflow/context.h>
 
@@ -20,8 +19,6 @@ BOOST_AUTO_TEST_SUITE(LinemodelRules)
 Float64 getLinemodelDoubletRatio(std::string spc, std::string noise, bool enableRatioRule){
 
     CProcessFlowContext ctx;
-    CProcessFlow processFlow;
-
 
     TFloat64Range redshiftRange = TFloat64Range( 0.0, 0.0 );
     TFloat64Range spcLambdaRange = TFloat64Range( 3800.0, 12000.0 );
@@ -50,9 +47,6 @@ Float64 getLinemodelDoubletRatio(std::string spc, std::string noise, bool enable
     }else{
         ctx.GetDataStore().SetScopedParam("linemodelsolve.linemodel.rules", "no");
     }
-
-    retVal = processFlow.Process( ctx );
-    BOOST_CHECK( retVal == true );
 
     // Create redshift initial list by spanning redshift acdross the given range, with the given delta
     Float64 redshiftStep = 0.001;
@@ -122,8 +116,6 @@ BOOST_AUTO_TEST_CASE( OIIRatioRange1 )
 std::vector<Float64> getLinemodelFittedAmplitudes(std::string spc, std::string noise, std::string ctlgPath, bool enableSuperStrongRule){
 
     CProcessFlowContext ctx;
-    CProcessFlow processFlow;
-
 
     TFloat64Range redshiftRange = TFloat64Range( 0.0, 0.0 );
     TFloat64Range spcLambdaRange = TFloat64Range( 2000.0, 12000.0 );
@@ -148,9 +140,6 @@ std::vector<Float64> getLinemodelFittedAmplitudes(std::string spc, std::string n
     }else{
         ctx.GetDataStore().SetScopedParam("linemodelsolve.linemodel.rules", "no");
     }
-
-    retVal = processFlow.Process( ctx );
-    BOOST_CHECK( retVal == true );
 
 
     //these tplcatalog related variables are unused here.

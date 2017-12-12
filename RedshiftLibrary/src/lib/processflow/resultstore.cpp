@@ -5,6 +5,7 @@
 
 #include <boost/filesystem.hpp>
 #include <fstream>
+#include <boost/algorithm/string.hpp>
 
 
 using namespace NSEpic;
@@ -202,7 +203,7 @@ Void COperatorResultStore::SaveReliabilityResult( const CDataStore& store, const
 }
 
 
-Void COperatorResultStore::SaveAllResults( const CDataStore& store, const bfs::path& dir ) const
+Void COperatorResultStore::SaveAllResults( const CDataStore& store, const bfs::path& dir, const std::string opt ) const
 {
     // Store global result
     {
@@ -220,7 +221,9 @@ Void COperatorResultStore::SaveAllResults( const CDataStore& store, const bfs::p
     }
 
     // Store per template results
-    {
+    std::string opt_lower = opt;
+    boost::algorithm::to_lower(opt_lower);
+    if(opt_lower=="all"){
         TPerTemplateResultsMap::const_iterator it;
         for( it=m_PerTemplateResults.begin(); it != m_PerTemplateResults.end(); it++ )
         {

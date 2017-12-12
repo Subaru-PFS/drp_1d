@@ -79,9 +79,9 @@ Void CDataStore::SaveReliabilityResult( const boost::filesystem::path& dir )
 	m_ResultStore.SaveReliabilityResult( *this, dir );
 }
 
-Void  CDataStore::SaveAllResults( const boost::filesystem::path& dir ) const
+Void  CDataStore::SaveAllResults( const boost::filesystem::path& dir, const std::string opt ) const
 {
-    m_ResultStore.SaveAllResults( *this, dir );
+    m_ResultStore.SaveAllResults( *this, dir, opt );
 }
 
 Void  CDataStore::StoreScopedPerTemplateResult( const CTemplate& t, const std::string& name, std::shared_ptr<const COperatorResult> result )

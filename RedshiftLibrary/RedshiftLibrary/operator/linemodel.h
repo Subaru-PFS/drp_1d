@@ -52,8 +52,10 @@ public:
                                               const std::string &opt_velocityFitting="no",
                                               const Float64 &opt_twosteplargegridstep=0.001,
                                               const std::string &opt_rigidity="rules",
-                                              const Float64 &opt_velocityfitmin=20,
-                                              const Float64 &opt_velocityfitmax=500);
+                                              const Float64 &opt_emvelocityfitmin=20,
+                                              const Float64 &opt_emvelocityfitmax=500,
+                                             const Float64 &opt_absvelocityfitmin=150,
+                                             const Float64 &opt_absvelocityfitmax=500);
 
 
 
@@ -86,6 +88,7 @@ public:
     void storeGlobalModelResults( CDataStore &dataStore );
     void storePerTemplateModelResults( CDataStore &dataStore, const CTemplate& tpl );
 
+    bool m_enableWidthFitByGroups;
 
     Int32 m_maxModelSaveCount;
 

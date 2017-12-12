@@ -18,6 +18,7 @@ using namespace boost;
 
 CLineCatalogsOffsets::CLineCatalogsOffsets()
 {
+    //m_Catalogs_relpath = "linecatalogs_offsets/offsetsCatalogs_20171128_fit"; //path to the fit offset catalog, used only for Linemeas for now
     //m_Catalogs_relpath = "linecatalogs_offsets/offsetsCatalogs_20170410_0"; //path to the fixed offset catalog
     m_Catalogs_relpath = "linecatalogs_offsets/offsetsCatalogs_20170410_m150"; //path to the fixed offset catalog
     //m_Catalogs_relpath = "linecatalogs_offsets/offsetsCatalogs_20170410_m300"; //path to the fixed offset catalog
@@ -141,11 +142,27 @@ Bool CLineCatalogsOffsets::LoadCatalog( const char* filePath )
                 }
                 catch (bad_lexical_cast)
                 {
-                    Log.LogError( "Unable to read offset value from file, aborting" );
+                    Log.LogError( "Unable to read offset value from offset file, aborting" );
                     return false;
                 }
             }
 
+            std::string fitMode="fixed";
+            ++it;
+            if( it != tok.end() )
+            {
+                try
+                {
+                    fitMode = *it;
+                }
+                catch (bad_lexical_cast)
+                {
+                    Log.LogError( "Unable to read fittingmode value from offset file, aborting" );
+                    return false;
+                }
+            }
+
+            newCatalog.FittingMode.push_back(fitMode);
             newCatalog.Offsets.push_back(offset);
             newCatalog.Names.push_back(name);
 
@@ -171,6 +188,7 @@ Bool CLineCatalogsOffsets::SetLinesOffsets(CLineModelElementList &LineModelEleme
         Int32 nRays = LineModelElementList.m_Elements[iElts]->GetSize();
         for(UInt32 j=0; j<nRays; j++){
             LineModelElementList.m_Elements[iElts]->m_Rays[j].SetOffset(0.0);
+            LineModelElementList.m_Elements[iElts]->m_Rays[j].EnableOffsetFit(false); //default is to not fit the offset
         }
     }
 
@@ -179,6 +197,7 @@ Bool CLineCatalogsOffsets::SetLinesOffsets(CLineModelElementList &LineModelEleme
     for(Int32 kL=0; kL<nLines; kL++)
     {
         Float64 offset = m_OffsetsCatalog[index].Offsets[kL];
+        bool enableOffsetFit = m_OffsetsCatalog[index].FittingMode[kL]=="fit";
         std::string name = m_OffsetsCatalog[index].Names[kL];
         //find line in the elementList
         for( UInt32 iElts=0; iElts<LineModelElementList.m_Elements.size(); iElts++ )
@@ -189,6 +208,9 @@ Bool CLineCatalogsOffsets::SetLinesOffsets(CLineModelElementList &LineModelEleme
                 if(LineModelElementList.m_Elements[iElts]->m_Rays[j].GetName() == name)
                 {
                     LineModelElementList.m_Elements[iElts]->m_Rays[j].SetOffset(offset);
+                    LineModelElementList.m_Elements[iElts]->m_Rays[j].EnableOffsetFit(enableOffsetFit);
+                    Log.LogInfo( "Offsets: setting line: %s\t offset:%.1f\t fitMode:%s\t fitEnabled:%d ", name.c_str(), offset, m_OffsetsCatalog[index].FittingMode[kL].c_str(), enableOffsetFit);
+
                 }
 
             }

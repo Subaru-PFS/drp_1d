@@ -123,6 +123,7 @@ Bool CTemplateCatalog::Add( std::shared_ptr<CTemplate> r )
     m_List[r->GetCategory()].push_back( r );
 
     // Compute continuum substracted spectrum
+    Log.LogInfo("TemplateCatalog: estimating continuum w. method=%s, for tpl=%s", m_continuumRemovalMethod.c_str(),  r->GetName().c_str());
     std::shared_ptr<CTemplate> tmplWithoutCont = std::shared_ptr<CTemplate>( new CTemplate( r->GetName().c_str(), r->GetCategory() ) );
 
     *tmplWithoutCont = *r;

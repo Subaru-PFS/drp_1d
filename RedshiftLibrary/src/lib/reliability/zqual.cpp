@@ -76,7 +76,7 @@ Bool CQualz::Solve( CDataStore& resultStore, CClassifierStore& classifierStore, 
 	}
 
 
-	if ( 1 ) //m_doTEST )
+    if ( m_predLabel.size()>0 ) //m_doTEST )
 	{
 		/* **********************************************************************
 		 * 		Z-PROJECTION
@@ -103,7 +103,9 @@ Bool CQualz::Solve( CDataStore& resultStore, CClassifierStore& classifierStore, 
 			resultStore.StoreScopedGlobalResult( "zpredict", zQual_vect );
 
 		}
-	}
+    }else{
+        return false;
+    }
 
 	return true;
 }

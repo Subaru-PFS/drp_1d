@@ -45,10 +45,13 @@ Void CCorrelationSolveResult::SaveLine( const CDataStore& store, std::ostream& s
     GetBestCorrelationResult( store, redshift, merit, tplName );
 
     stream  << store.GetSpectrumName() << "\t"
+            << store.GetProcessingID() << "\t"
                 << redshift << "\t"
                 << merit << "\t"
                 << tplName << "\t"
-                << "CorrelationSolve" << std::endl;
+                << "CorrelationSolve" << "\t"
+                << "-1" << "\t" //deltaz
+                << "-1" << std::endl; //reliability label
 }
 
 

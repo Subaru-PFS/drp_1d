@@ -9,7 +9,19 @@ CRay::CRay()
     m_Offset = 0.0;
 }
 
-CRay::CRay(const string& name, Float64 pos, UInt32 type, std::string profile, UInt32 force, Float64 amp, Float64 width, Float64 cut , Float64 posErr, Float64 sigmaErr, Float64 ampErr, const std::string& groupName, Float64 nominalAmp)
+CRay::CRay(const string& name,
+           Float64 pos, UInt32 type,
+           std::string profile,
+           UInt32 force,
+           Float64 amp,
+           Float64 width,
+           Float64 cut ,
+           Float64 posErr,
+           Float64 sigmaErr,
+           Float64 ampErr,
+           const std::string& groupName,
+           Float64 nominalAmp,
+           const string &velGroupName)
 {
     m_Name = name;
     m_Pos = pos;
@@ -31,7 +43,9 @@ CRay::CRay(const string& name, Float64 pos, UInt32 type, std::string profile, UI
     m_NominalAmplitude = nominalAmp;
 
     m_Offset = 0.0;
+    m_OffsetFit = false;
 
+    m_VelGroupName = velGroupName;
 }
 
 CRay::~CRay()
@@ -101,7 +115,23 @@ Float64 CRay::GetOffset() const
 
 bool CRay::SetOffset(Float64 val)
 {
-    m_Offset = val;
+    if(m_OffsetFit)
+    {
+        m_Offset = val;
+        return true;
+    }else{
+        return false;
+    }
+}
+
+bool CRay::GetOffsetFitEnabled() const
+{
+    return m_OffsetFit;
+}
+
+bool CRay::EnableOffsetFit(bool val)
+{
+    m_OffsetFit = val;
     return true;
 }
 
@@ -150,7 +180,10 @@ const Float64 CRay::GetNominalAmplitude() const
     return m_NominalAmplitude;
 }
 
-
+const std::string& CRay::GetVelGroupName() const
+{
+    return m_VelGroupName;
+}
 
 /**
  * This function converts lambda vacuum to lambda air

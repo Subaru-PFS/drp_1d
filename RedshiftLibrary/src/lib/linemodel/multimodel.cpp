@@ -513,7 +513,7 @@ fit(Float64 redshift, const TFloat64Range& lambdaRange, CLineModelSolution& mode
                 {
 
                     //set the tplshape
-                    m_models[km]->initTplshapeModel(kts, false);
+                    m_models[km]->setTplshapeModel(kts, false);
                     //set the tplshape amplitude
                     //m_models[km]->setTplshapeAmplitude( ampsElts, errorsElts);
 
@@ -549,7 +549,7 @@ fit(Float64 redshift, const TFloat64Range& lambdaRange, CLineModelSolution& mode
             {
                 for(Int32 km=0; km<m_models.size(); km++)
                 {
-                    m_models[km]->initTplshapeModel(iBestTplshape, false);
+                    m_models[km]->setTplshapeModel(iBestTplshape, false);
                     for(Int32 k=0; k<m_models[km]->m_Elements.size(); k++)
                     {
                         m_models[km]->m_Elements[k]->SetFittedAmplitude(multifit_amps[iBestTplshape][k], 0.0);

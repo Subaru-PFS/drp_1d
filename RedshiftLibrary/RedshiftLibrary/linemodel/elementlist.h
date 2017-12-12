@@ -58,7 +58,7 @@ public:
     void LogCatalogInfos();
 
     void PrepareContinuum(Float64 z);
-    void EstimateSpectrumContinuum(Float64 opt_enhance_lines=0);
+    void EstimateSpectrumContinuum(Float64 opt_enhance_lines, const TFloat64Range &lambdaRange);
 
     Int32 LoadFitContinuumOneTemplate(const TFloat64Range& lambdaRange, const CTemplate& tpl);
     Int32 LoadFitContinuum(const TFloat64Range& lambdaRange);
@@ -117,18 +117,22 @@ public:
 
     void SetVelocityEmission(Float64 vel);
     void SetVelocityAbsorption(Float64 vel);
+    void SetVelocityEmissionOneElement(Float64 vel, Int32 idxElt);
+    void SetVelocityAbsorptionOneElement(Float64 vel, Int32 idxElt);
     Float64 GetVelocityEmission();
     Float64 GetVelocityAbsorption();
     Float64 GetVelocityInfFromInstrumentResolution();
     Int32 ApplyVelocityBound(Float64 inf, Float64 sup);
     void SetSourcesizeDispersion(Float64 sizeArcsec);
-
+    std::vector<std::vector<Int32>> GetModelVelfitGroups(Int32 lineType );
 
     Bool initModelAtZ(Float64 redshift, const TFloat64Range& lambdaRange, const CSpectrumSpectralAxis &spectralAxis);
 
     Float64 fit(Float64 redshift, const TFloat64Range& lambdaRange, CLineModelSolution &modelSolution, Int32 contreest_iterations=0, bool enableLogging=0);
 
-    Bool initTplshapeModel(Int32 itplshape, Bool enableSetVelocity=false);
+    Bool initLambdaOffsets();
+
+    Bool setTplshapeModel(Int32 itplshape, Bool enableSetVelocity=false);
     Bool setTplshapeAmplitude(std::vector<Float64> ampsElts, std::vector<Float64> errorsElts);
 
     std::vector<CLmfitController*> createLmfitControllers( const TFloat64Range& lambdaRange);
@@ -148,6 +152,10 @@ public:
     void refreshModelDerivVelUnderElements(std::vector<Int32> filterEltsIdx);
     void refreshModelDerivVelAbsorptionUnderElements(std::vector<Int32> filterEltsIdx);
     void refreshModelDerivVelEmissionUnderElements(std::vector<Int32> filterEltsIdx);
+
+    Bool addToSpectrumAmplitudeOffset(CSpectrumFluxAxis &modelfluxAxis);
+    Int32 prepareAmplitudeOffset(const CSpectrumFluxAxis &spcFlux);
+
 
     void setModelSpcObservedOnSupportZeroOutside(const TFloat64Range &lambdaRange);
     CMask getOutsideLinesMask();
@@ -217,12 +225,19 @@ public:
     std::vector<std::vector<Float64>> m_MtmTplshape;
     std::vector<std::vector<Float64>> m_DtmTplshape;
 
+    bool m_enableAmplitudeOffsets;
+    Float64 m_LambdaOffsetMin = -400.0;
+    Float64 m_LambdaOffsetMax = 400.0;
+    Float64 m_LambdaOffsetStep = 25.0;
+    bool m_enableLambdaOffsetsFit;
+
 private:
 
     Int32 fitAmplitudesHybrid(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& spcFluxAxisNoContinuum, const CSpectrumFluxAxis &continuumfluxAxis, Float64 redshift);
     void fitAmplitudesSimplex();
     Int32 fitAmplitudesLmfit( const CSpectrumFluxAxis& fluxAxis, CLmfitController * controller);
     Int32 fitAmplitudesLinSolve(std::vector<Int32> EltsIdx, const CSpectrumSpectralAxis &spectralAxis, const CSpectrumFluxAxis &fluxAxis, const CSpectrumFluxAxis& continuumfluxAxis, std::vector<Float64> &ampsfitted, std::vector<Float64> &errorsfitted);
+    Int32 fitAmplitudesLinSolveAndLambdaOffset(std::vector<Int32> EltsIdx, const CSpectrumSpectralAxis &spectralAxis, const CSpectrumFluxAxis &fluxAxis, const CSpectrumFluxAxis& continuumfluxAxis, std::vector<Float64> &ampsfitted, std::vector<Float64> &errorsfitted, Bool enableOffsetFitting);
     Int32 fitAmplitudesLBFGS(std::vector<Int32> filteredEltsIdx, const CSpectrumFluxAxis& fluxAxis, std::vector<Float64>& ampsfitted, Int32 lineType);
 
     bool m_forceDisableLyaFitting;
@@ -270,8 +285,10 @@ private:
     Float64 m_velocityAbsorption;
     Float64 m_velocityEmissionInit;
     Float64 m_velocityAbsorptionInit;
+
     Float64 m_nominalWidthDefaultEmission;
     Float64 m_nominalWidthDefaultAbsorption;
+
     std::string m_calibrationPath;
     std::string m_fittingmethod;
     std::vector<Int32> m_elementsDisabledIndexes;
@@ -305,6 +322,12 @@ private:
     bool m_lmfit_fitContinuum;
     bool m_lmfit_fitEmissionVelocity;
     bool m_lmfit_fitAbsorptionVelocity;
+
+    std::vector<Float64> m_ampOffsetsX0;
+    std::vector<Float64> m_ampOffsetsX1;
+    std::vector<Float64> m_ampOffsetsX2;
+    std::vector<Int32> m_ampOffsetsIdxStart;
+    std::vector<Int32> m_ampOffsetsIdxStop;
 };
 
 }

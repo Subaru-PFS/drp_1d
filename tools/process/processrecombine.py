@@ -41,7 +41,7 @@ class processRecombine(object):
                 fileList.append(fullPath)
         return fileList
         
-    def recombine(self, infoFilePath):
+    def recombine(self, infoFilePath, enableSkipUnfinished=True):
         """
         recombine from the subset described by infoFilePath
         """
@@ -51,7 +51,8 @@ class processRecombine(object):
         for line in f:
             lineStr = line.strip()
             if not lineStr.startswith('#'):
-                subpathsList.append(lineStr)
+                fullPath = os.path.join(self.outputPath, lineStr)
+                subpathsList.append(fullPath)
             
         #create this config merged output path
         name = os.path.split(infoFilePath)[1]
@@ -100,28 +101,30 @@ class processRecombine(object):
             
             #copy intermediate results if any
             self.copyIntermediateResultsDirs(subpathsList, datasetOutputPath, spcfileName="input.spectrumlist")
-
-            #copy the cluster logs into the merged folder
-            try:
-                source_path = os.path.join(self.outputPath, "cluster_logs") #warning hardcoded, but not critical to avoid this...
-                dest_path = os.path.join(datasetOutputPath, "cluster_logs")
-                shutil.copytree(source_path, dest_path)
-            except:
-                print("INFO: skipped cluster_logs directory while recombining. Folder not found")
-
-            #estimate per spectrum processing time stats
-            try:
-                clusterLogsDirPath= os.path.join(self.outputPath, "cluster_logs") #warning hardcoded, but not critical to avoid this...
-                self.estimatePerSpectrumProcTime(clusterLogsDirPath, datasetOutputPath)
-            except:
-                print("INFO/Warning: skipped per spectrum processing time stats")
-
                 
         except Exception as e:
-            raise e
-            print("WARNING: unable to merge some intermediate output files. Skipping that operation !")
-            raw_input("\n\nWARNING: unable to merge some output files. will skip that operation.\nPress any key to continue...".format())
+            if not enableSkipUnfinished:
+                raise e
+                print("WARNING: unable to merge some intermediate output files. Skipping that operation !")
+                raw_input("\n\nWARNING: unable to merge some output files. will skip that operation.\nPress any key to continue...".format())
+            else:
+                print e
         
+        #copy the cluster logs into the merged folder
+        try:
+            source_path = os.path.join(self.outputPath, "cluster_logs") #warning hardcoded, but not critical to avoid this...
+            dest_path = os.path.join(datasetOutputPath, "cluster_logs")
+            shutil.copytree(source_path, dest_path)
+        except:
+            print("INFO: skipped cluster_logs directory while recombining. Folder not found")
+
+        #estimate per spectrum processing time stats
+        try:
+            clusterLogsDirPath= os.path.join(self.outputPath, "cluster_logs") #warning hardcoded, but not critical to avoid this...
+            self.estimatePerSpectrumProcTime(clusterLogsDirPath, datasetOutputPath)
+        except:
+            print("INFO/Warning: skipped per spectrum processing time stats")
+
         
     def recombineAll(self):
         for f in self.flist:
