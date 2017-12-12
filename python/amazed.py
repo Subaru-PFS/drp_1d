@@ -25,13 +25,20 @@ def amazed():
             if not spectrum.startswith('#'):
                 spectrumList.append(spectrum.strip())
 
-    retcode, medianRemovalMethod = param.Get_String("continuumRemoval.method", "IrregularSamplingMedian")
-    retcode, opt_medianKernelWidth = param.Get_Float64("continuumRemoval.medianKernelWidth", 75)
-    retcode, opt_nscales = param.Get_Float64("continuumRemoval.decompScales", 8)
-    retcode, dfBinPath = param.Get_String("continuumRemoval.binPath", "absolute_path_to_df_binaries_here")
+    retcode, medianRemovalMethod = param.Get_String("continuumRemoval.method",
+                                                    "IrregularSamplingMedian")
+    assert retcode
 
-    print("calling : %s %s %s %s" % (medianRemovalMethod, opt_medianKernelWidth,
-                          opt_nscales, dfBinPath))
+    retcode, opt_medianKernelWidth = param.Get_Float64("continuumRemoval.medianKernelWidth", 75)
+    assert retcode
+
+    retcode, opt_nscales = param.Get_Float64("continuumRemoval.decompScales", 8)
+    assert retcode
+
+    retcode, dfBinPath = param.Get_String("continuumRemoval.binPath",
+                                          "absolute_path_to_df_binaries_here")
+    assert retcode
+
     template_catalog = CTemplateCatalog(medianRemovalMethod, opt_medianKernelWidth,
                                         opt_nscales, dfBinPath)
     print("Loading %s" % args.template_dir)
@@ -54,9 +61,9 @@ def amazed():
 
         pflow=CProcessFlow()
         pflow.Process(ctx)
-        ctx.GetDataStore().SaveRedshiftResult('/tmp/foo')
+        ctx.GetDataStore().SaveRedshiftResult(args.output_folder)
         #ctx.GetDataStore().SaveReliabilityResult('/tmp/bar')
-        ctx.GetDataStore().SaveAllResults('/tmp/bar')
+        ctx.GetDataStore().SaveAllResults(args.output_folder)
 
 if __name__ == '__main__':
     amazed()

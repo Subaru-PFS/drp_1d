@@ -6,6 +6,9 @@ parser.add_argument('--parameters', '-p', dest='parameters_file', metavar='FILE'
                     default='parameters.json', help='Parameters file')
 parser.add_argument('--datapath', '-d', dest='data_path', metavar='DIR', type=str,
                     help='Data root-path')
+parser.add_argument('--output', '-o', dest='output_folder', metavar='DIR', type=str,
+                    default='./output',
+                    help='Directory where all generated files are going to be stored')
 parser.add_argument('--input', '-i', dest='input_file', metavar='FILE', type=str,
                     default='input.spectrumlist',
                     help='Input file containing the spectrums list file to process')

@@ -30,10 +30,7 @@ MESSAGE( STATUS "Version used: ${VERSION}" )
 # Exported configuration variables
 #--------------------------------------------------------
 SET( cpf-redshift_INCLUDE_DIR ${ROOT_DIR}/RedshiftLibrary/ )
-SET( cpf-redshift_THIRDPARTY_INCLUDE_DIR ${ROOT_DIR}/thirdparty/include/ )
-
 SET( cpf-redshift_LINK_DIR ${ROOT_DIR}/lib/ )
-SET( cpf-redshift_THIRDPARTY_LINK_DIR ${ROOT_DIR}/thirdparty/lib/)
 
 SET( cpf-redshift_THIRDPARTY_LIBS "")
 
@@ -52,6 +49,15 @@ ENDIF()
 IF( NOT DEFINED Boost_INCLUDE_DIRS )
   LIST(APPEND cpf-redshift_THIRDPARTY_LIBS pthread boost_filesystem boost_system boost_thread boost_timer boost_chrono boost_program_options boost_regex)
   SET(tests_THIRDPARTY_LIBS boost_unit_test_framework)
+ENDIF()
+
+IF( cpf-redshift_THIRDPARTY_LIBS )
+  # Set THIRDPARTY_{INCLUDE,LNIK}_DIR if using any third-party
+  SET( cpf-redshift_THIRDPARTY_INCLUDE_DIR ${ROOT_DIR}/thirdparty/include/ )
+  SET( cpf-redshift_THIRDPARTY_LINK_DIR ${ROOT_DIR}/thirdparty/lib/)
+ELSE()
+  SET( cpf-redshift_THIRDPARTY_INCLUDE_DIR ${cpf-redshift_INCLUDE_DIR} )
+  SET( cpf-redshift_THIRDPARTY_LINK_DIR ${cpf-redshift_LINK_DIR} )
 ENDIF()
 
 IF( DEFINED BUILD_THIRDPARTY )
@@ -85,12 +91,12 @@ FILE( GLOB_RECURSE LIB_SOURCE_FILES ${ROOT_DIR}/RedshiftLibrary/src/lib/*.cpp )
 ADD_LIBRARY( ${LIB_NAME} SHARED ${LIB_SOURCE_FILES} )
 TARGET_LINK_LIBRARIES(${LIB_NAME}
   ${cpf-redshift_THIRDPARTY_LIBS}
-  ${Boost_filesystem_LIBRARY}
-  ${Boost_system_LIBRARY}
-  ${Boost_thread_LIBRARY}
-  ${Boost_timer_LIBRARY}
-  ${Boost_chrono_LIBRARY}
-  ${Boost_program_options_LIBRARY}
+  ${Boost_FILESYSTEM_LIBRARY_RELEASE}
+  ${Boost_SYSTEM_LIBRARY_RELEASE}
+  ${Boost_THREAD_LIBRARY_RELEASE}
+  ${Boost_TIMER_LIBRARY_RELEASE}
+  ${Boost_CHRONO_LIBRARY_RELEASE}
+  ${Boost_PROGRAM_OPTIONS_LIBRARY_RELEASE}
   ${CFITSIO_LIBRARIES} ${GSL_LIBRARIES} ${FFTW_LIBRARIES})
 
 #--------------------------------------------------------
