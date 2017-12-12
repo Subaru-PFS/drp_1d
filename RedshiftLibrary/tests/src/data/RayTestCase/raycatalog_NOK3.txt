@@ -1,0 +1,8 @@
+#invalid because no version found at the beginning of the file
+3968.5	CaH	A	-1	-1	-1	-1	-1
+5175    MgI	A	-1	-1	-1	-1	-1
+
+10320   [SII]			E	W	-1	-1	-1	-1
+6562.8  Halpha			E	S	-1	-1	-1	-1
+4101.7  Hdelta			E	W	-1	-1	-1	-1
+

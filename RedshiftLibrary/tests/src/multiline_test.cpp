@@ -1,0 +1,540 @@
+#include <RedshiftLibrary/linemodel/element.h>
+#include <RedshiftLibrary/linemodel/multiline.h>
+#include <RedshiftLibrary/ray/ray.h>
+
+#include <time.h>
+#include <iostream>
+#include <stdlib.h>
+#include <cmath>
+#include <boost/test/unit_test.hpp>
+
+using namespace NSEpic;
+BOOST_AUTO_TEST_SUITE(test_element)
+
+Float64 precision =1e-12;
+BOOST_AUTO_TEST_CASE(Instance){
+    CRay ray = CRay("Abs",4500., 1, "SYM", 2, 0.2, 0.3);
+    CRay ray2 = CRay("Em",6564.61, 2, "SYM", 2,1.0, 0.5);
+    std::vector<CRay> rs;
+    rs.push_back(ray);
+    rs.push_back(ray2);
+    std::vector<Float64> nominalAmplitudes = std::vector<Float64> ();
+    nominalAmplitudes.push_back(0.8);
+    nominalAmplitudes.push_back(0.5);
+    std::vector<Int32> catalogIndexes;
+    catalogIndexes.push_back(1);
+    catalogIndexes.push_back(0);
+
+    CSpectrumSpectralAxis spectralAxis = CSpectrumSpectralAxis( 15000, false );
+    Float64* fluxAxis = spectralAxis.GetSamples();
+    for(Int32 k=0; k<spectralAxis.GetSamplesCount(); k++){
+      fluxAxis[k]=k;
+    }
+
+    CMultiLine element = CMultiLine(rs,  "SYMXL",  0.9, 1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes);
+    BOOST_CHECK("Abs" == element.GetRayName(0));
+    BOOST_CHECK("-1" == element.GetRayName(2));
+    BOOST_CHECK_CLOSE(-1.0, element.GetSignFactor(0),precision);
+    BOOST_CHECK_CLOSE(1.0, element.GetSignFactor(1),precision);
+    BOOST_CHECK_CLOSE(0.0, element.GetWidth(0,2.), precision);
+
+    std::vector<CRay> rayInMulti = element.GetRays();
+    for(Int32 k=0; k<rayInMulti.size(); k++){
+        BOOST_CHECK(rs[k].GetName() == rayInMulti[k].GetName());
+    }
+
+
+    element.SetNominalAmplitude(0,1.5);
+    BOOST_CHECK_CLOSE(1.5, element.GetNominalAmplitude(0),precision);
+    BOOST_CHECK_CLOSE(0.5, element.GetNominalAmplitude(1),precision);
+
+    element.SetFittedAmplitude(2.,0.5);
+    BOOST_CHECK_CLOSE(-1,element.GetElementAmplitude(),precision);
+    BOOST_CHECK_CLOSE(-3, element.GetFittedAmplitude(0), precision);
+    BOOST_CHECK_CLOSE(-3,  element.GetFittedAmplitudeErrorSigma(0),precision);
+    BOOST_CHECK_CLOSE(-3, element.GetFittedAmplitude(1), precision);
+
+
+
+}
+
+
+BOOST_AUTO_TEST_CASE(prepareSupportSeparated){
+
+    CRay ray = CRay("Abs",5500, 1, "SYM", 2, 10.2, 10.3, 10.4 ,10.5 , 10.6, 10.7, "group", 10.8);
+    CRay ray2 = CRay("Em",4400, 2, "SYM", 2, 10.2, 10.3, 20.4 ,10.5 , 10.6, 10.7, "group", 10.8);
+    std::vector<CRay> rs;
+    rs.push_back(ray);
+    rs.push_back(ray2);
+    std::vector<Float64> nominalAmplitudes = std::vector<Float64> ();
+    nominalAmplitudes.push_back(0.8);
+    nominalAmplitudes.push_back(0.5);
+    std::vector<Int32> catalogIndexes;
+    catalogIndexes.push_back(1);
+    catalogIndexes.push_back(0);
+
+    CSpectrumSpectralAxis spectralAxis = CSpectrumSpectralAxis( 15000, false );
+    Float64* fluxAxis = spectralAxis.GetSamples();
+    for(Int32 k=0; k<spectralAxis.GetSamplesCount(); k++){
+      fluxAxis[k]=k;
+    }
+    TFloat64Range lambdaRange = TFloat64Range( 3900.0, 12500.0 );
+
+    CMultiLine element = CMultiLine(rs,  "fixed",  0.9, 1.0, 1.1, nominalAmplitudes, 10.2,catalogIndexes);
+
+    Float64 redshift = 0.1;
+    TInt32Range supportRay = element.EstimateTheoreticalSupport(0,spectralAxis, redshift, lambdaRange);
+    BOOST_CHECK_CLOSE(6010., supportRay.GetBegin(), precision);
+    BOOST_CHECK_CLOSE(6091. ,supportRay.GetEnd(), precision);
+    supportRay = element.EstimateTheoreticalSupport(1,spectralAxis, redshift, lambdaRange);
+    BOOST_CHECK_CLOSE(4800., supportRay.GetBegin(), precision);
+    BOOST_CHECK_CLOSE(4881. ,supportRay.GetEnd(), precision);
+
+
+
+    element.prepareSupport(spectralAxis,redshift, lambdaRange);
+    TInt32RangeList support = element.getSupport();
+    BOOST_CHECK(support.size() ==2);
+    if(support.size()>=1){
+      BOOST_CHECK_CLOSE(6010., support[0].GetBegin(), precision);
+      BOOST_CHECK_CLOSE(6091. ,support[0].GetEnd(), precision);
+    }
+    if(support.size()>=2){
+      BOOST_CHECK_CLOSE(4800., support[1].GetBegin(), precision);
+      BOOST_CHECK_CLOSE(4881. ,support[1].GetEnd(), precision);
+    }
+    TInt32Range support0 = element.getSupportSubElt(0);
+    BOOST_CHECK_CLOSE(6010., support0.GetBegin(), precision);
+    BOOST_CHECK_CLOSE(6091. ,support0.GetEnd(), precision);
+
+    support0 = element.getTheoreticalSupportSubElt(0);
+    BOOST_CHECK_CLOSE(6010., support0.GetBegin(), precision);
+    BOOST_CHECK_CLOSE(6091. ,support0.GetEnd(), precision);
+
+    BOOST_CHECK_CLOSE(0.55905517220910295, element.getModelAtLambda(6061., 0.1, 1.0, 0), precision);
+    BOOST_CHECK_CLOSE(-0.55905517220910295, element.GetModelDerivAmplitudeAtLambda(6061., 0.1, 1.0), precision);
+    BOOST_CHECK_CLOSE(0, element.getModelAtLambda(4811., 0.1, 1.0, 0.), precision);
+
+    element.SetFittedAmplitude(2.,0.5);
+    BOOST_CHECK_CLOSE(2. ,element.GetElementAmplitude(), precision);
+    element.LimitFittedAmplitude(0,0.01);
+    BOOST_CHECK_CLOSE(0.01 ,element.GetFittedAmplitude(0), precision);
+    element.SetFittedAmplitude(2.,0.5);
+
+    // ==============create problem du to lambda range =============
+
+
+    lambdaRange = TFloat64Range( 4850.0, 12500.0 );
+    supportRay = element.EstimateTheoreticalSupport(1,spectralAxis, redshift, lambdaRange);
+    BOOST_CHECK_CLOSE(4850., supportRay.GetBegin(), precision);
+
+    lambdaRange = TFloat64Range( 3900.0, 4860.0 );
+    supportRay = element.EstimateTheoreticalSupport(1,spectralAxis, redshift, lambdaRange);
+    BOOST_CHECK_CLOSE(4860., supportRay.GetEnd(), precision);
+
+    lambdaRange = TFloat64Range( 3900.0, 3880.0 );
+    supportRay = element.EstimateTheoreticalSupport(1,spectralAxis, redshift, lambdaRange);
+    BOOST_CHECK_CLOSE(4799., supportRay.GetEnd(), precision);
+    element.prepareSupport(spectralAxis,redshift, lambdaRange);
+    support = element.getSupport();
+    BOOST_CHECK(support.size() ==0);
+
+    lambdaRange = TFloat64Range( 5000., 12500.0 );
+    element.prepareSupport(spectralAxis,redshift, lambdaRange);
+    BOOST_CHECK( element.IsOutsideLambdaRange(0) == false);
+    BOOST_CHECK( element.IsOutsideLambdaRange(1) == true);
+    support = element.getSupport();
+    BOOST_CHECK(support.size() ==1);
+    BOOST_CHECK_CLOSE(0.55905517220910295, element.getModelAtLambda(6061., 0.1, 1.0, 0), precision);
+    BOOST_CHECK_CLOSE(-0.55905517220910295, element.GetModelDerivAmplitudeAtLambda(6061., 0.1, 1.0), precision);
+
+    element.SetFittedAmplitude(2.,0.5);
+    BOOST_CHECK_CLOSE(2. ,element.GetElementAmplitude(), precision);
+
+
+
+
+
+    lambdaRange = TFloat64Range( 3900., 4600.0 );
+    element.prepareSupport(spectralAxis,redshift, lambdaRange);
+    BOOST_CHECK( element.IsOutsideLambdaRange(0) == true);
+    BOOST_CHECK( element.IsOutsideLambdaRange(1) == true);
+    support = element.getSupport();
+    BOOST_CHECK(support.size() ==0);
+
+}
+
+BOOST_AUTO_TEST_CASE(prepareSupportJoined){
+
+    CRay ray = CRay("Abs",5500, 1, "SYM", 2, 10.2, 10.3, 10.4 ,10.5 , 10.6, 10.7, "group", 10.8);
+    CRay ray2 = CRay("Em",5520, 2, "SYM", 2, 10.2, 10.3, 20.4 ,10.5 , 10.6, 10.7, "group", 10.8);
+    std::vector<CRay> rs;
+    rs.push_back(ray);
+    rs.push_back(ray2);
+    std::vector<Float64> nominalAmplitudes = std::vector<Float64> ();
+    nominalAmplitudes.push_back(0.8);
+    nominalAmplitudes.push_back(0.5);
+    std::vector<Int32> catalogIndexes;
+    catalogIndexes.push_back(1);
+    catalogIndexes.push_back(0);
+
+    CSpectrumSpectralAxis spectralAxis = CSpectrumSpectralAxis( 15000, false );
+    Float64* fluxAxis = spectralAxis.GetSamples();
+    for(Int32 k=0; k<spectralAxis.GetSamplesCount(); k++){
+      fluxAxis[k]=k;
+    }
+    TFloat64Range lambdaRange = TFloat64Range( 3900.0, 12500.0 );
+
+    CMultiLine element = CMultiLine(rs,  "fixed",  0.9, 1.0, 1.1, nominalAmplitudes, 10.2,catalogIndexes);
+
+    Float64 redshift = 0.1;
+    TInt32Range supportRay = element.EstimateTheoreticalSupport(0,spectralAxis, redshift, lambdaRange);
+    BOOST_CHECK_CLOSE(6010., supportRay.GetBegin(), precision);
+    BOOST_CHECK_CLOSE(6091. ,supportRay.GetEnd(), precision);
+    supportRay = element.EstimateTheoreticalSupport(1,spectralAxis, redshift, lambdaRange);
+    BOOST_CHECK_CLOSE(6032., supportRay.GetBegin(), precision);
+    BOOST_CHECK_CLOSE(6112. ,supportRay.GetEnd(), precision);
+
+    element.prepareSupport(spectralAxis,redshift, lambdaRange);
+    TInt32RangeList support = element.getSupport();
+
+    BOOST_CHECK(support.size() ==2);
+    if(support.size()>=1){
+      BOOST_CHECK_CLOSE(6010., support[0].GetBegin(), precision);
+      BOOST_CHECK_CLOSE(6112. ,support[0].GetEnd(), precision);
+    }
+    if(support.size()>=2){
+      BOOST_CHECK_CLOSE(6112., support[1].GetBegin(), precision);
+      BOOST_CHECK_CLOSE(6111. ,support[1].GetEnd(), precision);
+    }
+    BOOST_CHECK_CLOSE(0.002774683933338204, element.getModelAtLambda(6015., 0.1, 1.0, 0.), precision);
+    BOOST_CHECK_CLOSE(-0.002774683933338204, element.GetModelDerivAmplitudeAtLambda(6015., 0.1, 1.0), precision);
+
+    lambdaRange = TFloat64Range( 3900.0, 6050 );
+    element.prepareSupport(spectralAxis,redshift, lambdaRange);
+    support = element.getSupport();
+    BOOST_CHECK(support.size() ==1);
+    if(support.size()>1){
+      BOOST_CHECK_CLOSE(6010., support[0].GetBegin(), precision);
+      BOOST_CHECK_CLOSE(6050. ,support[0].GetEnd(), precision);
+    }
+    BOOST_CHECK_CLOSE(0.0027748494511785626, element.getModelAtLambda(6015., 0.1, 1.0, 0.), precision);
+    BOOST_CHECK_CLOSE(-0.0027748494511785626, element.GetModelDerivAmplitudeAtLambda(6015., 0.1, 1.0), precision);
+
+
+    lambdaRange = TFloat64Range( 6040.0, 12500.0 );
+    element.prepareSupport(spectralAxis,redshift, lambdaRange);
+    support = element.getSupport();
+    BOOST_CHECK(support.size() ==2);
+    if(support.size()>1){
+      BOOST_CHECK_CLOSE(6040., support[0].GetBegin(), precision);
+      BOOST_CHECK_CLOSE(6112. ,support[0].GetEnd(), precision);
+    }
+    if(support.size()>2){
+      BOOST_CHECK_CLOSE(6112., support[0].GetBegin(), precision);
+      BOOST_CHECK_CLOSE(6111. ,support[0].GetEnd(), precision);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(addModel_SupportAll){
+    // in this case multiline support is equal to spetral axis.
+    // So all the bin continuum are duplicate in model after init model
+
+    CRay ray = CRay("Abs",10, 1, "SYM", 2, 10.2, 10.3, 10.4 ,10.5 , 10.6, 10.7, "group", 10.8);
+    CRay ray2 = CRay("Em",15, 2, "SYM", 2, 10.2, 10.3, 20.4 ,10.5 , 10.6, 10.7, "group", 10.8);
+    CRay ray3 = CRay("Em2",150, 2, "SYM", 2, 10.2, 10.3, 20.4 ,10.5 , 10.6, 10.7, "group", 10.8);
+    std::vector<CRay> rs;
+    rs.push_back(ray);
+    rs.push_back(ray2);
+    rs.push_back(ray3);
+    std::vector<Float64> nominalAmplitudes = std::vector<Float64> ();
+    nominalAmplitudes.push_back(0.8);
+    nominalAmplitudes.push_back(0.5);
+    nominalAmplitudes.push_back(0.1);
+    std::vector<Int32> catalogIndexes;
+    catalogIndexes.push_back(1);
+    catalogIndexes.push_back(0);
+    catalogIndexes.push_back(2);
+
+    CSpectrumSpectralAxis spectralAxis = CSpectrumSpectralAxis( 40, false );
+    Float64* fluxAxis = spectralAxis.GetSamples();
+    for(Int32 k=0; k<spectralAxis.GetSamplesCount(); k++){
+      fluxAxis[k]=k;
+    }
+
+    CSpectrumFluxAxis modelfluxAxis = CSpectrumFluxAxis(40);
+    Float64* modelSamples = modelfluxAxis.GetSamples();
+    for(Int32 k=0; k<modelfluxAxis.GetSamplesCount(); k++){
+      modelSamples[k]=0;
+    }
+
+    CSpectrumFluxAxis sigmaDerivfluxAxis = CSpectrumFluxAxis(40);
+    Float64* sigmaSamples = sigmaDerivfluxAxis.GetSamples();
+    for(Int32 k=0; k<sigmaDerivfluxAxis.GetSamplesCount(); k++){
+      sigmaSamples[k]=0;
+    }
+
+    CSpectrumFluxAxis continumfluxAxis = CSpectrumFluxAxis(40);
+    Float64* continuumSamples = continumfluxAxis.GetSamples();
+    for(Int32 k=0; k<continumfluxAxis.GetSamplesCount(); k++){
+      continuumSamples[k]=k;
+    }
+
+    TFloat64Range lambdaRange = TFloat64Range( 1.0, 50 );
+
+    CMultiLine element = CMultiLine(rs,  "fixed",  0.9, 1.0, 1.1, nominalAmplitudes, 10.2,catalogIndexes);
+    Float64 redshift = 0.1;
+    element.prepareSupport(spectralAxis,redshift, lambdaRange);
+
+    //===================================================
+
+    element.initSpectrumModel(modelfluxAxis,continumfluxAxis );
+    modelSamples = modelfluxAxis.GetSamples();
+    for(Int32 k=0; k<modelfluxAxis.GetSamplesCount(); k++){
+      BOOST_CHECK(modelSamples[k]== continuumSamples[k] );
+    }
+
+    //===================================================
+
+    element.addToSpectrumModel(spectralAxis, modelfluxAxis, continumfluxAxis, redshift, -1);
+    modelSamples = modelfluxAxis.GetSamples();
+    BOOST_CHECK_CLOSE(modelSamples[0],0,precision );
+    BOOST_CHECK_CLOSE(modelSamples[10],10.178965730921629,precision );
+    BOOST_CHECK_CLOSE(modelSamples[20],19.734721200399765,precision );
+    BOOST_CHECK_CLOSE(modelSamples[39],38.935326495742004,precision );
+
+    //===================================================
+
+    element.addToSpectrumModelDerivVel(spectralAxis, sigmaDerivfluxAxis, continumfluxAxis, redshift, 1);
+    // TODO: maybe :
+    // element.addToSpectrumModelDerivVel(spectralAxis, sigmaDerivfluxAxis, continumfluxAxis, redshift, 0);
+    sigmaSamples = sigmaDerivfluxAxis.GetSamples();
+    BOOST_CHECK_CLOSE(sigmaSamples[0],0,precision );
+    BOOST_CHECK_CLOSE(sigmaSamples[10],-1.7529520317772871e-06,precision );
+    BOOST_CHECK_CLOSE(sigmaSamples[20],1.2976630163563986e-06,precision );
+    BOOST_CHECK_CLOSE(sigmaSamples[39],-1.6772325192354914e-06,precision );
+}
+
+BOOST_AUTO_TEST_CASE(addModel_SupportPartial){
+    // in this case multiline support is lower than continuum length.
+    // So all the bin continuum are duplicate in model
+
+    CRay ray = CRay("Abs",10, 1, "SYM", 2, 10.2, 10.3, 10.4 ,10.5 , 10.6, 10.7, "group", 10.8);
+    CRay ray2 = CRay("Em",15, 2, "SYM", 2, 10.2, 10.3, 20.4 ,10.5 , 10.6, 10.7, "group", 10.8);
+    std::vector<CRay> rs;
+    rs.push_back(ray);
+    rs.push_back(ray2);
+    std::vector<Float64> nominalAmplitudes = std::vector<Float64> ();
+    nominalAmplitudes.push_back(0.8);
+    nominalAmplitudes.push_back(0.5);
+    std::vector<Int32> catalogIndexes;
+    catalogIndexes.push_back(1);
+    catalogIndexes.push_back(0);
+
+    CSpectrumSpectralAxis spectralAxis = CSpectrumSpectralAxis( 40, false );
+    Float64* fluxAxis = spectralAxis.GetSamples();
+    for(Int32 k=0; k<spectralAxis.GetSamplesCount(); k++){
+      fluxAxis[k]=k;
+    }
+
+    CSpectrumFluxAxis modelfluxAxis = CSpectrumFluxAxis(40);
+    Float64* modelSamples = modelfluxAxis.GetSamples();
+    for(Int32 k=0; k<modelfluxAxis.GetSamplesCount(); k++){
+      modelSamples[k]=0;
+    }
+
+    CSpectrumFluxAxis sigmaDerivfluxAxis = CSpectrumFluxAxis(40);
+    Float64* sigmaSamples = sigmaDerivfluxAxis.GetSamples();
+    for(Int32 k=0; k<sigmaDerivfluxAxis.GetSamplesCount(); k++){
+      sigmaSamples[k]=0;
+    }
+
+    CSpectrumFluxAxis continumfluxAxis = CSpectrumFluxAxis(40);
+    Float64* continuumSamples = continumfluxAxis.GetSamples();
+    for(Int32 k=0; k<continumfluxAxis.GetSamplesCount(); k++){
+      continuumSamples[k]=k;
+    }
+
+    TFloat64Range lambdaRange = TFloat64Range( 1.0, 30 );
+
+    CMultiLine element = CMultiLine(rs,  "fixed",  0.9, 1.0, 1.1, nominalAmplitudes, 10.2,catalogIndexes);
+    Float64 redshift = 0.1;
+    element.prepareSupport(spectralAxis,redshift, lambdaRange);
+
+
+    //===================================================
+
+    element.initSpectrumModel(modelfluxAxis,continumfluxAxis );
+    modelSamples = modelfluxAxis.GetSamples();
+    for(Int32 k=0; k<=30; k++){
+      BOOST_CHECK_CLOSE(modelSamples[k],continuumSamples[k],precision );
+    }
+    for(Int32 k=31; k<40; k++){
+      BOOST_CHECK_CLOSE(modelSamples[k],0,precision );
+    }
+
+    //===================================================
+
+    element.addToSpectrumModel(spectralAxis, modelfluxAxis, continumfluxAxis, redshift, -1);
+    BOOST_CHECK_CLOSE(modelSamples[0],0,precision );
+    BOOST_CHECK_CLOSE(modelSamples[10],10.178965730921629,precision );
+    BOOST_CHECK_CLOSE(modelSamples[20],19.734721200399765,precision );
+    for(Int32 k=31; k<40; k++){
+      BOOST_CHECK_CLOSE(modelSamples[k],0,precision );
+    }
+
+    //===================================================
+
+    element.addToSpectrumModelDerivVel(spectralAxis, sigmaDerivfluxAxis, continumfluxAxis, redshift, 1);
+    // TODO: maybe :
+    //element.addToSpectrumModelDerivVel(spectralAxis, sigmaDerivfluxAxis, redshift, 0);
+    sigmaSamples = sigmaDerivfluxAxis.GetSamples();
+    BOOST_CHECK_CLOSE(sigmaSamples[0],0,precision );
+    BOOST_CHECK_CLOSE(sigmaSamples[10],-1.7529520317772871e-06,precision );
+    BOOST_CHECK_CLOSE(sigmaSamples[20],1.2976630163563986e-06,precision );
+    for(Int32 k=31; k<40; k++){
+      BOOST_CHECK_CLOSE(modelSamples[k],0,precision );
+    }
+
+}
+
+
+
+BOOST_AUTO_TEST_CASE(addModel_totalOutside){
+    // in this case multiline support totaly outside lambdarange
+    CRay ray = CRay("Abs",10, 1, "SYM", 2, 10.2, 10.3, 10.4 ,10.5 , 10.6, 10.7, "group", 10.8);
+    CRay ray2 = CRay("Em",15, 2, "SYM", 2, 10.2, 10.3, 20.4 ,10.5 , 10.6, 10.7, "group", 10.8);
+    std::vector<CRay> rs;
+    rs.push_back(ray);
+    rs.push_back(ray2);
+    std::vector<Float64> nominalAmplitudes = std::vector<Float64> ();
+    nominalAmplitudes.push_back(0.8);
+    nominalAmplitudes.push_back(0.5);
+    std::vector<Int32> catalogIndexes;
+    catalogIndexes.push_back(1);
+    catalogIndexes.push_back(0);
+
+    CSpectrumSpectralAxis spectralAxis = CSpectrumSpectralAxis( 40, false );
+    Float64* fluxAxis = spectralAxis.GetSamples();
+    for(Int32 k=0; k<spectralAxis.GetSamplesCount(); k++){
+      fluxAxis[k]=k;
+    }
+
+    CSpectrumFluxAxis modelfluxAxis = CSpectrumFluxAxis(40);
+    Float64* modelSamples = modelfluxAxis.GetSamples();
+    for(Int32 k=0; k<modelfluxAxis.GetSamplesCount(); k++){
+      modelSamples[k]=0;
+    }
+
+    CSpectrumFluxAxis sigmaDerivfluxAxis = CSpectrumFluxAxis(40);
+    Float64* sigmaSamples = sigmaDerivfluxAxis.GetSamples();
+    for(Int32 k=0; k<sigmaDerivfluxAxis.GetSamplesCount(); k++){
+      sigmaSamples[k]=0;
+    }
+
+    CSpectrumFluxAxis continumfluxAxis = CSpectrumFluxAxis(40);
+    Float64* continuumSamples = continumfluxAxis.GetSamples();
+    for(Int32 k=0; k<continumfluxAxis.GetSamplesCount(); k++){
+      continuumSamples[k]=k;
+    }
+
+    TFloat64Range lambdaRange = TFloat64Range( 100, 200 );
+
+    CMultiLine element = CMultiLine(rs,  "fixed",  0.9, 1.0, 1.1, nominalAmplitudes, 10.2,catalogIndexes);
+    Float64 redshift = 0.1;
+    element.prepareSupport(spectralAxis,redshift, lambdaRange);
+    //===================================================
+
+    element.initSpectrumModel(modelfluxAxis,continumfluxAxis );
+    modelSamples = modelfluxAxis.GetSamples();
+    for(Int32 k=0; k<=40; k++){
+      BOOST_CHECK_CLOSE(modelSamples[k],0,precision );
+    }
+
+    //===================================================
+
+    element.addToSpectrumModel(spectralAxis, modelfluxAxis, continumfluxAxis, redshift, -1);
+    for(Int32 k=0; k<40; k++){
+      BOOST_CHECK_CLOSE(modelSamples[k],0,precision );
+    }
+
+    //===================================================
+
+    element.addToSpectrumModelDerivVel(spectralAxis, sigmaDerivfluxAxis, continumfluxAxis, redshift, 1);
+    // TODO: maybe : 
+    //element.addToSpectrumModelDerivVel(spectralAxis, sigmaDerivfluxAxis, continumfluxAxis, redshift, 0);
+    for(Int32 k=0; k<40; k++){
+      BOOST_CHECK_CLOSE(modelSamples[k],0,precision );
+    }
+
+    BOOST_CHECK_CLOSE(0.,element.getModelAtLambda(10, 0.1,1.0, -1),precision);
+    BOOST_CHECK_CLOSE(0.,element.GetModelDerivAmplitudeAtLambda(0, 0.1, 1.0),precision);
+}
+
+BOOST_AUTO_TEST_CASE(fitAmplitude){
+    // in this case multiline support totaly outside lambdarange
+    Float64 lambda0 = 15;
+    CRay ray = CRay("Abs",100, 1, "SYM", 2, 1, 5, 20.4 ,10.5 , 10.6, 10.7, "group", 10.8);
+    CRay ray2 = CRay("Em",lambda0, 2, "SYM", 2, 1, 5, 20.4 ,10.5 , 10.6, 10.7, "group", 10.8);
+    std::vector<CRay> rs;
+    rs.push_back(ray);
+    rs.push_back(ray2);
+    std::vector<Float64> nominalAmplitudes = std::vector<Float64> ();
+    nominalAmplitudes.push_back(0.8);
+    nominalAmplitudes.push_back(1);
+    std::vector<Int32> catalogIndexes;
+    catalogIndexes.push_back(1);
+    catalogIndexes.push_back(0);
+    CSpectrumSpectralAxis spectralAxis = CSpectrumSpectralAxis( 40, false );
+    Float64* fluxAxis = spectralAxis.GetSamples();
+    for(Int32 k=0; k<spectralAxis.GetSamplesCount(); k++){
+      fluxAxis[k]=k;
+    }
+
+    Float64 redshift = 0.0;
+    Float64 velocity = 20000;
+
+
+    Float64 lambda = lambda0*(1+redshift);
+    Float64 sigma = velocity/300000*(lambda);
+    Float64 A = 3.55;
+
+    CSpectrumFluxAxis modelfluxAxis = CSpectrumFluxAxis(40);
+    Float64* modelSamples = modelfluxAxis.GetSamples();
+    for(Int32 k=0; k<modelfluxAxis.GetSamplesCount(); k++){
+      Float64 val = A * exp(-pow((k-lambda),2)/(2*pow(sigma,2)));
+      modelSamples[k]=val;
+    }
+
+    TFloat64Range lambdaRange = TFloat64Range( 0, 40 );
+
+    CMultiLine element = CMultiLine(rs,  "velocitydriven",  0.9, velocity, 1.1, nominalAmplitudes, 10.2,catalogIndexes);
+
+    element.prepareSupport(spectralAxis,redshift, lambdaRange);
+    element.fitAmplitude(spectralAxis,modelfluxAxis, redshift, -1 );
+
+    BOOST_CHECK_CLOSE(A,element.GetElementAmplitude(), precision);
+
+
+    redshift = 0.5;
+    lambda = lambda0*(1+redshift);
+    sigma = velocity/300000*(lambda);
+    A = 4.5;
+
+    modelfluxAxis = CSpectrumFluxAxis(40);
+    modelSamples = modelfluxAxis.GetSamples();
+    for(Int32 k=0; k<modelfluxAxis.GetSamplesCount(); k++){
+      Float64 val = A * exp(-pow((k-lambda),2)/(2*pow(sigma,2)));
+      modelSamples[k]=val;
+    }
+    element.fitAmplitude(spectralAxis,modelfluxAxis, redshift, -1 );
+
+    BOOST_CHECK_CLOSE(A,element.GetElementAmplitude(), precision);
+
+    lambdaRange = TFloat64Range( 1000, 2000 );
+    element.prepareSupport(spectralAxis,redshift, lambdaRange);
+    element.fitAmplitude(spectralAxis,modelfluxAxis, redshift, -1 );
+    BOOST_CHECK_CLOSE(-1,element.GetElementAmplitude(), precision);
+}
+
+BOOST_AUTO_TEST_SUITE_END()

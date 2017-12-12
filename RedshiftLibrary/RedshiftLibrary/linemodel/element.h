@@ -38,6 +38,15 @@ public:
 
 
     virtual void fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis, const CSpectrumFluxAxis &continuumfluxAxis, Float64  redshift, Int32 lineIdx=-1 ) =0;
+    virtual void fitAmplitudeAndLambdaOffset(const CSpectrumSpectralAxis& spectralAxis,
+                                             const CSpectrumFluxAxis& fluxAxis,
+                                             const CSpectrumFluxAxis &continuumfluxAxis,
+                                             Float64  redshift,
+                                             Int32 lineIdx=-1,
+                                             bool enableOffsetFitting=true,
+                                             Float64 step=25.,
+                                             Float64 min=-400.,
+                                             Float64 max=400.) =0;
     virtual Float64 getModelAtLambda( Float64 lambda, Float64 redshift, Float64 continuumFlux, Int32 kRaySupport=-1 )=0;
     virtual Float64 GetModelDerivAmplitudeAtLambda( Float64 lambda, Float64 redshift, Float64 continuumFlux  )=0;
     virtual Float64 GetModelDerivContinuumAmpAtLambda(Float64 lambda, Float64 redshift, Float64 continuumFluxUnscale  )=0;
@@ -66,6 +75,7 @@ public:
     Float64 GetVelocityEmission();
     void SetVelocityAbsorption(Float64 vel);
     Float64 GetVelocityAbsorption();
+    Float64 GetVelocity();
 
     void SetSourcesizeDispersion(Float64 sigma);
 
@@ -94,6 +104,8 @@ public:
     Float64 GetLineProfileDerivZ(std::string profile, Float64 x, Float64 mu0, Float64 redshift, Float64 sigma);
     Float64 GetLineProfileDerivSigma(std::string profile, Float64 x, Float64 x0, Float64 sigma);
     Float64 GetNSigmaSupport(std::string profile);
+    Float64 GetLineFlux(std::string profile, Float64 sigma, Float64 A);
+
 
     Float64 GetSumCross();
     void SetSumCross(Float64 val);

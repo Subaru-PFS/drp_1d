@@ -50,8 +50,10 @@ private:
     Float64 m_opt_velocity_emission;
     Float64 m_opt_velocity_absorption;
     std::string m_opt_velocityfit;
-    Float64 m_opt_velocity_fit_min;
-    Float64 m_opt_velocity_fit_max;
+    Float64 m_opt_em_velocity_fit_min;
+    Float64 m_opt_em_velocity_fit_max;
+    Float64 m_opt_abs_velocity_fit_min;
+    Float64 m_opt_abs_velocity_fit_max;
     std::string m_opt_continuumreest;
     std::string m_opt_rules;
     Float64 m_opt_extremacount;

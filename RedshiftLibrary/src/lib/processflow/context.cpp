@@ -129,7 +129,7 @@ bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath,
     //paramStore->Get( "continuumRemoval.method", medianRemovalMethod, "waveletsDF" );
 
     const char*     nameBaseline;		// baseline filename
-    Log.LogInfo( "Continuum estimation: using %s", medianRemovalMethod.c_str() );
+    Log.LogInfo( "Continuum estimation on input spectrum: using %s", medianRemovalMethod.c_str() );
     if( medianRemovalMethod== "IrregularSamplingMedian")
     {
         nameBaseline = "preprocess/baselineISMedian";

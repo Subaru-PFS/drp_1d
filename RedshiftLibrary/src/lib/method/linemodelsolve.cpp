@@ -61,8 +61,10 @@ const std::string CLineModelSolve::GetDescription()
     desc.append("\tparam: linemodel.rules = {""all"", ""balmer"", ""strongweak"", ""superstrong"", ""ratiorange"", ""ciiiratio"", ""no""}\n");
     desc.append("\tparam: linemodel.extremacount = <float value>\n");
     desc.append("\tparam: linemodel.velocityfit = {""yes"", ""no""}\n");
-    desc.append("\tparam: linemodel.velocityfitmin = <float value>\n");
-    desc.append("\tparam: linemodel.velocityfitmax = <float value>\n");
+    desc.append("\tparam: linemodel.emvelocityfitmin = <float value>\n");
+    desc.append("\tparam: linemodel.emvelocityfitmax = <float value>\n");
+    desc.append("\tparam: linemodel.absvelocityfitmin = <float value>\n");
+    desc.append("\tparam: linemodel.absvelocityfitmax = <float value>\n");
     desc.append("\tparam: linemodel.fastfitlargegridstep = <float value>, deactivated if negative or zero\n");
     desc.append("\tparam: linemodel.pdfcombination = {""marg"", ""bestchi2""}\n");
     desc.append("\tparam: linemodel.saveintermediateresults = {""yes"", ""no""}\n");
@@ -91,8 +93,12 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
     dataStore.GetScopedParam( "linemodel.velocityemission", m_opt_velocity_emission, 100.0 );
     dataStore.GetScopedParam( "linemodel.velocityabsorption", m_opt_velocity_absorption, 300.0 );
     dataStore.GetScopedParam( "linemodel.velocityfit", m_opt_velocityfit, "yes" );
-    dataStore.GetScopedParam( "linemodel.velocityfitmin", m_opt_velocity_fit_min, 20.0 );
-    dataStore.GetScopedParam( "linemodel.velocityfitmax", m_opt_velocity_fit_max, 500.0 );
+    if(m_opt_velocityfit=="yes"){
+        dataStore.GetScopedParam( "linemodel.emvelocityfitmin", m_opt_em_velocity_fit_min, 20.0 );
+        dataStore.GetScopedParam( "linemodel.emvelocityfitmax", m_opt_em_velocity_fit_max, 500.0 );
+        dataStore.GetScopedParam( "linemodel.absvelocityfitmin", m_opt_abs_velocity_fit_min, 150.0 );
+        dataStore.GetScopedParam( "linemodel.absvelocityfitmax", m_opt_abs_velocity_fit_max, 500.0 );
+    }
     dataStore.GetScopedParam( "linemodel.continuumreestimation", m_opt_continuumreest, "no" );
     dataStore.GetScopedParam( "linemodel.rules", m_opt_rules, "all" );
     dataStore.GetScopedParam( "linemodel.extremacount", m_opt_extremacount, 10.0 );
@@ -136,8 +142,10 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
         Log.LogInfo( "    -velocity fit: %s", m_opt_velocityfit.c_str());
     }
     if(m_opt_velocityfit=="yes"){
-        Log.LogInfo( "    -velocity fit min : %.1f", m_opt_velocity_fit_min);
-        Log.LogInfo( "    -velocity fit max : %.1f", m_opt_velocity_fit_max);
+        Log.LogInfo( "    -em velocity fit min : %.1f", m_opt_em_velocity_fit_min);
+        Log.LogInfo( "    -em velocity fit max : %.1f", m_opt_em_velocity_fit_max);
+        Log.LogInfo( "    -abs velocity fit min : %.1f", m_opt_abs_velocity_fit_min);
+        Log.LogInfo( "    -abs velocity fit max : %.1f", m_opt_abs_velocity_fit_max);
     }
 
     Log.LogInfo( "    -rigidity: %s", m_opt_rigidity.c_str());
@@ -199,7 +207,7 @@ std::shared_ptr<CLineModelSolveResult> CLineModelSolve::Compute( CDataStore& dat
 
         CombinePDF(dataStore, result, m_opt_rigidity, m_opt_pdfcombination);
 
-        SaveContinuumPDF(dataStore, result);
+        //SaveContinuumPDF(dataStore, result);
 
         //Save chisquareTplshape results
         if(m_opt_enableSaveChisquareTplshapeResults)
@@ -241,7 +249,7 @@ std::shared_ptr<CLineModelSolveResult> CLineModelSolve::Compute( CDataStore& dat
 Int32 CLineModelSolve::CombinePDF(CDataStore &store, std::shared_ptr<const CLineModelResult> result, std::string opt_rigidity, std::string opt_combine)
 {
     //hardcoded prior parameter
-    bool zPriorStrongLinePresence = true;
+    bool zPriorStrongLinePresence = false;
     if(zPriorStrongLinePresence)
     {
         Log.LogInfo("Linemodel: Pdfz computation: StrongLinePresence prior enabled");
@@ -616,14 +624,15 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
         Log.LogInfo( "Linemodel - hacking zref enabled");
         Float64 zref = -1.0;
         namespace fs = boost::filesystem;
-        /*
-        //fs::path refFilePath("/home/aschmitt/amazed_cluster/datasets/sdss/sdss_201707/SDSS_spectra_bg10k/reference_SDSS_spectra_bg10k.txt");
-        fs::path refFilePath("/sps/euclid/Users/schmitt/amazed_cluster/datasets/sdss/sdss_201707/reference_SDSS_spectra_bg10k.txt");
+        //*
+        //fs::path refFilePath("/home/aschmitt/amazed_cluster/datasets/sdss/sdss_201707/reference_SDSS_spectra_bg10k.txt");
+        //fs::path refFilePath("/sps/euclid/Users/schmitt/amazed_cluster/datasets/sdss/sdss_201707/reference_SDSS_spectra_bg10k.txt");
+        fs::path refFilePath("/home/aschmitt/data/sdss/sdss_201707/reference_SDSS_spectra_bg10k.txt");
         Int32 substring_start = 5;
         Int32 substring_n = 15;
         Int32 colId = 2; //starts at 1, so that id_column is usually 1
         //*/
-        //*
+        /*
         //fs::path refFilePath("/home/aschmitt/amazed_cluster/datasets/sdss/sdss_201707/SDSS_spectra_bg10k/reference_SDSS_spectra_bg10k.txt");
         fs::path refFilePath("/home/aschmitt/amazed_cluster/datasets/pfs/pfs6b2_201704_sim10k/pfs6b2_reference_20170523_filtSim3h.txt");
         Int32 substring_start = 0;
@@ -682,8 +691,10 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
                       m_opt_velocityfit,
                       m_opt_twosteplargegridstep,
                       m_opt_rigidity,
-                      m_opt_velocity_fit_min,
-                      m_opt_velocity_fit_max);
+                      m_opt_em_velocity_fit_min,
+                      m_opt_em_velocity_fit_max,
+                      m_opt_abs_velocity_fit_min,
+                      m_opt_abs_velocity_fit_max);
 
     if( !result )
     {

@@ -42,10 +42,13 @@ Void CBlindSolveResult::SaveLine( const CDataStore& store, std::ostream& stream 
 
     GetBestFitResult( store, redshift, merit, tplName );
     stream  << store.GetSpectrumName() << "\t"
+            << store.GetProcessingID() << "\t"
                 << redshift << "\t"
                 << merit << "\t"
                 << tplName << "\t"
-                << "BlindSolve" << std::endl;
+                << "BlindSolve" << "\t"
+                << "-1" << "\t" //deltaz
+                << "-1" << std::endl; //reliability label
 }
 
 Bool CBlindSolveResult::GetBestFitResult( const CDataStore& store, Float64& redshift, Float64& merit, std::string& tplName ) const

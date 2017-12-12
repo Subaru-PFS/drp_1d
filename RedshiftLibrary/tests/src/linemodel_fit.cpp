@@ -170,116 +170,116 @@ void checkAmplitudeAndVelocityFit(std::string spectrumPath, std::string noisePat
 //}
 
 
-BOOST_AUTO_TEST_CASE( LinemodelFit_lmfit_1EmissionLineF )
-{
-    std::string spectrumPath = "../RedshiftLibrary/tests/src/data/LinemodelFitTestCase/signalnoise_4lines_sig400_6000A_10000A.fits";
-    std::string noisePath    = "../RedshiftLibrary/tests/src/data/LinemodelFitTestCase/noise_4lines_sig400_6000A_10000A.fits";
-    std::string linecatalogPath = "../RedshiftLibrary/tests/src/data/LinemodelFitTestCase/linecatalog_test_linemodel_profile_1EL.txt";
+//BOOST_AUTO_TEST_CASE( LinemodelFit_lmfit_1EmissionLineF )
+//{
+//    std::string spectrumPath = "../RedshiftLibrary/tests/src/data/LinemodelFitTestCase/signalnoise_4lines_sig400_6000A_10000A.fits";
+//    std::string noisePath    = "../RedshiftLibrary/tests/src/data/LinemodelFitTestCase/noise_4lines_sig400_6000A_10000A.fits";
+//    std::string linecatalogPath = "../RedshiftLibrary/tests/src/data/LinemodelFitTestCase/linecatalog_test_linemodel_profile_1EL.txt";
 
-    std::string opt_fittingmethod = "lmfit";
-    Int32 lineTypeFilter = CRay::nType_Emission;
-    Int32 forceFilter = CRay::nForce_Strong;
+//    std::string opt_fittingmethod = "lmfit";
+//    Int32 lineTypeFilter = CRay::nType_Emission;
+//    Int32 forceFilter = CRay::nForce_Strong;
 
-    std::vector<Float64> ampsRef;
-    ampsRef.push_back(1.0);
+//    std::vector<Float64> ampsRef;
+//    ampsRef.push_back(1.0);
 
-    Float64 emissionVelocityRef = 400.0;
-    Float64 z = 0.0;
+//    Float64 emissionVelocityRef = 400.0;
+//    Float64 z = 0.0;
 
-    Float64 initialVelocity = 50.0;
-    for(Int32 kV=0; kV<5; kV++)
-    {
-        BOOST_TEST_MESSAGE( "LinemodelFit_lmfit_1EmissionLineF: initial velocity: " << initialVelocity );
-        checkAmplitudeAndVelocityFit(spectrumPath, noisePath, linecatalogPath, opt_fittingmethod, lineTypeFilter, forceFilter, initialVelocity, z, ampsRef, emissionVelocityRef);
-        initialVelocity += 100.0;
-    }
+//    Float64 initialVelocity = 50.0;
+//    for(Int32 kV=0; kV<5; kV++)
+//    {
+//        BOOST_TEST_MESSAGE( "LinemodelFit_lmfit_1EmissionLineF: initial velocity: " << initialVelocity );
+//        checkAmplitudeAndVelocityFit(spectrumPath, noisePath, linecatalogPath, opt_fittingmethod, lineTypeFilter, forceFilter, initialVelocity, z, ampsRef, emissionVelocityRef);
+//        initialVelocity += 100.0;
+//    }
 
-}
+//}
 
-BOOST_AUTO_TEST_CASE( LinemodelFit_lmfit_4UnitaryEmissionLinesTF )
-{
-    std::string spectrumPath = "../RedshiftLibrary/tests/src/data/LinemodelFitTestCase/signal_4lines_sig100_6000A_10000A_a1.0.fits";
-    std::string noisePath    = "../RedshiftLibrary/tests/src/data/LinemodelFitTestCase/noise_4lines_sig400_6000A_10000A.fits";
-    std::string linecatalogPath = "../RedshiftLibrary/tests/src/data/LinemodelFitTestCase/linecatalog_test_linemodel_profile_4EL.txt";
+//BOOST_AUTO_TEST_CASE( LinemodelFit_lmfit_4UnitaryEmissionLinesTF )
+//{
+//    std::string spectrumPath = "../RedshiftLibrary/tests/src/data/LinemodelFitTestCase/signal_4lines_sig100_6000A_10000A_a1.0.fits";
+//    std::string noisePath    = "../RedshiftLibrary/tests/src/data/LinemodelFitTestCase/noise_4lines_sig400_6000A_10000A.fits";
+//    std::string linecatalogPath = "../RedshiftLibrary/tests/src/data/LinemodelFitTestCase/linecatalog_test_linemodel_profile_4EL.txt";
 
-    std::string opt_fittingmethod = "lmfit";
-    Int32 lineTypeFilter = CRay::nType_Emission;
-    Int32 forceFilter = CRay::nForce_Strong;
+//    std::string opt_fittingmethod = "lmfit";
+//    Int32 lineTypeFilter = CRay::nType_Emission;
+//    Int32 forceFilter = CRay::nForce_Strong;
 
-    std::vector<Float64> ampsRef;
-    ampsRef.push_back(1.0);
-    ampsRef.push_back(1.0);
-    ampsRef.push_back(1.0);
-    ampsRef.push_back(1.0);
+//    std::vector<Float64> ampsRef;
+//    ampsRef.push_back(1.0);
+//    ampsRef.push_back(1.0);
+//    ampsRef.push_back(1.0);
+//    ampsRef.push_back(1.0);
 
-    Float64 emissionVelocityRef = 100.0;
-    Float64 z = 0.0;
+//    Float64 emissionVelocityRef = 100.0;
+//    Float64 z = 0.0;
 
-    Float64 initialVelocity = 50.0;
-    for(Int32 kV=0; kV<5; kV++)
-    {
-        BOOST_TEST_MESSAGE( "LinemodelFit_lmfit_4UnitaryEmissionLinesTF: initial velocity: " << initialVelocity );
-        checkAmplitudeAndVelocityFit(spectrumPath, noisePath, linecatalogPath, opt_fittingmethod, lineTypeFilter, forceFilter, initialVelocity, z, ampsRef, emissionVelocityRef);
-        initialVelocity += 100.0;
-    }
-}
+//    Float64 initialVelocity = 50.0;
+//    for(Int32 kV=0; kV<5; kV++)
+//    {
+//        BOOST_TEST_MESSAGE( "LinemodelFit_lmfit_4UnitaryEmissionLinesTF: initial velocity: " << initialVelocity );
+//        checkAmplitudeAndVelocityFit(spectrumPath, noisePath, linecatalogPath, opt_fittingmethod, lineTypeFilter, forceFilter, initialVelocity, z, ampsRef, emissionVelocityRef);
+//        initialVelocity += 100.0;
+//    }
+//}
 
-BOOST_AUTO_TEST_CASE( LinemodelFit_lmfit_4UnitaryEmissionLinesTF_normalisation )
-{
-    std::string spectrumPath = "../RedshiftLibrary/tests/src/data/LinemodelFitTestCase/signal_4lines_sig100_6000A_10000A_a1.0_1em17.fits";
-    std::string noisePath    = "../RedshiftLibrary/tests/src/data/LinemodelFitTestCase/noise_4lines_sig400_6000A_10000A_1em17.fits";
-    std::string linecatalogPath = "../RedshiftLibrary/tests/src/data/LinemodelFitTestCase/linecatalog_test_linemodel_profile_4EL.txt";
+//BOOST_AUTO_TEST_CASE( LinemodelFit_lmfit_4UnitaryEmissionLinesTF_normalisation )
+//{
+//    std::string spectrumPath = "../RedshiftLibrary/tests/src/data/LinemodelFitTestCase/signal_4lines_sig100_6000A_10000A_a1.0_1em17.fits";
+//    std::string noisePath    = "../RedshiftLibrary/tests/src/data/LinemodelFitTestCase/noise_4lines_sig400_6000A_10000A_1em17.fits";
+//    std::string linecatalogPath = "../RedshiftLibrary/tests/src/data/LinemodelFitTestCase/linecatalog_test_linemodel_profile_4EL.txt";
 
-    std::string opt_fittingmethod = "lmfit";
-    Int32 lineTypeFilter = CRay::nType_Emission;
-    Int32 forceFilter = CRay::nForce_Strong;
+//    std::string opt_fittingmethod = "lmfit";
+//    Int32 lineTypeFilter = CRay::nType_Emission;
+//    Int32 forceFilter = CRay::nForce_Strong;
 
-    std::vector<Float64> ampsRef;
-    ampsRef.push_back(1.0e-17);
-    ampsRef.push_back(1.0e-17);
-    ampsRef.push_back(1.0e-17);
-    ampsRef.push_back(1.0e-17);
+//    std::vector<Float64> ampsRef;
+//    ampsRef.push_back(1.0e-17);
+//    ampsRef.push_back(1.0e-17);
+//    ampsRef.push_back(1.0e-17);
+//    ampsRef.push_back(1.0e-17);
 
-    Float64 emissionVelocityRef = 100.0;
-    Float64 z = 0.0;
+//    Float64 emissionVelocityRef = 100.0;
+//    Float64 z = 0.0;
 
-    Float64 initialVelocity = 50.0;
-    for(Int32 kV=0; kV<5; kV++)
-    {
-        BOOST_TEST_MESSAGE( "LinemodelFit_lmfit_4UnitaryEmissionLinesTF_normalisation: initial velocity: " << initialVelocity );
-        checkAmplitudeAndVelocityFit(spectrumPath, noisePath, linecatalogPath, opt_fittingmethod, lineTypeFilter, forceFilter, initialVelocity, z, ampsRef, emissionVelocityRef);
-        initialVelocity += 100.0;
-    }
-}
+//    Float64 initialVelocity = 50.0;
+//    for(Int32 kV=0; kV<5; kV++)
+//    {
+//        BOOST_TEST_MESSAGE( "LinemodelFit_lmfit_4UnitaryEmissionLinesTF_normalisation: initial velocity: " << initialVelocity );
+//        checkAmplitudeAndVelocityFit(spectrumPath, noisePath, linecatalogPath, opt_fittingmethod, lineTypeFilter, forceFilter, initialVelocity, z, ampsRef, emissionVelocityRef);
+//        initialVelocity += 100.0;
+//    }
+//}
 
-BOOST_AUTO_TEST_CASE( LinemodelFit_lmfit_4EmissionLinesF )
-{
-    std::string spectrumPath = "../RedshiftLibrary/tests/src/data/LinemodelFitTestCase/signalnoise_4lines_sig400_6000A_10000A.fits";
-    std::string noisePath    = "../RedshiftLibrary/tests/src/data/LinemodelFitTestCase/noise_4lines_sig400_6000A_10000A.fits";
-    std::string linecatalogPath = "../RedshiftLibrary/tests/src/data/LinemodelFitTestCase/linecatalog_test_linemodel_profile_4EL.txt";
+//BOOST_AUTO_TEST_CASE( LinemodelFit_lmfit_4EmissionLinesF )
+//{
+//    std::string spectrumPath = "../RedshiftLibrary/tests/src/data/LinemodelFitTestCase/signalnoise_4lines_sig400_6000A_10000A.fits";
+//    std::string noisePath    = "../RedshiftLibrary/tests/src/data/LinemodelFitTestCase/noise_4lines_sig400_6000A_10000A.fits";
+//    std::string linecatalogPath = "../RedshiftLibrary/tests/src/data/LinemodelFitTestCase/linecatalog_test_linemodel_profile_4EL.txt";
 
-    std::string opt_fittingmethod = "lmfit";
-    Int32 lineTypeFilter = CRay::nType_Emission;
-    Int32 forceFilter = CRay::nForce_Strong;
+//    std::string opt_fittingmethod = "lmfit";
+//    Int32 lineTypeFilter = CRay::nType_Emission;
+//    Int32 forceFilter = CRay::nForce_Strong;
 
-    std::vector<Float64> ampsRef;
-    ampsRef.push_back(1.0);
-    ampsRef.push_back(3.0);
-    ampsRef.push_back(4.0);
-    ampsRef.push_back(0.1);
+//    std::vector<Float64> ampsRef;
+//    ampsRef.push_back(1.0);
+//    ampsRef.push_back(3.0);
+//    ampsRef.push_back(4.0);
+//    ampsRef.push_back(0.1);
 
-    Float64 emissionVelocityRef = 400.0;
-    Float64 z = 0.0;
+//    Float64 emissionVelocityRef = 400.0;
+//    Float64 z = 0.0;
 
-    Float64 initialVelocity = 50.0;
-    for(Int32 kV=0; kV<5; kV++)
-    {
-        BOOST_TEST_MESSAGE( "LinemodelFit_lmfit_4EmissionLinesF: initial velocity: " << initialVelocity );
-        checkAmplitudeAndVelocityFit(spectrumPath, noisePath, linecatalogPath, opt_fittingmethod, lineTypeFilter, forceFilter, initialVelocity, z, ampsRef, emissionVelocityRef);
-        initialVelocity += 100.0;
-    }
+//    Float64 initialVelocity = 50.0;
+//    for(Int32 kV=0; kV<5; kV++)
+//    {
+//        BOOST_TEST_MESSAGE( "LinemodelFit_lmfit_4EmissionLinesF: initial velocity: " << initialVelocity );
+//        checkAmplitudeAndVelocityFit(spectrumPath, noisePath, linecatalogPath, opt_fittingmethod, lineTypeFilter, forceFilter, initialVelocity, z, ampsRef, emissionVelocityRef);
+//        initialVelocity += 100.0;
+//    }
 
-}
+//}
 
 
 //BOOST_AUTO_TEST_CASE( LinemodelFit_lbfgsfit_4UnitaryEmissionLinesTF )

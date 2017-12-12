@@ -164,8 +164,9 @@ Float64 CLineModelElement::GetLineProfile(std::string profile, Float64 x, Float6
         val = exp(-0.5*xsurc*xsurc);
     }else if(profile=="LOR"){
         const Float64 xsurc = xc/sigma;
-        const Float64 x = xsurc*2.0;
+        const Float64 x = xsurc;
         val = 1.0/(1+x*x);
+        //height of the peak is 2*A/pi/c
     }else if(profile=="ASYM"){
         const Float64 coeff = m_asym_sigma_coeff;
 
@@ -200,6 +201,22 @@ Float64 CLineModelElement::GetLineProfile(std::string profile, Float64 x, Float6
     //use sigma normalized profiles
     //val /= sigma;
 
+    return val;
+}
+
+
+Float64 CLineModelElement::GetLineFlux(std::string profile, Float64 sigma, Float64 A)
+{
+    Float64 val=0.0;
+    if(profile=="SYM"){
+        val = A*sigma*sqrt(2*M_PI);
+    }else if(profile=="LOR"){
+        val = A*sigma*M_PI;
+    }else if(profile=="ASYM"){
+        val = A*sigma*sqrt(2*M_PI);
+    }else if(profile=="ASYMFIT" || profile.find("ASYMFIXED")!=std::string::npos){
+        val = A*sigma*m_asymfit_sigma_coeff*sqrt(2*M_PI); //not checked if this analytic integral is correct
+    }
     return val;
 }
 
@@ -365,7 +382,7 @@ Float64 CLineModelElement::GetLineProfileDerivSigma(std::string profile, Float64
 
 Float64 CLineModelElement::GetNSigmaSupport(std::string profile)
 {
-    static Float64 nominal = 8.0;
+    static Float64 nominal = 8;
     Float64 val=nominal;
 
     if(profile=="SYM"){
@@ -410,6 +427,21 @@ Float64 CLineModelElement::GetVelocityEmission()
 Float64 CLineModelElement::GetVelocityAbsorption()
 {
     return m_VelocityAbsorption;
+}
+
+Float64 CLineModelElement::GetVelocity()
+{
+    Float64 vel=-1;
+    if(m_Rays.size()>0)
+    {
+        if(m_Rays[0].GetIsEmission())
+        {
+            vel = m_VelocityEmission;
+        }else{
+            vel = m_VelocityAbsorption;
+        }
+    }
+    return vel;
 }
 
 void CLineModelElement::SetAsymfitWidthCoeff(Float64 coeff)

@@ -26,7 +26,7 @@ BOOST_AUTO_TEST_SUITE(LinemodelFit_EstimateLeastSquare)
  * Check that the least-square-fast provides the same value as the least-square method
  *
 **/
-void checkLeastSquareFast(std::string spectrumPath, std::string noisePath, std::string linecatalogPath, std::string opt_fittingmethod, std::string opt_continuumcomponent, Int32 lineTypeFilter, Int32 forceFilter, Float64 initVelocity, Float64 z)
+void checkLeastSquareFast(std::string spectrumPath, std::string noisePath, std::string linecatalogPath, std::string opt_fittingmethod, std::string opt_continuumcomponent, std::string opt_rigidity, Int32 lineTypeFilter, Int32 forceFilter, Float64 initVelocity, Float64 z)
 {
     // load spectrum
     CSpectrumIOFitsReader reader;
@@ -72,7 +72,6 @@ void checkLeastSquareFast(std::string spectrumPath, std::string noisePath, std::
     Float64 opt_velocityEmission = initVelocity;
     Float64 opt_velocityAbsorption = initVelocity;
     std::string opt_rules = "no";
-    std::string opt_rigidity = "tplshape";
     std::string opt_calibrationPath= "../RedshiftLibrary/tests/src/data/LinemodelFitEstimateLeastSquareTestCase/calibration";
 
 
@@ -141,9 +140,9 @@ BOOST_AUTO_TEST_CASE( LinemodelFit_EstimateLstSq_tplshape_pfsbatch6 )
 {
     std::string spectrumPath = "../RedshiftLibrary/tests/src/data/LinemodelFitEstimateLeastSquareTestCase/10000663000008vacLine_TF.fits";
     std::string noisePath = "../RedshiftLibrary/tests/src/data/LinemodelFitEstimateLeastSquareTestCase/10000663000008vacLine_ErrF.fits";
-    std::string linecatalogPath = "../RedshiftLibrary/tests/src/data/LinemodelFitEstimateLeastSquareTestCase/linecatalogamazedvacuum_B13D.txt";
-    std::string linecatalogPath_NoLinesInLbdaRange = "../RedshiftLibrary/tests/src/data/LinemodelFitEstimateLeastSquareTestCase/linecatalogamazedvacuum_NoLinesInWavelengthRange.txt"; //only 1 line outside the wavelength range
-    std::string linecatalogPath_Ha = "../RedshiftLibrary/tests/src/data/LinemodelFitEstimateLeastSquareTestCase/linecatalogamazedvacuum_Ha.txt"; //only 1 line in the wavelength range
+    std::string linecatalogPath = "../RedshiftLibrary/tests/src/data/LinemodelFitEstimateLeastSquareTestCase/linecatalogamazedvacuum_B13D_converted_v4.txt";
+    std::string linecatalogPath_NoLinesInLbdaRange = "../RedshiftLibrary/tests/src/data/LinemodelFitEstimateLeastSquareTestCase/linecatalogamazedvacuum_NoLinesInWavelengthRange_converted_v4.txt"; //only 1 line outside the wavelength range
+    std::string linecatalogPath_Ha = "../RedshiftLibrary/tests/src/data/LinemodelFitEstimateLeastSquareTestCase/linecatalogamazedvacuum_Ha_converted_v4.txt"; //only 1 line in the wavelength range
 
 
     std::string opt_fittingmethod = "individual";
@@ -151,28 +150,41 @@ BOOST_AUTO_TEST_CASE( LinemodelFit_EstimateLstSq_tplshape_pfsbatch6 )
     Float64 initialVelocity = 100.0;
     Int32 forceFilter = CRay::nForce_Strong;
 
-    Float64 z = 0.077164;
-    std::string opt_continuumcomponent = "fromspectrum";
+    //loop on the rigidity
+    for(Int32 k=0; k<2; k++)
+    {
+        std::string opt_rigidity = "";
+        if(k==0)
+        {
+            opt_rigidity = "rules";
+        }else{
+            opt_rigidity = "tplshape";
+        }
+        Float64 z = 0.077164;
+        std::string opt_continuumcomponent = "fromspectrum";
 
-    //test the linemodel tplshape, without lines fitted (catalog has no lines in the lbda range)
-    opt_continuumcomponent = "fromspectrum";
-    checkLeastSquareFast(spectrumPath, noisePath, linecatalogPath_NoLinesInLbdaRange, opt_fittingmethod, opt_continuumcomponent, lineTypeFilter, forceFilter, initialVelocity, z);
 
-    //test the linemodel tplshape, with only 1 line in the catalog
-    opt_continuumcomponent = "fromspectrum";
-    checkLeastSquareFast(spectrumPath, noisePath, linecatalogPath_Ha, opt_fittingmethod, opt_continuumcomponent, lineTypeFilter, forceFilter, initialVelocity, z);
+        BOOST_TEST_MESSAGE( "\n--test the linemodel " <<  opt_rigidity.c_str()  << ", without lines fitted (catalog has no lines in the lbda range)" );
+        opt_continuumcomponent = "fromspectrum";
+        checkLeastSquareFast(spectrumPath, noisePath, linecatalogPath_NoLinesInLbdaRange, opt_fittingmethod, opt_continuumcomponent, opt_rigidity, lineTypeFilter, forceFilter, initialVelocity, z);
 
-    //test the linemodel tplshape
-    opt_continuumcomponent = "fromspectrum";
-    checkLeastSquareFast(spectrumPath, noisePath, linecatalogPath, opt_fittingmethod, opt_continuumcomponent, lineTypeFilter, forceFilter, initialVelocity, z);
 
-    //test the fullmodel tplshape, without lines fitted (catalog has no lines in the lbda range)
-    opt_continuumcomponent = "tplfit";
-    checkLeastSquareFast(spectrumPath, noisePath, linecatalogPath_NoLinesInLbdaRange, opt_fittingmethod, opt_continuumcomponent, lineTypeFilter, forceFilter, initialVelocity, z);
+        BOOST_TEST_MESSAGE( "\n--test the linemodel " <<  opt_rigidity.c_str()  << ", with only 1 line in the catalog" );
+        opt_continuumcomponent = "fromspectrum";
+        checkLeastSquareFast(spectrumPath, noisePath, linecatalogPath_Ha, opt_fittingmethod, opt_continuumcomponent, opt_rigidity, lineTypeFilter, forceFilter, initialVelocity, z);
 
-    //test the fullmodel tplshape
-    opt_continuumcomponent = "tplfit";
-    checkLeastSquareFast(spectrumPath, noisePath, linecatalogPath, opt_fittingmethod, opt_continuumcomponent, lineTypeFilter, forceFilter, initialVelocity, z);
+        BOOST_TEST_MESSAGE( "\n--test the linemodel " <<  opt_rigidity.c_str());
+        opt_continuumcomponent = "fromspectrum";
+        checkLeastSquareFast(spectrumPath, noisePath, linecatalogPath, opt_fittingmethod, opt_continuumcomponent, opt_rigidity, lineTypeFilter, forceFilter, initialVelocity, z);
+
+        BOOST_TEST_MESSAGE( "\n--test the fullmodel " <<  opt_rigidity.c_str()  << ", without lines fitted (catalog has no lines in the lbda range)" );
+        opt_continuumcomponent = "tplfit";
+        checkLeastSquareFast(spectrumPath, noisePath, linecatalogPath_NoLinesInLbdaRange, opt_fittingmethod, opt_continuumcomponent, opt_rigidity, lineTypeFilter, forceFilter, initialVelocity, z);
+
+        BOOST_TEST_MESSAGE( "\n--test the fullmodel " <<  opt_rigidity.c_str() );
+        opt_continuumcomponent = "tplfit";
+        checkLeastSquareFast(spectrumPath, noisePath, linecatalogPath, opt_fittingmethod, opt_continuumcomponent, opt_rigidity, lineTypeFilter, forceFilter, initialVelocity, z);
+    }
 
 }
 

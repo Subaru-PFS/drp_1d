@@ -102,7 +102,16 @@ Bool CRayCatalog::Add( const CRay& r )
     return true;
 }
 
-Bool CRayCatalog::Load( const char* filePath )
+/**
+ * @brief CRayCatalog::Load
+ * Loads a line catalog in TSV format as of v0.4
+ * @param filePath
+ * @return  1 if success
+ * @return -3 if file cannot be opened
+ * @return -2 if bad version number in the header of the file
+ * @return -1 if any other error encountered
+ */
+Int32 CRayCatalog::Load( const char* filePath )
 {
     ifstream file;
 
@@ -112,20 +121,29 @@ Bool CRayCatalog::Load( const char* filePath )
     file.open( filePath, ifstream::in );
     if( file.rdstate() & ios_base::failbit )
     {
-        return false;
+        return -3;
     }
 
     string line;
 
-    Float64 ver = 0.0;
+    Float64 ver = -1.0;
     // Read file line by line
     while( getline( file, line ) )
     {
         // manage version
-        if(line.find("#version:0.3.0")!= std::string::npos){
-            ver = 0.3;
+        if(ver==-1.0){
+            if(line.find("#version:0.4.0")!= std::string::npos){
+                ver = 0.4;
+            }
             continue;
         }
+
+        if(ver!=0.4)
+        {
+            Log.LogError( "Line catalog version %f is not supported. Aborting", ver);
+            return -2;
+        }
+
         // remove comments
         if(line.compare(0,1,"#",1)==0){
             continue;
@@ -149,7 +167,7 @@ Bool CRayCatalog::Load( const char* filePath )
             catch (bad_lexical_cast)
             {
                 pos = 0.0;
-                return false;
+                return -1;
             }
 
             // Parse name
@@ -161,7 +179,7 @@ Bool CRayCatalog::Load( const char* filePath )
             }
             else
             {
-                return false;
+                return -1;
             }
 
             // Parse type
@@ -191,44 +209,58 @@ Bool CRayCatalog::Load( const char* filePath )
             std::string profileName = "SYM";
             std::string groupName = "-1";
             Float64 nominalAmplitude = 1.0;
-            if(ver>=0.3){
-                // Parse profile name
-                ++it;
-                if( it != tok.end() ){
-                    profileName = *it;
-                }
+            std::string velGroupName = "-1";
+            // Parse profile name
+            ++it;
+            if( it != tok.end() ){
+                profileName = *it;
+            }
 
 
-                // Parse group name
+            // Parse group name
+            ++it;
+            if( it != tok.end() )
+            {
+                groupName = *it;
+                // Parse group line nominal amplitude
                 ++it;
                 if( it != tok.end() )
                 {
-                    groupName = *it;
-                    // Parse group line nominal amplitude
-                    ++it;
-                    if( it != tok.end() )
+                    try
                     {
-                        try
-                        {
-                            nominalAmplitude = lexical_cast<double>(*it);
-                        }
-                        catch (bad_lexical_cast)
-                        {
-                            Log.LogError( "Unable to read nominal amplitude value from file, setting as default (1.0)." );
-                            nominalAmplitude = 1.0;
-                        }
+                        nominalAmplitude = lexical_cast<double>(*it);
+                    }
+                    catch (bad_lexical_cast)
+                    {
+                        Log.LogError( "Unable to read nominal amplitude value from file, setting as default (1.0)." );
+                        nominalAmplitude = 1.0;
                     }
                 }
+                if(groupName=="" || groupName=="-1")
+                {
+                    nominalAmplitude = 1.0;
+                }
             }
-            if( nominalAmplitude>0.0 )
-	      {
-                Add( CRay( name, pos, Etype, profileName, Eforce, -1, -1, -1, -1, -1, -1, groupName, nominalAmplitude ) );
-	      }
+
+            // Parse velocity group name
+            ++it;
+            if( it != tok.end() ){
+                velGroupName = *it;
+            }
+
+            if( nominalAmplitude>0.0 ) //do not load a line with nominal amplitude = ZERO
+            {
+                Add( CRay(name, pos, Etype, profileName, Eforce, -1, -1, -1, -1, -1, -1, groupName, nominalAmplitude, velGroupName) );
+            }
         }
     }
     file.close();
 
-    return true;
+    if(ver<0.0)
+    {
+        return 0;
+    }
+    return 1;
 }
 
 Bool CRayCatalog::Save( const char* filePath )
@@ -240,8 +272,8 @@ Bool CRayCatalog::Save( const char* filePath )
         return false;
     }
 
-    file << "#version:0.3.0" << std::endl;
-    file << "#Lambda" << "\t" << "Name" << "\t" << "Type" << "\t" << std::endl;
+    file << "#version:0.4.0" << std::endl;
+    file << "#lambda" << "\t" << "name" << "\t" << "type" << "\t" << "force" << "\t" << "profile" << "\t" << "amp_group" << "\t" << "nominal_ampl" << "\t" << "vel_group" << std::endl;
     for( int i = 0; i< m_List.size(); i++ )
     {
         file << m_List[i].GetPosition() << "\t";
@@ -263,11 +295,11 @@ Bool CRayCatalog::Save( const char* filePath )
         }
         file << m_List[i].GetProfile() << "\t";
 
-        if(m_List[i].GetGroupName()!="-1")
-        {
-            file << m_List[i].GetGroupName() << "\t";
-            file << m_List[i].GetNominalAmplitude();
-        }
+        file << m_List[i].GetGroupName() << "\t";
+        file << m_List[i].GetNominalAmplitude() << "\t";
+
+        file << m_List[i].GetVelGroupName();
+
         file << std::endl;
 
     }

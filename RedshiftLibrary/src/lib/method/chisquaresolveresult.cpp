@@ -100,7 +100,9 @@ Void CChisquareSolveResult::SaveLine( const CDataStore& store, std::ostream& str
                 << redshift << "\t"
                 << merit << "\t"
                 << tplName << "\t"
-                << "ChisquareSolve" << std::endl;
+                << "ChisquareSolve"<< "\t"
+                << "-1" << "\t" //deltaz
+                << "-1" << std::endl; //reliability label
 }
 
 Bool CChisquareSolveResult::GetBestRedshift( const CDataStore& store, Float64& redshift, Float64& merit, std::string& tplName ) const
