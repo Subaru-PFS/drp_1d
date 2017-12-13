@@ -12,6 +12,8 @@ using namespace NSEpic;
 using namespace std;
 namespace bfs = boost::filesystem;
 
+CLog _logger;
+
 /**
  * 
  */

@@ -73,13 +73,13 @@ void checkLeastSquareFast(std::string spectrumPath, std::string noisePath, std::
     Float64 opt_velocityAbsorption = initVelocity;
     std::string opt_rules = "no";
     std::string opt_rigidity = "tplshape";
-    std::string opt_calibrationPath= "../RedshiftLibrary/tests/src/data/LinemodelFitEstimateLeastSquareTestCase/calibration";
+    std::string opt_calibrationPath= "./RedshiftLibrary/tests/src/data/LinemodelFitEstimateLeastSquareTestCase/calibration";
 
 
 
     //these tplcatalog related variables are unused here.
     CTemplateCatalog tplCatalog;
-    Bool retValue = tplCatalog.Load( "../RedshiftLibrary/tests/src/data/LinemodelFitEstimateLeastSquareTestCase/ContinuumTemplates_simulm2016Extended_dustfree201702_1/" );
+    Bool retValue = tplCatalog.Load( "./RedshiftLibrary/tests/src/data/LinemodelFitEstimateLeastSquareTestCase/ContinuumTemplates_simulm2016Extended_dustfree201702_1/" );
     BOOST_CHECK( retValue == true);
     TStringList tplCategories = TStringList { "galaxy" };
 
@@ -139,11 +139,11 @@ void checkLeastSquareFast(std::string spectrumPath, std::string noisePath, std::
 ***/
 BOOST_AUTO_TEST_CASE( LinemodelFit_EstimateLstSq_tplshape_pfsbatch6 )
 {
-    std::string spectrumPath = "../RedshiftLibrary/tests/src/data/LinemodelFitEstimateLeastSquareTestCase/10000663000008vacLine_TF.fits";
-    std::string noisePath = "../RedshiftLibrary/tests/src/data/LinemodelFitEstimateLeastSquareTestCase/10000663000008vacLine_ErrF.fits";
-    std::string linecatalogPath = "../RedshiftLibrary/tests/src/data/LinemodelFitEstimateLeastSquareTestCase/linecatalogamazedvacuum_B13D.txt";
-    std::string linecatalogPath_NoLinesInLbdaRange = "../RedshiftLibrary/tests/src/data/LinemodelFitEstimateLeastSquareTestCase/linecatalogamazedvacuum_NoLinesInWavelengthRange.txt"; //only 1 line outside the wavelength range
-    std::string linecatalogPath_Ha = "../RedshiftLibrary/tests/src/data/LinemodelFitEstimateLeastSquareTestCase/linecatalogamazedvacuum_Ha.txt"; //only 1 line in the wavelength range
+    std::string spectrumPath = "./RedshiftLibrary/tests/src/data/LinemodelFitEstimateLeastSquareTestCase/10000663000008vacLine_TF.fits";
+    std::string noisePath = "./RedshiftLibrary/tests/src/data/LinemodelFitEstimateLeastSquareTestCase/10000663000008vacLine_ErrF.fits";
+    std::string linecatalogPath = "./RedshiftLibrary/tests/src/data/LinemodelFitEstimateLeastSquareTestCase/linecatalogamazedvacuum_B13D.txt";
+    std::string linecatalogPath_NoLinesInLbdaRange = "./RedshiftLibrary/tests/src/data/LinemodelFitEstimateLeastSquareTestCase/linecatalogamazedvacuum_NoLinesInWavelengthRange.txt"; //only 1 line outside the wavelength range
+    std::string linecatalogPath_Ha = "./RedshiftLibrary/tests/src/data/LinemodelFitEstimateLeastSquareTestCase/linecatalogamazedvacuum_Ha.txt"; //only 1 line in the wavelength range
 
 
     std::string opt_fittingmethod = "individual";

@@ -27,11 +27,13 @@ BOOST_AUTO_TEST_CASE(AddNoise_test)
   BOOST_CHECK(noiseFromFile.SetNoiseFilePath("/this/file/should/not/exist") == false);
   BOOST_CHECK(noiseFromFile.SetNoiseFilePath("data/SpectrumioTestCase/spectrum1_z_1.2299.fits") == false);
 
+  /*
   CSpectrumIOFitsReader reader;
 
   Bool retVal = reader.Read( "01", OSpectrum );
   BOOST_CHECK( retVal == true );
   BOOST_CHECK(noiseFromFile.SetNoiseFilePath("02") == true);
+  */
 }
 
 //-----------------------------------------------------------------------------

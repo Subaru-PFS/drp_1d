@@ -64,7 +64,7 @@ void UtilChisquareTestFit( const char* spectraPath,
     CMask spcMask = Mask();
     spcMask.SetSize(sampleCount);
 
-    std::string calibrationPath = "../RedshiftLibrary/tests/src/data/Operator_Chisquare_ismTestCase/calibration";
+    std::string calibrationPath = "./RedshiftLibrary/tests/src/data/Operator_Chisquare_ismTestCase/calibration";
 
     std::shared_ptr<CChisquareResult> r;
     Int32 enable_IGM = 0;
@@ -119,9 +119,9 @@ BOOST_AUTO_TEST_CASE(ChisquareTestCstFlux)
         //z=0 test 0
         targetFitIsmCalzetti = 0.0;
         z = 0.0;
-        UtilChisquareTestFit( "../RedshiftLibrary/tests/src/data/Operator_Chisquare_ismTestCase/fits_chisquare_ism_cstflux/spc_synth_z0_a1_constantflux_gmu6500gw15ga025_ismCalzetti0_200A-10kA_TF.fits",
-                              "../RedshiftLibrary/tests/src/data/Operator_Chisquare_ismTestCase/fits_chisquare_ism_cstflux/spc_synth_z0_a1_constantflux_gmu6500gw15ga025_200A-10kA_ErrF.fits",
-                              "../RedshiftLibrary/tests/src/data/Operator_Chisquare_ismTestCase/fits_chisquare_ism_cstflux/templates/galaxy/template_constantflux_gmu6500gw15ga025.dat",
+        UtilChisquareTestFit( "./RedshiftLibrary/tests/src/data/Operator_Chisquare_ismTestCase/fits_chisquare_ism_cstflux/spc_synth_z0_a1_constantflux_gmu6500gw15ga025_ismCalzetti0_200A-10kA_TF.fits",
+                              "./RedshiftLibrary/tests/src/data/Operator_Chisquare_ismTestCase/fits_chisquare_ism_cstflux/spc_synth_z0_a1_constantflux_gmu6500gw15ga025_200A-10kA_ErrF.fits",
+                              "./RedshiftLibrary/tests/src/data/Operator_Chisquare_ismTestCase/fits_chisquare_ism_cstflux/templates/galaxy/template_constantflux_gmu6500gw15ga025.dat",
                               true,
                               z,
                               1.0,
@@ -131,9 +131,9 @@ BOOST_AUTO_TEST_CASE(ChisquareTestCstFlux)
         //z=0 test 1
         targetFitIsmCalzetti = 0.2;
         z = 0.0;
-        UtilChisquareTestFit( "../RedshiftLibrary/tests/src/data/Operator_Chisquare_ismTestCase/fits_chisquare_ism_cstflux/spc_synth_z0_a1_constantflux_gmu6500gw15ga025_ismCalzetti02_200A-10kA_TF.fits",
-                              "../RedshiftLibrary/tests/src/data/Operator_Chisquare_ismTestCase/fits_chisquare_ism_cstflux/spc_synth_z0_a1_constantflux_gmu6500gw15ga025_200A-10kA_ErrF.fits",
-                              "../RedshiftLibrary/tests/src/data/Operator_Chisquare_ismTestCase/fits_chisquare_ism_cstflux/templates/galaxy/template_constantflux_gmu6500gw15ga025.dat",
+        UtilChisquareTestFit( "./RedshiftLibrary/tests/src/data/Operator_Chisquare_ismTestCase/fits_chisquare_ism_cstflux/spc_synth_z0_a1_constantflux_gmu6500gw15ga025_ismCalzetti02_200A-10kA_TF.fits",
+                              "./RedshiftLibrary/tests/src/data/Operator_Chisquare_ismTestCase/fits_chisquare_ism_cstflux/spc_synth_z0_a1_constantflux_gmu6500gw15ga025_200A-10kA_ErrF.fits",
+                              "./RedshiftLibrary/tests/src/data/Operator_Chisquare_ismTestCase/fits_chisquare_ism_cstflux/templates/galaxy/template_constantflux_gmu6500gw15ga025.dat",
                               true,
                               z,
                               1.0,
@@ -144,9 +144,9 @@ BOOST_AUTO_TEST_CASE(ChisquareTestCstFlux)
         //z=0 test 2
         targetFitIsmCalzetti = 0.8;
         z = 0.0;
-        UtilChisquareTestFit( "../RedshiftLibrary/tests/src/data/Operator_Chisquare_ismTestCase/fits_chisquare_ism_cstflux/spc_synth_z0_a1_constantflux_gmu6500gw15ga025_ismCalzetti08_200A-10kA_TF.fits",
-                              "../RedshiftLibrary/tests/src/data/Operator_Chisquare_ismTestCase/fits_chisquare_ism_cstflux/spc_synth_z0_a1_constantflux_gmu6500gw15ga025_200A-10kA_ErrF.fits",
-                              "../RedshiftLibrary/tests/src/data/Operator_Chisquare_ismTestCase/fits_chisquare_ism_cstflux/templates/galaxy/template_constantflux_gmu6500gw15ga025.dat",
+        UtilChisquareTestFit( "./RedshiftLibrary/tests/src/data/Operator_Chisquare_ismTestCase/fits_chisquare_ism_cstflux/spc_synth_z0_a1_constantflux_gmu6500gw15ga025_ismCalzetti08_200A-10kA_TF.fits",
+                              "./RedshiftLibrary/tests/src/data/Operator_Chisquare_ismTestCase/fits_chisquare_ism_cstflux/spc_synth_z0_a1_constantflux_gmu6500gw15ga025_200A-10kA_ErrF.fits",
+                              "./RedshiftLibrary/tests/src/data/Operator_Chisquare_ismTestCase/fits_chisquare_ism_cstflux/templates/galaxy/template_constantflux_gmu6500gw15ga025.dat",
                               true,
                               z,
                               1.0,

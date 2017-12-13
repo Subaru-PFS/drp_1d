@@ -86,8 +86,8 @@ void BadDataConcreteRule::Correct( CLineModelElementList& LineModelElementList )
 CLineModelElementList GetData ( void )
 {
   std::string spc, noise;
-  spc = "../RedshiftLibrary/tests/src/data/LinemodelRulesTestCase/simu_rules_ratiorange_1.fits";
-  noise = "../RedshiftLibrary/tests/src/data/LinemodelRulesTestCase/simu_rules_ratiorange_1_noise.fits";
+  spc = "./RedshiftLibrary/tests/src/data/LinemodelRulesTestCase/simu_rules_ratiorange_1.fits";
+  noise = "./RedshiftLibrary/tests/src/data/LinemodelRulesTestCase/simu_rules_ratiorange_1_noise.fits";
   CProcessFlowContext ctx;
   CProcessFlow processFlow;
   TFloat64Range redshiftRange = TFloat64Range( 0.0, 0.1 );
@@ -102,7 +102,7 @@ CLineModelElementList GetData ( void )
 
   std::string procID = "processing_id_unused";
   std::shared_ptr<CClassifierStore> classifStore = std::shared_ptr<CClassifierStore>( new CClassifierStore() );
-  Bool retVal = ctx.Init( spc.c_str(), noise.c_str(), procID, NULL, "../RedshiftLibrary/tests/src/data/LinemodelRulesTestCase/raycatalog_test_elratiorules.txt", params, classifStore );
+  Bool retVal = ctx.Init( spc.c_str(), noise.c_str(), procID, NULL, "./RedshiftLibrary/tests/src/data/LinemodelRulesTestCase/raycatalog_test_elratiorules.txt", params, classifStore );
   BOOST_CHECK( retVal == true );
   retVal = processFlow.Process( ctx ); // Segmentation fault
   BOOST_CHECK( retVal == true );
@@ -119,7 +119,7 @@ CLineModelElementList GetData ( void )
 
   //these tplcatalog related variables are unused here.
   CTemplateCatalog tplCatalog;
-  Bool retValue = tplCatalog.Load( "../RedshiftLibrary/tests/src/data/templatecatalog/" );
+  Bool retValue = tplCatalog.Load( "./RedshiftLibrary/tests/src/data/templatecatalog/" );
   TStringList tplCategories;
 
   //* Segmentation fault

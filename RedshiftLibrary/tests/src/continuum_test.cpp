@@ -26,9 +26,9 @@ BOOST_AUTO_TEST_CASE(Compute)
     CSpectrum s;
     CSpectrum s_continuumRef;
 
-    Bool retVal = reader.Read( "../RedshiftLibrary/tests/src/data/ContinuumTestCase/simu_ECN_continuum.fits", s_continuumRef );
+    Bool retVal = reader.Read( "./RedshiftLibrary/tests/src/data/ContinuumTestCase/simu_ECN_continuum.fits", s_continuumRef );
     BOOST_CHECK( retVal == true );
-    retVal = reader.Read( "../RedshiftLibrary/tests/src/data/ContinuumTestCase/simu_ECN_all.fits", s );
+    retVal = reader.Read( "./RedshiftLibrary/tests/src/data/ContinuumTestCase/simu_ECN_all.fits", s );
     BOOST_CHECK( retVal == true );
 
     // Remove continuum
@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE(ContinuumIndexes)
     CSpectrumIOFitsReader reader;
     CSpectrum s;
 
-    Bool retVal = reader.Read( "../RedshiftLibrary/tests/src/data/ContinuumTestCase/spectrum_tpl_vvds-reddestdataExtensionData.txt_TF.fits", s );
+    Bool retVal = reader.Read( "./RedshiftLibrary/tests/src/data/ContinuumTestCase/spectrum_tpl_vvds-reddestdataExtensionData.txt_TF.fits", s );
     BOOST_CHECK( retVal == true );
 
     //compute continuum indexes

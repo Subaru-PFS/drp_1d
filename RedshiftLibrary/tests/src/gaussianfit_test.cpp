@@ -170,7 +170,7 @@ BOOST_AUTO_TEST_SUITE_END()
 //     CSpectrumIOFitsReader reader;
 //     CSpectrum spectrum;
 //
-//     Bool retVal = reader.Read( "../RedshiftLibrary/tests/src/data/GaussianfitTestCase/gaussian.fits", spectrum );
+//     Bool retVal = reader.Read( ./RedshiftLibrary/tests/src/data/GaussianfitTestCase/gaussian.fits", spectrum );
 //     BOOST_CHECK( retVal == true );
 //
 //
@@ -199,7 +199,7 @@ BOOST_AUTO_TEST_SUITE_END()
 //     CSpectrumIOFitsReader reader;
 //     CSpectrum spectrum;
 //
-//     Bool retVal = reader.Read( "../RedshiftLibrary/tests/src/data/GaussianfitTestCase/gaussian_1em17.fits", spectrum );
+//     Bool retVal = reader.Read( ./RedshiftLibrary/tests/src/data/GaussianfitTestCase/gaussian_1em17.fits", spectrum );
 //     BOOST_CHECK( retVal == true );
 //
 //
@@ -228,7 +228,7 @@ BOOST_AUTO_TEST_SUITE_END()
 //     CSpectrumIOFitsReader reader;
 //     CSpectrum spectrum;
 //
-//     Bool retVal = reader.Read( "../RedshiftLibrary/tests/src/data/GaussianfitTestCase/gaussian_1em18_noisy.fits", spectrum );
+//     Bool retVal = reader.Read( ./RedshiftLibrary/tests/src/data/GaussianfitTestCase/gaussian_1em18_noisy.fits", spectrum );
 //     BOOST_CHECK( retVal == true );
 //
 //
@@ -258,7 +258,7 @@ BOOST_AUTO_TEST_SUITE_END()
 //     CSpectrumIOFitsReader reader;
 //     CSpectrum spectrum;
 //
-//     Bool retVal = reader.Read( "../RedshiftLibrary/tests/src/data/GaussianfitTestCase/flat.fits", spectrum );
+//     Bool retVal = reader.Read( ./RedshiftLibrary/tests/src/data/GaussianfitTestCase/flat.fits", spectrum );
 //     BOOST_CHECK( retVal == true );
 //
 //

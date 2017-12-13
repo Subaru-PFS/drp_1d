@@ -18,7 +18,6 @@ using namespace NSEpic;
 
 BOOST_AUTO_TEST_SUITE(Operator_Chisquare_igm)
 
-
 void UtilChisquareTestFit( const char* spectraPath, const char* noisePath, const char* tplPath, bool disableMask, const Float64 redshift, const Float64 targetFittedAmplitude, const Float64 targetFittedMeiksinIdx )
 {
     Bool retVal;
@@ -52,7 +51,7 @@ void UtilChisquareTestFit( const char* spectraPath, const char* noisePath, const
     CMask spcMask = Mask();
     spcMask.SetSize(sampleCount);
 
-    std::string calibrationPath = "../RedshiftLibrary/tests/src/data/Operator_Chisquare_igmTestCase/calibration";
+    std::string calibrationPath = "./RedshiftLibrary/tests/src/data/Operator_Chisquare_igmTestCase/calibration";
 
     COperatorChiSquare2 chi(calibrationPath);
     auto r = std::dynamic_pointer_cast<CChisquareResult>( chi.Compute( s, t, TFloat64Range( 200, 20000 ), redshifts, 1.0, additional_spcMasks, "precomputedfinegrid", 1 ) );
@@ -83,9 +82,9 @@ BOOST_AUTO_TEST_CASE(ChisquareTestCstFlux)
     //z=0 test
     targetFitMeiksinId = 5;
     z = 0.0;
-    UtilChisquareTestFit( "../RedshiftLibrary/tests/src/data/Operator_Chisquare_igmTestCase/fits_chisquare_igm_cstflux/spc_synth_z0_constant1p0_meiksin-z2c5.fits",
-                            "../RedshiftLibrary/tests/src/data/Operator_Chisquare_igmTestCase/fits_chisquare_igm_cstflux/spc_synth_z0_constant0p5_ErrF.fits",
-                            "../RedshiftLibrary/tests/src/data/Operator_Chisquare_igmTestCase/fits_chisquare_igm_cstflux/templates/galaxy/template_constantflux.dat", //constant template f=1.0 for all lambda
+    UtilChisquareTestFit( "./RedshiftLibrary/tests/src/data/Operator_Chisquare_igmTestCase/fits_chisquare_igm_cstflux/spc_synth_z0_constant1p0_meiksin-z2c5.fits",
+                            "./RedshiftLibrary/tests/src/data/Operator_Chisquare_igmTestCase/fits_chisquare_igm_cstflux/spc_synth_z0_constant0p5_ErrF.fits",
+                            "./RedshiftLibrary/tests/src/data/Operator_Chisquare_igmTestCase/fits_chisquare_igm_cstflux/templates/galaxy/template_constantflux.dat", //constant template f=1.0 for all lambda
                             true,
                             z,
                             1.0,
@@ -95,9 +94,9 @@ BOOST_AUTO_TEST_CASE(ChisquareTestCstFlux)
     //z=2.75 test
     targetFitMeiksinId = 5;
     z = 2.75;
-    UtilChisquareTestFit( "../RedshiftLibrary/tests/src/data/Operator_Chisquare_igmTestCase/fits_chisquare_igm_cstflux/spc_synth_z2p75_constant1p0_meiksin-z3c5.fits",
-                            "../RedshiftLibrary/tests/src/data/Operator_Chisquare_igmTestCase/fits_chisquare_igm_cstflux/spc_synth_z2p75_constant0p5_ErrF.fits",
-                            "../RedshiftLibrary/tests/src/data/Operator_Chisquare_igmTestCase/fits_chisquare_igm_cstflux/templates/galaxy/template_constantflux.dat", //constant template f=1.0 for all lambda
+    UtilChisquareTestFit( "./RedshiftLibrary/tests/src/data/Operator_Chisquare_igmTestCase/fits_chisquare_igm_cstflux/spc_synth_z2p75_constant1p0_meiksin-z3c5.fits",
+                            "./RedshiftLibrary/tests/src/data/Operator_Chisquare_igmTestCase/fits_chisquare_igm_cstflux/spc_synth_z2p75_constant0p5_ErrF.fits",
+                            "./RedshiftLibrary/tests/src/data/Operator_Chisquare_igmTestCase/fits_chisquare_igm_cstflux/templates/galaxy/template_constantflux.dat", //constant template f=1.0 for all lambda
                             true,
                             z,
                             1.0,
@@ -106,9 +105,9 @@ BOOST_AUTO_TEST_CASE(ChisquareTestCstFlux)
     //z=4.75 test
     targetFitMeiksinId = 1;
     z = 4.75;
-    UtilChisquareTestFit( "../RedshiftLibrary/tests/src/data/Operator_Chisquare_igmTestCase/fits_chisquare_igm_cstflux/spc_synth_z4p75_constant1p0_meiksin-z5c1.fits",
-                            "../RedshiftLibrary/tests/src/data/Operator_Chisquare_igmTestCase/fits_chisquare_igm_cstflux/spc_synth_z4p75_constant0p5_ErrF.fits",
-                            "../RedshiftLibrary/tests/src/data/Operator_Chisquare_igmTestCase/fits_chisquare_igm_cstflux/templates/galaxy/template_constantflux.dat", //constant template f=1.0 for all lambda
+    UtilChisquareTestFit( "./RedshiftLibrary/tests/src/data/Operator_Chisquare_igmTestCase/fits_chisquare_igm_cstflux/spc_synth_z4p75_constant1p0_meiksin-z5c1.fits",
+                            "./RedshiftLibrary/tests/src/data/Operator_Chisquare_igmTestCase/fits_chisquare_igm_cstflux/spc_synth_z4p75_constant0p5_ErrF.fits",
+                            "./RedshiftLibrary/tests/src/data/Operator_Chisquare_igmTestCase/fits_chisquare_igm_cstflux/templates/galaxy/template_constantflux.dat", //constant template f=1.0 for all lambda
                             true,
                             z,
                             1.0,
