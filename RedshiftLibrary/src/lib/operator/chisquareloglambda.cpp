@@ -744,10 +744,11 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64* spectrumRebinedLambda,
     InitFFT(m_nPaddedSamples);
 
     //prepare z array
+    Int32 zoff=1;
     std::vector<Float64> z_vect(nshifts, 0.0);
     for( Int32 t=0;t<z_vect.size();t++)
     {
-        z_vect[t] = (spectrumRebinedLambda[0]-tplRebinedLambda[t])/tplRebinedLambda[t];
+        z_vect[t] = (spectrumRebinedLambda[0]-tplRebinedLambda[t+zoff])/tplRebinedLambda[t+zoff];
     }
 
     // Estimate DtD

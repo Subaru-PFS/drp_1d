@@ -35,7 +35,6 @@ const std::string CMethodChisquareLogSolve::GetDescription()
 
     desc.append("\tparam: chisquarelogsolve.spectrum.component = {""raw"", ""nocontinuum"", ""continuum"", ""all""}\n");
     desc.append("\tparam: chisquarelogsolve.overlapThreshold = <float value>\n");
-    desc.append("\tparam: chisquarelogsolve.interpolation = {""precomputedfinegrid"", ""lin""}\n");
     desc.append("\tparam: chisquarelogsolve.extinction = {""yes"", ""no""}\n");
     desc.append("\tparam: chisquarelogsolve.dustfit = {""yes"", ""no""}\n");
     desc.append("\tparam: chisquarelogsolve.enablespclogrebin = {""yes"", ""no""}\n");

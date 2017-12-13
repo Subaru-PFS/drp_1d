@@ -182,8 +182,7 @@ Bool CProcessFlow::Process( CProcessFlowContext& ctx )
         ctx.GetParameterStore().Get( "chisquarelogsolve.overlapThreshold", overlapThreshold, 1.0);
         std::string opt_spcComponent;
         ctx.GetDataStore().GetScopedParam( "chisquarelogsolve.spectrum.component", opt_spcComponent, "raw" );
-        std::string opt_interp;
-        ctx.GetDataStore().GetScopedParam( "chisquarelogsolve.interpolation", opt_interp, "precomputedfinegrid" );
+        std::string opt_interp="unused";
         std::string opt_extinction;
         ctx.GetDataStore().GetScopedParam( "chisquarelogsolve.extinction", opt_extinction, "no" );
         std::string opt_dustFit;
