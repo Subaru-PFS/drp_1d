@@ -1,8 +1,6 @@
 #ifndef _CORE_REDSHIFT_DATATYPES_
 #define _CORE_REDSHIFT_DATATYPES_
 
-#include <RedshiftLibrary/common/datatypes.h>
-
 #include <vector>
 #include <string>
 #include <memory>

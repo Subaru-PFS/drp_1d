@@ -7,6 +7,7 @@
 
 #include <RedshiftLibrary/log/log.h>
 #include <RedshiftLibrary/ray/ruleBalmerLinearSolver.h>
+#include <RedshiftLibrary/ray/linetags.h>
 
 using namespace NSEpic;
 using namespace std;
@@ -29,6 +30,7 @@ Bool CRuleBalmerLinearSolver::Check( CLineModelElementList& LineModelElementList
  **/
 void CRuleBalmerLinearSolver::Correct( CLineModelElementList& LineModelElementList )
 {
+    linetags ltags;
     const CSpectrumSpectralAxis& spectralAxis = LineModelElementList.m_SpectrumModel->GetSpectralAxis();
     std::vector<Float64> lambdax;
     std::vector<Float64> continuumx;
@@ -37,14 +39,14 @@ void CRuleBalmerLinearSolver::Correct( CLineModelElementList& LineModelElementLi
     std::vector<Int32> iEltE;
     std::vector<Int32> iEltA;
     std::vector<std::string> linetags;
-    linetags.push_back( "Halpha" );
-    linetags.push_back( "Hbeta" );
-    linetags.push_back( "Hgamma" );
-    linetags.push_back( "Hdelta" );
-    linetags.push_back( "H8" );
-    linetags.push_back( "H9" );
-    linetags.push_back( "H10" );
-    linetags.push_back( "H11" );
+    linetags.push_back( ltags.halpha_em );
+    linetags.push_back( ltags.hbeta_em );
+    linetags.push_back( ltags.hgamma_em );
+    linetags.push_back( ltags.hdelta_em );
+    linetags.push_back( ltags.h8_em );
+    linetags.push_back( ltags.h9_em );
+    linetags.push_back( ltags.h10_em );
+    linetags.push_back( ltags.h11_em );
     Int32 ilineE;
     Int32 ilineA;
     std::string tagE;

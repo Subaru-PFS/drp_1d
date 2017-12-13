@@ -4,6 +4,7 @@
 #include <RedshiftLibrary/ray/regulament.h>
 #include <RedshiftLibrary/ray/catalogsTplShape.h>
 #include <RedshiftLibrary/ray/catalogsOffsets.h>
+#include <RedshiftLibrary/ray/linetags.h>
 
 #include <gsl/gsl_multifit.h>
 #include <RedshiftLibrary/spectrum/io/genericreader.h>
@@ -3407,7 +3408,8 @@ Int32 CLineModelElementList::setLyaProfile(Float64 redshift, const CSpectrumSpec
     }
 
     //1. retrieve the Lya index
-    std::string lyaTag = "LyAE";
+    linetags ltags;
+    std::string lyaTag = ltags.lya_em;
     Int32 idxLineLyaE = -1;
     Int32 idxLyaE = FindElementIndex(lyaTag, -1, idxLineLyaE);
     if( idxLyaE<0 || idxLineLyaE<0 )
@@ -4399,7 +4401,8 @@ Int32 CLineModelElementList::LoadModelSolution(const CLineModelSolution&  modelS
   }
 
   if(modelSolution.LyaWidthCoeff != -1.0 or modelSolution.LyaAlpha !=-1.0 or modelSolution.LyaDelta !=-1.0){
-    std::string lyaTag = "LyAE";
+    linetags ltags;
+    std::string lyaTag = ltags.lya_em;
     Int32 idxLyaE = FindElementIndex(lyaTag);
     if( idxLyaE>-1 )
     {
@@ -4417,16 +4420,17 @@ Int32 CLineModelElementList::LoadModelSolution(const CLineModelSolution&  modelS
 // return error: 1=can't find element index, 2=Abs_width not high enough compared to Em_width
 Int32 CLineModelElementList::improveBalmerFit()
 {
+    linetags ltags;
     std::vector<std::string> linetagsE;
-    linetagsE.push_back( "Halpha" );
-    linetagsE.push_back( "Hbeta" );
-    linetagsE.push_back( "Hgamma" );
-    linetagsE.push_back( "Hdelta" );
+    linetagsE.push_back( ltags.halpha_em );
+    linetagsE.push_back( ltags.hbeta_em );
+    linetagsE.push_back( ltags.hgamma_em );
+    linetagsE.push_back( ltags.hdelta_em );
     std::vector<std::string> linetagsA;
-    linetagsA.push_back( "HalphaA" );
-    linetagsA.push_back( "HbetaA" );
-    linetagsA.push_back( "HgammaA" );
-    linetagsA.push_back( "HdeltaA" );
+    linetagsA.push_back( ltags.halpha_abs );
+    linetagsA.push_back( ltags.hbeta_abs );
+    linetagsA.push_back( ltags.hgamma_abs );
+    linetagsA.push_back( ltags.hdelta_abs );
 
     if(linetagsE.size()!=linetagsA.size())
     {
@@ -4568,7 +4572,8 @@ CLineModelSolution CLineModelElementList::GetModelSolution(Int32 opt_level)
 
                 //rough estimation of SNR_Ha, using the given model and fitting method
                 //(warning: Ha flux and error could have been obtained by global fitting of the model, which leads to different results than fitted individually...)
-                if(m_RestRayList[iRestRay].GetName()=="Halpha" && m_RestRayList[iRestRay].GetType()==CRay::nType_Emission)
+                linetags ltags;
+                if(m_RestRayList[iRestRay].GetName()==ltags.halpha_em && m_RestRayList[iRestRay].GetType()==CRay::nType_Emission)
                 {
 
                     if(fluxError>0.0)
@@ -4594,7 +4599,8 @@ CLineModelSolution CLineModelElementList::GetModelSolution(Int32 opt_level)
     modelSolution.LyaWidthCoeff = -1.0;
     modelSolution.LyaAlpha = -1.0;
     modelSolution.LyaDelta = -1.0;
-    std::string lyaTag = "LyAE";
+    linetags ltags;
+    std::string lyaTag = ltags.lya_em;
     Int32 idxLyaE = FindElementIndex(lyaTag);
     if( idxLyaE>-1 )
     {

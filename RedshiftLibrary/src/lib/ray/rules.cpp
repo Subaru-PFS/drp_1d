@@ -1,5 +1,5 @@
 #include <RedshiftLibrary/ray/rules.h>
-
+#include <RedshiftLibrary/ray/linetags.h>
 #include <RedshiftLibrary/operator/raydetection.h>
 
 using namespace NSEpic;
@@ -137,17 +137,18 @@ Bool CRules::checkRule02(Float64 z, CRayMatchingResult::TSolutionSet& matchingSo
     // check if the OIII doublet is in this solution set
     Int32 founda=0;
     Int32 foundb=0;
+    linetags ltags;
     for( UInt32 i=0; i<matchingSolutionSet.size(); i++ )
     {
         std::string name = matchingSolutionSet[i].RestRay.GetName();
-        std::size_t foundstra = name.find("[OIII](doublet-1)");
+        std::size_t foundstra = name.find(ltags.oIIIa_em);
         if (foundstra!=std::string::npos){
             founda++;
         }
-        std::size_t foundstrb = name.find("[OIII](doublet-1/3)");
+        std::size_t foundstrb = name.find(ltags.oIIIb_em);
         if (foundstrb!=std::string::npos){
             // check if OIIIa would be in the wavelength range
-            Float64 lambda = getRestRayLambda("[OIII](doublet-1)")*(1+z);
+            Float64 lambda = getRestRayLambda(ltags.oIIIa_em)*(1+z);
             if( lambda >= (m_lambdaRange.GetBegin()+m_winsize) && (lambda <= m_lambdaRange.GetEnd()-m_winsize) ){
                 foundb++;
             }
@@ -169,20 +170,21 @@ Bool CRules::checkRule03(Float64 z, CRayMatchingResult::TSolutionSet& matchingSo
     // check if the Hbeta doublet is in this solution set
     Int32 foundHbeta=0;
     Int32 foundHalpha=0;
+    linetags ltags;
 
     //Float64 z = CRayMatchingResult::GetMeanRedshiftSolution(matchingSolutionSet);
     for( UInt32 i=0; i<matchingSolutionSet.size(); i++ )
     {
         std::string name = matchingSolutionSet[i].RestRay.GetName();
-        std::size_t foundstr = name.find("Hbeta");
+        std::size_t foundstr = name.find(ltags.hbeta_em);
         if (foundstr!=std::string::npos){
             // check if Halpha would be in the wavelength range
-            Float64 lambda = getRestRayLambda("Halpha")*(1+z);
+            Float64 lambda = getRestRayLambda(ltags.halpha_em)*(1+z);
             if( lambda >= (m_lambdaRange.GetBegin()+m_winsize) && (lambda <= m_lambdaRange.GetEnd()-m_winsize) ){
                 foundHbeta++;
             }
         }
-        foundstr = name.find("Halpha");
+        foundstr = name.find(ltags.halpha_em);
         if (foundstr!=std::string::npos){
             foundHalpha++;
         }

@@ -1,5 +1,6 @@
 #include <RedshiftLibrary/log/log.h>
 #include <RedshiftLibrary/ray/catalogsTplShape.h>
+#include <RedshiftLibrary/ray/linetags.h>
 
 #include <algorithm>    // std::sort
 #include <boost/tokenizer.hpp>
@@ -340,7 +341,8 @@ Bool CRayCatalogsTplShape::SetLyaProfile(CLineModelElementList &LineModelElement
     if(iCatalog<0){
         return false;
     }
-    std::string lyaTag = "LyAE";
+    linetags ltags;
+    std::string lyaTag = ltags.lya_em;
     //loop the amplitudes in the iLine_st catalog in order to find Lya
     CRayCatalog::TRayVector currentCatalogLineList = m_RayCatalogList[iCatalog].GetList();
     Int32 nLines = currentCatalogLineList.size();
