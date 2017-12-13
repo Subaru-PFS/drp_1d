@@ -18,6 +18,7 @@
 #include <boost/tokenizer.hpp>
 #include <boost/lexical_cast.hpp>
 #include <fstream>
+#include "test-config.h"
 
 
 using namespace NSEpic;
@@ -37,8 +38,8 @@ void checkSupport(std::string linecatalogPath,
                   bool targetOustideLambdaRangeTrue)
 {
     //some input params
-    std::string spectrumPath = spcPath;//"./RedshiftLibrary/tests/src/data/LinemodelProfileTestCase/signalnoise_4lines_sig400_6000A_10000A.fits";       //unused, only needed for linemodel initialization
-    std::string noisePath    = nPath;//"./RedshiftLibrary/tests/src/data/LinemodelProfileTestCase/noise_4lines_sig400_6000A_10000A.fits";     //unused, only needed for linemodel initialization
+    std::string spectrumPath = spcPath;//DATA_ROOT_DIR "LinemodelProfileTestCase/signalnoise_4lines_sig400_6000A_10000A.fits";       //unused, only needed for linemodel initialization
+    std::string noisePath    = nPath;//DATA_ROOT_DIR "LinemodelProfileTestCase/noise_4lines_sig400_6000A_10000A.fits";     //unused, only needed for linemodel initialization
     Int32 lineTypeFilter = CRay::nType_Emission;
     Int32 forceFilter = -1;
     std::string opt_fittingmethod = "ones"; //all the elements amplitudes set to 1.0
@@ -90,7 +91,7 @@ void checkSupport(std::string linecatalogPath,
 
     //these tplcatalog related variables are unused here.
     CTemplateCatalog tplCatalog;
-    Bool retValue = tplCatalog.Load( "./RedshiftLibrary/tests/src/data/templatecatalog/" );
+    Bool retValue = tplCatalog.Load( DATA_ROOT_DIR "templatecatalog/" );
     TStringList tplCategories;
 
     CLineModelElementList model(spectrum, spectrumContinuum, tplCatalog, tplCategories, unused_calibrationPath, lineList, opt_fittingmethod, opt_continuumcomponent, opt_lineWidthType, opt_resolution, opt_velocityEmission, opt_velocityAbsorption, opt_rules, opt_rigidity);
@@ -133,10 +134,10 @@ void checkSupport(std::string linecatalogPath,
 **/
 BOOST_AUTO_TEST_CASE( Linemodel_multiline_support_1EL_center )
 {
-    std::string linecatalogPath = "./RedshiftLibrary/tests/src/data/LinemodelSupportTestCase/linecatalog_test_linemodel_support_1EL_15000.txt";
+    std::string linecatalogPath = DATA_ROOT_DIR "LinemodelSupportTestCase/linecatalog_test_linemodel_support_1EL_15000.txt";
 
-    std::string spectrumPath = "./RedshiftLibrary/tests/src/data/LinemodelSupportTestCase/spc_100_114181174_axespc_F.fits";
-    std::string noisePath    = "./RedshiftLibrary/tests/src/data/LinemodelSupportTestCase/spc_100_114181174_axespc_ErrF.fits";
+    std::string spectrumPath = DATA_ROOT_DIR "LinemodelSupportTestCase/spc_100_114181174_axespc_F.fits";
+    std::string noisePath    = DATA_ROOT_DIR "LinemodelSupportTestCase/spc_100_114181174_axespc_ErrF.fits";
 
     TFloat64Range lambdaRange = TFloat64Range( 13000.0, 18000.0 );
     Float64 redshift = 0.0;
@@ -152,10 +153,10 @@ BOOST_AUTO_TEST_CASE( Linemodel_multiline_support_1EL_center )
 **/
 BOOST_AUTO_TEST_CASE( Linemodel_multiline_support_1EL_outside )
 {
-    std::string linecatalogPath = "./RedshiftLibrary/tests/src/data/LinemodelSupportTestCase/linecatalog_test_linemodel_support_1EL_15000.txt";
+    std::string linecatalogPath = DATA_ROOT_DIR "LinemodelSupportTestCase/linecatalog_test_linemodel_support_1EL_15000.txt";
 
-    std::string spectrumPath = "./RedshiftLibrary/tests/src/data/LinemodelSupportTestCase/spc_100_114181174_axespc_F.fits";
-    std::string noisePath    = "./RedshiftLibrary/tests/src/data/LinemodelSupportTestCase/spc_100_114181174_axespc_ErrF.fits";
+    std::string spectrumPath = DATA_ROOT_DIR "LinemodelSupportTestCase/spc_100_114181174_axespc_F.fits";
+    std::string noisePath    = DATA_ROOT_DIR "LinemodelSupportTestCase/spc_100_114181174_axespc_ErrF.fits";
 
     TFloat64Range lambdaRange = TFloat64Range( 17000.0, 18000.0 );
     Float64 redshift = 0.0;
@@ -171,10 +172,10 @@ BOOST_AUTO_TEST_CASE( Linemodel_multiline_support_1EL_outside )
 **/
 BOOST_AUTO_TEST_CASE( Linemodel_multiline_support_1EL_borderOverlap50percent )
 {
-    std::string linecatalogPath = "./RedshiftLibrary/tests/src/data/LinemodelSupportTestCase/linecatalog_test_linemodel_support_1EL_15000.txt";
+    std::string linecatalogPath = DATA_ROOT_DIR "LinemodelSupportTestCase/linecatalog_test_linemodel_support_1EL_15000.txt";
 
-    std::string spectrumPath = "./RedshiftLibrary/tests/src/data/LinemodelSupportTestCase/spc_100_114181174_axespc_F.fits";
-    std::string noisePath    = "./RedshiftLibrary/tests/src/data/LinemodelSupportTestCase/spc_100_114181174_axespc_ErrF.fits";
+    std::string spectrumPath = DATA_ROOT_DIR "LinemodelSupportTestCase/spc_100_114181174_axespc_F.fits";
+    std::string noisePath    = DATA_ROOT_DIR "LinemodelSupportTestCase/spc_100_114181174_axespc_ErrF.fits";
 
     TFloat64Range lambdaRange = TFloat64Range( 15000.0, 18000.0 );
     Float64 redshift = 0.0;
@@ -190,10 +191,10 @@ BOOST_AUTO_TEST_CASE( Linemodel_multiline_support_1EL_borderOverlap50percent )
 **/
 BOOST_AUTO_TEST_CASE( Linemodel_multiline_support_1EL_borderOverlap12percent )
 {
-    std::string linecatalogPath = "./RedshiftLibrary/tests/src/data/LinemodelSupportTestCase/linecatalog_test_linemodel_support_1EL_15000.txt";
+    std::string linecatalogPath = DATA_ROOT_DIR "LinemodelSupportTestCase/linecatalog_test_linemodel_support_1EL_15000.txt";
 
-    std::string spectrumPath = "./RedshiftLibrary/tests/src/data/LinemodelSupportTestCase/spc_100_114181174_axespc_F.fits";
-    std::string noisePath    = "./RedshiftLibrary/tests/src/data/LinemodelSupportTestCase/spc_100_114181174_axespc_ErrF.fits";
+    std::string spectrumPath = DATA_ROOT_DIR "LinemodelSupportTestCase/spc_100_114181174_axespc_F.fits";
+    std::string noisePath    = DATA_ROOT_DIR "LinemodelSupportTestCase/spc_100_114181174_axespc_ErrF.fits";
 
     TFloat64Range lambdaRange = TFloat64Range( 15045.6, 18000.0 );
     Float64 redshift = 0.0;
@@ -209,10 +210,10 @@ BOOST_AUTO_TEST_CASE( Linemodel_multiline_support_1EL_borderOverlap12percent )
 **/
 BOOST_AUTO_TEST_CASE( Linemodel_multiline_support_1EL_borderOverlap1percent )
 {
-    std::string linecatalogPath = "./RedshiftLibrary/tests/src/data/LinemodelSupportTestCase/linecatalog_test_linemodel_support_1EL_15000.txt";
+    std::string linecatalogPath = DATA_ROOT_DIR "LinemodelSupportTestCase/linecatalog_test_linemodel_support_1EL_15000.txt";
 
-    std::string spectrumPath = "./RedshiftLibrary/tests/src/data/LinemodelSupportTestCase/spc_100_114181174_axespc_F.fits";
-    std::string noisePath    = "./RedshiftLibrary/tests/src/data/LinemodelSupportTestCase/spc_100_114181174_axespc_ErrF.fits";
+    std::string spectrumPath = DATA_ROOT_DIR "LinemodelSupportTestCase/spc_100_114181174_axespc_F.fits";
+    std::string noisePath    = DATA_ROOT_DIR "LinemodelSupportTestCase/spc_100_114181174_axespc_ErrF.fits";
 
     TFloat64Range lambdaRange = TFloat64Range( 15058.8, 18000.0 );
     Float64 redshift = 0.0;
@@ -229,10 +230,10 @@ BOOST_AUTO_TEST_CASE( Linemodel_multiline_support_1EL_borderOverlap1percent )
 **/
 BOOST_AUTO_TEST_CASE( Linemodel_multiline_support_1EL_borderOverlap_withNonZeroRedshift )
 {
-    std::string linecatalogPath = "./RedshiftLibrary/tests/src/data/LinemodelSupportTestCase/linecatalog_test_linemodel_support_1EL_OIIIb.txt";
+    std::string linecatalogPath = DATA_ROOT_DIR "LinemodelSupportTestCase/linecatalog_test_linemodel_support_1EL_OIIIb.txt";
 
-    std::string spectrumPath = "./RedshiftLibrary/tests/src/data/LinemodelSupportTestCase/spc_100_114181174_axespc_F.fits";
-    std::string noisePath    = "./RedshiftLibrary/tests/src/data/LinemodelSupportTestCase/spc_100_114181174_axespc_ErrF.fits";
+    std::string spectrumPath = DATA_ROOT_DIR "LinemodelSupportTestCase/spc_100_114181174_axespc_F.fits";
+    std::string noisePath    = DATA_ROOT_DIR "LinemodelSupportTestCase/spc_100_114181174_axespc_ErrF.fits";
 
     TFloat64Range lambdaRange = TFloat64Range( 0.0, 20000.0 );
     Float64 redshift = 1.5102;

@@ -13,6 +13,7 @@
 //#include <boost/algorithm/string/predicate.hpp>
 
 #include <boost/test/unit_test.hpp>
+#include "test-config.h"
 
 using namespace NSEpic;
 
@@ -43,7 +44,7 @@ BOOST_AUTO_TEST_CASE(Deltaz)
     Float64 zRangeHalf = 0.005;
     TFloat64Range redshiftRange = TFloat64Range( center_redshift-zRangeHalf, center_redshift+zRangeHalf );
 
-    DeltazTestCompute( "./RedshiftLibrary/tests/src/data/DeltazTestCase/simulm201605_tplshapeconttplfit_linemodelsolve.linemodel.csv", center_redshift, redshiftRange);
+    DeltazTestCompute( DATA_ROOT_DIR "DeltazTestCase/simulm201605_tplshapeconttplfit_linemodelsolve.linemodel.csv", center_redshift, redshiftRange);
 
 }
 

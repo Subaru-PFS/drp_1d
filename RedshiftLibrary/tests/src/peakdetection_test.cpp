@@ -6,6 +6,7 @@
 
 #include <math.h>
 #include <boost/test/unit_test.hpp>
+#include "test-config.h"
 
 using namespace NSEpic;
 using namespace std;
@@ -19,7 +20,7 @@ BOOST_AUTO_TEST_CASE(Compute)
     CSpectrumIOFitsReader reader;
     CSpectrum s;
 	
-    Bool retVal = reader.Read( "./RedshiftLibrary/tests/src/data/PeakDetectionTestCase/peakdetection_simu.fits", s );
+    Bool retVal = reader.Read( DATA_ROOT_DIR "PeakDetectionTestCase/peakdetection_simu.fits", s );
 
     BOOST_CHECK( retVal == true);
 

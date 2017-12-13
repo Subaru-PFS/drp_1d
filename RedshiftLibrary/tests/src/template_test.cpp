@@ -4,6 +4,7 @@
 
 
 #include <boost/test/unit_test.hpp>
+#include "test-config.h"
 
 using namespace NSEpic;
 
@@ -13,7 +14,7 @@ BOOST_AUTO_TEST_CASE(LoadCatalog)
 {
     CTemplateCatalog catalog;
 
-    Bool rValue = catalog.Load( "./RedshiftLibrary/tests/src/data/templatecatalog/" );
+    Bool rValue = catalog.Load( DATA_ROOT_DIR "templatecatalog/" );
     BOOST_CHECK( rValue == true );
     BOOST_CHECK( catalog.GetTemplateCount( "galaxy" ) == 2 );
     BOOST_CHECK( catalog.GetTemplateCount( "emission" ) == 1 );
