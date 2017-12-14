@@ -304,6 +304,8 @@ Bool CProcessFlow::Process( CProcessFlowContext& ctx )
                 }else{
                     Log.LogError( "Unable estimate Reliability");
                 }
+            }else{
+                Log.LogInfo( "No Reliability Result Found");
             }
         }
     }

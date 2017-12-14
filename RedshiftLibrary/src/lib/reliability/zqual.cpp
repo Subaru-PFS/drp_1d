@@ -76,7 +76,7 @@ Bool CQualz::Solve( CDataStore& resultStore, CClassifierStore& classifierStore, 
 	}
 
 
-    if ( m_predLabel.size()>0 ) //m_doTEST )
+    if ( 1 ) //m_doTEST )
 	{
 		/* **********************************************************************
 		 * 		Z-PROJECTION
