@@ -36,7 +36,11 @@ public:
 
 private:
 
-    Int32 CombinePDF(CDataStore &store, std::shared_ptr<const CLineModelResult> result, std::string opt_rigidity, std::string opt_combine);
+    Int32 CombinePDF(CDataStore &store,
+                     std::shared_ptr<const CLineModelResult> result,
+                     std::string opt_rigidity,
+                     std::string opt_combine,
+                     std::string opt_stronglinesprior);
     Int32 SaveContinuumPDF(CDataStore &store, std::shared_ptr<const CLineModelResult> result);
 
 
@@ -59,6 +63,7 @@ private:
     Float64 m_opt_extremacount;
     Float64 m_opt_twosteplargegridstep;
     std::string m_opt_pdfcombination;
+    std::string m_opt_stronglinesprior;
     std::string m_opt_saveintermediateresults;
     bool m_opt_enableSaveChisquareTplshapeResults;
 

@@ -67,6 +67,7 @@ const std::string CLineModelSolve::GetDescription()
     desc.append("\tparam: linemodel.absvelocityfitmax = <float value>\n");
     desc.append("\tparam: linemodel.fastfitlargegridstep = <float value>, deactivated if negative or zero\n");
     desc.append("\tparam: linemodel.pdfcombination = {""marg"", ""bestchi2""}\n");
+    desc.append("\tparam: linemodel.stronglinesprior = {""yes"", ""no""}\n");
     desc.append("\tparam: linemodel.saveintermediateresults = {""yes"", ""no""}\n");
 
 
@@ -102,6 +103,7 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
     dataStore.GetScopedParam( "linemodel.continuumreestimation", m_opt_continuumreest, "no" );
     dataStore.GetScopedParam( "linemodel.rules", m_opt_rules, "all" );
     dataStore.GetScopedParam( "linemodel.extremacount", m_opt_extremacount, 10.0 );
+    dataStore.GetScopedParam( "linemodel.stronglinesprior", m_opt_stronglinesprior, "no");
     dataStore.GetScopedParam( "linemodel.pdfcombination", m_opt_pdfcombination, "marg");
     dataStore.GetScopedParam( "linemodel.saveintermediateresults", m_opt_saveintermediateresults, "no");
 
@@ -158,6 +160,7 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
     Log.LogInfo( "    -extremacount: %.3f", m_opt_extremacount);
     Log.LogInfo( "    -fastfitlargegridstep: %.6f", m_opt_twosteplargegridstep);
 
+    Log.LogInfo( "    -pdf-stronglinesprior: %s", m_opt_stronglinesprior.c_str());
     Log.LogInfo( "    -pdf-combination: %s", m_opt_pdfcombination.c_str()); // "marg";    // "bestchi2";    // "bestproba";
 
     if(m_opt_saveintermediateresults=="yes")
@@ -205,7 +208,7 @@ std::shared_ptr<CLineModelSolveResult> CLineModelSolve::Compute( CDataStore& dat
         }
         std::shared_ptr<const CLineModelResult> result = std::dynamic_pointer_cast<const CLineModelResult>( results.lock() );
 
-        CombinePDF(dataStore, result, m_opt_rigidity, m_opt_pdfcombination);
+        CombinePDF(dataStore, result, m_opt_rigidity, m_opt_pdfcombination, m_opt_stronglinesprior);
 
         //SaveContinuumPDF(dataStore, result);
 
@@ -246,10 +249,10 @@ std::shared_ptr<CLineModelSolveResult> CLineModelSolve::Compute( CDataStore& dat
 }
 
 
-Int32 CLineModelSolve::CombinePDF(CDataStore &store, std::shared_ptr<const CLineModelResult> result, std::string opt_rigidity, std::string opt_combine)
+Int32 CLineModelSolve::CombinePDF(CDataStore &store, std::shared_ptr<const CLineModelResult> result, std::string opt_rigidity, std::string opt_combine, std::string opt_stronglinesprior)
 {
     //hardcoded prior parameter
-    bool zPriorStrongLinePresence = false;
+    bool zPriorStrongLinePresence = (opt_stronglinesprior=="yes");
     if(zPriorStrongLinePresence)
     {
         Log.LogInfo("Linemodel: Pdfz computation: StrongLinePresence prior enabled");
