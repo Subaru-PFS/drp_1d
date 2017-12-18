@@ -5,7 +5,7 @@ PROJECT( cpf-redshift )
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake)
 include(SetupVar)
 
-FIND_PACKAGE(Boost REQUIRED COMPONENTS filesystem system thread timer chrono program_options unit_test_framework)
+FIND_PACKAGE(Boost COMPONENTS filesystem system thread timer chrono program_options unit_test_framework)
 FIND_PACKAGE(Cfitsio)
 FIND_PACKAGE(GSL)
 FIND_PACKAGE(FFTW)
@@ -31,33 +31,50 @@ MESSAGE( STATUS "Version used: ${VERSION}" )
 #--------------------------------------------------------
 SET( cpf-redshift_INCLUDE_DIR ${ROOT_DIR}/RedshiftLibrary/ )
 SET( cpf-redshift_LINK_DIR ${ROOT_DIR}/lib/ )
+SET( cpf-redshift_THIRDPARTY_INCLUDE_DIR ${ROOT_DIR}/thirdparty/include/ )
+SET( cpf-redshift_THIRDPARTY_LINK_DIR ${ROOT_DIR}/thirdparty/lib/)
 
 SET( cpf-redshift_THIRDPARTY_LIBS "")
 
-IF( NOT DEFINED CFITSIO_INCLUDE_DIR )
+IF( NOT CFITSIO_FOUND )
   LIST(APPEND cpf-redshift_THIRDPARTY_LIBS cfitsio )
-ENDIF()
-
-IF( NOT DEFINED FFTW_INCLUDE_DIR )
-  LIST(APPEND cpf-redshift_THIRDPARTY_LIBS fftw3 )
-ENDIF()
-
-IF( NOT DEFINED GSL_INCLUDE_DIRS )
-  LIST(APPEND cpf-redshift_THIRDPARTY_LIBS gsl gslcblas)
-ENDIF()
-
-IF( NOT DEFINED Boost_INCLUDE_DIRS )
-  LIST(APPEND cpf-redshift_THIRDPARTY_LIBS pthread boost_filesystem boost_system boost_thread boost_timer boost_chrono boost_program_options boost_regex)
-  SET(tests_THIRDPARTY_LIBS boost_unit_test_framework)
-ENDIF()
-
-IF( cpf-redshift_THIRDPARTY_LIBS )
-  # Set THIRDPARTY_{INCLUDE,LNIK}_DIR if using any third-party
-  SET( cpf-redshift_THIRDPARTY_INCLUDE_DIR ${ROOT_DIR}/thirdparty/include/ )
-  SET( cpf-redshift_THIRDPARTY_LINK_DIR ${ROOT_DIR}/thirdparty/lib/)
+  INCLUDE_DIRECTORIES( ${cpf-redshift_THIRDPARTY_INCLUDE_DIR} )
 ELSE()
-  SET( cpf-redshift_THIRDPARTY_INCLUDE_DIR ${cpf-redshift_INCLUDE_DIR} )
-  SET( cpf-redshift_THIRDPARTY_LINK_DIR ${cpf-redshift_LINK_DIR} )
+  LIST(APPEND cpf-redshift_THIRDPARTY_LIBS ${CFITSIO_LIBRARIES} )
+  INCLUDE_DIRECTORIES( ${CFITSIO_INCLUDE_DIR} )
+ENDIF()
+
+IF( NOT FFTW_FOUND )
+  LIST(APPEND cpf-redshift_THIRDPARTY_LIBS fftw3 )
+  INCLUDE_DIRECTORIES( ${cpf-redshift_THIRDPARTY_INCLUDE_DIR} )
+ELSE()
+  LIST(APPEND cpf-redshift_THIRDPARTY_LIBS ${FFTW_LIBRARIES} )
+  INCLUDE_DIRECTORIES( ${FFTW_INCLUDE_DIR} )
+ENDIF()
+
+IF( NOT GSL_FOUND )
+  LIST(APPEND cpf-redshift_THIRDPARTY_LIBS gsl gslcblas)
+  INCLUDE_DIRECTORIES( ${cpf-redshift_THIRDPARTY_INCLUDE_DIR} )
+ELSE()
+  LIST(APPEND cpf-redshift_THIRDPARTY_LIBS ${GSL_LIBRARIES} )
+  INCLUDE_DIRECTORIES( ${GSL_INCLUDE_DIRS} )
+ENDIF()
+
+IF( NOT BOOST_FOUND )
+  LIST(APPEND cpf-redshift_THIRDPARTY_LIBS pthread boost_filesystem boost_system boost_thread boost_timer boost_chrono boost_program_options boost_regex)
+  INCLUDE_DIRECTORIES( ${cpf-redshift_THIRDPARTY_INCLUDE_DIR} )
+  SET(tests_THIRDPARTY_LIBS boost_unit_test_framework)
+ELSE()
+  LIST(APPEND cpf-redshift_THIRDPARTY_LIBS
+    ${Boost_FILESYSTEM_LIBRARY_RELEASE}
+    ${Boost_SYSTEM_LIBRARY_RELEASE}
+    ${Boost_THREAD_LIBRARY_RELEASE}
+    ${Boost_TIMER_LIBRARY_RELEASE}
+    ${Boost_CHRONO_LIBRARY_RELEASE}
+    ${Boost_PROGRAM_OPTIONS_LIBRARY_RELEASE}
+    )
+  SET(tests_THIRDPARTY_LIBS ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY_RELEASE})
+  INCLUDE_DIRECTORIES( ${Boost_INCLUDE_DIRS} )
 ENDIF()
 
 IF( DEFINED BUILD_THIRDPARTY )
@@ -78,7 +95,7 @@ endif()
 #--------------------------------------------------------
 # Preprocessor and linker path
 #--------------------------------------------------------
-INCLUDE_DIRECTORIES( ${cpf-redshift_INCLUDE_DIR} ${cpf-redshift_THIRDPARTY_INCLUDE_DIR} ${Boost_INCLUDE_DIRS} ${GSL_INCLUDE_DIRS} ${FFTW_INCLUDE_DIR} ${CFITSIO_INCLUDE_DIR})
+INCLUDE_DIRECTORIES( ${cpf-redshift_INCLUDE_DIR} )
 
 LINK_DIRECTORIES( ${cpf-redshift_LINK_DIR} ${cpf-redshift_THIRDPARTY_LINK_DIR}  )
 
@@ -98,25 +115,9 @@ ADD_LIBRARY( ${LIB_NAME} SHARED ${LIB_SOURCE_FILES} )
 ADD_LIBRARY( ${LIB_NAME}-static STATIC ${LIB_SOURCE_FILES} )
 SET_TARGET_PROPERTIES(${LIB_NAME}-static PROPERTIES  OUTPUT_NAME ${LIB_NAME})
 
-TARGET_LINK_LIBRARIES(${LIB_NAME}
-  ${cpf-redshift_THIRDPARTY_LIBS}
-  ${Boost_FILESYSTEM_LIBRARY_RELEASE}
-  ${Boost_SYSTEM_LIBRARY_RELEASE}
-  ${Boost_THREAD_LIBRARY_RELEASE}
-  ${Boost_TIMER_LIBRARY_RELEASE}
-  ${Boost_CHRONO_LIBRARY_RELEASE}
-  ${Boost_PROGRAM_OPTIONS_LIBRARY_RELEASE}
-  ${CFITSIO_LIBRARIES} ${GSL_LIBRARIES} ${FFTW_LIBRARIES})
+TARGET_LINK_LIBRARIES(${LIB_NAME} ${cpf-redshift_THIRDPARTY_LIBS})
 
-TARGET_LINK_LIBRARIES(${LIB_NAME}-static
-  ${cpf-redshift_THIRDPARTY_LIBS}
-  ${Boost_FILESYSTEM_LIBRARY_RELEASE}
-  ${Boost_SYSTEM_LIBRARY_RELEASE}
-  ${Boost_THREAD_LIBRARY_RELEASE}
-  ${Boost_TIMER_LIBRARY_RELEASE}
-  ${Boost_CHRONO_LIBRARY_RELEASE}
-  ${Boost_PROGRAM_OPTIONS_LIBRARY_RELEASE}
-  ${CFITSIO_LIBRARIES} ${GSL_LIBRARIES} ${FFTW_LIBRARIES})
+TARGET_LINK_LIBRARIES(${LIB_NAME}-static ${cpf-redshift_THIRDPARTY_LIBS})
 
 #--------------------------------------------------------
 # Compile test
@@ -132,7 +133,7 @@ CONFIGURE_FILE(${ROOT_DIR}/RedshiftLibrary/tests/src/test-config.h.in
 FOREACH(TEST_SOURCE ${TEST_SOURCE_FILES})
   GET_FILENAME_COMPONENT(TEST_NAME ${TEST_SOURCE} NAME_WE)
   ADD_EXECUTABLE( ${TEST_NAME} ${TEST_SOURCE} )
-  TARGET_LINK_LIBRARIES( ${TEST_NAME} ${LIB_NAME} ${cpf-redshift_THIRDPARTY_LIBS} ${tests_THIRDPARTY_LIBS} ${Boost_LIBRARIES} ${CFITSIO_LIBRARIES} ${GSL_LIBRARIES} ${FFTW_LIBRARIES})
+  TARGET_LINK_LIBRARIES( ${TEST_NAME} ${LIB_NAME} ${cpf-redshift_THIRDPARTY_LIBS} ${tests_THIRDPARTY_LIBS})
   ADD_TEST(NAME ${TEST_NAME}
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin
     COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/bin/${TEST_NAME} )
@@ -157,10 +158,7 @@ INCLUDE_DIRECTORIES( ${PYTHON_INCLUDE_DIRS} )
 
 SET_PROPERTY(SOURCE RedshiftLibrary/RedshiftLibrary/redshift.i PROPERTY CPLUSPLUS ON)
 SWIG_ADD_LIBRARY(redshift LANGUAGE python SOURCES RedshiftLibrary/RedshiftLibrary/redshift.i)
-SWIG_LINK_LIBRARIES( redshift ${PYTHON_LIBRARIES}
-  ${cpf-redshift_THIRDPARTY_LIBS}
-  ${Boost_LIBRARIES}
-  ${CFITSIO_LIBRARIES} ${GSL_LIBRARIES} ${FFTW_LIBRARIES} ${LIB_NAME} )
+SWIG_LINK_LIBRARIES( redshift ${PYTHON_LIBRARIES} ${cpf-redshift_THIRDPARTY_LIBS} )
 
 #--------------------------------------------------------
 # Package deployement and config
