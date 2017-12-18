@@ -12,14 +12,14 @@ thirdPartyDir = os.path.normpath(os.getcwd()+"/../thirdparty")+"/"
 def ExtractTarGZ( tarPath, destPath ) :
 
     if os.path.exists( destPath ):
-        print "File or folder: "+os.path.normpath( destPath )+" already exist, extraction skipped..."
+        print("File or folder: "+os.path.normpath( destPath )+" already exist, extraction skipped...")
         return False
 
     else :
 
         tfile = tarfile.open( tarPath, 'r:gz')
 
-        print "Extracting: \n\tFrom: " + tarPath + " to: " + destPath
+        print("Extracting: \n\tFrom: " + tarPath + " to: " + destPath)
 
         extractDir = os.path.dirname(destPath)+"/"
         tfile.extractall( extractDir )
@@ -36,14 +36,14 @@ def DownloadHTTPFile( fileUrl, localFilePath ) :
 
     # Check if file already exist
     if os.path.exists(localFilePath) :
-        print "File: "+localFilePath+" already exist, download skipped..."
+        print("File: "+localFilePath+" already exist, download skipped...")
         return False
 
     # Do HTTP request
     try :
         urlfile = urllib2.urlopen( fileUrl )
     except urllib2.URLError as e:
-        print "Download from: " + fileUrl + "failed.\nReason are:" + str( e.reason )
+        print("Download from: " + fileUrl + "failed.\nReason are:" + str( e.reason ))
         return
 
     if urlfile.info().has_key('Content-Length'):
@@ -53,7 +53,7 @@ def DownloadHTTPFile( fileUrl, localFilePath ) :
 
     localFile = open(localFilePath, 'wb')
 
-    print "Downloading: \n\tFrom: " + fileUrl + "\n\tTo: " + localFilePath
+    print("Downloading: \n\tFrom: " + fileUrl + "\n\tTo: " + localFilePath)
 
     #Download file
     data_list = []
@@ -62,7 +62,7 @@ def DownloadHTTPFile( fileUrl, localFilePath ) :
     while 1:
         data = urlfile.read(chunk)
         if not data:
-            print " OK !"
+            print(" OK !")
             break
         size += len( data )
         localFile.write(data)
