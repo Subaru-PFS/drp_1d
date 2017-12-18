@@ -116,6 +116,7 @@ public:
     Float64 GetFitAmplitude();
 
     std::vector<CRay>       m_Rays; //only used in multiline for now... tbd: should be moved elsewhere ?
+    std::string             m_fittingGroupInfo;
 protected:
     Bool LoadDataExtinction();
 

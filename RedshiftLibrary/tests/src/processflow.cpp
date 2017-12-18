@@ -19,9 +19,9 @@ BOOST_AUTO_TEST_CASE( ProcessShifted1 )
     CProcessFlow processFlow;
 
     std::shared_ptr<CParameterStore> params = std::shared_ptr<CParameterStore>( new CParameterStore() );
-    params->Set( "lambdaRange", TFloat64Range( 3800.0, 12500.0 ) );
-    params->Set( "redshiftRange", TFloat64Range( 0.0, 5.0 ) );
-    params->Set( "redshiftStep", 0.0001);
+    params->Set( "lambdarange", TFloat64Range( 3800.0, 12500.0 ) );
+    params->Set( "redshiftrange", TFloat64Range( 0.0, 5.0 ) );
+    params->Set( "redshiftstep", 0.0001);
     params->Set( "smoothWidth", (Int64)0 );
     params->Set( "templateCategoryList", TStringList { "galaxy" } );
     params->Set( "method", "blindsolve");
@@ -50,9 +50,9 @@ BOOST_AUTO_TEST_CASE( ProcessShifted2 )
     CProcessFlow processFlow;
 
     std::shared_ptr<CParameterStore> params = std::shared_ptr<CParameterStore>( new CParameterStore() );
-    params->Set( "lambdaRange", TFloat64Range( 3800.0, 12500.0 ) );
-    params->Set( "redshiftRange", TFloat64Range( 0.0, 5.0 ) );
-    params->Set( "redshiftStep", 0.0001);
+    params->Set( "lambdarange", TFloat64Range( 3800.0, 12500.0 ) );
+    params->Set( "redshiftrange", TFloat64Range( 0.0, 5.0 ) );
+    params->Set( "redshiftstep", 0.0001);
     params->Set( "smoothWidth", (Int64)0 );
     params->Set( "templateCategoryList",  TStringList { "galaxy" } );
     params->Set( "method", "blindsolve");
@@ -80,9 +80,9 @@ BOOST_AUTO_TEST_CASE( ProcessShiftedDecimated )
     CProcessFlow processFlow;
 
     std::shared_ptr<CParameterStore> params = std::shared_ptr<CParameterStore>( new CParameterStore() );
-    params->Set( "lambdaRange", TFloat64Range( 3800.0, 12500.0 ) );
-    params->Set( "redshiftRange", TFloat64Range( 0.0, 5.0 ) );
-    params->Set( "redshiftStep", 0.0001);
+    params->Set( "lambdarange", TFloat64Range( 3800.0, 12500.0 ) );
+    params->Set( "redshiftrange", TFloat64Range( 0.0, 5.0 ) );
+    params->Set( "redshiftstep", 0.0001);
     params->Set( "smoothWidth", (Int64)0 );
     params->Set( "templateCategoryList", TStringList { "galaxy" } );
     params->Set( "method", "blindsolve");

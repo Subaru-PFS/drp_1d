@@ -44,6 +44,7 @@ CLineModelElement::CLineModelElement(const std::string& widthType, const Float64
     //example: 0.33 means 66% of the line is allowed to be outside the spectrum with the line still considered inside the lambda range
 
     //LoadDataExtinction(); //uncomment if this line profile is used
+    m_fittingGroupInfo = "-1";
 }
 
 CLineModelElement::~CLineModelElement()

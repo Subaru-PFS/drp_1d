@@ -2158,6 +2158,14 @@ Int32 CLineModelElementList::fitAmplitudesHybrid(const CSpectrumSpectralAxis& sp
       Float64 overlapThres = 0.33;
       std::vector<Int32> overlappingInds = getOverlappingElements(iElts, indexesFitted, overlapThres);
 
+      //setting the fitting group info
+      for(Int32 ifit=0; ifit<overlappingInds.size(); ifit++)
+      {
+          std::string fitGroupTag = boost::str(boost::format("hy%d") % iValidElts);
+          m_Elements[overlappingInds[ifit]]->m_fittingGroupInfo=fitGroupTag;
+      }
+
+
       /*
       Log.LogDebug( "Redshift: %f", m_Redshift);
       Log.LogDebug( "hybrid fit: idx=%d - overlappingIdx=%d", iValidElts, overlappingInds.size());
@@ -4533,6 +4541,7 @@ CLineModelSolution CLineModelElementList::GetModelSolution(Int32 opt_level)
             modelSolution.FluxErrors.push_back(-1.0);
             modelSolution.FluxDirectIntegration.push_back(-1.0);
             modelSolution.OutsideLambdaRange.push_back(true);
+            modelSolution.fittingGroupInfo.push_back("-1");
         }else{
             Float64 amp = m_Elements[eIdx]->GetFittedAmplitude(subeIdx);
             modelSolution.Amplitudes.push_back(amp);
@@ -4592,6 +4601,7 @@ CLineModelSolution CLineModelElementList::GetModelSolution(Int32 opt_level)
                 modelSolution.FluxDirectIntegration.push_back(-1.0);
             }
 
+            modelSolution.fittingGroupInfo.push_back(m_Elements[eIdx]->m_fittingGroupInfo);
             modelSolution.OutsideLambdaRange.push_back(m_Elements[eIdx]->IsOutsideLambdaRange(subeIdx));
         }
     }

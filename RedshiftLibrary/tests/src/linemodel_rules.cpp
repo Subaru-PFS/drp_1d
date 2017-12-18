@@ -24,9 +24,9 @@ Float64 getLinemodelDoubletRatio(std::string spc, std::string noise, bool enable
     TFloat64Range spcLambdaRange = TFloat64Range( 3800.0, 12000.0 );
 
     std::shared_ptr<CParameterStore> params = std::shared_ptr<CParameterStore>( new CParameterStore() );
-    params->Set( "lambdaRange", spcLambdaRange);
-    params->Set( "redshiftRange",  redshiftRange);
-    params->Set( "redshiftStep", 0.1);
+    params->Set( "lambdarange", spcLambdaRange);
+    params->Set( "redshiftrange",  redshiftRange);
+    params->Set( "redshiftstep", 0.1);
     params->Set( "smoothWidth", (Int64)0 );
     params->Set( "templateCategoryList", TStringList { "galaxy" } );
     params->Set( "method", "linemodel");
@@ -121,9 +121,9 @@ std::vector<Float64> getLinemodelFittedAmplitudes(std::string spc, std::string n
     TFloat64Range spcLambdaRange = TFloat64Range( 2000.0, 12000.0 );
 
     std::shared_ptr<CParameterStore> params = std::shared_ptr<CParameterStore>( new CParameterStore() );
-    params->Set( "lambdaRange", spcLambdaRange);
-    params->Set( "redshiftRange",  redshiftRange);
-    params->Set( "redshiftStep", 0.01);
+    params->Set( "lambdarange", spcLambdaRange);
+    params->Set( "redshiftrange",  redshiftRange);
+    params->Set( "redshiftstep", 0.01);
     params->Set( "smoothWidth", (Int64)0 );
     params->Set( "templateCategoryList", TStringList { "galaxy" } );
     params->Set( "method", "linemodel");

@@ -74,9 +74,9 @@ Bool CProcessFlow::Process( CProcessFlowContext& ctx )
     TFloat64Range redshiftRange;
     Float64       redshiftStep;
 
-    ctx.GetParameterStore().Get( "lambdaRange", lambdaRange );
-    ctx.GetParameterStore().Get( "redshiftRange", redshiftRange );
-    ctx.GetParameterStore().Get( "redshiftStep", redshiftStep );
+    ctx.GetParameterStore().Get( "lambdarange", lambdaRange );
+    ctx.GetParameterStore().Get( "redshiftrange", redshiftRange );
+    ctx.GetParameterStore().Get( "redshiftstep", redshiftStep );
     TFloat64Range spcLambdaRange;
     ctx.GetSpectrum().GetSpectralAxis().ClampLambdaRange( lambdaRange, spcLambdaRange );
 
