@@ -93,6 +93,7 @@ def Main( argv ):
     parser = optparse.OptionParser(usage=usage)
     parser.add_option(u"-d", u"--dry", help="Clear thirdparty dir before download and installation", action="store_true",  dest="Dry")
     parser.add_option(u"-c", u"--clear", help="Clean temporary files after download and installation", action="store_true",  dest="Clear")
+    parser.add_option(u"-j", u"--parallel", help="Parallel make flag", action="store", type="string", dest="Parallel", default="1")
     (options, args) = parser.parse_args()
 
     if options.Clear == True:
@@ -102,48 +103,47 @@ def Main( argv ):
     if options.Dry == True:
         Clear()
 
-
     # CPPUNIT
     libPath = libDict["cppunit"]["path"];
     libSrc = libDict["cppunit"]["src"];
     if DownloadHTTPFile( libSrc, libPath+".tar.gz" ) :
         if ExtractTarGZ( libPath+".tar.gz", libPath ) :
-            os.system( "cd "+libPath+"/ ; ./configure --prefix="+thirdPartyDir+" ; make ; make install ; cd ../" )
+            os.system( "cd "+libPath+"/ ; ./configure --prefix="+thirdPartyDir+" ; make -j"+options.Parallel+" ; make install ; cd ../" )
 
     # GSL
     libPath = libDict["gsl"]["path"];
     libSrc = libDict["gsl"]["src"];
     if DownloadHTTPFile( libSrc, libPath+".tar.gz" ) :
         if ExtractTarGZ( libPath+".tar.gz", libPath ) :
-            os.system( "cd "+libPath+"/ ; ./configure --prefix="+thirdPartyDir+" ; make ; make install ; cd ../" )
-            
+            os.system( "cd "+libPath+"/ ; ./configure --prefix="+thirdPartyDir+" ; make -j"+options.Parallel+"; make install ; cd ../" )
+
     # FFTW
     libPath = libDict["fftw"]["path"];
     libSrc = libDict["fftw"]["src"];
     if DownloadHTTPFile( libSrc, libPath+".tar.gz" ) :
         if ExtractTarGZ( libPath+".tar.gz", libPath ) :
-            os.system( "cd "+libPath+"/ ; ./configure --prefix="+thirdPartyDir+" ; make ; make install ; cd ../" )
+            os.system( "cd "+libPath+"/ ; ./configure --prefix="+thirdPartyDir+" --enable-shared; make -j"+options.Parallel+"; make install ; cd ../" )
 
     # DOXYGEN
     libPath = libDict["doxygen"]["path"];
     libSrc = libDict["doxygen"]["src"];
     if DownloadHTTPFile( libSrc, libPath+".tar.gz" ) :
         if ExtractTarGZ( libPath+".tar.gz", libPath ) :
-            os.system( "cd " + libPath + "/ ; ./configure --prefix " + thirdPartyDir + " ; make ; make install ; cd ../" )
+            os.system( "cd " + libPath + "/ ; ./configure --prefix " + thirdPartyDir + " ; make -j"+options.Parallel+"; make install ; cd ../" )
 
     # BOOST
     libPath = libDict["boost"]["path"];
     libSrc = libDict["boost"]["src"];
     if DownloadHTTPFile( libSrc, libPath+".tar.gz" ) :
         if ExtractTarGZ( libPath+".tar.gz", libPath ) :
-            os.system( "cd "+libPath+"/ ; ./bootstrap.sh --with-libraries=test,filesystem,program_options,thread,regex,python,timer,chrono --prefix="+thirdPartyDir+" ; ./b2 link=static install ; cd ../" )
+            os.system( "cd "+libPath+"/ ; ./bootstrap.sh --with-libraries=test,filesystem,program_options,thread,regex,python,timer,chrono --prefix="+thirdPartyDir+" --with-python-version=2.7; ./b2 -j"+options.Parallel+" link=shared install ; ./b2 -j"+options.Parallel+" link=static install ; cd ../" )
 
     # CFITSIO
     libPath = libDict["cfitsio"]["path"];
     libSrc = libDict["cfitsio"]["src"];
     if DownloadHTTPFile( libSrc, libPath+".tar.gz" ) :
         if ExtractTarGZ( libPath+".tar.gz", libPath ) :
-            os.system( "cd "+libPath+"/ ; ./configure --enable-reentrant --prefix="+thirdPartyDir+" --enable-sse2 --enable-ssse3; make all-nofitsio; make install; cd ../" )
+            os.system( "cd "+libPath+"/ ; ./configure --enable-reentrant --prefix="+thirdPartyDir+" --enable-sse2 --enable-ssse3; make -j"+options.Parallel+" all-nofitsio; make install; cd ../" )
 
 
 

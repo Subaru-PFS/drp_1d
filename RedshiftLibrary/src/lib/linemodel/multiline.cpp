@@ -842,7 +842,7 @@ void CMultiLine::addToSpectrumModelDerivVel( const CSpectrumSpectralAxis& models
         if(m_OutsideLambdaRangeList[k]){
             continue;
         }
-        if((emissionRay  ^ m_Rays[k].GetIsEmission())){
+        if((emissionRay ^ m_Rays[k].GetIsEmission())){
             continue;
         }
 
