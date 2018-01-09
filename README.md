@@ -58,6 +58,15 @@ You can build either in **Debug** or **Release** mode
 Note :
 If you don't specify any **-DCMAKE_BUILD_TYPE=xxxxx** , it will build  by default in Release mode
 
+
+##### shared and static
+
+You can build either static or shared library :
+cmake .. -DBUILD_SHARED_LIBS=ON
+or
+cmake .. -DBUILD_SHARED_LIBS=OFF
+
+
 ## Additional documentation
 
 Detailed documentation about this software can be found by building the provided documentation:
