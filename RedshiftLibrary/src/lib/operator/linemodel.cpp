@@ -705,6 +705,10 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
                                 idxVelfitGroups.clear();
                                 idxVelfitGroups = model.GetModelVelfitGroups(CRay::nType_Absorption);
                                 Log.LogInfo( "\nLineModel Infos: VelfitGroups ABSORPTION - n = %.d", idxVelfitGroups.size());
+                                if(extremumList.size()>1 && idxVelfitGroups.size()>1)
+                                {
+                                    Log.LogError("Linemodel not allowed to use more than 1 group per E/A for more than 1 extremum (see .json linemodel.extremacount)");
+                                }
                             }
                         }else{
                             Log.LogInfo( "LineModel Infos: manualStep velocity fit EMISSION, for z = %.4f", result->Redshifts[idx]);
@@ -715,6 +719,10 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
                                 idxVelfitGroups.clear();
                                 idxVelfitGroups = model.GetModelVelfitGroups(CRay::nType_Emission);
                                 Log.LogInfo( "\nLineModel Infos: VelfitGroups EMISSION - n = %.d", idxVelfitGroups.size());
+                                if(extremumList.size()>1 && idxVelfitGroups.size()>1)
+                                {
+                                    Log.LogError("Linemodel not allowed to use more than 1 group per E/A for more than 1 extremum (see .json linemodel.extremacount)");
+                                }
                             }
                         }
 
