@@ -317,9 +317,30 @@ CSpectrum CLineModelElementList::GetSpectrumModelContinuum() const
 /**
  * \brief Returns a pointer to a spectrum containing the observed spectrum with the fitted lines subtracted
  **/
-const CSpectrum& CLineModelElementList::GetObservedSpectrumWithLinesRemoved() const
+const CSpectrum& CLineModelElementList::GetObservedSpectrumWithLinesRemoved(Int32 lineTypeFilter)
 {
     const CSpectrumSpectralAxis& spectralAxis = m_SpectrumModel->GetSpectralAxis();
+
+    //
+    std::vector<Float64> fluxAndContinuum(spectralAxis.GetSamplesCount(), 0.0);
+    if(lineTypeFilter==CRay::nType_Emission)
+    {
+        refreshModel(CRay::nType_Absorption);
+        for( Int32 t=0;t<spectralAxis.GetSamplesCount();t++)
+        {
+            fluxAndContinuum[t] = m_SpectrumModel->GetFluxAxis()[t];
+        }
+        refreshModel(CRay::nType_Emission);
+    }else if(lineTypeFilter==CRay::nType_Absorption)
+    {
+        refreshModel(CRay::nType_Emission);
+        for( Int32 t=0;t<spectralAxis.GetSamplesCount();t++)
+        {
+            fluxAndContinuum[t] = m_SpectrumModel->GetFluxAxis()[t];
+        }
+        refreshModel(CRay::nType_Absorption);
+    }
+
     const CSpectrumFluxAxis& modelFluxAxis = m_SpectrumModel->GetFluxAxis();
 
     //create new spectrum, which is corrected under the lines
@@ -333,8 +354,42 @@ const CSpectrum& CLineModelElementList::GetObservedSpectrumWithLinesRemoved() co
         Y[t] = m_SpcFluxAxis[t]-modelFluxAxis[t]+m_ContinuumFluxAxis[t];
     }
 
+    bool enableSmoothBlendContinuUnderLines=true;
+    if(enableSmoothBlendContinuUnderLines)
+    {
+        Float64 alphaMax = 0.9; //alpha blend = 0: only lineSubtractedFlux, alpha=1: only continuum
+
+        std::vector<Int32> validEltsIdx = GetModelValidElementsIndexes();
+        std::vector<Int32> nonZeroValidEltsIdx;
+        for(Int32 j=0; j<validEltsIdx.size(); j++)
+        {
+            Int32 lineType = m_Elements[validEltsIdx[j]]->m_Rays[0].GetType();
+            if(!(lineTypeFilter==-1 || lineTypeFilter==lineType))
+            {
+                continue;
+            }
+
+            if(m_Elements[validEltsIdx[j]]->GetElementAmplitude()>0.0)
+            {
+                nonZeroValidEltsIdx.push_back(validEltsIdx[j]);
+            }
+        }
+        if(nonZeroValidEltsIdx.size()>0)
+        {
+            std::vector<Int32> supportIdxes = getSupportIndexes( nonZeroValidEltsIdx );
+            if(supportIdxes.size()>0)
+            {
+                for( Int32 i=1; i<supportIdxes.size(); i++ )
+                {
+                    Float64 weighting = GetWeightingAnyLineCenterProximity(supportIdxes[i], nonZeroValidEltsIdx);
+                    Float64 alpha = alphaMax*weighting;
+                    Y[supportIdxes[i]] = (1.-alpha)*Y[supportIdxes[i]] + alpha*(fluxAndContinuum[supportIdxes[i]]);
+                }
+            }
+        }
+    }
+
     return *m_SpcCorrectedUnderLines;
-    //return *m_SpectrumModel;;
 }
 
 
@@ -1848,7 +1903,7 @@ void CLineModelElementList::reinitModelUnderElements(std::vector<Int32>  filterE
  * Calls reinitModel.
  * For each entry in m_Elements, addToSpectrumModel using the reinitModel output as arguments.
  **/
-void CLineModelElementList::refreshModel()
+void CLineModelElementList::refreshModel(Int32 lineTypeFilter)
 {
     reinitModel();
 
@@ -1872,7 +1927,11 @@ void CLineModelElementList::refreshModel()
     //create spectrum model
     for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
     {
-        m_Elements[iElts]->addToSpectrumModel(spectralAxis, modelFluxAxis, m_ContinuumFluxAxis, m_Redshift);
+        Int32 lineType = m_Elements[iElts]->m_Rays[0].GetType();
+        if(lineTypeFilter==-1 || lineTypeFilter==lineType)
+        {
+            m_Elements[iElts]->addToSpectrumModel(spectralAxis, modelFluxAxis, m_ContinuumFluxAxis, m_Redshift);
+        }
     }
 
 }
@@ -2157,6 +2216,14 @@ Int32 CLineModelElementList::fitAmplitudesHybrid(const CSpectrumSpectralAxis& sp
       //do the fit on the ovelapping elements
       Float64 overlapThres = 0.33;
       std::vector<Int32> overlappingInds = getOverlappingElements(iElts, indexesFitted, overlapThres);
+
+      //setting the fitting group info
+      for(Int32 ifit=0; ifit<overlappingInds.size(); ifit++)
+      {
+          std::string fitGroupTag = boost::str(boost::format("hy%d") % iValidElts);
+          m_Elements[overlappingInds[ifit]]->m_fittingGroupInfo=fitGroupTag;
+      }
+
 
       /*
       Log.LogDebug( "Redshift: %f", m_Redshift);
@@ -2899,6 +2966,50 @@ std::vector<Int32> CLineModelElementList::getSupportIndexes( std::vector<Int32> 
 
     return indexes;
 }
+
+Float64 CLineModelElementList::GetWeightingAnyLineCenterProximity(Int32 sampleIndex, std::vector<Int32> EltsIdx)
+{
+    Float64 maxWeight=0.0;
+    const CSpectrumSpectralAxis& spectralAxis = m_SpectrumModel->GetSpectralAxis();
+    Float64 currentLbda = spectralAxis[sampleIndex];
+
+    for( UInt32 i=0; i<EltsIdx.size(); i++ )
+    {
+        Int32 iElts = EltsIdx[i];
+
+
+
+        TInt32RangeList s = m_Elements[iElts]->getTheoreticalSupport();
+        for( UInt32 iS=0; iS<s.size(); iS++ )
+        {
+            Float64 weight = 0;
+            TInt32Range range = s[iS];
+            if(sampleIndex>range.GetBegin() && sampleIndex<range.GetEnd())
+            {
+                Float64 minRangeLbda = spectralAxis[range.GetBegin()];
+                Float64 maxRangeLbda = spectralAxis[range.GetEnd()];
+
+                Float64 fullInterval = maxRangeLbda-minRangeLbda;
+                if(fullInterval>0.0)
+                {
+                    Float64 leftInterval = currentLbda-minRangeLbda;
+                    Float64 rightInterval = maxRangeLbda-currentLbda;
+                    Float64 coeff = std::abs(leftInterval - rightInterval);
+
+                    weight = 1.-(Float64)coeff/(Float64)fullInterval;
+                }
+            }
+
+            if(maxWeight<weight)
+            {
+                maxWeight=weight;
+            }
+        }
+    }
+
+    return maxWeight;
+}
+
 
 /**
  * \brief Returns a sorted set of line indices present in the supports of the argument. 
@@ -4533,6 +4644,7 @@ CLineModelSolution CLineModelElementList::GetModelSolution(Int32 opt_level)
             modelSolution.FluxErrors.push_back(-1.0);
             modelSolution.FluxDirectIntegration.push_back(-1.0);
             modelSolution.OutsideLambdaRange.push_back(true);
+            modelSolution.fittingGroupInfo.push_back("-1");
         }else{
             Float64 amp = m_Elements[eIdx]->GetFittedAmplitude(subeIdx);
             modelSolution.Amplitudes.push_back(amp);
@@ -4592,6 +4704,7 @@ CLineModelSolution CLineModelElementList::GetModelSolution(Int32 opt_level)
                 modelSolution.FluxDirectIntegration.push_back(-1.0);
             }
 
+            modelSolution.fittingGroupInfo.push_back(m_Elements[eIdx]->m_fittingGroupInfo);
             modelSolution.OutsideLambdaRange.push_back(m_Elements[eIdx]->IsOutsideLambdaRange(subeIdx));
         }
     }

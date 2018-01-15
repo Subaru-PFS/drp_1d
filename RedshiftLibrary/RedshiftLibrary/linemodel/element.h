@@ -29,6 +29,7 @@ public:
 
     virtual void prepareSupport(const CSpectrumSpectralAxis& spectralAxis, Float64 redshift, const TFloat64Range& lambdaRange)=0;
     virtual TInt32RangeList getSupport()=0;
+    virtual TInt32RangeList getTheoreticalSupport()=0;
     virtual TInt32Range getSupportSubElt(Int32 subeIdx)=0;
     virtual TInt32Range getTheoreticalSupportSubElt(Int32 subeIdx)=0;
 
@@ -116,6 +117,7 @@ public:
     Float64 GetFitAmplitude();
 
     std::vector<CRay>       m_Rays; //only used in multiline for now... tbd: should be moved elsewhere ?
+    std::string             m_fittingGroupInfo;
 protected:
     Bool LoadDataExtinction();
 

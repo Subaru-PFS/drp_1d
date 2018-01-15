@@ -145,7 +145,7 @@ public:
     Float64 GetRedshift();
 
     void reinitModel();
-    void refreshModel();
+    void refreshModel(Int32 lineTypeFilter=-1);
     void reinitModelUnderElements(std::vector<Int32> filterEltsIdx, Int32 lineIdx=-1 );
     void refreshModelInitAllGrid();
     void refreshModelUnderElements(std::vector<Int32> filterEltsIdx, Int32 lineIdx=-1 );
@@ -179,7 +179,7 @@ public:
     CLineModelSolution GetModelSolution(Int32 opt_level=0);
     const CSpectrum&    GetModelSpectrum() const;
     CSpectrum GetSpectrumModelContinuum() const;
-    const CSpectrum&    GetObservedSpectrumWithLinesRemoved() const;
+    const CSpectrum&    GetObservedSpectrumWithLinesRemoved(Int32 lineTypeFilter=-1);
     Float64 GetContinuumError(Int32 eIdx, Int32 subeIdx);
     Float64 GetFluxDirectIntegration(Int32 eIdx, Int32 subeIdx);
     const CSpectrumFluxAxis&    GetModelContinuum() const;
@@ -244,6 +244,7 @@ private:
     Int32 setLyaProfile( Float64 redshift, const CSpectrumSpectralAxis& spectralAxis );
 
     std::vector<Int32> getSupportIndexes(std::vector<Int32> EltsIdx);
+    Float64 GetWeightingAnyLineCenterProximity(Int32 sampleIndex, std::vector<Int32> EltsIdx);
     std::vector<Int32> getOverlappingElementsBySupport(Int32 ind , Float64 overlapThres=0.1);
     std::vector<Int32> ReestimateContinuumApprox(std::vector<Int32> EltsIdx);
     std::vector<Int32> ReestimateContinuumUnderLines(std::vector<Int32> EltsIdx);

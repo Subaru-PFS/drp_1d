@@ -705,6 +705,10 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
                                 idxVelfitGroups.clear();
                                 idxVelfitGroups = model.GetModelVelfitGroups(CRay::nType_Absorption);
                                 Log.LogInfo( "\nLineModel Infos: VelfitGroups ABSORPTION - n = %.d", idxVelfitGroups.size());
+                                if(extremumList.size()>1 && idxVelfitGroups.size()>1)
+                                {
+                                    Log.LogError("Linemodel not allowed to use more than 1 group per E/A for more than 1 extremum (see .json linemodel.extremacount)");
+                                }
                             }
                         }else{
                             Log.LogInfo( "LineModel Infos: manualStep velocity fit EMISSION, for z = %.4f", result->Redshifts[idx]);
@@ -715,6 +719,10 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
                                 idxVelfitGroups.clear();
                                 idxVelfitGroups = model.GetModelVelfitGroups(CRay::nType_Emission);
                                 Log.LogInfo( "\nLineModel Infos: VelfitGroups EMISSION - n = %.d", idxVelfitGroups.size());
+                                if(extremumList.size()>1 && idxVelfitGroups.size()>1)
+                                {
+                                    Log.LogError("Linemodel not allowed to use more than 1 group per E/A for more than 1 extremum (see .json linemodel.extremacount)");
+                                }
                             }
                         }
 
@@ -1036,8 +1044,26 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
           }
           }else{
             // CModelSpectrumResult
-            std::shared_ptr<CModelSpectrumResult>  resultspcmodel = std::shared_ptr<CModelSpectrumResult>( new CModelSpectrumResult(model.GetModelSpectrum()) );
-            //std::shared_ptr<CModelSpectrumResult>  resultspcmodel = std::shared_ptr<CModelSpectrumResult>( new CModelSpectrumResult(model.GetObservedSpectrumWithLinesRemoved()) );
+            std::shared_ptr<CModelSpectrumResult>  resultspcmodel;
+            Int32 overrideModelSavedType = 0;
+            //0=save model, (DEFAULT)
+            //1=save model with lines removed,
+            //2=save model with only Em. lines removed.
+            if(overrideModelSavedType==0)
+            {
+                resultspcmodel = std::shared_ptr<CModelSpectrumResult>( new CModelSpectrumResult(model.GetModelSpectrum()) );
+            }else if(overrideModelSavedType==1 || overrideModelSavedType==2)
+            {
+                Int32 lineTypeFilter=-1;
+                if(overrideModelSavedType==1)
+                {
+                    lineTypeFilter=-1;
+                }else if(overrideModelSavedType==2)
+                {
+                    lineTypeFilter = CRay::nType_Emission;
+                }
+                resultspcmodel = std::shared_ptr<CModelSpectrumResult>( new CModelSpectrumResult(model.GetObservedSpectrumWithLinesRemoved(lineTypeFilter)) );
+            }
             //std::shared_ptr<CModelSpectrumResult>  resultspcmodel = std::shared_ptr<CModelSpectrumResult>( new CModelSpectrumResult(model.GetSpectrumModelContinuum()) );
 
             m_savedModelSpectrumResults.push_back(resultspcmodel);
@@ -1054,7 +1080,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
 
             if( savedModels < maxSaveNLinemodelContinua )
             {
-                // Save the reestimated continuum, only the first extrema
+                // Save the reestimated continuum, only the first n=maxSaveNLinemodelContinua extrema
                 std::shared_ptr<CSpectraFluxResult> baselineResult = (std::shared_ptr<CSpectraFluxResult>) new CSpectraFluxResult();
                 baselineResult->m_optio = 0;
                 const CSpectrumFluxAxis& modelContinuumFluxAxis = model.GetModelContinuum();

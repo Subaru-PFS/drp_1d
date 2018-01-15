@@ -358,13 +358,30 @@ TInt32RangeList CMultiLine::getSupport()
     if(m_OutsideLambdaRange==false)
       {
         for(Int32 i=0; i<m_Rays.size(); i++)
-	  {
+      {
             if(m_OutsideLambdaRangeList[i])
-	      {
+          {
                 continue;
-	      }
+          }
             support.push_back(TInt32Range(m_StartNoOverlap[i], m_EndNoOverlap[i]));
-	  }
+      }
+      }
+    return support;
+}
+
+TInt32RangeList CMultiLine::getTheoreticalSupport()
+{
+    TInt32RangeList support;
+    if(m_OutsideLambdaRange==false)
+      {
+        for(Int32 i=0; i<m_Rays.size(); i++)
+      {
+            if(m_OutsideLambdaRangeList[i])
+          {
+                continue;
+          }
+            support.push_back(TInt32Range(m_StartTheoretical[i], m_EndTheoretical[i]));
+      }
       }
     return support;
 }

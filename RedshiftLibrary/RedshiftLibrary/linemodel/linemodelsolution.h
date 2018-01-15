@@ -34,6 +34,7 @@ struct CLineModelSolution
     std::vector<Float64> Offset;    //line offset in km/s
     std::vector<Bool> OutsideLambdaRange;
     std::vector<TInt32Range> fittingIndexRange;
+    std::vector<std::string> fittingGroupInfo;
 
     Float64 LyaWidthCoeff;
     Float64 LyaAlpha;
