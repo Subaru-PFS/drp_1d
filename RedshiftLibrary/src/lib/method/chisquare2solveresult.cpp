@@ -119,11 +119,13 @@ Void CChisquare2SolveResult::SaveLine( const CDataStore& store, std::ostream& st
     if(m_bestRedshiftMethod==0)
     {
         GetBestRedshift( store, redshift, merit, tplName, amp, dustCoeff, meiksinIdx );
-        Log.LogInfo( "Chisquare2solve-result: extracting best redshift from chi2 extrema: z=%f", redshift);
+        Log.LogInfo( "Chisquare2solve-result: extracted best redshift from chi2 extrema: z=%f", redshift);
     }else if(m_bestRedshiftMethod==2)
     {
         GetBestRedshiftFromPdf( store, redshift, merit );
-        Log.LogInfo( "Chisquare2solve-result: extracting best redshift from PDF: z=%f", redshift);
+        Log.LogInfo( "Chisquare2solve-result: extracted best redshift from PDF: z=%f", redshift);
+        GetBestModel(store, redshift, tplName);
+        Log.LogInfo( "Chisquare2solve-result: extracted best model: model=%s", tplName.c_str());
     }else{
         Log.LogError( "Chisquare2solve-result: can't parse best redshift estimation method");
     }
@@ -236,5 +238,69 @@ Bool CChisquare2SolveResult::GetBestRedshiftFromPdf( const CDataStore& store, Fl
     redshift = tmpRedshift;
     merit = tmpProbaLog;
     return true;
+}
+
+
+/**
+ * @brief CChisquare2SolveResult::GetBestModel
+ * Find the best tpl-name corresponding to the input arg. z and to the minimum Chisquare
+ * @param store
+ * @param z
+ * @param tplName
+ * @return
+ */
+Int32 CChisquare2SolveResult::GetBestModel(const CDataStore& store, Float64 z, std::string& tplName) const
+{
+    tplName = "-1";
+    Bool foundRedshiftAtLeastOnce = false;
+
+    std::string scopeStr;
+    if(m_type == nType_raw){
+        scopeStr = "chisquare";
+    }else if(m_type == nType_all){
+        scopeStr = "chisquare";
+    }else if(m_type == nType_noContinuum){
+        scopeStr = "chisquare_nocontinuum";
+    }else if(m_type == nType_continuumOnly){
+        scopeStr = "chisquare_continuum";
+    }
+    std::string scope = store.GetScope( *this ) + "chisquarelogsolve." + scopeStr.c_str();
+    TOperatorResultMap meritResults = store.GetPerTemplateResult(scope.c_str());
+
+    Float64 tmpMerit = DBL_MAX ;
+    std::string tmpTplName = "-1";
+    for( TOperatorResultMap::const_iterator it = meritResults.begin(); it != meritResults.end(); it++ )
+    {
+        auto meritResult = std::dynamic_pointer_cast<const CChisquareResult>( (*it).second );
+        if(meritResult->ChiSquare.size()<1){
+            continue;
+        }
+
+        Int32 idx=-1;
+        for( Int32 i=0; i<meritResult->ChiSquare.size(); i++ )
+        {
+            if( meritResult->Status[i] == COperator::nStatus_OK )
+            {
+                Float64 tmpRedshift = meritResult->Redshifts[i];
+                if(tmpRedshift == z){
+                    idx = i;
+                    foundRedshiftAtLeastOnce = true;
+                    break;
+                }
+            }
+        }
+        if(idx>-1 && meritResult->ChiSquare[idx]<tmpMerit){
+            tmpMerit = meritResult->ChiSquare[idx];
+            tmpTplName = (*it).first;
+        }
+
+    }
+
+    if(foundRedshiftAtLeastOnce){
+        tplName = tmpTplName;
+    }else{
+        return -1;
+    }
+    return 1;
 }
 
