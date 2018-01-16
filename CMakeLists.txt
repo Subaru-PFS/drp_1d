@@ -96,6 +96,7 @@ endif()
 # Preprocessor and linker path
 #--------------------------------------------------------
 INCLUDE_DIRECTORIES( ${cpf-redshift_INCLUDE_DIR} )
+
 LINK_DIRECTORIES( ${cpf-redshift_LINK_DIR} ${cpf-redshift_THIRDPARTY_LINK_DIR}  )
 
 #-------------------------  -------------------------------
@@ -110,39 +111,41 @@ SET( LIB_NAME cpf-redshift${EXT} )
 
 FILE( GLOB_RECURSE LIB_SOURCE_FILES ${ROOT_DIR}/RedshiftLibrary/src/lib/*.cpp )
 
-ADD_LIBRARY( ${LIB_NAME} ${LIB_SOURCE_FILES} )
+ADD_LIBRARY( ${LIB_NAME} SHARED ${LIB_SOURCE_FILES} )
+ADD_LIBRARY( ${LIB_NAME}-static STATIC ${LIB_SOURCE_FILES} )
+SET_TARGET_PROPERTIES(${LIB_NAME}-static PROPERTIES  OUTPUT_NAME ${LIB_NAME})
+
 TARGET_LINK_LIBRARIES(${LIB_NAME} ${cpf-redshift_THIRDPARTY_LIBS})
+
+TARGET_LINK_LIBRARIES(${LIB_NAME}-static ${cpf-redshift_THIRDPARTY_LIBS})
 
 #--------------------------------------------------------
 # Compile test
 #--------------------------------------------------------
+ENABLE_TESTING()
 
-IF (DEFINED ENABLE_TESTS)
-  ENABLE_TESTING()
+FILE( GLOB_RECURSE TEST_SOURCE_FILES ${ROOT_DIR}/RedshiftLibrary/tests/src/*.cpp )
+ADD_DEFINITIONS(-DBOOST_TEST_DYN_LINK)
 
-  FILE( GLOB_RECURSE TEST_SOURCE_FILES ${ROOT_DIR}/RedshiftLibrary/tests/src/*.cpp )
-  ADD_DEFINITIONS(-DBOOST_TEST_DYN_LINK)
+CONFIGURE_FILE(${ROOT_DIR}/RedshiftLibrary/tests/src/test-config.h.in
+  ${ROOT_DIR}/RedshiftLibrary/tests/src/test-config.h)
 
-  CONFIGURE_FILE(${ROOT_DIR}/RedshiftLibrary/tests/src/test-config.h.in
-    ${ROOT_DIR}/RedshiftLibrary/tests/src/test-config.h)
-
-  FOREACH(TEST_SOURCE ${TEST_SOURCE_FILES})
-    GET_FILENAME_COMPONENT(TEST_NAME ${TEST_SOURCE} NAME_WE)
-    ADD_EXECUTABLE( ${TEST_NAME} ${TEST_SOURCE} )
-    TARGET_LINK_LIBRARIES( ${TEST_NAME} ${LIB_NAME} ${cpf-redshift_THIRDPARTY_LIBS} ${tests_THIRDPARTY_LIBS})
-    ADD_TEST(NAME ${TEST_NAME}
-      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin
-      COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/bin/${TEST_NAME} )
-    SET_PROPERTY(SOURCE ${TEST_SOURCE} APPEND PROPERTY COMPILE_DEFINITIONS BOOST_TEST_MODULE=${TEST_NAME} )
-  ENDFOREACH(TEST_SOURCE)
-ENDIF (DEFINED ENABLE_TESTS)
+FOREACH(TEST_SOURCE ${TEST_SOURCE_FILES})
+  GET_FILENAME_COMPONENT(TEST_NAME ${TEST_SOURCE} NAME_WE)
+  ADD_EXECUTABLE( ${TEST_NAME} ${TEST_SOURCE} )
+  TARGET_LINK_LIBRARIES( ${TEST_NAME} ${LIB_NAME} ${cpf-redshift_THIRDPARTY_LIBS} ${tests_THIRDPARTY_LIBS})
+  ADD_TEST(NAME ${TEST_NAME}
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin
+    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/bin/${TEST_NAME} )
+  SET_PROPERTY(SOURCE ${TEST_SOURCE} APPEND PROPERTY COMPILE_DEFINITIONS BOOST_TEST_MODULE=${TEST_NAME} )
+ENDFOREACH(TEST_SOURCE)
 
 #--------------------------------------------------------
 # Install directive
 #--------------------------------------------------------
-INSTALL(TARGETS ${LIB_NAME} ARCHIVE DESTINATION lib LIBRARY DESTINATION lib)
-INSTALL(DIRECTORY ${ROOT_DIR}/RedshiftLibrary/ DESTINATION RedshiftLibrary )
-INSTALL(FILES  ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cpf-redshift-config.cmake DESTINATION cmake )
+INSTALL( TARGETS ${LIB_NAME} ${LIB_NAME}-static ARCHIVE DESTINATION lib LIBRARY DESTINATION lib)
+INSTALL( DIRECTORY ${ROOT_DIR}/RedshiftLibrary/ DESTINATION RedshiftLibrary )
+INSTALL( FILES  ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cpf-redshift-config.cmake DESTINATION cmake )
 
 
 #--------------------------------------------------------
@@ -177,4 +180,5 @@ CONFIGURE_FILE(
         )
 
 EXPORT( PACKAGE ${LIB_NAME} )
-EXPORT(TARGETS ${LIB_NAME} FILE FindCPFRedshift.cmake)
+EXPORT( PACKAGE ${LIB_NAME}-static )
+EXPORT(TARGETS ${LIB_NAME} ${LIB_NAME}-static FILE FindCPFRedshift.cmake)
