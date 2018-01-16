@@ -365,7 +365,8 @@ Int32 CPdfz::Marginalize(TFloat64List redshifts, std::vector<TFloat64List> merit
     return 0;
 }
 
-// TODO: problem while estimating best proba. is it best proba for each z ? In that case: what about sum_z P = 1 ?
+//This mathematically does not correspond to any valid method for combining PDFs.
+//TODO: problem while estimating best proba. is it best proba for each z ? In that case: what about sum_z P = 1 ?
 Int32 CPdfz::BestProba(TFloat64List redshifts, std::vector<TFloat64List> meritResults, std::vector<TFloat64List> zPriors, Float64 cstLog, std::shared_ptr<CPdfMargZLogResult> postmargZResult)
 {
     bool verbose = false;
@@ -551,6 +552,7 @@ Int32 CPdfz::BestChi2(TFloat64List redshifts, std::vector<TFloat64List> meritRes
         Log.LogError("Pdfz: Pdfz-bestchi2: Pdfz computation failed");
         return -1;
     }else{
+        postmargZResult->valEvidenceLog = logEvidence;
         postmargZResult->countTPL = redshifts.size(); // assumed 1 model per z
         postmargZResult->Redshifts.resize(redshifts.size());
         postmargZResult->valProbaLog.resize(redshifts.size());
