@@ -326,6 +326,8 @@ Int32 CPdfz::Marginalize(TFloat64List redshifts, std::vector<TFloat64List> merit
                     }
                 }
             }
+
+            postmargZResult->valEvidenceLog = logSumEvidence;
             for ( UInt32 k=0; k<redshifts.size(); k++)
             {
                 if( true /*meritResult->Status[k]== COperator::nStatus_OK*/) //todo: check (temporarily considers status is always OK for linemodel tplshape)

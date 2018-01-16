@@ -14,7 +14,7 @@ using namespace NSEpic;
 
 CPdfMargZLogResult::CPdfMargZLogResult()
 {
-
+    valEvidenceLog=-1;
 }
 
 CPdfMargZLogResult::~CPdfMargZLogResult()
@@ -25,6 +25,7 @@ CPdfMargZLogResult::~CPdfMargZLogResult()
 Void CPdfMargZLogResult::Save( const CDataStore& store, std::ostream& stream ) const
 {
     stream << "#z_tested \tLog P( z | priors )" <<std::endl;
+    stream << "#EvidenceLog=" << valEvidenceLog << std::endl;
 	for ( Int32 i=0; i<Redshifts.size(); i++)
     {
     		stream.precision(10);

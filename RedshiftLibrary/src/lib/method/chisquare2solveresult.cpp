@@ -24,6 +24,7 @@ Void CChisquare2SolveResult::Save( const CDataStore& store, std::ostream& stream
 {
     Float64 redshift;
     Float64 merit;
+    Float64 evidence;
     std::string tplName;
     Float64 amplitude;
     Float64 dustCoeff;
@@ -39,6 +40,23 @@ Void CChisquare2SolveResult::Save( const CDataStore& store, std::ostream& stream
                 << amplitude << "\t"
                 << std::setprecision(4) << dustCoeff << "\t"
                 << meiksinIdx << std::endl;
+
+    stream <<  "#Redshifts\tprobaLog\tevidenceLog\tModel"<< std::endl;
+    if(m_bestRedshiftMethod==2)
+    {
+        GetBestRedshiftFromPdf( store, redshift, merit, evidence );
+        Log.LogInfo( "Chisquare2solve-result: extracting best redshift from PDF: z=%f", redshift);
+        GetBestModel(store, redshift, tplName);
+        Log.LogInfo( "Chisquare2solve-result: extracted best model: model=%s", tplName.c_str());
+
+        stream  << redshift << "\t"
+                << merit << "\t"
+                << evidence << "\t"
+                << tplName << std::endl;
+    }else{
+        stream <<  "-1\t-1\t-1"<< std::endl;
+    }
+
 
     stream << std::endl;
     stream << std::endl;
@@ -109,6 +127,7 @@ Void CChisquare2SolveResult::SaveLine( const CDataStore& store, std::ostream& st
 
     Float64 redshift;
     Float64 merit;
+    Float64 evidence;
     std::string tplName="-1";
 
     //unused
@@ -122,7 +141,7 @@ Void CChisquare2SolveResult::SaveLine( const CDataStore& store, std::ostream& st
         Log.LogInfo( "Chisquare2solve-result: extracted best redshift from chi2 extrema: z=%f", redshift);
     }else if(m_bestRedshiftMethod==2)
     {
-        GetBestRedshiftFromPdf( store, redshift, merit );
+        GetBestRedshiftFromPdf( store, redshift, merit, evidence );
         Log.LogInfo( "Chisquare2solve-result: extracted best redshift from PDF: z=%f", redshift);
         GetBestModel(store, redshift, tplName);
         Log.LogInfo( "Chisquare2solve-result: extracted best model: model=%s", tplName.c_str());
@@ -207,7 +226,7 @@ Bool CChisquare2SolveResult::GetBestRedshift( const CDataStore& store, Float64& 
  * output: merit = chi2(redshift)
  *
  **/
-Bool CChisquare2SolveResult::GetBestRedshiftFromPdf( const CDataStore& store, Float64& redshift, Float64& merit ) const
+Bool CChisquare2SolveResult::GetBestRedshiftFromPdf( const CDataStore& store, Float64& redshift, Float64& merit, Float64& evidence ) const
 {
     std::string scope_res = "zPDF/logposterior.logMargP_Z_data";
     auto results_pdf =  store.GetGlobalResult( scope_res.c_str() );
@@ -237,6 +256,7 @@ Bool CChisquare2SolveResult::GetBestRedshiftFromPdf( const CDataStore& store, Fl
 
     redshift = tmpRedshift;
     merit = tmpProbaLog;
+    evidence = logzpdf1d->valEvidenceLog;
     return true;
 }
 
