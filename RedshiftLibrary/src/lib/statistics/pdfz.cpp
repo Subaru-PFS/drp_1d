@@ -561,23 +561,20 @@ Int32 CPdfz::BestChi2(TFloat64List redshifts, std::vector<TFloat64List> meritRes
     Float64 logEvidence;
     TFloat64List zprior;
     zprior = pdfz.GetConstantLogZPrior(redshifts.size());
-    Float64 priorModelCst = 1.0/((Float64)meritResults.size());
-    Float64 logPriorModel = log(priorModelCst);
-
     Int32 retPdfz = pdfz.Compute(chi2Min, redshifts, cstLog, zprior, logProba, logEvidence);
     if(retPdfz!=0)
     {
         Log.LogError("Pdfz: Pdfz-bestchi2: Pdfz computation failed");
         return -1;
     }else{
-        postmargZResult->valEvidenceLog = logEvidence+logPriorModel; //warning logPriorModel can be used that way as long as it is constant over the models
+        postmargZResult->valEvidenceLog = logEvidence;
         postmargZResult->countTPL = redshifts.size(); // assumed 1 model per z
         postmargZResult->Redshifts.resize(redshifts.size());
         postmargZResult->valProbaLog.resize(redshifts.size());
         for ( UInt32 k=0; k<redshifts.size(); k++)
         {
             postmargZResult->Redshifts[k] = redshifts[k] ;
-            postmargZResult->valProbaLog[k] = logProba[k]+logPriorModel;
+            postmargZResult->valProbaLog[k] = logProba[k];
         }
     }
 
