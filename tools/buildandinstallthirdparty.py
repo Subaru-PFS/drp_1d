@@ -79,10 +79,14 @@ def DownloadHTTPFile( fileUrl, localFilePath ) :
 libDict = { "cppunit": { "path": "cppunit-1.12.1",
                          "src": "http://downloads.sourceforge.net/cppunit/cppunit-1.12.1.tar.gz",
                          "static": "libcppunit.a", "shared": "libcppunit.so" },
-            "boost": { "path":  "boost-1.66.0",
-                       "src": "http://downloads.sourceforge.net/project/boost/boost/1.66.0/"
-                              "boost_1_66_0.tar.gz",
-                       "static": "libboost_chrono.a", "shared": "libboost_chrono.so.1.66.0" },
+            #"boost": { "path":  "boost-1.66.0",
+            #           "src": "http://downloads.sourceforge.net/project/boost/boost/1.66.0/"
+            #                  "boost_1_66_0.tar.gz",
+            #           "static": "libboost_chrono.a", "shared": "libboost_chrono.so.1.66.0" },
+            "boost": { "path":  "boost-1.57.0",
+                       "src": "http://downloads.sourceforge.net/project/boost/boost/1.57.0/"
+                              "boost_1_57_0.tar.gz",
+                       "static": "libboost_chrono.a", "shared": "libboost_chrono.so.1.57.0" },
             "gsl": { "path":  "gsl-2.1",
                      "src": "http://ftp.igh.cnrs.fr/pub/gnu/gsl/gsl-2.1.tar.gz",
                      "static": "libgsl.a", "shared": "libgsl.so.19.0.0" },
