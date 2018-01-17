@@ -317,9 +317,11 @@ Int32 CMethodChisquare2Solve::CombinePDF(CDataStore &store, std::string scopeStr
 
     if(opt_combine=="marg" && chiSquares.size()>0)
     {
+        Log.LogError("Chisquare2: Pdfz combination - Marginalization");
         retPdfz = pdfz.Marginalize( redshifts, chiSquares, priors, cstLog, postmargZResult);
     }else if(opt_combine=="bestchi2")
     {
+        Log.LogError("Chisquarelog: Pdfz combination - BestChi2");
         retPdfz = pdfz.BestChi2( redshifts, chiSquares, priors, cstLog, postmargZResult);
     }else{
         Log.LogError("Chisquare2: Unable to parse pdf combination method option");
