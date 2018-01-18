@@ -144,7 +144,7 @@ INSTALL( FILES  ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cpf-redshift-config.cmake DEST
 # Build python wrapper
 #--------------------------------------------------------
 FIND_PACKAGE(SWIG)
-IF(DEFINED SWIG_ADD_LIBRARY)
+IF(DEFINED SWIG_VERSION)
   MESSAGE(STATUS "Using SWIG version ${SWIG_VERSION}")
   INCLUDE(${SWIG_USE_FILE})
   FIND_PACKAGE(PythonLibs)
