@@ -16,4 +16,4 @@ set ( cpf-redshift_THIRDPARTY_LIBS "@cpf-redshift_THIRDPARTY_LIBS@" )
 
 set_and_check ( cpf-redshift_STATIC_LIB "@cpf-redshift_LINK_DIR@libcpf-redshift.a" )
 set ( cpf-redshift_THIRDPARTY_STATIC_LIBS "@cpf-redshift_THIRDPARTY_STATIC_LIBS@" )
-
+set ( cpf-redshift_REVISION "@GIT_REVISION@" )

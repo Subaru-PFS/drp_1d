@@ -4,6 +4,9 @@ PROJECT( cpf-redshift )
 # extra path for modules
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake)
 include(SetupVar)
+include(gitrevision)
+
+message("Using git revision : " ${GIT_REVISION})
 
 FIND_PACKAGE(Boost COMPONENTS filesystem system thread timer chrono program_options unit_test_framework)
 FIND_PACKAGE(Cfitsio)
@@ -166,6 +169,11 @@ CONFIGURE_FILE(
        ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cpf-redshift-config-version.cmake
        @ONLY
         )
+
+      CONFIGURE_FILE(
+	${CMAKE_CURRENT_SOURCE_DIR}/cmake/version.h.in
+	${CMAKE_CURRENT_SOURCE_DIR}/RedshiftLibrary/RedshiftLibrary/version.h
+	)
 
 EXPORT( PACKAGE ${LIB_NAME} )
 EXPORT( PACKAGE ${LIB_NAME}-static )
