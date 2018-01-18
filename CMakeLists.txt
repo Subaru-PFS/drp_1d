@@ -18,6 +18,8 @@ find_program(CCACHE_FOUND ccache)
 if(CCACHE_FOUND)
   set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
   set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
+  set(ENV{CC} "ccache cc")
+  set(ENV{CXX} "ccache c++")
 endif(CCACHE_FOUND)
 
 #--------------------------------------------------------
@@ -55,6 +57,7 @@ IF( NOT (CFITSIO_FOUND AND FFTW_FOUND AND GSL_FOUND AND BOOST_FOUND) )
     libboost_regex.a)
   SET(tests_THIRDPARTY_LIBS boost_unit_test_framework)
   INCLUDE_DIRECTORIES( ${cpf-redshift_THIRDPARTY_INCLUDE_DIR} )
+  set(PARALLEL_BUILD_FLAG "-j4")
   ADD_SUBDIRECTORY( tools )
 ELSE()
   MESSAGE( STATUS "Using system third-party libraries." )
@@ -140,16 +143,16 @@ INSTALL( FILES  ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cpf-redshift-config.cmake DEST
 #--------------------------------------------------------
 # Build python wrapper
 #--------------------------------------------------------
-FIND_PACKAGE(SWIG)
-IF(SWIG_VERSION)
-  INCLUDE(${SWIG_USE_FILE})
-  FIND_PACKAGE(PythonLibs)
-  INCLUDE_DIRECTORIES( ${PYTHON_INCLUDE_DIRS} )
+#FIND_PACKAGE(SWIG)
+#IF(DEFINED SWIG_ADD_LIBRARY)
+#  INCLUDE(${SWIG_USE_FILE})
+#  FIND_PACKAGE(PythonLibs)
+#  INCLUDE_DIRECTORIES( ${PYTHON_INCLUDE_DIRS} )
 
-  SET_PROPERTY(SOURCE RedshiftLibrary/RedshiftLibrary/redshift.i PROPERTY CPLUSPLUS ON)
-  SWIG_ADD_LIBRARY(redshift LANGUAGE python SOURCES RedshiftLibrary/RedshiftLibrary/redshift.i)
-  SWIG_LINK_LIBRARIES( redshift ${PYTHON_LIBRARIES} ${cpf-redshift_THIRDPARTY_LIBS} )
-ENDIF()
+#  SET_PROPERTY(SOURCE RedshiftLibrary/RedshiftLibrary/redshift.i PROPERTY CPLUSPLUS ON)
+#  SWIG_ADD_LIBRARY(redshift LANGUAGE python SOURCES RedshiftLibrary/RedshiftLibrary/redshift.i)
+#  SWIG_LINK_LIBRARIES( redshift ${PYTHON_LIBRARIES} ${cpf-redshift_THIRDPARTY_LIBS} )
+#ENDIF()
 
 #--------------------------------------------------------
 # Package deployement and config

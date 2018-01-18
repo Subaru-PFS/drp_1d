@@ -78,44 +78,43 @@ def DownloadHTTPFile( fileUrl, localFilePath ) :
 
 libDict = { "cppunit": { "path": "cppunit-1.12.1",
                          "src": "http://downloads.sourceforge.net/cppunit/cppunit-1.12.1.tar.gz",
-                         "static": "libcppunit.a", "shared": "libcppunit.so" },
+                         "check_file": "libcppunit.a" },
             #"boost": { "path":  "boost-1.66.0",
             #           "src": "http://downloads.sourceforge.net/project/boost/boost/1.66.0/"
             #                  "boost_1_66_0.tar.gz",
-            #           "static": "libboost_chrono.a", "shared": "libboost_chrono.so.1.66.0" },
+            #           "check_file": "libboost_chrono.a" },
             "boost": { "path":  "boost-1.57.0",
                        "src": "http://downloads.sourceforge.net/project/boost/boost/1.57.0/"
                               "boost_1_57_0.tar.gz",
-                       "static": "libboost_chrono.a", "shared": "libboost_chrono.so.1.57.0" },
+                       "check_file": "libboost_chrono.a" },
             "gsl": { "path":  "gsl-2.1",
                      "src": "http://ftp.igh.cnrs.fr/pub/gnu/gsl/gsl-2.1.tar.gz",
-                     "static": "libgsl.a", "shared": "libgsl.so.19.0.0" },
+                     "check_file": "libgsl.a" },
             "fftw": { "path":  "fftw-3.3.3",
                       "src": "ftp://ftp.fftw.org/pub/fftw/fftw-3.3.3.tar.gz",
-                      "static": "libfftw3.a", "shared": "libfftw3.so.3.3.2" },
+                      "check_file": "libfftw3.a" },
             "doxygen": { "path":  "doxygen-1.8.8",
                          "src": "http://ftp.stack.nl/pub/users/dimitri/doxygen-1.8.8.src.tar.gz",
-                         "static": "", "shared": "" },
+                         "check_file": "" },
             "doxytag": { "path": "doxytag.py",
                          "src": "https://raw.githubusercontent.com/"
                                 "vlfeat/vlfeat/master/docsrc/doxytag.py",
-                         "static": "", "shared": "" },
+                         "check_file": "" },
             "cfitsio": { "path": "cfitsio-3.36",
                          "src": "http://heasarc.gsfc.nasa.gov/FTP/software/fitsio/c/"
                                 "cfitsio3360.tar.gz",
-                         "static": "libcfitsio.a", "shared": "libcfitsio.so.2.3.36" }
+                         "check_file": "libcfitsio.a" }
 }
 
 def Clear() :
     os.system( "rm -rf "+thirdPartyDir+"/*" )
 
-def _standard_build(path, third_party_dir, options):
-    enable_shared = '--enable-shared --disable-static' if options.Shared else '--disable-shared --enable-static'
-    os.system( "cd {path} ; ./configure --prefix={third_party_dir} {shared}; make -j{parallel}; make install ; cd ../".format(
-        path=path, third_party_dir=third_party_dir, parallel=options.Parallel, shared=enable_shared) )
+def _standard_build(path, third_party_dir, options, extra_flags=''):
+    os.system( "cd {path} ; ./configure --prefix={third_party_dir} --enable-shared --enable-static; make -j{parallel}; make install; cd ../".format(
+        path=path, third_party_dir=third_party_dir, parallel=options.Parallel, extra_shared=extra_flags) )
 
-def _check_lib(name, shared, third_party_dir):
-    filename = libDict[name]['shared' if shared else 'static']
+def _check_lib(name, third_party_dir):
+    filename = libDict[name]['check_file']
     return os.path.exists(os.path.join(third_party_dir, 'lib', filename))
 
 
@@ -125,7 +124,6 @@ def Main( argv ):
     parser.add_option(u"-d", u"--dry", help="Clear thirdparty dir before download and installation", action="store_true",  dest="Dry")
     parser.add_option(u"-c", u"--clear", help="Clean temporary files after download and installation", action="store_true",  dest="Clear")
     parser.add_option(u"-j", u"--parallel", help="Parallel make flag", action="store", type="string", dest="Parallel", default="1")
-    parser.add_option(u"-s", u"--shared", help="Build shared libs. Build static libs otherwise.", action="store_true", dest="Shared")
     (options, args) = parser.parse_args()
 
     if options.Clear == True:
@@ -138,7 +136,7 @@ def Main( argv ):
     # CPPUNIT
     libPath = os.path.join(thirdPartyDir, libDict["cppunit"]["path"]);
     libSrc = libDict["cppunit"]["src"];
-    if not _check_lib('cppunit', options.Shared, thirdPartyDir):
+    if not _check_lib('cppunit', thirdPartyDir):
         DownloadHTTPFile( libSrc, libPath+".tar.gz" )
         ExtractTarGZ( libPath+".tar.gz", libPath )
         _standard_build(libPath, thirdPartyDir, options)
@@ -146,7 +144,7 @@ def Main( argv ):
     # GSL
     libPath = os.path.join(thirdPartyDir, libDict["gsl"]["path"]);
     libSrc = libDict["gsl"]["src"];
-    if not _check_lib('gsl', options.Shared, thirdPartyDir):
+    if not _check_lib('gsl', thirdPartyDir):
         DownloadHTTPFile( libSrc, libPath+".tar.gz" )
         ExtractTarGZ( libPath+".tar.gz", libPath )
         _standard_build(libPath, thirdPartyDir, options)
@@ -154,15 +152,16 @@ def Main( argv ):
     # FFTW
     libPath = os.path.join(thirdPartyDir, libDict["fftw"]["path"]);
     libSrc = libDict["fftw"]["src"];
-    if not _check_lib('fftw', options.Shared, thirdPartyDir):
+    if not _check_lib('fftw', thirdPartyDir):
         DownloadHTTPFile( libSrc, libPath+".tar.gz" )
         ExtractTarGZ( libPath+".tar.gz", libPath )
-        _standard_build(libPath, thirdPartyDir, options)
+        _standard_build(libPath, thirdPartyDir, options,
+                        ["--enable-sse2 --enable-avx --enable-openmp"]*2)
 
     # DOXYGEN
     # libPath = os.path.join(thirdPartyDir, libDict["doxygen"]["path"]);
     # libSrc = libDict["doxygen"]["src"];
-    # if not _check_lib('doxygen', options.Shared, thirdPartyDir):
+    # if not _check_lib('doxygen', thirdPartyDir):
     #     DownloadHTTPFile( libSrc, libPath+".tar.gz" )
     #     ExtractTarGZ( libPath+".tar.gz", libPath )
     #     _standard_build(libPath, thirdPartyDir, options)
@@ -170,28 +169,24 @@ def Main( argv ):
     # BOOST
     libPath = os.path.join(thirdPartyDir, libDict["boost"]["path"]);
     libSrc = libDict["boost"]["src"];
-    if not _check_lib('boost', options.Shared, thirdPartyDir):
+    if not _check_lib('boost', thirdPartyDir):
         DownloadHTTPFile( libSrc, libPath+".tar.gz" )
         ExtractTarGZ( libPath+".tar.gz", libPath )
-        link_type = 'shared' if options.Shared else 'static'
         os.system( "cd {path}; ./bootstrap.sh --with-libraries=test,filesystem,program_options,thread,"
                    "regex,python,timer,chrono --prefix={third_party_dir};"
-                   "./b2 -j{parallel} link={link_type} install; cd ../".format(
-                       path=libPath, third_party_dir=thirdPartyDir, parallel=options.Parallel,
-                       link_type=link_type) )
+                   "./b2 -j{parallel} link=shared install; ./b2 -j{parallel} link=static install; cd ../".format(
+                       path=libPath, third_party_dir=thirdPartyDir, parallel=options.Parallel) )
 
 
     # CFITSIO
     libPath = os.path.join(thirdPartyDir, libDict["cfitsio"]["path"]);
     libSrc = libDict["cfitsio"]["src"];
-    if not _check_lib('cfitsio', options.Shared, thirdPartyDir):
+    if not _check_lib('cfitsio',  thirdPartyDir):
         DownloadHTTPFile( libSrc, libPath+".tar.gz" )
         ExtractTarGZ( libPath+".tar.gz", libPath )
-        build_shared = 'shared' if options.Shared else 'all-nofitsio'
         os.system( "cd {path}; ./configure --enable-reentrant --prefix={third_party_dir} --enable-sse2"
-                   "--enable-ssse3;make -j{parallel} {build_shared}; make install; cd ../".format(
-                       path=libPath, third_party_dir=thirdPartyDir, parallel=options.Parallel,
-                       build_shared=build_shared) )
+                   "--enable-ssse3;make -j{parallel} shared all-nofitsio; make install; cd ../".format(
+                       path=libPath, third_party_dir=thirdPartyDir, parallel=options.Parallel) )
 
 
 

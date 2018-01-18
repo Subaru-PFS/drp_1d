@@ -1,9 +1,6 @@
 # Build all third party dependencies
 FIND_PROGRAM( PYTHON python HINTS /usr/bin )
 EXECUTE_PROCESS( COMMAND pwd )
-EXECUTE_PROCESS( COMMAND ${PYTHON} buildandinstallthirdparty.py
-  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-  RESULT_VARIABLE result )
-EXECUTE_PROCESS( COMMAND ${PYTHON} buildandinstallthirdparty.py -s
+EXECUTE_PROCESS( COMMAND ${PYTHON} buildandinstallthirdparty.py ${PARALLEL_BUILD_FLAG}
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
   RESULT_VARIABLE result )
