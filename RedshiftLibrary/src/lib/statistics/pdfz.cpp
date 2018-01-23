@@ -240,8 +240,10 @@ Int32 CPdfz::Marginalize(TFloat64List redshifts, std::vector<TFloat64List> merit
     std::vector<UInt32> nSum;
 
     Float64 MaxiLogEvidence = -DBL_MAX;
-    TFloat64List LogEvidences;
+    TFloat64List LogEvidencesWPriorM;
     Float64 sumModifiedEvidences = 0;
+    Float64 priorModelCst = 1.0/((Float64)meritResults.size());
+    Float64 logPriorModel = log(priorModelCst);
     for(Int32 km=0; km<meritResults.size(); km++)
     {
         //Todo: Check if the status is OK ?
@@ -260,9 +262,11 @@ Int32 CPdfz::Marginalize(TFloat64List redshifts, std::vector<TFloat64List> merit
 //            {
 //                Log.LogInfo("Pdfz: Marginalize: for km=%d, logEvidence=%e", km, MaxiLogEvidence);
 //            }
-            LogEvidences.push_back(logEvidence);
-            if(MaxiLogEvidence<logEvidence){
-                MaxiLogEvidence=logEvidence;
+            Float64 logEvidenceWPriorM = logEvidence+logPriorModel;
+
+            LogEvidencesWPriorM.push_back(logEvidenceWPriorM);
+            if(MaxiLogEvidence<logEvidenceWPriorM){
+                MaxiLogEvidence=logEvidenceWPriorM;
             }
         }
     }
@@ -272,9 +276,9 @@ Int32 CPdfz::Marginalize(TFloat64List redshifts, std::vector<TFloat64List> merit
     }
 
     //Using computational trick to sum the evidences
-    for(Int32 k=0; k<LogEvidences.size(); k++)
+    for(Int32 k=0; k<LogEvidencesWPriorM.size(); k++)
     {
-        sumModifiedEvidences += exp(LogEvidences[k]-MaxiLogEvidence);
+        sumModifiedEvidences += exp(LogEvidencesWPriorM[k]-MaxiLogEvidence);
     }
     Float64 logSumEvidence = MaxiLogEvidence + log(sumModifiedEvidences);
     if(verbose)
@@ -333,7 +337,7 @@ Int32 CPdfz::Marginalize(TFloat64List redshifts, std::vector<TFloat64List> merit
                 if( true /*meritResult->Status[k]== COperator::nStatus_OK*/) //todo: check (temporarily considers status is always OK for linemodel tplshape)
                 {
                     Float64 logValProba = postmargZResult->valProbaLog[k];
-                    Float64 logValProbaAdd = logProba[k]+logEvidence-logSumEvidence;
+                    Float64 logValProbaAdd = logProba[k]+logPriorModel+logEvidence-logSumEvidence;
                     Float64 maxP = logValProba;
                     if(maxP<logValProbaAdd)
                     {
@@ -367,6 +371,7 @@ Int32 CPdfz::Marginalize(TFloat64List redshifts, std::vector<TFloat64List> merit
 
 //This mathematically does not correspond to any valid method for combining PDFs.
 //TODO: problem while estimating best proba. is it best proba for each z ? In that case: what about sum_z P = 1 ?
+//TODO: this methid should be replaced/modified to correspond to the MaxPDF technique.
 Int32 CPdfz::BestProba(TFloat64List redshifts, std::vector<TFloat64List> meritResults, std::vector<TFloat64List> zPriors, Float64 cstLog, std::shared_ptr<CPdfMargZLogResult> postmargZResult)
 {
     bool verbose = false;
@@ -498,7 +503,17 @@ Int32 CPdfz::BestProba(TFloat64List redshifts, std::vector<TFloat64List> meritRe
     return 0;
 }
 
-
+/**
+ * @brief CPdfz::BestChi2
+ * Computes the combined pdf by taking the best chi2
+ * WARNING: as long as the prior on the models are constant, it is equivalent to compute the bestchi2 and the MaxPDF. If this prior is not constant any more, the mas search has to be modified.
+ * @param redshifts
+ * @param meritResults
+ * @param zPriors
+ * @param cstLog
+ * @param postmargZResult
+ * @return
+ */
 Int32 CPdfz::BestChi2(TFloat64List redshifts, std::vector<TFloat64List> meritResults, std::vector<TFloat64List> zPriors, Float64 cstLog, std::shared_ptr<CPdfMargZLogResult> postmargZResult)
 {
     bool verbose = false;
