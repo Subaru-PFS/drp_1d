@@ -85,6 +85,7 @@ Bool CProcessFlow::Process( CProcessFlowContext& ctx )
 
     // Create redshift initial list by spanning redshift acdross the given range, with the given delta
     TFloat64List redshifts = redshiftRange.SpreadOver( redshiftStep );
+    //TFloat64List redshifts = redshiftRange.SpreadOverOnePlusX( redshiftStep ); //experimental: spreadover a grid at delta/(1+z), unusable because PDF needs regular z-step
     DebugAssert( redshifts.size() > 0 );
 
     std::string CategoryFilter="all";
