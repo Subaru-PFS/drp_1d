@@ -11,6 +11,8 @@ import time
 import argparse
 
 
+import processParamCheck
+
 try:
     #cmd_subfolder = os.path.abspath("/home/aschmitt/gitlab/cpf-redshift/tools/aview/") #use locally
     cmd_subfolder = os.path.abspath("/home/aschmitt/amazed_cluster/gitlab/cpf-redshift/tools/aview_hardcopy/") #use on hermes
@@ -23,6 +25,7 @@ except ImportError:
     print("Import ERROR: unable to load the reference package. some functionnalities will be unavailable...")
 
 import spectrumlist
+
 
 
 
@@ -161,8 +164,16 @@ class processHelper(object):
         if not os.path.exists(self.config_parametersPath):
             print("ERROR: parameters file does not exist! Aborting...")
             return False
+        if 1:
+            pcheck = processParamCheck.processParamCheck(self.config_parametersPath)
+            retDeprecatedKeyword = pcheck.checkAll()
+            if retDeprecatedKeyword:
+                print("INFO: aborting...")
+                return False
         
         return True
+           
+        
 
     def prepareBracketing(self):
         """
