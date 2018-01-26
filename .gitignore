@@ -3,6 +3,7 @@
 ###############################################
 build/
 build-debug/
+RedshiftLibrary/RedshiftLibrary/version.h
 
 cmake/cpf-redshift-config-version.cmake
 cmake/cpf-redshift-config.cmake
@@ -20,6 +21,7 @@ tools/CMakeFiles/
 
 bin/*
 test/report/report.xml
+RedshiftLibrary/tests/src/test-config.h
 
 # Third party
 thirdparty/*

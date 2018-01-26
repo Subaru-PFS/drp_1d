@@ -73,6 +73,11 @@ class processRecombine(object):
             #merge input spectrumlist files
             self.mergeCsvFiles(subpathsList, datasetOutputPath, fileName="input.spectrumlist")         
             
+            #copy version file from first subset #0, supposing the file is similar for the other subsets results
+            source_path = os.path.join(subpathsList[0], "versions.txt")
+            dest_path = os.path.join(datasetOutputPath, "versions.txt")
+            shutil.copy(source_path, dest_path)
+            
             #copy json file from first subset #0, supposing the file is similar for the other subsets results
             source_path = os.path.join(subpathsList[0], "parameters.json")
             dest_path = os.path.join(datasetOutputPath, "parameters.json")
