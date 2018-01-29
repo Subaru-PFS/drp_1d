@@ -286,6 +286,8 @@ class processHelper(object):
             argStr = "{} --parameters {}".format(argStr, overrideParamFileFullPath)
             argParamsLabel = os.path.splitext(overrideParamFile)[0]            
             
+        argStr = "{} --saveintermediateresults {}".format(argStr, self.config_saveintermediateresults) 
+            
         #warning, hardcoded: always use only 1 proc. thread        
         argStr = "{} --thread-count {}".format(argStr, "1")
 
