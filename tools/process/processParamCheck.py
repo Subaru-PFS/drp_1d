@@ -24,12 +24,15 @@ class processParamCheck(object):
         """
         ret_errors = 0
         
-        ret_errors = self.checkParamJsonForDeprecatedKeywords()
+        ret_errors += self.checkParamJsonForDeprecatedKeywords()
+        ret_errors += self.checkParamJsonForBestUseInPractice()
         
         if ret_errors==0:
             print("INFO: no errors found")
         else:
             print("ERROR: some errors were found")
+            
+            
         return ret_errors
         
     def checkParamJsonForDeprecatedKeywords(self):
@@ -51,6 +54,21 @@ class processParamCheck(object):
         return 0
         
         
+    def checkParamJsonForBestUseInPractice(self):
+        """
+        This will inform if some keywords were found in the json. The keywords searched for here should probably better be defined in the config file or as cmd line args in the best classical use of amazed
+        """
+        somewhereelse_keywords = ["SaveIntermediateResults"]
+        print("Info: checking for the following 'better-defined-somewhere-else' keywords: \n{}\n".format(somewhereelse_keywords))
+        
+        f = open(self.parampath, 'r')
+        for line in f:
+            for w in somewhereelse_keywords:
+                if w in line:
+                    print("WARNING: found best-defined-somewhere-else keyword in json param file ! ({} found in {})".format(w, line))
+                    return 1
+        
+        return 0
 
         
         
