@@ -504,8 +504,10 @@ Int32 getVelocitiesFromRefFile( const char* filePath, std::string spcid, Float64
  * \brief
  * Retrieve the true-redshift from a hardcoded ref file path
  * nb: this is a hack for development purposes/line measurement at zref
+ * reverseInclusion=0 (default): spcId is searched to be included in the Ref-File-Id
+ * reverseInclusion=1 : Ref-File-Id is searched to be included in the spcId
  **/
-Int32 getValueFromRefFile( const char* filePath, std::string spcid, Int32 colID, Float64& zref )
+Int32 getValueFromRefFile( const char* filePath, std::string spcid, Int32 colID, Float64& zref, Int32 reverseInclusion )
 {
     ifstream file;
 
@@ -537,9 +539,18 @@ Int32 getValueFromRefFile( const char* filePath, std::string spcid, Int32 colID,
             {
                 name = *it;
             }
-            std::size_t foundstr = name.find(spcid.c_str());
-            if (foundstr==std::string::npos){
-                continue;
+
+            if(reverseInclusion==0)
+            {
+                std::size_t foundstr = name.find(spcid.c_str());
+                if (foundstr==std::string::npos){
+                    continue;
+                }
+            }else{
+                std::size_t foundstr = spcid.find(name.c_str());
+                if (foundstr==std::string::npos){
+                    continue;
+                }
             }
 
             // Found the correct spectrum ID: now read the ref values
@@ -627,6 +638,7 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
         Log.LogInfo( "Linemodel - hacking zref enabled");
         Float64 zref = -1.0;
         namespace fs = boost::filesystem;
+        Int32 reverseInclusionForIdMatching = 0;
         //*
         // Euclid case for process at zref
         fs::path refFilePath("/home/aschmitt/amazed_cluster/datasets/euclid/euclidsim2016/EUC-TEST-TUGALSPC-2016-03_export20170302_3z4mag4lfhabins_TrueFlux/reference_correctedFastSim.list");
@@ -634,6 +646,7 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
         Int32 substring_start = 0;
         Int32 substring_n = spc.GetName().size();
         Int32 colId = 2; //starts at 1, so that id_column is usually 1
+        reverseInclusionForIdMatching = 1;
         //*/
         /*
         // SDSS case for process at zref
@@ -665,14 +678,30 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
         {
             std::string spcSubStringId = spc.GetName().substr(substring_start, substring_n);
             Log.LogInfo( "Linemodel - hack - using substring %s", spcSubStringId.c_str());
-            getValueFromRefFile( refFilePath.c_str(), spcSubStringId, colId, zref);
+            getValueFromRefFile( refFilePath.c_str(), spcSubStringId, colId, zref, reverseInclusionForIdMatching);
         }
         if(zref==-1)
         {
             Log.LogWarning( "Linemodel - hack - unable to find zref!");
             return false;
         }
-        _redshifts.push_back(zref);
+
+        if(true) //computing only on zref, or on a zrange around zref
+        {
+            Float64 deltaZrangeHalf = 0.5e-2; //override zrange
+            Float64 stepZ = 1e-4;
+            Float64 nStepsZ = deltaZrangeHalf*2/stepZ+1;
+            for(Int32 kz=0; kz<nStepsZ; kz++)
+            {
+                Float64 _z = zref + kz*stepZ - deltaZrangeHalf;
+                _redshifts.push_back(_z);
+            }
+            Log.LogInfo( "Linemodel - hack - zmin=%.5f, zmax=%.5f, zstep=%.5f", _redshifts[0], _redshifts[_redshifts.size()-1], stepZ);
+        }else{
+            _redshifts.push_back(zref);
+        }
+        m_opt_extremacount = 1; //override nextrema count
+        m_opt_twosteplargegridstep = 0; //override fastfitlargegrid
         Log.LogInfo( "Linemodel - hack - Loaded zref for spc %s : zref=%f", spc.GetName().c_str(), zref);
     }else{
         _redshifts = redshifts;
