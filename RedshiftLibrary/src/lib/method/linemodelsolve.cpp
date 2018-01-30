@@ -628,6 +628,15 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
         Float64 zref = -1.0;
         namespace fs = boost::filesystem;
         //*
+        // Euclid case for process at zref
+        fs::path refFilePath("/home/aschmitt/amazed_cluster/datasets/euclid/euclidsim2016/EUC-TEST-TUGALSPC-2016-03_export20170302_3z4mag4lfhabins_TrueFlux/reference_correctedFastSim.list");
+        //fs::path refFilePath("/sps/euclid/Users/schmitt/amazed_cluster/amazed_cluster/datasets/euclid/euclidsim2016/EUC-TEST-TUGALSPC-2016-03_export20170302_3z4mag4lfhabins_TrueFlux/reference_correctedFastSim.list");
+        Int32 substring_start = 0;
+        Int32 substring_n = spc.GetName().size();
+        Int32 colId = 2; //starts at 1, so that id_column is usually 1
+        //*/
+        /*
+        // SDSS case for process at zref
         //fs::path refFilePath("/home/aschmitt/amazed_cluster/datasets/sdss/sdss_201707/reference_SDSS_spectra_bg10k.txt");
         //fs::path refFilePath("/sps/euclid/Users/schmitt/amazed_cluster/datasets/sdss/sdss_201707/reference_SDSS_spectra_bg10k.txt");
         fs::path refFilePath("/home/aschmitt/data/sdss/sdss_201707/reference_SDSS_spectra_bg10k.txt");
@@ -636,7 +645,7 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
         Int32 colId = 2; //starts at 1, so that id_column is usually 1
         //*/
         /*
-        //fs::path refFilePath("/home/aschmitt/amazed_cluster/datasets/sdss/sdss_201707/SDSS_spectra_bg10k/reference_SDSS_spectra_bg10k.txt");
+        // PFS case for process at zref
         fs::path refFilePath("/home/aschmitt/amazed_cluster/datasets/pfs/pfs6b2_201704_sim10k/pfs6b2_reference_20170523_filtSim3h.txt");
         Int32 substring_start = 0;
         Int32 substring_n = 18;

@@ -296,9 +296,10 @@ Int32 CMethodChisquareLogSolve::CombinePDF(CDataStore &store, std::string scopeS
         if(cstLog==-1)
         {
             cstLog = meritResult->CstLog;
+            Log.LogInfo("chisquarelogsolve: using cstLog = %f", cstLog);
         }else if ( cstLog != meritResult->CstLog)
         {
-            Log.LogError("chisquarelogsolve: Found different cstLog values in results... val-1=%f != val-2=%f");
+            Log.LogError("chisquarelogsolve: Found different cstLog values in results... val-1=%f != val-2=%f", cstLog, meritResult->CstLog);
         }
         if(redshifts.size()==0)
         {
@@ -326,11 +327,11 @@ Int32 CMethodChisquareLogSolve::CombinePDF(CDataStore &store, std::string scopeS
 
     if(opt_combine=="marg" && chiSquares.size()>0)
     {
-        Log.LogError("Chisquarelog: Pdfz combination - Marginalization");
+        Log.LogInfo("Chisquarelog: Pdfz combination - Marginalization");
         retPdfz = pdfz.Marginalize( redshifts, chiSquares, priors, cstLog, postmargZResult);
     }else if(opt_combine=="bestchi2")
     {
-        Log.LogError("Chisquarelog: Pdfz combination - BestChi2");
+        Log.LogInfo("Chisquarelog: Pdfz combination - BestChi2");
         retPdfz = pdfz.BestChi2( redshifts, chiSquares, priors, cstLog, postmargZResult);
     }else{
         Log.LogError("Chisquarelog: Unable to parse pdf combination method option");
