@@ -642,7 +642,7 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
         //*
         // Euclid case for process at zref
         fs::path refFilePath("/home/aschmitt/amazed_cluster/datasets/euclid/euclidsim2016/EUC-TEST-TUGALSPC-2016-03_export20170302_3z4mag4lfhabins_TrueFlux/reference_correctedFastSim.list");
-        //fs::path refFilePath("/sps/euclid/Users/schmitt/amazed_cluster/amazed_cluster/datasets/euclid/euclidsim2016/EUC-TEST-TUGALSPC-2016-03_export20170302_3z4mag4lfhabins_TrueFlux/reference_correctedFastSim.list");
+        //fs::path refFilePath("/sps/euclid/Users/schmitt/amazed_cluster/datasets/euclid/euclidsim2016/EUC-TEST-TUGALSPC-2016-03_export20170302_3z4mag4lfhabins_TrueFlux/reference_correctedFastSim.list");
         Int32 substring_start = 0;
         Int32 substring_n = spc.GetName().size();
         Int32 colId = 2; //starts at 1, so that id_column is usually 1
@@ -689,7 +689,7 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
         if(true) //computing only on zref, or on a zrange around zref
         {
             Float64 deltaZrangeHalf = 0.5e-2; //override zrange
-            Float64 stepZ = 1e-4;
+            Float64 stepZ = 1e-5;
             Float64 nStepsZ = deltaZrangeHalf*2/stepZ+1;
             for(Int32 kz=0; kz<nStepsZ; kz++)
             {
