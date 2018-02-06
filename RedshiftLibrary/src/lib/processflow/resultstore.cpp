@@ -205,6 +205,9 @@ Void COperatorResultStore::SaveReliabilityResult( const CDataStore& store, const
 
 Void COperatorResultStore::SaveAllResults( const CDataStore& store, const bfs::path& dir, const std::string opt ) const
 {
+    std::string opt_lower = opt;
+    boost::algorithm::to_lower(opt_lower);
+
     // Store global result
     {
         TResultsMap::const_iterator it;
@@ -212,6 +215,23 @@ Void COperatorResultStore::SaveAllResults( const CDataStore& store, const bfs::p
         {
             std::string resultName = (*it).first;
             auto  result = (*it).second;
+
+            bool saveThisResult = false;
+            if(opt_lower=="all" || opt_lower=="global"){
+                saveThisResult = true;
+            }else if(opt_lower=="linemeas")
+            {
+                std::string linemeasTagRes = "linemodel_fit_extrema_0";
+                std::size_t foundstr = resultName.find(linemeasTagRes.c_str());
+                if (foundstr!=std::string::npos){
+                    saveThisResult=true;
+                }
+            }
+
+            if(!saveThisResult)
+            {
+                continue;
+            }
 
             std::fstream outputStream;
             // Save result at root of output directory
@@ -221,8 +241,6 @@ Void COperatorResultStore::SaveAllResults( const CDataStore& store, const bfs::p
     }
 
     // Store per template results
-    std::string opt_lower = opt;
-    boost::algorithm::to_lower(opt_lower);
     if(opt_lower=="all"){
         TPerTemplateResultsMap::const_iterator it;
         for( it=m_PerTemplateResults.begin(); it != m_PerTemplateResults.end(); it++ )

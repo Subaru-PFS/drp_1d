@@ -639,7 +639,8 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
         Float64 zref = -1.0;
         namespace fs = boost::filesystem;
         Int32 reverseInclusionForIdMatching = 0;
-        //*
+        bool computeOnZrange=false;
+        /*
         // Euclid case for process at zref
         fs::path refFilePath("/home/aschmitt/amazed_cluster/datasets/euclid/euclidsim2016/EUC-TEST-TUGALSPC-2016-03_export20170302_3z4mag4lfhabins_TrueFlux/reference_correctedFastSim.list");
         //fs::path refFilePath("/sps/euclid/Users/schmitt/amazed_cluster/datasets/euclid/euclidsim2016/EUC-TEST-TUGALSPC-2016-03_export20170302_3z4mag4lfhabins_TrueFlux/reference_correctedFastSim.list");
@@ -647,8 +648,9 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
         Int32 substring_n = spc.GetName().size();
         Int32 colId = 2; //starts at 1, so that id_column is usually 1
         reverseInclusionForIdMatching = 1;
+        computeOnZrange = true;
         //*/
-        /*
+        //*
         // SDSS case for process at zref
         //fs::path refFilePath("/home/aschmitt/amazed_cluster/datasets/sdss/sdss_201707/reference_SDSS_spectra_bg10k.txt");
         //fs::path refFilePath("/sps/euclid/Users/schmitt/amazed_cluster/datasets/sdss/sdss_201707/reference_SDSS_spectra_bg10k.txt");
@@ -656,6 +658,7 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
         Int32 substring_start = 5;
         Int32 substring_n = 15;
         Int32 colId = 2; //starts at 1, so that id_column is usually 1
+        computeOnZrange = false;
         //*/
         /*
         // PFS case for process at zref
@@ -672,6 +675,7 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
         }
 
         Int32 colId = 2; //starts at 1, so that id_column is usually 1
+        computeOnZrange = false;
         //*/
 
         if ( fs::exists(refFilePath) )
@@ -686,7 +690,7 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
             return false;
         }
 
-        if(true) //computing only on zref, or on a zrange around zref
+        if(computeOnZrange) //computing only on zref, or on a zrange around zref
         {
             Float64 deltaZrangeHalf = 0.5e-2; //override zrange
             Float64 stepZ = 1e-5;

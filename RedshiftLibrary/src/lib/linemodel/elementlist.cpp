@@ -85,7 +85,8 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
     m_fitContinuum_outsidelinesmask = 0;
     m_fitContinuum_observedFrame = 0;
 
-    m_nominalWidthDefaultEmission = 1.15;// suited to new pfs simulations
+    //m_nominalWidthDefaultEmission = 1.15;// suited to new pfs simulations
+    m_nominalWidthDefaultEmission = 13.4;// euclid 1 px
     m_nominalWidthDefaultAbsorption = m_nominalWidthDefaultEmission;
 
     m_enableAmplitudeOffsets = false; //this is highly experimental for now.
