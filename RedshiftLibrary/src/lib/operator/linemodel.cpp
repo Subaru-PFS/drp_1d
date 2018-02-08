@@ -697,7 +697,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
 
                         if(iLineType==0)
                         {
-                            Log.LogInfo( "\nLineModel Infos: manualStep velocity fit ABSORPTION, for z = %.4f", result->Redshifts[idx]);
+                            Log.LogInfo( "\nLineModel Infos: manualStep velocity fit ABSORPTION, for z = %.6f", result->Redshifts[idx]);
                             vInfLim = velfitMinA;
                             vSupLim = velfitMaxA;
                             if(m_enableWidthFitByGroups)
@@ -711,7 +711,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
                                 }
                             }
                         }else{
-                            Log.LogInfo( "LineModel Infos: manualStep velocity fit EMISSION, for z = %.4f", result->Redshifts[idx]);
+                            Log.LogInfo( "LineModel Infos: manualStep velocity fit EMISSION, for z = %.6f", result->Redshifts[idx]);
                             vInfLim = velfitMinE;
                             vSupLim = velfitMaxE;
                             if(m_enableWidthFitByGroups)
