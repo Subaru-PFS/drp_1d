@@ -380,9 +380,10 @@ Void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& t
             Float64 sumT = 0.0;
             Float64 sumS = 0.0;
 
-            Float64 sumCross_IGM = -1.0;
-            Float64 sumT_IGM = -1.0;
-            Float64 sumS_IGM = -1.0;
+            Float64 sumCross_IGM = 0.0;
+            Float64 sumT_IGM = 0.0;
+            Float64 sumS_IGM = 0.0;
+            Int32 sumsIgmSaved = 0;
 
             Float64 err2 = 0.0;
             Float64 fit = 0;
@@ -408,19 +409,20 @@ Void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& t
                     if(option_igmFastProcessing && kMeiksin==0)
                     {
                         //store intermediate sums for IGM range
-                        if(sumCross_IGM==-1)
+                        if(sumsIgmSaved==0)
                         {
                             if(Xspc[j]>=m_igmCorrectionMeiksin->GetLambdaMax()*(1+redshift))
                             {
                                 sumCross_IGM = sumCross;
                                 sumT_IGM = sumT;
                                 sumS_IGM = sumS;
+                                sumsIgmSaved = 1;
                             }
                         }
                     }
                 }
             }
-            if(option_igmFastProcessing && kMeiksin==0)
+            if(option_igmFastProcessing && kMeiksin==0 && sumsIgmSaved==1)
             {
                 sumCross_outsideIGM[kDust] = sumCross-sumCross_IGM;
                 sumT_outsideIGM[kDust] = sumT-sumT_IGM;
