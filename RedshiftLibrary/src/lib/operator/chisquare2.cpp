@@ -222,6 +222,14 @@ Void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& t
     {
         if(igmLoopUseless_WavelengthRange)
         {
+            //Now copy from the already calculated k>0 igm values
+            for(Int32 kism=0; kism<ChiSquareInterm.size(); kism++)
+            {
+                for(Int32 kigm=1; kigm<ChiSquareInterm[kism].size(); kigm++)
+                {
+                    ChiSquareInterm[kism][kigm] = ChiSquareInterm[kism][0];
+                }
+            }
             break;
         }
         Int32 meiksinIdx = kMeiksin; //index for the Meiksin curve (0-6; 3 being the median extinction value)
