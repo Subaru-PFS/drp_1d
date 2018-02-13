@@ -326,6 +326,17 @@ Void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& t
             //*/
 
 
+            /*//debug:
+            // save final ISM/IGM template model
+            if(redshift>=2.4 && redshift<2.4001 && meiksinIdx==6){
+                FILE* f = fopen( "chisquare2_template_finalModel.txt", "w+" );
+                for(Int32 m=0; m<itplTplSpectralAxis.GetSamplesCount(); m++){
+                    fprintf( f, "%e %e\n", Xtpl[m], Ytpl[m]);
+                }
+                fclose( f );
+            }
+            //*/
+
             /*/
             // Optionally mask pixels far from the breaks
             bool opt_onlyBreaks = false;
