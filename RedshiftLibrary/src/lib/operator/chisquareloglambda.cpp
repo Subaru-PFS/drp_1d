@@ -711,15 +711,14 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64* spectrumRebinedLambda,
                                              std::vector<Int32> igmMeiksinCoeffs,
                                              std::vector<Int32> ismEbmvCoeffs)
 {
-
     Float64 redshiftValueMeiksin = result->Redshifts[0];
     if(verboseLogFitFitRangez)
     {
-        Log.LogInfo("ChisquareLog, FitAllz: redshiftValueMeiksin = %f", redshiftValueMeiksin);
-        Log.LogInfo("ChisquareLog, FitAllz: spc[0] = %f", spectrumRebinedLambda[0]);
-        Log.LogInfo("ChisquareLog, FitAllz: spc[max] = %f", spectrumRebinedLambda[nSpc-1]);
-        Log.LogInfo("ChisquareLog, FitAllz: tpl[0]*zmax = %f", tplRebinedLambda[0]*(1.0+result->Redshifts[result->Redshifts.size()-1]));
-        Log.LogInfo("ChisquareLog, FitAllz: tpl[max]*zmin = %f", tplRebinedLambda[nTpl-1]*(1+result->Redshifts[0]));
+        Log.LogInfo("ChisquareLog, FitRangez: redshiftValueMeiksin = %f", redshiftValueMeiksin);
+        Log.LogInfo("ChisquareLog, FitRangez: spc[0] = %f", spectrumRebinedLambda[0]);
+        Log.LogInfo("ChisquareLog, FitRangez: spc[max] = %f", spectrumRebinedLambda[nSpc-1]);
+        Log.LogInfo("ChisquareLog, FitRangez: tpl[0]*zmax = %f", tplRebinedLambda[0]*(1.0+result->Redshifts[result->Redshifts.size()-1]));
+        Log.LogInfo("ChisquareLog, FitRangez: tpl[max]*zmin = %f", tplRebinedLambda[nTpl-1]*(1+result->Redshifts[0]));
     }
 
     //
@@ -729,7 +728,7 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64* spectrumRebinedLambda,
     /*
     //next power of two
     Int32 maxnsamples = (Int32)(nTpl*2);
-    //Log.LogInfo("ChisquareLog, FitAllz: maxnsamples = %d", maxnsamples);
+    //Log.LogInfo("ChisquareLog, FitRangez: maxnsamples = %d", maxnsamples);
     Int32 power = 1;
     while(power < maxnsamples)
     {
@@ -737,9 +736,13 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64* spectrumRebinedLambda,
     }
     m_nPaddedSamples = power;
     //*/
+
+    Log.LogInfo("ChisquareLog, Now fitting using the FFT on nshifts=%d values, for Meiksin redshift=%f", nshifts, redshiftValueMeiksin);
+
+
     if(verboseLogFitFitRangez)
     {
-        Log.LogInfo("ChisquareLog, FitAllz: initializing FFT with n = %d points", m_nPaddedSamples);
+        Log.LogInfo("ChisquareLog, FitRangez: initializing FFT with n = %d points", m_nPaddedSamples);
     }
     InitFFT(m_nPaddedSamples);
 
@@ -824,7 +827,7 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64* spectrumRebinedLambda,
         enableIGM = false;
         if(verboseLogFitFitRangez)
         {
-            Log.LogInfo("ChisquareLog, FitAllz: IGM disabled, min-tpl-lbda=%f", lambdaMinTpl);
+            Log.LogInfo("ChisquareLog, FitRangez: IGM disabled, min-tpl-lbda=%f", lambdaMinTpl);
         }
     }
 
@@ -863,7 +866,7 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64* spectrumRebinedLambda,
 
         if(verboseLogFitFitRangez && enableIGM)
         {
-            Log.LogInfo("ChisquareLog, FitAllz: IGM index=%d", kIGM);
+            Log.LogInfo("ChisquareLog, FitRangez: IGM index=%d", kIGM);
         }
 
         if(enableIGM)
@@ -897,7 +900,7 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64* spectrumRebinedLambda,
         {
             if(verboseLogFitFitRangez && enableISM)
             {
-                Log.LogInfo("ChisquareLog, FitAllz: ISM index =%d", kISM);
+                Log.LogInfo("ChisquareLog, FitRangez: ISM index =%d", kISM);
             }
 
 
@@ -995,7 +998,7 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64* spectrumRebinedLambda,
 
             if(verboseExportFitRangez)
             {
-                Log.LogInfo("ChisquareLog, FitAllz: dtd = %e", dtd);
+                Log.LogInfo("ChisquareLog, FitRangez: dtd = %e", dtd);
             }
 
             //return -1;
@@ -1004,7 +1007,7 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64* spectrumRebinedLambda,
             if( mtm_vec.size()!=dtm_vec.size())
             {
                 errorWhileFitting = 1;
-                Log.LogError("ChisquareLog, FitAllz: xty vectors sizes don't match: dtm size = %d, mtm size = %d", dtm_vec.size(), mtm_vec.size());
+                Log.LogError("ChisquareLog, FitRangez: xty vectors sizes don't match: dtm size = %d, mtm size = %d", dtm_vec.size(), mtm_vec.size());
                 //return 2;
                 continue;
             }
@@ -1059,17 +1062,17 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64* spectrumRebinedLambda,
 
             if(verboseExportFitRangez)
             {
-                Log.LogInfo("ChisquareLog, FitAllz: spc lbda 0 =%f", spectrumRebinedLambda[0]);
-                Log.LogInfo("ChisquareLog, FitAllz: tpl lbda 0 =%f", tplRebinedLambda[0]);
+                Log.LogInfo("ChisquareLog, FitRangez: spc lbda 0 =%f", spectrumRebinedLambda[0]);
+                Log.LogInfo("ChisquareLog, FitRangez: tpl lbda 0 =%f", tplRebinedLambda[0]);
                 Float64 z_O = (spectrumRebinedLambda[0]-tplRebinedLambda[0])/tplRebinedLambda[0];
-                Log.LogInfo("ChisquareLog, FitAllz: z 0 =%f", z_O);
+                Log.LogInfo("ChisquareLog, FitRangez: z 0 =%f", z_O);
 
                 //        Float64 logstep = log(spectrumRebinedLambda[1])-log(spectrumRebinedLambda[0]);
                 //        Float64 logInitialStep = log(spectrumRebinedLambda[0])-log(tplRebinedLambda[0]);
-                //        Log.LogInfo("ChisquareLog, FitAllz: logstep=%f", logstep);
-                //        Log.LogInfo("ChisquareLog, FitAllz: step=%f A", exp(logstep));
-                //        Log.LogInfo("ChisquareLog, FitAllz: logInitialStep=%f", logInitialStep);
-                //        Log.LogInfo("ChisquareLog, FitAllz: InitialStep=%f A", exp(logInitialStep));
+                //        Log.LogInfo("ChisquareLog, FitRangez: logstep=%f", logstep);
+                //        Log.LogInfo("ChisquareLog, FitRangez: step=%f A", exp(logstep));
+                //        Log.LogInfo("ChisquareLog, FitRangez: logInitialStep=%f", logInitialStep);
+                //        Log.LogInfo("ChisquareLog, FitRangez: InitialStep=%f A", exp(logInitialStep));
                 //        std::vector<Float64> log1pz(dtm_vec.size(), 0.0);
                 //        for( Int32 t=0;t<log1pz.size();t++)
                 //        {
@@ -1109,7 +1112,7 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64* spectrumRebinedLambda,
         mtmreversed_array[t] = bestFitMtm[z_vect.size()-1-t];
         ismCoeffreversed_array[t] = bestISMCoeff[z_vect.size()-1-t];
         igmIdxreversed_array[t] = bestIGMIdx[z_vect.size()-1-t];
-        //Log.LogInfo("ChisquareLog, FitAllz: interpolating z result, for z=%f, chi2reversed_array=%f", zreversed_array[t], chi2reversed_array[t]);
+        //Log.LogInfo("ChisquareLog, FitRangez: interpolating z result, for z=%f, chi2reversed_array=%f", zreversed_array[t], chi2reversed_array[t]);
     }
 
     Int32 k = 0;
@@ -1117,16 +1120,16 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64* spectrumRebinedLambda,
     for (Int32 iz=0;iz<result->Redshifts.size();iz++)
     {
         //* //NGP
-        //Log.LogInfo("ChisquareLog, FitAllz: interpolating gsl-bsearch z result, , ztgt=%f, zcalc_min=%f, zcalc_max=%f", result->Redshifts[iz], zreversed_array[0], zreversed_array[z_vect.size()-1]);
+        //Log.LogInfo("ChisquareLog, FitRangez: interpolating gsl-bsearch z result, , ztgt=%f, zcalc_min=%f, zcalc_max=%f", result->Redshifts[iz], zreversed_array[0], zreversed_array[z_vect.size()-1]);
         k = gsl_interp_bsearch (zreversed_array, result->Redshifts[iz], klow, z_vect.size()-1);
         klow = k;
 
         /*
         if(result->Redshifts[iz]==0.0)
         {
-            Log.LogInfo("ChisquareLog, FitAllz: interpolating z result, kshift=%f", k);
-            Log.LogInfo("ChisquareLog, FitAllz: interpolating z result, zcalc=%f, kfound=%d, zfound=%f", result->Redshifts[iz], k, z_vect[z_vect.size()-1-k]);
-            Log.LogInfo("ChisquareLog, FitAllz: interpolating z result, bestChi2=%f", bestChi2[z_vect.size()-1-k]);
+            Log.LogInfo("ChisquareLog, FitRangez: interpolating z result, kshift=%f", k);
+            Log.LogInfo("ChisquareLog, FitRangez: interpolating z result, zcalc=%f, kfound=%d, zfound=%f", result->Redshifts[iz], k, z_vect[z_vect.size()-1-k]);
+            Log.LogInfo("ChisquareLog, FitRangez: interpolating z result, bestChi2=%f", bestChi2[z_vect.size()-1-k]);
         }
         // closest value
         result->ChiSquare[iz] = bestChi2[z_vect.size()-1-k];
@@ -1144,7 +1147,7 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64* spectrumRebinedLambda,
     }
 
     //*
-    Log.LogInfo("ChisquareLog, FitAllz: interpolating (lin) z result from n=%d (min=%f, max=%f) to n=%d (min=%f, max=%f)", z_vect.size(),  zreversed_array[0],  zreversed_array[z_vect.size()-1],
+    Log.LogInfo("ChisquareLog, FitRangez: interpolating (lin) z result from n=%d (min=%f, max=%f) to n=%d (min=%f, max=%f)", z_vect.size(),  zreversed_array[0],  zreversed_array[z_vect.size()-1],
             result->Redshifts.size(),
             result->Redshifts[0],
             result->Redshifts[result->Redshifts.size()-1]);

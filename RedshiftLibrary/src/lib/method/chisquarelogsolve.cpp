@@ -97,6 +97,7 @@ std::shared_ptr<CChisquareLogSolveResult> CMethodChisquareLogSolve::Compute(CDat
     Log.LogInfo( "    -ISM dust-fit: %s", opt_dustFit.c_str());
     Log.LogInfo( "    -pdfcombination: %s", m_opt_pdfcombination.c_str());
     Log.LogInfo( "    -saveintermediateresults: %d", (int)m_opt_enableSaveIntermediateChisquareResults);
+    Log.LogInfo( "    -enable spectrum-log-rebin: %s", m_opt_spclogrebin.c_str());
     Log.LogInfo( "");
 
     if(m_opt_spclogrebin=="yes")

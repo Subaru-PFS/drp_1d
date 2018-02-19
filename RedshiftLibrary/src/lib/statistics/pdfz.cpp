@@ -23,8 +23,8 @@ CPdfz::~CPdfz()
  * @param merits
  * @param redshifts
  * ...
- *
- * @return 0: success, 1:problem, 2:dz not constant, 3 not enough z values, 4: zPrior not valid
+ * NB-2018-02-19 : this method works with IRREGULAR z grid. No need to have a regular grid z-pdf anymore
+ * @return 0: success, 1:problem, 3 not enough z values, 4: zPrior not valid
  */
 Int32 CPdfz::Compute(TFloat64List merits, TFloat64List redshifts, Float64 cstLog, TFloat64List logZPrior, TFloat64List& logPdf, Float64 &logEvidence)
 {
@@ -75,34 +75,11 @@ Int32 CPdfz::Compute(TFloat64List merits, TFloat64List redshifts, Float64 cstLog
 //        logZPrior[kz] = log(zPrior[kz]);
 //    }
 
-    //check if the z step is constant. If not, pdf cannot be estimated by the current method.
-    Float64 reldzThreshold = 0.05; //relative difference accepted
-    bool constantdz = true;
-    Float64 mindz = DBL_MAX;
-    Float64 maxdz = -DBL_MAX;
-    for ( UInt32 k=1; k<redshifts.size(); k++)
-    {
-        Float64 diff = redshifts[k]-redshifts[k-1];
-        if(mindz > diff)
-        {
-            mindz = diff;
-        }
-        if(maxdz < diff)
-        {
-            maxdz = diff;
-        }
-    }
-    Float64 zstep = (maxdz+mindz)/2.0;
-    if(abs(maxdz-mindz)/zstep>reldzThreshold)
-    {
-        constantdz = false;
-        return 2;
-    }
-
     logPdf.resize(redshifts.size());
 
     /* ------------------------------------------------------------------
     * NOTE (copied from dev_bayes branch by S. Jamal):
+    * NOTE-20180219 (this has been modified to support not regular z-grids: ie. zstep not constant). z-step now included in the calculation of the MAXI log-sum-exp scale factor
     * -------
     * The sum is realised in ( Z , TPL) 2D space
     * csteLOG = -N/2*LOG(2*pi) - LOG ( product ( sigma_RMSE) )
@@ -134,7 +111,21 @@ Int32 CPdfz::Compute(TFloat64List merits, TFloat64List redshifts, Float64 cstLog
     for ( UInt32 k=0; k<redshifts.size(); k++)
     {
         mchi2Sur2[k] = -0.5*merits[k];
-        smallVALUES[k] = mchi2Sur2[k] + logZPrior[k];
+        //find the smallest zstep in order to use most penalizing case fot the log-sum-exp trick
+        Float64 zstepPrevious = -1.0;
+        if(k>0){
+            zstepPrevious = (redshifts[k]-redshifts[k-1]);
+        }else if(k<redshifts.size()-1){
+            zstepPrevious = (redshifts[k+1]-redshifts[k]);
+        }
+        Float64 zstepNext = 1.0;
+        if(k<redshifts.size()-1){
+            zstepNext = (redshifts[k+1]-redshifts[k]);
+        }else if(k>0){
+            zstepNext = (redshifts[k]-redshifts[k-1]);
+        }
+        Float64 zstepCurrent = min(zstepPrevious, zstepNext);
+        smallVALUES[k] = mchi2Sur2[k] + logZPrior[k] + log(zstepCurrent);
         if(maxi<smallVALUES[k])
         {
             maxi = smallVALUES[k]; // maxi will be used to avoid underflows when summing exponential of small values
@@ -146,16 +137,17 @@ Int32 CPdfz::Compute(TFloat64List merits, TFloat64List redshifts, Float64 cstLog
     for ( UInt32 k=1; k<redshifts.size(); k++)
     {
         Float64 modifiedEXPO = exp(smallVALUES[k]-maxi);
-        sumModifiedExp += (modifiedEXPO+modifiedEXPO_previous)/2.0;
+        Float64 trapezArea = (modifiedEXPO+modifiedEXPO_previous)/2.0;
+        trapezArea *= (redshifts[k]-redshifts[k-1]);
+        sumModifiedExp += trapezArea;
         modifiedEXPO_previous = modifiedEXPO;
     }
-    logEvidence = cstLog + maxi + log(sumModifiedExp) + log(zstep);
+    logEvidence = cstLog + maxi + log(sumModifiedExp);
 
     if(verbose)
     {
         Log.LogInfo("Pdfz: Pdfz computation: using cstLog=%e", cstLog);
         Log.LogInfo("Pdfz: Pdfz computation: using logEvidence=%e", logEvidence);
-        Log.LogInfo("Pdfz: Pdfz computation: using log(zstep)=%e",  log(zstep));
         //Log.LogInfo("Pdfz: Pdfz computation: using logPrior=%f",  logPrior); //logPrior can be variable with z
     }
 
