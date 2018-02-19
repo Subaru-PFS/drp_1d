@@ -28,7 +28,12 @@ public:
     std::vector<Float64> GetConstantLogZPrior(UInt32 nredshifts);
     std::vector<Float64> GetStrongLinePresenceLogZPrior(std::vector<bool> linePresence);
 
-    Int32 Marginalize(TFloat64List redshifts, std::vector<TFloat64List> meritResults, std::vector<TFloat64List> zPriors, Float64 cstLog, std::shared_ptr<CPdfMargZLogResult> postmargZResult);
+    Int32 Marginalize(TFloat64List redshifts,
+                      std::vector<TFloat64List> meritResults,
+                      std::vector<TFloat64List> zPriors,
+                      Float64 cstLog,
+                      std::shared_ptr<CPdfMargZLogResult> postmargZResult,
+                      std::vector<TFloat64List> modelPriors=std::vector<TFloat64List>());
     Int32 BestProba(TFloat64List redshifts, std::vector<TFloat64List> meritResults, std::vector<TFloat64List> zPriors, Float64 cstLog, std::shared_ptr<CPdfMargZLogResult> postmargZResult);
     Int32 BestChi2(TFloat64List redshifts, std::vector<TFloat64List> meritResults, std::vector<TFloat64List> zPriors, Float64 cstLog, std::shared_ptr<CPdfMargZLogResult> postmargZResult);
 

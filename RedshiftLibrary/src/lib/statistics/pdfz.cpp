@@ -221,7 +221,7 @@ std::vector<Float64> CPdfz::GetStrongLinePresenceLogZPrior(std::vector<bool> lin
 }
 
 
-Int32 CPdfz::Marginalize(TFloat64List redshifts, std::vector<TFloat64List> meritResults, std::vector<TFloat64List> zPriors, Float64 cstLog, std::shared_ptr<CPdfMargZLogResult> postmargZResult)
+Int32 CPdfz::Marginalize(TFloat64List redshifts, std::vector<TFloat64List> meritResults, std::vector<TFloat64List> zPriors, Float64 cstLog, std::shared_ptr<CPdfMargZLogResult> postmargZResult, std::vector<TFloat64List> modelPriors)
 {
     bool verbose = false;
 
@@ -242,8 +242,46 @@ Int32 CPdfz::Marginalize(TFloat64List redshifts, std::vector<TFloat64List> merit
     Float64 MaxiLogEvidence = -DBL_MAX;
     TFloat64List LogEvidencesWPriorM;
     Float64 sumModifiedEvidences = 0;
-    Float64 priorModelCst = 1.0/((Float64)meritResults.size());
-    Float64 logPriorModel = log(priorModelCst);
+
+    std::vector<Float64> logPriorModel;
+    if( /*false &&*/ modelPriors.size()!=meritResults.size())
+    {
+        Float64 priorModelCst = 1.0/((Float64)meritResults.size());
+        Log.LogInfo("Pdfz: Marginalize: no priors loaded, using constant priors (=%f)", priorModelCst);
+        for(Int32 km=0; km<meritResults.size(); km++)
+        {
+            logPriorModel.push_back(log(priorModelCst));
+        }
+    }else
+    {
+        /*
+        //override modelPriors with pypelid 10 knn templates priors
+        logPriorModel.push_back(log(0.1490));
+        logPriorModel.push_back(log(0.0794));
+        logPriorModel.push_back(log(0.0744));
+        logPriorModel.push_back(log(0.0836));
+        logPriorModel.push_back(log(0.1089));
+        logPriorModel.push_back(log(0.1124));
+        logPriorModel.push_back(log(0.0786));
+        logPriorModel.push_back(log(0.1563));
+        logPriorModel.push_back(log(0.0509));
+        logPriorModel.push_back(log(0.1060));
+        //*/
+
+        //logging priors used
+        Float64 sumPriors=0.;
+        for(Int32 km=0; km<meritResults.size(); km++)
+        {
+            sumPriors += exp(logPriorModel[km]);
+            Log.LogInfo("Pdfz: Marginalize: for model k=%d, using prior=%f", km, exp(logPriorModel[km]));
+        }
+        Log.LogInfo("Pdfz: Marginalize: sumPriors=%f", sumPriors);
+        if(sumPriors>1.1 || sumPriors<0.9)
+        {
+            Log.LogError("Pdfz: sumPriors should be close to 1... !!!");
+        }
+    }
+
     for(Int32 km=0; km<meritResults.size(); km++)
     {
         //Todo: Check if the status is OK ?
@@ -262,7 +300,7 @@ Int32 CPdfz::Marginalize(TFloat64List redshifts, std::vector<TFloat64List> merit
 //            {
 //                Log.LogInfo("Pdfz: Marginalize: for km=%d, logEvidence=%e", km, MaxiLogEvidence);
 //            }
-            Float64 logEvidenceWPriorM = logEvidence+logPriorModel;
+            Float64 logEvidenceWPriorM = logEvidence+logPriorModel[km];
 
             LogEvidencesWPriorM.push_back(logEvidenceWPriorM);
             if(MaxiLogEvidence<logEvidenceWPriorM){
@@ -337,7 +375,7 @@ Int32 CPdfz::Marginalize(TFloat64List redshifts, std::vector<TFloat64List> merit
                 if( true /*meritResult->Status[k]== COperator::nStatus_OK*/) //todo: check (temporarily considers status is always OK for linemodel tplshape)
                 {
                     Float64 logValProba = postmargZResult->valProbaLog[k];
-                    Float64 logValProbaAdd = logProba[k]+logPriorModel+logEvidence-logSumEvidence;
+                    Float64 logValProbaAdd = logProba[k]+logPriorModel[km]+logEvidence-logSumEvidence;
                     Float64 maxP = logValProba;
                     if(maxP<logValProbaAdd)
                     {

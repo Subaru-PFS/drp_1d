@@ -20,7 +20,7 @@ public:
     CLineModelResult();
     virtual ~CLineModelResult();
 
-    Int32 Init(std::vector<Float64> redshifts, CRayCatalog::TRayVector restRays, Int32 nTplshapes);
+    Int32 Init(std::vector<Float64> redshifts, CRayCatalog::TRayVector restRays, Int32 nTplshapes, std::vector<Float64> tplshapesPriors);
 
     Void Save( const CDataStore& store, std::ostream& stream ) const;
     Void SaveLine( const CDataStore& store, std::ostream& stream ) const;
@@ -46,6 +46,7 @@ public:
     TFloat64List            ScaleMargCorrection;  // margCorrection for min chi2
 
     std::vector<TFloat64List> ChiSquareTplshapes; // full chi2 results (for each tplshape)
+    std::vector<Float64> PriorTplshapes; // model prior (for each tplshape)
     std::vector<TFloat64List> ScaleMargCorrectionTplshapes; // full scale marginalization correction results (for each tplshape)
     std::vector<std::vector<bool>> StrongELPresentTplshapes; // full strongELPresent results (for each tplshape)
     TFloat64List ChiSquareContinuum; // chi2 result for the continuum

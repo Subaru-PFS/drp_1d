@@ -1135,6 +1135,11 @@ Int32 CLineModelElementList::getTplshape_count()
     return m_CatalogTplShape->GetCatalogsCount();
 }
 
+std::vector<Float64> CLineModelElementList::getTplshape_priors()
+{
+    return m_CatalogTplShape->getCatalogsPriors();
+}
+
 std::vector<Float64> CLineModelElementList::GetChisquareTplshape()
 {
     return m_ChisquareTplshape;

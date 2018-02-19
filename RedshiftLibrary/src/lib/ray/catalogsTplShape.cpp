@@ -28,10 +28,10 @@ CRayCatalogsTplShape::CRayCatalogsTplShape()
     //tplshapedcatalog_relpath = (tplshapeRelPath/"linecatalogs_tplshape_ExtendedTemplatesJan2017v3_20170524_B13F_v1").string();
     //tplshapedcatalog_relpath = (tplshapeRelPath/"linecatalogs_tplshape_ExtendedTemplatesJan2017v3_20170602_B14_v1_emission").string();
     //tplshapedcatalog_relpath = (tplshapeRelPath/"linecatalogs_tplshape_ExtendedTemplatesJan2017v3_20170602_B14B_v2_emission").string();
-    tplshapedcatalog_relpath = (tplshapeRelPath/"linecatalogs_tplshape_ExtendedTemplatesJan2017v3_20170602_B14C_v3_emission").string();
+    //tplshapedcatalog_relpath = (tplshapeRelPath/"linecatalogs_tplshape_ExtendedTemplatesJan2017v3_20170602_B14C_v3_emission").string();
 
     //pypelid test
-    //tplshapedcatalog_relpath = (tplshapeRelPath/"tplratio_catalog_pypelid20180205").string();
+    tplshapedcatalog_relpath = (tplshapeRelPath/"tplratio_catalog_pypelid20180216").string();
 
     Log.LogInfo( "CRayCatalogsTplShape - Loaded tplshape catalog : %s", tplshapedcatalog_relpath.c_str());
 }
@@ -108,6 +108,23 @@ Bool CRayCatalogsTplShape::Load( const char* dirPath )
     }
     Log.LogInfo( "CRayCatalogsTplShape - Found %d tplshaped velocities files", tplshapeVelocitiesList.size());
 
+    //load the priors list for all the catalogs
+    fs::path tplshapePriorsDir = tplshapeCatalogDir/"priors/";
+    std::vector<std::string> tplshapePriorsList;
+    if ( fs::exists(tplshapePriorsDir) && fs::is_directory(tplshapePriorsDir))
+    {
+      for( fs::directory_iterator dir_iter(tplshapePriorsDir) ; dir_iter != end_iter ; ++dir_iter)
+      {
+        if (fs::is_regular_file(dir_iter->status()) )
+        {
+          tplshapePriorsList.push_back(dir_iter->path().c_str());
+        }
+      }
+    }else{
+        Log.LogError( "CRayCatalogsTplShape - ERROR - unable to find priors directory");
+    }
+    Log.LogInfo( "CRayCatalogsTplShape - Found %d tplshaped priors files", tplshapeVelocitiesList.size());
+
 
 
     //Load the linecatalog-tplshaped in the list
@@ -150,6 +167,33 @@ Bool CRayCatalogsTplShape::Load( const char* dirPath )
         if( !ret )
         {
             Log.LogError( "Failed to load tplshape velocities: %s", tplshapeVelocitiesList[kvel].c_str());
+            return false;
+        }
+
+        //find the prior-tplshaped corresponding to the tpl-shaped catalog
+        Int32 kprior = -1;
+        tplname = name.filename().c_str();
+        boost::replace_all( tplname, "_catalog.txt", "_prior.txt");
+        for(Int32 k=0; k<tplshapePriorsList.size(); k++)
+        {
+            std::string priorname = tplshapePriorsList[k];
+            std::size_t foundstra = priorname.find(tplname.c_str());
+            if (foundstra==std::string::npos){
+                continue;
+            }
+            kprior = k;
+        }
+
+        if(kprior<0)
+        {
+            Log.LogError( "Failed to match tplshape-catalog with tplshape-prior files: %s", tplname.c_str());
+            return false;
+        }
+        m_Priors.push_back(1.0);
+        bool retPrior = LoadPrior(tplshapePriorsList[kprior].c_str(), k);
+        if( !retPrior )
+        {
+            Log.LogError( "Failed to load tplshape prior: %s", tplshapePriorsList[kprior].c_str());
             return false;
         }
 
@@ -199,6 +243,40 @@ bool CRayCatalogsTplShape::LoadVelocities( const char* filePath, Int32 k )
     return true;
 }
 
+bool CRayCatalogsTplShape::LoadPrior( const char* filePath, Int32 k )
+{
+    Float64 prior=1.0;
+
+    ifstream file;
+    file.open( filePath, ifstream::in );
+    if( file.rdstate() & ios_base::failbit ){
+        return false;
+    }
+    string line;
+
+    // Read file line by line
+    Int32 readNums = 0;
+    while( getline( file, line ) )
+    {
+        if(readNums==0)
+        {
+            prior = std::stod(line);
+        }
+        readNums++;
+    }
+    file.close();
+    if(readNums!=1)
+    {
+        return false;
+    }
+
+
+    Log.LogDebug( "CRayCatalogsTplShape k=%d - Set prior=%.1f", k, prior);
+    m_Priors[k] = prior;
+
+    return true;
+}
+
 CRayCatalog::TRayVector CRayCatalogsTplShape::GetRestLinesList( const Int32 index )
 {
     Int32 typeFilter=-1;
@@ -211,6 +289,11 @@ CRayCatalog::TRayVector CRayCatalogsTplShape::GetRestLinesList( const Int32 inde
 Int32 CRayCatalogsTplShape::GetCatalogsCount()
 {
     return m_RayCatalogList.size();
+}
+
+std::vector<Float64> CRayCatalogsTplShape::getCatalogsPriors()
+{
+    return m_Priors;
 }
 
 std::string CRayCatalogsTplShape::GetCatalogName(Int32 idx)

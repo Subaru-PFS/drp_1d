@@ -232,7 +232,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
 
 
     std::shared_ptr<CLineModelResult> result = std::shared_ptr<CLineModelResult>( new CLineModelResult() );
-    result->Init( sortedRedshifts, restRayList, model.getTplshape_count()); //todo resize
+    result->Init( sortedRedshifts, restRayList, model.getTplshape_count(), model.getTplshape_priors()); //todo resize
 
 
     Log.LogInfo( "Linemodel: initialized");

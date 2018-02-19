@@ -37,7 +37,7 @@ CLineModelResult::~CLineModelResult()
  * @param nTplshapes
  * @return
  */
-Int32 CLineModelResult::Init( std::vector<Float64> redshifts, CRayCatalog::TRayVector restRays, Int32 nTplshapes )
+Int32 CLineModelResult::Init( std::vector<Float64> redshifts, CRayCatalog::TRayVector restRays, Int32 nTplshapes, std::vector<Float64> tplshapesPriors )
 {
     Int32 err = 0;
 
@@ -61,6 +61,8 @@ Int32 CLineModelResult::Init( std::vector<Float64> redshifts, CRayCatalog::TRayV
 
         std::vector<bool> selp(nResults, false);
         StrongELPresentTplshapes.push_back(selp);
+
+        PriorTplshapes.push_back(tplshapesPriors[k]);
     }
 
     ChiSquareContinuum.resize( nResults );

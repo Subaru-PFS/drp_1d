@@ -99,11 +99,10 @@ public:
 
     std::string getTplshape_bestTplName();
     Int32 getTplshape_count();
+    std::vector<Float64> getTplshape_priors();
     std::vector<Float64> GetChisquareTplshape();
     std::vector<Float64> GetScaleMargTplshape();
     std::vector<bool> GetStrongELPresentTplshape();
-
-
 
     Int32 GetNElements();
     Int32 GetModelValidElementsNDdl();

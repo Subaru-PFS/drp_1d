@@ -218,7 +218,7 @@ std::shared_ptr<CLineModelSolveResult> CLineModelSolve::Compute( CDataStore& dat
             for(Int32 km=0; km<result->ChiSquareTplshapes.size(); km++)
             {
                 std::shared_ptr<CLineModelResult> result_chisquaretplshape = std::shared_ptr<CLineModelResult>( new CLineModelResult() );
-                result_chisquaretplshape->Init( result->Redshifts, result->restRayList, 0);
+                result_chisquaretplshape->Init( result->Redshifts, result->restRayList, 0, std::vector<Float64>());
                 for(Int32 kz=0; kz<result->Redshifts.size(); kz++)
                 {
                     result_chisquaretplshape->ChiSquare[kz] = result->ChiSquareTplshapes[km][kz];
@@ -233,7 +233,7 @@ std::shared_ptr<CLineModelSolveResult> CLineModelSolve::Compute( CDataStore& dat
             for(Int32 km=0; km<result->ScaleMargCorrectionTplshapes.size(); km++)
             {
                 std::shared_ptr<CLineModelResult> result_chisquaretplshape = std::shared_ptr<CLineModelResult>( new CLineModelResult() );
-                result_chisquaretplshape->Init( result->Redshifts, result->restRayList, 0);
+                result_chisquaretplshape->Init( result->Redshifts, result->restRayList, 0, std::vector<Float64>());
                 for(Int32 kz=0; kz<result->Redshifts.size(); kz++)
                 {
                     result_chisquaretplshape->ChiSquare[kz] = result->ScaleMargCorrectionTplshapes[km][kz];
@@ -316,7 +316,7 @@ Int32 CLineModelSolve::CombinePDF(CDataStore &store, std::shared_ptr<const CLine
     else if(opt_combine=="bestproba" || opt_combine=="marg"){
 
         Log.LogInfo("Linemodel: Pdfz computation - combination: method=%s, n=%d", opt_combine.c_str(), result->ChiSquareTplshapes.size());
-        std::vector<TFloat64List> priorsTplshapes;
+        std::vector<TFloat64List> zpriorsTplshapes;
         for(Int32 k=0; k<result->ChiSquareTplshapes.size(); k++)
         {
             TFloat64List _prior;
@@ -328,7 +328,7 @@ Int32 CLineModelSolve::CombinePDF(CDataStore &store, std::shared_ptr<const CLine
             {
                 _prior = pdfz.GetConstantLogZPrior(result->Redshifts.size());
             }
-            priorsTplshapes.push_back(_prior);
+            zpriorsTplshapes.push_back(_prior);
         }
 
         //correct chi2 if necessary: todo add switch
@@ -345,9 +345,9 @@ Int32 CLineModelSolve::CombinePDF(CDataStore &store, std::shared_ptr<const CLine
 
         if(opt_combine=="marg")
         {
-            retPdfz = pdfz.Marginalize( result->Redshifts, ChiSquareTplshapesCorrected, priorsTplshapes, cstLog, postmargZResult);
+            retPdfz = pdfz.Marginalize( result->Redshifts, ChiSquareTplshapesCorrected, zpriorsTplshapes, cstLog, postmargZResult);
         }else{
-            retPdfz = pdfz.BestProba( result->Redshifts, ChiSquareTplshapesCorrected, priorsTplshapes, cstLog, postmargZResult);
+            retPdfz = pdfz.BestProba( result->Redshifts, ChiSquareTplshapesCorrected, zpriorsTplshapes, cstLog, postmargZResult);
         }
         // todo: store priors for each tplshape model ?
     }else{
