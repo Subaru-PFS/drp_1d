@@ -1538,6 +1538,12 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(const CSpe
 
         }
 
+        //put the error in the spectrum object: needed for cstLog estimation (at least)
+        for( Int32 t=0;t<m_spectrumRebinedLog.GetSampleCount();t++)
+        {
+             m_spectrumRebinedLog.GetFluxAxis().GetError()[t] = m_errorRebinedLog[t];
+        }
+
         if(verboseExportLogRebin)
         {
             // save rebinned data
