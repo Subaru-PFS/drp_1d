@@ -208,7 +208,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
     bool offsetsInitRet = model.initLambdaOffsets();
     if(!offsetsInitRet)
     {
-        Log.LogError( "Linemodel: Failed to init lambda offsets");
+        Log.LogError( "Linemodel: Failed to init lambda offsets. Continuing without offsets...");
     }
     //*/
 
@@ -232,7 +232,12 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
 
 
     std::shared_ptr<CLineModelResult> result = std::shared_ptr<CLineModelResult>( new CLineModelResult() );
-    result->Init( sortedRedshifts, restRayList, model.getTplshape_count(), model.getTplshape_priors()); //todo resize
+    Int32 resultInitRet = result->Init( sortedRedshifts, restRayList, model.getTplshape_count(), model.getTplshape_priors());
+    if(resultInitRet!=0)
+    {
+        Log.LogError( "Linemodel: ERROR while initializing linemodel result (ret=%d)", resultInitRet);
+        return result;
+    }
 
 
     Log.LogInfo( "Linemodel: initialized");

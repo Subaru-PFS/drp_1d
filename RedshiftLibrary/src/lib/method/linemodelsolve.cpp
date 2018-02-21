@@ -345,7 +345,7 @@ Int32 CLineModelSolve::CombinePDF(CDataStore &store, std::shared_ptr<const CLine
 
         if(opt_combine=="marg")
         {
-            retPdfz = pdfz.Marginalize( result->Redshifts, ChiSquareTplshapesCorrected, zpriorsTplshapes, cstLog, postmargZResult);
+            retPdfz = pdfz.Marginalize( result->Redshifts, ChiSquareTplshapesCorrected, zpriorsTplshapes, cstLog, postmargZResult, result->PriorTplshapes);
         }else{
             retPdfz = pdfz.BestProba( result->Redshifts, ChiSquareTplshapesCorrected, zpriorsTplshapes, cstLog, postmargZResult);
         }

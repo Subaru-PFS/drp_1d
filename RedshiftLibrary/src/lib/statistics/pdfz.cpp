@@ -213,7 +213,7 @@ std::vector<Float64> CPdfz::GetStrongLinePresenceLogZPrior(std::vector<bool> lin
 }
 
 
-Int32 CPdfz::Marginalize(TFloat64List redshifts, std::vector<TFloat64List> meritResults, std::vector<TFloat64List> zPriors, Float64 cstLog, std::shared_ptr<CPdfMargZLogResult> postmargZResult, std::vector<TFloat64List> modelPriors)
+Int32 CPdfz::Marginalize(TFloat64List redshifts, std::vector<TFloat64List> meritResults, std::vector<TFloat64List> zPriors, Float64 cstLog, std::shared_ptr<CPdfMargZLogResult> postmargZResult, std::vector<Float64> modelPriors)
 {
     bool verbose = false;
 
@@ -259,6 +259,10 @@ Int32 CPdfz::Marginalize(TFloat64List redshifts, std::vector<TFloat64List> merit
         logPriorModel.push_back(log(0.0509));
         logPriorModel.push_back(log(0.1060));
         //*/
+        for(Int32 km=0; km<meritResults.size(); km++)
+        {
+            logPriorModel.push_back(log(modelPriors[km]));
+        }
 
         //logging priors used
         Float64 sumPriors=0.;

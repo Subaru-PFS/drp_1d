@@ -128,6 +128,7 @@ Bool CRayCatalogsTplShape::Load( const char* dirPath )
 
 
     //Load the linecatalog-tplshaped in the list
+    Int32 successLoadPriors = true;
     for(Int32 k=0; k<tplshapeCatalogList.size(); k++)
     {
         CRayCatalog lineCatalog;
@@ -171,6 +172,7 @@ Bool CRayCatalogsTplShape::Load( const char* dirPath )
         }
 
         //find the prior-tplshaped corresponding to the tpl-shaped catalog
+        m_Priors.push_back(1.0);
         Int32 kprior = -1;
         tplname = name.filename().c_str();
         boost::replace_all( tplname, "_catalog.txt", "_prior.txt");
@@ -187,18 +189,30 @@ Bool CRayCatalogsTplShape::Load( const char* dirPath )
         if(kprior<0)
         {
             Log.LogError( "Failed to match tplshape-catalog with tplshape-prior files: %s", tplname.c_str());
-            return false;
+            successLoadPriors=false;
+            continue;
         }
-        m_Priors.push_back(1.0);
         bool retPrior = LoadPrior(tplshapePriorsList[kprior].c_str(), k);
         if( !retPrior )
         {
             Log.LogError( "Failed to load tplshape prior: %s", tplshapePriorsList[kprior].c_str());
-            return false;
+            successLoadPriors=false;
+            continue;
         }
 
 
     }
+    if(!successLoadPriors)
+    {
+        Float64 priorCST = 1./(Float64)(tplshapeCatalogList.size());
+        Log.LogError( "Failed to load tplshape prior, USING constant priors instead ! (p=%f)", priorCST);
+        for(Int32 k=0; k<tplshapeCatalogList.size(); k++)
+        {
+            m_Priors[k] = priorCST;
+        }
+    }
+
+
     Log.LogInfo( "CRayCatalogsTplShape - Loaded %d tplshaped catalogs", m_RayCatalogList.size());
 
     return true;

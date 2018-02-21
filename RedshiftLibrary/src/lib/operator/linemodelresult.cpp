@@ -36,10 +36,15 @@ CLineModelResult::~CLineModelResult()
  * @param restRays
  * @param nTplshapes
  * @return
+ * ERR = -2 : if the tplshapesPriors list is not the same size as the tpl-ratios
  */
 Int32 CLineModelResult::Init( std::vector<Float64> redshifts, CRayCatalog::TRayVector restRays, Int32 nTplshapes, std::vector<Float64> tplshapesPriors )
 {
     Int32 err = 0;
+    if(tplshapesPriors.size()!=nTplshapes)
+    {
+        return -2;
+    }
 
     Int32 nResults = redshifts.size();
     Status.resize( nResults );
