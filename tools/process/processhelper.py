@@ -537,7 +537,7 @@ def StartFromCommandLine( argv ) :
         
         rrefPath = ""
         if options.divide and options.refPath=="":
-            dividecount = options.dividecount
+            dividecount = int(options.dividecount)
         elif not options.refPath=="":
             print("INFO: ref file path has been provided: spclist splitting forced with dividecount=1")
             dividecount = 1
