@@ -1,4 +1,4 @@
-#version:0.3.0
+#version:0.4.0	(autoconverted)
 #Emission	lines	list
 #lambda	Name	type	force	profile	group	nominal_ampl
 8600.00	A8600	E	S	SYM	-1	-1	-1
