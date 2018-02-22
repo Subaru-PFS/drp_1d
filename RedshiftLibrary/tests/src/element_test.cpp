@@ -97,7 +97,7 @@ BOOST_AUTO_TEST_CASE(GetLineProfile){
 
   BOOST_CHECK_CLOSE(0.237755, element.GetLineProfile("SYM",6564.61, 6568., 2. ), 0.001);
   BOOST_CHECK_CLOSE(0.944159, element.GetLineProfile("SYMXL",6564.61, 6568., 2. ), 0.001);
-  BOOST_CHECK_CLOSE(0.0800506, element.GetLineProfile("LOR",6564.61, 6568., 2. ), 0.001);
+  BOOST_CHECK_CLOSE(0.2581961, element.GetLineProfile("LOR",6564.61, 6568., 2. ), 0.001);
   BOOST_CHECK_CLOSE(0.373055, element.GetLineProfile("ASYM",6564.61, 6565., 2. ), 0.001);
   BOOST_CHECK_CLOSE(0.0628983, element.GetLineProfile("ASYM2",6564.61, 6568., 2. ), 0.001);
   BOOST_CHECK_CLOSE(0.0628983, element.GetLineProfile("ASYMFIT",6564.61, 6568., 2. ), 0.001);
