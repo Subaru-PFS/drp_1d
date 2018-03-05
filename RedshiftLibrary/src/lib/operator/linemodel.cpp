@@ -93,6 +93,9 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
                                  const Float64 &opt_absvelocityfitmin,
                                  const Float64 &opt_absvelocityfitmax)
 {
+    // initialize empty results so that it can be returned anyway in case of an error
+    std::shared_ptr<CLineModelResult> result = std::shared_ptr<CLineModelResult>( new CLineModelResult() );
+
     if( spectrum.GetSpectralAxis().IsInLinearScale()==false )
     {
         Log.LogError( "Line Model, input spectrum is not in linear scale (ignored)." );
@@ -203,6 +206,15 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
     Log.LogInfo( "Linemodel: sourcesize init to: ss=%.1f", setssSizeInit);
 
 
+    //init catalog tplratios
+    Log.LogInfo( "Linemodel: Tpl-ratios init");
+    bool tplratioInitRet = model.initTplratioCatalogs();
+    if(!tplratioInitRet)
+    {
+        Log.LogError( "Linemodel: Failed to init tpl-ratios. aborting...");
+        return result;
+    }
+
     //init catalog offsets
     Log.LogInfo( "Linemodel: Lambda offsets init");
     bool offsetsInitRet = model.initLambdaOffsets();
@@ -231,7 +243,6 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
     //*/
 
 
-    std::shared_ptr<CLineModelResult> result = std::shared_ptr<CLineModelResult>( new CLineModelResult() );
     Int32 resultInitRet = result->Init( sortedRedshifts, restRayList, model.getTplshape_count(), model.getTplshape_priors());
     if(resultInitRet!=0)
     {

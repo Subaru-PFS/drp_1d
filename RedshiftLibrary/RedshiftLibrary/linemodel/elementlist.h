@@ -129,6 +129,7 @@ public:
 
     Float64 fit(Float64 redshift, const TFloat64Range& lambdaRange, CLineModelSolution &modelSolution, Int32 contreest_iterations=0, bool enableLogging=0);
 
+    Bool initTplratioCatalogs();
     Bool initLambdaOffsets();
 
     Bool setTplshapeModel(Int32 itplshape, Bool enableSetVelocity=false);

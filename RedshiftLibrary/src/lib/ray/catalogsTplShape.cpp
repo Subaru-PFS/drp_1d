@@ -1,4 +1,5 @@
 #include <RedshiftLibrary/log/log.h>
+#include <RedshiftLibrary/linemodel/calibrationconfig.h>
 #include <RedshiftLibrary/ray/catalogsTplShape.h>
 #include <RedshiftLibrary/ray/linetags.h>
 
@@ -19,9 +20,10 @@ using namespace boost;
 
 CRayCatalogsTplShape::CRayCatalogsTplShape()
 {
+    /*
+    //DEPRECATED
     // old relpath = "linecatalogs_tplshape_ExtendedTemplatesMarch2016_v2_20160916_B10I2_mod"
     //tplshapedcatalog_relpath = "linecatalogs_tplshape_ExtendedTemplatesMarch2016_B13B_mod20170110";
-
 
     bfs::path tplshapeRelPath( "linecatalogs_tplshapes" );
     //tplshapedcatalog_relpath = "linecatalogs_tplshape_ExtendedTemplatesMarch2016_B13D_mod2";
@@ -32,25 +34,27 @@ CRayCatalogsTplShape::CRayCatalogsTplShape()
 
     //pypelid test
     //tplshapedcatalog_relpath = (tplshapeRelPath/"tplratio_catalog_pypelid20180216").string();
-
-    Log.LogInfo( "CRayCatalogsTplShape - Loaded tplshape catalog : %s", tplshapedcatalog_relpath.c_str());
+    //
+    */
 }
 
 CRayCatalogsTplShape::~CRayCatalogsTplShape()
 {
-
-}
-
-Bool CRayCatalogsTplShape::SetTplctlgRelPath( const char* relPath )
-{
-    tplshapedcatalog_relpath = relPath;
-    return true;
 }
 
 Bool CRayCatalogsTplShape::Init( std::string calibrationPath)
 {
     bfs::path calibrationFolder( calibrationPath.c_str() );
-    //std::string dirPath = (calibrationFolder.append( tplshapedcatalog_relpath.c_str() )).string();
+    CCalibrationConfigHelper calibrationConfig;
+    Int32 retConfig = calibrationConfig.Init(calibrationPath);
+    if(!retConfig)
+    {
+        Log.LogError("Unable to load the calibration-config. aborting...");
+        return false;
+    }
+    tplshapedcatalog_relpath = calibrationConfig.Get_linemodelTplratio_relpath();
+    Log.LogInfo( "CRayCatalogsTplShape - Loading tplshape catalog : %s", tplshapedcatalog_relpath.c_str());
+
     std::string dirPath = (calibrationFolder/tplshapedcatalog_relpath.c_str()).string();
 
     bool ret = Load(dirPath.c_str());
@@ -123,7 +127,7 @@ Bool CRayCatalogsTplShape::Load( const char* dirPath )
     }else{
         Log.LogError( "CRayCatalogsTplShape - ERROR - unable to find priors directory");
     }
-    Log.LogInfo( "CRayCatalogsTplShape - Found %d tplshaped priors files", tplshapeVelocitiesList.size());
+    Log.LogInfo( "CRayCatalogsTplShape - Found %d tplshaped priors files", tplshapePriorsList.size());
 
 
 
@@ -143,7 +147,7 @@ Bool CRayCatalogsTplShape::Load( const char* dirPath )
         fs::path name(tplshapeCatalogList[k].c_str());
         m_RayCatalogNames.push_back(name.filename().c_str());
 
-        //find the velocities-tplshaped corresponding to the tpl-shaped catalog
+        //find the velocities-tplshaped corresponding to the tpl-shaped catalog: this is mandatory (continue/skip loading if velocities aren't found)
         Int32 kvel = -1;
         std::string tplname = name.filename().c_str();
         boost::replace_all( tplname, "_catalog.txt", "_velocities.txt");
@@ -171,7 +175,7 @@ Bool CRayCatalogsTplShape::Load( const char* dirPath )
             return false;
         }
 
-        //find the prior-tplshaped corresponding to the tpl-shaped catalog
+        //find the prior-tplshaped corresponding to the tpl-shaped catalog : this is optional (ignore if priors aren't found)
         m_Priors.push_back(1.0);
         Int32 kprior = -1;
         tplname = name.filename().c_str();
@@ -186,23 +190,24 @@ Bool CRayCatalogsTplShape::Load( const char* dirPath )
             kprior = k;
         }
 
-        if(kprior<0)
+        if(kprior<0 || !successLoadPriors)
         {
             Log.LogError( "Failed to match tplshape-catalog with tplshape-prior files: %s", tplname.c_str());
             successLoadPriors=false;
-            continue;
         }
-        bool retPrior = LoadPrior(tplshapePriorsList[kprior].c_str(), k);
-        if( !retPrior )
+        if(successLoadPriors)
         {
-            Log.LogError( "Failed to load tplshape prior: %s", tplshapePriorsList[kprior].c_str());
-            successLoadPriors=false;
-            continue;
+            bool retPrior = LoadPrior(tplshapePriorsList[kprior].c_str(), k);
+            if( !retPrior )
+            {
+                Log.LogError( "Failed to load tplshape prior: %s", tplshapePriorsList[kprior].c_str());
+                successLoadPriors=false;
+            }
         }
 
 
     }
-    if(!successLoadPriors)
+    if(!successLoadPriors) //if not all priors were successfully loaded, replace by cst prior
     {
         Float64 priorCST = 1./(Float64)(tplshapeCatalogList.size());
         Log.LogError( "Failed to load tplshape prior, USING constant priors instead ! (p=%f)", priorCST);

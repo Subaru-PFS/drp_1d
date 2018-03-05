@@ -1,5 +1,6 @@
 #include <RedshiftLibrary/log/log.h>
 #include <RedshiftLibrary/ray/catalogsOffsets.h>
+#include <RedshiftLibrary/linemodel/calibrationconfig.h>
 
 #include <algorithm>    // std::sort
 #include <boost/tokenizer.hpp>
@@ -18,6 +19,7 @@ using namespace boost;
 
 CLineCatalogsOffsets::CLineCatalogsOffsets()
 {
+    /* //DEPRECATED: Use the calibtation config file
     //m_Catalogs_relpath = "linecatalogs_offsets/offsetsCatalogs_20171218_fit"; //path to the fit offset catalog, used only for templates EL remove for now
     //m_Catalogs_relpath = "linecatalogs_offsets/offsetsCatalogs_20171128_fit"; //path to the fit offset catalog, used only for Linemeas for now
     //m_Catalogs_relpath = "linecatalogs_offsets/offsetsCatalogs_20170410_0"; //path to the fixed offset catalog
@@ -25,6 +27,7 @@ CLineCatalogsOffsets::CLineCatalogsOffsets()
     //m_Catalogs_relpath = "linecatalogs_offsets/offsetsCatalogs_20170410_m300"; //path to the fixed offset catalog
     //m_Catalogs_relpath = "linecatalogs_offsets/offsetsCatalogs_20170410_steidel"; //path to the steidel offset as of 2017-02 pfs10k simus.
     Log.LogInfo( "CLineCatalogsOffsets - directory : %s", m_Catalogs_relpath.c_str());
+    */
 }
 
 CLineCatalogsOffsets::~CLineCatalogsOffsets()
@@ -32,16 +35,21 @@ CLineCatalogsOffsets::~CLineCatalogsOffsets()
 
 }
 
-Bool CLineCatalogsOffsets::SetCtlgRelPath( const char* relPath )
-{
-    m_Catalogs_relpath = relPath;
-    return true;
-}
-
 Bool CLineCatalogsOffsets::Init( std::string calibrationPath)
 {
     m_Calibration_path = calibrationPath;
     bfs::path calibrationFolder( calibrationPath.c_str() );
+
+    CCalibrationConfigHelper calibrationConfig;
+    Int32 retConfig = calibrationConfig.Init(calibrationPath);
+    if(!retConfig)
+    {
+        Log.LogError("Unable to load the calibration-config. aborting...");
+        return false;
+    }
+    m_Catalogs_relpath = calibrationConfig.Get_linemodelOffset_relpath();
+    Log.LogInfo( "CLineCatalogsOffsets - Loading offsets catalog : %s", m_Catalogs_relpath.c_str());
+
     std::string dirPath = (calibrationFolder/m_Catalogs_relpath.c_str()).string();
 
     bool ret = Load(dirPath.c_str());

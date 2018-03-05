@@ -1,0 +1,4 @@
+#define the relative paths for some calibration files
+linemodel-tplratio-dir=linecatalogs_tplshape_ExtendedTemplatesMarch2016_B13B_mod20170110_3
+linemodel-offsets-dir=linecatalogs_offsets/offsetsCatalogs_20170410_m150
+

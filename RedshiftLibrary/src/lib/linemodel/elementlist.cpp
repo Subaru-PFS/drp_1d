@@ -181,60 +181,24 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
     //*/
 
 
-
-
     // "New style" rules initialization:
     m_Regulament = new CRegulament ( );
     m_Regulament->CreateRulesFromJSONFiles( );
     m_Regulament->EnableRulesAccordingToParameters ( m_rulesoption );
 
-    //tplshape catalog initialization : used for rigidities tplcorr and tplshape
-    m_CatalogTplShape = new CRayCatalogsTplShape();
-
+    // Load the line catalog
+    m_RestRayList = restRayList;
     Log.LogDebug( "About to load catalog." );
     if(m_rigidity != "tplshape")
     {
-        m_RestRayList = restRayList;
-
         //load the regular catalog
         LoadCatalog(restRayList);
         //LogCatalogInfos();
     }else{
-        m_RestRayList = restRayList;
         //load the tplshape catalog with only 1 element for all lines
         //LoadCatalogOneMultiline(restRayList);
         //load the tplshape catalog with 2 elements: 1 for the Em lines + 1 for the Abs lines
         LoadCatalogTwoMultilinesAE(restRayList);
-        bool ret = m_CatalogTplShape->Init(calibrationPath);
-        if(!ret)
-        {
-            Log.LogError("Unable to initialize the the tpl-shape catalogs. aborting...");
-            return;
-        }
-        m_CatalogTplShape->InitLineCorrespondingAmplitudes(*this);
-        m_CatalogTplShape->SetMultilineNominalAmplitudesFast( *this, 0 );
-        //m_CatalogTplShape->SetMultilineNominalAmplitudes( *this, 0 );
-        //m_RestRayList = m_CatalogTplShape->GetRestLinesList(0);
-        //LoadCatalog(m_RestRayList);
-        LogCatalogInfos();
-
-        //Resize tplshape buffers
-        m_ChisquareTplshape.resize(m_CatalogTplShape->GetCatalogsCount());
-        m_ScaleMargCorrTplshape.resize(m_CatalogTplShape->GetCatalogsCount());
-        m_StrongELPresentTplshape.resize(m_CatalogTplShape->GetCatalogsCount());
-        m_FittedAmpTplshape.resize(m_CatalogTplShape->GetCatalogsCount());
-        m_FittedErrorTplshape.resize(m_CatalogTplShape->GetCatalogsCount());
-        m_MtmTplshape.resize(m_CatalogTplShape->GetCatalogsCount());
-        m_DtmTplshape.resize(m_CatalogTplShape->GetCatalogsCount());
-        for(Int32 ktplshape=0; ktplshape<m_CatalogTplShape->GetCatalogsCount(); ktplshape++)
-        {
-            m_FittedAmpTplshape[ktplshape].resize(m_Elements.size());
-            m_FittedErrorTplshape[ktplshape].resize(m_Elements.size());
-            m_MtmTplshape[ktplshape].resize(m_Elements.size());
-            m_DtmTplshape[ktplshape].resize(m_Elements.size());
-        }
-
-        m_tplshapeLeastSquareFast = false;
     }
 }
 
@@ -274,6 +238,44 @@ Bool CLineModelElementList::initLambdaOffsets()
     return true;
 }
 
+
+Bool CLineModelElementList::initTplratioCatalogs()
+{
+    //tplshape catalog initialization : used for rigidities tplcorr and tplshape
+    m_CatalogTplShape = new CRayCatalogsTplShape();
+
+    bool ret = m_CatalogTplShape->Init(m_calibrationPath);
+    if(!ret)
+    {
+        Log.LogError("Unable to initialize the the tpl-shape catalogs. aborting...");
+        return false;
+    }
+    m_CatalogTplShape->InitLineCorrespondingAmplitudes(*this);
+    m_CatalogTplShape->SetMultilineNominalAmplitudesFast( *this, 0 );
+    //m_CatalogTplShape->SetMultilineNominalAmplitudes( *this, 0 );
+    //m_RestRayList = m_CatalogTplShape->GetRestLinesList(0);
+    //LoadCatalog(m_RestRayList);
+    LogCatalogInfos();
+
+    //Resize tplshape buffers
+    m_ChisquareTplshape.resize(m_CatalogTplShape->GetCatalogsCount());
+    m_ScaleMargCorrTplshape.resize(m_CatalogTplShape->GetCatalogsCount());
+    m_StrongELPresentTplshape.resize(m_CatalogTplShape->GetCatalogsCount());
+    m_FittedAmpTplshape.resize(m_CatalogTplShape->GetCatalogsCount());
+    m_FittedErrorTplshape.resize(m_CatalogTplShape->GetCatalogsCount());
+    m_MtmTplshape.resize(m_CatalogTplShape->GetCatalogsCount());
+    m_DtmTplshape.resize(m_CatalogTplShape->GetCatalogsCount());
+    for(Int32 ktplshape=0; ktplshape<m_CatalogTplShape->GetCatalogsCount(); ktplshape++)
+    {
+        m_FittedAmpTplshape[ktplshape].resize(m_Elements.size());
+        m_FittedErrorTplshape[ktplshape].resize(m_Elements.size());
+        m_MtmTplshape[ktplshape].resize(m_Elements.size());
+        m_DtmTplshape[ktplshape].resize(m_Elements.size());
+    }
+
+    m_tplshapeLeastSquareFast = false;
+    return true;
+}
 
 /**
  * @brief setPassMode

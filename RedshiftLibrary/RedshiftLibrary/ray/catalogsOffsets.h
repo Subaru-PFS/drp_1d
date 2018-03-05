@@ -35,7 +35,6 @@ public:
     CLineCatalogsOffsets();
     ~CLineCatalogsOffsets();
     Bool Init(std::string calibrationPath);
-    Bool SetCtlgRelPath( const char* relPath );
 
     Bool Load( const char* dirPath );
     Bool LoadCatalog( const char* filePath );

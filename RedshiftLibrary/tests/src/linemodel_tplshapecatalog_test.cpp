@@ -14,7 +14,6 @@ BOOST_AUTO_TEST_CASE( LoadCatalogAndVelocities )
     std::string calibrationPath = DATA_ROOT_DIR "LinemodelTplshapeCtlgTestCase/calibrationPath1";
     std::string relPath = "linecatalogs_tplshape_ExtendedTemplatesMarch2016_B13B_mod20170110_3";
     CRayCatalogsTplShape* catalogTplShape = new CRayCatalogsTplShape();
-    catalogTplShape->SetTplctlgRelPath(relPath.c_str());
     bool retVal = catalogTplShape->Init(calibrationPath);
     BOOST_CHECK( retVal == true );
 
