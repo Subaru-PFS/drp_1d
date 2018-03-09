@@ -45,6 +45,8 @@ public:
     Void                ShiftByWaveLength(  const CSpectrumSpectralAxis& origin, Float64 wavelengthOffset, EShiftDirection direction );
     Void                ShiftByWaveLength( Float64 wavelengthOffset, EShiftDirection direction );
 
+    Void                ApplyOffset(Float64 wavelengthOffset);
+
     Int32               GetIndexAtWaveLength( Float64 waveLength ) const;
     TInt32Range         GetIndexesAtWaveLengthRange( const TFloat64Range& waveLengthRange ) const;
 

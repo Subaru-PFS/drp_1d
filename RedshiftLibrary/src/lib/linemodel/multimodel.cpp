@@ -166,10 +166,18 @@ CMultiModel::CMultiModel(const CSpectrum& spectrum,
                                                                                              opt_rules,
                                                                                              opt_rigidity
                                                                                              )));
+
+
+
+        //hardcoded source size definition for each roll
         if(km==0){
-            m_models[km]->SetSourcesizeDispersion(0.1);
+            m_models[km]->SetSourcesizeDispersion(0.35);
         }else if(km==1){
-            m_models[km]->SetSourcesizeDispersion(0.5);
+            m_models[km]->SetSourcesizeDispersion(0.35);
+        }else if(km==2){
+            m_models[km]->SetSourcesizeDispersion(0.35);
+        }else if(km==3){
+            m_models[km]->SetSourcesizeDispersion(0.35);
         }
     }
 
@@ -249,6 +257,15 @@ std::shared_ptr<CSpectrum> CMultiModel::LoadRollSpectrum(std::string refSpcFullP
     }
 
     return spc;
+}
+
+Int32 CMultiModel::LoadFitContaminantTemplate(Int32 iRoll, CTemplate &tpl, const TFloat64Range& lambdaRange)
+{
+    if(m_models.size()>iRoll)
+    {
+        return m_models[iRoll]->LoadFitContaminantTemplate(lambdaRange, tpl);
+    }
+    return 0;
 }
 
 Int32 CMultiModel::setPassMode(Int32 iPass)

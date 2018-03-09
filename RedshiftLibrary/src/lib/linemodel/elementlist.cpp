@@ -106,6 +106,7 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
     CSpectrumFluxAxis& modelFluxAxis = m_SpectrumModel->GetFluxAxis();
     const CSpectrumFluxAxis& spectrumFluxAxis = spectrum.GetFluxAxis();
     m_spcFluxAxisNoContinuum.SetSize( spectrumSampleCount );
+    m_spcFluxAxisContaminant.SetSize( spectrumSampleCount );
 
     const Float64* error = spectrumFluxAxis.GetError();
     m_ErrorNoContinuum = m_spcFluxAxisNoContinuum.GetError();
@@ -146,15 +147,17 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
     m_observeGridContinuumFlux = NULL;
     m_unscaleContinuumFluxAxisDerivZ =NULL;
     m_chiSquareOperator = NULL;
-    //*
-    //WARNING: HACK, first pass with continuum from spectrum.
-    m_fitContinuum_tplfitStore = NULL;
-    m_fitContinuum_option = 0; //0=interactive fitting, 1=use precomputed fit store
+    for( UInt32 i=0; i<modelFluxAxis.GetSamplesCount(); i++ )
+    {
+        m_spcFluxAxisContaminant[i] = 0.0;
+    }
+
     //NB: fitContinuum_option: this is the initialization (default value), eventually overriden in SetFitContinuum_FitStore() when a fitStore gets available
+    m_fitContinuum_option = 0; //0=interactive fitting, 1=use precomputed fit store
+    m_fitContinuum_tplfitStore = NULL;
+
     if(m_ContinuumComponent == "tplfit" ||opt_fittingmethod == "lmfit" )
     {
-
-
         m_chiSquareOperator = new COperatorChiSquare2(calibrationPath);
         m_observeGridContinuumFlux = new Float64[modelFluxAxis.GetSamplesCount()]();
         if(m_observeGridContinuumFlux == NULL){
@@ -1062,6 +1065,103 @@ Bool CLineModelElementList::SolveContinuum(const CSpectrum& spectrum,
     }
 
 }
+
+Int32 CLineModelElementList::LoadFitContaminantTemplate(const TFloat64Range& lambdaRange, const CTemplate& tpl){
+    Float64 merit = DBL_MAX;
+    Float64 fitAmplitude = -1.0;
+    Float64 overlapThreshold = 1.0;
+
+    bool ignoreLinesSupport=false;
+    std::vector<CMask> maskList;
+    if(ignoreLinesSupport){
+        maskList.resize(1);
+        maskList[0]=getOutsideLinesMask();
+    }
+    std::vector<Float64> redshifts(1, 0.0); //fitting an already redshifted model
+    std::string opt_interp = "lin";
+    Int32 opt_extinction = 0;
+    Int32 opt_dustFit = 0;
+
+    //Fit contaminant template AMPLITUDE
+    //prepare observed spectrum without continuum
+    std::shared_ptr<CSpectrum> _spc = std::shared_ptr<CSpectrum>( new CSpectrum(*m_inputSpc) );
+    CSpectrumFluxAxis _spcFluxAxis = _spc->GetFluxAxis();
+    Float64* Y_spc = _spcFluxAxis.GetSamples();
+    for(UInt32 i=0; i<m_SpcFluxAxis.GetSamplesCount(); i++)
+    {
+        Y_spc[i] = m_SpcFluxAxis[i]-m_ContinuumFluxAxis[i];
+    }
+
+    /*
+    if(m_chiSquareOperator == NULL)
+    {
+        m_chiSquareOperator = new COperatorChiSquare2(calibrationPath);
+    }
+    auto  chisquareResult = std::dynamic_pointer_cast<CChisquareResult>( m_chiSquareOperator->Compute( *_spc, tpl, lambdaRange, redshifts, overlapThreshold, maskList, opt_interp, opt_extinction, opt_dustFit ) );
+    if( !chisquareResult )
+    {
+
+        //Log.LogInfo( "Failed to compute chi square value");
+        return false;
+    }else{
+        //
+        merit = chisquareResult->ChiSquare[0];
+        fitAmplitude = chisquareResult->FitAmplitude[0];
+        return true;
+    }
+    //*/
+    fitAmplitude = 1.0;
+
+    //prepare INTERPOLATED contaminant
+    Int32 n = tpl.GetSampleCount();
+    CSpectrumFluxAxis tplFluxAxis = tpl.GetFluxAxis();
+    const CSpectrumSpectralAxis& tplSpectralAxis = tpl.GetSpectralAxis();
+    Float64* Ysrc = tplFluxAxis.GetSamples();
+    const Float64* Xsrc = tplSpectralAxis.GetSamples();
+    gsl_spline *spline = gsl_spline_alloc (gsl_interp_cspline, n);
+    gsl_spline_init (spline, Xsrc, Ysrc, n);
+    gsl_interp_accel * accelerator =  gsl_interp_accel_alloc();
+    Int32 k = 0;
+    Float64 x = 0.0;
+    const CSpectrumSpectralAxis& spcSpectralAxis = m_SpectrumModel->GetSpectralAxis();
+    for(k=0; k<spcSpectralAxis.GetSamplesCount(); k++){
+        x = spcSpectralAxis[k];
+        if(x < tplSpectralAxis[0] || x > tplSpectralAxis[n-1]){
+            m_spcFluxAxisContaminant[k] = 0.0;
+        }else{
+            m_spcFluxAxisContaminant[k] = fitAmplitude*gsl_spline_eval (spline, x, accelerator);
+
+        }
+    }
+    gsl_spline_free (spline);
+    gsl_interp_accel_free (accelerator);
+
+    //*//debug:
+    FILE* f = fopen( "contaminantFittedInterpolated.txt", "w+" );
+    for(k=0; k<m_SpcFluxAxis.GetSamplesCount(); k++)
+    {
+        fprintf( f, "%f\t%e\n", spcSpectralAxis[k], m_spcFluxAxisContaminant[k]);
+    }
+    fclose( f );
+    //*/
+
+    const CSpectrumFluxAxis& inputSpectrumFluxAxis = m_inputSpc->GetFluxAxis();
+    if( m_ContinuumComponent=="nocontinuum" )
+    {
+        for(k=0; k<m_SpcFluxAxis.GetSamplesCount(); k++){
+            m_SpcFluxAxis[k] = inputSpectrumFluxAxis[k]-m_ContinuumFluxAxis[k]-m_spcFluxAxisContaminant[k];
+        }
+    }else if( m_ContinuumComponent == "fromspectrum" || m_ContinuumComponent == "tplfit")
+    {
+        for(k=0; k<m_SpcFluxAxis.GetSamplesCount(); k++){
+            m_SpcFluxAxis[k] = inputSpectrumFluxAxis[k]-m_spcFluxAxisContaminant[k];
+        }
+    }
+
+    return 1;
+}
+
+
 
 std::string CLineModelElementList::getFitContinuum_tplName()
 {

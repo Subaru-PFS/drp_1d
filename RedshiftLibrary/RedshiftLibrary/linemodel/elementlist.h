@@ -89,6 +89,8 @@ public:
     void SetContinuumComponent(std::string component);
     Int32 SetFitContinuum_FitStore(CTemplatesFitStore* fitStore);
 
+    Int32 LoadFitContaminantTemplate(const TFloat64Range& lambdaRange, const CTemplate& tpl);
+
     Bool initDtd(const TFloat64Range& lambdaRange);
     Float64 EstimateDTransposeD(const TFloat64Range& lambdaRange, std::string spcComponent);
     Float64 EstimateMTransposeM(const TFloat64Range& lambdaRange);
@@ -267,6 +269,7 @@ private:
 
     CSpectrumFluxAxis m_SpcFluxAxis;    //observed spectrum
     CSpectrumFluxAxis m_spcFluxAxisNoContinuum; //observed spectrum for line fitting
+    CSpectrumFluxAxis m_spcFluxAxisContaminant; //optionally used contaminant to be removed from observed spectrum
     Float64* m_ErrorNoContinuum;
     CSpectrumFluxAxis m_SpcFluxAxisModelDerivVelEmi;
     CSpectrumFluxAxis m_SpcFluxAxisModelDerivVelAbs;

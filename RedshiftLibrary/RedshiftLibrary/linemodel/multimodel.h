@@ -44,7 +44,7 @@ public:
     ~CMultiModel();
 
     std::shared_ptr<CSpectrum> LoadRollSpectrum(std::string refSpcFullPath, Int32 iRoll, Int32 iRollOffset);
-
+    Int32 LoadFitContaminantTemplate(Int32 iRoll, CTemplate& tpl, const TFloat64Range& lambdaRange);
 
     Int32 getTplshape_count();
     std::vector<Float64> getTplshape_priors();
@@ -102,7 +102,6 @@ public:
     void SetVelocityEmission(Float64 vel);
 
 
-
     Float64 fit(Float64 redshift, const TFloat64Range& lambdaRange, CLineModelSolution& modelSolution, Int32 contreest_iterations, bool enableLogging);
 
     std::vector<std::shared_ptr<CLineModelElementList>  > m_models;
@@ -111,7 +110,7 @@ private:
 
     std::string m_opt_rigidity;
     std::vector<Float64> m_chi2tplshape;
-    Int32 mIndexExportModel = 1;
+    Int32 mIndexExportModel = 0;
 
 };
 

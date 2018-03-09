@@ -22,6 +22,7 @@
 #include <boost/chrono/thread_clock.hpp>
 
 #include <RedshiftLibrary/processflow/datastore.h>
+#include <RedshiftLibrary/spectrum/io/genericreader.h>
 
 #include <math.h>
 #include <float.h>
@@ -222,6 +223,40 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
                                  opt_velocityAbsorption,
                                  opt_rules,
                                  opt_rigidity);
+    //*
+    //hardcoded load from file on disk: of the contaminant for first model
+    std::string templatePath = "/home/aschmitt/data/euclid/simulation2017-SC3_test_zweiroll/amazed/output_rolls_source3/euc_testsc3_zweiroll_source3_roll0_F_i0/linemodelsolve.linemodel_spc_extrema_0.txt";
+    const std::string& category = "emission";
+    std::shared_ptr<CTemplate> tplContaminant = std::shared_ptr<CTemplate>( new CTemplate( "contaminant", category ) );
+    CSpectrumIOGenericReader asciiReader;
+    if( !asciiReader.Read( templatePath.c_str(), *tplContaminant ) ) {
+        Log.LogError( "Fail to read contaminant template: %s", templatePath.c_str() );
+        return result;
+    }else{
+        Log.LogError( "Successfully loaded contaminant template: %s", templatePath.c_str() );
+    }
+    //*//debug:
+    FILE* f = fopen( "contaminantLoaded.txt", "w+" );
+    for(Int32 k=0; k<tplContaminant->GetSampleCount(); k++)
+    {
+        fprintf( f, "%f\t%e\n", tplContaminant->GetSpectralAxis()[k], tplContaminant->GetFluxAxis()[k]);
+    }
+    fclose( f );
+    //*/
+    Int32 iContTemplate = 0;
+    Float64 lambdaOffset_forSourceSpatialOffsetInDispersionDirection=2000; //hardcoded
+    tplContaminant->GetSpectralAxis().ApplyOffset(lambdaOffset_forSourceSpatialOffsetInDispersionDirection);
+    //*//debug:
+    FILE* f2 = fopen( "contaminantShifted.txt", "w+" );
+    for(Int32 k=0; k<tplContaminant->GetSampleCount(); k++)
+    {
+        fprintf( f2, "%f\t%e\n", tplContaminant->GetSpectralAxis()[k], tplContaminant->GetFluxAxis()[k]);
+    }
+    fclose( f2 );
+    //*/
+    //tplContaminant
+    model.LoadFitContaminantTemplate(iContTemplate, *tplContaminant, lambdaRange);
+    //*/
     //*/
 
 

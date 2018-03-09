@@ -203,7 +203,7 @@ std::shared_ptr<CLineModelSolveResult> CLineModelSolve::Compute( CDataStore& dat
         auto results = dataStore.GetGlobalResult( scope.c_str() );
         if(results.expired())
         {
-            Log.LogError("linemodelsolve: Unable to retriev linemodel results");
+            Log.LogError("linemodelsolve: Unable to retrieve linemodel results");
             return NULL;
         }
         std::shared_ptr<const CLineModelResult> result = std::dynamic_pointer_cast<const CLineModelResult>( results.lock() );

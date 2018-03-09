@@ -137,6 +137,16 @@ Void CSpectrumSpectralAxis::ShiftByWaveLength( const CSpectrumSpectralAxis& orig
 
 }
 
+Void CSpectrumSpectralAxis::ApplyOffset( Float64 wavelengthOffset )
+{
+
+    for( Int32 i=0; i< m_Samples.size(); i++ )
+    {
+        m_Samples[i] += wavelengthOffset;
+    }
+
+}
+
 /**
  * Copy the input axis, including its samples.
  */
