@@ -43,10 +43,11 @@ public:
 
     ~CMultiModel();
 
-    std::shared_ptr<CSpectrum> LoadRollSpectrum(std::string refSpcFullPath, Int32 iRoll);
+    std::shared_ptr<CSpectrum> LoadRollSpectrum(std::string refSpcFullPath, Int32 iRoll, Int32 iRollOffset);
 
 
     Int32 getTplshape_count();
+    std::vector<Float64> getTplshape_priors();
     std::string getTplshape_bestTplName();
     std::vector<Float64> GetChisquareTplshape();
     std::vector<Float64> GetScaleMargTplshape();
@@ -54,6 +55,8 @@ public:
     Float64 getLeastSquareContinuumMerit(const TFloat64Range& lambdaRange);
     Float64 getLeastSquareContinuumMeritFast();
     Float64 getContinuumScaleMargCorrection();
+    Bool initTplratioCatalogs();
+    Bool initLambdaOffsets();
 
     Int32 getSpcNSamples(const TFloat64Range& lambdaRange);
     Float64 getDTransposeD(const TFloat64Range& lambdaRange, std::string spcComponent);
@@ -75,11 +78,14 @@ public:
     const CSpectrum& GetModelSpectrum() const;
     const CSpectrum GetSpectrumModelContinuum() const;
     const CSpectrumFluxAxis& GetModelContinuum() const;
+    const CSpectrum&    GetObservedSpectrumWithLinesRemoved(Int32 lineTypeFilter=-1);
 
     Float64 GetVelocityEmission();
     Float64 GetVelocityAbsorption();
     TStringList GetModelRulesLog();
-
+    std::vector<std::vector<Int32>> GetModelVelfitGroups(Int32 lineType );
+    void SetVelocityEmissionOneElement(Float64 vel, Int32 idxElt);
+    void SetVelocityAbsorptionOneElement(Float64 vel, Int32 idxElt);
 
 
     Int32 LoadModelSolution(const CLineModelSolution&  modelSolution);
@@ -105,7 +111,7 @@ private:
 
     std::string m_opt_rigidity;
     std::vector<Float64> m_chi2tplshape;
-    Int32 mIndexExportModel = 0;
+    Int32 mIndexExportModel = 1;
 
 };
 

@@ -33,11 +33,13 @@ CMultiModel::CMultiModel(const CSpectrum& spectrum,
 
     m_opt_rigidity = opt_rigidity;
 
-    Int32 nModels = 2;
+    Int32 nModels = 3;
+    Int32 irollOffset = 0; //0 if using roll0_F, roll1_F etc..., 1 if using roll1_F, roll2_F, etc...
+    //also, in this hack, iRollOffset determines which roll is in the spectrumlist.
     std::vector<std::shared_ptr<CSpectrum>> spcRolls;
     for(Int32 km=0; km<nModels; km++)
     {
-        std::shared_ptr<CSpectrum> spcRoll = LoadRollSpectrum(spectrum.GetFullPath(), km+1);
+        std::shared_ptr<CSpectrum> spcRoll = LoadRollSpectrum(spectrum.GetFullPath(), km+irollOffset, irollOffset);
         spcRolls.push_back(spcRoll);
     }
     CSpectrum spcContinuumForMultimodel = CSpectrum(spectrumContinuum);
@@ -171,12 +173,6 @@ CMultiModel::CMultiModel(const CSpectrum& spectrum,
         }
     }
 
-    //
-    if(nModels>0 && m_opt_rigidity=="tplshape")
-    {
-        Int32 nTplshape = m_models[0]->getTplshape_count();
-        m_chi2tplshape.resize(nTplshape);
-    }
 
 }
 
@@ -188,7 +184,7 @@ CMultiModel::~CMultiModel()
 }
 
 //temporary hack: probably, all the rolls should be read by the client instead
-std::shared_ptr<CSpectrum> CMultiModel::LoadRollSpectrum(std::string refSpcFullPath, Int32 iRoll)
+std::shared_ptr<CSpectrum> CMultiModel::LoadRollSpectrum(std::string refSpcFullPath, Int32 iRoll, Int32 iRollOffset)
 {
     bool verbose=false;
     std::shared_ptr<CSpectrum> spc = std::shared_ptr<CSpectrum>( new CSpectrum() );
@@ -206,7 +202,7 @@ std::shared_ptr<CSpectrum> CMultiModel::LoadRollSpectrum(std::string refSpcFullP
     }
     Int32 substring_start = 0;
     Int32 substring_n;
-    std::string strTag = "_roll1_F";
+    std::string strTag = boost::str(boost::format("_roll%d_F") % iRollOffset);
     std::size_t foundstra = spcName.find(strTag.c_str());
     if (foundstra!=std::string::npos){
         substring_n = (Int32)foundstra;
@@ -261,6 +257,33 @@ Int32 CMultiModel::setPassMode(Int32 iPass)
 }
 
 
+Bool CMultiModel::initTplratioCatalogs()
+{
+    Bool ret=-1;
+    for(Int32 km=0; km<m_models.size(); km++)
+    {
+        ret = m_models[km]->initTplratioCatalogs();
+    }
+
+    //
+    if(m_models.size()>0 && m_opt_rigidity=="tplshape")
+    {
+        Int32 nTplshape = m_models[0]->getTplshape_count();
+        m_chi2tplshape.resize(nTplshape);
+    }
+
+    return ret;
+}
+
+Bool CMultiModel::initLambdaOffsets()
+{
+    Bool ret=-1;
+    for(Int32 km=0; km<m_models.size(); km++)
+    {
+        ret = m_models[km]->initLambdaOffsets();
+    }
+    return ret;
+}
 
 Int32 CMultiModel::getTplshape_count()
 {
@@ -271,6 +294,19 @@ Int32 CMultiModel::getTplshape_count()
     else
     {
         return -1;
+    }
+}
+
+std::vector<Float64> CMultiModel::getTplshape_priors()
+{
+    if(m_models.size()>0)
+    {
+        return m_models[0]->getTplshape_priors();
+    }
+    else
+    {
+        std::vector<Float64> dumb;
+        return dumb;
     }
 }
 
@@ -698,6 +734,19 @@ const CSpectrum& CMultiModel::GetModelSpectrum() const
     }
 }
 
+const CSpectrum& CMultiModel::GetObservedSpectrumWithLinesRemoved(Int32 lineTypeFilter)
+{
+    if(m_models.size()>mIndexExportModel)
+    {
+        return m_models[mIndexExportModel]->GetObservedSpectrumWithLinesRemoved(lineTypeFilter);
+    }
+    else
+    {
+        std::shared_ptr<CSpectrum> spcDumb=0;
+        return *spcDumb;
+    }
+}
+
 const CSpectrum CMultiModel::GetSpectrumModelContinuum() const
 {
     if(m_models.size()>mIndexExportModel)
@@ -747,6 +796,35 @@ Float64 CMultiModel::GetVelocityAbsorption()
     else
     {
         return -1;
+    }
+}
+
+std::vector<std::vector<Int32>> CMultiModel::GetModelVelfitGroups( Int32 lineType )
+{
+    if(m_models.size()>0)
+    {
+        return m_models[0]->GetModelVelfitGroups(lineType);
+    }
+    else
+    {
+        std::vector<std::vector<Int32>> dumb;
+        return dumb;
+    }
+}
+
+void CMultiModel::SetVelocityEmissionOneElement(Float64 vel, Int32 idxElt)
+{
+    for(Int32 km=0; km<m_models.size(); km++)
+    {
+        m_models[km]->SetVelocityEmissionOneElement(vel, idxElt);
+    }
+}
+
+void CMultiModel::SetVelocityAbsorptionOneElement(Float64 vel, Int32 idxElt)
+{
+    for(Int32 km=0; km<m_models.size(); km++)
+    {
+        m_models[km]->SetVelocityAbsorptionOneElement(vel, idxElt);
     }
 }
 

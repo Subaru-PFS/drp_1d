@@ -186,7 +186,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
     std::shared_ptr<CTemplateCatalog> orthoTplCatalog = orthoTplStore.getTplCatalog(ctlgIdx);
     Log.LogInfo( "Linemodel: Templates store prepared.");
 
-    //*
+    /*
     CLineModelElementList model( spectrum,
                                  spectrumContinuum,
                                  tplCatalog,//*orthoTplCatalog,//
@@ -204,6 +204,25 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
     Float64 setssSizeInit = 0.1;
     model.SetSourcesizeDispersion(setssSizeInit);
     Log.LogInfo( "Linemodel: sourcesize init to: ss=%.1f", setssSizeInit);
+    //*/
+
+
+    //*
+    CMultiModel model( spectrum,
+                                 spectrumContinuum,
+                                 tplCatalog,//*orthoTplCatalog,//
+                                 tplCategoryList,
+                                 opt_calibrationPath,
+                                 restRayList,
+                                 opt_fittingmethod,
+                                 opt_continuumcomponent,
+                                 opt_lineWidthType,
+                                 opt_resolution,
+                                 opt_velocityEmission,
+                                 opt_velocityAbsorption,
+                                 opt_rules,
+                                 opt_rigidity);
+    //*/
 
 
     //init catalog tplratios
@@ -222,26 +241,6 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
     {
         Log.LogError( "Linemodel: Failed to init lambda offsets. Continuing without offsets...");
     }
-    //*/
-
-
-    /*
-    CMultiModel model( spectrum,
-                                 spectrumContinuum,
-                                 tplCatalog,//*orthoTplCatalog,//
-                                 tplCategoryList,
-                                 opt_calibrationPath,
-                                 restRayList,
-                                 opt_fittingmethod,
-                                 opt_continuumcomponent,
-                                 opt_lineWidthType,
-                                 opt_resolution,
-                                 opt_velocityEmission,
-                                 opt_velocityAbsorption,
-                                 opt_rules,
-                                 opt_rigidity);
-    //*/
-
 
     Int32 resultInitRet = result->Init( sortedRedshifts, restRayList, model.getTplshape_count(), model.getTplshape_priors());
     if(resultInitRet!=0)
