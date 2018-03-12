@@ -6,7 +6,7 @@
 #include <RedshiftLibrary/operator/operator.h>
 #include <RedshiftLibrary/operator/linemodelresult.h>
 #include <RedshiftLibrary/linemodel/elementlist.h>
-#include <RedshiftLibrary/linemodel/multimodel.h>
+#include <RedshiftLibrary/linemodel/multirollmodel.h>
 #include <RedshiftLibrary/linemodel/modelspectrumresult.h>
 #include <RedshiftLibrary/linemodel/modelfittingresult.h>
 #include <RedshiftLibrary/linemodel/modelrulesresult.h>

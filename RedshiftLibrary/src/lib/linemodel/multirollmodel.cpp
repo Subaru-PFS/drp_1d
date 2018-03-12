@@ -1,4 +1,4 @@
-#include <RedshiftLibrary/linemodel/multimodel.h>
+#include <RedshiftLibrary/linemodel/multirollmodel.h>
 
 #include <boost/filesystem.hpp>
 #include <RedshiftLibrary/spectrum/io/genericreader.h>
@@ -15,7 +15,7 @@ using namespace NSEpic;
 /**
  * \brief Constructor.
  **/
-CMultiModel::CMultiModel(const CSpectrum& spectrum,
+CMultiRollModel::CMultiRollModel(const CSpectrum& spectrum,
                           const CSpectrum &spectrumContinuum,
                           const CTemplateCatalog& tplCatalog,
                           const TStringList& tplCategoryList,
@@ -187,12 +187,12 @@ CMultiModel::CMultiModel(const CSpectrum& spectrum,
 /**
  * \brief Empty destructor.
  **/
-CMultiModel::~CMultiModel()
+CMultiRollModel::~CMultiRollModel()
 {
 }
 
 //temporary hack: probably, all the rolls should be read by the client instead
-std::shared_ptr<CSpectrum> CMultiModel::LoadRollSpectrum(std::string refSpcFullPath, Int32 iRoll, Int32 iRollOffset)
+std::shared_ptr<CSpectrum> CMultiRollModel::LoadRollSpectrum(std::string refSpcFullPath, Int32 iRoll, Int32 iRollOffset)
 {
     bool verbose=false;
     std::shared_ptr<CSpectrum> spc = std::shared_ptr<CSpectrum>( new CSpectrum() );
@@ -259,7 +259,7 @@ std::shared_ptr<CSpectrum> CMultiModel::LoadRollSpectrum(std::string refSpcFullP
     return spc;
 }
 
-Int32 CMultiModel::LoadFitContaminantTemplate(Int32 iRoll, CTemplate &tpl, const TFloat64Range& lambdaRange)
+Int32 CMultiRollModel::LoadFitContaminantTemplate(Int32 iRoll, CTemplate &tpl, const TFloat64Range& lambdaRange)
 {
     if(m_models.size()>iRoll)
     {
@@ -268,13 +268,13 @@ Int32 CMultiModel::LoadFitContaminantTemplate(Int32 iRoll, CTemplate &tpl, const
     return 0;
 }
 
-Int32 CMultiModel::setPassMode(Int32 iPass)
+Int32 CMultiRollModel::setPassMode(Int32 iPass)
 {
     return 0;
 }
 
 
-Bool CMultiModel::initTplratioCatalogs()
+Bool CMultiRollModel::initTplratioCatalogs()
 {
     Bool ret=-1;
     for(Int32 km=0; km<m_models.size(); km++)
@@ -292,7 +292,7 @@ Bool CMultiModel::initTplratioCatalogs()
     return ret;
 }
 
-Bool CMultiModel::initLambdaOffsets()
+Bool CMultiRollModel::initLambdaOffsets()
 {
     Bool ret=-1;
     for(Int32 km=0; km<m_models.size(); km++)
@@ -302,7 +302,7 @@ Bool CMultiModel::initLambdaOffsets()
     return ret;
 }
 
-Int32 CMultiModel::getTplshape_count()
+Int32 CMultiRollModel::getTplshape_count()
 {
     if(m_models.size()>0)
     {
@@ -314,7 +314,7 @@ Int32 CMultiModel::getTplshape_count()
     }
 }
 
-std::vector<Float64> CMultiModel::getTplshape_priors()
+std::vector<Float64> CMultiRollModel::getTplshape_priors()
 {
     if(m_models.size()>0)
     {
@@ -327,7 +327,7 @@ std::vector<Float64> CMultiModel::getTplshape_priors()
     }
 }
 
-Int32 CMultiModel::getSpcNSamples(const TFloat64Range& lambdaRange)
+Int32 CMultiRollModel::getSpcNSamples(const TFloat64Range& lambdaRange)
 {
     if(m_models.size()>0)
     {
@@ -339,7 +339,7 @@ Int32 CMultiModel::getSpcNSamples(const TFloat64Range& lambdaRange)
     }
 }
 
-Int32 CMultiModel::SetFitContinuum_FitStore(CTemplatesFitStore* fitStore)
+Int32 CMultiRollModel::SetFitContinuum_FitStore(CTemplatesFitStore* fitStore)
 {
     Int32 ret=-1;
     for(Int32 km=0; km<m_models.size(); km++)
@@ -349,7 +349,7 @@ Int32 CMultiModel::SetFitContinuum_FitStore(CTemplatesFitStore* fitStore)
     return ret;
 }
 
-Float64 CMultiModel::getDTransposeD(const TFloat64Range& lambdaRange, std::string spcComponent)
+Float64 CMultiRollModel::getDTransposeD(const TFloat64Range& lambdaRange, std::string spcComponent)
 {
     Float64 valf=0.0;
     for(Int32 km=0; km<m_models.size(); km++)
@@ -360,7 +360,7 @@ Float64 CMultiModel::getDTransposeD(const TFloat64Range& lambdaRange, std::strin
 }
 
 //TODO
-Float64 CMultiModel::getLikelihood_cstLog(const TFloat64Range& lambdaRange)
+Float64 CMultiRollModel::getLikelihood_cstLog(const TFloat64Range& lambdaRange)
 {
     Float64 valf=0.0;
     for(Int32 km=0; km<m_models.size(); km++)
@@ -371,7 +371,7 @@ Float64 CMultiModel::getLikelihood_cstLog(const TFloat64Range& lambdaRange)
     return valf;
 }
 
-void CMultiModel::SetAbsLinesLimit(Float64 limit)
+void CMultiRollModel::SetAbsLinesLimit(Float64 limit)
 {
     for(Int32 km=0; km<m_models.size(); km++)
     {
@@ -379,7 +379,7 @@ void CMultiModel::SetAbsLinesLimit(Float64 limit)
     }
 }
 
-void CMultiModel::SetLeastSquareFastEstimationEnabled(Int32 enabled)
+void CMultiRollModel::SetLeastSquareFastEstimationEnabled(Int32 enabled)
 {
     for(Int32 km=0; km<m_models.size(); km++)
     {
@@ -389,7 +389,7 @@ void CMultiModel::SetLeastSquareFastEstimationEnabled(Int32 enabled)
 
 //TODO: this fitting function needs to be fine tuned for this multimodel use case.
 //TBD First-order 0: only use individual fitting method: get the mtm, and dtm values for each model, then estimate the amplitude accordingly for all models
-Float64 CMultiModel::
+Float64 CMultiRollModel::
 fit(Float64 redshift, const TFloat64Range& lambdaRange, CLineModelSolution& modelSolution, Int32 contreest_iterations, bool enableLogging)
 {
     //first individual fitting: get the amps, dtm, mtm calculated
@@ -618,7 +618,7 @@ fit(Float64 redshift, const TFloat64Range& lambdaRange, CLineModelSolution& mode
 }
 
 //TODO
-Float64 CMultiModel::getScaleMargCorrection(Int32 idxLine)
+Float64 CMultiRollModel::getScaleMargCorrection(Int32 idxLine)
 {
     Float64 valf=0.0;
     for(Int32 km=0; km<m_models.size(); km++)
@@ -629,7 +629,7 @@ Float64 CMultiModel::getScaleMargCorrection(Int32 idxLine)
     return valf;
 }
 
-std::vector<Float64> CMultiModel::GetChisquareTplshape()
+std::vector<Float64> CMultiRollModel::GetChisquareTplshape()
 {
     /*
     std::vector<Float64> chi2tplshape;
@@ -651,7 +651,7 @@ std::vector<Float64> CMultiModel::GetChisquareTplshape()
     return m_chi2tplshape;
 }
 
-std::vector<Float64> CMultiModel::GetScaleMargTplshape()
+std::vector<Float64> CMultiRollModel::GetScaleMargTplshape()
 {
     std::vector<Float64> scaleMargtplshape;
     if(m_models.size()>0)
@@ -671,7 +671,7 @@ std::vector<Float64> CMultiModel::GetScaleMargTplshape()
 }
 
 //todo: tbd, are these booleans to be combined by OR or AND ?
-std::vector<bool> CMultiModel::GetStrongELPresentTplshape()
+std::vector<bool> CMultiRollModel::GetStrongELPresentTplshape()
 {
     std::vector<bool> strongElPresentplshape;
     if(m_models.size()>0)
@@ -690,7 +690,7 @@ std::vector<bool> CMultiModel::GetStrongELPresentTplshape()
     return strongElPresentplshape;
 }
 
-Float64 CMultiModel::getLeastSquareContinuumMerit(const TFloat64Range& lambdaRange)
+Float64 CMultiRollModel::getLeastSquareContinuumMerit(const TFloat64Range& lambdaRange)
 {
     Float64 valf=0.0;
     for(Int32 km=0; km<m_models.size(); km++)
@@ -700,7 +700,7 @@ Float64 CMultiModel::getLeastSquareContinuumMerit(const TFloat64Range& lambdaRan
     return valf;
 }
 
-Float64 CMultiModel::getLeastSquareContinuumMeritFast()
+Float64 CMultiRollModel::getLeastSquareContinuumMeritFast()
 {
     Float64 valf=0.0;
     for(Int32 km=0; km<m_models.size(); km++)
@@ -710,7 +710,7 @@ Float64 CMultiModel::getLeastSquareContinuumMeritFast()
     return valf;
 }
 
-Float64 CMultiModel::getContinuumScaleMargCorrection()
+Float64 CMultiRollModel::getContinuumScaleMargCorrection()
 {
     Float64 valf=0.0;
     for(Int32 km=0; km<m_models.size(); km++)
@@ -721,7 +721,7 @@ Float64 CMultiModel::getContinuumScaleMargCorrection()
 }
 
 //todo: check if all values are shared between all the models
-Int32 CMultiModel::LoadModelSolution(const CLineModelSolution&  modelSolution)
+Int32 CMultiRollModel::LoadModelSolution(const CLineModelSolution&  modelSolution)
 {
     for(Int32 km=0; km<m_models.size(); km++)
     {
@@ -730,7 +730,7 @@ Int32 CMultiModel::LoadModelSolution(const CLineModelSolution&  modelSolution)
     return 0;
 }
 
-void CMultiModel::SetFittingMethod(std::string fitMethod)
+void CMultiRollModel::SetFittingMethod(std::string fitMethod)
 {
     for(Int32 km=0; km<m_models.size(); km++)
     {
@@ -738,7 +738,7 @@ void CMultiModel::SetFittingMethod(std::string fitMethod)
     }
 }
 
-const CSpectrum& CMultiModel::GetModelSpectrum() const
+const CSpectrum& CMultiRollModel::GetModelSpectrum() const
 {
     if(m_models.size()>mIndexExportModel)
     {
@@ -751,7 +751,7 @@ const CSpectrum& CMultiModel::GetModelSpectrum() const
     }
 }
 
-const CSpectrum& CMultiModel::GetObservedSpectrumWithLinesRemoved(Int32 lineTypeFilter)
+const CSpectrum& CMultiRollModel::GetObservedSpectrumWithLinesRemoved(Int32 lineTypeFilter)
 {
     if(m_models.size()>mIndexExportModel)
     {
@@ -764,7 +764,7 @@ const CSpectrum& CMultiModel::GetObservedSpectrumWithLinesRemoved(Int32 lineType
     }
 }
 
-const CSpectrum CMultiModel::GetSpectrumModelContinuum() const
+const CSpectrum CMultiRollModel::GetSpectrumModelContinuum() const
 {
     if(m_models.size()>mIndexExportModel)
     {
@@ -777,7 +777,7 @@ const CSpectrum CMultiModel::GetSpectrumModelContinuum() const
     }
 }
 
-const CSpectrumFluxAxis& CMultiModel::GetModelContinuum() const
+const CSpectrumFluxAxis& CMultiRollModel::GetModelContinuum() const
 {
     if(m_models.size()>mIndexExportModel)
     {
@@ -791,7 +791,7 @@ const CSpectrumFluxAxis& CMultiModel::GetModelContinuum() const
 }
 
 //todo: tbd: which one should be returned in this multimodel case ?
-Float64 CMultiModel::GetVelocityEmission()
+Float64 CMultiRollModel::GetVelocityEmission()
 {
     if(m_models.size()>0)
     {
@@ -804,7 +804,7 @@ Float64 CMultiModel::GetVelocityEmission()
 }
 
 //todo: tbd: which one should be returned in this multimodel case ?
-Float64 CMultiModel::GetVelocityAbsorption()
+Float64 CMultiRollModel::GetVelocityAbsorption()
 {
     if(m_models.size()>0)
     {
@@ -816,7 +816,7 @@ Float64 CMultiModel::GetVelocityAbsorption()
     }
 }
 
-std::vector<std::vector<Int32>> CMultiModel::GetModelVelfitGroups( Int32 lineType )
+std::vector<std::vector<Int32>> CMultiRollModel::GetModelVelfitGroups( Int32 lineType )
 {
     if(m_models.size()>0)
     {
@@ -829,7 +829,7 @@ std::vector<std::vector<Int32>> CMultiModel::GetModelVelfitGroups( Int32 lineTyp
     }
 }
 
-void CMultiModel::SetVelocityEmissionOneElement(Float64 vel, Int32 idxElt)
+void CMultiRollModel::SetVelocityEmissionOneElement(Float64 vel, Int32 idxElt)
 {
     for(Int32 km=0; km<m_models.size(); km++)
     {
@@ -837,7 +837,7 @@ void CMultiModel::SetVelocityEmissionOneElement(Float64 vel, Int32 idxElt)
     }
 }
 
-void CMultiModel::SetVelocityAbsorptionOneElement(Float64 vel, Int32 idxElt)
+void CMultiRollModel::SetVelocityAbsorptionOneElement(Float64 vel, Int32 idxElt)
 {
     for(Int32 km=0; km<m_models.size(); km++)
     {
@@ -846,7 +846,7 @@ void CMultiModel::SetVelocityAbsorptionOneElement(Float64 vel, Int32 idxElt)
 }
 
 //todo: add model number tag in front of the log-string items ?
-TStringList CMultiModel::GetModelRulesLog()
+TStringList CMultiRollModel::GetModelRulesLog()
 {
     TStringList tstr;
     for(Int32 km=0; km<m_models.size(); km++)
@@ -861,7 +861,7 @@ TStringList CMultiModel::GetModelRulesLog()
 
 }
 
-void CMultiModel::ResetElementIndexesDisabled()
+void CMultiRollModel::ResetElementIndexesDisabled()
 {
     for(Int32 km=0; km<m_models.size(); km++)
     {
@@ -869,7 +869,7 @@ void CMultiModel::ResetElementIndexesDisabled()
     }
 }
 
-Int32 CMultiModel::ApplyVelocityBound(Float64 inf, Float64 sup)
+Int32 CMultiRollModel::ApplyVelocityBound(Float64 inf, Float64 sup)
 {
     for(Int32 km=0; km<m_models.size(); km++)
     {
@@ -878,7 +878,7 @@ Int32 CMultiModel::ApplyVelocityBound(Float64 inf, Float64 sup)
     return 0;
 }
 
-void CMultiModel::SetVelocityAbsorption(Float64 vel)
+void CMultiRollModel::SetVelocityAbsorption(Float64 vel)
 {
     for(Int32 km=0; km<m_models.size(); km++)
     {
@@ -886,7 +886,7 @@ void CMultiModel::SetVelocityAbsorption(Float64 vel)
     }
 }
 
-void CMultiModel::SetVelocityEmission(Float64 vel)
+void CMultiRollModel::SetVelocityEmission(Float64 vel)
 {
     for(Int32 km=0; km<m_models.size(); km++)
     {
@@ -894,7 +894,7 @@ void CMultiModel::SetVelocityEmission(Float64 vel)
     }
 }
 
-Float64 CMultiModel::EstimateMTransposeM(const TFloat64Range& lambdaRange)
+Float64 CMultiRollModel::EstimateMTransposeM(const TFloat64Range& lambdaRange)
 {
     Float64 valf=0.0;
     for(Int32 km=0; km<m_models.size(); km++)
@@ -904,7 +904,7 @@ Float64 CMultiModel::EstimateMTransposeM(const TFloat64Range& lambdaRange)
     return valf;
 }
 
-Float64 CMultiModel::getCumulSNRStrongEL()
+Float64 CMultiRollModel::getCumulSNRStrongEL()
 {
     Float64 valf=0.0;
     for(Int32 km=0; km<m_models.size(); km++)
@@ -914,7 +914,7 @@ Float64 CMultiModel::getCumulSNRStrongEL()
     return valf;
 }
 
-Int32 CMultiModel::GetNElements()
+Int32 CMultiRollModel::GetNElements()
 {
     if(m_models.size()>0)
     {
@@ -926,7 +926,7 @@ Int32 CMultiModel::GetNElements()
     }
 }
 
-Int32 CMultiModel::GetModelNonZeroElementsNDdl()
+Int32 CMultiRollModel::GetModelNonZeroElementsNDdl()
 {
     if(m_models.size()>0)
     {
@@ -939,7 +939,7 @@ Int32 CMultiModel::GetModelNonZeroElementsNDdl()
 }
 
 //todo: make the returned mask the concatenation of the mask for all models
-CMask CMultiModel::getOutsideLinesMask()
+CMask CMultiRollModel::getOutsideLinesMask()
 {
     if(m_models.size()>0)
     {
@@ -952,7 +952,7 @@ CMask CMultiModel::getOutsideLinesMask()
 }
 
 //todo: tbd: which one should be returned in this multimodel case ?
-std::string CMultiModel::getFitContinuum_tplName()
+std::string CMultiRollModel::getFitContinuum_tplName()
 {
     if(m_models.size()>0)
     {
@@ -965,7 +965,7 @@ std::string CMultiModel::getFitContinuum_tplName()
 }
 
 //todo: tbd: which one should be returned in this multimodel case ?
-Float64 CMultiModel::getFitContinuum_tplAmplitude()
+Float64 CMultiRollModel::getFitContinuum_tplAmplitude()
 {
     if(m_models.size()>0)
     {
@@ -978,7 +978,7 @@ Float64 CMultiModel::getFitContinuum_tplAmplitude()
 }
 
 //todo: tbd: which one should be returned in this multimodel case ?
-Float64 CMultiModel::getFitContinuum_tplMerit()
+Float64 CMultiRollModel::getFitContinuum_tplMerit()
 {
     if(m_models.size()>0)
     {
@@ -991,7 +991,7 @@ Float64 CMultiModel::getFitContinuum_tplMerit()
 }
 
 //todo: tbd: which one should be returned in this multimodel case ?
-Float64 CMultiModel::getFitContinuum_tplIsmDustCoeff()
+Float64 CMultiRollModel::getFitContinuum_tplIsmDustCoeff()
 {
     if(m_models.size()>0)
     {
@@ -1004,7 +1004,7 @@ Float64 CMultiModel::getFitContinuum_tplIsmDustCoeff()
 }
 
 //todo: tbd: which one should be returned in this multimodel case ?
-Float64 CMultiModel::getFitContinuum_tplIgmMeiksinIdx()
+Float64 CMultiRollModel::getFitContinuum_tplIgmMeiksinIdx()
 {
     if(m_models.size()>0)
     {
@@ -1017,7 +1017,7 @@ Float64 CMultiModel::getFitContinuum_tplIgmMeiksinIdx()
 }
 
 //todo: tbd: which one should be returned in this multimodel case ?
-std::string CMultiModel::getTplshape_bestTplName()
+std::string CMultiRollModel::getTplshape_bestTplName()
 {
     if(m_models.size()>0)
     {

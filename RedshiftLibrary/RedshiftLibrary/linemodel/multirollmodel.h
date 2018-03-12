@@ -21,12 +21,12 @@
 namespace NSEpic
 {
 
-class CMultiModel
+class CMultiRollModel
 {
 
 public:
 
-    CMultiModel(const CSpectrum& spectrum,
+    CMultiRollModel(const CSpectrum& spectrum,
                           const CSpectrum& spectrumNoContinuum,
                           const CTemplateCatalog& tplCatalog,
                           const TStringList& tplCategoryList,
@@ -41,7 +41,7 @@ public:
                           const std::string &opt_rules,
                           const std::string &opt_rigidity);
 
-    ~CMultiModel();
+    ~CMultiRollModel();
 
     std::shared_ptr<CSpectrum> LoadRollSpectrum(std::string refSpcFullPath, Int32 iRoll, Int32 iRollOffset);
     Int32 LoadFitContaminantTemplate(Int32 iRoll, CTemplate& tpl, const TFloat64Range& lambdaRange);

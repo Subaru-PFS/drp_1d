@@ -209,7 +209,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
 
 
     //*
-    CMultiModel model( spectrum,
+    CMultiRollModel model( spectrum,
                                  spectrumContinuum,
                                  tplCatalog,//*orthoTplCatalog,//
                                  tplCategoryList,
