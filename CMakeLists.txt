@@ -54,8 +54,12 @@ IF( NOT (CFITSIO_FOUND AND FFTW_FOUND AND GSL_FOUND AND BOOST_FOUND) )
   SET( cpf-redshift_THIRDPARTY_STATIC_LIBS
     libcfitsio.a libfftw3.a libgsl.a libgslcblas.a libboost_filesystem.a
     libboost_system.a libboost_thread.a libboost_timer.a libboost_chrono.a libboost_program_options.a
-    libboost_regex.a)
-  SET(tests_THIRDPARTY_LIBS boost_unit_test_framework)
+    libboost_regex.a libboost_unit_test_framework.a)
+  IF(BUILD_SHARED_LIBS)
+    SET( tests_THIRDPARTY_LIBS boost_unit_test_framework)
+  ELSE()
+    SET( tests_THIRDPARTY_LIBS libboost_unit_test_framework.a)
+  ENDIF()
   INCLUDE_DIRECTORIES( ${cpf-redshift_THIRDPARTY_INCLUDE_DIR} )
   set(PARALLEL_BUILD_FLAG "-j4")
   ADD_SUBDIRECTORY( tools )
@@ -70,7 +74,7 @@ ELSE()
     ${Boost_TIMER_LIBRARY_RELEASE}
     ${Boost_CHRONO_LIBRARY_RELEASE}
     ${Boost_PROGRAM_OPTIONS_LIBRARY_RELEASE})
-  SET( cpf-redshift_THIRDPARTY_STATIC_LIBS ${cpf-redshift_THIRDPARTY_LIBS})
+  SET(cpf-redshift_THIRDPARTY_STATIC_LIBS ${cpf-redshift_THIRDPARTY_LIBS})
   SET(tests_THIRDPARTY_LIBS ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY_RELEASE})
 
   INCLUDE_DIRECTORIES( ${CFITSIO_INCLUDE_DIR} ${FFTW_INCLUDE_DIR} ${GSL_INCLUDE_DIRS}
@@ -104,16 +108,27 @@ SET( LIB_NAME cpf-redshift${EXT} )
 
 FILE( GLOB_RECURSE LIB_SOURCE_FILES ${ROOT_DIR}/RedshiftLibrary/src/lib/*.cpp )
 
-ADD_LIBRARY( ${LIB_NAME} SHARED ${LIB_SOURCE_FILES} )
-ADD_LIBRARY( ${LIB_NAME}-static STATIC ${LIB_SOURCE_FILES} )
-SET_TARGET_PROPERTIES(${LIB_NAME}-static PROPERTIES OUTPUT_NAME ${LIB_NAME})
+IF(BUILD_SHARED_LIBS)
+  ADD_LIBRARY( ${LIB_NAME} SHARED ${LIB_SOURCE_FILES} )
+  TARGET_LINK_LIBRARIES(${LIB_NAME} ${cpf-redshift_THIRDPARTY_LIBS})
+  INSTALL( TARGETS ${LIB_NAME} ARCHIVE DESTINATION lib LIBRARY DESTINATION lib)
+  EXPORT( PACKAGE ${LIB_NAME} )
+  EXPORT(TARGETS ${LIB_NAME} FILE FindCPFRedshift.cmake)
+ELSE()
+  ADD_LIBRARY( ${LIB_NAME}-static STATIC ${LIB_SOURCE_FILES} )
+  SET_TARGET_PROPERTIES(${LIB_NAME}-static PROPERTIES OUTPUT_NAME ${LIB_NAME})
+  TARGET_LINK_LIBRARIES(${LIB_NAME}-static ${cpf-redshift_THIRDPARTY_LIBS})
+  INSTALL( TARGETS ${LIB_NAME}-static ARCHIVE DESTINATION lib LIBRARY DESTINATION lib)
+  EXPORT( PACKAGE ${LIB_NAME}-static )
+  EXPORT(TARGETS ${LIB_NAME}-static FILE FindCPFRedshift.cmake)
+  SET(LIB_NAME ${LIB_NAME}-static)
+ENDIF()
 
-TARGET_LINK_LIBRARIES(${LIB_NAME} ${cpf-redshift_THIRDPARTY_LIBS})
-TARGET_LINK_LIBRARIES(${LIB_NAME}-static ${cpf-redshift_THIRDPARTY_LIBS})
 
 #--------------------------------------------------------
 # Compile test
 #--------------------------------------------------------
+IF(BUILD_SHARED_LIBS)
 ENABLE_TESTING()
 
 FILE( GLOB_RECURSE TEST_SOURCE_FILES ${ROOT_DIR}/RedshiftLibrary/tests/src/*.cpp )
@@ -131,30 +146,28 @@ FOREACH(TEST_SOURCE ${TEST_SOURCE_FILES})
     COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/bin/${TEST_NAME} )
   SET_PROPERTY(SOURCE ${TEST_SOURCE} APPEND PROPERTY COMPILE_DEFINITIONS BOOST_TEST_MODULE=${TEST_NAME} )
 ENDFOREACH(TEST_SOURCE)
-
+ENDIF()
 #--------------------------------------------------------
 # Install directive
 #--------------------------------------------------------
-INSTALL( TARGETS ${LIB_NAME} ${LIB_NAME}-static ARCHIVE DESTINATION lib LIBRARY DESTINATION lib)
 INSTALL( DIRECTORY ${ROOT_DIR}/RedshiftLibrary/ DESTINATION RedshiftLibrary )
 INSTALL( FILES  ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cpf-redshift-config.cmake DESTINATION cmake )
-
 
 #--------------------------------------------------------
 # Build python wrapper
 #--------------------------------------------------------
 FIND_PACKAGE(SWIG)
-IF(DEFINED SWIG_VERSION)
+IF(BUILD_SHARED_LIBS AND DEFINED SWIG_VERSION)
   MESSAGE(STATUS "Using SWIG version ${SWIG_VERSION}")
   INCLUDE(${SWIG_USE_FILE})
   FIND_PACKAGE(PythonLibs)
   INCLUDE_DIRECTORIES( ${PYTHON_INCLUDE_DIRS} )
 
-  SET_PROPERTY(SOURCE RedshiftLibrary/RedshiftLibrary/redshift.i PROPERTY CPLUSPLUS ON)
+  SET_PROPERTY(SOURCE ${ROOT_DIR}/RedshiftLibrary/RedshiftLibrary/redshift.i PROPERTY CPLUSPLUS ON)
   IF(CMAKE_VERSION VERSION_GREATER "3.8.0")
-    SWIG_ADD_LIBRARY(redshift LANGUAGE python SOURCES RedshiftLibrary/RedshiftLibrary/redshift.i)
+    SWIG_ADD_LIBRARY(redshift LANGUAGE python SOURCES ${ROOT_DIR}/RedshiftLibrary/RedshiftLibrary/redshift.i)
   ELSE()
-    SWIG_ADD_MODULE(redshift python RedshiftLibrary/RedshiftLibrary/redshift.i)
+    SWIG_ADD_MODULE(redshift python ${ROOT_DIR}/RedshiftLibrary/RedshiftLibrary/redshift.i)
   ENDIF()
   SWIG_LINK_LIBRARIES( redshift ${PYTHON_LIBRARIES} ${cpf-redshift_THIRDPARTY_LIBS} )
 ENDIF()
@@ -183,6 +196,3 @@ CONFIGURE_FILE(
 	${CMAKE_CURRENT_SOURCE_DIR}/RedshiftLibrary/RedshiftLibrary/version.h
 	)
 
-EXPORT( PACKAGE ${LIB_NAME} )
-EXPORT( PACKAGE ${LIB_NAME}-static )
-EXPORT(TARGETS ${LIB_NAME} ${LIB_NAME}-static FILE FindCPFRedshift.cmake)
