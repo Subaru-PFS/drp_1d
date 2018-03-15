@@ -43,6 +43,7 @@
 #include <RedshiftLibrary/method/dtreecsolveresult.h>
 #include <RedshiftLibrary/method/linematching2solve.h>
 #include <RedshiftLibrary/method/linemodelsolve.h>
+#include <RedshiftLibrary/method/zweimodelsolve.h>
 #include <RedshiftLibrary/method/linemodelsolveresult.h>
 #include <RedshiftLibrary/method/linemodeltplshapesolve.h>
 #include <RedshiftLibrary/method/linemodeltplshapesolveresult.h>
@@ -138,6 +139,20 @@ Bool CProcessFlow::Process( CProcessFlowContext& ctx )
     if(methodName  == "linemodel" ){
 
         CLineModelSolve Solve(calibrationDirPath);
+        mResult = Solve.Compute( ctx.GetDataStore(),
+                                 ctx.GetSpectrum(),
+                                 ctx.GetSpectrumWithoutContinuum(),
+                                 ctx.GetTemplateCatalog(),
+                                 filteredTemplateCategoryList,
+                                 ctx.GetRayCatalog(),
+                                 spcLambdaRange,
+                                 redshifts );
+
+
+
+    }else if(methodName  == "zweimodelsolve" ){
+
+        CZweiModelSolve Solve(calibrationDirPath);
         mResult = Solve.Compute( ctx.GetDataStore(),
                                  ctx.GetSpectrum(),
                                  ctx.GetSpectrumWithoutContinuum(),
