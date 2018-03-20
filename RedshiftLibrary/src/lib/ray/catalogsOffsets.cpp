@@ -44,21 +44,21 @@ Bool CLineCatalogsOffsets::Init( std::string calibrationPath)
     Int32 retConfig = calibrationConfig.Init(calibrationPath);
     if(!retConfig)
     {
-        Log.LogError("Unable to load the calibration-config. aborting...");
+        Log.LogError("    CatalogsOffsets - Unable to load the calibration-config. aborting...");
         return false;
     }
     m_Catalogs_relpath = calibrationConfig.Get_linemodelOffset_relpath();
-    Log.LogInfo( "CLineCatalogsOffsets - Loading offsets catalog : %s", m_Catalogs_relpath.c_str());
+    Log.LogInfo( "    CatalogsOffsets - Loading offsets catalog : %s", m_Catalogs_relpath.c_str());
 
     std::string dirPath = (calibrationFolder/m_Catalogs_relpath.c_str()).string();
 
     bool ret = Load(dirPath.c_str());
     if(!ret)
     {
-        Log.LogError("Unable to load the offset catalogs. aborting...");
+        Log.LogError("    CatalogsOffsets - Unable to load the offset catalogs. aborting...");
         return false;
     }else{
-        Log.LogInfo("Loaded %d lines offsets catalogs", m_OffsetsCatalog.size());
+        Log.LogInfo("    CatalogsOffsets - Loaded %d lines offsets catalogs", m_OffsetsCatalog.size());
     }
     return true;
 }
@@ -87,7 +87,7 @@ Bool CLineCatalogsOffsets::Load( const char* dirPath )
     {
         return false;
     }
-    Log.LogDebug( "CLineCatalogsOffsets - Found %d offsets catalogs", catalogList.size());
+    Log.LogDebug( "    CatalogsOffsets - CLineCatalogsOffsets - Found %d offsets catalogs", catalogList.size());
 
     //Load the catalogs in the list
     for(Int32 k=0; k<catalogList.size(); k++)
@@ -151,7 +151,7 @@ Bool CLineCatalogsOffsets::LoadCatalog( const char* filePath )
                 }
                 catch (bad_lexical_cast)
                 {
-                    Log.LogError( "Unable to read offset value from offset file, aborting" );
+                    Log.LogError( "    CatalogsOffsets - Unable to read offset value from offset file, aborting" );
                     return false;
                 }
             }
@@ -166,7 +166,7 @@ Bool CLineCatalogsOffsets::LoadCatalog( const char* filePath )
                 }
                 catch (bad_lexical_cast)
                 {
-                    Log.LogError( "Unable to read fittingmode value from offset file, aborting" );
+                    Log.LogError( "    CatalogsOffsets - Unable to read fittingmode value from offset file, aborting" );
                     return false;
                 }
             }
@@ -218,7 +218,7 @@ Bool CLineCatalogsOffsets::SetLinesOffsets(CLineModelElementList &LineModelEleme
                 {
                     LineModelElementList.m_Elements[iElts]->m_Rays[j].SetOffset(offset);
                     LineModelElementList.m_Elements[iElts]->m_Rays[j].EnableOffsetFit(enableOffsetFit);
-                    Log.LogInfo( "Offsets: setting line: %s\t offset:%.1f\t fitMode:%s\t fitEnabled:%d ", name.c_str(), offset, m_OffsetsCatalog[index].FittingMode[kL].c_str(), enableOffsetFit);
+                    Log.LogInfo( "    CatalogsOffsets - setting line: %s\t offset:%.1f\t fitMode:%s\t fitEnabled:%d ", name.c_str(), offset, m_OffsetsCatalog[index].FittingMode[kL].c_str(), enableOffsetFit);
 
                 }
 
@@ -238,11 +238,11 @@ Bool CLineCatalogsOffsets::SetLinesOffsetsAutoSelectStack(CLineModelElementList 
     {
         bfs::path ctlgPath( m_OffsetsCatalog[offsetCtlgIndex].filePath.c_str() );
         std::string ctlgFileStackNameWExt = ctlgPath.filename().string();
-        Log.LogInfo( "CLineCatalogsOffsets: AutoSetUVStack from = %s", ctlgFileStackNameWExt.c_str() );
+        Log.LogInfo( "    CatalogsOffsets: AutoSetUVStack from = %s", ctlgFileStackNameWExt.c_str() );
         SetLinesOffsets(LineModelElementList, offsetCtlgIndex);
     }else
     {
-        Log.LogWarning( "CLineCatalogsOffsets: FAILED to AutoSetUVStack with name = %s", spectrumName.c_str() );
+        Log.LogWarning( "    CatalogsOffsets: FAILED to AutoSetUVStack with name = %s", spectrumName.c_str() );
         return false;
     }
 
@@ -307,7 +307,7 @@ Int32 CLineCatalogsOffsets::AutoSelectStackFromReferenceFile(std::string spectru
                 }
                 catch (bad_lexical_cast)
                 {
-                    Log.LogError( "Unable to read stackname value from file, aborting" );
+                    Log.LogError( "    CatalogsOffsets - Unable to read stackname value from file, aborting" );
                     return -1;
                 }
             }

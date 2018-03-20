@@ -90,6 +90,8 @@ public:
 
     bool m_enableWidthFitByGroups;
 
+    bool m_logInfoVerbose = false;
+
     Int32 m_maxModelSaveCount;
 
 private:

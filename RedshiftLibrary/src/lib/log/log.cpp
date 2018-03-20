@@ -76,6 +76,21 @@ Void CLog::LogInfo( const char* format, ... )
 }
 
 /**
+ * Calls LogEntry with an Information message.
+ */
+Void CLog::LogDetail( const char* format, ... )
+{
+    m_Mutex.Lock();
+
+    va_list args;
+    va_start( args, format );
+    LogEntry( nLevel_Detail, format, args );
+    va_end( args );
+
+    m_Mutex.Unlock();
+}
+
+/**
  * Calls LogEntry with a Debug message.
  */
 Void CLog::LogDebug( const char* format, ... )

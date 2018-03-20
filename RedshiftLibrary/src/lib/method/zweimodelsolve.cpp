@@ -720,6 +720,7 @@ Bool CZweiModelSolve::Solve( CDataStore& dataStore,
 
     // ---------------------------------------------------
     //get the contaminant spectra/noise paths
+    Log.LogInfo("===============================================");
     std::string spcContFileName="";
     std::string errorContFileName="";
     std::string contMatchFilePath = "/home/aschmitt/data/euclid/simulation2017-SC3_test_zweiroll/simulation2017-SC3_test_zweiroll_source1source3/simulation2017-SC3_test_zweiroll_source1_rolls/simulation2017-SC3_test_zweiroll_source1_source3_match.txt";
@@ -815,10 +816,12 @@ Bool CZweiModelSolve::Solve( CDataStore& dataStore,
             Log.LogInfo("Zweimodel - contaminant - Successfully loaded input noise file:    (%s)", noiseName.c_str() );
         }
     }
+    Log.LogInfo("===============================================");
 
 
     // ---------------------------------------------------
     // Compute the S1 first pass without contaminant
+    Log.LogInfo("Zweimodel - Computing first linemodel : S1");
     COperatorLineModel linemodel;
     auto  result = linemodel.Compute( dataStore,
 				      _spc,

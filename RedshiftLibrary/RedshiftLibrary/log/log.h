@@ -33,6 +33,7 @@ public:
     nLevel_Error = 90,
     nLevel_Warning = 80,
     nLevel_Info = 70,
+    nLevel_Detail = 65,
     nLevel_Debug = 60,
     nLevel_None = 0
   };
@@ -43,6 +44,7 @@ public:
     Void LogError( const char* format, ... );
     Void LogWarning( const char* format, ... );
     Void LogInfo( const char* format, ... );
+    Void LogDetail( const char* format, ... );
     Void LogDebug( const char* format, ... );
 
     CMutex& GetSynchMutex();

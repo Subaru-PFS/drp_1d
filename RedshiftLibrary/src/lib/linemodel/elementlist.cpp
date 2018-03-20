@@ -98,7 +98,7 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
     m_SpcFluxAxis.SetSize( spectrumSampleCount );
     m_SpcContinuumFluxAxis = spectrumContinuum.GetFluxAxis();
     m_ContinuumWinsize = spectrumContinuum.GetMedianWinsize();
-    Log.LogInfo("Continuum winsize found is %.2f A", m_ContinuumWinsize);
+    Log.LogInfo("    model: Continuum winsize found is %.2f A", m_ContinuumWinsize);
 
     m_ContinuumFluxAxis.SetSize( spectrumSampleCount );
     m_SpcFluxAxisModelDerivVelEmi.SetSize( spectrumSampleCount );
@@ -720,18 +720,18 @@ void CLineModelElementList::LoadCatalogTwoMultilinesAE(const CRayCatalog::TRayVe
 
 
 /**
- * \brief LogInfo the number of lines for each element, and their nominal amplitudes.
+ * \brief LogDetail the number of lines for each element, and their nominal amplitudes.
  **/
 void CLineModelElementList::LogCatalogInfos()
 {
-    Log.LogInfo( "\n");
-    Log.LogInfo( "LineModel Infos: %d elements", m_Elements.size());
+    Log.LogDetail( "\n");
+    Log.LogDetail( "LineModel Infos: %d elements", m_Elements.size());
     for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
     {
         Int32 nRays = m_Elements[iElts]->GetSize();
         if(nRays<1)
         {
-            Log.LogInfo( "LineModel ctlg: elt %d (%s): no lines", iElts, m_Elements[iElts]->GetElementTypeTag().c_str());
+            Log.LogDetail( "LineModel ctlg: elt %d (%s): no lines", iElts, m_Elements[iElts]->GetElementTypeTag().c_str());
 
         }
         for(UInt32 j=0; j<nRays; j++){
@@ -739,10 +739,10 @@ void CLineModelElementList::LogCatalogInfos()
             if(nRays>1){
                 nominalAmpStr = boost::str(boost::format("(nominal amp = %.4e)") % m_Elements[iElts]->GetNominalAmplitude(j));
             }
-            Log.LogInfo( "LineModel ctlg: elt %d (%s): line %d = %s %s", iElts, m_Elements[iElts]->GetElementTypeTag().c_str(), j, m_Elements[iElts]->GetRayName(j).c_str(), nominalAmpStr.c_str());
+            Log.LogDetail( "LineModel ctlg: elt %d (%s): line %d = %s %s", iElts, m_Elements[iElts]->GetElementTypeTag().c_str(), j, m_Elements[iElts]->GetRayName(j).c_str(), nominalAmpStr.c_str());
         }
     }
-    Log.LogInfo( "\n");
+    Log.LogDetail( "\n");
 }
 
 
@@ -1876,7 +1876,7 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
         //m_CatalogTplShape->GetCatalogVelocities(savedIdxFitted, m_velocityEmission, m_velocityAbsorption);
         for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
         {
-            Log.LogInfo( "Linemodel: tplshape = %d (%s), and A=%f", savedIdxFitted, m_tplshapeBestTplName.c_str(), m_FittedAmpTplshape[savedIdxFitted][iElts]);
+            Log.LogInfo( "    model - Linemodel: tplratio = %d (%s), and A=%f", savedIdxFitted, m_tplshapeBestTplName.c_str(), m_FittedAmpTplshape[savedIdxFitted][iElts]);
             m_Elements[iElts]->SetFittedAmplitude(m_FittedAmpTplshape[savedIdxFitted][iElts], m_FittedErrorTplshape[savedIdxFitted][iElts]);
             m_Elements[iElts]->SetSumCross(m_DtmTplshape[savedIdxFitted][iElts]);
             m_Elements[iElts]->SetSumGauss(m_MtmTplshape[savedIdxFitted][iElts]);
@@ -4914,7 +4914,10 @@ std::vector<Int32> CLineModelElementList::GetModelValidElementsIndexes()
 std::vector<std::vector<Int32>> CLineModelElementList::GetModelVelfitGroups( Int32 lineType )
 {
     Bool verbose = false;
-
+    if(verbose)
+    {
+        Log.LogInfo("    model: group tags for lineType=%d", lineType);
+    }
     std::vector<std::string> tags;
     std::vector<Int32> nonGroupedLines;
 
@@ -4925,6 +4928,11 @@ std::vector<std::vector<Int32>> CLineModelElementList::GetModelVelfitGroups( Int
         Int32 nRays = m_Elements[iElts]->GetSize();
         for(Int32 iSubElts=0; iSubElts<nRays; iSubElts++)
         {
+            if(verbose)
+            {
+                Log.LogInfo("    model: group tags - lineType=%d", lineType);
+                Log.LogInfo("    model: group tags - m_Elements[iElts]->m_Rays[iSubElts].GetType()=%d", m_Elements[iElts]->m_Rays[iSubElts].GetType());
+            }
             if(lineType == m_Elements[iElts]->m_Rays[iSubElts].GetType())
             {
                 std::string _tag = m_Elements[iElts]->m_Rays[iSubElts].GetVelGroupName();
@@ -4936,13 +4944,25 @@ std::vector<std::vector<Int32>> CLineModelElementList::GetModelVelfitGroups( Int
             }
         }
     }
+
+    if(verbose)
+    {
+        Log.LogInfo("    model: group tags non unique found=%d", tags.size());
+        for( Int32 itag = 0; itag<tags.size(); itag++){
+            Log.LogInfo("    model: non unique tag %d/%d = %s", itag+1, tags.size(), tags[itag].c_str());
+        }
+    }
+
     // create the group tag set by removing duplicates
     std::sort( tags.begin(), tags.end() );
     tags.erase( std::unique( tags.begin(), tags.end() ), tags.end() );
     //*
-    //print the tags
-    for( Int32 itag = 0; itag<tags.size(); itag++){
-        Log.LogInfo("Tag %d/%d = %s", itag+1, tags.size(), tags[itag].c_str());
+    if(verbose)
+    {
+        //print the tags
+        for( Int32 itag = 0; itag<tags.size(); itag++){
+            Log.LogInfo("    model: velfit group Tag %d/%d = %s", itag+1, tags.size(), tags[itag].c_str());
+        }
     }
     //*/
 
@@ -4985,14 +5005,14 @@ std::vector<std::vector<Int32>> CLineModelElementList::GetModelVelfitGroups( Int
         groupsTags.push_back("-1");
     }
 
-    if(verbose)
+    if(true)
     {
         //print the groups
         for( Int32 igr = 0; igr<groups.size(); igr++){
-            Log.LogInfo("Group %d/%d: tag=%s", igr+1, groups.size(), groupsTags[igr].c_str());
+            Log.LogInfo("    model: Group %d/%d: nlines=%d, tag=%s", igr+1, groups.size(), groups[igr].size(), groupsTags[igr].c_str());
             for(Int32 i=0; i<groups[igr].size(); i++)
             {
-                Log.LogInfo("\t%d: iElt=%d", i+1, groups[igr][i]);
+                Log.LogInfo("    model: \t%d: iElt=%d", i+1, groups[igr][i]);
             }
         }
     }

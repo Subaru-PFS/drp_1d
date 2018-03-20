@@ -144,9 +144,9 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
         if(largeGridRedshifts.size()<1)
         {
             enableFastFitLargeGrid = 0;
-            Log.LogInfo( "Linemodel: FastFitLargeGrid auto disabled: raw %d redshifts will be calculated", sortedRedshifts.size());
+            Log.LogInfo( "  Operator-Linemodel: FastFitLargeGrid auto disabled: raw %d redshifts will be calculated", sortedRedshifts.size());
         }else{
-            Log.LogInfo( "Linemodel: FastFitLargeGrid enabled: %d redshifts will be calculated on the large grid (%d initially)", largeGridRedshifts.size(), sortedRedshifts.size());
+            Log.LogInfo( "  Operator-Linemodel: FastFitLargeGrid enabled: %d redshifts will be calculated on the large grid (%d initially)", largeGridRedshifts.size(), sortedRedshifts.size());
         }
     }
 
@@ -165,7 +165,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
     Log.LogDebug( "restRayList.size() = %d", restRayList.size() );
 
     bool enableOrtho = true;
-    Log.LogInfo( "linemodel: TemplatesOrthogonalization enabled = %d", enableOrtho );
+    Log.LogInfo( "  Operator-Linemodel: TemplatesOrthogonalization enabled = %d", enableOrtho );
 
     //prepare continuum templates catalog
     CTemplatesOrthogonalization tplOrtho(tplCatalog,
@@ -185,7 +185,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
     CTemplatesOrthoStore orthoTplStore = tplOrtho.getOrthogonalTplStore();
     Int32 ctlgIdx = 0; //only one ortho config for now
     std::shared_ptr<CTemplateCatalog> orthoTplCatalog = orthoTplStore.getTplCatalog(ctlgIdx);
-    Log.LogInfo( "Linemodel: Templates store prepared.");
+    Log.LogInfo( "  Operator-Linemodel: Templates store prepared.");
 
     //*
     CLineModelElementList model( spectrum,
@@ -204,7 +204,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
                                  opt_rigidity);
     Float64 setssSizeInit = 0.1;
     model.SetSourcesizeDispersion(setssSizeInit);
-    Log.LogInfo( "Linemodel: sourcesize init to: ss=%.1f", setssSizeInit);
+    Log.LogInfo( "  Operator-Linemodel: sourcesize init to: ss=%.1f", setssSizeInit);
     //*/
 
 
@@ -266,31 +266,31 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
 
 
     //init catalog tplratios
-    Log.LogInfo( "Linemodel: Tpl-ratios init");
+    Log.LogInfo( "  Operator-Linemodel: Tpl-ratios init");
     bool tplratioInitRet = model.initTplratioCatalogs();
     if(!tplratioInitRet)
     {
-        Log.LogError( "Linemodel: Failed to init tpl-ratios. aborting...");
+        Log.LogError( "  Operator-Linemodel: Failed to init tpl-ratios. aborting...");
         return result;
     }
 
     //init catalog offsets
-    Log.LogInfo( "Linemodel: Lambda offsets init");
+    Log.LogInfo( "  Operator-Linemodel: Lambda offsets init");
     bool offsetsInitRet = model.initLambdaOffsets();
     if(!offsetsInitRet)
     {
-        Log.LogError( "Linemodel: Failed to init lambda offsets. Continuing without offsets...");
+        Log.LogError( "  Operator-Linemodel: Failed to init lambda offsets. Continuing without offsets...");
     }
 
     Int32 resultInitRet = result->Init( sortedRedshifts, restRayList, model.getTplshape_count(), model.getTplshape_priors());
     if(resultInitRet!=0)
     {
-        Log.LogError( "Linemodel: ERROR while initializing linemodel result (ret=%d)", resultInitRet);
+        Log.LogError( "  Operator-Linemodel: ERROR while initializing linemodel result (ret=%d)", resultInitRet);
         return result;
     }
 
 
-    Log.LogInfo( "Linemodel: initialized");
+    Log.LogInfo( "  Operator-Linemodel: initialized");
 
     //setup velocity fitting
     bool enableVelocityFitting = true;
@@ -304,11 +304,11 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
     if(opt_velocityFitting != "yes"){
         enableVelocityFitting = false;
     }else{        
-        Log.LogInfo( "Linemodel: velocity fitting bounds for Emission: min=%.1f - max=%.1f", velfitMinE, velfitMaxE);
-        Log.LogInfo( "Linemodel: velocity fitting bounds for Absorption: min=%.1f - max=%.1f", velfitMinA, velfitMaxA);
+        Log.LogInfo( "  Operator-Linemodel: velocity fitting bounds for Emission: min=%.1f - max=%.1f", velfitMinE, velfitMaxE);
+        Log.LogInfo( "  Operator-Linemodel: velocity fitting bounds for Absorption: min=%.1f - max=%.1f", velfitMinA, velfitMaxA);
     }
 
-    //enable/disable fit by groups. Once enbled, the velocity fitting groups are defined in the line catalog from v4.0.
+    //enable/disable fit by groups. Once enabled, the velocity fitting groups are defined in the line catalog from v4.0 on.
     m_enableWidthFitByGroups = true;
 
     //fit continuum
@@ -319,11 +319,11 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
         Float64 redshiftStep = 1.5e-4;
         Float64 minRedshift = sortedRedshifts[0];
         Float64 maxRedshift = sortedRedshifts[sortedRedshifts.size()-1];
-        Log.LogInfo( "Linemodel: continuum tpl fitting: step=%.5f, min=%.1f, max=%.1f", redshiftStep, minRedshift, maxRedshift);
+        Log.LogInfo( "  Operator-Linemodel: continuum tpl fitting: step=%.5f, min=%.1f, max=%.1f", redshiftStep, minRedshift, maxRedshift);
 
         CTemplatesFitStore* tplfitStore = new CTemplatesFitStore(minRedshift, maxRedshift, redshiftStep);
         std::vector<Float64> redshiftsTplFit = tplfitStore->GetRedshiftList();
-        Log.LogInfo( "Linemodel: continuum tpl redshift list n=%d", redshiftsTplFit.size());
+        Log.LogInfo( "  Operator-Linemodel: continuum tpl redshift list n=%d", redshiftsTplFit.size());
         std::vector<std::shared_ptr<CChisquareResult>> chisquareResultsAllTpl;
         std::vector<std::string> chisquareResultsTplName;
 
@@ -370,7 +370,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
                 auto  chisquareResult = std::dynamic_pointer_cast<CChisquareResult>( chiSquareOperator->Compute( spectrum, tpl, lambdaRange, redshiftsTplFit, overlapThreshold, maskList, opt_interp, opt_extinction, opt_dustFit ) );
                 if( !chisquareResult )
                 {
-                    Log.LogInfo( "Linemodel failed to compute chi square value for tpl=%s", tpl.GetName().c_str());
+                    Log.LogInfo( "  Operator-Linemodel failed to compute chi square value for tpl=%s", tpl.GetName().c_str());
                 }else{
                     chisquareResultsAllTpl.push_back(chisquareResult);
                     chisquareResultsTplName.push_back(tpl.GetName());
@@ -419,7 +419,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
         boost::chrono::thread_clock::time_point stop_tplfitprecompute = boost::chrono::thread_clock::now();
         Float64 duration_tplfitprecompute = boost::chrono::duration_cast<boost::chrono::microseconds>(stop_tplfitprecompute - start_tplfitprecompute).count();
         Float64 duration_tplfit_seconds = duration_tplfitprecompute/1e6;
-        Log.LogInfo( "Linemodel: tplfit-precompute done in %.4e sec", duration_tplfit_seconds);
+        Log.LogInfo( "  Operator-Linemodel: tplfit-precompute done in %.4e sec", duration_tplfit_seconds);
         Log.LogInfo("<proc-lm-tplfit><%d>", (Int32)duration_tplfit_seconds);
 
     }
@@ -464,19 +464,21 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
     //Set model parameter: abs lines limit
     Float64 absLinesLimit = 1.0; //-1 to disable, 1.0 is typical
     model.SetAbsLinesLimit(absLinesLimit);
-    Log.LogInfo( "Linemodel: set abs lines limit to %f (ex: -1 means disabled)", absLinesLimit);
+    Log.LogInfo( "  Operator-Linemodel: set abs lines limit to %f (ex: -1 means disabled)", absLinesLimit);
 
     //Set model parameter: continuum least-square estimation fast
     //note: this fast method requires continuum templates and linemodels to be orthogonal. The velfit option turns this trickier...
     Int32 estimateLeastSquareFast = 0;
     model.SetLeastSquareFastEstimationEnabled(estimateLeastSquareFast);
-    Log.LogInfo( "Linemodel: set estimateLeastSquareFast to %d (ex: 0 means disabled)", estimateLeastSquareFast);
+    Log.LogInfo( "  Operator-Linemodel: set estimateLeastSquareFast to %d (ex: 0 means disabled)", estimateLeastSquareFast);
 
-    Log.LogInfo( "Linemodel: processing");
+    Log.LogInfo( "  Operator-Linemodel: start processing");
 
     //Set model parameters to FIRST-PASS
     model.setPassMode(1);
-    Log.LogInfo( "\nLinemodel: first-pass mode");
+    Log.LogInfo( "  Operator-Linemodel: ---------- ---------- ---------- ----------" );
+    Log.LogInfo( "  Operator-Linemodel: now computing first-pass");
+    Log.LogInfo( "  Operator-Linemodel: ---------- ---------- ---------- ----------" );
 
     //WARNING: HACK, first pass with continuum from spectrum.
     //model.SetContinuumComponent("fromspectrum");
@@ -553,34 +555,34 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
     boost::chrono::thread_clock::time_point stop_mainloop = boost::chrono::thread_clock::now();
     Float64 duration_mainloop = boost::chrono::duration_cast<boost::chrono::microseconds>(stop_mainloop - start_mainloop).count();
     Float64 duration_firstpass_seconds = duration_mainloop/1e6;
-    Log.LogInfo( "Linemodel: first-pass done in %.4e sec", duration_firstpass_seconds);
-    Log.LogInfo("<proc-lm-fistpass><%d>", (Int32)duration_firstpass_seconds);
+    Log.LogInfo( "  Operator-Linemodel: first-pass done in %.4e sec", duration_firstpass_seconds);
+    Log.LogInfo("  Operator-Linemodel: <proc-lm-fistpass><%d>", (Int32)duration_firstpass_seconds);
 
     // extrema
     Int32 extremumCount = opt_extremacount;
-    Log.LogDebug( "opt_extremacount = %d", opt_extremacount );
+    Log.LogDebug( "  Operator-Linemodel: opt_extremacount = %d", opt_extremacount );
     TPointList extremumList;
     TFloat64Range redshiftsRange(result->Redshifts[0], result->Redshifts[result->Redshifts.size()-1]);
-    Log.LogDebug( "redshiftsRange.GetBegin() = %f, redshiftsRange.GetEnd() = %f",
+    Log.LogDebug( "  Operator-Linemodel: redshiftsRange.GetBegin() = %f, redshiftsRange.GetEnd() = %f",
 		redshiftsRange.GetBegin(), redshiftsRange.GetEnd() );
 
     if(result->Redshifts.size() == 1)
     {
         extremumList.push_back(SPoint( result->Redshifts[0], result->ChiSquare[0] ));
-        Log.LogInfo("Line Model, only 1 redshift calculated, only 1 extremum");
+        Log.LogInfo("  Operator-Linemodel: only 1 redshift calculated, only 1 extremum");
     }else
     {
-        Log.LogInfo("Line Model, ChiSquare min val = %e", result->GetMinChiSquare() );
-        Log.LogInfo("Line Model, ChiSquare max val = %e", result->GetMaxChiSquare() );
+        Log.LogInfo("  Operator-Linemodel: ChiSquare min val = %e", result->GetMinChiSquare() );
+        Log.LogInfo("  Operator-Linemodel: ChiSquare max val = %e", result->GetMaxChiSquare() );
         CExtremum extremum( redshiftsRange, extremumCount, true, 2);
         extremum.Find( result->Redshifts, result->ChiSquare, extremumList );
         if( extremumList.size() == 0 )
         {
-            Log.LogError("Line Model, Extremum find method failed");
+            Log.LogError("  Operator-Linemodel: Extremum find method failed");
             return result;
         }
 
-        Log.LogInfo( "Linemodel: found %d extrema", extremumList.size());
+        Log.LogInfo( "  Operator-Linemodel: found %d extrema", extremumList.size());
     }
     /*
     // Refine Extremum with a second maximum search around the z candidates:
@@ -607,7 +609,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
     Float64 extensionradius = 0.005;
     for( Int32 i=0; i<extremumList.size(); i++ )
     {
-        Log.LogInfo("Linemodel: Raw extr #%d, z_e.X=%f, m_e.Y=%e", i, extremumList[i].X, extremumList[i].Y);
+        Log.LogInfo("  Operator-Linemodel: Raw extr #%d, z_e.X=%f, m_e.Y=%e", i, extremumList[i].X, extremumList[i].Y);
         Float64 x = extremumList[i].X;
         Float64 left_border = max(redshiftsRange.GetBegin(), x-extensionradius);
         Float64 right_border=min(redshiftsRange.GetEnd(), x+extensionradius);
@@ -625,7 +627,9 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
 
     //Set model parameters to SECOND-PASS
     model.setPassMode(2);
-    Log.LogInfo( "\nLinemodel: second-pass mode");
+    Log.LogInfo( "  Operator-Linemodel: ---------- ---------- ---------- ----------" );
+    Log.LogInfo( "  Operator-Linemodel: now computing second-pass");
+    Log.LogInfo( "  Operator-Linemodel: ---------- ---------- ---------- ----------" );
 
     std::vector<Float64> extrema_velocityEL;
     std::vector<Float64> extrema_velocityAL;
@@ -646,7 +650,8 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
     {
         for( Int32 i=0; i<extremumList.size(); i++ )
         {
-            //Log.LogInfo("New extrema %d", i);
+            Log.LogInfo( "  Operator-Linemodel: Computing second pass for extremum #%d", i);
+            Log.LogInfo( "  Operator-Linemodel: ---------- /\\ ---------- ---------- ---------- %d", i );
             Float64 z = extremumList[i].X;
             Float64 m = extremumList[i].Y;
 
@@ -660,7 +665,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
                 }
             }
             if(idx==-1){
-                Log.LogInfo( "Problem. could not find extrema solution index...");
+                Log.LogInfo( "  Operator-Linemodel: Problem. could not find extrema solution index...");
                 continue;
             }
 
@@ -686,7 +691,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
                     model.SetFittingMethod("lmfit");
                     //model.SetElementIndexesDisabledAuto();
                     Float64 meritTmp;
-                    Log.LogInfo("Lm fit for extrema %d", i);
+                    Log.LogInfo("  Operator-Linemodel: Lm fit for extrema %d", i);
                     meritTmp = model.fit( result->Redshifts[idx], lambdaRange, result->LineModelSolutions[idx], contreest_iterations, true );
                     modelInfoSave = true;
                     // CModelSpectrumResult
@@ -752,31 +757,31 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
 
                         if(iLineType==0)
                         {
-                            Log.LogInfo( "\nLineModel Infos: manualStep velocity fit ABSORPTION, for z = %.6f", result->Redshifts[idx]);
+                            Log.LogInfo( "  Operator-Linemodel: manualStep velocity fit ABSORPTION, for z = %.6f", result->Redshifts[idx]);
                             vInfLim = velfitMinA;
                             vSupLim = velfitMaxA;
                             if(m_enableWidthFitByGroups)
                             {
                                 idxVelfitGroups.clear();
                                 idxVelfitGroups = model.GetModelVelfitGroups(CRay::nType_Absorption);
-                                Log.LogInfo( "\nLineModel Infos: VelfitGroups ABSORPTION - n = %.d", idxVelfitGroups.size());
+                                Log.LogInfo( "  Operator-Linemodel: VelfitGroups ABSORPTION - n = %d", idxVelfitGroups.size());
                                 if(extremumList.size()>1 && idxVelfitGroups.size()>1)
                                 {
-                                    Log.LogError("Linemodel not allowed to use more than 1 group per E/A for more than 1 extremum (see .json linemodel.extremacount)");
+                                    Log.LogError("  Operator-Linemodel: not allowed to use more than 1 group per E/A for more than 1 extremum (see .json linemodel.extremacount)");
                                 }
                             }
                         }else{
-                            Log.LogInfo( "LineModel Infos: manualStep velocity fit EMISSION, for z = %.6f", result->Redshifts[idx]);
+                            Log.LogInfo( "  Operator-Linemodel: manualStep velocity fit EMISSION, for z = %.6f", result->Redshifts[idx]);
                             vInfLim = velfitMinE;
                             vSupLim = velfitMaxE;
                             if(m_enableWidthFitByGroups)
                             {
                                 idxVelfitGroups.clear();
                                 idxVelfitGroups = model.GetModelVelfitGroups(CRay::nType_Emission);
-                                Log.LogInfo( "\nLineModel Infos: VelfitGroups EMISSION - n = %.d", idxVelfitGroups.size());
+                                Log.LogInfo( "  Operator-Linemodel: VelfitGroups EMISSION - n = %d", idxVelfitGroups.size());
                                 if(extremumList.size()>1 && idxVelfitGroups.size()>1)
                                 {
-                                    Log.LogError("Linemodel not allowed to use more than 1 group per E/A for more than 1 extremum (see .json linemodel.extremacount)");
+                                    Log.LogError("  Operator-Linemodel: not allowed to use more than 1 group per E/A for more than 1 extremum (see .json linemodel.extremacount)");
                                 }
                             }
                         }
@@ -805,13 +810,15 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
                             dzInfLim = 0.;
                             dzSupLim = 0.;
                         }
-                        Log.LogInfo( "LineModel Infos: dzInfLim n=%e", dzInfLim);
-                        Log.LogInfo( "LineModel Infos: dzSupLim n=%e", dzSupLim);
-                        Log.LogInfo( "LineModel Infos: manualStep n=%d", nDzSteps);
+                        Log.LogInfo( "  Operator-Linemodel: dzInfLim n=%e", dzInfLim);
+                        Log.LogInfo( "  Operator-Linemodel: dzSupLim n=%e", dzSupLim);
+                        Log.LogInfo( "  Operator-Linemodel: manualStep n=%d", nDzSteps);
 
 
                         for(Int32 kgroup=0; kgroup<idxVelfitGroups.size(); kgroup++)
                         {
+                            Log.LogInfo( "  Operator-Linemodel: manualStep fitting group=%d", kgroup);
+
                             Float64 meritMin = DBL_MAX;
                             Float64 vOptim = -1.0;
                             Float64 dzOptim = -1.0;
@@ -845,7 +852,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
                                         }
                                     }
 
-                                    //Log.LogInfo( "LineModel Infos: testing v=%f", vTest);
+                                    //Log.LogInfo( "  Operator-Linemodel: testing v=%f", vTest);
                                     Float64 meritv;
                                     meritv = model.fit( result->Redshifts[idx]+dzTest, lambdaRange, result->LineModelSolutions[idx], contreest_iterations, false );
 
@@ -860,7 +867,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
 
                                     //
 
-                                    //Log.LogInfo("LineModel Solution: testing velocity: merit=%.3e for velocity = %.1f", meritv, vTest);
+                                    //Log.LogInfo("  Operator-Linemodel: testing velocity: merit=%.3e for velocity = %.1f", meritv, vTest);
                                     if(meritMin>meritv)
                                     {
                                         meritMin = meritv;
@@ -877,7 +884,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
                             }
                             if(vOptim != -1.0)
                             {
-                                Log.LogInfo( "LineModel Solution: best Velocity found = %.1f", vOptim);
+                                Log.LogInfo( "  Operator-Linemodel: best Velocity found = %.1f", vOptim);
                                 result->ChiSquare[idx] =  meritMin;
                                 if(iLineType==0)
                                 {
@@ -944,7 +951,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
             }
             //model.SetFittingMethod(opt_fittingmethod);
 
-            Log.LogInfo("Linemodel: Recomputed extr #%d, idx=%d, z_e.X=%f, m_e.Y=%f", i, idx2, extremumList2[i].X, extremumList2[i].Y);
+            Log.LogInfo("  Operator-Linemodel: Recomputed extr #%d, idx=%d, z_e.X=%f, m_e.Y=%f", i, idx2, extremumList2[i].X, extremumList2[i].Y);
 
         }
     }else
@@ -1004,7 +1011,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
         Log.LogError("Line Model, Extremum Ordering failed");
     }
 
-    Log.LogInfo("Line Model, Store extrema results");
+    Log.LogInfo("  Operator-Linemodel: Now storing extrema results");
     // store extrema results
     result->ExtremaResult.Resize(extremumCount);
 
@@ -1034,7 +1041,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
             Log.LogInfo( "Problem. could not find extrema solution index...");
             continue;
         }
-        Log.LogInfo("Linemodel: Saving extr #%d, idx=%d, z=%f, m=%f", i, idx, result->Redshifts[idx], result->ChiSquare[idx]);
+        Log.LogInfo("  Operator-Linemodel: Saving extr #%d, idx=%d, z=%f, m=%f", i, idx, result->Redshifts[idx], result->ChiSquare[idx]);
 
 
         // reestimate the model (eventually with continuum reestimation) on the extrema selected
@@ -1077,7 +1084,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
         }
         if(m!=result->ChiSquare[idx])
         {
-            Log.LogInfo("Linemodel: m (%f for idx=%d) !=chi2 (%f) ", m, idx, result->ChiSquare[idx]);
+            Log.LogInfo("  Operator-Linemodel: m (%f for idx=%d) !=chi2 (%f) ", m, idx, result->ChiSquare[idx]);
         }
         m = result->ChiSquare[idx];//result->ChiSquare[idx];
 
@@ -1180,7 +1187,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
             Int32 ret = deltaz.Compute3ddl(result->ChiSquare, result->Redshifts, z, range, dz);
             if(ret!=0)
             {
-                Log.LogError("Linemodel: Deltaz computation failed");
+                Log.LogError("  Operator-Linemodel: Deltaz computation failed");
             }
         }
         result->ExtremaResult.DeltaZ[i] = dz;
@@ -1297,7 +1304,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::computeWithUltimPass(CDataS
 
     if(result && opt_rigidity=="tplshape")
     {
-       Log.LogInfo("Linemodel - Last Pass: begin");
+       Log.LogInfo("  Operator-Linemodel - Last Pass: begin");
        //
        //do the last pass on the 1st extremum range
        //
@@ -1309,9 +1316,9 @@ std::shared_ptr<COperatorResult> COperatorLineModel::computeWithUltimPass(CDataS
        Int32 bestIndex=-1;
        for(Int32 k=0; k<result->ExtremaResult.Extrema.size(); k++)
        {
-           Log.LogInfo("Linemodel - Last Pass: k = %d", k);
-           Log.LogInfo("Linemodel - Last Pass: result->Extrema[k] = %.5f", result->ExtremaResult.Extrema[k]);
-           Log.LogInfo("Linemodel - Last Pass: result->ExtremaMerit[k] = %.5f", result->ExtremaResult.ExtremaMerit[k]);
+           Log.LogInfo("  Operator-Linemodel - Last Pass: k = %d", k);
+           Log.LogInfo("  Operator-Linemodel - Last Pass: result->Extrema[k] = %.5f", result->ExtremaResult.Extrema[k]);
+           Log.LogInfo("  Operator-Linemodel - Last Pass: result->ExtremaMerit[k] = %.5f", result->ExtremaResult.ExtremaMerit[k]);
 
             if(bestMerit>result->ExtremaResult.ExtremaMerit[k])
             {
@@ -1320,7 +1327,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::computeWithUltimPass(CDataS
                 bestIndex = k;
             }
        }
-       Log.LogInfo("Linemodel - Last Pass: around extrema z = %.5f", bestRedshift);
+       Log.LogInfo("  Operator-Linemodel - Last Pass: around extrema z = %.5f", bestRedshift);
        Float64 z=bestRedshift-halfRange;
        std::vector<Float64> lastPassRedshifts;
        if(z<redshifts[0])
@@ -1332,7 +1339,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::computeWithUltimPass(CDataS
            lastPassRedshifts.push_back(z);
            z+=lastPassStep;
        }
-       Log.LogInfo("Linemodel - Last Pass: range zmin=%.5f, zmax=%.5f", lastPassRedshifts[0], lastPassRedshifts[lastPassRedshifts.size()-1]);
+       Log.LogInfo("  Operator-Linemodel - Last Pass: range zmin=%.5f, zmax=%.5f", lastPassRedshifts[0], lastPassRedshifts[lastPassRedshifts.size()-1]);
 
 
        std::string opt_rigidity_lastPass = "rules";
@@ -1368,11 +1375,11 @@ std::shared_ptr<COperatorResult> COperatorLineModel::computeWithUltimPass(CDataS
 
         m_maxModelSaveCount = maxSaveBackup;
         Float64 refinedExtremum = lastPassResult->ExtremaResult.Extrema[0];
-        Log.LogInfo("Linemodel - Last Pass: found refined z=%.5f", refinedExtremum);
+        Log.LogInfo("  Operator-Linemodel - Last Pass: found refined z=%.5f", refinedExtremum);
 
         result->ExtremaResult.ExtremaLastPass[bestIndex] = refinedExtremum;
     }else{
-        Log.LogInfo("Linemodel - Last Pass: failed to do linemodel, rigidity=%s", opt_rigidity.c_str());
+        Log.LogInfo("  Operator-Linemodel - Last Pass: failed to do linemodel, rigidity=%s", opt_rigidity.c_str());
     }
 
     return result;
@@ -1435,8 +1442,8 @@ void COperatorLineModel::storePerTemplateModelResults( CDataStore &dataStore, co
 Int32 COperatorLineModel::interpolateLargeGridOnFineGrid(TFloat64List redshiftsLargeGrid, TFloat64List redshiftsFineGrid, TFloat64List meritLargeGrid, TFloat64List& meritFineGrid)
 {
     //* // GSL method LIN
-    Log.LogInfo( "Linemodel: First-Pass - interp FROM large grid z0=%f to zEnd=%f (n=%d)",  redshiftsLargeGrid[0], redshiftsLargeGrid[redshiftsLargeGrid.size()-1], redshiftsLargeGrid.size());
-    Log.LogInfo( "Linemodel: First-Pass - interp TO fine grid z0=%f to zEnd=%f (n=%d)",  redshiftsFineGrid[0], redshiftsFineGrid[redshiftsFineGrid.size()-1], redshiftsFineGrid.size());
+    Log.LogDetail( "  Operator-Linemodel: First-Pass - interp FROM large grid z0=%f to zEnd=%f (n=%d)",  redshiftsLargeGrid[0], redshiftsLargeGrid[redshiftsLargeGrid.size()-1], redshiftsLargeGrid.size());
+    Log.LogDetail( "  Operator-Linemodel: First-Pass - interp TO fine grid z0=%f to zEnd=%f (n=%d)",  redshiftsFineGrid[0], redshiftsFineGrid[redshiftsFineGrid.size()-1], redshiftsFineGrid.size());
 
     //initialise and allocate the gsl objects
     //lin
