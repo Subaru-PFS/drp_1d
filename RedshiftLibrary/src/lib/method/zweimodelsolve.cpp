@@ -723,6 +723,7 @@ Bool CZweiModelSolve::Solve( CDataStore& dataStore,
     Log.LogInfo("===============================================");
     std::string spcContFileName="";
     std::string errorContFileName="";
+    Float64 offsetLambdaContaminant=0.0;
     std::string contMatchFilePath = "/home/aschmitt/data/euclid/simulation2017-SC3_test_zweiroll/simulation2017-SC3_test_zweiroll_source1source3/simulation2017-SC3_test_zweiroll_source1_rolls/simulation2017-SC3_test_zweiroll_source1_source3_match.txt";
     Int32 reverseInclusionForIdMatching = 0;
     namespace fs = boost::filesystem;
@@ -743,13 +744,15 @@ Bool CZweiModelSolve::Solve( CDataStore& dataStore,
         std::string spcSubStringId = spc.GetName().substr(substring_start, substring_n);
         Log.LogInfo( "Zweimodel - contaminant file search - using substring %s", spcSubStringId.c_str());
         Int32 colId=1;
-        Bool retContFiles = getContaminantNameFromFile( contMatchFilePath.c_str(), spcSubStringId, colId, spcContFileName, errorContFileName, reverseInclusionForIdMatching);
+        Bool retContFiles = getContaminantNameFromFile( contMatchFilePath.c_str(), spcSubStringId, colId, spcContFileName, errorContFileName, offsetLambdaContaminant, reverseInclusionForIdMatching);
         if(retContFiles==false)
         {
             Log.LogError( "Zweimodel - contaminant - failed to read cont. match file=%s", contMatchFilePath.c_str());
         }
         Log.LogInfo( "Zweimodel - contaminant - using cont spc : %s", spcContFileName.c_str());
         Log.LogInfo( "Zweimodel - contaminant - using cont error : %s", errorContFileName.c_str());
+        Log.LogInfo( "Zweimodel - contaminant - using offsetLambdaContaminant_s2tos1 : %.2f", offsetLambdaContaminant);
+
     }else{
         Log.LogError( "Zweimodel - contaminant - unable to find cont. match file=%s", contMatchFilePath.c_str());
         return false;
@@ -950,26 +953,30 @@ Bool CZweiModelSolve::Solve( CDataStore& dataStore,
 
 
     std::shared_ptr<CLineModelResult> result_s1_c2;
+    std::vector<std::vector<Float64>> combined_merits;
     Float64 bestmerit = DBL_MAX;
     Float64 bestC2z = -1.0;
+    Float64 bestC1z = -1.0;
     for(Int32 kzs2=0; kzs2<zcandidates_s2.size(); kzs2++)
     {
         Log.LogInfo("Zweimodel - Computing multiroll model for s1 with contaminant from s2z%d", kzs2);
         Log.LogInfo("Zweimodel - ===============================================");
+        std::vector<Float64> combined_merits_s2zX;
 
-        Int32 iRollContaminated = 0; //hardcoded for now
-        Float64 contLambdaOffset_s2tos1 = 2000; //hardcoded for now. This is a simple modelization of the needed regrid of s2 on s1 grid (kind of due to s1/s2 radec distance)
+        COperatorLineModel linemodel_s1c2X;
+        Int32 iRollContaminated_s1 = 0; //hardcoded for now
+        Float64 contLambdaOffset_s2tos1 = offsetLambdaContaminant;//previously tested with hardcoded 2000A; //This is a simple modelization of the needed regrid of s2 on s1 grid (kind of due to s1/s2 radec distance)
         std::shared_ptr<CModelSpectrumResult> contModelSpectrum = linemodel_s2.GetModelSpectrumResult(kzs2);
-        linemodel_s1.initContaminant(contModelSpectrum, iRollContaminated, contLambdaOffset_s2tos1);
+        linemodel_s1c2X.initContaminant(contModelSpectrum, iRollContaminated_s1, contLambdaOffset_s2tos1);
 
         Float64 _opt_twosteplargegridstep = -1;
-        linemodel_s1.m_secondPass_extensionradius = 0.0;
-        linemodel_s1.m_secondPass_velfit_dzInfLim = 0;
-        linemodel_s1.m_secondPass_velfit_dzSupLim = 0;
-        linemodel_s1.m_secondPass_velfit_dzStep = 2e-4;
-        linemodel_s1.m_secondPass_velfit_vStep = 50.0;
+        linemodel_s1c2X.m_secondPass_extensionradius = 0.0;
+        linemodel_s1c2X.m_secondPass_velfit_dzInfLim = 0; //no z refinement
+        linemodel_s1c2X.m_secondPass_velfit_dzSupLim = 0; //no z refinement
+        linemodel_s1c2X.m_secondPass_velfit_dzStep = 2e-4;
+        linemodel_s1c2X.m_secondPass_velfit_vStep = 50.0;
         Int32 _opt_extremacount = -1; //no extrema search calculating on all redshifts
-        auto result_s1_cX = linemodel_s1.Compute( dataStore,
+        auto result_s1_c2zX = linemodel_s1c2X.Compute( dataStore,
                                                      _spc,
                                                      _spcContinuum,
                                                      tplCatalog,
@@ -997,25 +1004,99 @@ Bool CZweiModelSolve::Solve( CDataStore& dataStore,
                                                      m_opt_abs_velocity_fit_min,
                                                      m_opt_abs_velocity_fit_max);
 
-        if( !result_s1_cX )
+        if( !result_s1_c2zX )
         {
-            Log.LogInfo( "Zweimodel - Failed to compute linemodel s1_c2z0");
+            Log.LogInfo( "Zweimodel - Failed to compute linemodel s1_c2z%d", kzs2);
             return false;
         }
         else{
-            Float64 merits2 = meritcandidates_s2[kzs2];
-            Log.LogInfo( "Zweimodel - Computing combined merit with ms2=%f", merits2);
-            auto lineModelResult_s1c2X = std::dynamic_pointer_cast<const CLineModelResult>( result_s1_cX );
-            Float64 merits1 = lineModelResult_s1c2X->ExtremaResult.Extrema[0];
-            Log.LogInfo( "Zweimodel - Computing combined merit with ms1c2=%f", merits1);
-            Float64 combinedMerit = merits2 + merits1;
-            Log.LogInfo( "Zweimodel - Computing combined merit=%f", combinedMerit);
-            if(bestmerit>combinedMerit)
+            //now computing s2zX with c1zY
+            auto lineModelResult_s1c2zX = std::dynamic_pointer_cast<const CLineModelResult>( result_s1_c2zX );
+
+            for(Int32 kzs1=0; kzs1<zcandidates_s1.size(); kzs1++)
             {
-                bestC2z = zcandidates_s2[kzs2];
-                bestmerit = combinedMerit;
-                result_s1_c2 = std::dynamic_pointer_cast<CLineModelResult>( result_s1_cX );
+
+                Log.LogInfo("Zweimodel - Computing multiroll model for s2 with contaminant from c1zY%d", kzs1);
+                Log.LogInfo("Zweimodel - ===============================================");
+
+                Int32 idx_linemodelExtrema_s1c2zX = -1;
+                for(Int32 i=0; i<lineModelResult_s1c2zX->ExtremaResult.Extrema.size(); i++)
+                {
+                    if(zcandidates_s1[kzs1]==lineModelResult_s1c2zX->ExtremaResult.Extrema[i])
+                    {
+                        idx_linemodelExtrema_s1c2zX = i;
+                    }
+                }
+                Float64 redshift1 = lineModelResult_s1c2zX->ExtremaResult.Extrema[idx_linemodelExtrema_s1c2zX];
+                Float64 merits1 = lineModelResult_s1c2zX->ExtremaResult.ExtremaMerit[idx_linemodelExtrema_s1c2zX];
+
+                COperatorLineModel linemodel_s2c1Y;
+                Int32 iRollContaminated_s2 = 0; //hardcoded for now
+                Float64 contLambdaOffset_s1tos2 = -offsetLambdaContaminant;
+                std::shared_ptr<CModelSpectrumResult> contModelSpectrum = linemodel_s1c2X.GetModelSpectrumResult(idx_linemodelExtrema_s1c2zX);
+                linemodel_s2c1Y.initContaminant(contModelSpectrum, iRollContaminated_s2, contLambdaOffset_s1tos2);
+
+                Float64 _opt_twosteplargegridstep = -1;
+                linemodel_s2c1Y.m_secondPass_extensionradius = 0.0;
+                linemodel_s2c1Y.m_secondPass_velfit_dzInfLim = 0;
+                linemodel_s2c1Y.m_secondPass_velfit_dzSupLim = 0;
+                linemodel_s2c1Y.m_secondPass_velfit_dzStep = 2e-4;
+                linemodel_s2c1Y.m_secondPass_velfit_vStep = 50.0;
+                Int32 _opt_extremacount = -1; //no extrema search calculating on all redshifts
+                std::vector<Float64> redshifts_s2(1, zcandidates_s2[kzs2]);
+                auto result_s2_c1zY = linemodel_s2c1Y.Compute( dataStore,
+                                                            *contSpectrum,
+                                                            _spcContinuum_s2,
+                                                             tplCatalog,
+                                                             tplCategoryList,
+                                                             m_calibrationPath,
+                                                             restraycatalog,
+                                                             m_opt_linetypefilter,
+                                                             m_opt_lineforcefilter,
+                                                             lambdaRange,
+                                                             redshifts_s2,
+                                                             _opt_extremacount,
+                                                             m_opt_fittingmethod,
+                                                             m_opt_continuumcomponent,
+                                                             m_opt_lineWidthType,
+                                                             m_opt_resolution,
+                                                             m_opt_velocity_emission,
+                                                             m_opt_velocity_absorption,
+                                                             m_opt_continuumreest,
+                                                             m_opt_rules,
+                                                             m_opt_velocityfit,
+                                                             _opt_twosteplargegridstep,
+                                                             m_opt_rigidity,
+                                                             m_opt_em_velocity_fit_min,
+                                                             m_opt_em_velocity_fit_max,
+                                                             m_opt_abs_velocity_fit_min,
+                                                             m_opt_abs_velocity_fit_max);
+
+                if( !result_s2_c1zY )
+                {
+                    Log.LogInfo( "Zweimodel - Failed to compute linemodel s2_c1z%d", kzs1);
+                    return false;
+                }else{
+
+                    auto lineModelResult_s2c1zY = std::dynamic_pointer_cast<const CLineModelResult>( result_s2_c1zY );
+                    Float64 redshift2 = lineModelResult_s2c1zY->ExtremaResult.Extrema[0];
+                    Float64 merits2 = lineModelResult_s2c1zY->ExtremaResult.ExtremaMerit[0];
+                    Float64 combinedMerit = merits2 + merits1;
+                    combined_merits_s2zX.push_back(combinedMerit);
+
+                    if(bestmerit>combinedMerit)
+                    {
+                        bestC2z = redshift2;
+                        bestC1z = redshift1;
+                        bestmerit = combinedMerit;
+                        result_s1_c2 = std::dynamic_pointer_cast<CLineModelResult>( result_s1_c2zX );
+                    }
+                }
+
+
+
             }
+            combined_merits.push_back(combined_merits_s2zX);
         }
     }
 
@@ -1025,16 +1106,25 @@ Bool CZweiModelSolve::Solve( CDataStore& dataStore,
         return false;
     }
     else{
+        Log.LogInfo( "Zweimodel - Successfully computed linemodel s1_c2: best S1_z=%.5f, best S2_z=%.5f", bestC1z, bestC2z);
         // Store linemodel chisquare results
         dataStore.StoreScopedGlobalResult( scopeStr.c_str(), result_s1_c2 );
         //save linemodel fitting and spectrum-model results
-        linemodel_s1.storeGlobalModelResults(dataStore);
+        //linemodel_s1.storeGlobalModelResults(dataStore);
+
+        std::shared_ptr<CZweiModelResult> zweimodelResult = std::shared_ptr<CZweiModelResult>( new CZweiModelResult(zcandidates_s1, zcandidates_s2, combined_merits));
+        std::string fname_result = (boost::format("zweimodel")).str();
+        dataStore.StoreScopedGlobalResult( fname_result.c_str(), zweimodelResult );
     }
 
     return true;
 }
 
-Int32 CZweiModelSolve::getContaminantNameFromFile( const char* filePath, std::string spcid, Int32 colID, std::string& contSpcFileName, std::string& contErrorFileName, Int32 reverseInclusion )
+Int32 CZweiModelSolve::getContaminantNameFromFile( const char* filePath, std::string spcid, Int32 colID,
+                                                   std::string& contSpcFileName,
+                                                   std::string& contErrorFileName,
+                                                   Float64& offsetLambdaContaminant,
+                                                   Int32 reverseInclusion )
 {    
     contSpcFileName = "";
     contErrorFileName = "";
@@ -1103,6 +1193,23 @@ Int32 CZweiModelSolve::getContaminantNameFromFile( const char* filePath, std::st
                     }else{
                         contErrorFileName = "";
                         Log.LogError( "Failed to find spc tag in contaminant name" );
+                        return false;
+                    }
+
+                    //now read the lambda offset
+                    ++it;
+                    if( it != tok.end() )
+                    {
+                        try
+                        {
+                            offsetLambdaContaminant = lexical_cast<double>(*it);
+                        }
+                        catch (bad_lexical_cast)
+                        {
+                            return false;
+                        }
+                    }else{
+                        Log.LogError( "Failed to find offsetLambdaContaminant value for the given contaminant spectrum" );
                         return false;
                     }
 

@@ -5,6 +5,8 @@
 #include <RedshiftLibrary/method/linemodelsolveresult.h>
 #include <RedshiftLibrary/spectrum/template/template.h>
 #include <RedshiftLibrary/operator/linemodel.h>
+#include <RedshiftLibrary/linemodel/zweimodelresult.h>
+
 
 namespace NSEpic
 {
@@ -38,7 +40,11 @@ private:
 
     Int32 getValueFromRefFile( const char* filePath, std::string spcid, Int32 colID, Float64& zref, Int32 reverseInclusion );
     Int32 getVelocitiesFromRefFile( const char* filePath, std::string spcid, Float64& elv, Float64& alv );
-    Int32 getContaminantNameFromFile( const char* filePath, std::string spcid, Int32 colID, std::string& contSpcFileName, std::string& contErrorFileName, Int32 reverseInclusion );
+    Int32 getContaminantNameFromFile(const char* filePath, std::string spcid, Int32 colID,
+                                     std::string& contSpcFileName,
+                                     std::string& contErrorFileName,
+                                     Float64 &offsetLambdaContaminant,
+                                     Int32 reverseInclusion );
 
 
     Int32 CombinePDF(CDataStore &store,
