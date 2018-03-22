@@ -57,7 +57,7 @@ CMultiRollModel::CMultiRollModel(const CSpectrum& spectrum,
         Int32 retComb = spcCombination.Combine(spcRolls, spcCombined);
         if( retComb !=0 )
         {
-            Log.LogError( "Multimodel: Unable to combine rolls for continuum estimate override");
+            Log.LogError( "    multirollmodel: Unable to combine rolls for continuum estimate override");
         }
 
         // Estimate continuum spectrum
@@ -74,7 +74,7 @@ CMultiRollModel::CMultiRollModel(const CSpectrum& spectrum,
         std::string medianRemovalMethod = spectrumContinuum.GetContinuumEstimationMethod();
 
         const char*     nameBaseline;		// baseline filename
-        Log.LogInfo( "Continuum estimation: using %s", medianRemovalMethod.c_str() );
+        Log.LogInfo( "    multirollmodel: Continuum estimation: using %s", medianRemovalMethod.c_str() );
         if( medianRemovalMethod== "IrregularSamplingMedian")
         {
             nameBaseline = "preprocess/baselineISMedian";
@@ -103,7 +103,7 @@ CMultiRollModel::CMultiRollModel(const CSpectrum& spectrum,
             bool ret = spectrumWithoutContinuum->RemoveContinuum( continuum );
             if( !ret ) //doesn't seem to work. TODO: check that the df errors lead to a ret=false value
             {
-                Log.LogError( "Failed to apply continuum substraction for multimodel-combined spectrum" );
+                Log.LogError( "    multirollmodel: Failed to apply continuum substraction for multimodel-combined spectrum" );
                 return;
             }
         }else if( medianRemovalMethod== "raw")
@@ -144,7 +144,7 @@ CMultiRollModel::CMultiRollModel(const CSpectrum& spectrum,
         spcContinuumForMultimodel.SetDecompScales(spectrumWithoutContinuum->GetDecompScales());
         spcContinuumForMultimodel.SetContinuumEstimationMethod(spectrumWithoutContinuum->GetContinuumEstimationMethod());
         spcContinuumForMultimodel.SetWaveletsDFBinPath(spectrumWithoutContinuum->GetWaveletsDFBinPath());
-        Log.LogInfo("===============================================");
+        Log.LogInfo("    multirollmodel: ===============================================");
 
 
     }
@@ -199,14 +199,14 @@ std::shared_ptr<CSpectrum> CMultiRollModel::LoadRollSpectrum(std::string refSpcF
 
     if(verbose)
     {
-        Log.LogInfo( "Multimodel: load roll #%d: ref spc full path = %s", iRoll, refSpcFullPath.c_str() );
+        Log.LogInfo( "    multirollmodel: load roll #%d: ref spc full path = %s", iRoll, refSpcFullPath.c_str() );
     }
     std::string spcName = bfs::path( refSpcFullPath ).stem().string().c_str();
     std::string spcPath = bfs::path( refSpcFullPath ).parent_path().string().c_str();
     if(verbose)
     {
-        Log.LogInfo( "Multimodel: load roll #%d: ref spc name = %s", iRoll, spcName.c_str() );
-        Log.LogInfo( "Multimodel: load roll #%d: ref spc path = %s", iRoll, spcPath.c_str() );
+        Log.LogInfo( "    multirollmodel: load roll #%d: ref spc name = %s", iRoll, spcName.c_str() );
+        Log.LogInfo( "    multirollmodel: load roll #%d: ref spc path = %s", iRoll, spcPath.c_str() );
     }
     Int32 substring_start = 0;
     Int32 substring_n;
@@ -215,7 +215,7 @@ std::shared_ptr<CSpectrum> CMultiRollModel::LoadRollSpectrum(std::string refSpcF
     if (foundstra!=std::string::npos){
         substring_n = (Int32)foundstra;
     }else{
-        Log.LogWarning( "Multimodel - load roll hack - unable to find strTag=%s", strTag.c_str());
+        Log.LogWarning( "    multirollmodel: load roll hack - unable to find strTag=%s", strTag.c_str());
         return spc;
     }
 
@@ -226,8 +226,8 @@ std::shared_ptr<CSpectrum> CMultiRollModel::LoadRollSpectrum(std::string refSpcF
     bfs::path newNoiseRollPath = bfs::path(spcPath)/bfs::path(newNoiseRollName.c_str());
 
 
-    Log.LogInfo( "Multimodel: load roll #%d: new spc roll path = %s", iRoll, newSpcRollPath.c_str() );
-    Log.LogInfo( "Multimodel: load roll #%d: new noise roll path = %s", iRoll, newNoiseRollPath.c_str() );
+    Log.LogInfo( "    multirollmodel: load roll #%d: new spc roll path = %s", iRoll, newSpcRollPath.c_str() );
+    Log.LogInfo( "    multirollmodel: load roll #%d: new noise roll path = %s", iRoll, newNoiseRollPath.c_str() );
     //
 
     //Read the fits data
@@ -235,7 +235,7 @@ std::shared_ptr<CSpectrum> CMultiRollModel::LoadRollSpectrum(std::string refSpcF
     Bool rValue = reader.Read( newSpcRollPath.c_str(), *spc );
     if( !rValue )
     {
-        Log.LogError("Failed to read input spectrum file: (%s)", newSpcRollPath.c_str() );
+        Log.LogError("    multirollmodel: Failed to read input spectrum file: (%s)", newSpcRollPath.c_str() );
         spc = NULL;
         return spc;
     }
@@ -245,13 +245,13 @@ std::shared_ptr<CSpectrum> CMultiRollModel::LoadRollSpectrum(std::string refSpcF
         CNoiseFromFile noise;
         if( ! noise.SetNoiseFilePath( newNoiseRollPath.c_str() ) )
         {
-            Log.LogError("Failed to load noise spectrum");
+            Log.LogError("    multirollmodel: Failed to load noise spectrum");
             return spc;
         }
 
         if( ! noise.AddNoise( *spc ) )
         {
-            Log.LogError( "Failed to apply noise from spectrum: %s", newNoiseRollPath.c_str() );
+            Log.LogError( "    multirollmodel: Failed to apply noise from spectrum: %s", newNoiseRollPath.c_str() );
             return spc;
         }
     }
@@ -552,7 +552,7 @@ fit(Float64 redshift, const TFloat64Range& lambdaRange, CLineModelSolution& mode
 
                     if(enableLogging)
                     {
-                        Log.LogInfo( "Multifit: for tplshape=%d, for kElt=%d found A=%f", kts, k, amps[k] );
+                        Log.LogDetail( "    multirollmodel: Multifit: for tplshape=%d, for kElt=%d found A=%f", kts, k, amps[k] );
                     }
                 }
                 //*/
@@ -585,7 +585,7 @@ fit(Float64 redshift, const TFloat64Range& lambdaRange, CLineModelSolution& mode
 
                 if(enableLogging)
                 {
-                    Log.LogInfo( "Multifit: for tplshape=%d, found lst-sq=%f", kts, valf );
+                    Log.LogDetail( "    multirollmodel: Multifit: for tplshape=%d, found lst-sq=%f", kts, valf );
                 }
                 m_chi2tplshape[kts] = valf;
                 if(minChi2Tplshape>valf)

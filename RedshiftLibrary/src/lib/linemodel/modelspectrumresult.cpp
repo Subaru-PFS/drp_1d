@@ -58,3 +58,8 @@ Void CModelSpectrumResult::SaveLine(const CDataStore &store, std::ostream& strea
 {
 
 }
+
+CSpectrum& CModelSpectrumResult::GetSpectrum()
+{
+    return model;
+}

@@ -87,12 +87,22 @@ public:
 
     void storeGlobalModelResults( CDataStore &dataStore );
     void storePerTemplateModelResults( CDataStore &dataStore, const CTemplate& tpl );
+    std::shared_ptr<CModelSpectrumResult> GetModelSpectrumResult(Int32 idx);
 
     bool m_enableWidthFitByGroups;
 
-    bool m_logInfoVerbose = false;
-
     Int32 m_maxModelSaveCount;
+    Float64 m_secondPass_extensionradius = 0.005;
+    Float64 m_secondPass_velfit_dzInfLim = -4e-4;
+    Float64 m_secondPass_velfit_dzSupLim = 4e-4;
+    Float64 m_secondPass_velfit_dzStep = 2e-4;
+    Float64 m_secondPass_velfit_vStep = 20.0;
+
+    bool m_enableLoadContTemplate=false;
+    Int32 m_iRollContaminated=-1;
+    Float64 m_contLambdaOffset=0;
+    std::shared_ptr<CTemplate> m_tplContaminant=NULL;
+    Int32 initContaminant(std::shared_ptr<CModelSpectrumResult> contModelSpectrum, Int32 iRollContaminated, Float64 contLambdaOffset);
 
 private:
 

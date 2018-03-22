@@ -187,7 +187,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
     std::shared_ptr<CTemplateCatalog> orthoTplCatalog = orthoTplStore.getTplCatalog(ctlgIdx);
     Log.LogInfo( "  Operator-Linemodel: Templates store prepared.");
 
-    //*
+    /*
     CLineModelElementList model( spectrum,
                                  spectrumContinuum,
                                  tplCatalog,//*orthoTplCatalog,//
@@ -208,7 +208,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
     //*/
 
 
-    /*
+    //*
     CMultiRollModel model( spectrum,
                                  spectrumContinuum,
                                  tplCatalog,//*orthoTplCatalog,//
@@ -225,11 +225,15 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
                                  opt_rigidity);
 
 
-    Int32 iContTemplate = 0; //idx of the roll being contaminated
-    std::shared_ptr<CTemplate> tplContaminant;
-    Bool enableLoadContTemplate = true;
-    if(enableLoadContTemplate)
+    Bool enableLoadContTemplateOverride = false; //manual switch for hardcoded contaminant bypass load
+    if(enableLoadContTemplateOverride)
     {
+        m_enableLoadContTemplate = false; //disable stock contaminant in case of overrided contaminant
+        Int32 iContTemplate = 0; //idx of the roll being contaminated
+        std::shared_ptr<CTemplate> tplContaminant;
+
+        Log.LogInfo( "  Operator-Linemodel: OVERRIDDEN loading contaminant for roll #%d", iContTemplate );
+
         //hardcoded load from file on disk: of the contaminant for first model
         std::string templatePath = "/home/aschmitt/data/euclid/simulation2017-SC3_test_zweiroll/amazed/output_rolls_source3/euc_testsc3_zweiroll_source3_roll0_F_i0/linemodelsolve.linemodel_spc_extrema_0.txt";
         const std::string& category = "emission";
@@ -259,9 +263,31 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
             fprintf( f2, "%f\t%e\n", tplContaminant->GetSpectralAxis()[k], tplContaminant->GetFluxAxis()[k]);
         }
         fclose( f2 );
+
+        //tplContaminant
+        model.LoadFitContaminantTemplate(iContTemplate, *tplContaminant, lambdaRange);
     }
-    //tplContaminant
-    model.LoadFitContaminantTemplate(iContTemplate, *tplContaminant, lambdaRange);
+    if(m_enableLoadContTemplate)
+    {
+        Log.LogInfo( "  Operator-Linemodel: loading contaminant for roll #%d", m_iRollContaminated );
+        if(m_tplContaminant==0)
+        {
+            Log.LogError( "  Operator-Linemodel: Contaminant data is invalid... aborting." );
+        }else{
+            //applying offset for ra/dec distance between main source and contaminant
+            m_tplContaminant->GetSpectralAxis().ApplyOffset(m_contLambdaOffset);
+            //debug:
+            FILE* f2 = fopen( "contaminantShifted.txt", "w+" );
+            for(Int32 k=0; k<m_tplContaminant->GetSampleCount(); k++)
+            {
+                fprintf( f2, "%f\t%e\n", m_tplContaminant->GetSpectralAxis()[k], m_tplContaminant->GetFluxAxis()[k]);
+            }
+            fclose( f2 );
+
+            //apply contamination to the multiroll model
+            model.LoadFitContaminantTemplate(m_iRollContaminated, *m_tplContaminant, lambdaRange);
+        }
+    }
     //*/
 
 
@@ -570,6 +596,13 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
     {
         extremumList.push_back(SPoint( result->Redshifts[0], result->ChiSquare[0] ));
         Log.LogInfo("  Operator-Linemodel: only 1 redshift calculated, only 1 extremum");
+    }else if(opt_extremacount==-1)
+    {
+        for(Int32 ke=0; ke<result->Redshifts.size(); ke++)
+        {
+            extremumList.push_back(SPoint( result->Redshifts[ke], result->ChiSquare[ke] ));
+        }
+        Log.LogInfo("  Operator-Linemodel: all initial redshifts considered as extrema");
     }else
     {
         Log.LogInfo("  Operator-Linemodel: ChiSquare min val = %e", result->GetMinChiSquare() );
@@ -606,7 +639,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
 
     //*
     // extend z around the extrema
-    Float64 extensionradius = 0.005;
+    Float64 extensionradius = m_secondPass_extensionradius;
     for( Int32 i=0; i<extremumList.size(); i++ )
     {
         Log.LogInfo("  Operator-Linemodel: Raw extr #%d, z_e.X=%f, m_e.Y=%e", i, extremumList[i].X, extremumList[i].Y);
@@ -787,22 +820,22 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
                         }
 
                         //Prepare velocity grid to be checked
-                        Float64 vStep = 20.0;
+                        Float64 vStep = m_secondPass_velfit_vStep;;
                         Int32 nSteps = (int)((vSupLim-vInfLim)/vStep);
 
 
-                        Float64 dzInfLim = -4e-4;
+                        Float64 dzInfLim = m_secondPass_velfit_dzInfLim;
                         if(result->Redshifts[idx]+dzInfLim<result->Redshifts[0])
                         {
                             dzInfLim = result->Redshifts[0]-result->Redshifts[idx];
                         }
-                        Float64 dzSupLim = 4e-4;
+                        Float64 dzSupLim = m_secondPass_velfit_dzSupLim;
                         if(result->Redshifts[idx]+dzSupLim>result->Redshifts[result->Redshifts.size()-1])
                         {
                             dzSupLim = result->Redshifts[result->Redshifts.size()-1]-result->Redshifts[idx];
                         }
 
-                        Float64 dzStep = 2e-4;
+                        Float64 dzStep = m_secondPass_velfit_dzStep;
                         Int32 nDzSteps = (int)((dzSupLim-dzInfLim)/dzStep);
                         if(nDzSteps==0)
                         {
@@ -1385,6 +1418,39 @@ std::shared_ptr<COperatorResult> COperatorLineModel::computeWithUltimPass(CDataS
     return result;
 }
 
+/**
+ * @brief COperatorLineModel::initContaminant
+ * prepare the contaminant to be used when instantiating a multimodel in compute()
+ * @return
+ */
+Int32 COperatorLineModel::initContaminant(std::shared_ptr<CModelSpectrumResult> contModelSpectrum, Int32 iRollContaminated, Float64 contLambdaOffset)
+{
+    //
+    Log.LogInfo("  Operator-Linemodel: Initializing contaminant for roll #%d, with offset=%.2f", iRollContaminated, contLambdaOffset);
+
+    m_iRollContaminated = iRollContaminated;
+    m_contLambdaOffset = contLambdaOffset;
+    const std::string& category = "emission";
+    m_tplContaminant = std::shared_ptr<CTemplate>( new CTemplate( "contaminant", category ) );
+    Int32 length = contModelSpectrum->GetSpectrum().GetSampleCount();
+    CSpectrumAxis& contModelFluxAxis = contModelSpectrum->GetSpectrum().GetFluxAxis();
+    CSpectrumAxis& contModelSpectralAxis = contModelSpectrum->GetSpectrum().GetSpectralAxis();
+
+    CSpectrumAxis& spcFluxAxis = m_tplContaminant->GetFluxAxis();
+    spcFluxAxis.SetSize( length );
+    CSpectrumAxis& spcSpectralAxis = m_tplContaminant->GetSpectralAxis();
+    spcSpectralAxis.SetSize( length );
+
+    for(Int32 k=0; k<length; k++)
+    {
+        spcFluxAxis[k] = contModelFluxAxis[k];
+        spcSpectralAxis[k] =  contModelSpectralAxis[k];
+    }
+
+    m_enableLoadContTemplate = true;
+    return 0;
+}
+
 ///
 /// \brief COperatorLineModel::storeGlobalModelResults
 /// stores the linemodel results as global results in the datastore
@@ -1438,6 +1504,18 @@ void COperatorLineModel::storePerTemplateModelResults( CDataStore &dataStore, co
     }
 
 }
+
+std::shared_ptr<CModelSpectrumResult> COperatorLineModel::GetModelSpectrumResult(Int32 idx)
+{
+    Int32 nResults = m_savedModelSpectrumResults.size();
+    if(idx>=nResults)
+    {
+        return NULL;
+    }else{
+        return m_savedModelSpectrumResults[idx];
+    }
+}
+
 
 Int32 COperatorLineModel::interpolateLargeGridOnFineGrid(TFloat64List redshiftsLargeGrid, TFloat64List redshiftsFineGrid, TFloat64List meritLargeGrid, TFloat64List& meritFineGrid)
 {

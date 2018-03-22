@@ -822,17 +822,24 @@ Bool CZweiModelSolve::Solve( CDataStore& dataStore,
     // ---------------------------------------------------
     // Compute the S1 first pass without contaminant
     Log.LogInfo("Zweimodel - Computing first linemodel : S1");
-    COperatorLineModel linemodel;
-    auto  result = linemodel.Compute( dataStore,
-				      _spc,
+    Log.LogInfo("Zweimodel - ===============================================");
+    COperatorLineModel linemodel_s1;
+
+    linemodel_s1.m_secondPass_velfit_dzInfLim = 4e-4;
+    linemodel_s1.m_secondPass_velfit_dzSupLim = 4e-4;
+    linemodel_s1.m_secondPass_velfit_dzStep = 4e-4;
+    linemodel_s1.m_secondPass_velfit_vStep = 50.0;
+
+    auto  result_s1 = linemodel_s1.Compute( dataStore,
+                      _spc,
                       _spcContinuum,
                       tplCatalog,
                       tplCategoryList,
                       m_calibrationPath,
-				      restraycatalog,
+                      restraycatalog,
                       m_opt_linetypefilter,
                       m_opt_lineforcefilter,
-				      lambdaRange,
+                      lambdaRange,
                       _redshifts,
                       m_opt_extremacount,
                       m_opt_fittingmethod,
@@ -850,16 +857,178 @@ Bool CZweiModelSolve::Solve( CDataStore& dataStore,
                       m_opt_em_velocity_fit_max,
                       m_opt_abs_velocity_fit_min,
                       m_opt_abs_velocity_fit_max);
-
-    if( !result )
+    if( !result_s1 )
     {
-        //Log.LogInfo( "Failed to compute linemodel");
+        Log.LogInfo( "Zweimodel - Failed to compute linemodel s1");
         return false;
-    }else{
+    }
+//    else{
+//        // Store linemodel chisquare results
+//        dataStore.StoreScopedGlobalResult( scopeStr.c_str(), result_s1 );
+//        //save linemodel fitting and spectrum-model results
+//        linemodel_s1.storeGlobalModelResults(dataStore);
+//    }
+
+    // ---------------------------------------------------
+    Log.LogInfo("Zweimodel - Computing second linemodel : S2");
+    Log.LogInfo("Zweimodel - ===============================================");
+    Log.LogInfo("Zweimodel - using zero continuum (probably overrided inside multimodel)");
+    //WARNING: using dumb continuum zero here.
+    //WARNING: Note that, in the multimodel, the continuum is re-estimated from the combined inside the operator anyway.
+    CSpectrum _spcContinuum_s2 = *contSpectrum;
+    _spcContinuum_s2.SetMedianWinsize(_spcContinuum.GetMedianWinsize());
+    _spcContinuum_s2.SetDecompScales(_spcContinuum.GetDecompScales());
+    _spcContinuum_s2.SetContinuumEstimationMethod(_spcContinuum.GetContinuumEstimationMethod());
+    _spcContinuum_s2.SetWaveletsDFBinPath(_spcContinuum.GetWaveletsDFBinPath());
+    CSpectrumFluxAxis spcfluxAxis2 = _spcContinuum_s2.GetFluxAxis();
+    for(Int32 k=0; k<spcfluxAxis2.GetSamplesCount(); k++)
+    {
+        spcfluxAxis2[k] = 0.0;
+    }
+
+    COperatorLineModel linemodel_s2;
+    linemodel_s2.m_secondPass_velfit_dzInfLim = 4e-4;
+    linemodel_s2.m_secondPass_velfit_dzSupLim = 4e-4;
+    linemodel_s2.m_secondPass_velfit_dzStep = 4e-4;
+    linemodel_s2.m_secondPass_velfit_vStep = 50.0;
+    auto  result_s2 = linemodel_s2.Compute( dataStore,
+                      *contSpectrum,
+                      _spcContinuum_s2,
+                      tplCatalog,
+                      tplCategoryList,
+                      m_calibrationPath,
+                      restraycatalog,
+                      m_opt_linetypefilter,
+                      m_opt_lineforcefilter,
+                      lambdaRange,
+                      _redshifts,
+                      m_opt_extremacount,
+                      m_opt_fittingmethod,
+                      m_opt_continuumcomponent,
+                      m_opt_lineWidthType,
+                      m_opt_resolution,
+                      m_opt_velocity_emission,
+                      m_opt_velocity_absorption,
+                      m_opt_continuumreest,
+                      m_opt_rules,
+                      m_opt_velocityfit,
+                      m_opt_twosteplargegridstep,
+                      m_opt_rigidity,
+                      m_opt_em_velocity_fit_min,
+                      m_opt_em_velocity_fit_max,
+                      m_opt_abs_velocity_fit_min,
+                      m_opt_abs_velocity_fit_max);
+    if( !result_s2 )
+    {
+        Log.LogInfo( "Zweimodel - Failed to compute linemodel s2");
+        return false;
+    }
+
+
+    //get the s1 redshift candidates
+    Log.LogInfo( "Zweimodel - Retrieving candidates for s1");
+    std::vector<Float64> zcandidates_s1;
+    auto lineModelResult_s1 = std::dynamic_pointer_cast<const CLineModelResult>( result_s1 );
+    for( Int32 i=0; i<lineModelResult_s1->ExtremaResult.Extrema.size(); i++ )
+    {
+        Float64 zc = lineModelResult_s1->ExtremaResult.Extrema[i];
+        zcandidates_s1.push_back(zc);
+        Log.LogInfo( "Zweimodel - Candidate s1 - #%d : %.5f", i, zc);
+    }
+    //get the s2 redshift candidates
+    Log.LogInfo( "Zweimodel - Retrieving candidates for s2");
+    std::vector<Float64> zcandidates_s2;
+    std::vector<Float64> meritcandidates_s2;
+    auto lineModelResult_s2 = std::dynamic_pointer_cast<const CLineModelResult>( result_s2 );
+    for( Int32 i=0; i<lineModelResult_s2->ExtremaResult.Extrema.size(); i++ )
+    {
+        Float64 zc = lineModelResult_s2->ExtremaResult.Extrema[i];
+        zcandidates_s2.push_back(zc);
+        meritcandidates_s2.push_back(lineModelResult_s2->ExtremaResult.ExtremaMerit[i]);
+        Log.LogInfo( "Zweimodel - Candidate s2 - #%d : %.5f", i, zc);
+    }
+
+
+    std::shared_ptr<CLineModelResult> result_s1_c2;
+    Float64 bestmerit = DBL_MAX;
+    Float64 bestC2z = -1.0;
+    for(Int32 kzs2=0; kzs2<zcandidates_s2.size(); kzs2++)
+    {
+        Log.LogInfo("Zweimodel - Computing multiroll model for s1 with contaminant from s2z%d", kzs2);
+        Log.LogInfo("Zweimodel - ===============================================");
+
+        Int32 iRollContaminated = 0; //hardcoded for now
+        Float64 contLambdaOffset_s2tos1 = 2000; //hardcoded for now. This is a simple modelization of the needed regrid of s2 on s1 grid (kind of due to s1/s2 radec distance)
+        std::shared_ptr<CModelSpectrumResult> contModelSpectrum = linemodel_s2.GetModelSpectrumResult(kzs2);
+        linemodel_s1.initContaminant(contModelSpectrum, iRollContaminated, contLambdaOffset_s2tos1);
+
+        Float64 _opt_twosteplargegridstep = -1;
+        linemodel_s1.m_secondPass_extensionradius = 0.0;
+        linemodel_s1.m_secondPass_velfit_dzInfLim = 0;
+        linemodel_s1.m_secondPass_velfit_dzSupLim = 0;
+        linemodel_s1.m_secondPass_velfit_dzStep = 2e-4;
+        linemodel_s1.m_secondPass_velfit_vStep = 50.0;
+        Int32 _opt_extremacount = -1; //no extrema search calculating on all redshifts
+        auto result_s1_cX = linemodel_s1.Compute( dataStore,
+                                                     _spc,
+                                                     _spcContinuum,
+                                                     tplCatalog,
+                                                     tplCategoryList,
+                                                     m_calibrationPath,
+                                                     restraycatalog,
+                                                     m_opt_linetypefilter,
+                                                     m_opt_lineforcefilter,
+                                                     lambdaRange,
+                                                     zcandidates_s1,
+                                                     _opt_extremacount,
+                                                     m_opt_fittingmethod,
+                                                     m_opt_continuumcomponent,
+                                                     m_opt_lineWidthType,
+                                                     m_opt_resolution,
+                                                     m_opt_velocity_emission,
+                                                     m_opt_velocity_absorption,
+                                                     m_opt_continuumreest,
+                                                     m_opt_rules,
+                                                     m_opt_velocityfit,
+                                                     _opt_twosteplargegridstep,
+                                                     m_opt_rigidity,
+                                                     m_opt_em_velocity_fit_min,
+                                                     m_opt_em_velocity_fit_max,
+                                                     m_opt_abs_velocity_fit_min,
+                                                     m_opt_abs_velocity_fit_max);
+
+        if( !result_s1_cX )
+        {
+            Log.LogInfo( "Zweimodel - Failed to compute linemodel s1_c2z0");
+            return false;
+        }
+        else{
+            Float64 merits2 = meritcandidates_s2[kzs2];
+            Log.LogInfo( "Zweimodel - Computing combined merit with ms2=%f", merits2);
+            auto lineModelResult_s1c2X = std::dynamic_pointer_cast<const CLineModelResult>( result_s1_cX );
+            Float64 merits1 = lineModelResult_s1c2X->ExtremaResult.Extrema[0];
+            Log.LogInfo( "Zweimodel - Computing combined merit with ms1c2=%f", merits1);
+            Float64 combinedMerit = merits2 + merits1;
+            Log.LogInfo( "Zweimodel - Computing combined merit=%f", combinedMerit);
+            if(bestmerit>combinedMerit)
+            {
+                bestC2z = zcandidates_s2[kzs2];
+                bestmerit = combinedMerit;
+                result_s1_c2 = std::dynamic_pointer_cast<CLineModelResult>( result_s1_cX );
+            }
+        }
+    }
+
+    if( !result_s1_c2 )
+    {
+        Log.LogInfo( "Zweimodel - Failed to compute linemodel s1_c2");
+        return false;
+    }
+    else{
         // Store linemodel chisquare results
-        dataStore.StoreScopedGlobalResult( scopeStr.c_str(), result );
+        dataStore.StoreScopedGlobalResult( scopeStr.c_str(), result_s1_c2 );
         //save linemodel fitting and spectrum-model results
-        linemodel.storeGlobalModelResults(dataStore);
+        linemodel_s1.storeGlobalModelResults(dataStore);
     }
 
     return true;

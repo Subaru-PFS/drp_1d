@@ -26,6 +26,8 @@ public:
     Void Save( const CDataStore& store, std::ostream& stream ) const;
     Void SaveLine( const CDataStore& store, std::ostream& stream ) const;
 
+    CSpectrum& GetSpectrum();
+
 private:
     CSpectrum model;
 
