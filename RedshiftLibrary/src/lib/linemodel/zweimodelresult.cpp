@@ -35,7 +35,33 @@ CZweiModelResult::~CZweiModelResult()
 
 Void CZweiModelResult::Save( const CDataStore& store, std::ostream& stream ) const
 {
-    stream << "testSave";
+    // first save the s1 redshift values on 1 line
+    stream << "#redhifts s1" << std::endl;;
+    for(Int32 k=0; k<m_redshifts_s1.size(); k++)
+    {
+        stream << m_redshifts_s1[k] << "\t";
+    }
+    stream << std::endl;
+
+    // then save the s2 redshift values on 1 line
+    stream << "#redhifts s2" << std::endl;;
+    for(Int32 k=0; k<m_redshifts_s2.size(); k++)
+    {
+        stream << m_redshifts_s2[k] << "\t";
+    }
+    stream << std::endl;
+
+    // finally save the merits matrix (rows=s2 index, cols = s1 index)
+    stream << "#merits matrix (rows=s2 index, cols = s1 index)" << std::endl;
+    for(Int32 k2=0; k2<m_redshifts_s2.size(); k2++)
+    {
+
+        for(Int32 k1=0; k1<m_redshifts_s1.size(); k1++)
+        {
+            stream << m_combined_merits[k2][k1] << "\t";
+        }
+        stream << std::endl;
+    }
 }
 
 /**
