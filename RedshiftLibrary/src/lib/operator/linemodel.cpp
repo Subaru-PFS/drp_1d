@@ -187,7 +187,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
     std::shared_ptr<CTemplateCatalog> orthoTplCatalog = orthoTplStore.getTplCatalog(ctlgIdx);
     Log.LogInfo( "  Operator-Linemodel: Templates store prepared.");
 
-    /*
+    //*
     CLineModelElementList model( spectrum,
                                  spectrumContinuum,
                                  tplCatalog,//*orthoTplCatalog,//
@@ -208,7 +208,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
     //*/
 
 
-    //*
+    /*
     CMultiRollModel model( spectrum,
                                  spectrumContinuum,
                                  tplCatalog,//*orthoTplCatalog,//
@@ -357,14 +357,14 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
         if(redshiftsTplFit.size()<100 && opt_chi2operator != "chisquare2") // warning arbitrary number of redshifts threshold to consider chisquare2 faster than chisquarelog
         {
             opt_chi2operator = "chisquare2";
-            Log.LogInfo( "linemodel: precomputing- auto select chisquare2 operator (faster for few redshifts calc. points)" );
+            Log.LogInfo( "  Operator-Linemodel: precomputing- auto select chisquare2 operator (faster for few redshifts calc. points)" );
         }
         std::string opt_interp = "precomputedfinegrid"; // "lin"; //
         Int32 opt_dustFit = 1;
         Int32 opt_extinction = 1;
-        Log.LogInfo( "linemodel: precomputing- with operator = %s", opt_chi2operator.c_str() );
-        Log.LogInfo( "linemodel: precomputing-fitContinuum_dustfit = %d", opt_dustFit );
-        Log.LogInfo( "linemodel: precomputing-fitContinuum_igm = %d", opt_extinction );
+        Log.LogInfo( "  Operator-Linemodel: precomputing- with operator = %s", opt_chi2operator.c_str() );
+        Log.LogInfo( "  Operator-Linemodel: precomputing-fitContinuum_dustfit = %d", opt_dustFit );
+        Log.LogInfo( "  Operator-Linemodel: precomputing-fitContinuum_igm = %d", opt_extinction );
 
         std::shared_ptr<COperator> chiSquareOperator;
         if(opt_chi2operator=="chisquarelog")
@@ -378,7 +378,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
         else if(opt_chi2operator=="chisquare2"){
             chiSquareOperator = std::shared_ptr<COperatorChiSquare2>( new COperatorChiSquare2(opt_calibrationPath));
         }else{
-            Log.LogError( "linemodel: unable to parce chisquare continuum fit operator");
+            Log.LogError( "  Operator-Linemodel: unable to parce chisquare continuum fit operator");
         }
 
 

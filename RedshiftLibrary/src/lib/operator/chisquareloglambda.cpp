@@ -122,7 +122,7 @@ Int32 COperatorChiSquareLogLambda::EstimateXtY(const Float64* X, const Float64* 
 
     if(verboseLogXtYFFT)
     {
-        Log.LogInfo("ChisquareLog, FitAllz: Processing spc-fft with n=%d, padded to n=%d", nSpc, nPadded);
+        Log.LogInfo("  Operator-ChisquareLog: FitAllz: Processing spc-fft with n=%d, padded to n=%d", nSpc, nPadded);
     }
 
 //    for(Int32 k=0; k<nSpc; k++)
@@ -151,7 +151,7 @@ Int32 COperatorChiSquareLogLambda::EstimateXtY(const Float64* X, const Float64* 
 
         if(verboseLogXtYFFT)
         {
-            Log.LogInfo("ChisquareLog, FitAllz: Processing spc-fft with nPadBeforeSpc=%d", nPadBeforeSpc);
+            Log.LogInfo("  Operator-ChisquareLog: FitAllz: Processing spc-fft with nPadBeforeSpc=%d", nPadBeforeSpc);
         }
         for(Int32 k=0; k<nPadBeforeSpc; k++)
         {
@@ -179,7 +179,7 @@ Int32 COperatorChiSquareLogLambda::EstimateXtY(const Float64* X, const Float64* 
         fftw_execute(pSpc);
         if(verboseLogXtYFFT)
         {
-            Log.LogInfo("ChisquareLog, FitAllz: spc-fft done");
+            Log.LogInfo("  Operator-ChisquareLog: FitAllz: spc-fft done");
         }
         if(verboseExportXtYFFT)
         {
@@ -198,7 +198,7 @@ Int32 COperatorChiSquareLogLambda::EstimateXtY(const Float64* X, const Float64* 
             precomputedFFT_spcFluxOverErr2 = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * nPadded);
             if(precomputedFFT_spcFluxOverErr2==0)
             {
-                Log.LogError("ChisquareLog, InitFFT: Unable to allocate precomputedFFT_spcFluxOverErr2");
+                Log.LogError("  Operator-ChisquareLog: InitFFT: Unable to allocate precomputedFFT_spcFluxOverErr2");
                 return -1;
             }
             for(Int32 k=0; k<nPadded; k++)
@@ -213,7 +213,7 @@ Int32 COperatorChiSquareLogLambda::EstimateXtY(const Float64* X, const Float64* 
             precomputedFFT_spcOneOverErr2 = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * nPadded);
             if(precomputedFFT_spcOneOverErr2==0)
             {
-                Log.LogError("ChisquareLog, InitFFT: Unable to allocate precomputedFFT_spcOneOverErr2");
+                Log.LogError("  Operator-ChisquareLog: InitFFT: Unable to allocate precomputedFFT_spcOneOverErr2");
                 return -1;
             }for(Int32 k=0; k<nPadded; k++)
             {
@@ -245,7 +245,7 @@ Int32 COperatorChiSquareLogLambda::EstimateXtY(const Float64* X, const Float64* 
 
     if(verboseLogXtYFFT)
     {
-        Log.LogInfo("ChisquareLog, FitAllz: Processing tpl-fft with n=%d, padded to n=%d", nTpl, nPadded);
+        Log.LogInfo("  Operator-ChisquareLog: FitAllz: Processing tpl-fft with n=%d, padded to n=%d", nTpl, nPadded);
     }
     //    for(Int32 k=0; k<nTpl; k++)
     //    {
@@ -288,7 +288,7 @@ Int32 COperatorChiSquareLogLambda::EstimateXtY(const Float64* X, const Float64* 
     fftw_execute(pTpl);
     if(verboseLogXtYFFT)
     {
-        Log.LogInfo("ChisquareLog, FitAllz: tpl-fft done");
+        Log.LogInfo("  Operator-ChisquareLog: FitAllz: tpl-fft done");
     }
     if(verboseExportXtYFFT)
     {
@@ -314,7 +314,7 @@ Int32 COperatorChiSquareLogLambda::EstimateXtY(const Float64* X, const Float64* 
     fftw_execute(pBackward);
     if(verboseLogXtYFFT)
     {
-        Log.LogInfo("ChisquareLog, FitAllz: backward-fft done");
+        Log.LogInfo("  Operator-ChisquareLog: FitAllz: backward-fft done");
     }
 
 
@@ -358,12 +358,12 @@ Int32 COperatorChiSquareLogLambda::InitFFT(Int32 nPadded)
     pSpc = fftw_plan_dft_r2c_1d(nPadded, inSpc, outSpc, FFTW_ESTIMATE);
     if(inSpc==0)
     {
-        Log.LogError("ChisquareLog, InitFFT: Unable to allocate inSpc");
+        Log.LogError("  Operator-ChisquareLog: InitFFT: Unable to allocate inSpc");
         return -1;
     }
     if(outSpc==0)
     {
-        Log.LogError("ChisquareLog, InitFFT: Unable to allocate inSpc");
+        Log.LogError("  Operator-ChisquareLog: InitFFT: Unable to allocate inSpc");
         return -1;
     }
 
@@ -373,17 +373,17 @@ Int32 COperatorChiSquareLogLambda::InitFFT(Int32 nPadded)
     pTpl = fftw_plan_dft_r2c_1d(nPadded, inTpl, outTpl, FFTW_ESTIMATE);
     if(inTpl_padded==0)
     {
-        Log.LogError("ChisquareLog, InitFFT: Unable to allocate inTpl_padded");
+        Log.LogError("  Operator-ChisquareLog: InitFFT: Unable to allocate inTpl_padded");
         return -1;
     }
     if(inTpl==0)
     {
-        Log.LogError("ChisquareLog, InitFFT: Unable to allocate inTpl");
+        Log.LogError("  Operator-ChisquareLog: InitFFT: Unable to allocate inTpl");
         return -1;
     }
     if(outTpl==0)
     {
-        Log.LogError("ChisquareLog, InitFFT: Unable to allocate outTpl");
+        Log.LogError("  Operator-ChisquareLog: InitFFT: Unable to allocate outTpl");
         return -1;
     }
 
@@ -392,12 +392,12 @@ Int32 COperatorChiSquareLogLambda::InitFFT(Int32 nPadded)
     pBackward= fftw_plan_dft_c2r_1d(nPadded, outCombined, inCombined, FFTW_ESTIMATE);
     if(outCombined==0)
     {
-        Log.LogError("ChisquareLog, InitFFT: Unable to allocate outCombined");
+        Log.LogError("  Operator-ChisquareLog: InitFFT: Unable to allocate outCombined");
         return -1;
     }
     if(inCombined==0)
     {
-        Log.LogError("ChisquareLog, InitFFT: Unable to allocate inCombined");
+        Log.LogError("  Operator-ChisquareLog: InitFFT: Unable to allocate inCombined");
         return -1;
     }
 
@@ -525,7 +525,7 @@ Int32 COperatorChiSquareLogLambda::FitAllz(const TFloat64Range& lambdaRange,
                 if(zlistsegments[k]>=result->Redshifts[i] && zlistsegments[k]<result->Redshifts[i+1])
                 {
                     zindexesFullLstSquare.push_back(i);
-                    //Log.LogInfo("ChisquareLog, zindexesFullLstSquare: index found for zlistsegments_k = %f, redshift_i = %f, i = %d", zlistsegments[k], i);
+                    //Log.LogInfo("  Operator-ChisquareLog: zindexesFullLstSquare: index found for zlistsegments_k = %f, redshift_i = %f, i = %d", zlistsegments[k], i);
                     break; //index found, go to next zlistsegments item
                 }
             }
@@ -534,10 +534,10 @@ Int32 COperatorChiSquareLogLambda::FitAllz(const TFloat64Range& lambdaRange,
 
         if(verboseLogFitAllz)
         {
-            Log.LogInfo("ChisquareLog, FitAllz: indexes for full LstSquare calculation, count = %d", zindexesFullLstSquare.size());
+            Log.LogInfo("  Operator-ChisquareLog: FitAllz: indexes for full LstSquare calculation, count = %d", zindexesFullLstSquare.size());
             for(Int32 k=0; k<zindexesFullLstSquare.size(); k++)
             {
-                Log.LogInfo("ChisquareLog, FitAllz: indexes ranges: for i=%d, zindexesFullLstSquare=%d", k,zindexesFullLstSquare[k]);
+                Log.LogInfo("  Operator-ChisquareLog: FitAllz: indexes ranges: for i=%d, zindexesFullLstSquare=%d", k,zindexesFullLstSquare[k]);
             }
         }
 
@@ -571,10 +571,10 @@ Int32 COperatorChiSquareLogLambda::FitAllz(const TFloat64Range& lambdaRange,
 
     if(verboseLogFitAllz)
     {
-        Log.LogInfo("ChisquareLog, FitAllz: indexes - izrangelist calculation, count = %d", izrangelist.size());
+        Log.LogInfo("  Operator-ChisquareLog: FitAllz: indexes - izrangelist calculation, count = %d", izrangelist.size());
         for(Int32 k=0; k<nzranges; k++)
         {
-            Log.LogInfo("ChisquareLog, FitAllz: indexes ranges: for i=%d, zmin=%f, zmax=%f", k, result->Redshifts[izrangelist[k].GetBegin()], result->Redshifts[izrangelist[k].GetEnd()]);
+            Log.LogInfo("  Operator-ChisquareLog: FitAllz: indexes ranges: for i=%d, zmin=%f, zmax=%f", k, result->Redshifts[izrangelist[k].GetBegin()], result->Redshifts[izrangelist[k].GetEnd()]);
         }
     }
 
@@ -584,7 +584,7 @@ Int32 COperatorChiSquareLogLambda::FitAllz(const TFloat64Range& lambdaRange,
     UInt32 nSpc = spectrumRebinedSpectralAxis.GetSamplesCount();
     if(verboseLogFitAllz)
     {
-        Log.LogInfo("ChisquareLog, FitAllz: spc lbda min=%f, max=%f", spectrumRebinedLambda[0], spectrumRebinedLambda[nSpc-1]);
+        Log.LogInfo("  Operator-ChisquareLog: FitAllz: spc lbda min=%f, max=%f", spectrumRebinedLambda[0], spectrumRebinedLambda[nSpc-1]);
     }
 
     Float64* tplRebinedLambdaGlobal = tplRebinedSpectralAxis.GetSamples();
@@ -620,17 +620,17 @@ Int32 COperatorChiSquareLogLambda::FitAllz(const TFloat64Range& lambdaRange,
         }
         if(ilbda.GetBegin()==-1 || ilbda.GetEnd()==-1)
         {
-            Log.LogError("ChisquareLog, FitAllz: Can't find tpl indexes");
+            Log.LogError("  Operator-ChisquareLog: FitAllz: Can't find tpl indexes");
             return -1;
         }
 
         if(verboseLogFitAllz)
         {
-            Log.LogInfo("ChisquareLog, FitAllz: zrange min=%f, max=%f", zrange.GetBegin(), zrange.GetEnd());
-            Log.LogInfo("ChisquareLog, FitAllz: full zmin=%f, full zmax=%f", result->Redshifts[0], result->Redshifts[result->Redshifts.size()-1]);
-            Log.LogInfo("ChisquareLog, FitAllz: indexes tpl crop: lbda min=%d, max=%d", ilbda.GetBegin(), ilbda.GetEnd());
-            Log.LogInfo("ChisquareLog, FitAllz: indexes tpl full: lbda min=%d, max=%d", 0, tplRebinedSpectralAxis.GetSamplesCount());
-            Log.LogInfo("ChisquareLog, FitAllz: tpl lbda min*zmax=%f, max*zmin=%f",
+            Log.LogInfo("  Operator-ChisquareLog: FitAllz: zrange min=%f, max=%f", zrange.GetBegin(), zrange.GetEnd());
+            Log.LogInfo("  Operator-ChisquareLog: FitAllz: full zmin=%f, full zmax=%f", result->Redshifts[0], result->Redshifts[result->Redshifts.size()-1]);
+            Log.LogInfo("  Operator-ChisquareLog: FitAllz: indexes tpl crop: lbda min=%d, max=%d", ilbda.GetBegin(), ilbda.GetEnd());
+            Log.LogInfo("  Operator-ChisquareLog: FitAllz: indexes tpl full: lbda min=%d, max=%d", 0, tplRebinedSpectralAxis.GetSamplesCount());
+            Log.LogInfo("  Operator-ChisquareLog: FitAllz: tpl lbda min*zmax=%f, max*zmin=%f",
                         tplRebinedLambdaGlobal[ilbda.GetBegin()]*(1.0+zrange.GetEnd()),
                         tplRebinedLambdaGlobal[ilbda.GetEnd()]*(1.0+zrange.GetBegin()));
         }
@@ -714,11 +714,11 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64* spectrumRebinedLambda,
     Float64 redshiftValueMeiksin = result->Redshifts[0];
     if(verboseLogFitFitRangez)
     {
-        Log.LogInfo("ChisquareLog, FitRangez: redshiftValueMeiksin = %f", redshiftValueMeiksin);
-        Log.LogInfo("ChisquareLog, FitRangez: spc[0] = %f", spectrumRebinedLambda[0]);
-        Log.LogInfo("ChisquareLog, FitRangez: spc[max] = %f", spectrumRebinedLambda[nSpc-1]);
-        Log.LogInfo("ChisquareLog, FitRangez: tpl[0]*zmax = %f", tplRebinedLambda[0]*(1.0+result->Redshifts[result->Redshifts.size()-1]));
-        Log.LogInfo("ChisquareLog, FitRangez: tpl[max]*zmin = %f", tplRebinedLambda[nTpl-1]*(1+result->Redshifts[0]));
+        Log.LogInfo("  Operator-ChisquareLog: FitRangez: redshiftValueMeiksin = %f", redshiftValueMeiksin);
+        Log.LogInfo("  Operator-ChisquareLog: FitRangez: spc[0] = %f", spectrumRebinedLambda[0]);
+        Log.LogInfo("  Operator-ChisquareLog: FitRangez: spc[max] = %f", spectrumRebinedLambda[nSpc-1]);
+        Log.LogInfo("  Operator-ChisquareLog: FitRangez: tpl[0]*zmax = %f", tplRebinedLambda[0]*(1.0+result->Redshifts[result->Redshifts.size()-1]));
+        Log.LogInfo("  Operator-ChisquareLog: FitRangez: tpl[max]*zmin = %f", tplRebinedLambda[nTpl-1]*(1+result->Redshifts[0]));
     }
 
     //
@@ -728,7 +728,7 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64* spectrumRebinedLambda,
     /*
     //next power of two
     Int32 maxnsamples = (Int32)(nTpl*2);
-    //Log.LogInfo("ChisquareLog, FitRangez: maxnsamples = %d", maxnsamples);
+    //Log.LogInfo("  Operator-ChisquareLog: FitRangez: maxnsamples = %d", maxnsamples);
     Int32 power = 1;
     while(power < maxnsamples)
     {
@@ -737,12 +737,12 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64* spectrumRebinedLambda,
     m_nPaddedSamples = power;
     //*/
 
-    Log.LogInfo("ChisquareLog, Now fitting using the FFT on nshifts=%d values, for Meiksin redshift=%f", nshifts, redshiftValueMeiksin);
+    Log.LogDetail("  Operator-ChisquareLog: Now fitting using the FFT on nshifts=%d values, for Meiksin redshift=%f", nshifts, redshiftValueMeiksin);
 
 
     if(verboseLogFitFitRangez)
     {
-        Log.LogInfo("ChisquareLog, FitRangez: initializing FFT with n = %d points", m_nPaddedSamples);
+        Log.LogInfo("  Operator-ChisquareLog: FitRangez: initializing FFT with n = %d points", m_nPaddedSamples);
     }
     InitFFT(m_nPaddedSamples);
 
@@ -827,7 +827,7 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64* spectrumRebinedLambda,
         enableIGM = false;
         if(verboseLogFitFitRangez)
         {
-            Log.LogInfo("ChisquareLog, FitRangez: IGM disabled, min-tpl-lbda=%f", lambdaMinTpl);
+            Log.LogInfo("  Operator-ChisquareLog: FitRangez: IGM disabled, min-tpl-lbda=%f", lambdaMinTpl);
         }
     }
 
@@ -866,7 +866,7 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64* spectrumRebinedLambda,
 
         if(verboseLogFitFitRangez && enableIGM)
         {
-            Log.LogInfo("ChisquareLog, FitRangez: IGM index=%d", kIGM);
+            Log.LogInfo("  Operator-ChisquareLog: FitRangez: IGM index=%d", kIGM);
         }
 
         if(enableIGM)
@@ -900,7 +900,7 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64* spectrumRebinedLambda,
         {
             if(verboseLogFitFitRangez && enableISM)
             {
-                Log.LogInfo("ChisquareLog, FitRangez: ISM index =%d", kISM);
+                Log.LogInfo("  Operator-ChisquareLog: FitRangez: ISM index =%d", kISM);
             }
 
 
@@ -998,7 +998,7 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64* spectrumRebinedLambda,
 
             if(verboseExportFitRangez)
             {
-                Log.LogInfo("ChisquareLog, FitRangez: dtd = %e", dtd);
+                Log.LogInfo("  Operator-ChisquareLog: FitRangez: dtd = %e", dtd);
             }
 
             //return -1;
@@ -1007,7 +1007,7 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64* spectrumRebinedLambda,
             if( mtm_vec.size()!=dtm_vec.size())
             {
                 errorWhileFitting = 1;
-                Log.LogError("ChisquareLog, FitRangez: xty vectors sizes don't match: dtm size = %d, mtm size = %d", dtm_vec.size(), mtm_vec.size());
+                Log.LogError("  Operator-ChisquareLog: FitRangez: xty vectors sizes don't match: dtm size = %d, mtm size = %d", dtm_vec.size(), mtm_vec.size());
                 //return 2;
                 continue;
             }
@@ -1062,17 +1062,17 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64* spectrumRebinedLambda,
 
             if(verboseExportFitRangez)
             {
-                Log.LogInfo("ChisquareLog, FitRangez: spc lbda 0 =%f", spectrumRebinedLambda[0]);
-                Log.LogInfo("ChisquareLog, FitRangez: tpl lbda 0 =%f", tplRebinedLambda[0]);
+                Log.LogInfo("  Operator-ChisquareLog: FitRangez: spc lbda 0 =%f", spectrumRebinedLambda[0]);
+                Log.LogInfo("  Operator-ChisquareLog: FitRangez: tpl lbda 0 =%f", tplRebinedLambda[0]);
                 Float64 z_O = (spectrumRebinedLambda[0]-tplRebinedLambda[0])/tplRebinedLambda[0];
-                Log.LogInfo("ChisquareLog, FitRangez: z 0 =%f", z_O);
+                Log.LogInfo("  Operator-ChisquareLog: FitRangez: z 0 =%f", z_O);
 
                 //        Float64 logstep = log(spectrumRebinedLambda[1])-log(spectrumRebinedLambda[0]);
                 //        Float64 logInitialStep = log(spectrumRebinedLambda[0])-log(tplRebinedLambda[0]);
-                //        Log.LogInfo("ChisquareLog, FitRangez: logstep=%f", logstep);
-                //        Log.LogInfo("ChisquareLog, FitRangez: step=%f A", exp(logstep));
-                //        Log.LogInfo("ChisquareLog, FitRangez: logInitialStep=%f", logInitialStep);
-                //        Log.LogInfo("ChisquareLog, FitRangez: InitialStep=%f A", exp(logInitialStep));
+                //        Log.LogInfo("  Operator-ChisquareLog: FitRangez: logstep=%f", logstep);
+                //        Log.LogInfo("  Operator-ChisquareLog: FitRangez: step=%f A", exp(logstep));
+                //        Log.LogInfo("  Operator-ChisquareLog: FitRangez: logInitialStep=%f", logInitialStep);
+                //        Log.LogInfo("  Operator-ChisquareLog: FitRangez: InitialStep=%f A", exp(logInitialStep));
                 //        std::vector<Float64> log1pz(dtm_vec.size(), 0.0);
                 //        for( Int32 t=0;t<log1pz.size();t++)
                 //        {
@@ -1112,7 +1112,7 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64* spectrumRebinedLambda,
         mtmreversed_array[t] = bestFitMtm[z_vect.size()-1-t];
         ismCoeffreversed_array[t] = bestISMCoeff[z_vect.size()-1-t];
         igmIdxreversed_array[t] = bestIGMIdx[z_vect.size()-1-t];
-        //Log.LogInfo("ChisquareLog, FitRangez: interpolating z result, for z=%f, chi2reversed_array=%f", zreversed_array[t], chi2reversed_array[t]);
+        //Log.LogInfo("  Operator-ChisquareLog: FitRangez: interpolating z result, for z=%f, chi2reversed_array=%f", zreversed_array[t], chi2reversed_array[t]);
     }
 
     Int32 k = 0;
@@ -1120,16 +1120,16 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64* spectrumRebinedLambda,
     for (Int32 iz=0;iz<result->Redshifts.size();iz++)
     {
         //* //NGP
-        //Log.LogInfo("ChisquareLog, FitRangez: interpolating gsl-bsearch z result, , ztgt=%f, zcalc_min=%f, zcalc_max=%f", result->Redshifts[iz], zreversed_array[0], zreversed_array[z_vect.size()-1]);
+        //Log.LogInfo("  Operator-ChisquareLog: FitRangez: interpolating gsl-bsearch z result, , ztgt=%f, zcalc_min=%f, zcalc_max=%f", result->Redshifts[iz], zreversed_array[0], zreversed_array[z_vect.size()-1]);
         k = gsl_interp_bsearch (zreversed_array, result->Redshifts[iz], klow, z_vect.size()-1);
         klow = k;
 
         /*
         if(result->Redshifts[iz]==0.0)
         {
-            Log.LogInfo("ChisquareLog, FitRangez: interpolating z result, kshift=%f", k);
-            Log.LogInfo("ChisquareLog, FitRangez: interpolating z result, zcalc=%f, kfound=%d, zfound=%f", result->Redshifts[iz], k, z_vect[z_vect.size()-1-k]);
-            Log.LogInfo("ChisquareLog, FitRangez: interpolating z result, bestChi2=%f", bestChi2[z_vect.size()-1-k]);
+            Log.LogInfo("  Operator-ChisquareLog: FitRangez: interpolating z result, kshift=%f", k);
+            Log.LogInfo("  Operator-ChisquareLog: FitRangez: interpolating z result, zcalc=%f, kfound=%d, zfound=%f", result->Redshifts[iz], k, z_vect[z_vect.size()-1-k]);
+            Log.LogInfo("  Operator-ChisquareLog: FitRangez: interpolating z result, bestChi2=%f", bestChi2[z_vect.size()-1-k]);
         }
         // closest value
         result->ChiSquare[iz] = bestChi2[z_vect.size()-1-k];
@@ -1147,7 +1147,7 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64* spectrumRebinedLambda,
     }
 
     //*
-    Log.LogInfo("ChisquareLog, FitRangez: interpolating (lin) z result from n=%d (min=%f, max=%f) to n=%d (min=%f, max=%f)", z_vect.size(),  zreversed_array[0],  zreversed_array[z_vect.size()-1],
+    Log.LogDetail("  Operator-ChisquareLog: FitRangez: interpolating (lin) z result from n=%d (min=%f, max=%f) to n=%d (min=%f, max=%f)", z_vect.size(),  zreversed_array[0],  zreversed_array[z_vect.size()-1],
             result->Redshifts.size(),
             result->Redshifts[0],
             result->Redshifts[result->Redshifts.size()-1]);
@@ -1238,7 +1238,7 @@ Int32 COperatorChiSquareLogLambda::InterpolateResult(const Float64* in, const Fl
         Float64 Xrebin = tgtGrid[j];
         out[j] = gsl_interp_eval(interpolation, inGrid, in, Xrebin, accelerator); //lin
         //out[j] = gsl_spline_eval (spline, Xrebin, accelerator); //spline
-        //Log.LogInfo("ChisquareLog, FitAllz: interpolating gsl-spline z result, , ztgt=%f, rebinY=%f", tgtGrid[j], out[j]);
+        //Log.LogInfo("  Operator-ChisquareLog: FitAllz: interpolating gsl-spline z result, , ztgt=%f, rebinY=%f", tgtGrid[j], out[j]);
     }
 
     gsl_interp_free(interpolation);
@@ -1285,17 +1285,17 @@ TInt32Range COperatorChiSquareLogLambda::FindTplSpectralIndex(const Float64* spc
 
     if(ilbdamin<0 || ilbdamin>nTpl-1)
     {
-        Log.LogError("ChisquareLog, Problem with tpl indexes for zranges, found lbdamin=%d", ilbdamin);
+        Log.LogError("  Operator-ChisquareLog: Problem with tpl indexes for zranges, found lbdamin=%d", ilbdamin);
         return TInt32Range(-1, -1);
     }
     if(ilbdamax<0 || ilbdamax>nTpl-1)
     {
-        Log.LogError("ChisquareLog, Problem with tpl indexes for zranges, found ilbdamax=%d", ilbdamax);
+        Log.LogError("  Operator-ChisquareLog: Problem with tpl indexes for zranges, found ilbdamax=%d", ilbdamax);
         return TInt32Range(-1, -1);
     }
     if(ilbdamin > ilbdamax)
     {
-        Log.LogError("ChisquareLog, Problem with tpl indexes for zranges, found ilbdamin=%d > ilbdamax=%d", ilbdamin, ilbdamax);
+        Log.LogError("  Operator-ChisquareLog: Problem with tpl indexes for zranges, found ilbdamin=%d > ilbdamax=%d", ilbdamin, ilbdamax);
         return TInt32Range(-1, -1);
     }
 
@@ -1319,35 +1319,35 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(const CSpe
                           const TFloat64Range& lambdaRange, const TFloat64List& redshifts,
                           Float64 overlapThreshold , std::vector<CMask> additional_spcMasks, std::string opt_interp, Int32 opt_extinction, Int32 opt_dustFitting)
 {
-    Log.LogInfo("ChisquareLog, starting computation for template: %s", tpl.GetName().c_str());
+    Log.LogInfo("  Operator-ChisquareLog: starting computation for template: %s", tpl.GetName().c_str());
 
 
     if( opt_dustFitting && m_ismCorrectionCalzetti->calzettiInitFailed)
     {
-        Log.LogError("ChisquareLog, no calzetti calib. file loaded... aborting!");
+        Log.LogError("  Operator-ChisquareLog: no calzetti calib. file loaded... aborting!");
         return NULL;
     }
 
     if( opt_extinction && m_igmCorrectionMeiksin->meiksinInitFailed)
     {
-        Log.LogError("ChisquareLog, no meiksin calib. file loaded... aborting!");
+        Log.LogError("  Operator-ChisquareLog: no meiksin calib. file loaded... aborting!");
         return NULL;
     }
 
     if( spectrum.GetSpectralAxis().IsInLinearScale() == false || tpl.GetSpectralAxis().IsInLinearScale() == false )
     {
-        Log.LogError("ChisquareLog, input spectrum or template are not in log scale (ignored)");
+        Log.LogError("  Operator-ChisquareLog: input spectrum or template are not in log scale (ignored)");
         //return NULL;
     }
 
     //assuming that lambdarange is strictly included in the spectrum spectral range
     if(std::max(spectrum.GetSpectralAxis()[0], lambdaRange.GetBegin()) != lambdaRange.GetBegin())
     {
-        Log.LogError("ChisquareLog, lambdarange is not strictly included in the spectrum spectral range (min lambdarange)");
+        Log.LogError("  Operator-ChisquareLog: lambdarange is not strictly included in the spectrum spectral range (min lambdarange)");
     }
     if(std::min(spectrum.GetSpectralAxis()[spectrum.GetSpectralAxis().GetSamplesCount()-1], lambdaRange.GetEnd())!=lambdaRange.GetEnd())
     {
-        Log.LogError("ChisquareLog, lambdarange is not strictly included in the spectrum spectral range (max lambdarange)");
+        Log.LogError("  Operator-ChisquareLog: lambdarange is not strictly included in the spectrum spectral range (max lambdarange)");
     }
 
     //sort the redshift and keep track of the indexes
@@ -1367,7 +1367,7 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(const CSpe
 
     if(overlapThreshold<1.0)
     {
-        Log.LogError("ChisquareLog, overlap threshold can't be lower than 1.0");
+        Log.LogError("  Operator-ChisquareLog: overlap threshold can't be lower than 1.0");
         return NULL;
     }
     //check that the overlap is >1. for all sortedRedshifts
@@ -1382,12 +1382,12 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(const CSpe
     }
     if(!overlapFull)
     {
-        Log.LogError("ChisquareLog, overlap found to be lower than 1.0 for this redshift range");
-        Log.LogError("ChisquareLog, for zmin=%f, tpl.lbdamax is %f (should be >%f)",
+        Log.LogError("  Operator-ChisquareLog: overlap found to be lower than 1.0 for this redshift range");
+        Log.LogError("  Operator-ChisquareLog: for zmin=%f, tpl.lbdamax is %f (should be >%f)",
                      sortedRedshifts[0],
                      tpl.GetSpectralAxis()[tpl.GetSpectralAxis().GetSamplesCount()-1],
                      lambdaRange.GetEnd()/(1+sortedRedshifts[0]));
-        Log.LogError("ChisquareLog, for zmax=%f, tpl.lbdamin is %f (should be <%f)",
+        Log.LogError("  Operator-ChisquareLog: for zmax=%f, tpl.lbdamin is %f (should be <%f)",
                      sortedRedshifts[sortedRedshifts.size()-1],
                      tpl.GetSpectralAxis()[0],
                      lambdaRange.GetBegin()/(1+sortedRedshifts[sortedRedshifts.size()-1]));
@@ -1400,7 +1400,7 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(const CSpe
     Int32 lbdaMaxIdx = spectrum.GetSpectralAxis().GetIndexAtWaveLength(lambdaRange.GetEnd());
     if(lbdaMinIdx<0 || lbdaMaxIdx<0 || lbdaMaxIdx<=lbdaMinIdx)
     {
-        Log.LogError("ChisquareLog, problem while searching for lambdarange observed spectral indexes");
+        Log.LogError("  Operator-ChisquareLog: problem while searching for lambdarange observed spectral indexes");
     }
 
     Float64 loglbdaStep = log(spectrum.GetSpectralAxis()[lbdaMaxIdx])-log(spectrum.GetSpectralAxis()[lbdaMaxIdx-1]);
@@ -1420,16 +1420,16 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(const CSpe
 
     if(m_opt_spcrebin){
 
-        Log.LogInfo("ChisquareLog, Log-regular lambda resampling ON");
+        Log.LogInfo("  Operator-ChisquareLog: Log-regular lambda resampling ON");
 
         if(verboseLogRebin){
-            Log.LogInfo("ChisquareLog, ORIGINAL grid spectrum count = %d", lbdaMaxIdx-lbdaMinIdx+1);
-            //Log.LogInfo("ChisquareLog, Log-Rebin: zref = %f", zRef);
-            //Log.LogInfo("ChisquareLog, Log-Rebin: zStep = %f", zStep);
-            Log.LogInfo("ChisquareLog, Log-Rebin: loglbdaStep = %f", loglbdaStep);
-            Log.LogInfo("ChisquareLog, Log-Rebin: loglbdamin=%f : loglbdamax=%f", loglbdamin, loglbdamax);
-            Log.LogInfo("ChisquareLog, Log-Rebin: lbdamin=%f : lbdamax=%f", exp(loglbdamin), exp(loglbdamax));
-            Log.LogInfo("ChisquareLog, Log-Rebin: loglbdaCount = %d", loglbdaCount);
+            Log.LogInfo("  Operator-ChisquareLog: ORIGINAL grid spectrum count = %d", lbdaMaxIdx-lbdaMinIdx+1);
+            //Log.LogInfo("  Operator-ChisquareLog: Log-Rebin: zref = %f", zRef);
+            //Log.LogInfo("  Operator-ChisquareLog: Log-Rebin: zStep = %f", zStep);
+            Log.LogInfo("  Operator-ChisquareLog: Log-Rebin: loglbdaStep = %f", loglbdaStep);
+            Log.LogInfo("  Operator-ChisquareLog: Log-Rebin: loglbdamin=%f : loglbdamax=%f", loglbdamin, loglbdamax);
+            Log.LogInfo("  Operator-ChisquareLog: Log-Rebin: lbdamin=%f : lbdamax=%f", exp(loglbdamin), exp(loglbdamax));
+            Log.LogInfo("  Operator-ChisquareLog: Log-Rebin: loglbdaCount = %d", loglbdaCount);
 
         }
         CSpectrumSpectralAxis targetSpectralAxis;
@@ -1458,12 +1458,12 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(const CSpe
             Float64 dlambda_begin = (targetSpectralAxis[1]-targetSpectralAxis[0]);
             Float64 dz_zrangemin_begin = dlambda_begin/(targetSpectralAxis[0]/(1.+sortedRedshifts[0]));
             Float64 dz_zrangemax_begin = dlambda_begin/(targetSpectralAxis[0]/(1.+sortedRedshifts[sortedRedshifts.size()-1]));
-            Log.LogInfo("ChisquareLog, Log-Rebin: dz_zrangemin_begin=%f : dz_zrangemax_begin=%f", dz_zrangemin_begin, dz_zrangemax_begin);
+            Log.LogInfo("  Operator-ChisquareLog: Log-Rebin: dz_zrangemin_begin=%f : dz_zrangemax_begin=%f", dz_zrangemin_begin, dz_zrangemax_begin);
 
             Float64 dlambda_end = (targetSpectralAxis[loglbdaCount-1]-targetSpectralAxis[loglbdaCount-2]);
             Float64 dz_zrangemin_end = dlambda_end/(targetSpectralAxis[loglbdaCount-2]/(1.+sortedRedshifts[0]));
             Float64 dz_zrangemax_end = dlambda_end/(targetSpectralAxis[loglbdaCount-2]/(1.+sortedRedshifts[sortedRedshifts.size()-1]));
-            Log.LogInfo("ChisquareLog, Log-Rebin: dz_zrangemin_end=%f : dz_zrangemax_end=%f", dz_zrangemin_end, dz_zrangemax_end);
+            Log.LogInfo("  Operator-ChisquareLog: Log-Rebin: dz_zrangemin_end=%f : dz_zrangemax_end=%f", dz_zrangemin_end, dz_zrangemax_end);
         }
 
         if(verboseExportLogRebin)
@@ -1569,11 +1569,11 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(const CSpe
     }
     else // check that the raw spectrum grid is in log-regular grid
     {
-        Log.LogInfo("ChisquareLog, Log-regular lambda resampling OFF");
+        Log.LogInfo("  Operator-ChisquareLog: Log-regular lambda resampling OFF");
 
         if(verboseLogRebin)
         {
-            Log.LogInfo("ChisquareLog, lbda raw min_idx=%d, max_idx=%d", lbdaMinIdx, lbdaMaxIdx);
+            Log.LogInfo("  Operator-ChisquareLog: lbda raw min_idx=%d, max_idx=%d", lbdaMinIdx, lbdaMaxIdx);
         }
 
 
@@ -1589,7 +1589,7 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(const CSpe
             Float64 relativeErrAbs = std::abs( (_loglbdaStep-loglbdaStep)/loglbdaStep );
             //if(verboseLogRebin)
             //{
-            //    Log.LogInfo("ChisquareLog, _loglbdastep = %f, relativeErrAbs = %f", _loglbdaStep, relativeErrAbs);
+            //    Log.LogInfo("  Operator-ChisquareLog: _loglbdastep = %f, relativeErrAbs = %f", _loglbdaStep, relativeErrAbs);
             //}
 
             if(relativeErrAbs > maxAbsRelativeError)
@@ -1603,11 +1603,11 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(const CSpe
             }
             lbda1 = lbda2;
         }
-        Log.LogInfo("ChisquareLog, Log-regular lambda check: max Abs Relative Error (log lbda step)= %f", maxAbsRelativeError);
-        Log.LogInfo("ChisquareLog, Log-regular lambda check (for rel-tol=%f): (1=success, 0=fail) CHECK = %d", relativeLogLbdaStepTol, logRegLbdaCheck);
+        Log.LogInfo("  Operator-ChisquareLog: Log-regular lambda check: max Abs Relative Error (log lbda step)= %f", maxAbsRelativeError);
+        Log.LogInfo("  Operator-ChisquareLog: Log-regular lambda check (for rel-tol=%f): (1=success, 0=fail) CHECK = %d", relativeLogLbdaStepTol, logRegLbdaCheck);
         if( !logRegLbdaCheck )
         {
-            Log.LogError("ChisquareLog, Log-regular lambda check FAILED");
+            Log.LogError("  Operator-ChisquareLog: Log-regular lambda check FAILED");
         }
         //prepare data for log-regular computation
         for( Int32 t=0;t<loglbdaCount;t++)
@@ -1671,9 +1671,9 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(const CSpe
         }
         Int32 tpl_loglbdaCount = int((tpl_tgt_loglbdamax-tpl_tgt_loglbdamin)/loglbdaStep+1);
         if(verboseLogRebin){
-            Log.LogInfo("ChisquareLog, Log-Rebin: tpl loglbdamin=%f : loglbdamax=%f", tpl_tgt_loglbdamin, tpl_tgt_loglbdamax);
-            Log.LogInfo("ChisquareLog, Log-Rebin: tpl lbdamin=%f : lbdamax=%f", exp(tpl_tgt_loglbdamin), exp(tpl_tgt_loglbdamax));
-            Log.LogInfo("ChisquareLog, Log-Rebin: tpl loglbdaCount = %d", tpl_loglbdaCount);
+            Log.LogInfo("  Operator-ChisquareLog: Log-Rebin: tpl loglbdamin=%f : loglbdamax=%f", tpl_tgt_loglbdamin, tpl_tgt_loglbdamax);
+            Log.LogInfo("  Operator-ChisquareLog: Log-Rebin: tpl lbdamin=%f : lbdamax=%f", exp(tpl_tgt_loglbdamin), exp(tpl_tgt_loglbdamax));
+            Log.LogInfo("  Operator-ChisquareLog: Log-Rebin: tpl loglbdaCount = %d", tpl_loglbdaCount);
 
         }
         //todo: check that the coverage is ok with teh current tgtTplAxis ?
@@ -1717,17 +1717,17 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(const CSpe
         delta = tpl_targetSpectralAxis[0]-tpl.GetSpectralAxis()[0];
         if( delta < 0.0 )
         {
-            Log.LogError("ChisquareLog, Log-Rebin: tpl rebin error. Target MIN lbda value=%f, input tpl min lbda value=%f",
+            Log.LogError("  Operator-ChisquareLog: Log-Rebin: tpl rebin error. Target MIN lbda value=%f, input tpl min lbda value=%f",
                          tpl_targetSpectralAxis[0], tpl.GetSpectralAxis()[0]);
-            Log.LogError("ChisquareLog, Log-Rebin: tpl rebin error. Extend your input template wavelength range or modify the processing parameter <lambdarange>");
+            Log.LogError("  Operator-ChisquareLog: Log-Rebin: tpl rebin error. Extend your input template wavelength range or modify the processing parameter <lambdarange>");
         }
         //precision problem due to exp/log - end
         delta = tpl_targetSpectralAxis[tpl_targetSpectralAxis.GetSamplesCount()-1]-tpl.GetSpectralAxis()[tpl.GetSpectralAxis().GetSamplesCount()-1];
         if( delta > 0.0 )
         {
-            Log.LogError("ChisquareLog, Log-Rebin: tpl rebin error. Target MAX lbda value=%f, input tpl max lbda value=%f",
+            Log.LogError("  Operator-ChisquareLog: Log-Rebin: tpl rebin error. Target MAX lbda value=%f, input tpl max lbda value=%f",
                          tpl_targetSpectralAxis[tpl_targetSpectralAxis.GetSamplesCount()-1], tpl.GetSpectralAxis()[tpl.GetSpectralAxis().GetSamplesCount()-1]);
-            Log.LogError("ChisquareLog, Log-Rebin: tpl rebin error. Extend your input template wavelength range or modify the processing parameter <lambdarange>");
+            Log.LogError("  Operator-ChisquareLog: Log-Rebin: tpl rebin error. Extend your input template wavelength range or modify the processing parameter <lambdarange>");
         }
 
         Float64* pfgBuffer_unused = 0;
@@ -1766,7 +1766,7 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(const CSpe
     std::vector<Int32> igmMeiksinCoeffs;
     if(opt_extinction)
     {
-        //Log.LogError("ChisquareLog, FitAllz opt_extinction not validated yet...");
+        //Log.LogError("  Operator-ChisquareLog: FitAllz opt_extinction not validated yet...");
         Int32 nIGMCoeffs = m_igmCorrectionMeiksin->GetIdxCount();
         igmMeiksinCoeffs.resize(nIGMCoeffs);
         for(Int32 kigm=0; kigm<nIGMCoeffs; kigm++)
@@ -1781,7 +1781,7 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(const CSpe
     std::vector<Int32> ismEbmvCoeffs;
     if(opt_dustFitting)
     {
-        //Log.LogError("ChisquareLog, FitAllz opt_dustFitting not validated yet...");
+        //Log.LogError("  Operator-ChisquareLog: FitAllz opt_dustFitting not validated yet...");
         Int32 nISMCoeffs = m_ismCorrectionCalzetti->GetNPrecomputedDustCoeffs();
         ismEbmvCoeffs.resize(nISMCoeffs);
         for(Int32 kism=0; kism<nISMCoeffs; kism++)
@@ -1801,7 +1801,7 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(const CSpe
     //WARNING: no additional masks coded for use as of 2017-06-13
     if(additional_spcMasks.size()!=0)
     {
-        Log.LogError("ChisquareLog, No additional masks used. Feature not coded for this log-lambda operator!)");
+        Log.LogError("  Operator-ChisquareLog: No additional masks used. Feature not coded for this log-lambda operator!)");
     }
 
 
@@ -1809,7 +1809,7 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(const CSpe
     Int32 retFit = FitAllz(lambdaRange, result, igmMeiksinCoeffs, ismEbmvCoeffs);
     if(retFit!=0)
     {
-        Log.LogError("ChisquareLog, FitAllz failed with error %d", retFit);
+        Log.LogError("  Operator-ChisquareLog: FitAllz failed with error %d", retFit);
     }
     //*/
     //**************** End Fitting at all redshifts ****************//
@@ -1836,7 +1836,7 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(const CSpe
     }
     if(overlapValidInfZ!=sortedRedshifts[0] || overlapValidSupZ!=sortedRedshifts[sortedRedshifts.size()-1])
     {
-        Log.LogInfo("ChisquareLog, overlap warning for %s: minz=%.3f, maxz=%.3f", tpl.GetName().c_str(), overlapValidInfZ, overlapValidSupZ);
+        Log.LogInfo("  Operator-ChisquareLog: overlap warning for %s: minz=%.3f, maxz=%.3f", tpl.GetName().c_str(), overlapValidInfZ, overlapValidSupZ);
     }
 
     //estimate CstLog for PDF estimation
@@ -1943,5 +1943,5 @@ const Float64*  COperatorChiSquareLogLambda::getMeiksinCoeff(Int32 meiksinIdx, F
 void COperatorChiSquareLogLambda::enableSpcLogRebin(Bool enable)
 {
     m_opt_spcrebin = enable;
-    Log.LogInfo("ChisquareLog, Spectrum REBIN-LOG enabled=%d", m_opt_spcrebin);
+    Log.LogInfo("  Operator-ChisquareLog: Spectrum REBIN-LOG enabled=%d", m_opt_spcrebin);
 }

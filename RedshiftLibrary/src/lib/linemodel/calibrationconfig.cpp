@@ -34,7 +34,7 @@ Bool CCalibrationConfigHelper::Init( std::string calibrationPath)
     bool ret = Load(filePath.c_str());
     if(!ret)
     {
-        Log.LogError("Unable to load the calibration config. aborting...");
+        Log.LogError("Unable to load the calibration config. file (%s). Aborting...", filePath.c_str());
         return false;
     }
     return true;
