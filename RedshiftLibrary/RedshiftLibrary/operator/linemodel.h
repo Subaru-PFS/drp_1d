@@ -10,6 +10,7 @@
 #include <RedshiftLibrary/linemodel/modelspectrumresult.h>
 #include <RedshiftLibrary/linemodel/modelfittingresult.h>
 #include <RedshiftLibrary/linemodel/modelrulesresult.h>
+#include <RedshiftLibrary/operator/spectraFluxResult.h>
 #include <RedshiftLibrary/common/mask.h>
 
 #include <RedshiftLibrary/spectrum/spectrum.h>
@@ -88,6 +89,8 @@ public:
     void storeGlobalModelResults( CDataStore &dataStore );
     void storePerTemplateModelResults( CDataStore &dataStore, const CTemplate& tpl );
     std::shared_ptr<CModelSpectrumResult> GetModelSpectrumResult(Int32 idx);
+    std::shared_ptr<CSpectraFluxResult> GetModelSpectrumContinuumResult(Int32 idx);
+
 
     bool m_enableWidthFitByGroups;
 
@@ -103,6 +106,8 @@ public:
     Float64 m_contLambdaOffset=0;
     std::shared_ptr<CTemplate> m_tplContaminant=NULL;
     Int32 initContaminant(std::shared_ptr<CModelSpectrumResult> contModelSpectrum, Int32 iRollContaminated, Float64 contLambdaOffset);
+    std::shared_ptr<CModelSpectrumResult> GetContaminantSpectrumResult();
+    std::shared_ptr<CModelSpectrumResult> m_savedContaminantSpectrumResult;
 
 private:
 
@@ -115,6 +120,7 @@ private:
     std::vector<std::shared_ptr<CModelSpectrumResult>  > m_savedModelSpectrumResults;
     std::vector<std::shared_ptr<CModelFittingResult>  > m_savedModelFittingResults;
     std::vector<std::shared_ptr<CModelRulesResult>  > m_savedModelRulesResults;
+    std::vector<std::shared_ptr<CSpectraFluxResult>  > m_savedModelContinuumSpectrumResults;
 
 };
 

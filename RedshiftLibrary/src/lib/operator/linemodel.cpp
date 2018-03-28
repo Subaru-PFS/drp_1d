@@ -187,7 +187,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
     std::shared_ptr<CTemplateCatalog> orthoTplCatalog = orthoTplStore.getTplCatalog(ctlgIdx);
     Log.LogInfo( "  Operator-Linemodel: Templates store prepared.");
 
-    //*
+    /*
     CLineModelElementList model( spectrum,
                                  spectrumContinuum,
                                  tplCatalog,//*orthoTplCatalog,//
@@ -208,7 +208,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
     //*/
 
 
-    /*
+    //*
     CMultiRollModel model( spectrum,
                                  spectrumContinuum,
                                  tplCatalog,//*orthoTplCatalog,//
@@ -274,8 +274,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
         {
             Log.LogError( "  Operator-Linemodel: Contaminant data is invalid... aborting." );
         }else{
-            //applying offset for ra/dec distance between main source and contaminant
-            m_tplContaminant->GetSpectralAxis().ApplyOffset(m_contLambdaOffset);
+            /*
             //debug:
             FILE* f2 = fopen( "contaminantShifted.txt", "w+" );
             for(Int32 k=0; k<m_tplContaminant->GetSampleCount(); k++)
@@ -283,9 +282,11 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
                 fprintf( f2, "%f\t%e\n", m_tplContaminant->GetSpectralAxis()[k], m_tplContaminant->GetFluxAxis()[k]);
             }
             fclose( f2 );
+            //*/
 
             //apply contamination to the multiroll model
             model.LoadFitContaminantTemplate(m_iRollContaminated, *m_tplContaminant, lambdaRange);
+            m_savedContaminantSpectrumResult = model.GetContaminantSpectrumResult(m_iRollContaminated);
         }
     }
     //*/
@@ -1055,6 +1056,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
     m_savedModelSpectrumResults.clear();
     m_savedModelFittingResults.clear();
     m_savedModelRulesResults.clear();
+    m_savedModelContinuumSpectrumResults.clear();
 
     for( Int32 i=0; i<extremumCount; i++ )
     {
@@ -1124,7 +1126,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
         //save the model result
         //WARNING: saving results TODO: this is currently wrong !! the model saved corresponds to the bestchi2 model. PDFs should be combined prior to exporting the best model for each extrema...
         static Int32 maxModelSave = std::min(m_maxModelSaveCount, extremumCount);
-        Int32 maxSaveNLinemodelContinua = 1;
+        Int32 maxSaveNLinemodelContinua = maxModelSave;
         if( savedModels<maxModelSave )
         {
           if(modelInfoSave){
@@ -1134,9 +1136,8 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
             m_savedModelRulesResults.push_back(savedModelRulesResults_lmfit[indiceList2[i]]);
             if( savedModels < maxSaveNLinemodelContinua && contreest_iterations>0)
             {
-              std::string nameBaselineStr = (boost::format("linemodel_continuum_extrema_%1%") % savedModels).str();
-              dataStore.StoreScopedGlobalResult(nameBaselineStr.c_str(), savedBaselineResult_lmfit[indiceList2[i]]);
-          }
+                m_savedModelContinuumSpectrumResults.push_back(savedBaselineResult_lmfit[indiceList2[i]]);
+            }
           }else{
             // CModelSpectrumResult
             std::shared_ptr<CModelSpectrumResult>  resultspcmodel;
@@ -1188,9 +1189,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
                     baselineResult->fluxes[k] = modelContinuumFluxAxis[k];
                     baselineResult->wavel[k]  = (spectrum.GetSpectralAxis())[k];
                 }
-
-                std::string nameBaselineStr = (boost::format("linemodel_continuum_extrema_%1%") % savedModels).str();
-                dataStore.StoreScopedGlobalResult(nameBaselineStr.c_str(), baselineResult);
+                m_savedModelContinuumSpectrumResults.push_back(baselineResult);
             }
           }
           savedModels++;
@@ -1447,6 +1446,9 @@ Int32 COperatorLineModel::initContaminant(std::shared_ptr<CModelSpectrumResult> 
         spcSpectralAxis[k] =  contModelSpectralAxis[k];
     }
 
+    //applying offset for ra/dec distance between main source and contaminant
+    m_tplContaminant->GetSpectralAxis().ApplyOffset(m_contLambdaOffset);
+
     m_enableLoadContTemplate = true;
     return 0;
 }
@@ -1474,6 +1476,13 @@ void COperatorLineModel::storeGlobalModelResults( CDataStore &dataStore )
 
         std::string fname_rules = (boost::format("linemodel_rules_extrema_%1%") % k).str();
         dataStore.StoreScopedGlobalResult( fname_rules.c_str(), m_savedModelRulesResults[k] );
+    }
+
+
+    for(Int32 k=0; k<m_savedModelContinuumSpectrumResults.size(); k++)
+    {
+        std::string nameBaselineStr = (boost::format("linemodel_continuum_extrema_%1%") % k).str();
+        dataStore.StoreScopedGlobalResult(nameBaselineStr.c_str(), m_savedModelContinuumSpectrumResults[k]);
     }
 
 }
@@ -1514,6 +1523,25 @@ std::shared_ptr<CModelSpectrumResult> COperatorLineModel::GetModelSpectrumResult
     }else{
         return m_savedModelSpectrumResults[idx];
     }
+}
+
+
+std::shared_ptr<CSpectraFluxResult> COperatorLineModel::GetModelSpectrumContinuumResult(Int32 idx)
+{
+    Int32 nResults = m_savedModelContinuumSpectrumResults.size();
+    if(idx>=nResults)
+    {
+        return NULL;
+    }else{
+        return m_savedModelContinuumSpectrumResults[idx];
+    }
+}
+
+
+
+std::shared_ptr<CModelSpectrumResult> COperatorLineModel::GetContaminantSpectrumResult()
+{
+    return m_savedContaminantSpectrumResult;
 }
 
 

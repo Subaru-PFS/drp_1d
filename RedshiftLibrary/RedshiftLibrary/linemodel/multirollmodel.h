@@ -45,6 +45,7 @@ public:
 
     std::shared_ptr<CSpectrum> LoadRollSpectrum(std::string refSpcFullPath, Int32 iRoll, Int32 iRollOffset);
     Int32 LoadFitContaminantTemplate(Int32 iRoll, CTemplate& tpl, const TFloat64Range& lambdaRange);
+    std::shared_ptr<CModelSpectrumResult> GetContaminantSpectrumResult(Int32 iRoll);
 
     Int32 getTplshape_count();
     std::vector<Float64> getTplshape_priors();

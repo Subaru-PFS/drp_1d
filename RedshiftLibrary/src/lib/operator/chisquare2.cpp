@@ -95,7 +95,7 @@ Void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& t
 
     if(spcMaskAdditional.GetMasksCount()!=spcFluxAxis.GetSamplesCount())
     {
-        Log.LogInfo("Chisquare2, spcMaskAdditional does not have the same size as the spectrum flux vector... (%d vs %d), aborting!", spcMaskAdditional.GetMasksCount(), spcFluxAxis.GetSamplesCount());
+        Log.LogInfo("  Operator-Chisquare2: spcMaskAdditional does not have the same size as the spectrum flux vector... (%d vs %d), aborting!", spcMaskAdditional.GetMasksCount(), spcFluxAxis.GetSamplesCount());
         status = nStatus_DataError;
         return ;
     }
@@ -278,7 +278,7 @@ Void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& t
             }
 
             Float64 coeffEBMV = m_ismCorrectionCalzetti->GetEbmvValue(kDust);
-            //Log.LogInfo("Chisquare2, fitting with dust coeff value: %f", coeffEBMV);
+            //Log.LogInfo("  Operator-Chisquare2: fitting with dust coeff value: %f", coeffEBMV);
 
             Float64 z = redshift;
             for(Int32 k=kStart; k<=kEnd; k++)
@@ -518,24 +518,24 @@ std::shared_ptr<COperatorResult> COperatorChiSquare2::Compute(const CSpectrum& s
                           const TFloat64Range& lambdaRange, const TFloat64List& redshifts,
                           Float64 overlapThreshold , std::vector<CMask> additional_spcMasks, std::string opt_interp, Int32 opt_extinction, Int32 opt_dustFitting)
 {
-    Log.LogInfo("Chisquare2, starting computation for template: %s", tpl.GetName().c_str());
+    Log.LogInfo("  Operator-Chisquare2: starting computation for template: %s", tpl.GetName().c_str());
 
 
     if( opt_dustFitting && m_ismCorrectionCalzetti->calzettiInitFailed)
     {
-        Log.LogError("Chisquare2, no calzetti calib. file loaded... aborting!");
+        Log.LogError("  Operator-Chisquare2: no calzetti calib. file loaded... aborting!");
         return NULL;
     }
 
     if( opt_extinction && m_igmCorrectionMeiksin->meiksinInitFailed)
     {
-        Log.LogError("Chisquare2, no meiksin calib. file loaded... aborting!");
+        Log.LogError("  Operator-Chisquare2: no meiksin calib. file loaded... aborting!");
         return NULL;
     }
 
     if( spectrum.GetSpectralAxis().IsInLinearScale() == false || tpl.GetSpectralAxis().IsInLinearScale() == false )
     {
-        Log.LogError("Chisquare2, input spectrum or template are not in log scale (ignored)");
+        Log.LogError("  Operator-Chisquare2: input spectrum or template are not in log scale (ignored)");
         //return NULL;
     }
 
@@ -569,7 +569,7 @@ std::shared_ptr<COperatorResult> COperatorChiSquare2::Compute(const CSpectrum& s
         precomputedFineGridTplFlux = (Float64*)malloc(nTgt*sizeof(Float64));
         if(precomputedFineGridTplFlux == NULL)
         {
-            Log.LogError("Chisquare2, unable to allocate the precomputed fine grid buffer... aborting!");
+            Log.LogError("  Operator-Chisquare2: unable to allocate the precomputed fine grid buffer... aborting!");
             return NULL;
         }
         // pfg with static array => doesn't work
@@ -663,7 +663,7 @@ std::shared_ptr<COperatorResult> COperatorChiSquare2::Compute(const CSpectrum& s
     }
     if(additional_spcMasks.size()!=sortedRedshifts.size() && additional_spcMasks.size()!=0)
     {
-        Log.LogError("Chisquare2, using default mask, masks-list size (%d) didn't match the input redshift-list (%d) !)", additional_spcMasks.size(), sortedRedshifts.size());
+        Log.LogError("  Operator-Chisquare2: using default mask, masks-list size (%d) didn't match the input redshift-list (%d) !)", additional_spcMasks.size(), sortedRedshifts.size());
     }
 
     for (Int32 i=0;i<sortedRedshifts.size();i++)
@@ -722,7 +722,7 @@ std::shared_ptr<COperatorResult> COperatorChiSquare2::Compute(const CSpectrum& s
     }
     if(overlapValidInfZ!=sortedRedshifts[0] || overlapValidSupZ!=sortedRedshifts[sortedRedshifts.size()-1])
     {
-        Log.LogInfo("Chisquare2, overlap warning for %s: minz=%.3f, maxz=%.3f", tpl.GetName().c_str(), overlapValidInfZ, overlapValidSupZ);
+        Log.LogInfo("  Operator-Chisquare2: overlap warning for %s: minz=%.3f, maxz=%.3f", tpl.GetName().c_str(), overlapValidInfZ, overlapValidSupZ);
     }
 
     //estimate CstLog for PDF estimation
@@ -876,7 +876,7 @@ const COperatorResult* COperatorChiSquare2::ExportChi2versusAZ(const CSpectrum& 
 {
     if( spectrum.GetSpectralAxis().IsInLinearScale() == false || tpl.GetSpectralAxis().IsInLinearScale() == false )
     {
-        Log.LogError("Chisquare2, input spectrum or template are not in log scale (ignored)");
+        Log.LogError("  Operator-Chisquare2: input spectrum or template are not in log scale (ignored)");
         //return NULL;
     }
 

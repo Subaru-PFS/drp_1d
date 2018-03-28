@@ -13,6 +13,7 @@
 #include <RedshiftLibrary/operator/chisquare2.h>
 
 #include <RedshiftLibrary/operator/linemodelresult.h>
+#include <RedshiftLibrary/linemodel/modelspectrumresult.h>
 #include <RedshiftLibrary/linemodel/element.h>
 
 #include <RedshiftLibrary/spectrum/template/catalog.h>
@@ -90,6 +91,7 @@ public:
     Int32 SetFitContinuum_FitStore(CTemplatesFitStore* fitStore);
 
     Int32 LoadFitContaminantTemplate(const TFloat64Range& lambdaRange, const CTemplate& tpl);
+    std::shared_ptr<CModelSpectrumResult> GetContaminantSpectrumResult();
 
     Bool initDtd(const TFloat64Range& lambdaRange);
     Float64 EstimateDTransposeD(const TFloat64Range& lambdaRange, std::string spcComponent);
@@ -269,7 +271,7 @@ private:
 
     CSpectrumFluxAxis m_SpcFluxAxis;    //observed spectrum
     CSpectrumFluxAxis m_spcFluxAxisNoContinuum; //observed spectrum for line fitting
-    CSpectrumFluxAxis m_spcFluxAxisContaminant; //optionally used contaminant to be removed from observed spectrum
+    std::shared_ptr<CTemplate> m_tplContaminantSpcRebin; //optionally used contaminant to be removed from observed spectrum
     Float64* m_ErrorNoContinuum;
     CSpectrumFluxAxis m_SpcFluxAxisModelDerivVelEmi;
     CSpectrumFluxAxis m_SpcFluxAxisModelDerivVelAbs;

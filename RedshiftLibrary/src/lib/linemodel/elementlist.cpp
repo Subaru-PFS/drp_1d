@@ -62,7 +62,7 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
                           const std::string& opt_rules,
                           const std::string &opt_rigidity)
 {
-    //memebers for chi2 continuum fitting
+    //members for chi2 continuum fitting
     m_tplCatalog = tplCatalog;
     m_tplCategoryList = tplCategoryList;
     m_inputSpc = std::shared_ptr<CSpectrum>( new CSpectrum(spectrum) );
@@ -106,7 +106,6 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
     CSpectrumFluxAxis& modelFluxAxis = m_SpectrumModel->GetFluxAxis();
     const CSpectrumFluxAxis& spectrumFluxAxis = spectrum.GetFluxAxis();
     m_spcFluxAxisNoContinuum.SetSize( spectrumSampleCount );
-    m_spcFluxAxisContaminant.SetSize( spectrumSampleCount );
 
     const Float64* error = spectrumFluxAxis.GetError();
     m_ErrorNoContinuum = m_spcFluxAxisNoContinuum.GetError();
@@ -147,10 +146,6 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
     m_observeGridContinuumFlux = NULL;
     m_unscaleContinuumFluxAxisDerivZ =NULL;
     m_chiSquareOperator = NULL;
-    for( UInt32 i=0; i<modelFluxAxis.GetSamplesCount(); i++ )
-    {
-        m_spcFluxAxisContaminant[i] = 0.0;
-    }
 
     //NB: fitContinuum_option: this is the initialization (default value), eventually overriden in SetFitContinuum_FitStore() when a fitStore gets available
     m_fitContinuum_option = 0; //0=interactive fitting, 1=use precomputed fit store
@@ -1082,35 +1077,23 @@ Int32 CLineModelElementList::LoadFitContaminantTemplate(const TFloat64Range& lam
     Int32 opt_extinction = 0;
     Int32 opt_dustFit = 0;
 
-    //Fit contaminant template AMPLITUDE
     //prepare observed spectrum without continuum
+    const CSpectrumFluxAxis& inputSpectrumFluxAxis = m_inputSpc->GetFluxAxis();
     std::shared_ptr<CSpectrum> _spc = std::shared_ptr<CSpectrum>( new CSpectrum(*m_inputSpc) );
     CSpectrumFluxAxis _spcFluxAxis = _spc->GetFluxAxis();
     Float64* Y_spc = _spcFluxAxis.GetSamples();
-    for(UInt32 i=0; i<m_SpcFluxAxis.GetSamplesCount(); i++)
+    for(UInt32 i=0; i<inputSpectrumFluxAxis.GetSamplesCount(); i++)
     {
-        Y_spc[i] = m_SpcFluxAxis[i]-m_ContinuumFluxAxis[i];
+        Y_spc[i] = inputSpectrumFluxAxis[i]-m_ContinuumFluxAxis[i];
     }
-
-    /*
-    if(m_chiSquareOperator == NULL)
-    {
-        m_chiSquareOperator = new COperatorChiSquare2(calibrationPath);
-    }
-    auto  chisquareResult = std::dynamic_pointer_cast<CChisquareResult>( m_chiSquareOperator->Compute( *_spc, tpl, lambdaRange, redshifts, overlapThreshold, maskList, opt_interp, opt_extinction, opt_dustFit ) );
-    if( !chisquareResult )
-    {
-
-        //Log.LogInfo( "Failed to compute chi square value");
-        return false;
-    }else{
-        //
-        merit = chisquareResult->ChiSquare[0];
-        fitAmplitude = chisquareResult->FitAmplitude[0];
-        return true;
-    }
-    //*/
-    fitAmplitude = 1.0;
+    //prepare tpl contaminant
+    const CSpectrumSpectralAxis& spcSpectralAxis = m_SpectrumModel->GetSpectralAxis();
+    const std::string& category = "emission";
+    m_tplContaminantSpcRebin = std::shared_ptr<CTemplate>( new CTemplate( "contaminantrebin", category ) );
+    CSpectrumFluxAxis& tplContaminantRebinFluxAxis = m_tplContaminantSpcRebin->GetFluxAxis();
+    CSpectrumSpectralAxis& tplContaminantRebinSpcAxis = m_tplContaminantSpcRebin->GetSpectralAxis();
+    tplContaminantRebinFluxAxis.SetSize(spcSpectralAxis.GetSamplesCount());
+    tplContaminantRebinSpcAxis.SetSize(spcSpectralAxis.GetSamplesCount());
 
     //prepare INTERPOLATED contaminant
     Int32 n = tpl.GetSampleCount();
@@ -1123,45 +1106,81 @@ Int32 CLineModelElementList::LoadFitContaminantTemplate(const TFloat64Range& lam
     gsl_interp_accel * accelerator =  gsl_interp_accel_alloc();
     Int32 k = 0;
     Float64 x = 0.0;
-    const CSpectrumSpectralAxis& spcSpectralAxis = m_SpectrumModel->GetSpectralAxis();
     for(k=0; k<spcSpectralAxis.GetSamplesCount(); k++){
         x = spcSpectralAxis[k];
+        tplContaminantRebinSpcAxis[k]=spcSpectralAxis[k];
         if(x < tplSpectralAxis[0] || x > tplSpectralAxis[n-1]){
-            m_spcFluxAxisContaminant[k] = 0.0;
+            tplContaminantRebinFluxAxis[k] = 0.0;
         }else{
-            m_spcFluxAxisContaminant[k] = fitAmplitude*gsl_spline_eval (spline, x, accelerator);
+            tplContaminantRebinFluxAxis[k] = gsl_spline_eval (spline, x, accelerator);
 
         }
     }
     gsl_spline_free (spline);
     gsl_interp_accel_free (accelerator);
 
-    //*//debug:
+
+    //*
+    //Fit contaminant template AMPLITUDE
+    if(m_chiSquareOperator == NULL)
+    {
+        m_chiSquareOperator = new COperatorChiSquare2(m_calibrationPath);
+    }
+    auto  chisquareResult = std::dynamic_pointer_cast<CChisquareResult>( m_chiSquareOperator->Compute( *_spc, *m_tplContaminantSpcRebin, lambdaRange, redshifts, overlapThreshold, maskList, opt_interp, opt_extinction, opt_dustFit ) );
+    if( !chisquareResult )
+    {
+
+        Log.LogError( "    model: contaminant - Failed to compute chi square value");
+        return false;
+    }else{
+        //
+        merit = chisquareResult->ChiSquare[0];
+        fitAmplitude = chisquareResult->FitAmplitude[0];
+    }
+    Log.LogInfo( "    model: contaminant raw fit amplitude is %f.", fitAmplitude);
+    //*/
+    if(fitAmplitude > 1.0)
+    {
+        Log.LogInfo( "    model: contaminant raw fit amplitude was %f. NOW SET TO 1.0", fitAmplitude);
+        fitAmplitude = 1.0;
+    }
+    //*/
+    //fitAmplitude = 1.0;
+    Log.LogInfo( "    model: contaminant fit amplitude = %f", fitAmplitude);
+    for(k=0; k<spcSpectralAxis.GetSamplesCount(); k++)
+    {
+        tplContaminantRebinFluxAxis[k] = fitAmplitude*tplContaminantRebinFluxAxis[k];
+    }
+
+    /*//debug:
     FILE* f = fopen( "contaminantFittedInterpolated.txt", "w+" );
     for(k=0; k<m_SpcFluxAxis.GetSamplesCount(); k++)
     {
-        fprintf( f, "%f\t%e\n", spcSpectralAxis[k], m_spcFluxAxisContaminant[k]);
+        fprintf( f, "%f\t%e\n", spcSpectralAxis[k], tplContaminantRebinFluxAxis[k]);
     }
     fclose( f );
     //*/
 
-    const CSpectrumFluxAxis& inputSpectrumFluxAxis = m_inputSpc->GetFluxAxis();
     if( m_ContinuumComponent=="nocontinuum" )
     {
         for(k=0; k<m_SpcFluxAxis.GetSamplesCount(); k++){
-            m_SpcFluxAxis[k] = inputSpectrumFluxAxis[k]-m_ContinuumFluxAxis[k]-m_spcFluxAxisContaminant[k];
+            m_SpcFluxAxis[k] = inputSpectrumFluxAxis[k]-m_ContinuumFluxAxis[k]-tplContaminantRebinFluxAxis[k];
         }
     }else if( m_ContinuumComponent == "fromspectrum" || m_ContinuumComponent == "tplfit")
     {
         for(k=0; k<m_SpcFluxAxis.GetSamplesCount(); k++){
-            m_SpcFluxAxis[k] = inputSpectrumFluxAxis[k]-m_spcFluxAxisContaminant[k];
+            m_SpcFluxAxis[k] = inputSpectrumFluxAxis[k]-tplContaminantRebinFluxAxis[k];
         }
     }
 
     return 1;
 }
 
-
+std::shared_ptr<CModelSpectrumResult> CLineModelElementList::GetContaminantSpectrumResult()
+{
+    std::shared_ptr<CModelSpectrumResult>  resultcont = std::shared_ptr<CModelSpectrumResult>( new CModelSpectrumResult(*m_tplContaminantSpcRebin) );
+    return resultcont;
+}
 
 std::string CLineModelElementList::getFitContinuum_tplName()
 {

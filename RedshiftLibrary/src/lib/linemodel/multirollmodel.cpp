@@ -268,6 +268,15 @@ Int32 CMultiRollModel::LoadFitContaminantTemplate(Int32 iRoll, CTemplate &tpl, c
     return 0;
 }
 
+std::shared_ptr<CModelSpectrumResult> CMultiRollModel::GetContaminantSpectrumResult(Int32 iRoll)
+{
+    if(m_models.size()>iRoll)
+    {
+        return m_models[iRoll]->GetContaminantSpectrumResult();
+    }
+    return 0;
+}
+
 Int32 CMultiRollModel::setPassMode(Int32 iPass)
 {
     return 0;

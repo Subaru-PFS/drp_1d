@@ -870,6 +870,7 @@ Bool CZweiModelSolve::Solve( CDataStore& dataStore,
 //        dataStore.StoreScopedGlobalResult( scopeStr.c_str(), result_s1 );
 //        //save linemodel fitting and spectrum-model results
 //        linemodel_s1.storeGlobalModelResults(dataStore);
+//        return true;
 //    }
 
     // ---------------------------------------------------
@@ -953,6 +954,10 @@ Bool CZweiModelSolve::Solve( CDataStore& dataStore,
 
 
     std::shared_ptr<CLineModelResult> result_s1_c2;
+    std::shared_ptr<CModelSpectrumResult> best_s1spcModelSpectrum;
+    std::shared_ptr<CModelSpectrumResult> best_s1contModelSpectrum;
+    std::shared_ptr<CModelSpectrumResult> best_s2spcModelSpectrum;
+    std::shared_ptr<CModelSpectrumResult> best_s2contModelSpectrum;
     std::vector<std::vector<Float64>> combined_merits;
     Float64 bestmerit = DBL_MAX;
     Float64 bestC2z = -1.0;
@@ -967,7 +972,14 @@ Bool CZweiModelSolve::Solve( CDataStore& dataStore,
         Int32 iRollContaminated_s1 = 0; //hardcoded for now
         Float64 contLambdaOffset_s2tos1 = offsetLambdaContaminant;//previously tested with hardcoded 2000A; //This is a simple modelization of the needed regrid of s2 on s1 grid (kind of due to s1/s2 radec distance)
         std::shared_ptr<CModelSpectrumResult> contModelSpectrum = linemodel_s2.GetModelSpectrumResult(kzs2);
-        linemodel_s1c2X.initContaminant(contModelSpectrum, iRollContaminated_s1, contLambdaOffset_s2tos1);
+        std::shared_ptr<CSpectraFluxResult> contModelContinuumSpectrum = linemodel_s2.GetModelSpectrumContinuumResult(kzs2);
+        std::shared_ptr<CModelSpectrumResult> contModelContinuumSubtractedSpectrum = std::shared_ptr<CModelSpectrumResult>( new CModelSpectrumResult(contModelSpectrum->GetSpectrum()) );
+        for(Int32 i=0; i<contModelSpectrum->GetSpectrum().GetFluxAxis().GetSamplesCount(); i++)
+        {
+            contModelContinuumSubtractedSpectrum->GetSpectrum().GetFluxAxis()[i] = contModelSpectrum->GetSpectrum().GetFluxAxis()[i] - contModelContinuumSpectrum->fluxes[i];
+            //contModelContinuumSubtractedSpectrum->GetSpectrum().GetFluxAxis()[i] = 0.0;
+        }
+        linemodel_s1c2X.initContaminant(contModelContinuumSubtractedSpectrum, iRollContaminated_s1, contLambdaOffset_s2tos1);
 
         Float64 _opt_twosteplargegridstep = -1;
         linemodel_s1c2X.m_secondPass_extensionradius = 0.0;
@@ -1034,7 +1046,14 @@ Bool CZweiModelSolve::Solve( CDataStore& dataStore,
                 Int32 iRollContaminated_s2 = 0; //hardcoded for now
                 Float64 contLambdaOffset_s1tos2 = -offsetLambdaContaminant;
                 std::shared_ptr<CModelSpectrumResult> contModelSpectrum = linemodel_s1c2X.GetModelSpectrumResult(idx_linemodelExtrema_s1c2zX);
-                linemodel_s2c1Y.initContaminant(contModelSpectrum, iRollContaminated_s2, contLambdaOffset_s1tos2);
+                std::shared_ptr<CSpectraFluxResult> contModelContinuumSpectrum = linemodel_s1c2X.GetModelSpectrumContinuumResult(idx_linemodelExtrema_s1c2zX);
+                std::shared_ptr<CModelSpectrumResult> contModelContinuumSubtractedSpectrum = std::shared_ptr<CModelSpectrumResult>( new CModelSpectrumResult(contModelSpectrum->GetSpectrum()) );
+                for(Int32 i=0; i<contModelSpectrum->GetSpectrum().GetFluxAxis().GetSamplesCount(); i++)
+                {
+                    contModelContinuumSubtractedSpectrum->GetSpectrum().GetFluxAxis()[i] = contModelSpectrum->GetSpectrum().GetFluxAxis()[i] - contModelContinuumSpectrum->fluxes[i];
+                    //contModelContinuumSubtractedSpectrum->GetSpectrum().GetFluxAxis()[i] = 0.0;
+                }
+                linemodel_s2c1Y.initContaminant(contModelContinuumSubtractedSpectrum, iRollContaminated_s2, contLambdaOffset_s1tos2);
 
                 Float64 _opt_twosteplargegridstep = -1;
                 linemodel_s2c1Y.m_secondPass_extensionradius = 0.0;
@@ -1090,6 +1109,10 @@ Bool CZweiModelSolve::Solve( CDataStore& dataStore,
                         bestC1z = redshift1;
                         bestmerit = combinedMerit;
                         result_s1_c2 = std::dynamic_pointer_cast<CLineModelResult>( result_s1_c2zX );
+                        best_s1spcModelSpectrum = linemodel_s1c2X.GetModelSpectrumResult(idx_linemodelExtrema_s1c2zX);
+                        best_s1contModelSpectrum = linemodel_s1c2X.GetContaminantSpectrumResult();
+                        best_s2spcModelSpectrum = linemodel_s2c1Y.GetModelSpectrumResult(0);
+                        best_s2contModelSpectrum = linemodel_s2c1Y.GetContaminantSpectrumResult();
                     }
                 }
 
@@ -1110,7 +1133,14 @@ Bool CZweiModelSolve::Solve( CDataStore& dataStore,
         // Store linemodel chisquare results
         dataStore.StoreScopedGlobalResult( scopeStr.c_str(), result_s1_c2 );
         //save linemodel fitting and spectrum-model results
-        //linemodel_s1.storeGlobalModelResults(dataStore);
+        std::string fname_s1spc = (boost::format("linemodel_s1spc_extrema_0")).str();
+        dataStore.StoreScopedGlobalResult( fname_s1spc.c_str(), best_s1spcModelSpectrum );
+        std::string fname_s1cont = (boost::format("linemodel_s1cont_extrema_0")).str();
+        dataStore.StoreScopedGlobalResult( fname_s1cont.c_str(), best_s1contModelSpectrum );
+        std::string fname_s2spc = (boost::format("linemodel_s2spc_extrema_0")).str();
+        dataStore.StoreScopedGlobalResult( fname_s2spc.c_str(), best_s2spcModelSpectrum );
+        std::string fname_s2cont = (boost::format("linemodel_s2cont_extrema_0")).str();
+        dataStore.StoreScopedGlobalResult( fname_s2cont.c_str(), best_s2contModelSpectrum );
 
         std::shared_ptr<CZweiModelResult> zweimodelResult = std::shared_ptr<CZweiModelResult>( new CZweiModelResult(zcandidates_s1, zcandidates_s2, combined_merits));
         std::string fname_result = (boost::format("zweimodel")).str();
