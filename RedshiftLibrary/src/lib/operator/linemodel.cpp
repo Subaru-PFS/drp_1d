@@ -187,7 +187,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
     std::shared_ptr<CTemplateCatalog> orthoTplCatalog = orthoTplStore.getTplCatalog(ctlgIdx);
     Log.LogInfo( "  Operator-Linemodel: Templates store prepared.");
 
-    /*
+    //*
     CLineModelElementList model( spectrum,
                                  spectrumContinuum,
                                  tplCatalog,//*orthoTplCatalog,//
@@ -208,7 +208,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
     //*/
 
 
-    //*
+    /*
     CMultiRollModel model( spectrum,
                                  spectrumContinuum,
                                  tplCatalog,//*orthoTplCatalog,//
@@ -274,7 +274,9 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
         {
             Log.LogError( "  Operator-Linemodel: Contaminant data is invalid... aborting." );
         }else{
-            /*
+            //
+            if(0)
+            {
             //debug:
             FILE* f2 = fopen( "contaminantShifted.txt", "w+" );
             for(Int32 k=0; k<m_tplContaminant->GetSampleCount(); k++)
@@ -282,7 +284,8 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
                 fprintf( f2, "%f\t%e\n", m_tplContaminant->GetSpectralAxis()[k], m_tplContaminant->GetFluxAxis()[k]);
             }
             fclose( f2 );
-            //*/
+            //
+            }
 
             //apply contamination to the multiroll model
             model.LoadFitContaminantTemplate(m_iRollContaminated, *m_tplContaminant, lambdaRange);
