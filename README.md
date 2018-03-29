@@ -62,10 +62,21 @@ If you don't specify any **-DCMAKE_BUILD_TYPE=xxxxx** , it will build  by defaul
 ##### shared and static
 
 You can build either static or shared library :
-cmake .. -DBUILD_SHARED_LIBS=ON
-or
-cmake .. -DBUILD_SHARED_LIBS=OFF
 
+	cmake .. -DBUILD_SHARED_LIBS=ON
+or
+
+	cmake .. -DBUILD_SHARED_LIBS=OFF
+
+##### building and running tests
+
+In order to build tests, shared libs version must be enabled :
+
+	cmake .. -DBUILD_SHARED_LIBS=ON
+
+Run tests with :
+
+	make test
 
 ## Additional documentation
 
