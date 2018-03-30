@@ -251,13 +251,20 @@ std::shared_ptr<CLineModelSolveResult> CLineModelSolve::Compute( CDataStore& dat
 
 Int32 CLineModelSolve::CombinePDF(CDataStore &store, std::shared_ptr<const CLineModelResult> result, std::string opt_rigidity, std::string opt_combine, std::string opt_stronglinesprior)
 {
-    //hardcoded prior parameter
     bool zPriorStrongLinePresence = (opt_stronglinesprior=="yes");
     if(zPriorStrongLinePresence)
     {
         Log.LogInfo("Linemodel: Pdfz computation: StrongLinePresence prior enabled");
     }else{
         Log.LogInfo("Linemodel: Pdfz computation: StrongLinePresence prior disabled");
+    }
+    //hardcoded Euclid-NHaZprior parameter
+    bool zPriorEuclidNHa = false;
+    if(zPriorEuclidNHa)
+    {
+        Log.LogInfo("Linemodel: Pdfz computation: EuclidNHa prior enabled");
+    }else{
+        Log.LogInfo("Linemodel: Pdfz computation: EuclidNHa prior disabled");
     }
 
     Log.LogInfo("Linemodel: Pdfz computation");
@@ -291,6 +298,11 @@ Int32 CLineModelSolve::CombinePDF(CDataStore &store, std::shared_ptr<const CLine
             zPrior->valProbaLog = pdfz.GetStrongLinePresenceLogZPrior(strongLinePresence);
         }else{
             zPrior->valProbaLog = pdfz.GetConstantLogZPrior(result->Redshifts.size());
+        }
+        if(zPriorEuclidNHa)
+        {
+            std::vector<Float64> zlogPriorNHa = pdfz.GetEuclidNhaLogZPrior(result->Redshifts);
+            zPrior->valProbaLog = pdfz.CombineLogZPrior(zPrior->valProbaLog, zlogPriorNHa);
         }
 
         //correct chi2 if necessary: todo add switch
@@ -327,6 +339,12 @@ Int32 CLineModelSolve::CombinePDF(CDataStore &store, std::shared_ptr<const CLine
             }else
             {
                 _prior = pdfz.GetConstantLogZPrior(result->Redshifts.size());
+            }
+
+            if(zPriorEuclidNHa)
+            {
+                std::vector<Float64> zlogPriorNHa = pdfz.GetEuclidNhaLogZPrior(result->Redshifts);
+                _prior = pdfz.CombineLogZPrior(_prior, zlogPriorNHa);
             }
             zpriorsTplshapes.push_back(_prior);
         }

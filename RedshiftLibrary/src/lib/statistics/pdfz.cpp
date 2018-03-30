@@ -212,6 +212,87 @@ std::vector<Float64> CPdfz::GetStrongLinePresenceLogZPrior(std::vector<bool> lin
     return logzPrior;
 }
 
+std::vector<Float64> CPdfz::GetEuclidNhaLogZPrior(std::vector<Float64> redshifts)
+{
+    std::vector<Float64> zPrior(redshifts.size(), 0.0);
+    Float64 aCoeff = 1.0;
+    for(UInt32 kz=0; kz<redshifts.size(); kz++)
+    {
+        zPrior[kz] = (1e-6)*( -3080.1*aCoeff*redshifts[kz]+15546.6 );
+    }
+
+    Float64 sum = 0.0;
+    for(UInt32 kz=0; kz<redshifts.size(); kz++)
+    {
+        sum+=zPrior[kz];
+    }
+    if(sum>0)
+    {
+        for(UInt32 kz=0; kz<redshifts.size(); kz++)
+        {
+            zPrior[kz] /= sum;
+        }
+    }
+
+    //switch to log
+    std::vector<Float64> logzPrior(redshifts.size(), 0.0);
+    for(UInt32 kz=0; kz<redshifts.size(); kz++)
+    {
+        logzPrior[kz] = log(zPrior[kz]);
+    }
+
+    return logzPrior;
+}
+
+/**
+ * @brief CombineLogZPrior
+ * returns a vector with log(prior1*prior2) for each z, with normalization so that sumPrior=1
+ * @param logprior1
+ * @param logprior2
+ * @return
+ */
+std::vector<Float64> CPdfz::CombineLogZPrior(std::vector<Float64> logprior1, std::vector<Float64> logprior2)
+{
+    std::vector<Float64> logzPriorCombined;
+    if(logprior1.size()!=logprior2.size())
+    {
+        return logzPriorCombined;
+    }
+    Int32 n=logprior1.size();
+
+    Float64 maxi = DBL_MIN;
+    for ( UInt32 k=0; k<n; k++)
+    {
+        Float64 val= logprior1[k]+logprior2[k];
+        if(maxi<val)
+        {
+            maxi=val;
+        }
+    }
+    std::vector<Float64> zPrior_modif(n, 0.0);
+    for ( UInt32 k=0; k<n; k++)
+    {
+        zPrior_modif[k] = logprior1[k]+logprior2[k]-maxi;
+    }
+
+    Float64 sumExpModif=0.0;
+    for ( UInt32 k=0; k<n; k++)
+    {
+        sumExpModif+=exp(zPrior_modif[k]);
+    }
+
+    Float64 logSum = log(exp(maxi))*sumExpModif;
+
+    logzPriorCombined.resize(n);
+    for(Int32 k=0; k<n; k++)
+    {
+        logzPriorCombined[k] =  logprior1[k]+logprior2[k]-logSum;
+    }
+
+
+    return logzPriorCombined;
+}
+
 
 Int32 CPdfz::Marginalize(TFloat64List redshifts, std::vector<TFloat64List> meritResults, std::vector<TFloat64List> zPriors, Float64 cstLog, std::shared_ptr<CPdfMargZLogResult> postmargZResult, std::vector<Float64> modelPriors)
 {
