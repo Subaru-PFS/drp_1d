@@ -130,8 +130,8 @@ Float64 CLineModelElement::GetLineWidth(Float64 redshiftedlambda, Float64 z, Boo
         //      Leads to linear regression: sigma_psf = 3.939e-4*wl_angstrom + 2.191
         //+ considers source size in the dispersion direction
         //+ considers velocity
-        //instrumentSigma = (redshiftedlambda*3.939e-4 + 2.191); //probably a realistic calib.
-        instrumentSigma = 11.; //(approx. 10 or 11?) for tips-fast current version 201708
+        instrumentSigma = (redshiftedlambda*3.939e-4 + 2.191); //probably a realistic calib.
+        //instrumentSigma = 11.; //(approx. 10 or 11?) for tips-fast current version 201708
 
         sourcesizeSigma = m_SourceSizeDispersion*angstromPix/arcsecPix;
 
