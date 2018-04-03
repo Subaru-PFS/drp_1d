@@ -21,6 +21,8 @@ class CPdfMargZLogResult : public COperatorResult
     Void Save( const CDataStore& store, std::ostream& stream ) const;
     Void SaveLine( const CDataStore& store, std::ostream& stream ) const;
 
+    Int32 Load( std::string filePath );
+
     TFloat64List          Redshifts;
     TFloat64List          valProbaLog;
     Float64                 valEvidenceLog;

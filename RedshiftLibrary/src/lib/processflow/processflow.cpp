@@ -289,6 +289,27 @@ Bool CProcessFlow::Process( CProcessFlowContext& ctx )
                                 redshiftStep,
                                 ctx.GetRayCatalog() );
 
+    }else if(methodName  == "reliability" ){
+        Log.LogInfo( "Processing RELIABILITY ONLY");
+        //using an input pdf (ie. bypass redshift estimation method) from <intermSpcDir>/zPDF/logposterior.logMargP_Z_data.csv
+
+        //loading pdf into datastore
+        boost::filesystem::path perSpectrumDir="";
+        perSpectrumDir = perSpectrumDir/( boost::filesystem::path( ctx.GetDataStore().GetProcessingID() ).string() );
+        boost::filesystem::path inputPdfPath = perSpectrumDir/( boost::filesystem::path( "zPDF/logposterior.logMargP_Z_data.csv" ).string() ) ;
+
+        Log.LogInfo( "Loading PDF from %s", inputPdfPath.string().c_str() );
+        std::shared_ptr<CPdfMargZLogResult> postmargZResult = std::shared_ptr<CPdfMargZLogResult>(new CPdfMargZLogResult());
+        Int32 retPdfz = postmargZResult->Load(inputPdfPath.string().c_str());
+        Log.LogInfo("Pdfz loaded n values = %d", postmargZResult->Redshifts.size());
+        if(retPdfz<0)
+        {
+            Log.LogError("Pdfz loading failed (ret=%d)", retPdfz);
+        }else{
+            ctx.GetDataStore().StoreGlobalResult( "zPDF/logposterior.logMargP_Z_data", postmargZResult); //need to store this pdf with this exact same name so that zqual can load it. see zqual.cpp/ExtractFeaturesPDF
+        }
+        mResult = std::shared_ptr<CLineModelResult>(new CLineModelResult());
+
     }else{
         Log.LogError("Problem found while parsing the method parameter !");
         return false;
