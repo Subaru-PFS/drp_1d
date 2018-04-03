@@ -308,7 +308,7 @@ Bool CProcessFlow::Process( CProcessFlowContext& ctx )
         }else{
             ctx.GetDataStore().StoreGlobalResult( "zPDF/logposterior.logMargP_Z_data", postmargZResult); //need to store this pdf with this exact same name so that zqual can load it. see zqual.cpp/ExtractFeaturesPDF
         }
-        mResult = std::shared_ptr<CLineModelResult>(new CLineModelResult());
+        mResult = std::shared_ptr<CLineModelSolveResult>(new CLineModelSolveResult());
 
     }else{
         Log.LogError("Problem found while parsing the method parameter !");
