@@ -14,14 +14,16 @@
 
 
 %{
-	#include "RedshiftLibrary/log/log.h"
-	#include "RedshiftLibrary/log/consolehandler.h"
-	#include "RedshiftLibrary/processflow/parameterstore.h"
-	#include "RedshiftLibrary/reliability/zclassifierstore.h"
-	#include "RedshiftLibrary/processflow/context.h"
-	#include "RedshiftLibrary/processflow/processflow.h"
+        #include "RedshiftLibrary/log/log.h"
+        #include "RedshiftLibrary/log/consolehandler.h"
+        #include "RedshiftLibrary/processflow/parameterstore.h"
+        #include "RedshiftLibrary/reliability/zclassifierstore.h"
+        #include "RedshiftLibrary/processflow/context.h"
+        #include "RedshiftLibrary/processflow/processflow.h"
+  	#include "RedshiftLibrary/processflow/resultstore.h"
 	#include "RedshiftLibrary/ray/catalog.h"
   	#include "RedshiftLibrary/spectrum/template/catalog.h"
+    	#include "RedshiftLibrary/spectrum/io/reader.h"
 	using namespace NSEpic;
 %}
 
@@ -126,5 +128,18 @@ class COperatorResultStore
 {
 public:
   COperatorResultStore();
+};
+
+class CSpectrum
+{
+ public:
+  CSpectrum();
+};
+
+class CSpectrumIOReader
+{
+ public:
+  CSpectrumIOReader();
+  virtual Bool Read(const char* filePath, CSpectrum& spectrum) = 0;
 };
 
