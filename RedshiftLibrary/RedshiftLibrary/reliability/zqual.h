@@ -36,8 +36,8 @@ public:
 	std::shared_ptr<const CQualzResult> Compute ( CDataStore& resultStore, CClassifierStore& classifierStore,
 			const TFloat64Range &redshiftRange, Float64& redshiftStep );
 
-	Bool disp_details = false;   // display temporary results for each learnerwhen computing the score
-	Bool disp_time    = true;    // display time of full process (zFeature + zProject)
+    Bool disp_details = false;   // display temporary results for each learnerwhen computing the score
+    Bool disp_time    = false;    // display time of full process (zFeature + zProject)
 	Bool m_doTEST   = 0;         // matlab check
 
 	boost::posix_time::time_duration T0, T1;

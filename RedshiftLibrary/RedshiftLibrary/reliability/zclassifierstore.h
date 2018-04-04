@@ -23,7 +23,8 @@ private:
 		CLearner();
 		~CLearner();
 
-		Bool Load ( gsl_matrix* params, gsl_matrix* vectors );
+        Bool LoadParams ( gsl_matrix* params );
+        Bool LoadVectors ( gsl_matrix* vectors );
 
 		Int32 m_nbSVectors;		// = M, number of SVector
 		Int32 m_nbDesriptors;		// =  P, number of desriptors in an observation x
@@ -46,9 +47,12 @@ public:
 	CClassifierStore();
 	~CClassifierStore();
 
-	Bool Load ( const char* dirPath );
-	Bool Load_params( const char* dirPath );
+    Bool Load ( const char* dirPath );
+    Float64 Load_version( const char* dirPath );
+    Bool Load_params( const char* dirPath );
     Bool m_isInitialized;
+    Bool m_classifier_option;
+    Float64 m_file_format_version;
 
 	Void DisplayQ ( const gsl_matrix* m );
 

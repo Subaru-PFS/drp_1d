@@ -848,25 +848,27 @@ Void CQualz::GetScorePred ( CClassifierStore& classifierStore )
 		}
 
 
-		M = learner->m_SVectors->size1;	// nb_sVectors
-		P 	= learner->m_SVectors->size2;	// nb_descriptors
-		if ( disp_details ) {
-			std::cout
-			<<"nbCLASSIF = " <<M <<"\t"
-			<<"nbDESCRIPTORS = " <<P <<std::endl;
-		}
+        double learner_sc;
+        Float64  learner_score;
 
-		auto mu = learner->m_SVmu;
-		auto sigma = learner->m_SVsigma;
+        auto mu = learner->m_SVmu;
+        auto sigma = learner->m_SVsigma;
 
-		GetXc(mu, sigma);
+        GetXc(mu, sigma);
 
-		double learner_sc;
-		Float64  learner_score;
-		gsl_vector* prod_xsvt = gsl_vector_alloc( M );
+        if ( classifierStore.m_classifier_option==1 ) {
+            // OPTION 1: 		Compute: (x_c * sc')*sv_L *alpha  + bias
 
-		if ( false ) {
-			// OPTION 1: 		Compute: (x_c * sc')*sv_L *alpha  + bias
+            M = learner->m_SVectors->size1;	// nb_sVectors
+            P 	= learner->m_SVectors->size2;	// nb_descriptors
+            if ( disp_details ) {
+                std::cout
+                <<"nbCLASSIF = " <<M <<"\t"
+                <<"nbDESCRIPTORS = " <<P <<std::endl;
+            }
+
+            gsl_vector* prod_xsvt = gsl_vector_alloc( M );
+
 			gsl_matrix* sv_transpose = gsl_matrix_alloc( P, M );	// Size (learner->m_SVectors) = [M x P]
 			gsl_matrix_transpose_memcpy( sv_transpose,  learner->m_SVectors);
 
@@ -891,8 +893,9 @@ Void CQualz::GetScorePred ( CClassifierStore& classifierStore )
 			gsl_matrix_free(sv_transpose);
 			gsl_vector_free(prod_svAlpha);
 
-		} else {
+        } else if (classifierStore.m_classifier_option==2) {
 			// OPTION 2: 		Compute: (x_c * beta) + bias
+
 			double learner_sc2 = 0;
 			for ( Int32 lig = 0; lig< learner->m_SVbeta->size ; lig++) {
 				learner_sc2 += ( gsl_vector_get(m_Xc, lig) ) *( gsl_vector_get(learner->m_SVbeta, lig) );
@@ -903,7 +906,9 @@ Void CQualz::GetScorePred ( CClassifierStore& classifierStore )
 			learner_sc2 += learner->m_SVbias;
 			GetSigmoid ( learner_sc2, learner->m_SVsigmoiid, learner_score);
 			learner_sc = learner_sc2;
-		}
+        }else{
+            Log.LogError("Unable to find a correct classifier option: found %d", classifierStore.m_classifier_option);
+        }
 
 		if ( disp_details ) {
 			std::cout
