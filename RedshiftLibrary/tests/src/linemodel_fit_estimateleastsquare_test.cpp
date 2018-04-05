@@ -46,7 +46,8 @@ void checkLeastSquareFast(std::string spectrumPath, std::string noisePath, std::
     CSpectrumFluxAxis fluxAxisWithoutContinuumCalc;
     Int32 retValContinuumEstimation = continuum.RemoveContinuum( *spectrum, fluxAxisWithoutContinuumCalc );
     BOOST_CHECK( retValContinuumEstimation);
-    CSpectrumFluxAxis& continuumFluxAxis = spectrum->GetFluxAxis();
+    CSpectrum spectrumContinuum = *spectrum;
+    CSpectrumFluxAxis& continuumFluxAxis = spectrumContinuum.GetFluxAxis();
     for(UInt32 i=0; i<continuumFluxAxis.GetSamplesCount(); i++){
         if(opt_continuumcomponent == "fromspectrum")
         {
@@ -98,7 +99,7 @@ void checkLeastSquareFast(std::string spectrumPath, std::string noisePath, std::
     CTemplateCatalog orthoTplCatalog = tplOrtho.getOrthogonalTplCatalog();
 
 
-    CLineModelElementList model(*spectrum, *spectrum, orthoTplCatalog, tplCategories, opt_calibrationPath, lineList, opt_fittingmethod, opt_continuumcomponent, opt_lineWidthType, opt_resolution, opt_velocityEmission, opt_velocityAbsorption, opt_rules, opt_rigidity);
+    CLineModelElementList model(*spectrum, spectrumContinuum, orthoTplCatalog, tplCategories, opt_calibrationPath, lineList, opt_fittingmethod, opt_continuumcomponent, opt_lineWidthType, opt_resolution, opt_velocityEmission, opt_velocityAbsorption, opt_rules, opt_rigidity);
 
     bool tplratioInitRet = model.initTplratioCatalogs();
     BOOST_CHECK_MESSAGE( tplratioInitRet, "Unable to intialize tpl-ratio catalog");

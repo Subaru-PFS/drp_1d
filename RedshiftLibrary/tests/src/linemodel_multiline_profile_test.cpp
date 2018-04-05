@@ -59,14 +59,14 @@ void checkProfileValue(std::string linecatalogPath,
     // load spectrum
     CSpectrumIOFitsReader reader;
 
-    CSpectrum spectrum;
+    std::shared_ptr<CSpectrum> spectrum = std::shared_ptr<CSpectrum>( new CSpectrum() );
 
-    Bool retVal = reader.Read( spectrumPath.c_str(), std::shared_ptr<CSpectrum>(&spectrum));
+    Bool retVal = reader.Read( spectrumPath.c_str(), spectrum);
     BOOST_CHECK( retVal == true);
     CNoiseFromFile noise;
     retVal = noise.SetNoiseFilePath( noisePath.c_str() );
     BOOST_CHECK( retVal == true);
-    retVal = noise.AddNoise( spectrum ) ;
+    retVal = noise.AddNoise( *spectrum ) ;
     BOOST_CHECK( retVal == true);
 
 
@@ -74,7 +74,7 @@ void checkProfileValue(std::string linecatalogPath,
     //CContinuumIrregularSamplingMedian continuum;
     //CSpectrumFluxAxis fluxAxisWithoutContinuumCalc;
     //Int32 retValCont = continuum.RemoveContinuum( spectrum, fluxAxisWithoutContinuumCalc );
-    CSpectrum spectrumContinuum = spectrum;
+    CSpectrum spectrumContinuum = *spectrum;
     CSpectrumFluxAxis& continuumFluxAxis = spectrum.GetFluxAxis();
     for(UInt32 i=0; i<continuumFluxAxis.GetSamplesCount(); i++){
         //continuumFluxAxis[i] -= fluxAxisWithoutContinuumCalc[i];
