@@ -51,7 +51,6 @@ public:
     Float64 Load_version( const char* dirPath );
     Bool Load_params( const char* dirPath );
     Bool m_isInitialized;
-    Bool m_classifier_option;
     Float64 m_file_format_version;
 
 	Void DisplayQ ( const gsl_matrix* m );
@@ -64,7 +63,9 @@ public:
 	const Int32 GetNbLearners() const;
 	const Int32 GetNbFeatures() const;
 	const std::string GetTypeCoding() const;
-	const std::string GetTypeClassifier() const;
+    const std::string GetTypeClassifier() const;
+    const Int32 GetOptionClassifier() const;
+
 	const gsl_vector* GetLearnersWeight() const;
 	const std::string GetLabel( Int32 idLabel ) const;
 	const TStringList GetLabels() const;
@@ -100,6 +101,7 @@ protected:
 	Int32 m_nbFeatures;
 	std::string m_typeCoding;
 	std::string m_typeClassifier;
+    Int32 m_classifier_option;
 
 	gsl_vector* m_learnersWeight;
 

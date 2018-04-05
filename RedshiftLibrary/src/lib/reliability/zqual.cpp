@@ -856,7 +856,7 @@ Void CQualz::GetScorePred ( CClassifierStore& classifierStore )
 
         GetXc(mu, sigma);
 
-        if ( classifierStore.m_classifier_option==1 ) {
+        if ( classifierStore.GetOptionClassifier()==1 ) {
             // OPTION 1: 		Compute: (x_c * sc')*sv_L *alpha  + bias
 
             M = learner->m_SVectors->size1;	// nb_sVectors
@@ -893,7 +893,7 @@ Void CQualz::GetScorePred ( CClassifierStore& classifierStore )
 			gsl_matrix_free(sv_transpose);
 			gsl_vector_free(prod_svAlpha);
 
-        } else if (classifierStore.m_classifier_option==2) {
+        } else if (classifierStore.GetOptionClassifier()==2) {
 			// OPTION 2: 		Compute: (x_c * beta) + bias
 
 			double learner_sc2 = 0;
@@ -907,7 +907,7 @@ Void CQualz::GetScorePred ( CClassifierStore& classifierStore )
 			GetSigmoid ( learner_sc2, learner->m_SVsigmoiid, learner_score);
 			learner_sc = learner_sc2;
         }else{
-            Log.LogError("Unable to find a correct classifier option: found %d", classifierStore.m_classifier_option);
+            Log.LogError("Unable to find a correct classifier option: found %d", classifierStore.GetOptionClassifier());
         }
 
 		if ( disp_details ) {

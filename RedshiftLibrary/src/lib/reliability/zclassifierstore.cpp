@@ -146,8 +146,19 @@ Bool CClassifierStore::Load ( const char* directoryPath )
                 dirPath = directoryPath;
                 name = "sv"+nbLearner+"/sv"+nbLearner+"_vectors.dat";
                 dirPath=dirPath/name;
+                if ( !boost::filesystem::exists( dirPath ) )
+                {
+                    dirPath = directoryPath;
+                    name = "sv"+nbLearner+"/sv"+nbLearner+"_vectors.csv";
+                    dirPath=dirPath/name;
+                    if ( !boost::filesystem::exists( dirPath ) )
+                    {
+                        Log.LogError("  ZClassifier: ERROR File does not exist: %s", dirPath.string().c_str());
+                    }
+                }
                 rows = temp_sv[i];
                 cols = GetNbFeatures()+ 1+ 1; // the matrix contains the vector Alpha, the vector SVlabels and the matrix SVectors
+                Log.LogDetail("  ZClassifier: rows:%d cols:%d", rows, cols);
                 sv_vectors = gsl_matrix_alloc(rows,cols);
                 f = fopen( dirPath.c_str(), "r");
                 if ( f==NULL){
@@ -157,39 +168,45 @@ Bool CClassifierStore::Load ( const char* directoryPath )
                 gsl_matrix_fscanf( f, sv_vectors );
             }
 
-            // LOAD PARAMS
-            Log.LogDetail("  ZClassifier: Loading params #%d", i);
-			dirPath = directoryPath;
-			name = "sv"+nbLearner+"/sv"+nbLearner+"_params.dat";
-            dirPath=dirPath/name;
-            if ( !boost::filesystem::exists( dirPath ) )
+            if(m_classifier_option==2)
             {
+                // LOAD PARAMS
+                Log.LogDetail("  ZClassifier: Loading params #%d", i);
                 dirPath = directoryPath;
-                name = "sv"+nbLearner+"/sv"+nbLearner+"_params.csv";
+                name = "sv"+nbLearner+"/sv"+nbLearner+"_params.dat";
                 dirPath=dirPath/name;
                 if ( !boost::filesystem::exists( dirPath ) )
                 {
-                    Log.LogError("  ZClassifier: ERROR File does not exist: %s", dirPath.string().c_str());
+                    dirPath = directoryPath;
+                    name = "sv"+nbLearner+"/sv"+nbLearner+"_params.csv";
+                    dirPath=dirPath/name;
+                    if ( !boost::filesystem::exists( dirPath ) )
+                    {
+                        Log.LogError("  ZClassifier: ERROR File does not exist: %s", dirPath.string().c_str());
+                    }
                 }
+                rows = GetNbFeatures();
+                cols = 3;
+                sv_params = gsl_matrix_alloc(rows,cols);
+                f = fopen( dirPath.c_str(), "r");
+                if ( f==NULL) {
+                    Log.LogError("  ZClassifier: ERROR in reading %s", dirPath.string().c_str());
+                    return false;
+                }
+                gsl_matrix_fscanf( f, sv_params );
             }
-			rows = GetNbFeatures();
-			cols = 3;
-			sv_params = gsl_matrix_alloc(rows,cols);
-			f = fopen( dirPath.c_str(), "r");
-			if ( f==NULL) {
-                Log.LogError("  ZClassifier: ERROR in reading %s", dirPath.string().c_str());
-				return false;
-			}
-			gsl_matrix_fscanf( f, sv_params );
 
 
+            Log.LogDetail("  ZClassifier: creating learner #%d", i);
 			auto learner = new CLearner();
 			learner->m_SVmu = gsl_vector_alloc(GetNbFeatures());
-			learner->m_SVsigma = gsl_vector_alloc(GetNbFeatures());
-            learner->m_SVbeta = gsl_vector_alloc(GetNbFeatures());
+            learner->m_SVsigma = gsl_vector_alloc(GetNbFeatures());
 			learner->m_SVsigmoiid.resize(2);
-            learner->LoadParams (sv_params);
-
+            if(m_classifier_option==2)
+            {
+                learner->m_SVbeta = gsl_vector_alloc(GetNbFeatures());
+                learner->LoadParams (sv_params);
+            }
             if(m_classifier_option==1)
             {
                 learner->m_SValpha = gsl_vector_alloc(temp_sv[i]);
@@ -216,8 +233,12 @@ Bool CClassifierStore::Load ( const char* directoryPath )
         {
             gsl_matrix_free ( sv_vectors );
         }
-		gsl_matrix_free ( sv_params );
-		gsl_matrix_free( params_L );
+        if(m_classifier_option==2)
+        {
+            gsl_matrix_free ( sv_params );
+        }
+
+        gsl_matrix_free( params_L );
 		fclose(f);
 
 		// CHECK COMPUTATIONAL TIME
@@ -247,6 +268,7 @@ Bool CClassifierStore::Load ( const char* directoryPath )
 		}
 		 */
         m_isInitialized = true;
+        Log.LogDetail("  ZClassifier: Successfully initialized");
     }else{
         Log.LogError("  ZClassifier: Unable to load the learner params from directory %s", directoryPath);
         m_isInitialized = false;
@@ -302,8 +324,9 @@ Bool CClassifierStore::Load_params ( const char* directoryPath)
 {
 	FILE* f;
     Int32 rows;
-	bfs::path dirPath;
-	gsl_vector* params;
+    bfs::path dirPath;
+    gsl_vector* params_global_info;
+    gsl_vector* params;
 
 
 	// LOAD GLOBAL PARAMS
@@ -318,11 +341,36 @@ Bool CClassifierStore::Load_params ( const char* directoryPath)
             Log.LogError("  ZClassifier: ERROR File does not exist: %s", dirPath.string().c_str());
         }
     }
+    //first read 3 first values
+    rows=3;
+    params_global_info = gsl_vector_alloc(rows);
+    f = fopen( dirPath.c_str(), "r");
+    if ( f==NULL) 	{
+        Log.LogError("  ZClassifier: ERROR in reading %s", dirPath.string().c_str());
+        return false;
+    }
+    gsl_vector_fscanf( f, params_global_info );
+
+    // UPDATE GLOBAL INFO
+    Int32 nbFeat = (Int32)  params_global_info->data[0];
+    Log.LogDetail("  ZClassifier: Nb Features read = %d", nbFeat);
+    SetNbFeatures( nbFeat );
+    Int32 nbClasses = (Int32) params_global_info->data[1];
+    Log.LogDetail("  ZClassifier: Nb Classes read = %d", nbClasses);
+    SetNbClasses( nbClasses );
+    Int32 nbLearners = (Int32) params_global_info->data[2];
+    Log.LogDetail("  ZClassifier: Nb Learners read = %d", nbLearners);
+    SetNbLearners( nbLearners );
+    m_Labels.resize(GetNbClasses());
+    for (Int32 j = 0; j< GetNbClasses(); j++) {
+        m_Labels[j] = "C"+std::to_string(j+1);
+    }
+
     if(m_file_format_version<1.0) //read nums separated by EOL
     {
-        rows = 8+1; //ROWS: nbFeatures; nbClass; nbLearners; size each SVectors ; NAN (to dismiss)
+        rows = nbClasses+3+1; //ROWS: nbFeatures; nbClass; nbLearners; size each SVectors ; NAN (to dismiss)
     }else{
-        rows = 8; //COLS: nbFeatures; nbClass; nbLearners; size each SVectors ;
+        rows = nbClasses+3; //COLS: nbFeatures; nbClass; nbLearners; size each SVectors ;
     }
 	params = gsl_vector_alloc(rows);
     f = fopen( dirPath.c_str(), "r");
@@ -332,28 +380,11 @@ Bool CClassifierStore::Load_params ( const char* directoryPath)
     }
     gsl_vector_fscanf( f, params );
 
-    // UPDATE GLOBAL INFO
-    Int32 nbFeat = (Int32)  params->data[0];
-    Log.LogDetail("  ZClassifier: Nb Features read = %d", nbFeat);
-    SetNbFeatures( nbFeat );
-    Int32 nbClasses = (Int32) params->data[1];
-    Log.LogDetail("  ZClassifier: Nb Classes read = %d", nbClasses);
-    SetNbClasses( nbClasses );
-    Int32 nbLearners = (Int32) params->data[2];
-    Log.LogDetail("  ZClassifier: Nb Learners read = %d", nbLearners);
-    SetNbLearners( nbLearners );
-    m_Labels.resize(GetNbClasses());
-    for (Int32 j = 0; j< GetNbClasses(); j++) {
-        m_Labels[j] = "C"+std::to_string(j+1);
-    }
-
     // STORE TEMP INFO
     temp_sv.resize(GetNbClasses());
     for (Int32 j = 0; j< GetNbClasses(); j++) {
         temp_sv[j] = params->data[3+j];
     }
-
-
 
 	// LOAD LEARNERS_WEIGHT
 	dirPath = directoryPath;
@@ -478,7 +509,12 @@ const std::string CClassifierStore::GetTypeCoding() const
 
 const std::string CClassifierStore::GetTypeClassifier() const
 {
-	return m_typeClassifier;
+    return m_typeClassifier;
+}
+
+const Int32 CClassifierStore::GetOptionClassifier() const
+{
+    return m_classifier_option;
 }
 
 const std::string CClassifierStore::GetLabel( Int32 idLabel ) const
@@ -542,7 +578,7 @@ Void CClassifierStore::SetTypeCoding( std::string typecoding )
 
 Void CClassifierStore::SetTypeClassifier( std::string typeclassifier )
 {
-	m_typeClassifier = typeclassifier;
+    m_typeClassifier = typeclassifier;
 }
 
 Void CClassifierStore::SetLearnerWeight( gsl_vector* w )
