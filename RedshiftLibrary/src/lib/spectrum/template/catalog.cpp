@@ -189,7 +189,7 @@ Bool CTemplateCatalog::Add( const char* templatePath, const std::string& categor
     std::shared_ptr<CTemplate> tmpl = std::shared_ptr<CTemplate>( new CTemplate( name.c_str(), category ) );
 
     CSpectrumIOGenericReader asciiReader;
-    if( !asciiReader.Read( templatePath, *tmpl ) ) {
+    if( !asciiReader.Read( templatePath, tmpl ) ) {
         Log.LogError( "Fail to read template: %s", templatePath );
         return false;
     }

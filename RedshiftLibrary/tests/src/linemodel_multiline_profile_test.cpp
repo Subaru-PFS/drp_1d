@@ -58,9 +58,10 @@ void checkProfileValue(std::string linecatalogPath,
 
     // load spectrum
     CSpectrumIOFitsReader reader;
+
     CSpectrum spectrum;
 
-    Bool retVal = reader.Read( spectrumPath.c_str(), spectrum);
+    Bool retVal = reader.Read( spectrumPath.c_str(), std::shared_ptr<CSpectrum>(&spectrum));
     BOOST_CHECK( retVal == true);
     CNoiseFromFile noise;
     retVal = noise.SetNoiseFilePath( noisePath.c_str() );
@@ -74,7 +75,7 @@ void checkProfileValue(std::string linecatalogPath,
     //CSpectrumFluxAxis fluxAxisWithoutContinuumCalc;
     //Int32 retValCont = continuum.RemoveContinuum( spectrum, fluxAxisWithoutContinuumCalc );
     CSpectrum spectrumContinuum = spectrum;
-    CSpectrumFluxAxis& continuumFluxAxis = spectrumContinuum.GetFluxAxis();
+    CSpectrumFluxAxis& continuumFluxAxis = spectrum.GetFluxAxis();
     for(UInt32 i=0; i<continuumFluxAxis.GetSamplesCount(); i++){
         //continuumFluxAxis[i] -= fluxAxisWithoutContinuumCalc[i];
         continuumFluxAxis[i] = 0.0;
@@ -245,7 +246,7 @@ BOOST_AUTO_TEST_CASE( Linemodel_multiline_profile_sym_value_fullwavelengthrange 
     std::string signalRefFluxPath = DATA_ROOT_DIR "LinemodelProfileTestCase/signal_4lines_sig100_6000A_10000A_a1.0.fits";
     CSpectrumIOFitsReader reader;
     CSpectrum spectrum;
-    Bool retVal = reader.Read( signalRefFluxPath.c_str(), spectrum);
+    Bool retVal = reader.Read( signalRefFluxPath.c_str(), std::shared_ptr<CSpectrum>(&spectrum) );
     BOOST_CHECK( retVal == true);
     std::vector<Float64> refProfileValue(lambda.size());
     CSpectrumFluxAxis& spcFluxAxis = spectrum.GetFluxAxis();

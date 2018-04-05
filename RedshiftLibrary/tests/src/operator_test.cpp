@@ -33,9 +33,11 @@ BOOST_AUTO_TEST_CASE(CorrelationAtZEqualZero)
 
     CSpectrumIOFitsReader reader;
 
-    retVal = reader.Read( DATA_ROOT_DIR "OperatorTestCase/spectrum1_z_1.2299.fits", s );
+    retVal = reader.Read( DATA_ROOT_DIR "OperatorTestCase/spectrum1_z_1.2299.fits",
+			  std::shared_ptr<CSpectrum>(&s) );
     BOOST_CHECK( retVal );
-    retVal = reader.Read( DATA_ROOT_DIR "OperatorTestCase/spectrum1_z_1.2299.fits", t );
+    retVal = reader.Read( DATA_ROOT_DIR "OperatorTestCase/spectrum1_z_1.2299.fits",
+			  std::shared_ptr<CTemplate>(&t) );
     BOOST_CHECK( retVal );
 
     s.ConvertToLogScale();
@@ -78,9 +80,11 @@ BOOST_AUTO_TEST_CASE(CorrelationAtGivenZ)
 
     CSpectrumIOFitsReader reader;
 
-    retVal = reader.Read( DATA_ROOT_DIR "OperatorTestCase/spectrum1_z_1.2299.fits", s );
+    retVal = reader.Read( DATA_ROOT_DIR "OperatorTestCase/spectrum1_z_1.2299.fits",
+			  std::shared_ptr<CSpectrum>(&s) );
     BOOST_CHECK( retVal );
-    retVal = reader.Read( DATA_ROOT_DIR "OperatorTestCase/spectrum1_z_1.2299.fits", t );
+    retVal = reader.Read( DATA_ROOT_DIR "OperatorTestCase/spectrum1_z_1.2299.fits",
+			  std::shared_ptr<CTemplate>(&t) );
     BOOST_CHECK( retVal );
 
     // Shift template back to rest pose
@@ -129,7 +133,7 @@ void UtilCorrelationMatchWithEZ( const char* spectraPath, const char* noisePath,
 
     // Load spectrum and templates
     CSpectrumIOGenericReader reader;
-    retVal = reader.Read( spectraPath, s );
+    retVal = reader.Read( spectraPath, std::shared_ptr<CSpectrum>(&s) );
     BOOST_CHECK( retVal );
 
     if( noisePath )
@@ -141,7 +145,7 @@ void UtilCorrelationMatchWithEZ( const char* spectraPath, const char* noisePath,
 
 
 
-    retVal = reader.Read( tplPath, t );
+    retVal = reader.Read( tplPath, std::shared_ptr<CTemplate>(&t) );
     BOOST_CHECK( retVal );
 
     {
@@ -230,7 +234,7 @@ void UtilChisquareMatchWithEZ( const char* spectraPath, const char* noisePath, c
 
     // Load spectrum and templates
     CSpectrumIOGenericReader reader;
-    retVal = reader.Read( spectraPath, s );
+    retVal = reader.Read( spectraPath, std::shared_ptr<CSpectrum>(&s) );
     BOOST_CHECK( retVal );
 
     if( noisePath )
@@ -240,7 +244,7 @@ void UtilChisquareMatchWithEZ( const char* spectraPath, const char* noisePath, c
         noise.AddNoise( s );
     }
 
-    retVal = reader.Read( tplPath, t );
+    retVal = reader.Read( tplPath, std::shared_ptr<CTemplate>(&t) );
     BOOST_CHECK( retVal );
 
     Float64 redshiftDelta = 0.0001;

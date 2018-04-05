@@ -25,8 +25,8 @@ BOOST_AUTO_TEST_CASE(Compute)
 {
     // load continuum and associated simu ECN spectrum (Emission line + Continuum + Noise)
     CSpectrumIOFitsReader reader;
-    CSpectrum s;
-    CSpectrum s_continuumRef;
+    std::shared_ptr<CSpectrum> s = std::shared_ptr<CSpectrum>( new CSpectrum() );
+    std::shared_ptr<CSpectrum> s_continuumRef = std::shared_ptr<CSpectrum>( new CSpectrum() );
 
     Bool retVal = reader.Read( DATA_ROOT_DIR "ContinuumTestCase/simu_ECN_continuum.fits", s_continuumRef );
     BOOST_CHECK( retVal == true );
@@ -37,13 +37,13 @@ BOOST_AUTO_TEST_CASE(Compute)
     CContinuumIrregularSamplingMedian continuum;
     CSpectrumFluxAxis fluxAxisWithoutContinuumCalc;
 
-    retVal = continuum.RemoveContinuum( s, fluxAxisWithoutContinuumCalc );
+    retVal = continuum.RemoveContinuum( *s, fluxAxisWithoutContinuumCalc );
     BOOST_CHECK( retVal == true );
     // test the extracted continuum to be lower than a threshold all over the lambda range
     Float64 threshold = 0.05;
-    CSpectrumFluxAxis fluxAxis = s.GetFluxAxis();
+    CSpectrumFluxAxis fluxAxis = s->GetFluxAxis();
     fluxAxis.Subtract(fluxAxisWithoutContinuumCalc);
-    Float64 er = fluxAxis.ComputeRMSDiff(s_continuumRef.GetFluxAxis());
+    Float64 er = fluxAxis.ComputeRMSDiff(s_continuumRef->GetFluxAxis());
     BOOST_CHECK(er < threshold);
 }
 
@@ -51,14 +51,14 @@ BOOST_AUTO_TEST_CASE(ContinuumIndexes)
 {
     // load spectrum
     CSpectrumIOFitsReader reader;
-    CSpectrum s;
+    std::shared_ptr<CSpectrum> s = std::shared_ptr<CSpectrum>( new CSpectrum() );
 
     Bool retVal = reader.Read( DATA_ROOT_DIR "ContinuumTestCase/spectrum_tpl_vvds-reddestdataExtensionData.txt_TF.fits", s );
     BOOST_CHECK( retVal == true );
 
     //compute continuum indexes
     CContinuumIndexes continuumIndexes;
-    CContinuumIndexes::TContinuumIndexList indexesList = continuumIndexes.getIndexes( s, 0.0 );
+    CContinuumIndexes::TContinuumIndexList indexesList = continuumIndexes.getIndexes( *s, 0.0 );
 
     // test the extracted indexes
     //Lya index

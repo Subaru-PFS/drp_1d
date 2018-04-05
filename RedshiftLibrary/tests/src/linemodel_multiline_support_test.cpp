@@ -49,7 +49,7 @@ void checkSupport(std::string linecatalogPath,
     CSpectrumIOFitsReader reader;
     CSpectrum spectrum;
 
-    Bool retVal = reader.Read( spectrumPath.c_str(), spectrum);
+    Bool retVal = reader.Read( spectrumPath.c_str(), std::shared_ptr<CSpectrum>(&spectrum));
     BOOST_CHECK_MESSAGE( retVal == true, "check load flux spectrum");
     CNoiseFromFile noise;
     retVal = noise.SetNoiseFilePath( noisePath.c_str() );

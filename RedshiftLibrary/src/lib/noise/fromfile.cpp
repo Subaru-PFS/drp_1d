@@ -21,7 +21,7 @@ Bool CNoiseFromFile::SetNoiseFilePath( const char* filePath )
     m_NoiseSpectrum = std::shared_ptr<CSpectrum>( new CSpectrum() );
     CSpectrumIOGenericReader reader;
 
-    if( reader.Read( filePath, *m_NoiseSpectrum ) )
+    if( reader.Read( filePath, m_NoiseSpectrum ) )
     {
         return true;
     }

@@ -232,7 +232,7 @@ std::shared_ptr<CSpectrum> CMultiRollModel::LoadRollSpectrum(std::string refSpcF
 
     //Read the fits data
     CSpectrumIOGenericReader reader;
-    Bool rValue = reader.Read( newSpcRollPath.c_str(), *spc );
+    Bool rValue = reader.Read( newSpcRollPath.c_str(), spc );
     if( !rValue )
     {
         Log.LogError("    multirollmodel: Failed to read input spectrum file: (%s)", newSpcRollPath.c_str() );

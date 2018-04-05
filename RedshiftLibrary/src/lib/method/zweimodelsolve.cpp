@@ -781,7 +781,7 @@ Bool CZweiModelSolve::Solve( CDataStore& dataStore,
     contSpectrum->SetFullPath(bfs::path( spcContFilePath ).string().c_str() );
 
     CSpectrumIOGenericReader reader;
-    Bool rValue = reader.Read( spcContFilePath.c_str(), *contSpectrum );
+    Bool rValue = reader.Read( spcContFilePath.c_str(), contSpectrum );
     if( !rValue )
     {
         Log.LogError("Zweimodel - contaminant - Failed to read contaminant spectrum file: (%s)", spcContFilePath.c_str() );

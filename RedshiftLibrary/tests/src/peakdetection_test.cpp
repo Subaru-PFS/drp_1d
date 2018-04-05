@@ -20,7 +20,7 @@ BOOST_AUTO_TEST_CASE(Compute)
     CSpectrumIOFitsReader reader;
     CSpectrum s;
 	
-    Bool retVal = reader.Read( DATA_ROOT_DIR "PeakDetectionTestCase/peakdetection_simu.fits", s );
+    Bool retVal = reader.Read( DATA_ROOT_DIR "PeakDetectionTestCase/peakdetection_simu.fits", std::shared_ptr<CSpectrum>(&s) );
 
     BOOST_CHECK( retVal == true);
 

@@ -31,24 +31,22 @@ void checkLeastSquareFast(std::string spectrumPath, std::string noisePath, std::
 {
     // load spectrum
     CSpectrumIOFitsReader reader;
-    CSpectrum spectrum;
-
+    std::shared_ptr<CSpectrum> spectrum = std::shared_ptr<CSpectrum>( new CSpectrum() );
     Bool retVal = reader.Read( spectrumPath.c_str(), spectrum);
     BOOST_CHECK( retVal == true);
     CNoiseFromFile noise;
     retVal = noise.SetNoiseFilePath( noisePath.c_str() );
     BOOST_CHECK( retVal == true);
-    retVal = noise.AddNoise( spectrum ) ;
+    retVal = noise.AddNoise( *spectrum ) ;
     BOOST_CHECK( retVal == true);
 
 
     // get continuum from Median in case of opt_continuumcomponent==fromspectrum
     CContinuumIrregularSamplingMedian continuum;
     CSpectrumFluxAxis fluxAxisWithoutContinuumCalc;
-    Int32 retValContinuumEstimation = continuum.RemoveContinuum( spectrum, fluxAxisWithoutContinuumCalc );
+    Int32 retValContinuumEstimation = continuum.RemoveContinuum( *spectrum, fluxAxisWithoutContinuumCalc );
     BOOST_CHECK( retValContinuumEstimation);
-    CSpectrum spectrumContinuum = spectrum;
-    CSpectrumFluxAxis& continuumFluxAxis = spectrumContinuum.GetFluxAxis();
+    CSpectrumFluxAxis& continuumFluxAxis = spectrum->GetFluxAxis();
     for(UInt32 i=0; i<continuumFluxAxis.GetSamplesCount(); i++){
         if(opt_continuumcomponent == "fromspectrum")
         {
@@ -100,7 +98,7 @@ void checkLeastSquareFast(std::string spectrumPath, std::string noisePath, std::
     CTemplateCatalog orthoTplCatalog = tplOrtho.getOrthogonalTplCatalog();
 
 
-    CLineModelElementList model(spectrum, spectrumContinuum, orthoTplCatalog, tplCategories, opt_calibrationPath, lineList, opt_fittingmethod, opt_continuumcomponent, opt_lineWidthType, opt_resolution, opt_velocityEmission, opt_velocityAbsorption, opt_rules, opt_rigidity);
+    CLineModelElementList model(*spectrum, *spectrum, orthoTplCatalog, tplCategories, opt_calibrationPath, lineList, opt_fittingmethod, opt_continuumcomponent, opt_lineWidthType, opt_resolution, opt_velocityEmission, opt_velocityAbsorption, opt_rules, opt_rigidity);
 
     bool tplratioInitRet = model.initTplratioCatalogs();
     BOOST_CHECK_MESSAGE( tplratioInitRet, "Unable to intialize tpl-ratio catalog");

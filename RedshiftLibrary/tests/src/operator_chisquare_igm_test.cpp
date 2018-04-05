@@ -30,7 +30,7 @@ void UtilChisquareTestFit( const char* spectraPath, const char* noisePath, const
 
     // Load spectrum and templates
     CSpectrumIOGenericReader reader;
-    retVal = reader.Read( spectraPath, s );
+    retVal = reader.Read( spectraPath, std::shared_ptr<CSpectrum>(&s) );
     BOOST_CHECK( retVal );
 
     if( noisePath )
@@ -40,7 +40,7 @@ void UtilChisquareTestFit( const char* spectraPath, const char* noisePath, const
         noise.AddNoise( s );
     }
 
-    retVal = reader.Read( tplPath, t );
+    retVal = reader.Read( tplPath, std::shared_ptr<CTemplate>(&t) );
     BOOST_CHECK( retVal );
 
     Float64 redshiftDelta = 0.0001;
