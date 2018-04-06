@@ -47,14 +47,14 @@ void checkSupport(std::string linecatalogPath,
 
     // load spectrum
     CSpectrumIOFitsReader reader;
-    CSpectrum spectrum;
+    std::shared_ptr<CSpectrum> spectrum = std::shared_ptr<CSpectrum>( new CSpectrum() );
 
-    Bool retVal = reader.Read( spectrumPath.c_str(), std::shared_ptr<CSpectrum>(&spectrum));
+    Bool retVal = reader.Read( spectrumPath.c_str(), spectrum);
     BOOST_CHECK_MESSAGE( retVal == true, "check load flux spectrum");
     CNoiseFromFile noise;
     retVal = noise.SetNoiseFilePath( noisePath.c_str() );
     BOOST_CHECK_MESSAGE( retVal == true, "check load noise spectrum");
-    retVal = noise.AddNoise( spectrum ) ;
+    retVal = noise.AddNoise( *spectrum ) ;
     BOOST_CHECK_MESSAGE( retVal == true, "check add noise spectrum");
 
 
@@ -62,7 +62,7 @@ void checkSupport(std::string linecatalogPath,
     //CContinuumIrregularSamplingMedian continuum;
     //CSpectrumFluxAxis fluxAxisWithoutContinuumCalc;
     //Int32 retValCont = continuum.RemoveContinuum( spectrum, fluxAxisWithoutContinuumCalc );
-    CSpectrum spectrumContinuum = spectrum;
+    CSpectrum spectrumContinuum = *spectrum;
     CSpectrumFluxAxis& continuumFluxAxis = spectrumContinuum.GetFluxAxis();
     for(UInt32 i=0; i<continuumFluxAxis.GetSamplesCount(); i++){
         //continuumFluxAxis[i] -= fluxAxisWithoutContinuumCalc[i];
@@ -94,7 +94,7 @@ void checkSupport(std::string linecatalogPath,
     Bool retValue = tplCatalog.Load( DATA_ROOT_DIR "templatecatalog/" );
     TStringList tplCategories;
 
-    CLineModelElementList model(spectrum, spectrumContinuum, tplCatalog, tplCategories, unused_calibrationPath, lineList, opt_fittingmethod, opt_continuumcomponent, opt_lineWidthType, opt_resolution, opt_velocityEmission, opt_velocityAbsorption, opt_rules, opt_rigidity);
+    CLineModelElementList model(*spectrum, spectrumContinuum, tplCatalog, tplCategories, unused_calibrationPath, lineList, opt_fittingmethod, opt_continuumcomponent, opt_lineWidthType, opt_resolution, opt_velocityEmission, opt_velocityAbsorption, opt_rules, opt_rigidity);
 
 
     //initialize the model spectrum

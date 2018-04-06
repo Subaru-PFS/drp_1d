@@ -18,15 +18,16 @@ BOOST_AUTO_TEST_CASE(Compute)
 
     // load simu spectrum (emission lines + Noise)
     CSpectrumIOFitsReader reader;
-    CSpectrum s;
-	
-    Bool retVal = reader.Read( DATA_ROOT_DIR "PeakDetectionTestCase/peakdetection_simu.fits", std::shared_ptr<CSpectrum>(&s) );
+    std::shared_ptr<CSpectrum> spectrum = std::shared_ptr<CSpectrum>( new CSpectrum() );
+
+    Bool retVal = reader.Read( DATA_ROOT_DIR "PeakDetectionTestCase/peakdetection_simu.fits",
+			       spectrum);
 
     BOOST_CHECK( retVal == true);
 
-    TLambdaRange lambdaRange = s.GetLambdaRange();
+    TLambdaRange lambdaRange = spectrum->GetLambdaRange();
     CPeakDetection detection(500.0, 15, 1, 0);
-    auto peakDetectionResult = detection.Compute( s, lambdaRange); //using winsize=500 and cut=15 so that 3 only peaks are detected in the test signal for sure
+    auto peakDetectionResult = detection.Compute( *spectrum, lambdaRange); //using winsize=500 and cut=15 so that 3 only peaks are detected in the test signal for sure
     BOOST_CHECK( retVal == true );
     const TInt32RangeList& resPeaks = peakDetectionResult->PeakList;
 
@@ -45,7 +46,7 @@ BOOST_AUTO_TEST_CASE(Compute)
         Float64 infRef = peakxpos[i]-fwhm/2.0*1.5;
         infRef = max((Float64)infRef, 0.0);
         Float64 supRef = peakxpos[i]+fwhm/2.0*1.5;
-        supRef = min((Float64)supRef, (Float64)s.GetFluxAxis().GetSamplesCount());
+        supRef = min((Float64)supRef, (Float64)spectrum->GetFluxAxis().GetSamplesCount());
 
         Float64 infCalc = resPeaks[i].GetBegin();
         Float64 supCalc = resPeaks[i].GetEnd();
