@@ -111,7 +111,17 @@ Bool CProcessFlow::Process( CProcessFlowContext& ctx )
     ctx.GetParameterStore().Get( "calibrationDir", calibrationDirPath );
 
 
+
+    std::string methodName;
+    ctx.GetParameterStore().Get( "method", methodName );
+    boost::algorithm::to_lower(methodName);
+
+
     Bool enableInputSpcCheck = true;
+    if(methodName  == "reliability" )
+    {
+        enableInputSpcCheck = false;
+    }
     if(enableInputSpcCheck)
     {
         //Check if the Spectrum is valid on the lambdarange
@@ -127,11 +137,6 @@ Bool CProcessFlow::Process( CProcessFlowContext& ctx )
         }
     }
 
-
-
-    std::string methodName;
-    ctx.GetParameterStore().Get( "method", methodName );
-    boost::algorithm::to_lower(methodName);
 
     std::shared_ptr<COperatorResult> mResult;
 

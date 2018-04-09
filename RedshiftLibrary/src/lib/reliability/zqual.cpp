@@ -220,12 +220,17 @@ Bool CQualz::ExtractFeaturesPDF( CDataStore& resultStore, const TFloat64Range& r
 			 * 		                     = m_4 / sigma2^2
 			 *
 			 * ********************************************************************** */
-			Float64 m3, zcenter, zmoment1, zmoment2, zmoment3, zmoment4;
+            Float64 m3, zcenter, zmoment1, zmoment2, zmoment3, zmoment4;
+            m3 = 0;
+            zmoment1 = 0;
 			for ( Int32 i=0; i<nb_pz; i++) {
 				zmoment1 += zpdf1d[i] * logzpdf1d->Redshifts[i]; // = E[z]
 				m3 += zpdf1d[i] * logzpdf1d->Redshifts[i]* logzpdf1d->Redshifts[i]* logzpdf1d->Redshifts[i]; // = E[z^3]
 			}
 
+            zmoment2 = 0;
+            zmoment3 = 0;
+            zmoment4 = 0;
 			for ( Int32 i=0; i<nb_pz; i++) {
 				zcenter =  (logzpdf1d->Redshifts[i] - zmoment1);
 				zmoment2 += zpdf1d[i] * zcenter * zcenter; // = E [ (z - E[z] ) ^2 ]
@@ -236,7 +241,7 @@ Bool CQualz::ExtractFeaturesPDF( CDataStore& resultStore, const TFloat64Range& r
 			Float64 sigma =sqrt(zmoment2),  sigma2 = zmoment2,  sigma3 = sigma2*sigma, sigma4 = sigma2*sigma2;
 
 			zmean = zmoment1;
-			zdispersion = sqrt(zmoment2);
+            zdispersion = sqrt(zmoment2);
 			zskewness = (m3-3*mu*sigma2-mu3)/sigma3;
 			zskewness2 = zmoment3/ sigma3;
 			zkurtosis = zmoment4/sigma4;
@@ -280,10 +285,42 @@ Bool CQualz::ExtractFeaturesPDF( CDataStore& resultStore, const TFloat64Range& r
 				r2_cumpz +=zpdf1d[i];
 			}
 
+
+            if(0)
+            {
+                if(0)
+                {
+                    zdispersion=0.000632706;
+                    cr_cumpz=0.95296;
+                    cr_dz=0.0015;
+                    cr_nbz=16.0000e+00  ;
+                    r2_cumpz=0.992187;
+                }
+                std::setprecision(20);
+                std::cout
+                << "------------------------------------------------------------------"
+
+                << "CHECK VERSUS MATLAB FEATURES"
+                << " \t \n"
+                << " \t [STAT] dispersion = " << zdispersion << "\n"
+                << " \t [MAP] pzmap = " << pzmap << "\n"
+
+                << " \t [CR 95%] nz = " << cr_nbz << "\n"
+                << " \t [CR 95%] dz = " << cr_dz << "\n"
+                << " \t [CR 95%] pz = " << cr_cumpz <<"\n"
+                << " \t -1\n"
+                << " \t [R2 1E-3] pz = " << r2_cumpz <<"\n"
+                << " \t [KM] dist_pz = " << dist_peaks.Y <<"\n"
+                << " \t [KM] #modes = " << significant_peaks <<"\n"
+                << "------------------------------------------------------------------" << "\n"
+                << "   zmoment2 = " << zmoment2 <<"\n"
+                <<"\n";
+            }
+
 			/* **********************************************************************
 			 * 		QUICK DISPLAY ON CONSOLE
 			 * ********************************************************************** */
-			if ( 0 )
+            if ( 0 )
 			{
 				std::setprecision(20);
 				std::cout

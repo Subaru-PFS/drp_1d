@@ -71,7 +71,7 @@ Bool CClassifierStore::Load ( const char* directoryPath )
 
 
     Log.LogDetail("  ZClassifier: Loading with classifier option: %d", m_classifier_option);
-    Log.LogDetail("  ZClassifier: Loading from classifier directory: %s", directoryPath);
+    Log.LogInfo("  ZClassifier: Loading from zclassifier directory: %s", directoryPath);
 
     m_file_format_version = Load_version( directoryPath );
     Log.LogDetail("  ZClassifier: Found file format version = %.3f", m_file_format_version);
