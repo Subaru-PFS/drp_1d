@@ -185,7 +185,7 @@ Bool CQualz::ExtractFeaturesPDF( CDataStore& resultStore, const TFloat64Range& r
 			SPoint map_estimate; map_estimate.X = zmap;  map_estimate.Y = pzmap;
 
 			for ( Int32 i=1; i<nb_pz; i++) {
-				if ( zpdf1d[i]>= pzmap) {
+                if ( zpdf1d[i]>= pzmap) {
 					indice_map =  i;
 					pzmap = zpdf1d[indice_map];
 					zmap =  logzpdf1d->Redshifts[indice_map];
@@ -257,22 +257,43 @@ Bool CQualz::ExtractFeaturesPDF( CDataStore& resultStore, const TFloat64Range& r
 
 			Bool cond_stop = false;
 			Int32 crit_stop = round ( (nb_pz * 0.5) * 0.5 );
-			while ( cr_cumpz<=0.95 && indice_right<= (crit_stop+indice_map) && !cond_stop ) {
-				indice_right ++;
-				if (indice_right< nb_pz-1) {
-					cr_nbz ++;
-					cr_cumpz += zpdf1d[indice_right];
-					cr_zright = logzpdf1d->Redshifts[indice_right];
-					if ( cr_cumpz<=0.95) {
-						indice_left --;
-						if ( indice_left>=max(0,indice_map-crit_stop) ) {
-							cr_nbz ++;
-							cr_cumpz += zpdf1d[indice_left];
-							cr_zleft = logzpdf1d->Redshifts[indice_left];
-						}
-					}
-				}
-			}
+            Bool rightFirst = true; //rightFirst=false is closer to Matlab's behaviour
+            if(rightFirst)
+            {
+                while ( cr_cumpz<=0.95 && indice_right<= (crit_stop+indice_map) && !cond_stop ) {
+                    indice_right ++;
+                    if (indice_right< nb_pz-1) {
+                        cr_nbz ++;
+                        cr_cumpz += zpdf1d[indice_right];
+                        cr_zright = logzpdf1d->Redshifts[indice_right];
+                        if ( cr_cumpz<=0.95) {
+                            indice_left --;
+                            if ( indice_left>=max(0,indice_map-crit_stop) ) {
+                                cr_nbz ++;
+                                cr_cumpz += zpdf1d[indice_left];
+                                cr_zleft = logzpdf1d->Redshifts[indice_left];
+                            }
+                        }
+                    }
+                }
+            }else{
+                while ( cr_cumpz<=0.95 && indice_left>=0 && !cond_stop ) {
+                    indice_left --;
+                    if ( indice_left>=max(0,indice_map-crit_stop) ) {
+                        cr_nbz ++;
+                        cr_cumpz += zpdf1d[indice_left];
+                        cr_zleft = logzpdf1d->Redshifts[indice_left];
+                        if ( cr_cumpz<=0.95) {
+                            indice_right ++;
+                            if (indice_right< nb_pz-1) {
+                                cr_nbz ++;
+                                cr_cumpz += zpdf1d[indice_right];
+                                cr_zright = logzpdf1d->Redshifts[indice_right];
+                            }
+                        }
+                    }
+                }
+            }
 			cr_dz = cr_zright - cr_zleft +1* redshiftStep;
 
 			/* **********************************************************************
@@ -296,6 +317,13 @@ Bool CQualz::ExtractFeaturesPDF( CDataStore& resultStore, const TFloat64Range& r
                     cr_nbz=16.0000e+00  ;
                     r2_cumpz=0.992187;
                 }
+                if(0)
+                {
+                    cr_cumpz=0.959401987918265;
+                    cr_dz=0.000699999999999923;
+                    cr_nbz=8.0000e+00  ;
+
+                }
                 std::setprecision(20);
                 std::cout
                 << "------------------------------------------------------------------"
@@ -313,6 +341,9 @@ Bool CQualz::ExtractFeaturesPDF( CDataStore& resultStore, const TFloat64Range& r
                 << " \t [KM] dist_pz = " << dist_peaks.Y <<"\n"
                 << " \t [KM] #modes = " << significant_peaks <<"\n"
                 << "------------------------------------------------------------------" << "\n"
+                << "   zmap = " << zmap <<"\n"
+                << "   cr_zleft = " << cr_zleft <<"\n"
+                << "   cr_zright = " << cr_zright <<"\n"
                 << "   zmoment2 = " << zmoment2 <<"\n"
                 <<"\n";
             }
