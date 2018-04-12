@@ -777,6 +777,11 @@ void CMultiLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const C
 
     if ( num==0 || m_sumGauss==0 )
       {
+        Log.LogDebug("    multiline:     num=%d, mtm=%f", num, m_sumGauss);
+        for(Int32 k2=0; k2<nRays; k2++)
+        {
+            Log.LogDebug("    multiline:     subE=%d, nominal_amp=%f", k2, m_NominalAmplitudes[k2]);
+        }
         return;
       }
 

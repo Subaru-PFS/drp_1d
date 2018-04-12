@@ -294,14 +294,16 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
     }
     //*/
 
-
-    //init catalog tplratios
-    Log.LogInfo( "  Operator-Linemodel: Tpl-ratios init");
-    bool tplratioInitRet = model.initTplratioCatalogs();
-    if(!tplratioInitRet)
+    if(opt_rigidity=="tplshape")
     {
-        Log.LogError( "  Operator-Linemodel: Failed to init tpl-ratios. aborting...");
-        return result;
+        //init catalog tplratios
+        Log.LogInfo( "  Operator-Linemodel: Tpl-ratios init");
+        bool tplratioInitRet = model.initTplratioCatalogs();
+        if(!tplratioInitRet)
+        {
+            Log.LogError( "  Operator-Linemodel: Failed to init tpl-ratios. aborting...");
+            return result;
+        }
     }
 
     //init catalog offsets

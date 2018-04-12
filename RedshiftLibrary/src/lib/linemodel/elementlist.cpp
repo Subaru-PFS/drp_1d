@@ -191,13 +191,13 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
     {
         //load the regular catalog
         LoadCatalog(restRayList);
-        //LogCatalogInfos();
     }else{
         //load the tplshape catalog with only 1 element for all lines
         //LoadCatalogOneMultiline(restRayList);
         //load the tplshape catalog with 2 elements: 1 for the Em lines + 1 for the Abs lines
         LoadCatalogTwoMultilinesAE(restRayList);
     }
+    LogCatalogInfos();
 }
 
 /**
@@ -253,7 +253,7 @@ Bool CLineModelElementList::initTplratioCatalogs()
     //m_CatalogTplShape->SetMultilineNominalAmplitudes( *this, 0 );
     //m_RestRayList = m_CatalogTplShape->GetRestLinesList(0);
     //LoadCatalog(m_RestRayList);
-    LogCatalogInfos();
+    //LogCatalogInfos();
 
     //Resize tplshape buffers
     m_ChisquareTplshape.resize(m_CatalogTplShape->GetCatalogsCount());
@@ -731,7 +731,7 @@ void CLineModelElementList::LogCatalogInfos()
         }
         for(UInt32 j=0; j<nRays; j++){
             std::string nominalAmpStr = "";
-            if(nRays>1){
+            if(nRays>0){
                 nominalAmpStr = boost::str(boost::format("(nominal amp = %.4e)") % m_Elements[iElts]->GetNominalAmplitude(j));
             }
             Log.LogDetail( "LineModel ctlg: elt %d (%s): line %d = %s %s", iElts, m_Elements[iElts]->GetElementTypeTag().c_str(), j, m_Elements[iElts]->GetRayName(j).c_str(), nominalAmpStr.c_str());
@@ -1253,11 +1253,20 @@ std::string CLineModelElementList::getTplshape_bestTplName()
 
 Int32 CLineModelElementList::getTplshape_count()
 {
+    if(m_rigidity!="tplshape")
+    {
+        return 0;
+    }
     return m_CatalogTplShape->GetCatalogsCount();
 }
 
 std::vector<Float64> CLineModelElementList::getTplshape_priors()
 {
+    if(m_rigidity!="tplshape")
+    {
+        std::vector<Float64> dumb;
+        return dumb;
+    }
     return m_CatalogTplShape->getCatalogsPriors();
 }
 
@@ -1514,6 +1523,18 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
             for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
             {
                 m_Elements[iElts]->fitAmplitude(spectralAxis, m_spcFluxAxisNoContinuum, m_ContinuumFluxAxis, redshift);
+                //optionnally log some fitting details
+                Log.LogDebug("    model: elt #%d individual fit", iElts);
+                Float64 dbg_amp = m_Elements[iElts]->GetElementAmplitude();
+                Log.LogDebug("    model:     fitted elt amp = %f", dbg_amp);
+                Int32 nSubE = m_Elements[iElts]->GetSize();
+                for(Int32 iSubElts=0; iSubElts<nSubE; iSubElts++)
+                {
+                    Log.LogDebug("    model:     sub #%d - fitted amp = %f", iSubElts, m_Elements[iElts]->GetFittedAmplitude(iSubElts));
+                    Log.LogDebug("    model:     sub #%d - outside range = %d", iSubElts, m_Elements[iElts]->IsOutsideLambdaRange(iSubElts));
+                }
+                Log.LogDebug("    model:     dtm = %f", m_Elements[iElts]->GetSumCross());
+                Log.LogDebug("    model:     dtd = %f", m_Elements[iElts]->GetSumGauss());
             }
         }
 
@@ -2352,20 +2373,22 @@ Int32 CLineModelElementList::fitAmplitudesHybrid(const CSpectrumSpectralAxis& sp
       }
 
 
-      /*
-      Log.LogDebug( "Redshift: %f", m_Redshift);
-      Log.LogDebug( "hybrid fit: idx=%d - overlappingIdx=%d", iValidElts, overlappingInds.size());
+
+      //Log.LogDebug( "Redshift: %f", m_Redshift);
+      Log.LogDebug( "    model: hybrid fit: #%d - N overlapping=%d", iValidElts, overlappingInds.size());
       for(Int32 ifit=0; ifit<overlappingInds.size(); ifit++)
       {
-          Log.LogDebug( "hybrid fit: i=%d - Id=%d", ifit, overlappingInds[ifit]);
+          Log.LogDebug( "    model: hybrid fit:     overlapping #%d - eltIdx=%d", ifit, overlappingInds[ifit]);
       }
-      //*/
+
       if(!m_enableAmplitudeOffsets && overlappingInds.size()<2)
       {
+          Log.LogDebug( "    model: hybrid fit:     Individual fit");
           m_Elements[iElts]->fitAmplitudeAndLambdaOffset(spectralAxis, spcFluxAxisNoContinuum, continuumfluxAxis, redshift, -1, m_enableLambdaOffsetsFit, m_LambdaOffsetStep, m_LambdaOffsetMin, m_LambdaOffsetMax);
       }
       else
       {
+          Log.LogDebug( "    model: hybrid fit:     SVD fit");
           //fit individually: mainly for mtm and dtm estimation
           for(Int32 ifit=0; ifit<overlappingInds.size(); ifit++)
           {

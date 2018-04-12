@@ -243,6 +243,8 @@ std::shared_ptr<CLineModelSolveResult> CLineModelSolve::Compute( CDataStore& dat
                 dataStore.StoreScopedGlobalResult( resname.c_str(), result_chisquaretplshape );
             }
         }
+    }else{
+        return NULL;
     }
 
     return std::shared_ptr<CLineModelSolveResult>( new CLineModelSolveResult() );
