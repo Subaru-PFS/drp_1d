@@ -22,31 +22,32 @@ BOOST_AUTO_TEST_SUITE(Operator_Chisquare)
 void UtilChisquareTestFit( const char* spectraPath, const char* noisePath, const char* tplPath, bool disableMask, const Float64 targetFittedAmplitude )
 {
     Bool retVal;
-    CSpectrum s;
-    CTemplate t;
+    std::shared_ptr<CSpectrum> spectrum = std::shared_ptr<CSpectrum>( new CSpectrum() );
+    std::shared_ptr<CTemplate> _template = std::shared_ptr<CTemplate>( new CTemplate() );
 
     Float64 z = 0.0;
 
     // Load spectrum and templates
-    CSpectrumIOGenericReader reader;
-    retVal = reader.Read( spectraPath, s );
+    std::shared_ptr<CSpectrumIOGenericReader> reader = std::shared_ptr<CSpectrumIOGenericReader>( new CSpectrumIOGenericReader() );
+
+    retVal = reader->Read( spectraPath, spectrum );
     BOOST_CHECK( retVal );
 
     if( noisePath )
     {
         CNoiseFromFile noise;
-        noise.SetNoiseFilePath( noisePath );
-        noise.AddNoise( s );
+        noise.SetNoiseFilePath( noisePath, reader );
+        noise.AddNoise( *spectrum );
     }
 
-    retVal = reader.Read( tplPath, t );
+    retVal = reader->Read( tplPath, _template );
     BOOST_CHECK( retVal );
 
     Float64 redshiftDelta = 0.0001;
     TFloat64List redshifts = TFloat64Range( 0.0, 0.0 ).SpreadOver( redshiftDelta );
 
     //building the mask
-    Int32 sampleCount = s.GetFluxAxis().GetSamplesCount();
+    Int32 sampleCount = spectrum->GetFluxAxis().GetSamplesCount();
     std::vector<CMask> additional_spcMasks;
     CMask spcMask = Mask();
     spcMask.SetSize(sampleCount);
@@ -54,14 +55,14 @@ void UtilChisquareTestFit( const char* spectraPath, const char* noisePath, const
     //TBD: Warning, here the mask is created by thresholding with the mean. The mask should be loaded from an external CSV file
     Float64 mean = -1.0;
     Float64 std = -1.0;
-    s.GetMeanAndStdFluxInRange(TFloat64Range( 920, 9000 ), mean, std);
+    spectrum->GetMeanAndStdFluxInRange(TFloat64Range( 920, 9000 ), mean, std);
     Float64 thres = mean*0.5;
 
     for(Int32 km=0; km<spcMask.GetMasksCount(); km++)
     {
         if(!disableMask)
         {
-            if(s.GetFluxAxis()[km]>thres)
+            if(spectrum->GetFluxAxis()[km]>thres)
             {
                 spcMask[km]=0.0;
             }else
@@ -77,7 +78,7 @@ void UtilChisquareTestFit( const char* spectraPath, const char* noisePath, const
     std::string calibrationPath = DATA_ROOT_DIR "Operator_ChisquareTestCase/calibration";
 
     COperatorChiSquare2 chi(calibrationPath);
-    auto r = std::dynamic_pointer_cast<CChisquareResult>( chi.Compute( s, t, TFloat64Range( 920, 9000 ), redshifts, 1.0, additional_spcMasks, "precomputedfinegrid", 0 ) );
+    auto r = std::dynamic_pointer_cast<CChisquareResult>( chi.Compute( *spectrum, *_template, TFloat64Range( 920, 9000 ), redshifts, 1.0, additional_spcMasks, "precomputedfinegrid", 0 ) );
     BOOST_CHECK( r != NULL );
 
     Float64 fit_amplitude = r->FitAmplitude[0];

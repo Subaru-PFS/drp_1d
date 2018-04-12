@@ -3,6 +3,16 @@ import os.path
 from redshift import *
 from argumentparser import parser
 
+class TestReader(CSpectrumIOGenericReader):
+
+    def Read(self, path, spectrum):
+        print('there')
+        print('reading {} into {}'.format(path,spectrum))
+        res = super().Read(path, spectrum)
+        print('here')
+        return res
+
+
 def amazed():
 
     args = parser.parse_args()
@@ -48,11 +58,17 @@ def amazed():
     print("Loading %s" % args.linecatalog)
     line_catalog.Load(args.linecatalog)
 
+    reader = TestReader()
+
+    print(spectrumList)
+
     for line in spectrumList:
-        spectrum, noise, proc_id = line.split(' ')
+        spectrum, noise, proc_id = line.split()
         ctx=CProcessFlowContext()
         ctx.Init(os.path.join(args.spectrum_dir, spectrum),
                  os.path.join(args.spectrum_dir, noise),
+                 reader,
+                 reader,
                  proc_id,
                  template_catalog,
                  line_catalog,

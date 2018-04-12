@@ -1,5 +1,6 @@
 #include <RedshiftLibrary/common/datatypes.h>
 #include <RedshiftLibrary/spectrum/spectrum.h>
+#include <RedshiftLibrary/spectrum/io/genericreader.h>
 #include <RedshiftLibrary/method/blindsolveresult.h>
 #include <RedshiftLibrary/processflow/processflow.h>
 #include <RedshiftLibrary/processflow/parameterstore.h>
@@ -35,7 +36,9 @@ Float64 getLinemodelDoubletRatio(std::string spc, std::string noise, bool enable
 
     std::string procID = "processing_id_unused";
     std::shared_ptr<CClassifierStore> classifStore = std::shared_ptr<CClassifierStore>( new CClassifierStore() );
-    Bool retVal = ctx.Init( spc.c_str(), noise.c_str(), procID, NULL, DATA_ROOT_DIR "LinemodelRulesTestCase/raycatalog_test_elratiorules.txt", params, classifStore );
+    std::shared_ptr<CSpectrumIOGenericReader> reader = std::shared_ptr<CSpectrumIOGenericReader>( new CSpectrumIOGenericReader() );
+
+    Bool retVal = ctx.Init( spc.c_str(), noise.c_str(), reader, reader, procID, NULL, DATA_ROOT_DIR "LinemodelRulesTestCase/raycatalog_test_elratiorules.txt", params, classifStore );
     BOOST_CHECK( retVal == true );
 
     //these tplcatalog related variables are unused here.
@@ -136,7 +139,9 @@ std::vector<Float64> getLinemodelFittedAmplitudes(std::string spc, std::string n
 
     std::string procID = "processing_id_unused";
     std::shared_ptr<CClassifierStore> classifStore = std::shared_ptr<CClassifierStore>( new CClassifierStore() );
-    Bool retVal = ctx.Init( spc.c_str(), noise.c_str(), procID, NULL, ctlgPath.c_str(), params, classifStore );
+    std::shared_ptr<CSpectrumIOGenericReader> reader = std::shared_ptr<CSpectrumIOGenericReader>( new CSpectrumIOGenericReader() );
+
+    Bool retVal = ctx.Init( spc.c_str(), noise.c_str(), reader, reader, procID, NULL, ctlgPath.c_str(), params, classifStore );
     BOOST_CHECK( retVal == true );
 
 

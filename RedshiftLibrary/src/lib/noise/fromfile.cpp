@@ -2,7 +2,7 @@
 
 #include <RedshiftLibrary/spectrum/axis.h>
 #include <RedshiftLibrary/spectrum/spectrum.h>
-#include <RedshiftLibrary/spectrum/io/genericreader.h>
+#include <RedshiftLibrary/spectrum/io/reader.h>
 
 using namespace NSEpic;
 using namespace std;
@@ -16,12 +16,12 @@ CNoiseFromFile::~CNoiseFromFile()
 {
 }
 
-Bool CNoiseFromFile::SetNoiseFilePath( const char* filePath )
+Bool CNoiseFromFile::SetNoiseFilePath( const char* filePath,
+				       std::shared_ptr<CSpectrumIOReader> noise_reader )
 {
     m_NoiseSpectrum = std::shared_ptr<CSpectrum>( new CSpectrum() );
-    CSpectrumIOGenericReader reader;
 
-    if( reader.Read( filePath, *m_NoiseSpectrum ) )
+    if( noise_reader->Read( filePath, m_NoiseSpectrum ) )
     {
         return true;
     }

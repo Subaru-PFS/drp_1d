@@ -14,10 +14,10 @@ class CSpectrumIOGenericReader : public CSpectrumIOReader
 public:
 
     CSpectrumIOGenericReader();
-    ~CSpectrumIOGenericReader();
+    virtual ~CSpectrumIOGenericReader();
 
     static Bool CanRead( const char* filePath );
-    Bool Read( const char* filePath, CSpectrum& s );
+    virtual Bool Read( const char* filePath, std::shared_ptr<CSpectrum> spectrum );
 
 private:
 

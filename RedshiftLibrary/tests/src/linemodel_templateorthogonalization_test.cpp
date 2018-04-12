@@ -35,20 +35,20 @@ Float64 processOrtho(std::string spectrumPath, std::string noisePath, std::strin
                      bool enableOrtho)
 {
     // load spectrum
-    CSpectrumIOFitsReader reader;
-    CSpectrum spectrum;
+    std::shared_ptr<CSpectrumIOFitsReader> reader = std::shared_ptr<CSpectrumIOFitsReader>( new CSpectrumIOFitsReader() );
+    std::shared_ptr<CSpectrum> spectrum = std::shared_ptr<CSpectrum>( new CSpectrum() );
 
-    Bool retVal = reader.Read( spectrumPath.c_str(), spectrum);
+    Bool retVal = reader->Read( spectrumPath.c_str(), spectrum);
     BOOST_CHECK( retVal == true);
     CNoiseFromFile noise;
-    retVal = noise.SetNoiseFilePath( noisePath.c_str() );
+    retVal = noise.SetNoiseFilePath( noisePath.c_str(), reader );
     BOOST_CHECK( retVal == true);
-    retVal = noise.AddNoise( spectrum ) ;
+    retVal = noise.AddNoise( *spectrum ) ;
     BOOST_CHECK( retVal == true);
 
 
     // get continuum from Median in case of opt_continuumcomponent==fromspectrum
-    CSpectrum spectrumContinuum = spectrum;
+    CSpectrum spectrumContinuum = *spectrum;
     CSpectrumFluxAxis& continuumFluxAxis = spectrumContinuum.GetFluxAxis();
     for(UInt32 i=0; i<continuumFluxAxis.GetSamplesCount(); i++){
         continuumFluxAxis[i] = 0.0; //put zero as continuum in case of "tplfit" continuum for linemodel
@@ -103,7 +103,7 @@ Float64 processOrtho(std::string spectrumPath, std::string noisePath, std::strin
     }
 
 
-    CLineModelElementList model(spectrum,
+    CLineModelElementList model(*spectrum,
                                 spectrumContinuum,
                                 finalTplCatalog,
                                 tplCategories,

@@ -19,7 +19,7 @@ public:
     CSpectrumIOAsciiReader();
     ~CSpectrumIOAsciiReader();
 
-    Bool Read( const char* filePath, CSpectrum& s );
+    virtual Bool Read( const char* filePath, std::shared_ptr<CSpectrum> s );
 
 private:
 

@@ -18,7 +18,7 @@ public:
     CSpectrumIOReader();
     virtual ~CSpectrumIOReader();
 
-    virtual Bool Read( const char* fluxPath, CSpectrum& s ) = 0;
+    virtual Bool Read( const char* fluxPath, std::shared_ptr<CSpectrum> s ) = 0;
 
 private:
 

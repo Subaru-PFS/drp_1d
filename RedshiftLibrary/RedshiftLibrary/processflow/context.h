@@ -3,6 +3,7 @@
 
 #include <RedshiftLibrary/spectrum/template/template.h>
 #include <RedshiftLibrary/processflow/datastore.h>
+#include <RedshiftLibrary/spectrum/io/reader.h>
 
 #include <RedshiftLibrary/reliability/zclassifierstore.h>
 
@@ -36,16 +37,22 @@ public:
     CProcessFlowContext();
     ~CProcessFlowContext();
 
-    bool Init(const char* spectrumPath, const char* noisePath, std::string processingID,
-               const char* tempalteCatalogPath, const char* rayCatalogPath,
-               std::shared_ptr<CParameterStore> paramStore,
-	       std::shared_ptr<CClassifierStore> zqualStore  );
+    bool Init(const char* spectrumPath, const char* noisePath,
+	      std::shared_ptr<CSpectrumIOReader> spectrum_reader,
+	      std::shared_ptr<CSpectrumIOReader> noise_reader,
+	      std::string processingID,
+	      const char* tempalteCatalogPath, const char* rayCatalogPath,
+	      std::shared_ptr<CParameterStore> paramStore,
+	      std::shared_ptr<CClassifierStore> zqualStore);
 
-    bool Init(const char* spectrumPath, const char* noisePath, std::string processingID,
-               std::shared_ptr<const CTemplateCatalog> templateCatalog,
-               std::shared_ptr<const CRayCatalog> rayCatalog,
-               std::shared_ptr<CParameterStore> paramStore,
-	       std::shared_ptr<CClassifierStore> zqualStore  );
+    bool Init(const char* spectrumPath, const char* noisePath,
+	      std::shared_ptr<CSpectrumIOReader> spectrum_reader,
+	      std::shared_ptr<CSpectrumIOReader> noise_reader,
+	      std::string processingID,
+	      std::shared_ptr<const CTemplateCatalog> templateCatalog,
+	      std::shared_ptr<const CRayCatalog> rayCatalog,
+	      std::shared_ptr<CParameterStore> paramStore,
+	      std::shared_ptr<CClassifierStore> zqualStore);
 
     const CSpectrum&                GetSpectrum() const;
     const CSpectrum&                GetSpectrumWithoutContinuum() const;

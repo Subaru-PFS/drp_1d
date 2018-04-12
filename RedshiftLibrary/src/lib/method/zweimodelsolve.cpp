@@ -780,8 +780,9 @@ Bool CZweiModelSolve::Solve( CDataStore& dataStore,
     contSpectrum->SetName(spcName.c_str());
     contSpectrum->SetFullPath(bfs::path( spcContFilePath ).string().c_str() );
 
-    CSpectrumIOGenericReader reader;
-    Bool rValue = reader.Read( spcContFilePath.c_str(), *contSpectrum );
+    std::shared_ptr<CSpectrumIOGenericReader> reader = std::shared_ptr<CSpectrumIOGenericReader>( new CSpectrumIOGenericReader() );
+
+    Bool rValue = reader->Read( spcContFilePath.c_str(), contSpectrum );
     if( !rValue )
     {
         Log.LogError("Zweimodel - contaminant - Failed to read contaminant spectrum file: (%s)", spcContFilePath.c_str() );
@@ -805,7 +806,7 @@ Bool CZweiModelSolve::Solve( CDataStore& dataStore,
     else
     {
         CNoiseFromFile noise;
-        if( ! noise.SetNoiseFilePath( errorContFilePath.c_str() ) )
+        if( ! noise.SetNoiseFilePath( errorContFilePath.c_str(), reader ) )
         {
             Log.LogError("Zweimodel - contaminant - Failed to load noise spectrum");
             return false;

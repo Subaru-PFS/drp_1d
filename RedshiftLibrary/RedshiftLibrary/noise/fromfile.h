@@ -3,6 +3,7 @@
 
 #include <RedshiftLibrary/common/datatypes.h>
 #include <RedshiftLibrary/noise/noise.h>
+#include <RedshiftLibrary/spectrum/io/reader.h>
 
 #include <memory>
 
@@ -19,9 +20,9 @@ public:
     CNoiseFromFile( );
     ~CNoiseFromFile();
 
-    Bool SetNoiseFilePath( const char* filePath );
+    Bool SetNoiseFilePath( const char* filePath, std::shared_ptr<CSpectrumIOReader> noise_reader);
 
-    Bool AddNoise( CSpectrum& s1 ) const; 
+    Bool AddNoise( CSpectrum& s1 ) const;
 
 private:
 

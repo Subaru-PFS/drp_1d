@@ -5,6 +5,7 @@
 #include <RedshiftLibrary/spectrum/io/genericreader.h>
 #include <RedshiftLibrary/spectrum/io/fitsreader.h>
 #include <RedshiftLibrary/spectrum/spectrum.h>
+#include "test-config.h"
 
 using namespace NSEpic;
 using namespace std;
@@ -18,14 +19,16 @@ BOOST_AUTO_TEST_CASE(AddNoise_test)
   CNoiseFromFile noiseFromFile= CNoiseFromFile();
   CSpectrum OSpectrum = CSpectrum();
   CSpectrumFluxAxis& fluxAxis = OSpectrum.GetFluxAxis();
+  std::shared_ptr<CSpectrumIOGenericReader> reader = std::shared_ptr<CSpectrumIOGenericReader>( new CSpectrumIOGenericReader() );
+
   fluxAxis.SetSize(3);
   fluxAxis[0]= 1.0;
   fluxAxis[1]= 1.5;
   fluxAxis[2]= 2.5;
   BOOST_CHECK(noiseFromFile.AddNoise(OSpectrum) == false);
 
-  BOOST_CHECK(noiseFromFile.SetNoiseFilePath("/this/file/should/not/exist") == false);
-  BOOST_CHECK(noiseFromFile.SetNoiseFilePath("data/SpectrumioTestCase/spectrum1_z_1.2299.fits") == false);
+  BOOST_CHECK(noiseFromFile.SetNoiseFilePath("/this/file/should/not/exist", reader) == false);
+  BOOST_CHECK(noiseFromFile.SetNoiseFilePath(DATA_ROOT_DIR "SpectrumioTestCase/spectrum1_z_1.2299.fits", reader) == true);
 
   /*
   CSpectrumIOFitsReader reader;

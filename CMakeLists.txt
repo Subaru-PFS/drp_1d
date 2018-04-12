@@ -169,7 +169,7 @@ IF(BUILD_SHARED_LIBS AND DEFINED SWIG_VERSION)
   ELSE()
     SWIG_ADD_MODULE(redshift python ${ROOT_DIR}/RedshiftLibrary/RedshiftLibrary/redshift.i)
   ENDIF()
-  SWIG_LINK_LIBRARIES( redshift ${PYTHON_LIBRARIES} ${cpf-redshift_THIRDPARTY_LIBS} )
+  SWIG_LINK_LIBRARIES( redshift ${PYTHON_LIBRARIES} ${LIB_NAME})
 ENDIF()
 
 #--------------------------------------------------------

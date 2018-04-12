@@ -27,7 +27,7 @@ CSpectrumIOFitsReader::~CSpectrumIOFitsReader()
  * If the fits file has 2 HDUs, if the 2nd HDU is binary table, if this table only has 2 columns, then continue - otherwise return false.
  * Call the spectrum methods to get the flux and spectral axii, if the column data can be read as samples, return true, otherwise return false.
  */
-Bool CSpectrumIOFitsReader::Read2( fitsfile* fptr, CSpectrum& spectrum )
+Bool CSpectrumIOFitsReader::Read2( fitsfile* fptr, std::shared_ptr<CSpectrum> spectrum )
 {
     Int32 status = 0;
     Int32 length = 0;
@@ -57,8 +57,8 @@ Bool CSpectrumIOFitsReader::Read2( fitsfile* fptr, CSpectrum& spectrum )
         return false;
 
     length = (Int32) nbRows;
-    CSpectrumAxis& spcFluxAxis = spectrum.GetFluxAxis();
-    CSpectrumAxis& spcSpectralAxis = spectrum.GetSpectralAxis();
+    CSpectrumAxis& spcFluxAxis = spectrum->GetFluxAxis();
+    CSpectrumAxis& spcSpectralAxis = spectrum->GetSpectralAxis();
 
     spcFluxAxis.SetSize( length );
     spcSpectralAxis.SetSize( length );
@@ -85,7 +85,7 @@ Bool CSpectrumIOFitsReader::Read2( fitsfile* fptr, CSpectrum& spectrum )
  * - CRVAL1: Start lambda range
  * - CDELT1: lambda range between two consecutives samples
  */
-Bool CSpectrumIOFitsReader::Read1( fitsfile* fptr, CSpectrum& spectrum )
+Bool CSpectrumIOFitsReader::Read1( fitsfile* fptr, std::shared_ptr<CSpectrum> spectrum )
 {
     Int32 status = 0;
     long naxiss[2];
@@ -119,7 +119,7 @@ Bool CSpectrumIOFitsReader::Read1( fitsfile* fptr, CSpectrum& spectrum )
     length = naxiss[0];
 
     // Read data
-    CSpectrumAxis& spcFluxAxis = spectrum.GetFluxAxis();
+    CSpectrumAxis& spcFluxAxis = spectrum->GetFluxAxis();
 
     Int32 nullval = 0;
     Int32 anynul = 0;
@@ -139,7 +139,7 @@ Bool CSpectrumIOFitsReader::Read1( fitsfile* fptr, CSpectrum& spectrum )
         return false;
 
     // wavelength array
-    CSpectrumAxis& spcSpectralAxis = spectrum.GetSpectralAxis();
+    CSpectrumAxis& spcSpectralAxis = spectrum->GetSpectralAxis();
 
     spcSpectralAxis.SetSize( length );
     double wave_value = crval1 - cdelt1 * (crpix1-1);
@@ -159,7 +159,7 @@ Bool CSpectrumIOFitsReader::Read1( fitsfile* fptr, CSpectrum& spectrum )
 /**
  * Attempts to read the file as a fits file containing 2 HDUs, using the Read1 and Read2 methods to read each HDU, respectively. If all calls return true, this method returns true as well - and returns false otherwise.
  */
-Bool CSpectrumIOFitsReader::Read( const char* filePath, CSpectrum& spectrum )
+Bool CSpectrumIOFitsReader::Read( const char* filePath, std::shared_ptr<CSpectrum> spectrum )
 {
     fitsfile *fptr = NULL;
     Int32 status = 0;

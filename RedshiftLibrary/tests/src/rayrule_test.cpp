@@ -4,6 +4,7 @@
 //#include <RedshiftLibrary/linemodel/element.h>
 #include <RedshiftLibrary/linemodel/elementlist.h>
 #include <RedshiftLibrary/spectrum/spectrum.h>
+#include <RedshiftLibrary/spectrum/io/genericreader.h>
 #include <RedshiftLibrary/method/blindsolveresult.h>
 #include <RedshiftLibrary/processflow/processflow.h>
 #include <RedshiftLibrary/processflow/parameterstore.h>
@@ -103,7 +104,9 @@ CLineModelElementList GetData ( void )
 
   std::string procID = "processing_id_unused";
   std::shared_ptr<CClassifierStore> classifStore = std::shared_ptr<CClassifierStore>( new CClassifierStore() );
-  Bool retVal = ctx.Init( spc.c_str(), noise.c_str(), procID, NULL, DATA_ROOT_DIR "LinemodelRulesTestCase/raycatalog_test_elratiorules.txt", params, classifStore );
+  std::shared_ptr<CSpectrumIOGenericReader> reader = std::shared_ptr<CSpectrumIOGenericReader>( new CSpectrumIOGenericReader() );
+
+  Bool retVal = ctx.Init( spc.c_str(), noise.c_str(), reader, reader, procID, NULL, DATA_ROOT_DIR "LinemodelRulesTestCase/raycatalog_test_elratiorules.txt", params, classifStore );
   BOOST_CHECK( retVal == true );
   retVal = processFlow.Process( ctx ); // Segmentation fault
   BOOST_CHECK( retVal == true );

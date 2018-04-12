@@ -33,7 +33,7 @@ CSpectrumIOAsciiReader::~CSpectrumIOAsciiReader()
 /**
  * 
  */
-Bool CSpectrumIOAsciiReader::Read( const char* filePath, CSpectrum& spectrum )
+Bool CSpectrumIOAsciiReader::Read( const char* filePath, std::shared_ptr<CSpectrum> spectrum )
 {
   //Uncomment below when --verbose works properly.
   Log.LogDebug ( "Parsing ASCII file %s.", filePath );
@@ -59,10 +59,10 @@ Bool CSpectrumIOAsciiReader::Read( const char* filePath, CSpectrum& spectrum )
       return false;
     }
 
-  CSpectrumAxis& spcFluxAxis = spectrum.GetFluxAxis();
+  CSpectrumAxis& spcFluxAxis = spectrum->GetFluxAxis();
   spcFluxAxis.SetSize( length );
 
-  CSpectrumAxis& spcSpectralAxis = spectrum.GetSpectralAxis();
+  CSpectrumAxis& spcSpectralAxis = spectrum->GetSpectralAxis();
   spcSpectralAxis.SetSize( length );
 
   Int32 i = 0;

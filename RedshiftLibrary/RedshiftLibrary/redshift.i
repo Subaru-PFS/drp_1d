@@ -1,4 +1,4 @@
-%module redshift
+%module(directors="1") redshift
 %include <std_string.i>
 %include <std_shared_ptr.i>
 %include typemaps.i
@@ -7,6 +7,10 @@
 %shared_ptr(CClassifierStore)
 %shared_ptr(CTemplateCatalog)
 %shared_ptr(CRayCatalog)
+%shared_ptr(CSpectrum)
+%shared_ptr(CSpectrumIOReader)
+%shared_ptr(CSpectrumIOGenericReader)
+%feature("director");
 
 %apply std::string &OUTPUT { std::string& out_str };
 %apply Int64 &OUTPUT { Int64& out_int };
@@ -14,14 +18,17 @@
 
 
 %{
-	#include "RedshiftLibrary/log/log.h"
-	#include "RedshiftLibrary/log/consolehandler.h"
-	#include "RedshiftLibrary/processflow/parameterstore.h"
-	#include "RedshiftLibrary/reliability/zclassifierstore.h"
-	#include "RedshiftLibrary/processflow/context.h"
-	#include "RedshiftLibrary/processflow/processflow.h"
+        #include "RedshiftLibrary/log/log.h"
+        #include "RedshiftLibrary/log/consolehandler.h"
+        #include "RedshiftLibrary/processflow/parameterstore.h"
+        #include "RedshiftLibrary/reliability/zclassifierstore.h"
+        #include "RedshiftLibrary/processflow/context.h"
+        #include "RedshiftLibrary/processflow/processflow.h"
+  	#include "RedshiftLibrary/processflow/resultstore.h"
 	#include "RedshiftLibrary/ray/catalog.h"
   	#include "RedshiftLibrary/spectrum/template/catalog.h"
+    	#include "RedshiftLibrary/spectrum/io/reader.h"
+    	#include "RedshiftLibrary/spectrum/io/genericreader.h"
 	using namespace NSEpic;
 %}
 
@@ -98,6 +105,8 @@ public:
   CProcessFlowContext();
   bool Init( const char* spectrumPath,
 	     const char* noisePath,
+	     std::shared_ptr<CSpectrumIOReader> spectrum_reader,
+	     std::shared_ptr<CSpectrumIOReader> noise_reader,
 	     std::string processingID,
 	     std::shared_ptr<const CTemplateCatalog> templateCatalog,
 	     std::shared_ptr<const CRayCatalog> rayCatalog,
@@ -126,5 +135,27 @@ class COperatorResultStore
 {
 public:
   COperatorResultStore();
+};
+
+class CSpectrum
+{
+ public:
+  CSpectrum();
+};
+
+class CSpectrumIOReader
+{
+ public:
+  CSpectrumIOReader();
+  virtual ~CSpectrumIOReader();
+  virtual Bool Read(const char* filePath, std::shared_ptr<CSpectrum> s) = 0;
+};
+
+class CSpectrumIOGenericReader : public CSpectrumIOReader
+{
+ public:
+  CSpectrumIOGenericReader();
+  virtual ~CSpectrumIOGenericReader();
+  virtual Bool Read( const char* filePath, std::shared_ptr<CSpectrum> s );
 };
 

@@ -28,20 +28,23 @@ BOOST_AUTO_TEST_SUITE(Operator)
 BOOST_AUTO_TEST_CASE(CorrelationAtZEqualZero)
 {
     Bool retVal;
-    CSpectrum s;
-    CTemplate t;
+    std::shared_ptr<CSpectrum> spectrum = std::shared_ptr<CSpectrum>( new CSpectrum() );
+    std::shared_ptr<CTemplate> _template = std::shared_ptr<CTemplate>( new CTemplate() );
 
     CSpectrumIOFitsReader reader;
 
-    retVal = reader.Read( DATA_ROOT_DIR "OperatorTestCase/spectrum1_z_1.2299.fits", s );
+    retVal = reader.Read( DATA_ROOT_DIR "OperatorTestCase/spectrum1_z_1.2299.fits",
+			  spectrum );
     BOOST_CHECK( retVal );
-    retVal = reader.Read( DATA_ROOT_DIR "OperatorTestCase/spectrum1_z_1.2299.fits", t );
+    retVal = reader.Read( DATA_ROOT_DIR "OperatorTestCase/spectrum1_z_1.2299.fits",
+			  _template );
     BOOST_CHECK( retVal );
 
-    s.ConvertToLogScale();
-    t.ConvertToLogScale();
+    spectrum->ConvertToLogScale();
+    _template->ConvertToLogScale();
 
-    TFloat64Range lambdaRange( s.GetLambdaRange().GetBegin(), s.GetLambdaRange().GetEnd() );
+    TFloat64Range lambdaRange( spectrum->GetLambdaRange().GetBegin(),
+			       spectrum->GetLambdaRange().GetEnd() );
 
     COperatorCorrelation correlation;
     TFloat64List redshifts;
@@ -50,7 +53,7 @@ BOOST_AUTO_TEST_CASE(CorrelationAtZEqualZero)
     redshifts = TFloat64Range( 0.0, 3.0 ).SpreadOver( redshiftDelta );
     // prepare the unused masks
     std::vector<CMask> maskList;
-    auto r = std::dynamic_pointer_cast<CCorrelationResult>( correlation.Compute( s, t, lambdaRange, redshifts, 0.99, maskList ) );
+    auto r = std::dynamic_pointer_cast<CCorrelationResult>( correlation.Compute( *spectrum, *_template, lambdaRange, redshifts, 0.99, maskList ) );
     BOOST_CHECK( r != NULL );
 
 
@@ -71,27 +74,29 @@ BOOST_AUTO_TEST_CASE(CorrelationAtZEqualZero)
 BOOST_AUTO_TEST_CASE(CorrelationAtGivenZ)
 {
     Bool retVal;
-    CSpectrum s;
-    CTemplate t;
+    std::shared_ptr<CSpectrum> spectrum = std::shared_ptr<CSpectrum>( new CSpectrum() );
+    std::shared_ptr<CTemplate> _template = std::shared_ptr<CTemplate>( new CTemplate() );
 
     Float64 z = 1.2299;
 
     CSpectrumIOFitsReader reader;
 
-    retVal = reader.Read( DATA_ROOT_DIR "OperatorTestCase/spectrum1_z_1.2299.fits", s );
+    retVal = reader.Read( DATA_ROOT_DIR "OperatorTestCase/spectrum1_z_1.2299.fits",
+			  spectrum );
     BOOST_CHECK( retVal );
-    retVal = reader.Read( DATA_ROOT_DIR "OperatorTestCase/spectrum1_z_1.2299.fits", t );
+    retVal = reader.Read( DATA_ROOT_DIR "OperatorTestCase/spectrum1_z_1.2299.fits",
+			  _template );
     BOOST_CHECK( retVal );
 
     // Shift template back to rest pose
-    CSpectrumSpectralAxis& tplSpectralAxis = t.GetSpectralAxis();
+    CSpectrumSpectralAxis& tplSpectralAxis = _template->GetSpectralAxis();
     tplSpectralAxis.ShiftByWaveLength( 1.0 + z,  CSpectrumSpectralAxis::nShiftBackward );
 
-    s.ConvertToLogScale();
-    t.ConvertToLogScale();
+    spectrum->ConvertToLogScale();
+    _template->ConvertToLogScale();
 
-    TFloat64Range lambdaRange( s.GetLambdaRange().GetBegin(), s.GetLambdaRange().GetEnd() );
-
+    TFloat64Range lambdaRange( spectrum->GetLambdaRange().GetBegin(),
+			       spectrum->GetLambdaRange().GetEnd() );
 
     Float64 redshiftDelta = 0.0001;
     TFloat64List redshifts = TFloat64Range( 0.0, 3.0 ).SpreadOver( redshiftDelta );
@@ -101,7 +106,7 @@ BOOST_AUTO_TEST_CASE(CorrelationAtGivenZ)
     // prepare the unused masks
     std::vector<CMask> maskList;
     COperatorCorrelation correlation;
-    auto r = std::dynamic_pointer_cast<CCorrelationResult>( correlation.Compute( s, t, lambdaRange, redshifts, 0.7, maskList ) );
+    auto r = std::dynamic_pointer_cast<CCorrelationResult>( correlation.Compute( *spectrum, *_template, lambdaRange, redshifts, 0.7, maskList ) );
     BOOST_CHECK( r != NULL );
 
     const TFloat64List& results = r->Correlation;
@@ -122,39 +127,40 @@ void UtilCorrelationMatchWithEZ( const char* spectraPath, const char* noisePath,
 {
 
     Bool retVal;
-    CSpectrum s;
-    CTemplate t;
+    std::shared_ptr<CSpectrum> spectrum = std::shared_ptr<CSpectrum>( new CSpectrum() );
+    std::shared_ptr<CTemplate> _template = std::shared_ptr<CTemplate>( new CTemplate() );
 
     Float64 z = 1.2299;
 
     // Load spectrum and templates
-    CSpectrumIOGenericReader reader;
-    retVal = reader.Read( spectraPath, s );
+    std::shared_ptr<CSpectrumIOGenericReader> reader = std::shared_ptr<CSpectrumIOGenericReader>( new CSpectrumIOGenericReader() );
+
+    retVal = reader->Read( spectraPath, spectrum );
     BOOST_CHECK( retVal );
 
     if( noisePath )
     {
         CNoiseFromFile noise;
-        noise.SetNoiseFilePath( noisePath );
-        noise.AddNoise( s );
+        noise.SetNoiseFilePath( noisePath, reader );
+        noise.AddNoise( *spectrum );
     }
 
 
 
-    retVal = reader.Read( tplPath, t );
+    retVal = reader->Read( tplPath, _template );
     BOOST_CHECK( retVal );
 
     {
         CContinuumMedian continuum;
-        s.RemoveContinuum( continuum );
+        spectrum->RemoveContinuum( continuum );
     }
     {
         CContinuumMedian continuum;
-        t.RemoveContinuum(continuum);
+        _template->RemoveContinuum(continuum);
     }
 
-    s.ConvertToLogScale();
-    t.ConvertToLogScale();
+    spectrum->ConvertToLogScale();
+    _template->ConvertToLogScale();
 
 
     Float64 redshiftDelta = 0.0001;
@@ -163,7 +169,7 @@ void UtilCorrelationMatchWithEZ( const char* spectraPath, const char* noisePath,
     // prepare the unused masks
     std::vector<CMask> maskList;
     COperatorCorrelation correlation;
-    auto r = std::dynamic_pointer_cast<CCorrelationResult>( correlation.Compute( s, t, TFloat64Range( 5600, 7000 ), redshifts, 1.0, maskList ) );
+    auto r = std::dynamic_pointer_cast<CCorrelationResult>( correlation.Compute( *spectrum, *_template, TFloat64Range( 5600, 7000 ), redshifts, 1.0, maskList ) );
     BOOST_CHECK( r != NULL );
 
     CCorrelationResult referenceResult;
@@ -223,24 +229,25 @@ BOOST_AUTO_TEST_CASE(CorrelationMatchWithEZ)
 void UtilChisquareMatchWithEZ( const char* spectraPath, const char* noisePath, const char* tplPath, const char* resultPath )
 {
     Bool retVal;
-    CSpectrum s;
-    CTemplate t;
+    std::shared_ptr<CSpectrum> spectrum = std::shared_ptr<CSpectrum>( new CSpectrum() );
+    std::shared_ptr<CTemplate> _template = std::shared_ptr<CTemplate>( new CTemplate() );
 
     Float64 z = 1.2299;
 
     // Load spectrum and templates
-    CSpectrumIOGenericReader reader;
-    retVal = reader.Read( spectraPath, s );
+    std::shared_ptr<CSpectrumIOGenericReader> reader = std::shared_ptr<CSpectrumIOGenericReader>( new CSpectrumIOGenericReader() );
+
+    retVal = reader->Read( spectraPath, spectrum);
     BOOST_CHECK( retVal );
 
     if( noisePath )
     {
         CNoiseFromFile noise;
-        noise.SetNoiseFilePath( noisePath );
-        noise.AddNoise( s );
+        noise.SetNoiseFilePath( noisePath, reader );
+        noise.AddNoise( *spectrum );
     }
 
-    retVal = reader.Read( tplPath, t );
+    retVal = reader->Read( tplPath, _template );
     BOOST_CHECK( retVal );
 
     Float64 redshiftDelta = 0.0001;
@@ -250,7 +257,7 @@ void UtilChisquareMatchWithEZ( const char* spectraPath, const char* noisePath, c
     // prepare the unused masks
     std::vector<CMask> maskList;
     COperatorChiSquare chi;
-    auto r = std::dynamic_pointer_cast<CChisquareResult>( chi.Compute( s, t, TFloat64Range( 0., 10000. ), redshifts, overlapThres, maskList ) );
+    auto r = std::dynamic_pointer_cast<CChisquareResult>( chi.Compute( *spectrum, *_template, TFloat64Range( 0., 10000. ), redshifts, overlapThres, maskList ) );
     BOOST_CHECK( r != NULL );
 
     CChisquareResult referenceResult;

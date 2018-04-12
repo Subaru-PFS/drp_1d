@@ -231,8 +231,9 @@ std::shared_ptr<CSpectrum> CMultiRollModel::LoadRollSpectrum(std::string refSpcF
     //
 
     //Read the fits data
-    CSpectrumIOGenericReader reader;
-    Bool rValue = reader.Read( newSpcRollPath.c_str(), *spc );
+    std::shared_ptr<CSpectrumIOGenericReader> reader = std::shared_ptr<CSpectrumIOGenericReader>( new CSpectrumIOGenericReader() );
+
+    Bool rValue = reader->Read( newSpcRollPath.c_str(), spc );
     if( !rValue )
     {
         Log.LogError("    multirollmodel: Failed to read input spectrum file: (%s)", newSpcRollPath.c_str() );
@@ -243,7 +244,7 @@ std::shared_ptr<CSpectrum> CMultiRollModel::LoadRollSpectrum(std::string refSpcF
     //add noise
     {
         CNoiseFromFile noise;
-        if( ! noise.SetNoiseFilePath( newNoiseRollPath.c_str() ) )
+        if( ! noise.SetNoiseFilePath( newNoiseRollPath.c_str(), reader ) )
         {
             Log.LogError("    multirollmodel: Failed to load noise spectrum");
             return spc;
