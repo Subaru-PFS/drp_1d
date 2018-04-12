@@ -29,18 +29,19 @@ void UtilChisquareTestFit( const char* spectraPath, const char* noisePath, const
     BOOST_TEST_MESSAGE( "  Redshift = " << redshift );
 
     // Load spectrum and templates
-    CSpectrumIOGenericReader reader;
-    retVal = reader.Read( spectraPath, spectrum );
+    std::shared_ptr<CSpectrumIOGenericReader> reader = std::shared_ptr<CSpectrumIOGenericReader>( new CSpectrumIOGenericReader() );
+
+    retVal = reader->Read( spectraPath, spectrum );
     BOOST_CHECK( retVal );
 
     if( noisePath )
     {
         CNoiseFromFile noise;
-        noise.SetNoiseFilePath( noisePath );
+        noise.SetNoiseFilePath( noisePath, reader );
         noise.AddNoise( *spectrum );
     }
 
-    retVal = reader.Read( tplPath, _template );
+    retVal = reader->Read( tplPath, _template );
     BOOST_CHECK( retVal );
 
     Float64 redshiftDelta = 0.0001;

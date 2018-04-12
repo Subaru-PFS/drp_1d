@@ -38,7 +38,7 @@ Float64 getLinemodelDoubletRatio(std::string spc, std::string noise, bool enable
     std::shared_ptr<CClassifierStore> classifStore = std::shared_ptr<CClassifierStore>( new CClassifierStore() );
     std::shared_ptr<CSpectrumIOGenericReader> reader = std::shared_ptr<CSpectrumIOGenericReader>( new CSpectrumIOGenericReader() );
 
-    Bool retVal = ctx.Init( spc.c_str(), noise.c_str(), reader, procID, NULL, DATA_ROOT_DIR "LinemodelRulesTestCase/raycatalog_test_elratiorules.txt", params, classifStore );
+    Bool retVal = ctx.Init( spc.c_str(), noise.c_str(), reader, reader, procID, NULL, DATA_ROOT_DIR "LinemodelRulesTestCase/raycatalog_test_elratiorules.txt", params, classifStore );
     BOOST_CHECK( retVal == true );
 
     //these tplcatalog related variables are unused here.
@@ -135,7 +135,7 @@ std::vector<Float64> getLinemodelFittedAmplitudes(std::string spc, std::string n
     std::shared_ptr<CClassifierStore> classifStore = std::shared_ptr<CClassifierStore>( new CClassifierStore() );
     std::shared_ptr<CSpectrumIOGenericReader> reader = std::shared_ptr<CSpectrumIOGenericReader>( new CSpectrumIOGenericReader() );
 
-    Bool retVal = ctx.Init( spc.c_str(), noise.c_str(), reader, procID, NULL, ctlgPath.c_str(), params, classifStore );
+    Bool retVal = ctx.Init( spc.c_str(), noise.c_str(), reader, reader, procID, NULL, ctlgPath.c_str(), params, classifStore );
     BOOST_CHECK( retVal == true );
 
 

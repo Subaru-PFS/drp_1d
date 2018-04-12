@@ -105,7 +105,8 @@ public:
   CProcessFlowContext();
   bool Init( const char* spectrumPath,
 	     const char* noisePath,
-	     std::shared_ptr<CSpectrumIOReader> reader,
+	     std::shared_ptr<CSpectrumIOReader> spectrum_reader,
+	     std::shared_ptr<CSpectrumIOReader> noise_reader,
 	     std::string processingID,
 	     std::shared_ptr<const CTemplateCatalog> templateCatalog,
 	     std::shared_ptr<const CRayCatalog> rayCatalog,

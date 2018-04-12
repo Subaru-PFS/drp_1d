@@ -35,13 +35,13 @@ Float64 processOrtho(std::string spectrumPath, std::string noisePath, std::strin
                      bool enableOrtho)
 {
     // load spectrum
-    CSpectrumIOFitsReader reader;
+    std::shared_ptr<CSpectrumIOFitsReader> reader = std::shared_ptr<CSpectrumIOFitsReader>( new CSpectrumIOFitsReader() );
     std::shared_ptr<CSpectrum> spectrum = std::shared_ptr<CSpectrum>( new CSpectrum() );
 
-    Bool retVal = reader.Read( spectrumPath.c_str(), spectrum);
+    Bool retVal = reader->Read( spectrumPath.c_str(), spectrum);
     BOOST_CHECK( retVal == true);
     CNoiseFromFile noise;
-    retVal = noise.SetNoiseFilePath( noisePath.c_str() );
+    retVal = noise.SetNoiseFilePath( noisePath.c_str(), reader );
     BOOST_CHECK( retVal == true);
     retVal = noise.AddNoise( *spectrum ) ;
     BOOST_CHECK( retVal == true);

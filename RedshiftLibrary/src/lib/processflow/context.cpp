@@ -45,7 +45,8 @@ CProcessFlowContext::~CProcessFlowContext()
 }
 
 bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath,
-				std::shared_ptr<CSpectrumIOReader> reader,
+				std::shared_ptr<CSpectrumIOReader> spectrum_reader,
+				std::shared_ptr<CSpectrumIOReader> noise_reader,
                                 const std::string processingID,
                                 std::shared_ptr<const CTemplateCatalog> templateCatalog,
                                 std::shared_ptr<const CRayCatalog> rayCatalog,
@@ -70,7 +71,7 @@ bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath,
     m_Spectrum->SetName(spcName.c_str());
     m_Spectrum->SetFullPath(bfs::path( spectrumPath ).string().c_str() );
 
-    Bool rValue = reader->Read( spectrumPath, m_Spectrum );
+    Bool rValue = spectrum_reader->Read( spectrumPath, m_Spectrum );
     if( !rValue )
     {
         Log.LogError("Failed to read input spectrum file: (%s)", spectrumPath );
@@ -94,7 +95,7 @@ bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath,
     else
     {
         CNoiseFromFile noise;
-        if( ! noise.SetNoiseFilePath( noisePath ) )
+        if( ! noise.SetNoiseFilePath( noisePath, noise_reader ) )
         {
             Log.LogError("Failed to load noise spectrum");
             return false;
@@ -246,7 +247,8 @@ bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath,
 }
 
 bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath,
-				std::shared_ptr<CSpectrumIOReader> reader,
+				std::shared_ptr<CSpectrumIOReader> spectrum_reader,
+				std::shared_ptr<CSpectrumIOReader> noise_reader,
 				std::string processingID,
                                 const char* templateCatalogPath, const char* rayCatalogPath,
                                 std::shared_ptr<CParameterStore> paramStore,
@@ -299,7 +301,7 @@ bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath,
         }
     }
 
-    return Init( spectrumPath, noisePath, reader, processingID, templateCatalog, rayCatalog, paramStore, zqualStore );
+    return Init( spectrumPath, noisePath, spectrum_reader, noise_reader, processingID, templateCatalog, rayCatalog, paramStore, zqualStore );
 
 }
 

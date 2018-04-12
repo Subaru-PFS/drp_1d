@@ -3,7 +3,7 @@
 
 #include <RedshiftLibrary/continuum/irregularsamplingmedian.h>
 
-#include <RedshiftLibrary/spectrum/io/fitsreader.h>
+#include <RedshiftLibrary/spectrum/io/genericreader.h>
 
 #include <RedshiftLibrary/noise/flat.h>
 #include <RedshiftLibrary/noise/fromfile.h>
@@ -24,15 +24,15 @@ BOOST_AUTO_TEST_SUITE(LinemodelFit)
 void checkAmplitudeAndVelocityFit(std::string spectrumPath, std::string noisePath, std::string linecatalogPath, std::string opt_fittingmethod, Int32 lineTypeFilter, Int32 forceFilter, Float64 initVelocity, Float64 z, std::vector<Float64> ampsRef, Float64 fittedVelocityRef)
 {
     // load spectrum
-    CSpectrumIOFitsReader reader;
-    CSpectrum spectrum;
+    std::shared_ptr<CSpectrumIOGenericReader> reader = std::shared_ptr<CSpectrumIOGenericReader>( new CSpectrumIOGenericReader() );
+    std::shared_ptr<CSpectrum> spectrum = std::shared_ptr<CSpectrum>( new CSpectrum() );
 
-    Bool retVal = reader.Read( spectrumPath.c_str(), std::shared_ptr<CSpectrum>(&spectrum));
+    Bool retVal = reader->Read( spectrumPath.c_str(), spectrum);
     BOOST_CHECK( retVal == true);
     CNoiseFromFile noise;
-    retVal = noise.SetNoiseFilePath( noisePath.c_str() );
+    retVal = noise.SetNoiseFilePath( noisePath.c_str(), reader );
     BOOST_CHECK( retVal == true);
-    retVal = noise.AddNoise( spectrum ) ;
+    retVal = noise.AddNoise( *spectrum ) ;
     BOOST_CHECK( retVal == true);
 
 
@@ -40,7 +40,7 @@ void checkAmplitudeAndVelocityFit(std::string spectrumPath, std::string noisePat
     //CContinuumIrregularSamplingMedian continuum;
     //CSpectrumFluxAxis fluxAxisWithoutContinuumCalc;
     //Int32 retValCont = continuum.RemoveContinuum( spectrum, fluxAxisWithoutContinuumCalc );
-    CSpectrum spectrumContinuum = spectrum;
+    CSpectrum spectrumContinuum = *spectrum;
     CSpectrumFluxAxis& continuumFluxAxis = spectrumContinuum.GetFluxAxis();
     for(UInt32 i=0; i<continuumFluxAxis.GetSamplesCount(); i++){
         //continuumFluxAxis[i] -= fluxAxisWithoutContinuumCalc[i];
@@ -72,7 +72,7 @@ void checkAmplitudeAndVelocityFit(std::string spectrumPath, std::string noisePat
     Bool retValue = tplCatalog.Load( DATA_ROOT_DIR "templatecatalog/" );
     TStringList tplCategories;
 
-    CLineModelElementList model(spectrum, spectrumContinuum, tplCatalog, tplCategories, unused_calibrationPath, lineList, opt_fittingmethod, opt_continuumcomponent, opt_lineWidthType, opt_resolution, opt_velocityEmission, opt_velocityAbsorption, opt_rules, opt_rigidity);
+    CLineModelElementList model(*spectrum, spectrumContinuum, tplCatalog, tplCategories, unused_calibrationPath, lineList, opt_fittingmethod, opt_continuumcomponent, opt_lineWidthType, opt_resolution, opt_velocityEmission, opt_velocityAbsorption, opt_rules, opt_rigidity);
     TFloat64Range lambdaRange = TFloat64Range( 100.0, 12000.0 );
     CLineModelSolution modelSolution;
     Float64 merit = model.fit(z, lambdaRange, modelSolution);

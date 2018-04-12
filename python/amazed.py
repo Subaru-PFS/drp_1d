@@ -68,6 +68,7 @@ def amazed():
         ctx.Init(os.path.join(args.spectrum_dir, spectrum),
                  os.path.join(args.spectrum_dir, noise),
                  reader,
+                 reader,
                  proc_id,
                  template_catalog,
                  line_catalog,
