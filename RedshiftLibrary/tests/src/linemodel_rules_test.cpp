@@ -54,7 +54,8 @@ Float64 getLinemodelDoubletRatio(std::string spc, std::string noise, bool enable
     Float64 redshiftStep = 0.001;
     TFloat64List redshifts = redshiftRange.SpreadOver( redshiftStep );
 
-    CLineModelSolve Solve;
+    std::string calibpath = DATA_ROOT_DIR "LinemodelRulesTestCase/calibration";
+    CLineModelSolve Solve(calibpath);
     std::shared_ptr<const CLineModelSolveResult> solveResult = Solve.Compute(ctx.GetDataStore(),
                                                                              ctx.GetSpectrum(),
                                                                              ctx.GetSpectrumWithoutContinuum(),
@@ -64,6 +65,8 @@ Float64 getLinemodelDoubletRatio(std::string spc, std::string noise, bool enable
                                                                              spcLambdaRange,
                                                                              redshifts);
 
+
+    BOOST_CHECK_MESSAGE( solveResult!=NULL, "NULL Linemodel results");
 
     std::string scope = "linemodelsolve.linemodel_fit_extrema_0";
     auto results = ctx.GetDataStore().GetGlobalResult(scope.c_str());
@@ -75,6 +78,9 @@ Float64 getLinemodelDoubletRatio(std::string spc, std::string noise, bool enable
 
         a1 = result->GetLineModelSolution().Amplitudes[0];
         a2 = result->GetLineModelSolution().Amplitudes[1];
+    }else{
+        BOOST_MESSAGE( "linemodel fit results expired" );
+        return -1;
     }
 
 
@@ -93,7 +99,7 @@ BOOST_AUTO_TEST_CASE( OIIRatioRange1 )
     spc = DATA_ROOT_DIR "LinemodelRulesTestCase/simu_rules_ratiorange_1.fits";
     noise = DATA_ROOT_DIR "LinemodelRulesTestCase/simu_rules_ratiorange_1_noise.fits";
     ratio = getLinemodelDoubletRatio(spc, noise, 0); //rule disabled, get ratio
-    BOOST_CHECK_MESSAGE( ratio > OIIRatioRangeLimit, "RatioRange: 1st spectrum control test failed = leads to a ratio not > OIIRatioRangeLimit" );
+    BOOST_CHECK_MESSAGE( ratio > OIIRatioRangeLimit, "RatioRange: 1st spectrum control test failed = leads to a ratio (=" << ratio <<") not > OIIRatioRangeLimit");
     ratio = getLinemodelDoubletRatio(spc, noise, 1); //rule enabled, get ratio
     BOOST_CHECK_CLOSE_FRACTION( OIIRatioRangeLimit, ratio, 0.1);
 
@@ -174,6 +180,7 @@ std::vector<Float64> getLinemodelFittedAmplitudes(std::string spc, std::string n
 }
 
 
+#if 0
 BOOST_AUTO_TEST_CASE( OIIIMultilineSuperstrongRule )
 {
     std::string spc, noise, ctlg;
@@ -195,5 +202,6 @@ BOOST_AUTO_TEST_CASE( OIIIMultilineSuperstrongRule )
     //BOOST_CHECK_CLOSE_FRACTION( 2.0, ratio, 0.1);
 
 }
+#endif
 
 BOOST_AUTO_TEST_SUITE_END()
