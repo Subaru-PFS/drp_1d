@@ -255,28 +255,104 @@ Bool CQualz::ExtractFeaturesPDF( CDataStore& resultStore, const TFloat64Range& r
 			Float64 cr_zleft = zmap, cr_zright = zmap;
 			Int32 indice_left = indice_map, indice_right = indice_map;
 
-			Bool cond_stop = false;
-			Int32 crit_stop = round ( (nb_pz * 0.5) * 0.5 );
-            Bool rightFirst = true; //rightFirst=false is closer to Matlab's behaviour
-            if(rightFirst)
+            Int32 isearchMethod = 2; //2 is closer to Matlab's behaviour, 0 is the initial C++ implementation
+            Bool verboseCRIndexSearch = false;
+            if(isearchMethod==2)
             {
-                while ( cr_cumpz<=0.95 && indice_right<= (crit_stop+indice_map) && !cond_stop ) {
+                Float64 criter=1e-3;
+                Int32 maxiborne=indice_map;
+                Int32 maxiborneLimit = int (nb_pz - indice_map -1 );
+                while ( logzpdf1d->Redshifts[maxiborne] < zmap+criter && maxiborne<maxiborneLimit)
+                {
+                    maxiborne++;
+                }
+                if(maxiborne>indice_map)
+                {
+                    maxiborne-=1;
+                }
+                Int32 margin=10;
+                maxiborne = maxiborne+margin;
+                Bool stop = false;
+                for(Int32 kr=0; kr<maxiborne-indice_map; kr++)
+                {
+                    for(Int32 kl=0; kl<=kr+3; kl++)
+                    {
+                        indice_left = indice_map-kl;
+                        indice_right = indice_map+kr;
+                        cr_zleft = logzpdf1d->Redshifts[indice_left];
+                        cr_zright = logzpdf1d->Redshifts[indice_right];
+                        cr_cumpz = 0.0;
+                        cr_nbz = 0;
+                        for(Int32 k=indice_left; k<=indice_right; k++)
+                        {
+                            cr_nbz ++;
+                            cr_cumpz += zpdf1d[k];
+                        }
+                        if(cr_cumpz>=0.95)
+                        {
+                            stop = true;
+                        }
+                        if(verboseCRIndexSearch)
+                        {
+                            std::cout
+                                    << " \t Idx search: " << "\n"
+                                    << " \t indice_left: " << indice_left << "\n"
+                                    << " \t indice_right: " << indice_right << "\n"
+                                    << " \t cr_cumpz: " << cr_cumpz << "\n"
+                                    << " \t cr_nbz: " << cr_nbz << "\n"
+                                    << " \n";
+                        }
+                        if(stop)
+                        {
+                            break;
+                        }
+                    }
+                    if(stop)
+                    {
+                        break;
+                    }
+                }
+            }else if(isearchMethod==1)
+            {
+                //right first, with criter 2e-3
+                Float64 criter=1e-3;
+                Int32 maxiborne=indice_map;
+                Int32 maxiborneLimit = int (nb_pz - indice_map );
+                while ( logzpdf1d->Redshifts[maxiborne] < zmap+criter && maxiborne<maxiborneLimit)
+                {
+                    maxiborne++;
+                }
+                Int32 margin=10;
+                while ( cr_cumpz<=0.95 && indice_right<(maxiborne+margin) ) {
                     indice_right ++;
                     if (indice_right< nb_pz-1) {
                         cr_nbz ++;
                         cr_cumpz += zpdf1d[indice_right];
                         cr_zright = logzpdf1d->Redshifts[indice_right];
                         if ( cr_cumpz<=0.95) {
-                            indice_left --;
-                            if ( indice_left>=max(0,indice_map-crit_stop) ) {
+                            if ( indice_left>0 ) {
+                                indice_left --;
                                 cr_nbz ++;
                                 cr_cumpz += zpdf1d[indice_left];
                                 cr_zleft = logzpdf1d->Redshifts[indice_left];
                             }
                         }
                     }
+                    if(verboseCRIndexSearch)
+                    {
+                        std::cout
+                                << " \t Idx search: " << "\n"
+                                << " \t indice_right: " << indice_right << "\n"
+                                << " \t indice_left: " << indice_left << "\n"
+                                << " \t cr_cumpz: " << cr_cumpz << "\n"
+                                << " \t cr_nbz: " << cr_nbz << "\n"
+                                << " \n";
+                    }
                 }
             }else{
+                //Original Method : left first
+                Bool cond_stop = false;
+                Int32 crit_stop = round ( (nb_pz * 0.5) * 0.5 );
                 while ( cr_cumpz<=0.95 && indice_left>=0 && !cond_stop ) {
                     indice_left --;
                     if ( indice_left>=max(0,indice_map-crit_stop) ) {
@@ -294,20 +370,42 @@ Bool CQualz::ExtractFeaturesPDF( CDataStore& resultStore, const TFloat64Range& r
                     }
                 }
             }
-			cr_dz = cr_zright - cr_zleft +1* redshiftStep;
-
+            cr_dz = cr_zright - cr_zleft;//+1*redshiftStep; //do not add redshiftStep to reproduce Matlab results best
+            Int32 cr_idx_zleft = indice_left;
+            Int32 cr_idx_zright = indice_right;
 			/* **********************************************************************
 			 * 		REGION R2 ( dz = 2 * espsilon ) characteristics
 			 * ********************************************************************** */
-			Float64 zshift = 1e-3;
-			Int32 epsilon = round(zshift/redshiftStep);
-			indice_left = max(0, indice_map - epsilon), indice_right =min(indice_map + epsilon, nb_pz-1);
+            Float64 zshift = 1e-3;
+            Int32 methodR2Indexes = 1; //0= initial method, 1= 20180417 method that reproduces best Matlab
+            if(methodR2Indexes==0)
+            {
+                Int32 epsilon = round(zshift/redshiftStep);
+                indice_left = max(0, indice_map - epsilon), indice_right =min(indice_map + epsilon, nb_pz-1);
+            }else if(methodR2Indexes==1)
+            {
+                indice_left=indice_map;
+                Int32 miniLimit = int (0);
+                while ( logzpdf1d->Redshifts[indice_left] > zmap-zshift+redshiftStep && indice_left>miniLimit)
+                {
+                    indice_left--;
+                }
+                indice_right=indice_map;
+                Int32 maxiLimit = int (nb_pz - 1 );
+                while ( logzpdf1d->Redshifts[indice_right] < zmap+zshift && indice_right<maxiLimit)
+                {
+                    indice_right++;
+                }
+            }
+            r2_cumpz = 0.0;
 			for ( int i = indice_left;  i<= indice_right;  i++) {
 				r2_cumpz +=zpdf1d[i];
-			}
+            }
+            Int32 cr2_idx_zleft = indice_left;
+            Int32 cr2_idx_zright = indice_right;
 
-
-            if(0)
+            Bool showDescriptors=true;
+            if(showDescriptors)
             {
                 if(0)
                 {
@@ -342,9 +440,14 @@ Bool CQualz::ExtractFeaturesPDF( CDataStore& resultStore, const TFloat64Range& r
                 << " \t [KM] #modes = " << significant_peaks <<"\n"
                 << "------------------------------------------------------------------" << "\n"
                 << "   zmap = " << zmap <<"\n"
+                << "   indice_map = " << indice_map << "\n"
                 << "   cr_zleft = " << cr_zleft <<"\n"
                 << "   cr_zright = " << cr_zright <<"\n"
+                << "   cr_idx_zleft = " << cr_idx_zleft <<"\n"
+                << "   cr_idx_zright = " << cr_idx_zright <<"\n"
                 << "   zmoment2 = " << zmoment2 <<"\n"
+                << "   cr2_idx_zleft = " << cr2_idx_zleft <<"\n"
+                << "   cr2_idx_zright = " << cr2_idx_zright <<"\n"
                 <<"\n";
             }
 

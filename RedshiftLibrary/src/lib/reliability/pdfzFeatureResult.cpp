@@ -26,12 +26,16 @@ CPdfzFeatureResult::~CPdfzFeatureResult()
 Void CPdfzFeatureResult::Save( const CDataStore& store, std::ostream& stream ) const
 {
 	std::setprecision(20);
-	stream << "#zPDF_descriptors \t Value" << std::endl;
+    stream << "#zPDF_descriptors \tValue" << std::endl;
 
 	boost::unordered_map<const std::string , Float64>::const_iterator it = mapzfeatures.begin();
 	for ( it=mapzfeatures.begin(); it!=mapzfeatures.end(); ++it) {
 		std::string map_key = (it->first);
 		Float64 map_content = (it->second);
+        //std::cout
+        //         << " \t map_key: " << map_key << "\n"
+        //        << " \t map_content: " << map_content << "\n";
+
 		stream << map_key << "\t" << map_content << std::endl;
 	}
 
