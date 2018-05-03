@@ -49,6 +49,7 @@ std::shared_ptr<const CQualzResult> CQualz::Compute( CDataStore& resultStore, CC
 	Bool storeResult = false;
 	CDataStore::CAutoScope resultScope( resultStore, "zReliability/result");
 
+    Log.LogDetail("  ZClassifier: Solving with zstep = %f", redshiftStep);
 	storeResult = Solve ( resultStore, classifierStore, redshiftRange, redshiftStep);
 
 	if (storeResult)
@@ -1017,6 +1018,7 @@ Void CQualz::GetScorePred ( CClassifierStore& classifierStore )
 			<<"LEARNER" <<learner_id
 			<<std::endl;
 		}
+        Log.LogDetail("  ZClassifier: LEARNER #%d", learner_id);
 
 
         double learner_sc;

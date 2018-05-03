@@ -50,6 +50,35 @@ Int32 CPdfz::Compute(TFloat64List merits, TFloat64List redshifts, Float64 cstLog
         Log.LogInfo("Pdfz: Pdfz computation: using merit max=%e", meritmax);
     }
 
+    //check if the z step is constant. If not, pdf cannot be estimated by the current method.
+    Float64 reldzThreshold = 0.05; //relative difference accepted
+    bool constantdz = true;
+    Float64 mindz = DBL_MAX;
+    Float64 maxdz = -DBL_MAX;
+    for ( UInt32 k=1; k<redshifts.size(); k++)
+    {
+        Float64 diff = redshifts[k]-redshifts[k-1];
+        if(mindz > diff)
+        {
+            mindz = diff;
+        }
+        if(maxdz < diff)
+        {
+            maxdz = diff;
+        }
+    }
+    Float64 zstep = (maxdz+mindz)/2.0;
+    if(abs(maxdz-mindz)/zstep>reldzThreshold)
+    {
+        constantdz = false;
+        return 2;
+    }
+
+    //deactivate logPrior just to see...
+//    for ( UInt32 k=0; k<redshifts.size(); k++)
+//    {
+//        logZPrior[k] = 0;
+//    }
 
     //check if there is more than 2 redshifts values
     if(redshifts.size()==1) //consider this as a success
@@ -112,23 +141,23 @@ Int32 CPdfz::Compute(TFloat64List merits, TFloat64List redshifts, Float64 cstLog
     {
         mchi2Sur2[k] = -0.5*merits[k];
         //find the smallest zstep in order to use most penalizing case fot the log-sum-exp trick
-        Float64 zstepPrevious = -1.0;
+        Float64 zstepPrevious = zstep;
         if(k>0){
             zstepPrevious = (redshifts[k]-redshifts[k-1]);
         }else if(k<redshifts.size()-1){
             zstepPrevious = (redshifts[k+1]-redshifts[k]);
         }
-        Float64 zstepNext = 1.0;
+        Float64 zstepNext = zstep;
         if(k<redshifts.size()-1){
             zstepNext = (redshifts[k+1]-redshifts[k]);
         }else if(k>0){
             zstepNext = (redshifts[k]-redshifts[k-1]);
         }
         Float64 zstepCurrent = min(zstepPrevious, zstepNext);
-        smallVALUES[k] = mchi2Sur2[k] + logZPrior[k] + log(zstepCurrent);
-        if(maxi<smallVALUES[k])
+        smallVALUES[k] = mchi2Sur2[k] + logZPrior[k];
+        if(maxi<smallVALUES[k] + log(zstepCurrent))
         {
-            maxi = smallVALUES[k]; // maxi will be used to avoid underflows when summing exponential of small values
+            maxi = smallVALUES[k] + log(zstepCurrent); // maxi will be used to avoid underflows when summing exponential of small values
         }
     }
 
