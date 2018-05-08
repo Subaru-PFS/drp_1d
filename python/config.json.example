@@ -1,0 +1,11 @@
+{
+    "parameters_file": "parameters.json",
+    "data_path": "~/data/data-0.2.7",
+    "output_folder": "/tmp",
+    "input_file": "input.spectrumlist",
+    "spectrum_dir": "spectrum/",
+    "template_dir": "calibration/templates/",
+    "linecatalog":"calibration/linecatalogs/linecatalogamazedvacuum_C1_noHepsilon.txt",
+    "calibration_dir": "calibration/",
+    "zclassifier_dir": "calibration/reliability/zclassifier_C6A3iS1nD9cS1nS1_20180404/"
+}
