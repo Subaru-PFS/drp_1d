@@ -402,5 +402,15 @@ Bool CProcessFlow::isPdfValid(CProcessFlowContext& ctx) const
         return false;
     }
 
+    //is pdf any value nan ?
+    for(Int32 k=0; k<logzpdf1d->valProbaLog.size(); k++)
+    {
+        if(logzpdf1d->valProbaLog[k] != logzpdf1d->valProbaLog[k])
+        {
+            Log.LogError("PDF has nan or invalid values !");
+            return false;
+        }
+    }
+
     return true;
 }

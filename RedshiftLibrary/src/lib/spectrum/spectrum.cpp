@@ -244,6 +244,9 @@ const Bool CSpectrum::IsNoiseValid( Float64 LambdaMin,  Float64 LambdaMax ) cons
         if( isinf(error[i]) ){
             valid = false;
         }
+        if( error[i] != error[i] ){
+            valid = false;
+        }
     }
     return valid;
 }

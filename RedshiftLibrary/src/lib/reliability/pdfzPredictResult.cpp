@@ -43,7 +43,7 @@ Void CPdfzPredictResult::Save( const CDataStore& store, std::ostream& stream ) c
 		stream
 		<< "Learner_"<< (i+1) << "\t"
 		<< std::setprecision(10)
-		<< m_score->data[i] << "\t"
+        << m_score->data[i] << "\t"
 		<< std::endl;
 	}
 }
