@@ -62,8 +62,10 @@ std::shared_ptr<const CQualzResult> CQualz::Compute( CDataStore& resultStore, CC
 }
 
 
-Bool CQualz::Solve( CDataStore& resultStore, CClassifierStore& classifierStore, const TFloat64Range& redshiftRange,
-		Float64& redshiftStep )
+Bool CQualz::Solve( CDataStore& resultStore,
+                    CClassifierStore& classifierStore,
+                    const TFloat64Range& redshiftRange,
+                    Float64& redshiftStep )
 {
 	boost::posix_time::ptime  startTime;
 
@@ -71,18 +73,19 @@ Bool CQualz::Solve( CDataStore& resultStore, CClassifierStore& classifierStore, 
 	 * 		Z-FEATURES IN POSTERIOR PDF
 	 * ********************************************************************** */
 	{
+        Log.LogDetail("  ZClassifier: Extracting Features from PDF");
 		startTime = boost::posix_time::microsec_clock::local_time();
         bool ExtractDone = ExtractFeaturesPDF ( resultStore, redshiftRange, redshiftStep );
 		T0 = boost::posix_time::microsec_clock::local_time() - startTime;
 	}
 
 
-    if ( 1 ) //m_doTEST )
 	{
 		/* **********************************************************************
 		 * 		Z-PROJECTION
 		 * ********************************************************************** */
-		{
+        {
+            Log.LogDetail("  ZClassifier: Projecting");
 			startTime = boost::posix_time::microsec_clock::local_time();
 			ProjectPDF ( classifierStore );
 			T1 = boost::posix_time::microsec_clock::local_time() - startTime;
@@ -92,8 +95,14 @@ Bool CQualz::Solve( CDataStore& resultStore, CClassifierStore& classifierStore, 
 		 * 		STORE & DISPLAY
 		 * ********************************************************************** */
 		{
-			DisplayPrediction();
+            Log.LogDetail("  ZClassifier: Displaying prediction");
+            //DisplayPrediction();
+            Log.LogInfo("  ZClassifier: PREDICTED CLASS zREL : %s", m_predLabel.c_str());
+            Log.LogInfo("  ZClassifier: \t*associated posterior class prediction = : %f", m_predProba);
 
+
+
+            Log.LogDetail("  ZClassifier: Storing results");
 			auto zQual_vect = std::shared_ptr<CPdfzPredictResult>(new CPdfzPredictResult());
 			zQual_vect->m_predLabel = m_predLabel;
 			zQual_vect->m_score = m_score;
@@ -104,8 +113,6 @@ Bool CQualz::Solve( CDataStore& resultStore, CClassifierStore& classifierStore, 
 			resultStore.StoreScopedGlobalResult( "zpredict", zQual_vect );
 
 		}
-    }else{
-        return false;
     }
 
 	return true;
@@ -127,7 +134,16 @@ Bool CQualz::ExtractFeaturesPDF( CDataStore& resultStore, const TFloat64Range& r
         return false;
     }
 
+
+    Log.LogDebug("  ZClassifier: ExtractFeaturesPDF - Checking PDF for Nan vector");
 	nanVector = CheckPDF(logzpdf1d->valProbaLog);
+
+
+    Log.LogDebug("  ZClassifier: ExtractFeaturesPDF - more PDF checks");
+    if(logzpdf1d->Redshifts.size()!=logzpdf1d->valProbaLog.size())
+    {
+        return false;
+    }
 
 	SPoint dist_peaks;
     Int32 significant_peaks = 0;
@@ -137,7 +153,8 @@ Bool CQualz::ExtractFeaturesPDF( CDataStore& resultStore, const TFloat64Range& r
 
 	if ( nanVector ) {
 		return false;
-	} else {
+    } else {
+        Log.LogDebug("  ZClassifier: ExtractFeaturesPDF - estimate zpdf");
 		Int32 nb_pz = logzpdf1d->Redshifts.size();
 		TFloat64List zpdf1d;
 		zpdf1d.resize(nb_pz);
@@ -147,7 +164,8 @@ Bool CQualz::ExtractFeaturesPDF( CDataStore& resultStore, const TFloat64Range& r
 		}
 		/* **********************************************************************
 		 * 		FIND EXTREMA IN ZPDF
-		 * ********************************************************************** */
+         * ********************************************************************** */
+        Log.LogDebug("  ZClassifier: ExtractFeaturesPDF - find extrema");
 		TPointList extremumList;
 		Int32 extremumCount = 1000;
 
@@ -180,6 +198,7 @@ Bool CQualz::ExtractFeaturesPDF( CDataStore& resultStore, const TFloat64Range& r
 			/* **********************************************************************
 			 * 		MAXIMUM A POSTERIORI Z-ESTIMATE
 			 * *********************************************************************** */
+            Log.LogDebug("  ZClassifier: ExtractFeaturesPDF - find map");
 			Int32 indice_map = 0;
 			zmap = logzpdf1d->Redshifts[indice_map];
 			pzmap = exp( logzpdf1d->valProbaLog[indice_map] + lbins);
@@ -249,7 +268,8 @@ Bool CQualz::ExtractFeaturesPDF( CDataStore& resultStore, const TFloat64Range& r
 
 			/* **********************************************************************
 			 * 		CREDIBILITY REGION (95%) characteristics
-			 * *********************************************************************** */
+             * *********************************************************************** */
+            Log.LogDebug("  ZClassifier: ExtractFeaturesPDF - estimate CR95 features");
 			cr_dz =0;
 			cr_nbz = 1;
 			cr_cumpz = pzmap;
@@ -376,7 +396,8 @@ Bool CQualz::ExtractFeaturesPDF( CDataStore& resultStore, const TFloat64Range& r
             Int32 cr_idx_zright = indice_right;
 			/* **********************************************************************
 			 * 		REGION R2 ( dz = 2 * espsilon ) characteristics
-			 * ********************************************************************** */
+             * ********************************************************************** */
+            Log.LogDebug("  ZClassifier: ExtractFeaturesPDF - estimate CR_2 features");
             Float64 zshift = 1e-3;
             Int32 methodR2Indexes = 1; //0= initial method, 1= 20180417 method that reproduces best Matlab
             if(methodR2Indexes==0)
@@ -405,7 +426,7 @@ Bool CQualz::ExtractFeaturesPDF( CDataStore& resultStore, const TFloat64Range& r
             Int32 cr2_idx_zleft = indice_left;
             Int32 cr2_idx_zright = indice_right;
 
-            Bool showDescriptors=true;
+            Bool showDescriptors=false;
             if(showDescriptors)
             {
                 if(0)
@@ -440,15 +461,15 @@ Bool CQualz::ExtractFeaturesPDF( CDataStore& resultStore, const TFloat64Range& r
                 << " \t [KM] dist_pz = " << dist_peaks.Y <<"\n"
                 << " \t [KM] #modes = " << significant_peaks <<"\n"
                 << "------------------------------------------------------------------" << "\n"
-                << "   zmap = " << zmap <<"\n"
-                << "   indice_map = " << indice_map << "\n"
-                << "   cr_zleft = " << cr_zleft <<"\n"
-                << "   cr_zright = " << cr_zright <<"\n"
-                << "   cr_idx_zleft = " << cr_idx_zleft <<"\n"
-                << "   cr_idx_zright = " << cr_idx_zright <<"\n"
-                << "   zmoment2 = " << zmoment2 <<"\n"
-                << "   cr2_idx_zleft = " << cr2_idx_zleft <<"\n"
-                << "   cr2_idx_zright = " << cr2_idx_zright <<"\n"
+                << " \t   zmap = " << zmap <<"\n"
+                << " \t   indice_map = " << indice_map << "\n"
+                << " \t   cr_zleft = " << cr_zleft <<"\n"
+                << " \t   cr_zright = " << cr_zright <<"\n"
+                << " \t   cr_idx_zleft = " << cr_idx_zleft <<"\n"
+                << " \t   cr_idx_zright = " << cr_idx_zright <<"\n"
+                << " \t   zmoment2 = " << zmoment2 <<"\n"
+                << " \t   cr2_idx_zleft = " << cr2_idx_zleft <<"\n"
+                << " \t   cr2_idx_zright = " << cr2_idx_zright <<"\n"
                 <<"\n";
             }
 
@@ -503,6 +524,7 @@ Bool CQualz::ExtractFeaturesPDF( CDataStore& resultStore, const TFloat64Range& r
 	/* **********************************************************************
 	 * 		STORE FEATURE Vector
 	 * ********************************************************************** */
+    Log.LogDebug("  ZClassifier: ExtractFeaturesPDF - store features");
 	std::string desc_1 = "Localized_prior";  		// boolean (0 if constant prior; 1 otherwise)
 	std::string desc_2 = "%z candidats"; 	 		// if localized prior on z-candidates, fraction in the initial zRange (in %)
 	std::string desc_3 = "std_p(z|D,I) ";

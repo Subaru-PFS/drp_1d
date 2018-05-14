@@ -334,17 +334,17 @@ Bool CProcessFlow::Process( CProcessFlowContext& ctx )
         }else
         {
             Log.LogInfo( "Processing reliability");
-            CQualz solve2;
-            std::shared_ptr<const CQualzResult> solve2Result = solve2.Compute( ctx.GetDataStore(), classifStore, redshiftRange, redshiftStep );
+            CQualz solveReliab;
+            std::shared_ptr<const CQualzResult> solveReliabResult = solveReliab.Compute( ctx.GetDataStore(), classifStore, redshiftRange, redshiftStep );
 
-            if(solve2Result)
+            if(solveReliabResult)
             {
                 std::string predLabel="";
-                bool retPredLabel = solve2Result->GetPredictedLabel( ctx.GetDataStore(), predLabel );
+                bool retPredLabel = solveReliabResult->GetPredictedLabel( ctx.GetDataStore(), predLabel );
                 if( retPredLabel ) {
                     mResult->SetReliabilityLabel(predLabel);
                 }else{
-                    Log.LogError( "Unable estimate Reliability");
+                    Log.LogError( "Unable to estimate Reliability");
                 }
             }else{
                 Log.LogInfo( "No Reliability Result Found");

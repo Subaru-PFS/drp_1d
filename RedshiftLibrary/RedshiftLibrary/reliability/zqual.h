@@ -48,7 +48,7 @@ private:
 	Bool Solve( CDataStore& resultStore, CClassifierStore& classifierStore, const TFloat64Range& redshiftRange,
 			Float64& redshiftStep );
 
-	Void DisplayPrediction();
+    Void DisplayPrediction();
 	Bool CheckPDF ( const TFloat64List& zpdf);
 
 	// extract descriptors from the zPDF
