@@ -312,6 +312,7 @@ Int32 CMethodChisquare2Solve::CombinePDF(CDataStore &store, std::string scopeStr
                     logLikelihoodCorrected[kz] = meritResult->ChiSquareIntermediate[kz][kism][kigm];// + resultXXX->ScaleMargCorrectionTplshapes[][]?;
                 }
                 chiSquares.push_back(logLikelihoodCorrected);
+                Log.LogDetail("    chisquare2solve: Pdfz combine - prepared merit  #%d for model : %s", chiSquares.size()-1, ((*it).first).c_str());
             }
         }
     }

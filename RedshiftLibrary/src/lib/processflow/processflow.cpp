@@ -116,7 +116,23 @@ Bool CProcessFlow::Process( CProcessFlowContext& ctx )
     ctx.GetParameterStore().Get( "method", methodName );
     boost::algorithm::to_lower(methodName);
 
+    //************************************
+    Bool enableInputSpcCorrect = true;
+    if(methodName  == "reliability" )
+    {
+        enableInputSpcCorrect = false;
+    }
+    if(enableInputSpcCorrect)
+    {
+        //Check if the Spectrum is valid on the lambdarange
+        const Float64 lmin = spcLambdaRange.GetBegin();
+        const Float64 lmax = spcLambdaRange.GetEnd();
+        if( ctx.correctSpectrum( lmin, lmax ) ){
+            Log.LogInfo( "Successfully corrected noise from spectrum: %s, on wavelength range (%.1f ; %.1f)", ctx.GetSpectrum().GetName().c_str(), lmin, lmax );
+        }
+    }
 
+    //************************************
     Bool enableInputSpcCheck = true;
     if(methodName  == "reliability" )
     {
@@ -130,12 +146,17 @@ Bool CProcessFlow::Process( CProcessFlowContext& ctx )
         if( !ctx.GetSpectrum().IsFluxValid( lmin, lmax ) ){
             Log.LogError( "Failed to validate spectrum flux: %s, on wavelength range (%.1f ; %.1f)", ctx.GetSpectrum().GetName().c_str(), lmin, lmax );
             return false;
+        }else{
+            Log.LogDetail( "Successfully validated spectrum flux: %s, on wavelength range (%.1f ; %.1f)", ctx.GetSpectrum().GetName().c_str(), lmin, lmax );
         }
         if( !ctx.GetSpectrum().IsNoiseValid( lmin, lmax ) ){
             Log.LogError( "Failed to validate noise from spectrum: %s, on wavelength range (%.1f ; %.1f)", ctx.GetSpectrum().GetName().c_str(), lmin, lmax );
             return false;
+        }else{
+            Log.LogDetail( "Successfully validated noise from spectrum: %s, on wavelength range (%.1f ; %.1f)", ctx.GetSpectrum().GetName().c_str(), lmin, lmax );
         }
     }
+
 
 
     std::shared_ptr<COperatorResult> mResult;

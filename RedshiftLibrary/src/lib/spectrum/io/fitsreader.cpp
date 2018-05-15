@@ -1,4 +1,5 @@
 #include <RedshiftLibrary/spectrum/io/fitsreader.h>
+#include <RedshiftLibrary/log/log.h>
 
 #include <RedshiftLibrary/spectrum/spectrum.h>
 #include <RedshiftLibrary/spectrum/axis.h>
@@ -127,6 +128,9 @@ Bool CSpectrumIOFitsReader::Read1( fitsfile* fptr, std::shared_ptr<CSpectrum> sp
     if( fits_read_img( fptr, TDOUBLE, 1, length, &nullval, spcFluxAxis.GetSamples(), &anynul, &status ) )
         return false;
 
+    Log.LogDebug("    CSpectrumIOFitsReader: loaded flux values n samples=%d", length);
+    Log.LogDebug("    CSpectrumIOFitsReader: loaded flux values first sample=%f", spcFluxAxis.GetSamples()[0]);
+
     // read keywords
     float crpix1, crval1, cdelt1;
     if( fits_read_key( fptr, TFLOAT, "CRPIX1", &crpix1, NULL, &status ) )
@@ -137,6 +141,10 @@ Bool CSpectrumIOFitsReader::Read1( fitsfile* fptr, std::shared_ptr<CSpectrum> sp
 
     if( fits_read_key( fptr, TFLOAT, "CDELT1", &cdelt1, NULL, &status ) )
         return false;
+
+    Log.LogDebug("    CSpectrumIOFitsReader: loaded CRPIX1=%f", crpix1);
+    Log.LogDebug("    CSpectrumIOFitsReader: loaded CRVAL1=%f", crval1);
+    Log.LogDebug("    CSpectrumIOFitsReader: loaded CDELT1=%f", cdelt1);
 
     // wavelength array
     CSpectrumAxis& spcSpectralAxis = spectrum->GetSpectralAxis();
@@ -152,6 +160,8 @@ Bool CSpectrumIOFitsReader::Read1( fitsfile* fptr, std::shared_ptr<CSpectrum> sp
         wave_value += cdelt1;
         spcSpectralAxis[i]=wave_value;
     }
+
+    Log.LogDebug("    CSpectrumIOFitsReader: loaded spectral values first sample=%f", spcSpectralAxis.GetSamples()[0]);
 
     return true;
 }
@@ -175,11 +185,13 @@ Bool CSpectrumIOFitsReader::Read( const char* filePath, std::shared_ptr<CSpectru
             // check hdus
             if ( hdunum==1 )
             {
+                Log.LogDebug("    CSpectrumIOFitsReader: Read1");
                 if( !Read1( fptr, spectrum ) )
                     retv = false;
             }
             else if( hdunum == 2 )
             {
+                Log.LogDebug("    CSpectrumIOFitsReader: Read2");
                 if( !Read2( fptr, spectrum ) )
                     retv = false;
             }

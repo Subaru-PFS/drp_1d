@@ -71,6 +71,8 @@ Void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& t
                                    std::string opt_interp, Float64 forcedAmplitude, Int32 opt_extinction, Int32 opt_dustFitting, CMask spcMaskAdditional)
 {
     chiSquare = boost::numeric::bounds<float>::highest();
+    bool status_chisquareSetAtLeastOnce = false;
+
     for(Int32 kism=0; kism<ChiSquareInterm.size(); kism++)
     {
         for(Int32 kigm=0; kigm<ChiSquareInterm[kism].size(); kigm++)
@@ -157,7 +159,11 @@ Void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& t
     //the spectral axis should be in the same scale
     TFloat64Range currentRange = logIntersectedLambdaRange;
     if( spcSpectralAxis.IsInLinearScale() != tplSpectralAxis.IsInLinearScale() )
+    {
+        Log.LogError( "    chisquare operator: data and model not in the same scale (lin/log) ! Aborting.");
+        status = nStatus_DataError;
         return;
+    }
     if(spcSpectralAxis.IsInLinearScale()){
         currentRange = intersectedLambdaRange;
     }
@@ -261,9 +267,10 @@ Void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& t
         }
         if(kStart==-1 || kEnd==-1)
         {
-            //Error ?
+            Log.LogDebug( "chisquare operator: kStart=%d, kEnd=%d ! Aborting.", kStart, kEnd);
             break;
         }
+
 
         //Loop on the EBMV dust coeff
         for(Int32 kDust=0; kDust<nDustCoeffs; kDust++)
@@ -406,6 +413,16 @@ Void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& t
             {
                 numDevsFull++;
                 if(spcMaskAdditional[j]){
+
+                    /*
+                    //check for invalid data
+                    if(error[j]!=error[j]){
+                        Log.LogDebug("  Operator-Chisquare2: noise invalid=%e for i=%d", error[j], j);
+                        Log.LogDebug("  Operator-Chisquare2: noise invalid, w=%e for i=%d", spcSpectralAxis[j], j);
+                        Log.LogDebug("  Operator-Chisquare2: noise invalid,samples count=%d", spcSpectralAxis.GetSamplesCount(), j);
+                    }
+                    //*/
+
                     numDevs++;
                     err2 = 1.0 / (error[j] * error[j]);
 
@@ -468,7 +485,11 @@ Void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& t
                 fit = sumS - sumCross*ampl;
             }
 
-
+            /*
+            Log.LogDebug("  Operator-Chisquare2: fit=%e", fit);
+            Log.LogDebug("  Operator-Chisquare2: sumT=%e", sumT);
+            Log.LogDebug("  Operator-Chisquare2: sumS=%e", sumS);
+            Log.LogDebug("  Operator-Chisquare2: sumCross=%e", sumCross);
             //*/
 
             /*
@@ -502,11 +523,17 @@ Void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& t
                 fittingDtM = sumCross;
                 fittingMtM = sumT;
 
+                status_chisquareSetAtLeastOnce = true;
             }
         }
     }
 
-    status = nStatus_OK;
+    if(status_chisquareSetAtLeastOnce)
+    {
+        status = nStatus_OK;
+    }else{
+        status = nStatus_LoopError;
+    }
 }
 
 /**
@@ -538,6 +565,27 @@ std::shared_ptr<COperatorResult> COperatorChiSquare2::Compute(const CSpectrum& s
         Log.LogError("  Operator-Chisquare2: input spectrum or template are not in log scale (ignored)");
         //return NULL;
     }
+
+    //**************************************************
+//    Bool enableInputSpcCheck = false;
+//    if(enableInputSpcCheck)
+//    {
+//        //Check if the Spectrum is valid on the lambdarange
+//        const Float64 lmin = lambdaRange.GetBegin();
+//        const Float64 lmax = lambdaRange.GetEnd();
+//        if( !spectrum.IsFluxValid( lmin, lmax ) ){
+//            Log.LogError( "    Operator-Chisquare2: debug - Failed to validate spectrum flux: %s, on wavelength range (%.1f ; %.1f)", spectrum.GetName().c_str(), lmin, lmax );
+//            return NULL;
+//        }else{
+//            Log.LogDetail( "    Operator-Chisquare2: debug - Successfully validated spectrum flux: %s, on wavelength range (%.1f ; %.1f)", spectrum.GetName().c_str(), lmin, lmax );
+//        }
+//        if( !spectrum.IsNoiseValid( lmin, lmax ) ){
+//            Log.LogError( "    Operator-Chisquare2: debug - Failed to validate noise from spectrum: %s, on wavelength range (%.1f ; %.1f)", spectrum.GetName().c_str(), lmin, lmax );
+//            return NULL;
+//        }else{
+//            Log.LogDetail( "    Operator-Chisquare2: debug - Successfully validated noise from spectrum: %s, on wavelength range (%.1f ; %.1f)", spectrum.GetName().c_str(), lmin, lmax );
+//        }
+//    }
 
 
     // Pre-Allocate the rebined template and mask with regard to the spectrum size
@@ -725,6 +773,37 @@ std::shared_ptr<COperatorResult> COperatorChiSquare2::Compute(const CSpectrum& s
         Log.LogInfo("  Operator-Chisquare2: overlap warning for %s: minz=%.3f, maxz=%.3f", tpl.GetName().c_str(), overlapValidInfZ, overlapValidSupZ);
     }
 
+    //only bad status warning
+    Int32 oneValidStatusFoundIndex = -1;
+    for (Int32 i=0;i<sortedRedshifts.size();i++)
+    {
+        if(result->Status[i]==nStatus_OK)
+        {
+            oneValidStatusFoundIndex=i;
+            Log.LogDebug("  Operator-Chisquare2: STATUS VALID found for %s: at least at index=%d", tpl.GetName().c_str(), i);
+            break;
+        }
+    }if(oneValidStatusFoundIndex==-1)
+    {
+        Log.LogWarning("  Operator-Chisquare2: STATUS WARNING for %s: Not even one single valid fit/merit value found", tpl.GetName().c_str());
+    }
+
+
+    //loop error status warning
+    Int32 loopErrorStatusFoundIndex = -1;
+    for (Int32 i=0;i<sortedRedshifts.size();i++)
+    {
+        if(result->Status[i]==nStatus_LoopError)
+        {
+            loopErrorStatusFoundIndex=i;
+            Log.LogDebug("  Operator-Chisquare2: STATUS Loop Error found for %s: at least at index=%d", tpl.GetName().c_str(), i);
+            break;
+        }
+    }if(loopErrorStatusFoundIndex!=-1)
+    {
+        Log.LogWarning("    chisquare2-operator: Loop Error - chisquare values not set even once");
+    }
+
     //estimate CstLog for PDF estimation
     result->CstLog = EstimateLikelihoodCstLog(spectrum, lambdaRange);
 
@@ -757,9 +836,10 @@ std::shared_ptr<COperatorResult> COperatorChiSquare2::Compute(const CSpectrum& s
         result->Extrema.resize( extremumCount );
         for( Int32 i=0; i<extremumList.size(); i++ )
         {
-
             result->Extrema[i] = extremumList[i].X;
         }
+
+        Log.LogDebug("  Operator-Chisquare2: EXTREMA found n=%d", extremumList.size());
     }else
     {
         // store extrema results
@@ -779,6 +859,7 @@ std::shared_ptr<COperatorResult> COperatorChiSquare2::Compute(const CSpectrum& s
         {
             result->Extrema[i] = tmpX[sortedIndexes[i]];
         }
+        Log.LogDebug("  Operator-Chisquare2: EXTREMA forced n=%d", result->Extrema.size());
     }
 
     if(opt_interp=="precomputedfinegrid"){

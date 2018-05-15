@@ -331,6 +331,11 @@ const CSpectrum& CProcessFlowContext::GetSpectrum() const
     return *m_Spectrum;
 }
 
+bool CProcessFlowContext::correctSpectrum(Float64 LambdaMin,  Float64 LambdaMax)
+{
+    return m_Spectrum->correctSpectrum( LambdaMin, LambdaMax ) ;
+}
+
 const CSpectrum& CProcessFlowContext::GetSpectrumWithoutContinuum() const
 {
     return *m_SpectrumWithoutContinuum;

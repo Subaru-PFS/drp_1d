@@ -1,5 +1,6 @@
 #include <RedshiftLibrary/spectrum/spectrum.h>
 
+#include <RedshiftLibrary/log/log.h>
 
 #include <RedshiftLibrary/common/mask.h>
 #include <RedshiftLibrary/debug/assert.h>
@@ -219,8 +220,22 @@ const Bool CSpectrum::IsFluxValid( Float64 LambdaMin,  Float64 LambdaMax ) const
     Int32 iMin = m_SpectralAxis.GetIndexAtWaveLength(LambdaMin);
     Int32 iMax = m_SpectralAxis.GetIndexAtWaveLength(LambdaMax);
     for(Int32 i=iMin; i<iMax; i++){
+
+        //check flux
+        if( isnan(flux[i]) ){
+            continue;
+        }
+        if( isinf(flux[i]) ){
+            continue;
+        }
+        if( flux[i] != flux[i] ){
+            continue;
+        }
+
+        //all zero check
         if( flux[i] != 0.0 ){
             allzero = false;
+            //Log.LogDebug("    CSpectrum::IsFluxValid - Found non zero and valid flux value (=%e) at index=%d", i, flux[i]);
         }
     }
     Bool valid = !allzero;
@@ -230,25 +245,139 @@ const Bool CSpectrum::IsFluxValid( Float64 LambdaMin,  Float64 LambdaMax ) const
 const Bool CSpectrum::IsNoiseValid( Float64 LambdaMin,  Float64 LambdaMax ) const
 {
     Bool valid=true;
+    Int32 nInvalid = 0;
 
     const Float64* error = m_FluxAxis.GetError();
     Int32 iMin = m_SpectralAxis.GetIndexAtWaveLength(LambdaMin);
     Int32 iMax = m_SpectralAxis.GetIndexAtWaveLength(LambdaMax);
     for(Int32 i=iMin; i<iMax; i++){
+        Bool validSample=true;
         if( error[i] <= 0 ){
-            valid = false;
+            validSample = false;
+            Log.LogDebug("    CSpectrum::IsNoiseValid - Found negative noise value (=%e) at index=%d", i, error[i]);
         }
         if( isnan(error[i]) ){
-            valid = false;
+            validSample = false;
+            Log.LogDebug("    CSpectrum::IsNoiseValid - Found nan noise value (=%e) at index=%d", i, error[i]);
         }
         if( isinf(error[i]) ){
-            valid = false;
+            validSample = false;
+            Log.LogDebug("    CSpectrum::IsNoiseValid - Found inf noise value (=%e) at index=%d", i, error[i]);
         }
         if( error[i] != error[i] ){
-            valid = false;
+            validSample = false;
+            Log.LogDebug("    CSpectrum::IsNoiseValid - Found != noise value (=%e) at index=%d", i, error[i]);
+        }
+        if(!validSample){
+            valid=false;
+            nInvalid++;
         }
     }
+    if(nInvalid>0)
+    {
+        Log.LogDetail("    CSpectrum::IsNoiseValid - Found %d invalid noise samples", nInvalid);
+    }
     return valid;
+}
+
+Bool CSpectrum::correctSpectrum( Float64 LambdaMin,  Float64 LambdaMax, Float64 coeffCorr )
+{
+    Bool corrected=false;
+    Int32 nCorrected = 0;
+
+    Float64* error = m_FluxAxis.GetError();
+    Float64* flux = m_FluxAxis.GetSamples();
+
+    Int32 iMin = m_SpectralAxis.GetIndexAtWaveLength(LambdaMin);
+    Int32 iMax = m_SpectralAxis.GetIndexAtWaveLength(LambdaMax);
+    //Log.LogDebug("    CSpectrum::correctSpectrum - debug - iMin=%d and wmin=%f, iMax=%d and wmax=%f", iMin, m_SpectralAxis[iMin], iMax, m_SpectralAxis[iMax]);
+
+    Float64 maxNoise = -DBL_MAX;
+    Float64 minFlux = DBL_MAX;
+    for(Int32 i=iMin; i<=iMax; i++){
+        //Log.LogDebug("    CSpectrum::correctSpectrum - debug - RAW sample for maxFlux/minNoise. Found err(=%f) and flux=%f", error[i], flux[i]);
+        //check noise
+        if( error[i] <= 0 ){
+            continue;
+        }
+        if( isnan(error[i]) ){
+            continue;
+        }
+        if( isinf(error[i]) ){
+            continue;
+        }
+        if( error[i] != error[i] ){
+            continue;
+        }
+
+        //check flux
+        if( isnan(flux[i]) ){
+            continue;
+        }
+        if( isinf(flux[i]) ){
+            continue;
+        }
+        if( flux[i] != flux[i] ){
+            continue;
+        }
+        //Log.LogDebug("    CSpectrum::correctSpectrum - debug - valid sample for maxFlux/minNoise. Found err(=%f) and flux=%f", error[i], flux[i]);
+        if(error[i] > maxNoise)
+        {
+            maxNoise = error[i];
+        }
+        if(abs(flux[i]) < abs(minFlux))
+        {
+            minFlux = abs(flux[i]);
+        }
+    }
+
+    for(Int32 i=iMin; i<=iMax; i++){
+        Bool validSample=true;
+
+        //check noise
+        if( error[i] <= 0 ){
+            validSample = false;
+            Log.LogDebug("    CSpectrum::correctSpectrum - Found negative noise value (=%f) at index=%d (w=%f)", i, error[i], m_SpectralAxis[i]);
+        }
+        if( isnan(error[i]) ){
+            validSample = false;
+            Log.LogDebug("    CSpectrum::correctSpectrum - Found nan noise value (=%f) at index=%d (w=%f)", i, error[i], m_SpectralAxis[i]);
+        }
+        if( isinf(error[i]) ){
+            validSample = false;
+            Log.LogDebug("    CSpectrum::correctSpectrum - Found inf noise value (=%f) at index=%d (w=%f)", i, error[i], m_SpectralAxis[i]);
+        }
+        if( error[i] != error[i] ){
+            validSample = false;
+            Log.LogDebug("    CSpectrum::correctSpectrum - Found != noise value (=%f) at index=%d (w=%f)", i, error[i], m_SpectralAxis[i]);
+        }
+
+        //check flux
+        if( isnan(flux[i]) ){
+            validSample = false;
+            Log.LogDebug("    CSpectrum::correctSpectrum - Found nan flux value (=%f) at index=%d (w=%f)", i, flux[i], m_SpectralAxis[i]);
+        }
+        if( isinf(flux[i]) ){
+            validSample = false;
+            Log.LogDebug("    CSpectrum::correctSpectrum - Found inf flux value (=%f) at index=%d (w=%f)", i, flux[i], m_SpectralAxis[i]);
+        }
+        if( flux[i] != flux[i] ){
+            validSample = false;
+            Log.LogDebug("    CSpectrum::correctSpectrum - Found != flux value (=%f) at index=%d (w=%f)", i, flux[i], m_SpectralAxis[i]);
+        }
+
+        if(!validSample){
+            error[i]=maxNoise*coeffCorr;
+            flux[i]=minFlux/coeffCorr;
+            corrected=true;
+            nCorrected++;
+        }
+    }
+    if(nCorrected>0)
+    {
+        Log.LogInfo("    CSpectrum::correctSpectrum - Corrected %d invalid samples with coeff (=%f), minFlux=%e, maxNoise=%e", nCorrected, coeffCorr, minFlux, maxNoise);
+    }
+    return corrected;
 }
 
 

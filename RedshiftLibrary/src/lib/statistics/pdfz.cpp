@@ -338,6 +338,26 @@ Int32 CPdfz::Marginalize(TFloat64List redshifts, std::vector<TFloat64List> merit
         return -99;
     }
 
+    //check merit curves. Maybe this should be assert stuff ?
+    for(Int32 km=0; km<meritResults.size(); km++)
+    {
+        TFloat64List _merit = meritResults[km];
+        Bool invalidFound = false;
+        for(Int32 kz=0; kz<_merit.size(); kz++)
+        {
+            if(_merit[kz] != _merit[kz])
+            {
+                Log.LogError("    CPdfz::Marginalize - merit result #%d has at least one nan or invalid value at index=%d", km, kz);
+                invalidFound=true;
+            }
+            if(invalidFound)
+            {
+                break;
+            }
+        }
+    }
+
+
     Bool initPostMarg = false;
     std::vector<UInt32> nSum;
 

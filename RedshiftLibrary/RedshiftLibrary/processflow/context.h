@@ -59,6 +59,8 @@ public:
     const CTemplateCatalog&         GetTemplateCatalog() const;
     const CRayCatalog&              GetRayCatalog() const;
 
+    bool correctSpectrum(Float64 LambdaMin,  Float64 LambdaMax);
+
     CParameterStore&                GetParameterStore();
     COperatorResultStore&           GetResultStore();
     CDataStore&                     GetDataStore();
