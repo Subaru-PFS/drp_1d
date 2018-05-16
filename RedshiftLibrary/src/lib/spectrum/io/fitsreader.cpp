@@ -122,7 +122,7 @@ Bool CSpectrumIOFitsReader::Read1( fitsfile* fptr, std::shared_ptr<CSpectrum> sp
     // Read data
     CSpectrumAxis& spcFluxAxis = spectrum->GetFluxAxis();
 
-    Int32 nullval = 0;
+    Float64 nullval = NAN;
     Int32 anynul = 0;
     spcFluxAxis.SetSize( length );
     if( fits_read_img( fptr, TDOUBLE, 1, length, &nullval, spcFluxAxis.GetSamples(), &anynul, &status ) )
