@@ -28,6 +28,7 @@ public:
         nStatus_OK = 0,
         nStatus_DataError,
         nStatus_LoopError,
+        nStatus_InvalidProductsError,
         nStatus_NoOverlap
     };
 

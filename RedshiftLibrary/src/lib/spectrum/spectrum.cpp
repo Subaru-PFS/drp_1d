@@ -300,10 +300,10 @@ Bool CSpectrum::correctSpectrum( Float64 LambdaMin,  Float64 LambdaMax, Float64 
         if( error[i] <= 0 ){
             continue;
         }
-        if( isnan(error[i]) ){
+        if( std::isnan(error[i]) ){
             continue;
         }
-        if( isinf(error[i]) ){
+        if( std::isinf(error[i]) ){
             continue;
         }
         if( error[i] != error[i] ){
@@ -311,10 +311,10 @@ Bool CSpectrum::correctSpectrum( Float64 LambdaMin,  Float64 LambdaMax, Float64 
         }
 
         //check flux
-        if( isnan(flux[i]) ){
+        if( std::isnan(flux[i]) ){
             continue;
         }
-        if( isinf(flux[i]) ){
+        if( std::isinf(flux[i]) ){
             continue;
         }
         if( flux[i] != flux[i] ){
@@ -325,10 +325,20 @@ Bool CSpectrum::correctSpectrum( Float64 LambdaMin,  Float64 LambdaMax, Float64 
         {
             maxNoise = error[i];
         }
-        if(abs(flux[i]) < abs(minFlux))
+        if(std::abs(flux[i]) < std::abs(minFlux))
         {
             minFlux = abs(flux[i]);
         }
+    }
+    if(minFlux==DBL_MAX)
+    {
+        Log.LogError("    CSpectrum::correctSpectrum - unable to set minFlux value (=%e). Setting it to 0.", minFlux);
+        minFlux = 0.0;
+    }
+    if(maxNoise==-DBL_MAX)
+    {
+        Log.LogError("    CSpectrum::correctSpectrum - unable to set maxNoise value.");
+        return false;
     }
 
     for(Int32 i=iMin; i<=iMax; i++){

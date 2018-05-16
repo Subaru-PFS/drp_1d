@@ -434,7 +434,30 @@ Void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& t
 
                     sumS+= Yspc[j]*Yspc[j]*err2;
 
-                    if(option_igmFastProcessing && kMeiksin==0)
+		    if( std::isinf(err2) || std::isnan(err2) ){
+		       	Log.LogError("  Operator-Chisquare2: found invalid inverse variance : err2=%e, for index=%d at wl=%f", err2, j, spcSpectralAxis[j]);
+			status = nStatus_InvalidProductsError;
+            		return ; 
+		    }
+
+
+		    if( std::isinf(sumS) || std::isnan(sumS) || sumS!=sumS ){
+		       	Log.LogError("  Operator-Chisquare2: found invalid dtd : dtd=%e, for index=%d at wl=%f", sumS, j, spcSpectralAxis[j]);
+		       	Log.LogError("  Operator-Chisquare2: found invalid dtd : Yspc=%e, for index=%d at wl=%f", Yspc[j], j, spcSpectralAxis[j]);
+		       	Log.LogError("  Operator-Chisquare2: found invalid dtd : err2=%e, for index=%d at wl=%f", err2, j, spcSpectralAxis[j]);
+		       	Log.LogError("  Operator-Chisquare2: found invalid dtd : error=%e, for index=%d at wl=%f", error[j], j, spcSpectralAxis[j]);
+			status = nStatus_InvalidProductsError;
+            		return ; 
+		    }
+                    
+		    if( std::isinf(sumT) || std::isnan(sumT) ){
+		       	Log.LogError("  Operator-Chisquare2: found invalid mtm : mtm=%e, for index=%d at wl=%f", sumT, j, spcSpectralAxis[j]);
+			status = nStatus_InvalidProductsError;
+            		return ; 
+		    }
+                    
+
+		    if(option_igmFastProcessing && kMeiksin==0)
                     {
                         //store intermediate sums for IGM range
                         if(sumsIgmSaved==0)
@@ -747,6 +770,13 @@ std::shared_ptr<COperatorResult> COperatorChiSquare2::Compute(const CSpectrum& s
                   opt_extinction,
                   opt_dustFitting,
                   additional_spcMask);
+
+	if(result->Status[i]==nStatus_InvalidProductsError)
+        {
+            Log.LogError("  Operator-Chisquare2: found invalid chisquare products for z=%f. Now breaking z loop.", redshift);
+      	    break;
+	}
+
     }
 
     //overlap warning
