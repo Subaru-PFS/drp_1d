@@ -275,6 +275,21 @@ Bool CTemplateCatalog::LoadCategory( const path& dirPath, const std::string&  ca
     directory_iterator end_itr;
     for ( directory_iterator itr( dirPath ); itr != end_itr; ++itr )
     {
+        //hack limit the number of templates loaded for this category
+        //Int32 ntplMax = 7;
+        //if(GetTemplateCount(category)>=ntplMax)
+        //{
+        //    return true;
+        //}
+
+        //hack filter the template catalog by name
+        //std::string name = itr->path().c_str();
+        //std::size_t foundstra = name.find("Rebinned-NEW-E-extendeddataExtensionData");
+        //if (foundstra==std::string::npos)
+        //{
+        //    continue;
+        //}
+
         if ( !is_directory( itr->status() ) )
         {
             if( !Add( itr->path().c_str(), category ) )

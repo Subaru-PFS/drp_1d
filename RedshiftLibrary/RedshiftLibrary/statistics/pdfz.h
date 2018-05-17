@@ -30,6 +30,9 @@ public:
     std::vector<Float64> GetEuclidNhaLogZPrior(std::vector<Float64> redshifts);
     std::vector<Float64> CombineLogZPrior(std::vector<Float64> logprior1, std::vector<Float64> logprior2);
 
+    Float64 getSumTrapez(std::vector<Float64> redshifts, std::vector<Float64> valprobalog);
+    Float64 getSumRect(std::vector<Float64> redshifts, std::vector<Float64> valprobalog);
+
 
     Int32 Marginalize(TFloat64List redshifts,
                       std::vector<TFloat64List> meritResults,

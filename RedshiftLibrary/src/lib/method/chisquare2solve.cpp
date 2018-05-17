@@ -319,22 +319,36 @@ Int32 CMethodChisquare2Solve::CombinePDF(CDataStore &store, std::string scopeStr
 
     if(opt_combine=="marg" && chiSquares.size()>0)
     {
-        Log.LogInfo("Chisquare2: Pdfz combination - Marginalization");
+        Log.LogInfo("    chisquare2solve: Pdfz combination - Marginalization");
         retPdfz = pdfz.Marginalize( redshifts, chiSquares, priors, cstLog, postmargZResult);
     }else if(opt_combine=="bestchi2")
     {
-        Log.LogInfo("Chisquare2: Pdfz combination - BestChi2");
+        Log.LogInfo("    chisquare2solve: Pdfz combination - BestChi2");
         retPdfz = pdfz.BestChi2( redshifts, chiSquares, priors, cstLog, postmargZResult);
     }else{
-        Log.LogError("Chisquare2: Unable to parse pdf combination method option");
+        Log.LogError("    chisquare2solve: Unable to parse pdf combination method option");
     }
 
 
     if(retPdfz!=0)
     {
-        Log.LogError("chisquare2: Pdfz computation failed");
+        Log.LogError("    chisquare2solve: Pdfz computation failed");
     }else{
-        store.StoreGlobalResult( "zPDF/logposterior.logMargP_Z_data", postmargZResult); //need to store this pdf with this exact same name so that zqual can load it. see zqual.cpp/ExtractFeaturesPDF
+
+        //check pdf sum=1
+        Float64 sumRect = pdfz.getSumRect(postmargZResult->Redshifts, postmargZResult->valProbaLog);
+        Float64 sumTrapz = pdfz.getSumTrapez(postmargZResult->Redshifts, postmargZResult->valProbaLog);
+        Log.LogDetail("    chisquare2solve: Pdfz normalization - sum rect. = %e", sumRect);
+        Log.LogDetail("    chisquare2solve: Pdfz normalization - sum trapz. = %e", sumTrapz);
+        Bool pdfSumCheck = abs(sumRect-1.0)<1e-1 || abs(sumTrapz-1.0)<1e-1;
+        if(!pdfSumCheck){
+            Log.LogError("    chisquare2solve: Pdfz normalization failed");
+        }
+
+
+        {
+            store.StoreGlobalResult( "zPDF/logposterior.logMargP_Z_data", postmargZResult); //need to store this pdf with this exact same name so that zqual can load it. see zqual.cpp/ExtractFeaturesPDF
+        }
     }
 
     return retPdfz;
