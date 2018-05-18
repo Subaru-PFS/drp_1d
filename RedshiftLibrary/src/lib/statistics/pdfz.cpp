@@ -29,6 +29,7 @@ CPdfz::~CPdfz()
 Int32 CPdfz::Compute(TFloat64List merits, TFloat64List redshifts, Float64 cstLog, TFloat64List logZPrior, TFloat64List& logPdf, Float64 &logEvidence)
 {
     Bool verbose = false;
+    Int32 sumMethod = 1; //0=rect, 1=trapez
     logPdf.clear();
 
     if(verbose)
@@ -107,30 +108,7 @@ Int32 CPdfz::Compute(TFloat64List merits, TFloat64List redshifts, Float64 cstLog
     logPdf.resize(redshifts.size());
 
     /* ------------------------------------------------------------------
-    * NOTE (copied from dev_bayes branch by S. Jamal):
-    * NOTE-20180219 (this has been modified to support not regular z-grids: ie. zstep not constant). z-step now included in the calculation of the MAXI log-sum-exp scale factor
-    * -------
-    * The sum is realised in ( Z , TPL) 2D space
-    * csteLOG = -N/2*LOG(2*pi) - LOG ( product ( sigma_RMSE) )
-    *      =  -N/2*LOG(2*pi) - sum ( LOG ( sigma_RMSE) )
-    *      csteLOG is independent from the (z, tpl) space; only dependant
-    *      of input spectrum (rmse & nbr points for the overlapRate)
-    *
-    * LogEvidence  = LOG ( sum  ( Prior * Likelihood   )  )
-    *      = LOG ( sum ( EXPONENTIAL ( logPrior + logLikelihood )  )  )
-    *      = LOG ( sum ( EXPONENTIAL ( logPrior  - chi2/2 +  csteLOG )  )  )
-    *      = LOG ( csteLOG * sum ( EXPONENTIAL  ( logPrior - chi2/2 )  )  )
-    *      = csteLOG + LOG ( sum ( EXPONENTIAL ( logPrior  - chi2/2  )  )
-    *
-    * The values "logPrior  - chi2/2"   are very small.
-    * Cannot comput EXP directly.
-    * The LOG-SUM-EXP computational trick is used here:
-    *              smallVALUES = logPrior  - chi2/2
-    *              MAXI = max(smallVALUES)
-    *              ModifiedEXPO = EXPONENTIAL  ( smallVALUES - MAXI  )
-    *
-    *              LogEvidence = csteLOG + MAXI +  LOG ( sum  ( ModifiedEXPO )
-    *
+    * NOTE: this uses the LOG-SUM-EXP trick originally suggested by S. Jamal
     * ------------------------------------------------------------------  */
 
     //prepare logLikelihood and LogEvidence
@@ -141,6 +119,7 @@ Int32 CPdfz::Compute(TFloat64List merits, TFloat64List redshifts, Float64 cstLog
     {
         mchi2Sur2[k] = -0.5*merits[k];
         Float64 zstep;
+        // here, using rect. approx. (enough precision for maxi estimation)
         if(k==0)
         {
             zstep = (redshifts[k+1]-redshifts[k])*0.5;
@@ -159,25 +138,44 @@ Int32 CPdfz::Compute(TFloat64List merits, TFloat64List redshifts, Float64 cstLog
         }
     }
 
+
     Float64 sumModifiedExp = 0.0;
-    for ( UInt32 k=0; k<redshifts.size(); k++)
+    if(sumMethod==0)
     {
-        Float64 modifiedEXPO = exp(smallVALUES[k]-maxi);
-        Float64 area = (modifiedEXPO);
-        Float64 zstep;
-        if(k==0)
+        Log.LogDebug("Pdfz: Pdfz computation: summation method option = RECTANGLES");
+        for ( UInt32 k=0; k<redshifts.size(); k++)
         {
-            zstep = (redshifts[k+1]-redshifts[k])*0.5;
+            Float64 modifiedEXPO = exp(smallVALUES[k]-maxi);
+            Float64 area = (modifiedEXPO);
+            Float64 zstep;
+            if(k==0)
+            {
+                zstep = (redshifts[k+1]-redshifts[k])*0.5;
+            }
+            else if(k==redshifts.size()-1)
+            {
+                zstep = (redshifts[k]-redshifts[k-1])*0.5;
+            }else
+            {
+                zstep = (redshifts[k+1]+redshifts[k])*0.5 - (redshifts[k]+redshifts[k-1])*0.5;
+            }
+            area *= zstep;
+            sumModifiedExp += area;
         }
-        else if(k==redshifts.size()-1)
+    }else if(sumMethod==1)
+    {
+        Log.LogDebug("Pdfz: Pdfz computation: summation method option = TRAPEZOID");
+        Float64 modifiedEXPO_previous = exp(smallVALUES[0]-maxi);
+        for ( UInt32 k=1; k<redshifts.size(); k++)
         {
-            zstep = (redshifts[k]-redshifts[k-1])*0.5;
-        }else
-        {
-            zstep = (redshifts[k+1]+redshifts[k])*0.5 - (redshifts[k]+redshifts[k-1])*0.5;
+            Float64 modifiedEXPO = exp(smallVALUES[k]-maxi);
+            Float64 trapezArea = (modifiedEXPO+modifiedEXPO_previous)/2.0;
+            trapezArea *= (redshifts[k]-redshifts[k-1]);
+            sumModifiedExp += trapezArea;
+            modifiedEXPO_previous = modifiedEXPO;
         }
-        area *= zstep;
-        sumModifiedExp += area;
+    }else{
+        Log.LogError("Pdfz: Pdfz computation: unable to parse summation method option");
     }
     logEvidence = cstLog + maxi + log(sumModifiedExp);
 
