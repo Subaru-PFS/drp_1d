@@ -67,8 +67,8 @@ Int32 CPdfz::Compute(TFloat64List merits, TFloat64List redshifts, Float64 cstLog
             maxdz = diff;
         }
     }
-    Float64 zstep = (maxdz+mindz)/2.0;
-    if(abs(maxdz-mindz)/zstep>reldzThreshold)
+    Float64 zstep_mean = (maxdz+mindz)/2.0;
+    if(abs(maxdz-mindz)/zstep_mean>reldzThreshold)
     {
         constantdz = false;
         return 2;
@@ -140,36 +140,44 @@ Int32 CPdfz::Compute(TFloat64List merits, TFloat64List redshifts, Float64 cstLog
     for ( UInt32 k=0; k<redshifts.size(); k++)
     {
         mchi2Sur2[k] = -0.5*merits[k];
-        //find the smallest zstep in order to use most penalizing case fot the log-sum-exp trick
-        Float64 zstepPrevious = zstep;
-        if(k>0){
-            zstepPrevious = (redshifts[k]-redshifts[k-1]);
-        }else if(k<redshifts.size()-1){
-            zstepPrevious = (redshifts[k+1]-redshifts[k]);
-        }
-        Float64 zstepNext = zstep;
-        if(k<redshifts.size()-1){
-            zstepNext = (redshifts[k+1]-redshifts[k]);
-        }else if(k>0){
-            zstepNext = (redshifts[k]-redshifts[k-1]);
-        }
-        Float64 zstepCurrent = min(zstepPrevious, zstepNext);
-        smallVALUES[k] = mchi2Sur2[k] + logZPrior[k];
-        if(maxi<smallVALUES[k] + log(zstepCurrent))
+        Float64 zstep;
+        if(k==0)
         {
-            maxi = smallVALUES[k] + log(zstepCurrent); // maxi will be used to avoid underflows when summing exponential of small values
+            zstep = (redshifts[k+1]-redshifts[k])*0.5;
+        }
+        else if(k==redshifts.size()-1)
+        {
+            zstep = (redshifts[k]-redshifts[k-1])*0.5;
+        }else
+        {
+            zstep = (redshifts[k+1]+redshifts[k])*0.5 - (redshifts[k]+redshifts[k-1])*0.5;
+        }
+        smallVALUES[k] = mchi2Sur2[k] + logZPrior[k];
+        if(maxi<smallVALUES[k] + log(zstep))
+        {
+            maxi = smallVALUES[k] + log(zstep); // maxi will be used to avoid underflows when summing exponential of small values
         }
     }
 
     Float64 sumModifiedExp = 0.0;
-    Float64 modifiedEXPO_previous = exp(smallVALUES[0]-maxi);
-    for ( UInt32 k=1; k<redshifts.size(); k++)
+    for ( UInt32 k=0; k<redshifts.size(); k++)
     {
         Float64 modifiedEXPO = exp(smallVALUES[k]-maxi);
-        Float64 trapezArea = (modifiedEXPO+modifiedEXPO_previous)/2.0;
-        trapezArea *= (redshifts[k]-redshifts[k-1]);
-        sumModifiedExp += trapezArea;
-        modifiedEXPO_previous = modifiedEXPO;
+        Float64 area = (modifiedEXPO);
+        Float64 zstep;
+        if(k==0)
+        {
+            zstep = (redshifts[k+1]-redshifts[k])*0.5;
+        }
+        else if(k==redshifts.size()-1)
+        {
+            zstep = (redshifts[k]-redshifts[k-1])*0.5;
+        }else
+        {
+            zstep = (redshifts[k+1]+redshifts[k])*0.5 - (redshifts[k]+redshifts[k-1])*0.5;
+        }
+        area *= zstep;
+        sumModifiedExp += area;
     }
     logEvidence = cstLog + maxi + log(sumModifiedExp);
 
@@ -244,36 +252,45 @@ Float64 CPdfz::getSumRect(std::vector<Float64> redshifts, std::vector<Float64> v
     std::vector<Float64> smallVALUES(redshifts.size(), 0.0);
     for ( UInt32 k=0; k<redshifts.size(); k++)
     {
-        //find the smallest zstep in order to use most penalizing case fot the log-sum-exp trick
-        Float64 zstepPrevious = -1.;
-        if(k>0){
-            zstepPrevious = (redshifts[k]-redshifts[k-1]);
-        }else if(k<redshifts.size()-1){
-            zstepPrevious = (redshifts[k+1]-redshifts[k]);
-        }
-        Float64 zstepNext = -1.;
-        if(k<redshifts.size()-1){
-            zstepNext = (redshifts[k+1]-redshifts[k]);
-        }else if(k>0){
-            zstepNext = (redshifts[k]-redshifts[k-1]);
-        }
-        Float64 zstepCurrent = min(zstepPrevious, zstepNext);
-        smallVALUES[k] = valprobalog[k];
-        if(maxi<smallVALUES[k] + log(zstepCurrent))
+        Float64 zstep;
+        if(k==0)
         {
-            maxi = smallVALUES[k] + log(zstepCurrent); // maxi will be used to avoid underflows when summing exponential of small values
+            zstep = (redshifts[k+1]-redshifts[k])*0.5;
+        }
+        else if(k==redshifts.size()-1)
+        {
+            zstep = (redshifts[k]-redshifts[k-1])*0.5;
+        }else
+        {
+            zstep = (redshifts[k+1]+redshifts[k])*0.5 - (redshifts[k]+redshifts[k-1])*0.5;
+        }
+        smallVALUES[k] = valprobalog[k];
+        if(maxi<smallVALUES[k] + log(zstep))
+        {
+            maxi = smallVALUES[k] + log(zstep); // maxi will be used to avoid underflows when summing exponential of small values
         }
     }
 
-    Log.LogDetail("  pdfz: getSumRect - found maxi = %e", maxi);
+    Log.LogDebug("  pdfz: getSumRect - found maxi = %e", maxi);
     Float64 sumModifiedExp = 0.0;
     for ( UInt32 k=0; k<redshifts.size()-1; k++)
     {
         Float64 modifiedEXPO = exp(smallVALUES[k]-maxi);
-        Float64 trapezArea = modifiedEXPO;
-        Float64 zstep=(redshifts[k+1]-redshifts[k]);
-        trapezArea *= zstep;
-        sumModifiedExp += trapezArea;
+        Float64 area = modifiedEXPO;
+        Float64 zstep;
+        if(k==0)
+        {
+            zstep = (redshifts[k+1]-redshifts[k])*0.5;
+        }
+        else if(k==redshifts.size()-1)
+        {
+            zstep = (redshifts[k]-redshifts[k-1])*0.5;
+        }else
+        {
+            zstep = (redshifts[k+1]+redshifts[k])*0.5 - (redshifts[k]+redshifts[k-1])*0.5;
+        }
+        area *= zstep;
+        sumModifiedExp += area;
     }
     Float64 logSum = maxi + log(sumModifiedExp);
 

@@ -337,12 +337,12 @@ Int32 CMethodChisquare2Solve::CombinePDF(CDataStore &store, std::string scopeStr
 
         //check pdf sum=1
         Float64 sumRect = pdfz.getSumRect(postmargZResult->Redshifts, postmargZResult->valProbaLog);
-        Float64 sumTrapz = pdfz.getSumTrapez(postmargZResult->Redshifts, postmargZResult->valProbaLog);
+        Float64 sumTrapez = pdfz.getSumTrapez(postmargZResult->Redshifts, postmargZResult->valProbaLog);
         Log.LogDetail("    chisquare2solve: Pdfz normalization - sum rect. = %e", sumRect);
-        Log.LogDetail("    chisquare2solve: Pdfz normalization - sum trapz. = %e", sumTrapz);
-        Bool pdfSumCheck = abs(sumRect-1.0)<1e-1 || abs(sumTrapz-1.0)<1e-1;
+        Log.LogDetail("    chisquare2solve: Pdfz normalization - sum trapz. = %e", sumTrapez);
+        Bool pdfSumCheck = abs(sumRect-1.0)<1e-1 || abs(sumTrapez-1.0)<1e-1;
         if(!pdfSumCheck){
-            Log.LogError("    chisquare2solve: Pdfz normalization failed");
+            Log.LogError("    chisquare2solve: Pdfz normalization failed (rectsum = %f, trapzesum = %f)", sumRect, sumTrapez);
         }
 
 
