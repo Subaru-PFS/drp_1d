@@ -226,6 +226,39 @@ Void COperatorResultStore::SaveAllResults( const CDataStore& store, const bfs::p
                 if (foundstr!=std::string::npos){
                     saveThisResult=true;
                 }
+            }else if(opt_lower=="default")
+            {
+                //save best fit parameters
+                std::string linemeasTagRes = "linemodel_fit_extrema_0";
+                std::size_t foundstr = resultName.find(linemeasTagRes.c_str());
+                if (foundstr!=std::string::npos){
+                    saveThisResult=true;
+                }
+                //save best model
+                std::string linemodelTagRes = "linemodel_spc_extrema_0";
+                foundstr = resultName.find(linemodelTagRes.c_str());
+                if (foundstr!=std::string::npos){
+                    saveThisResult=true;
+                }
+                //save best continuum
+                std::string continuummodelTagRes = "linemodel_continuum_extrema_0";
+                foundstr = resultName.find(continuummodelTagRes.c_str());
+                if (foundstr!=std::string::npos){
+                    saveThisResult=true;
+                }
+                //save redshiftresult brief
+                std::string redshiftresultTagRes = "redshiftresult";
+                foundstr = resultName.find(redshiftresultTagRes.c_str());
+                if (foundstr!=std::string::npos){
+                    saveThisResult=true;
+                }
+
+                //save pdf
+                std::string pdfTagRes = "logposterior.logMargP_Z_data";
+                foundstr = resultName.find(pdfTagRes.c_str());
+                if (foundstr!=std::string::npos){
+                    saveThisResult=true;
+                }
             }
 
             if(!saveThisResult)
