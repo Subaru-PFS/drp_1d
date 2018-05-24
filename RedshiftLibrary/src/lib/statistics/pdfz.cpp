@@ -297,6 +297,92 @@ Float64 CPdfz::getSumRect(std::vector<Float64> redshifts, std::vector<Float64> v
     return sum;
 }
 
+/**
+ * @brief CPdfz::getCandidateSumTrapez
+ * @param redshifts
+ * @param valprobalog
+ * @param zcandidate
+ * @param zwidth
+ * @return -1 if error, else sum around the candidate
+ */
+Float64 CPdfz::getCandidateSumTrapez(std::vector<Float64> redshifts, std::vector<Float64> valprobalog, Float64 zcandidate, Float64 zwidth)
+{
+    //check that redshifts are sorted
+    for ( UInt32 k=1; k<redshifts.size(); k++)
+    {
+        if(redshifts[k]<redshifts[k-1])
+        {
+            Log.LogError("    CPdfz::getCandidateSumTrapez - redshifts are not sorted for (at least) index={}", k);
+            return -1.0;
+        }
+    }
+
+    //find indexes kmin, kmax so that zmin and zmax are inside [ redshifts[kmin]:redshifts[kmax] ]
+    Int32 kmin=0;
+    Int32 kmax=redshifts.size()-1;
+    Float64 halfzwidth = zwidth/2.0;
+    for ( UInt32 k=0; k<redshifts.size(); k++)
+    {
+        if( redshifts[k] < (zcandidate-halfzwidth) )
+        {
+            kmin = k;
+        }
+    }
+    Log.LogDebug("    CPdfz::getCandidateSumTrapez - kmin index=%d", kmin);
+
+    for ( UInt32 k=redshifts.size()-1; k>0; k--)
+    {
+        if( redshifts[k] > (zcandidate+halfzwidth) )
+        {
+            kmax = k;
+        }
+    }
+    Log.LogDebug("    CPdfz::getCandidateSumTrapez - kmax index=%d", kmax);
+
+    //initialize the LOG-SUM-EXP trick
+    Float64 maxi = -DBL_MAX;
+    std::vector<Float64> smallVALUES(redshifts.size(), 0.0);
+    for ( UInt32 k=kmin; k<=kmax; k++)
+    {
+        //estimate zstep for the log-sum-exp trick
+        Float64 zstep;
+        if(k==0)
+        {
+            zstep = (redshifts[k+1]-redshifts[k]);
+        }
+        else if(k==redshifts.size()-1)
+        {
+            zstep = (redshifts[k]-redshifts[k-1]);
+        }else
+        {
+            zstep = (redshifts[k+1]+redshifts[k])*0.5 - (redshifts[k]+redshifts[k-1])*0.5;
+        }
+        smallVALUES[k] = valprobalog[k];
+        if(maxi<smallVALUES[k] + log(zstep))
+        {
+            maxi = smallVALUES[k] + log(zstep); // maxi will be used to avoid underflows when summing exponential of small values
+        }
+    }
+
+    //for now the sum is estimated between kmin and kmax.
+    //todo: INTERPOLATE (linear) in order to start exactly at zmin and stop at zmax
+    Float64 sum=0.0;
+    Float64 sumModifiedExp = 0.0;
+    Float64 modifiedEXPO_previous = exp(smallVALUES[kmin]-maxi);
+    for ( UInt32 k=kmin+1; k<=kmax; k++)
+    {
+        Float64 modifiedEXPO = exp(smallVALUES[k]-maxi);
+        Float64 trapezArea = (modifiedEXPO+modifiedEXPO_previous)/2.0;
+        trapezArea *= (redshifts[k]-redshifts[k-1]);
+        sumModifiedExp += trapezArea;
+        modifiedEXPO_previous = modifiedEXPO;
+    }
+    Float64 logSum = maxi + log(sumModifiedExp);
+
+    sum = exp(logSum);
+
+    return sum;
+}
 
 std::vector<Float64> CPdfz::GetConstantLogZPrior(UInt32 nredshifts)
 {

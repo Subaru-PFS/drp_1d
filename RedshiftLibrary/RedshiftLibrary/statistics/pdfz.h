@@ -32,6 +32,8 @@ public:
 
     Float64 getSumTrapez(std::vector<Float64> redshifts, std::vector<Float64> valprobalog);
     Float64 getSumRect(std::vector<Float64> redshifts, std::vector<Float64> valprobalog);
+    Float64 getCandidateSumTrapez(std::vector<Float64> redshifts, std::vector<Float64> valprobalog, Float64 zcandidate, Float64 zwidth);
+
 
 
     Int32 Marginalize(TFloat64List redshifts,

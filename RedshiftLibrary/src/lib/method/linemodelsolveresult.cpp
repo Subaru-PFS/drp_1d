@@ -295,5 +295,25 @@ Bool CLineModelSolveResult::GetBestRedshiftWithStrongELSnrPrior( const CDataStor
     return true;
 }
 
+Bool CLineModelSolveResult::GetRedshiftCandidates( const CDataStore& store,  std::vector<Float64>& redshiftcandidates) const
+{
+    Log.LogDebug( "CLineModelSolveResult:GetRedshiftCandidates" );
+    redshiftcandidates.clear();
+    std::string scope = store.GetScope( *this ) + "linemodelsolve.linemodel";
+    auto results = store.GetGlobalResult( scope.c_str() );
 
+    if(!results.expired())
+    {
+        auto lineModelResult = std::dynamic_pointer_cast<const CLineModelResult>( results.lock() );
+        for( Int32 i=0; i<lineModelResult->ExtremaResult.Extrema.size(); i++ )
+        {
+            Float64 tmpRedshift = lineModelResult->ExtremaResult.Extrema[i];
+            redshiftcandidates.push_back(tmpRedshift);
+        }
+    }else{
+        return false;
+    }
+
+    return true;
+}
 

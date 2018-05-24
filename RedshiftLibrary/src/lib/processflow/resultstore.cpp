@@ -187,6 +187,47 @@ void COperatorResultStore::SaveRedshiftResultError(  const std::string spcName, 
     }
 }
 
+void COperatorResultStore::SaveCandidatesResult( const CDataStore& store, const bfs::path& dir )
+{
+    // Append candidate result line to output candidate file
+    {
+        std::fstream outputStream;
+        // Save result at root of output directory
+        Int32 ret = CreateResultStorage( outputStream, bfs::path( "candidates.csv" ), dir );
+
+        //*
+        if(ret==1)
+        {
+            outputStream <<  "#Spectrum\tProcessingID\tRedshift_1\tProb_1\tRedshift_2\tProb_2\t..."<< std::endl;
+        }
+        //*/
+
+        auto  result = GetGlobalResult( "candidatesresult" ).lock();
+        if(result){
+            result->SaveLine( store, outputStream );
+        }
+    }
+}
+
+void COperatorResultStore::SaveCandidatesResultError( const std::string spcName,  const std::string processingID, const bfs::path& dir )
+{
+    // Append candidate result line to output candidate file
+    {
+        std::fstream outputStream;
+        // Save result at root of output directory
+        Int32 ret = CreateResultStorage( outputStream, bfs::path( "candidates.csv" ), dir );
+
+        //*
+        if(ret==1)
+        {
+            outputStream <<  "#Spectrum\tProcessingID\tRedshift_1\tProb_1\tRedshift_2\tProb_2\t..."<< std::endl;
+        }
+        //*/
+
+        outputStream <<  spcName << "\t" << processingID << "\t-1\t-1\t-1\t-1\t-1\t-1\t-1"<< std::endl;
+    }
+}
+
 Void COperatorResultStore::SaveReliabilityResult( const CDataStore& store, const bfs::path& dir )
 {
     // Append best redshift result line to output file

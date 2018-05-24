@@ -86,8 +86,8 @@ public:
     TOperatorResultMap              GetPerTemplateResult( const std::string& name ) const;
     std::weak_ptr<const COperatorResult>          GetGlobalResult( const std::string& name ) const;
 
-    Void                            SaveRedshiftResultHeader( const boost::filesystem::path& dir );
     Void                            SaveRedshiftResult( const boost::filesystem::path& dir );
+    Void                            SaveCandidatesResult( const boost::filesystem::path& dir );
     Void                            SaveReliabilityResult( const boost::filesystem::path& dir );
     Void                            SaveAllResults(const boost::filesystem::path& dir , const std::string opt) const;
 

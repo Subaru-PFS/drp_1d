@@ -38,6 +38,8 @@ public:
     Bool GetBestRedshiftWithStrongELSnrPrior( const CDataStore& store, Float64& redshift, Float64& merit ) const;
     Bool GetBestRedshiftFromPdf(const CDataStore& store, Float64& redshift, Float64& merit, Float64& sigma , Float64 &snrHa, std::string &modelTplratio, std::string &modelTplContinuum) const;
 
+    Bool GetRedshiftCandidates( const CDataStore& store,  std::vector<Float64>& redshiftcandidates) const;
+
 private:
 
 

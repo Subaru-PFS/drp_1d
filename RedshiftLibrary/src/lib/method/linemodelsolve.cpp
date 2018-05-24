@@ -379,6 +379,20 @@ Int32 CLineModelSolve::CombinePDF(CDataStore &store, std::shared_ptr<const CLine
     {
         Log.LogError("Linemodel: Pdfz computation failed");
     }else{
+
+        //check pdf sum=1
+        Float64 sumRect = pdfz.getSumRect(postmargZResult->Redshifts, postmargZResult->valProbaLog);
+        Float64 sumTrapez = pdfz.getSumTrapez(postmargZResult->Redshifts, postmargZResult->valProbaLog);
+        Log.LogDetail("    linemodelsolve: Pdfz normalization - sum rect. = %e", sumRect);
+        Log.LogDetail("    linemodelsolve: Pdfz normalization - sum trapz. = %e", sumTrapez);
+        Bool pdfSumCheck = abs(sumRect-1.0)<1e-1 || abs(sumTrapez-1.0)<1e-1;
+        if(!pdfSumCheck){
+            Log.LogError("    linemodelsolve: Pdfz normalization failed (rectsum = %f, trapzesum = %f)", sumRect, sumTrapez);
+        }
+
+        //compute pdf sum around candidate
+
+
         store.StoreGlobalResult( "zPDF/logposterior.logMargP_Z_data", postmargZResult); //need to store this pdf with this exact same name so that zqual can load it. see zqual.cpp/ExtractFeaturesPDF
     }
 

@@ -48,6 +48,7 @@
 #include <RedshiftLibrary/method/linemodeltplshapesolve.h>
 #include <RedshiftLibrary/method/linemodeltplshapesolveresult.h>
 
+#include <RedshiftLibrary/statistics/pdfcandidateszresult.h>
 #include <RedshiftLibrary/reliability/zqual.h>
 
 #include <boost/algorithm/string.hpp>
@@ -174,6 +175,35 @@ Bool CProcessFlow::Process( CProcessFlowContext& ctx )
                                  spcLambdaRange,
                                  redshifts );
 
+
+        //this should be done for every method, not just the linemodel
+        if( mResult)
+        {
+            Log.LogInfo( "Computing candidates Prob." );
+            std::shared_ptr<CLineModelSolveResult> solveResult = std::dynamic_pointer_cast<CLineModelSolveResult>( mResult );
+            std::shared_ptr<CPdfCandidateszResult> zcand = std::shared_ptr<CPdfCandidateszResult>(new CPdfCandidateszResult());
+            std::vector<Float64> zc;
+            Bool retzc = solveResult->GetRedshiftCandidates( ctx.GetDataStore(), zc);
+            Log.LogInfo( "  Found %d candidates", zc.size() );
+            if(retzc)
+            {
+                std::string scope_res = "zPDF/logposterior.logMargP_Z_data";
+                auto results =  ctx.GetDataStore().GetGlobalResult( scope_res.c_str() );
+                auto logzpdf1d = std::dynamic_pointer_cast<const CPdfMargZLogResult>( results.lock() );
+
+                if(!logzpdf1d)
+                {
+                    Log.LogError( "Extract Proba. for z candidates: no results retrieved from scope: %s", scope_res.c_str());
+                    return false;
+                }
+
+                Log.LogInfo( "  Integrating %d candidates proba.", zc.size() );
+                zcand->Compute(zc, logzpdf1d->Redshifts, logzpdf1d->valProbaLog);
+                ctx.GetDataStore().StoreScopedGlobalResult( "candidatesresult", zcand );
+            }else{
+                Log.LogError( "Failed to get z candidates from these results");
+            }
+        }
 
 
     }else if(methodName  == "zweimodelsolve" ){
