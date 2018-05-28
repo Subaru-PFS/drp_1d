@@ -402,10 +402,10 @@ std::vector<Float64> CPdfz::GetConstantLogZPrior(UInt32 nredshifts)
     return logzPrior;
 }
 
-std::vector<Float64> CPdfz::GetStrongLinePresenceLogZPrior(std::vector<bool> linePresence)
+std::vector<Float64> CPdfz::GetStrongLinePresenceLogZPrior(std::vector<bool> linePresence, Float64 penalization_factor)
 {
     Float64 probaPresent = 1.0;
-    Float64 probaAbsent = 1e-5;
+    Float64 probaAbsent = penalization_factor;
     std::vector<Float64> zPrior(linePresence.size(), probaAbsent);
     Float64 sum = 0.0;
     for(UInt32 kz=0; kz<linePresence.size(); kz++)

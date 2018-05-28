@@ -71,7 +71,7 @@ const std::string CZweiModelSolve::GetDescription()
     desc.append("\tparam: zweimodel.absvelocityfitmax = <float value>\n");
     desc.append("\tparam: zweimodel.fastfitlargegridstep = <float value>, deactivated if negative or zero\n");
     desc.append("\tparam: zweimodel.pdfcombination = {""marg"", ""bestchi2""}\n");
-    desc.append("\tparam: zweimodel.stronglinesprior = {""yes"", ""no""}\n");
+    desc.append("\tparam: zweimodel.stronglinesprior = <float value>, penalization factor = positive value or -1 to deactivate\n");
     desc.append("\tparam: zweimodel.saveintermediateresults = {""yes"", ""no""}\n");
 
 
@@ -107,7 +107,7 @@ Bool CZweiModelSolve::PopulateParameters( CDataStore& dataStore )
     dataStore.GetScopedParam( "zweimodel.continuumreestimation", m_opt_continuumreest, "no" );
     dataStore.GetScopedParam( "zweimodel.rules", m_opt_rules, "all" );
     dataStore.GetScopedParam( "zweimodel.extremacount", m_opt_extremacount, 10.0 );
-    dataStore.GetScopedParam( "zweimodel.stronglinesprior", m_opt_stronglinesprior, "no");
+    dataStore.GetScopedParam( "zweimodel.stronglinesprior", m_opt_stronglinesprior, 1e-16);
     dataStore.GetScopedParam( "zweimodel.pdfcombination", m_opt_pdfcombination, "marg");
     dataStore.GetScopedParam( "zweimodel.saveintermediateresults", m_opt_saveintermediateresults, "no");
 
@@ -164,7 +164,7 @@ Bool CZweiModelSolve::PopulateParameters( CDataStore& dataStore )
     Log.LogInfo( "    -extremacount: %.3f", m_opt_extremacount);
     Log.LogInfo( "    -fastfitlargegridstep: %.6f", m_opt_twosteplargegridstep);
 
-    Log.LogInfo( "    -pdf-stronglinesprior: %s", m_opt_stronglinesprior.c_str());
+    Log.LogInfo( "    -pdf-stronglinesprior: %e", m_opt_stronglinesprior);
     Log.LogInfo( "    -pdf-combination: %s", m_opt_pdfcombination.c_str()); // "marg";    // "bestchi2";    // "bestproba";
 
     if(m_opt_saveintermediateresults=="yes")
@@ -254,13 +254,12 @@ std::shared_ptr<CLineModelSolveResult> CZweiModelSolve::Compute( CDataStore& dat
 }
 
 
-Int32 CZweiModelSolve::CombinePDF(CDataStore &store, std::shared_ptr<const CLineModelResult> result, std::string opt_rigidity, std::string opt_combine, std::string opt_stronglinesprior)
+Int32 CZweiModelSolve::CombinePDF(CDataStore &store, std::shared_ptr<const CLineModelResult> result, std::string opt_rigidity, std::string opt_combine, Float64 opt_stronglinesprior)
 {
-    //hardcoded prior parameter
-    bool zPriorStrongLinePresence = (opt_stronglinesprior=="yes");
+    bool zPriorStrongLinePresence = (opt_stronglinesprior>0.0);
     if(zPriorStrongLinePresence)
     {
-        Log.LogInfo("Linemodel: Pdfz computation: StrongLinePresence prior enabled");
+        Log.LogInfo("Linemodel: Pdfz computation: StrongLinePresence prior enabled: factor=%e", opt_stronglinesprior);
     }else{
         Log.LogInfo("Linemodel: Pdfz computation: StrongLinePresence prior disabled");
     }
@@ -293,7 +292,7 @@ Int32 CZweiModelSolve::CombinePDF(CDataStore &store, std::shared_ptr<const CLine
         {
             UInt32 lineTypeFilter = 1;// for emission lines only
             std::vector<bool> strongLinePresence = result->GetStrongLinesPresence(lineTypeFilter, result->LineModelSolutions);
-            zPrior->valProbaLog = pdfz.GetStrongLinePresenceLogZPrior(strongLinePresence);
+            zPrior->valProbaLog = pdfz.GetStrongLinePresenceLogZPrior(strongLinePresence, opt_stronglinesprior);
         }else{
             zPrior->valProbaLog = pdfz.GetConstantLogZPrior(result->Redshifts.size());
         }
@@ -328,7 +327,7 @@ Int32 CZweiModelSolve::CombinePDF(CDataStore &store, std::shared_ptr<const CLine
             if(zPriorStrongLinePresence)
             {
                 std::vector<bool> strongLinePresence = result->StrongELPresentTplshapes[k];
-                _prior = pdfz.GetStrongLinePresenceLogZPrior(strongLinePresence);
+                _prior = pdfz.GetStrongLinePresenceLogZPrior(strongLinePresence, opt_stronglinesprior);
             }else
             {
                 _prior = pdfz.GetConstantLogZPrior(result->Redshifts.size());

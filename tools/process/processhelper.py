@@ -173,11 +173,17 @@ class processHelper(object):
             
         self.config_saveintermediateresults = self.getConfigVal("saveintermediateresults")
         print("INFO: saveintermediateresults is : {}".format(self.config_saveintermediateresults))
-        if not (self.config_saveintermediateresults=="no" or self.config_saveintermediateresults=="global" or self.config_saveintermediateresults=="linemeas" or self.config_saveintermediateresults=="all"):
+        if not (self.config_saveintermediateresults=="no" or self.config_saveintermediateresults=="global" or self.config_saveintermediateresults=="default" or self.config_saveintermediateresults=="linemeas" or self.config_saveintermediateresults=="all"):
             print("ERROR: config_saveintermediateresults bad value (={})...".format(self.config_saveintermediateresults))
             return False
-        
-        
+       
+ 
+        self.config_verbose = self.getConfigVal("verbose")
+        print("INFO: verbose is : {}".format(self.config_verbose)) 
+        if not (self.config_verbose=="0" or self.config_verbose=="1" or self.config_verbose=="2"):
+            print("ERROR: config_verbose bad value (={})...".format(self.config_verbose))
+            return False
+       
         return True
            
         
@@ -290,6 +296,9 @@ class processHelper(object):
             
         #warning, hardcoded: always use only 1 proc. thread        
         argStr = "{} --thread-count {}".format(argStr, "1")
+	        
+        argStr = "{} --verbose {}".format(argStr, self.config_verbose)
+
 
         if self.enableProcessAtZ:
             #Warning: hardcoded read first spc entry in the spclist, assuming it's the spc nametag 
