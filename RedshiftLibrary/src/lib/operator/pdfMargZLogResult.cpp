@@ -110,3 +110,17 @@ Void CPdfMargZLogResult::SaveLine( const CDataStore& store, std::ostream& stream
 	stream.precision(20);
     stream << "CPdfMargZLogResult" << "\t" << Redshifts.size() << std::endl;
 }
+
+Int32 CPdfMargZLogResult::getIndex( Float64 z ) const
+{
+    Int32 solutionIdx=-1;
+    for ( UInt32 i2=0; i2<Redshifts.size(); i2++)
+    {
+        if( Redshifts[i2]==z )
+        {
+            solutionIdx = i2;
+            break;
+        }
+    }
+    return solutionIdx;
+}

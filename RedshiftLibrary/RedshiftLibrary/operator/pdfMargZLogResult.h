@@ -23,6 +23,8 @@ class CPdfMargZLogResult : public COperatorResult
 
     Int32 Load( std::string filePath );
 
+    Int32 getIndex( Float64 z ) const;
+
     TFloat64List          Redshifts;
     TFloat64List          valProbaLog;
     Float64                 valEvidenceLog;

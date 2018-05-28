@@ -195,27 +195,31 @@ Bool CLineModelSolveResult::GetBestRedshiftFromPdf( const CDataStore& store,
 
         for( Int32 i=0; i<lineModelResult->ExtremaResult.Extrema.size(); i++ )
         {
-            UInt32 solIdx = lineModelResult->GetExtremaIndex(i);
-            if(solIdx<0 || solIdx>=logzpdf1d->valProbaLog.size())
+            for(Int32 kval=0; kval<lineModelResult->ExtremaResult.ExtremaExtendedRedshifts.size(); kval++)
             {
-                Log.LogError( "GetBestRedshiftFromPdf: pdf proba value not found for extremumIndex = %d", i);
-                return false;
-            }
+                Float64 zInCandidateRange = lineModelResult->ExtremaResult.ExtremaExtendedRedshifts[kval];
+                UInt32 solIdx = logzpdf1d->getIndex(zInCandidateRange);
+                if(solIdx<0 || solIdx>=logzpdf1d->valProbaLog.size())
+                {
+                    Log.LogError( "GetBestRedshiftFromPdf: pdf proba value not found for extremumIndex = %d", i);
+                    return false;
+                }
 
-            Float64 probaLog = logzpdf1d->valProbaLog[solIdx];
+                Float64 probaLog = logzpdf1d->valProbaLog[solIdx];
 
-            Float64 merit = lineModelResult->GetExtremaMerit(i);
-            //if( merit < tmpMerit )
-            if(probaLog>tmpProbaLog)
-            {
-                tmpProbaLog = probaLog;
-                tmpMerit = merit;
-                //tmpRedshift = lineModelResult->Extrema[i];
-                tmpRedshift = lineModelResult->ExtremaResult.ExtremaLastPass[i];
-                tmpSigma = lineModelResult->ExtremaResult.DeltaZ[i];
-                tmpSnrHa = lineModelResult->ExtremaResult.snrHa[i];
-                tmpModelTplratio = lineModelResult->ExtremaResult.FittedTplshapeName[i];
-                tmpModelTplcontinuum = lineModelResult->ExtremaResult.FittedTplName[i];
+                Float64 merit = lineModelResult->GetExtremaMerit(i);
+                //if( merit < tmpMerit )
+                if(probaLog>tmpProbaLog)
+                {
+                    tmpProbaLog = probaLog;
+                    tmpMerit = merit;
+                    //tmpRedshift = lineModelResult->Extrema[i];
+                    tmpRedshift = lineModelResult->ExtremaResult.ExtremaLastPass[i];
+                    tmpSigma = lineModelResult->ExtremaResult.DeltaZ[i];
+                    tmpSnrHa = lineModelResult->ExtremaResult.snrHa[i];
+                    tmpModelTplratio = lineModelResult->ExtremaResult.FittedTplshapeName[i];
+                    tmpModelTplcontinuum = lineModelResult->ExtremaResult.FittedTplName[i];
+                }
             }
         }
     }
