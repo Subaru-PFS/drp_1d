@@ -84,7 +84,7 @@ public:
                                               const Float64 &opt_twosteplargegridstep=0.001,
                                               const std::string &opt_rigidity="rules");
 
-    Int32 ComputeCandidates(const Int32 opt_extremacount);
+    Int32 ComputeCandidates(const Int32 opt_extremacount, const Int32 opt_sign, const std::vector<Float64> floatValues);
 
 
     Int32 ComputeSecondPass(CDataStore &dataStore,

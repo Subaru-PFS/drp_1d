@@ -788,7 +788,28 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
     //**************************************************
     //Compute z-candidates
     //**************************************************
-    Int32 retCandidates = linemodel.ComputeCandidates(m_opt_extremacount);
+    Bool overrideUseBestchi2forCandidates = false;
+    Int32 sign = 1;
+    std::vector<Float64> fvals;
+    std::shared_ptr<const CLineModelResult> lmresult = std::dynamic_pointer_cast<const CLineModelResult>( linemodel.getResult() );
+    if(overrideUseBestchi2forCandidates)
+    {
+        sign = -1;
+        fvals = lmresult->ChiSquare;
+    }else{
+        std::shared_ptr<CPdfMargZLogResult> postmargZResult = std::shared_ptr<CPdfMargZLogResult>(new CPdfMargZLogResult());
+        Int32 retCombinePdf = CombinePDF(lmresult, m_opt_rigidity, m_opt_pdfcombination, m_opt_stronglinesprior, postmargZResult);
+
+        if(retCombinePdf!=0)
+        {
+            Log.LogError("Linemodel: Candidates search - Pdfz computation failed");
+            return false;
+        }else{
+            sign = -1;
+            fvals = postmargZResult->valProbaLog;
+        }
+    }
+    Int32 retCandidates = linemodel.ComputeCandidates(m_opt_extremacount, 1, fvals);
     if( retCandidates!=0 )
     {
         Log.LogError( "Line Model, compute z-candidates failed. Aborting" );

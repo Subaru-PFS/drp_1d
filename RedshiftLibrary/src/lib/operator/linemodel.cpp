@@ -547,19 +547,21 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
     return 0;
 }
 
-Int32 COperatorLineModel::ComputeCandidates(const Int32 opt_extremacount)
+/**
+ * @brief COperatorLineModel::ComputeCandidates
+ * @param opt_extremacount
+ * @return
+ */
+Int32 COperatorLineModel::ComputeCandidates(const Int32 opt_extremacount, const Int32 opt_sign, const std::vector<Float64> floatValues)
 {
-    // extrema
-    Int32 extremumCount = opt_extremacount;
     Log.LogDebug( "  Operator-Linemodel: opt_extremacount = %d", opt_extremacount );
     TFloat64Range redshiftsRange(m_result->Redshifts[0], m_result->Redshifts[m_result->Redshifts.size()-1]);
-    Log.LogDebug( "  Operator-Linemodel: redshiftsRange.GetBegin() = %f, redshiftsRange.GetEnd() = %f",
-		redshiftsRange.GetBegin(), redshiftsRange.GetEnd() );
+    Log.LogDebug( "  Operator-Linemodel: redshiftsRange.GetBegin() = %f, redshiftsRange.GetEnd() = %f", redshiftsRange.GetBegin(), redshiftsRange.GetEnd() );
 
     if(m_result->Redshifts.size() == 1)
     {
         m_extremumList.push_back(SPoint( m_result->Redshifts[0], m_result->ChiSquare[0] ));
-        Log.LogInfo("  Operator-Linemodel: only 1 redshift calculated, only 1 extremum");
+        Log.LogInfo("  Operator-Linemodel: found only 1 redshift calculated, thus using only 1 extremum");
     }else if(opt_extremacount==-1)
     {
         for(Int32 ke=0; ke<m_result->Redshifts.size(); ke++)
@@ -571,8 +573,13 @@ Int32 COperatorLineModel::ComputeCandidates(const Int32 opt_extremacount)
     {
         Log.LogInfo("  Operator-Linemodel: ChiSquare min val = %e", m_result->GetMinChiSquare() );
         Log.LogInfo("  Operator-Linemodel: ChiSquare max val = %e", m_result->GetMaxChiSquare() );
-        CExtremum extremum( redshiftsRange, extremumCount, true, 2);
-        extremum.Find( m_result->Redshifts, m_result->ChiSquare, m_extremumList );
+        Bool invertForMinSearch = true;
+        if(opt_sign==1)
+        {
+            invertForMinSearch = false;
+        }
+        CExtremum extremum( redshiftsRange, opt_extremacount, invertForMinSearch, 2);
+        extremum.Find( m_result->Redshifts, floatValues, m_extremumList );
         if( m_extremumList.size() == 0 )
         {
             Log.LogError("  Operator-Linemodel: Extremum find method failed");
@@ -621,6 +628,7 @@ Int32 COperatorLineModel::ComputeCandidates(const Int32 opt_extremacount)
    //todo: remove duplicate redshifts from the extended extrema list
     return 0;
 }
+
 
 Int32 COperatorLineModel::ComputeSecondPass(CDataStore &dataStore,
                                             const CSpectrum& spectrum,
@@ -1390,7 +1398,9 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
     //**************************************************
     //Compute z-candidates
     //**************************************************
-    Int32 retCandidates = ComputeCandidates(opt_extremacount);
+
+    Log.LogInfo( "Line Model, compute z-candidates from best-chisquare values (nb. no priors)" );
+    Int32 retCandidates = ComputeCandidates(opt_extremacount, -1, m_result->ChiSquare);
     if( retCandidates!=0 )
     {
         Log.LogError( "Line Model, compute z-candidates failed. Aborting" );
