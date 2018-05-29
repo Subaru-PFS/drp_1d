@@ -8,7 +8,6 @@
 #include <RedshiftLibrary/processflow/datastore.h>
 
 #include <RedshiftLibrary/statistics/pdfz.h>
-#include <RedshiftLibrary/operator/pdfMargZLogResult.h>
 #include <RedshiftLibrary/operator/pdfLogresult.h>
 
 #include <boost/tokenizer.hpp>
@@ -196,7 +195,7 @@ std::shared_ptr<CLineModelSolveResult> CLineModelSolve::Compute( CDataStore& dat
 
     if(retSolve){
 
-        /* ------------------------  COMPUTE POSTMARG PDF  --------------------------  */
+        /* ------------------------  COMPUTE POSTERIOR PDF  --------------------------  */
         Log.LogInfo("linemodelsolve: Pdfz computation");
 
         std::string scope = "linemodelsolve.linemodel";
@@ -208,7 +207,28 @@ std::shared_ptr<CLineModelSolveResult> CLineModelSolve::Compute( CDataStore& dat
         }
         std::shared_ptr<const CLineModelResult> result = std::dynamic_pointer_cast<const CLineModelResult>( results.lock() );
 
-        CombinePDF(dataStore, result, m_opt_rigidity, m_opt_pdfcombination, m_opt_stronglinesprior);
+        std::shared_ptr<CPdfMargZLogResult> postmargZResult = std::shared_ptr<CPdfMargZLogResult>(new CPdfMargZLogResult());
+        Int32 retCombinePdf = CombinePDF(result, m_opt_rigidity, m_opt_pdfcombination, m_opt_stronglinesprior, postmargZResult);
+
+        if(retCombinePdf!=0)
+        {
+            Log.LogError("Linemodel: Pdfz computation failed");
+        }else{
+
+            //check pdf sum=1
+            CPdfz pdfz;
+            Float64 sumRect = pdfz.getSumRect(postmargZResult->Redshifts, postmargZResult->valProbaLog);
+            Float64 sumTrapez = pdfz.getSumTrapez(postmargZResult->Redshifts, postmargZResult->valProbaLog);
+            Log.LogDetail("    linemodelsolve: Pdfz normalization - sum rect. = %e", sumRect);
+            Log.LogDetail("    linemodelsolve: Pdfz normalization - sum trapz. = %e", sumTrapez);
+            Bool pdfSumCheck = abs(sumRect-1.0)<1e-1 || abs(sumTrapez-1.0)<1e-1;
+            if(!pdfSumCheck){
+                Log.LogError("    linemodelsolve: Pdfz normalization failed (rectsum = %f, trapzesum = %f)", sumRect, sumTrapez);
+            }
+
+            dataStore.StoreGlobalResult( "zPDF/logposterior.logMargP_Z_data", postmargZResult); //need to store this pdf with this exact same name so that zqual can load it. see zqual.cpp/ExtractFeaturesPDF
+        }
+
 
         //SaveContinuumPDF(dataStore, result);
 
@@ -251,7 +271,11 @@ std::shared_ptr<CLineModelSolveResult> CLineModelSolve::Compute( CDataStore& dat
 }
 
 
-Int32 CLineModelSolve::CombinePDF(CDataStore &store, std::shared_ptr<const CLineModelResult> result, std::string opt_rigidity, std::string opt_combine, Float64 opt_stronglinesprior)
+Int32 CLineModelSolve::CombinePDF(std::shared_ptr<const CLineModelResult> result,
+                                  std::string opt_rigidity,
+                                  std::string opt_combine,
+                                  Float64 opt_stronglinesprior,
+                                  std::shared_ptr<CPdfMargZLogResult> postmargZResult)
 {
     bool zPriorStrongLinePresence = (opt_stronglinesprior>0.0);
     if(zPriorStrongLinePresence)
@@ -270,7 +294,6 @@ Int32 CLineModelSolve::CombinePDF(CDataStore &store, std::shared_ptr<const CLine
     }
 
     Log.LogInfo("Linemodel: Pdfz computation");
-    std::shared_ptr<CPdfMargZLogResult> postmargZResult = std::shared_ptr<CPdfMargZLogResult>(new CPdfMargZLogResult());
     CPdfz pdfz;
     Float64 cstLog = result->cstLog;
     TFloat64List logProba;
@@ -315,7 +338,7 @@ Int32 CLineModelSolve::CombinePDF(CDataStore &store, std::shared_ptr<const CLine
         }
         retPdfz = pdfz.Compute(logLikelihoodCorrected, result->Redshifts, cstLog, zPrior->valProbaLog, logProba, logEvidence);
         if(retPdfz==0){
-            store.StoreGlobalResult( "zPDF/logprior.logP_Z_data", zPrior);
+            //store.StoreGlobalResult( "zPDF/logprior.logP_Z_data", zPrior);
 
             postmargZResult->countTPL = result->Redshifts.size(); // assumed 1 model per z
             postmargZResult->Redshifts.resize(result->Redshifts.size());
@@ -374,29 +397,7 @@ Int32 CLineModelSolve::CombinePDF(CDataStore &store, std::shared_ptr<const CLine
         Log.LogError("Linemodel: Unable to parse pdf combination method option");
     }
 
-
-    if(retPdfz!=0)
-    {
-        Log.LogError("Linemodel: Pdfz computation failed");
-    }else{
-
-        //check pdf sum=1
-        Float64 sumRect = pdfz.getSumRect(postmargZResult->Redshifts, postmargZResult->valProbaLog);
-        Float64 sumTrapez = pdfz.getSumTrapez(postmargZResult->Redshifts, postmargZResult->valProbaLog);
-        Log.LogDetail("    linemodelsolve: Pdfz normalization - sum rect. = %e", sumRect);
-        Log.LogDetail("    linemodelsolve: Pdfz normalization - sum trapz. = %e", sumTrapez);
-        Bool pdfSumCheck = abs(sumRect-1.0)<1e-1 || abs(sumTrapez-1.0)<1e-1;
-        if(!pdfSumCheck){
-            Log.LogError("    linemodelsolve: Pdfz normalization failed (rectsum = %f, trapzesum = %f)", sumRect, sumTrapez);
-        }
-
-        //compute pdf sum around candidate
-
-
-        store.StoreGlobalResult( "zPDF/logposterior.logMargP_Z_data", postmargZResult); //need to store this pdf with this exact same name so that zqual can load it. see zqual.cpp/ExtractFeaturesPDF
-    }
-
-    return 0;
+    return retPdfz;
 }
 
 
@@ -745,35 +746,91 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
         _redshifts = redshifts;
     }
 
-    // Compute merit function
+    // Compute with linemodel operator
     COperatorLineModel linemodel;
-    auto  result = linemodel.Compute( dataStore,
-				      _spc,
-                      _spcContinuum,
-                      tplCatalog,
-                      tplCategoryList,
-                      m_calibrationPath,
-				      restraycatalog,
-                      m_opt_linetypefilter,
-                      m_opt_lineforcefilter,
-				      lambdaRange,
-                      _redshifts,
-                      m_opt_extremacount,
-                      m_opt_fittingmethod,
-                      m_opt_continuumcomponent,
-                      m_opt_lineWidthType,
-                      m_opt_resolution,
-                      m_opt_velocity_emission,
-                      m_opt_velocity_absorption,
-                      m_opt_continuumreest,
-                      m_opt_rules,
-                      m_opt_velocityfit,
-                      m_opt_twosteplargegridstep,
-                      m_opt_rigidity,
-                      m_opt_em_velocity_fit_min,
-                      m_opt_em_velocity_fit_max,
-                      m_opt_abs_velocity_fit_min,
-                      m_opt_abs_velocity_fit_max);
+    Int32 retInit = linemodel.Init(_spc, _redshifts);
+    if( retInit!=0 )
+    {
+        Log.LogError( "Line Model, init failed. Aborting" );
+        return false;
+    }
+    //**************************************************
+    //FIRST PASS
+    //**************************************************
+    Int32 retFirstPass = linemodel.ComputeFirstPass(dataStore,
+                                          _spc,
+                                          _spcContinuum,
+                                          tplCatalog,
+                                          tplCategoryList,
+                                          m_calibrationPath,
+                                          restraycatalog,
+                                          m_opt_linetypefilter,
+                                          m_opt_lineforcefilter,
+                                          lambdaRange,
+                                          m_opt_extremacount,
+                                          m_opt_fittingmethod,
+                                          m_opt_continuumcomponent,
+                                          m_opt_lineWidthType,
+                                          m_opt_resolution,
+                                          m_opt_velocity_emission,
+                                          m_opt_velocity_absorption,
+                                          m_opt_continuumreest,
+                                          m_opt_rules,
+                                          m_opt_velocityfit,
+                                          m_opt_twosteplargegridstep,
+                                          m_opt_rigidity);
+    if( retFirstPass!=0 )
+    {
+        Log.LogError( "Line Model, first pass failed. Aborting" );
+        return false;
+    }
+
+    //**************************************************
+    //Compute z-candidates
+    //**************************************************
+    Int32 retCandidates = linemodel.ComputeCandidates(m_opt_extremacount);
+    if( retCandidates!=0 )
+    {
+        Log.LogError( "Line Model, compute z-candidates failed. Aborting" );
+        return false;
+    }
+
+
+    //**************************************************
+    //SECOND PASS
+    //**************************************************
+    Int32 retSecondPass = linemodel.ComputeSecondPass(dataStore,
+                                            _spc,
+                                            _spcContinuum,
+                                            tplCatalog,
+                                            tplCategoryList,
+                                            m_calibrationPath,
+                                            restraycatalog,
+                                            m_opt_linetypefilter,
+                                            m_opt_lineforcefilter,
+                                            lambdaRange,
+                                            m_opt_extremacount,
+                                            m_opt_fittingmethod,
+                                            m_opt_continuumcomponent,
+                                            m_opt_lineWidthType,
+                                            m_opt_resolution,
+                                            m_opt_velocity_emission,
+                                            m_opt_velocity_absorption,
+                                            m_opt_continuumreest,
+                                            m_opt_rules,
+                                            m_opt_velocityfit,
+                                            m_opt_rigidity,
+                                            m_opt_em_velocity_fit_min,
+                                            m_opt_em_velocity_fit_max,
+                                            m_opt_abs_velocity_fit_min,
+                                            m_opt_abs_velocity_fit_max);
+    if( retSecondPass!=0 )
+    {
+        Log.LogError( "Line Model, second pass failed. Aborting" );
+        return false;
+    }
+
+    auto  result = linemodel.getResult();
 
     if( !result )
     {

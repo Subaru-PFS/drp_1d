@@ -58,6 +58,9 @@ public:
                                              const Float64 &opt_absvelocityfitmin=150,
                                              const Float64 &opt_absvelocityfitmax=500);
 
+    Int32 Init(const CSpectrum& spectrum, const TFloat64List& redshifts);
+    std::shared_ptr<COperatorResult> getResult();
+
     Int32 ComputeFirstPass(CDataStore &dataStore,
                                               const CSpectrum& spectrum,
                                               const CSpectrum &spectrumContinuum,
@@ -81,28 +84,7 @@ public:
                                               const Float64 &opt_twosteplargegridstep=0.001,
                                               const std::string &opt_rigidity="rules");
 
-    Int32 ComputeCandidates(CDataStore &dataStore,
-                                              const CSpectrum& spectrum,
-                                              const CSpectrum &spectrumContinuum,
-                                              const CTemplateCatalog &tplCatalog,
-                                              const TStringList &tplCategoryList,
-                                              const std::string opt_calibrationPath,
-                                              const CRayCatalog& restraycatalog,
-                                              const std::string &opt_lineTypeFilter,
-                                              const std::string &opt_lineForceFilter,
-                                              const TFloat64Range& lambdaRange,
-                                              const Int32 opt_extremacount,
-                                              const std::string &opt_fittingmethod,
-                                              const std::string &opt_continuumcomponent,
-                                              const std::string& opt_lineWidthType,
-                                              const Float64 opt_resolution,
-                                              const Float64 opt_velocityEmission,
-                                              const Float64 opt_velocityAbsorption,
-                                              const std::string &opt_continuumreest="no",
-                                              const std::string &opt_rules="all",
-                                              const std::string &opt_velocityFitting="no",
-                                              const Float64 &opt_twosteplargegridstep=0.001,
-                                              const std::string &opt_rigidity="rules");
+    Int32 ComputeCandidates(const Int32 opt_extremacount);
 
 
     Int32 ComputeSecondPass(CDataStore &dataStore,

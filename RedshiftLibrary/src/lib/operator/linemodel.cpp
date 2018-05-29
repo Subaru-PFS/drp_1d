@@ -547,28 +547,7 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
     return 0;
 }
 
-Int32 COperatorLineModel::ComputeCandidates(CDataStore &dataStore,
-                                  const CSpectrum& spectrum,
-                                  const CSpectrum& spectrumContinuum,
-                                  const CTemplateCatalog& tplCatalog,
-                                  const TStringList& tplCategoryList,
-                                  const std::string opt_calibrationPath,
-                                  const CRayCatalog& restraycatalog,
-                                  const std::string& opt_lineTypeFilter,
-                                  const std::string& opt_lineForceFilter,
-                                  const TFloat64Range& lambdaRange,
-                                  const Int32 opt_extremacount,
-                                  const std::string& opt_fittingmethod,
-                                  const std::string& opt_continuumcomponent,
-                                  const std::string& opt_lineWidthType,
-                                  const Float64 opt_resolution,
-                                  const Float64 opt_velocityEmission,
-                                  const Float64 opt_velocityAbsorption,
-                                  const std::string& opt_continuumreest,
-                                  const std::string& opt_rules,
-                                  const std::string& opt_velocityFitting,
-                                  const Float64 &opt_twosteplargegridstep,
-                                  const std::string& opt_rigidity)
+Int32 COperatorLineModel::ComputeCandidates(const Int32 opt_extremacount)
 {
     // extrema
     Int32 extremumCount = opt_extremacount;
@@ -1312,20 +1291,31 @@ Int32 COperatorLineModel::ComputeSecondPass(CDataStore &dataStore,
 }
 
 
-/**
- * \brief Call the Linemodel to fit models for various redshifts
- * Print an error if the spectral axis is not in linear scale.
- * Sort the list of redshifts.
+Int32 COperatorLineModel::Init(const CSpectrum& spectrum,
+                                  const TFloat64List& redshifts)
+{
+    // initialize empty results so that it can be returned anyway in case of an error
+    m_result = std::shared_ptr<CLineModelResult>( new CLineModelResult() );
 
- * Get the list of rest lines filtered by type and force.
- * Create a CLineModelResult object, resize its members and populate it with the filtered list.
- * Create an ElementList object.
- * For each sorted redshift value, call ModelFit.
- * Find the extrema in the set of per-redshift results.
- * Refine Extremum with a second maximum search around the z candidates.
- * Filter out peaks outside intervals centered on the refined extrema.
- * Save the results.
- **/
+    if( spectrum.GetSpectralAxis().IsInLinearScale()==false )
+    {
+        Log.LogError( "Line Model, input spectrum is not in linear scale (ignored)." );
+        return -1;
+    }
+
+    //sort the redshifts
+    m_sortedRedshifts = redshifts;
+    std::sort(m_sortedRedshifts.begin(), m_sortedRedshifts.end());
+
+    return 0;
+}
+
+
+std::shared_ptr<COperatorResult> COperatorLineModel::getResult()
+{
+    return m_result;
+}
+
 std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataStore,
                                   const CSpectrum& spectrum,
                                   const CSpectrum& spectrumContinuum,
@@ -1400,28 +1390,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
     //**************************************************
     //Compute z-candidates
     //**************************************************
-    Int32 retCandidates = ComputeCandidates(dataStore,
-                                          spectrum,
-                                          spectrumContinuum,
-                                          tplCatalog,
-                                          tplCategoryList,
-                                          opt_calibrationPath,
-                                          restraycatalog,
-                                          opt_lineTypeFilter,
-                                          opt_lineForceFilter,
-                                          lambdaRange,
-                                          opt_extremacount,
-                                          opt_fittingmethod,
-                                          opt_continuumcomponent,
-                                          opt_lineWidthType,
-                                          opt_resolution,
-                                          opt_velocityEmission,
-                                          opt_velocityAbsorption,
-                                          opt_continuumreest,
-                                          opt_rules,
-                                          opt_velocityFitting,
-                                          opt_twosteplargegridstep,
-                                          opt_rigidity);
+    Int32 retCandidates = ComputeCandidates(opt_extremacount);
     if( retCandidates!=0 )
     {
         Log.LogError( "Line Model, compute z-candidates failed. Aborting" );
