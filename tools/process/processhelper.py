@@ -146,9 +146,13 @@ class processHelper(object):
                 
         self.config_zclassifierdir = self.getConfigVal("zclassifierdir")
         print("INFO: reliabilitydir is : {}".format(self.config_zclassifierdir))
-        if not os.path.exists(self.config_zclassifierdir):
-            print("ERROR: zclassifierdir dir does not exist! Aborting...")
-            return False
+        enableSkipReliability = True
+	if not os.path.exists(self.config_zclassifierdir):
+	    if not enableSkipReliability:
+            	print("ERROR: zclassifierdir dir does not exist! Aborting...")
+            	return False
+	    else:
+		print("ERROR: zclassifierdir dir does not exist! Skipping...")
             
         self.config_linecatalog = self.getConfigVal("linecatalog")
         print("INFO: linecatalog is : {}".format(self.config_linecatalog))

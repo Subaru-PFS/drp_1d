@@ -206,15 +206,15 @@ Bool CLineModelSolveResult::GetBestRedshiftFromPdf( const CDataStore& store,
                 }
 
                 Float64 probaLog = logzpdf1d->valProbaLog[solIdx];
+                Log.LogDebug( "GetBestRedshiftFromPdf: z=%f : probalog = %f", zInCandidateRange, probaLog);
 
-                Float64 merit = lineModelResult->GetExtremaMerit(i);
+                Float64 merit = lineModelResult->ChiSquare[solIdx];
                 //if( merit < tmpMerit )
                 if(probaLog>tmpProbaLog)
                 {
                     tmpProbaLog = probaLog;
                     tmpMerit = merit;
-                    //tmpRedshift = lineModelResult->Extrema[i];
-                    tmpRedshift = lineModelResult->ExtremaResult.ExtremaLastPass[i];
+                    tmpRedshift = zInCandidateRange;//lineModelResult->ExtremaResult.ExtremaLastPass[i];
                     tmpSigma = lineModelResult->ExtremaResult.DeltaZ[i];
                     tmpSnrHa = lineModelResult->ExtremaResult.snrHa[i];
                     tmpModelTplratio = lineModelResult->ExtremaResult.FittedTplshapeName[i];
