@@ -1,8 +1,10 @@
+#!/usr/bin/env python
+
 import os.path
 
-from redshift import *
-from argumentparser import parser
-from config import Config
+from .redshift import *
+from .argumentparser import parser
+from .config import Config
 
 def fullpath(config, *path):
     return os.path.expanduser(os.path.join(config.data_path, *path))

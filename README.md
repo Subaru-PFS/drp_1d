@@ -78,6 +78,18 @@ Run tests with :
 
 	make test
 
+#### 3 - alternative. Build and install python module with setuptools
+
+Create a virtualenv and install amazed :
+
+     virtualenv venv
+	 source venv/bin/activate
+	 python setup.py install
+
+Run it with :
+
+     amazed --help
+
 ## Additional documentation
 
 Detailed documentation about this software can be found by building the provided documentation:
