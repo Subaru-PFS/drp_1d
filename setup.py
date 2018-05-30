@@ -13,14 +13,16 @@ class build_cmake_ext(build_ext):
 
     def build_cmake(self, ext):
         cwd = Path().absolute()
-        print(f'Building in {cwd}')
+        print('Building in {}'.format(cwd))
 
         # these dirs will be created in build_py, so if you don't have
         # any python sources to bundle, the dirs will be missing
         build_temp = Path(self.build_temp)
-        build_temp.mkdir(parents=True, exist_ok=True)
+        if not build_temp.exists():
+            build_temp.mkdir(parents=True)
         extdir = Path(self.get_ext_fullpath(ext.name))
-        extdir.mkdir(parents=True, exist_ok=True)
+        if not extdir.exists():
+            extdir.mkdir(parents=True)
 
         # example of cmake args
         config = 'Debug' if self.debug else 'Release'
@@ -49,7 +51,7 @@ class install_cmake_ext(install):
             self.copy_file(f, self.install_platlib)
 
 #swig_ext = Extension('_redshift', sources=[])
-libcpf_ext = Extension('libcpf-redshift', sources=[])
+libcpf_ext = Extension('pyamazed.redshift', sources=[])
 
 
 setup(
@@ -61,7 +63,7 @@ setup(
     license = "GPLv3+",
     url = "http://www.lam.fr",
 
-    py_modules = ['pyamazed'],
+    packages = ['pyamazed'],
 
     long_description=open(os.path.join(os.path.dirname(__file__), 'README.md')).read(),
 
