@@ -6,8 +6,14 @@ from .redshift import *
 from .argumentparser import parser
 from .config import Config
 
-def fullpath(config, *path):
+def datapath(config, *path):
     return os.path.expanduser(os.path.join(config.data_path, *path))
+
+def calibrationpath(config, *path):
+    return os.path.expanduser(os.path.join(config.calibration_dir, *path))
+
+def spectrumpath(config, *path):
+    return os.path.expanduser(os.path.join(config.spectrum_dir, *path))
 
 class TestReader(CSpectrumIOGenericReader):
 
@@ -27,18 +33,18 @@ def amazed():
     logConsoleHandler.SetLevelMask ( zlog.nLevel_Info )
 
     param = CParameterStore()
-    param.Load(fullpath(config, config.parameters_file))
+    param.Load(os.path.expanduser(config.parameters_file))
 
     classif = CClassifierStore()
 
     if config.zclassifier_dir:
-        classif.Load(fullpath(config, config.zclassifier_dir))
+        classif.Load(calibrationpath(config, config.zclassifier_dir))
 
     spectrumList = []
-    with open(fullpath(config, config.input_file), 'r') as f:
+    with open(os.path.expanduser(config.input_file), 'r') as f:
         for spectrum in f:
             if not spectrum.startswith('#'):
-                spectrumList.append(fullpath(config, config.spectrum_dir, spectrum.strip()))
+                spectrumList.append(spectrum.strip())
 
     retcode, medianRemovalMethod = param.Get_String("continuumRemoval.method",
                                                     "IrregularSamplingMedian")
@@ -57,11 +63,11 @@ def amazed():
     template_catalog = CTemplateCatalog(medianRemovalMethod, opt_medianKernelWidth,
                                         opt_nscales, dfBinPath)
     print("Loading %s" % config.template_dir)
-    template_catalog.Load(fullpath(config, config.template_dir))
+    template_catalog.Load(calibrationpath(config, config.template_dir))
 
     line_catalog = CRayCatalog()
     print("Loading %s" % config.linecatalog)
-    line_catalog.Load(fullpath(config, config.linecatalog))
+    line_catalog.Load(calibrationpath(config, config.linecatalog))
 
     reader = TestReader()
 
@@ -70,8 +76,8 @@ def amazed():
     for line in spectrumList:
         spectrum, noise, proc_id = line.split()
         ctx=CProcessFlowContext()
-        ctx.Init(fullpath(config, config.spectrum_dir, spectrum),
-                 fullpath(config, config.spectrum_dir, noise),
+        ctx.Init(spectrumpath(config, config.spectrum_dir, spectrum),
+                 spectrumpath(config, config.spectrum_dir, noise),
                  reader,
                  reader,
                  proc_id,
