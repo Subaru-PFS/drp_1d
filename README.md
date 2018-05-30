@@ -86,7 +86,14 @@ Create a virtualenv and install amazed :
 
      virtualenv venv
 	 source venv/bin/activate
-	 python setup.py install
+
+Install amazed with setup.py:
+
+     python setup.py install
+
+Or, installwith pip :
+
+     pip install -e .
 
 Run it with :
 
