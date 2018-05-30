@@ -18,7 +18,7 @@ def spectrumpath(config, *path):
 class TestReader(CSpectrumIOGenericReader):
 
     def Read(self, path, spectrum):
-        print('reading {} into {}'.format(path,spectrum))
+        print('reading {} into {}'.format(path, spectrum))
         res = super().Read(path, spectrum)
         print('here')
         return res
@@ -76,8 +76,8 @@ def amazed():
     for line in spectrumList:
         spectrum, noise, proc_id = line.split()
         ctx=CProcessFlowContext()
-        ctx.Init(spectrumpath(config, config.spectrum_dir, spectrum),
-                 spectrumpath(config, config.spectrum_dir, noise),
+        ctx.Init(spectrumpath(config, spectrum),
+                 spectrumpath(config, noise),
                  reader,
                  reader,
                  proc_id,
