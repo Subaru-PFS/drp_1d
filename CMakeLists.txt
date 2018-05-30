@@ -156,21 +156,11 @@ INSTALL( FILES  ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cpf-redshift-config.cmake DEST
 #--------------------------------------------------------
 # Build python wrapper
 #--------------------------------------------------------
-FIND_PACKAGE(SWIG)
-IF(BUILD_SHARED_LIBS AND DEFINED SWIG_VERSION)
-  MESSAGE(STATUS "Using SWIG version ${SWIG_VERSION}")
-  INCLUDE(${SWIG_USE_FILE})
-  FIND_PACKAGE(PythonLibs)
-  INCLUDE_DIRECTORIES( ${PYTHON_INCLUDE_DIRS} )
-  SET(CMAKE_SWIG_OUTDIR ${ROOT_DIR}/pyamazed)
-  SET_PROPERTY(SOURCE ${ROOT_DIR}/RedshiftLibrary/RedshiftLibrary/redshift.i PROPERTY CPLUSPLUS ON)
-  IF(CMAKE_VERSION VERSION_GREATER "3.8.0")
-    SWIG_ADD_LIBRARY(redshift LANGUAGE python SOURCES ${ROOT_DIR}/RedshiftLibrary/RedshiftLibrary/redshift.i)
-  ELSE()
-    SWIG_ADD_MODULE(redshift python ${ROOT_DIR}/RedshiftLibrary/RedshiftLibrary/redshift.i)
-  ENDIF()
-  SWIG_LINK_LIBRARIES( redshift ${PYTHON_LIBRARIES} ${LIB_NAME})
-ENDIF()
+
+CONFIGURE_FILE(
+  ${CMAKE_CURRENT_SOURCE_DIR}/swig_ext.py.in
+  ${CMAKE_CURRENT_SOURCE_DIR}/swig_ext.py
+)
 
 #--------------------------------------------------------
 # Package deployement and config

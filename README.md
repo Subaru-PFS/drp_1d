@@ -29,7 +29,7 @@ This step can be automatically done with cmake, by adding -DBUILD_THIRDPARTY=tru
 
      cmake . -DBUILD_THIRDPARTY=true
 
-#### 3. Create makefiles:
+#### 3. Build libcpf-redshift
 
 Build process uses cmake tool
 
@@ -78,7 +78,9 @@ Run tests with :
 
 	make test
 
-#### 3 - alternative. Build and install python module with setuptools
+#### 4. Build and install python interface and client with setuptools
+
+##### With python setup.py install
 
 Create a virtualenv and install amazed :
 
@@ -89,6 +91,7 @@ Create a virtualenv and install amazed :
 Run it with :
 
      amazed --help
+
 
 ## Additional documentation
 
