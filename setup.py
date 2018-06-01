@@ -7,7 +7,7 @@ from pathlib import Path
 try:
     from swig_ext import swig_ext
 except ImportError:
-    print('swig_ext.y not found. Please run cmake before setup !')
+    print('swig_ext.py not found. Please run cmake before setup !')
     exit()
 
 class build_cmake_ext(build_ext):

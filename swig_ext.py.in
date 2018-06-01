@@ -1,9 +1,9 @@
 from setuptools import Extension
 import os, os.path
 
-include_dir = ['{}'.format(l) for l in '@cpf-redshift_THIRDPARTY_INCLUDE_DIR@'.split(';')]
-lib_dir = ['{}'.format(l) for l in '@cpf-redshift_THIRDPARTY_LINK_DIR@'.split(';')]
-libs = ['{}'.format(l) for l in '@cpf-redshift_THIRDPARTY_LIBS@'.split(';')]
+include_dir = '@cpf-redshift_THIRDPARTY_INCLUDE_DIR@'.split(';')
+lib_dir = '@cpf-redshift_THIRDPARTY_LINK_DIR@'.split(';')
+libs = '@cpf-redshift_THIRDPARTY_LIBS@'.split(';')
 
 swig_ext = Extension('_redshift', sources=['RedshiftLibrary/RedshiftLibrary/redshift.i'],
                      swig_opts = ['-c++'],
