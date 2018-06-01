@@ -4,6 +4,12 @@ from setuptools.command.install import install
 from setuptools import setup, Extension
 from pathlib import Path
 
+try:
+    from swig_ext import swig_ext
+except ImportError:
+    print('swig_ext.py not found. Please run cmake before setup !')
+    exit()
+
 class build_cmake_ext(build_ext):
 
     def run(self):
@@ -44,16 +50,6 @@ class build_cmake_ext(build_ext):
             self.spawn(['cmake', '--build', '.'] + build_args)
         os.chdir(str(cwd))
 
-class install_cmake_ext(install):
-    def run(self):
-        super().run()
-        for f in ['lib/_redshift.so', 'lib/libcpf-redshift.so']:
-            self.copy_file(f, self.install_platlib)
-
-#swig_ext = Extension('_redshift', sources=[])
-libcpf_ext = Extension('pyamazed.redshift', sources=[])
-
-
 setup(
     name = "pyamazed",
     version = "0.0.1",
@@ -77,11 +73,10 @@ setup(
         "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
     ],
 
-    ext_modules=[ libcpf_ext ],
-    cmdclass={
-        'build_ext': build_cmake_ext,
-        'install': install_cmake_ext,
-    },
+    ext_modules=[ swig_ext ],
+    #cmdclass={
+    #    'build_ext': build_cmake_ext,
+    #},
 
     entry_points={
         'console_scripts': [
