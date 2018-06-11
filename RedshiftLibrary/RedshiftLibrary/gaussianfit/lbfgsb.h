@@ -226,9 +226,6 @@ typedef FILE* fileType;
 
 
 
-/* math.h */
-double sqrt(double);
-
 extern double ddot(integer *, double *, integer *, double *, 
         integer *);
 
