@@ -29,6 +29,9 @@
   	#include "RedshiftLibrary/spectrum/template/catalog.h"
     	#include "RedshiftLibrary/spectrum/io/reader.h"
     	#include "RedshiftLibrary/spectrum/io/genericreader.h"
+      	#include "RedshiftLibrary/spectrum/axis.h"
+        #include "RedshiftLibrary/spectrum/fluxaxis.h"
+        #include "RedshiftLibrary/spectrum/spectralaxis.h"
 	using namespace NSEpic;
 %}
 
@@ -141,6 +144,8 @@ class CSpectrum
 {
  public:
   CSpectrum();
+  CSpectrumFluxAxis& GetFluxAxis();
+  CSpectrumSpectralAxis& GetSpectralAxis();
 };
 
 class CSpectrumIOReader
@@ -159,3 +164,22 @@ class CSpectrumIOGenericReader : public CSpectrumIOReader
   virtual Bool Read( const char* filePath, std::shared_ptr<CSpectrum> s );
 };
 
+class CSpectrumAxis
+{
+ public:
+  CSpectrumAxis();
+  Float64* GetSamples();
+  virtual Void SetSize( UInt32 s );
+};
+
+class CSpectrumSpectralAxis : public CSpectrumAxis {
+ public:
+  CSpectrumSpectralAxis();
+};
+
+class CSpectrumFluxAxis : public CSpectrumAxis
+{
+ public:
+  CSpectrumFluxAxis();
+  Void SetSize( UInt32 s );
+};

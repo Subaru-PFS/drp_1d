@@ -30,7 +30,7 @@ public:
     const Float64*      GetSamples() const;
     Float64*            GetSamples();
     UInt32              GetSamplesCount() const;
-    
+
     virtual Void        SetSize( UInt32 s );
 
 protected:
