@@ -33,12 +33,10 @@ BOOST_AUTO_TEST_CASE(CorrelationAtZEqualZero)
 
     CSpectrumIOFitsReader reader;
 
-    retVal = reader.Read( DATA_ROOT_DIR "OperatorTestCase/spectrum1_z_1.2299.fits",
-			  spectrum );
-    BOOST_CHECK( retVal );
-    retVal = reader.Read( DATA_ROOT_DIR "OperatorTestCase/spectrum1_z_1.2299.fits",
-			  _template );
-    BOOST_CHECK( retVal );
+    BOOST_CHECK_NO_THROW(reader.Read( DATA_ROOT_DIR "OperatorTestCase/spectrum1_z_1.2299.fits",
+				      spectrum ));
+    BOOST_CHECK_NO_THROW(reader.Read( DATA_ROOT_DIR "OperatorTestCase/spectrum1_z_1.2299.fits",
+				      _template ));
 
     spectrum->ConvertToLogScale();
     _template->ConvertToLogScale();
@@ -81,12 +79,10 @@ BOOST_AUTO_TEST_CASE(CorrelationAtGivenZ)
 
     CSpectrumIOFitsReader reader;
 
-    retVal = reader.Read( DATA_ROOT_DIR "OperatorTestCase/spectrum1_z_1.2299.fits",
-			  spectrum );
-    BOOST_CHECK( retVal );
-    retVal = reader.Read( DATA_ROOT_DIR "OperatorTestCase/spectrum1_z_1.2299.fits",
-			  _template );
-    BOOST_CHECK( retVal );
+    BOOST_CHECK_NO_THROW(reader.Read( DATA_ROOT_DIR "OperatorTestCase/spectrum1_z_1.2299.fits",
+				      spectrum ));
+    BOOST_CHECK_NO_THROW(reader.Read( DATA_ROOT_DIR "OperatorTestCase/spectrum1_z_1.2299.fits",
+				      _template ));
 
     // Shift template back to rest pose
     CSpectrumSpectralAxis& tplSpectralAxis = _template->GetSpectralAxis();
@@ -135,21 +131,18 @@ void UtilCorrelationMatchWithEZ( const char* spectraPath, const char* noisePath,
     // Load spectrum and templates
     std::shared_ptr<CSpectrumIOGenericReader> reader = std::shared_ptr<CSpectrumIOGenericReader>( new CSpectrumIOGenericReader() );
 
-    retVal = reader->Read( spectraPath, spectrum );
-    BOOST_CHECK( retVal );
+    BOOST_CHECK_NO_THROW(reader->Read( spectraPath, spectrum ));
 
     if( noisePath )
     {
         CNoiseFromFile noise;
-        noise.SetNoiseFilePath( noisePath, reader );
-        noise.AddNoise( *spectrum );
+        BOOST_CHECK_NO_THROW(noise.SetNoiseFilePath( noisePath, reader ));
+        BOOST_CHECK_NO_THROW(noise.AddNoise( *spectrum ));
     }
 
 
 
-    retVal = reader->Read( tplPath, _template );
-    BOOST_CHECK( retVal );
-
+    BOOST_CHECK_NO_THROW(reader->Read( tplPath, _template ));
     {
         CContinuumMedian continuum;
         spectrum->RemoveContinuum( continuum );
@@ -237,18 +230,16 @@ void UtilChisquareMatchWithEZ( const char* spectraPath, const char* noisePath, c
     // Load spectrum and templates
     std::shared_ptr<CSpectrumIOGenericReader> reader = std::shared_ptr<CSpectrumIOGenericReader>( new CSpectrumIOGenericReader() );
 
-    retVal = reader->Read( spectraPath, spectrum);
-    BOOST_CHECK( retVal );
+    BOOST_CHECK_NO_THROW(reader->Read( spectraPath, spectrum));
 
     if( noisePath )
     {
         CNoiseFromFile noise;
-        noise.SetNoiseFilePath( noisePath, reader );
-        noise.AddNoise( *spectrum );
+        BOOST_CHECK_NO_THROW(noise.SetNoiseFilePath( noisePath, reader ));
+        BOOST_CHECK_NO_THROW(noise.AddNoise( *spectrum ));
     }
 
-    retVal = reader->Read( tplPath, _template );
-    BOOST_CHECK( retVal );
+    BOOST_CHECK_NO_THROW(reader->Read( tplPath, _template ));
 
     Float64 redshiftDelta = 0.0001;
     TFloat64List redshifts = TFloat64Range( 0.0, 5.0 ).SpreadOver( redshiftDelta );

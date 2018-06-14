@@ -61,14 +61,10 @@ void checkProfileValue(std::string linecatalogPath,
 
     std::shared_ptr<CSpectrum> spectrum = std::shared_ptr<CSpectrum>( new CSpectrum() );
 
-    Bool retVal = reader->Read( spectrumPath.c_str(), spectrum);
-    BOOST_CHECK( retVal == true);
+    BOOST_CHECK_NO_THROW(reader->Read( spectrumPath.c_str(), spectrum));
     CNoiseFromFile noise;
-    retVal = noise.SetNoiseFilePath( noisePath.c_str(), reader );
-    BOOST_CHECK( retVal == true);
-    retVal = noise.AddNoise( *spectrum ) ;
-    BOOST_CHECK( retVal == true);
-
+    BOOST_CHECK_NO_THROW(noise.SetNoiseFilePath( noisePath.c_str(), reader ));
+    BOOST_CHECK_NO_THROW(noise.AddNoise( *spectrum ));
 
     // get continuum
     //CContinuumIrregularSamplingMedian continuum;
@@ -247,8 +243,7 @@ BOOST_AUTO_TEST_CASE( Linemodel_multiline_profile_sym_value_fullwavelengthrange 
     CSpectrumIOFitsReader reader;
     std::shared_ptr<CSpectrum> spectrum = std::shared_ptr<CSpectrum>( new CSpectrum() );
 
-    Bool retVal = reader.Read( signalRefFluxPath.c_str(), spectrum );
-    BOOST_CHECK( retVal == true);
+    BOOST_CHECK_NO_THROW(reader.Read( signalRefFluxPath.c_str(), spectrum ));
     std::vector<Float64> refProfileValue(lambda.size());
     CSpectrumFluxAxis& spcFluxAxis = spectrum->GetFluxAxis();
     for(UInt32 i=0; i<spcFluxAxis.GetSamplesCount(); i++){

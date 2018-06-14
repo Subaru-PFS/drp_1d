@@ -1,4 +1,7 @@
 #include <RedshiftLibrary/spectrum/spectrum.h>
+#include <RedshiftLibrary/spectrum/io/genericreader.h>
+#include <RedshiftLibrary/noise/flat.h>
+#include <RedshiftLibrary/noise/fromfile.h>
 
 #include <RedshiftLibrary/log/log.h>
 
@@ -10,6 +13,9 @@
 #include <algorithm>
 
 #include <gsl/gsl_fit.h>
+#include <boost/filesystem.hpp>
+
+namespace bfs = boost::filesystem;
 
 using namespace NSEpic;
 
@@ -441,4 +447,38 @@ void CSpectrum::SetWaveletsDFBinPath(std::string binPath)
     m_dfBinPath = binPath;
 }
 
+CSpectrum& CSpectrum::LoadSpectrum(const char* spectrumFilePath, const char* noiseFilePath)
+{
+  std::string spcName="";
+  std::string noiseName="";
 
+  std::shared_ptr<CSpectrumIOGenericReader> reader = std::shared_ptr<CSpectrumIOGenericReader>( new CSpectrumIOGenericReader() );
+
+ if(spectrumFilePath!=NULL)
+      spcName = bfs::path(spectrumFilePath).stem().string() ;
+
+  if(noiseFilePath!=NULL)
+      noiseName = bfs::path(noiseFilePath).stem().string() ;
+
+  SetName(spcName.c_str());
+  SetFullPath(bfs::path( spectrumFilePath ).string().c_str());
+
+  reader->Read(spectrumFilePath, (std::shared_ptr<NSEpic::CSpectrum>)this);
+  Log.LogInfo("Successfully loaded input spectrum file: (%s)", spcName.c_str() );
+
+  // add noise if any or add flat noise
+  if( noiseFilePath == NULL )
+    {
+      CNoiseFlat noise;
+      noise.SetStatErrorLevel( 1.0 );
+      noise.AddNoise( *this );
+    }
+  else
+    {
+      CNoiseFromFile noise;
+      noise.SetNoiseFilePath(noiseFilePath, reader);
+      noise.AddNoise(*this);
+      Log.LogInfo("Successfully loaded input noise file:    (%s)", noiseName.c_str() );
+    }
+  return *this;
+}

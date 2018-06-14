@@ -169,13 +169,12 @@ Bool CSpectrumIOFitsReader::Read1( fitsfile* fptr, std::shared_ptr<CSpectrum> sp
 /**
  * Attempts to read the file as a fits file containing 2 HDUs, using the Read1 and Read2 methods to read each HDU, respectively. If all calls return true, this method returns true as well - and returns false otherwise.
  */
-Bool CSpectrumIOFitsReader::Read( const char* filePath, std::shared_ptr<CSpectrum> spectrum )
+Void CSpectrumIOFitsReader::Read( const char* filePath, std::shared_ptr<CSpectrum> spectrum )
 {
     fitsfile *fptr = NULL;
     Int32 status = 0;
     Int32 hdunum=0;
 
-    Bool retv = true;
     // open the fits file
     if( !fits_open_file( &fptr, filePath, READONLY, &status ) )
     {
@@ -187,26 +186,32 @@ Bool CSpectrumIOFitsReader::Read( const char* filePath, std::shared_ptr<CSpectru
             {
                 Log.LogDebug("    CSpectrumIOFitsReader: Read1");
                 if( !Read1( fptr, spectrum ) )
-                    retv = false;
+		  {
+		    fits_close_file( fptr, &status );
+		    throw string("error in Read1 : ") + filePath;
+		  }
             }
             else if( hdunum == 2 )
             {
                 Log.LogDebug("    CSpectrumIOFitsReader: Read2");
                 if( !Read2( fptr, spectrum ) )
-                    retv = false;
+		  {
+		    fits_close_file( fptr, &status );
+		    throw string("error in Read2 : ") + filePath;
+		  }
             }
             else
             {
-                retv = false;
+	      fits_close_file( fptr, &status );
+	      throw string("bad hdu count in ") + filePath;
             }
         }
     }
     else
     {
-        return false;
+      fits_close_file( fptr, &status );
+      throw string("error opening fits file : ") + filePath;
     }
 
     fits_close_file( fptr, &status );
-
-    return retv;
 }

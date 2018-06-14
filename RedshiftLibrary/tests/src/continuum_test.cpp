@@ -28,16 +28,15 @@ BOOST_AUTO_TEST_CASE(Compute)
     std::shared_ptr<CSpectrum> s = std::shared_ptr<CSpectrum>( new CSpectrum() );
     std::shared_ptr<CSpectrum> s_continuumRef = std::shared_ptr<CSpectrum>( new CSpectrum() );
 
-    Bool retVal = reader.Read( DATA_ROOT_DIR "ContinuumTestCase/simu_ECN_continuum.fits", s_continuumRef );
-    BOOST_CHECK( retVal == true );
-    retVal = reader.Read( DATA_ROOT_DIR "ContinuumTestCase/simu_ECN_all.fits", s );
-    BOOST_CHECK( retVal == true );
+    BOOST_CHECK_NO_THROW(reader.Read( DATA_ROOT_DIR "ContinuumTestCase/simu_ECN_continuum.fits",
+				      s_continuumRef ));
+    BOOST_CHECK_NO_THROW(reader.Read( DATA_ROOT_DIR "ContinuumTestCase/simu_ECN_all.fits", s ));
 
     // Remove continuum
     CContinuumIrregularSamplingMedian continuum;
     CSpectrumFluxAxis fluxAxisWithoutContinuumCalc;
 
-    retVal = continuum.RemoveContinuum( *s, fluxAxisWithoutContinuumCalc );
+    Bool retVal = continuum.RemoveContinuum( *s, fluxAxisWithoutContinuumCalc );
     BOOST_CHECK( retVal == true );
     // test the extracted continuum to be lower than a threshold all over the lambda range
     Float64 threshold = 0.05;
@@ -53,8 +52,7 @@ BOOST_AUTO_TEST_CASE(ContinuumIndexes)
     CSpectrumIOFitsReader reader;
     std::shared_ptr<CSpectrum> s = std::shared_ptr<CSpectrum>( new CSpectrum() );
 
-    Bool retVal = reader.Read( DATA_ROOT_DIR "ContinuumTestCase/spectrum_tpl_vvds-reddestdataExtensionData.txt_TF.fits", s );
-    BOOST_CHECK( retVal == true );
+    BOOST_CHECK_NO_THROW(reader.Read( DATA_ROOT_DIR "ContinuumTestCase/spectrum_tpl_vvds-reddestdataExtensionData.txt_TF.fits", s ));
 
     //compute continuum indexes
     CContinuumIndexes continuumIndexes;

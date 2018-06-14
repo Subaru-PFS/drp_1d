@@ -20,15 +20,12 @@ BOOST_AUTO_TEST_CASE(Compute)
     CSpectrumIOFitsReader reader;
     std::shared_ptr<CSpectrum> spectrum = std::shared_ptr<CSpectrum>( new CSpectrum() );
 
-    Bool retVal = reader.Read( DATA_ROOT_DIR "PeakDetectionTestCase/peakdetection_simu.fits",
-			       spectrum);
-
-    BOOST_CHECK( retVal == true);
+    BOOST_CHECK_NO_THROW(reader.Read( DATA_ROOT_DIR "PeakDetectionTestCase/peakdetection_simu.fits",
+				      spectrum));
 
     TLambdaRange lambdaRange = spectrum->GetLambdaRange();
     CPeakDetection detection(500.0, 15, 1, 0);
     auto peakDetectionResult = detection.Compute( *spectrum, lambdaRange); //using winsize=500 and cut=15 so that 3 only peaks are detected in the test signal for sure
-    BOOST_CHECK( retVal == true );
     const TInt32RangeList& resPeaks = peakDetectionResult->PeakList;
 
 

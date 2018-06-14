@@ -24,12 +24,15 @@
         #include "RedshiftLibrary/reliability/zclassifierstore.h"
         #include "RedshiftLibrary/processflow/context.h"
         #include "RedshiftLibrary/processflow/processflow.h"
-  	#include "RedshiftLibrary/processflow/resultstore.h"
-	#include "RedshiftLibrary/ray/catalog.h"
-  	#include "RedshiftLibrary/spectrum/template/catalog.h"
-    	#include "RedshiftLibrary/spectrum/io/reader.h"
-    	#include "RedshiftLibrary/spectrum/io/genericreader.h"
-	using namespace NSEpic;
+        #include "RedshiftLibrary/processflow/resultstore.h"
+        #include "RedshiftLibrary/ray/catalog.h"
+        #include "RedshiftLibrary/spectrum/template/catalog.h"
+        #include "RedshiftLibrary/spectrum/io/reader.h"
+        #include "RedshiftLibrary/spectrum/io/genericreader.h"
+        #include "RedshiftLibrary/spectrum/axis.h"
+        #include "RedshiftLibrary/spectrum/fluxaxis.h"
+        #include "RedshiftLibrary/spectrum/spectralaxis.h"
+        using namespace NSEpic;
 %}
 
 typedef int Int32;
@@ -40,8 +43,8 @@ typedef unsigned long long UInt64 ;
 typedef unsigned int UInt32 ;
 typedef unsigned short UInt16 ;
 typedef unsigned char UInt8 ;
-typedef float	Float32 ;
-typedef double	Float64 ;
+typedef float   Float32 ;
+typedef double  Float64 ;
 typedef char Char;
 typedef unsigned char Byte;
 typedef void Void;
@@ -104,14 +107,14 @@ class CProcessFlowContext {
 public:
   CProcessFlowContext();
   bool Init( const char* spectrumPath,
-	     const char* noisePath,
-	     std::shared_ptr<CSpectrumIOReader> spectrum_reader,
-	     std::shared_ptr<CSpectrumIOReader> noise_reader,
-	     std::string processingID,
-	     std::shared_ptr<const CTemplateCatalog> templateCatalog,
-	     std::shared_ptr<const CRayCatalog> rayCatalog,
-	     std::shared_ptr<CParameterStore> paramStore,
-	     std::shared_ptr<CClassifierStore> zqualStore  );
+             const char* noisePath,
+             std::shared_ptr<CSpectrumIOReader> spectrum_reader,
+             std::shared_ptr<CSpectrumIOReader> noise_reader,
+             std::string processingID,
+             std::shared_ptr<const CTemplateCatalog> templateCatalog,
+             std::shared_ptr<const CRayCatalog> rayCatalog,
+             std::shared_ptr<CParameterStore> paramStore,
+             std::shared_ptr<CClassifierStore> zqualStore  );
   CDataStore& GetDataStore();
 };
 
@@ -141,6 +144,8 @@ class CSpectrum
 {
  public:
   CSpectrum();
+  CSpectrumFluxAxis& GetFluxAxis();
+  CSpectrumSpectralAxis& GetSpectralAxis();
 };
 
 class CSpectrumIOReader
@@ -159,3 +164,22 @@ class CSpectrumIOGenericReader : public CSpectrumIOReader
   virtual Bool Read( const char* filePath, std::shared_ptr<CSpectrum> s );
 };
 
+class CSpectrumAxis
+{
+ public:
+  CSpectrumAxis();
+  Float64* GetSamples();
+  virtual void SetSize( UInt32 s );
+};
+
+class CSpectrumSpectralAxis : public CSpectrumAxis {
+ public:
+  CSpectrumSpectralAxis();
+};
+
+class CSpectrumFluxAxis : public CSpectrumAxis
+{
+ public:
+  CSpectrumFluxAxis();
+  void SetSize( UInt32 s );
+};

@@ -50,14 +50,10 @@ void checkSupport(std::string linecatalogPath,
 
     std::shared_ptr<CSpectrum> spectrum = std::shared_ptr<CSpectrum>( new CSpectrum() );
 
-    Bool retVal = reader->Read( spectrumPath.c_str(), spectrum);
-    BOOST_CHECK_MESSAGE( retVal == true, "check load flux spectrum");
+    BOOST_CHECK_NO_THROW(reader->Read( spectrumPath.c_str(), spectrum));
     CNoiseFromFile noise;
-    retVal = noise.SetNoiseFilePath( noisePath.c_str(), reader );
-    BOOST_CHECK_MESSAGE( retVal == true, "check load noise spectrum");
-    retVal = noise.AddNoise( *spectrum ) ;
-    BOOST_CHECK_MESSAGE( retVal == true, "check add noise spectrum");
-
+    BOOST_CHECK_NO_THROW(noise.SetNoiseFilePath( noisePath.c_str(), reader ));
+    BOOST_CHECK_NO_THROW(noise.AddNoise( *spectrum )) ;
 
     // get continuum
     //CContinuumIrregularSamplingMedian continuum;

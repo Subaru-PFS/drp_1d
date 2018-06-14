@@ -4,9 +4,10 @@
 #include <RedshiftLibrary/common/datatypes.h>
 #include <RedshiftLibrary/spectrum/io/reader.h>
 
-
 namespace NSEpic
 {
+
+class CSpectrum;
 
 class CSpectrumIOGenericReader : public CSpectrumIOReader
 {
@@ -17,8 +18,7 @@ public:
     virtual ~CSpectrumIOGenericReader();
 
     static Bool CanRead( const char* filePath );
-    virtual Bool Read( const char* filePath, std::shared_ptr<CSpectrum> spectrum );
-
+    virtual Void Read( const char* filePath, std::shared_ptr<CSpectrum> spectrum );
 private:
 
 };

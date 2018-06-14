@@ -27,14 +27,10 @@ void checkAmplitudeAndVelocityFit(std::string spectrumPath, std::string noisePat
     std::shared_ptr<CSpectrumIOGenericReader> reader = std::shared_ptr<CSpectrumIOGenericReader>( new CSpectrumIOGenericReader() );
     std::shared_ptr<CSpectrum> spectrum = std::shared_ptr<CSpectrum>( new CSpectrum() );
 
-    Bool retVal = reader->Read( spectrumPath.c_str(), spectrum);
-    BOOST_CHECK( retVal == true);
+    BOOST_CHECK_NO_THROW(reader->Read( spectrumPath.c_str(), spectrum));
     CNoiseFromFile noise;
-    retVal = noise.SetNoiseFilePath( noisePath.c_str(), reader );
-    BOOST_CHECK( retVal == true);
-    retVal = noise.AddNoise( *spectrum ) ;
-    BOOST_CHECK( retVal == true);
-
+    BOOST_CHECK_NO_THROW(noise.SetNoiseFilePath( noisePath.c_str(), reader ));
+    BOOST_CHECK_NO_THROW(noise.AddNoise( *spectrum ));
 
     // get continuum
     //CContinuumIrregularSamplingMedian continuum;

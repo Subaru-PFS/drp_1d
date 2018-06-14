@@ -781,43 +781,27 @@ Bool CZweiModelSolve::Solve( CDataStore& dataStore,
 
     std::shared_ptr<CSpectrumIOGenericReader> reader = std::shared_ptr<CSpectrumIOGenericReader>( new CSpectrumIOGenericReader() );
 
-    Bool rValue = reader->Read( spcContFilePath.c_str(), contSpectrum );
-    if( !rValue )
-    {
-        Log.LogError("Zweimodel - contaminant - Failed to read contaminant spectrum file: (%s)", spcContFilePath.c_str() );
-        contSpectrum = NULL;
-        return false;
-    }else{
-        Log.LogInfo("Zweimodel - contaminant - Successfully loaded contaminant spectrum file: (%s)", spcName.c_str() );
-    }
+    reader->Read( spcContFilePath.c_str(), contSpectrum );
+    Log.LogInfo("Zweimodel - contaminant - Successfully loaded contaminant spectrum file: (%s)", spcName.c_str() );
 
     // add noise if any or add flat noise
     if( errorContFilePath.c_str() == NULL )
     {
         CNoiseFlat noise;
         noise.SetStatErrorLevel( 1.0 );
-        if (! noise.AddNoise( *contSpectrum ) )
-        {
-            Log.LogError( "Zweimodel - contaminant - Failed to apply flat noise" );
-            return false;
-        }
+        noise.AddNoise( *contSpectrum );
     }
     else
     {
         CNoiseFromFile noise;
-        if( ! noise.SetNoiseFilePath( errorContFilePath.c_str(), reader ) )
+        noise.SetNoiseFilePath( errorContFilePath.c_str(), reader );
         {
             Log.LogError("Zweimodel - contaminant - Failed to load noise spectrum");
             return false;
         }
 
-        if( ! noise.AddNoise( *contSpectrum ) )
-        {
-            Log.LogError( "Zweimodel - contaminant - Failed to apply noise from spectrum: %s", errorContFilePath.c_str() );
-            return false;
-        }else{
-            Log.LogInfo("Zweimodel - contaminant - Successfully loaded input noise file:    (%s)", noiseName.c_str() );
-        }
+        noise.AddNoise( *contSpectrum );
+	Log.LogInfo("Zweimodel - contaminant - Successfully loaded input noise file:    (%s)", noiseName.c_str() );
     }
     Log.LogInfo("===============================================");
 

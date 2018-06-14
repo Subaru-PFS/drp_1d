@@ -15,7 +15,7 @@ namespace bfs = boost::filesystem;
 CLog _logger;
 
 /**
- * 
+ *
  */
 CSpectrumIOAsciiReader::CSpectrumIOAsciiReader()
 {
@@ -23,7 +23,7 @@ CSpectrumIOAsciiReader::CSpectrumIOAsciiReader()
 }
 
 /**
- * 
+ *
  */
 CSpectrumIOAsciiReader::~CSpectrumIOAsciiReader()
 {
@@ -31,16 +31,15 @@ CSpectrumIOAsciiReader::~CSpectrumIOAsciiReader()
 }
 
 /**
- * 
+ *
  */
-Bool CSpectrumIOAsciiReader::Read( const char* filePath, std::shared_ptr<CSpectrum> spectrum )
+Void CSpectrumIOAsciiReader::Read( const char* filePath, std::shared_ptr<CSpectrum> spectrum )
 {
   //Uncomment below when --verbose works properly.
   Log.LogDebug ( "Parsing ASCII file %s.", filePath );
   if( !bfs::exists( filePath ) )
     {
-      Log.LogError( "Read: Path for spectrum file does not exist." );
-      return false;
+      throw string("Read: Path for spectrum file does not exist. :") + filePath;
     }
 
   bfs::ifstream file;
@@ -48,15 +47,13 @@ Bool CSpectrumIOAsciiReader::Read( const char* filePath, std::shared_ptr<CSpectr
 
   if( !IsAsciiDataFile( file ) )
     {
-      Log.LogError ( "Read: file is not ASCII." );
-      return false;
+      throw string("Read: file is not ASCII :") + filePath;
     }
 
   Int32 length = GetAsciiDataLength( file );
   if( length == -1 )
     {
-      Log.LogError ( "Read: file length == -1." );
-      return false;
+      throw string("Read: file length == -1 :") + filePath;
     }
 
   CSpectrumAxis& spcFluxAxis = spectrum->GetFluxAxis();
@@ -83,11 +80,10 @@ Bool CSpectrumIOAsciiReader::Read( const char* filePath, std::shared_ptr<CSpectr
     }
   file.close();
   Log.LogDebug ( "File contents read as ASCII characters." );
-  return true;
 }
 
 /**
- * 
+ *
  */
 Bool CSpectrumIOAsciiReader::IsAsciiDataFile( bfs::ifstream& file  )
 {

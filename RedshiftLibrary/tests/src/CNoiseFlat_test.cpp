@@ -21,7 +21,7 @@ BOOST_AUTO_TEST_CASE(AddNoise_test)
   fluxAxis[0]= 1.0;
   fluxAxis[1]= 1.5;
   fluxAxis[2]= 2.5;
-  BOOST_CHECK(ONoiseFlat.AddNoise(OSpectrum) == true);
+  BOOST_CHECK_NO_THROW(ONoiseFlat.AddNoise(OSpectrum));
 }
 
 //-----------------------------------------------------------------------------

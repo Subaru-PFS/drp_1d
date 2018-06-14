@@ -1,7 +1,8 @@
 #include <RedshiftLibrary/spectrum/io/genericreader.h>
-
 #include <RedshiftLibrary/spectrum/io/asciireader.h>
 #include <RedshiftLibrary/spectrum/io/fitsreader.h>
+#include <RedshiftLibrary/noise/flat.h>
+#include <RedshiftLibrary/noise/fromfile.h>
 
 #include <boost/filesystem.hpp>
 
@@ -48,9 +49,9 @@ Bool CSpectrumIOGenericReader::CanRead( const char* filePath )
 }
 
 /**
- * Will return a call to reader.Read if the file extension is fits, txt or dat. Returns false otherwise.
+ * Will return a call to reader.Read if the file extension is fits, txt or dat. Throw otherwise.
  */
-Bool CSpectrumIOGenericReader::Read( const char* filePath, std::shared_ptr<CSpectrum> spectrum )
+Void CSpectrumIOGenericReader::Read( const char* filePath, std::shared_ptr<CSpectrum> spectrum )
 {
     bfs::path path( filePath );
 
@@ -58,21 +59,19 @@ Bool CSpectrumIOGenericReader::Read( const char* filePath, std::shared_ptr<CSpec
 
     if( !bfs::exists( path ) )
     {
-        return false;
+      throw string("File doesn't exist :") + filePath;
     }
 
     if( fileExtension == ".fits" )
     {
         CSpectrumIOFitsReader reader;
-
-        return reader.Read( filePath, spectrum );
+        reader.Read( filePath, spectrum );
     }
     else if( fileExtension == ".txt" || fileExtension == ".dat"  )
     {
         CSpectrumIOAsciiReader reader;
-
-        return reader.Read( filePath, spectrum );
+        reader.Read( filePath, spectrum );
+    } else {
+      throw string(filePath) + string(" : Unknown file type");
     }
-
-    return false;
 }

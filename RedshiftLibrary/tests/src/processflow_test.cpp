@@ -30,7 +30,11 @@ BOOST_AUTO_TEST_CASE( ProcessShifted1 )
     std::shared_ptr<CSpectrumIOGenericReader> reader = std::shared_ptr<CSpectrumIOGenericReader>( new CSpectrumIOGenericReader() );
 
     std::string procID = "lbgabs_1K_2z3_20J22.5__EZ_fits-W-F_0";
-    Bool retVal = ctx.Init( DATA_ROOT_DIR "ProcessFlowTestCase/lbgabs_1K_2z3_20J22.5__EZ_fits-W-F_0.fits", NULL, reader, reader, procID, DATA_ROOT_DIR "ProcessFlowTestCase/template_shifted1/", NULL, params, NULL );
+    std::shared_ptr<CSpectrum> spectrum = std::shared_ptr<CSpectrum>(new CSpectrum());
+
+    spectrum->LoadSpectrum(DATA_ROOT_DIR "ProcessFlowTestCase/lbgabs_1K_2z3_20J22.5__EZ_fits-W-F_0.fits", NULL);
+
+    Bool retVal = ctx.Init(spectrum, procID, DATA_ROOT_DIR "ProcessFlowTestCase/template_shifted1/", NULL, params, NULL );
     BOOST_CHECK( retVal == true );
 
     retVal = processFlow.Process( ctx );
@@ -61,7 +65,11 @@ BOOST_AUTO_TEST_CASE( ProcessShifted2 )
     std::shared_ptr<CSpectrumIOGenericReader> reader = std::shared_ptr<CSpectrumIOGenericReader>( new CSpectrumIOGenericReader() );
 
     std::string procID = "processing_id_unused";
-    Bool retVal = ctx.Init( DATA_ROOT_DIR "ProcessFlowTestCase/lbgabs_1K_2z3_20J22.5__EZ_fits-W-F_206.fits", NULL, reader, reader, procID, DATA_ROOT_DIR "ProcessFlowTestCase/template_shifted2/", NULL, params, NULL );
+    std::shared_ptr<CSpectrum> spectrum = std::shared_ptr<CSpectrum>(new CSpectrum());
+
+    spectrum->LoadSpectrum(DATA_ROOT_DIR "ProcessFlowTestCase/lbgabs_1K_2z3_20J22.5__EZ_fits-W-F_206.fits", NULL);
+
+    Bool retVal = ctx.Init( spectrum, procID, DATA_ROOT_DIR "ProcessFlowTestCase/template_shifted2/", NULL, params, NULL );
     BOOST_CHECK( retVal == true );
 
     retVal = processFlow.Process( ctx );
@@ -93,7 +101,11 @@ BOOST_AUTO_TEST_CASE( ProcessShiftedDecimated )
 
 
     std::string procID = "processing_id_unused";
-    Bool retVal = ctx.Init( DATA_ROOT_DIR "ProcessFlowTestCase/lbgabs_1K_2z3_20J22.5__EZ_fits-W-F_0.fits", NULL, reader, reader, procID, DATA_ROOT_DIR "ProcessFlowTestCase/template_shifted_decimated/", NULL, params, NULL );
+    std::shared_ptr<CSpectrum> spectrum = std::shared_ptr<CSpectrum>(new CSpectrum());
+
+    spectrum->LoadSpectrum(DATA_ROOT_DIR "ProcessFlowTestCase/lbgabs_1K_2z3_20J22.5__EZ_fits-W-F_0.fits", NULL);
+
+    Bool retVal = ctx.Init( spectrum, procID, DATA_ROOT_DIR "ProcessFlowTestCase/template_shifted_decimated/", NULL, params, NULL );
     BOOST_CHECK( retVal == true );
 
     retVal = processFlow.Process( ctx );

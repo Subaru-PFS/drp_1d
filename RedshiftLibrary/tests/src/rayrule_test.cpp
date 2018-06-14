@@ -105,8 +105,11 @@ CLineModelElementList GetData ( void )
   std::string procID = "processing_id_unused";
   std::shared_ptr<CClassifierStore> classifStore = std::shared_ptr<CClassifierStore>( new CClassifierStore() );
   std::shared_ptr<CSpectrumIOGenericReader> reader = std::shared_ptr<CSpectrumIOGenericReader>( new CSpectrumIOGenericReader() );
+  std::shared_ptr<CSpectrum> spectrum = std::shared_ptr<CSpectrum>(new CSpectrum());
 
-  Bool retVal = ctx.Init( spc.c_str(), noise.c_str(), reader, reader, procID, NULL, DATA_ROOT_DIR "LinemodelRulesTestCase/raycatalog_test_elratiorules.txt", params, classifStore );
+  spectrum->LoadSpectrum(spc.c_str(), noise.c_str());
+
+  Bool retVal = ctx.Init( spectrum, procID, NULL, DATA_ROOT_DIR "LinemodelRulesTestCase/raycatalog_test_elratiorules.txt", params, classifStore );
   BOOST_CHECK( retVal == true );
   retVal = processFlow.Process( ctx ); // Segmentation fault
   BOOST_CHECK( retVal == true );

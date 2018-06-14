@@ -44,9 +44,7 @@ CProcessFlowContext::~CProcessFlowContext()
 
 }
 
-bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath,
-				std::shared_ptr<CSpectrumIOReader> spectrum_reader,
-				std::shared_ptr<CSpectrumIOReader> noise_reader,
+bool CProcessFlowContext::Init( std::shared_ptr<CSpectrum> spectrum,
                                 const std::string processingID,
                                 std::shared_ptr<const CTemplateCatalog> templateCatalog,
                                 std::shared_ptr<const CRayCatalog> rayCatalog,
@@ -55,62 +53,9 @@ bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath,
 {
     Log.LogInfo("Processing context initialiation");
 
-    m_ClassifierStore=zqualStore;
+    m_ClassifierStore = zqualStore;
 
-    m_Spectrum = std::shared_ptr<CSpectrum>( new CSpectrum() );
-    std::string spcName="";
-    if(spectrumPath!=NULL)
-    {
-        spcName = bfs::path( spectrumPath ).stem().string() ;
-    }
-    std::string noiseName="";
-    if(noisePath!=NULL)
-    {
-        noiseName = bfs::path( noisePath ).stem().string() ;
-    }
-    m_Spectrum->SetName(spcName.c_str());
-    m_Spectrum->SetFullPath(bfs::path( spectrumPath ).string().c_str() );
-
-    Bool rValue = spectrum_reader->Read( spectrumPath, m_Spectrum );
-    if( !rValue )
-    {
-        Log.LogError("Failed to read input spectrum file: (%s)", spectrumPath );
-        m_Spectrum = NULL;
-        return false;
-    }else{
-        Log.LogInfo("Successfully loaded input spectrum file: (%s)", spcName.c_str() );
-    }
-
-    // add noise if any or add flat noise
-    if( noisePath == NULL )
-    {
-        CNoiseFlat noise;
-        noise.SetStatErrorLevel( 1.0 );
-        if (! noise.AddNoise( *m_Spectrum ) )
-        {
-            Log.LogError( "Failed to apply flat noise" );
-            return false;
-        }
-    }
-    else
-    {
-        CNoiseFromFile noise;
-        if( ! noise.SetNoiseFilePath( noisePath, noise_reader ) )
-        {
-            Log.LogError("Failed to load noise spectrum");
-            return false;
-        }
-
-        if( ! noise.AddNoise( *m_Spectrum ) )
-        {
-            Log.LogError( "Failed to apply noise from spectrum: %s", noisePath );
-            return false;
-        }else{
-            Log.LogInfo("Successfully loaded input noise file:    (%s)", noiseName.c_str() );
-        }
-    }
-
-
+    m_Spectrum = spectrum;
 
     // This should be moved to CProcessFlow
 
@@ -118,12 +63,12 @@ bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath,
     Int64 smoothWidth;
     paramStore->Get( "smoothWidth", smoothWidth, 0 );
     if( smoothWidth > 0 )
-        m_Spectrum->GetFluxAxis().ApplyMeanSmooth( smoothWidth );
+      m_Spectrum->GetFluxAxis().ApplyMeanSmooth( smoothWidth );
 
 
     // Compute continuum substracted spectrum
     m_SpectrumWithoutContinuum = std::shared_ptr<CSpectrum>( new CSpectrum() );
-    *m_SpectrumWithoutContinuum = *m_Spectrum;
+    *m_SpectrumWithoutContinuum = *spectrum;
 
     std::string medianRemovalMethod;
     paramStore->Get( "continuumRemoval.method", medianRemovalMethod, "IrregularSamplingMedian" );
@@ -165,8 +110,7 @@ bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath,
         bool ret = m_SpectrumWithoutContinuum->RemoveContinuum( continuum );
         if( !ret ) //doesn't seem to work. TODO: check that the df errors lead to a ret=false value
         {
-            Log.LogError( "Failed to apply continuum substraction for spectrum: %s", spectrumPath );
-            return false;
+	  throw string("Failed to apply continuum substraction for spectrum: %s") + m_Spectrum->GetName();
         }
     }else if( medianRemovalMethod== "raw")
     {
@@ -200,13 +144,13 @@ bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath,
 
     //process continuum relevance
     CContinuumIndexes continuumIndexes;
-    CSpectrum _spcContinuum = *m_Spectrum;
+    CSpectrum _spcContinuum = *spectrum;
     CSpectrumFluxAxis spcfluxAxis = _spcContinuum.GetFluxAxis();
     spcfluxAxis.Subtract( m_SpectrumWithoutContinuum->GetFluxAxis() );
     CSpectrumFluxAxis& sfluxAxisPtr = _spcContinuum.GetFluxAxis();
     sfluxAxisPtr = spcfluxAxis;
 
-    CContinuumIndexes::SContinuumRelevance continuumRelevance = continuumIndexes.getRelevance( *m_Spectrum, _spcContinuum );
+    CContinuumIndexes::SContinuumRelevance continuumRelevance = continuumIndexes.getRelevance( *spectrum, _spcContinuum );
 
 
     m_SpectrumWithoutContinuum->ConvertToLogScale();
@@ -219,7 +163,7 @@ bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath,
 
 
     m_DataStore = std::shared_ptr<CDataStore>( new CDataStore( *m_ResultStore, *m_ParameterStore ) );
-    m_DataStore->SetSpectrumName( bfs::path( spectrumPath ).stem().string() );
+    m_DataStore->SetSpectrumName( m_Spectrum->GetName() );
     m_DataStore->SetProcessingID( processingID );
 
     // Save the baseline in store
@@ -246,9 +190,7 @@ bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath,
     return true;
 }
 
-bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath,
-				std::shared_ptr<CSpectrumIOReader> spectrum_reader,
-				std::shared_ptr<CSpectrumIOReader> noise_reader,
+bool CProcessFlowContext::Init( std::shared_ptr<CSpectrum> spectrum,
 				std::string processingID,
                                 const char* templateCatalogPath, const char* rayCatalogPath,
                                 std::shared_ptr<CParameterStore> paramStore,
@@ -270,9 +212,7 @@ bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath,
     std::shared_ptr<CTemplateCatalog> templateCatalog = std::shared_ptr<CTemplateCatalog>( new CTemplateCatalog( medianRemovalMethod, opt_medianKernelWidth, opt_nscales, dfBinPath) );
     std::shared_ptr<CRayCatalog> rayCatalog = std::shared_ptr<CRayCatalog>(new CRayCatalog);
 
-
     Bool rValue;
-
 
     // Load template catalog
     if( templateCatalogPath )
@@ -301,7 +241,7 @@ bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath,
         }
     }
 
-    return Init( spectrumPath, noisePath, spectrum_reader, noise_reader, processingID, templateCatalog, rayCatalog, paramStore, zqualStore );
+    return Init( spectrum, processingID, templateCatalog, rayCatalog, paramStore, zqualStore );
 
 }
 

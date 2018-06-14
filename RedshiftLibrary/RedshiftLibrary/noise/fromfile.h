@@ -20,9 +20,9 @@ public:
     CNoiseFromFile( );
     ~CNoiseFromFile();
 
-    Bool SetNoiseFilePath( const char* filePath, std::shared_ptr<CSpectrumIOReader> noise_reader);
+    Void SetNoiseFilePath( const char* filePath, std::shared_ptr<CSpectrumIOReader> noise_reader);
 
-    Bool AddNoise( CSpectrum& s1 ) const;
+    Void AddNoise( CSpectrum& s1 ) const;
 
 private:
 

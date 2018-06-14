@@ -42,18 +42,16 @@ void UtilChisquareTestFit( const char* spectraPath,
     // Load spectrum and templates
     std::shared_ptr<CSpectrumIOGenericReader> reader = std::shared_ptr<CSpectrumIOGenericReader>( new CSpectrumIOGenericReader() );
 
-    retVal = reader->Read( spectraPath, spectrum );
-    BOOST_CHECK( retVal );
+    BOOST_CHECK_NO_THROW(reader->Read( spectraPath, spectrum ));
 
     if( noisePath )
     {
         CNoiseFromFile noise;
-        noise.SetNoiseFilePath( noisePath, reader );
-        noise.AddNoise( *spectrum );
+        BOOST_CHECK_NO_THROW(noise.SetNoiseFilePath( noisePath, reader ));
+        BOOST_CHECK_NO_THROW(noise.AddNoise( *spectrum ));
     }
 
-    retVal = reader->Read( tplPath, _template );
-    BOOST_CHECK( retVal );
+    BOOST_CHECK_NO_THROW(reader->Read( tplPath, _template ));
 
     Float64 redshiftDelta = 0.0001;
     TFloat64List redshifts = TFloat64Range( z, z ).SpreadOver( redshiftDelta );

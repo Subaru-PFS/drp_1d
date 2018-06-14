@@ -3,6 +3,7 @@
 #include <RedshiftLibrary/spectrum/axis.h>
 #include <RedshiftLibrary/spectrum/spectrum.h>
 #include <RedshiftLibrary/spectrum/io/reader.h>
+#include <RedshiftLibrary/spectrum/io/genericreader.h>
 
 using namespace NSEpic;
 using namespace std;
@@ -16,26 +17,21 @@ CNoiseFromFile::~CNoiseFromFile()
 {
 }
 
-Bool CNoiseFromFile::SetNoiseFilePath( const char* filePath,
+Void CNoiseFromFile::SetNoiseFilePath( const char* filePath,
 				       std::shared_ptr<CSpectrumIOReader> noise_reader )
 {
     m_NoiseSpectrum = std::shared_ptr<CSpectrum>( new CSpectrum() );
 
-    if( noise_reader->Read( filePath, m_NoiseSpectrum ) )
-    {
-        return true;
-    }
-
-    return false;
+    noise_reader->Read( filePath, m_NoiseSpectrum );
 }
 
-Bool CNoiseFromFile::AddNoise( CSpectrum& s1 ) const
+Void CNoiseFromFile::AddNoise( CSpectrum& s1 ) const
 {
     if( m_NoiseSpectrum == NULL )
-        return false;
+      throw string("Noise wasn't initialized");
 
     if( s1.GetSampleCount() != m_NoiseSpectrum->GetSampleCount() )
-        return false;
+      throw string("Sample counts don't match");
 
     Float64* dstError = s1.GetFluxAxis().GetError();
     Float64* srcError = m_NoiseSpectrum->GetFluxAxis().GetSamples();
@@ -44,6 +40,4 @@ Bool CNoiseFromFile::AddNoise( CSpectrum& s1 ) const
     {
         dstError[i] = srcError[i];
     }
-
-    return true;
 }
