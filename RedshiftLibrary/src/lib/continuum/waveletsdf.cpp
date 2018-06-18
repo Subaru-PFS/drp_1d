@@ -246,8 +246,8 @@ Bool CContinuumDF::RemoveContinuum ( const CSpectrum& s, CSpectrumFluxAxis& noCo
 		noContinuumFluxAxis[j] = fluxAxis[j]-estimatedBaseline[j];
 	}
 
-	Float64* noContinuumFluxAxisError = noContinuumFluxAxis.GetError();
-	const Float64* fluxAxisError = fluxAxis.GetError();
+	TFloat64List& noContinuumFluxAxisError = noContinuumFluxAxis.GetError();
+	const TFloat64List& fluxAxisError = fluxAxis.GetError();
 	for(Int32 j=0;j<nn;j++)
 	{
 			noContinuumFluxAxisError[j] = fluxAxisError[j];

@@ -1480,7 +1480,7 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(const CSpe
         bool enableVarianceWeightedRebin = true;
         if(enableVarianceWeightedRebin)
         {
-            const Float64* error = spectrum.GetFluxAxis().GetError();
+            const TFloat64List& error = spectrum.GetFluxAxis().GetError();
             CSpectrumFluxAxis errorFluxAxis(spectrum.GetSampleCount());
             for( Int32 t=0;t<spectrum.GetSampleCount();t++)
             {
@@ -1513,7 +1513,7 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(const CSpe
                                        rebinMethod );
 
             //rebin the variance
-            const Float64* error = spectrum.GetFluxAxis().GetError();
+            const TFloat64List& error = spectrum.GetFluxAxis().GetError();
             CSpectrumFluxAxis errorFluxAxis(spectrum.GetSampleCount());
             for( Int32 t=0;t<spectrum.GetSampleCount();t++)
             {
@@ -1910,7 +1910,7 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(const CSpe
 Float64 COperatorChiSquareLogLambda::EstimateLikelihoodCstLog(const CSpectrum& spectrum, const TFloat64Range& lambdaRange)
 {
     const CSpectrumSpectralAxis& spcSpectralAxis = spectrum.GetSpectralAxis();
-    const Float64* error = spectrum.GetFluxAxis().GetError();
+    const TFloat64List& error = spectrum.GetFluxAxis().GetError();
 
     Int32 numDevs = 0;
     Float64 cstLog = 0.0;

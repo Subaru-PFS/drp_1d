@@ -61,7 +61,7 @@ Int32 CSpectrumCombination::Combine( std::vector<std::shared_ptr<CSpectrum>> spc
     Float64* weightSumSq = new Float64 [(int)spcCombined.GetSampleCount()]();
     CSpectrumFluxAxis& combinedFluxAxis = spcCombined.GetFluxAxis();
     Float64* combinedFlux = combinedFluxAxis.GetSamples();
-    Float64* combinedNoise = combinedFluxAxis.GetError();
+    TFloat64List& combinedNoise = combinedFluxAxis.GetError();
     for(Int32 ks=0; ks<nSamples; ks++)
     {
         weightSumSq[ks]=0.0;
@@ -71,7 +71,7 @@ Int32 CSpectrumCombination::Combine( std::vector<std::shared_ptr<CSpectrum>> spc
     for(Int32 kr=0; kr<nRolls; kr++)
     {
         CSpectrumFluxAxis rollFluxAxis = spcList[kr]->GetFluxAxis();
-        Float64* rollNoise = rollFluxAxis.GetError();
+        TFloat64List& rollNoise = rollFluxAxis.GetError();
         for(Int32 ks=0; ks<nSamples; ks++)
         {
             Float64 sigma2Inv = 1.0/(rollNoise[ks]*rollNoise[ks]);

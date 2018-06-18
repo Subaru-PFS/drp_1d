@@ -1,5 +1,4 @@
 #include <boost/test/unit_test.hpp>
-#include <RedshiftLibrary/noise/flat.h>
 #include <RedshiftLibrary/noise/fromfile.h>
 #include <RedshiftLibrary/spectrum/axis.h>
 #include <RedshiftLibrary/spectrum/io/genericreader.h>
@@ -19,13 +18,14 @@ BOOST_AUTO_TEST_CASE(AddNoise_test)
   CNoiseFromFile noiseFromFile= CNoiseFromFile();
   CSpectrum OSpectrum = CSpectrum();
   CSpectrumFluxAxis& fluxAxis = OSpectrum.GetFluxAxis();
-  std::shared_ptr<CSpectrumIOGenericReader> reader = std::shared_ptr<CSpectrumIOGenericReader>( new CSpectrumIOGenericReader() );
+  CSpectrumIOGenericReader reader;
 
   fluxAxis.SetSize(3);
   fluxAxis[0]= 1.0;
   fluxAxis[1]= 1.5;
   fluxAxis[2]= 2.5;
-  noiseFromFile.AddNoise(OSpectrum);
+
+  BOOST_CHECK_THROW(noiseFromFile.AddNoise(OSpectrum), string);
 
   BOOST_CHECK_THROW(noiseFromFile.SetNoiseFilePath("/this/file/should/not/exist", reader), string);
   BOOST_CHECK_NO_THROW(noiseFromFile.SetNoiseFilePath(DATA_ROOT_DIR "SpectrumioTestCase/spectrum1_z_1.2299.fits", reader));

@@ -779,9 +779,9 @@ Bool CZweiModelSolve::Solve( CDataStore& dataStore,
     contSpectrum->SetName(spcName.c_str());
     contSpectrum->SetFullPath(bfs::path( spcContFilePath ).string().c_str() );
 
-    std::shared_ptr<CSpectrumIOGenericReader> reader = std::shared_ptr<CSpectrumIOGenericReader>( new CSpectrumIOGenericReader() );
+    CSpectrumIOGenericReader reader;
 
-    reader->Read( spcContFilePath.c_str(), contSpectrum );
+    reader.Read( spcContFilePath.c_str(), *contSpectrum );
     Log.LogInfo("Zweimodel - contaminant - Successfully loaded contaminant spectrum file: (%s)", spcName.c_str() );
 
     // add noise if any or add flat noise

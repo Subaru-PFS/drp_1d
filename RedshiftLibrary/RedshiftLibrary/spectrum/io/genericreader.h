@@ -18,7 +18,7 @@ public:
     virtual ~CSpectrumIOGenericReader();
 
     static Bool CanRead( const char* filePath );
-    virtual Void Read( const char* filePath, std::shared_ptr<CSpectrum> spectrum );
+    virtual Void Read( const char* filePath, CSpectrum& spectrum );
 private:
 
 };

@@ -25,10 +25,6 @@ Void CNoiseFlat::SetStatErrorLevel( Float64 level )
 
 Void CNoiseFlat::AddNoise( CSpectrum& s1 ) const
 {
-    Float64* statError = s1.GetFluxAxis().GetError();
-
-    for( UInt32 i=0; i<s1.GetFluxAxis().GetSamplesCount(); i++ )
-    {
-        statError[i] = m_StatErrorLevel;
-    }
+    TFloat64List& statError = s1.GetFluxAxis().GetError();
+    statError.assign(s1.GetFluxAxis().GetSamplesCount(), m_StatErrorLevel);
 }

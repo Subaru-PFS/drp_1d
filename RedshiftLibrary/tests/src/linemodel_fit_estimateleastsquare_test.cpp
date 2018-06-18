@@ -30,22 +30,24 @@ BOOST_AUTO_TEST_SUITE(LinemodelFit_EstimateLeastSquare)
 void checkLeastSquareFast(std::string spectrumPath, std::string noisePath, std::string linecatalogPath, std::string opt_fittingmethod, std::string opt_continuumcomponent, Int32 lineTypeFilter, Int32 forceFilter, Float64 initVelocity, Float64 z)
 {
     // load spectrum
-    std::shared_ptr<CSpectrumIOFitsReader> reader = std::shared_ptr<CSpectrumIOFitsReader>( new CSpectrumIOFitsReader() );
+  CSpectrumIOFitsReader reader;
 
-    std::shared_ptr<CSpectrum> spectrum = std::shared_ptr<CSpectrum>( new CSpectrum() );
-    BOOST_CHECK_NO_THROW(reader->Read( spectrumPath.c_str(), spectrum));
+  CSpectrum spectrum;
+    BOOST_CHECK_NO_THROW(reader.Read( spectrumPath.c_str(), spectrum));
 
     CNoiseFromFile noise;
-    BOOST_CHECK_NO_THROW(noise.SetNoiseFilePath( noisePath.c_str(), reader ));
-    BOOST_CHECK_NO_THROW(noise.AddNoise( *spectrum )) ;
+    //BOOST_CHECK_NO_THROW(noise.SetNoiseFilePath( noisePath.c_str(), reader ));
+    noise.SetNoiseFilePath( noisePath.c_str(), reader );
+    noise.AddNoise( spectrum ) ;
+    //BOOST_CHECK_NO_THROW(noise.AddNoise( spectrum )) ;
 
 
     // get continuum from Median in case of opt_continuumcomponent==fromspectrum
     CContinuumIrregularSamplingMedian continuum;
     CSpectrumFluxAxis fluxAxisWithoutContinuumCalc;
-    Int32 retValContinuumEstimation = continuum.RemoveContinuum( *spectrum, fluxAxisWithoutContinuumCalc );
+    Int32 retValContinuumEstimation = continuum.RemoveContinuum( spectrum, fluxAxisWithoutContinuumCalc );
     BOOST_CHECK( retValContinuumEstimation);
-    CSpectrum spectrumContinuum = *spectrum;
+    CSpectrum spectrumContinuum = spectrum;
     CSpectrumFluxAxis& continuumFluxAxis = spectrumContinuum.GetFluxAxis();
     for(UInt32 i=0; i<continuumFluxAxis.GetSamplesCount(); i++){
         if(opt_continuumcomponent == "fromspectrum")
@@ -98,7 +100,7 @@ void checkLeastSquareFast(std::string spectrumPath, std::string noisePath, std::
     CTemplateCatalog orthoTplCatalog = tplOrtho.getOrthogonalTplCatalog();
 
 
-    CLineModelElementList model(*spectrum, spectrumContinuum, orthoTplCatalog, tplCategories, opt_calibrationPath, lineList, opt_fittingmethod, opt_continuumcomponent, opt_lineWidthType, opt_resolution, opt_velocityEmission, opt_velocityAbsorption, opt_rules, opt_rigidity);
+    CLineModelElementList model(spectrum, spectrumContinuum, orthoTplCatalog, tplCategories, opt_calibrationPath, lineList, opt_fittingmethod, opt_continuumcomponent, opt_lineWidthType, opt_resolution, opt_velocityEmission, opt_velocityAbsorption, opt_rules, opt_rigidity);
 
     bool tplratioInitRet = model.initTplratioCatalogs();
     BOOST_CHECK_MESSAGE( tplratioInitRet, "Unable to intialize tpl-ratio catalog");

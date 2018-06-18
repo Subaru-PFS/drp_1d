@@ -272,7 +272,7 @@ private:
     CSpectrumFluxAxis m_SpcFluxAxis;    //observed spectrum
     CSpectrumFluxAxis m_spcFluxAxisNoContinuum; //observed spectrum for line fitting
     std::shared_ptr<CTemplate> m_tplContaminantSpcRebin; //optionally used contaminant to be removed from observed spectrum
-    Float64* m_ErrorNoContinuum;
+    TFloat64List m_ErrorNoContinuum;
     CSpectrumFluxAxis m_SpcFluxAxisModelDerivVelEmi;
     CSpectrumFluxAxis m_SpcFluxAxisModelDerivVelAbs;
     Float64 m_dTransposeDNocontinuum; //the cached dtd (maximum chisquare value)

@@ -107,10 +107,10 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
     const CSpectrumFluxAxis& spectrumFluxAxis = spectrum.GetFluxAxis();
     m_spcFluxAxisNoContinuum.SetSize( spectrumSampleCount );
 
-    const Float64* error = spectrumFluxAxis.GetError();
+    const TFloat64List& error = spectrumFluxAxis.GetError();
     m_ErrorNoContinuum = m_spcFluxAxisNoContinuum.GetError();
-    Float64* errorSpc = m_SpcFluxAxis.GetError();
-    Float64* errorSpcContinuum = m_SpcContinuumFluxAxis.GetError();
+    TFloat64List& errorSpc = m_SpcFluxAxis.GetError();
+    TFloat64List& errorSpcContinuum = m_SpcContinuumFluxAxis.GetError();
     // sets the error vectors
     for( UInt32 i=0; i<spectrumSampleCount; i++ )
     {

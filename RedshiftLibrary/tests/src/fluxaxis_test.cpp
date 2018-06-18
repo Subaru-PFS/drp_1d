@@ -259,9 +259,9 @@ CMask* Mask=new CMask(10);
 
 Float64 mean=1.;
 Float64 sdev=1.;
-const Float64 error=1.;
+const TFloat64List error { 1. };
 
-Bool resultComputeMeanAndSDev_cas1=object_FluxAxisA->ComputeMeanAndSDev((*Mask),mean,sdev,&error);
+Bool resultComputeMeanAndSDev_cas1=object_FluxAxisA->ComputeMeanAndSDev((*Mask),mean,sdev,error);
 BOOST_CHECK(resultComputeMeanAndSDev_cas1==false);
 
 

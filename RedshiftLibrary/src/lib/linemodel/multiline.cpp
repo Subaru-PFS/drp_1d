@@ -709,7 +709,7 @@ void CMultiLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const C
       }
     const Float64* fluxNoContinuum = noContinuumfluxAxis.GetSamples();
     const Float64* spectral = spectralAxis.GetSamples();
-    const Float64* error = noContinuumfluxAxis.GetError();
+    const TFloat64List& error = noContinuumfluxAxis.GetError();
     const Float64* fluxContinuum = continuumfluxAxis.GetSamples();
 
     Float64 y = 0.0;

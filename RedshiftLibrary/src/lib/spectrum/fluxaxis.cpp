@@ -378,12 +378,7 @@ Void CSpectrumFluxAxis::SetSize( UInt32 s )
 {
     CSpectrumAxis::SetSize( s );
     m_StatError.resize( s );
-
-    for( UInt32 i=0; i<s; i++ )
-    {
-        m_StatError[i] = 1.0;
-    }
-
+    m_StatError.assign(s, 1.0);
 }
 
 Bool CSpectrumFluxAxis::ApplyMedianSmooth( UInt32 kernelHalfWidth )
@@ -438,9 +433,9 @@ Bool CSpectrumFluxAxis::ApplyMeanSmooth( UInt32 kernelHalfWidth )
 }
 
 
-Bool CSpectrumFluxAxis::ComputeMeanAndSDev( const CMask& mask, Float64& mean, Float64& sdev, const Float64* error ) const
+Bool CSpectrumFluxAxis::ComputeMeanAndSDev( const CMask& mask, Float64& mean, Float64& sdev, const TFloat64List error ) const
 {
-    if( error )
+  if( !error.empty() )
     {
         return ComputeMeanAndSDevWithError( mask, mean, sdev, error );
     }
@@ -493,7 +488,7 @@ Bool CSpectrumFluxAxis::ComputeMeanAndSDevWithoutError( const CMask& mask, Float
     return true;
 }
 
-Bool CSpectrumFluxAxis::ComputeMeanAndSDevWithError( const CMask& mask, Float64& mean, Float64& sdev, const Float64* error ) const
+Bool CSpectrumFluxAxis::ComputeMeanAndSDevWithError( const CMask& mask, Float64& mean, Float64& sdev, const TFloat64List error ) const
 {
     DebugAssert( mask.GetMasksCount() == GetSamplesCount() );
 

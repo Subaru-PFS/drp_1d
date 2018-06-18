@@ -231,9 +231,9 @@ std::shared_ptr<CSpectrum> CMultiRollModel::LoadRollSpectrum(std::string refSpcF
     //
 
     //Read the fits data
-    std::shared_ptr<CSpectrumIOGenericReader> reader = std::shared_ptr<CSpectrumIOGenericReader>( new CSpectrumIOGenericReader() );
+    CSpectrumIOGenericReader reader;
 
-    reader->Read( newSpcRollPath.c_str(), spc );
+    reader.Read( newSpcRollPath.c_str(), *spc );
     CNoiseFromFile noise;
     noise.SetNoiseFilePath( newNoiseRollPath.c_str(), reader );
     noise.AddNoise( *spc );

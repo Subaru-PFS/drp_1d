@@ -27,8 +27,8 @@ public:
 
     CSpectrumFluxAxis& operator=(const CSpectrumFluxAxis& other);
 
-    const Float64*      GetError() const;
-    Float64*            GetError();
+    const TFloat64List&      GetError() const;
+    TFloat64List&            GetError();
 
     Void                SetSize( UInt32 s );
 
@@ -36,7 +36,7 @@ public:
     Bool                ApplyMedianSmooth( UInt32 kernelHalfWidth );
 
 
-    Bool                ComputeMeanAndSDev( const CMask& mask, Float64& mean,  Float64& sdev, const Float64* error ) const;
+    Bool                ComputeMeanAndSDev( const CMask& mask, Float64& mean,  Float64& sdev, const TFloat64List error ) const;
     Float64             ComputeRMSDiff( const CSpectrumFluxAxis& other );
     Bool                Subtract(const CSpectrumFluxAxis& other);
     Bool                Invert();
@@ -53,22 +53,22 @@ public:
 private:
 
     Bool                ComputeMeanAndSDevWithoutError( const CMask& mask, Float64& mean,  Float64& sdev) const;
-    Bool                ComputeMeanAndSDevWithError( const CMask& mask, Float64& mean, Float64& sdev, const Float64* error ) const;
+    Bool                ComputeMeanAndSDevWithError( const CMask& mask, Float64& mean, Float64& sdev, const TFloat64List error ) const;
 
     TFloat64List        m_StatError;
 
 };
 
 inline
-Float64* CSpectrumFluxAxis::GetError()
+TFloat64List& CSpectrumFluxAxis::GetError()
 {
-    return m_StatError.data();
+  return m_StatError;
 }
 
 inline
-const Float64* CSpectrumFluxAxis::GetError() const
+const TFloat64List& CSpectrumFluxAxis::GetError() const
 {
-    return m_StatError.data();
+  return m_StatError;
 }
 
 }

@@ -9,7 +9,8 @@ using namespace NSEpic;
 using namespace std;
 
 
-CNoiseFromFile::CNoiseFromFile()
+CNoiseFromFile::CNoiseFromFile():
+  m_initialized(false)
 {
 }
 
@@ -18,23 +19,22 @@ CNoiseFromFile::~CNoiseFromFile()
 }
 
 Void CNoiseFromFile::SetNoiseFilePath( const char* filePath,
-				       std::shared_ptr<CSpectrumIOReader> noise_reader )
+				       CSpectrumIOReader& noise_reader )
 {
-    m_NoiseSpectrum = std::shared_ptr<CSpectrum>( new CSpectrum() );
-
-    noise_reader->Read( filePath, m_NoiseSpectrum );
+  m_initialized = true;
+  noise_reader.Read( filePath, m_NoiseSpectrum );
 }
 
 Void CNoiseFromFile::AddNoise( CSpectrum& s1 ) const
 {
-    if( m_NoiseSpectrum == NULL )
-      throw string("Noise wasn't initialized");
+  if( !m_initialized )
+     throw string("Noise wasn't initialized");
 
-    if( s1.GetSampleCount() != m_NoiseSpectrum->GetSampleCount() )
+    if( s1.GetSampleCount() != m_NoiseSpectrum.GetSampleCount() )
       throw string("Sample counts don't match");
 
-    Float64* dstError = s1.GetFluxAxis().GetError();
-    Float64* srcError = m_NoiseSpectrum->GetFluxAxis().GetSamples();
+    TFloat64List& dstError = s1.GetFluxAxis().GetError();
+    const Float64* srcError = m_NoiseSpectrum.GetFluxAxis().GetSamples();
 
     for( UInt32 i=0; i<s1.GetFluxAxis().GetSamplesCount(); i++ )
     {

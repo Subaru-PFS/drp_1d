@@ -361,8 +361,8 @@ Float64 CLineDetection::ComputeFluxes( const CSpectrum& spectrum, Float64 winsiz
     Float64 xmad = XMadFind( fluxMasked, n, med );
     Float64 noise_win= xmad;
     // use noise spectrum
-    const Float64* error = fluxAxis.GetError();
-    if( error!= NULL )
+    const TFloat64List& error = fluxAxis.GetError();
+    if( !error.empty() )
       {
         // check if noise file has been loaded
         bool isNoiseOnes = true;

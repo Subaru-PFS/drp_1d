@@ -18,11 +18,11 @@ public:
     CSpectrumIOFitsReader();
     ~CSpectrumIOFitsReader();
 
-    virtual Void Read( const char* filePath, std::shared_ptr<CSpectrum> s );
+    virtual Void Read( const char* filePath, CSpectrum& s );
 
 private:
-    Bool Read1( fitsfile* fptr, std::shared_ptr<CSpectrum> spectrum );
-    Bool Read2( fitsfile* fptr, std::shared_ptr<CSpectrum> spectrum );
+    Bool Read1( fitsfile* fptr, CSpectrum& spectrum );
+    Bool Read2( fitsfile* fptr, CSpectrum& spectrum );
 };
 
 

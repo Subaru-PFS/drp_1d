@@ -126,9 +126,9 @@ Float64 COperatorCorrelation::GetComputationDuration() const
             continue;
         }
 
-        const Float64* error = spcFluxAxis.GetError();
+        const TFloat64List& error = spcFluxAxis.GetError();
 
-        DebugAssert( error!= NULL );
+        DebugAssert( !error.empty() );
 
         Float64 spcMean = 0.0;
         Float64 spcSDev = 0.0;
@@ -141,7 +141,7 @@ Float64 COperatorCorrelation::GetComputationDuration() const
 
         Float64 tplMean = 0.0;
         Float64 tplSDev = 0.0;
-        if( !itplTplFluxAxis.ComputeMeanAndSDev( itplMask, tplMean, tplSDev, NULL ) )
+        if( !itplTplFluxAxis.ComputeMeanAndSDev( itplMask, tplMean, tplSDev, TFloat64List() ) )
         {
             result->Status[i] = nStatus_DataError;
             continue;

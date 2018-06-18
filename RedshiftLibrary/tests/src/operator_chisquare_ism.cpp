@@ -31,8 +31,8 @@ void UtilChisquareTestFit( const char* spectraPath,
                            std::string chisquareOperator)
 {
     Bool retVal;
-    std::shared_ptr<CSpectrum> spectrum = std::shared_ptr<CSpectrum>( new CSpectrum() );
-    std::shared_ptr<CTemplate> _template = std::shared_ptr<CTemplate>( new CTemplate() );
+    CSpectrum spectrum;
+    CTemplate _template;
 
     BOOST_TEST_MESSAGE( "\n  Operator = " << chisquareOperator );
 
@@ -40,18 +40,18 @@ void UtilChisquareTestFit( const char* spectraPath,
     BOOST_TEST_MESSAGE( "  Redshift = " << redshift );
 
     // Load spectrum and templates
-    std::shared_ptr<CSpectrumIOGenericReader> reader = std::shared_ptr<CSpectrumIOGenericReader>( new CSpectrumIOGenericReader() );
+    CSpectrumIOGenericReader reader;
 
-    BOOST_CHECK_NO_THROW(reader->Read( spectraPath, spectrum ));
+    BOOST_CHECK_NO_THROW(reader.Read( spectraPath, spectrum ));
 
     if( noisePath )
     {
         CNoiseFromFile noise;
         BOOST_CHECK_NO_THROW(noise.SetNoiseFilePath( noisePath, reader ));
-        BOOST_CHECK_NO_THROW(noise.AddNoise( *spectrum ));
+        BOOST_CHECK_NO_THROW(noise.AddNoise( spectrum ));
     }
 
-    BOOST_CHECK_NO_THROW(reader->Read( tplPath, _template ));
+    BOOST_CHECK_NO_THROW(reader.Read( tplPath, _template ));
 
     Float64 redshiftDelta = 0.0001;
     TFloat64List redshifts = TFloat64Range( z, z ).SpreadOver( redshiftDelta );
@@ -59,7 +59,7 @@ void UtilChisquareTestFit( const char* spectraPath,
     TFloat64Range lambdaRange = TFloat64Range( 300*(1+z), 4000*(1+z) );
 
     //building the mask
-    Int32 sampleCount = spectrum->GetFluxAxis().GetSamplesCount();
+    Int32 sampleCount = spectrum.GetFluxAxis().GetSamplesCount();
     std::vector<CMask> additional_spcMasks;
     CMask spcMask = Mask();
     spcMask.SetSize(sampleCount);
@@ -72,7 +72,7 @@ void UtilChisquareTestFit( const char* spectraPath,
     if(chisquareOperator=="chisquare2")
     {
         COperatorChiSquare2 chi(calibrationPath);
-        r = std::dynamic_pointer_cast<CChisquareResult>( chi.Compute( *spectrum, *_template, TFloat64Range( 200, 20000 ), redshifts, 1.0, additional_spcMasks, "precomputedfinegrid", enable_IGM, enable_ISM ) );
+        r = std::dynamic_pointer_cast<CChisquareResult>( chi.Compute( spectrum, _template, TFloat64Range( 200, 20000 ), redshifts, 1.0, additional_spcMasks, "precomputedfinegrid", enable_IGM, enable_ISM ) );
         BOOST_CHECK( r != NULL );
         BOOST_CHECK( r->Status[0] == COperatorChiSquare2::nStatus_OK );
     }
@@ -81,7 +81,7 @@ void UtilChisquareTestFit( const char* spectraPath,
         bool enableRebinLog = true;
         COperatorChiSquareLogLambda chi(calibrationPath);
         chi.enableSpcLogRebin(enableRebinLog);
-        r = std::dynamic_pointer_cast<CChisquareResult>( chi.Compute( *spectrum, *_template, lambdaRange, redshifts, 1.0, additional_spcMasks, "precomputedfinegrid", enable_IGM, enable_ISM  ) );
+        r = std::dynamic_pointer_cast<CChisquareResult>( chi.Compute( spectrum, _template, lambdaRange, redshifts, 1.0, additional_spcMasks, "precomputedfinegrid", enable_IGM, enable_ISM  ) );
         BOOST_CHECK( r != NULL );
         BOOST_CHECK( r->Status[0] == COperatorChiSquareLogLambda::nStatus_OK );
     }
