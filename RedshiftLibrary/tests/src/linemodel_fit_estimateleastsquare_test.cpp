@@ -33,13 +33,7 @@ void checkLeastSquareFast(std::string spectrumPath, std::string noisePath, std::
   CSpectrumIOFitsReader reader;
 
   CSpectrum spectrum;
-    BOOST_CHECK_NO_THROW(reader.Read( spectrumPath.c_str(), spectrum));
-
-    CNoiseFromFile noise;
-    //BOOST_CHECK_NO_THROW(noise.SetNoiseFilePath( noisePath.c_str(), reader ));
-    noise.SetNoiseFilePath( noisePath.c_str(), reader );
-    noise.AddNoise( spectrum ) ;
-    //BOOST_CHECK_NO_THROW(noise.AddNoise( spectrum )) ;
+  BOOST_CHECK_NO_THROW(spectrum.LoadSpectrum(spectrumPath.c_str(),  noisePath.c_str()));
 
 
     // get continuum from Median in case of opt_continuumcomponent==fromspectrum
