@@ -447,7 +447,7 @@ void CSpectrum::SetWaveletsDFBinPath(std::string binPath)
     m_dfBinPath = binPath;
 }
 
-CSpectrum& CSpectrum::LoadSpectrum(const char* spectrumFilePath, const char* noiseFilePath)
+void CSpectrum::LoadSpectrum(const char* spectrumFilePath, const char* noiseFilePath)
 {
   std::string spcName="";
   std::string noiseName="";
@@ -481,5 +481,4 @@ CSpectrum& CSpectrum::LoadSpectrum(const char* spectrumFilePath, const char* noi
       noise.AddNoise(*this);
       Log.LogInfo("Successfully loaded input noise file:    (%s)", noiseName.c_str() );
     }
-  return *this;
 }

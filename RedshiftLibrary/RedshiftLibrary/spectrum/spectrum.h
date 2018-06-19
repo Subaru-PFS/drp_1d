@@ -70,7 +70,7 @@ public:
     void                SetContinuumEstimationMethod(std::string method);
     void                SetWaveletsDFBinPath(std::string binPath);
 
-    CSpectrum&          LoadSpectrum(const char* spectrumFilePath, const char* noiseFilePath);
+    void LoadSpectrum(const char* spectrumFilePath, const char* noiseFilePath);
 
 private:
 

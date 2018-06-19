@@ -193,7 +193,7 @@ Void CSpectrumIOFitsReader::Read( const char* filePath, CSpectrum& spectrum )
             }
             else if( hdunum == 2 )
             {
-	      //Log.LogDebug("    CSpectrumIOFitsReader: Read2");
+	      Log.LogDebug("    CSpectrumIOFitsReader: Read2");
                 if( !Read2( fptr, spectrum ) )
 		  {
 		    fits_close_file( fptr, &status );

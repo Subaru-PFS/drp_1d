@@ -2,6 +2,7 @@
 %include <std_string.i>
 %include <std_shared_ptr.i>
 %include typemaps.i
+
 %shared_ptr(CParameterStore)
 %shared_ptr(CLogConsoleHandler)
 %shared_ptr(CClassifierStore)
@@ -106,15 +107,12 @@ public:
 class CProcessFlowContext {
 public:
   CProcessFlowContext();
-  bool Init( const char* spectrumPath,
-             const char* noisePath,
-             std::shared_ptr<CSpectrumIOReader> spectrum_reader,
-             std::shared_ptr<CSpectrumIOReader> noise_reader,
-             std::string processingID,
-             std::shared_ptr<const CTemplateCatalog> templateCatalog,
-             std::shared_ptr<const CRayCatalog> rayCatalog,
-             std::shared_ptr<CParameterStore> paramStore,
-             std::shared_ptr<CClassifierStore> zqualStore  );
+  bool Init(std::shared_ptr<CSpectrum> spectrum,
+	    std::string processingID,
+	    std::shared_ptr<const CTemplateCatalog> templateCatalog,
+	    std::shared_ptr<const CRayCatalog> rayCatalog,
+	    std::shared_ptr<CParameterStore> paramStore,
+	    std::shared_ptr<CClassifierStore> zqualStore  );
   CDataStore& GetDataStore();
 };
 
@@ -140,20 +138,26 @@ public:
   COperatorResultStore();
 };
 
+%catches(std::string, ...) CSpectrum::LoadSpectrum;
+
 class CSpectrum
 {
  public:
   CSpectrum();
   CSpectrumFluxAxis& GetFluxAxis();
   CSpectrumSpectralAxis& GetSpectralAxis();
+  void LoadSpectrum(const char* spectrumFilePath, const char* noiseFilePath);
+
 };
+
+%catches(std::string, ...) CSpectrumIOReader::Read;
 
 class CSpectrumIOReader
 {
  public:
   CSpectrumIOReader();
   virtual ~CSpectrumIOReader();
-  virtual Bool Read(const char* filePath, std::shared_ptr<CSpectrum> s) = 0;
+  virtual void Read(const char* filePath, CSpectrum& s) = 0;
 };
 
 class CSpectrumIOGenericReader : public CSpectrumIOReader
@@ -161,7 +165,7 @@ class CSpectrumIOGenericReader : public CSpectrumIOReader
  public:
   CSpectrumIOGenericReader();
   virtual ~CSpectrumIOGenericReader();
-  virtual Bool Read( const char* filePath, std::shared_ptr<CSpectrum> s );
+  virtual void Read( const char* filePath, CSpectrum& s );
 };
 
 class CSpectrumAxis
