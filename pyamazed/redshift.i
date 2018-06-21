@@ -94,7 +94,7 @@ public:
 class CRayCatalog
 {
 public:
-    Bool Load( const char* filePath );
+    void Load( const char* filePath );
 };
 
 class CTemplateCatalog
