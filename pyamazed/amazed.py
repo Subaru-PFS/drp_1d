@@ -79,18 +79,28 @@ def amazed():
             spectrum.LoadSpectrum(spectrumpath(config, spectrum_path),
                                   spectrumpath(config, noise_path))
         except Exception as e:
-            print("Exception caught : {}".format(e))
+            print("Can't load spectrum : {}".format(e))
             continue
-        ctx=CProcessFlowContext()
-        ctx.Init(spectrum,
-                 proc_id,
-                 template_catalog,
-                 line_catalog,
-                 param,
-                 classif)
+
+        try:
+            ctx = CProcessFlowContext()
+            ctx.Init(spectrum,
+                     proc_id,
+                     template_catalog,
+                     line_catalog,
+                     param,
+                     classif)
+        except Exception as e:
+            print("Can't init process flow : {}".format(e))
+            continue
 
         pflow=CProcessFlow()
-        pflow.Process(ctx)
+        try:
+            pflow.Process(ctx)
+        except Exception as e:
+            print("Can't process : {}".format(e))
+            continue
+
         ctx.GetDataStore().SaveRedshiftResult(config.output_folder)
         #ctx.GetDataStore().SaveReliabilityResult('/tmp/bar')
         ctx.GetDataStore().SaveAllResults(config.output_folder, 'all')

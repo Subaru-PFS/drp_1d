@@ -111,8 +111,7 @@ CLineModelElementList GetData ( void )
 
   Bool retVal = ctx.Init( spectrum, procID, NULL, DATA_ROOT_DIR "LinemodelRulesTestCase/raycatalog_test_elratiorules.txt", params, classifStore );
   BOOST_CHECK( retVal == true );
-  retVal = processFlow.Process( ctx ); // Segmentation fault
-  BOOST_CHECK( retVal == true );
+  BOOST_CHECK_NO_THROW(processFlow.Process( ctx )); // Segmentation fault
   // Create redshift initial list by spanning redshift acdross the given range, with the given delta
   Float64 redshiftStep = 0.01;
   TFloat64List redshifts = redshiftRange.SpreadOver( redshiftStep );

@@ -68,7 +68,7 @@ CProcessFlow::~CProcessFlow()
 
 }
 
-Bool CProcessFlow::Process( CProcessFlowContext& ctx )
+void CProcessFlow::Process( CProcessFlowContext& ctx )
 {
     Log.LogInfo("<proc-spc><%s>", ctx.GetSpectrum().GetName().c_str());
 
@@ -146,13 +146,13 @@ Bool CProcessFlow::Process( CProcessFlowContext& ctx )
         const Float64 lmax = spcLambdaRange.GetEnd();
         if( !ctx.GetSpectrum().IsFluxValid( lmin, lmax ) ){
             Log.LogError( "Failed to validate spectrum flux: %s, on wavelength range (%.1f ; %.1f)", ctx.GetSpectrum().GetName().c_str(), lmin, lmax );
-            return false;
+            throw std::string("Failed to validate spectrum flux");
         }else{
             Log.LogDetail( "Successfully validated spectrum flux: %s, on wavelength range (%.1f ; %.1f)", ctx.GetSpectrum().GetName().c_str(), lmin, lmax );
         }
         if( !ctx.GetSpectrum().IsNoiseValid( lmin, lmax ) ){
             Log.LogError( "Failed to validate noise from spectrum: %s, on wavelength range (%.1f ; %.1f)", ctx.GetSpectrum().GetName().c_str(), lmin, lmax );
-            return false;
+            throw std::string("Failed to validate noise from spectrum");
         }else{
             Log.LogDetail( "Successfully validated noise from spectrum: %s, on wavelength range (%.1f ; %.1f)", ctx.GetSpectrum().GetName().c_str(), lmin, lmax );
         }
@@ -160,7 +160,7 @@ Bool CProcessFlow::Process( CProcessFlowContext& ctx )
 
 
 
-    std::shared_ptr<COperatorResult> mResult;
+    std::shared_ptr<COperatorResult> mResult = NULL;
 
 
     if(methodName  == "linemodel" ){
@@ -194,7 +194,7 @@ Bool CProcessFlow::Process( CProcessFlowContext& ctx )
                 if(!logzpdf1d)
                 {
                     Log.LogError( "Extract Proba. for z candidates: no results retrieved from scope: %s", scope_res.c_str());
-                    return false;
+                    throw std::string("Extract Proba. for z candidates");
                 }
 
                 Log.LogInfo( "  Integrating %d candidates proba.", zc.size() );
@@ -368,7 +368,7 @@ Bool CProcessFlow::Process( CProcessFlowContext& ctx )
 
     }else{
         Log.LogError("Problem found while parsing the method parameter !");
-        return false;
+        throw std::string("Problem found while parsing the method parameter");
     }
 
 
@@ -407,11 +407,9 @@ Bool CProcessFlow::Process( CProcessFlowContext& ctx )
     if( mResult ) {
         ctx.GetDataStore().StoreScopedGlobalResult( "redshiftresult", mResult );
     }else{
-        Log.LogError( "Unable to store method result.");
-        return false;
+      Log.LogError( "Unable to store method result.");
+      throw std::string("Unable to store method result");
     }
-
-    return true;
 }
 
 /**

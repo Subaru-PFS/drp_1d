@@ -36,8 +36,8 @@ BOOST_AUTO_TEST_CASE( ProcessShifted1 )
     Bool retVal = ctx.Init(spectrum, procID, DATA_ROOT_DIR "ProcessFlowTestCase/template_shifted1/", NULL, params, NULL );
     BOOST_CHECK( retVal == true );
 
-    retVal = processFlow.Process( ctx );
-    BOOST_CHECK( retVal == true );
+    BOOST_CHECK_NO_THROW(processFlow.Process( ctx ));
+
 
     Float64 redshift;
     Float64 merit;
@@ -70,8 +70,7 @@ BOOST_AUTO_TEST_CASE( ProcessShifted2 )
     Bool retVal = ctx.Init( spectrum, procID, DATA_ROOT_DIR "ProcessFlowTestCase/template_shifted2/", NULL, params, NULL );
     BOOST_CHECK( retVal == true );
 
-    retVal = processFlow.Process( ctx );
-    BOOST_CHECK( retVal == true );
+    BOOST_CHECK_NO_THROW(processFlow.Process( ctx ));
 
     Float64 redshift=0.0;
     Float64 merit=0.0;
@@ -104,8 +103,7 @@ BOOST_AUTO_TEST_CASE( ProcessShiftedDecimated )
     Bool retVal = ctx.Init( spectrum, procID, DATA_ROOT_DIR "ProcessFlowTestCase/template_shifted_decimated/", NULL, params, NULL );
     BOOST_CHECK( retVal == true );
 
-    retVal = processFlow.Process( ctx );
-    BOOST_CHECK( retVal == true );
+    BOOST_CHECK_NO_THROW(processFlow.Process( ctx ));
 
     Float64 redshift;
     Float64 merit;

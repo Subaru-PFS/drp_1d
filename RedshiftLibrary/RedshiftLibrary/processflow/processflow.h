@@ -28,7 +28,7 @@ public:
     CProcessFlow();
     ~CProcessFlow();
 
-    Bool Process( CProcessFlowContext& ctx );
+    void Process( CProcessFlowContext& ctx );
 
 private:
 

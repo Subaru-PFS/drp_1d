@@ -116,10 +116,12 @@ public:
   CDataStore& GetDataStore();
 };
 
+%catches(std::string, ...) CProcessFlow::Process;
+
 class CProcessFlow {
 public:
   CProcessFlow();
-  Bool Process( CProcessFlowContext& ctx );
+  void Process( CProcessFlowContext& ctx );
 };
 
 class CDataStore
