@@ -232,13 +232,7 @@ bool CProcessFlowContext::Init( std::shared_ptr<CSpectrum> spectrum,
     //std::cout << "ctx" << std::endl;
     if( rayCatalogPath )
     {
-        rValue = rayCatalog->Load( rayCatalogPath );
-        if( !rValue )
-        {
-            Log.LogError("Failed to load line catalog: (%s)", rayCatalogPath );
-            m_RayCatalog = NULL;
-            return false;
-        }
+        rayCatalog->Load( rayCatalogPath );
     }
 
     return Init( spectrum, processingID, templateCatalog, rayCatalog, paramStore, zqualStore );

@@ -156,8 +156,7 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
         m_chiSquareOperator = new COperatorChiSquare2(calibrationPath);
         m_observeGridContinuumFlux = new Float64[modelFluxAxis.GetSamplesCount()]();
         if(m_observeGridContinuumFlux == NULL){
-          Log.LogError("unable to allocate m_observeGridContinuumFlux");
-          return;
+          throw std::string("unable to allocate m_observeGridContinuumFlux");
         }
         if(0)
         {

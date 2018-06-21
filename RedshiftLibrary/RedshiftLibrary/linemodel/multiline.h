@@ -21,7 +21,7 @@ class CMultiLine:public CLineModelElement
 
 public:
 
-    CMultiLine(std::vector<CRay> rs, const std::string& widthType, const Float64 resolution, const Float64 velocityEmission, const Float64 velocityAbsorption, std::vector<Float64> nominalAmplitudes, Float64 nominalWidth, std::vector<Int32> catalogIndexes);
+    CMultiLine(std::vector<CRay> rs, const std::string& widthType, const Float64 resolution, const Float64 velocityEmission, const Float64 velocityAbsorption, TFloat64List nominalAmplitudes, Float64 nominalWidth, TInt32List catalogIndexes);
     ~CMultiLine();
 
     std::string GetRayName(Int32 subeIdx);
@@ -77,25 +77,25 @@ public:
 private:
     Int32 FindElementIndex(std::string LineTagStr);
 
-    std::vector<std::vector<Int32>>     m_RayIsActiveOnSupport;
-    std::vector<Float64>    m_SignFactors;
-    std::vector<Float64>        m_FittedAmplitudes;
-    std::vector<Float64>        m_FittedAmplitudeErrorSigmas;
-    std::vector<Float64>        m_NominalAmplitudes;
+    std::vector<TInt32List>     m_RayIsActiveOnSupport;
+    TFloat64List        m_SignFactors;
+    TFloat64List        m_FittedAmplitudes;
+    TFloat64List        m_FittedAmplitudeErrorSigmas;
+    TFloat64List        m_NominalAmplitudes;
 
     Float64 m_absLinesLimit;
 
-    std::vector<Float64>        mBuffer_mu;
-    std::vector<Float64>        mBuffer_c;
-    std::vector<std::string>    m_profile;
+    TFloat64List        mBuffer_mu;
+    TFloat64List        mBuffer_c;
+    TStringList    m_profile;
 
 
-    std::vector<Int32>          m_StartNoOverlap;
-    std::vector<Int32>          m_EndNoOverlap;
-    std::vector<Int32>          m_StartTheoretical;
-    std::vector<Int32>          m_EndTheoretical;
+    TInt32List          m_StartNoOverlap;
+    TInt32List          m_EndNoOverlap;
+    TInt32List          m_StartTheoretical;
+    TInt32List          m_EndTheoretical;
 
-    std::vector<bool>           m_OutsideLambdaRangeList;
+    TBoolList           m_OutsideLambdaRangeList;
 
     //constant
     Float64 m_c_kms;

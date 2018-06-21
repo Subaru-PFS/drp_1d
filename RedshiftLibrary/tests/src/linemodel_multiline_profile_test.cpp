@@ -80,8 +80,8 @@ void checkProfileValue(std::string linecatalogPath,
 
     //get line catalog
     CRayCatalog lineCatalog;
-    Bool rValue = lineCatalog.Load( linecatalogPath.c_str() );
-    BOOST_CHECK( rValue == true);
+    BOOST_CHECK_NO_THROW(lineCatalog.Load( linecatalogPath.c_str() ));
+
     CRayCatalog::TRayVector lineList = lineCatalog.GetFilteredList(lineTypeFilter, forceFilter);
     BOOST_CHECK( lineList.size()>0);
 

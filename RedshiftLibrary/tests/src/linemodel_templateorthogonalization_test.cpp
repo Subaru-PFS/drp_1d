@@ -55,8 +55,8 @@ Float64 processOrtho(std::string spectrumPath, std::string noisePath, std::strin
 
     //get line catalog
     CRayCatalog lineCatalog;
-    Bool rValueLoadLineCatalog = lineCatalog.Load( linecatalogPath.c_str() );
-    BOOST_CHECK( rValueLoadLineCatalog == true);
+    BOOST_CHECK_NO_THROW(lineCatalog.Load( linecatalogPath.c_str() ));
+
     CRayCatalog::TRayVector lineList = lineCatalog.GetFilteredList(lineTypeFilter, forceFilter);
     BOOST_CHECK( lineList.size()>0);
 
@@ -75,8 +75,8 @@ Float64 processOrtho(std::string spectrumPath, std::string noisePath, std::strin
     CTemplateCatalog tplCatalog;
     std::string templatesPath= DATA_ROOT_DIR "Linemodel_tplorthogalization/templates/";
     BOOST_TEST_MESSAGE( "Loading templates from " << templatesPath );
-    Bool retValue = tplCatalog.Load(templatesPath.c_str());
-    BOOST_CHECK( retValue == true);
+    BOOST_CHECK_NO_THROW(tplCatalog.Load(templatesPath.c_str()));
+
     TStringList tplCategories = TStringList { "galaxy" };
 
     CTemplateCatalog finalTplCatalog;

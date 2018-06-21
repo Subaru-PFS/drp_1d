@@ -69,8 +69,7 @@ void checkSupport(std::string linecatalogPath,
 
     //get line catalog
     CRayCatalog lineCatalog;
-    Bool rValue = lineCatalog.Load( linecatalogPath.c_str() );
-    BOOST_CHECK_MESSAGE( rValue == true, "check load catalog");
+    BOOST_CHECK_NO_THROW(lineCatalog.Load( linecatalogPath.c_str() ));
     CRayCatalog::TRayVector lineList = lineCatalog.GetFilteredList(lineTypeFilter, forceFilter);
     BOOST_CHECK_MESSAGE( lineList.size()>0, "check loaded catalog not empty");
 
