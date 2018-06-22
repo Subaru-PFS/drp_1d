@@ -179,7 +179,7 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
                                                                               opt_rigidity) );
     Float64 setssSizeInit = 0.1;
     m_model->SetSourcesizeDispersion(setssSizeInit);
-    Log.LogInfo( "  Operator-Linemodel: sourcesize init to: ss=%.1f", setssSizeInit);
+    Log.LogInfo( "  Operator-Linemodel: sourcesize init to: ss=%.2f", setssSizeInit);
 
 
     /*

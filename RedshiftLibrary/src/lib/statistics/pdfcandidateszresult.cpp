@@ -12,7 +12,7 @@ using namespace std;
 
 CPdfCandidateszResult::CPdfCandidateszResult()
 {
-    Fullwidth = 1e-3;
+    Fullwidth = 1e-2;
 }
 
 CPdfCandidateszResult::~CPdfCandidateszResult()
