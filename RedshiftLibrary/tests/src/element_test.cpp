@@ -117,12 +117,12 @@ BOOST_AUTO_TEST_CASE(GetLineProfileDerivSigma){
   catalogIndexes.push_back(0);
   CMultiLine element = CMultiLine(rs,  "SYMXL",  0.9, 1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes);
 
-  BOOST_CHECK_CLOSE(0.00747742, element.GetLineProfileDerivSigma("SYM",6564.61, 6568., 2. ), 0.001);
-  BOOST_CHECK_CLOSE(0.000237551, element.GetLineProfileDerivSigma("SYMXL",6564.61, 6568., 2. ), 0.001);
-  BOOST_CHECK_CLOSE(0.00526978, element.GetLineProfileDerivSigma("ASYM",6564.61, 6565., 2. ), 0.001);
-  BOOST_CHECK_CLOSE(0.00147619, element.GetLineProfileDerivSigma("ASYM2",6564.61, 6568., 2. ), 0.001);
-  BOOST_CHECK_CLOSE(0.00147619, element.GetLineProfileDerivSigma("ASYMFIT",6564.61, 6568., 2. ), 0.001);
-  BOOST_CHECK_CLOSE(0.00147619, element.GetLineProfileDerivSigma("ASYMFIXED",6564.61, 6568., 2. ), 0.001);
+  BOOST_CHECK_CLOSE(0.34153872866337925, element.GetLineProfileDerivSigma("SYM", 6564.61, 6568., 2. ), 0.001);
+  BOOST_CHECK_CLOSE(0.010850371757731672, element.GetLineProfileDerivSigma("SYMXL", 6564.61, 6568., 2. ), 0.001);
+  BOOST_CHECK_CLOSE(0.24081246138668605, element.GetLineProfileDerivSigma("ASYM", 6564.61, 6565., 2. ), 0.001);
+  BOOST_CHECK_CLOSE(0.067426590554372501, element.GetLineProfileDerivSigma("ASYM2", 6564.61, 6568., 2. ), 0.001);
+  BOOST_CHECK_CLOSE(0.067426590554372501, element.GetLineProfileDerivSigma("ASYMFIT", 6564.61, 6568., 2. ), 0.001);
+  BOOST_CHECK_CLOSE(0.067426590554372501, element.GetLineProfileDerivSigma("ASYMFIXED", 6564.61, 6568., 2. ), 0.001);
 }
 
 
