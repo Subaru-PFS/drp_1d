@@ -1,4 +1,5 @@
 %module(directors="1") redshift
+
 %include <std_string.i>
 %include <std_shared_ptr.i>
 %include typemaps.i
@@ -17,8 +18,8 @@
 %apply Int64 &OUTPUT { Int64& out_int };
 %apply Float64 &OUTPUT { Float64& out_float };
 
-
 %{
+        #define SWIG_FILE_WITH_INIT
         #include "RedshiftLibrary/log/log.h"
         #include "RedshiftLibrary/log/consolehandler.h"
         #include "RedshiftLibrary/processflow/parameterstore.h"
@@ -34,6 +35,12 @@
         #include "RedshiftLibrary/spectrum/fluxaxis.h"
         #include "RedshiftLibrary/spectrum/spectralaxis.h"
         using namespace NSEpic;
+%}
+
+%include numpy.i
+
+%init %{
+import_array();
 %}
 
 typedef int Int32;
@@ -181,11 +188,25 @@ class CSpectrumAxis
 class CSpectrumSpectralAxis : public CSpectrumAxis {
  public:
   CSpectrumSpectralAxis();
+  //CSpectrumSpectralAxis( const Float64* samples, UInt32 n, Bool isLogScale  );
 };
+%apply (double* IN_ARRAY1, int DIM1) {( const Float64* samples, UInt32 n)};
+%extend CSpectrumSpectralAxis {
+ CSpectrumSpectralAxis( const Float64* samples, UInt32 n) :
+  CSpectrumAxis( samples, n ),
+      m_SpectralFlags( 0 )
+	{
+	}
+};
+%clear (double* IN_ARRAY1, int DIM1, bool isLogScale);
 
+
+%apply (double* IN_ARRAY1, int DIM1) {( const Float64* samples, UInt32 n)};
 class CSpectrumFluxAxis : public CSpectrumAxis
 {
  public:
   CSpectrumFluxAxis();
+  CSpectrumFluxAxis( const Float64* samples, UInt32 n );
   void SetSize( UInt32 s );
 };
+%clear (double* IN_ARRAY1, int DIM1);
