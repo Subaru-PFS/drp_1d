@@ -8,7 +8,6 @@
 #include <RedshiftLibrary/extremum/extremum.h>
 #include <RedshiftLibrary/processflow/datastore.h>
 #include <RedshiftLibrary/statistics/pdfz.h>
-#include <RedshiftLibrary/operator/pdfMargZLogResult.h>
 
 #include <RedshiftLibrary/spectrum/io/fitswriter.h>
 #include <float.h>
@@ -55,6 +54,7 @@ std::shared_ptr<CChisquare2SolveResult> CMethodChisquare2Solve::Compute(CDataSto
                                                                               const TFloat64List& redshifts,
                                                                               Float64 overlapThreshold,
                                                                               std::vector<CMask> maskList,
+                                                                              const std::string outputPdfRelDir,
                                                                               std::string spcComponent,
                                                                               std::string opt_interp,
                                                                               std::string opt_extinction,
@@ -119,7 +119,28 @@ std::shared_ptr<CChisquare2SolveResult> CMethodChisquare2Solve::Compute(CDataSto
         std::shared_ptr< CChisquare2SolveResult>  ChisquareSolveResult = std::shared_ptr< CChisquare2SolveResult>( new CChisquare2SolveResult() );
         ChisquareSolveResult->m_type = _type;
 
-        CombinePDF(resultStore, scopeStr, m_opt_pdfcombination);
+        std::shared_ptr<CPdfMargZLogResult> postmargZResult = std::shared_ptr<CPdfMargZLogResult>(new CPdfMargZLogResult());
+        Int32 retCombinePdf = CombinePDF(resultStore, scopeStr, m_opt_pdfcombination, postmargZResult);
+
+        if(retCombinePdf==0)
+        {
+            //check pdf sum=1
+            CPdfz pdfz;
+            Float64 sumRect = pdfz.getSumRect(postmargZResult->Redshifts, postmargZResult->valProbaLog);
+            Float64 sumTrapez = pdfz.getSumTrapez(postmargZResult->Redshifts, postmargZResult->valProbaLog);
+            Log.LogDetail("    chisquare2solve: Pdfz normalization - sum rect. = %e", sumRect);
+            Log.LogDetail("    chisquare2solve: Pdfz normalization - sum trapz. = %e", sumTrapez);
+            Bool pdfSumCheck = abs(sumRect-1.0)<1e-1 || abs(sumTrapez-1.0)<1e-1;
+            if(!pdfSumCheck){
+                Log.LogError("    chisquare2solve: Pdfz normalization failed (rectsum = %f, trapzesum = %f)", sumRect, sumTrapez);
+            }
+
+
+            {
+                std::string pdfPath = outputPdfRelDir+"/logposterior.logMargP_Z_data";
+                resultStore.StoreGlobalResult( pdfPath.c_str(), postmargZResult); //need to store this pdf with this exact same name so that zqual can load it. see zqual.cpp/ExtractFeaturesPDF
+            }
+        }
 
         return ChisquareSolveResult;
     }
@@ -255,15 +276,14 @@ Bool CMethodChisquare2Solve::Solve(CDataStore& resultStore,
 }
 
 
-Int32 CMethodChisquare2Solve::CombinePDF(CDataStore &store, std::string scopeStr, std::string opt_combine )
+Int32 CMethodChisquare2Solve::CombinePDF(CDataStore &store, std::string scopeStr, std::string opt_combine, std::shared_ptr<CPdfMargZLogResult> postmargZResult)
 {
     Log.LogInfo("chisquare2solve: Pdfz computation");
-    std::string scope = "chisquare2solve.";
+    std::string scope = store.GetCurrentScopeName() + ".";
     scope.append(scopeStr.c_str());
 
     TOperatorResultMap meritResults = store.GetPerTemplateResult(scope.c_str());
 
-    std::shared_ptr<CPdfMargZLogResult> postmargZResult = std::shared_ptr<CPdfMargZLogResult>(new CPdfMargZLogResult());
     CPdfz pdfz;
     Float64 cstLog = -1;
 
@@ -317,38 +337,28 @@ Int32 CMethodChisquare2Solve::CombinePDF(CDataStore &store, std::string scopeStr
         }
     }
 
-    if(opt_combine=="marg" && chiSquares.size()>0)
+    if(chiSquares.size()>0)
     {
-        Log.LogInfo("    chisquare2solve: Pdfz combination - Marginalization");
-        retPdfz = pdfz.Marginalize( redshifts, chiSquares, priors, cstLog, postmargZResult);
-    }else if(opt_combine=="bestchi2")
+        if(opt_combine=="marg")
+        {
+            Log.LogInfo("    chisquare2solve: Pdfz combination - Marginalization");
+            retPdfz = pdfz.Marginalize( redshifts, chiSquares, priors, cstLog, postmargZResult);
+        }else if(opt_combine=="bestchi2")
+        {
+            Log.LogInfo("    chisquare2solve: Pdfz combination - BestChi2");
+            retPdfz = pdfz.BestChi2( redshifts, chiSquares, priors, cstLog, postmargZResult);
+        }else{
+            Log.LogError("    chisquare2solve: Unable to parse pdf combination method option");
+        }
+    }else
     {
-        Log.LogInfo("    chisquare2solve: Pdfz combination - BestChi2");
-        retPdfz = pdfz.BestChi2( redshifts, chiSquares, priors, cstLog, postmargZResult);
-    }else{
-        Log.LogError("    chisquare2solve: Unable to parse pdf combination method option");
+        Log.LogError("    chisquare2solve: Unable to find any chisquares prepared for combination. chiSquares.size()=%d", chiSquares.size());
     }
 
 
     if(retPdfz!=0)
     {
         Log.LogError("    chisquare2solve: Pdfz computation failed");
-    }else{
-
-        //check pdf sum=1
-        Float64 sumRect = pdfz.getSumRect(postmargZResult->Redshifts, postmargZResult->valProbaLog);
-        Float64 sumTrapez = pdfz.getSumTrapez(postmargZResult->Redshifts, postmargZResult->valProbaLog);
-        Log.LogDetail("    chisquare2solve: Pdfz normalization - sum rect. = %e", sumRect);
-        Log.LogDetail("    chisquare2solve: Pdfz normalization - sum trapz. = %e", sumTrapez);
-        Bool pdfSumCheck = abs(sumRect-1.0)<1e-1 || abs(sumTrapez-1.0)<1e-1;
-        if(!pdfSumCheck){
-            Log.LogError("    chisquare2solve: Pdfz normalization failed (rectsum = %f, trapzesum = %f)", sumRect, sumTrapez);
-        }
-
-
-        {
-            store.StoreGlobalResult( "zPDF/logposterior.logMargP_Z_data", postmargZResult); //need to store this pdf with this exact same name so that zqual can load it. see zqual.cpp/ExtractFeaturesPDF
-        }
     }
 
     return retPdfz;

@@ -52,6 +52,11 @@ namespace NSEpic
 
     Void Save( const CDataStore& store, std::ostream& stream ) const;
     Void SaveLine( const CDataStore& store, std::ostream& stream ) const;
+    inline Int32 GetEvidenceFromPdf(const CDataStore& store, Float64 &evidence) const
+    {
+        return 1;
+    }
+
     Void SaveSolutionSetToStream( std::ostream& stream, TSolutionSetList selectedResults, Int32 type) const;
 
     Bool GetBestRedshift( Float64& Redshift, Int32& MatchingNumber ) const;

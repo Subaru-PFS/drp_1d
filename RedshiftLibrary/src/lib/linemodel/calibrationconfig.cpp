@@ -71,11 +71,18 @@ Bool CCalibrationConfigHelper::Load( const char* filePath )
             m_linemodelOffset_relpath = line.substr(foundstrEqual+1, line.size());
             readNums++;
         }
+        std::string star_templates_key = "star-templates-dir";
+        foundstra = line.find(star_templates_key.c_str());
+        foundstrEqual = line.find("=");
+        if (foundstra!=std::string::npos){
+            m_starTemplates_relpath = line.substr(foundstrEqual+1, line.size());
+            readNums++;
+        }
 
 
     }
     file.close();
-    if(readNums!=2) //reading 1. tplratiodir, 2. offsetsdir
+    if(readNums!=3) //reading 1. tplratiodir, 2. offsetsdir, 3. starstemplates
     {
         return false;
     }
@@ -93,3 +100,9 @@ std::string CCalibrationConfigHelper::Get_linemodelOffset_relpath()
 {
     return m_linemodelOffset_relpath;
 }
+
+std::string CCalibrationConfigHelper::Get_starTemplates_relpath()
+{
+    return m_starTemplates_relpath;
+}
+

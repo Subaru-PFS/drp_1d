@@ -53,7 +53,7 @@ bool CProcessFlowContext::Init( const char* spectrumPath, const char* noisePath,
                                 std::shared_ptr<CParameterStore> paramStore,
                                 std::shared_ptr<CClassifierStore> zqualStore  )
 {
-    Log.LogInfo("Processing context initialiation");
+    Log.LogInfo("Processing context initialization");
 
     m_ClassifierStore=zqualStore;
 

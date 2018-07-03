@@ -157,7 +157,9 @@ Void CChisquare2SolveResult::SaveLine( const CDataStore& store, std::ostream& st
                 << tplName << "\t"
                 << "Chisquare2Solve_" << tmpChar << "\t"
                 << "-1" << "\t" //deltaz
-                << m_ReliabilityLabel << std::endl; //reliability label
+                << m_ReliabilityLabel << "\t"
+                << "-1" << "\t"
+                << m_TypeLabel << std::endl; //reliability label
 
 }
 
@@ -228,7 +230,17 @@ Bool CChisquare2SolveResult::GetBestRedshift( const CDataStore& store, Float64& 
  **/
 Bool CChisquare2SolveResult::GetBestRedshiftFromPdf( const CDataStore& store, Float64& redshift, Float64& merit, Float64& evidence ) const
 {
-    std::string scope_res = "zPDF/logposterior.logMargP_Z_data";
+    //check if the pdf is stellar/galaxy or else
+    std::string outputPdfRelDir  = "zPDF"; //default value set to galaxy zPDF folder
+    std::string scope = store.GetScope( *this );
+    std::size_t foundstra;
+    foundstra = scope.find("stellarsolve");
+    if (foundstra!=std::string::npos){
+        outputPdfRelDir = "stellar_zPDF";
+    }
+
+
+    std::string scope_res = outputPdfRelDir+"/logposterior.logMargP_Z_data";
     auto results_pdf =  store.GetGlobalResult( scope_res.c_str() );
     std::shared_ptr<const CPdfMargZLogResult> logzpdf1d = std::dynamic_pointer_cast<const CPdfMargZLogResult>( results_pdf.lock() );
 
@@ -244,7 +256,6 @@ Bool CChisquare2SolveResult::GetBestRedshiftFromPdf( const CDataStore& store, Fl
 
     for( Int32 i=0; i<logzpdf1d->Redshifts.size(); i++ )
     {
-
         Float64 probaLog = logzpdf1d->valProbaLog[i];
         if(probaLog>tmpProbaLog)
         {
@@ -258,6 +269,32 @@ Bool CChisquare2SolveResult::GetBestRedshiftFromPdf( const CDataStore& store, Fl
     merit = tmpProbaLog;
     evidence = logzpdf1d->valEvidenceLog;
     return true;
+}
+
+Int32 CChisquare2SolveResult::GetEvidenceFromPdf(const CDataStore& store, Float64 &evidence) const
+{
+    //check if the pdf is stellar/galaxy or else
+    std::string outputPdfRelDir  = "zPDF"; //default value set to galaxy zPDF folder
+    std::string scope = store.GetScope( *this );
+    std::size_t foundstra;
+    foundstra = scope.find("stellarsolve");
+    if (foundstra!=std::string::npos){
+        outputPdfRelDir = "stellar_zPDF";
+    }
+
+
+    std::string scope_res = outputPdfRelDir+"/logposterior.logMargP_Z_data";
+    auto results_pdf =  store.GetGlobalResult( scope_res.c_str() );
+    std::shared_ptr<const CPdfMargZLogResult> logzpdf1d = std::dynamic_pointer_cast<const CPdfMargZLogResult>( results_pdf.lock() );
+
+    if(!logzpdf1d)
+    {
+        Log.LogError( "GetEvidenceFromPdf: no pdf results retrieved from scope: %s", scope_res.c_str());
+        return -1;
+    }
+
+    evidence = logzpdf1d->valEvidenceLog;
+    return 0;
 }
 
 

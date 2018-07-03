@@ -24,6 +24,10 @@ public:
 
     Void Save( const CDataStore& store, std::ostream& stream ) const;
     Void SaveLine( const CDataStore& store, std::ostream& stream ) const;
+    inline Int32 GetEvidenceFromPdf(const CDataStore& store, Float64 &evidence) const
+    {
+        return 1;
+    }
 
 private:
 

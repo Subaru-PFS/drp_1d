@@ -97,7 +97,7 @@ CPdfz::~CPdfz()
  */
 Int32 CPdfz::Compute(TFloat64List merits, TFloat64List redshifts, Float64 cstLog, TFloat64List logZPrior, TFloat64List& logPdf, Float64 &logEvidence)
 {
-    Bool verbose = false;
+    Bool verbose = true;
     Int32 sumMethod = 1; //0=rect, 1=trapez
     logPdf.clear();
 
@@ -116,8 +116,8 @@ Int32 CPdfz::Compute(TFloat64List merits, TFloat64List redshifts, Float64 cstLog
                 meritmin = merits[k];
             }
         }
-        Log.LogInfo("Pdfz: Pdfz computation: using merit min=%e", meritmin);
-        Log.LogInfo("Pdfz: Pdfz computation: using merit max=%e", meritmax);
+        Log.LogDetail("Pdfz: Pdfz computation: using merit min=%e", meritmin);
+        Log.LogDetail("Pdfz: Pdfz computation: using merit max=%e", meritmax);
     }
 
     //check if the z step is constant. If not, pdf cannot be estimated by the current method.
@@ -250,8 +250,8 @@ Int32 CPdfz::Compute(TFloat64List merits, TFloat64List redshifts, Float64 cstLog
 
     if(verbose)
     {
-        Log.LogInfo("Pdfz: Pdfz computation: using cstLog=%e", cstLog);
-        Log.LogInfo("Pdfz: Pdfz computation: using logEvidence=%e", logEvidence);
+        Log.LogDetail("Pdfz: Pdfz computation: using cstLog=%e", cstLog);
+        Log.LogDetail("Pdfz: Pdfz computation: using logEvidence=%e", logEvidence);
         //Log.LogInfo("Pdfz: Pdfz computation: using logPrior=%f",  logPrior); //logPrior can be variable with z
     }
 
@@ -462,7 +462,7 @@ Int32 CPdfz::getCandidateGaussFit(std::vector<Float64> redshifts,
                                     Float64& gaussSigma,
                                     Float64& gaussSigmaErr)
 {
-    Int32 verbose = 1;
+    Int32 verbose = 0;
     Int32 ret=0;
     Log.LogDebug("    CPdfz::getCandidateSumGaussFit - Starting pdf peaks gaussian fitting");
 
@@ -893,7 +893,7 @@ Int32 CPdfz::Marginalize(TFloat64List redshifts, std::vector<TFloat64List> merit
         Int32 retPdfz = pdfz.Compute(meritResults[km], redshifts, cstLog, zPriors[km], logProba, logEvidence);
         if(retPdfz!=0)
         {
-            Log.LogError("Pdfz: Pdfz computation failed for result km=%d", km);
+            Log.LogError("Pdfz: Pdfz computation - compute logEvidence: failed for result km=%d", km);
             return -1;
         }else{
 //            if(verbose)

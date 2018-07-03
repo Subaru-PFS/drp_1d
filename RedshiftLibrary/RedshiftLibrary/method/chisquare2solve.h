@@ -6,7 +6,7 @@
 #include <RedshiftLibrary/method/chisquare2solveresult.h>
 #include <RedshiftLibrary/spectrum/template/template.h>
 #include <RedshiftLibrary/operator/chisquare2.h>
-
+#include <RedshiftLibrary/operator/pdfMargZLogResult.h>
 
 namespace NSEpic
 {
@@ -28,9 +28,20 @@ class CMethodChisquare2Solve
     ~CMethodChisquare2Solve();
     const std::string GetDescription();
 
-    std::shared_ptr<CChisquare2SolveResult> Compute(CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
-                                        const CTemplateCatalog& tplCatalog, const TStringList& tplCategoryList,
-                                        const TFloat64Range& lambdaRange, const TFloat64List& redshifts, Float64 overlapThreshold, std::vector<CMask> maskList, std::string spcComponent="raw" , std::string opt_interp="lin", std::string opt_extinction="no", std::string opt_dustFit="no");
+    std::shared_ptr<CChisquare2SolveResult> Compute(CDataStore& resultStore,
+                                                    const CSpectrum& spc,
+                                                    const CSpectrum& spcWithoutCont,
+                                                    const CTemplateCatalog& tplCatalog,
+                                                    const TStringList& tplCategoryList,
+                                                    const TFloat64Range& lambdaRange,
+                                                    const TFloat64List& redshifts,
+                                                    Float64 overlapThreshold,
+                                                    std::vector<CMask> maskList,
+                                                    const std::string outputPdfRelDir,
+                                                    std::string spcComponent="raw" ,
+                                                    std::string opt_interp="lin",
+                                                    std::string opt_extinction="no",
+                                                    std::string opt_dustFit="no");
 
 
 
@@ -38,7 +49,10 @@ private:
 
     Bool Solve(CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont, const CTemplate& tpl, const CTemplate& tplWithoutCont,
                                    const TFloat64Range& lambdaRange, const TFloat64List& redshifts, Float64 overlapThreshold , std::vector<CMask> maskList, Int32 spctype=CChisquare2SolveResult::nType_raw, std::string opt_interp="lin", std::string opt_extinction="no", std::string opt_dustFitting="no");
-    Int32 CombinePDF(CDataStore& store, std::string scopeStr, std::string opt_combine);
+    Int32 CombinePDF(CDataStore& store,
+                     std::string scopeStr,
+                     std::string opt_combine,
+                     std::shared_ptr<CPdfMargZLogResult> postmargZResult);
 
 
     COperatorChiSquare2* m_chiSquareOperator;

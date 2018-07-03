@@ -20,7 +20,10 @@ class CPdfMargZLogResult : public COperatorResult
 
     Void Save( const CDataStore& store, std::ostream& stream ) const;
     Void SaveLine( const CDataStore& store, std::ostream& stream ) const;
-
+    inline Int32 GetEvidenceFromPdf(const CDataStore& store, Float64 &evidence) const
+    {
+        return 1;
+    }
     Int32 Load( std::string filePath );
 
     Int32 getIndex( Float64 z ) const;
