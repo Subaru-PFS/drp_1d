@@ -46,12 +46,7 @@ Bool CRayCatalogsTplShape::Init( std::string calibrationPath)
 {
     bfs::path calibrationFolder( calibrationPath.c_str() );
     CCalibrationConfigHelper calibrationConfig;
-    Int32 retConfig = calibrationConfig.Init(calibrationPath);
-    if(!retConfig)
-    {
-        Log.LogError("Unable to load the calibration-config. aborting...");
-        return false;
-    }
+    calibrationConfig.Init(calibrationPath);
     tplshapedcatalog_relpath = calibrationConfig.Get_linemodelTplratio_relpath();
     Log.LogInfo( "    CatalogsTplShape - Loading tplshape catalog : %s", tplshapedcatalog_relpath.c_str());
 

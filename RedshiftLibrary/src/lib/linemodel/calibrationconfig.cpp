@@ -25,28 +25,24 @@ CCalibrationConfigHelper::~CCalibrationConfigHelper()
 {
 }
 
-Bool CCalibrationConfigHelper::Init( std::string calibrationPath)
+Void CCalibrationConfigHelper::Init( std::string calibrationPath)
 {
     bfs::path calibrationFolder( calibrationPath.c_str() );
     //std::string dirPath = (calibrationFolder.append( tplshapedcatalog_relpath.c_str() )).string();
     std::string filePath = (calibrationFolder/calibration_config_file_relpath.c_str()).string();
 
-    bool ret = Load(filePath.c_str());
-    if(!ret)
-    {
-        Log.LogError("Unable to load the calibration config. file (%s). Aborting...", filePath.c_str());
-        return false;
-    }
-    return true;
+    Load(filePath.c_str());
 }
 
 
-Bool CCalibrationConfigHelper::Load( const char* filePath )
+Void CCalibrationConfigHelper::Load( const char* filePath )
 {
     ifstream file;
     file.open( filePath, ifstream::in );
     if( file.rdstate() & ios_base::failbit ){
-        return false;
+      char buf[180];
+      snprintf(buf, sizeof(buf), "Can't load calibration config file [%s]", filePath);
+      throw std::runtime_error(buf);
     }
     string line;
 
@@ -84,10 +80,10 @@ Bool CCalibrationConfigHelper::Load( const char* filePath )
     file.close();
     if(readNums!=3) //reading 1. tplratiodir, 2. offsetsdir, 3. starstemplates
     {
-        return false;
+      char buf[180];
+      snprintf(buf, sizeof(buf), "Invalid calibration config file [%s]", filePath);
+      throw std::runtime_error(buf);
     }
-
-    return true;
 }
 
 

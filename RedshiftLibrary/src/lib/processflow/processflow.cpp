@@ -171,15 +171,13 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
 
         std::string calibrationDirPath;
         ctx.GetParameterStore().Get( "calibrationDir", calibrationDirPath );
-        bfs::path calibrationFolder( calibrationDirPath.c_str() );
 
+        bfs::path calibrationFolder( calibrationDirPath.c_str() );
         CCalibrationConfigHelper calibrationConfig;
-        Int32 retConfig = calibrationConfig.Init(calibrationDirPath);
-        if(!retConfig)
-        {
-            Log.LogError("    Processflow - Unable to load the calibration-config. aborting...");
-        }else{
-            std::string starTemplates = calibrationConfig.Get_starTemplates_relpath();
+        calibrationConfig.Init(calibrationDirPath);
+
+	std::string starTemplates = calibrationConfig.Get_starTemplates_relpath();
+
             Log.LogInfo( "    Processflow - Loading star templates catalog : %s", starTemplates.c_str());
             std::string templateDir = (calibrationFolder/starTemplates.c_str()).string();
 
@@ -245,7 +243,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
                 Log.LogError( "Unable to store stellar result.");
             }
 
-        }
+
     }
 
     // Galaxy method

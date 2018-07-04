@@ -214,24 +214,16 @@ CLineModelElementList::~CLineModelElementList()
     }
 }
 
-Bool CLineModelElementList::initLambdaOffsets()
+Void CLineModelElementList::initLambdaOffsets()
 {
-    CLineCatalogsOffsets* ctlgOffsets = new CLineCatalogsOffsets();
-    bool ret = ctlgOffsets->Init(m_calibrationPath);
-    if(!ret)
-    {
-        Log.LogError("Unable to initialize the the offsets catalog. aborting...");
-        return false;
-    }else
-    {
-        // load static offset catalog, idx=0
-        ctlgOffsets->SetLinesOffsets( *this, 0);
+  CLineCatalogsOffsets* ctlgOffsets = new CLineCatalogsOffsets();
+  ctlgOffsets->Init(m_calibrationPath);
+  // load static offset catalog, idx=0
+  ctlgOffsets->SetLinesOffsets( *this, 0);
 
-        // load auto stack, hack from reference catalog
-        //std::string spcName = m_inputSpc->GetName();
-        //ctlgOffsets->SetLinesOffsetsAutoSelectStack(*this, spcName);
-    }
-    return true;
+  // load auto stack, hack from reference catalog
+  //std::string spcName = m_inputSpc->GetName();
+  //ctlgOffsets->SetLinesOffsetsAutoSelectStack(*this, spcName);
 }
 
 

@@ -288,7 +288,8 @@ Bool CMultiRollModel::initLambdaOffsets()
     Bool ret=-1;
     for(Int32 km=0; km<m_models.size(); km++)
     {
-        ret = m_models[km]->initLambdaOffsets();
+        m_models[km]->initLambdaOffsets();
+	ret = true;
     }
     return ret;
 }

@@ -35,35 +35,23 @@ CLineCatalogsOffsets::~CLineCatalogsOffsets()
 
 }
 
-Bool CLineCatalogsOffsets::Init( std::string calibrationPath)
+Void CLineCatalogsOffsets::Init( std::string calibrationPath)
 {
     m_Calibration_path = calibrationPath;
     bfs::path calibrationFolder( calibrationPath.c_str() );
 
     CCalibrationConfigHelper calibrationConfig;
-    Int32 retConfig = calibrationConfig.Init(calibrationPath);
-    if(!retConfig)
-    {
-        Log.LogError("    CatalogsOffsets - Unable to load the calibration-config. aborting...");
-        return false;
-    }
+    calibrationConfig.Init(calibrationPath);
     m_Catalogs_relpath = calibrationConfig.Get_linemodelOffset_relpath();
     Log.LogInfo( "    CatalogsOffsets - Loading offsets catalog : %s", m_Catalogs_relpath.c_str());
 
     std::string dirPath = (calibrationFolder/m_Catalogs_relpath.c_str()).string();
 
-    bool ret = Load(dirPath.c_str());
-    if(!ret)
-    {
-        Log.LogError("    CatalogsOffsets - Unable to load the offset catalogs. aborting...");
-        return false;
-    }else{
-        Log.LogInfo("    CatalogsOffsets - Loaded %d lines offsets catalogs", m_OffsetsCatalog.size());
-    }
-    return true;
+    Load(dirPath.c_str());
+    Log.LogInfo("    CatalogsOffsets - Loaded %d lines offsets catalogs", m_OffsetsCatalog.size());
 }
 
-Bool CLineCatalogsOffsets::Load( const char* dirPath )
+Void CLineCatalogsOffsets::Load( const char* dirPath )
 {
     m_OffsetsCatalog.clear();
 
@@ -85,7 +73,9 @@ Bool CLineCatalogsOffsets::Load( const char* dirPath )
     }
     if(catalogList.size()<1)
     {
-        return false;
+      char buf[180];
+      snprintf(buf, sizeof(buf), "Unable to load the offset catalogs [%s]", dirPath);
+      throw std::runtime_error(buf);
     }
     Log.LogDebug( "    CatalogsOffsets - CLineCatalogsOffsets - Found %d offsets catalogs", catalogList.size());
 
@@ -94,8 +84,6 @@ Bool CLineCatalogsOffsets::Load( const char* dirPath )
     {
         LoadCatalog( catalogList[k].c_str() );
     }
-
-    return true;
 }
 
 Bool CLineCatalogsOffsets::LoadCatalog( const char* filePath )

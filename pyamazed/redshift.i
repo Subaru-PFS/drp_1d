@@ -1,8 +1,9 @@
 %module(directors="1") redshift
 
+%include typemaps.i
 %include <std_string.i>
 %include <std_shared_ptr.i>
-%include typemaps.i
+%include std_except.i
 
 %shared_ptr(CParameterStore)
 %shared_ptr(CLogConsoleHandler)
