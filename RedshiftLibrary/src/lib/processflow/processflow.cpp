@@ -84,8 +84,6 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
 
     Log.LogInfo( "Processing spc:%s (CLambdaRange: %f-%f:%f)", ctx.GetSpectrum().GetName().c_str(),
             spcLambdaRange.GetBegin(), spcLambdaRange.GetEnd(), ctx.GetSpectrum().GetResolution());
-    Log.LogInfo( "                  (LambdaRange: %f-%f)",
-		 lambdaRange.GetBegin(), lambdaRange.GetEnd());
 
     // Create redshift initial list by spanning redshift acdross the given range, with the given delta
     TFloat64List redshifts = redshiftRange.SpreadOver( redshiftStep );

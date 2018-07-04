@@ -107,10 +107,12 @@ std::shared_ptr<CChisquareLogSolveResult> CMethodChisquareLogSolve::Compute(CDat
         m_chiSquareOperator->enableSpcLogRebin(false);
     }
 
+    Log.LogInfo( "Iterating over %d tplCategories", tplCategoryList.size());
     for( UInt32 i=0; i<tplCategoryList.size(); i++ )
     {
         std::string category = tplCategoryList[i];
 
+	Log.LogInfo( "   trying %s (%d templates)", category.c_str(), tplCatalog.GetTemplateCount( category ));
         for( UInt32 j=0; j<tplCatalog.GetTemplateCount( category ); j++ )
         {
             const CTemplate& tpl = tplCatalog.GetTemplate( category, j );

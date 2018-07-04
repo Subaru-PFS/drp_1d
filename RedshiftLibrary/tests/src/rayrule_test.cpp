@@ -125,7 +125,7 @@ CLineModelElementList GetData ( void )
 
   //these tplcatalog related variables are unused here.
   CTemplateCatalog tplCatalog;
-  Bool retValue = tplCatalog.Load( DATA_ROOT_DIR "templatecatalog/" );
+  BOOST_CHECK_NO_THROW(tplCatalog.Load( DATA_ROOT_DIR "templatecatalog/" ));
   TStringList tplCategories;
 
   //* Segmentation fault

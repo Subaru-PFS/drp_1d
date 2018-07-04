@@ -87,7 +87,7 @@ void checkSupport(std::string linecatalogPath,
 
     //these tplcatalog related variables are unused here.
     CTemplateCatalog tplCatalog;
-    Bool retValue = tplCatalog.Load( DATA_ROOT_DIR "templatecatalog/" );
+    BOOST_CHECK_NO_THROW(tplCatalog.Load( DATA_ROOT_DIR "templatecatalog/" ));
     TStringList tplCategories;
 
     CLineModelElementList model(spectrum, spectrumContinuum, tplCatalog, tplCategories, unused_calibrationPath, lineList, opt_fittingmethod, opt_continuumcomponent, opt_lineWidthType, opt_resolution, opt_velocityEmission, opt_velocityAbsorption, opt_rules, opt_rigidity);

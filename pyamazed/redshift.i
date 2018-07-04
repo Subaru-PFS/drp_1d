@@ -104,11 +104,13 @@ public:
     void Load( const char* filePath );
 };
 
+%catches(std::string, std::runtime_error, ...) CTemplateCatalog::Load;
+
 class CTemplateCatalog
 {
 public:
     CTemplateCatalog( std::string cremovalmethod="Median", Float64 mediankernelsize=75.0, Float64 waveletsScales=8, std::string waveletsDFBinPath="");
-    Bool Load( const char* filePath );
+    void Load( const char* filePath );
 };
 
 class CProcessFlowContext {

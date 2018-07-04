@@ -217,14 +217,7 @@ bool CProcessFlowContext::Init( std::shared_ptr<CSpectrum> spectrum,
     // Load template catalog
     if( templateCatalogPath )
     {
-      Log.LogDebug ( "templateCatalogPath exists." );
-      rValue = templateCatalog->Load( templateCatalogPath );
-      if( !rValue )
-        {
-	  Log.LogError( "Failed to load template catalog from path: (%s)", templateCatalogPath );
-	  m_TemplateCatalog = NULL;
-	  return false;
-        }
+      templateCatalog->Load( templateCatalogPath );
       Log.LogDebug ( "Template catalog loaded." );
     }
 

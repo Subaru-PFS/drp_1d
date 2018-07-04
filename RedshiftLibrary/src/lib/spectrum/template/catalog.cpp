@@ -115,10 +115,10 @@ UInt32 CTemplateCatalog::GetTemplateCount( const std::string& category ) const
 /**
  * Adds the input to the list of templates, under its category. If the input doesn't have a category, function returns false. Also computes the template without continuum and adds it to the list of templates without continuum. Returns true.
  */
-Bool CTemplateCatalog::Add( std::shared_ptr<CTemplate> r )
+Void CTemplateCatalog::Add( std::shared_ptr<CTemplate> r )
 {
     if( r->GetCategory().empty() )
-        return false;
+      throw std::runtime_error("Template has no category");
 
     m_List[r->GetCategory()].push_back( r );
 
@@ -148,8 +148,7 @@ Bool CTemplateCatalog::Add( std::shared_ptr<CTemplate> r )
         Bool ret = tmplWithoutCont->RemoveContinuum( continuum );
         if( !ret )
         {
-            Log.LogError( "Failed to apply continuum substraction for template" );
-            return false;
+	    throw std::runtime_error("Failed to apply continuum substraction for template");
         }
     }
     else if( m_continuumRemovalMethod == "zero" )
@@ -168,19 +167,18 @@ Bool CTemplateCatalog::Add( std::shared_ptr<CTemplate> r )
     tmplWithoutCont->ConvertToLogScale();
 
     m_ListWithoutCont[r->GetCategory()].push_back( tmplWithoutCont );
-
-    return true;
 }
 
 /**
  * Adds the templates in the input path, under the input category.
  */
-Bool CTemplateCatalog::Add( const char* templatePath, const std::string& category )
+Void CTemplateCatalog::Add( const char* templatePath, const std::string& category )
 {
     if ( !exists( templatePath ) )
       {
-	Log.LogError ( "Path %s does not exist.", templatePath );
-	return false;
+	char buf[180];
+	std::snprintf(buf, sizeof(buf), "Path %s does not exist.", templatePath);
+	throw std::runtime_error(buf);
       }
 
     path p( templatePath );
@@ -192,20 +190,20 @@ Bool CTemplateCatalog::Add( const char* templatePath, const std::string& categor
     asciiReader.Read( templatePath, *tmpl );
 
     Add( tmpl );
-    return true;
 }
 
 /**
  * Loads input directory as a collection of categories of templates.
  */
-Bool CTemplateCatalog::Load( const char* dirPath )
+Void CTemplateCatalog::Load( const char* dirPath )
 {
     path pathFound;
 
     if ( !exists( dirPath ) )
       {
-    Log.LogError ( "Path %s does not exist.", dirPath );
-        return false;
+	char buf[180];
+	std::snprintf(buf, sizeof(buf), "Path %s does not exist.", dirPath);
+	throw std::runtime_error(buf);
       }
 
     directory_iterator end_itr;
@@ -220,7 +218,6 @@ Bool CTemplateCatalog::Load( const char* dirPath )
             LoadCategory( itr->path(), category );
         }
     }
-    return true;
 }
 
 /**
@@ -230,7 +227,7 @@ Bool CTemplateCatalog::Save( const char* dirPath, Bool saveWithoutContinuum )
 {
     if ( !exists( dirPath ) )
       {
-    Log.LogError ( "Path %s does not exist.", dirPath );
+	Log.LogError ( "Path %s does not exist.", dirPath );
         return false;
       }
 
@@ -288,10 +285,11 @@ Bool CTemplateCatalog::LoadCategory( const path& dirPath, const std::string&  ca
         //}
 
         if ( !is_directory( itr->status() ) )
-        {
-            if( !Add( itr->path().c_str(), category ) )
-                return false;
-        }
+	  {
+	    Add( itr->path().c_str(), category );
     }
+    }
+    Log.LogInfo ( "Loaded %d templates for category %s.", m_List.size(), category.c_str() );
+
     return true;
 }

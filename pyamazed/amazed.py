@@ -62,7 +62,12 @@ def amazed():
     template_catalog = CTemplateCatalog(medianRemovalMethod, opt_medianKernelWidth,
                                         opt_nscales, dfBinPath)
     print("Loading %s" % config.template_dir)
-    template_catalog.Load(calibrationpath(config, config.template_dir))
+
+    try:
+        template_catalog.Load(calibrationpath(config, config.template_dir))
+    except Exception as e:
+        print(f"Can't load template : {e}")
+        raise
 
     line_catalog = CRayCatalog()
     print("Loading %s" % config.linecatalog)

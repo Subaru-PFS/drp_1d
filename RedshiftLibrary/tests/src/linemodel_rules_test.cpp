@@ -47,7 +47,7 @@ Float64 getLinemodelDoubletRatio(std::string spc, std::string noise, bool enable
 
     //these tplcatalog related variables are unused here.
     CTemplateCatalog tplCatalog;
-    Bool rValue = tplCatalog.Load( DATA_ROOT_DIR "templatecatalog/" );
+    BOOST_CHECK_NO_THROW(tplCatalog.Load( DATA_ROOT_DIR "templatecatalog/" ));
     TStringList tplCategories;
 
 
@@ -160,7 +160,7 @@ std::vector<Float64> getLinemodelFittedAmplitudes(std::string spc, std::string n
 
     //these tplcatalog related variables are unused here.
     CTemplateCatalog tplCatalog;
-    Bool rValue = tplCatalog.Load( DATA_ROOT_DIR "templatecatalog/" );
+    BOOST_CHECK_NO_THROW(tplCatalog.Load( DATA_ROOT_DIR "templatecatalog/" ));
     TStringList tplCategories;
 
     // Create redshift initial list by spanning redshift acdross the given range, with the given delta

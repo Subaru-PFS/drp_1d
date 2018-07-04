@@ -74,8 +74,7 @@ void checkLeastSquareFast(std::string spectrumPath, std::string noisePath, std::
 
     //these tplcatalog related variables are unused here.
     CTemplateCatalog tplCatalog;
-    Bool retValue = tplCatalog.Load( DATA_ROOT_DIR "LinemodelFitEstimateLeastSquareTestCase/ContinuumTemplates_simulm2016Extended_dustfree201702_1/" );
-    BOOST_CHECK( retValue == true);
+    BOOST_CHECK_NO_THROW(tplCatalog.Load( DATA_ROOT_DIR "LinemodelFitEstimateLeastSquareTestCase/ContinuumTemplates_simulm2016Extended_dustfree201702_1/" ));
     TStringList tplCategories = TStringList { "galaxy" };
 
     //prepare continuum templates catalog
