@@ -107,7 +107,7 @@ Bool CZweiModelSolve::PopulateParameters( CDataStore& dataStore )
     dataStore.GetScopedParam( "zweimodel.continuumreestimation", m_opt_continuumreest, "no" );
     dataStore.GetScopedParam( "zweimodel.rules", m_opt_rules, "all" );
     dataStore.GetScopedParam( "zweimodel.extremacount", m_opt_extremacount, 10.0 );
-    dataStore.GetScopedParam( "zweimodel.stronglinesprior", m_opt_stronglinesprior, 1e-16);
+    dataStore.GetScopedParam( "zweimodel.stronglinesprior", m_opt_stronglinesprior, 1e-1);
     dataStore.GetScopedParam( "zweimodel.pdfcombination", m_opt_pdfcombination, "marg");
     dataStore.GetScopedParam( "zweimodel.saveintermediateresults", m_opt_saveintermediateresults, "no");
 

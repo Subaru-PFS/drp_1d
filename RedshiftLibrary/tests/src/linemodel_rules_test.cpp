@@ -63,6 +63,7 @@ Float64 getLinemodelDoubletRatio(std::string spc, std::string noise, bool enable
 
     std::string calibpath = DATA_ROOT_DIR "LinemodelRulesTestCase/calibration";
     CLineModelSolve Solve(calibpath);
+    std::string outputPdfRelDir = "zPDF";
     std::shared_ptr<const CLineModelSolveResult> solveResult = Solve.Compute(ctx.GetDataStore(),
                                                                              ctx.GetSpectrum(),
                                                                              ctx.GetSpectrumWithoutContinuum(),
@@ -70,7 +71,8 @@ Float64 getLinemodelDoubletRatio(std::string spc, std::string noise, bool enable
                                                                              tplCategories,
                                                                              ctx.GetRayCatalog(),
                                                                              spcLambdaRange,
-                                                                             redshifts);
+                                                                             redshifts,
+                                                                             outputPdfRelDir);
 
 
     BOOST_CHECK_MESSAGE( solveResult!=NULL, "NULL Linemodel results");
@@ -168,6 +170,7 @@ std::vector<Float64> getLinemodelFittedAmplitudes(std::string spc, std::string n
     TFloat64List redshifts = redshiftRange.SpreadOver( redshiftStep );
 
     CLineModelSolve Solve;
+    std::string outputPdfRelDir = "zPDF";
     std::shared_ptr<const CLineModelSolveResult> solveResult = Solve.Compute(ctx.GetDataStore(),
                                                                              ctx.GetSpectrum(),
                                                                              ctx.GetSpectrumWithoutContinuum(),
@@ -175,7 +178,8 @@ std::vector<Float64> getLinemodelFittedAmplitudes(std::string spc, std::string n
                                                                              tplCategories,
                                                                              ctx.GetRayCatalog(),
                                                                              spcLambdaRange,
-                                                                             redshifts);
+                                                                             redshifts,
+                                                                             outputPdfRelDir);
 
 
     std::string scope = "linemodelsolve.linemodel_fit_extrema_0";

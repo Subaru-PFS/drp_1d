@@ -4,6 +4,8 @@
 #include <RedshiftLibrary/spectrum/template/template.h>
 #include <RedshiftLibrary/spectrum/template/catalog.h>
 
+#include <RedshiftLibrary/linemodel/calibrationconfig.h>
+
 #include <RedshiftLibrary/processflow/context.h>
 #include <RedshiftLibrary/extremum/extremum.h>
 #include <RedshiftLibrary/continuum/median.h>
@@ -56,7 +58,7 @@
 #include <float.h>
 
 using namespace NSEpic;
-
+namespace bfs = boost::filesystem;
 
 CProcessFlow::CProcessFlow()
 {
@@ -159,10 +161,102 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
     }
 
 
+    // Stellar method
+    std::shared_ptr<COperatorResult> starResult;
+    std::string enableStarFitting;
+    ctx.GetParameterStore().Get( "enablestellarsolve", enableStarFitting, "no" );
+    Log.LogInfo( "Stellar solve enabled : %s", enableStarFitting.c_str());
+    if(enableStarFitting=="yes"){
+        CDataStore::CAutoScope resultScope( ctx.GetDataStore(), "stellarsolve" );
 
-    std::shared_ptr<COperatorResult> mResult = NULL;
+        std::string calibrationDirPath;
+        ctx.GetParameterStore().Get( "calibrationDir", calibrationDirPath );
+        bfs::path calibrationFolder( calibrationDirPath.c_str() );
+
+        CCalibrationConfigHelper calibrationConfig;
+        Int32 retConfig = calibrationConfig.Init(calibrationDirPath);
+        if(!retConfig)
+        {
+            Log.LogError("    Processflow - Unable to load the calibration-config. aborting...");
+        }else{
+            std::string starTemplates = calibrationConfig.Get_starTemplates_relpath();
+            Log.LogInfo( "    Processflow - Loading star templates catalog : %s", starTemplates.c_str());
+            std::string templateDir = (calibrationFolder/starTemplates.c_str()).string();
+
+            TStringList   filteredStarTemplateCategoryList;
+            filteredStarTemplateCategoryList.push_back( "star" );
+
+            //temporary star catalog handling through calibration files, should be loaded somewhere else ?
+            std::string medianRemovalMethod="zero";
+            Float64 opt_medianKernelWidth = 150; //not used
+            Int64 opt_nscales=8; //not used
+            std::string dfBinPath="absolute_path_to_df_binaries_here"; //not used
+            std::shared_ptr<CTemplateCatalog> starTemplateCatalog = std::shared_ptr<CTemplateCatalog>( new CTemplateCatalog(medianRemovalMethod, opt_medianKernelWidth, opt_nscales, dfBinPath) );
+            Bool rValue = starTemplateCatalog->Load( templateDir.c_str() );
+            if( !rValue )
+            {
+                Log.LogInfo("Failed to load template catalog: %s", templateDir.c_str());
+                return false;
+            }else{
+                for( UInt32 i=0; i<filteredStarTemplateCategoryList.size(); i++ )
+                {
+                    std::string category = filteredStarTemplateCategoryList[i];
+                    UInt32 ntpl = starTemplateCatalog->GetTemplateCount(category);
+                    Log.LogInfo("Loaded (category=%s) template count = %d", category.c_str(), ntpl);
+                }
+
+            }
+
+            Float64 overlapThreshold;
+            ctx.GetParameterStore().Get( "starsolve.overlapThreshold", overlapThreshold, 1.0);
+            std::string opt_spcComponent;
+            ctx.GetDataStore().GetScopedParam( "starsolve.spectrum.component", opt_spcComponent, "raw" );
+            std::string opt_interp;
+            ctx.GetDataStore().GetScopedParam( "starsolve.interpolation", opt_interp, "precomputedfinegrid" );
+            std::string opt_extinction;
+            ctx.GetDataStore().GetScopedParam( "starsolve.extinction", opt_extinction, "no" );
+            std::string opt_dustFit;
+            ctx.GetDataStore().GetScopedParam( "starsolve.dustfit", opt_dustFit, "yes" );
+
+            // prepare the unused masks
+            std::vector<CMask> maskList;
+            //define the redshift search grid
+            TFloat64Range starRedshiftRange=TFloat64Range(-0.5e-2, +0.5e-2);
+            Float64 starRedshiftStep = 1e-5;
+            Log.LogInfo("Stellar fitting redshift range = [%.5f, %.5f], step=%.6f", starRedshiftRange.GetBegin(), starRedshiftRange.GetEnd(), starRedshiftStep);
+            TFloat64List stars_redshifts = starRedshiftRange.SpreadOver( starRedshiftStep );
+            DebugAssert( stars_redshifts.size() > 0 );
+
+            Log.LogInfo("Processing stellar fitting");
+            //CMethodChisquare2Solve solve(calibrationDirPath);
+            CMethodChisquareLogSolve solve(calibrationDirPath);
+            starResult = solve.Compute( ctx.GetDataStore(),
+                                     ctx.GetSpectrum(),
+                                     ctx.GetSpectrumWithoutContinuum(),
+                                     *starTemplateCatalog,
+                                     filteredStarTemplateCategoryList,
+                                     spcLambdaRange,
+                                     stars_redshifts,
+                                     overlapThreshold,
+                                     maskList,
+                                     "stellar_zPDF",
+                                     opt_spcComponent, opt_interp, opt_extinction, opt_dustFit);
 
 
+            //finally save the stellar fitting results
+            if( starResult ) {
+                Log.LogInfo("Saving star fitting results");
+                ctx.GetDataStore().StoreScopedGlobalResult( "stellarresult", starResult );
+            }else{
+                Log.LogError( "Unable to store stellar result.");
+            }
+
+        }
+    }
+
+    // Galaxy method
+    std::shared_ptr<COperatorResult> mResult;
+    std::string galaxy_method_pdf_reldir = "zPDF";
     if(methodName  == "linemodel" ){
 
         CLineModelSolve Solve(calibrationDirPath);
@@ -173,7 +267,8 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
                                  filteredTemplateCategoryList,
                                  ctx.GetRayCatalog(),
                                  spcLambdaRange,
-                                 redshifts );
+                                 redshifts,
+                                 galaxy_method_pdf_reldir);
 
 
         //this should be done for every method, not just the linemodel
@@ -247,6 +342,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
                                  redshifts,
                                  overlapThreshold,
                                  maskList,
+                                 galaxy_method_pdf_reldir,
                                  opt_spcComponent, opt_interp, opt_extinction, opt_dustFit);
 
     }else if(methodName  == "chisquarelogsolve" ){
@@ -275,6 +371,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
                                  redshifts,
                                  overlapThreshold,
                                  maskList,
+                                 galaxy_method_pdf_reldir,
                                  opt_spcComponent, opt_interp, opt_extinction, opt_dustFit);
 
     }else if(methodName  == "amazed0_1" ){
@@ -402,6 +499,27 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
             }
         }
     }
+
+    //estimate star/galaxy classification
+    Log.LogInfo("===============================================");
+    Float64 stellarEvidence=-DBL_MAX;
+    Float64 galaxyEvidence=-DBL_MAX;
+    Int32 retGalaxyEv = mResult->GetEvidenceFromPdf(ctx.GetDataStore(), galaxyEvidence);
+    Log.LogInfo( "Found galaxy evidence: %e", galaxyEvidence);
+    std::string typeLabel = "G";
+    if(enableStarFitting=="yes"){
+        Int32 retStellarEv = starResult->GetEvidenceFromPdf(ctx.GetDataStore(), stellarEvidence);
+        if(retStellarEv==0)
+        {
+            Log.LogInfo( "Found stellar evidence: %e", stellarEvidence);
+            if(stellarEvidence>galaxyEvidence)
+            {
+                typeLabel = "S";
+            }
+        }
+    }
+    Log.LogInfo( "Setting object type: %s", typeLabel.c_str());
+    mResult->SetTypeLabel(typeLabel);
 
     //finally save the method results with (optionally) the zqual label
     if( mResult ) {

@@ -179,7 +179,7 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
                                                                               opt_rigidity) );
     Float64 setssSizeInit = 0.1;
     m_model->SetSourcesizeDispersion(setssSizeInit);
-    Log.LogInfo( "  Operator-Linemodel: sourcesize init to: ss=%.1f", setssSizeInit);
+    Log.LogInfo( "  Operator-Linemodel: sourcesize init to: ss=%.2f", setssSizeInit);
 
 
     /*
@@ -738,7 +738,6 @@ Int32 COperatorLineModel::ComputeSecondPass(CDataStore &dataStore,
             {
                 Bool enableManualStepVelocityFit = true;
                 Bool enableLMVelocityFit = false;
-                Bool enableLBFGSVelocityFit = false;
                 if(enableLMVelocityFit)
                 {
                     //fit the emission and absorption width using the linemodel lmfit strategy
@@ -777,19 +776,6 @@ Int32 COperatorLineModel::ComputeSecondPass(CDataStore &dataStore,
                     z = m_result->LineModelSolutions[idx].Redshift;
                     m_result->ExtremaResult.lmfitPass.push_back(z);
                     //m_result->Redshifts[idx] = z;
-
-                    m_model->SetFittingMethod(opt_fittingmethod);
-                    m_model->ResetElementIndexesDisabled();
-                    Int32 velocityHasBeenReset = m_model->ApplyVelocityBound(velfitMinE, velfitMaxE);
-                    enableManualStepVelocityFit = velocityHasBeenReset;
-                }
-
-                if(enableLBFGSVelocityFit){
-                    //fit the emission and absorption width using the linemodel lbfgsfit strategy
-                    m_model->SetFittingMethod("lbfgsfit");
-                    //m_model->SetElementIndexesDisabledAuto();
-                    Float64 meritTmp;
-                    meritTmp = m_model->fit( m_result->Redshifts[idx], lambdaRange, m_result->LineModelSolutions[idx], contreest_iterations, false );
 
                     m_model->SetFittingMethod(opt_fittingmethod);
                     m_model->ResetElementIndexesDisabled();

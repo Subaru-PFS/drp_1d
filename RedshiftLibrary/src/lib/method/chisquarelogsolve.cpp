@@ -8,7 +8,6 @@
 #include <RedshiftLibrary/extremum/extremum.h>
 #include <RedshiftLibrary/processflow/datastore.h>
 #include <RedshiftLibrary/statistics/pdfz.h>
-#include <RedshiftLibrary/operator/pdfMargZLogResult.h>
 #include <RedshiftLibrary/operator/pdfLogresult.h>
 
 #include <RedshiftLibrary/spectrum/io/fitswriter.h>
@@ -56,6 +55,7 @@ std::shared_ptr<CChisquareLogSolveResult> CMethodChisquareLogSolve::Compute(CDat
                                                                               const TFloat64List& redshifts,
                                                                               Float64 overlapThreshold,
                                                                               std::vector<CMask> maskList,
+                                                                              const string outputPdfRelDir,
                                                                               std::string spcComponent,
                                                                               std::string opt_interp,
                                                                               std::string opt_extinction,
@@ -130,8 +130,14 @@ std::shared_ptr<CChisquareLogSolveResult> CMethodChisquareLogSolve::Compute(CDat
         std::shared_ptr< CChisquareLogSolveResult>  ChisquareSolveResult = std::shared_ptr< CChisquareLogSolveResult>( new CChisquareLogSolveResult() );
         ChisquareSolveResult->m_type = _type;
 
-        CombinePDF(resultStore, scopeStr, m_opt_pdfcombination);
+        std::shared_ptr<CPdfMargZLogResult> postmargZResult = std::shared_ptr<CPdfMargZLogResult>(new CPdfMargZLogResult());
+        Int32 retCombinePdf = CombinePDF(resultStore, scopeStr, m_opt_pdfcombination, postmargZResult);
 
+        if(retCombinePdf==0)
+        {
+            std::string pdfPath = outputPdfRelDir+"/logposterior.logMargP_Z_data";
+            resultStore.StoreGlobalResult( pdfPath.c_str(), postmargZResult); //need to store this pdf with this exact same name so that zqual can load it. see zqual.cpp/ExtractFeaturesPDF
+        }
         return ChisquareSolveResult;
     }
 
@@ -267,15 +273,16 @@ Bool CMethodChisquareLogSolve::Solve(CDataStore& resultStore,
 }
 
 
-Int32 CMethodChisquareLogSolve::CombinePDF(CDataStore &store, std::string scopeStr, std::string opt_combine )
+Int32 CMethodChisquareLogSolve::CombinePDF(CDataStore &store, std::string scopeStr, std::string opt_combine, std::shared_ptr<CPdfMargZLogResult> postmargZResult )
 {
-    Log.LogInfo("chisquarelogsolve: Pdfz computation");
-    std::string scope = "chisquarelogsolve.";
+    Log.LogInfo("    chisquarelogsolve: Pdfz computation");
+    std::string scope = store.GetCurrentScopeName() + ".";
     scope.append(scopeStr.c_str());
+
+    Log.LogDetail("    chisquarelogsolve: using results in scope:%s", scope.c_str());
 
     TOperatorResultMap meritResults = store.GetPerTemplateResult(scope.c_str());
 
-    std::shared_ptr<CPdfMargZLogResult> postmargZResult = std::shared_ptr<CPdfMargZLogResult>(new CPdfMargZLogResult());
     CPdfz pdfz;
     Float64 cstLog = -1;
 
@@ -309,6 +316,24 @@ Int32 CMethodChisquareLogSolve::CombinePDF(CDataStore &store, std::string scopeS
             redshifts = meritResult->Redshifts;
         }
 
+
+        //check chi2 results status for this template
+        {
+            Bool foundBadStatus=0;
+            for ( UInt32 kz=0; kz<meritResult->Redshifts.size(); kz++)
+            {
+                if(meritResult->Status[kz]!=COperator::nStatus_OK)
+                {
+                    foundBadStatus = 1;
+                    break;
+                }
+            }
+            if(foundBadStatus)
+            {
+                Log.LogError("chisquarelogsolve: Found bad status result... fot tpl=%s", (*it).first.c_str());
+            }
+        }
+
         for(Int32 kism=0; kism<nISM; kism++)
         {
             for(Int32 kigm=0; kigm<nIGM; kigm++)
@@ -324,28 +349,35 @@ Int32 CMethodChisquareLogSolve::CombinePDF(CDataStore &store, std::string scopeS
                     logLikelihoodCorrected[kz] = meritResult->ChiSquareIntermediate[kz][kism][kigm];// + resultXXX->ScaleMargCorrectionTplshapes[][]?;
                 }
                 chiSquares.push_back(logLikelihoodCorrected);
+                Log.LogDetail("    chisquarelogsolve: Pdfz combine - prepared merit  #%d for model : %s, ism=%d, igm=%d", chiSquares.size()-1, ((*it).first).c_str(), kism, kigm);
             }
         }
     }
 
-    if(opt_combine=="marg" && chiSquares.size()>0)
+    if(chiSquares.size()>0)
     {
-        Log.LogInfo("Chisquarelog: Pdfz combination - Marginalization");
-        retPdfz = pdfz.Marginalize( redshifts, chiSquares, priors, cstLog, postmargZResult);
-    }else if(opt_combine=="bestchi2")
+        if(opt_combine=="marg")
+        {
+            Log.LogInfo("    chisquarelogsolve: Pdfz combination - Marginalization");
+            retPdfz = pdfz.Marginalize( redshifts, chiSquares, priors, cstLog, postmargZResult);
+        }else if(opt_combine=="bestchi2")
+        {
+            Log.LogInfo("    chisquarelogsolve: Pdfz combination - BestChi2");
+            retPdfz = pdfz.BestChi2( redshifts, chiSquares, priors, cstLog, postmargZResult);
+        }else{
+            Log.LogError("    chisquarelogsolve: Unable to parse pdf combination method option");
+        }
+    }else
     {
-        Log.LogInfo("Chisquarelog: Pdfz combination - BestChi2");
-        retPdfz = pdfz.BestChi2( redshifts, chiSquares, priors, cstLog, postmargZResult);
-    }else{
-        Log.LogError("Chisquarelog: Unable to parse pdf combination method option");
+        Log.LogError("    chisquarelogsolve: Unable to find any chisquares prepared for combination. chiSquares.size()=%d", chiSquares.size());
     }
+
+
 
 
     if(retPdfz!=0)
     {
         Log.LogError("Chisquarelog: Pdfz computation failed");
-    }else{
-        store.StoreGlobalResult( "zPDF/logposterior.logMargP_Z_data", postmargZResult); //need to store this pdf with this exact same name so that zqual can load it. see zqual.cpp/ExtractFeaturesPDF
     }
 
     return retPdfz;

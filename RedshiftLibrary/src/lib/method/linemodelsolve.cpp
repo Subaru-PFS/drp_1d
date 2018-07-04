@@ -102,7 +102,7 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
     dataStore.GetScopedParam( "linemodel.continuumreestimation", m_opt_continuumreest, "no" );
     dataStore.GetScopedParam( "linemodel.rules", m_opt_rules, "all" );
     dataStore.GetScopedParam( "linemodel.extremacount", m_opt_extremacount, 10.0 );
-    dataStore.GetScopedParam( "linemodel.stronglinesprior", m_opt_stronglinesprior, 1e-16);
+    dataStore.GetScopedParam( "linemodel.stronglinesprior", m_opt_stronglinesprior, 1e-1);
     dataStore.GetScopedParam( "linemodel.pdfcombination", m_opt_pdfcombination, "marg");
     dataStore.GetScopedParam( "linemodel.saveintermediateresults", m_opt_saveintermediateresults, "no");
 
@@ -186,7 +186,8 @@ std::shared_ptr<CLineModelSolveResult> CLineModelSolve::Compute( CDataStore& dat
                                        const TStringList& tplCategoryList,
 								       const CRayCatalog& restraycatalog,
 								       const TFloat64Range& lambdaRange,
-								       const TFloat64List& redshifts )
+                                       const TFloat64List& redshifts,
+                                       const std::string outputPdfRelDir)
 {
     CDataStore::CAutoScope resultScope( dataStore, "linemodelsolve" );
 
@@ -223,10 +224,12 @@ std::shared_ptr<CLineModelSolveResult> CLineModelSolve::Compute( CDataStore& dat
             Log.LogDetail("    linemodelsolve: Pdfz normalization - sum trapz. = %e", sumTrapez);
             Bool pdfSumCheck = abs(sumRect-1.0)<1e-1 || abs(sumTrapez-1.0)<1e-1;
             if(!pdfSumCheck){
-                Log.LogError("    linemodelsolve: Pdfz normalization failed (rectsum = %f, trapzesum = %f)", sumRect, sumTrapez);
+                Log.LogWarning("    linemodelsolve: Pdfz normalization failed (rectsum = %f, trapzesum = %f)", sumRect, sumTrapez);
             }
 
-            dataStore.StoreGlobalResult( "zPDF/logposterior.logMargP_Z_data", postmargZResult); //need to store this pdf with this exact same name so that zqual can load it. see zqual.cpp/ExtractFeaturesPDF
+            Log.LogDetail("    linemodelsolve: Storing PDF results");
+            std::string pdfPath = outputPdfRelDir+"/logposterior.logMargP_Z_data";
+            dataStore.StoreGlobalResult( pdfPath.c_str(), postmargZResult); //need to store this pdf with this exact same name so that zqual can load it. see zqual.cpp/ExtractFeaturesPDF
         }
 
 

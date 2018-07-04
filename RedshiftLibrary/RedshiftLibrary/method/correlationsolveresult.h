@@ -25,6 +25,11 @@ public:
 
     Void Save( const CDataStore& store, std::ostream& stream ) const;
     Void SaveLine( const CDataStore& store, std::ostream& stream ) const;
+    inline Int32 GetEvidenceFromPdf(const CDataStore& store, Float64 &evidence) const
+    {
+        return 1;
+    }
+
     Bool GetBestCorrelationResult( const CDataStore& store, Float64& redshift, Float64& merit, std::string& tplName ) const;
 
 };

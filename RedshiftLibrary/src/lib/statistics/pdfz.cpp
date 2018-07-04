@@ -7,6 +7,75 @@ using namespace std;
 #include <fstream>
 
 #include <gsl/gsl_multifit.h>
+#include <gsl/gsl_multifit_nlin.h>
+#include <gsl/gsl_blas.h>
+
+//** gaussian fit **//
+struct pdfz_lmfitdata {
+    size_t n;
+    Float64 *y;
+    Float64 *z;
+    Float64 zcenter;
+};
+
+int
+pdfz_lmfit_f (const gsl_vector * x, void *data,
+         gsl_vector * f)
+{
+    Int32 verbose=0;
+    size_t n = ((struct pdfz_lmfitdata *)data)->n;
+    Float64 *y = ((struct pdfz_lmfitdata *)data)->y;
+    Float64 *z = ((struct pdfz_lmfitdata *)data)->z;
+    Float64 zcenter = ((struct pdfz_lmfitdata *)data)->zcenter;
+
+    double a = gsl_vector_get (x, 0);
+    double sigma = gsl_vector_get (x, 1);
+    if(verbose)
+    {
+        Log.LogInfo("Pdfz: Pdfz computation: pdfz_lmfit_f : a=%e, sigma=%e, zcenter=%.5f ", a, sigma, zcenter);
+    }
+
+
+    for (Int32 i = 0; i < n; i++)
+    {
+        Float64 t = z[i]-zcenter;
+        const Float64 xsurc = t/sigma;
+        Float64 Yi = a * exp (-0.5 * xsurc * xsurc);
+        if(0 && verbose)
+        {
+            Log.LogInfo("Pdfz: Pdfz computation: pdfz_lmfit_f : for i=%d, Yi=%e", i, Yi);
+        }
+        gsl_vector_set (f, i, Yi - y[i]);
+    }
+
+    return GSL_SUCCESS;
+}
+
+int
+pdfz_lmfit_df (const gsl_vector * x, void *data,
+         gsl_matrix * J)
+{
+    size_t n = ((struct pdfz_lmfitdata *)data)->n;
+    Float64 *y = ((struct pdfz_lmfitdata *)data)->y;
+    Float64 *z = ((struct pdfz_lmfitdata *)data)->z;
+    Float64 zcenter = ((struct pdfz_lmfitdata *)data)->zcenter;
+
+    double a = gsl_vector_get (x, 0);
+    double sigma = gsl_vector_get (x, 1);
+
+    size_t i;
+
+    for (i = 0; i < n; i++)
+    {
+        Float64 t = z[i]-zcenter;
+        const Float64 xsurc = t/sigma;
+
+        gsl_matrix_set (J, i, 0, exp (-0.5 * xsurc * xsurc));
+        gsl_matrix_set (J, i, 1, t*t/(sigma*sigma*sigma)*a*exp (-0.5 * xsurc * xsurc));
+    }
+    return GSL_SUCCESS;
+}
+//** gaussian fit end**//
 
 CPdfz::CPdfz()
 {
@@ -28,7 +97,7 @@ CPdfz::~CPdfz()
  */
 Int32 CPdfz::Compute(TFloat64List merits, TFloat64List redshifts, Float64 cstLog, TFloat64List logZPrior, TFloat64List& logPdf, Float64 &logEvidence)
 {
-    Bool verbose = false;
+    Bool verbose = true;
     Int32 sumMethod = 1; //0=rect, 1=trapez
     logPdf.clear();
 
@@ -47,8 +116,8 @@ Int32 CPdfz::Compute(TFloat64List merits, TFloat64List redshifts, Float64 cstLog
                 meritmin = merits[k];
             }
         }
-        Log.LogInfo("Pdfz: Pdfz computation: using merit min=%e", meritmin);
-        Log.LogInfo("Pdfz: Pdfz computation: using merit max=%e", meritmax);
+        Log.LogDetail("Pdfz: Pdfz computation: using merit min=%e", meritmin);
+        Log.LogDetail("Pdfz: Pdfz computation: using merit max=%e", meritmax);
     }
 
     //check if the z step is constant. If not, pdf cannot be estimated by the current method.
@@ -181,8 +250,8 @@ Int32 CPdfz::Compute(TFloat64List merits, TFloat64List redshifts, Float64 cstLog
 
     if(verbose)
     {
-        Log.LogInfo("Pdfz: Pdfz computation: using cstLog=%e", cstLog);
-        Log.LogInfo("Pdfz: Pdfz computation: using logEvidence=%e", logEvidence);
+        Log.LogDetail("Pdfz: Pdfz computation: using cstLog=%e", cstLog);
+        Log.LogDetail("Pdfz: Pdfz computation: using logEvidence=%e", logEvidence);
         //Log.LogInfo("Pdfz: Pdfz computation: using logPrior=%f",  logPrior); //logPrior can be variable with z
     }
 
@@ -382,6 +451,215 @@ Float64 CPdfz::getCandidateSumTrapez(std::vector<Float64> redshifts, std::vector
     sum = exp(logSum);
 
     return sum;
+}
+
+Int32 CPdfz::getCandidateGaussFit(std::vector<Float64> redshifts,
+                                     std::vector<Float64> valprobalog,
+                                     Float64 zcandidate,
+                                     Float64 zwidth,
+                                    Float64& gaussAmp,
+                                    Float64& gaussAmpErr,
+                                    Float64& gaussSigma,
+                                    Float64& gaussSigmaErr)
+{
+    Int32 verbose = 0;
+    Int32 ret=0;
+    Log.LogDebug("    CPdfz::getCandidateSumGaussFit - Starting pdf peaks gaussian fitting");
+
+
+    //check that redshifts are sorted
+    for ( UInt32 k=1; k<redshifts.size(); k++)
+    {
+        if(redshifts[k]<redshifts[k-1])
+        {
+            Log.LogError("    CPdfz::getCandidateSumGaussFit - redshifts are not sorted for (at least) index={}", k);
+            return -1.0;
+        }
+    }
+
+    //find indexes kmin, kmax so that zmin and zmax are inside [ redshifts[kmin]:redshifts[kmax] ]
+    Int32 kmin=0;
+    Int32 kmax=redshifts.size()-1;
+    Float64 halfzwidth = zwidth/2.0;
+    for ( UInt32 k=0; k<redshifts.size(); k++)
+    {
+        if( redshifts[k] < (zcandidate-halfzwidth) )
+        {
+            kmin = k;
+        }
+    }
+    if(verbose)
+    {
+        Log.LogInfo("    CPdfz::getCandidateSumGaussFit - kmin index=%d", kmin);
+    }
+
+    for ( UInt32 k=redshifts.size()-1; k>0; k--)
+    {
+        if( redshifts[k] > (zcandidate+halfzwidth) )
+        {
+            kmax = k;
+        }
+    }
+    if(verbose)
+    {
+        Log.LogInfo("    CPdfz::getCandidateSumGaussFit - kmax index=%d", kmax);
+    }
+
+    //initialize GSL
+    const gsl_multifit_fdfsolver_type *T = gsl_multifit_fdfsolver_lmsder;
+    gsl_multifit_fdfsolver *s;
+    int status, info;
+    size_t i;
+    size_t n = kmax-kmin+2; //n samples on the support, /* number of data points to fit */
+    size_t p = 2; //DOF = 1.amplitude + 2.width
+
+    if(verbose)
+    {
+        Log.LogInfo("    CPdfz::getCandidateSumGaussFit - n=%d, p=%d", n, p);
+    }
+    if(n<p){
+        Log.LogError( "    CPdfz::getCandidateSumGaussFit - LMfit not enough samples on support");
+        return -1;
+    }
+
+    gsl_matrix *J = gsl_matrix_alloc(n, p);
+    gsl_matrix *covar = gsl_matrix_alloc (p, p);
+    double y[n], weights[n], z[n];
+    Float64 zc = zcandidate;
+    gsl_multifit_function_fdf f;
+
+    Float64* x_init = (Float64*) calloc( p, sizeof( Float64 ) );
+    if(x_init==0){
+        Log.LogError( "    CPdfz::getCandidateSumGaussFit - Unable to allocate x_init");
+        return -1;
+    }
+
+    //initialize lmfit with previously estimated values ?
+    //
+    Float64 maxP = 0.0;
+    for (i = 0; i < n; i++)
+    {
+        Float64 idx = i+kmin;
+        Float64 _p = exp(valprobalog[idx]);
+        if(_p>maxP)
+        {
+            maxP=_p;
+        }
+    }
+    if(maxP>0.0)
+    {
+        x_init[0] = maxP;
+    }
+    else{
+        x_init[0] = 1.0;
+    }
+    x_init[1] = zwidth/2.0;
+    if(verbose)
+    {
+        Log.LogError( "    CPdfz::getCandidateSumGaussFit - init a=%e", x_init[0]);
+        Log.LogError( "    CPdfz::getCandidateSumGaussFit - init sigma=%e", x_init[1]);
+    }
+
+    gsl_vector_view x = gsl_vector_view_array (x_init, p);
+//    if(x.vector==0){
+//        Log.LogError( "    CPdfz::getCandidateSumGaussFit - Unable to allocate x");
+//        return -1;
+//    }
+    gsl_vector_view w = gsl_vector_view_array(weights, n);
+//    if(w.vector==0){
+//        Log.LogError( "    CPdfz::getCandidateSumGaussFit - Unable to allocate w");
+//        return -1;
+//    }
+    gsl_vector *res_f;
+    double chi, chi0;
+
+    const double xtol = 1e-8;
+    const double gtol = 1e-8;
+    const double ftol =1-8;
+    Int32 maxIterations = 250;
+
+    // This is the data to be fitted;
+    for (i = 0; i < n; i++)
+    {
+        Float64 idx = i+kmin;
+        weights[i] = 1.0; //no weights
+        y[i] = exp(valprobalog[idx]);
+        z[i] = redshifts[idx];
+    }
+
+    struct pdfz_lmfitdata d = {n,y,z,zc};
+    f.f = &pdfz_lmfit_f;
+    f.df = &pdfz_lmfit_df;
+    f.n = n;
+    f.p = p;
+    f.params = &d;
+
+    Log.LogDebug( "    CPdfz::getCandidateSumGaussFit - LMfit data ready");
+
+    s = gsl_multifit_fdfsolver_alloc (T, n, p);
+    if(s==0){
+        Log.LogError( "    CPdfz::getCandidateSumGaussFit - Unable to allocate the multifit solver s");
+        return -1;
+    }
+
+    /* initialize solver with starting point and weights */
+    gsl_multifit_fdfsolver_wset (s, &f, &x.vector, &w.vector);
+
+    /* compute initial residual norm */
+    res_f = gsl_multifit_fdfsolver_residual(s);
+    chi0 = gsl_blas_dnrm2(res_f);
+
+    /* solve the system with a maximum of maxIterations iterations */
+    status = gsl_multifit_fdfsolver_driver(s, maxIterations, xtol, gtol, ftol, &info);
+
+    gsl_multifit_fdfsolver_jac(s, J);
+    gsl_multifit_covar (J, 0.0, covar);
+
+    /* compute final residual norm */
+    chi = gsl_blas_dnrm2(res_f);
+
+    double dof = n - p;
+    double c = GSL_MAX_DBL(1, chi / sqrt(dof));
+    if(verbose)
+    {
+#define FIT(i) gsl_vector_get(s->x, i)
+#define ERR(i) sqrt(gsl_matrix_get(covar,i,i))
+
+        Log.LogInfo( "summary from method '%s'",
+                gsl_multifit_fdfsolver_name(s));
+        Log.LogInfo( "number of iterations: %zu",
+                gsl_multifit_fdfsolver_niter(s));
+        Log.LogInfo("function evaluations: %zu", f.nevalf);
+        Log.LogInfo("Jacobian evaluations: %zu", f.nevaldf);
+        Log.LogInfo( "reason for stopping: %s",
+                (info == 1) ? "small step size" :(info==2)? "small gradient": "small change in f");
+        Log.LogInfo( "initial |f(x)| = %g", chi0);
+        Log.LogInfo("final   |f(x)| = %g", chi);
+
+        {
+
+            Log.LogInfo( "chisq/dof = %g",  pow(chi, 2.0) / dof);
+
+            for(Int32 k=0; k<p; k++)
+            {
+                if(FIT(k)<1e-3)
+                {
+                    Log.LogInfo ("A %d     = %.3e +/- %.8f", k, FIT(k), c*ERR(k));
+                }else{
+                    Log.LogInfo ( "A %d     = %.5f +/- %.8f", k, FIT(k), c*ERR(k));
+                }
+
+            }
+        }
+        Log.LogInfo ( "status = %s (%d)", gsl_strerror (status), status);
+    }
+
+    gaussAmp = gsl_vector_get(s->x, 0);
+    gaussAmpErr = c*ERR(0);
+    gaussSigma = abs(gsl_vector_get(s->x, 1));
+    gaussSigmaErr = c*ERR(1);
+
+    return ret;
 }
 
 std::vector<Float64> CPdfz::GetConstantLogZPrior(UInt32 nredshifts)
@@ -615,7 +893,7 @@ Int32 CPdfz::Marginalize(TFloat64List redshifts, std::vector<TFloat64List> merit
         Int32 retPdfz = pdfz.Compute(meritResults[km], redshifts, cstLog, zPriors[km], logProba, logEvidence);
         if(retPdfz!=0)
         {
-            Log.LogError("Pdfz: Pdfz computation failed for result km=%d", km);
+            Log.LogError("Pdfz: Pdfz computation - compute logEvidence: failed for result km=%d", km);
             return -1;
         }else{
 //            if(verbose)

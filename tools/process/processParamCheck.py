@@ -10,9 +10,21 @@ import os
 import sys
 import time
 import argparse
+import json
 
 
-
+def findkeys(node, kv):
+    if isinstance(node, list):
+        for i in node:
+            for x in findkeys(i, kv):
+               yield x
+    elif isinstance(node, dict):
+        if kv in node:
+            yield node[kv]
+        for j in node.values():
+            for x in findkeys(j, kv):
+                yield x
+                
 class processParamCheck(object):
     def __init__(self, parampath):
         self.logTagStr = "processParamCheck"
@@ -26,11 +38,15 @@ class processParamCheck(object):
         
         ret_errors += self.checkParamJsonForDeprecatedKeywords()
         ret_errors += self.checkParamJsonForBestUseInPractice()
+        ret_errors += self.checkParamJsonForDeprecatedParamTypes()
         
+        
+        print("\n****************************************")
         if ret_errors==0:
-            print("INFO: no errors found")
+            print(" JSON check RESULT: no errors found")
         else:
             print("ERROR: some errors were found")
+        print("****************************************")
             
             
         return ret_errors
@@ -51,6 +67,36 @@ class processParamCheck(object):
                     print("WARNING: found deprecated keyword in json param file ! ({} found in {})".format(w, line))
                     return 1
         
+        return 0 
+       
+
+    
+    def checkParamJsonForDeprecatedParamTypes(self, verbose=False):
+        """
+        check some parameters types. 
+        In that test, it was a string initially, then has been modified to be a float value
+        return 1 (error) if a string is found
+        return 0 (success) if a float is found
+        """
+        target_keywords = ["stronglinesprior"]
+        print("Info: checking for the following deprecated types: \n{}\n".format(target_keywords))
+        
+        f = open(self.parampath, 'r')
+        data = json.load(f)
+        for w in target_keywords:
+            occurences = list(findkeys(data, w))
+            if verbose:
+                print("key {}: found n={} times".format(w, len(occurences)))
+            
+            for k, o in enumerate(occurences):
+                if verbose:
+                    print("INFO: occurence = {}".format(o))
+                    print("INFO: type occurence = {}".format(type(o)))
+                try:
+                    float(o)
+                except:
+                    print("WARNING: found deprecated value type (STRING that should be FLOAT now) in json param file ! ({} found with string value = {})".format(w, o))
+                    return 1
         return 0
         
         
@@ -58,14 +104,14 @@ class processParamCheck(object):
         """
         This will inform if some keywords were found in the json. The keywords searched for here should probably better be defined in the config file or as cmd line args in the best classical use of amazed
         """
-        somewhereelse_keywords = ["SaveIntermediateResults"]
+        somewhereelse_keywords = ["SaveIntermediateResults", "calibrationDir"]
         print("Info: checking for the following 'better-defined-somewhere-else' keywords: \n{}\n".format(somewhereelse_keywords))
         
         f = open(self.parampath, 'r')
         for line in f:
             for w in somewhereelse_keywords:
                 if w in line:
-                    print("WARNING: found best-defined-somewhere-else keyword in json param file ! ({} found in {})".format(w, line))
+                    print("WARNING: found best-defined-somewhere-else (in the config file ?) keyword in json param file ! ({} found in {})".format(w, line))
                     return 1
         
         return 0

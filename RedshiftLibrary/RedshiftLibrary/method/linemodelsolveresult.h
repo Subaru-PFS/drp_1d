@@ -40,6 +40,9 @@ public:
 
     Bool GetRedshiftCandidates( const CDataStore& store,  std::vector<Float64>& redshiftcandidates) const;
 
+    Int32 GetEvidenceFromPdf(const CDataStore& store, Float64 &evidence) const;
+
+
 private:
 
 

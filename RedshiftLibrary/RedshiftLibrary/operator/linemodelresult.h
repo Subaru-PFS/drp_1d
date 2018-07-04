@@ -24,6 +24,11 @@ public:
 
     Void Save( const CDataStore& store, std::ostream& stream ) const;
     Void SaveLine( const CDataStore& store, std::ostream& stream ) const;
+    inline Int32 GetEvidenceFromPdf(const CDataStore& store, Float64 &evidence) const
+    {
+        return 1;
+    }
+
     Void Load( std::istream& stream );
 
     Int32 GetNLinesOverCutThreshold(Int32 extremaIdx, Float64 snrThres, Float64 fitThres) const;

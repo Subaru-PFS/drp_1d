@@ -28,10 +28,14 @@ public:
     //virtual Void Load( std::istream& stream ) = 0;
 
     Void SetReliabilityLabel( std::string lbl );
+    Void SetTypeLabel( std::string lbl );
+    virtual Int32 GetEvidenceFromPdf(const CDataStore& store, Float64 &evidence) const = 0;
+
 
 protected:
 
     std::string m_ReliabilityLabel="-1";
+    std::string m_TypeLabel="-1";
 };
 
 typedef std::vector< std::shared_ptr<COperatorResult> >           TOperatorResultList;

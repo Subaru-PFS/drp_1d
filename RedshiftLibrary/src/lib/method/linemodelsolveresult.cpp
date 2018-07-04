@@ -16,7 +16,6 @@ using namespace NSEpic;
  **/
 CLineModelSolveResult::CLineModelSolveResult()
 {
-    m_ReliabilityLabel = "-1";
 }
 
 /**
@@ -99,7 +98,8 @@ Void CLineModelSolveResult::SaveLine( const CDataStore& store, std::ostream& str
         << "LineModelSolve" << "\t"
         << sigma << "\t"
         << m_ReliabilityLabel << "\t"
-        << snrHa << std::endl;
+        << snrHa << "\t"
+        << m_TypeLabel << std::endl;
 }
 
 /**
@@ -232,6 +232,32 @@ Bool CLineModelSolveResult::GetBestRedshiftFromPdf( const CDataStore& store,
     modelTplratio = tmpModelTplratio;
     modelTplContinuum = tmpModelTplcontinuum;
     return true;
+}
+
+Int32 CLineModelSolveResult::GetEvidenceFromPdf(const CDataStore& store, Float64 &evidence) const
+{
+    //check if the pdf is stellar/galaxy or else
+    std::string outputPdfRelDir  = "zPDF"; //default value set to galaxy zPDF folder
+    std::string scope = store.GetScope( *this );
+    std::size_t foundstra;
+    foundstra = scope.find("stellarsolve");
+    if (foundstra!=std::string::npos){
+        outputPdfRelDir = "stellar_zPDF";
+    }
+
+
+    std::string scope_res = outputPdfRelDir+"/logposterior.logMargP_Z_data";
+    auto results_pdf =  store.GetGlobalResult( scope_res.c_str() );
+    std::shared_ptr<const CPdfMargZLogResult> logzpdf1d = std::dynamic_pointer_cast<const CPdfMargZLogResult>( results_pdf.lock() );
+
+    if(!logzpdf1d)
+    {
+        Log.LogError( "GetEvidenceFromPdf: no pdf results retrieved from scope: %s", scope_res.c_str());
+        return -1;
+    }
+
+    evidence = logzpdf1d->valEvidenceLog;
+    return 0;
 }
 
 /**
