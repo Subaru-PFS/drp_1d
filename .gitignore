@@ -47,3 +47,5 @@ pkgconfig
 
 # Python cache files
 *.pyc
+
+swig_ext.py
