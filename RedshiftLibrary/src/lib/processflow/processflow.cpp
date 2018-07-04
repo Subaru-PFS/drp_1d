@@ -192,20 +192,14 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
             Int64 opt_nscales=8; //not used
             std::string dfBinPath="absolute_path_to_df_binaries_here"; //not used
             std::shared_ptr<CTemplateCatalog> starTemplateCatalog = std::shared_ptr<CTemplateCatalog>( new CTemplateCatalog(medianRemovalMethod, opt_medianKernelWidth, opt_nscales, dfBinPath) );
-            Bool rValue = starTemplateCatalog->Load( templateDir.c_str() );
-            if( !rValue )
-            {
-                Log.LogInfo("Failed to load template catalog: %s", templateDir.c_str());
-                return false;
-            }else{
-                for( UInt32 i=0; i<filteredStarTemplateCategoryList.size(); i++ )
-                {
+            starTemplateCatalog->Load( templateDir.c_str() );
+
+	    for( UInt32 i=0; i<filteredStarTemplateCategoryList.size(); i++ )
+	        {
                     std::string category = filteredStarTemplateCategoryList[i];
                     UInt32 ntpl = starTemplateCatalog->GetTemplateCount(category);
                     Log.LogInfo("Loaded (category=%s) template count = %d", category.c_str(), ntpl);
                 }
-
-            }
 
             Float64 overlapThreshold;
             ctx.GetParameterStore().Get( "starsolve.overlapThreshold", overlapThreshold, 1.0);
@@ -526,7 +520,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
         ctx.GetDataStore().StoreScopedGlobalResult( "redshiftresult", mResult );
     }else{
       Log.LogError( "Unable to store method result.");
-      throw std::string("Unable to store method result");
+      throw std::runtime_error("Unable to store method result");
     }
 }
 

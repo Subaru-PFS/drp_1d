@@ -125,7 +125,7 @@ public:
   CDataStore& GetDataStore();
 };
 
-%catches(std::string, ...) CProcessFlow::Process;
+%catches(std::string, std::runtime_error, ...) CProcessFlow::Process;
 
 class CProcessFlow {
 public:
