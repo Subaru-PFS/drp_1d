@@ -191,25 +191,18 @@ class CSpectrumAxis
 class CSpectrumSpectralAxis : public CSpectrumAxis {
  public:
   CSpectrumSpectralAxis();
-  //CSpectrumSpectralAxis( const Float64* samples, UInt32 n, Bool isLogScale  );
-};
 %apply (double* IN_ARRAY1, int DIM1) {( const Float64* samples, UInt32 n)};
-%extend CSpectrumSpectralAxis {
- CSpectrumSpectralAxis( const Float64* samples, UInt32 n) :
-  CSpectrumAxis( samples, n ),
-      m_SpectralFlags( 0 )
-	{
-	}
+  CSpectrumSpectralAxis( const Float64* samples, UInt32 n, Bool isLogScale  );
+%clear (double* IN_ARRAY1, int DIM1);
 };
-%clear (double* IN_ARRAY1, int DIM1, bool isLogScale);
 
 
-%apply (double* IN_ARRAY1, int DIM1) {( const Float64* samples, UInt32 n)};
 class CSpectrumFluxAxis : public CSpectrumAxis
 {
  public:
   CSpectrumFluxAxis();
+%apply (double* IN_ARRAY1, int DIM1) {( const Float64* samples, UInt32 n)};
   CSpectrumFluxAxis( const Float64* samples, UInt32 n );
+%clear (double* IN_ARRAY1, int DIM1);
   void SetSize( UInt32 s );
 };
-%clear (double* IN_ARRAY1, int DIM1);
