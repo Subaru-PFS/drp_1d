@@ -83,6 +83,7 @@ class CParameterStore {
   %rename(Get_String) Get( const std::string& name, std::string& out_str, std::string = "");
   %rename(Get_Int64) Get( const std::string& name, Int64& out_int, Int64 defaultValue = 0);
   %rename(Get_Float64) Get( const std::string& name, Int64& out_int, Int64 defaultValue = 0);
+  %rename(Set_String) Set( const std::string& name, std::string& out_str, std::string = "");
 public:
   CParameterStore();
   Bool Load( const std::string& path );
@@ -90,6 +91,7 @@ public:
   Bool Get( const std::string& name, std::string& out_str, std::string defaultValue = "" );
   Bool Get( const std::string& name, Int64& out_int, Int64 defaultValue = 0 );
   Bool Get( const std::string& name, Float64& out_float, Float64 defaultValue  = 0 );
+  Bool Set( const std::string& name, const std::string& v );
 
 };
 

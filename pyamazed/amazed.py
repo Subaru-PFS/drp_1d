@@ -15,6 +15,9 @@ def calibrationpath(config, *path):
 def spectrumpath(config, *path):
     return os.path.expanduser(os.path.join(config.spectrum_dir, *path))
 
+def update_paramstore(param, config):
+    param.Set('calibrationDir', config.calibration_dir)
+
 class TestReader(CSpectrumIOGenericReader):
 
     def Read(self, path, spectrum):
@@ -33,6 +36,7 @@ def amazed():
 
     param = CParameterStore()
     param.Load(os.path.expanduser(config.parameters_file))
+    update_paramstore(param, config)
 
     classif = CClassifierStore()
 
