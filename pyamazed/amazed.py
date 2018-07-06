@@ -1,10 +1,9 @@
 #!/usr/bin/env python
-
 import os.path
-
 from argumentparser import parser
 from redshift import *
 from config import Config
+
 
 def datapath(config, *path):
     return os.path.expanduser(os.path.join(config.data_path, *path))

@@ -182,29 +182,32 @@ class CSpectrumIOGenericReader : public CSpectrumIOReader
   virtual void Read( const char* filePath, CSpectrum& s );
 };
 
+%apply (double* IN_ARRAY1, int DIM1) {(const Float64* samples, UInt32 n)};
 class CSpectrumAxis
 {
  public:
-  CSpectrumAxis();
+  // CSpectrumAxis(); // needs %rename
+  CSpectrumAxis(const Float64* samples, UInt32 n );
   Float64* GetSamples();
   virtual void SetSize( UInt32 s );
 };
+%clear (const Float64* samples, UInt32 n);
 
+%apply (double* IN_ARRAY1, int DIM1) {(const Float64* samples, UInt32 n)};
 class CSpectrumSpectralAxis : public CSpectrumAxis {
  public:
-  CSpectrumSpectralAxis();
-%apply (double* IN_ARRAY1, int DIM1) {( const Float64* samples, UInt32 n)};
-  CSpectrumSpectralAxis( const Float64* samples, UInt32 n, Bool isLogScale  );
-%clear (double* IN_ARRAY1, int DIM1);
+  // CSpectrumSpectralAxis(); // needs %rename
+  CSpectrumSpectralAxis( const Float64* samples, UInt32 n );
 };
+%clear (const Float64* samples, UInt32 n);
 
 
+%apply (double* IN_ARRAY1, int DIM1) {(const Float64* samples, UInt32 n)};
 class CSpectrumFluxAxis : public CSpectrumAxis
 {
  public:
-  CSpectrumFluxAxis();
-%apply (double* IN_ARRAY1, int DIM1) {( const Float64* samples, UInt32 n)};
+  // CSpectrumFluxAxis(); // needs %rename
   CSpectrumFluxAxis( const Float64* samples, UInt32 n );
-%clear (double* IN_ARRAY1, int DIM1);
   void SetSize( UInt32 s );
 };
+%clear (const Float64* samples, UInt32 n);
