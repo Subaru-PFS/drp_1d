@@ -70,6 +70,16 @@ CSpectrum::CSpectrum(const CSpectrum& other, TFloat64List mask)
     m_nbScales = other.GetDecompScales();
 }
 
+CSpectrum::CSpectrum(CSpectrumSpectralAxis& spectralAxis, CSpectrumFluxAxis& fluxAxis) :
+  m_SpectralAxis(spectralAxis),
+  m_FluxAxis(fluxAxis)
+{
+    m_estimationMethod = "";
+    m_medianWindowSize = -1;
+    m_nbScales = -1;
+    m_dfBinPath = "";
+}
+
 CSpectrum::~CSpectrum()
 {
 

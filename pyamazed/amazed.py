@@ -17,13 +17,6 @@ def spectrumpath(config, *path):
 def update_paramstore(param, config):
     param.Set('calibrationDir', config.calibration_dir)
 
-class TestReader(CSpectrumIOGenericReader):
-
-    def Read(self, path, spectrum):
-        print('reading {} into {}'.format(path, spectrum))
-        super().Read(path, spectrum)
-        print('here')
-
 def amazed():
 
     args = parser.parse_args()
@@ -75,8 +68,6 @@ def amazed():
     line_catalog = CRayCatalog()
     print("Loading %s" % config.linecatalog)
     line_catalog.Load(calibrationpath(config, config.linecatalog))
-
-    reader = TestReader()
 
     print(spectrumList)
 

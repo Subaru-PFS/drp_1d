@@ -26,6 +26,7 @@ public:
 
     CSpectrum();
     CSpectrum(const CSpectrum& other, TFloat64List mask);
+    CSpectrum(CSpectrumSpectralAxis& spectralAxis, CSpectrumFluxAxis& fluxAxis);
     ~CSpectrum();
 
     CSpectrum& operator=(const CSpectrum& other);

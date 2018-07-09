@@ -157,7 +157,8 @@ public:
 class CSpectrum
 {
  public:
-  CSpectrum();
+  // CSpectrum(); // needs %rename
+  CSpectrum(CSpectrumSpectralAxis& spectralAxis, CSpectrumFluxAxis& fluxAxis);
   CSpectrumFluxAxis& GetFluxAxis();
   CSpectrumSpectralAxis& GetSpectralAxis();
   void LoadSpectrum(const char* spectrumFilePath, const char* noiseFilePath);
