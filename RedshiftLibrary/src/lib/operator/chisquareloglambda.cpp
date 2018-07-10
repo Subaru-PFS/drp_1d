@@ -601,18 +601,22 @@ Int32 COperatorChiSquareLogLambda::FitAllz(const TFloat64Range& lambdaRange,
         TInt32Range ilbda;
         if(result->Redshifts.size()>1)
         {
-            Float64 redshiftStep =  result->Redshifts[izrangelist[k].GetBegin()+1]-result->Redshifts[izrangelist[k].GetBegin()];
-            TFloat64List subRedshifts = zrange.SpreadOver( redshiftStep );
+            TFloat64List subRedshifts;
+            for(Int32 kzsub=izrangelist[k].GetBegin(); kzsub<=izrangelist[k].GetEnd(); kzsub++)
+            {
+                subRedshifts.push_back(result->Redshifts[kzsub]);
+            }
             subresult->Init(subRedshifts.size(), std::max((Int32)ismEbmvCoeffs.size(), 1), std::max((Int32)igmMeiksinCoeffs.size(),1));
             subresult->Redshifts = subRedshifts;
 
             //slice the template
+            Float64 redshiftStep_toBeDoneDifferently =  result->Redshifts[izrangelist[k].GetBegin()+1]-result->Redshifts[izrangelist[k].GetBegin()];
             ilbda = FindTplSpectralIndex( spectrumRebinedLambda,
                                                       tplRebinedLambdaGlobal,
                                                       spectrumRebinedSpectralAxis.GetSamplesCount(),
                                                       tplRebinedSpectralAxis.GetSamplesCount(),
                                                       zrange,
-                                                      redshiftStep);
+                                                      redshiftStep_toBeDoneDifferently);
         }else{
             ilbda=TInt32Range(0, tplRebinedSpectralAxis.GetSamplesCount()-1);
             subresult->Init(1, std::max((Int32)ismEbmvCoeffs.size(), 1), std::max((Int32)igmMeiksinCoeffs.size(),1));

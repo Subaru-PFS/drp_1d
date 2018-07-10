@@ -88,8 +88,17 @@ Bool CProcessFlow::Process( CProcessFlowContext& ctx )
             spcLambdaRange.GetBegin(), spcLambdaRange.GetEnd(), ctx.GetSpectrum().GetResolution());
 
     // Create redshift initial list by spanning redshift acdross the given range, with the given delta
-    TFloat64List redshifts = redshiftRange.SpreadOver( redshiftStep );
-    //TFloat64List redshifts = redshiftRange.SpreadOverOnePlusX( redshiftStep ); //experimental: spreadover a grid at delta/(1+z), unusable because PDF needs regular z-step
+    std::string redshiftSampling;
+    ctx.GetParameterStore().Get( "redshiftsampling", redshiftSampling, "lin" ); //TODO: sampling in log cannot be used for now as zqual descriptors assume constant dz.
+    TFloat64List redshifts;
+    if(redshiftSampling=="log")
+    {
+        redshifts = redshiftRange.SpreadOverLog( redshiftStep ); //experimental: spreadover a grid at delta/(1+z), unusable because PDF needs regular z-step
+    }else
+    {
+        redshifts = redshiftRange.SpreadOver( redshiftStep );
+    }
+
     DebugAssert( redshifts.size() > 0 );
 
     std::string CategoryFilter="all";

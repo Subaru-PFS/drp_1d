@@ -70,6 +70,7 @@ Void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& t
                                    std::vector<TFloat64List>& ChiSquareInterm,
                                    std::string opt_interp, Float64 forcedAmplitude, Int32 opt_extinction, Int32 opt_dustFitting, CMask spcMaskAdditional)
 {
+    Bool amplForcePositive=true;
     chiSquare = boost::numeric::bounds<float>::highest();
     bool status_chisquareSetAtLeastOnce = false;
 
@@ -500,7 +501,12 @@ Void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& t
                 //status = nStatus_DataError;
                 //return;
             }else{
-                ampl = max(0.0, sumCross / sumT);
+                if(amplForcePositive)
+                {
+                    ampl = max(0.0, sumCross / sumT);
+                }else{
+                    ampl = sumCross / sumT;
+                }
                 if(forcedAmplitude !=-1){
                     ampl = forcedAmplitude;
                 }

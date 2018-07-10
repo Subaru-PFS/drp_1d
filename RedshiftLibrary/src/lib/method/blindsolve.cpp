@@ -89,7 +89,7 @@ Bool COperatorBlindSolve::BlindSolve( CDataStore& resultStore, const CSpectrum& 
 
 
     // Create redshift initial list by spanning redshift acdross the given range, with the given delta
-    TFloat64List redshifts = redshiftsRange.SpreadOver( redshiftStep );
+    TFloat64List redshifts = redshiftsRange.SpreadOver( redshiftStep ); //TODO: this should be done in processflow, not in the method itself.
     DebugAssert( redshifts.size() > 0 );
 
     // prepare the unused masks

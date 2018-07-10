@@ -29,7 +29,7 @@ public:
     };
     typedef SValues TemplateFitValues;
 
-    CTemplatesFitStore(Float64 minRedshift, Float64 maxRedshift, Float64 stepRedshift);
+    CTemplatesFitStore(Float64 minRedshift, Float64 maxRedshift, Float64 stepRedshift, std::string opt_sampling);
     ~CTemplatesFitStore();
     bool Add( Float64 redshift, Float64 merit, Float64 fitAmplitude, Float64 fitDustCoeff, Float64 fitMeiksinIdx, Float64 fitDtM, Float64 fitMtM, std::string tplName );
     std::vector<Float64> GetRedshiftList();
@@ -40,6 +40,7 @@ private:
     Float64    m_minRedshift;
     Float64    m_maxRedshift;
     Float64    m_stepRedshift;
+    std::string m_samplingRedshift;
 };
 
 

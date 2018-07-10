@@ -51,7 +51,8 @@ public:
                                               const std::string &opt_continuumreest="no",
                                               const std::string &opt_rules="all",
                                               const std::string &opt_velocityFitting="no",
-                                              const Float64 &opt_twosteplargegridstep=0.001,
+                                             const Float64 &opt_twosteplargegridstep=0.001,
+                                             const std::string &opt_twosteplargegridsampling="log",
                                               const std::string &opt_rigidity="rules",
                                               const Float64 &opt_emvelocityfitmin=20,
                                               const Float64 &opt_emvelocityfitmax=500,
@@ -82,6 +83,7 @@ public:
                                               const std::string &opt_rules="all",
                                               const std::string &opt_velocityFitting="no",
                                               const Float64 &opt_twosteplargegridstep=0.001,
+                                              const string &opt_twosteplargegridsampling="log",
                                               const std::string &opt_rigidity="rules");
 
     Int32 ComputeCandidates(const Int32 opt_extremacount, const Int32 opt_sign, const std::vector<Float64> floatValues);
@@ -135,6 +137,7 @@ public:
                                       const std::string& opt_rules,
                                       const std::string& opt_velocityFitting,
                                       const Float64 &opt_twosteplargegridstep,
+                                      const string &opt_twosteplargegridsampling,
                                       const std::string& opt_rigidity,
                                       const Float64 &opt_velocityfitmin,
                                       const Float64 &opt_velocityfitmax);

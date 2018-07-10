@@ -86,6 +86,16 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
     dataStore.GetScopedParam( "linemodel.lineforcefilter", m_opt_lineforcefilter, "no" );
     dataStore.GetScopedParam( "linemodel.fittingmethod", m_opt_fittingmethod, "hybrid" );
     dataStore.GetScopedParam( "linemodel.fastfitlargegridstep", m_opt_twosteplargegridstep, 0.001 );
+    std::string redshiftSampling;
+    dataStore.GetParam( "redshiftsampling", redshiftSampling, "lin" ); //TODO: sampling in log cannot be used for now as zqual descriptors assume constant dz.
+    if(redshiftSampling=="log")
+    {
+        m_opt_twosteplargegridsampling = "log";
+    }else{
+        m_opt_twosteplargegridsampling = "lin";
+    }
+    Log.LogDetail( "    fastfitlargegridsampling (auto set from redshiftsampling param.): %s", m_opt_twosteplargegridsampling);
+
     dataStore.GetScopedParam( "linemodel.continuumcomponent", m_opt_continuumcomponent, "fromspectrum" );
     dataStore.GetScopedParam( "linemodel.rigidity", m_opt_rigidity, "rules" );
     dataStore.GetScopedParam( "linemodel.linewidthtype", m_opt_lineWidthType, "velocitydriven" );
@@ -781,6 +791,7 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
                                           m_opt_rules,
                                           m_opt_velocityfit,
                                           m_opt_twosteplargegridstep,
+                                          m_opt_twosteplargegridsampling,
                                           m_opt_rigidity);
     if( retFirstPass!=0 )
     {
