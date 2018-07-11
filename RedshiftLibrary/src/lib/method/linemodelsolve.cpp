@@ -94,7 +94,7 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
     }else{
         m_opt_twosteplargegridsampling = "lin";
     }
-    Log.LogDetail( "    fastfitlargegridsampling (auto set from redshiftsampling param.): %s", m_opt_twosteplargegridsampling);
+    Log.LogDetail( "    fastfitlargegridsampling (auto set from redshiftsampling param.): %s", m_opt_twosteplargegridsampling.c_str());
 
     dataStore.GetScopedParam( "linemodel.continuumcomponent", m_opt_continuumcomponent, "fromspectrum" );
     dataStore.GetScopedParam( "linemodel.rigidity", m_opt_rigidity, "rules" );
