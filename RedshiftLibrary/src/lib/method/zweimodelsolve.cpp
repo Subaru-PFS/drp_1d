@@ -99,7 +99,7 @@ Bool CZweiModelSolve::PopulateParameters( CDataStore& dataStore )
     }else{
         m_opt_twosteplargegridsampling = "lin";
     }
-    Log.LogDetail( "    fastfitlargegridsampling (auto set from redshiftsampling param.): %s", m_opt_twosteplargegridsampling);
+    Log.LogDetail( "    fastfitlargegridsampling (auto set from redshiftsampling param.): %s", m_opt_twosteplargegridsampling.c_str());
 
     dataStore.GetScopedParam( "zweimodel.continuumcomponent", m_opt_continuumcomponent, "fromspectrum" );
     dataStore.GetScopedParam( "zweimodel.rigidity", m_opt_rigidity, "rules" );
