@@ -315,7 +315,7 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
         Float64 minRedshift = m_sortedRedshifts[0]; //TODO: should these values be the same as for the main redshift estimation ?
         Float64 maxRedshift = m_sortedRedshifts[m_sortedRedshifts.size()-1]; //TODO: should these values be the same as for the main redshift estimation ?
         std::string zsamplingtplfit = opt_twosteplargegridsampling;
-        Log.LogInfo( "  Operator-Linemodel: continuum tpl fitting: sampling:%s, step=%.5f, min=%.1f, max=%.1f", zsamplingtplfit, redshiftStep, minRedshift, maxRedshift);
+        Log.LogInfo( "  Operator-Linemodel: continuum tpl fitting: sampling:%s, step=%.5f, min=%.1f, max=%.1f", zsamplingtplfit.c_str(), redshiftStep, minRedshift, maxRedshift);
 
         CTemplatesFitStore* tplfitStore = new CTemplatesFitStore(minRedshift, maxRedshift, redshiftStep, zsamplingtplfit);
         std::vector<Float64> redshiftsTplFit = tplfitStore->GetRedshiftList();
