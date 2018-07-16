@@ -789,6 +789,7 @@ Int32 CLineModelElementList::LoadFitContinuumOneTemplate(const TFloat64Range& la
  **/
 Int32 CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange)
 {
+    Log.LogDebug("Elementlist, m_fitContinuum_option=%d", m_fitContinuum_option);
     if(m_observeGridContinuumFlux == NULL)
     {
         Log.LogError("Elementlist, cannot loadfitcontinuum without precomputedGridTplFlux... aborting!");

@@ -511,7 +511,7 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
                 m_result->ChiSquareContinuum[i] = m_model->getLeastSquareContinuumMeritFast();
             }
             m_result->ScaleMargCorrectionContinuum[i] = m_model->getContinuumScaleMargCorrection();
-            Log.LogDebug( "Z interval %d: Chi2 = %f", i, m_result->ChiSquare[i] );
+            Log.LogDebug( "  Operator-Linemodel: Z interval %d: Chi2 = %f", i, m_result->ChiSquare[i] );
             indexLargeGrid++;
             //Log.LogInfo( "\nLineModel Infos: large grid step %d", i);
         }else{
