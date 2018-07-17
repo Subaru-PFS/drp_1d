@@ -8,8 +8,9 @@ using namespace NSEpic;
 
 CTemplatesFitStore::CTemplatesFitStore(Float64 minRedshift, Float64 maxRedshift, Float64 stepRedshift, std::string opt_sampling)
 {
-    m_minRedshift = minRedshift;
-    m_maxRedshift = maxRedshift+stepRedshift;
+    Float64 marginRedshiftSteps = 3.0;
+    m_minRedshift = minRedshift - marginRedshiftSteps*stepRedshift;
+    m_maxRedshift = maxRedshift + marginRedshiftSteps*stepRedshift;
     m_stepRedshift = stepRedshift;
     m_samplingRedshift = opt_sampling;
 }
@@ -57,14 +58,14 @@ CTemplatesFitStore::TemplateFitValues CTemplatesFitStore::GetFitValues(Float64 r
 {
     if(redshiftVal<m_fitValues[0].redshift)
     {
-        Log.LogDebug("CTemplatesFitStore - GetFitValues, looking for redshiftVal=%f, but lt m_fitValues[0].redshift=%f", redshiftVal, m_fitValues[0].redshift);
+        Log.LogError("CTemplatesFitStore - GetFitValues, looking for redshiftVal=%f, but lt m_fitValues[0].redshift=%f", redshiftVal, m_fitValues[0].redshift);
         SValues sval;
         sval.tplName="";
         return sval;
     }
     if(redshiftVal>m_fitValues[m_fitValues.size()-1].redshift)
     {
-        Log.LogDebug("CTemplatesFitStore - GetFitValues, looking for redshiftVal=%f, but ht m_fitValues[m_fitValues.size()-1].redshift=%f", redshiftVal, m_fitValues[m_fitValues.size()-1].redshift);
+        Log.LogError("CTemplatesFitStore - GetFitValues, looking for redshiftVal=%f, but ht m_fitValues[m_fitValues.size()-1].redshift=%f", redshiftVal, m_fitValues[m_fitValues.size()-1].redshift);
         SValues sval;
         sval.tplName="";
         return sval;
