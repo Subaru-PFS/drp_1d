@@ -50,6 +50,10 @@ private:
     std::string m_opt_lineforcefilter;
     std::string m_opt_fittingmethod;
     std::string m_opt_continuumcomponent;
+
+    std::string m_opt_tplfit_dustfit="no";
+    std::string m_opt_tplfit_igmfit="no";
+
     std::string m_opt_rigidity;
     std::string m_opt_lineWidthType;
     Float64 m_opt_resolution;

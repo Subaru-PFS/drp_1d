@@ -330,11 +330,9 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
             Log.LogInfo( "  Operator-Linemodel: precomputing- auto select chisquare2 operator (faster for few redshifts calc. points)" );
         }
         std::string opt_interp = "precomputedfinegrid"; // "lin"; //
-        Int32 opt_dustFit = 1;
-        Int32 opt_extinction = 1;
         Log.LogInfo( "  Operator-Linemodel: precomputing- with operator = %s", opt_chi2operator.c_str() );
-        Log.LogInfo( "  Operator-Linemodel: precomputing-fitContinuum_dustfit = %d", opt_dustFit );
-        Log.LogInfo( "  Operator-Linemodel: precomputing-fitContinuum_igm = %d", opt_extinction );
+        Log.LogInfo( "  Operator-Linemodel: precomputing-fitContinuum_dustfit = %d", m_opt_tplfit_dustFit );
+        Log.LogInfo( "  Operator-Linemodel: precomputing-fitContinuum_igm = %d", m_opt_tplfit_extinction );
 
         std::shared_ptr<COperator> chiSquareOperator;
         if(opt_chi2operator=="chisquarelog")
@@ -363,7 +361,7 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
             {
                 const CTemplate& tpl = orthoTplCatalog->GetTemplate( category, j );
 
-                auto  chisquareResult = std::dynamic_pointer_cast<CChisquareResult>( chiSquareOperator->Compute( spectrum, tpl, lambdaRange, redshiftsTplFit, overlapThreshold, maskList, opt_interp, opt_extinction, opt_dustFit ) );
+                auto  chisquareResult = std::dynamic_pointer_cast<CChisquareResult>( chiSquareOperator->Compute( spectrum, tpl, lambdaRange, redshiftsTplFit, overlapThreshold, maskList, opt_interp, m_opt_tplfit_extinction, m_opt_tplfit_dustFit ) );
                 if( !chisquareResult )
                 {
                     Log.LogInfo( "  Operator-Linemodel failed to compute chi square value for tpl=%s", tpl.GetName().c_str());

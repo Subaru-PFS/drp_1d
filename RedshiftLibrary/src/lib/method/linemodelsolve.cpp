@@ -51,6 +51,8 @@ const std::string CLineModelSolve::GetDescription()
     desc.append("\tparam: linemodel.lineforcefilter = {""no"", ""S""}\n");
     desc.append("\tparam: linemodel.fittingmethod = {""hybrid"", ""individual""}\n");
     desc.append("\tparam: linemodel.continuumcomponent = {""fromspectrum"", ""tplfit"", ""nocontinuum"", ""zero""}\n");
+    desc.append("\tparam: linemodel.continuumismfit = {""no"", ""yes""}\n");
+    desc.append("\tparam: linemodel.continuumigmfit = {""no"", ""yes""}\n");
     desc.append("\tparam: linemodel.rigidity = {""rules"", ""tplcorr"", ""tplshape""}\n");
     desc.append("\tparam: linemodel.linewidthtype = {""instrumentdriven"", ""velocitydriven"",  ""combined"",  ""nispvsspsf201707"", ""fixed""}\n");
     desc.append("\tparam: linemodel.instrumentresolution = <float value>\n");
@@ -97,6 +99,10 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
     Log.LogDetail( "    fastfitlargegridsampling (auto set from redshiftsampling param.): %s", m_opt_twosteplargegridsampling.c_str());
 
     dataStore.GetScopedParam( "linemodel.continuumcomponent", m_opt_continuumcomponent, "fromspectrum" );
+    if(m_opt_continuumcomponent=="tplfit"){
+        dataStore.GetScopedParam( "linemodel.continuumismfit", m_opt_tplfit_dustfit, "no" );
+        dataStore.GetScopedParam( "linemodel.continuumigmfit", m_opt_tplfit_igmfit, "no" );
+    }
     dataStore.GetScopedParam( "linemodel.rigidity", m_opt_rigidity, "rules" );
     dataStore.GetScopedParam( "linemodel.linewidthtype", m_opt_lineWidthType, "velocitydriven" );
     dataStore.GetScopedParam( "linemodel.instrumentresolution", m_opt_resolution, 2350.0 );
@@ -165,6 +171,10 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
     }
 
     Log.LogInfo( "    -continuumcomponent: %s", m_opt_continuumcomponent.c_str());
+    if(m_opt_continuumcomponent=="tplfit"){
+        Log.LogInfo( "      -tplfit_ismfit: %s", m_opt_tplfit_dustfit.c_str());
+        Log.LogInfo( "      -tplfit_igmfit: %s", m_opt_tplfit_igmfit.c_str());
+    }
     Log.LogInfo( "    -continuumreestimation: %s", m_opt_continuumreest.c_str());
     Log.LogInfo( "    -extremacount: %.3f", m_opt_extremacount);
     Log.LogInfo( "    -fastfitlargegridstep: %.6f", m_opt_twosteplargegridstep);
@@ -767,6 +777,12 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
         Log.LogError( "Line Model, init failed. Aborting" );
         return false;
     }
+    //
+    if(m_opt_continuumcomponent=="tplfit"){
+        linemodel.m_opt_tplfit_dustFit = Int32(m_opt_tplfit_dustfit=="yes");
+        linemodel.m_opt_tplfit_extinction = Int32(m_opt_tplfit_igmfit=="yes");
+    }
+
     //**************************************************
     //FIRST PASS
     //**************************************************
