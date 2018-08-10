@@ -623,7 +623,10 @@ void CMultiLine::fitAmplitudeAndLambdaOffset(const CSpectrumSpectralAxis& spectr
 
     if(!atLeastOneOffsetToFit)
     {
+        Log.LogDebug( "    multiline: no offsets to fit");
         nSteps = 1;
+    }else{
+        Log.LogDebug( "    multiline: offsets to fit n=%d", nSteps);
     }
 
     Float64 bestMerit = DBL_MAX;

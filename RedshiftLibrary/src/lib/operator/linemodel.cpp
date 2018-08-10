@@ -149,7 +149,7 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
     CRayCatalog::TRayVector restRayList = restraycatalog.GetFilteredList( typeFilter, forceFilter);
     Log.LogDebug( "restRayList.size() = %d", restRayList.size() );
 
-    bool enableOrtho = true;
+    bool enableOrtho = (opt_continuumcomponent=="tplfit");
     Log.LogInfo( "  Operator-Linemodel: TemplatesOrthogonalization enabled = %d", enableOrtho );
 
     //prepare continuum templates catalog
