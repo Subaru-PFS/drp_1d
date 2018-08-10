@@ -1,10 +1,9 @@
 #!/usr/bin/env python
-
 import os.path
+from argumentparser import parser
+from redshift import *
+from config import Config
 
-from .redshift import *
-from .argumentparser import parser
-from .config import Config
 
 def datapath(config, *path):
     return os.path.expanduser(os.path.join(config.data_path, *path))
@@ -15,13 +14,8 @@ def calibrationpath(config, *path):
 def spectrumpath(config, *path):
     return os.path.expanduser(os.path.join(config.spectrum_dir, *path))
 
-class TestReader(CSpectrumIOGenericReader):
-
-    def Read(self, path, spectrum):
-        print('reading {} into {}'.format(path, spectrum))
-        res = super().Read(path, spectrum)
-        print('here')
-        return res
+def update_paramstore(param, config):
+    param.Set('calibrationDir', config.calibration_dir)
 
 def amazed():
 
@@ -34,6 +28,7 @@ def amazed():
 
     param = CParameterStore()
     param.Load(os.path.expanduser(config.parameters_file))
+    update_paramstore(param, config)
 
     classif = CClassifierStore()
 
@@ -63,31 +58,48 @@ def amazed():
     template_catalog = CTemplateCatalog(medianRemovalMethod, opt_medianKernelWidth,
                                         opt_nscales, dfBinPath)
     print("Loading %s" % config.template_dir)
-    template_catalog.Load(calibrationpath(config, config.template_dir))
+
+    try:
+        template_catalog.Load(calibrationpath(config, config.template_dir))
+    except Exception as e:
+        print(f"Can't load template : {e}")
+        raise
 
     line_catalog = CRayCatalog()
     print("Loading %s" % config.linecatalog)
     line_catalog.Load(calibrationpath(config, config.linecatalog))
 
-    reader = TestReader()
-
     print(spectrumList)
 
     for line in spectrumList:
-        spectrum, noise, proc_id = line.split()
-        ctx=CProcessFlowContext()
-        ctx.Init(spectrumpath(config, spectrum),
-                 spectrumpath(config, noise),
-                 reader,
-                 reader,
-                 proc_id,
-                 template_catalog,
-                 line_catalog,
-                 param,
-                 classif)
+        spectrum_path, noise_path, proc_id = line.split()
+        spectrum = CSpectrum()
+        try:
+            spectrum.LoadSpectrum(spectrumpath(config, spectrum_path),
+                                  spectrumpath(config, noise_path))
+        except Exception as e:
+            print("Can't load spectrum : {}".format(e))
+            continue
+
+        try:
+            ctx = CProcessFlowContext()
+            ctx.Init(spectrum,
+                     proc_id,
+                     template_catalog,
+                     line_catalog,
+                     param,
+                     classif)
+        except Exception as e:
+            print("Can't init process flow : {}".format(e))
+            continue
 
         pflow=CProcessFlow()
-        pflow.Process(ctx)
+        try:
+            pflow.Process(ctx)
+        except Exception as e:
+            print("Can't process : {}".format(e))
+            continue
+
         ctx.GetDataStore().SaveRedshiftResult(config.output_folder)
         #ctx.GetDataStore().SaveReliabilityResult('/tmp/bar')
         ctx.GetDataStore().SaveAllResults(config.output_folder, 'all')

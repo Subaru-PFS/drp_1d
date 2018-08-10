@@ -37,17 +37,13 @@ public:
     CProcessFlowContext();
     ~CProcessFlowContext();
 
-    bool Init(const char* spectrumPath, const char* noisePath,
-	      std::shared_ptr<CSpectrumIOReader> spectrum_reader,
-	      std::shared_ptr<CSpectrumIOReader> noise_reader,
+    bool Init(std::shared_ptr<CSpectrum> spectrum,
 	      std::string processingID,
 	      const char* tempalteCatalogPath, const char* rayCatalogPath,
 	      std::shared_ptr<CParameterStore> paramStore,
 	      std::shared_ptr<CClassifierStore> zqualStore);
 
-    bool Init(const char* spectrumPath, const char* noisePath,
-	      std::shared_ptr<CSpectrumIOReader> spectrum_reader,
-	      std::shared_ptr<CSpectrumIOReader> noise_reader,
+    bool Init(std::shared_ptr<CSpectrum> spectrum,
 	      std::string processingID,
 	      std::shared_ptr<const CTemplateCatalog> templateCatalog,
 	      std::shared_ptr<const CRayCatalog> rayCatalog,

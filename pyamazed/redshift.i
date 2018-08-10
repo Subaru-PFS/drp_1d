@@ -1,7 +1,10 @@
 %module(directors="1") redshift
+
+%include typemaps.i
 %include <std_string.i>
 %include <std_shared_ptr.i>
-%include typemaps.i
+%include std_except.i
+
 %shared_ptr(CParameterStore)
 %shared_ptr(CLogConsoleHandler)
 %shared_ptr(CClassifierStore)
@@ -16,20 +19,29 @@
 %apply Int64 &OUTPUT { Int64& out_int };
 %apply Float64 &OUTPUT { Float64& out_float };
 
-
 %{
+        #define SWIG_FILE_WITH_INIT
         #include "RedshiftLibrary/log/log.h"
         #include "RedshiftLibrary/log/consolehandler.h"
         #include "RedshiftLibrary/processflow/parameterstore.h"
         #include "RedshiftLibrary/reliability/zclassifierstore.h"
         #include "RedshiftLibrary/processflow/context.h"
         #include "RedshiftLibrary/processflow/processflow.h"
-  	#include "RedshiftLibrary/processflow/resultstore.h"
-	#include "RedshiftLibrary/ray/catalog.h"
-  	#include "RedshiftLibrary/spectrum/template/catalog.h"
-    	#include "RedshiftLibrary/spectrum/io/reader.h"
-    	#include "RedshiftLibrary/spectrum/io/genericreader.h"
-	using namespace NSEpic;
+        #include "RedshiftLibrary/processflow/resultstore.h"
+        #include "RedshiftLibrary/ray/catalog.h"
+        #include "RedshiftLibrary/spectrum/template/catalog.h"
+        #include "RedshiftLibrary/spectrum/io/reader.h"
+        #include "RedshiftLibrary/spectrum/io/genericreader.h"
+        #include "RedshiftLibrary/spectrum/axis.h"
+        #include "RedshiftLibrary/spectrum/fluxaxis.h"
+        #include "RedshiftLibrary/spectrum/spectralaxis.h"
+        using namespace NSEpic;
+%}
+
+%include numpy.i
+
+%init %{
+import_array();
 %}
 
 typedef int Int32;
@@ -40,8 +52,8 @@ typedef unsigned long long UInt64 ;
 typedef unsigned int UInt32 ;
 typedef unsigned short UInt16 ;
 typedef unsigned char UInt8 ;
-typedef float	Float32 ;
-typedef double	Float64 ;
+typedef float   Float32 ;
+typedef double  Float64 ;
 typedef char Char;
 typedef unsigned char Byte;
 typedef void Void;
@@ -71,6 +83,7 @@ class CParameterStore {
   %rename(Get_String) Get( const std::string& name, std::string& out_str, std::string = "");
   %rename(Get_Int64) Get( const std::string& name, Int64& out_int, Int64 defaultValue = 0);
   %rename(Get_Float64) Get( const std::string& name, Int64& out_int, Int64 defaultValue = 0);
+  %rename(Set_String) Set( const std::string& name, std::string& out_str, std::string = "");
 public:
   CParameterStore();
   Bool Load( const std::string& path );
@@ -78,6 +91,7 @@ public:
   Bool Get( const std::string& name, std::string& out_str, std::string defaultValue = "" );
   Bool Get( const std::string& name, Int64& out_int, Int64 defaultValue = 0 );
   Bool Get( const std::string& name, Float64& out_float, Float64 defaultValue  = 0 );
+  Bool Set( const std::string& name, const std::string& v );
 
 };
 
@@ -90,35 +104,36 @@ public:
 class CRayCatalog
 {
 public:
-    Bool Load( const char* filePath );
+    void Load( const char* filePath );
 };
+
+%catches(std::string, std::runtime_error, ...) CTemplateCatalog::Load;
 
 class CTemplateCatalog
 {
 public:
     CTemplateCatalog( std::string cremovalmethod="Median", Float64 mediankernelsize=75.0, Float64 waveletsScales=8, std::string waveletsDFBinPath="");
-    Bool Load( const char* filePath );
+    void Load( const char* filePath );
 };
 
 class CProcessFlowContext {
 public:
   CProcessFlowContext();
-  bool Init( const char* spectrumPath,
-	     const char* noisePath,
-	     std::shared_ptr<CSpectrumIOReader> spectrum_reader,
-	     std::shared_ptr<CSpectrumIOReader> noise_reader,
-	     std::string processingID,
-	     std::shared_ptr<const CTemplateCatalog> templateCatalog,
-	     std::shared_ptr<const CRayCatalog> rayCatalog,
-	     std::shared_ptr<CParameterStore> paramStore,
-	     std::shared_ptr<CClassifierStore> zqualStore  );
+  bool Init(std::shared_ptr<CSpectrum> spectrum,
+	    std::string processingID,
+	    std::shared_ptr<const CTemplateCatalog> templateCatalog,
+	    std::shared_ptr<const CRayCatalog> rayCatalog,
+	    std::shared_ptr<CParameterStore> paramStore,
+	    std::shared_ptr<CClassifierStore> zqualStore  );
   CDataStore& GetDataStore();
 };
+
+%catches(std::string, std::runtime_error, ...) CProcessFlow::Process;
 
 class CProcessFlow {
 public:
   CProcessFlow();
-  Bool Process( CProcessFlowContext& ctx );
+  void Process( CProcessFlowContext& ctx );
 };
 
 class CDataStore
@@ -137,18 +152,27 @@ public:
   COperatorResultStore();
 };
 
+%catches(std::string, ...) CSpectrum::LoadSpectrum;
+
 class CSpectrum
 {
  public:
-  CSpectrum();
+  // CSpectrum(); // needs %rename
+  CSpectrum(CSpectrumSpectralAxis& spectralAxis, CSpectrumFluxAxis& fluxAxis);
+  CSpectrumFluxAxis& GetFluxAxis();
+  CSpectrumSpectralAxis& GetSpectralAxis();
+  void LoadSpectrum(const char* spectrumFilePath, const char* noiseFilePath);
+
 };
+
+%catches(std::string, ...) CSpectrumIOReader::Read;
 
 class CSpectrumIOReader
 {
  public:
   CSpectrumIOReader();
   virtual ~CSpectrumIOReader();
-  virtual Bool Read(const char* filePath, std::shared_ptr<CSpectrum> s) = 0;
+  virtual void Read(const char* filePath, CSpectrum& s) = 0;
 };
 
 class CSpectrumIOGenericReader : public CSpectrumIOReader
@@ -156,6 +180,35 @@ class CSpectrumIOGenericReader : public CSpectrumIOReader
  public:
   CSpectrumIOGenericReader();
   virtual ~CSpectrumIOGenericReader();
-  virtual Bool Read( const char* filePath, std::shared_ptr<CSpectrum> s );
+  virtual void Read( const char* filePath, CSpectrum& s );
 };
 
+%apply (double* IN_ARRAY1, int DIM1) {(const Float64* samples, UInt32 n)};
+class CSpectrumAxis
+{
+ public:
+  // CSpectrumAxis(); // needs %rename
+  CSpectrumAxis(const Float64* samples, UInt32 n );
+  Float64* GetSamples();
+  virtual void SetSize( UInt32 s );
+};
+%clear (const Float64* samples, UInt32 n);
+
+%apply (double* IN_ARRAY1, int DIM1) {(const Float64* samples, UInt32 n)};
+class CSpectrumSpectralAxis : public CSpectrumAxis {
+ public:
+  // CSpectrumSpectralAxis(); // needs %rename
+  CSpectrumSpectralAxis( const Float64* samples, UInt32 n );
+};
+%clear (const Float64* samples, UInt32 n);
+
+
+%apply (double* IN_ARRAY1, int DIM1) {(const Float64* samples, UInt32 n)};
+class CSpectrumFluxAxis : public CSpectrumAxis
+{
+ public:
+  // CSpectrumFluxAxis(); // needs %rename
+  CSpectrumFluxAxis( const Float64* samples, UInt32 n );
+  void SetSize( UInt32 s );
+};
+%clear (const Float64* samples, UInt32 n);

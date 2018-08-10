@@ -190,16 +190,19 @@ std::shared_ptr<const CLineModelTplshapeSolveResult> CLineModelTplshapeSolve::Co
             }
             //get line catalog
             CRayCatalog lineCatalog;
-            Bool rValue = lineCatalog.Load( tplshapeCatalogList[kctlg].c_str() );
-            if( !rValue )
-            {
-                Log.LogError( "Failed to load tplshape catalog: %s", tplshapeCatalogList[kctlg].c_str());
-                continue;
-            }
-            else
-            {
-                Log.LogInfo( "Loaded tplshape: %s", tplshapeCatalogList[kctlg].c_str());
-            }
+
+            try
+	      {
+	      lineCatalog.Load( tplshapeCatalogList[kctlg].c_str() );
+	      }
+	    catch (std::string)
+	      {
+                Log.LogError( "Failed to load tplshape catalog: %s",
+			      tplshapeCatalogList[kctlg].c_str());
+		continue;
+	      }
+	    Log.LogInfo( "Loaded tplshape: %s", tplshapeCatalogList[kctlg].c_str());
+
 
             if(0)
             {

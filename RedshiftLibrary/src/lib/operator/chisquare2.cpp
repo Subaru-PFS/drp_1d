@@ -408,7 +408,7 @@ Void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& t
             Float64 fit = 0;
             Int32 numDevs = 0;
             Int32 numDevsFull = 0;
-            const Float64* error = spcFluxAxis.GetError();
+            const TFloat64List& error = spcFluxAxis.GetError();
 
             for(Int32 j=kStart; j<=kEnd; j++)
             {
@@ -1176,7 +1176,7 @@ const COperatorResult* COperatorChiSquare2::ExportChi2versusAZ(const CSpectrum& 
 Float64 COperatorChiSquare2::EstimateLikelihoodCstLog(const CSpectrum& spectrum, const TFloat64Range& lambdaRange)
 {
     const CSpectrumSpectralAxis& spcSpectralAxis = spectrum.GetSpectralAxis();
-    const Float64* error = spectrum.GetFluxAxis().GetError();
+    const TFloat64List& error = spectrum.GetFluxAxis().GetError();
 
     Int32 numDevs = 0;
     Float64 cstLog = 0.0;

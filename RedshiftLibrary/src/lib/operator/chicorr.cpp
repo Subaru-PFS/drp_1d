@@ -133,9 +133,9 @@ int COperatorChicorr::Compute(const CSpectrum& spectrum, const CSpectrum& spectr
             continue;
         }
 
-        const Float64* error = spcFluxAxis.GetError();
+        const TFloat64List& error = spcFluxAxis.GetError();
 
-        DebugAssert( error!= NULL );
+        DebugAssert( !error.empty() );
 
         Float64 spcMean = 0.0;
         Float64 spcSDev = 0.0;
@@ -147,7 +147,7 @@ int COperatorChicorr::Compute(const CSpectrum& spectrum, const CSpectrum& spectr
 
         Float64 tplMean = 0.0;
         Float64 tplSDev = 0.0;
-        if( !itplTplWithoutContFluxAxis.ComputeMeanAndSDev( itplMask, tplMean, tplSDev, NULL ) )
+        if( !itplTplWithoutContFluxAxis.ComputeMeanAndSDev( itplMask, tplMean, tplSDev, TFloat64List()) )
         {
             result_corr->Status[i] = COperator::nStatus_DataError;
             continue;

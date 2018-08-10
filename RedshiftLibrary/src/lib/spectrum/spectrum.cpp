@@ -1,4 +1,7 @@
 #include <RedshiftLibrary/spectrum/spectrum.h>
+#include <RedshiftLibrary/spectrum/io/genericreader.h>
+#include <RedshiftLibrary/noise/flat.h>
+#include <RedshiftLibrary/noise/fromfile.h>
 
 #include <RedshiftLibrary/log/log.h>
 
@@ -10,6 +13,9 @@
 #include <algorithm>
 
 #include <gsl/gsl_fit.h>
+#include <boost/filesystem.hpp>
+
+namespace bfs = boost::filesystem;
 
 using namespace NSEpic;
 
@@ -32,13 +38,13 @@ CSpectrum::CSpectrum(const CSpectrum& other, TFloat64List mask)
     CSpectrumSpectralAxis otherSpectral = other.GetSpectralAxis();
     CSpectrumFluxAxis otherFlux = other.GetFluxAxis();
 
-    const Float64* error = otherFlux.GetError();
+    const TFloat64List& error = otherFlux.GetError();
 
     for(Int32 i=0; i<mask.size(); i++){
         if(mask[i]!=0){
             tmpWave.push_back(otherSpectral[i]);
             tmpFlux.push_back(otherFlux[i]);
-            if( error!= NULL ){
+            if( !error.empty() ){
                 tmpError.push_back(error[i]);
             }
         }
@@ -50,7 +56,7 @@ CSpectrum::CSpectrum(const CSpectrum& other, TFloat64List mask)
     for(Int32 i=0; i<tmpFlux.size(); i++){
         (*_SpectralAxis)[i] = tmpWave[i];
         (*_FluxAxis)[i] = tmpFlux[i];
-        if( error!= NULL ){
+        if( !error.empty() ){
             (*_FluxAxis).GetError()[i] = tmpError[i];
         }
     }
@@ -62,6 +68,16 @@ CSpectrum::CSpectrum(const CSpectrum& other, TFloat64List mask)
     m_dfBinPath = other.GetWaveletsDFBinPath();
     m_medianWindowSize = other.GetMedianWinsize();
     m_nbScales = other.GetDecompScales();
+}
+
+CSpectrum::CSpectrum(CSpectrumSpectralAxis& spectralAxis, CSpectrumFluxAxis& fluxAxis) :
+  m_SpectralAxis(spectralAxis),
+  m_FluxAxis(fluxAxis)
+{
+    m_estimationMethod = "";
+    m_medianWindowSize = -1;
+    m_nbScales = -1;
+    m_dfBinPath = "";
 }
 
 CSpectrum::~CSpectrum()
@@ -152,7 +168,7 @@ bool CSpectrum::GetMeanAndStdFluxInRange(TFloat64Range wlRange,  Float64& mean, 
 
     CMask mask;
     m_SpectralAxis.GetMask( wlRange, mask );
-    const Float64* error = m_FluxAxis.GetError();
+    const TFloat64List& error = m_FluxAxis.GetError();
     Float64 _Mean = 0.0;
     Float64 _SDev = 0.0;
     m_FluxAxis.ComputeMeanAndSDev( mask,_Mean ,_SDev, error);
@@ -174,7 +190,7 @@ bool CSpectrum::GetLinearRegInRange(TFloat64Range wlRange,  Float64& a, Float64 
         return false;
     }
 
-    const Float64* error = m_FluxAxis.GetError();
+    const TFloat64List& error = m_FluxAxis.GetError();
 
     TInt32Range iRange = m_SpectralAxis.GetIndexesAtWaveLengthRange(wlRange);
     Int32 n = iRange.GetEnd()-iRange.GetBegin()+1;
@@ -247,7 +263,7 @@ const Bool CSpectrum::IsNoiseValid( Float64 LambdaMin,  Float64 LambdaMax ) cons
     Bool valid=true;
     Int32 nInvalid = 0;
 
-    const Float64* error = m_FluxAxis.GetError();
+    const TFloat64List& error = m_FluxAxis.GetError();
     Int32 iMin = m_SpectralAxis.GetIndexAtWaveLength(LambdaMin);
     Int32 iMax = m_SpectralAxis.GetIndexAtWaveLength(LambdaMax);
     for(Int32 i=iMin; i<iMax; i++){
@@ -285,7 +301,7 @@ Bool CSpectrum::correctSpectrum( Float64 LambdaMin,  Float64 LambdaMax, Float64 
     Bool corrected=false;
     Int32 nCorrected = 0;
 
-    Float64* error = m_FluxAxis.GetError();
+    TFloat64List& error = m_FluxAxis.GetError();
     Float64* flux = m_FluxAxis.GetSamples();
 
     Int32 iMin = m_SpectralAxis.GetIndexAtWaveLength(LambdaMin);
@@ -441,4 +457,38 @@ void CSpectrum::SetWaveletsDFBinPath(std::string binPath)
     m_dfBinPath = binPath;
 }
 
+void CSpectrum::LoadSpectrum(const char* spectrumFilePath, const char* noiseFilePath)
+{
+  std::string spcName="";
+  std::string noiseName="";
 
+  CSpectrumIOGenericReader reader;
+
+ if(spectrumFilePath!=NULL)
+      spcName = bfs::path(spectrumFilePath).stem().string() ;
+
+  if(noiseFilePath!=NULL)
+      noiseName = bfs::path(noiseFilePath).stem().string() ;
+
+  SetName(spcName.c_str());
+  SetFullPath(bfs::path( spectrumFilePath ).string().c_str());
+
+  reader.Read(spectrumFilePath, *this);
+  Log.LogInfo("Successfully loaded input spectrum file: (%s), samples : %d",
+	      spcName.c_str(), GetSampleCount() );
+
+  // add noise if any or add flat noise
+  if( noiseFilePath == NULL )
+    {
+      CNoiseFlat noise;
+      noise.SetStatErrorLevel( 1.0 );
+      noise.AddNoise(*this);
+    }
+  else
+    {
+      CNoiseFromFile noise;
+      noise.SetNoiseFilePath(noiseFilePath, reader);
+      noise.AddNoise(*this);
+      Log.LogInfo("Successfully loaded input noise file:    (%s)", noiseName.c_str() );
+    }
+}

@@ -30,24 +30,18 @@ BOOST_AUTO_TEST_SUITE(LinemodelFit_EstimateLeastSquare)
 void checkLeastSquareFast(std::string spectrumPath, std::string noisePath, std::string linecatalogPath, std::string opt_fittingmethod, std::string opt_continuumcomponent, Int32 lineTypeFilter, Int32 forceFilter, Float64 initVelocity, Float64 z)
 {
     // load spectrum
-    std::shared_ptr<CSpectrumIOFitsReader> reader = std::shared_ptr<CSpectrumIOFitsReader>( new CSpectrumIOFitsReader() );
+  CSpectrumIOFitsReader reader;
 
-    std::shared_ptr<CSpectrum> spectrum = std::shared_ptr<CSpectrum>( new CSpectrum() );
-    Bool retVal = reader->Read( spectrumPath.c_str(), spectrum);
-    BOOST_CHECK( retVal == true);
-    CNoiseFromFile noise;
-    retVal = noise.SetNoiseFilePath( noisePath.c_str(), reader );
-    BOOST_CHECK( retVal == true);
-    retVal = noise.AddNoise( *spectrum ) ;
-    BOOST_CHECK( retVal == true);
+  CSpectrum spectrum;
+  BOOST_CHECK_NO_THROW(spectrum.LoadSpectrum(spectrumPath.c_str(),  noisePath.c_str()));
 
 
     // get continuum from Median in case of opt_continuumcomponent==fromspectrum
     CContinuumIrregularSamplingMedian continuum;
     CSpectrumFluxAxis fluxAxisWithoutContinuumCalc;
-    Int32 retValContinuumEstimation = continuum.RemoveContinuum( *spectrum, fluxAxisWithoutContinuumCalc );
+    Int32 retValContinuumEstimation = continuum.RemoveContinuum( spectrum, fluxAxisWithoutContinuumCalc );
     BOOST_CHECK( retValContinuumEstimation);
-    CSpectrum spectrumContinuum = *spectrum;
+    CSpectrum spectrumContinuum = spectrum;
     CSpectrumFluxAxis& continuumFluxAxis = spectrumContinuum.GetFluxAxis();
     for(UInt32 i=0; i<continuumFluxAxis.GetSamplesCount(); i++){
         if(opt_continuumcomponent == "fromspectrum")
@@ -61,8 +55,8 @@ void checkLeastSquareFast(std::string spectrumPath, std::string noisePath, std::
 
     //get line catalog
     CRayCatalog lineCatalog;
-    Bool rValueLoadLineCatalog = lineCatalog.Load( linecatalogPath.c_str() );
-    BOOST_CHECK( rValueLoadLineCatalog == true);
+    BOOST_CHECK_NO_THROW( lineCatalog.Load( linecatalogPath.c_str() ) );
+
     CRayCatalog::TRayVector lineList = lineCatalog.GetFilteredList(lineTypeFilter, forceFilter);
     BOOST_CHECK( lineList.size()>0);
 
@@ -80,8 +74,7 @@ void checkLeastSquareFast(std::string spectrumPath, std::string noisePath, std::
 
     //these tplcatalog related variables are unused here.
     CTemplateCatalog tplCatalog;
-    Bool retValue = tplCatalog.Load( DATA_ROOT_DIR "LinemodelFitEstimateLeastSquareTestCase/ContinuumTemplates_simulm2016Extended_dustfree201702_1/" );
-    BOOST_CHECK( retValue == true);
+    BOOST_CHECK_NO_THROW(tplCatalog.Load( DATA_ROOT_DIR "LinemodelFitEstimateLeastSquareTestCase/ContinuumTemplates_simulm2016Extended_dustfree201702_1/" ));
     TStringList tplCategories = TStringList { "galaxy" };
 
     //prepare continuum templates catalog
@@ -100,7 +93,7 @@ void checkLeastSquareFast(std::string spectrumPath, std::string noisePath, std::
     CTemplateCatalog orthoTplCatalog = tplOrtho.getOrthogonalTplCatalog();
 
 
-    CLineModelElementList model(*spectrum, spectrumContinuum, orthoTplCatalog, tplCategories, opt_calibrationPath, lineList, opt_fittingmethod, opt_continuumcomponent, opt_lineWidthType, opt_resolution, opt_velocityEmission, opt_velocityAbsorption, opt_rules, opt_rigidity);
+    CLineModelElementList model(spectrum, spectrumContinuum, orthoTplCatalog, tplCategories, opt_calibrationPath, lineList, opt_fittingmethod, opt_continuumcomponent, opt_lineWidthType, opt_resolution, opt_velocityEmission, opt_velocityAbsorption, opt_rules, opt_rigidity);
 
     bool tplratioInitRet = model.initTplratioCatalogs();
     BOOST_CHECK_MESSAGE( tplratioInitRet, "Unable to intialize tpl-ratio catalog");

@@ -3,14 +3,13 @@
 
 #include <RedshiftLibrary/common/datatypes.h>
 #include <RedshiftLibrary/noise/noise.h>
+#include <RedshiftLibrary/spectrum/spectrum.h>
 #include <RedshiftLibrary/spectrum/io/reader.h>
 
 #include <memory>
 
 namespace NSEpic
 {
-
-class CSpectrum;
 
 class CNoiseFromFile : public CNoise
 {
@@ -20,14 +19,14 @@ public:
     CNoiseFromFile( );
     ~CNoiseFromFile();
 
-    Bool SetNoiseFilePath( const char* filePath, std::shared_ptr<CSpectrumIOReader> noise_reader);
+    Void SetNoiseFilePath( const char* filePath, CSpectrumIOReader& noise_reader);
 
-    Bool AddNoise( CSpectrum& s1 ) const;
+    Void AddNoise( CSpectrum& s1 ) const;
 
 private:
 
-    std::shared_ptr<CSpectrum>     m_NoiseSpectrum;
-
+    CSpectrum     m_NoiseSpectrum;
+    Bool m_initialized;
 };
 
 

@@ -37,13 +37,17 @@ Float64 getLinemodelDoubletRatio(std::string spc, std::string noise, bool enable
     std::string procID = "processing_id_unused";
     std::shared_ptr<CClassifierStore> classifStore = std::shared_ptr<CClassifierStore>( new CClassifierStore() );
     std::shared_ptr<CSpectrumIOGenericReader> reader = std::shared_ptr<CSpectrumIOGenericReader>( new CSpectrumIOGenericReader() );
+    std::shared_ptr<CSpectrum> spectrum = std::shared_ptr<CSpectrum>(new CSpectrum());
 
-    Bool retVal = ctx.Init( spc.c_str(), noise.c_str(), reader, reader, procID, NULL, DATA_ROOT_DIR "LinemodelRulesTestCase/raycatalog_test_elratiorules.txt", params, classifStore );
-    BOOST_CHECK( retVal == true );
+    spectrum->LoadSpectrum(spc.c_str(), noise.c_str());
+
+    BOOST_CHECK_NO_THROW(ctx.Init(spectrum, procID, NULL,
+				  DATA_ROOT_DIR "LinemodelRulesTestCase/raycatalog_test_elratiorules.txt",
+				  params, classifStore));
 
     //these tplcatalog related variables are unused here.
     CTemplateCatalog tplCatalog;
-    Bool rValue = tplCatalog.Load( DATA_ROOT_DIR "templatecatalog/" );
+    BOOST_CHECK_NO_THROW(tplCatalog.Load( DATA_ROOT_DIR "templatecatalog/" ));
     TStringList tplCategories;
 
 
@@ -143,7 +147,9 @@ std::vector<Float64> getLinemodelFittedAmplitudes(std::string spc, std::string n
     std::shared_ptr<CClassifierStore> classifStore = std::shared_ptr<CClassifierStore>( new CClassifierStore() );
     std::shared_ptr<CSpectrumIOGenericReader> reader = std::shared_ptr<CSpectrumIOGenericReader>( new CSpectrumIOGenericReader() );
 
-    Bool retVal = ctx.Init( spc.c_str(), noise.c_str(), reader, reader, procID, NULL, ctlgPath.c_str(), params, classifStore );
+    std::shared_ptr<CSpectrum> spectrum = std::shared_ptr<CSpectrum>(new CSpectrum);
+    spectrum->LoadSpectrum(spc.c_str(), noise.c_str());
+    Bool retVal = ctx.Init( spectrum, procID, NULL, ctlgPath.c_str(), params, classifStore );
     BOOST_CHECK( retVal == true );
 
 
@@ -156,7 +162,7 @@ std::vector<Float64> getLinemodelFittedAmplitudes(std::string spc, std::string n
 
     //these tplcatalog related variables are unused here.
     CTemplateCatalog tplCatalog;
-    Bool rValue = tplCatalog.Load( DATA_ROOT_DIR "templatecatalog/" );
+    BOOST_CHECK_NO_THROW(tplCatalog.Load( DATA_ROOT_DIR "templatecatalog/" ));
     TStringList tplCategories;
 
     // Create redshift initial list by spanning redshift acdross the given range, with the given delta

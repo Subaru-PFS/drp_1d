@@ -291,9 +291,9 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
 
     //init catalog offsets
     Log.LogInfo( "  Operator-Linemodel: Lambda offsets init");
-    bool offsetsInitRet = m_model->initLambdaOffsets();
-    if(!offsetsInitRet)
-    {
+    try {
+      m_model->initLambdaOffsets();
+    } catch (std::exception const& e) {
         Log.LogError( "  Operator-Linemodel: Failed to init lambda offsets. Continuing without offsets...");
     }
 

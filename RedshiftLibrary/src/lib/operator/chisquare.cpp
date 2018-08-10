@@ -115,7 +115,7 @@ Void COperatorChiSquare::BasicFit( const CSpectrum& spectrum, const CTemplate& t
     Float64 err2 = 0.0;
     Float64 fit = 0;
     Int32 numDevs = 0;
-    const Float64* error = spcFluxAxis.GetError();
+    const TFloat64List& error = spcFluxAxis.GetError();
 
     while( j<spcSpectralAxis.GetSamplesCount() && Xspc[j] <= currentRange.GetEnd() )
     {

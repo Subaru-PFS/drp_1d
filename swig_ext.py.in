@@ -1,13 +1,21 @@
 from setuptools import Extension
 import os, os.path
+import numpy
 
 include_dir = '@cpf-redshift_THIRDPARTY_INCLUDE_DIR@'.split(';')
 lib_dir = '@cpf-redshift_THIRDPARTY_LINK_DIR@'.split(';')
 libs = '@cpf-redshift_THIRDPARTY_LIBS@'.split(';')
 
-swig_ext = Extension('_redshift', sources=['RedshiftLibrary/RedshiftLibrary/redshift.i'],
+#  find out numpy include directory.
+try:
+    numpy_include = numpy.get_include()
+except AttributeError:
+    numpy_include = numpy.get_numpy_include()
+
+
+swig_ext = Extension('_redshift', sources=['pyamazed/redshift.i'],
                      swig_opts = ['-c++'],
-                     include_dirs = ['RedshiftLibrary', 'thirdparty/include'],
+                     include_dirs = ['RedshiftLibrary', 'thirdparty/include', numpy_include],
                      library_dirs = lib_dir + [os.path.join(os.getcwd(), 'lib'), ],
                      libraries = libs + ['cpf-redshift', ],
                      runtime_library_dirs = lib_dir + [os.path.join(os.getcwd(), 'lib'), ])

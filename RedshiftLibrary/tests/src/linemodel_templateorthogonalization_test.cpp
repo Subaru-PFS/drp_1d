@@ -35,20 +35,18 @@ Float64 processOrtho(std::string spectrumPath, std::string noisePath, std::strin
                      bool enableOrtho)
 {
     // load spectrum
-    std::shared_ptr<CSpectrumIOFitsReader> reader = std::shared_ptr<CSpectrumIOFitsReader>( new CSpectrumIOFitsReader() );
-    std::shared_ptr<CSpectrum> spectrum = std::shared_ptr<CSpectrum>( new CSpectrum() );
+  CSpectrumIOFitsReader reader;
+    CSpectrum spectrum;
 
-    Bool retVal = reader->Read( spectrumPath.c_str(), spectrum);
-    BOOST_CHECK( retVal == true);
+    BOOST_CHECK_NO_THROW(reader.Read( spectrumPath.c_str(), spectrum));
     CNoiseFromFile noise;
-    retVal = noise.SetNoiseFilePath( noisePath.c_str(), reader );
-    BOOST_CHECK( retVal == true);
-    retVal = noise.AddNoise( *spectrum ) ;
-    BOOST_CHECK( retVal == true);
+    BOOST_CHECK_NO_THROW(noise.SetNoiseFilePath( noisePath.c_str(), reader ));
+    BOOST_CHECK_NO_THROW(noise.AddNoise( spectrum ));
+
 
 
     // get continuum from Median in case of opt_continuumcomponent==fromspectrum
-    CSpectrum spectrumContinuum = *spectrum;
+    CSpectrum spectrumContinuum = spectrum;
     CSpectrumFluxAxis& continuumFluxAxis = spectrumContinuum.GetFluxAxis();
     for(UInt32 i=0; i<continuumFluxAxis.GetSamplesCount(); i++){
         continuumFluxAxis[i] = 0.0; //put zero as continuum in case of "tplfit" continuum for linemodel
@@ -57,8 +55,8 @@ Float64 processOrtho(std::string spectrumPath, std::string noisePath, std::strin
 
     //get line catalog
     CRayCatalog lineCatalog;
-    Bool rValueLoadLineCatalog = lineCatalog.Load( linecatalogPath.c_str() );
-    BOOST_CHECK( rValueLoadLineCatalog == true);
+    BOOST_CHECK_NO_THROW(lineCatalog.Load( linecatalogPath.c_str() ));
+
     CRayCatalog::TRayVector lineList = lineCatalog.GetFilteredList(lineTypeFilter, forceFilter);
     BOOST_CHECK( lineList.size()>0);
 
@@ -77,8 +75,8 @@ Float64 processOrtho(std::string spectrumPath, std::string noisePath, std::strin
     CTemplateCatalog tplCatalog;
     std::string templatesPath= DATA_ROOT_DIR "Linemodel_tplorthogalization/templates/";
     BOOST_TEST_MESSAGE( "Loading templates from " << templatesPath );
-    Bool retValue = tplCatalog.Load(templatesPath.c_str());
-    BOOST_CHECK( retValue == true);
+    BOOST_CHECK_NO_THROW(tplCatalog.Load(templatesPath.c_str()));
+
     TStringList tplCategories = TStringList { "galaxy" };
 
     CTemplateCatalog finalTplCatalog;
@@ -103,7 +101,7 @@ Float64 processOrtho(std::string spectrumPath, std::string noisePath, std::strin
     }
 
 
-    CLineModelElementList model(*spectrum,
+    CLineModelElementList model(spectrum,
                                 spectrumContinuum,
                                 finalTplCatalog,
                                 tplCategories,

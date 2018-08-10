@@ -46,24 +46,20 @@ void checkSupport(std::string linecatalogPath,
     Float64 z = 0.0;
 
     // load spectrum
-    std::shared_ptr<CSpectrumIOFitsReader> reader = std::shared_ptr<CSpectrumIOFitsReader>( new CSpectrumIOFitsReader() );
+    CSpectrumIOFitsReader reader;
 
-    std::shared_ptr<CSpectrum> spectrum = std::shared_ptr<CSpectrum>( new CSpectrum() );
+    CSpectrum spectrum;
 
-    Bool retVal = reader->Read( spectrumPath.c_str(), spectrum);
-    BOOST_CHECK_MESSAGE( retVal == true, "check load flux spectrum");
+    BOOST_CHECK_NO_THROW(reader.Read( spectrumPath.c_str(), spectrum));
     CNoiseFromFile noise;
-    retVal = noise.SetNoiseFilePath( noisePath.c_str(), reader );
-    BOOST_CHECK_MESSAGE( retVal == true, "check load noise spectrum");
-    retVal = noise.AddNoise( *spectrum ) ;
-    BOOST_CHECK_MESSAGE( retVal == true, "check add noise spectrum");
-
+    BOOST_CHECK_NO_THROW(noise.SetNoiseFilePath( noisePath.c_str(), reader ));
+    BOOST_CHECK_NO_THROW(noise.AddNoise( spectrum )) ;
 
     // get continuum
     //CContinuumIrregularSamplingMedian continuum;
     //CSpectrumFluxAxis fluxAxisWithoutContinuumCalc;
     //Int32 retValCont = continuum.RemoveContinuum( spectrum, fluxAxisWithoutContinuumCalc );
-    CSpectrum spectrumContinuum = *spectrum;
+    CSpectrum spectrumContinuum = spectrum;
     CSpectrumFluxAxis& continuumFluxAxis = spectrumContinuum.GetFluxAxis();
     for(UInt32 i=0; i<continuumFluxAxis.GetSamplesCount(); i++){
         //continuumFluxAxis[i] -= fluxAxisWithoutContinuumCalc[i];
@@ -73,8 +69,7 @@ void checkSupport(std::string linecatalogPath,
 
     //get line catalog
     CRayCatalog lineCatalog;
-    Bool rValue = lineCatalog.Load( linecatalogPath.c_str() );
-    BOOST_CHECK_MESSAGE( rValue == true, "check load catalog");
+    BOOST_CHECK_NO_THROW(lineCatalog.Load( linecatalogPath.c_str() ));
     CRayCatalog::TRayVector lineList = lineCatalog.GetFilteredList(lineTypeFilter, forceFilter);
     BOOST_CHECK_MESSAGE( lineList.size()>0, "check loaded catalog not empty");
 
@@ -92,10 +87,10 @@ void checkSupport(std::string linecatalogPath,
 
     //these tplcatalog related variables are unused here.
     CTemplateCatalog tplCatalog;
-    Bool retValue = tplCatalog.Load( DATA_ROOT_DIR "templatecatalog/" );
+    BOOST_CHECK_NO_THROW(tplCatalog.Load( DATA_ROOT_DIR "templatecatalog/" ));
     TStringList tplCategories;
 
-    CLineModelElementList model(*spectrum, spectrumContinuum, tplCatalog, tplCategories, unused_calibrationPath, lineList, opt_fittingmethod, opt_continuumcomponent, opt_lineWidthType, opt_resolution, opt_velocityEmission, opt_velocityAbsorption, opt_rules, opt_rigidity);
+    CLineModelElementList model(spectrum, spectrumContinuum, tplCatalog, tplCategories, unused_calibrationPath, lineList, opt_fittingmethod, opt_continuumcomponent, opt_lineWidthType, opt_resolution, opt_velocityEmission, opt_velocityAbsorption, opt_rules, opt_rigidity);
 
 
     //initialize the model spectrum

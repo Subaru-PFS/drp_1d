@@ -70,7 +70,7 @@ CProcessFlow::~CProcessFlow()
 
 }
 
-Bool CProcessFlow::Process( CProcessFlowContext& ctx )
+void CProcessFlow::Process( CProcessFlowContext& ctx )
 {
     Log.LogInfo("<proc-spc><%s>", ctx.GetSpectrum().GetName().c_str());
 
@@ -84,7 +84,7 @@ Bool CProcessFlow::Process( CProcessFlowContext& ctx )
     TFloat64Range spcLambdaRange;
     ctx.GetSpectrum().GetSpectralAxis().ClampLambdaRange( lambdaRange, spcLambdaRange );
 
-    Log.LogInfo( "Processing spc:%s (LambdaRange: %f-%f:%f)", ctx.GetSpectrum().GetName().c_str(),
+    Log.LogInfo( "Processing spc:%s (CLambdaRange: %f-%f:%f)", ctx.GetSpectrum().GetName().c_str(),
             spcLambdaRange.GetBegin(), spcLambdaRange.GetEnd(), ctx.GetSpectrum().GetResolution());
 
     // Create redshift initial list by spanning redshift acdross the given range, with the given delta
@@ -156,14 +156,20 @@ Bool CProcessFlow::Process( CProcessFlowContext& ctx )
         const Float64 lmin = spcLambdaRange.GetBegin();
         const Float64 lmax = spcLambdaRange.GetEnd();
         if( !ctx.GetSpectrum().IsFluxValid( lmin, lmax ) ){
-            Log.LogError( "Failed to validate spectrum flux: %s, on wavelength range (%.1f ; %.1f)", ctx.GetSpectrum().GetName().c_str(), lmin, lmax );
-            return false;
+	  char buf[180];
+	  std::snprintf(buf, sizeof(buf),
+			"Failed to validate spectrum flux: %s, on wavelength range (%.1f ; %.1f)",
+			ctx.GetSpectrum().GetName().c_str(), lmin, lmax );
+	  throw std::runtime_error(buf);
         }else{
             Log.LogDetail( "Successfully validated spectrum flux: %s, on wavelength range (%.1f ; %.1f)", ctx.GetSpectrum().GetName().c_str(), lmin, lmax );
         }
         if( !ctx.GetSpectrum().IsNoiseValid( lmin, lmax ) ){
-            Log.LogError( "Failed to validate noise from spectrum: %s, on wavelength range (%.1f ; %.1f)", ctx.GetSpectrum().GetName().c_str(), lmin, lmax );
-            return false;
+	  char buf[180];
+	  std::snprintf(buf, sizeof(buf),
+			"Failed to validate noise from spectrum: %s, on wavelength range (%.1f ; %.1f)",
+			ctx.GetSpectrum().GetName().c_str(), lmin, lmax );
+            throw std::runtime_error(buf);
         }else{
             Log.LogDetail( "Successfully validated noise from spectrum: %s, on wavelength range (%.1f ; %.1f)", ctx.GetSpectrum().GetName().c_str(), lmin, lmax );
         }
@@ -176,20 +182,17 @@ Bool CProcessFlow::Process( CProcessFlowContext& ctx )
     ctx.GetParameterStore().Get( "enablestellarsolve", enableStarFitting, "no" );
     Log.LogInfo( "Stellar solve enabled : %s", enableStarFitting.c_str());
     if(enableStarFitting=="yes"){
-
         CDataStore::CAutoScope resultScope( ctx.GetDataStore(), "stellarsolve" );
 
         std::string calibrationDirPath;
         ctx.GetParameterStore().Get( "calibrationDir", calibrationDirPath );
-        bfs::path calibrationFolder( calibrationDirPath.c_str() );
 
+        bfs::path calibrationFolder( calibrationDirPath.c_str() );
         CCalibrationConfigHelper calibrationConfig;
-        Int32 retConfig = calibrationConfig.Init(calibrationDirPath);
-        if(!retConfig)
-        {
-            Log.LogError("    Processflow - Unable to load the calibration-config. aborting...");
-        }else{
-            std::string starTemplates = calibrationConfig.Get_starTemplates_relpath();
+        calibrationConfig.Init(calibrationDirPath);
+
+	std::string starTemplates = calibrationConfig.Get_starTemplates_relpath();
+
             Log.LogInfo( "    Processflow - Loading star templates catalog : %s", starTemplates.c_str());
             std::string templateDir = (calibrationFolder/starTemplates.c_str()).string();
 
@@ -202,21 +205,14 @@ Bool CProcessFlow::Process( CProcessFlowContext& ctx )
             Int64 opt_nscales=8; //not used
             std::string dfBinPath="absolute_path_to_df_binaries_here"; //not used
             std::shared_ptr<CTemplateCatalog> starTemplateCatalog = std::shared_ptr<CTemplateCatalog>( new CTemplateCatalog(medianRemovalMethod, opt_medianKernelWidth, opt_nscales, dfBinPath) );
-            Bool rValue = starTemplateCatalog->Load( templateDir.c_str() );
-            if( !rValue )
-            {
-                Log.LogInfo("Failed to load template catalog: %s", templateDir.c_str());
-                return false;
-            }else{
-                for( UInt32 i=0; i<filteredStarTemplateCategoryList.size(); i++ )
-                {
+            starTemplateCatalog->Load( templateDir.c_str() );
+
+	    for( UInt32 i=0; i<filteredStarTemplateCategoryList.size(); i++ )
+	        {
                     std::string category = filteredStarTemplateCategoryList[i];
                     UInt32 ntpl = starTemplateCatalog->GetTemplateCount(category);
                     Log.LogInfo("Loaded (category=%s) template count = %d", category.c_str(), ntpl);
                 }
-
-            }
-
 
             Float64 overlapThreshold;
             ctx.GetParameterStore().Get( "starsolve.overlapThreshold", overlapThreshold, 1.0);
@@ -262,7 +258,7 @@ Bool CProcessFlow::Process( CProcessFlowContext& ctx )
                 Log.LogError( "Unable to store stellar result.");
             }
 
-        }
+
     }
 
     // Galaxy method
@@ -300,7 +296,7 @@ Bool CProcessFlow::Process( CProcessFlowContext& ctx )
                 if(!logzpdf1d)
                 {
                     Log.LogError( "Extract Proba. for z candidates: no results retrieved from scope: %s", scope_res.c_str());
-                    return false;
+                    throw std::string("Extract Proba. for z candidates");
                 }
 
                 Log.LogInfo( "  Integrating %d candidates proba.", zc.size() );
@@ -476,7 +472,7 @@ Bool CProcessFlow::Process( CProcessFlowContext& ctx )
 
     }else{
         Log.LogError("Problem found while parsing the method parameter !");
-        return false;
+        throw std::string("Problem found while parsing the method parameter");
     }
 
 
@@ -536,11 +532,9 @@ Bool CProcessFlow::Process( CProcessFlowContext& ctx )
     if( mResult ) {
         ctx.GetDataStore().StoreScopedGlobalResult( "redshiftresult", mResult );
     }else{
-        Log.LogError( "Unable to store method result.");
-        return false;
+      Log.LogError( "Unable to store method result.");
+      throw std::runtime_error("Unable to store method result");
     }
-
-    return true;
 }
 
 /**

@@ -136,14 +136,10 @@ BOOST_AUTO_TEST_CASE(LoadCatalog)
     CRayCatalog catalog;
     Bool returnValue;
 
-    returnValue = catalog.Load( DATA_ROOT_DIR "RayTestCase/raycatalog_OK1.txt" );
-    BOOST_CHECK( returnValue == true );
+    BOOST_CHECK_NO_THROW(catalog.Load( DATA_ROOT_DIR "RayTestCase/raycatalog_OK1.txt" ));
 
-    returnValue = catalog.Load( DATA_ROOT_DIR "RayTestCase/raycatalog_NOK1.txt" );
-    BOOST_CHECK( returnValue == false );
-
-    returnValue = catalog.Load( DATA_ROOT_DIR "RayTestCase/raycatalog_NOK1.txt" );
-    BOOST_CHECK( returnValue == false );
+    BOOST_CHECK_THROW(catalog.Load( DATA_ROOT_DIR "RayTestCase/raycatalog_NOK1.txt" ), std::string);
+    BOOST_CHECK_THROW(catalog.Load( DATA_ROOT_DIR "RayTestCase/raycatalog_NOK1.txt" ), std::string);
 
 }
 
@@ -153,8 +149,7 @@ BOOST_AUTO_TEST_CASE(MatchingTest1)
     CRayCatalog restFrameCatalog;
     Bool returnValue;
 
-    returnValue = restFrameCatalog.Load( DATA_ROOT_DIR "RayTestCase/raycatalog_testMatch1.txt" );
-    BOOST_CHECK( returnValue == true );
+    BOOST_CHECK_NO_THROW(restFrameCatalog.Load( DATA_ROOT_DIR "RayTestCase/raycatalog_testMatch1.txt" ));
 
     CRayCatalog detectedCatalog;
     Float64 shiftLambda = 1.5;
@@ -182,8 +177,7 @@ BOOST_AUTO_TEST_CASE(MatchingTest2_EzValidationTest)
     CRayCatalog restFrameCatalog;
     Bool returnValue;
 
-    returnValue = restFrameCatalog.Load( DATA_ROOT_DIR "RayTestCase/RayMatchingVVDS/raycatalog.txt" );
-    BOOST_CHECK( returnValue == true );
+    BOOST_CHECK_NO_THROW(restFrameCatalog.Load( DATA_ROOT_DIR "RayTestCase/RayMatchingVVDS/raycatalog.txt" ));
 
     //load detected lines results
     TFloat64List rayPosList = UtilLoadDetectedRayPositions(DATA_ROOT_DIR "RayTestCase/RayMatchingVVDS/sc_020100776_F02P017_vmM1_red_129_1_atm_clean.fits/detectedRayCatalog.csv");

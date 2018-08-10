@@ -16,7 +16,7 @@ defaults = {
 
 class Config(object):
 
-    def __init__(self, args=None):
+    def __init__(self, args):
 
         # set up defaults
         for k, v in defaults.items():

@@ -22,8 +22,8 @@ public:
     CCalibrationConfigHelper();
     ~CCalibrationConfigHelper();
 
-    Bool Init(std::string calibrationPath);
-    Bool Load(const char* filePath);
+    Void Init(std::string calibrationPath);
+    Void Load(const char* filePath);
 
     std::string Get_linemodelTplratio_relpath();
     std::string Get_linemodelOffset_relpath();

@@ -106,12 +106,8 @@ Bool CRayCatalog::Add( const CRay& r )
  * @brief CRayCatalog::Load
  * Loads a line catalog in TSV format as of v0.4
  * @param filePath
- * @return  1 if success
- * @return -3 if file cannot be opened
- * @return -2 if bad version number in the header of the file
- * @return -1 if any other error encountered
  */
-Int32 CRayCatalog::Load( const char* filePath )
+void CRayCatalog::Load( const char* filePath )
 {
     ifstream file;
 
@@ -120,9 +116,7 @@ Int32 CRayCatalog::Load( const char* filePath )
 
     file.open( filePath, ifstream::in );
     if( file.rdstate() & ios_base::failbit )
-    {
-        return -3;
-    }
+      throw std::string("file cannot be opened");
 
     string line;
 
@@ -139,10 +133,7 @@ Int32 CRayCatalog::Load( const char* filePath )
         }
 
         if(ver!=0.4)
-        {
-            Log.LogError( "Line catalog version %f is not supported. Aborting", ver);
-            return -2;
-        }
+	  throw string("Line catalog version is not supported : ") + filePath;
 
         // remove comments
         if(line.compare(0,1,"#",1)==0){
@@ -153,7 +144,7 @@ Int32 CRayCatalog::Load( const char* filePath )
         // Tokenize each line
         typedef tokenizer< char_separator<char> > ttokenizer;
         ttokenizer tok( line, sep );
-        
+
         // Check if it's not a comment
         ttokenizer::iterator it = tok.begin();
         if( it != tok.end() && *it != "#" )
@@ -167,7 +158,7 @@ Int32 CRayCatalog::Load( const char* filePath )
             catch (bad_lexical_cast)
             {
                 pos = 0.0;
-                return -1;
+                throw string("Bad file format : ") + filePath;
             }
 
             // Parse name
@@ -179,7 +170,7 @@ Int32 CRayCatalog::Load( const char* filePath )
             }
             else
             {
-                return -1;
+                throw string("Bad name in : ") + filePath;
             }
 
             // Parse type
@@ -257,10 +248,7 @@ Int32 CRayCatalog::Load( const char* filePath )
     file.close();
 
     if(ver<0.0)
-    {
-        return 0;
-    }
-    return 1;
+      throw string("Invalid catalog file : ") + filePath;
 }
 
 Bool CRayCatalog::Save( const char* filePath )

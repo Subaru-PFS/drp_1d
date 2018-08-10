@@ -231,31 +231,12 @@ std::shared_ptr<CSpectrum> CMultiRollModel::LoadRollSpectrum(std::string refSpcF
     //
 
     //Read the fits data
-    std::shared_ptr<CSpectrumIOGenericReader> reader = std::shared_ptr<CSpectrumIOGenericReader>( new CSpectrumIOGenericReader() );
+    CSpectrumIOGenericReader reader;
 
-    Bool rValue = reader->Read( newSpcRollPath.c_str(), spc );
-    if( !rValue )
-    {
-        Log.LogError("    multirollmodel: Failed to read input spectrum file: (%s)", newSpcRollPath.c_str() );
-        spc = NULL;
-        return spc;
-    }
-
-    //add noise
-    {
-        CNoiseFromFile noise;
-        if( ! noise.SetNoiseFilePath( newNoiseRollPath.c_str(), reader ) )
-        {
-            Log.LogError("    multirollmodel: Failed to load noise spectrum");
-            return spc;
-        }
-
-        if( ! noise.AddNoise( *spc ) )
-        {
-            Log.LogError( "    multirollmodel: Failed to apply noise from spectrum: %s", newNoiseRollPath.c_str() );
-            return spc;
-        }
-    }
+    reader.Read( newSpcRollPath.c_str(), *spc );
+    CNoiseFromFile noise;
+    noise.SetNoiseFilePath( newNoiseRollPath.c_str(), reader );
+    noise.AddNoise( *spc );
 
     return spc;
 }
@@ -307,7 +288,8 @@ Bool CMultiRollModel::initLambdaOffsets()
     Bool ret=-1;
     for(Int32 km=0; km<m_models.size(); km++)
     {
-        ret = m_models[km]->initLambdaOffsets();
+        m_models[km]->initLambdaOffsets();
+	ret = true;
     }
     return ret;
 }

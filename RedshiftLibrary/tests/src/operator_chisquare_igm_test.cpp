@@ -22,33 +22,31 @@ BOOST_AUTO_TEST_SUITE(Operator_Chisquare_igm)
 void UtilChisquareTestFit( const char* spectraPath, const char* noisePath, const char* tplPath, bool disableMask, const Float64 redshift, const Float64 targetFittedAmplitude, const Float64 targetFittedMeiksinIdx )
 {
     Bool retVal;
-    std::shared_ptr<CSpectrum> spectrum = std::shared_ptr<CSpectrum>( new CSpectrum() );
-    std::shared_ptr<CTemplate> _template = std::shared_ptr<CTemplate>( new CTemplate() );
+    CSpectrum spectrum;
+    CTemplate _template;
 
     Float64 z = redshift;
     BOOST_TEST_MESSAGE( "  Redshift = " << redshift );
 
     // Load spectrum and templates
-    std::shared_ptr<CSpectrumIOGenericReader> reader = std::shared_ptr<CSpectrumIOGenericReader>( new CSpectrumIOGenericReader() );
+    CSpectrumIOGenericReader reader;
 
-    retVal = reader->Read( spectraPath, spectrum );
-    BOOST_CHECK( retVal );
+    BOOST_CHECK_NO_THROW(reader.Read( spectraPath, spectrum ));
 
     if( noisePath )
     {
         CNoiseFromFile noise;
         noise.SetNoiseFilePath( noisePath, reader );
-        noise.AddNoise( *spectrum );
+        noise.AddNoise( spectrum );
     }
 
-    retVal = reader->Read( tplPath, _template );
-    BOOST_CHECK( retVal );
+    BOOST_CHECK_NO_THROW(reader.Read( tplPath, _template ));
 
     Float64 redshiftDelta = 0.0001;
     TFloat64List redshifts = TFloat64Range( z, z ).SpreadOver( redshiftDelta );
 
     //building the mask
-    Int32 sampleCount = spectrum->GetFluxAxis().GetSamplesCount();
+    Int32 sampleCount = spectrum.GetFluxAxis().GetSamplesCount();
     std::vector<CMask> additional_spcMasks;
     CMask spcMask = Mask();
     spcMask.SetSize(sampleCount);
@@ -56,7 +54,7 @@ void UtilChisquareTestFit( const char* spectraPath, const char* noisePath, const
     std::string calibrationPath = DATA_ROOT_DIR "Operator_Chisquare_igmTestCase/calibration";
 
     COperatorChiSquare2 chi(calibrationPath);
-    auto r = std::dynamic_pointer_cast<CChisquareResult>( chi.Compute( *spectrum, *_template, TFloat64Range( 200, 20000 ), redshifts, 1.0, additional_spcMasks, "precomputedfinegrid", 1 ) );
+    auto r = std::dynamic_pointer_cast<CChisquareResult>( chi.Compute( spectrum, _template, TFloat64Range( 200, 20000 ), redshifts, 1.0, additional_spcMasks, "precomputedfinegrid", 1 ) );
     BOOST_CHECK( r != NULL );
     BOOST_CHECK( r->Status[0] == COperatorChiSquare2::nStatus_OK );
 

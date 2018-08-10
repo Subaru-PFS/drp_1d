@@ -22,7 +22,7 @@ public:
 
     Void SetStatErrorLevel( Float64 level );
 
-    Bool AddNoise( CSpectrum& s1 ) const; 
+    Void AddNoise( CSpectrum& s1 ) const;
 
 private:
 

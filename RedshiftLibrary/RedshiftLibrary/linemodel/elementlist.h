@@ -134,7 +134,7 @@ public:
     Float64 fit(Float64 redshift, const TFloat64Range& lambdaRange, CLineModelSolution &modelSolution, Int32 contreest_iterations=0, bool enableLogging=0);
 
     Bool initTplratioCatalogs();
-    Bool initLambdaOffsets();
+    Void initLambdaOffsets();
 
     Bool setTplshapeModel(Int32 itplshape, Bool enableSetVelocity=false);
     Bool setTplshapeAmplitude(std::vector<Float64> ampsElts, std::vector<Float64> errorsElts);
@@ -271,7 +271,7 @@ private:
     CSpectrumFluxAxis m_SpcFluxAxis;    //observed spectrum
     CSpectrumFluxAxis m_spcFluxAxisNoContinuum; //observed spectrum for line fitting
     std::shared_ptr<CTemplate> m_tplContaminantSpcRebin; //optionally used contaminant to be removed from observed spectrum
-    Float64* m_ErrorNoContinuum;
+    TFloat64List& m_ErrorNoContinuum;
     CSpectrumFluxAxis m_SpcFluxAxisModelDerivVelEmi;
     CSpectrumFluxAxis m_SpcFluxAxisModelDerivVelAbs;
     Float64 m_dTransposeDNocontinuum; //the cached dtd (maximum chisquare value)

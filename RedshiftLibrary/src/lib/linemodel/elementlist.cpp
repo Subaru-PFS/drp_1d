@@ -59,7 +59,8 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
                           const Float64 velocityEmission,
                           const Float64 velocityAbsorption,
                           const std::string& opt_rules,
-                          const std::string &opt_rigidity)
+                          const std::string &opt_rigidity):
+  m_ErrorNoContinuum(m_spcFluxAxisNoContinuum.GetError())
 {
     //members for chi2 continuum fitting
     m_tplCatalog = tplCatalog;
@@ -106,10 +107,9 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
     const CSpectrumFluxAxis& spectrumFluxAxis = spectrum.GetFluxAxis();
     m_spcFluxAxisNoContinuum.SetSize( spectrumSampleCount );
 
-    const Float64* error = spectrumFluxAxis.GetError();
-    m_ErrorNoContinuum = m_spcFluxAxisNoContinuum.GetError();
-    Float64* errorSpc = m_SpcFluxAxis.GetError();
-    Float64* errorSpcContinuum = m_SpcContinuumFluxAxis.GetError();
+    const TFloat64List& error = spectrumFluxAxis.GetError();
+    TFloat64List& errorSpc = m_SpcFluxAxis.GetError();
+    TFloat64List& errorSpcContinuum = m_SpcContinuumFluxAxis.GetError();
     // sets the error vectors
     for( UInt32 i=0; i<spectrumSampleCount; i++ )
     {
@@ -155,8 +155,7 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
         m_chiSquareOperator = new COperatorChiSquare2(calibrationPath);
         m_observeGridContinuumFlux = new Float64[modelFluxAxis.GetSamplesCount()]();
         if(m_observeGridContinuumFlux == NULL){
-          Log.LogError("unable to allocate m_observeGridContinuumFlux");
-          return;
+          throw std::string("unable to allocate m_observeGridContinuumFlux");
         }
         if(0)
         {
@@ -215,24 +214,16 @@ CLineModelElementList::~CLineModelElementList()
     }
 }
 
-Bool CLineModelElementList::initLambdaOffsets()
+Void CLineModelElementList::initLambdaOffsets()
 {
-    CLineCatalogsOffsets* ctlgOffsets = new CLineCatalogsOffsets();
-    bool ret = ctlgOffsets->Init(m_calibrationPath);
-    if(!ret)
-    {
-        Log.LogError("Unable to initialize the the offsets catalog. aborting...");
-        return false;
-    }else
-    {
-        // load static offset catalog, idx=0
-        ctlgOffsets->SetLinesOffsets( *this, 0);
+  CLineCatalogsOffsets* ctlgOffsets = new CLineCatalogsOffsets();
+  ctlgOffsets->Init(m_calibrationPath);
+  // load static offset catalog, idx=0
+  ctlgOffsets->SetLinesOffsets( *this, 0);
 
-        // load auto stack, hack from reference catalog
-        //std::string spcName = m_inputSpc->GetName();
-        //ctlgOffsets->SetLinesOffsetsAutoSelectStack(*this, spcName);
-    }
-    return true;
+  // load auto stack, hack from reference catalog
+  //std::string spcName = m_inputSpc->GetName();
+  //ctlgOffsets->SetLinesOffsetsAutoSelectStack(*this, spcName);
 }
 
 

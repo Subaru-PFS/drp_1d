@@ -4,7 +4,7 @@
 #include <RedshiftLibrary/processflow/processflow.h>
 #include <RedshiftLibrary/processflow/parameterstore.h>
 #include <RedshiftLibrary/processflow/context.h>
-#include <RedshiftLibrary/spectrum/io/genericreader.h>
+#include <RedshiftLibrary/log/consolehandler.h>
 
 #include <boost/test/unit_test.hpp>
 #include "test-config.h"
@@ -27,14 +27,17 @@ BOOST_AUTO_TEST_CASE( ProcessShifted1 )
     params->Set( "smoothWidth", (Int64)0 );
     params->Set( "templateCategoryList", TStringList { "galaxy" } );
     params->Set( "method", "blindsolve");
-    std::shared_ptr<CSpectrumIOGenericReader> reader = std::shared_ptr<CSpectrumIOGenericReader>( new CSpectrumIOGenericReader() );
 
     std::string procID = "lbgabs_1K_2z3_20J22.5__EZ_fits-W-F_0";
-    Bool retVal = ctx.Init( DATA_ROOT_DIR "ProcessFlowTestCase/lbgabs_1K_2z3_20J22.5__EZ_fits-W-F_0.fits", NULL, reader, reader, procID, DATA_ROOT_DIR "ProcessFlowTestCase/template_shifted1/", NULL, params, NULL );
+    std::shared_ptr<CSpectrum> spectrum = std::shared_ptr<CSpectrum>(new CSpectrum());
+
+    BOOST_CHECK_NO_THROW(spectrum->LoadSpectrum(DATA_ROOT_DIR "ProcessFlowTestCase/lbgabs_1K_2z3_20J22.5__EZ_fits-W-F_0.fits", NULL));
+
+    Bool retVal = ctx.Init(spectrum, procID, DATA_ROOT_DIR "ProcessFlowTestCase/template_shifted1/", NULL, params, NULL );
     BOOST_CHECK( retVal == true );
 
-    retVal = processFlow.Process( ctx );
-    BOOST_CHECK( retVal == true );
+    BOOST_CHECK_NO_THROW(processFlow.Process( ctx ));
+
 
     Float64 redshift;
     Float64 merit;
@@ -58,14 +61,16 @@ BOOST_AUTO_TEST_CASE( ProcessShifted2 )
     params->Set( "smoothWidth", (Int64)0 );
     params->Set( "templateCategoryList",  TStringList { "galaxy" } );
     params->Set( "method", "blindsolve");
-    std::shared_ptr<CSpectrumIOGenericReader> reader = std::shared_ptr<CSpectrumIOGenericReader>( new CSpectrumIOGenericReader() );
 
     std::string procID = "processing_id_unused";
-    Bool retVal = ctx.Init( DATA_ROOT_DIR "ProcessFlowTestCase/lbgabs_1K_2z3_20J22.5__EZ_fits-W-F_206.fits", NULL, reader, reader, procID, DATA_ROOT_DIR "ProcessFlowTestCase/template_shifted2/", NULL, params, NULL );
+    std::shared_ptr<CSpectrum> spectrum = std::shared_ptr<CSpectrum>(new CSpectrum());
+
+    spectrum->LoadSpectrum(DATA_ROOT_DIR "ProcessFlowTestCase/lbgabs_1K_2z3_20J22.5__EZ_fits-W-F_206.fits", NULL);
+
+    Bool retVal = ctx.Init( spectrum, procID, DATA_ROOT_DIR "ProcessFlowTestCase/template_shifted2/", NULL, params, NULL );
     BOOST_CHECK( retVal == true );
 
-    retVal = processFlow.Process( ctx );
-    BOOST_CHECK( retVal == true );
+    BOOST_CHECK_NO_THROW(processFlow.Process( ctx ));
 
     Float64 redshift=0.0;
     Float64 merit=0.0;
@@ -89,15 +94,16 @@ BOOST_AUTO_TEST_CASE( ProcessShiftedDecimated )
     params->Set( "smoothWidth", (Int64)0 );
     params->Set( "templateCategoryList", TStringList { "galaxy" } );
     params->Set( "method", "blindsolve");
-    std::shared_ptr<CSpectrumIOGenericReader> reader = std::shared_ptr<CSpectrumIOGenericReader>( new CSpectrumIOGenericReader() );
-
 
     std::string procID = "processing_id_unused";
-    Bool retVal = ctx.Init( DATA_ROOT_DIR "ProcessFlowTestCase/lbgabs_1K_2z3_20J22.5__EZ_fits-W-F_0.fits", NULL, reader, reader, procID, DATA_ROOT_DIR "ProcessFlowTestCase/template_shifted_decimated/", NULL, params, NULL );
+    std::shared_ptr<CSpectrum> spectrum = std::shared_ptr<CSpectrum>(new CSpectrum());
+
+    spectrum->LoadSpectrum(DATA_ROOT_DIR "ProcessFlowTestCase/lbgabs_1K_2z3_20J22.5__EZ_fits-W-F_0.fits", NULL);
+
+    Bool retVal = ctx.Init( spectrum, procID, DATA_ROOT_DIR "ProcessFlowTestCase/template_shifted_decimated/", NULL, params, NULL );
     BOOST_CHECK( retVal == true );
 
-    retVal = processFlow.Process( ctx );
-    BOOST_CHECK( retVal == true );
+    BOOST_CHECK_NO_THROW(processFlow.Process( ctx ));
 
     Float64 redshift;
     Float64 merit;

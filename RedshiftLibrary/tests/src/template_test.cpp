@@ -14,8 +14,7 @@ BOOST_AUTO_TEST_CASE(LoadCatalog)
 {
     CTemplateCatalog catalog;
 
-    Bool rValue = catalog.Load( DATA_ROOT_DIR "templatecatalog/" );
-    BOOST_CHECK( rValue == true );
+    BOOST_CHECK_NO_THROW(catalog.Load( DATA_ROOT_DIR "templatecatalog/" ));
     BOOST_CHECK( catalog.GetTemplateCount( "galaxy" ) == 2 );
     BOOST_CHECK( catalog.GetTemplateCount( "emission" ) == 1 );
     BOOST_CHECK( catalog.GetTemplateCount( "qso" ) == 1 );
