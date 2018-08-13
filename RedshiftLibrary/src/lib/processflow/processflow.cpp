@@ -53,10 +53,17 @@
 #include <RedshiftLibrary/statistics/pdfcandidateszresult.h>
 #include <RedshiftLibrary/reliability/zqual.h>
 
+#include <boost/tokenizer.hpp>
+#include <boost/lexical_cast.hpp>
+#include <fstream>
+#include <iostream>
+
 #include <boost/algorithm/string.hpp>
 #include <stdio.h>
 #include <float.h>
 
+using namespace std;
+using namespace boost;
 using namespace NSEpic;
 namespace bfs = boost::filesystem;
 
@@ -87,19 +94,85 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
     Log.LogInfo( "Processing spc:%s (CLambdaRange: %f-%f:%f)", ctx.GetSpectrum().GetName().c_str(),
             spcLambdaRange.GetBegin(), spcLambdaRange.GetEnd(), ctx.GetSpectrum().GetResolution());
 
+
+    std::string methodName;
+    ctx.GetParameterStore().Get( "method", methodName );
+    boost::algorithm::to_lower(methodName);
+
     // Create redshift initial list by spanning redshift acdross the given range, with the given delta
     std::string redshiftSampling;
     ctx.GetParameterStore().Get( "redshiftsampling", redshiftSampling, "lin" ); //TODO: sampling in log cannot be used for now as zqual descriptors assume constant dz.
-    TFloat64List redshifts;
+    TFloat64List raw_redshifts;
     if(redshiftSampling=="log")
     {
-        redshifts = redshiftRange.SpreadOverLog( redshiftStep ); //experimental: spreadover a grid at delta/(1+z), unusable because PDF needs regular z-step
+        raw_redshifts = redshiftRange.SpreadOverLog( redshiftStep ); //experimental: spreadover a grid at delta/(1+z), unusable because PDF needs regular z-step
     }else
     {
-        redshifts = redshiftRange.SpreadOver( redshiftStep );
+        raw_redshifts = redshiftRange.SpreadOver( redshiftStep );
     }
 
-    DebugAssert( redshifts.size() > 0 );
+
+    //Override z-search grid for line measurement: load the zref values from a tsv catalog file (col0: spc name, col1: zref float value)
+    std::string opt_linemeas_catalog_path;
+    ctx.GetParameterStore().Get( "linemeascatalog", opt_linemeas_catalog_path, "" );
+    TFloat64List redshifts;
+    if(opt_linemeas_catalog_path!="")
+    {
+        Log.LogInfo( "Override z-search range !");
+        Float64 zref = -1.0;
+        namespace fs = boost::filesystem;
+        Int32 reverseInclusionForIdMatching = 0; //0: because the names must match exactly, but: linemeas catalog includes the extension (.fits) and spc.GetName doesn't.
+        bool computeOnZrange=false; //nb: hardcoded option for now
+        Int32 colId = 2;//starts at 1, so that (for the linemeas_catalog) id_column=1, zref_column=2
+        fs::path refFilePath(opt_linemeas_catalog_path.c_str());
+
+
+        if ( fs::exists(refFilePath) )
+        {
+            std::string spcSubStringId = ctx.GetSpectrum().GetName();
+            Log.LogInfo( "Override z-search: using spc-string: %s", spcSubStringId.c_str());
+            getValueFromRefFile( refFilePath.c_str(), spcSubStringId, colId, zref, reverseInclusionForIdMatching);
+        }
+        if(zref==-1)
+        {
+          char buf[180];
+          snprintf(buf, sizeof(buf), "Override z-search: unable to find zref!");
+          throw std::runtime_error(buf);
+        }
+
+        if(computeOnZrange) //computing only on zref, or on a zrange around zref
+        {
+            Float64 deltaZrangeHalf = 0.5e-2; //override zrange
+            Float64 stepZ = 1e-5;
+            Float64 nStepsZ = deltaZrangeHalf*2/stepZ+1;
+            for(Int32 kz=0; kz<nStepsZ; kz++)
+            {
+                Float64 _z = zref + kz*stepZ - deltaZrangeHalf;
+                redshifts.push_back(_z);
+            }
+            Log.LogInfo( "Override z-search: zmin=%.5f, zmax=%.5f, zstep=%.5f", redshifts[0], redshifts[redshifts.size()-1], stepZ);
+        }else{
+            redshifts.push_back(zref);
+        }
+
+        if(methodName=="linemodel"){
+            ctx.GetDataStore().SetScopedParam( "linemodelsolve.linemodel.extremacount", 1.0);
+            Log.LogInfo( "Override z-search: Using overriden linemodelsolve.linemodel.extremacount: %f", 1.0);
+            ctx.GetDataStore().SetScopedParam( "linemodelsolve.linemodel.fastfitlargegridstep", 0.0);
+            Log.LogInfo( "Override z-search: Using overriden linemodelsolve.linemodel.fastfitlargegridstep: %f", 0.0);
+        }
+
+        Log.LogInfo( "Override z-search: Using overriden zref for spc %s : zref=%f", ctx.GetSpectrum().GetName().c_str(), zref);
+    }else{
+        redshifts = raw_redshifts;
+    }
+
+    if(redshifts.size() < 1)
+    {
+      char buf[180];
+      snprintf(buf, sizeof(buf), "Unable to initialize the z-search grid (size=0)");
+      throw std::runtime_error(buf);
+    }
 
     std::string CategoryFilter="all";
     // Remove Star category, and filter the list with regard to input variable CategoryFilter
@@ -122,11 +195,6 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
     std::string calibrationDirPath;
     ctx.GetParameterStore().Get( "calibrationDir", calibrationDirPath );
 
-
-
-    std::string methodName;
-    ctx.GetParameterStore().Get( "method", methodName );
-    boost::algorithm::to_lower(methodName);
 
     //************************************
     Bool enableInputSpcCorrect = true;
@@ -586,5 +654,87 @@ Bool CProcessFlow::isPdfValid(CProcessFlowContext& ctx) const
         }
     }
 
+    return true;
+}
+
+
+/**
+ * \brief
+ * Retrieve the true-redshift from a catalog file path
+ *
+ * reverseInclusion=0 (default): spcId is searched to be included in the Ref-File-Id
+ * reverseInclusion=1 : Ref-File-Id is searched to be included in the spcId
+ **/
+Int32 CProcessFlow::getValueFromRefFile( const char* filePath, std::string spcid, Int32 colID, Float64& zref, Int32 reverseInclusion )
+{
+    ifstream file;
+
+    file.open( filePath, ifstream::in );
+    if( file.rdstate() & ios_base::failbit )
+        return false;
+
+    string line;
+
+    // Read file line by line
+    while( getline( file, line ) )
+    {
+        // remove comments
+        if(line.compare(0,1,"#",1)==0){
+            continue;
+        }
+        char_separator<char> sep(" \t");
+
+        // Tokenize each line
+        typedef tokenizer< char_separator<char> > ttokenizer;
+        ttokenizer tok( line, sep );
+
+        // Check if it's not a comment
+        ttokenizer::iterator it = tok.begin();
+        if( it != tok.end() && *it != "#" )
+        {
+            string name;
+            if( it != tok.end() )
+            {
+                name = *it;
+            }
+
+            if(reverseInclusion==0)
+            {
+                std::size_t foundstr = name.find(spcid.c_str());
+                if (foundstr==std::string::npos){
+                    continue;
+                }
+            }else{
+                std::size_t foundstr = spcid.find(name.c_str());
+                if (foundstr==std::string::npos){
+                    continue;
+                }
+            }
+
+            // Found the correct spectrum ID: now read the ref values
+            Int32 nskip = colID-1;
+            for(Int32 i=0; i<nskip; i++)
+            {
+                ++it;
+            }
+            if( it != tok.end() )
+            {
+
+                zref = 0.0;
+                try
+                {
+                    zref = lexical_cast<double>(*it);
+                    return true;
+                }
+                catch (bad_lexical_cast)
+                {
+                    zref = 0.0;
+                    return false;
+                }
+            }
+
+        }
+    }
+    file.close();
     return true;
 }
