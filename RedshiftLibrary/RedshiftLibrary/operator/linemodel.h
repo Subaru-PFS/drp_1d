@@ -9,6 +9,7 @@
 #include <RedshiftLibrary/linemodel/multirollmodel.h>
 #include <RedshiftLibrary/linemodel/modelspectrumresult.h>
 #include <RedshiftLibrary/linemodel/modelfittingresult.h>
+#include <RedshiftLibrary/linemodel/modelcontinuumfittingresult.h>
 #include <RedshiftLibrary/linemodel/modelrulesresult.h>
 #include <RedshiftLibrary/operator/spectraFluxResult.h>
 #include <RedshiftLibrary/common/mask.h>
@@ -186,6 +187,7 @@ private:
 
     std::vector<std::shared_ptr<CModelSpectrumResult>  > m_savedModelSpectrumResults;
     std::vector<std::shared_ptr<CModelFittingResult>  > m_savedModelFittingResults;
+    std::vector<std::shared_ptr<CModelContinuumFittingResult>  > m_savedModelContinuumFittingResults;
     std::vector<std::shared_ptr<CModelRulesResult>  > m_savedModelRulesResults;
     std::vector<std::shared_ptr<CSpectraFluxResult>  > m_savedModelContinuumSpectrumResults;
 

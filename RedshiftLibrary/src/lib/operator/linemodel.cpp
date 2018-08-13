@@ -1183,6 +1183,16 @@ Int32 COperatorLineModel::ComputeSecondPass(CDataStore &dataStore,
             std::shared_ptr<CModelFittingResult>  resultfitmodel = std::shared_ptr<CModelFittingResult>( new CModelFittingResult(m_result->LineModelSolutions[idx], m_result->Redshifts[idx], m_result->ChiSquare[idx], m_result->restRayList, m_model->GetVelocityEmission(), m_model->GetVelocityAbsorption()) );
             m_savedModelFittingResults.push_back(resultfitmodel);
 
+            // CModelContinuumFittingResult
+            std::shared_ptr<CModelContinuumFittingResult>  resultfitcontinuummodel = std::shared_ptr<CModelContinuumFittingResult>( new CModelContinuumFittingResult(m_result->Redshifts[idx],
+                                                                                                                                                                     m_model->getFitContinuum_tplName(),
+                                                                                                                                                                     m_model->getFitContinuum_tplMerit(),
+                                                                                                                                                                     m_model->getFitContinuum_tplAmplitude(),
+                                                                                                                                                                     m_model->getFitContinuum_tplIsmDustCoeff(),
+                                                                                                                                                                     m_model->getFitContinuum_tplIgmMeiksinIdx()
+                                                                                                                                                                     ) );
+            m_savedModelContinuumFittingResults.push_back(resultfitcontinuummodel);
+
             // CModelRulesResult
             std::shared_ptr<CModelRulesResult>  resultrulesmodel = std::shared_ptr<CModelRulesResult>( new CModelRulesResult( m_model->GetModelRulesLog() ));
             m_savedModelRulesResults.push_back(resultrulesmodel);
@@ -1641,6 +1651,9 @@ void COperatorLineModel::storeGlobalModelResults( CDataStore &dataStore )
         std::string fname_fit = (boost::format("linemodel_fit_extrema_%1%") % k).str();
         dataStore.StoreScopedGlobalResult( fname_fit.c_str(), m_savedModelFittingResults[k] );
 
+        std::string fname_fitcontinuum = (boost::format("linemodel_fitcontinuum_extrema_%1%") % k).str();
+        dataStore.StoreScopedGlobalResult( fname_fitcontinuum.c_str(), m_savedModelContinuumFittingResults[k] );
+
         std::string fname_rules = (boost::format("linemodel_rules_extrema_%1%") % k).str();
         dataStore.StoreScopedGlobalResult( fname_rules.c_str(), m_savedModelRulesResults[k] );
     }
@@ -1674,6 +1687,9 @@ void COperatorLineModel::storePerTemplateModelResults( CDataStore &dataStore, co
 
         std::string fname_fit = (boost::format("linemodel_fit_extrema_%1%") % k).str();
         dataStore.StoreScopedPerTemplateResult(  tpl, fname_fit.c_str(), m_savedModelFittingResults[k] );
+
+        std::string fname_fitcontinuum = (boost::format("linemodel_fitcontinuum_extrema_%1%") % k).str();
+        dataStore.StoreScopedPerTemplateResult(  tpl, fname_fitcontinuum.c_str(), m_savedModelContinuumFittingResults[k] );
 
         std::string fname_rules = (boost::format("linemodel_rules_extrema_%1%") % k).str();
         dataStore.StoreScopedPerTemplateResult(  tpl, fname_rules.c_str(), m_savedModelRulesResults[k] );
