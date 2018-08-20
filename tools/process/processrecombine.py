@@ -194,7 +194,7 @@ class processRecombine(object):
                         shutil.copytree(source_path, dest_path)
                     except:
                         print("ERROR: unable to copy intermediate files for: {}".format(procTag))
-                        raise e
+                        
             f.close()
             
     def estimatePerSpectrumProcTime(self, clusterLogDirPath, datasetOutputPath):
