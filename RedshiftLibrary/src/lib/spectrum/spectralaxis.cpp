@@ -77,7 +77,7 @@ CSpectrumSpectralAxis& CSpectrumSpectralAxis::operator=( const CSpectrumSpectral
 /**
  * Shift current axis the input offset in the input direction.
  */
-Void CSpectrumSpectralAxis::ShiftByWaveLength( Float64 wavelengthOffset, EShiftDirection direction )
+void CSpectrumSpectralAxis::ShiftByWaveLength( Float64 wavelengthOffset, EShiftDirection direction )
 {
 	ShiftByWaveLength( *this, wavelengthOffset, direction );
 }
@@ -85,7 +85,7 @@ Void CSpectrumSpectralAxis::ShiftByWaveLength( Float64 wavelengthOffset, EShiftD
 /**
  * Copy the input axis samples and shift the axis the specified offset in the specidifed direction.
  */
-Void CSpectrumSpectralAxis::ShiftByWaveLength( const CSpectrumSpectralAxis& origin, Float64 wavelengthOffset, EShiftDirection direction )
+void CSpectrumSpectralAxis::ShiftByWaveLength( const CSpectrumSpectralAxis& origin, Float64 wavelengthOffset, EShiftDirection direction )
 {
     m_SpectralFlags = 0;
 
@@ -146,7 +146,7 @@ Void CSpectrumSpectralAxis::ShiftByWaveLength( const CSpectrumSpectralAxis& orig
 
 }
 
-Void CSpectrumSpectralAxis::ApplyOffset( Float64 wavelengthOffset )
+void CSpectrumSpectralAxis::ApplyOffset( Float64 wavelengthOffset )
 {
 
     for( Int32 i=0; i< m_Samples.size(); i++ )
@@ -159,7 +159,7 @@ Void CSpectrumSpectralAxis::ApplyOffset( Float64 wavelengthOffset )
 /**
  * Copy the input axis, including its samples.
  */
-Void CSpectrumSpectralAxis::CopyFrom( const CSpectrumSpectralAxis& other )
+void CSpectrumSpectralAxis::CopyFrom( const CSpectrumSpectralAxis& other )
 {
     m_SpectralFlags = other.m_SpectralFlags;
 
@@ -258,7 +258,7 @@ TLambdaRange CSpectrumSpectralAxis::GetLambdaRange() const
 /**
  * 
  */
-Void CSpectrumSpectralAxis::GetMask( const TFloat64Range& lambdaRange,  CMask& mask ) const
+void CSpectrumSpectralAxis::GetMask( const TFloat64Range& lambdaRange,  CMask& mask ) const
 {
     TFloat64Range range = lambdaRange;
 

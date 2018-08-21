@@ -25,7 +25,7 @@ CCalibrationConfigHelper::~CCalibrationConfigHelper()
 {
 }
 
-Void CCalibrationConfigHelper::Init( std::string calibrationPath)
+void CCalibrationConfigHelper::Init( std::string calibrationPath)
 {
     bfs::path calibrationFolder( calibrationPath.c_str() );
     //std::string dirPath = (calibrationFolder.append( tplshapedcatalog_relpath.c_str() )).string();
@@ -35,7 +35,7 @@ Void CCalibrationConfigHelper::Init( std::string calibrationPath)
 }
 
 
-Void CCalibrationConfigHelper::Load( const char* filePath )
+void CCalibrationConfigHelper::Load( const char* filePath )
 {
     ifstream file;
     file.open( filePath, ifstream::in );

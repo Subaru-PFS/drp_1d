@@ -31,7 +31,7 @@ Bool CRuleRatioRange::Check( CLineModelElementList& LineModelElementList )
 /**
  * For two distinct lines, if neither IsOutsideLambdaRange, and their amplitudes are beyond a range (considering coeff), SetFittedAmplitude of each with corrected values.
  **/
-Void CRuleRatioRange::Correct( CLineModelElementList& LineModelElementList )
+void CRuleRatioRange::Correct( CLineModelElementList& LineModelElementList )
 {
     Int32 iA = LineModelElementList.FindElementIndex( m_LineA, m_LineType);
     if( iA==-1 )

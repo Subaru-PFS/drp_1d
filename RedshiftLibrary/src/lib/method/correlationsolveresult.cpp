@@ -19,7 +19,7 @@ CCorrelationSolveResult::~CCorrelationSolveResult()
 
 }
 
-Void CCorrelationSolveResult::Save( const CDataStore& store, std::ostream& stream ) const
+void CCorrelationSolveResult::Save( const CDataStore& store, std::ostream& stream ) const
 {
     Float64 redshift;
     Float64 merit;
@@ -36,7 +36,7 @@ Void CCorrelationSolveResult::Save( const CDataStore& store, std::ostream& strea
 }
 
 
-Void CCorrelationSolveResult::SaveLine( const CDataStore& store, std::ostream& stream ) const
+void CCorrelationSolveResult::SaveLine( const CDataStore& store, std::ostream& stream ) const
 {
     Float64 redshift;
     Float64 merit;

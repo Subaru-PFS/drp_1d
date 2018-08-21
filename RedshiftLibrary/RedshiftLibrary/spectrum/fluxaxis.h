@@ -31,7 +31,7 @@ public:
     const TFloat64List&      GetError() const;
     TFloat64List&            GetError();
 
-    Void                SetSize( UInt32 s );
+    void                SetSize( UInt32 s );
 
     Bool                ApplyMeanSmooth( UInt32 kernelHalfWidth );
     Bool                ApplyMedianSmooth( UInt32 kernelHalfWidth );

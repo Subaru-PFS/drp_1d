@@ -385,7 +385,7 @@ Bool CSpectrumFluxAxis::RebinVarianceWeighted( const CSpectrumFluxAxis& sourceFl
     return true;
 }
 
-Void CSpectrumFluxAxis::SetSize( UInt32 s )
+void CSpectrumFluxAxis::SetSize( UInt32 s )
 {
     CSpectrumAxis::SetSize( s );
     m_StatError.resize( s );

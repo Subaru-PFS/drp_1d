@@ -17,7 +17,7 @@ CLineMatchingSolveResult::~CLineMatchingSolveResult()
 
 }
 
-Void CLineMatchingSolveResult::Save( const CDataStore& store, std::ostream& stream ) const
+void CLineMatchingSolveResult::Save( const CDataStore& store, std::ostream& stream ) const
 {
     Float64 redshift;
     Float64 merit;
@@ -34,7 +34,7 @@ Void CLineMatchingSolveResult::Save( const CDataStore& store, std::ostream& stre
                 << merit << std::endl;
 }
 
-Void CLineMatchingSolveResult::SaveLine( const CDataStore& store, std::ostream& stream ) const
+void CLineMatchingSolveResult::SaveLine( const CDataStore& store, std::ostream& stream ) const
 {
     Float64 redshift;
     Float64 merit;

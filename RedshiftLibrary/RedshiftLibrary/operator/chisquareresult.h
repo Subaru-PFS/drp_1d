@@ -16,16 +16,16 @@ public:
     CChisquareResult();
     virtual ~CChisquareResult();
 
-    Void Init( UInt32 n, Int32 nISM, Int32 nIGM);
+    void Init( UInt32 n, Int32 nISM, Int32 nIGM);
 
-    Void Save( const CDataStore& store, std::ostream& stream ) const;
-    Void SaveLine( const CDataStore& store, std::ostream& stream ) const;
+    void Save( const CDataStore& store, std::ostream& stream ) const;
+    void SaveLine( const CDataStore& store, std::ostream& stream ) const;
     inline Int32 GetEvidenceFromPdf(const CDataStore& store, Float64 &evidence) const
     {
         return 1;
     }
 
-    Void Load( std::istream& stream );
+    void Load( std::istream& stream );
 
     TFloat64List            Redshifts;
     TFloat64List            ChiSquare;

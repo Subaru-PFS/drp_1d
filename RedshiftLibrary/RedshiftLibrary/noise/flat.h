@@ -20,9 +20,9 @@ public:
     CNoiseFlat();
     ~CNoiseFlat();
 
-    Void SetStatErrorLevel( Float64 level );
+    void SetStatErrorLevel( Float64 level );
 
-    Void AddNoise( CSpectrum& s1 ) const;
+    void AddNoise( CSpectrum& s1 ) const;
 
 private:
 

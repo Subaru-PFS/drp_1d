@@ -33,7 +33,7 @@ CLog::~CLog()
 /**
  * Calls LogEntry with an Error message.
  */
-Void CLog::LogError( const char* format, ... )
+void CLog::LogError( const char* format, ... )
 {
     m_Mutex.Lock();
 
@@ -48,7 +48,7 @@ Void CLog::LogError( const char* format, ... )
 /**
  * Calls LogEntry with a Warning message.
  */
-Void CLog::LogWarning( const char* format, ... )
+void CLog::LogWarning( const char* format, ... )
 {
     m_Mutex.Lock();
 
@@ -63,7 +63,7 @@ Void CLog::LogWarning( const char* format, ... )
 /**
  * Calls LogEntry with an Information message.
  */
-Void CLog::LogInfo( const char* format, ... )
+void CLog::LogInfo( const char* format, ... )
 {
     m_Mutex.Lock();
 
@@ -78,7 +78,7 @@ Void CLog::LogInfo( const char* format, ... )
 /**
  * Calls LogEntry with an Information message.
  */
-Void CLog::LogDetail( const char* format, ... )
+void CLog::LogDetail( const char* format, ... )
 {
     m_Mutex.Lock();
 
@@ -93,7 +93,7 @@ Void CLog::LogDetail( const char* format, ... )
 /**
  * Calls LogEntry with a Debug message.
  */
-Void CLog::LogDebug( const char* format, ... )
+void CLog::LogDebug( const char* format, ... )
 {
     m_Mutex.Lock();
 
@@ -108,7 +108,7 @@ Void CLog::LogDebug( const char* format, ... )
 /**
  * Calls LogEntry in every handler registered on the table with the input message, if the handler has a level mask <= the message level.
  */
-Void CLog::LogEntry( ELevel lvl, const char* format, va_list& args )
+void CLog::LogEntry( ELevel lvl, const char* format, va_list& args )
 {
   Int32 i;
 
@@ -131,14 +131,14 @@ CMutex& CLog::GetSynchMutex()
     return m_Mutex;
 }
 
-Void CLog::Indent()
+void CLog::Indent()
 {
 
     m_IndentBuffer[m_IndentCount] = '\t';
     m_IndentCount++;
     m_IndentBuffer[m_IndentCount] = 0;
 }
-Void CLog::UnIndent()
+void CLog::UnIndent()
 {
     if( m_IndentCount == 0 )
         return;
@@ -151,7 +151,7 @@ Void CLog::UnIndent()
 /**
  * Remove the reference for the input handler if it exists in the handler table.
  */
-Void CLog::RemoveHandler( CLogHandler& handler )
+void CLog::RemoveHandler( CLogHandler& handler )
 {
     Int32 i;
 
@@ -169,7 +169,7 @@ Void CLog::RemoveHandler( CLogHandler& handler )
  * Insert a reference to the input handler in the first vacant position in the handler table.
  * Will _not_ prevent a handler to be included multiple times.
  */
-Void CLog::AddHandler( CLogHandler& handler )
+void CLog::AddHandler( CLogHandler& handler )
 {
     Int32 i;
 

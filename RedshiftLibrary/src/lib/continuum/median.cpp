@@ -35,7 +35,7 @@ CContinuumMedian::~CContinuumMedian()
 /**
  * Sets m_MeanSmoothAmplitude to width.
  */
-Void CContinuumMedian::SetMeanKernelWidth( Float32 width )
+void CContinuumMedian::SetMeanKernelWidth( Float32 width )
 {
     m_MeanSmoothAmplitude = width;
 }
@@ -43,7 +43,7 @@ Void CContinuumMedian::SetMeanKernelWidth( Float32 width )
 /**
  * Sets m_MedianSmoothAmplitude to width.
  */
-Void CContinuumMedian::SetMedianKernelWidth( Float32 width )
+void CContinuumMedian::SetMedianKernelWidth( Float32 width )
 {
     m_MedianSmoothAmplitude = width;
 }
@@ -51,7 +51,7 @@ Void CContinuumMedian::SetMedianKernelWidth( Float32 width )
 /**
  * Sets m_MedianSmoothCycles to count.
  */
-Void CContinuumMedian::SetMedianCycleCount( UInt32 count )
+void CContinuumMedian::SetMedianCycleCount( UInt32 count )
 {
     m_MedianSmoothCycles = count;
 }

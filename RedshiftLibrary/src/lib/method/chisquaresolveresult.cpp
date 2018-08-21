@@ -19,7 +19,7 @@ CChisquareSolveResult::~CChisquareSolveResult()
 
 }
 
-Void CChisquareSolveResult::Save( const CDataStore& store, std::ostream& stream ) const
+void CChisquareSolveResult::Save( const CDataStore& store, std::ostream& stream ) const
 {
     Float64 redshift;
     Float64 merit;
@@ -87,7 +87,7 @@ Bool CChisquareSolveResult::GetBestRedshiftPerTemplateString( const CDataStore& 
 
 }
 
-Void CChisquareSolveResult::SaveLine( const CDataStore& store, std::ostream& stream ) const
+void CChisquareSolveResult::SaveLine( const CDataStore& store, std::ostream& stream ) const
 {
     Float64 redshift;
     Float64 merit;

@@ -43,7 +43,7 @@ CGaussianFit::~CGaussianFit()
 /**
  * Sets amplitude to m_Amplitude, position to m_Mu and width to m_C.
  */
-Void CGaussianFit::GetResults( Float64& amplitude, Float64& position, Float64& width ) const
+void CGaussianFit::GetResults( Float64& amplitude, Float64& position, Float64& width ) const
 {
     amplitude =  m_Amplitude;
     position = m_Mu;
@@ -53,7 +53,7 @@ Void CGaussianFit::GetResults( Float64& amplitude, Float64& position, Float64& w
 /**
  * Sets coeff0 to m_coeff0.
  */
-Void CGaussianFit::GetResultsPolyCoeff0( Float64& coeff0 ) const
+void CGaussianFit::GetResultsPolyCoeff0( Float64& coeff0 ) const
 {
     coeff0 =  m_coeff0;
 }
@@ -61,7 +61,7 @@ Void CGaussianFit::GetResultsPolyCoeff0( Float64& coeff0 ) const
 /**
  * Sets amplitude to m_AmplitudeErr, position to m_MuErr and width to m_CErr.
  */
-Void CGaussianFit::GetResultsError( Float64& amplitude, Float64& position, Float64& width ) const
+void CGaussianFit::GetResultsError( Float64& amplitude, Float64& position, Float64& width ) const
 {
     amplitude = m_AmplitudeErr;
     position = m_MuErr;
@@ -70,7 +70,7 @@ Void CGaussianFit::GetResultsError( Float64& amplitude, Float64& position, Float
 /**
  * Calculate a first approximate value for the gaussian fit, and set the referenced parameters to these values.
  */
-Void CGaussianFit::ComputeFirstGuess( const CSpectrum& spectrum, const TInt32Range& studyRange, Int32 polyOrder, Float64& peakValue, Float64& peakPos, Float64& gaussAmp )
+void CGaussianFit::ComputeFirstGuess( const CSpectrum& spectrum, const TInt32Range& studyRange, Int32 polyOrder, Float64& peakValue, Float64& peakPos, Float64& gaussAmp )
 {
     Int32 n = studyRange.GetLength();
     const Float64* x = spectrum.GetSpectralAxis().GetSamples() + studyRange.GetBegin();

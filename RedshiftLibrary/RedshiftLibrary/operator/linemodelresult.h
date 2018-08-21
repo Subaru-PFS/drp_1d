@@ -22,14 +22,14 @@ public:
 
     Int32 Init(std::vector<Float64> redshifts, CRayCatalog::TRayVector restRays, Int32 nTplshapes, std::vector<Float64> tplshapesPriors);
 
-    Void Save( const CDataStore& store, std::ostream& stream ) const;
-    Void SaveLine( const CDataStore& store, std::ostream& stream ) const;
+    void Save( const CDataStore& store, std::ostream& stream ) const;
+    void SaveLine( const CDataStore& store, std::ostream& stream ) const;
     inline Int32 GetEvidenceFromPdf(const CDataStore& store, Float64 &evidence) const
     {
         return 1;
     }
 
-    Void Load( std::istream& stream );
+    void Load( std::istream& stream );
 
     Int32 GetNLinesOverCutThreshold(Int32 extremaIdx, Float64 snrThres, Float64 fitThres) const;
     std::vector<bool> GetStrongLinesPresence( UInt32 filterType, std::vector<CLineModelSolution> linemodelsols ) const;

@@ -10,13 +10,13 @@ CQuickSort<T>::~CQuickSort()
 }
 
 template < class T >
-Void CQuickSort<T>::Sort( T* value, Int32 n ) const
+void CQuickSort<T>::Sort( T* value, Int32 n ) const
 {
     Sort(value, 0, n );
 }
 
 template < class T >
-Void CQuickSort<T>::Sort( T* value, Int32 beg, Int32 end ) const
+void CQuickSort<T>::Sort( T* value, Int32 beg, Int32 end ) const
 {
     if (end > beg + 1)
     {
@@ -37,7 +37,7 @@ Void CQuickSort<T>::Sort( T* value, Int32 beg, Int32 end ) const
 }
 
 template < class T >
-Void CQuickSort<T>::SortIndexes( const T* value, Int32* index, Int32 n ) const
+void CQuickSort<T>::SortIndexes( const T* value, Int32* index, Int32 n ) const
 {
     vector<T> tmp( n );
 
@@ -51,7 +51,7 @@ Void CQuickSort<T>::SortIndexes( const T* value, Int32* index, Int32 n ) const
 }
 
 template < class T >
-Void CQuickSort<T>::SortIndexes( T* value, Int32* index, Int32 beg, Int32 end ) const
+void CQuickSort<T>::SortIndexes( T* value, Int32* index, Int32 beg, Int32 end ) const
 {
     if (end > beg + 1)
     {

@@ -214,7 +214,7 @@ CLineModelElementList::~CLineModelElementList()
     }
 }
 
-Void CLineModelElementList::initLambdaOffsets()
+void CLineModelElementList::initLambdaOffsets()
 {
   CLineCatalogsOffsets* ctlgOffsets = new CLineCatalogsOffsets();
   ctlgOffsets->Init(m_calibrationPath);

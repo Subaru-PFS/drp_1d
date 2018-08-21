@@ -36,7 +36,7 @@ CModelRulesResult::~CModelRulesResult()
 /**
  * \brief Prints the rules of the Linemodel in the argument store, using the argument stream as output.
  **/
-Void CModelRulesResult::Save( const CDataStore& store, std::ostream& stream ) const
+void CModelRulesResult::Save( const CDataStore& store, std::ostream& stream ) const
 {
     for(Int32 k=0; k<LogStrings.size(); k++)
     {
@@ -47,7 +47,7 @@ Void CModelRulesResult::Save( const CDataStore& store, std::ostream& stream ) co
 /**
  * \brief Empty method.
  **/
-Void CModelRulesResult::SaveLine(const CDataStore &store, std::ostream& stream ) const
+void CModelRulesResult::SaveLine(const CDataStore &store, std::ostream& stream ) const
 {
 
 }

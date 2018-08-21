@@ -18,7 +18,7 @@ CBlindSolveResult::~CBlindSolveResult()
 
 }
 
-Void CBlindSolveResult::Save( const CDataStore& store, std::ostream& stream ) const
+void CBlindSolveResult::Save( const CDataStore& store, std::ostream& stream ) const
 {
     Float64 redshift;
     Float64 merit;
@@ -34,7 +34,7 @@ Void CBlindSolveResult::Save( const CDataStore& store, std::ostream& stream ) co
                 << tplName << std::endl;
 }
 
-Void CBlindSolveResult::SaveLine( const CDataStore& store, std::ostream& stream ) const
+void CBlindSolveResult::SaveLine( const CDataStore& store, std::ostream& stream ) const
 {
     Float64 redshift;
     Float64 merit;

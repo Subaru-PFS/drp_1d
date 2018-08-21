@@ -16,7 +16,7 @@ CLogHandler::~CLogHandler()
     m_Logger->RemoveHandler( *this );
 }
 
-Void CLogHandler::SetLevelMask( UInt32 mask )
+void CLogHandler::SetLevelMask( UInt32 mask )
 {
     m_LevelMask = mask;
 }

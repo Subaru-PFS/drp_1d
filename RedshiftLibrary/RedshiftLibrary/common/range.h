@@ -37,18 +37,18 @@ public:
         return m_Begin == m_End;
     }
 
-    Void Set( const T& b,  const T& e )
+    void Set( const T& b,  const T& e )
     {
         m_Begin = b;
         m_End = e;
     }
 
-    Void SetBegin( const T& v )
+    void SetBegin( const T& v )
     {
         m_Begin = v;
     }
 
-    Void SetEnd( const T& v )
+    void SetEnd( const T& v )
     {
         m_End = v;
     }

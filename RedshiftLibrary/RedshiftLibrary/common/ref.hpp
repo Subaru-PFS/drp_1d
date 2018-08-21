@@ -34,7 +34,7 @@ DataType* CRef<DataType>::GetPointer() const
 }
 
 template < class DataType >
-Void CRef<DataType>::ReleasePointer()
+void CRef<DataType>::ReleasePointer()
 {
     if( m_Pointer == NULL ) 
         return;
@@ -51,7 +51,7 @@ Void CRef<DataType>::ReleasePointer()
 }
 
 template < class DataType >
-Void CRef<DataType>::AcquirePointer( const Void* n )
+void CRef<DataType>::AcquirePointer( const void* n )
 {
     if( m_Pointer != NULL ) 
         ReleasePointer(); 

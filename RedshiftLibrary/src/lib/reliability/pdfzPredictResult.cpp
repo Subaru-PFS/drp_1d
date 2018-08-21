@@ -25,7 +25,7 @@ CPdfzPredictResult::~CPdfzPredictResult()
 }
 
 
-Void CPdfzPredictResult::Save( const CDataStore& store, std::ostream& stream ) const
+void CPdfzPredictResult::Save( const CDataStore& store, std::ostream& stream ) const
 {
     stream << "#Predicted_Label(zReliability) "<<" \t" << m_predLabel.c_str() << std::endl;
 	stream << "#Class \t PosteriorProbability_Prediction" << "\t"<< std::endl;
@@ -49,7 +49,7 @@ Void CPdfzPredictResult::Save( const CDataStore& store, std::ostream& stream ) c
 }
 
 
-Void CPdfzPredictResult::SaveLine( const CDataStore& store, std::ostream& stream ) const
+void CPdfzPredictResult::SaveLine( const CDataStore& store, std::ostream& stream ) const
 {
 	stream
     << "#zReliability_Pred \t" <<m_predLabel.c_str() << "\t"

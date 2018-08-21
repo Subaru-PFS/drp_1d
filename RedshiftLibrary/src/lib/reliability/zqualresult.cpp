@@ -29,7 +29,7 @@ CQualzResult::~CQualzResult()
 
 }
 
-Void CQualzResult::Save ( const CDataStore& store, std::ostream& stream ) const
+void CQualzResult::Save ( const CDataStore& store, std::ostream& stream ) const
 {
 	std::string scope = store.GetScope( *this ) + "zReliability/result.zpredict";
 	auto zqualResults = store.GetGlobalResult(scope.c_str());
@@ -65,7 +65,7 @@ Void CQualzResult::Save ( const CDataStore& store, std::ostream& stream ) const
 
 }
 
-Void CQualzResult::SaveLine( const CDataStore& store, std::ostream& stream ) const
+void CQualzResult::SaveLine( const CDataStore& store, std::ostream& stream ) const
 {
 	std::string scope = store.GetScope( *this ) + "zReliability/result.zpredict";
 	auto zqualResults = store.GetGlobalResult(scope.c_str());

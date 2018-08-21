@@ -77,10 +77,10 @@ public:
 
     const std::string&  GetVelGroupName() const;
 
-    Void                Save( std::ostream& stream ) const;
-    Void                SaveDescription( std::ostream& stream ) const;
+    void                Save( std::ostream& stream ) const;
+    void                SaveDescription( std::ostream& stream ) const;
 
-    Void                ConvertVacuumToAir();
+    void                ConvertVacuumToAir();
 
 private:
 

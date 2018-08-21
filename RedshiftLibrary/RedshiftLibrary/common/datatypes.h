@@ -24,7 +24,7 @@ namespace NSEpic
 	typedef	double                  Float64;
 	typedef char                    Char;
 	typedef unsigned char           Byte;
-	typedef void                    Void;
+	//typedef void                    Void;
 	typedef unsigned int            Bool;
 	typedef const char*             String;
 

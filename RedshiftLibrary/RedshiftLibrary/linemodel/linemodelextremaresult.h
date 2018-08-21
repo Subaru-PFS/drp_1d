@@ -20,11 +20,11 @@ public:
     CLineModelExtremaResult();
     ~CLineModelExtremaResult();
 
-    Void Resize(Int32 size);
+    void Resize(Int32 size);
 
-    Void Save( const CDataStore& store, std::ostream& stream ) const;
-    //Void SaveLine( const CDataStore& store, std::ostream& stream ) const;
-    //Void Load( std::istream& stream );
+    void Save( const CDataStore& store, std::ostream& stream ) const;
+    //void SaveLine( const CDataStore& store, std::ostream& stream ) const;
+    //void Load( std::istream& stream );
 
     //Extrema results
     TFloat64List            Extrema;    // z extrema

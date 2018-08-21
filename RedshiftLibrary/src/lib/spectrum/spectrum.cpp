@@ -223,7 +223,7 @@ const std::string CSpectrum::GetName() const
     return m_Name;
 }
 
-Void CSpectrum::SetName( const char* name )
+void CSpectrum::SetName( const char* name )
 {
     m_Name = name;
 }

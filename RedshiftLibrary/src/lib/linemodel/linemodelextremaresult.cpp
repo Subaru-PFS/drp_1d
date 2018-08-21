@@ -27,7 +27,7 @@ CLineModelExtremaResult::~CLineModelExtremaResult()
 
 }
 
-Void CLineModelExtremaResult::Resize(Int32 size)
+void CLineModelExtremaResult::Resize(Int32 size)
 {
     Extrema.resize(size);
     ExtremaMerit.resize(size);
@@ -67,7 +67,7 @@ Void CLineModelExtremaResult::Resize(Int32 size)
  * Print each SigmaZ as a comment.
  * Print each LogArea as a comment.
  **/
-Void CLineModelExtremaResult::Save( const CDataStore& store, std::ostream& stream ) const
+void CLineModelExtremaResult::Save( const CDataStore& store, std::ostream& stream ) const
 {
     // save extrema list, on 1 line
     if(Extrema.size()>0){

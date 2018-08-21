@@ -17,7 +17,7 @@ CCorrelationResult::~CCorrelationResult()
 
 }
 
-Void CCorrelationResult::Load( std::istream& stream )
+void CCorrelationResult::Load( std::istream& stream )
 {
     // Clear current lines list
     Redshifts.clear();
@@ -97,7 +97,7 @@ Void CCorrelationResult::Load( std::istream& stream )
     }
 }
 
-Void CCorrelationResult::Save( const CDataStore& store, std::ostream& stream ) const
+void CCorrelationResult::Save( const CDataStore& store, std::ostream& stream ) const
 {
     stream <<  "#Redshifts\tCorrelation\tOverlap"<< std::endl;
     for ( int i=0; i<Redshifts.size(); i++)
@@ -115,7 +115,7 @@ Void CCorrelationResult::Save( const CDataStore& store, std::ostream& stream ) c
     }
 }
 
-Void CCorrelationResult::SaveLine( const CDataStore& store, std::ostream& stream ) const
+void CCorrelationResult::SaveLine( const CDataStore& store, std::ostream& stream ) const
 {
     stream << "tCorrelationResult" << "\t" << Redshifts.size() << std::endl;
 }

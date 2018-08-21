@@ -62,7 +62,7 @@ Int32 CPdfCandidateszResult::Compute( std::vector<Float64> zc,  std::vector<Floa
 }
 
 
-Void CPdfCandidateszResult::Save( const CDataStore& store, std::ostream& stream ) const
+void CPdfCandidateszResult::Save( const CDataStore& store, std::ostream& stream ) const
 {
     stream  << "#fullwidth = " << Fullwidth << std::endl;
     stream  << "#method = " << optMethod << std::endl;
@@ -93,7 +93,7 @@ Void CPdfCandidateszResult::Save( const CDataStore& store, std::ostream& stream 
     stream << std::endl;
 }
 
-Void CPdfCandidateszResult::SaveLine( const CDataStore& store, std::ostream& stream ) const
+void CPdfCandidateszResult::SaveLine( const CDataStore& store, std::ostream& stream ) const
 {
     stream  << store.GetSpectrumName() << "\t" << store.GetProcessingID() << "\t";
 

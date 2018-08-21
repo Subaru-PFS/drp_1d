@@ -25,7 +25,7 @@ CLineMatching2SolveResult::~CLineMatching2SolveResult()
 /**
  * Collects from GetBestResult in the store and pretty outputs to stream.
  */
-Void CLineMatching2SolveResult::Save( const CDataStore& store, std::ostream& stream ) const
+void CLineMatching2SolveResult::Save( const CDataStore& store, std::ostream& stream ) const
 {
     Float64 redshift;
     Float64 merit;
@@ -42,7 +42,7 @@ Void CLineMatching2SolveResult::Save( const CDataStore& store, std::ostream& str
 /**
  * Collects from GetBestResult in the store and pretty outputs to stream, with a "LineMatching2Solve" suffix.
  */
-Void CLineMatching2SolveResult::SaveLine( const CDataStore& store, std::ostream& stream ) const
+void CLineMatching2SolveResult::SaveLine( const CDataStore& store, std::ostream& stream ) const
 {
     Float64 redshift;
     Float64 merit;

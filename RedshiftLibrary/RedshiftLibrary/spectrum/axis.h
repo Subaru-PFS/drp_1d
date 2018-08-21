@@ -31,7 +31,7 @@ public:
     Float64*            GetSamples();
     UInt32              GetSamplesCount() const;
     
-    virtual Void        SetSize( UInt32 s );
+    virtual void        SetSize( UInt32 s );
 
 protected:
 

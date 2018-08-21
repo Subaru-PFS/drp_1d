@@ -14,12 +14,12 @@ COperatorResult::~COperatorResult()
 
 
 
-Void COperatorResult::SetReliabilityLabel( std::string lbl )
+void COperatorResult::SetReliabilityLabel( std::string lbl )
 {
     m_ReliabilityLabel = lbl;
 }
 
-Void COperatorResult::SetTypeLabel( std::string lbl )
+void COperatorResult::SetTypeLabel( std::string lbl )
 {
     m_TypeLabel = lbl;
 }

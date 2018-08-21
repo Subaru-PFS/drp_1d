@@ -13,7 +13,7 @@ using namespace NSEpic;
 /**
  * Wrapper around Log.LogInfo.
  */
-Void NSEpic::DebugLogInfo( String format, ... )
+void NSEpic::DebugLogInfo( String format, ... )
 {
     va_list args;
     va_start( args, format );
@@ -24,7 +24,7 @@ Void NSEpic::DebugLogInfo( String format, ... )
 /**
  * Wrapper around Log.LogWarning.
  */
-Void NSEpic::DebugLogWarning( String format, ... )
+void NSEpic::DebugLogWarning( String format, ... )
 {
     va_list args;
     va_start( args, format );
@@ -35,7 +35,7 @@ Void NSEpic::DebugLogWarning( String format, ... )
 /**
  * Wrapper around Log.LogError.
  */
-Void NSEpic::DebugLogError( String format, ... )
+void NSEpic::DebugLogError( String format, ... )
 {
     va_list args;
     va_start( args, format );
@@ -47,7 +47,7 @@ Void NSEpic::DebugLogError( String format, ... )
 /**
  * Traceback print.
  */
-Void NSEpic::DebugLogCodeInformation( String file, UInt32 line, String func )
+void NSEpic::DebugLogCodeInformation( String file, UInt32 line, String func )
 {
     Log.LogInfo( "%s()\n%s:%d", func, file, line );
 }
@@ -55,7 +55,7 @@ Void NSEpic::DebugLogCodeInformation( String file, UInt32 line, String func )
 /**
  * Raises SIGABRT.
  */
-Void NSEpic::DebugRaiseException()
+void NSEpic::DebugRaiseException()
 {
     raise( SIGABRT );
 }
@@ -63,7 +63,7 @@ Void NSEpic::DebugRaiseException()
 /**
  * Raises SIGABRT.
  */
-Void NSEpic::DebugBreakExecution()
+void NSEpic::DebugBreakExecution()
 {
     raise( SIGABRT );
 }
@@ -81,7 +81,7 @@ String NSEpic::DebugGetDumpDirectory()
 /**
  * Empty.
  */
-Void NSEpic::DebugCreateDump( Void* dumpData )
+void NSEpic::DebugCreateDump( void* dumpData )
 {
 
 }
@@ -89,7 +89,7 @@ Void NSEpic::DebugCreateDump( Void* dumpData )
 /**
  * Calls signal with a SignalHandler parameter.
  */
-Void NSEpic::InstallSignalHandler()
+void NSEpic::InstallSignalHandler()
 {
     signal( SIGSEGV, SignalHandler );
 }
@@ -97,7 +97,7 @@ Void NSEpic::InstallSignalHandler()
 /**
  * Helper structure to pass arguments to signal.
  */
-Void NSEpic::SignalHandler(int sig)
+void NSEpic::SignalHandler(int sig)
 {
   void *array[16];
   size_t size;

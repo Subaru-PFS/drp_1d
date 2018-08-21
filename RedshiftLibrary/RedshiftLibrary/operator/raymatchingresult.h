@@ -50,14 +50,14 @@ namespace NSEpic
     CRayMatchingResult();
     virtual ~CRayMatchingResult();
 
-    Void Save( const CDataStore& store, std::ostream& stream ) const;
-    Void SaveLine( const CDataStore& store, std::ostream& stream ) const;
+    void Save( const CDataStore& store, std::ostream& stream ) const;
+    void SaveLine( const CDataStore& store, std::ostream& stream ) const;
     inline Int32 GetEvidenceFromPdf(const CDataStore& store, Float64 &evidence) const
     {
         return 1;
     }
 
-    Void SaveSolutionSetToStream( std::ostream& stream, TSolutionSetList selectedResults, Int32 type) const;
+    void SaveSolutionSetToStream( std::ostream& stream, TSolutionSetList selectedResults, Int32 type) const;
 
     Bool GetBestRedshift( Float64& Redshift, Int32& MatchingNumber ) const;
     Bool GetBestMatchNumRedshift( Float64& Redshift, Int32& MatchingNumber ) const;
@@ -73,7 +73,7 @@ namespace NSEpic
     TFloat64List GetRoundedRedshiftCandidatesOverNumber( Int32 number, Float64 step ) const;
     TFloat64List GetExtendedRedshiftCandidatesOverNumber( Int32 number, Float64 step, Float64 rangeWidth ) const;
 
-    Void FilterWithRules( CSpectrum spc, TFloat64Range lambdaRange, Float64 winsize );
+    void FilterWithRules( CSpectrum spc, TFloat64Range lambdaRange, Float64 winsize );
 
     TSolutionSetList SolutionSetList;
     TSolutionSetList FilteredSolutionSetList;

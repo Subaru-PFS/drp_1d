@@ -18,7 +18,7 @@ CPdfLogResult::~CPdfLogResult()
 
 }
 
-Void CPdfLogResult::SetSize( UInt32 n )
+void CPdfLogResult::SetSize( UInt32 n )
 {
     Redshifts.resize(n);
     valProbaLog.resize(n);
@@ -26,7 +26,7 @@ Void CPdfLogResult::SetSize( UInt32 n )
     Status.resize(n);
 }
 
-Void CPdfLogResult::Load( std::istream& stream )
+void CPdfLogResult::Load( std::istream& stream )
 {
     // Clear current list
     Redshifts.clear();
@@ -106,7 +106,7 @@ Void CPdfLogResult::Load( std::istream& stream )
     }
 }
 
-Void CPdfLogResult::Save( const CDataStore& store, std::ostream& stream ) const
+void CPdfLogResult::Save( const CDataStore& store, std::ostream& stream ) const
 {
     stream <<  "#Redshifts\tPdfLog\tOverlap"<< std::endl;
     for ( Int32 i=0; i<Redshifts.size(); i++)
@@ -122,7 +122,7 @@ Void CPdfLogResult::Save( const CDataStore& store, std::ostream& stream ) const
     }
 }
 
-Void CPdfLogResult::SaveLine( const CDataStore& store, std::ostream& stream ) const
+void CPdfLogResult::SaveLine( const CDataStore& store, std::ostream& stream ) const
 {
 	stream.precision(20);
     stream << "CPdfLogResult" << "\t" << Redshifts.size() << std::endl;

@@ -19,7 +19,7 @@ CChisquareResult::~CChisquareResult()
 
 }
 
-Void CChisquareResult::Init(UInt32 n , Int32 nISM, Int32 nIGM)
+void CChisquareResult::Init(UInt32 n , Int32 nISM, Int32 nIGM)
 {
     ChiSquare.resize( n );
     FitAmplitude.resize( n );
@@ -45,7 +45,7 @@ Void CChisquareResult::Init(UInt32 n , Int32 nISM, Int32 nIGM)
     }
 }
 
-Void CChisquareResult::Load( std::istream& stream )
+void CChisquareResult::Load( std::istream& stream )
 {
     // Clear current lines list
     Redshifts.clear();
@@ -128,7 +128,7 @@ Void CChisquareResult::Load( std::istream& stream )
     }
 }
 
-Void CChisquareResult::Save( const CDataStore& store, std::ostream& stream ) const
+void CChisquareResult::Save( const CDataStore& store, std::ostream& stream ) const
 {
     stream <<  "#Redshifts\tChiSquare\tOverlap"<< std::endl;
     for ( int i=0; i<Redshifts.size(); i++)
@@ -219,7 +219,7 @@ Void CChisquareResult::Save( const CDataStore& store, std::ostream& stream ) con
     }
 }
 
-Void CChisquareResult::SaveLine( const CDataStore& store, std::ostream& stream ) const
+void CChisquareResult::SaveLine( const CDataStore& store, std::ostream& stream ) const
 {
     stream << "ChisquareResult" << "\t" << Redshifts.size() << std::endl;
 }

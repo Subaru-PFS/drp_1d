@@ -190,7 +190,7 @@ const std::string& CRay::GetVelGroupName() const
  *
  * see. Morton 1991, ApJS, 77, 119.
  */
-Void CRay::ConvertVacuumToAir()
+void CRay::ConvertVacuumToAir()
 {
     Float64 s = (1e-4)/m_Pos;
     Float64 coeff = 1 + 8.34254*1e-5 + (2.406147*1e-2)/(130-s*s) + (1.5998*1e-4)/(38.9-s*s) ;
@@ -200,7 +200,7 @@ Void CRay::ConvertVacuumToAir()
     return;
 }
 
-Void CRay::Save(  std::ostream& stream ) const
+void CRay::Save(  std::ostream& stream ) const
 {
     stream << GetName() << "\t" << GetPosition() << "\t";
     if( GetIsStrong() )
@@ -210,7 +210,7 @@ Void CRay::Save(  std::ostream& stream ) const
     stream << GetCut() << "\t" << GetWidth() << "\t" << GetAmplitude() << "\t" << GetPosFitError() << "\t" << GetSigmaFitError() << "\t" << GetAmpFitError() << "\t";
 }
 
-Void CRay::SaveDescription(  std::ostream& stream ) const
+void CRay::SaveDescription(  std::ostream& stream ) const
 {
     stream << "#";
     stream << "Name" << "\t" << "Position" << "\t";

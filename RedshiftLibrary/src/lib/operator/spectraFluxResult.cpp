@@ -22,7 +22,7 @@ CSpectraFluxResult::~CSpectraFluxResult()
 	//m_optio = 1;
 }
 
-Void CSpectraFluxResult::Save( const CDataStore& store, std::ostream& stream ) const
+void CSpectraFluxResult::Save( const CDataStore& store, std::ostream& stream ) const
 {
 	UInt32 p = 13;
 	std::string tx;
@@ -41,7 +41,7 @@ Void CSpectraFluxResult::Save( const CDataStore& store, std::ostream& stream ) c
 	}
 }
 
-Void CSpectraFluxResult::SaveLine( const CDataStore& store, std::ostream& stream ) const
+void CSpectraFluxResult::SaveLine( const CDataStore& store, std::ostream& stream ) const
 {
 	stream.precision(10);
     stream << "CSpectraFluxResult" << "\t" << fluxes.size() << std::endl;

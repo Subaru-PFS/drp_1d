@@ -20,7 +20,7 @@ CChisquareLogSolveResult::~CChisquareLogSolveResult()
 
 }
 
-Void CChisquareLogSolveResult::Save( const CDataStore& store, std::ostream& stream ) const
+void CChisquareLogSolveResult::Save( const CDataStore& store, std::ostream& stream ) const
 {
     Float64 redshift;
     Float64 merit;
@@ -120,7 +120,7 @@ Bool CChisquareLogSolveResult::GetBestRedshiftPerTemplateString( const CDataStor
 
 }
 
-Void CChisquareLogSolveResult::SaveLine( const CDataStore& store, std::ostream& stream ) const
+void CChisquareLogSolveResult::SaveLine( const CDataStore& store, std::ostream& stream ) const
 {
     char tmpChar[256];
     Float64 dtreepathnum;

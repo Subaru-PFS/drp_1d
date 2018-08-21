@@ -22,8 +22,8 @@ public:
 	CPdfzPredictResult();
 	virtual ~CPdfzPredictResult();
 
-	Void Save( const CDataStore& store, std::ostream& stream ) const;
-	Void SaveLine( const CDataStore& store, std::ostream& stream ) const;
+	void Save( const CDataStore& store, std::ostream& stream ) const;
+	void SaveLine( const CDataStore& store, std::ostream& stream ) const;
     inline Int32 GetEvidenceFromPdf(const CDataStore& store, Float64 &evidence) const
     {
         return 1;

@@ -40,7 +40,7 @@ void CContinuumIndexesResult::SetValues(Float64 stdSpc, Float64 std_continuum)
 /**
  * \brief Prints the result in the argument store, using the argument stream as output.
  **/
-Void CContinuumIndexesResult::Save( const CDataStore& store, std::ostream& stream ) const
+void CContinuumIndexesResult::Save( const CDataStore& store, std::ostream& stream ) const
 {
     stream << "std_spc" << "\t" << "std_continuum" << std::endl;
     stream << m_StdSpectrum << "\t" << m_StdContinuum << std::endl;
@@ -49,7 +49,7 @@ Void CContinuumIndexesResult::Save( const CDataStore& store, std::ostream& strea
 /**
  * \brief Empty method.
  **/
-Void CContinuumIndexesResult::SaveLine(const CDataStore &store, std::ostream& stream ) const
+void CContinuumIndexesResult::SaveLine(const CDataStore &store, std::ostream& stream ) const
 {
 
 }

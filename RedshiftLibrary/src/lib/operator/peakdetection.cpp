@@ -100,7 +100,7 @@ TInt32Range CPeakDetection::FindGaussianFitStartAndStop( Int32 i, const TInt32Ra
  * 2. if center (=max position) is  on the left or on the right -> disable this peak
  * 3. todo: use waves and fluxAxis for proper logging
  */
-Void CPeakDetection::RedefineBorders( TInt32RangeList& peakList, const CSpectrumAxis& waves, const CSpectrumAxis& smoothFluxAxis, const CSpectrumAxis& fluxAxis )
+void CPeakDetection::RedefineBorders( TInt32RangeList& peakList, const CSpectrumAxis& waves, const CSpectrumAxis& smoothFluxAxis, const CSpectrumAxis& fluxAxis )
 {
     const Float64* smoothFluxData = smoothFluxAxis.GetSamples();
 
@@ -155,7 +155,7 @@ Void CPeakDetection::RedefineBorders( TInt32RangeList& peakList, const CSpectrum
 }
 
 
-Void CPeakDetection::FindPossiblePeaks( const CSpectrumAxis& fluxAxis, const CSpectrumSpectralAxis& spectralAxis, TInt32RangeList& peakList )
+void CPeakDetection::FindPossiblePeaks( const CSpectrumAxis& fluxAxis, const CSpectrumSpectralAxis& spectralAxis, TInt32RangeList& peakList )
 {
     peakList.clear();
 

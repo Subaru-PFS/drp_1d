@@ -15,20 +15,20 @@ namespace NSEpic
 
 
 // Internal usage should not be used directly
-Void DebugLogCodeInformation( String file, UInt32 line, String func );
-Void DebugLogInfo( String format, ... );
-Void DebugLogWarning( String format, ... );
-Void DebugLogError( String format, ... );
+void DebugLogCodeInformation( String file, UInt32 line, String func );
+void DebugLogInfo( String format, ... );
+void DebugLogWarning( String format, ... );
+void DebugLogError( String format, ... );
 
-Void DebugBreakExecution();
-Void DebugRaiseException();
+void DebugBreakExecution();
+void DebugRaiseException();
 
-Void DebugCreateDump( Void* dumpData = NULL ) ;
+void DebugCreateDump( void* dumpData = NULL ) ;
 
 String DebugGetDumpDirectory();
 
-Void InstallSignalHandler();
-Void SignalHandler(int sig);
+void InstallSignalHandler();
+void SignalHandler(int sig);
 
 /**@}*/
 }

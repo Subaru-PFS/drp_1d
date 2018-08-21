@@ -41,24 +41,24 @@ public:
     CLog( );
     virtual ~CLog();
 
-    Void LogError( const char* format, ... );
-    Void LogWarning( const char* format, ... );
-    Void LogInfo( const char* format, ... );
-    Void LogDetail( const char* format, ... );
-    Void LogDebug( const char* format, ... );
+    void LogError( const char* format, ... );
+    void LogWarning( const char* format, ... );
+    void LogInfo( const char* format, ... );
+    void LogDetail( const char* format, ... );
+    void LogDebug( const char* format, ... );
 
     CMutex& GetSynchMutex();
 
-    Void Indent();
-    Void UnIndent();
+    void Indent();
+    void UnIndent();
 
 private:
 
     friend class CLogHandler;
 
-    Void            LogEntry( ELevel lvl, const char*  format, va_list& args );
-    Void            AddHandler( CLogHandler& handler );
-    Void            RemoveHandler( CLogHandler& handler );
+    void            LogEntry( ELevel lvl, const char*  format, va_list& args );
+    void            AddHandler( CLogHandler& handler );
+    void            RemoveHandler( CLogHandler& handler );
     const char*     GetHeader( CLog::ELevel lvl );
 
     //Attributes

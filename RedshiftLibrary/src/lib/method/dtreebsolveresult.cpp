@@ -23,7 +23,7 @@ CDTreeBSolveResult::~CDTreeBSolveResult()
 
 }
 
-Void CDTreeBSolveResult::Save( const CDataStore& store, std::ostream& stream ) const
+void CDTreeBSolveResult::Save( const CDataStore& store, std::ostream& stream ) const
 {
     Float64 redshift;
     Float64 merit;
@@ -41,7 +41,7 @@ Void CDTreeBSolveResult::Save( const CDataStore& store, std::ostream& stream ) c
 
 }
 
-Void CDTreeBSolveResult::SaveLine( const CDataStore& store, std::ostream& stream ) const
+void CDTreeBSolveResult::SaveLine( const CDataStore& store, std::ostream& stream ) const
 {
     Float64 redshift;
     Float64 merit;

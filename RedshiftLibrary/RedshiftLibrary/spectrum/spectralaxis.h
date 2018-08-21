@@ -43,10 +43,10 @@ public:
     Float64             GetResolution( Float64 atWavelength = -1.0 ) const;
     Float64             GetMeanResolution() const;
 
-    Void                ShiftByWaveLength(  const CSpectrumSpectralAxis& origin, Float64 wavelengthOffset, EShiftDirection direction );
-    Void                ShiftByWaveLength( Float64 wavelengthOffset, EShiftDirection direction );
+    void                ShiftByWaveLength(  const CSpectrumSpectralAxis& origin, Float64 wavelengthOffset, EShiftDirection direction );
+    void                ShiftByWaveLength( Float64 wavelengthOffset, EShiftDirection direction );
 
-    Void                ApplyOffset(Float64 wavelengthOffset);
+    void                ApplyOffset(Float64 wavelengthOffset);
 
     Int32               GetIndexAtWaveLength( Float64 waveLength ) const;
     TInt32Range         GetIndexesAtWaveLengthRange( const TFloat64Range& waveLengthRange ) const;
@@ -59,12 +59,12 @@ public:
 
     TLambdaRange        GetLambdaRange() const;
     Bool                ClampLambdaRange( const TFloat64Range& range, TFloat64Range& clampedRange ) const;
-    Void                GetMask( const TFloat64Range& range,  CMask& mask ) const;
+    void                GetMask( const TFloat64Range& range,  CMask& mask ) const;
     Float64             IntersectMaskAndComputeOverlapRate( const TFloat64Range& lambdaRange,  CMask& omask ) const;
 
     Bool                PlotResolution( const char* filePath ) const;
 
-    Void                CopyFrom( const CSpectrumSpectralAxis& other );
+    void                CopyFrom( const CSpectrumSpectralAxis& other );
 
 private:
 

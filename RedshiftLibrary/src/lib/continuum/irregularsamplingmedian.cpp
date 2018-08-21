@@ -34,7 +34,7 @@ CContinuumIrregularSamplingMedian::~CContinuumIrregularSamplingMedian()
 /**
  * Sets the value for m_MeanSmoothAmplitude.
  */
-Void CContinuumIrregularSamplingMedian::SetMeanKernelWidth( Float32 width )
+void CContinuumIrregularSamplingMedian::SetMeanKernelWidth( Float32 width )
 {
     m_MeanSmoothAmplitude = width;
 }
@@ -42,7 +42,7 @@ Void CContinuumIrregularSamplingMedian::SetMeanKernelWidth( Float32 width )
 /**
  * Sets the value for m_MedianSmoothAmplitude.
  */
-Void CContinuumIrregularSamplingMedian::SetMedianKernelWidth( Float32 width )
+void CContinuumIrregularSamplingMedian::SetMedianKernelWidth( Float32 width )
 {
     m_MedianSmoothAmplitude = width;
 }
@@ -50,7 +50,7 @@ Void CContinuumIrregularSamplingMedian::SetMedianKernelWidth( Float32 width )
 /**
  * Sets m_MedianSmoothCycles to input.
  */
-Void CContinuumIrregularSamplingMedian::SetMedianCycleCount( UInt32 count )
+void CContinuumIrregularSamplingMedian::SetMedianCycleCount( UInt32 count )
 {
     m_MedianSmoothCycles = count;
 }

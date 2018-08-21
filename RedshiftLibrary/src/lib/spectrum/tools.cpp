@@ -17,7 +17,7 @@ CSpectrumTools::~CSpectrumTools()
 }
 
 
-Void CSpectrumTools::Interpolate( const CSpectrumAxis& axisXorg, const CSpectrumAxis& axisYorg, Int32 offsetOrg, Int32 nOrg,
+void CSpectrumTools::Interpolate( const CSpectrumAxis& axisXorg, const CSpectrumAxis& axisYorg, Int32 offsetOrg, Int32 nOrg,
                                 const CSpectrumAxis& axisXint, CSpectrumAxis& axisYint, CMask& mask )
 {
     Int32 nInt = axisXint.GetSamplesCount();

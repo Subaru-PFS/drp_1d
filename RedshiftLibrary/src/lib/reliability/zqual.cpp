@@ -647,7 +647,7 @@ Bool CQualz::ExtractFeaturesPDF( CDataStore& resultStore, const TFloat64Range& r
 
 
 
-Void CQualz::DisplayPrediction()
+void CQualz::DisplayPrediction()
 {
 	std::cout
 	<< "---------------------------------------------------------------------------------------------------------\n"
@@ -911,7 +911,7 @@ Bool CQualz::CheckPDF( const TFloat64List& zpdf)
  * 			>> Project the feature vector into a trainde mapping
  * 						and compute score & posterior class probabilities in addiction to the predicted label
 /*  ------------------------------------------------------------------------------------------------------ */
-Void CQualz::ProjectPDF ( CClassifierStore& classifierStore )
+void CQualz::ProjectPDF ( CClassifierStore& classifierStore )
 {
 	if ( nanVector ) {
 		m_predLabel = NAN;
@@ -934,7 +934,7 @@ Void CQualz::ProjectPDF ( CClassifierStore& classifierStore )
  * 			>> Get Predicted zReliability Class
  * 					by combining the (binary) predictions of each learner + the additional step of 'DECODE'  in ECOC
 /*  ------------------------------------------------------------------------------------------------------ */
-Void CQualz::GetLabelPred ( CClassifierStore& classifierStore )
+void CQualz::GetLabelPred ( CClassifierStore& classifierStore )
 {
 	Int32 opt_predL = 1;
 
@@ -1021,7 +1021,7 @@ Void CQualz::GetLabelPred ( CClassifierStore& classifierStore )
  *	[ Function ]
  * 			>> Get the score for each learner
 /*  ------------------------------------------------------------------------------------------------------ */
-Void CQualz::GetScorePred ( CClassifierStore& classifierStore )
+void CQualz::GetScorePred ( CClassifierStore& classifierStore )
 {
 	Int32 i, j, M,P;
 
@@ -1122,7 +1122,7 @@ Void CQualz::GetScorePred ( CClassifierStore& classifierStore )
  *	[ Function ]
  * 			>> Get the posterior class probabilities (combine coding strategy ECOC and individual responses of learners)
 /*  ------------------------------------------------------------------------------------------------------ */
-Void CQualz::GetPosteriorPred ( CClassifierStore& classifierStore )
+void CQualz::GetPosteriorPred ( CClassifierStore& classifierStore )
 {
 	Int32 K = classifierStore.GetNbClasses();
 	Int32 L = classifierStore.GetNbLearners();
@@ -1552,7 +1552,7 @@ Float64 CQualz::GetNormKL ( gsl_matrix* m )
  *	[ Function ]
  * 			>> Center the feature vector with SV parameters (mean & dispersion)
 /*  ------------------------------------------------------------------------------------------------------ */
-Void CQualz::GetXc( gsl_vector* mu, gsl_vector* sigma )
+void CQualz::GetXc( gsl_vector* mu, gsl_vector* sigma )
 {
 	/*
 	std::string desc_1 = "Localized_prior";  				//0
@@ -1588,7 +1588,7 @@ Void CQualz::GetXc( gsl_vector* mu, gsl_vector* sigma )
  *	[ Function ]
  * 			>> Compute sigmoid function
 /*  ------------------------------------------------------------------------------------------------------ */
-Void CQualz::GetSigmoid ( Float64& sc, TFloat64List& paramsSig, Float64& result )
+void CQualz::GetSigmoid ( Float64& sc, TFloat64List& paramsSig, Float64& result )
 {
 	result = 1 + exp (paramsSig[0]*sc + paramsSig[1]) ;
 	result = 1/result;

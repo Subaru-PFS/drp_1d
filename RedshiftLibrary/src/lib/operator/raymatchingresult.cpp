@@ -26,7 +26,7 @@ CRayMatchingResult::~CRayMatchingResult()
 /**
  * Will output to stream the current results and filtered results at index 0.
  */
-Void CRayMatchingResult::Save( const CDataStore& store, std::ostream& stream ) const
+void CRayMatchingResult::Save( const CDataStore& store, std::ostream& stream ) const
 {
   /*
   // We should also save best result:
@@ -53,7 +53,7 @@ Void CRayMatchingResult::Save( const CDataStore& store, std::ostream& stream ) c
 /**
  * Outputs the solutions in "selectedResults" to "stream". Depending on "type", certain fields will be output.
  */
-Void CRayMatchingResult::SaveSolutionSetToStream( std::ostream& stream,  TSolutionSetList selectedResults, Int32 type ) const
+void CRayMatchingResult::SaveSolutionSetToStream( std::ostream& stream,  TSolutionSetList selectedResults, Int32 type ) const
 {
   //type == 0, solutions
   //type == 1, not valid filtered solutions
@@ -114,7 +114,7 @@ Void CRayMatchingResult::SaveSolutionSetToStream( std::ostream& stream,  TSoluti
 /**
  * Empty method.
  */
-Void CRayMatchingResult::SaveLine( const CDataStore& store, std::ostream& stream ) const
+void CRayMatchingResult::SaveLine( const CDataStore& store, std::ostream& stream ) const
 {
 
 }
@@ -353,9 +353,9 @@ Int32 CRayMatchingResult::GetMaxMatchingNumber() const
 /**
  * Attempts to apply all rules to each solution. If a rule is applicable, that solution is removed from the current set of solutions.
  */
-Void CRayMatchingResult::FilterWithRules( CSpectrum spc, TFloat64Range lambdaRange, Float64 winsize )
+void CRayMatchingResult::FilterWithRules( CSpectrum spc, TFloat64Range lambdaRange, Float64 winsize )
 {
-  Log.LogDebug ( "Void CRayMatchingResult::FilterWithRules( CSpectrum spc, TFloat64Range lambdaRange, Float64 winsize )" );
+  Log.LogDebug ( "void CRayMatchingResult::FilterWithRules( CSpectrum spc, TFloat64Range lambdaRange, Float64 winsize )" );
   if( SolutionSetList.size()<1 )
     {
       Log.LogDebug ( "SolutionSetList.size()<1, returning" );

@@ -19,9 +19,9 @@ public:
     CNoiseFromFile( );
     ~CNoiseFromFile();
 
-    Void SetNoiseFilePath( const char* filePath, CSpectrumIOReader& noise_reader);
+    void SetNoiseFilePath( const char* filePath, CSpectrumIOReader& noise_reader);
 
-    Void AddNoise( CSpectrum& s1 ) const;
+    void AddNoise( CSpectrum& s1 ) const;
 
 private:
 

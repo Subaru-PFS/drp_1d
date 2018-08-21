@@ -24,7 +24,7 @@ CMutex::~CMutex()
 /**
  *
  */
-Void CMutex::Lock()
+void CMutex::Lock()
 {
     m_Mutex.lock();
 }
@@ -32,7 +32,7 @@ Void CMutex::Lock()
 /**
  *
  */
-Void CMutex::Unlock()
+void CMutex::Unlock()
 {
     m_Mutex.unlock();
 }

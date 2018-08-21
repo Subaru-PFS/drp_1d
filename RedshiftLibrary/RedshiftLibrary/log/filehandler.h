@@ -21,7 +21,7 @@ public:
     CLogFileHandler( CLog& logger, const char* filePath );
     ~CLogFileHandler();
 
-    Void LogEntry( UInt32 lvl, const char* header, const char* msg );
+    void LogEntry( UInt32 lvl, const char* header, const char* msg );
 
 private:
 

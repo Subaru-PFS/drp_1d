@@ -178,7 +178,7 @@ std::vector<bool> CLineModelResult::GetStrongELPresentTplshapeResult( Int32 inde
  *     Ignore the next token - it should be a name (string).
  *     Try to read the chisquare. If this fails, return.
  **/
-Void CLineModelResult::Load( std::istream& stream )
+void CLineModelResult::Load( std::istream& stream )
 {
     // Clear current lines list
     Redshifts.clear();
@@ -249,7 +249,7 @@ Void CLineModelResult::Load( std::istream& stream )
  * Print each SigmaZ as a comment.
  * Print each LogArea as a comment.
  **/
-Void CLineModelResult::Save( const CDataStore& store, std::ostream& stream ) const
+void CLineModelResult::Save( const CDataStore& store, std::ostream& stream ) const
 {
     stream <<  "#Redshifts\tChiSquare"<< std::endl;
     for ( int i=0; i<Redshifts.size(); i++)
@@ -278,7 +278,7 @@ Void CLineModelResult::Save( const CDataStore& store, std::ostream& stream ) con
 /**
  * \brief Prints the argument store's number of redshift results in the argument stream.
  **/
-Void CLineModelResult::SaveLine( const CDataStore& store, std::ostream& stream ) const
+void CLineModelResult::SaveLine( const CDataStore& store, std::ostream& stream ) const
 {
     stream << "LineModelResult" << "\t" << Redshifts.size() << std::endl;
 }

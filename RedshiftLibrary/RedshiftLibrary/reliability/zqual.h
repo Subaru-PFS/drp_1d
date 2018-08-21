@@ -48,17 +48,17 @@ private:
 	Bool Solve( CDataStore& resultStore, CClassifierStore& classifierStore, const TFloat64Range& redshiftRange,
 			Float64& redshiftStep );
 
-    Void DisplayPrediction();
+    void DisplayPrediction();
 	Bool CheckPDF ( const TFloat64List& zpdf);
 
 	// extract descriptors from the zPDF
 	Bool ExtractFeaturesPDF ( CDataStore& resultStore, const TFloat64Range& redshiftRange, Float64& redshiftStep );
 
 	// predict a reliability label using const classifier
-	Void ProjectPDF ( CClassifierStore& classifierStore );
-	Void GetPosteriorPred ( CClassifierStore& classifierStore );
-	Void GetScorePred ( CClassifierStore& classifierStore );
-	Void GetLabelPred ( CClassifierStore& classifierStore );
+	void ProjectPDF ( CClassifierStore& classifierStore );
+	void GetPosteriorPred ( CClassifierStore& classifierStore );
+	void GetScorePred ( CClassifierStore& classifierStore );
+	void GetLabelPred ( CClassifierStore& classifierStore );
 
 	// method to derive number of significant peaks/modes in the zPDF
 	Int32 GetNPeaksKM ( TPointList& peaks, Float64& zmap_estimate, Float64& lbins );
@@ -68,12 +68,12 @@ private:
 	gsl_vector* GetArgminKL ( CClassifierStore& classifierStore, gsl_vector* r, gsl_vector* w_learner, gsl_vector* p0, Float64& distance );
 	gsl_vector* GetNumDenKL( CClassifierStore& classifierStore, gsl_vector* r, gsl_vector* r_estim , gsl_vector* pold );
 	Float64 GetDistanceKL ( gsl_vector* r, gsl_vector* r_estim, gsl_vector* w_learner );
-	Void GetSigmoid ( Float64& sc, TFloat64List& paramsSig, Float64& result );
+	void GetSigmoid ( Float64& sc, TFloat64List& paramsSig, Float64& result );
 	Bool GetLSQnonNegKL (gsl_matrix* c, gsl_vector* d, gsl_vector* result );
 	gsl_vector* GetProductKL ( gsl_vector* x, gsl_matrix* sv );
 	gsl_matrix* GetTimesKL ( const gsl_matrix* m, gsl_vector* v );
 	gsl_vector* GetSumKL ( gsl_matrix* m, Bool opt_row );
-	Void GetXc ( gsl_vector* mu, gsl_vector* sigma );
+	void GetXc ( gsl_vector* mu, gsl_vector* sigma );
 	//Float64 GetNormKL ( gsl_matrix* m );
 
 

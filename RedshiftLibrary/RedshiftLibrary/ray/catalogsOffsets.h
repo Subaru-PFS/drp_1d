@@ -34,9 +34,9 @@ public:
 
     CLineCatalogsOffsets();
     ~CLineCatalogsOffsets();
-    Void Init(std::string calibrationPath);
+    void Init(std::string calibrationPath);
 
-    Void Load( const char* dirPath );
+    void Load( const char* dirPath );
     Bool LoadCatalog( const char* filePath );
     Bool SetLinesOffsets(CLineModelElementList &LineModelElementList, Int32 index);
 

@@ -29,19 +29,19 @@ public:
     COperatorResultStore();
     virtual ~COperatorResultStore();
 
-    Void                    StorePerTemplateResult( const CTemplate& t, const std::string& path, const std::string& name, std::shared_ptr<const COperatorResult> result );
-    Void                    StoreGlobalResult( const std::string& path, const std::string& name, std::shared_ptr<const COperatorResult> result );
+    void                    StorePerTemplateResult( const CTemplate& t, const std::string& path, const std::string& name, std::shared_ptr<const COperatorResult> result );
+    void                    StoreGlobalResult( const std::string& path, const std::string& name, std::shared_ptr<const COperatorResult> result );
 
     std::weak_ptr<const COperatorResult> GetPerTemplateResult( const CTemplate& t, const std::string& name ) const;
     TOperatorResultMap      GetPerTemplateResult( const std::string& name ) const;
     std::weak_ptr<const COperatorResult>  GetGlobalResult( const std::string& name ) const;
 
-    Void                    SaveRedshiftResultError( const std::string spcName, const std::string processingID, const boost::filesystem::path& dir );
-    Void                    SaveRedshiftResult( const CDataStore& store, const boost::filesystem::path& dir );
-    Void                    SaveCandidatesResult( const CDataStore& store, const boost::filesystem::path& dir );
-    Void                    SaveCandidatesResultError( const std::string spcName, const std::string processingID, const boost::filesystem::path& dir );
-    Void                    SaveAllResults(const CDataStore& store, const boost::filesystem::path& dir , const std::string opt) const;
-    Void                    SaveReliabilityResult( const CDataStore& store, const boost::filesystem::path& dir );
+    void                    SaveRedshiftResultError( const std::string spcName, const std::string processingID, const boost::filesystem::path& dir );
+    void                    SaveRedshiftResult( const CDataStore& store, const boost::filesystem::path& dir );
+    void                    SaveCandidatesResult( const CDataStore& store, const boost::filesystem::path& dir );
+    void                    SaveCandidatesResultError( const std::string spcName, const std::string processingID, const boost::filesystem::path& dir );
+    void                    SaveAllResults(const CDataStore& store, const boost::filesystem::path& dir , const std::string opt) const;
+    void                    SaveReliabilityResult( const CDataStore& store, const boost::filesystem::path& dir );
 
     std::string             GetScope( const COperatorResult&  result) const;
 

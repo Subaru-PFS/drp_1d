@@ -458,7 +458,7 @@ Bool CClassifierStore::CLearner::LoadVectors ( gsl_matrix* vectors)
 }
 
 
-Void CClassifierStore::DisplayQ ( const gsl_matrix* m )
+void CClassifierStore::DisplayQ ( const gsl_matrix* m )
 {
 	std::cout << "---------------------------------------------------------------------------------------------------------"<<"\n"
 			<<">> ["<<GetTypeCoding()<<"] Coding Matrix :  \t\t"
@@ -551,50 +551,50 @@ const gsl_matrix* CClassifierStore::GetCodingMatrixNeg() const
  * 					>>	SET - METHODS
 /* --------------------------------------------------------------------- */
 
-Void CClassifierStore::SetLearners ( CClassifierStore::MapLearners& learners )
+void CClassifierStore::SetLearners ( CClassifierStore::MapLearners& learners )
 {
 	m_learners = learners;
 }
 
-Void CClassifierStore::SetNbClasses( Int32 nbclasses )
+void CClassifierStore::SetNbClasses( Int32 nbclasses )
 {
 	m_nbClasses = (Int32) nbclasses;
 }
 
-Void CClassifierStore::SetNbLearners( Int32 nblearners )
+void CClassifierStore::SetNbLearners( Int32 nblearners )
 {
 	m_nbLearners = (Int32) nblearners;
 }
 
-Void CClassifierStore::SetNbFeatures( Int32 nbfeatures )
+void CClassifierStore::SetNbFeatures( Int32 nbfeatures )
 {
 	m_nbFeatures = (Int32) nbfeatures;
 }
 
-Void CClassifierStore::SetTypeCoding( std::string typecoding )
+void CClassifierStore::SetTypeCoding( std::string typecoding )
 {
 	m_typeCoding = typecoding;
 }
 
-Void CClassifierStore::SetTypeClassifier( std::string typeclassifier )
+void CClassifierStore::SetTypeClassifier( std::string typeclassifier )
 {
     m_typeClassifier = typeclassifier;
 }
 
-Void CClassifierStore::SetLearnerWeight( gsl_vector* w )
+void CClassifierStore::SetLearnerWeight( gsl_vector* w )
 {
 	for (Int32 i = 0; i<w->size-1; i++ ){
 		m_learnersWeight->data[i] = w->data[i];
 	}
 }
 
-Void CClassifierStore::SetCodingMatrix( gsl_matrix* m )
+void CClassifierStore::SetCodingMatrix( gsl_matrix* m )
 {
 	m_codingMatrix = gsl_matrix_alloc(GetNbClasses(), GetNbLearners());
 	gsl_matrix_memcpy(m_codingMatrix, m);
 }
 
-Void CClassifierStore::SetCodingMatrixPos( )
+void CClassifierStore::SetCodingMatrixPos( )
 {
 	m_codingMatrixPos = gsl_matrix_alloc( GetNbClasses(), GetNbLearners() );
 	gsl_matrix_memcpy( m_codingMatrixPos, GetCodingMatrix() );
@@ -607,7 +607,7 @@ Void CClassifierStore::SetCodingMatrixPos( )
 	}
 }
 
-Void CClassifierStore::SetCodingMatrixNeg( )
+void CClassifierStore::SetCodingMatrixNeg( )
 {
 	m_codingMatrixNeg = gsl_matrix_alloc( GetNbClasses(), GetNbLearners());
 	gsl_matrix_memcpy( m_codingMatrixNeg, GetCodingMatrix() );

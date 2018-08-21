@@ -19,9 +19,9 @@ public:
     CContinuumIrregularSamplingMedian();
     ~CContinuumIrregularSamplingMedian();
 
-    Void SetMeanKernelWidth( Float32 width );
-    Void SetMedianKernelWidth( Float32 width );
-    Void SetMedianCycleCount( UInt32 count );
+    void SetMeanKernelWidth( Float32 width );
+    void SetMedianKernelWidth( Float32 width );
+    void SetMedianCycleCount( UInt32 count );
 
     Bool RemoveContinuum( const CSpectrum& s, CSpectrumFluxAxis& noContinuumFluxAxis );
     Bool ProcessRemoveContinuum( const CSpectrum& s, CSpectrumFluxAxis& noContinuumFluxAxis, Float64 resolution );

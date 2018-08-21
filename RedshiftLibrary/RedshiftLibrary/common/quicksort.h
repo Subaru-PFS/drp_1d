@@ -24,13 +24,13 @@ public:
     CQuickSort();
     ~CQuickSort();
     
-    Void Sort( T* arr, Int32 n ) const;
-    Void SortIndexes( const T* arr, Int32* index, Int32 n ) const;
+    void Sort( T* arr, Int32 n ) const;
+    void SortIndexes( const T* arr, Int32* index, Int32 n ) const;
     
 private:
     
-    Void Sort( T* arr, Int32 beg, Int32 end ) const;
-    Void SortIndexes( T* arr, Int32* index, Int32 beg, Int32 end ) const;
+    void Sort( T* arr, Int32 beg, Int32 end ) const;
+    void SortIndexes( T* arr, Int32* index, Int32 beg, Int32 end ) const;
 
 };
     

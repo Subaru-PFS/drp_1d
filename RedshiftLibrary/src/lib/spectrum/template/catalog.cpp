@@ -115,7 +115,7 @@ UInt32 CTemplateCatalog::GetTemplateCount( const std::string& category ) const
 /**
  * Adds the input to the list of templates, under its category. If the input doesn't have a category, function returns false. Also computes the template without continuum and adds it to the list of templates without continuum. Returns true.
  */
-Void CTemplateCatalog::Add( std::shared_ptr<CTemplate> r )
+void CTemplateCatalog::Add( std::shared_ptr<CTemplate> r )
 {
     if( r->GetCategory().empty() )
       throw std::runtime_error("Template has no category");
@@ -172,7 +172,7 @@ Void CTemplateCatalog::Add( std::shared_ptr<CTemplate> r )
 /**
  * Adds the templates in the input path, under the input category.
  */
-Void CTemplateCatalog::Add( const char* templatePath, const std::string& category )
+void CTemplateCatalog::Add( const char* templatePath, const std::string& category )
 {
     if ( !exists( templatePath ) )
       {
@@ -195,7 +195,7 @@ Void CTemplateCatalog::Add( const char* templatePath, const std::string& categor
 /**
  * Loads input directory as a collection of categories of templates.
  */
-Void CTemplateCatalog::Load( const char* dirPath )
+void CTemplateCatalog::Load( const char* dirPath )
 {
     path pathFound;
 

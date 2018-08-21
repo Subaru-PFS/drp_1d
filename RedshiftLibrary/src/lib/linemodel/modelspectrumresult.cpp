@@ -37,7 +37,7 @@ CModelSpectrumResult::~CModelSpectrumResult()
 /**
  * \brief Prints to argument stream each lambda and flux in the model.
  **/
-Void CModelSpectrumResult::Save( const CDataStore& store, std::ostream& stream ) const
+void CModelSpectrumResult::Save( const CDataStore& store, std::ostream& stream ) const
 {
     const CSpectrumSpectralAxis& spectralAxis = model.GetSpectralAxis();
     const CSpectrumFluxAxis& modelFluxAxis = model.GetFluxAxis();
@@ -54,7 +54,7 @@ Void CModelSpectrumResult::Save( const CDataStore& store, std::ostream& stream )
 /**
  * \brief Empty method.
  **/
-Void CModelSpectrumResult::SaveLine(const CDataStore &store, std::ostream& stream ) const
+void CModelSpectrumResult::SaveLine(const CDataStore &store, std::ostream& stream ) const
 {
 
 }

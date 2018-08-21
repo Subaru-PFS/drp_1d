@@ -18,14 +18,14 @@ CNoiseFromFile::~CNoiseFromFile()
 {
 }
 
-Void CNoiseFromFile::SetNoiseFilePath( const char* filePath,
+void CNoiseFromFile::SetNoiseFilePath( const char* filePath,
 				       CSpectrumIOReader& noise_reader )
 {
   m_initialized = true;
   noise_reader.Read( filePath, m_NoiseSpectrum );
 }
 
-Void CNoiseFromFile::AddNoise( CSpectrum& s1 ) const
+void CNoiseFromFile::AddNoise( CSpectrum& s1 ) const
 {
   if( !m_initialized )
      throw string("Noise wasn't initialized");

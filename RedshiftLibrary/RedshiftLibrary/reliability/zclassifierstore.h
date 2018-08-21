@@ -53,11 +53,11 @@ public:
     Bool m_isInitialized;
     Float64 m_file_format_version;
 
-	Void DisplayQ ( const gsl_matrix* m );
+	void DisplayQ ( const gsl_matrix* m );
 
 	typedef boost::unordered_map<const Int32, std::shared_ptr<CLearner>> MapLearners;
 	const MapLearners& GetLearners() const;
-	Void SetLearners (MapLearners& learner );
+	void SetLearners (MapLearners& learner );
 
 	const Int32 GetNbClasses() const;
 	const Int32 GetNbLearners() const;
@@ -74,16 +74,16 @@ public:
 	const gsl_matrix* GetCodingMatrixPos() const;
 	const gsl_matrix* GetCodingMatrixNeg() const;
 
-	Void SetNbClasses( Int32 nbclasses );
-	Void SetNbLearners( Int32 nblearners );
-	Void SetNbFeatures( Int32 nbfeatures );
-	Void SetTypeCoding( std::string typecoding );
-	Void SetTypeClassifier( std::string typeclassifier );
+	void SetNbClasses( Int32 nbclasses );
+	void SetNbLearners( Int32 nblearners );
+	void SetNbFeatures( Int32 nbfeatures );
+	void SetTypeCoding( std::string typecoding );
+	void SetTypeClassifier( std::string typeclassifier );
 
-	Void SetLearnerWeight( gsl_vector* w );
-	Void SetCodingMatrix( gsl_matrix* m );
-	Void SetCodingMatrixPos();
-	Void SetCodingMatrixNeg();
+	void SetLearnerWeight( gsl_vector* w );
+	void SetCodingMatrix( gsl_matrix* m );
+	void SetCodingMatrixPos();
+	void SetCodingMatrixNeg();
 
 	TFloat64List temp_sv;
 	gsl_matrix* params_L;

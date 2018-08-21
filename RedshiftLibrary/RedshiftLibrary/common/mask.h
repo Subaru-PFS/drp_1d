@@ -33,7 +33,7 @@ public:
     Bool            IntersectWith( const CMask& other );
     UInt32          GetMaskedSampleCount() const;
     UInt32          GetUnMaskedSampleCount() const;
-    Void            SetSize( UInt32 s );
+    void            SetSize( UInt32 s );
 
 private:
 
@@ -72,7 +72,7 @@ UInt32 CMask::GetMaskedSampleCount() const
 }
 
 inline
-Void CMask::SetSize( UInt32 s )
+void CMask::SetSize( UInt32 s )
 {
     m_Mask.resize( s );
 }

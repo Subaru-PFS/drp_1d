@@ -20,8 +20,8 @@ public:
     CMutex( );
     virtual ~CMutex();
 
-    Void Lock();
-    Void Unlock();
+    void Lock();
+    void Unlock();
 
 private:
 

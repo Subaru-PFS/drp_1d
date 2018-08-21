@@ -18,7 +18,7 @@ CLogConsoleHandler::~CLogConsoleHandler()
 /**
  * Prints log message in stdout.
  */
-Void CLogConsoleHandler::LogEntry( UInt32 lvl, const char* header, const char* msg )
+void CLogConsoleHandler::LogEntry( UInt32 lvl, const char* header, const char* msg )
 {
     if( header )
         printf("%s", header );

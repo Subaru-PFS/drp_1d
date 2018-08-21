@@ -27,7 +27,7 @@ CLineModelTplshapeSolveResult::~CLineModelTplshapeSolveResult()
 /**
  * \brief Outputs to the output stream the values for redshift and merit and template name of the best redshift obtained.
  **/
-Void CLineModelTplshapeSolveResult::Save( const CDataStore& store, std::ostream& stream ) const
+void CLineModelTplshapeSolveResult::Save( const CDataStore& store, std::ostream& stream ) const
 {
     Float64 redshift;
     Float64 merit;
@@ -53,7 +53,7 @@ Void CLineModelTplshapeSolveResult::Save( const CDataStore& store, std::ostream&
 /**
  * \brief Prints into the output stream the redshift, merit and template name for the best redshift obtained.
  **/
-Void CLineModelTplshapeSolveResult::SaveLine( const CDataStore& store, std::ostream& stream ) const
+void CLineModelTplshapeSolveResult::SaveLine( const CDataStore& store, std::ostream& stream ) const
 {
     Float64 redshift;
     Float64 merit;

@@ -35,7 +35,7 @@ CLineCatalogsOffsets::~CLineCatalogsOffsets()
 
 }
 
-Void CLineCatalogsOffsets::Init( std::string calibrationPath)
+void CLineCatalogsOffsets::Init( std::string calibrationPath)
 {
     m_Calibration_path = calibrationPath;
     bfs::path calibrationFolder( calibrationPath.c_str() );
@@ -51,7 +51,7 @@ Void CLineCatalogsOffsets::Init( std::string calibrationPath)
     Log.LogInfo("    CatalogsOffsets - Loaded %d lines offsets catalogs", m_OffsetsCatalog.size());
 }
 
-Void CLineCatalogsOffsets::Load( const char* dirPath )
+void CLineCatalogsOffsets::Load( const char* dirPath )
 {
     m_OffsetsCatalog.clear();
 

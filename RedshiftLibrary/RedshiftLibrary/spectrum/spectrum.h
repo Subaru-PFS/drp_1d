@@ -31,7 +31,7 @@ public:
 
     CSpectrum& operator=(const CSpectrum& other);
 
-    Void  SetName( const char* name );
+    void  SetName( const char* name );
 
     Bool InvertFlux();
 

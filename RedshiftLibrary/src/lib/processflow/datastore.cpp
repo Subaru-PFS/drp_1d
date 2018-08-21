@@ -53,7 +53,7 @@ const std::string& CDataStore::GetSpectrumName() const
     return m_SpectrumName;
 }
 
-Void CDataStore::SetSpectrumName( const std::string& name )
+void CDataStore::SetSpectrumName( const std::string& name )
 {
     m_SpectrumName = name;
 }
@@ -63,44 +63,44 @@ const std::string& CDataStore::GetProcessingID() const
     return m_ProcessingID;
 }
 
-Void CDataStore::SetProcessingID( const std::string& valStr )
+void CDataStore::SetProcessingID( const std::string& valStr )
 {
     m_ProcessingID = valStr;
 }
 
-Void  CDataStore::SaveRedshiftResult( const boost::filesystem::path& dir )
+void  CDataStore::SaveRedshiftResult( const boost::filesystem::path& dir )
 {
     m_ResultStore.SaveRedshiftResult( *this, dir );
 }
 
 
-Void  CDataStore::SaveCandidatesResult( const boost::filesystem::path& dir )
+void  CDataStore::SaveCandidatesResult( const boost::filesystem::path& dir )
 {
     m_ResultStore.SaveCandidatesResult( *this, dir );
 }
 
 
-Void CDataStore::SaveReliabilityResult( const boost::filesystem::path& dir )
+void CDataStore::SaveReliabilityResult( const boost::filesystem::path& dir )
 {
 	m_ResultStore.SaveReliabilityResult( *this, dir );
 }
 
-Void  CDataStore::SaveAllResults( const boost::filesystem::path& dir, const std::string opt ) const
+void  CDataStore::SaveAllResults( const boost::filesystem::path& dir, const std::string opt ) const
 {
     m_ResultStore.SaveAllResults( *this, dir, opt );
 }
 
-Void  CDataStore::StoreScopedPerTemplateResult( const CTemplate& t, const std::string& name, std::shared_ptr<const COperatorResult> result )
+void  CDataStore::StoreScopedPerTemplateResult( const CTemplate& t, const std::string& name, std::shared_ptr<const COperatorResult> result )
 {
     m_ResultStore.StorePerTemplateResult( t, GetCurrentScopeName(), name, result );
 }
 
-Void CDataStore::StoreScopedGlobalResult( const std::string& name, std::shared_ptr<const COperatorResult> result )
+void CDataStore::StoreScopedGlobalResult( const std::string& name, std::shared_ptr<const COperatorResult> result )
 {
     m_ResultStore.StoreGlobalResult( GetCurrentScopeName(), name, result );
 }
 
-Void CDataStore::StoreGlobalResult( const std::string& name, std::shared_ptr<const COperatorResult> result )
+void CDataStore::StoreGlobalResult( const std::string& name, std::shared_ptr<const COperatorResult> result )
 {
     m_ResultStore.StoreGlobalResult( "", name, result );
 }
@@ -120,12 +120,12 @@ std::weak_ptr<const COperatorResult> CDataStore::GetGlobalResult( const std::str
     return m_ResultStore.GetGlobalResult( name );
 }
 
-Void CDataStore::PushScope( const std::string& name )
+void CDataStore::PushScope( const std::string& name )
 {
     m_ScopeStack.push_back( name );
 }
 
-Void CDataStore::PopScope()
+void CDataStore::PopScope()
 {
     m_ScopeStack.pop_back();
 }

@@ -33,13 +33,13 @@ public:
     CDataStore( COperatorResultStore& resultStore, CParameterStore& parameStore );
     virtual ~CDataStore();
 
-    Void                PushScope( const std::string& name );
-    Void                PopScope();
+    void                PushScope( const std::string& name );
+    void                PopScope();
 
     const std::string&  GetSpectrumName() const;
-    Void                SetSpectrumName( const std::string& name );
+    void                SetSpectrumName( const std::string& name );
     const std::string&  GetProcessingID() const;
-    Void                SetProcessingID( const std::string& valStr );
+    void                SetProcessingID( const std::string& valStr );
 
     std::string         GetCurrentScopeName() const;
 
@@ -78,18 +78,18 @@ public:
     Bool                            SetParam( const std::string& name, Bool v );
     Bool                            SetParam( const std::string& name, const std::string& v );
 
-    Void                            StoreScopedPerTemplateResult( const CTemplate& t, const std::string& name, std::shared_ptr<const COperatorResult>  result );
-    Void                            StoreScopedGlobalResult( const std::string& name, std::shared_ptr<const COperatorResult>  result );
-    Void                            StoreGlobalResult( const std::string& name, std::shared_ptr<const COperatorResult>  result );
+    void                            StoreScopedPerTemplateResult( const CTemplate& t, const std::string& name, std::shared_ptr<const COperatorResult>  result );
+    void                            StoreScopedGlobalResult( const std::string& name, std::shared_ptr<const COperatorResult>  result );
+    void                            StoreGlobalResult( const std::string& name, std::shared_ptr<const COperatorResult>  result );
 
     std::weak_ptr<const COperatorResult>          GetPerTemplateResult( const CTemplate& t, const std::string& name ) const;
     TOperatorResultMap              GetPerTemplateResult( const std::string& name ) const;
     std::weak_ptr<const COperatorResult>          GetGlobalResult( const std::string& name ) const;
 
-    Void                            SaveRedshiftResult( const boost::filesystem::path& dir );
-    Void                            SaveCandidatesResult( const boost::filesystem::path& dir );
-    Void                            SaveReliabilityResult( const boost::filesystem::path& dir );
-    Void                            SaveAllResults(const boost::filesystem::path& dir , const std::string opt) const;
+    void                            SaveRedshiftResult( const boost::filesystem::path& dir );
+    void                            SaveCandidatesResult( const boost::filesystem::path& dir );
+    void                            SaveReliabilityResult( const boost::filesystem::path& dir );
+    void                            SaveAllResults(const boost::filesystem::path& dir , const std::string opt) const;
 
 
 protected:

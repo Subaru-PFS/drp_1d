@@ -23,12 +23,12 @@ public:
     COperatorResult();
     virtual ~COperatorResult();
 
-    virtual Void Save( const CDataStore& store, std::ostream& stream ) const = 0;
-    virtual Void SaveLine( const CDataStore& store, std::ostream& stream ) const = 0;
-    //virtual Void Load( std::istream& stream ) = 0;
+    virtual void Save( const CDataStore& store, std::ostream& stream ) const = 0;
+    virtual void SaveLine( const CDataStore& store, std::ostream& stream ) const = 0;
+    //virtual void Load( std::istream& stream ) = 0;
 
-    Void SetReliabilityLabel( std::string lbl );
-    Void SetTypeLabel( std::string lbl );
+    void SetReliabilityLabel( std::string lbl );
+    void SetTypeLabel( std::string lbl );
     virtual Int32 GetEvidenceFromPdf(const CDataStore& store, Float64 &evidence) const = 0;
 
 

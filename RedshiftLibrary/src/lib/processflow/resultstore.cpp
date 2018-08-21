@@ -43,7 +43,7 @@ void COperatorResultStore::StoreResult( TResultsMap& map, const std::string& pat
     map[ scopedName ] = result;
 }
 
-Void COperatorResultStore::StorePerTemplateResult( const CTemplate& t, const std::string& path, const std::string& name, std::shared_ptr<const COperatorResult> result )
+void COperatorResultStore::StorePerTemplateResult( const CTemplate& t, const std::string& path, const std::string& name, std::shared_ptr<const COperatorResult> result )
 {
     TPerTemplateResultsMap::iterator it = m_PerTemplateResults.find( t.GetName() );
     if( it == m_PerTemplateResults.end() )
@@ -54,7 +54,7 @@ Void COperatorResultStore::StorePerTemplateResult( const CTemplate& t, const std
     StoreResult( m_PerTemplateResults[ t.GetName() ], path, name, result );
 }
 
-Void COperatorResultStore::StoreGlobalResult( const std::string& path, const std::string& name, std::shared_ptr<const COperatorResult> result )
+void COperatorResultStore::StoreGlobalResult( const std::string& path, const std::string& name, std::shared_ptr<const COperatorResult> result )
 {
     StoreResult( m_GlobalResults, path, name, result );
 }
@@ -228,7 +228,7 @@ void COperatorResultStore::SaveCandidatesResultError( const std::string spcName,
     }
 }
 
-Void COperatorResultStore::SaveReliabilityResult( const CDataStore& store, const bfs::path& dir )
+void COperatorResultStore::SaveReliabilityResult( const CDataStore& store, const bfs::path& dir )
 {
     // Append best redshift result line to output file
     {
@@ -244,7 +244,7 @@ Void COperatorResultStore::SaveReliabilityResult( const CDataStore& store, const
 }
 
 
-Void COperatorResultStore::SaveAllResults( const CDataStore& store, const bfs::path& dir, const std::string opt ) const
+void COperatorResultStore::SaveAllResults( const CDataStore& store, const bfs::path& dir, const std::string opt ) const
 {
     std::string opt_lower = opt;
     boost::algorithm::to_lower(opt_lower);

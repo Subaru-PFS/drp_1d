@@ -1,19 +1,26 @@
 %module(directors="1") redshift
 
 %include typemaps.i
-%include <std_string.i>
-%include <std_shared_ptr.i>
+%include std_string.i
+%include std_shared_ptr.i
 %include std_except.i
 
-%shared_ptr(CParameterStore)
-%shared_ptr(CLogConsoleHandler)
-%shared_ptr(CClassifierStore)
-%shared_ptr(CTemplateCatalog)
-%shared_ptr(CRayCatalog)
+ //%shared_ptr(CClassifierStore)
+ //%shared_ptr(CLogConsoleHandler)
+ //%shared_ptr(CLogHandler)
+ //%shared_ptr(CLog)
+ //%shared_ptr(CSingleton<CLog>)
+ //%shared_ptr(CParameterStore)
+ //%shared_ptr(CRayCatalog)
 %shared_ptr(CSpectrum)
-%shared_ptr(CSpectrumIOReader)
-%shared_ptr(CSpectrumIOGenericReader)
+ //%shared_ptr(CSpectrumAxis)
+ //%shared_ptr(CSpectrumFluxAxis)
+ //%shared_ptr(CSpectrumIOGenericReader)
+ //%shared_ptr(CSpectrumIOReader)
+ //%shared_ptr(CTemplateCatalog)
+
 %feature("director");
+
 
 %apply std::string &OUTPUT { std::string& out_str };
 %apply Int64 &OUTPUT { Int64& out_int };
@@ -23,6 +30,7 @@
         #define SWIG_FILE_WITH_INIT
         #include "RedshiftLibrary/common/range.h"
         #include "RedshiftLibrary/log/log.h"
+        #include <RedshiftLibrary/common/singleton.h>
         #include "RedshiftLibrary/log/consolehandler.h"
         #include "RedshiftLibrary/processflow/parameterstore.h"
         #include "RedshiftLibrary/reliability/zclassifierstore.h"
@@ -57,7 +65,7 @@ import_array();
 /* typedef double  Float64 ; */
 /* typedef char Char; */
 /* typedef unsigned char Byte; */
-typedef void Void;
+/* typedef void Void; */
 /* typedef unsigned int Bool; */
 /* typedef const char* String; */
 
@@ -88,7 +96,6 @@ class CRange
   const T& GetEnd() const;
   const T& GetBegin() const;
 };
-//%include "../RedshiftLibrary/RedshiftLibrary/common/range.h"
 typedef CRange<Float64> TFloat64Range;
 typedef TFloat64Range   TLambdaRange;
 %template(TFloat64Range) CRange<Float64>;
@@ -240,6 +247,8 @@ typedef TFloat64Range   TLambdaRange;
 //%clear (const Float64* samples, UInt32 n);
 //%clear (const Float64* _samples, const Float64* _samples, UInt32 n);
 
+%include "../RedshiftLibrary/RedshiftLibrary/common/range.h"
+%include "../RedshiftLibrary/RedshiftLibrary/common/singleton.h"
 %include "../RedshiftLibrary/RedshiftLibrary/common/datatypes.h"
 %include "../RedshiftLibrary/RedshiftLibrary/spectrum/fluxaxis.h"
 %include "../RedshiftLibrary/RedshiftLibrary/log/log.h"
@@ -256,3 +265,9 @@ typedef TFloat64Range   TLambdaRange;
 %include "../RedshiftLibrary/RedshiftLibrary/spectrum/axis.h"
 %include "../RedshiftLibrary/RedshiftLibrary/spectrum/fluxaxis.h"
 %include "../RedshiftLibrary/RedshiftLibrary/spectrum/spectralaxis.h"
+
+%extend NSEpic::CLogConsoleHandler {
+  void    SetLevelMask( UInt32 mask ) {
+    $self->CLogHandler::SetLevelMask(mask);
+  }
+}

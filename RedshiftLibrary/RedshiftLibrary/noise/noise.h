@@ -19,7 +19,7 @@ public:
     CNoise();
     virtual ~CNoise();
 
-    virtual Void AddNoise( CSpectrum& s1 ) const = 0;
+    virtual void AddNoise( CSpectrum& s1 ) const = 0;
 
 private:
 

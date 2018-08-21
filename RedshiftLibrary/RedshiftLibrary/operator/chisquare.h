@@ -28,7 +28,7 @@ public:
 
 private:
 
-    Void BasicFit(const CSpectrum& spectrum, const CTemplate& tpl,
+    void BasicFit(const CSpectrum& spectrum, const CTemplate& tpl,
                    const TFloat64Range& lambdaRange, Float64 redshift, Float64 overlapThreshold,
                    Float64& overlapRate, Float64& chiSquare, Float64 &fitamplitude, EStatus& status  );
 

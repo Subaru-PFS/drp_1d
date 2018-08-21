@@ -48,7 +48,7 @@ CModelFittingResult::~CModelFittingResult()
 /**
  * \brief Prints the results of the Linemodel in the argument store, using the argument stream as output.
  **/
-Void CModelFittingResult::Save( const CDataStore& store, std::ostream& stream ) const
+void CModelFittingResult::Save( const CDataStore& store, std::ostream& stream ) const
 {
     // save linemodel solution
     if(true){
@@ -111,7 +111,7 @@ Void CModelFittingResult::Save( const CDataStore& store, std::ostream& stream ) 
 
 //Load the linemodel fit results from a csv file;
 //WARNING: read only the amplitudes fitted so far, as of 2016-03-10
-Void CModelFittingResult::Load( const char* filePath )
+void CModelFittingResult::Load( const char* filePath )
 {
     std::ifstream file;
     file.open( filePath, std::ifstream::in );
@@ -182,7 +182,7 @@ Void CModelFittingResult::Load( const char* filePath )
 /**
  * \brief Empty method.
  **/
-Void CModelFittingResult::SaveLine(const CDataStore &store, std::ostream& stream ) const
+void CModelFittingResult::SaveLine(const CDataStore &store, std::ostream& stream ) const
 {
 
 }
