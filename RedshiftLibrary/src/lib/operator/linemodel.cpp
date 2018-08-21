@@ -661,8 +661,10 @@ Int32 COperatorLineModel::ComputeSecondPass(CDataStore &dataStore,
                                             const std::string& opt_rigidity,
                                             const Float64 &opt_emvelocityfitmin,
                                             const Float64 &opt_emvelocityfitmax,
+                                            const Float64 &opt_emvelocityfitstep,
                                             const Float64 &opt_absvelocityfitmin,
-                                            const Float64 &opt_absvelocityfitmax)
+                                            const Float64 &opt_absvelocityfitmax,
+                                            const Float64 &opt_absvelocityfitstep)
 {
 
     //Set model parameters to SECOND-PASS
@@ -676,16 +678,18 @@ Int32 COperatorLineModel::ComputeSecondPass(CDataStore &dataStore,
     bool enableVelocityFitting = true;
     Float64 velfitMinE = opt_emvelocityfitmin;
     Float64 velfitMaxE = opt_emvelocityfitmax;
+    Float64 velfitStepE = opt_emvelocityfitstep;
     Float64 velfitMinA = opt_absvelocityfitmin;
     Float64 velfitMaxA = opt_absvelocityfitmax;
+    Float64 velfitStepA = opt_absvelocityfitstep;
     //HARDCODED - override: no-velocityfitting for abs
     //velfitMinA = opt_velocityAbsorption;
     //velfitMaxA = opt_velocityAbsorption;
     if(opt_velocityFitting != "yes"){
         enableVelocityFitting = false;
     }else{
-        Log.LogInfo( "  Operator-Linemodel: velocity fitting bounds for Emission: min=%.1f - max=%.1f", velfitMinE, velfitMaxE);
-        Log.LogInfo( "  Operator-Linemodel: velocity fitting bounds for Absorption: min=%.1f - max=%.1f", velfitMinA, velfitMaxA);
+        Log.LogInfo( "  Operator-Linemodel: velocity fitting bounds for Emission: min=%.1f - max=%.1f - step=%.1f", velfitMinE, velfitMaxE, velfitStepE);
+        Log.LogInfo( "  Operator-Linemodel: velocity fitting bounds for Absorption: min=%.1f - max=%.1f - step=%.1f", velfitMinA, velfitMaxA, velfitStepA);
     }
 
     //enable/disable fit by groups. Once enabled, the velocity fitting groups are defined in the line catalog from v4.0 on.
@@ -802,12 +806,14 @@ Int32 COperatorLineModel::ComputeSecondPass(CDataStore &dataStore,
                     {
                         Float64 vInfLim;
                         Float64 vSupLim;
+                        Float64 vStep;
 
                         if(iLineType==0)
                         {
                             Log.LogInfo( "  Operator-Linemodel: manualStep velocity fit ABSORPTION, for z = %.6f", m_result->Redshifts[idx]);
                             vInfLim = velfitMinA;
                             vSupLim = velfitMaxA;
+                            vStep = velfitStepA;
                             if(m_enableWidthFitByGroups)
                             {
                                 idxVelfitGroups.clear();
@@ -822,6 +828,7 @@ Int32 COperatorLineModel::ComputeSecondPass(CDataStore &dataStore,
                             Log.LogInfo( "  Operator-Linemodel: manualStep velocity fit EMISSION, for z = %.6f", m_result->Redshifts[idx]);
                             vInfLim = velfitMinE;
                             vSupLim = velfitMaxE;
+                            vStep = velfitStepE;
                             if(m_enableWidthFitByGroups)
                             {
                                 idxVelfitGroups.clear();
@@ -835,7 +842,6 @@ Int32 COperatorLineModel::ComputeSecondPass(CDataStore &dataStore,
                         }
 
                         //Prepare velocity grid to be checked
-                        Float64 vStep = m_secondPass_velfit_vStep;;
                         Int32 nSteps = (int)((vSupLim-vInfLim)/vStep);
 
 
@@ -1354,8 +1360,10 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
                                   const std::string& opt_rigidity,
                                  const Float64 &opt_emvelocityfitmin,
                                  const Float64 &opt_emvelocityfitmax,
+                                 const Float64 &opt_emvelocityfitstep,
                                  const Float64 &opt_absvelocityfitmin,
-                                 const Float64 &opt_absvelocityfitmax)
+                                 const Float64 &opt_absvelocityfitmax,
+                                 const Float64 &opt_absvelocityfitstep)
 {
     // initialize empty results so that it can be returned anyway in case of an error
     m_result = std::shared_ptr<CLineModelResult>( new CLineModelResult() );
@@ -1440,8 +1448,10 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
                                           opt_rigidity,
                                           opt_emvelocityfitmin,
                                           opt_emvelocityfitmax,
+                                          opt_emvelocityfitstep,
                                           opt_absvelocityfitmin,
-                                          opt_absvelocityfitmax);
+                                          opt_absvelocityfitmax,
+                                          opt_absvelocityfitstep);
     if( retSecondPass!=0 )
     {
         Log.LogError( "Line Model, second pass failed. Aborting" );

@@ -62,8 +62,10 @@ private:
     std::string m_opt_velocityfit;
     Float64 m_opt_em_velocity_fit_min;
     Float64 m_opt_em_velocity_fit_max;
+    Float64 m_opt_em_velocity_fit_step;
     Float64 m_opt_abs_velocity_fit_min;
     Float64 m_opt_abs_velocity_fit_max;
+    Float64 m_opt_abs_velocity_fit_step;
     std::string m_opt_continuumreest;
     std::string m_opt_rules;
     Float64 m_opt_extremacount;

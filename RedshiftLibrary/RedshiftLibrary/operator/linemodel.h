@@ -55,10 +55,12 @@ public:
                                              const Float64 &opt_twosteplargegridstep=0.001,
                                              const std::string &opt_twosteplargegridsampling="log",
                                               const std::string &opt_rigidity="rules",
-                                              const Float64 &opt_emvelocityfitmin=20,
-                                              const Float64 &opt_emvelocityfitmax=500,
-                                             const Float64 &opt_absvelocityfitmin=150,
-                                             const Float64 &opt_absvelocityfitmax=500);
+                                             const Float64 &opt_emvelocityfitmin=20.,
+                                             const Float64 &opt_emvelocityfitmax=500.,
+                                            const Float64 &opt_emvelocityfitstep=20.,
+                                            const Float64 &opt_absvelocityfitmin=150.,
+                                            const Float64 &opt_absvelocityfitmax=500.,
+                                            const Float64 &opt_absvelocityfitstep=20.);
 
     Int32 Init(const CSpectrum& spectrum, const TFloat64List& redshifts);
     std::shared_ptr<COperatorResult> getResult();
@@ -111,10 +113,12 @@ public:
                                               const std::string &opt_rules="all",
                                               const std::string &opt_velocityFitting="no",
                                               const std::string &opt_rigidity="rules",
-                                              const Float64 &opt_emvelocityfitmin=20,
-                                              const Float64 &opt_emvelocityfitmax=500,
-                                             const Float64 &opt_absvelocityfitmin=150,
-                                             const Float64 &opt_absvelocityfitmax=500);
+                                              const Float64 &opt_emvelocityfitmin=20.,
+                                              const Float64 &opt_emvelocityfitmax=500.,
+                                             const Float64 &opt_emvelocityfitstep=20.,
+                                             const Float64 &opt_absvelocityfitmin=150.,
+                                             const Float64 &opt_absvelocityfitmax=500.,
+                                             const Float64 &opt_absvelocityfitstep=20.);
 
     std::shared_ptr<COperatorResult> computeWithUltimPass(CDataStore &dataStore,
                                       const CSpectrum& spectrum,
@@ -156,7 +160,6 @@ public:
     Float64 m_secondPass_velfit_dzInfLim = -4e-4;
     Float64 m_secondPass_velfit_dzSupLim = 4e-4;
     Float64 m_secondPass_velfit_dzStep = 2e-4;
-    Float64 m_secondPass_velfit_vStep = 20.0;
 
     bool m_enableLoadContTemplate=false;
     Int32 m_iRollContaminated=-1;

@@ -825,7 +825,7 @@ Bool CZweiModelSolve::Solve( CDataStore& dataStore,
     linemodel_s1.m_secondPass_velfit_dzInfLim = 4e-4;
     linemodel_s1.m_secondPass_velfit_dzSupLim = 4e-4;
     linemodel_s1.m_secondPass_velfit_dzStep = 4e-4;
-    linemodel_s1.m_secondPass_velfit_vStep = 50.0;
+    Float64 _vStep = 50.0;
 
     auto  result_s1 = linemodel_s1.Compute( dataStore,
                       _spc,
@@ -853,8 +853,10 @@ Bool CZweiModelSolve::Solve( CDataStore& dataStore,
                       m_opt_rigidity,
                       m_opt_em_velocity_fit_min,
                       m_opt_em_velocity_fit_max,
+                      _vStep,
                       m_opt_abs_velocity_fit_min,
-                      m_opt_abs_velocity_fit_max);
+                      m_opt_abs_velocity_fit_max,
+                      _vStep);
     if( !result_s1 )
     {
         Log.LogInfo( "Zweimodel - Failed to compute linemodel s1");
@@ -889,7 +891,6 @@ Bool CZweiModelSolve::Solve( CDataStore& dataStore,
     linemodel_s2.m_secondPass_velfit_dzInfLim = 4e-4;
     linemodel_s2.m_secondPass_velfit_dzSupLim = 4e-4;
     linemodel_s2.m_secondPass_velfit_dzStep = 4e-4;
-    linemodel_s2.m_secondPass_velfit_vStep = 50.0;
     auto  result_s2 = linemodel_s2.Compute( dataStore,
                       *contSpectrum,
                       _spcContinuum_s2,
@@ -916,8 +917,10 @@ Bool CZweiModelSolve::Solve( CDataStore& dataStore,
                       m_opt_rigidity,
                       m_opt_em_velocity_fit_min,
                       m_opt_em_velocity_fit_max,
+                      _vStep,
                       m_opt_abs_velocity_fit_min,
-                      m_opt_abs_velocity_fit_max);
+                      m_opt_abs_velocity_fit_max,
+                      _vStep);
     if( !result_s2 )
     {
         Log.LogInfo( "Zweimodel - Failed to compute linemodel s2");
@@ -983,7 +986,6 @@ Bool CZweiModelSolve::Solve( CDataStore& dataStore,
         linemodel_s1c2X.m_secondPass_velfit_dzInfLim = 0; //no z refinement
         linemodel_s1c2X.m_secondPass_velfit_dzSupLim = 0; //no z refinement
         linemodel_s1c2X.m_secondPass_velfit_dzStep = 2e-4;
-        linemodel_s1c2X.m_secondPass_velfit_vStep = 50.0;
         Int32 _opt_extremacount = -1; //no extrema search calculating on all redshifts
         auto result_s1_c2zX = linemodel_s1c2X.Compute( dataStore,
                                                      _spc,
@@ -1011,8 +1013,10 @@ Bool CZweiModelSolve::Solve( CDataStore& dataStore,
                                                      m_opt_rigidity,
                                                      m_opt_em_velocity_fit_min,
                                                      m_opt_em_velocity_fit_max,
+                                                     _vStep,
                                                      m_opt_abs_velocity_fit_min,
-                                                     m_opt_abs_velocity_fit_max);
+                                                     m_opt_abs_velocity_fit_max,
+                                                     _vStep);
 
         if( !result_s1_c2zX )
         {
@@ -1059,7 +1063,6 @@ Bool CZweiModelSolve::Solve( CDataStore& dataStore,
                 linemodel_s2c1Y.m_secondPass_velfit_dzInfLim = 0;
                 linemodel_s2c1Y.m_secondPass_velfit_dzSupLim = 0;
                 linemodel_s2c1Y.m_secondPass_velfit_dzStep = 2e-4;
-                linemodel_s2c1Y.m_secondPass_velfit_vStep = 50.0;
                 Int32 _opt_extremacount = -1; //no extrema search calculating on all redshifts
                 std::vector<Float64> redshifts_s2(1, zcandidates_s2[kzs2]);
                 auto result_s2_c1zY = linemodel_s2c1Y.Compute( dataStore,
@@ -1088,8 +1091,10 @@ Bool CZweiModelSolve::Solve( CDataStore& dataStore,
                                                              m_opt_rigidity,
                                                              m_opt_em_velocity_fit_min,
                                                              m_opt_em_velocity_fit_max,
+                                                             _vStep,
                                                              m_opt_abs_velocity_fit_min,
-                                                             m_opt_abs_velocity_fit_max);
+                                                             m_opt_abs_velocity_fit_max,
+                                                             _vStep);
 
                 if( !result_s2_c1zY )
                 {

@@ -64,8 +64,10 @@ const std::string CLineModelSolve::GetDescription()
     desc.append("\tparam: linemodel.velocityfit = {""yes"", ""no""}\n");
     desc.append("\tparam: linemodel.emvelocityfitmin = <float value>\n");
     desc.append("\tparam: linemodel.emvelocityfitmax = <float value>\n");
+    desc.append("\tparam: linemodel.emvelocityfitstep = <float value>\n");
     desc.append("\tparam: linemodel.absvelocityfitmin = <float value>\n");
     desc.append("\tparam: linemodel.absvelocityfitmax = <float value>\n");
+    desc.append("\tparam: linemodel.absvelocityfitstep = <float value>\n");
     desc.append("\tparam: linemodel.fastfitlargegridstep = <float value>, deactivated if negative or zero\n");
     desc.append("\tparam: linemodel.pdfcombination = {""marg"", ""bestchi2""}\n");
     desc.append("\tparam: linemodel.stronglinesprior = <float value>, penalization factor = positive value or -1 to deactivate\n");
@@ -112,8 +114,10 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
     if(m_opt_velocityfit=="yes"){
         dataStore.GetScopedParam( "linemodel.emvelocityfitmin", m_opt_em_velocity_fit_min, 20.0 );
         dataStore.GetScopedParam( "linemodel.emvelocityfitmax", m_opt_em_velocity_fit_max, 500.0 );
+        dataStore.GetScopedParam( "linemodel.emvelocityfitstep", m_opt_em_velocity_fit_step, 20.0 );
         dataStore.GetScopedParam( "linemodel.absvelocityfitmin", m_opt_abs_velocity_fit_min, 150.0 );
         dataStore.GetScopedParam( "linemodel.absvelocityfitmax", m_opt_abs_velocity_fit_max, 500.0 );
+        dataStore.GetScopedParam( "linemodel.absvelocityfitstep", m_opt_abs_velocity_fit_step, 20.0 );
     }
     dataStore.GetScopedParam( "linemodel.continuumreestimation", m_opt_continuumreest, "no" );
     dataStore.GetScopedParam( "linemodel.rules", m_opt_rules, "all" );
@@ -161,8 +165,10 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
     if(m_opt_velocityfit=="yes"){
         Log.LogInfo( "    -em velocity fit min : %.1f", m_opt_em_velocity_fit_min);
         Log.LogInfo( "    -em velocity fit max : %.1f", m_opt_em_velocity_fit_max);
+        Log.LogInfo( "    -em velocity fit step : %.1f", m_opt_em_velocity_fit_step);
         Log.LogInfo( "    -abs velocity fit min : %.1f", m_opt_abs_velocity_fit_min);
         Log.LogInfo( "    -abs velocity fit max : %.1f", m_opt_abs_velocity_fit_max);
+        Log.LogInfo( "    -abs velocity fit step : %.1f", m_opt_abs_velocity_fit_step);
     }
 
     Log.LogInfo( "    -rigidity: %s", m_opt_rigidity.c_str());
@@ -710,8 +716,10 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
                                             m_opt_rigidity,
                                             m_opt_em_velocity_fit_min,
                                             m_opt_em_velocity_fit_max,
+                                            m_opt_em_velocity_fit_step,
                                             m_opt_abs_velocity_fit_min,
-                                            m_opt_abs_velocity_fit_max);
+                                            m_opt_abs_velocity_fit_max,
+                                            m_opt_abs_velocity_fit_step);
     if( retSecondPass!=0 )
     {
         Log.LogError( "Line Model, second pass failed. Aborting" );
