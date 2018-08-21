@@ -187,6 +187,10 @@ class processHelper(object):
         if not (self.config_verbose=="0" or self.config_verbose=="1" or self.config_verbose=="2"):
             print("ERROR: config_verbose bad value (={})...".format(self.config_verbose))
             return False
+                
+        self.config_linemeascatalogpath = self.getConfigVal("linemeascatalog")
+        print("INFO: linemeascatalogpath is : {}".format(self.config_linemeascatalogpath))
+
        
         return True
            
@@ -302,6 +306,10 @@ class processHelper(object):
         argStr = "{} --thread-count {}".format(argStr, "1")
 	        
         argStr = "{} --verbose {}".format(argStr, self.config_verbose)
+        
+	argStr = "{} --linemeascatalog {}".format(argStr, self.config_linemeascatalogpath)
+
+
 
 
         if self.enableProcessAtZ:
