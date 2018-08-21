@@ -169,7 +169,7 @@ Bool CSpectrumIOFitsReader::Read1( fitsfile* fptr, CSpectrum& spectrum )
 /**
  * Attempts to read the file as a fits file containing 2 HDUs, using the Read1 and Read2 methods to read each HDU, respectively. If all calls return true, this method returns true as well - and returns false otherwise.
  */
-Void CSpectrumIOFitsReader::Read( const char* filePath, CSpectrum& spectrum )
+void CSpectrumIOFitsReader::Read( const char* filePath, CSpectrum& spectrum )
 {
     fitsfile *fptr = NULL;
     Int32 status = 0;

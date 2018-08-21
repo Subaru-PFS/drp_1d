@@ -33,7 +33,7 @@ CSpectrumIOAsciiReader::~CSpectrumIOAsciiReader()
 /**
  *
  */
-Void CSpectrumIOAsciiReader::Read( const char* filePath, CSpectrum& spectrum )
+void CSpectrumIOAsciiReader::Read( const char* filePath, CSpectrum& spectrum )
 {
   //Uncomment below when --verbose works properly.
   Log.LogDebug ( "Parsing ASCII file %s.", filePath );

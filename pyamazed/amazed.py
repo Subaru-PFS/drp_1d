@@ -3,6 +3,7 @@ import os.path
 from argumentparser import parser
 from redshift import *
 from config import Config
+import numpy as np
 
 
 def datapath(config, *path):
@@ -69,17 +70,25 @@ def amazed():
     print("Loading %s" % config.linecatalog)
     line_catalog.Load(calibrationpath(config, config.linecatalog))
 
+    print("TEST")
+    #flux = CSpectrumFluxAxis_default(np.ones(10))
+    flux = CSpectrumFluxAxis_withError(np.ones(10), np.ones(10))
     print(spectrumList)
 
     for line in spectrumList:
         spectrum_path, noise_path, proc_id = line.split()
-        spectrum = CSpectrum()
+        spectrum = CSpectrum_default()
         try:
             spectrum.LoadSpectrum(spectrumpath(config, spectrum_path),
                                   spectrumpath(config, noise_path))
         except Exception as e:
             print("Can't load spectrum : {}".format(e))
             continue
+
+        #range = spectrum.GetLambdaRange()
+        range = TFloat64Range(13000, 18500)
+        done, mean, std = spectrum.GetMeanAndStdFluxInRange(range)
+        print(f'Spectrum stats: {done}, {mean}, {std}')
 
         try:
             ctx = CProcessFlowContext()

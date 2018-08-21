@@ -51,7 +51,7 @@ Bool CSpectrumIOGenericReader::CanRead( const char* filePath )
 /**
  * Will return a call to reader.Read if the file extension is fits, txt or dat. Throw otherwise.
  */
-Void CSpectrumIOGenericReader::Read( const char* filePath, CSpectrum& spectrum )
+void CSpectrumIOGenericReader::Read( const char* filePath, CSpectrum& spectrum )
 {
     bfs::path path( filePath );
 

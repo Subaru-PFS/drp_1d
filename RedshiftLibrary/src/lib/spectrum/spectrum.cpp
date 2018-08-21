@@ -266,6 +266,8 @@ const Bool CSpectrum::IsNoiseValid( Float64 LambdaMin,  Float64 LambdaMax ) cons
     const TFloat64List& error = m_FluxAxis.GetError();
     Int32 iMin = m_SpectralAxis.GetIndexAtWaveLength(LambdaMin);
     Int32 iMax = m_SpectralAxis.GetIndexAtWaveLength(LambdaMax);
+    Log.LogDebug("    CSpectrum::IsNoiseValid - iMin=%d error[iMin]=%e", iMin, error[iMin]);
+    Log.LogDebug("    CSpectrum::IsNoiseValid - iMax=%d error[iMax]=%e", iMax, error[iMax]);
     for(Int32 i=iMin; i<iMax; i++){
         Bool validSample=true;
         if( error[i] <= 0 ){

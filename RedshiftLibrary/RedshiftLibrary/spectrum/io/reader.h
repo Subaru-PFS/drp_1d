@@ -18,7 +18,7 @@ public:
     CSpectrumIOReader();
     virtual ~CSpectrumIOReader();
 
-    virtual Void Read( const char* fluxPath, CSpectrum& s ) = 0;
+    virtual void Read( const char* fluxPath, CSpectrum& s ) = 0;
 private:
 
 };
