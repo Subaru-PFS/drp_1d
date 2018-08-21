@@ -46,10 +46,11 @@ def amazed():
                                                     "IrregularSamplingMedian")
     assert retcode
 
-    retcode, opt_medianKernelWidth = param.Get_Float64("continuumRemoval.medianKernelWidth", 75)
+    #retcode, opt_medianKernelWidth = param.Get_Float64("continuumRemoval.medianKernelWidth", 75.0)
+    retcode, opt_medianKernelWidth = param.Get_Float64("continuumRemoval.medianKernelWidth")
     assert retcode
 
-    retcode, opt_nscales = param.Get_Float64("continuumRemoval.decompScales", 8)
+    retcode, opt_nscales = param.Get_Float64("continuumRemoval.decompScales", 8.0)
     assert retcode
 
     retcode, dfBinPath = param.Get_String("continuumRemoval.binPath",
@@ -72,7 +73,7 @@ def amazed():
 
     print("TEST")
     #flux = CSpectrumFluxAxis_default(np.ones(10))
-    flux = CSpectrumFluxAxis_withError(np.ones(10), np.ones(10))
+    flux = CSpectrumFluxAxis(np.ones(10), np.ones(10))
     print(spectrumList)
 
     for line in spectrumList:
