@@ -306,8 +306,13 @@ class processHelper(object):
         argStr = "{} --thread-count {}".format(argStr, "1")
 	        
         argStr = "{} --verbose {}".format(argStr, self.config_verbose)
-        
-	argStr = "{} --linemeascatalog {}".format(argStr, self.config_linemeascatalogpath)
+       
+ 
+        if not os.path.exists(self.config_linemeascatalogpath) and (self.config_linemeascatalogpath!="not found"):
+	   print("ERROR: linemeascatalog bad value (={})...".format(self.config_linemeascatalogpath))
+           return False
+	elif (self.config_linemeascatalogpath!="not found"):
+	   argStr = "{} --linemeascatalog {}".format(argStr, self.config_linemeascatalogpath)
 
 
 
