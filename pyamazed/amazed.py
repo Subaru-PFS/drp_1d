@@ -71,11 +71,6 @@ def amazed():
     print("Loading %s" % config.linecatalog)
     line_catalog.Load(calibrationpath(config, config.linecatalog))
 
-    print("TEST")
-    #flux = CSpectrumFluxAxis_default(np.ones(10))
-    flux = CSpectrumFluxAxis(np.ones(10), np.ones(10))
-    print(spectrumList)
-
     for line in spectrumList:
         spectrum_path, noise_path, proc_id = line.split()
         spectrum = CSpectrum_default()

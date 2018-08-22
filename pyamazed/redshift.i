@@ -226,7 +226,7 @@ class CSpectrumAxis
 };
 %clear (const Float64* samples, UInt32 n);
 
-%apply (double* IN_ARRAY1, int DIM1) {(const Float64* samples, UInt32 n)};
+%apply (double* IN_ARRAY1, int DIM1) {(const NSEpic::Float64* samples, NSEpic::UInt32 n)};
 class CSpectrumSpectralAxis : public CSpectrumAxis {
  public:
   // CSpectrumSpectralAxis(); // needs %rename
