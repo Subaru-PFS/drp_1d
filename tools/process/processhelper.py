@@ -147,12 +147,12 @@ class processHelper(object):
         self.config_zclassifierdir = self.getConfigVal("zclassifierdir")
         print("INFO: reliabilitydir is : {}".format(self.config_zclassifierdir))
         enableSkipReliability = True
-	if not os.path.exists(self.config_zclassifierdir):
-	    if not enableSkipReliability:
-            	print("ERROR: zclassifierdir dir does not exist! Aborting...")
-            	return False
-	    else:
-		print("ERROR: zclassifierdir dir does not exist! Skipping...")
+        if not os.path.exists(self.config_zclassifierdir):
+            if not enableSkipReliability:
+                print("ERROR: zclassifierdir dir does not exist! Aborting...")
+                return False
+            else:
+                print("ERROR: zclassifierdir dir does not exist! Skipping...")
             
         self.config_linecatalog = self.getConfigVal("linecatalog")
         print("INFO: linecatalog is : {}".format(self.config_linecatalog))
@@ -304,15 +304,15 @@ class processHelper(object):
             
         #warning, hardcoded: always use only 1 proc. thread        
         argStr = "{} --thread-count {}".format(argStr, "1")
-	        
+                
         argStr = "{} --verbose {}".format(argStr, self.config_verbose)
        
  
         if not os.path.exists(self.config_linemeascatalogpath) and (self.config_linemeascatalogpath!="not found"):
-	   print("ERROR: linemeascatalog bad value (={})...".format(self.config_linemeascatalogpath))
-           return False
-	elif (self.config_linemeascatalogpath!="not found"):
-	   argStr = "{} --linemeascatalog {}".format(argStr, self.config_linemeascatalogpath)
+            print("ERROR: linemeascatalog bad value (={})...".format(self.config_linemeascatalogpath))
+            return False
+        elif (self.config_linemeascatalogpath!="not found"):
+            argStr = "{} --linemeascatalog {}".format(argStr, self.config_linemeascatalogpath)
 
 
 
@@ -511,7 +511,7 @@ class processHelper(object):
             self.exportSubRecombineInfo()
         
         
-def StartFromCommandLine( argv ) :	
+def StartFromCommandLine( argv ) :
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     
 
@@ -597,7 +597,7 @@ def StartFromCommandLine( argv ) :
     
     
     
-def Main( argv ) :	
+def Main( argv ) :
     try:
         StartFromCommandLine( argv )
     except (KeyboardInterrupt):
