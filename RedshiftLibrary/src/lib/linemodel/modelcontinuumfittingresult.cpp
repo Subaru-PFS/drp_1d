@@ -48,7 +48,7 @@ CModelContinuumFittingResult::~CModelContinuumFittingResult()
 /**
  * \brief Prints the results of the Linemodel in the argument store, using the argument stream as output.
  **/
-Void CModelContinuumFittingResult::Save( const CDataStore& store, std::ostream& stream ) const
+void CModelContinuumFittingResult::Save( const CDataStore& store, std::ostream& stream ) const
 {
     // save model continuum solution
 
@@ -65,7 +65,7 @@ Void CModelContinuumFittingResult::Save( const CDataStore& store, std::ostream& 
 /**
  * \brief Empty method.
  **/
-Void CModelContinuumFittingResult::SaveLine(const CDataStore &store, std::ostream& stream ) const
+void CModelContinuumFittingResult::SaveLine(const CDataStore &store, std::ostream& stream ) const
 {
 
 }
