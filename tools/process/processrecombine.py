@@ -103,17 +103,27 @@ class processRecombine(object):
             source_path = os.path.join(subpathsList[0], "templates_nocontinuum")
             dest_path = os.path.join(datasetOutputPath, "templates_nocontinuum")
             shutil.copytree(source_path, dest_path)
-            
+  
+        except Exception as e:
+            if not enableSkipUnfinished:
+                print("WARNING: unable to merge some output files. Skipping that operation !")
+                input("\n\nWARNING: unable to merge some output files. will skip that operation.\nPress any key to continue...".format())
+                raise e
+            else:
+                print(e)
+                
+                
+        try:
             #copy intermediate results if any
             self.copyIntermediateResultsDirs(subpathsList, datasetOutputPath, spcfileName="input.spectrumlist")
                 
         except Exception as e:
             if not enableSkipUnfinished:
+                print("WARNING: unable to merge some INTERMEDIATE output files. Skipping that operation !")
+                input("\n\nWARNING: unable to merge some output files. will skip that operation.\nPress any key to continue...".format())
                 raise e
-                print("WARNING: unable to merge some intermediate output files. Skipping that operation !")
-                raw_input("\n\nWARNING: unable to merge some output files. will skip that operation.\nPress any key to continue...".format())
             else:
-                print e
+                print(e)
         
         #copy the cluster logs into the merged folder
         try:
@@ -184,6 +194,7 @@ class processRecombine(object):
                         shutil.copytree(source_path, dest_path)
                     except:
                         print("ERROR: unable to copy intermediate files for: {}".format(procTag))
+                        
             f.close()
             
     def estimatePerSpectrumProcTime(self, clusterLogDirPath, datasetOutputPath):

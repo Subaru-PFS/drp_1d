@@ -9,6 +9,7 @@
 #include <RedshiftLibrary/linemodel/multirollmodel.h>
 #include <RedshiftLibrary/linemodel/modelspectrumresult.h>
 #include <RedshiftLibrary/linemodel/modelfittingresult.h>
+#include <RedshiftLibrary/linemodel/modelcontinuumfittingresult.h>
 #include <RedshiftLibrary/linemodel/modelrulesresult.h>
 #include <RedshiftLibrary/operator/spectraFluxResult.h>
 #include <RedshiftLibrary/common/mask.h>
@@ -51,12 +52,15 @@ public:
                                               const std::string &opt_continuumreest="no",
                                               const std::string &opt_rules="all",
                                               const std::string &opt_velocityFitting="no",
-                                              const Float64 &opt_twosteplargegridstep=0.001,
+                                             const Float64 &opt_twosteplargegridstep=0.001,
+                                             const std::string &opt_twosteplargegridsampling="log",
                                               const std::string &opt_rigidity="rules",
-                                              const Float64 &opt_emvelocityfitmin=20,
-                                              const Float64 &opt_emvelocityfitmax=500,
-                                             const Float64 &opt_absvelocityfitmin=150,
-                                             const Float64 &opt_absvelocityfitmax=500);
+                                             const Float64 &opt_emvelocityfitmin=20.,
+                                             const Float64 &opt_emvelocityfitmax=500.,
+                                            const Float64 &opt_emvelocityfitstep=20.,
+                                            const Float64 &opt_absvelocityfitmin=150.,
+                                            const Float64 &opt_absvelocityfitmax=500.,
+                                            const Float64 &opt_absvelocityfitstep=20.);
 
     Int32 Init(const CSpectrum& spectrum, const TFloat64List& redshifts);
     std::shared_ptr<COperatorResult> getResult();
@@ -82,6 +86,7 @@ public:
                                               const std::string &opt_rules="all",
                                               const std::string &opt_velocityFitting="no",
                                               const Float64 &opt_twosteplargegridstep=0.001,
+                                              const string &opt_twosteplargegridsampling="log",
                                               const std::string &opt_rigidity="rules");
 
     Int32 ComputeCandidates(const Int32 opt_extremacount, const Int32 opt_sign, const std::vector<Float64> floatValues);
@@ -108,10 +113,12 @@ public:
                                               const std::string &opt_rules="all",
                                               const std::string &opt_velocityFitting="no",
                                               const std::string &opt_rigidity="rules",
-                                              const Float64 &opt_emvelocityfitmin=20,
-                                              const Float64 &opt_emvelocityfitmax=500,
-                                             const Float64 &opt_absvelocityfitmin=150,
-                                             const Float64 &opt_absvelocityfitmax=500);
+                                              const Float64 &opt_emvelocityfitmin=20.,
+                                              const Float64 &opt_emvelocityfitmax=500.,
+                                             const Float64 &opt_emvelocityfitstep=20.,
+                                             const Float64 &opt_absvelocityfitmin=150.,
+                                             const Float64 &opt_absvelocityfitmax=500.,
+                                             const Float64 &opt_absvelocityfitstep=20.);
 
     std::shared_ptr<COperatorResult> computeWithUltimPass(CDataStore &dataStore,
                                       const CSpectrum& spectrum,
@@ -135,6 +142,7 @@ public:
                                       const std::string& opt_rules,
                                       const std::string& opt_velocityFitting,
                                       const Float64 &opt_twosteplargegridstep,
+                                      const string &opt_twosteplargegridsampling,
                                       const std::string& opt_rigidity,
                                       const Float64 &opt_velocityfitmin,
                                       const Float64 &opt_velocityfitmax);
@@ -152,7 +160,6 @@ public:
     Float64 m_secondPass_velfit_dzInfLim = -4e-4;
     Float64 m_secondPass_velfit_dzSupLim = 4e-4;
     Float64 m_secondPass_velfit_dzStep = 2e-4;
-    Float64 m_secondPass_velfit_vStep = 20.0;
 
     bool m_enableLoadContTemplate=false;
     Int32 m_iRollContaminated=-1;
@@ -162,6 +169,8 @@ public:
     std::shared_ptr<CModelSpectrumResult> GetContaminantSpectrumResult();
     std::shared_ptr<CModelSpectrumResult> m_savedContaminantSpectrumResult;
 
+    Int32 m_opt_tplfit_dustFit = 1;
+    Int32 m_opt_tplfit_extinction = 1;
 private:
 
     std::shared_ptr<CLineModelResult> m_result;
@@ -172,6 +181,7 @@ private:
     Int32 m_enableFastFitLargeGrid;
     Int32 m_estimateLeastSquareFast;
 
+
     void ComputeArea1(CLineModelResult& results);
     void ComputeArea2(CLineModelResult& results);
     Float64 FitBayesWidth( CSpectrumSpectralAxis& spectralAxis, CSpectrumFluxAxis& fluxAxis, Float64 z, Int32 start, Int32 end);
@@ -180,6 +190,7 @@ private:
 
     std::vector<std::shared_ptr<CModelSpectrumResult>  > m_savedModelSpectrumResults;
     std::vector<std::shared_ptr<CModelFittingResult>  > m_savedModelFittingResults;
+    std::vector<std::shared_ptr<CModelContinuumFittingResult>  > m_savedModelContinuumFittingResults;
     std::vector<std::shared_ptr<CModelRulesResult>  > m_savedModelRulesResults;
     std::vector<std::shared_ptr<CSpectraFluxResult>  > m_savedModelContinuumSpectrumResults;
 

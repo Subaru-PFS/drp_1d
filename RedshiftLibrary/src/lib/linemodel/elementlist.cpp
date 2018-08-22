@@ -780,6 +780,7 @@ Int32 CLineModelElementList::LoadFitContinuumOneTemplate(const TFloat64Range& la
  **/
 Int32 CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange)
 {
+    Log.LogDebug("Elementlist, m_fitContinuum_option=%d", m_fitContinuum_option);
     if(m_observeGridContinuumFlux == NULL)
     {
         Log.LogError("Elementlist, cannot loadfitcontinuum without precomputedGridTplFlux... aborting!");
@@ -1523,8 +1524,8 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
                     Log.LogDebug("    model:     sub #%d - fitted amp = %f", iSubElts, m_Elements[iElts]->GetFittedAmplitude(iSubElts));
                     Log.LogDebug("    model:     sub #%d - outside range = %d", iSubElts, m_Elements[iElts]->IsOutsideLambdaRange(iSubElts));
                 }
-                Log.LogDebug("    model:     dtm = %f", m_Elements[iElts]->GetSumCross());
-                Log.LogDebug("    model:     dtd = %f", m_Elements[iElts]->GetSumGauss());
+                Log.LogDebug("    model:     dtm = %e", m_Elements[iElts]->GetSumCross());
+                Log.LogDebug("    model:     dtd = %e", m_Elements[iElts]->GetSumGauss());
             }
         }
 

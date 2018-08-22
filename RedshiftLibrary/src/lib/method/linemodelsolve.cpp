@@ -51,6 +51,8 @@ const std::string CLineModelSolve::GetDescription()
     desc.append("\tparam: linemodel.lineforcefilter = {""no"", ""S""}\n");
     desc.append("\tparam: linemodel.fittingmethod = {""hybrid"", ""individual""}\n");
     desc.append("\tparam: linemodel.continuumcomponent = {""fromspectrum"", ""tplfit"", ""nocontinuum"", ""zero""}\n");
+    desc.append("\tparam: linemodel.continuumismfit = {""no"", ""yes""}\n");
+    desc.append("\tparam: linemodel.continuumigmfit = {""no"", ""yes""}\n");
     desc.append("\tparam: linemodel.rigidity = {""rules"", ""tplcorr"", ""tplshape""}\n");
     desc.append("\tparam: linemodel.linewidthtype = {""instrumentdriven"", ""velocitydriven"",  ""combined"",  ""nispvsspsf201707"", ""fixed""}\n");
     desc.append("\tparam: linemodel.instrumentresolution = <float value>\n");
@@ -62,8 +64,10 @@ const std::string CLineModelSolve::GetDescription()
     desc.append("\tparam: linemodel.velocityfit = {""yes"", ""no""}\n");
     desc.append("\tparam: linemodel.emvelocityfitmin = <float value>\n");
     desc.append("\tparam: linemodel.emvelocityfitmax = <float value>\n");
+    desc.append("\tparam: linemodel.emvelocityfitstep = <float value>\n");
     desc.append("\tparam: linemodel.absvelocityfitmin = <float value>\n");
     desc.append("\tparam: linemodel.absvelocityfitmax = <float value>\n");
+    desc.append("\tparam: linemodel.absvelocityfitstep = <float value>\n");
     desc.append("\tparam: linemodel.fastfitlargegridstep = <float value>, deactivated if negative or zero\n");
     desc.append("\tparam: linemodel.pdfcombination = {""marg"", ""bestchi2""}\n");
     desc.append("\tparam: linemodel.stronglinesprior = <float value>, penalization factor = positive value or -1 to deactivate\n");
@@ -86,7 +90,21 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
     dataStore.GetScopedParam( "linemodel.lineforcefilter", m_opt_lineforcefilter, "no" );
     dataStore.GetScopedParam( "linemodel.fittingmethod", m_opt_fittingmethod, "hybrid" );
     dataStore.GetScopedParam( "linemodel.fastfitlargegridstep", m_opt_twosteplargegridstep, 0.001 );
+    std::string redshiftSampling;
+    dataStore.GetParam( "redshiftsampling", redshiftSampling, "lin" ); //TODO: sampling in log cannot be used for now as zqual descriptors assume constant dz.
+    if(redshiftSampling=="log")
+    {
+        m_opt_twosteplargegridsampling = "log";
+    }else{
+        m_opt_twosteplargegridsampling = "lin";
+    }
+    Log.LogDetail( "    fastfitlargegridsampling (auto set from redshiftsampling param.): %s", m_opt_twosteplargegridsampling.c_str());
+
     dataStore.GetScopedParam( "linemodel.continuumcomponent", m_opt_continuumcomponent, "fromspectrum" );
+    if(m_opt_continuumcomponent=="tplfit"){
+        dataStore.GetScopedParam( "linemodel.continuumismfit", m_opt_tplfit_dustfit, "no" );
+        dataStore.GetScopedParam( "linemodel.continuumigmfit", m_opt_tplfit_igmfit, "no" );
+    }
     dataStore.GetScopedParam( "linemodel.rigidity", m_opt_rigidity, "rules" );
     dataStore.GetScopedParam( "linemodel.linewidthtype", m_opt_lineWidthType, "velocitydriven" );
     dataStore.GetScopedParam( "linemodel.instrumentresolution", m_opt_resolution, 2350.0 );
@@ -96,8 +114,10 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
     if(m_opt_velocityfit=="yes"){
         dataStore.GetScopedParam( "linemodel.emvelocityfitmin", m_opt_em_velocity_fit_min, 20.0 );
         dataStore.GetScopedParam( "linemodel.emvelocityfitmax", m_opt_em_velocity_fit_max, 500.0 );
+        dataStore.GetScopedParam( "linemodel.emvelocityfitstep", m_opt_em_velocity_fit_step, 20.0 );
         dataStore.GetScopedParam( "linemodel.absvelocityfitmin", m_opt_abs_velocity_fit_min, 150.0 );
         dataStore.GetScopedParam( "linemodel.absvelocityfitmax", m_opt_abs_velocity_fit_max, 500.0 );
+        dataStore.GetScopedParam( "linemodel.absvelocityfitstep", m_opt_abs_velocity_fit_step, 20.0 );
     }
     dataStore.GetScopedParam( "linemodel.continuumreestimation", m_opt_continuumreest, "no" );
     dataStore.GetScopedParam( "linemodel.rules", m_opt_rules, "all" );
@@ -145,8 +165,10 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
     if(m_opt_velocityfit=="yes"){
         Log.LogInfo( "    -em velocity fit min : %.1f", m_opt_em_velocity_fit_min);
         Log.LogInfo( "    -em velocity fit max : %.1f", m_opt_em_velocity_fit_max);
+        Log.LogInfo( "    -em velocity fit step : %.1f", m_opt_em_velocity_fit_step);
         Log.LogInfo( "    -abs velocity fit min : %.1f", m_opt_abs_velocity_fit_min);
         Log.LogInfo( "    -abs velocity fit max : %.1f", m_opt_abs_velocity_fit_max);
+        Log.LogInfo( "    -abs velocity fit step : %.1f", m_opt_abs_velocity_fit_step);
     }
 
     Log.LogInfo( "    -rigidity: %s", m_opt_rigidity.c_str());
@@ -155,6 +177,10 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
     }
 
     Log.LogInfo( "    -continuumcomponent: %s", m_opt_continuumcomponent.c_str());
+    if(m_opt_continuumcomponent=="tplfit"){
+        Log.LogInfo( "      -tplfit_ismfit: %s", m_opt_tplfit_dustfit.c_str());
+        Log.LogInfo( "      -tplfit_igmfit: %s", m_opt_tplfit_igmfit.c_str());
+    }
     Log.LogInfo( "    -continuumreestimation: %s", m_opt_continuumreest.c_str());
     Log.LogInfo( "    -extremacount: %.3f", m_opt_extremacount);
     Log.LogInfo( "    -fastfitlargegridstep: %.6f", m_opt_twosteplargegridstep);
@@ -537,89 +563,6 @@ Int32 getVelocitiesFromRefFile( const char* filePath, std::string spcid, Float64
     return true;
 }
 
-
-/**
- * \brief
- * Retrieve the true-redshift from a hardcoded ref file path
- * nb: this is a hack for development purposes/line measurement at zref
- * reverseInclusion=0 (default): spcId is searched to be included in the Ref-File-Id
- * reverseInclusion=1 : Ref-File-Id is searched to be included in the spcId
- **/
-Int32 getValueFromRefFile( const char* filePath, std::string spcid, Int32 colID, Float64& zref, Int32 reverseInclusion )
-{
-    ifstream file;
-
-    file.open( filePath, ifstream::in );
-    if( file.rdstate() & ios_base::failbit )
-        return false;
-
-    string line;
-
-    // Read file line by line
-    while( getline( file, line ) )
-    {
-        // remove comments
-        if(line.compare(0,1,"#",1)==0){
-            continue;
-        }
-        char_separator<char> sep(" \t");
-
-        // Tokenize each line
-        typedef tokenizer< char_separator<char> > ttokenizer;
-        ttokenizer tok( line, sep );
-
-        // Check if it's not a comment
-        ttokenizer::iterator it = tok.begin();
-        if( it != tok.end() && *it != "#" )
-        {
-            string name;
-            if( it != tok.end() )
-            {
-                name = *it;
-            }
-
-            if(reverseInclusion==0)
-            {
-                std::size_t foundstr = name.find(spcid.c_str());
-                if (foundstr==std::string::npos){
-                    continue;
-                }
-            }else{
-                std::size_t foundstr = spcid.find(name.c_str());
-                if (foundstr==std::string::npos){
-                    continue;
-                }
-            }
-
-            // Found the correct spectrum ID: now read the ref values
-            Int32 nskip = colID-1;
-            for(Int32 i=0; i<nskip; i++)
-            {
-                ++it;
-            }
-            if( it != tok.end() )
-            {
-
-                zref = 0.0;
-                try
-                {
-                    zref = lexical_cast<double>(*it);
-                    return true;
-                }
-                catch (bad_lexical_cast)
-                {
-                    zref = 0.0;
-                    return false;
-                }
-            }
-
-        }
-    }
-    file.close();
-    return true;
-}
-
-
 /**
  * \brief
  * Create a continuum object by subtracting spcWithoutCont from the spc.
@@ -669,94 +612,20 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
     //        Log.LogInfo( "Linemodel - hack - Loaded velocities for spc %s : elv=%4.1f, alv=%4.1f", spc.GetName().c_str(), elv, alv);
     //    }
 
-    //Hack: load the zref values
-    std::vector<Float64> _redshifts;
-    if(false)
-    {
-        Log.LogInfo( "Linemodel - hacking zref enabled");
-        Float64 zref = -1.0;
-        namespace fs = boost::filesystem;
-        Int32 reverseInclusionForIdMatching = 0;
-        bool computeOnZrange=false;
-        /*
-        // Euclid case for process at zref
-        fs::path refFilePath("/home/aschmitt/amazed_cluster/datasets/euclid/euclidsim2016/EUC-TEST-TUGALSPC-2016-03_export20170302_3z4mag4lfhabins_TrueFlux/reference_correctedFastSim.list");
-        //fs::path refFilePath("/sps/euclid/Users/schmitt/amazed_cluster/datasets/euclid/euclidsim2016/EUC-TEST-TUGALSPC-2016-03_export20170302_3z4mag4lfhabins_TrueFlux/reference_correctedFastSim.list");
-        Int32 substring_start = 0;
-        Int32 substring_n = spc.GetName().size();
-        Int32 colId = 2; //starts at 1, so that id_column is usually 1
-        reverseInclusionForIdMatching = 1;
-        computeOnZrange = true;
-        //*/
-        //*
-        // SDSS case for process at zref
-        //fs::path refFilePath("/home/aschmitt/amazed_cluster/datasets/sdss/sdss_201707/reference_SDSS_spectra_bg10k.txt");
-        //fs::path refFilePath("/sps/euclid/Users/schmitt/amazed_cluster/datasets/sdss/sdss_201707/reference_SDSS_spectra_bg10k.txt");
-        fs::path refFilePath("/home/aschmitt/data/sdss/sdss_201707/reference_SDSS_spectra_bg10k.txt");
-        Int32 substring_start = 5;
-        Int32 substring_n = 15;
-        Int32 colId = 2; //starts at 1, so that id_column is usually 1
-        computeOnZrange = false;
-        //*/
-        /*
-        // PFS case for process at zref
-        fs::path refFilePath("/home/aschmitt/amazed_cluster/datasets/pfs/pfs6b2_201704_sim10k/pfs6b2_reference_20170523_filtSim3h.txt");
-        Int32 substring_start = 0;
-        Int32 substring_n = 18;
-        std::string strTag = "wlines";
-        std::size_t foundstra = spc.GetName().find(strTag.c_str());
-        if (foundstra!=std::string::npos){
-            substring_n = (Int32)foundstra;
-        }else{
-            Log.LogWarning( "Linemodel - hack - unable to find strTag=%s", strTag.c_str());
-            return false;
-        }
-
-        Int32 colId = 2; //starts at 1, so that id_column is usually 1
-        computeOnZrange = false;
-        //*/
-
-        if ( fs::exists(refFilePath) )
-        {
-            std::string spcSubStringId = spc.GetName().substr(substring_start, substring_n);
-            Log.LogInfo( "Linemodel - hack - using substring %s", spcSubStringId.c_str());
-            getValueFromRefFile( refFilePath.c_str(), spcSubStringId, colId, zref, reverseInclusionForIdMatching);
-        }
-        if(zref==-1)
-        {
-            Log.LogWarning( "Linemodel - hack - unable to find zref!");
-            return false;
-        }
-
-        if(computeOnZrange) //computing only on zref, or on a zrange around zref
-        {
-            Float64 deltaZrangeHalf = 0.5e-2; //override zrange
-            Float64 stepZ = 1e-5;
-            Float64 nStepsZ = deltaZrangeHalf*2/stepZ+1;
-            for(Int32 kz=0; kz<nStepsZ; kz++)
-            {
-                Float64 _z = zref + kz*stepZ - deltaZrangeHalf;
-                _redshifts.push_back(_z);
-            }
-            Log.LogInfo( "Linemodel - hack - zmin=%.5f, zmax=%.5f, zstep=%.5f", _redshifts[0], _redshifts[_redshifts.size()-1], stepZ);
-        }else{
-            _redshifts.push_back(zref);
-        }
-        m_opt_extremacount = 1; //override nextrema count
-        m_opt_twosteplargegridstep = 0; //override fastfitlargegrid
-        Log.LogInfo( "Linemodel - hack - Loaded zref for spc %s : zref=%f", spc.GetName().c_str(), zref);
-    }else{
-        _redshifts = redshifts;
-    }
-
     // Compute with linemodel operator
     COperatorLineModel linemodel;
-    Int32 retInit = linemodel.Init(_spc, _redshifts);
+    Int32 retInit = linemodel.Init(_spc, redshifts);
     if( retInit!=0 )
     {
         Log.LogError( "Line Model, init failed. Aborting" );
         return false;
     }
+    //
+    if(m_opt_continuumcomponent=="tplfit"){
+        linemodel.m_opt_tplfit_dustFit = Int32(m_opt_tplfit_dustfit=="yes");
+        linemodel.m_opt_tplfit_extinction = Int32(m_opt_tplfit_igmfit=="yes");
+    }
+
     //**************************************************
     //FIRST PASS
     //**************************************************
@@ -781,6 +650,7 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
                                           m_opt_rules,
                                           m_opt_velocityfit,
                                           m_opt_twosteplargegridstep,
+                                          m_opt_twosteplargegridsampling,
                                           m_opt_rigidity);
     if( retFirstPass!=0 )
     {
@@ -846,8 +716,10 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
                                             m_opt_rigidity,
                                             m_opt_em_velocity_fit_min,
                                             m_opt_em_velocity_fit_max,
+                                            m_opt_em_velocity_fit_step,
                                             m_opt_abs_velocity_fit_min,
-                                            m_opt_abs_velocity_fit_max);
+                                            m_opt_abs_velocity_fit_max,
+                                            m_opt_abs_velocity_fit_step);
     if( retSecondPass!=0 )
     {
         Log.LogError( "Line Model, second pass failed. Aborting" );

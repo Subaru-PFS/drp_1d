@@ -114,7 +114,7 @@ public:
         return v;
     }
 
-    std::vector<T>   SpreadOverOnePlusX( Float64 delta ) const
+    std::vector<T>   SpreadOverLog( Float64 delta ) const
     {
         std::vector<T> v;
 
@@ -128,14 +128,14 @@ public:
 
         v.push_back(m_Begin);
         Float64 x = m_Begin;
-        Float64 step = delta/(1.+m_Begin);
+        Float64 step = delta*(1.+m_Begin);
         Int32 count = 0;
-        Int32 maxCount = 1e12;
+        Int32 maxCount = 1e8;
         while(x+step<m_End && count<maxCount)
         {
             x = x+step;
             v.push_back(x);
-            step = delta/(1.+x);
+            step = delta*(1.+x);
             count ++;
         }
 

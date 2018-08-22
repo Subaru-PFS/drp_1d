@@ -7,6 +7,7 @@
 #include <math.h>
 #include <RedshiftLibrary/log/log.h>
 #include <RedshiftLibrary/operator/pdfMargZLogResult.h>
+#include <RedshiftLibrary/statistics/pdfz.h>
 
 
 using namespace NSEpic;
@@ -225,8 +226,25 @@ Bool CLineModelSolveResult::GetBestRedshiftFromPdf( const CDataStore& store,
     }
 
     redshift = tmpRedshift;
+    //option 1.
     //merit = tmpMerit;
-    merit = tmpProbaLog;
+    //option 2.
+    //merit = tmpProbaLog;
+    //option 3
+    CPdfz pdfz;
+    Float64 Fullwidth = 1e-2;
+    Float64 gauss_amp = -1;
+    Float64 gauss_amp_err = -1;
+    Float64 gauss_width = -1;
+    Float64 gauss_width_err = -1;
+    Float64 gauss_integral = -1;
+    Int32 retGaussFit = pdfz.getCandidateGaussFit( logzpdf1d->Redshifts, logzpdf1d->valProbaLog, redshift, Fullwidth, gauss_amp, gauss_amp_err, gauss_width, gauss_width_err);
+    if(retGaussFit==0)
+    {
+        gauss_integral = gauss_amp*gauss_width*sqrt(2*M_PI);
+    }
+    merit = gauss_integral;
+
     sigma = tmpSigma;
     snrHa = tmpSnrHa;
     modelTplratio = tmpModelTplratio;

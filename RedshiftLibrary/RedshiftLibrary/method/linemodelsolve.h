@@ -50,6 +50,10 @@ private:
     std::string m_opt_lineforcefilter;
     std::string m_opt_fittingmethod;
     std::string m_opt_continuumcomponent;
+
+    std::string m_opt_tplfit_dustfit="no";
+    std::string m_opt_tplfit_igmfit="no";
+
     std::string m_opt_rigidity;
     std::string m_opt_lineWidthType;
     Float64 m_opt_resolution;
@@ -58,12 +62,15 @@ private:
     std::string m_opt_velocityfit;
     Float64 m_opt_em_velocity_fit_min;
     Float64 m_opt_em_velocity_fit_max;
+    Float64 m_opt_em_velocity_fit_step;
     Float64 m_opt_abs_velocity_fit_min;
     Float64 m_opt_abs_velocity_fit_max;
+    Float64 m_opt_abs_velocity_fit_step;
     std::string m_opt_continuumreest;
     std::string m_opt_rules;
     Float64 m_opt_extremacount;
     Float64 m_opt_twosteplargegridstep;
+    std::string m_opt_twosteplargegridsampling;
     std::string m_opt_pdfcombination;
     Float64 m_opt_stronglinesprior;
     std::string m_opt_saveintermediateresults;

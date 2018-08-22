@@ -120,29 +120,33 @@ Int32 CPdfz::Compute(TFloat64List merits, TFloat64List redshifts, Float64 cstLog
         Log.LogDetail("Pdfz: Pdfz computation: using merit max=%e", meritmax);
     }
 
-    //check if the z step is constant. If not, pdf cannot be estimated by the current method.
-    Float64 reldzThreshold = 0.05; //relative difference accepted
-    bool constantdz = true;
-    Float64 mindz = DBL_MAX;
-    Float64 maxdz = -DBL_MAX;
-    for ( UInt32 k=1; k<redshifts.size(); k++)
-    {
-        Float64 diff = redshifts[k]-redshifts[k-1];
-        if(mindz > diff)
-        {
-            mindz = diff;
-        }
-        if(maxdz < diff)
-        {
-            maxdz = diff;
-        }
-    }
-    Float64 zstep_mean = (maxdz+mindz)/2.0;
-    if(abs(maxdz-mindz)/zstep_mean>reldzThreshold)
-    {
-        constantdz = false;
-        return 2;
-    }
+
+    //
+//    //check if the z step is constant. If not, pdf cannot be estimated by the current method.
+//    Float64 reldzThreshold = 0.05; //relative difference accepted
+//    bool constantdz = true;
+//    Float64 mindz = DBL_MAX;
+//    Float64 maxdz = -DBL_MAX;
+//    for ( UInt32 k=1; k<redshifts.size(); k++)
+//    {
+//        Float64 diff = redshifts[k]-redshifts[k-1];
+//        if(mindz > diff)
+//        {
+//            mindz = diff;
+//        }
+//        if(maxdz < diff)
+//        {
+//            maxdz = diff;
+//        }
+//    }
+//    Float64 zstep_mean = (maxdz+mindz)/2.0;
+//    if(abs(maxdz-mindz)/zstep_mean>reldzThreshold)
+//    {
+//        constantdz = false;
+//        return 2;
+//    }
+    //
+
 
     //deactivate logPrior just to see...
 //    for ( UInt32 k=0; k<redshifts.size(); k++)
@@ -167,6 +171,24 @@ Int32 CPdfz::Compute(TFloat64List merits, TFloat64List redshifts, Float64 cstLog
     {
         return 4;
         //Float64 logPrior = log(1.0/redshifts.size()); //log(1.0)
+    }
+    if(verbose)
+    {
+        Float64 logZPriorMax = -DBL_MAX;
+        Float64 logZPriorMin = DBL_MAX;
+        for ( UInt32 k=0; k<redshifts.size(); k++)
+        {
+            if(logZPriorMax<logZPrior[k])
+            {
+                logZPriorMax = logZPrior[k];
+            }
+            if(logZPriorMin>logZPrior[k])
+            {
+                logZPriorMin = logZPrior[k];
+            }
+        }
+        Log.LogDetail("Pdfz: Pdfz computation: using logZPrior min=%e", logZPriorMax);
+        Log.LogDetail("Pdfz: Pdfz computation: using logZPrior max=%e", logZPriorMin);
     }
 //    std::vector<Float64> logZPrior(zPrior.size(), 1.0);
 //    for(UInt32 kz=0; kz<zPrior.size(); kz++)
@@ -206,7 +228,7 @@ Int32 CPdfz::Compute(TFloat64List merits, TFloat64List redshifts, Float64 cstLog
             maxi = smallVALUES[k] + log(zstep); // maxi will be used to avoid underflows when summing exponential of small values
         }
     }
-
+    Log.LogDebug("Pdfz: Pdfz computation: using maxi value for log-sum-exp trick=%e", maxi);
 
     Float64 sumModifiedExp = 0.0;
     if(sumMethod==0)
@@ -258,6 +280,25 @@ Int32 CPdfz::Compute(TFloat64List merits, TFloat64List redshifts, Float64 cstLog
     for ( UInt32 k=0; k<redshifts.size(); k++)
     {
             logPdf[k] = logZPrior[k] + (mchi2Sur2[k] + cstLog) - logEvidence;
+    }
+
+    if(verbose)
+    {
+        Float64 pdfmax = -DBL_MAX;
+        Float64 pdfmin = DBL_MAX;
+        for ( UInt32 k=0; k<redshifts.size(); k++)
+        {
+            if(pdfmax<logPdf[k])
+            {
+                pdfmax = logPdf[k];
+            }
+            if(pdfmin>logPdf[k])
+            {
+                pdfmin = logPdf[k];
+            }
+        }
+        Log.LogDetail("Pdfz: Pdfz computation: found pdf min=%e", pdfmin);
+        Log.LogDetail("Pdfz: Pdfz computation: found pdf max=%e", pdfmax);
     }
 
     return 0;
@@ -1012,6 +1053,7 @@ Int32 CPdfz::Marginalize(TFloat64List redshifts, std::vector<TFloat64List> merit
 //TODO: this methid should be replaced/modified to correspond to the MaxPDF technique.
 Int32 CPdfz::BestProba(TFloat64List redshifts, std::vector<TFloat64List> meritResults, std::vector<TFloat64List> zPriors, Float64 cstLog, std::shared_ptr<CPdfMargZLogResult> postmargZResult)
 {
+    Log.LogError("Pdfz: Pdfz-bestproba computation ! This method is currently not working !! It will produce bad results as is....");
     bool verbose = false;
 
     if(meritResults.size() != zPriors.size())

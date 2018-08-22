@@ -78,6 +78,7 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
                                   const std::string& opt_rules,
                                   const std::string& opt_velocityFitting,
                                   const Float64 &opt_twosteplargegridstep,
+                                  const string &opt_twosteplargegridsampling,
                                   const std::string& opt_rigidity)
 {
 
@@ -97,7 +98,15 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
         std::vector<Int32> removed_inds;
         Int32 lastKeptInd = 0;
         for(Int32 i=1; i<m_sortedRedshifts.size()-1; i++){
-            if( abs(m_sortedRedshifts[i]-m_sortedRedshifts[lastKeptInd])<dz_thres && abs(m_sortedRedshifts[i+1]-m_sortedRedshifts[i])<dz_thres ){
+            Bool conditionKeepSample = true;
+            if(opt_twosteplargegridsampling == "log")
+            {
+                Float64 onepz = abs(1.+m_sortedRedshifts[i]);
+                conditionKeepSample = (abs(m_sortedRedshifts[i]-m_sortedRedshifts[lastKeptInd])<onepz*dz_thres) && (abs(m_sortedRedshifts[i+1]-m_sortedRedshifts[i])<onepz*dz_thres);
+            }else{
+                conditionKeepSample = (abs(m_sortedRedshifts[i]-m_sortedRedshifts[lastKeptInd])<dz_thres) && (abs(m_sortedRedshifts[i+1]-m_sortedRedshifts[i])<dz_thres);
+            }
+            if( conditionKeepSample ){
                 removed_inds.push_back(i);
             }else{
                 lastKeptInd=i;
@@ -140,7 +149,7 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
     CRayCatalog::TRayVector restRayList = restraycatalog.GetFilteredList( typeFilter, forceFilter);
     Log.LogDebug( "restRayList.size() = %d", restRayList.size() );
 
-    bool enableOrtho = true;
+    bool enableOrtho = (opt_continuumcomponent=="tplfit");
     Log.LogInfo( "  Operator-Linemodel: TemplatesOrthogonalization enabled = %d", enableOrtho );
 
     //prepare continuum templates catalog
@@ -302,12 +311,13 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
     if(enableFitContinuumPrecomputed && opt_continuumcomponent == "tplfit")
     {
         boost::chrono::thread_clock::time_point start_tplfitprecompute = boost::chrono::thread_clock::now();
-        Float64 redshiftStep = 1.5e-4;
-        Float64 minRedshift = m_sortedRedshifts[0];
-        Float64 maxRedshift = m_sortedRedshifts[m_sortedRedshifts.size()-1];
-        Log.LogInfo( "  Operator-Linemodel: continuum tpl fitting: step=%.5f, min=%.1f, max=%.1f", redshiftStep, minRedshift, maxRedshift);
+        Float64 redshiftStep = 1.5e-4; //TODO: should these values be the same as for the main redshift estimation ?
+        Float64 minRedshift = m_sortedRedshifts[0]; //TODO: should these values be the same as for the main redshift estimation ?
+        Float64 maxRedshift = m_sortedRedshifts[m_sortedRedshifts.size()-1]; //TODO: should these values be the same as for the main redshift estimation ?
+        std::string zsamplingtplfit = opt_twosteplargegridsampling;
+        Log.LogInfo( "  Operator-Linemodel: continuum tpl fitting: sampling:%s, step=%.5f, min=%.1f, max=%.1f", zsamplingtplfit.c_str(), redshiftStep, minRedshift, maxRedshift);
 
-        CTemplatesFitStore* tplfitStore = new CTemplatesFitStore(minRedshift, maxRedshift, redshiftStep);
+        CTemplatesFitStore* tplfitStore = new CTemplatesFitStore(minRedshift, maxRedshift, redshiftStep, zsamplingtplfit);
         std::vector<Float64> redshiftsTplFit = tplfitStore->GetRedshiftList();
         Log.LogInfo( "  Operator-Linemodel: continuum tpl redshift list n=%d", redshiftsTplFit.size());
         std::vector<std::shared_ptr<CChisquareResult>> chisquareResultsAllTpl;
@@ -320,11 +330,9 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
             Log.LogInfo( "  Operator-Linemodel: precomputing- auto select chisquare2 operator (faster for few redshifts calc. points)" );
         }
         std::string opt_interp = "precomputedfinegrid"; // "lin"; //
-        Int32 opt_dustFit = 1;
-        Int32 opt_extinction = 1;
         Log.LogInfo( "  Operator-Linemodel: precomputing- with operator = %s", opt_chi2operator.c_str() );
-        Log.LogInfo( "  Operator-Linemodel: precomputing-fitContinuum_dustfit = %d", opt_dustFit );
-        Log.LogInfo( "  Operator-Linemodel: precomputing-fitContinuum_igm = %d", opt_extinction );
+        Log.LogInfo( "  Operator-Linemodel: precomputing-fitContinuum_dustfit = %d", m_opt_tplfit_dustFit );
+        Log.LogInfo( "  Operator-Linemodel: precomputing-fitContinuum_igm = %d", m_opt_tplfit_extinction );
 
         std::shared_ptr<COperator> chiSquareOperator;
         if(opt_chi2operator=="chisquarelog")
@@ -338,7 +346,7 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
         else if(opt_chi2operator=="chisquare2"){
             chiSquareOperator = std::shared_ptr<COperatorChiSquare2>( new COperatorChiSquare2(opt_calibrationPath));
         }else{
-            Log.LogError( "  Operator-Linemodel: unable to parce chisquare continuum fit operator");
+            Log.LogError( "  Operator-Linemodel: unable to parse chisquare continuum fit operator");
         }
 
 
@@ -353,7 +361,7 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
             {
                 const CTemplate& tpl = orthoTplCatalog->GetTemplate( category, j );
 
-                auto  chisquareResult = std::dynamic_pointer_cast<CChisquareResult>( chiSquareOperator->Compute( spectrum, tpl, lambdaRange, redshiftsTplFit, overlapThreshold, maskList, opt_interp, opt_extinction, opt_dustFit ) );
+                auto  chisquareResult = std::dynamic_pointer_cast<CChisquareResult>( chiSquareOperator->Compute( spectrum, tpl, lambdaRange, redshiftsTplFit, overlapThreshold, maskList, opt_interp, m_opt_tplfit_extinction, m_opt_tplfit_dustFit ) );
                 if( !chisquareResult )
                 {
                     Log.LogInfo( "  Operator-Linemodel failed to compute chi square value for tpl=%s", tpl.GetName().c_str());
@@ -501,7 +509,7 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
                 m_result->ChiSquareContinuum[i] = m_model->getLeastSquareContinuumMeritFast();
             }
             m_result->ScaleMargCorrectionContinuum[i] = m_model->getContinuumScaleMargCorrection();
-            Log.LogDebug( "Z interval %d: Chi2 = %f", i, m_result->ChiSquare[i] );
+            Log.LogDebug( "  Operator-Linemodel: Z interval %d: Chi2 = %f", i, m_result->ChiSquare[i] );
             indexLargeGrid++;
             //Log.LogInfo( "\nLineModel Infos: large grid step %d", i);
         }else{
@@ -653,8 +661,10 @@ Int32 COperatorLineModel::ComputeSecondPass(CDataStore &dataStore,
                                             const std::string& opt_rigidity,
                                             const Float64 &opt_emvelocityfitmin,
                                             const Float64 &opt_emvelocityfitmax,
+                                            const Float64 &opt_emvelocityfitstep,
                                             const Float64 &opt_absvelocityfitmin,
-                                            const Float64 &opt_absvelocityfitmax)
+                                            const Float64 &opt_absvelocityfitmax,
+                                            const Float64 &opt_absvelocityfitstep)
 {
 
     //Set model parameters to SECOND-PASS
@@ -668,16 +678,18 @@ Int32 COperatorLineModel::ComputeSecondPass(CDataStore &dataStore,
     bool enableVelocityFitting = true;
     Float64 velfitMinE = opt_emvelocityfitmin;
     Float64 velfitMaxE = opt_emvelocityfitmax;
+    Float64 velfitStepE = opt_emvelocityfitstep;
     Float64 velfitMinA = opt_absvelocityfitmin;
     Float64 velfitMaxA = opt_absvelocityfitmax;
+    Float64 velfitStepA = opt_absvelocityfitstep;
     //HARDCODED - override: no-velocityfitting for abs
     //velfitMinA = opt_velocityAbsorption;
     //velfitMaxA = opt_velocityAbsorption;
     if(opt_velocityFitting != "yes"){
         enableVelocityFitting = false;
     }else{
-        Log.LogInfo( "  Operator-Linemodel: velocity fitting bounds for Emission: min=%.1f - max=%.1f", velfitMinE, velfitMaxE);
-        Log.LogInfo( "  Operator-Linemodel: velocity fitting bounds for Absorption: min=%.1f - max=%.1f", velfitMinA, velfitMaxA);
+        Log.LogInfo( "  Operator-Linemodel: velocity fitting bounds for Emission: min=%.1f - max=%.1f - step=%.1f", velfitMinE, velfitMaxE, velfitStepE);
+        Log.LogInfo( "  Operator-Linemodel: velocity fitting bounds for Absorption: min=%.1f - max=%.1f - step=%.1f", velfitMinA, velfitMaxA, velfitStepA);
     }
 
     //enable/disable fit by groups. Once enabled, the velocity fitting groups are defined in the line catalog from v4.0 on.
@@ -794,12 +806,14 @@ Int32 COperatorLineModel::ComputeSecondPass(CDataStore &dataStore,
                     {
                         Float64 vInfLim;
                         Float64 vSupLim;
+                        Float64 vStep;
 
                         if(iLineType==0)
                         {
                             Log.LogInfo( "  Operator-Linemodel: manualStep velocity fit ABSORPTION, for z = %.6f", m_result->Redshifts[idx]);
                             vInfLim = velfitMinA;
                             vSupLim = velfitMaxA;
+                            vStep = velfitStepA;
                             if(m_enableWidthFitByGroups)
                             {
                                 idxVelfitGroups.clear();
@@ -814,6 +828,7 @@ Int32 COperatorLineModel::ComputeSecondPass(CDataStore &dataStore,
                             Log.LogInfo( "  Operator-Linemodel: manualStep velocity fit EMISSION, for z = %.6f", m_result->Redshifts[idx]);
                             vInfLim = velfitMinE;
                             vSupLim = velfitMaxE;
+                            vStep = velfitStepE;
                             if(m_enableWidthFitByGroups)
                             {
                                 idxVelfitGroups.clear();
@@ -827,7 +842,6 @@ Int32 COperatorLineModel::ComputeSecondPass(CDataStore &dataStore,
                         }
 
                         //Prepare velocity grid to be checked
-                        Float64 vStep = m_secondPass_velfit_vStep;;
                         Int32 nSteps = (int)((vSupLim-vInfLim)/vStep);
 
 
@@ -1175,6 +1189,16 @@ Int32 COperatorLineModel::ComputeSecondPass(CDataStore &dataStore,
             std::shared_ptr<CModelFittingResult>  resultfitmodel = std::shared_ptr<CModelFittingResult>( new CModelFittingResult(m_result->LineModelSolutions[idx], m_result->Redshifts[idx], m_result->ChiSquare[idx], m_result->restRayList, m_model->GetVelocityEmission(), m_model->GetVelocityAbsorption()) );
             m_savedModelFittingResults.push_back(resultfitmodel);
 
+            // CModelContinuumFittingResult
+            std::shared_ptr<CModelContinuumFittingResult>  resultfitcontinuummodel = std::shared_ptr<CModelContinuumFittingResult>( new CModelContinuumFittingResult(m_result->Redshifts[idx],
+                                                                                                                                                                     m_model->getFitContinuum_tplName(),
+                                                                                                                                                                     m_model->getFitContinuum_tplMerit(),
+                                                                                                                                                                     m_model->getFitContinuum_tplAmplitude(),
+                                                                                                                                                                     m_model->getFitContinuum_tplIsmDustCoeff(),
+                                                                                                                                                                     m_model->getFitContinuum_tplIgmMeiksinIdx()
+                                                                                                                                                                     ) );
+            m_savedModelContinuumFittingResults.push_back(resultfitcontinuummodel);
+
             // CModelRulesResult
             std::shared_ptr<CModelRulesResult>  resultrulesmodel = std::shared_ptr<CModelRulesResult>( new CModelRulesResult( m_model->GetModelRulesLog() ));
             m_savedModelRulesResults.push_back(resultrulesmodel);
@@ -1332,11 +1356,14 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
                                   const std::string& opt_rules,
                                   const std::string& opt_velocityFitting,
                                   const Float64 &opt_twosteplargegridstep,
+                                  const string &opt_twosteplargegridsampling,
                                   const std::string& opt_rigidity,
                                  const Float64 &opt_emvelocityfitmin,
                                  const Float64 &opt_emvelocityfitmax,
+                                 const Float64 &opt_emvelocityfitstep,
                                  const Float64 &opt_absvelocityfitmin,
-                                 const Float64 &opt_absvelocityfitmax)
+                                 const Float64 &opt_absvelocityfitmax,
+                                 const Float64 &opt_absvelocityfitstep)
 {
     // initialize empty results so that it can be returned anyway in case of an error
     m_result = std::shared_ptr<CLineModelResult>( new CLineModelResult() );
@@ -1374,6 +1401,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
                                           opt_rules,
                                           opt_velocityFitting,
                                           opt_twosteplargegridstep,
+                                          opt_twosteplargegridsampling,
                                           opt_rigidity);
     if( retFirstPass!=0 )
     {
@@ -1420,8 +1448,10 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
                                           opt_rigidity,
                                           opt_emvelocityfitmin,
                                           opt_emvelocityfitmax,
+                                          opt_emvelocityfitstep,
                                           opt_absvelocityfitmin,
-                                          opt_absvelocityfitmax);
+                                          opt_absvelocityfitmax,
+                                          opt_absvelocityfitstep);
     if( retSecondPass!=0 )
     {
         Log.LogError( "Line Model, second pass failed. Aborting" );
@@ -1458,6 +1488,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::computeWithUltimPass(CDataS
                                   const std::string& opt_rules,
                                   const std::string& opt_velocityFitting,
                                   const Float64 &opt_twosteplargegridstep,
+                                  const string &opt_twosteplargegridsampling,
                                   const std::string& opt_rigidity,
                                   const Float64 &opt_velocityfitmin,
                                   const Float64 &opt_velocityfitmax)
@@ -1484,6 +1515,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::computeWithUltimPass(CDataS
                             opt_rules,
                             opt_velocityFitting,
                             opt_twosteplargegridstep,
+                            opt_twosteplargegridsampling,
                             opt_rigidity,
                             opt_velocityfitmin,
                             opt_velocityfitmax));
@@ -1555,6 +1587,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::computeWithUltimPass(CDataS
                                opt_rules,
                                opt_velocityFitting,
                                opt_twosteplargegridstep,
+                               opt_twosteplargegridsampling,
                                opt_rigidity_lastPass,
                                opt_velocityfitmin,
                                opt_velocityfitmax));
@@ -1628,6 +1661,9 @@ void COperatorLineModel::storeGlobalModelResults( CDataStore &dataStore )
         std::string fname_fit = (boost::format("linemodel_fit_extrema_%1%") % k).str();
         dataStore.StoreScopedGlobalResult( fname_fit.c_str(), m_savedModelFittingResults[k] );
 
+        std::string fname_fitcontinuum = (boost::format("linemodel_fitcontinuum_extrema_%1%") % k).str();
+        dataStore.StoreScopedGlobalResult( fname_fitcontinuum.c_str(), m_savedModelContinuumFittingResults[k] );
+
         std::string fname_rules = (boost::format("linemodel_rules_extrema_%1%") % k).str();
         dataStore.StoreScopedGlobalResult( fname_rules.c_str(), m_savedModelRulesResults[k] );
     }
@@ -1661,6 +1697,9 @@ void COperatorLineModel::storePerTemplateModelResults( CDataStore &dataStore, co
 
         std::string fname_fit = (boost::format("linemodel_fit_extrema_%1%") % k).str();
         dataStore.StoreScopedPerTemplateResult(  tpl, fname_fit.c_str(), m_savedModelFittingResults[k] );
+
+        std::string fname_fitcontinuum = (boost::format("linemodel_fitcontinuum_extrema_%1%") % k).str();
+        dataStore.StoreScopedPerTemplateResult(  tpl, fname_fitcontinuum.c_str(), m_savedModelContinuumFittingResults[k] );
 
         std::string fname_rules = (boost::format("linemodel_rules_extrema_%1%") % k).str();
         dataStore.StoreScopedPerTemplateResult(  tpl, fname_rules.c_str(), m_savedModelRulesResults[k] );
