@@ -16,7 +16,7 @@ def spectrumpath(config, *path):
     return os.path.expanduser(os.path.join(config.spectrum_dir, *path))
 
 def update_paramstore(param, config):
-    param.Set('calibrationDir', config.calibration_dir)
+    param.Set_String('calibrationDir', config.calibration_dir)
 
 def amazed():
 
