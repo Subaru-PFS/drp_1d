@@ -55,7 +55,7 @@ public:
 
 	void DisplayQ ( const gsl_matrix* m );
 
-	typedef boost::unordered_map<const Int32, std::shared_ptr<CLearner>> MapLearners;
+	typedef boost::unordered_map<const Int32, std::shared_ptr<CLearner> > MapLearners;
 	const MapLearners& GetLearners() const;
 	void SetLearners (MapLearners& learner );
 
