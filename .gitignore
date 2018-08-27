@@ -35,6 +35,8 @@ pkgconfig
 #
 *.o
 *.a
+*.so
+*.dylib
 
 # Eclipse IDE
 .cproject
@@ -47,5 +49,11 @@ pkgconfig
 
 # Python cache files
 *.pyc
+*__pycache__
+dist
+pyamazed/redshift_wrap.cpp
+pyamazed/redshift_wrap.h
+pyamazed/redshift.py
+*.egg*
 
 swig_ext.py
