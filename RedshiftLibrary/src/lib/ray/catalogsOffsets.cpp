@@ -37,6 +37,13 @@ CLineCatalogsOffsets::~CLineCatalogsOffsets()
 
 void CLineCatalogsOffsets::Init( std::string calibrationPath, std::string offsetsCatalogsRelPath)
 {
+    if(offsetsCatalogsRelPath.size()<1)
+    {
+      char buf[180];
+      snprintf(buf, sizeof(buf), "Unable to init the offset catalog. Found empty relative path.");
+      throw std::runtime_error(buf);
+    }
+
     m_Calibration_path = calibrationPath;
     bfs::path calibrationFolder( calibrationPath.c_str() );
 

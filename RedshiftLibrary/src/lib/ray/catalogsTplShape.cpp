@@ -44,6 +44,13 @@ CRayCatalogsTplShape::~CRayCatalogsTplShape()
 
 Bool CRayCatalogsTplShape::Init( std::string calibrationPath, std::string opt_tplratioCatRelPath)
 {
+    if(opt_tplratioCatRelPath.size()<1)
+    {
+      char buf[180];
+      snprintf(buf, sizeof(buf), "Unable to init the tpl-ratio catalog. Found empty relative path.");
+      throw std::runtime_error(buf);
+    }
+
     bfs::path calibrationFolder( calibrationPath.c_str() );
 
     tplshapedcatalog_relpath = opt_tplratioCatRelPath;

@@ -111,8 +111,9 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
     if(m_opt_rigidity=="tplshape")
     {
         dataStore.GetScopedParam( "linemodel.tplratio_catalog", m_opt_tplratio_reldirpath, "linecatalogs_tplshapes/linecatalogs_tplshape_ExtendedTemplatesJan2017v3_20170602_B14C_v3_emission" );
-        dataStore.GetScopedParam( "linemodel.offsets_catalog", m_opt_offsets_reldirpath, "linecatalogs_offsets/offsetsCatalogs_20170410_m150" );
     }
+    dataStore.GetScopedParam( "linemodel.offsets_catalog", m_opt_offsets_reldirpath, "linecatalogs_offsets/offsetsCatalogs_20170410_m150" );
+
     dataStore.GetScopedParam( "linemodel.linewidthtype", m_opt_lineWidthType, "velocitydriven" );
     dataStore.GetScopedParam( "linemodel.instrumentresolution", m_opt_resolution, 2350.0 );
     dataStore.GetScopedParam( "linemodel.velocityemission", m_opt_velocity_emission, 100.0 );
@@ -184,9 +185,8 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
     }else if(m_opt_rigidity=="tplshape")
     {
         Log.LogInfo( "      -tplratio_catalog: %s", m_opt_tplratio_reldirpath.c_str());
-        Log.LogInfo( "      -offsets_catalog: %s", m_opt_offsets_reldirpath.c_str());
     }
-
+    Log.LogInfo( "    -linemodel offsets_catalog: %s", m_opt_offsets_reldirpath.c_str());
 
     Log.LogInfo( "    -continuumcomponent: %s", m_opt_continuumcomponent.c_str());
     if(m_opt_continuumcomponent=="tplfit"){
