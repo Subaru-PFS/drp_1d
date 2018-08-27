@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 import os.path
-from argumentparser import parser
-from redshift import *
-from config import Config
+from .argumentparser import parser
+from .redshift import *
+from .config import Config
 import numpy as np
 
 
