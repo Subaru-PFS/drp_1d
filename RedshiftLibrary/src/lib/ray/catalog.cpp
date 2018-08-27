@@ -7,10 +7,12 @@
 #include <string>
 #include <fstream>
 #include <iostream>
+#include <boost/filesystem.hpp>
 
 using namespace NSEpic;
 using namespace std;
 using namespace boost;
+using namespace boost::filesystem;
 
 
 CRayCatalog::CRayCatalog()
@@ -113,6 +115,12 @@ void CRayCatalog::Load( const char* filePath )
 
     // Clear current line list
     m_List.clear();
+
+    if ( !exists( filePath ) ) {
+      char buf[180];
+      std::snprintf(buf, sizeof(buf), "Can't load line catalog : %s does not exist.", filePath);
+      throw std::runtime_error(buf);
+    }
 
     file.open( filePath, ifstream::in );
     if( file.rdstate() & ios_base::failbit )
