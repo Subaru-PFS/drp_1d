@@ -25,7 +25,7 @@ def amazed():
 
     zlog = CLog()
     logConsoleHandler = CLogConsoleHandler( zlog )
-    logConsoleHandler.SetLevelMask ( zlog.nLevel_Info )
+    logConsoleHandler.SetLevelMask ( config.log_level )
 
     param = CParameterStore()
     param.Load(os.path.expanduser(config.parameters_file))

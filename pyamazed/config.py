@@ -1,4 +1,5 @@
 import json
+from redshift import CLog
 
 defaults = {
     'parameters_file': 'parameters.json',
@@ -11,7 +12,8 @@ defaults = {
     'template_dir': 'calibration/templates/ExtendedTemplatesJan2017_v3',
     'linecatalog':'linecatalog.txt',
     'calibration_dir': './calibration',
-    'zclassifier_dir': ''
+    'zclassifier_dir': '',
+    'log_level': CLog.nLevel_Warning
     }
 
 class Config(object):
