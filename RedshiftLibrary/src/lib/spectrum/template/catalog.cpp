@@ -289,7 +289,7 @@ Bool CTemplateCatalog::LoadCategory( const path& dirPath, const std::string&  ca
 	    Add( itr->path().c_str(), category );
     }
     }
-    Log.LogInfo ( "Loaded %d templates for category %s.", m_List.size(), category.c_str() );
+    Log.LogInfo ( "Loaded %d templates for category %s.", GetTemplateCount(category), category.c_str() );
 
     return true;
 }

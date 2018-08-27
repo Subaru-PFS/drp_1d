@@ -54,6 +54,8 @@ const std::string CLineModelSolve::GetDescription()
     desc.append("\tparam: linemodel.continuumismfit = {""no"", ""yes""}\n");
     desc.append("\tparam: linemodel.continuumigmfit = {""no"", ""yes""}\n");
     desc.append("\tparam: linemodel.rigidity = {""rules"", ""tplcorr"", ""tplshape""}\n");
+    desc.append("\tparam: linemodel.tplratio_catalog = <relative path>\n");
+    desc.append("\tparam: linemodel.offsets_catalog = <relative path>\n");
     desc.append("\tparam: linemodel.linewidthtype = {""instrumentdriven"", ""velocitydriven"",  ""combined"",  ""nispvsspsf201707"", ""fixed""}\n");
     desc.append("\tparam: linemodel.instrumentresolution = <float value>\n");
     desc.append("\tparam: linemodel.velocityemission = <float value>\n");
@@ -106,6 +108,11 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
         dataStore.GetScopedParam( "linemodel.continuumigmfit", m_opt_tplfit_igmfit, "no" );
     }
     dataStore.GetScopedParam( "linemodel.rigidity", m_opt_rigidity, "rules" );
+    if(m_opt_rigidity=="tplshape")
+    {
+        dataStore.GetScopedParam( "linemodel.tplratio_catalog", m_opt_tplratio_reldirpath, "linecatalogs_tplshapes/linecatalogs_tplshape_ExtendedTemplatesJan2017v3_20170602_B14C_v3_emission" );
+        dataStore.GetScopedParam( "linemodel.offsets_catalog", m_opt_offsets_reldirpath, "linecatalogs_offsets/offsetsCatalogs_20170410_m150" );
+    }
     dataStore.GetScopedParam( "linemodel.linewidthtype", m_opt_lineWidthType, "velocitydriven" );
     dataStore.GetScopedParam( "linemodel.instrumentresolution", m_opt_resolution, 2350.0 );
     dataStore.GetScopedParam( "linemodel.velocityemission", m_opt_velocity_emission, 100.0 );
@@ -173,8 +180,13 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
 
     Log.LogInfo( "    -rigidity: %s", m_opt_rigidity.c_str());
     if(m_opt_rigidity=="rules"){
-        Log.LogInfo( "    -rules: %s", m_opt_rules.c_str());
+        Log.LogInfo( "      -rules: %s", m_opt_rules.c_str());
+    }else if(m_opt_rigidity=="tplshape")
+    {
+        Log.LogInfo( "      -tplratio_catalog: %s", m_opt_tplratio_reldirpath.c_str());
+        Log.LogInfo( "      -offsets_catalog: %s", m_opt_offsets_reldirpath.c_str());
     }
+
 
     Log.LogInfo( "    -continuumcomponent: %s", m_opt_continuumcomponent.c_str());
     if(m_opt_continuumcomponent=="tplfit"){
@@ -651,7 +663,9 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
                                           m_opt_velocityfit,
                                           m_opt_twosteplargegridstep,
                                           m_opt_twosteplargegridsampling,
-                                          m_opt_rigidity);
+                                          m_opt_rigidity,
+                                          m_opt_tplratio_reldirpath,
+                                          m_opt_offsets_reldirpath);
     if( retFirstPass!=0 )
     {
         Log.LogError( "Line Model, first pass failed. Aborting" );

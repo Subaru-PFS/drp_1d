@@ -42,12 +42,11 @@ CRayCatalogsTplShape::~CRayCatalogsTplShape()
 {
 }
 
-Bool CRayCatalogsTplShape::Init( std::string calibrationPath)
+Bool CRayCatalogsTplShape::Init( std::string calibrationPath, std::string opt_tplratioCatRelPath)
 {
     bfs::path calibrationFolder( calibrationPath.c_str() );
-    CCalibrationConfigHelper calibrationConfig;
-    calibrationConfig.Init(calibrationPath);
-    tplshapedcatalog_relpath = calibrationConfig.Get_linemodelTplratio_relpath();
+
+    tplshapedcatalog_relpath = opt_tplratioCatRelPath;
     Log.LogInfo( "    CatalogsTplShape - Loading tplshape catalog : %s", tplshapedcatalog_relpath.c_str());
 
     std::string dirPath = (calibrationFolder/tplshapedcatalog_relpath.c_str()).string();

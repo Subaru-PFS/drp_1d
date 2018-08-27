@@ -1,4 +1,2 @@
 #define the relative paths for some calibration files
-linemodel-tplratio-dir=linecatalogs_tplshapes/linecatalogs_tplshape_ExtendedTemplatesJan2017v3_20170602_B14C_v3_emission
-linemodel-offsets-dir=linecatalogs_offsets/offsetsCatalogs_20170410_m150
 star-templates-dir=templates/stars_templates_munari-lowt_20170105
