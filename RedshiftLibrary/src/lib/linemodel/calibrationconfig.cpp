@@ -53,20 +53,6 @@ void CCalibrationConfigHelper::Load( const char* filePath )
         std::size_t foundstra;
         std::size_t foundstrEqual;
 
-        std::string tplratio_key = "linemodel-tplratio-dir";
-        foundstra = line.find(tplratio_key.c_str());
-        foundstrEqual = line.find("=");
-        if (foundstra!=std::string::npos){
-            m_linemodelTplratio_relpath = line.substr(foundstrEqual+1, line.size());
-            readNums++;
-        }
-        std::string offsets_key = "linemodel-offsets-dir";
-        foundstra = line.find(offsets_key.c_str());
-        foundstrEqual = line.find("=");
-        if (foundstra!=std::string::npos){
-            m_linemodelOffset_relpath = line.substr(foundstrEqual+1, line.size());
-            readNums++;
-        }
         std::string star_templates_key = "star-templates-dir";
         foundstra = line.find(star_templates_key.c_str());
         foundstrEqual = line.find("=");
@@ -78,23 +64,12 @@ void CCalibrationConfigHelper::Load( const char* filePath )
 
     }
     file.close();
-    if(readNums!=3) //reading 1. tplratiodir, 2. offsetsdir, 3. starstemplates
+    if(readNums!=1) //reading 1.starstemplates, ...
     {
       char buf[180];
       snprintf(buf, sizeof(buf), "Invalid calibration config file [%s]", filePath);
       throw std::runtime_error(buf);
     }
-}
-
-
-std::string CCalibrationConfigHelper::Get_linemodelTplratio_relpath()
-{
-    return m_linemodelTplratio_relpath;
-}
-
-std::string CCalibrationConfigHelper::Get_linemodelOffset_relpath()
-{
-    return m_linemodelOffset_relpath;
 }
 
 std::string CCalibrationConfigHelper::Get_starTemplates_relpath()

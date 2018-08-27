@@ -68,6 +68,11 @@ private:
     Float64 m_opt_abs_velocity_fit_step;
     std::string m_opt_continuumreest;
     std::string m_opt_rules;
+
+    //options for rigidity=tplshape
+    std::string m_opt_tplratio_reldirpath;
+    std::string m_opt_offsets_reldirpath;
+
     Float64 m_opt_extremacount;
     Float64 m_opt_twosteplargegridstep;
     std::string m_opt_twosteplargegridsampling;

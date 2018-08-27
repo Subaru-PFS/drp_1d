@@ -35,14 +35,12 @@ CLineCatalogsOffsets::~CLineCatalogsOffsets()
 
 }
 
-void CLineCatalogsOffsets::Init( std::string calibrationPath)
+void CLineCatalogsOffsets::Init( std::string calibrationPath, std::string offsetsCatalogsRelPath)
 {
     m_Calibration_path = calibrationPath;
     bfs::path calibrationFolder( calibrationPath.c_str() );
 
-    CCalibrationConfigHelper calibrationConfig;
-    calibrationConfig.Init(calibrationPath);
-    m_Catalogs_relpath = calibrationConfig.Get_linemodelOffset_relpath();
+    m_Catalogs_relpath = offsetsCatalogsRelPath;
     Log.LogInfo( "    CatalogsOffsets - Loading offsets catalog : %s", m_Catalogs_relpath.c_str());
 
     std::string dirPath = (calibrationFolder/m_Catalogs_relpath.c_str()).string();
