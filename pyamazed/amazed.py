@@ -30,6 +30,7 @@ def amazed():
     param = CParameterStore()
     param.Load(os.path.expanduser(config.parameters_file))
     update_paramstore(param, config)
+    opt_saveIntermediateResults = param.Get_String('SaveIntermediateResults', 'all')
 
     classif = CClassifierStore()
 
@@ -107,7 +108,7 @@ def amazed():
 
         ctx.GetDataStore().SaveRedshiftResult(config.output_folder)
         #ctx.GetDataStore().SaveReliabilityResult('/tmp/bar')
-        ctx.GetDataStore().SaveAllResults(config.output_folder, 'all')
+        ctx.GetDataStore().SaveAllResults(os.path.join(config.output_folder, proc_id), 'all')
 
 if __name__ == '__main__':
     amazed()
