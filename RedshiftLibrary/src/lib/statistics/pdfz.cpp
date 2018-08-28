@@ -495,13 +495,13 @@ Float64 CPdfz::getCandidateSumTrapez(std::vector<Float64> redshifts, std::vector
 }
 
 Int32 CPdfz::getCandidateGaussFit(std::vector<Float64> redshifts,
-                                     std::vector<Float64> valprobalog,
-                                     Float64 zcandidate,
-                                     Float64 zwidth,
-                                    Float64& gaussAmp,
-                                    Float64& gaussAmpErr,
-                                    Float64& gaussSigma,
-                                    Float64& gaussSigmaErr)
+                                  std::vector<Float64> valprobalog,
+                                  Float64 zcandidate,
+                                  Float64 zwidth,
+                                  Float64& gaussAmp,
+                                  Float64& gaussAmpErr,
+                                  Float64& gaussSigma,
+                                  Float64& gaussSigmaErr)
 {
     Int32 verbose = 0;
     Int32 ret=0;
@@ -587,9 +587,14 @@ Int32 CPdfz::getCandidateGaussFit(std::vector<Float64> redshifts,
             maxP=_p;
         }
     }
+    Float64 normFactor=maxP;
+    if(normFactor<=0.)
+    {
+        normFactor=1.0;
+    }
     if(maxP>0.0)
     {
-        x_init[0] = maxP;
+        x_init[0] = maxP/normFactor;
     }
     else{
         x_init[0] = 1.0;
@@ -624,7 +629,7 @@ Int32 CPdfz::getCandidateGaussFit(std::vector<Float64> redshifts,
     {
         Float64 idx = i+kmin;
         weights[i] = 1.0; //no weights
-        y[i] = exp(valprobalog[idx]);
+        y[i] = exp(valprobalog[idx])/normFactor;
         z[i] = redshifts[idx];
     }
 
@@ -695,8 +700,8 @@ Int32 CPdfz::getCandidateGaussFit(std::vector<Float64> redshifts,
         Log.LogInfo ( "status = %s (%d)", gsl_strerror (status), status);
     }
 
-    gaussAmp = gsl_vector_get(s->x, 0);
-    gaussAmpErr = c*ERR(0);
+    gaussAmp = gsl_vector_get(s->x, 0)*normFactor;
+    gaussAmpErr = c*ERR(0)*normFactor;
     gaussSigma = abs(gsl_vector_get(s->x, 1));
     gaussSigmaErr = c*ERR(1);
 

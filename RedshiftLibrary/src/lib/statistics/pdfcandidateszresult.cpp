@@ -81,7 +81,7 @@ void CPdfCandidateszResult::Save( const CDataStore& store, std::ostream& stream 
     stream  << "#" << store.GetSpectrumName() << "\t" << store.GetProcessingID() << "\t";
     stream  << std::endl;
 
-    stream  << "#" << "rank" << "redshift" << "\t" << "intgProba";
+    stream  << "#" << "rank" << "\t" << "redshift" << "\t" << "intgProba";
     if(optMethod==1)
     {
         stream << "\t" << "gaussAmp" << "\t" << "gaussAmpErr" << "\t" << "gaussSigma" << "\t" << "gaussSigmaErr";
