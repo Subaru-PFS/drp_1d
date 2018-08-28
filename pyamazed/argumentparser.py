@@ -1,4 +1,20 @@
 import argparse
+from redshift import CLog
+
+def log_level(lvl):
+    levels = {
+        'critical': CLog.nLevel_Critical,
+        'error': CLog.nLevel_Error,
+        'warning': CLog.nLevel_Warning,
+        'info': CLog.nLevel_Info,
+        'debug': CLog.nLevel_Debug,
+        'none': CLog.nLevel_None
+    }
+    if lvl.lower() not in levels:
+        print('Warning: unknown log lever "%s"' % lvl)
+        return CLog.nLevel_Info
+    else:
+        return levels[lvl.lower()]
 
 parser = argparse.ArgumentParser(description='CPF-redshift client tool.')
 
@@ -24,4 +40,6 @@ parser.add_argument('--zclassifier_dir', '-z', dest='zclassifier_dir', metavar='
                     help='Specify directory in which zClassifier files are stored')
 parser.add_argument('--config', '-c', dest='config', metavar='FILE', type=str,
                     help='Json configuration file giving all these command line parameters.')
+parser.add_argument('--log_level', '-l', dest='log_level', metavar='LEVEL', type=log_level,
+                    help='Verbosity level. Either "none", "debug", "info", "warning", "error" or "critical".')
 

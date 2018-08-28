@@ -192,7 +192,10 @@ class CSpectrum
   TLambdaRange GetLambdaRange() const;
   %apply Float64& OUTPUT { Float64& mean };
   %apply Float64& OUTPUT { Float64& std };
+
   void  SetName( const char* name );
+  const std::string GetName() const;
+
   const Bool IsNoiseValid( Float64 LambdaMin,  Float64 LambdaMax ) const;
   bool GetMeanAndStdFluxInRange(TFloat64Range wlRange,  Float64& mean, Float64 &std) const;
 };

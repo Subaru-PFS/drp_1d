@@ -133,8 +133,8 @@ public:
 
     Float64 fit(Float64 redshift, const TFloat64Range& lambdaRange, CLineModelSolution &modelSolution, Int32 contreest_iterations=0, bool enableLogging=0);
 
-    Bool initTplratioCatalogs();
-    void initLambdaOffsets();
+    Bool initTplratioCatalogs(std::string opt_tplratioCatRelPath);
+    void initLambdaOffsets(std::string offsetsCatalogsRelPath);
 
     Bool setTplshapeModel(Int32 itplshape, Bool enableSetVelocity=false);
     Bool setTplshapeAmplitude(std::vector<Float64> ampsElts, std::vector<Float64> errorsElts);

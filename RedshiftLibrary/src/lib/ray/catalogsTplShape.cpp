@@ -42,12 +42,18 @@ CRayCatalogsTplShape::~CRayCatalogsTplShape()
 {
 }
 
-Bool CRayCatalogsTplShape::Init( std::string calibrationPath)
+Bool CRayCatalogsTplShape::Init( std::string calibrationPath, std::string opt_tplratioCatRelPath)
 {
+    if(opt_tplratioCatRelPath.size()<1)
+    {
+      char buf[180];
+      snprintf(buf, sizeof(buf), "Unable to init the tpl-ratio catalog. Found empty relative path.");
+      throw std::runtime_error(buf);
+    }
+
     bfs::path calibrationFolder( calibrationPath.c_str() );
-    CCalibrationConfigHelper calibrationConfig;
-    calibrationConfig.Init(calibrationPath);
-    tplshapedcatalog_relpath = calibrationConfig.Get_linemodelTplratio_relpath();
+
+    tplshapedcatalog_relpath = opt_tplratioCatRelPath;
     Log.LogInfo( "    CatalogsTplShape - Loading tplshape catalog : %s", tplshapedcatalog_relpath.c_str());
 
     std::string dirPath = (calibrationFolder/tplshapedcatalog_relpath.c_str()).string();

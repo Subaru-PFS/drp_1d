@@ -25,7 +25,7 @@ class CRayCatalogsTplShape
 public:
     CRayCatalogsTplShape();
     ~CRayCatalogsTplShape();
-    Bool Init(std::string calibrationPath);
+    Bool Init(std::string calibrationPath, std::string opt_tplratioCatRelPath);
 
     Bool Load( const char* dirPath );
     bool LoadVelocities( const char* filepath, Int32 k );

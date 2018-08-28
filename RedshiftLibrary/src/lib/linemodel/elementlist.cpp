@@ -214,10 +214,10 @@ CLineModelElementList::~CLineModelElementList()
     }
 }
 
-void CLineModelElementList::initLambdaOffsets()
+void CLineModelElementList::initLambdaOffsets(std::string offsetsCatalogsRelPath)
 {
   CLineCatalogsOffsets* ctlgOffsets = new CLineCatalogsOffsets();
-  ctlgOffsets->Init(m_calibrationPath);
+  ctlgOffsets->Init(m_calibrationPath, offsetsCatalogsRelPath);
   // load static offset catalog, idx=0
   ctlgOffsets->SetLinesOffsets( *this, 0);
 
@@ -227,12 +227,12 @@ void CLineModelElementList::initLambdaOffsets()
 }
 
 
-Bool CLineModelElementList::initTplratioCatalogs()
+Bool CLineModelElementList::initTplratioCatalogs(std::string opt_tplratioCatRelPath)
 {
     //tplshape catalog initialization : used for rigidities tplcorr and tplshape
     m_CatalogTplShape = new CRayCatalogsTplShape();
 
-    bool ret = m_CatalogTplShape->Init(m_calibrationPath);
+    bool ret = m_CatalogTplShape->Init(m_calibrationPath, opt_tplratioCatRelPath);
     if(!ret)
     {
         Log.LogError("Unable to initialize the the tpl-shape catalogs. aborting...");

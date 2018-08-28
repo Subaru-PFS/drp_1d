@@ -6,6 +6,7 @@
 #include <float.h>
 #include <RedshiftLibrary/log/log.h>
 #include <RedshiftLibrary/operator/pdfMargZLogResult.h>
+#include <RedshiftLibrary/extremum/extremum.h>
 
 
 using namespace NSEpic;
@@ -357,4 +358,43 @@ Int32 CChisquareLogSolveResult::GetBestModel(const CDataStore& store, Float64 z,
         return -1;
     }
     return 1;
+}
+
+
+
+Bool CChisquareLogSolveResult::GetRedshiftCandidates( const CDataStore& store,  std::vector<Float64>& redshiftcandidates, Int32 n_candidates) const
+{
+    Log.LogDebug( "CChisquareLogSolveResult:GetRedshiftCandidates" );
+    redshiftcandidates.clear();
+
+    //check if the pdf is stellar/galaxy or else
+    std::string outputPdfRelDir  = "zPDF"; //default value set to galaxy zPDF folder
+    std::string scope = store.GetScope( *this );
+    std::size_t foundstra;
+    foundstra = scope.find("stellarsolve");
+    if (foundstra!=std::string::npos){
+        outputPdfRelDir = "stellar_zPDF";
+    }
+
+
+    std::string scope_res = outputPdfRelDir+"/logposterior.logMargP_Z_data";
+    auto results_pdf =  store.GetGlobalResult( scope_res.c_str() );
+    std::shared_ptr<const CPdfMargZLogResult> logzpdf1d = std::dynamic_pointer_cast<const CPdfMargZLogResult>( results_pdf.lock() );
+
+    if(!logzpdf1d)
+    {
+        Log.LogError( "GetRedshiftCandidates: no pdf results retrieved from scope: %s", scope_res.c_str());
+        return -1;
+    }
+
+    // Find extrema
+    TPointList extremumList;
+    CExtremum extremum(TFloat64Range(0.0, DBL_MAX), n_candidates);
+    extremum.Find( logzpdf1d->Redshifts, logzpdf1d->valProbaLog, extremumList );
+    for(Int32 k=0; k<extremumList.size(); k++)
+    {
+        redshiftcandidates.push_back(extremumList[k].X);
+    }
+
+    return true;
 }

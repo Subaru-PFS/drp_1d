@@ -52,15 +52,17 @@ public:
                                               const std::string &opt_continuumreest="no",
                                               const std::string &opt_rules="all",
                                               const std::string &opt_velocityFitting="no",
-                                             const Float64 &opt_twosteplargegridstep=0.001,
-                                             const std::string &opt_twosteplargegridsampling="log",
+                                              const Float64 &opt_twosteplargegridstep=0.001,
+                                              const std::string &opt_twosteplargegridsampling="log",
                                               const std::string &opt_rigidity="rules",
-                                             const Float64 &opt_emvelocityfitmin=20.,
-                                             const Float64 &opt_emvelocityfitmax=500.,
-                                            const Float64 &opt_emvelocityfitstep=20.,
-                                            const Float64 &opt_absvelocityfitmin=150.,
-                                            const Float64 &opt_absvelocityfitmax=500.,
-                                            const Float64 &opt_absvelocityfitstep=20.);
+                                              const string &opt_tplratioCatRelPath="",
+                                              const string &opt_offsetCatRelPath="",
+                                              const Float64 &opt_emvelocityfitmin=20.,
+                                              const Float64 &opt_emvelocityfitmax=500.,
+                                              const Float64 &opt_emvelocityfitstep=20.,
+                                              const Float64 &opt_absvelocityfitmin=150.,
+                                              const Float64 &opt_absvelocityfitmax=500.,
+                                              const Float64 &opt_absvelocityfitstep=20.);
 
     Int32 Init(const CSpectrum& spectrum, const TFloat64List& redshifts);
     std::shared_ptr<COperatorResult> getResult();
@@ -87,7 +89,9 @@ public:
                                               const std::string &opt_velocityFitting="no",
                                               const Float64 &opt_twosteplargegridstep=0.001,
                                               const string &opt_twosteplargegridsampling="log",
-                                              const std::string &opt_rigidity="rules");
+                                              const std::string &opt_rigidity="rules",
+                                              const string &opt_tplratioCatRelPath="",
+                                              const string &opt_offsetCatRelPath="");
 
     Int32 ComputeCandidates(const Int32 opt_extremacount, const Int32 opt_sign, const std::vector<Float64> floatValues);
 
@@ -144,8 +148,14 @@ public:
                                       const Float64 &opt_twosteplargegridstep,
                                       const string &opt_twosteplargegridsampling,
                                       const std::string& opt_rigidity,
-                                      const Float64 &opt_velocityfitmin,
-                                      const Float64 &opt_velocityfitmax);
+                                      const string &opt_tplratioCatRelPath,
+                                      const string &opt_offsetCatRelPath,
+                                      const Float64 &opt_emvelocityfitmin,
+                                      const Float64 &opt_emvelocityfitmax,
+                                      const Float64 &opt_emvelocityfitstep,
+                                      const Float64 &opt_absvelocityfitmin,
+                                      const Float64 &opt_absvelocityfitmax,
+                                      const Float64 &opt_absvelocityfitstep);
 
     void storeGlobalModelResults( CDataStore &dataStore );
     void storePerTemplateModelResults( CDataStore &dataStore, const CTemplate& tpl );

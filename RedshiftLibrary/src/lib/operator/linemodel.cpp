@@ -79,7 +79,9 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
                                   const std::string& opt_velocityFitting,
                                   const Float64 &opt_twosteplargegridstep,
                                   const string &opt_twosteplargegridsampling,
-                                  const std::string& opt_rigidity)
+                                  const std::string& opt_rigidity,
+                                  const std::string& opt_tplratioCatRelPath,
+                                  const std::string& opt_offsetCatRelPath)
 {
 
     // redefine redshift grid
@@ -281,7 +283,7 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
     {
         //init catalog tplratios
         Log.LogInfo( "  Operator-Linemodel: Tpl-ratios init");
-        bool tplratioInitRet = m_model->initTplratioCatalogs();
+        bool tplratioInitRet = m_model->initTplratioCatalogs(opt_tplratioCatRelPath);
         if(!tplratioInitRet)
         {
             Log.LogError( "  Operator-Linemodel: Failed to init tpl-ratios. aborting...");
@@ -292,7 +294,7 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
     //init catalog offsets
     Log.LogInfo( "  Operator-Linemodel: Lambda offsets init");
     try {
-      m_model->initLambdaOffsets();
+        m_model->initLambdaOffsets(opt_offsetCatRelPath);
     } catch (std::exception const& e) {
         Log.LogError( "  Operator-Linemodel: Failed to init lambda offsets. Continuing without offsets...");
     }
@@ -1358,12 +1360,14 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
                                   const Float64 &opt_twosteplargegridstep,
                                   const string &opt_twosteplargegridsampling,
                                   const std::string& opt_rigidity,
-                                 const Float64 &opt_emvelocityfitmin,
-                                 const Float64 &opt_emvelocityfitmax,
-                                 const Float64 &opt_emvelocityfitstep,
-                                 const Float64 &opt_absvelocityfitmin,
-                                 const Float64 &opt_absvelocityfitmax,
-                                 const Float64 &opt_absvelocityfitstep)
+                                  const string &opt_tplratioCatRelPath,
+                                  const string &opt_offsetCatRelPath,
+                                  const Float64 &opt_emvelocityfitmin,
+                                  const Float64 &opt_emvelocityfitmax,
+                                  const Float64 &opt_emvelocityfitstep,
+                                  const Float64 &opt_absvelocityfitmin,
+                                  const Float64 &opt_absvelocityfitmax,
+                                  const Float64 &opt_absvelocityfitstep)
 {
     // initialize empty results so that it can be returned anyway in case of an error
     m_result = std::shared_ptr<CLineModelResult>( new CLineModelResult() );
@@ -1402,7 +1406,9 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(CDataStore &dataSto
                                           opt_velocityFitting,
                                           opt_twosteplargegridstep,
                                           opt_twosteplargegridsampling,
-                                          opt_rigidity);
+                                          opt_rigidity,
+                                          opt_tplratioCatRelPath,
+                                          opt_offsetCatRelPath);
     if( retFirstPass!=0 )
     {
         Log.LogError( "Line Model, first pass failed. Aborting" );
@@ -1490,8 +1496,14 @@ std::shared_ptr<COperatorResult> COperatorLineModel::computeWithUltimPass(CDataS
                                   const Float64 &opt_twosteplargegridstep,
                                   const string &opt_twosteplargegridsampling,
                                   const std::string& opt_rigidity,
-                                  const Float64 &opt_velocityfitmin,
-                                  const Float64 &opt_velocityfitmax)
+                                  const string &opt_tplratioCatRelPath,
+                                  const string &opt_offsetCatRelPath,
+                                  const Float64 &opt_emvelocityfitmin,
+                                  const Float64 &opt_emvelocityfitmax,
+                                  const Float64 &opt_emvelocityfitstep,
+                                  const Float64 &opt_absvelocityfitmin,
+                                  const Float64 &opt_absvelocityfitmax,
+                                  const Float64 &opt_absvelocityfitstep)
 {
     auto result = std::dynamic_pointer_cast<CLineModelResult>(Compute( dataStore,
                             spectrum,
@@ -1517,8 +1529,14 @@ std::shared_ptr<COperatorResult> COperatorLineModel::computeWithUltimPass(CDataS
                             opt_twosteplargegridstep,
                             opt_twosteplargegridsampling,
                             opt_rigidity,
-                            opt_velocityfitmin,
-                            opt_velocityfitmax));
+                            opt_tplratioCatRelPath,
+                            opt_offsetCatRelPath,
+                            opt_emvelocityfitmin,
+                            opt_emvelocityfitmax,
+                            opt_emvelocityfitstep,
+                            opt_absvelocityfitmin,
+                            opt_absvelocityfitmax,
+                            opt_absvelocityfitstep));
 
     if(result && opt_rigidity=="tplshape")
     {
@@ -1589,8 +1607,14 @@ std::shared_ptr<COperatorResult> COperatorLineModel::computeWithUltimPass(CDataS
                                opt_twosteplargegridstep,
                                opt_twosteplargegridsampling,
                                opt_rigidity_lastPass,
-                               opt_velocityfitmin,
-                               opt_velocityfitmax));
+                               opt_tplratioCatRelPath,
+                               opt_offsetCatRelPath,
+                               opt_emvelocityfitmin,
+                               opt_emvelocityfitmax,
+                               opt_emvelocityfitstep,
+                               opt_absvelocityfitmin,
+                               opt_absvelocityfitmax,
+                               opt_absvelocityfitstep));
 
         m_maxModelSaveCount = maxSaveBackup;
         Float64 refinedExtremum = lastPassResult->ExtremaResult.Extrema[0];

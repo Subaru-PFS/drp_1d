@@ -94,8 +94,8 @@ void checkLeastSquareFast(std::string spectrumPath, std::string noisePath, std::
 
 
     CLineModelElementList model(spectrum, spectrumContinuum, orthoTplCatalog, tplCategories, opt_calibrationPath, lineList, opt_fittingmethod, opt_continuumcomponent, opt_lineWidthType, opt_resolution, opt_velocityEmission, opt_velocityAbsorption, opt_rules, opt_rigidity);
-
-    bool tplratioInitRet = model.initTplratioCatalogs();
+    std::string tplratio_relpath = "linecatalogs_tplshapes/linecatalogs_tplshape_ExtendedTemplatesJan2017v3_20170602_B14C_v3_emission";
+    bool tplratioInitRet = model.initTplratioCatalogs(tplratio_relpath);
     BOOST_CHECK_MESSAGE( tplratioInitRet, "Unable to intialize tpl-ratio catalog");
 
     TFloat64Range lambdaRange = TFloat64Range( 3900.0, 12500.0 );

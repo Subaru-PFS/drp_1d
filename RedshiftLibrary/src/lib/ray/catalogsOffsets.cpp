@@ -35,14 +35,19 @@ CLineCatalogsOffsets::~CLineCatalogsOffsets()
 
 }
 
-void CLineCatalogsOffsets::Init( std::string calibrationPath)
+void CLineCatalogsOffsets::Init( std::string calibrationPath, std::string offsetsCatalogsRelPath)
 {
+    if(offsetsCatalogsRelPath.size()<1)
+    {
+      char buf[180];
+      snprintf(buf, sizeof(buf), "Unable to init the offset catalog. Found empty relative path.");
+      throw std::runtime_error(buf);
+    }
+
     m_Calibration_path = calibrationPath;
     bfs::path calibrationFolder( calibrationPath.c_str() );
 
-    CCalibrationConfigHelper calibrationConfig;
-    calibrationConfig.Init(calibrationPath);
-    m_Catalogs_relpath = calibrationConfig.Get_linemodelOffset_relpath();
+    m_Catalogs_relpath = offsetsCatalogsRelPath;
     Log.LogInfo( "    CatalogsOffsets - Loading offsets catalog : %s", m_Catalogs_relpath.c_str());
 
     std::string dirPath = (calibrationFolder/m_Catalogs_relpath.c_str()).string();
