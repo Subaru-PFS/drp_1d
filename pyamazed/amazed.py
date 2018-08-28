@@ -110,5 +110,6 @@ def amazed():
         #ctx.GetDataStore().SaveReliabilityResult('/tmp/bar')
         ctx.GetDataStore().SaveAllResults(os.path.join(config.output_folder, proc_id), 'all')
 
+
 if __name__ == '__main__':
     amazed()

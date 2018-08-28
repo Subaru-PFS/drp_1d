@@ -1,5 +1,5 @@
 import json
-from redshift import CLog
+from .redshift import CLog
 
 defaults = {
     'parameters_file': 'parameters.json',

@@ -152,6 +152,7 @@ public:
 	    std::shared_ptr<CParameterStore> paramStore,
 	    std::shared_ptr<CClassifierStore> zqualStore  );
   CDataStore& GetDataStore();
+  COperatorResultStore& GetResultStore();
 };
 
 %catches(std::string, std::runtime_error, ...) CProcessFlow::Process;
@@ -167,15 +168,16 @@ class CDataStore
 public:
   CDataStore( COperatorResultStore& resultStore, CParameterStore& parameStore );
   void SaveRedshiftResult( const std::string& dir );
+  void SaveCandidatesResult( const std::string& dir );
   void SaveReliabilityResult( const std::string& dir );
   void SaveAllResults( const std::string& dir, const std::string opt ) const;
-
 };
 
 class COperatorResultStore
 {
 public:
   COperatorResultStore();
+
 };
 
 %catches(std::string, ...) CSpectrum::LoadSpectrum;

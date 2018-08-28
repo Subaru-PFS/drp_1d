@@ -1,5 +1,5 @@
 import argparse
-from redshift import CLog
+from .redshift import CLog
 
 def log_level(lvl):
     levels = {
