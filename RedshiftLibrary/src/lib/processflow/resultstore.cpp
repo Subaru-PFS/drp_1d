@@ -198,7 +198,7 @@ void COperatorResultStore::SaveCandidatesResult( const CDataStore& store, const 
         //*
         if(ret==1)
         {
-            outputStream <<  "#Spectrum\tProcessingID\tRedshift_1\tProb_1\tgaussAmp_1\tgaussSigma_1\tRedshift_2\tProb_2\tgaussAmp_2\tgaussSigma_2\t..."<< std::endl;
+            outputStream <<  "#Spectrum\tProcessingID\tRank_1\tRedshift_1\tProb_1\tgaussAmp_1\tgaussSigma_1\tRank_2\tRedshift_2\tProb_2\tgaussAmp_2\tgaussSigma_2\t..."<< std::endl;
         }
         //*/
 
