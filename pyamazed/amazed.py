@@ -4,7 +4,7 @@ from .argumentparser import parser
 from .redshift import *
 from .config import Config
 import numpy as np
-
+import json
 
 def datapath(config, *path):
     return os.path.expanduser(os.path.join(config.data_path, *path))
@@ -109,6 +109,11 @@ def amazed():
         ctx.GetDataStore().SaveRedshiftResult(config.output_folder)
         #ctx.GetDataStore().SaveReliabilityResult('/tmp/bar')
         ctx.GetDataStore().SaveAllResults(os.path.join(config.output_folder, proc_id), 'all')
+
+
+    # save cpf-redshift version in output dir
+    with open(os.path.join(config.output_folder, 'version.json'), 'w') as f:
+        json.dump({'cpf-redshift-version': get_version()}, f)
 
 
 if __name__ == '__main__':
