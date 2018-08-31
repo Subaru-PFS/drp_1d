@@ -38,6 +38,8 @@ public:
 
     const char* lya_em = "LyAE";
 
+    const char* niia_em = "[NII](doublet-1)";
+    const char* niib_em = "[NII](doublet-1/2.95)";
 
 
 };

@@ -4427,18 +4427,30 @@ Int32 CLineModelElementList::LoadModelSolution(const CLineModelSolution&  modelS
 Int32 CLineModelElementList::improveBalmerFit()
 {
     linetags ltags;
+    //Emission Balmer lines
     std::vector<std::string> linetagsE;
     linetagsE.push_back( ltags.halpha_em );
     linetagsE.push_back( ltags.hbeta_em );
     linetagsE.push_back( ltags.hgamma_em );
     linetagsE.push_back( ltags.hdelta_em );
+    //Absorption Balmer lines
     std::vector<std::string> linetagsA;
     linetagsA.push_back( ltags.halpha_abs );
     linetagsA.push_back( ltags.hbeta_abs );
     linetagsA.push_back( ltags.hgamma_abs );
     linetagsA.push_back( ltags.hdelta_abs );
+    //Additional lines to be fitted with the Balmer lines, WARNING: only EMISSION for now !!
+    std::vector<std::string> linetagsNII;
+    linetagsNII.push_back( ltags.niia_em );
+    linetagsNII.push_back( ltags.niib_em );
+    std::vector<std::string> linetagsVoid;
+    std::vector<TStringList> linetagsMore;
+    linetagsMore.push_back( linetagsNII );
+    linetagsMore.push_back( linetagsVoid );
+    linetagsMore.push_back( linetagsVoid );
+    linetagsMore.push_back( linetagsVoid );
 
-    if(linetagsE.size()!=linetagsA.size())
+    if(linetagsE.size()!=linetagsA.size() || linetagsE.size()!=linetagsMore.size())
     {
         return -1;
     }
@@ -4463,6 +4475,24 @@ Int32 CLineModelElementList::improveBalmerFit()
         Int32 subeIdxE = 0;
         Int32 subeIdxA = 0;
 
+        //find the linesMore unique elements indexes
+        std::vector<Int32> ilinesMore;
+        for( Int32 imore=0; imore<linetagsMore[itag].size(); imore++)
+        {
+            std::string tagMore = linetagsMore[itag][imore];
+            Int32 ilineMore = FindElementIndex( tagMore, CRay::nType_Emission );
+            if(ilineMore<0)
+            {
+                continue;
+            }
+            ilinesMore.push_back(ilineMore);
+        }
+        std::sort(ilinesMore.begin(), ilinesMore.end());
+        ilinesMore.erase( std::unique( ilinesMore.begin(), ilinesMore.end() ), ilinesMore.end() );
+        for( Int32 imore=0; imore<ilinesMore.size(); imore++)
+        {
+            Log.LogInfo("    model: balmerImprove more tags = %d", ilinesMore[imore]);
+        }
 
         //try if the width is significantly different: abs > em
         Float64 AbsVSEmWidthCoeffThreshold = 2.0;
@@ -4479,10 +4509,23 @@ Int32 CLineModelElementList::improveBalmerFit()
         Float64 amp_errorA = m_Elements[ilineA]->GetFittedAmplitudeErrorSigma(0);
         Float64 ampE = m_Elements[ilineE]->GetFittedAmplitude(0);
         Float64 amp_errorE = m_Elements[ilineE]->GetFittedAmplitudeErrorSigma(0);
+        TFloat64List ampsMore;
+        TFloat64List ampErrorsMore;
+        for( Int32 imore=0; imore<ilinesMore.size(); imore++)
+        {
+            Float64 amp = m_Elements[ilinesMore[imore]]->GetFittedAmplitude(0);
+            Float64 ampErr = m_Elements[ilinesMore[imore]]->GetFittedAmplitudeErrorSigma(0);
+            ampsMore.push_back(amp);
+            ampErrorsMore.push_back(ampErr);
+        }
 
         std::vector<Int32> eltsIdx;
         eltsIdx.push_back(ilineA);
         eltsIdx.push_back(ilineE);
+        for( Int32 imore=0; imore<ilinesMore.size(); imore++)
+        {
+            eltsIdx.push_back(ilinesMore[imore]);
+        }
         std::vector<Float64> ampsfitted;
         std::vector<Float64> errorsfitted;
         fitAmplitudesLinSolve(eltsIdx, m_SpectrumModel->GetSpectralAxis(), m_spcFluxAxisNoContinuum, m_ContinuumFluxAxis, ampsfitted, errorsfitted);
@@ -4491,6 +4534,10 @@ Int32 CLineModelElementList::improveBalmerFit()
         std::vector<Int32> elts;
         elts.push_back(ilineA);
         elts.push_back(ilineE);
+        for( Int32 imore=0; imore<ilinesMore.size(); imore++)
+        {
+            elts.push_back(ilinesMore[imore]);
+        }
         refreshModelUnderElements(elts);
         Float64 modelErr_withfit = getModelErrorUnderElement(ilineA);
         if(modelErr_withfit>modelErr_init)
@@ -4499,6 +4546,11 @@ Int32 CLineModelElementList::improveBalmerFit()
             Float64 nominal_ampE = m_Elements[ilineE]->GetNominalAmplitude(0);
             m_Elements[ilineA]->SetFittedAmplitude(ampA/nominal_ampA, amp_errorA/nominal_ampA);
             m_Elements[ilineE]->SetFittedAmplitude(ampE/nominal_ampE, amp_errorE/nominal_ampE);
+            for( Int32 imore=0; imore<ilinesMore.size(); imore++)
+            {
+                Float64 nominal_ampMore = m_Elements[ilinesMore[imore]]->GetNominalAmplitude(0);
+                m_Elements[ilinesMore[imore]]->SetFittedAmplitude(ampsMore[imore]/nominal_ampMore, ampErrorsMore[imore]/nominal_ampMore);
+            }
         }
     }
 
