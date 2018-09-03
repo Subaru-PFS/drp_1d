@@ -29,6 +29,7 @@
 %{
         #define SWIG_FILE_WITH_INIT
         #include "RedshiftLibrary/common/datatypes.h"
+        #include "RedshiftLibrary/version.h"
         #include "RedshiftLibrary/common/range.h"
         #include "RedshiftLibrary/log/log.h"
         #include <RedshiftLibrary/common/singleton.h>
@@ -58,21 +59,7 @@ import_array();
 
 using namespace NSEpic;
 
-/* typedef int Int32; */
-/* typedef short Int16; */
-/* typedef signed char Int8 ; */
-/* typedef long long Int64 ; */
-/* typedef unsigned long long UInt64 ; */
-/* typedef unsigned int UInt32 ; */
-/* typedef unsigned short UInt16 ; */
-/* typedef unsigned char UInt8 ; */
-/* typedef float   Float32 ; */
-/* typedef double  Float64 ; */
-/* typedef char Char; */
-/* typedef unsigned char Byte; */
-/* typedef void Void; */
-/* typedef unsigned int Bool; */
-/* typedef const char* String; */
+const char* get_version();
 
 class CLog {
 public:
@@ -152,6 +139,7 @@ public:
 	    std::shared_ptr<CParameterStore> paramStore,
 	    std::shared_ptr<CClassifierStore> zqualStore  );
   CDataStore& GetDataStore();
+  COperatorResultStore& GetResultStore();
 };
 
 %catches(std::string, std::runtime_error, ...) CProcessFlow::Process;
@@ -167,15 +155,16 @@ class CDataStore
 public:
   CDataStore( COperatorResultStore& resultStore, CParameterStore& parameStore );
   void SaveRedshiftResult( const std::string& dir );
+  void SaveCandidatesResult( const std::string& dir );
   void SaveReliabilityResult( const std::string& dir );
   void SaveAllResults( const std::string& dir, const std::string opt ) const;
-
 };
 
 class COperatorResultStore
 {
 public:
   COperatorResultStore();
+
 };
 
 %catches(std::string, ...) CSpectrum::LoadSpectrum;

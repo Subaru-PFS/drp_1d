@@ -1,5 +1,5 @@
 import argparse
-from redshift import CLog
+from .redshift import CLog
 
 def log_level(lvl):
     levels = {
@@ -42,4 +42,3 @@ parser.add_argument('--config', '-c', dest='config', metavar='FILE', type=str,
                     help='Json configuration file giving all these command line parameters.')
 parser.add_argument('--log_level', '-l', dest='log_level', metavar='LEVEL', type=log_level,
                     help='Verbosity level. Either "none", "debug", "info", "warning", "error" or "critical".')
-

@@ -1,5 +1,5 @@
 import json
-from redshift import CLog
+from .redshift import CLog
 
 defaults = {
     'parameters_file': 'parameters.json',
@@ -30,7 +30,7 @@ class Config(object):
                 cfg = json.load(f)
             for k, v in cfg.items():
                 if k not in defaults:
-                    raise AttributeError('Invalid config file parameter {}'.format(arg))
+                    raise AttributeError('Invalid config file parameter {}'.format(k))
                 setattr(self, k, v)
 
 
