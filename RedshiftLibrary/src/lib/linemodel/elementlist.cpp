@@ -4491,7 +4491,7 @@ Int32 CLineModelElementList::improveBalmerFit()
         ilinesMore.erase( std::unique( ilinesMore.begin(), ilinesMore.end() ), ilinesMore.end() );
         for( Int32 imore=0; imore<ilinesMore.size(); imore++)
         {
-            Log.LogInfo("    model: balmerImprove more tags = %d", ilinesMore[imore]);
+            Log.LogDebug("    model: balmerImprove more tags = %d", ilinesMore[imore]);
         }
 
         //try if the width is significantly different: abs > em
