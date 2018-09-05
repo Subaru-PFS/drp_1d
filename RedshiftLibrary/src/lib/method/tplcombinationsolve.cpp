@@ -34,9 +34,9 @@ const std::string CMethodTplcombinationSolve::GetDescription()
     desc.append("\tparam: tplcombinationsolve.spectrum.component = {""raw"", ""nocontinuum"", ""continuum"", ""all""}\n");
     desc.append("\tparam: tplcombinationsolve.overlapThreshold = <float value>\n");
     desc.append("\tparam: tplcombinationsolve.interpolation = {""precomputedfinegrid"", ""lin""}\n");
-    desc.append("\tparam: tplcombinationsolve.extinction = {""yes"", ""no""}\n");
-    desc.append("\tparam: tplcombinationsolve.dustfit = {""yes"", ""no""}\n");
-    desc.append("\tparam: tplcombinationsolve.pdfcombination = {""marg"", ""bestchi2""}\n");
+    //desc.append("\tparam: tplcombinationsolve.extinction = {""yes"", ""no""}\n");
+    //desc.append("\tparam: tplcombinationsolve.dustfit = {""yes"", ""no""}\n");
+    //desc.append("\tparam: tplcombinationsolve.pdfcombination = {""marg"", ""bestchi2""}\n");
     desc.append("\tparam: tplcombinationsolve.saveintermediateresults = {""yes"", ""no""}\n");
 
 
@@ -45,7 +45,7 @@ const std::string CMethodTplcombinationSolve::GetDescription()
 }
 
 
-std::shared_ptr<CChisquare2SolveResult> CMethodTplcombinationSolve::Compute(CDataStore& resultStore,
+std::shared_ptr<CTplcombinationSolveResult> CMethodTplcombinationSolve::Compute(CDataStore& resultStore,
                                                                               const CSpectrum& spc,
                                                                               const CSpectrum& spcWithoutCont,
                                                                               const CTemplateCatalog& tplCatalog,
@@ -67,16 +67,16 @@ std::shared_ptr<CChisquare2SolveResult> CMethodTplcombinationSolve::Compute(CDat
 
     Int32 _type;
     if(spcComponent=="raw"){
-       _type = CChisquare2SolveResult::nType_raw;
+       _type = CTplcombinationSolveResult::nType_raw;
        scopeStr = "chisquare";
     }else if(spcComponent=="nocontinuum"){
-       _type = CChisquare2SolveResult::nType_noContinuum;
+       _type = CTplcombinationSolveResult::nType_noContinuum;
        scopeStr = "chisquare_nocontinuum";
     }else if(spcComponent=="continuum"){
-        _type = CChisquare2SolveResult::nType_continuumOnly;
+        _type = CTplcombinationSolveResult::nType_continuumOnly;
         scopeStr = "chisquare_continuum";
     }else if(spcComponent=="all"){
-        _type = CChisquare2SolveResult::nType_all;
+        _type = CTplcombinationSolveResult::nType_all;
     }
 
 
@@ -89,35 +89,43 @@ std::shared_ptr<CChisquare2SolveResult> CMethodTplcombinationSolve::Compute(CDat
         m_opt_enableSaveIntermediateChisquareResults = false;
     }
 
+    //for now interp must be 'lin'. pfg not availbale for now...
+    if(opt_interp!="lin")
+    {
+        Log.LogError("Tplcombinationsolve: interp. parameter must be 'lin'");
+        throw std::string("Tplcombinationsolve: interpolation parameter must be lin");
+    }
+
     Log.LogInfo( "Method parameters:");
+    Log.LogInfo( "    -interpolation: %s", opt_interp.c_str());
     Log.LogInfo( "    -overlapThreshold: %.3f", overlapThreshold);
     Log.LogInfo( "    -component: %s", spcComponent.c_str());
     Log.LogInfo( "    -IGM extinction: %s", opt_extinction.c_str());
     Log.LogInfo( "    -ISM dust-fit: %s", opt_dustFit.c_str());
-    Log.LogInfo( "    -pdfcombination: %s", m_opt_pdfcombination.c_str());
+    //Log.LogInfo( "    -pdfcombination: %s", m_opt_pdfcombination.c_str());
     Log.LogInfo( "    -saveintermediateresults: %d", (int)m_opt_enableSaveIntermediateChisquareResults);
     Log.LogInfo( "");
 
-    for( UInt32 i=0; i<tplCategoryList.size(); i++ )
-    {
-        std::string category = tplCategoryList[i];
+//    for( UInt32 i=0; i<tplCategoryList.size(); i++ )
+//    {
+//        std::string category = tplCategoryList[i];
 
-        for( UInt32 j=0; j<tplCatalog.GetTemplateCount( category ); j++ )
-        {
-            const CTemplate& tpl = tplCatalog.GetTemplate( category, j );
-            const CTemplate& tplWithoutCont = tplCatalog.GetTemplateWithoutContinuum( category, j );
+//        for( UInt32 j=0; j<tplCatalog.GetTemplateCount( category ); j++ )
+//        {
+//            const CTemplate& tpl = tplCatalog.GetTemplate( category, j );
+//            const CTemplate& tplWithoutCont = tplCatalog.GetTemplateWithoutContinuum( category, j );
 
-            Solve( resultStore, spc, spcWithoutCont, tpl, tplWithoutCont, lambdaRange, redshifts, overlapThreshold, maskList, _type, opt_interp, opt_extinction, opt_dustFit);
+    Solve( resultStore, spc, spcWithoutCont, tplCatalog, tplCategoryList, lambdaRange, redshifts, overlapThreshold, maskList, _type, opt_interp, opt_extinction, opt_dustFit);
 
-            storeResult = true;
-        }
-    }
+    storeResult = true;
+//        }
+//    }
 
 
     if( storeResult )
     {
-        std::shared_ptr< CChisquare2SolveResult>  ChisquareSolveResult = std::shared_ptr< CChisquare2SolveResult>( new CChisquare2SolveResult() );
-        ChisquareSolveResult->m_type = _type;
+        std::shared_ptr< CTplcombinationSolveResult>  solveResult = std::shared_ptr< CTplcombinationSolveResult>( new CTplcombinationSolveResult() );
+        solveResult->m_type = _type;
 
         std::shared_ptr<CPdfMargZLogResult> postmargZResult = std::shared_ptr<CPdfMargZLogResult>(new CPdfMargZLogResult());
         Int32 retCombinePdf = CombinePDF(resultStore, scopeStr, m_opt_pdfcombination, postmargZResult);
@@ -128,11 +136,11 @@ std::shared_ptr<CChisquare2SolveResult> CMethodTplcombinationSolve::Compute(CDat
             CPdfz pdfz;
             Float64 sumRect = pdfz.getSumRect(postmargZResult->Redshifts, postmargZResult->valProbaLog);
             Float64 sumTrapez = pdfz.getSumTrapez(postmargZResult->Redshifts, postmargZResult->valProbaLog);
-            Log.LogDetail("    chisquare2solve: Pdfz normalization - sum rect. = %e", sumRect);
-            Log.LogDetail("    chisquare2solve: Pdfz normalization - sum trapz. = %e", sumTrapez);
+            Log.LogDetail("    tplcombinationsolve: Pdfz normalization - sum rect. = %e", sumRect);
+            Log.LogDetail("    tplcombinationsolve: Pdfz normalization - sum trapz. = %e", sumTrapez);
             Bool pdfSumCheck = abs(sumRect-1.0)<1e-1 || abs(sumTrapez-1.0)<1e-1;
             if(!pdfSumCheck){
-                Log.LogError("    chisquare2solve: Pdfz normalization failed (rectsum = %f, trapzesum = %f)", sumRect, sumTrapez);
+                Log.LogError("    tplcombinationsolve: Pdfz normalization failed (rectsum = %f, trapzesum = %f)", sumRect, sumTrapez);
             }
 
 
@@ -142,7 +150,7 @@ std::shared_ptr<CChisquare2SolveResult> CMethodTplcombinationSolve::Compute(CDat
             }
         }
 
-        return ChisquareSolveResult;
+        return solveResult;
     }
 
     return NULL;
@@ -151,23 +159,22 @@ std::shared_ptr<CChisquare2SolveResult> CMethodTplcombinationSolve::Compute(CDat
 Bool CMethodTplcombinationSolve::Solve(CDataStore& resultStore,
                                     const CSpectrum& spc,
                                     const CSpectrum& spcWithoutCont,
-                                    const CTemplate& tpl,
-                                    const CTemplate& tplWithoutCont,
+                                    const CTemplateCatalog &tplCatalog,
+                                    const TStringList &tplCategoryList,
                                     const TFloat64Range& lambdaRange,
                                     const TFloat64List& redshifts,
                                     Float64 overlapThreshold,
                                     std::vector<CMask> maskList,
                                     Int32 spctype,
                                     std::string opt_interp,
-                                   std::string opt_extinction,
-                                   std::string opt_dustFitting )
+                                    std::string opt_extinction,
+                                    std::string opt_dustFitting )
 {
     CSpectrum _spc;
-    CTemplate _tpl;
-    std::string scopeStr = "chisquare";
+    std::string scopeStr = "tplcombination";
     Int32 _ntype = 1;
     Int32 _spctype = spctype;
-    Int32 _spctypetab[3] = {CChisquare2SolveResult::nType_raw, CChisquare2SolveResult::nType_noContinuum, CChisquare2SolveResult::nType_continuumOnly};
+    Int32 _spctypetab[3] = {CTplcombinationSolveResult::nType_raw, CTplcombinationSolveResult::nType_noContinuum, CTplcombinationSolveResult::nType_continuumOnly};
 
 
     Int32 enable_extinction = 0; //TODO: extinction should be deactivated for nocontinuum anyway ? TBD
@@ -181,94 +188,69 @@ Bool CMethodTplcombinationSolve::Solve(CDataStore& resultStore,
         enable_dustFitting = 1;
     }
 
+    //prepare the list of components/templates
+    std::vector<CTemplate> tplList;
+    for( UInt32 i=0; i<tplCategoryList.size(); i++ )
+    {
+        std::string category = tplCategoryList[i];
 
-
-    //case: nType_all
-    if(spctype == CChisquare2SolveResult::nType_all){
-        _ntype = 3;
+        for( UInt32 j=0; j<tplCatalog.GetTemplateCount( category ); j++ )
+        {
+            const CTemplate& tpl = tplCatalog.GetTemplate( category, j );
+            CTemplate _tpl=tpl;
+            tplList.push_back(_tpl);
+        }
     }
 
+    //case: nType_all
+    if(spctype == CTplcombinationSolveResult::nType_all){
+        _ntype = 3;
+    }
     for( Int32 i=0; i<_ntype; i++){
-        if(spctype == CChisquare2SolveResult::nType_all){
+        if(spctype == CTplcombinationSolveResult::nType_all){
             _spctype = _spctypetab[i];
         }else{
             _spctype = spctype;
         }
 
-        if(_spctype == CChisquare2SolveResult::nType_continuumOnly){
+        if(_spctype == CTplcombinationSolveResult::nType_continuumOnly){
             // use continuum only
             _spc = spc;
             CSpectrumFluxAxis spcfluxAxis = _spc.GetFluxAxis();
             spcfluxAxis.Subtract(spcWithoutCont.GetFluxAxis());
             CSpectrumFluxAxis& sfluxAxisPtr = _spc.GetFluxAxis();
             sfluxAxisPtr = spcfluxAxis;
-            _tpl = tpl;
-            CSpectrumFluxAxis tplfluxAxis = _tpl.GetFluxAxis();
-            tplfluxAxis.Subtract(tplWithoutCont.GetFluxAxis());
-            CSpectrumFluxAxis& tfluxAxisPtr = _tpl.GetFluxAxis();
-            tfluxAxisPtr = tplfluxAxis;
-
-
             scopeStr = "chisquare_continuum";
-        }else if(_spctype == CChisquare2SolveResult::nType_raw){
+        }else if(_spctype == CTplcombinationSolveResult::nType_raw){
             // use full spectrum
             _spc = spc;
-            _tpl = tpl;
             scopeStr = "chisquare";
 
-        }else if(_spctype == CChisquare2SolveResult::nType_noContinuum){
+        }else if(_spctype == CTplcombinationSolveResult::nType_noContinuum){
             // use spectrum without continuum
             _spc = spc;
             CSpectrumFluxAxis spcfluxAxis = spcWithoutCont.GetFluxAxis();
             CSpectrumFluxAxis& sfluxAxisPtr = _spc.GetFluxAxis();
             sfluxAxisPtr = spcfluxAxis;
-            _tpl = tpl;
-            CSpectrumFluxAxis tplfluxAxis = tplWithoutCont.GetFluxAxis();
-            CSpectrumFluxAxis& tfluxAxisPtr = _tpl.GetFluxAxis();
-            tfluxAxisPtr = tplfluxAxis;
             scopeStr = "chisquare_nocontinuum";
             //
             enable_dustFitting = 0;
         }
 
         // Compute merit function
-        //CRef<CChisquareResult>  chisquareResult = (CChisquareResult*)chiSquare.ExportChi2versusAZ( _spc, _tpl, lambdaRange, redshifts, overlapThreshold );
-        auto  chisquareResult = std::dynamic_pointer_cast<CChisquareResult>( m_chiSquareOperator->Compute( _spc, _tpl, lambdaRange, redshifts, overlapThreshold, maskList, opt_interp, enable_extinction, enable_dustFitting ) );
+        auto  result = std::dynamic_pointer_cast<CTplcombinationResult>( m_tplcombinationOperator->Compute( _spc, tplList, lambdaRange, redshifts, overlapThreshold, maskList, opt_interp, enable_extinction, enable_dustFitting ) );
 
-        if( !chisquareResult )
+        if( !result )
         {
             //Log.LogInfo( "Failed to compute chi square value");
             return false;
         }else{
             // Store results
-            resultStore.StoreScopedPerTemplateResult( tpl, scopeStr.c_str(), chisquareResult );
-
-            //Save intermediate chisquare results
-            if(m_opt_enableSaveIntermediateChisquareResults && chisquareResult->ChiSquareIntermediate.size()>0 && chisquareResult->ChiSquareIntermediate.size()==chisquareResult->Redshifts.size())
-            {
-                Int32 nISM = chisquareResult->ChiSquareIntermediate[0].size();
-                if(chisquareResult->ChiSquareIntermediate[0].size()>0)
-                {
-                    Int32 nIGM = chisquareResult->ChiSquareIntermediate[0][0].size();
-
-                    for(Int32 kism=0; kism<nISM; kism++)
-                    {
-                        for(Int32 kigm=0; kigm<nIGM; kigm++)
-                        {
-                            std::shared_ptr<CChisquareResult> result_chisquare_intermediate = std::shared_ptr<CChisquareResult>( new CChisquareResult() );
-                            result_chisquare_intermediate->Init( chisquareResult->Redshifts.size(), 0, 0);
-                            for(Int32 kz=0; kz<chisquareResult->Redshifts.size(); kz++)
-                            {
-                                result_chisquare_intermediate->Redshifts[kz] = chisquareResult->Redshifts[kz];
-                                result_chisquare_intermediate->ChiSquare[kz] = chisquareResult->ChiSquareIntermediate[kz][kism][kigm];
-                            }
-
-                            std::string resname = (boost::format("%s_intermediate_ism%d_igm%d") % scopeStr.c_str() % kism % kigm).str();
-                            resultStore.StoreScopedPerTemplateResult( tpl, resname.c_str(), result_chisquare_intermediate );
-                        }
-                    }
-                }
-            }
+            Log.LogDetail("tplcombinationsolve: Save tplcombination results");
+            resultStore.StoreScopedGlobalResult(scopeStr.c_str(), result );
+            // Store spectrum results
+            Log.LogDetail("tplcombinationsolve: Save spectrum/model results");
+            m_tplcombinationOperator->SaveSpectrumResults(resultStore);
         }
     }
 
@@ -278,11 +260,18 @@ Bool CMethodTplcombinationSolve::Solve(CDataStore& resultStore,
 
 Int32 CMethodTplcombinationSolve::CombinePDF(CDataStore &store, std::string scopeStr, std::string opt_combine, std::shared_ptr<CPdfMargZLogResult> postmargZResult)
 {
-    Log.LogInfo("chisquare2solve: Pdfz computation");
+    Log.LogInfo("tplcombinationsolve: Pdfz computation");
     std::string scope = store.GetCurrentScopeName() + ".";
     scope.append(scopeStr.c_str());
 
-    TOperatorResultMap meritResults = store.GetPerTemplateResult(scope.c_str());
+    Log.LogDebug("tplcombinationsolve: combining pdf using results at scope: %s", scope.c_str());
+    auto results = store.GetGlobalResult( scope.c_str() );
+    if(results.expired())
+    {
+        Log.LogError("tplcombinationsolve: CombinePDF - Unable to retrieve tplcombination results");
+        throw std::string("tplcombinationsolve: CombinePDF - Unable to retrieve tplcombination results");
+    }
+    std::shared_ptr<const CTplcombinationResult> result = std::dynamic_pointer_cast<const CTplcombinationResult>( results.lock() );
 
     CPdfz pdfz;
     Float64 cstLog = -1;
@@ -291,30 +280,28 @@ Int32 CMethodTplcombinationSolve::CombinePDF(CDataStore &store, std::string scop
     std::vector<TFloat64List> priors;
     std::vector<TFloat64List> chiSquares;
     std::vector<Float64> redshifts;
-    for( TOperatorResultMap::const_iterator it = meritResults.begin(); it != meritResults.end(); it++ )
     {
-        auto meritResult = std::dynamic_pointer_cast<const CChisquareResult>( (*it).second );
         Int32 nISM = -1;
         Int32 nIGM = -1;
-        if(meritResult->ChiSquareIntermediate.size()>0)
+        if(result->ChiSquareIntermediate.size()>0)
         {
-            nISM = meritResult->ChiSquareIntermediate[0].size();
-            if(meritResult->ChiSquareIntermediate[0].size()>0)
+            nISM = result->ChiSquareIntermediate[0].size();
+            if(result->ChiSquareIntermediate[0].size()>0)
             {
-                nIGM = meritResult->ChiSquareIntermediate[0][0].size();
+                nIGM = result->ChiSquareIntermediate[0][0].size();
             }
         }
         if(cstLog==-1)
         {
-            cstLog = meritResult->CstLog;
-            Log.LogInfo("chisquare2solve: using cstLog = %f", cstLog);
-        }else if ( cstLog != meritResult->CstLog)
+            cstLog = result->CstLog;
+            Log.LogInfo("tplcombinationsolve: using cstLog = %f", cstLog);
+        }else if ( cstLog != result->CstLog)
         {
-            Log.LogError("chisquare2solve: Found different cstLog values in results... val-1=%f != val-2=%f", cstLog, meritResult->CstLog);
+            Log.LogError("tplcombinationsolve: Found different cstLog values in results... val-1=%f != val-2=%f", cstLog, result->CstLog);
         }
         if(redshifts.size()==0)
         {
-            redshifts = meritResult->Redshifts;
+            redshifts = result->Redshifts;
         }
 
         for(Int32 kism=0; kism<nISM; kism++)
@@ -322,17 +309,17 @@ Int32 CMethodTplcombinationSolve::CombinePDF(CDataStore &store, std::string scop
             for(Int32 kigm=0; kigm<nIGM; kigm++)
             {
                 TFloat64List _prior;
-                _prior = pdfz.GetConstantLogZPrior(meritResult->Redshifts.size());
+                _prior = pdfz.GetConstantLogZPrior(result->Redshifts.size());
                 priors.push_back(_prior);
 
                 //correct chi2 for ampl. marg. if necessary: todo add switch, currently deactivated
-                TFloat64List logLikelihoodCorrected(meritResult->ChiSquareIntermediate.size(), DBL_MAX);
-                for ( UInt32 kz=0; kz<meritResult->Redshifts.size(); kz++)
+                TFloat64List logLikelihoodCorrected(result->ChiSquareIntermediate.size(), DBL_MAX);
+                for ( UInt32 kz=0; kz<result->Redshifts.size(); kz++)
                 {
-                    logLikelihoodCorrected[kz] = meritResult->ChiSquareIntermediate[kz][kism][kigm];// + resultXXX->ScaleMargCorrectionTplshapes[][]?;
+                    logLikelihoodCorrected[kz] = result->ChiSquareIntermediate[kz][kism][kigm];// + resultXXX->ScaleMargCorrectionTplshapes[][]?;
                 }
                 chiSquares.push_back(logLikelihoodCorrected);
-                Log.LogDetail("    chisquare2solve: Pdfz combine - prepared merit  #%d for model : %s", chiSquares.size()-1, ((*it).first).c_str());
+                Log.LogDetail("    tplcombinationsolve: Pdfz combine - prepared merit #%d for ism=%d, igm=%d", chiSquares.size()-1, kism, kigm);
             }
         }
     }
@@ -341,24 +328,24 @@ Int32 CMethodTplcombinationSolve::CombinePDF(CDataStore &store, std::string scop
     {
         if(opt_combine=="marg")
         {
-            Log.LogInfo("    chisquare2solve: Pdfz combination - Marginalization");
+            Log.LogInfo("    tplcombinationsolve: Pdfz combination - Marginalization");
             retPdfz = pdfz.Marginalize( redshifts, chiSquares, priors, cstLog, postmargZResult);
         }else if(opt_combine=="bestchi2")
         {
-            Log.LogInfo("    chisquare2solve: Pdfz combination - BestChi2");
+            Log.LogInfo("    tplcombinationsolve: Pdfz combination - BestChi2");
             retPdfz = pdfz.BestChi2( redshifts, chiSquares, priors, cstLog, postmargZResult);
         }else{
-            Log.LogError("    chisquare2solve: Unable to parse pdf combination method option");
+            Log.LogError("    tplcombinationsolve: Unable to parse pdf combination method option");
         }
     }else
     {
-        Log.LogError("    chisquare2solve: Unable to find any chisquares prepared for combination. chiSquares.size()=%d", chiSquares.size());
+        Log.LogError("    tplcombinationsolve: Unable to find any chisquares prepared for combination. chiSquares.size()=%d", chiSquares.size());
     }
 
 
     if(retPdfz!=0)
     {
-        Log.LogError("    chisquare2solve: Pdfz computation failed");
+        Log.LogError("    tplcombinationsolve: Pdfz computation failed");
     }
 
     return retPdfz;
