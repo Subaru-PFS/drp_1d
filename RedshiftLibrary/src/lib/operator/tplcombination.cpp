@@ -79,7 +79,7 @@ void COperatorTplcombination::BasicFit(const CSpectrum& spectrum,
                                        Int32 opt_dustFitting,
                                        CMask spcMaskAdditional)
 {
-    bool verbose = false;
+    bool verbose = true;
     if(verbose)
     {
         Log.LogDebug("  Operator-tplcombination: BasicFit - for z=%f", redshift);
@@ -99,13 +99,7 @@ void COperatorTplcombination::BasicFit(const CSpectrum& spectrum,
         fittingResults.ChiSquareInterm.push_back(_chi2List);
 
     }
-//    for(Int32 kism=0; kism<fittingResults.ChiSquareInterm.size(); kism++)
-//    {
-//        for(Int32 kigm=0; kigm<fittingResults.ChiSquareInterm[kism].size(); kigm++)
-//        {
-//            fittingResults.ChiSquareInterm[kism][kigm] = boost::numeric::bounds<float>::highest();
-//        }
-//    }
+
     fittingResults.fittingAmplitudes = std::vector<Float64>(tplList.size(), -1.);
     fittingResults.fittingErrors = std::vector<Float64>(tplList.size(), -1.);
     fittingResults.overlapRate = 0.0;
@@ -126,6 +120,8 @@ void COperatorTplcombination::BasicFit(const CSpectrum& spectrum,
     // Compute clamped lambda range over spectrum
     TFloat64Range spcLambdaRange;
     retVal = spcSpectralAxis.ClampLambdaRange( lambdaRange, spcLambdaRange );
+    Log.LogDebug("  Operator-Tplcombination: spectrum has n=%d samples in lambdarange: %.2f - %.2f", spcSpectralAxis.GetSamplesCount(), spcSpectralAxis[0], spcSpectralAxis[spcSpectralAxis.GetSamplesCount()-1]);
+
 
     // Now interpolating all the templates
     Log.LogDebug("  Operator-tplcombination: BasicFit - interpolating");
@@ -155,6 +151,7 @@ void COperatorTplcombination::BasicFit(const CSpectrum& spectrum,
         //CSpectrumFluxAxis::Rebin( intersectedLambdaRange, tplFluxAxis, shiftedTplSpectralAxis, spcSpectralAxis, itplTplFluxAxis, itplTplSpectralAxis, itplMask );
         CSpectrumFluxAxis::Rebin2( intersectedLambdaRange, tplFluxAxis, pfgTplBuffer, redshift, *m_shiftedTemplatesSpectralAxis_bf[ktpl], spcSpectralAxis, itplTplFluxAxis, itplTplSpectralAxis, itplMask, opt_interp );
 
+        Log.LogDebug("  Operator-Tplcombination: Rebinned template #%d has n=%d samples in lambdarange: %.2f - %.2f", ktpl, itplTplSpectralAxis.GetSamplesCount(), itplTplSpectralAxis[0], itplTplSpectralAxis[itplTplSpectralAxis.GetSamplesCount()-1]);
 
         /*//overlapRate, Method 1
         CMask mask;
@@ -180,7 +177,18 @@ void COperatorTplcombination::BasicFit(const CSpectrum& spectrum,
     }
 
     // Linear fit
-    Int32 n=spcSpectralAxis.GetSamplesCount(); //for now, fitting on the whole observed spectrum range. TODO: crop the indexes.
+    Int32 imin_lbda = spcSpectralAxis.GetIndexAtWaveLength(spcLambdaRange.GetBegin());
+    if(spcSpectralAxis[imin_lbda]<spcLambdaRange.GetBegin() && imin_lbda+1<spcSpectralAxis.GetSamplesCount())
+    {
+        imin_lbda += 1;
+    }
+    Int32 imax_lbda = spcSpectralAxis.GetIndexAtWaveLength(spcLambdaRange.GetEnd());
+    if(spcSpectralAxis[imax_lbda]>spcLambdaRange.GetEnd() && imax_lbda-1>=imin_lbda)
+    {
+        imax_lbda -= 1;
+    }
+    Int32 n=imax_lbda-imin_lbda+1;
+    Log.LogDebug("  Operator-Tplcombination: prep. linear fitting with n=%d samples in the clamped lambdarange spectrum (imin=%d, lbda_min=%.3f - imax=%d, lbda_max=%.3f)", n, imin_lbda, spcSpectralAxis[imin_lbda], imax_lbda, spcSpectralAxis[imax_lbda]);
     Int32 nddl=tplList.size();
     gsl_matrix *X, *cov;
     gsl_vector *y, *w, *c;
@@ -196,9 +204,9 @@ void COperatorTplcombination::BasicFit(const CSpectrum& spectrum,
     Float64 maxabsval = DBL_MIN;
     for (Int32 k = 0; k < n; k++)
     {
-        if(maxabsval<std::abs(spcFluxAxis[k]))
+        if(maxabsval<std::abs(spcFluxAxis[k+imin_lbda]))
         {
-            maxabsval=std::abs(spcFluxAxis[k]);
+            maxabsval=std::abs(spcFluxAxis[k+imin_lbda]);
         }
     }
     normFactor = maxabsval;
@@ -211,13 +219,13 @@ void COperatorTplcombination::BasicFit(const CSpectrum& spectrum,
     Float64 xi, yi, ei, chisq;
     for(Int32 i = 0; i < n; i++)
     {
-        xi = spcSpectralAxis[i];
-        yi = spcFluxAxis[i]/normFactor;
-        ei = spcError[i]/normFactor;
+        xi = spcSpectralAxis[i+imin_lbda];
+        yi = spcFluxAxis[i+imin_lbda]/normFactor;
+        ei = spcError[i+imin_lbda]/normFactor;
 
         for (Int32 iddl = 0; iddl < nddl; iddl++)
         {
-            Float64 fval =  m_templatesRebined_bf[iddl]->GetFluxAxis()[i];
+            Float64 fval =  m_templatesRebined_bf[iddl]->GetFluxAxis()[i+imin_lbda];
             gsl_matrix_set (X, i, iddl, fval);
 
             if(0 && verbose)
@@ -290,11 +298,11 @@ void COperatorTplcombination::BasicFit(const CSpectrum& spectrum,
 
     //build the model
     CSpectrum modelSpectrum;
-    modelSpectrum.GetSpectralAxis().SetSize(spcSpectralAxis.GetSamplesCount());
-    modelSpectrum.GetFluxAxis().SetSize(spcSpectralAxis.GetSamplesCount());
+    modelSpectrum.GetSpectralAxis().SetSize(n);
+    modelSpectrum.GetFluxAxis().SetSize(n);
     for(Int32 k=0; k<modelSpectrum.GetSampleCount(); k++)
     {
-        modelSpectrum.GetSpectralAxis()[k]=spcSpectralAxis[k];
+        modelSpectrum.GetSpectralAxis()[k]=spcSpectralAxis[k+imin_lbda];
         modelSpectrum.GetFluxAxis()[k]=.0;
         for (Int32 iddl = 0; iddl < nddl; iddl++)
         {
@@ -302,7 +310,7 @@ void COperatorTplcombination::BasicFit(const CSpectrum& spectrum,
             if(k==0){
                 Log.LogDebug("  Operator-Tplcombination: Building model with tpl/component #%d with amplitude a=%+.5e", iddl, a);
             }
-            modelSpectrum.GetFluxAxis()[k] += a*m_templatesRebined_bf[iddl]->GetFluxAxis()[k];
+            modelSpectrum.GetFluxAxis()[k] += a*m_templatesRebined_bf[iddl]->GetFluxAxis()[k+imin_lbda];
         }
     }
     fittingResults.modelSpectrum = modelSpectrum;
@@ -310,9 +318,9 @@ void COperatorTplcombination::BasicFit(const CSpectrum& spectrum,
     //estimate the lst-square brute force
     fittingResults.residue = .0;
     Float64 diff;
-    for(Int32 k=0; k<modelSpectrum.GetSampleCount(); k++)
+    for(Int32 k=0; k<n; k++)
     {
-        diff = modelSpectrum.GetFluxAxis()[k]-spcFluxAxis[k];
+        diff = modelSpectrum.GetFluxAxis()[k]-spcFluxAxis[k+imin_lbda];
         fittingResults.residue += diff*diff;
     }
 
