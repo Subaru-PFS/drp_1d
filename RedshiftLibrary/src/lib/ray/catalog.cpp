@@ -134,14 +134,26 @@ void CRayCatalog::Load( const char* filePath )
     {
         // manage version
         if(ver==-1.0){
-            if(line.find("#version:0.4.0")!= std::string::npos){
+            if(line.find("#version:0.4.0")!= std::string::npos)
+            {
                 ver = 0.4;
+            }else if(line.find("#version:0.3.0")!= std::string::npos)
+            {
+                ver = 0.3;
+            }else if(line.find("#version:")!= std::string::npos)
+            {
+                Log.LogDebug("Loading Line Catalog: unable to parse version line: %s", line);
             }
             continue;
         }
 
         if(ver!=0.4)
-	  throw string("Line catalog version is not supported : ") + filePath;
+        {
+            char buf[180];
+            std::snprintf(buf, sizeof(buf), "Line catalog version (found ver=%.3f) is not supported", ver);
+            Log.LogError(buf);
+            throw std::string(buf);
+        }
 
         // remove comments
         if(line.compare(0,1,"#",1)==0){
@@ -256,7 +268,12 @@ void CRayCatalog::Load( const char* filePath )
     file.close();
 
     if(ver<0.0)
-      throw string("Invalid catalog file : ") + filePath;
+    {
+        char buf[180];
+        std::snprintf(buf, sizeof(buf), "Invalid line catalog file (found ver=%.3f)", ver);
+        Log.LogError(buf);
+        throw std::string(buf);
+    }
 }
 
 Bool CRayCatalog::Save( const char* filePath )
