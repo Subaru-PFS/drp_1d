@@ -79,7 +79,7 @@ void COperatorTplcombination::BasicFit(const CSpectrum& spectrum,
                                        Int32 opt_dustFitting,
                                        CMask spcMaskAdditional)
 {
-    bool verbose = true;
+    bool verbose = false;
     if(verbose)
     {
         Log.LogDebug("  Operator-tplcombination: BasicFit - for z=%f", redshift);
@@ -87,7 +87,7 @@ void COperatorTplcombination::BasicFit(const CSpectrum& spectrum,
     boost::chrono::thread_clock::time_point start_prep = boost::chrono::thread_clock::now();
 
 
-    fittingResults.residue = boost::numeric::bounds<float>::highest();
+    fittingResults.chisquare = boost::numeric::bounds<float>::highest();
     bool status_chisquareSetAtLeastOnce = false;
 
     Int32 nISM = 1; //no ISM fitting for now
@@ -316,20 +316,21 @@ void COperatorTplcombination::BasicFit(const CSpectrum& spectrum,
     fittingResults.modelSpectrum = modelSpectrum;
 
     //estimate the lst-square brute force
-    fittingResults.residue = .0;
-    Float64 diff;
+    fittingResults.chisquare = .0;
+    Float64 diff, err2;
     for(Int32 k=0; k<n; k++)
     {
         diff = modelSpectrum.GetFluxAxis()[k]-spcFluxAxis[k+imin_lbda];
-        fittingResults.residue += diff*diff;
+        err2 = spcError[k+imin_lbda]*spcError[k+imin_lbda];
+        fittingResults.chisquare += diff*diff/err2;
     }
 
-    //save the interm residues/chisquares: for now, ism and igm deactivated so that interm chi2=global chi2
+    //save the interm chisquares: for now, ism and igm deactivated so that interm chi2=global chi2
     for(Int32 kism=0; kism<fittingResults.ChiSquareInterm.size(); kism++)
     {
         for(Int32 kigm=0; kigm<fittingResults.ChiSquareInterm[kism].size(); kigm++)
         {
-            fittingResults.ChiSquareInterm[kism][kigm] = fittingResults.residue;
+            fittingResults.ChiSquareInterm[kism][kigm] = fittingResults.chisquare;
         }
     }
 
@@ -576,7 +577,7 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(const CSpectru
             break;
         }
 
-        result->ChiSquare[i]=fittingResults.residue;
+        result->ChiSquare[i]=fittingResults.chisquare;
         result->Overlap[i]=fittingResults.overlapRate;
         result->ChiSquareIntermediate[i]=fittingResults.ChiSquareInterm;
 

@@ -41,7 +41,7 @@ private:
     {
         COperator::EStatus status;
         Float64     overlapRate;
-        Float64     residue;    //least-square value
+        Float64     chisquare;
         CSpectrum   modelSpectrum;
         std::vector<Float64>    fittingAmplitudes;
         std::vector<Float64>    fittingErrors;
