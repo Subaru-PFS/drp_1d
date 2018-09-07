@@ -142,7 +142,7 @@ void CRayCatalog::Load( const char* filePath )
                 ver = 0.3;
             }else if(line.find("#version:")!= std::string::npos)
             {
-                Log.LogDebug("Loading Line Catalog: unable to parse version line: %s", line);
+                Log.LogDebug("Loading Line Catalog: unable to parse version line: %s", line.c_str());
             }
             continue;
         }
