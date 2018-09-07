@@ -2,6 +2,7 @@
 import os.path
 from .argumentparser import parser
 from .redshift import *
+from .catalog import FitsTemplateCatalog
 from .config import Config
 import numpy as np
 import json
@@ -58,8 +59,10 @@ def amazed():
                                           "absolute_path_to_df_binaries_here")
     assert retcode
 
-    template_catalog = CTemplateCatalog(medianRemovalMethod, opt_medianKernelWidth,
-                                        opt_nscales, dfBinPath)
+    #template_catalog = CTemplateCatalog(medianRemovalMethod, opt_medianKernelWidth,
+    #                                    opt_nscales, dfBinPath)
+    template_catalog = FitsTemplateCatalog(medianRemovalMethod, opt_medianKernelWidth,
+                                           opt_nscales, dfBinPath)
     print("Loading %s" % config.template_dir)
 
     try:

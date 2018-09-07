@@ -6,47 +6,45 @@
 %include std_except.i
 
 %shared_ptr(CClassifierStore)
+%shared_ptr(CLog)
 %shared_ptr(CLogConsoleHandler)
 %shared_ptr(CLogHandler)
-%shared_ptr(CLog)
-%shared_ptr(CSingleton<CLog>)
 %shared_ptr(CParameterStore)
 %shared_ptr(CRayCatalog)
+%shared_ptr(CSingleton<CLog>)
 %shared_ptr(CSpectrum)
 %shared_ptr(CSpectrumAxis)
 %shared_ptr(CSpectrumFluxAxis)
-%shared_ptr(CSpectrumSpectralAxis)
 %shared_ptr(CSpectrumIOGenericReader)
 %shared_ptr(CSpectrumIOReader)
+%shared_ptr(CSpectrumSpectralAxis)
+%shared_ptr(CTemplate)
 %shared_ptr(CTemplateCatalog)
 
-%apply std::string &OUTPUT { std::string& out_str };
-%apply NSEpic::Int64 &OUTPUT { NSEpic::Int64& out_int };
-%apply NSEpic::Float64 &OUTPUT { NSEpic::Float64& out_float };
-
 %feature("director");
+%feature("nodirector") CSpectrumFluxAxis;
 
 %{
-        #define SWIG_FILE_WITH_INIT
-        #include "RedshiftLibrary/common/datatypes.h"
-        #include "RedshiftLibrary/version.h"
-        #include "RedshiftLibrary/common/range.h"
-        #include "RedshiftLibrary/log/log.h"
-        #include <RedshiftLibrary/common/singleton.h>
-        #include "RedshiftLibrary/log/consolehandler.h"
-        #include "RedshiftLibrary/processflow/parameterstore.h"
-        #include "RedshiftLibrary/reliability/zclassifierstore.h"
-        #include "RedshiftLibrary/processflow/context.h"
-        #include "RedshiftLibrary/processflow/processflow.h"
-        #include "RedshiftLibrary/processflow/resultstore.h"
-        #include "RedshiftLibrary/ray/catalog.h"
-        #include "RedshiftLibrary/spectrum/template/catalog.h"
-        #include "RedshiftLibrary/spectrum/io/reader.h"
-        #include "RedshiftLibrary/spectrum/io/genericreader.h"
-        #include "RedshiftLibrary/spectrum/axis.h"
-        #include "RedshiftLibrary/spectrum/fluxaxis.h"
-        #include "RedshiftLibrary/spectrum/spectralaxis.h"
-        using namespace NSEpic;
+#define SWIG_FILE_WITH_INIT
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/version.h"
+#include "RedshiftLibrary/common/range.h"
+#include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/common/singleton.h"
+#include "RedshiftLibrary/log/consolehandler.h"
+#include "RedshiftLibrary/processflow/parameterstore.h"
+#include "RedshiftLibrary/reliability/zclassifierstore.h"
+#include "RedshiftLibrary/processflow/context.h"
+#include "RedshiftLibrary/processflow/processflow.h"
+#include "RedshiftLibrary/processflow/resultstore.h"
+#include "RedshiftLibrary/ray/catalog.h"
+#include "RedshiftLibrary/spectrum/template/catalog.h"
+#include "RedshiftLibrary/spectrum/io/reader.h"
+#include "RedshiftLibrary/spectrum/io/genericreader.h"
+#include "RedshiftLibrary/spectrum/axis.h"
+#include "RedshiftLibrary/spectrum/fluxaxis.h"
+#include "RedshiftLibrary/spectrum/spectralaxis.h"
+using namespace NSEpic;
 %}
 
 %include numpy.i
@@ -55,7 +53,12 @@
 import_array();
 %}
 
-%include "../RedshiftLibrary/RedshiftLibrary/common/datatypes.h"
+// %include "../RedshiftLibrary/RedshiftLibrary/common/datatypes.h"
+typedef	double Float64;
+typedef unsigned int UInt32;
+
+namespace NSEpic {
+}
 
 using namespace NSEpic;
 
@@ -92,6 +95,10 @@ typedef CRange<Float64> TFloat64Range;
 typedef TFloat64Range   TLambdaRange;
 %template(TFloat64Range) CRange<Float64>;
 
+%apply std::string &OUTPUT { std::string& out_str };
+%apply Int64 &OUTPUT { Int64& out_int };
+%apply Float64 &OUTPUT { Float64& out_float };
+
 class CParameterStore {
 %rename(Get_String) Get( const std::string& name, std::string& out_str, std::string = "");
 %rename(Get_Int64) Get( const std::string& name, Int64& out_int, Int64 defaultValue = 0);
@@ -127,6 +134,7 @@ class CTemplateCatalog
 public:
     CTemplateCatalog( std::string cremovalmethod="Median", Float64 mediankernelsize=75.0, Float64 waveletsScales=8, std::string waveletsDFBinPath="");
     void Load( const char* filePath );
+    void Add( std::shared_ptr<CTemplate> r );
 };
 
 class CProcessFlowContext {
@@ -207,18 +215,23 @@ class CSpectrumIOGenericReader : public CSpectrumIOReader
   virtual void Read( const char* filePath, CSpectrum& s );
 };
 
+%rename(CSpectrumAxis_default) CSpectrumAxis();
+%rename(CSpectrumAxis_empty) CSpectrumAxis(UInt32 n);
+%rename(CSpectrumAxis_withSpectrum) CSpectrumAxis(const Float64* samples, UInt32 n);
+
 %apply (double* IN_ARRAY1, int DIM1) {(const Float64* samples, UInt32 n)};
 class CSpectrumAxis
 {
  public:
-  // CSpectrumAxis(); // needs %rename
+  CSpectrumAxis();
+  CSpectrumAxis( UInt32 n );
   CSpectrumAxis(const Float64* samples, UInt32 n );
   Float64* GetSamples();
   virtual void SetSize( UInt32 s );
 };
 %clear (const Float64* samples, UInt32 n);
 
-%apply (double* IN_ARRAY1, int DIM1) {(const NSEpic::Float64* samples, NSEpic::UInt32 n)};
+%apply (double* IN_ARRAY1, int DIM1) {(const Float64* samples, UInt32 n)};
 class CSpectrumSpectralAxis : public CSpectrumAxis {
  public:
   // CSpectrumSpectralAxis(); // needs %rename
@@ -228,21 +241,38 @@ class CSpectrumSpectralAxis : public CSpectrumAxis {
 
 
 //%apply (double* IN_ARRAY1, int DIM1) {(const Float64* samples, UInt32 n)};
-//%rename(CSpectrumFluxAxis_default) CSpectrumFluxAxis(const Float64* samples, UInt32 n);
-//%rename(CSpectrumFluxAxis_withError) CSpectrumFluxAxis( const Float64* _samples, UInt32 n,
-// 							const Float64* _error, UInt32 m );
-//%rename(CSpectrumFluxAxis_withError) CSpectrumFluxAxis( double* , int , double* , int );
-%apply (double* IN_ARRAY1, int DIM1) {(const NSEpic::Float64* _samples, NSEpic::UInt32 n),
-                                      (const NSEpic::Float64* _error, NSEpic::UInt32 m)};
+
+%rename(CSpectrumFluxAxis_default) CSpectrumFluxAxis();
+%rename(CSpectrumFluxAxis_empty) CSpectrumFluxAxis(UInt32 n);
+%rename(CSpectrumFluxAxis_withSpectrum) CSpectrumFluxAxis(const Float64* samples, UInt32 n);
+%rename(CSpectrumFluxAxis_withError) CSpectrumFluxAxis( double* samples,
+							UInt32 n,
+ 							double* error,
+							UInt32 m );
+
+%apply (double* IN_ARRAY1, int DIM1) {(const Float64* samples, UInt32 n)}
+%apply (double* IN_ARRAY1, int DIM1) {(const double* samples, UInt32 n),
+                                      (const double* error, UInt32 m)}
 
 class CSpectrumFluxAxis : public CSpectrumAxis
 {
  public:
   // CSpectrumFluxAxis(); // needs %rename
-  //CSpectrumFluxAxis( const Float64* samples, UInt32 n );
-  CSpectrumFluxAxis( const Float64* _samples, UInt32 n, const Float64* _error, UInt32 m );
+  CSpectrumFluxAxis();
+  CSpectrumFluxAxis( UInt32 n );
+  CSpectrumFluxAxis( const Float64* samples, UInt32 n );
+  CSpectrumFluxAxis( const double* samples, UInt32 n,
+  		     const double* error, UInt32 m );
   void SetSize( UInt32 s );
 };
 //%clear (const Float64* samples, UInt32 n);
 //%clear (const Float64* _samples, const Float64* _samples, UInt32 n);
+
+class CTemplate : public CSpectrum
+{
+ public:
+  CTemplate( const std::string& name, const std::string& category,
+	     CSpectrumSpectralAxis& spectralAxis, CSpectrumFluxAxis& fluxAxis);
+  Bool Save( const char* filePath ) const;
+};
 

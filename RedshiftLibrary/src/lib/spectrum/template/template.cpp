@@ -24,6 +24,15 @@ CTemplate::CTemplate( const std::string& name, const std::string& category ) :
 
 }
 
+CTemplate::CTemplate( const std::string& name, const std::string& category,
+		      CSpectrumSpectralAxis& spectralAxis, CSpectrumFluxAxis& fluxAxis) :
+    m_Category( category ),
+    m_Name( name )
+{
+  m_SpectralAxis = spectralAxis;
+  m_FluxAxis = fluxAxis;
+}
+
 /**
  * Destructor, empty.
  */

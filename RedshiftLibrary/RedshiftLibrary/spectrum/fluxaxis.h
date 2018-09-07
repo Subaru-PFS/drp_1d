@@ -23,7 +23,7 @@ public:
     CSpectrumFluxAxis();
     CSpectrumFluxAxis( UInt32 n );
     CSpectrumFluxAxis( const Float64* samples, UInt32 n );
-    CSpectrumFluxAxis( const Float64* _samples, UInt32 n, const Float64* _error, UInt32 m );
+    CSpectrumFluxAxis( const Float64* samples, UInt32 n, const Float64* error, UInt32 m );
     ~CSpectrumFluxAxis();
 
     CSpectrumFluxAxis& operator=(const CSpectrumFluxAxis& other);

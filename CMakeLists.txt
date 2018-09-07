@@ -179,10 +179,16 @@ CONFIGURE_FILE(
        ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cpf-redshift-config-version.cmake.in
        ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cpf-redshift-config-version.cmake
        @ONLY
-        )
+)
 
-      CONFIGURE_FILE(
+CONFIGURE_FILE(
 	${CMAKE_CURRENT_SOURCE_DIR}/cmake/version.h.in
 	${CMAKE_CURRENT_SOURCE_DIR}/RedshiftLibrary/RedshiftLibrary/version.h
-	)
+)
 
+# Generate TAGS file if etags is installed
+find_program(ETAGS NAMES etags ctags)
+if(ETAGS)
+  execute_process(COMMAND find RedshiftLibrary/ ( -name *.cpp -o -name *.h -o -name *.hpp -o -name *.py -o -name *.c ) -exec ${ETAGS} -a TAGS {} +
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+endif(ETAGS)
