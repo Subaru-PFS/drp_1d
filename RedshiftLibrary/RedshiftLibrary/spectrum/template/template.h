@@ -17,6 +17,8 @@ public:
 
     CTemplate();
     CTemplate( const std::string& name, const std::string& category );
+    CTemplate( const std::string& name, const std::string& category,
+	       CSpectrumSpectralAxis& spectralAxis, CSpectrumFluxAxis& fluxAxis);
     ~CTemplate();
 
     const std::string&  GetCategory() const;

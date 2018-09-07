@@ -10,11 +10,15 @@ class FitsTemplateCatalog(CTemplateCatalog):
         hdul = fits.open(path)
 
         for spectrum in hdul[1:]:
-            template = CTemplate()
-            wavel = np.array([s[0] for s in spectrum.data])
-            spectralaxis = CSpectrumSpectralAxis(wavel)
-            flux =  np.array([s[1] for s in spectrum.data])
-            #embed()
-            signal = CSpectrumFluxAxis_withSpectrum(flux)
+            name = spectrum.header['EXTNAME']
+            print(f'Loading template {name}')
 
+            wavel = spectrum.data.field('WAVE')
+            spectralaxis = CSpectrumSpectralAxis(wavel)
+
+            flux = spectrum.data.field('FLUX')
+            signal = CSpectrumFluxAxis_withSpectrum(flux)
+            template = CTemplate(name, 'galaxy', spectralaxis, signal)
+            #embed()
             self.Add(template)
+            #template.Save(f'/tmp/dat-{name}')

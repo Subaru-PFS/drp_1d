@@ -53,7 +53,7 @@ using namespace NSEpic;
 import_array();
 %}
 
-//%include "../RedshiftLibrary/RedshiftLibrary/common/datatypes.h"
+// %include "../RedshiftLibrary/RedshiftLibrary/common/datatypes.h"
 typedef	double Float64;
 typedef unsigned int UInt32;
 
@@ -270,5 +270,9 @@ class CSpectrumFluxAxis : public CSpectrumAxis
 
 class CTemplate : public CSpectrum
 {
+ public:
+  CTemplate( const std::string& name, const std::string& category,
+	     CSpectrumSpectralAxis& spectralAxis, CSpectrumFluxAxis& fluxAxis);
+  Bool Save( const char* filePath ) const;
 };
 

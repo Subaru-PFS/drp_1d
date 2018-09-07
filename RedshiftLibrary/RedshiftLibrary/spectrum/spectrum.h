@@ -73,11 +73,13 @@ public:
 
     void LoadSpectrum(const char* spectrumFilePath, const char* noiseFilePath);
 
+protected:
+    CSpectrumFluxAxis               m_FluxAxis;
+    CSpectrumSpectralAxis           m_SpectralAxis;
+
 private:
 
     std::string                     m_Name;
-    CSpectrumFluxAxis               m_FluxAxis;
-    CSpectrumSpectralAxis           m_SpectralAxis;
     std::string                     m_FullPath;
     Int32                           m_nbScales;
     Float64                         m_medianWindowSize;
