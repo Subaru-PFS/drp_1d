@@ -49,6 +49,7 @@
 #include <RedshiftLibrary/method/linemodelsolveresult.h>
 #include <RedshiftLibrary/method/linemodeltplshapesolve.h>
 #include <RedshiftLibrary/method/linemodeltplshapesolveresult.h>
+#include <RedshiftLibrary/method/tplcombinationsolve.h>
 
 #include <RedshiftLibrary/statistics/pdfcandidateszresult.h>
 #include <RedshiftLibrary/reliability/zqual.h>
@@ -224,19 +225,19 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
         const Float64 lmin = spcLambdaRange.GetBegin();
         const Float64 lmax = spcLambdaRange.GetEnd();
         if( !ctx.GetSpectrum().IsFluxValid( lmin, lmax ) ){
-	  char buf[180];
-	  std::snprintf(buf, sizeof(buf),
-			"Failed to validate spectrum flux: %s, on wavelength range (%.1f ; %.1f)",
-			ctx.GetSpectrum().GetName().c_str(), lmin, lmax );
-	  throw std::runtime_error(buf);
+            char buf[180];
+            std::snprintf(buf, sizeof(buf),
+                          "Failed to validate spectrum flux: %s, on wavelength range (%.1f ; %.1f)",
+                          ctx.GetSpectrum().GetName().c_str(), lmin, lmax );
+            throw std::runtime_error(buf);
         }else{
             Log.LogDetail( "Successfully validated spectrum flux: %s, on wavelength range (%.1f ; %.1f)", ctx.GetSpectrum().GetName().c_str(), lmin, lmax );
         }
         if( !ctx.GetSpectrum().IsNoiseValid( lmin, lmax ) ){
-	  char buf[180];
-	  std::snprintf(buf, sizeof(buf),
-			"Failed to validate noise from spectrum: %s, on wavelength range (%.1f ; %.1f)",
-			ctx.GetSpectrum().GetName().c_str(), lmin, lmax );
+            char buf[180];
+            std::snprintf(buf, sizeof(buf),
+                          "Failed to validate noise from spectrum: %s, on wavelength range (%.1f ; %.1f)",
+                          ctx.GetSpectrum().GetName().c_str(), lmin, lmax );
             throw std::runtime_error(buf);
         }else{
             Log.LogDetail( "Successfully validated noise from spectrum: %s, on wavelength range (%.1f ; %.1f)", ctx.GetSpectrum().GetName().c_str(), lmin, lmax );
@@ -462,6 +463,50 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
             }
         }
 
+
+    }else if(methodName  == "tplcombinationsolve" ){
+        Float64 overlapThreshold;
+        ctx.GetParameterStore().Get( "tplcombinationsolve.overlapThreshold", overlapThreshold, 1.0);
+        std::string opt_spcComponent;
+        ctx.GetDataStore().GetScopedParam( "tplcombinationsolve.spectrum.component", opt_spcComponent, "raw" );
+        std::string opt_interp="lin";
+        ctx.GetDataStore().GetScopedParam( "tplcombinationsolve.interpolation", opt_interp, "lin" );
+        std::string opt_extinction="no";
+        //ctx.GetDataStore().GetScopedParam( "tplcombinationsolve.extinction", opt_extinction, "no" );
+        std::string opt_dustFit="no";
+        //ctx.GetDataStore().GetScopedParam( "tplcombinationsolve.dustfit", opt_dustFit, "no" );
+
+        // prepare the unused masks
+        std::vector<CMask> maskList;
+        //retrieve the calibration dir path
+        std::string calibrationDirPath;
+        ctx.GetParameterStore().Get( "calibrationDir", calibrationDirPath );
+        CMethodTplcombinationSolve solve(calibrationDirPath);
+        mResult = solve.Compute( ctx.GetDataStore(),
+                                 ctx.GetSpectrum(),
+                                 ctx.GetSpectrumWithoutContinuum(),
+                                 ctx.GetTemplateCatalog(),
+                                 filteredTemplateCategoryList,
+                                 spcLambdaRange,
+                                 redshifts,
+                                 overlapThreshold,
+                                 maskList,
+                                 galaxy_method_pdf_reldir,
+                                 opt_spcComponent, opt_interp, opt_extinction, opt_dustFit);
+
+        if( mResult)
+        {
+            Log.LogInfo( "Extracting z-candidates from TplcombinationSolve method results" );
+            std::shared_ptr<CTplcombinationSolveResult> solveResult = std::dynamic_pointer_cast<CTplcombinationSolveResult>( mResult );
+            Int32 n_cand = 5; //this is hardcoded for now for this method
+            Bool retzc = solveResult->GetRedshiftCandidates( ctx.GetDataStore(), zcandidates_unordered_list, n_cand);
+            if(retzc)
+            {
+                Log.LogInfo( "Found %d z-candidates", zcandidates_unordered_list.size() );
+            }else{
+                Log.LogError( "Failed to get z candidates from these results");
+            }
+        }
 
     }else if(methodName  == "amazed0_1" ){
         COperatorDTree7Solve Solve(calibrationDirPath);

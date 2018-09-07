@@ -20,6 +20,7 @@
 #include <boost/numeric/conversion/bounds.hpp>
 #include "boost/format.hpp"
 #include <boost/chrono/thread_clock.hpp>
+#include <boost/progress.hpp>
 
 #include <RedshiftLibrary/processflow/datastore.h>
 #include <RedshiftLibrary/spectrum/io/genericreader.h>
@@ -490,6 +491,7 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
     }
     boost::chrono::thread_clock::time_point start_mainloop = boost::chrono::thread_clock::now();
 
+    boost::progress_display show_progress(m_result->Redshifts.size()) ;
     //#pragma omp parallel for
     for (Int32 i=0;i<m_result->Redshifts.size();i++)
     {
@@ -527,6 +529,7 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
             }
             m_result->ScaleMargCorrectionContinuum[i] = m_model->getContinuumScaleMargCorrection();
         }
+        ++show_progress;
     }
 
 
@@ -870,7 +873,8 @@ Int32 COperatorLineModel::ComputeSecondPass(CDataStore &dataStore,
                         Log.LogInfo( "  Operator-Linemodel: dzSupLim n=%e", dzSupLim);
                         Log.LogInfo( "  Operator-Linemodel: manualStep n=%d", nDzSteps);
 
-
+                        Int32 n_progresssteps = idxVelfitGroups.size()*nDzSteps*nSteps;
+                        boost::progress_display show_progress(n_progresssteps) ;
                         for(Int32 kgroup=0; kgroup<idxVelfitGroups.size(); kgroup++)
                         {
                             Log.LogInfo( "  Operator-Linemodel: manualStep fitting group=%d", kgroup);
@@ -936,6 +940,7 @@ Int32 COperatorLineModel::ComputeSecondPass(CDataStore &dataStore,
                                         }
                                         dzOptim = dzTest;
                                     }
+                                    ++show_progress;
                                 }
                             }
                             if(vOptim != -1.0)
