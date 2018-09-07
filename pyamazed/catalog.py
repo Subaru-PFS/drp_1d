@@ -1,7 +1,6 @@
 from .redshift import *
 from astropy.io import fits
 import numpy as np
-from IPython import embed
 
 class FitsTemplateCatalog(CTemplateCatalog):
 
@@ -19,6 +18,4 @@ class FitsTemplateCatalog(CTemplateCatalog):
             flux = spectrum.data.field('FLUX')
             signal = CSpectrumFluxAxis_withSpectrum(flux)
             template = CTemplate(name, 'galaxy', spectralaxis, signal)
-            #embed()
             self.Add(template)
-            #template.Save(f'/tmp/dat-{name}')
