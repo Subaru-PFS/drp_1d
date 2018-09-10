@@ -1,8 +1,13 @@
 #
 # Create a template fits file from a directory of .dat templates
 #
-# usage :
-# python catalog2fits.py source_dir dest_fits
+usage = """
+ usage :
+ python catalog2fits.py category source_dir dest_fits
+
+ e.g. :
+ python catalog2fits.py galaxy BC03_sdss_tremonti21/galaxy/ galaxy_tmpl.fits
+"""
 
 import os
 import sys
@@ -25,11 +30,12 @@ def load_spectrum(name, path):
     hdu.name = name
     return hdu
 
-def convert_catalog(path, output):
+def convert_catalog(category, path, output):
     """
     """
     hdr = fits.Header()
     primary = fits.PrimaryHDU(header=hdr)
+    primary.header['CATEGORY'] = category.strip().lower()
     templates = [primary]
     with os.scandir(os.path.expanduser(path)) as it:
         for template in it:
@@ -41,4 +47,8 @@ def convert_catalog(path, output):
     hdul.writeto(output, overwrite=True)
 
 if __name__ == '__main__':
-    convert_catalog(sys.argv[1], sys.argv[2])
+    try:
+        convert_catalog(sys.argv[1], sys.argv[2], sys.argv[3])
+    except Exception as e:
+        print(e)
+        print(usage)
