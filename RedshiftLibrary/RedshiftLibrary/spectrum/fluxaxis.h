@@ -21,7 +21,7 @@ class CSpectrumFluxAxis : public CSpectrumAxis
 public:
 
     CSpectrumFluxAxis();
-    CSpectrumFluxAxis( UInt32 n );
+    explicit CSpectrumFluxAxis( UInt32 n );
     CSpectrumFluxAxis( const Float64* samples, UInt32 n );
     CSpectrumFluxAxis( const Float64* samples, UInt32 n, const Float64* error, UInt32 m );
     ~CSpectrumFluxAxis();

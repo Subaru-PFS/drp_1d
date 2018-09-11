@@ -18,8 +18,8 @@ class CMask
 
 public:
 
-    CMask( );
-    CMask( UInt32 weightsCount );
+    CMask();
+    explicit CMask( UInt32 weightsCount );
     ~CMask();
 
     const Mask*     GetMasks() const;
