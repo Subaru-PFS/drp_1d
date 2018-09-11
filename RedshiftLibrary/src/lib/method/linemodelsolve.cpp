@@ -104,8 +104,8 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
 
     dataStore.GetScopedParam( "linemodel.continuumcomponent", m_opt_continuumcomponent, "fromspectrum" );
     if(m_opt_continuumcomponent=="tplfit"){
-        dataStore.GetScopedParam( "linemodel.continuumismfit", m_opt_tplfit_dustfit, "no" );
-        dataStore.GetScopedParam( "linemodel.continuumigmfit", m_opt_tplfit_igmfit, "no" );
+        dataStore.GetScopedParam( "linemodel.continuumismfit", m_opt_tplfit_dustfit, "yes" );
+        dataStore.GetScopedParam( "linemodel.continuumigmfit", m_opt_tplfit_igmfit, "yes" );
     }
     dataStore.GetScopedParam( "linemodel.rigidity", m_opt_rigidity, "rules" );
     if(m_opt_rigidity=="tplshape")

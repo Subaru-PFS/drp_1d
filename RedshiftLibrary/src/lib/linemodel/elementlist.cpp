@@ -155,7 +155,7 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
         m_chiSquareOperator = new COperatorChiSquare2(calibrationPath);
         m_observeGridContinuumFlux = new Float64[modelFluxAxis.GetSamplesCount()]();
         if(m_observeGridContinuumFlux == NULL){
-          throw std::string("unable to allocate m_observeGridContinuumFlux");
+          throw std::runtime_error("unable to allocate m_observeGridContinuumFlux");
         }
         if(0)
         {
@@ -4242,6 +4242,7 @@ bool CLineModelElementList::GetModelStrongEmissionLinePresent()
             if( amp>0.0)
             {
                 isStrongPresent = true;
+                Log.LogDebug("    model: GetModelStrongEmissionLinePresent - found Strong EL: %s", m_RestRayList[m_Elements[iElts]->m_LineCatalogIndexes[lineIdx]].GetName().c_str());
                 break;
             }
         }

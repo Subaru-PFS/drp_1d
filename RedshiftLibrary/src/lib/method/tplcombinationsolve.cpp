@@ -93,7 +93,7 @@ std::shared_ptr<CTplcombinationSolveResult> CMethodTplcombinationSolve::Compute(
     if(opt_interp!="lin")
     {
         Log.LogError("Tplcombinationsolve: interp. parameter must be 'lin'");
-        throw std::string("Tplcombinationsolve: interpolation parameter must be lin");
+        throw std::runtime_error("Tplcombinationsolve: interpolation parameter must be lin");
     }
 
     Log.LogInfo( "Method parameters:");
@@ -269,7 +269,7 @@ Int32 CMethodTplcombinationSolve::CombinePDF(CDataStore &store, std::string scop
     if(results.expired())
     {
         Log.LogError("tplcombinationsolve: CombinePDF - Unable to retrieve tplcombination results");
-        throw std::string("tplcombinationsolve: CombinePDF - Unable to retrieve tplcombination results");
+        throw std::runtime_error("tplcombinationsolve: CombinePDF - Unable to retrieve tplcombination results");
     }
     std::shared_ptr<const CTplcombinationResult> result = std::dynamic_pointer_cast<const CTplcombinationResult>( results.lock() );
 

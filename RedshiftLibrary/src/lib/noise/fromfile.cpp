@@ -27,11 +27,15 @@ void CNoiseFromFile::SetNoiseFilePath( const char* filePath,
 
 void CNoiseFromFile::AddNoise( CSpectrum& s1 ) const
 {
-  if( !m_initialized )
-     throw string("Noise wasn't initialized");
+    if( !m_initialized )
+    {
+        throw runtime_error("Noise wasn't initialized");
+    }
 
     if( s1.GetSampleCount() != m_NoiseSpectrum.GetSampleCount() )
-      throw string("Sample counts don't match");
+    {
+        throw runtime_error("Sample counts don't match");
+    }
 
     TFloat64List& dstError = s1.GetFluxAxis().GetError();
     const Float64* srcError = m_NoiseSpectrum.GetFluxAxis().GetSamples();

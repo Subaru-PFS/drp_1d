@@ -124,7 +124,7 @@ void CRayCatalog::Load( const char* filePath )
 
     file.open( filePath, ifstream::in );
     if( file.rdstate() & ios_base::failbit )
-      throw std::string("file cannot be opened");
+      throw std::runtime_error("file cannot be opened");
 
     string line;
 
@@ -152,7 +152,7 @@ void CRayCatalog::Load( const char* filePath )
             char buf[180];
             std::snprintf(buf, sizeof(buf), "Line catalog version (found ver=%.3f) is not supported", ver);
             Log.LogError(buf);
-            throw std::string(buf);
+            throw std::runtime_error(buf);
         }
 
         // remove comments
@@ -272,7 +272,7 @@ void CRayCatalog::Load( const char* filePath )
         char buf[180];
         std::snprintf(buf, sizeof(buf), "Invalid line catalog file (found ver=%.3f)", ver);
         Log.LogError(buf);
-        throw std::string(buf);
+        throw std::runtime_error(buf);
     }
 }
 

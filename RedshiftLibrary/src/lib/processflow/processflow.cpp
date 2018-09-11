@@ -599,7 +599,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
 
     }else{
         Log.LogError("Problem found while parsing the method parameter !");
-        throw std::string("Problem found while parsing the method parameter");
+        throw std::runtime_error("Problem found while parsing the method parameter");
     }
 
     //Extracting the candidates summarized results (nb: only works for linemodel and chisquare methods as of Aug.2018)
@@ -615,7 +615,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
         if(!logzpdf1d)
         {
             Log.LogError( "Extract Proba. for z candidates: no results retrieved from scope: %s", scope_res.c_str());
-            throw std::string("Extract Proba. for z candidates");
+            throw std::runtime_error("Extract Proba. for z candidates");
         }
 
         Log.LogInfo( "  Integrating %d candidates proba.", zcandidates_unordered_list.size() );
