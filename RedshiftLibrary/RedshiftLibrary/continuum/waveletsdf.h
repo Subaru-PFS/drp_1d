@@ -14,7 +14,7 @@ class CContinuumDF : public CContinuum
 {
 
 public:
-	CContinuumDF( std::string binPath );
+	explicit CContinuumDF( std::string binPath );
 	CContinuumDF();
 	~CContinuumDF();
 

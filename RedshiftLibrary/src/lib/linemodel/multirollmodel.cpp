@@ -939,7 +939,7 @@ CMask CMultiRollModel::getOutsideLinesMask()
     }
     else
     {
-        return -1;
+      throw std::runtime_error("getOutsideLinesMask: Invalid size");
     }
 }
 
