@@ -23,7 +23,7 @@ BOOST_AUTO_TEST_CASE( ProcessShifted1 )
     std::shared_ptr<CParameterStore> params = std::shared_ptr<CParameterStore>( new CParameterStore() );
     params->Set( "lambdarange", TFloat64Range( 3800.0, 12500.0 ) );
     params->Set( "redshiftrange", TFloat64Range( 0.0, 5.0 ) );
-    params->Set( "redshiftstep", 0.0001);
+    params->Set( "redshiftstep", 0.001);
     params->Set( "smoothWidth", (Int64)0 );
     params->Set( "templateCategoryList", TStringList { "galaxy" } );
     params->Set( "method", "blindsolve");
@@ -46,7 +46,8 @@ BOOST_AUTO_TEST_CASE( ProcessShifted1 )
     auto blindSolveResult = std::dynamic_pointer_cast<const CBlindSolveResult>( ctx.GetDataStore().GetGlobalResult( "blindsolve" ).lock() );
     blindSolveResult->GetBestFitResult( ctx.GetDataStore(), redshift, merit, tplName );
 
-    BOOST_CHECK_CLOSE_FRACTION( 2.0295, redshift, 0.0001 );
+    //BOOST_CHECK_CLOSE_FRACTION( 2.0295, redshift, 0.0001 );
+    BOOST_CHECK_CLOSE_FRACTION( 2.0289, redshift, 0.0001 );
 }
 
 BOOST_AUTO_TEST_CASE( ProcessShifted2 )
@@ -57,7 +58,7 @@ BOOST_AUTO_TEST_CASE( ProcessShifted2 )
     std::shared_ptr<CParameterStore> params = std::shared_ptr<CParameterStore>( new CParameterStore() );
     params->Set( "lambdarange", TFloat64Range( 3800.0, 12500.0 ) );
     params->Set( "redshiftrange", TFloat64Range( 0.0, 5.0 ) );
-    params->Set( "redshiftstep", 0.0001);
+    params->Set( "redshiftstep", 0.001);
     params->Set( "smoothWidth", (Int64)0 );
     params->Set( "templateCategoryList",  TStringList { "galaxy" } );
     params->Set( "method", "blindsolve");
@@ -79,7 +80,8 @@ BOOST_AUTO_TEST_CASE( ProcessShifted2 )
     auto blindSolveResult = std::dynamic_pointer_cast< const CBlindSolveResult>( ctx.GetDataStore().GetGlobalResult( "blindsolve" ).lock() );
     blindSolveResult->GetBestFitResult( ctx.GetDataStore(), redshift, merit, tplName );
 
-    BOOST_CHECK_CLOSE_FRACTION( 2.7757, redshift, 0.0001 );
+    //BOOST_CHECK_CLOSE_FRACTION( 2.7757, redshift, 0.0001 );
+    BOOST_CHECK_CLOSE_FRACTION( 2.7749, redshift, 0.0001 );
 }
 
 BOOST_AUTO_TEST_CASE( ProcessShiftedDecimated )
@@ -90,7 +92,7 @@ BOOST_AUTO_TEST_CASE( ProcessShiftedDecimated )
     std::shared_ptr<CParameterStore> params = std::shared_ptr<CParameterStore>( new CParameterStore() );
     params->Set( "lambdarange", TFloat64Range( 3800.0, 12500.0 ) );
     params->Set( "redshiftrange", TFloat64Range( 0.0, 5.0 ) );
-    params->Set( "redshiftstep", 0.0001);
+    params->Set( "redshiftstep", 0.001);
     params->Set( "smoothWidth", (Int64)0 );
     params->Set( "templateCategoryList", TStringList { "galaxy" } );
     params->Set( "method", "blindsolve");
@@ -112,7 +114,8 @@ BOOST_AUTO_TEST_CASE( ProcessShiftedDecimated )
     auto blindSolveResult = std::dynamic_pointer_cast<const CBlindSolveResult>( ctx.GetDataStore().GetGlobalResult( "blindsolve" ).lock() );
     blindSolveResult->GetBestFitResult( ctx.GetDataStore(), redshift, merit, tplName );
 
-    BOOST_CHECK_CLOSE_FRACTION( 2.02952, redshift, 0.00001 );
+    //BOOST_CHECK_CLOSE_FRACTION( 2.02952, redshift, 0.00001 );
+    BOOST_CHECK_CLOSE_FRACTION( 2.02300, redshift, 0.00001 );
 }
 
 BOOST_AUTO_TEST_SUITE_END()

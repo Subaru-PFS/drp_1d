@@ -97,12 +97,15 @@ void CExtremum::SetSignSearch( Float64 val )
  */
 Bool CExtremum::Find( const TFloat64List& xAxis, const TFloat64List& yAxis, TPointList& maxPoint ) const
 {
-    UInt32 n = xAxis.size();
+    Int32 n = xAxis.size();
     const Float64* selectedXAxis = xAxis.data();
     const Float64* selectedYAxis = yAxis.data();
 
     Int32 rangeXBeginIndex = -1;
     Int32 rangeXEndIndex = -1;
+
+    if( n == 0 )
+        return false;
 
     // Find index in xAxis that correspond to the boundary specified by m_XRange
     if( m_XRange.GetIsEmpty() )

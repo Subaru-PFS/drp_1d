@@ -110,28 +110,36 @@ BOOST_AUTO_TEST_CASE(Save){
   // stream.rdbuf(&str);
   linemodelResult.Save(store, stream);
   std::ostringstream result;
+
   result << "#Redshifts\tChiSquare";
-  result<< std::endl <<"0.1\t2.99999999999999988897769753748435e-01";
-  result<< std::endl <<"#Extrema for z = {0.10000000000000000555111512312578\t}";
-  result<< std::endl <<"#ExtremaMerit for z = {0.10000000000000000555111512312578\t}";
-  result<< std::endl <<"#ExtremaDeltaZ for z = {0.10000000000000000555111512312578\t}";
-  result<< std::endl <<"#mTransposeM for z = {0.10000000000000000555111512312578\t}";
-  result<< std::endl <<"#ExtremaLastPass for z = {0.10000000000000000555111512312578\t}";
-  result<< std::endl <<"#BIC for each extrema = {0.10000000000000000555111512312578\t}";
-  result<< std::endl <<"#POSTERIOR for each extrema = {0.10000000000000000555111512312578\t}";
-  result<< std::endl <<"#SigmaZ for each extrema = {0.10000000000000000555111512312578\t}";
-  result<< std::endl <<"#LogArea for each extrema = {0.10000000000000000555111512312578\t}";
-  result<< std::endl <<"#ContinuumIndexes Color for each extrema = {<-0.00000000000000000000000000000000\t-0.00000000000000000000000000000000\t-0.00000000000000000000000000000000\t-0.00000000000000000000000000000000\t-0.00000000000000000000000000000000\t-0.00000000000000000000000000000000\t>}";
-  result<< std::endl <<"#ContinuumIndexes Break for each extrema = {<-0.00000000000000000000000000000000\t-0.00000000000000000000000000000000\t-0.00000000000000000000000000000000\t-0.00000000000000000000000000000000\t-0.00000000000000000000000000000000\t-0.00000000000000000000000000000000\t>}";
-  result<< std::endl <<"#StrongELSNR for each extrema = {0.10000000000000000555111512312578\t}";
-  result<< std::endl <<"#dTransposeDNocontinuum for each extrema = {0.10000000000000000555111512312578\t}";
-  result<< std::endl <<"#dTransposeD for each extrema = {0.10000000000000000555111512312578\t}";
-  result<< std::endl <<"#FittedTplName for each extrema = {template\t}";
-  result<< std::endl <<"#FittedTplAmplitude for each extrema = {0.10000000000000000555111512312578\t}";
-  result<< std::endl <<"#FittedTplDustCoeff for each extrema = {0.100\t}";
-  result<< std::endl <<"#FittedTplMeiksinIdx for each extrema = {1\t}";
-  result<< std::endl <<"#FittedTplcorrTplName for each extrema = {\t}";
-  result<< std::endl;
+  result << std::endl << "0.1\t2.99999999999999988897769753748435e-01";
+  result << std::endl << "#Extrema for z = {0.10000000000000000555111512312578\t}";
+  result << std::endl << "#ExtremaMerit for z = {0.10000000000000000555111512312578\t}";
+  result << std::endl << "#ExtremaMeritContinuum for z = {0.00000000000000000000000000000000\t}";
+  result << std::endl << "#ExtremaDeltaZ for z = {0.10000000000000000555111512312578\t}";
+  result << std::endl << "#mTransposeM for z = {0.10000000000000000555111512312578\t}";
+  result << std::endl << "#NDof for z = {0\t}";
+  result << std::endl << "#CorrScaleMarg for z = {0.00000000000000000000000000000000\t}";
+  result << std::endl << "#ExtremaLastPass for z = {0.10000000000000000555111512312578\t}";
+  result << std::endl << "#lmfitPass for z = {0.00000000000000000000000000000000\t}";
+  result << std::endl << "#snrHa for z = {0.00000000000000000000000000000000\t}";
+  result << std::endl << "#BIC for each extrema = {0.10000000000000000555111512312578\t}";
+  result << std::endl << "#POSTERIOR for each extrema = {0.10000000000000000555111512312578\t}";
+  result << std::endl << "#SigmaZ for each extrema = {0.10000000000000000555111512312578\t}";
+  result << std::endl << "#LogArea for each extrema = {0.10000000000000000555111512312578\t}";
+  result << std::endl << "#ContinuumIndexes Color for each extrema = {<-0.00000000000000000000000000000000\t-0.00000000000000000000000000000000\t-0.00000000000000000000000000000000\t-0.00000000000000000000000000000000\t-0.00000000000000000000000000000000\t-0.00000000000000000000000000000000\t>}";
+  result << std::endl << "#ContinuumIndexes Break for each extrema = {<-0.00000000000000000000000000000000\t-0.00000000000000000000000000000000\t-0.00000000000000000000000000000000\t-0.00000000000000000000000000000000\t-0.00000000000000000000000000000000\t-0.00000000000000000000000000000000\t>}";
+  result << std::endl << "#StrongELSNR for each extrema = {0.10000000000000000555111512312578\t}";
+  result << std::endl << "#FittedTplName for each extrema = {template\t}";
+  result << std::endl << "#FittedTplAmplitude for each extrema = {0.10000000000000000555111512312578\t}";
+  result << std::endl << "#FittedTplMerit for each extrema = {0.00000000000000000000000000000000\t}";
+  result << std::endl << "#FittedTplDustCoeff for each extrema = {0.100\t}";
+  result << std::endl << "#FittedTplMeiksinIdx for each extrema = {1\t}";
+  result << std::endl << "#FittedTplshapeName for each extrema = {\t}";
+  result << std::endl << "#dTransposeDNocontinuum = {0.100\t}";
+  result << std::endl << "#dTransposeD = {0.100\t}";
+  result << std::endl;
+
 
   // std::stringstream ss(result.str());
   // std::stringstream ss2(stream.str());
@@ -146,8 +154,8 @@ BOOST_AUTO_TEST_CASE(Save){
   //   }
   // }
   BOOST_CHECK(stream.str() == result.str());
-  // BOOST_TEST_MESSAGE("Save string:"<<stream.str()<<";");
-  // BOOST_TEST_MESSAGE("result string:"<<result.str())<<";";
+  //BOOST_TEST_MESSAGE("Save string:\n"<<stream.str()<<";");
+  //BOOST_TEST_MESSAGE("result string:\n"<<result.str())<<";";
 }
 
 BOOST_AUTO_TEST_CASE(SaveLine){

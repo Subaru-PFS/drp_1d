@@ -47,8 +47,7 @@ void UtilChisquareTestFit( const char* spectraPath, const char* noisePath, const
     //building the mask
     Int32 sampleCount = spectrum.GetFluxAxis().GetSamplesCount();
     std::vector<CMask> additional_spcMasks;
-    CMask spcMask = Mask();
-    spcMask.SetSize(sampleCount);
+    CMask spcMask = CMask(sampleCount);
 
     //TBD: Warning, here the mask is created by thresholding with the mean. The mask should be loaded from an external CSV file
     Float64 mean = -1.0;

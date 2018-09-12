@@ -95,13 +95,14 @@ BOOST_AUTO_TEST_CASE(PdfzFeatureResult_Save)
 
   result.Save(dummy_store, stream);
 
-  stringstream expected("#zPDF_descriptors \t Value\n\
+  stringstream expected("#zPDF_descriptors \tValue\n\
 baz\t13.31\n\
 bar\t12.21\n\
 foo\t11.11\n");
 
   BOOST_CHECK(stream.str() == expected.str());
-  // BOOST_TEST_MESSAGE("\nresult:\n" << stream.str());
+  //BOOST_TEST_MESSAGE("\nresult:\n" << stream.str());
+  //BOOST_TEST_MESSAGE("\nexpected:\n" << expected.str());
 
   result.SaveLine(dummy_store, stream);
 }

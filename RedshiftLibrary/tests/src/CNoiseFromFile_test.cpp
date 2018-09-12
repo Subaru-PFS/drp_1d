@@ -15,7 +15,7 @@ BOOST_AUTO_TEST_SUITE(CNoiseFromFile_test)
 
 BOOST_AUTO_TEST_CASE(AddNoise_test)
 {
-  CNoiseFromFile noiseFromFile= CNoiseFromFile();
+  CNoiseFromFile noiseFromFile = CNoiseFromFile();
   CSpectrum OSpectrum = CSpectrum();
   CSpectrumFluxAxis& fluxAxis = OSpectrum.GetFluxAxis();
   CSpectrumIOGenericReader reader;
@@ -25,9 +25,10 @@ BOOST_AUTO_TEST_CASE(AddNoise_test)
   fluxAxis[1]= 1.5;
   fluxAxis[2]= 2.5;
 
-  BOOST_CHECK_THROW(noiseFromFile.AddNoise(OSpectrum), string);
+  BOOST_CHECK_THROW(noiseFromFile.AddNoise(OSpectrum), runtime_error);
 
-  BOOST_CHECK_THROW(noiseFromFile.SetNoiseFilePath("/this/file/should/not/exist", reader), string);
+  BOOST_CHECK_THROW(noiseFromFile.SetNoiseFilePath("/this/file/should/not/exist",
+						   reader), runtime_error);
   BOOST_CHECK_NO_THROW(noiseFromFile.SetNoiseFilePath(DATA_ROOT_DIR "SpectrumioTestCase/spectrum1_z_1.2299.fits", reader));
 
   /*

@@ -1,5 +1,10 @@
 #include <boost/test/unit_test.hpp>
 #include <RedshiftLibrary/spectrum/spectralaxis.h>
+#include <RedshiftLibrary/common/mask.h>
+#include <RedshiftLibrary/common/datatypes.h>
+#include <math.h>
+#include <algorithm>
+#include <iterator>
 
 using namespace NSEpic;
 
@@ -20,17 +25,73 @@ BOOST_AUTO_TEST_CASE(Constructor)
   BOOST_CHECK(n31Axis.GetSamplesCount()==1);
   CSpectrumSpectralAxis n32Axis = CSpectrumSpectralAxis(n3Array, 1, true);
   BOOST_CHECK(n32Axis.GetSamplesCount()==1);
+
+  CSpectrumSpectralAxis n33Axis = CSpectrumSpectralAxis(n3Array, 1);
+
   // Clone from an other spectral axis redshift 0
   CSpectrumSpectralAxis n41Axis  = CSpectrumSpectralAxis(1, false);
   // CSpectrumSpectralAxis n42Axis  = CSpectrumSpectralAxis(n41Axis,0.,CSpectrumSpectralAxis::nShiftForward);
   // One element from 2 elements array
-  Float64 n5Array[] = {1.,2.};
+  Float64 n5Array[] = {1., 2.};
   CSpectrumSpectralAxis n5Axis = CSpectrumSpectralAxis(n5Array, 1, false);
   BOOST_CHECK(n5Axis.GetSamplesCount()==1);
+
   // Two elements from 1 element array
   Float64 n6Array[] = {1.};
   CSpectrumSpectralAxis n6Axis = CSpectrumSpectralAxis(n6Array, 2, false);
   BOOST_CHECK(n6Axis.GetSamplesCount()==2);
+
+  // ShiftByWaveLength linear forward
+  Float64 n7Array[] = {2., 3.};
+  CSpectrumSpectralAxis n7Axis = CSpectrumSpectralAxis(n7Array, 2, false);
+  CSpectrumSpectralAxis n7ShiftForward = CSpectrumSpectralAxis(n7Axis, 10.1,
+							       CSpectrumSpectralAxis::nShiftForward);
+  BOOST_CHECK(n7ShiftForward.GetSamplesCount() == 2);
+  BOOST_CHECK_CLOSE(n7ShiftForward.GetSamples()[0], 20.2, 1.e-12);
+  BOOST_CHECK_CLOSE(n7ShiftForward.GetSamples()[1], 30.3, 1.e-12);
+
+  // ShiftByWaveLength linear backward
+  CSpectrumSpectralAxis n7ShiftBack = CSpectrumSpectralAxis(n7Axis, 2,
+							    CSpectrumSpectralAxis::nShiftBackward);
+  BOOST_CHECK(n7ShiftBack.GetSamplesCount() == 2);
+  BOOST_CHECK_CLOSE(n7ShiftBack.GetSamples()[0], 1., 1.e-12);
+  BOOST_CHECK_CLOSE(n7ShiftBack.GetSamples()[1], 3./2, 1.e-12);
+
+  // ShiftByWaveLength log forward
+  CSpectrumSpectralAxis n7AxisLog = CSpectrumSpectralAxis(n7Array, 2, true);
+  CSpectrumSpectralAxis n7ShiftLogForward = CSpectrumSpectralAxis(n7AxisLog, exp(10.1),
+								  CSpectrumSpectralAxis::nShiftForward);
+  BOOST_CHECK(n7ShiftLogForward.GetSamplesCount() == 2);
+  BOOST_CHECK_CLOSE(n7ShiftLogForward.GetSamples()[0], 12.1, 1.e-12);
+  BOOST_CHECK_CLOSE(n7ShiftLogForward.GetSamples()[1], 13.1, 1.e-12);
+
+  // ShiftByWaveLength log backward
+  CSpectrumSpectralAxis n7ShiftLogBack = CSpectrumSpectralAxis(n7AxisLog, exp(0.5),
+							       CSpectrumSpectralAxis::nShiftBackward);
+  BOOST_CHECK(n7ShiftLogBack.GetSamplesCount() == 2);
+  BOOST_CHECK_CLOSE(n7ShiftLogBack.GetSamples()[0], 1.5, 1.e-12);
+  BOOST_CHECK_CLOSE(n7ShiftLogBack.GetSamples()[1], 2.5, 1.e-12);
+
+  // ShiftByWaveLength zero shift
+  CSpectrumSpectralAxis n7ZeroShift = CSpectrumSpectralAxis(n7Axis, 0.,
+							    CSpectrumSpectralAxis::nShiftForward);
+  BOOST_CHECK(n7ZeroShift.GetSamplesCount() == 2);
+  BOOST_CHECK_CLOSE(n7ZeroShift.GetSamples()[0], 2., 1.e-12);
+  BOOST_CHECK_CLOSE(n7ZeroShift.GetSamples()[1], 3., 1.e-12);
+
+
+}
+
+BOOST_AUTO_TEST_CASE(ApplyOffset)
+{
+  Float64 array[] = {1., 2., 3.};
+  CSpectrumSpectralAxis axis = CSpectrumSpectralAxis(array, 3, false);
+
+  axis.ApplyOffset(1.);
+
+  BOOST_CHECK_CLOSE(axis.GetSamples()[0], 2., 1.e-12);
+  BOOST_CHECK_CLOSE(axis.GetSamples()[1], 3., 1.e-12);
+  BOOST_CHECK_CLOSE(axis.GetSamples()[2], 4., 1.e-12);
 }
 
 BOOST_AUTO_TEST_CASE(Operator)
@@ -55,22 +116,58 @@ BOOST_AUTO_TEST_CASE(Resolution)
   BOOST_CHECK_CLOSE(n8Axis.GetResolution(3.),1.,1.e-12);
   BOOST_CHECK_CLOSE(n8Axis.GetResolution(4.),6.,1.e-12);
   BOOST_CHECK_CLOSE(n8Axis.GetResolution(11.),6.,1.e-12);
+
+  // not enough samples
+  Float64 array[] = {10.};
+  CSpectrumSpectralAxis axis = CSpectrumSpectralAxis(array,1,false);
+  BOOST_CHECK_CLOSE(axis.GetResolution(),0.,1.e-12);
+  BOOST_CHECK_CLOSE(axis.GetMeanResolution(),0.,1.e-12);
+
 }
 
-BOOST_AUTO_TEST_CASE(ShiftByWaveLength)
+BOOST_AUTO_TEST_CASE(GetMask)
 {
-  Float64 n9Array[] = {5.};
-  CSpectrumSpectralAxis n91Axis = CSpectrumSpectralAxis(n9Array,1,false);
-  n91Axis.ShiftByWaveLength(1.,CSpectrumSpectralAxis::nShiftForward);
-  // BOOST_CHECK_CLOSE(n91Axis[0],6.,1.e-12);
-  CSpectrumSpectralAxis n92Axis = CSpectrumSpectralAxis(n9Array,1,false);
-  n92Axis.ShiftByWaveLength(1.,CSpectrumSpectralAxis::nShiftBackward);
-  // BOOST_CHECK_CLOSE(n92Axis[0],4.,1.e-12);
-  CSpectrumSpectralAxis n93Axis = CSpectrumSpectralAxis(n9Array,1,false);
-  CSpectrumSpectralAxis n94Axis = CSpectrumSpectralAxis();
-  CSpectrumSpectralAxis n95Axis = CSpectrumSpectralAxis();
-  // n94Axis.ShiftByWaveLength(n93Axis,1.,CSpectrumSpectralAxis::nShiftForward);
-  // n95Axis.ShiftByWaveLength(n93Axis,1.,CSpectrumSpectralAxis::nShiftBackward);
+  Float64 array[] = {1.,3.,4.,10.};
+  CMask mask;
+  TFloat64Range range(0.5,5.);
+  Mask result[] = {1,1,1,0};
+
+  // linear
+  CSpectrumSpectralAxis axis = CSpectrumSpectralAxis(array, 4, false);
+  axis.GetMask(range, mask);
+  BOOST_CHECK( std::equal(result, result + 4, mask.GetMasks()) );
+
+  // log
+  CSpectrumSpectralAxis axislog = CSpectrumSpectralAxis(array, 4, true);
+  Mask resultlog[] = {1,0,0,0};
+  axislog.GetMask(range, mask);
+  BOOST_CHECK( std::equal(resultlog, resultlog + 4, mask.GetMasks()) );
+
+}
+
+BOOST_AUTO_TEST_CASE(IntersectMaskAndComputeOverlapRate)
+{
+  CMask mask(4);
+  TFloat64Range range(0.5,5.);
+  Float64 array[] = {1.,3.,4.,10.};
+
+  mask[0] = 1;
+  mask[1] = 1;
+  mask[2] = 0;
+  mask[3] = 0;
+
+  // linear
+  CSpectrumSpectralAxis axis = CSpectrumSpectralAxis(array, 4, false);
+  BOOST_CHECK_CLOSE(axis.IntersectMaskAndComputeOverlapRate(range, mask), 2./3, 1e-18);
+
+  // log
+  CSpectrumSpectralAxis axislog = CSpectrumSpectralAxis(array, 4, true);
+  BOOST_CHECK_CLOSE(axislog.IntersectMaskAndComputeOverlapRate(range, mask), 1., 1e-18);
+
+  TFloat64Range outrange(-5,0.);
+  BOOST_CHECK_CLOSE(axis.IntersectMaskAndComputeOverlapRate(outrange, mask), 0., 1e-18);
+
+
 }
 
 BOOST_AUTO_TEST_CASE(GetIndexAtWaveLength)

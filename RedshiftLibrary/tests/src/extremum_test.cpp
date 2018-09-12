@@ -27,11 +27,12 @@ BOOST_AUTO_TEST_CASE(Extremum1)
 {
     CExtremum peaks1;
     CExtremum peaks2(true);
+    CExtremum peaks_empty;
     TPointList maxPoint;
     TFloat64List x = { 0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0 };
     TFloat64List y = { 1.0, 5.0, 0.0, 3.0, 9.0, 0.1, 0.2, 0.5, 8.0, 1.0, 4.0 };
     TFloat64List y_2 = { 5.0, 0.0, 0.0, 3.0, 9.0, 0.1, 0.2, 0.5, 8.0, 1.0, 4.0 };
-    TFloat64List x_empty;
+    TFloat64List x_empty = {};
 
     peaks2 = CExtremum(TFloat64Range(-10.0, 10.0), 5, true, 2);
     peaks2 = CExtremum(TFloat64Range(-10.0, 10.0), 5, false, 2);
@@ -46,9 +47,11 @@ BOOST_AUTO_TEST_CASE(Extremum1)
     peaks1.Find( x, y_2, maxPoint);
     check_points(maxPoint, TPointList({ {0.4,9}, {0.8,8} }));
 
-    // peaks1.Find( x_empty, y, maxPoint);
-    // print_point(maxPoint);
-//    BOOST_ERROR("FIXME: fails with empty list");
+    BOOST_CHECK( peaks1.Find( x_empty, y, maxPoint) == false);
+    print_point(maxPoint);
+
+    peaks_empty = CExtremum(TFloat64Range(1.0, 1.0), 5, false, 2);
+    peaks_empty.Find( x, y, maxPoint);
 
     // peaks1.Find( x_empty, x_empty, maxPoint);
     // print_point(maxPoint);

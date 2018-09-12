@@ -62,7 +62,7 @@ NSEpic::TFloat64List UtilLoadDetectedRayPositions( const char* filePath ){
             {
                 pos = lexical_cast<double>(*it);
             }
-            catch (bad_lexical_cast)
+            catch (bad_lexical_cast&)
             {
                 pos = 0.0;
                 return posList;
@@ -137,9 +137,8 @@ BOOST_AUTO_TEST_CASE(LoadCatalog)
     Bool returnValue;
 
     BOOST_CHECK_NO_THROW(catalog.Load( DATA_ROOT_DIR "RayTestCase/raycatalog_OK1.txt" ));
-
-    BOOST_CHECK_THROW(catalog.Load( DATA_ROOT_DIR "RayTestCase/raycatalog_NOK1.txt" ), std::string);
-    BOOST_CHECK_THROW(catalog.Load( DATA_ROOT_DIR "RayTestCase/raycatalog_NOK1.txt" ), std::string);
+    BOOST_CHECK_THROW(catalog.Load( DATA_ROOT_DIR "RayTestCase/raycatalog_NOK1.txt" ),
+		      std::runtime_error);
 
 }
 
