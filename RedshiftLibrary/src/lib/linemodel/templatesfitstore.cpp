@@ -87,6 +87,11 @@ CTemplatesFitStore::TemplateFitValues CTemplatesFitStore::GetFitValues(Float64 r
         idx = (redshiftVal-m_minRedshift)/m_stepRedshift;
     }
 
-
+    if(idx<0)
+    {
+        Log.LogError("CTemplatesFitStore::GetFitValues - cannot find the correct pre-computed continuum.");
+        Log.LogError("CTemplatesFitStore::GetFitValues - redshiftVal=%f, but lt m_fitValues[0].redshift=%f", redshiftVal, m_fitValues[0].redshift);
+        Log.LogError("CTemplatesFitStore::GetFitValues - redshiftVal=%f, but ht m_fitValues[m_fitValues.size()-1].redshift=%f", redshiftVal, m_fitValues[m_fitValues.size()-1].redshift);
+    }
     return m_fitValues[idx];
 }
