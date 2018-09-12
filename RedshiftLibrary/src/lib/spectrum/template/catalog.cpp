@@ -118,7 +118,7 @@ UInt32 CTemplateCatalog::GetTemplateCount( const std::string& category ) const
 void CTemplateCatalog::Add( std::shared_ptr<CTemplate> r )
 {
     if( r->GetCategory().empty() )
-      throw std::runtime_error("Template has no category");
+      throw runtime_error("Template has no category");
 
     m_List[r->GetCategory()].push_back( r );
 
@@ -176,9 +176,8 @@ void CTemplateCatalog::Add( const char* templatePath, const std::string& categor
 {
     if ( !exists( templatePath ) )
       {
-	char buf[180];
-	std::snprintf(buf, sizeof(buf), "Path %s does not exist.", templatePath);
-	throw std::runtime_error(buf);
+	Log.LogError("Path %s does not exist.", templatePath);
+	throw std::runtime_error("Template path does not exist");
       }
 
     path p( templatePath );
@@ -201,9 +200,8 @@ void CTemplateCatalog::Load( const char* dirPath )
 
     if ( !exists( dirPath ) )
       {
-	char buf[180];
-	std::snprintf(buf, sizeof(buf), "Path %s does not exist.", dirPath);
-	throw std::runtime_error(buf);
+	Log.LogError("Path %s does not exist.", dirPath);
+	throw std::runtime_error("Template catalog path does not exist");
       }
 
     directory_iterator end_itr;

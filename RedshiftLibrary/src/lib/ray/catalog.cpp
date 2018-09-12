@@ -117,14 +117,14 @@ void CRayCatalog::Load( const char* filePath )
     m_List.clear();
 
     if ( !exists( filePath ) ) {
-      char buf[180];
-      std::snprintf(buf, sizeof(buf), "Can't load line catalog : %s does not exist.", filePath);
-      throw std::runtime_error(buf);
+      Log.LogError("Can't load line catalog : %s does not exist.", filePath);
+      throw runtime_error("Can't load line catalog");
     }
 
     file.open( filePath, ifstream::in );
-    if( file.rdstate() & ios_base::failbit )
-      throw std::runtime_error("file cannot be opened");
+    if( file.rdstate() & ios_base::failbit ) {
+      throw runtime_error("file cannot be opened");
+    }
 
     string line;
 
@@ -149,10 +149,8 @@ void CRayCatalog::Load( const char* filePath )
 
         if(ver!=0.4)
         {
-            char buf[180];
-            std::snprintf(buf, sizeof(buf), "Line catalog version (found ver=%.3f) is not supported", ver);
-            Log.LogError(buf);
-            throw std::runtime_error(buf);
+            Log.LogError("Line catalog version (found ver=%.3f) is not supported", ver);
+            throw runtime_error("Line catalog version is not supported");
         }
 
         // remove comments
@@ -175,10 +173,10 @@ void CRayCatalog::Load( const char* filePath )
             {
                 pos = lexical_cast<double>(*it);
             }
-            catch (bad_lexical_cast)
+            catch (const bad_lexical_cast& e)
             {
-                pos = 0.0;
-                throw string("Bad file format : ") + filePath;
+	      Log.LogError("Bad file format : %s [%s]", filePath, e.what());
+	      throw runtime_error("Bad file format");
             }
 
             // Parse name
@@ -190,7 +188,8 @@ void CRayCatalog::Load( const char* filePath )
             }
             else
             {
-                throw string("Bad name in : ") + filePath;
+	      Log.LogError("Bad name in : %s", + filePath);
+	      throw runtime_error("Bad name");
             }
 
             // Parse type
@@ -269,10 +268,8 @@ void CRayCatalog::Load( const char* filePath )
 
     if(ver<0.0)
     {
-        char buf[180];
-        std::snprintf(buf, sizeof(buf), "Invalid line catalog file (found ver=%.3f)", ver);
-        Log.LogError(buf);
-        throw std::runtime_error(buf);
+        Log.LogError("Invalid line catalog file (found ver=%.3f)", ver);
+        throw runtime_error("Invalid line catalog file");
     }
 }
 

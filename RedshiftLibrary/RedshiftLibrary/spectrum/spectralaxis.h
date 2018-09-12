@@ -62,10 +62,6 @@ public:
     void                GetMask( const TFloat64Range& range,  CMask& mask ) const;
     Float64             IntersectMaskAndComputeOverlapRate( const TFloat64Range& lambdaRange,  CMask& omask ) const;
 
-    Bool                PlotResolution( const char* filePath ) const;
-
-    void                CopyFrom( const CSpectrumSpectralAxis& other );
-
 private:
 
     UInt32              m_SpectralFlags;

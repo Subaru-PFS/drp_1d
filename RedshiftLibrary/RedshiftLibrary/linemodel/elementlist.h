@@ -61,8 +61,8 @@ public:
     void PrepareContinuum(Float64 z);
     void EstimateSpectrumContinuum(Float64 opt_enhance_lines, const TFloat64Range &lambdaRange);
 
-    Int32 LoadFitContinuumOneTemplate(const TFloat64Range& lambdaRange, const CTemplate& tpl);
-    Int32 LoadFitContinuum(const TFloat64Range& lambdaRange);
+    void LoadFitContinuumOneTemplate(const TFloat64Range& lambdaRange, const CTemplate& tpl);
+    void LoadFitContinuum(const TFloat64Range& lambdaRange);
     void setRedshift(Float64 redshift, bool reinterpolatedContinuum);
     Int32 ApplyContinuumOnGrid(const CTemplate& tpl);
     Bool SolveContinuum(const CSpectrum& spectrum,

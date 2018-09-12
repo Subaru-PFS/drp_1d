@@ -39,6 +39,7 @@
 
 
 using namespace NSEpic;
+using namespace std;
 
 /**
  * \brief Prepares the state for Linemodel operation.
@@ -155,7 +156,7 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
         m_chiSquareOperator = new COperatorChiSquare2(calibrationPath);
         m_observeGridContinuumFlux = new Float64[modelFluxAxis.GetSamplesCount()]();
         if(m_observeGridContinuumFlux == NULL){
-          throw std::runtime_error("unable to allocate m_observeGridContinuumFlux");
+          throw runtime_error("unable to allocate m_observeGridContinuumFlux");
         }
         if(0)
         {
@@ -731,7 +732,7 @@ void CLineModelElementList::LogCatalogInfos()
 }
 
 
-Int32 CLineModelElementList::LoadFitContinuumOneTemplate(const TFloat64Range& lambdaRange, const CTemplate& tpl){
+void CLineModelElementList::LoadFitContinuumOneTemplate(const TFloat64Range& lambdaRange, const CTemplate& tpl){
   Float64 merit = DBL_MAX;
 
   Float64 fitContinuumAmplitude = -1.0;
@@ -755,8 +756,7 @@ Int32 CLineModelElementList::LoadFitContinuumOneTemplate(const TFloat64Range& la
 
   if(m_observeGridContinuumFlux == NULL)
   {
-      Log.LogError("Elementlist, cannot SolveContinuum without m_observeGridContinuumFlux... aborting!");
-      return -1;
+    throw runtime_error("Elementlist, cannot SolveContinuum without m_observeGridContinuumFlux");
   }
   Bool ret = SolveContinuum( *m_inputSpc, tpl, lambdaRange, redshifts, overlapThreshold, maskList, opt_interp, opt_extinction, opt_dustFit, merit, fitContinuumAmplitude, fitDustCoeff, fitMeiksinIdx, fitDtM, fitMtM);
   /*//debug
@@ -771,20 +771,17 @@ Int32 CLineModelElementList::LoadFitContinuumOneTemplate(const TFloat64Range& la
   Log.LogInfo("LMfit : Continuum Amp set Init at %0.00f", fitContinuumAmplitude);
   Log.LogInfo("Lmfit: solve succes %s", (ret? "t": "f"));
   ApplyContinuumOnGrid(tpl);
-
-   return 1;
 }
 
 /**
  * \brief Generates a continuum from the fitting with a set of templates : uses the chisquare2 operator
  **/
-Int32 CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange)
+void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange)
 {
     Log.LogDebug("Elementlist, m_fitContinuum_option=%d", m_fitContinuum_option);
     if(m_observeGridContinuumFlux == NULL)
     {
-        Log.LogError("Elementlist, cannot loadfitcontinuum without precomputedGridTplFlux... aborting!");
-        return -1;
+      throw runtime_error("Elementlist, cannot loadfitcontinuum without precomputedGridTplFlux");
     }
 
     Float64 bestMerit = DBL_MAX;
@@ -809,7 +806,6 @@ Int32 CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange)
             maskList[0]=getOutsideLinesMask();
         }
 
-
         std::vector<Float64> redshifts(1, m_Redshift);
         if(m_fitContinuum_observedFrame){
             redshifts[0] = 0.0;
@@ -829,7 +825,11 @@ Int32 CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange)
                 Int32 fitMeiksinIdx = -1;
                 Float64 fitDtM = -1.0;
                 Float64 fitMtM = -1.0;
-                Bool ret = SolveContinuum( *m_inputSpc, tpl, lambdaRange, redshifts, overlapThreshold, maskList, opt_interp, opt_extinction, opt_dustFit, merit, fitAmplitude, fitDustCoeff, fitMeiksinIdx, fitDtM, fitMtM);
+                Bool ret = SolveContinuum( *m_inputSpc, tpl, lambdaRange,
+					   redshifts, overlapThreshold,
+					   maskList, opt_interp, opt_extinction,
+					   opt_dustFit, merit, fitAmplitude,
+					   fitDustCoeff, fitMeiksinIdx, fitDtM, fitMtM);
 
                 if(ret && merit<bestMerit)
                 {
@@ -847,7 +847,7 @@ Int32 CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange)
         CTemplatesFitStore::TemplateFitValues fitValues = m_fitContinuum_tplfitStore->GetFitValues(m_Redshift);
         if(fitValues.tplName=="")
         {
-            return -1;
+	  throw runtime_error("Empty template name");
         }
         bestMerit = fitValues.merit;
         bestFitAmplitude = fitValues.fitAmplitude;
@@ -857,8 +857,7 @@ Int32 CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange)
         bestFitMtM = fitValues.fitMtM;
         bestTplName = fitValues.tplName;
     }else{
-        Log.LogError("Elementlist, cannot parse fitContinuum_option... aborting!");
-        return -1;
+        throw runtime_error("Elementlist, cannot parse fitContinuum_option");
     }
 
     if(bestTplName!="")
@@ -891,11 +890,8 @@ Int32 CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange)
             }
         }
     }else{
-        Log.LogError( "Failed to load and fit continuum");
-        return -1;
+      throw runtime_error( "Failed to load and fit continuum");
     }
-
-    return 0;
 }
 
 void CLineModelElementList::setFitContinuum_tplAmplitude(Float64 tplAmp){
@@ -918,7 +914,6 @@ the continuum can be reinterpolate.
 void CLineModelElementList::setRedshift(Float64 redshift, bool reinterpolatedContinuum){
   m_Redshift = redshift;
 
-
   if(reinterpolatedContinuum){
     for( UInt32 i=0; i<m_tplCategoryList.size(); i++ )
     {
@@ -935,7 +930,6 @@ void CLineModelElementList::setRedshift(Float64 redshift, bool reinterpolatedCon
           }
         }
   }
-
 
 }
 
@@ -1358,12 +1352,7 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
 
     if(m_ContinuumComponent == "tplfit") //the support has to be already computed when LoadFitContinuum() is called
     {
-        Int32 retLoadFitCont = LoadFitContinuum(lambdaRange);
-        if(retLoadFitCont!=0)
-        {
-            Log.LogError( "LineModel Error: Unable to loadFit continuum, aborting");
-            return -1;
-        }
+        LoadFitContinuum(lambdaRange);
     }
     if(m_ContinuumComponent != "nocontinuum"){
         //prepare the continuum

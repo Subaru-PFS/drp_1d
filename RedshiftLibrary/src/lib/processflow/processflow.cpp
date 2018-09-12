@@ -136,9 +136,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
         }
         if(zref==-1)
         {
-          char buf[180];
-          snprintf(buf, sizeof(buf), "Override z-search: unable to find zref!");
-          throw std::runtime_error(buf);
+          throw std::runtime_error("Override z-search: unable to find zref!");
         }
 
         if(computeOnZrange) //computing only on zref, or on a zrange around zref
@@ -170,9 +168,8 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
 
     if(redshifts.size() < 1)
     {
-      char buf[180];
-      snprintf(buf, sizeof(buf), "Unable to initialize the z-search grid (size=0)");
-      throw std::runtime_error(buf);
+      Log.LogError("Unable to initialize the z-search grid (size=%d)", redshifts.size());
+      throw std::runtime_error("Unable to initialize the z-search grid");
     }
 
     std::string CategoryFilter="all";
@@ -225,20 +222,16 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
         const Float64 lmin = spcLambdaRange.GetBegin();
         const Float64 lmax = spcLambdaRange.GetEnd();
         if( !ctx.GetSpectrum().IsFluxValid( lmin, lmax ) ){
-            char buf[180];
-            std::snprintf(buf, sizeof(buf),
-                          "Failed to validate spectrum flux: %s, on wavelength range (%.1f ; %.1f)",
-                          ctx.GetSpectrum().GetName().c_str(), lmin, lmax );
-            throw std::runtime_error(buf);
+	  Log.LogError("Failed to validate spectrum flux: %s, on wavelength range (%.1f ; %.1f)",
+			  ctx.GetSpectrum().GetName().c_str(), lmin, lmax );
+	  throw std::runtime_error("Failed to validate spectrum flux");
         }else{
             Log.LogDetail( "Successfully validated spectrum flux: %s, on wavelength range (%.1f ; %.1f)", ctx.GetSpectrum().GetName().c_str(), lmin, lmax );
         }
         if( !ctx.GetSpectrum().IsNoiseValid( lmin, lmax ) ){
-            char buf[180];
-            std::snprintf(buf, sizeof(buf),
-                          "Failed to validate noise from spectrum: %s, on wavelength range (%.1f ; %.1f)",
-                          ctx.GetSpectrum().GetName().c_str(), lmin, lmax );
-            throw std::runtime_error(buf);
+	  Log.LogError("Failed to validate noise from spectrum: %s, on wavelength range (%.1f ; %.1f)",
+		       ctx.GetSpectrum().GetName().c_str(), lmin, lmax );
+	  throw std::runtime_error("Failed to validate noise from spectrum");
         }else{
             Log.LogDetail( "Successfully validated noise from spectrum: %s, on wavelength range (%.1f ; %.1f)", ctx.GetSpectrum().GetName().c_str(), lmin, lmax );
         }
@@ -598,7 +591,6 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
         mResult = std::shared_ptr<CLineModelSolveResult>(new CLineModelSolveResult());
 
     }else{
-        Log.LogError("Problem found while parsing the method parameter !");
         throw std::runtime_error("Problem found while parsing the method parameter");
     }
 
@@ -615,7 +607,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
         if(!logzpdf1d)
         {
             Log.LogError( "Extract Proba. for z candidates: no results retrieved from scope: %s", scope_res.c_str());
-            throw std::runtime_error("Extract Proba. for z candidates");
+            throw std::runtime_error("Extract Proba. for z candidates: no results retrieved from scope");
         }
 
         Log.LogInfo( "  Integrating %d candidates proba.", zcandidates_unordered_list.size() );
@@ -681,7 +673,6 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
     if( mResult ) {
         ctx.GetDataStore().StoreScopedGlobalResult( "redshiftresult", mResult );
     }else{
-      Log.LogError( "Unable to store method result.");
       throw std::runtime_error("Unable to store method result");
     }
 }

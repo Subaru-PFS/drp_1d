@@ -39,7 +39,7 @@ Int32 CSpectrumCombination::Combine( std::vector<std::shared_ptr<CSpectrum>> spc
 
         //check that all spectral axis values are the same
         bool sameSpcAxis = true;
-        for(Int32 ks=1; ks<spcList[0]->GetSampleCount(); ks++)
+        for(Int32 ks=0; ks<spcList[0]->GetSampleCount(); ks++)
         {
             if(spcList[0]->GetSpectralAxis()[ks] != spcList[kr]->GetSpectralAxis()[ks])
             sameSpcAxis=false;

@@ -40,9 +40,8 @@ void CCalibrationConfigHelper::Load( const char* filePath )
     ifstream file;
     file.open( filePath, ifstream::in );
     if( file.rdstate() & ios_base::failbit ){
-      char buf[180];
-      snprintf(buf, sizeof(buf), "Can't load calibration config file [%s]", filePath);
-      throw std::runtime_error(buf);
+      Log.LogError("Can't load calibration config file [%s]", filePath);
+      throw runtime_error("Can't load calibration config file");
     }
     string line;
 
@@ -66,9 +65,8 @@ void CCalibrationConfigHelper::Load( const char* filePath )
     file.close();
     if(readNums!=1) //reading 1.starstemplates, ...
     {
-      char buf[180];
-      snprintf(buf, sizeof(buf), "Invalid calibration config file [%s]", filePath);
-      throw std::runtime_error(buf);
+      Log.LogError("Invalid calibration config file [%s]", filePath);
+      throw runtime_error("Invalid calibration config file");
     }
 }
 

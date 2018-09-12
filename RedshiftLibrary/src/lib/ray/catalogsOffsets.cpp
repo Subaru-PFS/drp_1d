@@ -39,9 +39,7 @@ void CLineCatalogsOffsets::Init( std::string calibrationPath, std::string offset
 {
     if(offsetsCatalogsRelPath.size()<1)
     {
-      char buf[180];
-      snprintf(buf, sizeof(buf), "Unable to init the offset catalog. Found empty relative path.");
-      throw std::runtime_error(buf);
+      throw runtime_error("Unable to init the offset catalog. Found empty relative path.");
     }
 
     m_Calibration_path = calibrationPath;
@@ -78,9 +76,8 @@ void CLineCatalogsOffsets::Load( const char* dirPath )
     }
     if(catalogList.size()<1)
     {
-      char buf[180];
-      snprintf(buf, sizeof(buf), "Unable to load the offset catalogs [%s]", dirPath);
-      throw std::runtime_error(buf);
+      Log.LogError("Unable to load the offset catalogs [%s]", dirPath);
+      throw runtime_error("Unable to load the offset catalogs");
     }
     Log.LogDebug( "    CatalogsOffsets - CLineCatalogsOffsets - Found %d offsets catalogs", catalogList.size());
 

@@ -51,7 +51,8 @@ CSpectrumSpectralAxis::CSpectrumSpectralAxis( const Float64* samples, UInt32 n) 
 /**
  * Constructor, shifts origin along direction an offset distance.
  */
-CSpectrumSpectralAxis::CSpectrumSpectralAxis( const CSpectrumSpectralAxis& origin, Float64 wavelengthOffset, EShiftDirection direction  )
+CSpectrumSpectralAxis::CSpectrumSpectralAxis( const CSpectrumSpectralAxis& origin, Float64 wavelengthOffset, EShiftDirection direction  ) :
+  CSpectrumAxis( origin.GetSamplesCount() )
 {
     ShiftByWaveLength( origin, wavelengthOffset, direction );
 }
@@ -157,23 +158,6 @@ void CSpectrumSpectralAxis::ApplyOffset( Float64 wavelengthOffset )
 }
 
 /**
- * Copy the input axis, including its samples.
- */
-void CSpectrumSpectralAxis::CopyFrom( const CSpectrumSpectralAxis& other )
-{
-    m_SpectralFlags = other.m_SpectralFlags;
-
-    SetSize( other.GetSamplesCount() );
-
-    // Copy spectral data
-    const Float64* otherData = other.GetSamples();
-    for( UInt32 i=0; i<other.GetSamplesCount(); i++ )
-    {
-        m_Samples[i] = otherData[i];
-    }
-}
-
-/**
  * Return the wavelength interval between two consecutive samples.
  */
 Float64 CSpectrumSpectralAxis::GetResolution( Float64 atWavelength ) const
@@ -201,7 +185,7 @@ Float64 CSpectrumSpectralAxis::GetResolution( Float64 atWavelength ) const
 }
 
 /**
- * 
+ *
  */
 Float64 CSpectrumSpectralAxis::GetMeanResolution() const
 {
@@ -224,7 +208,7 @@ Float64 CSpectrumSpectralAxis::GetMeanResolution() const
 }
 
 /**
- * 
+ *
  */
 Bool CSpectrumSpectralAxis::IsInLogScale() const
 {
@@ -232,7 +216,7 @@ Bool CSpectrumSpectralAxis::IsInLogScale() const
 }
 
 /**
- * 
+ *
  */
 Bool CSpectrumSpectralAxis::IsInLinearScale() const
 {
@@ -240,7 +224,7 @@ Bool CSpectrumSpectralAxis::IsInLinearScale() const
 }
 
 /**
- * 
+ *
  */
 TLambdaRange CSpectrumSpectralAxis::GetLambdaRange() const
 {
@@ -256,7 +240,7 @@ TLambdaRange CSpectrumSpectralAxis::GetLambdaRange() const
 }
 
 /**
- * 
+ *
  */
 void CSpectrumSpectralAxis::GetMask( const TFloat64Range& lambdaRange,  CMask& mask ) const
 {
@@ -282,7 +266,7 @@ void CSpectrumSpectralAxis::GetMask( const TFloat64Range& lambdaRange,  CMask& m
 }
 
 /**
- * 
+ *
  */
 Float64 CSpectrumSpectralAxis::IntersectMaskAndComputeOverlapRate( const TFloat64Range& lambdaRange,  CMask& omask ) const
 {
@@ -316,7 +300,7 @@ Float64 CSpectrumSpectralAxis::IntersectMaskAndComputeOverlapRate( const TFloat6
 }
 
 /**
- * 
+ *
  */
 Bool CSpectrumSpectralAxis::ClampLambdaRange( const TFloat64Range& range, TFloat64Range& clampedRange ) const
 {
@@ -341,29 +325,9 @@ Bool CSpectrumSpectralAxis::ClampLambdaRange( const TFloat64Range& range, TFloat
     return true;
 }
 
-/**
- * 
- */
-Bool CSpectrumSpectralAxis::PlotResolution( const char* filePath ) const
-{
-    FILE* f = fopen( filePath, "w+" );
-    if( f == NULL )
-        return false;
-
-    if( m_Samples.size() >= 2 )
-    {
-        for( int i=0;i<m_Samples.size()-1;i++)
-        {
-            fprintf( f, "%f %f\n", m_Samples[i], m_Samples[i+1] - m_Samples[i] );
-        }
-    }
-    fclose( f );
-
-    return true;
-}
 
 /**
- * 
+ *
  */
 TInt32Range CSpectrumSpectralAxis::GetIndexesAtWaveLengthRange( const TFloat64Range& waveLengthRange ) const
 {
@@ -376,7 +340,7 @@ TInt32Range CSpectrumSpectralAxis::GetIndexesAtWaveLengthRange( const TFloat64Ra
 }
 
 /**
- * 
+ *
  */
 Int32 CSpectrumSpectralAxis::GetIndexAtWaveLength( Float64 waveLength ) const
 {
@@ -410,7 +374,7 @@ Int32 CSpectrumSpectralAxis::GetIndexAtWaveLength( Float64 waveLength ) const
 }
 
 /**
- * 
+ *
  */
 Bool CSpectrumSpectralAxis::ConvertToLinearScale()
 {
@@ -428,7 +392,7 @@ Bool CSpectrumSpectralAxis::ConvertToLinearScale()
 }
 
 /**
- * 
+ *
  */
 Bool CSpectrumSpectralAxis::ConvertToLogScale()
 {
