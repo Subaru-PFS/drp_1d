@@ -494,6 +494,53 @@ Float64 CPdfz::getCandidateSumTrapez(std::vector<Float64> redshifts, std::vector
     return sum;
 }
 
+
+Int32 CPdfz::getCandidateRobustGaussFit(std::vector<Float64> redshifts,
+                                  std::vector<Float64> valprobalog,
+                                  Float64 zcandidate,
+                                  Float64 zwidth,
+                                  Float64& gaussAmp,
+                                  Float64& gaussAmpErr,
+                                  Float64& gaussSigma,
+                                  Float64& gaussSigmaErr)
+{
+    Int32 fitSuccessful = false;
+    Int32 nTry = 5;
+    Int32 iTry = 0;
+
+    Float64 current_zwidth = zwidth;
+    while(!fitSuccessful && iTry<nTry)
+    {
+        Int32 retFit = getCandidateGaussFit(redshifts,
+                                            valprobalog,
+                                            zcandidate,
+                                            current_zwidth,
+                                            gaussAmp,
+                                            gaussAmpErr,
+                                            gaussSigma,
+                                            gaussSigmaErr);
+        if(!retFit && gaussSigma<zwidth*2.0 && std::abs(gaussSigma/gaussSigmaErr)>1e-2)
+        {
+            fitSuccessful=true;
+        }else{
+            Log.LogInfo("    CPdfz::getCandidateRobustGaussFit - iTry=%d", iTry);
+            Log.LogInfo("    CPdfz::getCandidateRobustGaussFit - for zcandidate=%.5f", zcandidate);
+            Log.LogInfo("    CPdfz::getCandidateRobustGaussFit - found gaussAmp=%e", gaussAmp);
+            Log.LogInfo("    CPdfz::getCandidateRobustGaussFit - found gaussSigma=%e", gaussSigma);
+            Log.LogInfo("    CPdfz::getCandidateRobustGaussFit - Going to retry w. different parameters", gaussSigma);
+        }
+        current_zwidth /= 2.0;
+        iTry++;
+    }
+
+    if(fitSuccessful)
+    {
+        return 0;
+    }else{
+        return -1;
+    }
+}
+
 Int32 CPdfz::getCandidateGaussFit(std::vector<Float64> redshifts,
                                   std::vector<Float64> valprobalog,
                                   Float64 zcandidate,
@@ -622,7 +669,7 @@ Int32 CPdfz::getCandidateGaussFit(std::vector<Float64> redshifts,
     const double xtol = 1e-8;
     const double gtol = 1e-8;
     const double ftol =1-8;
-    Int32 maxIterations = 250;
+    Int32 maxIterations = 500;
 
     // This is the data to be fitted;
     for (i = 0; i < n; i++)

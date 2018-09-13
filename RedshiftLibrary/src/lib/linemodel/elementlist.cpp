@@ -399,17 +399,17 @@ const CSpectrum& CLineModelElementList::GetObservedSpectrumWithLinesRemoved(Int3
  */
 Float64 CLineModelElementList::GetContinuumError(Int32 eIdx, Int32 subeIdx)
 {
-    if(m_ContinuumWinsize<=0)
-    {
-        return -99;
-    }
+//    if(m_ContinuumWinsize<=0)
+//    {
+//        return -99;
+//    }
     Int32 nMinValueForErrorEstimation=10;
 
     const CSpectrum& noLinesSpectrum = GetObservedSpectrumWithLinesRemoved();
     const CSpectrumFluxAxis& noLinesFluxAxis = noLinesSpectrum.GetFluxAxis();
     const CSpectrumSpectralAxis& spectralAxis = m_SpectrumModel->GetSpectralAxis();
     TFloat64Range lambdaRange = spectralAxis.GetLambdaRange(); //using the full wavelength range for this error estimation
-    Float64 winsizeAngstrom = m_ContinuumWinsize;
+    Float64 winsizeAngstrom = 150;
 
     Float64 mu = m_Elements[eIdx]->GetObservedPosition(subeIdx, m_Redshift);
     TInt32Range indexRange = m_Elements[eIdx]->EstimateIndexRange(subeIdx,

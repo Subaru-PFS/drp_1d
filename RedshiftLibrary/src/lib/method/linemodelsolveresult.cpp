@@ -176,6 +176,7 @@ Bool CLineModelSolveResult::GetBestRedshiftFromPdf( const CDataStore& store,
 
 
     Float64 tmpProbaLog = -DBL_MAX;
+    Float64 tmpIntgProba = -DBL_MAX;
     Float64 tmpMerit = DBL_MAX;
     Float64 tmpRedshift = 0.0;
     Float64 tmpSigma = -1.0;
@@ -209,10 +210,27 @@ Bool CLineModelSolveResult::GetBestRedshiftFromPdf( const CDataStore& store,
                 Float64 probaLog = logzpdf1d->valProbaLog[solIdx];
                 Log.LogDebug( "GetBestRedshiftFromPdf: z=%f : probalog = %f", zInCandidateRange, probaLog);
 
+                CPdfz pdfz;
+                Float64 Fullwidth = 1e-2;
+                Float64 gauss_amp = -1;
+                Float64 gauss_amp_err = -1;
+                Float64 gauss_width = -1;
+                Float64 gauss_width_err = -1;
+                Float64 gauss_integral = -1;
+                Int32 retGaussFit = pdfz.getCandidateRobustGaussFit( logzpdf1d->Redshifts, logzpdf1d->valProbaLog, redshift, Fullwidth, gauss_amp, gauss_amp_err, gauss_width, gauss_width_err);
+                if(retGaussFit==0)
+                {
+                    gauss_integral = gauss_amp*gauss_width*sqrt(2*M_PI);
+                }else{
+                    gauss_integral = -1;
+                }
+
                 Float64 merit = lineModelResult->ChiSquare[solIdx];
                 //if( merit < tmpMerit )
-                if(probaLog>tmpProbaLog)
+                //if(probaLog>tmpProbaLog)
+                if(gauss_integral>tmpIntgProba)
                 {
+                    tmpIntgProba = gauss_integral;
                     tmpProbaLog = probaLog;
                     tmpMerit = merit;
                     tmpRedshift = zInCandidateRange;//lineModelResult->ExtremaResult.ExtremaLastPass[i];
@@ -231,19 +249,7 @@ Bool CLineModelSolveResult::GetBestRedshiftFromPdf( const CDataStore& store,
     //option 2.
     //merit = tmpProbaLog;
     //option 3
-    CPdfz pdfz;
-    Float64 Fullwidth = 1e-2;
-    Float64 gauss_amp = -1;
-    Float64 gauss_amp_err = -1;
-    Float64 gauss_width = -1;
-    Float64 gauss_width_err = -1;
-    Float64 gauss_integral = -1;
-    Int32 retGaussFit = pdfz.getCandidateGaussFit( logzpdf1d->Redshifts, logzpdf1d->valProbaLog, redshift, Fullwidth, gauss_amp, gauss_amp_err, gauss_width, gauss_width_err);
-    if(retGaussFit==0)
-    {
-        gauss_integral = gauss_amp*gauss_width*sqrt(2*M_PI);
-    }
-    merit = gauss_integral;
+    merit = tmpIntgProba;
 
     sigma = tmpSigma;
     snrHa = tmpSnrHa;

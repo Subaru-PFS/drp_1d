@@ -59,10 +59,12 @@ Int32 CPdfCandidateszResult::Compute( std::vector<Float64> zc,  std::vector<Floa
             ValSumProba[kc] = pdfz.getCandidateSumTrapez( Pdfz, PdfProbalog, zc[kc], Fullwidth);
         }else
         {
-            Int32 retGaussFit = pdfz.getCandidateGaussFit( Pdfz, PdfProbalog, zc[kc], Fullwidth, GaussAmp[kc], GaussAmpErr[kc], GaussSigma[kc], GaussSigmaErr[kc]);
+            Int32 retGaussFit = pdfz.getCandidateRobustGaussFit( Pdfz, PdfProbalog, zc[kc], Fullwidth, GaussAmp[kc], GaussAmpErr[kc], GaussSigma[kc], GaussSigmaErr[kc]);
             if(retGaussFit==0)
             {
                 ValSumProba[kc] = GaussAmp[kc]*GaussSigma[kc]*sqrt(2*M_PI);
+            }else{
+                ValSumProba[kc] = -1.;
             }
         }
     }
