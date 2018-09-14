@@ -326,7 +326,7 @@ Int32 CLineModelSolve::CombinePDF(std::shared_ptr<const CLineModelResult> result
         Log.LogInfo("Linemodel: Pdfz computation: StrongLinePresence prior disabled");
     }
     //hardcoded Euclid-NHaZprior parameter
-    bool zPriorEuclidNHa = false;
+    bool zPriorEuclidNHa = true;
     if(zPriorEuclidNHa)
     {
         Log.LogInfo("Linemodel: Pdfz computation: EuclidNHa prior enabled");
