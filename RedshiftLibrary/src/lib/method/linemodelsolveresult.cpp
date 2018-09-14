@@ -227,8 +227,8 @@ Bool CLineModelSolveResult::GetBestRedshiftFromPdf( const CDataStore& store,
 
                 Float64 merit = lineModelResult->ChiSquare[solIdx];
                 //if( merit < tmpMerit )
-                //if(probaLog>tmpProbaLog)
-                if(gauss_integral>tmpIntgProba)
+                if(probaLog>tmpProbaLog)
+                //if(gauss_integral>tmpIntgProba)
                 {
                     tmpIntgProba = gauss_integral;
                     tmpProbaLog = probaLog;
