@@ -217,7 +217,7 @@ Bool CLineModelSolveResult::GetBestRedshiftFromPdf( const CDataStore& store,
                 Float64 gauss_width = -1;
                 Float64 gauss_width_err = -1;
                 Float64 gauss_integral = -1;
-                Int32 retGaussFit = pdfz.getCandidateRobustGaussFit( logzpdf1d->Redshifts, logzpdf1d->valProbaLog, redshift, Fullwidth, gauss_amp, gauss_amp_err, gauss_width, gauss_width_err);
+                Int32 retGaussFit = pdfz.getCandidateRobustGaussFit( logzpdf1d->Redshifts, logzpdf1d->valProbaLog, zInCandidateRange, Fullwidth, gauss_amp, gauss_amp_err, gauss_width, gauss_width_err);
                 if(retGaussFit==0)
                 {
                     gauss_integral = gauss_amp*gauss_width*sqrt(2*M_PI);

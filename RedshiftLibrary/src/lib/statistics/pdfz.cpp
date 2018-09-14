@@ -523,11 +523,11 @@ Int32 CPdfz::getCandidateRobustGaussFit(std::vector<Float64> redshifts,
         {
             fitSuccessful=true;
         }else{
-            Log.LogInfo("    CPdfz::getCandidateRobustGaussFit - iTry=%d", iTry);
-            Log.LogInfo("    CPdfz::getCandidateRobustGaussFit - for zcandidate=%.5f", zcandidate);
-            Log.LogInfo("    CPdfz::getCandidateRobustGaussFit - found gaussAmp=%e", gaussAmp);
-            Log.LogInfo("    CPdfz::getCandidateRobustGaussFit - found gaussSigma=%e", gaussSigma);
-            Log.LogInfo("    CPdfz::getCandidateRobustGaussFit - Going to retry w. different parameters", gaussSigma);
+            Log.LogDetail("    CPdfz::getCandidateRobustGaussFit - iTry=%d", iTry);
+            Log.LogDetail("    CPdfz::getCandidateRobustGaussFit -    for zcandidate=%.5f", zcandidate);
+            Log.LogDetail("    CPdfz::getCandidateRobustGaussFit -       found gaussAmp=%e", gaussAmp);
+            Log.LogDetail("    CPdfz::getCandidateRobustGaussFit -       found gaussSigma=%e", gaussSigma);
+            Log.LogDetail("    CPdfz::getCandidateRobustGaussFit -       now going to retry w. different parameters", gaussSigma);
         }
         current_zwidth /= 2.0;
         iTry++;
