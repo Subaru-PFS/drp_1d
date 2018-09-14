@@ -36,7 +36,7 @@ class CLineModelElementList
 public:
 
     CLineModelElementList(const CSpectrum& spectrum,
-                          const CSpectrum& spectrumNoContinuum,
+                          const CSpectrum& spectrumContinuum,
                           const CTemplateCatalog& tplCatalog,
                           const TStringList& tplCategoryList,
                           const std::string calibrationPath,

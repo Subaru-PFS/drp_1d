@@ -231,21 +231,27 @@ void CSpectrum::SetName( const char* name )
 const Bool CSpectrum::IsFluxValid( Float64 LambdaMin,  Float64 LambdaMax ) const
 {
     Bool allzero=true;
+    Bool atleastOneInvalidValue = false;
 
     const Float64* flux = m_FluxAxis.GetSamples();
     Int32 iMin = m_SpectralAxis.GetIndexAtWaveLength(LambdaMin);
     Int32 iMax = m_SpectralAxis.GetIndexAtWaveLength(LambdaMax);
+    Log.LogDetail( "CSpectrum::IsFluxValid - checking on the configured lambdarange = (%f, %f)", LambdaMin, LambdaMax );
+    Log.LogDetail( "CSpectrum::IsFluxValid - checking on the true observed spectral axis lambdarange = (%f, %f)", m_SpectralAxis[iMin], m_SpectralAxis[iMax] );
     for(Int32 i=iMin; i<iMax; i++){
 
         //check flux
         if( isnan(flux[i]) ){
-            continue;
+            atleastOneInvalidValue = true;
+            Log.LogDebug("    CSpectrum::IsFluxValid - Found nan flux value (=%e) at index=%d", i, flux[i]);
         }
         if( isinf(flux[i]) ){
-            continue;
+            atleastOneInvalidValue = true;
+            Log.LogDebug("    CSpectrum::IsFluxValid - Found inf flux value (=%e) at index=%d", i, flux[i]);
         }
         if( flux[i] != flux[i] ){
-            continue;
+            atleastOneInvalidValue = true;
+            Log.LogDebug("    CSpectrum::IsFluxValid - Found invalid flux value (=%e) at index=%d", i, flux[i]);
         }
 
         //all zero check
@@ -254,7 +260,7 @@ const Bool CSpectrum::IsFluxValid( Float64 LambdaMin,  Float64 LambdaMax ) const
             //Log.LogDebug("    CSpectrum::IsFluxValid - Found non zero and valid flux value (=%e) at index=%d", i, flux[i]);
         }
     }
-    Bool valid = !allzero;
+    Bool valid = !allzero && !atleastOneInvalidValue;
     return valid;
 }
 

@@ -605,7 +605,6 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
     CSpectrumFluxAxis& sfluxAxisPtr = _spcContinuum.GetFluxAxis();
     sfluxAxisPtr = spcfluxAxis;
 
-
     //    //Hack: load the simulated true-velocities
     //    if(false)
     //    {
@@ -636,6 +635,31 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
     if(m_opt_continuumcomponent=="tplfit"){
         linemodel.m_opt_tplfit_dustFit = Int32(m_opt_tplfit_dustfit=="yes");
         linemodel.m_opt_tplfit_extinction = Int32(m_opt_tplfit_igmfit=="yes");
+    }
+
+    if(m_opt_continuumcomponent=="fromspectrum"){
+        //check the continuum validity
+        if( !_spcContinuum.IsFluxValid( lambdaRange.GetBegin(), lambdaRange.GetEnd() ) ){
+            Log.LogError("Line Model - Failed to validate continuum spectrum flux on wavelength range (%.1f ; %.1f)",lambdaRange.GetBegin(), lambdaRange.GetEnd() );
+            throw std::runtime_error("Failed to validate continuum  flux");
+        }else{
+            Log.LogDetail( "Line Model - Successfully validated continuum flux on wavelength range (%.1f ; %.1f)", lambdaRange.GetBegin(), lambdaRange.GetEnd() );
+        }
+
+        /*
+        //check the continuum flux axis
+        const CSpectrumSpectralAxis& contspectralAxis = _spcContinuum.GetSpectralAxis();
+        const CSpectrumFluxAxis& contfluxAxis = _spcContinuum.GetFluxAxis();
+        for(Int32 j=0; j<contfluxAxis.GetSamplesCount(); j++)
+        {
+            if(isnan(contfluxAxis[j]))
+            {
+                Log.LogError( "Linemodelsolve(): NaN value found for the ContinuumFluxAxis at lambda=%f", contspectralAxis[j] );
+                throw runtime_error("Linemodelsolve() NaN value found");
+                break;
+            }
+        }
+        //*/
     }
 
     //**************************************************
@@ -699,8 +723,8 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
     Int32 retCandidates = linemodel.ComputeCandidates(m_opt_extremacount, 1, fvals);
     if( retCandidates!=0 )
     {
-        Log.LogError( "Line Model, compute z-candidates failed. Aborting" );
-        return false;
+        Log.LogError( "Linemodel: Search for z-candidates failed. Aborting" );
+        throw std::runtime_error("Linemodel: Search for z-candidates failed. Aborting");
     }
 
 

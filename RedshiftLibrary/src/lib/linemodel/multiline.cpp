@@ -168,6 +168,12 @@ TInt32Range CMultiLine::EstimateIndexRange(Int32 subeIdx, const CSpectrumSpectra
     }
     supportRange.SetEnd(spectralAxis.GetIndexAtWaveLength(lambda_end));
 
+    //correct the end value if higher then lambdaRange end
+    //Log.LogDebug( "    multiline: spectralAxis[supportRange.GetEnd()] = %f", spectralAxis[supportRange.GetEnd()]);
+    if(spectralAxis[supportRange.GetEnd()]>lambdaRange.GetEnd())
+    {
+        supportRange.SetEnd(supportRange.GetEnd()-1);
+    }
     //correct the end value if not higher or equal to the begin value
     if(supportRange.GetEnd()<supportRange.GetBegin())
     {

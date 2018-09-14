@@ -523,11 +523,11 @@ Int32 CPdfz::getCandidateRobustGaussFit(std::vector<Float64> redshifts,
         {
             fitSuccessful=true;
         }else{
-            Log.LogDetail("    CPdfz::getCandidateRobustGaussFit - iTry=%d", iTry);
-            Log.LogDetail("    CPdfz::getCandidateRobustGaussFit -    for zcandidate=%.5f", zcandidate);
-            Log.LogDetail("    CPdfz::getCandidateRobustGaussFit -       found gaussAmp=%e", gaussAmp);
-            Log.LogDetail("    CPdfz::getCandidateRobustGaussFit -       found gaussSigma=%e", gaussSigma);
-            Log.LogDetail("    CPdfz::getCandidateRobustGaussFit -       now going to retry w. different parameters", gaussSigma);
+            Log.LogDebug("    CPdfz::getCandidateRobustGaussFit - iTry=%d", iTry);
+            Log.LogDebug("    CPdfz::getCandidateRobustGaussFit -    for zcandidate=%.5f", zcandidate);
+            Log.LogDebug("    CPdfz::getCandidateRobustGaussFit -       found gaussAmp=%e", gaussAmp);
+            Log.LogDebug("    CPdfz::getCandidateRobustGaussFit -       found gaussSigma=%e", gaussSigma);
+            Log.LogDebug("    CPdfz::getCandidateRobustGaussFit -       now going to retry w. different parameters", gaussSigma);
         }
         current_zwidth /= 2.0;
         iTry++;
@@ -812,10 +812,59 @@ std::vector<Float64> CPdfz::GetEuclidNhaLogZPrior(std::vector<Float64> redshifts
 {
     std::vector<Float64> zPrior(redshifts.size(), 0.0);
     Float64 aCoeff = 1.0;
+
+    Float64 maxP=-DBL_MAX;
+    Float64 minP=DBL_MAX;
     for(UInt32 kz=0; kz<redshifts.size(); kz++)
     {
-        zPrior[kz] = (1e-6)*( -3080.1*aCoeff*redshifts[kz]+15546.6 );
+        Float64 z = redshifts[kz];
+        Float64 z2 = z*z;
+        Float64 z3 = z2*z;
+        Float64 z4 = z3*z;
+        Float64 z5 = z4*z;
+        Float64 z6 = z5*z;
+
+        if(0)
+        {
+            zPrior[kz] = (1e-6)*( -3080.1*aCoeff*redshifts[kz]+15546.6 ); //smooth affine version of pozzetti model at FHa=1e-16
+        }else{
+            zPrior[kz] = (1.)*(- 54.7422088727874*z6
+                                 + 1203.94994364807*z5
+                                 - 10409.6716744981*z4
+                                 + 44240.3837462642*z3
+                                 - 92914.84430357*z2
+                                 + 79004.76406*z
+                                 - 2288.98457865 ); //poly reg pozzetti model at FHa=1e-16
+            if(zPrior[kz]<0){
+                zPrior[kz]=DBL_MIN;
+            }
+        }
+
+        if(zPrior[kz]>maxP)
+        {
+            maxP=zPrior[kz];
+        }
+        if(zPrior[kz]<minP)
+        {
+            minP=zPrior[kz];
+        }
     }
+
+    Log.LogDetail("Pdfz: zPrior: using HalphaZPrior min=%e", minP);
+    Log.LogDetail("Pdfz: zPrior: using HalphaZPrior max=%e", maxP);
+    Float64 dynamicCut = 1e4;
+    if(maxP>0)
+    {
+        for(UInt32 kz=0; kz<redshifts.size(); kz++)
+        {
+            zPrior[kz]/=maxP;
+            if(zPrior[kz]<1./dynamicCut)
+            {
+                zPrior[kz]=1./dynamicCut;
+            }
+        }
+    }
+
 
     Float64 sum = 0.0;
     for(UInt32 kz=0; kz<redshifts.size(); kz++)

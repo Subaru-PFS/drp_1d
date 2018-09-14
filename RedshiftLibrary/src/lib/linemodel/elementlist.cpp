@@ -197,6 +197,20 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
         LoadCatalogTwoMultilinesAE(restRayList);
     }
     LogCatalogInfos();
+
+    /*
+    //check the continuum flux axis
+    const CSpectrumSpectralAxis& spectralAxis = m_SpectrumModel->GetSpectralAxis();
+    for(Int32 j=0; j<m_ContinuumFluxAxis.GetSamplesCount(); j++)
+    {
+        if(isnan(m_ContinuumFluxAxis[j]))
+        {
+            Log.LogError( "CLineModelElementList(): NaN value found for the ContinuumFluxAxis at lambda=%f", spectralAxis[j] );
+            throw runtime_error("CLineModelElementList() NaN value found");
+            break;
+        }
+    }
+    */
 }
 
 /**
@@ -1943,6 +1957,21 @@ void CLineModelElementList::SetAbsLinesLimit(Float64 limit)
 void CLineModelElementList::reinitModel()
 {
     CSpectrumFluxAxis& modelFluxAxis = m_SpectrumModel->GetFluxAxis();
+
+    /*
+    //check the continuum flux axis
+    const CSpectrumSpectralAxis& spectralAxis = m_SpectrumModel->GetSpectralAxis();
+    for(Int32 j=0; j<m_ContinuumFluxAxis.GetSamplesCount(); j++)
+    {
+        if(isnan(m_ContinuumFluxAxis[j]))
+        {
+            Log.LogError( "CLineModelElementList::reinitModel: NaN value found for the ContinuumFluxAxis at lambda=%f", spectralAxis[j] );
+            throw runtime_error("CLineModelElementList::reinitModel: NaN value found");
+            break;
+        }
+    }
+    */
+
     //init spectrum model with continuum
     for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
     {
@@ -1972,10 +2001,28 @@ void CLineModelElementList::reinitModelUnderElements(std::vector<Int32>  filterE
  **/
 void CLineModelElementList::refreshModel(Int32 lineTypeFilter)
 {
-    reinitModel();
+    reinitModel();    
 
     const CSpectrumSpectralAxis& spectralAxis = m_SpectrumModel->GetSpectralAxis();
     CSpectrumFluxAxis& modelFluxAxis = m_SpectrumModel->GetFluxAxis();
+
+    /*
+    //check the model reinited for nan values
+    Int32 imin = spectralAxis.GetIndexAtWaveLength(12500.);
+    Int32 imax = spectralAxis.GetIndexAtWaveLength(18500.);
+    //Int32 imin = 0;
+    //Int32 imax = modelFluxAxis.GetSamplesCount();
+
+    for(Int32 j=imin; j<imax; j++)
+    {
+        if(isnan(modelFluxAxis[j]))
+        {
+            Log.LogError( "CLineModelElementList::refreshModel: NaN value found for the reinited model spectrum at lambda=%f", spectralAxis[j] );
+            throw runtime_error("CLineModelElementList::refreshModel: NaN value found");
+            break;
+        }
+    }
+    //*/
 
     /*
     CSpectrumFluxAxis contFluxAxisWithAmpOffset = CSpectrumFluxAxis(m_ContinuumFluxAxis.GetSamplesCount());
@@ -1999,6 +2046,25 @@ void CLineModelElementList::refreshModel(Int32 lineTypeFilter)
         {
             m_Elements[iElts]->addToSpectrumModel(spectralAxis, modelFluxAxis, m_ContinuumFluxAxis, m_Redshift);
         }
+
+        /*
+        //check the model for nan values
+        Int32 imin = spectralAxis.GetIndexAtWaveLength(12500.);
+        Int32 imax = spectralAxis.GetIndexAtWaveLength(18500.);
+        //Int32 imin = 0;
+        //Int32 imax = modelFluxAxis.GetSamplesCount();
+
+        for(Int32 j=imin; j<imax; j++)
+        {
+            if(isnan(modelFluxAxis[j]))
+            {
+                Log.LogError( "CLineModelElementList::refreshModel: NaN value found for the model spectrum at lambda=%f", spectralAxis[j] );
+                Log.LogError( "CLineModelElementList::refreshModel: NaN value found for the model spectrum when added line %d (nElts=%d)", iElts, m_Elements.size() );
+                throw runtime_error("CLineModelElementList::refreshModel: NaN value found");
+                break;
+            }
+        }
+        //*/
     }
 
 }
@@ -3792,6 +3858,36 @@ Float64 CLineModelElementList::getLeastSquareMerit(const TFloat64Range& lambdaRa
         //        }
     }
     Log.LogDebug( "CLineModelElementList::getLeastSquareMerit fit = %f", fit );
+    if(isnan(fit))
+    {
+        Log.LogError( "CLineModelElementList::getLeastSquareMerit: NaN value found on the lambdarange = (%f, %f)", lambdaRange.GetBegin(), lambdaRange.GetEnd() );
+        Log.LogError( "CLineModelElementList::getLeastSquareMerit: NaN value found on the true observed spectral axis lambdarange = (%f, %f)", spcSpectralAxis[imin], spcSpectralAxis[imax] );
+        for(Int32 j=imin; j<imax; j++)
+        {
+            if(isnan(Yspc[j]))
+            {
+                Log.LogError( "CLineModelElementList::getLeastSquareMerit: NaN value found for the observed spectrum at lambda=%f", spcSpectralAxis[j] );
+                break;
+            }
+            if(isnan(Ymodel[j]))
+            {
+                Log.LogError( "CLineModelElementList::getLeastSquareMerit: NaN value found for the model at lambda=%f", spcSpectralAxis[j] );
+                break;
+            }
+
+            if(isnan(m_ErrorNoContinuum[j]))
+            {
+                Log.LogError( "CLineModelElementList::getLeastSquareMerit: NaN value found for the sqrt(variance) at lambda=%f", spcSpectralAxis[j] );
+                break;
+            }
+            if(m_ErrorNoContinuum[j]==0.0)
+            {
+                Log.LogError( "CLineModelElementList::getLeastSquareMerit: 0 value found for the sqrt(variance) at lambda=%f", spcSpectralAxis[j] );
+                break;
+            }
+        }
+        throw runtime_error("CLineModelElementList::getLeastSquareMerit: NaN value found");
+    }
     return fit;
 }
 
