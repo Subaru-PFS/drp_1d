@@ -3,6 +3,7 @@
 
 #include <RedshiftLibrary/spectrum/spectrum.h>
 #include <RedshiftLibrary/spectrum/axis.h>
+#include <limits>
 
 
 using namespace NSEpic;
@@ -34,7 +35,7 @@ Bool CSpectrumIOFitsReader::Read2( fitsfile* fptr, CSpectrum& spectrum )
     Int32 length = 0;
     Int32 hdunum = 2;
     Int32 hdutype = 0;
-    Int32 nullval = 0;
+    Float64 nullval = std::numeric_limits<Float64>::quiet_NaN();
     Int32 anynul = 0;
 
     // Move to second hdu

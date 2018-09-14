@@ -222,16 +222,16 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
         const Float64 lmin = spcLambdaRange.GetBegin();
         const Float64 lmax = spcLambdaRange.GetEnd();
         if( !ctx.GetSpectrum().IsFluxValid( lmin, lmax ) ){
-	  Log.LogError("Failed to validate spectrum flux: %s, on wavelength range (%.1f ; %.1f)",
-			  ctx.GetSpectrum().GetName().c_str(), lmin, lmax );
-	  throw std::runtime_error("Failed to validate spectrum flux");
+            Log.LogError("Failed to validate spectrum flux: %s, on wavelength range (%.1f ; %.1f)",
+                         ctx.GetSpectrum().GetName().c_str(), lmin, lmax );
+            throw std::runtime_error("Failed to validate spectrum flux");
         }else{
             Log.LogDetail( "Successfully validated spectrum flux: %s, on wavelength range (%.1f ; %.1f)", ctx.GetSpectrum().GetName().c_str(), lmin, lmax );
         }
         if( !ctx.GetSpectrum().IsNoiseValid( lmin, lmax ) ){
-	  Log.LogError("Failed to validate noise from spectrum: %s, on wavelength range (%.1f ; %.1f)",
-		       ctx.GetSpectrum().GetName().c_str(), lmin, lmax );
-	  throw std::runtime_error("Failed to validate noise from spectrum");
+            Log.LogError("Failed to validate noise from spectrum: %s, on wavelength range (%.1f ; %.1f)",
+                         ctx.GetSpectrum().GetName().c_str(), lmin, lmax );
+            throw std::runtime_error("Failed to validate noise from spectrum");
         }else{
             Log.LogDetail( "Successfully validated noise from spectrum: %s, on wavelength range (%.1f ; %.1f)", ctx.GetSpectrum().GetName().c_str(), lmin, lmax );
         }
