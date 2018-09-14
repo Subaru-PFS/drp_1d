@@ -188,7 +188,8 @@ void CSpectrumIOFitsReader::Read( const char* filePath, CSpectrum& spectrum )
                 if( !Read1( fptr, spectrum ) )
 		  {
 		    fits_close_file( fptr, &status );
-		    throw string("error in Read1 : ") + filePath;
+		    Log.LogError("error in Read1 : %s", filePath);
+		    throw runtime_error("error in Read1");
 		  }
             }
             else if( hdunum == 2 )
@@ -197,23 +198,27 @@ void CSpectrumIOFitsReader::Read( const char* filePath, CSpectrum& spectrum )
                 if( !Read2( fptr, spectrum ) )
 		  {
 		    fits_close_file( fptr, &status );
-		    throw string("error in Read2 : ") + filePath;
+		    Log.LogError("error in Read2 : %s", filePath);
+		    throw runtime_error("error in Read2 ");
 		  }
             }
             else
             {
 	      fits_close_file( fptr, &status );
-	      throw string("bad hdu count in ") + filePath;
+	      Log.LogError("bad hdu count : %s", filePath);
+	      throw runtime_error("bad hdu count");
             }
         } else {
 	  fits_close_file( fptr, &status );
-	  throw string("bad hdu count in ") + filePath;
+	  Log.LogError("bad hdu count : %s", filePath);
+	  throw runtime_error("bad hdu count");
 	}
     }
     else
     {
       fits_close_file( fptr, &status );
-      throw string("error opening fits file : ") + filePath;
+      Log.LogError("error opening fits file : %s", filePath);
+      throw runtime_error("error opening fits file");
     }
     fits_close_file( fptr, &status );
 }

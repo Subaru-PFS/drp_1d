@@ -110,7 +110,9 @@ bool CProcessFlowContext::Init( std::shared_ptr<CSpectrum> spectrum,
         bool ret = m_SpectrumWithoutContinuum->RemoveContinuum( continuum );
         if( !ret ) //doesn't seem to work. TODO: check that the df errors lead to a ret=false value
         {
-	  throw string("Failed to apply continuum substraction for spectrum: %s") + m_Spectrum->GetName();
+	  Log.LogError("Failed to apply continuum substraction for spectrum: %s",
+			  m_Spectrum->GetName());
+	  throw runtime_error("Failed to apply continuum substraction");
         }
     }else if( medianRemovalMethod== "raw")
     {

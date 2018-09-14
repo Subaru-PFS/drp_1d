@@ -320,16 +320,8 @@ Bool CSpectrumFluxAxis::RebinVarianceWeighted( const CSpectrumFluxAxis& sourceFl
     Float64* Errrebin = rebinedError.GetSamples();
     Float64* Xrebin = rebinedSpectralAxis.GetSamples();
 
-    // Move cursors up to lambda range start
-    Int32 j = 0;
-    while( j<targetSpectralAxis.GetSamplesCount() && Xtgt[j] < currentRange.GetBegin() )
-    {
-        Yrebin[j] = 0.0;
-        j++;
-    }
-
-
     if(opt_interp=="lin"){
+        Int32 j = 0;
         Int32 k = 0;
         Float64 t = 0.0;
         //Float64 varianceCompensation=1.;
@@ -374,12 +366,6 @@ Bool CSpectrumFluxAxis::RebinVarianceWeighted( const CSpectrumFluxAxis& sourceFl
 
             k++;
         }
-    }
-
-    while( j < targetSpectralAxis.GetSamplesCount() )
-    {
-        Yrebin[j] = 0.0;
-        j++;
     }
 
     return true;

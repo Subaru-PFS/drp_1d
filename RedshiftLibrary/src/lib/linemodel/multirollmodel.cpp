@@ -11,6 +11,7 @@
 
 namespace bfs = boost::filesystem;
 using namespace NSEpic;
+using namespace std;
 
 /**
  * \brief Constructor.
@@ -939,7 +940,7 @@ CMask CMultiRollModel::getOutsideLinesMask()
     }
     else
     {
-      throw std::runtime_error("getOutsideLinesMask: Invalid size");
+      throw runtime_error("getOutsideLinesMask: Invalid size");
     }
 }
 

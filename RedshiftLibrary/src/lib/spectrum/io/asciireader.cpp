@@ -39,7 +39,8 @@ void CSpectrumIOAsciiReader::Read( const char* filePath, CSpectrum& spectrum )
   Log.LogDebug ( "Parsing ASCII file %s.", filePath );
   if( !bfs::exists( filePath ) )
     {
-      throw string("Read: Path for spectrum file does not exist. :") + filePath;
+      Log.LogError("Read: Path for spectrum file does not exist. : %s", filePath);
+      throw runtime_error("Read: Path for spectrum file does not exist");
     }
 
   bfs::ifstream file;
@@ -47,13 +48,15 @@ void CSpectrumIOAsciiReader::Read( const char* filePath, CSpectrum& spectrum )
 
   if( !IsAsciiDataFile( file ) )
     {
-      throw string("Read: file is not ASCII :") + filePath;
+      Log.LogError("Read: file is not ASCII : %s", filePath);
+      throw runtime_error("Read: file is not ASCII");
     }
 
   Int32 length = GetAsciiDataLength( file );
   if( length == -1 )
     {
-      throw string("Read: file length == -1 :") + filePath;
+      Log.LogError("Read: file length == -1 : %s", filePath);
+      throw runtime_error("Read: file length == -1");
     }
 
   CSpectrumAxis& spcFluxAxis = spectrum.GetFluxAxis();
