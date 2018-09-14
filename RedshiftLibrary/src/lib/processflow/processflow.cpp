@@ -196,6 +196,12 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
 
     //************************************
     Bool enableInputSpcCorrect = true;
+    std::string enableInputSpcCorrectStr;
+    ctx.GetParameterStore().Get( "autocorrectinput", enableInputSpcCorrectStr, "no" );
+    if(enableInputSpcCorrectStr!="yes")
+    {
+        enableInputSpcCorrect=false;
+    }
     if(methodName  == "reliability" )
     {
         enableInputSpcCorrect = false;

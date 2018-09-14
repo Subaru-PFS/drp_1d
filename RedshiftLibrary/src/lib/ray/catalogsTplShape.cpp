@@ -124,7 +124,7 @@ Bool CRayCatalogsTplShape::Load( const char* dirPath )
         }
       }
     }else{
-        Log.LogError( "    CatalogsTplShape - ERROR - unable to find priors directory");
+        Log.LogWarning("    CatalogsTplShape - ERROR - unable to find priors directory");
     }
     Log.LogInfo( "    CatalogsTplShape - Found %d tplshaped priors files", tplshapePriorsList.size());
 
@@ -195,7 +195,7 @@ Bool CRayCatalogsTplShape::Load( const char* dirPath )
 
         if(kprior<0 || !successLoadPriors)
         {
-            Log.LogError( "    CatalogsTplShape - Failed to match tplshape-catalog with tplshape-prior files: %s", tplname.c_str());
+            Log.LogWarning( "    CatalogsTplShape - Failed to match tplshape-catalog with tplshape-prior files: %s", tplname.c_str());
             successLoadPriors=false;
         }
         if(successLoadPriors)
@@ -213,7 +213,7 @@ Bool CRayCatalogsTplShape::Load( const char* dirPath )
     if(!successLoadPriors) //if not all priors were successfully loaded, replace by cst prior
     {
         Float64 priorCST = 1./(Float64)(tplshapeCatalogList.size());
-        Log.LogError( "    CatalogsTplShape - Failed to load tplshape prior, USING constant priors instead ! (p=%f)", priorCST);
+        Log.LogWarning( "    CatalogsTplShape - Failed to load tplshape prior, USING constant priors instead ! (p=%f)", priorCST);
         for(Int32 k=0; k<tplshapeCatalogList.size(); k++)
         {
             m_Priors[k] = priorCST;
