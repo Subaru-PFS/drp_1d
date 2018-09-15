@@ -26,6 +26,7 @@ public:
 
     void Resize(Int32 n);
     Int32 Compute(std::vector<Float64> zc , std::vector<Float64> Pdfz, std::vector<Float64> PdfProbalog);
+    void SetFullWidth(Float64 width);
 
 
     Int32                       optMethod; //0: direct integration, 1:gaussian fit

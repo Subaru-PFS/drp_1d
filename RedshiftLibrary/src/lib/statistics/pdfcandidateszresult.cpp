@@ -73,6 +73,10 @@ Int32 CPdfCandidateszResult::Compute( std::vector<Float64> zc,  std::vector<Floa
     return 0;
 }
 
+void CPdfCandidateszResult::SetFullWidth(Float64 width)
+{
+    Fullwidth = width;
+}
 
 void CPdfCandidateszResult::Save( const CDataStore& store, std::ostream& stream ) const
 {

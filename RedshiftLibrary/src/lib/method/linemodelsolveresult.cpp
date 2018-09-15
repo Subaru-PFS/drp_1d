@@ -211,26 +211,33 @@ Bool CLineModelSolveResult::GetBestRedshiftFromPdf( const CDataStore& store,
                 Log.LogDebug( "GetBestRedshiftFromPdf: z=%f : probalog = %f", zInCandidateRange, probaLog);
 
                 CPdfz pdfz;
-                Float64 Fullwidth = 1e-2;
-                Float64 gauss_amp = -1;
-                Float64 gauss_amp_err = -1;
-                Float64 gauss_width = -1;
-                Float64 gauss_width_err = -1;
-                Float64 gauss_integral = -1;
-                Int32 retGaussFit = pdfz.getCandidateRobustGaussFit( logzpdf1d->Redshifts, logzpdf1d->valProbaLog, zInCandidateRange, Fullwidth, gauss_amp, gauss_amp_err, gauss_width, gauss_width_err);
-                if(retGaussFit==0)
+                Int32 method=0;
+                Float64 flux_integral = -1;
+                if(method==1)
                 {
-                    gauss_integral = gauss_amp*gauss_width*sqrt(2*M_PI);
+                    Float64 gauss_amp = -1;
+                    Float64 gauss_amp_err = -1;
+                    Float64 gauss_width = -1;
+                    Float64 gauss_width_err = -1;
+                    Float64 Fullwidth = 1e-2;
+                    Int32 retGaussFit = pdfz.getCandidateRobustGaussFit( logzpdf1d->Redshifts, logzpdf1d->valProbaLog, zInCandidateRange, Fullwidth, gauss_amp, gauss_amp_err, gauss_width, gauss_width_err);
+                    if(retGaussFit==0)
+                    {
+                        flux_integral = gauss_amp*gauss_width*sqrt(2*M_PI);
+                    }else{
+                        flux_integral = -1;
+                    }
                 }else{
-                    gauss_integral = -1;
+                    Float64 Fullwidth = 6e-3;
+                    flux_integral = pdfz.getCandidateSumTrapez( logzpdf1d->Redshifts, logzpdf1d->valProbaLog, zInCandidateRange, Fullwidth);
                 }
 
                 Float64 merit = lineModelResult->ChiSquare[solIdx];
                 //if( merit < tmpMerit )
                 if(probaLog>tmpProbaLog)
-                //if(gauss_integral>tmpIntgProba)
+                //if(flux_integral>tmpIntgProba)
                 {
-                    tmpIntgProba = gauss_integral;
+                    tmpIntgProba = flux_integral;
                     tmpProbaLog = probaLog;
                     tmpMerit = merit;
                     tmpRedshift = zInCandidateRange;//lineModelResult->ExtremaResult.ExtremaLastPass[i];

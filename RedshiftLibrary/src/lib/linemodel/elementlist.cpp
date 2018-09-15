@@ -3858,24 +3858,24 @@ Float64 CLineModelElementList::getLeastSquareMerit(const TFloat64Range& lambdaRa
         //        }
     }
     Log.LogDebug( "CLineModelElementList::getLeastSquareMerit fit = %f", fit );
-    if(isnan(fit))
+    if(std::isnan(fit))
     {
         Log.LogError( "CLineModelElementList::getLeastSquareMerit: NaN value found on the lambdarange = (%f, %f)", lambdaRange.GetBegin(), lambdaRange.GetEnd() );
         Log.LogError( "CLineModelElementList::getLeastSquareMerit: NaN value found on the true observed spectral axis lambdarange = (%f, %f)", spcSpectralAxis[imin], spcSpectralAxis[imax] );
         for(Int32 j=imin; j<imax; j++)
         {
-            if(isnan(Yspc[j]))
+            if(std::isnan(Yspc[j]))
             {
                 Log.LogError( "CLineModelElementList::getLeastSquareMerit: NaN value found for the observed spectrum at lambda=%f", spcSpectralAxis[j] );
                 break;
             }
-            if(isnan(Ymodel[j]))
+            if(std::isnan(Ymodel[j]))
             {
                 Log.LogError( "CLineModelElementList::getLeastSquareMerit: NaN value found for the model at lambda=%f", spcSpectralAxis[j] );
                 break;
             }
 
-            if(isnan(m_ErrorNoContinuum[j]))
+            if(std::isnan(m_ErrorNoContinuum[j]))
             {
                 Log.LogError( "CLineModelElementList::getLeastSquareMerit: NaN value found for the sqrt(variance) at lambda=%f", spcSpectralAxis[j] );
                 break;
