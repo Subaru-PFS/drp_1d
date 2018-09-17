@@ -144,7 +144,7 @@ Bool CContinuumIrregularSamplingMedian::RemoveContinuum( const CSpectrum& s, CSp
 Bool CContinuumIrregularSamplingMedian::ProcessRemoveContinuum( const CSpectrum& s, CSpectrumFluxAxis& noContinuumFluxAxis, Float64 resolution )
 {
     Int32 k0 = 0;
-    Int32 k1 = 0;
+    UInt32 k1 = 0;
     Int32 nd;
 
     Int32 nreflex, nbig;
@@ -281,7 +281,7 @@ Bool CContinuumIrregularSamplingMedian::ProcessRemoveContinuum( const CSpectrum&
         //estimate lin fit border values for odd reflex robustness
         //begin
         const CSpectrumSpectralAxis& spectralAxis = s.GetSpectralAxis();
-        Int32 kBeginSup = k0+nreflex;
+        UInt32 kBeginSup = k0+nreflex;
         if(kBeginSup>k1){
             kBeginSup = k1;
         }

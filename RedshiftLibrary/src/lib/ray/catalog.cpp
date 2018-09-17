@@ -240,7 +240,7 @@ void CRayCatalog::Load( const char* filePath )
                     {
                         nominalAmplitude = lexical_cast<double>(*it);
                     }
-                    catch (bad_lexical_cast)
+                    catch (bad_lexical_cast&)
                     {
                         Log.LogError( "Unable to read nominal amplitude value from file, setting as default (1.0)." );
                         nominalAmplitude = 1.0;

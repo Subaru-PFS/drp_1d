@@ -79,10 +79,8 @@ std::shared_ptr<CLineMatching2SolveResult> COperatorLineMatching2Solve::Compute(
 {
   Log.LogDebug ( "std::shared_ptr<const CLineMatching2SolveResult> COperatorLineMatching2Solve::Compute( CDataStore& resultStore, const CSpectrum& spc, const TFloat64Range& lambdaRange, const TFloat64Range& redshiftsRange, Float64 redshiftStep, const CRayCatalog& restRayCatalog )" );
 
-  Int32 disablegaussianfitqualitycheck_value;
   Int32 lineType = CRay::nType_Emission;
   std::string linetypeStr = "E";
-  Bool storeResult = false;
 
   CDataStore::CAutoScope resultScope ( resultStore, "linematching2solve" );
 

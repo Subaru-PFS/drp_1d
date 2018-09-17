@@ -658,7 +658,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
     Log.LogInfo("===============================================");
     Float64 stellarEvidence=-DBL_MAX;
     Float64 galaxyEvidence=-DBL_MAX;
-    Int32 retGalaxyEv = mResult->GetEvidenceFromPdf(ctx.GetDataStore(), galaxyEvidence);
+    mResult->GetEvidenceFromPdf(ctx.GetDataStore(), galaxyEvidence);
     Log.LogInfo( "Found galaxy evidence: %e", galaxyEvidence);
     std::string typeLabel = "G";
     if(enableStarFitting=="yes"){
@@ -804,7 +804,7 @@ Int32 CProcessFlow::getValueFromRefFile( const char* filePath, std::string spcid
                     zref = lexical_cast<double>(*it);
                     return true;
                 }
-                catch (bad_lexical_cast)
+                catch (bad_lexical_cast&)
                 {
                     zref = 0.0;
                     return false;

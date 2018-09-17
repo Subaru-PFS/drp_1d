@@ -21,11 +21,8 @@ BOOST_AUTO_TEST_SUITE(Operator_Chisquare)
 
 void UtilChisquareTestFit( const char* spectraPath, const char* noisePath, const char* tplPath, bool disableMask, const Float64 targetFittedAmplitude )
 {
-    Bool retVal;
     CSpectrum spectrum;
     CTemplate _template;
-
-    Float64 z = 0.0;
 
     // Load spectrum and templates
     CSpectrumIOGenericReader reader;

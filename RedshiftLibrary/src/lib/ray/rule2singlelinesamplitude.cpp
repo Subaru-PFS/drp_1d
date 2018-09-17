@@ -23,6 +23,7 @@ void CRule2SingleLinesAmplitude::SetUp( Bool EnabledArgument, ... )
       std::string strTmp = boost::str( (boost::format("setup - linetype=%d, lineA=%s, lineB=%s") % m_LineType % m_LineA % m_LineB) );
       Logs.append(strTmp.c_str());
   }
+  va_end(Arguments);
 }
 
 /**
@@ -59,11 +60,8 @@ void CRule2SingleLinesAmplitude::Correct( CLineModelElementList& LineModelElemen
     }
   if( LineModelElementList.m_Elements[iA]->IsOutsideLambdaRange() == false )
     {
-      Float64 nSigma = 1.0;
       Float64 ampA = LineModelElementList.m_Elements[iA]->GetFittedAmplitude( 0 );
-      Float64 erA = LineModelElementList.m_Elements[iA]->GetFittedAmplitudeErrorSigma( 0 );
       Float64 ampB = LineModelElementList.m_Elements[iB]->GetFittedAmplitude( 0 );
-      Float64 erB = LineModelElementList.m_Elements[iB]->GetFittedAmplitudeErrorSigma( 0 );
 
       if( !(ampA<=0.0 && ampB<=0.0) )
       {

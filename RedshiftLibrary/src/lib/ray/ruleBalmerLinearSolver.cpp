@@ -16,8 +16,8 @@ void CRuleBalmerLinearSolver::SetUp( Bool EnabledArgument, ... )
 {
   Name = "balmerlinesolve";
   Enabled = EnabledArgument;
-  va_list Arguments;
-  va_start ( Arguments, EnabledArgument );
+  //va_list Arguments;
+  //va_start ( Arguments, EnabledArgument );
 }
 
 Bool CRuleBalmerLinearSolver::Check( CLineModelElementList& LineModelElementList )
@@ -189,9 +189,9 @@ void CRuleBalmerLinearSolver::Correct( CLineModelElementList& LineModelElementLi
                         Float64 ValidEcorrected = ampsE[i2];
 
                         Float64 overlap = 0.33;
-                        std::vector<Int32> indexesFitted;
-                        std::vector<Int32> EOverlapIdx = LineModelElementList.getOverlappingElements( iEltE[i2], indexesFitted, overlap );
-                        std::vector<Int32> EOverlapIdxA = LineModelElementList.getOverlappingElements( iEltA[i2], indexesFitted, overlap );
+                        std::vector<UInt32> indexesFitted;
+                        std::vector<UInt32> EOverlapIdx = LineModelElementList.getOverlappingElements( iEltE[i2], indexesFitted, overlap );
+                        std::vector<UInt32> EOverlapIdxA = LineModelElementList.getOverlappingElements( iEltA[i2], indexesFitted, overlap );
                         for(Int32 io=0; io<EOverlapIdxA.size(); io++)
                         {
                             EOverlapIdx.push_back(EOverlapIdxA[io]);
@@ -250,10 +250,10 @@ TFloat64List CRuleBalmerLinearSolver::BalmerModelLinSolve( std::vector<Float64> 
   //Linear fit
   int i, n;
   Float64 fval;
-  double yi, ei, chisq;
+  double chisq;
   gsl_matrix *X, *cov;
   gsl_vector *y, *w, *c;
-  
+
   n = lambdax.size();
   Int32 nddl = 4;
   if(n<nddl)
@@ -261,19 +261,20 @@ TFloat64List CRuleBalmerLinearSolver::BalmerModelLinSolve( std::vector<Float64> 
       TFloat64List empty;
       return empty;
     }
-  
+
   X = gsl_matrix_alloc (n, nddl);
   y = gsl_vector_alloc (n);
   w = gsl_vector_alloc (n);
-  
+
   c = gsl_vector_alloc (nddl);
   cov = gsl_matrix_alloc (nddl, nddl);
-  
+
   for (i = 0; i < n; i++)
     {
+      double yi, ei;
       yi = datax[i];
       ei = errdatax[i];
-      
+
       for (Int32 iddl = 0; iddl < nddl; iddl++)
         {
 	  if( iddl==0 )
@@ -297,13 +298,13 @@ TFloat64List CRuleBalmerLinearSolver::BalmerModelLinSolve( std::vector<Float64> 
       gsl_vector_set (y, i, yi);
       gsl_vector_set (w, i, 1.0/(ei*ei));
     }
-  
+
   {
     gsl_multifit_linear_workspace * work = gsl_multifit_linear_alloc (n, nddl);
     gsl_multifit_wlinear (X, w, y, c, cov, &chisq, work);
     gsl_multifit_linear_free (work);
   }
-  
+
 #define C(i) (gsl_vector_get(c,(i)))
 #define COV(i,j) (gsl_matrix_get(cov,(i),(j)))
   if(1)
@@ -317,19 +318,19 @@ TFloat64List CRuleBalmerLinearSolver::BalmerModelLinSolve( std::vector<Float64> 
       Log.LogDebug( "  %+.5e, %+.5e, %+.5e ]\n", COV(2,0), COV(2,1), COV(2,2) );
       Log.LogInfo( "# chisq/n = %g", chisq/n );
     }
-  
+
   TFloat64List coeffs;
   coeffs.push_back(gsl_vector_get(c,(0)));
   coeffs.push_back(gsl_vector_get(c,(1)));
   coeffs.push_back(gsl_vector_get(c,(2)));
   coeffs.push_back(gsl_vector_get(c,(3)));
-  
+
   gsl_matrix_free (X);
   gsl_vector_free (y);
   gsl_vector_free (w);
   gsl_vector_free (c);
   gsl_matrix_free (cov);
-  
+
   return coeffs;
 }
 

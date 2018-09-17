@@ -580,9 +580,6 @@ Bool COperatorDTreeCSolve::GetCombinedRedshift(CDataStore& store, std::string sc
     {
         Float64 post=0.0;
         Float64 coeff = results->dTransposeDNocontinuum/50.0;//resultPriorContinuum->ChiSquare[i];//results->dTransposeDNocontinuum/50.0; //resultPriorContinuum->ChiSquare[i]
-        Float64 weight = 1.0;
-        Float64 offset = 0.0;
-
 
         for(Int32 kci=0; kci<results->ExtremaResult.ContinuumIndexes[idxLMResultsExtrema[i]].size();kci++)
         {

@@ -74,8 +74,8 @@ public:
     void LoadSpectrum(const char* spectrumFilePath, const char* noiseFilePath);
 
 protected:
-    CSpectrumFluxAxis               m_FluxAxis;
     CSpectrumSpectralAxis           m_SpectralAxis;
+    CSpectrumFluxAxis               m_FluxAxis;
 
 private:
 

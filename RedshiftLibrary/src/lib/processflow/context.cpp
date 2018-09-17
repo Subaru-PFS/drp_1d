@@ -214,8 +214,6 @@ bool CProcessFlowContext::Init( std::shared_ptr<CSpectrum> spectrum,
     std::shared_ptr<CTemplateCatalog> templateCatalog = std::shared_ptr<CTemplateCatalog>( new CTemplateCatalog( medianRemovalMethod, opt_medianKernelWidth, opt_nscales, dfBinPath) );
     std::shared_ptr<CRayCatalog> rayCatalog = std::shared_ptr<CRayCatalog>(new CRayCatalog);
 
-    Bool rValue;
-
     // Load template catalog
     if( templateCatalogPath )
     {

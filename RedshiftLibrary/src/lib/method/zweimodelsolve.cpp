@@ -496,7 +496,7 @@ Int32 CZweiModelSolve::getVelocitiesFromRefFile( const char* filePath, std::stri
                 {
                     elv = lexical_cast<double>(*it);
                 }
-                catch (bad_lexical_cast)
+                catch (bad_lexical_cast&)
                 {
                     elv = 0.0;
                     return false;
@@ -510,7 +510,7 @@ Int32 CZweiModelSolve::getVelocitiesFromRefFile( const char* filePath, std::stri
                 {
                     alv = lexical_cast<double>(*it);
                 }
-                catch (bad_lexical_cast)
+                catch (bad_lexical_cast&)
                 {
                     alv = 0.0;
                     return false;
@@ -592,7 +592,7 @@ Int32 CZweiModelSolve::getValueFromRefFile( const char* filePath, std::string sp
                     zref = lexical_cast<double>(*it);
                     return true;
                 }
-                catch (bad_lexical_cast)
+                catch (bad_lexical_cast&)
                 {
                     zref = 0.0;
                     return false;
@@ -664,7 +664,7 @@ Bool CZweiModelSolve::Solve( CDataStore& dataStore,
         Float64 zref = -1.0;
         namespace fs = boost::filesystem;
         Int32 reverseInclusionForIdMatching = 0;
-        bool computeOnZrange=false;
+        bool computeOnZrange;
         /*
         // Euclid case for process at zref
         fs::path refFilePath("/home/aschmitt/amazed_cluster/datasets/euclid/euclidsim2016/EUC-TEST-TUGALSPC-2016-03_export20170302_3z4mag4lfhabins_TrueFlux/reference_correctedFastSim.list");
@@ -779,8 +779,8 @@ Bool CZweiModelSolve::Solve( CDataStore& dataStore,
 
     fs::path spcdirPath = bfs::path(spc.GetFullPath()).branch_path();
     Log.LogInfo( "Zweimodel - contaminant - using spcdir : %s", spcdirPath.string().c_str());
-    std::string spcContFilePath="";
-    std::string errorContFilePath="";
+    std::string spcContFilePath;
+    std::string errorContFilePath;
     spcContFilePath = ( spcdirPath/bfs::path(spcContFileName) ).string();
     errorContFilePath = ( spcdirPath/bfs::path(errorContFileName) ).string();
 
@@ -1257,7 +1257,7 @@ Int32 CZweiModelSolve::getContaminantNameFromFile( const char* filePath, std::st
                         {
                             offsetLambdaContaminant = lexical_cast<double>(*it);
                         }
-                        catch (bad_lexical_cast)
+                        catch (bad_lexical_cast&)
                         {
                             return false;
                         }
@@ -1269,7 +1269,7 @@ Int32 CZweiModelSolve::getContaminantNameFromFile( const char* filePath, std::st
                     file.close();
                     return true;
                 }
-                catch (bad_lexical_cast)
+                catch (bad_lexical_cast&)
                 {
                     return false;
                 }

@@ -59,18 +59,16 @@ private:
         Int32               polyOrder;
     };
 
-    Float64 m_Amplitude;
-    Float64 m_Mu;
-    Float64 m_C;
-    Float64 m_AmplitudeErr;
-    Float64 m_MuErr;
-    Float64 m_CErr;
-
-    Float64 m_coeff0;
-
-    Int32   m_PolyOrder;
     Float64 m_AbsTol;
+    Float64 m_Amplitude;
+    Float64 m_AmplitudeErr;
+    Float64 m_C;
+    Float64 m_CErr;
+    Float64 m_Mu;
+    Float64 m_MuErr;
     Float64 m_RelTol;
+    Float64 m_coeff0;
+    Int32   m_PolyOrder;
 };
 
 }

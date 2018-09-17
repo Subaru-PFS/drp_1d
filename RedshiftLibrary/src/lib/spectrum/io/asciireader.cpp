@@ -68,7 +68,7 @@ void CSpectrumIOAsciiReader::Read( const char* filePath, CSpectrum& spectrum )
   Int32 i = 0;
   file.clear();
   file.seekg( 0 );
-  int l = file.tellg();
+
   for( std::string line; std::getline( file, line ); )
     {
       if( !boost::starts_with( line, "#" ) )

@@ -20,6 +20,7 @@ void CRuleSuperStrong::SetUp( Bool EnabledArgument, ... )
   m_SuperStrongTags.push_back(_superStrongTag2);
   std::string _superStrongTag3 = std::string ( va_arg( Arguments, const char* ) );
   m_SuperStrongTags.push_back(_superStrongTag3);
+  va_end(Arguments);
 }
 
 /** \brief Verify that "super stronger lines have higher amplitudes than other lines" rule is applicable, and then apply it.
@@ -81,7 +82,7 @@ void CRuleSuperStrong::Correct( CLineModelElementList& LineModelElementList )
       Float64 ampA = maxiStrong;
       Float64 erA = erStrong;
       Float64 ampB = LineModelElementList.m_Elements[eIdxWeak]->GetFittedAmplitude( subeIdxWeak );
-      Float64 erB = LineModelElementList.m_Elements[eIdxWeak]->GetFittedAmplitudeErrorSigma( subeIdxWeak );
+
       //Method 0 : no noise taken into acccount
       //Float64 maxB = (coeff*ampA);
       //Method 1 : using Strong line noise to be more tolerant
@@ -156,14 +157,12 @@ Float64 CRuleSuperStrong::FindHighestSuperStrongLineAmp( TStringList superstrong
 	  continue;
 	}
 
-      Float64 validSNRCut = 0.05;
       Float64 ampStrong = LineModelElementList.m_Elements[eIdxStrong]->GetFittedAmplitude( subeIdxStrong );
       Float64 erStrong = LineModelElementList.m_Elements[eIdxStrong]->GetFittedAmplitudeErrorSigma( subeIdxStrong );
-      Float64 lineSnr = -1.0;
-      if(erStrong>0.0 && ampStrong>0.0)
-      {
-          lineSnr = ampStrong/erStrong;
-      }
+      // if(erStrong>0.0 && ampStrong>0.0)
+      // {
+      //     lineSnr = ampStrong/erStrong;
+      // }
       if( maxi<ampStrong /*&& lineSnr>validSNRCut*/ )
 	{
 	  maxi = ampStrong;

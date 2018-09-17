@@ -16,7 +16,7 @@ struct lmfitdata {
     size_t n;
     Float64 * y;
     CLineModelElementList* linemodel;
-    std::vector<Int32> linemodel_samples_indexes;
+    std::vector<UInt32> linemodel_samples_indexes;
     const Float64* observeGridContinuumFlux;
     CLmfitController* controller;
 };
@@ -30,8 +30,8 @@ lmfit_f (const gsl_vector * x, void *data,
     //std::shared_ptr<CLineModelElementList> linemodel = ((struct lmfitdata *)data)->linemodel;
     CLineModelElementList* linemodel = ((struct lmfitdata *)data)->linemodel;
     CLmfitController* controller = ((struct lmfitdata *)data)->controller;
-    std::vector<Int32> elts_indexes = controller->getFilteredIdx();
-    std::vector<Int32> samples_indexes = ((struct lmfitdata *)data)->linemodel_samples_indexes;
+    std::vector<UInt32> elts_indexes = controller->getFilteredIdx();
+    std::vector<UInt32> samples_indexes = ((struct lmfitdata *)data)->linemodel_samples_indexes;
     Float64 normFactor = controller->getNormFactor();
     //const Float64* observeGridContinuumFlux = ((struct lmfitdata *)data)->observeGridContinuumFlux;
 
@@ -50,7 +50,7 @@ lmfit_f (const gsl_vector * x, void *data,
       linemodel->setFitContinuum_tplAmplitude( continuumTplAmp);
     }
 
-    for (Int32 iElt = 0; iElt < elts_indexes.size(); iElt++)
+    for (UInt32 iElt = 0; iElt < elts_indexes.size(); iElt++)
     {
         Float64 amp = controller->lineAmp_LmToModel(gsl_vector_get (x, iElt));///normFactor;
         linemodel->SetElementAmplitude(elts_indexes[iElt], amp, 0.0);
@@ -74,7 +74,7 @@ lmfit_f (const gsl_vector * x, void *data,
     }
 
 
-    for (Int32 i = 0; i < n; i++)
+    for (UInt32 i = 0; i < n; i++)
     {
 
         Float64 Yi = linemodel->getModelFluxVal(samples_indexes[i])*normFactor;
@@ -94,8 +94,8 @@ lmfit_df (const gsl_vector * x, void *data,
     //std::shared_ptr<CLineModelElementList> linemodel = ((struct lmfitdata *)data)->linemodel;
     CLineModelElementList* linemodel = ((struct lmfitdata *)data)->linemodel;
     CLmfitController* controller = ((struct lmfitdata *)data)->controller;
-    std::vector<Int32> elts_indexes = controller->getFilteredIdx();
-    std::vector<Int32> samples_indexes = ((struct lmfitdata *)data)->linemodel_samples_indexes;
+    std::vector<UInt32> elts_indexes = controller->getFilteredIdx();
+    std::vector<UInt32> samples_indexes = ((struct lmfitdata *)data)->linemodel_samples_indexes;
     Float64 normFactor = controller->getNormFactor();
     const Float64* observeGridContinuumFlux = ((struct lmfitdata *)data)->observeGridContinuumFlux;
 
@@ -116,7 +116,7 @@ lmfit_df (const gsl_vector * x, void *data,
       linemodel->setFitContinuum_tplAmplitude( continuumTplAmp);
     }
 
-    for (Int32 iElt = 0; iElt < elts_indexes.size(); iElt++)
+    for (UInt32 iElt = 0; iElt < elts_indexes.size(); iElt++)
     {
         Float64 amp = controller->lineAmp_LmToModel(gsl_vector_get (x, iElt));///normFactor;
         linemodel->SetElementAmplitude(elts_indexes[iElt], amp, 0.0);
@@ -141,10 +141,10 @@ lmfit_df (const gsl_vector * x, void *data,
     }
     //linemodel->refreshModel();
     Float64 normAmpLine = controller->getNormAmpLine();
-    for (Int32 i = 0; i < n; i++)
+    for (UInt32 i = 0; i < n; i++)
     {
 
-        for (Int32 iElt = 0; iElt < elts_indexes.size(); iElt++)
+        for (UInt32 iElt = 0; iElt < elts_indexes.size(); iElt++)
         {
             Float64 dval = linemodel->getModelFluxDerivEltVal(elts_indexes[iElt], samples_indexes[i])*normFactor/normAmpLine*2*gsl_vector_get (x, iElt);
             gsl_matrix_set (J, i, iElt, dval);
@@ -166,7 +166,7 @@ lmfit_df (const gsl_vector * x, void *data,
 
         if(controller->isContinuumFitted()){
           Float64 dval =  observeGridContinuumFlux[samples_indexes[i]];
-          for (Int32 iElt = 0; iElt < elts_indexes.size(); iElt++)
+          for (UInt32 iElt = 0; iElt < elts_indexes.size(); iElt++)
           {
               dval += linemodel->getModelFluxDerivContinuumAmpEltVal(elts_indexes[iElt], samples_indexes[i]);
           }
@@ -178,7 +178,7 @@ lmfit_df (const gsl_vector * x, void *data,
           if(!controller->isNoContinuum()){
               Float64 dvalContinuum = linemodel->getModelFluxDerivZContinuumVal(samples_indexes[i] );
               Float64 dval = dvalContinuum;
-              for (Int32 iElt = 0; iElt < elts_indexes.size(); iElt++)
+              for (UInt32 iElt = 0; iElt < elts_indexes.size(); iElt++)
               {
                  dval += linemodel-> getModelFluxDerivZEltVal(elts_indexes[iElt], samples_indexes[i], dvalContinuum);
               }
@@ -186,7 +186,7 @@ lmfit_df (const gsl_vector * x, void *data,
               gsl_matrix_set (J, i, controller->getIndRedshift(),dval);
            }else{
               Float64 dval = 0.;
-              for (Int32 iElt = 0; iElt < elts_indexes.size(); iElt++)
+              for (UInt32 iElt = 0; iElt < elts_indexes.size(); iElt++)
               {
                  dval += linemodel-> getModelFluxDerivZEltValNoContinuum(elts_indexes[iElt], samples_indexes[i]);
               }
@@ -200,7 +200,7 @@ lmfit_df (const gsl_vector * x, void *data,
     FILE* fspc = fopen( "model_flux.txt", "w+" );
     for (Int32 i = 0; i < n; i++)
     {
-        fprintf( fspc, "%d %f\n", samples_indexes[i], linemodel->getModelFluxVal(samples_indexes[i])*normFactor);//*1e12);
+        fprintf( fspc, "%d %f\n", samples_indexes[i], linemodel->getModelFluxVal(samples_indexes[i])*normFactor);
     }
     fclose( fspc );
     //*/
@@ -211,7 +211,7 @@ lmfit_df (const gsl_vector * x, void *data,
      for (Int32 i = 0; i < n; i++)
      {
          Float64 normAbsFactor = controller->getNormAbsFactor();
-         fprintf( fspc, "%d %f\n", samples_indexes[i],linemodel->getModelFluxDerivVelAbsorptionVal(samples_indexes[i])*normFactor/normAbsFactor*2*gsl_vector_get (x, controller->getIndAbsorptionVel()));//*1e12);
+         fprintf( fspc, "%d %f\n", samples_indexes[i],linemodel->getModelFluxDerivVelAbsorptionVal(samples_indexes[i])*normFactor/normAbsFactor*2*gsl_vector_get (x, controller->getIndAbsorptionVel()));
      }
      fclose( fspc );
      //*/

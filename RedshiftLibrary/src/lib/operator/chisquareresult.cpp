@@ -76,7 +76,7 @@ void CChisquareResult::Load( std::istream& stream )
                 {
                     r = boost::lexical_cast<Float64>(*it);
                 }
-                catch (boost::bad_lexical_cast)
+                catch (boost::bad_lexical_cast&)
                 {
                     return;
                 }
@@ -90,7 +90,7 @@ void CChisquareResult::Load( std::istream& stream )
                     {
                         c = boost::lexical_cast<Float64>(*it);
                     }
-                    catch (boost::bad_lexical_cast)
+                    catch (boost::bad_lexical_cast&)
                     {
                         return;
                     }
@@ -109,7 +109,7 @@ void CChisquareResult::Load( std::istream& stream )
                     {
                         o = boost::lexical_cast<Float64>(*it);
                     }
-                    catch (boost::bad_lexical_cast)
+                    catch (boost::bad_lexical_cast&)
                     {
                         o = -1.0;
                     }

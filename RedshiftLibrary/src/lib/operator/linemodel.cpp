@@ -197,7 +197,7 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
     /*
     CMultiRollModel model( spectrum,
                                  spectrumContinuum,
-                                 tplCatalog,//*orthoTplCatalog,//
+                                 tplCatalog,//orthoTplCatalog,
                                  tplCategoryList,
                                  opt_calibrationPath,
                                  restRayList,
@@ -354,7 +354,6 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
 
 
         Float64 overlapThreshold = 1.0;
-        bool ignoreLinesSupport=0;
         std::vector<CMask> maskList; //can't get the lines support BEFORE initializing the model
 
         for( UInt32 i=0; i<tplCategoryList.size(); i++ )
@@ -723,7 +722,6 @@ Int32 COperatorLineModel::ComputeSecondPass(CDataStore &dataStore,
             Log.LogInfo( "  Operator-Linemodel: Computing second pass for extremum #%d", i);
             Log.LogInfo( "  Operator-Linemodel: ---------- /\\ ---------- ---------- ---------- %d", i );
             Float64 z = m_extremumList[i].X;
-            Float64 m = m_extremumList[i].Y;
 
             //find the index in the zaxis results
             Int32 idx=-1;
@@ -750,7 +748,7 @@ Int32 COperatorLineModel::ComputeSecondPass(CDataStore &dataStore,
 
             //model.LoadModelSolution(m_result->LineModelSolutions[idx]);
             m_model->fit( m_result->Redshifts[idx], lambdaRange, m_result->LineModelSolutions[idx], contreest_iterations, false );
-            m = m_result->ChiSquare[idx];
+            //m = m_result->ChiSquare[idx];
             if(enableVelocityFitting)
             {
                 Bool enableManualStepVelocityFit = true;
@@ -760,9 +758,9 @@ Int32 COperatorLineModel::ComputeSecondPass(CDataStore &dataStore,
                     //fit the emission and absorption width using the linemodel lmfit strategy
                     m_model->SetFittingMethod("lmfit");
                     //m_model->SetElementIndexesDisabledAuto();
-                    Float64 meritTmp;
+
                     Log.LogInfo("  Operator-Linemodel: Lm fit for extrema %d", i);
-                    meritTmp = m_model->fit( m_result->Redshifts[idx], lambdaRange, m_result->LineModelSolutions[idx], contreest_iterations, true );
+                    m_model->fit( m_result->Redshifts[idx], lambdaRange, m_result->LineModelSolutions[idx], contreest_iterations, true );
                     modelInfoSave = true;
                     // CModelSpectrumResult
                     std::shared_ptr<CModelSpectrumResult>  resultspcmodel = std::shared_ptr<CModelSpectrumResult>( new CModelSpectrumResult(m_model->GetModelSpectrum()) );
@@ -881,7 +879,6 @@ Int32 COperatorLineModel::ComputeSecondPass(CDataStore &dataStore,
 
                             Float64 meritMin = DBL_MAX;
                             Float64 vOptim = -1.0;
-                            Float64 dzOptim = -1.0;
                             for(Int32 kdz=0; kdz<nDzSteps; kdz++)
                             {
                                 Float64 dzTest = dzInfLim+kdz*dzStep;
@@ -938,7 +935,6 @@ Int32 COperatorLineModel::ComputeSecondPass(CDataStore &dataStore,
                                         {
                                             vOptim = m_model->GetVelocityEmission();
                                         }
-                                        dzOptim = dzTest;
                                     }
                                     ++show_progress;
                                 }
@@ -1815,7 +1811,7 @@ void COperatorLineModel::ComputeArea1(CLineModelResult& results)
     }
     for( Int32 i2=0; i2<results.Redshifts.size(); i2++ )
     {
-        spcFluxAxis[i2] = exp(-(results.ChiSquare[i2]-maxp)/2.0)-1.0;
+        spcFluxAxis[i2] = expm1(-(results.ChiSquare[i2]-maxp)/2.0);
         spcSpectralAxis[i2] = results.Redshifts[i2];
     }
 
@@ -1883,7 +1879,6 @@ void COperatorLineModel::ComputeArea1(CLineModelResult& results)
         Float64 gaussWidth = FitBayesWidth( spcSpectralAxis, spcFluxAxis, results.ExtremaResult.Extrema[i], izmin, izmax);
         Float64 gaussAmp = spcFluxAxis[iz];
 
-        Float64 intsize = 0.001;
         Float64 area=0.0;
         for( Int32 i2=izmin; i2<izmax; i2++ )
         {
@@ -1946,7 +1941,7 @@ void COperatorLineModel::ComputeArea2(CLineModelResult& results)
 
         //quadratic fit
         int i, n;
-        double xi, yi, ei, chisq;
+        double chisq;
         gsl_matrix *X, *cov;
         gsl_vector *y, *w, *c;
 
@@ -1962,6 +1957,7 @@ void COperatorLineModel::ComputeArea2(CLineModelResult& results)
         double x0 = results.ExtremaResult.Extrema[indz];
         for (i = 0; i < n; i++)
         {
+	    double xi, yi, ei;
             xi = results.Redshifts[i+izmin];
             yi = results.ChiSquare[i+izmin];
             ei = 1.0; //todo, estimate weighting ?

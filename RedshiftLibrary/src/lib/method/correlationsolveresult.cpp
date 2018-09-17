@@ -61,7 +61,6 @@ Bool CCorrelationSolveResult::GetBestCorrelationResult( const CDataStore& store,
     TOperatorResultMap correlationResults = store.GetPerTemplateResult(scope.c_str());
 
 
-    Int32 maxIndex = 0;
     Float64 tmpCorr = DBL_MIN ;
     Float64 tmpRedshift = 0.0;
     std::string tmpTplName;

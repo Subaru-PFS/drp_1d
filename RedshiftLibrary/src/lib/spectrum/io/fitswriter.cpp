@@ -34,7 +34,6 @@ Bool CSpectrumIOFitsWriter::Write( const char* filePath, CSpectrum& spectrum )
 {
     fitsfile *fptr = NULL;
     Int32 status = 0;
-    Int32 hdunum=0;
 
     Bool retv = true;
 

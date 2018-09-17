@@ -147,7 +147,7 @@ void CModelFittingResult::Load( const char* filePath )
             std::string name;
             if( it != tok.end() )
             {
-                name = *it;
+	      // name = *it;
             }
             else
             {
@@ -166,7 +166,7 @@ void CModelFittingResult::Load( const char* filePath )
             {
                 amp = boost::lexical_cast<double>(*it);
             }
-            catch (boost::bad_lexical_cast)
+            catch (boost::bad_lexical_cast&)
             {
                 amp = 0.0;
                 return;

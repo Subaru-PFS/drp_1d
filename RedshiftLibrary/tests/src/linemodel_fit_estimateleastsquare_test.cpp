@@ -150,7 +150,7 @@ BOOST_AUTO_TEST_CASE( LinemodelFit_EstimateLstSq_tplshape_pfsbatch6 )
     Int32 forceFilter = CRay::nForce_Strong;
 
     Float64 z = 0.077164;
-    std::string opt_continuumcomponent = "fromspectrum";
+    std::string opt_continuumcomponent;
 
     //test the linemodel tplshape, without lines fitted (catalog has no lines in the lbda range)
     opt_continuumcomponent = "fromspectrum";

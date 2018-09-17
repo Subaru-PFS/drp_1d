@@ -55,7 +55,7 @@ Bool CLineMatchingSolveResult::GetBestResult(const CDataStore& store, Float64& r
     Float64 tmpRedshift = -1.0;
 
     if(!Results.expired()){
-        Int32 er = std::dynamic_pointer_cast<const CRayMatchingResult>( Results.lock() )->GetBestRedshift(tmpRedshift, tmpMatchNum);
+        std::dynamic_pointer_cast<const CRayMatchingResult>( Results.lock() )->GetBestRedshift(tmpRedshift, tmpMatchNum);
     }
 
     redshift = tmpRedshift;

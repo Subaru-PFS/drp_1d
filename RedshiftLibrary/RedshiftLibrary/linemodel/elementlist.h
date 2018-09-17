@@ -111,7 +111,7 @@ public:
     Int32 GetNElements();
     Int32 GetModelValidElementsNDdl();
     Int32 GetModelNonZeroElementsNDdl();
-    std::vector<Int32> GetModelValidElementsIndexes();
+    std::vector<UInt32> GetModelValidElementsIndexes();
     bool IsElementIndexInDisabledList(Int32 index);
     void SetElementAmplitude(Int32 j, Float64 a, Float64 snr);
     Float64 GetElementAmplitude(Int32 j);
@@ -150,12 +150,12 @@ public:
 
     void reinitModel();
     void refreshModel(Int32 lineTypeFilter=-1);
-    void reinitModelUnderElements(std::vector<Int32> filterEltsIdx, Int32 lineIdx=-1 );
+    void reinitModelUnderElements(std::vector<UInt32> filterEltsIdx, Int32 lineIdx=-1 );
     void refreshModelInitAllGrid();
-    void refreshModelUnderElements(std::vector<Int32> filterEltsIdx, Int32 lineIdx=-1 );
-    void refreshModelDerivVelUnderElements(std::vector<Int32> filterEltsIdx);
-    void refreshModelDerivVelAbsorptionUnderElements(std::vector<Int32> filterEltsIdx);
-    void refreshModelDerivVelEmissionUnderElements(std::vector<Int32> filterEltsIdx);
+    void refreshModelUnderElements(std::vector<UInt32> filterEltsIdx, Int32 lineIdx=-1 );
+    void refreshModelDerivVelUnderElements(std::vector<UInt32> filterEltsIdx);
+    void refreshModelDerivVelAbsorptionUnderElements(std::vector<UInt32> filterEltsIdx);
+    void refreshModelDerivVelEmissionUnderElements(std::vector<UInt32> filterEltsIdx);
 
     Bool addToSpectrumAmplitudeOffset(CSpectrumFluxAxis &modelfluxAxis);
     Int32 prepareAmplitudeOffset(const CSpectrumFluxAxis &spcFlux);
@@ -177,8 +177,8 @@ public:
     Float64 getCumulSNRStrongEL();
     Float64 getCumulSNROnRange( TInt32Range idxRange );
     bool GetModelStrongEmissionLinePresent();
-    Float64 getModelErrorUnderElement(Int32 eltId);
-    Float64 getContinuumMeanUnderElement(Int32 eltId);
+    Float64 getModelErrorUnderElement(UInt32 eltId);
+    Float64 getContinuumMeanUnderElement(UInt32 eltId);
     Int32 LoadModelSolution(const CLineModelSolution&  modelSolution);
     CLineModelSolution GetModelSolution(Int32 opt_level=0);
     const CSpectrum&    GetModelSpectrum() const;
@@ -187,20 +187,20 @@ public:
     Float64 GetContinuumError(Int32 eIdx, Int32 subeIdx);
     Float64 GetFluxDirectIntegration(Int32 eIdx, Int32 subeIdx);
     const CSpectrumFluxAxis&    GetModelContinuum() const;
-    Float64 getModelFluxVal(Int32 idx) const;
-    Float64 getModelFluxDerivEltVal(Int32 DerivEltIdx, Int32 idx) const;
-    Float64 getModelFluxDerivContinuumAmpEltVal(Int32 DerivEltIdx, Int32 idx) const;
-    Float64 getModelFluxDerivZContinuumVal(Int32 idx)const;
+    Float64 getModelFluxVal(UInt32 idx) const;
+    Float64 getModelFluxDerivEltVal(UInt32 DerivEltIdx, UInt32 idx) const;
+    Float64 getModelFluxDerivContinuumAmpEltVal(UInt32 DerivEltIdx, UInt32 idx) const;
+    Float64 getModelFluxDerivZContinuumVal(UInt32 idx)const;
     //void calculateUnscaleContinuumDerivZ();
-    Float64 getModelFluxDerivZEltValNoContinuum(Int32 DerivEltIdx, Int32 idx) const;
-    Float64 getModelFluxDerivZEltVal(Int32 DerivEltIdx, Int32 idx, Float64 continuumFluxDerivZ) const;
-    Float64 getModelFluxDerivVelVal(Int32 idx) const;
-    Float64 getModelFluxDerivVelEmissionVal(Int32 idx) const;
-    Float64 getModelFluxDerivVelAbsorptionVal(Int32 idx) const;
+    Float64 getModelFluxDerivZEltValNoContinuum(UInt32 DerivEltIdx, UInt32 idx) const;
+    Float64 getModelFluxDerivZEltVal(UInt32 DerivEltIdx, UInt32 idx, Float64 continuumFluxDerivZ) const;
+    Float64 getModelFluxDerivVelVal(UInt32 idx) const;
+    Float64 getModelFluxDerivVelEmissionVal(UInt32 idx) const;
+    Float64 getModelFluxDerivVelAbsorptionVal(UInt32 idx) const;
     Int32 estimateMeanSqFluxAndGradient(const Float64* varPack,
                                         const Float64 normFactor,
-                                        std::vector<Int32> filteredEltsIdx,
-                                        std::vector<Int32> xInds,
+                                        std::vector<UInt32> filteredEltsIdx,
+                                        std::vector<UInt32> xInds,
                                         Int32 lineType,
                                         Float64 *fluxdata,
                                         Float64* msqBuffer,
@@ -213,7 +213,7 @@ public:
     CSpectrumFluxAxis m_SpcContinuumFluxAxis; //continuum spectrum used for the model
     Int32 FindElementIndex(Int32 LineCatalogIndex);
     Int32 FindElementIndex(std::string LineTagStr, Int32 linetype=-1, Int32& lineIdx=defaultIdx);
-    std::vector<Int32> getOverlappingElements(Int32 ind , std::vector<Int32> excludedInd, Float64 overlapThres=0.1);
+    std::vector<UInt32> getOverlappingElements(UInt32 ind , std::vector<UInt32> excludedInd, Float64 overlapThres=0.1);
     CRayCatalog::TRayVector m_RestRayList;
     std::shared_ptr<CSpectrum>  m_SpcCorrectedUnderLines;  //observed spectrum corrected under the lines
 
@@ -240,20 +240,20 @@ private:
     Int32 fitAmplitudesHybrid(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& spcFluxAxisNoContinuum, const CSpectrumFluxAxis &continuumfluxAxis, Float64 redshift);
     void fitAmplitudesSimplex();
     Int32 fitAmplitudesLmfit( const CSpectrumFluxAxis& fluxAxis, CLmfitController * controller);
-    Int32 fitAmplitudesLinSolve(std::vector<Int32> EltsIdx, const CSpectrumSpectralAxis &spectralAxis, const CSpectrumFluxAxis &fluxAxis, const CSpectrumFluxAxis& continuumfluxAxis, std::vector<Float64> &ampsfitted, std::vector<Float64> &errorsfitted);
-    Int32 fitAmplitudesLinSolveAndLambdaOffset(std::vector<Int32> EltsIdx, const CSpectrumSpectralAxis &spectralAxis, const CSpectrumFluxAxis &fluxAxis, const CSpectrumFluxAxis& continuumfluxAxis, std::vector<Float64> &ampsfitted, std::vector<Float64> &errorsfitted, Bool enableOffsetFitting);
+    Int32 fitAmplitudesLinSolve(std::vector<UInt32> EltsIdx, const CSpectrumSpectralAxis &spectralAxis, const CSpectrumFluxAxis &fluxAxis, const CSpectrumFluxAxis& continuumfluxAxis, std::vector<Float64> &ampsfitted, std::vector<Float64> &errorsfitted);
+    Int32 fitAmplitudesLinSolveAndLambdaOffset(std::vector<UInt32> EltsIdx, const CSpectrumSpectralAxis &spectralAxis, const CSpectrumFluxAxis &fluxAxis, const CSpectrumFluxAxis& continuumfluxAxis, std::vector<Float64> &ampsfitted, std::vector<Float64> &errorsfitted, Bool enableOffsetFitting);
 
     bool m_forceDisableLyaFitting;
     Int32 setLyaProfile( Float64 redshift, const CSpectrumSpectralAxis& spectralAxis );
 
-    std::vector<Int32> getSupportIndexes(std::vector<Int32> EltsIdx);
-    Float64 GetWeightingAnyLineCenterProximity(Int32 sampleIndex, std::vector<Int32> EltsIdx);
-    std::vector<Int32> getOverlappingElementsBySupport(Int32 ind , Float64 overlapThres=0.1);
-    std::vector<Int32> ReestimateContinuumApprox(std::vector<Int32> EltsIdx);
-    std::vector<Int32> ReestimateContinuumUnderLines(std::vector<Int32> EltsIdx);
-    void refreshModelAfterContReestimation(std::vector<Int32> EltsIdx, CSpectrumFluxAxis& modelFluxAxis, CSpectrumFluxAxis& spcFluxAxisNoContinuum);
+    std::vector<UInt32> getSupportIndexes(std::vector<UInt32> EltsIdx);
+    Float64 GetWeightingAnyLineCenterProximity(UInt32 sampleIndex, std::vector<UInt32> EltsIdx);
+    std::vector<UInt32> getOverlappingElementsBySupport(UInt32 ind , Float64 overlapThres=0.1);
+    std::vector<UInt32> ReestimateContinuumApprox(std::vector<UInt32> EltsIdx);
+    std::vector<UInt32> ReestimateContinuumUnderLines(std::vector<UInt32> EltsIdx);
+    void refreshModelAfterContReestimation(std::vector<UInt32> EltsIdx, CSpectrumFluxAxis& modelFluxAxis, CSpectrumFluxAxis& spcFluxAxisNoContinuum);
 
-    std::vector<Int32> findLineIdxInCatalog(const CRayCatalog::TRayVector& restRayList, std::string strTag, Int32 type);
+    std::vector<UInt32> findLineIdxInCatalog(const CRayCatalog::TRayVector& restRayList, std::string strTag, Int32 type);
 
 
     void addDoubleLine(const CRay &r1, const CRay &r2, Int32 index1, Int32 index2, Float64 nominalWidth, Float64 a1, Float64 a2);

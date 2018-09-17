@@ -18,16 +18,16 @@ using namespace NSEpic;
  * Stack attribution constructor.
  */
 CGaussianFit::CGaussianFit( ) :
-    m_PolyOrder( 2 ),
     m_AbsTol( 0.0 ),
-    m_RelTol( 1e-12),
     m_Amplitude( 0.0 ),
     m_AmplitudeErr( 0.0 ),
-    m_Mu( 0.0 ),
-    m_MuErr( 0.0 ),
     m_C( 0.0 ),
     m_CErr( 0.0 ),
-    m_coeff0( 0.0)
+    m_Mu( 0.0 ),
+    m_MuErr( 0.0 ),
+    m_RelTol( 1e-12),
+    m_coeff0( 0.0),
+    m_PolyOrder( 2 )
 {
 
 }
@@ -192,12 +192,12 @@ CGaussianFit::EStatus CGaussianFit::Compute( const CSpectrum& spectrum, const TI
     gsl_multifit_fdfsolver_set( multifitSolver, &multifitFunction, &firstGuessView.vector );
 
     //Iterate
-    int iter = 0;
     int status = 0;
 
     if(0)
     {
-    do 
+    int iter = 0;
+    do
       {
         iter++;
         status = gsl_multifit_fdfsolver_iterate( multifitSolver );
@@ -212,8 +212,8 @@ CGaussianFit::EStatus CGaussianFit::Compute( const CSpectrum& spectrum, const TI
     while( status==GSL_CONTINUE && iter<500 );
     }else{
         /* solve the system with a maximum of 50 iterations */
-        int status, info;
-        status = gsl_multifit_fdfsolver_driver(multifitSolver, 500, m_RelTol, m_RelTol, 0.0, &info);
+        int info;
+        gsl_multifit_fdfsolver_driver(multifitSolver, 500, m_RelTol, m_RelTol, 0.0, &info);
     }
 
     // Set values and errors
@@ -284,13 +284,13 @@ CGaussianFit::EStatus CGaussianFit::Compute( const CSpectrum& spectrum, const TI
     {
         returnCode = nStatus_Success; //GSL_ETOLX, the change in the position vector falls below machine precision
     }
-    else 
+    else
       {
 	if ( status == GSL_CONTINUE )
 	  {
 	    returnCode = nStatus_IterationHasNotConverged;
 	  }
-	else 
+	else
 	  {
 	    if( status != GSL_SUCCESS )
 	      {
@@ -317,6 +317,8 @@ CGaussianFit::EStatus CGaussianFit::Compute( const CSpectrum& spectrum, const TI
     gsl_matrix_free( J );
 
     free( firstGuessData );
+    free(output);
+    free(outputError);
 
     return returnCode;
 }
@@ -376,7 +378,6 @@ int CGaussianFit::GaussDF( const gsl_vector* param, void* data, gsl_matrix* J )
     SUserData* userData = (SUserData*) data;
     Int32 n = userData->studyRange->GetLength();
     const Float64* x = userData->spectrum->GetSpectralAxis().GetSamples() + userData->studyRange->GetBegin();
-    const Float64* y = userData->spectrum->GetFluxAxis().GetSamples() + userData->studyRange->GetBegin();
     //Float64* err = userData->spectrum->GetFluxAxis().GetError() + userData->studyRange->GetBegin();
     std::vector<Float64> err( n );
     if( true ) //WARNING: Hardcoded disable the use of err vect. = 1.0

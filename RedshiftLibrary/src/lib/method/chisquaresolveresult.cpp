@@ -112,7 +112,6 @@ Bool CChisquareSolveResult::GetBestRedshift( const CDataStore& store, Float64& r
     TOperatorResultMap meritResults = store.GetPerTemplateResult(scope.c_str());
 
 
-    Int32 maxIndex = 0;
     Float64 tmpMerit = DBL_MAX ;
     Float64 tmpRedshift = 0.0;
     std::string tmpTplName;

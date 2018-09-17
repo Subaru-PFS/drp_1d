@@ -52,7 +52,7 @@ void CSpectrumTools::Interpolate( const CSpectrumAxis& axisXorg, const CSpectrum
         }
     }
 
-    for( j ;j<nInt; j++ )
+    for( ;j<nInt; j++ )
     {
         //DebugAssert( Xint[j]>Xorg[Norg-1] );
 

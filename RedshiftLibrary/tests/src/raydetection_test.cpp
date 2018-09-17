@@ -91,6 +91,7 @@ BOOST_AUTO_TEST_CASE(XMadFind){
   BOOST_CHECK_CLOSE( med, 1.5, 1e-12);
   Float64 xmed = (lineDetection.*result<CLineDetectionXMadFind>::ptr)(x, 5 , med);
   BOOST_CHECK_CLOSE( xmed, 0.5, 1e-12);
+  free(x);
 }
 
 BOOST_AUTO_TEST_CASE(ComputeFluxes){
@@ -236,7 +237,7 @@ BOOST_AUTO_TEST_CASE(RemoveStrongFromSpectra){
   Float64 cut = -3;
 
 
-  Bool returnValue = (lineDetection.*result<CLineDetectionRemoveStrongFromSpectra>::ptr)(spc, lineDetectionResult, strongLines, selectedretestPeaks, selectedgaussparams, winsize, cut);
+  (lineDetection.*result<CLineDetectionRemoveStrongFromSpectra>::ptr)(spc, lineDetectionResult, strongLines, selectedretestPeaks, selectedgaussparams, winsize, cut);
   BOOST_CHECK_EQUAL(lineDetectionResult.RayCatalog.GetList().size() , 2);
   BOOST_CHECK_CLOSE(lineDetectionResult.RayCatalog.GetList()[0].GetCut() ,-0.21739130434803555, 1e-12);
   BOOST_CHECK_CLOSE(lineDetectionResult.RayCatalog.GetList()[1].GetCut() , -0.096153846153846159, 1e-12);

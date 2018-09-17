@@ -29,7 +29,7 @@ class CLmfitController{
     bool isNoContinuum();
     void resizeAmpsLine();
     void setAmpLine(Int32 idx, Float64 amp, Float64 ampErr);
-    std::vector<Int32>  getFilteredIdx();
+    std::vector<UInt32>  getFilteredIdx();
     bool removeNegAmpLine();
     void setNormAmpLine(Float64 normAmpLine);
     Float64 getNormAmpLine();
@@ -95,7 +95,7 @@ class CLmfitController{
     Float64 m_merit;
     Float64 m_redshift;
     Float64 m_redshiftErr;
-    std::vector<Int32> m_filteredEltsIdx;
+    std::vector<UInt32> m_filteredEltsIdx;
     Int32 m_numberParameters;
     Int32 m_indAbsorptionVel;
     Int32 m_indEmissionVel;

@@ -112,7 +112,7 @@ void CLmfitController::addElement(Int32 elemId){
 }
 
 // return the vecotr of index of fitted element
-std::vector<Int32> CLmfitController::getFilteredIdx(){
+std::vector<UInt32> CLmfitController::getFilteredIdx(){
   return m_filteredEltsIdx;
 }
 

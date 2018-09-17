@@ -46,16 +46,16 @@ void CContinuumDF::mirror_( const CSpectrum& s, UInt32 nb, float* tab)
 	UInt32 nn = s.GetFluxAxis().GetSamplesCount();
 	UInt32 nall = nn+nb*2;
 	UInt32 k;
-	for (Int32 j=0; j<nb; j++) {
+	for (UInt32 j=0; j<nb; j++) {
 		k = nb-j;
 		tab [j] = Ys[k];
 	}
 
-	for (Int32 j=nb; j<nall-nb; j++) {
+	for (UInt32 j=nb; j<nall-nb; j++) {
 		tab [j] = Ys[j-nb];
 	}
 
-	for (Int32 j=nall-nb; j<nall; j++) {
+	for (UInt32 j=nall-nb; j<nall; j++) {
 		k = (nall-j)+nn-nb-1;
 		tab [j] = Ys[k];
 	}
@@ -82,15 +82,13 @@ std::string CContinuumDF::temporaryPath ( const CSpectrum& s, UInt32 nall)
 
 	fitsfile *fptr = NULL;
 	Int32 status = 0;
-	Int32 hdunum=0;
-	Bool retv = true;
 	long naxis = 1;
 	long naxes[1] = {nall};
 	if( bfs::exists( filePathTEST ) ) {	bfs::remove( filePathTEST );}
-	Int32 nocrea = fits_create_file(&fptr, filePathTEST, &status);
-	Int32 noimg  = fits_create_img(fptr, FLOAT_IMG, naxis, naxes, &status);
-	Int32 nowrite = fits_write_img(fptr, TFLOAT, 1, nall, extendedData_, &status);
-	Int32 noclose = fits_close_file(fptr, &status);
+	fits_create_file(&fptr, filePathTEST, &status);
+	fits_create_img(fptr, FLOAT_IMG, naxis, naxes, &status);
+	fits_write_img(fptr, TFLOAT, 1, nall, extendedData_, &status);
+	fits_close_file(fptr, &status);
 
 	return filePathTEST;
 }
@@ -192,23 +190,15 @@ Bool CContinuumDF::RemoveContinuum ( const CSpectrum& s, CSpectrumFluxAxis& noCo
 	/* *******************************************************
 	 *           READ PMT-B3SPLINE RESULT
 	 * ****************************************************** */
-	fitsfile *fptr2 = NULL;
 	Int32 status = 0;
-	Int32 hdunum=0;
-	Int32 nullval = 0;
-	Int32 anynul = 0;
 
 	fitsfile *fptr2BIS = NULL;
 	Int32 statusBIS = 0;
-	Int32 hdunumBIS=0;
 	Int32 nullvalBIS = 0;
 	Int32 anynulBIS = 0;
 
 
-	int Mlig = nscales+1, Mcol = nall; // true
-
-	float array [Mlig][Mcol]; 		//auto array = new float [Mlig][Mcol]();
-
+	int Mcol = nall; // true
 
 	float *arrayBIS;
 	arrayBIS = (float *) malloc(Mcol* sizeof(float));

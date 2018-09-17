@@ -116,7 +116,7 @@ Bool CExtremum::Find( const TFloat64List& xAxis, const TFloat64List& yAxis, TPoi
     else
     {
     	// Find index range for the given lambda range
-        for( Int32 i=0; i<n; i++ )
+        for( UInt32 i=0; i<n; i++ )
         {
             if( rangeXBeginIndex==-1 && xAxis[i]>=m_XRange.GetBegin() )
             {
@@ -167,15 +167,15 @@ Bool CExtremum::InternalFind( const Float64* xAxis, const Float64* yAxis, UInt32
     // Tmp array can be considered as the "input" of each iteration.
     vector<Float64> tmpX( n );
     vector<Float64> tmpY( n );
-    Int32 tmpSize = n;
-    for( Int32 t=0; t<n; t++ )
+    UInt32 tmpSize = n;
+    for( UInt32 t=0; t<n; t++ )
     {
         tmpX[t] = xAxis[t];
         tmpY[t] = m_SignSearch*yAxis[t];
     }
 
 
-    for( Int32 count=0; count<m_RefreshCount; count++ )
+    for( UInt32 count=0; count<m_RefreshCount; count++ )
     {
         Int32 maxCount = 0;
 
@@ -295,7 +295,7 @@ Bool CExtremum::InternalFind2( const Float64* xAxis, const Float64* yAxis, UInt3
     vector<Float64> tmpX( n );
     vector<Float64> tmpY( n );
     Int32 tmpSize = n;
-    for( Int32 t=0; t<n; t++ )
+    for( UInt32 t=0; t<n; t++ )
       {
         if( !std::isnan( yAxis[t] ) )
 	  {
@@ -313,9 +313,9 @@ Bool CExtremum::InternalFind2( const Float64* xAxis, const Float64* yAxis, UInt3
     maxPoint.resize( m_MaxPeakCount );
     Int32 k = 0;
 
-    for( Int32 i=0; i<m_MaxPeakCount; i++ )
+    for( UInt32 i=0; i<m_MaxPeakCount; i++ )
       {
-        Int32 j = sortedIndexes[(sortedIndexes.size()-1)-i];
+        UInt32 j = sortedIndexes[(sortedIndexes.size()-1)-i];
 
         maxPoint[k++] = SPoint( tmpX[j], tmpY[j] );
       }

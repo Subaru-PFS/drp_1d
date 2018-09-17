@@ -134,12 +134,12 @@ Int32 CTemplatesOrthogonalization::OrthogonalizeTemplate(const CTemplate& inputT
         Float64 contreest_iterations = 0;
         Bool enableLogging=true;
         CLineModelSolution modelSolution;
-        Float64 fit = model.fit( redshift, lambdaRange, modelSolution, contreest_iterations, enableLogging );
+        model.fit( redshift, lambdaRange, modelSolution, contreest_iterations, enableLogging );
 
         //get mtm and dtm cumulative vector and store it
         std::vector<Float64> lbda;
         std::vector<Float64> mtmCumul;
-        Int32 ret = model.getMTransposeMCumulative(lambdaRange, lbda, mtmCumul);
+        model.getMTransposeMCumulative(lambdaRange, lbda, mtmCumul);
 
 
         //Subtract the fitted model from the original template

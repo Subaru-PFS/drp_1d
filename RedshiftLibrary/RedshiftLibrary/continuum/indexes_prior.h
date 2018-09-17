@@ -30,7 +30,7 @@ private:
 
     Float64 m_tbl_break_step;
     Float64 m_tbl_break_min;
-    Int32 m_tbl_break_n;
+    UInt32 m_tbl_break_n;
 
     std::vector<TContinuumIndexData> m_ciprior_table;
     std::vector<Float64> m_ciprior_max;

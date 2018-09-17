@@ -160,14 +160,14 @@ BOOST_AUTO_TEST_CASE(ParameterStore3)
   try {
     store.Load("/this/file/should/not/exist");
     BOOST_FAIL("store.Load() should have failed");
-  } catch (std::runtime_error) {
+  } catch (std::runtime_error&) {
     BOOST_CHECK(true);
   }
 
   try {
     store.Save("/this/file/should/not/exist");
     BOOST_FAIL("store.Save() should have failed");
-  } catch (std::runtime_error) {
+  } catch (std::runtime_error&) {
     BOOST_CHECK(true);
   }
 

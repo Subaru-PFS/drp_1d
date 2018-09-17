@@ -27,7 +27,6 @@ BOOST_AUTO_TEST_SUITE(Operator)
  */
 BOOST_AUTO_TEST_CASE(CorrelationAtZEqualZero)
 {
-    Bool retVal;
     CSpectrum spectrum;
     CTemplate _template;
 
@@ -71,7 +70,6 @@ BOOST_AUTO_TEST_CASE(CorrelationAtZEqualZero)
  */
 BOOST_AUTO_TEST_CASE(CorrelationAtGivenZ)
 {
-    Bool retVal;
     CSpectrum spectrum;
     CTemplate _template;
 
@@ -122,11 +120,8 @@ BOOST_AUTO_TEST_CASE(CorrelationAtGivenZ)
 void UtilCorrelationMatchWithEZ( const char* spectraPath, const char* noisePath, const char* tplPath, const char* resultPath )
 {
 
-    Bool retVal;
     CSpectrum spectrum;
     CTemplate _template;
-
-    Float64 z = 1.2299;
 
     // Load spectrum and templates
     CSpectrumIOGenericReader reader;
@@ -221,11 +216,8 @@ BOOST_AUTO_TEST_CASE(CorrelationMatchWithEZ)
 
 void UtilChisquareMatchWithEZ( const char* spectraPath, const char* noisePath, const char* tplPath, const char* resultPath )
 {
-    Bool retVal;
     CSpectrum spectrum;
     CTemplate _template;
-
-    Float64 z = 1.2299;
 
     // Load spectrum and templates
     CSpectrumIOGenericReader reader;

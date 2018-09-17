@@ -112,7 +112,6 @@ std::shared_ptr<const CLineModelTplshapeSolveResult> CLineModelTplshapeSolve::Co
 								       const TFloat64Range& lambdaRange,
 								       const TFloat64List& redshifts )
 {
-    Bool storeResult = false;
     CDataStore::CAutoScope resultScope( dataStore, "linemodeltplshapesolve" );
 
     PopulateParameters( dataStore );
@@ -242,7 +241,7 @@ std::shared_ptr<const CLineModelTplshapeSolveResult> CLineModelTplshapeSolve::Co
             }
 
             Solve( dataStore, _spc, _spcContinuum, tplCatalog, tplCategoryList, tpl, lineCatalog, lambdaRange, redshifts);
-            storeResult = true;
+            //storeResult = true;
         }
     }
 

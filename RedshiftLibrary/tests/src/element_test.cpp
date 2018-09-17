@@ -18,7 +18,7 @@ BOOST_AUTO_TEST_CASE(Instance){
   rs.push_back(ray);
   std::vector<Float64> nominalAmplitudes = std::vector<Float64> ();
   nominalAmplitudes.push_back(0.8);
-  std::vector<Int32> catalogIndexes;
+  std::vector<UInt32> catalogIndexes;
   catalogIndexes.push_back(1);
   catalogIndexes.push_back(0);
 
@@ -60,7 +60,7 @@ BOOST_AUTO_TEST_CASE(GetLineWidth){
     rs.push_back(ray);
     std::vector<Float64> nominalAmplitudes = std::vector<Float64> ();
     nominalAmplitudes.push_back(0.8);
-    std::vector<Int32> catalogIndexes;
+    std::vector<UInt32> catalogIndexes;
     catalogIndexes.push_back(1);
     catalogIndexes.push_back(0);
 
@@ -90,7 +90,7 @@ BOOST_AUTO_TEST_CASE(GetLineProfile){
   rs.push_back(ray);
   std::vector<Float64> nominalAmplitudes = std::vector<Float64> ();
   nominalAmplitudes.push_back(0.8);
-  std::vector<Int32> catalogIndexes;
+  std::vector<UInt32> catalogIndexes;
   catalogIndexes.push_back(1);
   catalogIndexes.push_back(0);
   CMultiLine element = CMultiLine(rs,  "SYMXL",  0.9, 1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes);
@@ -112,7 +112,7 @@ BOOST_AUTO_TEST_CASE(GetLineProfileDerivSigma){
   rs.push_back(ray);
   std::vector<Float64> nominalAmplitudes = std::vector<Float64> ();
   nominalAmplitudes.push_back(0.8);
-  std::vector<Int32> catalogIndexes;
+  std::vector<UInt32> catalogIndexes;
   catalogIndexes.push_back(1);
   catalogIndexes.push_back(0);
   CMultiLine element = CMultiLine(rs,  "SYMXL",  0.9, 1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes);
@@ -132,7 +132,7 @@ BOOST_AUTO_TEST_CASE(GetNSigmaSupport){
   rs.push_back(ray);
   std::vector<Float64> nominalAmplitudes = std::vector<Float64> ();
   nominalAmplitudes.push_back(0.8);
-  std::vector<Int32> catalogIndexes;
+  std::vector<UInt32> catalogIndexes;
   catalogIndexes.push_back(1);
   catalogIndexes.push_back(0);
   CMultiLine element = CMultiLine(rs,  "SYMXL",  0.9, 1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes);

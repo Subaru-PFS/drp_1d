@@ -15,7 +15,7 @@
 
 #include <vector>
 #include <stdio.h>
-#include <math.h>
+#include <cmath>
 #include <gsl/gsl_blas.h>
 #include <gsl/gsl_linalg.h>
 #include <gsl/gsl_matrix.h>
@@ -75,7 +75,7 @@ Bool CQualz::Solve( CDataStore& resultStore,
 	{
         Log.LogDetail("  ZClassifier: Extracting Features from PDF");
 		startTime = boost::posix_time::microsec_clock::local_time();
-        bool ExtractDone = ExtractFeaturesPDF ( resultStore, redshiftRange, redshiftStep );
+        ExtractFeaturesPDF ( resultStore, redshiftRange, redshiftStep );
 		T0 = boost::posix_time::microsec_clock::local_time() - startTime;
 	}
 
@@ -121,7 +121,7 @@ Bool CQualz::Solve( CDataStore& resultStore,
 /*  ------------------------------------------------------------------------------------------------------
  *	[ Function ]
  * 			>> Compute descriptors of the redshift posterior PDF P ( z | D, I )
-/*  ------------------------------------------------------------------------------------------------------ */
+*  ------------------------------------------------------------------------------------------------------ */
 Bool CQualz::ExtractFeaturesPDF( CDataStore& resultStore, const TFloat64Range& redshiftRange, Float64& redshiftStep )
 {
     std::string scope_res = "zPDF/logposterior.logMargP_Z_data";
@@ -178,7 +178,7 @@ Bool CQualz::ExtractFeaturesPDF( CDataStore& resultStore, const TFloat64Range& r
 			if ( extremumList.size()==0) {
 				dist_peaks.X = NAN;	// distance in z between the two first best peaks in zPDF
 				dist_peaks.Y = NAN; // distance in pz
-                significant_peaks = NAN;
+				significant_peaks = -1;
 				nanVector = true;
 			} else {
 				dist_peaks.X = 0;	// distance in z between the two first best peaks in zPDF
@@ -283,7 +283,7 @@ Bool CQualz::ExtractFeaturesPDF( CDataStore& resultStore, const TFloat64Range& r
                 Float64 criter=1e-3;
                 Int32 maxiborne=indice_map;
                 Int32 maxiborneLimit = int (nb_pz - indice_map -1 );
-                while ( logzpdf1d->Redshifts[maxiborne] < zmap+criter && maxiborne<maxiborneLimit)
+                while ( maxiborne<maxiborneLimit && logzpdf1d->Redshifts[maxiborne] < zmap+criter)
                 {
                     maxiborne++;
                 }
@@ -414,7 +414,7 @@ Bool CQualz::ExtractFeaturesPDF( CDataStore& resultStore, const TFloat64Range& r
                 }
                 indice_right=indice_map;
                 Int32 maxiLimit = int (nb_pz - 1 );
-                while ( logzpdf1d->Redshifts[indice_right] < zmap+zshift && indice_right<maxiLimit)
+                while ( indice_right<maxiLimit && logzpdf1d->Redshifts[indice_right] < zmap+zshift)
                 {
                     indice_right++;
                 }
@@ -678,7 +678,7 @@ void CQualz::DisplayPrediction()
 /*  ------------------------------------------------------------------------------------------------------
  *	[ Function ]
  * 			>> Compute # of significant peaks in the posterior zPDF P ( z | D, I )
-/*  ------------------------------------------------------------------------------------------------------ */
+ *  ------------------------------------------------------------------------------------------------------ */
 Int32 CQualz::GetNPeaksKM ( TPointList& peaks, Float64& zmap_estimate, Float64& lbins )
 {
 	gsl_matrix *data;					// Input data = modes/peaks(zPDF)
@@ -751,7 +751,6 @@ Int32 CQualz::GetNPeaksKM ( TPointList& peaks, Float64& zmap_estimate, Float64& 
 		}
 
 		// STEP 2.2 - Update centroïds
-		Int32 elm = 0;
 		Float64 weighted_mean;
 		for ( i=0; i<nClusters; i++) {
 			for (j=0; j<nObs; j++) {
@@ -785,7 +784,7 @@ Int32 CQualz::GetNPeaksKM ( TPointList& peaks, Float64& zmap_estimate, Float64& 
 	 * ********************************************************************** */
 	TFloat64List nbElements;
 	nbElements.resize(nClusters);
-	Int32 ic, nelements, zmap_cluster = -1, zmap_position = -1;
+	Int32 ic, nelements, zmap_cluster = -1;
 	for ( ic=0; ic<nClusters; ic++) {
 		nelements = 0;
 		for ( i=0; i<nObs; i++) {
@@ -793,7 +792,7 @@ Int32 CQualz::GetNPeaksKM ( TPointList& peaks, Float64& zmap_estimate, Float64& 
 				nelements++;
 				if ( peaks[i].X == zmap_estimate ) {
 					zmap_cluster = ic;     // cluster in where the zmap is located
-					zmap_position = i; 	// very likely to be the first in this list
+					//zmap_position = i; 	// very likely to be the first in this list
 				}
 			}
 		}
@@ -825,7 +824,7 @@ Int32 CQualz::GetNPeaksKM ( TPointList& peaks, Float64& zmap_estimate, Float64& 
 /*  ------------------------------------------------------------------------------------------------------
  *	[ Function ]
  * 			>> Compute the distance between two vectors: L1, L2, COSINE, XC
-/*  ------------------------------------------------------------------------------------------------------ */
+ *  ------------------------------------------------------------------------------------------------------ */
 Float64 CQualz::GetDistanceKM ( gsl_vector *vect1, gsl_vector *vect2, std::string method )
 {
 	Int32 i;
@@ -888,7 +887,7 @@ Float64 CQualz::GetDistanceKM ( gsl_vector *vect1, gsl_vector *vect2, std::strin
  *	[ Function ]
  *			>> Check if the full zPDF == NAN
  *					This can occur when wrong input flux & noise spectra are processed
-/*  ------------------------------------------------------------------------------------------------------ */
+ *  ------------------------------------------------------------------------------------------------------ */
 Bool CQualz::CheckPDF( const TFloat64List& zpdf)
 {
 	Int32 counter = 0;
@@ -910,11 +909,11 @@ Bool CQualz::CheckPDF( const TFloat64List& zpdf)
  *	[ Function ]
  * 			>> Project the feature vector into a trainde mapping
  * 						and compute score & posterior class probabilities in addiction to the predicted label
-/*  ------------------------------------------------------------------------------------------------------ */
+ *  ------------------------------------------------------------------------------------------------------ */
 void CQualz::ProjectPDF ( CClassifierStore& classifierStore )
 {
 	if ( nanVector ) {
-		m_predLabel = NAN;
+		m_predLabel = "";
 	} else {
 
 		m_predLabel = " ";
@@ -933,7 +932,7 @@ void CQualz::ProjectPDF ( CClassifierStore& classifierStore )
  *	[ Function ]
  * 			>> Get Predicted zReliability Class
  * 					by combining the (binary) predictions of each learner + the additional step of 'DECODE'  in ECOC
-/*  ------------------------------------------------------------------------------------------------------ */
+ *  ------------------------------------------------------------------------------------------------------ */
 void CQualz::GetLabelPred ( CClassifierStore& classifierStore )
 {
 	Int32 opt_predL = 1;
@@ -1020,10 +1019,10 @@ void CQualz::GetLabelPred ( CClassifierStore& classifierStore )
 /*  ------------------------------------------------------------------------------------------------------
  *	[ Function ]
  * 			>> Get the score for each learner
-/*  ------------------------------------------------------------------------------------------------------ */
+ *  ------------------------------------------------------------------------------------------------------ */
 void CQualz::GetScorePred ( CClassifierStore& classifierStore )
 {
-	Int32 i, j, M,P;
+	Int32 M,P;
 
 	auto mapLearners = classifierStore.GetLearners();
 	CClassifierStore::MapLearners::const_iterator it = mapLearners.begin();
@@ -1062,7 +1061,7 @@ void CQualz::GetScorePred ( CClassifierStore& classifierStore )
                 <<"nbDESCRIPTORS = " <<P <<std::endl;
             }
 
-            gsl_vector* prod_xsvt = gsl_vector_alloc( M );
+            gsl_vector* prod_xsvt;
 
 			gsl_matrix* sv_transpose = gsl_matrix_alloc( P, M );	// Size (learner->m_SVectors) = [M x P]
 			gsl_matrix_transpose_memcpy( sv_transpose,  learner->m_SVectors);
@@ -1121,7 +1120,7 @@ void CQualz::GetScorePred ( CClassifierStore& classifierStore )
 /*  ------------------------------------------------------------------------------------------------------
  *	[ Function ]
  * 			>> Get the posterior class probabilities (combine coding strategy ECOC and individual responses of learners)
-/*  ------------------------------------------------------------------------------------------------------ */
+ *  ------------------------------------------------------------------------------------------------------ */
 void CQualz::GetPosteriorPred ( CClassifierStore& classifierStore )
 {
 	Int32 K = classifierStore.GetNbClasses();
@@ -1181,7 +1180,7 @@ void CQualz::GetPosteriorPred ( CClassifierStore& classifierStore )
 /*  ------------------------------------------------------------------------------------------------------
  *	[ Function ]
  * 			>> Compute Kullback-Leibler minimization to compute posterior class probabilities (here, numfits =2)
-/*  ------------------------------------------------------------------------------------------------------ */
+ *  ------------------------------------------------------------------------------------------------------ */
 gsl_vector*  CQualz::GetArgminKL ( CClassifierStore& classifierStore, gsl_vector* r, gsl_vector* w_learner, gsl_vector* p0, Float64& distance )
 {
 	double sump;
@@ -1191,7 +1190,7 @@ gsl_vector*  CQualz::GetArgminKL ( CClassifierStore& classifierStore, gsl_vector
 	Int32 K = classifierStore.GetCodingMatrix()->size1; //nbClasses
 	Int32 L = classifierStore.GetCodingMatrix()->size2; // nbLearners
 
-	gsl_vector* p = gsl_vector_alloc(K);
+	gsl_vector* p;
 
 	gsl_vector* tempPos;
 	gsl_vector* tempNeg;
@@ -1347,10 +1346,10 @@ gsl_vector*  CQualz::GetArgminKL ( CClassifierStore& classifierStore, gsl_vector
 /*  ------------------------------------------------------------------------------------------------------
  *	[ Function ]
  * 			>> Compute c.*p = d		-> ( p= c\d)		with positive constraints on p
-/*  ------------------------------------------------------------------------------------------------------ */
+ *  ------------------------------------------------------------------------------------------------------ */
 Bool CQualz::GetLSQnonNegKL ( gsl_matrix* c, gsl_vector* d, gsl_vector* p )
 {
-	Int32 s,  L = c->size1, K = c->size2;
+	Int32 s,  K = c->size2;
 	gsl_permutation * permut = gsl_permutation_alloc(K); //OVA coding strategy (the coding matrix is square)
 	gsl_linalg_LU_decomp ( c, permut, &s);
 	gsl_linalg_LU_solve ( c, permut, d, p);
@@ -1388,7 +1387,7 @@ Bool CQualz::GetLSQnonNegKL ( gsl_matrix* c, gsl_vector* d, gsl_vector* p )
 /*  ------------------------------------------------------------------------------------------------------
  *	[ Function ]
  * 			>> Intermediate step to minimize KL distance in function "GetArgminKL(..)"
-/*  ------------------------------------------------------------------------------------------------------ */
+ *  ------------------------------------------------------------------------------------------------------ */
 gsl_vector* CQualz::GetNumDenKL( CClassifierStore& classifierStore, gsl_vector* r, gsl_vector* r_estim, gsl_vector* pold )
 {
 	Int32 K = classifierStore.GetCodingMatrix()->size1; //nbClasses
@@ -1499,7 +1498,7 @@ gsl_vector* CQualz::GetNumDenKL( CClassifierStore& classifierStore, gsl_vector* 
 /*  ------------------------------------------------------------------------------------------------------
  *	[ Function ]
  * 			>> Compute the distance KL
-/*  ------------------------------------------------------------------------------------------------------ */
+ *  ------------------------------------------------------------------------------------------------------ */
 Float64 CQualz::GetDistanceKL ( gsl_vector* r, gsl_vector* r_estim, gsl_vector* w_learner )
 {
 	Float64 threshold = 100*EPS_TOL;
@@ -1524,7 +1523,7 @@ Float64 CQualz::GetDistanceKL ( gsl_vector* r, gsl_vector* r_estim, gsl_vector* 
 /*  ------------------------------------------------------------------------------------------------------
  *	[ Function ]
  * 			>> Compute the norm L1 of a gsl_matrix
-/*  ------------------------------------------------------------------------------------------------------ *
+ *  ------------------------------------------------------------------------------------------------------ *
 Float64 CQualz::GetNormKL ( gsl_matrix* m )
 {
 	gsl_vector* temp = gsl_vector_alloc( m->size1 );
@@ -1545,13 +1544,13 @@ Float64 CQualz::GetNormKL ( gsl_matrix* m )
 
 	return normL1;
 }
-
+*/
 
 
 /*  ------------------------------------------------------------------------------------------------------
  *	[ Function ]
  * 			>> Center the feature vector with SV parameters (mean & dispersion)
-/*  ------------------------------------------------------------------------------------------------------ */
+ *  ------------------------------------------------------------------------------------------------------ */
 void CQualz::GetXc( gsl_vector* mu, gsl_vector* sigma )
 {
 	/*
@@ -1587,7 +1586,7 @@ void CQualz::GetXc( gsl_vector* mu, gsl_vector* sigma )
 /*  ------------------------------------------------------------------------------------------------------
  *	[ Function ]
  * 			>> Compute sigmoid function
-/*  ------------------------------------------------------------------------------------------------------ */
+ *  ------------------------------------------------------------------------------------------------------ */
 void CQualz::GetSigmoid ( Float64& sc, TFloat64List& paramsSig, Float64& result )
 {
 	result = 1 + exp (paramsSig[0]*sc + paramsSig[1]) ;
@@ -1600,20 +1599,19 @@ void CQualz::GetSigmoid ( Float64& sc, TFloat64List& paramsSig, Float64& result 
  * 			>> Compute the product of a vector Y and matrix SV
  * 						Output Result [1 x M] = PRODUCT( Y [1 x P] , SV [size P x M] ).
  * 								Element Result[j] = SUM_i( Y[i] * SV[i,j] )
-/*  ------------------------------------------------------------------------------------------------------ */
+ *  ------------------------------------------------------------------------------------------------------ */
 gsl_vector* CQualz::GetProductKL ( gsl_vector* y, gsl_matrix* sv )
 {
-	double prod;
 	gsl_vector* result = gsl_vector_alloc( y->size );
 	//gsl_vector* temp = gsl_vector_alloc( sv->size1 );
 	for ( Int32 col = 0; col< sv->size2 ; col++) {
-		prod = 0;
-		for ( Int32 lig = 0; lig< sv->size1 ; lig++) {
-			prod += ( gsl_vector_get(y, lig) ) *( gsl_matrix_get(sv, lig, col) );
-		}
+	  double prod = 0;
+	  for ( Int32 lig = 0; lig< sv->size1 ; lig++) {
+	    prod += ( gsl_vector_get(y, lig) ) *( gsl_matrix_get(sv, lig, col) );
+	  }
 		//gsl_matrix_get_col ( temp, sv, col );
 		//gsl_blas_ddot( y, temp, &prod ); // DOUBLE c =  ( Vector a [1xP] * Vector b [1xP] ). Element c = SUM_j( a[j] * b[j] )
-		result->data[col] = prod;
+	  result->data[col] = prod;
 	}
 	//gsl_vector_free(temp);
 
@@ -1628,10 +1626,9 @@ gsl_vector* CQualz::GetProductKL ( gsl_vector* y, gsl_matrix* sv )
  * 			>> Compute @times function(vector Y , matrix M)
  * 						Output Result [P x M] = PRODUCT( V [P x 1] , M [size P x M] ).
  * 								Column Result[:,j] = ( Y[i] * M[i,j] )_i
-/*  ------------------------------------------------------------------------------------------------------ */
+ *  ------------------------------------------------------------------------------------------------------ */
 gsl_matrix* CQualz::GetTimesKL ( const gsl_matrix* m, gsl_vector* v )
 {
-	Float64 prod;
 	gsl_matrix* result = gsl_matrix_alloc( m->size1, m->size2 );
 	gsl_vector* temp = gsl_vector_alloc( m->size1 );
 	for ( Int32 j = 0; j< m->size2 ; j++) {
@@ -1648,7 +1645,7 @@ gsl_matrix* CQualz::GetTimesKL ( const gsl_matrix* m, gsl_vector* v )
 /*  ------------------------------------------------------------------------------------------------------
  *	[ Function ]
  * 			>> Compute the sum of a matrix (on each column, or on each row)
-/*  ------------------------------------------------------------------------------------------------------ */
+ *  ------------------------------------------------------------------------------------------------------ */
 gsl_vector* CQualz::GetSumKL ( gsl_matrix* m, Bool opt_row)
 {
 	Float64 s = 0.0;

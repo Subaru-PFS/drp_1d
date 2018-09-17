@@ -94,7 +94,6 @@ Bool CSpectrumIOFitsReader::Read1( fitsfile* fptr, CSpectrum& spectrum )
     Int32 naxis;
     Int32 length = 0;
     Int32 nfound;
-    Int32 hdunum = 0;
     Int32 hdutype = 0;
 
     // Move to first hdu

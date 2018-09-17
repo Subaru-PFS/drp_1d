@@ -140,7 +140,7 @@ Bool CContinuumMedian::RemoveContinuum( const CSpectrum& s, CSpectrumFluxAxis& n
     Int32 nd;
 
     Int32 nreflex, nbig;
-    Int32 j, k;
+    UInt32 j, k;
 
     const CSpectrumFluxAxis& fluxAxis = s.GetFluxAxis();
 

@@ -32,6 +32,7 @@ namespace NSEpic
 	typedef std::vector<Int64>      TInt64List;
 	typedef std::vector<Bool>       TBoolList;
 	typedef std::vector<Int32>       TInt32List;
+	typedef std::vector<UInt32>       TUInt32List;
 	typedef std::vector<UInt8>      TUInt8List;
 	typedef std::vector<std::string>      TStringList;
 

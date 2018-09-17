@@ -56,7 +56,6 @@ pdfz_lmfit_df (const gsl_vector * x, void *data,
          gsl_matrix * J)
 {
     size_t n = ((struct pdfz_lmfitdata *)data)->n;
-    Float64 *y = ((struct pdfz_lmfitdata *)data)->y;
     Float64 *z = ((struct pdfz_lmfitdata *)data)->z;
     Float64 zcenter = ((struct pdfz_lmfitdata *)data)->zcenter;
 
@@ -1228,7 +1227,6 @@ Int32 CPdfz::BestProba(TFloat64List redshifts, std::vector<TFloat64List> meritRe
     //normalize: sum_z P = 1
     //1. check if the z step is constant. If not, pdf cannot be estimated by the current method.
     Float64 reldzThreshold = 0.05; //relative difference accepted
-    bool constantdz = true;
     Float64 mindz = DBL_MAX;
     Float64 maxdz = -DBL_MAX;
     for ( UInt32 k=1; k<redshifts.size(); k++)
@@ -1246,7 +1244,6 @@ Int32 CPdfz::BestProba(TFloat64List redshifts, std::vector<TFloat64List> meritRe
     Float64 zstep = (maxdz+mindz)/2.0;
     if(abs(maxdz-mindz)/zstep>reldzThreshold)
     {
-        constantdz = false;
         return 2;
     }
 

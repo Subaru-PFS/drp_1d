@@ -108,11 +108,11 @@ void create_test_file_learnersparams(boost::filesystem::path path)
 
 void create_test_file_learners_vectors(boost::filesystem::path path)
 {
-  FILE *f;
-  gsl_matrix* sv_vectors;
   boost::filesystem::path filename;
 
   for (Int32 i=0; i<LEARNERS; ++i) {
+    gsl_matrix* sv_vectors;
+    FILE *f;
     boost::filesystem::path pathname = path/("sv" + std::to_string(i+1));
     boost::filesystem::create_directory(pathname);
     filename = pathname/("sv" + std::to_string(i+1) + "_vectors.dat");
@@ -128,11 +128,11 @@ void create_test_file_learners_vectors(boost::filesystem::path path)
 
 void create_test_file_learners_params(boost::filesystem::path path)
 {
-  FILE *f;
-  gsl_matrix* sv_params;
   boost::filesystem::path filename;
 
   for (Int32 i=0; i<LEARNERS; ++i) {
+    FILE *f;
+    gsl_matrix* sv_params;
     boost::filesystem::path pathname = path/("sv" + std::to_string(i+1));
     boost::filesystem::create_directory(pathname);
     filename = pathname/("sv" + std::to_string(i+1) + "_params.dat");

@@ -23,7 +23,7 @@ BOOST_AUTO_TEST_CASE( LoadCatalogAndVelocities )
 
         Float64 elv=-1;
         Float64 alv=-1;
-        bool ret = catalogTplShape->GetCatalogVelocities(k, elv, alv);
+        catalogTplShape->GetCatalogVelocities(k, elv, alv);
         BOOST_CHECK( retVal == true );
 
         bool noCorrespondence = true;

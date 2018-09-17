@@ -139,7 +139,7 @@ Bool CLineCatalogsOffsets::LoadCatalog( const char* filePath )
                 {
                     offset = lexical_cast<double>(*it);
                 }
-                catch (bad_lexical_cast)
+                catch (bad_lexical_cast&)
                 {
                     Log.LogError( "    CatalogsOffsets - Unable to read offset value from offset file, aborting" );
                     return false;
@@ -154,7 +154,7 @@ Bool CLineCatalogsOffsets::LoadCatalog( const char* filePath )
                 {
                     fitMode = *it;
                 }
-                catch (bad_lexical_cast)
+                catch (bad_lexical_cast&)
                 {
                     Log.LogError( "    CatalogsOffsets - Unable to read fittingmode value from offset file, aborting" );
                     return false;
@@ -295,7 +295,7 @@ Int32 CLineCatalogsOffsets::AutoSelectStackFromReferenceFile(std::string spectru
                 {
                     stack_name = (*it);
                 }
-                catch (bad_lexical_cast)
+                catch (bad_lexical_cast&)
                 {
                     Log.LogError( "    CatalogsOffsets - Unable to read stackname value from file, aborting" );
                     return -1;

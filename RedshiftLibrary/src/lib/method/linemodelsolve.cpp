@@ -548,7 +548,7 @@ Int32 getVelocitiesFromRefFile( const char* filePath, std::string spcid, Float64
                 {
                     elv = lexical_cast<double>(*it);
                 }
-                catch (bad_lexical_cast)
+                catch (bad_lexical_cast&)
                 {
                     elv = 0.0;
                     return false;
@@ -562,7 +562,7 @@ Int32 getVelocitiesFromRefFile( const char* filePath, std::string spcid, Float64
                 {
                     alv = lexical_cast<double>(*it);
                 }
-                catch (bad_lexical_cast)
+                catch (bad_lexical_cast&)
                 {
                     alv = 0.0;
                     return false;
@@ -700,12 +700,12 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
     //Compute z-candidates
     //**************************************************
     Bool overrideUseBestchi2forCandidates = false;
-    Int32 sign = 1;
+    // Int32 sign = 1;
     std::vector<Float64> fvals;
     std::shared_ptr<const CLineModelResult> lmresult = std::dynamic_pointer_cast<const CLineModelResult>( linemodel.getResult() );
     if(overrideUseBestchi2forCandidates)
     {
-        sign = -1;
+      // sign = -1;
         fvals = lmresult->ChiSquare;
     }else{
         std::shared_ptr<CPdfMargZLogResult> postmargZResult = std::shared_ptr<CPdfMargZLogResult>(new CPdfMargZLogResult());
@@ -716,7 +716,7 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
             Log.LogError("Linemodel: Candidates search - Pdfz computation failed");
             return false;
         }else{
-            sign = -1;
+	  // sign = -1;
             fvals = postmargZResult->valProbaLog;
         }
     }

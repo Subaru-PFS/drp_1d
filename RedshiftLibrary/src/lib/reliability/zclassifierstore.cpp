@@ -27,7 +27,7 @@ using namespace NSEpic;
 
 /*  ---------------------------------------------------------------------
  * 					>>CLASS C_CLASSIFIER_STORE
-/*  --------------------------------------------------------------------- */
+ *  --------------------------------------------------------------------- */
 CClassifierStore::CClassifierStore()
 {
     m_isInitialized = false;
@@ -43,7 +43,7 @@ CClassifierStore::~CClassifierStore()
 
 /* ---------------------------------------------------------------------
  * 					>>CLASS C_LEARNER
-/* --------------------------------------------------------------------- */
+ * --------------------------------------------------------------------- */
 
 CClassifierStore::CLearner::CLearner()
 {
@@ -57,7 +57,7 @@ CClassifierStore::CLearner::~CLearner()
 
 /* ---------------------------------------------------------------------
  * 					>>	LOAD - PARAMETERS FILES (.dat or .txt)
-/* --------------------------------------------------------------------- */
+ * --------------------------------------------------------------------- */
 Bool CClassifierStore::Load ( const char* directoryPath )
 {
 	Bool disp_time = false;
@@ -481,7 +481,7 @@ void CClassifierStore::DisplayQ ( const gsl_matrix* m )
 
 /* ---------------------------------------------------------------------
  * 					>>	GET - METHODS
-/* --------------------------------------------------------------------- */
+ * --------------------------------------------------------------------- */
 const CClassifierStore::MapLearners& CClassifierStore::GetLearners() const
 {
 	return m_learners;
@@ -549,7 +549,7 @@ const gsl_matrix* CClassifierStore::GetCodingMatrixNeg() const
 
 /* ---------------------------------------------------------------------
  * 					>>	SET - METHODS
-/* --------------------------------------------------------------------- */
+ * --------------------------------------------------------------------- */
 
 void CClassifierStore::SetLearners ( CClassifierStore::MapLearners& learners )
 {

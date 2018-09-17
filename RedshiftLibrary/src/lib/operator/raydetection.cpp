@@ -463,7 +463,7 @@ bool CLineDetection::Retest( const CSpectrum& spectrum, CLineDetectionResult& re
     // remove selected retestPeaks: EZELFind ln 1102
     // not implemented, did not seem useful
 
-    bool continue_retest = false;
+    bool continue_retest;
     continue_retest = RemoveStrongFromSpectra( spectrum, result, strongLines, selectedretestPeaks, selectedgaussparams, winsize, cut );
 
     return continue_retest;
@@ -547,7 +547,6 @@ bool CLineDetection::RemoveStrongFromSpectra(const CSpectrum& spectrum, CLineDet
 	  }
     }
 
-    bool added=false;
     for( int k=0; k<selectedretestPeaks.size(); k++ )
       {
         TInt32Range reducedrange( (int)reducedindexesMap[selectedretestPeaks[k].GetBegin()], (int)reducedindexesMap[selectedretestPeaks[k].GetEnd()] );
@@ -561,7 +560,6 @@ bool CLineDetection::RemoveStrongFromSpectra(const CSpectrum& spectrum, CLineDet
             std::string peakName = buffer;
             result.RayCatalog.Add( CRay( peakName, selectedgaussparams[k].Pos, m_type, "SYM", force , selectedgaussparams[k].Amp, selectedgaussparams[k].Width, ratioAmp) );
             result.RayCatalog.Sort();
-            added=true;
         }
     }
 

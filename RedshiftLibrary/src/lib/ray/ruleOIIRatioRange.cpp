@@ -21,6 +21,7 @@ void CRuleRatioRange::SetUp( Bool EnabledArgument, ... )
   m_LineA = std::string ( va_arg( Arguments, const char* ) );
   m_LineB = std::string ( va_arg( Arguments, const char* ) );
   m_Coefficient = va_arg( Arguments, Float64 );
+  va_end(Arguments);
 }
 
 Bool CRuleRatioRange::Check( CLineModelElementList& LineModelElementList )

@@ -40,7 +40,7 @@ CMask& CMask::operator &= ( const CMask& other )
     if( GetMasksCount() != other.GetMasksCount() )
         return *this;
 
-    for( Int32 i = 0; i<GetMasksCount(); i++ )
+    for( UInt32 i = 0; i<GetMasksCount(); i++ )
     {
         m_Mask[i] = other[i] & m_Mask[i];
     }
@@ -59,7 +59,7 @@ Bool CMask::IntersectWith( const CMask& other )
     Mask* selfWeight = m_Mask.data();
     const Mask* otherWeight = other.GetMasks();
 
-    for( Int32 j=0; j<GetMasksCount(); j++ )
+    for( UInt32 j=0; j<GetMasksCount(); j++ )
     {
         selfWeight[j] = selfWeight[j] & otherWeight[j];
     }

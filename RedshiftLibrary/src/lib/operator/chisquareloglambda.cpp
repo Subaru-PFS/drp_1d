@@ -1096,7 +1096,8 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64* spectrumRebinedLambda,
 
     if(errorWhileFitting!=0)
     {
-        return -2;
+      throw runtime_error("Error while fitting");
+      //return -2;
     }
 
     //interpolating on the regular z grid
@@ -1155,7 +1156,7 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64* spectrumRebinedLambda,
             result->Redshifts.size(),
             result->Redshifts[0],
             result->Redshifts[result->Redshifts.size()-1]);
-    Int32 interpRet = InterpolateResult(
+    InterpolateResult(
                 chi2reversed_array,
                 zreversed_array,
                 &result->Redshifts.front(),
@@ -1177,7 +1178,7 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64* spectrumRebinedLambda,
             {
                 intermChi2BufferReversed_array[t] = intermediateChi2[z_vect.size()-1-t][kism][kigm];
             }
-            Int32 interpIntermRet = InterpolateResult(
+            InterpolateResult(
                         intermChi2BufferReversed_array,
                         zreversed_array,
                         &result->Redshifts.front(),

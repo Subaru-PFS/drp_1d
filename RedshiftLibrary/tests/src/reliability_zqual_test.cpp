@@ -26,7 +26,7 @@ BOOST_AUTO_TEST_CASE(QualzResult_Save)
   COperatorResultStore result_store;
   CParameterStore parameter_store;
   CDataStore data_store(result_store, parameter_store);
-  std::stringstream stream;
+  //std::stringstream stream;
   CDataStore::CAutoScope result_scope(data_store, "zReliability/result");
   //std::shared_ptr<const CQualzResult> SolveResult = (std::shared_ptr<const CQualzResult>) new CQualzResult();
 

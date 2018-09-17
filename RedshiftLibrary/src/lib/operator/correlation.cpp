@@ -167,8 +167,7 @@ Float64 COperatorCorrelation::GetComputationDuration() const
 
         Float64 sumCorr=0;
         Float64 sumWeight=0;
-        Float64 tplInterpolatedFlux=-1;
-        Float64 t = 0;
+
         // k index: move over template
         // j index: move over spectrum
         

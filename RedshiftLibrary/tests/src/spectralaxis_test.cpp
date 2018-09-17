@@ -216,7 +216,7 @@ BOOST_AUTO_TEST_CASE(Scale)
 {
   Float64 n111Array[] = {1.,1.};
   CSpectrumSpectralAxis n111Axis = CSpectrumSpectralAxis(n111Array,2,false);
-  Float64 n111begin = n111Axis[0];
+
   BOOST_CHECK(n111Axis.IsInLinearScale()==true);
   BOOST_CHECK(n111Axis.IsInLogScale()==false);
   n111Axis.ConvertToLinearScale();
@@ -228,7 +228,7 @@ BOOST_AUTO_TEST_CASE(Scale)
   BOOST_CHECK_CLOSE(n111Axis[0],0.,1e-12);
 
   CSpectrumSpectralAxis n112Axis = CSpectrumSpectralAxis(2,true);
-  Float64 n112begin = n112Axis[0];
+
   BOOST_CHECK(n112Axis.IsInLinearScale()==false);
   BOOST_CHECK(n112Axis.IsInLogScale()==true);
   n112Axis.ConvertToLogScale();

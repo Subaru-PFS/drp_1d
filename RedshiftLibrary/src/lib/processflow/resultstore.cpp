@@ -124,7 +124,6 @@ Int32 COperatorResultStore::CreateResultStorage( std::fstream& stream, const bfs
     bfs::path outputFilePath = bfs::path( baseDir );
     outputFilePath /= path.string();
 
-    std::fstream outputFile;
 
     if( bfs::exists( outputFilePath.parent_path() ) == false )
     {

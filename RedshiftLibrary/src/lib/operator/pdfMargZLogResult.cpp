@@ -74,7 +74,7 @@ Int32 CPdfMargZLogResult::Load( std::string filePath )
             {
                 r = boost::lexical_cast<Float64>(*it);
             }
-            catch (boost::bad_lexical_cast)
+            catch (boost::bad_lexical_cast&)
             {
                 return -1;
             }
@@ -88,7 +88,7 @@ Int32 CPdfMargZLogResult::Load( std::string filePath )
                 {
                     c = boost::lexical_cast<Float64>(*it);
                 }
-                catch (boost::bad_lexical_cast)
+                catch (boost::bad_lexical_cast&)
                 {
                     return -1;
                 }

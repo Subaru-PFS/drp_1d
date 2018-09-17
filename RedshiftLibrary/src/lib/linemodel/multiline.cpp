@@ -21,7 +21,7 @@ CMultiLine::CMultiLine( std::vector<CRay> rs,
 			const Float64 velocityAbsorption,
 			std::vector<Float64> nominalAmplitudes,
 			Float64 nominalWidth,
-			std::vector<Int32> catalogIndexes ) : CLineModelElement ( widthType, resolution, velocityEmission, velocityAbsorption )
+			std::vector<UInt32> catalogIndexes ) : CLineModelElement ( widthType, resolution, velocityEmission, velocityAbsorption )
 {
     m_ElementType = "CMultiLine";
     m_c_kms = 300000.0; //to be defined in a better location ?

@@ -14,6 +14,7 @@ void CRuleStrongHigherThanWeak::SetUp( Bool EnabledArgument, ... )
   va_list Arguments;
   va_start ( Arguments, EnabledArgument );
   m_LineType = va_arg( Arguments, Int32 );
+  va_end(Arguments);
 }
 
 /** \brief Verify that "stronger lines have higher amplitudes than weaker lines" rule is applicable, and then apply it.
@@ -63,7 +64,7 @@ void CRuleStrongHigherThanWeak::Correct( CLineModelElementList& LineModelElement
       Float64 ampA = maxiStrong;
       Float64 erA = erStrong;
       Float64 ampB = LineModelElementList.m_Elements[eIdxWeak]->GetFittedAmplitude( subeIdxWeak );
-      Float64 erB = LineModelElementList.m_Elements[eIdxWeak]->GetFittedAmplitudeErrorSigma( subeIdxWeak );
+
       //Method 0 : no noise taken into acccount
       //Float64 maxB = (coeff*ampA);
 
@@ -126,14 +127,12 @@ Float64 CRuleStrongHigherThanWeak::FindHighestStrongLineAmp( Int32 linetype , Fl
 	  continue;
 	}
 
-      Float64 validSNRCut = 0.05;
       Float64 ampStrong = LineModelElementList.m_Elements[eIdxStrong]->GetFittedAmplitude( subeIdxStrong );
       Float64 erStrong = LineModelElementList.m_Elements[eIdxStrong]->GetFittedAmplitudeErrorSigma( subeIdxStrong );
-      Float64 lineSnr = -1.0;
-      if(erStrong>0.0 && ampStrong>0.0)
-      {
-          lineSnr = ampStrong/erStrong;
-      }
+      // if(erStrong>0.0 && ampStrong>0.0)
+      // {
+      //     lineSnr = ampStrong/erStrong;
+      // }
       if( maxi<ampStrong /*&& lineSnr>validSNRCut*/ )
 	{
 	  maxi = ampStrong;

@@ -105,8 +105,6 @@ void COperatorTplcombination::BasicFit(const CSpectrum& spectrum,
     fittingResults.overlapRate = 0.0;
     fittingResults.status = COperator::nStatus_DataError;
 
-    Bool retVal;
-
     const CSpectrumSpectralAxis& spcSpectralAxis = spectrum.GetSpectralAxis();
     const CSpectrumFluxAxis& spcFluxAxis = spectrum.GetFluxAxis();
     const TFloat64List& spcError = spcFluxAxis.GetError();
@@ -119,7 +117,7 @@ void COperatorTplcombination::BasicFit(const CSpectrum& spectrum,
     }
     // Compute clamped lambda range over spectrum
     TFloat64Range spcLambdaRange;
-    retVal = spcSpectralAxis.ClampLambdaRange( lambdaRange, spcLambdaRange );
+    spcSpectralAxis.ClampLambdaRange( lambdaRange, spcLambdaRange );
     Log.LogDebug("  Operator-Tplcombination: spectrum has n=%d samples in lambdarange: %.2f - %.2f", spcSpectralAxis.GetSamplesCount(), spcSpectralAxis[0], spcSpectralAxis[spcSpectralAxis.GetSamplesCount()-1]);
 
 
@@ -137,7 +135,7 @@ void COperatorTplcombination::BasicFit(const CSpectrum& spectrum,
 
         // Compute clamped lambda range over template
         TFloat64Range tplLambdaRange;
-        retVal = m_shiftedTemplatesSpectralAxis_bf[ktpl]->ClampLambdaRange( lambdaRange, tplLambdaRange );
+        m_shiftedTemplatesSpectralAxis_bf[ktpl]->ClampLambdaRange( lambdaRange, tplLambdaRange );
 
         // if there is any intersection between the lambda range of the spectrum and the lambda range of the template
         // Compute the intersected range
@@ -216,10 +214,9 @@ void COperatorTplcombination::BasicFit(const CSpectrum& spectrum,
     }
 
     // Prepare the fit data
-    Float64 xi, yi, ei, chisq;
+    Float64 yi, ei, chisq;
     for(Int32 i = 0; i < n; i++)
     {
-        xi = spcSpectralAxis[i+imin_lbda];
         yi = spcFluxAxis[i+imin_lbda]/normFactor;
         ei = spcError[i+imin_lbda]/normFactor;
 
@@ -398,7 +395,7 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(const CSpectru
     }
 
     Log.LogDebug("  Operator-tplcombination: allocating memory for buffers (N = %d)", tplList.size());
-    Float64* precomputedFineGridTplFlux; //Todo: define as a list for each tpl
+    Float64* precomputedFineGridTplFlux = NULL; //Todo: define as a list for each tpl
     for(Int32 ktpl=0; ktpl<tplList.size(); ktpl++)
     {
         // Pre-Allocate the rebined template with regard to the spectrum size

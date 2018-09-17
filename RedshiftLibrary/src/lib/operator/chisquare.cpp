@@ -40,8 +40,6 @@ void COperatorChiSquare::BasicFit( const CSpectrum& spectrum, const CTemplate& t
     overlapRate = 0.0;
     status = nStatus_DataError;
 
-    Bool retVal;
-
     CSpectrumSpectralAxis shiftedTplSpectralAxis( tpl.GetSampleCount(), false );
 
     const CSpectrumSpectralAxis& spcSpectralAxis = spectrum.GetSpectralAxis();
@@ -52,7 +50,7 @@ void COperatorChiSquare::BasicFit( const CSpectrum& spectrum, const CTemplate& t
 
     // Compute clamped lambda range over spectrum
     TFloat64Range spcLambdaRange;
-    retVal = spcSpectralAxis.ClampLambdaRange( lambdaRange, spcLambdaRange );
+    spcSpectralAxis.ClampLambdaRange( lambdaRange, spcLambdaRange );
 
     // Compute shifted template
     Float64 onePlusRedshift = 1.0 + redshift;
@@ -62,7 +60,7 @@ void COperatorChiSquare::BasicFit( const CSpectrum& spectrum, const CTemplate& t
 
     // Compute clamped lambda range over template
     TFloat64Range tplLambdaRange;
-    retVal = shiftedTplSpectralAxis.ClampLambdaRange( lambdaRange, tplLambdaRange );
+    shiftedTplSpectralAxis.ClampLambdaRange( lambdaRange, tplLambdaRange );
 
     // if there is any intersection between the lambda range of the spectrum and the lambda range of the template
     // Compute the intersected range

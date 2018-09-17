@@ -93,8 +93,9 @@ CContinuumIndexes::SContinuumRelevance CContinuumIndexes::getRelevance(const CSp
     Float64 Fa = NAN;
     Float64 stdS = NAN;
     Float64 stdC = NAN;
-    bool retA = spectrum.GetMeanAndStdFluxInRange( spectrum.GetLambdaRange(), Fa, stdS );
-    bool retB = continuum.GetMeanAndStdFluxInRange( continuum.GetLambdaRange(), Fa, stdC );
+
+    spectrum.GetMeanAndStdFluxInRange( spectrum.GetLambdaRange(), Fa, stdS );
+    continuum.GetMeanAndStdFluxInRange( continuum.GetLambdaRange(), Fa, stdC );
 
     SContinuumRelevance relevance;
     relevance.StdSpectrum = stdS;

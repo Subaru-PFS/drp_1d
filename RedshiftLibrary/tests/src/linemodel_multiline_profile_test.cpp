@@ -104,12 +104,12 @@ void checkProfileValue(std::string linecatalogPath,
     CLineModelElementList model(spectrum, spectrumContinuum, tplCatalog, tplCategories, unused_calibrationPath, lineList, opt_fittingmethod, opt_continuumcomponent, opt_lineWidthType, opt_resolution, opt_velocityEmission, opt_velocityAbsorption, opt_rules, opt_rigidity);
     TFloat64Range lambdaRange = TFloat64Range( 100.0, 12000.0 );
     CLineModelSolution modelSolution;
-    Float64 merit = model.fit(z, lambdaRange, modelSolution);
+    model.fit(z, lambdaRange, modelSolution);
 
     CSpectrumSpectralAxis spcSpectralAxis = spectrum.GetSpectralAxis();
 
-    std::vector<Int32> validEltsIdx;
-    for (Int32 iElt=0; iElt<model.m_Elements.size(); iElt++)
+    std::vector<UInt32> validEltsIdx;
+    for (UInt32 iElt=0; iElt<model.m_Elements.size(); iElt++)
     {
         validEltsIdx.push_back(iElt);
     }
@@ -175,7 +175,7 @@ void checkProfileValue(std::string linecatalogPath,
         Float64* mmy = (Float64*) calloc( nsamples, sizeof( Float64 ) );
         //prepare fluxdata
         Float64* fluxdata = (Float64*) calloc( nsamples, sizeof( Float64 ) );
-        std::vector<Int32> xInds;
+        std::vector<UInt32> xInds;
         const Float64* flux = spcFluxAxis.GetSamples();
         for (Int32 i = 0; i < nsamples; i++)
         {
@@ -184,7 +184,7 @@ void checkProfileValue(std::string linecatalogPath,
         }
 
 
-        Int32 ret = model.estimateMeanSqFluxAndGradient(margs, normFactor, validEltsIdx, xInds, lineTypeFilter, fluxdata, mmy, f, g);
+        model.estimateMeanSqFluxAndGradient(margs, normFactor, validEltsIdx, xInds, lineTypeFilter, fluxdata, mmy, f, g);
         //BOOST_CHECK_SMALL( abs(f - refProfileMeansquareValue), 1e-4);
         BOOST_CHECK_CLOSE_FRACTION( f, refProfileMeansquareValue, 1e-3);
 
@@ -272,9 +272,9 @@ BOOST_AUTO_TEST_CASE( Linemodel_multiline_profile_sym_value_fullwavelengthrange 
         {
             Int32 kCol = 0;
             // Parse line
-            double val = 0.0;
             while( it != tok.end() )
             {
+	      double val;
                 val = boost::lexical_cast<double>(*it);
                 gradResidualMatrix[kLine][kCol] = val;
                 ++it;
@@ -306,9 +306,9 @@ BOOST_AUTO_TEST_CASE( Linemodel_multiline_profile_sym_value_fullwavelengthrange 
         if( it != tok.end() )
         {
             // Parse line
-            double val = 0.0;
             while( it != tok.end() )
             {
+	      double val;
                 val = boost::lexical_cast<double>(*it);
                 refProfileMeansquareValue = val;
                 ++it;
@@ -335,9 +335,9 @@ BOOST_AUTO_TEST_CASE( Linemodel_multiline_profile_sym_value_fullwavelengthrange 
         if( it != tok.end() )
         {
             // Parse line
-            double val = 0.0;
             while( it != tok.end() )
             {
+	        double val;
                 val = boost::lexical_cast<double>(*it);
                 refProfileGradientMeansquareValues[kLine] = val;
                 ++it;

@@ -181,10 +181,8 @@ Bool CLineModelSolveResult::GetBestRedshiftFromPdf( const CDataStore& store,
         return false;
     }
 
-
     Float64 tmpProbaLog = -DBL_MAX;
     Float64 tmpIntgProba = -DBL_MAX;
-    Float64 tmpMerit = DBL_MAX;
     Float64 tmpRedshift = 0.0;
     Float64 tmpSigma = -1.0;
     Float64 tmpSnrHa = -3.0;
@@ -240,14 +238,13 @@ Bool CLineModelSolveResult::GetBestRedshiftFromPdf( const CDataStore& store,
                     flux_integral = pdfz.getCandidateSumTrapez( logzpdf1d->Redshifts, logzpdf1d->valProbaLog, zInCandidateRange, Fullwidth);
                 }
 
-                Float64 merit = lineModelResult->ChiSquare[solIdx];
+                //Float64 merit = lineModelResult->ChiSquare[solIdx];
                 //if( merit < tmpMerit )
                 if(probaLog>tmpProbaLog)
                 //if(flux_integral>tmpIntgProba)
                 {
                     tmpIntgProba = flux_integral;
                     tmpProbaLog = probaLog;
-                    tmpMerit = merit;
                     tmpRedshift = zInCandidateRange;//lineModelResult->ExtremaResult.ExtremaLastPass[i];
                     tmpSigma = lineModelResult->ExtremaResult.DeltaZ[i];
                     tmpSnrHa = lineModelResult->ExtremaResult.snrHa[i];

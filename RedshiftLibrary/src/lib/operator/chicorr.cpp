@@ -173,7 +173,6 @@ int COperatorChicorr::Compute(const CSpectrum& spectrum, const CSpectrum& spectr
             k++;
 
         Int32 jStart = j;
-        Int32 kStart = k;
 
         // xcorr vars
         Float64 sumCorr=0;

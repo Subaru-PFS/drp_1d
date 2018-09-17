@@ -113,7 +113,7 @@ NSEpic::TFloat64List UtilLoadRayMatchingResults( const char* filePath ){
                     {
                         z = lexical_cast<double>(*it);
                     }
-                    catch (bad_lexical_cast)
+                    catch (bad_lexical_cast&)
                     {;
                     }
                     ++it;
@@ -134,7 +134,6 @@ NSEpic::TFloat64List UtilLoadRayMatchingResults( const char* filePath ){
 BOOST_AUTO_TEST_CASE(LoadCatalog)
 {
     CRayCatalog catalog;
-    Bool returnValue;
 
     BOOST_CHECK_NO_THROW(catalog.Load( DATA_ROOT_DIR "RayTestCase/raycatalog_OK1.txt" ));
     BOOST_CHECK_THROW(catalog.Load( DATA_ROOT_DIR "RayTestCase/raycatalog_NOK1.txt" ),
@@ -146,7 +145,6 @@ BOOST_AUTO_TEST_CASE(LoadCatalog)
 BOOST_AUTO_TEST_CASE(MatchingTest1)
 {
     CRayCatalog restFrameCatalog;
-    Bool returnValue;
 
     BOOST_CHECK_NO_THROW(restFrameCatalog.Load( DATA_ROOT_DIR "RayTestCase/raycatalog_testMatch1.txt" ));
 
@@ -174,7 +172,6 @@ BOOST_AUTO_TEST_CASE(MatchingTest2_EzValidationTest)
 {
     //load restframe catalog
     CRayCatalog restFrameCatalog;
-    Bool returnValue;
 
     BOOST_CHECK_NO_THROW(restFrameCatalog.Load( DATA_ROOT_DIR "RayTestCase/RayMatchingVVDS/raycatalog.txt" ));
 

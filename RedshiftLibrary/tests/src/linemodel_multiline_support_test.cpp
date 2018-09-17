@@ -43,7 +43,6 @@ void checkSupport(std::string linecatalogPath,
     Int32 lineTypeFilter = CRay::nType_Emission;
     Int32 forceFilter = -1;
     std::string opt_fittingmethod = "ones"; //all the elements amplitudes set to 1.0
-    Float64 z = 0.0;
 
     // load spectrum
     CSpectrumIOFitsReader reader;

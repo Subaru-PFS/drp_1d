@@ -332,7 +332,7 @@ Bool COperatorDTreeBSolve::GetCombinedRedshift(CDataStore& store)
         Int32 iCalcGrid=0;
         for( Int32 i=0; i<znc.size(); i++ )
         {
-            if((znc[i]>=zcontinuum_calcGrid[iCalcGrid] && iCalcGrid<zcontinuum_calcGrid.size()) || iCalcGrid==0){
+            if((iCalcGrid<zcontinuum_calcGrid.size() && znc[i]>=zcontinuum_calcGrid[iCalcGrid]) || iCalcGrid==0){
                 chi2continuum.push_back(chi2continuum_calcGrid[iCalcGrid]);
                 iCalcGrid++;
             }else if(iCalcGrid>=zcontinuum_calcGrid.size()){
