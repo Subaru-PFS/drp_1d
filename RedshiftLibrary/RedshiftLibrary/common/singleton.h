@@ -3,48 +3,30 @@
 
 #include <RedshiftLibrary/common/datatypes.h>
 
-namespace NSEpic
-{
+namespace NSEpic {
 
 /**
  * \ingroup Core
  * Singleton base class
  */
-template <typename T> 
-class CSingleton
+template <typename T> class CSingleton
 {
 
-public:
+  public:
+    CSingleton() { m_Instance = (T *)this; }
 
-    CSingleton( )
-    {
-        m_Instance = (T*) this;
-    }
+    virtual ~CSingleton() { m_Instance = NULL; }
 
-    virtual ~CSingleton( )
-    {  
-        m_Instance = NULL;  
-    }
+    static Bool IsCreated() { return m_Instance != NULL; }
 
-    static Bool IsCreated()
-    {
-        return m_Instance != NULL;
-    }
+    static T &GetInstance() { return *m_Instance; }
 
-    static T& GetInstance( )
-    {  
-        return *m_Instance ;
-    }
-
-private:
-
-    static T*  m_Instance;
+  private:
+    static T *m_Instance;
 };
 
-template <typename T> 
-T* CSingleton<T>::m_Instance = NULL;
+template <typename T> T *CSingleton<T>::m_Instance = NULL;
 
-
-}
+} // namespace NSEpic
 
 #endif

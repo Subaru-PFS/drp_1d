@@ -7,6 +7,10 @@
 using namespace NSEpic;
 using namespace std;
 
+CRuleSuperStrong::CRuleSuperStrong()
+{
+}
+
 void CRuleSuperStrong::SetUp( Bool EnabledArgument, ... )
 {
   Name = "superstrong";

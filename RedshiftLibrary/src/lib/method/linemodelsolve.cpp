@@ -220,12 +220,12 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
  * Return a pointer to an empty CLineModelSolveResult. (The results for Linemodel will reside in the linemodel.linemodel result).
  **/
 std::shared_ptr<CLineModelSolveResult> CLineModelSolve::Compute( CDataStore& dataStore,
-								       const CSpectrum& spc,
-								       const CSpectrum& spcWithoutCont,
+                                                                       const CSpectrum& spc,
+                                                                       const CSpectrum& spcWithoutCont,
                                        const CTemplateCatalog& tplCatalog,
                                        const TStringList& tplCategoryList,
-								       const CRayCatalog& restraycatalog,
-								       const TFloat64Range& lambdaRange,
+                                                                       const CRayCatalog& restraycatalog,
+                                                                       const TFloat64Range& lambdaRange,
                                        const TFloat64List& redshifts,
                                        const std::string outputPdfRelDir)
 {
@@ -588,13 +588,13 @@ Int32 getVelocitiesFromRefFile( const char* filePath, std::string spcid, Float64
  * If that returned true, store results.
  **/
 Bool CLineModelSolve::Solve( CDataStore& dataStore,
-			     const CSpectrum& spc,
-			     const CSpectrum& spcWithoutCont,
+                             const CSpectrum& spc,
+                             const CSpectrum& spcWithoutCont,
                  const CTemplateCatalog& tplCatalog,
                  const TStringList& tplCategoryList,
-			     const CRayCatalog& restraycatalog,
+                             const CRayCatalog& restraycatalog,
                  const TFloat64Range& lambdaRange,
-			     const TFloat64List& redshifts )
+                             const TFloat64List& redshifts )
 {
     std::string scopeStr = "linemodel";
 
@@ -720,7 +720,7 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
             Log.LogError("Linemodel: Candidates search - Pdfz computation failed");
             return false;
         }else{
-	  // sign = -1;
+          // sign = -1;
             fvals = postmargZResult->valProbaLog;
         }
     }

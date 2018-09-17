@@ -84,31 +84,31 @@ public:
 
 private:
 
-    Int32           m_Type;
-    std::string     m_Profile;
-    Int32           m_Force;
-    Float64         m_Pos;
-    Float64         m_Offset;
-    Float64         m_Amp;
-    Float64         m_Width;
-    Float64         m_Cut;
+    Int32           m_Type = 0;
+    std::string     m_Profile = "";
+    Int32           m_Force = 0;
+    Float64         m_Pos = 0;
+    Float64         m_Offset = 0;
+    Float64         m_Amp = 0;
+    Float64         m_Width = 0;
+    Float64         m_Cut = 0;
 
     //fit err
-    Float64         m_PosFitErr;
-    Float64         m_SigmaFitErr;
-    Float64         m_AmpFitErr;
+    Float64         m_PosFitErr = 0;
+    Float64         m_SigmaFitErr = 0;
+    Float64         m_AmpFitErr = 0;
 
-    std::string     m_Name;
+    std::string     m_Name = "";
 
     //for multiline group
-    std::string     m_GroupName;
-    Float64         m_NominalAmplitude;
+    std::string     m_GroupName = "";
+    Float64         m_NominalAmplitude = 0;
 
     //for offset fitting
-    bool            m_OffsetFit;
+    bool            m_OffsetFit = false;
 
     //for velocity fitting
-    std::string     m_VelGroupName;
+    std::string     m_VelGroupName = "";
 
 };
 

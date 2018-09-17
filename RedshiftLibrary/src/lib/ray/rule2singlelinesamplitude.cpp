@@ -8,6 +8,14 @@
 using namespace NSEpic;
 using namespace std;
 
+CRule2SingleLinesAmplitude::CRule2SingleLinesAmplitude() :
+  m_LineType(0),
+  m_LineA(""),
+  m_LineB(""),
+  m_Coefficient(0)
+{
+}
+
 void CRule2SingleLinesAmplitude::SetUp( Bool EnabledArgument, ... )
 {
   Name = "balmersingle";

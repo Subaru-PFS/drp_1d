@@ -36,14 +36,14 @@ public:
 
     const Float64*  getDustCoeff(Float64 dustCoeff, Float64 maxLambda);
 
-    Float64 *m_dataCalzetti;
+    Float64 *m_dataCalzetti = NULL;
     Float64 m_NdataCalzetti;
 
-    Int32 m_nDustCoeff;
+    Int32 m_nDustCoeff = 0;
     Float64 m_dustCoeffStep;
     Float64 m_dustCoeffStart;
-    Float64* m_dataDustCoeff;
-    bool calzettiInitFailed;
+    Float64* m_dataDustCoeff = NULL;
+    bool calzettiInitFailed = false;
 
 private:
 

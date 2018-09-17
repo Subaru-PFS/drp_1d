@@ -5,30 +5,25 @@
 
 using namespace std;
 
-namespace NSEpic
-{
+namespace NSEpic {
 
-  /**
-   * \ingroup Redshift
-   * Statistical mean objects.
-   **/
-template< typename T >
-class CMean
-{
+/**
+ * \ingroup Redshift
+ * Statistical mean objects.
+ **/
+template <typename T> class CMean {
 
-public:
-    
+  public:
     CMean();
     ~CMean();
-        
-    T Find( const T * a, Int32 n );
 
-private:
-    
+    T Find(const T *a, Int32 n);
+
+  private:
 };
-    
+
 #include <RedshiftLibrary/common/mean.hpp>
 
-}
+} // namespace NSEpic
 
 #endif

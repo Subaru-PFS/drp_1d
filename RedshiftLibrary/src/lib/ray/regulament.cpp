@@ -16,9 +16,12 @@
 using namespace NSEpic;
 using namespace std;
 
+CRegulament::CRegulament()
+{
+}
+
 void CRegulament::Apply( CLineModelElementList& LineModelElementList )
 {
-    
   for( std::vector<CRule*>::iterator it = m_RulesVector.begin(); it != m_RulesVector.end(); it++ )
     {
       (*it)->Apply ( LineModelElementList );

@@ -7,6 +7,11 @@
 using namespace NSEpic;
 using namespace std;
 
+CRuleStrongHigherThanWeak::CRuleStrongHigherThanWeak():
+  m_LineType(0)
+{
+}
+
 void CRuleStrongHigherThanWeak::SetUp( Bool EnabledArgument, ... )
 {
   Name = "strongweak";

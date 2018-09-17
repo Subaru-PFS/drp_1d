@@ -144,10 +144,10 @@ void CModelFittingResult::Load( const char* filePath )
             ++it;
 
             //parse name
-            std::string name;
+            //std::string name;
             if( it != tok.end() )
             {
-	      // name = *it;
+              // name = *it;
             }
             else
             {

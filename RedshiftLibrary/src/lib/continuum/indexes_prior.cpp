@@ -15,6 +15,9 @@ namespace bfs = boost::filesystem;
 using namespace NSEpic;
 using namespace std;
 
+CContinuumIndexesPrior::CContinuumIndexesPrior() {
+}
+
 /**
  * Get the prior value for a gievn color, break pair
  */

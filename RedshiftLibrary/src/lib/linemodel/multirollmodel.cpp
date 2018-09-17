@@ -74,11 +74,11 @@ CMultiRollModel::CMultiRollModel(const CSpectrum& spectrum,
 
         std::string medianRemovalMethod = spectrumContinuum.GetContinuumEstimationMethod();
 
-        //const char*     nameBaseline;		// baseline filename
+        //const char*     nameBaseline;         // baseline filename
         Log.LogInfo( "    multirollmodel: Continuum estimation: using %s", medianRemovalMethod.c_str() );
         if( medianRemovalMethod== "IrregularSamplingMedian")
         {
-	    // nameBaseline = "preprocess/baselineISMedian";
+            // nameBaseline = "preprocess/baselineISMedian";
             CContinuumIrregularSamplingMedian continuum;
             Float64 opt_medianKernelWidth=spectrumContinuum.GetMedianWinsize();
             continuum.SetMedianKernelWidth(opt_medianKernelWidth);
@@ -87,7 +87,7 @@ CMultiRollModel::CMultiRollModel(const CSpectrum& spectrum,
             spectrumWithoutContinuum->SetMedianWinsize(opt_medianKernelWidth);
         }else if( medianRemovalMethod== "Median")
         {
-	    // nameBaseline = "preprocess/baselineMedian";
+            // nameBaseline = "preprocess/baselineMedian";
             CContinuumMedian continuum;
             Float64 opt_medianKernelWidth=spectrumContinuum.GetMedianWinsize();
             continuum.SetMedianKernelWidth(opt_medianKernelWidth);
@@ -96,7 +96,7 @@ CMultiRollModel::CMultiRollModel(const CSpectrum& spectrum,
 
         }else if( medianRemovalMethod== "waveletsDF")
         {
-	    // nameBaseline = "preprocess/baselineDF";
+            // nameBaseline = "preprocess/baselineDF";
             Int64 nscales=spectrumContinuum.GetDecompScales();
             std::string dfBinPath=spectrumContinuum.GetWaveletsDFBinPath();
             CContinuumDF continuum(dfBinPath);
@@ -109,7 +109,7 @@ CMultiRollModel::CMultiRollModel(const CSpectrum& spectrum,
             }
         }else if( medianRemovalMethod== "raw")
         {
-	    // nameBaseline = "preprocess/baselineRAW";
+            // nameBaseline = "preprocess/baselineRAW";
             CSpectrumFluxAxis& spcFluxAxis = spectrumWithoutContinuum->GetFluxAxis();
             spcFluxAxis.SetSize( spectrumForContinuumEstimation->GetSampleCount() );
             CSpectrumSpectralAxis& spcSpectralAxis = spectrumWithoutContinuum->GetSpectralAxis();
@@ -122,7 +122,7 @@ CMultiRollModel::CMultiRollModel(const CSpectrum& spectrum,
             }
         }else if( medianRemovalMethod== "zero")
         {
-	    // nameBaseline = "preprocess/baselineZERO";
+            // nameBaseline = "preprocess/baselineZERO";
             CSpectrumFluxAxis& spcFluxAxis = spectrumWithoutContinuum->GetFluxAxis();
             spcFluxAxis.SetSize( spectrumForContinuumEstimation->GetSampleCount() );
             CSpectrumSpectralAxis& spcSpectralAxis = spectrumWithoutContinuum->GetSpectralAxis();
@@ -290,7 +290,7 @@ Bool CMultiRollModel::initLambdaOffsets(std::string offsetsCatalogsRelPath)
     for(Int32 km=0; km<m_models.size(); km++)
     {
         m_models[km]->initLambdaOffsets(offsetsCatalogsRelPath);
-	ret = true;
+        ret = true;
     }
     return ret;
 }
