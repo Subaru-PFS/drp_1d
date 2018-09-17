@@ -183,7 +183,7 @@ void COperatorResultStore::SaveRedshiftResultError(  const std::string spcName, 
         }
 
 
-        outputStream <<  spcName << "\t" << processingID << "\t-1\t-1\t-1\t-1\t-1\t-1\t-1"<< std::endl;
+        outputStream <<  spcName << "\t" << processingID << "\t-1\t-1\t-1\t-1\t-1\t-1\t-1\t-1"<< std::endl;
     }
 }
 
