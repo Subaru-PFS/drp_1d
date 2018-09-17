@@ -38,15 +38,16 @@ void CLineModelSolveResult::Save( const CDataStore& store, std::ostream& stream 
     std::string tplcontinuumName="-1";
     Float64 sigma;
     Float64 snrHa=-1.0;
+    Float64 lfHa=-1.0;
 
     //GetBestRedshiftWithStrongELSnrPrior( store, redshift, merit );
     if(m_bestRedshiftMethod==0)
     {
-        GetBestRedshift( store, redshift, merit, sigma, snrHa );
+        GetBestRedshift( store, redshift, merit, sigma, snrHa, lfHa );
         Log.LogInfo( "Linemodelsolve-result: extracting best redshift from chi2 extrema: z=%f", redshift);
     }else if(m_bestRedshiftMethod==2)
     {
-        GetBestRedshiftFromPdf( store, redshift, merit, sigma, snrHa, tplratioName, tplcontinuumName );
+        GetBestRedshiftFromPdf( store, redshift, merit, sigma, snrHa, lfHa, tplratioName, tplcontinuumName );
         Log.LogInfo( "Linemodelsolve-result: extracting best redshift from PDF: z=%f", redshift);
         Log.LogInfo( "Linemodelsolve-result: extracted best model-tplratio=%s", tplratioName.c_str());
         Log.LogInfo( "Linemodelsolve-result: extracted best model-tplcontinuum=%s", tplcontinuumName.c_str());
@@ -75,16 +76,17 @@ void CLineModelSolveResult::SaveLine( const CDataStore& store, std::ostream& str
     std::string tplcontinuumName="-1";
     Float64 sigma;
     Float64 snrHa;
+    Float64 lfHa=-1;
 
 
     //GetBestRedshiftWithStrongELSnrPrior( store, redshift, merit );
     if(m_bestRedshiftMethod==0)
     {
-        GetBestRedshift( store, redshift, merit, sigma, snrHa );
+        GetBestRedshift( store, redshift, merit, sigma, snrHa, lfHa );
         //Log.LogInfo( "Linemodelsolve-result: extracting best redshift from chi2 extrema: z=%f", redshift);;
     }else if(m_bestRedshiftMethod==2)
     {
-        GetBestRedshiftFromPdf( store, redshift, merit, sigma, snrHa, tplratioName, tplcontinuumName);
+        GetBestRedshiftFromPdf( store, redshift, merit, sigma, snrHa, lfHa, tplratioName, tplcontinuumName);
         //Log.LogInfo( "Linemodelsolve-result: extracting best redshift from PDF: z=%f", redshift);
     }else{
         //Log.LogError( "Linemodelsolve-result: can't parse best redshift estimation method");
@@ -100,6 +102,7 @@ void CLineModelSolveResult::SaveLine( const CDataStore& store, std::ostream& str
         << sigma << "\t"
         << m_ReliabilityLabel << "\t"
         << snrHa << "\t"
+        << lfHa << "\t"
         << m_TypeLabel << std::endl;
 }
 
@@ -111,7 +114,7 @@ void CLineModelSolveResult::SaveLine( const CDataStore& store, std::ostream& str
  *   if this entry is less than the temporary merit, update the temporary merit and redshift values with the result stored in this entry.
  * Set the redshift and merit referenced arguments with the best values found.
  **/
-Bool CLineModelSolveResult::GetBestRedshift( const CDataStore& store, Float64& redshift, Float64& merit, Float64& sigma, Float64& snrHa ) const
+Bool CLineModelSolveResult::GetBestRedshift( const CDataStore& store, Float64& redshift, Float64& merit, Float64& sigma, Float64& snrHa, Float64& lfHa ) const
 {
     std::string scope = store.GetScope( *this ) + "linemodelsolve.linemodel";
     auto results = store.GetGlobalResult( scope.c_str() );
@@ -120,6 +123,7 @@ Bool CLineModelSolveResult::GetBestRedshift( const CDataStore& store, Float64& r
     Float64 tmpRedshift = 0.0;
     Float64 tmpSigma = -1.0;
     Float64 tmpSnrHa = -1.0;
+    Float64 tmpLFHa = -1.0;
 
     if( !results.expired() )
     {
@@ -135,6 +139,7 @@ Bool CLineModelSolveResult::GetBestRedshift( const CDataStore& store, Float64& r
                 //tmpRedshift = lineModelResult->lmfitPass[i];
                 tmpSigma = lineModelResult->ExtremaResult.DeltaZ[i];
                 tmpSnrHa = lineModelResult->ExtremaResult.snrHa[i];
+                tmpLFHa = lineModelResult->ExtremaResult.lfHa[i];
             }
         }
     }
@@ -143,6 +148,7 @@ Bool CLineModelSolveResult::GetBestRedshift( const CDataStore& store, Float64& r
     merit = tmpMerit;
     sigma = tmpSigma;
     snrHa = tmpSnrHa;
+    lfHa = tmpLFHa;
     return true;
 }
 
@@ -158,6 +164,7 @@ Bool CLineModelSolveResult::GetBestRedshiftFromPdf( const CDataStore& store,
                                                     Float64& merit,
                                                     Float64& sigma,
                                                     Float64& snrHa,
+                                                    Float64& lfHa,
                                                     std::string& modelTplratio,
                                                     std::string& modelTplContinuum ) const
 {
@@ -181,6 +188,7 @@ Bool CLineModelSolveResult::GetBestRedshiftFromPdf( const CDataStore& store,
     Float64 tmpRedshift = 0.0;
     Float64 tmpSigma = -1.0;
     Float64 tmpSnrHa = -3.0;
+    Float64 tmpLFHa = -3.0;
     std::string tmpModelTplratio = "-1";
     std::string tmpModelTplcontinuum = "-1";
 
@@ -243,6 +251,7 @@ Bool CLineModelSolveResult::GetBestRedshiftFromPdf( const CDataStore& store,
                     tmpRedshift = zInCandidateRange;//lineModelResult->ExtremaResult.ExtremaLastPass[i];
                     tmpSigma = lineModelResult->ExtremaResult.DeltaZ[i];
                     tmpSnrHa = lineModelResult->ExtremaResult.snrHa[i];
+                    tmpLFHa = lineModelResult->ExtremaResult.lfHa[i];
                     tmpModelTplratio = lineModelResult->ExtremaResult.FittedTplshapeName[i];
                     tmpModelTplcontinuum = lineModelResult->ExtremaResult.FittedTplName[i];
                 }
@@ -260,6 +269,7 @@ Bool CLineModelSolveResult::GetBestRedshiftFromPdf( const CDataStore& store,
 
     sigma = tmpSigma;
     snrHa = tmpSnrHa;
+    lfHa = tmpLFHa;
     modelTplratio = tmpModelTplratio;
     modelTplContinuum = tmpModelTplcontinuum;
     return true;

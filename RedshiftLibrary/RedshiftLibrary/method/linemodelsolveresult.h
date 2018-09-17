@@ -33,10 +33,17 @@ public:
 
     void Save( const CDataStore& store, std::ostream& stream ) const;
     void SaveLine( const CDataStore& store, std::ostream& stream ) const;
-    Bool GetBestRedshift(const CDataStore& store, Float64& redshift, Float64& merit , Float64 &sigma, Float64 &snrHa) const;
+    Bool GetBestRedshift(const CDataStore& store, Float64& redshift, Float64& merit , Float64 &sigma, Float64 &snrHa, Float64 &lfHa) const;
     Bool GetBestRedshiftLogArea( const CDataStore& store, Float64& redshift, Float64& merit ) const;
     Bool GetBestRedshiftWithStrongELSnrPrior( const CDataStore& store, Float64& redshift, Float64& merit ) const;
-    Bool GetBestRedshiftFromPdf(const CDataStore& store, Float64& redshift, Float64& merit, Float64& sigma , Float64 &snrHa, std::string &modelTplratio, std::string &modelTplContinuum) const;
+    Bool GetBestRedshiftFromPdf(const CDataStore& store,
+                                Float64& redshift,
+                                Float64& merit,
+                                Float64& sigma ,
+                                Float64 &snrHa,
+                                Float64 &lfHa,
+                                std::string &modelTplratio,
+                                std::string &modelTplContinuum) const;
 
     Bool GetRedshiftCandidates( const CDataStore& store,  std::vector<Float64>& redshiftcandidates) const;
 

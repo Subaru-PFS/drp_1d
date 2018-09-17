@@ -28,6 +28,7 @@ struct CLineModelSolution
     std::vector<Float64> FluxDirectIntegration;    //Flux obtained by direct integration for each line
 
     Float64 snrHa;
+    Float64 lfHa;
 
     std::vector<Float64> LambdaObs;  //observed position in Angstrom
     std::vector<Float64> Velocity;  //dispersion velocity in km/s

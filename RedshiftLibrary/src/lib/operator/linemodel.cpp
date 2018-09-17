@@ -1264,6 +1264,7 @@ Int32 COperatorLineModel::ComputeSecondPass(CDataStore &dataStore,
 
         //store model Ha SNR
         m_result->ExtremaResult.snrHa[i] = m_result->LineModelSolutions[idx].snrHa;
+        m_result->ExtremaResult.lfHa[i] = m_result->LineModelSolutions[idx].lfHa;
 
         //store the model norm
         m_result->ExtremaResult.mTransposeM[i] = m_model->EstimateMTransposeM(lambdaRange);

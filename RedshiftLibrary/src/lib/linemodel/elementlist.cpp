@@ -4655,6 +4655,7 @@ CLineModelSolution CLineModelElementList::GetModelSolution(Int32 opt_level)
     modelSolution.Rays = m_RestRayList;
     modelSolution.ElementId.resize(m_RestRayList.size());
     modelSolution.snrHa = -1.0;
+    modelSolution.lfHa = -1.0;
 
     for( UInt32 iRestRay=0; iRestRay<m_RestRayList.size(); iRestRay++ )
     {
@@ -4662,7 +4663,7 @@ CLineModelSolution CLineModelElementList::GetModelSolution(Int32 opt_level)
         Int32 subeIdx = m_Elements[eIdx]->FindElementIndex(iRestRay);
         modelSolution.ElementId[iRestRay] = eIdx;
 
-        if(eIdx==-1 || subeIdx==-1)
+        if(eIdx==-1 || subeIdx==-1 || m_Elements[eIdx]->IsOutsideLambdaRange(subeIdx))
         {
             modelSolution.Amplitudes.push_back(m_Elements[eIdx]->GetFittedAmplitude(subeIdx));
             modelSolution.Errors.push_back(-1.0);
@@ -4720,10 +4721,13 @@ CLineModelSolution CLineModelElementList::GetModelSolution(Int32 opt_level)
                 linetags ltags;
                 if(m_RestRayList[iRestRay].GetName()==ltags.halpha_em && m_RestRayList[iRestRay].GetType()==CRay::nType_Emission)
                 {
-
                     if(fluxError>0.0)
                     {
                         modelSolution.snrHa = flux/fluxError;
+                    }
+                    if(flux>0.0)
+                    {
+                        modelSolution.lfHa = log10(flux);
                     }
                 }
             }
