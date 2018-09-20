@@ -469,9 +469,10 @@ const CSpectrumFluxAxis &CLineModelElementList::GetModelContinuum() const
  * @param subeIdx
  * @return
  */
-Float64 CLineModelElementList::GetFluxDirectIntegration(Int32 eIdx, Int32 subeIdx)
+Int32 CLineModelElementList::GetFluxDirectIntegration(Int32 eIdx, Int32 subeIdx, Float64& fluxdi, Float64& snrdi)
 {
-    Float64 nsigma = 10.; //total range: ie. range will be mu-nsigma/2; mu+nsigma/2
+    Int32 ret=0;
+    Float64 nsigma = 6.; //total range: ie. range will be mu-nsigma/2; mu+nsigma/2
 
     const CSpectrumSpectralAxis& spectralAxis = m_SpectrumModel->GetSpectralAxis();
     TFloat64Range lambdaRange = spectralAxis.GetLambdaRange(); //using the full wavelength range for this error estimation
@@ -486,25 +487,41 @@ Float64 CLineModelElementList::GetFluxDirectIntegration(Int32 eIdx, Int32 subeId
                                                                     winsizeAngstrom);
 
     //estimate the integrated flux between obs. spectrum and continuum: trapezoidal intg
-    Float64 sum=0.0;
+    Float64 sumFlux=0.0;
+    Float64 sumErr=0.0;
     UInt32 nsum = 0;
     for( Int32 t=indexRange.GetBegin();t<indexRange.GetEnd()-1;t++)
     {
-        Float64 fa = m_SpcFluxAxis[t]-m_ContinuumFluxAxis[t];
-        Float64 fb = m_SpcFluxAxis[t+1]-m_ContinuumFluxAxis[t+1];
+        //trapez
+        //Float64 fa = m_SpcFluxAxis[t]-m_ContinuumFluxAxis[t];
+        //Float64 fb = m_SpcFluxAxis[t+1]-m_ContinuumFluxAxis[t+1];
+        //Float64 diff = (spectralAxis[t+1]-spectralAxis[t])*(fb+fa)*0.5;
+        //sumFlux += diff;
 
-        Float64 diff = (spectralAxis[t+1]-spectralAxis[t])*(fb+fa)*0.5;
-        sum += diff;
+        //direct
+        sumFlux += m_SpcFluxAxis[t]-m_ContinuumFluxAxis[t];
+        sumErr += m_ErrorNoContinuum[t]*m_ErrorNoContinuum[t];
+
         nsum++;
     }
 
-    Float64 fluxdi = 0.;
+    fluxdi = 0.;
     if(nsum>0)
     {
-        fluxdi = sum;
+        fluxdi = sumFlux;
+    }else{
+        ret=-1;
     }
 
-    return fluxdi;
+    snrdi = -1;
+    if(sumErr>0.0)
+    {
+        snrdi = fluxdi/sqrt(sumErr);
+    }else{
+        ret=-1;
+    }
+
+    return ret;
 
 }
 
@@ -4689,7 +4706,9 @@ CLineModelSolution CLineModelElementList::GetModelSolution(Int32 opt_level)
                 Float64 sigma = m_Elements[eIdx]->GetWidth(subeIdx, m_Redshift);
                 Float64 flux = -1;
                 Float64 fluxError = -1;
-                Float64 fluxDI = GetFluxDirectIntegration(eIdx, subeIdx);
+                Float64 fluxDI = -1;
+                Float64 snrDI = -1;
+                Int32 retdi = GetFluxDirectIntegration(eIdx, subeIdx, fluxDI, snrDI);
                 if(amp>=0.0)
                 {
                     if(m_RestRayList[iRestRay].GetType()==CRay::nType_Emission)
@@ -4712,13 +4731,22 @@ CLineModelSolution CLineModelElementList::GetModelSolution(Int32 opt_level)
                 linetags ltags;
                 if(m_RestRayList[iRestRay].GetName()==ltags.halpha_em && m_RestRayList[iRestRay].GetType()==CRay::nType_Emission)
                 {
-                    if(fluxError>0.0)
+                    if(false)
                     {
-                        modelSolution.snrHa = flux/fluxError;
-                    }
-                    if(flux>0.0)
-                    {
-                        modelSolution.lfHa = log10(flux);
+                        if(fluxError>0.0)
+                        {
+                            modelSolution.snrHa = flux/fluxError;
+                        }
+                        if(flux>0.0)
+                        {
+                            modelSolution.lfHa = log10(flux);
+                        }
+                    }else{
+                        modelSolution.snrHa = snrDI;
+                        if(fluxDI>0.0)
+                        {
+                            modelSolution.lfHa = log10(fluxDI);
+                        }
                     }
                 }
             }

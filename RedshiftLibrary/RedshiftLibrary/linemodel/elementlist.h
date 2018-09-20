@@ -185,7 +185,7 @@ public:
     CSpectrum GetSpectrumModelContinuum() const;
     const CSpectrum&    GetObservedSpectrumWithLinesRemoved(Int32 lineTypeFilter=-1);
     Float64 GetContinuumError(Int32 eIdx, Int32 subeIdx);
-    Float64 GetFluxDirectIntegration(Int32 eIdx, Int32 subeIdx);
+    Int32 GetFluxDirectIntegration(Int32 eIdx, Int32 subeIdx, Float64& fluxdi, Float64& snrdi);
     const CSpectrumFluxAxis&    GetModelContinuum() const;
     Float64 getModelFluxVal(UInt32 idx) const;
     Float64 getModelFluxDerivEltVal(UInt32 DerivEltIdx, UInt32 idx) const;
