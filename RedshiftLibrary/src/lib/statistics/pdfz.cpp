@@ -807,10 +807,9 @@ std::vector<Float64> CPdfz::GetStrongLinePresenceLogZPrior(std::vector<bool> lin
     return logzPrior;
 }
 
-std::vector<Float64> CPdfz::GetEuclidNhaLogZPrior(std::vector<Float64> redshifts)
+std::vector<Float64> CPdfz::GetEuclidNhaLogZPrior(std::vector<Float64> redshifts, Float64 aCoeff)
 {
     std::vector<Float64> zPrior(redshifts.size(), 0.0);
-    Float64 aCoeff = 1.0;
 
     Float64 maxP=-DBL_MAX;
     Float64 minP=DBL_MAX;
@@ -827,7 +826,7 @@ std::vector<Float64> CPdfz::GetEuclidNhaLogZPrior(std::vector<Float64> redshifts
         {
             zPrior[kz] = (1e-6)*( -3080.1*aCoeff*redshifts[kz]+15546.6 ); //smooth affine version of pozzetti model at FHa=1e-16
         }else{
-            zPrior[kz] = (1.)*(- 54.7422088727874*z6
+            zPrior[kz] = (- 54.7422088727874*z6
                                  + 1203.94994364807*z5
                                  - 10409.6716744981*z4
                                  + 44240.3837462642*z3
@@ -837,6 +836,8 @@ std::vector<Float64> CPdfz::GetEuclidNhaLogZPrior(std::vector<Float64> redshifts
             if(zPrior[kz]<0){
                 zPrior[kz]=DBL_MIN;
             }
+            zPrior[kz] = pow(zPrior[kz], aCoeff);
+
         }
 
         if(zPrior[kz]>maxP)

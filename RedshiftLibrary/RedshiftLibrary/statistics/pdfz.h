@@ -27,7 +27,7 @@ public:
     Int32 Compute(TFloat64List merits, TFloat64List redshifts, Float64 cstLog, TFloat64List zPrior, TFloat64List &logPdf, Float64 &logEvidence);
     std::vector<Float64> GetConstantLogZPrior(UInt32 nredshifts);
     std::vector<Float64> GetStrongLinePresenceLogZPrior(std::vector<bool> linePresence, Float64 penalization_factor);
-    std::vector<Float64> GetEuclidNhaLogZPrior(std::vector<Float64> redshifts);
+    std::vector<Float64> GetEuclidNhaLogZPrior(std::vector<Float64> redshifts, Float64 aCoeff);
     std::vector<Float64> CombineLogZPrior(std::vector<Float64> logprior1, std::vector<Float64> logprior2);
 
     Float64 getSumTrapez(std::vector<Float64> redshifts, std::vector<Float64> valprobalog);

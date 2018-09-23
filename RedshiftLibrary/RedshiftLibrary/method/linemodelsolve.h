@@ -42,6 +42,7 @@ private:
                      std::string opt_rigidity,
                      std::string opt_combine,
                      Float64 opt_stronglinesprior,
+                     Float64 opt_euclidNHaEmittersPriorStrength,
                      std::shared_ptr<CPdfMargZLogResult> postmargZResult);
     Int32 SaveContinuumPDF(CDataStore &store, std::shared_ptr<const CLineModelResult> result);
 
@@ -78,6 +79,7 @@ private:
     std::string m_opt_twosteplargegridsampling;
     std::string m_opt_pdfcombination;
     Float64 m_opt_stronglinesprior;
+    Float64 m_opt_euclidNHaEmittersPriorStrength;
     std::string m_opt_saveintermediateresults;
     bool m_opt_enableSaveChisquareTplshapeResults;
 

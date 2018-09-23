@@ -131,6 +131,7 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
     dataStore.GetScopedParam( "linemodel.rules", m_opt_rules, "all" );
     dataStore.GetScopedParam( "linemodel.extremacount", m_opt_extremacount, 10.0 );
     dataStore.GetScopedParam( "linemodel.stronglinesprior", m_opt_stronglinesprior, 1e-1);
+    dataStore.GetScopedParam( "linemodel.euclidnhaemittersStrength", m_opt_euclidNHaEmittersPriorStrength, 1.0);
     dataStore.GetScopedParam( "linemodel.pdfcombination", m_opt_pdfcombination, "marg");
     dataStore.GetScopedParam( "linemodel.saveintermediateresults", m_opt_saveintermediateresults, "no");
 
@@ -198,6 +199,7 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
     Log.LogInfo( "    -fastfitlargegridstep: %.6f", m_opt_twosteplargegridstep);
 
     Log.LogInfo( "    -pdf-stronglinesprior: %e", m_opt_stronglinesprior);
+    Log.LogInfo( "    -pdf-euclidNHaEmittersPriorStrength: %e", m_opt_euclidNHaEmittersPriorStrength);
     Log.LogInfo( "    -pdf-combination: %s", m_opt_pdfcombination.c_str()); // "marg";    // "bestchi2";    // "bestproba";
 
     if(m_opt_saveintermediateresults=="yes")
@@ -247,7 +249,7 @@ std::shared_ptr<CLineModelSolveResult> CLineModelSolve::Compute( CDataStore& dat
         std::shared_ptr<const CLineModelResult> result = std::dynamic_pointer_cast<const CLineModelResult>( results.lock() );
 
         std::shared_ptr<CPdfMargZLogResult> postmargZResult = std::shared_ptr<CPdfMargZLogResult>(new CPdfMargZLogResult());
-        Int32 retCombinePdf = CombinePDF(result, m_opt_rigidity, m_opt_pdfcombination, m_opt_stronglinesprior, postmargZResult);
+        Int32 retCombinePdf = CombinePDF(result, m_opt_rigidity, m_opt_pdfcombination, m_opt_stronglinesprior, m_opt_euclidNHaEmittersPriorStrength, postmargZResult);
 
         if(retCombinePdf!=0)
         {
@@ -316,6 +318,7 @@ Int32 CLineModelSolve::CombinePDF(std::shared_ptr<const CLineModelResult> result
                                   std::string opt_rigidity,
                                   std::string opt_combine,
                                   Float64 opt_stronglinesprior,
+                                  Float64 opt_euclidNHaEmittersPriorStrength,
                                   std::shared_ptr<CPdfMargZLogResult> postmargZResult)
 {
     bool zPriorStrongLinePresence = (opt_stronglinesprior>0.0);
@@ -326,10 +329,11 @@ Int32 CLineModelSolve::CombinePDF(std::shared_ptr<const CLineModelResult> result
         Log.LogInfo("Linemodel: Pdfz computation: StrongLinePresence prior disabled");
     }
     //hardcoded Euclid-NHaZprior parameter
-    bool zPriorEuclidNHa = true;
-    if(zPriorEuclidNHa)
+    bool zPriorEuclidNHa = false;
+    if(opt_euclidNHaEmittersPriorStrength>0.0)
     {
-        Log.LogInfo("Linemodel: Pdfz computation: EuclidNHa prior enabled");
+        zPriorEuclidNHa = true;
+        Log.LogInfo("Linemodel: Pdfz computation: EuclidNHa prior enabled, with strength-coeff: %e", opt_euclidNHaEmittersPriorStrength);
     }else{
         Log.LogInfo("Linemodel: Pdfz computation: EuclidNHa prior disabled");
     }
@@ -367,7 +371,7 @@ Int32 CLineModelSolve::CombinePDF(std::shared_ptr<const CLineModelResult> result
         }
         if(zPriorEuclidNHa)
         {
-            std::vector<Float64> zlogPriorNHa = pdfz.GetEuclidNhaLogZPrior(result->Redshifts);
+            std::vector<Float64> zlogPriorNHa = pdfz.GetEuclidNhaLogZPrior(result->Redshifts, opt_euclidNHaEmittersPriorStrength);
             zPrior->valProbaLog = pdfz.CombineLogZPrior(zPrior->valProbaLog, zlogPriorNHa);
         }
 
@@ -409,7 +413,7 @@ Int32 CLineModelSolve::CombinePDF(std::shared_ptr<const CLineModelResult> result
 
             if(zPriorEuclidNHa)
             {
-                std::vector<Float64> zlogPriorNHa = pdfz.GetEuclidNhaLogZPrior(result->Redshifts);
+                std::vector<Float64> zlogPriorNHa = pdfz.GetEuclidNhaLogZPrior(result->Redshifts, opt_euclidNHaEmittersPriorStrength);
                 _prior = pdfz.CombineLogZPrior(_prior, zlogPriorNHa);
             }
             zpriorsTplshapes.push_back(_prior);
@@ -709,7 +713,7 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
         fvals = lmresult->ChiSquare;
     }else{
         std::shared_ptr<CPdfMargZLogResult> postmargZResult = std::shared_ptr<CPdfMargZLogResult>(new CPdfMargZLogResult());
-        Int32 retCombinePdf = CombinePDF(lmresult, m_opt_rigidity, m_opt_pdfcombination, m_opt_stronglinesprior, postmargZResult);
+        Int32 retCombinePdf = CombinePDF(lmresult, m_opt_rigidity, m_opt_pdfcombination, m_opt_stronglinesprior, m_opt_euclidNHaEmittersPriorStrength, postmargZResult);
 
         if(retCombinePdf!=0)
         {

@@ -81,6 +81,7 @@ private:
     std::string m_opt_twosteplargegridsampling;
     std::string m_opt_pdfcombination;
     Float64 m_opt_stronglinesprior;
+    Float64 m_opt_euclidNHaEmittersPriorStrength;
     std::string m_opt_saveintermediateresults;
     bool m_opt_enableSaveChisquareTplshapeResults;
 
