@@ -48,6 +48,8 @@ void CLineModelExtremaResult::Resize(Int32 size)
     bic.resize(size);
     ContinuumIndexes.resize(size);
     OutsideLinesMask.resize(size);
+    OutsideLinesSTDFlux.resize(size);
+    OutsideLinesSTDError.resize(size);
     FittedTplName.resize(size);
     FittedTplAmplitude.resize(size);
     FittedTplMerit.resize(size);
@@ -317,5 +319,28 @@ void CLineModelExtremaResult::Save( const CDataStore& store, std::ostream& strea
         }
         stream << "}" << std::endl;
     }
+
+
+    // save OutsideLinesSTDFlux, on 1 line
+    if(OutsideLinesSTDFlux.size()>0){
+        stream <<  "#OutsideLinesSTDFlux for each extrema = {";
+        for ( int i=0; i<OutsideLinesSTDFlux.size(); i++)
+        {
+            stream << std::scientific << std::setprecision(5) <<  OutsideLinesSTDFlux[i] << "\t";
+        }
+        stream << "}" << std::endl;
+    }
+
+    // save OutsideLinesSTDError, on 1 line
+    if(OutsideLinesSTDError.size()>0){
+        stream <<  "#OutsideLinesSTDError for each extrema = {";
+        for ( int i=0; i<OutsideLinesSTDError.size(); i++)
+        {
+            stream << std::scientific << std::setprecision(5) <<  OutsideLinesSTDError[i] << "\t";
+        }
+        stream << "}" << std::endl;
+    }
+
+
 
 }

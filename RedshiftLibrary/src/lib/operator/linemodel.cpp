@@ -1294,6 +1294,20 @@ Int32 COperatorLineModel::ComputeSecondPass(CDataStore &dataStore,
 
         //save the outsideLinesMask
         m_result->ExtremaResult.OutsideLinesMask[i] = m_model->getOutsideLinesMask();
+        m_result->ExtremaResult.OutsideLinesSTDFlux[i] = m_model->getOutsideLinesSTD(1);
+        m_result->ExtremaResult.OutsideLinesSTDError[i] = m_model->getOutsideLinesSTD(2);
+        Float64 ratioSTD = -1;
+        if(m_result->ExtremaResult.OutsideLinesSTDError[i]>0.0)
+        {
+            ratioSTD = m_result->ExtremaResult.OutsideLinesSTDFlux[i]/m_result->ExtremaResult.OutsideLinesSTDError[i];
+            Float64 ratio_thres = 1.5;
+            if(abs(ratioSTD)>ratio_thres || abs(ratioSTD)<1./ratio_thres)
+            {
+                Log.LogWarning( "  Operator-Linemodel: STD estimations outside lines do not match: ratio=%e, flux-STD=%e, error-std=%e", ratioSTD, m_result->ExtremaResult.OutsideLinesSTDFlux[i], m_result->ExtremaResult.OutsideLinesSTDError[i]);
+            }
+        }else{
+            Log.LogWarning( "  Operator-Linemodel: unable to get STD estimations..." );
+        }
 
         //save the continuum tpl fitting results
         m_result->ExtremaResult.FittedTplName[i] = m_model->getFitContinuum_tplName();

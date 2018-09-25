@@ -2316,6 +2316,51 @@ CMask CLineModelElementList::getOutsideLinesMask()
     return _mask;
 }
 
+
+/**
+ * \brief Estimates the STD outside the lines for the observed-model spectrum
+ * NB: supposes the spectrum whithout continuum has a null mean value
+ * input: which = 1: uses the spectrum flux continuum subtracted to compute STD
+ * input: which = 2: uses the spectrum error to compute STD
+ **/
+Float64 CLineModelElementList::getOutsideLinesSTD( Int32 which)
+{
+    if(which!=1 && which!=2)
+    {
+        Log.LogError( "    model: getOutsideLinesSTD - Failed to parse input argument, which" );
+        return -1;
+    }
+    Float64 estimated_std = -1.;
+    CMask _mask = getOutsideLinesMask();
+
+    const CSpectrumSpectralAxis& spectralAxis = m_SpectrumModel->GetSpectralAxis();
+    Float64 sum2 = 0.0;
+    Int32 nsum=0;
+    for( UInt32 i=0; i<spectralAxis.GetSamplesCount(); i++ )
+    {
+        if(_mask[i])
+        {
+            if(which==1)
+            {
+                sum2 += m_spcFluxAxisNoContinuum[i]*m_spcFluxAxisNoContinuum[i];
+                nsum++;
+            }else if(which==2)
+            {
+                sum2 += m_ErrorNoContinuum[i]*m_ErrorNoContinuum[i];
+                nsum++;
+            }
+        }
+    }
+    if(nsum>0)
+    {
+        estimated_std = sqrt(sum2/nsum);
+    }else{
+        return -1.;
+    }
+
+    return estimated_std;
+}
+
 /**
  * \brief Tries to fit subelements considering their overlap.
  * For each entry in GetModelValidElementsIndexes:
