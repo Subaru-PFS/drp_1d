@@ -5,8 +5,7 @@
 
 #include <boost/thread.hpp>
 
-namespace NSEpic
-{
+namespace NSEpic {
 
 /**
  * \ingroup Core
@@ -15,19 +14,17 @@ namespace NSEpic
 class CMutex
 {
 
-public:
-
-    CMutex( );
+  public:
+    CMutex();
     virtual ~CMutex();
 
     void Lock();
     void Unlock();
 
-private:
-
-    boost::mutex        m_Mutex;
+  private:
+    boost::mutex m_Mutex;
 };
 
-}
+} // namespace NSEpic
 
 #endif

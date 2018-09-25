@@ -5,108 +5,79 @@
 
 #include <vector>
 
-namespace NSEpic
-{
+namespace NSEpic {
 
 /**
  * \ingroup Core
  * Templated Range manipulation class
  */
-template <typename T> 
-class CRange
+template <typename T> class CRange
 {
 
-public:
+  public:
+    CRange() {}
 
-    CRange( )
-    {
-    }
-
-    CRange( T begin, T end )
+    CRange(T begin, T end)
     {
         m_Begin = begin;
         m_End = end;
     }
 
-    ~CRange( )
-    {  
-    }
+    ~CRange() {}
 
-    Bool GetIsEmpty() const
-    {
-        return m_Begin == m_End;
-    }
+    Bool GetIsEmpty() const { return m_Begin == m_End; }
 
-    void Set( const T& b,  const T& e )
+    void Set(const T &b, const T &e)
     {
         m_Begin = b;
         m_End = e;
     }
 
-    void SetBegin( const T& v )
-    {
-        m_Begin = v;
-    }
+    void SetBegin(const T &v) { m_Begin = v; }
 
-    void SetEnd( const T& v )
-    {
-        m_End = v;
-    }
+    void SetEnd(const T &v) { m_End = v; }
 
-    CRange<T> operator - ( Float64 t )
-    {
-        return CRange<T>( m_Begin - t, m_End - t );
-    }
+    CRange<T> operator-(Float64 t) { return CRange<T>(m_Begin - t, m_End - t); }
 
-    T Interpolate( Float64 t )
-    {
-        return m_Begin + ( m_End - m_Begin ) * t;
-    }
+    T Interpolate(Float64 t) { return m_Begin + (m_End - m_Begin) * t; }
 
-    const T& GetBegin() const
-    {
-        return m_Begin;
-    }
+    const T &GetBegin() const { return m_Begin; }
 
-    const T& GetEnd() const
-    {
-        return m_End;
-    }
+    const T &GetEnd() const { return m_End; }
 
-    T GetLength() const
-    {
-        return m_End - m_Begin;
-    }
+    T GetLength() const { return m_End - m_Begin; }
 
-    static Bool Intersect( const CRange<T>& a, const CRange<T> b, CRange<T>& intersect )
+    static Bool Intersect(const CRange<T> &a, const CRange<T> b,
+                          CRange<T> &intersect)
     {
-        if( ( a.GetBegin() >= b.GetBegin() && a.GetBegin() <= b.GetEnd() ) ||
-                ( a.GetEnd() >= b.GetBegin() && a.GetEnd() <= b.GetEnd() ) ||
-                ( b.GetBegin() >= a.GetBegin() && b.GetBegin() <= a.GetEnd() ) ||
-                            ( b.GetEnd() >= a.GetBegin() && b.GetEnd() <= a.GetEnd() ))
+        if ((a.GetBegin() >= b.GetBegin() && a.GetBegin() <= b.GetEnd()) ||
+            (a.GetEnd() >= b.GetBegin() && a.GetEnd() <= b.GetEnd()) ||
+            (b.GetBegin() >= a.GetBegin() && b.GetBegin() <= a.GetEnd()) ||
+            (b.GetEnd() >= a.GetBegin() && b.GetEnd() <= a.GetEnd()))
         {
-            intersect.Set( std::max( a.GetBegin(), b.GetBegin() ), std::min( a.GetEnd(), b.GetEnd() ) );
+            intersect.Set(std::max(a.GetBegin(), b.GetBegin()),
+                          std::min(a.GetEnd(), b.GetEnd()));
             return true;
         }
 
         return false;
     }
 
-    std::vector<T>   SpreadOver( Float64 delta ) const
+    std::vector<T> SpreadOver(Float64 delta) const
     {
         std::vector<T> v;
 
-        if( GetIsEmpty() || delta == 0.0  || GetLength() < delta )
+        if (GetIsEmpty() || delta == 0.0 || GetLength() < delta)
         {
-            v.resize( 1 );
+            v.resize(1);
             v[0] = m_Begin;
             return v;
         }
 
         Int32 count = GetLength() / delta;
 
-        v.resize( count+1 );
-        for( UInt32 i=0; i<v.size() ;i++ )
+        v.resize(count + 1);
+        for (UInt32 i = 0; i < v.size(); i++)
         {
             v[i] = GetBegin() + delta * i;
         }
@@ -114,47 +85,45 @@ public:
         return v;
     }
 
-    std::vector<T>   SpreadOverLog( Float64 delta ) const
+    std::vector<T> SpreadOverLog(Float64 delta) const
     {
         std::vector<T> v;
 
-        if( GetIsEmpty() || delta == 0.0  || GetLength() < delta )
+        if (GetIsEmpty() || delta == 0.0 || GetLength() < delta)
         {
-            v.resize( 1 );
+            v.resize(1);
             v[0] = m_Begin;
             return v;
         }
 
-
         v.push_back(m_Begin);
         Float64 x = m_Begin;
-        Float64 step = delta*(1.+m_Begin);
+        Float64 step = delta * (1. + m_Begin);
         Int32 count = 0;
         Int32 maxCount = 1e8;
-        while(x+step<m_End && count<maxCount)
+        while (x + step < m_End && count < maxCount)
         {
-            x = x+step;
+            x = x + step;
             v.push_back(x);
-            step = delta*(1.+x);
-            count ++;
+            step = delta * (1. + x);
+            count++;
         }
 
         return v;
     }
 
-private:
-
-    T     m_Begin;
-    T     m_End;
+  private:
+    T m_Begin;
+    T m_End;
 };
 
-typedef CRange<Int32>   TInt32Range;
+typedef CRange<Int32> TInt32Range;
 typedef CRange<Float64> TFloat64Range;
-typedef TFloat64Range   TLambdaRange;
-typedef std::vector< TLambdaRange > TLambdaRangeList;
-typedef std::vector< TInt32Range > TInt32RangeList;
-typedef std::vector< TFloat64Range > TFloat64RangeList;
+typedef TFloat64Range TLambdaRange;
+typedef std::vector<TLambdaRange> TLambdaRangeList;
+typedef std::vector<TInt32Range> TInt32RangeList;
+typedef std::vector<TFloat64Range> TFloat64RangeList;
 
-}
+} // namespace NSEpic
 
 #endif

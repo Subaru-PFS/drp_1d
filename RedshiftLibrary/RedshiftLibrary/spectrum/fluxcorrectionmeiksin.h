@@ -47,7 +47,7 @@ public:
     Float64 GetLambdaMin();
     Float64 GetLambdaMax();
 
-    bool meiksinInitFailed;
+    bool meiksinInitFailed = false;
 
 private:
 

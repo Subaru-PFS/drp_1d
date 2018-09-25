@@ -85,13 +85,13 @@ protected:
 	TFloat64List m_zfeatures;
 	vector<string> id_descriptors;
 
-	Int32 m_idpredLabel;
-	Float64 m_predProba;
-	std::string m_predLabel;
+	Int32 m_idpredLabel = 0;
+	Float64 m_predProba = 0;
+	std::string m_predLabel = "";
 
-	gsl_vector* m_Xc;
-	gsl_vector* m_score;
-	gsl_vector* m_posterior;
+	gsl_vector* m_Xc = NULL;
+	gsl_vector* m_score = NULL;
+	gsl_vector* m_posterior = NULL;
 
 };
 

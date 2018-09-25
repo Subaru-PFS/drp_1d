@@ -163,7 +163,7 @@ public:
     std::shared_ptr<CSpectraFluxResult> GetModelSpectrumContinuumResult(Int32 idx);
 
 
-    bool m_enableWidthFitByGroups;
+    bool m_enableWidthFitByGroups = false;
 
     Int32 m_maxModelSaveCount;
     Float64 m_secondPass_extensionradius = 0.005;
@@ -188,8 +188,8 @@ private:
     TFloat64List m_sortedRedshifts;
     TPointList m_extremumList;
 
-    Int32 m_enableFastFitLargeGrid;
-    Int32 m_estimateLeastSquareFast;
+    Int32 m_enableFastFitLargeGrid = 0;
+    Int32 m_estimateLeastSquareFast = 0;
 
 
     void ComputeArea1(CLineModelResult& results);

@@ -11,6 +11,14 @@
 using namespace NSEpic;
 using namespace std;
 
+CRuleRatioRange::CRuleRatioRange():
+  m_LineType(0),
+  m_LineA(""),
+  m_LineB(""),
+  m_Coefficient(0)
+{
+}
+
 void CRuleRatioRange::SetUp( Bool EnabledArgument, ... )
 {
   Name = "ratiorange";

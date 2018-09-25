@@ -204,11 +204,11 @@ Bool CContinuumDF::RemoveContinuum ( const CSpectrum& s, CSpectrumFluxAxis& noCo
 	arrayBIS = (float *) malloc(Mcol* sizeof(float));
 	Int32 noopen = fits_open_file(&fptr2BIS, outputFileSplineBIS.c_str(), READONLY, &statusBIS);
     //Int32 noopen = fits_open_file(&fptr2, outputFileSpline.c_str(), READONLY, &status);
-    if ( noopen ) { return false; }
+	if ( noopen ) { free(arrayBIS); return false; }
 
     Int32 noread  = fits_read_img(fptr2BIS, TFLOAT, 1, Mcol, &nullvalBIS, arrayBIS, &anynulBIS, &statusBIS);
     	//Int32 noread  = fits_read_img(fptr2, TFLOAT, 1, Mlig*Mcol, &nullval, array, &anynul, &status);
-	if ( noread ) { return false; }
+	if ( noread ) { free(arrayBIS); return false; }
 
 	estimatedBaseline_extd =new float[nall];
 	estimatedBaseline_extd=  arrayBIS; //array[nscales];
@@ -235,6 +235,8 @@ Bool CContinuumDF::RemoveContinuum ( const CSpectrum& s, CSpectrumFluxAxis& noCo
 		baseline[j]                       =  estimatedBaseline[j]  ;
 		noContinuumFluxAxis[j] = fluxAxis[j]-estimatedBaseline[j];
 	}
+
+	free(arrayBIS);
 
 	TFloat64List& noContinuumFluxAxisError = noContinuumFluxAxis.GetError();
 	const TFloat64List& fluxAxisError = fluxAxis.GetError();
