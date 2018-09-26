@@ -881,8 +881,15 @@ std::vector<Float64> CPdfz::GetEuclidNhaLogZPrior(std::vector<Float64> redshifts
                                  - 92914.84430357*z2
                                  + 79004.76406*z
                                  - 2288.98457865 ); //poly reg pozzetti model at FHa=1e-16
-            if(zPrior[kz]<0){
-                zPrior[kz]=DBL_MIN;
+
+
+            //shape prior at low z, left of the bell
+            if(z<0.7204452872044528){
+                zPrior[kz]=20367.877916402278;
+            }else{
+                if(zPrior[kz]<0){
+                    zPrior[kz]=DBL_MIN;
+                }
             }
             zPrior[kz] = pow(zPrior[kz], aCoeff);
 

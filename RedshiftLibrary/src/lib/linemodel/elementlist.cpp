@@ -493,14 +493,20 @@ Int32 CLineModelElementList::GetFluxDirectIntegration(Int32 eIdx, Int32 subeIdx,
     for( Int32 t=indexRange.GetBegin();t<indexRange.GetEnd()-1;t++)
     {
         //trapez
-        //Float64 fa = m_SpcFluxAxis[t]-m_ContinuumFluxAxis[t];
-        //Float64 fb = m_SpcFluxAxis[t+1]-m_ContinuumFluxAxis[t+1];
-        //Float64 diff = (spectralAxis[t+1]-spectralAxis[t])*(fb+fa)*0.5;
-        //sumFlux += diff;
+        Float64 fa = m_SpcFluxAxis[t]-m_ContinuumFluxAxis[t];
+        Float64 fb = m_SpcFluxAxis[t+1]-m_ContinuumFluxAxis[t+1];
+        Float64 diffFlux = (spectralAxis[t+1]-spectralAxis[t])*(fb+fa)*0.5;
+        sumFlux += diffFlux;
 
-        //direct
-        sumFlux += m_SpcFluxAxis[t]-m_ContinuumFluxAxis[t];
-        sumErr += m_ErrorNoContinuum[t]*m_ErrorNoContinuum[t];
+
+        Float64 ea = m_ErrorNoContinuum[t]*m_ErrorNoContinuum[t];
+        Float64 eb = m_ErrorNoContinuum[t+1]*m_ErrorNoContinuum[t+1];
+        Float64 diffError = (spectralAxis[t+1]-spectralAxis[t])*(eb+ea)*0.5;
+        sumErr += diffError;
+
+        //direct - missing dlambda
+        //sumFlux += m_SpcFluxAxis[t]-m_ContinuumFluxAxis[t];
+        //sumErr += m_ErrorNoContinuum[t]*m_ErrorNoContinuum[t];
 
         nsum++;
     }
