@@ -295,6 +295,7 @@ Int32 COperatorLineModel::ComputeFirstPass(
         {
             Log.LogError(
                 "  Operator-Linemodel: Failed to init tpl-ratios. aborting...");
+            throw runtime_error("  Operator-Linemodel: Failed to init tpl-ratios. aborting...");
             return -1;
         }
     }
