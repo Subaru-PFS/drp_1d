@@ -4,9 +4,11 @@
 #include <RedshiftLibrary/spectrum/io/genericreader.h>
 #include <RedshiftLibrary/spectrum/io/fitsreader.h>
 #include <RedshiftLibrary/spectrum/spectrum.h>
+#include "test-tools.h"
 #include "test-config.h"
 
 using namespace NSEpic;
+using namespace CPFTest;
 using namespace std;
 
 BOOST_AUTO_TEST_SUITE(CNoiseFromFile_test)
@@ -19,6 +21,7 @@ BOOST_AUTO_TEST_CASE(AddNoise_test)
   CSpectrum OSpectrum = CSpectrum();
   CSpectrumFluxAxis& fluxAxis = OSpectrum.GetFluxAxis();
   CSpectrumIOGenericReader reader;
+  boost::filesystem::path tempfile = generate_spectrum_fits(123, 3800, 12600);
 
   fluxAxis.SetSize(3);
   fluxAxis[0]= 1.0;
@@ -29,8 +32,9 @@ BOOST_AUTO_TEST_CASE(AddNoise_test)
 
   BOOST_CHECK_THROW(noiseFromFile.SetNoiseFilePath("/this/file/should/not/exist",
 						   reader), runtime_error);
-  BOOST_CHECK_NO_THROW(noiseFromFile.SetNoiseFilePath(DATA_ROOT_DIR "SpectrumioTestCase/spectrum1_z_1.2299.fits", reader));
+  BOOST_CHECK_NO_THROW(noiseFromFile.SetNoiseFilePath(tempfile.c_str(), reader));
 
+  boost::filesystem::remove(tempfile.native());
   /*
   CSpectrumIOFitsReader reader;
 

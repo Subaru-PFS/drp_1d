@@ -1,4 +1,5 @@
 import json
+import os.path
 from .redshift import CLog
 
 defaults = {
@@ -26,7 +27,7 @@ class Config(object):
 
         # load config file
         if args.config is not None:
-            with open(args.config, 'r') as f:
+            with open(os.path.expanduser(args.config), 'r') as f:
                 cfg = json.load(f)
             for k, v in cfg.items():
                 if k not in defaults:

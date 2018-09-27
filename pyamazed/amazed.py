@@ -17,7 +17,7 @@ def spectrumpath(config, *path):
     return os.path.expanduser(os.path.join(config.spectrum_dir, *path))
 
 def update_paramstore(param, config):
-    param.Set_String('calibrationDir', config.calibration_dir)
+    param.Set_String('calibrationDir', os.path.expanduser(config.calibration_dir))
 
 def amazed():
 
@@ -68,7 +68,7 @@ def amazed():
     try:
         template_catalog.Load(calibrationpath(config, config.template_dir))
     except Exception as e:
-        print(f"Can't load template : {e}")
+        print("Can't load template : {}".format(e))
         raise
 
     line_catalog = CRayCatalog()
@@ -88,7 +88,7 @@ def amazed():
         #range = spectrum.GetLambdaRange()
         range = TFloat64Range(13000, 18500)
         done, mean, std = spectrum.GetMeanAndStdFluxInRange(range)
-        print(f'Spectrum stats: {done}, {mean}, {std}')
+        print('Spectrum stats: {}, {}, {}'.format(done, mean, std))
 
         try:
             ctx = CProcessFlowContext()

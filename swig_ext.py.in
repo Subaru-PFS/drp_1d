@@ -15,6 +15,7 @@ except AttributeError:
 
 swig_ext = Extension('_redshift', sources=['pyamazed/redshift.i'],
                      swig_opts = ['-c++'],
+                     extra_compile_args = ['-std=c++11'],
                      include_dirs = ['RedshiftLibrary', 'thirdparty/include', numpy_include],
                      library_dirs = lib_dir + [os.path.join(os.getcwd(), 'lib'), ],
                      libraries = libs + ['@LIB_NAME@', ],

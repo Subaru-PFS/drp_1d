@@ -18,6 +18,7 @@
 namespace bfs = boost::filesystem;
 
 using namespace NSEpic;
+using namespace std;
 
 CSpectrum::CSpectrum()
 {

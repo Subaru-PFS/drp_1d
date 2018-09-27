@@ -123,6 +123,7 @@ BOOST_AUTO_TEST_CASE(Save){
   result << std::endl << "#ExtremaLastPass for z = {0.10000000000000000555111512312578\t}";
   result << std::endl << "#lmfitPass for z = {0.00000000000000000000000000000000\t}";
   result << std::endl << "#snrHa for z = {0.00000000000000000000000000000000\t}";
+  result << std::endl << "#lfHa for z = {0.00000000000000000000000000000000\t}";
   result << std::endl << "#BIC for each extrema = {0.10000000000000000555111512312578\t}";
   result << std::endl << "#POSTERIOR for each extrema = {0.10000000000000000555111512312578\t}";
   result << std::endl << "#SigmaZ for each extrema = {0.10000000000000000555111512312578\t}";
@@ -154,8 +155,8 @@ BOOST_AUTO_TEST_CASE(Save){
   //   }
   // }
   BOOST_CHECK(stream.str() == result.str());
-  //BOOST_TEST_MESSAGE("Save string:\n"<<stream.str()<<";");
-  //BOOST_TEST_MESSAGE("result string:\n"<<result.str())<<";";
+  BOOST_TEST_MESSAGE("Save string:\n"<<stream.str()<<";");
+  BOOST_TEST_MESSAGE("result string:\n"<<result.str())<<";";
 }
 
 BOOST_AUTO_TEST_CASE(SaveLine){

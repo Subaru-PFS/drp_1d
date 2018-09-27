@@ -151,7 +151,8 @@ void CModelFittingResult::Load( const char* filePath )
             }
             else
             {
-                return;
+	      file.close();
+	      return;
             }
 
             // skip
@@ -169,7 +170,8 @@ void CModelFittingResult::Load( const char* filePath )
             catch (boost::bad_lexical_cast&)
             {
                 amp = 0.0;
-                return;
+		file.close();
+		return;
             }
             LineModelSolution.Amplitudes.push_back(amp);
 
