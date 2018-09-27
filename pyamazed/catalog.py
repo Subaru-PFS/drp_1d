@@ -10,7 +10,7 @@ class FitsTemplateCatalog(CTemplateCatalog):
         category = hdul[0].header['CATEGORY']
         for spectrum in hdul[1:]:
             name = spectrum.header['EXTNAME']
-            print(f'Loading {category} template {name}')
+            print('Loading {} template {}'.format(category, name))
 
             wavel = spectrum.data.field('WAVE')
             spectralaxis = CSpectrumSpectralAxis(wavel)

@@ -15,9 +15,11 @@
 #include <boost/math/special_functions.hpp>
 
 #include <boost/test/unit_test.hpp>
+#include "test-tools.h"
 #include "test-config.h"
 
 using namespace NSEpic;
+using namespace CPFTest;
 
 BOOST_AUTO_TEST_SUITE(Operator)
 
@@ -27,30 +29,28 @@ BOOST_AUTO_TEST_SUITE(Operator)
  */
 BOOST_AUTO_TEST_CASE(CorrelationAtZEqualZero)
 {
-    CSpectrum spectrum;
-    CTemplate _template;
+    CSpectrum _spectrum;
+    CTemplate _template("foo", "galaxy");
 
     CSpectrumIOFitsReader reader;
 
-    BOOST_CHECK_NO_THROW(reader.Read( DATA_ROOT_DIR "OperatorTestCase/spectrum1_z_1.2299.fits",
-				      spectrum ));
-    BOOST_CHECK_NO_THROW(reader.Read( DATA_ROOT_DIR "OperatorTestCase/spectrum1_z_1.2299.fits",
-				      _template ));
+    generate_spectrum(_spectrum, 123, 3800, 12600);
+    (CSpectrum&)_template = _spectrum;
 
-    spectrum.ConvertToLogScale();
+    _spectrum.ConvertToLogScale();
     _template.ConvertToLogScale();
 
-    TFloat64Range lambdaRange( spectrum.GetLambdaRange().GetBegin(),
-			       spectrum.GetLambdaRange().GetEnd() );
+    TFloat64Range lambdaRange( _spectrum.GetLambdaRange().GetBegin(),
+			       _spectrum.GetLambdaRange().GetEnd() );
 
     COperatorCorrelation correlation;
     TFloat64List redshifts;
 
-    Float64 redshiftDelta = 0.0001;
+    Float64 redshiftDelta = 0.001;
     redshifts = TFloat64Range( 0.0, 3.0 ).SpreadOver( redshiftDelta );
     // prepare the unused masks
     std::vector<CMask> maskList;
-    auto r = std::dynamic_pointer_cast<CCorrelationResult>( correlation.Compute( spectrum, _template, lambdaRange, redshifts, 0.99, maskList ) );
+    auto r = std::dynamic_pointer_cast<CCorrelationResult>( correlation.Compute( _spectrum, _template, lambdaRange, redshifts, 0.99, maskList ) );
     BOOST_CHECK( r != NULL );
 
 
@@ -59,8 +59,6 @@ BOOST_AUTO_TEST_CASE(CorrelationAtZEqualZero)
     extremum.Find( r->Redshifts, r->Correlation, extremumList );
 
     BOOST_CHECK_CLOSE_FRACTION( 0.0, extremumList[0].X, 0.000001 );
-
-
 }
 
 /**
@@ -70,29 +68,27 @@ BOOST_AUTO_TEST_CASE(CorrelationAtZEqualZero)
  */
 BOOST_AUTO_TEST_CASE(CorrelationAtGivenZ)
 {
-    CSpectrum spectrum;
+    CSpectrum _spectrum;
     CTemplate _template;
 
     Float64 z = 1.2299;
 
     CSpectrumIOFitsReader reader;
 
-    BOOST_CHECK_NO_THROW(reader.Read( DATA_ROOT_DIR "OperatorTestCase/spectrum1_z_1.2299.fits",
-				      spectrum ));
-    BOOST_CHECK_NO_THROW(reader.Read( DATA_ROOT_DIR "OperatorTestCase/spectrum1_z_1.2299.fits",
-				      _template ));
+    generate_spectrum(_spectrum, 123, 3800, 12600);
+    (CSpectrum&)_template = _spectrum;
 
     // Shift template back to rest pose
     CSpectrumSpectralAxis& tplSpectralAxis = _template.GetSpectralAxis();
     tplSpectralAxis.ShiftByWaveLength( 1.0 + z,  CSpectrumSpectralAxis::nShiftBackward );
 
-    spectrum.ConvertToLogScale();
+    _spectrum.ConvertToLogScale();
     _template.ConvertToLogScale();
 
-    TFloat64Range lambdaRange( spectrum.GetLambdaRange().GetBegin(),
-			       spectrum.GetLambdaRange().GetEnd() );
+    TFloat64Range lambdaRange( _spectrum.GetLambdaRange().GetBegin(),
+			       _spectrum.GetLambdaRange().GetEnd() );
 
-    Float64 redshiftDelta = 0.0001;
+    Float64 redshiftDelta = 0.001;
     TFloat64List redshifts = TFloat64Range( 0.0, 3.0 ).SpreadOver( redshiftDelta );
 
     //CRedshifts redshifts( &z, 1 );
@@ -100,7 +96,7 @@ BOOST_AUTO_TEST_CASE(CorrelationAtGivenZ)
     // prepare the unused masks
     std::vector<CMask> maskList;
     COperatorCorrelation correlation;
-    auto r = std::dynamic_pointer_cast<CCorrelationResult>( correlation.Compute( spectrum, _template, lambdaRange, redshifts, 0.7, maskList ) );
+    auto r = std::dynamic_pointer_cast<CCorrelationResult>( correlation.Compute( _spectrum, _template, lambdaRange, redshifts, 0.7, maskList ) );
     BOOST_CHECK( r != NULL );
 
     const TFloat64List& results = r->Correlation;
@@ -134,8 +130,6 @@ void UtilCorrelationMatchWithEZ( const char* spectraPath, const char* noisePath,
         BOOST_CHECK_NO_THROW(noise.SetNoiseFilePath( noisePath, reader ));
         BOOST_CHECK_NO_THROW(noise.AddNoise( spectrum ));
     }
-
-
 
     BOOST_CHECK_NO_THROW(reader.Read( tplPath, _template ));
     {

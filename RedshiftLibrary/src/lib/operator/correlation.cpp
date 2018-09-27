@@ -98,8 +98,6 @@ Float64 COperatorCorrelation::GetComputationDuration() const
         Float64 onePlusRedshift = 1.0 + redshifts[i];
         shiftedTplSpectralAxis.ShiftByWaveLength( tplSpectralAxis, onePlusRedshift, CSpectrumSpectralAxis::nShiftForward );
 
-        TFloat64Range intersectedLambdaRange( 0.0, 0.0 );
-
         // Compute clamped lambda range over template
         TFloat64Range tplLambdaRange;
         retVal = shiftedTplSpectralAxis.ClampLambdaRange( lambdaRange, tplLambdaRange );
@@ -107,6 +105,7 @@ Float64 COperatorCorrelation::GetComputationDuration() const
 
         // if there is any intersection between the lambda range of the spectrum and the lambda range of the template
         // Compute the intersected range
+        TFloat64Range intersectedLambdaRange;
         TFloat64Range::Intersect( tplLambdaRange, spcLambdaRange, intersectedLambdaRange );
 
         CSpectrumFluxAxis itplTplFluxAxis;
