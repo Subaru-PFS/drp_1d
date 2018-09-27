@@ -2021,6 +2021,30 @@ void CLineModelElementList::refreshModel(Int32 lineTypeFilter)
     const CSpectrumSpectralAxis& spectralAxis = m_SpectrumModel->GetSpectralAxis();
     CSpectrumFluxAxis& modelFluxAxis = m_SpectrumModel->GetFluxAxis();
 
+    Bool enableMinMaxLog = false;
+    if(enableMinMaxLog)
+    {
+        //check the model min/max values
+        Int32 imin = spectralAxis.GetIndexAtWaveLength(12500.);
+        Int32 imax = spectralAxis.GetIndexAtWaveLength(18500.);
+        //Int32 imin = 0;
+        //Int32 imax = modelFluxAxis.GetSamplesCount();
+        Float64 fmin = DBL_MAX;
+        Float64 fmax = -DBL_MAX;
+        for(Int32 j=imin; j<imax; j++)
+        {
+            if(modelFluxAxis[j]<fmin)
+            {
+                fmin = modelFluxAxis[j];
+            }
+            if(modelFluxAxis[j]>fmax)
+            {
+                fmax = modelFluxAxis[j];
+            }
+        }
+        Log.LogDebug( "CLineModelElementList::refreshModel AFTER REINIT: model min=%e and model max=%e", fmin, fmax );
+    }
+
     /*
     //check the model reinited for nan values
     Int32 imin = spectralAxis.GetIndexAtWaveLength(12500.);
@@ -2080,6 +2104,29 @@ void CLineModelElementList::refreshModel(Int32 lineTypeFilter)
             }
         }
         //*/
+    }
+
+    if(enableMinMaxLog)
+    {
+        //check the model min/max values
+        Int32 imin = spectralAxis.GetIndexAtWaveLength(12500.);
+        Int32 imax = spectralAxis.GetIndexAtWaveLength(18500.);
+        //Int32 imin = 0;
+        //Int32 imax = modelFluxAxis.GetSamplesCount();
+        Float64 fmin = DBL_MAX;
+        Float64 fmax = -DBL_MAX;
+        for(Int32 j=imin; j<imax; j++)
+        {
+            if(modelFluxAxis[j]<fmin)
+            {
+                fmin = modelFluxAxis[j];
+            }
+            if(modelFluxAxis[j]>fmax)
+            {
+                fmax = modelFluxAxis[j];
+            }
+        }
+        Log.LogDebug( "CLineModelElementList::refreshModel AFTER addToSpectrumModel: model min=%e and model max=%e", fmin, fmax );
     }
 
 }
@@ -3998,7 +4045,7 @@ Float64 CLineModelElementList::getLeastSquareMeritFast(Int32 idxLine)
         fit += term1 + term2;
     }
 
-    Log.LogDebug( "CLineModelElementList::getLeastSquareMerit fit = %f", fit );
+    Log.LogDebug( "CLineModelElementList::getLeastSquareMerit fit fast = %f", fit );
     return fit;
 }
 

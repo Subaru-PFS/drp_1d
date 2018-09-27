@@ -644,8 +644,8 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
     if(m_opt_continuumcomponent=="fromspectrum"){
         //check the continuum validity
         if( !_spcContinuum.IsFluxValid( lambdaRange.GetBegin(), lambdaRange.GetEnd() ) ){
-            Log.LogError("Line Model - Failed to validate continuum spectrum flux on wavelength range (%.1f ; %.1f)",lambdaRange.GetBegin(), lambdaRange.GetEnd() );
-            throw std::runtime_error("Failed to validate continuum  flux");
+            Log.LogWarning("Line Model - Failed to validate continuum spectrum flux on wavelength range (%.1f ; %.1f)",lambdaRange.GetBegin(), lambdaRange.GetEnd() );
+            //throw std::runtime_error("Failed to validate continuum  flux");
         }else{
             Log.LogDetail( "Line Model - Successfully validated continuum flux on wavelength range (%.1f ; %.1f)", lambdaRange.GetBegin(), lambdaRange.GetEnd() );
         }

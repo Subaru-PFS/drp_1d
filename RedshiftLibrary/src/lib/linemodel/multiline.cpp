@@ -794,10 +794,10 @@ void CMultiLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const C
 
     if ( num==0 || m_sumGauss==0 )
       {
-        Log.LogDebug("    multiline:     num=%d, mtm=%f", num, m_sumGauss);
+        Log.LogDebug("    multiline failed:     num=%d, mtm=%f", num, m_sumGauss);
         for(Int32 k2=0; k2<nRays; k2++)
         {
-            Log.LogDebug("    multiline:     subE=%d, nominal_amp=%f", k2, m_NominalAmplitudes[k2]);
+            Log.LogDebug("    multiline failed:     subE=%d, nominal_amp=%f", k2, m_NominalAmplitudes[k2]);
         }
         return;
       }
@@ -929,16 +929,19 @@ Float64 CMultiLine::getModelAtLambda(Float64 lambda, Float64 redshift, Float64 c
         }
 
         Float64 A = m_FittedAmplitudes[k2];
-        Float64 mu = GetObservedPosition(k2, redshift);
-        Float64 sigma = GetLineWidth(mu, redshift, m_Rays[k2].GetIsEmission(), m_profile[k2]);
+        if(A>=0)
+        {
+            Float64 mu = GetObservedPosition(k2, redshift);
+            Float64 sigma = GetLineWidth(mu, redshift, m_Rays[k2].GetIsEmission(), m_profile[k2]);
 
-        //*
-        if(m_SignFactors[k2]==-1){
-            Yi += m_SignFactors[k2] * continuumFlux * A * GetLineProfile(m_profile[k2], x, mu, sigma);
-        }else{
-            Yi += m_SignFactors[k2] * A * GetLineProfile(m_profile[k2], x, mu, sigma);
+            //*
+            if(m_SignFactors[k2]==-1){
+                Yi += m_SignFactors[k2] * continuumFlux * A * GetLineProfile(m_profile[k2], x, mu, sigma);
+            }else{
+                Yi += m_SignFactors[k2] * A * GetLineProfile(m_profile[k2], x, mu, sigma);
+            }
+            //*/
         }
-        //*/
     }
     return Yi;
 }
