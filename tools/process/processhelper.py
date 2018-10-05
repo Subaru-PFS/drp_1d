@@ -10,8 +10,9 @@ import sys
 import time
 import argparse
 
-
+import math
 import processParamCheck
+import json
 
 try:
     #cmd_subfolder = os.path.abspath("/home/aschmitt/gitlab/cpf-redshift/tools/aview/") #use locally
@@ -202,7 +203,11 @@ class processHelper(object):
         """
         if self.opt_bracketing=="method":
             bracketing_method=["linemodel", "linemodel", "amazed0_3", "amazed0_1", "chisquare2solve", "chisquare2solve"]
-            bracketing_parameterFilePath=["lm_rules.json", "lm_tplshape.json", "amazed0_3.json", "amazed0_1.json", "chi2_nc.json", "chi2_raw.json"]
+            bracketing_parameterFileName=["lm_rules.json", "lm_tplshape.json", "amazed0_3.json", "amazed0_1.json", "chi2_nc.json", "chi2_raw.json"]
+            overrideParamFolder = os.path.split(self.config_parametersPath)[0]
+            bracketing_parameterFilePath = []
+            for k in range(len(bracketing_parameterFileName)):
+                bracketing_parameterFilePath.append(os.path.join(overrideParamFolder, bracketing_parameterFileName[k]))
             bracketing_templateCtlNames=["ExtendedTemplatesMarch2016_v2", "ExtendedTemplatesMarch2016_v2", "ContinuumTemplates_simulm2016", "ExtendedTemplatesMarch2016_v2", "ExtendedTemplatesMarch2016_v2", "ExtendedTemplatesMarch2016_v2"]   
             bracketing_templateCtlPath = []            
             for k in range(len(bracketing_templateCtlNames)):
@@ -214,12 +219,16 @@ class processHelper(object):
                                "blindsolve", 
                                "chisquare2solve", 
                                "chisquare2solve"]
-            bracketing_parameterFilePath=["fullmodel_elv370alv530.json", 
+            bracketing_parameterFileName=["fullmodel_elv370alv530.json", 
                                           "fullmodel.json", 
                                           "linemodel_elv370alv530.json", 
                                           "blindsolve.json", 
                                           "chi2_nc.json", 
                                           "chi2_raw.json"]
+            overrideParamFolder = os.path.split(self.config_parametersPath)[0]
+            bracketing_parameterFilePath = []
+            for k in range(len(bracketing_parameterFileName)):
+                bracketing_parameterFilePath.append(os.path.join(overrideParamFolder, bracketing_parameterFileName[k]))
             bracketing_templateCtlNames=["ContinuumTemplates_simulm2016Extended_dustfree201702", 
                                          "ContinuumTemplates_simulm2016Extended_dustfree201702", 
                                          "ContinuumTemplates_simulm2016Extended_dustfree201702", 
@@ -231,13 +240,62 @@ class processHelper(object):
                 bracketing_templateCtlPath.append(os.path.join(self.bracketing_templatesRootPath, bracketing_templateCtlNames[k]))
         elif self.opt_bracketing=="tplcat_analysis-pfs":
             bracketing_method=["chisquare2solve", "chisquare2solve", "chisquare2solve", "chisquare2solve", "chisquare2solve", "chisquare2solve"]
-            bracketing_parameterFilePath=["chisquare_rest_lbda4z0.json", "chisquare_rest_lbda4z0p5.json", "chisquare_rest_lbda4z1.json", "chisquare_rest_lbda4z1p5.json", "chisquare_rest_lbda4z2.json", "chisquare_rest_lbda4z2p5.json"]
+            bracketing_parameterFileName=["chisquare_rest_lbda4z0.json", "chisquare_rest_lbda4z0p5.json", "chisquare_rest_lbda4z1.json", "chisquare_rest_lbda4z1p5.json", "chisquare_rest_lbda4z2.json", "chisquare_rest_lbda4z2p5.json"]
+            overrideParamFolder = os.path.split(self.config_parametersPath)[0]
+            bracketing_parameterFilePath = []
+            for k in range(len(bracketing_parameterFileName)):
+                bracketing_parameterFilePath.append(os.path.join(overrideParamFolder, bracketing_parameterFileName[k]))
+                
             #bracketing_templateCtlNames=["BC03_sdss_tremonti21", "BC03_sdss_tremonti21", "BC03_sdss_tremonti21", "BC03_sdss_tremonti21", "BC03_sdss_tremonti21", "BC03_sdss_tremonti21"]
             bracketing_templateCtlNames=["legac_z0_697", "legac_z0_697", "legac_z0_697", "legac_z0_697", "legac_z0_697", "legac_z0_697"]   
             bracketing_templateCtlPath = []            
             for k in range(len(bracketing_templateCtlNames)):
                 bracketing_templateCtlPath.append(os.path.join(self.bracketing_templatesRootPath, bracketing_templateCtlNames[k]))
-              
+        elif self.opt_bracketing=="priors_optimization-euclid":
+            
+            #rawParamFolder = os.path.split(self.config_parametersPath)[0]
+            tmp_subfolder = "tmp_parameters_brackets"
+            tmp_bracketing_parameters_dir = os.path.join(self.work_process_dir, tmp_subfolder)
+            if not os.path.exists(tmp_bracketing_parameters_dir):
+                os.mkdir(tmp_bracketing_parameters_dir)
+            
+            nhaempriorSs = [-1, 1, 2, 3, 4, 5, 6]
+            selpps = [7.5e-1, 2.5e-1]
+            
+            bracketing_parameterFilePath=[]
+            for nhaempriorS in nhaempriorSs:
+                for selpp in selpps:
+                    argParamsLabelWExt = os.path.split(self.config_parametersPath)[1]
+                    argParamsLabel = os.path.splitext(argParamsLabelWExt)[0]
+                    
+                    if nhaempriorS<0:
+                        nhaempsStr="NO"
+                    else:
+                        nhaempsStr = ("{}".format(nhaempriorS)).replace("-", "m").replace(".", "p")
+                    if selpp<0:
+                        selppStr="NO"
+                    else:
+                        selppStr = ("{:.3e}".format(selpp)).replace("-", "m").replace(".", "p").replace("+", "")
+                    overrideParamFile = "{}_nhaemps{}_selpp{}.json".format(argParamsLabel, nhaempsStr, selppStr)                  
+                    overrideParamFileFullPath = os.path.join(tmp_bracketing_parameters_dir, overrideParamFile)
+                    
+                    fin=open(self.config_parametersPath)
+                    data_json = json.load(fin)
+                    data_json['linemodelsolve']['linemodel']['stronglinesprior']=selpp
+                    data_json['linemodelsolve']['linemodel']['euclidnhaemittersStrength']=nhaempriorS
+                    fin.close()
+                    # Writing JSON data
+                    with open(overrideParamFileFullPath, 'w') as fout:
+                        json.dump(data_json, fout)
+                    fout.close()
+                    
+                                        
+                    bracketing_parameterFilePath.append(overrideParamFileFullPath)
+            
+            n_brackets = len(bracketing_parameterFilePath)
+            bracketing_method = [self.config_method for a in range(n_brackets)]
+            bracketing_templateCtlPath = [self.config_templatedir for a in range(n_brackets)]   
+
         else:
             #toto implement cont. method bracketing or other params...
             pass
@@ -253,7 +311,7 @@ class processHelper(object):
         
         return dico
         
-    def prepareArgumentString(self, overrideMethod="", overrideParamFile="", overrideTemplatesCtlg="", overrideSpclist="", overrideSpclistIndex=-1):
+    def prepareArgumentString(self, overrideMethod="", overrideParamFilePath="", overrideTemplatesCtlg="", overrideSpclist="", overrideSpclistIndex=-1):
         """
         prepares the args for the amazed bin call
         - default args come from the input config file loaded previously
@@ -289,16 +347,14 @@ class processHelper(object):
         if self.config_linecatalogconvert:
             argStr = "{} --linecatalog-convert".format(argStr)
 
-        if overrideParamFile=="":
+        if overrideParamFilePath=="":
             argStr = "{} --parameters {}".format(argStr, self.config_parametersPath)
             argParamsLabelWExt = os.path.split(self.config_parametersPath)[1]
             argParamsLabel = os.path.splitext(argParamsLabelWExt)[0]
-        else:
-            #Note: looks for the bracketing param files in the original folder from config file
-            overrideParamFolder = os.path.split(self.config_parametersPath)[0]
-            overrideParamFileFullPath = os.path.join(overrideParamFolder, overrideParamFile)
-            argStr = "{} --parameters {}".format(argStr, overrideParamFileFullPath)
-            argParamsLabel = os.path.splitext(overrideParamFile)[0]            
+        else:         
+            argStr = "{} --parameters {}".format(argStr, overrideParamFilePath)
+            argParamsLabelWExt = os.path.split(overrideParamFilePath)[1]
+            argParamsLabel = (os.path.splitext(argParamsLabelWExt)[0])  
             
         argStr = "{} --saveintermediateresults {}".format(argStr, self.config_saveintermediateresults) 
             
@@ -380,7 +436,7 @@ class processHelper(object):
             print("processhelper not ready, aborting...")
             return
         
-        if self.opt_bracketing == "method" or self.opt_bracketing == "method-euclid" or self.opt_bracketing == "tplcat_analysis-pfs":
+        if self.opt_bracketing == "method" or self.opt_bracketing == "method-euclid" or self.opt_bracketing == "tplcat_analysis-pfs" or self.opt_bracketing == "priors_optimization-euclid":
             bracketing = self.prepareBracketing()    
             nproc = len(bracketing["method"])
         else:
@@ -408,7 +464,7 @@ class processHelper(object):
                                                         overrideSpclistIndex = overrideSpclistIndex)
                 else:
                     argStr = self.prepareArgumentString(overrideMethod = bracketing["method"][k], 
-                                                        overrideParamFile = bracketing["parameters"][k], 
+                                                        overrideParamFilePath = bracketing["parameters"][k], 
                                                         overrideTemplatesCtlg = bracketing["templates"][k],
                                                         overrideSpclist = overrideSpclist,
                                                         overrideSpclistIndex = overrideSpclistIndex)
@@ -533,7 +589,7 @@ def StartFromCommandLine( argv ) :
                     help="dryrun (skip run), local (run locally), 'cluster_lam' or 'cluster_in2p3' to run on a cluster through qsub")
                  
     parser.add_argument("-m", "--methodBracketing", dest="methodBracketing", default="",
-                help="bracketing of the parameters : choose between '' or 'method' or 'method-euclid' or 'tplcat_analysis-pfs'") 
+                help="bracketing of the parameters : choose between '' or 'method' or 'method-euclid' or 'tplcat_analysis-pfs' or 'priors_optimization-euclid' ") 
                 
     parser.add_argument("-t", "--bracketingTemplatesRootPath", dest="brackTemplatesRootPath", default="/home/aschmitt/amazed_cluster/calibration/templates/",
                 help="path to the templates root path used for the bracketing")
