@@ -1638,8 +1638,8 @@ Int32 COperatorLineModel::ComputeSecondPass(
         m_result->ExtremaResult.OutsideLinesMask[i] =
             m_model->getOutsideLinesMask();
 
-        m_result->ExtremaResult.OutsideLinesSTDFlux[i] = m_model->getOutsideLinesSTD(1);
-        m_result->ExtremaResult.OutsideLinesSTDError[i] = m_model->getOutsideLinesSTD(2);
+        m_result->ExtremaResult.OutsideLinesSTDFlux[i] = m_model->getOutsideLinesSTD(1, lambdaRange);
+        m_result->ExtremaResult.OutsideLinesSTDError[i] = m_model->getOutsideLinesSTD(2, lambdaRange);
         Float64 ratioSTD = -1;
         if(m_result->ExtremaResult.OutsideLinesSTDError[i]>0.0)
         {

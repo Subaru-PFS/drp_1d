@@ -857,6 +857,11 @@ CPdfz::GetStrongLinePresenceLogZPrior(std::vector<bool> linePresence,
 
 std::vector<Float64> CPdfz::GetEuclidNhaLogZPrior(std::vector<Float64> redshifts, Float64 aCoeff)
 {
+    if(aCoeff<=0)
+    {
+        Log.LogError( "    CPdfz::GetEuclidNhaLogZPrior: problem found aCoeff<=0: aCoeff=%f", aCoeff);
+        throw std::runtime_error("    CPdfz::GetEuclidNhaLogZPrior: problem found aCoeff<=0");
+    }
     std::vector<Float64> zPrior(redshifts.size(), 0.0);
 
     Float64 maxP = -DBL_MAX;
@@ -870,30 +875,26 @@ std::vector<Float64> CPdfz::GetEuclidNhaLogZPrior(std::vector<Float64> redshifts
         Float64 z5 = z4*z;
         Float64 z6 = z5*z;
 
-        if(0)
-        {
-            zPrior[kz] = (1e-6)*( -3080.1*aCoeff*redshifts[kz]+15546.6 ); //smooth affine version of pozzetti model at FHa=1e-16
+        //poly reg pozzetti model at FHa=1e-16
+        zPrior[kz] = (- 54.7422088727874*z6
+                      + 1203.94994364807*z5
+                      - 10409.6716744981*z4
+                      + 44240.3837462642*z3
+                      - 92914.84430357*z2
+                      + 79004.76406*z
+                      - 2288.98457865 );
+
+        //shape prior at low z, left of the bell
+        Bool enable_low_z_flat = true;
+        if(enable_low_z_flat && z<0.7204452872044528){
+            zPrior[kz]=20367.877916402278;
         }else{
-            zPrior[kz] = (- 54.7422088727874*z6
-                                 + 1203.94994364807*z5
-                                 - 10409.6716744981*z4
-                                 + 44240.3837462642*z3
-                                 - 92914.84430357*z2
-                                 + 79004.76406*z
-                                 - 2288.98457865 ); //poly reg pozzetti model at FHa=1e-16
-
-
-            //shape prior at low z, left of the bell
-            if(z<0.7204452872044528){
-                zPrior[kz]=20367.877916402278;
-            }else{
-                if(zPrior[kz]<0){
-                    zPrior[kz]=DBL_MIN;
-                }
+            if(zPrior[kz]<0){
+                zPrior[kz]=DBL_MIN;
             }
-            zPrior[kz] = pow(zPrior[kz], aCoeff);
-
         }
+        //apply strength
+        zPrior[kz] = pow(zPrior[kz], aCoeff);
 
         if (zPrior[kz] > maxP)
         {
@@ -907,7 +908,7 @@ std::vector<Float64> CPdfz::GetEuclidNhaLogZPrior(std::vector<Float64> redshifts
 
     Log.LogDetail("Pdfz: zPrior: using HalphaZPrior min=%e", minP);
     Log.LogDetail("Pdfz: zPrior: using HalphaZPrior max=%e", maxP);
-    Float64 dynamicCut = 1e4;
+    Float64 dynamicCut = 1e12;
     if (maxP > 0)
     {
         for (UInt32 kz = 0; kz < redshifts.size(); kz++)
@@ -954,6 +955,7 @@ std::vector<Float64> CPdfz::GetEuclidNhaLogZPrior(std::vector<Float64> redshifts
 std::vector<Float64> CPdfz::CombineLogZPrior(std::vector<Float64> logprior1,
                                              std::vector<Float64> logprior2)
 {
+    bool normalizePrior=true;
     std::vector<Float64> logzPriorCombined;
     if (logprior1.size() != logprior2.size())
     {
@@ -983,11 +985,16 @@ std::vector<Float64> CPdfz::CombineLogZPrior(std::vector<Float64> logprior1,
     }
 
     Float64 logSum = log(exp(maxi)) * sumExpModif;
+    Float64 lognormterm = 0.;
+    if(normalizePrior)
+    {
+        lognormterm=logSum;
+    }
 
     logzPriorCombined.resize(n);
     for (Int32 k = 0; k < n; k++)
     {
-        logzPriorCombined[k] = logprior1[k] + logprior2[k] - logSum;
+        logzPriorCombined[k] = logprior1[k] + logprior2[k] - lognormterm;
     }
 
     return logzPriorCombined;

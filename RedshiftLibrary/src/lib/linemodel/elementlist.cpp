@@ -2376,7 +2376,7 @@ CMask CLineModelElementList::getOutsideLinesMask()
  * input: which = 1: uses the spectrum flux continuum subtracted to compute STD
  * input: which = 2: uses the spectrum error to compute STD
  **/
-Float64 CLineModelElementList::getOutsideLinesSTD( Int32 which)
+Float64 CLineModelElementList::getOutsideLinesSTD( Int32 which, TFloat64Range lambdarange)
 {
     if(which!=1 && which!=2)
     {
@@ -2389,7 +2389,9 @@ Float64 CLineModelElementList::getOutsideLinesSTD( Int32 which)
     const CSpectrumSpectralAxis& spectralAxis = m_SpectrumModel->GetSpectralAxis();
     Float64 sum2 = 0.0;
     Int32 nsum=0;
-    for( UInt32 i=0; i<spectralAxis.GetSamplesCount(); i++ )
+    Float64 imin = spectralAxis.GetIndexAtWaveLength(lambdarange.GetBegin());
+    Float64 imax = spectralAxis.GetIndexAtWaveLength(lambdarange.GetEnd());
+    for( UInt32 i=imin; i<imax; i++ )
     {
         if(_mask[i])
         {

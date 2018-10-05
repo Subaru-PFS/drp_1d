@@ -163,7 +163,7 @@ public:
 
     void setModelSpcObservedOnSupportZeroOutside(const TFloat64Range &lambdaRange);
     CMask getOutsideLinesMask();
-    Float64 getOutsideLinesSTD( Int32 which);
+    Float64 getOutsideLinesSTD(Int32 which, TFloat64Range lambdarange);
 
 
     Int32 getSpcNSamples(const TFloat64Range& lambdaRange);

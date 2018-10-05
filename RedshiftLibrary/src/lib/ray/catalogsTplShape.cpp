@@ -20,22 +20,7 @@ using namespace boost;
 
 CRayCatalogsTplShape::CRayCatalogsTplShape()
 {
-    /*
-    //DEPRECATED
-    // old relpath = "linecatalogs_tplshape_ExtendedTemplatesMarch2016_v2_20160916_B10I2_mod"
-    //tplshapedcatalog_relpath = "linecatalogs_tplshape_ExtendedTemplatesMarch2016_B13B_mod20170110";
 
-    bfs::path tplshapeRelPath( "linecatalogs_tplshapes" );
-    //tplshapedcatalog_relpath = "linecatalogs_tplshape_ExtendedTemplatesMarch2016_B13D_mod2";
-    //tplshapedcatalog_relpath = (tplshapeRelPath/"linecatalogs_tplshape_ExtendedTemplatesJan2017v3_20170524_B13F_v1").string();
-    //tplshapedcatalog_relpath = (tplshapeRelPath/"linecatalogs_tplshape_ExtendedTemplatesJan2017v3_20170602_B14_v1_emission").string();
-    //tplshapedcatalog_relpath = (tplshapeRelPath/"linecatalogs_tplshape_ExtendedTemplatesJan2017v3_20170602_B14B_v2_emission").string();
-    tplshapedcatalog_relpath = (tplshapeRelPath/"linecatalogs_tplshape_ExtendedTemplatesJan2017v3_20170602_B14C_v3_emission").string();
-
-    //pypelid test
-    //tplshapedcatalog_relpath = (tplshapeRelPath/"tplratio_catalog_pypelid20180216").string();
-    //
-    */
 }
 
 CRayCatalogsTplShape::~CRayCatalogsTplShape()
@@ -369,6 +354,19 @@ Bool CRayCatalogsTplShape::InitLineCorrespondingAmplitudes(CLineModelElementList
             }
         }
     }
+
+//    //Now log the linesCorrespondingNominalAmp
+//    for( UInt32 iElts=0; iElts<LineModelElementList.m_Elements.size(); iElts++ )
+//    {
+//        for(Int32 k=0; k<GetCatalogsCount(); k++)
+//        {
+//            Int32 nRays = LineModelElementList.m_Elements[iElts]->GetSize();
+//            for(UInt32 j=0; j<nRays; j++){
+//                Float64 nomAmp = m_RayCatalogLinesCorrespondingNominalAmp[iElts][k][j];
+//                Log.LogDebug( "    CatalogsTplShape - linesCorrespondingNominalAmp iElt=%d, iCatalog=%d, iLine=%d : NominalAmpFound = %e", iElts, k, j, nomAmp);
+//            }
+//        }
+//    }
 
     return 0;
 }
