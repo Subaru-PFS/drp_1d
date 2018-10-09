@@ -71,7 +71,7 @@ void checkProfileValue(std::string linecatalogPath,
     //CSpectrumFluxAxis fluxAxisWithoutContinuumCalc;
     //Int32 retValCont = continuum.RemoveContinuum( spectrum, fluxAxisWithoutContinuumCalc );
     CSpectrum spectrumContinuum = spectrum;
-    CSpectrumFluxAxis& continuumFluxAxis = spectrum.GetFluxAxis();
+    CSpectrumFluxAxis& continuumFluxAxis = spectrumContinuum.GetFluxAxis();
     for(UInt32 i=0; i<continuumFluxAxis.GetSamplesCount(); i++){
         //continuumFluxAxis[i] -= fluxAxisWithoutContinuumCalc[i];
         continuumFluxAxis[i] = 0.0;
@@ -101,10 +101,23 @@ void checkProfileValue(std::string linecatalogPath,
     BOOST_CHECK_NO_THROW(tplCatalog.Load( DATA_ROOT_DIR "templatecatalog/" ));
     TStringList tplCategories;
 
-    CLineModelElementList model(spectrum, spectrumContinuum, tplCatalog, tplCategories, unused_calibrationPath, lineList, opt_fittingmethod, opt_continuumcomponent, opt_lineWidthType, opt_resolution, opt_velocityEmission, opt_velocityAbsorption, opt_rules, opt_rigidity);
+    CLineModelElementList model(spectrum,
+                                spectrumContinuum,
+                                tplCatalog,
+                                tplCategories,
+                                unused_calibrationPath,
+                                lineList,
+                                opt_fittingmethod,
+                                opt_continuumcomponent,
+                                opt_lineWidthType,
+                                opt_resolution,
+                                opt_velocityEmission,
+                                opt_velocityAbsorption,
+                                opt_rules,
+                                opt_rigidity);
     TFloat64Range lambdaRange = TFloat64Range( 100.0, 12000.0 );
     CLineModelSolution modelSolution;
-    model.fit(z, lambdaRange, modelSolution);
+    model.fit(z, lambdaRange, modelSolution, 0, 1);
 
     CSpectrumSpectralAxis spcSpectralAxis = spectrum.GetSpectralAxis();
 
@@ -122,6 +135,10 @@ void checkProfileValue(std::string linecatalogPath,
         Float64 iLambda = spcSpectralAxis.GetIndexAtWaveLength(lambdas[k]);
         Float64 profileValue = model.getModelFluxVal(iLambda);
         Float64 refFluxValue = refProfileFluxValues[k];
+
+        //BOOST_MESSAGE("Check fluxes : ilambda="<<iLambda<<", for lambda="<<lambdas[k]);
+        //BOOST_MESSAGE("Check fluxes : profileValue="<<profileValue<<", for refFluxValue="<<refFluxValue);
+
         //BOOST_CHECK_CLOSE_FRACTION( profileValue, refFluxValue, 1e-5);
         BOOST_CHECK_SMALL( std::abs(profileValue - refFluxValue), 1e-3);
     }

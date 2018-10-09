@@ -136,7 +136,6 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
     dataStore.GetScopedParam( "linemodel.saveintermediateresults", m_opt_saveintermediateresults, "no");
 
     //Auto-correct fitting method
-    //std::string forcefittingmethod = "ones";
     std::string forcefittingmethod = "individual";
     if(m_opt_rigidity=="tplshape" && m_opt_fittingmethod != forcefittingmethod)
     {

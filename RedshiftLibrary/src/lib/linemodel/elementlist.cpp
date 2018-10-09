@@ -2025,10 +2025,10 @@ void CLineModelElementList::refreshModel(Int32 lineTypeFilter)
     if(enableMinMaxLog)
     {
         //check the model min/max values
-        Int32 imin = spectralAxis.GetIndexAtWaveLength(12500.);
-        Int32 imax = spectralAxis.GetIndexAtWaveLength(18500.);
-        //Int32 imin = 0;
-        //Int32 imax = modelFluxAxis.GetSamplesCount();
+        //Int32 imin = spectralAxis.GetIndexAtWaveLength(12500.);
+        //Int32 imax = spectralAxis.GetIndexAtWaveLength(18500.);
+        Int32 imin = 0;
+        Int32 imax = modelFluxAxis.GetSamplesCount();
         Float64 fmin = DBL_MAX;
         Float64 fmax = -DBL_MAX;
         for(Int32 j=imin; j<imax; j++)
@@ -2456,7 +2456,7 @@ Int32 CLineModelElementList::fitAmplitudesHybrid(const CSpectrumSpectralAxis& sp
           continue;
       }
       //do the fit on the ovelapping elements
-      Float64 overlapThres = 0.33;
+      Float64 overlapThres = 0.15; //15% seemed necessary for Ha/SII complex when lines are very wide (either because of PSF or source size)
       std::vector<UInt32> overlappingInds = getOverlappingElements(iElts, indexesFitted, overlapThres);
 
       //setting the fitting group info

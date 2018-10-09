@@ -133,6 +133,7 @@ Float64 CLineModelElement::GetLineWidth(Float64 redshiftedlambda, Float64 z, Boo
         //+ considers source size in the dispersion direction
         //+ considers velocity
         instrumentSigma = (redshiftedlambda*3.939e-4 + 2.191); //probably a realistic calib.
+        //instrumentSigma = (redshiftedlambda*4.661e-4 + 2.593); //2017b calib
         //instrumentSigma = 11.; //(approx. 10 or 11?) for tips-fast current version 201708
 
         sourcesizeSigma = m_SourceSizeDispersion*angstromPix/arcsecPix;
