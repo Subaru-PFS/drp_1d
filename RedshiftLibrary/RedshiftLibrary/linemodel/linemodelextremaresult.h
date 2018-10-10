@@ -59,6 +59,7 @@ public:
     TFloat64List            FittedTplDustCoeff;     //Calzetti dustcoeff for the best template fitted for continuum
     std::vector<Int32>      FittedTplMeiksinIdx;    //Meiksin igm index for the best template fitted for continuum
     std::vector<std::string>      FittedTplshapeName;   //Name of the best template fitted for tplcorr/tplshape
+    std::vector<Float64>      FittedTplshapeIsmCoeff;   //IsmCoeff/EBMV of the best template fitted for tplcorr/tplshape
 
 };
 

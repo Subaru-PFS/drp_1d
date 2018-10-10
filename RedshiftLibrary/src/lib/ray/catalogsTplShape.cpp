@@ -20,14 +20,15 @@ using namespace boost;
 
 CRayCatalogsTplShape::CRayCatalogsTplShape()
 {
-
+    m_ismCorrectionCalzetti = new CSpectrumFluxCorrectionCalzetti();
 }
 
 CRayCatalogsTplShape::~CRayCatalogsTplShape()
 {
+    delete m_ismCorrectionCalzetti;
 }
 
-Bool CRayCatalogsTplShape::Init( std::string calibrationPath, std::string opt_tplratioCatRelPath)
+Bool CRayCatalogsTplShape::Init( std::string calibrationPath, std::string opt_tplratioCatRelPath, Int32 enableISMCalzetti)
 {
     if(opt_tplratioCatRelPath.size()<1)
     {
@@ -41,6 +42,9 @@ Bool CRayCatalogsTplShape::Init( std::string calibrationPath, std::string opt_tp
 
     std::string dirPath = (calibrationFolder/tplshapedcatalog_relpath.c_str()).string();
 
+    m_opt_dust_calzetti = enableISMCalzetti;
+    m_ismCorrectionCalzetti->Init(calibrationPath, 0.0, 0.1, 4);
+
     bool ret = Load(dirPath.c_str());
     if(!ret)
     {
@@ -53,9 +57,13 @@ Bool CRayCatalogsTplShape::Init( std::string calibrationPath, std::string opt_tp
 
 Bool CRayCatalogsTplShape::Load( const char* dirPath )
 {
-
     // Clear current catalog list
     m_RayCatalogList.clear();
+    m_RayCatalogNames.clear();
+    m_ELvelocities.clear();
+    m_ABSvelocities.clear();
+    m_Priors.clear();
+    m_IsmIndexes.clear();
 
     //load the catalogs list from the files in the tplshape-catalogs folder : tplshapeCatalogDir
     namespace fs = boost::filesystem;
@@ -117,95 +125,107 @@ Bool CRayCatalogsTplShape::Load( const char* dirPath )
 
     //Load the linecatalog-tplshaped in the list
     Int32 successLoadPriors = true;
-    for(Int32 k=0; k<tplshapeCatalogList.size(); k++)
+    Int32 nDustCoeffs=1;
+    if(!m_opt_dust_calzetti)
     {
-        CRayCatalog lineCatalog;
-	try
-	  {
-	  lineCatalog.Load( tplshapeCatalogList[k].c_str() );
-	  }
-	catch (std::string& e)
-	  {
-            Log.LogError( "    CatalogsTplShape - Failed to load tplshape catalog: %s", e.c_str());
-            continue;
-	  }
-
-        m_RayCatalogList.push_back(lineCatalog);
-
-        fs::path name(tplshapeCatalogList[k].c_str());
-        m_RayCatalogNames.push_back(name.filename().c_str());
-
-        //find the velocities-tplshaped corresponding to the tpl-shaped catalog: this is mandatory (continue/skip loading if velocities aren't found)
-        Int32 kvel = -1;
-        std::string tplname = name.filename().c_str();
-        boost::replace_all( tplname, "_catalog.txt", "_velocities.txt");
-        for(Int32 k=0; k<tplshapeVelocitiesList.size(); k++)
+        nDustCoeffs = 1;
+    }else{
+        nDustCoeffs = m_ismCorrectionCalzetti->GetNPrecomputedDustCoeffs();
+    }
+    for(Int32 ktpl=0; ktpl<tplshapeCatalogList.size(); ktpl++)
+    {
+        //Loop on the EBMV dust coeff
+        for(Int32 kDust=0; kDust<nDustCoeffs; kDust++)
         {
-            std::string velname = tplshapeVelocitiesList[k];
-            std::size_t foundstra = velname.find(tplname.c_str());
-            if (foundstra==std::string::npos){
-                continue;
-            }
-            kvel = k;
-        }
-
-        if(kvel<0)
-        {
-            Log.LogError( "    CatalogsTplShape - Failed to match tplshape-catalog with tplshape-velocities files: %s", tplname.c_str());
-            return false;
-        }
-        m_ELvelocities.push_back(200.0);
-        m_ABSvelocities.push_back(200.0);
-        bool ret = LoadVelocities(tplshapeVelocitiesList[kvel].c_str(), k);
-        if( !ret )
-        {
-            Log.LogError( "    CatalogsTplShape - Failed to load tplshape velocities: %s", tplshapeVelocitiesList[kvel].c_str());
-            return false;
-        }
-
-        //find the prior-tplshaped corresponding to the tpl-shaped catalog : this is optional (ignore if priors aren't found)
-        m_Priors.push_back(1.0);
-        Int32 kprior = -1;
-        tplname = name.filename().c_str();
-        boost::replace_all( tplname, "_catalog.txt", "_prior.txt");
-        for(Int32 k=0; k<tplshapePriorsList.size(); k++)
-        {
-            std::string priorname = tplshapePriorsList[k];
-            std::size_t foundstra = priorname.find(tplname.c_str());
-            if (foundstra==std::string::npos){
-                continue;
-            }
-            kprior = k;
-        }
-
-        if(kprior<0 || !successLoadPriors)
-        {
-            Log.LogWarning( "    CatalogsTplShape - Failed to match tplshape-catalog with tplshape-prior files: %s", tplname.c_str());
-            successLoadPriors=false;
-        }
-        if(successLoadPriors)
-        {
-            bool retPrior = LoadPrior(tplshapePriorsList[kprior].c_str(), k);
-            if( !retPrior )
+            CRayCatalog lineCatalog;
+            try
             {
-                Log.LogError( "    CatalogsTplShape - Failed to load tplshape prior: %s", tplshapePriorsList[kprior].c_str());
+                lineCatalog.Load( tplshapeCatalogList[ktpl].c_str() );
+            }
+            catch (std::string& e)
+            {
+                Log.LogError( "    CatalogsTplShape - Failed to load tplshape catalog: %s", e.c_str());
+                throw runtime_error("    CatalogsTplShape - Failed to load tplshape catalog");
+            }
+
+            m_RayCatalogList.push_back(lineCatalog);
+            m_IsmIndexes.push_back(kDust);
+
+            fs::path name(tplshapeCatalogList[ktpl].c_str());
+            m_RayCatalogNames.push_back(name.filename().c_str());
+
+            //find the velocities-tplshaped corresponding to the tpl-shaped catalog: this is mandatory (continue/skip loading if velocities aren't found)
+            Int32 kvel = -1;
+            std::string tplname = name.filename().c_str();
+            boost::replace_all( tplname, "_catalog.txt", "_velocities.txt");
+            for(Int32 kv=0; kv<tplshapeVelocitiesList.size(); kv++)
+            {
+                std::string velname = tplshapeVelocitiesList[kv];
+                std::size_t foundstra = velname.find(tplname.c_str());
+                if (foundstra==std::string::npos){
+                    continue;
+                }
+                kvel = kv;
+            }
+
+            if(kvel<0)
+            {
+                Log.LogError( "    CatalogsTplShape - Failed to match tplshape-catalog with tplshape-velocities files: %s", tplname.c_str());
+                return false;
+            }
+            m_ELvelocities.push_back(200.0);
+            m_ABSvelocities.push_back(200.0);
+            bool ret = LoadVelocities(tplshapeVelocitiesList[kvel].c_str(), m_ELvelocities.size()-1);
+            if( !ret )
+            {
+                Log.LogError( "    CatalogsTplShape - Failed to load tplshape velocities: %s", tplshapeVelocitiesList[kvel].c_str());
+                return false;
+            }
+
+            //find the prior-tplshaped corresponding to the tpl-shaped catalog : this is optional (ignore if priors aren't found)
+            m_Priors.push_back(1.0);
+            Int32 kprior = -1;
+            tplname = name.filename().c_str();
+            boost::replace_all( tplname, "_catalog.txt", "_prior.txt");
+            for(Int32 kp=0; kp<tplshapePriorsList.size(); kp++)
+            {
+                std::string priorname = tplshapePriorsList[kp];
+                std::size_t foundstra = priorname.find(tplname.c_str());
+                if (foundstra==std::string::npos){
+                    continue;
+                }
+                kprior = kp;
+            }
+
+            if(kprior<0 || !successLoadPriors)
+            {
+                Log.LogWarning( "    CatalogsTplShape - Failed to match tplshape-catalog with tplshape-prior files: %s", tplname.c_str());
                 successLoadPriors=false;
             }
+            if(successLoadPriors)
+            {
+                bool retPrior = LoadPrior(tplshapePriorsList[kprior].c_str(), m_Priors.size()-1);
+                if( !retPrior )
+                {
+                    Log.LogError( "    CatalogsTplShape - Failed to load tplshape prior: %s", tplshapePriorsList[kprior].c_str());
+                    successLoadPriors=false;
+                }
+            }
+
         }
-
-
     }
     if(!successLoadPriors) //if not all priors were successfully loaded, replace by cst prior
     {
-        Float64 priorCST = 1./(Float64)(tplshapeCatalogList.size());
+        Float64 priorCST = 1./(Float64)(m_Priors.size());
         Log.LogWarning( "    CatalogsTplShape - Failed to load tplshape prior, USING constant priors instead ! (p=%f)", priorCST);
-        for(Int32 k=0; k<tplshapeCatalogList.size(); k++)
+        for(Int32 k=0; k<m_Priors.size(); k++)
         {
-            m_Priors[k] = priorCST;
+            for(Int32 kDust=0; kDust<nDustCoeffs; kDust++)
+            {
+                m_Priors[k] = priorCST;
+            }
         }
     }
-
-
     Log.LogInfo( "    CatalogsTplShape - Loaded %d tplshaped catalogs", m_RayCatalogList.size());
 
     return true;
@@ -277,13 +297,17 @@ bool CRayCatalogsTplShape::LoadPrior( const char* filePath, Int32 k )
         return false;
     }
 
-
     Log.LogDebug( "    CatalogsTplShape - k=%d - Set prior=%.1f", k, prior);
     m_Priors[k] = prior;
 
     return true;
 }
 
+/**
+ * @brief CRayCatalogsTplShape::GetRestLinesList
+ * @param index
+ * WARNING: ismCoeff not applied on the restlines provided by that function.
+ */
 CRayCatalog::TRayVector CRayCatalogsTplShape::GetRestLinesList( const Int32 index )
 {
     Int32 typeFilter=-1;
@@ -306,6 +330,11 @@ std::vector<Float64> CRayCatalogsTplShape::getCatalogsPriors()
 std::string CRayCatalogsTplShape::GetCatalogName(Int32 idx)
 {
     return m_RayCatalogNames[idx];
+}
+
+Float64 CRayCatalogsTplShape::GetIsmCoeff(Int32 idx)
+{
+    return m_ismCorrectionCalzetti->GetEbmvValue(m_IsmIndexes[idx]);
 }
 
 Bool CRayCatalogsTplShape::GetCatalogVelocities(Int32 idx, Float64& elv, Float64& alv )
@@ -342,6 +371,9 @@ Bool CRayCatalogsTplShape::InitLineCorrespondingAmplitudes(CLineModelElementList
             for(Int32 kL=0; kL<currentCatalogLineList.size(); kL++)
             {
                 Float64 nominalAmp = currentCatalogLineList[kL].GetNominalAmplitude();
+                Float64 restLambda = currentCatalogLineList[kL].GetPosition();
+                Float64 dustCoeff = m_ismCorrectionCalzetti->getDustCoeff( m_IsmIndexes[iCatalog], restLambda);
+                nominalAmp*=dustCoeff;
                 //find line in the elementList
                 Int32 nRays = LineModelElementList.m_Elements[iElts]->GetSize();
                 for(UInt32 j=0; j<nRays; j++){
@@ -422,6 +454,9 @@ Bool CRayCatalogsTplShape::SetMultilineNominalAmplitudes(CLineModelElementList &
     for(Int32 kL=0; kL<nLines; kL++)
     {
         Float64 nominalAmp = currentCatalogLineList[kL].GetNominalAmplitude();
+        Float64 restLambda = currentCatalogLineList[kL].GetPosition();
+        Float64 dustCoeff = m_ismCorrectionCalzetti->getDustCoeff( m_IsmIndexes[iCatalog], restLambda);
+        nominalAmp*=dustCoeff;
         //find line in the elementList
         for( UInt32 iElts=0; iElts<LineModelElementList.m_Elements.size(); iElts++ )
         {

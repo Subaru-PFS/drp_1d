@@ -25,7 +25,7 @@ class CRayCatalogsTplShape
 public:
     CRayCatalogsTplShape();
     ~CRayCatalogsTplShape();
-    Bool Init(std::string calibrationPath, std::string opt_tplratioCatRelPath);
+    Bool Init(std::string calibrationPath, std::string opt_tplratioCatRelPath, Int32 enableISMCalzetti);
 
     Bool Load( const char* dirPath );
     bool LoadVelocities( const char* filepath, Int32 k );
@@ -36,6 +36,8 @@ public:
     Int32 GetCatalogsCount();
     std::vector<Float64> getCatalogsPriors();
     std::string GetCatalogName(Int32 idx);
+    Float64 GetIsmCoeff(Int32 idx);
+
     Bool GetCatalogVelocities(Int32 idx, Float64& elv, Float64& alv );
     Bool SetMultilineNominalAmplitudes(CLineModelElementList& LineModelElementList, Int32 iLine);
     Bool SetLyaProfile(CLineModelElementList &LineModelElementList, Int32 iCatalog);
@@ -53,7 +55,10 @@ private:
     std::vector<Float64> m_ELvelocities;
     std::vector<Float64> m_ABSvelocities;
     std::vector<Float64> m_Priors;
+    std::vector<Int32> m_IsmIndexes;
 
+    CSpectrumFluxCorrectionCalzetti* m_ismCorrectionCalzetti;
+    Int32 m_opt_dust_calzetti;
 };
 
 

@@ -266,12 +266,12 @@ Int32 CMultiRollModel::setPassMode(Int32 iPass)
 }
 
 
-Bool CMultiRollModel::initTplratioCatalogs(std::string opt_tplratioCatRelPath)
+Bool CMultiRollModel::initTplratioCatalogs(std::string opt_tplratioCatRelPath, Int32 opt_tplratio_ismFit)
 {
     Bool ret=-1;
     for(Int32 km=0; km<m_models.size(); km++)
     {
-        ret = m_models[km]->initTplratioCatalogs(opt_tplratioCatRelPath);
+        ret = m_models[km]->initTplratioCatalogs(opt_tplratioCatRelPath, opt_tplratio_ismFit);
     }
 
     //

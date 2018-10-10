@@ -40,7 +40,7 @@ COperatorChiSquareLogLambda::COperatorChiSquareLogLambda(
 
     // ISM
     m_ismCorrectionCalzetti = new CSpectrumFluxCorrectionCalzetti();
-    m_ismCorrectionCalzetti->Init(calibrationPath);
+    m_ismCorrectionCalzetti->Init(calibrationPath, 0.0, 0.1, 10);
 
     // IGM
     m_igmCorrectionMeiksin = new CSpectrumFluxCorrectionMeiksin();

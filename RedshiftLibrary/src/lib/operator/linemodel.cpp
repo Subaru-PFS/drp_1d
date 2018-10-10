@@ -290,7 +290,7 @@ Int32 COperatorLineModel::ComputeFirstPass(
         // init catalog tplratios
         Log.LogInfo("  Operator-Linemodel: Tpl-ratios init");
         bool tplratioInitRet =
-            m_model->initTplratioCatalogs(opt_tplratioCatRelPath);
+            m_model->initTplratioCatalogs(opt_tplratioCatRelPath, m_opt_tplratio_ismFit);
         if (!tplratioInitRet)
         {
             Log.LogError(
@@ -1668,9 +1668,11 @@ Int32 COperatorLineModel::ComputeSecondPass(
         m_result->ExtremaResult.FittedTplMeiksinIdx[i] =
             m_model->getFitContinuum_tplIgmMeiksinIdx();
 
-        // save the tplcorr results
+        // save the tplcorr/tplratio results
         m_result->ExtremaResult.FittedTplshapeName[i] =
             m_model->getTplshape_bestTplName();
+        m_result->ExtremaResult.FittedTplshapeIsmCoeff[i] =
+            m_model->getTplshape_bestTplIsmCoeff();
     }
 
     // ComputeArea2(*m_result);

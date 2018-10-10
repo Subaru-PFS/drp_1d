@@ -106,6 +106,7 @@ Bool CZweiModelSolve::PopulateParameters( CDataStore& dataStore )
     if(m_opt_rigidity=="tplshape")
     {
         dataStore.GetScopedParam( "zweimodel.tplratio_catalog", m_opt_tplratio_reldirpath, "linecatalogs_tplshapes/linecatalogs_tplshape_ExtendedTemplatesJan2017v3_20170602_B14C_v3_emission" );
+        dataStore.GetScopedParam( "zweimodel.tplratio_ismfit", m_opt_tplratio_ismfit, "yes" );
     }
     dataStore.GetScopedParam( "zweimodel.offsets_catalog", m_opt_offsets_reldirpath, "linecatalogs_offsets/offsetsCatalogs_20170410_m150" );
 
@@ -176,6 +177,7 @@ Bool CZweiModelSolve::PopulateParameters( CDataStore& dataStore )
     }else if(m_opt_rigidity=="tplshape")
     {
         Log.LogInfo( "      -tplratio_catalog", m_opt_tplratio_reldirpath.c_str());
+        Log.LogInfo( "      -tplratio_ismfit", m_opt_tplratio_ismfit.c_str());
     }
     Log.LogInfo( "      -offsets_catalog", m_opt_offsets_reldirpath.c_str());
 

@@ -74,6 +74,7 @@ private:
 
     //options for rigidity=tplshape
     std::string m_opt_tplratio_reldirpath;
+    std::string m_opt_tplratio_ismfit="no";
     std::string m_opt_offsets_reldirpath;
 
     Float64 m_opt_extremacount;

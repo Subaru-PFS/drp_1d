@@ -111,6 +111,7 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
     if(m_opt_rigidity=="tplshape")
     {
         dataStore.GetScopedParam( "linemodel.tplratio_catalog", m_opt_tplratio_reldirpath, "linecatalogs_tplshapes/linecatalogs_tplshape_ExtendedTemplatesJan2017v3_20170602_B14C_v3_emission" );
+        dataStore.GetScopedParam( "linemodel.tplratio_ismfit", m_opt_tplratio_ismfit, "yes" );
     }
     dataStore.GetScopedParam( "linemodel.offsets_catalog", m_opt_offsets_reldirpath, "linecatalogs_offsets/offsetsCatalogs_20170410_m150" );
 
@@ -185,6 +186,7 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
     }else if(m_opt_rigidity=="tplshape")
     {
         Log.LogInfo( "      -tplratio_catalog: %s", m_opt_tplratio_reldirpath.c_str());
+        Log.LogInfo( "      -tplratio_ismfit: %s", m_opt_tplratio_ismfit.c_str());
     }
     Log.LogInfo( "    -linemodel offsets_catalog: %s", m_opt_offsets_reldirpath.c_str());
 
@@ -638,6 +640,11 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
     if(m_opt_continuumcomponent=="tplfit"){
         linemodel.m_opt_tplfit_dustFit = Int32(m_opt_tplfit_dustfit=="yes");
         linemodel.m_opt_tplfit_extinction = Int32(m_opt_tplfit_igmfit=="yes");
+    }
+
+    if(m_opt_rigidity=="tplshape")
+    {
+        linemodel.m_opt_tplratio_ismFit = Int32(m_opt_tplratio_ismfit=="yes");
     }
 
     if(m_opt_continuumcomponent=="fromspectrum"){

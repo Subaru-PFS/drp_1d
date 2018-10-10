@@ -35,7 +35,7 @@ CSpectrumFluxCorrectionCalzetti::~CSpectrumFluxCorrectionCalzetti()
     }
 }
 
-Bool CSpectrumFluxCorrectionCalzetti::Init( std::string calibrationPath )
+Bool CSpectrumFluxCorrectionCalzetti::Init( std::string calibrationPath, Float64 ebmv_start, Float64 ebmv_step, Float64 ebmv_n)
 {
     //load calzetti data
     bfs::path calibrationFolder( calibrationPath.c_str() );
@@ -73,9 +73,9 @@ Bool CSpectrumFluxCorrectionCalzetti::Init( std::string calibrationPath )
         file.close();
 
         //precomte the dust-coeff table
-        m_nDustCoeff = 10;
-        m_dustCoeffStep = 0.1;
-        m_dustCoeffStart = 0.0;
+        m_nDustCoeff = ebmv_n;
+        m_dustCoeffStep = ebmv_step;
+        m_dustCoeffStart = ebmv_start;
         m_dataDustCoeff = new Float64[(int)(m_nDustCoeff*m_NdataCalzetti)]();
 
         for(Int32 kDust=0; kDust<m_nDustCoeff; kDust++)

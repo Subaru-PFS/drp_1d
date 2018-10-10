@@ -47,7 +47,7 @@ COperatorTplcombination::COperatorTplcombination( std::string calibrationPath )
 
     //ISM
     m_ismCorrectionCalzetti = new CSpectrumFluxCorrectionCalzetti();
-    m_ismCorrectionCalzetti->Init(calibrationPath);
+    m_ismCorrectionCalzetti->Init(calibrationPath, 0.0, 0.1, 10);
     //Allocate buffer for Ytpl reinit during Dust-fit loop
     m_YtplRawBufferMaxBufferSize = 10*1e6; //allows array from 0A to 100000A with dl=0.01
     m_YtplRawBuffer = new Float64[(int)m_YtplRawBufferMaxBufferSize]();

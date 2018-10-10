@@ -242,12 +242,12 @@ void CLineModelElementList::initLambdaOffsets(std::string offsetsCatalogsRelPath
 }
 
 
-Bool CLineModelElementList::initTplratioCatalogs(std::string opt_tplratioCatRelPath)
+Bool CLineModelElementList::initTplratioCatalogs(std::string opt_tplratioCatRelPath, Int32 opt_tplratio_ismFit)
 {
     //tplshape catalog initialization : used for rigidities tplcorr and tplshape
     m_CatalogTplShape = new CRayCatalogsTplShape();
 
-    bool ret = m_CatalogTplShape->Init(m_calibrationPath, opt_tplratioCatRelPath);
+    bool ret = m_CatalogTplShape->Init(m_calibrationPath, opt_tplratioCatRelPath, opt_tplratio_ismFit);
     if(!ret)
     {
         Log.LogError("Unable to initialize the the tpl-shape catalogs. aborting...");
@@ -1267,6 +1267,10 @@ std::string CLineModelElementList::getTplshape_bestTplName()
 {
     return m_tplshapeBestTplName;
 }
+Float64 CLineModelElementList::getTplshape_bestTplIsmCoeff()
+{
+    return m_tplshapeBestTplIsmCoeff;
+}
 
 Int32 CLineModelElementList::getTplshape_count()
 {
@@ -1836,6 +1840,7 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
 
                 modelSolution = GetModelSolution();
                 m_tplshapeBestTplName = m_CatalogTplShape->GetCatalogName(savedIdxFitted);
+                m_tplshapeBestTplIsmCoeff = m_CatalogTplShape->GetIsmCoeff(savedIdxFitted);
             }
         }
 
@@ -1864,7 +1869,7 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
         //m_CatalogTplShape->GetCatalogVelocities(savedIdxFitted, m_velocityEmission, m_velocityAbsorption);
         for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
         {
-            Log.LogInfo( "    model - Linemodel: tplratio = %d (%s), and A=%f", savedIdxFitted, m_tplshapeBestTplName.c_str(), m_FittedAmpTplshape[savedIdxFitted][iElts]);
+            Log.LogInfo( "    model - Linemodel: tplratio = %d (%s, with ebmv=%.1f), and A=%f", savedIdxFitted, m_tplshapeBestTplName.c_str(), m_tplshapeBestTplIsmCoeff, m_FittedAmpTplshape[savedIdxFitted][iElts]);
             m_Elements[iElts]->SetFittedAmplitude(m_FittedAmpTplshape[savedIdxFitted][iElts], m_FittedErrorTplshape[savedIdxFitted][iElts]);
             m_Elements[iElts]->SetSumCross(m_DtmTplshape[savedIdxFitted][iElts]);
             m_Elements[iElts]->SetSumGauss(m_MtmTplshape[savedIdxFitted][iElts]);

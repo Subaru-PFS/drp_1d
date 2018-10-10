@@ -102,6 +102,7 @@ public:
     Int32 getMTransposeMCumulative(const TFloat64Range& lambdaRange, std::vector<Float64> lbda, std::vector<Float64> mtmCumul);
 
     std::string getTplshape_bestTplName();
+    Float64 getTplshape_bestTplIsmCoeff();
     Int32 getTplshape_count();
     std::vector<Float64> getTplshape_priors();
     std::vector<Float64> GetChisquareTplshape();
@@ -133,7 +134,7 @@ public:
 
     Float64 fit(Float64 redshift, const TFloat64Range& lambdaRange, CLineModelSolution &modelSolution, Int32 contreest_iterations=0, bool enableLogging=0);
 
-    Bool initTplratioCatalogs(std::string opt_tplratioCatRelPath);
+    Bool initTplratioCatalogs(std::string opt_tplratioCatRelPath, Int32 opt_tplratio_ismFit);
     void initLambdaOffsets(std::string offsetsCatalogsRelPath);
 
     Bool setTplshapeModel(Int32 itplshape, Bool enableSetVelocity=false);
@@ -305,6 +306,7 @@ private:
     CTemplateCatalog m_tplCatalog;
     TStringList m_tplCategoryList;
     std::string m_tplshapeBestTplName;
+    Float64 m_tplshapeBestTplIsmCoeff;
     Int32 m_tplshapeLeastSquareFast = 0;    //for rigidity=tplshape: switch to use fast least square estimation
 
     COperatorChiSquare2* m_chiSquareOperator;

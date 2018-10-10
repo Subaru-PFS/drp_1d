@@ -101,7 +101,8 @@ void checkLeastSquareFast(std::string spectrumPath, std::string noisePath,
         "linecatalogs_tplshapes/"
         "linecatalogs_tplshape_ExtendedTemplatesJan2017v3_20170602_B14C_v3_"
         "emission";
-    bool tplratioInitRet = model.initTplratioCatalogs(tplratio_relpath);
+    Int32 enableTplratioISMfit=0;
+    bool tplratioInitRet = model.initTplratioCatalogs(tplratio_relpath,enableTplratioISMfit);
     BOOST_CHECK_MESSAGE(tplratioInitRet,
                         "Unable to intialize tpl-ratio catalog");
 
