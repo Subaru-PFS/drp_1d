@@ -5,6 +5,14 @@ import numpy
 include_dir = '@cpf-redshift_THIRDPARTY_INCLUDE_DIR@'.split(';')
 lib_dir = '@cpf-redshift_THIRDPARTY_LINK_DIR@'.split(';')
 libs = '@cpf-redshift_THIRDPARTY_LIBS@'.split(';')
+coverage = @cpf-redshift_COVERAGE@
+
+extra_compile_args = ['-std=c++11']
+extra_link_args = []
+
+if coverage:
+    extra_compile_args.append('--coverage')
+    extra_link_args.append('-fprofile-arcs')
 
 #  find out numpy include directory.
 try:
@@ -15,8 +23,11 @@ except AttributeError:
 
 swig_ext = Extension('_redshift', sources=['pyamazed/redshift.i'],
                      swig_opts = ['-c++'],
-                     extra_compile_args = ['-std=c++11'],
+                     extra_compile_args = extra_compile_args,
                      include_dirs = ['RedshiftLibrary', 'thirdparty/include', numpy_include],
                      library_dirs = lib_dir + [os.path.join(os.getcwd(), 'lib'), ],
                      libraries = libs + ['@LIB_NAME@', ],
+                     extra_link_args = extra_link_args,
                      runtime_library_dirs = lib_dir + [os.path.join(os.getcwd(), 'lib'), ])
+
+#print("build dir is : {}".format(swig_ext.get_ext_fullname('_redshift')))

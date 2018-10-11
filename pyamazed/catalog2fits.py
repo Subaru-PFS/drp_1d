@@ -37,18 +37,19 @@ def convert_catalog(category, path, output):
     primary = fits.PrimaryHDU(header=hdr)
     primary.header['CATEGORY'] = category.strip().lower()
     templates = [primary]
-    with os.scandir(os.path.expanduser(path)) as it:
-        for template in it:
-            if os.path.splitext(template.name)[1] == '.dat':
-                print(template.name)
-                templates.append(load_spectrum(os.path.splitext(template.name)[0],
-                                               template))
+    for template in os.scandir(os.path.expanduser(path)):
+        if os.path.splitext(template.name)[1] == '.dat':
+            print(template.name)
+            templates.append(load_spectrum(os.path.splitext(template.name)[0],
+                                           template.path))
     hdul = fits.HDUList(templates)
     hdul.writeto(output, overwrite=True)
 
 if __name__ == '__main__':
+    convert_catalog(sys.argv[1], sys.argv[2], sys.argv[3])
     try:
-        convert_catalog(sys.argv[1], sys.argv[2], sys.argv[3])
+        #convert_catalog(sys.argv[1], sys.argv[2], sys.argv[3])
+        pass
     except Exception as e:
         print(e)
         print(usage)

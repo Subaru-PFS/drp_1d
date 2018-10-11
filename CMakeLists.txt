@@ -38,11 +38,14 @@ SET( CMAKE_RUNTIME_OUTPUT_DIRECTORY ${ROOT_DIR}/bin )
 FILE (STRINGS ${ROOT_DIR}/VERSION VERSION)
 MESSAGE( STATUS "Version used: ${VERSION}" )
 
-SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall -Wno-sign-compare -Wno-parentheses")
+#SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall -Wno-sign-compare -Wno-parentheses")
 
 IF(TEST_COVERAGE)
   SET(GCC_COVERAGE_COMPILE_FLAGS "--coverage")
   SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} ${GCC_COVERAGE_COMPILE_FLAGS}")
+  SET(cpf-redshift_COVERAGE "True")
+ELSE()
+  SET(cpf-redshift_COVERAGE "False")
 ENDIF()
 
 #--------------------------------------------------------
@@ -88,7 +91,7 @@ ELSE()
     ${Boost_INCLUDE_DIRS})
 ENDIF()
 
-MESSAGE("Using third party libraries: " ${cpf-redshift_THIRDPARTY_LIBS})
+MESSAGE("Using third party libraries: " "${cpf-redshift_THIRDPARTY_LIBS}")
 
 find_package(OpenMP)
 if (OPENMP_FOUND)
@@ -139,7 +142,6 @@ IF(BUILD_SHARED_LIBS)
 ENABLE_TESTING()
 
 FILE( GLOB_RECURSE TEST_SOURCE_FILES ${ROOT_DIR}/RedshiftLibrary/tests/src/*_test.cpp )
-ADD_LIBRARY(test_tools STATIC ${ROOT_DIR}/RedshiftLibrary/tests/src/test-tools.cpp)
 ADD_DEFINITIONS(-DBOOST_TEST_DYN_LINK)
 
 CONFIGURE_FILE(${ROOT_DIR}/RedshiftLibrary/tests/src/test-config.h.in
@@ -148,7 +150,7 @@ CONFIGURE_FILE(${ROOT_DIR}/RedshiftLibrary/tests/src/test-config.h.in
 FOREACH(TEST_SOURCE ${TEST_SOURCE_FILES})
   GET_FILENAME_COMPONENT(TEST_NAME ${TEST_SOURCE} NAME_WE)
   ADD_EXECUTABLE( ${TEST_NAME} ${TEST_SOURCE} )
-  TARGET_LINK_LIBRARIES( ${TEST_NAME} ${LIB_NAME} test_tools ${cpf-redshift_THIRDPARTY_LIBS} ${tests_THIRDPARTY_LIBS})
+  TARGET_LINK_LIBRARIES( ${TEST_NAME} ${LIB_NAME} ${cpf-redshift_THIRDPARTY_LIBS} ${tests_THIRDPARTY_LIBS})
   ADD_TEST(NAME ${TEST_NAME}
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin
     COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/bin/${TEST_NAME} )
@@ -168,7 +170,12 @@ INSTALL( FILES  ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cpf-redshift-config.cmake DEST
 CONFIGURE_FILE(
   ${CMAKE_CURRENT_SOURCE_DIR}/swig_ext.py.in
   ${CMAKE_CURRENT_SOURCE_DIR}/swig_ext.py
-)
+  )
+SET (GENERATED_FILES_LIST "swig_ext.py" "pyamazed/redshift_wrap.cpp"
+  "pyamazed/redshift_wrap.h" "pyamazed/redshift.py" "pyamazed.egg-info")
+
+SET_DIRECTORY_PROPERTIES(PROPERTIES
+  ADDITIONAL_MAKE_CLEAN_FILES "${GENERATED_FILES_LIST}")
 
 #--------------------------------------------------------
 # Package deployement and config
@@ -197,6 +204,9 @@ CONFIGURE_FILE(
 # Generate TAGS file if etags is installed
 find_program(ETAGS NAMES etags ctags)
 if(ETAGS)
-  execute_process(COMMAND find RedshiftLibrary/ ( -name *.cpp -o -name *.h -o -name *.hpp -o -name *.py -o -name *.c ) -exec ${ETAGS} -a TAGS {} +
+  execute_process(COMMAND "find RedshiftLibrary/ ( -name *.cpp -o -name *.h -o -name *.hpp -o -name *.py -o -name *.c ) -exec ${ETAGS} -a TAGS {} +"
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 endif(ETAGS)
+
+add_executable(debug_target debug_target/foo.cpp)
+target_link_libraries(debug_target ${LIB_NAME} ${cpf-redshift_THIRDPARTY_LIBS})

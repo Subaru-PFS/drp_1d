@@ -132,7 +132,7 @@ Bool CQualz::ExtractFeaturesPDF(CDataStore &resultStore,
     {
         Log.LogError("ExtractFeaturesPDF: no results retrieved from scope: %s",
                      scope_res.c_str());
-        return false;
+        throw runtime_error("ExtractFeaturesPDF: no results retrieved from scope");
     }
 
     Log.LogDebug(
@@ -142,7 +142,7 @@ Bool CQualz::ExtractFeaturesPDF(CDataStore &resultStore,
     Log.LogDebug("  ZClassifier: ExtractFeaturesPDF - more PDF checks");
     if (logzpdf1d->Redshifts.size() != logzpdf1d->valProbaLog.size())
     {
-        return false;
+        throw runtime_error("ZClassifier: ExtractFeaturesPDF: logzpdf1d->Redshifts.size() != logzpdf1d->valProbaLog.size()");
     }
 
     SPoint dist_peaks;
@@ -154,7 +154,7 @@ Bool CQualz::ExtractFeaturesPDF(CDataStore &resultStore,
 
     if (nanVector)
     {
-        return false;
+        throw runtime_error("ZClassifier: ExtractFeaturesPDF: nanVector");
     } else
     {
         Log.LogDebug("  ZClassifier: ExtractFeaturesPDF - estimate zpdf");
@@ -210,7 +210,7 @@ Bool CQualz::ExtractFeaturesPDF(CDataStore &resultStore,
 
         if (nanVector)
         {
-            return false;
+            throw runtime_error("ZClassifier: ExtractFeaturesPDF: nanVector here");
         } else
         {
 

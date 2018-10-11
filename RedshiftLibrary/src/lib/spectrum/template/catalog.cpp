@@ -60,7 +60,7 @@ TTemplateRefList CTemplateCatalog::GetTemplate( const TStringList& categoryList 
 
     for( Int32 i=0; i<categoryList.size(); i++ )
     {
-        for ( Int32 j=0; j<GetTemplateCount( categoryList[i] ); i++ )
+        for ( Int32 j=0; j<GetTemplateCount( categoryList[i] ); j++ )
         {
             list.push_back( m_List.at( categoryList[i] )[j] );
         }
@@ -78,7 +78,7 @@ TTemplateRefList CTemplateCatalog::GetTemplateWithoutContinuum( const TStringLis
 
     for( Int32 i=0; i<categoryList.size(); i++ )
     {
-        for ( Int32 j=0; j<GetTemplateCount( categoryList[i] ); i++ )
+        for ( Int32 j=0; j<GetTemplateCount( categoryList[i] ); j++ )
         {
             list.push_back( m_ListWithoutCont.at( categoryList[i] )[j] );
         }
@@ -243,7 +243,7 @@ Bool CTemplateCatalog::Save( const char* dirPath, Bool saveWithoutContinuum )
             const CTemplate& tpl = GetTemplate( category, j );
             const CTemplate& tplWithoutCOntinuum = GetTemplateWithoutContinuum( category, j );
 
-            std::string filePath = tpl.GetName();
+            std::string filePath = tpl.GetName() + ".txt";
             path file (filePath.c_str());
             path full_path = dirCategoryFull / file;
             if(saveWithoutContinuum)

@@ -36,8 +36,8 @@ BOOST_AUTO_TEST_CASE(Save)
   CSpectrum spectrum;
 
   // linear
-  boost::filesystem::path tempfile = boost::filesystem::unique_path("%%%%%%%%%%.txt");
-  const char* filename = tempfile.native().c_str();
+  boost::filesystem::path tempfile = boost::filesystem::unique_path("tst_%%%%%%%%%%.txt");
+  const char* filename = tempfile.c_str();
   BOOST_CHECK_NO_THROW(tmpl.Save(filename));
   spectrum.LoadSpectrum(filename, NULL);
   BOOST_CHECK_CLOSE(spectrum.GetSpectralAxis()[0], 0.0, 1e-8);

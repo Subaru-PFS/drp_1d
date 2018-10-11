@@ -4,7 +4,7 @@
 #include <RedshiftLibrary/spectrum/io/genericreader.h>
 #include <RedshiftLibrary/spectrum/io/fitsreader.h>
 #include <RedshiftLibrary/spectrum/spectrum.h>
-#include "test-tools.h"
+#include <RedshiftLibrary/tests/test-tools.h>
 #include "test-config.h"
 
 using namespace NSEpic;

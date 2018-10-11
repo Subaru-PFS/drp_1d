@@ -47,7 +47,7 @@ Bool CSpectrumFluxCorrectionMeiksin::Init( std::string calibrationPath )
     fileNamesList.push_back("Meiksin_Var_curves_6.5.txt");
     fileNamesList.push_back("Meiksin_Var_curves_7.0.txt");
 
-    for(Int32 k=0; k<fileNamesList.size(); k++)
+    for(UInt32 k=0; k<fileNamesList.size(); k++)
     {
         bfs::path fPath = ( calibrationFolder/"igm"/"IGM_variation_curves_meiksin"/fileNamesList[k].c_str() ).string();
         std::string fPathStr = (fPath).string();

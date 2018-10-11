@@ -5,7 +5,7 @@
 #include <boost/filesystem.hpp>
 
 #include <boost/test/unit_test.hpp>
-#include "test-tools.h"
+#include <RedshiftLibrary/tests/test-tools.h>
 #include "test-config.h"
 
 using namespace NSEpic;
@@ -36,8 +36,9 @@ BOOST_AUTO_TEST_CASE(VVDSReadInvalidFile)
 
     CSpectrum spectrum;
 
-    BOOST_CHECK_THROW(reader.Read( DATA_ROOT_DIR "SpectrumioTestCase/invalidspectrum1.fits",
-                                   spectrum ), std::runtime_error);
+    boost::filesystem::path tempfile = generate_bogus_fits_file();
+
+    BOOST_CHECK_THROW(reader.Read( tempfile.c_str(), spectrum ), std::runtime_error);
     //BOOST_CHECK( spectrum.GetSampleCount() == 0 );
     //BOOST_CHECK_CLOSE_FRACTION( 0.0, spectrum.GetLambdaRange().GetBegin(), 0.01 );
     //BOOST_CHECK_CLOSE_FRACTION( 0.0, spectrum.GetResolution(), 0.01  );

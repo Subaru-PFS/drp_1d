@@ -1,2 +1,0 @@
-#define the relative paths for some calibration files
-star-templates-dir=templates/stars_templates_munari-lowt_20170105

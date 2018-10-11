@@ -57,3 +57,5 @@ pyamazed/redshift.py
 *.egg*
 
 swig_ext.py
+
+lib/*.so
