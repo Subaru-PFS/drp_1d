@@ -322,7 +322,7 @@ Float64 CLineDetection::ComputeFluxes( const CSpectrum& spectrum, Float64 winsiz
 
     Float64 maxValue = -DBL_MAX;
     Int32 maxIndex = -1;
-    for( Int32 k=range.GetBegin(); k<range.GetEnd()+1; k++ )
+    for( Int32 k=range.GetBegin(); k<=range.GetEnd(); k++ )
     {
         if( maxValue<fluxAxis[k] && mask[k]!=0 )
 	  {
@@ -340,12 +340,10 @@ Float64 CLineDetection::ComputeFluxes( const CSpectrum& spectrum, Float64 winsiz
     //int right = min((Int32)fluxAxis.GetSamplesCount()-1, (Int32)(maxIndex + windowSampleCount/2.0) )+1;
     //irreg. sampling
     int left = max( 0, specAxis.GetIndexAtWaveLength( specAxis[maxIndex]-winsize/2.0 ) );
-    int right = min( (Int32)fluxAxis.GetSamplesCount()-1, specAxis.GetIndexAtWaveLength( specAxis[maxIndex]+winsize/2.0 ) )+1;
-    int size_odd = right - left +1;
-    if( (int)(size_odd/2) == size_odd/2 )
-      {
-        size_odd -= 1;
-      }
+    int right = min( (Int32)fluxAxis.GetSamplesCount(), specAxis.GetIndexAtWaveLength( specAxis[maxIndex]+winsize/2.0 )+1 );
+
+    left = max(range.GetBegin(), left);
+    right = min(range.GetEnd()+1, right);
 
     Float64 *fluxMasked = (Float64*)malloc( fluxAxis.GetSamplesCount()*sizeof( Float64 ) );
     int n=0;
@@ -359,6 +357,8 @@ Float64 CLineDetection::ComputeFluxes( const CSpectrum& spectrum, Float64 winsiz
       }
     Float64 med = medianProcessor.Find( fluxMasked, n );
     Float64 xmad = XMadFind( fluxMasked, n, med );
+    free(fluxMasked);
+
     Float64 noise_win= xmad;
     // use noise spectrum
     const TFloat64List& error = fluxAxis.GetError();
@@ -585,16 +585,18 @@ Float64 CLineDetection::XMadFind( const Float64* x, Int32 n, Float64 median )
 
     sort.Sort( xdata.data(), n);
 
-    if( ((float)n)/2. - int(n/2.) == 0 )
+    if ( n & 1 )
     {
-        UInt32 i1 = n/2 -1;
-        UInt32 i2 = n/2;
-        xmadm = 0.5*(xdata[i1]+xdata[i2]);
+        // n is odd
+        UInt32 i1 = n >> 1; // i.e. int(n/2)
+        xmadm = xdata[i1];
     }
     else
     {
-        UInt32 i1 = int(n/2);
-        xmadm = xdata[i1];
+        // n is even
+        UInt32 i1 = n/2 -1;
+        UInt32 i2 = n/2;
+        xmadm = 0.5*(xdata[i1]+xdata[i2]);
     }
 
     return xmadm;
