@@ -179,20 +179,20 @@ Bool CContinuumIrregularSamplingMedian::ProcessRemoveContinuum( const CSpectrum&
 
     frac = m_MedianSmoothAmplitude/resolution-floor( m_MedianSmoothAmplitude/resolution );
 
-    m_MedianSmoothAmplitude = (Int32) m_MedianSmoothAmplitude/resolution;
+    Float64 medianSmoothAmplitude = (Int32) m_MedianSmoothAmplitude/resolution;
 
     if( frac>=0.5 )
     {
-        m_MedianSmoothAmplitude += 1;
+        medianSmoothAmplitude += 1;
     }
 
     // set default
-    if( m_MedianSmoothAmplitude<=0 )
+    if( medianSmoothAmplitude<=0 )
     {
         return false;
     }
 
-    m_MedianSmoothAmplitude = max( meanSmoothAmplitude, m_MedianSmoothAmplitude );
+    medianSmoothAmplitude = max( meanSmoothAmplitude, medianSmoothAmplitude );
 
     noContinuumFluxAxis.SetSize( norig );
     TFloat64List& noContinuumFluxAxisError = noContinuumFluxAxis.GetError();
@@ -322,7 +322,7 @@ Bool CContinuumIrregularSamplingMedian::ProcessRemoveContinuum( const CSpectrum&
 
     {
         // WARNING!!!
-        // m_MedianSmoothAmplitude must be an odd number;
+        // medianSmoothAmplitude must be an odd number;
         // otherwise a sorted array will be sorted
         // by the median smooth iterations
 
@@ -331,18 +331,19 @@ Bool CContinuumIrregularSamplingMedian::ProcessRemoveContinuum( const CSpectrum&
 
         for( k=0; k<m_MedianSmoothCycles; k++ )
         {
-            // median smooth size=2*m_MedianSmoothAmplitude+1
-            MedianSmooth( ysmoobig.data(), nbig, 2*m_MedianSmoothAmplitude+1,temp.data() );
+            // median smooth size=2*medianSmoothAmplitude+1
+            MedianSmooth( ysmoobig.data(), nbig, 2*medianSmoothAmplitude+1,temp.data() );
             ysmoobig = temp;
         }
 
-        // m_MedianSmoothAmplitude must be odd
-        m_MedianSmoothAmplitude= 2 * ( m_MedianSmoothAmplitude/2 ) + 1;
+        // medianSmoothAmplitude must be odd
+        //medianSmoothAmplitude= 2 * ( medianSmoothAmplitude/2 ) + 1;
+        medianSmoothAmplitude |= 1;
 
         for( k=0; k<m_MedianSmoothCycles; k++ )
         {
-            // median smooth size=m_MedianSmoothAmplitude
-            MedianSmooth( ysmoobig.data(), nbig, m_MedianSmoothAmplitude, temp.data() );
+            // median smooth size=medianSmoothAmplitude
+            MedianSmooth( ysmoobig.data(), nbig, medianSmoothAmplitude, temp.data() );
             ysmoobig = temp;
         }
     }
