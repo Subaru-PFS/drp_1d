@@ -179,7 +179,7 @@ Bool CContinuumIrregularSamplingMedian::ProcessRemoveContinuum( const CSpectrum&
 
     frac = m_MedianSmoothAmplitude/resolution-floor( m_MedianSmoothAmplitude/resolution );
 
-    Float64 medianSmoothAmplitude = (Int32) m_MedianSmoothAmplitude/resolution;
+    Int32 medianSmoothAmplitude = (Int32) m_MedianSmoothAmplitude/resolution;
 
     if( frac>=0.5 )
     {

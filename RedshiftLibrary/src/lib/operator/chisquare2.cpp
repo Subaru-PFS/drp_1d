@@ -68,6 +68,8 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& t
                                    Float64 &fittingMeiksinIdx,
                                    EStatus& status,
                                    std::vector<TFloat64List>& ChiSquareInterm,
+                                   std::vector<TFloat64List>& IsmCalzettiCoeffInterm,
+                                   std::vector<TInt32List>& IgmMeiksinIdxInterm,
                                    std::string opt_interp, Float64 forcedAmplitude, Int32 opt_extinction, Int32 opt_dustFitting, CMask spcMaskAdditional)
 {
     Bool amplForcePositive=true;
@@ -79,6 +81,8 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& t
         for(Int32 kigm=0; kigm<ChiSquareInterm[kism].size(); kigm++)
         {
             ChiSquareInterm[kism][kigm] = boost::numeric::bounds<float>::highest();
+            IsmCalzettiCoeffInterm[kism][kigm] = -1.0;
+            IgmMeiksinIdxInterm[kism][kigm] = -1;
         }
     }
     fittingAmplitude = -1.0;
@@ -233,6 +237,8 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& t
                 for(Int32 kigm=1; kigm<ChiSquareInterm[kism].size(); kigm++)
                 {
                     ChiSquareInterm[kism][kigm] = ChiSquareInterm[kism][0];
+                    IsmCalzettiCoeffInterm[kism][kigm] = IsmCalzettiCoeffInterm[kism][0];
+                    IgmMeiksinIdxInterm[kism][kigm] = IgmMeiksinIdxInterm[kism][0];
                 }
             }
             break;
@@ -540,6 +546,8 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& t
             //*/
 
             ChiSquareInterm[kDust][kMeiksin] = fit;
+            IsmCalzettiCoeffInterm[kDust][kMeiksin] = coeffEBMV;
+            IgmMeiksinIdxInterm[kDust][kMeiksin] = meiksinIdx;
 
             if(fit<chiSquare)
             {
@@ -769,6 +777,8 @@ std::shared_ptr<COperatorResult> COperatorChiSquare2::Compute(const CSpectrum& s
                   result->FitMeiksinIdx[i],
                   result->Status[i],
                   result->ChiSquareIntermediate[i],
+                  result->IsmDustCoeffIntermediate[i],
+                  result->IgmMeiksinIdxIntermediate[i],
                   opt_interp,
                   -1,
                   opt_extinction,
@@ -1150,7 +1160,11 @@ const COperatorResult* COperatorChiSquare2::ExportChi2versusAZ(const CSpectrum& 
                       result->FitDustCoeff[i],
                       result->FitMeiksinIdx[i],
                       result->Status[i],
-                      result->ChiSquareIntermediate[i], "lin", ampl );
+                      result->ChiSquareIntermediate[i],
+                      result->IsmDustCoeffIntermediate[i],
+                      result->IgmMeiksinIdxIntermediate[i],
+                      "lin",
+                      ampl );
 
             fprintf( f, "%.15e", result->ChiSquare[i]);
             if(j<sortedAmplitudes.size()-1){

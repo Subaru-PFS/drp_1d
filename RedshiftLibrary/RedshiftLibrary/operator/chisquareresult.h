@@ -37,7 +37,9 @@ public:
     Float64                 CstLog;
 
     //intermediate chisquare results
-    std::vector<std::vector<TFloat64List>> ChiSquareIntermediate; // full chi2 results (for each config [Calzetti, Meiksin])
+    std::vector<std::vector<TFloat64List>> ChiSquareIntermediate; // chi2 for each intermediate results (for each config [z][Calzetti][Meiksin])
+    std::vector<std::vector<TFloat64List>> IsmDustCoeffIntermediate; // calzetti dust coeff for each intermediate result (for each config [z][Calzetti][Meiksin])
+    std::vector<std::vector<TInt32List>> IgmMeiksinIdxIntermediate; // meiksin idx for each intermediate result (for each config [z][Calzetti][Meiksin])
 
     TFloat64List            Overlap;
     TFloat64List            Extrema;

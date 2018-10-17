@@ -879,15 +879,15 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange)
             }
         }
     }else if(m_fitContinuum_option==1){
-        CTemplatesFitStore::TemplateFitValues fitValues = m_fitContinuum_tplfitStore->GetFitValues(m_Redshift);
+        CTemplatesFitStore::TemplateFitValues fitValues = m_fitContinuum_tplfitStore->GetFitValues(m_Redshift, 0);
         if(fitValues.tplName=="")
         {
-	  throw runtime_error("Empty template name");
+            throw runtime_error("Empty template name");
         }
         bestMerit = fitValues.merit;
         bestFitAmplitude = fitValues.fitAmplitude;
-        bestFitDustCoeff = fitValues.fitDustCoeff;
-        bestFitMeiksinIdx = fitValues.fitMeiksinIdx;
+        bestFitDustCoeff = fitValues.ismDustCoeff;
+        bestFitMeiksinIdx = fitValues.igmMeiksinIdx;
         bestFitDtM = fitValues.fitDtM;
         bestFitMtM = fitValues.fitMtM;
         bestTplName = fitValues.tplName;

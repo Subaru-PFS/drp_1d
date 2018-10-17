@@ -18,29 +18,48 @@ class CTemplatesFitStore
 public:
 
     struct SValues{
-        Float64 redshift;
+        std::string tplName;
+        Float64 ismDustCoeff;
+        Int32 igmMeiksinIdx;
+
         Float64 merit;
         Float64 fitAmplitude;
-        Float64 fitDustCoeff;
-        Int32 fitMeiksinIdx;
         Float64 fitDtM;
         Float64 fitMtM;
-        std::string tplName;
     };
     typedef SValues TemplateFitValues;
 
     CTemplatesFitStore(Float64 minRedshift, Float64 maxRedshift, Float64 stepRedshift, std::string opt_sampling);
     ~CTemplatesFitStore();
-    bool Add( Float64 redshift, Float64 merit, Float64 fitAmplitude, Float64 fitDustCoeff, Float64 fitMeiksinIdx, Float64 fitDtM, Float64 fitMtM, std::string tplName );
+
+    bool Add(std::string tplName,
+             Float64 ismDustCoeff,
+             Int32 igmMeiksinIdx,
+             Float64 redshift,
+             Float64 merit,
+             Float64 fitAmplitude,
+             Float64 fitDtM,
+             Float64 fitMtM);
+
+    void prepareRedshiftList();
+    void initFitValues();
+    Int32 GetRedshiftIndex(Float64 z);
+
     std::vector<Float64> GetRedshiftList();
-    TemplateFitValues GetFitValues(Float64 redshiftVal);
+    TemplateFitValues GetFitValues(Float64 redshiftVal, Int32 continuumCandidateRank);
 
 private:
-    std::vector<SValues>    m_fitValues;
+    std::vector<std::vector<SValues>>    m_fitValues; //[nz][n_continuum_candidates]
+    Int32 n_continuum_candidates=3;
+
     Float64    m_minRedshift;
     Float64    m_maxRedshift;
     Float64    m_stepRedshift;
     std::string m_samplingRedshift;
+
+    std::vector<Float64> redshiftgrid;
+    std::map<UInt32,UInt32> redshiftgridmap;
+    Float64 redshiftgridmapPrecision = 1e-8;
 };
 
 
