@@ -291,10 +291,14 @@ Int32 CLineModelElementList::setPassMode(Int32 iPass)
     if(iPass==1)
     {
         m_forceDisableLyaFitting = true;
+        m_forcedisableTplratioISMfit = true;
+        m_forcedisableMoreMultipleContinuumfit=true;
     }
     if(iPass==2)
     {
         m_forceDisableLyaFitting = false;
+        m_forcedisableTplratioISMfit = false;
+        m_forcedisableMoreMultipleContinuumfit=false;
     }
 
 
@@ -811,7 +815,7 @@ void CLineModelElementList::LoadFitContinuumOneTemplate(const TFloat64Range& lam
 /**
  * \brief Generates a continuum from the fitting with a set of templates : uses the chisquare2 operator
  **/
-void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange)
+void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, Int32 icontinuum)
 {
     Log.LogDebug("Elementlist, m_fitContinuum_option=%d", m_fitContinuum_option);
     if(m_observeGridContinuumFlux == NULL)
@@ -879,7 +883,7 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange)
             }
         }
     }else if(m_fitContinuum_option==1){
-        CTemplatesFitStore::TemplateFitValues fitValues = m_fitContinuum_tplfitStore->GetFitValues(m_Redshift, 0);
+        CTemplatesFitStore::TemplateFitValues fitValues = m_fitContinuum_tplfitStore->GetFitValues(m_Redshift, icontinuum);
         if(fitValues.tplName=="")
         {
             throw runtime_error("Empty template name");
@@ -921,6 +925,8 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange)
                     m_fitContinuum_tplFitMtM = bestFitMtM;
                     setFitContinuum_tplAmplitude(bestFitAmplitude);
 
+                    Log.LogDebug( "    model : LoadFitContinuum, loaded: %s", bestTplName.c_str());
+                    break;
                 }
             }
         }
@@ -1331,6 +1337,8 @@ Bool CLineModelElementList::setTplshapeModel(Int32 itplshape, Bool enableSetVelo
         //Set the velocities from templates: todo auto switch when velfit is ON
         m_CatalogTplShape->GetCatalogVelocities(itplshape, m_velocityEmission, m_velocityAbsorption);
     }
+
+    Log.LogDebug( "    model : setTplshapeModel, loaded: %d = %s", itplshape, m_CatalogTplShape->GetCatalogName(itplshape).c_str());
     return true;
 }
 
@@ -1386,507 +1394,569 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
         initDtd(lambdaRange);
     }
 
-    if(m_ContinuumComponent == "tplfit") //the support has to be already computed when LoadFitContinuum() is called
-    {
-        LoadFitContinuum(lambdaRange);
-    }
-    if(m_ContinuumComponent != "nocontinuum"){
-        //prepare the continuum
-        if(m_ContinuumComponent == "tplfit" && m_fitContinuum_observedFrame){
-            PrepareContinuum(0.0);
-        }else{
-            PrepareContinuum(redshift);
-        }
-    }
-    //EstimateSpectrumContinuum();
 
-    if(m_ContinuumComponent == "nocontinuum")
-    {
-    }
-    else
-    {
-        for(UInt32 i=0; i<modelFluxAxis.GetSamplesCount(); i++)
-        {
-            modelFluxAxis[i] = m_ContinuumFluxAxis[i];
-            m_spcFluxAxisNoContinuum[i] = m_SpcFluxAxis[i]-m_ContinuumFluxAxis[i];
-        }
-    }
-
-    if(m_enableAmplitudeOffsets)
-    {
-        prepareAmplitudeOffset(m_spcFluxAxisNoContinuum);
-    }
-
-    Float64 merit = DBL_MAX;//m_dTransposeDNocontinuum;
-    Int32 nfitting=1; //multiple fitting steps for rigidity=tplshape
-    Int32 savedIdxFitted=-1; //for rigidity=tplshape
-
+    Int32 nfitting=1; //multiple fitting steps for rigidity=tplshape/tplratio
     if(m_rigidity=="tplshape")
     {
         nfitting=m_CatalogTplShape->GetCatalogsCount();
     }
+    Int32 savedIdxFitted=-1; //for rigidity=tplshape
 
-    for(Int32 ifitting=0; ifitting<nfitting; ifitting++)
+    Int32 ncontinuumfitting=1;
+    Int32 savedIdxContinuumFitted=-1; //for continuum tplfit
+    if(m_ContinuumComponent == "tplfit" && !m_forcedisableMoreMultipleContinuumfit)
     {
-        if(m_rigidity!="tplshape")
+        ncontinuumfitting=m_fitcontinuum_maxN;
+    }
+
+
+    Float64 merit = DBL_MAX; //initializing 'on the fly' best-merit
+    std::vector<Float64> meritTplratio(nfitting, DBL_MAX); //initializing 'on the fly' best-merit per tplratio
+    for(Int32 icontfitting=0; icontfitting<ncontinuumfitting; icontfitting++)
+    {
+        if(m_ContinuumComponent == "tplfit") //the support has to be already computed when LoadFitContinuum() is called
         {
-            if(!m_forceDisableLyaFitting)
+            LoadFitContinuum(lambdaRange, icontfitting);
+        }
+        if(m_ContinuumComponent != "nocontinuum"){
+            //prepare the continuum
+            if(m_ContinuumComponent == "tplfit" && m_fitContinuum_observedFrame){
+                PrepareContinuum(0.0);
+            }else{
+                PrepareContinuum(redshift);
+            }
+        }
+        //EstimateSpectrumContinuum();
+
+        if(m_ContinuumComponent == "nocontinuum")
+        {
+        }
+        else
+        {
+            for(UInt32 i=0; i<modelFluxAxis.GetSamplesCount(); i++)
             {
+                modelFluxAxis[i] = m_ContinuumFluxAxis[i];
+                m_spcFluxAxisNoContinuum[i] = m_SpcFluxAxis[i]-m_ContinuumFluxAxis[i];
+            }
+        }
+
+        if(m_enableAmplitudeOffsets)
+        {
+            prepareAmplitudeOffset(m_spcFluxAxisNoContinuum);
+        }
+
+        for(Int32 ifitting=0; ifitting<nfitting; ifitting++)
+        {
+            if(m_rigidity!="tplshape")
+            {
+                if(!m_forceDisableLyaFitting)
+                {
+                    //prepare the Lya width and asym coefficients if the asymfit profile option is met
+                    setLyaProfile(redshift, spectralAxis);
+                }
+            }else{
+
+                if(m_forcedisableTplratioISMfit)
+                {
+                    if(m_CatalogTplShape->GetIsmCoeff(ifitting)>0)
+                    {
+                        //copy the values for ebmv=ebmv_fixed (=0) here
+                        m_ChisquareTplshape[ifitting] = m_ChisquareTplshape[ifitting-1];
+                        m_ScaleMargCorrTplshape[ifitting] = m_ScaleMargCorrTplshape[ifitting-1];
+                        m_StrongELPresentTplshape[ifitting] = m_StrongELPresentTplshape[ifitting-1];
+                        meritTplratio[ifitting] = meritTplratio[ifitting-1];
+                        for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
+                        {
+                            m_FittedAmpTplshape[ifitting][iElts] = m_FittedAmpTplshape[ifitting-1][iElts];
+                            m_FittedErrorTplshape[ifitting][iElts] = m_FittedErrorTplshape[ifitting-1][iElts];
+                            m_DtmTplshape[ifitting][iElts] = m_DtmTplshape[ifitting-1][iElts];
+                            m_MtmTplshape[ifitting][iElts] = m_MtmTplshape[ifitting-1][iElts];
+                        }
+                        continue;
+                    }
+                }
+                setTplshapeModel(ifitting, false);
                 //prepare the Lya width and asym coefficients if the asymfit profile option is met
+                //INFO: tpl-shape are always ASYMFIXED for the lyaE profile, as of 2016-01-11
                 setLyaProfile(redshift, spectralAxis);
             }
-        }else{
-            setTplshapeModel(ifitting, false);
-            //prepare the Lya width and asym coefficients if the asymfit profile option is met
-            //INFO: tpl-shape are always ASYMFIXED for the lyaE profile, as of 2016-01-11
-            setLyaProfile(redshift, spectralAxis);
-        }
 
-        //generate random amplitudes
-        if(m_fittingmethod=="random")
-        {
-            srand(time(0));
-            Float64 randNumFloat = (Float64) rand() / (Float64) (RAND_MAX);
-
-            Float64 coeffAmpEmission = pow(10.0, randNumFloat*3.0-1.0);
-            randNumFloat = (Float64) rand() / (Float64) (RAND_MAX);
-            Float64 coeffAmpAbsorption = pow(10.0, randNumFloat*1.0-1.0);
-            Log.LogInfo( "\nLineModel simulation: coeffAmpEmission = %.2f", coeffAmpEmission);
-            Log.LogInfo( "LineModel simulation: coeffAmpAbsorption = %.2f", coeffAmpAbsorption);
-            //fit the model amplitudes individually
-            for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
+            //generate random amplitudes
+            if(m_fittingmethod=="random")
             {
-                Float64 meanContinuum = getContinuumMeanUnderElement(iElts);
-                Float64 err = 1e-22;
-                Float64 amax = meanContinuum;
-                if(m_RestRayList[m_Elements[iElts]->m_LineCatalogIndexes[0]].GetType() == CRay::nType_Absorption)
-                {
-                    amax = meanContinuum*0.5*coeffAmpAbsorption;
-                }else{
-                    amax = meanContinuum*coeffAmpEmission;
-                }
+                srand(time(0));
+                Float64 randNumFloat = (Float64) rand() / (Float64) (RAND_MAX);
+
+                Float64 coeffAmpEmission = pow(10.0, randNumFloat*3.0-1.0);
                 randNumFloat = (Float64) rand() / (Float64) (RAND_MAX);
-                Float64 a = randNumFloat*amax;
-                if(a<0.0){
-                    a=0.0;
-                }
-                //get the max nominal amplitude
-                Int32 nRays = m_Elements[iElts]->GetSize();
-                Float64 maxNominalAmp = -1.0;
-                for(UInt32 j=0; j<nRays; j++){
-                    if(maxNominalAmp<m_Elements[iElts]->GetNominalAmplitude(j))
-                    {
-                        maxNominalAmp = m_Elements[iElts]->GetNominalAmplitude(j);
-                    }
-                }
-
-                SetElementAmplitude(iElts, a/maxNominalAmp, err);
-            }
-        }
-
-        //generate amplitudes from existing linemodel fit solution file .csv
-        if(m_fittingmethod=="fromfile")
-        {
-            CModelFittingResult result;
-            std::string linemodelFitResultsPath = "/home/aschmitt/gitlab/cpf-redshift/tools/simulation"; //this is the simulation folder absolute path !
-            linemodelFitResultsPath.append("/amazed/linecatalogs/linemodelsolve.linemodel_fit_extrema_0.csv");
-
-            Log.LogInfo("\nLineModel fitting from File: loading: %s", linemodelFitResultsPath.c_str());
-            result.Load(linemodelFitResultsPath.c_str());
-            if(result.GetLineModelSolution().Amplitudes.size()<2)
-            {
-                Log.LogError( "\nLineModel fitting from File: unable to load from file: %s", linemodelFitResultsPath.c_str());
-            }
-
-            for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
-            {
-                Float64 meanContinuum = getContinuumMeanUnderElement(iElts);
-
-                //get the max nominal amplitude
-                Int32 nRays = m_Elements[iElts]->GetSize();
-                Float64 nominalAmp = -1.0;
-                Float64 err=1.5*1e-20; //not used
-                for(UInt32 j=0; j<nRays; j++){
-                    Int32 lineIndex = m_Elements[iElts]->m_LineCatalogIndexes[j];
-                    nominalAmp = m_Elements[iElts]->GetNominalAmplitude(j);
-                    Float64 a = result.GetLineModelSolution().Amplitudes[lineIndex];
-
+                Float64 coeffAmpAbsorption = pow(10.0, randNumFloat*1.0-1.0);
+                Log.LogInfo( "\nLineModel simulation: coeffAmpEmission = %.2f", coeffAmpEmission);
+                Log.LogInfo( "LineModel simulation: coeffAmpAbsorption = %.2f", coeffAmpAbsorption);
+                //fit the model amplitudes individually
+                for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
+                {
+                    Float64 meanContinuum = getContinuumMeanUnderElement(iElts);
+                    Float64 err = 1e-22;
+                    Float64 amax = meanContinuum;
                     if(m_RestRayList[m_Elements[iElts]->m_LineCatalogIndexes[0]].GetType() == CRay::nType_Absorption)
                     {
-                        Float64 ampFitted = meanContinuum*a/nominalAmp;
-                        SetElementAmplitude(iElts, ampFitted, err);
+                        amax = meanContinuum*0.5*coeffAmpAbsorption;
                     }else{
-                        Float64 ampFitted = a/nominalAmp;
-                        SetElementAmplitude(iElts, ampFitted, err);
+                        amax = meanContinuum*coeffAmpEmission;
+                    }
+                    randNumFloat = (Float64) rand() / (Float64) (RAND_MAX);
+                    Float64 a = randNumFloat*amax;
+                    if(a<0.0){
+                        a=0.0;
+                    }
+                    //get the max nominal amplitude
+                    Int32 nRays = m_Elements[iElts]->GetSize();
+                    Float64 maxNominalAmp = -1.0;
+                    for(UInt32 j=0; j<nRays; j++){
+                        if(maxNominalAmp<m_Elements[iElts]->GetNominalAmplitude(j))
+                        {
+                            maxNominalAmp = m_Elements[iElts]->GetNominalAmplitude(j);
+                        }
                     }
 
+                    SetElementAmplitude(iElts, a/maxNominalAmp, err);
                 }
-
-
             }
 
-        }
-
-
-        //fit the amplitudes of each element independently
-        if(m_fittingmethod=="individual")
-        {
-            //fit the model amplitudes individually
-            for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
+            //generate amplitudes from existing linemodel fit solution file .csv
+            if(m_fittingmethod=="fromfile")
             {
-                m_Elements[iElts]->fitAmplitude(spectralAxis, m_spcFluxAxisNoContinuum, m_ContinuumFluxAxis, redshift);
-                //optionnally log some fitting details
-                Log.LogDebug("    model: elt #%d individual fit", iElts);
-                Float64 dbg_amp = m_Elements[iElts]->GetElementAmplitude();
-                Log.LogDebug("    model:     fitted elt amp = %f", dbg_amp);
-                Int32 nSubE = m_Elements[iElts]->GetSize();
-                for(Int32 iSubElts=0; iSubElts<nSubE; iSubElts++)
+                CModelFittingResult result;
+                std::string linemodelFitResultsPath = "/home/aschmitt/gitlab/cpf-redshift/tools/simulation"; //this is the simulation folder absolute path !
+                linemodelFitResultsPath.append("/amazed/linecatalogs/linemodelsolve.linemodel_fit_extrema_0.csv");
+
+                Log.LogInfo("\nLineModel fitting from File: loading: %s", linemodelFitResultsPath.c_str());
+                result.Load(linemodelFitResultsPath.c_str());
+                if(result.GetLineModelSolution().Amplitudes.size()<2)
                 {
-                    Log.LogDebug("    model:     sub #%d - fitted amp = %f", iSubElts, m_Elements[iElts]->GetFittedAmplitude(iSubElts));
-                    Log.LogDebug("    model:     sub #%d - outside range = %d", iSubElts, m_Elements[iElts]->IsOutsideLambdaRange(iSubElts));
-                }
-                Log.LogDebug("    model:     dtm = %e", m_Elements[iElts]->GetSumCross());
-                Log.LogDebug("    model:     dtd = %e", m_Elements[iElts]->GetSumGauss());
-            }
-        }
-
-
-        //fit the amplitude of all elements together (but Emission or Absorption separately) with iterative   solver: lmfit
-        if(m_fittingmethod=="lmfit")
-        {
-            //Log.LogInfo( "Linemodel: Fitting method lmfit, z= %f", m_Redshift);
-            SetVelocityEmission(m_velocityEmissionInit);
-            SetVelocityAbsorption(m_velocityAbsorptionInit);
-            m_Redshift = redshift;
-            Float64 bestMerit = DBL_MAX;
-            std::shared_ptr<CLmfitController> bestController;// at each run of lmfit we create a controller, we keep the best evaluation
-            std::vector<CLmfitController*> controllers = createLmfitControllers(lambdaRange);
-            if(controllers.size() == 0){
-                Log.LogError("LMfit : No Controller created");
-            }
-            for( UInt32 i=0; i<controllers.size(); i++ )
-            {
-              CLmfitController *controller = controllers[i];
-              //Log.LogInfo("Continuum Template use : %s", controller->getTemplate()->GetName().c_str());
-              if(!controller->isNoContinuum() && !controller->isContinuumLoaded()){
-                LoadFitContinuumOneTemplate(lambdaRange, *controller->getTemplate());
-              }
-              // adding element base on configuration
-              std::vector<UInt32> validEltsIdx = GetModelValidElementsIndexes();
-              for (UInt32 iElt = 0; iElt < validEltsIdx.size(); iElt++)
-              {
-                // if(controller->isLineTypeVelocityFitted(m_RestRayList[m_Elements[validEltsIdx[iElt]]->m_LineCatalogIndexes[0]].GetType()))
-                // {
-                    controller->addElement(validEltsIdx[iElt]);
-                    m_Elements[validEltsIdx[iElt]]->fitAmplitude(spectralAxis, m_spcFluxAxisNoContinuum,m_ContinuumFluxAxis , redshift);
-                // }
-              }
-
-              controller->calculatedIndices();
-              bool NegVal = true;
-              while( NegVal)
-              {
-                Int32 retVal = fitAmplitudesLmfit(m_SpcFluxAxis, controller);
-                //Log.LogInfo( "LineModel Infos: Lmfit retVal = %d", retVal);
-                NegVal = controller->removeNegAmpLine();
-                //Log.LogInfo( "LineModel Infos: Lmfit NegVal = %s", (NegVal?"t":"f") );
-                //Log.LogInfo( "LineModel Infos: Lmfit merit = %.0f ; bestMerit : %.0f ", controller->getMerit(), bestMerit );
-                if(retVal==0 && !NegVal && controller->getMerit()< bestMerit ){
-
-                  bestMerit = controller->getMerit();
-                  bestController = std::shared_ptr<CLmfitController>( controller);
-                  //Log.LogInfo("Pointeur best Controller setted");
-                }
-                //NegVal = false;//no while
-              }
-            }
-
-
-            //We set the best model found
-            if(bestController){
-              if(bestController->isContinuumFitted()){
-                if(bestController->isRedshiftFitted()){
-                    m_Redshift = bestController->getRedshift();
-                }
-                const CTemplate* tpl = bestController->getTemplate();
-                ApplyContinuumOnGrid(*tpl );
-                setFitContinuum_tplAmplitude(bestController->getContinuumAmp());
-                  //setFitContinuum_tplAmplitude(  bestController->getContinuumAmp());
-              }else if (bestController-> isRedshiftFitted()){
-                setRedshift(bestController-> getRedshift(), bestController->isContinuumLoaded());
-
-              }
-              std::vector<UInt32> bestFilteredEltsIdx = bestController->getFilteredIdx();
-
-              for (UInt32 iElt = 0; iElt < bestFilteredEltsIdx.size(); iElt++)
-              {
-                  Float64 amp = bestController->getLineAmp(iElt);
-                  Float64 ampErr = bestController->getLineAmpErr(iElt);
-                  //Log.LogInfo("Lmfit : amp [%d] = %.1f, z = %f", iElt, amp, m_Redshift);
-                  SetElementAmplitude(bestFilteredEltsIdx[iElt], amp, ampErr);
-              }
-              if(bestController->isEmissionVelocityFitted()){
-                SetVelocityEmission(bestController->getEmissionVelocity());
-                //Log.LogInfo("Lmfit : VelEmission = %.1f, z = %f", bestController->getEmissionVelocity(), m_Redshift);
-              }
-              if(bestController->isAbsorptionVelocityFitted()){
-                SetVelocityAbsorption(bestController->getAbsorptionVelocity());
-                //Log.LogInfo("Lmfit : VelAbsorption= %.1f, z = %f", bestController->getAbsorptionVelocity(), m_Redshift);
-               }
-               //prepare the elements support
-               for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
-               {
-                   m_Elements[iElts]->prepareSupport(spectralAxis, redshift, lambdaRange);
-               }
-               refreshModelInitAllGrid();
-               //modelSolution = GetModelSolution();
-            }else{
-              Log.LogError( "LineModel Lmfit: not able to fit values at z %f", m_Redshift);
-              //continue;
-              return DBL_MAX;
-            }
-        }
-
-        //fit the amplitude of all elements together with linear solver: gsl_multifit_wlinear
-        if(m_fittingmethod=="svd")
-        {
-            std::vector<UInt32> validEltsIdx = GetModelValidElementsIndexes();
-            std::vector<Float64> ampsfitted;
-            std::vector<Float64> errorsfitted;
-            fitAmplitudesLinSolveAndLambdaOffset(validEltsIdx, spectralAxis, m_spcFluxAxisNoContinuum, m_ContinuumFluxAxis, ampsfitted, errorsfitted, m_enableLambdaOffsetsFit);
-        }
-
-        //fit the amplitudes of each element independently, unless there is overlap
-        if(m_fittingmethod=="hybrid")
-        {
-            fitAmplitudesHybrid(spectralAxis, m_spcFluxAxisNoContinuum, m_ContinuumFluxAxis, redshift);
-
-            //apply a continuum iterative re-estimation with lines removed from the initial spectrum
-            Int32 nIt = contreest_iterations;
-            Int32 it=0;
-            while(it<nIt){
-                applyRules();
-
-                //*
-                //iterative continuum estimation :: RAW SLOW METHOD
-                refreshModel();
-                Float64 enhanceLines = 0;
-                //*
-                if(nIt>2*it && nIt>3.0 && it<=3){
-                    enhanceLines = 2.0-((Float64)it*0.33);
+                    Log.LogError( "\nLineModel fitting from File: unable to load from file: %s", linemodelFitResultsPath.c_str());
                 }
 
-                //*/
-                /*
-                if(it==0 && nIt>1){
-                    enhanceLines = 1.5;
-                }
-                */
-                EstimateSpectrumContinuum(enhanceLines, lambdaRange);
-
-                for(UInt32 i=0; i<modelFluxAxis.GetSamplesCount(); i++){
-                    modelFluxAxis[i] = m_ContinuumFluxAxis[i];
-                    m_spcFluxAxisNoContinuum[i] = m_SpcFluxAxis[i]-m_ContinuumFluxAxis[i];
-                }
-                //*/
-
-                /*
-            //iterative continuum estimation approx: APPROX. METHOD
-            std::vector<Int32> validEltsIdx = GetModelValidElementsIndexes();
-            std::vector<Int32> refreshIdxs = ReestimateContinuumApprox(validEltsIdx);
-            refreshModelAfterContReestimation(refreshIdxs, modelFluxAxis, spcFluxAxisNoContinuum);
-            //*/
-
-                /*
-            //iterative continuum estimation approx: FAST METHOD
-            std::vector<Int32> validEltsIdx = GetModelValidElementsIndexes();
-            std::vector<Int32> highSNRvalidEltsIdx;
-            Float64 snrthres = 5.0;
-            for( UInt32 i=0; i<validEltsIdx.size(); i++ )
-            {
-                Int32 eltIdx = validEltsIdx[i];
-                Bool isSnrHigh = false;
-                Int32 nrays = m_Elements[eltIdx]->GetSize();
-                for(Int32 iray=0; iray<nrays; iray++)
+                for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
                 {
-                    Float64 A = m_Elements[eltIdx]->GetFittedAmplitude(iray);
-                    Float64 Sigma = m_Elements[eltIdx]->GetFittedAmplitudeErrorSigma(iray);
+                    Float64 meanContinuum = getContinuumMeanUnderElement(iElts);
 
-                    Float64 snr = A/Sigma;
-                    if(snr > snrthres){
-                        isSnrHigh = true;
-                        break;
+                    //get the max nominal amplitude
+                    Int32 nRays = m_Elements[iElts]->GetSize();
+                    Float64 nominalAmp = -1.0;
+                    Float64 err=1.5*1e-20; //not used
+                    for(UInt32 j=0; j<nRays; j++){
+                        Int32 lineIndex = m_Elements[iElts]->m_LineCatalogIndexes[j];
+                        nominalAmp = m_Elements[iElts]->GetNominalAmplitude(j);
+                        Float64 a = result.GetLineModelSolution().Amplitudes[lineIndex];
+
+                        if(m_RestRayList[m_Elements[iElts]->m_LineCatalogIndexes[0]].GetType() == CRay::nType_Absorption)
+                        {
+                            Float64 ampFitted = meanContinuum*a/nominalAmp;
+                            SetElementAmplitude(iElts, ampFitted, err);
+                        }else{
+                            Float64 ampFitted = a/nominalAmp;
+                            SetElementAmplitude(iElts, ampFitted, err);
+                        }
+
+                    }
+
+
+                }
+
+            }
+
+
+            //fit the amplitudes of each element independently
+            if(m_fittingmethod=="individual")
+            {
+                //fit the model amplitudes individually
+                for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
+                {
+                    m_Elements[iElts]->fitAmplitude(spectralAxis, m_spcFluxAxisNoContinuum, m_ContinuumFluxAxis, redshift);
+
+                    //optionnally log some fitting details
+                    if(0)
+                    {
+                        Log.LogDebug("    model: elt #%d individual fit", iElts);
+                    Float64 dbg_amp = m_Elements[iElts]->GetElementAmplitude();
+                    Log.LogDebug("    model:     fitted elt amp = %f", dbg_amp);
+                    Int32 nSubE = m_Elements[iElts]->GetSize();
+                    for(Int32 iSubElts=0; iSubElts<nSubE; iSubElts++)
+                    {
+                        Log.LogDebug("    model:     sub #%d - fitted amp = %f", iSubElts, m_Elements[iElts]->GetFittedAmplitude(iSubElts));
+                        Log.LogDebug("    model:     sub #%d - outside range = %d", iSubElts, m_Elements[iElts]->IsOutsideLambdaRange(iSubElts));
+                    }
+                    Log.LogDebug("    model:     dtm = %e", m_Elements[iElts]->GetSumCross());
+                    Log.LogDebug("    model:     dtd = %e", m_Elements[iElts]->GetSumGauss());
                     }
                 }
-                if(isSnrHigh){
-                    highSNRvalidEltsIdx.push_back(eltIdx);
+            }
+
+
+            //fit the amplitude of all elements together (but Emission or Absorption separately) with iterative   solver: lmfit
+            if(m_fittingmethod=="lmfit")
+            {
+                //Log.LogInfo( "Linemodel: Fitting method lmfit, z= %f", m_Redshift);
+                SetVelocityEmission(m_velocityEmissionInit);
+                SetVelocityAbsorption(m_velocityAbsorptionInit);
+                m_Redshift = redshift;
+                Float64 bestMerit = DBL_MAX;
+                std::shared_ptr<CLmfitController> bestController;// at each run of lmfit we create a controller, we keep the best evaluation
+                std::vector<CLmfitController*> controllers = createLmfitControllers(lambdaRange);
+                if(controllers.size() == 0){
+                    Log.LogError("LMfit : No Controller created");
+                }
+                for( UInt32 i=0; i<controllers.size(); i++ )
+                {
+                  CLmfitController *controller = controllers[i];
+                  //Log.LogInfo("Continuum Template use : %s", controller->getTemplate()->GetName().c_str());
+                  if(!controller->isNoContinuum() && !controller->isContinuumLoaded()){
+                    LoadFitContinuumOneTemplate(lambdaRange, *controller->getTemplate());
+                  }
+                  // adding element base on configuration
+                  std::vector<UInt32> validEltsIdx = GetModelValidElementsIndexes();
+                  for (UInt32 iElt = 0; iElt < validEltsIdx.size(); iElt++)
+                  {
+                    // if(controller->isLineTypeVelocityFitted(m_RestRayList[m_Elements[validEltsIdx[iElt]]->m_LineCatalogIndexes[0]].GetType()))
+                    // {
+                        controller->addElement(validEltsIdx[iElt]);
+                        m_Elements[validEltsIdx[iElt]]->fitAmplitude(spectralAxis, m_spcFluxAxisNoContinuum,m_ContinuumFluxAxis , redshift);
+                    // }
+                  }
+
+                  controller->calculatedIndices();
+                  bool NegVal = true;
+                  while( NegVal)
+                  {
+                    Int32 retVal = fitAmplitudesLmfit(m_SpcFluxAxis, controller);
+                    //Log.LogInfo( "LineModel Infos: Lmfit retVal = %d", retVal);
+                    NegVal = controller->removeNegAmpLine();
+                    //Log.LogInfo( "LineModel Infos: Lmfit NegVal = %s", (NegVal?"t":"f") );
+                    //Log.LogInfo( "LineModel Infos: Lmfit merit = %.0f ; bestMerit : %.0f ", controller->getMerit(), bestMerit );
+                    if(retVal==0 && !NegVal && controller->getMerit()< bestMerit ){
+
+                      bestMerit = controller->getMerit();
+                      bestController = std::shared_ptr<CLmfitController>( controller);
+                      //Log.LogInfo("Pointeur best Controller setted");
+                    }
+                    //NegVal = false;//no while
+                  }
+                }
+
+
+                //We set the best model found
+                if(bestController){
+                  if(bestController->isContinuumFitted()){
+                    if(bestController->isRedshiftFitted()){
+                        m_Redshift = bestController->getRedshift();
+                    }
+                    const CTemplate* tpl = bestController->getTemplate();
+                    ApplyContinuumOnGrid(*tpl );
+                    setFitContinuum_tplAmplitude(bestController->getContinuumAmp());
+                      //setFitContinuum_tplAmplitude(  bestController->getContinuumAmp());
+                  }else if (bestController-> isRedshiftFitted()){
+                    setRedshift(bestController-> getRedshift(), bestController->isContinuumLoaded());
+
+                  }
+                  std::vector<UInt32> bestFilteredEltsIdx = bestController->getFilteredIdx();
+
+                  for (UInt32 iElt = 0; iElt < bestFilteredEltsIdx.size(); iElt++)
+                  {
+                      Float64 amp = bestController->getLineAmp(iElt);
+                      Float64 ampErr = bestController->getLineAmpErr(iElt);
+                      //Log.LogInfo("Lmfit : amp [%d] = %.1f, z = %f", iElt, amp, m_Redshift);
+                      SetElementAmplitude(bestFilteredEltsIdx[iElt], amp, ampErr);
+                  }
+                  if(bestController->isEmissionVelocityFitted()){
+                    SetVelocityEmission(bestController->getEmissionVelocity());
+                    //Log.LogInfo("Lmfit : VelEmission = %.1f, z = %f", bestController->getEmissionVelocity(), m_Redshift);
+                  }
+                  if(bestController->isAbsorptionVelocityFitted()){
+                    SetVelocityAbsorption(bestController->getAbsorptionVelocity());
+                    //Log.LogInfo("Lmfit : VelAbsorption= %.1f, z = %f", bestController->getAbsorptionVelocity(), m_Redshift);
+                   }
+                   //prepare the elements support
+                   for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
+                   {
+                       m_Elements[iElts]->prepareSupport(spectralAxis, redshift, lambdaRange);
+                   }
+                   refreshModelInitAllGrid();
+                   //modelSolution = GetModelSolution();
+                }else{
+                  Log.LogError( "LineModel Lmfit: not able to fit values at z %f", m_Redshift);
+                  //continue;
+                  return DBL_MAX;
                 }
             }
-            std::vector<Int32> refreshIdxs = ReestimateContinuumUnderLines(highSNRvalidEltsIdx);
-            refreshModelAfterContReestimation(refreshIdxs, modelFluxAxis, spcFluxAxisNoContinuum);
-            //*/
 
+            //fit the amplitude of all elements together with linear solver: gsl_multifit_wlinear
+            if(m_fittingmethod=="svd")
+            {
+                std::vector<UInt32> validEltsIdx = GetModelValidElementsIndexes();
+                std::vector<Float64> ampsfitted;
+                std::vector<Float64> errorsfitted;
+                fitAmplitudesLinSolveAndLambdaOffset(validEltsIdx, spectralAxis, m_spcFluxAxisNoContinuum, m_ContinuumFluxAxis, ampsfitted, errorsfitted, m_enableLambdaOffsetsFit);
+            }
 
+            //fit the amplitudes of each element independently, unless there is overlap
+            if(m_fittingmethod=="hybrid")
+            {
                 fitAmplitudesHybrid(spectralAxis, m_spcFluxAxisNoContinuum, m_ContinuumFluxAxis, redshift);
-                it++;
-            }
-        }
 
-        //set all the amplitudes to 1.0
-        if(m_fittingmethod=="ones")
-        {
-            for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
+                //apply a continuum iterative re-estimation with lines removed from the initial spectrum
+                Int32 nIt = contreest_iterations;
+                Int32 it=0;
+                while(it<nIt){
+                    applyRules();
+
+                    //*
+                    //iterative continuum estimation :: RAW SLOW METHOD
+                    refreshModel();
+                    Float64 enhanceLines = 0;
+                    //*
+                    if(nIt>2*it && nIt>3.0 && it<=3){
+                        enhanceLines = 2.0-((Float64)it*0.33);
+                    }
+
+                    //*/
+                    /*
+                    if(it==0 && nIt>1){
+                        enhanceLines = 1.5;
+                    }
+                    */
+                    EstimateSpectrumContinuum(enhanceLines, lambdaRange);
+
+                    for(UInt32 i=0; i<modelFluxAxis.GetSamplesCount(); i++){
+                        modelFluxAxis[i] = m_ContinuumFluxAxis[i];
+                        m_spcFluxAxisNoContinuum[i] = m_SpcFluxAxis[i]-m_ContinuumFluxAxis[i];
+                    }
+                    //*/
+
+                    /*
+                //iterative continuum estimation approx: APPROX. METHOD
+                std::vector<Int32> validEltsIdx = GetModelValidElementsIndexes();
+                std::vector<Int32> refreshIdxs = ReestimateContinuumApprox(validEltsIdx);
+                refreshModelAfterContReestimation(refreshIdxs, modelFluxAxis, spcFluxAxisNoContinuum);
+                //*/
+
+                    /*
+                //iterative continuum estimation approx: FAST METHOD
+                std::vector<Int32> validEltsIdx = GetModelValidElementsIndexes();
+                std::vector<Int32> highSNRvalidEltsIdx;
+                Float64 snrthres = 5.0;
+                for( UInt32 i=0; i<validEltsIdx.size(); i++ )
+                {
+                    Int32 eltIdx = validEltsIdx[i];
+                    Bool isSnrHigh = false;
+                    Int32 nrays = m_Elements[eltIdx]->GetSize();
+                    for(Int32 iray=0; iray<nrays; iray++)
+                    {
+                        Float64 A = m_Elements[eltIdx]->GetFittedAmplitude(iray);
+                        Float64 Sigma = m_Elements[eltIdx]->GetFittedAmplitudeErrorSigma(iray);
+
+                        Float64 snr = A/Sigma;
+                        if(snr > snrthres){
+                            isSnrHigh = true;
+                            break;
+                        }
+                    }
+                    if(isSnrHigh){
+                        highSNRvalidEltsIdx.push_back(eltIdx);
+                    }
+                }
+                std::vector<Int32> refreshIdxs = ReestimateContinuumUnderLines(highSNRvalidEltsIdx);
+                refreshModelAfterContReestimation(refreshIdxs, modelFluxAxis, spcFluxAxisNoContinuum);
+                //*/
+
+
+                    fitAmplitudesHybrid(spectralAxis, m_spcFluxAxisNoContinuum, m_ContinuumFluxAxis, redshift);
+                    it++;
+                }
+            }
+
+            //set all the amplitudes to 1.0
+            if(m_fittingmethod=="ones")
             {
-                m_Elements[iElts]->SetFittedAmplitude(1.0, 1.0);
+                for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
+                {
+                    m_Elements[iElts]->SetFittedAmplitude(1.0, 1.0);
+                }
             }
-        }
 
-        if(m_rigidity=="rules")
-        {
-            //Apply rules,
-            applyRules( enableLogging );
-
-            refreshModel();
-            //create spectrum model
-            Int32 modelSolutionLevel = Int32(enableLogging);
-            modelSolution = GetModelSolution(modelSolutionLevel);
-            m_tplshapeBestTplName = "None";
-
-            merit = getLeastSquareMerit(lambdaRange);
-        }
-
-
-        //correct lines amplitude with tplshapePrior (tpl-corr): Warning: Rules must all be deactivated
-        if(m_rigidity=="tplcorr")
-        {
-            refreshModel();
-            //create spectrum model
-            modelSolution = GetModelSolution();
-            //Log.LogInfo( "LineModel Infos: TPLCORR");
-            std::vector<Float64> correctedAmplitudes;
-            correctedAmplitudes.resize(modelSolution.Amplitudes.size());
-            std::string bestTplName = "";
-
-            m_CatalogTplShape->GetBestFit( modelSolution.Rays, modelSolution.Amplitudes, modelSolution.Errors, correctedAmplitudes, bestTplName);
-            for( UInt32 iRestRay=0; iRestRay<m_RestRayList.size(); iRestRay++ )
+            if(m_rigidity=="rules")
             {
-                Int32 eIdx = FindElementIndex(iRestRay);
-                Int32 subeIdx = m_Elements[eIdx]->FindElementIndex(iRestRay);
-                Float64 er = m_Elements[eIdx]->GetFittedAmplitudeErrorSigma(subeIdx); //not modifying the fitting error for now
-                Float64 nominalAmp = m_Elements[eIdx]->GetNominalAmplitude(subeIdx);
-                m_Elements[eIdx]->SetFittedAmplitude(correctedAmplitudes[iRestRay]/nominalAmp, er);
-            }
-            refreshModel();
-            modelSolution = GetModelSolution();
-            m_tplshapeBestTplName = bestTplName;
+                //Apply rules,
+                applyRules( enableLogging );
 
-            merit = getLeastSquareMerit(lambdaRange);
+                refreshModel();
+                //create spectrum model
+                Int32 modelSolutionLevel = Int32(enableLogging);
+                modelSolution = GetModelSolution(modelSolutionLevel);
+                m_tplshapeBestTplName = "None";
+
+                merit = getLeastSquareMerit(lambdaRange);
+            }
+
+
+            //correct lines amplitude with tplshapePrior (tpl-corr): Warning: Rules must all be deactivated
+            if(m_rigidity=="tplcorr")
+            {
+                refreshModel();
+                //create spectrum model
+                modelSolution = GetModelSolution();
+                //Log.LogInfo( "LineModel Infos: TPLCORR");
+                std::vector<Float64> correctedAmplitudes;
+                correctedAmplitudes.resize(modelSolution.Amplitudes.size());
+                std::string bestTplName = "";
+
+                m_CatalogTplShape->GetBestFit( modelSolution.Rays, modelSolution.Amplitudes, modelSolution.Errors, correctedAmplitudes, bestTplName);
+                for( UInt32 iRestRay=0; iRestRay<m_RestRayList.size(); iRestRay++ )
+                {
+                    Int32 eIdx = FindElementIndex(iRestRay);
+                    Int32 subeIdx = m_Elements[eIdx]->FindElementIndex(iRestRay);
+                    Float64 er = m_Elements[eIdx]->GetFittedAmplitudeErrorSigma(subeIdx); //not modifying the fitting error for now
+                    Float64 nominalAmp = m_Elements[eIdx]->GetNominalAmplitude(subeIdx);
+                    m_Elements[eIdx]->SetFittedAmplitude(correctedAmplitudes[iRestRay]/nominalAmp, er);
+                }
+                refreshModel();
+                modelSolution = GetModelSolution();
+                m_tplshapeBestTplName = bestTplName;
+
+                merit = getLeastSquareMerit(lambdaRange);
+            }
+
+            if(m_rigidity=="tplshape")
+            {
+                Float64 _merit;
+                //if(enableLogging || m_ContinuumComponent == "tplfit")
+                if(enableLogging)
+                {
+                    refreshModel();
+                    _merit = getLeastSquareMerit(lambdaRange);
+                    //_merit = getLeastSquareMeritFast();
+                }else{
+                    if(m_tplshapeLeastSquareFast)
+                    {
+                        _merit = getLeastSquareMeritFast();
+                    }else
+                    {
+                        refreshModel();
+                        _merit = getLeastSquareMerit(lambdaRange);
+                    }
+                }
+
+                if(_merit<meritTplratio[ifitting])
+                {
+                    meritTplratio[ifitting] = _merit;
+                    m_ChisquareTplshape[ifitting] = _merit;
+                    m_ScaleMargCorrTplshape[ifitting] = getScaleMargCorrection();
+                    m_StrongELPresentTplshape[ifitting] = GetModelStrongEmissionLinePresent();
+
+                    //Saving the model A, errorA, and dtm, mtm, ... (for all tplratios, needed ?)
+                    //NB: this is only needed for the index=savedIdxFitted ultimately
+                    for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
+                    {
+                        bool savedAmp=false;
+
+                        UInt32 nRays = m_Elements[iElts]->GetSize();
+                        for(UInt32 j=0; j<nRays; j++){
+                            if(savedAmp)
+                            {
+                                break;
+                            }
+                            Float64 amp = m_Elements[iElts]->GetFittedAmplitude(j);
+                            if(amp>0.0 && !m_Elements[iElts]->IsOutsideLambdaRange(j))
+                            {
+
+                                Float64 amp_error = m_Elements[iElts]->GetFittedAmplitudeErrorSigma(j);
+                                Float64 nominal_amp = m_Elements[iElts]->GetNominalAmplitude(j);
+                                m_FittedAmpTplshape[ifitting][iElts] = amp/nominal_amp;
+                                m_FittedErrorTplshape[ifitting][iElts] = amp_error/nominal_amp;
+                                m_DtmTplshape[ifitting][iElts] = m_Elements[iElts]->GetSumCross();
+                                m_MtmTplshape[ifitting][iElts] = m_Elements[iElts]->GetSumGauss();
+
+                                savedAmp=true;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                if(merit>_merit)
+                {
+                    merit=_merit;
+
+                    savedIdxContinuumFitted = icontfitting;
+                    savedIdxFitted = ifitting;
+
+
+                    modelSolution = GetModelSolution();
+                    m_tplshapeBestTplName = m_CatalogTplShape->GetCatalogName(savedIdxFitted);
+                    m_tplshapeBestTplIsmCoeff = m_CatalogTplShape->GetIsmCoeff(savedIdxFitted);
+                }
+            }
+
+            //if(m_rigidity=="tplcorr")
+            //{
+            //  Float64 tplshapePriorCoeff = m_CatalogTplShape->GetBestFit( modelSolution.Rays, modelSolution.Amplitudes,  );
+            //  Log.LogDebug( "Linemodel: tplshapePriorCoeff = %f", tplshapePriorCoeff);
+            //  merit = sqrt(merit*merit/2.0-log(tplshapePriorCoeff));
+            //}
+
+            if(m_ContinuumComponent == "nocontinuum"){
+                reinitModel();
+            }
+        }
+    }
+
+    if(enableLogging)
+    {
+        if(m_ContinuumComponent == "tplfit")
+        {
+            if(ncontinuumfitting>1)
+            {
+                LoadFitContinuum(lambdaRange, savedIdxContinuumFitted);
+            }
+            Log.LogInfo( "    model - Linemodel: fitcontinuum = %d (%s, with ebmv=%.1f), and A=%e",
+                         savedIdxContinuumFitted,
+                         m_fitContinuum_tplName.c_str(),
+                         m_fitContinuum_tplFitDustCoeff,
+                         m_fitContinuum_tplFitAmplitude);
         }
 
         if(m_rigidity=="tplshape")
         {
-            Float64 _merit;
-            //if(enableLogging || m_ContinuumComponent == "tplfit")
-            if(enableLogging)
-            {
-                refreshModel();
-                _merit = getLeastSquareMerit(lambdaRange);
-                //_merit = getLeastSquareMeritFast();
-            }else{
-                if(m_tplshapeLeastSquareFast)
-                {
-                    _merit = getLeastSquareMeritFast();
-                }else
-                {
-                    refreshModel();
-                    _merit = getLeastSquareMerit(lambdaRange);
-                }
+            //m_CatalogTplShape->SetMultilineNominalAmplitudes( *this, savedIdxFitted );
+            bool retSetMultiAmplFast = m_CatalogTplShape->SetMultilineNominalAmplitudesFast( *this, savedIdxFitted );
+            if( !retSetMultiAmplFast ){
+                Log.LogError( "Linemodel: tplshape, Unable to set Multiline NominalAmplitudes from Tplshape !");
             }
-            m_ChisquareTplshape[ifitting] = _merit;
-            m_ScaleMargCorrTplshape[ifitting] = getScaleMargCorrection();
-            m_StrongELPresentTplshape[ifitting] = GetModelStrongEmissionLinePresent();
 
-            if(merit>_merit)
+
+            //Set the velocities from templates: todo auto switch when velfit is ON
+            //m_CatalogTplShape->GetCatalogVelocities(savedIdxFitted, m_velocityEmission, m_velocityAbsorption);
+            for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
             {
-                merit=_merit;
-
-                savedIdxFitted = ifitting;
-                for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
-                {
-                    bool savedAmp=false;
-
-                    UInt32 nRays = m_Elements[iElts]->GetSize();
-                    for(UInt32 j=0; j<nRays; j++){
-                        if(savedAmp)
-                        {
-                            break;
-                        }
-                        Float64 amp = m_Elements[iElts]->GetFittedAmplitude(j);
-                        if(amp>0.0 && !m_Elements[iElts]->IsOutsideLambdaRange(j))
-                        {
-
-                            Float64 amp_error = m_Elements[iElts]->GetFittedAmplitudeErrorSigma(j);
-                            Float64 nominal_amp = m_Elements[iElts]->GetNominalAmplitude(j);
-                            m_FittedAmpTplshape[ifitting][iElts] = amp/nominal_amp;
-                            m_FittedErrorTplshape[ifitting][iElts] = amp_error/nominal_amp;
-                            m_DtmTplshape[ifitting][iElts] = m_Elements[iElts]->GetSumCross();
-                            m_MtmTplshape[ifitting][iElts] = m_Elements[iElts]->GetSumGauss();
-
-                            savedAmp=true;
-                            break;
-                        }
-                    }
-                }
-
-                modelSolution = GetModelSolution();
-                m_tplshapeBestTplName = m_CatalogTplShape->GetCatalogName(savedIdxFitted);
-                m_tplshapeBestTplIsmCoeff = m_CatalogTplShape->GetIsmCoeff(savedIdxFitted);
+                Log.LogInfo( "    model - Linemodel: tplratio = %d (%s, with ebmv=%.1f), and A=%e", savedIdxFitted, m_tplshapeBestTplName.c_str(), m_tplshapeBestTplIsmCoeff, m_FittedAmpTplshape[savedIdxFitted][iElts]);
+                m_Elements[iElts]->SetFittedAmplitude(m_FittedAmpTplshape[savedIdxFitted][iElts], m_FittedErrorTplshape[savedIdxFitted][iElts]);
+                m_Elements[iElts]->SetSumCross(m_DtmTplshape[savedIdxFitted][iElts]);
+                m_Elements[iElts]->SetSumGauss(m_MtmTplshape[savedIdxFitted][iElts]);
             }
+            //Lya
+            bool retLyaProfile = m_CatalogTplShape->SetLyaProfile(*this, savedIdxFitted);
+            if( !retLyaProfile ){
+                Log.LogError( "Linemodel: tplshape, Unable to retrieve Lya Profile from Tplshape !");
+            }
+
+            //prepare the Lya width and asym coefficients if the asymfit profile option is met
+            setLyaProfile(redshift, spectralAxis);
+
+            refreshModel();
+
+            Int32 modelSolutionLevel = Int32(enableLogging);
+            modelSolution = GetModelSolution(modelSolutionLevel);
         }
-
-        //if(m_rigidity=="tplcorr")
-        //{
-        //  Float64 tplshapePriorCoeff = m_CatalogTplShape->GetBestFit( modelSolution.Rays, modelSolution.Amplitudes,  );
-        //  Log.LogDebug( "Linemodel: tplshapePriorCoeff = %f", tplshapePriorCoeff);
-        //  merit = sqrt(merit*merit/2.0-log(tplshapePriorCoeff));
-        //}
-
-        if(m_ContinuumComponent == "nocontinuum"){
-            reinitModel();
-        }
-    }
-
-    if(m_rigidity=="tplshape" && enableLogging)
-    {
-        //m_CatalogTplShape->SetMultilineNominalAmplitudes( *this, savedIdxFitted );
-        bool retSetMultiAmplFast = m_CatalogTplShape->SetMultilineNominalAmplitudesFast( *this, savedIdxFitted );
-        if( !retSetMultiAmplFast ){
-            Log.LogError( "Linemodel: tplshape, Unable to set Multiline NominalAmplitudes from Tplshape !");
-        }
-
-
-        //Set the velocities from templates: todo auto switch when velfit is ON
-        //m_CatalogTplShape->GetCatalogVelocities(savedIdxFitted, m_velocityEmission, m_velocityAbsorption);
-        for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
-        {
-            Log.LogInfo( "    model - Linemodel: tplratio = %d (%s, with ebmv=%.1f), and A=%f", savedIdxFitted, m_tplshapeBestTplName.c_str(), m_tplshapeBestTplIsmCoeff, m_FittedAmpTplshape[savedIdxFitted][iElts]);
-            m_Elements[iElts]->SetFittedAmplitude(m_FittedAmpTplshape[savedIdxFitted][iElts], m_FittedErrorTplshape[savedIdxFitted][iElts]);
-            m_Elements[iElts]->SetSumCross(m_DtmTplshape[savedIdxFitted][iElts]);
-            m_Elements[iElts]->SetSumGauss(m_MtmTplshape[savedIdxFitted][iElts]);
-        }
-        //Lya
-        bool retLyaProfile = m_CatalogTplShape->SetLyaProfile(*this, savedIdxFitted);
-        if( !retLyaProfile ){
-            Log.LogError( "Linemodel: tplshape, Unable to retrieve Lya Profile from Tplshape !");
-        }
-
-        //prepare the Lya width and asym coefficients if the asymfit profile option is met
-        setLyaProfile(redshift, spectralAxis);
-
-        refreshModel();
-
-        Int32 modelSolutionLevel = Int32(enableLogging);
-        modelSolution = GetModelSolution(modelSolutionLevel);
     }
     return merit;
 }
@@ -1898,7 +1968,7 @@ std::vector<CLmfitController*> CLineModelElementList::createLmfitControllers( co
     useLmfitControllers.push_back(new CLmfitController(m_lmfit_fitEmissionVelocity,  m_lmfit_fitAbsorptionVelocity));
   }else{
     if(m_lmfit_bestTemplate){
-      LoadFitContinuum(lambdaRange);
+      LoadFitContinuum(lambdaRange, -1);
       for( UInt32 i=0; i<m_tplCategoryList.size(); i++ )
       {
         std::string category = m_tplCategoryList[i];
@@ -2441,6 +2511,7 @@ Float64 CLineModelElementList::getOutsideLinesSTD( Int32 which, TFloat64Range la
  **/
 Int32 CLineModelElementList::fitAmplitudesHybrid(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& spcFluxAxisNoContinuum, const CSpectrumFluxAxis &continuumfluxAxis, Float64 redshift)
 {
+  bool verbose=false;
   std::vector<UInt32> validEltsIdx = GetModelValidElementsIndexes();
   std::vector<UInt32> indexesFitted;
   for( UInt32 iValidElts=0; iValidElts<validEltsIdx.size(); iValidElts++ )
@@ -2472,22 +2543,29 @@ Int32 CLineModelElementList::fitAmplitudesHybrid(const CSpectrumSpectralAxis& sp
       }
 
 
-
-      //Log.LogDebug( "Redshift: %f", m_Redshift);
-      Log.LogDebug( "    model: hybrid fit: #%d - N overlapping=%d", iValidElts, overlappingInds.size());
-      for(UInt32 ifit=0; ifit<overlappingInds.size(); ifit++)
+      if(verbose)
       {
-          Log.LogDebug( "    model: hybrid fit:     overlapping #%d - eltIdx=%d", ifit, overlappingInds[ifit]);
+          //Log.LogDebug( "Redshift: %f", m_Redshift);
+          Log.LogDebug( "    model: hybrid fit: #%d - N overlapping=%d", iValidElts, overlappingInds.size());
+          for(UInt32 ifit=0; ifit<overlappingInds.size(); ifit++)
+          {
+              Log.LogDebug( "    model: hybrid fit:     overlapping #%d - eltIdx=%d", ifit, overlappingInds[ifit]);
+          }
       }
-
       if(!m_enableAmplitudeOffsets && overlappingInds.size()<2)
       {
-          Log.LogDebug( "    model: hybrid fit:     Individual fit");
+          if(verbose)
+          {
+            Log.LogDebug( "    model: hybrid fit:     Individual fit");
+          }
           m_Elements[iElts]->fitAmplitudeAndLambdaOffset(spectralAxis, spcFluxAxisNoContinuum, continuumfluxAxis, redshift, -1, m_enableLambdaOffsetsFit, m_LambdaOffsetStep, m_LambdaOffsetMin, m_LambdaOffsetMax);
       }
       else
       {
-          Log.LogDebug( "    model: hybrid fit:     SVD fit");
+          if(verbose)
+          {
+            Log.LogDebug( "    model: hybrid fit:     SVD fit");
+          }
           //fit individually: mainly for mtm and dtm estimation
           for(UInt32 ifit=0; ifit<overlappingInds.size(); ifit++)
           {

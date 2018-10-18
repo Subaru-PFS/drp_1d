@@ -1156,9 +1156,7 @@ Int32 COperatorLineModel::ComputeSecondPass(
 
                                     //
 
-                                    // Log.LogInfo("  Operator-Linemodel:
-                                    // testing velocity: merit=%.3e for velocity
-                                    // = %.1f", meritv, vTest);
+                                    Log.LogDebug("  Operator-Linemodel: testing velocity: merit=%.3e for velocity = %.1f", meritv, vTest);
                                     if (meritMin > meritv)
                                     {
                                         meritMin = meritv;

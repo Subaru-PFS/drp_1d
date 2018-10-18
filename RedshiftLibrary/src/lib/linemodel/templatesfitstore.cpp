@@ -212,7 +212,7 @@ CTemplatesFitStore::TemplateFitValues CTemplatesFitStore::GetFitValues(Float64 r
     }
 
 
-    //find the idxz using the zmap
+    //find the idxz
     Int32 idxz=-1;
     if(m_samplingRedshift=="log")
     {

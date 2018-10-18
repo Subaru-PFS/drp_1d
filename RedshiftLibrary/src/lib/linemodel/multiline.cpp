@@ -629,10 +629,16 @@ void CMultiLine::fitAmplitudeAndLambdaOffset(const CSpectrumSpectralAxis& spectr
 
     if(!atLeastOneOffsetToFit)
     {
-        Log.LogDebug( "    multiline: no offsets to fit");
+        if(m_verbose)
+        {
+            Log.LogDebug( "    multiline: no offsets to fit");
+        }
         nSteps = 1;
     }else{
-        Log.LogDebug( "    multiline: offsets to fit n=%d", nSteps);
+        if(m_verbose)
+        {
+            Log.LogDebug( "    multiline: offsets to fit n=%d", nSteps);
+        }
     }
 
     Float64 bestMerit = DBL_MAX;
@@ -720,7 +726,10 @@ void CMultiLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const C
     const Float64* spectral = spectralAxis.GetSamples();
     const TFloat64List& error = noContinuumfluxAxis.GetError();
 
-    Log.LogDebug("    error[0]:%e", error[0]);
+    if(m_verbose)
+    {
+        Log.LogDebug("    error[0]:%e", error[0]);
+    }
     const Float64* fluxContinuum = continuumfluxAxis.GetSamples();
 
     Float64 y = 0.0;
@@ -731,18 +740,22 @@ void CMultiLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const C
 
     Float64 err2 = 0.0;
     Int32 num = 0;
-
-    Log.LogDebug("    multiline: nLines=%d", nRays);
+    if(m_verbose)
+    {
+        Log.LogDebug("    multiline: nLines=%d", nRays);
+    }
     for(Int32 k2=0; k2<nRays; k2++)
       {
         mBuffer_mu[k2] = GetObservedPosition(k2, redshift);
         mBuffer_c[k2] = GetLineWidth(mBuffer_mu[k2], redshift, m_Rays[k2].GetIsEmission(), m_profile[k2]);
-
-        Log.LogDebug("    mBuffer_mu[k2]:%e", mBuffer_mu[k2]);
-        Log.LogDebug("    mBuffer_c[k2]:%e", mBuffer_c[k2]);
-        Log.LogDebug("    m_Rays[k2].GetIsEmission():%d", m_Rays[k2].GetIsEmission());
-        Log.LogDebug("    redshift:%e", redshift);
-        Log.LogDebug("    m_profile[k2]:%s", m_profile[k2].c_str());
+        if(m_verbose)
+        {
+            Log.LogDebug("    mBuffer_mu[k2]:%e", mBuffer_mu[k2]);
+            Log.LogDebug("    mBuffer_c[k2]:%e", mBuffer_c[k2]);
+            Log.LogDebug("    m_Rays[k2].GetIsEmission():%d", m_Rays[k2].GetIsEmission());
+            Log.LogDebug("    redshift:%e", redshift);
+            Log.LogDebug("    m_profile[k2]:%s", m_profile[k2].c_str());
+        }
       }
 
 
@@ -794,10 +807,13 @@ void CMultiLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const C
 
     if ( num==0 || m_sumGauss==0 )
       {
-        Log.LogDebug("    multiline failed:     num=%d, mtm=%f", num, m_sumGauss);
-        for(Int32 k2=0; k2<nRays; k2++)
+        if(m_verbose)
         {
-            Log.LogDebug("    multiline failed:     subE=%d, nominal_amp=%f", k2, m_NominalAmplitudes[k2]);
+            Log.LogDebug("    multiline failed:     num=%d, mtm=%f", num, m_sumGauss);
+            for(Int32 k2=0; k2<nRays; k2++)
+            {
+                Log.LogDebug("    multiline failed:     subE=%d, nominal_amp=%f", k2, m_NominalAmplitudes[k2]);
+            }
         }
         return;
       }

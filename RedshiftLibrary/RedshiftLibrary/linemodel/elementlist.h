@@ -62,7 +62,7 @@ public:
     void EstimateSpectrumContinuum(Float64 opt_enhance_lines, const TFloat64Range &lambdaRange);
 
     void LoadFitContinuumOneTemplate(const TFloat64Range& lambdaRange, const CTemplate& tpl);
-    void LoadFitContinuum(const TFloat64Range& lambdaRange);
+    void LoadFitContinuum(const TFloat64Range& lambdaRange, Int32 icontinuum);
     void setRedshift(Float64 redshift, bool reinterpolatedContinuum);
     Int32 ApplyContinuumOnGrid(const CTemplate& tpl);
     Bool SolveContinuum(const CSpectrum& spectrum,
@@ -301,6 +301,7 @@ private:
     std::vector<Int32> m_elementsDisabledIndexes;
     std::string m_rulesoption;
     std::string m_rigidity;
+    bool m_forcedisableTplratioISMfit=false;
 
     std::shared_ptr<CSpectrum> m_inputSpc;
     CTemplateCatalog m_tplCatalog;
@@ -324,6 +325,8 @@ private:
     Int32 m_fitContinuum_tplFitMeiksinIdx;
     Float64 m_fitContinuum_tplFitDtM;
     Float64 m_fitContinuum_tplFitMtM;
+    Int32 m_fitcontinuum_maxN = 3;
+    bool m_forcedisableMoreMultipleContinuumfit=false;
 
     bool m_lmfit_noContinuumTemplate;
     bool m_lmfit_bestTemplate;
