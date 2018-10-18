@@ -1087,7 +1087,7 @@ Int32 CPdfz::Marginalize(TFloat64List redshifts,
         for (Int32 km = 0; km < meritResults.size(); km++)
         {
             sumPriors += exp(logPriorModel[km]);
-            Log.LogInfo("Pdfz: Marginalize: for model k=%d, using prior=%f", km,
+            Log.LogDetail("Pdfz: Marginalize: for model k=%d, using prior=%f", km,
                         exp(logPriorModel[km]));
         }
         Log.LogInfo("Pdfz: Marginalize: sumPriors=%f", sumPriors);
@@ -1176,7 +1176,7 @@ Int32 CPdfz::Marginalize(TFloat64List redshifts,
                 for (UInt32 k = 0; k < redshifts.size(); k++)
                 {
                     postmargZResult->Redshifts[k] = redshifts[k];
-                    postmargZResult->valProbaLog[k] = log(0.0);
+                    postmargZResult->valProbaLog[k] = -INFINITY;
                     nSum[k] = 0;
                 }
                 initPostMarg = true;

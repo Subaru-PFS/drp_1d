@@ -169,10 +169,20 @@ Int32 COperatorLineModel::ComputeFirstPass(
 
     // prepare continuum templates catalog
     CTemplatesOrthogonalization tplOrtho(
-        tplCatalog, tplCategoryList, opt_calibrationPath, restRayList,
-        opt_fittingmethod, opt_continuumcomponent, opt_lineWidthType,
-        opt_resolution, opt_velocityEmission, opt_velocityAbsorption, opt_rules,
-        opt_rigidity, enableOrtho);
+                tplCatalog,
+                tplCategoryList,
+                opt_calibrationPath,
+                restRayList,
+                opt_fittingmethod,
+                opt_continuumcomponent,
+                opt_lineWidthType,
+                opt_resolution,
+                opt_velocityEmission,
+                opt_velocityAbsorption,
+                opt_rules,
+                opt_rigidity,
+                enableOrtho);
+
     // CTemplateCatalog orthoTplCatalog = tplOrtho.getOrthogonalTplCatalog();
     CTemplatesOrthoStore orthoTplStore = tplOrtho.getOrthogonalTplStore();
     Int32 ctlgIdx = 0; // only one ortho config for now
@@ -181,11 +191,20 @@ Int32 COperatorLineModel::ComputeFirstPass(
     Log.LogInfo("  Operator-Linemodel: Templates store prepared.");
 
     m_model = std::shared_ptr<CLineModelElementList>(new CLineModelElementList(
-        spectrum, spectrumContinuum,
-        tplCatalog, //*orthoTplCatalog,//
-        tplCategoryList, opt_calibrationPath, restRayList, opt_fittingmethod,
-        opt_continuumcomponent, opt_lineWidthType, opt_resolution,
-        opt_velocityEmission, opt_velocityAbsorption, opt_rules, opt_rigidity));
+                                                         spectrum,
+                                                         spectrumContinuum,
+                                                         tplCatalog, //*orthoTplCatalog,//
+                                                         tplCategoryList,
+                                                         opt_calibrationPath,
+                                                         restRayList,
+                                                         opt_fittingmethod,
+                                                         opt_continuumcomponent,
+                                                         opt_lineWidthType,
+                                                         opt_resolution,
+                                                         opt_velocityEmission,
+                                                         opt_velocityAbsorption,
+                                                         opt_rules,
+                                                         opt_rigidity));
     Float64 setssSizeInit = 0.1;
     m_model->SetSourcesizeDispersion(setssSizeInit);
     Log.LogInfo("  Operator-Linemodel: sourcesize init to: ss=%.2f",
@@ -298,6 +317,13 @@ Int32 COperatorLineModel::ComputeFirstPass(
             throw runtime_error("  Operator-Linemodel: Failed to init tpl-ratios. aborting...");
             return -1;
         }
+
+        m_model->m_opt_firstpass_forcedisableTplratioISMfit = m_opt_firstpass_tplratio_ismFit;
+    }
+    if(opt_continuumcomponent == "tplfit")
+    {
+        m_model->m_opt_fitcontinuum_maxCount = m_opt_fitcontinuum_maxN;
+        m_model->m_opt_firstpass_forcedisableMultipleContinuumfit = m_opt_firstpass_multiplecontinuumfit_disable;
     }
 
     // init catalog offsets
@@ -401,18 +427,22 @@ Int32 COperatorLineModel::ComputeFirstPass(
         for (UInt32 i = 0; i < tplCategoryList.size(); i++)
         {
             std::string category = tplCategoryList[i];
-            for (UInt32 j = 0; j < orthoTplCatalog->GetTemplateCount(category);
-                 j++)
+            for (UInt32 j = 0; j < orthoTplCatalog->GetTemplateCount(category); j++)
             {
-                const CTemplate &tpl =
-                    orthoTplCatalog->GetTemplate(category, j);
+                const CTemplate &tpl = orthoTplCatalog->GetTemplate(category, j);
 
                 auto chisquareResult =
                     std::dynamic_pointer_cast<CChisquareResult>(
                         chiSquareOperator->Compute(
-                            spectrum, tpl, lambdaRange, redshiftsTplFit,
-                            overlapThreshold, maskList, opt_interp,
-                            m_opt_tplfit_extinction, m_opt_tplfit_dustFit));
+                                spectrum,
+                                tpl,
+                                lambdaRange,
+                                redshiftsTplFit,
+                                overlapThreshold,
+                                maskList,
+                                opt_interp,
+                                m_opt_tplfit_extinction,
+                                m_opt_tplfit_dustFit));
                 if (!chisquareResult)
                 {
                     Log.LogInfo("  Operator-Linemodel failed to compute chi "
@@ -425,43 +455,29 @@ Int32 COperatorLineModel::ComputeFirstPass(
                 }
             }
         }
-
         chiSquareOperator.reset();
 
-        // fill the results with Best Values
-        Int32 nTplFitResults = redshiftsTplFit.size();
-        for (Int32 i = 0; i < nTplFitResults; i++)
+        // fill the fit store with fitted values: only the best fitted values FOR EACH TEMPLATE are used
+        Int32 nredshiftsTplFitResults = redshiftsTplFit.size();
+        for (Int32 i = 0; i < nredshiftsTplFitResults; i++)
         {
             Float64 redshift = redshiftsTplFit[i];
-            Float64 bestMerit = DBL_MAX;
-            Float64 bestFitAmplitude;
-            Float64 bestFitDustCoeff;
-            Int32 bestFitMeiksinIdx;
-            Float64 bestFitDtM;
-            Float64 bestFitMtM;
-            std::string bestTplName;
 
             for (UInt32 j = 0; j < chisquareResultsAllTpl.size(); j++)
             {
                 auto chisquareResult =
                     std::dynamic_pointer_cast<CChisquareResult>(
                         chisquareResultsAllTpl[j]);
-                Float64 merit = chisquareResult->ChiSquare[i];
 
-                if (merit < bestMerit)
-                {
-                    bestMerit = merit;
-                    bestFitAmplitude = chisquareResult->FitAmplitude[i];
-                    bestFitDustCoeff = chisquareResult->FitDustCoeff[i];
-                    bestFitMeiksinIdx = chisquareResult->FitMeiksinIdx[i];
-                    bestFitDtM = chisquareResult->FitDtM[i];
-                    bestFitMtM = chisquareResult->FitMtM[i];
-                    bestTplName = chisquareResultsTplName[j];
-                }
+                tplfitStore->Add(chisquareResultsTplName[j],
+                                 chisquareResult->FitDustCoeff[i],
+                                 chisquareResult->FitMeiksinIdx[i],
+                                 redshift,
+                                 chisquareResult->ChiSquare[i],
+                                 chisquareResult->FitAmplitude[i],
+                                 chisquareResult->FitDtM[i],
+                                 chisquareResult->FitMtM[i]);
             }
-            tplfitStore->Add(redshift, bestMerit, bestFitAmplitude,
-                             bestFitDustCoeff, bestFitMeiksinIdx, bestFitDtM,
-                             bestFitMtM, bestTplName);
         }
 
         // Set tplFitStore if needed
@@ -1147,9 +1163,7 @@ Int32 COperatorLineModel::ComputeSecondPass(
 
                                     //
 
-                                    // Log.LogInfo("  Operator-Linemodel:
-                                    // testing velocity: merit=%.3e for velocity
-                                    // = %.1f", meritv, vTest);
+                                    Log.LogDebug("  Operator-Linemodel: testing velocity: merit=%.3e for velocity = %.1f", meritv, vTest);
                                     if (meritMin > meritv)
                                     {
                                         meritMin = meritv;

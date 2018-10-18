@@ -36,9 +36,14 @@ public:
 
 private:
 
-    void BasicFit(const CSpectrum& spectrum, const CTemplate& tpl, Float64 *pfgTplBuffer,
-                   const TFloat64Range& lambdaRange, Float64 redshift, Float64 overlapThreshold,
-                   Float64& overlapRate, Float64& chiSquare,
+    void BasicFit(const CSpectrum& spectrum,
+                  const CTemplate& tpl,
+                  Float64 *pfgTplBuffer,
+                  const TFloat64Range& lambdaRange,
+                  Float64 redshift,
+                  Float64 overlapThreshold,
+                  Float64& overlapRate,
+                  Float64& chiSquare,
                   Float64 &fittingAmplitude,
                   Float64& fittingDtM,
                   Float64& fittingMtM,
@@ -46,6 +51,8 @@ private:
                   Float64 &fittingMeiksinIdx,
                   EStatus& status,
                   std::vector<TFloat64List>& ChiSquareInterm,
+                  std::vector<TFloat64List>& IsmCalzettiCoeffInterm,
+                  std::vector<TInt32List>& IgmMeiksinIdxInterm,
                   std::string opt_interp, Float64 forcedAmplitude=-1, Int32 opt_extinction=0, Int32 opt_dustFitting=0, CMask spcMaskAdditional=CMask() );
 
     // buffers for the precomputed fine grid template

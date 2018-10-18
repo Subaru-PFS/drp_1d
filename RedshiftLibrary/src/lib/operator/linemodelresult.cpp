@@ -76,9 +76,9 @@ Int32 CLineModelResult::Init( std::vector<Float64> redshifts, CRayCatalog::TRayV
     return err;
 }
 
-Int32 CLineModelResult::SetChisquareTplshapeResult( Int32 index, TFloat64List chisquareTplshape, TFloat64List scaleMargCorrTplshape, std::vector<bool> strongEmissionLinePresentTplshape )
+Int32 CLineModelResult::SetChisquareTplshapeResult( Int32 index_z, TFloat64List chisquareTplshape, TFloat64List scaleMargCorrTplshape, std::vector<bool> strongEmissionLinePresentTplshape )
 {
-    if(index>=Redshifts.size())
+    if(index_z>=Redshifts.size())
     {
         return -1;
     }
@@ -101,17 +101,17 @@ Int32 CLineModelResult::SetChisquareTplshapeResult( Int32 index, TFloat64List ch
 
     for(Int32 k=0; k<chisquareTplshape.size(); k++)
     {
-        ChiSquareTplshapes[k][index] = chisquareTplshape[k];
-        ScaleMargCorrectionTplshapes[k][index] = scaleMargCorrTplshape[k];
-        StrongELPresentTplshapes[k][index] = strongEmissionLinePresentTplshape[k];
+        ChiSquareTplshapes[k][index_z] = chisquareTplshape[k];
+        ScaleMargCorrectionTplshapes[k][index_z] = scaleMargCorrTplshape[k];
+        StrongELPresentTplshapes[k][index_z] = strongEmissionLinePresentTplshape[k];
     }
     return 0;
 }
 
-TFloat64List CLineModelResult::GetChisquareTplshapeResult( Int32 index )
+TFloat64List CLineModelResult::GetChisquareTplshapeResult( Int32 index_z )
 {
     TFloat64List chisquareTplshape;
-    if(index>=Redshifts.size())
+    if(index_z>=Redshifts.size())
     {
         return chisquareTplshape;
     }
@@ -122,16 +122,16 @@ TFloat64List CLineModelResult::GetChisquareTplshapeResult( Int32 index )
 
     for(Int32 k=0; k<ChiSquareTplshapes.size(); k++)
     {
-        chisquareTplshape.push_back(ChiSquareTplshapes[k][index]);
+        chisquareTplshape.push_back(ChiSquareTplshapes[k][index_z]);
     }
 
     return chisquareTplshape;
 }
 
-TFloat64List CLineModelResult::GetScaleMargCorrTplshapeResult( Int32 index )
+TFloat64List CLineModelResult::GetScaleMargCorrTplshapeResult( Int32 index_z )
 {
     TFloat64List scaleMargCorrTplshape;
-    if(index>=Redshifts.size())
+    if(index_z>=Redshifts.size())
     {
         return scaleMargCorrTplshape;
     }
@@ -142,16 +142,16 @@ TFloat64List CLineModelResult::GetScaleMargCorrTplshapeResult( Int32 index )
 
     for(Int32 k=0; k<ScaleMargCorrectionTplshapes.size(); k++)
     {
-        scaleMargCorrTplshape.push_back(ScaleMargCorrectionTplshapes[k][index]);
+        scaleMargCorrTplshape.push_back(ScaleMargCorrectionTplshapes[k][index_z]);
     }
 
     return scaleMargCorrTplshape;
 }
 
-std::vector<bool> CLineModelResult::GetStrongELPresentTplshapeResult( Int32 index )
+std::vector<bool> CLineModelResult::GetStrongELPresentTplshapeResult( Int32 index_z )
 {
     std::vector<bool> strongELPresentTplshape;
-    if(index>=Redshifts.size())
+    if(index_z>=Redshifts.size())
     {
         return strongELPresentTplshape;
     }
@@ -162,7 +162,7 @@ std::vector<bool> CLineModelResult::GetStrongELPresentTplshapeResult( Int32 inde
 
     for(Int32 k=0; k<StrongELPresentTplshapes.size(); k++)
     {
-        strongELPresentTplshape.push_back(StrongELPresentTplshapes[k][index]);
+        strongELPresentTplshape.push_back(StrongELPresentTplshapes[k][index_z]);
     }
 
     return strongELPresentTplshape;

@@ -54,6 +54,7 @@ private:
 
     std::string m_opt_tplfit_dustfit="no";
     std::string m_opt_tplfit_igmfit="no";
+    Float64 m_opt_continuumfitcount;
 
     std::string m_opt_rigidity;
     std::string m_opt_lineWidthType;
@@ -76,8 +77,11 @@ private:
     std::string m_opt_offsets_reldirpath="";
 
     Float64 m_opt_extremacount;
-    Float64 m_opt_twosteplargegridstep;
-    std::string m_opt_twosteplargegridsampling;
+    Float64 m_opt_firstpass_largegridstep;
+    std::string m_opt_firstpass_largegridsampling;
+    std::string m_opt_firstpass_tplratio_ismfit;
+    std::string m_opt_firstpass_disablemultiplecontinuumfit;
+
     std::string m_opt_pdfcombination;
     Float64 m_opt_stronglinesprior;
     Float64 m_opt_euclidNHaEmittersPriorStrength;

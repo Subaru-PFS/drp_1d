@@ -43,6 +43,7 @@ CTemplatesOrthogonalization::CTemplatesOrthogonalization(const CTemplateCatalog&
             }
             std::string opt_fittingmethod2 = "hybrid";
 
+            Log.LogDetail("    tplOrthogonalization: now processing tpl=%s", tpl.GetName().c_str() );
             Int32 ret = OrthogonalizeTemplate(tpl,
                                   calibrationPath,
                                   restRayList,

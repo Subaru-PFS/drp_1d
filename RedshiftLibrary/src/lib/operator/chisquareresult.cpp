@@ -31,17 +31,30 @@ void CChisquareResult::Init(UInt32 n , Int32 nISM, Int32 nIGM)
     Overlap.resize( n );
     Status.resize( n );
 
+    ChiSquareIntermediate.clear();
+    IsmDustCoeffIntermediate.clear();
+    IgmMeiksinIdxIntermediate.clear();
     for(Int32 k=0; k<n; k++)
     {
         std::vector<TFloat64List> _ChiSquareISMList;
+        std::vector<TFloat64List> _IsmDustCoeffISMList;
+        std::vector<TInt32List> _IgmMeiksinIdxISMList;
         for(Int32 kism=0; kism<nISM; kism++)
         {
 
-            TFloat64List _chi2List(nIGM, DBL_MAX);
-            _ChiSquareISMList.push_back(_chi2List);
+            TFloat64List _chi2IGMList(nIGM, DBL_MAX);
+            _ChiSquareISMList.push_back(_chi2IGMList);
+
+            TFloat64List _dustCoeffIGMList(nIGM, -1.0);
+            _IsmDustCoeffISMList.push_back(_dustCoeffIGMList);
+
+            TInt32List _meiksinIdxIGMList(nIGM, -1);
+            _IgmMeiksinIdxISMList.push_back(_meiksinIdxIGMList);
 
         }
         ChiSquareIntermediate.push_back(_ChiSquareISMList);
+        IsmDustCoeffIntermediate.push_back(_IsmDustCoeffISMList);
+        IgmMeiksinIdxIntermediate.push_back(_IgmMeiksinIdxISMList);
     }
 }
 
