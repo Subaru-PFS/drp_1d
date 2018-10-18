@@ -243,7 +243,7 @@ Bool CTemplateCatalog::Save( const char* dirPath, Bool saveWithoutContinuum )
             const CTemplate& tpl = GetTemplate( category, j );
             const CTemplate& tplWithoutCOntinuum = GetTemplateWithoutContinuum( category, j );
 
-            std::string filePath = tpl.GetName() + ".txt";
+            std::string filePath = tpl.GetName();
             path file (filePath.c_str());
             path full_path = dirCategoryFull / file;
             if(saveWithoutContinuum)

@@ -208,5 +208,3 @@ if(ETAGS)
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 endif(ETAGS)
 
-add_executable(debug_target debug_target/foo.cpp)
-target_link_libraries(debug_target ${LIB_NAME} ${cpf-redshift_THIRDPARTY_LIBS})
