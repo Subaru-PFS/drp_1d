@@ -69,7 +69,7 @@ const std::string CZweiModelSolve::GetDescription()
     desc.append("\tparam: zweimodel.emvelocityfitmax = <float value>\n");
     desc.append("\tparam: zweimodel.absvelocityfitmin = <float value>\n");
     desc.append("\tparam: zweimodel.absvelocityfitmax = <float value>\n");
-    desc.append("\tparam: zweimodel.fastfitlargegridstep = <float value>, deactivated if negative or zero\n");
+    desc.append("\tparam: zweimodel.firstpass.largegridstep = <float value>, deactivated if negative or zero\n");
     desc.append("\tparam: zweimodel.pdfcombination = {""marg"", ""bestchi2""}\n");
     desc.append("\tparam: zweimodel.stronglinesprior = <float value>, penalization factor = positive value or -1 to deactivate\n");
     desc.append("\tparam: zweimodel.saveintermediateresults = {""yes"", ""no""}\n");
@@ -90,16 +90,16 @@ Bool CZweiModelSolve::PopulateParameters( CDataStore& dataStore )
     dataStore.GetScopedParam( "zweimodel.linetypefilter", m_opt_linetypefilter, "no" );
     dataStore.GetScopedParam( "zweimodel.lineforcefilter", m_opt_lineforcefilter, "no" );
     dataStore.GetScopedParam( "zweimodel.fittingmethod", m_opt_fittingmethod, "hybrid" );
-    dataStore.GetScopedParam( "zweimodel.fastfitlargegridstep", m_opt_twosteplargegridstep, 0.001 );
+    dataStore.GetScopedParam( "zweimodel.firstpass.largegridstep", m_opt_firstpass_largegridstep, 0.001 );
     std::string redshiftSampling;
     dataStore.GetParam( "redshiftsampling", redshiftSampling, "lin" ); //TODO: sampling in log cannot be used for now as zqual descriptors assume constant dz.
     if(redshiftSampling=="log")
     {
-        m_opt_twosteplargegridsampling = "log";
+        m_opt_firstpass_largegridsampling = "log";
     }else{
-        m_opt_twosteplargegridsampling = "lin";
+        m_opt_firstpass_largegridsampling = "lin";
     }
-    Log.LogDetail( "    fastfitlargegridsampling (auto set from redshiftsampling param.): %s", m_opt_twosteplargegridsampling.c_str());
+    Log.LogDetail( "    firstpass - largegridsampling (auto set from redshiftsampling param.): %s", m_opt_firstpass_largegridsampling.c_str());
 
     dataStore.GetScopedParam( "zweimodel.continuumcomponent", m_opt_continuumcomponent, "fromspectrum" );
     dataStore.GetScopedParam( "zweimodel.rigidity", m_opt_rigidity, "rules" );
@@ -184,7 +184,8 @@ Bool CZweiModelSolve::PopulateParameters( CDataStore& dataStore )
     Log.LogInfo( "    -continuumcomponent: %s", m_opt_continuumcomponent.c_str());
     Log.LogInfo( "    -continuumreestimation: %s", m_opt_continuumreest.c_str());
     Log.LogInfo( "    -extremacount: %.3f", m_opt_extremacount);
-    Log.LogInfo( "    -fastfitlargegridstep: %.6f", m_opt_twosteplargegridstep);
+    Log.LogInfo( "    -first pass:");
+    Log.LogInfo( "      -largegridstep: %.6f", m_opt_firstpass_largegridstep);
 
     Log.LogInfo( "    -pdf-stronglinesprior: %e", m_opt_stronglinesprior);
     Log.LogInfo( "    -pdf-combination: %s", m_opt_pdfcombination.c_str()); // "marg";    // "bestchi2";    // "bestproba";
@@ -732,7 +733,7 @@ Bool CZweiModelSolve::Solve( CDataStore& dataStore,
             _redshifts.push_back(zref);
         }
         m_opt_extremacount = 1; //override nextrema count
-        m_opt_twosteplargegridstep = 0; //override fastfitlargegrid
+        m_opt_firstpass_largegridstep = 0; //override fastfitlargegrid
         Log.LogInfo( "Linemodel - hack - Loaded zref for spc %s : zref=%f", spc.GetName().c_str(), zref);
     }else{
         _redshifts = redshifts;
@@ -860,8 +861,8 @@ Bool CZweiModelSolve::Solve( CDataStore& dataStore,
                       m_opt_continuumreest,
                       m_opt_rules,
                       m_opt_velocityfit,
-                      m_opt_twosteplargegridstep,
-                      m_opt_twosteplargegridsampling,
+                      m_opt_firstpass_largegridstep,
+                      m_opt_firstpass_largegridsampling,
                       m_opt_rigidity,
                       m_opt_tplratio_reldirpath,
                       m_opt_offsets_reldirpath,
@@ -926,8 +927,8 @@ Bool CZweiModelSolve::Solve( CDataStore& dataStore,
                       m_opt_continuumreest,
                       m_opt_rules,
                       m_opt_velocityfit,
-                      m_opt_twosteplargegridstep,
-                      m_opt_twosteplargegridsampling,
+                      m_opt_firstpass_largegridstep,
+                      m_opt_firstpass_largegridsampling,
                       m_opt_rigidity,
                       m_opt_tplratio_reldirpath,
                       m_opt_offsets_reldirpath,

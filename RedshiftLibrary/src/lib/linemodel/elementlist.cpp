@@ -291,14 +291,14 @@ Int32 CLineModelElementList::setPassMode(Int32 iPass)
     if(iPass==1)
     {
         m_forceDisableLyaFitting = true;
-        m_forcedisableTplratioISMfit = true;
-        m_forcedisableMoreMultipleContinuumfit=true;
+        m_forcedisableTplratioISMfit = m_opt_firstpass_forcedisableTplratioISMfit;
+        m_forcedisableMultipleContinuumfit = m_opt_firstpass_forcedisableMultipleContinuumfit;
     }
     if(iPass==2)
     {
         m_forceDisableLyaFitting = false;
         m_forcedisableTplratioISMfit = false;
-        m_forcedisableMoreMultipleContinuumfit=false;
+        m_forcedisableMultipleContinuumfit=false;
     }
 
 
@@ -1404,9 +1404,9 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
 
     Int32 ncontinuumfitting=1;
     Int32 savedIdxContinuumFitted=-1; //for continuum tplfit
-    if(m_ContinuumComponent == "tplfit" && !m_forcedisableMoreMultipleContinuumfit)
+    if(m_ContinuumComponent == "tplfit" && !m_forcedisableMultipleContinuumfit)
     {
-        ncontinuumfitting=m_fitcontinuum_maxN;
+        ncontinuumfitting=m_opt_fitcontinuum_maxCount;
     }
 
 

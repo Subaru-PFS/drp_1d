@@ -58,6 +58,7 @@ class processParamCheck(object):
         return 0 if no deprecated is found
         """
         deprecated_keywords = ["lambdaRange", "redshiftRange", "redshiftStep"]
+        deprecated_keywords.append("fastfitlargegridstep")
         print("Info: checking for the following deprecated keywords: \n{}\n".format(deprecated_keywords))
         
         f = open(self.parampath, 'r')

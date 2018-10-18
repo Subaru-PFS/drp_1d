@@ -237,6 +237,10 @@ public:
     Float64 m_LambdaOffsetStep = 25.0;
     bool m_enableLambdaOffsetsFit;
 
+
+    Int32 m_opt_fitcontinuum_maxCount = 2;
+    bool m_opt_firstpass_forcedisableMultipleContinuumfit=true;
+    bool m_opt_firstpass_forcedisableTplratioISMfit=true;
 private:
 
     Int32 fitAmplitudesHybrid(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& spcFluxAxisNoContinuum, const CSpectrumFluxAxis &continuumfluxAxis, Float64 redshift);
@@ -325,8 +329,7 @@ private:
     Int32 m_fitContinuum_tplFitMeiksinIdx;
     Float64 m_fitContinuum_tplFitDtM;
     Float64 m_fitContinuum_tplFitMtM;
-    Int32 m_fitcontinuum_maxN = 3;
-    bool m_forcedisableMoreMultipleContinuumfit=false;
+    bool m_forcedisableMultipleContinuumfit=false;
 
     bool m_lmfit_noContinuumTemplate;
     bool m_lmfit_bestTemplate;

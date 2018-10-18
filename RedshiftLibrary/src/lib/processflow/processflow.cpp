@@ -157,8 +157,8 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
         if(methodName=="linemodel"){
             ctx.GetDataStore().SetScopedParam( "linemodelsolve.linemodel.extremacount", 1.0);
             Log.LogInfo( "Override z-search: Using overriden linemodelsolve.linemodel.extremacount: %f", 1.0);
-            ctx.GetDataStore().SetScopedParam( "linemodelsolve.linemodel.fastfitlargegridstep", 0.0);
-            Log.LogInfo( "Override z-search: Using overriden linemodelsolve.linemodel.fastfitlargegridstep: %f", 0.0);
+            ctx.GetDataStore().SetScopedParam( "linemodelsolve.linemodel.firstpass.largegridstep", 0.0);
+            Log.LogInfo( "Override z-search: Using overriden linemodelsolve.linemodel.firstpass.largegridstep: %f", 0.0);
         }
 
         Log.LogInfo( "Override z-search: Using overriden zref for spc %s : zref=%f", ctx.GetSpectrum().GetName().c_str(), zref);

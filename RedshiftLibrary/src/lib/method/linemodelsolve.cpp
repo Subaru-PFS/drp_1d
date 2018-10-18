@@ -53,8 +53,10 @@ const std::string CLineModelSolve::GetDescription()
     desc.append("\tparam: linemodel.continuumcomponent = {""fromspectrum"", ""tplfit"", ""nocontinuum"", ""zero""}\n");
     desc.append("\tparam: linemodel.continuumismfit = {""no"", ""yes""}\n");
     desc.append("\tparam: linemodel.continuumigmfit = {""no"", ""yes""}\n");
+    desc.append("\tparam: linemodel.continuumfitcount = <float value>\n");
     desc.append("\tparam: linemodel.rigidity = {""rules"", ""tplcorr"", ""tplshape""}\n");
     desc.append("\tparam: linemodel.tplratio_catalog = <relative path>\n");
+    desc.append("\tparam: linemodel.tplratio_ismfit = {""no"", ""yes""}\n");
     desc.append("\tparam: linemodel.offsets_catalog = <relative path>\n");
     desc.append("\tparam: linemodel.linewidthtype = {""instrumentdriven"", ""velocitydriven"",  ""combined"",  ""nispvsspsf201707"", ""fixed""}\n");
     desc.append("\tparam: linemodel.instrumentresolution = <float value>\n");
@@ -70,7 +72,11 @@ const std::string CLineModelSolve::GetDescription()
     desc.append("\tparam: linemodel.absvelocityfitmin = <float value>\n");
     desc.append("\tparam: linemodel.absvelocityfitmax = <float value>\n");
     desc.append("\tparam: linemodel.absvelocityfitstep = <float value>\n");
-    desc.append("\tparam: linemodel.fastfitlargegridstep = <float value>, deactivated if negative or zero\n");
+    //first pass
+    desc.append("\tparam: linemodel.firstpass.largegridstep = <float value>, deactivated if negative or zero\n");
+    desc.append("\tparam: linemodel.firstpass.tplratio_ismfit = {""no"", ""yes""}\n");
+    desc.append("\tparam: linemodel.firstpass.multiplecontinuumfit_disable = {""no"", ""yes""}\n");
+
     desc.append("\tparam: linemodel.pdfcombination = {""marg"", ""bestchi2""}\n");
     desc.append("\tparam: linemodel.stronglinesprior = <float value>, penalization factor = positive value or -1 to deactivate\n");
     desc.append("\tparam: linemodel.saveintermediateresults = {""yes"", ""no""}\n");
@@ -91,21 +97,25 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
     dataStore.GetScopedParam( "linemodel.linetypefilter", m_opt_linetypefilter, "no" );
     dataStore.GetScopedParam( "linemodel.lineforcefilter", m_opt_lineforcefilter, "no" );
     dataStore.GetScopedParam( "linemodel.fittingmethod", m_opt_fittingmethod, "hybrid" );
-    dataStore.GetScopedParam( "linemodel.fastfitlargegridstep", m_opt_twosteplargegridstep, 0.001 );
+    dataStore.GetScopedParam( "linemodel.firstpass.largegridstep", m_opt_firstpass_largegridstep, 0.001 );
+    dataStore.GetScopedParam( "linemodel.firstpass.tplratio_ismfit", m_opt_firstpass_tplratio_ismfit, "no" );
+    dataStore.GetScopedParam( "linemodel.firstpass.multiplecontinuumfit_disable", m_opt_firstpass_disablemultiplecontinuumfit, "yes" );
+
     std::string redshiftSampling;
     dataStore.GetParam( "redshiftsampling", redshiftSampling, "lin" ); //TODO: sampling in log cannot be used for now as zqual descriptors assume constant dz.
     if(redshiftSampling=="log")
     {
-        m_opt_twosteplargegridsampling = "log";
+        m_opt_firstpass_largegridsampling = "log";
     }else{
-        m_opt_twosteplargegridsampling = "lin";
+        m_opt_firstpass_largegridsampling = "lin";
     }
-    Log.LogDetail( "    fastfitlargegridsampling (auto set from redshiftsampling param.): %s", m_opt_twosteplargegridsampling.c_str());
+    Log.LogDetail( "    firstpass - largegridsampling (auto set from redshiftsampling param.): %s", m_opt_firstpass_largegridsampling.c_str());
 
     dataStore.GetScopedParam( "linemodel.continuumcomponent", m_opt_continuumcomponent, "fromspectrum" );
     if(m_opt_continuumcomponent=="tplfit"){
         dataStore.GetScopedParam( "linemodel.continuumismfit", m_opt_tplfit_dustfit, "yes" );
         dataStore.GetScopedParam( "linemodel.continuumigmfit", m_opt_tplfit_igmfit, "yes" );
+        dataStore.GetScopedParam( "linemodel.continuumfitcount", m_opt_continuumfitcount, 2 );
     }
     dataStore.GetScopedParam( "linemodel.rigidity", m_opt_rigidity, "rules" );
     if(m_opt_rigidity=="tplshape")
@@ -194,10 +204,14 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
     if(m_opt_continuumcomponent=="tplfit"){
         Log.LogInfo( "      -tplfit_ismfit: %s", m_opt_tplfit_dustfit.c_str());
         Log.LogInfo( "      -tplfit_igmfit: %s", m_opt_tplfit_igmfit.c_str());
+        Log.LogInfo( "      -continuum fit count:  %.0f", m_opt_continuumfitcount);
     }
     Log.LogInfo( "    -continuumreestimation: %s", m_opt_continuumreest.c_str());
-    Log.LogInfo( "    -extremacount: %.3f", m_opt_extremacount);
-    Log.LogInfo( "    -fastfitlargegridstep: %.6f", m_opt_twosteplargegridstep);
+    Log.LogInfo( "    -extremacount: %.0f", m_opt_extremacount);
+    Log.LogInfo( "    -first pass:");
+    Log.LogInfo( "      -largegridstep: %.6f", m_opt_firstpass_largegridstep);
+    Log.LogInfo( "      -tplratio_ismfit: %s", m_opt_firstpass_tplratio_ismfit.c_str());
+    Log.LogInfo( "      -multiplecontinuumfit_disable: %s", m_opt_firstpass_disablemultiplecontinuumfit.c_str());
 
     Log.LogInfo( "    -pdf-stronglinesprior: %e", m_opt_stronglinesprior);
     Log.LogInfo( "    -pdf-euclidNHaEmittersPriorStrength: %e", m_opt_euclidNHaEmittersPriorStrength);
@@ -640,11 +654,13 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
     if(m_opt_continuumcomponent=="tplfit"){
         linemodel.m_opt_tplfit_dustFit = Int32(m_opt_tplfit_dustfit=="yes");
         linemodel.m_opt_tplfit_extinction = Int32(m_opt_tplfit_igmfit=="yes");
+        linemodel.m_opt_fitcontinuum_maxN = m_opt_continuumfitcount;
     }
 
     if(m_opt_rigidity=="tplshape")
     {
         linemodel.m_opt_tplratio_ismFit = Int32(m_opt_tplratio_ismfit=="yes");
+        linemodel.m_opt_firstpass_tplratio_ismFit = Int32(m_opt_firstpass_tplratio_ismfit=="yes");
     }
 
     if(m_opt_continuumcomponent=="fromspectrum"){
@@ -695,8 +711,8 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
                                           m_opt_continuumreest,
                                           m_opt_rules,
                                           m_opt_velocityfit,
-                                          m_opt_twosteplargegridstep,
-                                          m_opt_twosteplargegridsampling,
+                                          m_opt_firstpass_largegridstep,
+                                          m_opt_firstpass_largegridsampling,
                                           m_opt_rigidity,
                                           m_opt_tplratio_reldirpath,
                                           m_opt_offsets_reldirpath);

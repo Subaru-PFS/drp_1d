@@ -49,7 +49,7 @@ const std::string COperatorDTreeCSolve::GetDescription()
     desc.append("\tparam: linemodel.rules = {""all"", ""no""}\n");
     desc.append("\tparam: linemodel.continuumreestimation = {""no"", ""onlyextrema"", ""always""}\n");
     desc.append("\tparam: linemodel.extremacount = <float value>\n");
-    desc.append("\tparam: linemodel.fastfitlargegridstep = <float value>, deactivated if negative or zero\n");
+    desc.append("\tparam: linemodel.firstpass.largegridstep = <float value>, deactivated if negative or zero\n");
 
     desc.append("\tparam: chisquare.overlapthreshold = <float value>\n");
     desc.append("\tparam: chisquare.redshiftsupport = {""full"", ""extremaextended""}\n");
@@ -133,7 +133,7 @@ Bool COperatorDTreeCSolve::Solve(CDataStore &dataStore, const CSpectrum &spc, co
     Float64 opt_extremacount;
     dataStore.GetScopedParam( "linemodel.extremacount", opt_extremacount, 10.0 );
     Float64 opt_twosteplargegridstep;
-    dataStore.GetScopedParam( "linemodel.fastfitlargegridstep", opt_twosteplargegridstep, 0.001 );
+    dataStore.GetScopedParam( "linemodel.firstpass.largegridstep", opt_twosteplargegridstep, 0.001 );
 
 
     //_///////////////////////////////////////////////////////////////////////////////////////////////////////////////////

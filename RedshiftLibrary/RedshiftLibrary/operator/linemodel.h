@@ -181,9 +181,11 @@ public:
 
     Int32 m_opt_tplfit_dustFit = 1;
     Int32 m_opt_tplfit_extinction = 1;
-
+    Int32 m_opt_fitcontinuum_maxN = 2;
 
     Int32 m_opt_tplratio_ismFit = 1;
+    Int32 m_opt_firstpass_tplratio_ismFit=0;
+    Int32 m_opt_firstpass_multiplecontinuumfit_disable=1;
 private:
 
     std::shared_ptr<CLineModelResult> m_result;

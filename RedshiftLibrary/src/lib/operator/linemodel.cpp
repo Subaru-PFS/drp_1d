@@ -317,6 +317,13 @@ Int32 COperatorLineModel::ComputeFirstPass(
             throw runtime_error("  Operator-Linemodel: Failed to init tpl-ratios. aborting...");
             return -1;
         }
+
+        m_model->m_opt_firstpass_forcedisableTplratioISMfit = m_opt_firstpass_tplratio_ismFit;
+    }
+    if(opt_continuumcomponent == "tplfit")
+    {
+        m_model->m_opt_fitcontinuum_maxCount = m_opt_fitcontinuum_maxN;
+        m_model->m_opt_firstpass_forcedisableMultipleContinuumfit = m_opt_firstpass_multiplecontinuumfit_disable;
     }
 
     // init catalog offsets
