@@ -271,7 +271,7 @@ static void add_template_category(CTemplateCatalog &catalog,
     shared_ptr<CTemplate> _template;
     for (int i = 0; i < count; i++)
     {
-        string name = category + "_test_template_" + to_string(i);
+        string name = category + "_test_template_" + to_string(i) + ".txt";
         _template = (shared_ptr<CTemplate>)(new CTemplate(name, category));
         generate_template(*_template, template_size, lambda_min, lambda_max);
         catalog.Add(_template);
