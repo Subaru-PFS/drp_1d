@@ -115,7 +115,7 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
     if(m_opt_continuumcomponent=="tplfit"){
         dataStore.GetScopedParam( "linemodel.continuumismfit", m_opt_tplfit_dustfit, "yes" );
         dataStore.GetScopedParam( "linemodel.continuumigmfit", m_opt_tplfit_igmfit, "yes" );
-        dataStore.GetScopedParam( "linemodel.continuumfitcount", m_opt_continuumfitcount, 2 );
+        dataStore.GetScopedParam( "linemodel.continuumfitcount", m_opt_continuumfitcount, 1 );
     }
     dataStore.GetScopedParam( "linemodel.rigidity", m_opt_rigidity, "rules" );
     if(m_opt_rigidity=="tplshape")

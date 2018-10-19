@@ -50,7 +50,7 @@ public:
 
 private:
     std::vector<std::vector<SValues>>    m_fitValues; //[nz][n_continuum_candidates]
-    Int32 n_continuum_candidates=3;
+    Int32 n_continuum_candidates=10;
 
     Float64    m_minRedshift;
     Float64    m_maxRedshift;
