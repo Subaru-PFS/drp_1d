@@ -1,17 +1,12 @@
 @PACKAGE_INIT@
 
-set_and_check ( cpf-redshift_INCLUDE_DIR "@cpf-redshift_INCLUDE_DIR@")
-set_and_check ( cpf-redshift_THIRDPARTY_INCLUDE_DIR "@cpf-redshift_THIRDPARTY_INCLUDE_DIR@")
+set_and_check ( cpf-redshift_INCLUDE_DIR "@PACKAGE_cpf-redshift_INCLUDE_DIR@")
+set_and_check ( cpf-redshift_THIRDPARTY_INCLUDE_DIR "@PACKAGE_cpf-redshift_THIRDPARTY_INCLUDE_DIR@")
 
-set_and_check ( cpf-redshift_LINK_DIR "@cpf-redshift_LINK_DIR@")
-set_and_check ( cpf-redshift_THIRDPARTY_LINK_DIR "@cpf-redshift_THIRDPARTY_LINK_DIR@")
+set_and_check ( cpf-redshift_LINK_DIR "@PACKAGE_cpf-redshift_LINK_DIR@")
+set_and_check ( cpf-redshift_THIRDPARTY_LINK_DIR "@PACKAGE_cpf-redshift_THIRDPARTY_LINK_DIR@")
 
-if ( ${CMAKE_BUILD_TYPE} STREQUAL "Release" )
 set ( cpf-redshift_LIB "cpf-redshift" )
-endif()
-if ( ${CMAKE_BUILD_TYPE} STREQUAL "Debug" )
-set ( cpf-redshift_LIBDEBUG "libcpf-redshift-debug" )
-endif()
 set ( cpf-redshift_THIRDPARTY_LIBS "@cpf-redshift_THIRDPARTY_LIBS@" )
 
 set ( cpf-redshift_STATIC_LIB "libcpf-redshift.a" )

@@ -114,7 +114,7 @@ FILE (STRINGS ${ROOT_DIR}/VERSION VERSION_NUMBER)
 #--------------------------------------------------------
 # Compile library
 #--------------------------------------------------------
-SET( LIB_NAME cpf-redshift${EXT} )
+SET( LIB_NAME cpf-redshift )
 
 FILE( GLOB_RECURSE LIB_SOURCE_FILES ${ROOT_DIR}/RedshiftLibrary/src/lib/*.cpp )
 
@@ -185,14 +185,15 @@ INCLUDE ( CMakePackageConfigHelpers )
 # Configure config file (this is used by find_package to find where the library is)
 CONFIGURE_PACKAGE_CONFIG_FILE(
        ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cpf-redshift-config.cmake.in
-       ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cpf-redshift-config.cmake
-       INSTALL_DESTINATION cmake
+       ${CMAKE_CURRENT_BINARY_DIR}/cmake/cpf-redshift-config.cmake
+       INSTALL_DESTINATION ${LIB_INSTALL_DIR}/cmake
+       PATH_VARS cpf-redshift_INCLUDE_DIR cpf-redshift_THIRDPARTY_INCLUDE_DIR cpf-redshift_LINK_DIR cpf-redshift_THIRDPARTY_LINK_DIR
         )
 
 # Configure version file (this is used by find_package to determine a matching version)
 CONFIGURE_FILE(
        ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cpf-redshift-config-version.cmake.in
-       ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cpf-redshift-config-version.cmake
+       ${CMAKE_CURRENT_BINARY_DIR}/cmake/cpf-redshift-config-version.cmake
        @ONLY
 )
 

@@ -56,7 +56,7 @@ You can build either in **Debug** or **Release** mode
 	make package
 
 Note :
-If you don't specify any **-DCMAKE_BUILD_TYPE=xxxxx** , it will build  by default in Release mode
+If you don't specify any **-DCMAKE_BUILD_TYPE=xxxxx** , it will build by default in Release mode
 
 
 ##### shared and static
@@ -72,13 +72,50 @@ or
 
 In order to build tests, shared libs version must be enabled :
 
-	cmake .. -DBUILD_SHARED_LIBS=ON
+    cmake .. -DBUILD_SHARED_LIBS=ON
+
+Tests can output line coverage statistics if you define `TEST_COVERAGE` :
+
+    cmake .. -DBUILD_SHARED_LIBS=ON -DTEST_COVERAGE=ON
 
 Run tests with :
 
-	make test
+    make test
 
-#### 4. Build and install python interface and client with setuptools
+Create coverage reports with :
+
+     GCOV_PREFIX=$HOME/src/cpf-redshift/RedshiftLibrary/ GCOV_PREFIX_STRIP=4 lcov -q -c -t "result" -o tests.cov --no-external -b $HOME/src/cpf-redshift/RedshiftLibrary/ -d CMakeFiles
+     lcov -q -r tests.cov '*/tests/src/*' -o coverage.info
+	 genhtml -o coverage coverage.info
+
+#### 4. Usage in client code
+
+##### CMakeLists.txt
+
+You client `CMakeLists.txt` must include :
+
+    FIND_PACKAGE( cpf-redshift )
+    INCLUDE_DIRECTORIES( ${cpf-redshift_INCLUDE_DIR} ${cpf-redshift_THIRDPARTY_INCLUDE_DIR}  )
+	LINK_DIRECTORIES( ${cpf-redshift_LINK_DIR} ${cpf-redshift_THIRDPARTY_LINK_DIR} )
+
+    TARGET_LINK_LIBRARIES( YOUR_TARGET ${cpf-redshift_THIRDPARTY_LIBS} ${cpf-redshift_LIB})
+    # or alternatively, if you want to link to boost-tests :
+    TARGET_LINK_LIBRARIES( YOUR_TARGET ${cpf-redshift_THIRDPARTY_LIBS} ${tests_THIRDPARTY_LIBS} ${cpf-redshift_LIB})
+
+###### Building
+
+Say you have built a Release and a Debug version of cpf-redshift in `~/src/cpf-redshift/build` and
+`~/src/cpf-redshift/build-debug` directories.
+
+You can build each version with :
+
+     CMAKE_MODULE_PATH=$HOME/src/cpf-redshift/build/ cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=ON
+
+or :
+
+     CMAKE_MODULE_PATH=$HOME/src/cpf-redshift/build-debug/ cmake .. -DCMAKE_BUILD_TYPE=Debug -DBUILD_SHARED_LIBS=ON
+
+#### 5. Build and install python interface and client with setuptools
 
 ##### With python setup.py install
 
