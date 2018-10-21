@@ -42,6 +42,8 @@ public:
     void                    SaveCandidatesResultError( const std::string spcName, const std::string processingID, const boost::filesystem::path& dir );
     void                    SaveAllResults(const CDataStore& store, const boost::filesystem::path& dir , const std::string opt) const;
     void                    SaveReliabilityResult( const CDataStore& store, const boost::filesystem::path& dir );
+    void                    SaveStellarResultError( const std::string spcName, const std::string processingID, const boost::filesystem::path& dir );
+    void                    SaveStellarResult( const CDataStore& store, const boost::filesystem::path& dir );
 
     std::string             GetScope( const COperatorResult&  result) const;
 

@@ -164,6 +164,8 @@ void COperatorResultStore::SaveRedshiftResult( const CDataStore& store, const bf
         auto  result = GetGlobalResult( "redshiftresult" ).lock();
         if(result){
             result->SaveLine( store, outputStream );
+        }else{
+            throw std::runtime_error("Unable to retrieve redshift result for saving");
         }
     }
 }
@@ -175,6 +177,48 @@ void COperatorResultStore::SaveRedshiftResultError(  const std::string spcName, 
         std::fstream outputStream;
         // Save result at root of output directory
         Int32 ret = CreateResultStorage( outputStream, bfs::path( "redshift.csv" ), dir );
+
+        if(ret==1)
+        {
+            outputStream <<  "#Spectrum\tProcessingID\tRedshift\tMerit\tTemplate\tMethod\tDeltaz\tReliability\tsnrHa\tlfHa\tType"<< std::endl;
+        }
+
+
+        outputStream <<  spcName << "\t" << processingID << "\t-1\t-1\t-1\t-1\t-1\t-1\t-1\t-1\t-1"<< std::endl;
+    }
+}
+
+void COperatorResultStore::SaveStellarResult( const CDataStore& store, const bfs::path& dir )
+{
+    // Append best redshift result line to output file
+    {
+        std::fstream outputStream;
+        // Save result at root of output directory
+        Int32 ret = CreateResultStorage( outputStream, bfs::path( "stellar.csv" ), dir );
+
+        //*
+        if(ret==1)
+        {
+            outputStream <<  "#Spectrum\tProcessingID\tRedshift\tMerit\tTemplate\tMethod\tDeltaz\tReliability\tsnrHa\tlfHa\tType"<< std::endl;
+        }
+        //*/
+
+        auto  result = GetGlobalResult( "stellarsolve.stellarresult" ).lock();
+        if(result){
+            result->SaveLine( store, outputStream );
+        }else{
+            throw std::runtime_error("Unable to retrieve stellar result for saving");
+        }
+    }
+}
+
+void COperatorResultStore::SaveStellarResultError(  const std::string spcName,  const std::string processingID, const bfs::path& dir )
+{
+    // Append best redshift result line to output file
+    {
+        std::fstream outputStream;
+        // Save result at root of output directory
+        Int32 ret = CreateResultStorage( outputStream, bfs::path( "stellar.csv" ), dir );
 
         if(ret==1)
         {

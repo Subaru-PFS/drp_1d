@@ -73,6 +73,10 @@ void  CDataStore::SaveRedshiftResult( const boost::filesystem::path& dir )
     m_ResultStore.SaveRedshiftResult( *this, dir );
 }
 
+void  CDataStore::SaveStellarResult( const boost::filesystem::path& dir )
+{
+    m_ResultStore.SaveStellarResult( *this, dir );
+}
 
 void  CDataStore::SaveCandidatesResult( const boost::filesystem::path& dir )
 {
