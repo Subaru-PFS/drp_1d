@@ -50,6 +50,7 @@
 #include <RedshiftLibrary/method/linemodeltplshapesolve.h>
 #include <RedshiftLibrary/method/linemodeltplshapesolveresult.h>
 #include <RedshiftLibrary/method/tplcombinationsolve.h>
+#include <RedshiftLibrary/processflow/classificationresult.h>
 
 #include <RedshiftLibrary/statistics/pdfcandidateszresult.h>
 #include <RedshiftLibrary/reliability/zqual.h>
@@ -654,8 +655,10 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
         }
     }
 
-    //estimate star/galaxy classification
+    //estimate star/galaxy/qso classification
     Log.LogInfo("===============================================");
+    std::shared_ptr<CClassificationResult> classifResult = std::shared_ptr<CClassificationResult>( new CClassificationResult() );
+    Float64 qsoEvidence=-DBL_MAX;
     Float64 stellarEvidence=-DBL_MAX;
     Float64 galaxyEvidence=-DBL_MAX;
     mResult->GetEvidenceFromPdf(ctx.GetDataStore(), galaxyEvidence);
@@ -673,7 +676,18 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
         }
     }
     Log.LogInfo( "Setting object type: %s", typeLabel.c_str());
-    mResult->SetTypeLabel(typeLabel);
+    mResult->SetTypeLabel(typeLabel); //maybe this is unecessary since there is a classifresult now
+    classifResult->SetTypeLabel(typeLabel);
+    classifResult->SetG(galaxyEvidence);
+    classifResult->SetS(stellarEvidence);
+    classifResult->SetQ(qsoEvidence);
+
+    //save the classification results
+    if( classifResult ) {
+        ctx.GetDataStore().StoreScopedGlobalResult( "classificationresult", classifResult );
+    }else{
+      throw std::runtime_error("Unable to store method result");
+    }
 
     //finally save the method results with (optionally) the zqual label
     if( mResult ) {

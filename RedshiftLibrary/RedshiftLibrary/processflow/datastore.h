@@ -90,6 +90,7 @@ public:
     void                            SaveCandidatesResult( const boost::filesystem::path& dir );
     void                            SaveReliabilityResult( const boost::filesystem::path& dir );
     void                            SaveStellarResult( const boost::filesystem::path& dir );
+    void                            SaveClassificationResult( const boost::filesystem::path& dir );
     void                            SaveAllResults(const boost::filesystem::path& dir , const std::string opt) const;
 
 

@@ -230,6 +230,49 @@ void COperatorResultStore::SaveStellarResultError(  const std::string spcName,  
     }
 }
 
+
+void COperatorResultStore::SaveClassificationResult( const CDataStore& store, const bfs::path& dir )
+{
+    // Append classif. result line to output file
+    {
+        std::fstream outputStream;
+        // Save result at root of output directory
+        Int32 ret = CreateResultStorage( outputStream, bfs::path( "classification.csv" ), dir );
+
+        //*
+        if(ret==1)
+        {
+            outputStream <<  "#Spectrum\tProcessingID\ttype\tevidenceG\tevidenceS\tevidenceQ"<< std::endl;
+        }
+        //*/
+
+        auto  result = GetGlobalResult( "classificationresult" ).lock();
+        if(result){
+            result->SaveLine( store, outputStream );
+        }else{
+            throw std::runtime_error("Unable to retrieve classification result for saving");
+        }
+    }
+}
+
+void COperatorResultStore::SaveClassificationResultError(  const std::string spcName,  const std::string processingID, const bfs::path& dir )
+{
+    // Append best classification result line to output file
+    {
+        std::fstream outputStream;
+        // Save result at root of output directory
+        Int32 ret = CreateResultStorage( outputStream, bfs::path( "classification.csv" ), dir );
+
+        if(ret==1)
+        {
+            outputStream <<  "#Spectrum\tProcessingID\ttype\tevidenceG\tevidenceS\tevidenceQ"<< std::endl;
+        }
+
+
+        outputStream <<  spcName << "\t" << processingID << "\t-1\t-1\t-1\t-1"<< std::endl;
+    }
+}
+
 void COperatorResultStore::SaveCandidatesResult( const CDataStore& store, const bfs::path& dir )
 {
     // Append candidate result line to output candidate file
