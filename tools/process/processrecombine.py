@@ -104,6 +104,10 @@ class processRecombine(object):
             dest_path = os.path.join(datasetOutputPath, "templates_nocontinuum")
             shutil.copytree(source_path, dest_path)
             
+            #merge classification.csv files
+            self.mergeCsvFiles(subpathsList, datasetOutputPath, fileName="classification.csv", verbose=True)
+            print("WARNING: classification.csv has been recombined!")
+            
             #merge stellar.csv files
             self.mergeCsvFiles(subpathsList, datasetOutputPath, fileName="stellar.csv", verbose=True)
             print("WARNING: stellar.csv has been recombined!")
