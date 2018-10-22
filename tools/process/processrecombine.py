@@ -103,6 +103,10 @@ class processRecombine(object):
             source_path = os.path.join(subpathsList[0], "templates_nocontinuum")
             dest_path = os.path.join(datasetOutputPath, "templates_nocontinuum")
             shutil.copytree(source_path, dest_path)
+            
+            #merge stellar.csv files
+            self.mergeCsvFiles(subpathsList, datasetOutputPath, fileName="stellar.csv", verbose=True)
+            print("WARNING: stellar.csv has been recombined!")
   
         except Exception as e:
             if not enableSkipUnfinished:
