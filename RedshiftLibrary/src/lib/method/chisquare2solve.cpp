@@ -149,16 +149,16 @@ std::shared_ptr<CChisquare2SolveResult> CMethodChisquare2Solve::Compute(CDataSto
 }
 
 Bool CMethodChisquare2Solve::Solve(CDataStore& resultStore,
-                                    const CSpectrum& spc,
-                                    const CSpectrum& spcWithoutCont,
-                                    const CTemplate& tpl,
-                                    const CTemplate& tplWithoutCont,
-                                    const TFloat64Range& lambdaRange,
-                                    const TFloat64List& redshifts,
-                                    Float64 overlapThreshold,
-                                    std::vector<CMask> maskList,
-                                    Int32 spctype,
-                                    std::string opt_interp,
+                                   const CSpectrum& spc,
+                                   const CSpectrum& spcWithoutCont,
+                                   const CTemplate& tpl,
+                                   const CTemplate& tplWithoutCont,
+                                   const TFloat64Range& lambdaRange,
+                                   const TFloat64List& redshifts,
+                                   Float64 overlapThreshold,
+                                   std::vector<CMask> maskList,
+                                   Int32 spctype,
+                                   std::string opt_interp,
                                    std::string opt_extinction,
                                    std::string opt_dustFitting )
 {

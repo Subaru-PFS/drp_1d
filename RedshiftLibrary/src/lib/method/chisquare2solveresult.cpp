@@ -321,7 +321,7 @@ Int32 CChisquare2SolveResult::GetBestModel(const CDataStore& store, Float64 z, s
     }else if(m_type == nType_continuumOnly){
         scopeStr = "chisquare_continuum";
     }
-    std::string scope = store.GetScope( *this ) + "chisquarelogsolve." + scopeStr.c_str();
+    std::string scope = store.GetScope( *this ) + "chisquare2solve." + scopeStr.c_str();
     TOperatorResultMap meritResults = store.GetPerTemplateResult(scope.c_str());
 
     Float64 tmpMerit = DBL_MAX ;

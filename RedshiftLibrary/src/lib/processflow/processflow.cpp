@@ -260,72 +260,72 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
         CCalibrationConfigHelper calibrationConfig;
         calibrationConfig.Init(calibrationDirPath);
 
-	std::string starTemplates = calibrationConfig.Get_starTemplates_relpath();
+        std::string starTemplates = calibrationConfig.Get_starTemplates_relpath();
 
-            Log.LogInfo( "    Processflow - Loading star templates catalog : %s", starTemplates.c_str());
-            std::string templateDir = (calibrationFolder/starTemplates.c_str()).string();
+        Log.LogInfo( "    Processflow - Loading star templates catalog : %s", starTemplates.c_str());
+        std::string templateDir = (calibrationFolder/starTemplates.c_str()).string();
 
-            TStringList   filteredStarTemplateCategoryList;
-            filteredStarTemplateCategoryList.push_back( "star" );
+        TStringList   filteredStarTemplateCategoryList;
+        filteredStarTemplateCategoryList.push_back( "star" );
 
-            //temporary star catalog handling through calibration files, should be loaded somewhere else ?
-            std::string medianRemovalMethod="zero";
-            Float64 opt_medianKernelWidth = 150; //not used
-            Int64 opt_nscales=8; //not used
-            std::string dfBinPath="absolute_path_to_df_binaries_here"; //not used
-            std::shared_ptr<CTemplateCatalog> starTemplateCatalog = std::shared_ptr<CTemplateCatalog>( new CTemplateCatalog(medianRemovalMethod, opt_medianKernelWidth, opt_nscales, dfBinPath) );
-            starTemplateCatalog->Load( templateDir.c_str() );
+        //temporary star catalog handling through calibration files, should be loaded somewhere else ?
+        std::string medianRemovalMethod="zero";
+        Float64 opt_medianKernelWidth = 150; //not used
+        Int64 opt_nscales=8; //not used
+        std::string dfBinPath="absolute_path_to_df_binaries_here"; //not used
+        std::shared_ptr<CTemplateCatalog> starTemplateCatalog = std::shared_ptr<CTemplateCatalog>( new CTemplateCatalog(medianRemovalMethod, opt_medianKernelWidth, opt_nscales, dfBinPath) );
+        starTemplateCatalog->Load( templateDir.c_str() );
 
-	    for( UInt32 i=0; i<filteredStarTemplateCategoryList.size(); i++ )
-	        {
-                    std::string category = filteredStarTemplateCategoryList[i];
-                    UInt32 ntpl = starTemplateCatalog->GetTemplateCount(category);
-                    Log.LogInfo("Loaded (category=%s) template count = %d", category.c_str(), ntpl);
-                }
+        for( UInt32 i=0; i<filteredStarTemplateCategoryList.size(); i++ )
+        {
+            std::string category = filteredStarTemplateCategoryList[i];
+            UInt32 ntpl = starTemplateCatalog->GetTemplateCount(category);
+            Log.LogInfo("Loaded (category=%s) template count = %d", category.c_str(), ntpl);
+        }
 
-            Float64 overlapThreshold;
-            ctx.GetParameterStore().Get( "starsolve.overlapThreshold", overlapThreshold, 1.0);
-            std::string opt_spcComponent;
-            ctx.GetDataStore().GetScopedParam( "starsolve.spectrum.component", opt_spcComponent, "raw" );
-            std::string opt_interp;
-            ctx.GetDataStore().GetScopedParam( "starsolve.interpolation", opt_interp, "precomputedfinegrid" );
-            std::string opt_extinction;
-            ctx.GetDataStore().GetScopedParam( "starsolve.extinction", opt_extinction, "no" );
-            std::string opt_dustFit;
-            ctx.GetDataStore().GetScopedParam( "starsolve.dustfit", opt_dustFit, "yes" );
+        Float64 overlapThreshold;
+        ctx.GetParameterStore().Get( "starsolve.overlapThreshold", overlapThreshold, 1.0);
+        std::string opt_spcComponent;
+        ctx.GetDataStore().GetScopedParam( "starsolve.spectrum.component", opt_spcComponent, "raw" );
+        std::string opt_interp;
+        ctx.GetDataStore().GetScopedParam( "starsolve.interpolation", opt_interp, "precomputedfinegrid" );
+        std::string opt_extinction;
+        ctx.GetDataStore().GetScopedParam( "starsolve.extinction", opt_extinction, "no" );
+        std::string opt_dustFit;
+        ctx.GetDataStore().GetScopedParam( "starsolve.dustfit", opt_dustFit, "yes" );
 
-            // prepare the unused masks
-            std::vector<CMask> maskList;
-            //define the redshift search grid
-            TFloat64Range starRedshiftRange=TFloat64Range(-0.5e-2, +0.5e-2);
-            Float64 starRedshiftStep = 1e-5;
-            Log.LogInfo("Stellar fitting redshift range = [%.5f, %.5f], step=%.6f", starRedshiftRange.GetBegin(), starRedshiftRange.GetEnd(), starRedshiftStep);
-            TFloat64List stars_redshifts = starRedshiftRange.SpreadOver( starRedshiftStep );
-            DebugAssert( stars_redshifts.size() > 0 );
+        // prepare the unused masks
+        std::vector<CMask> maskList;
+        //define the redshift search grid
+        TFloat64Range starRedshiftRange=TFloat64Range(-0.5e-2, +0.5e-2);
+        Float64 starRedshiftStep = 1e-5;
+        Log.LogInfo("Stellar fitting redshift range = [%.5f, %.5f], step=%.6f", starRedshiftRange.GetBegin(), starRedshiftRange.GetEnd(), starRedshiftStep);
+        TFloat64List stars_redshifts = starRedshiftRange.SpreadOver( starRedshiftStep );
+        DebugAssert( stars_redshifts.size() > 0 );
 
-            Log.LogInfo("Processing stellar fitting");
-            //CMethodChisquare2Solve solve(calibrationDirPath);
-            CMethodChisquareLogSolve solve(calibrationDirPath);
-            starResult = solve.Compute( ctx.GetDataStore(),
-                                     ctx.GetSpectrum(),
-                                     ctx.GetSpectrumWithoutContinuum(),
-                                     *starTemplateCatalog,
-                                     filteredStarTemplateCategoryList,
-                                     spcLambdaRange,
-                                     stars_redshifts,
-                                     overlapThreshold,
-                                     maskList,
-                                     "stellar_zPDF",
-                                     opt_spcComponent, opt_interp, opt_extinction, opt_dustFit);
+        Log.LogInfo("Processing stellar fitting");
+        CMethodChisquare2Solve solve(calibrationDirPath);
+        //CMethodChisquareLogSolve solve(calibrationDirPath);
+        starResult = solve.Compute( ctx.GetDataStore(),
+                                    ctx.GetSpectrum(),
+                                    ctx.GetSpectrumWithoutContinuum(),
+                                    *starTemplateCatalog,
+                                    filteredStarTemplateCategoryList,
+                                    spcLambdaRange,
+                                    stars_redshifts,
+                                    overlapThreshold,
+                                    maskList,
+                                    "stellar_zPDF",
+                                    opt_spcComponent, opt_interp, opt_extinction, opt_dustFit);
 
 
-            //finally save the stellar fitting results
-            if( starResult ) {
-                Log.LogInfo("Saving star fitting results");
-                ctx.GetDataStore().StoreScopedGlobalResult( "stellarresult", starResult );
-            }else{
-                Log.LogError( "Unable to store stellar result.");
-            }
+        //finally save the stellar fitting results
+        if( starResult ) {
+            Log.LogInfo("Saving star fitting results");
+            ctx.GetDataStore().StoreScopedGlobalResult( "stellarresult", starResult );
+        }else{
+            Log.LogError( "Unable to store stellar result.");
+        }
 
 
     }
