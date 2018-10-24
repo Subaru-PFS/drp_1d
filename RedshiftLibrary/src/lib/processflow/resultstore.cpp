@@ -206,9 +206,9 @@ void COperatorResultStore::SaveStellarResult( const CDataStore& store, const bfs
         auto  result = GetGlobalResult( "stellarsolve.stellarresult" ).lock();
         if(result){
             result->SaveLine( store, outputStream );
-        }else{
-            throw std::runtime_error("Unable to retrieve stellar result for saving");
-        }
+        }//else{
+        //    throw std::runtime_error("Unable to retrieve stellar result for saving");
+        //}
     }
 }
 
@@ -249,9 +249,9 @@ void COperatorResultStore::SaveClassificationResult( const CDataStore& store, co
         auto  result = GetGlobalResult( "classificationresult" ).lock();
         if(result){
             result->SaveLine( store, outputStream );
-        }else{
-            throw std::runtime_error("Unable to retrieve classification result for saving");
-        }
+        }//else{
+        //    throw std::runtime_error("Unable to retrieve classification result for saving");
+        //}
     }
 }
 

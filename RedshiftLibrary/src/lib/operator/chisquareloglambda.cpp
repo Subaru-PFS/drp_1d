@@ -521,10 +521,11 @@ void COperatorChiSquareLogLambda::freeFFTPlans()
  * @param spcMaskAdditional
  * @return
  */
-Int32 COperatorChiSquareLogLambda::FitAllz(
-    const TFloat64Range &lambdaRange, std::shared_ptr<CChisquareResult> result,
-    std::vector<Int32> igmMeiksinCoeffs, std::vector<Int32> ismEbmvCoeffs,
-    CMask spcMaskAdditional)
+Int32 COperatorChiSquareLogLambda::FitAllz(const TFloat64Range &lambdaRange,
+                                           std::shared_ptr<CChisquareResult> result,
+                                           std::vector<Int32> igmMeiksinCoeffs,
+                                           std::vector<Int32> ismEbmvCoeffs,
+                                           CMask spcMaskAdditional)
 {
     bool verboseLogFitAllz = false;
 
@@ -785,11 +786,16 @@ Int32 COperatorChiSquareLogLambda::FitAllz(
  * @param ismEbmvCoeffs
  * @return
  */
-Int32 COperatorChiSquareLogLambda::FitRangez(
-    Float64 *spectrumRebinedLambda, Float64 *spectrumRebinedFluxRaw,
-    Float64 *error, Float64 *tplRebinedLambda, Float64 *tplRebinedFluxRaw,
-    UInt32 nSpc, UInt32 nTpl, std::shared_ptr<CChisquareResult> result,
-    std::vector<Int32> igmMeiksinCoeffs, std::vector<Int32> ismEbmvCoeffs)
+Int32 COperatorChiSquareLogLambda::FitRangez(Float64 *spectrumRebinedLambda,
+                                             Float64 *spectrumRebinedFluxRaw,
+                                             Float64 *error,
+                                             Float64 *tplRebinedLambda,
+                                             Float64 *tplRebinedFluxRaw,
+                                             UInt32 nSpc,
+                                             UInt32 nTpl,
+                                             std::shared_ptr<CChisquareResult> result,
+                                             std::vector<Int32> igmMeiksinCoeffs,
+                                             std::vector<Int32> ismEbmvCoeffs)
 {
     Float64 redshiftValueMeiksin = result->Redshifts[0];
     if (verboseLogFitFitRangez)
@@ -1272,15 +1278,19 @@ Int32 COperatorChiSquareLogLambda::FitRangez(
     }
 
     //*
-    Log.LogDetail("  Operator-ChisquareLog: FitRangez: interpolating (lin) z "
-                  "result from n=%d (min=%f, max=%f) to n=%d (min=%f, max=%f)",
-                  z_vect.size(), zreversed_array[0],
-                  zreversed_array[z_vect.size() - 1], result->Redshifts.size(),
-                  result->Redshifts[0],
-                  result->Redshifts[result->Redshifts.size() - 1]);
-    InterpolateResult(chi2reversed_array, zreversed_array,
-                      &result->Redshifts.front(), z_vect.size(),
-                      result->Redshifts.size(), result->ChiSquare, DBL_MAX);
+    Log.LogDetail("  Operator-ChisquareLog: FitRangez: interpolating (lin) z result from n=%d (min=%f, max=%f) to n=%d (min=%f, max=%f)",
+                  z_vect.size(),
+                  zreversed_array[0],
+            zreversed_array[z_vect.size() - 1],
+            result->Redshifts.size(),
+            result->Redshifts[0],
+            result->Redshifts[result->Redshifts.size() - 1]);
+    InterpolateResult(chi2reversed_array,
+                      zreversed_array,
+                      &result->Redshifts.front(),
+                      z_vect.size(),
+                      result->Redshifts.size(),
+                      result->ChiSquare, DBL_MAX);
     //*/
 
     //*
@@ -1330,10 +1340,15 @@ Int32 COperatorChiSquareLogLambda::FitRangez(
     return 0;
 }
 
-Int32 COperatorChiSquareLogLambda::InterpolateResult(
-    const Float64 *in, const Float64 *inGrid, const Float64 *tgtGrid, Int32 n,
-    Int32 tgtn, std::vector<Float64> &out, Float64 defaultValue)
+Int32 COperatorChiSquareLogLambda::InterpolateResult(const Float64 *in,
+                                                     const Float64 *inGrid,
+                                                     const Float64 *tgtGrid,
+                                                     Int32 n,
+                                                     Int32 tgtn,
+                                                     std::vector<Float64> &out,
+                                                     Float64 defaultValue)
 {
+    bool debug = 0;
     out.resize(tgtn);
     for (Int32 j = 0; j < tgtn; j++)
     {
@@ -1354,7 +1369,21 @@ Int32 COperatorChiSquareLogLambda::InterpolateResult(
     for (Int32 j = 0; j < tgtn; j++)
     {
         Float64 Xrebin = tgtGrid[j];
-        out[j] = gsl_interp_eval(interpolation, inGrid, in, Xrebin,
+        if(debug)
+        {
+            Log.LogDebug("  Operator-ChisquareLog: InterpolateResult, j=%d, xrebin=%f",
+                     j,
+                     Xrebin);
+        }
+        if(Xrebin<inGrid[0])
+        {
+            Log.LogError("Error while interpolating loglambda chi2 result. xrebin(%f)<x[0](%f)", Xrebin, inGrid[0]);
+            throw runtime_error("Error while interpolating loglambda chi2 result.");
+        }
+        out[j] = gsl_interp_eval(interpolation,
+                                 inGrid,
+                                 in,
+                                 Xrebin,
                                  accelerator); // lin
         // out[j] = gsl_spline_eval (spline, Xrebin, accelerator); //spline
         // Log.LogInfo("  Operator-ChisquareLog: FitAllz: interpolating

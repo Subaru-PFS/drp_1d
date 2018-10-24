@@ -661,9 +661,12 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
     Float64 qsoEvidence=-DBL_MAX;
     Float64 stellarEvidence=-DBL_MAX;
     Float64 galaxyEvidence=-DBL_MAX;
-    mResult->GetEvidenceFromPdf(ctx.GetDataStore(), galaxyEvidence);
-    Log.LogInfo( "Found galaxy evidence: %e", galaxyEvidence);
-    std::string typeLabel = "G";
+    std::string typeLabel = "U";
+    if(mResult){
+        mResult->GetEvidenceFromPdf(ctx.GetDataStore(), galaxyEvidence);
+        Log.LogInfo( "Found galaxy evidence: %e", galaxyEvidence);
+        typeLabel = "G";
+    }
     if(enableStarFitting=="yes"){
         Int32 retStellarEv = starResult->GetEvidenceFromPdf(ctx.GetDataStore(), stellarEvidence);
         if(retStellarEv==0)
@@ -675,8 +678,10 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
             }
         }
     }
-    Log.LogInfo( "Setting object type: %s", typeLabel.c_str());
-    mResult->SetTypeLabel(typeLabel); //maybe this is unecessary since there is a classifresult now
+    if(mResult){
+        Log.LogInfo( "Setting object type: %s", typeLabel.c_str());
+        mResult->SetTypeLabel(typeLabel); //maybe this is unecessary since there is a classifresult now
+    }
     classifResult->SetTypeLabel(typeLabel);
     classifResult->SetG(galaxyEvidence);
     classifResult->SetS(stellarEvidence);
