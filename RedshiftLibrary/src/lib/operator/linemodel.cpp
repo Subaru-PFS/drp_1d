@@ -689,8 +689,9 @@ Int32 COperatorLineModel::ComputeFirstPass(
  * @return
  */
 Int32 COperatorLineModel::ComputeCandidates(
-    const Int32 opt_extremacount, const Int32 opt_sign,
-    const std::vector<Float64> floatValues)
+        const Int32 opt_extremacount,
+        const Int32 opt_sign,
+        const std::vector<Float64> floatValues)
 {
     Log.LogDebug("  Operator-Linemodel: opt_extremacount = %d",
                  opt_extremacount);

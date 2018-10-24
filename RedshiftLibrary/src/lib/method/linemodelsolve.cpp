@@ -409,6 +409,7 @@ Int32 CLineModelSolve::CombinePDF(std::shared_ptr<const CLineModelResult> result
                 postmargZResult->Redshifts[k] = result->Redshifts[k] ;
                 postmargZResult->valProbaLog[k] = logProba[k];
             }
+            postmargZResult->valEvidenceLog = logEvidence;
         }
     }
     else if(opt_combine=="bestproba" || opt_combine=="marg"){

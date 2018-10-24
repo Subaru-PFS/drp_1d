@@ -1464,8 +1464,7 @@ Int32 CPdfz::BestChi2(TFloat64List redshifts,
     Float64 logEvidence;
     TFloat64List zprior;
     zprior = pdfz.GetConstantLogZPrior(redshifts.size());
-    Int32 retPdfz =
-        pdfz.Compute(chi2Min, redshifts, cstLog, zprior, logProba, logEvidence);
+    Int32 retPdfz = pdfz.Compute(chi2Min, redshifts, cstLog, zprior, logProba, logEvidence);
     if (retPdfz != 0)
     {
         Log.LogError("Pdfz: Pdfz-bestchi2: Pdfz computation failed");
