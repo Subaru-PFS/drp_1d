@@ -73,7 +73,7 @@ void CTemplatesFitStore::initFitValues()
     {
         SValues values_unused;
         values_unused.merit = DBL_MAX;
-        std::vector<SValues> zfitvals(n_continuum_candidates, values_unused);
+        std::vector<SValues> zfitvals;//(n_max_continuum_candidates, values_unused);
         m_fitValues.push_back(zfitvals);
     }
 }
@@ -109,9 +109,9 @@ Int32 CTemplatesFitStore::GetRedshiftIndex(Float64 z)
  *
  * brief: try to insert the fit values into the mFitValues table at the correct idxz:
  *   - no insertion if redshift can't be found in the redshiftgrid
- *   - no insertion if the merti is higher than the highest rank continuum candidate
+ *   - no insertion if the merit is higher than the highest rank continuum candidate
  *   - insertion is done at a given continuum_candidate_rank position wrt merit value
- * @return
+ * @return False if there was a problem.
  */
 bool CTemplatesFitStore::Add(std::string tplName,
                              Float64 ismDustCoeff,
@@ -135,13 +135,15 @@ bool CTemplatesFitStore::Add(std::string tplName,
     Int32 idxz=GetRedshiftIndex(redshift);
     if(idxz<0)
     {
+        Log.LogDebug("CTemplatesFitStore::Unable to find z index for redshift=%f",
+                     redshift);
         return false;
     }
     //
 
     //if chi2 val is the lowest, and condition on tplName, insert at position ipos
     Int32 ipos=-1;
-    for(Int32 kpos=0; kpos<n_continuum_candidates; kpos++)
+    for(Int32 kpos=0; kpos<m_fitValues[idxz].size(); kpos++)
     {
         if(tmpSValues.merit < m_fitValues[idxz][kpos].merit)
         {
@@ -150,17 +152,39 @@ bool CTemplatesFitStore::Add(std::string tplName,
         }
     }
 
-    if(ipos<0)
+    if(ipos<0 && m_fitValues[idxz].size()<n_max_continuum_candidates)
+    {
+        Log.LogDebug("CTemplatesFitStore::Add iz=%d (z=%f) - adding at end position %d (merit=%e, ebmv=%e, imeiksin=%d)",
+                     idxz,
+                     redshift,
+                     m_fitValues[idxz].size(),
+                     tmpSValues.merit,
+                     tmpSValues.ismDustCoeff,
+                     tmpSValues.igmMeiksinIdx);
+
+        m_fitValues[idxz].push_back(tmpSValues);
+
+    }else if(ipos<0)
     {
         //nothing to do, merit doesn't qualify the fit result to be stored
-        return false;
     }else{
+        Log.LogDebug("CTemplatesFitStore::Add iz=%d (z=%f) - adding at pos=%d (merit=%e, ebmv=%e, imeiksin=%d)",
+                     idxz,
+                     redshift,
+                     ipos,
+                     tmpSValues.merit,
+                     tmpSValues.ismDustCoeff,
+                     tmpSValues.igmMeiksinIdx);
+
         //insert the new SValue and move all the older candidates position according to ipos found
         std::vector<SValues>  tmpBufferValues;
         for(UInt32 ktmp=0; ktmp<m_fitValues[idxz].size(); ktmp++)
         {
             tmpBufferValues.push_back(m_fitValues[idxz][ktmp]);
         }
+        SValues values_unused;
+        values_unused.merit = DBL_MAX;
+        tmpBufferValues.push_back(values_unused);
 
         UInt32 iOld=0;
         for(UInt32 ktmp=0; ktmp<m_fitValues[idxz].size(); ktmp++)
@@ -173,10 +197,23 @@ bool CTemplatesFitStore::Add(std::string tplName,
                 iOld++;
             }
         }
+        m_fitValues[idxz].push_back(tmpBufferValues[iOld]);
     }
-    //
+
+    //this is not very secure. it should be checked that all redshifts have the same fitValues count
+    if(n_continuum_candidates<m_fitValues[idxz].size())
+    {
+        n_continuum_candidates=m_fitValues[idxz].size();
+        Log.LogDebug("CTemplatesFitStore::n_continuum_candidates set to %d)", n_continuum_candidates);
+    }
+
 
     return true;
+}
+
+Int32 CTemplatesFitStore::GetContinuumCount()
+{
+    return n_continuum_candidates;
 }
 
 CTemplatesFitStore::TemplateFitValues CTemplatesFitStore::GetFitValues(Float64 redshiftVal, Int32 continuumCandidateRank)

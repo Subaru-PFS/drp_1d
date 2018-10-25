@@ -163,6 +163,8 @@ Int32 COperatorLineModel::ComputeFirstPass(
         restraycatalog.GetFilteredList(typeFilter, forceFilter);
     Log.LogDebug("restRayList.size() = %d", restRayList.size());
 
+    /*
+    //tpl ortho disabled for now
     bool enableOrtho = (opt_continuumcomponent == "tplfit");
     Log.LogInfo("  Operator-Linemodel: TemplatesOrthogonalization enabled = %d",
                 enableOrtho);
@@ -189,6 +191,7 @@ Int32 COperatorLineModel::ComputeFirstPass(
     std::shared_ptr<CTemplateCatalog> orthoTplCatalog =
         orthoTplStore.getTplCatalog(ctlgIdx);
     Log.LogInfo("  Operator-Linemodel: Templates store prepared.");
+    //*/
 
     m_model = std::shared_ptr<CLineModelElementList>(new CLineModelElementList(
                                                          spectrum,
@@ -320,11 +323,6 @@ Int32 COperatorLineModel::ComputeFirstPass(
 
         m_model->m_opt_firstpass_forcedisableTplratioISMfit = m_opt_firstpass_tplratio_ismFit;
     }
-    if(opt_continuumcomponent == "tplfit")
-    {
-        m_model->m_opt_fitcontinuum_maxCount = m_opt_fitcontinuum_maxN;
-        m_model->m_opt_firstpass_forcedisableMultipleContinuumfit = m_opt_firstpass_multiplecontinuumfit_disable;
-    }
 
     // init catalog offsets
     Log.LogInfo("  Operator-Linemodel: Lambda offsets init");
@@ -368,20 +366,29 @@ Int32 COperatorLineModel::ComputeFirstPass(
         std::string zsamplingtplfit = opt_twosteplargegridsampling;
         Log.LogInfo("  Operator-Linemodel: continuum tpl fitting: sampling:%s, "
                     "step=%.5f, min=%.1f, max=%.1f",
-                    zsamplingtplfit.c_str(), redshiftStep, minRedshift,
+                    zsamplingtplfit.c_str(),
+                    redshiftStep,
+                    minRedshift,
                     maxRedshift);
 
-        CTemplatesFitStore *tplfitStore = new CTemplatesFitStore(
-            minRedshift, maxRedshift, redshiftStep, zsamplingtplfit);
+        CTemplatesFitStore *tplfitStore = new CTemplatesFitStore(minRedshift,
+                                                                 maxRedshift,
+                                                                 redshiftStep,
+                                                                 zsamplingtplfit);
         std::vector<Float64> redshiftsTplFit = tplfitStore->GetRedshiftList();
         Log.LogInfo("  Operator-Linemodel: continuum tpl redshift list n=%d",
                     redshiftsTplFit.size());
+        for(UInt32 kztplfit=0; kztplfit<std::min(Int32(redshiftsTplFit.size()), Int32(10)); kztplfit++)
+        {
+            Log.LogDebug("  Operator-Linemodel: continuum tpl redshift list[%d] = %f",
+                        kztplfit,
+                        redshiftsTplFit[kztplfit]);
+        }
         std::vector<std::shared_ptr<CChisquareResult>> chisquareResultsAllTpl;
         std::vector<std::string> chisquareResultsTplName;
 
         std::string opt_chi2operator = "chisquarelog"; //"chisquare2"; //
-        if (redshiftsTplFit.size() < 100 &&
-            opt_chi2operator !=
+        if (redshiftsTplFit.size() < 100 && opt_chi2operator !=
                 "chisquare2") // warning arbitrary number of redshifts threshold
                               // to consider chisquare2 faster than chisquarelog
         {
@@ -390,7 +397,7 @@ Int32 COperatorLineModel::ComputeFirstPass(
                 "  Operator-Linemodel: precomputing- auto select chisquare2 "
                 "operator (faster for few redshifts calc. points)");
         }
-        std::string opt_interp = "precomputedfinegrid"; // "lin"; //
+        std::string opt_interp = "lin"; //"precomputedfinegrid"; //
         Log.LogInfo("  Operator-Linemodel: precomputing- with operator = %s",
                     opt_chi2operator.c_str());
         Log.LogInfo(
@@ -398,6 +405,8 @@ Int32 COperatorLineModel::ComputeFirstPass(
             m_opt_tplfit_dustFit);
         Log.LogInfo("  Operator-Linemodel: precomputing-fitContinuum_igm = %d",
                     m_opt_tplfit_extinction);
+        Log.LogInfo("  Operator-Linemodel: precomputing-fitContinuum opt_interp = %s",
+                    opt_interp.c_str());
 
         std::shared_ptr<COperator> chiSquareOperator;
         if (opt_chi2operator == "chisquarelog")
@@ -421,15 +430,43 @@ Int32 COperatorLineModel::ComputeFirstPass(
         }
 
         Float64 overlapThreshold = 1.0;
-        std::vector<CMask> maskList; // can't get the lines support BEFORE
-                                     // initializing the model
+        bool ignoreLinesSupport=true;
+        if (opt_chi2operator != "chisquare2")
+        {
+            ignoreLinesSupport=false;
+            Log.LogWarning("  Operator-Linemodel: unable to ignoreLinesSupport if NOT chisquare2-operator is used. Disabled");
+        }
+        std::vector<CMask> maskList;
+        if(ignoreLinesSupport){
+            boost::chrono::thread_clock::time_point start_tplfitmaskprep =
+                    boost::chrono::thread_clock::now();
+
+            maskList.resize(redshiftsTplFit.size());
+            for(UInt32 kztplfit=0; kztplfit<redshiftsTplFit.size(); kztplfit++)
+            {
+                m_model->initModelAtZ(redshiftsTplFit[kztplfit], lambdaRange, spectrum.GetSpectralAxis());
+                maskList[kztplfit]=m_model->getOutsideLinesMask();
+            }
+
+            boost::chrono::thread_clock::time_point stop_tplfitmaskprep =
+                    boost::chrono::thread_clock::now();
+            Float64 duration_tplfitmaskprep =
+                boost::chrono::duration_cast<boost::chrono::microseconds>(
+                    stop_tplfitmaskprep - start_tplfitmaskprep).count();
+            Float64 duration_tplfitmaskprep_seconds = duration_tplfitmaskprep / 1e6;
+            Log.LogInfo("  Operator-Linemodel: tplfit-precompute mask prep done in %.4e sec",
+                        duration_tplfitmaskprep_seconds);
+        }
+
 
         for (UInt32 i = 0; i < tplCategoryList.size(); i++)
         {
             std::string category = tplCategoryList[i];
-            for (UInt32 j = 0; j < orthoTplCatalog->GetTemplateCount(category); j++)
+            //for (UInt32 j = 0; j < orthoTplCatalog->GetTemplateCount(category); j++)
+            for (UInt32 j = 0; j < tplCatalog.GetTemplateCount(category); j++)
             {
-                const CTemplate &tpl = orthoTplCatalog->GetTemplate(category, j);
+                //const CTemplate &tpl = orthoTplCatalog->GetTemplate(category, j);
+                const CTemplate &tpl = tplCatalog.GetTemplate(category, j);
 
                 auto chisquareResult =
                     std::dynamic_pointer_cast<CChisquareResult>(
@@ -469,7 +506,7 @@ Int32 COperatorLineModel::ComputeFirstPass(
                     std::dynamic_pointer_cast<CChisquareResult>(
                         chisquareResultsAllTpl[j]);
 
-                tplfitStore->Add(chisquareResultsTplName[j],
+                Int32 retAdd = tplfitStore->Add(chisquareResultsTplName[j],
                                  chisquareResult->FitDustCoeff[i],
                                  chisquareResult->FitMeiksinIdx[i],
                                  redshift,
@@ -477,6 +514,11 @@ Int32 COperatorLineModel::ComputeFirstPass(
                                  chisquareResult->FitAmplitude[i],
                                  chisquareResult->FitDtM[i],
                                  chisquareResult->FitMtM[i]);
+               if(!retAdd)
+               {
+                   Log.LogError("  Operator-Linemodel: Failed to add continuum fit to store. aborting...");
+                   throw runtime_error("  Operator-Linemodel: Failed to add continuum fit to store. aborting...");
+               }
             }
         }
 
@@ -487,12 +529,36 @@ Int32 COperatorLineModel::ComputeFirstPass(
             boost::chrono::thread_clock::now();
         Float64 duration_tplfitprecompute =
             boost::chrono::duration_cast<boost::chrono::microseconds>(
-                stop_tplfitprecompute - start_tplfitprecompute)
-                .count();
+                stop_tplfitprecompute - start_tplfitprecompute).count();
         Float64 duration_tplfit_seconds = duration_tplfitprecompute / 1e6;
         Log.LogInfo("  Operator-Linemodel: tplfit-precompute done in %.4e sec",
                     duration_tplfit_seconds);
         Log.LogInfo("<proc-lm-tplfit><%d>", (Int32)duration_tplfit_seconds);
+
+
+
+        if(opt_continuumcomponent == "tplfit")
+        {
+            if(m_opt_fitcontinuum_maxN==-1)
+            {
+                m_model->m_opt_fitcontinuum_maxCount = tplfitStore->GetContinuumCount();
+            }else{
+                Int32 effectiveContinuumCount = std::min(m_opt_fitcontinuum_maxN, tplfitStore->GetContinuumCount());
+                m_model->m_opt_fitcontinuum_maxCount = effectiveContinuumCount;
+            }
+            Log.LogInfo("  Operator-Linemodel: fitcontinuum_maxCount set to %d",
+                        m_model->m_opt_fitcontinuum_maxCount);
+        }
+
+    }else{
+        if(opt_continuumcomponent == "tplfit")
+        {
+            m_model->m_opt_fitcontinuum_maxCount = m_opt_fitcontinuum_maxN;
+        }
+    }
+    if(opt_continuumcomponent == "tplfit")
+    {
+        m_model->m_opt_firstpass_forcedisableMultipleContinuumfit = m_opt_firstpass_multiplecontinuumfit_disable;
     }
 
     //    //hack, zero outside of the support

@@ -57,8 +57,12 @@ COperatorChiSquare2::~COperatorChiSquare2()
 }
 
 
-void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& tpl, Float64* pfgTplBuffer,
-                                const TFloat64Range& lambdaRange, Float64 redshift, Float64 overlapThreshold,
+void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
+                                   const CTemplate& tpl,
+                                   Float64* pfgTplBuffer,
+                                   const TFloat64Range& lambdaRange,
+                                   Float64 redshift,
+                                   Float64 overlapThreshold,
                                    Float64& overlapRate,
                                    Float64& chiSquare,
                                    Float64& fittingAmplitude,
@@ -72,7 +76,8 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& t
                                    std::vector<TInt32List>& IgmMeiksinIdxInterm,
                                    std::string opt_interp, Float64 forcedAmplitude, Int32 opt_extinction, Int32 opt_dustFitting, CMask spcMaskAdditional)
 {
-    Bool amplForcePositive=true;
+    bool verbose = false;
+    bool amplForcePositive=true;
     chiSquare = boost::numeric::bounds<float>::highest();
     bool status_chisquareSetAtLeastOnce = false;
 
@@ -175,10 +180,10 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& t
 
     /*//debug:
     // save rebinedtpl
-    if(redshift==0.0){
+    if(true || redshift==0.0){
         FILE* f = fopen( "chisquare2_template_rebined.txt", "w+" );
         for(Int32 m=0; m<itplTplSpectralAxis.GetSamplesCount(); m++){
-            fprintf( f, "%e %e\n", Xtpl[m], Ytpl[m]);
+            fprintf( f, "%f %e\n", Xtpl[m], Ytpl[m]);
         }
         fclose( f );
     }
@@ -220,6 +225,7 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& t
     //Prepare the wavelengthRange Limits
     Float64 lbda_min = currentRange.GetBegin();
     Float64 lbda_max = currentRange.GetEnd();
+    Log.LogDebug( "  Operator-Chisquare2: currentRange_lbda_min=%f, currentRange_lbda_max=%f", lbda_min, lbda_max);
     std::vector<Float64> sumCross_outsideIGM(nDustCoeffs, 0.0);
     std::vector<Float64>  sumT_outsideIGM(nDustCoeffs, 0.0);
     std::vector<Float64>  sumS_outsideIGM(nDustCoeffs, 0.0);
@@ -272,7 +278,7 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& t
         }
         if(kStart==-1 || kEnd==-1)
         {
-            Log.LogDebug( "chisquare operator: kStart=%d, kEnd=%d ! Aborting.", kStart, kEnd);
+            Log.LogDebug( "  Operator-Chisquare2: kStart=%d, kEnd=%d ! Aborting.", kStart, kEnd);
             break;
         }
 
@@ -439,30 +445,30 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& t
 
                     sumS+= Yspc[j]*Yspc[j]*err2;
 
-		    if( std::isinf(err2) || std::isnan(err2) ){
-		       	Log.LogError("  Operator-Chisquare2: found invalid inverse variance : err2=%e, for index=%d at wl=%f", err2, j, spcSpectralAxis[j]);
-			status = nStatus_InvalidProductsError;
-            		return ; 
-		    }
+                    if( std::isinf(err2) || std::isnan(err2) ){
+                        Log.LogError("  Operator-Chisquare2: found invalid inverse variance : err2=%e, for index=%d at wl=%f", err2, j, spcSpectralAxis[j]);
+                        status = nStatus_InvalidProductsError;
+                        return ;
+                    }
 
 
-		    if( std::isinf(sumS) || std::isnan(sumS) || sumS!=sumS ){
-		       	Log.LogError("  Operator-Chisquare2: found invalid dtd : dtd=%e, for index=%d at wl=%f", sumS, j, spcSpectralAxis[j]);
-		       	Log.LogError("  Operator-Chisquare2: found invalid dtd : Yspc=%e, for index=%d at wl=%f", Yspc[j], j, spcSpectralAxis[j]);
-		       	Log.LogError("  Operator-Chisquare2: found invalid dtd : err2=%e, for index=%d at wl=%f", err2, j, spcSpectralAxis[j]);
-		       	Log.LogError("  Operator-Chisquare2: found invalid dtd : error=%e, for index=%d at wl=%f", error[j], j, spcSpectralAxis[j]);
-			status = nStatus_InvalidProductsError;
-            		return ; 
-		    }
+                    if( std::isinf(sumS) || std::isnan(sumS) || sumS!=sumS ){
+                        Log.LogError("  Operator-Chisquare2: found invalid dtd : dtd=%e, for index=%d at wl=%f", sumS, j, spcSpectralAxis[j]);
+                        Log.LogError("  Operator-Chisquare2: found invalid dtd : Yspc=%e, for index=%d at wl=%f", Yspc[j], j, spcSpectralAxis[j]);
+                        Log.LogError("  Operator-Chisquare2: found invalid dtd : err2=%e, for index=%d at wl=%f", err2, j, spcSpectralAxis[j]);
+                        Log.LogError("  Operator-Chisquare2: found invalid dtd : error=%e, for index=%d at wl=%f", error[j], j, spcSpectralAxis[j]);
+                        status = nStatus_InvalidProductsError;
+                        return ;
+                    }
                     
-		    if( std::isinf(sumT) || std::isnan(sumT) ){
-		       	Log.LogError("  Operator-Chisquare2: found invalid mtm : mtm=%e, for index=%d at wl=%f", sumT, j, spcSpectralAxis[j]);
-			status = nStatus_InvalidProductsError;
-            		return ; 
-		    }
+                    if( std::isinf(sumT) || std::isnan(sumT) ){
+                        Log.LogError("  Operator-Chisquare2: found invalid mtm : mtm=%e, for index=%d at wl=%f", sumT, j, spcSpectralAxis[j]);
+                        status = nStatus_InvalidProductsError;
+                        return ;
+                    }
                     
 
-		    if(option_igmFastProcessing && kMeiksin==0)
+                    if(option_igmFastProcessing && kMeiksin==0)
                     {
                         //store intermediate sums for IGM range
                         if(sumsIgmSaved==0)
@@ -518,11 +524,19 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& t
                 fit = sumS - sumCross*ampl;
             }
 
-            /*
-            Log.LogDebug("  Operator-Chisquare2: fit=%e", fit);
-            Log.LogDebug("  Operator-Chisquare2: sumT=%e", sumT);
-            Log.LogDebug("  Operator-Chisquare2: sumS=%e", sumS);
-            Log.LogDebug("  Operator-Chisquare2: sumCross=%e", sumCross);
+            //*
+            if(verbose)
+            {
+                Log.LogDebug("");
+                Log.LogDebug("  Operator-Chisquare2: z=%f", redshift);
+                Log.LogDebug("  Operator-Chisquare2: fit=%e", fit);
+                Log.LogDebug("  Operator-Chisquare2: sumT=%e", sumT);
+                Log.LogDebug("  Operator-Chisquare2: sumS=%e", sumS);
+                Log.LogDebug("  Operator-Chisquare2: sumCross=%e", sumCross);
+                Log.LogDebug("  Operator-Chisquare2: coeffEBMV=%.2f", coeffEBMV);
+                Log.LogDebug("  Operator-Chisquare2: meiksinIdx=%d", meiksinIdx);
+
+            }
             //*/
 
             /*
@@ -576,12 +590,28 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum, const CTemplate& t
  *
  * input: if additional_spcMasks size is 0, no additional mask will be used, otherwise its size should match the redshifts list size
  **/
-std::shared_ptr<COperatorResult> COperatorChiSquare2::Compute(const CSpectrum& spectrum, const CTemplate& tpl,
-                          const TFloat64Range& lambdaRange, const TFloat64List& redshifts,
-                          Float64 overlapThreshold , std::vector<CMask> additional_spcMasks, std::string opt_interp, Int32 opt_extinction, Int32 opt_dustFitting)
+std::shared_ptr<COperatorResult> COperatorChiSquare2::Compute(const CSpectrum& spectrum,
+                                                              const CTemplate& tpl,
+                                                              const TFloat64Range& lambdaRange,
+                                                              const TFloat64List& redshifts,
+                                                              Float64 overlapThreshold,
+                                                              std::vector<CMask> additional_spcMasks,
+                                                              std::string opt_interp,
+                                                              Int32 opt_extinction,
+                                                              Int32 opt_dustFitting)
 {
     Log.LogInfo("  Operator-Chisquare2: starting computation for template: %s", tpl.GetName().c_str());
-
+    if(0)
+    {
+        //CSpectrumFluxAxis tmp_tplFluxAxis = tpl.GetFluxAxis();
+        CSpectrumSpectralAxis tmp_tplSpectralAxis = tpl.GetSpectralAxis();
+        for(UInt32 k=0; k<std::min(Int32(tmp_tplSpectralAxis.GetSamplesCount()), Int32(10)); k++)
+        {
+            Log.LogDebug("  Operator-Chisquare2: tpl_SpectralAxis[%d] = %f",
+                         k,
+                         tmp_tplSpectralAxis[k]);
+        }
+    }
 
     if( opt_dustFitting && m_ismCorrectionCalzetti->calzettiInitFailed)
     {
@@ -785,11 +815,11 @@ std::shared_ptr<COperatorResult> COperatorChiSquare2::Compute(const CSpectrum& s
                   opt_dustFitting,
                   additional_spcMask);
 
-	if(result->Status[i]==nStatus_InvalidProductsError)
+        if(result->Status[i]==nStatus_InvalidProductsError)
         {
             Log.LogError("  Operator-Chisquare2: found invalid chisquare products for z=%f. Now breaking z loop.", redshift);
-      	    break;
-	}
+            break;
+        }
 
     }
 

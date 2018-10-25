@@ -1918,7 +1918,7 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
             {
                 LoadFitContinuum(lambdaRange, savedIdxContinuumFitted);
             }
-            Log.LogInfo( "    model - Linemodel: fitcontinuum = %d (%s, with ebmv=%.1f), and A=%e",
+            Log.LogInfo( "    model - Linemodel: fitcontinuum = %d (%s, with ebmv=%.3f), and A=%e",
                          savedIdxContinuumFitted,
                          m_fitContinuum_tplName.c_str(),
                          m_fitContinuum_tplFitDustCoeff,
@@ -1938,7 +1938,7 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
             //m_CatalogTplShape->GetCatalogVelocities(savedIdxFitted, m_velocityEmission, m_velocityAbsorption);
             for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
             {
-                Log.LogInfo( "    model - Linemodel: tplratio = %d (%s, with ebmv=%.1f), and A=%e", savedIdxFitted, m_tplshapeBestTplName.c_str(), m_tplshapeBestTplIsmCoeff, m_FittedAmpTplshape[savedIdxFitted][iElts]);
+                Log.LogInfo( "    model - Linemodel: tplratio = %d (%s, with ebmv=%.3f), and A=%e", savedIdxFitted, m_tplshapeBestTplName.c_str(), m_tplshapeBestTplIsmCoeff, m_FittedAmpTplshape[savedIdxFitted][iElts]);
                 m_Elements[iElts]->SetFittedAmplitude(m_FittedAmpTplshape[savedIdxFitted][iElts], m_FittedErrorTplshape[savedIdxFitted][iElts]);
                 m_Elements[iElts]->SetSumCross(m_DtmTplshape[savedIdxFitted][iElts]);
                 m_Elements[iElts]->SetSumGauss(m_MtmTplshape[savedIdxFitted][iElts]);

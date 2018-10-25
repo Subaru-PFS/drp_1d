@@ -47,10 +47,12 @@ public:
 
     std::vector<Float64> GetRedshiftList();
     TemplateFitValues GetFitValues(Float64 redshiftVal, Int32 continuumCandidateRank);
+    Int32 GetContinuumCount();
 
 private:
     std::vector<std::vector<SValues>>    m_fitValues; //[nz][n_continuum_candidates]
-    Int32 n_continuum_candidates=10;
+    Int32 n_max_continuum_candidates=10000;
+    Int32 n_continuum_candidates=0;
 
     Float64    m_minRedshift;
     Float64    m_maxRedshift;

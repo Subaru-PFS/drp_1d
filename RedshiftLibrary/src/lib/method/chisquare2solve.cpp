@@ -92,6 +92,7 @@ std::shared_ptr<CChisquare2SolveResult> CMethodChisquare2Solve::Compute(CDataSto
     Log.LogInfo( "Method parameters:");
     Log.LogInfo( "    -overlapThreshold: %.3f", overlapThreshold);
     Log.LogInfo( "    -component: %s", spcComponent.c_str());
+    Log.LogInfo( "    -interp: %s", opt_interp.c_str());
     Log.LogInfo( "    -IGM extinction: %s", opt_extinction.c_str());
     Log.LogInfo( "    -ISM dust-fit: %s", opt_dustFit.c_str());
     Log.LogInfo( "    -pdfcombination: %s", m_opt_pdfcombination.c_str());
