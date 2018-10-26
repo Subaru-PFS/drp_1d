@@ -67,6 +67,15 @@ public:
     Int32 Init(const CSpectrum& spectrum, const TFloat64List& redshifts);
     std::shared_ptr<COperatorResult> getResult();
 
+    void PrecomputeContinuumFit(const CSpectrum &spectrum,
+                                const CSpectrum &spectrumContinuum,
+                                const CTemplateCatalog &tplCatalog,
+                                const TStringList &tplCategoryList,
+                                const std::string opt_calibrationPath,
+                                const TFloat64Range &lambdaRange,
+                                const Float64 redshiftStep=0.00015,
+                                const string zsampling="log");
+
     Int32 ComputeFirstPass(CDataStore &dataStore,
                                               const CSpectrum& spectrum,
                                               const CSpectrum &spectrumContinuum,
