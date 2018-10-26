@@ -257,7 +257,7 @@ void CLineModelResult::Save( const CDataStore& store, std::ostream& stream ) con
         stream <<  Redshifts[i] << std::setprecision(32) << "\t" << std::scientific << ChiSquare[i] << std::fixed << std::endl;
     }
 
-    ExtremaResult.Save(store, stream);
+    ExtremaResult.Save(store, stream); //todo: move these into their own file. aview should be adapted.
 
     // save dTransposeDNocontinuum, on 1 line
     if(true){
@@ -424,6 +424,12 @@ UInt32 CLineModelResult::GetExtremaIndex(UInt32 extremaIdx) const
         }
     }
     return solutionIdx;
+}
+
+std::shared_ptr<CLineModelExtremaResult> CLineModelResult::GetExtremaResult() const
+{
+    std::shared_ptr<CLineModelExtremaResult> extremaresult = std::shared_ptr<CLineModelExtremaResult>(new CLineModelExtremaResult(ExtremaResult));
+    return extremaresult;
 }
 
 Float64 CLineModelResult::GetMinChiSquare() const

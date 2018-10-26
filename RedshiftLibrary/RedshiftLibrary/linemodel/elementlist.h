@@ -103,6 +103,7 @@ public:
 
     std::string getTplshape_bestTplName();
     Float64 getTplshape_bestTplIsmCoeff();
+    Float64 getTplshape_bestAmplitude();
     Int32 getTplshape_count();
     std::vector<Float64> getTplshape_priors();
     std::vector<Float64> GetChisquareTplshape();
@@ -312,6 +313,7 @@ private:
     TStringList m_tplCategoryList;
     std::string m_tplshapeBestTplName;
     Float64 m_tplshapeBestTplIsmCoeff;
+    Float64 m_tplshapeBestTplAmplitude;
     Int32 m_tplshapeLeastSquareFast = 0;    //for rigidity=tplshape: switch to use fast least square estimation
 
     COperatorChiSquare2* m_chiSquareOperator;

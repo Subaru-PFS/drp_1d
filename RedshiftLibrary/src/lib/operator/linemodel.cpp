@@ -1764,6 +1764,8 @@ Int32 COperatorLineModel::ComputeSecondPass(
             m_model->getTplshape_bestTplName();
         m_result->ExtremaResult.FittedTplshapeIsmCoeff[i] =
             m_model->getTplshape_bestTplIsmCoeff();
+        m_result->ExtremaResult.FittedTplshapeAmplitude[i] =
+            m_model->getTplshape_bestAmplitude();
     }
 
     // ComputeArea2(*m_result);

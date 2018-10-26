@@ -1278,6 +1278,12 @@ Float64 CLineModelElementList::getTplshape_bestTplIsmCoeff()
     return m_tplshapeBestTplIsmCoeff;
 }
 
+Float64 CLineModelElementList::getTplshape_bestAmplitude()
+{
+    return m_tplshapeBestTplAmplitude;
+}
+
+
 Int32 CLineModelElementList::getTplshape_count()
 {
     if(m_rigidity!="tplshape")
@@ -1894,6 +1900,7 @@ Float64 CLineModelElementList::fit(Float64 redshift, const TFloat64Range& lambda
                     modelSolution = GetModelSolution();
                     m_tplshapeBestTplName = m_CatalogTplShape->GetCatalogName(savedIdxFitted);
                     m_tplshapeBestTplIsmCoeff = m_CatalogTplShape->GetIsmCoeff(savedIdxFitted);
+                    m_tplshapeBestTplAmplitude = m_FittedAmpTplshape[savedIdxFitted][0]; //Should be only 1 elt in tpl ratio mode...
                 }
             }
 

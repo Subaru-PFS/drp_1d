@@ -36,6 +36,8 @@ public:
     Float64 GetExtremaMerit(Int32 extremaIdx) const;
     UInt32 GetExtremaIndex(UInt32 extremaIdx) const;
 
+    std::shared_ptr<CLineModelExtremaResult> GetExtremaResult() const;
+
     Float64 GetMinChiSquare() const;
     Float64 GetMaxChiSquare() const;
 

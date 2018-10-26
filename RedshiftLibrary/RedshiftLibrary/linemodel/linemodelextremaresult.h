@@ -12,7 +12,7 @@
 namespace NSEpic
 {
 
-class CLineModelExtremaResult
+class CLineModelExtremaResult : public COperatorResult
 {
 
 public:
@@ -23,7 +23,11 @@ public:
     void Resize(Int32 size);
 
     void Save( const CDataStore& store, std::ostream& stream ) const;
-    //void SaveLine( const CDataStore& store, std::ostream& stream ) const;
+    void SaveLine( const CDataStore& store, std::ostream& stream ) const;
+    inline Int32 GetEvidenceFromPdf(const CDataStore& store, Float64 &evidence) const
+    {
+        return 1;
+    }
     //void Load( std::istream& stream );
 
     //Extrema results
@@ -59,6 +63,7 @@ public:
     TFloat64List            FittedTplDustCoeff;     //Calzetti dustcoeff for the best template fitted for continuum
     std::vector<Int32>      FittedTplMeiksinIdx;    //Meiksin igm index for the best template fitted for continuum
     std::vector<std::string>      FittedTplshapeName;   //Name of the best template fitted for tplcorr/tplshape
+    std::vector<Float64>      FittedTplshapeAmplitude;   //amp of the best template fitted for tplcorr/tplshape
     std::vector<Float64>      FittedTplshapeIsmCoeff;   //IsmCoeff/EBMV of the best template fitted for tplcorr/tplshape
 
 };

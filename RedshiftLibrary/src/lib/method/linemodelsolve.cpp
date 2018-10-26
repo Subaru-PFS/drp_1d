@@ -792,15 +792,22 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
         return false;
     }
 
-    auto  result = linemodel.getResult();
+    std::shared_ptr<const CLineModelResult> result = std::dynamic_pointer_cast<const CLineModelResult>( linemodel.getResult() );
+
 
     if( !result )
     {
         //Log.LogInfo( "Failed to compute linemodel");
         return false;
     }else{
-        // Store linemodel chisquare results
+        //save linemodel chisquare results
         dataStore.StoreScopedGlobalResult( scopeStr.c_str(), result );
+        //save linemodel extrema results
+        std::string extremaResultsStr=scopeStr.c_str();
+        extremaResultsStr.append("_extrema");
+        //Log.LogError("Line Model, saving extrema results: %s", extremaResultsStr.c_str());
+        dataStore.StoreScopedGlobalResult( extremaResultsStr.c_str(), result->GetExtremaResult() );
+
         //save linemodel fitting and spectrum-model results
         linemodel.storeGlobalModelResults(dataStore);
     }
