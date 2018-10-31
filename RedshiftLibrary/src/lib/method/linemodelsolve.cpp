@@ -117,6 +117,7 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
         dataStore.GetScopedParam( "linemodel.continuumismfit", m_opt_tplfit_dustfit, "yes" );
         dataStore.GetScopedParam( "linemodel.continuumigmfit", m_opt_tplfit_igmfit, "yes" );
         dataStore.GetScopedParam( "linemodel.continuumfitcount", m_opt_continuumfitcount, 1 );
+        dataStore.GetScopedParam( "linemodel.continuumfitignorelinesupport", m_opt_tplfit_ignoreLinesSupport, "no" );
     }
     dataStore.GetScopedParam( "linemodel.rigidity", m_opt_rigidity, "rules" );
     if(m_opt_rigidity=="tplshape")
@@ -206,6 +207,7 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
         Log.LogInfo( "      -tplfit_ismfit: %s", m_opt_tplfit_dustfit.c_str());
         Log.LogInfo( "      -tplfit_igmfit: %s", m_opt_tplfit_igmfit.c_str());
         Log.LogInfo( "      -continuum fit count:  %.0f", m_opt_continuumfitcount);
+        Log.LogInfo( "      -tplfit_ignorelinesupport: %s", m_opt_tplfit_ignoreLinesSupport.c_str());
     }
     Log.LogInfo( "    -continuumreestimation: %s", m_opt_continuumreest.c_str());
     Log.LogInfo( "    -extremacount: %.0f", m_opt_extremacount);
@@ -657,6 +659,7 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
         linemodel.m_opt_tplfit_dustFit = Int32(m_opt_tplfit_dustfit=="yes");
         linemodel.m_opt_tplfit_extinction = Int32(m_opt_tplfit_igmfit=="yes");
         linemodel.m_opt_fitcontinuum_maxN = m_opt_continuumfitcount;
+        linemodel.m_opt_tplfit_ignoreLinesSupport = Int32(m_opt_tplfit_ignoreLinesSupport=="yes");
     }
 
     if(m_opt_rigidity=="tplshape")

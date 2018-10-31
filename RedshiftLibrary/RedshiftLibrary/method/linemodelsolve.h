@@ -55,6 +55,7 @@ private:
     std::string m_opt_tplfit_dustfit="no";
     std::string m_opt_tplfit_igmfit="no";
     Float64 m_opt_continuumfitcount;
+    std::string m_opt_tplfit_ignoreLinesSupport="no";
 
     std::string m_opt_rigidity;
     std::string m_opt_lineWidthType;

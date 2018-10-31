@@ -358,7 +358,6 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
     bool enableFitContinuumPrecomputed = true;
     if (enableFitContinuumPrecomputed && opt_continuumcomponent == "tplfit")
     {
-        bool ignoreLinesSupport=false; //default: false, as ortho templates store makes this un-necessary
         PrecomputeContinuumFit(spectrum,
                                spectrumContinuum,
                                *orthoTplCatalog,//tplCatalog,//
@@ -367,7 +366,7 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
                                lambdaRange,
                                1.5e-4,
                                opt_twosteplargegridsampling,
-                               ignoreLinesSupport);
+                               m_opt_tplfit_ignoreLinesSupport);
     }else{
         if(opt_continuumcomponent == "tplfit")
         {

@@ -192,6 +192,7 @@ public:
     Int32 m_opt_tplfit_dustFit = 1;
     Int32 m_opt_tplfit_extinction = 1;
     Int32 m_opt_fitcontinuum_maxN = 2;
+    bool m_opt_tplfit_ignoreLinesSupport=false; //default: false, as ortho templates store makes this un-necessary
 
     Int32 m_opt_tplratio_ismFit = 1;
     Int32 m_opt_firstpass_tplratio_ismFit=0;
