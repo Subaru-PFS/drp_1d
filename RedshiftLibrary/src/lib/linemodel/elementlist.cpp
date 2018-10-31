@@ -81,7 +81,7 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
     m_calibrationPath = calibrationPath;
 
     //tplfit continuum option: warning, these options not used when using the precomputed continuum fit store (which is recommended)
-    m_fitContinuum_dustfit = 1;
+    m_fitContinuum_dustfit = -10;
     m_fitContinuum_igm = 1;
     m_fitContinuum_outsidelinesmask = 0;
     m_fitContinuum_observedFrame = 0;
@@ -797,7 +797,21 @@ void CLineModelElementList::LoadFitContinuumOneTemplate(const TFloat64Range& lam
   {
     throw runtime_error("Elementlist, cannot SolveContinuum without m_observeGridContinuumFlux");
   }
-  Bool ret = SolveContinuum( *m_inputSpc, tpl, lambdaRange, redshifts, overlapThreshold, maskList, opt_interp, opt_extinction, opt_dustFit, merit, fitContinuumAmplitude, fitDustCoeff, fitMeiksinIdx, fitDtM, fitMtM);
+  Bool ret = SolveContinuum( *m_inputSpc,
+                             tpl,
+                             lambdaRange,
+                             redshifts,
+                             overlapThreshold,
+                             maskList,
+                             opt_interp,
+                             opt_extinction,
+                             opt_dustFit,
+                             merit,
+                             fitContinuumAmplitude,
+                             fitDustCoeff,
+                             fitMeiksinIdx,
+                             fitDtM,
+                             fitMtM);
   /*//debug
   // export for debug
   FILE* fspc = fopen( "Continuum.txt", "w+" );
@@ -1068,7 +1082,15 @@ Bool CLineModelElementList::SolveContinuum(const CSpectrum& spectrum,
     // Compute merit function
 
     //CRef<CChisquareResult>  chisquareResult = (CChisquareResult*)chiSquare.ExportChi2versusAZ( _spc, _tpl, lambdaRange, redshifts, overlapThreshold );
-    auto  chisquareResult = std::dynamic_pointer_cast<CChisquareResult>( m_chiSquareOperator->Compute( spectrum, tpl, lambdaRange, redshifts, overlapThreshold, maskList, opt_interp, opt_extinction, opt_dustFit ) );
+    auto  chisquareResult = std::dynamic_pointer_cast<CChisquareResult>( m_chiSquareOperator->Compute( spectrum,
+                                                                                                       tpl,
+                                                                                                       lambdaRange,
+                                                                                                       redshifts,
+                                                                                                       overlapThreshold,
+                                                                                                       maskList,
+                                                                                                       opt_interp,
+                                                                                                       opt_extinction,
+                                                                                                       opt_dustFit ) );
     if( !chisquareResult )
     {
 
@@ -1100,7 +1122,7 @@ Int32 CLineModelElementList::LoadFitContaminantTemplate(const TFloat64Range& lam
     std::vector<Float64> redshifts(1, 0.0); //fitting an already redshifted model
     std::string opt_interp = "lin";
     Int32 opt_extinction = 0;
-    Int32 opt_dustFit = 0;
+    Int32 opt_dustFit = -1;
 
     //prepare observed spectrum without continuum
     const CSpectrumFluxAxis& inputSpectrumFluxAxis = m_inputSpc->GetFluxAxis();
@@ -1151,7 +1173,15 @@ Int32 CLineModelElementList::LoadFitContaminantTemplate(const TFloat64Range& lam
     {
         m_chiSquareOperator = new COperatorChiSquare2(m_calibrationPath);
     }
-    auto  chisquareResult = std::dynamic_pointer_cast<CChisquareResult>( m_chiSquareOperator->Compute( *_spc, *m_tplContaminantSpcRebin, lambdaRange, redshifts, overlapThreshold, maskList, opt_interp, opt_extinction, opt_dustFit ) );
+    auto  chisquareResult = std::dynamic_pointer_cast<CChisquareResult>( m_chiSquareOperator->Compute( *_spc,
+                                                                                                       *m_tplContaminantSpcRebin,
+                                                                                                       lambdaRange,
+                                                                                                       redshifts,
+                                                                                                       overlapThreshold,
+                                                                                                       maskList,
+                                                                                                       opt_interp,
+                                                                                                       opt_extinction,
+                                                                                                       opt_dustFit ) );
     if( !chisquareResult )
     {
 

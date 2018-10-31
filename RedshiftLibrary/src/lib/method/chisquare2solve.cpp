@@ -176,10 +176,11 @@ Bool CMethodChisquare2Solve::Solve(CDataStore& resultStore,
     {
         enable_extinction = 1;
     }
-    Int32 enable_dustFitting = 0;
+
+    Int32 option_dustFitting = -1;
     if(opt_dustFitting=="yes")
     {
-        enable_dustFitting = 1;
+        option_dustFitting = -10;
     }
 
 
@@ -229,12 +230,20 @@ Bool CMethodChisquare2Solve::Solve(CDataStore& resultStore,
             tfluxAxisPtr = tplfluxAxis;
             scopeStr = "chisquare_nocontinuum";
             //
-            enable_dustFitting = 0;
+            option_dustFitting = -1;
         }
 
         // Compute merit function
         //CRef<CChisquareResult>  chisquareResult = (CChisquareResult*)chiSquare.ExportChi2versusAZ( _spc, _tpl, lambdaRange, redshifts, overlapThreshold );
-        auto  chisquareResult = std::dynamic_pointer_cast<CChisquareResult>( m_chiSquareOperator->Compute( _spc, _tpl, lambdaRange, redshifts, overlapThreshold, maskList, opt_interp, enable_extinction, enable_dustFitting ) );
+        auto  chisquareResult = std::dynamic_pointer_cast<CChisquareResult>( m_chiSquareOperator->Compute( _spc,
+                                                                                                           _tpl,
+                                                                                                           lambdaRange,
+                                                                                                           redshifts,
+                                                                                                           overlapThreshold,
+                                                                                                           maskList,
+                                                                                                           opt_interp,
+                                                                                                           enable_extinction,
+                                                                                                           option_dustFitting ) );
 
         if( !chisquareResult )
         {

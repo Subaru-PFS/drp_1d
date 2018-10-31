@@ -1476,21 +1476,34 @@ TInt32Range COperatorChiSquareLogLambda::FindTplSpectralIndex(
  *spectrum grid) 2. input: if additional_spcMasks size is 0, no additional mask
  *will be used, otherwise its size should match the redshifts list size
  *
+ * opt_dustFitting: -1 = disabled, -10 = fit over all available indexes, positive integer 0, 1 or ... will be used as ism-calzetti index as initialized in constructor
  **/
 std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(
-    const CSpectrum &spectrum, const CTemplate &tpl,
-    const TFloat64Range &lambdaRange, const TFloat64List &redshifts,
-    Float64 overlapThreshold, std::vector<CMask> additional_spcMasks,
-    std::string opt_interp, Int32 opt_extinction, Int32 opt_dustFitting)
+        const CSpectrum &spectrum,
+        const CTemplate &tpl,
+        const TFloat64Range &lambdaRange,
+        const TFloat64List &redshifts,
+        Float64 overlapThreshold,
+        std::vector<CMask> additional_spcMasks,
+        std::string opt_interp,
+        Int32 opt_extinction,
+        Int32 opt_dustFitting)
 {
     Log.LogInfo(
         "  Operator-ChisquareLog: starting computation for template: %s",
         tpl.GetName().c_str());
 
-    if (opt_dustFitting && m_ismCorrectionCalzetti->calzettiInitFailed)
+    if ((opt_dustFitting==-10 || opt_dustFitting>-1) && m_ismCorrectionCalzetti->calzettiInitFailed)
     {
         Log.LogError("  Operator-ChisquareLog: no calzetti calib. file "
                      "loaded... aborting!");
+        return NULL;
+    }
+    if( opt_dustFitting>-1 && opt_dustFitting>m_ismCorrectionCalzetti->GetNPrecomputedDustCoeffs()-1)
+    {
+        Log.LogError("  Operator-ChisquareLog: calzetti index overflow (opt=%d, while NPrecomputedDustCoeffs=%d)... aborting!",
+                     opt_dustFitting,
+                     m_ismCorrectionCalzetti->GetNPrecomputedDustCoeffs());
         return NULL;
     }
 
@@ -2051,7 +2064,7 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(
 
     // Optionally apply some ISM attenuation
     std::vector<Int32> ismEbmvCoeffs;
-    if (opt_dustFitting)
+    if (opt_dustFitting==-10)
     {
         // Log.LogError("  Operator-ChisquareLog: FitAllz opt_dustFitting not
         // validated yet...");
@@ -2061,7 +2074,13 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(
         {
             ismEbmvCoeffs[kism] = kism;
         }
-    } else
+    }else if (opt_dustFitting>-1)
+    {
+        Int32 nISMCoeffs = 1;
+        ismEbmvCoeffs.resize(nISMCoeffs);
+        ismEbmvCoeffs[0] = opt_dustFitting;
+
+    }else
     {
         ismEbmvCoeffs.clear();
     }

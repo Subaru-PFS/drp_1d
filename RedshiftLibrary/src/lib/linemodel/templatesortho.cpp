@@ -39,7 +39,6 @@ CTemplatesOrthogonalization::CTemplatesOrthogonalization(const CTemplateCatalog&
             if(enableOverride){
                 rigidity = "rules";
                 rules = "no";
-
             }
             std::string opt_fittingmethod2 = "hybrid";
 

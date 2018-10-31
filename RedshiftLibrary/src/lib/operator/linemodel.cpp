@@ -171,7 +171,7 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
         restraycatalog.GetFilteredList(typeFilter, forceFilter);
     Log.LogDebug("restRayList.size() = %d", restRayList.size());
 
-    /*
+    //*
     //tpl orthogonalization
     bool enableOrtho = (opt_continuumcomponent == "tplfit");
     Log.LogInfo("  Operator-Linemodel: TemplatesOrthogonalization enabled = %d", enableOrtho);
@@ -202,7 +202,7 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
     m_model = std::shared_ptr<CLineModelElementList>(new CLineModelElementList(
                                                          spectrum,
                                                          spectrumContinuum,
-                                                         tplCatalog, //*orthoTplCatalog,//
+                                                         *orthoTplCatalog,//tplCatalog, //
                                                          tplCategoryList,
                                                          opt_calibrationPath,
                                                          restRayList,
@@ -358,14 +358,16 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
     bool enableFitContinuumPrecomputed = true;
     if (enableFitContinuumPrecomputed && opt_continuumcomponent == "tplfit")
     {
+        bool ignoreLinesSupport=false; //default: false, as ortho templates store makes this un-necessary
         PrecomputeContinuumFit(spectrum,
                                spectrumContinuum,
-                               tplCatalog,//*orthoTplCatalog,//
+                               *orthoTplCatalog,//tplCatalog,//
                                tplCategoryList,
                                opt_calibrationPath,
                                lambdaRange,
                                1.5e-4,
-                               opt_twosteplargegridsampling);
+                               opt_twosteplargegridsampling,
+                               ignoreLinesSupport);
     }else{
         if(opt_continuumcomponent == "tplfit")
         {
@@ -573,7 +575,8 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
                                                  const std::string opt_calibrationPath,
                                                  const TFloat64Range &lambdaRange,
                                                  const Float64 redshiftStep,
-                                                 const string zsampling)
+                                                 const string zsampling,
+                                                 bool ignoreLinesSupport)
 {
     boost::chrono::thread_clock::time_point start_tplfitprecompute =
         boost::chrono::thread_clock::now();
@@ -641,7 +644,6 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
     }
 
     Float64 overlapThreshold = 1.0;
-    bool ignoreLinesSupport=true; //default: false, as ortho templates store makes this un-necessary
     if (opt_chi2operator != "chisquare2")
     {
         ignoreLinesSupport=false;
@@ -680,6 +682,12 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
             //const CTemplate &tpl = orthoTplCatalog->GetTemplate(category, j);
             const CTemplate &tpl = tplCatalog.GetTemplate(category, j);
 
+            Int32 opt_tplfit_integer_chi2_dustfit = -1;
+            if(m_opt_tplfit_dustFit)
+            {
+                opt_tplfit_integer_chi2_dustfit=-10;
+            }
+
             auto chisquareResult =
                 std::dynamic_pointer_cast<CChisquareResult>(
                     chiSquareOperator->Compute(
@@ -691,7 +699,7 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
                             maskList,
                             opt_interp,
                             m_opt_tplfit_extinction,
-                            m_opt_tplfit_dustFit));
+                            opt_tplfit_integer_chi2_dustfit));
             if (!chisquareResult)
             {
                 Log.LogInfo("  Operator-Linemodel failed to compute chi "

@@ -56,7 +56,31 @@ COperatorChiSquare2::~COperatorChiSquare2()
     delete m_igmCorrectionMeiksin;
 }
 
-
+/**
+ * @brief COperatorChiSquare2::BasicFit
+ * @param spectrum
+ * @param tpl
+ * @param pfgTplBuffer
+ * @param lambdaRange
+ * @param redshift
+ * @param overlapThreshold
+ * @param overlapRate
+ * @param chiSquare
+ * @param fittingAmplitude
+ * @param fittingDtM
+ * @param fittingMtM
+ * @param fittingDustCoeff
+ * @param fittingMeiksinIdx
+ * @param status
+ * @param ChiSquareInterm
+ * @param IsmCalzettiCoeffInterm
+ * @param IgmMeiksinIdxInterm
+ * @param opt_interp
+ * @param forcedAmplitude
+ * @param opt_extinction
+ * @param opt_dustFitting : -1 = disabled, -10 = fit over all available indexes, positive integer 0, 1 or ... will be used as ism-calzetti index as initialized in constructor.
+ * @param spcMaskAdditional
+ */
 void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
                                    const CTemplate& tpl,
                                    Float64* pfgTplBuffer,
@@ -74,7 +98,11 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
                                    std::vector<TFloat64List>& ChiSquareInterm,
                                    std::vector<TFloat64List>& IsmCalzettiCoeffInterm,
                                    std::vector<TInt32List>& IgmMeiksinIdxInterm,
-                                   std::string opt_interp, Float64 forcedAmplitude, Int32 opt_extinction, Int32 opt_dustFitting, CMask spcMaskAdditional)
+                                   std::string opt_interp,
+                                   Float64 forcedAmplitude,
+                                   Int32 opt_extinction,
+                                   Int32 opt_dustFitting,
+                                   CMask spcMaskAdditional)
 {
     bool verbose = false;
     bool amplForcePositive=true;
@@ -198,20 +226,33 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
     }
 
     // Optionally Apply some Calzetti Extinction for DUST
-    bool opt_dust_calzetti = opt_dustFitting;
-
     Int32 nDustCoeffs=1;
-    if(!opt_dust_calzetti)
+    Int32 iDustCoeffMin = 0;
+    Int32 iDustCoeffMax = iDustCoeffMin+1;
+    if(opt_dustFitting==-10 || opt_dustFitting>0)
     {
-        nDustCoeffs = 1;
-    }else{
-        nDustCoeffs = m_ismCorrectionCalzetti->GetNPrecomputedDustCoeffs();
         if(m_YtplRawBufferMaxBufferSize<itplTplSpectralAxis.GetSamplesCount())
         {
             Log.LogError( "chisquare operator: rebinned tpl size > buffer size for dust-fit ! Aborting.");
             status = nStatus_DataError;
             return ;
         }
+
+        if(opt_dustFitting>0)
+        {
+            nDustCoeffs = 1;
+            iDustCoeffMin = opt_dustFitting;
+            iDustCoeffMax = iDustCoeffMin;
+        }else if(opt_dustFitting==-10)
+        {
+            nDustCoeffs = m_ismCorrectionCalzetti->GetNPrecomputedDustCoeffs();
+            iDustCoeffMin = 0;
+            iDustCoeffMax = iDustCoeffMin+nDustCoeffs-1;
+        }
+    }else{
+        nDustCoeffs = 1;
+        iDustCoeffMin = 0;
+        iDustCoeffMax = iDustCoeffMin;
     }
 
     //Optionally apply some IGM absorption
@@ -284,7 +325,7 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
 
 
         //Loop on the EBMV dust coeff
-        for(Int32 kDust=0; kDust<nDustCoeffs; kDust++)
+        for(Int32 kDust=iDustCoeffMin; kDust<=iDustCoeffMax; kDust++)
         {
             if(ytpl_modified)
             {
@@ -589,6 +630,8 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
  * \brief
  *
  * input: if additional_spcMasks size is 0, no additional mask will be used, otherwise its size should match the redshifts list size
+ *
+ * opt_dustFitting: -1 = disabled, -10 = fit over all available indexes, positive integer 0, 1 or ... will be used as ism-calzetti index as initialized in constructor.
  **/
 std::shared_ptr<COperatorResult> COperatorChiSquare2::Compute(const CSpectrum& spectrum,
                                                               const CTemplate& tpl,
@@ -613,9 +656,16 @@ std::shared_ptr<COperatorResult> COperatorChiSquare2::Compute(const CSpectrum& s
         }
     }
 
-    if( opt_dustFitting && m_ismCorrectionCalzetti->calzettiInitFailed)
+    if( (opt_dustFitting==-10 || opt_dustFitting>-1) && m_ismCorrectionCalzetti->calzettiInitFailed)
     {
         Log.LogError("  Operator-Chisquare2: no calzetti calib. file loaded... aborting!");
+        return NULL;
+    }
+    if( opt_dustFitting>-1 && opt_dustFitting>m_ismCorrectionCalzetti->GetNPrecomputedDustCoeffs()-1)
+    {
+        Log.LogError("  Operator-Chisquare2: calzetti index overflow (opt=%d, while NPrecomputedDustCoeffs=%d)... aborting!",
+                     opt_dustFitting,
+                     m_ismCorrectionCalzetti->GetNPrecomputedDustCoeffs());
         return NULL;
     }
 
@@ -749,7 +799,7 @@ std::shared_ptr<COperatorResult> COperatorChiSquare2::Compute(const CSpectrum& s
 
     std::shared_ptr<CChisquareResult> result = std::shared_ptr<CChisquareResult>( new CChisquareResult() );
     Int32 nDustCoeffs=1;
-    if(opt_dustFitting)
+    if(opt_dustFitting==-10)
     {
         nDustCoeffs = m_ismCorrectionCalzetti->GetNPrecomputedDustCoeffs();
     }

@@ -74,7 +74,8 @@ public:
                                 const std::string opt_calibrationPath,
                                 const TFloat64Range &lambdaRange,
                                 const Float64 redshiftStep=0.00015,
-                                const string zsampling="log");
+                                const string zsampling="log",
+                                bool ignoreLinesSupport=false);
 
     Int32 ComputeFirstPass(CDataStore &dataStore,
                                               const CSpectrum& spectrum,
