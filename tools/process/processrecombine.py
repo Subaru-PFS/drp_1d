@@ -41,7 +41,12 @@ class processRecombine(object):
                 fileList.append(fullPath)
         return fileList
         
-    def recombine(self, infoFilePath, enableSkipUnfinished=True):
+    def recombine(self, 
+                  infoFilePath, 
+                  enableSkipUnfinished=True, 
+                  ignoreLogFile=True, 
+                  ignoreTemplatesFiles=True, 
+                  ignoreClusterLogs=True):
         """
         recombine from the subset described by infoFilePath
         """
@@ -65,14 +70,23 @@ class processRecombine(object):
         self.mergeCsvFiles(subpathsList, datasetOutputPath, fileName="redshift.csv", verbose=True)
         print("WARNING: redshift.csv has been recombined!")
         
-        #merge log files
-        self.mergeCsvFiles(subpathsList, datasetOutputPath, fileName="log.txt")
-        print("WARNING: log.txt has been recombined!")
+        if not ignoreLogFile:
+            print("INFO: merging log files")
+            self.mergeCsvFiles(subpathsList, datasetOutputPath, fileName="log.txt")
+            print("WARNING: log.txt has been recombined!")
+            
+        print("INFO: merging BRIEF log files")
+        self.mergeCsvFiles(subpathsList, datasetOutputPath, fileName="log.txt", maxNLines=10000)
+        print("WARNING: log file BRIEF has been recombined!")
+        
+
 
         try:        
-            #merge input spectrumlist files
-            self.mergeCsvFiles(subpathsList, datasetOutputPath, fileName="input.spectrumlist")         
+            print("INFO: merging input spectrumlist files")
+            self.mergeCsvFiles(subpathsList, datasetOutputPath, fileName="input.spectrumlist")   
+            print("WARNING: input.spectrumlist has been recombined!")
             
+            print("INFO: merging versions files")
             #copy version file from first subset #0, supposing the file is similar for the other subsets results
             source_path = os.path.join(subpathsList[0], "versions.txt")
             dest_path = os.path.join(datasetOutputPath, "versions.txt")
@@ -94,15 +108,16 @@ class processRecombine(object):
             dest_path = os.path.join(datasetOutputPath, "config.txt")
             shutil.copy(source_path, dest_path)
             
-            #copy templates folder from first subset #0, supposing the file is similar for the other subsets results
-            source_path = os.path.join(subpathsList[0], "templates")
-            dest_path = os.path.join(datasetOutputPath, "templates")
-            shutil.copytree(source_path, dest_path)
-            
-            #copy templates folder from first subset #0, supposing the file is similar for the other subsets results
-            source_path = os.path.join(subpathsList[0], "templates_nocontinuum")
-            dest_path = os.path.join(datasetOutputPath, "templates_nocontinuum")
-            shutil.copytree(source_path, dest_path)
+            if not ignoreTemplatesFiles:
+                #copy templates folder from first subset #0, supposing the file is similar for the other subsets results
+                source_path = os.path.join(subpathsList[0], "templates")
+                dest_path = os.path.join(datasetOutputPath, "templates")
+                shutil.copytree(source_path, dest_path)
+                
+                #copy templates folder from first subset #0, supposing the file is similar for the other subsets results
+                source_path = os.path.join(subpathsList[0], "templates_nocontinuum")
+                dest_path = os.path.join(datasetOutputPath, "templates_nocontinuum")
+                shutil.copytree(source_path, dest_path)
             
             #merge classification.csv files
             self.mergeCsvFiles(subpathsList, datasetOutputPath, fileName="classification.csv", verbose=True)
@@ -121,8 +136,9 @@ class processRecombine(object):
                 print(e)
                 
                 
+                
         try:
-            #copy intermediate results if any
+            print("INFO: copy intermediate results if any!")
             self.copyIntermediateResultsDirs(subpathsList, datasetOutputPath, spcfileName="input.spectrumlist")
                 
         except Exception as e:
@@ -131,17 +147,20 @@ class processRecombine(object):
                 input("\n\nWARNING: unable to merge some output files. will skip that operation.\nPress any key to continue...".format())
                 raise e
             else:
+                print("INFO: unable to merge some INTERMEDIATE output files. Skipping that operation !")
                 print(e)
         
-        #copy the cluster logs into the merged folder
-        try:
-            source_path = os.path.join(self.outputPath, "cluster_logs") #warning hardcoded, but not critical to avoid this...
-            dest_path = os.path.join(datasetOutputPath, "cluster_logs")
-            shutil.copytree(source_path, dest_path)
-        except:
-            print("INFO: skipped cluster_logs directory while recombining. Folder not found")
-
-        #estimate per spectrum processing time stats
+        
+        if not ignoreClusterLogs:
+            print("INFO: copying the cluster logs into the merged folder !")
+            try:
+                source_path = os.path.join(self.outputPath, "cluster_logs") #warning hardcoded, but not critical to avoid this...
+                dest_path = os.path.join(datasetOutputPath, "cluster_logs")
+                shutil.copytree(source_path, dest_path)
+            except:
+                print("INFO: skipped cluster_logs directory while recombining. Folder not found")
+    
+        print("INFO: estimate per spectrum processing time stats !")
         try:
             clusterLogsDirPath= os.path.join(self.outputPath, "cluster_logs") #warning hardcoded, but not critical to avoid this...
             self.estimatePerSpectrumProcTime(clusterLogsDirPath, datasetOutputPath)
@@ -149,59 +168,105 @@ class processRecombine(object):
             print("INFO/Warning: skipped per spectrum processing time stats")
 
         
-    def recombineAll(self):
+    def recombineAll(self, opt_brief = True):
+        """
+        """
+        ignoreLogFile=True
+        ignoreTemplatesFiles=True
+        ignoreClusterLogs=True
+        if opt_brief==False:
+            ignoreLogFile=False
+            ignoreTemplatesFiles=False
+            ignoreClusterLogs=False                  
+        
         for f in self.flist:
             print("INFO: recombining from subsets: {}".format(f))
-            self.recombine(f)
+            self.recombine(f, 
+                           ignoreLogFile=ignoreLogFile, 
+                           ignoreTemplatesFiles=ignoreTemplatesFiles,
+                           ignoreClusterLogs=ignoreClusterLogs)
             
-    def mergeCsvFiles(self, subpathsList, outPath, fileName, verbose=False):
+    def mergeCsvFiles(self, 
+                      subpathsList, 
+                      outPath, 
+                      fileName, 
+                      verbose=False, 
+                      enableSkipMissing=True,
+                      maxNLines=-1):
         """
         input:  - subpathsList is a list of directories containing the 'fileName' file
                 - outPath is a directory where the merged 'fileName' csv will be saved 
         """
         allLines = []
         headerCopied = False
+        skipAll = False
         for dirpath in subpathsList:
+            if skipAll:
+                break
             fpath = os.path.join(dirpath, fileName)
-            f = open(fpath, 'r')
-            if f==0:
-                print("ERROR: unable to open file = {}".format(fpath))
-            n=0
-            for line in f:
-                lineStr = line.strip()
-                if not lineStr.startswith('#'):
-                    allLines.append(lineStr)
-                    n+=1
-                elif not headerCopied:
-                    headerCopied = True
-                    allLines.append(lineStr)
-            if verbose:
-                print("INFO-merge: f={}, found lines n={}".format(fpath, n))            
-            f.close()
-            
-        fFilePath = os.path.join(outPath, fileName)
+            if os.path.isfile(fpath):
+                f = open(fpath, 'r')
+                if f==0:
+                    print("ERROR: unable to open file = {}".format(fpath))
+                n=0
+                for line in f:
+                    lineStr = line.strip()
+                    if not lineStr.startswith('#'):
+                        allLines.append(lineStr)
+                        n+=1
+                    elif not headerCopied:
+                        headerCopied = True
+                        allLines.append(lineStr)
+                    if maxNLines>0 and len(allLines)>maxNLines:
+                        skipAll=True
+                        break
+                if verbose:
+                    print("INFO-merge: f={}, found lines n={}".format(fpath, n))            
+                f.close()
+            else:
+                print("WARNING: csv merge: unable to open file (does not exit): {}".format(fpath))
+                if not enableSkipMissing:
+                    print("ERROR: csv merge: will now exit after error.".format(fpath))
+                    exit()
+                    
+        finalOutputName = fileName
+        if maxNLines>0:
+            outPathNoExt = os.path.splitext(fileName)[0]
+            outPathExt = os.path.splitext(fileName)[1]
+            finalOutputName = "{}_brief_cut{}.{}".format(outPathNoExt, maxNLines, outPathExt)
+        fFilePath = os.path.join(outPath, finalOutputName)
         fout = open(fFilePath, 'w')
         for l in allLines:
             fout.write(l)
             fout.write('\n')
         fout.close()
           
-    def copyIntermediateResultsDirs(self, subpathsList, outPath, spcfileName):
+    def copyIntermediateResultsDirs(self, 
+                                    subpathsList, 
+                                    outPath, 
+                                    spcfileName,
+                                    enableSkipMissing=True):
         """
         """
         for dirpath in subpathsList:
             fpath = os.path.join(dirpath, spcfileName)
-            f = open(fpath, 'r')
-            for line in f:
-                lineStr = line.strip()
-                if not lineStr.startswith('#'):
-                    procTag = lineStr.split("\t")[2]
-                    source_path = os.path.join(dirpath, procTag)
-                    dest_path = os.path.join(outPath, procTag)
-                    try:
-                        shutil.copytree(source_path, dest_path)
-                    except:
-                        print("ERROR: unable to copy intermediate files for: {}".format(procTag))
+            if os.path.isfile(fpath):
+                f = open(fpath, 'r')
+                for line in f:
+                    lineStr = line.strip()
+                    if not lineStr.startswith('#'):
+                        procTag = lineStr.split("\t")[2]
+                        source_path = os.path.join(dirpath, procTag)
+                        dest_path = os.path.join(outPath, procTag)
+                        try:
+                            shutil.copytree(source_path, dest_path)
+                        except:
+                            print("ERROR: unable to copy intermediate files for: {}".format(procTag))
+            else:
+                print("WARNING: copy Intermediate Res : unable to open file (does not exit): {}".format(fpath))
+                if not enableSkipMissing:
+                    print("ERROR: csv merge: will now exit after error.".format(fpath))
+                    exit()
                         
             f.close()
             
