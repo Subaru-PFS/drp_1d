@@ -227,6 +227,7 @@ class CSpectrumAxis
   CSpectrumAxis( UInt32 n );
   CSpectrumAxis(const Float64* samples, UInt32 n );
   Float64* GetSamples();
+  UInt32 GetSamplesCount() const;
   virtual void SetSize( UInt32 s );
 };
 %clear (const Float64* samples, UInt32 n);
