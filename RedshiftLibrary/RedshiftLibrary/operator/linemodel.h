@@ -108,32 +108,45 @@ public:
 
 
     Int32 ComputeSecondPass(CDataStore &dataStore,
-                                              const CSpectrum& spectrum,
-                                              const CSpectrum &spectrumContinuum,
-                                              const CTemplateCatalog &tplCatalog,
-                                              const TStringList &tplCategoryList,
-                                              const std::string opt_calibrationPath,
-                                              const CRayCatalog& restraycatalog,
-                                              const std::string &opt_lineTypeFilter,
-                                              const std::string &opt_lineForceFilter,
-                                              const TFloat64Range& lambdaRange,
-                                              const Int32 opt_extremacount,
-                                              const std::string &opt_fittingmethod,
-                                              const std::string &opt_continuumcomponent,
-                                              const std::string& opt_lineWidthType,
-                                              const Float64 opt_resolution,
-                                              const Float64 opt_velocityEmission,
-                                              const Float64 opt_velocityAbsorption,
-                                              const std::string &opt_continuumreest="no",
-                                              const std::string &opt_rules="all",
-                                              const std::string &opt_velocityFitting="no",
-                                              const std::string &opt_rigidity="rules",
-                                              const Float64 &opt_emvelocityfitmin=20.,
-                                              const Float64 &opt_emvelocityfitmax=500.,
-                                             const Float64 &opt_emvelocityfitstep=20.,
-                                             const Float64 &opt_absvelocityfitmin=150.,
-                                             const Float64 &opt_absvelocityfitmax=500.,
-                                             const Float64 &opt_absvelocityfitstep=20.);
+                            const CSpectrum& spectrum,
+                            const CSpectrum &spectrumContinuum,
+                            const CTemplateCatalog &tplCatalog,
+                            const TStringList &tplCategoryList,
+                            const std::string opt_calibrationPath,
+                            const CRayCatalog& restraycatalog,
+                            const std::string &opt_lineTypeFilter,
+                            const std::string &opt_lineForceFilter,
+                            const TFloat64Range& lambdaRange,
+                            const Int32 opt_extremacount,
+                            const std::string &opt_fittingmethod,
+                            const std::string &opt_continuumcomponent,
+                            const std::string& opt_lineWidthType,
+                            const Float64 opt_resolution,
+                            const Float64 opt_velocityEmission,
+                            const Float64 opt_velocityAbsorption,
+                            const std::string &opt_continuumreest="no",
+                            const std::string &opt_rules="all",
+                            const std::string &opt_velocityFitting="no",
+                            const std::string &opt_rigidity="rules",
+                            const Float64 &opt_emvelocityfitmin=20.,
+                            const Float64 &opt_emvelocityfitmax=500.,
+                            const Float64 &opt_emvelocityfitstep=20.,
+                            const Float64 &opt_absvelocityfitmin=150.,
+                            const Float64 &opt_absvelocityfitmax=500.,
+                            const Float64 &opt_absvelocityfitstep=20.);
+
+    Int32 EstimateSecondPassParameters(const CSpectrum &spectrum,
+                                       const TFloat64Range &lambdaRange,
+                                       const string &opt_continuumreest,
+                                       const string &opt_fittingmethod,
+                                       const std::string &opt_rigidity,
+                                       const string &opt_velocityFitting,
+                                       const Float64 &opt_emvelocityfitmin,
+                                       const Float64 &opt_emvelocityfitmax,
+                                       const Float64 &opt_emvelocityfitstep,
+                                       const Float64 &opt_absvelocityfitmin,
+                                       const Float64 &opt_absvelocityfitmax,
+                                       const Float64 &opt_absvelocityfitstep);
 
     std::shared_ptr<COperatorResult> computeWithUltimPass(CDataStore &dataStore,
                                       const CSpectrum& spectrum,
@@ -208,6 +221,7 @@ private:
     //candidates
     TPointList m_extremumList;
     CLineModelExtremaResult m_firstpass_extremaResult;
+    CLineModelExtremaResult m_secondpass_parameters_extremaResult;
 
     Int32 m_enableFastFitLargeGrid = 0;
     Int32 m_estimateLeastSquareFast = 0;
@@ -224,6 +238,14 @@ private:
     std::vector<std::shared_ptr<CModelContinuumFittingResult>  > m_savedModelContinuumFittingResults;
     std::vector<std::shared_ptr<CModelRulesResult>  > m_savedModelRulesResults;
     std::vector<std::shared_ptr<CSpectraFluxResult>  > m_savedModelContinuumSpectrumResults;
+
+    //lmfit
+
+    bool mlmfit_modelInfoSave = false;
+    std::vector<std::shared_ptr<CModelSpectrumResult>> mlmfit_savedModelSpectrumResults_lmfit;
+    std::vector<std::shared_ptr<CModelFittingResult>> mlmfit_savedModelFittingResults_lmfit;
+    std::vector<std::shared_ptr<CModelRulesResult>> mlmfit_savedModelRulesResults_lmfit;
+    std::vector<std::shared_ptr<CSpectraFluxResult>> mlmfit_savedBaselineResult_lmfit;
 
 };
 

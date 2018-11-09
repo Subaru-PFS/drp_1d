@@ -40,6 +40,7 @@ void CLineModelExtremaResult::Resize(Int32 size)
     lmfitPass.resize(size);
     snrHa.resize(size);
     lfHa.resize(size);
+
     Posterior.resize(size);
     StrongELSNR.resize(size);
     LogArea.resize(size);
@@ -50,11 +51,17 @@ void CLineModelExtremaResult::Resize(Int32 size)
     OutsideLinesMask.resize(size);
     OutsideLinesSTDFlux.resize(size);
     OutsideLinesSTDError.resize(size);
+
+    Elv.resize(size);
+    Alv.resize(size);
+    GroupsLv.resize(size);
+
     FittedTplName.resize(size);
     FittedTplAmplitude.resize(size);
     FittedTplMerit.resize(size);
     FittedTplDustCoeff.resize(size);
     FittedTplMeiksinIdx.resize(size);
+
     FittedTplshapeName.resize(size);
     FittedTplshapeIsmCoeff.resize(size);
     FittedTplshapeAmplitude.resize(size);

@@ -201,7 +201,7 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
     m_model = std::shared_ptr<CLineModelElementList>(new CLineModelElementList(
                                                          spectrum,
                                                          spectrumContinuum,
-                                                         *orthoTplCatalog,
+                                                         tplCatalog,
                                                          tplCategoryList,
                                                          opt_calibrationPath,
                                                          restRayList,
@@ -877,6 +877,7 @@ Int32 COperatorLineModel::ComputeCandidates(const Int32 opt_extremacount,
     for (Int32 i = 0; i < m_extremumList.size(); i++)
     {
         Float64 z = m_extremumList[i].X;
+        Float64 m = m_extremumList[i].Y;
         // find the index in the zaxis results
         Int32 idx = -1;
         for (UInt32 i2 = 0; i2 < m_result->Redshifts.size(); i2++)
@@ -893,11 +894,18 @@ Int32 COperatorLineModel::ComputeCandidates(const Int32 opt_extremacount,
             continue;
         }
 
+        //save basic fitting info from first pass
+        m_firstpass_extremaResult.Extrema[i] = z;
+        m_firstpass_extremaResult.ExtremaMerit[i] = m;
+        m_firstpass_extremaResult.Elv[i] = m_result->LineModelSolutions[idx].EmissionVelocity;
+        m_firstpass_extremaResult.Alv[i] = m_result->LineModelSolutions[idx].AbsorptionVelocity;
+
         //save the continuum fitting parameters from first pass
         m_firstpass_extremaResult.FittedTplName[i] = m_result->ContinuumModelSolutions[idx].tplName;
         m_firstpass_extremaResult.FittedTplDustCoeff[i] = m_result->ContinuumModelSolutions[idx].tplDustCoeff;
         m_firstpass_extremaResult.FittedTplMeiksinIdx[i] = m_result->ContinuumModelSolutions[idx].tplMeiksinIdx;
         m_firstpass_extremaResult.FittedTplAmplitude[i] = m_result->ContinuumModelSolutions[idx].tplAmplitude;
+
         //... todo: more first pass results can be saved here if needed
     }
 
@@ -905,100 +913,73 @@ Int32 COperatorLineModel::ComputeCandidates(const Int32 opt_extremacount,
     return 0;
 }
 
-Int32 COperatorLineModel::ComputeSecondPass(
-        CDataStore &dataStore,
-        const CSpectrum &spectrum,
-        const CSpectrum &spectrumContinuum,
-        const CTemplateCatalog &tplCatalog,
-        const TStringList &tplCategoryList,
-        const std::string opt_calibrationPath,
-        const CRayCatalog &restraycatalog,
-        const std::string &opt_lineTypeFilter,
-        const std::string &opt_lineForceFilter,
-        const TFloat64Range &lambdaRange,
-        const Int32 opt_extremacount,
-        const std::string &opt_fittingmethod,
-        const std::string &opt_continuumcomponent,
-        const std::string &opt_lineWidthType,
-        const Float64 opt_resolution,
-        const Float64 opt_velocityEmission,
-        const Float64 opt_velocityAbsorption,
-        const std::string &opt_continuumreest,
-        const std::string &opt_rules,
-        const std::string &opt_velocityFitting,
-        const std::string &opt_rigidity,
-        const Float64 &opt_emvelocityfitmin,
-        const Float64 &opt_emvelocityfitmax,
-        const Float64 &opt_emvelocityfitstep,
-        const Float64 &opt_absvelocityfitmin,
-        const Float64 &opt_absvelocityfitmax,
-        const Float64 &opt_absvelocityfitstep)
+Int32 COperatorLineModel::ComputeSecondPass(CDataStore &dataStore,
+                                            const CSpectrum &spectrum,
+                                            const CSpectrum &spectrumContinuum,
+                                            const CTemplateCatalog &tplCatalog,
+                                            const TStringList &tplCategoryList,
+                                            const std::string opt_calibrationPath,
+                                            const CRayCatalog &restraycatalog,
+                                            const std::string &opt_lineTypeFilter,
+                                            const std::string &opt_lineForceFilter,
+                                            const TFloat64Range &lambdaRange,
+                                            const Int32 opt_extremacount,
+                                            const std::string &opt_fittingmethod,
+                                            const std::string &opt_continuumcomponent,
+                                            const std::string &opt_lineWidthType,
+                                            const Float64 opt_resolution,
+                                            const Float64 opt_velocityEmission,
+                                            const Float64 opt_velocityAbsorption,
+                                            const std::string &opt_continuumreest,
+                                            const std::string &opt_rules,
+                                            const std::string &opt_velocityFitting,
+                                            const std::string &opt_rigidity,
+                                            const Float64 &opt_emvelocityfitmin,
+                                            const Float64 &opt_emvelocityfitmax,
+                                            const Float64 &opt_emvelocityfitstep,
+                                            const Float64 &opt_absvelocityfitmin,
+                                            const Float64 &opt_absvelocityfitmax,
+                                            const Float64 &opt_absvelocityfitstep)
 {
 
     // Set model parameters to SECOND-PASS
     m_model->setPassMode(2);
-    Log.LogInfo(
-        "  Operator-Linemodel: ---------- ---------- ---------- ----------");
+    Log.LogInfo("  Operator-Linemodel: ---------- ---------- ---------- ----------");
     Log.LogInfo("  Operator-Linemodel: now computing second-pass");
-    Log.LogInfo(
-        "  Operator-Linemodel: ---------- ---------- ---------- ----------");
+    Log.LogInfo("  Operator-Linemodel: ---------- ---------- ---------- ----------");
 
-    // setup velocity fitting
-    bool enableVelocityFitting = true;
-    Float64 velfitMinE = opt_emvelocityfitmin;
-    Float64 velfitMaxE = opt_emvelocityfitmax;
-    Float64 velfitStepE = opt_emvelocityfitstep;
-    Float64 velfitMinA = opt_absvelocityfitmin;
-    Float64 velfitMaxA = opt_absvelocityfitmax;
-    Float64 velfitStepA = opt_absvelocityfitstep;
-    // HARDCODED - override: no-velocityfitting for abs
-    // velfitMinA = opt_velocityAbsorption;
-    // velfitMaxA = opt_velocityAbsorption;
-    if (opt_velocityFitting != "yes")
-    {
-        enableVelocityFitting = false;
-    } else
-    {
-        Log.LogInfo("  Operator-Linemodel: velocity fitting bounds for "
-                    "Emission: min=%.1f - max=%.1f - step=%.1f",
-                    velfitMinE, velfitMaxE, velfitStepE);
-        Log.LogInfo("  Operator-Linemodel: velocity fitting bounds for "
-                    "Absorption: min=%.1f - max=%.1f - step=%.1f",
-                    velfitMinA, velfitMaxA, velfitStepA);
-    }
+    //init lmfit variables
+    mlmfit_modelInfoSave = false;
+    mlmfit_savedModelSpectrumResults_lmfit.clear();
+    mlmfit_savedModelFittingResults_lmfit.clear();
+    mlmfit_savedModelRulesResults_lmfit.clear();
+    mlmfit_savedBaselineResult_lmfit.clear();
 
-    // enable/disable fit by groups. Once enabled, the velocity fitting groups
-    // are defined in the line catalog from v4.0 on.
-    m_enableWidthFitByGroups = true;
-
-    std::vector<Float64> extrema_velocityEL;
-    std::vector<Float64> extrema_velocityAL;
-    extrema_velocityEL.resize(m_extremumList.size());
-    extrema_velocityAL.resize(m_extremumList.size());
+    EstimateSecondPassParameters(spectrum,
+                                 lambdaRange,
+                                 opt_continuumreest,
+                                 opt_fittingmethod,
+                                 opt_rigidity,
+                                 opt_velocityFitting,
+                                 opt_emvelocityfitmin,
+                                 opt_emvelocityfitmax,
+                                 opt_emvelocityfitstep,
+                                 opt_absvelocityfitmin,
+                                 opt_absvelocityfitmax,
+                                 opt_absvelocityfitstep);
 
     TPointList extremumList2;
     extremumList2.resize(m_extremumList.size());
 
-    bool modelInfoSave = false;
-    std::vector<std::shared_ptr<CModelSpectrumResult>>
-        savedModelSpectrumResults_lmfit;
-    std::vector<std::shared_ptr<CModelFittingResult>>
-        savedModelFittingResults_lmfit;
-    std::vector<std::shared_ptr<CModelRulesResult>>
-        savedModelRulesResults_lmfit;
-    std::vector<std::shared_ptr<CSpectraFluxResult>> savedBaselineResult_lmfit;
-
     // recompute the fine grid results around the extrema
-    if (m_enableFastFitLargeGrid == 1 || enableVelocityFitting)
+    bool enable_recompute_around_candidate = true;
+    if (enable_recompute_around_candidate)
     {
         for (Int32 i = 0; i < m_extremumList.size(); i++)
         {
-            Log.LogInfo(
-                "  Operator-Linemodel: Computing second pass for extremum #%d",
-                i);
-            Log.LogInfo("  Operator-Linemodel: ---------- /\\ ---------- "
-                        "---------- ---------- %d",
-                        i);
+            Log.LogInfo("");
+            Log.LogInfo("  Operator-Linemodel: Second pass - recompute around Candidate #%d", i);
+            Log.LogInfo("  Operator-Linemodel: ---------- /\\ ---------- ---------- ---------- Candidate #%d", i);
             Float64 z = m_extremumList[i].X;
 
             // find the index in the zaxis results
@@ -1029,359 +1010,14 @@ Int32 COperatorLineModel::ComputeSecondPass(
                 contreest_iterations = 0;
             }
 
-            // model.LoadModelSolution(m_result->LineModelSolutions[idx]);
-            m_model->fit(m_result->Redshifts[idx], lambdaRange,
-                         m_result->LineModelSolutions[idx],
-                         m_result->ContinuumModelSolutions[idx],
-                         contreest_iterations, false);
-            // m = m_result->ChiSquare[idx];
-            if (enableVelocityFitting)
-            {
-                Bool enableManualStepVelocityFit = true;
-                Bool enableLMVelocityFit = false;
-                if (enableLMVelocityFit)
-                {
-                    // fit the emission and absorption width using the linemodel
-                    // lmfit strategy
-                    m_model->SetFittingMethod("lmfit");
-                    // m_model->SetElementIndexesDisabledAuto();
-
-                    Log.LogInfo("  Operator-Linemodel: Lm fit for extrema %d",
-                                i);
-                    m_model->fit(m_result->Redshifts[idx], lambdaRange,
-                                 m_result->LineModelSolutions[idx],
-                                 m_result->ContinuumModelSolutions[idx],
-                                 contreest_iterations, true);
-                    modelInfoSave = true;
-                    // CModelSpectrumResult
-                    std::shared_ptr<CModelSpectrumResult> resultspcmodel =
-                        std::shared_ptr<CModelSpectrumResult>(
-                            new CModelSpectrumResult(
-                                m_model->GetModelSpectrum()));
-                    // std::shared_ptr<CModelSpectrumResult>  resultspcmodel =
-                    // std::shared_ptr<CModelSpectrumResult>( new
-                    // CModelSpectrumResult(m_model->GetObservedSpectrumWithLinesRemoved())
-                    // );
-                    savedModelSpectrumResults_lmfit.push_back(resultspcmodel);
-                    // CModelFittingResult
-                    std::shared_ptr<CModelFittingResult> resultfitmodel =
-                        std::shared_ptr<CModelFittingResult>(
-                            new CModelFittingResult(
-                                m_result->LineModelSolutions[idx],
-                                m_result->Redshifts[idx],
-                                m_result->ChiSquare[idx], m_result->restRayList,
-                                m_model->GetVelocityEmission(),
-                                m_model->GetVelocityAbsorption()));
-                    savedModelFittingResults_lmfit.push_back(resultfitmodel);
-                    // CModelRulesResult
-                    std::shared_ptr<CModelRulesResult> resultrulesmodel =
-                        std::shared_ptr<CModelRulesResult>(
-                            new CModelRulesResult(m_model->GetModelRulesLog()));
-                    savedModelRulesResults_lmfit.push_back(resultrulesmodel);
-
-                    std::shared_ptr<CSpectraFluxResult> baselineResult_lmfit =
-                        (std::shared_ptr<
-                            CSpectraFluxResult>)new CSpectraFluxResult();
-                    baselineResult_lmfit->m_optio = 0;
-                    const CSpectrumFluxAxis &modelContinuumFluxAxis =
-                        m_model->GetModelContinuum();
-                    UInt32 len = modelContinuumFluxAxis.GetSamplesCount();
-
-                    baselineResult_lmfit->fluxes.resize(len);
-                    baselineResult_lmfit->wavel.resize(len);
-                    for (Int32 k = 0; k < len; k++)
-                    {
-                        baselineResult_lmfit->fluxes[k] =
-                            modelContinuumFluxAxis[k];
-                        baselineResult_lmfit->wavel[k] =
-                            (spectrum.GetSpectralAxis())[k];
-                    }
-                    savedBaselineResult_lmfit.push_back(baselineResult_lmfit);
-
-                    z = m_result->LineModelSolutions[idx].Redshift;
-                    m_result->ExtremaResult.lmfitPass.push_back(z);
-                    // m_result->Redshifts[idx] = z;
-
-                    m_model->SetFittingMethod(opt_fittingmethod);
-                    m_model->ResetElementIndexesDisabled();
-                    Int32 velocityHasBeenReset =
-                        m_model->ApplyVelocityBound(velfitMinE, velfitMaxE);
-                    enableManualStepVelocityFit = velocityHasBeenReset;
-                }
-
-                if (enableManualStepVelocityFit)
-                {
-                    // fit the emission and absorption width by minimizing the
-                    // linemodel merit with linemodel "hybrid" fitting method
-                    m_model->SetFittingMethod("hybrid");
-                    if (opt_rigidity == "tplshape")
-                    {
-                        m_model->SetFittingMethod("individual");
-                    }
-                    // m_model->m_enableAmplitudeOffsets = true;
-                    // contreest_iterations = 1;
-                    std::vector<std::vector<Int32>> idxVelfitGroups;
-
-                    for (Int32 iLineType = 0; iLineType < 2; iLineType++)
-                    {
-                        Float64 vInfLim;
-                        Float64 vSupLim;
-                        Float64 vStep;
-
-                        if (iLineType == 0)
-                        {
-                            Log.LogInfo("  Operator-Linemodel: manualStep "
-                                        "velocity fit ABSORPTION, for z = %.6f",
-                                        m_result->Redshifts[idx]);
-                            vInfLim = velfitMinA;
-                            vSupLim = velfitMaxA;
-                            vStep = velfitStepA;
-                            if (m_enableWidthFitByGroups)
-                            {
-                                idxVelfitGroups.clear();
-                                idxVelfitGroups = m_model->GetModelVelfitGroups(
-                                    CRay::nType_Absorption);
-                                Log.LogInfo("  Operator-Linemodel: "
-                                            "VelfitGroups ABSORPTION - n = %d",
-                                            idxVelfitGroups.size());
-                                if (m_extremumList.size() > 1 &&
-                                    idxVelfitGroups.size() > 1)
-                                {
-                                    Log.LogError(
-                                        "  Operator-Linemodel: not allowed to "
-                                        "use more than 1 group per E/A for "
-                                        "more than 1 extremum (see .json "
-                                        "linemodel.extremacount)");
-                                }
-                            }
-                        } else
-                        {
-                            Log.LogInfo("  Operator-Linemodel: manualStep "
-                                        "velocity fit EMISSION, for z = %.6f",
-                                        m_result->Redshifts[idx]);
-                            vInfLim = velfitMinE;
-                            vSupLim = velfitMaxE;
-                            vStep = velfitStepE;
-                            if (m_enableWidthFitByGroups)
-                            {
-                                idxVelfitGroups.clear();
-                                idxVelfitGroups = m_model->GetModelVelfitGroups(
-                                    CRay::nType_Emission);
-                                Log.LogInfo("  Operator-Linemodel: "
-                                            "VelfitGroups EMISSION - n = %d",
-                                            idxVelfitGroups.size());
-                                if (m_extremumList.size() > 1 &&
-                                    idxVelfitGroups.size() > 1)
-                                {
-                                    Log.LogError(
-                                        "  Operator-Linemodel: not allowed to "
-                                        "use more than 1 group per E/A for "
-                                        "more than 1 extremum (see .json "
-                                        "linemodel.extremacount)");
-                                }
-                            }
-                        }
-
-                        // Prepare velocity grid to be checked
-                        Int32 nSteps = (int)((vSupLim - vInfLim) / vStep);
-
-                        Float64 dzInfLim = m_secondPass_velfit_dzInfLim;
-                        if (m_result->Redshifts[idx] + dzInfLim <
-                            m_result->Redshifts[0])
-                        {
-                            dzInfLim = m_result->Redshifts[0] -
-                                       m_result->Redshifts[idx];
-                        }
-                        Float64 dzSupLim = m_secondPass_velfit_dzSupLim;
-                        if (m_result->Redshifts[idx] + dzSupLim >
-                            m_result->Redshifts[m_result->Redshifts.size() - 1])
-                        {
-                            dzSupLim =
-                                m_result->Redshifts[m_result->Redshifts.size() -
-                                                    1] -
-                                m_result->Redshifts[idx];
-                        }
-
-                        Float64 dzStep = m_secondPass_velfit_dzStep;
-                        Int32 nDzSteps = (int)((dzSupLim - dzInfLim) / dzStep);
-                        if (nDzSteps == 0)
-                        {
-                            nDzSteps = 1;
-                            dzInfLim = 0.;
-                            dzSupLim = 0.;
-                        }
-                        Log.LogInfo("  Operator-Linemodel: dzInfLim n=%e",
-                                    dzInfLim);
-                        Log.LogInfo("  Operator-Linemodel: dzSupLim n=%e",
-                                    dzSupLim);
-                        Log.LogInfo("  Operator-Linemodel: manualStep n=%d",
-                                    nDzSteps);
-
-                        Int32 n_progresssteps =
-                            idxVelfitGroups.size() * nDzSteps * nSteps;
-                        boost::progress_display show_progress(n_progresssteps);
-                        for (Int32 kgroup = 0; kgroup < idxVelfitGroups.size();
-                             kgroup++)
-                        {
-                            Log.LogInfo("  Operator-Linemodel: manualStep "
-                                        "fitting group=%d",
-                                        kgroup);
-
-                            Float64 meritMin = DBL_MAX;
-                            Float64 vOptim = -1.0;
-                            for (Int32 kdz = 0; kdz < nDzSteps; kdz++)
-                            {
-                                Float64 dzTest = dzInfLim + kdz * dzStep;
-                                for (Int32 kv = 0; kv < nSteps; kv++)
-                                {
-                                    Float64 vTest = vInfLim + kv * vStep;
-                                    if (iLineType == 0)
-                                    {
-                                        if (m_enableWidthFitByGroups)
-                                        {
-                                            for (Int32 ke = 0;
-                                                 ke <
-                                                 idxVelfitGroups[kgroup].size();
-                                                 ke++)
-                                            {
-                                                m_model
-                                                    ->SetVelocityAbsorptionOneElement(
-                                                        vTest,
-                                                        idxVelfitGroups[kgroup]
-                                                                       [ke]);
-                                            }
-                                        } else
-                                        {
-                                            m_model->SetVelocityAbsorption(
-                                                vTest);
-                                        }
-                                    } else
-                                    {
-                                        if (m_enableWidthFitByGroups)
-                                        {
-                                            for (Int32 ke = 0;
-                                                 ke <
-                                                 idxVelfitGroups[kgroup].size();
-                                                 ke++)
-                                            {
-                                                m_model
-                                                    ->SetVelocityEmissionOneElement(
-                                                        vTest,
-                                                        idxVelfitGroups[kgroup]
-                                                                       [ke]);
-                                            }
-                                        } else
-                                        {
-                                            m_model->SetVelocityEmission(vTest);
-                                        }
-                                    }
-
-                                    // Log.LogInfo( "  Operator-Linemodel:
-                                    // testing v=%f", vTest);
-                                    Float64 meritv;
-                                    meritv = m_model->fit(m_result->Redshifts[idx] + dzTest,
-                                                          lambdaRange,
-                                                          m_result->LineModelSolutions[idx], //maybe this member result should be replaced by an unused variable
-                                                          m_result->ContinuumModelSolutions[idx], //maybe this member result should be replaced by an unused variable
-                                                          contreest_iterations,
-                                                          false);
-
-                                    //                                    if(m_enableWidthFitByGroups)
-                                    //                                    {
-                                    //                                        meritv
-                                    //                                        =
-                                    //                                        0.0;
-                                    //                                        for(Int32
-                                    //                                        ke=0;
-                                    //                                        ke<idxVelfitGroups[kgroup].size();
-                                    //                                        ke++)
-                                    //                                        {
-                                    //                                            meritv += m_model->getModelErrorUnderElement(idxVelfitGroups[kgroup][ke]);
-                                    //                                        }
-                                    //                                    }
-
-
-                                    Log.LogDebug("  Operator-Linemodel: testing velocity: merit=%.3e for velocity = %.1f", meritv, vTest);
-                                    if (meritMin > meritv)
-                                    {
-                                        meritMin = meritv;
-                                        if (iLineType == 0)
-                                        {
-                                            vOptim =
-                                                m_model
-                                                    ->GetVelocityAbsorption();
-                                        } else
-                                        {
-                                            vOptim =
-                                                m_model->GetVelocityEmission();
-                                        }
-                                    }
-                                    ++show_progress;
-                                }
-                            }
-                            if (vOptim != -1.0)
-                            {
-                                Log.LogInfo("  Operator-Linemodel: best "
-                                            "Velocity found = %.1f",
-                                            vOptim);
-                                m_result->ChiSquare[idx] = meritMin;
-                                if (iLineType == 0)
-                                {
-                                    if (m_enableWidthFitByGroups)
-                                    {
-                                        for (Int32 ke = 0;
-                                             ke <
-                                             idxVelfitGroups[kgroup].size();
-                                             ke++)
-                                        {
-                                            m_model
-                                                ->SetVelocityAbsorptionOneElement(
-                                                    vOptim,
-                                                    idxVelfitGroups[kgroup]
-                                                                   [ke]);
-                                        }
-                                    } else
-                                    {
-                                        m_model->SetVelocityAbsorption(vOptim);
-                                    }
-                                } else
-                                {
-                                    if (m_enableWidthFitByGroups)
-                                    {
-                                        for (Int32 ke = 0;
-                                             ke <
-                                             idxVelfitGroups[kgroup].size();
-                                             ke++)
-                                        {
-                                            m_model
-                                                ->SetVelocityEmissionOneElement(
-                                                    vOptim,
-                                                    idxVelfitGroups[kgroup]
-                                                                   [ke]);
-                                        }
-                                    } else
-                                    {
-                                        m_model->SetVelocityEmission(vOptim);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    m_model->SetFittingMethod(opt_fittingmethod);
-                    // m_model->m_enableAmplitudeOffsets = false;
-                }
-            }
-            extrema_velocityEL[i] = m_model->GetVelocityEmission();
-            extrema_velocityAL[i] = m_model->GetVelocityAbsorption();
-
             // finally compute the redshifts on the z-range around the extremum
             TFloat64Range redshiftsRange(
                 m_result->Redshifts[0],
                 m_result->Redshifts[m_result->Redshifts.size() - 1]);
             Float64 left_border = max(redshiftsRange.GetBegin(),
                                       z - m_secondPass_extensionradius);
-            Float64 right_border =
-                min(redshiftsRange.GetEnd(), z + m_secondPass_extensionradius);
+            Float64 right_border = min(redshiftsRange.GetEnd(),
+                                       z + m_secondPass_extensionradius);
             // m_model->SetFittingMethod("nofit");
             extremumList2[i].Y = DBL_MAX;
             extremumList2[i].X = m_result->Redshifts[idx];
@@ -1426,6 +1062,8 @@ Int32 COperatorLineModel::ComputeSecondPass(
             }
             // m_model->SetFittingMethod(opt_fittingmethod);
 
+            m_secondpass_parameters_extremaResult.Extrema[i] = extremumList2[i].X;
+            m_secondpass_parameters_extremaResult.ExtremaMerit[i] = extremumList2[i].Y;
             Log.LogInfo("  Operator-Linemodel: Recomputed extr #%d, idx=%d, "
                         "z_e.X=%f, m_e.Y=%f",
                         i, idx2, extremumList2[i].X, extremumList2[i].Y);
@@ -1440,12 +1078,9 @@ Int32 COperatorLineModel::ComputeSecondPass(
     }
 
     // reorder extremumList using .Y values : smallest to highest
-    TPointList extremumListOrdered;
-    std::vector<Float64> extrema_velocityELOrdered;
-    std::vector<Float64> extrema_velocityALOrdered;
-    Int32 extremumCount = extremumList2.size();
-    std::vector<Int32> indiceList2;
-
+    // todo: recode using map and sort from std lib
+    Int32 extremumCount = m_secondpass_parameters_extremaResult.Extrema.size();
+    std::vector<Int32> indiceSortedCandidatesList;
     for (Int32 ie = 0; ie < extremumCount; ie++)
     {
         Int32 iYmin = 0;
@@ -1458,40 +1093,35 @@ Int32 COperatorLineModel::ComputeSecondPass(
                 iYmin = ie2;
             }
         }
-
-        extremumListOrdered.push_back(extremumList2[iYmin]);
         extremumList2.erase(extremumList2.begin() + iYmin);
-        extrema_velocityELOrdered.push_back(extrema_velocityEL[iYmin]);
-        extrema_velocityEL.erase(extrema_velocityEL.begin() + iYmin);
-        extrema_velocityALOrdered.push_back(extrema_velocityAL[iYmin]);
-        extrema_velocityAL.erase(extrema_velocityAL.begin() + iYmin);
-        // founding the initial index in extrenumList2
-        for (Int32 ie2 = 0; ie2 < indiceList2.size(); ie2++)
+
+        // find the initial index in extremumList2
+        for (Int32 ie2 = 0; ie2 < indiceSortedCandidatesList.size(); ie2++)
         {
-            if (iYmin >= indiceList2[ie2])
+            if (iYmin >= indiceSortedCandidatesList[ie2])
             {
                 iYmin++;
             }
         }
-        indiceList2.push_back(iYmin);
+        indiceSortedCandidatesList.push_back(iYmin);
     }
-    if (modelInfoSave)
+    if (mlmfit_modelInfoSave)
     {
         TFloat64List OrderedLMZ;
-        for (Int32 ie2 = 0; ie2 < indiceList2.size(); ie2++)
+        for (Int32 ie2 = 0; ie2 < indiceSortedCandidatesList.size(); ie2++)
         {
             OrderedLMZ.push_back(
-                m_result->ExtremaResult.lmfitPass[indiceList2[ie2]]);
+                m_result->ExtremaResult.lmfitPass[indiceSortedCandidatesList[ie2]]);
         }
         m_result->ExtremaResult.lmfitPass = OrderedLMZ;
     }
-    if (extremumListOrdered.size() == 0)
+    if (indiceSortedCandidatesList.size() == 0)
     {
-        Log.LogError("Line Model, Extremum Ordering failed");
+        Log.LogError("  Operator-Linemodel: Extremum Ordering failed");
     }
 
+
     Log.LogInfo("  Operator-Linemodel: Now storing extrema results");
-    // store extrema results
     m_result->ExtremaResult.Resize(extremumCount);
 
     // Int32 start =
@@ -1507,8 +1137,9 @@ Int32 COperatorLineModel::ComputeSecondPass(
 
     for (Int32 i = 0; i < extremumCount; i++)
     {
-        Float64 z = extremumListOrdered[i].X;
-        Float64 m = extremumListOrdered[i].Y;
+        Int32 index_extremum = indiceSortedCandidatesList[i];
+        Float64 z = m_secondpass_parameters_extremaResult.Extrema[index_extremum];
+        Float64 m = m_secondpass_parameters_extremaResult.ExtremaMerit[index_extremum];
 
         // find the index in the zaxis results
         Int32 idx = -1;
@@ -1525,8 +1156,8 @@ Int32 COperatorLineModel::ComputeSecondPass(
             Log.LogInfo("Problem. could not find extrema solution index...");
             continue;
         }
-        Log.LogInfo("  Operator-Linemodel: Saving extr #%d, idx=%d, z=%f, m=%f",
-                    i, idx, m_result->Redshifts[idx], m_result->ChiSquare[idx]);
+        Log.LogInfo("  Operator-Linemodel: Saving candidate #%d, idx=%d, z=%f, m=%f",
+                    index_extremum, idx, m_result->Redshifts[idx], m_result->ChiSquare[idx]);
 
         // reestimate the model (eventually with continuum reestimation) on the
         // extrema selected
@@ -1540,54 +1171,32 @@ Int32 COperatorLineModel::ComputeSecondPass(
             contreest_iterations = 0;
         }
 
-        if (enableVelocityFitting && extremumCount > 1)
-        {
-            //            ModelFit( model, lambdaRange,
-            //            m_result->Redshifts[idx], m_result->ChiSquare[idx],
-            //            m_result->LineModelSolutions[idx],
-            //            contreest_iterations); m = m_result->ChiSquare[idx];
-            //            //fit the emission and absorption width using the
-            //            lindemodel lmfit strategy
-            //            m_model->SetFittingMethod("lmfit");
-            //            m_model->SetElementIndexesDisabledAuto();
-            //            ModelFit( model, lambdaRange,
-            //            m_result->Redshifts[idx], m_result->ChiSquare[idx],
-            //            m_result->LineModelSolutions[idx],
-            //            contreest_iterations);
+        m_model->SetVelocityEmission(m_secondpass_parameters_extremaResult.Elv[index_extremum]);
+        m_model->SetVelocityAbsorption(m_secondpass_parameters_extremaResult.Alv[index_extremum]);
 
-            //            m_model->SetFittingMethod(opt_fittingmethod);
-            //            m_model->ResetElementIndexesDisabled();
-            //            m_model->ApplyVelocityBound();
-            //        }else{
-            m_model->SetVelocityEmission(extrema_velocityELOrdered[i]);
-            m_model->SetVelocityAbsorption(extrema_velocityALOrdered[i]);
-        }
 
-        if (!modelInfoSave)
+        if (!mlmfit_modelInfoSave)
         {
+            m_model->SetFittingMethod("svdlc");
             m_result->ChiSquare[idx] = m_model->fit(m_result->Redshifts[idx],
                                                     lambdaRange,
                                                     m_result->LineModelSolutions[idx],
                                                     m_result->ContinuumModelSolutions[idx],
                                                     contreest_iterations,
                                                     true);
-            m_result->ScaleMargCorrection[idx] =
-                m_model->getScaleMargCorrection();
-            m_result->SetChisquareTplshapeResult(
-                idx, m_model->GetChisquareTplshape(),
-                m_model->GetScaleMargTplshape(),
-                m_model->GetStrongELPresentTplshape());
+            m_result->ScaleMargCorrection[idx] = m_model->getScaleMargCorrection();
+            m_result->SetChisquareTplshapeResult(idx,
+                                                 m_model->GetChisquareTplshape(),
+                                                 m_model->GetScaleMargTplshape(),
+                                                 m_model->GetStrongELPresentTplshape());
             if (m_estimateLeastSquareFast)
             {
-                m_result->ChiSquareContinuum[idx] =
-                    m_model->getLeastSquareContinuumMerit(lambdaRange);
-            } else
+                m_result->ChiSquareContinuum[idx] = m_model->getLeastSquareContinuumMerit(lambdaRange);
+            }else
             {
-                m_result->ChiSquareContinuum[idx] =
-                    m_model->getLeastSquareContinuumMeritFast();
+                m_result->ChiSquareContinuum[idx] = m_model->getLeastSquareContinuumMeritFast();
             }
-            m_result->ScaleMargCorrectionContinuum[idx] =
-                m_model->getContinuumScaleMargCorrection();
+            m_result->ScaleMargCorrectionContinuum[idx] = m_model->getContinuumScaleMargCorrection();
         }
         if (m != m_result->ChiSquare[idx])
         {
@@ -1600,25 +1209,19 @@ Int32 COperatorLineModel::ComputeSecondPass(
         // WARNING: saving results TODO: this is currently wrong !! the model
         // saved corresponds to the bestchi2 model. PDFs should be combined
         // prior to exporting the best model for each extrema...
-        static Int32 maxModelSave =
-            std::min(m_maxModelSaveCount, extremumCount);
+        static Int32 maxModelSave = std::min(m_maxModelSaveCount, extremumCount);
         Int32 maxSaveNLinemodelContinua = maxModelSave;
         if (savedModels < maxModelSave)
         {
-            if (modelInfoSave)
+            if (mlmfit_modelInfoSave)
             {
                 Log.LogInfo("Save model store during lm_fit");
-                m_savedModelSpectrumResults.push_back(
-                    savedModelSpectrumResults_lmfit[indiceList2[i]]);
-                m_savedModelFittingResults.push_back(
-                    savedModelFittingResults_lmfit[indiceList2[i]]);
-                m_savedModelRulesResults.push_back(
-                    savedModelRulesResults_lmfit[indiceList2[i]]);
-                if (savedModels < maxSaveNLinemodelContinua &&
-                    contreest_iterations > 0)
+                m_savedModelSpectrumResults.push_back(mlmfit_savedModelSpectrumResults_lmfit[index_extremum]);
+                m_savedModelFittingResults.push_back(mlmfit_savedModelFittingResults_lmfit[index_extremum]);
+                m_savedModelRulesResults.push_back(mlmfit_savedModelRulesResults_lmfit[index_extremum]);
+                if (savedModels < maxSaveNLinemodelContinua && contreest_iterations > 0)
                 {
-                    m_savedModelContinuumSpectrumResults.push_back(
-                        savedBaselineResult_lmfit[indiceList2[i]]);
+                    m_savedModelContinuumSpectrumResults.push_back(mlmfit_savedBaselineResult_lmfit[index_extremum]);
                 }
             } else
             {
@@ -1632,8 +1235,7 @@ Int32 COperatorLineModel::ComputeSecondPass(
                 {
                     resultspcmodel = std::shared_ptr<CModelSpectrumResult>(
                         new CModelSpectrumResult(m_model->GetModelSpectrum()));
-                } else if (overrideModelSavedType == 1 ||
-                           overrideModelSavedType == 2)
+                } else if (overrideModelSavedType == 1 || overrideModelSavedType == 2)
                 {
                     Int32 lineTypeFilter = -1;
                     if (overrideModelSavedType == 1)
@@ -1644,9 +1246,7 @@ Int32 COperatorLineModel::ComputeSecondPass(
                         lineTypeFilter = CRay::nType_Emission;
                     }
                     resultspcmodel = std::shared_ptr<CModelSpectrumResult>(
-                        new CModelSpectrumResult(
-                            m_model->GetObservedSpectrumWithLinesRemoved(
-                                lineTypeFilter)));
+                        new CModelSpectrumResult(m_model->GetObservedSpectrumWithLinesRemoved(lineTypeFilter)));
                 }
                 // std::shared_ptr<CModelSpectrumResult>  resultspcmodel =
                 // std::shared_ptr<CModelSpectrumResult>( new
@@ -1835,6 +1435,415 @@ Int32 COperatorLineModel::ComputeSecondPass(
     }
 
     // ComputeArea2(*m_result);
+
+    return 0;
+}
+
+/**
+ * @brief COperatorLineModel::estimateSecondPassParameters
+ * - Estimates best parameters: elv and alv
+ * - Store parameters for further use into:
+ *
+ *
+ * @return
+ */
+Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum,
+                                                       const TFloat64Range &lambdaRange,
+                                                       const std::string &opt_continuumreest,
+                                                       const std::string &opt_fittingmethod,
+                                                       const string &opt_rigidity,
+                                                       const std::string &opt_velocityFitting,
+                                                       const Float64 &opt_emvelocityfitmin,
+                                                       const Float64 &opt_emvelocityfitmax,
+                                                       const Float64 &opt_emvelocityfitstep,
+                                                       const Float64 &opt_absvelocityfitmin,
+                                                       const Float64 &opt_absvelocityfitmax,
+                                                       const Float64 &opt_absvelocityfitstep)
+{
+
+    // setup velocity fitting
+    bool enableVelocityFitting = true;
+    Float64 velfitMinE = opt_emvelocityfitmin;
+    Float64 velfitMaxE = opt_emvelocityfitmax;
+    Float64 velfitStepE = opt_emvelocityfitstep;
+    Float64 velfitMinA = opt_absvelocityfitmin;
+    Float64 velfitMaxA = opt_absvelocityfitmax;
+    Float64 velfitStepA = opt_absvelocityfitstep;
+    // HARDCODED - override: no-velocityfitting for abs
+    // velfitMinA = opt_velocityAbsorption;
+    // velfitMaxA = opt_velocityAbsorption;
+    if (opt_velocityFitting != "yes")
+    {
+        enableVelocityFitting = false;
+    } else
+    {
+        Log.LogInfo("  Operator-Linemodel: "
+                    "velocity fitting bounds for Emission: min=%.1f - max=%.1f - step=%.1f",
+                    velfitMinE, velfitMaxE, velfitStepE);
+        Log.LogInfo("  Operator-Linemodel: "
+                    "velocity fitting bounds for Absorption: min=%.1f - max=%.1f - step=%.1f",
+                    velfitMinA, velfitMaxA, velfitStepA);
+    }
+
+    // enable/disable fit by groups. Once enabled, the velocity fitting groups
+    // are defined in the line catalog from v4.0 on.
+    m_enableWidthFitByGroups = true;
+
+
+
+
+    bool enable_secondpass_parameters_estimation = true;
+    if (!enable_secondpass_parameters_estimation) //?
+    {
+        m_secondpass_parameters_extremaResult = m_firstpass_extremaResult;
+        return 0;
+    }
+
+    m_secondpass_parameters_extremaResult.Resize(m_extremumList.size());
+    for (Int32 i = 0; i < m_extremumList.size(); i++)
+    {
+        Log.LogInfo("");
+        Log.LogInfo("  Operator-Linemodel: Second pass - estimate parameters for candidate #%d", i);
+        Log.LogInfo("  Operator-Linemodel: ---------- /\\ ---------- ---------- ---------- Candidate #%d", i);
+        Float64 z = m_extremumList[i].X;
+        Float64 m = m_extremumList[i].Y;
+
+        m_secondpass_parameters_extremaResult.Extrema[i] = z;
+        m_secondpass_parameters_extremaResult.ExtremaMerit[i] = m;
+
+        // find the index in the zaxis results
+        Int32 idx = -1;
+        for (UInt32 i2 = 0; i2 < m_result->Redshifts.size(); i2++)
+        {
+            if (m_result->Redshifts[i2] == z)
+            {
+                idx = i2;
+                break;
+            }
+        }
+        if (idx == -1)
+        {
+            Log.LogInfo("  Operator-Linemodel: Problem. could not find "
+                        "extrema solution index...");
+            continue;
+        }
+
+        // reestimate the model (eventually with continuum reestimation) on
+        // the extrema selected
+        Int32 contreest_iterations = 0;
+        if (opt_continuumreest == "always")
+        {
+            contreest_iterations = 1;
+        } else
+        {
+            contreest_iterations = 0;
+        }
+
+        // model.LoadModelSolution(m_result->LineModelSolutions[idx]);
+        m_model->fit(m_result->Redshifts[idx],
+                     lambdaRange,
+                     m_result->LineModelSolutions[idx],
+                     m_result->ContinuumModelSolutions[idx],
+                     contreest_iterations, false);
+        // m = m_result->ChiSquare[idx];
+        if (enableVelocityFitting)
+        {
+            Bool enableManualStepVelocityFit = true;
+            Bool enableLMVelocityFit = false;
+            if (enableLMVelocityFit)
+            {
+                // fit the emission and absorption width using the linemodel
+                // lmfit strategy
+                m_model->SetFittingMethod("lmfit");
+                // m_model->SetElementIndexesDisabledAuto();
+
+                Log.LogInfo("  Operator-Linemodel: Lm fit for extrema %d",
+                            i);
+                m_model->fit(m_result->Redshifts[idx], lambdaRange,
+                             m_result->LineModelSolutions[idx],
+                             m_result->ContinuumModelSolutions[idx],
+                             contreest_iterations, true);
+                mlmfit_modelInfoSave = true;
+                // CModelSpectrumResult
+                std::shared_ptr<CModelSpectrumResult> resultspcmodel =
+                        std::shared_ptr<CModelSpectrumResult>(
+                            new CModelSpectrumResult(
+                                m_model->GetModelSpectrum()));
+                // std::shared_ptr<CModelSpectrumResult>  resultspcmodel =
+                // std::shared_ptr<CModelSpectrumResult>( new
+                // CModelSpectrumResult(m_model->GetObservedSpectrumWithLinesRemoved())
+                // );
+                mlmfit_savedModelSpectrumResults_lmfit.push_back(resultspcmodel);
+                // CModelFittingResult
+                std::shared_ptr<CModelFittingResult> resultfitmodel =
+                        std::shared_ptr<CModelFittingResult>(
+                            new CModelFittingResult(
+                                m_result->LineModelSolutions[idx],
+                                m_result->Redshifts[idx],
+                                m_result->ChiSquare[idx], m_result->restRayList,
+                                m_model->GetVelocityEmission(),
+                                m_model->GetVelocityAbsorption()));
+                mlmfit_savedModelFittingResults_lmfit.push_back(resultfitmodel);
+                // CModelRulesResult
+                std::shared_ptr<CModelRulesResult> resultrulesmodel =
+                        std::shared_ptr<CModelRulesResult>(
+                            new CModelRulesResult(m_model->GetModelRulesLog()));
+                mlmfit_savedModelRulesResults_lmfit.push_back(resultrulesmodel);
+
+                std::shared_ptr<CSpectraFluxResult> baselineResult_lmfit =
+                        (std::shared_ptr<
+                         CSpectraFluxResult>)new CSpectraFluxResult();
+                baselineResult_lmfit->m_optio = 0;
+                const CSpectrumFluxAxis &modelContinuumFluxAxis =
+                        m_model->GetModelContinuum();
+                UInt32 len = modelContinuumFluxAxis.GetSamplesCount();
+
+                baselineResult_lmfit->fluxes.resize(len);
+                baselineResult_lmfit->wavel.resize(len);
+                for (Int32 k = 0; k < len; k++)
+                {
+                    baselineResult_lmfit->fluxes[k] =
+                            modelContinuumFluxAxis[k];
+                    baselineResult_lmfit->wavel[k] =
+                            (spectrum.GetSpectralAxis())[k];
+                }
+                mlmfit_savedBaselineResult_lmfit.push_back(baselineResult_lmfit);
+
+                z = m_result->LineModelSolutions[idx].Redshift;
+                m_result->ExtremaResult.lmfitPass.push_back(z);
+                // m_result->Redshifts[idx] = z;
+
+                m_model->SetFittingMethod(opt_fittingmethod);
+                m_model->ResetElementIndexesDisabled();
+                Int32 velocityHasBeenReset =
+                        m_model->ApplyVelocityBound(velfitMinE, velfitMaxE);
+                enableManualStepVelocityFit = velocityHasBeenReset;
+            }
+
+            if (enableManualStepVelocityFit)
+            {
+                // fit the emission and absorption width by minimizing the
+                // linemodel merit with linemodel "hybrid" fitting method
+                m_model->SetFittingMethod("hybrid");
+                if (opt_rigidity == "tplshape")
+                {
+                    m_model->SetFittingMethod("individual");
+                }
+                // m_model->m_enableAmplitudeOffsets = true;
+                // contreest_iterations = 1;
+                std::vector<std::vector<Int32>> idxVelfitGroups;
+
+                for (Int32 iLineType = 0; iLineType < 2; iLineType++)
+                {
+                    Float64 vInfLim;
+                    Float64 vSupLim;
+                    Float64 vStep;
+
+                    if (iLineType == 0)
+                    {
+                        Log.LogInfo("  Operator-Linemodel: manualStep velocity fit ABSORPTION, for z = %.6f",
+                                    m_result->Redshifts[idx]);
+                        vInfLim = velfitMinA;
+                        vSupLim = velfitMaxA;
+                        vStep = velfitStepA;
+                        if (m_enableWidthFitByGroups)
+                        {
+                            idxVelfitGroups.clear();
+                            idxVelfitGroups = m_model->GetModelVelfitGroups(CRay::nType_Absorption);
+                            Log.LogInfo("  Operator-Linemodel: VelfitGroups ABSORPTION - n = %d",
+                                        idxVelfitGroups.size());
+                            if (m_extremumList.size() > 1 && idxVelfitGroups.size() > 1)
+                            {
+                                Log.LogError(
+                                            "  Operator-Linemodel: not allowed to "
+                                            "use more than 1 group per E/A for "
+                                            "more than 1 extremum (see .json "
+                                            "linemodel.extremacount)");
+                            }
+                        }
+                    } else
+                    {
+                        Log.LogInfo("  Operator-Linemodel: manualStep velocity fit EMISSION, for z = %.6f",
+                                    m_result->Redshifts[idx]);
+                        vInfLim = velfitMinE;
+                        vSupLim = velfitMaxE;
+                        vStep = velfitStepE;
+                        if (m_enableWidthFitByGroups)
+                        {
+                            idxVelfitGroups.clear();
+                            idxVelfitGroups = m_model->GetModelVelfitGroups(
+                                        CRay::nType_Emission);
+                            Log.LogInfo("  Operator-Linemodel: VelfitGroups EMISSION - n = %d",
+                                        idxVelfitGroups.size());
+                            if (m_extremumList.size() > 1 && idxVelfitGroups.size() > 1)
+                            {
+                                Log.LogError(
+                                            "  Operator-Linemodel: not allowed to "
+                                            "use more than 1 group per E/A for "
+                                            "more than 1 extremum (see .json "
+                                            "linemodel.extremacount)");
+                            }
+                        }
+                    }
+
+                    // Prepare velocity grid to be checked
+                    Int32 nSteps = (int)((vSupLim - vInfLim) / vStep);
+
+                    Float64 dzInfLim = m_secondPass_velfit_dzInfLim;
+                    if (m_result->Redshifts[idx] + dzInfLim <
+                            m_result->Redshifts[0])
+                    {
+                        dzInfLim = m_result->Redshifts[0] -
+                                m_result->Redshifts[idx];
+                    }
+                    Float64 dzSupLim = m_secondPass_velfit_dzSupLim;
+                    if (m_result->Redshifts[idx] + dzSupLim >
+                            m_result->Redshifts[m_result->Redshifts.size() - 1])
+                    {
+                        dzSupLim =
+                                m_result->Redshifts[m_result->Redshifts.size() -
+                                1] -
+                                m_result->Redshifts[idx];
+                    }
+
+                    Float64 dzStep = m_secondPass_velfit_dzStep;
+                    Int32 nDzSteps = (int)((dzSupLim - dzInfLim) / dzStep);
+                    if (nDzSteps == 0)
+                    {
+                        nDzSteps = 1;
+                        dzInfLim = 0.;
+                        dzSupLim = 0.;
+                    }else
+                    {
+                        Log.LogInfo("  Operator-Linemodel: dzInfLim n=%e", dzInfLim);
+                        Log.LogInfo("  Operator-Linemodel: dzSupLim n=%e", dzSupLim);
+                        Log.LogInfo("  Operator-Linemodel: manualStep n=%d", nDzSteps);
+                    }
+
+                    Int32 n_progresssteps = idxVelfitGroups.size() * nDzSteps * nSteps;
+                    boost::progress_display show_progress(n_progresssteps);
+                    for (Int32 kgroup = 0; kgroup < idxVelfitGroups.size(); kgroup++)
+                    {
+                        Log.LogInfo("  Operator-Linemodel: manualStep fitting group=%d", kgroup);
+
+                        Float64 meritMin = DBL_MAX;
+                        Float64 vOptim = -1.0;
+                        for (Int32 kdz = 0; kdz < nDzSteps; kdz++)
+                        {
+                            Float64 dzTest = dzInfLim + kdz * dzStep;
+                            for (Int32 kv = 0; kv < nSteps; kv++)
+                            {
+                                Float64 vTest = vInfLim + kv * vStep;
+                                if (iLineType == 0)
+                                {
+                                    if (m_enableWidthFitByGroups)
+                                    {
+                                        for (Int32 ke = 0; ke < idxVelfitGroups[kgroup].size(); ke++)
+                                        {
+                                            m_model->SetVelocityAbsorptionOneElement(vTest,
+                                                                                     idxVelfitGroups[kgroup][ke]);
+                                        }
+                                    } else
+                                    {
+                                        m_model->SetVelocityAbsorption(vTest);
+                                    }
+                                } else
+                                {
+                                    if (m_enableWidthFitByGroups)
+                                    {
+                                        for (Int32 ke = 0; ke < idxVelfitGroups[kgroup].size(); ke++)
+                                        {
+                                            m_model->SetVelocityEmissionOneElement(vTest,
+                                                                                   idxVelfitGroups[kgroup][ke]);
+                                        }
+                                    } else
+                                    {
+                                        m_model->SetVelocityEmission(vTest);
+                                    }
+                                }
+
+                                // Log.LogInfo( "  Operator-Linemodel:
+                                // testing v=%f", vTest);
+                                Float64 meritv;
+                                meritv = m_model->fit(m_result->Redshifts[idx] + dzTest,
+                                                      lambdaRange,
+                                                      m_result->LineModelSolutions[idx], //maybe this member result should be replaced by an unused variable
+                                                      m_result->ContinuumModelSolutions[idx], //maybe this member result should be replaced by an unused variable
+                                                      contreest_iterations,
+                                                      false);
+
+                                //                                    if(m_enableWidthFitByGroups)
+                                //                                    {
+                                //                                        meritv
+                                //                                        =
+                                //                                        0.0;
+                                //                                        for(Int32
+                                //                                        ke=0;
+                                //                                        ke<idxVelfitGroups[kgroup].size();
+                                //                                        ke++)
+                                //                                        {
+                                //                                            meritv += m_model->getModelErrorUnderElement(idxVelfitGroups[kgroup][ke]);
+                                //                                        }
+                                //                                    }
+
+
+                                Log.LogDebug("  Operator-Linemodel: testing velocity: merit=%.3e for velocity = %.1f", meritv, vTest);
+                                if (meritMin > meritv)
+                                {
+                                    meritMin = meritv;
+                                    if (iLineType == 0)
+                                    {
+                                        vOptim = m_model->GetVelocityAbsorption();
+                                    } else
+                                    {
+                                        vOptim = m_model->GetVelocityEmission();
+                                    }
+                                }
+                                ++show_progress;
+                            }
+                        }
+                        if (vOptim != -1.0)
+                        {
+                            Log.LogInfo("  Operator-Linemodel: best Velocity found = %.1f", vOptim);
+                            m_result->ChiSquare[idx] = meritMin;
+                            if (iLineType == 0)
+                            {
+                                if (m_enableWidthFitByGroups)
+                                {
+                                    for (Int32 ke = 0; ke < idxVelfitGroups[kgroup].size(); ke++)
+                                    {
+                                        m_model ->SetVelocityAbsorptionOneElement( vOptim,
+                                                                                   idxVelfitGroups[kgroup][ke]);
+                                    }
+                                } else
+                                {
+                                    m_model->SetVelocityAbsorption(vOptim);
+                                }
+                            } else
+                            {
+                                if (m_enableWidthFitByGroups)
+                                {
+                                    for (Int32 ke = 0; ke < idxVelfitGroups[kgroup].size(); ke++)
+                                    {
+                                        m_model->SetVelocityEmissionOneElement( vOptim,
+                                                                                idxVelfitGroups[kgroup][ke]);
+                                    }
+                                } else
+                                {
+                                    m_model->SetVelocityEmission(vOptim);
+                                }
+                            }
+                        }
+                    }
+                }
+                m_model->SetFittingMethod(opt_fittingmethod);
+                // m_model->m_enableAmplitudeOffsets = false;
+            }
+        }
+        m_secondpass_parameters_extremaResult.Elv[i] = m_model->GetVelocityEmission();
+        m_secondpass_parameters_extremaResult.Alv[i] = m_model->GetVelocityAbsorption();
+        //if elv/alv fitting per fitting groups: should be used to populate: m_secondpass_parameters_extremaResult[i].GroupsLv
+    }
 
     return 0;
 }

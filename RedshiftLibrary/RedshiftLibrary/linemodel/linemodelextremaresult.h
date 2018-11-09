@@ -58,6 +58,12 @@ public:
     TFloat64List            OutsideLinesSTDFlux;    //STD measured on the spectrum continuum substracted outside lines
     TFloat64List            OutsideLinesSTDError;   //STD measured on the error spectrum outside lines
 
+    //line width
+    std::vector<Float64>      Elv;   //emission line width
+    std::vector<Float64>      Alv;   //absorption line width
+    std::vector<std::vector<Float64>>      GroupsLv;   //per fitting group line width
+
+
     //template continuum
     std::vector<std::string>      FittedTplName;    //Name of the best template fitted for continuum
     TFloat64List            FittedTplAmplitude;     //Amplitude for the best template fitted for continuum
