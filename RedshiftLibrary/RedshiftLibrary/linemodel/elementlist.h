@@ -133,7 +133,12 @@ public:
 
     Bool initModelAtZ(Float64 redshift, const TFloat64Range& lambdaRange, const CSpectrumSpectralAxis &spectralAxis);
 
-    Float64 fit(Float64 redshift, const TFloat64Range& lambdaRange, CLineModelSolution &modelSolution, Int32 contreest_iterations=0, bool enableLogging=0);
+    Float64 fit(Float64 redshift,
+                const TFloat64Range& lambdaRange,
+                CLineModelSolution &modelSolution,
+                CContinuumModelSolution &continuumModelSolution,
+                Int32 contreest_iterations=0,
+                bool enableLogging=0);
 
     Bool initTplratioCatalogs(std::string opt_tplratioCatRelPath, Int32 opt_tplratio_ismFit);
     void initLambdaOffsets(std::string offsetsCatalogsRelPath);
@@ -184,6 +189,7 @@ public:
     Float64 getContinuumMeanUnderElement(UInt32 eltId);
     Int32 LoadModelSolution(const CLineModelSolution&  modelSolution);
     CLineModelSolution GetModelSolution(Int32 opt_level=0);
+    CContinuumModelSolution GetContinuumModelSolution();
     const CSpectrum&    GetModelSpectrum() const;
     CSpectrum GetSpectrumModelContinuum() const;
     const CSpectrum&    GetObservedSpectrumWithLinesRemoved(Int32 lineTypeFilter=-1);

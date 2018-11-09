@@ -9,6 +9,7 @@
 #include <RedshiftLibrary/continuum/indexes.h>
 #include <RedshiftLibrary/linemodel/linemodelextremaresult.h>
 #include <RedshiftLibrary/linemodel/linemodelsolution.h>
+#include <RedshiftLibrary/linemodel/continuummodelsolution.h>
 
 namespace NSEpic
 {
@@ -60,6 +61,7 @@ public:
     TFloat64List ScaleMargCorrectionContinuum; //  scale marginalization correction result for the continuum
 
     std::vector<CLineModelSolution> LineModelSolutions;
+    std::vector<CContinuumModelSolution> ContinuumModelSolutions;
 
     //Extrema results
     CLineModelExtremaResult ExtremaResult;

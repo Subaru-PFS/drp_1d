@@ -54,6 +54,7 @@ Int32 CLineModelResult::Init( std::vector<Float64> redshifts, CRayCatalog::TRayV
     Redshifts = redshifts;
     restRayList = restRays;
     LineModelSolutions.resize( nResults );
+    ContinuumModelSolutions.resize( nResults );
 
     //init the tplshape chisquare results
     for(Int32 k=0; k<nTplshapes; k++)

@@ -87,7 +87,6 @@ public:
                                               const std::string &opt_lineTypeFilter,
                                               const std::string &opt_lineForceFilter,
                                               const TFloat64Range& lambdaRange,
-                                              const Int32 opt_extremacount,
                                               const std::string &opt_fittingmethod,
                                               const std::string &opt_continuumcomponent,
                                               const std::string& opt_lineWidthType,
@@ -103,7 +102,9 @@ public:
                                               const string &opt_tplratioCatRelPath="",
                                               const string &opt_offsetCatRelPath="");
 
-    Int32 ComputeCandidates(const Int32 opt_extremacount, const Int32 opt_sign, const std::vector<Float64> floatValues);
+    Int32 ComputeCandidates(const Int32 opt_extremacount,
+                            const Int32 opt_sign,
+                            const std::vector<Float64> floatValues);
 
 
     Int32 ComputeSecondPass(CDataStore &dataStore,
@@ -203,7 +204,10 @@ private:
     std::shared_ptr<CLineModelResult> m_result;
     std::shared_ptr<CLineModelElementList> m_model;
     TFloat64List m_sortedRedshifts;
+
+    //candidates
     TPointList m_extremumList;
+    CLineModelExtremaResult m_firstpass_extremaResult;
 
     Int32 m_enableFastFitLargeGrid = 0;
     Int32 m_estimateLeastSquareFast = 0;

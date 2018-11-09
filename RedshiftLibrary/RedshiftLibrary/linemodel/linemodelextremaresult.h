@@ -57,11 +57,15 @@ public:
     std::vector<CMask>      OutsideLinesMask;   //Mask with 0 under the lines and 1 anywhere else
     TFloat64List            OutsideLinesSTDFlux;    //STD measured on the spectrum continuum substracted outside lines
     TFloat64List            OutsideLinesSTDError;   //STD measured on the error spectrum outside lines
+
+    //template continuum
     std::vector<std::string>      FittedTplName;    //Name of the best template fitted for continuum
     TFloat64List            FittedTplAmplitude;     //Amplitude for the best template fitted for continuum
     TFloat64List            FittedTplMerit;     //Chisquare for the best template fitted for continuum
     TFloat64List            FittedTplDustCoeff;     //Calzetti dustcoeff for the best template fitted for continuum
     std::vector<Int32>      FittedTplMeiksinIdx;    //Meiksin igm index for the best template fitted for continuum
+
+    //template ratio
     std::vector<std::string>      FittedTplshapeName;   //Name of the best template fitted for tplcorr/tplshape
     std::vector<Float64>      FittedTplshapeAmplitude;   //amp of the best template fitted for tplcorr/tplshape
     std::vector<Float64>      FittedTplshapeIsmCoeff;   //IsmCoeff/EBMV of the best template fitted for tplcorr/tplshape

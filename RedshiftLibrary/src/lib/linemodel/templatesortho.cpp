@@ -134,7 +134,13 @@ Int32 CTemplatesOrthogonalization::OrthogonalizeTemplate(const CTemplate& inputT
         Float64 contreest_iterations = 0;
         Bool enableLogging=true;
         CLineModelSolution modelSolution;
-        model.fit( redshift, lambdaRange, modelSolution, contreest_iterations, enableLogging );
+        CContinuumModelSolution continuumModelSolution;
+        model.fit( redshift,
+                   lambdaRange,
+                   modelSolution,
+                   continuumModelSolution,
+                   contreest_iterations,
+                   enableLogging );
 
         //get mtm and dtm cumulative vector and store it
         std::vector<Float64> lbda;

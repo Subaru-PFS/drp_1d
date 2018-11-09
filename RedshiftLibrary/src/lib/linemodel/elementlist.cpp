@@ -1419,6 +1419,7 @@ Bool CLineModelElementList::initDtd(const TFloat64Range& lambdaRange)
 Float64 CLineModelElementList::fit(Float64 redshift,
                                    const TFloat64Range& lambdaRange,
                                    CLineModelSolution& modelSolution,
+                                   CContinuumModelSolution &continuumModelSolution,
                                    Int32 contreest_iterations,
                                    bool enableLogging)
 {
@@ -1968,6 +1969,7 @@ Float64 CLineModelElementList::fit(Float64 redshift,
                 //create spectrum model
                 Int32 modelSolutionLevel = Int32(enableLogging);
                 modelSolution = GetModelSolution(modelSolutionLevel);
+                continuumModelSolution = GetContinuumModelSolution();
                 m_tplshapeBestTplName = "None";
 
                 merit = getLeastSquareMerit(lambdaRange);
@@ -1980,6 +1982,7 @@ Float64 CLineModelElementList::fit(Float64 redshift,
                 refreshModel();
                 //create spectrum model
                 modelSolution = GetModelSolution();
+                continuumModelSolution = GetContinuumModelSolution();
                 //Log.LogInfo( "LineModel Infos: TPLCORR");
                 std::vector<Float64> correctedAmplitudes;
                 correctedAmplitudes.resize(modelSolution.Amplitudes.size());
@@ -1996,6 +1999,7 @@ Float64 CLineModelElementList::fit(Float64 redshift,
                 }
                 refreshModel();
                 modelSolution = GetModelSolution();
+                continuumModelSolution = GetContinuumModelSolution();
                 m_tplshapeBestTplName = bestTplName;
 
                 merit = getLeastSquareMerit(lambdaRange);
@@ -2067,6 +2071,7 @@ Float64 CLineModelElementList::fit(Float64 redshift,
 
 
                     modelSolution = GetModelSolution();
+                    continuumModelSolution = GetContinuumModelSolution();
                     m_tplshapeBestTplName = m_CatalogTplShape->GetCatalogName(savedIdxFitted);
                     m_tplshapeBestTplIsmCoeff = m_CatalogTplShape->GetIsmCoeff(savedIdxFitted);
                     m_tplshapeBestTplAmplitude = m_FittedAmpTplshape[savedIdxFitted][0]; //Should be only 1 elt in tpl ratio mode...
@@ -2136,6 +2141,7 @@ Float64 CLineModelElementList::fit(Float64 redshift,
 
             Int32 modelSolutionLevel = Int32(enableLogging);
             modelSolution = GetModelSolution(modelSolutionLevel);
+            continuumModelSolution = GetContinuumModelSolution();
         }
     }
     return merit;
@@ -5363,6 +5369,20 @@ CLineModelSolution CLineModelElementList::GetModelSolution(Int32 opt_level)
     modelSolution.AbsorptionVelocity = m_velocityAbsorption;
     modelSolution.Redshift = m_Redshift;
     return modelSolution;
+}
+
+
+CContinuumModelSolution CLineModelElementList::GetContinuumModelSolution()
+{
+    CContinuumModelSolution continuumModelSolution;
+
+    continuumModelSolution.tplName = m_fitContinuum_tplName;
+    continuumModelSolution.tplDustCoeff = m_fitContinuum_tplFitDustCoeff;
+    continuumModelSolution.tplMeiksinIdx = m_fitContinuum_tplFitMeiksinIdx;
+    continuumModelSolution.tplAmplitude = m_fitContinuum_tplFitAmplitude;
+    continuumModelSolution.tplMerit = m_fitContinuum_tplFitMerit;
+
+    return continuumModelSolution;
 }
 
 /**

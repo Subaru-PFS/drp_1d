@@ -47,6 +47,7 @@ BOOST_AUTO_TEST_CASE(Constructor)
   CSpectrumIOGenericReader reader;
   TFloat64Range range(12500,18500);
   CLineModelSolution solution;
+  CContinuumModelSolution c_solution;
   int iterations = 1;
 
   generate_spectrum(spectrum, 1000, 3500, 12500);
@@ -84,7 +85,7 @@ BOOST_AUTO_TEST_CASE(Constructor)
 					   opt_lineWidthType, opt_resolution, opt_velocityEmission,
 					   opt_velocityAbsorption, opt_rules, opt_rigidity);
 
-  model_fromspectrum.fit(0.5, range, solution, iterations, false);
+  model_fromspectrum.fit(0.5, range, solution, c_solution, iterations, false);
 
   // tplfit
   BOOST_MESSAGE("TODO : tplfit doesn't work. Bad Meiksin generation ?");

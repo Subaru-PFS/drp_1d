@@ -382,15 +382,24 @@ void CMultiRollModel::SetLeastSquareFastEstimationEnabled(Int32 enabled)
 
 //TODO: this fitting function needs to be fine tuned for this multimodel use case.
 //TBD First-order 0: only use individual fitting method: get the mtm, and dtm values for each model, then estimate the amplitude accordingly for all models
-Float64 CMultiRollModel::
-fit(Float64 redshift, const TFloat64Range& lambdaRange, CLineModelSolution& modelSolution, Int32 contreest_iterations, bool enableLogging)
+Float64 CMultiRollModel::fit(Float64 redshift,
+                             const TFloat64Range& lambdaRange,
+                             CLineModelSolution& modelSolution,
+                             Int32 contreest_iterations,
+                             bool enableLogging)
 {
     //first individual fitting: get the amps, dtm, mtm calculated
     Float64 merit=0.0;
     for(Int32 km=0; km<m_models.size(); km++)
     {
         CLineModelSolution _modelSolution;
-        merit += m_models[km]->fit(redshift, lambdaRange, _modelSolution, contreest_iterations, enableLogging);
+        CContinuumModelSolution continuumModelSolution;
+        merit += m_models[km]->fit(redshift,
+                                   lambdaRange,
+                                   _modelSolution,
+                                   continuumModelSolution,
+                                   contreest_iterations,
+                                   enableLogging);
         modelSolution = _modelSolution;
     }
 

@@ -62,7 +62,6 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
                                            const std::string &opt_lineTypeFilter,
                                            const std::string &opt_lineForceFilter,
                                            const TFloat64Range &lambdaRange,
-                                           const Int32 opt_extremacount,
                                            const std::string &opt_fittingmethod,
                                            const std::string &opt_continuumcomponent,
                                            const std::string &opt_lineWidthType,
@@ -468,35 +467,37 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
     for (Int32 i = 0; i < m_result->Redshifts.size(); i++)
     {
         if (m_enableFastFitLargeGrid == 0 || i == 0 ||
-            m_result->Redshifts[i] == largeGridRedshifts[indexLargeGrid])
+                m_result->Redshifts[i] == largeGridRedshifts[indexLargeGrid])
         {
-            m_result->ChiSquare[i] = m_model->fit(
-                m_result->Redshifts[i], lambdaRange,
-                m_result->LineModelSolutions[i], contreest_iterations, false);
+            m_result->ChiSquare[i] = m_model->fit(m_result->Redshifts[i],
+                                                  lambdaRange,
+                                                  m_result->LineModelSolutions[i],
+                                                  m_result->ContinuumModelSolutions[i],
+                                                  contreest_iterations,
+                                                  false);
             calculatedLargeGridRedshifts.push_back(m_result->Redshifts[i]);
             calculatedLargeGridMerits.push_back(m_result->ChiSquare[i]);
-            m_result->ScaleMargCorrection[i] =
-                m_model->getScaleMargCorrection();
-            m_result->SetChisquareTplshapeResult(
-                i, m_model->GetChisquareTplshape(),
-                m_model->GetScaleMargTplshape(),
-                m_model->GetStrongELPresentTplshape());
+            m_result->ScaleMargCorrection[i] = m_model->getScaleMargCorrection();
+            m_result->SetChisquareTplshapeResult(i,
+                                                 m_model->GetChisquareTplshape(),
+                                                 m_model->GetScaleMargTplshape(),
+                                                 m_model->GetStrongELPresentTplshape());
             for (Int32 k = 0; k < m_result->ChiSquareTplshapes.size(); k++)
             {
                 calculatedChiSquareTplshapes[k].push_back(
-                    m_result->ChiSquareTplshapes[k][i]);
+                            m_result->ChiSquareTplshapes[k][i]);
             }
             if (m_estimateLeastSquareFast)
             {
                 m_result->ChiSquareContinuum[i] =
-                    m_model->getLeastSquareContinuumMerit(lambdaRange);
+                        m_model->getLeastSquareContinuumMerit(lambdaRange);
             } else
             {
                 m_result->ChiSquareContinuum[i] =
-                    m_model->getLeastSquareContinuumMeritFast();
+                        m_model->getLeastSquareContinuumMeritFast();
             }
             m_result->ScaleMargCorrectionContinuum[i] =
-                m_model->getContinuumScaleMargCorrection();
+                    m_model->getContinuumScaleMargCorrection();
             Log.LogDebug("  Operator-Linemodel: Z interval %d: Chi2 = %f", i,
                          m_result->ChiSquare[i]);
             indexLargeGrid++;
@@ -775,13 +776,11 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
  * @param opt_extremacount
  * @return
  */
-Int32 COperatorLineModel::ComputeCandidates(
-        const Int32 opt_extremacount,
-        const Int32 opt_sign,
-        const std::vector<Float64> floatValues)
+Int32 COperatorLineModel::ComputeCandidates(const Int32 opt_extremacount,
+                                            const Int32 opt_sign,
+                                            const std::vector<Float64> floatValues)
 {
-    Log.LogDebug("  Operator-Linemodel: opt_extremacount = %d",
-                 opt_extremacount);
+    Log.LogDebug("  Operator-Linemodel: opt_extremacount = %d", opt_extremacount);
     TFloat64Range redshiftsRange(
         m_result->Redshifts[0],
         m_result->Redshifts[m_result->Redshifts.size() - 1]);
@@ -871,6 +870,38 @@ Int32 COperatorLineModel::ComputeCandidates(
     }
     //*/
     // todo: remove duplicate redshifts from the extended extrema list
+
+
+    //now preparing the candidates extrema results
+    m_firstpass_extremaResult.Resize(m_extremumList.size());
+    for (Int32 i = 0; i < m_extremumList.size(); i++)
+    {
+        Float64 z = m_extremumList[i].X;
+        // find the index in the zaxis results
+        Int32 idx = -1;
+        for (UInt32 i2 = 0; i2 < m_result->Redshifts.size(); i2++)
+        {
+            if (m_result->Redshifts[i2] == z)
+            {
+                idx = i2;
+                break;
+            }
+        }
+        if (idx == -1)
+        {
+            Log.LogInfo("Problem. could not find extrema solution index...");
+            continue;
+        }
+
+        //save the continuum fitting parameters from first pass
+        m_firstpass_extremaResult.FittedTplName[i] = m_result->ContinuumModelSolutions[idx].tplName;
+        m_firstpass_extremaResult.FittedTplDustCoeff[i] = m_result->ContinuumModelSolutions[idx].tplDustCoeff;
+        m_firstpass_extremaResult.FittedTplMeiksinIdx[i] = m_result->ContinuumModelSolutions[idx].tplMeiksinIdx;
+        m_firstpass_extremaResult.FittedTplAmplitude[i] = m_result->ContinuumModelSolutions[idx].tplAmplitude;
+        //... todo: more first pass results can be saved here if needed
+    }
+
+
     return 0;
 }
 
@@ -1001,6 +1032,7 @@ Int32 COperatorLineModel::ComputeSecondPass(
             // model.LoadModelSolution(m_result->LineModelSolutions[idx]);
             m_model->fit(m_result->Redshifts[idx], lambdaRange,
                          m_result->LineModelSolutions[idx],
+                         m_result->ContinuumModelSolutions[idx],
                          contreest_iterations, false);
             // m = m_result->ChiSquare[idx];
             if (enableVelocityFitting)
@@ -1018,6 +1050,7 @@ Int32 COperatorLineModel::ComputeSecondPass(
                                 i);
                     m_model->fit(m_result->Redshifts[idx], lambdaRange,
                                  m_result->LineModelSolutions[idx],
+                                 m_result->ContinuumModelSolutions[idx],
                                  contreest_iterations, true);
                     modelInfoSave = true;
                     // CModelSpectrumResult
@@ -1246,11 +1279,12 @@ Int32 COperatorLineModel::ComputeSecondPass(
                                     // Log.LogInfo( "  Operator-Linemodel:
                                     // testing v=%f", vTest);
                                     Float64 meritv;
-                                    meritv = m_model->fit(
-                                        m_result->Redshifts[idx] + dzTest,
-                                        lambdaRange,
-                                        m_result->LineModelSolutions[idx],
-                                        contreest_iterations, false);
+                                    meritv = m_model->fit(m_result->Redshifts[idx] + dzTest,
+                                                          lambdaRange,
+                                                          m_result->LineModelSolutions[idx], //maybe this member result should be replaced by an unused variable
+                                                          m_result->ContinuumModelSolutions[idx], //maybe this member result should be replaced by an unused variable
+                                                          contreest_iterations,
+                                                          false);
 
                                     //                                    if(m_enableWidthFitByGroups)
                                     //                                    {
@@ -1266,7 +1300,6 @@ Int32 COperatorLineModel::ComputeSecondPass(
                                     //                                        }
                                     //                                    }
 
-                                    //
 
                                     Log.LogDebug("  Operator-Linemodel: testing velocity: merit=%.3e for velocity = %.1f", meritv, vTest);
                                     if (meritMin > meritv)
@@ -1361,8 +1394,10 @@ Int32 COperatorLineModel::ComputeSecondPass(
                     // Log.LogInfo("Fit for Extended redshift %d, z = %f", iz,
                     // m_result->Redshifts[iz]);
                     m_result->ChiSquare[iz] =
-                        m_model->fit(m_result->Redshifts[iz], lambdaRange,
+                        m_model->fit(m_result->Redshifts[iz],
+                                     lambdaRange,
                                      m_result->LineModelSolutions[iz],
+                                     m_result->ContinuumModelSolutions[iz],
                                      contreest_iterations, false);
                     m_result->ScaleMargCorrection[iz] =
                         m_model->getScaleMargCorrection();
@@ -1530,9 +1565,12 @@ Int32 COperatorLineModel::ComputeSecondPass(
 
         if (!modelInfoSave)
         {
-            m_result->ChiSquare[idx] = m_model->fit(
-                m_result->Redshifts[idx], lambdaRange,
-                m_result->LineModelSolutions[idx], contreest_iterations, true);
+            m_result->ChiSquare[idx] = m_model->fit(m_result->Redshifts[idx],
+                                                    lambdaRange,
+                                                    m_result->LineModelSolutions[idx],
+                                                    m_result->ContinuumModelSolutions[idx],
+                                                    contreest_iterations,
+                                                    true);
             m_result->ScaleMargCorrection[idx] =
                 m_model->getScaleMargCorrection();
             m_result->SetChisquareTplshapeResult(
@@ -1864,15 +1902,29 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(
     //**************************************************
     // FIRST PASS
     //**************************************************
-    Int32 retFirstPass = ComputeFirstPass(
-        dataStore, spectrum, spectrumContinuum, tplCatalog, tplCategoryList,
-        opt_calibrationPath, restraycatalog, opt_lineTypeFilter,
-        opt_lineForceFilter, lambdaRange, opt_extremacount, opt_fittingmethod,
-        opt_continuumcomponent, opt_lineWidthType, opt_resolution,
-        opt_velocityEmission, opt_velocityAbsorption, opt_continuumreest,
-        opt_rules, opt_velocityFitting, opt_twosteplargegridstep,
-        opt_twosteplargegridsampling, opt_rigidity, opt_tplratioCatRelPath,
-        opt_offsetCatRelPath);
+    Int32 retFirstPass = ComputeFirstPass(dataStore,
+                                          spectrum,
+                                          spectrumContinuum,
+                                          tplCatalog,
+                                          tplCategoryList,
+                                          opt_calibrationPath,
+                                          restraycatalog,
+                                          opt_lineTypeFilter,
+                                          opt_lineForceFilter,
+                                          lambdaRange,
+                                          opt_fittingmethod,
+                                          opt_continuumcomponent,
+                                          opt_lineWidthType,
+                                          opt_resolution,
+                                          opt_velocityEmission,
+                                          opt_velocityAbsorption,
+                                          opt_continuumreest,
+                                          opt_rules, opt_velocityFitting,
+                                          opt_twosteplargegridstep,
+                                          opt_twosteplargegridsampling,
+                                          opt_rigidity,
+                                          opt_tplratioCatRelPath,
+                                          opt_offsetCatRelPath);
     if (retFirstPass != 0)
     {
         Log.LogError("Line Model, first pass failed. Aborting");
