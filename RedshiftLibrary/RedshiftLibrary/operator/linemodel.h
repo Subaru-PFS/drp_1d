@@ -197,6 +197,7 @@ public:
     Int32 m_opt_tplratio_ismFit = 1;
     Int32 m_opt_firstpass_tplratio_ismFit=0;
     Int32 m_opt_firstpass_multiplecontinuumfit_disable=1;
+    std::string m_opt_firstpass_fittingmethod;
 private:
 
     std::shared_ptr<CLineModelResult> m_result;

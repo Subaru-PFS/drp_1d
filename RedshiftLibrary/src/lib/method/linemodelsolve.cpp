@@ -98,6 +98,7 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
     dataStore.GetScopedParam( "linemodel.linetypefilter", m_opt_linetypefilter, "no" );
     dataStore.GetScopedParam( "linemodel.lineforcefilter", m_opt_lineforcefilter, "no" );
     dataStore.GetScopedParam( "linemodel.fittingmethod", m_opt_fittingmethod, "hybrid" );
+    dataStore.GetScopedParam( "linemodel.firstpass.fittingmethod", m_opt_firstpass_fittingmethod, "hybrid" );
     dataStore.GetScopedParam( "linemodel.firstpass.largegridstep", m_opt_firstpass_largegridstep, 0.001 );
     dataStore.GetScopedParam( "linemodel.firstpass.tplratio_ismfit", m_opt_firstpass_tplratio_ismfit, "no" );
     dataStore.GetScopedParam( "linemodel.firstpass.multiplecontinuumfit_disable", m_opt_firstpass_disablemultiplecontinuumfit, "yes" );
@@ -150,12 +151,17 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
 
     //Auto-correct fitting method
     std::string forcefittingmethod = "individual";
-    if(m_opt_rigidity=="tplshape" && m_opt_fittingmethod != forcefittingmethod)
+    if(m_opt_rigidity=="tplshape" && m_opt_fittingmethod == "hybrid")
     {
         m_opt_fittingmethod = forcefittingmethod;
         dataStore.SetScopedParam("linemodel.fittingmethod", m_opt_fittingmethod);
         Log.LogInfo( "LineModel fitting method auto-correct due to tplshape rigidity");
-
+    }
+    if(m_opt_rigidity=="tplshape" && m_opt_firstpass_fittingmethod == "hybrid")
+    {
+        m_opt_firstpass_fittingmethod = forcefittingmethod;
+        dataStore.SetScopedParam("linemodel.firstpass.fittingmethod", m_opt_firstpass_fittingmethod);
+        Log.LogInfo( "LineModel first pass fitting method auto-correct due to tplshape rigidity");
     }
     Log.LogInfo( "Linemodel parameters:");
     Log.LogInfo( "    -linetypefilter: %s", m_opt_linetypefilter.c_str());
@@ -213,6 +219,7 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
     Log.LogInfo( "    -extremacount: %.0f", m_opt_extremacount);
     Log.LogInfo( "    -first pass:");
     Log.LogInfo( "      -largegridstep: %.6f", m_opt_firstpass_largegridstep);
+    Log.LogInfo( "      -fittingmethod: %s", m_opt_firstpass_fittingmethod.c_str());
     Log.LogInfo( "      -tplratio_ismfit: %s", m_opt_firstpass_tplratio_ismfit.c_str());
     Log.LogInfo( "      -multiplecontinuumfit_disable: %s", m_opt_firstpass_disablemultiplecontinuumfit.c_str());
 
@@ -654,6 +661,7 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
         Log.LogError( "Line Model, init failed. Aborting" );
         return false;
     }
+    linemodel.m_opt_firstpass_fittingmethod=m_opt_firstpass_fittingmethod;
     //
     if(m_opt_continuumcomponent=="tplfit"){
         linemodel.m_opt_tplfit_dustFit = Int32(m_opt_tplfit_dustfit=="yes");

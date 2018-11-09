@@ -202,7 +202,7 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
     m_model = std::shared_ptr<CLineModelElementList>(new CLineModelElementList(
                                                          spectrum,
                                                          spectrumContinuum,
-                                                         *orthoTplCatalog,//tplCatalog, //
+                                                         *orthoTplCatalog,
                                                          tplCategoryList,
                                                          opt_calibrationPath,
                                                          restRayList,
@@ -313,6 +313,10 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
     }
     //*/
 
+    //set some model parameters
+    m_model->m_opt_firstpass_fittingmethod = m_opt_firstpass_fittingmethod;
+    m_model->m_opt_secondpass_fittingmethod = opt_fittingmethod;
+
     if (opt_rigidity == "tplshape")
     {
         // init catalog tplratios
@@ -360,7 +364,7 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
     {
         PrecomputeContinuumFit(spectrum,
                                spectrumContinuum,
-                               *orthoTplCatalog,//tplCatalog,//
+                               *orthoTplCatalog,
                                tplCategoryList,
                                opt_calibrationPath,
                                lambdaRange,
@@ -871,20 +875,33 @@ Int32 COperatorLineModel::ComputeCandidates(
 }
 
 Int32 COperatorLineModel::ComputeSecondPass(
-    CDataStore &dataStore, const CSpectrum &spectrum,
-    const CSpectrum &spectrumContinuum, const CTemplateCatalog &tplCatalog,
-    const TStringList &tplCategoryList, const std::string opt_calibrationPath,
-    const CRayCatalog &restraycatalog, const std::string &opt_lineTypeFilter,
-    const std::string &opt_lineForceFilter, const TFloat64Range &lambdaRange,
-    const Int32 opt_extremacount, const std::string &opt_fittingmethod,
-    const std::string &opt_continuumcomponent,
-    const std::string &opt_lineWidthType, const Float64 opt_resolution,
-    const Float64 opt_velocityEmission, const Float64 opt_velocityAbsorption,
-    const std::string &opt_continuumreest, const std::string &opt_rules,
-    const std::string &opt_velocityFitting, const std::string &opt_rigidity,
-    const Float64 &opt_emvelocityfitmin, const Float64 &opt_emvelocityfitmax,
-    const Float64 &opt_emvelocityfitstep, const Float64 &opt_absvelocityfitmin,
-    const Float64 &opt_absvelocityfitmax, const Float64 &opt_absvelocityfitstep)
+        CDataStore &dataStore,
+        const CSpectrum &spectrum,
+        const CSpectrum &spectrumContinuum,
+        const CTemplateCatalog &tplCatalog,
+        const TStringList &tplCategoryList,
+        const std::string opt_calibrationPath,
+        const CRayCatalog &restraycatalog,
+        const std::string &opt_lineTypeFilter,
+        const std::string &opt_lineForceFilter,
+        const TFloat64Range &lambdaRange,
+        const Int32 opt_extremacount,
+        const std::string &opt_fittingmethod,
+        const std::string &opt_continuumcomponent,
+        const std::string &opt_lineWidthType,
+        const Float64 opt_resolution,
+        const Float64 opt_velocityEmission,
+        const Float64 opt_velocityAbsorption,
+        const std::string &opt_continuumreest,
+        const std::string &opt_rules,
+        const std::string &opt_velocityFitting,
+        const std::string &opt_rigidity,
+        const Float64 &opt_emvelocityfitmin,
+        const Float64 &opt_emvelocityfitmax,
+        const Float64 &opt_emvelocityfitstep,
+        const Float64 &opt_absvelocityfitmin,
+        const Float64 &opt_absvelocityfitmax,
+        const Float64 &opt_absvelocityfitstep)
 {
 
     // Set model parameters to SECOND-PASS
@@ -1064,6 +1081,10 @@ Int32 COperatorLineModel::ComputeSecondPass(
                     // fit the emission and absorption width by minimizing the
                     // linemodel merit with linemodel "hybrid" fitting method
                     m_model->SetFittingMethod("hybrid");
+                    if (opt_rigidity == "tplshape")
+                    {
+                        m_model->SetFittingMethod("individual");
+                    }
                     // m_model->m_enableAmplitudeOffsets = true;
                     // contreest_iterations = 1;
                     std::vector<std::vector<Int32>> idxVelfitGroups;

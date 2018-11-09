@@ -242,6 +242,8 @@ public:
     Int32 m_opt_fitcontinuum_maxCount = 2;
     bool m_opt_firstpass_forcedisableMultipleContinuumfit=true;
     bool m_opt_firstpass_forcedisableTplratioISMfit=true;
+    std::string m_opt_firstpass_fittingmethod = "hybrid";
+    std::string m_opt_secondpass_fittingmethod = "hybrid";
 private:
 
     Int32 fitAmplitudesHybrid(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& spcFluxAxisNoContinuum, const CSpectrumFluxAxis &continuumfluxAxis, Float64 redshift);
@@ -249,6 +251,15 @@ private:
     Int32 fitAmplitudesLmfit( const CSpectrumFluxAxis& fluxAxis, CLmfitController * controller);
     Int32 fitAmplitudesLinSolve(std::vector<UInt32> EltsIdx, const CSpectrumSpectralAxis &spectralAxis, const CSpectrumFluxAxis &fluxAxis, const CSpectrumFluxAxis& continuumfluxAxis, std::vector<Float64> &ampsfitted, std::vector<Float64> &errorsfitted);
     Int32 fitAmplitudesLinSolveAndLambdaOffset(std::vector<UInt32> EltsIdx, const CSpectrumSpectralAxis &spectralAxis, const CSpectrumFluxAxis &fluxAxis, const CSpectrumFluxAxis& continuumfluxAxis, std::vector<Float64> &ampsfitted, std::vector<Float64> &errorsfitted, Bool enableOffsetFitting);
+
+    Int32 fitAmplitudesLinesAndContinuumLinSolve(std::vector<UInt32> EltsIdx,
+                                                 const TFloat64Range& lambdaRange,
+                                                 const CSpectrumSpectralAxis& spectralAxis,
+                                                 const CSpectrumFluxAxis& fluxAxis,
+                                                 const CSpectrumFluxAxis& continuumfluxAxis,
+                                                 std::vector<Float64>& ampsfitted,
+                                                 std::vector<Float64>& errorsfitted,
+                                                 Float64 &chisquare);
 
     bool m_forceDisableLyaFitting;
     Int32 setLyaProfile( Float64 redshift, const CSpectrumSpectralAxis& spectralAxis );

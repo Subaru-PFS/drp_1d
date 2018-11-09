@@ -82,6 +82,7 @@ private:
     std::string m_opt_firstpass_largegridsampling;
     std::string m_opt_firstpass_tplratio_ismfit;
     std::string m_opt_firstpass_disablemultiplecontinuumfit;
+    std::string m_opt_firstpass_fittingmethod;
 
     std::string m_opt_pdfcombination;
     Float64 m_opt_stronglinesprior;
