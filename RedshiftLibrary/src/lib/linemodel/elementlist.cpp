@@ -941,7 +941,8 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, I
 
                     m_fitContinuum_tplFitDtM = bestFitDtM;
                     m_fitContinuum_tplFitMtM = bestFitMtM;
-                    setFitContinuum_tplAmplitude(bestFitAmplitude);
+                    std::vector<Float64> polyCoeffs;
+                    setFitContinuum_tplAmplitude(bestFitAmplitude, polyCoeffs);
 
                     Log.LogDebug( "    model : LoadFitContinuum, loaded: %s", bestTplName.c_str());
                     break;
@@ -953,13 +954,23 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, I
     }
 }
 
-void CLineModelElementList::setFitContinuum_tplAmplitude(Float64 tplAmp){
+void CLineModelElementList::setFitContinuum_tplAmplitude(Float64 tplAmp, std::vector<Float64> polyCoeffs){
+    const CSpectrumSpectralAxis& spcSpectralAxis = m_SpectrumModel->GetSpectralAxis();
 
     //Float64 alpha = 0.5; //alpha blend = 1: only m_SpcContinuumFluxAxis, alpha=0: only tplfit
     m_fitContinuum_tplFitAmplitude = tplAmp;
     for (UInt32 k=0; k<m_ContinuumFluxAxis.GetSamplesCount(); k++){
         //m_ContinuumFluxAxis[k] = (1.-alpha)*m_observeGridContinuumFlux[k]*tplAmp + (alpha)*m_SpcContinuumFluxAxis[k];
         m_ContinuumFluxAxis[k] = m_observeGridContinuumFlux[k]*tplAmp;
+        for(Int32 kCoeff=0; kCoeff<polyCoeffs.size(); kCoeff++)
+        {
+            Float64 lbdaTerm=1.0;
+            for(Int32 kt=0; kt<kCoeff; kt++)
+            {
+                lbdaTerm *=  spcSpectralAxis[k];
+            }
+            m_ContinuumFluxAxis[k] += polyCoeffs[kCoeff]*lbdaTerm;
+        }
         m_spcFluxAxisNoContinuum[k] = m_SpcFluxAxis[k]-m_ContinuumFluxAxis[k];
     }
 }
@@ -1298,8 +1309,8 @@ void CLineModelElementList::PrepareContinuum(Float64 z)
     }
 
 
-
-    setFitContinuum_tplAmplitude(m_fitContinuum_tplFitAmplitude);
+    std::vector<Float64> polyCoeffs;
+    setFitContinuum_tplAmplitude(m_fitContinuum_tplFitAmplitude, polyCoeffs);
     return;
 }
 
@@ -1698,7 +1709,8 @@ Float64 CLineModelElementList::fit(Float64 redshift,
                     }
                     const CTemplate* tpl = bestController->getTemplate();
                     ApplyContinuumOnGrid(*tpl );
-                    setFitContinuum_tplAmplitude(bestController->getContinuumAmp());
+                    std::vector<Float64> polyCoeffs;
+                    setFitContinuum_tplAmplitude(bestController->getContinuumAmp(), polyCoeffs);
                       //setFitContinuum_tplAmplitude(  bestController->getContinuumAmp());
                   }else if (bestController-> isRedshiftFitted()){
                     setRedshift(bestController-> getRedshift(), bestController->isContinuumLoaded());
@@ -1751,7 +1763,7 @@ Float64 CLineModelElementList::fit(Float64 redshift,
             }
 
             //fit the amplitude of all elements AND continuum amplitude together with linear solver: gsl_multifit_wlinear
-            if(m_fittingmethod=="svdlc")
+            if(m_fittingmethod=="svdlc" || m_fittingmethod=="svdlcp2")
             {
                 //1. fit only the current continuum
                 //prepare continuum on the observed grid
@@ -1760,12 +1772,18 @@ Float64 CLineModelElementList::fit(Float64 redshift,
                 Log.LogDebug( "    model: fitting svdlc, with continuum-tpl=%s", m_fitContinuum_tplName.c_str());
                 setRedshift(m_Redshift, true);
                 m_fitContinuum_tplFitAmplitude = 1.0;
-                setFitContinuum_tplAmplitude(m_fitContinuum_tplFitAmplitude);
+                std::vector<Float64> polyCoeffs_unused;
+                setFitContinuum_tplAmplitude(m_fitContinuum_tplFitAmplitude, polyCoeffs_unused);
 
                 std::vector<UInt32> validEltsIdx = GetModelValidElementsIndexes();
                 std::vector<Float64> ampsfitted;
                 std::vector<Float64> errorsfitted;
                 Float64 chi2_cl = DBL_MAX;
+                Int32 fitc_polyOrder = -1;
+                if(m_fittingmethod=="svdlcp2")
+                {
+                    fitc_polyOrder = 2;
+                }
                 fitAmplitudesLinesAndContinuumLinSolve(validEltsIdx,
                                                        lambdaRange,
                                                        spectralAxis,
@@ -1773,12 +1791,18 @@ Float64 CLineModelElementList::fit(Float64 redshift,
                                                        m_ContinuumFluxAxis,
                                                        ampsfitted,
                                                        errorsfitted,
-                                                       chi2_cl);
+                                                       chi2_cl,
+                                                       fitc_polyOrder);
                 Log.LogDebug( "    model: fitting svdlc done");
 
 
-                m_fitContinuum_tplFitAmplitude = ampsfitted[ampsfitted.size()-1];
-                setFitContinuum_tplAmplitude(m_fitContinuum_tplFitAmplitude);
+                m_fitContinuum_tplFitAmplitude = ampsfitted[validEltsIdx.size()];
+                std::vector<Float64> polyCoeffs;
+                for(Int32 kpoly=validEltsIdx.size()+1; kpoly<ampsfitted.size();kpoly++)
+                {
+                    polyCoeffs.push_back(ampsfitted[kpoly]);
+                }
+                setFitContinuum_tplAmplitude(m_fitContinuum_tplFitAmplitude, polyCoeffs);
                 //PrepareContinuum(m_Redshift);
                 for(UInt32 i=0; i<modelFluxAxis.GetSamplesCount(); i++)
                 {
@@ -3846,6 +3870,7 @@ Int32 CLineModelElementList::fitAmplitudesLinSolve( std::vector<UInt32> EltsIdx,
  * @param continuumfluxAxis: must contain the continuum to be amp-fitted
  * @param ampsfitted: output
  * @param errorsfitted: output
+ * @param polyOrder: order of the polynom to be fitted along with the continuum (-1 = disabled)
  * @return
  *
  * WARNING: not sure about fitting abs. lines with this method...
@@ -3857,18 +3882,24 @@ Int32 CLineModelElementList::fitAmplitudesLinesAndContinuumLinSolve( std::vector
                                                                      const CSpectrumFluxAxis& continuumfluxAxis,
                                                                      std::vector<Float64>& ampsfitted,
                                                                      std::vector<Float64>& errorsfitted,
-                                                                     Float64& chisquare)
+                                                                     Float64& chisquare,
+                                                                     Int32 polyOrder)
 {
-  //boost::chrono::thread_clock::time_point start_prep = boost::chrono::thread_clock::now();
+    //boost::chrono::thread_clock::time_point start_prep = boost::chrono::thread_clock::now();
 
     bool verbose = false;
     Int32 idx = 0;
-
 
     Int32 nddl = EltsIdx.size()+1; //number of param to be fitted=nlines+continuum
     if(nddl<2){
         return -1;
     }
+
+    if(polyOrder>=0)
+    {
+        nddl += polyOrder+1;
+    }
+
     std::vector<UInt32> xInds;
     for(Int32 i=0; i<spectralAxis.GetSamplesCount(); i++)
     {
@@ -3954,6 +3985,20 @@ Int32 CLineModelElementList::fitAmplitudesLinesAndContinuumLinSolve( std::vector
 
         gsl_matrix_set (X, i, EltsIdx.size(), ci);
 
+
+        if(polyOrder>=0)
+        {
+            for(Int32 kCoeff=0; kCoeff<polyOrder+1; kCoeff++)
+            {
+                Float64 vect=1.0;
+                for(Int32 kt=0; kt<kCoeff; kt++)
+                {
+                    vect *= xi;
+                }
+                gsl_matrix_set (X, i, EltsIdx.size()+1+kCoeff, vect);
+            }
+        }
+
         gsl_vector_set (y, i, yi);
         gsl_vector_set (w, i, 1.0/(ei*ei));
     }
@@ -4033,6 +4078,16 @@ Int32 CLineModelElementList::fitAmplitudesLinesAndContinuumLinSolve( std::vector
         }
         ampsfitted[iddl] = (a);
         errorsfitted[iddl] = (sigma);
+    }
+
+
+    if(verbose && polyOrder>=0)
+    {
+        for(Int32 kCoeff=0; kCoeff<polyOrder+1; kCoeff++)
+        {
+            Float64 p = gsl_vector_get(c, EltsIdx.size()+1+kCoeff)/normFactor;
+            Log.LogInfo("# Found p%d poly amplitude = %+.5e", kCoeff, p);
+        }
     }
 
     if(verbose)

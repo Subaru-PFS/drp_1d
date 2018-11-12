@@ -148,6 +148,9 @@ public:
                                        const Float64 &opt_absvelocityfitmax,
                                        const Float64 &opt_absvelocityfitstep);
 
+    Int32 RecomputeAroundCandidates(const TFloat64Range &lambdaRange,
+                                    const std::string &opt_continuumreest);
+
     std::shared_ptr<COperatorResult> computeWithUltimPass(CDataStore &dataStore,
                                       const CSpectrum& spectrum,
                                       const CSpectrum& spectrumContinuum,
@@ -219,9 +222,11 @@ private:
     TFloat64List m_sortedRedshifts;
 
     //candidates
-    TPointList m_extremumList;
+    TPointList m_firstpass_extremumList;
     CLineModelExtremaResult m_firstpass_extremaResult;
     CLineModelExtremaResult m_secondpass_parameters_extremaResult;
+    TPointList m_secondpass_recomputed_extremumList;
+    std::vector<Int32> m_secondpass_indiceSortedCandidatesList;
 
     Int32 m_enableFastFitLargeGrid = 0;
     Int32 m_estimateLeastSquareFast = 0;

@@ -648,7 +648,7 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
     }
 
     Float64 overlapThreshold = 1.0;
-    if (opt_chi2operator != "chisquare2")
+    if (opt_chi2operator != "chisquare2" && ignoreLinesSupport==true)
     {
         ignoreLinesSupport=false;
         Log.LogWarning("  Operator-Linemodel: unable to ignoreLinesSupport if NOT chisquare2-operator is used. Disabled");
@@ -790,7 +790,7 @@ Int32 COperatorLineModel::ComputeCandidates(const Int32 opt_extremacount,
 
     if (m_result->Redshifts.size() == 1)
     {
-        m_extremumList.push_back(
+        m_firstpass_extremumList.push_back(
             SPoint(m_result->Redshifts[0], m_result->ChiSquare[0]));
         Log.LogInfo("  Operator-Linemodel: found only 1 redshift calculated, "
                     "thus using only 1 extremum");
@@ -798,7 +798,7 @@ Int32 COperatorLineModel::ComputeCandidates(const Int32 opt_extremacount,
     {
         for (Int32 ke = 0; ke < m_result->Redshifts.size(); ke++)
         {
-            m_extremumList.push_back(
+            m_firstpass_extremumList.push_back(
                 SPoint(m_result->Redshifts[ke], m_result->ChiSquare[ke]));
         }
         Log.LogInfo("  Operator-Linemodel: all initial redshifts considered as "
@@ -816,23 +816,23 @@ Int32 COperatorLineModel::ComputeCandidates(const Int32 opt_extremacount,
         }
         CExtremum extremum(redshiftsRange, opt_extremacount, invertForMinSearch,
                            2);
-        extremum.Find(m_result->Redshifts, floatValues, m_extremumList);
-        if (m_extremumList.size() == 0)
+        extremum.Find(m_result->Redshifts, floatValues, m_firstpass_extremumList);
+        if (m_firstpass_extremumList.size() == 0)
         {
             Log.LogError("  Operator-Linemodel: Extremum find method failed");
             return -1;
         }
 
         Log.LogInfo("  Operator-Linemodel: found %d extrema",
-                    m_extremumList.size());
+                    m_firstpass_extremumList.size());
     }
     /*
     // Refine Extremum with a second maximum search around the z candidates:
     // This corresponds to the finer xcorrelation in EZ Pandora (in standard_DP
     fctn in SolveKernel.py) Float64 radius = 0.001; for( Int32 i=0;
-    i<m_extremumList.size(); i++ )
+    i<m_firstpass_extremumList.size(); i++ )
     {
-        Float64 x = m_extremumList[i].X;
+        Float64 x = m_firstpass_extremumList[i].X;
         Float64 left_border = max(redshiftsRange.GetBegin(), x-radius);
         Float64 right_border=min(redshiftsRange.GetEnd(), x+radius);
 
@@ -840,7 +840,7 @@ Int32 COperatorLineModel::ComputeCandidates(const Int32 opt_extremacount,
         TFloat64Range rangeFine = TFloat64Range( left_border, right_border );
         CExtremum extremumFine( rangeFine , 1, true);
         extremumFine.Find( m_result->Redshifts, m_result->ChiSquare,
-    m_extremumListFine ); if(m_extremumListFine.size()>0){ m_extremumList[i] =
+    m_extremumListFine ); if(m_extremumListFine.size()>0){ m_firstpass_extremumList[i] =
     m_extremumListFine[0];
         }
     }
@@ -848,11 +848,11 @@ Int32 COperatorLineModel::ComputeCandidates(const Int32 opt_extremacount,
 
     //*
     // extend z around the extrema
-    for (Int32 i = 0; i < m_extremumList.size(); i++)
+    for (Int32 i = 0; i < m_firstpass_extremumList.size(); i++)
     {
         Log.LogInfo("  Operator-Linemodel: Raw extr #%d, z_e.X=%f, m_e.Y=%e", i,
-                    m_extremumList[i].X, m_extremumList[i].Y);
-        Float64 x = m_extremumList[i].X;
+                    m_firstpass_extremumList[i].X, m_firstpass_extremumList[i].Y);
+        Float64 x = m_firstpass_extremumList[i].X;
         Float64 left_border =
             max(redshiftsRange.GetBegin(), x - m_secondPass_extensionradius);
         Float64 right_border =
@@ -873,11 +873,11 @@ Int32 COperatorLineModel::ComputeCandidates(const Int32 opt_extremacount,
 
 
     //now preparing the candidates extrema results
-    m_firstpass_extremaResult.Resize(m_extremumList.size());
-    for (Int32 i = 0; i < m_extremumList.size(); i++)
+    m_firstpass_extremaResult.Resize(m_firstpass_extremumList.size());
+    for (Int32 i = 0; i < m_firstpass_extremumList.size(); i++)
     {
-        Float64 z = m_extremumList[i].X;
-        Float64 m = m_extremumList[i].Y;
+        Float64 z = m_firstpass_extremumList[i].X;
+        Float64 m = m_firstpass_extremumList[i].Y;
         // find the index in the zaxis results
         Int32 idx = -1;
         for (UInt32 i2 = 0; i2 < m_result->Redshifts.size(); i2++)
@@ -955,6 +955,7 @@ Int32 COperatorLineModel::ComputeSecondPass(CDataStore &dataStore,
     mlmfit_savedModelRulesResults_lmfit.clear();
     mlmfit_savedBaselineResult_lmfit.clear();
 
+    // estimate second pass parameters (mainly elv, alv...)
     EstimateSecondPassParameters(spectrum,
                                  lambdaRange,
                                  opt_continuumreest,
@@ -968,160 +969,13 @@ Int32 COperatorLineModel::ComputeSecondPass(CDataStore &dataStore,
                                  opt_absvelocityfitmax,
                                  opt_absvelocityfitstep);
 
-    TPointList extremumList2;
-    extremumList2.resize(m_extremumList.size());
-
     // recompute the fine grid results around the extrema
-    bool enable_recompute_around_candidate = true;
-    if (enable_recompute_around_candidate)
-    {
-        for (Int32 i = 0; i < m_extremumList.size(); i++)
-        {
-            Log.LogInfo("");
-            Log.LogInfo("  Operator-Linemodel: Second pass - recompute around Candidate #%d", i);
-            Log.LogInfo("  Operator-Linemodel: ---------- /\\ ---------- ---------- ---------- Candidate #%d", i);
-            Float64 z = m_extremumList[i].X;
-
-            // find the index in the zaxis results
-            Int32 idx = -1;
-            for (UInt32 i2 = 0; i2 < m_result->Redshifts.size(); i2++)
-            {
-                if (m_result->Redshifts[i2] == z)
-                {
-                    idx = i2;
-                    break;
-                }
-            }
-            if (idx == -1)
-            {
-                Log.LogInfo("  Operator-Linemodel: Problem. could not find "
-                            "extrema solution index...");
-                continue;
-            }
-
-            // reestimate the model (eventually with continuum reestimation) on
-            // the extrema selected
-            Int32 contreest_iterations = 0;
-            if (opt_continuumreest == "always")
-            {
-                contreest_iterations = 1;
-            } else
-            {
-                contreest_iterations = 0;
-            }
-
-            // finally compute the redshifts on the z-range around the extremum
-            TFloat64Range redshiftsRange(
-                m_result->Redshifts[0],
-                m_result->Redshifts[m_result->Redshifts.size() - 1]);
-            Float64 left_border = max(redshiftsRange.GetBegin(),
-                                      z - m_secondPass_extensionradius);
-            Float64 right_border = min(redshiftsRange.GetEnd(),
-                                       z + m_secondPass_extensionradius);
-            // m_model->SetFittingMethod("nofit");
-            extremumList2[i].Y = DBL_MAX;
-            extremumList2[i].X = m_result->Redshifts[idx];
-            Int32 idx2 = idx;
-            for (Int32 iz = 0; iz < m_result->Redshifts.size(); iz++)
-            {
-                if (m_result->Redshifts[iz] >= left_border &&
-                    m_result->Redshifts[iz] <= right_border)
-                {
-                    // Log.LogInfo("Fit for Extended redshift %d, z = %f", iz,
-                    // m_result->Redshifts[iz]);
-                    m_result->ChiSquare[iz] =
-                        m_model->fit(m_result->Redshifts[iz],
-                                     lambdaRange,
-                                     m_result->LineModelSolutions[iz],
-                                     m_result->ContinuumModelSolutions[iz],
-                                     contreest_iterations, false);
-                    m_result->ScaleMargCorrection[iz] =
-                        m_model->getScaleMargCorrection();
-                    m_result->SetChisquareTplshapeResult(
-                        iz, m_model->GetChisquareTplshape(),
-                        m_model->GetScaleMargTplshape(),
-                        m_model->GetStrongELPresentTplshape());
-                    if (m_estimateLeastSquareFast)
-                    {
-                        m_result->ChiSquareContinuum[iz] =
-                            m_model->getLeastSquareContinuumMerit(lambdaRange);
-                    } else
-                    {
-                        m_result->ChiSquareContinuum[iz] =
-                            m_model->getLeastSquareContinuumMeritFast();
-                    }
-                    m_result->ScaleMargCorrectionContinuum[iz] =
-                        m_model->getContinuumScaleMargCorrection();
-                    if (m_result->ChiSquare[iz] < extremumList2[i].Y)
-                    {
-                        extremumList2[i].X = m_result->Redshifts[iz];
-                        extremumList2[i].Y = m_result->ChiSquare[iz];
-                        idx2 = iz;
-                    }
-                }
-            }
-            // m_model->SetFittingMethod(opt_fittingmethod);
-
-            m_secondpass_parameters_extremaResult.Extrema[i] = extremumList2[i].X;
-            m_secondpass_parameters_extremaResult.ExtremaMerit[i] = extremumList2[i].Y;
-            Log.LogInfo("  Operator-Linemodel: Recomputed extr #%d, idx=%d, "
-                        "z_e.X=%f, m_e.Y=%f",
-                        i, idx2, extremumList2[i].X, extremumList2[i].Y);
-        }
-    } else
-    {
-        for (Int32 i = 0; i < m_extremumList.size(); i++)
-        {
-            extremumList2[i].X = m_extremumList[i].X;
-            extremumList2[i].Y = m_extremumList[i].Y;
-        }
-    }
-
-    // reorder extremumList using .Y values : smallest to highest
-    // todo: recode using map and sort from std lib
-    Int32 extremumCount = m_secondpass_parameters_extremaResult.Extrema.size();
-    std::vector<Int32> indiceSortedCandidatesList;
-    for (Int32 ie = 0; ie < extremumCount; ie++)
-    {
-        Int32 iYmin = 0;
-        Float64 YMin = DBL_MAX;
-        for (Int32 ie2 = 0; ie2 < extremumList2.size(); ie2++)
-        {
-            if (YMin > extremumList2[ie2].Y)
-            {
-                YMin = extremumList2[ie2].Y;
-                iYmin = ie2;
-            }
-        }
-        extremumList2.erase(extremumList2.begin() + iYmin);
-
-        // find the initial index in extremumList2
-        for (Int32 ie2 = 0; ie2 < indiceSortedCandidatesList.size(); ie2++)
-        {
-            if (iYmin >= indiceSortedCandidatesList[ie2])
-            {
-                iYmin++;
-            }
-        }
-        indiceSortedCandidatesList.push_back(iYmin);
-    }
-    if (mlmfit_modelInfoSave)
-    {
-        TFloat64List OrderedLMZ;
-        for (Int32 ie2 = 0; ie2 < indiceSortedCandidatesList.size(); ie2++)
-        {
-            OrderedLMZ.push_back(
-                m_result->ExtremaResult.lmfitPass[indiceSortedCandidatesList[ie2]]);
-        }
-        m_result->ExtremaResult.lmfitPass = OrderedLMZ;
-    }
-    if (indiceSortedCandidatesList.size() == 0)
-    {
-        Log.LogError("  Operator-Linemodel: Extremum Ordering failed");
-    }
+    RecomputeAroundCandidates(lambdaRange,
+                              opt_continuumreest);
 
 
     Log.LogInfo("  Operator-Linemodel: Now storing extrema results");
+    Int32 extremumCount = m_secondpass_parameters_extremaResult.Extrema.size();
     m_result->ExtremaResult.Resize(extremumCount);
 
     // Int32 start =
@@ -1137,7 +991,7 @@ Int32 COperatorLineModel::ComputeSecondPass(CDataStore &dataStore,
 
     for (Int32 i = 0; i < extremumCount; i++)
     {
-        Int32 index_extremum = indiceSortedCandidatesList[i];
+        Int32 index_extremum = m_secondpass_indiceSortedCandidatesList[i];
         Float64 z = m_secondpass_parameters_extremaResult.Extrema[index_extremum];
         Float64 m = m_secondpass_parameters_extremaResult.ExtremaMerit[index_extremum];
 
@@ -1177,7 +1031,6 @@ Int32 COperatorLineModel::ComputeSecondPass(CDataStore &dataStore,
 
         if (!mlmfit_modelInfoSave)
         {
-            m_model->SetFittingMethod("svdlc");
             m_result->ChiSquare[idx] = m_model->fit(m_result->Redshifts[idx],
                                                     lambdaRange,
                                                     m_result->LineModelSolutions[idx],
@@ -1499,14 +1352,14 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
         return 0;
     }
 
-    m_secondpass_parameters_extremaResult.Resize(m_extremumList.size());
-    for (Int32 i = 0; i < m_extremumList.size(); i++)
+    m_secondpass_parameters_extremaResult.Resize(m_firstpass_extremumList.size());
+    for (Int32 i = 0; i < m_firstpass_extremumList.size(); i++)
     {
         Log.LogInfo("");
         Log.LogInfo("  Operator-Linemodel: Second pass - estimate parameters for candidate #%d", i);
         Log.LogInfo("  Operator-Linemodel: ---------- /\\ ---------- ---------- ---------- Candidate #%d", i);
-        Float64 z = m_extremumList[i].X;
-        Float64 m = m_extremumList[i].Y;
+        Float64 z = m_firstpass_extremumList[i].X;
+        Float64 m = m_firstpass_extremumList[i].Y;
 
         m_secondpass_parameters_extremaResult.Extrema[i] = z;
         m_secondpass_parameters_extremaResult.ExtremaMerit[i] = m;
@@ -1652,7 +1505,7 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
                             idxVelfitGroups = m_model->GetModelVelfitGroups(CRay::nType_Absorption);
                             Log.LogInfo("  Operator-Linemodel: VelfitGroups ABSORPTION - n = %d",
                                         idxVelfitGroups.size());
-                            if (m_extremumList.size() > 1 && idxVelfitGroups.size() > 1)
+                            if (m_firstpass_extremumList.size() > 1 && idxVelfitGroups.size() > 1)
                             {
                                 Log.LogError(
                                             "  Operator-Linemodel: not allowed to "
@@ -1675,7 +1528,7 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
                                         CRay::nType_Emission);
                             Log.LogInfo("  Operator-Linemodel: VelfitGroups EMISSION - n = %d",
                                         idxVelfitGroups.size());
-                            if (m_extremumList.size() > 1 && idxVelfitGroups.size() > 1)
+                            if (m_firstpass_extremumList.size() > 1 && idxVelfitGroups.size() > 1)
                             {
                                 Log.LogError(
                                             "  Operator-Linemodel: not allowed to "
@@ -1815,9 +1668,11 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
                                         m_model ->SetVelocityAbsorptionOneElement( vOptim,
                                                                                    idxVelfitGroups[kgroup][ke]);
                                     }
+                                    //todo: elv/alv fitting per fitting groups: should be saved in m_secondpass_parameters_extremaResult[i].GroupsLv
                                 } else
                                 {
                                     m_model->SetVelocityAbsorption(vOptim);
+                                    m_secondpass_parameters_extremaResult.Alv[i] = vOptim;
                                 }
                             } else
                             {
@@ -1828,9 +1683,11 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
                                         m_model->SetVelocityEmissionOneElement( vOptim,
                                                                                 idxVelfitGroups[kgroup][ke]);
                                     }
+                                    //todo: elv/alv fitting per fitting groups: should be saved in m_secondpass_parameters_extremaResult[i].GroupsLv
                                 } else
                                 {
                                     m_model->SetVelocityEmission(vOptim);
+                                    m_secondpass_parameters_extremaResult.Elv[i] = vOptim;
                                 }
                             }
                         }
@@ -1840,9 +1697,194 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
                 // m_model->m_enableAmplitudeOffsets = false;
             }
         }
-        m_secondpass_parameters_extremaResult.Elv[i] = m_model->GetVelocityEmission();
-        m_secondpass_parameters_extremaResult.Alv[i] = m_model->GetVelocityAbsorption();
-        //if elv/alv fitting per fitting groups: should be used to populate: m_secondpass_parameters_extremaResult[i].GroupsLv
+    }
+
+    return 0;
+}
+
+Int32 COperatorLineModel::RecomputeAroundCandidates(const TFloat64Range &lambdaRange,
+                                                    const string &opt_continuumreest)
+{
+    m_secondpass_recomputed_extremumList.clear();
+    m_secondpass_recomputed_extremumList.resize(m_firstpass_extremumList.size());
+
+    bool enable_recompute_around_candidate = true;
+    if (enable_recompute_around_candidate)
+    {
+        for (Int32 i = 0; i < m_firstpass_extremumList.size(); i++)
+        {
+            Log.LogInfo("");
+            Log.LogInfo("  Operator-Linemodel: Second pass - recompute around Candidate #%d", i);
+            Log.LogInfo("  Operator-Linemodel: ---------- /\\ ---------- ---------- ---------- Candidate #%d", i);
+            Float64 z = m_firstpass_extremumList[i].X;
+            m_model->SetVelocityEmission(m_secondpass_parameters_extremaResult.Elv[i]);
+            m_model->SetVelocityAbsorption(m_secondpass_parameters_extremaResult.Alv[i]);
+            Log.LogInfo("    Operator-Linemodel: recompute with elv=%.1f, alv=%.1f",
+                        m_model->GetVelocityEmission(),
+                        m_model->GetVelocityAbsorption());
+
+            // find the index in the zaxis results
+            Int32 idx = -1;
+            for (UInt32 i2 = 0; i2 < m_result->Redshifts.size(); i2++)
+            {
+                if (m_result->Redshifts[i2] == z)
+                {
+                    idx = i2;
+                    break;
+                }
+            }
+            if (idx == -1)
+            {
+                Log.LogInfo("  Operator-Linemodel: Problem. could not find "
+                            "extrema solution index...");
+                continue;
+            }
+
+            // reestimate the model (eventually with continuum reestimation) on
+            // the extrema selected
+            Int32 contreest_iterations = 0;
+            if (opt_continuumreest == "always")
+            {
+                contreest_iterations = 1;
+            } else
+            {
+                contreest_iterations = 0;
+            }
+
+            // finally compute the redshifts on the z-range around the extremum
+            TFloat64Range redshiftsRange(
+                m_result->Redshifts[0],
+                m_result->Redshifts[m_result->Redshifts.size() - 1]);
+            Float64 left_border = max(redshiftsRange.GetBegin(),
+                                      z - m_secondPass_extensionradius);
+            Float64 right_border = min(redshiftsRange.GetEnd(),
+                                       z + m_secondPass_extensionradius);
+            // m_model->SetFittingMethod("nofit");
+            m_secondpass_recomputed_extremumList[i].Y = DBL_MAX;
+            m_secondpass_recomputed_extremumList[i].X = m_result->Redshifts[idx];
+            Int32 idx2 = idx;
+
+            //find the candidate z-range min/max indexes
+            Int32 izmin_cand = m_result->Redshifts.size();
+            Int32 izmax_cand = -1;
+            for (Int32 iz = 0; iz < m_result->Redshifts.size(); iz++)
+            {
+                if (m_result->Redshifts[iz] >= left_border &&
+                    m_result->Redshifts[iz] <= right_border)
+                {
+                    if(izmin_cand>iz)
+                    {
+                        izmin_cand = iz;
+                    }
+                    if(izmax_cand<iz)
+                    {
+                        izmax_cand = iz;
+                    }
+                }
+            }
+
+            Int32 n_progresssteps = izmax_cand-izmin_cand+1;
+            Log.LogInfo("    Operator-Linemodel: Fit n=%d values for z in [%.6f; %.6f]",
+                        n_progresssteps,
+                        m_result->Redshifts[izmin_cand],
+                        m_result->Redshifts[izmax_cand]);
+            boost::progress_display show_progress(n_progresssteps);
+            for (Int32 iz = izmin_cand; iz <= izmax_cand; iz++)
+            {
+                // Log.LogInfo("Fit for Extended redshift %d, z = %f", iz,
+                // m_result->Redshifts[iz]);
+                m_result->ChiSquare[iz] =
+                        m_model->fit(m_result->Redshifts[iz],
+                                     lambdaRange,
+                                     m_result->LineModelSolutions[iz],
+                                     m_result->ContinuumModelSolutions[iz],
+                                     contreest_iterations, false);
+                m_result->ScaleMargCorrection[iz] =
+                        m_model->getScaleMargCorrection();
+                m_result->SetChisquareTplshapeResult(iz,
+                                                     m_model->GetChisquareTplshape(),
+                                                     m_model->GetScaleMargTplshape(),
+                                                     m_model->GetStrongELPresentTplshape());
+                if (m_estimateLeastSquareFast)
+                {
+                    m_result->ChiSquareContinuum[iz] =
+                            m_model->getLeastSquareContinuumMerit(lambdaRange);
+                } else
+                {
+                    m_result->ChiSquareContinuum[iz] =
+                            m_model->getLeastSquareContinuumMeritFast();
+                }
+                m_result->ScaleMargCorrectionContinuum[iz] =
+                        m_model->getContinuumScaleMargCorrection();
+                if (m_result->ChiSquare[iz] < m_secondpass_recomputed_extremumList[i].Y)
+                {
+                    m_secondpass_recomputed_extremumList[i].X = m_result->Redshifts[iz];
+                    m_secondpass_recomputed_extremumList[i].Y = m_result->ChiSquare[iz];
+                    idx2 = iz;
+                }
+                ++show_progress;
+            }
+            // m_model->SetFittingMethod(opt_fittingmethod);
+
+            m_secondpass_parameters_extremaResult.Extrema[i] = m_secondpass_recomputed_extremumList[i].X;
+            m_secondpass_parameters_extremaResult.ExtremaMerit[i] = m_secondpass_recomputed_extremumList[i].Y;
+            Log.LogInfo("  Operator-Linemodel: Recomputed extr #%d, idx=%d, "
+                        "z_e.X=%f, m_e.Y=%f",
+                        i,
+                        idx2,
+                        m_secondpass_recomputed_extremumList[i].X,
+                        m_secondpass_recomputed_extremumList[i].Y);
+        }
+    } else
+    {
+        for (Int32 i = 0; i < m_firstpass_extremumList.size(); i++)
+        {
+            m_secondpass_recomputed_extremumList[i].X = m_firstpass_extremumList[i].X;
+            m_secondpass_recomputed_extremumList[i].Y = m_firstpass_extremumList[i].Y;
+        }
+    }
+
+    // reorder extremumList using .Y values : smallest to highest
+    // todo: recode using map and sort from std lib
+    Int32 extremumCount = m_secondpass_parameters_extremaResult.Extrema.size();
+    m_secondpass_indiceSortedCandidatesList.clear();
+    for (Int32 ie = 0; ie < extremumCount; ie++)
+    {
+        Int32 iYmin = 0;
+        Float64 YMin = DBL_MAX;
+        for (Int32 ie2 = 0; ie2 < m_secondpass_recomputed_extremumList.size(); ie2++)
+        {
+            if (YMin > m_secondpass_recomputed_extremumList[ie2].Y)
+            {
+                YMin = m_secondpass_recomputed_extremumList[ie2].Y;
+                iYmin = ie2;
+            }
+        }
+        m_secondpass_recomputed_extremumList.erase(m_secondpass_recomputed_extremumList.begin() + iYmin);
+
+        // find the initial index in m_secondpass_recomputed_extremumList
+        for (Int32 ie2 = 0; ie2 < m_secondpass_indiceSortedCandidatesList.size(); ie2++)
+        {
+            if (iYmin >= m_secondpass_indiceSortedCandidatesList[ie2])
+            {
+                iYmin++;
+            }
+        }
+        m_secondpass_indiceSortedCandidatesList.push_back(iYmin);
+    }
+    if (mlmfit_modelInfoSave)
+    {
+        TFloat64List OrderedLMZ;
+        for (Int32 ie2 = 0; ie2 < m_secondpass_indiceSortedCandidatesList.size(); ie2++)
+        {
+            OrderedLMZ.push_back(
+                m_result->ExtremaResult.lmfitPass[m_secondpass_indiceSortedCandidatesList[ie2]]);
+        }
+        m_result->ExtremaResult.lmfitPass = OrderedLMZ;
+    }
+    if (m_secondpass_indiceSortedCandidatesList.size() == 0)
+    {
+        Log.LogError("  Operator-Linemodel: Extremum Ordering failed");
     }
 
     return 0;
@@ -1875,24 +1917,38 @@ std::shared_ptr<COperatorResult> COperatorLineModel::getResult()
 }
 
 std::shared_ptr<COperatorResult> COperatorLineModel::Compute(
-    CDataStore &dataStore, const CSpectrum &spectrum,
-    const CSpectrum &spectrumContinuum, const CTemplateCatalog &tplCatalog,
-    const TStringList &tplCategoryList, const std::string opt_calibrationPath,
-    const CRayCatalog &restraycatalog, const std::string &opt_lineTypeFilter,
-    const std::string &opt_lineForceFilter, const TFloat64Range &lambdaRange,
-    const TFloat64List &redshifts, const Int32 opt_extremacount,
-    const std::string &opt_fittingmethod,
-    const std::string &opt_continuumcomponent,
-    const std::string &opt_lineWidthType, const Float64 opt_resolution,
-    const Float64 opt_velocityEmission, const Float64 opt_velocityAbsorption,
-    const std::string &opt_continuumreest, const std::string &opt_rules,
-    const std::string &opt_velocityFitting,
-    const Float64 &opt_twosteplargegridstep,
-    const string &opt_twosteplargegridsampling, const std::string &opt_rigidity,
-    const string &opt_tplratioCatRelPath, const string &opt_offsetCatRelPath,
-    const Float64 &opt_emvelocityfitmin, const Float64 &opt_emvelocityfitmax,
-    const Float64 &opt_emvelocityfitstep, const Float64 &opt_absvelocityfitmin,
-    const Float64 &opt_absvelocityfitmax, const Float64 &opt_absvelocityfitstep)
+        CDataStore &dataStore,
+        const CSpectrum &spectrum,
+        const CSpectrum &spectrumContinuum,
+        const CTemplateCatalog &tplCatalog,
+        const TStringList &tplCategoryList,
+        const std::string opt_calibrationPath,
+        const CRayCatalog &restraycatalog,
+        const std::string &opt_lineTypeFilter,
+        const std::string &opt_lineForceFilter,
+        const TFloat64Range &lambdaRange,
+        const TFloat64List &redshifts,
+        const Int32 opt_extremacount,
+        const std::string &opt_fittingmethod,
+        const std::string &opt_continuumcomponent,
+        const std::string &opt_lineWidthType,
+        const Float64 opt_resolution,
+        const Float64 opt_velocityEmission,
+        const Float64 opt_velocityAbsorption,
+        const std::string &opt_continuumreest,
+        const std::string &opt_rules,
+        const std::string &opt_velocityFitting,
+        const Float64 &opt_twosteplargegridstep,
+        const string &opt_twosteplargegridsampling,
+        const std::string &opt_rigidity,
+        const string &opt_tplratioCatRelPath,
+        const string &opt_offsetCatRelPath,
+        const Float64 &opt_emvelocityfitmin,
+        const Float64 &opt_emvelocityfitmax,
+        const Float64 &opt_emvelocityfitstep,
+        const Float64 &opt_absvelocityfitmin,
+        const Float64 &opt_absvelocityfitmax,
+        const Float64 &opt_absvelocityfitstep)
 {
     // initialize empty results so that it can be returned anyway in case of an
     // error
@@ -2261,8 +2317,10 @@ COperatorLineModel::GetContaminantSpectrumResult()
 }
 
 Int32 COperatorLineModel::interpolateLargeGridOnFineGrid(
-    TFloat64List redshiftsLargeGrid, TFloat64List redshiftsFineGrid,
-    TFloat64List meritLargeGrid, TFloat64List &meritFineGrid)
+        TFloat64List redshiftsLargeGrid,
+        TFloat64List redshiftsFineGrid,
+        TFloat64List meritLargeGrid,
+        TFloat64List &meritFineGrid)
 {
     //* // GSL method LIN
     Log.LogDetail("  Operator-Linemodel: First-Pass - interp FROM large grid "

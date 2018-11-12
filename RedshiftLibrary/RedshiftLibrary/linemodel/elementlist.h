@@ -83,7 +83,7 @@ public:
     std::string getFitContinuum_tplName();
     Float64 getFitContinuum_tplAmplitude();
     Float64 getFitContinuum_tplMerit();
-    void setFitContinuum_tplAmplitude(Float64 tplAmp);
+    void setFitContinuum_tplAmplitude(Float64 tplAmp, std::vector<Float64> polyCoeffs);
     Float64 getFitContinuum_tplIsmDustCoeff();
     Float64 getFitContinuum_tplIgmMeiksinIdx();
     Float64* getPrecomputedGridContinuumFlux();
@@ -265,7 +265,8 @@ private:
                                                  const CSpectrumFluxAxis& continuumfluxAxis,
                                                  std::vector<Float64>& ampsfitted,
                                                  std::vector<Float64>& errorsfitted,
-                                                 Float64 &chisquare);
+                                                 Float64 &chisquare,
+                                                 Int32 polyOrder=-1);
 
     bool m_forceDisableLyaFitting;
     Int32 setLyaProfile( Float64 redshift, const CSpectrumSpectralAxis& spectralAxis );
