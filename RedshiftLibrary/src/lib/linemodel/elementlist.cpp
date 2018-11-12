@@ -148,7 +148,7 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
     m_chiSquareOperator = NULL;
 
     //NB: fitContinuum_option: this is the initialization (default value), eventually overriden in SetFitContinuum_FitStore() when a fitStore gets available
-    m_fitContinuum_option = 0; //0=interactive fitting, 1=use precomputed fit store
+    m_fitContinuum_option = 0; //0=interactive fitting, 1=use precomputed fit store, 2=use fixed values (typical use for second pass recompute)
     m_fitContinuum_tplfitStore = NULL;
 
     if(m_ContinuumComponent == "tplfit" ||opt_fittingmethod == "lmfit" )
@@ -827,7 +827,7 @@ void CLineModelElementList::LoadFitContinuumOneTemplate(const TFloat64Range& lam
   //*/
   Log.LogInfo("LMfit : Continuum Amp set Init at %0.00f", fitContinuumAmplitude);
   Log.LogInfo("Lmfit: solve succes %s", (ret? "t": "f"));
-  ApplyContinuumOnGrid(tpl);
+  ApplyContinuumOnGrid(tpl, m_Redshift);
 }
 
 /**
@@ -845,13 +845,15 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, I
     Float64 bestFitAmplitude = -1.0;
     Float64 bestFitDustCoeff = -1.0;
     Int32 bestFitMeiksinIdx = -1;
+    Float64 bestFitRedshift = m_Redshift;
     Float64 bestFitDtM = -1.0;
     Float64 bestFitMtM = -1.0;
     std::string bestTplName="";
+    std::vector<Float64> bestFitPolyCoeffs;
 
     if(m_fitContinuum_option==0){
         //hardcoded parameters
-        std::string opt_interp = "precomputedfinegrid"; // "lin"; //
+        std::string opt_interp = "lin"; //"precomputedfinegrid"; //
         Int32 opt_extinction = m_fitContinuum_igm;
         Int32 opt_dustFit = m_fitContinuum_dustfit;
         Float64 overlapThreshold = 1.0;
@@ -913,6 +915,17 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, I
         bestFitDtM = fitValues.fitDtM;
         bestFitMtM = fitValues.fitMtM;
         bestTplName = fitValues.tplName;
+    }else if(m_fitContinuum_option==2){
+        //values unmodified
+        bestTplName = m_fitContinuum_tplName;
+        bestMerit = m_fitContinuum_tplFitMerit;
+        bestFitAmplitude = m_fitContinuum_tplFitAmplitude;
+        bestFitDustCoeff = m_fitContinuum_tplFitDustCoeff;
+        bestFitMeiksinIdx = m_fitContinuum_tplFitMeiksinIdx;
+        bestFitDtM = m_fitContinuum_tplFitDtM;
+        bestFitMtM = m_fitContinuum_tplFitMtM;
+        bestFitRedshift = m_fitContinuum_tplFitRedshift;
+        bestFitPolyCoeffs = m_fitContinuum_tplFitPolyCoeffs;
     }else{
         throw runtime_error("Elementlist, cannot parse fitContinuum_option");
     }
@@ -936,13 +949,14 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, I
                     m_fitContinuum_tplFitMerit = bestMerit;
                     m_fitContinuum_tplFitDustCoeff = bestFitDustCoeff;
                     m_fitContinuum_tplFitMeiksinIdx = bestFitMeiksinIdx;
+                    m_fitContinuum_tplFitRedshift = bestFitRedshift;
 
-                    ApplyContinuumOnGrid(tpl);
+                    ApplyContinuumOnGrid(tpl, m_fitContinuum_tplFitRedshift);
 
                     m_fitContinuum_tplFitDtM = bestFitDtM;
                     m_fitContinuum_tplFitMtM = bestFitMtM;
-                    std::vector<Float64> polyCoeffs;
-                    setFitContinuum_tplAmplitude(bestFitAmplitude, polyCoeffs);
+                    m_fitContinuum_tplFitPolyCoeffs = bestFitPolyCoeffs;
+                    setFitContinuum_tplAmplitude(bestFitAmplitude, bestFitPolyCoeffs);
 
                     Log.LogDebug( "    model : LoadFitContinuum, loaded: %s", bestTplName.c_str());
                     break;
@@ -995,7 +1009,7 @@ void CLineModelElementList::setRedshift(Float64 redshift, bool reinterpolatedCon
 
             if(tpl.GetName()==m_fitContinuum_tplName)
             {
-              ApplyContinuumOnGrid(tpl);
+              ApplyContinuumOnGrid(tpl, redshift);
             }
           }
         }
@@ -1006,9 +1020,8 @@ void CLineModelElementList::setRedshift(Float64 redshift, bool reinterpolatedCon
 /**
 Apply the template continuum by interpolating the grid as define in Init COntinuum
 **/
-Int32 CLineModelElementList::ApplyContinuumOnGrid(const CTemplate& tpl){
+Int32 CLineModelElementList::ApplyContinuumOnGrid(const CTemplate& tpl, Float64 zcontinuum){
     m_fitContinuum_tplName = tpl.GetName();
-
 
     Int32 n = tpl.GetSampleCount();
     CSpectrumFluxAxis tplFluxAxis = tpl.GetFluxAxis();
@@ -1052,7 +1065,7 @@ Int32 CLineModelElementList::ApplyContinuumOnGrid(const CTemplate& tpl){
     const CSpectrumSpectralAxis& spcSpectralAxis = m_SpectrumModel->GetSpectralAxis();
 
     for(k=0; k<spcSpectralAxis.GetSamplesCount(); k++){
-        x = spcSpectralAxis[k]/(1+m_Redshift);
+        x = spcSpectralAxis[k]/(1+zcontinuum);
         if(x < tplSpectralAxis[0] || x > tplSpectralAxis[n-1]){
             m_observeGridContinuumFlux[k] = 0.0;
         }else{
@@ -1288,6 +1301,29 @@ Int32 CLineModelElementList::SetFitContinuum_FitStore(CTemplatesFitStore* fitSto
     Log.LogInfo( "Elementlist: enabling fitContinuum store.");
     m_fitContinuum_tplfitStore = fitStore;
     return 1;
+}
+
+void CLineModelElementList::SetFitContinuum_FitValues(Float64 tplfit_name,
+                                                      Float64 tplfit_amp,
+                                                      Float64 tplfit_chi2,
+                                                      Float64 tplfit_ebmv,
+                                                      Int32 tplfit_meiksinidx,
+                                                      Float64 tplfit_continuumredshift,
+                                                      Float64 tplfit_dtm,
+                                                      Float64 tplfit_mtm,
+                                                      std::vector<Float64> polyCoeffs)
+{
+    m_fitContinuum_tplName = tplfit_name;
+    m_fitContinuum_tplFitAmplitude = tplfit_amp;
+    m_fitContinuum_tplFitMerit = tplfit_chi2;
+    m_fitContinuum_tplFitDustCoeff = tplfit_ebmv;
+    m_fitContinuum_tplFitMeiksinIdx = tplfit_meiksinidx;
+    m_fitContinuum_tplFitRedshift = tplfit_continuumredshift;
+
+
+    m_fitContinuum_tplFitDtM = tplfit_dtm;
+    m_fitContinuum_tplFitMtM = tplfit_mtm;
+    m_fitContinuum_tplFitPolyCoeffs = polyCoeffs;
 }
 
 /**
@@ -1708,7 +1744,7 @@ Float64 CLineModelElementList::fit(Float64 redshift,
                         m_Redshift = bestController->getRedshift();
                     }
                     const CTemplate* tpl = bestController->getTemplate();
-                    ApplyContinuumOnGrid(*tpl );
+                    ApplyContinuumOnGrid(*tpl, m_Redshift);
                     std::vector<Float64> polyCoeffs;
                     setFitContinuum_tplAmplitude(bestController->getContinuumAmp(), polyCoeffs);
                       //setFitContinuum_tplAmplitude(  bestController->getContinuumAmp());
@@ -1767,8 +1803,6 @@ Float64 CLineModelElementList::fit(Float64 redshift,
             {
                 //1. fit only the current continuum
                 //prepare continuum on the observed grid
-                m_fitContinuum_tplFitDustCoeff = 0;
-                m_fitContinuum_tplFitMeiksinIdx = 0;
                 Log.LogDebug( "    model: fitting svdlc, with continuum-tpl=%s", m_fitContinuum_tplName.c_str());
                 setRedshift(m_Redshift, true);
                 m_fitContinuum_tplFitAmplitude = 1.0;
@@ -5436,6 +5470,10 @@ CContinuumModelSolution CLineModelElementList::GetContinuumModelSolution()
     continuumModelSolution.tplMeiksinIdx = m_fitContinuum_tplFitMeiksinIdx;
     continuumModelSolution.tplAmplitude = m_fitContinuum_tplFitAmplitude;
     continuumModelSolution.tplMerit = m_fitContinuum_tplFitMerit;
+    continuumModelSolution.tplDtm = m_fitContinuum_tplFitDtM;
+    continuumModelSolution.tplMtm = m_fitContinuum_tplFitMtM;
+    continuumModelSolution.tplRedshift = m_fitContinuum_tplFitRedshift;
+    continuumModelSolution.pCoeffs = m_fitContinuum_tplFitPolyCoeffs;
 
     return continuumModelSolution;
 }

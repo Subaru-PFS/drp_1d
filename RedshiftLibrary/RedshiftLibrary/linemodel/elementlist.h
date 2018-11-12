@@ -64,7 +64,7 @@ public:
     void LoadFitContinuumOneTemplate(const TFloat64Range& lambdaRange, const CTemplate& tpl);
     void LoadFitContinuum(const TFloat64Range& lambdaRange, Int32 icontinuum);
     void setRedshift(Float64 redshift, bool reinterpolatedContinuum);
-    Int32 ApplyContinuumOnGrid(const CTemplate& tpl);
+    Int32 ApplyContinuumOnGrid(const CTemplate& tpl, Float64 zcontinuum);
     Bool SolveContinuum(const CSpectrum& spectrum,
                         const CTemplate& tpl,
                         const TFloat64Range& lambdaRange,
@@ -89,6 +89,15 @@ public:
     Float64* getPrecomputedGridContinuumFlux();
     void SetContinuumComponent(std::string component);
     Int32 SetFitContinuum_FitStore(CTemplatesFitStore* fitStore);
+    void SetFitContinuum_FitValues(Float64 tplfit_name,
+                                   Float64 tplfit_amp,
+                                   Float64 tplfit_chi2,
+                                   Float64 tplfit_ebmv,
+                                   Int32 tplfit_meiksinidx,
+                                   Float64 tplfit_continuumredshift,
+                                   Float64 tplfit_dtm,
+                                   Float64 tplfit_mtm,
+                                   std::vector<Float64> polyCoeffs);
 
     Int32 LoadFitContaminantTemplate(const TFloat64Range& lambdaRange, const CTemplate& tpl);
     std::shared_ptr<CModelSpectrumResult> GetContaminantSpectrumResult();
@@ -347,8 +356,10 @@ private:
     Float64 m_fitContinuum_tplFitMerit;
     Float64 m_fitContinuum_tplFitDustCoeff;
     Int32 m_fitContinuum_tplFitMeiksinIdx;
+    Float64 m_fitContinuum_tplFitRedshift; // only used with m_fitContinuum_option==2 for now
     Float64 m_fitContinuum_tplFitDtM;
     Float64 m_fitContinuum_tplFitMtM;
+    std::vector<Float64> m_fitContinuum_tplFitPolyCoeffs;   // only used with m_fitContinuum_option==2 for now
     bool m_forcedisableMultipleContinuumfit=false;
 
     bool m_lmfit_noContinuumTemplate;

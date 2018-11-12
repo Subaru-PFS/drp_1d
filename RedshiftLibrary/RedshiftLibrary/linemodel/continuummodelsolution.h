@@ -18,12 +18,15 @@ struct CContinuumModelSolution
     //template continuum
     std::string         tplName;
     Float64             tplAmplitude;
-    Float64             tplMerit;
     Float64             tplDustCoeff;
     Int32               tplMeiksinIdx;
+    Float64             tplRedshift;
+
+    Float64             tplMerit;
+    Float64             tplDtm;
+    Float64             tplMtm;
 
     //polynom
-    Int32           pOrder;
     TFloat64List    pCoeffs;
 };
 
