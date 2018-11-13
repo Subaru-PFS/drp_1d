@@ -89,7 +89,9 @@ public:
     Float64* getPrecomputedGridContinuumFlux();
     void SetContinuumComponent(std::string component);
     Int32 SetFitContinuum_FitStore(CTemplatesFitStore* fitStore);
-    void SetFitContinuum_FitValues(Float64 tplfit_name,
+    void SetFitContinuum_Option(Int32 opt);
+    Int32 GetFitContinuum_Option();
+    void SetFitContinuum_FitValues(std::string tplfit_name,
                                    Float64 tplfit_amp,
                                    Float64 tplfit_chi2,
                                    Float64 tplfit_ebmv,

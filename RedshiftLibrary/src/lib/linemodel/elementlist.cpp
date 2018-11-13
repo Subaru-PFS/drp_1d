@@ -1294,7 +1294,6 @@ void CLineModelElementList::SetContinuumComponent(std::string component)
     m_ContinuumComponent = component;
 }
 
-
 Int32 CLineModelElementList::SetFitContinuum_FitStore(CTemplatesFitStore* fitStore)
 {
     m_fitContinuum_option = 1; //enable use of the fit store
@@ -1303,7 +1302,17 @@ Int32 CLineModelElementList::SetFitContinuum_FitStore(CTemplatesFitStore* fitSto
     return 1;
 }
 
-void CLineModelElementList::SetFitContinuum_FitValues(Float64 tplfit_name,
+void CLineModelElementList::SetFitContinuum_Option(Int32 opt)
+{
+    m_fitContinuum_option = opt;
+}
+
+Int32 CLineModelElementList::GetFitContinuum_Option()
+{
+    return m_fitContinuum_option;
+}
+
+void CLineModelElementList::SetFitContinuum_FitValues(std::string tplfit_name,
                                                       Float64 tplfit_amp,
                                                       Float64 tplfit_chi2,
                                                       Float64 tplfit_ebmv,

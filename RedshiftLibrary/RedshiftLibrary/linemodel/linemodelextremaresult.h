@@ -70,6 +70,8 @@ public:
     TFloat64List            FittedTplMerit;     //Chisquare for the best template fitted for continuum
     TFloat64List            FittedTplDustCoeff;     //Calzetti dustcoeff for the best template fitted for continuum
     std::vector<Int32>      FittedTplMeiksinIdx;    //Meiksin igm index for the best template fitted for continuum
+    TFloat64List      FittedTplRedshift;    //Redshift for the best template fitted for continuum
+    std::vector<TFloat64List>      FittedTplpCoeffs;    //poly coeffs for the best template fitted for continuum
 
     //template ratio
     std::vector<std::string>      FittedTplshapeName;   //Name of the best template fitted for tplcorr/tplshape

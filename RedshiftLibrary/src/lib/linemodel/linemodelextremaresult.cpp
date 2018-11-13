@@ -61,6 +61,8 @@ void CLineModelExtremaResult::Resize(Int32 size)
     FittedTplMerit.resize(size);
     FittedTplDustCoeff.resize(size);
     FittedTplMeiksinIdx.resize(size);
+    FittedTplRedshift.resize(size);
+    FittedTplpCoeffs.resize(size);
 
     FittedTplshapeName.resize(size);
     FittedTplshapeIsmCoeff.resize(size);

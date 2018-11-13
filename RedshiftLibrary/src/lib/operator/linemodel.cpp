@@ -902,9 +902,13 @@ Int32 COperatorLineModel::ComputeCandidates(const Int32 opt_extremacount,
 
         //save the continuum fitting parameters from first pass
         m_firstpass_extremaResult.FittedTplName[i] = m_result->ContinuumModelSolutions[idx].tplName;
+        m_firstpass_extremaResult.FittedTplAmplitude[i] = m_result->ContinuumModelSolutions[idx].tplAmplitude;
+        m_firstpass_extremaResult.FittedTplMerit[i] = m_result->ContinuumModelSolutions[idx].tplMerit;
         m_firstpass_extremaResult.FittedTplDustCoeff[i] = m_result->ContinuumModelSolutions[idx].tplDustCoeff;
         m_firstpass_extremaResult.FittedTplMeiksinIdx[i] = m_result->ContinuumModelSolutions[idx].tplMeiksinIdx;
-        m_firstpass_extremaResult.FittedTplAmplitude[i] = m_result->ContinuumModelSolutions[idx].tplAmplitude;
+        m_firstpass_extremaResult.FittedTplRedshift[i] = m_result->ContinuumModelSolutions[idx].tplRedshift;
+        m_firstpass_extremaResult.FittedTplpCoeffs[i] = m_result->ContinuumModelSolutions[idx].pCoeffs;
+
 
         //... todo: more first pass results can be saved here if needed
     }
@@ -944,6 +948,8 @@ Int32 COperatorLineModel::ComputeSecondPass(CDataStore &dataStore,
 
     // Set model parameters to SECOND-PASS
     m_model->setPassMode(2);
+    Int32 savedFitContinuumOption = m_model->GetFitContinuum_Option();
+
     Log.LogInfo("  Operator-Linemodel: ---------- ---------- ---------- ----------");
     Log.LogInfo("  Operator-Linemodel: now computing second-pass");
     Log.LogInfo("  Operator-Linemodel: ---------- ---------- ---------- ----------");
@@ -1289,6 +1295,8 @@ Int32 COperatorLineModel::ComputeSecondPass(CDataStore &dataStore,
 
     // ComputeArea2(*m_result);
 
+    m_model->SetFitContinuum_Option(savedFitContinuumOption);
+
     return 0;
 }
 
@@ -1363,6 +1371,27 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
 
         m_secondpass_parameters_extremaResult.Extrema[i] = z;
         m_secondpass_parameters_extremaResult.ExtremaMerit[i] = m;
+
+        // fix the fitcontinuum values for this extremum : keep the 1st pass values
+        m_secondpass_parameters_extremaResult.FittedTplName[i] = m_firstpass_extremaResult.FittedTplName[i];
+        m_secondpass_parameters_extremaResult.FittedTplAmplitude[i] = m_firstpass_extremaResult.FittedTplAmplitude[i];
+        m_secondpass_parameters_extremaResult.FittedTplMerit[i] = m_firstpass_extremaResult.FittedTplMerit[i];
+        m_secondpass_parameters_extremaResult.FittedTplDustCoeff[i] = m_firstpass_extremaResult.FittedTplDustCoeff[i];
+        m_secondpass_parameters_extremaResult.FittedTplMeiksinIdx[i] = m_firstpass_extremaResult.FittedTplMeiksinIdx[i];
+        m_secondpass_parameters_extremaResult.FittedTplRedshift[i] = m_firstpass_extremaResult.FittedTplRedshift[i];
+        m_secondpass_parameters_extremaResult.FittedTplpCoeffs[i] = m_firstpass_extremaResult.FittedTplpCoeffs[i] ;
+        m_model->SetFitContinuum_FitValues(m_secondpass_parameters_extremaResult.FittedTplName[i],
+                                           m_secondpass_parameters_extremaResult.FittedTplAmplitude[i],
+                                           m_secondpass_parameters_extremaResult.FittedTplMerit[i],
+                                           m_secondpass_parameters_extremaResult.FittedTplDustCoeff[i],
+                                           m_secondpass_parameters_extremaResult.FittedTplMeiksinIdx[i],
+                                           m_secondpass_parameters_extremaResult.FittedTplRedshift[i],
+                                           -1.,
+                                           -1.,
+                                           m_secondpass_parameters_extremaResult.FittedTplpCoeffs[i]);
+        m_model->SetFitContinuum_Option(2);
+
+
 
         // find the index in the zaxis results
         Int32 idx = -1;
@@ -1672,8 +1701,10 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
                                 } else
                                 {
                                     m_model->SetVelocityAbsorption(vOptim);
-                                    m_secondpass_parameters_extremaResult.Alv[i] = vOptim;
                                 }
+
+                                m_secondpass_parameters_extremaResult.Alv[i] = vOptim;
+                                Log.LogDebug("    Operator-Linemodel: secondpass_parameters extrema #%d set: alv=%.1f", i, vOptim);
                             } else
                             {
                                 if (m_enableWidthFitByGroups)
@@ -1687,8 +1718,9 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
                                 } else
                                 {
                                     m_model->SetVelocityEmission(vOptim);
-                                    m_secondpass_parameters_extremaResult.Elv[i] = vOptim;
                                 }
+                                m_secondpass_parameters_extremaResult.Elv[i] = vOptim;
+                                Log.LogDebug("    Operator-Linemodel: secondpass_parameters extrema #%d set: elv=%.1f", i, vOptim);
                             }
                         }
                     }
@@ -1722,6 +1754,18 @@ Int32 COperatorLineModel::RecomputeAroundCandidates(const TFloat64Range &lambdaR
             Log.LogInfo("    Operator-Linemodel: recompute with elv=%.1f, alv=%.1f",
                         m_model->GetVelocityEmission(),
                         m_model->GetVelocityAbsorption());
+
+            // fix the fitcontinuum values for this extremum
+            m_model->SetFitContinuum_FitValues(m_secondpass_parameters_extremaResult.FittedTplName[i],
+                                               m_secondpass_parameters_extremaResult.FittedTplAmplitude[i],
+                                               m_secondpass_parameters_extremaResult.FittedTplMerit[i],
+                                               m_secondpass_parameters_extremaResult.FittedTplDustCoeff[i],
+                                               m_secondpass_parameters_extremaResult.FittedTplMeiksinIdx[i],
+                                               m_secondpass_parameters_extremaResult.FittedTplRedshift[i],
+                                               -1.,
+                                               -1.,
+                                               m_secondpass_parameters_extremaResult.FittedTplpCoeffs[i]);
+            m_model->SetFitContinuum_Option(2);
 
             // find the index in the zaxis results
             Int32 idx = -1;
