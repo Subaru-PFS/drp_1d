@@ -215,6 +215,7 @@ public:
     Int32 m_opt_firstpass_tplratio_ismFit=0;
     Int32 m_opt_firstpass_multiplecontinuumfit_disable=1;
     std::string m_opt_firstpass_fittingmethod;
+    Int32 m_opt_secondpass_tplfit_fixfromfirstpass=1; //0: load fit continuum, 1 (default): use the best continuum from first pass
 private:
 
     std::shared_ptr<CLineModelResult> m_result;

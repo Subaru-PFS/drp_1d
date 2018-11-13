@@ -1001,6 +1001,18 @@ Int32 COperatorLineModel::ComputeSecondPass(CDataStore &dataStore,
         Float64 z = m_secondpass_parameters_extremaResult.Extrema[index_extremum];
         Float64 m = m_secondpass_parameters_extremaResult.ExtremaMerit[index_extremum];
 
+        m_model->SetFitContinuum_FitValues(m_secondpass_parameters_extremaResult.FittedTplName[index_extremum],
+                                           m_secondpass_parameters_extremaResult.FittedTplAmplitude[index_extremum],
+                                           m_secondpass_parameters_extremaResult.FittedTplMerit[index_extremum],
+                                           m_secondpass_parameters_extremaResult.FittedTplDustCoeff[index_extremum],
+                                           m_secondpass_parameters_extremaResult.FittedTplMeiksinIdx[index_extremum],
+                                           m_secondpass_parameters_extremaResult.FittedTplRedshift[index_extremum],
+                                           -1.,
+                                           -1.,
+                                           m_secondpass_parameters_extremaResult.FittedTplpCoeffs[index_extremum]);
+        m_model->SetFitContinuum_Option(2);
+
+
         // find the index in the zaxis results
         Int32 idx = -1;
         for (UInt32 i2 = 0; i2 < m_result->Redshifts.size(); i2++)
@@ -1321,7 +1333,6 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
                                                        const Float64 &opt_absvelocityfitmax,
                                                        const Float64 &opt_absvelocityfitstep)
 {
-
     // setup velocity fitting
     bool enableVelocityFitting = true;
     Float64 velfitMinE = opt_emvelocityfitmin;
@@ -1373,24 +1384,27 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
         m_secondpass_parameters_extremaResult.ExtremaMerit[i] = m;
 
         // fix the fitcontinuum values for this extremum : keep the 1st pass values
-        m_secondpass_parameters_extremaResult.FittedTplName[i] = m_firstpass_extremaResult.FittedTplName[i];
-        m_secondpass_parameters_extremaResult.FittedTplAmplitude[i] = m_firstpass_extremaResult.FittedTplAmplitude[i];
-        m_secondpass_parameters_extremaResult.FittedTplMerit[i] = m_firstpass_extremaResult.FittedTplMerit[i];
-        m_secondpass_parameters_extremaResult.FittedTplDustCoeff[i] = m_firstpass_extremaResult.FittedTplDustCoeff[i];
-        m_secondpass_parameters_extremaResult.FittedTplMeiksinIdx[i] = m_firstpass_extremaResult.FittedTplMeiksinIdx[i];
-        m_secondpass_parameters_extremaResult.FittedTplRedshift[i] = m_firstpass_extremaResult.FittedTplRedshift[i];
-        m_secondpass_parameters_extremaResult.FittedTplpCoeffs[i] = m_firstpass_extremaResult.FittedTplpCoeffs[i] ;
-        m_model->SetFitContinuum_FitValues(m_secondpass_parameters_extremaResult.FittedTplName[i],
-                                           m_secondpass_parameters_extremaResult.FittedTplAmplitude[i],
-                                           m_secondpass_parameters_extremaResult.FittedTplMerit[i],
-                                           m_secondpass_parameters_extremaResult.FittedTplDustCoeff[i],
-                                           m_secondpass_parameters_extremaResult.FittedTplMeiksinIdx[i],
-                                           m_secondpass_parameters_extremaResult.FittedTplRedshift[i],
-                                           -1.,
-                                           -1.,
-                                           m_secondpass_parameters_extremaResult.FittedTplpCoeffs[i]);
-        m_model->SetFitContinuum_Option(2);
+        if(m_opt_secondpass_tplfit_fixfromfirstpass)
+        {
+            m_secondpass_parameters_extremaResult.FittedTplName[i] = m_firstpass_extremaResult.FittedTplName[i];
+            m_secondpass_parameters_extremaResult.FittedTplAmplitude[i] = m_firstpass_extremaResult.FittedTplAmplitude[i];
+            m_secondpass_parameters_extremaResult.FittedTplMerit[i] = m_firstpass_extremaResult.FittedTplMerit[i];
+            m_secondpass_parameters_extremaResult.FittedTplDustCoeff[i] = m_firstpass_extremaResult.FittedTplDustCoeff[i];
+            m_secondpass_parameters_extremaResult.FittedTplMeiksinIdx[i] = m_firstpass_extremaResult.FittedTplMeiksinIdx[i];
+            m_secondpass_parameters_extremaResult.FittedTplRedshift[i] = m_firstpass_extremaResult.FittedTplRedshift[i];
+            m_secondpass_parameters_extremaResult.FittedTplpCoeffs[i] = m_firstpass_extremaResult.FittedTplpCoeffs[i] ;
 
+            m_model->SetFitContinuum_FitValues(m_firstpass_extremaResult.FittedTplName[i],
+                                               m_firstpass_extremaResult.FittedTplAmplitude[i],
+                                               m_firstpass_extremaResult.FittedTplMerit[i],
+                                               m_firstpass_extremaResult.FittedTplDustCoeff[i],
+                                               m_firstpass_extremaResult.FittedTplMeiksinIdx[i],
+                                               m_firstpass_extremaResult.FittedTplRedshift[i],
+                                               -1.,
+                                               -1.,
+                                               m_firstpass_extremaResult.FittedTplpCoeffs[i]);
+            m_model->SetFitContinuum_Option(2);
+        }
 
 
         // find the index in the zaxis results
@@ -1756,16 +1770,19 @@ Int32 COperatorLineModel::RecomputeAroundCandidates(const TFloat64Range &lambdaR
                         m_model->GetVelocityAbsorption());
 
             // fix the fitcontinuum values for this extremum
-            m_model->SetFitContinuum_FitValues(m_secondpass_parameters_extremaResult.FittedTplName[i],
-                                               m_secondpass_parameters_extremaResult.FittedTplAmplitude[i],
-                                               m_secondpass_parameters_extremaResult.FittedTplMerit[i],
-                                               m_secondpass_parameters_extremaResult.FittedTplDustCoeff[i],
-                                               m_secondpass_parameters_extremaResult.FittedTplMeiksinIdx[i],
-                                               m_secondpass_parameters_extremaResult.FittedTplRedshift[i],
-                                               -1.,
-                                               -1.,
-                                               m_secondpass_parameters_extremaResult.FittedTplpCoeffs[i]);
-            m_model->SetFitContinuum_Option(2);
+            if(m_opt_secondpass_tplfit_fixfromfirstpass)
+            {
+                m_model->SetFitContinuum_FitValues(m_secondpass_parameters_extremaResult.FittedTplName[i],
+                                                   m_secondpass_parameters_extremaResult.FittedTplAmplitude[i],
+                                                   m_secondpass_parameters_extremaResult.FittedTplMerit[i],
+                                                   m_secondpass_parameters_extremaResult.FittedTplDustCoeff[i],
+                                                   m_secondpass_parameters_extremaResult.FittedTplMeiksinIdx[i],
+                                                   m_secondpass_parameters_extremaResult.FittedTplRedshift[i],
+                                                   -1.,
+                                                   -1.,
+                                                   m_secondpass_parameters_extremaResult.FittedTplpCoeffs[i]);
+                m_model->SetFitContinuum_Option(2);
+            }
 
             // find the index in the zaxis results
             Int32 idx = -1;
@@ -1864,14 +1881,27 @@ Int32 COperatorLineModel::RecomputeAroundCandidates(const TFloat64Range &lambdaR
                 {
                     m_secondpass_recomputed_extremumList[i].X = m_result->Redshifts[iz];
                     m_secondpass_recomputed_extremumList[i].Y = m_result->ChiSquare[iz];
+
+                    // set the second pass parameters used in the model export procedure in computeSecondPass()
+                    m_secondpass_parameters_extremaResult.Extrema[i] = m_result->Redshifts[iz];
+                    m_secondpass_parameters_extremaResult.ExtremaMerit[i] = m_result->ChiSquare[iz];
+                    CContinuumModelSolution csolution = m_model->GetContinuumModelSolution();
+                    m_secondpass_parameters_extremaResult.FittedTplName[i] = csolution.tplName;
+                    m_secondpass_parameters_extremaResult.FittedTplAmplitude[i] = csolution.tplAmplitude;
+                    m_secondpass_parameters_extremaResult.FittedTplMerit[i] = csolution.tplMerit;
+                    m_secondpass_parameters_extremaResult.FittedTplDustCoeff[i] = csolution.tplDustCoeff;
+                    m_secondpass_parameters_extremaResult.FittedTplMeiksinIdx[i] = csolution.tplMeiksinIdx;
+                    m_secondpass_parameters_extremaResult.FittedTplRedshift[i] = csolution.tplRedshift;
+                    m_secondpass_parameters_extremaResult.FittedTplpCoeffs[i] = csolution.pCoeffs;
+
+
                     idx2 = iz;
                 }
                 ++show_progress;
             }
             // m_model->SetFittingMethod(opt_fittingmethod);
 
-            m_secondpass_parameters_extremaResult.Extrema[i] = m_secondpass_recomputed_extremumList[i].X;
-            m_secondpass_parameters_extremaResult.ExtremaMerit[i] = m_secondpass_recomputed_extremumList[i].Y;
+
             Log.LogInfo("  Operator-Linemodel: Recomputed extr #%d, idx=%d, "
                         "z_e.X=%f, m_e.Y=%f",
                         i,
