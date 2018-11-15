@@ -362,6 +362,13 @@ void COperatorResultStore::SaveAllResults( const CDataStore& store, const bfs::p
                     saveThisResult=true;
                 }
 
+                //save first pass extrema results
+                std::string firstpassextremaresTagRes = "linemodel_firstpass_extrema";
+                foundstr = resultName.find(firstpassextremaresTagRes.c_str());
+                if (foundstr!=std::string::npos){
+                    saveThisResult=true;
+                }
+
                 //save best fit parameters
                 std::string linefitTagRes = "linemodel_fit_extrema_0";
                 foundstr = resultName.find(linefitTagRes.c_str());
