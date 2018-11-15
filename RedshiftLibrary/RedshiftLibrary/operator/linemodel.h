@@ -66,6 +66,7 @@ public:
 
     Int32 Init(const CSpectrum& spectrum, const TFloat64List& redshifts);
     std::shared_ptr<COperatorResult> getResult();
+    std::shared_ptr<CLineModelExtremaResult> GetFirstpassExtremaResult() const;
 
     void PrecomputeContinuumFit(const CSpectrum &spectrum,
                                 const CSpectrum &spectrumContinuum,
@@ -148,8 +149,10 @@ public:
                                        const Float64 &opt_absvelocityfitmax,
                                        const Float64 &opt_absvelocityfitstep);
 
-    Int32 RecomputeAroundCandidates(const TFloat64Range &lambdaRange,
-                                    const std::string &opt_continuumreest);
+    Int32 RecomputeAroundCandidates(TPointList input_extremumList,
+                                    const TFloat64Range &lambdaRange,
+                                    const std::string &opt_continuumreest,
+                                    const bool overrideRecomputeOnlyOnTheCandidate=false);
 
     std::shared_ptr<COperatorResult> computeWithUltimPass(CDataStore &dataStore,
                                       const CSpectrum& spectrum,
@@ -215,6 +218,7 @@ public:
     Int32 m_opt_firstpass_tplratio_ismFit=0;
     Int32 m_opt_firstpass_multiplecontinuumfit_disable=1;
     std::string m_opt_firstpass_fittingmethod;
+    std::string m_opt_secondpasslcfittingmethod="-1";
     Int32 m_opt_secondpass_tplfit_fixfromfirstpass=1; //0: load fit continuum, 1 (default): use the best continuum from first pass
 private:
 
@@ -226,7 +230,6 @@ private:
     TPointList m_firstpass_extremumList;
     CLineModelExtremaResult m_firstpass_extremaResult;
     CLineModelExtremaResult m_secondpass_parameters_extremaResult;
-    TPointList m_secondpass_recomputed_extremumList;
     std::vector<Int32> m_secondpass_indiceSortedCandidatesList;
 
     Int32 m_enableFastFitLargeGrid = 0;

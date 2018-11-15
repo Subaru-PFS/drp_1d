@@ -973,6 +973,7 @@ void CLineModelElementList::setFitContinuum_tplAmplitude(Float64 tplAmp, std::ve
 
     //Float64 alpha = 0.5; //alpha blend = 1: only m_SpcContinuumFluxAxis, alpha=0: only tplfit
     m_fitContinuum_tplFitAmplitude = tplAmp;
+    m_fitContinuum_tplFitPolyCoeffs = polyCoeffs;
     for (UInt32 k=0; k<m_ContinuumFluxAxis.GetSamplesCount(); k++){
         //m_ContinuumFluxAxis[k] = (1.-alpha)*m_observeGridContinuumFlux[k]*tplAmp + (alpha)*m_SpcContinuumFluxAxis[k];
         m_ContinuumFluxAxis[k] = m_observeGridContinuumFlux[k]*tplAmp;
@@ -1354,7 +1355,7 @@ void CLineModelElementList::PrepareContinuum(Float64 z)
     }
 
 
-    std::vector<Float64> polyCoeffs;
+    std::vector<Float64> polyCoeffs=m_fitContinuum_tplFitPolyCoeffs;
     setFitContinuum_tplAmplitude(m_fitContinuum_tplFitAmplitude, polyCoeffs);
     return;
 }
@@ -1813,7 +1814,23 @@ Float64 CLineModelElementList::fit(Float64 redshift,
                 //1. fit only the current continuum
                 //prepare continuum on the observed grid
                 Log.LogDebug( "    model: fitting svdlc, with continuum-tpl=%s", m_fitContinuum_tplName.c_str());
-                setRedshift(m_Redshift, true);
+
+                //re-interpolate the continuum on the grid
+                for( UInt32 i=0; i<m_tplCategoryList.size(); i++ )
+                {
+                    std::string category = m_tplCategoryList[i];
+
+                    for( UInt32 j=0; j<m_tplCatalog.GetTemplateCount( category ); j++ )
+                    {
+                        const CTemplate& tpl = m_tplCatalog.GetTemplate( category, j );
+
+                        if(tpl.GetName()==m_fitContinuum_tplName)
+                        {
+                            ApplyContinuumOnGrid(tpl, m_fitContinuum_tplFitRedshift);
+                        }
+                    }
+                }
+
                 m_fitContinuum_tplFitAmplitude = 1.0;
                 std::vector<Float64> polyCoeffs_unused;
                 setFitContinuum_tplAmplitude(m_fitContinuum_tplFitAmplitude, polyCoeffs_unused);

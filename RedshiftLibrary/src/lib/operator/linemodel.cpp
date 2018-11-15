@@ -976,8 +976,42 @@ Int32 COperatorLineModel::ComputeSecondPass(CDataStore &dataStore,
                                  opt_absvelocityfitstep);
 
     // recompute the fine grid results around the extrema
-    RecomputeAroundCandidates(lambdaRange,
+    RecomputeAroundCandidates(m_firstpass_extremumList,
+                              lambdaRange,
                               opt_continuumreest);
+
+    // additional fitting with fittingmethod=svdlcp2
+    if(m_opt_secondpasslcfittingmethod=="svdlc" || m_opt_secondpasslcfittingmethod=="svdlcp2")
+    {
+        TPointList _secondpass_extremumList;
+        for (Int32 i = 0; i < m_secondpass_parameters_extremaResult.Extrema.size(); i++)
+        {
+            SPoint _point(m_secondpass_parameters_extremaResult.Extrema[i],
+                          m_secondpass_parameters_extremaResult.ExtremaMerit[i]);
+            _secondpass_extremumList.push_back(_point);
+        }
+        Log.LogInfo("  Operator-Linemodel: now computing second-pass SVDLCP2 on each secondpass candidate (n=%d)", _secondpass_extremumList.size());
+        bool useSecondPassRedshiftValue = true;
+        if(useSecondPassRedshiftValue)
+        {
+            for (Int32 i = 0; i < m_secondpass_parameters_extremaResult.Extrema.size(); i++)
+            {
+                m_secondpass_parameters_extremaResult.FittedTplRedshift[i] = m_secondpass_parameters_extremaResult.Extrema[i];
+            }
+        }
+        m_model->SetFittingMethod(m_opt_secondpasslcfittingmethod);
+        RecomputeAroundCandidates(_secondpass_extremumList,
+                                  lambdaRange,
+                                  opt_continuumreest,
+                                  true);
+        m_model->SetFittingMethod(opt_fittingmethod);
+
+        Log.LogInfo("  Operator-Linemodel: now re-computing the final chi2 for each candidate");
+        RecomputeAroundCandidates(_secondpass_extremumList,
+                                  lambdaRange,
+                                  opt_continuumreest);
+
+    }
 
 
     Log.LogInfo("  Operator-Linemodel: Now storing extrema results");
@@ -1295,6 +1329,10 @@ Int32 COperatorLineModel::ComputeSecondPass(CDataStore &dataStore,
             m_model->getFitContinuum_tplIsmDustCoeff();
         m_result->ExtremaResult.FittedTplMeiksinIdx[i] =
             m_model->getFitContinuum_tplIgmMeiksinIdx();
+
+        CContinuumModelSolution csolution = m_model->GetContinuumModelSolution();
+        m_result->ExtremaResult.FittedTplRedshift[i] = csolution.tplRedshift;
+        m_result->ExtremaResult.FittedTplpCoeffs[i] = csolution.pCoeffs;
 
         // save the tplcorr/tplratio results
         m_result->ExtremaResult.FittedTplshapeName[i] =
@@ -1748,21 +1786,31 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
     return 0;
 }
 
-Int32 COperatorLineModel::RecomputeAroundCandidates(const TFloat64Range &lambdaRange,
-                                                    const string &opt_continuumreest)
+Int32 COperatorLineModel::RecomputeAroundCandidates(TPointList input_extremumList,
+                                                    const TFloat64Range &lambdaRange,
+                                                    const string &opt_continuumreest,
+                                                    const bool overrideRecomputeOnlyOnTheCandidate)
 {
-    m_secondpass_recomputed_extremumList.clear();
-    m_secondpass_recomputed_extremumList.resize(m_firstpass_extremumList.size());
+    if(input_extremumList.size()<1)
+    {
+        Log.LogError("  Operator-Linemodel: RecomputeAroundCandidates n<1...");
+        throw runtime_error("  Operator-Linemodel: RecomputeAroundCandidates n<1...");
+        return -1;
+    }
+
+    TPointList _secondpass_recomputed_extremumList;
+    _secondpass_recomputed_extremumList.resize(input_extremumList.size());
+    Log.LogInfo("  Operator-Linemodel: Second pass - recomputing around n=%d candidates", input_extremumList.size());
 
     bool enable_recompute_around_candidate = true;
     if (enable_recompute_around_candidate)
     {
-        for (Int32 i = 0; i < m_firstpass_extremumList.size(); i++)
+        for (Int32 i = 0; i < input_extremumList.size(); i++)
         {
             Log.LogInfo("");
             Log.LogInfo("  Operator-Linemodel: Second pass - recompute around Candidate #%d", i);
             Log.LogInfo("  Operator-Linemodel: ---------- /\\ ---------- ---------- ---------- Candidate #%d", i);
-            Float64 z = m_firstpass_extremumList[i].X;
+            Float64 z = input_extremumList[i].X;
             m_model->SetVelocityEmission(m_secondpass_parameters_extremaResult.Elv[i]);
             m_model->SetVelocityAbsorption(m_secondpass_parameters_extremaResult.Alv[i]);
             Log.LogInfo("    Operator-Linemodel: recompute with elv=%.1f, alv=%.1f",
@@ -1821,27 +1869,35 @@ Int32 COperatorLineModel::RecomputeAroundCandidates(const TFloat64Range &lambdaR
             Float64 right_border = min(redshiftsRange.GetEnd(),
                                        z + m_secondPass_extensionradius);
             // m_model->SetFittingMethod("nofit");
-            m_secondpass_recomputed_extremumList[i].Y = DBL_MAX;
-            m_secondpass_recomputed_extremumList[i].X = m_result->Redshifts[idx];
+            _secondpass_recomputed_extremumList[i].Y = DBL_MAX;
+            _secondpass_recomputed_extremumList[i].X = m_result->Redshifts[idx];
             Int32 idx2 = idx;
 
             //find the candidate z-range min/max indexes
-            Int32 izmin_cand = m_result->Redshifts.size();
+            Int32 izmin_cand = -1;
             Int32 izmax_cand = -1;
-            for (Int32 iz = 0; iz < m_result->Redshifts.size(); iz++)
+            if(!overrideRecomputeOnlyOnTheCandidate)
             {
-                if (m_result->Redshifts[iz] >= left_border &&
-                    m_result->Redshifts[iz] <= right_border)
+                izmin_cand = m_result->Redshifts.size();
+                izmax_cand = -1;
+                for (Int32 iz = 0; iz < m_result->Redshifts.size(); iz++)
                 {
-                    if(izmin_cand>iz)
+                    if (m_result->Redshifts[iz] >= left_border &&
+                            m_result->Redshifts[iz] <= right_border)
                     {
-                        izmin_cand = iz;
-                    }
-                    if(izmax_cand<iz)
-                    {
-                        izmax_cand = iz;
+                        if(izmin_cand>iz)
+                        {
+                            izmin_cand = iz;
+                        }
+                        if(izmax_cand<iz)
+                        {
+                            izmax_cand = iz;
+                        }
                     }
                 }
+            }else{
+                izmin_cand = idx;
+                izmax_cand = idx;
             }
 
             Int32 n_progresssteps = izmax_cand-izmin_cand+1;
@@ -1877,10 +1933,10 @@ Int32 COperatorLineModel::RecomputeAroundCandidates(const TFloat64Range &lambdaR
                 }
                 m_result->ScaleMargCorrectionContinuum[iz] =
                         m_model->getContinuumScaleMargCorrection();
-                if (m_result->ChiSquare[iz] < m_secondpass_recomputed_extremumList[i].Y)
+                if (m_result->ChiSquare[iz] < _secondpass_recomputed_extremumList[i].Y)
                 {
-                    m_secondpass_recomputed_extremumList[i].X = m_result->Redshifts[iz];
-                    m_secondpass_recomputed_extremumList[i].Y = m_result->ChiSquare[iz];
+                    _secondpass_recomputed_extremumList[i].X = m_result->Redshifts[iz];
+                    _secondpass_recomputed_extremumList[i].Y = m_result->ChiSquare[iz];
 
                     // set the second pass parameters used in the model export procedure in computeSecondPass()
                     m_secondpass_parameters_extremaResult.Extrema[i] = m_result->Redshifts[iz];
@@ -1906,19 +1962,55 @@ Int32 COperatorLineModel::RecomputeAroundCandidates(const TFloat64Range &lambdaR
                         "z_e.X=%f, m_e.Y=%f",
                         i,
                         idx2,
-                        m_secondpass_recomputed_extremumList[i].X,
-                        m_secondpass_recomputed_extremumList[i].Y);
+                        _secondpass_recomputed_extremumList[i].X,
+                        _secondpass_recomputed_extremumList[i].Y);
+            Log.LogInfo("  Operator-Linemodel: Recomputed extr #%d, FittedTplName=%s",
+                        i,
+                        m_secondpass_parameters_extremaResult.FittedTplName[i].c_str());
+            Log.LogInfo("  Operator-Linemodel: Recomputed extr #%d, FittedTplAmplitude=%.4e",
+                        i,
+                        m_secondpass_parameters_extremaResult.FittedTplAmplitude[i]);
+            Log.LogInfo("  Operator-Linemodel: Recomputed extr #%d, FittedTplDustCoeff=%f, FittedTplMeiksinIdx=%d",
+                        i,
+                        m_secondpass_parameters_extremaResult.FittedTplDustCoeff[i],
+                        m_secondpass_parameters_extremaResult.FittedTplMeiksinIdx[i]);
+            Log.LogInfo("  Operator-Linemodel: Recomputed extr #%d, FittedTplRedshiftf=%.6f",
+                        i,
+                        m_secondpass_parameters_extremaResult.FittedTplRedshift[i]);
+
+            Float64 pCoeff0 = -1;
+            Float64 pCoeff1 = -1;
+            Float64 pCoeff2 = -1;
+            if(m_secondpass_parameters_extremaResult.FittedTplpCoeffs[i].size()>0)
+            {
+                pCoeff0=m_secondpass_parameters_extremaResult.FittedTplpCoeffs[i][0];
+            }
+            if(m_secondpass_parameters_extremaResult.FittedTplpCoeffs[i].size()>1)
+            {
+                pCoeff1=m_secondpass_parameters_extremaResult.FittedTplpCoeffs[i][1];
+            }
+            if(m_secondpass_parameters_extremaResult.FittedTplpCoeffs[i].size()>2)
+            {
+                pCoeff2=m_secondpass_parameters_extremaResult.FittedTplpCoeffs[i][2];
+            }
+            Log.LogInfo("  Operator-Linemodel: Recomputed extr #%d, FittedTplpCoeffs_0=%.4e, "
+                        "FittedTplpCoeffs_1=%.4e, FittedTplpCoeffs_2=%.4e",
+                        i,
+                        pCoeff0,
+                        pCoeff1,
+                        pCoeff2);
         }
     } else
     {
-        for (Int32 i = 0; i < m_firstpass_extremumList.size(); i++)
+        for (Int32 i = 0; i < input_extremumList.size(); i++)
         {
-            m_secondpass_recomputed_extremumList[i].X = m_firstpass_extremumList[i].X;
-            m_secondpass_recomputed_extremumList[i].Y = m_firstpass_extremumList[i].Y;
+            _secondpass_recomputed_extremumList[i].X = input_extremumList[i].X;
+            _secondpass_recomputed_extremumList[i].Y = input_extremumList[i].Y;
         }
     }
 
-    // reorder extremumList using .Y values : smallest to highest
+    // sort extremumList using merit values : smallest to highest
+    // m_secondpass_indiceSortedCandidatesList will contain the indexes order
     // todo: recode using map and sort from std lib
     Int32 extremumCount = m_secondpass_parameters_extremaResult.Extrema.size();
     m_secondpass_indiceSortedCandidatesList.clear();
@@ -1926,17 +2018,17 @@ Int32 COperatorLineModel::RecomputeAroundCandidates(const TFloat64Range &lambdaR
     {
         Int32 iYmin = 0;
         Float64 YMin = DBL_MAX;
-        for (Int32 ie2 = 0; ie2 < m_secondpass_recomputed_extremumList.size(); ie2++)
+        for (Int32 ie2 = 0; ie2 < _secondpass_recomputed_extremumList.size(); ie2++)
         {
-            if (YMin > m_secondpass_recomputed_extremumList[ie2].Y)
+            if (YMin > _secondpass_recomputed_extremumList[ie2].Y)
             {
-                YMin = m_secondpass_recomputed_extremumList[ie2].Y;
+                YMin = _secondpass_recomputed_extremumList[ie2].Y;
                 iYmin = ie2;
             }
         }
-        m_secondpass_recomputed_extremumList.erase(m_secondpass_recomputed_extremumList.begin() + iYmin);
+        _secondpass_recomputed_extremumList.erase(_secondpass_recomputed_extremumList.begin() + iYmin);
 
-        // find the initial index in m_secondpass_recomputed_extremumList
+        // find the initial index in _secondpass_recomputed_extremumList
         for (Int32 ie2 = 0; ie2 < m_secondpass_indiceSortedCandidatesList.size(); ie2++)
         {
             if (iYmin >= m_secondpass_indiceSortedCandidatesList[ie2])
@@ -1988,6 +2080,13 @@ Int32 COperatorLineModel::Init(const CSpectrum &spectrum,
 std::shared_ptr<COperatorResult> COperatorLineModel::getResult()
 {
     return m_result;
+}
+
+
+std::shared_ptr<CLineModelExtremaResult> COperatorLineModel::GetFirstpassExtremaResult() const
+{
+    std::shared_ptr<CLineModelExtremaResult> extremaresult = std::shared_ptr<CLineModelExtremaResult>(new CLineModelExtremaResult(m_firstpass_extremaResult));
+    return extremaresult;
 }
 
 std::shared_ptr<COperatorResult> COperatorLineModel::Compute(

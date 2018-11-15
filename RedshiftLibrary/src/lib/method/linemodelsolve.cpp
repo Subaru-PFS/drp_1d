@@ -54,6 +54,7 @@ const std::string CLineModelSolve::GetDescription()
     desc.append("\tparam: linemodel.continuumismfit = {""no"", ""yes""}\n");
     desc.append("\tparam: linemodel.continuumigmfit = {""no"", ""yes""}\n");
     desc.append("\tparam: linemodel.continuumfitcount = <float value>\n");
+    desc.append("\tparam: linemodel.secondpasslcfittingmethod = {""no"", ""svdlcp2""}\n");
     desc.append("\tparam: linemodel.rigidity = {""rules"", ""tplcorr"", ""tplshape""}\n");
     desc.append("\tparam: linemodel.tplratio_catalog = <relative path>\n");
     desc.append("\tparam: linemodel.tplratio_ismfit = {""no"", ""yes""}\n");
@@ -98,6 +99,7 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
     dataStore.GetScopedParam( "linemodel.linetypefilter", m_opt_linetypefilter, "no" );
     dataStore.GetScopedParam( "linemodel.lineforcefilter", m_opt_lineforcefilter, "no" );
     dataStore.GetScopedParam( "linemodel.fittingmethod", m_opt_fittingmethod, "hybrid" );
+    dataStore.GetScopedParam( "linemodel.secondpasslcfittingmethod", m_opt_secondpasslcfittingmethod, "no" );
     dataStore.GetScopedParam( "linemodel.firstpass.fittingmethod", m_opt_firstpass_fittingmethod, "hybrid" );
     dataStore.GetScopedParam( "linemodel.firstpass.largegridstep", m_opt_firstpass_largegridstep, 0.001 );
     dataStore.GetScopedParam( "linemodel.firstpass.tplratio_ismfit", m_opt_firstpass_tplratio_ismfit, "no" );
@@ -214,6 +216,7 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
         Log.LogInfo( "      -tplfit_igmfit: %s", m_opt_tplfit_igmfit.c_str());
         Log.LogInfo( "      -continuum fit count:  %.0f", m_opt_continuumfitcount);
         Log.LogInfo( "      -tplfit_ignorelinesupport: %s", m_opt_tplfit_ignoreLinesSupport.c_str());
+        Log.LogInfo( "      -tplfit_secondpass-LC-fitting-method: %s", m_opt_secondpasslcfittingmethod.c_str());
     }
     Log.LogInfo( "    -continuumreestimation: %s", m_opt_continuumreest.c_str());
     Log.LogInfo( "    -extremacount: %.0f", m_opt_extremacount);
@@ -616,10 +619,10 @@ Int32 getVelocitiesFromRefFile( const char* filePath, std::string spcid, Float64
 Bool CLineModelSolve::Solve( CDataStore& dataStore,
                              const CSpectrum& spc,
                              const CSpectrum& spcWithoutCont,
-                 const CTemplateCatalog& tplCatalog,
-                 const TStringList& tplCategoryList,
+                             const CTemplateCatalog& tplCatalog,
+                             const TStringList& tplCategoryList,
                              const CRayCatalog& restraycatalog,
-                 const TFloat64Range& lambdaRange,
+                             const TFloat64Range& lambdaRange,
                              const TFloat64List& redshifts )
 {
     std::string scopeStr = "linemodel";
@@ -668,6 +671,8 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
         linemodel.m_opt_tplfit_extinction = Int32(m_opt_tplfit_igmfit=="yes");
         linemodel.m_opt_fitcontinuum_maxN = m_opt_continuumfitcount;
         linemodel.m_opt_tplfit_ignoreLinesSupport = Int32(m_opt_tplfit_ignoreLinesSupport=="yes");
+        linemodel.m_opt_secondpasslcfittingmethod = m_opt_secondpasslcfittingmethod;
+
     }
 
     if(m_opt_rigidity=="tplshape")
@@ -817,6 +822,12 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
         extremaResultsStr.append("_extrema");
         //Log.LogError("Line Model, saving extrema results: %s", extremaResultsStr.c_str());
         dataStore.StoreScopedGlobalResult( extremaResultsStr.c_str(), result->GetExtremaResult() );
+
+        //save linemodel firstpass extrema results
+        std::string firstpassExtremaResultsStr=scopeStr.c_str();
+        firstpassExtremaResultsStr.append("_firstpass_extrema");
+        //Log.LogError("Line Model, saving firstpass extrema results: %s", firstpassExtremaResultsStr.c_str());
+        dataStore.StoreScopedGlobalResult( firstpassExtremaResultsStr.c_str(), linemodel.GetFirstpassExtremaResult() );
 
         //save linemodel fitting and spectrum-model results
         linemodel.storeGlobalModelResults(dataStore);
