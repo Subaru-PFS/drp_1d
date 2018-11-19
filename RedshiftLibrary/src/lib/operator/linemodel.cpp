@@ -774,11 +774,13 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
 /**
  * @brief COperatorLineModel::ComputeCandidates
  * @param opt_extremacount
+ * @param meritCut: optionally cut the number of candidates by merit (-1=disabled)
  * @return
  */
 Int32 COperatorLineModel::ComputeCandidates(const Int32 opt_extremacount,
                                             const Int32 opt_sign,
-                                            const std::vector<Float64> floatValues)
+                                            const std::vector<Float64> floatValues,
+                                            const Float64 meritCut)
 {
     Log.LogDebug("  Operator-Linemodel: opt_extremacount = %d", opt_extremacount);
     TFloat64Range redshiftsRange(
@@ -826,6 +828,30 @@ Int32 COperatorLineModel::ComputeCandidates(const Int32 opt_extremacount,
         Log.LogInfo("  Operator-Linemodel: found %d extrema",
                     m_firstpass_extremumList.size());
     }
+
+    // remove extrema with merit threshold (input floatValues MUST be log-proba !)
+    if(meritCut>0.0){
+        Float64 meritThres = meritCut; //30=default logProba value for 1% missed values on PFS-cosmo noOiiDoublet
+        Int32 keepMinN = 2;
+        Int32 nExtrema = m_firstpass_extremumList.size();
+        Int32 iExtremumFinalList = 0;
+        for (Int32 i = 0; i < nExtrema; i++)
+        {
+            Float64 meritDiff = m_firstpass_extremumList[0].Y-m_firstpass_extremumList[iExtremumFinalList].Y;
+            if(meritDiff>meritThres && i>=keepMinN)
+            {
+                Log.LogInfo("  Operator-Linemodel: Candidates selection by proba cut: removing i=%d, final_i=%d, e.X=%f, e.Y=%e",
+                            i,
+                            iExtremumFinalList,
+                            m_firstpass_extremumList[iExtremumFinalList].X,
+                            m_firstpass_extremumList[iExtremumFinalList].Y);
+                m_firstpass_extremumList.erase(m_firstpass_extremumList.begin() + iExtremumFinalList);
+            }else{
+                iExtremumFinalList++;
+            }
+        }
+    }
+
     /*
     // Refine Extremum with a second maximum search around the z candidates:
     // This corresponds to the finer xcorrelation in EZ Pandora (in standard_DP
@@ -845,6 +871,8 @@ Int32 COperatorLineModel::ComputeCandidates(const Int32 opt_extremacount,
         }
     }
     //*/
+
+
 
     //*
     // extend z around the extrema
@@ -2176,7 +2204,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(
     Log.LogInfo("Line Model, compute z-candidates from best-chisquare values "
                 "(nb. no priors)");
     Int32 retCandidates =
-        ComputeCandidates(opt_extremacount, -1, m_result->ChiSquare);
+        ComputeCandidates(opt_extremacount, -1, m_result->ChiSquare, -1);
     if (retCandidates != 0)
     {
         Log.LogError("Line Model, compute z-candidates failed. Aborting");

@@ -209,6 +209,12 @@ Bool CRayCatalogsTplShape::Load( const char* dirPath )
                 {
                     Log.LogError( "    CatalogsTplShape - Failed to load tplshape prior: %s", tplshapePriorsList[kprior].c_str());
                     successLoadPriors=false;
+                }else{
+                    //make this prior tpl-ratio equiprobable with other EBMV values
+                    if(nDustCoeffs>1)
+                    {
+                        m_Priors[m_Priors.size()-1] /= Float64(nDustCoeffs);
+                    }
                 }
             }
 

@@ -52,6 +52,7 @@ private:
     std::string m_opt_fittingmethod;
     std::string m_opt_secondpasslcfittingmethod;
     std::string m_opt_continuumcomponent;
+    std::string m_opt_skipsecondpass="no";
 
     std::string m_opt_tplfit_dustfit="no";
     std::string m_opt_tplfit_igmfit="no";
@@ -79,6 +80,7 @@ private:
     std::string m_opt_offsets_reldirpath="";
 
     Float64 m_opt_extremacount;
+    Float64 m_opt_candidatesLogprobaCutThreshold;
     Float64 m_opt_firstpass_largegridstep;
     std::string m_opt_firstpass_largegridsampling;
     std::string m_opt_firstpass_tplratio_ismfit;

@@ -66,6 +66,7 @@ const std::string CLineModelSolve::GetDescription()
     desc.append("\tparam: linemodel.continuumreestimation = {""no"", ""onlyextrema"", ""always""}\n");
     desc.append("\tparam: linemodel.rules = {""all"", ""balmer"", ""strongweak"", ""superstrong"", ""ratiorange"", ""ciiiratio"", ""no""}\n");
     desc.append("\tparam: linemodel.extremacount = <float value>\n");
+    desc.append("\tparam: linemodel.extremacutprobathreshold = <float value> (-1:disabled)\n");
     desc.append("\tparam: linemodel.velocityfit = {""yes"", ""no""}\n");
     desc.append("\tparam: linemodel.emvelocityfitmin = <float value>\n");
     desc.append("\tparam: linemodel.emvelocityfitmax = <float value>\n");
@@ -77,6 +78,8 @@ const std::string CLineModelSolve::GetDescription()
     desc.append("\tparam: linemodel.firstpass.largegridstep = <float value>, deactivated if negative or zero\n");
     desc.append("\tparam: linemodel.firstpass.tplratio_ismfit = {""no"", ""yes""}\n");
     desc.append("\tparam: linemodel.firstpass.multiplecontinuumfit_disable = {""no"", ""yes""}\n");
+
+    desc.append("\tparam: linemodel.skipsecondpass = {""no"", ""yes""}\n");
 
     desc.append("\tparam: linemodel.pdfcombination = {""marg"", ""bestchi2""}\n");
     desc.append("\tparam: linemodel.stronglinesprior = <float value>, penalization factor = positive value or -1 to deactivate\n");
@@ -100,6 +103,7 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
     dataStore.GetScopedParam( "linemodel.lineforcefilter", m_opt_lineforcefilter, "no" );
     dataStore.GetScopedParam( "linemodel.fittingmethod", m_opt_fittingmethod, "hybrid" );
     dataStore.GetScopedParam( "linemodel.secondpasslcfittingmethod", m_opt_secondpasslcfittingmethod, "no" );
+    dataStore.GetScopedParam( "linemodel.skipsecondpass", m_opt_skipsecondpass, "no" );
     dataStore.GetScopedParam( "linemodel.firstpass.fittingmethod", m_opt_firstpass_fittingmethod, "hybrid" );
     dataStore.GetScopedParam( "linemodel.firstpass.largegridstep", m_opt_firstpass_largegridstep, 0.001 );
     dataStore.GetScopedParam( "linemodel.firstpass.tplratio_ismfit", m_opt_firstpass_tplratio_ismfit, "no" );
@@ -146,6 +150,7 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
     dataStore.GetScopedParam( "linemodel.continuumreestimation", m_opt_continuumreest, "no" );
     dataStore.GetScopedParam( "linemodel.rules", m_opt_rules, "all" );
     dataStore.GetScopedParam( "linemodel.extremacount", m_opt_extremacount, 10.0 );
+    dataStore.GetScopedParam( "linemodel.extremacutprobathreshold", m_opt_candidatesLogprobaCutThreshold, -1 );
     dataStore.GetScopedParam( "linemodel.stronglinesprior", m_opt_stronglinesprior, -1);
     dataStore.GetScopedParam( "linemodel.euclidnhaemittersStrength", m_opt_euclidNHaEmittersPriorStrength, -1);
     dataStore.GetScopedParam( "linemodel.pdfcombination", m_opt_pdfcombination, "marg");
@@ -220,11 +225,15 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
     }
     Log.LogInfo( "    -continuumreestimation: %s", m_opt_continuumreest.c_str());
     Log.LogInfo( "    -extremacount: %.0f", m_opt_extremacount);
+    Log.LogInfo( "    -extrema cut proba-threshold: %.0f", m_opt_candidatesLogprobaCutThreshold);
     Log.LogInfo( "    -first pass:");
     Log.LogInfo( "      -largegridstep: %.6f", m_opt_firstpass_largegridstep);
     Log.LogInfo( "      -fittingmethod: %s", m_opt_firstpass_fittingmethod.c_str());
     Log.LogInfo( "      -tplratio_ismfit: %s", m_opt_firstpass_tplratio_ismfit.c_str());
     Log.LogInfo( "      -multiplecontinuumfit_disable: %s", m_opt_firstpass_disablemultiplecontinuumfit.c_str());
+
+
+    Log.LogInfo( "    -skip second pass: %s", m_opt_skipsecondpass.c_str());
 
     Log.LogInfo( "    -pdf-stronglinesprior: %e", m_opt_stronglinesprior);
     Log.LogInfo( "    -pdf-euclidNHaEmittersPriorStrength: %e", m_opt_euclidNHaEmittersPriorStrength);
@@ -763,7 +772,7 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
             fvals = postmargZResult->valProbaLog;
         }
     }
-    Int32 retCandidates = linemodel.ComputeCandidates(m_opt_extremacount, 1, fvals);
+    Int32 retCandidates = linemodel.ComputeCandidates(m_opt_extremacount, 1, fvals, m_opt_candidatesLogprobaCutThreshold);
     if( retCandidates!=0 )
     {
         Log.LogError( "Linemodel: Search for z-candidates failed. Aborting" );
@@ -774,39 +783,42 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
     //**************************************************
     //SECOND PASS
     //**************************************************
-    Int32 retSecondPass = linemodel.ComputeSecondPass(dataStore,
-                                                      _spc,
-                                                      _spcContinuum,
-                                                      tplCatalog,
-                                                      tplCategoryList,
-                                                      m_calibrationPath,
-                                                      restraycatalog,
-                                                      m_opt_linetypefilter,
-                                                      m_opt_lineforcefilter,
-                                                      lambdaRange,
-                                                      m_opt_extremacount,
-                                                      m_opt_fittingmethod,
-                                                      m_opt_continuumcomponent,
-                                                      m_opt_lineWidthType,
-                                                      m_opt_resolution,
-                                                      m_opt_velocity_emission,
-                                                      m_opt_velocity_absorption,
-                                                      m_opt_continuumreest,
-                                                      m_opt_rules,
-                                                      m_opt_velocityfit,
-                                                      m_opt_rigidity,
-                                                      m_opt_em_velocity_fit_min,
-                                                      m_opt_em_velocity_fit_max,
-                                                      m_opt_em_velocity_fit_step,
-                                                      m_opt_abs_velocity_fit_min,
-                                                      m_opt_abs_velocity_fit_max,
-                                                      m_opt_abs_velocity_fit_step);
-    if( retSecondPass!=0 )
+    bool skipSecondPass = (m_opt_skipsecondpass=="yes");
+    if(!skipSecondPass)
     {
-        Log.LogError( "Line Model, second pass failed. Aborting" );
-        return false;
+        Int32 retSecondPass = linemodel.ComputeSecondPass(dataStore,
+                                                          _spc,
+                                                          _spcContinuum,
+                                                          tplCatalog,
+                                                          tplCategoryList,
+                                                          m_calibrationPath,
+                                                          restraycatalog,
+                                                          m_opt_linetypefilter,
+                                                          m_opt_lineforcefilter,
+                                                          lambdaRange,
+                                                          m_opt_extremacount,
+                                                          m_opt_fittingmethod,
+                                                          m_opt_continuumcomponent,
+                                                          m_opt_lineWidthType,
+                                                          m_opt_resolution,
+                                                          m_opt_velocity_emission,
+                                                          m_opt_velocity_absorption,
+                                                          m_opt_continuumreest,
+                                                          m_opt_rules,
+                                                          m_opt_velocityfit,
+                                                          m_opt_rigidity,
+                                                          m_opt_em_velocity_fit_min,
+                                                          m_opt_em_velocity_fit_max,
+                                                          m_opt_em_velocity_fit_step,
+                                                          m_opt_abs_velocity_fit_min,
+                                                          m_opt_abs_velocity_fit_max,
+                                                          m_opt_abs_velocity_fit_step);
+        if( retSecondPass!=0 )
+        {
+            Log.LogError( "Line Model, second pass failed. Aborting" );
+            return false;
+        }
     }
-
     std::shared_ptr<const CLineModelResult> result = std::dynamic_pointer_cast<const CLineModelResult>( linemodel.getResult() );
 
 
