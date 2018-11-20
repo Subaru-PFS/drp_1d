@@ -1609,8 +1609,27 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(
                      "lambdarange observed spectral indexes");
     }
 
-    Float64 loglbdaStep = log(spectrum.GetSpectralAxis()[lbdaMaxIdx]) -
+    Float64 loglbdaStep_fromOriSpc = log(spectrum.GetSpectralAxis()[lbdaMaxIdx]) -
                           log(spectrum.GetSpectralAxis()[lbdaMaxIdx - 1]);
+
+    //find loglbdaStep from tgt redshift grid
+    Float64 tgtDzOnepzMin=DBL_MAX;
+    for (Int32 k = 1; k < sortedRedshifts.size(); k++)
+    {
+        //Log.LogDetail("  Operator-ChisquareLog: Log-Rebin: sortedRedshifts[k] = %f", sortedRedshifts[k]);
+        Float64 tgtDzOnepz=(sortedRedshifts[k]-sortedRedshifts[k-1])/(1+sortedRedshifts[k-1]);
+        if(tgtDzOnepzMin>tgtDzOnepz)
+        {
+            tgtDzOnepzMin = tgtDzOnepz;
+        }
+    }
+    Log.LogDetail("  Operator-ChisquareLog: Log-Rebin: tgtDzOnepzMin = %f", tgtDzOnepzMin);
+    Float64 loglbdaStep_fromTgtZgrid = log(1.0+tgtDzOnepzMin);
+    Log.LogDetail("  Operator-ChisquareLog: Log-Rebin: loglbdaStep_fromOriSpc = %f", loglbdaStep_fromOriSpc);
+    Log.LogDetail("  Operator-ChisquareLog: Log-Rebin: loglbdaStep_fromTgtZgrid = %f", loglbdaStep_fromTgtZgrid);
+    Float64 loglbdaStep = std::max(loglbdaStep_fromOriSpc, loglbdaStep_fromTgtZgrid);
+    Log.LogDetail("  Operator-ChisquareLog: Log-Rebin: loglbdaStep = %f", loglbdaStep);
+
     // Float64 loglbdaStep =
     // log(spectrum.GetSpectralAxis()[1])-log(spectrum.GetSpectralAxis()[0]);
     Float64 loglbdamin = log(lambdaRange.GetBegin());
@@ -1630,14 +1649,10 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(
     if (m_opt_spcrebin)
     {
 
-        Log.LogInfo(
-            "  Operator-ChisquareLog: Log-regular lambda resampling ON");
+        Log.LogDetail("  Operator-ChisquareLog: Log-regular lambda resampling START");
 
         if (verboseLogRebin)
         {
-            Log.LogInfo(
-                "  Operator-ChisquareLog: ORIGINAL grid spectrum count = %d",
-                lbdaMaxIdx - lbdaMinIdx + 1);
             // Log.LogInfo("  Operator-ChisquareLog: Log-Rebin: zref = %f",
             // zRef); Log.LogInfo("  Operator-ChisquareLog: Log-Rebin: zStep =
             // %f", zStep);
@@ -1649,9 +1664,12 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(
             Log.LogInfo(
                 "  Operator-ChisquareLog: Log-Rebin: lbdamin=%f : lbdamax=%f",
                 exp(loglbdamin), exp(loglbdamax));
-            Log.LogInfo("  Operator-ChisquareLog: Log-Rebin: loglbdaCount = %d",
-                        loglbdaCount);
         }
+        Log.LogDetail(
+            "  Operator-ChisquareLog: ORIGINAL grid spectrum count = %d",
+            lbdaMaxIdx - lbdaMinIdx + 1);
+        Log.LogDetail("  Operator-ChisquareLog: Log-Rebin: loglbdaCount = %d", loglbdaCount);
+
         CSpectrumSpectralAxis targetSpectralAxis;
         targetSpectralAxis.SetSize(loglbdaCount);
 
@@ -1678,7 +1696,7 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(
                 spectrum.GetSpectralAxis()
                     [spectrum.GetSpectralAxis().GetSamplesCount() - 1];
         }
-        if (verboseLogRebin)
+
         {
             // zstep lower lbda range for this sampling
             Float64 dlambda_begin =
@@ -1690,7 +1708,7 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(
                 dlambda_begin /
                 (targetSpectralAxis[0] /
                  (1. + sortedRedshifts[sortedRedshifts.size() - 1]));
-            Log.LogInfo("  Operator-ChisquareLog: Log-Rebin: "
+            Log.LogDetail("  Operator-ChisquareLog: Log-Rebin: "
                         "dz_zrangemin_begin=%f : dz_zrangemax_begin=%f",
                         dz_zrangemin_begin, dz_zrangemax_begin);
 
@@ -1703,7 +1721,7 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(
                 dlambda_end /
                 (targetSpectralAxis[loglbdaCount - 2] /
                  (1. + sortedRedshifts[sortedRedshifts.size() - 1]));
-            Log.LogInfo("  Operator-ChisquareLog: Log-Rebin: "
+            Log.LogDetail("  Operator-ChisquareLog: Log-Rebin: "
                         "dz_zrangemin_end=%f : dz_zrangemax_end=%f",
                         dz_zrangemin_end, dz_zrangemax_end);
         }
@@ -1798,6 +1816,7 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(
             fclose(f);
         }
 
+        Log.LogDetail("  Operator-ChisquareLog: Log-regular lambda resampling FINISHED");
     } else // check that the raw spectrum grid is in log-regular grid
     {
         Log.LogInfo(
@@ -2254,6 +2273,5 @@ const Float64 *COperatorChiSquareLogLambda::getMeiksinCoeff(Int32 meiksinIdx,
 void COperatorChiSquareLogLambda::enableSpcLogRebin(Bool enable)
 {
     m_opt_spcrebin = enable;
-    Log.LogInfo("  Operator-ChisquareLog: Spectrum REBIN-LOG enabled=%d",
-                m_opt_spcrebin);
+    Log.LogInfo("  Operator-ChisquareLog: Spectrum REBIN-LOG enabled=%d", m_opt_spcrebin);
 }

@@ -330,7 +330,7 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
             return -1;
         }
 
-        m_model->m_opt_firstpass_forcedisableTplratioISMfit = m_opt_firstpass_tplratio_ismFit;
+        m_model->m_opt_firstpass_forcedisableTplratioISMfit = !m_opt_firstpass_tplratio_ismFit;
     }
 
     // init catalog offsets
@@ -361,13 +361,19 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
     bool enableFitContinuumPrecomputed = true;
     if (enableFitContinuumPrecomputed && opt_continuumcomponent == "tplfit")
     {
+        Float64 redshiftStepForContinuumFit = opt_twosteplargegridstep;
+        if(redshiftStepForContinuumFit==-1)
+        {
+            Log.LogError("  Operator-Linemodel: opt_firstpass_zgridstep must be defined for this fit continuum procedure.");
+            throw runtime_error("  Operator-Linemodel: opt_firstpass_zgridstep must be defined (!= -1) for this fit continuum procedure.");
+        }
         PrecomputeContinuumFit(spectrum,
                                spectrumContinuum,
                                *orthoTplCatalog,
                                tplCategoryList,
                                opt_calibrationPath,
                                lambdaRange,
-                               1.5e-4,
+                               redshiftStepForContinuumFit,
                                opt_twosteplargegridsampling,
                                m_opt_tplfit_ignoreLinesSupport);
     }else{
