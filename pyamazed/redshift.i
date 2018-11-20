@@ -125,6 +125,7 @@ class CRayCatalog
 {
 public:
     void Load( const char* filePath );
+    void ConvertVacuumToAir();
 };
 
 %catches(std::string, std::runtime_error, ...) CTemplateCatalog::Load;
