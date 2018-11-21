@@ -36,22 +36,6 @@ CTemplateCatalog::~CTemplateCatalog()
 }
 
 /**
- * Returns the contents of the i-th entry in the category item of m_List.
- */
-const CTemplate& CTemplateCatalog::GetTemplate( const std::string& category, UInt32 i ) const
-{
-    return *m_List.at( category )[i];
-}
-
-/**
- * Returns the contents of the i-th entry in the category item of m_ListWithoutCont.
- */
-const CTemplate& CTemplateCatalog::GetTemplateWithoutContinuum( const std::string& category, UInt32 i ) const
-{
-    return *m_ListWithoutCont.at( category )[i];
-}
-
-/**
  * Returns a list containing all templates as enumerated in the categoryList input.
  */
 TTemplateRefList CTemplateCatalog::GetTemplate( const TStringList& categoryList ) const

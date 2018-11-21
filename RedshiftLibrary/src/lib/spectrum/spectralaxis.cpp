@@ -88,6 +88,7 @@ void CSpectrumSpectralAxis::ShiftByWaveLength( Float64 wavelengthOffset, EShiftD
  */
 void CSpectrumSpectralAxis::ShiftByWaveLength( const CSpectrumSpectralAxis& origin, Float64 wavelengthOffset, EShiftDirection direction )
 {
+    Int32 nSamples = origin.GetSamplesCount();
     m_SpectralFlags = 0;
 
     DebugAssert( origin.GetSamplesCount() == GetSamplesCount() );
@@ -98,7 +99,7 @@ void CSpectrumSpectralAxis::ShiftByWaveLength( const CSpectrumSpectralAxis& orig
 
     if( wavelengthOffset == 0.0 )
     {
-        for( Int32 i=0; i< origin.GetSamplesCount(); i++ )
+        for( Int32 i=0; i<nSamples; i++ )
         {
             m_Samples[i] = originSamples[i];
         }
@@ -113,14 +114,14 @@ void CSpectrumSpectralAxis::ShiftByWaveLength( const CSpectrumSpectralAxis& orig
 
         if( direction == nShiftForward )
         {
-            for( Int32 i=0; i< origin.GetSamplesCount(); i++ )
+            for( Int32 i=0; i<nSamples; i++ )
             {
                 m_Samples[i] = originSamples[i] + wavelengthOffset;
             }
         }
         else if( direction == nShiftBackward )
         {
-            for( Int32 i=0; i< origin.GetSamplesCount(); i++ )
+            for( Int32 i=0; i<nSamples; i++ )
             {
                 m_Samples[i] = originSamples[i] - wavelengthOffset;
             }
@@ -131,14 +132,14 @@ void CSpectrumSpectralAxis::ShiftByWaveLength( const CSpectrumSpectralAxis& orig
 
         if( direction == nShiftForward )
         {
-            for( Int32 i=0; i< origin.GetSamplesCount(); i++ )
+            for( Int32 i=0; i<nSamples; i++ )
             {
                 m_Samples[i] = originSamples[i] * wavelengthOffset;
             }
         }
         else if( direction == nShiftBackward )
         {
-            for( Int32 i=0; i< origin.GetSamplesCount(); i++ )
+            for( Int32 i=0; i<nSamples; i++ )
             {
                 m_Samples[i] = originSamples[i] / wavelengthOffset;
             }
@@ -149,8 +150,8 @@ void CSpectrumSpectralAxis::ShiftByWaveLength( const CSpectrumSpectralAxis& orig
 
 void CSpectrumSpectralAxis::ApplyOffset( Float64 wavelengthOffset )
 {
-
-    for( Int32 i=0; i< m_Samples.size(); i++ )
+    Int32 nSamples = m_Samples.size();
+    for( Int32 i=0; i<nSamples ; i++ )
     {
         m_Samples[i] += wavelengthOffset;
     }
@@ -194,7 +195,8 @@ Float64 CSpectrumSpectralAxis::GetMeanResolution() const
 
     Float64 resolution = 0.0;
     Int32 nsum = 0;
-    for( Int32 i=0; i< m_Samples.size()-1; i++ )
+    Int32 nSamples = m_Samples.size()-1;
+    for( Int32 i=0; i<nSamples; i++ )
     {
         resolution += (m_Samples[i+1]-m_Samples[i]);
         nsum++;
@@ -278,9 +280,9 @@ Float64 CSpectrumSpectralAxis::IntersectMaskAndComputeOverlapRate( const TFloat6
     Int32 selfRate=0;
     Int32 otherRate=0;
     const Mask* otherWeight = omask.GetMasks();
-
+    Int32 nSamples = m_Samples.size();
     // weight = Spectrum over lambdarange flag
-    for( Int32 i=0; i< m_Samples.size(); i++ )
+    for( Int32 i=0; i<nSamples; i++ )
     {
         //otherWeight[i] = 0;
         // If this sample is somewhere in a valid lambdaRande, tag weight with 1
@@ -380,8 +382,9 @@ Bool CSpectrumSpectralAxis::ConvertToLinearScale()
 {
     if( ( m_SpectralFlags & nFLags_LogScale ) == false )
         return true;
+    Int32 nSamples = GetSamplesCount();
 
-    for( Int32 i=0; i<GetSamplesCount(); i++ )
+    for( Int32 i=0; i<nSamples; i++ )
     {
         m_Samples[i] = exp( m_Samples[i] );
     }
@@ -398,8 +401,9 @@ Bool CSpectrumSpectralAxis::ConvertToLogScale()
 {
     if( m_SpectralFlags & nFLags_LogScale )
         return true;
+    Int32 nSamples = GetSamplesCount();
 
-    for( Int32 i=0; i<GetSamplesCount(); i++ )
+    for( Int32 i=0; i<nSamples; i++ )
     {
         m_Samples[i] = log( m_Samples[i] );
     }

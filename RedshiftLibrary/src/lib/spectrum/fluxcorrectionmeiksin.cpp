@@ -120,11 +120,6 @@ Bool CSpectrumFluxCorrectionMeiksin::LoadFile( const char* filePath )
     return loadSuccess;
 }
 
-Int32 CSpectrumFluxCorrectionMeiksin::GetIdxCount()
-{
-    return 7; //harcoded value from the number of cols in the ascii files
-}
-
 /**
  * @brief CSpectrumFluxCorrectionMeiksin::GetRedshiftIndex
  * @param z
@@ -157,21 +152,7 @@ Int32 CSpectrumFluxCorrectionMeiksin::GetRedshiftIndex(Float64 z)
  * Hardcoded for meiksin files as of 2017-06-13.
  * @return
  */
-std::vector<Float64> CSpectrumFluxCorrectionMeiksin::GetSegmentsStartRedshiftList()
-{
-    std::vector<Float64> zstartlist={0.0, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0, 6.5};
-    return zstartlist;
-}
 
-Float64 CSpectrumFluxCorrectionMeiksin::GetLambdaMin()
-{
-    return m_LambdaMin;
-}
-
-Float64 CSpectrumFluxCorrectionMeiksin::GetLambdaMax()
-{
-    return m_LambdaMax;
-}
 
 Float64 CSpectrumFluxCorrectionMeiksin::getCoeff(Int32 meiksinIdx, Float64 redshift, Float64 restLambda)
 {

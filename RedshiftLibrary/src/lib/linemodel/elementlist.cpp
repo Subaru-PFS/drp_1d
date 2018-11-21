@@ -1414,7 +1414,8 @@ void CLineModelElementList::PrepareContinuum(Float64 z)
     Float64* Yrebin = m_ContinuumFluxAxis.GetSamples();
 
     if(m_observeGridContinuumFlux == NULL){
-        for ( UInt32 i = 0; i<targetSpectralAxis.GetSamplesCount(); i++)
+        UInt32 nSamples = targetSpectralAxis.GetSamplesCount();
+        for ( UInt32 i = 0; i<nSamples; i++)
         {
             Yrebin[i] = m_SpcContinuumFluxAxis[i];
         }
@@ -2490,7 +2491,8 @@ void CLineModelElementList::refreshModel(Int32 lineTypeFilter)
     }
 
     //create spectrum model
-    for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
+    UInt32 nElements = m_Elements.size();
+    for( UInt32 iElts=0; iElts<nElements; iElts++ )
     {
         Int32 lineType = m_Elements[iElts]->m_Rays[0].GetType();
         if(lineTypeFilter==-1 || lineTypeFilter==lineType)

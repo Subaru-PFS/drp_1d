@@ -17,6 +17,14 @@ namespace NSEpic {
  */
 class CLineModelElement
 {
+  enum TLineWidthType {
+    INSTRUMENTDRIVEN,
+    FIXED,
+    COMBINED,
+    VELOCITYDRIVEN,
+    NISPSIM2016,
+    NISPVSSPSF201707,
+  };
 
   public:
     CLineModelElement(const std::string &widthType, const Float64 resolution,
@@ -152,7 +160,7 @@ class CLineModelElement
   protected:
     Bool LoadDataExtinction();
 
-    std::string m_LineWidthType;
+    TLineWidthType m_LineWidthType;
     Float64 m_NominalWidth;
     Float64 m_Resolution;
     Float64 m_VelocityEmission;

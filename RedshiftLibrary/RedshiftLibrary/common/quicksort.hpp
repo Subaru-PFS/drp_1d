@@ -57,7 +57,7 @@ void CQuickSort<T>::SortIndexes( T* value, Int32* index, Int32 beg, Int32 end ) 
     {
         Float64 piv = value[beg];
         Int32 l = beg + 1, r = end;
-        while (l < r) 
+        while (l < r)
         {
             if (value[l] <= piv)
                 l++;

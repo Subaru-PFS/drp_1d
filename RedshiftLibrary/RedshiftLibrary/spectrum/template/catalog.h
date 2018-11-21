@@ -48,6 +48,23 @@ private:
 
 };
 
+/**
+ * Returns the contents of the i-th entry in the category item of m_List.
+ */
+inline const CTemplate& CTemplateCatalog::GetTemplate( const std::string& category, UInt32 i ) const
+{
+    return *m_List.at( category )[i];
+}
+
+/**
+ * Returns the contents of the i-th entry in the category item of m_ListWithoutCont.
+ */
+inline const CTemplate& CTemplateCatalog::GetTemplateWithoutContinuum( const std::string& category, UInt32 i ) const
+{
+    return *m_ListWithoutCont.at( category )[i];
+}
+
+
 
 }
 

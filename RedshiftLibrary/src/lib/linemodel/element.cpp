@@ -17,7 +17,22 @@ using namespace NSEpic;
 
 CLineModelElement::CLineModelElement(const std::string& widthType, const Float64 resolution, const Float64 velocityEmission, const Float64 velocityAbsorption)
 {
-    m_LineWidthType = widthType;
+    if( widthType == "instrumentdriven"){
+        m_LineWidthType = INSTRUMENTDRIVEN;
+    } else if( widthType == "fixed"){
+        m_LineWidthType = FIXED;
+    } else if( widthType == "combined"){
+        m_LineWidthType = COMBINED;
+    } else if( widthType == "velocitydriven"){
+        m_LineWidthType = VELOCITYDRIVEN;
+    } else if( widthType == "nispsim2016"){
+        m_LineWidthType = NISPSIM2016;
+    } else if( widthType == "nispvsspsf201707"){
+        m_LineWidthType = NISPVSSPSF201707;
+    } else {
+        Log.LogError("Unknown LineWidthType %s", widthType.c_str());
+        throw std::runtime_error("Unknown LineWidthType");
+    }
 
     //m_Resolution = 250.0 * (1.0 + 0.0); //dr=+0.5 found empirically on VVDS DEEP 651
     m_Resolution = resolution;
@@ -93,42 +108,46 @@ Float64 CLineModelElement::GetLineWidth(Float64 redshiftedlambda, Float64 z, Boo
     Float64 velocitySigma = 0.0;
     Float64 sourcesizeSigma = 0.0;
 
-    if( m_LineWidthType == "instrumentdriven"){
+    const Float64 c = 300000.0;
+    const Float64 pfsSimuCompensationFactor = 1.0;
+    const Float64 arcsecPix = 0.355; //0.3 is the same as in tipsfast
+    const Float64 angstromPix = 13.4;
+    Float64 v;
+
+    switch (m_LineWidthType) {
+    case INSTRUMENTDRIVEN:
         instrumentSigma = redshiftedlambda/m_Resolution*m_instrumentResolutionEmpiricalFactor;
-    }else if( m_LineWidthType == "fixed"){
+        break;
+    case FIXED:
         instrumentSigma = m_NominalWidth;
-    }else if( m_LineWidthType == "combined"){
-        Float64 v = m_VelocityEmission;
+        break;
+    case COMBINED:
+        v = m_VelocityEmission;
         if(!isEmission){
             v = m_VelocityAbsorption;
         }
-        Float64 c = 300000.0;
-        Float64 pfsSimuCompensationFactor = 1.0;
         velocitySigma = pfsSimuCompensationFactor*v/c*redshiftedlambda;//, useless /(1+z)*(1+z);
         instrumentSigma = redshiftedlambda/m_Resolution*m_instrumentResolutionEmpiricalFactor;
-    }else if( m_LineWidthType == "velocitydriven"){
-        Float64 v = m_VelocityEmission;
+        break;
+    case VELOCITYDRIVEN:
+        v = m_VelocityEmission;
         if(!isEmission){
             v = m_VelocityAbsorption;
         }
-        Float64 c = 300000.0;
-        Float64 pfsSimuCompensationFactor = 1.0;
         velocitySigma = pfsSimuCompensationFactor*v/c*redshiftedlambda;//, useless /(1+z)*(1+z);
-    }else if( m_LineWidthType == "nispsim2016"){
+        break;
+    case NISPSIM2016:
         instrumentSigma = (redshiftedlambda*8.121e-4 + 7.4248)/2.35;
-        Float64 v = m_VelocityEmission;
+        v = m_VelocityEmission;
         if(!isEmission){
             v = m_VelocityAbsorption;
         }
-        Float64 c = 300000.0;
-        Float64 pfsSimuCompensationFactor = 1.0;
         velocitySigma = pfsSimuCompensationFactor*v/c*redshiftedlambda;
-    }else if( m_LineWidthType == "nispvsspsf201707"){
+        break;
+    case NISPVSSPSF201707:
         //+ considers Instrument PSF=f_linearregression(lambda) from MDB-EE50: SpaceSegment.PLM.PLMAsRequired.PLMNISPrEE50rEE80
         //      arcsec/pixel from : SpaceSegment.Instrument.NISP.NISPAsRequired.NISPGRAPSFRefEE50 : (0.355)
-        Float64 arcsecPix = 0.355; //0.3 is the same as in tipsfast
         //      angstrom/pixel from : SpaceSegment.Instrument.NISP.NISPAsRequired.NISPGRAAverageDlambda
-        Float64 angstromPix = 13.4;
         //      Leads to linear regression: sigma_psf = 3.939e-4*wl_angstrom + 2.191
         //+ considers source size in the dispersion direction
         //+ considers velocity
@@ -138,13 +157,15 @@ Float64 CLineModelElement::GetLineWidth(Float64 redshiftedlambda, Float64 z, Boo
 
         sourcesizeSigma = m_SourceSizeDispersion*angstromPix/arcsecPix;
 
-        Float64 v = m_VelocityEmission;
+        v = m_VelocityEmission;
         if(!isEmission){
             v = m_VelocityAbsorption;
         }
-        Float64 c = 300000.0;
-        Float64 pfsSimuCompensationFactor = 1.0;
         velocitySigma = pfsSimuCompensationFactor*v/c*redshiftedlambda;
+        break;
+    default:
+        Log.LogError("Invalid LineWidthType %d", m_LineWidthType);
+        throw std::runtime_error("Unknown LineWidthType");
     }
 
     Float64 sigma = sqrt(instrumentSigma*instrumentSigma + velocitySigma*velocitySigma + sourcesizeSigma*sourcesizeSigma);
@@ -263,42 +284,43 @@ Float64 CLineModelElement::GetLineProfileDerivZ(std::string profile, Float64 x, 
 }
 
 Float64 CLineModelElement::GetLineProfileDerivVel(std::string profile, Float64 x, Float64 x0, Float64 sigma, Bool isEmission){
-  if( m_LineWidthType == "instrumentdriven"){
-      return 0.0;
-  }else if( m_LineWidthType == "fixed"){
-      return 0.0;
-  }else if( m_LineWidthType == "combined"){
-      Float64 v = m_VelocityEmission;
-      if(!isEmission){
-          v = m_VelocityAbsorption;
-      }
-      Float64 c = 300000.0;
-      Float64 pfsSimuCompensationFactor = 1.0;
-      Float64 v_to_sigma = pfsSimuCompensationFactor/c*x0; //velocity sigma = v_to_sigma * v
-      return v_to_sigma * v_to_sigma * v /sigma * GetLineProfileDerivSigma(profile,x,x0,sigma);
-    }else if( m_LineWidthType == "velocitydriven"){
-      Float64 c = 300000.0;
-      Float64 pfsSimuCompensationFactor = 1.0;
-        Float64 v_to_sigma = pfsSimuCompensationFactor/c*x0;
+    const Float64 c = 300000.0;
+    const Float64 pfsSimuCompensationFactor = 1.0;
+    Float64 v;
+    Float64 v_to_sigma;
+
+    switch (m_LineWidthType) {
+    case INSTRUMENTDRIVEN:
+        return 0.0;
+    case FIXED:
+        return 0.0;
+    case COMBINED:
+        v = m_VelocityEmission;
+        if(!isEmission){
+            v = m_VelocityAbsorption;
+        }
+        v_to_sigma = pfsSimuCompensationFactor/c*x0; //velocity sigma = v_to_sigma * v
+        return v_to_sigma * v_to_sigma * v /sigma * GetLineProfileDerivSigma(profile,x,x0,sigma);
+    case VELOCITYDRIVEN:
+        v_to_sigma = pfsSimuCompensationFactor/c*x0;
         return v_to_sigma* GetLineProfileDerivSigma(profile, x,x0,sigma);
-    }else if( m_LineWidthType == "nispsim2016"){
-      Float64 v = m_VelocityEmission;
-      if(!isEmission){
-          v = m_VelocityAbsorption;
-      }
-      Float64 c = 300000.0;
-      Float64 pfsSimuCompensationFactor = 1.0;
-      Float64 v_to_sigma = pfsSimuCompensationFactor/c*x0; //velocity sigma = v_to_sigma * v
-      return v_to_sigma * v_to_sigma * v /sigma * GetLineProfileDerivSigma(profile, x,x0,sigma);
-    }else if( m_LineWidthType == "nispvsspsf201707"){ //not supported as of 2017-07
-      Float64 v = m_VelocityEmission;
-      if(!isEmission){
-          v = m_VelocityAbsorption;
-      }
-      Float64 c = 300000.0;
-      Float64 pfsSimuCompensationFactor = 1.0;
-      Float64 v_to_sigma = pfsSimuCompensationFactor/c*x0; //velocity sigma = v_to_sigma * v
-      return v_to_sigma * v_to_sigma * v /sigma * GetLineProfileDerivSigma(profile, x,x0,sigma);
+    case NISPSIM2016:
+        v = m_VelocityEmission;
+        if(!isEmission){
+            v = m_VelocityAbsorption;
+        }
+        v_to_sigma = pfsSimuCompensationFactor/c*x0; //velocity sigma = v_to_sigma * v
+        return v_to_sigma * v_to_sigma * v /sigma * GetLineProfileDerivSigma(profile, x,x0,sigma);
+    case NISPVSSPSF201707: //not supported as of 2017-07
+        v = m_VelocityEmission;
+        if(!isEmission){
+            v = m_VelocityAbsorption;
+        }
+        v_to_sigma = pfsSimuCompensationFactor/c*x0; //velocity sigma = v_to_sigma * v
+        return v_to_sigma * v_to_sigma * v /sigma * GetLineProfileDerivSigma(profile, x,x0,sigma);
+    default:
+        Log.LogError("Invalid LineWidthType %d", m_LineWidthType);
+        throw std::runtime_error("Unknown LineWidthType");
     }
     return 0.0;
 }

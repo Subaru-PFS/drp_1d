@@ -189,15 +189,16 @@ TInt32Range CMultiLine::EstimateIndexRange(Int32 subeIdx, const CSpectrumSpectra
  * Inits the fitted amplitude values.
  **/
 void CMultiLine::prepareSupport(const CSpectrumSpectralAxis& spectralAxis, Float64 redshift, const TFloat64Range &lambdaRange)
-{    
+{
+    Int32 nRays = m_Rays.size();
     m_OutsideLambdaRange=true;
-    m_RayIsActiveOnSupport.resize( m_Rays.size() , std::vector<Int32>( m_Rays.size() , 0.0 ) );
-    m_StartNoOverlap.resize(m_Rays.size());
-    m_EndNoOverlap.resize(m_Rays.size());
-    m_StartTheoretical.resize(m_Rays.size());
-    m_EndTheoretical.resize(m_Rays.size());
-    m_OutsideLambdaRangeList.resize(m_Rays.size());
-    for(Int32 i=0; i<m_Rays.size(); i++){
+    m_RayIsActiveOnSupport.resize( nRays , std::vector<Int32>( nRays , 0.0 ) );
+    m_StartNoOverlap.resize(nRays);
+    m_EndNoOverlap.resize(nRays);
+    m_StartTheoretical.resize(nRays);
+    m_EndTheoretical.resize(nRays);
+    m_OutsideLambdaRangeList.resize(nRays);
+    for(Int32 i=0; i<nRays; i++){
         TInt32Range supportRange = EstimateTheoreticalSupport(i, spectralAxis, redshift, lambdaRange);
         m_StartTheoretical[i] = supportRange.GetBegin();
         m_EndTheoretical[i] = supportRange.GetEnd();
@@ -240,7 +241,7 @@ void CMultiLine::prepareSupport(const CSpectrumSpectralAxis& spectralAxis, Float
     while(supportNoOverlap_has_duplicates && icmpt<ncmpt)
     {
         icmpt++;
-        for(Int32 i=0; i<m_Rays.size(); i++){
+        for(Int32 i=0; i<nRays; i++){
             if(m_OutsideLambdaRangeList[i]){
                 continue;
             }
@@ -248,7 +249,7 @@ void CMultiLine::prepareSupport(const CSpectrumSpectralAxis& spectralAxis, Float
             {
                 continue;
             }
-            for(Int32 j=0; j<m_Rays.size(); j++){
+            for(Int32 j=0; j<nRays; j++){
                 if(m_OutsideLambdaRangeList[j]){
                     continue;
                 }
@@ -283,7 +284,7 @@ void CMultiLine::prepareSupport(const CSpectrumSpectralAxis& spectralAxis, Float
                     m_RayIsActiveOnSupport[i][j] = 1;
                     m_RayIsActiveOnSupport[j][i] = 1;
                     //append all the previously overlapping rays as active on the support
-                    for(Int32 i2=0; i2<m_Rays.size(); i2++){
+                    for(Int32 i2=0; i2<nRays; i2++){
                         if(m_OutsideLambdaRangeList[i2]){
                             continue;
                         }
@@ -294,7 +295,7 @@ void CMultiLine::prepareSupport(const CSpectrumSpectralAxis& spectralAxis, Float
                         }
                     }
                     //append all the previously overlapping rays as active on the support
-                    for(Int32 j2=0; j2<m_Rays.size(); j2++){
+                    for(Int32 j2=0; j2<nRays; j2++){
                         if(m_OutsideLambdaRangeList[j2]){
                             continue;
                         }
@@ -311,7 +312,7 @@ void CMultiLine::prepareSupport(const CSpectrumSpectralAxis& spectralAxis, Float
         supportNoOverlap_has_duplicates = false;
 
         //check that there are no overlapping sub-supports in the list
-        for(Int32 i=0; i<m_Rays.size(); i++)
+        for(Int32 i=0; i<nRays; i++)
         {
             if(supportNoOverlap_has_duplicates)
             {
@@ -321,7 +322,7 @@ void CMultiLine::prepareSupport(const CSpectrumSpectralAxis& spectralAxis, Float
             {
                 continue;
             }
-            for(Int32 j=0; j<m_Rays.size(); j++)
+            for(Int32 j=0; j<nRays; j++)
             {
                 if(m_OutsideLambdaRangeList[j])
                 {
@@ -348,7 +349,7 @@ void CMultiLine::prepareSupport(const CSpectrumSpectralAxis& spectralAxis, Float
 
 
     //init the fitted amplitude values
-    for(Int32 k=0; k<m_Rays.size(); k++){
+    for(Int32 k=0; k<nRays; k++){
         if(m_OutsideLambdaRangeList[k]){
             m_FittedAmplitudes[k] = -1.0;
         }
@@ -361,9 +362,10 @@ void CMultiLine::prepareSupport(const CSpectrumSpectralAxis& spectralAxis, Float
 TInt32RangeList CMultiLine::getSupport()
 {
     TInt32RangeList support;
+    Int32 nRays = m_Rays.size();
     if(m_OutsideLambdaRange==false)
       {
-        for(Int32 i=0; i<m_Rays.size(); i++)
+        for(Int32 i=0; i<nRays; i++)
       {
             if(m_OutsideLambdaRangeList[i])
           {
@@ -378,9 +380,11 @@ TInt32RangeList CMultiLine::getSupport()
 TInt32RangeList CMultiLine::getTheoreticalSupport()
 {
     TInt32RangeList support;
+    Int32 nRays = m_Rays.size();
+
     if(m_OutsideLambdaRange==false)
       {
-        for(Int32 i=0; i<m_Rays.size(); i++)
+        for(Int32 i=0; i<nRays; i++)
       {
             if(m_OutsideLambdaRangeList[i])
           {
@@ -862,7 +866,8 @@ void CMultiLine::addToSpectrumModel( const CSpectrumSpectralAxis& modelspectralA
 
     const Float64* spectral = modelspectralAxis.GetSamples();
     Float64* flux = modelfluxAxis.GetSamples();
-    for(Int32 k=0; k<m_Rays.size(); k++)
+    Int32 nRays = m_Rays.size();
+    for(Int32 k=0; k<nRays; k++)
     { //loop on the interval
         if(m_OutsideLambdaRangeList[k])
         {
@@ -932,8 +937,9 @@ Float64 CMultiLine::getModelAtLambda(Float64 lambda, Float64 redshift, Float64 c
     Float64 Yi=0.0;
 
     Float64 x = lambda;
+    Int32 nRays = m_Rays.size();
 
-    for(Int32 k2=0; k2<m_Rays.size(); k2++) //loop on rays
+    for(Int32 k2=0; k2<nRays; k2++) //loop on rays
     {
         if(m_OutsideLambdaRangeList[k2])
         {
@@ -1117,7 +1123,8 @@ void CMultiLine::initSpectrumModel( CSpectrumFluxAxis &modelfluxAxis, CSpectrumF
 Int32 CMultiLine::FindElementIndex(std::string LineTagStr)
 {
     Int32 idx = -1;
-    for( UInt32 iElts=0; iElts<m_Rays.size(); iElts++ )
+    Int32 rays = m_Rays.size();
+    for( UInt32 iElts=0; iElts<rays; iElts++ )
     {
         std::string name = m_Rays[iElts].GetName();
         std::size_t foundstra = name.find(LineTagStr.c_str());

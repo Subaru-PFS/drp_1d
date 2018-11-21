@@ -22,6 +22,11 @@ if(CCACHE_FOUND)
   set(ENV{CXX} "ccache c++")
 endif(CCACHE_FOUND)
 
+# Force build type to release if not defined
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE Release)
+endif()
+
 #--------------------------------------------------------
 # Setup shortcut acces directory
 #--------------------------------------------------------
@@ -39,6 +44,8 @@ FILE (STRINGS ${ROOT_DIR}/VERSION VERSION)
 MESSAGE( STATUS "Version used: ${VERSION}" )
 
 #SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall -Wno-sign-compare -Wno-parentheses")
+SET(CMAKE_CXX_FLAGS_RELEASE  "${CMAKE_CXX_FLAGS_RELEASE} -flto")
+SET(CMAKE_CXX_FLAGS_DEBUG  "${CMAKE_CXX_FLAGS_DEBUG} -g")
 
 IF(TEST_COVERAGE)
   SET(GCC_COVERAGE_COMPILE_FLAGS "--coverage")
@@ -48,6 +55,9 @@ ELSE()
   SET(cpf-redshift_COVERAGE "False")
 ENDIF()
 
+IF(GPROF)
+  SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -pg")
+ENDIF()
 #--------------------------------------------------------
 # Exported configuration variables
 #--------------------------------------------------------
