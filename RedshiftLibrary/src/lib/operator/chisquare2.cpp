@@ -643,7 +643,7 @@ std::shared_ptr<COperatorResult> COperatorChiSquare2::Compute(const CSpectrum& s
                                                               Int32 opt_extinction,
                                                               Int32 opt_dustFitting)
 {
-    Log.LogInfo("  Operator-Chisquare2: starting computation for template: %s", tpl.GetName().c_str());
+    Log.LogDetail("  Operator-Chisquare2: starting computation for template: %s", tpl.GetName().c_str());
     if(0)
     {
         //CSpectrumFluxAxis tmp_tplFluxAxis = tpl.GetFluxAxis();

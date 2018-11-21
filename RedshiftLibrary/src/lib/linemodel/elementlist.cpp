@@ -926,6 +926,73 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, I
         bestFitMtM = m_fitContinuum_tplFitMtM;
         bestFitRedshift = m_fitContinuum_tplFitRedshift;
         bestFitPolyCoeffs = m_fitContinuum_tplFitPolyCoeffs;
+    }else if(m_fitContinuum_option==3){
+        //redo the fit only for the current template/ISM/IGM continuum
+
+        //hardcoded parameters
+        std::string opt_interp = "lin"; //"precomputedfinegrid"; //
+        Int32 opt_extinction = m_fitContinuum_igm;
+        Int32 opt_dustFit = m_fitContinuum_dustfit;
+        Float64 overlapThreshold = 1.0;
+
+        bool ignoreLinesSupport=m_fitContinuum_outsidelinesmask;
+        std::vector<CMask> maskList;
+        if(ignoreLinesSupport){
+            maskList.resize(1);
+            maskList[0]=getOutsideLinesMask();
+        }
+
+        std::vector<Float64> redshifts(1, m_Redshift);
+        if(m_fitContinuum_observedFrame){
+            redshifts[0] = 0.0;
+        }
+
+        for( UInt32 i=0; i<m_tplCategoryList.size(); i++ )
+        {
+            std::string category = m_tplCategoryList[i];
+
+            for( UInt32 j=0; j<m_tplCatalog.GetTemplateCount( category ); j++ )
+            {
+                const CTemplate& tpl = m_tplCatalog.GetTemplate( category, j );
+
+                if(tpl.GetName()==m_fitContinuum_tplName)
+                {
+                    Float64 merit = DBL_MAX;
+                    Float64 fitAmplitude = -1.0;
+                    Float64 fitDustCoeff = -1.0;
+                    Int32 fitMeiksinIdx = -1;
+                    Float64 fitDtM = -1.0;
+                    Float64 fitMtM = -1.0;
+                    Bool ret = SolveContinuum( *m_inputSpc,
+                                               tpl,
+                                               lambdaRange,
+                                               redshifts,
+                                               overlapThreshold,
+                                               maskList,
+                                               opt_interp,
+                                               opt_extinction,
+                                               opt_dustFit,
+                                               merit,
+                                               fitAmplitude,
+                                               fitDustCoeff,
+                                               fitMeiksinIdx,
+                                               fitDtM,
+                                               fitMtM);
+
+                    if(ret)
+                    {
+                        bestMerit = merit;
+                        bestFitAmplitude = fitAmplitude;
+                        bestFitDustCoeff = fitDustCoeff;
+                        bestFitMeiksinIdx = fitMeiksinIdx;
+                        bestFitDtM = fitDtM;
+                        bestFitMtM = fitMtM;
+                        bestTplName = tpl.GetName();
+                    }
+                    break;
+                }
+            }
+        }
     }else{
         throw runtime_error("Elementlist, cannot parse fitContinuum_option");
     }
