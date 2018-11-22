@@ -7,6 +7,7 @@
 #include <string>
 #include <fstream>
 #include <iostream>
+#include <cmath>
 #include <boost/filesystem.hpp>
 
 using namespace NSEpic;
@@ -102,6 +103,37 @@ Bool CRayCatalog::Add( const CRay& r )
     m_List.push_back( r );
 
     return true;
+}
+
+/**
+ * @brief parse_asymfixed
+ * Parse a ASYMFIXED_XX_YY_ZZ profile string
+ */
+//static void parse_asymfixed(std::string &profileString, Float64 &width, Float64 &alpha, Float64 &delta)
+static void parse_asymfixed(std::string &profileString, TAsymParams &asymParams)
+{
+    std::vector< Float64 > numbers;
+    std::string temp;
+    size_t start = 0, end;
+
+    end = profileString.find("_", start);
+    if (profileString.substr(start, end-start+1) != "ASYMFIXED_") {
+        throw std::runtime_error("XXX");
+    }
+    start = end + 1;
+    end = profileString.find("_", start);
+    temp = profileString.substr(start, end-start);
+    asymParams.width = std::stod(temp);
+
+    start = end + 1;
+    end = profileString.find("_", start);
+    temp = profileString.substr(start, end-start);
+    asymParams.alpha = std::stod(temp);
+
+    start = end + 1;
+    end = profileString.length();
+    temp = profileString.substr(start, end-start);
+    asymParams.delta = std::stod(temp);
 }
 
 /**
@@ -217,15 +249,28 @@ void CRayCatalog::Load( const char* filePath )
             }
 
             std::string profileName = "SYM";
+            CRay::TProfile profile;
+            TAsymParams asymParams = {NAN, NAN, NAN};
             std::string groupName = "-1";
             Float64 nominalAmplitude = 1.0;
             std::string velGroupName = "-1";
+
             // Parse profile name
             ++it;
             if( it != tok.end() ){
                 profileName = *it;
+		if (profileName.find("ASYMFIXED") != std::string::npos) {
+                    profile = CRay::ASYMFIXED;
+                    parse_asymfixed(profileName, asymParams);
+		}
+                else if (profileName == "SYM") { profile = CRay::SYM; }
+                else if (profileName == "SYMXL") { profile = CRay::SYMXL; }
+                else if (profileName == "LOR") { profile = CRay::LOR; }
+                else if (profileName == "ASYM") { profile = CRay::ASYM; }
+                else if (profileName == "ASYM2") { profile = CRay::ASYM2; }
+                else if (profileName == "ASYMFIT") { profile = CRay::ASYMFIT; }
+                else if (profileName == "EXTINCT") { profile = CRay::EXTINCT; }
             }
-
 
             // Parse group name
             ++it;
@@ -260,7 +305,7 @@ void CRayCatalog::Load( const char* filePath )
 
             if( nominalAmplitude>0.0 ) //do not load a line with nominal amplitude = ZERO
             {
-                Add( CRay(name, pos, Etype, profileName, Eforce, -1, -1, -1, -1, -1, -1, groupName, nominalAmplitude, velGroupName) );
+                Add( CRay(name, pos, Etype, profile, Eforce, -1, -1, -1, -1, -1, -1, groupName, nominalAmplitude, velGroupName, asymParams) );
             }
         }
     }

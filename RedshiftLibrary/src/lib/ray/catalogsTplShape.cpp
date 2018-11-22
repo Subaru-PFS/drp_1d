@@ -500,7 +500,7 @@ Bool CRayCatalogsTplShape::SetLyaProfile(CLineModelElementList &LineModelElement
         {
             continue;
         }
-        std::string targetProfile = currentCatalogLineList[kL].GetProfile();
+	CRay::TProfile targetProfile = currentCatalogLineList[kL].GetProfile();
 
         //find line Lya in the elementList
         for( UInt32 iElts=0; iElts<LineModelElementList.m_Elements.size(); iElts++ )
@@ -511,8 +511,9 @@ Bool CRayCatalogsTplShape::SetLyaProfile(CLineModelElementList &LineModelElement
 
                 if(LineModelElementList.m_RestRayList[LineModelElementList.m_Elements[iElts]->m_LineCatalogIndexes[j]].GetName() == lyaTag.c_str())
                 {
-
+                    TAsymParams asymParams = currentCatalogLineList[kL].GetAsymParams();
                     LineModelElementList.m_RestRayList[LineModelElementList.m_Elements[iElts]->m_LineCatalogIndexes[j]].SetProfile(targetProfile);
+                    LineModelElementList.m_RestRayList[LineModelElementList.m_Elements[iElts]->m_LineCatalogIndexes[j]].SetAsymParams(asymParams);
                     break;
                 }
 

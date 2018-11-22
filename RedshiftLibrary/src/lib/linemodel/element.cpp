@@ -97,9 +97,9 @@ bool CLineModelElement::IsOutsideLambdaRange()
     return m_OutsideLambdaRange;
 }
 
-Float64 CLineModelElement::GetLineWidth(Float64 redshiftedlambda, Float64 z, Bool isEmission, std::string profile)
+Float64 CLineModelElement::GetLineWidth(Float64 redshiftedlambda, Float64 z, Bool isEmission, CRay::TProfile profile)
 {
-    if(profile=="EXTINCT")
+    if(profile==CRay::EXTINCT)
     {
         return 300*(1.0+z); //hardcoded, in Angstrom
     }
@@ -174,52 +174,68 @@ Float64 CLineModelElement::GetLineWidth(Float64 redshiftedlambda, Float64 z, Boo
     return sigma;
 }
 
-Float64 CLineModelElement::GetLineProfile(std::string profile, Float64 x, Float64 x0, Float64 sigma)
+Float64 CLineModelElement::GetLineProfile(CRay::TProfile profile, Float64 x, Float64 x0, Float64 sigma)
 {
     Float64 xc = x-x0;
-    Float64 val=0.0;
+    Float64 val = 0.0;
+    Float64 xsurc;
+    Float64 coeff;
+    Float64 alpha;
 
-    if(profile=="SYM"){
-        const Float64 xsurc = xc/sigma;
+    Float64 sigma_rest, z, dataStartLambda, xcd;
+    Int32 valI;
+
+    switch (profile) {
+    case CRay::SYM:
+        xsurc = xc/sigma;
         val = exp(-0.5*xsurc*xsurc);
-    }else if(profile=="SYMXL"){
-        const Float64 coeff = m_symxl_sigma_coeff;
+        break;
+    case CRay::SYMXL:
+        coeff = m_symxl_sigma_coeff;
         sigma = sigma*coeff;
-        const Float64 xsurc = xc/sigma;
+        xsurc = xc/sigma;
         val = exp(-0.5*xsurc*xsurc);
-    }else if(profile=="LOR"){
-        const Float64 xsurc = xc/sigma;
-        const Float64 x = xsurc;
-        val = 1.0/(1+x*x);
+        break;
+    case CRay::LOR:
+        xsurc = xc/sigma;
+        val = 1.0/(1+xsurc*xsurc);
         //height of the peak is 2*A/pi/c
-    }else if(profile=="ASYM"){
-        const Float64 coeff = m_asym_sigma_coeff;
+        break;
+    case CRay::ASYM:
+        coeff = m_asym_sigma_coeff;
 
         sigma = sigma*coeff;
-        const Float64 xsurc = xc/sigma;
-        const Float64 alpha = m_asym_alpha;
+        xsurc = xc/sigma;
+        alpha = m_asym_alpha;
         val = exp(-0.5*xsurc*xsurc)*(1.0+erf(alpha/sqrt(2.0)*xsurc));
-    }else if(profile=="ASYM2"){
-        const Float64 coeff = m_asym2_sigma_coeff;
+        break;
+    case CRay::ASYM2:
+        coeff = m_asym2_sigma_coeff;
 
         sigma = sigma*coeff;
-        const Float64 xsurc = xc/sigma;
-        const Float64 alpha = m_asym2_alpha;
+        xsurc = xc/sigma;
+        alpha = m_asym2_alpha;
         val = exp(-0.5*xsurc*xsurc)*(1.0+erf(alpha/sqrt(2.0)*xsurc));
-    }else if(profile=="ASYMFIT" || profile.find("ASYMFIXED")!=std::string::npos){
-        const Float64 coeff = m_asymfit_sigma_coeff;
-        const Float64 xcd = xc+m_asymfit_delta;
+        break;
+    case CRay::ASYMFIT:
+    case CRay::ASYMFIXED:
+        coeff = m_asymfit_sigma_coeff;
+        xcd = xc+m_asymfit_delta;
 
         sigma = sigma*coeff;
-        const Float64 xsurc = xcd/sigma;
-        const Float64 alpha = m_asymfit_alpha;
+        xsurc = xcd/sigma;
+        alpha = m_asymfit_alpha;
         val = exp(-0.5*xsurc*xsurc)*(1.0+erf(alpha/sqrt(2.0)*xsurc));
-    }else if(profile=="EXTINCT"){
-        Float64 sigma_rest = m_dataN*m_dataStepLambda;
-        Float64 z = sigma/sigma_rest - 1.0;
-        Float64 dataStartLambda = (x0/(1+z)) - sigma_rest/2.0;
-        Int32 valI = int( (x/(1.0+z)-dataStartLambda)/m_dataStepLambda );
+        break;
+    case CRay::EXTINCT:
+        sigma_rest = m_dataN*m_dataStepLambda;
+        z = sigma/sigma_rest - 1.0;
+        dataStartLambda = (x0/(1+z)) - sigma_rest/2.0;
+        valI = int( (x/(1.0+z)-dataStartLambda)/m_dataStepLambda );
         return m_dataExtinctionFlux[valI];
+    default:
+        Log.LogError("Invalid ray profile %d", profile);
+        throw std::runtime_error("Invalid profile");
     }
 
     //WARNING/TODO/CHECK: this allows multirollmodel to fit the fluxes directly
@@ -230,173 +246,183 @@ Float64 CLineModelElement::GetLineProfile(std::string profile, Float64 x, Float6
 }
 
 
-Float64 CLineModelElement::GetLineFlux(std::string profile, Float64 sigma, Float64 A)
+Float64 CLineModelElement::GetLineFlux(CRay::TProfile profile, Float64 sigma, Float64 A)
 {
     Float64 val=0.0;
-    if(profile=="SYM"){
+    switch (profile) {
+    case CRay::SYM:
         val = A*sigma*sqrt(2*M_PI);
-    }else if(profile=="LOR"){
+        break;
+    case CRay::LOR:
         val = A*sigma*M_PI;
-    }else if(profile=="ASYM"){
+        break;
+    case CRay::ASYM:
         val = A*sigma*sqrt(2*M_PI);
-    }else if(profile=="ASYMFIT" || profile.find("ASYMFIXED")!=std::string::npos){
+        break;
+    case CRay::ASYMFIT:
+    case CRay::ASYMFIXED:
         val = A*sigma*m_asymfit_sigma_coeff*sqrt(2*M_PI); //not checked if this analytic integral is correct
+        break;
+    default:
+        Log.LogError("Invalid ray profile for GetLineFlux : %d", profile);
+        throw std::runtime_error("Invalid profile");
     }
     return val;
 }
 
-Float64 CLineModelElement::GetLineProfileDerivZ(std::string profile, Float64 x, Float64 lambda0, Float64 redshift, Float64 sigma){
+Float64 CLineModelElement::GetLineProfileDerivZ(CRay::TProfile profile, Float64 x, Float64 lambda0, Float64 redshift, Float64 sigma){
   Float64 xc = x-lambda0*(1+redshift);
   Float64 val=0.0;
-  if(profile=="SYM"){
-      const Float64 xsurc = xc/sigma;
+  Float64 xsurc, coeff, alpha, xcd;
+
+  switch (profile) {
+  case CRay::SYM:
+      xsurc = xc/sigma;
       val = lambda0 /sigma * xsurc * exp(-0.5*xsurc*xsurc);
-  }else if (profile == "SYMXL"){
-      const Float64 coeff = m_symxl_sigma_coeff;
+      break;
+  case CRay::SYMXL:
+      coeff = m_symxl_sigma_coeff;
       sigma = sigma*coeff;
-      const Float64 xsurc = xc/sigma;
+      xsurc = xc/sigma;
       val = lambda0 /sigma * xsurc * exp(-0.5*xsurc*xsurc);
-    }else if(profile == "ASYM"){
-      const Float64 coeff = m_asym_sigma_coeff;
+      break;
+  case CRay::ASYM:
+      coeff = m_asym_sigma_coeff;
       sigma = sigma*coeff;
-      const Float64 xsurc = xc/sigma;
-      const Float64 alpha = m_asym_alpha;
+      xsurc = xc/sigma;
+      alpha = m_asym_alpha;
       val = lambda0 /sigma * xsurc * exp(-0.5*xsurc*xsurc) *(1.0+erf(alpha/sqrt(2.0)*xsurc)) -alpha * lambda0 /sqrt(2*M_PI) /sigma * exp(-(1+alpha*alpha)/2 * xsurc * xsurc);
-    }else if (profile == "ASYM2"){
-      const Float64 coeff = m_asym2_sigma_coeff;
+      break;
+  case CRay::ASYM2:
+      coeff = m_asym2_sigma_coeff;
       sigma = sigma*coeff;
-      const Float64 xsurc = xc/sigma;
-      const Float64 alpha = m_asym2_alpha;
+      xsurc = xc/sigma;
+      alpha = m_asym2_alpha;
       val = lambda0 /sigma * xsurc * exp(-0.5*xsurc*xsurc) *(1.0+erf(alpha/sqrt(2.0)*xsurc)) -alpha * lambda0 /sqrt(2*M_PI) /sigma * exp(-(1+alpha*alpha)/2 * xsurc * xsurc);
-    }else if(profile=="ASYMFIT" || profile.find("ASYMFIXED")!=std::string::npos){
-      const Float64 coeff = m_asymfit_sigma_coeff;
-      const Float64 xcd = xc+m_asymfit_delta;
+      break;
+  case CRay::ASYMFIT:
+  case CRay::ASYMFIXED:
+      coeff = m_asymfit_sigma_coeff;
+      xcd = xc+m_asymfit_delta;
 
       sigma = sigma*coeff;
-      const Float64 xsurc = xcd/sigma;
-      const Float64 alpha = m_asymfit_alpha;
+      xsurc = xcd/sigma;
+      alpha = m_asymfit_alpha;
       val = lambda0 /sigma * xsurc * exp(-0.5*xsurc*xsurc) *(1.0+erf(alpha/sqrt(2.0)*xsurc)) -alpha * lambda0 /sqrt(2*M_PI) /sigma * exp(-(1+alpha*alpha)/2 * xsurc * xsurc);
-
-  }else{
-    Log.LogError("Deriv for Z not IMPLEMENTED for profile %s", profile.c_str());
+      break;
+  default:
+      Log.LogError("Deriv for Z not IMPLEMENTED for profile %d", profile);
+      throw std::runtime_error("Invalid profile");
   }
   return val;
 }
 
-Float64 CLineModelElement::GetLineProfileDerivVel(std::string profile, Float64 x, Float64 x0, Float64 sigma, Bool isEmission){
+Float64 CLineModelElement::GetLineProfileDerivVel(CRay::TProfile profile, Float64 x, Float64 x0, Float64 sigma, Bool isEmission){
     const Float64 c = 300000.0;
     const Float64 pfsSimuCompensationFactor = 1.0;
-    Float64 v;
-    Float64 v_to_sigma;
+    Float64 v, v_to_sigma;
 
     switch (m_LineWidthType) {
     case INSTRUMENTDRIVEN:
-        return 0.0;
     case FIXED:
         return 0.0;
     case COMBINED:
-        v = m_VelocityEmission;
-        if(!isEmission){
-            v = m_VelocityAbsorption;
-        }
+    case NISPSIM2016:
+    case NISPVSSPSF201707: //not supported as of 2017-07
+        v = isEmission ? m_VelocityEmission : m_VelocityAbsorption;
         v_to_sigma = pfsSimuCompensationFactor/c*x0; //velocity sigma = v_to_sigma * v
-        return v_to_sigma * v_to_sigma * v /sigma * GetLineProfileDerivSigma(profile,x,x0,sigma);
+        return v_to_sigma * v_to_sigma * v /sigma * GetLineProfileDerivSigma(profile, x, x0, sigma);
     case VELOCITYDRIVEN:
         v_to_sigma = pfsSimuCompensationFactor/c*x0;
-        return v_to_sigma* GetLineProfileDerivSigma(profile, x,x0,sigma);
-    case NISPSIM2016:
-        v = m_VelocityEmission;
-        if(!isEmission){
-            v = m_VelocityAbsorption;
-        }
-        v_to_sigma = pfsSimuCompensationFactor/c*x0; //velocity sigma = v_to_sigma * v
-        return v_to_sigma * v_to_sigma * v /sigma * GetLineProfileDerivSigma(profile, x,x0,sigma);
-    case NISPVSSPSF201707: //not supported as of 2017-07
-        v = m_VelocityEmission;
-        if(!isEmission){
-            v = m_VelocityAbsorption;
-        }
-        v_to_sigma = pfsSimuCompensationFactor/c*x0; //velocity sigma = v_to_sigma * v
-        return v_to_sigma * v_to_sigma * v /sigma * GetLineProfileDerivSigma(profile, x,x0,sigma);
+        return v_to_sigma * GetLineProfileDerivSigma(profile, x, x0, sigma);
     default:
-        Log.LogError("Invalid LineWidthType %d", m_LineWidthType);
+        Log.LogError("Invalid LineWidthType : %d", m_LineWidthType);
         throw std::runtime_error("Unknown LineWidthType");
     }
     return 0.0;
 }
 
-Float64 CLineModelElement::GetLineProfileDerivSigma(std::string profile, Float64 x, Float64 x0, Float64 sigma)
+Float64 CLineModelElement::GetLineProfileDerivSigma(CRay::TProfile profile, Float64 x, Float64 x0, Float64 sigma)
 {
     Float64 val=0.0;
     //Float64 cel = 300000.0;
     Float64 xc = x-x0;
-    if(profile=="SYM"){
-        const Float64 xsurc = xc/sigma;
+    Float64 xsurc, coeff, alpha, valsym, valsymd, valasym, arg, valasymd, xcd;
+    Float64 sigma_rest, z, dataStartLambda;
+    Int32 valI;
+
+    switch (profile) {
+    case CRay::SYM:
+        xsurc = xc/sigma;
         val = xc*xc  /(sigma*sigma*sigma) * exp(-0.5*xsurc*xsurc);
-    }else if(profile=="SYMXL"){
-        const Float64 coeff = m_symxl_sigma_coeff;
+        break;
+    case CRay::SYMXL:
+        coeff = m_symxl_sigma_coeff;
         sigma = sigma*coeff;
-        const Float64 xsurc = xc/sigma;
+        xsurc = xc/sigma;
         val = xc*xc/(sigma*sigma*sigma) * exp(-0.5*xsurc*xsurc);
-    }else if(profile=="ASYM"){
-        const Float64 coeff = m_asym_sigma_coeff;
+        break;
+    case CRay::ASYM:
+        coeff = m_asym_sigma_coeff;
 
         sigma = sigma*coeff;
-        const Float64 xsurc = xc/sigma;
-        const Float64 alpha = m_asym_alpha;
-        const Float64 valsym = exp(-0.5*xsurc*xsurc);
-        const Float64 valsymd = xc*xc/(sigma*sigma*sigma) * exp(-0.5*xsurc*xsurc);
+        xsurc = xc/sigma;
+        alpha = m_asym_alpha;
+        valsym = exp(-0.5*xsurc*xsurc);
+        valsymd = xc*xc/(sigma*sigma*sigma) * exp(-0.5*xsurc*xsurc);
 
-        const Float64 valasym = (1.0+erf(alpha/sqrt(2.0)*xsurc));
-        const Float64 arg = alpha*xc/sqrt(2)/sigma;
+        valasym = (1.0+erf(alpha/sqrt(2.0)*xsurc));
+        arg = alpha*xc/sqrt(2)/sigma;
         //const Float64 valasymd = -alpha/sqrt(2*M_PI)*xc /(sigma*sigma) /cel*x0*exp(-arg*arg);
-        const Float64 valasymd = -alpha*sqrt(2)/sqrt(M_PI)*xc /(sigma*sigma)*exp(-arg*arg);
+        valasymd = -alpha*sqrt(2)/sqrt(M_PI)*xc /(sigma*sigma)*exp(-arg*arg);
         val = valsym*valasymd+valsymd*valasym;
         //val = valsymd;
 
         //Float64 v = sigma*cel/x0;
         //val = -sqrt(2)*alpha*cel*(x - x0)*exp(-0.5*pow(cel*(x - x0)/(v*x0),2))*exp(-pow(alpha*cel*(x - x0), 2)/(2*pow(v*x0, 2)))/(sqrt(M_PI)*pow(v,2)*x0) + 1.0*pow(cel*(x - x0),2)*(erf(sqrt(2)*alpha*cel*(x - x0)/(2*v*x0)) + 1)*exp(-0.5*pow(cel*(x - x0)/(v*x0),2))/(pow(v,3)*pow(x0,2));
-
-    }else if(profile=="ASYM2"){
-        const Float64 coeff = m_asym2_sigma_coeff;
+        break;
+    case CRay::ASYM2:
+        coeff = m_asym2_sigma_coeff;
 
         sigma = sigma*coeff;
-        const Float64 xsurc = xc/sigma;
-        const Float64 alpha = m_asym2_alpha;
-        const Float64 valsym = exp(-0.5*xsurc*xsurc);
-        const Float64 valsymd = xc*xc /(sigma*sigma*sigma) * exp(-0.5*xsurc*xsurc);
+        xsurc = xc/sigma;
+        alpha = m_asym2_alpha;
+        valsym = exp(-0.5*xsurc*xsurc);
+        valsymd = xc*xc /(sigma*sigma*sigma) * exp(-0.5*xsurc*xsurc);
 
-        const Float64 valasym = (1.0+erf(alpha/sqrt(2.0)*xsurc));
-        const Float64 arg = alpha*xc/sqrt(2)/sigma;
+        valasym = (1.0+erf(alpha/sqrt(2.0)*xsurc));
+        arg = alpha*xc/sqrt(2)/sigma;
         //const Float64 valasymd = -alpha/sqrt(2*M_PI)*xc /(sigma*sigma) /cel*x0*exp(-arg*arg);
-        const Float64 valasymd = -alpha*sqrt(2)/sqrt(M_PI)*xc /(sigma*sigma)*exp(-arg*arg);
+        valasymd = -alpha*sqrt(2)/sqrt(M_PI)*xc /(sigma*sigma)*exp(-arg*arg);
         val = valsym*valasymd+valsymd*valasym;
         //val = valsymd;
 
         //Float64 v = sigma*cel/x0;
         //val = -sqrt(2)*alpha*cel*(x - x0)*exp(-0.5*pow(cel*(x - x0)/(v*x0),2))*exp(-pow(alpha*cel*(x - x0), 2)/(2*pow(v*x0, 2)))/(sqrt(M_PI)*pow(v,2)*x0) + 1.0*pow(cel*(x - x0),2)*(erf(sqrt(2)*alpha*cel*(x - x0)/(2*v*x0)) + 1)*exp(-0.5*pow(cel*(x - x0)/(v*x0),2))/(pow(v,3)*pow(x0,2));
-
-    }else if(profile=="ASYMFIT"  || profile.find("ASYMFIXED")!=std::string::npos){
-        const Float64 coeff = m_asymfit_sigma_coeff;
-        const Float64 xcd = xc+m_asymfit_delta;
+        break;
+    case CRay::ASYMFIT:
+    case CRay::ASYMFIXED:
+        coeff = m_asymfit_sigma_coeff;
+        xcd = xc+m_asymfit_delta;
 
         sigma = sigma*coeff;
-        const Float64 xsurc = xcd/sigma;
-        const Float64 alpha = m_asymfit_alpha;
-        const Float64 valsym = exp(-0.5*xsurc*xsurc);
-        const Float64 valsymd = xcd*xcd  /(sigma*sigma*sigma) * exp(-0.5*xsurc*xsurc);
+        xsurc = xcd/sigma;
+        alpha = m_asymfit_alpha;
+        valsym = exp(-0.5*xsurc*xsurc);
+        valsymd = xcd*xcd  /(sigma*sigma*sigma) * exp(-0.5*xsurc*xsurc);
 
-        const Float64 valasym = (1.0+erf(alpha/sqrt(2.0)*xsurc));
-        const Float64 arg = alpha*xcd/sqrt(2)/sigma;
+        valasym = (1.0+erf(alpha/sqrt(2.0)*xsurc));
+        arg = alpha*xcd/sqrt(2)/sigma;
         //const Float64 valasymd = -alpha/sqrt(2*M_PI)*xcd /(sigma*sigma) /cel*x0*exp(-arg*arg);
-        const Float64 valasymd = -alpha*sqrt(2)/sqrt(M_PI)*xcd /(sigma*sigma)*exp(-arg*arg);
+        valasymd = -alpha*sqrt(2)/sqrt(M_PI)*xcd /(sigma*sigma)*exp(-arg*arg);
         val = valsym*valasymd+valsymd*valasym;
         //val = valsymd;
 
         //Float64 v = sigma*cel/x0;
         //val = -sqrt(2)*alpha*cel*(x - x0)*exp(-0.5*pow(cel*(x - x0)/(v*x0),2))*exp(-pow(alpha*cel*(x - x0), 2)/(2*pow(v*x0, 2)))/(sqrt(M_PI)*pow(v,2)*x0) + 1.0*pow(cel*(x - x0),2)*(erf(sqrt(2)*alpha*cel*(x - x0)/(2*v*x0)) + 1)*exp(-0.5*pow(cel*(x - x0)/(v*x0),2))/(pow(v,3)*pow(x0,2));
-
-    }else if(profile=="EXTINCT"){ //NOT IMPLEMENTED FOR THIS PROFILE, to be done when necessary...
+        break;
+    case CRay::EXTINCT:
+        //NOT IMPLEMENTED FOR THIS PROFILE, to be done when necessary...
         Float64 sigma_rest = m_dataN*m_dataStepLambda;
         Float64 z = sigma/sigma_rest - 1.0;
         Float64 dataStartLambda = (x0/(1+z)) - sigma_rest/2.0;
@@ -406,25 +432,37 @@ Float64 CLineModelElement::GetLineProfileDerivSigma(std::string profile, Float64
     return val;
 }
 
-Float64 CLineModelElement::GetNSigmaSupport(std::string profile)
+Float64 CLineModelElement::GetNSigmaSupport(CRay::TProfile profile)
 {
     static Float64 nominal = 8;
     Float64 val=nominal;
 
-    if(profile=="SYM"){
+    switch (profile) {
+    case CRay::SYM:
         val = nominal;
-    }else if(profile=="LOR"){
+        break;
+    case CRay::LOR:
         val = nominal*2.0;
-    }else if(profile=="ASYM"){
+        break;
+    case CRay::ASYM:
         val = nominal*m_asym_sigma_coeff;
-    }else if(profile=="ASYM2"){
+        break;
+    case CRay::ASYM2:
         val = nominal*m_asym2_sigma_coeff;
-    }else if(profile=="SYMXL"){
+        break;
+    case CRay::SYMXL:
         val = nominal*m_symxl_sigma_coeff;
-    }else if(profile=="ASYMFIT"  || profile.find("ASYMFIXED")!=std::string::npos){
+        break;
+    case CRay::ASYMFIT:
+    case CRay::ASYMFIXED:
         val = nominal*m_asymfit_sigma_coeff*2.5;
-    }else if(profile=="EXTINCT"){
+        break;
+    case CRay::EXTINCT:
         val = 1.0;
+        break;
+    default:
+        Log.LogError("Invalid ray profile for GetNSigmaSupport : %d", profile);
+        throw std::runtime_error("Invalid profile");
     }
     return val;
 }

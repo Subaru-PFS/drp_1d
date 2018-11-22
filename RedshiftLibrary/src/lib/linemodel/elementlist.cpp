@@ -5,6 +5,7 @@
 #include <RedshiftLibrary/ray/catalogsTplShape.h>
 #include <RedshiftLibrary/ray/catalogsOffsets.h>
 #include <RedshiftLibrary/ray/linetags.h>
+#include <RedshiftLibrary/ray/ray.h>
 
 #include <gsl/gsl_multifit.h>
 #include <RedshiftLibrary/spectrum/io/genericreader.h>
@@ -3518,7 +3519,7 @@ std::vector<UInt32> CLineModelElementList::getOverlappingElementsBySupport( UInt
     CRay ray = m_RestRayList[m_Elements[ind]->m_LineCatalogIndexes[0]];
     Int32 linetype = ray.GetType();
     Float64 mu = ray.GetPosition()*(1+m_Redshift);
-    std::string profile = ray.GetProfile();
+    CRay::TProfile profile = ray.GetProfile();
     Float64 c = m_Elements[ind]->GetLineWidth(mu, m_Redshift, ray.GetIsEmission(), profile);
     Float64 winsize = m_Elements[ind]->GetNSigmaSupport(profile)*c;
     Float64 overlapThresholdMin = winsize*overlapThres;
@@ -3623,7 +3624,7 @@ std::vector<UInt32> CLineModelElementList::getOverlappingElements(UInt32 ind, st
             for( UInt32 iRayRef=0; iRayRef<raysRef.size(); iRayRef++ )
             {
                 Float64 muRef = raysRef[iRayRef].GetPosition()*(1+m_Redshift);
-                std::string profileRef = raysRef[iRayRef].GetProfile();
+                CRay::TProfile profileRef = raysRef[iRayRef].GetProfile();
                 Float64 cRef = m_Elements[ind]->GetLineWidth(muRef, m_Redshift, raysRef[iRayRef].GetIsEmission(), profileRef);
                 Float64 winsizeRef = m_Elements[ind]->GetNSigmaSupport(profileRef)*cRef;
                 Float64 overlapSizeMin = winsizeRef*overlapThres;
@@ -3631,7 +3632,7 @@ std::vector<UInt32> CLineModelElementList::getOverlappingElements(UInt32 ind, st
                 xsup = muRef+winsizeRef/2.0;
 
                 Float64 muElt = raysElt[iRayElt].GetPosition()*(1+m_Redshift);
-                std::string profileElt = raysElt[iRayElt].GetProfile();
+                CRay::TProfile profileElt = raysElt[iRayElt].GetProfile();
                 Float64 cElt = m_Elements[iElts]->GetLineWidth(muElt, m_Redshift, raysElt[iRayElt].GetIsEmission(), profileElt);
                 Float64 winsizeElt = m_Elements[iElts]->GetNSigmaSupport(profileElt)*cElt;
                 yinf = muElt-winsizeElt/2.0;
@@ -4265,57 +4266,31 @@ Int32 CLineModelElementList::setLyaProfile(Float64 redshift, const CSpectrumSpec
     //2. check if the profile has to be fitted
     bool asimfitProfileFound = false;
     bool asimfixedProfileFound = false;
-    std::string profileFixedStr = "";
+
     Int32 nrays = m_Elements[idxLyaE]->GetSize();
     for(Int32 iray=0; iray<nrays; iray++)
     {
         Int32 lineIndex = m_Elements[idxLyaE]->m_LineCatalogIndexes[iray];
-        std::string strProfile = m_RestRayList[lineIndex].GetProfile();
-        //boost::algorithm::to_lower(strProfile);
+        CRay::TProfile profile = m_RestRayList[lineIndex].GetProfile();
         bool lineOutsideLambdaRange = m_Elements[idxLyaE]->IsOutsideLambdaRange();
-        if( strProfile=="ASYMFIT" && !lineOutsideLambdaRange)
+        if( profile==CRay::ASYMFIT && !lineOutsideLambdaRange)
         {
             asimfitProfileFound = true;
             break;
-        }else if(strProfile.find("ASYMFIXED")!= std::string::npos)
+        }else if(profile==CRay::ASYMFIXED)
         {
+            //use the manual fixed profile parameters from catalog profile string
             asimfixedProfileFound = true;
-            profileFixedStr = strProfile;
+            TAsymParams asym_params = m_RestRayList[lineIndex].GetAsymParams();
+            m_Elements[idxLyaE]->SetAsymfitWidthCoeff(asym_params.width);
+            m_Elements[idxLyaE]->SetAsymfitAlphaCoeff(asym_params.alpha);
+            m_Elements[idxLyaE]->SetAsymfitDelta(asym_params.delta);
             break;
         }
     }
     if( !asimfitProfileFound && !asimfixedProfileFound)
     {
         return 3; //no profile found with parameters to be fitted
-    }
-
-    //use the manual fixed profile parameters from catalog profile string
-    if(asimfixedProfileFound)
-    {
-        if(verbose)
-        {
-            Log.LogInfo("Setting Lya Profile from catalog");
-        }
-        std::vector < std::string > numbers;
-        std::string  temp;
-
-        while (profileFixedStr.find("_", 0) != std::string::npos)
-        {
-            //does the string have an underscore in it?
-            size_t  pos = profileFixedStr.find("_", 0); //store the position of the delimiter
-            temp = profileFixedStr.substr(0, pos);      //get the token
-            profileFixedStr.erase(0, pos + 1);          //erase it from the source
-            numbers.push_back(temp);                //and put it into the array
-        }
-        numbers.push_back(profileFixedStr);
-        if(numbers.size()==4)
-        {
-            //set the associated Lya members in the element definition
-            m_Elements[idxLyaE]->SetAsymfitWidthCoeff(std::stod(numbers[1]));
-            m_Elements[idxLyaE]->SetAsymfitAlphaCoeff(std::stod(numbers[2]));
-            m_Elements[idxLyaE]->SetAsymfitDelta(std::stod(numbers[3]));
-        }
-
     }
 
     //FIT the profile parameters

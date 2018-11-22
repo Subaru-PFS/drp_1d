@@ -58,6 +58,7 @@ ENDIF()
 IF(GPROF)
   SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -pg")
 ENDIF()
+
 #--------------------------------------------------------
 # Exported configuration variables
 #--------------------------------------------------------

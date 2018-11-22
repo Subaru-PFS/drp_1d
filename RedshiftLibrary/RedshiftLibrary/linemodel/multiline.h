@@ -87,7 +87,7 @@ private:
 
     TFloat64List        mBuffer_mu;
     TFloat64List        mBuffer_c;
-    TStringList    m_profile;
+    CRay::TProfileList  m_profile;
 
 
     TInt32List          m_StartNoOverlap;

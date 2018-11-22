@@ -133,17 +133,17 @@ class CLineModelElement
 
     std::vector<Int32> m_LineCatalogIndexes;
     Float64 GetLineWidth(Float64 lambda, Float64 z, Bool isEmission,
-                         std::string profile);
-    Float64 GetLineProfile(std::string profile, Float64 x, Float64 x0,
+                         CRay::TProfile profile);
+    Float64 GetLineProfile(CRay::TProfile profile, Float64 x, Float64 x0,
                            Float64 c);
-    Float64 GetLineProfileDerivVel(std::string profile, Float64 x, Float64 x0,
+    Float64 GetLineProfileDerivVel(CRay::TProfile profile, Float64 x, Float64 x0,
                                    Float64 sigma, Bool isEmission);
-    Float64 GetLineProfileDerivZ(std::string profile, Float64 x, Float64 mu0,
+    Float64 GetLineProfileDerivZ(CRay::TProfile profile, Float64 x, Float64 mu0,
                                  Float64 redshift, Float64 sigma);
-    Float64 GetLineProfileDerivSigma(std::string profile, Float64 x, Float64 x0,
+    Float64 GetLineProfileDerivSigma(CRay::TProfile profile, Float64 x, Float64 x0,
                                      Float64 sigma);
-    Float64 GetNSigmaSupport(std::string profile);
-    Float64 GetLineFlux(std::string profile, Float64 sigma, Float64 A);
+    Float64 GetNSigmaSupport(CRay::TProfile profile);
+    Float64 GetLineFlux(CRay::TProfile profile, Float64 sigma, Float64 A);
 
     Float64 GetSumCross();
     void SetSumCross(Float64 val);

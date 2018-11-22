@@ -1,3 +1,4 @@
+#include <RedshiftLibrary/log/log.h>
 #include <RedshiftLibrary/ray/ray.h>
 
 using namespace NSEpic;
@@ -11,7 +12,7 @@ CRay::CRay()
 
 CRay::CRay(const string& name,
            Float64 pos, UInt32 type,
-           std::string profile,
+           CRay::TProfile profile,
            UInt32 force,
            Float64 amp,
            Float64 width,
@@ -21,7 +22,8 @@ CRay::CRay(const string& name,
            Float64 ampErr,
            const std::string& groupName,
            Float64 nominalAmp,
-           const string &velGroupName)
+           const string &velGroupName,
+           TAsymParams asymParams)
 {
     m_Name = name;
     m_Pos = pos;
@@ -46,6 +48,8 @@ CRay::CRay(const string& name,
     m_OffsetFit = false;
 
     m_VelGroupName = velGroupName;
+
+    m_asymParams = asymParams;
 }
 
 CRay::~CRay()
@@ -87,12 +91,12 @@ Int32 CRay::GetType() const
     return m_Type;
 }
 
-std::string CRay::GetProfile() const
+CRay::TProfile CRay::GetProfile() const
 {
     return m_Profile;
 }
 
-bool CRay::SetProfile(std::string profile)
+bool CRay::SetProfile(CRay::TProfile profile)
 {
     m_Profile = profile;
     return true;

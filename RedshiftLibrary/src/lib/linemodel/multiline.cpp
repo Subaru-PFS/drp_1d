@@ -758,7 +758,7 @@ void CMultiLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const C
             Log.LogDebug("    mBuffer_c[k2]:%e", mBuffer_c[k2]);
             Log.LogDebug("    m_Rays[k2].GetIsEmission():%d", m_Rays[k2].GetIsEmission());
             Log.LogDebug("    redshift:%e", redshift);
-            Log.LogDebug("    m_profile[k2]:%s", m_profile[k2].c_str());
+            Log.LogDebug("    m_profile[k2]:%d", m_profile[k2]);
         }
       }
 

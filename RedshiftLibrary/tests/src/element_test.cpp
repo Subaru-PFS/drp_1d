@@ -13,7 +13,7 @@ BOOST_AUTO_TEST_SUITE(test_element)
 
 BOOST_AUTO_TEST_CASE(Instance){
 
-  CRay ray = CRay("O2",0.1, 1, "SYM", 2, 0.2, 0.3, 0.4 ,0.5 , 0.6, 0.7, "group", 0.8);
+  CRay ray = CRay("O2",0.1, 1, CRay::SYM, 2, 0.2, 0.3, 0.4 ,0.5 , 0.6, 0.7, "group", 0.8);
   std::vector<CRay> rs;
   rs.push_back(ray);
   std::vector<Float64> nominalAmplitudes = std::vector<Float64> ();
@@ -57,7 +57,7 @@ BOOST_AUTO_TEST_CASE(Instance){
 
 BOOST_AUTO_TEST_CASE(GetLineWidth){
 
-    CRay ray = CRay("Halpha",6564.61, 2, "SYM", 2,1.0, 0.5);
+    CRay ray = CRay("Halpha",6564.61, 2, CRay::SYM, 2,1.0, 0.5);
     std::vector<CRay> rs;
     rs.push_back(ray);
     std::vector<Float64> nominalAmplitudes = std::vector<Float64> ();
@@ -72,22 +72,22 @@ BOOST_AUTO_TEST_CASE(GetLineWidth){
     CMultiLine elementVD = CMultiLine(rs,  "velocitydriven",  0.9, 1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes);
     CMultiLine elementNip = CMultiLine(rs,  "nispsim2016",  0.9, 1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes);
 
-    BOOST_CHECK_CLOSE( 3346.06, elementID.GetLineWidth(10000., 1., true, ""), 0.001);
-    BOOST_CHECK_CLOSE( 3346.06, elementID.GetLineWidth(10000., 1., false, ""),0.001);
-    BOOST_CHECK_CLOSE( 1.2,  elementfixed.GetLineWidth(10000., 1., true, ""),0.001);
-    BOOST_CHECK_CLOSE( 1.2, elementfixed.GetLineWidth(10000., 1., false, ""),0.001);
-    BOOST_CHECK_CLOSE( 3346.06, elementcombined.GetLineWidth(10000., 1., true, ""),0.001);
-    BOOST_CHECK_CLOSE( 3346.06, elementcombined.GetLineWidth(10000., 1., false, ""),0.001);
-    BOOST_CHECK_CLOSE( 0.0333333, elementVD.GetLineWidth(10000., 1., true, ""), 0.001);
-    BOOST_CHECK_CLOSE( 0.0366667, elementVD.GetLineWidth(10000., 1., false, ""), 0.001);
-    BOOST_CHECK_CLOSE( 6.61532, elementNip.GetLineWidth(10000., 1., true, ""), 0.001);
-    BOOST_CHECK_CLOSE( 6.61534, elementNip.GetLineWidth(10000., 1., false, ""), 0.001);
-    BOOST_CHECK_CLOSE( 600., elementNip.GetLineWidth(10000., 1., false, "EXTINCT"), 0.001);
+    BOOST_CHECK_CLOSE( 3346.06, elementID.GetLineWidth(10000., 1., true, CRay::NONE), 0.001);
+    BOOST_CHECK_CLOSE( 3346.06, elementID.GetLineWidth(10000., 1., false, CRay::NONE),0.001);
+    BOOST_CHECK_CLOSE( 1.2,  elementfixed.GetLineWidth(10000., 1., true, CRay::NONE),0.001);
+    BOOST_CHECK_CLOSE( 1.2, elementfixed.GetLineWidth(10000., 1., false, CRay::NONE),0.001);
+    BOOST_CHECK_CLOSE( 3346.06, elementcombined.GetLineWidth(10000., 1., true, CRay::NONE),0.001);
+    BOOST_CHECK_CLOSE( 3346.06, elementcombined.GetLineWidth(10000., 1., false, CRay::NONE),0.001);
+    BOOST_CHECK_CLOSE( 0.0333333, elementVD.GetLineWidth(10000., 1., true, CRay::NONE), 0.001);
+    BOOST_CHECK_CLOSE( 0.0366667, elementVD.GetLineWidth(10000., 1., false, CRay::NONE), 0.001);
+    BOOST_CHECK_CLOSE( 6.61532, elementNip.GetLineWidth(10000., 1., true, CRay::NONE), 0.001);
+    BOOST_CHECK_CLOSE( 6.61534, elementNip.GetLineWidth(10000., 1., false, CRay::NONE), 0.001);
+    BOOST_CHECK_CLOSE( 600., elementNip.GetLineWidth(10000., 1., false, CRay::EXTINCT), 0.001);
 
 }
 
 BOOST_AUTO_TEST_CASE(GetLineProfile){
-  CRay ray = CRay("Halpha",6564.61, 2, "SYM", 2,1.0, 0.5);
+  CRay ray = CRay("Halpha",6564.61, 2, CRay::SYM, 2,1.0, 0.5);
   std::vector<CRay> rs;
   rs.push_back(ray);
   std::vector<Float64> nominalAmplitudes = std::vector<Float64> ();
@@ -97,19 +97,19 @@ BOOST_AUTO_TEST_CASE(GetLineProfile){
   catalogIndexes.push_back(0);
   CMultiLine element = CMultiLine(rs,  "combined",  0.9, 1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes);
 
-  BOOST_CHECK_CLOSE(0.237755, element.GetLineProfile("SYM",6564.61, 6568., 2. ), 0.001);
-  BOOST_CHECK_CLOSE(0.944159, element.GetLineProfile("SYMXL",6564.61, 6568., 2. ), 0.001);
-  BOOST_CHECK_CLOSE(0.2581961, element.GetLineProfile("LOR",6564.61, 6568., 2. ), 0.001);
-  BOOST_CHECK_CLOSE(0.373055, element.GetLineProfile("ASYM",6564.61, 6565., 2. ), 0.001);
-  BOOST_CHECK_CLOSE(0.0628983, element.GetLineProfile("ASYM2",6564.61, 6568., 2. ), 0.001);
-  BOOST_CHECK_CLOSE(0.0628983, element.GetLineProfile("ASYMFIT",6564.61, 6568., 2. ), 0.001);
-  BOOST_CHECK_CLOSE(0.0628983, element.GetLineProfile("ASYMFIXED",6564.61, 6568., 2. ), 0.001);
-  //BOOST_TEST_MESSAGE("8 " << element.GetLineProfile("EXTINCT",6564.61, 6568., 2. ));
+  BOOST_CHECK_CLOSE(0.237755, element.GetLineProfile(CRay::SYM,6564.61, 6568., 2. ), 0.001);
+  BOOST_CHECK_CLOSE(0.944159, element.GetLineProfile(CRay::SYMXL,6564.61, 6568., 2. ), 0.001);
+  BOOST_CHECK_CLOSE(0.2581961, element.GetLineProfile(CRay::LOR,6564.61, 6568., 2. ), 0.001);
+  BOOST_CHECK_CLOSE(0.373055, element.GetLineProfile(CRay::ASYM,6564.61, 6565., 2. ), 0.001);
+  BOOST_CHECK_CLOSE(0.0628983, element.GetLineProfile(CRay::ASYM2,6564.61, 6568., 2. ), 0.001);
+  BOOST_CHECK_CLOSE(0.0628983, element.GetLineProfile(CRay::ASYMFIT,6564.61, 6568., 2. ), 0.001);
+  BOOST_CHECK_CLOSE(0.0628983, element.GetLineProfile(CRay::ASYMFIXED,6564.61, 6568., 2. ), 0.001);
+  //BOOST_TEST_MESSAGE("8 " << element.GetLineProfile(CRay::EXTINCT,6564.61, 6568., 2. ));
 
 }
 
 BOOST_AUTO_TEST_CASE(GetLineProfileDerivSigma){
-  CRay ray = CRay("Halpha",6564.61, 2, "SYM", 2,1.0, 0.5);
+  CRay ray = CRay("Halpha",6564.61, 2, CRay::SYM, 2,1.0, 0.5);
   std::vector<CRay> rs;
   rs.push_back(ray);
   std::vector<Float64> nominalAmplitudes = std::vector<Float64> ();
@@ -119,17 +119,17 @@ BOOST_AUTO_TEST_CASE(GetLineProfileDerivSigma){
   catalogIndexes.push_back(0);
   CMultiLine element = CMultiLine(rs,  "velocitydriven",  0.9, 1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes);
 
-  BOOST_CHECK_CLOSE(0.34153872866337925, element.GetLineProfileDerivSigma("SYM", 6564.61, 6568., 2. ), 0.001);
-  BOOST_CHECK_CLOSE(0.010850371757731672, element.GetLineProfileDerivSigma("SYMXL", 6564.61, 6568., 2. ), 0.001);
-  BOOST_CHECK_CLOSE(0.24081246138668605, element.GetLineProfileDerivSigma("ASYM", 6564.61, 6565., 2. ), 0.001);
-  BOOST_CHECK_CLOSE(0.067426590554372501, element.GetLineProfileDerivSigma("ASYM2", 6564.61, 6568., 2. ), 0.001);
-  BOOST_CHECK_CLOSE(0.067426590554372501, element.GetLineProfileDerivSigma("ASYMFIT", 6564.61, 6568., 2. ), 0.001);
-  BOOST_CHECK_CLOSE(0.067426590554372501, element.GetLineProfileDerivSigma("ASYMFIXED", 6564.61, 6568., 2. ), 0.001);
+  BOOST_CHECK_CLOSE(0.34153872866337925, element.GetLineProfileDerivSigma(CRay::SYM, 6564.61, 6568., 2. ), 0.001);
+  BOOST_CHECK_CLOSE(0.010850371757731672, element.GetLineProfileDerivSigma(CRay::SYMXL, 6564.61, 6568., 2. ), 0.001);
+  BOOST_CHECK_CLOSE(0.24081246138668605, element.GetLineProfileDerivSigma(CRay::ASYM, 6564.61, 6565., 2. ), 0.001);
+  BOOST_CHECK_CLOSE(0.067426590554372501, element.GetLineProfileDerivSigma(CRay::ASYM2, 6564.61, 6568., 2. ), 0.001);
+  BOOST_CHECK_CLOSE(0.067426590554372501, element.GetLineProfileDerivSigma(CRay::ASYMFIT, 6564.61, 6568., 2. ), 0.001);
+  BOOST_CHECK_CLOSE(0.067426590554372501, element.GetLineProfileDerivSigma(CRay::ASYMFIXED, 6564.61, 6568., 2. ), 0.001);
 }
 
 
 BOOST_AUTO_TEST_CASE(GetNSigmaSupport){
-  CRay ray = CRay("Halpha",6564.61, 2, "SYM", 2,1.0, 0.5);
+  CRay ray = CRay("Halpha",6564.61, 2, CRay::SYM, 2,1.0, 0.5);
   std::vector<CRay> rs;
   rs.push_back(ray);
   std::vector<Float64> nominalAmplitudes = std::vector<Float64> ();
@@ -140,13 +140,13 @@ BOOST_AUTO_TEST_CASE(GetNSigmaSupport){
   CMultiLine element = CMultiLine(rs,  "nispsim2016",  0.9, 1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes);
 
 
-  BOOST_CHECK_CLOSE(8., element.GetNSigmaSupport("SYM" ), 0.001);
-  BOOST_CHECK_CLOSE(16., element.GetNSigmaSupport("LOR" ), 0.001);
-  BOOST_CHECK_CLOSE(8., element.GetNSigmaSupport("ASYM" ), 0.001);
-  BOOST_CHECK_CLOSE(16., element.GetNSigmaSupport("ASYM2" ), 0.001);
-  BOOST_CHECK_CLOSE(40., element.GetNSigmaSupport("SYMXL" ), 0.001);
-  BOOST_CHECK_CLOSE(40., element.GetNSigmaSupport("ASYMFIT" ), 0.001);
-  BOOST_CHECK_CLOSE(40., element.GetNSigmaSupport("ASYMFIXED" ), 0.001);
+  BOOST_CHECK_CLOSE(8., element.GetNSigmaSupport(CRay::SYM), 0.001);
+  BOOST_CHECK_CLOSE(16., element.GetNSigmaSupport(CRay::LOR), 0.001);
+  BOOST_CHECK_CLOSE(8., element.GetNSigmaSupport(CRay::ASYM), 0.001);
+  BOOST_CHECK_CLOSE(16., element.GetNSigmaSupport(CRay::ASYM2), 0.001);
+  BOOST_CHECK_CLOSE(40., element.GetNSigmaSupport(CRay::SYMXL), 0.001);
+  BOOST_CHECK_CLOSE(40., element.GetNSigmaSupport(CRay::ASYMFIT), 0.001);
+  BOOST_CHECK_CLOSE(40., element.GetNSigmaSupport(CRay::ASYMFIXED), 0.001);
 
 }
 

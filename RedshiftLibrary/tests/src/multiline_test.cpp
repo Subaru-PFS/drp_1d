@@ -13,8 +13,8 @@ BOOST_AUTO_TEST_SUITE(test_element)
 
 Float64 precision = 1e-12;
 BOOST_AUTO_TEST_CASE(Instance) {
-  CRay ray = CRay("Abs", 4500., 1, "SYM", 2, 0.2, 0.3);
-  CRay ray2 = CRay("Em", 6564.61, 2, "SYM", 2, 1.0, 0.5);
+  CRay ray = CRay("Abs", 4500., 1, CRay::SYM, 2, 0.2, 0.3);
+  CRay ray2 = CRay("Em", 6564.61, 2, CRay::SYM, 2, 1.0, 0.5);
   std::vector<CRay> rs;
   rs.push_back(ray);
   rs.push_back(ray2);
@@ -31,7 +31,7 @@ BOOST_AUTO_TEST_CASE(Instance) {
     fluxAxis[k] = k;
   }
 
-  CMultiLine element = CMultiLine(rs, "SYMXL", 0.9, 1.0, 1.1, nominalAmplitudes,
+  CMultiLine element = CMultiLine(rs, "fixed", 0.9, 1.0, 1.1, nominalAmplitudes,
                                   1.2, catalogIndexes);
   BOOST_CHECK("Abs" == element.GetRayName(0));
   BOOST_CHECK("-1" == element.GetRayName(2));
@@ -57,9 +57,9 @@ BOOST_AUTO_TEST_CASE(Instance) {
 
 BOOST_AUTO_TEST_CASE(prepareSupportSeparated) {
 
-  CRay ray = CRay("Abs", 5500, 1, "SYM", 2, 10.2, 10.3, 10.4, 10.5, 10.6, 10.7,
+  CRay ray = CRay("Abs", 5500, 1, CRay::SYM, 2, 10.2, 10.3, 10.4, 10.5, 10.6, 10.7,
                   "group", 10.8);
-  CRay ray2 = CRay("Em", 4400, 2, "SYM", 2, 10.2, 10.3, 20.4, 10.5, 10.6, 10.7,
+  CRay ray2 = CRay("Em", 4400, 2, CRay::SYM, 2, 10.2, 10.3, 20.4, 10.5, 10.6, 10.7,
                    "group", 10.8);
   std::vector<CRay> rs;
   rs.push_back(ray);
@@ -169,9 +169,9 @@ BOOST_AUTO_TEST_CASE(prepareSupportSeparated) {
 
 BOOST_AUTO_TEST_CASE(prepareSupportJoined) {
 
-  CRay ray = CRay("Abs", 5500, 1, "SYM", 2, 10.2, 10.3, 10.4, 10.5, 10.6, 10.7,
+  CRay ray = CRay("Abs", 5500, 1, CRay::SYM, 2, 10.2, 10.3, 10.4, 10.5, 10.6, 10.7,
                   "group", 10.8);
-  CRay ray2 = CRay("Em", 5520, 2, "SYM", 2, 10.2, 10.3, 20.4, 10.5, 10.6, 10.7,
+  CRay ray2 = CRay("Em", 5520, 2, CRay::SYM, 2, 10.2, 10.3, 20.4, 10.5, 10.6, 10.7,
                    "group", 10.8);
   std::vector<CRay> rs;
   rs.push_back(ray);
@@ -253,11 +253,11 @@ BOOST_AUTO_TEST_CASE(addModel_SupportAll) {
   // in this case multiline support is equal to spetral axis.
   // So all the bin continuum are duplicate in model after init model
 
-  CRay ray = CRay("Abs", 10, 1, "SYM", 2, 10.2, 10.3, 10.4, 10.5, 10.6, 10.7,
+  CRay ray = CRay("Abs", 10, 1, CRay::SYM, 2, 10.2, 10.3, 10.4, 10.5, 10.6, 10.7,
                   "group", 10.8);
-  CRay ray2 = CRay("Em", 15, 2, "SYM", 2, 10.2, 10.3, 20.4, 10.5, 10.6, 10.7,
+  CRay ray2 = CRay("Em", 15, 2, CRay::SYM, 2, 10.2, 10.3, 20.4, 10.5, 10.6, 10.7,
                    "group", 10.8);
-  CRay ray3 = CRay("Em2", 150, 2, "SYM", 2, 10.2, 10.3, 20.4, 10.5, 10.6, 10.7,
+  CRay ray3 = CRay("Em2", 150, 2, CRay::SYM, 2, 10.2, 10.3, 20.4, 10.5, 10.6, 10.7,
                    "group", 10.8);
   std::vector<CRay> rs;
   rs.push_back(ray);
@@ -339,9 +339,9 @@ BOOST_AUTO_TEST_CASE(addModel_SupportPartial) {
   // in this case multiline support is lower than continuum length.
   // So all the bin continuum are duplicate in model
 
-  CRay ray = CRay("Abs", 10, 1, "SYM", 2, 10.2, 10.3, 10.4, 10.5, 10.6, 10.7,
+  CRay ray = CRay("Abs", 10, 1, CRay::SYM, 2, 10.2, 10.3, 10.4, 10.5, 10.6, 10.7,
                   "group", 10.8);
-  CRay ray2 = CRay("Em", 15, 2, "SYM", 2, 10.2, 10.3, 20.4, 10.5, 10.6, 10.7,
+  CRay ray2 = CRay("Em", 15, 2, CRay::SYM, 2, 10.2, 10.3, 20.4, 10.5, 10.6, 10.7,
                    "group", 10.8);
   std::vector<CRay> rs;
   rs.push_back(ray);
@@ -424,9 +424,9 @@ BOOST_AUTO_TEST_CASE(addModel_SupportPartial) {
 
 BOOST_AUTO_TEST_CASE(addModel_totalOutside) {
   // in this case multiline support totaly outside lambdarange
-  CRay ray = CRay("Abs", 10, 1, "SYM", 2, 10.2, 10.3, 10.4, 10.5, 10.6, 10.7,
+  CRay ray = CRay("Abs", 10, 1, CRay::SYM, 2, 10.2, 10.3, 10.4, 10.5, 10.6, 10.7,
                   "group", 10.8);
-  CRay ray2 = CRay("Em", 15, 2, "SYM", 2, 10.2, 10.3, 20.4, 10.5, 10.6, 10.7,
+  CRay ray2 = CRay("Em", 15, 2, CRay::SYM, 2, 10.2, 10.3, 20.4, 10.5, 10.6, 10.7,
                    "group", 10.8);
   std::vector<CRay> rs;
   rs.push_back(ray);
@@ -503,9 +503,9 @@ BOOST_AUTO_TEST_CASE(addModel_totalOutside) {
 BOOST_AUTO_TEST_CASE(fitAmplitude) {
   // in this case multiline support totaly outside lambdarange
   Float64 lambda0 = 15;
-  CRay ray = CRay("Abs", 100, 1, "SYM", 2, 1, 5, 20.4, 10.5, 10.6, 10.7,
+  CRay ray = CRay("Abs", 100, 1, CRay::SYM, 2, 1, 5, 20.4, 10.5, 10.6, 10.7,
                   "group", 10.8);
-  CRay ray2 = CRay("Em", lambda0, 2, "SYM", 2, 1, 5, 20.4, 10.5, 10.6, 10.7,
+  CRay ray2 = CRay("Em", lambda0, 2, CRay::SYM, 2, 1, 5, 20.4, 10.5, 10.6, 10.7,
                    "group", 10.8);
   std::vector<CRay> rs;
   rs.push_back(ray);
