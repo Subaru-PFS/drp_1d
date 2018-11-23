@@ -44,7 +44,8 @@ class processRecombine(object):
     def recombine(self, 
                   infoFilePath, 
                   enableSkipUnfinished=True, 
-                  ignoreLogFile=True, 
+                  ignoreLogFile=True,
+                  ignoreIntermediateFiles=True, 
                   ignoreTemplatesFiles=True, 
                   ignoreClusterLogs=True):
         """
@@ -136,19 +137,19 @@ class processRecombine(object):
                 print(e)
                 
                 
-                
-        try:
-            print("INFO: copy intermediate results if any!")
-            self.copyIntermediateResultsDirs(subpathsList, datasetOutputPath, spcfileName="input.spectrumlist")
-                
-        except Exception as e:
-            if not enableSkipUnfinished:
-                print("WARNING: unable to merge some INTERMEDIATE output files. Skipping that operation !")
-                input("\n\nWARNING: unable to merge some output files. will skip that operation.\nPress any key to continue...".format())
-                raise e
-            else:
-                print("INFO: unable to merge some INTERMEDIATE output files. Skipping that operation !")
-                print(e)
+        if not ignoreIntermediateFiles:        
+            try:
+                print("INFO: copy intermediate results if any!")
+                self.copyIntermediateResultsDirs(subpathsList, datasetOutputPath, spcfileName="input.spectrumlist")
+                    
+            except Exception as e:
+                if not enableSkipUnfinished:
+                    print("WARNING: unable to merge some INTERMEDIATE output files. Skipping that operation !")
+                    input("\n\nWARNING: unable to merge some output files. will skip that operation.\nPress any key to continue...".format())
+                    raise e
+                else:
+                    print("INFO: unable to merge some INTERMEDIATE output files. Skipping that operation !")
+                    print(e)
         
         
         if not ignoreClusterLogs:
@@ -159,7 +160,20 @@ class processRecombine(object):
                 shutil.copytree(source_path, dest_path)
             except:
                 print("INFO: skipped cluster_logs directory while recombining. Folder not found")
-    
+        
+        
+        print("INFO: merging BRIEF cluster log files")
+        try:            
+            clusterLogsDirPath= os.path.join(self.outputPath, "cluster_logs") #warning hardcoded, but not critical to avoid this...
+            self.mergeCsvFiles(subpathsList=[clusterLogsDirPath], 
+                               outPath=datasetOutputPath, 
+                               fileName="logOut_0-0.txt", 
+                               maxNLines=10000)
+        except:
+            print("INFO/Warning: skipped per spectrum processing time stats")
+        print("WARNING: cluster log file BRIEF has been recombined!")
+            
+        
         print("INFO: estimate per spectrum processing time stats !")
         try:
             clusterLogsDirPath= os.path.join(self.outputPath, "cluster_logs") #warning hardcoded, but not critical to avoid this...
@@ -174,17 +188,21 @@ class processRecombine(object):
         ignoreLogFile=True
         ignoreTemplatesFiles=True
         ignoreClusterLogs=True
+        ignoreIntermediateFiles=False
+        
         if opt_brief==False:
             ignoreLogFile=False
             ignoreTemplatesFiles=False
-            ignoreClusterLogs=False                  
+            ignoreClusterLogs=False  
+            ignoreIntermediateFiles=False                
         
         for f in self.flist:
             print("INFO: recombining from subsets: {}".format(f))
             self.recombine(f, 
                            ignoreLogFile=ignoreLogFile, 
                            ignoreTemplatesFiles=ignoreTemplatesFiles,
-                           ignoreClusterLogs=ignoreClusterLogs)
+                           ignoreClusterLogs=ignoreClusterLogs,
+                           ignoreIntermediateFiles=ignoreIntermediateFiles)
             
     def mergeCsvFiles(self, 
                       subpathsList, 
@@ -233,7 +251,7 @@ class processRecombine(object):
         if maxNLines>0:
             outPathNoExt = os.path.splitext(fileName)[0]
             outPathExt = os.path.splitext(fileName)[1]
-            finalOutputName = "{}_brief_cut{}.{}".format(outPathNoExt, maxNLines, outPathExt)
+            finalOutputName = "{}_brief_cut{}{}".format(outPathNoExt, maxNLines, outPathExt)
         fFilePath = os.path.join(outPath, finalOutputName)
         fout = open(fFilePath, 'w')
         for l in allLines:
