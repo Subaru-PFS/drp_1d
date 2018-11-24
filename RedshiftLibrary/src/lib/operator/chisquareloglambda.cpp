@@ -1625,7 +1625,7 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(
         }
     }
     Log.LogDetail("  Operator-ChisquareLog: Log-Rebin: tgtDzOnepzMin = %f", tgtDzOnepzMin);
-    Float64 loglbdaStep_fromTgtZgrid = log(1.0+tgtDzOnepzMin*0.5); //0.5 coeff as safety margin
+    Float64 loglbdaStep_fromTgtZgrid = log(1.0+tgtDzOnepzMin);
     Log.LogDetail("  Operator-ChisquareLog: Log-Rebin: loglbdaStep_fromOriSpc = %f", loglbdaStep_fromOriSpc);
     Log.LogDetail("  Operator-ChisquareLog: Log-Rebin: loglbdaStep_fromTgtZgrid = %f", loglbdaStep_fromTgtZgrid);
     Float64 loglbdaStep = std::max(loglbdaStep_fromOriSpc, loglbdaStep_fromTgtZgrid);

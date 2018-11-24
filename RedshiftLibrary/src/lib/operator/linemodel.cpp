@@ -571,7 +571,7 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
     Float64 duration_firstpass_seconds = duration_mainloop / 1e6;
     Log.LogInfo("  Operator-Linemodel: first-pass done in %.4e sec",
                 duration_firstpass_seconds);
-    Log.LogInfo("  Operator-Linemodel: <proc-lm-fistpass><%d>",
+    Log.LogInfo("  Operator-Linemodel: <proc-lm-firstpass><%d>",
                 (Int32)duration_firstpass_seconds);
 
     return 0;
@@ -979,6 +979,8 @@ Int32 COperatorLineModel::ComputeSecondPass(CDataStore &dataStore,
                                             const Float64 &opt_absvelocityfitmax,
                                             const Float64 &opt_absvelocityfitstep)
 {
+    boost::chrono::thread_clock::time_point start_secondpass =
+            boost::chrono::thread_clock::now();
 
     // Set model parameters to SECOND-PASS
     m_model->setPassMode(2);
@@ -1013,7 +1015,7 @@ Int32 COperatorLineModel::ComputeSecondPass(CDataStore &dataStore,
     RecomputeAroundCandidates(m_firstpass_extremumList,
                               lambdaRange,
                               opt_continuumreest,
-                              2);
+                              0); //0: retry all cont. templates at this stage
 
     // additional fitting with fittingmethod=svdlcp2
     if(m_opt_secondpasslcfittingmethod=="svdlc" || m_opt_secondpasslcfittingmethod=="svdlcp2")
@@ -1051,6 +1053,17 @@ Int32 COperatorLineModel::ComputeSecondPass(CDataStore &dataStore,
                                   2);
 
     }
+
+    boost::chrono::thread_clock::time_point stop_secondpass =
+        boost::chrono::thread_clock::now();
+    Float64 duration_secondpass =
+        boost::chrono::duration_cast<boost::chrono::microseconds>(
+            stop_secondpass - start_secondpass).count();
+    Float64 duration_secondpass_seconds = duration_secondpass / 1e6;
+    Log.LogInfo("  Operator-Linemodel: second pass done in %.4e sec",
+                duration_secondpass_seconds);
+    Log.LogInfo("<proc-lm-secondpass><%d>", (Int32)duration_secondpass_seconds);
+
 
 
     Log.LogInfo("  Operator-Linemodel: Now storing extrema results");
