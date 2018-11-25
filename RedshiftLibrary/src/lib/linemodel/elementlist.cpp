@@ -891,15 +891,21 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, I
 					   opt_dustFit, merit, fitAmplitude,
 					   fitDustCoeff, fitMeiksinIdx, fitDtM, fitMtM);
 
-                if(ret && merit<bestMerit)
+                if(ret)
                 {
-                    bestMerit = merit;
-                    bestFitAmplitude = fitAmplitude;
-                    bestFitDustCoeff = fitDustCoeff;
-                    bestFitMeiksinIdx = fitMeiksinIdx;
-                    bestFitDtM = fitDtM;
-                    bestFitMtM = fitMtM;
-                    bestTplName = tpl.GetName();
+                    if(merit<bestMerit)
+                    {
+                        bestMerit = merit;
+                        bestFitAmplitude = fitAmplitude;
+                        bestFitDustCoeff = fitDustCoeff;
+                        bestFitMeiksinIdx = fitMeiksinIdx;
+                        bestFitDtM = fitDtM;
+                        bestFitMtM = fitMtM;
+                        bestTplName = tpl.GetName();
+                    }
+                }else{
+                    Log.LogError("Failed to load-fit continuum");
+                    throw std::runtime_error("Failed to load-fit continuum");
                 }
             }
         }
@@ -1177,7 +1183,7 @@ Bool CLineModelElementList::SolveContinuum(const CSpectrum& spectrum,
                                            Float64& fitMtM)
 {
     // Compute merit function
-
+    //Log.LogInfo("Solving continuum for %s at z=%.4e", tpl.GetName().c_str(), redshifts[0]);
     //CRef<CChisquareResult>  chisquareResult = (CChisquareResult*)chiSquare.ExportChi2versusAZ( _spc, _tpl, lambdaRange, redshifts, overlapThreshold );
     auto  chisquareResult = std::dynamic_pointer_cast<CChisquareResult>( m_chiSquareOperator->Compute( spectrum,
                                                                                                        tpl,
@@ -1191,7 +1197,7 @@ Bool CLineModelElementList::SolveContinuum(const CSpectrum& spectrum,
     if( !chisquareResult )
     {
 
-        //Log.LogInfo( "Failed to compute chi square value");
+        Log.LogInfo( "Failed to compute chi square value");
         return false;
     }else{
         // Store results

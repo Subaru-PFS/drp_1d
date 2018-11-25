@@ -1882,8 +1882,9 @@ Int32 COperatorLineModel::RecomputeAroundCandidates(TPointList input_extremumLis
                                                    -1.,
                                                    -1.,
                                                    m_secondpass_parameters_extremaResult.FittedTplpCoeffs[i]);
-                m_model->SetFitContinuum_Option(tplfit_option);
             }
+            m_model->SetFitContinuum_Option(tplfit_option);
+            Log.LogInfo("    Operator-Linemodel: recompute with tplfit_option=%d", tplfit_option);
 
             // find the index in the zaxis results
             Int32 idx = -1;
