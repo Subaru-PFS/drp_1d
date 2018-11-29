@@ -40,6 +40,8 @@ void CLineModelExtremaResult::Resize(Int32 size)
     lmfitPass.resize(size);
     snrHa.resize(size);
     lfHa.resize(size);
+    snrOII.resize(size);
+    lfOII.resize(size);
 
     Posterior.resize(size);
     StrongELSNR.resize(size);
@@ -196,6 +198,27 @@ void CLineModelExtremaResult::Save( const CDataStore& store, std::ostream& strea
         for ( int i=0; i<lfHa.size(); i++)
         {
             stream <<  lfHa[i] << "\t";
+        }
+        stream << "}" << std::endl;
+    }
+
+
+    // save snrOII list, on 1 line
+    if(snrOII.size()>0){
+        stream <<  "#snrOII for z = {";
+        for ( int i=0; i<snrOII.size(); i++)
+        {
+            stream <<  snrOII[i] << "\t";
+        }
+        stream << "}" << std::endl;
+    }
+
+    // save lfOII list, on 1 line
+    if(lfOII.size()>0){
+        stream <<  "#lfOII for z = {";
+        for ( int i=0; i<lfOII.size(); i++)
+        {
+            stream <<  lfOII[i] << "\t";
         }
         stream << "}" << std::endl;
     }

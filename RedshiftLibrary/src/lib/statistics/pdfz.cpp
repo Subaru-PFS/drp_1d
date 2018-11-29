@@ -875,7 +875,7 @@ std::vector<Float64> CPdfz::GetEuclidNhaLogZPrior(std::vector<Float64> redshifts
         Float64 z5 = z4*z;
         Float64 z6 = z5*z;
 
-        //poly reg pozzetti model at FHa=1e-16
+        //poly reg pozzetti model 1 at FHa=1e-16
         zPrior[kz] = (- 54.7422088727874*z6
                       + 1203.94994364807*z5
                       - 10409.6716744981*z4

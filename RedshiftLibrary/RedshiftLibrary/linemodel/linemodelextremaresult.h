@@ -42,6 +42,8 @@ public:
     TFloat64List            lmfitPass;// z found with lmfit
     TFloat64List            snrHa;
     TFloat64List            lfHa;
+    TFloat64List            snrOII;
+    TFloat64List            lfOII;
 
     //Deprecated?
     TFloat64List            ExtremaExtendedRedshifts;    // z range around extrema

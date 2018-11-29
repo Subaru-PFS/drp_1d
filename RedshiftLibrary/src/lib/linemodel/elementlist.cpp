@@ -5417,6 +5417,13 @@ CLineModelSolution CLineModelElementList::GetModelSolution(Int32 opt_level)
     modelSolution.ElementId.resize(m_RestRayList.size());
     modelSolution.snrHa = -1.0;
     modelSolution.lfHa = -1.0;
+    modelSolution.snrOII = -1.0;
+    modelSolution.lfOII = -1.0;
+
+    bool oiidoubletSumState = 0;
+    //0: none accumulated,
+    //1: 1 of the 2 lines has been accumulated,
+    //2: the two lines already accumulated
 
     for( UInt32 iRestRay=0; iRestRay<m_RestRayList.size(); iRestRay++ )
     {
@@ -5500,6 +5507,37 @@ CLineModelSolution CLineModelElementList::GetModelSolution(Int32 opt_level)
                         {
                             modelSolution.lfHa = log10(fluxDI);
                         }
+                    }
+                }
+                if((m_RestRayList[iRestRay].GetName()==ltags.oII3726_em || m_RestRayList[iRestRay].GetName()==ltags.oII3729_em)
+                        && m_RestRayList[iRestRay].GetType()==CRay::nType_Emission)
+                {
+                    //here we only cover the fluxDI case.
+                    if(oiidoubletSumState==0 || (oiidoubletSumState==1 && fluxDI<=0.0))
+                    {
+                        modelSolution.snrOII = snrDI;
+                        if(fluxDI>0.0)
+                        {
+                            modelSolution.lfOII = log10(fluxDI);
+                        }
+                    }else if(oiidoubletSumState==1){
+                        if(fluxDI>0.0)
+                        {
+                            Float64 flux_oii_1 = std::pow(10., modelSolution.lfOII);
+                            Float64 err_oii_1 = (modelSolution.snrOII/flux_oii_1)*(modelSolution.snrOII/flux_oii_1);
+                            Float64 flux_oii_2 = fluxDI;
+                            Float64 err_oii_2 = (snrDI/fluxDI)*(snrDI/fluxDI);
+
+                            Float64 flux_oii = flux_oii_1+flux_oii_2;
+                            Float64 err_oii = err_oii_1+err_oii_2;
+
+                            modelSolution.snrOII = flux_oii/std::sqrt(err_oii);
+                            modelSolution.lfOII = log10(flux_oii);
+                        }
+
+                    }else{
+                        Log.LogError("  model: pb while estimating OII flux");
+                        throw std::runtime_error("model: pb while estimating OII flux");
                     }
                 }
             }

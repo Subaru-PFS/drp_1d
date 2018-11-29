@@ -1303,11 +1303,17 @@ Int32 COperatorLineModel::ComputeSecondPass(CDataStore &dataStore,
         }
         m_result->ExtremaResult.DeltaZ[i] = dz;
 
-        // store model Ha SNR
+        // store model Ha SNR & Flux
         m_result->ExtremaResult.snrHa[i] =
             m_result->LineModelSolutions[idx].snrHa;
         m_result->ExtremaResult.lfHa[i] =
             m_result->LineModelSolutions[idx].lfHa;
+
+        // store model OII SNR & Flux
+        m_result->ExtremaResult.snrOII[i] =
+            m_result->LineModelSolutions[idx].snrOII;
+        m_result->ExtremaResult.lfOII[i] =
+            m_result->LineModelSolutions[idx].lfOII;
 
         // store the model norm
         m_result->ExtremaResult.mTransposeM[i] =

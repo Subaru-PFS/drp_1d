@@ -29,6 +29,8 @@ struct CLineModelSolution
 
     Float64 snrHa;
     Float64 lfHa;
+    Float64 snrOII;
+    Float64 lfOII;
 
     std::vector<Float64> LambdaObs;  //observed position in Angstrom
     std::vector<Float64> Velocity;  //dispersion velocity in km/s
