@@ -478,29 +478,55 @@ const CSpectrumFluxAxis &CLineModelElementList::GetModelContinuum() const
  * @param subeIdx
  * @return
  */
-Int32 CLineModelElementList::GetFluxDirectIntegration(Int32 eIdx, Int32 subeIdx, Float64& fluxdi, Float64& snrdi)
+Int32 CLineModelElementList::GetFluxDirectIntegration(TInt32List eIdx_list, TInt32List subeIdx_list, Float64& fluxdi, Float64& snrdi)
 {
     Int32 ret=0;
     Float64 nsigma = 6.; //total range: ie. range will be mu-nsigma/2; mu+nsigma/2
 
+    Int32 nlines = eIdx_list.size();
+    if(nlines!=subeIdx_list.size())
+    {
+        return -1;
+    }
+
     const CSpectrumSpectralAxis& spectralAxis = m_SpectrumModel->GetSpectralAxis();
     TFloat64Range lambdaRange = spectralAxis.GetLambdaRange(); //using the full wavelength range for this error estimation
 
-    Float64 mu = m_Elements[eIdx]->GetObservedPosition(subeIdx, m_Redshift);
-    Float64 instrumentSigma = mu/m_resolution;
-    Float64 winsizeAngstrom = instrumentSigma*nsigma;
-    TInt32Range indexRange = m_Elements[eIdx]->EstimateIndexRange(subeIdx,
-                                                                    spectralAxis,
-                                                                    m_Redshift,
-                                                                    lambdaRange,
-                                                                    winsizeAngstrom);
+    TInt32List indexes;
+    for(Int32 kl=0; kl<nlines; kl++)
+    {
+        Int32 eIdx=eIdx_list[kl];
+        Int32 subeIdx=subeIdx_list[kl];
+
+        Float64 mu = m_Elements[eIdx]->GetObservedPosition(subeIdx, m_Redshift);
+        Float64 instrumentSigma = mu/m_resolution;
+        Float64 winsizeAngstrom = instrumentSigma*nsigma;
+        TInt32Range indexRange = m_Elements[eIdx]->EstimateIndexRange(subeIdx,
+                                                                      spectralAxis,
+                                                                      m_Redshift,
+                                                                      lambdaRange,
+                                                                      winsizeAngstrom);
+
+
+        for( Int32 t=indexRange.GetBegin();t<indexRange.GetEnd()-1;t++)
+        {
+            indexes.push_back(t);
+        }
+    }
+    //remove duplicate indexes
+    std::sort(indexes.begin(), indexes.end());
+    indexes.erase( std::unique( indexes.begin(), indexes.end() ), indexes.end() );
+
+    Int32 n_indexes = indexes.size();
 
     //estimate the integrated flux between obs. spectrum and continuum: trapezoidal intg
     Float64 sumFlux=0.0;
     Float64 sumErr=0.0;
     UInt32 nsum = 0;
-    for( Int32 t=indexRange.GetBegin();t<indexRange.GetEnd()-1;t++)
+    Int32 t;
+    for( Int32 kt=0;kt<n_indexes;kt++)
     {
+        t=indexes[kt];
         //trapez
         Float64 fa = m_SpcFluxAxis[t]-m_ContinuumFluxAxis[t];
         Float64 fb = m_SpcFluxAxis[t+1]-m_ContinuumFluxAxis[t+1];
@@ -5420,10 +5446,9 @@ CLineModelSolution CLineModelElementList::GetModelSolution(Int32 opt_level)
     modelSolution.snrOII = -1.0;
     modelSolution.lfOII = -1.0;
 
-    bool oiidoubletSumState = 0;
-    //0: none accumulated,
-    //1: 1 of the 2 lines has been accumulated,
-    //2: the two lines already accumulated
+    TInt32List eIdx_oii;
+    TInt32List subeIdx_oii;
+
 
     for( UInt32 iRestRay=0; iRestRay<m_RestRayList.size(); iRestRay++ )
     {
@@ -5468,7 +5493,9 @@ CLineModelSolution CLineModelElementList::GetModelSolution(Int32 opt_level)
                 Float64 fluxError = -1;
                 Float64 fluxDI = -1;
                 Float64 snrDI = -1;
-                Int32 retdi = GetFluxDirectIntegration(eIdx, subeIdx, fluxDI, snrDI);
+                TInt32List eIdx_line(1, eIdx);
+                TInt32List subeIdx_line(1, subeIdx);
+                Int32 retdi = GetFluxDirectIntegration(eIdx_line, subeIdx_line, fluxDI, snrDI);
                 if(amp>=0.0)
                 {
                     if(m_RestRayList[iRestRay].GetType()==CRay::nType_Emission)
@@ -5513,31 +5540,19 @@ CLineModelSolution CLineModelElementList::GetModelSolution(Int32 opt_level)
                         && m_RestRayList[iRestRay].GetType()==CRay::nType_Emission)
                 {
                     //here we only cover the fluxDI case.
-                    if(oiidoubletSumState==0 || (oiidoubletSumState==1 && fluxDI<=0.0))
+                    eIdx_oii.push_back(eIdx);
+                    subeIdx_oii.push_back(subeIdx);
+                    if(true)
                     {
+                        fluxDI = -1;
+                        Float64 snrDI = -1;
+                        Int32 retdi = GetFluxDirectIntegration(eIdx_oii, subeIdx_oii, fluxDI, snrDI);
+
                         modelSolution.snrOII = snrDI;
                         if(fluxDI>0.0)
                         {
                             modelSolution.lfOII = log10(fluxDI);
                         }
-                    }else if(oiidoubletSumState==1){
-                        if(fluxDI>0.0)
-                        {
-                            Float64 flux_oii_1 = std::pow(10., modelSolution.lfOII);
-                            Float64 err_oii_1 = (modelSolution.snrOII/flux_oii_1)*(modelSolution.snrOII/flux_oii_1);
-                            Float64 flux_oii_2 = fluxDI;
-                            Float64 err_oii_2 = (snrDI/fluxDI)*(snrDI/fluxDI);
-
-                            Float64 flux_oii = flux_oii_1+flux_oii_2;
-                            Float64 err_oii = err_oii_1+err_oii_2;
-
-                            modelSolution.snrOII = flux_oii/std::sqrt(err_oii);
-                            modelSolution.lfOII = log10(flux_oii);
-                        }
-
-                    }else{
-                        Log.LogError("  model: pb while estimating OII flux");
-                        throw std::runtime_error("model: pb while estimating OII flux");
                     }
                 }
             }
