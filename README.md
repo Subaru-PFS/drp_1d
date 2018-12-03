@@ -1,6 +1,42 @@
 # cpf-redshift
 
 
+## Per-distribution installation
+
+### Install dependencies on CentOS7
+
+As root:
+
+    yum install -y epel-release
+    yum -y install https://centos7.iuscommunity.org/ius-release.rpm
+	rpm --import /etc/pki/rpm-gpg/IUS-COMMUNITY-GPG-KEY
+    yum install -y git gcc-c++ make cmake swig boost-devel cfitsio-devel fftw-devel \
+	               python36-numpy python36u-pip python-virtualenv python36-devel
+
+### Install dependencies on Debian/Ubuntu
+
+As root:
+
+    apt-get install -y git cmake ccache build-essential swig python3-pip \
+                       libboost-filesystem-dev libboost-system-dev libboost-thread-dev \
+					   libboost-timer-dev libboost-chrono-dev libboost-program-options-dev \
+					   libboost-regex-dev libboost-test-dev \
+					   libcfitsio-dev libgsl-dev libfftw3-dev \
+					   pkg-config \
+					   python3-numpy
+
+### Download, build and install
+
+As a user, in `$HOME`:
+
+    git clone -b develop git@gitlab.lam.fr:CPF/cpf-redshift.git
+	mkdir cpf-redshift/build
+	cd cpf-redshift/build
+	cmake .. -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release
+	make -j4
+	virtualenv -p python3.6 --system-site-packages $HOME/venv
+	source $HOME/venv/bin/activate && pip3.6 install -e $HOME/cpf-redshift/
+
 ## Build and install (Unix and unix like):
 
 #### 1. Clone Git repository:
@@ -159,3 +195,6 @@ Then open in your web browser:
 ## Contacts
 
 Please send your bug reports or questions to alain DOT schmitt AT lam DOT fr
+
+
+

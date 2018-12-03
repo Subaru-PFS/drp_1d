@@ -88,7 +88,7 @@ BOOST_AUTO_TEST_CASE(Constructor)
   model_fromspectrum.fit(0.5, range, solution, c_solution, iterations, false);
 
   // tplfit
-  BOOST_MESSAGE("TODO : tplfit doesn't work. Bad Meiksin generation ?");
+  BOOST_TEST_MESSAGE("TODO : tplfit doesn't work. Bad Meiksin generation ?");
   CLineModelElementList model_tplfit(spectrum, spectrumContinuum,
    				     tplCatalog, tplCategories,
    				     calibrationPath.c_str(), lineList,

@@ -10,8 +10,65 @@ message("Using git revision : " ${GIT_REVISION})
 
 FIND_PACKAGE(Boost COMPONENTS filesystem system thread timer chrono program_options unit_test_framework)
 FIND_PACKAGE(Cfitsio)
-FIND_PACKAGE(GSL)
+FIND_PACKAGE(GSL 2.1)
 FIND_PACKAGE(FFTW)
+
+IF(NOT GSL_FOUND)
+  # older versions of cmake don't have FindGSL
+  FIND_PACKAGE(PkgConfig)
+  pkg_check_modules(GSL gsl>=2.1)
+ENDIF()
+
+# Set up THIRDPARTY_LIBS and THIRDPARTY_STATIC_LIBS
+IF (Boost_FOUND)
+  SET(boost_libs ${Boost_FILESYSTEM_LIBRARY_RELEASE}
+    ${Boost_SYSTEM_LIBRARY_RELEASE}
+    ${Boost_THREAD_LIBRARY_RELEASE}
+    ${Boost_TIMER_LIBRARY_RELEASE}
+    ${Boost_CHRONO_LIBRARY_RELEASE}
+    ${Boost_PROGRAM_OPTIONS_LIBRARY_RELEASE}
+    ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY_RELEASE})
+  LIST(APPEND cpf-redshift_THIRDPARTY_LIBS ${boost_libs})
+  LIST(APPEND cpf-redshift_THIRDPARTY_STATIC_LIBS ${boost_libs})
+  INCLUDE_DIRECTORIES( ${Boost_INCLUDE_DIR} )
+ELSE()
+  LIST(APPEND MISSING_THIRDPARTIES "boost")
+  LIST(APPEND cpf-redshift_THIRDPARTY_LIBS pthread boost_filesystem
+    boost_system boost_thread boost_timer boost_chrono boost_program_options boost_regex)
+  LIST(APPEND cpf-redshift_THIRDPARTY_STATIC_LIBS libboost_filesystem.a
+    libboost_system.a libboost_thread.a libboost_timer.a libboost_chrono.a libboost_program_options.a
+    libboost_regex.a)
+ENDIF()
+
+IF (CFITSIO_FOUND)
+  LIST(APPEND cpf-redshift_THIRDPARTY_LIBS ${CFITSIO_LIBRARIES})
+  LIST(APPEND cpf-redshift_THIRDPARTY_STATIC_LIBS ${CFITSIO_LIBRARIES})
+  INCLUDE_DIRECTORIES( ${CFITSIO_INCLUDE_DIR} )
+ELSE()
+  LIST(APPEND MISSING_THIRDPARTIES "cfitsio")
+  LIST(APPEND cpf-redshift_THIRDPARTY_LIBS cfitsio)
+  LIST(APPEND cpf-redshift_THIRDPARTY_STATIC_LIBS libcfitsio.a)
+ENDIF()
+
+IF (FFTW_FOUND)
+  LIST(APPEND cpf-redshift_THIRDPARTY_LIBS ${FFTW_LIBRARIES})
+  LIST(APPEND cpf-redshift_THIRDPARTY_STATIC_LIBS ${FFTW_LIBRARIES})
+  INCLUDE_DIRECTORIES( ${FFTW_INCLUDE_DIR} )
+ELSE()
+  LIST(APPEND MISSING_THIRDPARTIES "fftw")
+  LIST(APPEND cpf-redshift_THIRDPARTY_LIBS fftw3)
+  LIST(APPEND cpf-redshift_THIRDPARTY_STATIC_LIBS libfftw3.a)
+ENDIF()
+
+IF (GSL_FOUND)
+  LIST(APPEND cpf-redshift_THIRDPARTY_LIBS ${GSL_LIBRARIES})
+  LIST(APPEND cpf-redshift_THIRDPARTY_STATIC_LIBS ${GSL_LIBRARIES})
+  INCLUDE_DIRECTORIES( ${GSL_INCLUDE_DIR} )
+ELSE()
+  LIST(APPEND MISSING_THIRDPARTIES "gsl")
+  LIST(APPEND cpf-redshift_THIRDPARTY_LIBS gsl gslcblas)
+  LIST(APPEND cpf-redshift_THIRDPARTY_STATIC_LIBS libgsl.a libgslcblas.a)
+ENDIF()
 
 # use ccache if any
 find_program(CCACHE_FOUND ccache)
@@ -67,22 +124,10 @@ ENDIF()
 SET( cpf-redshift_INCLUDE_DIR ${ROOT_DIR}/RedshiftLibrary/ )
 SET( cpf-redshift_LINK_DIR ${ROOT_DIR}/lib/ )
 
-IF( NOT (CFITSIO_FOUND AND FFTW_FOUND AND GSL_FOUND AND BOOST_FOUND) )
+IF( NOT (CFITSIO_FOUND AND FFTW_FOUND AND GSL_FOUND AND Boost_FOUND) )
   MESSAGE( STATUS "Some library not found on system. Using thirdparty/" )
   SET( cpf-redshift_THIRDPARTY_INCLUDE_DIR ${ROOT_DIR}/thirdparty/include/ )
   SET( cpf-redshift_THIRDPARTY_LINK_DIR ${ROOT_DIR}/thirdparty/lib/)
-  SET( cpf-redshift_THIRDPARTY_LIBS
-    cfitsio fftw3 gsl gslcblas pthread boost_filesystem boost_system boost_thread boost_timer
-    boost_chrono boost_program_options boost_regex)
-  SET( cpf-redshift_THIRDPARTY_STATIC_LIBS
-    libcfitsio.a libfftw3.a libgsl.a libgslcblas.a libboost_filesystem.a
-    libboost_system.a libboost_thread.a libboost_timer.a libboost_chrono.a libboost_program_options.a
-    libboost_regex.a libboost_unit_test_framework.a)
-  IF(BUILD_SHARED_LIBS)
-    SET( tests_THIRDPARTY_LIBS boost_unit_test_framework)
-  ELSE()
-    SET( tests_THIRDPARTY_LIBS libboost_unit_test_framework.a)
-  ENDIF()
   INCLUDE_DIRECTORIES( ${cpf-redshift_THIRDPARTY_INCLUDE_DIR} )
   set(PARALLEL_BUILD_FLAG "-j4")
   ADD_SUBDIRECTORY( tools )
@@ -90,18 +135,6 @@ ELSE()
   MESSAGE( STATUS "Using system third-party libraries." )
   SET( cpf-redshift_THIRDPARTY_INCLUDE_DIR "" )
   SET( cpf-redshift_THIRDPARTY_LINK_DIR "" )
-  LIST(APPEND cpf-redshift_THIRDPARTY_LIBS ${CFITSIO_LIBRARIES} ${FFTW_LIBRARIES} ${GSL_LIBRARIES}
-    ${Boost_FILESYSTEM_LIBRARY_RELEASE}
-    ${Boost_SYSTEM_LIBRARY_RELEASE}
-    ${Boost_THREAD_LIBRARY_RELEASE}
-    ${Boost_TIMER_LIBRARY_RELEASE}
-    ${Boost_CHRONO_LIBRARY_RELEASE}
-    ${Boost_PROGRAM_OPTIONS_LIBRARY_RELEASE})
-  SET(cpf-redshift_THIRDPARTY_STATIC_LIBS ${cpf-redshift_THIRDPARTY_LIBS})
-  SET(tests_THIRDPARTY_LIBS ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY_RELEASE})
-
-  INCLUDE_DIRECTORIES( ${CFITSIO_INCLUDE_DIR} ${FFTW_INCLUDE_DIR} ${GSL_INCLUDE_DIRS}
-    ${Boost_INCLUDE_DIRS})
 ENDIF()
 
 MESSAGE("Using third party libraries: " "${cpf-redshift_THIRDPARTY_LIBS}")
