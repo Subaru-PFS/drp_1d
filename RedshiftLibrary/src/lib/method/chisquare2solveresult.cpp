@@ -160,6 +160,9 @@ void CChisquare2SolveResult::SaveLine( const CDataStore& store, std::ostream& st
                 << "-1" << "\t" //deltaz
                 << m_ReliabilityLabel << "\t"
                 << "-1" << "\t"
+                << "-1" << "\t"
+                << "-1" << "\t"
+                << "-1" << "\t"
                 << m_TypeLabel << std::endl; //reliability label
 
 }
