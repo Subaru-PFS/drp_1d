@@ -24,7 +24,7 @@ void addRay(CSpectrumFluxAxis& spectrumFluxAxis , Float64 sigma, Float64 mu, Flo
   }
 }
 
-Float64 precision = 1e-12;
+Float64 precision = 1e-4;
 
 BOOST_AUTO_TEST_CASE(GaussianFit){
   CSpectrum spc =  CSpectrum();

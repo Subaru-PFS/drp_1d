@@ -23,7 +23,7 @@ As root:
 					   libboost-regex-dev libboost-test-dev \
 					   libcfitsio-dev libgsl-dev libfftw3-dev \
 					   pkg-config \
-					   python3-numpy
+					   python3-numpy python3-astropy
 
 ### Download, build and install
 
@@ -35,7 +35,9 @@ As a user, in `$HOME`:
 	cmake .. -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release
 	make -j4
 	virtualenv -p python3.6 --system-site-packages $HOME/venv
-	source $HOME/venv/bin/activate && pip3.6 install -e $HOME/cpf-redshift/
+	source $HOME/venv/bin/activate
+	pip3.6 install astropy # on CentOS7 only
+	pip3.6 install -e $HOME/cpf-redshift/
 
 ## Build and install (Unix and unix like):
 
