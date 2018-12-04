@@ -231,6 +231,49 @@ void COperatorResultStore::SaveStellarResultError(  const std::string spcName,  
 }
 
 
+void COperatorResultStore::SaveQsoResult( const CDataStore& store, const bfs::path& dir )
+{
+    // Append best redshift result line to output file
+    {
+        std::fstream outputStream;
+        // Save result at root of output directory
+        Int32 ret = CreateResultStorage( outputStream, bfs::path( "qso.csv" ), dir );
+
+        //*
+        if(ret==1)
+        {
+            outputStream <<  "#Spectrum\tProcessingID\tRedshift\tMerit\tTemplate\tMethod\tDeltaz\tReliability\tsnrHa\tlfHa\tsnrOII\tlfOII\tType"<< std::endl;
+        }
+        //*/
+
+        auto  result = GetGlobalResult( "qsosolve.qsoresult" ).lock();
+        if(result){
+            result->SaveLine( store, outputStream );
+        }//else{
+        //    throw std::runtime_error("Unable to retrieve stellar result for saving");
+        //}
+    }
+}
+
+void COperatorResultStore::SaveQsoResultError(  const std::string spcName,  const std::string processingID, const bfs::path& dir )
+{
+    // Append best redshift result line to output file
+    {
+        std::fstream outputStream;
+        // Save result at root of output directory
+        Int32 ret = CreateResultStorage( outputStream, bfs::path( "qso.csv" ), dir );
+
+        if(ret==1)
+        {
+            outputStream <<  "#Spectrum\tProcessingID\tRedshift\tMerit\tTemplate\tMethod\tDeltaz\tReliability\tsnrHa\tlfHa\tsnrOII\tlfOII\tType"<< std::endl;
+        }
+
+
+        outputStream <<  spcName << "\t" << processingID << "\t-1\t-1\t-1\t-1\t-1\t-1\t-1\t-1\t-1\t-1\t-1"<< std::endl;
+    }
+}
+
+
 void COperatorResultStore::SaveClassificationResult( const CDataStore& store, const bfs::path& dir )
 {
     // Append classif. result line to output file

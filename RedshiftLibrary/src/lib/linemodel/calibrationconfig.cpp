@@ -59,11 +59,18 @@ void CCalibrationConfigHelper::Load( const char* filePath )
             m_starTemplates_relpath = line.substr(foundstrEqual+1, line.size());
             readNums++;
         }
+        std::string qso_templates_key = "qso-templates-dir";
+        foundstra = line.find(qso_templates_key.c_str());
+        foundstrEqual = line.find("=");
+        if (foundstra!=std::string::npos){
+            m_qsoTemplates_relpath = line.substr(foundstrEqual+1, line.size());
+            readNums++;
+        }
 
 
     }
     file.close();
-    if(readNums!=1) //reading 1.starstemplates, ...
+    if(readNums!=2) //reading 1.starstemplates, 2.qsotemplates, ...
     {
       Log.LogError("Invalid calibration config file [%s]", filePath);
       throw runtime_error("Invalid calibration config file");
@@ -73,5 +80,10 @@ void CCalibrationConfigHelper::Load( const char* filePath )
 std::string CCalibrationConfigHelper::Get_starTemplates_relpath()
 {
     return m_starTemplates_relpath;
+}
+
+std::string CCalibrationConfigHelper::Get_qsoTemplates_relpath()
+{
+    return m_qsoTemplates_relpath;
 }
 

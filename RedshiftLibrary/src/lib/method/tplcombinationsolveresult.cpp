@@ -233,10 +233,12 @@ Bool CTplcombinationSolveResult::GetBestRedshiftFromPdf( const CDataStore& store
     //check if the pdf is stellar/galaxy or else
     std::string outputPdfRelDir  = "zPDF"; //default value set to galaxy zPDF folder
     std::string scope = store.GetScope( *this );
-    std::size_t foundstra;
-    foundstra = scope.find("stellarsolve");
-    if (foundstra!=std::string::npos){
+    std::size_t foundstr_stellar = scope.find("stellarsolve");
+    std::size_t foundstr_qso = scope.find("qsosolve");
+    if (foundstr_stellar!=std::string::npos){
         outputPdfRelDir = "stellar_zPDF";
+    }else if (foundstr_qso!=std::string::npos){
+        outputPdfRelDir = "qso_zPDF";
     }
 
 
@@ -276,10 +278,12 @@ Int32 CTplcombinationSolveResult::GetEvidenceFromPdf(const CDataStore& store, Fl
     //check if the pdf is stellar/galaxy or else
     std::string outputPdfRelDir  = "zPDF"; //default value set to galaxy zPDF folder
     std::string scope = store.GetScope( *this );
-    std::size_t foundstra;
-    foundstra = scope.find("stellarsolve");
-    if (foundstra!=std::string::npos){
+    std::size_t foundstr_stellar = scope.find("stellarsolve");
+    std::size_t foundstr_qso = scope.find("qsosolve");
+    if (foundstr_stellar!=std::string::npos){
         outputPdfRelDir = "stellar_zPDF";
+    }else if (foundstr_qso!=std::string::npos){
+        outputPdfRelDir = "qso_zPDF";
     }
 
 
@@ -370,10 +374,12 @@ Bool CTplcombinationSolveResult::GetRedshiftCandidates( const CDataStore& store,
     //check if the pdf is stellar/galaxy or else
     std::string outputPdfRelDir  = "zPDF"; //default value set to galaxy zPDF folder
     std::string scope = store.GetScope( *this );
-    std::size_t foundstra;
-    foundstra = scope.find("stellarsolve");
-    if (foundstra!=std::string::npos){
+    std::size_t foundstr_stellar = scope.find("stellarsolve");
+    std::size_t foundstr_qso = scope.find("qsosolve");
+    if (foundstr_stellar!=std::string::npos){
         outputPdfRelDir = "stellar_zPDF";
+    }else if (foundstr_qso!=std::string::npos){
+        outputPdfRelDir = "qso_zPDF";
     }
 
 

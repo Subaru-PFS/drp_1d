@@ -280,7 +280,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
         {
             std::string category = filteredStarTemplateCategoryList[i];
             UInt32 ntpl = starTemplateCatalog->GetTemplateCount(category);
-            Log.LogInfo("Loaded (category=%s) template count = %d", category.c_str(), ntpl);
+            Log.LogInfo("stellar-solve: Loaded (category=%s) template count = %d", category.c_str(), ntpl);
         }
 
         Float64 overlapThreshold;
@@ -297,8 +297,8 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
         // prepare the unused masks
         std::vector<CMask> maskList;
         //define the redshift search grid
-        TFloat64Range starRedshiftRange=TFloat64Range(-0.5e-2, +0.5e-2);
-        Float64 starRedshiftStep = 1e-5;
+        TFloat64Range starRedshiftRange=TFloat64Range(-1e-3, +1e-3);
+        Float64 starRedshiftStep = 5e-5;
         Log.LogInfo("Stellar fitting redshift range = [%.5f, %.5f], step=%.6f", starRedshiftRange.GetBegin(), starRedshiftRange.GetEnd(), starRedshiftStep);
         TFloat64List stars_redshifts = starRedshiftRange.SpreadOver( starRedshiftStep );
         DebugAssert( stars_redshifts.size() > 0 );
@@ -326,8 +326,95 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
         }else{
             Log.LogError( "Unable to store stellar result.");
         }
+    }
+
+    // Quasar method
+    std::shared_ptr<COperatorResult> qsoResult;
+    std::string enableQsoFitting;
+    ctx.GetParameterStore().Get( "enableqsosolve", enableQsoFitting, "no" );
+    Log.LogInfo( "QSO solve enabled : %s", enableQsoFitting.c_str());
+    if(enableQsoFitting=="yes"){
+        CDataStore::CAutoScope resultScope( ctx.GetDataStore(), "qsosolve" );
+
+        std::string calibrationDirPath;
+        ctx.GetParameterStore().Get( "calibrationDir", calibrationDirPath );
+
+        bfs::path calibrationFolder( calibrationDirPath.c_str() );
+        CCalibrationConfigHelper calibrationConfig;
+        calibrationConfig.Init(calibrationDirPath);
+
+        std::string qsoTemplates = calibrationConfig.Get_qsoTemplates_relpath();
+
+        Log.LogInfo( "    Processflow - Loading qso templates catalog : %s", qsoTemplates.c_str());
+        std::string templateDir = (calibrationFolder/qsoTemplates.c_str()).string();
+
+        TStringList   filteredQSOTemplateCategoryList;
+        filteredQSOTemplateCategoryList.push_back( "emission" );
+
+        //temporary qso catalog handling through calibration files, should be loaded somewhere else ?
+        std::string medianRemovalMethod="zero";
+        Float64 opt_medianKernelWidth = 150; //not used
+        Int64 opt_nscales=8; //not used
+        std::string dfBinPath="absolute_path_to_df_binaries_here"; //not used
+        std::shared_ptr<CTemplateCatalog> qsoTemplateCatalog = std::shared_ptr<CTemplateCatalog>( new CTemplateCatalog(medianRemovalMethod, opt_medianKernelWidth, opt_nscales, dfBinPath) );
+        qsoTemplateCatalog->Load( templateDir.c_str() );
+
+        for( UInt32 i=0; i<filteredQSOTemplateCategoryList.size(); i++ )
+        {
+            std::string category = filteredQSOTemplateCategoryList[i];
+            UInt32 ntpl = qsoTemplateCatalog->GetTemplateCount(category);
+            Log.LogInfo("qso-solve: Loaded (category=%s) template count = %d", category.c_str(), ntpl);
+        }
+
+        Float64 overlapThreshold;
+        ctx.GetParameterStore().Get( "qsosolve.overlapThreshold", overlapThreshold, 1.0);
+        std::string opt_spcComponent;
+        ctx.GetDataStore().GetScopedParam( "qsosolve.spectrum.component", opt_spcComponent, "raw" );
+        std::string opt_interp;
+        ctx.GetDataStore().GetScopedParam( "qsosolve.interpolation", opt_interp, "precomputedfinegrid" );
+        std::string opt_extinction;
+        ctx.GetDataStore().GetScopedParam( "qsosolve.extinction", opt_extinction, "yes" );
+        std::string opt_dustFit;
+        ctx.GetDataStore().GetScopedParam( "qsosolve.dustfit", opt_dustFit, "yes" );
+
+        // prepare the unused masks
+        std::vector<CMask> maskList;
+        //define the redshift search grid
+        TFloat64Range qsoRedshiftRange=TFloat64Range(0.0, 6.0);
+        Float64 qsoRedshiftStep = 5e-4;
+        Log.LogInfo("QSO fitting redshift range = [%.5f, %.5f], step=%.6f", qsoRedshiftRange.GetBegin(), qsoRedshiftRange.GetEnd(), qsoRedshiftStep);
+        TFloat64List qso_redshifts;
+        if(redshiftSampling=="log")
+        {
+            qso_redshifts = qsoRedshiftRange.SpreadOverLog( qsoRedshiftStep );
+        }else{
+            qso_redshifts = qsoRedshiftRange.SpreadOver( qsoRedshiftStep );
+        }
+        DebugAssert( qso_redshifts.size() > 0 );
+
+        Log.LogInfo("Processing stellar fitting");
+        CMethodChisquare2Solve solve(calibrationDirPath);
+        //CMethodChisquareLogSolve solve(calibrationDirPath);
+        qsoResult = solve.Compute( ctx.GetDataStore(),
+                                    ctx.GetSpectrum(),
+                                    ctx.GetSpectrumWithoutContinuum(),
+                                    *qsoTemplateCatalog,
+                                    filteredQSOTemplateCategoryList,
+                                    spcLambdaRange,
+                                    qso_redshifts,
+                                    overlapThreshold,
+                                    maskList,
+                                    "qso_zPDF",
+                                    opt_spcComponent, opt_interp, opt_extinction, opt_dustFit);
 
 
+        //finally save the qso fitting results
+        if( qsoResult ) {
+            Log.LogInfo("Saving qso fitting results");
+            ctx.GetDataStore().StoreScopedGlobalResult( "qsoresult", qsoResult );
+        }else{
+            Log.LogError( "Unable to store qso result.");
+        }
     }
 
     // Galaxy method
@@ -675,6 +762,17 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
             if(stellarEvidence>galaxyEvidence)
             {
                 typeLabel = "S";
+            }
+        }
+    }
+    if(enableQsoFitting=="yes"){
+        Int32 retQsoEv = qsoResult->GetEvidenceFromPdf(ctx.GetDataStore(), qsoEvidence);
+        if(retQsoEv==0)
+        {
+            Log.LogInfo( "Found qso evidence: %e", qsoEvidence);
+            if(qsoEvidence>galaxyEvidence && qsoEvidence>stellarEvidence)
+            {
+                typeLabel = "Q";
             }
         }
     }
