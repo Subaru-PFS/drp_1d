@@ -1838,6 +1838,10 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
                 m_model->SetFittingMethod(opt_fittingmethod);
                 // m_model->m_enableAmplitudeOffsets = false;
             }
+        }else{
+            m_secondpass_parameters_extremaResult.Elv[i] = m_model->GetVelocityEmission();
+            m_secondpass_parameters_extremaResult.Alv[i] = m_model->GetVelocityAbsorption();
+
         }
     }
 
