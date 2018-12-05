@@ -375,7 +375,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
         std::string opt_extinction;
         ctx.GetDataStore().GetScopedParam( "qsosolve.extinction", opt_extinction, "yes" );
         std::string opt_dustFit;
-        ctx.GetDataStore().GetScopedParam( "qsosolve.dustfit", opt_dustFit, "yes" );
+        ctx.GetDataStore().GetScopedParam( "qsosolve.dustfit", opt_dustFit, "no" );
 
         // prepare the unused masks
         std::vector<CMask> maskList;
