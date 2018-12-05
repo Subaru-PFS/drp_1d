@@ -78,6 +78,11 @@ void  CDataStore::SaveStellarResult( const boost::filesystem::path& dir )
     m_ResultStore.SaveStellarResult( *this, dir );
 }
 
+void  CDataStore::SaveQsoResult( const boost::filesystem::path& dir )
+{
+    m_ResultStore.SaveQsoResult( *this, dir );
+}
+
 void  CDataStore::SaveClassificationResult( const boost::filesystem::path& dir )
 {
     m_ResultStore.SaveClassificationResult( *this, dir );

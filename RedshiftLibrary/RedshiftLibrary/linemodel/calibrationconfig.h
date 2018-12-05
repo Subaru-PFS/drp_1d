@@ -26,12 +26,14 @@ public:
     void Load(const char* filePath);
 
     std::string Get_starTemplates_relpath();
+    std::string Get_qsoTemplates_relpath();
 
 
 private:
 
     std::string calibration_config_file_relpath="";
     std::string m_starTemplates_relpath="";
+    std::string m_qsoTemplates_relpath="";
 
 };
 
