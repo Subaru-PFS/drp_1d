@@ -106,19 +106,19 @@ class CParameterStore {
 %rename(Set_String) Set( const std::string& name, const std::string& v);
 public:
   CParameterStore();
-  Bool Load( const std::string& path );
-  Bool Save( const std::string& path ) const;
-  Bool Get( const std::string& name, std::string& out_str, std::string defaultValue = "" );
-  Bool Get( const std::string& name, Int64& out_int, Int64 defaultValue = 0 );
-  Bool Get( const std::string& name, Float64& out_float, Float64 defaultValue  = 0 );
-  Bool Set( const std::string& name, const std::string& v );
+  bool Load( const std::string& path );
+  bool Save( const std::string& path ) const;
+  bool Get( const std::string& name, std::string& out_str, std::string defaultValue = "" );
+  bool Get( const std::string& name, Int64& out_int, Int64 defaultValue = 0 );
+  bool Get( const std::string& name, Float64& out_float, Float64 defaultValue  = 0 );
+  bool Set( const std::string& name, const std::string& v );
 
 };
 
 class CClassifierStore {
 public:
   CClassifierStore();
-  Bool Load ( const char* dirPath );
+  bool Load ( const char* dirPath );
 };
 
 class CRayCatalog
@@ -194,7 +194,7 @@ class CSpectrum
   void  SetName( const char* name );
   const std::string GetName() const;
 
-  const Bool IsNoiseValid( Float64 LambdaMin,  Float64 LambdaMax ) const;
+  const bool IsNoiseValid( Float64 LambdaMin,  Float64 LambdaMax ) const;
   bool GetMeanAndStdFluxInRange(TFloat64Range wlRange,  Float64& mean, Float64 &std) const;
 };
 
@@ -275,6 +275,6 @@ class CTemplate : public CSpectrum
  public:
   CTemplate( const std::string& name, const std::string& category,
 	     CSpectrumSpectralAxis& spectralAxis, CSpectrumFluxAxis& fluxAxis);
-  Bool Save( const char* filePath ) const;
+  bool Save( const char* filePath ) const;
 };
 
