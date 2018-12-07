@@ -1,0 +1,14 @@
+@PACKAGE_INIT@
+
+set_and_check ( cpf-redshift_INCLUDE_DIR "@PACKAGE_cpf-redshift_INCLUDE_DIR@")
+set_and_check ( cpf-redshift_THIRDPARTY_INCLUDE_DIR "@PACKAGE_cpf-redshift_THIRDPARTY_INCLUDE_DIR@")
+
+set_and_check ( cpf-redshift_LINK_DIR "@PACKAGE_cpf-redshift_LINK_DIR@")
+set_and_check ( cpf-redshift_THIRDPARTY_LINK_DIR "@PACKAGE_cpf-redshift_THIRDPARTY_LINK_DIR@")
+
+set ( cpf-redshift_LIB "cpf-redshift" )
+set ( cpf-redshift_THIRDPARTY_LIBS "@cpf-redshift_THIRDPARTY_LIBS@" )
+
+set ( cpf-redshift_STATIC_LIB "libcpf-redshift.a" )
+set ( cpf-redshift_THIRDPARTY_STATIC_LIBS "@cpf-redshift_THIRDPARTY_STATIC_LIBS@" )
+set ( cpf-redshift_REVISION "@GIT_REVISION@" )

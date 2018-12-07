@@ -1,0 +1,61 @@
+###############################################
+# Ignore files created by cmake
+###############################################
+build/
+build-debug/
+RedshiftLibrary/RedshiftLibrary/version.h
+
+cmake/cpf-redshift-config-version.cmake
+cmake/cpf-redshift-config.cmake
+CMakeFiles
+CMakeCache.txt
+cmake_install.cmake
+tools/CMakeFiles/
+
+*.creator.user*
+*.config
+*.creator
+*.includes
+*.files
+*.sh
+
+bin/*
+test/report/report.xml
+RedshiftLibrary/tests/src/test-config.h
+
+# Third party
+thirdparty/*
+
+# doc
+docs/html/
+
+#
+pkgconfig
+
+#
+*.o
+*.a
+*.so
+*.dylib
+
+# Eclipse IDE
+.cproject
+.project
+.settings/
+.pydevproject
+
+# Temp files
+*~
+
+# Python cache files
+*.pyc
+*__pycache__
+dist
+pyamazed/redshift_wrap.cpp
+pyamazed/redshift_wrap.h
+pyamazed/redshift.py
+*.egg*
+
+swig_ext.py
+
+lib/*.so
