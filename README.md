@@ -1,9 +1,22 @@
-# cpf-redshift
+# drp_1d
 
+## Requirements
 
-## Per-distribution installation
+drp_1d has the following strict requirements:
+* [gcc](https://gcc.gnu.org/)
+* [python](https://www.python.org/) 3.5
+* [cmake](https://cmake.org/)
+* [swig](http://www.swig.org/)
+* [boost](https://www.boost.org/)
+* [cfitsio](https://heasarc.gsfc.nasa.gov/fitsio/)
+* [gsl](https://www.gnu.org/software/gsl/) 2.1
+* [fftw](http://www.fftw.org/)
 
-### Install dependencies on CentOS7
+drp_1d also depends on other python packages
+* [numpy](http://www.numpy.org/)
+* [astropy](http://www.astropy.org/)
+
+### Installing dependencies on CentOS7
 
 As root:
 
@@ -13,7 +26,7 @@ As root:
     yum install -y git gcc-c++ make cmake swig boost-devel cfitsio-devel fftw-devel \
 	               python36-numpy python36u-pip python-virtualenv python36-devel
 
-### Install dependencies on Debian/Ubuntu
+### Installing dependencies on Debian/Ubuntu
 
 As root:
 
@@ -25,180 +38,41 @@ As root:
 					   pkg-config \
 					   python3-numpy python3-astropy
 
-### Install depencies on MacOS
+### Installing depencies on MacOS
 
 Use `brew` as packet manager on MacOS:
 
-    brew install boost cfitsio gsl fftw
+    brew install gcc cmake swig boost cfitsio gsl fftw
 
-### Download, build and install
+Use [Anaconda](https://www.anaconda.com/) as python3 provider and then install python depencies with `pip`:
 
-As a user, in `$HOME`:
-
-    git clone -b develop git@gitlab.lam.fr:CPF/cpf-redshift.git
-	mkdir cpf-redshift/build
-	cd cpf-redshift/build
-	cmake .. -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release
-	make -j4
-	virtualenv -p python3.6 --system-site-packages $HOME/venv
-	source $HOME/venv/bin/activate
-	pip3.6 install astropy # on CentOS7 only
-	pip3.6 install -e $HOME/cpf-redshift/
-
-## Build and install (Unix and unix like):
-
-#### 1. Clone Git repository:
-
-Create a project folder :
-
-    mkdir Projects
-    cd Projects
-
-Clone the cpf-redshift repository :
-
-	git clone git@gitlab.lam.fr:CPF/cpf-redshift.git
-
-#### 2. Build and install third party library by running the buildandinstall.sh script:
-
-Execute the script in cpf-redshift/tools :
-
-	cd cpf-redshift/tools/
-	./buildandinstallthirdparty.py
-
-Please note that each tool has its own dependency list. If a tool fails to build, remove the relevant files from $ROOT_DIR/thirdparty, install the missing dependency and try again.
-
-The "doxygen" tool requires at least flex and bison to work.
-
-This step can be automatically done with cmake, by adding -DBUILD_THIRDPARTY=true parameter. e.g. :
-
-     cmake . -DBUILD_THIRDPARTY=true
-
-#### 3. Build libcpf-redshift
-
-Build process uses cmake tool
-
-You can build either in **Debug** or **Release** mode
-
-##### example : build in Debug mode
-
-	cd $ROOT_DIR
-	mkdir build-debug
-	cd build-debug
-	cmake .. -DCMAKE_BUILD_TYPE=Debug
-	make
-	make install
-	make package
-
-##### example : build in Release  mode
-
-	cd $ROOT_DIR
-	mkdir build
-	cd build
-	cmake .. -DCMAKE_BUILD_TYPE=Release
-	make
-	make install
-	make package
-
-Note :
-If you don't specify any **-DCMAKE_BUILD_TYPE=xxxxx** , it will build by default in Release mode
+    pip3 install astropy
 
 
-##### shared and static
+## Installing drp_1d
 
-You can build either static or shared library :
+### Building C++ code from source
 
-	cmake .. -DBUILD_SHARED_LIBS=ON
-or
+As a user:
 
-	cmake .. -DBUILD_SHARED_LIBS=OFF
+    git clone -b develop git@github.com:Subaru-PFS/drp_1d.git
+    mkdir drp_1d/build
+    cd drp_1d/build
+    cmake .. -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release
+    make -j4
 
-##### building and running tests
+### Installing drp_1d python module from pip
 
-In order to build tests, shared libs version must be enabled :
+From `drp_1d` root directory:
 
-    cmake .. -DBUILD_SHARED_LIBS=ON
+    pip3 install .
 
-Tests can output line coverage statistics if you define `TEST_COVERAGE` :
+### Testing an installed drp_1d
 
-    cmake .. -DBUILD_SHARED_LIBS=ON -DTEST_COVERAGE=ON
+From `drp_1d` root directory:
 
-Run tests with :
-
+    cd build/
     make test
-
-Create coverage reports with :
-
-     GCOV_PREFIX=$HOME/src/cpf-redshift/RedshiftLibrary/ GCOV_PREFIX_STRIP=4 lcov -q -c -t "result" -o tests.cov --no-external -b $HOME/src/cpf-redshift/RedshiftLibrary/ -d CMakeFiles
-     lcov -q -r tests.cov '*/tests/src/*' -o coverage.info
-	 genhtml -o coverage coverage.info
-
-#### 4. Usage in client code
-
-##### CMakeLists.txt
-
-You client `CMakeLists.txt` must include :
-
-    FIND_PACKAGE( cpf-redshift )
-    INCLUDE_DIRECTORIES( ${cpf-redshift_INCLUDE_DIR} ${cpf-redshift_THIRDPARTY_INCLUDE_DIR}  )
-	LINK_DIRECTORIES( ${cpf-redshift_LINK_DIR} ${cpf-redshift_THIRDPARTY_LINK_DIR} )
-
-    TARGET_LINK_LIBRARIES( YOUR_TARGET ${cpf-redshift_THIRDPARTY_LIBS} ${cpf-redshift_LIB})
-    # or alternatively, if you want to link to boost-tests :
-    TARGET_LINK_LIBRARIES( YOUR_TARGET ${cpf-redshift_THIRDPARTY_LIBS} ${tests_THIRDPARTY_LIBS} ${cpf-redshift_LIB})
-
-###### Building
-
-Say you have built a Release and a Debug version of cpf-redshift in `~/src/cpf-redshift/build` and
-`~/src/cpf-redshift/build-debug` directories.
-
-You can build each version with :
-
-     CMAKE_MODULE_PATH=$HOME/src/cpf-redshift/build/ cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=ON
-
-or :
-
-     CMAKE_MODULE_PATH=$HOME/src/cpf-redshift/build-debug/ cmake .. -DCMAKE_BUILD_TYPE=Debug -DBUILD_SHARED_LIBS=ON
-
-#### 5. Build and install python interface and client with setuptools
-
-##### With python setup.py install
-
-Create a virtualenv and install amazed :
-
-     virtualenv venv
-	 source venv/bin/activate
-
-Install amazed with setup.py:
-
-     python setup.py install
-
-Or, installwith pip :
-
-     pip install -e .
-
-Run it with :
-
-     amazed --help
-
-
-## Additional documentation
-
-Detailed documentation about this software can be found by building the provided documentation:
-
-Build documentation:
-
-    cd $ROOT_DIR/tools/
-    python ./builddoc.py`
-
-Then open in your web browser:
-
-    $ROOT_DIR/docs/html/index.html
-
-## Libraries
-
-+ GSL : GNU Scientific Library
-
-[More informations here](https://www.gnu.org/software/gsl/)
 
 ## Contacts
 
