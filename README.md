@@ -25,6 +25,12 @@ As root:
 					   pkg-config \
 					   python3-numpy python3-astropy
 
+### Install depencies on MacOS
+
+Use `brew` as packet manager on MacOS:
+
+    brew install boost cfitsio gsl fftw
+
 ### Download, build and install
 
 As a user, in `$HOME`:
@@ -197,6 +203,3 @@ Then open in your web browser:
 ## Contacts
 
 Please send your bug reports or questions to alain DOT schmitt AT lam DOT fr
-
-
-
