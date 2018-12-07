@@ -44,7 +44,7 @@ Use `brew` as packet manager on MacOS:
 
     brew install gcc cmake swig boost cfitsio gsl fftw
 
-Use [Anaconda](https://www.anaconda.com/) as python3 provider and then install python depencies with `pip`:
+Use [Anaconda](https://www.anaconda.com/) as python3 provider and then install python dependencies with `pip`:
 
     pip3 install astropy
 
@@ -55,7 +55,7 @@ Use [Anaconda](https://www.anaconda.com/) as python3 provider and then install p
 
 As a user:
 
-    git clone -b develop git@github.com:Subaru-PFS/drp_1d.git
+    git clone git@github.com:Subaru-PFS/drp_1d.git
     mkdir drp_1d/build
     cd drp_1d/build
     cmake .. -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release
