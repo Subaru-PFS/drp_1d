@@ -42,7 +42,6 @@ def DownloadHTTPFile(fileUrl, localFilePath):
         urlfile = request.urlopen(fileUrl)
     except error.URLError as e:
         print("Download from: " + fileUrl + "failed.\nReason are:" + str(e.reason))
-        return
 
     localFile = open(localFilePath, 'wb')
 

@@ -6,6 +6,11 @@ SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake)
 include(SetupVar)
 include(gitrevision)
 
+# Force build type to release if not defined
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE Release)
+endif()
+
 message("Using git revision : " ${GIT_REVISION})
 
 IF(BUILD_SHARED_LIBS)
@@ -25,55 +30,64 @@ IF(NOT GSL_FOUND)
   pkg_check_modules(GSL gsl>=2.1)
 ENDIF()
 
-# Set up THIRDPARTY_LIBS and THIRDPARTY_STATIC_LIBS
+#--------------------------------------------------------
+# Setup shortcut access directory
+#--------------------------------------------------------
+SET( ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}" )
+
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+  set(CMAKE_INSTALL_PREFIX "$ENV{HOME}/usr" CACHE PATH "" FORCE)
+endif()
+
+SET( cpf-redshift_INCLUDE_DIR ${CMAKE_INSTALL_PREFIX}/include )
+SET( cpf-redshift_LINK_DIR ${CMAKE_INSTALL_PREFIX}/lib )
+
+# Set up THIRDPARTY_LIBS
 IF (Boost_FOUND)
-  SET(boost_libs ${Boost_FILESYSTEM_LIBRARY_RELEASE}
-    ${Boost_SYSTEM_LIBRARY_RELEASE}
-    ${Boost_THREAD_LIBRARY_RELEASE}
-    ${Boost_TIMER_LIBRARY_RELEASE}
-    ${Boost_CHRONO_LIBRARY_RELEASE}
-    ${Boost_PROGRAM_OPTIONS_LIBRARY_RELEASE}
-    ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY_RELEASE})
+  IF (CMAKE_BUILD_TYPE STREQUAL "Release")
+    SET(BOOST_TARGET "RELEASE")
+  ELSE()
+    SET(BOOST_TARGET "DEBUG")
+  ENDIF()
+
+  SET(boost_libs ${Boost_FILESYSTEM_LIBRARY_${BOOST_TARGET}}
+    ${Boost_SYSTEM_LIBRARY_${BOOST_TARGET}}
+    ${Boost_THREAD_LIBRARY_${BOOST_TARGET}}
+    ${Boost_TIMER_LIBRARY_${BOOST_TARGET}}
+    ${Boost_CHRONO_LIBRARY_${BOOST_TARGET}}
+    ${Boost_PROGRAM_OPTIONS_LIBRARY_${BOOST_TARGET}}
+    ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY_${BOOST_TARGET}})
   LIST(APPEND cpf-redshift_THIRDPARTY_LIBS ${boost_libs})
-  LIST(APPEND cpf-redshift_THIRDPARTY_STATIC_LIBS ${boost_libs})
-  INCLUDE_DIRECTORIES( ${Boost_INCLUDE_DIR} )
+  LIST(APPEND cpf-redshift_INCLUDE_DIR ${Boost_INCLUDE_DIRS})
+  LIST(APPEND cpf-redshift_LINK_DIR ${Boost_LIBRARY_DIRS})
 ELSE()
   LIST(APPEND MISSING_THIRDPARTIES "boost")
   LIST(APPEND cpf-redshift_THIRDPARTY_LIBS pthread boost_filesystem
-    boost_system boost_thread boost_timer boost_chrono boost_program_options boost_regex)
-  LIST(APPEND cpf-redshift_THIRDPARTY_STATIC_LIBS libboost_filesystem.a
-    libboost_system.a libboost_thread.a libboost_timer.a libboost_chrono.a libboost_program_options.a
-    libboost_regex.a)
+    boost_system boost_thread boost_timer boost_chrono boost_program_options)
 ENDIF()
 
 IF (CFITSIO_FOUND)
   LIST(APPEND cpf-redshift_THIRDPARTY_LIBS ${CFITSIO_LIBRARIES})
-  LIST(APPEND cpf-redshift_THIRDPARTY_STATIC_LIBS ${CFITSIO_LIBRARIES})
-  INCLUDE_DIRECTORIES( ${CFITSIO_INCLUDE_DIR} )
+  LIST(APPEND cpf-redshift_INCLUDE_DIR ${CFITSIO_INCLUDE_DIRS})
 ELSE()
   LIST(APPEND MISSING_THIRDPARTIES "cfitsio")
   LIST(APPEND cpf-redshift_THIRDPARTY_LIBS cfitsio)
-  LIST(APPEND cpf-redshift_THIRDPARTY_STATIC_LIBS libcfitsio.a)
 ENDIF()
 
 IF (FFTW_FOUND)
   LIST(APPEND cpf-redshift_THIRDPARTY_LIBS ${FFTW_LIBRARIES})
-  LIST(APPEND cpf-redshift_THIRDPARTY_STATIC_LIBS ${FFTW_LIBRARIES})
-  INCLUDE_DIRECTORIES( ${FFTW_INCLUDE_DIR} )
+  LIST(APPEND cpf-redshift_INCLUDE_DIR ${FFTW_INCLUDE_DIR})
 ELSE()
   LIST(APPEND MISSING_THIRDPARTIES "fftw")
   LIST(APPEND cpf-redshift_THIRDPARTY_LIBS fftw3)
-  LIST(APPEND cpf-redshift_THIRDPARTY_STATIC_LIBS libfftw3.a)
 ENDIF()
 
 IF (GSL_FOUND)
   LIST(APPEND cpf-redshift_THIRDPARTY_LIBS ${GSL_LIBRARIES})
-  LIST(APPEND cpf-redshift_THIRDPARTY_STATIC_LIBS ${GSL_LIBRARIES})
-  INCLUDE_DIRECTORIES( ${GSL_INCLUDE_DIR} )
+  LIST(APPEND cpf-redshift_INCLUDE_DIR ${GSL_INCLUDE_DIR})
 ELSE()
   LIST(APPEND MISSING_THIRDPARTIES "gsl")
   LIST(APPEND cpf-redshift_THIRDPARTY_LIBS gsl gslcblas)
-  LIST(APPEND cpf-redshift_THIRDPARTY_STATIC_LIBS libgsl.a libgslcblas.a)
 ENDIF()
 
 # use ccache if any
@@ -85,25 +99,8 @@ if(CCACHE_FOUND)
   set(ENV{CXX} "ccache c++")
 endif(CCACHE_FOUND)
 
-# Force build type to release if not defined
-if(NOT CMAKE_BUILD_TYPE)
-  set(CMAKE_BUILD_TYPE Release)
-endif()
-
 #--------------------------------------------------------
-# Setup shortcut acces directory
-#--------------------------------------------------------
-SET( ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}" )
-
-if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-  set(CMAKE_INSTALL_PREFIX "$ENV{HOME}/usr" CACHE PATH "" FORCE)
-endif()
-
-SET( cpf-redshift_INCLUDE_DIR ${CMAKE_INSTALL_PREFIX}/include )
-SET( cpf-redshift_LINK_DIR ${CMAKE_INSTALL_PREFIX}/lib )
-
-#--------------------------------------------------------
-# Parse version, this willbe used later to configure
+# Parse version, this will be used later to configure
 # cpf-core-redshift-version.cmake with the appropriate version number
 #--------------------------------------------------------
 
@@ -125,7 +122,7 @@ ELSE()
 ENDIF()
 
 IF(GPROF)
-  SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -pg")
+  SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Og -pg --coverage")
 ENDIF()
 
 #--------------------------------------------------------
@@ -167,21 +164,19 @@ SET( LIB_NAME cpf-redshift )
 
 FILE( GLOB_RECURSE LIB_SOURCE_FILES ${ROOT_DIR}/RedshiftLibrary/src/lib/*.cpp )
 
+# install with rpath to find third-parties
+SET(CMAKE_SKIP_BUILD_RPATH FALSE)
+SET(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
+SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+
+# the RPATH to be used when installing, but only if it's not a system directory
+LIST(FIND CMAKE_PLATFORM_IMPLICIT_LINK_DIRECTORIES "${CMAKE_INSTALL_PREFIX}/lib" isSystemDir)
+IF("${isSystemDir}" STREQUAL "-1")
+  SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
+ENDIF("${isSystemDir}" STREQUAL "-1")
+
 IF(BUILD_SHARED_LIBS)
-
-  # install with rpath to find third-parties
-  SET(CMAKE_SKIP_BUILD_RPATH FALSE)
-  SET(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
-  SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
-
-  # the RPATH to be used when installing, but only if it's not a system directory
-  LIST(FIND CMAKE_PLATFORM_IMPLICIT_LINK_DIRECTORIES "${CMAKE_INSTALL_PREFIX}/lib" isSystemDir)
-  IF("${isSystemDir}" STREQUAL "-1")
-    SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
-  ENDIF("${isSystemDir}" STREQUAL "-1")
-
-
-ADD_LIBRARY( ${LIB_NAME} SHARED ${LIB_SOURCE_FILES} )
+  ADD_LIBRARY( ${LIB_NAME} SHARED ${LIB_SOURCE_FILES} )
   TARGET_LINK_LIBRARIES(${LIB_NAME} ${cpf-redshift_THIRDPARTY_LIBS})
   INSTALL( TARGETS ${LIB_NAME}
     LIBRARY DESTINATION lib)
@@ -194,11 +189,10 @@ ELSE()
   SET(LIB_NAME ${LIB_NAME}-static)
 ENDIF()
 
-
 #--------------------------------------------------------
 # Compile test
 #--------------------------------------------------------
-IF(BUILD_SHARED_LIBS)
+IF(BUILD_TESTS AND BUILD_SHARED_LIBS)
 ENABLE_TESTING()
 
 FILE( GLOB_RECURSE TEST_SOURCE_FILES ${ROOT_DIR}/RedshiftLibrary/tests/src/*_test.cpp )
@@ -221,6 +215,7 @@ ENDIF()
 #--------------------------------------------------------
 # Install directive
 #--------------------------------------------------------
+
 INSTALL( DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/RedshiftLibrary/RedshiftLibrary DESTINATION include )
 INSTALL( FILES ${CMAKE_CURRENT_BINARY_DIR}/cmake/cpf-redshift-config.cmake DESTINATION share/cmake )
 INSTALL( FILES ${CMAKE_CURRENT_BINARY_DIR}/cmake/cpf-redshift-config-version.cmake DESTINATION share/cmake )
@@ -242,6 +237,7 @@ SET_DIRECTORY_PROPERTIES(PROPERTIES
 #--------------------------------------------------------
 # Package deployement and config
 #--------------------------------------------------------
+
 INCLUDE ( CMakePackageConfigHelpers )
 
 # Configure config file (this is used by find_package to find where the library is)

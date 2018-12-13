@@ -47,7 +47,7 @@ As a user, in `$HOME`:
 
 ## Build and install (Unix and unix like):
 
-#### 1. Clone Git repository:
+### 1. Clone Git repository:
 
 Create a project folder :
 
@@ -58,7 +58,7 @@ Clone the cpf-redshift repository :
 
 	git clone git@gitlab.lam.fr:CPF/cpf-redshift.git
 
-#### 2. Build and install third party library by running the buildandinstall.sh script:
+### 2. Build and install third party library by running the buildandinstall.sh script:
 
 Execute the script in cpf-redshift/tools :
 
@@ -73,13 +73,13 @@ This step can be automatically done with cmake, by adding -DBUILD_THIRDPARTY=tru
 
      cmake . -DBUILD_THIRDPARTY=true
 
-#### 3. Build libcpf-redshift
+### 3. Build libcpf-redshift
 
 Build process uses cmake tool
 
 You can build either in **Debug** or **Release** mode
 
-##### example : build in Debug mode
+#### example : build in Debug mode
 
 	cd $ROOT_DIR
 	mkdir build-debug
@@ -88,7 +88,7 @@ You can build either in **Debug** or **Release** mode
 	make
 	make install
 
-##### example : build in Release  mode
+#### example : build in Release  mode
 
 	cd $ROOT_DIR
 	mkdir build
@@ -109,7 +109,7 @@ or
 
 	cmake .. -DBUILD_SHARED_LIBS=OFF
 
-##### building and running tests
+#### building and running tests
 
 In order to build tests, shared libs version must be enabled :
 
@@ -129,9 +129,9 @@ Create coverage reports with :
      lcov -q -r tests.cov '*/tests/src/*' -o coverage.info
 	 genhtml -o coverage coverage.info
 
-#### 4. Usage in client code
+### 4. Usage in client code
 
-##### CMakeLists.txt
+#### CMakeLists.txt
 
 You client `CMakeLists.txt` must include :
 
@@ -143,7 +143,7 @@ You client `CMakeLists.txt` must include :
     # or alternatively, if you want to link to boost-tests :
     TARGET_LINK_LIBRARIES( YOUR_TARGET ${cpf-redshift_THIRDPARTY_LIBS} ${tests_THIRDPARTY_LIBS} ${cpf-redshift_LIB})
 
-###### Building
+##### Building
 
 Say you have built a Release and a Debug version of cpf-redshift in `~/src/cpf-redshift/build` and
 `~/src/cpf-redshift/build-debug` directories.
@@ -156,9 +156,9 @@ or :
 
      CMAKE_MODULE_PATH=$HOME/src/cpf-redshift/build-debug/ cmake .. -DCMAKE_BUILD_TYPE=Debug -DBUILD_SHARED_LIBS=ON
 
-#### 5. Build and install python interface and client with setuptools
+### 5. Build and install python interface and client with setuptools
 
-##### With python setup.py install
+#### With python setup.py install
 
 Create a virtualenv and install amazed :
 
@@ -176,6 +176,21 @@ Or, installwith pip :
 Run it with :
 
      amazed --help
+
+## Build wheel package
+
+Once cpf-redshift package has been compiled :
+
+     pip install numpy auditwheel
+
+     python setup.py bdist
+     pip wheel /build/cpf-redshift/ -w wheelhouse
+     auditwheel repair \
+		  wheelhouse/pyamazed-0.0.1-cp${MAJ}${MIN}-cp${MAJ}${MIN}m-linux_x86_64.whl \
+		  -w wheel
+     pip install twine
+     twine upload --repository-url https://test.pypi.org/legacy/ \
+	      wheel/pyamazed-0.0.1-cp36-cp36m-manylinux1_x86_64.whl
 
 ## Additional documentation
 
@@ -198,4 +213,4 @@ Then open in your web browser:
 
 ## Contacts
 
-Please send your bug reports or questions to amazed@lam.fr
+Please send your bug reports or questions to amazed-support@lam.fr
