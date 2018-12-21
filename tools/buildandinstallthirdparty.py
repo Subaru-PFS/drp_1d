@@ -1,6 +1,6 @@
-#! /usr/bin/python
+#!/usr/bin/env python
 
-import urllib2
+from urllib import request, error
 import sys
 import argparse
 import os
@@ -8,7 +8,6 @@ import tarfile
 import shutil
 from platform import platform
 
-thirdPartyDir = os.path.normpath(os.getcwd()+"/../thirdparty")+"/"
 
 def ExtractTarGZ( tarPath, destPath ) :
 
@@ -22,7 +21,7 @@ def ExtractTarGZ( tarPath, destPath ) :
 
         print("Extracting: \n\tFrom: " + tarPath + " to: " + destPath)
 
-        extractDir = os.path.dirname(destPath)+"/"
+        extractDir = os.path.dirname(destPath) + "/"
         tfile.extractall( extractDir )
         extractedPath = os.path.normpath ( extractDir+tfile.getmembers()[0].name )
 
@@ -37,20 +36,15 @@ def DownloadHTTPFile( fileUrl, localFilePath ) :
 
     # Check if file already exist
     if os.path.exists(localFilePath) :
-        print("File: "+localFilePath+" already exist, download skipped...")
+        print("File: " + localFilePath + " already exist, download skipped...")
         return False
 
     # Do HTTP request
     try :
-        urlfile = urllib2.urlopen( fileUrl )
-    except urllib2.URLError as e:
+        urlfile = request.urlopen( fileUrl )
+    except error.URLError as e:
         print("Download from: " + fileUrl + "failed.\nReason are:" + str( e.reason ))
         return
-
-    if urlfile.info().has_key('Content-Length'):
-        totalFileSize = int (urlfile.info()['Content-Length'] )
-    else :
-        totalFileSize = 100
 
     localFile = open(localFilePath, 'wb')
 
@@ -67,11 +61,6 @@ def DownloadHTTPFile( fileUrl, localFilePath ) :
             break
         size += len( data )
         localFile.write(data)
-
-        progress = float( size ) / totalFileSize * 100.0
-        sys.stdout.write("\r[%f%%]" %progress )
-
-        sys.stdout.flush()
 
     localFile.close()
 
@@ -145,17 +134,26 @@ libDict = {
     }
 }
 
-def Clear() :
-    os.system( "rm -rf "+thirdPartyDir+"/*" )
-
-
 def Main( argv ):
+
+    if sys.version_info[0] < 3:
+        print("Python version 3.X needed")
+        return
+
+    if sys.version_info[1] < 4:
+        # __file__ was relative until python 3.4
+        default_thirdpartydir = os.path.abspath(os.path.join(os.getcwd(),
+                                                             os.path.dirname(__file__),
+                                                             '..',
+                                                             'thirdparty'))
+    else:
+        default_thirdpartydir = os.path.abspath(os.path.join(os.path.dirname(__file__),
+                                                             '..', 'thirdparty'))
+
     usage = "Download and install third party library libraries:\n\t"
     parser = argparse.ArgumentParser(description=usage)
-    parser.add_argument("-d", "--dry", help="Clear thirdparty dir before download and installation",
-                        action="store_true")
-    parser.add_argument("-c", "--clear", help="Clean temporary files after download and installation",
-                        action="store_true")
+    parser.add_argument("-d", "--build_dir", help="Third-party build directory",
+                        default=default_thirdpartydir)
     parser.add_argument("-j", "--parallel", help="Parallel make flag", type=int,
                         default="1")
     parser.add_argument("--static", help="Build static libraries", action="store_false",
@@ -166,21 +164,15 @@ def Main( argv ):
                         help="Modules to build.")
     args = parser.parse_args()
 
-    if args.clear == True:
-        Clear()
-
-    if args.dry == True:
-        Clear()
-
     for module in args.modules:
-        libPath = os.path.join(thirdPartyDir, libDict[module]["path"]);
+        libPath = os.path.join(args.build_dir, libDict[module]["path"]);
         libSrc = libDict[module]["src"];
         build_method = libDict[module]['build']
         extra_flags = libDict[module]['extra_flags']
-        if not _check_lib(module, thirdPartyDir, args):
+        if not _check_lib(module, args.build_dir, args):
             DownloadHTTPFile(libSrc, libPath + ".tar.gz")
             ExtractTarGZ(libPath + ".tar.gz", libPath)
-            build_method(libPath, thirdPartyDir, args, extra_flags)
+            build_method(libPath, args.build_dir, args, extra_flags)
 
 Main( sys.argv )
 

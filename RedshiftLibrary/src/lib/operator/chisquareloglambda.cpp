@@ -443,12 +443,12 @@ Int32 COperatorChiSquareLogLambda::InitFFT(Int32 nPadded)
 
 void COperatorChiSquareLogLambda::freeFFTPrecomputedBuffers()
 {
-    if (!precomputedFFT_spcFluxOverErr2 == 0)
+    if (precomputedFFT_spcFluxOverErr2 != NULL)
     {
         fftw_free(precomputedFFT_spcFluxOverErr2);
         precomputedFFT_spcFluxOverErr2 = 0;
     }
-    if (!precomputedFFT_spcOneOverErr2 == 0)
+    if (precomputedFFT_spcOneOverErr2 != NULL)
     {
         fftw_free(precomputedFFT_spcOneOverErr2);
         precomputedFFT_spcOneOverErr2 = 0;

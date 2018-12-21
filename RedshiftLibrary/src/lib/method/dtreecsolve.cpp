@@ -591,7 +591,7 @@ Bool COperatorDTreeCSolve::GetCombinedRedshift(CDataStore& store, std::string sc
             Float64 Color = results->ExtremaResult.ContinuumIndexes[idxLMResultsExtrema[i]][kci].Color;
             Float64 Break = results->ExtremaResult.ContinuumIndexes[idxLMResultsExtrema[i]][kci].Break;
             Float64 heatmap_val = contIndexesPriorData.GetHeatmapVal( kci, Color, Break);
-            if(Color>Break && kci==3 || Color<=Break && kci==1){
+            if( (Color>Break && kci==3) || (Color<=Break && kci==1) ){
                 heatmap_val = 0.0;
             }else{
                 heatmap_val = 1.0;
