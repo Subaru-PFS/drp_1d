@@ -478,7 +478,11 @@ const CSpectrumFluxAxis &CLineModelElementList::GetModelContinuum() const
  * @param subeIdx
  * @return
  */
-Int32 CLineModelElementList::GetFluxDirectIntegration(TInt32List eIdx_list, TInt32List subeIdx_list, Float64& fluxdi, Float64& snrdi)
+Int32 CLineModelElementList::GetFluxDirectIntegration(TInt32List eIdx_list,
+                                                      TInt32List subeIdx_list,
+                                                      Int32 opt_cont_substract_abslinesmodel,
+                                                      Float64& fluxdi,
+                                                      Float64& snrdi)
 {
     Int32 ret=0;
     Float64 nsigma = 6.; //total range: ie. range will be mu-nsigma/2; mu+nsigma/2
@@ -519,6 +523,27 @@ Int32 CLineModelElementList::GetFluxDirectIntegration(TInt32List eIdx_list, TInt
 
     Int32 n_indexes = indexes.size();
 
+    //prepare the continuum
+    CSpectrumFluxAxis continuumFlux(m_ContinuumFluxAxis.GetSamplesCount());
+    if(opt_cont_substract_abslinesmodel<=0)
+    {
+        Int32 t;
+        for( Int32 kt=0;kt<n_indexes;kt++)
+        {
+            t=indexes[kt];
+            continuumFlux[t] = m_ContinuumFluxAxis[t];
+        }
+    }else{
+        CSpectrumFluxAxis absLinesModelFlux(m_ContinuumFluxAxis.GetSamplesCount());
+        getModel(absLinesModelFlux, CRay::nType_Absorption); //contains the continuum and abs lines model
+        Int32 t;
+        for( Int32 kt=0;kt<n_indexes;kt++)
+        {
+            t=indexes[kt];
+            continuumFlux[t] = absLinesModelFlux[t];
+        }
+    }
+
     //estimate the integrated flux between obs. spectrum and continuum: trapezoidal intg
     Float64 sumFlux=0.0;
     Float64 sumErr=0.0;
@@ -528,8 +553,8 @@ Int32 CLineModelElementList::GetFluxDirectIntegration(TInt32List eIdx_list, TInt
     {
         t=indexes[kt];
         //trapez
-        Float64 fa = m_SpcFluxAxis[t]-m_ContinuumFluxAxis[t];
-        Float64 fb = m_SpcFluxAxis[t+1]-m_ContinuumFluxAxis[t+1];
+        Float64 fa = m_SpcFluxAxis[t]-continuumFlux[t];
+        Float64 fb = m_SpcFluxAxis[t+1]-continuumFlux[t+1];
         Float64 diffFlux = (spectralAxis[t+1]-spectralAxis[t])*(fb+fa)*0.5;
         sumFlux += diffFlux;
 
@@ -2454,6 +2479,30 @@ void CLineModelElementList::reinitModelUnderElements(std::vector<UInt32>  filter
         m_Elements[iElts]->initSpectrumModel(modelFluxAxis, m_ContinuumFluxAxis, lineIdx);
     }
 }
+
+void CLineModelElementList::getModel(CSpectrumFluxAxis& modelfluxAxis, Int32 lineTypeFilter)
+{
+    const CSpectrumSpectralAxis& spectralAxis = m_SpectrumModel->GetSpectralAxis();
+
+
+    UInt32 nElements = m_Elements.size();
+    for( UInt32 iElts=0; iElts<nElements; iElts++ )
+    {
+        m_Elements[iElts]->initSpectrumModel(modelfluxAxis, m_ContinuumFluxAxis);
+    }
+
+    for( UInt32 iElts=0; iElts<nElements; iElts++ )
+    {
+        Int32 lineType = m_Elements[iElts]->m_Rays[0].GetType();
+        if(lineTypeFilter==-1 || lineTypeFilter==lineType)
+        {
+            m_Elements[iElts]->addToSpectrumModel(spectralAxis, modelfluxAxis, m_ContinuumFluxAxis, m_Redshift);
+        }
+    }
+
+    return;
+}
+
 
 /**
  * \brief Adds a new model to each m_Elements entry.
@@ -5495,7 +5544,12 @@ CLineModelSolution CLineModelElementList::GetModelSolution(Int32 opt_level)
                 Float64 snrDI = -1;
                 TInt32List eIdx_line(1, eIdx);
                 TInt32List subeIdx_line(1, subeIdx);
-                Int32 retdi = GetFluxDirectIntegration(eIdx_line, subeIdx_line, fluxDI, snrDI);
+                Int32 opt_cont_substract_abslinesmodel=0;
+                if(m_RestRayList[iRestRay].GetType()==CRay::nType_Emission)
+                {
+                    opt_cont_substract_abslinesmodel=1;
+                }
+                Int32 retdi = GetFluxDirectIntegration(eIdx_line, subeIdx_line, opt_cont_substract_abslinesmodel, fluxDI, snrDI);
                 if(amp>=0.0)
                 {
                     if(m_RestRayList[iRestRay].GetType()==CRay::nType_Emission)
@@ -5546,7 +5600,8 @@ CLineModelSolution CLineModelElementList::GetModelSolution(Int32 opt_level)
                     {
                         fluxDI = -1;
                         Float64 snrDI = -1;
-                        Int32 retdi = GetFluxDirectIntegration(eIdx_oii, subeIdx_oii, fluxDI, snrDI);
+                        Int32 opt_cont_substract_abslinesmodel=0;
+                        Int32 retdi = GetFluxDirectIntegration(eIdx_oii, subeIdx_oii, opt_cont_substract_abslinesmodel,fluxDI, snrDI);
 
                         modelSolution.snrOII = snrDI;
                         if(fluxDI>0.0)

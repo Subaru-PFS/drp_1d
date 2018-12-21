@@ -168,9 +168,10 @@ public:
 
     void reinitModel();
     void refreshModel(Int32 lineTypeFilter=-1);
-    void reinitModelUnderElements(std::vector<UInt32> filterEltsIdx, Int32 lineIdx=-1 );
+    void getModel(CSpectrumFluxAxis& modelfluxAxis, Int32 lineTypeFilter=-1);
+    void reinitModelUnderElements(std::vector<UInt32> filterEltsIdx, Int32 lineIdx=-1);
     void refreshModelInitAllGrid();
-    void refreshModelUnderElements(std::vector<UInt32> filterEltsIdx, Int32 lineIdx=-1 );
+    void refreshModelUnderElements(std::vector<UInt32> filterEltsIdx, Int32 lineIdx=-1);
     void refreshModelDerivVelUnderElements(std::vector<UInt32> filterEltsIdx);
     void refreshModelDerivVelAbsorptionUnderElements(std::vector<UInt32> filterEltsIdx);
     void refreshModelDerivVelEmissionUnderElements(std::vector<UInt32> filterEltsIdx);
@@ -207,6 +208,7 @@ public:
     Float64 GetContinuumError(Int32 eIdx, Int32 subeIdx);
     Int32 GetFluxDirectIntegration(TInt32List eIdx_list,
                                    TInt32List subeIdx_list,
+                                   Int32 opt_cont_substract_abslinesmodel,
                                    Float64& fluxdi,
                                    Float64& snrdi);
     const CSpectrumFluxAxis&    GetModelContinuum() const;
