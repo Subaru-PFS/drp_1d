@@ -84,10 +84,9 @@ You can build either in **Debug** or **Release** mode
 	cd $ROOT_DIR
 	mkdir build-debug
 	cd build-debug
-	cmake .. -DCMAKE_BUILD_TYPE=Debug
+	cmake .. -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$HOME/usr
 	make
 	make install
-	make package
 
 ##### example : build in Release  mode
 
@@ -97,11 +96,9 @@ You can build either in **Debug** or **Release** mode
 	cmake .. -DCMAKE_BUILD_TYPE=Release
 	make
 	make install
-	make package
 
 Note :
 If you don't specify any **-DCMAKE_BUILD_TYPE=xxxxx** , it will build by default in Release mode
-
 
 ##### shared and static
 
@@ -180,7 +177,6 @@ Run it with :
 
      amazed --help
 
-
 ## Additional documentation
 
 Detailed documentation about this software can be found by building the provided documentation:
@@ -202,4 +198,4 @@ Then open in your web browser:
 
 ## Contacts
 
-Please send your bug reports or questions to alain DOT schmitt AT lam DOT fr
+Please send your bug reports or questions to amazed@lam.fr

@@ -12,17 +12,18 @@ except ImportError:
     exit()
 
 setup(
-    name = "pyamazed",
-    version = "0.0.1",
-    author = "CeSAM",
-    author_email = "alain DOT schmitt AT lam DOT fr",
-    description = ("CPF-redshift python client."),
-    license = "GPLv3+",
-    url = "http://www.lam.fr",
+    name="pyamazed",
+    version="0.0.1",
+    author="CeSAM",
+    author_email="amazed@lam.fr",
+    description=("CPF-redshift python client."),
+    license="GPLv3+",
+    url="http://www.lam.fr",
 
-    packages = ['pyamazed'],
+    packages=['pyamazed'],
 
-    long_description=open(os.path.join(os.path.dirname(__file__), 'README.md')).read(),
+    long_description=open(os.path.join(os.path.dirname(__file__),
+                                       'README.md')).read(),
 
     setup_requires=['pytest-runner', 'numpy'],
     tests_require=['pytest', ],
@@ -35,7 +36,7 @@ setup(
         "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
     ],
 
-    ext_modules=[ swig_ext ],
+    ext_modules=[swig_ext],
 
     entry_points={
         'console_scripts': [
