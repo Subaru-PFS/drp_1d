@@ -253,12 +253,24 @@ CTemplatesFitStore::TemplateFitValues CTemplatesFitStore::GetFitValues(Float64 r
     Int32 idxz=-1;
     if(m_samplingRedshift=="log")
     {
-        for(Int32 k=0; k<redshiftgrid.size()-1; k++)
+        if(redshiftgrid.size()==1)
         {
-            if(redshiftVal >= redshiftgrid[k] && redshiftVal <= redshiftgrid[k+1] )
+            if(redshiftVal == redshiftgrid[0])
             {
-                idxz = k;
-                break;
+                idxz=0;
+            }else{
+                Log.LogError("CTemplatesFitStore::GetFitValues - redshiftgrid.size()==1 but m_fitValues[0].redshift=%e, and redshiftVal=%e",
+                         redshiftgrid[0],
+                        redshiftVal);
+            }
+        }else{
+            for(Int32 k=0; k<redshiftgrid.size()-1; k++)
+            {
+                if(redshiftVal >= redshiftgrid[k] && redshiftVal <= redshiftgrid[k+1] )
+                {
+                    idxz = k;
+                    break;
+                }
             }
         }
     }else{
@@ -277,7 +289,7 @@ CTemplatesFitStore::TemplateFitValues CTemplatesFitStore::GetFitValues(Float64 r
 
         for(Int32 k=0; k<10; k++)
         {
-            Log.LogError("CTemplatesFitStore::GetFitValues - redshiftVal=%e, but lt m_fitValues[%d].redshift=%e",
+            Log.LogError("CTemplatesFitStore::GetFitValues - redshiftVal=%e, lt m_fitValues[%d].redshift=%e",
                          redshiftVal,
                          k,
                          redshiftgrid[k]);
