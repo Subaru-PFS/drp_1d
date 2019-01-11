@@ -77,7 +77,7 @@ def _check_lib(name, prefix, options):
 
 def _standard_build(path, prefix, options, extra_flags=''):
     os.system("cd {path} ; ./configure --prefix={prefix} {shared} {extra_flags};"
-              "make -j{parallel} clean all; make install".format(
+              "make clean ; make -j{parallel} all; make install".format(
                   path=path, prefix=prefix,
                   parallel=options.parallel,
                   shared='--enable-shared' if options.shared else '--enable-static',
