@@ -62,5 +62,7 @@ parser.add_argument('--log_level', '-l', dest='log_level', metavar='LEVEL',
                     type=log_level,
                     help='Verbosity level. Either "none", "debug", "info", '
                     '"warning", "error" or "critical".')
+parser.add_argument('--linecatalog_convert', '-a', action='store_true',
+                    help='Convert the line catalog from Vacuum to Air')
 parser.add_argument('--version', '-v', action='version', version=get_version(),
                     help='Print version and exit.')

@@ -1,9 +1,9 @@
-from .redshift import *
+from .redshift import CSpectrumSpectralAxis, CSpectrumFluxAxis_withSpectrum, \
+    CTemplate, CTemplateCatalog
 from astropy.io import fits
-import numpy as np
+
 
 class FitsTemplateCatalog(CTemplateCatalog):
-
     def Load(self, path):
         """Load a template catalog from a fits file"""
         hdul = fits.open(path)
