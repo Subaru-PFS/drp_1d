@@ -165,6 +165,7 @@ SET( LIB_NAME cpf-redshift )
 FILE( GLOB_RECURSE LIB_SOURCE_FILES ${ROOT_DIR}/RedshiftLibrary/src/lib/*.cpp )
 
 # install with rpath to find third-parties
+SET(CMAKE_MACOSX_RPATH 1)
 SET(CMAKE_SKIP_BUILD_RPATH FALSE)
 SET(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
 SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
@@ -266,4 +267,3 @@ if(ETAGS)
   execute_process(COMMAND "find ${ROOT_DIR}/RedshiftLibrary/ ( -name *.cpp -o -name *.h -o -name *.hpp -o -name *.py -o -name *.c ) -exec ${ETAGS} -a ${ROOT_DIR}/TAGS {} +"
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 endif(ETAGS)
-
