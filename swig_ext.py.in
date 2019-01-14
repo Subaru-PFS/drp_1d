@@ -7,8 +7,10 @@ library_dirs = '@cpf-redshift_LINK_DIR@'.split(';')
 libs = '@cpf-redshift_THIRDPARTY_LIBS@'.split(';')
 coverage = @cpf-redshift_COVERAGE@
 
-extra_compile_args = ['-std=c++11', '-Wl,-rpath @cpf-redshift_LINK_DIR@']
+extra_compile_args = ['-std=c++11']
 extra_link_args = []
+for path in '@cpf-redshift_LINK_DIR@'.split(';'):
+    extra_link_args.extend(['-Wl,-rpath', path])
 
 if coverage:
     extra_compile_args.append('--coverage')
