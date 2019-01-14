@@ -65,7 +65,7 @@ def DownloadHTTPFile(fileUrl, localFilePath):
 
 def _check_lib(name, prefix, options):
     _os = platform(terse=True).lower()
-    if _os == 'macos':
+    if _os == 'macos' or _os.startswith('darwin'):
         ext = '.dylib' if options.shared else '.a'
     elif _os == 'windows':
         ext = '.dll' if options.shared else '.a'
