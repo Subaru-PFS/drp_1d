@@ -4,20 +4,25 @@ from .argumentparser import parser
 from .redshift import *
 from .catalog import FitsTemplateCatalog
 from .config import Config
-import numpy as np
 import json
+
 
 def datapath(config, *path):
     return os.path.expanduser(os.path.join(config.data_path, *path))
 
+
 def calibrationpath(config, *path):
     return os.path.expanduser(os.path.join(config.calibration_dir, *path))
+
 
 def spectrumpath(config, *path):
     return os.path.expanduser(os.path.join(config.spectrum_dir, *path))
 
+
 def update_paramstore(param, config):
-    param.Set_String('calibrationDir', os.path.expanduser(config.calibration_dir))
+    param.Set_String('calibrationDir',
+                     os.path.expanduser(config.calibration_dir))
+
 
 def amazed():
 
@@ -25,8 +30,8 @@ def amazed():
     config = Config(args)
 
     zlog = CLog()
-    logConsoleHandler = CLogConsoleHandler( zlog )
-    logConsoleHandler.SetLevelMask ( config.log_level )
+    logConsoleHandler = CLogFileHandler(zlog, os.path.join(config.output_folder, 'amazed.log'))
+    logConsoleHandler.SetLevelMask(config.log_level)
 
     param = CParameterStore()
     param.Load(os.path.expanduser(config.parameters_file))
@@ -59,10 +64,10 @@ def amazed():
                                           "absolute_path_to_df_binaries_here")
     assert retcode
 
-    #template_catalog = CTemplateCatalog(medianRemovalMethod, opt_medianKernelWidth,
-    #                                    opt_nscales, dfBinPath)
-    template_catalog = FitsTemplateCatalog(medianRemovalMethod, opt_medianKernelWidth,
-                                           opt_nscales, dfBinPath)
+    template_catalog = CTemplateCatalog(medianRemovalMethod, opt_medianKernelWidth,
+                                        opt_nscales, dfBinPath)
+    #template_catalog = FitsTemplateCatalog(medianRemovalMethod, opt_medianKernelWidth,
+    #                                       opt_nscales, dfBinPath)
     print("Loading %s" % config.template_dir)
 
     try:
