@@ -40,6 +40,7 @@ As a user, in `$HOME`:
 	cd cpf-redshift/build
 	cmake .. -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release
 	make -j4
+  make install
 	virtualenv -p python3.6 --system-site-packages $HOME/venv
 	source $HOME/venv/bin/activate
 	pip3.6 install astropy # on CentOS7 only
