@@ -32,6 +32,7 @@
 #include "RedshiftLibrary/log/log.h"
 #include "RedshiftLibrary/common/singleton.h"
 #include "RedshiftLibrary/log/consolehandler.h"
+#include "RedshiftLibrary/log/filehandler.h"
 #include "RedshiftLibrary/processflow/parameterstore.h"
 #include "RedshiftLibrary/reliability/zclassifierstore.h"
 #include "RedshiftLibrary/processflow/context.h"
@@ -80,6 +81,12 @@ public:
 class CLogConsoleHandler {
 public:
   CLogConsoleHandler( CLog& logger );
+  void SetLevelMask( UInt32 mask );
+};
+
+class CLogFileHandler {
+public:
+  CLogFileHandler( CLog& logger, const char* filePath );
   void SetLevelMask( UInt32 mask );
 };
 

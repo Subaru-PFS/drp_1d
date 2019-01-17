@@ -423,11 +423,17 @@ Float64 CLineModelElement::GetLineProfileDerivSigma(CRay::TProfile profile, Floa
         break;
     case CRay::EXTINCT:
         //NOT IMPLEMENTED FOR THIS PROFILE, to be done when necessary...
-        Float64 sigma_rest = m_dataN*m_dataStepLambda;
-        Float64 z = sigma/sigma_rest - 1.0;
-        Float64 dataStartLambda = (x0/(1+z)) - sigma_rest/2.0;
-        Int32 valI = int( (x/(1.0+z)-dataStartLambda)/m_dataStepLambda );
-        return m_dataExtinctionFlux[valI];
+        sigma_rest = m_dataN*m_dataStepLambda;
+        z = sigma/sigma_rest - 1.0;
+        dataStartLambda = (x0/(1+z)) - sigma_rest/2.0;
+        valI = int( (x/(1.0+z)-dataStartLambda)/m_dataStepLambda );
+        val = m_dataExtinctionFlux[valI];
+        break;
+    case CRay::NONE:
+    case CRay::LOR:
+      Log.LogError("Invalid ray profile %d", profile);
+      throw std::runtime_error("Invalid ray profile");
+      break;
     }
     return val;
 }

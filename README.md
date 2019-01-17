@@ -48,7 +48,6 @@ Use [Anaconda](https://www.anaconda.com/) as python3 provider and then install p
 
     pip3 install astropy
 
-
 ## Installing drp_1d
 
 ### Building C++ code from source
@@ -76,4 +75,4 @@ From `drp_1d` root directory:
 
 ## Contacts
 
-Please send your bug reports or questions to alain DOT schmitt AT lam DOT fr
+Please send your bug reports or questions to amazed-support@lam.fr
