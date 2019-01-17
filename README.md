@@ -9,9 +9,9 @@ As root:
 
     yum install -y epel-release
     yum -y install https://centos7.iuscommunity.org/ius-release.rpm
-	rpm --import /etc/pki/rpm-gpg/IUS-COMMUNITY-GPG-KEY
+    rpm --import /etc/pki/rpm-gpg/IUS-COMMUNITY-GPG-KEY
     yum install -y git gcc-c++ make cmake swig boost-devel cfitsio-devel fftw-devel \
-	               python36-numpy python36u-pip python-virtualenv python36-devel
+                   python36-numpy python36u-pip python-virtualenv python36-devel
 
 ### Install dependencies on Debian/Ubuntu
 
@@ -19,11 +19,11 @@ As root:
 
     apt-get install -y git cmake ccache build-essential swig python3-pip \
                        libboost-filesystem-dev libboost-system-dev libboost-thread-dev \
-					   libboost-timer-dev libboost-chrono-dev libboost-program-options-dev \
-					   libboost-regex-dev libboost-test-dev \
-					   libcfitsio-dev libgsl-dev libfftw3-dev \
-					   pkg-config \
-					   python3-numpy python3-astropy
+                       libboost-timer-dev libboost-chrono-dev libboost-program-options-dev \
+                       libboost-regex-dev libboost-test-dev \
+                       libcfitsio-dev libgsl-dev libfftw3-dev \
+                       pkg-config \
+                       python3-numpy python3-astropy
 
 ### Install depencies on MacOS
 
@@ -36,15 +36,15 @@ Use `brew` as packet manager on MacOS:
 As a user, in `$HOME`:
 
     git clone -b develop git@gitlab.lam.fr:CPF/cpf-redshift.git
-	mkdir cpf-redshift/build
-	cd cpf-redshift/build
-	cmake .. -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release
-	make -j4
-  make install
-	virtualenv -p python3.6 --system-site-packages $HOME/venv
-	source $HOME/venv/bin/activate
-	pip3.6 install astropy # on CentOS7 only
-	pip3.6 install -e $HOME/cpf-redshift/
+    mkdir cpf-redshift/build
+    cd cpf-redshift/build
+    cmake .. -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release
+    make -j4
+    make install
+    virtualenv -p python3.6 --system-site-packages $HOME/venv
+    source $HOME/venv/bin/activate
+    pip3.6 install astropy # on CentOS7 only
+    pip3.6 install -e $HOME/cpf-redshift/
 
 ## Build and install (Unix and unix like):
 
@@ -57,14 +57,14 @@ Create a project folder :
 
 Clone the cpf-redshift repository :
 
-	git clone git@gitlab.lam.fr:CPF/cpf-redshift.git
+    git clone git@gitlab.lam.fr:CPF/cpf-redshift.git
 
 ### 2. Build and install third party library by running the buildandinstall.sh script:
 
 Execute the script in cpf-redshift/tools :
 
-	cd cpf-redshift/tools/
-	./buildandinstallthirdparty.py
+    cd cpf-redshift/tools/
+    ./buildandinstallthirdparty.py
 
 Please note that each tool has its own dependency list. If a tool fails to build, remove the relevant files from $ROOT_DIR/thirdparty, install the missing dependency and try again.
 
@@ -82,21 +82,21 @@ You can build either in **Debug** or **Release** mode
 
 #### example : build in Debug mode
 
-	cd $ROOT_DIR
-	mkdir build-debug
-	cd build-debug
-	cmake .. -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$HOME/usr
-	make
-	make install
+    cd $ROOT_DIR
+    mkdir build-debug
+    cd build-debug
+    cmake .. -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$HOME/usr
+    make
+    make install
 
 #### example : build in Release  mode
 
-	cd $ROOT_DIR
-	mkdir build
-	cd build
-	cmake .. -DCMAKE_BUILD_TYPE=Release
-	make
-	make install
+    cd $ROOT_DIR
+    mkdir build
+    cd build
+    cmake .. -DCMAKE_BUILD_TYPE=Release
+    make
+    make install
 
 Note :
 If you don't specify any **-DCMAKE_BUILD_TYPE=xxxxx** , it will build by default in Release mode
@@ -105,10 +105,10 @@ If you don't specify any **-DCMAKE_BUILD_TYPE=xxxxx** , it will build by default
 
 You can build either static or shared library :
 
-	cmake .. -DBUILD_SHARED_LIBS=ON
+    cmake .. -DBUILD_SHARED_LIBS=ON
 or
 
-	cmake .. -DBUILD_SHARED_LIBS=OFF
+    cmake .. -DBUILD_SHARED_LIBS=OFF
 
 #### building and running tests
 
@@ -128,7 +128,7 @@ Create coverage reports with :
 
      GCOV_PREFIX=$HOME/src/cpf-redshift/RedshiftLibrary/ GCOV_PREFIX_STRIP=4 lcov -q -c -t "result" -o tests.cov --no-external -b $HOME/src/cpf-redshift/RedshiftLibrary/ -d CMakeFiles
      lcov -q -r tests.cov '*/tests/src/*' -o coverage.info
-	 genhtml -o coverage coverage.info
+     genhtml -o coverage coverage.info
 
 ### 4. Usage in client code
 
@@ -138,7 +138,7 @@ You client `CMakeLists.txt` must include :
 
     FIND_PACKAGE( cpf-redshift )
     INCLUDE_DIRECTORIES( ${cpf-redshift_INCLUDE_DIR} ${cpf-redshift_THIRDPARTY_INCLUDE_DIR}  )
-	LINK_DIRECTORIES( ${cpf-redshift_LINK_DIR} ${cpf-redshift_THIRDPARTY_LINK_DIR} )
+    LINK_DIRECTORIES( ${cpf-redshift_LINK_DIR} ${cpf-redshift_THIRDPARTY_LINK_DIR} )
 
     TARGET_LINK_LIBRARIES( YOUR_TARGET ${cpf-redshift_THIRDPARTY_LIBS} ${cpf-redshift_LIB})
     # or alternatively, if you want to link to boost-tests :
@@ -164,7 +164,7 @@ or :
 Create a virtualenv and install amazed :
 
      virtualenv venv
-	 source venv/bin/activate
+     source venv/bin/activate
 
 Install amazed with setup.py:
 
@@ -187,11 +187,11 @@ Once cpf-redshift package has been compiled :
      python setup.py bdist
      pip wheel /build/cpf-redshift/ -w wheelhouse
      auditwheel repair \
-		  wheelhouse/pyamazed-0.0.1-cp${MAJ}${MIN}-cp${MAJ}${MIN}m-linux_x86_64.whl \
-		  -w wheel
+          wheelhouse/pyamazed-0.0.1-cp${MAJ}${MIN}-cp${MAJ}${MIN}m-linux_x86_64.whl \
+          -w wheel
      pip install twine
      twine upload --repository-url https://test.pypi.org/legacy/ \
-	      wheel/pyamazed-0.0.1-cp36-cp36m-manylinux1_x86_64.whl
+          wheel/pyamazed-0.0.1-cp36-cp36m-manylinux1_x86_64.whl
 
 ## Additional documentation
 
