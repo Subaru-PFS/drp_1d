@@ -120,11 +120,12 @@ libDict = {
         "extra_flags": ''
     },
     "fftw": {
-        "path":  "fftw-3.3.3",
-        "src": "ftp://ftp.fftw.org/pub/fftw/fftw-3.3.3.tar.gz",
+        "path":  "fftw-3.3.8",
+        "src": "ftp://ftp.fftw.org/pub/fftw/fftw-3.3.8.tar.gz",
         "check_file": "libfftw3",
         "build": _standard_build,
-        "extra_flags": "--enable-sse2 --enable-avx --enable-openmp"
+        "extra_flags": "--enable-sse2 --enable-avx --enable-avx2 "
+        "--enable-avx512 --enable-avx-128-fma"
     },
     "cfitsio": {
         "path": "cfitsio-3.36",
