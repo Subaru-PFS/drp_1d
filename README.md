@@ -22,9 +22,9 @@ As root:
 
     yum install -y epel-release
     yum -y install https://centos7.iuscommunity.org/ius-release.rpm
-	rpm --import /etc/pki/rpm-gpg/IUS-COMMUNITY-GPG-KEY
+    rpm --import /etc/pki/rpm-gpg/IUS-COMMUNITY-GPG-KEY
     yum install -y git gcc-c++ make cmake swig boost-devel cfitsio-devel fftw-devel \
-	               python36-numpy python36u-pip python-virtualenv python36-devel
+                   python36-numpy python36u-pip python-virtualenv python36-devel
 
 ### Installing dependencies on Debian/Ubuntu
 
@@ -32,11 +32,11 @@ As root:
 
     apt-get install -y git cmake ccache build-essential swig python3-pip \
                        libboost-filesystem-dev libboost-system-dev libboost-thread-dev \
-					   libboost-timer-dev libboost-chrono-dev libboost-program-options-dev \
-					   libboost-regex-dev libboost-test-dev \
-					   libcfitsio-dev libgsl-dev libfftw3-dev \
-					   pkg-config \
-					   python3-numpy python3-astropy
+                       libboost-timer-dev libboost-chrono-dev libboost-program-options-dev \
+                       libboost-regex-dev libboost-test-dev \
+                       libcfitsio-dev libgsl-dev libfftw3-dev \
+                       pkg-config \
+                       python3-numpy python3-astropy
 
 ### Installing depencies on MacOS
 
@@ -47,7 +47,6 @@ Use `brew` as packet manager on MacOS:
 Use [Anaconda](https://www.anaconda.com/) as python3 provider and then install python dependencies with `pip`:
 
     pip3 install astropy
-
 
 ## Installing drp_1d
 
@@ -76,4 +75,4 @@ From `drp_1d` root directory:
 
 ## Contacts
 
-Please send your bug reports or questions to alain DOT schmitt AT lam DOT fr
+Please send your bug reports or questions to amazed-support@lam.fr

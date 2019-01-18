@@ -11,11 +11,13 @@ defaults = {
     'error_file': None,
     'spectrum_dir': 'spectrum',
     'template_dir': 'calibration/templates/ExtendedTemplatesJan2017_v3',
-    'linecatalog':'linecatalog.txt',
+    'linecatalog': 'linecatalog.txt',
     'calibration_dir': './calibration',
     'zclassifier_dir': '',
-    'log_level': CLog.nLevel_Warning
+    'log_level': CLog.nLevel_Warning,
+    'linecatalog_convert': False,
     }
+
 
 class Config(object):
 
