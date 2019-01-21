@@ -1,196 +1,83 @@
-# cpf-redshift
+# drp_1d
 
+## Requirements
 
-## Per-distribution installation
+drp_1d has the following strict requirements:
+* [gcc](https://gcc.gnu.org/)
+* [python](https://www.python.org/) 3.5
+* [cmake](https://cmake.org/)
+* [swig](http://www.swig.org/)
+* [boost](https://www.boost.org/)
+* [cfitsio](https://heasarc.gsfc.nasa.gov/fitsio/)
+* [gsl](https://www.gnu.org/software/gsl/) 2.1
+* [fftw](http://www.fftw.org/)
 
-### Install dependencies on CentOS7
+drp_1d also depends on other python packages
+* [numpy](http://www.numpy.org/)
+* [astropy](http://www.astropy.org/)
+
+### Installing dependencies on CentOS7
 
 As root:
 
     yum install -y epel-release
     yum -y install https://centos7.iuscommunity.org/ius-release.rpm
-    rpm --import /etc/pki/rpm-gpg/IUS-COMMUNITY-GPG-KEY
+	rpm --import /etc/pki/rpm-gpg/IUS-COMMUNITY-GPG-KEY
     yum install -y git gcc-c++ make cmake swig boost-devel cfitsio-devel fftw-devel \
-                   python36-numpy python36u-pip python-virtualenv python36-devel
+	               python36-numpy python36u-pip python-virtualenv python36-devel
 
-### Install dependencies on Debian/Ubuntu
+### Installing dependencies on Debian/Ubuntu
 
 As root:
 
     apt-get install -y git cmake ccache build-essential swig python3-pip \
                        libboost-filesystem-dev libboost-system-dev libboost-thread-dev \
-                       libboost-timer-dev libboost-chrono-dev libboost-program-options-dev \
-                       libboost-regex-dev libboost-test-dev \
-                       libcfitsio-dev libgsl-dev libfftw3-dev \
-                       pkg-config \
-                       python3-numpy python3-astropy
+					   libboost-timer-dev libboost-chrono-dev libboost-program-options-dev \
+					   libboost-regex-dev libboost-test-dev \
+					   libcfitsio-dev libgsl-dev libfftw3-dev \
+					   pkg-config \
+					   python3-numpy python3-astropy
 
-### Install depencies on MacOS
+### Installing depencies on MacOS
 
 Use `brew` as packet manager on MacOS:
 
-    brew install boost cfitsio gsl fftw
+    brew install gcc cmake swig boost cfitsio gsl fftw
 
-### Download, build and install
+Use [Anaconda](https://www.anaconda.com/) as python3 provider and then install python dependencies with `pip`:
 
-As a user, in `$HOME`:
+    pip3 install astropy
 
-    git clone -b develop git@gitlab.lam.fr:CPF/cpf-redshift.git
-    mkdir cpf-redshift/build
-    cd cpf-redshift/build
-    cmake .. -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release
+
+## Installing drp_1d
+
+### Building C++ code from source
+
+As a user:
+
+    git clone git@github.com:Subaru-PFS/drp_1d.git
+    mkdir drp_1d/build
+    cd drp_1d/build
+    cmake .. -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=ON
     make -j4
-    make install
-    virtualenv -p python3.6 --system-site-packages $HOME/venv
-    source $HOME/venv/bin/activate
-    pip3.6 install astropy # on CentOS7 only
-    pip3.6 install -e $HOME/cpf-redshift/
+	make install
 
-### Build options
-
-Build process uses cmake tool
-
-#### -DCMAKE_BUILD_TYPE
-
-You can build either in `Debug` or `Release` mode (defaults to `Release`).
-
-##### example : build in Debug mode
-
-    cd $ROOT_DIR
-    mkdir build-debug
-    cd build-debug
-    cmake .. -DCMAKE_BUILD_TYPE=Debug
-    make
-    make install
-
-##### example : build in Release  mode
-
-    cd $ROOT_DIR
-    mkdir build
-    cd build
-    cmake .. -DCMAKE_BUILD_TYPE=Release
-    make
-    make install
-
-
-#### -DBUILD_SHARED_LIBS
-
-You can build either static or shared library (defaults to `ON`).
-
-    cmake .. -DBUILD_SHARED_LIBS=ON
-or
-
-    cmake .. -DBUILD_SHARED_LIBS=OFF
-
-
-#### -DCMAKE_INSTALL_PREFIX
-
-You can specify install directory (defaults to `$HOME/usr`).
+You can specify install directory with `CMAKE_INSTALL_PREFIX` (defaults to `$HOME/usr`).
 
     cmake .. -DCMAKE_INSTALL_PREFIX=/usr/local
 
+### Installing drp_1d python module from pip
 
-#### -DBUILD_TESTS
+From `drp_1d` root directory:
 
-In order to build tests, shared libs version must be enabled :
+    pip3 install .
 
-    cmake .. -DBUILD_SHARED_LIBS=ON -DBUILD_TESTS=ON
+### Testing an installed drp_1d
 
-Run tests with :
+From `drp_1d` root directory:
 
+    cd build/
     make test
-
-#### -DTEST_COVERAGE
-
-Tests can output line coverage statistics if you define `TEST_COVERAGE` :
-
-    cmake .. -DBUILD_SHARED_LIBS=ON -DBUILD_TESTS=ON -DTEST_COVERAGE=ON
-
-Run tests with :
-
-    make test
-
-Create coverage reports with :
-
-     GCOV_PREFIX=$HOME/src/cpf-redshift/RedshiftLibrary/ GCOV_PREFIX_STRIP=4 lcov -q -c -t "result" -o tests.cov --no-external -b $HOME/src/cpf-redshift/RedshiftLibrary/ -d CMakeFiles
-     lcov -q -r tests.cov '*/tests/src/*' -o coverage.info
-     genhtml -o coverage coverage.info
-
-### Usage in client code
-
-#### CMakeLists.txt
-
-You client `CMakeLists.txt` must include :
-
-    FIND_PACKAGE( cpf-redshift )
-    INCLUDE_DIRECTORIES( ${cpf-redshift_INCLUDE_DIR} )
-    LINK_DIRECTORIES( ${cpf-redshift_LINK_DIR} )
-
-    TARGET_LINK_LIBRARIES( YOUR_TARGET ${cpf-redshift_LIB})
-
-##### Building
-
-Say you have built cpf-redshift in `$HOME/usr` directory.
-
-You can build the client with :
-
-     CMAKE_MODULE_PATH=$HOME/usr/share/cmake cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=ON
-
-
-### Build and install python interface and client with setuptools
-
-#### With python setup.py install
-
-Create a virtualenv and install amazed :
-
-     virtualenv venv
-     source venv/bin/activate
-
-Install amazed with setup.py:
-
-     python setup.py install
-
-Or, installwith pip :
-
-     pip install -e .
-
-Run it with :
-
-     amazed --help
-
-## Build wheel package
-
-Once cpf-redshift package has been compiled :
-
-     pip install numpy auditwheel
-
-     python setup.py bdist
-     pip wheel /build/cpf-redshift/ -w wheelhouse
-     auditwheel repair \
-          wheelhouse/pyamazed-0.0.1-cp${MAJ}${MIN}-cp${MAJ}${MIN}m-linux_x86_64.whl \
-          -w wheel
-     pip install twine
-     twine upload --repository-url https://test.pypi.org/legacy/ \
-          wheel/pyamazed-0.0.1-cp36-cp36m-manylinux1_x86_64.whl
-
-## Additional documentation
-
-Detailed documentation about this software can be found by building the provided documentation:
-
-Build documentation:
-
-    cd $ROOT_DIR/tools/
-    python ./builddoc.py`
-
-Then open in your web browser:
-
-    $ROOT_DIR/docs/html/index.html
-
-## Libraries
-
-+ GSL : GNU Scientific Library
-
-[More informations here](https://www.gnu.org/software/gsl/)
 
 ## Contacts
 
