@@ -1,9 +1,6 @@
 import os
-from setuptools.command.build_ext import build_ext
-from setuptools.command.install import install
-from setuptools import setup, Extension
-from pathlib import Path
-import numpy
+from setuptools import setup
+
 
 try:
     from swig_ext import swig_ext
@@ -16,7 +13,7 @@ setup(
     version="0.0.1",
     author="LAM - Laboratoire d'Astrophysique de Marseille",
     author_email="amazed-support@lam.fr",
-    description=("CPF-redshift python client."),
+    description=("AMAZED python client."),
     license="GPLv3+",
     url="http://www.lam.fr",
     packages=['pyamazed'],
@@ -31,7 +28,8 @@ setup(
         "Development Status :: 1 - Planning",
         "Topic :: Scientific/Engineering",
         "Programming Language :: Python",
-        "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
+        "License :: OSI Approved :: GNU General Public License v3 or "
+        "later (GPLv3+)",
     ],
     ext_modules=[swig_ext],
     entry_points={
