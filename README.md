@@ -43,8 +43,17 @@ As a user, in `$HOME`:
     make install
     virtualenv -p python3.6 --system-site-packages $HOME/venv
     source $HOME/venv/bin/activate
-    pip3.6 install astropy # on CentOS7 only
-    pip3.6 install -e $HOME/cpf-redshift/
+    pip3.6 install astropy # on CentOS7 and MacOSX
+
+#### For linux users
+
+    pip3.6 install -e $HOME/cpf-redshift
+
+#### For MacOSX users
+
+    MACOSX_DEPLOYMENT_TARGET=10.13 CC=clang CXX=clang++ pip3.6 install -e $HOME/cpf-redshift
+
+Set `MACOSX_DEPLOYMENT_TARGET` variable to properly MacOSX version (`sw_vers` command on terminal).
 
 ### Build options
 
