@@ -70,7 +70,15 @@ You can specify install directory with `CMAKE_INSTALL_PREFIX` (defaults to `$HOM
 
 From `drp_1d` root directory:
 
-    pip3 install .
+#### For linux users
+
+    pip install .
+
+#### For MacOSX users
+
+    MACOSX_DEPLOYMENT_TARGET=10.13 CC=clang CXX=clang++ pip3.6 install .
+
+Set `MACOSX_DEPLOYMENT_TARGET` variable to properly MacOSX version (`sw_vers` command on terminal).
 
 ### Testing an installed drp_1d
 
