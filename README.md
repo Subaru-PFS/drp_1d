@@ -46,50 +46,24 @@ As a user, in `$HOME`:
     pip3.6 install astropy # on CentOS7 only
     pip3.6 install -e $HOME/cpf-redshift/
 
-## Build and install (Unix and unix like):
-
-### 1. Clone Git repository:
-
-Create a project folder :
-
-    mkdir Projects
-    cd Projects
-
-Clone the cpf-redshift repository :
-
-    git clone git@gitlab.lam.fr:CPF/cpf-redshift.git
-
-### 2. Build and install third party library by running the buildandinstall.sh script:
-
-Execute the script in cpf-redshift/tools :
-
-    cd cpf-redshift/tools/
-    ./buildandinstallthirdparty.py
-
-Please note that each tool has its own dependency list. If a tool fails to build, remove the relevant files from $ROOT_DIR/thirdparty, install the missing dependency and try again.
-
-The "doxygen" tool requires at least flex and bison to work.
-
-This step can be automatically done with cmake, by adding -DBUILD_THIRDPARTY=true parameter. e.g. :
-
-     cmake . -DBUILD_THIRDPARTY=true
-
-### 3. Build libcpf-redshift
+### Build options
 
 Build process uses cmake tool
 
-You can build either in **Debug** or **Release** mode
+#### -DCMAKE_BUILD_TYPE
 
-#### example : build in Debug mode
+You can build either in `Debug` or `Release` mode (defaults to `Release`).
+
+##### example : build in Debug mode
 
     cd $ROOT_DIR
     mkdir build-debug
     cd build-debug
-    cmake .. -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$HOME/usr
+    cmake .. -DCMAKE_BUILD_TYPE=Debug
     make
     make install
 
-#### example : build in Release  mode
+##### example : build in Release  mode
 
     cd $ROOT_DIR
     mkdir build
@@ -98,27 +72,39 @@ You can build either in **Debug** or **Release** mode
     make
     make install
 
-Note :
-If you don't specify any **-DCMAKE_BUILD_TYPE=xxxxx** , it will build by default in Release mode
 
-##### shared and static
+#### -DBUILD_SHARED_LIBS
 
-You can build either static or shared library :
+You can build either static or shared library (defaults to `ON`).
 
     cmake .. -DBUILD_SHARED_LIBS=ON
 or
 
     cmake .. -DBUILD_SHARED_LIBS=OFF
 
-#### building and running tests
+
+#### -DCMAKE_INSTALL_PREFIX
+
+You can specify install directory (defaults to `$HOME/usr`).
+
+    cmake .. -DCMAKE_INSTALL_PREFIX=/usr/local
+
+
+#### -DBUILD_TESTS
 
 In order to build tests, shared libs version must be enabled :
 
-    cmake .. -DBUILD_SHARED_LIBS=ON
+    cmake .. -DBUILD_SHARED_LIBS=ON -DBUILD_TESTS=ON
+
+Run tests with :
+
+    make test
+
+#### -DTEST_COVERAGE
 
 Tests can output line coverage statistics if you define `TEST_COVERAGE` :
 
-    cmake .. -DBUILD_SHARED_LIBS=ON -DTEST_COVERAGE=ON
+    cmake .. -DBUILD_SHARED_LIBS=ON -DBUILD_TESTS=ON -DTEST_COVERAGE=ON
 
 Run tests with :
 
@@ -130,34 +116,28 @@ Create coverage reports with :
      lcov -q -r tests.cov '*/tests/src/*' -o coverage.info
      genhtml -o coverage coverage.info
 
-### 4. Usage in client code
+### Usage in client code
 
 #### CMakeLists.txt
 
 You client `CMakeLists.txt` must include :
 
     FIND_PACKAGE( cpf-redshift )
-    INCLUDE_DIRECTORIES( ${cpf-redshift_INCLUDE_DIR} ${cpf-redshift_THIRDPARTY_INCLUDE_DIR}  )
-    LINK_DIRECTORIES( ${cpf-redshift_LINK_DIR} ${cpf-redshift_THIRDPARTY_LINK_DIR} )
+    INCLUDE_DIRECTORIES( ${cpf-redshift_INCLUDE_DIR} )
+    LINK_DIRECTORIES( ${cpf-redshift_LINK_DIR} )
 
-    TARGET_LINK_LIBRARIES( YOUR_TARGET ${cpf-redshift_THIRDPARTY_LIBS} ${cpf-redshift_LIB})
-    # or alternatively, if you want to link to boost-tests :
-    TARGET_LINK_LIBRARIES( YOUR_TARGET ${cpf-redshift_THIRDPARTY_LIBS} ${tests_THIRDPARTY_LIBS} ${cpf-redshift_LIB})
+    TARGET_LINK_LIBRARIES( YOUR_TARGET ${cpf-redshift_LIB})
 
 ##### Building
 
-Say you have built a Release and a Debug version of cpf-redshift in `~/src/cpf-redshift/build` and
-`~/src/cpf-redshift/build-debug` directories.
+Say you have built cpf-redshift in `$HOME/usr` directory.
 
-You can build each version with :
+You can build the client with :
 
-     CMAKE_MODULE_PATH=$HOME/src/cpf-redshift/build/ cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=ON
+     CMAKE_MODULE_PATH=$HOME/usr/share/cmake cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=ON
 
-or :
 
-     CMAKE_MODULE_PATH=$HOME/src/cpf-redshift/build-debug/ cmake .. -DCMAKE_BUILD_TYPE=Debug -DBUILD_SHARED_LIBS=ON
-
-### 5. Build and install python interface and client with setuptools
+### Build and install python interface and client with setuptools
 
 #### With python setup.py install
 
