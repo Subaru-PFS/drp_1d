@@ -1,6 +1,0 @@
-# Absorption lines list  
-# Emission lines list
-6562.8  Halpha			E	S
-4861.3  Hbeta			E	S
-4340.4  Hgamma			E	 
-4101.7  Hdelta			E	 

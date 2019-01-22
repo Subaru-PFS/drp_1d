@@ -1,0 +1,34 @@
+from setuptools import Extension
+import os, os.path
+import numpy
+
+include_dirs = '@cpf-redshift_INCLUDE_DIR@'.split(';')
+library_dirs = '@cpf-redshift_LINK_DIR@'.split(';')
+libs = '@cpf-redshift_THIRDPARTY_LIBS@'.split(';')
+coverage = @cpf-redshift_COVERAGE@
+
+extra_compile_args = ['-std=c++11']
+extra_link_args = []
+for path in '@cpf-redshift_LINK_DIR@'.split(';'):
+    extra_link_args.extend(['-Wl,-rpath', path])
+
+if coverage:
+    extra_compile_args.append('--coverage')
+    extra_link_args.append('-fprofile-arcs')
+
+#  find out numpy include directory.
+try:
+    numpy_include = numpy.get_include()
+except AttributeError:
+    numpy_include = numpy.get_numpy_include()
+
+
+swig_ext = Extension('pyamazed/_redshift', sources=['pyamazed/redshift.i'],
+                     swig_opts = ['-c++'],
+                     extra_compile_args = extra_compile_args,
+                     include_dirs = include_dirs + [numpy_include],
+                     library_dirs = library_dirs,
+                     libraries = libs + ['@LIB_NAME@', ],
+                     extra_link_args = extra_link_args,
+                     runtime_library_dirs = library_dirs)
+

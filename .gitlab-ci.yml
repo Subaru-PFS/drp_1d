@@ -1,0 +1,23 @@
+image: ubuntu
+
+before_script:
+  # install required packages
+  - apt-get update && apt-get install -y git cmake ccache build-essential swig
+      python3-pip python3-venv libboost-filesystem-dev libboost-system-dev
+      libboost-thread-dev libboost-timer-dev libboost-chrono-dev
+      libboost-program-options-dev libboost-regex-dev libboost-test-dev
+      libcfitsio-dev libgsl-dev libfftw3-dev pkg-config
+      python3-numpy python3-astropy
+  - pip3 install --upgrade pip
+
+job:
+  script:
+    - mkdir build
+    - cd build
+    - cmake .. -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release
+    - make -j4
+    - cd ..
+    - python3.6 -m venv --system-site-packages venv
+    - source venv/bin/activate
+    - pip3.6 install .
+    - make -C build tests

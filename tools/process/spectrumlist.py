@@ -7,13 +7,19 @@ Created on Fri Dec  9 20:12:38 2016
 
 import os
 import sys
-
+import re
 import argparse
 
 try:
     import reference
 except ImportError:
     print("Import ERROR: unable to load the reference package. some functionnalities will be unavailable...")
+
+
+
+def get_valid_filename(s):
+    s = str(s).strip().replace(' ', '_')
+    return re.sub(r'(?u)[^-\w.]', '', s)
 
 
 class Spectrumlist(object):
@@ -25,6 +31,7 @@ class Spectrumlist(object):
 
         self.fvect = []
         self.errfvect = []
+        self.procidvect = []
             
         self.load()
  
@@ -38,17 +45,27 @@ class Spectrumlist(object):
         f = open(self.path)
         for line in f:
             lineStr = line.strip()
-            if not lineStr.startswith('#'):
+            if not lineStr.startswith('#') and not lineStr=="":
                 #print lineStr
                 data = lineStr.split("\t")
                 #if len(data)<2:
                 #    data = lineStr.split(" ")
                 #data = [r for r in data if r != '']
                 self.fvect.append(data[0])
-                if len(data)>=2:
+                if len(data)>=3:
                     self.errfvect.append(data[1])
+                    self.procidvect.append(data[2])
+                else:
+                    print("ERROR: invalid spectrumlist. Less than 3 columns found. Aborting")
+                    break
         print("Spctrumlist loaded n F = {}".format(len(self.fvect)))
         print("Spctrumlist loaded n ErrF = {}".format(len(self.errfvect)))
+        print("Spctrumlist loaded n procID = {}".format(len(self.procidvect)))
+        
+        if len(self.fvect) != len(self.errfvect):
+            print("ERROR: spectrumlist found with f list not the same len as ErrF")
+        if len(self.fvect) != len(self.procidvect):
+            print("ERROR: spectrumlist found with f list not the same len as procidvect")
         
               
         
@@ -66,8 +83,8 @@ class Spectrumlist(object):
             f = open(outputFileFullPath, 'w')
             for k, idThis in enumerate(self.fvect):
                 if k in indexes:
-                    if len(self.errfvect) == len(self.fvect):
-                        f.write("{}\t{}\n".format(self.fvect[k], self.errfvect[k]))
+                    if len(self.errfvect) == len(self.fvect) and len(self.procidvect) == len(self.fvect):
+                        f.write("{}\t{}\t{}\n".format(self.fvect[k], self.errfvect[k], self.procidvect[k]))
                     else:                        
                         f.write("{}\n".format(self.fvect[k]))
                         
@@ -104,9 +121,11 @@ class Spectrumlist(object):
                 fsub = open(subsetFilePath, 'w')
                 print("INFO: opening subset file: {}".format(subsetFilename))
                 
-            if len(self.errfvect) == len(self.fvect):
-                fsub.write("{}\t{}\n".format(self.fvect[k], self.errfvect[k]))
-            else:                        
+            if len(self.errfvect) == len(self.fvect) and len(self.procidvect) == len(self.fvect):
+                fsub.write("{}\t{}\t{}\n".format(self.fvect[k], self.errfvect[k], self.procidvect[k]))
+            else:
+                print("WARNING: no noise spectrum used in the spectrumlist !!")
+                stop                        
                 fsub.write("{}\n".format(self.fvect[k]))
             
             if verbose:
@@ -121,7 +140,31 @@ class Spectrumlist(object):
             pass
         
         return subsetFilePathList
-                        
+    
+    def addRelativePath(self, relpath, outputPath=""):
+        if outputPath=="":
+            dirPath = os.path.split(self.path)[0]
+            nameNoExt = os.path.splitext(self.name)[0]
+            outputFileFullPath = os.path.join(dirPath, "{}_wrelpath.spectrumlist".format(nameNoExt))
+        else:
+            outputFileFullPath = outputPath
+            
+        print("INFO: now writing a spectrumlist with added relpath prefix : {}".format(relpath))
+        print("INFO: now writing file : {}".format(outputFileFullPath))
+
+            
+        validCharRelpath = get_valid_filename(relpath)
+        
+        f = open(outputFileFullPath, 'w')
+        for k, idThis in enumerate(self.fvect):
+            if len(self.errfvect) == len(self.fvect) and len(self.procidvect) == len(self.fvect):
+                fluxStr = os.path.join(relpath, self.fvect[k])
+                noiseStr = os.path.join(relpath, self.errfvect[k])
+                idStr = "{}_{}".format(validCharRelpath, self.procidvect[k])
+                f.write("{}\t{}\t{}\n".format(fluxStr, noiseStr, idStr))
+            else:                        
+                f.write("{}\n".format(self.fvect[k]))
+                    
         
         
 def StartFromCommandLine( argv ) :	
@@ -144,11 +187,14 @@ def StartFromCommandLine( argv ) :
                     help="redshift range filter for the histograms")   
                     
     #option to split the spectrumlist
-    
     parser.add_argument("-d", "--divide", dest="divide", action='store_true',
                     help="enable spectrumlist dividing/splitting into subsets")
     parser.add_argument("-n", "--dividecount", dest="dividecount", default=100,
                     help="dividing/splitting count") 
+    
+    #option to add a relative path to the flux file path and noise file path
+    parser.add_argument("-p", "--prefixpath", dest="prefixpath", default="",
+                    help="prefix relative path to be added to the flux and noise paths")
           
     options = parser.parse_args()
     #print(options)
@@ -182,6 +228,9 @@ def StartFromCommandLine( argv ) :
                 os.mkdir(outputPath)
             print('splitting using full path: {}'.format(outputPath))
             spclist.splitIntoSubsets(int(options.dividecount), outputPath)
+        elif options.prefixpath!="":
+            spclist.addRelativePath(options.prefixpath)
+            
     else :
         print("Error: invalid arguments")
         exit()

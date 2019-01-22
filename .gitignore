@@ -3,9 +3,14 @@
 ###############################################
 build/
 build-debug/
+RedshiftLibrary/RedshiftLibrary/version.h
 
 cmake/cpf-redshift-config-version.cmake
 cmake/cpf-redshift-config.cmake
+CMakeFiles
+CMakeCache.txt
+cmake_install.cmake
+tools/CMakeFiles/
 
 *.creator.user*
 *.config
@@ -16,6 +21,7 @@ cmake/cpf-redshift-config.cmake
 
 bin/*
 test/report/report.xml
+RedshiftLibrary/tests/src/test-config.h
 
 # Third party
 thirdparty/*
@@ -26,9 +32,11 @@ docs/html/
 #
 pkgconfig
 
-# 
+#
 *.o
 *.a
+*.so
+*.dylib
 
 # Eclipse IDE
 .cproject
@@ -41,5 +49,13 @@ pkgconfig
 
 # Python cache files
 *.pyc
+*__pycache__
+dist
+pyamazed/redshift_wrap.cpp
+pyamazed/redshift_wrap.h
+pyamazed/redshift.py
+*.egg*
 
+swig_ext.py
 
+lib/*.so

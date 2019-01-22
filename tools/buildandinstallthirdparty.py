@@ -1,153 +1,185 @@
-#! /usr/bin/python
+#!/usr/bin/env python
 
-import urllib2
+from urllib import request, error
 import sys
-import optparse
+import argparse
 import os
 import tarfile
-import shutil
+from platform import platform
 
-thirdPartyDir = os.path.normpath(os.getcwd()+"/../thirdparty")+"/"
 
-def ExtractTarGZ( tarPath, destPath ) :
-
-    if os.path.exists( destPath ):
-        print "File or folder: "+os.path.normpath( destPath )+" already exist, extraction skipped..."
+def ExtractTarGZ(tarPath, destPath):
+    if os.path.exists(destPath):
+        print("File or folder: " + os.path.normpath(destPath) +
+              " already exist, extraction skipped...")
         return False
+    else:
+        tfile = tarfile.open(tarPath, 'r:gz')
 
-    else :
+        print("Extracting: \n\tFrom: " + tarPath + " to: " + destPath)
 
-        tfile = tarfile.open( tarPath, 'r:gz')
+        extractDir = os.path.dirname(destPath) + "/"
+        tfile.extractall(extractDir)
+        extractedPath = os.path.normpath(os.path.join(extractDir,
+                                                      tfile.getmembers()[0].name))
 
-        print "Extracting: \n\tFrom: " + tarPath + " to: " + destPath
-
-        extractDir = os.path.dirname(destPath)+"/"
-        tfile.extractall( extractDir )
-        extractedPath = os.path.normpath ( extractDir+tfile.getmembers()[0].name )
-
-        os.rename( extractedPath, destPath )
+        os.rename(extractedPath, destPath)
 
         return True
 
-def DownloadHTTPFile( fileUrl, localFilePath ) :
 
-    if localFilePath == None :
-        localFilePath = os.path.basename( fileUrl )
+def DownloadHTTPFile(fileUrl, localFilePath):
+    if localFilePath is None:
+        localFilePath = os.path.basename(fileUrl)
 
     # Check if file already exist
-    if os.path.exists(localFilePath) :
-        print "File: "+localFilePath+" already exist, download skipped..."
+    if os.path.exists(localFilePath):
+        print("File: " + localFilePath + " already exist, download skipped...")
         return False
 
     # Do HTTP request
-    try :
-        urlfile = urllib2.urlopen( fileUrl )
-    except urllib2.URLError as e:
-        print "Download from: " + fileUrl + "failed.\nReason are:" + str( e.reason )
-        return
-
-    if urlfile.info().has_key('Content-Length'):
-        totalFileSize = int (urlfile.info()['Content-Length'] )
-    else :
-        totalFileSize = 100
+    try:
+        urlfile = request.urlopen(fileUrl)
+    except error.URLError as e:
+        print("Download from: " + fileUrl + "failed.\nReason are:" + str(e.reason))
 
     localFile = open(localFilePath, 'wb')
 
-    print "Downloading: \n\tFrom: " + fileUrl + "\n\tTo: " + localFilePath
+    print("Downloading: \n\tFrom: " + fileUrl + "\n\tTo: " + localFilePath)
 
-    #Download file
-    data_list = []
+    # Download file
     chunk = 4096*10
     size = 0
     while 1:
         data = urlfile.read(chunk)
         if not data:
-            print " OK !"
+            print(" OK !")
             break
-        size += len( data )
+        size += len(data)
         localFile.write(data)
-
-        progress = float( size ) / totalFileSize * 100.0
-        sys.stdout.write("\r[%f%%]" %progress )
-
-        sys.stdout.flush()
 
     localFile.close()
 
     return True
 
+
+def _check_lib(name, prefix, options):
+    _os = platform(terse=True).lower()
+    if _os == 'macos' or _os.startswith('darwin'):
+        ext = '.dylib' if options.shared else '.a'
+    elif _os == 'windows':
+        ext = '.dll' if options.shared else '.a'
+    else:
+        ext = '.so' if options.shared else '.a'
+    filename = libDict[name]['check_file']
+    return os.path.exists(os.path.join(prefix, 'lib', filename + ext))
+
+
+def _standard_build(path, prefix, options, extra_flags=''):
+    os.system("cd {path} ; ./configure --prefix={prefix} {shared} {extra_flags};"
+              "make clean ; make -j{parallel} all; make install".format(
+                  path=path, prefix=prefix,
+                  parallel=options.parallel,
+                  shared='--enable-shared' if options.shared else '--enable-static',
+                  extra_flags=extra_flags))
+
+
+def _boost_build(path, prefix, options, extra_flags=''):
+    os.system("cd {path}; ./bootstrap.sh "
+              "--with-libraries=test,filesystem,program_options,thread,"
+              "regex,python,timer,chrono --prefix={prefix};"
+              "./b2 -j{parallel} link={shared} install; cd ../".format(
+                  path=path, prefix=prefix,
+                  parallel=options.parallel,
+                  shared='shared' if options.shared else 'static'))
+
+
+def _cfitsio_build(path, prefix, options, extra_flags=''):
+    os.system("cd {path}; ./configure --enable-reentrant --prefix={prefix} "
+              "--enable-sse2 --enable-ssse3 ;"
+              "make -j{parallel} clean {shared}; make install; cd ../".format(
+                  path=path, prefix=prefix,
+                  parallel=options.parallel,
+                  shared='shared' if options.shared else 'all-nofitsio'))
+
+
 libDict = {
-    "cppunit": { "path": thirdPartyDir+"cppunit-1.12.1", "src": "http://downloads.sourceforge.net/cppunit/cppunit-1.12.1.tar.gz" },
-    "boost": { "path":  thirdPartyDir+"boost-1.57.0", "src": "http://downloads.sourceforge.net/project/boost/boost/1.57.0/boost_1_57_0.tar.gz" },
-    "gsl": { "path":  thirdPartyDir+"gsl-2.1", "src": "http://ftp.igh.cnrs.fr/pub/gnu/gsl/gsl-2.1.tar.gz" },
-    "doxygen": { "path":  thirdPartyDir+"doxygen-1.8.8", "src": "http://ftp.stack.nl/pub/users/dimitri/doxygen-1.8.8.src.tar.gz" },
-    "doxytag": { "path": thirdPartyDir+"doxytag.py", "src": "https://raw.githubusercontent.com/vlfeat/vlfeat/master/docsrc/doxytag.py" },
-    "cfitsio": { "path": thirdPartyDir+"cfitsio-3.36", "src": "http://heasarc.gsfc.nasa.gov/FTP/software/fitsio/c/cfitsio3360.tar.gz" } }
+    "boost": {
+        "path":  "boost-1.57.0",
+        "src": "http://downloads.sourceforge.net/project/boost/boost/1.57.0/"
+        "boost_1_57_0.tar.gz",
+        "check_file": "libboost_chrono",
+        "build": _boost_build,
+        "extra_flags": ''
+    },
+    "gsl": {
+        "path":  "gsl-2.5",
+        "src": "http://ftp.igh.cnrs.fr/pub/gnu/gsl/gsl-2.5.tar.gz",
+        "check_file": "libgsl",
+        "build": _standard_build,
+        "extra_flags": ''
+    },
+    "fftw": {
+        "path":  "fftw-3.3.8",
+        "src": "ftp://ftp.fftw.org/pub/fftw/fftw-3.3.8.tar.gz",
+        "check_file": "libfftw3",
+        "build": _standard_build,
+        "extra_flags": "--enable-sse2 --enable-avx"
+    },
+    "cfitsio": {
+        "path": "cfitsio-3.36",
+        "src": "http://heasarc.gsfc.nasa.gov/FTP/software/fitsio/c/"
+        "cfitsio3360.tar.gz",
+        "check_file": "libcfitsio",
+        "build": _cfitsio_build,
+        "extra_flags": ''
+    }
+}
 
-def Clear() :
-    os.system( "rm -rf "+thirdPartyDir+"/*" )
 
-def Main( argv ):
-    usage = "Download and install third party library libraries:\n\t"
-    parser = optparse.OptionParser(usage=usage)
-    parser.add_option(u"-d", u"--dry", help="Clear thirdparty dir before download and installation", action="store_true",  dest="Dry")
-    parser.add_option(u"-c", u"--clear", help="Clean temporary files after download and installation", action="store_true",  dest="Clear")
-    (options, args) = parser.parse_args()
-
-    if options.Clear == True:
-        Clear()
+def Main(argv):
+    if sys.version_info[0] < 3:
+        print("Python version 3.X needed")
         return
 
-    if options.Dry == True:
-        Clear()
+    if sys.version_info[1] < 4:
+        # __file__ was relative until python 3.4
+        build_dir = os.path.abspath(os.path.join(os.getcwd(),
+                                                 os.path.dirname(__file__),
+                                                 '..', 'thirdparty'))
+    else:
+        build_dir = os.path.abspath(os.path.join(os.path.dirname(__file__),
+                                                 '..', 'thirdparty'))
+
+    usage = "Download and install third party library libraries:\n\t"
+    parser = argparse.ArgumentParser(description=usage)
+    parser.add_argument("--prefix", metavar='PREFIX',
+                        help="install files in PREFIX")
+    parser.add_argument("-j", "--parallel",
+                        help="Parallel make flag", type=int,
+                        default="1")
+    parser.add_argument("--static",
+                        help="Build static libraries", action="store_false",
+                        dest="shared", default=False)
+    parser.add_argument("--shared",
+                        help="Build shared libraries", action="store_true",
+                        dest="shared", default=False)
+    parser.add_argument('modules', metavar='NAME', choices=libDict.keys(),
+                        nargs='*', help="Modules to build.")
+    args = parser.parse_args()
+
+    for module in args.modules:
+        libPath = os.path.join(build_dir, libDict[module]["path"])
+        libSrc = libDict[module]["src"]
+        build_method = libDict[module]['build']
+        extra_flags = libDict[module]['extra_flags']
+        if not _check_lib(module, args.prefix, args):
+            DownloadHTTPFile(libSrc, libPath + ".tar.gz")
+            ExtractTarGZ(libPath + ".tar.gz", libPath)
+            build_method(libPath, args.prefix, args, extra_flags)
 
 
-    # CPPUNIT
-    libPath = libDict["cppunit"]["path"];
-    libSrc = libDict["cppunit"]["src"];
-    if DownloadHTTPFile( libSrc, libPath+".tar.gz" ) :
-        if ExtractTarGZ( libPath+".tar.gz", libPath ) :
-            os.system( "cd "+libPath+"/ ; ./configure --prefix="+thirdPartyDir+" ; make ; make install ; cd ../" )
-
-    # GSL
-    libPath = libDict["gsl"]["path"];
-    libSrc = libDict["gsl"]["src"];
-    if DownloadHTTPFile( libSrc, libPath+".tar.gz" ) :
-        if ExtractTarGZ( libPath+".tar.gz", libPath ) :
-            os.system( "cd "+libPath+"/ ; ./configure --prefix="+thirdPartyDir+" ; make ; make install ; cd ../" )
-
-    # DOXYGEN
-    libPath = libDict["doxygen"]["path"];
-    libSrc = libDict["doxygen"]["src"];
-    if DownloadHTTPFile( libSrc, libPath+".tar.gz" ) :
-        if ExtractTarGZ( libPath+".tar.gz", libPath ) :
-            os.system( "cd " + libPath + "/ ; ./configure --prefix " + thirdPartyDir + " ; make ; make install ; cd ../" )
-
-    # BOOST
-    libPath = libDict["boost"]["path"];
-    libSrc = libDict["boost"]["src"];
-    if DownloadHTTPFile( libSrc, libPath+".tar.gz" ) :
-        if ExtractTarGZ( libPath+".tar.gz", libPath ) :
-            os.system( "cd "+libPath+"/ ; ./bootstrap.sh --with-libraries=test,filesystem,program_options,thread,regex,python,timer,chrono --prefix="+thirdPartyDir+" ; ./b2 link=static install ; cd ../" )
-
-    # CFITSIO
-    libPath = libDict["cfitsio"]["path"];
-    libSrc = libDict["cfitsio"]["src"];
-    if DownloadHTTPFile( libSrc, libPath+".tar.gz" ) :
-        if ExtractTarGZ( libPath+".tar.gz", libPath ) :
-            os.system( "cd "+libPath+"/ ; ./configure --enable-reentrant --prefix="+thirdPartyDir+" --enable-sse2 --enable-ssse3; make all-nofitsio; make install; cd ../" )
-
-
-
-    # DOXYTAG
-    libPath = libDict["doxytag"]["path"];
-    libSrc = libDict["doxytag"]["src"];
-    if DownloadHTTPFile( libSrc, libPath ) :
-        os.system( "python2.7 -m compileall "+libPath )
-        os.system( "mv "+thirdPartyDir+"/doxytag.pyc "+libDict["doxygen"]["path"]+"/bin/doxytag" )
-
-
-Main( sys.argv )
+Main(sys.argv)
 
 
 

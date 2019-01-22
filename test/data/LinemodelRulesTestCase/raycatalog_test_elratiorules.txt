@@ -1,6 +1,0 @@
-#version:0.3.0						
-#Emission	lines	list			
-#lambda	Name	type	force	profile	group	nominal_ampl
-7600.00	[OII]3729	E	S	SYM		
-7400.00	[OII]3726	E	S	SYM
-

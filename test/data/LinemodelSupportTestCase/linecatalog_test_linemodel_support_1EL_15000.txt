@@ -1,6 +1,0 @@
-#version:0.3.0						
-#Emission	lines	list			
-#lambda	Name	type	force	profile	group	nominal_ampl
-15000	fake15000	E	S	SYM
-	
-

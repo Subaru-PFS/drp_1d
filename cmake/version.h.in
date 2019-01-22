@@ -1,0 +1,6 @@
+#define CPF_REDSHIFT_REVISION "@GIT_REVISION@"
+
+namespace NSEpic
+{
+  const char* get_version();
+}
