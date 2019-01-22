@@ -113,8 +113,8 @@ libDict = {
         "extra_flags": ''
     },
     "gsl": {
-        "path":  "gsl-2.1",
-        "src": "http://ftp.igh.cnrs.fr/pub/gnu/gsl/gsl-2.1.tar.gz",
+        "path":  "gsl-2.5",
+        "src": "http://ftp.igh.cnrs.fr/pub/gnu/gsl/gsl-2.5.tar.gz",
         "check_file": "libgsl",
         "build": _standard_build,
         "extra_flags": ''
