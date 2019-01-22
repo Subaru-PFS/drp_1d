@@ -124,8 +124,7 @@ libDict = {
         "src": "ftp://ftp.fftw.org/pub/fftw/fftw-3.3.8.tar.gz",
         "check_file": "libfftw3",
         "build": _standard_build,
-        "extra_flags": "--enable-sse2 --enable-avx --enable-avx2 "
-        "--enable-avx512 --enable-avx-128-fma"
+        "extra_flags": "--enable-sse2 --enable-avx"
     },
     "cfitsio": {
         "path": "cfitsio-3.36",

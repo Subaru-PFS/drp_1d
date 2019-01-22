@@ -21,10 +21,6 @@ BOOST_AUTO_TEST_SUITE(test_elementlist)
 
 BOOST_AUTO_TEST_CASE(Constructor)
 {
-  CLog log;
-  std::shared_ptr<CLogConsoleHandler> logConsoleHandler = std::shared_ptr<CLogConsoleHandler>( new CLogConsoleHandler( CLog::GetInstance() ) );
-  logConsoleHandler->SetLevelMask ( CLog::nLevel_Debug );
-
   bfs::path noisePath;
   bfs::path linecatalogPath;
   bfs::path calibrationPath;
