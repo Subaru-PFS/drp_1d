@@ -772,7 +772,7 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
             fvals = postmargZResult->valProbaLog;
         }
     }
-    Int32 retCandidates = linemodel.ComputeCandidates(m_opt_extremacount, 1, fvals, m_opt_candidatesLogprobaCutThreshold);
+    Int32 retCandidates = linemodel.ComputeCandidates(m_opt_extremacount, 1, fvals, m_opt_candidatesLogprobaCutThreshold); //BUG ? sign should change if chi2 or pdf are used... ?
     if( retCandidates!=0 )
     {
         Log.LogError( "Linemodel: Search for z-candidates failed. Aborting" );

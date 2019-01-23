@@ -44,6 +44,13 @@ public:
                                        Float64 &gaussAmp, Float64 &gaussAmpErr,
                                        Float64 &gaussSigma, Float64 &gaussSigmaErr);
 
+    Int32   getPmis(std::vector<Float64> redshifts,
+                    std::vector<Float64> valprobalog,
+                    Float64 zbest,
+                    std::vector<Float64> zcandidates,
+                    Float64 zwidth,
+                    Float64 &pmis);
+
     Int32 Marginalize(TFloat64List redshifts,
                       std::vector<TFloat64List> meritResults,
                       std::vector<TFloat64List> zPriors,

@@ -5,7 +5,7 @@
 using namespace NSEpic;
 using namespace std;
 #include <fstream>
-
+#include <RedshiftLibrary/extremum/extremum.h>
 #include <gsl/gsl_blas.h>
 #include <gsl/gsl_multifit.h>
 #include <gsl/gsl_multifit_nlin.h>
@@ -314,6 +314,14 @@ Float64 CPdfz::getSumTrapez(std::vector<Float64> redshifts,
                             std::vector<Float64> valprobalog)
 {
     Float64 sum = 0.0;
+    if(redshifts.size()==0)
+    {
+        return sum;
+    }
+    if(redshifts.size()!=valprobalog.size()) //this should raise an exception ? or return some error values ?
+    {
+        return sum;
+    }
 
     // prepare LogEvidence
     Float64 maxi = -DBL_MAX;
@@ -797,6 +805,148 @@ Int32 CPdfz::getCandidateGaussFit(std::vector<Float64> redshifts,
     gaussSigmaErr = c * ERR(1);
 
     return ret;
+}
+
+Int32   CPdfz::getPmis(std::vector<Float64> redshifts,
+                       std::vector<Float64> valprobalog,
+                       Float64 zbest,
+                       std::vector<Float64> zcandidates,
+                       Float64 zwidth,
+                       Float64 &pmis)
+{
+    Float64 halfzwidth = zwidth/2.;
+    pmis = -1;
+
+    //definition of the lines for mismatch
+    std::vector<Float64> lambda_mis;
+    lambda_mis.push_back(9533.2); //SIII9530
+    lambda_mis.push_back(9071.1); //SIII9068
+
+    lambda_mis.push_back(7753.2); //ArIII7751
+
+    lambda_mis.push_back(7332.2); //OII7330
+    lambda_mis.push_back(7321); //OII7319
+
+    lambda_mis.push_back(6564.61); //halpha
+    lambda_mis.push_back(3729.88); //[OII]3729
+    lambda_mis.push_back(3727.09); //[OII]3726
+    lambda_mis.push_back(5008.24); //[OIII](doublet-1)
+    lambda_mis.push_back(4960.29); //[OIII](doublet-1/3)
+    lambda_mis.push_back(4862.72); //Hbeta
+
+
+    //definition of relzerr_mis
+    std::vector<Float64> relzerr_mis;
+    relzerr_mis.clear();
+    for (Int32 kl1 = 0; kl1<lambda_mis.size(); kl1++)
+    {
+        for (Int32 kl2 = 0; kl2<lambda_mis.size(); kl2++)
+        {
+            if(kl1 != kl2)
+            {
+                Float64 relzerr = (lambda_mis[kl1]/lambda_mis[kl2])-1.;
+                relzerr_mis.push_back(relzerr);
+                Log.LogDetail( "pdfz: Found l1=%f, l2=%f, relzerr=%f", lambda_mis[kl1], lambda_mis[kl2], relzerr);
+            }
+        }
+    }
+
+    Int32 n_relzerr_mis = relzerr_mis.size();
+    Log.LogDetail( "pdfz: Found n relzerr for mismatch =%d", n_relzerr_mis);
+
+    //override amazed-zcandidates by all pdf peaks found
+    Int32 maxpeakscount = 1000;
+    TFloat64Range redshiftsRange(
+        redshifts[0],
+        redshifts[redshifts.size() - 1]);
+    CExtremum extremum(redshiftsRange, maxpeakscount, false, 2);
+    TPointList extremumList;
+    extremum.Find(redshifts, valprobalog, extremumList);
+    zcandidates.clear();
+    for (Int32 i = 0; i < extremumList.size(); i++)
+    {
+        Float64 x = extremumList[i].X;
+        zcandidates.push_back(x);
+    }
+    Log.LogDetail( "pdfz: Found n candidates for mismatch calc.=%d", zcandidates.size());
+
+
+    std::vector<Int32> indexes_candidates_selected;
+    //for(Int32 k_zmap=0; k_zmap<zcandidates.size(); k_zmap++)
+    {
+        //Int32 zmap = zcandidates[k_zmap];
+        Float64 zmap = zbest;
+
+        //find zcandidates corresponding to a relzerr value wrt to zmap
+        for(Int32 k_cand=0; k_cand<zcandidates.size(); k_cand++)
+        {
+            for(Int32 k_relzerr_mis=0; k_relzerr_mis<n_relzerr_mis; k_relzerr_mis++)
+            {
+                if(true)
+                    //if(relzerr_mis[k_relzerr_mis] > halfzwidth*2.0) //avoid zmap candidates selection
+                {
+                    //convert relzerr in z value for zmap
+                    Float64 z_mis = relzerr_mis[k_relzerr_mis]*(1+zmap)+zmap;
+                    //Log.LogDetail( "pdfz: Found zmis=%f for relzerr=%f", z_mis, relzerr_mis[k_relzerr_mis]);
+
+                    if(z_mis>(zcandidates[k_cand]-halfzwidth) && z_mis<(zcandidates[k_cand]+halfzwidth))
+                    {
+                        indexes_candidates_selected.push_back(k_cand);
+                        Log.LogDetail( "pdfz: Found mismatch for relzerr=%f, for zmap=%f: candidate at z=%f", relzerr_mis[k_relzerr_mis], zmap, zcandidates[k_cand]);
+                    }
+                }
+            }
+        }
+    }
+    Log.LogDetail( "pdfz: Found n indexes_candidates_selected=%d", indexes_candidates_selected.size());
+
+    //find redshift indexes corresponding to selected candidates surrounding
+    std::vector<Int32> indexes_zsamples_selected;
+    Int32 n_indexes_candidates_selected = indexes_candidates_selected.size();//min((Int32)1, (Int32)indexes_candidates_selected.size());
+    for(Int32 k_cand_sel=0; k_cand_sel<n_indexes_candidates_selected; k_cand_sel++)
+    {
+        Int32 k_cand = indexes_candidates_selected[k_cand_sel];
+
+        //find zcandidate index
+        for(Int32 kz=0; kz<redshifts.size(); kz++)
+        {
+            if(redshifts[kz]>(zcandidates[k_cand]-halfzwidth) && redshifts[kz]<(zcandidates[k_cand]+halfzwidth))
+            {
+                indexes_zsamples_selected.push_back(kz);
+            }
+        }
+    }
+
+    Log.LogDetail( "pdfz: Found n NON-UNIQUE indexes_zsamples_selected=%d", indexes_zsamples_selected.size());
+    //remove duplicate indexes
+    std::sort(indexes_zsamples_selected.begin(), indexes_zsamples_selected.end());
+    indexes_zsamples_selected.erase( std::unique( indexes_zsamples_selected.begin(), indexes_zsamples_selected.end() ), indexes_zsamples_selected.end() );
+
+    Log.LogDetail( "pdfz: Found n UNIQUE indexes_zsamples_selected=%d", indexes_zsamples_selected.size());
+
+
+    //now integrate over the selected unique z indexes
+    //warning, integrating exp. values directly. supposing that no overflow will occur if pdf is normalized
+    Float64 pmis_raw = 0;
+    std::vector<Float64> valprobalog_selected;
+    std::vector<Float64> redshifts_selected;
+    for(Int32 kz=0; kz<indexes_zsamples_selected.size(); kz++)
+    {
+        redshifts_selected.push_back(redshifts[indexes_zsamples_selected[kz]]);
+        valprobalog_selected.push_back(valprobalog[indexes_zsamples_selected[kz]]);
+    }
+    pmis_raw = getSumTrapez(redshifts_selected, valprobalog_selected);
+
+    //estimate zcalc intg proba
+    Float64 pzcalc = getCandidateSumTrapez( redshifts, valprobalog, zbest, zwidth);
+
+    Log.LogInfo("pdfz: <pmisraw><%.6e>", pmis_raw);
+    Log.LogInfo("pdfz: <pmap><%.6e>", pzcalc);
+
+    pmis = pmis_raw/(1.-pzcalc);
+    Log.LogInfo("pdfz: <pmis><%.6e>", pmis);
+
+    return 0;
 }
 
 std::vector<Float64> CPdfz::GetConstantLogZPrior(UInt32 nredshifts)
