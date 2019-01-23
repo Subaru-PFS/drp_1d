@@ -95,8 +95,8 @@ find_program(CCACHE_FOUND ccache)
 if(CCACHE_FOUND)
   set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
   set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
-  set(ENV{CC} "ccache cc")
-  set(ENV{CXX} "ccache c++")
+  set(ENV{CC} "ccache ${CMAKE_C_COMPILER}")
+  set(ENV{CXX} "ccache ${CMAKE_CXX_COMPILER}")
 endif(CCACHE_FOUND)
 
 #--------------------------------------------------------

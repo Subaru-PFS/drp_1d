@@ -113,8 +113,8 @@ libDict = {
         "extra_flags": ''
     },
     "gsl": {
-        "path":  "gsl-2.1",
-        "src": "http://ftp.igh.cnrs.fr/pub/gnu/gsl/gsl-2.1.tar.gz",
+        "path":  "gsl-2.5",
+        "src": "http://ftp.igh.cnrs.fr/pub/gnu/gsl/gsl-2.5.tar.gz",
         "check_file": "libgsl",
         "build": _standard_build,
         "extra_flags": ''
@@ -124,8 +124,7 @@ libDict = {
         "src": "ftp://ftp.fftw.org/pub/fftw/fftw-3.3.8.tar.gz",
         "check_file": "libfftw3",
         "build": _standard_build,
-        "extra_flags": "--enable-sse2 --enable-avx --enable-avx2 "
-        "--enable-avx512 --enable-avx-128-fma"
+        "extra_flags": "--enable-sse2 --enable-avx"
     },
     "cfitsio": {
         "path": "cfitsio-3.36",
