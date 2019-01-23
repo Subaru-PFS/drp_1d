@@ -72,10 +72,19 @@ public:
      nLevel_Error = 90,
      nLevel_Warning = 80,
      nLevel_Info = 70,
+     nLevel_Detail = 65,
      nLevel_Debug = 60,
      nLevel_None = 0
    };
   CLog( );
+
+  void LogError( const char* format, ... );
+  void LogWarning( const char* format, ... );
+  void LogInfo( const char* format, ... );
+  void LogDetail( const char* format, ... );
+  void LogDebug( const char* format, ... );
+  void Indent();
+  void UnIndent();
 };
 
 class CLogConsoleHandler {

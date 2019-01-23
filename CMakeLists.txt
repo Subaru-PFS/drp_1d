@@ -262,6 +262,8 @@ CONFIGURE_FILE(
 # Generate TAGS file if etags is installed
 find_program(ETAGS NAMES etags ctags)
 if(ETAGS)
-  execute_process(COMMAND "find ${ROOT_DIR}/RedshiftLibrary/ ( -name *.cpp -o -name *.h -o -name *.hpp -o -name *.py -o -name *.c ) -exec ${ETAGS} -a ${ROOT_DIR}/TAGS {} +"
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+  message("Running " ${ETAGS})
+  execute_process(COMMAND find RedshiftLibrary/ ( -name *.cpp -o -name *.h -o -name *.hpp -o -name *.py -o -name *.c ) -not -name redshift.py -exec ${ETAGS} -a TAGS {} +
+    WORKING_DIRECTORY ${ROOT_DIR})
 endif(ETAGS)
+

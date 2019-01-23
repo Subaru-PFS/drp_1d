@@ -8,6 +8,7 @@ def log_level(lvl):
         'error': CLog.nLevel_Error,
         'warning': CLog.nLevel_Warning,
         'info': CLog.nLevel_Info,
+        'detail': CLog.nLevel_Detail,
         'debug': CLog.nLevel_Debug,
         'none': CLog.nLevel_None
     }
@@ -60,8 +61,8 @@ parser.add_argument('--config', '-c', dest='config', metavar='FILE', type=str,
                     'line parameters.')
 parser.add_argument('--log_level', '-l', dest='log_level', metavar='LEVEL',
                     type=log_level,
-                    help='Verbosity level. Either "none", "debug", "info", '
-                    '"warning", "error" or "critical".')
+                    help='Verbosity level. Either "none", "debug", "detail",'
+                    '"info", "warning", "error" or "critical".')
 parser.add_argument('--linecatalog_convert', '-a', action='store_true',
                     help='Convert the line catalog from Vacuum to Air')
 parser.add_argument('--version', '-v', action='version', version=get_version(),
