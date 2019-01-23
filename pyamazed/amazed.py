@@ -9,8 +9,6 @@ from .config import Config
 import json
 
 
-zlog = None
-
 def datapath(config, *path):
     return os.path.expanduser(os.path.join(config.data_path, *path))
 
@@ -36,10 +34,7 @@ def process_spectrum(spectrum_path, noise_path, proc_id,
     Return a CProcessFlowContext object"""
 
     spectrum = CSpectrum_default()
-    try:
-        spectrum.LoadSpectrum(spectrum_path, noise_path)
-    except Exception as e:
-        zlog.LogWarning("Can't load spectrum : {}".format(e))
+    spectrum.LoadSpectrum(spectrum_path, noise_path)
 
     ctx = CProcessFlowContext()
     ctx.Init(spectrum, proc_id, template_catalog, line_catalog, param, classif)
