@@ -8,6 +8,9 @@ libs = '@cpf-redshift_THIRDPARTY_LIBS@'.split(';')
 coverage = @cpf-redshift_COVERAGE@
 
 extra_compile_args = ['-std=c++11']
+if '@CMAKE_C_COMPILER_ID@'.lower() == 'clang':
+    extra_compile_args.append('-stdlib=libc++')
+
 extra_link_args = []
 for path in '@cpf-redshift_LINK_DIR@'.split(';'):
     extra_link_args.extend(['-Wl,-rpath', path])
@@ -22,6 +25,9 @@ try:
 except AttributeError:
     numpy_include = numpy.get_numpy_include()
 
+# force c++ compiler
+os.environ['CXX'] = '@CMAKE_CXX_COMPILER@'
+os.environ['CC'] = '@CMAKE_C_COMPILER@'
 
 swig_ext = Extension('pyamazed/_redshift', sources=['pyamazed/redshift.i'],
                      swig_opts = ['-c++'],

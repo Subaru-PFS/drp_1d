@@ -1,12 +1,6 @@
 import os
 from setuptools import setup
-
-
-try:
-    from swig_ext import swig_ext
-except ImportError:
-    print('swig_ext.py not found. Please run cmake before setup !')
-    exit()
+from swig_ext import swig_ext
 
 setup(
     name="pyamazed",
