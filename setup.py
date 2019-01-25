@@ -20,9 +20,9 @@ setup(
     long_description=open(os.path.join(os.path.dirname(__file__),
                                        'README.md')).read(),
 
-    setup_requires=['pytest-runner', 'numpy', 'astropy'],
+    setup_requires=['pytest-runner', 'numpy>=1.16.0', 'astropy>=3.1.1'],
     tests_require=['pytest', ],
-    install_requires=['numpy', 'astropy'],
+    install_requires=['numpy>=1.16.0', 'astropy>=3.1.1'],
     py_modules=['pyamazed/redshift'],
     classifiers=[
         "Development Status :: 1 - Planning",
