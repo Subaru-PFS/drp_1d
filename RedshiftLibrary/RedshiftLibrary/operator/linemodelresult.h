@@ -34,6 +34,7 @@ public:
 
     Int32 GetNLinesOverCutThreshold(Int32 extremaIdx, Float64 snrThres, Float64 fitThres) const;
     std::vector<bool> GetStrongLinesPresence( UInt32 filterType, std::vector<CLineModelSolution> linemodelsols ) const;
+    std::vector<bool> GetStrongestLineIsHa( std::vector<CLineModelSolution> linemodelsols ) const;
     Float64 GetExtremaMerit(Int32 extremaIdx) const;
     UInt32 GetExtremaIndex(UInt32 extremaIdx) const;
 

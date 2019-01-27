@@ -8,6 +8,8 @@
 
 #include <string>
 
+#include <RedshiftLibrary/ray/linetags.h>
+
 using namespace NSEpic;
 
 
@@ -390,6 +392,62 @@ std::vector<bool> CLineModelResult::GetStrongLinesPresence( UInt32 filterType, s
     }
 
     return strongIsPresent;
+}
+
+
+/**
+ * @brief CLineModelResult::GetStrongestLineIsHa
+ * @return: a list of boolean values indicating if the strongest line is Ha (Highest amp and not outsidelambdarange for that z) for each redshift
+ */
+std::vector<bool> CLineModelResult::GetStrongestLineIsHa( std::vector<CLineModelSolution> linemodelsols ) const
+{
+    UInt32 filterType=1;
+    linetags ltags;
+    std::vector<bool> strongestIsHa(linemodelsols.size(), false);
+    for ( UInt32 solutionIdx=0; solutionIdx<linemodelsols.size(); solutionIdx++)
+    {
+        strongestIsHa[solutionIdx] = false;
+        Float64 ampMax = -1;
+        Float64 ampHa = -1;
+        for ( UInt32 j=0; j<linemodelsols[solutionIdx].Amplitudes.size(); j++)
+        {
+
+            if(filterType==1)
+            {
+                if( !linemodelsols[solutionIdx].Rays[j].GetIsEmission() )
+                {
+                    continue;
+                }
+            }else if(filterType==2)
+            {
+                if( linemodelsols[solutionIdx].Rays[j].GetIsEmission() )
+                {
+                    continue;
+                }
+            }
+
+            if( linemodelsols[solutionIdx].OutsideLambdaRange[j] )
+            {
+                continue;
+            }
+
+            if(linemodelsols[solutionIdx].Amplitudes[j]>ampMax)
+            {
+                ampMax = linemodelsols[solutionIdx].Amplitudes[j];
+            }
+            if(linemodelsols[solutionIdx].Rays[j].GetName()==ltags.halpha_em)
+            {
+                ampHa = linemodelsols[solutionIdx].Amplitudes[j];
+            }
+        }
+
+        if(ampHa>0 && ampMax==ampHa)
+        {
+            strongestIsHa[solutionIdx] = true;
+        }
+    }
+
+    return strongestIsHa;
 }
 
 

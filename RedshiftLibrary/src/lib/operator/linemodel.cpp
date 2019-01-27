@@ -518,6 +518,8 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
                 m_model->getScaleMargCorrection();
             m_result->LineModelSolutions[i] =
                 m_result->LineModelSolutions[i - 1];
+            m_result->ContinuumModelSolutions[i]=
+                m_result->ContinuumModelSolutions[i - 1];
             m_result->SetChisquareTplshapeResult(
                 i, m_result->GetChisquareTplshapeResult(i - 1),
                 m_result->GetScaleMargCorrTplshapeResult(i - 1),
@@ -943,6 +945,11 @@ Int32 COperatorLineModel::ComputeCandidates(const Int32 opt_extremacount,
         m_firstpass_extremaResult.FittedTplRedshift[i] = m_result->ContinuumModelSolutions[idx].tplRedshift;
         m_firstpass_extremaResult.FittedTplpCoeffs[i] = m_result->ContinuumModelSolutions[idx].pCoeffs;
 
+        if(m_result->ContinuumModelSolutions[idx].tplName=="")
+        {
+            Log.LogError(" Saving first pass extremum w. ContinuumModelSolutions tplname=%s", m_result->ContinuumModelSolutions[idx].tplName.c_str());
+            Log.LogError(" Saving first pass extremum w. result idx=%d, w. m_result->Redshifts[idx]=%f", idx, m_result->Redshifts[idx]);
+        }
 
         //... todo: more first pass results can be saved here if needed
     }

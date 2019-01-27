@@ -437,6 +437,26 @@ void CLineModelExtremaResult::Save( const CDataStore& store, std::ostream& strea
         stream << "}" << std::endl;
     }
 
+    // save Elv, on 1 line
+    if(Elv.size()>0){
+        stream <<  "#Elv for each extrema = {";
+        for ( int i=0; i<Elv.size(); i++)
+        {
+            stream << std::scientific << std::setprecision(1) <<  Elv[i] << "\t";
+        }
+        stream << "}" << std::endl;
+    }
+
+    // save Alv, on 1 line
+    if(Alv.size()>0){
+        stream <<  "#Alv for each extrema = {";
+        for ( int i=0; i<Alv.size(); i++)
+        {
+            stream << std::scientific << std::setprecision(1) <<  Alv[i] << "\t";
+        }
+        stream << "}" << std::endl;
+    }
+
 
 
 }

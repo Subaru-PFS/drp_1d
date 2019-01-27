@@ -91,7 +91,7 @@ void CLineModelSolveResult::SaveLine( const CDataStore& store, std::ostream& str
     }else if(m_bestRedshiftMethod==2)
     {
         GetBestRedshiftFromPdf( store, redshift, merit, sigma, snrHa, lfHa, snrOII, lfOII, tplratioName, tplcontinuumName);
-        //Log.LogInfo( "Linemodelsolve-result: extracting best redshift from PDF: z=%f", redshift);
+        Log.LogInfo( "Linemodelsolve-result: extracting best redshift from PDF: z=%f", redshift);
     }else{
         //Log.LogError( "Linemodelsolve-result: can't parse best redshift estimation method");
     }

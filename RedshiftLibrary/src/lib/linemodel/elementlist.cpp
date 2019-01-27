@@ -1089,7 +1089,8 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, I
             }
         }
     }else{
-      throw runtime_error( "Failed to load and fit continuum");
+        Log.LogError("Failed to load-fit continuum for cfitopt=%d", m_fitContinuum_option);
+        throw runtime_error( "Failed to load and fit continuum");
     }
 }
 
