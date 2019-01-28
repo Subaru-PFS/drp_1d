@@ -432,12 +432,12 @@ std::vector<bool> CLineModelResult::GetStrongestLineIsHa( std::vector<CLineModel
                 continue;
             }
 
-            Log.LogDebug("    linemodelresult: using ray for max amp search=%s", linemodelsols[solutionIdx].Rays[j].GetName());
+            Log.LogDebug("    linemodelresult: using ray for max amp search=%s", linemodelsols[solutionIdx].Rays[j].GetName().c_str());
             if(linemodelsols[solutionIdx].Amplitudes[j]>ampMax)
             {
                 ampMax = linemodelsols[solutionIdx].Amplitudes[j];
             }
-            if(linemodelsols[solutionIdx].Rays[j].GetName()==ltags.halpha_em)
+            if(linemodelsols[solutionIdx].Rays[j].GetName().c_str()==ltags.halpha_em)
             {
                 ampHa = linemodelsols[solutionIdx].Amplitudes[j];
             }
