@@ -7,6 +7,7 @@
 #include <RedshiftLibrary/operator/linemodel.h>
 
 #include <RedshiftLibrary/operator/pdfMargZLogResult.h>
+#include <RedshiftLibrary/operator/pdfLogresult.h>
 
 namespace NSEpic
 {
@@ -43,7 +44,8 @@ private:
                      std::string opt_combine,
                      Float64 opt_stronglinesprior,
                      Float64 opt_euclidNHaEmittersPriorStrength,
-                     std::shared_ptr<CPdfMargZLogResult> postmargZResult);
+                     std::shared_ptr<CPdfMargZLogResult> postmargZResult,
+                     std::shared_ptr<CPdfLogResult> zPrior);
     Int32 SaveContinuumPDF(CDataStore &store, std::shared_ptr<const CLineModelResult> result);
 
 

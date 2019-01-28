@@ -7,7 +7,7 @@
 #include <iomanip>      // std::setprecision
 
 #include <string>
-
+#include <RedshiftLibrary/log/log.h>
 #include <RedshiftLibrary/ray/linetags.h>
 
 using namespace NSEpic;
@@ -396,6 +396,7 @@ std::vector<bool> CLineModelResult::GetStrongLinesPresence( UInt32 filterType, s
 
 
 /**
+ * WARNING: this function has not been tested at all !!! please check/debug
  * @brief CLineModelResult::GetStrongestLineIsHa
  * @return: a list of boolean values indicating if the strongest line is Ha (Highest amp and not outsidelambdarange for that z) for each redshift
  */
@@ -431,6 +432,7 @@ std::vector<bool> CLineModelResult::GetStrongestLineIsHa( std::vector<CLineModel
                 continue;
             }
 
+            Log.LogDebug("    linemodelresult: using ray for max amp search=%s", linemodelsols[solutionIdx].Rays[j].GetName());
             if(linemodelsols[solutionIdx].Amplitudes[j]>ampMax)
             {
                 ampMax = linemodelsols[solutionIdx].Amplitudes[j];

@@ -2241,7 +2241,8 @@ Float64 CLineModelElementList::fit(Float64 redshift,
                     meritTplratio[ifitting] = _merit;
                     m_ChisquareTplshape[ifitting] = _merit;
                     m_ScaleMargCorrTplshape[ifitting] = getScaleMargCorrection();
-                    m_StrongELPresentTplshape[ifitting] = GetModelStrongEmissionLinePresent();
+                    //m_StrongELPresentTplshape[ifitting] = GetModelStrongEmissionLinePresent();
+                    m_StrongELPresentTplshape[ifitting] = GetModelHaStrongest(); //warning: hardcoded selpp replaced by whasp for lm-tplratio
 
                     //Saving the model A, errorA, and dtm, mtm, ... (for all tplratios, needed ?)
                     //NB: this is only needed for the index=savedIdxFitted ultimately
@@ -5172,6 +5173,54 @@ bool CLineModelElementList::GetModelStrongEmissionLinePresent()
     }
 
     return isStrongPresent;
+}
+
+/**
+ * @brief
+ * @return 1 if ha em is the strongest line present
+ */
+bool CLineModelElementList::GetModelHaStrongest()
+{
+    bool isHaStrongest = false;
+    linetags ltags;
+    Float64 ampMax = -1;
+    std::string lineMax = "";
+    Float64 ampHa = -1;
+
+    std::vector<UInt32> validEltsIdx = GetModelValidElementsIndexes();
+    for( UInt32 iValidElts=0; iValidElts<validEltsIdx.size(); iValidElts++ )
+    {
+        Int32 iElts = validEltsIdx[iValidElts];
+        UInt32 nlines =  m_Elements[iElts]->GetRays().size();
+        for(UInt32 lineIdx=0; lineIdx<nlines; lineIdx++)
+        {
+            if( !m_RestRayList[m_Elements[iElts]->m_LineCatalogIndexes[lineIdx]].GetIsEmission() )
+            {
+                continue;
+            }
+
+            Float64 amp = m_Elements[iElts]->GetFittedAmplitude(lineIdx);
+            if(amp>0. && amp>ampMax)
+            {
+                lineMax = m_RestRayList[m_Elements[iElts]->m_LineCatalogIndexes[lineIdx]].GetName().c_str();
+                ampMax = amp;
+            }
+            if( strcmp(m_RestRayList[m_Elements[iElts]->m_LineCatalogIndexes[lineIdx]].GetName().c_str(),ltags.halpha_em)==0)
+            {
+                ampHa = amp;
+            }
+        }
+    }
+
+    Log.LogDebug("    model: GetModelHaStrongest - ampMax=%e (for line=%s)", ampMax, lineMax.c_str());
+    Log.LogDebug("    model: GetModelHaStrongest - ampHa=%e (for lha tag=%s)", ampHa, ltags.halpha_em);
+    if( ampHa>0. && ampHa==ampMax)
+    {
+        isHaStrongest = true;
+        Log.LogDebug("    model: GetModelHaStrongest - found to be true");
+    }
+
+    return isHaStrongest;
 }
 
 /**

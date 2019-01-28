@@ -197,6 +197,7 @@ public:
     Float64 getCumulSNRStrongEL();
     Float64 getCumulSNROnRange( TInt32Range idxRange );
     bool GetModelStrongEmissionLinePresent();
+    bool GetModelHaStrongest();
     Float64 getModelErrorUnderElement(UInt32 eltId);
     Float64 getContinuumMeanUnderElement(UInt32 eltId);
     Int32 LoadModelSolution(const CLineModelSolution&  modelSolution);

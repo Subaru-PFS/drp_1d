@@ -286,12 +286,17 @@ std::shared_ptr<CLineModelSolveResult> CLineModelSolve::Compute( CDataStore& dat
         std::shared_ptr<const CLineModelResult> result = std::dynamic_pointer_cast<const CLineModelResult>( results.lock() );
 
         std::shared_ptr<CPdfMargZLogResult> postmargZResult = std::shared_ptr<CPdfMargZLogResult>(new CPdfMargZLogResult());
-        Int32 retCombinePdf = CombinePDF(result, m_opt_rigidity, m_opt_pdfcombination, m_opt_stronglinesprior, m_opt_euclidNHaEmittersPriorStrength, postmargZResult);
+        std::shared_ptr<CPdfLogResult> zpriorResult = std::shared_ptr<CPdfLogResult>(new CPdfLogResult());
+        Int32 retCombinePdf = CombinePDF(result, m_opt_rigidity, m_opt_pdfcombination, m_opt_stronglinesprior, m_opt_euclidNHaEmittersPriorStrength, postmargZResult, zpriorResult);
 
         if(retCombinePdf!=0)
         {
             Log.LogError("Linemodel: Pdfz computation failed");
         }else{
+
+            Log.LogDetail("    linemodelsolve: Storing priors (size=%d)", zpriorResult->Redshifts.size());
+            std::string priorPath = outputPdfRelDir+"/logprior.logP_Z_data";
+            dataStore.StoreGlobalResult( priorPath.c_str(), zpriorResult);
 
             //check pdf sum=1
             CPdfz pdfz;
@@ -356,7 +361,8 @@ Int32 CLineModelSolve::CombinePDF(std::shared_ptr<const CLineModelResult> result
                                   std::string opt_combine,
                                   Float64 opt_stronglinesprior,
                                   Float64 opt_euclidNHaEmittersPriorStrength,
-                                  std::shared_ptr<CPdfMargZLogResult> postmargZResult)
+                                  std::shared_ptr<CPdfMargZLogResult> postmargZResult,
+                                  std::shared_ptr<CPdfLogResult> zPrior)
 {
     bool zPriorStrongLinePresence = (opt_stronglinesprior>0.0);
     if(zPriorStrongLinePresence)
@@ -392,7 +398,6 @@ Int32 CLineModelSolve::CombinePDF(std::shared_ptr<const CLineModelResult> result
         {
             Log.LogInfo("Linemodel: Pdfz computation - simple (method=bestchi2)");
         }
-        std::shared_ptr<CPdfLogResult> zPrior = std::shared_ptr<CPdfLogResult>(new CPdfLogResult());
         zPrior->SetSize(result->Redshifts.size());
         for ( UInt32 k=0; k<result->Redshifts.size(); k++)
         {
@@ -401,8 +406,8 @@ Int32 CLineModelSolve::CombinePDF(std::shared_ptr<const CLineModelResult> result
         if(zPriorStrongLinePresence)
         {
             UInt32 lineTypeFilter = 1;// for emission lines only
-            //std::vector<bool> strongLinePresence = result->GetStrongLinesPresence(lineTypeFilter, result->LineModelSolutions);
-            std::vector<bool> strongLinePresence = result->GetStrongestLineIsHa(result->LineModelSolutions);
+            std::vector<bool> strongLinePresence = result->GetStrongLinesPresence(lineTypeFilter, result->LineModelSolutions);
+            //std::vector<bool> strongLinePresence = result->GetStrongestLineIsHa(result->LineModelSolutions); //warning: hardcoded selpp replaced by whasp for lm-tplratio
             zPrior->valProbaLog = pdfz.GetStrongLinePresenceLogZPrior(strongLinePresence, opt_stronglinesprior);
         }else{
             zPrior->valProbaLog = pdfz.GetConstantLogZPrior(result->Redshifts.size());
@@ -421,8 +426,6 @@ Int32 CLineModelSolve::CombinePDF(std::shared_ptr<const CLineModelResult> result
         }
         retPdfz = pdfz.Compute(logLikelihoodCorrected, result->Redshifts, cstLog, zPrior->valProbaLog, logProba, logEvidence);
         if(retPdfz==0){
-            //store.StoreGlobalResult( "zPDF/logprior.logP_Z_data", zPrior);
-
             postmargZResult->countTPL = result->Redshifts.size(); // assumed 1 model per z
             postmargZResult->Redshifts.resize(result->Redshifts.size());
             postmargZResult->valProbaLog.resize(result->Redshifts.size());
@@ -762,7 +765,8 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
         fvals = lmresult->ChiSquare;
     }else{
         std::shared_ptr<CPdfMargZLogResult> postmargZResult = std::shared_ptr<CPdfMargZLogResult>(new CPdfMargZLogResult());
-        Int32 retCombinePdf = CombinePDF(lmresult, m_opt_rigidity, m_opt_pdfcombination, m_opt_stronglinesprior, m_opt_euclidNHaEmittersPriorStrength, postmargZResult);
+        std::shared_ptr<CPdfLogResult> zpriorResult = std::shared_ptr<CPdfLogResult>(new CPdfLogResult());
+        Int32 retCombinePdf = CombinePDF(lmresult, m_opt_rigidity, m_opt_pdfcombination, m_opt_stronglinesprior, m_opt_euclidNHaEmittersPriorStrength, postmargZResult, zpriorResult);
 
         if(retCombinePdf!=0)
         {
