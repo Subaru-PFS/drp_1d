@@ -55,6 +55,11 @@ def amazed():
                                                      'amazed.log'))
     logConsoleHandler.SetLevelMask(config.log_level)
 
+    if os.path.exists(config.output_folder):
+        message = "Output directory {} already exists.".format(config.output_folder)
+        zlog.LogError(message)
+        raise Exception(message)
+
     param = CParameterStore()
     param.Load(os.path.expanduser(config.parameters_file))
     update_paramstore(param, config)
@@ -98,7 +103,7 @@ def amazed():
     try:
         template_catalog.Load(absolutepath(config, config.template_dir))
     except Exception as e:
-        zlog.LogCritical("Can't load template : {}".format(e))
+        zlog.LogError("Can't load template : {}".format(e))
         raise
 
     line_catalog = CRayCatalog()
@@ -109,6 +114,7 @@ def amazed():
 
     for line in spectrumList:
         spectrum_path, noise_path, proc_id = line.split()
+        target_path = os.path.join(config.output_folder, proc_id)
         try:
             ctx = process_spectrum(spectrumpath(config, spectrum_path),
                                    spectrumpath(config, noise_path),
@@ -120,23 +126,33 @@ def amazed():
                                                 noise_path, e))
             continue
 
+            ctx.GetDataStore().SaveAllResults()
+
         try:
-            ctx.GetDataStore().SaveRedshiftResult(config.output_folder)
+            ctx.GetDataStore().SaveRedshiftResult(target_path)
+            ctx.GetDataStore().SaveCandidatesResult(target_path);
+            ctx.GetDataStore().SaveReliabilityResult(target_path);
+            ctx.GetDataStore().SaveStellarResult(target_path);
+            ctx.GetDataStore().SaveClassificationResult(target_path);
         except Exception as e:
             zlog.LogWarning("Can't save redshift for "
                             "{} / {} : {}".format(spectrum_path,
                                                   noise_path, e))
 
-        else:
-            ctx.GetDataStore().SaveAllResults(os.path.join(config.output_folder,
-                                                           proc_id),
-                                              'all')
-        # ctx.GetDataStore().SaveReliabilityResult('/tmp/bar')
+        if config.save_intermediate_results != 'no':
+            ctx.GetDataStore().SaveAllResults(target_path,
+                                              config.save_intermediate_results)
 
     # save cpf-redshift version in output dir
     with open(os.path.join(config.output_folder, 'version.json'), 'w') as f:
         json.dump({'cpf-redshift-version': get_version()}, f)
 
 
+def main():
+    try:
+        amazed()
+    except Exception as e:
+        print("Critical error: {}".format(e))
+
 if __name__ == '__main__':
-    amazed()
+    main()

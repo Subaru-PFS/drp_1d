@@ -65,5 +65,8 @@ parser.add_argument('--log_level', '-l', dest='log_level', metavar='LEVEL',
                     '"info", "warning", "error" or "critical".')
 parser.add_argument('--linecatalog_convert', '-a', action='store_true',
                     help='Convert the line catalog from Vacuum to Air')
+parser.add_argument('--save_intermediate_results', '-b',
+                    choices=['all', 'global', 'linemeas', 'no'], default='all',
+                    help='Save intermediate results for each spectrum processed')
 parser.add_argument('--version', '-v', action='version', version=get_version(),
                     help='Print version and exit.')

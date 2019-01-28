@@ -178,11 +178,13 @@ public:
 class CDataStore
 {
 public:
-  CDataStore( COperatorResultStore& resultStore, CParameterStore& parameStore );
-  void SaveRedshiftResult( const std::string& dir );
-  void SaveCandidatesResult( const std::string& dir );
-  void SaveReliabilityResult( const std::string& dir );
-  void SaveAllResults( const std::string& dir, const std::string opt ) const;
+  CDataStore(COperatorResultStore& resultStore, CParameterStore& parameStore);
+  void SaveRedshiftResult(const std::string& dir);
+  void SaveCandidatesResult(const std::string& dir);
+  void SaveReliabilityResult(const std::string& dir);
+  void SaveStellarResult(const std::string& dir);
+  void SaveClassificationResult(const std::string& dir);
+  void SaveAllResults(const std::string& dir, const std::string opt) const;
 };
 
 class COperatorResultStore

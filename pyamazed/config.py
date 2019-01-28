@@ -16,6 +16,7 @@ defaults = {
     'zclassifier_dir': '',
     'log_level': CLog.nLevel_Warning,
     'linecatalog_convert': False,
+    'save_intermediate_results': 'all'
     }
 
 
