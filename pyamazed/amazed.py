@@ -9,12 +9,8 @@ from .config import Config
 import json
 
 
-def datapath(config, *path):
-    return os.path.expanduser(os.path.join(config.data_path, *path))
-
-
-def calibrationpath(config, *path):
-    return os.path.expanduser(os.path.join(config.calibration_dir, *path))
+def absolutepath(config, *path):
+    return os.path.expanduser(os.path.join(*path))
 
 
 def spectrumpath(config, *path):
@@ -68,7 +64,7 @@ def amazed():
     classif = CClassifierStore()
 
     if config.zclassifier_dir:
-        classif.Load(calibrationpath(config, config.zclassifier_dir))
+        classif.Load(absolutepath(config, config.zclassifier_dir))
 
     spectrumList = []
     with open(os.path.expanduser(config.input_file), 'r') as f:
@@ -100,14 +96,14 @@ def amazed():
     zlog.LogInfo("Loading %s" % config.template_dir)
 
     try:
-        template_catalog.Load(calibrationpath(config, config.template_dir))
+        template_catalog.Load(absolutepath(config, config.template_dir))
     except Exception as e:
         zlog.LogCritical("Can't load template : {}".format(e))
         raise
 
     line_catalog = CRayCatalog()
     zlog.LogInfo("Loading %s" % config.linecatalog)
-    line_catalog.Load(calibrationpath(config, config.linecatalog))
+    line_catalog.Load(absolutepath(config, config.linecatalog))
     if config.linecatalog_convert:
         line_catalog.ConvertVacuumToAir()
 
