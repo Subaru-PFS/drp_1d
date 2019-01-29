@@ -8,7 +8,7 @@ Author: CeSAM
 import argparse
 import csv
 
-# GLOBAL VARIABLES FOR PRECISION COMPARISION
+# GLOBAL VARIABLES FOR COMPARISION PRECISION
 FLOAT_PRECISION = 1e-12
 REDSHIFT_PRECISION = 1e-12
 MERIT_PRECISION = 1e-12
@@ -19,63 +19,93 @@ GAUSSAMPERR_PRECISION = 1e-12
 GAUSSSIGMA_PRECISION = 1e-12
 GAUSSSIGMAER_PRECISION = 1e-12
 
-def switch(arg):
-    switcher = {
-        1 = redshift_cmp,
-        2 = redshiftresult_cmp,
-        3 = candidatesresult_cmp,
-        4 = classificationresult_cmp
+# ------------------------------------------------------------------------------
+
+
+class ResultsComparator():
+    def factory(type):
+        if type == "redshift.csv":
+            return Redshift():
+        elif type == "candidatesresult.csv":
+            return Candidate():
+        elif type == "redshiftresult.csv":
+            return RedshiftResult():
+        elif type == "classificationresult.csv":
+            return ClassificationResult():
+
+# ------------------------------------------------------------------------------
+
+
+class Redshift(ResultsComparator):
+    def __init__():
+        self.referencePath = "/home/ffauchier/amazed/"
+
+        self.dict = {
+        "#Spectrum": lambda x,y : x == y,
+        "ProcessingID": lambda x,y : True,
+        "Redshift": lambda x,y : abs(float(x)-float(y)) < REDSHIFT_PRECISION,
+        "Merit": lambda x,y : abs(float(x)-float(y)) < MERIT_PRECISION,
+        "Template": lambda x,y : x == y,
+        "Method": lambda x,y : x == y,
+        "Deltaz": lambda x,y : int(x) == int(y),
+        "Reliability": lambda x,y : x == y,
+        "snrHa": lambda x,y : float(x) == float(y),
+        "lfHa": lambda x,y : float(x) == float(y),
+        "snrOII": lambda x,y : float(x) == float(y),
+        "lfOII": lambda x,y : float(x) == float(y),
+        # "Type": lambda x,y : x == y
+        "Type": True
         }
-    print switcher.get(arg)
 
-dl = [redshift_cmp,
-      redshiftresult_cmp,
-      candidatesresult_cmp,
-      classificationresult_cmp]
+# ------------------------------------------------------------------------------
 
-redshift_cmp = {
-    "#Spectrum": lambda x,y : x == y,
-    "ProcessingID": lambda x,y : True,
-    "Redshift": lambda x,y : abs(float(x)-float(y)) < REDSHIFT_PRECISION,
-    "Merit": lambda x,y : abs(float(x)-float(y)) < MERIT_PRECISION,
-    "Template": lambda x,y : x == y,
-    "Method": lambda x,y : x == y,
-    "Deltaz": lambda x,y : int(x) == int(y),
-    "Reliability": lambda x,y : x == y,
-    "snrHa": lambda x,y : float(x) == float(y),
-    "lfHa": lambda x,y : float(x) == float(y),
-    "snrOII": lambda x,y : float(x) == float(y),
-    "lfOII": lambda x,y : float(x) == float(y),
-    # "Type": lambda x,y : x == y
-    "Type": True
-}
 
-redshiftresult_cmp = {
-    "#Redshift": lambda x,y : abs(float(x)-float(y)) < REDSHIFT_PRECISION,
-    "Merit": lambda x,y : abs(float(x)-float(y)) < MERIT_PRECISION,
-    "TemplateRatio": lambda x,y : x == y,
-    "TemplateContinuum": lambda x,y : x == y,
-    "method": lambda x,y : x == y,
-    "sigma": lambda x,y : abs(float(x)-float(y)) < SIGME_PRECISION
-}
+class RedshiftResult(ResultsComparator):
+    def __init__():
+        self.referencePath = "/home/ffauchier/amazed/"
 
-candidatesresult_cmp = {
-    "#rank": lambda x,y : int(x)-int(y),
-    "redshift": lambda x,y : abs(float(x)-float(y)) < REDSHIFT_PRECISION,
-    "intgProba": lambda x,y : abs(float(x)-float(y)) < INTGPROBA_PRECISION,
-    "gaussAmp": lambda x,y : abs(float(x)-float(y)) < GAUSSAMP_PRECISION,
-    "gaussAmpErr": lambda x,y : abs(float(x)-float(y)) < GAUSSAMPERR_PRECISION,
-    "gaussSigma": lambda x,y : abs(float(x)-float(y)) < GAUSSSIGMA_PRECISION,
-    "gaussSigmaErr": lambda x,y : abs(float(x)-float(y)) < GAUSSSIGMAER_PRECISION
-}
+        self.dict = {
+        "#Redshift": lambda x,y : abs(float(x)-float(y)) < REDSHIFT_PRECISION,
+        "Merit": lambda x,y : abs(float(x)-float(y)) < MERIT_PRECISION,
+        "TemplateRatio": lambda x,y : x == y,
+        "TemplateContinuum": lambda x,y : x == y,
+        "method": lambda x,y : x == y,
+        "sigma": lambda x,y : abs(float(x)-float(y)) < SIGME_PRECISION
+        }
 
-classificationresult_cmp = {
-    "#Type": lambda x,y : x == y,
-    "Merit": lambda x,y : abs(float(x)-float(y)) < MERIT_PRECISION,
-    "EvidenceG": lambda x,y : abs(float(x)-float(y)) < FLOAT_PRECISION,
-    "EvidenceS": lambda x,y : abs(float(x)-float(y)) < MERIT_PRECISION,
-    "EvidenceQ": lambda x,y : abs(float(x)-float(y)) < MERIT_PRECISION
-}
+# ------------------------------------------------------------------------------
+
+
+class Candidate(ResultsComparator):
+    def __init__():
+        self.referencePath = "/home/ffauchier/amazed/"
+
+        self.dict = {
+        "#rank": lambda x,y : int(x)-int(y),
+        "redshift": lambda x,y : abs(float(x)-float(y)) < REDSHIFT_PRECISION,
+        "intgProba": lambda x,y : abs(float(x)-float(y)) < INTGPROBA_PRECISION,
+        "gaussAmp": lambda x,y : abs(float(x)-float(y)) < GAUSSAMP_PRECISION,
+        "gaussAmpErr": lambda x,y : abs(float(x)-float(y)) < GAUSSAMPERR_PRECISION,
+        "gaussSigma": lambda x,y : abs(float(x)-float(y)) < GAUSSSIGMA_PRECISION,
+        "gaussSigmaErr": lambda x,y : abs(float(x)-float(y)) < GAUSSSIGMAER_PRECISION
+        }
+
+# ------------------------------------------------------------------------------
+
+
+class ClassificationResult(ResultsComparator):
+    def __init__():
+        self.referencePath = "/home/ffauchier/amazed/"
+
+        self.dict = {
+        "#Type": lambda x,y : x == y,
+        "Merit": lambda x,y : abs(float(x)-float(y)) < MERIT_PRECISION,
+        "EvidenceG": lambda x,y : abs(float(x)-float(y)) < FLOAT_PRECISION,
+        "EvidenceS": lambda x,y : abs(float(x)-float(y)) < MERIT_PRECISION,
+        "EvidenceQ": lambda x,y : abs(float(x)-float(y)) < MERIT_PRECISION
+        }
+
+# ------------------------------------------------------------------------------
 
 
 def main():
@@ -89,6 +119,8 @@ def main():
     args = parser.parse_args()
     return run(args)
 
+# ------------------------------------------------------------------------------
+
 
 def read_csv(args):
     with open(args) as csv_file:
@@ -100,14 +132,25 @@ def read_csv(args):
             dict_list.update({res['#Spectrum']: res})
     return dict_list
 
+# ------------------------------------------------------------------------------
+
 
 def run(args):
+    # TODO: definir le type en fonction du fichier donné
+    # TODO: construire les path avec les args OUTPUT
 
+    readerRef = read_csv(args.file1) # ref
+    reader2 = read_csv(args.file2) # res
 
-    for spectrum in reader1.keys():
-        for k in reader1[spectrum].keys():
-            assert cmpDict[k](reader1[spectrum][k],reader2[spectrum][k])
+    obj = Redshift.factory(type)
+    dictRes = obj.dict
+    dict_cmp = obj.referencePath
 
+    for spectrum in readerRef.keys():
+        for k in readerRef[spectrum].keys():
+            assert cmpDict[k](readerRef[spectrum][k],dictRes[spectrum][k])
+
+# ------------------------------------------------------------------------------
 
 if __name__ == '__main__':
     main()
