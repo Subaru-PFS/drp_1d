@@ -49,22 +49,22 @@ def amazed():
     args = parser.parse_args()
     config = Config(args)
 
+    if os.path.exists(config.output_folder):
+        raise Exception("Output directory {} already exists.".format(config.output_folder))
+
+    os.makedirs(config.output_folder)
+
     zlog = CLog()
     logConsoleHandler = CLogFileHandler(zlog,
                                         os.path.join(config.output_folder,
-                                                     'amazed.log'))
+                                                     'log.txt'))
     logConsoleHandler.SetLevelMask(config.log_level)
-
-    if os.path.exists(config.output_folder):
-        message = "Output directory {} already exists.".format(config.output_folder)
-        zlog.LogError(message)
-        raise Exception(message)
 
     param = CParameterStore()
     param.Load(os.path.expanduser(config.parameters_file))
     update_paramstore(param, config)
-    opt_saveIntermediateResults = param.Get_String('SaveIntermediateResults',
-                                                   'all')
+    saveIntermediateResults = param.Get_String('SaveIntermediateResults',
+                                               'all')
 
     classif = CClassifierStore()
 
