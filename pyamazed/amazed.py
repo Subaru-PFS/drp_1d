@@ -71,6 +71,8 @@ def amazed():
     if config.zclassifier_dir:
         classif.Load(absolutepath(config, config.zclassifier_dir))
 
+    param.Set_String('linemeascatalog', config.linemeascatalog)
+
     spectrumList = []
     with open(os.path.expanduser(config.input_file), 'r') as f:
         for spectrum in f:
@@ -79,15 +81,14 @@ def amazed():
 
     medianRemovalMethod = param.Get_String("continuumRemoval.method",
                                            "IrregularSamplingMedian")
-    opt_medianKernelWidth = param.Get_Float64("continuumRemoval.medianKernelWidth")
-    opt_nscales = param.Get_Float64("continuumRemoval.decompScales",
-                                    8.0)
+    medianKernelWidth = param.Get_Float64("continuumRemoval.medianKernelWidth")
+    nscales = param.Get_Float64("continuumRemoval.decompScales", 8.0)
     dfBinPath = param.Get_String("continuumRemoval.binPath",
                                  "absolute_path_to_df_binaries_here")
 
     template_catalog = CTemplateCatalog(medianRemovalMethod,
-                                        opt_medianKernelWidth,
-                                        opt_nscales, dfBinPath)
+                                        medianKernelWidth,
+                                        nscales, dfBinPath)
     # template_catalog = FitsTemplateCatalog(medianRemovalMethod,
     #                                       opt_medianKernelWidth,
     #                                       opt_nscales, dfBinPath)
@@ -119,14 +120,12 @@ def amazed():
                                                 noise_path, e))
             continue
 
-            ctx.GetDataStore().SaveAllResults()
-
         try:
-            ctx.GetDataStore().SaveRedshiftResult(target_path)
-            ctx.GetDataStore().SaveCandidatesResult(target_path)
-            ctx.GetDataStore().SaveReliabilityResult(target_path)
-            ctx.GetDataStore().SaveStellarResult(target_path)
-            ctx.GetDataStore().SaveClassificationResult(target_path)
+            ctx.GetDataStore().SaveRedshiftResult(config.output_folder)
+            ctx.GetDataStore().SaveCandidatesResult(config.output_folder)
+            ctx.GetDataStore().SaveReliabilityResult(config.output_folder)
+            ctx.GetDataStore().SaveStellarResult(config.output_folder)
+            ctx.GetDataStore().SaveClassificationResult(config.output_folder)
         except Exception as e:
             zlog.LogWarning("Can't save redshift for "
                             "{} / {} : {}".format(spectrum_path,

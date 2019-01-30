@@ -23,8 +23,6 @@ parser = argparse.ArgumentParser(description='CPF-redshift client tool.')
 
 parser.add_argument('--parameters', '-p', dest='parameters_file',
                     metavar='FILE', type=str, help='Parameters file')
-parser.add_argument('--datapath', '-d', dest='data_path', metavar='DIR',
-                    type=str, help='Data root-path')
 parser.add_argument('--output', '-o', dest='output_folder', metavar='DIR',
                     type=str,
                     help='Directory where all generated files are '
@@ -68,5 +66,7 @@ parser.add_argument('--linecatalog_convert', '-a', action='store_true',
 parser.add_argument('--save_intermediate_results', '-b',
                     choices=['all', 'global', 'linemeas', 'no'], default='all',
                     help='Save intermediate results for each spectrum processed')
+parser.add_argument('--linemeascatalog', '-d',
+                    help='Optionally specify a linemeas-catalog file path')
 parser.add_argument('--version', '-v', action='version', version=get_version(),
                     help='Print version and exit.')

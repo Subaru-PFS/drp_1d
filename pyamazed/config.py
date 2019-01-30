@@ -5,7 +5,6 @@ from .redshift import CLog
 defaults = {
     'parameters_file': 'parameters.json',
     'config': None,
-    'data_path': '',
     'output_folder': './output',
     'input_file': 'input.spectrumlist',
     'error_file': None,
@@ -16,11 +15,12 @@ defaults = {
     'zclassifier_dir': '',
     'log_level': CLog.nLevel_Warning,
     'linecatalog_convert': False,
-    'save_intermediate_results': 'all'
+    'linemeascatalog': '',
+    'save_intermediate_results': 'all',
     }
 
 
-class Config(object):
+class Config:
 
     def __init__(self, args):
 
