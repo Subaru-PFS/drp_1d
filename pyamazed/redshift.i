@@ -122,12 +122,12 @@ class CParameterStore {
 %rename(Set_String) Set( const std::string& name, const std::string& v);
 public:
   CParameterStore();
-  bool Load( const std::string& path );
-  bool Save( const std::string& path ) const;
-  bool Get( const std::string& name, std::string& out_str, std::string defaultValue = "" );
-  bool Get( const std::string& name, Int64& out_int, Int64 defaultValue = 0 );
-  bool Get( const std::string& name, Float64& out_float, Float64 defaultValue  = 0 );
-  bool Set( const std::string& name, const std::string& v );
+  void Load( const std::string& path );
+  void Save( const std::string& path ) const;
+  void Get( const std::string& name, std::string& out_str, std::string defaultValue = "" );
+  void Get( const std::string& name, Int64& out_int, Int64 defaultValue = 0 );
+  void Get( const std::string& name, Float64& out_float, Float64 defaultValue  = 0 );
+  void Set( const std::string& name, const std::string& v );
 
 };
 

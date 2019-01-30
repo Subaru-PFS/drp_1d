@@ -46,37 +46,37 @@ public:
     std::string         GetScope( const COperatorResult&  result) const;
 
     // Wrapper functions
-    Bool                            GetScopedParam( const std::string& name, TFloat64List& v, const TFloat64List& defaultValue = TFloat64List() ) const;
-    Bool                            GetScopedParam( const std::string& name, TInt64List& v, const TInt64List& defaultValue = TInt64List() ) const;
-    Bool                            GetScopedParam( const std::string& name, TBoolList& v, const TBoolList& defaultValue = TBoolList() ) const;
-    Bool                            GetScopedParam( const std::string& name, Float64& v, Float64 defaultValue  = 0 ) const;
-    Bool                            GetScopedParam( const std::string& name, Int64& v, Int64 defaultValue = 0 ) const;
-    Bool                            GetScopedParam( const std::string& name, Bool& v, Bool defaultValue = true ) const;
-    Bool                            GetScopedParam( const std::string& name, std::string& v, std::string defaultValue = "" ) const;
+    void                            GetScopedParam( const std::string& name, TFloat64List& v, const TFloat64List& defaultValue = TFloat64List() ) const;
+    void                            GetScopedParam( const std::string& name, TInt64List& v, const TInt64List& defaultValue = TInt64List() ) const;
+    void                            GetScopedParam( const std::string& name, TBoolList& v, const TBoolList& defaultValue = TBoolList() ) const;
+    void                            GetScopedParam( const std::string& name, Float64& v, Float64 defaultValue  = 0 ) const;
+    void                            GetScopedParam( const std::string& name, Int64& v, Int64 defaultValue = 0 ) const;
+    void                            GetScopedParam( const std::string& name, Bool& v, Bool defaultValue = true ) const;
+    void                            GetScopedParam( const std::string& name, std::string& v, std::string defaultValue = "" ) const;
 
-    Bool                            SetScopedParam( const std::string& name, const TFloat64List& v );
-    Bool                            SetScopedParam( const std::string& name, const TInt64List& v );
-    Bool                            SetScopedParam( const std::string& name, const TBoolList& v );
-    Bool                            SetScopedParam( const std::string& name, Float64 v );
-    Bool                            SetScopedParam( const std::string& name, Int64 v );
-    Bool                            SetScopedParam( const std::string& name, Bool v );
-    Bool                            SetScopedParam( const std::string& name, const std::string& v );
+    void                            SetScopedParam( const std::string& name, const TFloat64List& v );
+    void                            SetScopedParam( const std::string& name, const TInt64List& v );
+    void                            SetScopedParam( const std::string& name, const TBoolList& v );
+    void                            SetScopedParam( const std::string& name, Float64 v );
+    void                            SetScopedParam( const std::string& name, Int64 v );
+    void                            SetScopedParam( const std::string& name, Bool v );
+    void                            SetScopedParam( const std::string& name, const std::string& v );
 
-    Bool                            GetParam( const std::string& name, TFloat64List& v, const TFloat64List& defaultValue = TFloat64List() ) const;
-    Bool                            GetParam( const std::string& name, TInt64List& v, const TInt64List& defaultValue = TInt64List() ) const;
-    Bool                            GetParam( const std::string& name, TBoolList& v, const TBoolList& defaultValue = TBoolList() ) const;
-    Bool                            GetParam( const std::string& name, Float64& v, Float64 defaultValue  = 0 ) const;
-    Bool                            GetParam( const std::string& name, Int64& v, Int64 defaultValue = 0 ) const;
-    Bool                            GetParam( const std::string& name, Bool& v, Bool defaultValue = true ) const;
-    Bool                            GetParam( const std::string& name, std::string& v, std::string defaultValue = "" ) const;
+    void                            GetParam( const std::string& name, TFloat64List& v, const TFloat64List& defaultValue = TFloat64List() ) const;
+    void                            GetParam( const std::string& name, TInt64List& v, const TInt64List& defaultValue = TInt64List() ) const;
+    void                            GetParam( const std::string& name, TBoolList& v, const TBoolList& defaultValue = TBoolList() ) const;
+    void                            GetParam( const std::string& name, Float64& v, Float64 defaultValue  = 0 ) const;
+    void                            GetParam( const std::string& name, Int64& v, Int64 defaultValue = 0 ) const;
+    void                            GetParam( const std::string& name, Bool& v, Bool defaultValue = true ) const;
+    void                            GetParam( const std::string& name, std::string& v, std::string defaultValue = "" ) const;
 
-    Bool                            SetParam( const std::string& name, const TFloat64List& v );
-    Bool                            SetParam( const std::string& name, const TInt64List& v );
-    Bool                            SetParam( const std::string& name, const TBoolList& v );
-    Bool                            SetParam( const std::string& name, Float64 v );
-    Bool                            SetParam( const std::string& name, Int64 v );
-    Bool                            SetParam( const std::string& name, Bool v );
-    Bool                            SetParam( const std::string& name, const std::string& v );
+    void                            SetParam( const std::string& name, const TFloat64List& v );
+    void                            SetParam( const std::string& name, const TInt64List& v );
+    void                            SetParam( const std::string& name, const TBoolList& v );
+    void                            SetParam( const std::string& name, Float64 v );
+    void                            SetParam( const std::string& name, Int64 v );
+    void                            SetParam( const std::string& name, Bool v );
+    void                            SetParam( const std::string& name, const std::string& v );
 
     void                            StoreScopedPerTemplateResult( const CTemplate& t, const std::string& name, std::shared_ptr<const COperatorResult>  result );
     void                            StoreScopedGlobalResult( const std::string& name, std::shared_ptr<const COperatorResult>  result );

@@ -16,8 +16,7 @@ CParameterStore::~CParameterStore()
 
 }
 
-
-Bool CParameterStore::Get( const std::string& name, TBoolList& v, const TBoolList& defaultValue ) const
+void CParameterStore::Get( const std::string& name, TBoolList& v, const TBoolList& defaultValue ) const
 {
   //std::cout << "Get v1" << std::endl;
     boost::optional< bpt::ptree & > property = m_PropertyTree.get_child_optional( name );
@@ -36,11 +35,9 @@ Bool CParameterStore::Get( const std::string& name, TBoolList& v, const TBoolLis
             v[i++] = it->second.get_value<Bool>();
         }
     }
-
-    return true;
 }
 
-Bool CParameterStore::Get( const std::string& name, TInt64List& v, const TInt64List& defaultValue ) const
+void CParameterStore::Get( const std::string& name, TInt64List& v, const TInt64List& defaultValue ) const
 {
   //std::cout << "Get v2" << std::endl;
     boost::optional< bpt::ptree & > property = m_PropertyTree.get_child_optional( name );
@@ -59,11 +56,9 @@ Bool CParameterStore::Get( const std::string& name, TInt64List& v, const TInt64L
             v[i++] = it->second.get_value<Int64>();
         }
     }
-
-    return true;
 }
 
-Bool CParameterStore::Get( const std::string& name, TFloat64List& v, const TFloat64List& defaultValue ) const
+void CParameterStore::Get( const std::string& name, TFloat64List& v, const TFloat64List& defaultValue ) const
 {
   //std::cout << "Get v3" << std::endl;
     boost::optional< bpt::ptree & > property = m_PropertyTree.get_child_optional( name );
@@ -82,11 +77,9 @@ Bool CParameterStore::Get( const std::string& name, TFloat64List& v, const TFloa
             v[i++] = it->second.get_value<Float64>();
         }
     }
-
-    return true;
 }
 
-Bool CParameterStore::Get( const std::string& name, TStringList& v, const TStringList& defaultValue ) const
+void CParameterStore::Get( const std::string& name, TStringList& v, const TStringList& defaultValue ) const
 {
   //std::cout << "Get v4" << std::endl;
     boost::optional< bpt::ptree & > property = m_PropertyTree.get_child_optional( name );
@@ -105,11 +98,9 @@ Bool CParameterStore::Get( const std::string& name, TStringList& v, const TStrin
             v[i++] = it->second.get_value<std::string>();
         }
     }
-
-    return true;
 }
 
-Bool CParameterStore::Get( const std::string& name, std::string& v, std::string defaultValue ) const
+void CParameterStore::Get( const std::string& name, std::string& v, std::string defaultValue ) const
 {
   //std::cout << "Get v5" << std::endl;
   boost::optional< std::string > property = m_PropertyTree.get_optional< std::string >( name );
@@ -126,10 +117,9 @@ Bool CParameterStore::Get( const std::string& name, std::string& v, std::string 
     v = *property;
   }
   //std::cout << "Returning from CParameterStore::Get v5" << std::endl;
-  return true;
 }
 
-Bool CParameterStore::Get( const std::string& name, Float64& v, Float64 defaultValue ) const
+void CParameterStore::Get( const std::string& name, Float64& v, Float64 defaultValue ) const
 {
   //std::cout << "Get v6" << std::endl;
     boost::optional<Float64> property = m_PropertyTree.get_optional<Float64>( name );
@@ -142,11 +132,9 @@ Bool CParameterStore::Get( const std::string& name, Float64& v, Float64 defaultV
     } else {
         v = *property;
     }
-
-    return true;
 }
 
-Bool CParameterStore::Get( const std::string& name, Int64& v, Int64 defaultValue ) const
+void CParameterStore::Get( const std::string& name, Int64& v, Int64 defaultValue ) const
 {
   //std::cout << "Get v7" << std::endl;
     boost::optional<Int64> property = m_PropertyTree.get_optional<Int64>( name );
@@ -159,11 +147,9 @@ Bool CParameterStore::Get( const std::string& name, Int64& v, Int64 defaultValue
     } else {
         v = *property;
     }
-
-    return true;
 }
 
-Bool CParameterStore::Get( const std::string& name, Bool& v, Bool defaultValue ) const
+void CParameterStore::Get( const std::string& name, Bool& v, Bool defaultValue ) const
 {
   //std::cout << "Get v8" << std::endl;
     boost::optional<Bool> property = m_PropertyTree.get_optional<Bool>( name );
@@ -176,12 +162,10 @@ Bool CParameterStore::Get( const std::string& name, Bool& v, Bool defaultValue )
     } else {
         v = *property;
     }
-
-    return true;
 }
 
 
-Bool CParameterStore::Get( const std::string& name, TFloat64Range& v, TFloat64Range defaultValue ) const
+void CParameterStore::Get( const std::string& name, TFloat64Range& v, TFloat64Range defaultValue ) const
 {
   //std::cout << "Get v9" << std::endl;
     TFloat64List listDefault( 2 );
@@ -190,15 +174,13 @@ Bool CParameterStore::Get( const std::string& name, TFloat64Range& v, TFloat64Ra
     listDefault[0] = defaultValue.GetBegin();
     listDefault[1] = defaultValue.GetEnd();
 
-    Bool r = Get( name, list, listDefault );
+    Get( name, list, listDefault );
 
     v.Set( list[0], list[1] );
-
-    return r;
 }
 
 
-Bool CParameterStore::Set( const std::string& name, const TFloat64List& v )
+void CParameterStore::Set( const std::string& name, const TFloat64List& v )
 {
     boost::optional< bpt::ptree & > property = m_PropertyTree.get_child_optional( name );
 
@@ -212,10 +194,9 @@ Bool CParameterStore::Set( const std::string& name, const TFloat64List& v )
     }
 
     m_PropertyTree.put_child( name, array );
-    return true;
 }
 
-Bool CParameterStore::Set( const std::string& name, const TStringList& v )
+void CParameterStore::Set( const std::string& name, const TStringList& v )
 {
     boost::optional< bpt::ptree & > property = m_PropertyTree.get_child_optional( name );
 
@@ -229,21 +210,19 @@ Bool CParameterStore::Set( const std::string& name, const TStringList& v )
     }
 
     m_PropertyTree.put_child( name, array );
-    return true;
 }
 
-Bool CParameterStore::Set( const std::string& name, const TFloat64Range& v )
+void CParameterStore::Set( const std::string& name, const TFloat64Range& v )
 {
     TFloat64List list( 2 );
 
     list[0] = v.GetBegin();
     list[1] = v.GetEnd();
 
-    return Set( name, list );
-
+    Set( name, list );
 }
 
-Bool CParameterStore::Set( const std::string& name, const TInt64List& v )
+void CParameterStore::Set( const std::string& name, const TInt64List& v )
 {
     boost::optional< bpt::ptree & > property = m_PropertyTree.get_child_optional( name );
 
@@ -257,10 +236,9 @@ Bool CParameterStore::Set( const std::string& name, const TInt64List& v )
     }
 
     m_PropertyTree.put_child( name, array );
-    return true;
 }
 
-Bool CParameterStore::Set( const std::string& name, const TBoolList& v )
+void CParameterStore::Set( const std::string& name, const TBoolList& v )
 {
     boost::optional< bpt::ptree & > property = m_PropertyTree.get_child_optional( name );
 
@@ -274,50 +252,43 @@ Bool CParameterStore::Set( const std::string& name, const TBoolList& v )
     }
 
     m_PropertyTree.put_child( name, array );
-    return true;
 }
 
-Bool CParameterStore::Set( const std::string& name, Float64 v )
+void CParameterStore::Set( const std::string& name, Float64 v )
 {
     boost::optional<Float64> property = m_PropertyTree.get_optional<Float64>( name );
 
     m_PropertyTree.put( name, v );
-    return true;
 }
 
-Bool CParameterStore::Set( const std::string& name, Int64 v )
+void CParameterStore::Set( const std::string& name, Int64 v )
 {
     boost::optional<Int64> property = m_PropertyTree.get_optional<Int64>( name );
 
     m_PropertyTree.put( name, v );
-    return true;
 }
 
-Bool CParameterStore::Set( const std::string& name, Bool v )
+void CParameterStore::Set( const std::string& name, Bool v )
 {
     boost::optional<Bool> property = m_PropertyTree.get_optional<Bool>( name );
 
     m_PropertyTree.put( name, v );
-    return true;
 }
 
-Bool CParameterStore::Set( const std::string& name, const std::string& v )
+void CParameterStore::Set( const std::string& name, const std::string& v )
 {
     boost::optional<std::string> property = m_PropertyTree.get_optional<std::string>( name );
 
     m_PropertyTree.put( name, v );
-    return true;
 }
 
 
-Bool CParameterStore::Save( const std::string& path ) const
+void CParameterStore::Save( const std::string& path ) const
 {
     bpt::json_parser::write_json( path, m_PropertyTree );
-    return true;
 }
 
-Bool CParameterStore::Load( const std::string& path )
+void CParameterStore::Load( const std::string& path )
 {
     bpt::json_parser::read_json( path, m_PropertyTree );
-    return true;
 }

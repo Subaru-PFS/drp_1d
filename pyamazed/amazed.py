@@ -77,20 +77,13 @@ def amazed():
             if not spectrum.startswith('#'):
                 spectrumList.append(spectrum.strip())
 
-    retcode, medianRemovalMethod = param.Get_String("continuumRemoval.method",
-                                                    "IrregularSamplingMedian")
-    assert retcode
-
-    retcode, opt_medianKernelWidth = param.Get_Float64("continuumRemoval.medianKernelWidth")
-    assert retcode
-
-    retcode, opt_nscales = param.Get_Float64("continuumRemoval.decompScales",
-                                             8.0)
-    assert retcode
-
-    retcode, dfBinPath = param.Get_String("continuumRemoval.binPath",
-                                          "absolute_path_to_df_binaries_here")
-    assert retcode
+    medianRemovalMethod = param.Get_String("continuumRemoval.method",
+                                           "IrregularSamplingMedian")
+    opt_medianKernelWidth = param.Get_Float64("continuumRemoval.medianKernelWidth")
+    opt_nscales = param.Get_Float64("continuumRemoval.decompScales",
+                                    8.0)
+    dfBinPath = param.Get_String("continuumRemoval.binPath",
+                                 "absolute_path_to_df_binaries_here")
 
     template_catalog = CTemplateCatalog(medianRemovalMethod,
                                         opt_medianKernelWidth,
@@ -130,10 +123,10 @@ def amazed():
 
         try:
             ctx.GetDataStore().SaveRedshiftResult(target_path)
-            ctx.GetDataStore().SaveCandidatesResult(target_path);
-            ctx.GetDataStore().SaveReliabilityResult(target_path);
-            ctx.GetDataStore().SaveStellarResult(target_path);
-            ctx.GetDataStore().SaveClassificationResult(target_path);
+            ctx.GetDataStore().SaveCandidatesResult(target_path)
+            ctx.GetDataStore().SaveReliabilityResult(target_path)
+            ctx.GetDataStore().SaveStellarResult(target_path)
+            ctx.GetDataStore().SaveClassificationResult(target_path)
         except Exception as e:
             zlog.LogWarning("Can't save redshift for "
                             "{} / {} : {}".format(spectrum_path,
@@ -153,6 +146,7 @@ def main():
         amazed()
     except Exception as e:
         print("Critical error: {}".format(e))
+
 
 if __name__ == '__main__':
     main()
