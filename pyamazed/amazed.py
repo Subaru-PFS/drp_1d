@@ -51,7 +51,8 @@ def amazed():
     config = Config(args)
 
     if os.path.exists(config.output_folder):
-        raise Exception("Output directory {} already exists.".format(config.output_folder))
+        raise Exception("Output directory {} already exists.".format(
+            config.output_folder))
 
     os.makedirs(config.output_folder)
 
