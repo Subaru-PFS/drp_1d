@@ -28,7 +28,8 @@ setup(
     ext_modules=[swig_ext],
     entry_points={
         'console_scripts': [
-            'amazed=pyamazed.amazed:main'
+            'amazed=pyamazed.amazed:main',
+            'amazed-cmp=pyamazed.output_compare:main'
         ],
     },
 

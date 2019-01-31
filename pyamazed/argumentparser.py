@@ -19,7 +19,7 @@ def log_level(lvl):
         return levels[lvl.lower()]
 
 
-parser = argparse.ArgumentParser(description='CPF-redshift client tool.')
+parser = argparse.ArgumentParser(description='AMAZED client tool.')
 
 parser.add_argument('--parameters', '-p', dest='parameters_file',
                     metavar='FILE', type=str, help='Parameters file')
