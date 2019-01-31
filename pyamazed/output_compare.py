@@ -9,6 +9,7 @@ import os
 import csv
 import argparse
 import numpy as np
+from pprint import pprint
 
 # GLOBAL VARIABLES FOR COMPARISION PRECISION
 FLOAT_PRECISION = 1e-12
@@ -230,7 +231,7 @@ def main():
     r = OutputDirComparator().compare(args.referencedir,
                                       args.outputdir)
     if r:
-        print(r)
+        pprint(r)
 
 
 if __name__ == '__main__':
