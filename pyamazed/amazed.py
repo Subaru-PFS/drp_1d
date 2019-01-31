@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import os.path
+import shutil
 from .argumentparser import parser
 from .redshift import CSpectrum_default, CProcessFlowContext, \
     CProcessFlow, CLog, CParameterStore, CClassifierStore, \
@@ -138,6 +139,11 @@ def amazed():
     # save cpf-redshift version in output dir
     with open(os.path.join(config.output_folder, 'version.json'), 'w') as f:
         json.dump({'cpf-redshift-version': get_version()}, f)
+
+    # copy input files to output dir
+    shutil.copyfile(os.path.expanduser(config.input_file),
+                    os.path.join(config.output_folder,
+                                 'input.spectrumlist'))
 
 
 def main():

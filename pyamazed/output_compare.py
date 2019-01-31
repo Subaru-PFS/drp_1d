@@ -55,19 +55,24 @@ class ResultsComparator():
 
 class OutputDirComparator(ResultsComparator):
 
-    def compare(self, path1, path2, spectrumListFile):
+    def compare(self, path1, path2):
 
         result = Redshift().compare(path1, path2)
-        spectrumList = read_spectrumlist(spectrumListFile)
-        for spectrum in spectrumList:
+        spectrumlist = read_spectrumlist(os.path.join(path1,
+                                                      'input.spectrumlist'))
+        for spectrum in spectrumlist:
             for method in [CandidateResult,
                            RedshiftResult,
                            ClassificationResult,
                            zPDFComparator]:
-                r = method().compare(os.path.join(path1, spectrum),
-                                     os.path.join(path2, spectrum))
-                if r:
-                    result.append(r)
+                try:
+                    r = method().compare(os.path.join(path1, spectrum),
+                                         os.path.join(path2, spectrum))
+                    if r:
+                        result.append(r)
+                except Exception as e:
+                    result.append('{}/{} : {}'.format(spectrum,
+                                                      method.__name__, e))
         return result
 
 
@@ -78,12 +83,12 @@ class CSVComparator(ResultsComparator):
     header_mark = None
 
     def _read_csv(self, args):
-        csvFile = open(args)
-        for l in csvFile:
+        csvfile = open(args)
+        for l in csvfile:
             if l.startswith(self.header_mark):
                 header = l.split()
                 break
-        reader = csv.reader(csvFile, delimiter='\t')
+        reader = csv.reader(csvfile, delimiter='\t')
         dict_list = {}
 
         for line in reader:
@@ -96,8 +101,12 @@ class CSVComparator(ResultsComparator):
 
     def compare(self, path1, path2):
 
-        csv1 = self._read_csv(os.path.join(path1, self.filename))
-        csv2 = self._read_csv(os.path.join(path2, self.filename))
+        try:
+            csv1 = self._read_csv(os.path.join(path1, self.filename))
+            csv2 = self._read_csv(os.path.join(path2, self.filename))
+        except Exception as e:
+            return ["can't read file : {}".format(e)]
+
         result = []
 
         for spectrum in csv1.keys():
@@ -216,14 +225,10 @@ def main():
     parser.add_argument('outputdir',
                         type=str,
                         help='Path to the output tests directory.')
-    parser.add_argument('spectrumlistfile',
-                        type=str,
-                        help='Path to spectrum.list file.')
     args = parser.parse_args()
 
     r = OutputDirComparator().compare(args.referencedir,
-                                      args.outputdir,
-                                      args.spectrumlistfile)
+                                      args.outputdir)
     if r:
         print(r)
 
