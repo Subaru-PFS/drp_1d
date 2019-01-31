@@ -45,7 +45,7 @@ class BooleanAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
         setattr(namespace, self.dest, True)
 
-parser = argparse.ArgumentParser(description='CPF-redshift client tool.')
+parser = argparse.ArgumentParser(description='AMAZED client tool.')
 
 parser.add_argument('--parameters', '-p', dest='parameters_file',
                     metavar='FILE', type=str, help='Parameters file')
