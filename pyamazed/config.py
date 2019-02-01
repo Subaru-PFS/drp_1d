@@ -44,3 +44,8 @@ class Config:
                 raise AttributeError('Invalid command line parameter {}'.format(arg))
             if getattr(args, arg) is not None:
                 setattr(self, arg, getattr(args, arg))
+
+    def save(self, path):
+        """Save configuration to path"""
+        with open(path, "w") as f:
+            json.dump(vars(self), f, indent=2)
