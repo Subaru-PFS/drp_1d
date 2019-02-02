@@ -194,6 +194,7 @@ public:
     Float64 getScaleMargCorrection(Int32 idxLine=-1);
     Float64 getContinuumScaleMargCorrection();
     Float64 getStrongerMultipleELAmpCoeff();
+    std::vector<std::string> getLinesAboveSNR(Float64 snrcut=3.5);
     Float64 getCumulSNRStrongEL();
     Float64 getCumulSNROnRange( TInt32Range idxRange );
     bool GetModelStrongEmissionLinePresent();

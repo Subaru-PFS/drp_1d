@@ -45,6 +45,7 @@ void CLineModelExtremaResult::Resize(Int32 size)
 
     Posterior.resize(size);
     StrongELSNR.resize(size);
+    StrongELSNRAboveCut.resize(size);
     LogArea.resize(size);
     LogAreaCorrectedExtrema.resize(size);
     SigmaZ.resize(size);
@@ -296,6 +297,26 @@ void CLineModelExtremaResult::Save( const CDataStore& store, std::ostream& strea
         for ( int i=0; i<StrongELSNR.size(); i++)
         {
             stream <<  StrongELSNR[i] << "\t";
+        }
+        stream << "}" << std::endl;
+    }
+
+
+    // save StrongELSNRAboveCut list, on 1 line
+    if(StrongELSNRAboveCut.size()>0){
+        stream <<  "#StrongELSNRAboveCut for each extrema = {";
+        for ( int i=0; i<StrongELSNRAboveCut.size(); i++)
+        {
+            std::vector<std::string> line_list = StrongELSNRAboveCut[i];
+            for ( int ki=0; ki<line_list.size(); ki++)
+            {
+                if(ki>0)
+                {
+                    stream << ",";
+                }
+                stream <<  line_list[ki];
+            }
+            stream << "\t";
         }
         stream << "}" << std::endl;
     }

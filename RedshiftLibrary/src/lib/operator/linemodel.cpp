@@ -1335,9 +1335,12 @@ Int32 COperatorLineModel::ComputeSecondPass(CDataStore &dataStore,
             m_result->GetNLinesOverCutThreshold(i, cutThres, cutThres);
         m_result->ExtremaResult.Posterior[i] =
             nValidLines; // m/Float64(1+nValidLines);
-        Float64 cumulStrongELSNR =
-            m_model->getCumulSNRStrongEL(); // getStrongerMultipleELAmpCoeff();
+        Float64 cumulStrongELSNR = m_model->getCumulSNRStrongEL(); // getStrongerMultipleELAmpCoeff(); //
         m_result->ExtremaResult.StrongELSNR[i] = cumulStrongELSNR;
+
+        std::vector<std::string> strongELSNRAboveCut = m_model->getLinesAboveSNR(3.5);
+        m_result->ExtremaResult.StrongELSNRAboveCut[i] = strongELSNRAboveCut;
+
 
         m_result->ExtremaResult.LogArea[i] = -DBL_MAX;
         m_result->ExtremaResult.LogAreaCorrectedExtrema[i] = -1.0;

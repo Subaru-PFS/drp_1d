@@ -4962,6 +4962,150 @@ Float64 CLineModelElementList::getModelErrorUnderElement( UInt32 eltId )
     return sqrt(fit/sumErr);
 }
 
+/**
+ * @brief CLineModelElementList::getLinesAboveSNR
+ * Only considering a list of strong emission lines for now
+ * @param snrcut
+ * @return
+ */
+std::vector<std::string> CLineModelElementList::getLinesAboveSNR(Float64 snrcut)
+{
+    TInt32List eIdx_oii;
+    TInt32List subeIdx_oii;
+    TInt32List eIdx_ciii;
+    TInt32List subeIdx_ciii;
+
+
+    Float64 snr_ha = -1;
+    Float64 snr_oii = -1;
+    Float64 snr_oiiia = -1;
+    //snr_oiiib = -1;
+    Float64 snr_hb = -1;
+    Float64 snr_ciii = -1;
+    Float64 snr_lya = -1;
+
+    for( UInt32 iRestRay=0; iRestRay<m_RestRayList.size(); iRestRay++ )
+    {
+        Int32 eIdx = FindElementIndex(iRestRay);
+        Int32 subeIdx = m_Elements[eIdx]->FindElementIndex(iRestRay);
+        if(eIdx==-1 || subeIdx==-1 || m_Elements[eIdx]->IsOutsideLambdaRange(subeIdx))
+        {
+        }else{
+
+            Float64 cont = m_Elements[eIdx]->GetContinuumAtCenterProfile(subeIdx, m_SpectrumModel->GetSpectralAxis(), m_Redshift, m_ContinuumFluxAxis);
+            Float64 sigma = m_Elements[eIdx]->GetWidth(subeIdx, m_Redshift);
+            Float64 flux = -1;
+            Float64 fluxError = -1;
+            Float64 fluxDI = -1;
+            Float64 snrDI = -1;
+            TInt32List eIdx_line(1, eIdx);
+            TInt32List subeIdx_line(1, subeIdx);
+            Int32 opt_cont_substract_abslinesmodel=0;
+            if(m_RestRayList[iRestRay].GetType()==CRay::nType_Emission)
+            {
+                opt_cont_substract_abslinesmodel=1;
+            }
+            Int32 retdi = GetFluxDirectIntegration(eIdx_line, subeIdx_line, opt_cont_substract_abslinesmodel, fluxDI, snrDI);
+
+            linetags ltags;
+            // Ha
+            if(m_RestRayList[iRestRay].GetName()==ltags.halpha_em && m_RestRayList[iRestRay].GetType()==CRay::nType_Emission)
+            {
+                {
+                    snr_ha = snrDI;
+                }
+            }
+            // oiii1
+            if(m_RestRayList[iRestRay].GetName()==ltags.oIIIa_em && m_RestRayList[iRestRay].GetType()==CRay::nType_Emission)
+            {
+                {
+                    snr_oiiia = snrDI;
+                }
+            }
+            // hb
+            if(m_RestRayList[iRestRay].GetName()==ltags.hbeta_em && m_RestRayList[iRestRay].GetType()==CRay::nType_Emission)
+            {
+                {
+                    snr_hb = snrDI;
+                }
+            }
+            // oii
+            if((m_RestRayList[iRestRay].GetName()==ltags.oII3726_em || m_RestRayList[iRestRay].GetName()==ltags.oII3729_em)
+                    && m_RestRayList[iRestRay].GetType()==CRay::nType_Emission)
+            {
+                //here we only cover the fluxDI case.
+                eIdx_oii.push_back(eIdx);
+                subeIdx_oii.push_back(subeIdx);
+                {
+                    fluxDI = -1;
+                    Float64 snrDI = -1;
+                    Int32 opt_cont_substract_abslinesmodel=0;
+                    Int32 retdi = GetFluxDirectIntegration(eIdx_oii, subeIdx_oii, opt_cont_substract_abslinesmodel,fluxDI, snrDI);
+
+                    snr_oii = snrDI;
+                }
+            }
+            if((m_RestRayList[iRestRay].GetName()==ltags.cIII1907_em || m_RestRayList[iRestRay].GetName()==ltags.cIII1909_em)
+                    && m_RestRayList[iRestRay].GetType()==CRay::nType_Emission)
+            {
+                //here we only cover the fluxDI case.
+                eIdx_ciii.push_back(eIdx);
+                subeIdx_ciii.push_back(subeIdx);
+                {
+                    fluxDI = -1;
+                    Float64 snrDI = -1;
+                    Int32 opt_cont_substract_abslinesmodel=0;
+                    Int32 retdi = GetFluxDirectIntegration(eIdx_ciii, subeIdx_ciii, opt_cont_substract_abslinesmodel,fluxDI, snrDI);
+
+                    snr_ciii = snrDI;
+                }
+            }
+            // lya
+            if(m_RestRayList[iRestRay].GetName()==ltags.lya_em && m_RestRayList[iRestRay].GetType()==CRay::nType_Emission)
+            {
+                {
+                    snr_lya = snrDI;
+                }
+            }
+        }
+    }
+
+    //sum snr ht cut
+    Int32 nhtcut = 0;
+    std::vector<std::string> str_above_cut;
+    if(snr_ha>snrcut)
+    {
+        nhtcut++;
+        str_above_cut.push_back("Ha");
+    }
+    if(snr_oiiia>snrcut)
+    {
+        nhtcut++;
+        str_above_cut.push_back("OIIIa");
+    }
+    if(snr_hb>snrcut)
+    {
+        nhtcut++;
+        str_above_cut.push_back("Hb");
+    }
+    if(snr_oii>snrcut)
+    {
+        nhtcut++;
+        str_above_cut.push_back("OII");
+    }
+    if(snr_lya>snrcut)
+    {
+        nhtcut++;
+        str_above_cut.push_back("Lya");
+    }
+    if(snr_ciii>snrcut)
+    {
+        nhtcut++;
+        str_above_cut.push_back("CIII");
+    }
+
+    return str_above_cut;
+}
 
 /**
  * \brief Returns the Stronger Multiple Emission Lines Amplitude Coefficient (SMELAC)
@@ -5237,20 +5381,17 @@ Float64 CLineModelElementList::getCumulSNROnRange( TInt32Range idxRange  )
     const Float64* Ymodel = modelFluxAxis.GetSamples();
 
     Int32 idx = 0;
-    Float64 maxAmp = 0.0;
+    Float64 sumF = 0.0;
     Float64 sumM = 0.0;
     for(Int32 i = 0; i < n; i++)
     {
         idx = i + idxRange.GetBegin();
-        Float64 amp = Ymodel[idx]-m_ContinuumFluxAxis[idx]; //using only the no-continuum component to estimate SNR
-        if(maxAmp<amp)
-        {
-            maxAmp = amp;
-        }
-        sumM +=  m_ErrorNoContinuum[idx];
+        Float64 flux = Ymodel[idx]-m_ContinuumFluxAxis[idx]; //using only the no-continuum component to estimate SNR
+        sumF += flux;
+        sumM +=  m_ErrorNoContinuum[idx]*m_ErrorNoContinuum[idx];
     }
-    Float64 Err = sumM/Float64(n);
-    Float64 rangeSNR = maxAmp/Err;
+    Float64 Err = std::sqrt(sumM);
+    Float64 rangeSNR = sumF/Err;
 
     return rangeSNR;
 }
