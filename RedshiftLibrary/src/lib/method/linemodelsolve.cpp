@@ -371,6 +371,15 @@ Int32 CLineModelSolve::CombinePDF(std::shared_ptr<const CLineModelResult> result
     }else{
         Log.LogInfo("Linemodel: Pdfz computation: StrongLinePresence prior disabled");
     }
+    Float64 opt_nlines_snr_penalization_factor = -1;
+    bool zPriorNLineSNR = (opt_nlines_snr_penalization_factor>0.0);
+    if(zPriorNLineSNR)
+    {
+        Log.LogInfo("Linemodel: Pdfz computation: N lines snr>cut prior enabled: factor=%e", opt_nlines_snr_penalization_factor);
+    }else{
+        Log.LogInfo("Linemodel: Pdfz computation: N lines snr>cut prior disabled");
+    }
+
     //hardcoded Euclid-NHaZprior parameter
     bool zPriorEuclidNHa = false;
     if(opt_euclidNHaEmittersPriorStrength>0.0)
@@ -417,6 +426,12 @@ Int32 CLineModelSolve::CombinePDF(std::shared_ptr<const CLineModelResult> result
             std::vector<Float64> zlogPriorNHa = pdfz.GetEuclidNhaLogZPrior(result->Redshifts, opt_euclidNHaEmittersPriorStrength);
             zPrior->valProbaLog = pdfz.CombineLogZPrior(zPrior->valProbaLog, zlogPriorNHa);
         }
+        if(zPriorNLineSNR)
+        {
+            std::vector<Int32> n_lines_above_snr = result->GetNLinesAboveSnrcut(result->LineModelSolutions);
+            std::vector<Float64> zlogPriorNLinesAboveSNR = pdfz.GetNLinesSNRAboveCutLogZPrior(n_lines_above_snr, opt_nlines_snr_penalization_factor);
+            zPrior->valProbaLog = pdfz.CombineLogZPrior(zPrior->valProbaLog, zlogPriorNLinesAboveSNR);
+        }
 
         //correct chi2 if necessary: todo add switch
         TFloat64List logLikelihoodCorrected(result->ChiSquare.size(), DBL_MAX);
@@ -457,6 +472,12 @@ Int32 CLineModelSolve::CombinePDF(std::shared_ptr<const CLineModelResult> result
             {
                 std::vector<Float64> zlogPriorNHa = pdfz.GetEuclidNhaLogZPrior(result->Redshifts, opt_euclidNHaEmittersPriorStrength);
                 _prior = pdfz.CombineLogZPrior(_prior, zlogPriorNHa);
+            }
+            if(zPriorNLineSNR)
+            {
+                std::vector<Int32> n_lines_above_snr = result->NLinesAboveSNRTplshapes[k];
+                std::vector<Float64> zlogPriorNLinesAboveSNR = pdfz.GetNLinesSNRAboveCutLogZPrior(n_lines_above_snr, opt_nlines_snr_penalization_factor);
+                _prior = pdfz.CombineLogZPrior(_prior, zlogPriorNLinesAboveSNR);
             }
             zpriorsTplshapes.push_back(_prior);
         }

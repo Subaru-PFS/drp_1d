@@ -1005,6 +1005,47 @@ CPdfz::GetStrongLinePresenceLogZPrior(std::vector<bool> linePresence,
     return logzPrior;
 }
 
+std::vector<Float64>
+CPdfz::GetNLinesSNRAboveCutLogZPrior(std::vector<Int32> nlinesAboveSNR,
+                                      Float64 penalization_factor)
+{
+    Int32 nz = nlinesAboveSNR.size();
+    Int32 nlinesThres = 2;
+    Float64 probaPresent = 1.0;
+    Float64 probaAbsent = penalization_factor;
+    std::vector<Float64> zPrior(nz, probaAbsent);
+    Float64 sum = 0.0;
+    for (UInt32 kz = 0; kz < nz; kz++)
+    {
+        if (nlinesAboveSNR[kz] >= nlinesThres)
+        {
+            zPrior[kz] = probaPresent;
+            //Log.LogDetail("Pdfz: Prior: nlinesAboveSNR[kz] >= nlinesThres for kz=%d", kz);
+        } else
+        {
+            zPrior[kz] = probaAbsent;
+        }
+        sum += zPrior[kz];
+    }
+
+    if (sum > 0)
+    {
+        for (UInt32 kz = 0; kz < nz; kz++)
+        {
+            zPrior[kz] /= sum;
+        }
+    }
+
+    // switch to log
+    std::vector<Float64> logzPrior(nz, probaAbsent);
+    for (UInt32 kz = 0; kz < nz; kz++)
+    {
+        logzPrior[kz] = log(zPrior[kz]);
+    }
+
+    return logzPrior;
+}
+
 std::vector<Float64> CPdfz::GetEuclidNhaLogZPrior(std::vector<Float64> redshifts, Float64 aCoeff)
 {
     if(aCoeff<=0)

@@ -70,6 +70,9 @@ Int32 CLineModelResult::Init( std::vector<Float64> redshifts, CRayCatalog::TRayV
         std::vector<bool> selp(nResults, false);
         StrongELPresentTplshapes.push_back(selp);
 
+        std::vector<Int32> nlac(nResults, false);
+        NLinesAboveSNRTplshapes.push_back(nlac);
+
         PriorTplshapes.push_back(tplshapesPriors[k]);
     }
 
@@ -79,7 +82,11 @@ Int32 CLineModelResult::Init( std::vector<Float64> redshifts, CRayCatalog::TRayV
     return err;
 }
 
-Int32 CLineModelResult::SetChisquareTplshapeResult( Int32 index_z, TFloat64List chisquareTplshape, TFloat64List scaleMargCorrTplshape, std::vector<bool> strongEmissionLinePresentTplshape )
+Int32 CLineModelResult::SetChisquareTplshapeResult(Int32 index_z,
+                                                    TFloat64List chisquareTplshape,
+                                                    TFloat64List scaleMargCorrTplshape,
+                                                    std::vector<bool> strongEmissionLinePresentTplshape,
+                                                    std::vector<Int32> nLinesAboveSNRTplshape)
 {
     if(index_z>=Redshifts.size())
     {
@@ -101,12 +108,17 @@ Int32 CLineModelResult::SetChisquareTplshapeResult( Int32 index_z, TFloat64List 
     {
         return -4;
     }
+    if(chisquareTplshape.size()!=nLinesAboveSNRTplshape.size())
+    {
+        return -4;
+    }
 
     for(Int32 k=0; k<chisquareTplshape.size(); k++)
     {
         ChiSquareTplshapes[k][index_z] = chisquareTplshape[k];
         ScaleMargCorrectionTplshapes[k][index_z] = scaleMargCorrTplshape[k];
         StrongELPresentTplshapes[k][index_z] = strongEmissionLinePresentTplshape[k];
+        NLinesAboveSNRTplshapes[k][index_z] = nLinesAboveSNRTplshape[k];
     }
     return 0;
 }
@@ -169,6 +181,27 @@ std::vector<bool> CLineModelResult::GetStrongELPresentTplshapeResult( Int32 inde
     }
 
     return strongELPresentTplshape;
+}
+
+
+std::vector<Int32> CLineModelResult::GetNLinesAboveSNRTplshapeResult( Int32 index_z )
+{
+    std::vector<Int32> priorTplshape;
+    if(index_z>=Redshifts.size())
+    {
+        return priorTplshape;
+    }
+    if(NLinesAboveSNRTplshapes.size()<1)
+    {
+        return priorTplshape;
+    }
+
+    for(Int32 k=0; k<NLinesAboveSNRTplshapes.size(); k++)
+    {
+        priorTplshape.push_back(NLinesAboveSNRTplshapes[k][index_z]);
+    }
+
+    return priorTplshape;
 }
 
 /**
@@ -392,6 +425,19 @@ std::vector<bool> CLineModelResult::GetStrongLinesPresence( UInt32 filterType, s
     }
 
     return strongIsPresent;
+}
+
+
+std::vector<Int32> CLineModelResult::GetNLinesAboveSnrcut( std::vector<CLineModelSolution> linemodelsols ) const
+{
+    std::vector<Int32> nlinesabove(linemodelsols.size(), 0);
+    for ( UInt32 solutionIdx=0; solutionIdx<linemodelsols.size(); solutionIdx++)
+    {
+        nlinesabove[solutionIdx] = linemodelsols[solutionIdx].NLinesAboveSnrCut;
+    }
+
+
+    return nlinesabove;
 }
 
 

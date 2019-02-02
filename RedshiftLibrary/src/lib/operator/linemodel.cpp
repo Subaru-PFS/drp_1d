@@ -487,7 +487,8 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
             m_result->SetChisquareTplshapeResult(i,
                                                  m_model->GetChisquareTplshape(),
                                                  m_model->GetScaleMargTplshape(),
-                                                 m_model->GetStrongELPresentTplshape());
+                                                 m_model->GetStrongELPresentTplshape(),
+                                                 m_model->GetNLinesAboveSNRTplshape());
             for (Int32 k = 0; k < m_result->ChiSquareTplshapes.size(); k++)
             {
                 calculatedChiSquareTplshapes[k].push_back(
@@ -523,7 +524,8 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
             m_result->SetChisquareTplshapeResult(
                 i, m_result->GetChisquareTplshapeResult(i - 1),
                 m_result->GetScaleMargCorrTplshapeResult(i - 1),
-                m_result->GetStrongELPresentTplshapeResult(i - 1));
+                m_result->GetStrongELPresentTplshapeResult(i - 1),
+                m_result->GetNLinesAboveSNRTplshapeResult(i - 1));
             if (m_estimateLeastSquareFast)
             {
                 m_result->ChiSquareContinuum[i] =
@@ -1152,7 +1154,8 @@ Int32 COperatorLineModel::ComputeSecondPass(CDataStore &dataStore,
             m_result->SetChisquareTplshapeResult(idx,
                                                  m_model->GetChisquareTplshape(),
                                                  m_model->GetScaleMargTplshape(),
-                                                 m_model->GetStrongELPresentTplshape());
+                                                 m_model->GetStrongELPresentTplshape(),
+                                                 m_model->GetNLinesAboveSNRTplshape());
             if (m_estimateLeastSquareFast)
             {
                 m_result->ChiSquareContinuum[idx] = m_model->getLeastSquareContinuumMerit(lambdaRange);
@@ -1995,7 +1998,8 @@ Int32 COperatorLineModel::RecomputeAroundCandidates(TPointList input_extremumLis
                 m_result->SetChisquareTplshapeResult(iz,
                                                      m_model->GetChisquareTplshape(),
                                                      m_model->GetScaleMargTplshape(),
-                                                     m_model->GetStrongELPresentTplshape());
+                                                     m_model->GetStrongELPresentTplshape(),
+                                                     m_model->GetNLinesAboveSNRTplshape());
                 if (m_estimateLeastSquareFast)
                 {
                     m_result->ChiSquareContinuum[iz] =

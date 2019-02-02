@@ -265,6 +265,7 @@ Bool CLineModelElementList::initTplratioCatalogs(std::string opt_tplratioCatRelP
     m_ChisquareTplshape.resize(m_CatalogTplShape->GetCatalogsCount());
     m_ScaleMargCorrTplshape.resize(m_CatalogTplShape->GetCatalogsCount());
     m_StrongELPresentTplshape.resize(m_CatalogTplShape->GetCatalogsCount());
+    m_NLinesAboveSNRTplshape.resize(m_CatalogTplShape->GetCatalogsCount());
     m_FittedAmpTplshape.resize(m_CatalogTplShape->GetCatalogsCount());
     m_FittedErrorTplshape.resize(m_CatalogTplShape->GetCatalogsCount());
     m_MtmTplshape.resize(m_CatalogTplShape->GetCatalogsCount());
@@ -1536,6 +1537,11 @@ std::vector<bool> CLineModelElementList::GetStrongELPresentTplshape()
     return m_StrongELPresentTplshape;
 }
 
+std::vector<Int32> CLineModelElementList::GetNLinesAboveSNRTplshape()
+{
+    return m_NLinesAboveSNRTplshape;
+}
+
 Bool CLineModelElementList::initModelAtZ(Float64 redshift, const TFloat64Range& lambdaRange, const CSpectrumSpectralAxis &spectralAxis)
 {
     m_Redshift = redshift;
@@ -1693,6 +1699,7 @@ Float64 CLineModelElementList::fit(Float64 redshift,
                         m_ChisquareTplshape[ifitting] = m_ChisquareTplshape[ifitting-1];
                         m_ScaleMargCorrTplshape[ifitting] = m_ScaleMargCorrTplshape[ifitting-1];
                         m_StrongELPresentTplshape[ifitting] = m_StrongELPresentTplshape[ifitting-1];
+                        m_NLinesAboveSNRTplshape[ifitting] = m_NLinesAboveSNRTplshape[ifitting-1];
                         meritTplratio[ifitting] = meritTplratio[ifitting-1];
                         for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
                         {
@@ -2243,6 +2250,8 @@ Float64 CLineModelElementList::fit(Float64 redshift,
                     m_ScaleMargCorrTplshape[ifitting] = getScaleMargCorrection();
                     //m_StrongELPresentTplshape[ifitting] = GetModelStrongEmissionLinePresent();
                     m_StrongELPresentTplshape[ifitting] = GetModelHaStrongest(); //warning: hardcoded selpp replaced by whasp for lm-tplratio
+                    std::vector<std::string> strongELSNRAboveCut = getLinesAboveSNR(3.5);
+                    m_NLinesAboveSNRTplshape[ifitting] = strongELSNRAboveCut.size();
 
                     //Saving the model A, errorA, and dtm, mtm, ... (for all tplratios, needed ?)
                     //NB: this is only needed for the index=savedIdxFitted ultimately
@@ -5832,6 +5841,10 @@ CLineModelSolution CLineModelElementList::GetModelSolution(Int32 opt_level)
     modelSolution.EmissionVelocity = m_velocityEmission;
     modelSolution.AbsorptionVelocity = m_velocityAbsorption;
     modelSolution.Redshift = m_Redshift;
+
+    std::vector<std::string> strongELSNRAboveCut = getLinesAboveSNR(3.5);
+    modelSolution.NLinesAboveSnrCut = strongELSNRAboveCut.size();
+
     return modelSolution;
 }
 

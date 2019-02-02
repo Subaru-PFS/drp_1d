@@ -199,8 +199,8 @@ public:
 
     Int32 m_maxModelSaveCount;
     Float64 m_secondPass_extensionradius = 0.005;
-    Float64 m_secondPass_velfit_dzInfLim = -4e-4;
-    Float64 m_secondPass_velfit_dzSupLim = 4e-4;
+    Float64 m_secondPass_velfit_dzInfLim = -6e-4;
+    Float64 m_secondPass_velfit_dzSupLim = 6e-4;
     Float64 m_secondPass_velfit_dzStep = 1e-4;
 
     bool m_enableLoadContTemplate=false;
