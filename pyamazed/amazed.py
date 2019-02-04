@@ -51,7 +51,8 @@ def amazed():
     config = Config(args)
 
     if os.path.exists(config.output_folder):
-        raise Exception("Output directory {} already exists.".format(config.output_folder))
+        raise Exception("Output directory {} already exists.".format(
+            config.output_folder))
 
     os.makedirs(config.output_folder)
 
@@ -144,6 +145,14 @@ def amazed():
     shutil.copyfile(os.path.expanduser(config.input_file),
                     os.path.join(config.output_folder,
                                  'input.spectrumlist'))
+
+    param.Save(os.path.join(config.output_folder,
+                            'parameters.json'))
+
+    config.save(os.path.join(config.output_folder,
+                             'config.json'))
+    line_catalog.Save(os.path.join(config.output_folder,
+                                   'linecatalog.txt'))
 
 
 def main():

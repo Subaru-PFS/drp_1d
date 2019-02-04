@@ -7,6 +7,7 @@ Author: CeSAM
 
 import os
 import csv
+import json
 import argparse
 import numpy as np
 from pprint import pprint
@@ -29,8 +30,6 @@ str_cmp = str.__eq__
 
 def true_cmp(x, y): #QUESTION: que font ces 2 parametres ici ?
     """
-    The "true_cmp" function.
-
     Temporary function used in ClassificationResult() to return True, due to no
     value of EvidenceQ in the csv.
 
@@ -41,8 +40,6 @@ def true_cmp(x, y): #QUESTION: que font ces 2 parametres ici ?
 
 def float_cmp(precision):
     """
-    The "float_cmp" function.
-
     Check the precision of the difference between two float.
 
     :param precision: The precision of the difference.
@@ -54,8 +51,6 @@ def float_cmp(precision):
 
 def int_cmp(x, y):
     """
-    The "int_cmp" function.
-
     Check that the two integers are equal.
 
     :return: Return True if the two integers are equal.
@@ -65,8 +60,6 @@ def int_cmp(x, y):
 
 def read_spectrumlist(spectrumListFile):
     """
-    The "read_spectrumlist" function.
-
     Read the spectrum list file and get all the process id for each spectrum.
 
     :param spectrum_list_file: The "spectrum.list" file.
@@ -90,16 +83,23 @@ class OutputDirComparator(ResultsComparator):
 
     def compare(self, path1, path2):
         """
-        The OutputDirComparator's "compare" function.
-
         Calls a comparator for each type of file by iterating if them.
-
 
         :param path1: Path to the reference file.
         :param path2: Path to the file being compared.
         :return: Return the result of the comparison.
         """
-        result = Redshift().compare(path1, path2)
+        global_tests = [(Redshift, []),
+                        (JSONComparator, ['parameters.json']),
+                        (JSONComparator, ['config.json', ['output_folder']]),
+                        (LinecatalogComparator, [])]
+
+        result = []
+        for method, args in global_tests:
+            r = method(*args).compare(path1, path2)
+            if r:
+                result.append(r)
+
         spectrumlist = read_spectrumlist(os.path.join(path1,
                                                       'input.spectrumlist'))
         for spectrum in spectrumlist:
@@ -118,6 +118,36 @@ class OutputDirComparator(ResultsComparator):
         return result
 
 
+class JSONComparator(ResultsComparator):
+
+    def __init__(self, filename, ignore_keys=None):
+        self.filename = filename
+        self.ignore_keys = ignore_keys if ignore_keys is not None else []
+
+    def compare(self, path1, path2):
+        result = []
+
+        with open(os.path.join(path1, self.filename), 'r') as f:
+            j1 = json.load(f)
+        with open(os.path.join(path2, self.filename), 'r') as f:
+            j2 = json.load(f)
+
+        s1 = set(j1.keys())
+        s2 = set(j2.keys())
+        if s1 != s2:
+            result.append('{} : keys mismatch [{}]'.format(
+                self.filename, s1 ^ s2))
+            self.ignore_keys.extend(s1 ^ s2)
+
+        for k in j1.keys():
+            if k in self.ignore_keys:
+                continue
+            if j1[k] != j2[k]:
+                result.append('{}/{} : value mismatch [{}] / [{}]'.format(
+                    self.filename, k, j1[k], j2[k]))
+        return result
+
+
 class CSVComparator(ResultsComparator):
     tests = {}
     filename = ""
@@ -126,8 +156,6 @@ class CSVComparator(ResultsComparator):
 
     def _read_csv(self, args):
         """
-        The "_read_csv" function.
-
         Create dictionnaries with the content of the CSV files given in
         parameters.
 
@@ -152,11 +180,6 @@ class CSVComparator(ResultsComparator):
 
     def compare(self, path1, path2):
         """
-        The "compare" function.
-
-        # TODO: insert better description
-        Does the comparison between two files
-
         :param path1: Path to the first file to compare.
         :param path2: Path to the second file to compare.
         :return: Return list of all differences
@@ -246,17 +269,28 @@ class ClassificationResult(CSVComparator):
     }
 
 
+class LinecatalogComparator(CSVComparator):
+    filename = "linecatalog.txt"
+    key = "name"
+    header_mark = "#lambda"
+    tests = {
+        "#lambda": float_cmp(FLOAT_PRECISION),
+        "name": str_cmp,
+        "type": str_cmp,
+        "force": str_cmp,
+        "profile": str_cmp,
+        "amp_group": str_cmp,
+        "nominal_ampl": str_cmp,
+        "vel_group": str_cmp,
+    }
+
+
 class zPDFComparator(ResultsComparator):
     filename = 'logposterior.logMargP_Z_data.csv'
 
     @staticmethod
     def _read_pdf(path):
-        # TODO: complete docstring
         """
-        The "_read_pdf" function.
-
-        Description
-
         :param path: Path to the csv to read.
         :return: Return the list of all differences.
         """
@@ -271,13 +305,7 @@ class zPDFComparator(ResultsComparator):
         return evidence, np.array(pdf, dtype=float)
 
     def compare(self, path1, path2):
-        # TODO: complete docstring
         """
-        The "compare" function.
-
-        # TODO: insert better description
-        Does the comparison between two files
-
         :param path1: Path to the first file to compare.
         :param path2: Path to the second file to compare.
         :return: Return the list of all differences.

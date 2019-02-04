@@ -18,6 +18,32 @@ def log_level(lvl):
     else:
         return levels[lvl.lower()]
 
+class BooleanAction(argparse.Action):
+    def __init__(self,
+                 option_strings,
+                 dest,
+                 nargs=None,
+                 const=None,
+                 default=None,
+                 type=None,
+                 choices=None,
+                 required=False,
+                 help=None,
+                 metavar=None):
+        super(BooleanAction, self).__init__(
+            option_strings=option_strings,
+            dest=dest,
+            nargs=0,
+            const=const,
+            default=default,
+            type=type,
+            choices=choices,
+            required=required,
+            help=help,
+            metavar=metavar)
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        setattr(namespace, self.dest, True)
 
 parser = argparse.ArgumentParser(description='AMAZED client tool.')
 
@@ -61,7 +87,7 @@ parser.add_argument('--log_level', '-l', dest='log_level', metavar='LEVEL',
                     type=log_level,
                     help='Verbosity level. Either "none", "debug", "detail",'
                     '"info", "warning", "error" or "critical".')
-parser.add_argument('--linecatalog_convert', '-a', action='store_true',
+parser.add_argument('--linecatalog_convert', '-a', action=BooleanAction,
                     help='Convert the line catalog from Vacuum to Air')
 parser.add_argument('--save_intermediate_results', '-b',
                     choices=['all', 'global', 'linemeas', 'no'], default='all',
