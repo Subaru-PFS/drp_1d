@@ -7,6 +7,7 @@ Author: CeSAM
 
 import os
 import csv
+import json
 import argparse
 import numpy as np
 from pprint import pprint
@@ -58,7 +59,21 @@ class OutputDirComparator(ResultsComparator):
 
     def compare(self, path1, path2):
 
-        result = Redshift().compare(path1, path2)
+        result = []
+
+        r = Redshift().compare(path1, path2)
+        if r:
+            result.append(r)
+
+        r = JSONComparator('parameters.json').compare(path1, path2)
+        if r:
+            result.append(r)
+
+        r = JSONComparator('config.json', ['output_folder']).compare(path1,
+                                                                     path2)
+        if r:
+            result.append(r)
+
         spectrumlist = read_spectrumlist(os.path.join(path1,
                                                       'input.spectrumlist'))
         for spectrum in spectrumlist:
@@ -74,6 +89,36 @@ class OutputDirComparator(ResultsComparator):
                 except Exception as e:
                     result.append('{}/{} : {}'.format(spectrum,
                                                       method.__name__, e))
+        return result
+
+
+class JSONComparator(ResultsComparator):
+
+    def __init__(self, filename, ignore_keys=None):
+        self.filename = filename
+        self.ignore_keys = ignore_keys if ignore_keys is not None else []
+
+    def compare(self, path1, path2):
+        result = []
+
+        with open(os.path.join(path1, self.filename), 'r') as f:
+            j1 = json.load(f)
+        with open(os.path.join(path2, self.filename), 'r') as f:
+            j2 = json.load(f)
+
+        s1 = set(j1.keys())
+        s2 = set(j2.keys())
+        if s1 != s2:
+            result.append('{} : keys mismatch [{}]'.format(
+                self.filename, s1 ^ s2))
+            self.ignore_keys.extend(s1 ^ s2)
+
+        for k in j1.keys():
+            if k in self.ignore_keys:
+                continue
+            if j1[k] != j2[k]:
+                result.append('{}/{} : value mismatch [{}] / [{}]'.format(
+                    self.filename, k, j1[k], j2[k]))
         return result
 
 
