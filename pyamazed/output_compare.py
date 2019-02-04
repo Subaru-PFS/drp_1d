@@ -28,19 +28,51 @@ PDF_PRECISION = 1e-7
 str_cmp = str.__eq__
 
 
-def true_cmp(x, y):
+def true_cmp(x, y): #QUESTION: que font ces 2 parametres ici ?
+    """
+    The "true_cmp" function.
+
+    Temporary function used in ClassificationResult() to return True, due to no
+    value of EvidenceQ in the csv.
+
+    :return: True
+    """
     return True
 
 
 def float_cmp(precision):
+    """
+    The "float_cmp" function.
+
+    Check the precision of the difference between two float.
+
+    :param precision: The precision of the difference.
+    :return: Return True if the precision is lower than the precision given in
+    argument.
+    """
     return lambda x, y: abs(float(x)-float(y)) < precision
 
 
-def int_cmp():
-    return lambda x, y: int(x) == int(y)
+def int_cmp(x, y):
+    """
+    The "int_cmp" function.
+
+    Check that the two integers are equal.
+
+    :return: Return True if the two integers are equal.
+    """
+    return int(x) == int(y)
 
 
 def read_spectrumlist(spectrumListFile):
+    """
+    The "read_spectrumlist" function.
+
+    Read the spectrum list file and get all the process id for each spectrum.
+
+    :param spectrum_list_file: The "spectrum.list" file.
+    :return: Return the list of all process_id.
+    """
     spectrumList = []
     for e in open(spectrumListFile, 'r'):
         if e and not e.startswith('#'):
@@ -58,7 +90,15 @@ class ResultsComparator():
 class OutputDirComparator(ResultsComparator):
 
     def compare(self, path1, path2):
+        """
+        The OutputDirComparator's "compare" function.
 
+        Calls a comparator for each type of file by iterating if them.
+
+        :param path1: Path to the reference file.
+        :param path2: Path to the file being compared.
+        :return: Return the result of the comparison.
+        """
         global_tests = [(Redshift, []),
                         (JSONComparator, ['parameters.json']),
                         (JSONComparator, ['config.json', ['output_folder']]),
@@ -125,6 +165,15 @@ class CSVComparator(ResultsComparator):
     header_mark = None
 
     def _read_csv(self, args):
+        """
+        The "_read_csv" function.
+
+        Create dictionnaries with the content of the CSV files given in
+        parameters.
+
+        :param args: Path to the csv to read.
+        :return: Return the dictionnaries lists
+        """
         csvfile = open(args)
         for l in csvfile:
             if l.startswith(self.header_mark):
@@ -142,7 +191,16 @@ class CSVComparator(ResultsComparator):
         return dict_list
 
     def compare(self, path1, path2):
+        """
+        The "compare" function.
 
+        # TODO: insert better description
+        Does the comparison between two files
+
+        :param path1: Path to the first file to compare.
+        :param path2: Path to the second file to compare.
+        :return: Return list of all differences
+        """
         try:
             csv1 = self._read_csv(os.path.join(path1, self.filename))
             csv2 = self._read_csv(os.path.join(path2, self.filename))
@@ -205,7 +263,7 @@ class CandidateResult(CSVComparator):
     key = '#rank'
     header_mark = '#rank'
     tests = {
-        "#rank": int_cmp(),
+        "#rank": int_cmp,
         "redshift": float_cmp(FLOAT_PRECISION),
         "intgProba": float_cmp(FLOAT_PRECISION),
         "gaussAmp": float_cmp(FLOAT_PRECISION),
@@ -249,6 +307,15 @@ class zPDFComparator(ResultsComparator):
 
     @staticmethod
     def _read_pdf(path):
+        # TODO: complete docstring
+        """
+        The "_read_pdf" function.
+
+        Description
+
+        :param path: Path to the csv to read.
+        :return: Return the list of all differences.
+        """
         with open(os.path.join(path, 'zPDF',
                                zPDFComparator.filename), "r") as f:
             header = f.readline()
@@ -260,6 +327,17 @@ class zPDFComparator(ResultsComparator):
         return evidence, np.array(pdf, dtype=float)
 
     def compare(self, path1, path2):
+        # TODO: complete docstring
+        """
+        The "compare" function.
+
+        # TODO: insert better description
+        Does the comparison between two files
+
+        :param path1: Path to the first file to compare.
+        :param path2: Path to the second file to compare.
+        :return: Return the list of all differences.
+        """
         result = []
         ev1, pdf1 = self._read_pdf(path1)
         ev2, pdf2 = self._read_pdf(path2)
