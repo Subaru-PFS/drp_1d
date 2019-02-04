@@ -59,20 +59,16 @@ class OutputDirComparator(ResultsComparator):
 
     def compare(self, path1, path2):
 
+        global_tests = [(Redshift, []),
+                        (JSONComparator, ['parameters.json']),
+                        (JSONComparator, ['config.json', ['output_folder']]),
+                        (LinecatalogComparator, [])]
+
         result = []
-
-        r = Redshift().compare(path1, path2)
-        if r:
-            result.append(r)
-
-        r = JSONComparator('parameters.json').compare(path1, path2)
-        if r:
-            result.append(r)
-
-        r = JSONComparator('config.json', ['output_folder']).compare(path1,
-                                                                     path2)
-        if r:
-            result.append(r)
+        for method, args in global_tests:
+            r = method(*args).compare(path1, path2)
+            if r:
+                result.append(r)
 
         spectrumlist = read_spectrumlist(os.path.join(path1,
                                                       'input.spectrumlist'))
@@ -229,6 +225,22 @@ class ClassificationResult(CSVComparator):
         "EvidenceG": float_cmp(FLOAT_PRECISION),
         "EvidenceS": float_cmp(FLOAT_PRECISION),
         "EvidenceQ": true_cmp
+    }
+
+
+class LinecatalogComparator(CSVComparator):
+    filename = "linecatalog.txt"
+    key = "name"
+    header_mark = "#lambda"
+    tests = {
+        "#lambda": float_cmp(FLOAT_PRECISION),
+        "name": str_cmp,
+        "type": str_cmp,
+        "force": str_cmp,
+        "profile": str_cmp,
+        "amp_group": str_cmp,
+        "nominal_ampl": str_cmp,
+        "vel_group": str_cmp,
     }
 
 
