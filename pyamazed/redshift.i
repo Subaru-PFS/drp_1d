@@ -141,6 +141,7 @@ class CRayCatalog
 {
 public:
     void Load( const char* filePath );
+    bool Save( const char* filePath );
     void ConvertVacuumToAir();
 };
 

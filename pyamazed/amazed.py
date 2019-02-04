@@ -150,6 +150,9 @@ def amazed():
 
     config.save(os.path.join(config.output_folder,
                              'config.json'))
+    line_catalog.Save(os.path.join(config.output_folder,
+                                   'linecatalog.txt'))
+
 
 def main():
     try:
