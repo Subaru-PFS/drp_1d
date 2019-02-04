@@ -129,23 +129,23 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
     dataStore.GetScopedParam( "linemodel.rigidity", m_opt_rigidity, "rules" );
     if(m_opt_rigidity=="tplshape")
     {
-        dataStore.GetScopedParam( "linemodel.tplratio_catalog", m_opt_tplratio_reldirpath, "linecatalogs_tplshapes/linecatalogs_tplshape_ExtendedTemplatesJan2017v3_20170602_B14C_v3_emission" );
+        dataStore.GetScopedParam( "linemodel.tplratio_catalog", m_opt_tplratio_reldirpath, "linecatalogs_tplshapes/linecatalogs_tplshape_ExtendedTemplatesJan2017v3_20170602_B14C_v4_emission" );
         dataStore.GetScopedParam( "linemodel.tplratio_ismfit", m_opt_tplratio_ismfit, "yes" );
     }
     dataStore.GetScopedParam( "linemodel.offsets_catalog", m_opt_offsets_reldirpath, "linecatalogs_offsets/offsetsCatalogs_20170410_m150" );
 
     dataStore.GetScopedParam( "linemodel.linewidthtype", m_opt_lineWidthType, "velocitydriven" );
     dataStore.GetScopedParam( "linemodel.instrumentresolution", m_opt_resolution, 2350.0 );
-    dataStore.GetScopedParam( "linemodel.velocityemission", m_opt_velocity_emission, 100.0 );
+    dataStore.GetScopedParam( "linemodel.velocityemission", m_opt_velocity_emission, 200.0 );
     dataStore.GetScopedParam( "linemodel.velocityabsorption", m_opt_velocity_absorption, 300.0 );
     dataStore.GetScopedParam( "linemodel.velocityfit", m_opt_velocityfit, "yes" );
     if(m_opt_velocityfit=="yes"){
         dataStore.GetScopedParam( "linemodel.emvelocityfitmin", m_opt_em_velocity_fit_min, 20.0 );
-        dataStore.GetScopedParam( "linemodel.emvelocityfitmax", m_opt_em_velocity_fit_max, 500.0 );
+        dataStore.GetScopedParam( "linemodel.emvelocityfitmax", m_opt_em_velocity_fit_max, 300.0 );
         dataStore.GetScopedParam( "linemodel.emvelocityfitstep", m_opt_em_velocity_fit_step, 20.0 );
         dataStore.GetScopedParam( "linemodel.absvelocityfitmin", m_opt_abs_velocity_fit_min, 150.0 );
         dataStore.GetScopedParam( "linemodel.absvelocityfitmax", m_opt_abs_velocity_fit_max, 500.0 );
-        dataStore.GetScopedParam( "linemodel.absvelocityfitstep", m_opt_abs_velocity_fit_step, 20.0 );
+        dataStore.GetScopedParam( "linemodel.absvelocityfitstep", m_opt_abs_velocity_fit_step, 50.0 );
     }
     dataStore.GetScopedParam( "linemodel.continuumreestimation", m_opt_continuumreest, "no" );
     dataStore.GetScopedParam( "linemodel.rules", m_opt_rules, "all" );

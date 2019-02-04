@@ -1281,6 +1281,9 @@ Int32 COperatorLineModel::ComputeSecondPass(CDataStore &dataStore,
 
         m_result->ExtremaResult.Extrema[i] = z;
         m_result->ExtremaResult.ExtremaMerit[i] = m;
+        m_result->ExtremaResult.Elv[i] = m_model->GetVelocityEmission();
+        m_result->ExtremaResult.Alv[i] = m_model->GetVelocityAbsorption();
+
         if (m_estimateLeastSquareFast)
         {
             m_result->ExtremaResult.ExtremaMeritContinuum[i] =
@@ -1733,6 +1736,7 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
 
                         Float64 meritMin = DBL_MAX;
                         Float64 vOptim = -1.0;
+                        Float64 z_vOptim = -1.0;
                         for (Int32 kdz = 0; kdz < nDzSteps; kdz++)
                         {
                             Float64 dzTest = dzInfLim + kdz * dzStep;
@@ -1770,7 +1774,8 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
                                 // Log.LogInfo( "  Operator-Linemodel:
                                 // testing v=%f", vTest);
                                 Float64 meritv;
-                                meritv = m_model->fit(m_result->Redshifts[idx] + dzTest*(1.+m_result->Redshifts[idx]),
+                                Float64 zTest = m_result->Redshifts[idx] + dzTest*(1.+m_result->Redshifts[idx]);
+                                meritv = m_model->fit(zTest,
                                                       lambdaRange,
                                                       m_result->LineModelSolutions[idx], //maybe this member result should be replaced by an unused variable
                                                       m_result->ContinuumModelSolutions[idx], //maybe this member result should be replaced by an unused variable
@@ -1799,9 +1804,11 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
                                     if (iLineType == 0)
                                     {
                                         vOptim = m_model->GetVelocityAbsorption();
+                                        z_vOptim = zTest;
                                     } else
                                     {
                                         vOptim = m_model->GetVelocityEmission();
+                                        z_vOptim = zTest;
                                     }
                                 }
                                 ++show_progress;
@@ -1843,7 +1850,7 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
                                     m_model->SetVelocityEmission(vOptim);
                                 }
                                 m_secondpass_parameters_extremaResult.Elv[i] = vOptim;
-                                Log.LogDebug("    Operator-Linemodel: secondpass_parameters extrema #%d set: elv=%.1f", i, vOptim);
+                                Log.LogInfo("    Operator-Linemodel: secondpass_parameters extrema #%d set: elv=%.1f (for z-optim=%.6f", i, vOptim, z_vOptim);
                             }
                         }
                     }

@@ -201,7 +201,7 @@ public:
     Float64 m_secondPass_extensionradius = 0.005;
     Float64 m_secondPass_velfit_dzInfLim = -6e-4;
     Float64 m_secondPass_velfit_dzSupLim = 6e-4;
-    Float64 m_secondPass_velfit_dzStep = 1e-4;
+    Float64 m_secondPass_velfit_dzStep = 0.5e-4;
 
     bool m_enableLoadContTemplate=false;
     Int32 m_iRollContaminated=-1;
