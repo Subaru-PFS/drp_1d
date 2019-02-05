@@ -1098,12 +1098,13 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, I
 void CLineModelElementList::setFitContinuum_tplAmplitude(Float64 tplAmp, std::vector<Float64> polyCoeffs){
     const CSpectrumSpectralAxis& spcSpectralAxis = m_SpectrumModel->GetSpectralAxis();
 
-    //Float64 alpha = 0.5; //alpha blend = 1: only m_SpcContinuumFluxAxis, alpha=0: only tplfit
+    Float64 alpha = 0.; //alpha blend = 1: only m_SpcContinuumFluxAxis, alpha=0: only tplfit
+
     m_fitContinuum_tplFitAmplitude = tplAmp;
     m_fitContinuum_tplFitPolyCoeffs = polyCoeffs;
     for (UInt32 k=0; k<m_ContinuumFluxAxis.GetSamplesCount(); k++){
-        //m_ContinuumFluxAxis[k] = (1.-alpha)*m_observeGridContinuumFlux[k]*tplAmp + (alpha)*m_SpcContinuumFluxAxis[k];
-        m_ContinuumFluxAxis[k] = m_observeGridContinuumFlux[k]*tplAmp;
+        m_ContinuumFluxAxis[k] = (1.-alpha)*m_observeGridContinuumFlux[k]*tplAmp + (alpha)*m_SpcContinuumFluxAxis[k];
+        //m_ContinuumFluxAxis[k] = m_observeGridContinuumFlux[k]*tplAmp;
         for(Int32 kCoeff=0; kCoeff<polyCoeffs.size(); kCoeff++)
         {
             Float64 lbdaTerm=1.0;

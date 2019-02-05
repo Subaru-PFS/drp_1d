@@ -1647,6 +1647,10 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
                     Float64 vSupLim;
                     Float64 vStep;
 
+                    Float64 dzInfLim = m_secondPass_velfit_dzInfLim;
+                    Float64 dzStep = m_secondPass_velfit_dzStep;
+                    Float64 dzSupLim = m_secondPass_velfit_dzSupLim;
+
                     if (iLineType == 0)
                     {
                         Log.LogInfo("  Operator-Linemodel: manualStep velocity fit ABSORPTION, for z = %.6f",
@@ -1697,14 +1701,12 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
                     // Prepare velocity grid to be checked
                     Int32 nSteps = (int)((vSupLim - vInfLim) / vStep);
 
-                    Float64 dzInfLim = m_secondPass_velfit_dzInfLim;
                     if (m_result->Redshifts[idx] + dzInfLim <
                             m_result->Redshifts[0])
                     {
                         dzInfLim = m_result->Redshifts[0] -
                                 m_result->Redshifts[idx];
                     }
-                    Float64 dzSupLim = m_secondPass_velfit_dzSupLim;
                     if (m_result->Redshifts[idx] + dzSupLim >
                             m_result->Redshifts[m_result->Redshifts.size() - 1])
                     {
@@ -1714,7 +1716,6 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
                                 m_result->Redshifts[idx];
                     }
 
-                    Float64 dzStep = m_secondPass_velfit_dzStep;
                     Int32 nDzSteps = (int)((dzSupLim - dzInfLim) / dzStep);
                     if (nDzSteps == 0)
                     {

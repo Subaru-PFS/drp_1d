@@ -40,7 +40,7 @@ COperatorLineMatching2Solve::COperatorLineMatching2Solve()
   m_tol = 0.002;
 
   // Log
-  m_bypassDebug = true;
+  m_bypassDebug = false;
 }
 
 /**
@@ -221,6 +221,7 @@ std::shared_ptr<CLineMatching2SolveResult> COperatorLineMatching2Solve::Compute(
               resultStore.StoreScopedGlobalResult( "raycatalog", lineDetectionResult );
               // Since we know at least one peak that corresponds to a line, let's try to match to a catalogued template.
               CRayMatching rayMatching;
+              Log.LogDebug ( "Now starting raymatching" );
               auto rayMatchingResult = rayMatching.Compute( lineDetectionResult->RayCatalog, restRayCatalog, redshiftsRange, m_minMatchNum, m_tol, lineType );
               if( rayMatchingResult )
               {
