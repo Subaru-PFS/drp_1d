@@ -125,7 +125,6 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
         namespace fs = boost::filesystem;
         Int32 reverseInclusionForIdMatching = 0; //0: because the names must match exactly, but: linemeas catalog includes the extension (.fits) and spc.GetName doesn't.
         bool computeOnZrange=false; //nb: hardcoded option for now
-        Int32 colId = 2;//starts at 1, so that (for the linemeas_catalog) id_column=1, zref_column=2
         fs::path refFilePath(opt_linemeas_catalog_path.c_str());
 
 
@@ -133,7 +132,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
         {
             std::string spcSubStringId = ctx.GetSpectrum().GetName();
             Log.LogInfo( "Override z-search: using spc-string: %s", spcSubStringId.c_str());
-            getValueFromRefFile( refFilePath.c_str(), spcSubStringId, colId, zref, reverseInclusionForIdMatching);
+            getValueFromRefFile( refFilePath.c_str(), spcSubStringId, zref, reverseInclusionForIdMatching);
         }
         if(zref==-1)
         {
@@ -860,8 +859,10 @@ Bool CProcessFlow::isPdfValid(CProcessFlowContext& ctx) const
  * reverseInclusion=0 (default): spcId is searched to be included in the Ref-File-Id
  * reverseInclusion=1 : Ref-File-Id is searched to be included in the spcId
  **/
-Int32 CProcessFlow::getValueFromRefFile( const char* filePath, std::string spcid, Int32 colID, Float64& zref, Int32 reverseInclusion )
+Int32 CProcessFlow::getValueFromRefFile( const char* filePath, std::string spcid, Float64& zref, Int32 reverseInclusion )
 {
+    int colID = -1;
+
     ifstream file;
 
     file.open( filePath, ifstream::in );
@@ -882,9 +883,28 @@ Int32 CProcessFlow::getValueFromRefFile( const char* filePath, std::string spcid
         // Tokenize each line
         typedef tokenizer< char_separator<char> > ttokenizer;
         ttokenizer tok( line, sep );
+        ttokenizer::iterator it;
+
+        if (colID == -1) {
+            int count = 0;
+            for ( it = tok.begin(); it != tok.end() ; ++count, ++it );
+            switch (count) {
+            case 2:
+                // Two-columns style redshift reference catalog
+                colID = 2;
+                break;
+            case 13:
+                // redshift.csv style redshift reference catalog
+                colID = 3;
+                break;
+            default:
+                Log.LogError("Invalid number of columns in reference catalog (%d)", count);
+                throw std::runtime_error("Invalid number of columns in reference catalog");
+            }
+        }
+        it = tok.begin();
 
         // Check if it's not a comment
-        ttokenizer::iterator it = tok.begin();
         if( it != tok.end() && *it != "#" )
         {
             string name;
