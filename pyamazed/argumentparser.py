@@ -8,6 +8,7 @@ def log_level(lvl):
         'error': CLog.nLevel_Error,
         'warning': CLog.nLevel_Warning,
         'info': CLog.nLevel_Info,
+        'detail': CLog.nLevel_Detail,
         'debug': CLog.nLevel_Debug,
         'none': CLog.nLevel_None
     }
@@ -17,13 +18,37 @@ def log_level(lvl):
     else:
         return levels[lvl.lower()]
 
+class BooleanAction(argparse.Action):
+    def __init__(self,
+                 option_strings,
+                 dest,
+                 nargs=None,
+                 const=None,
+                 default=None,
+                 type=None,
+                 choices=None,
+                 required=False,
+                 help=None,
+                 metavar=None):
+        super(BooleanAction, self).__init__(
+            option_strings=option_strings,
+            dest=dest,
+            nargs=0,
+            const=const,
+            default=default,
+            type=type,
+            choices=choices,
+            required=required,
+            help=help,
+            metavar=metavar)
 
-parser = argparse.ArgumentParser(description='CPF-redshift client tool.')
+    def __call__(self, parser, namespace, values, option_string=None):
+        setattr(namespace, self.dest, True)
+
+parser = argparse.ArgumentParser(description='AMAZED client tool.')
 
 parser.add_argument('--parameters', '-p', dest='parameters_file',
                     metavar='FILE', type=str, help='Parameters file')
-parser.add_argument('--datapath', '-d', dest='data_path', metavar='DIR',
-                    type=str, help='Data root-path')
 parser.add_argument('--output', '-o', dest='output_folder', metavar='DIR',
                     type=str,
                     help='Directory where all generated files are '
@@ -60,9 +85,14 @@ parser.add_argument('--config', '-c', dest='config', metavar='FILE', type=str,
                     'line parameters.')
 parser.add_argument('--log_level', '-l', dest='log_level', metavar='LEVEL',
                     type=log_level,
-                    help='Verbosity level. Either "none", "debug", "info", '
-                    '"warning", "error" or "critical".')
-parser.add_argument('--linecatalog_convert', '-a', action='store_true',
+                    help='Verbosity level. Either "none", "debug", "detail",'
+                    '"info", "warning", "error" or "critical".')
+parser.add_argument('--linecatalog_convert', '-a', action=BooleanAction,
                     help='Convert the line catalog from Vacuum to Air')
+parser.add_argument('--save_intermediate_results', '-b',
+                    choices=['all', 'global', 'linemeas', 'no'], default='all',
+                    help='Save intermediate results for each spectrum processed')
+parser.add_argument('--linemeascatalog', '-d',
+                    help='Optionally specify a linemeas-catalog file path')
 parser.add_argument('--version', '-v', action='version', version=get_version(),
                     help='Print version and exit.')

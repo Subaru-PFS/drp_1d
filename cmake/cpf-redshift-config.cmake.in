@@ -1,4 +1,4 @@
-set(cpf-redshift_VERSION 0.0.0)
+set(cpf-redshift_VERSION @PROJECT_VERSION@)
 @PACKAGE_INIT@
 
 set ( cpf-redshift_INCLUDE_DIR "@PACKAGE_cpf-redshift_INCLUDE_DIR@")
