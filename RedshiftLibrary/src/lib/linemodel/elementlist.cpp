@@ -1085,6 +1085,15 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, I
                     setFitContinuum_tplAmplitude(bestFitAmplitude, bestFitPolyCoeffs);
 
                     Log.LogDebug( "    model : LoadFitContinuum, loaded: %s", bestTplName.c_str());
+                    Log.LogDebug( "    model : LoadFitContinuum, loaded with A=%.e", bestFitAmplitude);
+                    Log.LogDebug( "    model : LoadFitContinuum, loaded with dtm=%.e", bestFitDtM);
+                    Log.LogDebug( "    model : LoadFitContinuum, loaded with mtm=%.e", bestFitMtM);
+                    Float64 tplfitsnr = -1;
+                    if(bestFitMtM>0.0)
+                    {
+                        tplfitsnr=bestFitDtM/std::sqrt(bestFitMtM);
+                    }
+                    Log.LogDebug( "    model : LoadFitContinuum, loaded with snr=%.e", tplfitsnr);
                     break;
                 }
             }
@@ -1401,6 +1410,17 @@ std::string CLineModelElementList::getFitContinuum_tplName()
 Float64 CLineModelElementList::getFitContinuum_tplAmplitude()
 {
     return m_fitContinuum_tplFitAmplitude;
+}
+
+//This SNR estimate maybe needs to use observed spectrum with lines removed ?
+Float64 CLineModelElementList::getFitContinuum_snr()
+{
+    Float64 snr = -1;
+    if(m_fitContinuum_tplFitMtM>0.)
+    {
+        snr = m_fitContinuum_tplFitDtM/std::sqrt(m_fitContinuum_tplFitMtM);
+    }
+    return snr;
 }
 
 Float64 CLineModelElementList::getFitContinuum_tplMerit()

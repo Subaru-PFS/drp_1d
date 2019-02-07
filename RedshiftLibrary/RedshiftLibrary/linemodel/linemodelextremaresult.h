@@ -74,6 +74,8 @@ public:
     TFloat64List            FittedTplDustCoeff;     //Calzetti dustcoeff for the best template fitted for continuum
     std::vector<Int32>      FittedTplMeiksinIdx;    //Meiksin igm index for the best template fitted for continuum
     TFloat64List      FittedTplRedshift;    //Redshift for the best template fitted for continuum
+    TFloat64List      FittedTplDtm;    //DTM for the best template fitted for continuum
+    TFloat64List      FittedTplMtm;    //MTM for the best template fitted for continuum
     std::vector<TFloat64List>      FittedTplpCoeffs;    //poly coeffs for the best template fitted for continuum
 
     //template ratio

@@ -945,6 +945,8 @@ Int32 COperatorLineModel::ComputeCandidates(const Int32 opt_extremacount,
         m_firstpass_extremaResult.FittedTplDustCoeff[i] = m_result->ContinuumModelSolutions[idx].tplDustCoeff;
         m_firstpass_extremaResult.FittedTplMeiksinIdx[i] = m_result->ContinuumModelSolutions[idx].tplMeiksinIdx;
         m_firstpass_extremaResult.FittedTplRedshift[i] = m_result->ContinuumModelSolutions[idx].tplRedshift;
+        m_firstpass_extremaResult.FittedTplDtm[i] = m_result->ContinuumModelSolutions[idx].tplDtm;
+        m_firstpass_extremaResult.FittedTplMtm[i] = m_result->ContinuumModelSolutions[idx].tplMtm;
         m_firstpass_extremaResult.FittedTplpCoeffs[i] = m_result->ContinuumModelSolutions[idx].pCoeffs;
 
         if(m_result->ContinuumModelSolutions[idx].tplName=="")
@@ -1102,8 +1104,8 @@ Int32 COperatorLineModel::ComputeSecondPass(CDataStore &dataStore,
                                            m_secondpass_parameters_extremaResult.FittedTplDustCoeff[index_extremum],
                                            m_secondpass_parameters_extremaResult.FittedTplMeiksinIdx[index_extremum],
                                            m_secondpass_parameters_extremaResult.FittedTplRedshift[index_extremum],
-                                           -1.,
-                                           -1.,
+                                           m_secondpass_parameters_extremaResult.FittedTplDtm[index_extremum],
+                                           m_secondpass_parameters_extremaResult.FittedTplMtm[index_extremum],
                                            m_secondpass_parameters_extremaResult.FittedTplpCoeffs[index_extremum]);
         m_model->SetFitContinuum_Option(2);
 
@@ -1242,7 +1244,8 @@ Int32 COperatorLineModel::ComputeSecondPass(CDataStore &dataStore,
                                 m_model->getFitContinuum_tplMerit(),
                                 m_model->getFitContinuum_tplAmplitude(),
                                 m_model->getFitContinuum_tplIsmDustCoeff(),
-                                m_model->getFitContinuum_tplIgmMeiksinIdx()));
+                                m_model->getFitContinuum_tplIgmMeiksinIdx(),
+                                m_model->getFitContinuum_snr()));
                 m_savedModelContinuumFittingResults.push_back(
                     resultfitcontinuummodel);
 
@@ -1408,6 +1411,9 @@ Int32 COperatorLineModel::ComputeSecondPass(CDataStore &dataStore,
         m_result->ExtremaResult.FittedTplRedshift[i] = csolution.tplRedshift;
         m_result->ExtremaResult.FittedTplpCoeffs[i] = csolution.pCoeffs;
 
+        m_result->ExtremaResult.FittedTplDtm[i] = csolution.tplDtm;
+        m_result->ExtremaResult.FittedTplMtm[i] = csolution.tplMtm;
+
         // save the tplcorr/tplratio results
         m_result->ExtremaResult.FittedTplshapeName[i] =
             m_model->getTplshape_bestTplName();
@@ -1512,8 +1518,8 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
                                                m_firstpass_extremaResult.FittedTplDustCoeff[i],
                                                m_firstpass_extremaResult.FittedTplMeiksinIdx[i],
                                                m_firstpass_extremaResult.FittedTplRedshift[i],
-                                               -1.,
-                                               -1.,
+                                               m_firstpass_extremaResult.FittedTplDtm[i],
+                                               m_firstpass_extremaResult.FittedTplMtm[i],
                                                m_firstpass_extremaResult.FittedTplpCoeffs[i]);
             m_model->SetFitContinuum_Option(2);
         }
@@ -1910,8 +1916,8 @@ Int32 COperatorLineModel::RecomputeAroundCandidates(TPointList input_extremumLis
                                                    m_secondpass_parameters_extremaResult.FittedTplDustCoeff[i],
                                                    m_secondpass_parameters_extremaResult.FittedTplMeiksinIdx[i],
                                                    m_secondpass_parameters_extremaResult.FittedTplRedshift[i],
-                                                   -1.,
-                                                   -1.,
+                                                   m_secondpass_parameters_extremaResult.FittedTplDtm[i],
+                                                   m_secondpass_parameters_extremaResult.FittedTplMtm[i],
                                                    m_secondpass_parameters_extremaResult.FittedTplpCoeffs[i]);
             }
             m_model->SetFitContinuum_Option(tplfit_option);
@@ -2034,6 +2040,8 @@ Int32 COperatorLineModel::RecomputeAroundCandidates(TPointList input_extremumLis
                     m_secondpass_parameters_extremaResult.FittedTplDustCoeff[i] = csolution.tplDustCoeff;
                     m_secondpass_parameters_extremaResult.FittedTplMeiksinIdx[i] = csolution.tplMeiksinIdx;
                     m_secondpass_parameters_extremaResult.FittedTplRedshift[i] = csolution.tplRedshift;
+                    m_secondpass_parameters_extremaResult.FittedTplDtm[i] = csolution.tplDtm;
+                    m_secondpass_parameters_extremaResult.FittedTplMtm[i] = csolution.tplMtm;
                     m_secondpass_parameters_extremaResult.FittedTplpCoeffs[i] = csolution.pCoeffs;
 
 

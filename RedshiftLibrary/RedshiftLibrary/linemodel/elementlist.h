@@ -82,6 +82,7 @@ public:
                         Float64& fitMtM);
     std::string getFitContinuum_tplName();
     Float64 getFitContinuum_tplAmplitude();
+    Float64 getFitContinuum_snr();
     Float64 getFitContinuum_tplMerit();
     void setFitContinuum_tplAmplitude(Float64 tplAmp, std::vector<Float64> polyCoeffs);
     Float64 getFitContinuum_tplIsmDustCoeff();
