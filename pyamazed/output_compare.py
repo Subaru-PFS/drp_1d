@@ -28,7 +28,7 @@ PDF_PRECISION = 1e-7
 str_cmp = str.__eq__
 
 
-def true_cmp(x, y): #QUESTION: que font ces 2 parametres ici ?
+def true_cmp(x, y):
     """
     The "true_cmp" function.
 
@@ -64,7 +64,7 @@ def int_cmp(x, y):
     return int(x) == int(y)
 
 
-def read_spectrumlist(spectrumListFile):
+def read_spectrumlist(spectrum_list_file):
     """
     The "read_spectrumlist" function.
 
@@ -74,7 +74,7 @@ def read_spectrumlist(spectrumListFile):
     :return: Return the list of all process_id.
     """
     spectrumList = []
-    for e in open(spectrumListFile, 'r'):
+    for e in open(spectrum_list_file, 'r'):
         if e and not e.startswith('#'):
             spectrumList.append(e.split()[2].strip())
 
