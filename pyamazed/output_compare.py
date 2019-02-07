@@ -28,7 +28,7 @@ PDF_PRECISION = 1e-7
 str_cmp = str.__eq__
 
 
-def true_cmp(x, y): #QUESTION: que font ces 2 parametres ici ?
+def true_cmp(x, y):
     """
     Temporary function used in ClassificationResult() to return True, due to no
     value of EvidenceQ in the csv.
@@ -58,7 +58,7 @@ def int_cmp(x, y):
     return int(x) == int(y)
 
 
-def read_spectrumlist(spectrumListFile):
+def read_spectrumlist(spectrum_list_file):
     """
     Read the spectrum list file and get all the process id for each spectrum.
 
@@ -66,7 +66,7 @@ def read_spectrumlist(spectrumListFile):
     :return: Return the list of all process_id.
     """
     spectrumList = []
-    for e in open(spectrumListFile, 'r'):
+    for e in open(spectrum_list_file, 'r'):
         if e and not e.startswith('#'):
             spectrumList.append(e.split()[2].strip())
 
