@@ -1,5 +1,4 @@
 from setuptools import Extension
-import os, os.path
 import numpy
 
 include_dirs = '@cpf-redshift_INCLUDE_DIR@'.split(';')
@@ -25,16 +24,11 @@ try:
 except AttributeError:
     numpy_include = numpy.get_numpy_include()
 
-# force c++ compiler
-os.environ['CXX'] = '@CMAKE_CXX_COMPILER@'
-os.environ['CC'] = '@CMAKE_C_COMPILER@'
-
 swig_ext = Extension('pyamazed/_redshift', sources=['pyamazed/redshift.i'],
-                     swig_opts = ['-c++'],
-                     extra_compile_args = extra_compile_args,
-                     include_dirs = include_dirs + [numpy_include],
-                     library_dirs = library_dirs,
-                     libraries = libs + ['@LIB_NAME@', ],
-                     extra_link_args = extra_link_args,
-                     runtime_library_dirs = library_dirs)
-
+                     swig_opts=['-c++'],
+                     extra_compile_args=extra_compile_args,
+                     include_dirs=include_dirs + [numpy_include],
+                     library_dirs=library_dirs,
+                     libraries=libs + ['@LIB_NAME@', ],
+                     extra_link_args=extra_link_args,
+                     runtime_library_dirs=library_dirs)
