@@ -45,6 +45,10 @@
 #include "RedshiftLibrary/spectrum/axis.h"
 #include "RedshiftLibrary/spectrum/fluxaxis.h"
 #include "RedshiftLibrary/spectrum/spectralaxis.h"
+#include "RedshiftLibrary/method/linemodelsolve.h"
+#include "RedshiftLibrary/method/dtreebsolve.h"
+#include "RedshiftLibrary/method/dtree7solve.h"
+#include "RedshiftLibrary/method/chisquare2solve.h"
 using namespace NSEpic;
 %}
 
@@ -297,3 +301,35 @@ class CTemplate : public CSpectrum
   bool Save( const char* filePath ) const;
 };
 
+class CLineModelSolve
+{
+ public:
+  CLineModelSolve(std::string calibrationPath="");
+  ~CLineModelSolve();
+  const std::string GetDescription();
+};
+
+class COperatorDTreeBSolve
+{
+ public:
+  COperatorDTreeBSolve( std::string calibrationPath="" );
+  ~COperatorDTreeBSolve();
+  const std::string GetDescription();
+};
+
+class COperatorDTree7Solve
+{
+ public:
+
+  COperatorDTree7Solve(std::string calibrationPath="");
+  ~COperatorDTree7Solve();
+  const std::string GetDescription();
+};
+
+class CMethodChisquare2Solve
+{
+ public:
+  CMethodChisquare2Solve( std::string calibrationPath="" );
+  ~CMethodChisquare2Solve();
+  const std::string GetDescription();
+};
