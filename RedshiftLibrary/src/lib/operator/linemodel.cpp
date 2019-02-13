@@ -172,7 +172,7 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
 
     //*
     //tpl orthogonalization
-    bool enableOrtho = (opt_continuumcomponent == "tplfit");
+    bool enableOrtho = (opt_continuumcomponent == "tplfit" || opt_continuumcomponent == "tplfitauto");
     Log.LogInfo("  Operator-Linemodel: TemplatesOrthogonalization enabled = %d", enableOrtho);
 
     // prepare continuum templates catalog
@@ -359,7 +359,7 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
 
     // fit continuum
     bool enableFitContinuumPrecomputed = true;
-    if (enableFitContinuumPrecomputed && opt_continuumcomponent == "tplfit")
+    if (enableFitContinuumPrecomputed && (opt_continuumcomponent == "tplfit" || opt_continuumcomponent == "tplfitauto") )
     {
         Float64 redshiftStepForContinuumFit = opt_twosteplargegridstep;
         if(redshiftStepForContinuumFit==-1)
@@ -377,12 +377,12 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
                                opt_twosteplargegridsampling,
                                m_opt_tplfit_ignoreLinesSupport);
     }else{
-        if(opt_continuumcomponent == "tplfit")
+        if(opt_continuumcomponent == "tplfit" || opt_continuumcomponent == "tplfitauto")
         {
             m_model->m_opt_fitcontinuum_maxCount = m_opt_fitcontinuum_maxN;
         }
     }
-    if(opt_continuumcomponent == "tplfit")
+    if(opt_continuumcomponent == "tplfit" || opt_continuumcomponent == "tplfitauto")
     {
         m_model->m_opt_firstpass_forcedisableMultipleContinuumfit = m_opt_firstpass_multiplecontinuumfit_disable;
     }

@@ -131,7 +131,7 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
             m_SpcFluxAxis[i] = m_spcFluxAxisNoContinuum[i];
         }
     }
-    if( m_ContinuumComponent == "fromspectrum" || m_ContinuumComponent == "tplfit")
+    if( m_ContinuumComponent == "fromspectrum" || m_ContinuumComponent == "tplfit" || m_ContinuumComponent == "tplfitauto")
     {
         //the continuum is set to the SpcContinuum and the observed spectrum is the raw spectrum
         CSpectrumFluxAxis& modelFluxAxis = m_SpectrumModel->GetFluxAxis();
@@ -152,7 +152,7 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
     m_fitContinuum_option = 0; //0=interactive fitting, 1=use precomputed fit store, 2=use fixed values (typical use for second pass recompute)
     m_fitContinuum_tplfitStore = NULL;
 
-    if(m_ContinuumComponent == "tplfit" ||opt_fittingmethod == "lmfit" )
+    if(m_ContinuumComponent == "tplfit" || m_ContinuumComponent == "tplfitauto" || opt_fittingmethod == "lmfit" )
     {
         m_chiSquareOperator = new COperatorChiSquare2(calibrationPath);
         m_observeGridContinuumFlux = new Float64[modelFluxAxis.GetSamplesCount()]();
@@ -886,7 +886,7 @@ void CLineModelElementList::LoadFitContinuumOneTemplate(const TFloat64Range& lam
 /**
  * \brief Generates a continuum from the fitting with a set of templates : uses the chisquare2 operator
  **/
-void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, Int32 icontinuum)
+void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, Int32 icontinuum, Int32 autoSelect)
 {
     Log.LogDebug("Elementlist, m_fitContinuum_option=%d", m_fitContinuum_option);
     if(m_observeGridContinuumFlux == NULL)
@@ -1076,11 +1076,21 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, I
                     m_fitContinuum_tplFitDustCoeff = bestFitDustCoeff;
                     m_fitContinuum_tplFitMeiksinIdx = bestFitMeiksinIdx;
                     m_fitContinuum_tplFitRedshift = bestFitRedshift;
+                    m_fitContinuum_tplFitDtM = bestFitDtM;
+                    m_fitContinuum_tplFitMtM = bestFitMtM;
+
+                    if(autoSelect)
+                    {
+                        Float64 contsnr = getFitContinuum_snr();
+                        m_fitContinuum_tplFitAlpha = 1.0;
+                        if(contsnr>50.)
+                        {
+                            m_fitContinuum_tplFitAlpha=0.0;
+                        }
+                    }
 
                     ApplyContinuumOnGrid(tpl, m_fitContinuum_tplFitRedshift);
 
-                    m_fitContinuum_tplFitDtM = bestFitDtM;
-                    m_fitContinuum_tplFitMtM = bestFitMtM;
                     m_fitContinuum_tplFitPolyCoeffs = bestFitPolyCoeffs;
                     setFitContinuum_tplAmplitude(bestFitAmplitude, bestFitPolyCoeffs);
 
@@ -1107,7 +1117,7 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, I
 void CLineModelElementList::setFitContinuum_tplAmplitude(Float64 tplAmp, std::vector<Float64> polyCoeffs){
     const CSpectrumSpectralAxis& spcSpectralAxis = m_SpectrumModel->GetSpectralAxis();
 
-    Float64 alpha = 0.; //alpha blend = 1: only m_SpcContinuumFluxAxis, alpha=0: only tplfit
+    Float64 alpha = m_fitContinuum_tplFitAlpha; //alpha blend = 1: only m_SpcContinuumFluxAxis, alpha=0: only tplfit
 
     m_fitContinuum_tplFitAmplitude = tplAmp;
     m_fitContinuum_tplFitPolyCoeffs = polyCoeffs;
@@ -1386,7 +1396,7 @@ Int32 CLineModelElementList::LoadFitContaminantTemplate(const TFloat64Range& lam
         for(k=0; k<m_SpcFluxAxis.GetSamplesCount(); k++){
             m_SpcFluxAxis[k] = inputSpectrumFluxAxis[k]-m_ContinuumFluxAxis[k]-tplContaminantRebinFluxAxis[k];
         }
-    }else if( m_ContinuumComponent == "fromspectrum" || m_ContinuumComponent == "tplfit")
+    }else if( m_ContinuumComponent == "fromspectrum" || m_ContinuumComponent == "tplfit" || m_ContinuumComponent == "tplfitauto")
     {
         for(k=0; k<m_SpcFluxAxis.GetSamplesCount(); k++){
             m_SpcFluxAxis[k] = inputSpectrumFluxAxis[k]-tplContaminantRebinFluxAxis[k];
@@ -1660,7 +1670,7 @@ Float64 CLineModelElementList::fit(Float64 redshift,
 
     Int32 ncontinuumfitting=1;
     Int32 savedIdxContinuumFitted=-1; //for continuum tplfit
-    if(m_ContinuumComponent == "tplfit" && !m_forcedisableMultipleContinuumfit)
+    if( (m_ContinuumComponent == "tplfit" || m_ContinuumComponent == "tplfitauto") && !m_forcedisableMultipleContinuumfit)
     {
         ncontinuumfitting=m_opt_fitcontinuum_maxCount;
     }
@@ -1670,13 +1680,21 @@ Float64 CLineModelElementList::fit(Float64 redshift,
     std::vector<Float64> meritTplratio(nfitting, DBL_MAX); //initializing 'on the fly' best-merit per tplratio
     for(Int32 icontfitting=0; icontfitting<ncontinuumfitting; icontfitting++)
     {
-        if(m_ContinuumComponent == "tplfit") //the support has to be already computed when LoadFitContinuum() is called
+        if(m_ContinuumComponent == "tplfit" || m_ContinuumComponent == "tplfitauto") //the support has to be already computed when LoadFitContinuum() is called
         {
-            LoadFitContinuum(lambdaRange, icontfitting);
+            Int32 autoselect = 0;
+            if(m_ContinuumComponent == "tplfit")
+            {
+                autoselect = 0;
+            }else if(m_ContinuumComponent == "tplfitauto")
+            {
+                autoselect = 1;
+            }
+            LoadFitContinuum(lambdaRange, icontfitting, autoselect);
         }
         if(m_ContinuumComponent != "nocontinuum"){
             //prepare the continuum
-            if(m_ContinuumComponent == "tplfit" && m_fitContinuum_observedFrame){
+            if( (m_ContinuumComponent == "tplfit" || m_ContinuumComponent == "tplfitauto") && m_fitContinuum_observedFrame){
                 PrepareContinuum(0.0);
             }else{
                 PrepareContinuum(redshift);
@@ -2335,11 +2353,19 @@ Float64 CLineModelElementList::fit(Float64 redshift,
 
     if(enableLogging)
     {
-        if(m_ContinuumComponent == "tplfit")
+        if(m_ContinuumComponent == "tplfit" || m_ContinuumComponent == "tplfitauto")
         {
             if(ncontinuumfitting>1 && m_fittingmethod!="svdlc")
             {
-                LoadFitContinuum(lambdaRange, savedIdxContinuumFitted);
+                Int32 autoselect = 0;
+                if(m_ContinuumComponent == "tplfit")
+                {
+                    autoselect = 0;
+                }else if(m_ContinuumComponent == "tplfitauto")
+                {
+                    autoselect = 1;
+                }
+                LoadFitContinuum(lambdaRange, savedIdxContinuumFitted, autoselect);
             }
             if(m_fittingmethod=="svdlc")
             {
@@ -2396,7 +2422,7 @@ std::vector<CLmfitController*> CLineModelElementList::createLmfitControllers( co
     useLmfitControllers.push_back(new CLmfitController(m_lmfit_fitEmissionVelocity,  m_lmfit_fitAbsorptionVelocity));
   }else{
     if(m_lmfit_bestTemplate){
-      LoadFitContinuum(lambdaRange, -1);
+      LoadFitContinuum(lambdaRange, -1, 0);
       for( UInt32 i=0; i<m_tplCategoryList.size(); i++ )
       {
         std::string category = m_tplCategoryList[i];
@@ -4815,7 +4841,7 @@ Float64 CLineModelElementList::getLeastSquareContinuumMeritFast()
 {
     Float64 fit;
 
-    if( m_ContinuumComponent=="tplfit" )
+    if( m_ContinuumComponent=="tplfit" || m_ContinuumComponent == "tplfitauto" )
     {
         fit = m_dTransposeDRaw;
 
@@ -4873,7 +4899,7 @@ Float64 CLineModelElementList::getContinuumScaleMargCorrection()
     Float64 corr=0.0;
 
     //scale marg for continuum
-    if(m_ContinuumComponent == "tplfit") //the support has to be already computed when LoadFitContinuum() is called
+    if(m_ContinuumComponent == "tplfit" || m_ContinuumComponent == "tplfitauto") //the support has to be already computed when LoadFitContinuum() is called
     {
         corr += log(m_fitContinuum_tplFitMtM);
     }

@@ -120,7 +120,7 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
     Log.LogDetail( "    firstpass - largegridsampling (auto set from redshiftsampling param.): %s", m_opt_firstpass_largegridsampling.c_str());
 
     dataStore.GetScopedParam( "linemodel.continuumcomponent", m_opt_continuumcomponent, "fromspectrum" );
-    if(m_opt_continuumcomponent=="tplfit"){
+    if(m_opt_continuumcomponent=="tplfit" || m_opt_continuumcomponent == "tplfitauto"){
         dataStore.GetScopedParam( "linemodel.continuumismfit", m_opt_tplfit_dustfit, "yes" );
         dataStore.GetScopedParam( "linemodel.continuumigmfit", m_opt_tplfit_igmfit, "yes" );
         dataStore.GetScopedParam( "linemodel.continuumfitcount", m_opt_continuumfitcount, 1 );
@@ -216,7 +216,7 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
     Log.LogInfo( "    -linemodel offsets_catalog: %s", m_opt_offsets_reldirpath.c_str());
 
     Log.LogInfo( "    -continuumcomponent: %s", m_opt_continuumcomponent.c_str());
-    if(m_opt_continuumcomponent=="tplfit"){
+    if(m_opt_continuumcomponent=="tplfit" || m_opt_continuumcomponent=="tplfitauto"){
         Log.LogInfo( "      -tplfit_ismfit: %s", m_opt_tplfit_dustfit.c_str());
         Log.LogInfo( "      -tplfit_igmfit: %s", m_opt_tplfit_igmfit.c_str());
         Log.LogInfo( "      -continuum fit count:  %.0f", m_opt_continuumfitcount);
@@ -700,7 +700,7 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
     }
     linemodel.m_opt_firstpass_fittingmethod=m_opt_firstpass_fittingmethod;
     //
-    if(m_opt_continuumcomponent=="tplfit"){
+    if(m_opt_continuumcomponent=="tplfit" || m_opt_continuumcomponent=="tplfitauto"){
         linemodel.m_opt_tplfit_dustFit = Int32(m_opt_tplfit_dustfit=="yes");
         linemodel.m_opt_tplfit_extinction = Int32(m_opt_tplfit_igmfit=="yes");
         linemodel.m_opt_fitcontinuum_maxN = m_opt_continuumfitcount;
