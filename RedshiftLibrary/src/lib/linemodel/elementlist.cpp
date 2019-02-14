@@ -1081,7 +1081,8 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, I
 
                     if(autoSelect)
                     {
-                        Float64 contsnr = getFitContinuum_snr();
+                        //Float64 contsnr = getFitContinuum_snr();
+                        Float64 contsnr = m_fitContinuum_tplFitSNRMax;
                         m_fitContinuum_tplFitAlpha = 1.0;
                         if(contsnr>50.)
                         {
@@ -1464,6 +1465,11 @@ Int32 CLineModelElementList::SetFitContinuum_FitStore(CTemplatesFitStore* fitSto
 void CLineModelElementList::SetFitContinuum_Option(Int32 opt)
 {
     m_fitContinuum_option = opt;
+}
+
+void CLineModelElementList::SetFitContinuum_SNRMax(Float64 snr_max)
+{
+    m_fitContinuum_tplFitSNRMax = snr_max;
 }
 
 Int32 CLineModelElementList::GetFitContinuum_Option()

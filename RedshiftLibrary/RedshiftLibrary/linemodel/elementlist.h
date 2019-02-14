@@ -90,6 +90,7 @@ public:
     Float64* getPrecomputedGridContinuumFlux();
     void SetContinuumComponent(std::string component);
     Int32 SetFitContinuum_FitStore(CTemplatesFitStore* fitStore);
+    void SetFitContinuum_SNRMax(Float64 snr_max);
     void SetFitContinuum_Option(Int32 opt);
     Int32 GetFitContinuum_Option();
     void SetFitContinuum_FitValues(std::string tplfit_name,
@@ -371,6 +372,7 @@ private:
     Float64 m_fitContinuum_tplFitRedshift; // only used with m_fitContinuum_option==2 for now
     Float64 m_fitContinuum_tplFitDtM;
     Float64 m_fitContinuum_tplFitMtM;
+    Float64 m_fitContinuum_tplFitSNRMax=0.0;
     std::vector<Float64> m_fitContinuum_tplFitPolyCoeffs;   // only used with m_fitContinuum_option==2 for now
     bool m_forcedisableMultipleContinuumfit=false;
 

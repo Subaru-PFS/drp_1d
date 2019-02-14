@@ -729,6 +729,7 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
     chiSquareOperator.reset();
 
     // fill the fit store with fitted values: only the best fitted values FOR EACH TEMPLATE are used
+    Float64 bestTplFitSNR = 0.0;
     Int32 nredshiftsTplFitResults = redshiftsTplFit.size();
     for (Int32 i = 0; i < nredshiftsTplFitResults; i++)
     {
@@ -748,13 +749,27 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
                              chisquareResult->FitAmplitude[i],
                              chisquareResult->FitDtM[i],
                              chisquareResult->FitMtM[i]);
+
+
            if(!retAdd)
            {
                Log.LogError("  Operator-Linemodel: Failed to add continuum fit to store. aborting...");
                throw runtime_error("  Operator-Linemodel: Failed to add continuum fit to store. aborting...");
            }
+
+           Float64 tplfitsnr = -1;
+           if(chisquareResult->FitMtM[i]>0.)
+           {
+               tplfitsnr = chisquareResult->FitDtM[i]/std::sqrt(chisquareResult->FitMtM[i]);
+           }
+           if(tplfitsnr>bestTplFitSNR)
+           {
+               bestTplFitSNR = tplfitsnr;
+           }
         }
     }
+    m_model->SetFitContinuum_SNRMax(bestTplFitSNR);
+    Log.LogInfo("  Operator-Linemodel: fitcontinuum_snrMAX set to %f", bestTplFitSNR);
 
     // Set tplFitStore if needed
     m_model->SetFitContinuum_FitStore(tplfitStore);
