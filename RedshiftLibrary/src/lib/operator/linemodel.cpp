@@ -1910,6 +1910,7 @@ Int32 COperatorLineModel::RecomputeAroundCandidates(TPointList input_extremumLis
     bool enable_recompute_around_candidate = true;
     if (enable_recompute_around_candidate)
     {
+        m_secondpass_parameters_extremaResult.ExtremaExtendedRedshifts.clear();
         for (Int32 i = 0; i < input_extremumList.size(); i++)
         {
             Log.LogInfo("");
@@ -2016,6 +2017,8 @@ Int32 COperatorLineModel::RecomputeAroundCandidates(TPointList input_extremumLis
             {
                 // Log.LogInfo("Fit for Extended redshift %d, z = %f", iz,
                 // m_result->Redshifts[iz]);
+                m_secondpass_parameters_extremaResult.ExtremaExtendedRedshifts.push_back(m_result->Redshifts[iz]);
+
                 m_result->ChiSquare[iz] =
                         m_model->fit(m_result->Redshifts[iz],
                                      lambdaRange,

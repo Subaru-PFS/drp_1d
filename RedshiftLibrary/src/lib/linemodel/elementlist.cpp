@@ -1132,7 +1132,7 @@ void CLineModelElementList::setFitContinuum_tplAmplitude(Float64 tplAmp, std::ve
             {
                 lbdaTerm *=  spcSpectralAxis[k];
             }
-            m_ContinuumFluxAxis[k] += polyCoeffs[kCoeff]*lbdaTerm;
+            m_ContinuumFluxAxis[k] += (1.-alpha)*(polyCoeffs[kCoeff]*lbdaTerm);
         }
         m_spcFluxAxisNoContinuum[k] = m_SpcFluxAxis[k]-m_ContinuumFluxAxis[k];
     }
