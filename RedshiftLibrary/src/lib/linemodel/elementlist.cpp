@@ -267,6 +267,8 @@ Bool CLineModelElementList::initTplratioCatalogs(std::string opt_tplratioCatRelP
     m_StrongELPresentTplshape.resize(m_CatalogTplShape->GetCatalogsCount());
     m_NLinesAboveSNRTplshape.resize(m_CatalogTplShape->GetCatalogsCount());
     m_FittedAmpTplshape.resize(m_CatalogTplShape->GetCatalogsCount());
+    m_LyaAsymCoeffTplshape.resize(m_CatalogTplShape->GetCatalogsCount());
+    m_LyaWidthCoeffTplshape.resize(m_CatalogTplShape->GetCatalogsCount());
     m_FittedErrorTplshape.resize(m_CatalogTplShape->GetCatalogsCount());
     m_MtmTplshape.resize(m_CatalogTplShape->GetCatalogsCount());
     m_DtmTplshape.resize(m_CatalogTplShape->GetCatalogsCount());
@@ -276,6 +278,8 @@ Bool CLineModelElementList::initTplratioCatalogs(std::string opt_tplratioCatRelP
         m_FittedErrorTplshape[ktplshape].resize(m_Elements.size());
         m_MtmTplshape[ktplshape].resize(m_Elements.size());
         m_DtmTplshape[ktplshape].resize(m_Elements.size());
+        m_LyaAsymCoeffTplshape[ktplshape].resize(m_Elements.size());
+        m_LyaWidthCoeffTplshape[ktplshape].resize(m_Elements.size());
     }
 
     m_tplshapeLeastSquareFast = false;
@@ -297,6 +301,8 @@ Int32 CLineModelElementList::setPassMode(Int32 iPass)
         m_forcedisableMultipleContinuumfit = m_opt_firstpass_forcedisableMultipleContinuumfit;
 
         m_fittingmethod = m_opt_firstpass_fittingmethod;
+
+        m_forceLyaFitting = false;
     }
     if(iPass==2)
     {
@@ -305,6 +311,8 @@ Int32 CLineModelElementList::setPassMode(Int32 iPass)
         m_forcedisableMultipleContinuumfit=false;
 
         m_fittingmethod = m_opt_secondpass_fittingmethod;
+        m_forceLyaFitting = true;
+        Log.LogInfo("    model: set forceLyaFitting ASYMFIT : %d", m_forceLyaFitting);
     }
 
 
@@ -1594,7 +1602,7 @@ Bool CLineModelElementList::initModelAtZ(Float64 redshift, const TFloat64Range& 
 
 Bool CLineModelElementList::setTplshapeModel(Int32 itplshape, Bool enableSetVelocity)
 {
-    m_CatalogTplShape->SetLyaProfile(*this, itplshape);
+    m_CatalogTplShape->SetLyaProfile(*this, itplshape, m_forceLyaFitting);
 
     //m_CatalogTplShape->SetMultilineNominalAmplitudes( *this, ifitting );
     m_CatalogTplShape->SetMultilineNominalAmplitudesFast( *this, itplshape );
@@ -1752,6 +1760,9 @@ Float64 CLineModelElementList::fit(Float64 redshift,
                             m_FittedErrorTplshape[ifitting][iElts] = m_FittedErrorTplshape[ifitting-1][iElts];
                             m_DtmTplshape[ifitting][iElts] = m_DtmTplshape[ifitting-1][iElts];
                             m_MtmTplshape[ifitting][iElts] = m_MtmTplshape[ifitting-1][iElts];
+
+                            m_LyaAsymCoeffTplshape[ifitting][iElts] = m_LyaAsymCoeffTplshape[ifitting-1][iElts];
+                            m_LyaWidthCoeffTplshape[ifitting][iElts] = m_LyaWidthCoeffTplshape[ifitting-1][iElts];
                         }
                         continue;
                     }
@@ -2321,6 +2332,9 @@ Float64 CLineModelElementList::fit(Float64 redshift,
                                 m_DtmTplshape[ifitting][iElts] = m_Elements[iElts]->GetSumCross();
                                 m_MtmTplshape[ifitting][iElts] = m_Elements[iElts]->GetSumGauss();
 
+                                m_LyaAsymCoeffTplshape[ifitting][iElts] = m_Elements[iElts]->GetAsymfitAlphaCoeff();
+                                m_LyaWidthCoeffTplshape[ifitting][iElts] = m_Elements[iElts]->GetAsymfitWidthCoeff();
+
                                 savedAmp=true;
                                 break;
                             }
@@ -2402,15 +2416,23 @@ Float64 CLineModelElementList::fit(Float64 redshift,
                 m_Elements[iElts]->SetSumCross(m_DtmTplshape[savedIdxFitted][iElts]);
                 m_Elements[iElts]->SetSumGauss(m_MtmTplshape[savedIdxFitted][iElts]);
             }
+
             //Lya
-            bool retLyaProfile = m_CatalogTplShape->SetLyaProfile(*this, savedIdxFitted);
-            if( !retLyaProfile ){
-                Log.LogError( "Linemodel: tplshape, Unable to retrieve Lya Profile from Tplshape !");
+            if(0)
+            {  //old method, valid only for asymfixed profile in tplshape mode
+                bool retLyaProfile = m_CatalogTplShape->SetLyaProfile(*this, savedIdxFitted, m_forceLyaFitting);
+                if( !retLyaProfile ){
+                    Log.LogError( "Linemodel: tplshape, Unable to retrieve Lya Profile from Tplshape !");
+                }
+                //prepare the Lya width and asym coefficients if the asymfit profile option is met
+                setLyaProfile(redshift, spectralAxis);
+            }else{
+                for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
+                {
+                    m_Elements[iElts]->SetAsymfitAlphaCoeff(m_LyaAsymCoeffTplshape[savedIdxFitted][iElts]);
+                    m_Elements[iElts]->SetAsymfitWidthCoeff(m_LyaWidthCoeffTplshape[savedIdxFitted][iElts]);
+                }
             }
-
-            //prepare the Lya width and asym coefficients if the asymfit profile option is met
-            setLyaProfile(redshift, spectralAxis);
-
             refreshModel();
 
             Int32 modelSolutionLevel = Int32(enableLogging);
@@ -4450,10 +4472,10 @@ Int32 CLineModelElementList::setLyaProfile(Float64 redshift, const CSpectrumSpec
         Float64 widthCoeffMin = 1.0;
         Float64 widthCoeffMax = 4.0;
         Int32 nWidthSteps = int((widthCoeffMax-widthCoeffMin)/widthCoeffStep+0.5);
-        Float64 asymCoeffStep = 0.5;
+        Float64 asymCoeffStep = 1.;
         Float64 asymCoeffMin = 0.0;
-        Float64 asymCoeffMax = 2.5;
-        Int32 nAsymSteps = int((asymCoeffMax-asymCoeffMin)/asymCoeffStep+0.5);
+        Float64 asymCoeffMax = 4.0;
+        Int32 nAsymSteps = int((asymCoeffMax-asymCoeffMin)/asymCoeffStep+1.5);
         Float64 deltaStep = 0.5;
         Float64 deltaMin = 0.0;
         Float64 deltaMax = 0.0;//4.0;
@@ -4479,15 +4501,17 @@ Int32 CLineModelElementList::setLyaProfile(Float64 redshift, const CSpectrumSpec
                     m_Elements[idxLyaE]->SetAsymfitWidthCoeff(asymWidthCoeff);
                     m_Elements[idxLyaE]->SetAsymfitAlphaCoeff(asymAlphaCoeff);
 
-                    idxLineLyaE = -1;
+                    //idxLineLyaE = -1;
                     m_Elements[idxLyaE]->fitAmplitude(spectralAxis, m_spcFluxAxisNoContinuum, m_ContinuumFluxAxis, redshift, idxLineLyaE);
+
+
                     Float64 m=m_dTransposeDNocontinuum;
-                    if(0)
+                    if(1)
                     {
                         refreshModelUnderElements(filterEltsIdxLya, idxLineLyaE);
                         m = getModelErrorUnderElement(idxLyaE);
                     }else{
-                        m = getLeastSquareMeritFast(idxLineLyaE);
+                        m = getLeastSquareMeritFast(idxLyaE);
                     }
                     if( m<meritMin )
                     {
@@ -4495,6 +4519,13 @@ Int32 CLineModelElementList::setLyaProfile(Float64 redshift, const CSpectrumSpec
                         bestWidth = m_Elements[idxLyaE]->GetAsymfitWidthCoeff();
                         bestAlpha = m_Elements[idxLyaE]->GetAsymfitAlphaCoeff();
                         bestDelta = m_Elements[idxLyaE]->GetAsymfitDelta();
+                    }
+
+                    if(verbose)
+                    {
+                        Log.LogInfo("Fitting Lya Profile: width=%f, asym=%f, delta=%f", asymWidthCoeff, asymAlphaCoeff, delta);
+                        Log.LogInfo("Fitting Lya Profile: merit=%e", m);
+                        Log.LogInfo("Fitting Lya Profile: idxLyaE=%d, idxLineLyaE=%d", idxLyaE, idxLineLyaE);
                     }
                 }
             }

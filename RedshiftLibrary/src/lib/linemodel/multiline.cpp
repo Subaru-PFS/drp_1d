@@ -708,7 +708,11 @@ void CMultiLine::fitAmplitudeAndLambdaOffset(const CSpectrumSpectralAxis& spectr
  * A estimation.
  * Loop for the signal synthesis.
  **/
-void CMultiLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& noContinuumfluxAxis, const CSpectrumFluxAxis &continuumfluxAxis, Float64  redshift, Int32 lineIdx )
+void CMultiLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis,
+                              const CSpectrumFluxAxis& noContinuumfluxAxis,
+                              const CSpectrumFluxAxis &continuumfluxAxis,
+                              Float64  redshift,
+                              Int32 lineIdx )
 {
     Float64 nRays = m_Rays.size();
 

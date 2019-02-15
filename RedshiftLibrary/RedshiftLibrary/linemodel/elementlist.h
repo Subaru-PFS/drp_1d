@@ -258,6 +258,8 @@ public:
     std::vector<std::vector<Float64>> m_FittedErrorTplshape;
     std::vector<std::vector<Float64>> m_MtmTplshape;
     std::vector<std::vector<Float64>> m_DtmTplshape;
+    std::vector<std::vector<Float64>> m_LyaAsymCoeffTplshape;
+    std::vector<std::vector<Float64>> m_LyaWidthCoeffTplshape;
 
     bool m_enableAmplitudeOffsets;
     Float64 m_LambdaOffsetMin = -400.0;
@@ -290,6 +292,7 @@ private:
                                                  Int32 polyOrder=-1);
 
     bool m_forceDisableLyaFitting;
+    bool m_forceLyaFitting=false;
     Int32 setLyaProfile( Float64 redshift, const CSpectrumSpectralAxis& spectralAxis );
 
     std::vector<UInt32> getSupportIndexes(std::vector<UInt32> EltsIdx);

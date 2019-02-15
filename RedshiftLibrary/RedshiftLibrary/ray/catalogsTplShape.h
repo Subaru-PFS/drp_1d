@@ -40,7 +40,7 @@ public:
 
     Bool GetCatalogVelocities(Int32 idx, Float64& elv, Float64& alv );
     Bool SetMultilineNominalAmplitudes(CLineModelElementList& LineModelElementList, Int32 iLine);
-    Bool SetLyaProfile(CLineModelElementList &LineModelElementList, Int32 iCatalog);
+    Bool SetLyaProfile(CLineModelElementList &LineModelElementList, Int32 iCatalog, bool forceLyaFitting);
     Bool InitLineCorrespondingAmplitudes(CLineModelElementList &LineModelElementList);
     Bool SetMultilineNominalAmplitudesFast(CLineModelElementList &LineModelElementList, Int32 iCatalog);
 

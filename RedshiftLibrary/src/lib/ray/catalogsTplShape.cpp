@@ -43,7 +43,7 @@ Bool CRayCatalogsTplShape::Init( std::string calibrationPath, std::string opt_tp
     std::string dirPath = (calibrationFolder/tplshapedcatalog_relpath.c_str()).string();
 
     m_opt_dust_calzetti = enableISMCalzetti;
-    m_ismCorrectionCalzetti->Init(calibrationPath, 0.0, 0.1, 4);
+    m_ismCorrectionCalzetti->Init(calibrationPath, 0.0, 0.1, 10);
 
     bool ret = Load(dirPath.c_str());
     if(!ret)
@@ -484,7 +484,7 @@ Bool CRayCatalogsTplShape::SetMultilineNominalAmplitudes(CLineModelElementList &
     return true;
 }
 
-Bool CRayCatalogsTplShape::SetLyaProfile(CLineModelElementList &LineModelElementList, Int32 iCatalog)
+Bool CRayCatalogsTplShape::SetLyaProfile(CLineModelElementList &LineModelElementList, Int32 iCatalog, bool forceLyaFitting)
 {
     if(iCatalog<0){
         return false;
@@ -501,6 +501,10 @@ Bool CRayCatalogsTplShape::SetLyaProfile(CLineModelElementList &LineModelElement
             continue;
         }
 	CRay::TProfile targetProfile = currentCatalogLineList[kL].GetProfile();
+    if(forceLyaFitting)
+    {
+        targetProfile = CRay::ASYMFIT;
+    }
 
         //find line Lya in the elementList
         for( UInt32 iElts=0; iElts<LineModelElementList.m_Elements.size(); iElts++ )
