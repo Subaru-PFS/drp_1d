@@ -777,12 +777,12 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
     //Compute z-candidates
     //**************************************************
     Bool overrideUseBestchi2forCandidates = false;
-    // Int32 sign = 1;
+    Int32 sign = 1;
     std::vector<Float64> fvals;
     std::shared_ptr<const CLineModelResult> lmresult = std::dynamic_pointer_cast<const CLineModelResult>( linemodel.getResult() );
     if(overrideUseBestchi2forCandidates)
     {
-      // sign = -1;
+        sign = -1;
         fvals = lmresult->ChiSquare;
     }else{
         std::shared_ptr<CPdfMargZLogResult> postmargZResult = std::shared_ptr<CPdfMargZLogResult>(new CPdfMargZLogResult());
@@ -794,17 +794,133 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
             Log.LogError("Linemodel: Candidates search - Pdfz computation failed");
             return false;
         }else{
-          // sign = -1;
+            sign = 1;
             fvals = postmargZResult->valProbaLog;
         }
     }
-    Int32 retCandidates = linemodel.ComputeCandidates(m_opt_extremacount, 1, fvals, m_opt_candidatesLogprobaCutThreshold); //BUG ? sign should change if chi2 or pdf are used... ?
+    Int32 retCandidates = linemodel.ComputeCandidates(m_opt_extremacount, sign, fvals, m_opt_candidatesLogprobaCutThreshold);
     if( retCandidates!=0 )
     {
         Log.LogError( "Linemodel: Search for z-candidates failed. Aborting" );
         throw std::runtime_error("Linemodel: Search for z-candidates failed. Aborting");
     }
 
+
+
+    //**************************************************
+    //FIRST PASS + CANDIDATES - B
+    //**************************************************
+    Bool enableFirstpass_B=true;
+    COperatorLineModel linemodel_fpb;
+    Int32 retInitB = linemodel_fpb.Init(_spc, redshifts);
+    if( retInitB!=0 )
+    {
+        Log.LogError( "Line Model fpB, init failed. Aborting" );
+        return false;
+    }
+    if(enableFirstpass_B)
+    {
+        Log.LogInfo( "Line Model FIRST PASS B enabled. Computing now." );
+
+        linemodel_fpb.m_opt_firstpass_fittingmethod=m_opt_firstpass_fittingmethod;
+        //
+        std::string fpb_opt_continuumcomponent = "fromspectrum";
+        if(fpb_opt_continuumcomponent=="tplfit" || fpb_opt_continuumcomponent=="tplfitauto"){
+            linemodel_fpb.m_opt_tplfit_dustFit = Int32(m_opt_tplfit_dustfit=="yes");
+            linemodel_fpb.m_opt_tplfit_extinction = Int32(m_opt_tplfit_igmfit=="yes");
+            linemodel_fpb.m_opt_fitcontinuum_maxN = m_opt_continuumfitcount;
+            linemodel_fpb.m_opt_tplfit_ignoreLinesSupport = Int32(m_opt_tplfit_ignoreLinesSupport=="yes");
+            linemodel_fpb.m_opt_secondpasslcfittingmethod = m_opt_secondpasslcfittingmethod;
+
+        }
+
+        if(m_opt_rigidity=="tplshape")
+        {
+            linemodel_fpb.m_opt_tplratio_ismFit = Int32(m_opt_tplratio_ismfit=="yes");
+            linemodel_fpb.m_opt_firstpass_tplratio_ismFit = Int32(m_opt_firstpass_tplratio_ismfit=="yes");
+        }
+
+        if(fpb_opt_continuumcomponent=="fromspectrum"){
+            //check the continuum validity
+            if( !_spcContinuum.IsFluxValid( lambdaRange.GetBegin(), lambdaRange.GetEnd() ) ){
+                Log.LogWarning("Line Model - Failed to validate continuum spectrum flux on wavelength range (%.1f ; %.1f)",lambdaRange.GetBegin(), lambdaRange.GetEnd() );
+                //throw std::runtime_error("Failed to validate continuum  flux");
+            }else{
+                Log.LogDetail( "Line Model - Successfully validated continuum flux on wavelength range (%.1f ; %.1f)", lambdaRange.GetBegin(), lambdaRange.GetEnd() );
+            }
+        }
+
+        //**************************************************
+        //FIRST PASS B
+        //**************************************************
+        Int32 retFirstPass = linemodel_fpb.ComputeFirstPass(dataStore,
+                                              _spc,
+                                              _spcContinuum,
+                                              tplCatalog,
+                                              tplCategoryList,
+                                              m_calibrationPath,
+                                              restraycatalog,
+                                              m_opt_linetypefilter,
+                                              m_opt_lineforcefilter,
+                                              lambdaRange,
+                                              m_opt_fittingmethod,
+                                              fpb_opt_continuumcomponent,
+                                              m_opt_lineWidthType,
+                                              m_opt_resolution,
+                                              m_opt_velocity_emission,
+                                              m_opt_velocity_absorption,
+                                              m_opt_continuumreest,
+                                              m_opt_rules,
+                                              m_opt_velocityfit,
+                                              m_opt_firstpass_largegridstep,
+                                              m_opt_firstpass_largegridsampling,
+                                              m_opt_rigidity,
+                                              m_opt_tplratio_reldirpath,
+                                              m_opt_offsets_reldirpath);
+        if( retFirstPass!=0 )
+        {
+            Log.LogError( "Line Model, first pass failed. Aborting" );
+            return false;
+        }
+
+        //**************************************************
+        //Compute z-candidates B
+        //**************************************************
+        Int32 fpb_opt_extremacount = 5;
+        Bool overrideUseBestchi2forCandidates = false;
+        Int32 sign = 1;
+        std::vector<Float64> fvals;
+        std::shared_ptr<const CLineModelResult> lmresult = std::dynamic_pointer_cast<const CLineModelResult>( linemodel_fpb.getResult() );
+        if(overrideUseBestchi2forCandidates)
+        {
+            sign = -1;
+            fvals = lmresult->ChiSquare;
+        }else{
+            std::shared_ptr<CPdfMargZLogResult> postmargZResult = std::shared_ptr<CPdfMargZLogResult>(new CPdfMargZLogResult());
+            std::shared_ptr<CPdfLogResult> zpriorResult = std::shared_ptr<CPdfLogResult>(new CPdfLogResult());
+            Int32 retCombinePdf = CombinePDF(lmresult, m_opt_rigidity, m_opt_pdfcombination, m_opt_stronglinesprior, m_opt_euclidNHaEmittersPriorStrength, postmargZResult, zpriorResult);
+
+            if(retCombinePdf!=0)
+            {
+                Log.LogError("linemodel_fpb: Candidates search - Pdfz computation failed");
+                return false;
+            }else{
+                sign = 1;
+                fvals = postmargZResult->valProbaLog;
+            }
+        }
+        Int32 retCandidates = linemodel_fpb.ComputeCandidates(fpb_opt_extremacount, sign, fvals, m_opt_candidatesLogprobaCutThreshold);
+        if( retCandidates!=0 )
+        {
+            Log.LogError( "linemodel_fpb: Search for z-candidates failed. Aborting" );
+            throw std::runtime_error("linemodel_fpb: Search for z-candidates failed. Aborting");
+        }
+        //**************************************************
+        //COMBINE CANDIDATES
+        //**************************************************
+        linemodel.Combine_firstpass_candidates(linemodel_fpb.GetFirstpassExtremaResult());
+
+    }    
 
     //**************************************************
     //SECOND PASS
@@ -822,7 +938,6 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
                                                           m_opt_linetypefilter,
                                                           m_opt_lineforcefilter,
                                                           lambdaRange,
-                                                          m_opt_extremacount,
                                                           m_opt_fittingmethod,
                                                           m_opt_continuumcomponent,
                                                           m_opt_lineWidthType,
@@ -866,6 +981,15 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
         firstpassExtremaResultsStr.append("_firstpass_extrema");
         //Log.LogError("Line Model, saving firstpass extrema results: %s", firstpassExtremaResultsStr.c_str());
         dataStore.StoreScopedGlobalResult( firstpassExtremaResultsStr.c_str(), linemodel.GetFirstpassExtremaResult() );
+
+        //save linemodel firstpass extrema B results
+        if(enableFirstpass_B)
+        {
+            std::string firstpassbExtremaResultsStr=scopeStr.c_str();
+            firstpassbExtremaResultsStr.append("_firstpassb_extrema");
+            //Log.LogError("Line Model, saving firstpassb extrema results: %s", firstpassExtremaResultsStr.c_str());
+            dataStore.StoreScopedGlobalResult( firstpassbExtremaResultsStr.c_str(), linemodel_fpb.GetFirstpassExtremaResult() );
+        }
 
         //save linemodel fitting and spectrum-model results
         linemodel.storeGlobalModelResults(dataStore);

@@ -107,6 +107,7 @@ public:
                             const Int32 opt_sign,
                             const std::vector<Float64> floatValues,
                             const Float64 meritCut);
+    Int32 Combine_firstpass_candidates(std::shared_ptr<CLineModelExtremaResult> firstpass_results_b);
 
 
     Int32 ComputeSecondPass(CDataStore &dataStore,
@@ -119,7 +120,6 @@ public:
                             const std::string &opt_lineTypeFilter,
                             const std::string &opt_lineForceFilter,
                             const TFloat64Range& lambdaRange,
-                            const Int32 opt_extremacount,
                             const std::string &opt_fittingmethod,
                             const std::string &opt_continuumcomponent,
                             const std::string& opt_lineWidthType,
