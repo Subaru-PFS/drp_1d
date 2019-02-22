@@ -76,6 +76,16 @@ private:
     std::string m_opt_continuumreest;
     std::string m_opt_rules;
 
+    std::string m_opt_lya_forcefit;
+    std::string m_opt_lya_forcedisablefit;
+    Float64 m_opt_lya_fit_asym_min;
+    Float64 m_opt_lya_fit_asym_max;
+    Float64 m_opt_lya_fit_asym_step;
+    Float64 m_opt_lya_fit_width_min;
+    Float64 m_opt_lya_fit_width_max;
+    Float64 m_opt_lya_fit_width_step;
+
+
     //options for rigidity=tplshape
     std::string m_opt_tplratio_reldirpath="";
     std::string m_opt_tplratio_ismfit="no";

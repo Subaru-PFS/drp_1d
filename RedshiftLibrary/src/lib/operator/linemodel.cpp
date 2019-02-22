@@ -316,6 +316,17 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
     m_model->m_opt_firstpass_fittingmethod = m_opt_firstpass_fittingmethod;
     m_model->m_opt_secondpass_fittingmethod = opt_fittingmethod;
 
+
+    m_model->m_opt_lya_forcefit=m_opt_lya_forcefit=="yes";
+    m_model->m_opt_lya_forcedisablefit=m_opt_lya_forcedisablefit=="yes";
+    m_model->m_opt_lya_fit_asym_min=m_opt_lya_fit_asym_min;
+    m_model->m_opt_lya_fit_asym_max=m_opt_lya_fit_asym_max;
+    m_model->m_opt_lya_fit_asym_step=m_opt_lya_fit_asym_step;
+    m_model->m_opt_lya_fit_width_min=m_opt_lya_fit_width_min;
+    m_model->m_opt_lya_fit_width_max=m_opt_lya_fit_width_max;
+    m_model->m_opt_lya_fit_width_step=m_opt_lya_fit_width_step;
+
+
     if (opt_rigidity == "tplshape")
     {
         // init catalog tplratios

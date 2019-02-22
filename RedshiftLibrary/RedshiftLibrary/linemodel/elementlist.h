@@ -267,6 +267,14 @@ public:
     Float64 m_LambdaOffsetStep = 25.0;
     bool m_enableLambdaOffsetsFit;
 
+    bool m_opt_lya_forcefit=false;
+    bool m_opt_lya_forcedisablefit=false;
+    Float64 m_opt_lya_fit_asym_min=0.0;
+    Float64 m_opt_lya_fit_asym_max=4.0;
+    Float64 m_opt_lya_fit_asym_step=1.0;
+    Float64 m_opt_lya_fit_width_min=1.;
+    Float64 m_opt_lya_fit_width_max=4.;
+    Float64 m_opt_lya_fit_width_step=1.;
 
     Int32 m_opt_fitcontinuum_maxCount = 2;
     bool m_opt_firstpass_forcedisableMultipleContinuumfit=true;

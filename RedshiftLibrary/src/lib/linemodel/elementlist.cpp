@@ -306,12 +306,12 @@ Int32 CLineModelElementList::setPassMode(Int32 iPass)
     }
     if(iPass==2)
     {
-        m_forceDisableLyaFitting = false;
+        m_forceDisableLyaFitting = m_opt_lya_forcedisablefit;
         m_forcedisableTplratioISMfit = false;
         m_forcedisableMultipleContinuumfit=false;
 
         m_fittingmethod = m_opt_secondpass_fittingmethod;
-        m_forceLyaFitting = true;
+        m_forceLyaFitting = m_opt_lya_forcefit;
         Log.LogInfo("    model: set forceLyaFitting ASYMFIT : %d", m_forceLyaFitting);
     }
 
@@ -1769,7 +1769,8 @@ Float64 CLineModelElementList::fit(Float64 redshift,
                 }
                 setTplshapeModel(ifitting, false);
                 //prepare the Lya width and asym coefficients if the asymfit profile option is met
-                //INFO: tpl-shape are always ASYMFIXED for the lyaE profile, as of 2016-01-11
+                //INFO: tpl-shape are often ASYMFIXED in the tplshape catalog files, for the lyaE profile, as of 2016-01-11
+                //INFO: tplshape can override the lyafitting, see m_opt_lya_forcefit
                 setLyaProfile(redshift, spectralAxis);
             }
 
@@ -2418,21 +2419,12 @@ Float64 CLineModelElementList::fit(Float64 redshift,
             }
 
             //Lya
-            if(0)
-            {  //old method, valid only for asymfixed profile in tplshape mode
-                bool retLyaProfile = m_CatalogTplShape->SetLyaProfile(*this, savedIdxFitted, m_forceLyaFitting);
-                if( !retLyaProfile ){
-                    Log.LogError( "Linemodel: tplshape, Unable to retrieve Lya Profile from Tplshape !");
-                }
-                //prepare the Lya width and asym coefficients if the asymfit profile option is met
-                setLyaProfile(redshift, spectralAxis);
-            }else{
-                for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
-                {
-                    m_Elements[iElts]->SetAsymfitAlphaCoeff(m_LyaAsymCoeffTplshape[savedIdxFitted][iElts]);
-                    m_Elements[iElts]->SetAsymfitWidthCoeff(m_LyaWidthCoeffTplshape[savedIdxFitted][iElts]);
-                }
+            for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
+            {
+                m_Elements[iElts]->SetAsymfitAlphaCoeff(m_LyaAsymCoeffTplshape[savedIdxFitted][iElts]);
+                m_Elements[iElts]->SetAsymfitWidthCoeff(m_LyaWidthCoeffTplshape[savedIdxFitted][iElts]);
             }
+
             refreshModel();
 
             Int32 modelSolutionLevel = Int32(enableLogging);
@@ -4468,13 +4460,13 @@ Int32 CLineModelElementList::setLyaProfile(Float64 redshift, const CSpectrumSpec
             Log.LogInfo("Fitting Lya Profile: width, asym, delta");
         }
         //3. find the best width and asym coeff. parameters
-        Float64 widthCoeffStep = 1.0;
-        Float64 widthCoeffMin = 1.0;
-        Float64 widthCoeffMax = 4.0;
-        Int32 nWidthSteps = int((widthCoeffMax-widthCoeffMin)/widthCoeffStep+0.5);
-        Float64 asymCoeffStep = 1.;
-        Float64 asymCoeffMin = 0.0;
-        Float64 asymCoeffMax = 4.0;
+        Float64 widthCoeffStep = m_opt_lya_fit_width_step;
+        Float64 widthCoeffMin = m_opt_lya_fit_width_min;
+        Float64 widthCoeffMax = m_opt_lya_fit_width_max;
+        Int32 nWidthSteps = int((widthCoeffMax-widthCoeffMin)/widthCoeffStep+1.5);
+        Float64 asymCoeffStep = m_opt_lya_fit_asym_step;
+        Float64 asymCoeffMin = m_opt_lya_fit_asym_min;
+        Float64 asymCoeffMax = m_opt_lya_fit_asym_max;
         Int32 nAsymSteps = int((asymCoeffMax-asymCoeffMin)/asymCoeffStep+1.5);
         Float64 deltaStep = 0.5;
         Float64 deltaMin = 0.0;

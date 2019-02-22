@@ -222,6 +222,16 @@ public:
     std::string m_opt_firstpass_fittingmethod;
     std::string m_opt_secondpasslcfittingmethod="-1";
     Int32 m_opt_secondpass_estimateParms_tplfit_fixfromfirstpass=1; //0: load fit continuum, 1 (default): use the best continuum from first pass
+
+    std::string m_opt_lya_forcefit;
+    std::string m_opt_lya_forcedisablefit;
+    Float64 m_opt_lya_fit_asym_min;
+    Float64 m_opt_lya_fit_asym_max;
+    Float64 m_opt_lya_fit_asym_step;
+    Float64 m_opt_lya_fit_width_min;
+    Float64 m_opt_lya_fit_width_max;
+    Float64 m_opt_lya_fit_width_step;
+
 private:
 
     std::shared_ptr<CLineModelResult> m_result;
