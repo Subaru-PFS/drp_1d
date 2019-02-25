@@ -183,6 +183,7 @@ Float64 CLineModelElement::GetLineProfile(CRay::TProfile profile, Float64 x, Flo
     Float64 alpha;
 
     Float64 sigma_rest, z, dataStartLambda, xcd;
+    Float64 muz, sigmaz, delta, gamma1, m0;
     Int32 valI;
 
     switch (profile) {
@@ -223,7 +224,18 @@ Float64 CLineModelElement::GetLineProfile(CRay::TProfile profile, Float64 x, Flo
         sigma = sigma*coeff;
 
         //correction in order to have the line shifted on the mean: from https://en.wikipedia.org/wiki/Skew_normal_distribution
-        xc = xc + m_asymfit_sigma_coeff*m_asymfit_alpha/std::sqrt(1.+m_asymfit_alpha*m_asymfit_alpha)*sqrt(2./M_PI);
+        delta = m_asymfit_alpha/std::sqrt(1.+m_asymfit_alpha*m_asymfit_alpha);
+        muz = delta*sqrt(2./M_PI);
+        xc = xc + m_asymfit_sigma_coeff*muz;
+        /*
+        //correction in order to have the line shifted on the mode: from https://en.wikipedia.org/wiki/Skew_normal_distribution
+        delta = m_asymfit_alpha/std::sqrt(1.+m_asymfit_alpha*m_asymfit_alpha);
+        muz = delta*sqrt(2./M_PI);
+        sigmaz = std::sqrt(1-muz*muz);
+        gamma1 = ((4-M_PI)/2.0)*pow(delta*std::sqrt(2/M_PI), 3.)/pow(1-2*delta*delta/M_PI, 3./2.);
+        m0 = muz - gamma1*sigmaz/2.0 - 0.5*exp(-2*M_PI/m_asymfit_alpha);
+        xc = xc + m_asymfit_sigma_coeff*m0;
+        //*/
 
         xcd = xc+m_asymfit_delta;
         xsurc = xcd/sigma;
