@@ -104,8 +104,8 @@ endif(CCACHE_FOUND)
 # cpf-core-redshift-version.cmake with the appropriate version number
 #--------------------------------------------------------
 
-FILE (STRINGS ${ROOT_DIR}/VERSION VERSION)
-MESSAGE( STATUS "Version used: ${VERSION}" )
+FILE (STRINGS ${ROOT_DIR}/VERSION PROJECT_VERSION)
+MESSAGE( STATUS "Version used: ${PROJECT_VERSION}" )
 
 #SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall -Wno-sign-compare -Wno-parentheses")
 IF(BUILD_SHARED_LIBS)
@@ -151,11 +151,6 @@ if (OPENMP_FOUND)
     set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 endif()
-
-#-------------------------  -------------------------------
-# Extract version number
-#--------------------------------------------------------
-FILE (STRINGS ${ROOT_DIR}/VERSION VERSION_NUMBER)
 
 #--------------------------------------------------------
 # Compile library
@@ -248,11 +243,11 @@ CONFIGURE_PACKAGE_CONFIG_FILE(
 )
 
 # Configure version file (this is used by find_package to determine a matching version)
-CONFIGURE_FILE(
-       ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cpf-redshift-config-version.cmake.in
-       ${CMAKE_CURRENT_BINARY_DIR}/cmake/cpf-redshift-config-version.cmake
-       @ONLY
-)
+WRITE_BASIC_PACKAGE_VERSION_FILE(
+  ${CMAKE_CURRENT_BINARY_DIR}/cmake/cpf-redshift-config-version.cmake
+  VERSION ${VERSION}
+  COMPATIBILITY SameMajorVersion
+  )
 
 CONFIGURE_FILE(
 	${CMAKE_CURRENT_SOURCE_DIR}/cmake/version.h.in
@@ -262,6 +257,7 @@ CONFIGURE_FILE(
 # Generate TAGS file if etags is installed
 find_program(ETAGS NAMES etags ctags)
 if(ETAGS)
-  execute_process(COMMAND "find ${ROOT_DIR}/RedshiftLibrary/ ( -name *.cpp -o -name *.h -o -name *.hpp -o -name *.py -o -name *.c ) -exec ${ETAGS} -a ${ROOT_DIR}/TAGS {} +"
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+  message("Running " ${ETAGS})
+  execute_process(COMMAND find RedshiftLibrary/ ( -name *.cpp -o -name *.h -o -name *.hpp -o -name *.py -o -name *.c ) -not -name redshift.py -exec ${ETAGS} -a TAGS {} +
+    WORKING_DIRECTORY ${ROOT_DIR})
 endif(ETAGS)

@@ -45,6 +45,10 @@
 #include "RedshiftLibrary/spectrum/axis.h"
 #include "RedshiftLibrary/spectrum/fluxaxis.h"
 #include "RedshiftLibrary/spectrum/spectralaxis.h"
+#include "RedshiftLibrary/method/linemodelsolve.h"
+#include "RedshiftLibrary/method/dtreebsolve.h"
+#include "RedshiftLibrary/method/dtree7solve.h"
+#include "RedshiftLibrary/method/chisquare2solve.h"
 using namespace NSEpic;
 %}
 
@@ -72,10 +76,19 @@ public:
      nLevel_Error = 90,
      nLevel_Warning = 80,
      nLevel_Info = 70,
+     nLevel_Detail = 65,
      nLevel_Debug = 60,
      nLevel_None = 0
    };
   CLog( );
+
+  void LogError( const char* format, ... );
+  void LogWarning( const char* format, ... );
+  void LogInfo( const char* format, ... );
+  void LogDetail( const char* format, ... );
+  void LogDebug( const char* format, ... );
+  void Indent();
+  void UnIndent();
 };
 
 class CLogConsoleHandler {
@@ -113,12 +126,12 @@ class CParameterStore {
 %rename(Set_String) Set( const std::string& name, const std::string& v);
 public:
   CParameterStore();
-  bool Load( const std::string& path );
-  bool Save( const std::string& path ) const;
-  bool Get( const std::string& name, std::string& out_str, std::string defaultValue = "" );
-  bool Get( const std::string& name, Int64& out_int, Int64 defaultValue = 0 );
-  bool Get( const std::string& name, Float64& out_float, Float64 defaultValue  = 0 );
-  bool Set( const std::string& name, const std::string& v );
+  void Load( const std::string& path );
+  void Save( const std::string& path ) const;
+  void Get( const std::string& name, std::string& out_str, std::string defaultValue = "" );
+  void Get( const std::string& name, Int64& out_int, Int64 defaultValue = 0 );
+  void Get( const std::string& name, Float64& out_float, Float64 defaultValue  = 0 );
+  void Set( const std::string& name, const std::string& v );
 
 };
 
@@ -132,6 +145,7 @@ class CRayCatalog
 {
 public:
     void Load( const char* filePath );
+    bool Save( const char* filePath );
     void ConvertVacuumToAir();
 };
 
@@ -169,11 +183,13 @@ public:
 class CDataStore
 {
 public:
-  CDataStore( COperatorResultStore& resultStore, CParameterStore& parameStore );
-  void SaveRedshiftResult( const std::string& dir );
-  void SaveCandidatesResult( const std::string& dir );
-  void SaveReliabilityResult( const std::string& dir );
-  void SaveAllResults( const std::string& dir, const std::string opt ) const;
+  CDataStore(COperatorResultStore& resultStore, CParameterStore& parameStore);
+  void SaveRedshiftResult(const std::string& dir);
+  void SaveCandidatesResult(const std::string& dir);
+  void SaveReliabilityResult(const std::string& dir);
+  void SaveStellarResult(const std::string& dir);
+  void SaveClassificationResult(const std::string& dir);
+  void SaveAllResults(const std::string& dir, const std::string opt) const;
 };
 
 class COperatorResultStore
@@ -285,3 +301,35 @@ class CTemplate : public CSpectrum
   bool Save( const char* filePath ) const;
 };
 
+class CLineModelSolve
+{
+ public:
+  CLineModelSolve(std::string calibrationPath="");
+  ~CLineModelSolve();
+  const std::string GetDescription();
+};
+
+class COperatorDTreeBSolve
+{
+ public:
+  COperatorDTreeBSolve( std::string calibrationPath="" );
+  ~COperatorDTreeBSolve();
+  const std::string GetDescription();
+};
+
+class COperatorDTree7Solve
+{
+ public:
+
+  COperatorDTree7Solve(std::string calibrationPath="");
+  ~COperatorDTree7Solve();
+  const std::string GetDescription();
+};
+
+class CMethodChisquare2Solve
+{
+ public:
+  CMethodChisquare2Solve( std::string calibrationPath="" );
+  ~CMethodChisquare2Solve();
+  const std::string GetDescription();
+};

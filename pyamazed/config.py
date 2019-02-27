@@ -5,7 +5,6 @@ from .redshift import CLog
 defaults = {
     'parameters_file': 'parameters.json',
     'config': None,
-    'data_path': '',
     'output_folder': './output',
     'input_file': 'input.spectrumlist',
     'error_file': None,
@@ -16,10 +15,12 @@ defaults = {
     'zclassifier_dir': '',
     'log_level': CLog.nLevel_Warning,
     'linecatalog_convert': False,
+    'linemeascatalog': '',
+    'save_intermediate_results': 'all',
     }
 
 
-class Config(object):
+class Config:
 
     def __init__(self, args):
 
@@ -43,3 +44,8 @@ class Config(object):
                 raise AttributeError('Invalid command line parameter {}'.format(arg))
             if getattr(args, arg) is not None:
                 setattr(self, arg, getattr(args, arg))
+
+    def save(self, path):
+        """Save configuration to path"""
+        with open(path, "w") as f:
+            json.dump(vars(self), f, indent=2)
