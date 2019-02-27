@@ -450,8 +450,11 @@ class processHelper(object):
             else:
                 nsubspclist=len(self.subspclists)
                 
+            skip_n_first_jobs = -1
             for ksubs in range(nsubspclist):
-            
+                if ksubs<skip_n_first_jobs:
+                    continue
+                
                 if len(self.subspclists)==0:
                     overrideSpclist=""
                     overrideSpclistIndex = -1
@@ -482,6 +485,8 @@ class processHelper(object):
                     f.write("#PBS -N amz_{}_{}".format(k, ksubs))
                     f.write("\n")
                     f.write("#PBS -l nodes=1:ppn=1")
+                    f.write("\n")
+                    f.write("#PBS -l mem=2GB") # request 2GB of memory
                     f.write("\n")
                     f.write("#PBS -l walltime=30:00:00")
                     f.write("\n")

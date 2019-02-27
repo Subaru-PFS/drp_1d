@@ -16,6 +16,8 @@
 #include <RedshiftLibrary/linemodel/modelspectrumresult.h>
 #include <RedshiftLibrary/linemodel/element.h>
 
+#include <RedshiftLibrary/statistics/pdfz.h>
+
 #include <RedshiftLibrary/spectrum/template/catalog.h>
 #include <RedshiftLibrary/linemodel/templatesfitstore.h>
 
@@ -119,6 +121,7 @@ public:
     Float64 getTplshape_bestAmplitude();
     Int32 getTplshape_count();
     std::vector<Float64> getTplshape_priors();
+    std::vector<CPdfz::SPriorZ> getTplshape_priorsPz();
     std::vector<Float64> GetChisquareTplshape();
     std::vector<Float64> GetScaleMargTplshape();
     std::vector<bool> GetStrongELPresentTplshape();

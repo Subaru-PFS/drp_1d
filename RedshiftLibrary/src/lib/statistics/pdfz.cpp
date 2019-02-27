@@ -1046,6 +1046,50 @@ CPdfz::GetNLinesSNRAboveCutLogZPrior(std::vector<Int32> nlinesAboveSNR,
     return logzPrior;
 }
 
+std::vector<Float64>
+CPdfz::GetModelZPrior(CPdfz::SPriorZ priorPzDef,
+                      std::vector<Float64> redshifts,
+                      Float64 aCoeff)
+{
+    if(aCoeff<=0)
+    {
+        Log.LogError( "    CPdfz::GetModelZPrior: problem found aCoeff<=0: aCoeff=%f", aCoeff);
+        throw std::runtime_error("    CPdfz::GetModelZPrior: problem found aCoeff<=0");
+    }
+
+    Int32 nz = redshifts.size();
+    std::vector<Float64> zPrior(nz, 0.0);
+    Float64 sum = 0.0;
+    for (UInt32 kz = 0; kz < nz; kz++)
+    {
+        Float64 muc = (redshifts[kz]-priorPzDef.mu);
+        Float64 gProfile = exp(-0.5*muc*muc/(priorPzDef.sigma*priorPzDef.sigma));
+        zPrior[kz] = priorPzDef.amp*gProfile + priorPzDef.p0;
+
+        //apply strength
+        zPrior[kz] = pow(zPrior[kz], aCoeff);
+
+        sum += zPrior[kz];
+    }
+
+    if (sum > 0)
+    {
+        for (UInt32 kz = 0; kz < nz; kz++)
+        {
+            zPrior[kz] /= sum;
+        }
+    }
+
+    // switch to log
+    std::vector<Float64> logzPrior(nz, 0.0);
+    for (UInt32 kz = 0; kz < nz; kz++)
+    {
+        logzPrior[kz] = log(zPrior[kz]);
+    }
+
+    return logzPrior;
+}
+
 std::vector<Float64> CPdfz::GetEuclidNhaLogZPrior(std::vector<Float64> redshifts, Float64 aCoeff)
 {
     if(aCoeff<=0)

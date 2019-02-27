@@ -40,7 +40,11 @@ CLineModelResult::~CLineModelResult()
  * @return
  * ERR = -2 : if the tplshapesPriors list is not the same size as the tpl-ratios
  */
-Int32 CLineModelResult::Init( std::vector<Float64> redshifts, CRayCatalog::TRayVector restRays, Int32 nTplshapes, std::vector<Float64> tplshapesPriors )
+Int32 CLineModelResult::Init(std::vector<Float64> redshifts,
+                              CRayCatalog::TRayVector restRays,
+                              Int32 nTplshapes,
+                              std::vector<Float64> tplshapesPriors,
+                              std::vector<CPdfz::SPriorZ> tplshapesPriorsPz)
 {
     Int32 err = 0;
     if(tplshapesPriors.size()!=nTplshapes)
@@ -74,6 +78,7 @@ Int32 CLineModelResult::Init( std::vector<Float64> redshifts, CRayCatalog::TRayV
         NLinesAboveSNRTplshapes.push_back(nlac);
 
         PriorTplshapes.push_back(tplshapesPriors[k]);
+        PriorPzTplshapes.push_back(tplshapesPriorsPz[k]);
     }
 
     ChiSquareContinuum.resize( nResults );

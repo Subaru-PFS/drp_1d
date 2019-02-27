@@ -1567,6 +1567,16 @@ std::vector<Float64> CLineModelElementList::getTplshape_priors()
     return m_CatalogTplShape->getCatalogsPriors();
 }
 
+std::vector<CPdfz::SPriorZ> CLineModelElementList::getTplshape_priorsPz()
+{
+    if(m_rigidity!="tplshape")
+    {
+        std::vector<CPdfz::SPriorZ> dumb;
+        return dumb;
+    }
+    return m_CatalogTplShape->getCatalogsPriorsPz();
+}
+
 std::vector<Float64> CLineModelElementList::GetChisquareTplshape()
 {
     return m_ChisquareTplshape;

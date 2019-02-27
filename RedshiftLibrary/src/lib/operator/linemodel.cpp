@@ -357,7 +357,8 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
 
     Int32 resultInitRet = m_result->Init(m_sortedRedshifts, restRayList,
                                          m_model->getTplshape_count(),
-                                         m_model->getTplshape_priors());
+                                         m_model->getTplshape_priors(),
+                                         m_model->getTplshape_priorsPz());
     if (resultInitRet != 0)
     {
         Log.LogError("  Operator-Linemodel: ERROR while initializing linemodel "

@@ -10,6 +10,7 @@
 #include <RedshiftLibrary/linemodel/linemodelextremaresult.h>
 #include <RedshiftLibrary/linemodel/linemodelsolution.h>
 #include <RedshiftLibrary/linemodel/continuummodelsolution.h>
+#include <RedshiftLibrary/statistics/pdfz.h>
 
 namespace NSEpic
 {
@@ -21,7 +22,11 @@ public:
     CLineModelResult();
     virtual ~CLineModelResult();
 
-    Int32 Init(std::vector<Float64> redshifts, CRayCatalog::TRayVector restRays, Int32 nTplshapes, std::vector<Float64> tplshapesPriors);
+    Int32 Init(std::vector<Float64> redshifts,
+               CRayCatalog::TRayVector restRays,
+               Int32 nTplshapes,
+               std::vector<Float64> tplshapesPriors,
+               std::vector<CPdfz::SPriorZ> tplshapesPriorsPz);
 
     void Save( const CDataStore& store, std::ostream& stream ) const;
     void SaveLine( const CDataStore& store, std::ostream& stream ) const;
@@ -63,6 +68,7 @@ public:
 
     std::vector<TFloat64List> ChiSquareTplshapes; // full chi2 results (for each tplshape)
     std::vector<Float64> PriorTplshapes; // model prior (for each tplshape)
+    std::vector<CPdfz::SPriorZ> PriorPzTplshapes; // model pz (for each tplshape)
     std::vector<TFloat64List> ScaleMargCorrectionTplshapes; // full scale marginalization correction results (for each tplshape)
     std::vector<std::vector<bool>> StrongELPresentTplshapes; // full strongELPresent results (for each tplshape)
     std::vector<std::vector<Int32>> NLinesAboveSNRTplshapes; // full n_lines_above_snr results (for each tplshape)
