@@ -9,7 +9,7 @@ import os
 import csv
 import json
 import pytest
-from tempfile import NamedTemporaryFile, TemporaryDirectory
+from tempfile import NamedTemporaryFile, TemporaryDirectory, mkdtemp
 from pyamazed.output_compare import read_spectrumlist, float_cmp, int_cmp, \
                                     str_cmp, \
                                     CSVComparator, JSONComparator,\
@@ -34,14 +34,13 @@ def spectrum_list():
     return spectrum_list_file
 
 
-@pytest.fixture
-def dummy_version_json():
-    json_file1 = NamedTemporaryFile()
+def dummy_json(args):
+    temp_dir = mkdtemp()
     data = {}
-    with open(json_file1.name, 'w') as v1:
-        data['cpf-redshift-version'] = '3f9ca6b'
-        json.dump(data, v1)
-    return json_file1
+    with open(os.path.join(temp_dir, "config.json"), mode='w') as f:
+        data['cpf-redshift-version'] = str(args)
+        json.dump(data, f)
+    return temp_dir
 
 
 class DummyResultComparator(CSVComparator):
@@ -59,8 +58,8 @@ class DummyResultComparator(CSVComparator):
 @pytest.fixture
 def dummy_csv_res():
     d = TemporaryDirectory()
-    redshiftresult_csv_file = open(os.path.join(d.name, "dummy_result_test.csv"), "w")
-    csv_writer = csv.writer(redshiftresult_csv_file, delimiter='\t')
+    result_csv_file = open(os.path.join(d.name, "dummy_result_test.csv"), "w")
+    csv_writer = csv.writer(result_csv_file, delimiter='\t')
     csv_writer.writerow(['#Comment'])
     csv_writer.writerow(['#Key',
                          'float',
@@ -74,13 +73,41 @@ def dummy_csv_res():
                          '2.0',
                          'tpl_NEW-Im-g.txt',
                          '3'])
-    redshiftresult_csv_file.close()
+    result_csv_file.close()
 
     return d
 
 ###############################################################################
 #                              tests functions                                #
 ###############################################################################
+
+
+def test_read_spectrumlist(spectrum_list):
+    """
+    Tests the spectrum list reader.
+    """
+    reader = read_spectrumlist(spectrum_list.name)
+    assert type(reader) == list
+    for element in reader:
+        assert type(element) == str
+
+
+def test_compare():
+    jsonObj = JSONComparator("config.json")
+    r_diff = jsonObj.compare(dummy_json('a1b2'), dummy_json('c3d4'))
+    assert r_diff != []
+    assert type(r_diff) == list
+
+    r_equal = jsonObj.compare(dummy_json('a1b2'), dummy_json('a1b2'))
+    assert r_equal == []
+    assert type(r_equal) == list
+
+def test_CSVComparator(dummy_csv_res):
+    cmp = DummyResultComparator()
+    r = cmp.compare(dummy_csv_res.name, dummy_csv_res.name)
+
+    assert r == []
+
 
 def test_true_cmp():
     """
@@ -101,30 +128,6 @@ def test_int_cmp():
     # NOTE: int_cmp() does not need to be tested
     """
     pass
-
-
-def test_read_spectrumlist(spectrum_list):
-    """
-    Tests the spectrum list reader.
-    """
-    reader = read_spectrumlist(spectrum_list.name)
-    assert type(reader) == list
-    for element in reader:
-        assert type(element) == str
-
-
-def test_compare(dummy_version_json):
-    jsonObj = JSONComparator(dummy_version_json.name)
-    r_equal = jsonObj.compare(dummy_version_json.name, dummy_version_json.name)
-    assert r_equal == []
-    assert type(r_equal) == list
-
-
-def test_CSVComparator(dummy_csv_res):
-    cmp = DummyResultComparator()
-    r = cmp.compare(dummy_csv_res.name, dummy_csv_res.name)
-
-    assert r == []
 
 
 def test_main():
