@@ -43,7 +43,20 @@ def dummy_json(param):
     temp_dir = mkdtemp()
     data = {}
     with open(os.path.join(temp_dir, "config.json"), mode='w') as f:
-        data['cpf-redshift-version'] = param
+        data["parameters_file"] = "tests/pfs6b3_127984_0/parameters.json",
+        data["config"] = "tests/pfs6b3_127984_0/config.json",
+        data["output_folder"] = "results/5e37479c/pfs6b3_127984_0",
+        data["input_file"] = "tests/pfs6b3_127984_0/input.spectrumlist",
+        data["error_file"] = None,
+        data["spectrum_dir"] = "data/pfs6b3_127984_0",
+        data["template_dir"] = "data/calibration/templates/BC03_sdss_tremonti21",
+        data["linecatalog"] = "data/calibration/linecatalogs/data[linecatalogamazedvacuum_C1_noHepsilon.txt",
+        data["calibration_dir"] = "data/calibration/",
+        data["zclassifier_dir"] = "data/calibration/reliability/data[zclassifier_C6A3iS1nD9cS1nS1_20180404/",
+        data["log_level"] = 70,
+        data["linecatalog_convert"] = True,
+        data["linemeascatalog"] = "",
+        data["save_intermediate_results"] = param
         json.dump(data, f)
     return temp_dir
 
@@ -101,11 +114,11 @@ def test_compare():
     Tests JSONComparator.compare() method.
     """
     jsonObj = JSONComparator("config.json")
-    r_diff = jsonObj.compare(dummy_json('a1b2'), dummy_json('c3d4'))
+    r_diff = jsonObj.compare(dummy_json('all'), dummy_json('none'))
     assert r_diff != []
     assert type(r_diff) == list
 
-    r_equal = jsonObj.compare(dummy_json('a1b2'), dummy_json('a1b2'))
+    r_equal = jsonObj.compare(dummy_json('all'), dummy_json('all'))
     assert r_equal == []
     assert type(r_equal) == list
 
