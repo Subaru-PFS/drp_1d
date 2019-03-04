@@ -8,6 +8,7 @@ Author: CeSAM
 import os
 import csv
 import json
+import shutil
 import pytest
 from tempfile import NamedTemporaryFile, TemporaryDirectory, mkdtemp
 from pyamazed.output_compare import read_spectrumlist, float_cmp, int_cmp, \
@@ -113,14 +114,23 @@ def test_compare():
     """
     Tests JSONComparator.compare() method.
     """
+    s_val1 = 'all'
+    s_val2 = 'none'
+    f1 = dummy_json(s_val1)
+    f2 = dummy_json(s_val2)
     jsonObj = JSONComparator("config.json")
-    r_diff = jsonObj.compare(dummy_json('all'), dummy_json('none'))
-    assert r_diff != []
-    assert type(r_diff) == list
 
-    r_equal = jsonObj.compare(dummy_json('all'), dummy_json('all'))
-    assert r_equal == []
-    assert type(r_equal) == list
+    # Compare two identical json
+    equal = jsonObj.compare(f1, f1)
+    assert equal == []
+
+    # Compare two identical json
+    diff = jsonObj.compare(f1, f2)
+    assert diff == ['config.json/save_intermediate_results : value mismatch ['\
+                    + str(s_val1) + '] / [' + str(s_val2) + ']']
+
+    shutil.rmtree(f1)
+    shutil.rmtree(f2)
 
 def test_CSVComparator():
     """
@@ -128,17 +138,22 @@ def test_CSVComparator():
     """
     f_val1 = 0.001
     f_val2 = 0.002
+    f1 = dummy_csv_res(f_val1)
+    f2 = dummy_csv_res(f_val2)
     cmp = DummyResultComparator()
 
     # Compare two identical csv
-    r_equal = cmp.compare(dummy_csv_res(f_val1), dummy_csv_res(f_val1))
+    r_equal = cmp.compare(f1, f1)
     assert r_equal == []
 
     # Compare two different csv
-    r_diff = cmp.compare(dummy_csv_res(f_val1), dummy_csv_res(f_val2))
-    assert r_diff != []
+    r_diff = cmp.compare(f1, f2)
     assert r_diff == ['0/float : [' + str(f_val1) + '] != [' \
                                     + str(f_val2) + ']']
+
+    shutil.rmtree(f1)
+    shutil.rmtree(f2)
+
 
 def test_true_cmp():
     """
