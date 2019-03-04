@@ -1057,21 +1057,50 @@ CPdfz::GetModelZPrior(CPdfz::SPriorZ priorPzDef,
         throw std::runtime_error("    CPdfz::GetModelZPrior: problem found aCoeff<=0");
     }
 
+    Float64 maxP = -DBL_MAX;
+    Float64 minP = DBL_MAX;
     Int32 nz = redshifts.size();
     std::vector<Float64> zPrior(nz, 0.0);
-    Float64 sum = 0.0;
     for (UInt32 kz = 0; kz < nz; kz++)
     {
         Float64 muc = (redshifts[kz]-priorPzDef.mu);
         Float64 gProfile = exp(-0.5*muc*muc/(priorPzDef.sigma*priorPzDef.sigma));
         zPrior[kz] = priorPzDef.amp*gProfile + priorPzDef.p0;
 
+        zPrior[kz] /= priorPzDef.amp + priorPzDef.p0; //pre-normalization in order to have a pow(.., 128) not overflown//max aCoeff would be 128 then
+
         //apply strength
         zPrior[kz] = pow(zPrior[kz], aCoeff);
 
-        sum += zPrior[kz];
+        if (zPrior[kz] > maxP)
+        {
+            maxP = zPrior[kz];
+        }
+        if (zPrior[kz] < minP)
+        {
+            minP = zPrior[kz];
+        }
+    }
+    //Log.LogDetail("Pdfz: zPrior: using HalphaZPrior min=%e", minP);
+    //Log.LogDetail("Pdfz: zPrior: using HalphaZPrior max=%e", maxP);
+    Float64 dynamicCut = 1e128;
+    if (maxP > 0)
+    {
+        for (UInt32 kz = 0; kz < redshifts.size(); kz++)
+        {
+            zPrior[kz] /= maxP;
+            if (zPrior[kz] < 1. / dynamicCut)
+            {
+                zPrior[kz] = 1. / dynamicCut;
+            }
+        }
     }
 
+    Float64 sum = 0.0;
+    for (UInt32 kz = 0; kz < redshifts.size(); kz++)
+    {
+        sum += zPrior[kz];
+    }
     if (sum > 0)
     {
         for (UInt32 kz = 0; kz < nz; kz++)
