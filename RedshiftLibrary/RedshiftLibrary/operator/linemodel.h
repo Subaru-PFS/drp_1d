@@ -231,6 +231,9 @@ public:
     Float64 m_opt_lya_fit_width_min;
     Float64 m_opt_lya_fit_width_max;
     Float64 m_opt_lya_fit_width_step;
+    Float64 m_opt_lya_fit_delta_min;
+    Float64 m_opt_lya_fit_delta_max;
+    Float64 m_opt_lya_fit_delta_step;
 
 private:
 

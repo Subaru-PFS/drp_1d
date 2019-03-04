@@ -83,6 +83,9 @@ const std::string CLineModelSolve::GetDescription()
     desc.append("\tparam: linemodel.lyafit.widthcoefffitmin = <float value>\n");
     desc.append("\tparam: linemodel.lyafit.widthcoefffitmax = <float value>\n");
     desc.append("\tparam: linemodel.lyafit.widthcoefffitstep = <float value>\n");
+    desc.append("\tparam: linemodel.lyafit.deltafitmin = <float value>\n");
+    desc.append("\tparam: linemodel.lyafit.deltafitmax = <float value>\n");
+    desc.append("\tparam: linemodel.lyafit.deltafitstep = <float value>\n");
 
     //first pass
     desc.append("\tparam: linemodel.firstpass.largegridstep = <float value>, deactivated if negative or zero\n");
@@ -167,6 +170,9 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
     dataStore.GetScopedParam( "linemodel.lyafit.widthfitmin", m_opt_lya_fit_width_min, 1.0 );
     dataStore.GetScopedParam( "linemodel.lyafit.widthfitmax", m_opt_lya_fit_width_max, 4.0 );
     dataStore.GetScopedParam( "linemodel.lyafit.widthfitstep", m_opt_lya_fit_width_step, 1.0 );
+    dataStore.GetScopedParam( "linemodel.lyafit.deltafitmin", m_opt_lya_fit_delta_min, 0.0 );
+    dataStore.GetScopedParam( "linemodel.lyafit.deltafitmax", m_opt_lya_fit_delta_max, 0.0 );
+    dataStore.GetScopedParam( "linemodel.lyafit.deltafitstep", m_opt_lya_fit_delta_step, 1.0 );
 
     dataStore.GetScopedParam( "linemodel.continuumreestimation", m_opt_continuumreest, "no" );
     dataStore.GetScopedParam( "linemodel.rules", m_opt_rules, "all" );
@@ -786,6 +792,9 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
     linemodel.m_opt_lya_fit_width_min=m_opt_lya_fit_width_min;
     linemodel.m_opt_lya_fit_width_max=m_opt_lya_fit_width_max;
     linemodel.m_opt_lya_fit_width_step=m_opt_lya_fit_width_step;
+    linemodel.m_opt_lya_fit_delta_min=m_opt_lya_fit_delta_min;
+    linemodel.m_opt_lya_fit_delta_max=m_opt_lya_fit_delta_max;
+    linemodel.m_opt_lya_fit_delta_step=m_opt_lya_fit_delta_step;
 
     if(m_opt_rigidity=="tplshape")
     {
