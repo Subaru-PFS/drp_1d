@@ -4478,11 +4478,10 @@ Int32 CLineModelElementList::setLyaProfile(Float64 redshift, const CSpectrumSpec
         Float64 asymCoeffMin = m_opt_lya_fit_asym_min;
         Float64 asymCoeffMax = m_opt_lya_fit_asym_max;
         Int32 nAsymSteps = int((asymCoeffMax-asymCoeffMin)/asymCoeffStep+1.5);
-        Float64 deltaStep = 0.5;
-        Float64 deltaMin = 0.0;
-        Float64 deltaMax = 0.0;//4.0;
-        Int32 nDeltaSteps = int((deltaMax-deltaMin)/deltaStep+0.5);
-        nDeltaSteps = 1;//disable delta fit here: will be parameterized through the offset object
+        Float64 deltaStep = m_opt_lya_fit_delta_step;
+        Float64 deltaMin = m_opt_lya_fit_delta_min;
+        Float64 deltaMax = m_opt_lya_fit_delta_max;
+        Int32 nDeltaSteps = int((deltaMax-deltaMin)/deltaStep+1.5);
 
         Float64 bestWidth = widthCoeffMin;
         Float64 bestAlpha = asymCoeffMin;

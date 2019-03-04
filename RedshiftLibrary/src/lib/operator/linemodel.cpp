@@ -325,6 +325,9 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
     m_model->m_opt_lya_fit_width_min=m_opt_lya_fit_width_min;
     m_model->m_opt_lya_fit_width_max=m_opt_lya_fit_width_max;
     m_model->m_opt_lya_fit_width_step=m_opt_lya_fit_width_step;
+    m_model->m_opt_lya_fit_delta_min=m_opt_lya_fit_delta_min;
+    m_model->m_opt_lya_fit_delta_max=m_opt_lya_fit_delta_max;
+    m_model->m_opt_lya_fit_delta_step=m_opt_lya_fit_delta_step;
 
 
     if (opt_rigidity == "tplshape")
@@ -374,7 +377,7 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
     if (enableFitContinuumPrecomputed && (opt_continuumcomponent == "tplfit" || opt_continuumcomponent == "tplfitauto") )
     {
         Float64 redshiftStepForContinuumFit = opt_twosteplargegridstep;
-        if(redshiftStepForContinuumFit==-1)
+        if(redshiftStepForContinuumFit<=0.)
         {
             Log.LogError("  Operator-Linemodel: opt_firstpass_zgridstep must be defined for this fit continuum procedure.");
             throw runtime_error("  Operator-Linemodel: opt_firstpass_zgridstep must be defined (!= -1) for this fit continuum procedure.");
@@ -610,7 +613,7 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
     Float64 maxRedshift = m_sortedRedshifts[m_sortedRedshifts.size()-1];
 
     Log.LogInfo("  Operator-Linemodel: continuum tpl fitting: sampling:%s, "
-                "step=%.5f, min=%.1f, max=%.1f",
+                "step=%.5e, min=%.5e, max=%.5e",
                 zsampling.c_str(),
                 redshiftStep,
                 minRedshift,
