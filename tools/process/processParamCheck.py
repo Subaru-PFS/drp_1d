@@ -59,6 +59,7 @@ class processParamCheck(object):
         """
         deprecated_keywords = ["lambdaRange", "redshiftRange", "redshiftStep"]
         deprecated_keywords.append("fastfitlargegridstep")
+        deprecated_keywords.append("linecatalogs_tplshape_ExtendedTemplatesJan2017v3_20170602_B14C_v3") #this tpl-ratio catalog should not be used anymore, OII lines ratio have been updated 
         print("Info: checking for the following deprecated keywords: \n{}\n".format(deprecated_keywords))
         
         f = open(self.parampath, 'r')

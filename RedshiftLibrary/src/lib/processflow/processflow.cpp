@@ -124,7 +124,9 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
         Float64 zref = -1.0;
         namespace fs = boost::filesystem;
         Int32 reverseInclusionForIdMatching = 0; //0: because the names must match exactly, but: linemeas catalog includes the extension (.fits) and spc.GetName doesn't.
+
         bool computeOnZrange=false; //nb: hardcoded option for now
+
         fs::path refFilePath(opt_linemeas_catalog_path.c_str());
 
 

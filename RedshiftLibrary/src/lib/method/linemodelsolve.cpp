@@ -74,6 +74,16 @@ const std::string CLineModelSolve::GetDescription()
     desc.append("\tparam: linemodel.absvelocityfitmin = <float value>\n");
     desc.append("\tparam: linemodel.absvelocityfitmax = <float value>\n");
     desc.append("\tparam: linemodel.absvelocityfitstep = <float value>\n");
+
+    desc.append("\tparam: linemodel.lyaforcefit = {""no"", ""yes""}\n");
+    desc.append("\tparam: linemodel.lyaforcedisablefit = {""no"", ""yes""}\n");
+    desc.append("\tparam: linemodel.lyafit.asymfitmin = <float value>\n");
+    desc.append("\tparam: linemodel.lyafit.asymfitmax = <float value>\n");
+    desc.append("\tparam: linemodel.lyafit.asymfitstep = <float value>\n");
+    desc.append("\tparam: linemodel.lyafit.widthcoefffitmin = <float value>\n");
+    desc.append("\tparam: linemodel.lyafit.widthcoefffitmax = <float value>\n");
+    desc.append("\tparam: linemodel.lyafit.widthcoefffitstep = <float value>\n");
+
     //first pass
     desc.append("\tparam: linemodel.firstpass.largegridstep = <float value>, deactivated if negative or zero\n");
     desc.append("\tparam: linemodel.firstpass.tplratio_ismfit = {""no"", ""yes""}\n");
@@ -84,6 +94,8 @@ const std::string CLineModelSolve::GetDescription()
     desc.append("\tparam: linemodel.pdfcombination = {""marg"", ""bestchi2""}\n");
     desc.append("\tparam: linemodel.stronglinesprior = <float value>, penalization factor = positive value or -1 to deactivate\n");
     desc.append("\tparam: linemodel.euclidnhaemittersStrength = <float value>, prior strength factor = positive value (typically 1 to 5) or -1 to deactivate\n");
+    desc.append("\tparam: linemodel.modelpriorzStrength = <float value>, prior strength factor = positive value (typically 1 to 5) or -1 to deactivate\n");
+
     desc.append("\tparam: linemodel.saveintermediateresults = {""yes"", ""no""}\n");
 
 
@@ -120,7 +132,7 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
     Log.LogDetail( "    firstpass - largegridsampling (auto set from redshiftsampling param.): %s", m_opt_firstpass_largegridsampling.c_str());
 
     dataStore.GetScopedParam( "linemodel.continuumcomponent", m_opt_continuumcomponent, "fromspectrum" );
-    if(m_opt_continuumcomponent=="tplfit"){
+    if(m_opt_continuumcomponent=="tplfit" || m_opt_continuumcomponent == "tplfitauto"){
         dataStore.GetScopedParam( "linemodel.continuumismfit", m_opt_tplfit_dustfit, "yes" );
         dataStore.GetScopedParam( "linemodel.continuumigmfit", m_opt_tplfit_igmfit, "yes" );
         dataStore.GetScopedParam( "linemodel.continuumfitcount", m_opt_continuumfitcount, 1 );
@@ -129,30 +141,40 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
     dataStore.GetScopedParam( "linemodel.rigidity", m_opt_rigidity, "rules" );
     if(m_opt_rigidity=="tplshape")
     {
-        dataStore.GetScopedParam( "linemodel.tplratio_catalog", m_opt_tplratio_reldirpath, "linecatalogs_tplshapes/linecatalogs_tplshape_ExtendedTemplatesJan2017v3_20170602_B14C_v3_emission" );
+        dataStore.GetScopedParam( "linemodel.tplratio_catalog", m_opt_tplratio_reldirpath, "linecatalogs_tplshapes/linecatalogs_tplshape_ExtendedTemplatesJan2017v3_20170602_B14C_v5_emission" );
         dataStore.GetScopedParam( "linemodel.tplratio_ismfit", m_opt_tplratio_ismfit, "yes" );
     }
     dataStore.GetScopedParam( "linemodel.offsets_catalog", m_opt_offsets_reldirpath, "linecatalogs_offsets/offsetsCatalogs_20170410_m150" );
 
     dataStore.GetScopedParam( "linemodel.linewidthtype", m_opt_lineWidthType, "velocitydriven" );
     dataStore.GetScopedParam( "linemodel.instrumentresolution", m_opt_resolution, 2350.0 );
-    dataStore.GetScopedParam( "linemodel.velocityemission", m_opt_velocity_emission, 100.0 );
+    dataStore.GetScopedParam( "linemodel.velocityemission", m_opt_velocity_emission, 200.0 );
     dataStore.GetScopedParam( "linemodel.velocityabsorption", m_opt_velocity_absorption, 300.0 );
     dataStore.GetScopedParam( "linemodel.velocityfit", m_opt_velocityfit, "yes" );
     if(m_opt_velocityfit=="yes"){
         dataStore.GetScopedParam( "linemodel.emvelocityfitmin", m_opt_em_velocity_fit_min, 20.0 );
-        dataStore.GetScopedParam( "linemodel.emvelocityfitmax", m_opt_em_velocity_fit_max, 500.0 );
+        dataStore.GetScopedParam( "linemodel.emvelocityfitmax", m_opt_em_velocity_fit_max, 300.0 );
         dataStore.GetScopedParam( "linemodel.emvelocityfitstep", m_opt_em_velocity_fit_step, 20.0 );
         dataStore.GetScopedParam( "linemodel.absvelocityfitmin", m_opt_abs_velocity_fit_min, 150.0 );
         dataStore.GetScopedParam( "linemodel.absvelocityfitmax", m_opt_abs_velocity_fit_max, 500.0 );
-        dataStore.GetScopedParam( "linemodel.absvelocityfitstep", m_opt_abs_velocity_fit_step, 20.0 );
+        dataStore.GetScopedParam( "linemodel.absvelocityfitstep", m_opt_abs_velocity_fit_step, 50.0 );
     }
+    dataStore.GetScopedParam( "linemodel.lyaforcefit", m_opt_lya_forcefit, "no" );
+    dataStore.GetScopedParam( "linemodel.lyaforcedisablefit", m_opt_lya_forcedisablefit, "no" );
+    dataStore.GetScopedParam( "linemodel.lyafit.asymfitmin", m_opt_lya_fit_asym_min, 0.0 );
+    dataStore.GetScopedParam( "linemodel.lyafit.asymfitmax", m_opt_lya_fit_asym_max, 4.0 );
+    dataStore.GetScopedParam( "linemodel.lyafit.asymfitstep", m_opt_lya_fit_asym_step, 1.0 );
+    dataStore.GetScopedParam( "linemodel.lyafit.widthfitmin", m_opt_lya_fit_width_min, 1.0 );
+    dataStore.GetScopedParam( "linemodel.lyafit.widthfitmax", m_opt_lya_fit_width_max, 4.0 );
+    dataStore.GetScopedParam( "linemodel.lyafit.widthfitstep", m_opt_lya_fit_width_step, 1.0 );
+
     dataStore.GetScopedParam( "linemodel.continuumreestimation", m_opt_continuumreest, "no" );
     dataStore.GetScopedParam( "linemodel.rules", m_opt_rules, "all" );
     dataStore.GetScopedParam( "linemodel.extremacount", m_opt_extremacount, 10.0 );
     dataStore.GetScopedParam( "linemodel.extremacutprobathreshold", m_opt_candidatesLogprobaCutThreshold, -1 );
     dataStore.GetScopedParam( "linemodel.stronglinesprior", m_opt_stronglinesprior, -1);
     dataStore.GetScopedParam( "linemodel.euclidnhaemittersStrength", m_opt_euclidNHaEmittersPriorStrength, -1);
+    dataStore.GetScopedParam( "linemodel.modelpriorzStrength", m_opt_modelZPriorStrength, -1);
     dataStore.GetScopedParam( "linemodel.pdfcombination", m_opt_pdfcombination, "marg");
     dataStore.GetScopedParam( "linemodel.saveintermediateresults", m_opt_saveintermediateresults, "no");
 
@@ -216,7 +238,7 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
     Log.LogInfo( "    -linemodel offsets_catalog: %s", m_opt_offsets_reldirpath.c_str());
 
     Log.LogInfo( "    -continuumcomponent: %s", m_opt_continuumcomponent.c_str());
-    if(m_opt_continuumcomponent=="tplfit"){
+    if(m_opt_continuumcomponent=="tplfit" || m_opt_continuumcomponent=="tplfitauto"){
         Log.LogInfo( "      -tplfit_ismfit: %s", m_opt_tplfit_dustfit.c_str());
         Log.LogInfo( "      -tplfit_igmfit: %s", m_opt_tplfit_igmfit.c_str());
         Log.LogInfo( "      -continuum fit count:  %.0f", m_opt_continuumfitcount);
@@ -237,6 +259,7 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
 
     Log.LogInfo( "    -pdf-stronglinesprior: %e", m_opt_stronglinesprior);
     Log.LogInfo( "    -pdf-euclidNHaEmittersPriorStrength: %e", m_opt_euclidNHaEmittersPriorStrength);
+    Log.LogInfo( "    -pdf-modelpriorzStrength: %e", m_opt_modelZPriorStrength);
     Log.LogInfo( "    -pdf-combination: %s", m_opt_pdfcombination.c_str()); // "marg";    // "bestchi2";    // "bestproba";
 
     if(m_opt_saveintermediateresults=="yes")
@@ -286,12 +309,24 @@ std::shared_ptr<CLineModelSolveResult> CLineModelSolve::Compute( CDataStore& dat
         std::shared_ptr<const CLineModelResult> result = std::dynamic_pointer_cast<const CLineModelResult>( results.lock() );
 
         std::shared_ptr<CPdfMargZLogResult> postmargZResult = std::shared_ptr<CPdfMargZLogResult>(new CPdfMargZLogResult());
-        Int32 retCombinePdf = CombinePDF(result, m_opt_rigidity, m_opt_pdfcombination, m_opt_stronglinesprior, m_opt_euclidNHaEmittersPriorStrength, postmargZResult);
+        std::shared_ptr<CPdfLogResult> zpriorResult = std::shared_ptr<CPdfLogResult>(new CPdfLogResult());
+        Int32 retCombinePdf = CombinePDF(result,
+                                         m_opt_rigidity,
+                                         m_opt_pdfcombination,
+                                         m_opt_stronglinesprior,
+                                         m_opt_euclidNHaEmittersPriorStrength,
+                                         m_opt_modelZPriorStrength,
+                                         postmargZResult,
+                                         zpriorResult);
 
         if(retCombinePdf!=0)
         {
             Log.LogError("Linemodel: Pdfz computation failed");
         }else{
+
+            Log.LogDetail("    linemodelsolve: Storing priors (size=%d)", zpriorResult->Redshifts.size());
+            std::string priorPath = outputPdfRelDir+"/logprior.logP_Z_data";
+            dataStore.StoreGlobalResult( priorPath.c_str(), zpriorResult);
 
             //check pdf sum=1
             CPdfz pdfz;
@@ -318,7 +353,7 @@ std::shared_ptr<CLineModelSolveResult> CLineModelSolve::Compute( CDataStore& dat
             for(Int32 km=0; km<result->ChiSquareTplshapes.size(); km++)
             {
                 std::shared_ptr<CLineModelResult> result_chisquaretplshape = std::shared_ptr<CLineModelResult>( new CLineModelResult() );
-                result_chisquaretplshape->Init( result->Redshifts, result->restRayList, 0, std::vector<Float64>());
+                result_chisquaretplshape->Init( result->Redshifts, result->restRayList, 0, std::vector<Float64>(), std::vector<CPdfz::SPriorZ>());
                 for(Int32 kz=0; kz<result->Redshifts.size(); kz++)
                 {
                     result_chisquaretplshape->ChiSquare[kz] = result->ChiSquareTplshapes[km][kz];
@@ -333,7 +368,7 @@ std::shared_ptr<CLineModelSolveResult> CLineModelSolve::Compute( CDataStore& dat
             for(Int32 km=0; km<result->ScaleMargCorrectionTplshapes.size(); km++)
             {
                 std::shared_ptr<CLineModelResult> result_chisquaretplshape = std::shared_ptr<CLineModelResult>( new CLineModelResult() );
-                result_chisquaretplshape->Init( result->Redshifts, result->restRayList, 0, std::vector<Float64>());
+                result_chisquaretplshape->Init( result->Redshifts, result->restRayList, 0, std::vector<Float64>(), std::vector<CPdfz::SPriorZ>());
                 for(Int32 kz=0; kz<result->Redshifts.size(); kz++)
                 {
                     result_chisquaretplshape->ChiSquare[kz] = result->ScaleMargCorrectionTplshapes[km][kz];
@@ -356,7 +391,9 @@ Int32 CLineModelSolve::CombinePDF(std::shared_ptr<const CLineModelResult> result
                                   std::string opt_combine,
                                   Float64 opt_stronglinesprior,
                                   Float64 opt_euclidNHaEmittersPriorStrength,
-                                  std::shared_ptr<CPdfMargZLogResult> postmargZResult)
+                                  Float64 opt_modelPriorZStrength,
+                                  std::shared_ptr<CPdfMargZLogResult> postmargZResult,
+                                  std::shared_ptr<CPdfLogResult> zPrior)
 {
     bool zPriorStrongLinePresence = (opt_stronglinesprior>0.0);
     if(zPriorStrongLinePresence)
@@ -365,6 +402,15 @@ Int32 CLineModelSolve::CombinePDF(std::shared_ptr<const CLineModelResult> result
     }else{
         Log.LogInfo("Linemodel: Pdfz computation: StrongLinePresence prior disabled");
     }
+    Float64 opt_nlines_snr_penalization_factor = -1;
+    bool zPriorNLineSNR = (opt_nlines_snr_penalization_factor>0.0);
+    if(zPriorNLineSNR)
+    {
+        Log.LogInfo("Linemodel: Pdfz computation: N lines snr>cut prior enabled: factor=%e", opt_nlines_snr_penalization_factor);
+    }else{
+        Log.LogInfo("Linemodel: Pdfz computation: N lines snr>cut prior disabled");
+    }
+
     //hardcoded Euclid-NHaZprior parameter
     bool zPriorEuclidNHa = false;
     if(opt_euclidNHaEmittersPriorStrength>0.0)
@@ -374,6 +420,34 @@ Int32 CLineModelSolve::CombinePDF(std::shared_ptr<const CLineModelResult> result
     }else{
         Log.LogInfo("Linemodel: Pdfz computation: EuclidNHa prior disabled");
     }
+
+    bool zPriorFromModel=true;
+    bool allPriorsZero=true;
+    Log.LogInfo("Linemodel: Pdfz computation: PriorPzTplshapes.size()=%d", result->PriorPzTplshapes.size());
+    if(result->PriorPzTplshapes.size()==result->ChiSquareTplshapes.size())
+    {
+        for(Int32 k=0; k<result->ChiSquareTplshapes.size(); k++)
+        {
+            if(result->PriorPzTplshapes[k].amp>0.0 || result->PriorPzTplshapes[k].p0>0.0)
+            {
+                allPriorsZero=false;
+            }
+        }
+        if(allPriorsZero)
+        {
+           zPriorFromModel=false;
+        }
+    }else{
+        zPriorFromModel=false;
+    }
+    if(zPriorFromModel && opt_modelPriorZStrength>0.0)
+    {
+        Log.LogInfo("Linemodel: Pdfz computation: Model Prior Pz enabled");
+    }else{
+        zPriorFromModel = false;
+        Log.LogInfo("Linemodel: Pdfz computation: Model Prior Pz disabled");
+    }
+
 
     Log.LogInfo("Linemodel: Pdfz computation");
     CPdfz pdfz;
@@ -392,7 +466,6 @@ Int32 CLineModelSolve::CombinePDF(std::shared_ptr<const CLineModelResult> result
         {
             Log.LogInfo("Linemodel: Pdfz computation - simple (method=bestchi2)");
         }
-        std::shared_ptr<CPdfLogResult> zPrior = std::shared_ptr<CPdfLogResult>(new CPdfLogResult());
         zPrior->SetSize(result->Redshifts.size());
         for ( UInt32 k=0; k<result->Redshifts.size(); k++)
         {
@@ -402,6 +475,7 @@ Int32 CLineModelSolve::CombinePDF(std::shared_ptr<const CLineModelResult> result
         {
             UInt32 lineTypeFilter = 1;// for emission lines only
             std::vector<bool> strongLinePresence = result->GetStrongLinesPresence(lineTypeFilter, result->LineModelSolutions);
+            //std::vector<bool> strongLinePresence = result->GetStrongestLineIsHa(result->LineModelSolutions); //warning: hardcoded selpp replaced by whasp for lm-tplratio
             zPrior->valProbaLog = pdfz.GetStrongLinePresenceLogZPrior(strongLinePresence, opt_stronglinesprior);
         }else{
             zPrior->valProbaLog = pdfz.GetConstantLogZPrior(result->Redshifts.size());
@@ -410,6 +484,12 @@ Int32 CLineModelSolve::CombinePDF(std::shared_ptr<const CLineModelResult> result
         {
             std::vector<Float64> zlogPriorNHa = pdfz.GetEuclidNhaLogZPrior(result->Redshifts, opt_euclidNHaEmittersPriorStrength);
             zPrior->valProbaLog = pdfz.CombineLogZPrior(zPrior->valProbaLog, zlogPriorNHa);
+        }
+        if(zPriorNLineSNR)
+        {
+            std::vector<Int32> n_lines_above_snr = result->GetNLinesAboveSnrcut(result->LineModelSolutions);
+            std::vector<Float64> zlogPriorNLinesAboveSNR = pdfz.GetNLinesSNRAboveCutLogZPrior(n_lines_above_snr, opt_nlines_snr_penalization_factor);
+            zPrior->valProbaLog = pdfz.CombineLogZPrior(zPrior->valProbaLog, zlogPriorNLinesAboveSNR);
         }
 
         //correct chi2 if necessary: todo add switch
@@ -420,8 +500,6 @@ Int32 CLineModelSolve::CombinePDF(std::shared_ptr<const CLineModelResult> result
         }
         retPdfz = pdfz.Compute(logLikelihoodCorrected, result->Redshifts, cstLog, zPrior->valProbaLog, logProba, logEvidence);
         if(retPdfz==0){
-            //store.StoreGlobalResult( "zPDF/logprior.logP_Z_data", zPrior);
-
             postmargZResult->countTPL = result->Redshifts.size(); // assumed 1 model per z
             postmargZResult->Redshifts.resize(result->Redshifts.size());
             postmargZResult->valProbaLog.resize(result->Redshifts.size());
@@ -454,6 +532,17 @@ Int32 CLineModelSolve::CombinePDF(std::shared_ptr<const CLineModelResult> result
                 std::vector<Float64> zlogPriorNHa = pdfz.GetEuclidNhaLogZPrior(result->Redshifts, opt_euclidNHaEmittersPriorStrength);
                 _prior = pdfz.CombineLogZPrior(_prior, zlogPriorNHa);
             }
+            if(zPriorNLineSNR)
+            {
+                std::vector<Int32> n_lines_above_snr = result->NLinesAboveSNRTplshapes[k];
+                std::vector<Float64> zlogPriorNLinesAboveSNR = pdfz.GetNLinesSNRAboveCutLogZPrior(n_lines_above_snr, opt_nlines_snr_penalization_factor);
+                _prior = pdfz.CombineLogZPrior(_prior, zlogPriorNLinesAboveSNR);
+            }
+            if(zPriorFromModel)
+            {
+                std::vector<Float64> zlogPriorPzModel = pdfz.GetModelZPrior(result->PriorPzTplshapes[k], result->Redshifts, opt_modelPriorZStrength);
+                _prior = pdfz.CombineLogZPrior(_prior, zlogPriorPzModel);
+            }
             zpriorsTplshapes.push_back(_prior);
         }
 
@@ -471,7 +560,12 @@ Int32 CLineModelSolve::CombinePDF(std::shared_ptr<const CLineModelResult> result
 
         if(opt_combine=="marg")
         {
-            retPdfz = pdfz.Marginalize( result->Redshifts, ChiSquareTplshapesCorrected, zpriorsTplshapes, cstLog, postmargZResult, result->PriorTplshapes);
+            retPdfz = pdfz.Marginalize(result->Redshifts,
+                                       ChiSquareTplshapesCorrected,
+                                       zpriorsTplshapes,
+                                       cstLog,
+                                       postmargZResult,
+                                       result->PriorTplshapes);
         }else{
             retPdfz = pdfz.BestProba( result->Redshifts, ChiSquareTplshapesCorrected, zpriorsTplshapes, cstLog, postmargZResult);
         }
@@ -675,7 +769,7 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
     }
     linemodel.m_opt_firstpass_fittingmethod=m_opt_firstpass_fittingmethod;
     //
-    if(m_opt_continuumcomponent=="tplfit"){
+    if(m_opt_continuumcomponent=="tplfit" || m_opt_continuumcomponent=="tplfitauto"){
         linemodel.m_opt_tplfit_dustFit = Int32(m_opt_tplfit_dustfit=="yes");
         linemodel.m_opt_tplfit_extinction = Int32(m_opt_tplfit_igmfit=="yes");
         linemodel.m_opt_fitcontinuum_maxN = m_opt_continuumfitcount;
@@ -683,6 +777,15 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
         linemodel.m_opt_secondpasslcfittingmethod = m_opt_secondpasslcfittingmethod;
 
     }
+
+    linemodel.m_opt_lya_forcefit=m_opt_lya_forcefit;
+    linemodel.m_opt_lya_forcedisablefit=m_opt_lya_forcedisablefit;
+    linemodel.m_opt_lya_fit_asym_min=m_opt_lya_fit_asym_min;
+    linemodel.m_opt_lya_fit_asym_max=m_opt_lya_fit_asym_max;
+    linemodel.m_opt_lya_fit_asym_step=m_opt_lya_fit_asym_step;
+    linemodel.m_opt_lya_fit_width_min=m_opt_lya_fit_width_min;
+    linemodel.m_opt_lya_fit_width_max=m_opt_lya_fit_width_max;
+    linemodel.m_opt_lya_fit_width_step=m_opt_lya_fit_width_step;
 
     if(m_opt_rigidity=="tplshape")
     {
@@ -752,33 +855,164 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
     //Compute z-candidates
     //**************************************************
     Bool overrideUseBestchi2forCandidates = false;
-    // Int32 sign = 1;
+    Int32 sign = 1;
     std::vector<Float64> fvals;
     std::shared_ptr<const CLineModelResult> lmresult = std::dynamic_pointer_cast<const CLineModelResult>( linemodel.getResult() );
     if(overrideUseBestchi2forCandidates)
     {
-      // sign = -1;
+        sign = -1;
         fvals = lmresult->ChiSquare;
     }else{
         std::shared_ptr<CPdfMargZLogResult> postmargZResult = std::shared_ptr<CPdfMargZLogResult>(new CPdfMargZLogResult());
-        Int32 retCombinePdf = CombinePDF(lmresult, m_opt_rigidity, m_opt_pdfcombination, m_opt_stronglinesprior, m_opt_euclidNHaEmittersPriorStrength, postmargZResult);
+        std::shared_ptr<CPdfLogResult> zpriorResult = std::shared_ptr<CPdfLogResult>(new CPdfLogResult());
+        Int32 retCombinePdf = CombinePDF(lmresult,
+                                         m_opt_rigidity,
+                                         m_opt_pdfcombination,
+                                         m_opt_stronglinesprior,
+                                         m_opt_euclidNHaEmittersPriorStrength,
+                                         m_opt_modelZPriorStrength,
+                                         postmargZResult,
+                                         zpriorResult);
 
         if(retCombinePdf!=0)
         {
             Log.LogError("Linemodel: Candidates search - Pdfz computation failed");
             return false;
         }else{
-          // sign = -1;
+            sign = 1;
             fvals = postmargZResult->valProbaLog;
         }
     }
-    Int32 retCandidates = linemodel.ComputeCandidates(m_opt_extremacount, 1, fvals, m_opt_candidatesLogprobaCutThreshold);
+    Int32 retCandidates = linemodel.ComputeCandidates(m_opt_extremacount, sign, fvals, m_opt_candidatesLogprobaCutThreshold);
     if( retCandidates!=0 )
     {
         Log.LogError( "Linemodel: Search for z-candidates failed. Aborting" );
         throw std::runtime_error("Linemodel: Search for z-candidates failed. Aborting");
     }
 
+
+
+    //**************************************************
+    //FIRST PASS + CANDIDATES - B
+    //**************************************************
+    Bool enableFirstpass_B = true && (m_opt_continuumcomponent=="tplfit" || m_opt_continuumcomponent=="tplfitauto") && (m_opt_extremacount>1);
+    COperatorLineModel linemodel_fpb;
+    Int32 retInitB = linemodel_fpb.Init(_spc, redshifts);
+    if( retInitB!=0 )
+    {
+        Log.LogError( "Line Model fpB, init failed. Aborting" );
+        return false;
+    }
+    if(enableFirstpass_B)
+    {
+        Log.LogInfo( "Line Model FIRST PASS B enabled. Computing now." );
+
+        linemodel_fpb.m_opt_firstpass_fittingmethod=m_opt_firstpass_fittingmethod;
+        //
+        std::string fpb_opt_continuumcomponent = "fromspectrum";
+        if(fpb_opt_continuumcomponent=="tplfit" || fpb_opt_continuumcomponent=="tplfitauto"){
+            linemodel_fpb.m_opt_tplfit_dustFit = Int32(m_opt_tplfit_dustfit=="yes");
+            linemodel_fpb.m_opt_tplfit_extinction = Int32(m_opt_tplfit_igmfit=="yes");
+            linemodel_fpb.m_opt_fitcontinuum_maxN = m_opt_continuumfitcount;
+            linemodel_fpb.m_opt_tplfit_ignoreLinesSupport = Int32(m_opt_tplfit_ignoreLinesSupport=="yes");
+            linemodel_fpb.m_opt_secondpasslcfittingmethod = m_opt_secondpasslcfittingmethod;
+
+        }
+
+        if(m_opt_rigidity=="tplshape")
+        {
+            linemodel_fpb.m_opt_tplratio_ismFit = Int32(m_opt_tplratio_ismfit=="yes");
+            linemodel_fpb.m_opt_firstpass_tplratio_ismFit = Int32(m_opt_firstpass_tplratio_ismfit=="yes");
+        }
+
+        if(fpb_opt_continuumcomponent=="fromspectrum"){
+            //check the continuum validity
+            if( !_spcContinuum.IsFluxValid( lambdaRange.GetBegin(), lambdaRange.GetEnd() ) ){
+                Log.LogWarning("Line Model - Failed to validate continuum spectrum flux on wavelength range (%.1f ; %.1f)",lambdaRange.GetBegin(), lambdaRange.GetEnd() );
+                //throw std::runtime_error("Failed to validate continuum  flux");
+            }else{
+                Log.LogDetail( "Line Model - Successfully validated continuum flux on wavelength range (%.1f ; %.1f)", lambdaRange.GetBegin(), lambdaRange.GetEnd() );
+            }
+        }
+
+        //**************************************************
+        //FIRST PASS B
+        //**************************************************
+        Int32 retFirstPass = linemodel_fpb.ComputeFirstPass(dataStore,
+                                              _spc,
+                                              _spcContinuum,
+                                              tplCatalog,
+                                              tplCategoryList,
+                                              m_calibrationPath,
+                                              restraycatalog,
+                                              m_opt_linetypefilter,
+                                              m_opt_lineforcefilter,
+                                              lambdaRange,
+                                              m_opt_fittingmethod,
+                                              fpb_opt_continuumcomponent,
+                                              m_opt_lineWidthType,
+                                              m_opt_resolution,
+                                              m_opt_velocity_emission,
+                                              m_opt_velocity_absorption,
+                                              m_opt_continuumreest,
+                                              m_opt_rules,
+                                              m_opt_velocityfit,
+                                              m_opt_firstpass_largegridstep,
+                                              m_opt_firstpass_largegridsampling,
+                                              m_opt_rigidity,
+                                              m_opt_tplratio_reldirpath,
+                                              m_opt_offsets_reldirpath);
+        if( retFirstPass!=0 )
+        {
+            Log.LogError( "Line Model, first pass failed. Aborting" );
+            return false;
+        }
+
+        //**************************************************
+        //Compute z-candidates B
+        //**************************************************
+        Int32 fpb_opt_extremacount = 5;
+        Bool overrideUseBestchi2forCandidates = false;
+        Int32 sign = 1;
+        std::vector<Float64> fvals;
+        std::shared_ptr<const CLineModelResult> lmresult = std::dynamic_pointer_cast<const CLineModelResult>( linemodel_fpb.getResult() );
+        if(overrideUseBestchi2forCandidates)
+        {
+            sign = -1;
+            fvals = lmresult->ChiSquare;
+        }else{
+            std::shared_ptr<CPdfMargZLogResult> postmargZResult = std::shared_ptr<CPdfMargZLogResult>(new CPdfMargZLogResult());
+            std::shared_ptr<CPdfLogResult> zpriorResult = std::shared_ptr<CPdfLogResult>(new CPdfLogResult());
+            Int32 retCombinePdf = CombinePDF(lmresult,
+                                             m_opt_rigidity,
+                                             m_opt_pdfcombination,
+                                             m_opt_stronglinesprior,
+                                             m_opt_euclidNHaEmittersPriorStrength,
+                                             m_opt_modelZPriorStrength,
+                                             postmargZResult,
+                                             zpriorResult);
+
+            if(retCombinePdf!=0)
+            {
+                Log.LogError("linemodel_fpb: Candidates search - Pdfz computation failed");
+                return false;
+            }else{
+                sign = 1;
+                fvals = postmargZResult->valProbaLog;
+            }
+        }
+        Int32 retCandidates = linemodel_fpb.ComputeCandidates(fpb_opt_extremacount, sign, fvals, m_opt_candidatesLogprobaCutThreshold);
+        if( retCandidates!=0 )
+        {
+            Log.LogError( "linemodel_fpb: Search for z-candidates failed. Aborting" );
+            throw std::runtime_error("linemodel_fpb: Search for z-candidates failed. Aborting");
+        }
+        //**************************************************
+        //COMBINE CANDIDATES
+        //**************************************************
+        linemodel.Combine_firstpass_candidates(linemodel_fpb.GetFirstpassExtremaResult());
+
+    }    
 
     //**************************************************
     //SECOND PASS
@@ -796,7 +1030,6 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
                                                           m_opt_linetypefilter,
                                                           m_opt_lineforcefilter,
                                                           lambdaRange,
-                                                          m_opt_extremacount,
                                                           m_opt_fittingmethod,
                                                           m_opt_continuumcomponent,
                                                           m_opt_lineWidthType,
@@ -840,6 +1073,15 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
         firstpassExtremaResultsStr.append("_firstpass_extrema");
         //Log.LogError("Line Model, saving firstpass extrema results: %s", firstpassExtremaResultsStr.c_str());
         dataStore.StoreScopedGlobalResult( firstpassExtremaResultsStr.c_str(), linemodel.GetFirstpassExtremaResult() );
+
+        //save linemodel firstpass extrema B results
+        if(enableFirstpass_B)
+        {
+            std::string firstpassbExtremaResultsStr=scopeStr.c_str();
+            firstpassbExtremaResultsStr.append("_firstpassb_extrema");
+            //Log.LogError("Line Model, saving firstpassb extrema results: %s", firstpassExtremaResultsStr.c_str());
+            dataStore.StoreScopedGlobalResult( firstpassbExtremaResultsStr.c_str(), linemodel_fpb.GetFirstpassExtremaResult() );
+        }
 
         //save linemodel fitting and spectrum-model results
         linemodel.storeGlobalModelResults(dataStore);

@@ -77,7 +77,8 @@ class processRecombine(object):
             print("WARNING: log.txt has been recombined!")
             
         print("INFO: merging BRIEF log files")
-        self.mergeCsvFiles(subpathsList, datasetOutputPath, fileName="log.txt", maxNLines=10000)
+        self.mergeCsvFiles(subpathsList, datasetOutputPath, fileName="log.txt", maxNLines=-1)
+        #self.mergeCsvFiles(subpathsList, datasetOutputPath, fileName="log.txt", maxNLines=10000)
         print("WARNING: log file BRIEF has been recombined!")
         
 
