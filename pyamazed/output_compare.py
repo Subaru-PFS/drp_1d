@@ -11,6 +11,7 @@ import json
 import argparse
 import numpy as np
 from pprint import pprint
+from astropy.io import fits
 
 # GLOBAL VARIABLES FOR COMPARISION PRECISION
 FLOAT_PRECISION = 1e-12
@@ -58,6 +59,17 @@ def int_cmp(x, y):
     return int(x) == int(y)
 
 
+def array_cmp(element_cmp):
+    """
+    Check that the two arrays are equal.
+
+    Arrays are compared element-wise with element_cmp
+
+    :return: Return True if the two arrays are equal.
+    """
+    return lambda X, Y: np.all([element_cmp(x, y) for (x, y) in zip(X, Y)])
+
+
 def read_spectrumlist(spectrum_list_file):
     """
     Read the spectrum list file and get all the process id for each spectrum.
@@ -73,10 +85,78 @@ def read_spectrumlist(spectrum_list_file):
     return spectrumList
 
 
-class ResultsComparator():
+class ResultsComparator:
 
     def compare(self, path1, path2):
         pass
+
+
+class FitsComparator(ResultsComparator):
+    """Compare two FITS files"""
+
+    @staticmethod
+    def compare_columns(hdu, name, comparator, col1, col2):
+        result = []
+        for i, (v1, v2) in enumerate(zip(col1, col2)):
+            if not comparator(v1, v2):
+                if len(result) < 3:
+                    result.append('HDU {}, column {}, line {} : '
+                                  '{} != {}'.format(hdu, name, i, v1, v2))
+                else:
+                    result.append('...')
+                    break
+        return result
+
+    def compare_hdu(self, name, hdul1, hdul2):
+        result = []
+        hdu1 = hdul1[name].data
+        hdu2 = hdul2[name].data
+        for col, comparator in self.tests[name].items():
+            if col == '__key':
+                continue
+            r = self.compare_columns(name, col, comparator,
+                                     hdu1[col], hdu2[col])
+            if r:
+                result.extend(r)
+        return result
+
+    def compare(self, path1, path2):
+        result = []
+        with fits.open(path1) as hdul1, fits.open(path2) as hdul2:
+            for name in self.tests.keys():
+                r = self.compare_hdu(name, hdul1, hdul2)
+                if r:
+                    result.extend(r)
+        return result
+
+
+class SpeClassificationCatalogComparator(FitsComparator):
+    """Compare two Euclid SpeClassificationCatalog"""
+    tests = {
+        'SPE_CLASSIFICATION_CAT': {'__key': 'OBJECT_ID',
+                                   'OBJECT_ID': int_cmp,
+                                   'SPE_STAR_PROB': float_cmp(FLOAT_PRECISION),
+                                   'SPE_GAL_PROB': float_cmp(FLOAT_PRECISION),
+                                   'SPE_QSO_PROB': float_cmp(FLOAT_PRECISION)}}
+
+
+class SpeZCatalogComparator(FitsComparator):
+    """Compare two Euclid SpeZCatalog"""
+    tests = {
+        'SPE_REDSHIFT_CAT': {'__key': 'SPE_RANK',
+                             'OBJECT_ID': int_cmp,
+                             'SPE_RANK': int_cmp,
+                             'SPE_Z':  float_cmp(FLOAT_PRECISION),
+                             'SPE_Z_REL': float_cmp(FLOAT_PRECISION)}}
+
+
+class SpePdfCatalogComparator(FitsComparator):
+    """Compare two Euclid SpeZCatalog"""
+    tests = {
+        'SPE_PDF_CAT': {'__key': 'SPE_RANK',
+                        'OBJECT_ID': int_cmp,
+                        'SPE_PDF_CLASS': str_cmp,
+                        'SPE_PDF': array_cmp(float_cmp(FLOAT_PRECISION))}}
 
 
 class OutputDirComparator(ResultsComparator):

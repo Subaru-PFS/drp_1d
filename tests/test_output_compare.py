@@ -10,15 +10,21 @@ import csv
 import json
 import shutil
 import pytest
-from tempfile import NamedTemporaryFile, TemporaryDirectory, mkdtemp
-from pyamazed.output_compare import read_spectrumlist, float_cmp, int_cmp, \
-                                    str_cmp, main, \
-                                    CSVComparator, JSONComparator,\
-                                    FLOAT_PRECISION, PDF_PRECISION
+from tempfile import NamedTemporaryFile, mkdtemp
+from astropy.io import fits
+import numpy as np
+from pyamazed.output_compare import (read_spectrumlist, float_cmp, int_cmp,
+                                     str_cmp,
+                                     CSVComparator, JSONComparator,
+                                     FLOAT_PRECISION,
+                                     SpeClassificationCatalogComparator,
+                                     SpeZCatalogComparator,
+                                     SpePdfCatalogComparator)
 
-###############################################################################
-#                               fixture functions                             #
-###############################################################################
+#
+# Fixture functions
+#
+
 
 @pytest.fixture
 def spectrum_list():
@@ -95,9 +101,25 @@ def dummy_csv_res(float_arg):
 
     return temp_dir
 
-###############################################################################
-#                              tests functions                                #
-###############################################################################
+
+def dummy_fits_file(data):
+    """Create a dummy fits file"""
+    fits_file = NamedTemporaryFile()
+    hdul = fits.HDUList()
+    hdul.append(fits.PrimaryHDU())
+    for name in data.keys():
+        columns = []
+        for col in data[name]:
+            columns.append(fits.Column(**col))
+        hdu = fits.BinTableHDU.from_columns(columns)
+        hdu.name = name
+        hdul.append(hdu)
+    hdul.writeto(fits_file)
+    return fits_file
+
+#
+# Tests functions
+#
 
 
 def test_read_spectrumlist(spectrum_list):
@@ -131,6 +153,7 @@ def test_compare():
 
     shutil.rmtree(f1)
     shutil.rmtree(f2)
+
 
 def test_CSVComparator():
     """
@@ -174,3 +197,110 @@ def test_int_cmp():
     # NOTE: int_cmp() does not need to be tested
     """
     pass
+
+
+def test_speclassificationcatalogcomparator():
+    data = {'SPE_CLASSIFICATION_CAT': [
+        {'name': 'OBJECT_ID',
+         'array': np.array([0, 0, 1, 1]), 'format': 'K'},
+        {'name': 'SPE_STAR_PROB',
+         'array': np.array([0.5, 0.5, 0.5, 0.5]), 'format': 'E'},
+        {'name': 'SPE_GAL_PROB',
+         'array': np.array([0.5, 0.5, 0.5, 0.5]), 'format': 'E'},
+        {'name': 'SPE_QSO_PROB',
+         'array': np.array([0.5, 0.5, 0.5, 0.5]), 'format': 'E'}]}
+
+    f1 = dummy_fits_file(data)
+    comparator = SpeClassificationCatalogComparator()
+    r = comparator.compare(f1.name, f1.name)
+    assert r == []
+
+    data2 = {'SPE_CLASSIFICATION_CAT': [
+        {'name': 'OBJECT_ID',
+         'array': np.array([0, 0, 1, 1]), 'format': 'K'},
+        {'name': 'SPE_STAR_PROB',
+         'array': np.array([0.5, 0.5, 0.5, 0.5]), 'format': 'E'},
+        {'name': 'SPE_GAL_PROB',
+         'array': np.array([0.6, 0.7, 0.8, 0.9]), 'format': 'E'},
+        {'name': 'SPE_QSO_PROB',
+         'array': np.array([0.5, 0.5, 0.5, 0.5]), 'format': 'E'}]}
+    f2 = dummy_fits_file(data2)
+    comparator = SpeClassificationCatalogComparator()
+    r = comparator.compare(f1.name, f2.name)
+    assert r[0].startswith('HDU SPE_CLASSIFICATION_CAT, column SPE_GAL_PROB, '
+                           'line 0 : 0.5 != 0.')
+    assert r[1].startswith('HDU SPE_CLASSIFICATION_CAT, column SPE_GAL_PROB, '
+                           'line 1 : 0.5 != 0.')
+    assert r[2].startswith('HDU SPE_CLASSIFICATION_CAT, column SPE_GAL_PROB, '
+                           'line 2 : 0.5 != 0.')
+    assert r[3] == '...'
+
+
+def test_spezcatalogcomparator():
+    data = {'SPE_REDSHIFT_CAT': [
+        {'name': 'OBJECT_ID',
+         'array': np.array([1234, 1234, 1234, 1234]), 'format': 'K'},
+        {'name': 'SPE_RANK',
+         'array': np.array([0, 1, 2, 3]), 'format': 'K'},
+        {'name': 'SPE_Z',
+         'array': np.array([2.2, 0.47, 0.43, 0.52]), 'format': 'E'},
+        {'name': 'SPE_Z_REL',
+         'array': np.array([5.1e-2, 3.2e-2, 2.2e-2, 1.2e-2]), 'format': 'E'}]}
+    f1 = dummy_fits_file(data)
+    comparator = SpeZCatalogComparator()
+    r = comparator.compare(f1.name, f1.name)
+    assert r == []
+
+    data2 = {'SPE_REDSHIFT_CAT': [
+        {'name': 'OBJECT_ID',
+         'array': np.array([1234, 1234, 1234, 1234]), 'format': 'K'},
+        {'name': 'SPE_RANK',
+         'array': np.array([0, 1, 2, 3]), 'format': 'K'},
+        {'name': 'SPE_Z',
+         'array': np.array([2.2, 0.47, 0.43, 0.52]), 'format': 'E'},
+        {'name': 'SPE_Z_REL',
+         'array': np.array([5.1e-2, 3.2e-2, 2.3e-2, 1.2e-2]), 'format': 'E'}]}
+    f2 = dummy_fits_file(data2)
+    comparator = SpeZCatalogComparator()
+    r = comparator.compare(f1.name, f2.name)
+    assert r[0].startswith('HDU SPE_REDSHIFT_CAT, column SPE_Z_REL, '
+                           'line 2 : 0.02')
+
+
+def test_spepdfcatalogcomparator():
+    data = {'SPE_PDF_CAT': [
+        {'name': 'OBJECT_ID',
+         'array': np.array([1234, ]), 'format': 'K'},
+        {'name': 'SPE_PDF_CLASS',
+         'array': np.array(['6']), 'format': 'A'},
+        {'name': 'SPE_PDF',
+         'array': np.array([[0.1, 1.1, 2.2, 3.3, 4.4]]), 'format': '5E'}]}
+    f1 = dummy_fits_file(data)
+    comparator = SpePdfCatalogComparator()
+    r = comparator.compare(f1.name, f1.name)
+    assert r == []
+
+    data2 = {'SPE_PDF_CAT': [
+        {'name': 'OBJECT_ID',
+         'array': np.array([1234, ]), 'format': 'K'},
+        {'name': 'SPE_PDF_CLASS',
+         'array': np.array(['6']), 'format': 'A'},
+        {'name': 'SPE_PDF',
+         'array': np.array([[0.1, 1.1, 2.2, 3.3, 4.5]]), 'format': '5E'}]}
+    f2 = dummy_fits_file(data2)
+    r = comparator.compare(f1.name, f2.name)
+    assert len(r) == 1
+    assert r[0].startswith('HDU SPE_PDF_CAT, column SPE_PDF, line 0 : [0.1')
+
+    data3 = {'SPE_PDF_CAT': [
+        {'name': 'OBJECT_ID',
+         'array': np.array([1234, ]), 'format': 'K'},
+        {'name': 'SPE_PDF_CLASS',
+         'array': np.array(['6']), 'format': 'A'},
+        {'name': 'SPE_PDF',
+         'array': np.array([[0.1, 1.1 + FLOAT_PRECISION / 1.1,
+                             2.2, 3.3,
+                             4.4 + FLOAT_PRECISION / 2]]), 'format': '5E'}]}
+    f3 = dummy_fits_file(data3)
+    r = comparator.compare(f1.name, f3.name)
+    assert r == []
