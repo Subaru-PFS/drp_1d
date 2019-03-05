@@ -151,12 +151,54 @@ class SpeZCatalogComparator(FitsComparator):
 
 
 class SpePdfCatalogComparator(FitsComparator):
-    """Compare two Euclid SpeZCatalog"""
+    """Compare two Euclid SpePdfCatalog"""
     tests = {
-        'SPE_PDF_CAT': {'__key': 'SPE_RANK',
+        'SPE_PDF_CAT': {'__key': 'OBJECT_ID',
                         'OBJECT_ID': int_cmp,
                         'SPE_PDF_CLASS': str_cmp,
                         'SPE_PDF': array_cmp(float_cmp(FLOAT_PRECISION))}}
+
+
+class SpeLineCatalogComparator(FitsComparator):
+    """Compare two Euclid SpeLineCatalog"""
+    tests = {
+        'SPE_LINE_FEATURES_CAT': {
+            '__key': 'OBJECT_ID',
+            'OBJECT_ID': int_cmp,
+            'SPE_RANK': int_cmp,
+            'SPE_LINE_ID': int_cmp,
+            'SPE_LINE_NAME': str_cmp,
+            'SPE_LINE_CENTRAL_WL': float_cmp(FLOAT_PRECISION),
+            'SPE_LINE_CENTRAL_WL_ERR': float_cmp(FLOAT_PRECISION),
+            'SPE_LINE_FLUX': float_cmp(FLOAT_PRECISION),
+            'SPE_LINE_FLUX_ERR': float_cmp(FLOAT_PRECISION),
+            'SPE_LINE_EW': float_cmp(FLOAT_PRECISION),
+            'SPE_LINE_EW_ERR': float_cmp(FLOAT_PRECISION),
+            'SPE_LINE_FWHM': float_cmp(FLOAT_PRECISION),
+            'SPE_LINE_FWHM_ERR': float_cmp(FLOAT_PRECISION)}}
+
+
+class SpeAbsorptionCatalogComparator(FitsComparator):
+    """Compare two Euclid SpeAbsorptionCatalog"""
+    tests = {
+        'SPE_SPECTRAL_FEATURES_CAT': {
+            '__key': 'OBJECT_ID',
+            'OBJECT_ID': int_cmp,
+            'SPE_RANK': int_cmp,
+            'SPE_LINE_ID': int_cmp,
+            'SPE_ABSORPTION_NAME': str_cmp,
+            'SPE_ABSORPTION': float_cmp(FLOAT_PRECISION),
+            'SPE_ABSORPTION_ERR': float_cmp(FLOAT_PRECISION)}}
+
+
+class SpeParametersCatalogComparator(FitsComparator):
+    """Compare two Euclid SpeParametersCatalog"""
+    tests = {
+        'SPE_REST_FRAME_PARAMETERS_CAT': {
+            '__key': 'OBJECT_ID',
+            'OBJECT_ID': int_cmp,
+            'SPE_RANK': int_cmp,
+            'SPE_SFR': float_cmp(FLOAT_PRECISION)}}
 
 
 class OutputDirComparator(ResultsComparator):
