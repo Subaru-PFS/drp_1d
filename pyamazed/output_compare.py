@@ -12,6 +12,8 @@ import argparse
 import numpy as np
 from pprint import pprint
 from astropy.io import fits
+from xml.etree import ElementTree
+from IPython import embed
 
 # GLOBAL VARIABLES FOR COMPARISION PRECISION
 FLOAT_PRECISION = 1e-12
@@ -157,6 +159,59 @@ class SpePdfCatalogComparator(FitsComparator):
                         'OBJECT_ID': int_cmp,
                         'SPE_PDF_CLASS': str_cmp,
                         'SPE_PDF': array_cmp(float_cmp(FLOAT_PRECISION))}}
+
+
+def read_xml(xml):
+
+    xml_tree = ElementTree.parse(xml)
+    root = xml_tree.getroot()
+
+    type = ['SpeParametersCatalog', 'SpeAbsorptionCatalog', 'SpeLineCatalog',
+            'SpePdfCatalog', 'SpeZCatalog', 'SpeClassificationCatalog']
+
+    product_dict = {}
+    for element in type:
+        basename = root.findall('./Data/' + element + '/DataContainer/FileName')
+        filename = basename[0].text
+        product_dict[element] = filename
+
+    return product_dict
+
+
+class EuclidXMLComparator(ResultsComparator):
+
+    def compare(self, xml1, xml2):
+        """
+        Compares XML data product files.
+
+        :param xml1: Path to the reference XML.
+        :param xml2: Path to the XML being compared.
+        :return: Return the result of the comparison.
+        """
+        map_dict = {
+            SpeParametersCatalog : SpeParametersCatalogComparator(),
+            SpeAbsorptionCatalog : SpeAbsorptionCatalogComparator(),
+            SpeLineCatalog : SpeLineCatalogComparator(),
+            SpePdfCatalog : SpePdfCatalogComparator(),
+            SpeZCatalog : SpeZCatalogComparator(),
+            SpeClassificationCatalog : SpeClassificationCatalogComparator()
+        }
+        result = []
+        dict1 = read_xml(xml1)
+        dict2 = read_xml(xml2)
+
+        for key, value in dict1.items():
+            try:
+                r = map_dict.get(key).compare(os.path.join(os.path.dirname(xml1),
+                                                  value),
+                                     os.path.join(os.path.dirname(xml2),
+                                                  dict2.get(key)))
+                if r:
+                    result.append(r)
+            except Exception as e:
+                result.append('{}/{} : {}'.format(value,
+                                                  method.__name__, e))
+        return result
 
 
 class OutputDirComparator(ResultsComparator):
@@ -406,20 +461,36 @@ class zPDFComparator(ResultsComparator):
 
 
 def main():
+    # parser = argparse.ArgumentParser(description='AMAZED results comparison tool')
+    # parser.add_argument('referencedir',
+    #                     type=str,
+    #                     help='Path to the output reference directory.')
+    # parser.add_argument('outputdir',
+    #                     type=str,
+    #                     help='Path to the output tests directory.')
+    # parser.add_argument('xml',
+    #                     type=str,
+    #                     help='Path to the output tests directory.')
+    # args = parser.parse_args()
+    #
+    # r = OutputDirComparator().compare(args.referencedir,
+    #                                   args.outputdir)
+    # if r:
+    #     pprint(r)
+
     parser = argparse.ArgumentParser(description='AMAZED results comparison tool')
-    parser.add_argument('referencedir',
+    parser.add_argument('xml1',
                         type=str,
                         help='Path to the output reference directory.')
-    parser.add_argument('outputdir',
+    parser.add_argument('xml2',
                         type=str,
                         help='Path to the output tests directory.')
     args = parser.parse_args()
 
-    r = OutputDirComparator().compare(args.referencedir,
-                                      args.outputdir)
+    r = EuclidXMLComparator().compare(args.xml1,
+                                      args.xml2)
     if r:
         pprint(r)
-
 
 if __name__ == '__main__':
     main()
