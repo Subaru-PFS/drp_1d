@@ -11,6 +11,8 @@ import json
 import argparse
 import numpy as np
 from pprint import pprint
+from astropy.io import fits
+from xml.etree import ElementTree
 
 # GLOBAL VARIABLES FOR COMPARISION PRECISION
 FLOAT_PRECISION = 1e-12
@@ -25,13 +27,12 @@ PDF_PRECISION = 1e-7
 # GAUSSSIGMAER_PRECISION = 1e-12
 
 
-str_cmp = str.__eq__
+def str_cmp(x, y):
+    return str(x) == str(y)
 
 
 def true_cmp(x, y):
     """
-    The "true_cmp" function.
-
     Temporary function used in ClassificationResult() to return True, due to no
     value of EvidenceQ in the csv.
 
@@ -42,8 +43,6 @@ def true_cmp(x, y):
 
 def float_cmp(precision):
     """
-    The "float_cmp" function.
-
     Check the precision of the difference between two float.
 
     :param precision: The precision of the difference.
@@ -55,8 +54,6 @@ def float_cmp(precision):
 
 def int_cmp(x, y):
     """
-    The "int_cmp" function.
-
     Check that the two integers are equal.
 
     :return: Return True if the two integers are equal.
@@ -64,10 +61,19 @@ def int_cmp(x, y):
     return int(x) == int(y)
 
 
+def array_cmp(element_cmp):
+    """
+    Check that the two arrays are equal.
+
+    Arrays are compared element-wise with element_cmp
+
+    :return: Return True if the two arrays are equal.
+    """
+    return lambda X, Y: np.all([element_cmp(x, y) for (x, y) in zip(X, Y)])
+
+
 def read_spectrumlist(spectrum_list_file):
     """
-    The "read_spectrumlist" function.
-
     Read the spectrum list file and get all the process id for each spectrum.
 
     :param spectrum_list_file: The "spectrum.list" file.
@@ -81,18 +87,178 @@ def read_spectrumlist(spectrum_list_file):
     return spectrumList
 
 
-class ResultsComparator():
-
+class ResultsComparator:
     def compare(self, path1, path2):
         pass
+
+
+class FitsComparator(ResultsComparator):
+    """Compare two FITS files"""
+
+    @staticmethod
+    def compare_columns(hdu, name, comparator, col1, col2):
+        result = []
+        for i, (v1, v2) in enumerate(zip(col1, col2)):
+            if not comparator(v1, v2):
+                if len(result) < 3:
+                    result.append('HDU {}, column {}, line {} : '
+                                  '{} != {}'.format(hdu, name, i, v1, v2))
+                else:
+                    result.append('...')
+                    break
+        return result
+
+    def compare_hdu(self, name, hdul1, hdul2):
+        result = []
+        hdu1 = hdul1[name].data
+        hdu2 = hdul2[name].data
+        for col, comparator in self.tests[name].items():
+            if col == '__key':
+                continue
+            r = self.compare_columns(name, col, comparator,
+                                     hdu1[col], hdu2[col])
+            if r:
+                result.extend(r)
+        return result
+
+    def compare(self, path1, path2):
+        result = []
+        with fits.open(path1) as hdul1, fits.open(path2) as hdul2:
+            for name in self.tests.keys():
+                r = self.compare_hdu(name, hdul1, hdul2)
+                if r:
+                    result.extend(r)
+        return result
+
+
+class SpeClassificationCatalogComparator(FitsComparator):
+    """Compare two Euclid SpeClassificationCatalog"""
+    tests = {
+        'SPE_CLASSIFICATION_CAT': {'__key': 'OBJECT_ID',
+                                   'OBJECT_ID': int_cmp,
+                                   'SPE_STAR_PROB': float_cmp(FLOAT_PRECISION),
+                                   'SPE_GAL_PROB': float_cmp(FLOAT_PRECISION),
+                                   'SPE_QSO_PROB': float_cmp(FLOAT_PRECISION)}}
+
+
+class SpeZCatalogComparator(FitsComparator):
+    """Compare two Euclid SpeZCatalog"""
+    tests = {
+        'SPE_REDSHIFT_CAT': {'__key': 'SPE_RANK',
+                             'OBJECT_ID': int_cmp,
+                             'SPE_RANK': int_cmp,
+                             'SPE_Z':  float_cmp(FLOAT_PRECISION),
+                             'SPE_Z_REL': float_cmp(FLOAT_PRECISION)}}
+
+
+class SpePdfCatalogComparator(FitsComparator):
+    """Compare two Euclid SpePdfCatalog"""
+    tests = {
+        'SPE_PDF_CAT': {'__key': 'OBJECT_ID',
+                        'OBJECT_ID': int_cmp,
+                        'SPE_PDF_CLASS': str_cmp,
+                        'SPE_PDF': array_cmp(float_cmp(FLOAT_PRECISION))}}
+
+
+class SpeLineCatalogComparator(FitsComparator):
+    """Compare two Euclid SpeLineCatalog"""
+    tests = {
+        'SPE_LINE_FEATURES_CAT': {
+            '__key': 'OBJECT_ID',
+            'OBJECT_ID': int_cmp,
+            'SPE_RANK': int_cmp,
+            'SPE_LINE_ID': int_cmp,
+            'SPE_LINE_NAME': str_cmp,
+            'SPE_LINE_CENTRAL_WL': float_cmp(FLOAT_PRECISION),
+            'SPE_LINE_CENTRAL_WL_ERR': float_cmp(FLOAT_PRECISION),
+            'SPE_LINE_FLUX': float_cmp(FLOAT_PRECISION),
+            'SPE_LINE_FLUX_ERR': float_cmp(FLOAT_PRECISION),
+            'SPE_LINE_EW': float_cmp(FLOAT_PRECISION),
+            'SPE_LINE_EW_ERR': float_cmp(FLOAT_PRECISION),
+            'SPE_LINE_FWHM': float_cmp(FLOAT_PRECISION),
+            'SPE_LINE_FWHM_ERR': float_cmp(FLOAT_PRECISION)}}
+
+
+class SpeAbsorptionCatalogComparator(FitsComparator):
+    """Compare two Euclid SpeAbsorptionCatalog"""
+    tests = {
+        'SPE_SPECTRAL_FEATURES_CAT': {
+            '__key': 'OBJECT_ID',
+            'OBJECT_ID': int_cmp,
+            'SPE_RANK': int_cmp,
+            'SPE_ABSORPTION_NAME': str_cmp,
+            'SPE_ABSORPTION': float_cmp(FLOAT_PRECISION),
+            'SPE_ABSORPTION_ERR': float_cmp(FLOAT_PRECISION)}}
+
+
+class SpeParametersCatalogComparator(FitsComparator):
+    """Compare two Euclid SpeParametersCatalog"""
+    tests = {
+        'SPE_REST_FRAME_PARAMETERS_CAT': {
+            '__key': 'OBJECT_ID',
+            'OBJECT_ID': int_cmp,
+            'SPE_RANK': int_cmp,
+            'SPE_SFR': float_cmp(FLOAT_PRECISION)}}
+
+
+def read_xml(xml):
+
+    xml_tree = ElementTree.parse(xml)
+    root = xml_tree.getroot()
+
+    type = ['SpeParametersCatalog', 'SpeAbsorptionCatalog', 'SpeLineCatalog',
+            'SpePdfCatalog', 'SpeZCatalog', 'SpeClassificationCatalog']
+
+    product_dict = {}
+    for element in type:
+        basename = root.findall('./Data/{}/DataContainer/'
+                                'FileName'.format(element))
+        filename = basename[0].text
+        product_dict[element] = filename
+
+    return product_dict
+
+
+class EuclidXMLComparator(ResultsComparator):
+
+    def compare(self, xml1, xml2):
+        """
+        Compares XML data product files.
+
+        :param xml1: Path to the reference XML.
+        :param xml2: Path to the XML being compared.
+        :return: Return the result of the comparison.
+        """
+        map_dict = {
+            'SpeParametersCatalog': SpeParametersCatalogComparator,
+            'SpeAbsorptionCatalog': SpeAbsorptionCatalogComparator,
+            'SpeLineCatalog': SpeLineCatalogComparator,
+            'SpePdfCatalog': SpePdfCatalogComparator,
+            'SpeZCatalog': SpeZCatalogComparator,
+            'SpeClassificationCatalog': SpeClassificationCatalogComparator
+        }
+        result = []
+        dict1 = read_xml(xml1)
+        dict2 = read_xml(xml2)
+
+        for key, value in dict1.items():
+            try:
+                r = map_dict[key]().compare(os.path.join(os.path.dirname(xml1),
+                                                         value),
+                                            os.path.join(os.path.dirname(xml2),
+                                                         dict2.get(key)))
+                if r:
+                    result.append(r)
+            except Exception as e:
+                result.append('{}/{} : {}'.format(value, key, e))
+
+        return result
 
 
 class OutputDirComparator(ResultsComparator):
 
     def compare(self, path1, path2):
         """
-        The OutputDirComparator's "compare" function.
-
         Calls a comparator for each type of file by iterating if them.
 
         :param path1: Path to the reference file.
@@ -166,8 +332,6 @@ class CSVComparator(ResultsComparator):
 
     def _read_csv(self, args):
         """
-        The "_read_csv" function.
-
         Create dictionnaries with the content of the CSV files given in
         parameters.
 
@@ -192,11 +356,6 @@ class CSVComparator(ResultsComparator):
 
     def compare(self, path1, path2):
         """
-        The "compare" function.
-
-        # TODO: insert better description
-        Does the comparison between two files
-
         :param path1: Path to the first file to compare.
         :param path2: Path to the second file to compare.
         :return: Return list of all differences
@@ -307,12 +466,7 @@ class zPDFComparator(ResultsComparator):
 
     @staticmethod
     def _read_pdf(path):
-        # TODO: complete docstring
         """
-        The "_read_pdf" function.
-
-        Description
-
         :param path: Path to the csv to read.
         :return: Return the list of all differences.
         """
@@ -327,13 +481,7 @@ class zPDFComparator(ResultsComparator):
         return evidence, np.array(pdf, dtype=float)
 
     def compare(self, path1, path2):
-        # TODO: complete docstring
         """
-        The "compare" function.
-
-        # TODO: insert better description
-        Does the comparison between two files
-
         :param path1: Path to the first file to compare.
         :param path2: Path to the second file to compare.
         :return: Return the list of all differences.
@@ -353,18 +501,52 @@ class zPDFComparator(ResultsComparator):
         return result
 
 
+def compare_amazed(args):
+    r = OutputDirComparator().compare(args.firstdir,
+                                      args.seconddir)
+    return r
+
+
+def compare_euclid(args):
+    r = EuclidXMLComparator().compare(args.firstxml,
+                                      args.secondxml)
+    return r
+
+
 def main():
-    parser = argparse.ArgumentParser(description='AMAZED results comparison tool')
-    parser.add_argument('referencedir',
-                        type=str,
-                        help='Path to the output reference directory.')
-    parser.add_argument('outputdir',
-                        type=str,
-                        help='Path to the output tests directory.')
+    parser = argparse.ArgumentParser(
+        description='AMAZED results comparison tool'
+    )
+    subparsers = parser.add_subparsers(dest='command')
+
+    amazed_parser = subparsers.add_parser('amazed',
+                                          help='Compare AMAZED results')
+    amazed_parser.add_argument('referencedir',
+                               type=str,
+                               help='Path to the first output directory.')
+    amazed_parser.add_argument('outputdir',
+                               type=str,
+                               help='Path to the second output directory.')
+    amazed_parser.set_defaults(handler=compare_amazed)
+
+    euclid_parser = subparsers.add_parser('euclid',
+                                          help='Compare EUCLID results')
+    euclid_parser.add_argument('firstxml',
+                               type=str,
+                               help='Path to the first XML file.')
+    euclid_parser.add_argument('secondxml',
+                               type=str,
+                               help='Path to the second XML file.')
+    euclid_parser.set_defaults(handler=compare_euclid)
+
     args = parser.parse_args()
 
-    r = OutputDirComparator().compare(args.referencedir,
-                                      args.outputdir)
+    if not args.command:
+        parser.print_help()
+        return
+
+    r = args.handler(args)
+
     if r:
         pprint(r)
 

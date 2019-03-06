@@ -30,6 +30,8 @@ setup(
         'console_scripts': [
             'amazed=pyamazed.amazed:main',
             'amazed-cmp=pyamazed.output_compare:main'
+            'amazed-cmp=pyamazed.output_compare:main',
+            'amazed-convert=pyamazed.catalog2fits:main',
         ],
     },
 

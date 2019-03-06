@@ -51,7 +51,8 @@ def amazed():
     config = Config(args)
 
     if os.path.exists(config.output_folder):
-        raise Exception("Output directory {} already exists.".format(config.output_folder))
+        raise Exception("Output directory {} already exists.".format(
+            config.output_folder))
 
     os.makedirs(config.output_folder)
 
@@ -87,16 +88,21 @@ def amazed():
     dfBinPath = param.Get_String("continuumRemoval.binPath",
                                  "absolute_path_to_df_binaries_here")
 
-    template_catalog = CTemplateCatalog(medianRemovalMethod,
-                                        medianKernelWidth,
-                                        nscales, dfBinPath)
-    # template_catalog = FitsTemplateCatalog(medianRemovalMethod,
-    #                                       opt_medianKernelWidth,
-    #                                       opt_nscales, dfBinPath)
-    zlog.LogInfo("Loading %s" % config.template_dir)
+    _template_dir = absolutepath(config, config.template_dir)
+    if os.path.isfile(config.template_dir):
+        # template_dir is actually a file: load templates from FITS
+        template_catalog = FitsTemplateCatalog(medianRemovalMethod,
+                                               medianKernelWidth,
+                                               nscales, dfBinPath)
+    elif os.path.isdir(config.template_dir):
+        # template_dir a directory: load templates from calibration dirs
+        template_catalog = CTemplateCatalog(medianRemovalMethod,
+                                            medianKernelWidth,
+                                            nscales, dfBinPath)
+    zlog.LogInfo("Loading %s" % _template_dir)
 
     try:
-        template_catalog.Load(absolutepath(config, config.template_dir))
+        template_catalog.Load(_template_dir)
     except Exception as e:
         zlog.LogError("Can't load template : {}".format(e))
         raise
