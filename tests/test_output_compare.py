@@ -19,7 +19,10 @@ from pyamazed.output_compare import (read_spectrumlist, float_cmp, int_cmp,
                                      FLOAT_PRECISION,
                                      SpeClassificationCatalogComparator,
                                      SpeZCatalogComparator,
-                                     SpePdfCatalogComparator)
+                                     SpePdfCatalogComparator,
+                                     SpeLineCatalogComparator,
+                                     SpeAbsorptionCatalogComparator,
+                                     SpeParametersCatalogComparator)
 
 #
 # Fixture functions
@@ -200,6 +203,8 @@ def test_int_cmp():
 
 
 def test_speclassificationcatalogcomparator():
+    comparator = SpeClassificationCatalogComparator()
+
     data = {'SPE_CLASSIFICATION_CAT': [
         {'name': 'OBJECT_ID',
          'array': np.array([0, 0, 1, 1]), 'format': 'K'},
@@ -209,9 +214,7 @@ def test_speclassificationcatalogcomparator():
          'array': np.array([0.5, 0.5, 0.5, 0.5]), 'format': 'E'},
         {'name': 'SPE_QSO_PROB',
          'array': np.array([0.5, 0.5, 0.5, 0.5]), 'format': 'E'}]}
-
     f1 = dummy_fits_file(data)
-    comparator = SpeClassificationCatalogComparator()
     r = comparator.compare(f1.name, f1.name)
     assert r == []
 
@@ -225,7 +228,6 @@ def test_speclassificationcatalogcomparator():
         {'name': 'SPE_QSO_PROB',
          'array': np.array([0.5, 0.5, 0.5, 0.5]), 'format': 'E'}]}
     f2 = dummy_fits_file(data2)
-    comparator = SpeClassificationCatalogComparator()
     r = comparator.compare(f1.name, f2.name)
     assert r[0].startswith('HDU SPE_CLASSIFICATION_CAT, column SPE_GAL_PROB, '
                            'line 0 : 0.5 != 0.')
@@ -237,6 +239,8 @@ def test_speclassificationcatalogcomparator():
 
 
 def test_spezcatalogcomparator():
+    comparator = SpeZCatalogComparator()
+
     data = {'SPE_REDSHIFT_CAT': [
         {'name': 'OBJECT_ID',
          'array': np.array([1234, 1234, 1234, 1234]), 'format': 'K'},
@@ -247,7 +251,6 @@ def test_spezcatalogcomparator():
         {'name': 'SPE_Z_REL',
          'array': np.array([5.1e-2, 3.2e-2, 2.2e-2, 1.2e-2]), 'format': 'E'}]}
     f1 = dummy_fits_file(data)
-    comparator = SpeZCatalogComparator()
     r = comparator.compare(f1.name, f1.name)
     assert r == []
 
@@ -261,13 +264,14 @@ def test_spezcatalogcomparator():
         {'name': 'SPE_Z_REL',
          'array': np.array([5.1e-2, 3.2e-2, 2.3e-2, 1.2e-2]), 'format': 'E'}]}
     f2 = dummy_fits_file(data2)
-    comparator = SpeZCatalogComparator()
     r = comparator.compare(f1.name, f2.name)
     assert r[0].startswith('HDU SPE_REDSHIFT_CAT, column SPE_Z_REL, '
                            'line 2 : 0.02')
 
 
 def test_spepdfcatalogcomparator():
+    comparator = SpePdfCatalogComparator()
+
     data = {'SPE_PDF_CAT': [
         {'name': 'OBJECT_ID',
          'array': np.array([1234, ]), 'format': 'K'},
@@ -276,7 +280,6 @@ def test_spepdfcatalogcomparator():
         {'name': 'SPE_PDF',
          'array': np.array([[0.1, 1.1, 2.2, 3.3, 4.4]]), 'format': '5E'}]}
     f1 = dummy_fits_file(data)
-    comparator = SpePdfCatalogComparator()
     r = comparator.compare(f1.name, f1.name)
     assert r == []
 
@@ -304,3 +307,134 @@ def test_spepdfcatalogcomparator():
     f3 = dummy_fits_file(data3)
     r = comparator.compare(f1.name, f3.name)
     assert r == []
+
+
+def test_spelinecatalogcomparator():
+    comparator = SpeLineCatalogComparator()
+
+    data = {'SPE_LINE_FEATURES_CAT': [
+        {'name': 'OBJECT_ID',
+         'array': np.array([0, 0, 0, 0]), 'format': 'K'},
+        {'name': 'SPE_RANK',
+         'array': np.array([1337, 1337, 1337, 1337]), 'format': 'I'},
+        {'name': 'SPE_LINE_ID',
+         'array': np.array([1337, 1337, 1337, 1337]), 'format': 'I'},
+        {'name': 'SPE_LINE_NAME',
+         'array': np.array([1, 1, 1, 1]), 'format': 'A'},
+        {'name': 'SPE_LINE_CENTRAL_WL',
+         'array': np.array([1.0, 1.1, 1.2, 1.3]), 'format': 'E'},
+        {'name': 'SPE_LINE_CENTRAL_WL_ERR',
+         'array': np.array([1.0e-3, 1.1e-3, 1.2e-3, 1.3e-3]), 'format': 'E'},
+        {'name': 'SPE_LINE_FLUX',
+         'array': np.array([1.0, 1.1, 1.2, 1.3]), 'format': 'E'},
+        {'name': 'SPE_LINE_FLUX_ERR',
+         'array': np.array([1.0e-3, 1.1e-3, 1.2e-3, 1.3e-3]), 'format': 'E'},
+        {'name': 'SPE_LINE_EW',
+         'array': np.array([1.0, 1.1, 1.2, 1.3]), 'format': 'E'},
+        {'name': 'SPE_LINE_EW_ERR',
+         'array': np.array([1.0e-3, 1.1e-3, 1.2e-3, 1.3e-3]), 'format': 'E'},
+        {'name': 'SPE_LINE_FWHM',
+         'array': np.array([1.0, 1.1, 1.2, 1.3]), 'format': 'E'},
+        {'name': 'SPE_LINE_FWHM_ERR',
+         'array': np.array([1.0e-3, 1.1e-3, 1.2e-3, 1.3e-3]), 'format': 'E'}]}
+    f1 = dummy_fits_file(data)
+    r = comparator.compare(f1.name, f1.name)
+    assert r == []
+
+    data2 = {'SPE_LINE_FEATURES_CAT': [
+        {'name': 'OBJECT_ID',
+         'array': np.array([0, 0, 0, 0]), 'format': 'K'},
+        {'name': 'SPE_RANK',
+         'array': np.array([1337, 1337, 1337, 1337]), 'format': 'I'},
+        {'name': 'SPE_LINE_ID',
+         'array': np.array([1337, 1337, 1337, 1337]), 'format': 'I'},
+        {'name': 'SPE_LINE_NAME',
+         'array': np.array([1, 1, 1, 1]), 'format': 'A'},
+        {'name': 'SPE_LINE_CENTRAL_WL',
+         'array': np.array([1.0, 1.1, 1.2, 1.3]), 'format': 'E'},
+        {'name': 'SPE_LINE_CENTRAL_WL_ERR',
+         'array': np.array([1.0e-3, 1.1e-3, 1.2e-3, 1.3e-3]), 'format': 'E'},
+        {'name': 'SPE_LINE_FLUX',
+         'array': np.array([1.0, 1.1, 1.2, 1.3]), 'format': 'E'},
+        {'name': 'SPE_LINE_FLUX_ERR',
+         'array': np.array([1.0e-3, 1.1e-4, 1.2e-3, 1.3e-3]), 'format': 'E'},
+        {'name': 'SPE_LINE_EW',
+         'array': np.array([1.0, 1.1, 1.2, 1.3]), 'format': 'E'},
+        {'name': 'SPE_LINE_EW_ERR',
+         'array': np.array([1.0e-3, 1.1e-3, 1.2e-3, 1.3e-3]), 'format': 'E'},
+        {'name': 'SPE_LINE_FWHM',
+         'array': np.array([1.0, 1.1, 1.2, 1.3]), 'format': 'E'},
+        {'name': 'SPE_LINE_FWHM_ERR',
+         'array': np.array([1.0e-3, 1.1e-3, 1.2e-3, 1.3e-3]), 'format': 'E'}]}
+
+    f2 = dummy_fits_file(data2)
+    r = comparator.compare(f1.name, f2.name)
+    assert len(r) == 1
+    assert r[0].startswith('HDU SPE_LINE_FEATURES_CAT, column '
+                           'SPE_LINE_FLUX_ERR, line 1 :')
+
+
+def test_speabsorptioncatalogcomparator():
+    comparator = SpeAbsorptionCatalogComparator()
+
+    data = {'SPE_SPECTRAL_FEATURES_CAT': [
+        {'name': 'OBJECT_ID',
+         'array': np.array([0, 0, 1, 1]), 'format': 'K'},
+        {'name': 'SPE_RANK',
+         'array': np.array([1337, 1337, 1337, 1337]), 'format': 'I'},
+        {'name': 'SPE_ABSORPTION_NAME',
+         'array': np.array(['foo', 'bar', 'baz', 'quux']), 'format': '8A'},
+        {'name': 'SPE_ABSORPTION',
+         'array': np.array([1.0, 1.1, 1.2, 1.3]), 'format': 'E'},
+        {'name': 'SPE_ABSORPTION_ERR',
+         'array': np.array([1.0e-3, 1.1e-3, 1.2e-3, 1.3e-3]), 'format': 'E'}]}
+    f1 = dummy_fits_file(data)
+    r = comparator.compare(f1.name, f1.name)
+    assert r == []
+
+    data2 = {'SPE_SPECTRAL_FEATURES_CAT': [
+        {'name': 'OBJECT_ID',
+         'array': np.array([0, 0, 1, 1]), 'format': 'K'},
+        {'name': 'SPE_RANK',
+         'array': np.array([1337, 1337, 1337, 1337]), 'format': 'I'},
+        {'name': 'SPE_ABSORPTION_NAME',
+         'array': np.array(['foo', 'bar', 'baz', 'quux']), 'format': '8A'},
+        {'name': 'SPE_ABSORPTION',
+         'array': np.array([1.0, 1.1, 1.2, 1.4]), 'format': 'E'},
+        {'name': 'SPE_ABSORPTION_ERR',
+         'array': np.array([1.0e-3, 1.1e-3, 1.2e-3, 1.3e-3]), 'format': 'E'}]}
+    f2 = dummy_fits_file(data2)
+    r = comparator.compare(f1.name, f2.name)
+    assert len(r) == 2
+    assert r[0].startswith('HDU SPE_SPECTRAL_FEATURES_CAT, '
+                           'column SPE_LINE_ID, line 2 : 1337 != 1338')
+    assert r[1].startswith('HDU SPE_SPECTRAL_FEATURES_CAT, column '
+                           'SPE_ABSORPTION, line 3 : 1.')
+
+
+def test_speparamernscatalogcomparator():
+    comparator = SpeParametersCatalogComparator()
+
+    data = {'SPE_REST_FRAME_PARAMETERS_CAT': [
+        {'name': 'OBJECT_ID',
+         'array': np.array([0, 0, 1, 1]), 'format': 'K'},
+        {'name': 'SPE_RANK',
+         'array': np.array([1337, 1337, 1337, 1337]), 'format': 'I'},
+        {'name': 'SPE_SFR',
+         'array': np.array([1.0, 1.1, 1.2, 1.3]), 'format': 'E'}]}
+    f1 = dummy_fits_file(data)
+    r = comparator.compare(f1.name, f1.name)
+    assert r == []
+
+    data2 = {'SPE_REST_FRAME_PARAMETERS_CAT': [
+        {'name': 'OBJECT_ID',
+         'array': np.array([0, 1, 1, 1]), 'format': 'K'},
+        {'name': 'SPE_RANK',
+         'array': np.array([1337, 1337, 1337, 1337]), 'format': 'I'},
+        {'name': 'SPE_SFR',
+         'array': np.array([1.0, 1.1, 1.2, 1.3]), 'format': 'E'}]}
+    f2 = dummy_fits_file(data2)
+    r = comparator.compare(f1.name, f2.name)
+    assert len(r) == 1
+    assert r[0].startswith('HDU SPE_REST_FRAME_PARAMETERS_CAT, '
+                           'column OBJECT_ID, line 1 : 0 != 1')
