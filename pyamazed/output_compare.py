@@ -27,7 +27,7 @@ PDF_PRECISION = 1e-7
 # GAUSSSIGMAER_PRECISION = 1e-12
 
 
-def str_cmp(x ,y):
+def str_cmp(x, y):
     return str(x) == str(y)
 
 
@@ -212,7 +212,8 @@ def read_xml(xml):
 
     product_dict = {}
     for element in type:
-        basename = root.findall('./Data/' + element + '/DataContainer/FileName')
+        basename = root.findall('./Data/{}/DataContainer/'
+                                'FileName'.format(element))
         filename = basename[0].text
         product_dict[element] = filename
 
@@ -230,12 +231,12 @@ class EuclidXMLComparator(ResultsComparator):
         :return: Return the result of the comparison.
         """
         map_dict = {
-            'SpeParametersCatalog' : SpeParametersCatalogComparator,
-            'SpeAbsorptionCatalog' : SpeAbsorptionCatalogComparator,
-            'SpeLineCatalog' : SpeLineCatalogComparator,
-            'SpePdfCatalog' : SpePdfCatalogComparator,
-            'SpeZCatalog' : SpeZCatalogComparator,
-            'SpeClassificationCatalog' : SpeClassificationCatalogComparator
+            'SpeParametersCatalog': SpeParametersCatalogComparator,
+            'SpeAbsorptionCatalog': SpeAbsorptionCatalogComparator,
+            'SpeLineCatalog': SpeLineCatalogComparator,
+            'SpePdfCatalog': SpePdfCatalogComparator,
+            'SpeZCatalog': SpeZCatalogComparator,
+            'SpeClassificationCatalog': SpeClassificationCatalogComparator
         }
         result = []
         dict1 = read_xml(xml1)
@@ -244,9 +245,9 @@ class EuclidXMLComparator(ResultsComparator):
         for key, value in dict1.items():
             try:
                 r = map_dict[key]().compare(os.path.join(os.path.dirname(xml1),
-                                                  value),
-                                     os.path.join(os.path.dirname(xml2),
-                                                  dict2.get(key)))
+                                                         value),
+                                            os.path.join(os.path.dirname(xml2),
+                                                         dict2.get(key)))
                 if r:
                     result.append(r)
             except Exception as e:
@@ -501,23 +502,54 @@ class zPDFComparator(ResultsComparator):
         return result
 
 
+def compare_amazed(args):
+    r = OutputDirComparator().compare(args.firstdir,
+                                      args.seconddir)
+    return r
+
+
+def compare_euclid(args):
+    r = EuclidXMLComparator().compare(args.firstxml,
+                                      args.secondxml)
+    return r
+
+
 def main():
-    parser = argparse.ArgumentParser(description='AMAZED results comparison tool')
-    parser.add_argument('referencedir',
-                        type=str,
-                        help='Path to the output reference directory.')
-    parser.add_argument('outputdir',
-                        type=str,
-                        help='Path to the output tests directory.')
-    parser.add_argument('xml',
-                        type=str,
-                        help='Path to the output tests directory.')
+    parser = argparse.ArgumentParser(
+        description='AMAZED results comparison tool'
+    )
+    subparsers = parser.add_subparsers(dest='command')
+
+    amazed_parser = subparsers.add_parser('amazed',
+                                          help='Compare AMAZED results')
+    amazed_parser.add_argument('referencedir',
+                               type=str,
+                               help='Path to the first output directory.')
+    amazed_parser.add_argument('outputdir',
+                               type=str,
+                               help='Path to the second output directory.')
+    amazed_parser.set_defaults(handler=compare_amazed)
+
+    euclid_parser = subparsers.add_parser('euclid',
+                                          help='Compare EUCLID results')
+    euclid_parser.add_argument('firstxml',
+                               type=str,
+                               help='Path to the first XML file.')
+    euclid_parser.add_argument('secondxml',
+                               type=str,
+                               help='Path to the second XML file.')
+    euclid_parser.set_defaults(handler=compare_euclid)
+
     args = parser.parse_args()
 
-    r = OutputDirComparator().compare(args.referencedir,
-                                      args.outputdir)
+    if not args.command:
+        parser.print_help()
+        return
+
+    r = args.handler(args)
+
     if r:
-        pprint(r)
+        print(r)
 
 
 if __name__ == '__main__':
