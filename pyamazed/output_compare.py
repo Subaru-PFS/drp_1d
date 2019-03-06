@@ -13,7 +13,6 @@ import numpy as np
 from pprint import pprint
 from astropy.io import fits
 from xml.etree import ElementTree
-from IPython import embed
 
 # GLOBAL VARIABLES FOR COMPARISION PRECISION
 FLOAT_PRECISION = 1e-12
@@ -28,7 +27,8 @@ PDF_PRECISION = 1e-7
 # GAUSSSIGMAER_PRECISION = 1e-12
 
 
-str_cmp = str.__eq__
+def str_cmp(x ,y):
+    return str(x) == str(y)
 
 
 def true_cmp(x, y):
@@ -161,6 +161,47 @@ class SpePdfCatalogComparator(FitsComparator):
                         'SPE_PDF': array_cmp(float_cmp(FLOAT_PRECISION))}}
 
 
+class SpeLineCatalogComparator(FitsComparator):
+    """Compare two Euclid SpeLineCatalog"""
+    tests = {
+        'SPE_LINE_FEATURES_CAT': {
+            '__key': 'OBJECT_ID',
+            'OBJECT_ID': int_cmp,
+            'SPE_RANK': int_cmp,
+            'SPE_LINE_ID': int_cmp,
+            'SPE_LINE_NAME': str_cmp,
+            'SPE_LINE_CENTRAL_WL': float_cmp(FLOAT_PRECISION),
+            'SPE_LINE_CENTRAL_WL_ERR': float_cmp(FLOAT_PRECISION),
+            'SPE_LINE_FLUX': float_cmp(FLOAT_PRECISION),
+            'SPE_LINE_FLUX_ERR': float_cmp(FLOAT_PRECISION),
+            'SPE_LINE_EW': float_cmp(FLOAT_PRECISION),
+            'SPE_LINE_EW_ERR': float_cmp(FLOAT_PRECISION),
+            'SPE_LINE_FWHM': float_cmp(FLOAT_PRECISION),
+            'SPE_LINE_FWHM_ERR': float_cmp(FLOAT_PRECISION)}}
+
+
+class SpeAbsorptionCatalogComparator(FitsComparator):
+    """Compare two Euclid SpeAbsorptionCatalog"""
+    tests = {
+        'SPE_SPECTRAL_FEATURES_CAT': {
+            '__key': 'OBJECT_ID',
+            'OBJECT_ID': int_cmp,
+            'SPE_RANK': int_cmp,
+            'SPE_ABSORPTION_NAME': str_cmp,
+            'SPE_ABSORPTION': float_cmp(FLOAT_PRECISION),
+            'SPE_ABSORPTION_ERR': float_cmp(FLOAT_PRECISION)}}
+
+
+class SpeParametersCatalogComparator(FitsComparator):
+    """Compare two Euclid SpeParametersCatalog"""
+    tests = {
+        'SPE_REST_FRAME_PARAMETERS_CAT': {
+            '__key': 'OBJECT_ID',
+            'OBJECT_ID': int_cmp,
+            'SPE_RANK': int_cmp,
+            'SPE_SFR': float_cmp(FLOAT_PRECISION)}}
+
+
 def read_xml(xml):
 
     xml_tree = ElementTree.parse(xml)
@@ -189,12 +230,12 @@ class EuclidXMLComparator(ResultsComparator):
         :return: Return the result of the comparison.
         """
         map_dict = {
-            SpeParametersCatalog : SpeParametersCatalogComparator(),
-            SpeAbsorptionCatalog : SpeAbsorptionCatalogComparator(),
-            SpeLineCatalog : SpeLineCatalogComparator(),
-            SpePdfCatalog : SpePdfCatalogComparator(),
-            SpeZCatalog : SpeZCatalogComparator(),
-            SpeClassificationCatalog : SpeClassificationCatalogComparator()
+            'SpeParametersCatalog' : SpeParametersCatalogComparator,
+            'SpeAbsorptionCatalog' : SpeAbsorptionCatalogComparator,
+            'SpeLineCatalog' : SpeLineCatalogComparator,
+            'SpePdfCatalog' : SpePdfCatalogComparator,
+            'SpeZCatalog' : SpeZCatalogComparator,
+            'SpeClassificationCatalog' : SpeClassificationCatalogComparator
         }
         result = []
         dict1 = read_xml(xml1)
@@ -202,58 +243,16 @@ class EuclidXMLComparator(ResultsComparator):
 
         for key, value in dict1.items():
             try:
-                r = map_dict.get(key).compare(os.path.join(os.path.dirname(xml1),
+                r = map_dict[key]().compare(os.path.join(os.path.dirname(xml1),
                                                   value),
                                      os.path.join(os.path.dirname(xml2),
                                                   dict2.get(key)))
                 if r:
                     result.append(r)
             except Exception as e:
-                result.append('{}/{} : {}'.format(value,
-                                                  method.__name__, e))
+                result.append('{}/{} : {}'.format(value, key, e))
+
         return result
-
-
-class SpeLineCatalogComparator(FitsComparator):
-    """Compare two Euclid SpeLineCatalog"""
-    tests = {
-        'SPE_LINE_FEATURES_CAT': {
-            '__key': 'OBJECT_ID',
-            'OBJECT_ID': int_cmp,
-            'SPE_RANK': int_cmp,
-            'SPE_LINE_ID': int_cmp,
-            'SPE_LINE_NAME': str_cmp,
-            'SPE_LINE_CENTRAL_WL': float_cmp(FLOAT_PRECISION),
-            'SPE_LINE_CENTRAL_WL_ERR': float_cmp(FLOAT_PRECISION),
-            'SPE_LINE_FLUX': float_cmp(FLOAT_PRECISION),
-            'SPE_LINE_FLUX_ERR': float_cmp(FLOAT_PRECISION),
-            'SPE_LINE_EW': float_cmp(FLOAT_PRECISION),
-            'SPE_LINE_EW_ERR': float_cmp(FLOAT_PRECISION),
-            'SPE_LINE_FWHM': float_cmp(FLOAT_PRECISION),
-            'SPE_LINE_FWHM_ERR': float_cmp(FLOAT_PRECISION)}}
-
-
-class SpeAbsorptionCatalogComparator(FitsComparator):
-    """Compare two Euclid SpeAbsorptionCatalog"""
-    tests = {
-        'SPE_SPECTRAL_FEATURES_CAT': {
-            '__key': 'OBJECT_ID',
-            'OBJECT_ID': int_cmp,
-            'SPE_RANK': int_cmp,
-            'SPE_LINE_ID': int_cmp,
-            'SPE_ABSORPTION_NAME': str_cmp,
-            'SPE_ABSORPTION': float_cmp(FLOAT_PRECISION),
-            'SPE_ABSORPTION_ERR': float_cmp(FLOAT_PRECISION)}}
-
-
-class SpeParametersCatalogComparator(FitsComparator):
-    """Compare two Euclid SpeParametersCatalog"""
-    tests = {
-        'SPE_REST_FRAME_PARAMETERS_CAT': {
-            '__key': 'OBJECT_ID',
-            'OBJECT_ID': int_cmp,
-            'SPE_RANK': int_cmp,
-            'SPE_SFR': float_cmp(FLOAT_PRECISION)}}
 
 
 class OutputDirComparator(ResultsComparator):
@@ -503,36 +502,23 @@ class zPDFComparator(ResultsComparator):
 
 
 def main():
-    # parser = argparse.ArgumentParser(description='AMAZED results comparison tool')
-    # parser.add_argument('referencedir',
-    #                     type=str,
-    #                     help='Path to the output reference directory.')
-    # parser.add_argument('outputdir',
-    #                     type=str,
-    #                     help='Path to the output tests directory.')
-    # parser.add_argument('xml',
-    #                     type=str,
-    #                     help='Path to the output tests directory.')
-    # args = parser.parse_args()
-    #
-    # r = OutputDirComparator().compare(args.referencedir,
-    #                                   args.outputdir)
-    # if r:
-    #     pprint(r)
-
     parser = argparse.ArgumentParser(description='AMAZED results comparison tool')
-    parser.add_argument('xml1',
+    parser.add_argument('referencedir',
                         type=str,
                         help='Path to the output reference directory.')
-    parser.add_argument('xml2',
+    parser.add_argument('outputdir',
+                        type=str,
+                        help='Path to the output tests directory.')
+    parser.add_argument('xml',
                         type=str,
                         help='Path to the output tests directory.')
     args = parser.parse_args()
 
-    r = EuclidXMLComparator().compare(args.xml1,
-                                      args.xml2)
+    r = OutputDirComparator().compare(args.referencedir,
+                                      args.outputdir)
     if r:
         pprint(r)
+
 
 if __name__ == '__main__':
     main()
