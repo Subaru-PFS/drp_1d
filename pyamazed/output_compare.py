@@ -521,10 +521,10 @@ def main():
 
     amazed_parser = subparsers.add_parser('amazed',
                                           help='Compare AMAZED results')
-    amazed_parser.add_argument('referencedir',
+    amazed_parser.add_argument('firstdir',
                                type=str,
                                help='Path to the first output directory.')
-    amazed_parser.add_argument('outputdir',
+    amazed_parser.add_argument('seconddir',
                                type=str,
                                help='Path to the second output directory.')
     amazed_parser.set_defaults(handler=compare_amazed)
