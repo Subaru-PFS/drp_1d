@@ -7,9 +7,9 @@ class FitsTemplateCatalog(CTemplateCatalog):
     def Load(self, path):
         """Load a template catalog from a fits file"""
         hdul = fits.open(path)
-        category = hdul[0].header['CATEGORY']
         for spectrum in hdul[1:]:
             name = spectrum.header['EXTNAME']
+            category = spectrum.header['CATEGORY']
             print('Loading {} template {}'.format(category, name))
 
             wavel = spectrum.data.field('WAVE')
