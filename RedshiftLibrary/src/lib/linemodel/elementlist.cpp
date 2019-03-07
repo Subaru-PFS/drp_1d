@@ -312,7 +312,7 @@ Int32 CLineModelElementList::setPassMode(Int32 iPass)
 
         m_fittingmethod = m_opt_secondpass_fittingmethod;
         m_forceLyaFitting = m_opt_lya_forcefit;
-        Log.LogInfo("    model: set forceLyaFitting ASYMFIT : %d", m_forceLyaFitting);
+        Log.LogInfo("    model: set forceLyaFitting ASYMFIT for Tpl-ratio mode : %d", m_forceLyaFitting);
     }
 
 
@@ -2315,9 +2315,9 @@ Float64 CLineModelElementList::fit(Float64 redshift,
                     meritTplratio[ifitting] = _merit;
                     m_ChisquareTplshape[ifitting] = _merit;
                     m_ScaleMargCorrTplshape[ifitting] = getScaleMargCorrection();
-                    //m_StrongELPresentTplshape[ifitting] = GetModelStrongEmissionLinePresent();
-                    m_StrongELPresentTplshape[ifitting] = GetModelHaStrongest(); //warning: hardcoded selpp replaced by whasp for lm-tplratio
-                    std::vector<std::string> strongELSNRAboveCut = getLinesAboveSNR(3.5);
+                    m_StrongELPresentTplshape[ifitting] = GetModelStrongEmissionLinePresent();
+                    //m_StrongELPresentTplshape[ifitting] = GetModelHaStrongest(); //warning: hardcoded selpp replaced by whasp for lm-tplratio
+                    std::vector<std::string> strongELSNRAboveCut;// = getLinesAboveSNR(3.5); //this is costing a lot of processing time, so deactivated for now.
                     m_NLinesAboveSNRTplshape[ifitting] = strongELSNRAboveCut.size();
 
                     //Saving the model A, errorA, and dtm, mtm, ... (for all tplratios, needed ?)

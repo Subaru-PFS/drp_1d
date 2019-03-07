@@ -904,7 +904,7 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
     //**************************************************
     //FIRST PASS + CANDIDATES - B
     //**************************************************
-    Bool enableFirstpass_B = true && (m_opt_continuumcomponent=="tplfit" || m_opt_continuumcomponent=="tplfitauto") && (m_opt_extremacount>1);
+    Bool enableFirstpass_B = false && (m_opt_continuumcomponent=="tplfit" || m_opt_continuumcomponent=="tplfitauto") && (m_opt_extremacount>1);
     COperatorLineModel linemodel_fpb;
     Int32 retInitB = linemodel_fpb.Init(_spc, redshifts);
     if( retInitB!=0 )
