@@ -62,7 +62,10 @@ public:
                                               const Float64 &opt_emvelocityfitstep=20.,
                                               const Float64 &opt_absvelocityfitmin=150.,
                                               const Float64 &opt_absvelocityfitmax=500.,
-                                              const Float64 &opt_absvelocityfitstep=20.);
+                                              const Float64 &opt_absvelocityfitstep=20.,
+                                              const Float64 &opt_manvelfit_dzmin=-6e-4,
+                                              const Float64 &opt_manvelfit_dzmax=6e-4,
+                                              const Float64 &opt_manvelfit_dzstep=1e-4);
 
     Int32 Init(const CSpectrum& spectrum, const TFloat64List& redshifts);
     std::shared_ptr<COperatorResult> getResult();
@@ -135,7 +138,11 @@ public:
                             const Float64 &opt_emvelocityfitstep=20.,
                             const Float64 &opt_absvelocityfitmin=150.,
                             const Float64 &opt_absvelocityfitmax=500.,
-                            const Float64 &opt_absvelocityfitstep=20.);
+                            const Float64 &opt_absvelocityfitstep=20.,
+                            const Float64 &opt_manvelfit_dzmin=-6e-4,
+                            const Float64 &opt_manvelfit_dzmax=6e-4,
+                            const Float64 &opt_manvelfit_dzstep=1e-4,
+                            const string &opt_continuumfit_method="fromfirstpass");
 
     Int32 EstimateSecondPassParameters(const CSpectrum &spectrum,
                                        const TFloat64Range &lambdaRange,
@@ -148,7 +155,10 @@ public:
                                        const Float64 &opt_emvelocityfitstep,
                                        const Float64 &opt_absvelocityfitmin,
                                        const Float64 &opt_absvelocityfitmax,
-                                       const Float64 &opt_absvelocityfitstep);
+                                       const Float64 &opt_absvelocityfitstep,
+                                       const Float64 &opt_manvelfit_dzmin,
+                                       const Float64 &opt_manvelfit_dzmax,
+                                       const Float64 &opt_manvelfit_dzstep);
 
     Int32 RecomputeAroundCandidates(TPointList input_extremumList,
                                     const TFloat64Range &lambdaRange,
@@ -199,9 +209,6 @@ public:
 
     Int32 m_maxModelSaveCount;
     Float64 m_secondPass_extensionradius = 0.005;
-    Float64 m_secondPass_velfit_dzInfLim = -6e-4;
-    Float64 m_secondPass_velfit_dzSupLim = 6e-4;
-    Float64 m_secondPass_velfit_dzStep = 0.5e-4;
 
     bool m_enableLoadContTemplate=false;
     Int32 m_iRollContaminated=-1;

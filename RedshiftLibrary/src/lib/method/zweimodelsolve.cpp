@@ -835,43 +835,46 @@ Bool CZweiModelSolve::Solve( CDataStore& dataStore,
     Log.LogInfo("Zweimodel - ===============================================");
     COperatorLineModel linemodel_s1;
 
-    linemodel_s1.m_secondPass_velfit_dzInfLim = 4e-4;
-    linemodel_s1.m_secondPass_velfit_dzSupLim = 4e-4;
-    linemodel_s1.m_secondPass_velfit_dzStep = 4e-4;
+    Float64 _secondPass_velfit_dzInfLim = 4e-4;
+    Float64 _secondPass_velfit_dzSupLim = 4e-4;
+    Float64 _secondPass_velfit_dzStep = 4e-4;
     Float64 _vStep = 50.0;
 
     auto  result_s1 = linemodel_s1.Compute( dataStore,
-                      _spc,
-                      _spcContinuum,
-                      tplCatalog,
-                      tplCategoryList,
-                      m_calibrationPath,
-                      restraycatalog,
-                      m_opt_linetypefilter,
-                      m_opt_lineforcefilter,
-                      lambdaRange,
-                      _redshifts,
-                      m_opt_extremacount,
-                      m_opt_fittingmethod,
-                      m_opt_continuumcomponent,
-                      m_opt_lineWidthType,
-                      m_opt_resolution,
-                      m_opt_velocity_emission,
-                      m_opt_velocity_absorption,
-                      m_opt_continuumreest,
-                      m_opt_rules,
-                      m_opt_velocityfit,
-                      m_opt_firstpass_largegridstep,
-                      m_opt_firstpass_largegridsampling,
-                      m_opt_rigidity,
-                      m_opt_tplratio_reldirpath,
-                      m_opt_offsets_reldirpath,
-                      m_opt_em_velocity_fit_min,
-                      m_opt_em_velocity_fit_max,
-                      _vStep,
-                      m_opt_abs_velocity_fit_min,
-                      m_opt_abs_velocity_fit_max,
-                      _vStep);
+                                            _spc,
+                                            _spcContinuum,
+                                            tplCatalog,
+                                            tplCategoryList,
+                                            m_calibrationPath,
+                                            restraycatalog,
+                                            m_opt_linetypefilter,
+                                            m_opt_lineforcefilter,
+                                            lambdaRange,
+                                            _redshifts,
+                                            m_opt_extremacount,
+                                            m_opt_fittingmethod,
+                                            m_opt_continuumcomponent,
+                                            m_opt_lineWidthType,
+                                            m_opt_resolution,
+                                            m_opt_velocity_emission,
+                                            m_opt_velocity_absorption,
+                                            m_opt_continuumreest,
+                                            m_opt_rules,
+                                            m_opt_velocityfit,
+                                            m_opt_firstpass_largegridstep,
+                                            m_opt_firstpass_largegridsampling,
+                                            m_opt_rigidity,
+                                            m_opt_tplratio_reldirpath,
+                                            m_opt_offsets_reldirpath,
+                                            m_opt_em_velocity_fit_min,
+                                            m_opt_em_velocity_fit_max,
+                                            _vStep,
+                                            m_opt_abs_velocity_fit_min,
+                                            m_opt_abs_velocity_fit_max,
+                                            _vStep,
+                                            _secondPass_velfit_dzInfLim,
+                                            _secondPass_velfit_dzSupLim,
+                                            _secondPass_velfit_dzStep);
     if( !result_s1 )
     {
         Log.LogInfo( "Zweimodel - Failed to compute linemodel s1");
@@ -903,41 +906,44 @@ Bool CZweiModelSolve::Solve( CDataStore& dataStore,
     }
 
     COperatorLineModel linemodel_s2;
-    linemodel_s2.m_secondPass_velfit_dzInfLim = 4e-4;
-    linemodel_s2.m_secondPass_velfit_dzSupLim = 4e-4;
-    linemodel_s2.m_secondPass_velfit_dzStep = 4e-4;
+    _secondPass_velfit_dzInfLim = 4e-4;
+    _secondPass_velfit_dzSupLim = 4e-4;
+    _secondPass_velfit_dzStep = 4e-4;
     auto  result_s2 = linemodel_s2.Compute( dataStore,
-                      *contSpectrum,
-                      _spcContinuum_s2,
-                      tplCatalog,
-                      tplCategoryList,
-                      m_calibrationPath,
-                      restraycatalog,
-                      m_opt_linetypefilter,
-                      m_opt_lineforcefilter,
-                      lambdaRange,
-                      _redshifts,
-                      m_opt_extremacount,
-                      m_opt_fittingmethod,
-                      m_opt_continuumcomponent,
-                      m_opt_lineWidthType,
-                      m_opt_resolution,
-                      m_opt_velocity_emission,
-                      m_opt_velocity_absorption,
-                      m_opt_continuumreest,
-                      m_opt_rules,
-                      m_opt_velocityfit,
-                      m_opt_firstpass_largegridstep,
-                      m_opt_firstpass_largegridsampling,
-                      m_opt_rigidity,
-                      m_opt_tplratio_reldirpath,
-                      m_opt_offsets_reldirpath,
-                      m_opt_em_velocity_fit_min,
-                      m_opt_em_velocity_fit_max,
-                      _vStep,
-                      m_opt_abs_velocity_fit_min,
-                      m_opt_abs_velocity_fit_max,
-                      _vStep);
+                                            *contSpectrum,
+                                            _spcContinuum_s2,
+                                            tplCatalog,
+                                            tplCategoryList,
+                                            m_calibrationPath,
+                                            restraycatalog,
+                                            m_opt_linetypefilter,
+                                            m_opt_lineforcefilter,
+                                            lambdaRange,
+                                            _redshifts,
+                                            m_opt_extremacount,
+                                            m_opt_fittingmethod,
+                                            m_opt_continuumcomponent,
+                                            m_opt_lineWidthType,
+                                            m_opt_resolution,
+                                            m_opt_velocity_emission,
+                                            m_opt_velocity_absorption,
+                                            m_opt_continuumreest,
+                                            m_opt_rules,
+                                            m_opt_velocityfit,
+                                            m_opt_firstpass_largegridstep,
+                                            m_opt_firstpass_largegridsampling,
+                                            m_opt_rigidity,
+                                            m_opt_tplratio_reldirpath,
+                                            m_opt_offsets_reldirpath,
+                                            m_opt_em_velocity_fit_min,
+                                            m_opt_em_velocity_fit_max,
+                                            _vStep,
+                                            m_opt_abs_velocity_fit_min,
+                                            m_opt_abs_velocity_fit_max,
+                                            _vStep,
+                                            _secondPass_velfit_dzInfLim,
+                                            _secondPass_velfit_dzSupLim,
+                                            _secondPass_velfit_dzStep);
     if( !result_s2 )
     {
         Log.LogInfo( "Zweimodel - Failed to compute linemodel s2");
@@ -1000,9 +1006,9 @@ Bool CZweiModelSolve::Solve( CDataStore& dataStore,
         Float64 _opt_twosteplargegridstep = -1;
         std::string _opt_twosteplargegridsampling = "log";
         linemodel_s1c2X.m_secondPass_extensionradius = 0.0;
-        linemodel_s1c2X.m_secondPass_velfit_dzInfLim = 0; //no z refinement
-        linemodel_s1c2X.m_secondPass_velfit_dzSupLim = 0; //no z refinement
-        linemodel_s1c2X.m_secondPass_velfit_dzStep = 2e-4;
+        _secondPass_velfit_dzInfLim = 0; //no z refinement
+        _secondPass_velfit_dzSupLim = 0; //no z refinement
+        _secondPass_velfit_dzStep = 2e-4;
         Int32 _opt_extremacount = -1; //no extrema search calculating on all redshifts
         auto result_s1_c2zX = linemodel_s1c2X.Compute( dataStore,
                                                      _spc,
@@ -1035,7 +1041,10 @@ Bool CZweiModelSolve::Solve( CDataStore& dataStore,
                                                      _vStep,
                                                      m_opt_abs_velocity_fit_min,
                                                      m_opt_abs_velocity_fit_max,
-                                                     _vStep);
+                                                     _vStep,
+                                                     _secondPass_velfit_dzInfLim,
+                                                     _secondPass_velfit_dzSupLim,
+                                                     _secondPass_velfit_dzStep);
 
         if( !result_s1_c2zX )
         {
@@ -1079,9 +1088,9 @@ Bool CZweiModelSolve::Solve( CDataStore& dataStore,
                 Float64 _opt_twosteplargegridstep = -1;
                 std::string _opt_twosteplargegridsampling = "log";
                 linemodel_s2c1Y.m_secondPass_extensionradius = 0.0;
-                linemodel_s2c1Y.m_secondPass_velfit_dzInfLim = 0;
-                linemodel_s2c1Y.m_secondPass_velfit_dzSupLim = 0;
-                linemodel_s2c1Y.m_secondPass_velfit_dzStep = 2e-4;
+                _secondPass_velfit_dzInfLim = 0;
+                _secondPass_velfit_dzSupLim = 0;
+                _secondPass_velfit_dzStep = 2e-4;
                 Int32 _opt_extremacount = -1; //no extrema search calculating on all redshifts
                 std::vector<Float64> redshifts_s2(1, zcandidates_s2[kzs2]);
                 auto result_s2_c1zY = linemodel_s2c1Y.Compute( dataStore,
@@ -1115,7 +1124,10 @@ Bool CZweiModelSolve::Solve( CDataStore& dataStore,
                                                              _vStep,
                                                              m_opt_abs_velocity_fit_min,
                                                              m_opt_abs_velocity_fit_max,
-                                                             _vStep);
+                                                             _vStep,
+                                                             _secondPass_velfit_dzInfLim,
+                                                             _secondPass_velfit_dzSupLim,
+                                                             _secondPass_velfit_dzStep);
 
                 if( !result_s2_c1zY )
                 {
