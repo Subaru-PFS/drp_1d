@@ -5927,7 +5927,7 @@ CLineModelSolution CLineModelElementList::GetModelSolution(Int32 opt_level)
     modelSolution.AbsorptionVelocity = m_velocityAbsorption;
     modelSolution.Redshift = m_Redshift;
 
-    std::vector<std::string> strongELSNRAboveCut = getLinesAboveSNR(3.5);
+    std::vector<std::string> strongELSNRAboveCut = std::vector<std::string>();// getLinesAboveSNR(3.5);
     modelSolution.NLinesAboveSnrCut = strongELSNRAboveCut.size();
 
     return modelSolution;

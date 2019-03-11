@@ -11,6 +11,7 @@
 #include <RedshiftLibrary/spectrum/template/template.h>
 #include <RedshiftLibrary/spectrum/fluxcorrectionmeiksin.h>
 #include <RedshiftLibrary/spectrum/fluxcorrectioncalzetti.h>
+#include <RedshiftLibrary/statistics/priorhelpercontinuum.h>
 
 namespace NSEpic
 {
@@ -31,7 +32,8 @@ public:
                                               std::vector<CMask> additional_spcMasks,
                                               std::string opt_interp,
                                               Int32 opt_extinction=0,
-                                              Int32 opt_dustFitting=0);
+                                              Int32 opt_dustFitting=0,
+                                              CPriorHelperContinuum::TPriorZEList logpriorze=CPriorHelperContinuum::TPriorZEList());
 
     const COperatorResult* ExportChi2versusAZ( const CSpectrum& spectrum, const CTemplate& tpl,
                                     const TFloat64Range& lambdaRange, const TFloat64List& redshifts,
@@ -59,7 +61,12 @@ private:
                   std::vector<TFloat64List>& ChiSquareInterm,
                   std::vector<TFloat64List>& IsmCalzettiCoeffInterm,
                   std::vector<TInt32List>& IgmMeiksinIdxInterm,
-                  std::string opt_interp, Float64 forcedAmplitude=-1, Int32 opt_extinction=0, Int32 opt_dustFitting=0, CMask spcMaskAdditional=CMask() );
+                  std::string opt_interp,
+                  Float64 forcedAmplitude=-1,
+                  Int32 opt_extinction=0,
+                  Int32 opt_dustFitting=0,
+                  CMask spcMaskAdditional=CMask(),
+                  std::vector<Float64> logpriorjoint_pISM_z_tpl=std::vector<Float64>());
 
     // buffers for the precomputed fine grid template
     CTemplate       m_templateRebined_bf; //buffer

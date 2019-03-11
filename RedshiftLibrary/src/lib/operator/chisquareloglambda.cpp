@@ -1479,8 +1479,7 @@ TInt32Range COperatorChiSquareLogLambda::FindTplSpectralIndex(
  *
  * opt_dustFitting: -1 = disabled, -10 = fit over all available indexes, positive integer 0, 1 or ... will be used as ism-calzetti index as initialized in constructor
  **/
-std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(
-        const CSpectrum &spectrum,
+std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(const CSpectrum &spectrum,
         const CTemplate &tpl,
         const TFloat64Range &lambdaRange,
         const TFloat64List &redshifts,
@@ -1488,7 +1487,8 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(
         std::vector<CMask> additional_spcMasks,
         std::string opt_interp,
         Int32 opt_extinction,
-        Int32 opt_dustFitting)
+        Int32 opt_dustFitting,
+        CPriorHelperContinuum::TPriorZEList logpriorze)
 {
     Log.LogInfo(
         "  Operator-ChisquareLog: starting computation for template: %s",
