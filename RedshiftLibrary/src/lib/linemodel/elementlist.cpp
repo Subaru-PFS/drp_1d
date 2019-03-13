@@ -312,7 +312,7 @@ Int32 CLineModelElementList::setPassMode(Int32 iPass)
 
         m_fittingmethod = m_opt_secondpass_fittingmethod;
         m_forceLyaFitting = m_opt_lya_forcefit;
-        Log.LogInfo("    model: set forceLyaFitting ASYMFIT : %d", m_forceLyaFitting);
+        Log.LogInfo("    model: set forceLyaFitting ASYMFIT for Tpl-ratio mode : %d", m_forceLyaFitting);
     }
 
 
@@ -2315,9 +2315,9 @@ Float64 CLineModelElementList::fit(Float64 redshift,
                     meritTplratio[ifitting] = _merit;
                     m_ChisquareTplshape[ifitting] = _merit;
                     m_ScaleMargCorrTplshape[ifitting] = getScaleMargCorrection();
-                    //m_StrongELPresentTplshape[ifitting] = GetModelStrongEmissionLinePresent();
-                    m_StrongELPresentTplshape[ifitting] = GetModelHaStrongest(); //warning: hardcoded selpp replaced by whasp for lm-tplratio
-                    std::vector<std::string> strongELSNRAboveCut = getLinesAboveSNR(3.5);
+                    m_StrongELPresentTplshape[ifitting] = GetModelStrongEmissionLinePresent();
+                    //m_StrongELPresentTplshape[ifitting] = GetModelHaStrongest(); //warning: hardcoded selpp replaced by whasp for lm-tplratio
+                    std::vector<std::string> strongELSNRAboveCut;// = getLinesAboveSNR(3.5); //this is costing a lot of processing time, so deactivated for now.
                     m_NLinesAboveSNRTplshape[ifitting] = strongELSNRAboveCut.size();
 
                     //Saving the model A, errorA, and dtm, mtm, ... (for all tplratios, needed ?)
@@ -4478,11 +4478,10 @@ Int32 CLineModelElementList::setLyaProfile(Float64 redshift, const CSpectrumSpec
         Float64 asymCoeffMin = m_opt_lya_fit_asym_min;
         Float64 asymCoeffMax = m_opt_lya_fit_asym_max;
         Int32 nAsymSteps = int((asymCoeffMax-asymCoeffMin)/asymCoeffStep+1.5);
-        Float64 deltaStep = 0.5;
-        Float64 deltaMin = 0.0;
-        Float64 deltaMax = 0.0;//4.0;
-        Int32 nDeltaSteps = int((deltaMax-deltaMin)/deltaStep+0.5);
-        nDeltaSteps = 1;//disable delta fit here: will be parameterized through the offset object
+        Float64 deltaStep = m_opt_lya_fit_delta_step;
+        Float64 deltaMin = m_opt_lya_fit_delta_min;
+        Float64 deltaMax = m_opt_lya_fit_delta_max;
+        Int32 nDeltaSteps = int((deltaMax-deltaMin)/deltaStep+1.5);
 
         Float64 bestWidth = widthCoeffMin;
         Float64 bestAlpha = asymCoeffMin;
@@ -5928,7 +5927,7 @@ CLineModelSolution CLineModelElementList::GetModelSolution(Int32 opt_level)
     modelSolution.AbsorptionVelocity = m_velocityAbsorption;
     modelSolution.Redshift = m_Redshift;
 
-    std::vector<std::string> strongELSNRAboveCut = getLinesAboveSNR(3.5);
+    std::vector<std::string> strongELSNRAboveCut = std::vector<std::string>();// getLinesAboveSNR(3.5);
     modelSolution.NLinesAboveSnrCut = strongELSNRAboveCut.size();
 
     return modelSolution;

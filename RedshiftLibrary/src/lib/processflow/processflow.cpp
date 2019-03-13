@@ -141,10 +141,11 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
           throw std::runtime_error("Override z-search: unable to find zref!");
         }
 
+
+        Float64 stepZ = 1e-5;
         if(computeOnZrange) //computing only on zref, or on a zrange around zref
         {
             Float64 deltaZrangeHalf = 0.5e-2; //override zrange
-            Float64 stepZ = 1e-5;
             Float64 nStepsZ = deltaZrangeHalf*2/stepZ+1;
             for(Int32 kz=0; kz<nStepsZ; kz++)
             {
@@ -159,8 +160,8 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
         if(methodName=="linemodel"){
             ctx.GetDataStore().SetScopedParam( "linemodelsolve.linemodel.extremacount", 1.0);
             Log.LogInfo( "Override z-search: Using overriden linemodelsolve.linemodel.extremacount: %f", 1.0);
-            ctx.GetDataStore().SetScopedParam( "linemodelsolve.linemodel.firstpass.largegridstep", 0.0);
-            Log.LogInfo( "Override z-search: Using overriden linemodelsolve.linemodel.firstpass.largegridstep: %f", 0.0);
+            ctx.GetDataStore().SetScopedParam( "linemodelsolve.linemodel.firstpass.largegridstep", stepZ);
+            Log.LogInfo( "Override z-search: Using overriden linemodelsolve.linemodel.firstpass.largegridstep: %f", stepZ);
         }
 
         Log.LogInfo( "Override z-search: Using overriden zref for spc %s : zref=%f", ctx.GetSpectrum().GetName().c_str(), zref);

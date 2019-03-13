@@ -83,13 +83,18 @@ const std::string CLineModelSolve::GetDescription()
     desc.append("\tparam: linemodel.lyafit.widthcoefffitmin = <float value>\n");
     desc.append("\tparam: linemodel.lyafit.widthcoefffitmax = <float value>\n");
     desc.append("\tparam: linemodel.lyafit.widthcoefffitstep = <float value>\n");
+    desc.append("\tparam: linemodel.lyafit.deltafitmin = <float value>\n");
+    desc.append("\tparam: linemodel.lyafit.deltafitmax = <float value>\n");
+    desc.append("\tparam: linemodel.lyafit.deltafitstep = <float value>\n");
 
     //first pass
     desc.append("\tparam: linemodel.firstpass.largegridstep = <float value>, deactivated if negative or zero\n");
     desc.append("\tparam: linemodel.firstpass.tplratio_ismfit = {""no"", ""yes""}\n");
     desc.append("\tparam: linemodel.firstpass.multiplecontinuumfit_disable = {""no"", ""yes""}\n");
 
+    //second pass
     desc.append("\tparam: linemodel.skipsecondpass = {""no"", ""yes""}\n");
+    desc.append("\tparam: linemodel.secondpass.continuumfit = {""fromfirstpass"", ""retryall""}\n");
 
     desc.append("\tparam: linemodel.pdfcombination = {""marg"", ""bestchi2""}\n");
     desc.append("\tparam: linemodel.stronglinesprior = <float value>, penalization factor = positive value or -1 to deactivate\n");
@@ -116,6 +121,7 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
     dataStore.GetScopedParam( "linemodel.fittingmethod", m_opt_fittingmethod, "hybrid" );
     dataStore.GetScopedParam( "linemodel.secondpasslcfittingmethod", m_opt_secondpasslcfittingmethod, "no" );
     dataStore.GetScopedParam( "linemodel.skipsecondpass", m_opt_skipsecondpass, "no" );
+    dataStore.GetScopedParam( "linemodel.secondpass.continuumfit", m_opt_secondpass_continuumfit, "fromfirstpass" );
     dataStore.GetScopedParam( "linemodel.firstpass.fittingmethod", m_opt_firstpass_fittingmethod, "hybrid" );
     dataStore.GetScopedParam( "linemodel.firstpass.largegridstep", m_opt_firstpass_largegridstep, 0.001 );
     dataStore.GetScopedParam( "linemodel.firstpass.tplratio_ismfit", m_opt_firstpass_tplratio_ismfit, "no" );
@@ -158,6 +164,9 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
         dataStore.GetScopedParam( "linemodel.absvelocityfitmin", m_opt_abs_velocity_fit_min, 150.0 );
         dataStore.GetScopedParam( "linemodel.absvelocityfitmax", m_opt_abs_velocity_fit_max, 500.0 );
         dataStore.GetScopedParam( "linemodel.absvelocityfitstep", m_opt_abs_velocity_fit_step, 50.0 );
+        dataStore.GetScopedParam( "linemodel.manvelocityfitdzmin", m_opt_manvelfit_dz_min, -6e-4 );
+        dataStore.GetScopedParam( "linemodel.manvelocityfitdzmax", m_opt_manvelfit_dz_max, 6e-4 );
+        dataStore.GetScopedParam( "linemodel.manvelocityfitdzstep", m_opt_manvelfit_dz_step, 1e-4 );
     }
     dataStore.GetScopedParam( "linemodel.lyaforcefit", m_opt_lya_forcefit, "no" );
     dataStore.GetScopedParam( "linemodel.lyaforcedisablefit", m_opt_lya_forcedisablefit, "no" );
@@ -167,6 +176,9 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
     dataStore.GetScopedParam( "linemodel.lyafit.widthfitmin", m_opt_lya_fit_width_min, 1.0 );
     dataStore.GetScopedParam( "linemodel.lyafit.widthfitmax", m_opt_lya_fit_width_max, 4.0 );
     dataStore.GetScopedParam( "linemodel.lyafit.widthfitstep", m_opt_lya_fit_width_step, 1.0 );
+    dataStore.GetScopedParam( "linemodel.lyafit.deltafitmin", m_opt_lya_fit_delta_min, 0.0 );
+    dataStore.GetScopedParam( "linemodel.lyafit.deltafitmax", m_opt_lya_fit_delta_max, 0.0 );
+    dataStore.GetScopedParam( "linemodel.lyafit.deltafitstep", m_opt_lya_fit_delta_step, 1.0 );
 
     dataStore.GetScopedParam( "linemodel.continuumreestimation", m_opt_continuumreest, "no" );
     dataStore.GetScopedParam( "linemodel.rules", m_opt_rules, "all" );
@@ -225,6 +237,9 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
         Log.LogInfo( "    -abs velocity fit min : %.1f", m_opt_abs_velocity_fit_min);
         Log.LogInfo( "    -abs velocity fit max : %.1f", m_opt_abs_velocity_fit_max);
         Log.LogInfo( "    -abs velocity fit step : %.1f", m_opt_abs_velocity_fit_step);
+        Log.LogInfo( "    -man velocity fit dz min : %.2e", m_opt_manvelfit_dz_min);
+        Log.LogInfo( "    -man velocity fit dz max : %.2e", m_opt_manvelfit_dz_max);
+        Log.LogInfo( "    -man velocity fit dz step : %.2e", m_opt_manvelfit_dz_step);
     }
 
     Log.LogInfo( "    -rigidity: %s", m_opt_rigidity.c_str());
@@ -254,8 +269,9 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
     Log.LogInfo( "      -tplratio_ismfit: %s", m_opt_firstpass_tplratio_ismfit.c_str());
     Log.LogInfo( "      -multiplecontinuumfit_disable: %s", m_opt_firstpass_disablemultiplecontinuumfit.c_str());
 
-
-    Log.LogInfo( "    -skip second pass: %s", m_opt_skipsecondpass.c_str());
+    Log.LogInfo( "    -second pass:");
+    Log.LogInfo( "      -skip second pass: %s", m_opt_skipsecondpass.c_str());
+    Log.LogInfo( "      -continuum fit method: %s", m_opt_secondpass_continuumfit.c_str());
 
     Log.LogInfo( "    -pdf-stronglinesprior: %e", m_opt_stronglinesprior);
     Log.LogInfo( "    -pdf-euclidNHaEmittersPriorStrength: %e", m_opt_euclidNHaEmittersPriorStrength);
@@ -786,6 +802,9 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
     linemodel.m_opt_lya_fit_width_min=m_opt_lya_fit_width_min;
     linemodel.m_opt_lya_fit_width_max=m_opt_lya_fit_width_max;
     linemodel.m_opt_lya_fit_width_step=m_opt_lya_fit_width_step;
+    linemodel.m_opt_lya_fit_delta_min=m_opt_lya_fit_delta_min;
+    linemodel.m_opt_lya_fit_delta_max=m_opt_lya_fit_delta_max;
+    linemodel.m_opt_lya_fit_delta_step=m_opt_lya_fit_delta_step;
 
     if(m_opt_rigidity=="tplshape")
     {
@@ -895,7 +914,7 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
     //**************************************************
     //FIRST PASS + CANDIDATES - B
     //**************************************************
-    Bool enableFirstpass_B = true && (m_opt_continuumcomponent=="tplfit" || m_opt_continuumcomponent=="tplfitauto") && (m_opt_extremacount>1);
+    Bool enableFirstpass_B = false && (m_opt_continuumcomponent=="tplfit" || m_opt_continuumcomponent=="tplfitauto") && (m_opt_extremacount>1);
     COperatorLineModel linemodel_fpb;
     Int32 retInitB = linemodel_fpb.Init(_spc, redshifts);
     if( retInitB!=0 )
@@ -1045,7 +1064,10 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
                                                           m_opt_em_velocity_fit_step,
                                                           m_opt_abs_velocity_fit_min,
                                                           m_opt_abs_velocity_fit_max,
-                                                          m_opt_abs_velocity_fit_step);
+                                                          m_opt_abs_velocity_fit_step,
+                                                          m_opt_manvelfit_dz_min,
+                                                          m_opt_manvelfit_dz_max,
+                                                          m_opt_manvelfit_dz_step);
         if( retSecondPass!=0 )
         {
             Log.LogError( "Line Model, second pass failed. Aborting" );

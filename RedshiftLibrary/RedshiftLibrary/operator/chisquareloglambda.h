@@ -11,6 +11,7 @@
 #include <RedshiftLibrary/spectrum/template/template.h>
 #include <RedshiftLibrary/spectrum/fluxcorrectionmeiksin.h>
 #include <RedshiftLibrary/spectrum/fluxcorrectioncalzetti.h>
+#include <RedshiftLibrary/statistics/priorhelpercontinuum.h>
 
 #include <fftw3.h>
 
@@ -33,7 +34,8 @@ public:
                                               std::vector<CMask> additional_spcMasks,
                                               std::string opt_interp,
                                               Int32 opt_extinction=0,
-                                              Int32 opt_dustFitting=0);
+                                              Int32 opt_dustFitting=0,
+                                              CPriorHelperContinuum::TPriorZEList logpriorze=CPriorHelperContinuum::TPriorZEList());
 
     const Float64*  getDustCoeff(Float64 dustCoeff, Float64 maxLambda);
     const Float64*  getMeiksinCoeff(Int32 meiksinIdx, Float64 redshift, Float64 maxLambda);

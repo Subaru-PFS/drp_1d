@@ -8,7 +8,6 @@
 #include <RedshiftLibrary/operator/chisquareresult.h>
 #include <RedshiftLibrary/extremum/extremum.h>
 #include <RedshiftLibrary/common/quicksort.h>
-
 #include <RedshiftLibrary/log/log.h>
 
 #include <boost/numeric/conversion/bounds.hpp>
@@ -80,6 +79,7 @@ COperatorChiSquare2::~COperatorChiSquare2()
  * @param opt_extinction
  * @param opt_dustFitting : -1 = disabled, -10 = fit over all available indexes, positive integer 0, 1 or ... will be used as ism-calzetti index as initialized in constructor.
  * @param spcMaskAdditional
+ * @param priorjoint_pISM_tpl_z : vector size = nISM, joint prior p(ISM, TPL, Z)
  */
 void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
                                    const CTemplate& tpl,
@@ -102,7 +102,8 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
                                    Float64 forcedAmplitude,
                                    Int32 opt_extinction,
                                    Int32 opt_dustFitting,
-                                   CMask spcMaskAdditional)
+                                   CMask spcMaskAdditional,
+                                   std::vector<Float64> logpriorjoint_pISM_z_tpl)
 {
     bool verbose = false;
     bool amplForcePositive=true;
@@ -561,8 +562,8 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
                 if(forcedAmplitude !=-1){
                     ampl = forcedAmplitude;
                 }
-                //* //1. fast method: D. Vibert, Amazed methods improvements, 10/06/2015
-                fit = sumS - sumCross*ampl;
+                //Generalized method (ampl can take any value now) for chi2 estimate
+                fit = sumT*ampl*ampl - 2.*ampl*sumCross;
             }
 
             //*
@@ -579,6 +580,12 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
 
             }
             //*/
+
+
+            if(logpriorjoint_pISM_z_tpl.size()==m_ismCorrectionCalzetti->GetNPrecomputedDustCoeffs())
+            {
+                fit -= 2.*logpriorjoint_pISM_z_tpl[kDust];
+            }
 
             /*
             if(redshift==0.0)
@@ -641,7 +648,8 @@ std::shared_ptr<COperatorResult> COperatorChiSquare2::Compute(const CSpectrum& s
                                                               std::vector<CMask> additional_spcMasks,
                                                               std::string opt_interp,
                                                               Int32 opt_extinction,
-                                                              Int32 opt_dustFitting)
+                                                              Int32 opt_dustFitting,
+                                                              CPriorHelperContinuum::TPriorZEList logpriorze)
 {
     Log.LogDetail("  Operator-Chisquare2: starting computation for template: %s", tpl.GetName().c_str());
     if(0)

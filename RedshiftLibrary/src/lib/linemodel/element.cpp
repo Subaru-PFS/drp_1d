@@ -223,10 +223,12 @@ Float64 CLineModelElement::GetLineProfile(CRay::TProfile profile, Float64 x, Flo
         coeff = m_asymfit_sigma_coeff;
         sigma = sigma*coeff;
 
+        //*
         //correction in order to have the line shifted on the mean: from https://en.wikipedia.org/wiki/Skew_normal_distribution
         delta = m_asymfit_alpha/std::sqrt(1.+m_asymfit_alpha*m_asymfit_alpha);
         muz = delta*sqrt(2./M_PI);
         xc = xc + m_asymfit_sigma_coeff*muz;
+
         /*
         //correction in order to have the line shifted on the mode: from https://en.wikipedia.org/wiki/Skew_normal_distribution
         delta = m_asymfit_alpha/std::sqrt(1.+m_asymfit_alpha*m_asymfit_alpha);

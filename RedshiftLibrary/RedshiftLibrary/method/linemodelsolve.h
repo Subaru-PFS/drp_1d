@@ -56,6 +56,7 @@ private:
     std::string m_opt_secondpasslcfittingmethod;
     std::string m_opt_continuumcomponent;
     std::string m_opt_skipsecondpass="no";
+    std::string m_opt_secondpass_continuumfit="fromfirstpass";
 
     std::string m_opt_tplfit_dustfit="no";
     std::string m_opt_tplfit_igmfit="no";
@@ -74,6 +75,9 @@ private:
     Float64 m_opt_abs_velocity_fit_min;
     Float64 m_opt_abs_velocity_fit_max;
     Float64 m_opt_abs_velocity_fit_step;
+    Float64 m_opt_manvelfit_dz_min;
+    Float64 m_opt_manvelfit_dz_max;
+    Float64 m_opt_manvelfit_dz_step;
     std::string m_opt_continuumreest;
     std::string m_opt_rules;
 
@@ -85,6 +89,9 @@ private:
     Float64 m_opt_lya_fit_width_min;
     Float64 m_opt_lya_fit_width_max;
     Float64 m_opt_lya_fit_width_step;
+    Float64 m_opt_lya_fit_delta_min;
+    Float64 m_opt_lya_fit_delta_max;
+    Float64 m_opt_lya_fit_delta_step;
 
 
     //options for rigidity=tplshape

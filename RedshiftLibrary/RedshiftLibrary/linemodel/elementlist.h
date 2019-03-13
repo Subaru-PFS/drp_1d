@@ -278,6 +278,9 @@ public:
     Float64 m_opt_lya_fit_width_min=1.;
     Float64 m_opt_lya_fit_width_max=4.;
     Float64 m_opt_lya_fit_width_step=1.;
+    Float64 m_opt_lya_fit_delta_min=0.;
+    Float64 m_opt_lya_fit_delta_max=0.;
+    Float64 m_opt_lya_fit_delta_step=1.;
 
     Int32 m_opt_fitcontinuum_maxCount = 2;
     bool m_opt_firstpass_forcedisableMultipleContinuumfit=true;
