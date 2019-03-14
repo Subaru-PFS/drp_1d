@@ -519,13 +519,15 @@ void COperatorChiSquareLogLambda::freeFFTPlans()
  * @param opt_extinction
  * @param opt_dustFitting
  * @param spcMaskAdditional
+ * @param logpriorze: if size=0, prior is deactivated
  * @return
  */
 Int32 COperatorChiSquareLogLambda::FitAllz(const TFloat64Range &lambdaRange,
                                            std::shared_ptr<CChisquareResult> result,
                                            std::vector<Int32> igmMeiksinCoeffs,
                                            std::vector<Int32> ismEbmvCoeffs,
-                                           CMask spcMaskAdditional)
+                                           CMask spcMaskAdditional,
+                                           CPriorHelperContinuum::TPriorZEList logpriorze)
 {
     bool verboseLogFitAllz = false;
 
@@ -737,11 +739,29 @@ Int32 COperatorChiSquareLogLambda::FitAllz(const TFloat64Range &lambdaRange,
         {
             UInt32 fullResultIdx = isubz + izrangelist[k].GetBegin();
             result->ChiSquare[fullResultIdx] = subresult->ChiSquare[isubz];
+            Float64 logprior = 0.;
+            if(logpriorze.size()>0)
+            {
+                Int32 kism_best = -1;
+                Int32 nISM = ismEbmvCoeffs.size();
+                for (Int32 kISM = 0; kISM < nISM; kISM++)
+                {
+                    Float64 ebmv = m_ismCorrectionCalzetti->GetEbmvValue(kISM);
+                    if(ebmv==subresult->FitDustCoeff[isubz])
+                    {
+                        kism_best = kISM;
+                        break;
+                    }
+                }
+                logprior = -2.0*logpriorze[fullResultIdx][kism_best].logpriorTZE;
+                result->ChiSquare[fullResultIdx] += logprior;
+            }
             result->Overlap[fullResultIdx] = subresult->Overlap[isubz];
             result->FitAmplitude[fullResultIdx] =
                 subresult->FitAmplitude[isubz];
             result->FitDtM[fullResultIdx] = subresult->FitDtM[isubz];
             result->FitMtM[fullResultIdx] = subresult->FitMtM[isubz];
+            result->LogPrior[fullResultIdx] = logprior;
             result->FitDustCoeff[fullResultIdx] =
                 subresult->FitDustCoeff[isubz];
             result->FitMeiksinIdx[fullResultIdx] =
@@ -753,12 +773,16 @@ Int32 COperatorChiSquareLogLambda::FitAllz(const TFloat64Range &lambdaRange,
                  kism++)
             {
                 for (Int32 kigm = 0;
-                     kigm <
-                     result->ChiSquareIntermediate[fullResultIdx][kism].size();
+                     kigm < result->ChiSquareIntermediate[fullResultIdx][kism].size();
                      kigm++)
                 {
                     result->ChiSquareIntermediate[fullResultIdx][kism][kigm] =
-                        subresult->ChiSquareIntermediate[isubz][kism][kigm];
+                            subresult->ChiSquareIntermediate[isubz][kism][kigm];
+                    if(logpriorze.size()>0)
+                    {
+                        result->ChiSquareIntermediate[fullResultIdx][kism][kigm] +=
+                                -2.0*logpriorze[fullResultIdx][kism].logpriorTZE;
+                    }
                 }
             }
         }
@@ -2119,9 +2143,15 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(const CSpe
                      "Feature not coded for this log-lambda operator!)");
     }
 
+    if(logpriorze.size()>0 && logpriorze.size()!=sortedRedshifts.size())
+    {
+        Log.LogError("  Operator-ChisquareLog: prior list size (%d) didn't match the input redshift-list (%d) !)", logpriorze.size(), sortedRedshifts.size());
+        throw std::runtime_error("  Operator-ChisquareLog: prior list size didn't match the input redshift-list size");
+    }
+
     //*
     Int32 retFit =
-        FitAllz(lambdaRange, result, igmMeiksinCoeffs, ismEbmvCoeffs);
+        FitAllz(lambdaRange, result, igmMeiksinCoeffs, ismEbmvCoeffs, CMask(), logpriorze);
     if (retFit != 0)
     {
         Log.LogError("  Operator-ChisquareLog: FitAllz failed with error %d",

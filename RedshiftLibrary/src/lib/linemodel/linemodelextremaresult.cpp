@@ -67,6 +67,7 @@ void CLineModelExtremaResult::Resize(Int32 size)
     FittedTplRedshift.resize(size);
     FittedTplDtm.resize(size);
     FittedTplMtm.resize(size);
+    FittedTplLogPrior.resize(size);
     FittedTplpCoeffs.resize(size);
 
     FittedTplshapeName.resize(size);
@@ -404,6 +405,17 @@ void CLineModelExtremaResult::Save( const CDataStore& store, std::ostream& strea
         for ( int i=0; i<FittedTplMtm.size(); i++)
         {
             stream <<  FittedTplMtm[i] << "\t";
+        }
+        stream << "}" << std::endl;
+    }
+
+    // save FittedTplLogPrior, on 1 line
+    if(FittedTplLogPrior.size()>0){
+        stream <<  "#FittedTplLogPrior for each extrema = {";
+        stream << std::setprecision(8);
+        for ( int i=0; i<FittedTplLogPrior.size(); i++)
+        {
+            stream <<  FittedTplLogPrior[i] << "\t";
         }
         stream << "}" << std::endl;
     }

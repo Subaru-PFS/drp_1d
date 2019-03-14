@@ -120,13 +120,15 @@ bool CTemplatesFitStore::Add(std::string tplName,
                              Float64 merit,
                              Float64 fitAmplitude,
                              Float64 fitDtM,
-                             Float64 fitMtM)
+                             Float64 fitMtM,
+                             Float64 logprior)
 {
     SValues tmpSValues;
     tmpSValues.merit = merit;
     tmpSValues.fitAmplitude = fitAmplitude;
     tmpSValues.fitDtM = fitDtM;
     tmpSValues.fitMtM = fitMtM;
+    tmpSValues.logprior = logprior;
     tmpSValues.ismDustCoeff = ismDustCoeff;
     tmpSValues.igmMeiksinIdx = igmMeiksinIdx;
     tmpSValues.tplName = tplName;

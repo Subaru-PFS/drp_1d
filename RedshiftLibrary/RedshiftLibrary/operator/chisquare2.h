@@ -55,6 +55,7 @@ private:
                   Float64 &fittingAmplitude,
                   Float64& fittingDtM,
                   Float64& fittingMtM,
+                  Float64 &fittingLogprior,
                   Float64 &fittingDustCoeff,
                   Float64 &fittingMeiksinIdx,
                   EStatus& status,
@@ -66,7 +67,7 @@ private:
                   Int32 opt_extinction=0,
                   Int32 opt_dustFitting=0,
                   CMask spcMaskAdditional=CMask(),
-                  std::vector<Float64> logpriorjoint_pISM_z_tpl=std::vector<Float64>());
+                  CPriorHelperContinuum::TPriorEList logpriore=CPriorHelperContinuum::TPriorEList());
 
     // buffers for the precomputed fine grid template
     CTemplate       m_templateRebined_bf; //buffer

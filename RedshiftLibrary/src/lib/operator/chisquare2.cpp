@@ -92,6 +92,7 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
                                    Float64& fittingAmplitude,
                                    Float64& fittingDtM,
                                    Float64& fittingMtM,
+                                   Float64& fittingLogprior,
                                    Float64 &fittingDustCoeff,
                                    Float64 &fittingMeiksinIdx,
                                    EStatus& status,
@@ -103,7 +104,7 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
                                    Int32 opt_extinction,
                                    Int32 opt_dustFitting,
                                    CMask spcMaskAdditional,
-                                   std::vector<Float64> logpriorjoint_pISM_z_tpl)
+                                   CPriorHelperContinuum::TPriorEList logpriore)
 {
     bool verbose = false;
     bool amplForcePositive=true;
@@ -581,10 +582,11 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
             }
             //*/
 
-
-            if(logpriorjoint_pISM_z_tpl.size()==m_ismCorrectionCalzetti->GetNPrecomputedDustCoeffs())
+            Float64 logprior = 0.;
+            if(logpriore.size()==m_ismCorrectionCalzetti->GetNPrecomputedDustCoeffs())
             {
-                fit -= 2.*logpriorjoint_pISM_z_tpl[kDust];
+                logprior = -2.*logpriore[kDust].logpriorTZE;
+                fit += logprior;
             }
 
             /*
@@ -619,6 +621,7 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
                 fittingAmplitude = ampl;
                 fittingDtM = sumCross;
                 fittingMtM = sumT;
+                fittingLogprior = logprior;
 
                 status_chisquareSetAtLeastOnce = true;
             }
@@ -836,6 +839,11 @@ std::shared_ptr<COperatorResult> COperatorChiSquare2::Compute(const CSpectrum& s
     {
         Log.LogError("  Operator-Chisquare2: using default mask, masks-list size (%d) didn't match the input redshift-list (%d) !)", additional_spcMasks.size(), sortedRedshifts.size());
     }
+    if(logpriorze.size()!=sortedRedshifts.size())
+    {
+        Log.LogError("  Operator-Chisquare2: prior list size (%d) didn't match the input redshift-list (%d) !)", logpriorze.size(), sortedRedshifts.size());
+        throw std::runtime_error("  Operator-Chisquare2: prior list size didn't match the input redshift-list size");
+    }
 
     for (Int32 i=0;i<sortedRedshifts.size();i++)
     {
@@ -861,6 +869,7 @@ std::shared_ptr<COperatorResult> COperatorChiSquare2::Compute(const CSpectrum& s
                   result->FitAmplitude[i],
                   result->FitDtM[i],
                   result->FitMtM[i],
+                  result->LogPrior[i],
                   result->FitDustCoeff[i],
                   result->FitMeiksinIdx[i],
                   result->Status[i],
@@ -871,7 +880,8 @@ std::shared_ptr<COperatorResult> COperatorChiSquare2::Compute(const CSpectrum& s
                   -1,
                   opt_extinction,
                   opt_dustFitting,
-                  additional_spcMask);
+                  additional_spcMask,
+                  logpriorze[i]);
 
         if(result->Status[i]==nStatus_InvalidProductsError)
         {
@@ -1245,6 +1255,7 @@ const COperatorResult* COperatorChiSquare2::ExportChi2versusAZ(const CSpectrum& 
                       result->FitAmplitude[i],
                       result->FitDtM[i],
                       result->FitMtM[i],
+                      result->LogPrior[i],
                       result->FitDustCoeff[i],
                       result->FitMeiksinIdx[i],
                       result->Status[i],
