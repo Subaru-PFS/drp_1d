@@ -47,6 +47,11 @@ pkgconfig
 # Temp files
 *~
 
+# Index files
+TAGS
+.DS_Store
+Thumbs.db
+
 # Python cache files
 *.pyc
 *__pycache__

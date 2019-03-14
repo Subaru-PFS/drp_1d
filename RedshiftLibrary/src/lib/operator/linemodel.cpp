@@ -702,8 +702,8 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
                     duration_tplfitmaskprep_seconds);
     }
 
-    CPriorHelperContinuum pContinuum;
-    pContinuum.Init("/home/aschmitt/work/tmp_vvds24_fullmodel/modelfitstats");
+    // CPriorHelperContinuum pContinuum;
+    // pContinuum.Init("/home/aschmitt/work/tmp_vvds24_fullmodel/modelfitstats");
 
     for (UInt32 i = 0; i < tplCategoryList.size(); i++)
     {
