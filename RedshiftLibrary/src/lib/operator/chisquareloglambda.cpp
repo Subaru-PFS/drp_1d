@@ -743,14 +743,19 @@ Int32 COperatorChiSquareLogLambda::FitAllz(const TFloat64Range &lambdaRange,
             if(logpriorze.size()>0)
             {
                 Int32 kism_best = -1;
-                Int32 nISM = ismEbmvCoeffs.size();
-                for (Int32 kISM = 0; kISM < nISM; kISM++)
+                if(subresult->FitDustCoeff[isubz]==-1)
                 {
-                    Float64 ebmv = m_ismCorrectionCalzetti->GetEbmvValue(kISM);
-                    if(ebmv==subresult->FitDustCoeff[isubz])
+                    kism_best=0;
+                }else{
+                    Int32 nISM = ismEbmvCoeffs.size();
+                    for (Int32 kISM = 0; kISM < nISM; kISM++)
                     {
-                        kism_best = kISM;
-                        break;
+                        Float64 ebmv = m_ismCorrectionCalzetti->GetEbmvValue(kISM);
+                        if(ebmv==subresult->FitDustCoeff[isubz])
+                        {
+                            kism_best = kISM;
+                            break;
+                        }
                     }
                 }
                 logprior = -2.0*logpriorze[fullResultIdx][kism_best].logpriorTZE;
