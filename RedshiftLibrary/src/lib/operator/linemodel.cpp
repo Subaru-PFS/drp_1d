@@ -1832,6 +1832,8 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
                 {
                     m_model->SetFittingMethod("individual");
                 }
+                m_model->SetForcedisableTplratioISMfit(m_model->m_opt_firstpass_forcedisableTplratioISMfit); //todo, add new param for this ?
+
                 // m_model->m_enableAmplitudeOffsets = true;
                 // contreest_iterations = 1;
                 std::vector<std::vector<Int32>> idxVelfitGroups;
@@ -1894,7 +1896,24 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
                     }
 
                     // Prepare velocity grid to be checked
-                    Int32 nSteps = (int)((vSupLim - vInfLim) / vStep);
+                    std::vector<Float64> velfitlist;
+                    Int32 optVelfit = 0; //lin
+                    //Int32 optVelfit = 1; //log todo ?
+                    if(optVelfit==0)
+                    {
+                        Int32 nStepsLin = (int)((vSupLim - vInfLim) / vStep);
+                        for (Int32 kv = 0; kv < nStepsLin; kv++)
+                        {
+                            velfitlist.push_back(vInfLim + kv * vStep);
+                        }
+                    }
+                    Int32 nVelSteps = velfitlist.size();
+                    /*
+                    for (Int32 kv = 0; kv < nVelSteps; kv++)
+                    {
+                        Log.LogDetail("  Operator-Linemodel: velstep %d = %f", kv, velfitlist[kv]);
+                    }
+                    //*/
 
                     if (m_result->Redshifts[idx] + dzInfLim <
                             m_result->Redshifts[0])
@@ -1924,7 +1943,7 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
                         Log.LogInfo("  Operator-Linemodel: manualStep n=%d", nDzSteps);
                     }
 
-                    Int32 n_progresssteps = idxVelfitGroups.size() * nDzSteps * nSteps;
+                    Int32 n_progresssteps = idxVelfitGroups.size() * nDzSteps * nVelSteps;
                     boost::progress_display show_progress(n_progresssteps);
                     for (Int32 kgroup = 0; kgroup < idxVelfitGroups.size(); kgroup++)
                     {
@@ -1936,9 +1955,9 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
                         for (Int32 kdz = 0; kdz < nDzSteps; kdz++)
                         {
                             Float64 dzTest = dzInfLim + kdz * dzStep;
-                            for (Int32 kv = 0; kv < nSteps; kv++)
+                            for (Int32 kv = 0; kv < nVelSteps; kv++)
                             {
-                                Float64 vTest = vInfLim + kv * vStep;
+                                Float64 vTest = velfitlist[kv];
                                 if (iLineType == 0)
                                 {
                                     if (m_enableWidthFitByGroups)
@@ -2051,8 +2070,12 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
                         }
                     }
                 }
+
+                //restore some params
                 m_model->SetFittingMethod(opt_fittingmethod);
                 // m_model->m_enableAmplitudeOffsets = false;
+                m_model->SetForcedisableTplratioISMfit(false); //todo coordinate with SetPassMode() ?
+
             }
         }else{
             m_secondpass_parameters_extremaResult.Elv[i] = m_model->GetVelocityEmission();

@@ -256,7 +256,7 @@ public:
     TStringList GetModelRulesLog();
 
     Int32 setPassMode(Int32 iPass);
-
+    void SetForcedisableTplratioISMfit(bool opt);
 
     CRayCatalogsTplShape* m_CatalogTplShape;
     std::vector<Float64> m_ChisquareTplshape;
