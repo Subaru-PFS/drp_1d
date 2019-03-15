@@ -32,6 +32,13 @@ CPriorHelperContinuum::~CPriorHelperContinuum()
 bool CPriorHelperContinuum::Init( std::string priorDirPath )
 {
     bfs::path rootFolder( priorDirPath.c_str() );
+    if(!bfs::exists(rootFolder))
+    {
+        Log.LogWarning("    CPriorHelperContinuum: rootFolder path does not exist: %s", rootFolder.string().c_str());
+        Log.LogWarning("    CPriorHelperContinuum: priors won't be used");
+        mInitFailed = true;
+        return false;
+    }
 
     std::vector<std::string> EZTfilesPathList;
     bfs::directory_iterator end_itr;
@@ -141,6 +148,13 @@ bool CPriorHelperContinuum::Init( std::string priorDirPath )
         SetAGausssigmaData(k, read_buffer);
         mInitFailed = false;
     }
+    return true;
+}
+
+
+bool CPriorHelperContinuum::SetBeta(Float64 beta)
+{
+    m_beta=beta;
     return true;
 }
 
@@ -264,6 +278,10 @@ bool CPriorHelperContinuum::LoadFileEZ( const char* filePath, std::vector<std::v
                 {
                     Float64 x;
                     iss >> x;
+                    if(std::isnan(x) || std::isinf(x) || x!=x || x<=0.)
+                    {
+                        x = m_priorminval;
+                    }
                     lineVals.push_back(x);
 
                     if(verboseRead)
@@ -290,8 +308,34 @@ bool CPriorHelperContinuum::LoadFileEZ( const char* filePath, std::vector<std::v
     return loadSuccess;
 }
 
-bool CPriorHelperContinuum::GetTplPriorData(std::string tplname, TPriorZEList& zePriorData)
+/**
+ * @brief CPriorHelperContinuum::GetTplPriorData
+ * @param tplname
+ * @param redshifts
+ * @param zePriorData
+ * @param outsideZRangeExtensionMode: 0=extend 0 value for z<m_z0, and n-1 value for z>m_z0+m_dZ*m_nZ, 1=return error if z outside prior range
+ * @return
+ */
+bool CPriorHelperContinuum::GetTplPriorData(std::string tplname,
+                                            std::vector<Float64> redshifts,
+                                            TPriorZEList& zePriorData,
+                                            Int32 outsideZRangeExtensionMode)
 {
+    bool verbose=false;
+    if(m_beta<=0.0)
+    {
+        Log.LogError("    CPriorHelperContinuum: beta coeff not initialized correctly (=%e)", m_beta);
+        zePriorData.clear();
+        return false;
+    }
+
+    if(mInitFailed)
+    {
+        Log.LogDetail("    CPriorHelperContinuum: init. failed, unable to provide priors. Priors won't be used.");
+        zePriorData.clear();
+        return true;
+    }
+
     //find idx for tplname
     UInt32 idx=-1;
     for(Int32 k=0; k<m_tplnames.size(); k++)
@@ -308,6 +352,53 @@ bool CPriorHelperContinuum::GetTplPriorData(std::string tplname, TPriorZEList& z
         return false;
     }
 
-    zePriorData = m_data[idx];
+    zePriorData.clear();
+    Int32 idz=-1;
+    for(Int32 kz=0; kz<redshifts.size(); kz++)
+    {
+
+       idz = Int32( (redshifts[kz]-m_z0)/m_dz );
+       if(outsideZRangeExtensionMode==1)
+       {
+           if(idz<0 || idz>=m_nZ)
+           {
+               Log.LogError("    CPriorHelperContinuum: unable to match this redshift in prior list : %e", redshifts[kz]);
+               return false;
+           }
+       }
+       if(outsideZRangeExtensionMode==0)
+       {
+           if(idz<0)
+           {
+               idz=0;
+           }
+           if(idz>=m_nZ)
+           {
+               idz=m_nZ;
+           }
+
+       }
+       if(verbose)
+       {
+           Log.LogInfo("    CPriorHelperContinuum: get prior for z=%f: found idz=%d", redshifts[kz], idz);
+       }
+       TPriorEList dataz = m_data[idx][idz];
+       for(UInt32 icol=0; icol<m_nEbv; icol++)
+       {
+           if(verbose)
+           {
+               Log.LogInfo("    CPriorHelperContinuum: get prior for tpl=%s", tplname.c_str());
+               Log.LogInfo("    CPriorHelperContinuum: get prior idTpl=%d, idz=%d, idebmv=%d : valf=%e", idx, idz, icol, dataz[icol].logpriorTZE);
+           }
+            dataz[icol].logpriorTZE /= m_dz;
+            dataz[icol].logpriorTZE = m_beta*log(dataz[icol].logpriorTZE);
+       }
+       zePriorData.push_back(dataz);
+    }
+
+
     return true;
 }
+
+
+

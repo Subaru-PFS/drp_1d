@@ -151,6 +151,7 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
     //NB: fitContinuum_option: this is the initialization (default value), eventually overriden in SetFitContinuum_FitStore() when a fitStore gets available
     m_fitContinuum_option = 0; //0=interactive fitting, 1=use precomputed fit store, 2=use fixed values (typical use for second pass recompute)
     m_fitContinuum_tplfitStore = NULL;
+    m_fitContinuum_priorhelper = NULL;
 
     if(m_ContinuumComponent == "tplfit" || m_ContinuumComponent == "tplfitauto" || opt_fittingmethod == "lmfit" )
     {
@@ -315,9 +316,17 @@ Int32 CLineModelElementList::setPassMode(Int32 iPass)
         Log.LogInfo("    model: set forceLyaFitting ASYMFIT for Tpl-ratio mode : %d", m_forceLyaFitting);
     }
 
+    //todo add new iPass==3 for second pass recompute, and use iPass==2 for second pass estimate parameters ?
 
     return true;
 }
+
+
+void CLineModelElementList::SetForcedisableTplratioISMfit(bool opt)
+{
+    m_forcedisableTplratioISMfit = opt;
+}
+
 
 /**
  * \brief Returns a pointer to m_SpectrumModel.
@@ -845,6 +854,7 @@ void CLineModelElementList::LoadFitContinuumOneTemplate(const TFloat64Range& lam
   Int32 fitMeiksinIdx = -1;
   Float64 fitDtM = -1.0;
   Float64 fitMtM = -1.0;
+  Float64 fitLogprior = 0.0;
   Float64 overlapThreshold = 1.0;
 
   bool ignoreLinesSupport=m_fitContinuum_outsidelinesmask;
@@ -876,7 +886,8 @@ void CLineModelElementList::LoadFitContinuumOneTemplate(const TFloat64Range& lam
                              fitDustCoeff,
                              fitMeiksinIdx,
                              fitDtM,
-                             fitMtM);
+                             fitMtM,
+                             fitLogprior);
   /*//debug
   // export for debug
   FILE* fspc = fopen( "Continuum.txt", "w+" );
@@ -909,6 +920,7 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, I
     Float64 bestFitRedshift = m_Redshift;
     Float64 bestFitDtM = -1.0;
     Float64 bestFitMtM = -1.0;
+    Float64 bestFitLogprior = 0.0;
     std::string bestTplName="";
     std::vector<Float64> bestFitPolyCoeffs;
 
@@ -945,11 +957,23 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, I
                 Int32 fitMeiksinIdx = -1;
                 Float64 fitDtM = -1.0;
                 Float64 fitMtM = -1.0;
-                Bool ret = SolveContinuum( *m_inputSpc, tpl, lambdaRange,
-					   redshifts, overlapThreshold,
-					   maskList, opt_interp, opt_extinction,
-					   opt_dustFit, merit, fitAmplitude,
-					   fitDustCoeff, fitMeiksinIdx, fitDtM, fitMtM);
+                Float64 fitLogprior = 0.0;
+                Bool ret = SolveContinuum( *m_inputSpc,
+                                           tpl,
+                                           lambdaRange,
+                                           redshifts,
+                                           overlapThreshold,
+                                           maskList,
+                                           opt_interp,
+                                           opt_extinction,
+                                           opt_dustFit,
+                                           merit,
+                                           fitAmplitude,
+                                           fitDustCoeff,
+                                           fitMeiksinIdx,
+                                           fitDtM,
+                                           fitMtM,
+                                           fitLogprior);
 
                 if(ret)
                 {
@@ -961,6 +985,7 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, I
                         bestFitMeiksinIdx = fitMeiksinIdx;
                         bestFitDtM = fitDtM;
                         bestFitMtM = fitMtM;
+                        bestFitLogprior = fitLogprior;
                         bestTplName = tpl.GetName();
                     }
                 }else{
@@ -981,6 +1006,7 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, I
         bestFitMeiksinIdx = fitValues.igmMeiksinIdx;
         bestFitDtM = fitValues.fitDtM;
         bestFitMtM = fitValues.fitMtM;
+        bestFitLogprior = fitValues.logprior;
         bestTplName = fitValues.tplName;
     }else if(m_fitContinuum_option==2){
         //values unmodified
@@ -991,6 +1017,7 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, I
         bestFitMeiksinIdx = m_fitContinuum_tplFitMeiksinIdx;
         bestFitDtM = m_fitContinuum_tplFitDtM;
         bestFitMtM = m_fitContinuum_tplFitMtM;
+        bestFitLogprior = m_fitContinuum_tplFitLogprior;
         bestFitRedshift = m_fitContinuum_tplFitRedshift;
         bestFitPolyCoeffs = m_fitContinuum_tplFitPolyCoeffs;
     }else if(m_fitContinuum_option==3){
@@ -1030,6 +1057,7 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, I
                     Int32 fitMeiksinIdx = -1;
                     Float64 fitDtM = -1.0;
                     Float64 fitMtM = -1.0;
+                    Float64 fitLogprior = 0.0;
                     Bool ret = SolveContinuum( *m_inputSpc,
                                                tpl,
                                                lambdaRange,
@@ -1044,7 +1072,8 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, I
                                                fitDustCoeff,
                                                fitMeiksinIdx,
                                                fitDtM,
-                                               fitMtM);
+                                               fitMtM,
+                                               fitLogprior);
 
                     if(ret)
                     {
@@ -1054,6 +1083,7 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, I
                         bestFitMeiksinIdx = fitMeiksinIdx;
                         bestFitDtM = fitDtM;
                         bestFitMtM = fitMtM;
+                        bestFitLogprior = fitLogprior;
                         bestTplName = tpl.GetName();
                     }
                     break;
@@ -1086,6 +1116,7 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, I
                     m_fitContinuum_tplFitRedshift = bestFitRedshift;
                     m_fitContinuum_tplFitDtM = bestFitDtM;
                     m_fitContinuum_tplFitMtM = bestFitMtM;
+                    m_fitContinuum_tplFitLogprior = bestFitLogprior;
 
                     if(autoSelect)
                     {
@@ -1104,15 +1135,16 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, I
                     setFitContinuum_tplAmplitude(bestFitAmplitude, bestFitPolyCoeffs);
 
                     Log.LogDebug( "    model : LoadFitContinuum, loaded: %s", bestTplName.c_str());
-                    Log.LogDebug( "    model : LoadFitContinuum, loaded with A=%.e", bestFitAmplitude);
-                    Log.LogDebug( "    model : LoadFitContinuum, loaded with dtm=%.e", bestFitDtM);
-                    Log.LogDebug( "    model : LoadFitContinuum, loaded with mtm=%.e", bestFitMtM);
+                    Log.LogDebug( "    model : LoadFitContinuum, loaded with A=%e", bestFitAmplitude);
+                    Log.LogDebug( "    model : LoadFitContinuum, loaded with dtm=%e", bestFitDtM);
+                    Log.LogDebug( "    model : LoadFitContinuum, loaded with mtm=%e", bestFitMtM);
+                    Log.LogDebug( "    model : LoadFitContinuum, loaded with logprior=%e", bestFitLogprior);
                     Float64 tplfitsnr = -1;
                     if(bestFitMtM>0.0)
                     {
                         tplfitsnr=bestFitDtM/std::sqrt(bestFitMtM);
                     }
-                    Log.LogDebug( "    model : LoadFitContinuum, loaded with snr=%.e", tplfitsnr);
+                    Log.LogDebug( "    model : LoadFitContinuum, loaded with snr=%e", tplfitsnr);
                     break;
                 }
             }
@@ -1262,8 +1294,18 @@ Bool CLineModelElementList::SolveContinuum(const CSpectrum& spectrum,
                                            Float64& fitDustCoeff,
                                            Int32& fitMeiksinIdx,
                                            Float64& fitDtM,
-                                           Float64& fitMtM)
+                                           Float64& fitMtM,
+                                           Float64& fitLogprior)
 {
+    CPriorHelperContinuum::TPriorZEList zePriorData;
+    //*
+    bool retGetPrior = m_fitContinuum_priorhelper->GetTplPriorData(tpl.GetName(), redshifts, zePriorData);
+    if(retGetPrior==false)
+    {
+        Log.LogError("    model: Failed to get prior for chi2 solvecontinuum.");
+        throw runtime_error("    model: Failed to get prior for chi2 solvecontinuum.");
+    }
+
     // Compute merit function
     //Log.LogInfo("Solving continuum for %s at z=%.4e", tpl.GetName().c_str(), redshifts[0]);
     //CRef<CChisquareResult>  chisquareResult = (CChisquareResult*)chiSquare.ExportChi2versusAZ( _spc, _tpl, lambdaRange, redshifts, overlapThreshold );
@@ -1275,7 +1317,8 @@ Bool CLineModelElementList::SolveContinuum(const CSpectrum& spectrum,
                                                                                                        maskList,
                                                                                                        opt_interp,
                                                                                                        opt_extinction,
-                                                                                                       opt_dustFit ) );
+                                                                                                       opt_dustFit,
+                                                                                                       zePriorData) );
     if( !chisquareResult )
     {
 
@@ -1289,6 +1332,7 @@ Bool CLineModelElementList::SolveContinuum(const CSpectrum& spectrum,
         fitMeiksinIdx = chisquareResult->FitMeiksinIdx[0];
         fitDtM = chisquareResult->FitDtM[0];
         fitMtM = chisquareResult->FitMtM[0];
+        fitLogprior = chisquareResult->LogPrior[0];
         return true;
     }
 
@@ -1470,6 +1514,12 @@ Int32 CLineModelElementList::SetFitContinuum_FitStore(CTemplatesFitStore* fitSto
     return 1;
 }
 
+Int32 CLineModelElementList::SetFitContinuum_PriorHelper(CPriorHelperContinuum* priorhelper)
+{
+    m_fitContinuum_priorhelper = priorhelper;
+    return 1;
+}
+
 void CLineModelElementList::SetFitContinuum_Option(Int32 opt)
 {
     m_fitContinuum_option = opt;
@@ -1493,6 +1543,7 @@ void CLineModelElementList::SetFitContinuum_FitValues(std::string tplfit_name,
                                                       Float64 tplfit_continuumredshift,
                                                       Float64 tplfit_dtm,
                                                       Float64 tplfit_mtm,
+                                                      Float64 tplfit_logprior,
                                                       std::vector<Float64> polyCoeffs)
 {
     m_fitContinuum_tplName = tplfit_name;
@@ -1505,6 +1556,7 @@ void CLineModelElementList::SetFitContinuum_FitValues(std::string tplfit_name,
 
     m_fitContinuum_tplFitDtM = tplfit_dtm;
     m_fitContinuum_tplFitMtM = tplfit_mtm;
+    m_fitContinuum_tplFitLogprior= tplfit_logprior;
     m_fitContinuum_tplFitPolyCoeffs = polyCoeffs;
 }
 
@@ -4791,6 +4843,12 @@ Float64 CLineModelElementList::getLeastSquareMerit(const TFloat64Range& lambdaRa
         //            Log.LogDebug( "CLineModelElementList::getLeastSquareMerit m_ErrorNoContinuum[%d] = %f", j, m_ErrorNoContinuum[j] );
         //        }
     }
+
+    if( m_ContinuumComponent=="tplfit" || m_ContinuumComponent == "tplfitauto" )
+    {
+        fit += m_fitContinuum_tplFitLogprior;
+    }
+
     Log.LogDebug( "CLineModelElementList::getLeastSquareMerit fit = %f", fit );
     if(std::isnan(fit))
     {
@@ -4844,6 +4902,12 @@ Float64 CLineModelElementList::getLeastSquareContinuumMerit(const TFloat64Range&
         diff = (Yspc[j] - YCont[j]);
         fit += (diff*diff) / (m_ErrorNoContinuum[j]*m_ErrorNoContinuum[j]);
     }
+
+    if( m_ContinuumComponent=="tplfit" || m_ContinuumComponent == "tplfitauto" )
+    {
+        fit += m_fitContinuum_tplFitLogprior;
+    }
+
     return fit;
 }
 
@@ -4886,6 +4950,7 @@ Float64 CLineModelElementList::getLeastSquareContinuumMeritFast()
         Float64 term1 = m_fitContinuum_tplFitAmplitude*m_fitContinuum_tplFitAmplitude*m_fitContinuum_tplFitMtM;
         Float64 term2 = - 2.*m_fitContinuum_tplFitAmplitude*m_fitContinuum_tplFitDtM;
         fit += term1 + term2;
+        fit += m_fitContinuum_tplFitLogprior;
     }else{
         fit = m_dTransposeDNocontinuum;
     }
@@ -5945,6 +6010,7 @@ CContinuumModelSolution CLineModelElementList::GetContinuumModelSolution()
     continuumModelSolution.tplMerit = m_fitContinuum_tplFitMerit;
     continuumModelSolution.tplDtm = m_fitContinuum_tplFitDtM;
     continuumModelSolution.tplMtm = m_fitContinuum_tplFitMtM;
+    continuumModelSolution.tplLogPrior = m_fitContinuum_tplFitLogprior;
     continuumModelSolution.tplRedshift = m_fitContinuum_tplFitRedshift;
     continuumModelSolution.pCoeffs = m_fitContinuum_tplFitPolyCoeffs;
 

@@ -26,6 +26,7 @@ public:
         Float64 fitAmplitude;
         Float64 fitDtM;
         Float64 fitMtM;
+        Float64 logprior;
     };
     typedef SValues TemplateFitValues;
 
@@ -39,7 +40,8 @@ public:
              Float64 merit,
              Float64 fitAmplitude,
              Float64 fitDtM,
-             Float64 fitMtM);
+             Float64 fitMtM,
+             Float64 logprior);
 
     void prepareRedshiftList();
     void initFitValues();

@@ -51,9 +51,12 @@ const std::string CLineModelSolve::GetDescription()
     desc.append("\tparam: linemodel.lineforcefilter = {""no"", ""S""}\n");
     desc.append("\tparam: linemodel.fittingmethod = {""hybrid"", ""individual""}\n");
     desc.append("\tparam: linemodel.continuumcomponent = {""fromspectrum"", ""tplfit"", ""nocontinuum"", ""zero""}\n");
-    desc.append("\tparam: linemodel.continuumismfit = {""no"", ""yes""}\n");
-    desc.append("\tparam: linemodel.continuumigmfit = {""no"", ""yes""}\n");
-    desc.append("\tparam: linemodel.continuumfitcount = <float value>\n");
+    desc.append("\tparam: linemodel.continuumfit.ismfit = {""no"", ""yes""}\n");
+    desc.append("\tparam: linemodel.continuumfit.igmfit = {""no"", ""yes""}\n");
+    desc.append("\tparam: linemodel.continuumfit.count = <float value>\n");
+    desc.append("\tparam: linemodel.continuumfit.ignorelinesupport = {""no"", ""yes""}\n");
+    desc.append("\tparam: linemodel.continuumfit.priors.beta = <float value>\n");
+    desc.append("\tparam: linemodel.continuumfit.priors.catalog_reldirpath = <relative path>\n");
     desc.append("\tparam: linemodel.secondpasslcfittingmethod = {""no"", ""svdlcp2""}\n");
     desc.append("\tparam: linemodel.rigidity = {""rules"", ""tplcorr"", ""tplshape""}\n");
     desc.append("\tparam: linemodel.tplratio_catalog = <relative path>\n");
@@ -139,10 +142,12 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
 
     dataStore.GetScopedParam( "linemodel.continuumcomponent", m_opt_continuumcomponent, "fromspectrum" );
     if(m_opt_continuumcomponent=="tplfit" || m_opt_continuumcomponent == "tplfitauto"){
-        dataStore.GetScopedParam( "linemodel.continuumismfit", m_opt_tplfit_dustfit, "yes" );
-        dataStore.GetScopedParam( "linemodel.continuumigmfit", m_opt_tplfit_igmfit, "yes" );
-        dataStore.GetScopedParam( "linemodel.continuumfitcount", m_opt_continuumfitcount, 1 );
-        dataStore.GetScopedParam( "linemodel.continuumfitignorelinesupport", m_opt_tplfit_ignoreLinesSupport, "no" );
+        dataStore.GetScopedParam( "linemodel.continuumfit.ismfit", m_opt_tplfit_dustfit, "yes" );
+        dataStore.GetScopedParam( "linemodel.continuumfit.igmfit", m_opt_tplfit_igmfit, "yes" );
+        dataStore.GetScopedParam( "linemodel.continuumfit.count", m_opt_continuumfitcount, 1 );
+        dataStore.GetScopedParam( "linemodel.continuumfit.ignorelinesupport", m_opt_tplfit_ignoreLinesSupport, "no" );
+        dataStore.GetScopedParam( "linemodel.continuumfit.priors.beta", m_opt_tplfit_continuumprior_beta, 1. );
+        dataStore.GetScopedParam( "linemodel.continuumfit.priors.catalog_reldirpath", m_opt_tplfit_continuumprior_reldirpath, "" ); //no priors by default
     }
     dataStore.GetScopedParam( "linemodel.rigidity", m_opt_rigidity, "rules" );
     if(m_opt_rigidity=="tplshape")
@@ -259,6 +264,8 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
         Log.LogInfo( "      -continuum fit count:  %.0f", m_opt_continuumfitcount);
         Log.LogInfo( "      -tplfit_ignorelinesupport: %s", m_opt_tplfit_ignoreLinesSupport.c_str());
         Log.LogInfo( "      -tplfit_secondpass-LC-fitting-method: %s", m_opt_secondpasslcfittingmethod.c_str());
+        Log.LogInfo( "      -tplfit_priors_reldirpath: %s", m_opt_tplfit_continuumprior_reldirpath.c_str());
+        Log.LogInfo( "      -tplfit_priors_beta:  %f", m_opt_tplfit_continuumprior_beta);
     }
     Log.LogInfo( "    -continuumreestimation: %s", m_opt_continuumreest.c_str());
     Log.LogInfo( "    -extremacount: %.0f", m_opt_extremacount);
@@ -791,6 +798,8 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
         linemodel.m_opt_fitcontinuum_maxN = m_opt_continuumfitcount;
         linemodel.m_opt_tplfit_ignoreLinesSupport = Int32(m_opt_tplfit_ignoreLinesSupport=="yes");
         linemodel.m_opt_secondpasslcfittingmethod = m_opt_secondpasslcfittingmethod;
+        linemodel.m_opt_tplfit_continuumprior_reldirpath = m_opt_tplfit_continuumprior_reldirpath;
+        linemodel.m_opt_tplfit_continuumprior_beta = m_opt_tplfit_continuumprior_beta;
 
     }
 

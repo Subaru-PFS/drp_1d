@@ -81,7 +81,8 @@ public:
                         Float64 &fitDustCoeff,
                         Int32 &fitMeiksinIdx,
                         Float64& fitDtM,
-                        Float64& fitMtM);
+                        Float64& fitMtM,
+                        Float64 &fitLogprior);
     std::string getFitContinuum_tplName();
     Float64 getFitContinuum_tplAmplitude();
     Float64 getFitContinuum_snr();
@@ -92,6 +93,7 @@ public:
     Float64* getPrecomputedGridContinuumFlux();
     void SetContinuumComponent(std::string component);
     Int32 SetFitContinuum_FitStore(CTemplatesFitStore* fitStore);
+    Int32 SetFitContinuum_PriorHelper(CPriorHelperContinuum* priorhelper);
     void SetFitContinuum_SNRMax(Float64 snr_max);
     void SetFitContinuum_Option(Int32 opt);
     Int32 GetFitContinuum_Option();
@@ -103,6 +105,7 @@ public:
                                    Float64 tplfit_continuumredshift,
                                    Float64 tplfit_dtm,
                                    Float64 tplfit_mtm,
+                                   Float64 tplfit_logprior,
                                    std::vector<Float64> polyCoeffs);
 
     Int32 LoadFitContaminantTemplate(const TFloat64Range& lambdaRange, const CTemplate& tpl);
@@ -253,7 +256,7 @@ public:
     TStringList GetModelRulesLog();
 
     Int32 setPassMode(Int32 iPass);
-
+    void SetForcedisableTplratioISMfit(bool opt);
 
     CRayCatalogsTplShape* m_CatalogTplShape;
     std::vector<Float64> m_ChisquareTplshape;
@@ -389,11 +392,12 @@ private:
     Float64 m_fitContinuum_tplFitRedshift; // only used with m_fitContinuum_option==2 for now
     Float64 m_fitContinuum_tplFitDtM;
     Float64 m_fitContinuum_tplFitMtM;
+    Float64 m_fitContinuum_tplFitLogprior;
     Float64 m_fitContinuum_tplFitSNRMax=0.0;
     std::vector<Float64> m_fitContinuum_tplFitPolyCoeffs;   // only used with m_fitContinuum_option==2 for now
     bool m_forcedisableMultipleContinuumfit=false;
-
     Float64 m_fitContinuum_tplFitAlpha=0.;
+    CPriorHelperContinuum* m_fitContinuum_priorhelper;
 
     bool m_lmfit_noContinuumTemplate;
     bool m_lmfit_bestTemplate;

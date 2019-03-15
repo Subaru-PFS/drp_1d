@@ -5,7 +5,7 @@
 #include <RedshiftLibrary/common/range.h>
 
 #include <boost/format.hpp>
-
+#include <float.h>
 #include <vector>
 #include <string>
 
@@ -26,7 +26,8 @@ public:
         Float64 A_sigma;
         Float64 A_mean;
     };
-    typedef std::vector<std::vector<SPriorTZE>> TPriorZEList;
+    typedef std::vector<SPriorTZE> TPriorEList;
+    typedef std::vector<TPriorEList> TPriorZEList;
     typedef std::vector<TPriorZEList> TPriorTZEList;
 
     CPriorHelperContinuum();
@@ -41,7 +42,12 @@ public:
     bool SetAGaussmeanData(UInt32 k, std::vector<std::vector<Float64>> agaussmean_data);
     bool SetAGausssigmaData(UInt32 k, std::vector<std::vector<Float64>> agausssigma_data);
 
-    bool GetTplPriorData(std::string tplname, TPriorZEList &zePriorData);
+    bool GetTplPriorData(std::string tplname,
+                         std::vector<Float64> redshifts,
+                         TPriorZEList &zePriorData,
+                         Int32 outsideZRangeExtensionMode=0);
+
+    bool SetBeta(Float64 beta);
 
     bool mInitFailed = false;
 
@@ -51,11 +57,15 @@ private:
     std::vector<std::string> m_tplnames;
 
     UInt32 m_nZ = 24;
-    UInt32 m_dz = 0.25;
-    UInt32 m_z0 = 0.0;
+    Float64 m_dz = 0.25;
+    Float64 m_z0 = 0.0;
 
     UInt32 m_nEbv = 10;
-    UInt32 m_ebv0 = 0.0;
+    Float64 m_ebv0 = 0.0;
+
+    Float64 m_beta = -1;
+
+    Float64 m_priorminval = DBL_MIN;
 };
 
 }
