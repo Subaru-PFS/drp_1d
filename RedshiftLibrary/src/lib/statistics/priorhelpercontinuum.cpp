@@ -387,7 +387,8 @@ bool CPriorHelperContinuum::GetTplPriorData(std::string tplname,
        {
            if(verbose)
            {
-               Log.LogInfo("    CPriorHelperContinuum: get prior idTpl=%d, idz=%d, idebv : valf=%e", idx, idz, icol, dataz[icol].logpriorTZE);
+               Log.LogInfo("    CPriorHelperContinuum: get prior for tpl=%s", tplname.c_str());
+               Log.LogInfo("    CPriorHelperContinuum: get prior idTpl=%d, idz=%d, idebmv=%d : valf=%e", idx, idz, icol, dataz[icol].logpriorTZE);
            }
             dataz[icol].logpriorTZE /= m_dz;
             dataz[icol].logpriorTZE = m_beta*log(dataz[icol].logpriorTZE);
