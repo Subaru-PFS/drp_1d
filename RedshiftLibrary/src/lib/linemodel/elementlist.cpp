@@ -316,9 +316,17 @@ Int32 CLineModelElementList::setPassMode(Int32 iPass)
         Log.LogInfo("    model: set forceLyaFitting ASYMFIT for Tpl-ratio mode : %d", m_forceLyaFitting);
     }
 
+    //todo add new iPass==3 for second pass recompute, and use iPass==2 for second pass estimate parameters ?
 
     return true;
 }
+
+
+void CLineModelElementList::SetForcedisableTplratioISMfit(bool opt)
+{
+    m_forcedisableTplratioISMfit = opt;
+}
+
 
 /**
  * \brief Returns a pointer to m_SpectrumModel.
