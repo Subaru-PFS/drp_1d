@@ -148,13 +148,44 @@ bool CPriorHelperContinuum::Init( std::string priorDirPath )
         SetAGausssigmaData(k, read_buffer);
         mInitFailed = false;
     }
+
+    bfs::path pz_fpath = rootFolder/"prior_continuum_hist_Z"/"prior_continuum_hist_Z.txt";
+    if(!bfs::exists(pz_fpath))
+    {
+        Log.LogError("    CPriorHelperContinuum: Pz path does not exist: %s", pz_fpath.string().c_str());
+        throw std::runtime_error("    CPriorHelperContinuum: Pz path does not exist");
+    }else{
+        std::vector<Float64> read_buffer;
+        bool ret = LoadFileZ(pz_fpath.string().c_str(), read_buffer);
+        if(!ret)
+        {
+            Log.LogError("Unable to load the Pz prior data. aborting...");
+            mInitFailed = true;
+            return false;
+        }
+        SetPzData(read_buffer);
+        mInitFailed = false;
+    }
+
     return true;
 }
 
 
-bool CPriorHelperContinuum::SetBeta(Float64 beta)
+bool CPriorHelperContinuum::SetBetaA(Float64 beta)
 {
-    m_beta=beta;
+    m_betaA=beta;
+    return true;
+}
+
+bool CPriorHelperContinuum::SetBetaTE(Float64 beta)
+{
+    m_betaTE=beta;
+    return true;
+}
+
+bool CPriorHelperContinuum::SetBetaZ(Float64 beta)
+{
+    m_betaZ=beta;
     return true;
 }
 
@@ -175,6 +206,12 @@ bool CPriorHelperContinuum::SetSize(UInt32 size)
             _zelist.push_back(_elist);
         }
         m_data.push_back(_zelist);
+    }
+
+    m_data_pz.clear();
+    for(UInt32 kz=0; kz<m_nZ; kz++)
+    {
+        m_data_pz.push_back(0.0);
     }
 
     m_tplnames.clear();
@@ -206,7 +243,7 @@ bool CPriorHelperContinuum::SetEZTData(UInt32 k, std::vector<std::vector<Float64
     {
         for(UInt32 ke=0; ke<m_nEbv; ke++)
         {
-            m_data[k][kz][ke].logpriorTZE = ezt_data[kz][ke];
+            m_data[k][kz][ke].priorTZE = ezt_data[kz][ke];
         }
     }
 
@@ -250,6 +287,23 @@ bool CPriorHelperContinuum::SetAGausssigmaData(UInt32 k, std::vector<std::vector
 
     return true;
 }
+
+bool CPriorHelperContinuum::SetPzData(std::vector<Float64> z_data)
+{
+    if(z_data.size()!=m_data_pz.size())
+    {
+        Log.LogError("    CPriorHelperContinuum: SetPzData failed for bad data size" );
+        throw std::runtime_error("    CPriorHelperContinuum: set pz bad data size");
+    }
+
+    for(UInt32 kz=0; kz<m_nZ; kz++)
+    {
+        m_data_pz[kz] = z_data[kz];
+    }
+
+    return true;
+}
+
 
 bool CPriorHelperContinuum::LoadFileEZ( const char* filePath, std::vector<std::vector<Float64>>& data)
 {
@@ -308,6 +362,56 @@ bool CPriorHelperContinuum::LoadFileEZ( const char* filePath, std::vector<std::v
     return loadSuccess;
 }
 
+bool CPriorHelperContinuum::LoadFileZ(const char* filePath , std::vector<Float64>& data)
+{
+    bool verboseRead=false;
+    Log.LogDetail("    CPriorHelperContinuum: start load prior file: %s", filePath);
+    bool loadSuccess=true;
+    std::ifstream file;
+    file.open( filePath, std::ifstream::in );
+    bool fileOpenFailed = file.rdstate() & std::ios_base::failbit;
+    if(fileOpenFailed)
+    {
+        loadSuccess = false;
+    }else
+    {
+        Int32 nlinesRead = 0;
+        std::string line;
+        // Read file line by line
+        while( getline( file, line ) )
+        {
+            if( !boost::starts_with( line, "#" ) )
+            {
+
+                std::istringstream iss( line );
+                Float64 x;
+                iss >> x;
+                if(std::isnan(x) || std::isinf(x) || x!=x || x<0.)
+                {
+                    x = m_priorminval;
+                }
+
+                if(verboseRead)
+                {
+                    Log.LogInfo("    CPriorHelperContinuum: read line=%d : valf=%e", nlinesRead, x);
+                }
+
+                nlinesRead++;
+                data.push_back(x);
+            }
+        }
+        file.close();
+
+        if(nlinesRead!=m_nZ)
+        {
+            Log.LogError("    CPriorHelperContinuum: read n=%d lines", nlinesRead);
+            throw std::runtime_error("    CPriorHelperContinuum: read bad number of lines");
+        }
+    }
+    return loadSuccess;
+}
+
+
 /**
  * @brief CPriorHelperContinuum::GetTplPriorData
  * @param tplname
@@ -322,9 +426,9 @@ bool CPriorHelperContinuum::GetTplPriorData(std::string tplname,
                                             Int32 outsideZRangeExtensionMode)
 {
     bool verbose=false;
-    if(m_beta<=0.0)
+    if(m_betaA<=0.0 && m_betaTE<=0.0 && m_betaZ<=0.0)
     {
-        Log.LogError("    CPriorHelperContinuum: beta coeff not initialized correctly (=%e)", m_beta);
+        Log.LogError("    CPriorHelperContinuum: beta coeff all zero (betaA=%e, betaTE=%e, betaZ=%e)", m_betaA, m_betaTE, m_betaZ);
         zePriorData.clear();
         return false;
     }
@@ -388,10 +492,40 @@ bool CPriorHelperContinuum::GetTplPriorData(std::string tplname,
            if(verbose)
            {
                Log.LogInfo("    CPriorHelperContinuum: get prior for tpl=%s", tplname.c_str());
-               Log.LogInfo("    CPriorHelperContinuum: get prior idTpl=%d, idz=%d, idebmv=%d : valf=%e", idx, idz, icol, dataz[icol].logpriorTZE);
+               Log.LogInfo("    CPriorHelperContinuum: get prior idTpl=%d, idz=%d, idebmv=%d : valf=%e", idx, idz, icol, dataz[icol].priorTZE);
            }
-            dataz[icol].logpriorTZE /= m_dz;
-            dataz[icol].logpriorTZE = m_beta*log(dataz[icol].logpriorTZE);
+
+           Float64 logPTE = 0.;
+           Float64 logPA = 0.;
+           Float64 logPZ = 0.;
+           if(dataz[icol].A_sigma>0.0)
+           {
+               logPA =-0.5*log(2*M_PI) - log(dataz[icol].A_sigma);
+           }
+           if(dataz[icol].priorTZE>0.0)
+           {
+               logPTE = log(dataz[icol].priorTZE);
+
+               if(std::isnan(logPTE) || logPTE!=logPTE || std::isinf(logPTE))
+               {
+                   Log.LogError("    CPriorHelperContinuum: logP_TZE is NAN (priorTZE=%e, logP_TZE=%e)",
+                                dataz[icol].priorTZE,
+                                logPTE);
+                   throw std::runtime_error("    CPriorHelperContinuum: logP_TZE is NAN or inf, or invalid");
+               }
+           }
+
+           if(m_data_pz[idz]>0.0)
+           {
+               logPZ = log(m_data_pz[idz]/m_dz);
+           }
+
+           dataz[icol].logprior_precompA = logPA;
+           dataz[icol].logprior_precompTE = logPTE;
+           dataz[icol].logprior_precompZ = logPZ;
+           dataz[icol].betaA = m_betaA;
+           dataz[icol].betaTE = m_betaTE;
+           dataz[icol].betaZ = m_betaZ;
        }
        zePriorData.push_back(dataz);
     }

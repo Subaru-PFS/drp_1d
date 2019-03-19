@@ -222,7 +222,9 @@ public:
     Int32 m_opt_tplfit_extinction = 1;
     Int32 m_opt_fitcontinuum_maxN = 2;
     bool m_opt_tplfit_ignoreLinesSupport=false; //default: false, as ortho templates store makes this un-necessary
-    Float64 m_opt_tplfit_continuumprior_beta=1.0;
+    Float64 m_opt_tplfit_continuumprior_betaA=1.0;
+    Float64 m_opt_tplfit_continuumprior_betaTE=1.0;
+    Float64 m_opt_tplfit_continuumprior_betaZ=1.0;
     std::string m_opt_tplfit_continuumprior_reldirpath="";
 
     Int32 m_opt_tplratio_ismFit = 1;

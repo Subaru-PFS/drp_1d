@@ -705,7 +705,9 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
 
     CPriorHelperContinuum *phelperContinuum = new CPriorHelperContinuum();
     phelperContinuum->Init(m_opt_tplfit_continuumprior_reldirpath.c_str());
-    phelperContinuum->SetBeta(m_opt_tplfit_continuumprior_beta);
+    phelperContinuum->SetBetaA(m_opt_tplfit_continuumprior_betaA);
+    phelperContinuum->SetBetaTE(m_opt_tplfit_continuumprior_betaTE);
+    phelperContinuum->SetBetaZ(m_opt_tplfit_continuumprior_betaZ);
 
     for (UInt32 i = 0; i < tplCategoryList.size(); i++)
     {

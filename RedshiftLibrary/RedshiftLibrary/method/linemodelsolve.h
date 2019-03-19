@@ -61,7 +61,9 @@ private:
     std::string m_opt_tplfit_dustfit="no";
     std::string m_opt_tplfit_igmfit="no";
     Float64 m_opt_continuumfitcount;
-    Float64 m_opt_tplfit_continuumprior_beta=1.0;
+    Float64 m_opt_tplfit_continuumprior_betaA=1.0;
+    Float64 m_opt_tplfit_continuumprior_betaTE=1.0;
+    Float64 m_opt_tplfit_continuumprior_betaZ=1.0;
     std::string m_opt_tplfit_continuumprior_reldirpath="";
     std::string m_opt_tplfit_ignoreLinesSupport="no";
 

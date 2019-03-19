@@ -146,7 +146,9 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
         dataStore.GetScopedParam( "linemodel.continuumfit.igmfit", m_opt_tplfit_igmfit, "yes" );
         dataStore.GetScopedParam( "linemodel.continuumfit.count", m_opt_continuumfitcount, 1 );
         dataStore.GetScopedParam( "linemodel.continuumfit.ignorelinesupport", m_opt_tplfit_ignoreLinesSupport, "no" );
-        dataStore.GetScopedParam( "linemodel.continuumfit.priors.beta", m_opt_tplfit_continuumprior_beta, 1. );
+        dataStore.GetScopedParam( "linemodel.continuumfit.priors.betaA", m_opt_tplfit_continuumprior_betaA, 1. );
+        dataStore.GetScopedParam( "linemodel.continuumfit.priors.betaTE", m_opt_tplfit_continuumprior_betaTE, 1. );
+        dataStore.GetScopedParam( "linemodel.continuumfit.priors.betaZ", m_opt_tplfit_continuumprior_betaZ, 1. );
         dataStore.GetScopedParam( "linemodel.continuumfit.priors.catalog_reldirpath", m_opt_tplfit_continuumprior_reldirpath, "" ); //no priors by default
     }
     dataStore.GetScopedParam( "linemodel.rigidity", m_opt_rigidity, "rules" );
@@ -265,7 +267,9 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
         Log.LogInfo( "      -tplfit_ignorelinesupport: %s", m_opt_tplfit_ignoreLinesSupport.c_str());
         Log.LogInfo( "      -tplfit_secondpass-LC-fitting-method: %s", m_opt_secondpasslcfittingmethod.c_str());
         Log.LogInfo( "      -tplfit_priors_reldirpath: %s", m_opt_tplfit_continuumprior_reldirpath.c_str());
-        Log.LogInfo( "      -tplfit_priors_beta:  %f", m_opt_tplfit_continuumprior_beta);
+        Log.LogInfo( "      -tplfit_priors_betaA:  %f", m_opt_tplfit_continuumprior_betaA);
+        Log.LogInfo( "      -tplfit_priors_betaTE:  %f", m_opt_tplfit_continuumprior_betaTE);
+        Log.LogInfo( "      -tplfit_priors_betaZ:  %f", m_opt_tplfit_continuumprior_betaZ);
     }
     Log.LogInfo( "    -continuumreestimation: %s", m_opt_continuumreest.c_str());
     Log.LogInfo( "    -extremacount: %.0f", m_opt_extremacount);
@@ -799,8 +803,9 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
         linemodel.m_opt_tplfit_ignoreLinesSupport = Int32(m_opt_tplfit_ignoreLinesSupport=="yes");
         linemodel.m_opt_secondpasslcfittingmethod = m_opt_secondpasslcfittingmethod;
         linemodel.m_opt_tplfit_continuumprior_reldirpath = m_opt_tplfit_continuumprior_reldirpath;
-        linemodel.m_opt_tplfit_continuumprior_beta = m_opt_tplfit_continuumprior_beta;
-
+        linemodel.m_opt_tplfit_continuumprior_betaA = m_opt_tplfit_continuumprior_betaA;
+        linemodel.m_opt_tplfit_continuumprior_betaTE = m_opt_tplfit_continuumprior_betaTE;
+        linemodel.m_opt_tplfit_continuumprior_betaZ = m_opt_tplfit_continuumprior_betaZ;
     }
 
     linemodel.m_opt_lya_forcefit=m_opt_lya_forcefit;
@@ -1076,7 +1081,8 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
                                                           m_opt_abs_velocity_fit_step,
                                                           m_opt_manvelfit_dz_min,
                                                           m_opt_manvelfit_dz_max,
-                                                          m_opt_manvelfit_dz_step);
+                                                          m_opt_manvelfit_dz_step,
+                                                          m_opt_secondpass_continuumfit);
         if( retSecondPass!=0 )
         {
             Log.LogError( "Line Model, second pass failed. Aborting" );
