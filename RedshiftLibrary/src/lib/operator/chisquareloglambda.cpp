@@ -777,7 +777,7 @@ Int32 COperatorChiSquareLogLambda::FitAllz(const TFloat64Range &lambdaRange,
                     logprior += -2.0*logpriorze[fullResultIdx][kism_best].betaZ*logpriorze[fullResultIdx][kism_best].logprior_precompZ;
                 }
 
-                if(logpriorze[fullResultIdx][kism_best].A_sigma>0.0)
+                if(logpriorze[fullResultIdx][kism_best].A_sigma>0.0 && logpriorze[fullResultIdx][kism_best].A_mean>0.0)
                 {
                     //now update the amplitude if there is any constraints from the priors
                     Float64 ampl = result->FitAmplitude[fullResultIdx];

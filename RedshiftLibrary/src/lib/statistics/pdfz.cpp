@@ -940,11 +940,11 @@ Int32   CPdfz::getPmis(std::vector<Float64> redshifts,
     //estimate zcalc intg proba
     Float64 pzcalc = getCandidateSumTrapez( redshifts, valprobalog, zbest, zwidth);
 
-    Log.LogInfo("pdfz: <pmisraw><%.6e>", pmis_raw);
-    Log.LogInfo("pdfz: <pmap><%.6e>", pzcalc);
+    Log.LogDetail("pdfz: <pmisraw><%.6e>", pmis_raw);
+    Log.LogDetail("pdfz: <pmap><%.6e>", pzcalc);
 
     pmis = pmis_raw/(1.-pzcalc);
-    Log.LogInfo("pdfz: <pmis><%.6e>", pmis);
+    Log.LogDetail("pdfz: <pmis><%.6e>", pmis);
 
     return 0;
 }
