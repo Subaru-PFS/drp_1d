@@ -527,7 +527,7 @@ Int32 COperatorChiSquareLogLambda::FitAllz(const TFloat64Range &lambdaRange,
                                            std::vector<Int32> igmMeiksinCoeffs,
                                            std::vector<Int32> ismEbmvCoeffs,
                                            CMask spcMaskAdditional,
-                                           CPriorHelperContinuum::TPriorZEList logpriorze)
+                                           CPriorHelper::TPriorZEList logpriorze)
 {
     bool verboseLogFitAllz = false;
 
@@ -1583,7 +1583,7 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(const CSpe
         std::string opt_interp,
         Int32 opt_extinction,
         Int32 opt_dustFitting,
-        CPriorHelperContinuum::TPriorZEList logpriorze)
+        CPriorHelper::TPriorZEList logpriorze)
 {
     Log.LogInfo(
         "  Operator-ChisquareLog: starting computation for template: %s",

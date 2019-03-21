@@ -104,7 +104,7 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
                                    Int32 opt_extinction,
                                    Int32 opt_dustFitting,
                                    CMask spcMaskAdditional,
-                                   CPriorHelperContinuum::TPriorEList logpriore)
+                                   CPriorHelper::TPriorEList logpriore)
 {
     bool verbose = false;
     bool amplForcePositive=true;
@@ -685,7 +685,7 @@ std::shared_ptr<COperatorResult> COperatorChiSquare2::Compute(const CSpectrum& s
                                                               std::string opt_interp,
                                                               Int32 opt_extinction,
                                                               Int32 opt_dustFitting,
-                                                              CPriorHelperContinuum::TPriorZEList logpriorze)
+                                                              CPriorHelper::TPriorZEList logpriorze)
 {
     Log.LogDetail("  Operator-Chisquare2: starting computation for template: %s", tpl.GetName().c_str());
     if(0)
@@ -888,7 +888,7 @@ std::shared_ptr<COperatorResult> COperatorChiSquare2::Compute(const CSpectrum& s
             //masks from the input masks list
             additional_spcMask = additional_spcMasks[sortedIndexes[i]];
         }
-        CPriorHelperContinuum::TPriorEList logp;
+        CPriorHelper::TPriorEList logp;
         if(logpriorze.size()>0 && logpriorze.size()==sortedRedshifts.size())
         {
             logp = logpriorze[i];

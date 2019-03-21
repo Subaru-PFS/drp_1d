@@ -1297,7 +1297,7 @@ Bool CLineModelElementList::SolveContinuum(const CSpectrum& spectrum,
                                            Float64& fitMtM,
                                            Float64& fitLogprior)
 {
-    CPriorHelperContinuum::TPriorZEList zePriorData;
+    CPriorHelper::TPriorZEList zePriorData;
     //*
     bool retGetPrior = m_fitContinuum_priorhelper->GetTplPriorData(tpl.GetName(), redshifts, zePriorData);
     if(retGetPrior==false)
@@ -1514,7 +1514,7 @@ Int32 CLineModelElementList::SetFitContinuum_FitStore(CTemplatesFitStore* fitSto
     return 1;
 }
 
-Int32 CLineModelElementList::SetFitContinuum_PriorHelper(CPriorHelperContinuum* priorhelper)
+Int32 CLineModelElementList::SetFitContinuum_PriorHelper(CPriorHelper *priorhelper)
 {
     m_fitContinuum_priorhelper = priorhelper;
     return 1;

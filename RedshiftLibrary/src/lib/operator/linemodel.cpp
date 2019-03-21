@@ -13,7 +13,7 @@
 #include <RedshiftLibrary/spectrum/template/template.h>
 #include <RedshiftLibrary/spectrum/tools.h>
 #include <RedshiftLibrary/statistics/deltaz.h>
-#include <RedshiftLibrary/statistics/priorhelpercontinuum.h>
+#include <RedshiftLibrary/statistics/priorhelper.h>
 
 #include <RedshiftLibrary/log/log.h>
 #include <RedshiftLibrary/spectrum/io/fitswriter.h>
@@ -703,8 +703,8 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
                     duration_tplfitmaskprep_seconds);
     }
 
-    CPriorHelperContinuum *phelperContinuum = new CPriorHelperContinuum();
-    phelperContinuum->Init(m_opt_tplfit_continuumprior_reldirpath.c_str());
+    CPriorHelper *phelperContinuum = new CPriorHelper();
+    phelperContinuum->Init(m_opt_tplfit_continuumprior_reldirpath.c_str(), 0);
     phelperContinuum->SetBetaA(m_opt_tplfit_continuumprior_betaA);
     phelperContinuum->SetBetaTE(m_opt_tplfit_continuumprior_betaTE);
     phelperContinuum->SetBetaZ(m_opt_tplfit_continuumprior_betaZ);
@@ -724,7 +724,7 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
                 opt_tplfit_integer_chi2_dustfit=-10;
             }
 
-            CPriorHelperContinuum::TPriorZEList zePriorData;
+            CPriorHelper::TPriorZEList zePriorData;
             //*
             bool retGetPrior = phelperContinuum->GetTplPriorData(tpl.GetName(), redshiftsTplFit, zePriorData);
             if(retGetPrior==false)

@@ -1,5 +1,5 @@
 #include <RedshiftLibrary/log/log.h>
-#include <RedshiftLibrary/statistics/priorhelpercontinuum.h>
+#include <RedshiftLibrary/statistics/priorhelper.h>
 
 #include <algorithm>    // std::sort
 #include <boost/tokenizer.hpp>
@@ -20,29 +20,39 @@ using namespace std;
 using namespace boost;
 
 
-CPriorHelperContinuum::CPriorHelperContinuum()
+CPriorHelper::CPriorHelper()
 {
 }
 
-CPriorHelperContinuum::~CPriorHelperContinuum()
+CPriorHelper::~CPriorHelper()
 {
 
 }
 
-bool CPriorHelperContinuum::Init( std::string priorDirPath )
+bool CPriorHelper::Init( std::string priorDirPath, Int32 type )
 {
+    m_type = type;
+
     bfs::path rootFolder( priorDirPath.c_str() );
     if(!bfs::exists(rootFolder))
     {
-        Log.LogWarning("    CPriorHelperContinuum: rootFolder path does not exist: %s", rootFolder.string().c_str());
-        Log.LogWarning("    CPriorHelperContinuum: priors won't be used");
+        Log.LogWarning("    CPriorHelper: rootFolder path does not exist: %s", rootFolder.string().c_str());
+        Log.LogWarning("    CPriorHelper: priors won't be used");
         mInitFailed = true;
         return false;
     }
 
     std::vector<std::string> EZTfilesPathList;
     bfs::directory_iterator end_itr;
-    for ( bfs::directory_iterator itr( rootFolder/"prior_continuum_hist_Ebmvc_Z" ); itr != end_itr; ++itr )
+    std::string ezt_path = "";
+    if(m_type==0)
+    {
+        ezt_path = "prior_continuum_hist_Ebmvc_Z";
+    }else if(m_type==1)
+    {
+        ezt_path = "prior_lines_hist_Ebmvr_Z";
+    }
+    for ( bfs::directory_iterator itr( rootFolder/ezt_path.c_str() ); itr != end_itr; ++itr )
     {
         if ( !is_directory( itr->status() ) )
         {
@@ -55,13 +65,29 @@ bool CPriorHelperContinuum::Init( std::string priorDirPath )
     {
         bfs::path fPath = EZTfilesPathList[k];
         std::string fNameStr = fPath.filename().c_str();
-        boost::replace_all( fNameStr, "prior_continuum_hist_Ebmvc_Z_Tplc_", "prior_continuum_gaussmean_Ac_Z_Tplc_");
 
-        bfs::path agaussfpath = rootFolder/"prior_continuum_gaussmean_Ac_Z"/bfs::path(fNameStr);
+        std::string ezt_tag = "";
+        std::string a_tag = "";
+        std::string a_dirpath = "";
+        if(m_type==0)
+        {
+            ezt_tag = "prior_continuum_hist_Ebmvc_Z_Tplc_";
+            a_tag = "prior_continuum_gaussmean_Ac_Z_Tplc_";
+            a_dirpath = "prior_continuum_gaussmean_Ac_Z";
+        }else if(m_type==1)
+        {
+            ezt_tag = "prior_lines_hist_Ebmvr_Z_Tplr_";
+            a_tag = "prior_lines_gaussmean_Ar_Z_Tplr_";
+            a_dirpath = "prior_lines_gaussmean_Ar_Z";
+        }
+
+        boost::replace_all( fNameStr, ezt_tag.c_str(), a_tag.c_str());
+
+        bfs::path agaussfpath = rootFolder/a_dirpath.c_str()/bfs::path(fNameStr);
         if(!bfs::exists(agaussfpath))
         {
-            Log.LogError("    CPriorHelperContinuum: AgaussMean path does not exist: %s", agaussfpath.string().c_str());
-            throw std::runtime_error("    CPriorHelperContinuum: AgaussMean path does not exist");
+            Log.LogError("    CPriorHelper: AgaussMean path does not exist: %s", agaussfpath.string().c_str());
+            throw std::runtime_error("    CPriorHelper: AgaussMean path does not exist");
         }
         AGaussMeanfilesPathList.push_back(agaussfpath.string());
     }
@@ -71,13 +97,29 @@ bool CPriorHelperContinuum::Init( std::string priorDirPath )
     {
         bfs::path fPath = EZTfilesPathList[k];
         std::string fNameStr = fPath.filename().c_str();
-        boost::replace_all( fNameStr, "prior_continuum_hist_Ebmvc_Z_Tplc_", "prior_continuum_gausssigma_Ac_Z_Tplc_");
 
-        bfs::path agaussfpath = rootFolder/"prior_continuum_gausssigma_Ac_Z"/bfs::path(fNameStr);
+        std::string ezt_tag = "";
+        std::string a_tag = "";
+        std::string a_dirpath = "";
+        if(m_type==0)
+        {
+            ezt_tag = "prior_continuum_hist_Ebmvc_Z_Tplc_";
+            a_tag = "prior_continuum_gausssigma_Ac_Z_Tplc_";
+            a_dirpath = "prior_continuum_gausssigma_Ac_Z";
+        }else if(m_type==1)
+        {
+            ezt_tag = "prior_lines_hist_Ebmvr_Z_Tplr_";
+            a_tag = "prior_lines_gausssigma_Ar_Z_Tplr_";
+            a_dirpath = "prior_lines_gausssigma_Ar_Z";
+        }
+
+        boost::replace_all( fNameStr, ezt_tag.c_str(), a_tag.c_str());
+
+        bfs::path agaussfpath = rootFolder/a_dirpath.c_str()/bfs::path(fNameStr);
         if(!bfs::exists(agaussfpath))
         {
-            Log.LogError("    CPriorHelperContinuum: AgaussSigma path does not exist: %s", agaussfpath.string().c_str());
-            throw std::runtime_error("    CPriorHelperContinuum: AgaussSigma path does not exist");
+            Log.LogError("    CPriorHelper: AgaussSigma path does not exist: %s", agaussfpath.string().c_str());
+            throw std::runtime_error("    CPriorHelper: AgaussSigma path does not exist");
         }
         AGaussSigmafilesPathList.push_back(agaussfpath.string());
     }
@@ -149,11 +191,23 @@ bool CPriorHelperContinuum::Init( std::string priorDirPath )
         mInitFailed = false;
     }
 
-    bfs::path pz_fpath = rootFolder/"prior_continuum_hist_Z"/"prior_continuum_hist_Z.txt";
+
+    std::string z_dirpath = "";
+    std::string z_filepath = "";
+    if(m_type==0)
+    {
+        z_dirpath = "prior_continuum_hist_Z";
+        z_filepath = "prior_continuum_hist_Z.txt";
+    }else if(m_type==1)
+    {
+        z_dirpath = "prior_lines_hist_Z";
+        z_filepath = "prior_lines_hist_Z.txt";
+    }
+    bfs::path pz_fpath = rootFolder/z_dirpath.c_str()/z_filepath.c_str();
     if(!bfs::exists(pz_fpath))
     {
-        Log.LogError("    CPriorHelperContinuum: Pz path does not exist: %s", pz_fpath.string().c_str());
-        throw std::runtime_error("    CPriorHelperContinuum: Pz path does not exist");
+        Log.LogError("    CPriorHelper: Pz path does not exist: %s", pz_fpath.string().c_str());
+        throw std::runtime_error("    CPriorHelper: Pz path does not exist");
     }else{
         std::vector<Float64> read_buffer;
         bool ret = LoadFileZ(pz_fpath.string().c_str(), read_buffer);
@@ -171,25 +225,25 @@ bool CPriorHelperContinuum::Init( std::string priorDirPath )
 }
 
 
-bool CPriorHelperContinuum::SetBetaA(Float64 beta)
+bool CPriorHelper::SetBetaA(Float64 beta)
 {
     m_betaA=beta;
     return true;
 }
 
-bool CPriorHelperContinuum::SetBetaTE(Float64 beta)
+bool CPriorHelper::SetBetaTE(Float64 beta)
 {
     m_betaTE=beta;
     return true;
 }
 
-bool CPriorHelperContinuum::SetBetaZ(Float64 beta)
+bool CPriorHelper::SetBetaZ(Float64 beta)
 {
     m_betaZ=beta;
     return true;
 }
 
-bool CPriorHelperContinuum::SetSize(UInt32 size)
+bool CPriorHelper::SetSize(UInt32 size)
 {
     m_data.clear();
     for(UInt32 k=0; k<size; k++)
@@ -220,23 +274,23 @@ bool CPriorHelperContinuum::SetSize(UInt32 size)
 }
 
 
-bool CPriorHelperContinuum::SetTNameData(UInt32 k, std::string tname)
+bool CPriorHelper::SetTNameData(UInt32 k, std::string tname)
 {
     if(k>=m_tplnames.size())
     {
-        Log.LogError("    CPriorHelperContinuum: SetTNameData failed for k=%d", k);
-        throw std::runtime_error("    CPriorHelperContinuum: set bad tname index");
+        Log.LogError("    CPriorHelper: SetTNameData failed for k=%d", k);
+        throw std::runtime_error("    CPriorHelper: set bad tname index");
     }
     m_tplnames[k] = tname;
     return true;
 }
 
-bool CPriorHelperContinuum::SetEZTData(UInt32 k, std::vector<std::vector<Float64>> ezt_data)
+bool CPriorHelper::SetEZTData(UInt32 k, std::vector<std::vector<Float64>> ezt_data)
 {
     if(k>=m_data.size())
     {
-        Log.LogError("    CPriorHelperContinuum: SetEZTData failed for k=%d", k);
-        throw std::runtime_error("    CPriorHelperContinuum: set bad data index");
+        Log.LogError("    CPriorHelper: SetEZTData failed for k=%d", k);
+        throw std::runtime_error("    CPriorHelper: set bad data index");
     }
 
     for(UInt32 kz=0; kz<m_nZ; kz++)
@@ -250,12 +304,12 @@ bool CPriorHelperContinuum::SetEZTData(UInt32 k, std::vector<std::vector<Float64
     return true;
 }
 
-bool CPriorHelperContinuum::SetAGaussmeanData(UInt32 k, std::vector<std::vector<Float64>> agaussmean_data)
+bool CPriorHelper::SetAGaussmeanData(UInt32 k, std::vector<std::vector<Float64>> agaussmean_data)
 {
     if(k>=m_data.size())
     {
-        Log.LogError("    CPriorHelperContinuum: SetAgaussmeanData failed for k=%d", k);
-        throw std::runtime_error("    CPriorHelperContinuum: set bad data index");
+        Log.LogError("    CPriorHelper: SetAgaussmeanData failed for k=%d", k);
+        throw std::runtime_error("    CPriorHelper: set bad data index");
     }
 
     for(UInt32 kz=0; kz<m_nZ; kz++)
@@ -269,12 +323,12 @@ bool CPriorHelperContinuum::SetAGaussmeanData(UInt32 k, std::vector<std::vector<
     return true;
 }
 
-bool CPriorHelperContinuum::SetAGausssigmaData(UInt32 k, std::vector<std::vector<Float64>> agausssigma_data)
+bool CPriorHelper::SetAGausssigmaData(UInt32 k, std::vector<std::vector<Float64>> agausssigma_data)
 {
     if(k>=m_data.size())
     {
-        Log.LogError("    CPriorHelperContinuum: SetAgausssigmaData failed for k=%d", k);
-        throw std::runtime_error("    CPriorHelperContinuum: set bad data index");
+        Log.LogError("    CPriorHelper: SetAgausssigmaData failed for k=%d", k);
+        throw std::runtime_error("    CPriorHelper: set bad data index");
     }
 
     for(UInt32 kz=0; kz<m_nZ; kz++)
@@ -288,12 +342,12 @@ bool CPriorHelperContinuum::SetAGausssigmaData(UInt32 k, std::vector<std::vector
     return true;
 }
 
-bool CPriorHelperContinuum::SetPzData(std::vector<Float64> z_data)
+bool CPriorHelper::SetPzData(std::vector<Float64> z_data)
 {
     if(z_data.size()!=m_data_pz.size())
     {
-        Log.LogError("    CPriorHelperContinuum: SetPzData failed for bad data size" );
-        throw std::runtime_error("    CPriorHelperContinuum: set pz bad data size");
+        Log.LogError("    CPriorHelper: SetPzData failed for bad data size" );
+        throw std::runtime_error("    CPriorHelper: set pz bad data size");
     }
 
     for(UInt32 kz=0; kz<m_nZ; kz++)
@@ -305,10 +359,10 @@ bool CPriorHelperContinuum::SetPzData(std::vector<Float64> z_data)
 }
 
 
-bool CPriorHelperContinuum::LoadFileEZ( const char* filePath, std::vector<std::vector<Float64>>& data)
+bool CPriorHelper::LoadFileEZ( const char* filePath, std::vector<std::vector<Float64>>& data)
 {
     bool verboseRead=false;
-    Log.LogDetail("    CPriorHelperContinuum: start load prior file: %s", filePath);
+    Log.LogDetail("    CPriorHelper: start load prior file: %s", filePath);
     bool loadSuccess=true;
     std::ifstream file;
     file.open( filePath, std::ifstream::in );
@@ -340,19 +394,19 @@ bool CPriorHelperContinuum::LoadFileEZ( const char* filePath, std::vector<std::v
 
                     if(verboseRead)
                     {
-                        Log.LogInfo("    CPriorHelperContinuum: read line=%d, col=%d : valf=%e", nlinesRead, lineVals.size()-1, x);
+                        Log.LogInfo("    CPriorHelper: read line=%d, col=%d : valf=%e", nlinesRead, lineVals.size()-1, x);
                     }
                 }
                 if(lineVals.size()!=m_nEbv)
                 {
-                    Log.LogError("    CPriorHelperContinuum: read n=%d cols, instead of %d", lineVals.size(), m_nEbv);
-                    throw std::runtime_error("    CPriorHelperContinuum: read bad number of cols");
+                    Log.LogError("    CPriorHelper: read n=%d cols, instead of %d", lineVals.size(), m_nEbv);
+                    throw std::runtime_error("    CPriorHelper: read bad number of cols");
                 }
                 nlinesRead++;
                 data.push_back(lineVals);
                 if(verboseRead)
                 {
-                    Log.LogInfo("    CPriorHelperContinuum: read n=%d cols", lineVals.size());
+                    Log.LogInfo("    CPriorHelper: read n=%d cols", lineVals.size());
                 }
             }
         }
@@ -362,10 +416,10 @@ bool CPriorHelperContinuum::LoadFileEZ( const char* filePath, std::vector<std::v
     return loadSuccess;
 }
 
-bool CPriorHelperContinuum::LoadFileZ(const char* filePath , std::vector<Float64>& data)
+bool CPriorHelper::LoadFileZ(const char* filePath , std::vector<Float64>& data)
 {
     bool verboseRead=false;
-    Log.LogDetail("    CPriorHelperContinuum: start load prior file: %s", filePath);
+    Log.LogDetail("    CPriorHelper: start load prior file: %s", filePath);
     bool loadSuccess=true;
     std::ifstream file;
     file.open( filePath, std::ifstream::in );
@@ -393,7 +447,7 @@ bool CPriorHelperContinuum::LoadFileZ(const char* filePath , std::vector<Float64
 
                 if(verboseRead)
                 {
-                    Log.LogInfo("    CPriorHelperContinuum: read line=%d : valf=%e", nlinesRead, x);
+                    Log.LogInfo("    CPriorHelper: read line=%d : valf=%e", nlinesRead, x);
                 }
 
                 nlinesRead++;
@@ -404,8 +458,8 @@ bool CPriorHelperContinuum::LoadFileZ(const char* filePath , std::vector<Float64
 
         if(nlinesRead!=m_nZ)
         {
-            Log.LogError("    CPriorHelperContinuum: read n=%d lines", nlinesRead);
-            throw std::runtime_error("    CPriorHelperContinuum: read bad number of lines");
+            Log.LogError("    CPriorHelper: read n=%d lines", nlinesRead);
+            throw std::runtime_error("    CPriorHelper: read bad number of lines");
         }
     }
     return loadSuccess;
@@ -413,14 +467,14 @@ bool CPriorHelperContinuum::LoadFileZ(const char* filePath , std::vector<Float64
 
 
 /**
- * @brief CPriorHelperContinuum::GetTplPriorData
+ * @brief CPriorHelper::GetTplPriorData
  * @param tplname
  * @param redshifts
  * @param zePriorData
  * @param outsideZRangeExtensionMode: 0=extend 0 value for z<m_z0, and n-1 value for z>m_z0+m_dZ*m_nZ, 1=return error if z outside prior range
  * @return
  */
-bool CPriorHelperContinuum::GetTplPriorData(std::string tplname,
+bool CPriorHelper::GetTplPriorData(std::string tplname,
                                             std::vector<Float64> redshifts,
                                             TPriorZEList& zePriorData,
                                             Int32 outsideZRangeExtensionMode)
@@ -428,14 +482,14 @@ bool CPriorHelperContinuum::GetTplPriorData(std::string tplname,
     bool verbose=false;
     if(m_betaA<=0.0 && m_betaTE<=0.0 && m_betaZ<=0.0)
     {
-        Log.LogError("    CPriorHelperContinuum: beta coeff all zero (betaA=%e, betaTE=%e, betaZ=%e)", m_betaA, m_betaTE, m_betaZ);
+        Log.LogError("    CPriorHelper: beta coeff all zero (betaA=%e, betaTE=%e, betaZ=%e)", m_betaA, m_betaTE, m_betaZ);
         zePriorData.clear();
         return false;
     }
 
     if(mInitFailed)
     {
-        Log.LogDetail("    CPriorHelperContinuum: init. failed, unable to provide priors. Priors won't be used.");
+        Log.LogDetail("    CPriorHelper: init. failed, unable to provide priors. Priors won't be used.");
         zePriorData.clear();
         return true;
     }
@@ -452,7 +506,7 @@ bool CPriorHelperContinuum::GetTplPriorData(std::string tplname,
     }
     if(idx<0 || idx>=m_tplnames.size())
     {
-        Log.LogError("    CPriorHelperContinuum: unable to match this tplname in priors names list : %s", tplname.c_str());
+        Log.LogError("    CPriorHelper: unable to match this tplname in priors names list : %s", tplname.c_str());
         return false;
     }
 
@@ -466,7 +520,7 @@ bool CPriorHelperContinuum::GetTplPriorData(std::string tplname,
        {
            if(idz<0 || idz>=m_nZ)
            {
-               Log.LogError("    CPriorHelperContinuum: unable to match this redshift in prior list : %e", redshifts[kz]);
+               Log.LogError("    CPriorHelper: unable to match this redshift in prior list : %e", redshifts[kz]);
                return false;
            }
        }
@@ -484,15 +538,15 @@ bool CPriorHelperContinuum::GetTplPriorData(std::string tplname,
        }
        if(verbose)
        {
-           Log.LogInfo("    CPriorHelperContinuum: get prior for z=%f: found idz=%d", redshifts[kz], idz);
+           Log.LogInfo("    CPriorHelper: get prior for z=%f: found idz=%d", redshifts[kz], idz);
        }
        TPriorEList dataz = m_data[idx][idz];
        for(UInt32 icol=0; icol<m_nEbv; icol++)
        {
            if(verbose)
            {
-               Log.LogInfo("    CPriorHelperContinuum: get prior for tpl=%s", tplname.c_str());
-               Log.LogInfo("    CPriorHelperContinuum: get prior idTpl=%d, idz=%d, idebmv=%d : valf=%e", idx, idz, icol, dataz[icol].priorTZE);
+               Log.LogInfo("    CPriorHelper: get prior for tpl=%s", tplname.c_str());
+               Log.LogInfo("    CPriorHelper: get prior idTpl=%d, idz=%d, idebmv=%d : valf=%e", idx, idz, icol, dataz[icol].priorTZE);
            }
 
            Float64 logPTE = 0.;
@@ -508,10 +562,10 @@ bool CPriorHelperContinuum::GetTplPriorData(std::string tplname,
 
                if(std::isnan(logPTE) || logPTE!=logPTE || std::isinf(logPTE))
                {
-                   Log.LogError("    CPriorHelperContinuum: logP_TZE is NAN (priorTZE=%e, logP_TZE=%e)",
+                   Log.LogError("    CPriorHelper: logP_TZE is NAN (priorTZE=%e, logP_TZE=%e)",
                                 dataz[icol].priorTZE,
                                 logPTE);
-                   throw std::runtime_error("    CPriorHelperContinuum: logP_TZE is NAN or inf, or invalid");
+                   throw std::runtime_error("    CPriorHelper: logP_TZE is NAN or inf, or invalid");
                }
            }
 

@@ -1,5 +1,5 @@
-#ifndef _REDSHIFT_PRIORHELPER_CONTINUUM_
-#define _REDSHIFT_PRIORHELPER_CONTINUUM_
+#ifndef _REDSHIFT_PRIORHELPER_
+#define _REDSHIFT_PRIORHELPER_
 
 #include <RedshiftLibrary/common/datatypes.h>
 #include <RedshiftLibrary/common/range.h>
@@ -16,7 +16,7 @@ namespace NSEpic
  * /ingroup Redshift
 
  */
-class CPriorHelperContinuum
+class CPriorHelper
 {
 
 public:
@@ -37,10 +37,10 @@ public:
     typedef std::vector<TPriorEList> TPriorZEList;
     typedef std::vector<TPriorZEList> TPriorTZEList;
 
-    CPriorHelperContinuum();
-    ~CPriorHelperContinuum();
+    CPriorHelper();
+    ~CPriorHelper();
 
-    bool Init( std::string priorDirPath );
+    bool Init( std::string priorDirPath, Int32 type );
     bool LoadFileEZ(const char* filePath , std::vector<std::vector<Float64>>& data);
     bool LoadFileZ(const char* filePath , std::vector<Float64>& data);
 
@@ -63,6 +63,8 @@ public:
     bool mInitFailed = false;
 
 private:
+
+    Int32 m_type; //0=Continuum, 1=Lines
 
     TPriorTZEList m_data;
     std::vector<Float64> m_data_pz;

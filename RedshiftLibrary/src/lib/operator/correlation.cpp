@@ -52,7 +52,7 @@ Float64 COperatorCorrelation::GetComputationDuration() const
                                                                    std::string opt_interp_unused,
                                                                    Int32 opt_extinction_unused,
                                                                    Int32 opt_dustFitting_unused,
-                                                                   CPriorHelperContinuum::TPriorZEList logpriorze_unused)
+                                                                   CPriorHelper::TPriorZEList logpriorze_unused)
  {
     Bool retVal;
 
