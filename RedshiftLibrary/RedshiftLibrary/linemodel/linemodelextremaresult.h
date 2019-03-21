@@ -54,6 +54,7 @@ public:
 
     //
     TFloat64List            StrongELSNR;
+    std::vector<std::vector<std::string>>            StrongELSNRAboveCut;
     TFloat64List            bic;    // bayesian information criterion for each extrema
     std::vector<CContinuumIndexes::TContinuumIndexList> ContinuumIndexes; //continuum indexes for each extrema
     std::vector<CMask>      OutsideLinesMask;   //Mask with 0 under the lines and 1 anywhere else
@@ -73,6 +74,9 @@ public:
     TFloat64List            FittedTplDustCoeff;     //Calzetti dustcoeff for the best template fitted for continuum
     std::vector<Int32>      FittedTplMeiksinIdx;    //Meiksin igm index for the best template fitted for continuum
     TFloat64List      FittedTplRedshift;    //Redshift for the best template fitted for continuum
+    TFloat64List      FittedTplDtm;    //DTM for the best template fitted for continuum
+    TFloat64List      FittedTplMtm;    //MTM for the best template fitted for continuum
+    TFloat64List      FittedTplLogPrior;    //log prior for the best template fitted for continuum
     std::vector<TFloat64List>      FittedTplpCoeffs;    //poly coeffs for the best template fitted for continuum
 
     //template ratio

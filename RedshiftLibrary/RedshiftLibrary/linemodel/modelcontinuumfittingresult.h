@@ -21,7 +21,13 @@ class CModelContinuumFittingResult : public COperatorResult
 
 public:
 
-    CModelContinuumFittingResult(Float64 _redshift, std::string _name, Float64 _merit, Float64 _amp, Float64 _ismCoeff, Int32 _igmIndex);
+    CModelContinuumFittingResult(Float64 _redshift,
+                                 std::string _name,
+                                 Float64 _merit,
+                                 Float64 _amp,
+                                 Float64 _ismCoeff,
+                                 Int32 _igmIndex,
+                                 Float64 _fitting_snr);
     CModelContinuumFittingResult();
     virtual ~CModelContinuumFittingResult();
 
@@ -41,6 +47,9 @@ private:
     Float64 Amp;
     Float64 IsmCoeff;
     Int32   IgmIndex;
+
+    //fitting info
+    Float64 Fitting_snr;
 };
 
 }

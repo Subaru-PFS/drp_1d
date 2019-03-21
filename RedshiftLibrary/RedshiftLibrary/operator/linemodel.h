@@ -62,7 +62,10 @@ public:
                                               const Float64 &opt_emvelocityfitstep=20.,
                                               const Float64 &opt_absvelocityfitmin=150.,
                                               const Float64 &opt_absvelocityfitmax=500.,
-                                              const Float64 &opt_absvelocityfitstep=20.);
+                                              const Float64 &opt_absvelocityfitstep=20.,
+                                              const Float64 &opt_manvelfit_dzmin=-6e-4,
+                                              const Float64 &opt_manvelfit_dzmax=6e-4,
+                                              const Float64 &opt_manvelfit_dzstep=1e-4);
 
     Int32 Init(const CSpectrum& spectrum, const TFloat64List& redshifts);
     std::shared_ptr<COperatorResult> getResult();
@@ -107,6 +110,7 @@ public:
                             const Int32 opt_sign,
                             const std::vector<Float64> floatValues,
                             const Float64 meritCut);
+    Int32 Combine_firstpass_candidates(std::shared_ptr<CLineModelExtremaResult> firstpass_results_b);
 
 
     Int32 ComputeSecondPass(CDataStore &dataStore,
@@ -119,7 +123,6 @@ public:
                             const std::string &opt_lineTypeFilter,
                             const std::string &opt_lineForceFilter,
                             const TFloat64Range& lambdaRange,
-                            const Int32 opt_extremacount,
                             const std::string &opt_fittingmethod,
                             const std::string &opt_continuumcomponent,
                             const std::string& opt_lineWidthType,
@@ -135,7 +138,11 @@ public:
                             const Float64 &opt_emvelocityfitstep=20.,
                             const Float64 &opt_absvelocityfitmin=150.,
                             const Float64 &opt_absvelocityfitmax=500.,
-                            const Float64 &opt_absvelocityfitstep=20.);
+                            const Float64 &opt_absvelocityfitstep=20.,
+                            const Float64 &opt_manvelfit_dzmin=-6e-4,
+                            const Float64 &opt_manvelfit_dzmax=6e-4,
+                            const Float64 &opt_manvelfit_dzstep=1e-4,
+                            const string &opt_continuumfit_method="fromfirstpass");
 
     Int32 EstimateSecondPassParameters(const CSpectrum &spectrum,
                                        const TFloat64Range &lambdaRange,
@@ -148,7 +155,10 @@ public:
                                        const Float64 &opt_emvelocityfitstep,
                                        const Float64 &opt_absvelocityfitmin,
                                        const Float64 &opt_absvelocityfitmax,
-                                       const Float64 &opt_absvelocityfitstep);
+                                       const Float64 &opt_absvelocityfitstep,
+                                       const Float64 &opt_manvelfit_dzmin,
+                                       const Float64 &opt_manvelfit_dzmax,
+                                       const Float64 &opt_manvelfit_dzstep);
 
     Int32 RecomputeAroundCandidates(TPointList input_extremumList,
                                     const TFloat64Range &lambdaRange,
@@ -199,9 +209,6 @@ public:
 
     Int32 m_maxModelSaveCount;
     Float64 m_secondPass_extensionradius = 0.005;
-    Float64 m_secondPass_velfit_dzInfLim = -4e-4;
-    Float64 m_secondPass_velfit_dzSupLim = 4e-4;
-    Float64 m_secondPass_velfit_dzStep = 2e-4;
 
     bool m_enableLoadContTemplate=false;
     Int32 m_iRollContaminated=-1;
@@ -215,6 +222,8 @@ public:
     Int32 m_opt_tplfit_extinction = 1;
     Int32 m_opt_fitcontinuum_maxN = 2;
     bool m_opt_tplfit_ignoreLinesSupport=false; //default: false, as ortho templates store makes this un-necessary
+    Float64 m_opt_tplfit_continuumprior_beta=1.0;
+    std::string m_opt_tplfit_continuumprior_reldirpath="";
 
     Int32 m_opt_tplratio_ismFit = 1;
     Int32 m_opt_firstpass_tplratio_ismFit=0;
@@ -222,6 +231,19 @@ public:
     std::string m_opt_firstpass_fittingmethod;
     std::string m_opt_secondpasslcfittingmethod="-1";
     Int32 m_opt_secondpass_estimateParms_tplfit_fixfromfirstpass=1; //0: load fit continuum, 1 (default): use the best continuum from first pass
+
+    std::string m_opt_lya_forcefit;
+    std::string m_opt_lya_forcedisablefit;
+    Float64 m_opt_lya_fit_asym_min;
+    Float64 m_opt_lya_fit_asym_max;
+    Float64 m_opt_lya_fit_asym_step;
+    Float64 m_opt_lya_fit_width_min;
+    Float64 m_opt_lya_fit_width_max;
+    Float64 m_opt_lya_fit_width_step;
+    Float64 m_opt_lya_fit_delta_min;
+    Float64 m_opt_lya_fit_delta_max;
+    Float64 m_opt_lya_fit_delta_step;
+
 private:
 
     std::shared_ptr<CLineModelResult> m_result;

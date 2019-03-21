@@ -102,9 +102,15 @@ BOOST_AUTO_TEST_CASE(GetLineProfile){
   BOOST_CHECK_CLOSE(0.2581961, element.GetLineProfile(CRay::LOR,6564.61, 6568., 2. ), 0.001);
   BOOST_CHECK_CLOSE(0.373055, element.GetLineProfile(CRay::ASYM,6564.61, 6565., 2. ), 0.001);
   BOOST_CHECK_CLOSE(0.0628983, element.GetLineProfile(CRay::ASYM2,6564.61, 6568., 2. ), 0.001);
-  BOOST_CHECK_CLOSE(0.0628983, element.GetLineProfile(CRay::ASYMFIT,6564.61, 6568., 2. ), 0.001);
-  BOOST_CHECK_CLOSE(0.0628983, element.GetLineProfile(CRay::ASYMFIXED,6564.61, 6568., 2. ), 0.001);
-  //BOOST_TEST_MESSAGE("8 " << element.GetLineProfile(CRay::EXTINCT,6564.61, 6568., 2. ));
+
+  // Theses value are for asym profile with mean shift
+  BOOST_CHECK_CLOSE(0.2893982, element.GetLineProfile(CRay::ASYMFIT,6564.61, 6568., 2. ), 0.001);
+  BOOST_CHECK_CLOSE(0.2893982, element.GetLineProfile(CRay::ASYMFIXED,6564.61, 6568., 2. ), 0.001);
+
+  // Theses tests failed since 56e4b5fdc567f65370075474d74f6a79ed3093c4
+  // c.f. asym profile with mean shift
+  //BOOST_CHECK_CLOSE(0.0628983, element.GetLineProfile(CRay::ASYMFIT,6564.61, 6568., 2. ), 0.001);
+  //BOOST_CHECK_CLOSE(0.0628983, element.GetLineProfile(CRay::ASYMFIXED,6564.61, 6568., 2. ), 0.001);
 
 }
 

@@ -27,6 +27,7 @@ void CChisquareResult::Init(UInt32 n , Int32 nISM, Int32 nIGM)
     FitMeiksinIdx.resize( n );
     FitDtM.resize( n );
     FitMtM.resize( n );
+    LogPrior.resize( n );
     Redshifts.resize( n );
     Overlap.resize( n );
     Status.resize( n );
@@ -226,6 +227,24 @@ void CChisquareResult::Save( const CDataStore& store, std::ostream& stream ) con
                 }
 
                 stream << "\t" <<   FitMeiksinIdx[idx] << "\t";
+            }
+            stream << "}" << std::endl;
+        }
+
+        if(LogPrior.size()>0){
+            stream <<  "#Extrema LogPrior = {";
+            for ( int i=0; i<Extrema.size(); i++)
+            {
+                Int32 idx=0;
+                for ( UInt32 i2=0; i2<Redshifts.size(); i2++)
+                {
+                    if(Redshifts[i2] == Extrema[i]){
+                        idx = i2;
+                        break;
+                    }
+                }
+
+                stream << "\t" <<   LogPrior[idx] << "\t";
             }
             stream << "}" << std::endl;
         }

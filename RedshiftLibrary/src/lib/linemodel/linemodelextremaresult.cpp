@@ -45,6 +45,7 @@ void CLineModelExtremaResult::Resize(Int32 size)
 
     Posterior.resize(size);
     StrongELSNR.resize(size);
+    StrongELSNRAboveCut.resize(size);
     LogArea.resize(size);
     LogAreaCorrectedExtrema.resize(size);
     SigmaZ.resize(size);
@@ -64,6 +65,9 @@ void CLineModelExtremaResult::Resize(Int32 size)
     FittedTplDustCoeff.resize(size);
     FittedTplMeiksinIdx.resize(size);
     FittedTplRedshift.resize(size);
+    FittedTplDtm.resize(size);
+    FittedTplMtm.resize(size);
+    FittedTplLogPrior.resize(size);
     FittedTplpCoeffs.resize(size);
 
     FittedTplshapeName.resize(size);
@@ -300,6 +304,26 @@ void CLineModelExtremaResult::Save( const CDataStore& store, std::ostream& strea
         stream << "}" << std::endl;
     }
 
+
+    // save StrongELSNRAboveCut list, on 1 line
+    if(StrongELSNRAboveCut.size()>0){
+        stream <<  "#StrongELSNRAboveCut for each extrema = {";
+        for ( int i=0; i<StrongELSNRAboveCut.size(); i++)
+        {
+            std::vector<std::string> line_list = StrongELSNRAboveCut[i];
+            for ( int ki=0; ki<line_list.size(); ki++)
+            {
+                if(ki>0)
+                {
+                    stream << ",";
+                }
+                stream <<  line_list[ki];
+            }
+            stream << "\t";
+        }
+        stream << "}" << std::endl;
+    }
+
     // save FittedTplName, on 1 line
     if(FittedTplName.size()>0){
         stream <<  "#FittedTplName for each extrema = {";
@@ -359,6 +383,39 @@ void CLineModelExtremaResult::Save( const CDataStore& store, std::ostream& strea
         for ( int i=0; i<FittedTplRedshift.size(); i++)
         {
             stream <<  FittedTplRedshift[i] << "\t";
+        }
+        stream << "}" << std::endl;
+    }
+
+    // save FittedTplDtm, on 1 line
+    if(FittedTplDtm.size()>0){
+        stream <<  "#FittedTplDtm for each extrema = {";
+        stream << std::setprecision(8);
+        for ( int i=0; i<FittedTplDtm.size(); i++)
+        {
+            stream <<  FittedTplDtm[i] << "\t";
+        }
+        stream << "}" << std::endl;
+    }
+
+    // save FittedTplMtm, on 1 line
+    if(FittedTplMtm.size()>0){
+        stream <<  "#FittedTplMtm for each extrema = {";
+        stream << std::setprecision(8);
+        for ( int i=0; i<FittedTplMtm.size(); i++)
+        {
+            stream <<  FittedTplMtm[i] << "\t";
+        }
+        stream << "}" << std::endl;
+    }
+
+    // save FittedTplLogPrior, on 1 line
+    if(FittedTplLogPrior.size()>0){
+        stream <<  "#FittedTplLogPrior for each extrema = {";
+        stream << std::setprecision(8);
+        for ( int i=0; i<FittedTplLogPrior.size(); i++)
+        {
+            stream <<  FittedTplLogPrior[i] << "\t";
         }
         stream << "}" << std::endl;
     }
@@ -433,6 +490,26 @@ void CLineModelExtremaResult::Save( const CDataStore& store, std::ostream& strea
         for ( int i=0; i<OutsideLinesSTDError.size(); i++)
         {
             stream << std::scientific << std::setprecision(5) <<  OutsideLinesSTDError[i] << "\t";
+        }
+        stream << "}" << std::endl;
+    }
+
+    // save Elv, on 1 line
+    if(Elv.size()>0){
+        stream <<  "#Elv for each extrema = {";
+        for ( int i=0; i<Elv.size(); i++)
+        {
+            stream << std::fixed << std::setprecision(1) <<  Elv[i] << "\t";
+        }
+        stream << "}" << std::endl;
+    }
+
+    // save Alv, on 1 line
+    if(Alv.size()>0){
+        stream <<  "#Alv for each extrema = {";
+        for ( int i=0; i<Alv.size(); i++)
+        {
+            stream << std::fixed << std::setprecision(1) <<  Alv[i] << "\t";
         }
         stream << "}" << std::endl;
     }
