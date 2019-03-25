@@ -64,7 +64,7 @@ private:
     Float64 m_opt_tplfit_continuumprior_betaA=1.0;
     Float64 m_opt_tplfit_continuumprior_betaTE=1.0;
     Float64 m_opt_tplfit_continuumprior_betaZ=1.0;
-    std::string m_opt_tplfit_continuumprior_reldirpath="";
+    std::string m_opt_tplfit_continuumprior_dirpath="";
     std::string m_opt_tplfit_ignoreLinesSupport="no";
 
     std::string m_opt_rigidity;
@@ -101,6 +101,10 @@ private:
     //options for rigidity=tplshape
     std::string m_opt_tplratio_reldirpath="";
     std::string m_opt_tplratio_ismfit="no";
+    Float64 m_opt_tplratio_prior_betaA=1.0;
+    Float64 m_opt_tplratio_prior_betaTE=1.0;
+    Float64 m_opt_tplratio_prior_betaZ=1.0;
+    std::string m_opt_tplratio_prior_dirpath="";
     std::string m_opt_offsets_reldirpath="";
 
     Float64 m_opt_extremacount;

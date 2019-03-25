@@ -199,6 +199,8 @@ public:
                                       const Float64 &opt_absvelocityfitmax,
                                       const Float64 &opt_absvelocityfitstep);
 
+    void InitTplratioPriors();
+
     void storeGlobalModelResults( CDataStore &dataStore );
     void storePerTemplateModelResults( CDataStore &dataStore, const CTemplate& tpl );
     std::shared_ptr<CModelSpectrumResult> GetModelSpectrumResult(Int32 idx);
@@ -225,7 +227,7 @@ public:
     Float64 m_opt_tplfit_continuumprior_betaA=1.0;
     Float64 m_opt_tplfit_continuumprior_betaTE=1.0;
     Float64 m_opt_tplfit_continuumprior_betaZ=1.0;
-    std::string m_opt_tplfit_continuumprior_reldirpath="";
+    std::string m_opt_tplfit_continuumprior_dirpath="";
 
     Int32 m_opt_tplratio_ismFit = 1;
     Int32 m_opt_firstpass_tplratio_ismFit=0;
@@ -233,6 +235,10 @@ public:
     std::string m_opt_firstpass_fittingmethod;
     std::string m_opt_secondpasslcfittingmethod="-1";
     Int32 m_opt_secondpass_estimateParms_tplfit_fixfromfirstpass=1; //0: load fit continuum, 1 (default): use the best continuum from first pass
+    Float64 m_opt_tplratio_prior_betaA=1.0;
+    Float64 m_opt_tplratio_prior_betaTE=1.0;
+    Float64 m_opt_tplratio_prior_betaZ=1.0;
+    std::string m_opt_tplratio_prior_dirpath="";
 
     std::string m_opt_lya_forcefit;
     std::string m_opt_lya_forcedisablefit;

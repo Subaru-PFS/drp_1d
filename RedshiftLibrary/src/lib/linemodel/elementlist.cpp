@@ -148,6 +148,8 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
     m_unscaleContinuumFluxAxisDerivZ =NULL;
     m_chiSquareOperator = NULL;
 
+    m_tplshape_priorhelper = NULL;
+
     //NB: fitContinuum_option: this is the initialization (default value), eventually overriden in SetFitContinuum_FitStore() when a fitStore gets available
     m_fitContinuum_option = 0; //0=interactive fitting, 1=use precomputed fit store, 2=use fixed values (typical use for second pass recompute)
     m_fitContinuum_tplfitStore = NULL;
@@ -273,6 +275,7 @@ Bool CLineModelElementList::initTplratioCatalogs(std::string opt_tplratioCatRelP
     m_FittedErrorTplshape.resize(m_CatalogTplShape->GetCatalogsCount());
     m_MtmTplshape.resize(m_CatalogTplShape->GetCatalogsCount());
     m_DtmTplshape.resize(m_CatalogTplShape->GetCatalogsCount());
+    m_LinesLogPriorTplshape.resize(m_CatalogTplShape->GetCatalogsCount());
     for(Int32 ktplshape=0; ktplshape<m_CatalogTplShape->GetCatalogsCount(); ktplshape++)
     {
         m_FittedAmpTplshape[ktplshape].resize(m_Elements.size());
@@ -281,6 +284,7 @@ Bool CLineModelElementList::initTplratioCatalogs(std::string opt_tplratioCatRelP
         m_DtmTplshape[ktplshape].resize(m_Elements.size());
         m_LyaAsymCoeffTplshape[ktplshape].resize(m_Elements.size());
         m_LyaWidthCoeffTplshape[ktplshape].resize(m_Elements.size());
+        m_LinesLogPriorTplshape[ktplshape].resize(m_Elements.size());
     }
 
     m_tplshapeLeastSquareFast = false;
@@ -1634,6 +1638,22 @@ std::vector<Float64> CLineModelElementList::GetChisquareTplshape()
     return m_ChisquareTplshape;
 }
 
+/**
+ * @brief CLineModelElementList::GetPriorLinesTplshape
+ * WARNING: as stated in fit(), the prior is valid in this code structure only for tplratio with only 1 element containing the EL component, hence using idx=0 here
+ * @return
+ */
+std::vector<Float64> CLineModelElementList::GetPriorLinesTplshape()
+{
+    std::vector<Float64> plinestplshape;
+    Int32 eltIdx = 0;
+    for(Int32 ktpl=0; ktpl<m_LinesLogPriorTplshape.size(); ktpl++)
+    {
+        plinestplshape.push_back(m_LinesLogPriorTplshape[ktpl][eltIdx]);
+    }
+    return plinestplshape;
+}
+
 std::vector<Float64> CLineModelElementList::GetScaleMargTplshape()
 {
     return m_ScaleMargCorrTplshape;
@@ -1678,6 +1698,14 @@ Bool CLineModelElementList::setTplshapeModel(Int32 itplshape, Bool enableSetVelo
     Log.LogDebug( "    model : setTplshapeModel, loaded: %d = %s", itplshape, m_CatalogTplShape->GetCatalogName(itplshape).c_str());
     return true;
 }
+
+
+Int32 CLineModelElementList::SetTplshape_PriorHelper(CPriorHelper *priorhelper)
+{
+    m_tplshape_priorhelper = priorhelper;
+    return 1;
+}
+
 
 Bool CLineModelElementList::setTplshapeAmplitude(std::vector<Float64> ampsElts, std::vector<Float64> errorsElts)
 {
@@ -1738,9 +1766,36 @@ Float64 CLineModelElementList::fit(Float64 redshift,
 
 
     Int32 nfitting=1; //multiple fitting steps for rigidity=tplshape/tplratio
+    std::vector<CPriorHelper::SPriorTZE> logPriorDataTplShape;
     if(m_rigidity=="tplshape")
     {
         nfitting=m_CatalogTplShape->GetCatalogsCount();
+
+        if(!m_tplshape_priorhelper->mInitFailed)
+        {
+            //prior initilization for tplshape EL only
+            if(m_Elements.size()>1)
+            {
+                Log.LogError("    model: Unable to use tplshape line priors with nElts>1 for now");
+                throw runtime_error("    model: Unable to use tplshape line priors with nElts>1 for now");
+                //NB: this could be done if the EL element idx in searched (see later in the ifitting loop, UV Abs lines would be not affected by priors then)
+            }
+            for(Int32 ifitting=0; ifitting<nfitting; ifitting++)
+            {
+                //prepare the lines prior data
+                Int32 ebvfilter=m_CatalogTplShape->GetIsmIndex(ifitting);
+                CPriorHelper::SPriorTZE logPriorData;
+                std::string tplrationame = m_CatalogTplShape->GetCatalogName(ifitting);
+                bool retGetPrior = m_tplshape_priorhelper->GetTZEPriorData(tplrationame, ebvfilter, redshift, logPriorData);
+                if(retGetPrior==false)
+                {
+                    Log.LogError("    model: Failed to get prior for chi2 solvecontinuum.");
+                    throw runtime_error("    model: Failed to get prior for chi2 solvecontinuum.");
+                }else{
+                    logPriorDataTplShape.push_back(logPriorData);
+                }
+            }
+        }
     }
     Int32 savedIdxFitted=-1; //for rigidity=tplshape
 
@@ -1754,6 +1809,7 @@ Float64 CLineModelElementList::fit(Float64 redshift,
 
     Float64 merit = DBL_MAX; //initializing 'on the fly' best-merit
     std::vector<Float64> meritTplratio(nfitting, DBL_MAX); //initializing 'on the fly' best-merit per tplratio
+    std::vector<Float64> meritPriorTplratio(nfitting, 0.0); //initializing 'on the fly' best-merit-prior per tplratio
     for(Int32 icontfitting=0; icontfitting<ncontinuumfitting; icontfitting++)
     {
         if(m_ContinuumComponent == "tplfit" || m_ContinuumComponent == "tplfitauto") //the support has to be already computed when LoadFitContinuum() is called
@@ -1816,6 +1872,7 @@ Float64 CLineModelElementList::fit(Float64 redshift,
                         m_StrongELPresentTplshape[ifitting] = m_StrongELPresentTplshape[ifitting-1];
                         m_NLinesAboveSNRTplshape[ifitting] = m_NLinesAboveSNRTplshape[ifitting-1];
                         meritTplratio[ifitting] = meritTplratio[ifitting-1];
+                        meritPriorTplratio[ifitting] = meritPriorTplratio[ifitting-1];
                         for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
                         {
                             m_FittedAmpTplshape[ifitting][iElts] = m_FittedAmpTplshape[ifitting-1][iElts];
@@ -1825,6 +1882,7 @@ Float64 CLineModelElementList::fit(Float64 redshift,
 
                             m_LyaAsymCoeffTplshape[ifitting][iElts] = m_LyaAsymCoeffTplshape[ifitting-1][iElts];
                             m_LyaWidthCoeffTplshape[ifitting][iElts] = m_LyaWidthCoeffTplshape[ifitting-1][iElts];
+                            m_LinesLogPriorTplshape[ifitting][iElts] = m_LinesLogPriorTplshape[ifitting-1][iElts];
                         }
                         continue;
                     }
@@ -2362,9 +2420,17 @@ Float64 CLineModelElementList::fit(Float64 redshift,
                     }
                 }
 
-                if(_merit<meritTplratio[ifitting])
+                //lines prior
+                Float64 _meritprior = 0.0;
+                if(logPriorDataTplShape.size()>0)
+                {
+                    _meritprior += -2.*logPriorDataTplShape[ifitting].betaZ*logPriorDataTplShape[ifitting].logprior_precompZ;
+                }
+
+                if( (_merit+_meritprior) < meritTplratio[ifitting]+meritPriorTplratio[ifitting])
                 {
                     meritTplratio[ifitting] = _merit;
+                    meritPriorTplratio[ifitting] = _meritprior;
                     m_ChisquareTplshape[ifitting] = _merit;
                     m_ScaleMargCorrTplshape[ifitting] = getScaleMargCorrection();
                     m_StrongELPresentTplshape[ifitting] = GetModelStrongEmissionLinePresent();
@@ -2394,7 +2460,7 @@ Float64 CLineModelElementList::fit(Float64 redshift,
                                 m_FittedErrorTplshape[ifitting][iElts] = amp_error/nominal_amp;
                                 m_DtmTplshape[ifitting][iElts] = m_Elements[iElts]->GetSumCross();
                                 m_MtmTplshape[ifitting][iElts] = m_Elements[iElts]->GetSumGauss();
-
+                                m_LinesLogPriorTplshape[ifitting][iElts] = _meritprior;
                                 m_LyaAsymCoeffTplshape[ifitting][iElts] = m_Elements[iElts]->GetAsymfitAlphaCoeff();
                                 m_LyaWidthCoeffTplshape[ifitting][iElts] = m_Elements[iElts]->GetAsymfitWidthCoeff();
 

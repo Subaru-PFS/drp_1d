@@ -347,6 +347,8 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
         }
 
         m_model->m_opt_firstpass_forcedisableTplratioISMfit = !m_opt_firstpass_tplratio_ismFit;
+
+        InitTplratioPriors();
     }
 
     // init catalog offsets
@@ -362,8 +364,7 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
 
     Int32 resultInitRet = m_result->Init(m_sortedRedshifts, restRayList,
                                          m_model->getTplshape_count(),
-                                         m_model->getTplshape_priors(),
-                                         m_model->getTplshape_priorsPz());
+                                         m_model->getTplshape_priors());
     if (resultInitRet != 0)
     {
         Log.LogError("  Operator-Linemodel: ERROR while initializing linemodel "
@@ -470,8 +471,6 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
     Log.LogInfo(
         "  Operator-Linemodel: ---------- ---------- ---------- ----------");
 
-    // WARNING: HACK, first pass with continuum from spectrum.
-    // model.SetContinuumComponent("fromspectrum");
     //
     Int32 indexLargeGrid = 0;
     std::vector<Float64> calculatedLargeGridRedshifts;
@@ -505,7 +504,8 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
                                                  m_model->GetChisquareTplshape(),
                                                  m_model->GetScaleMargTplshape(),
                                                  m_model->GetStrongELPresentTplshape(),
-                                                 m_model->GetNLinesAboveSNRTplshape());
+                                                 m_model->GetNLinesAboveSNRTplshape(),
+                                                 m_model->GetPriorLinesTplshape());
             for (Int32 k = 0; k < m_result->ChiSquareTplshapes.size(); k++)
             {
                 calculatedChiSquareTplshapes[k].push_back(
@@ -542,7 +542,8 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
                 i, m_result->GetChisquareTplshapeResult(i - 1),
                 m_result->GetScaleMargCorrTplshapeResult(i - 1),
                 m_result->GetStrongELPresentTplshapeResult(i - 1),
-                m_result->GetNLinesAboveSNRTplshapeResult(i - 1));
+                m_result->GetNLinesAboveSNRTplshapeResult(i - 1),
+                m_result->GetPriorLinesTplshapeResult(i - 1));
             if (!m_estimateLeastSquareFast)
             {
                 m_result->ChiSquareContinuum[i] =
@@ -704,7 +705,7 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
     }
 
     CPriorHelper *phelperContinuum = new CPriorHelper();
-    phelperContinuum->Init(m_opt_tplfit_continuumprior_reldirpath.c_str(), 0);
+    phelperContinuum->Init(m_opt_tplfit_continuumprior_dirpath.c_str(), 0);
     phelperContinuum->SetBetaA(m_opt_tplfit_continuumprior_betaA);
     phelperContinuum->SetBetaTE(m_opt_tplfit_continuumprior_betaTE);
     phelperContinuum->SetBetaZ(m_opt_tplfit_continuumprior_betaZ);
@@ -1340,7 +1341,8 @@ Int32 COperatorLineModel::ComputeSecondPass(CDataStore &dataStore,
                                                  m_model->GetChisquareTplshape(),
                                                  m_model->GetScaleMargTplshape(),
                                                  m_model->GetStrongELPresentTplshape(),
-                                                 m_model->GetNLinesAboveSNRTplshape());
+                                                 m_model->GetNLinesAboveSNRTplshape(),
+                                                 m_model->GetPriorLinesTplshape());
             if (!m_estimateLeastSquareFast)
             {
                 m_result->ChiSquareContinuum[idx] = m_model->getLeastSquareContinuumMerit(lambdaRange);
@@ -2230,7 +2232,8 @@ Int32 COperatorLineModel::RecomputeAroundCandidates(TPointList input_extremumLis
                                                      m_model->GetChisquareTplshape(),
                                                      m_model->GetScaleMargTplshape(),
                                                      m_model->GetStrongELPresentTplshape(),
-                                                     m_model->GetNLinesAboveSNRTplshape());
+                                                     m_model->GetNLinesAboveSNRTplshape(),
+                                                     m_model->GetPriorLinesTplshape());
                 if (!m_estimateLeastSquareFast)
                 {
                     m_result->ChiSquareContinuum[iz] =
@@ -2390,6 +2393,17 @@ Int32 COperatorLineModel::Init(const CSpectrum &spectrum,
     std::sort(m_sortedRedshifts.begin(), m_sortedRedshifts.end());
 
     return 0;
+}
+
+void COperatorLineModel::InitTplratioPriors()
+{
+    CPriorHelper *phelperLines = new CPriorHelper();
+    phelperLines->Init(m_opt_tplratio_prior_dirpath.c_str(), 1);
+    phelperLines->SetBetaA(m_opt_tplratio_prior_betaA);
+    phelperLines->SetBetaTE(m_opt_tplratio_prior_betaTE);
+    phelperLines->SetBetaZ(m_opt_tplratio_prior_betaZ);
+
+    m_model->SetTplshape_PriorHelper(phelperLines);
 }
 
 std::shared_ptr<COperatorResult> COperatorLineModel::getResult()

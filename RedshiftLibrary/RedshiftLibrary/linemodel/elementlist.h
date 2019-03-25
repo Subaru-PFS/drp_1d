@@ -126,9 +126,11 @@ public:
     std::vector<Float64> getTplshape_priors();
     std::vector<CPdfz::SPriorZ> getTplshape_priorsPz();
     std::vector<Float64> GetChisquareTplshape();
+    std::vector<Float64> GetPriorLinesTplshape();
     std::vector<Float64> GetScaleMargTplshape();
     std::vector<bool> GetStrongELPresentTplshape();
     std::vector<Int32> GetNLinesAboveSNRTplshape();
+    Int32 SetTplshape_PriorHelper(CPriorHelper* priorhelper);
 
     Int32 GetNElements();
     Int32 GetModelValidElementsNDdl();
@@ -266,6 +268,7 @@ public:
     std::vector<std::vector<Float64>> m_DtmTplshape;
     std::vector<std::vector<Float64>> m_LyaAsymCoeffTplshape;
     std::vector<std::vector<Float64>> m_LyaWidthCoeffTplshape;
+    std::vector<std::vector<Float64>> m_LinesLogPriorTplshape;
 
     bool m_enableAmplitudeOffsets;
     Float64 m_LambdaOffsetMin = -400.0;
@@ -375,6 +378,7 @@ private:
     Float64 m_tplshapeBestTplIsmCoeff;
     Float64 m_tplshapeBestTplAmplitude;
     Int32 m_tplshapeLeastSquareFast = 0;    //for rigidity=tplshape: switch to use fast least square estimation
+    CPriorHelper* m_tplshape_priorhelper;
 
     COperatorChiSquare2* m_chiSquareOperator;
     Int32 m_fitContinuum_dustfit;

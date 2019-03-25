@@ -237,37 +237,6 @@ Bool CRayCatalogsTplShape::Load( const char* dirPath )
                     }
                 }
             }
-
-
-            CPdfz::SPriorZ pz;
-            m_PriorsPz.push_back(pz);
-            Int32 kpriorPz = -1;
-            tplname = name.filename().c_str();
-            boost::replace_all( tplname, "_catalog.txt", "_prior_pZ_Tplr.ascii");
-            for(Int32 kp=0; kp<tplshapePriorsPzList.size(); kp++)
-            {
-                std::string priorname = tplshapePriorsPzList[kp];
-                std::size_t foundstra = priorname.find(tplname.c_str());
-                if (foundstra==std::string::npos){
-                    continue;
-                }
-                kpriorPz = kp;
-            }
-            if(kpriorPz<0 || !successLoadPriors)
-            {
-                Log.LogWarning( "    CatalogsTplShape - Failed to match tplshape-catalog with tplshape-priorPz files: %s", tplname.c_str());
-                successLoadPriors=false;
-            }
-            if(successLoadPriors)
-            {
-                bool retPrior = LoadPriorPz(tplshapePriorsPzList[kpriorPz].c_str(), m_PriorsPz.size()-1);
-                if( !retPrior )
-                {
-                    Log.LogError( "    CatalogsTplShape - Failed to load tplshape priorPz: %s", tplshapePriorsPzList[kpriorPz].c_str());
-                    successLoadPriors=false;
-                }
-            }
-
         }
     }
     if(!successLoadPriors) //if not all priors were successfully loaded, replace by cst prior
@@ -322,92 +291,6 @@ bool CRayCatalogsTplShape::LoadVelocities( const char* filePath, Int32 k )
     Log.LogDebug( "    CatalogsTplShape - k=%d - Set elv=%.1f, alv=%.1f", k, elv, alv);
     m_ELvelocities[k] = elv;
     m_ABSvelocities[k] = alv;
-
-    return true;
-}
-
-bool CRayCatalogsTplShape::LoadPriorPz( const char* filePath, Int32 k )
-{
-    Float64 prior=1.0;
-
-    ifstream file;
-    file.open( filePath, ifstream::in );
-    if( file.rdstate() & ios_base::failbit ){
-        return false;
-    }
-    string line;
-
-    Float64 amp=0.0;
-    Float64 mu=0.0;
-    Float64 sigma=0.0;
-    Float64 p0=0.0;
-
-    // Read file line by line
-    Int32 readNums = 0;
-    while( getline( file, line ) )
-    {
-        if( boost::starts_with( line, "#" ) )
-        {
-            continue;
-        }
-        boost::char_separator<char> sep("\t");
-        // Tokenize each line
-        typedef boost::tokenizer< boost::char_separator<char> > ttokenizer;
-        ttokenizer tok( line, sep );
-
-        // Check if it's not a comment
-        ttokenizer::iterator it = tok.begin();
-        if( it != tok.end() )
-        {
-            amp = boost::lexical_cast<double>(*it);
-            ++it;
-
-            if( it != tok.end() )
-            {
-                mu = boost::lexical_cast<double>(*it);
-                ++it;
-            }
-            else
-            {
-                file.close();
-                return false;
-            }
-
-            if( it != tok.end() )
-            {
-                sigma = boost::lexical_cast<double>(*it);
-                ++it;
-            }
-            else
-            {
-                file.close();
-                return false;
-            }
-
-            if( it != tok.end() )
-            {
-                p0 = boost::lexical_cast<double>(*it);
-                ++it;
-            }
-            else
-            {
-                file.close();
-                return false;
-            }
-        }
-        readNums++;
-    }
-    file.close();
-    if(readNums!=1)
-    {
-        return false;
-    }
-
-    Log.LogDebug( "    CatalogsTplShape - k=%d - Set priorZ : a=%f, mu=%f, sigma=%f, p0=%f", k, amp, mu, sigma, p0);
-    m_PriorsPz[k].amp = amp;
-    m_PriorsPz[k].mu = mu;
-    m_PriorsPz[k].sigma = sigma;
-    m_PriorsPz[k].p0 = p0;
 
     return true;
 }
@@ -483,6 +366,11 @@ std::string CRayCatalogsTplShape::GetCatalogName(Int32 idx)
 Float64 CRayCatalogsTplShape::GetIsmCoeff(Int32 idx)
 {
     return m_ismCorrectionCalzetti->GetEbmvValue(m_IsmIndexes[idx]);
+}
+
+Int32 CRayCatalogsTplShape::GetIsmIndex(Int32 idx)
+{
+    return m_IsmIndexes[idx];
 }
 
 Bool CRayCatalogsTplShape::GetCatalogVelocities(Int32 idx, Float64& elv, Float64& alv )

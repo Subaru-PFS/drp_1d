@@ -589,4 +589,24 @@ bool CPriorHelper::GetTplPriorData(std::string tplname,
 }
 
 
+bool CPriorHelper::GetTZEPriorData(std::string tplname,
+                                   Int32 EBVIndexfilter,
+                                   Float64 redshift,
+                                   SPriorTZE& tzePrioData,
+                                   Int32 outsideZRangeExtensionMode)
+{
+    if(EBVIndexfilter<0 || EBVIndexfilter>m_nEbv-1)
+    {
+        Log.LogError("    CPriorHelper: Bad EBV index requested =%d (nEBV=%d)", EBVIndexfilter, m_nEbv);
+        throw std::runtime_error("    CPriorHelper: Bad EBV index requested");
+    }
+    std::vector<Float64> redshifts(1, redshift);
+    TPriorZEList zePriorData;
+    GetTplPriorData(tplname, redshifts, zePriorData, outsideZRangeExtensionMode);
+
+    tzePrioData = zePriorData[0][EBVIndexfilter];
+
+    return true;
+}
+
 

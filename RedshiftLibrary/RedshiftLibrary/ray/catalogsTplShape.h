@@ -32,7 +32,6 @@ public:
     Bool Load( const char* dirPath );
     bool LoadVelocities( const char* filepath, Int32 k );
     bool LoadPrior( const char* filepath, Int32 k );
-    bool LoadPriorPz( const char* filepath, Int32 k );
 
     //Bool AreCatalogsAligned( const CRayCatalog::TRayVector& restRayList, Int32 typeFilter, Int32 forceFilter  );
     Float64 GetBestFit(const CRayCatalog::TRayVector& restRayList, std::vector<Float64> fittedAmplitudes, std::vector<Float64> fittedErrors, std::vector<Float64> &amplitudesCorrected , std::string &bestTplName);
@@ -41,6 +40,7 @@ public:
     std::vector<Float64> getCatalogsPriors();
     std::vector<CPdfz::SPriorZ> getCatalogsPriorsPz();
     std::string GetCatalogName(Int32 idx);
+    Int32 GetIsmIndex(Int32 idx);
     Float64 GetIsmCoeff(Int32 idx);
 
     Bool GetCatalogVelocities(Int32 idx, Float64& elv, Float64& alv );

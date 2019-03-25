@@ -56,6 +56,12 @@ public:
                          TPriorZEList &zePriorData,
                          Int32 outsideZRangeExtensionMode=0);
 
+    bool GetTZEPriorData(std::string tplname,
+                         Int32 EBVIndexfilter,
+                         Float64 redshift,
+                         SPriorTZE& tzePrioData,
+                         Int32 outsideZRangeExtensionMode=0);
+
     bool SetBetaA(Float64 beta);
     bool SetBetaTE(Float64 beta);
     bool SetBetaZ(Float64 beta);
@@ -75,7 +81,6 @@ private:
     Float64 m_z0 = 0.0;
 
     UInt32 m_nEbv = 10;
-    Float64 m_ebv0 = 0.0;
 
     Float64 m_betaTE = -1;
     Float64 m_betaA = -1;
