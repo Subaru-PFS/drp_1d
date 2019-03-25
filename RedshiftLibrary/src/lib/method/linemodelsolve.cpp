@@ -77,6 +77,7 @@ const std::string CLineModelSolve::GetDescription()
     desc.append("\tparam: linemodel.continuumreestimation = {""no"", ""onlyextrema"", ""always""}\n");
     desc.append("\tparam: linemodel.rules = {""all"", ""balmer"", ""strongweak"", ""superstrong"", ""ratiorange"", ""ciiiratio"", ""no""}\n");
     desc.append("\tparam: linemodel.extremacount = <float value>\n");
+    desc.append("\tparam: linemodel.extremacountB = <float value>\n");
     desc.append("\tparam: linemodel.extremacutprobathreshold = <float value> (-1:disabled)\n");
     desc.append("\tparam: linemodel.velocityfit = {""yes"", ""no""}\n");
     desc.append("\tparam: linemodel.emvelocityfitmin = <float value>\n");
@@ -203,6 +204,7 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
     dataStore.GetScopedParam( "linemodel.continuumreestimation", m_opt_continuumreest, "no" );
     dataStore.GetScopedParam( "linemodel.rules", m_opt_rules, "all" );
     dataStore.GetScopedParam( "linemodel.extremacount", m_opt_extremacount, 10.0 );
+    dataStore.GetScopedParam( "linemodel.extremacountB", m_opt_extremacountB, 0.0 );
     dataStore.GetScopedParam( "linemodel.extremacutprobathreshold", m_opt_candidatesLogprobaCutThreshold, -1 );
     dataStore.GetScopedParam( "linemodel.stronglinesprior", m_opt_stronglinesprior, -1);
     dataStore.GetScopedParam( "linemodel.euclidnhaemittersStrength", m_opt_euclidNHaEmittersPriorStrength, -1);
@@ -290,6 +292,7 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
     }
     Log.LogInfo( "    -continuumreestimation: %s", m_opt_continuumreest.c_str());
     Log.LogInfo( "    -extremacount: %.0f", m_opt_extremacount);
+    Log.LogInfo( "    -extremacount-firstpass B: %.0f", m_opt_extremacountB);
     Log.LogInfo( "    -extrema cut proba-threshold: %.0f", m_opt_candidatesLogprobaCutThreshold);
     Log.LogInfo( "    -first pass:");
     Log.LogInfo( "      -largegridstep: %.6f", m_opt_firstpass_largegridstep);
@@ -939,7 +942,7 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
     //**************************************************
     //FIRST PASS + CANDIDATES - B
     //**************************************************
-    Bool enableFirstpass_B = false && (m_opt_continuumcomponent=="tplfit" || m_opt_continuumcomponent=="tplfitauto") && (m_opt_extremacount>1);
+    Bool enableFirstpass_B = (m_opt_extremacountB>0) && (m_opt_continuumcomponent=="tplfit" || m_opt_continuumcomponent=="tplfitauto") && (m_opt_extremacountB>1);
     COperatorLineModel linemodel_fpb;
     Int32 retInitB = linemodel_fpb.Init(_spc, redshifts);
     if( retInitB!=0 )
@@ -1015,7 +1018,6 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
         //**************************************************
         //Compute z-candidates B
         //**************************************************
-        Int32 fpb_opt_extremacount = 5;
         Bool overrideUseBestchi2forCandidates = false;
         Int32 sign = 1;
         std::vector<Float64> fvals;
@@ -1045,7 +1047,7 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
                 fvals = postmargZResult->valProbaLog;
             }
         }
-        Int32 retCandidates = linemodel_fpb.ComputeCandidates(fpb_opt_extremacount, sign, fvals, m_opt_candidatesLogprobaCutThreshold);
+        Int32 retCandidates = linemodel_fpb.ComputeCandidates(m_opt_extremacountB, sign, fvals, m_opt_candidatesLogprobaCutThreshold);
         if( retCandidates!=0 )
         {
             Log.LogError( "linemodel_fpb: Search for z-candidates failed. Aborting" );

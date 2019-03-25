@@ -108,6 +108,8 @@ private:
     std::string m_opt_offsets_reldirpath="";
 
     Float64 m_opt_extremacount;
+    Float64 m_opt_extremacountB;
+
     Float64 m_opt_candidatesLogprobaCutThreshold;
     Float64 m_opt_firstpass_largegridstep;
     std::string m_opt_firstpass_largegridsampling;
