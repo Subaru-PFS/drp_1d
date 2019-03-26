@@ -552,9 +552,12 @@ bool CPriorHelper::GetTplPriorData(std::string tplname,
            Float64 logPTE = 0.;
            Float64 logPA = 0.;
            Float64 logPZ = 0.;
-           if(dataz[icol].A_sigma>0.0)
+           if(dataz[icol].A_sigma>0.0 && dataz[icol].priorTZE>0.0)
            {
-               logPA =-0.5*log(2*M_PI) - log(dataz[icol].A_sigma);
+               logPA = log(dataz[icol].priorTZE) -0.5*log(2*M_PI) - log(dataz[icol].A_sigma);
+           }else{
+               Float64 p_flat = 1./m_deltaA;
+               logPA = log(p_flat);
            }
            if(dataz[icol].priorTZE>0.0)
            {
@@ -567,6 +570,10 @@ bool CPriorHelper::GetTplPriorData(std::string tplname,
                                 logPTE);
                    throw std::runtime_error("    CPriorHelper: logP_TZE is NAN or inf, or invalid");
                }
+           }else{
+               Log.LogError("    CPriorHelper: P_TZE is 0 (priorTZE=%e) which is forbidden",
+                            dataz[icol].priorTZE);
+               throw std::runtime_error("    CPriorHelper: P_TZE is 0, which is forbidden");
            }
 
            if(m_data_pz[idz]>0.0)

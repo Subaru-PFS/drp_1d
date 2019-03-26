@@ -82,11 +82,14 @@ private:
 
     UInt32 m_nEbv = 10;
 
+    Float64 m_deltaA = (1e-13 - 1e-20);
+
     Float64 m_betaTE = -1;
     Float64 m_betaA = -1;
     Float64 m_betaZ = -1;
 
     Float64 m_priorminval = 0.0;//DBL_MIN;
+
 };
 
 }

@@ -1808,6 +1808,7 @@ Float64 CLineModelElementList::fit(Float64 redshift,
 
 
     Float64 merit = DBL_MAX; //initializing 'on the fly' best-merit
+    Float64 meritprior = 0.0; //initializing 'on the fly' best-merit-prior
     std::vector<Float64> meritTplratio(nfitting, DBL_MAX); //initializing 'on the fly' best-merit per tplratio
     std::vector<Float64> meritPriorTplratio(nfitting, 0.0); //initializing 'on the fly' best-merit-prior per tplratio
     for(Int32 icontfitting=0; icontfitting<ncontinuumfitting; icontfitting++)
@@ -2424,7 +2425,38 @@ Float64 CLineModelElementList::fit(Float64 redshift,
                 Float64 _meritprior = 0.0;
                 if(logPriorDataTplShape.size()>0)
                 {
+                    _meritprior += -2.*logPriorDataTplShape[ifitting].betaTE*logPriorDataTplShape[ifitting].logprior_precompTE;
+                    _meritprior += -2.*logPriorDataTplShape[ifitting].betaA*logPriorDataTplShape[ifitting].logprior_precompA;
                     _meritprior += -2.*logPriorDataTplShape[ifitting].betaZ*logPriorDataTplShape[ifitting].logprior_precompZ;
+                    if(logPriorDataTplShape[ifitting].A_sigma>0.0)
+                    {
+                        //
+                        Float64 ampl=0.0;
+                        for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
+                        {
+                            bool foundAmp=false;
+                            UInt32 nRays = m_Elements[iElts]->GetSize();
+                            for(UInt32 j=0; j<nRays; j++){
+                                if(foundAmp)
+                                {
+                                    break;
+                                }
+                                Float64 amp = m_Elements[iElts]->GetFittedAmplitude(j);
+                                if(amp>0.0 && !m_Elements[iElts]->IsOutsideLambdaRange(j))
+                                {
+                                    Float64 nominal_amp = m_Elements[iElts]->GetNominalAmplitude(j);
+                                    ampl = amp/nominal_amp;
+                                    foundAmp=true;
+                                    break;
+                                }
+                            }
+                        }
+                        //
+                        Float64 logPa = logPriorDataTplShape[ifitting].betaA*(ampl-logPriorDataTplShape[ifitting].A_mean)*(ampl-logPriorDataTplShape[ifitting].A_mean)
+                                /(logPriorDataTplShape[ifitting].A_sigma*logPriorDataTplShape[ifitting].A_sigma);
+                        _meritprior += logPa;
+                    }
+
                 }
 
                 if( (_merit+_meritprior) < meritTplratio[ifitting]+meritPriorTplratio[ifitting])
@@ -2471,10 +2503,10 @@ Float64 CLineModelElementList::fit(Float64 redshift,
                     }
                 }
 
-                if(merit>_merit)
+                if(merit+meritprior > _merit+_meritprior)
                 {
                     merit=_merit;
-
+                    meritprior=_meritprior;
                     savedIdxContinuumFitted = icontfitting;
                     savedIdxFitted = ifitting;
 
