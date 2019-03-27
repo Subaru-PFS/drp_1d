@@ -327,14 +327,14 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
  * Return a pointer to an empty CLineModelSolveResult. (The results for Linemodel will reside in the linemodel.linemodel result).
  **/
 std::shared_ptr<CLineModelSolveResult> CLineModelSolve::Compute( CDataStore& dataStore,
-                                                                       const CSpectrum& spc,
-                                                                       const CSpectrum& spcWithoutCont,
-                                       const CTemplateCatalog& tplCatalog,
-                                       const TStringList& tplCategoryList,
-                                                                       const CRayCatalog& restraycatalog,
-                                                                       const TFloat64Range& lambdaRange,
-                                       const TFloat64List& redshifts,
-                                       const std::string outputPdfRelDir)
+                                                                 const CSpectrum& spc,
+                                                                 const CSpectrum& spcWithoutCont,
+                                                                 const CTemplateCatalog& tplCatalog,
+                                                                 const TStringList& tplCategoryList,
+                                                                 const CRayCatalog& restraycatalog,
+                                                                 const TFloat64Range& lambdaRange,
+                                                                 const TFloat64List& redshifts,
+                                                                 const std::string outputPdfRelDir)
 {
     CDataStore::CAutoScope resultScope( dataStore, "linemodelsolve" );
 
@@ -438,6 +438,18 @@ std::shared_ptr<CLineModelSolveResult> CLineModelSolve::Compute( CDataStore& dat
                 std::string resname = (boost::format("linemodel_chisquaretplshape/linemodel_priorlinestplshape_%d") % km).str();
                 dataStore.StoreScopedGlobalResult( resname.c_str(), result_chisquaretplshape );
             }
+
+            //Save PriorContinuumTplshapes results
+            std::shared_ptr<CLineModelResult> result_chisquaretplshape = std::shared_ptr<CLineModelResult>( new CLineModelResult() );
+            result_chisquaretplshape->Init( result->Redshifts, result->restRayList, 0, std::vector<Float64>());
+            for(Int32 kz=0; kz<result->Redshifts.size(); kz++)
+            {
+                result_chisquaretplshape->ChiSquare[kz] = result->ContinuumModelSolutions[kz].tplLogPrior;
+            }
+
+            std::string resname = (boost::format("linemodel_chisquaretplshape/linemodel_priorcontinuumtplshape")).str();
+            dataStore.StoreScopedGlobalResult( resname.c_str(), result_chisquaretplshape );
+
         }
     }else{
         return NULL;

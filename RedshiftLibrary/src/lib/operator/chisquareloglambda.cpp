@@ -764,18 +764,11 @@ Int32 COperatorChiSquareLogLambda::FitAllz(const TFloat64Range &lambdaRange,
                         }
                     }
                 }
-                if(logpriorze[fullResultIdx][kism_best].logprior_precompTE>0.0)
-                {
-                    logprior += -2.0*logpriorze[fullResultIdx][kism_best].betaTE*logpriorze[fullResultIdx][kism_best].logprior_precompTE;
-                }
-                if(logpriorze[fullResultIdx][kism_best].logprior_precompA>0.0)
-                {
-                    logprior += -2.0*logpriorze[fullResultIdx][kism_best].betaA*logpriorze[fullResultIdx][kism_best].logprior_precompA;
-                }
-                if(logpriorze[fullResultIdx][kism_best].logprior_precompZ>0.0)
-                {
-                    logprior += -2.0*logpriorze[fullResultIdx][kism_best].betaZ*logpriorze[fullResultIdx][kism_best].logprior_precompZ;
-                }
+
+                logprior += -2.0*logpriorze[fullResultIdx][kism_best].betaTE*logpriorze[fullResultIdx][kism_best].logprior_precompTE;
+                logprior += -2.0*logpriorze[fullResultIdx][kism_best].betaA*logpriorze[fullResultIdx][kism_best].logprior_precompA;
+                logprior += -2.0*logpriorze[fullResultIdx][kism_best].betaZ*logpriorze[fullResultIdx][kism_best].logprior_precompZ;
+
 
                 if(logpriorze[fullResultIdx][kism_best].A_sigma>0.0 && logpriorze[fullResultIdx][kism_best].A_mean>0.0)
                 {
