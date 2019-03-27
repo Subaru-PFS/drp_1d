@@ -552,9 +552,9 @@ bool CPriorHelper::GetTplPriorData(std::string tplname,
            Float64 logPTE = 0.;
            Float64 logPA = 0.;
            Float64 logPZ = 0.;
-           if(dataz[icol].A_sigma>0.0 && dataz[icol].priorTZE>0.0)
+           if(dataz[icol].A_sigma>0.0)
            {
-               logPA = log(dataz[icol].priorTZE) -0.5*log(2*M_PI) - log(dataz[icol].A_sigma);
+               logPA = -0.5*log(2*M_PI) - log(dataz[icol].A_sigma);
            }else{
                Float64 p_flat = 1./m_deltaA;
                logPA = log(p_flat);
@@ -579,6 +579,11 @@ bool CPriorHelper::GetTplPriorData(std::string tplname,
            if(m_data_pz[idz]>0.0)
            {
                logPZ = log(m_data_pz[idz]/m_dz);
+           }
+
+           if(verbose)
+           {
+               Log.LogInfo("    CPriorHelper: get prior idTpl=%d, idz=%d, idebmv=%d : logPZ=%e", idx, idz, icol, logPZ);
            }
 
            dataz[icol].logprior_precompA = logPA;

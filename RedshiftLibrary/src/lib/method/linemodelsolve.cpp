@@ -424,6 +424,20 @@ std::shared_ptr<CLineModelSolveResult> CLineModelSolve::Compute( CDataStore& dat
                 std::string resname = (boost::format("linemodel_chisquaretplshape/linemodel_scalemargcorrtplshape_%d") % km).str();
                 dataStore.StoreScopedGlobalResult( resname.c_str(), result_chisquaretplshape );
             }
+
+            //Save PriorLinesTplshapes results
+            for(Int32 km=0; km<result->PriorLinesTplshapes.size(); km++)
+            {
+                std::shared_ptr<CLineModelResult> result_chisquaretplshape = std::shared_ptr<CLineModelResult>( new CLineModelResult() );
+                result_chisquaretplshape->Init( result->Redshifts, result->restRayList, 0, std::vector<Float64>());
+                for(Int32 kz=0; kz<result->Redshifts.size(); kz++)
+                {
+                    result_chisquaretplshape->ChiSquare[kz] = result->PriorLinesTplshapes[km][kz];
+                }
+
+                std::string resname = (boost::format("linemodel_chisquaretplshape/linemodel_priorlinestplshape_%d") % km).str();
+                dataStore.StoreScopedGlobalResult( resname.c_str(), result_chisquaretplshape );
+            }
         }
     }else{
         return NULL;

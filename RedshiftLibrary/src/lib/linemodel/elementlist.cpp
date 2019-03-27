@@ -2474,6 +2474,8 @@ Float64 CLineModelElementList::fit(Float64 redshift,
                     //NB: this is only needed for the index=savedIdxFitted ultimately
                     for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
                     {
+                        m_LinesLogPriorTplshape[ifitting][iElts] = _meritprior;
+
                         bool savedAmp=false;
 
                         UInt32 nRays = m_Elements[iElts]->GetSize();
@@ -2492,7 +2494,7 @@ Float64 CLineModelElementList::fit(Float64 redshift,
                                 m_FittedErrorTplshape[ifitting][iElts] = amp_error/nominal_amp;
                                 m_DtmTplshape[ifitting][iElts] = m_Elements[iElts]->GetSumCross();
                                 m_MtmTplshape[ifitting][iElts] = m_Elements[iElts]->GetSumGauss();
-                                m_LinesLogPriorTplshape[ifitting][iElts] = _meritprior;
+
                                 m_LyaAsymCoeffTplshape[ifitting][iElts] = m_Elements[iElts]->GetAsymfitAlphaCoeff();
                                 m_LyaWidthCoeffTplshape[ifitting][iElts] = m_Elements[iElts]->GetAsymfitWidthCoeff();
 
