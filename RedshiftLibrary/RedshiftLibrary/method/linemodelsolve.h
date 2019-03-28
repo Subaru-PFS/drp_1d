@@ -43,6 +43,7 @@ private:
                      std::string opt_rigidity,
                      std::string opt_combine,
                      Float64 opt_stronglinesprior,
+                     Float64 opt_hapriorstrength,
                      Float64 opt_euclidNHaEmittersPriorStrength,
                      Float64 opt_modelPriorZStrength,
                      std::shared_ptr<CPdfMargZLogResult> postmargZResult,
@@ -119,6 +120,7 @@ private:
 
     std::string m_opt_pdfcombination;
     Float64 m_opt_stronglinesprior;
+    Float64 m_opt_haPrior;
     Float64 m_opt_euclidNHaEmittersPriorStrength;
     Float64 m_opt_modelZPriorStrength;
     std::string m_opt_saveintermediateresults;

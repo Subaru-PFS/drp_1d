@@ -480,9 +480,11 @@ std::vector<Int32> CLineModelResult::GetNLinesAboveSnrcut( std::vector<CLineMode
  */
 std::vector<bool> CLineModelResult::GetStrongestLineIsHa( std::vector<CLineModelSolution> linemodelsols ) const
 {
+    bool verbose = true;
     UInt32 filterType=1;
     linetags ltags;
     std::vector<bool> strongestIsHa(linemodelsols.size(), false);
+    std::string ampMaxLineTag = "";
     for ( UInt32 solutionIdx=0; solutionIdx<linemodelsols.size(); solutionIdx++)
     {
         strongestIsHa[solutionIdx] = false;
@@ -514,8 +516,9 @@ std::vector<bool> CLineModelResult::GetStrongestLineIsHa( std::vector<CLineModel
             if(linemodelsols[solutionIdx].Amplitudes[j]>ampMax)
             {
                 ampMax = linemodelsols[solutionIdx].Amplitudes[j];
+                ampMaxLineTag = linemodelsols[solutionIdx].Rays[j].GetName().c_str();
             }
-            if(linemodelsols[solutionIdx].Rays[j].GetName().c_str()==ltags.halpha_em)
+            if(linemodelsols[solutionIdx].Rays[j].GetName()==ltags.halpha_em)
             {
                 ampHa = linemodelsols[solutionIdx].Amplitudes[j];
             }
@@ -524,6 +527,10 @@ std::vector<bool> CLineModelResult::GetStrongestLineIsHa( std::vector<CLineModel
         if(ampHa>0 && ampMax==ampHa)
         {
             strongestIsHa[solutionIdx] = true;
+        }
+        if(verbose)
+        {
+            Log.LogDetail("    linemodelresult: z=%f, ampHa=%e, ampMax=%e, ampMaxLineTag=%s", linemodelsols[solutionIdx].Redshift, ampHa, ampMax, ampMaxLineTag.c_str());
         }
     }
 

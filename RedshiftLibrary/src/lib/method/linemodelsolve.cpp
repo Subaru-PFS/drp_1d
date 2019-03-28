@@ -110,6 +110,7 @@ const std::string CLineModelSolve::GetDescription()
 
     desc.append("\tparam: linemodel.pdfcombination = {""marg"", ""bestchi2""}\n");
     desc.append("\tparam: linemodel.stronglinesprior = <float value>, penalization factor = positive value or -1 to deactivate\n");
+    desc.append("\tparam: linemodel.haprior = <float value>, penalization factor = positive value (typical 1e-1 to 1e-5) or -1 to deactivate\n");
     desc.append("\tparam: linemodel.euclidnhaemittersStrength = <float value>, prior strength factor = positive value (typically 1 to 5) or -1 to deactivate\n");
     desc.append("\tparam: linemodel.modelpriorzStrength = <float value>, prior strength factor = positive value (typically 1 to 5) or -1 to deactivate\n");
 
@@ -207,6 +208,7 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
     dataStore.GetScopedParam( "linemodel.extremacountB", m_opt_extremacountB, 0.0 );
     dataStore.GetScopedParam( "linemodel.extremacutprobathreshold", m_opt_candidatesLogprobaCutThreshold, -1 );
     dataStore.GetScopedParam( "linemodel.stronglinesprior", m_opt_stronglinesprior, -1);
+    dataStore.GetScopedParam( "linemodel.haprior", m_opt_haPrior, -1);
     dataStore.GetScopedParam( "linemodel.euclidnhaemittersStrength", m_opt_euclidNHaEmittersPriorStrength, -1);
     dataStore.GetScopedParam( "linemodel.modelpriorzStrength", m_opt_modelZPriorStrength, -1);
     dataStore.GetScopedParam( "linemodel.pdfcombination", m_opt_pdfcombination, "marg");
@@ -305,6 +307,7 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
     Log.LogInfo( "      -continuum fit method: %s", m_opt_secondpass_continuumfit.c_str());
 
     Log.LogInfo( "    -pdf-stronglinesprior: %e", m_opt_stronglinesprior);
+    Log.LogInfo( "    -pdf-hapriorstrength: %e", m_opt_haPrior);
     Log.LogInfo( "    -pdf-euclidNHaEmittersPriorStrength: %e", m_opt_euclidNHaEmittersPriorStrength);
     Log.LogInfo( "    -pdf-modelpriorzStrength: %e", m_opt_modelZPriorStrength);
     Log.LogInfo( "    -pdf-combination: %s", m_opt_pdfcombination.c_str()); // "marg";    // "bestchi2";    // "bestproba";
@@ -361,6 +364,7 @@ std::shared_ptr<CLineModelSolveResult> CLineModelSolve::Compute( CDataStore& dat
                                          m_opt_rigidity,
                                          m_opt_pdfcombination,
                                          m_opt_stronglinesprior,
+                                         m_opt_haPrior,
                                          m_opt_euclidNHaEmittersPriorStrength,
                                          m_opt_modelZPriorStrength,
                                          postmargZResult,
@@ -463,6 +467,7 @@ Int32 CLineModelSolve::CombinePDF(std::shared_ptr<const CLineModelResult> result
                                   std::string opt_rigidity,
                                   std::string opt_combine,
                                   Float64 opt_stronglinesprior,
+                                  Float64 opt_hapriorstrength,
                                   Float64 opt_euclidNHaEmittersPriorStrength,
                                   Float64 opt_modelPriorZStrength,
                                   std::shared_ptr<CPdfMargZLogResult> postmargZResult,
@@ -475,6 +480,14 @@ Int32 CLineModelSolve::CombinePDF(std::shared_ptr<const CLineModelResult> result
     }else{
         Log.LogInfo("Linemodel: Pdfz computation: StrongLinePresence prior disabled");
     }
+    bool zPriorHaStrongestLine = (opt_hapriorstrength>0.0);
+    if(zPriorHaStrongestLine)
+    {
+        Log.LogInfo("Linemodel: Pdfz computation: Ha strongest line prior enabled: factor=%e", opt_hapriorstrength);
+    }else{
+        Log.LogInfo("Linemodel: Pdfz computation: Ha strongest line prior disabled");
+    }
+
     Float64 opt_nlines_snr_penalization_factor = -1;
     bool zPriorNLineSNR = (opt_nlines_snr_penalization_factor>0.0);
     if(zPriorNLineSNR)
@@ -535,10 +548,16 @@ Int32 CLineModelSolve::CombinePDF(std::shared_ptr<const CLineModelResult> result
         {
             UInt32 lineTypeFilter = 1;// for emission lines only
             std::vector<bool> strongLinePresence = result->GetStrongLinesPresence(lineTypeFilter, result->LineModelSolutions);
-            //std::vector<bool> strongLinePresence = result->GetStrongestLineIsHa(result->LineModelSolutions); //warning: hardcoded selpp replaced by whasp for lm-tplratio
+
             zPrior->valProbaLog = pdfz.GetStrongLinePresenceLogZPrior(strongLinePresence, opt_stronglinesprior);
         }else{
             zPrior->valProbaLog = pdfz.GetConstantLogZPrior(result->Redshifts.size());
+        }
+        if(zPriorHaStrongestLine)
+        {
+            std::vector<bool> wHaStronglinePresence = result->GetStrongestLineIsHa(result->LineModelSolutions); //whasp for lm-tplratio
+            std::vector<Float64> zlogPriorHaStrongest = pdfz.GetStrongLinePresenceLogZPrior(wHaStronglinePresence, opt_hapriorstrength);
+            zPrior->valProbaLog = pdfz.CombineLogZPrior(zPrior->valProbaLog, zlogPriorHaStrongest);
         }
         if(zPriorEuclidNHa)
         {
@@ -587,6 +606,12 @@ Int32 CLineModelSolve::CombinePDF(std::shared_ptr<const CLineModelResult> result
                 _prior = pdfz.GetConstantLogZPrior(result->Redshifts.size());
             }
 
+            if(zPriorHaStrongestLine)
+            {
+                std::vector<bool> wHaStronglinePresence = result->GetStrongestLineIsHa(result->LineModelSolutions); //whasp for lm-tplratio
+                std::vector<Float64> zlogPriorHaStrongest = pdfz.GetStrongLinePresenceLogZPrior(wHaStronglinePresence, opt_hapriorstrength);
+                _prior = pdfz.CombineLogZPrior(_prior, zlogPriorHaStrongest);
+            }
             if(zPriorEuclidNHa)
             {
                 std::vector<Float64> zlogPriorNHa = pdfz.GetEuclidNhaLogZPrior(result->Redshifts, opt_euclidNHaEmittersPriorStrength);
@@ -942,6 +967,7 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
                                          m_opt_rigidity,
                                          m_opt_pdfcombination,
                                          m_opt_stronglinesprior,
+                                         m_opt_haPrior,
                                          m_opt_euclidNHaEmittersPriorStrength,
                                          m_opt_modelZPriorStrength,
                                          postmargZResult,
@@ -1059,6 +1085,7 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
                                              m_opt_rigidity,
                                              m_opt_pdfcombination,
                                              m_opt_stronglinesprior,
+                                             m_opt_haPrior,
                                              m_opt_euclidNHaEmittersPriorStrength,
                                              m_opt_modelZPriorStrength,
                                              postmargZResult,
