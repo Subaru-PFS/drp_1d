@@ -8,6 +8,7 @@ Created on Sat Dec 24 08:25:11 2016
 import os
 import sys
 import time
+import datetime
 import argparse
 
 import math
@@ -64,7 +65,8 @@ class processHelper(object):
             return
         
         #prepare the working dir
-        self.work_process_dir = os.path.abspath("process-work")
+        fn_datestr = datetime.now().strftime('%Y%m%d_%H%M%S')
+        self.work_process_dir = os.path.abspath("process-work_{}".format(fn_datestr))
         if not os.path.exists(self.work_process_dir):
             os.mkdir(self.work_process_dir)        
         
