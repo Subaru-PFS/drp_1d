@@ -115,7 +115,9 @@ if(CCACHE_FOUND)
   set(ENV{CXX} "ccache ${CMAKE_CXX_COMPILER}")
 endif(CCACHE_FOUND)
 
-LIST(REMOVE_DUPLICATES MISSING_THIRDPARTIES)
+IF(MISSING_THIRDPARTIES)
+  LIST(REMOVE_DUPLICATES MISSING_THIRDPARTIES)
+ENDIF()
 
 #--------------------------------------------------------
 # Parse version, this will be used later to configure
