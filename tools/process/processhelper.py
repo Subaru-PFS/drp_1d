@@ -8,7 +8,7 @@ Created on Sat Dec 24 08:25:11 2016
 import os
 import sys
 import time
-import datetime
+from datetime import datetime
 import argparse
 
 import math
