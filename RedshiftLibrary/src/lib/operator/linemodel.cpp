@@ -122,7 +122,7 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
             }
         }
         Int32 rmInd = 0;
-        for (Int32 i = 1; i < m_sortedRedshifts.size() - 1; i++)
+        for (Int32 i = 1; i < m_sortedRedshifts.size(); i++)
         {
             bool addToLargeGrid = true;
             if (removed_inds.size() > 0)
