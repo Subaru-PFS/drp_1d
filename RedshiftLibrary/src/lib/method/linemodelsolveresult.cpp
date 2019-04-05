@@ -239,7 +239,7 @@ Bool CLineModelSolveResult::GetBestRedshiftFromPdf(const CDataStore& store,
                 Log.LogDebug( "GetBestRedshiftFromPdf: z=%f : probalog = %f", zInCandidateRange, probaLog);
 
                 CPdfz pdfz;
-                Int32 method=0;
+                Int32 method=0; //0=direct intg, 1=gauss fit
                 Float64 flux_integral = -1;
                 if(method==1)
                 {
@@ -269,8 +269,8 @@ Bool CLineModelSolveResult::GetBestRedshiftFromPdf(const CDataStore& store,
 
                 //Float64 merit = lineModelResult->ChiSquare[solIdx];
                 //if( merit < tmpMerit )
-                if(probaLog>tmpProbaLog)
-                //if(flux_integral>tmpIntgProba)
+                //if(probaLog>tmpProbaLog)
+                if(flux_integral>tmpIntgProba)
                 {
                     tmpIntgProba = flux_integral;
                     tmpProbaLog = probaLog;
@@ -293,7 +293,7 @@ Bool CLineModelSolveResult::GetBestRedshiftFromPdf(const CDataStore& store,
         Float64 zwidth = 2e-2;
         Float64 pmis=-1;
         Float64 zmap = tmpRedshift;
-        Log.LogDetail( "pdfz: using zmap=%f", zmap);
+        Log.LogDetail( "pdfz: pmis using zmap=%f", zmap);
         Int32 retPMis = pdfz.getPmis( logzpdf1d->Redshifts,
                                       logzpdf1d->valProbaLog,
                                       zmap,
