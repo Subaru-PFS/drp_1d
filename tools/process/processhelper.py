@@ -8,7 +8,7 @@ Created on Sat Dec 24 08:25:11 2016
 import os
 import sys
 import time
-import datetime
+from datetime import datetime
 import argparse
 
 import math
@@ -283,7 +283,8 @@ class processHelper(object):
                     
                     fin=open(self.config_parametersPath)
                     data_json = json.load(fin)
-                    data_json['linemodelsolve']['linemodel']['stronglinesprior']=selpp
+                    #data_json['linemodelsolve']['linemodel']['stronglinesprior']=selpp
+                    data_json['linemodelsolve']['linemodel']['haprior']=selpp
                     data_json['linemodelsolve']['linemodel']['euclidnhaemittersStrength']=nhaempriorS
                     fin.close()
                     # Writing JSON data
