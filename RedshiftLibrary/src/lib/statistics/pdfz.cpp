@@ -1076,7 +1076,7 @@ std::vector<Float64> CPdfz::GetEuclidNhaLogZPrior(std::vector<Float64> redshifts
                       - 2288.98457865 );
 
         //shape prior at low z, left of the bell
-        Bool enable_low_z_flat = true;
+        Bool enable_low_z_flat = false;
         if(enable_low_z_flat && z<0.7204452872044528){
             zPrior[kz]=20367.877916402278;
         }else{
