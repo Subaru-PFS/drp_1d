@@ -109,6 +109,8 @@ const std::string CLineModelSolve::GetDescription()
     desc.append("\tparam: linemodel.secondpass.continuumfit = {""fromfirstpass"", ""retryall""}\n");
 
     desc.append("\tparam: linemodel.pdfcombination = {""marg"", ""bestchi2""}\n");
+    desc.append("\tparam: linemodel.pdf.margampcorr = {""yes"", ""no""}\n");
+
     desc.append("\tparam: linemodel.stronglinesprior = <float value>, penalization factor = positive value or -1 to deactivate\n");
     desc.append("\tparam: linemodel.haprior = <float value>, penalization factor = positive value (typical 1e-1 to 1e-5) or -1 to deactivate\n");
     desc.append("\tparam: linemodel.euclidnhaemittersStrength = <float value>, prior strength factor = positive value (typically 1 to 5) or -1 to deactivate\n");
@@ -212,6 +214,7 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
     dataStore.GetScopedParam( "linemodel.euclidnhaemittersStrength", m_opt_euclidNHaEmittersPriorStrength, -1);
     dataStore.GetScopedParam( "linemodel.modelpriorzStrength", m_opt_modelZPriorStrength, -1);
     dataStore.GetScopedParam( "linemodel.pdfcombination", m_opt_pdfcombination, "marg");
+    dataStore.GetScopedParam( "linemodel.pdf.margampcorr", m_opt_pdf_margAmpCorrection, "yes");
     dataStore.GetScopedParam( "linemodel.saveintermediateresults", m_opt_saveintermediateresults, "no");
 
     //Auto-correct fitting method
@@ -311,7 +314,7 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
     Log.LogInfo( "    -pdf-euclidNHaEmittersPriorStrength: %e", m_opt_euclidNHaEmittersPriorStrength);
     Log.LogInfo( "    -pdf-modelpriorzStrength: %e", m_opt_modelZPriorStrength);
     Log.LogInfo( "    -pdf-combination: %s", m_opt_pdfcombination.c_str()); // "marg";    // "bestchi2";    // "bestproba";
-
+    Log.LogInfo( "    -pdf-margAmpCorrection: %s", m_opt_pdf_margAmpCorrection.c_str());
     if(m_opt_saveintermediateresults=="yes")
     {
         m_opt_enableSaveChisquareTplshapeResults = true;
@@ -575,7 +578,14 @@ Int32 CLineModelSolve::CombinePDF(std::shared_ptr<const CLineModelResult> result
         TFloat64List logLikelihoodCorrected(result->ChiSquare.size(), DBL_MAX);
         for ( UInt32 k=0; k<result->Redshifts.size(); k++)
         {
-            logLikelihoodCorrected[k] = result->ChiSquare[k];// + result->ScaleMargCorrection[k];
+            logLikelihoodCorrected[k] = result->ChiSquare[k];
+        }
+        if(m_opt_pdf_margAmpCorrection=="yes")
+        {
+            for ( UInt32 k=0; k<result->Redshifts.size(); k++)
+            {
+                logLikelihoodCorrected[k] += result->ScaleMargCorrection[k];
+            }
         }
         retPdfz = pdfz.Compute(logLikelihoodCorrected, result->Redshifts, cstLog, zPrior->valProbaLog, logProba, logEvidence);
         if(retPdfz==0){
@@ -633,7 +643,14 @@ Int32 CLineModelSolve::CombinePDF(std::shared_ptr<const CLineModelResult> result
             TFloat64List logLikelihoodCorrected(result->ChiSquareTplshapes[k].size(), DBL_MAX);
             for ( UInt32 kz=0; kz<result->Redshifts.size(); kz++)
             {
-                logLikelihoodCorrected[kz] = result->ChiSquareTplshapes[k][kz];// + result->ScaleMargCorrectionTplshapes[k][kz];
+                logLikelihoodCorrected[kz] = result->ChiSquareTplshapes[k][kz];
+            }
+            if(m_opt_pdf_margAmpCorrection=="yes")
+            {
+                for ( UInt32 kz=0; kz<result->Redshifts.size(); kz++)
+                {
+                    logLikelihoodCorrected[kz] += result->ScaleMargCorrectionTplshapes[k][kz];
+                }
             }
             if(zPriorLines && result->PriorLinesTplshapes[k].size()==result->Redshifts.size())
             {
