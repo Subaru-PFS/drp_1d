@@ -77,7 +77,7 @@ Int32 CLineModelResult::Init(std::vector<Float64> redshifts,
         NLinesAboveSNRTplshapes.push_back(nlac);
 
         PriorTplshapes.push_back(tplshapesPriors[k]);
-        TFloat64List _logpriors(nResults, DBL_MAX);
+        TFloat64List _logpriors(nResults, 0.0);
         PriorLinesTplshapes.push_back(_logpriors);
     }
 

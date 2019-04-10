@@ -214,7 +214,7 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
     dataStore.GetScopedParam( "linemodel.euclidnhaemittersStrength", m_opt_euclidNHaEmittersPriorStrength, -1);
     dataStore.GetScopedParam( "linemodel.modelpriorzStrength", m_opt_modelZPriorStrength, -1);
     dataStore.GetScopedParam( "linemodel.pdfcombination", m_opt_pdfcombination, "marg");
-    dataStore.GetScopedParam( "linemodel.pdf.margampcorr", m_opt_pdf_margAmpCorrection, "yes");
+    dataStore.GetScopedParam( "linemodel.pdf.margampcorr", m_opt_pdf_margAmpCorrection, "no");
     dataStore.GetScopedParam( "linemodel.saveintermediateresults", m_opt_saveintermediateresults, "no");
 
     //Auto-correct fitting method
@@ -513,7 +513,7 @@ Int32 CLineModelSolve::CombinePDF(std::shared_ptr<const CLineModelResult> result
 
     bool zPriorLines=true;
     Log.LogInfo("Linemodel: Pdfz computation: PriorLinesTplshapes.size()=%d", result->PriorLinesTplshapes.size());
-    if(result->PriorLinesTplshapes.size()!=result->ChiSquareTplshapes.size())
+    if( !boost::filesystem::exists( m_opt_tplratio_prior_dirpath ) || result->PriorLinesTplshapes.size()!=result->ChiSquareTplshapes.size())
     {
         zPriorLines=false;
     }
@@ -574,7 +574,7 @@ Int32 CLineModelSolve::CombinePDF(std::shared_ptr<const CLineModelResult> result
             zPrior->valProbaLog = pdfz.CombineLogZPrior(zPrior->valProbaLog, zlogPriorNLinesAboveSNR);
         }
 
-        //correct chi2 if necessary: todo add switch
+        //correct chi2 if necessary
         TFloat64List logLikelihoodCorrected(result->ChiSquare.size(), DBL_MAX);
         for ( UInt32 k=0; k<result->Redshifts.size(); k++)
         {
@@ -636,7 +636,7 @@ Int32 CLineModelSolve::CombinePDF(std::shared_ptr<const CLineModelResult> result
             zpriorsTplshapes.push_back(_prior);
         }
 
-        //correct chi2 if necessary: todo add switch
+        //correct chi2 if necessary
         std::vector<TFloat64List> ChiSquareTplshapesCorrected;
         for(Int32 k=0; k<result->ChiSquareTplshapes.size(); k++)
         {
