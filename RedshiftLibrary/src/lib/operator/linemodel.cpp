@@ -1202,6 +1202,9 @@ Int32 COperatorLineModel::ComputeSecondPass(CDataStore &dataStore,
     }else if(opt_continuumfit_method=="retryall")
     {
         continnuum_fit_option=0;
+    }else if(opt_continuumfit_method=="refitfirstpass")
+    {
+        continnuum_fit_option=3;
     }else{
         Log.LogError("  Operator-Linemodel: continnuum_fit_option not found: %d", continnuum_fit_option);
         throw std::runtime_error("  Operator-Linemodel: continnuum_fit_option not found");

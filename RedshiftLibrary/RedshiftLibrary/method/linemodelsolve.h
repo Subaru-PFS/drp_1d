@@ -119,7 +119,8 @@ private:
     std::string m_opt_firstpass_fittingmethod;
 
     std::string m_opt_pdfcombination;
-    std::string m_opt_pdf_margAmpCorrection="yes";
+    std::string m_opt_pdf_margAmpCorrection="no";
+    std::string m_opt_bestz_option="maxproba"; //"maxintgproba"
     Float64 m_opt_stronglinesprior;
     Float64 m_opt_haPrior;
     Float64 m_opt_euclidNHaEmittersPriorStrength;
