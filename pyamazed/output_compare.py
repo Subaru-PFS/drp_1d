@@ -294,6 +294,32 @@ class OutputDirComparator(ResultsComparator):
         return result
 
 
+class SingleComparator(ResultsComparator):
+
+    def compare(self, path1, path2):
+        """
+        Calls a comparator for each type of file by iterating on them.
+
+        :param path1: Path to the reference directory.
+        :param path2: Path to the file being compared.
+        :return: Return the result of the comparison.
+        """
+
+        result = []
+        for method in [CandidateResult,
+                       RedshiftResult,
+                       ClassificationResult,
+                       zPDFComparator]:
+            try:
+                r = method().compare(path1, path2)
+                if r:
+                    result.append(r)
+            except Exception as e:
+                result.append('{}/{} : {}'.format(path1,
+                                                  method.__name__, e))
+        return result
+
+
 class JSONComparator(ResultsComparator):
 
     def __init__(self, filename, ignore_keys=None):
@@ -501,6 +527,12 @@ class zPDFComparator(ResultsComparator):
         return result
 
 
+def compare_single(args):
+    r = SingleComparator().compare(args.firstdir,
+                                   args.seconddir)
+    return r
+
+
 def compare_amazed(args):
     r = OutputDirComparator().compare(args.firstdir,
                                       args.seconddir)
@@ -518,6 +550,20 @@ def main():
         description='AMAZED results comparison tool'
     )
     subparsers = parser.add_subparsers(dest='command')
+
+    single_parser = subparsers.add_parser('single',
+                                          help='Compare a single spectrum '
+                                          'results')
+    single_parser.add_argument('firstdir',
+                               type=str,
+                               help='Path to the first output spectrum'
+                               ' directory.')
+    single_parser.add_argument('seconddir',
+                               type=str,
+                               help='Path to the second output spectrum'
+                               'directory.')
+
+    single_parser.set_defaults(handler=compare_single)
 
     amazed_parser = subparsers.add_parser('amazed',
                                           help='Compare AMAZED results')
