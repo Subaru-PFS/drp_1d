@@ -4,7 +4,7 @@ from swig_ext import swig_ext
 
 setup(
     name="pyamazed",
-    version="0.5.0",
+    version="0.6.0",
     author="LAM - Laboratoire d'Astrophysique de Marseille",
     author_email="amazed-support@lam.fr",
     description=("AMAZED python client."),
