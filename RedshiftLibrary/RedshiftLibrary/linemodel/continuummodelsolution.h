@@ -25,6 +25,7 @@ struct CContinuumModelSolution
     Float64             tplMerit;
     Float64             tplDtm;
     Float64             tplMtm;
+    Float64             tplLogPrior;
 
     //polynom
     TFloat64List    pCoeffs;

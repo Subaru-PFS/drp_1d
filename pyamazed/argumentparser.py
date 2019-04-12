@@ -1,5 +1,6 @@
 import argparse
-from .redshift import CLog, get_version
+from .redshift import CLog, get_version, CLineModelSolve, \
+    COperatorDTreeBSolve, COperatorDTree7Solve, CMethodChisquare2Solve
 
 
 def log_level(lvl):
@@ -17,6 +18,7 @@ def log_level(lvl):
         return CLog.nLevel_Info
     else:
         return levels[lvl.lower()]
+
 
 class BooleanAction(argparse.Action):
     def __init__(self,
@@ -45,7 +47,25 @@ class BooleanAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
         setattr(namespace, self.dest, True)
 
-parser = argparse.ArgumentParser(description='AMAZED client tool.')
+
+def build_epilog():
+    methods =  [CLineModelSolve,
+                COperatorDTreeBSolve,
+                COperatorDTree7Solve,
+                CMethodChisquare2Solve]
+
+    text = '\n'.join(['Methods parameters file (see parameters.json):',
+                      '\n'.join([m().GetDescription() for m in methods]),
+                      'Continuum Removal Methods:',
+                      '\tChoose between: IrregularSamplingMedian, waveletsDF,'
+                      ' zero, raw'])
+
+    return text
+
+
+parser = argparse.ArgumentParser(description='AMAZED client tool.',
+                                 formatter_class=argparse.RawDescriptionHelpFormatter,
+                                 epilog=build_epilog())
 
 parser.add_argument('--parameters', '-p', dest='parameters_file',
                     metavar='FILE', type=str, help='Parameters file')
@@ -91,7 +111,8 @@ parser.add_argument('--linecatalog_convert', '-a', action=BooleanAction,
                     help='Convert the line catalog from Vacuum to Air')
 parser.add_argument('--save_intermediate_results', '-b',
                     choices=['all', 'global', 'linemeas', 'no'], default='all',
-                    help='Save intermediate results for each spectrum processed')
+                    help='Save intermediate results for each spectrum '
+                    'processed')
 parser.add_argument('--linemeascatalog', '-d',
                     help='Optionally specify a linemeas-catalog file path')
 parser.add_argument('--version', '-v', action='version', version=get_version(),

@@ -20,6 +20,13 @@ class CPdfz
 
 public:
 
+    struct SPriorZ
+    {
+        Float64 amp=-1.0;
+        Float64 mu=-1.0;
+        Float64 sigma=-1.0;
+        Float64 p0=-1.0;
+    };
 
     CPdfz();
     ~CPdfz();
@@ -27,6 +34,9 @@ public:
     Int32 Compute(TFloat64List merits, TFloat64List redshifts, Float64 cstLog, TFloat64List zPrior, TFloat64List &logPdf, Float64 &logEvidence);
     std::vector<Float64> GetConstantLogZPrior(UInt32 nredshifts);
     std::vector<Float64> GetStrongLinePresenceLogZPrior(std::vector<bool> linePresence, Float64 penalization_factor);
+    std::vector<Float64> GetNLinesSNRAboveCutLogZPrior(std::vector<Int32> nlinesAboveSNR, Float64 penalization_factor);
+    std::vector<Float64> GetModelZPrior(CPdfz::SPriorZ priorPzDef,
+                                        std::vector<Float64> redshifts, Float64 aCoeff);
     std::vector<Float64> GetEuclidNhaLogZPrior(std::vector<Float64> redshifts, Float64 aCoeff);
     std::vector<Float64> CombineLogZPrior(std::vector<Float64> logprior1, std::vector<Float64> logprior2);
 
@@ -43,6 +53,13 @@ public:
                                        Float64 zwidth,
                                        Float64 &gaussAmp, Float64 &gaussAmpErr,
                                        Float64 &gaussSigma, Float64 &gaussSigmaErr);
+
+    Int32   getPmis(std::vector<Float64> redshifts,
+                    std::vector<Float64> valprobalog,
+                    Float64 zbest,
+                    std::vector<Float64> zcandidates,
+                    Float64 zwidth,
+                    Float64 &pmis);
 
     Int32 Marginalize(TFloat64List redshifts,
                       std::vector<TFloat64List> meritResults,

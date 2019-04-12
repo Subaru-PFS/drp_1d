@@ -260,7 +260,7 @@ class processHelper(object):
                 os.mkdir(tmp_bracketing_parameters_dir)
             
             nhaempriorSs = [-1, 1, 2, 3, 4, 5, 6]
-            selpps = [7.5e-1, 2.5e-1]
+            selpps = [-1, 1e-1, 1e-2, 1e-3, 1e-6, 1e-12]
             
             bracketing_parameterFilePath=[]
             for nhaempriorS in nhaempriorSs:
@@ -450,8 +450,11 @@ class processHelper(object):
             else:
                 nsubspclist=len(self.subspclists)
                 
+            skip_n_first_jobs = -1
             for ksubs in range(nsubspclist):
-            
+                if ksubs<skip_n_first_jobs:
+                    continue
+                
                 if len(self.subspclists)==0:
                     overrideSpclist=""
                     overrideSpclistIndex = -1
@@ -482,6 +485,8 @@ class processHelper(object):
                     f.write("#PBS -N amz_{}_{}".format(k, ksubs))
                     f.write("\n")
                     f.write("#PBS -l nodes=1:ppn=1")
+                    f.write("\n")
+                    f.write("#PBS -l mem=2GB") # request 2GB of memory
                     f.write("\n")
                     f.write("#PBS -l walltime=30:00:00")
                     f.write("\n")
@@ -634,7 +639,7 @@ def StartFromCommandLine( argv ) :
         print("INFO: cmdline arg bracketing = {}".format(opt_bracketing))
         
         bracketing_templatesRootPath = ""
-        if not opt_bracketing=="":
+        if not opt_bracketing=="" and not opt_bracketing=="priors_optimization-euclid":
             bracketing_templatesRootPath = os.path.abspath(options.brackTemplatesRootPath)
             if not os.path.exists(bracketing_templatesRootPath):
                 print("ERROR: bracketing templates root path not found: {}\nAborting".format(bracketing_templatesRootPath))

@@ -22,12 +22,13 @@ CModelContinuumFittingResult::CModelContinuumFittingResult()
 /**
  * \brief Attributes values to member variables according to arguments.
  **/
-CModelContinuumFittingResult::CModelContinuumFittingResult( Float64 _redshift,
+CModelContinuumFittingResult::CModelContinuumFittingResult(Float64 _redshift,
                                                             std::string _name,
                                                             Float64 _merit,
                                                             Float64 _amp,
                                                             Float64 _ismCoeff,
-                                                            Int32 _igmIndex)
+                                                            Int32 _igmIndex,
+                                                            Float64 _fitting_snr)
 {
     Redshift            = _redshift;
     Merit               = _merit;
@@ -35,6 +36,8 @@ CModelContinuumFittingResult::CModelContinuumFittingResult( Float64 _redshift,
     Name               = _name;
     IsmCoeff               = _ismCoeff;
     IgmIndex               = _igmIndex;
+
+    Fitting_snr               = _fitting_snr;
 
 }
 
@@ -52,13 +55,14 @@ void CModelContinuumFittingResult::Save( const CDataStore& store, std::ostream& 
 {
     // save model continuum solution
 
-    stream <<  "#z\ttpl_name\tmerit\tamp\tism_coeff\tigm_index" <<  std::endl;
+    stream <<  "#z\ttpl_name\tmerit\tamp\tism_coeff\tigm_index\tfit_snr" <<  std::endl;
     stream << std::fixed <<  Redshift << "\t";
     stream << Name.c_str() << "\t";
     stream << std::scientific << std::setprecision(5) << Merit << "\t";
     stream << std::scientific << std::setprecision(5) << Amp << "\t";
     stream << std::fixed << std::setprecision(3) << IsmCoeff << "\t";
-    stream << std::fixed << std::setprecision(1) << IgmIndex <<  std::endl;
+    stream << std::fixed << std::setprecision(1) << IgmIndex << "\t";
+    stream << std::fixed << std::setprecision(5) << Fitting_snr <<  std::endl;
 
 }
 

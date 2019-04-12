@@ -19,12 +19,28 @@ ELSE()
   SET(Boost_USE_STATIC_LIBS ON)
 ENDIF()
 
-FIND_PACKAGE(Boost COMPONENTS filesystem system thread timer chrono program_options unit_test_framework)
-FIND_PACKAGE(Cfitsio)
-FIND_PACKAGE(GSL 2.1)
-FIND_PACKAGE(FFTW)
+LIST(FIND MISSING_THIRDPARTIES "boost" find_boost)
+LIST(FIND MISSING_THIRDPARTIES "cfitsio" find_cfitsio)
+LIST(FIND MISSING_THIRDPARTIES "gsl" find_gsl)
+LIST(FIND MISSING_THIRDPARTIES "fftw" find_fftw)
 
-IF(NOT GSL_FOUND)
+IF(NOT find_boost GREATER -1)
+  FIND_PACKAGE(Boost COMPONENTS filesystem system thread timer chrono program_options unit_test_framework)
+ENDIF()
+
+IF(NOT find_cfitsio GREATER -1)
+  FIND_PACKAGE(Cfitsio)
+ENDIF()
+
+IF(NOT find_gsl GREATER -1)
+  FIND_PACKAGE(GSL 2.1)
+ENDIF()
+
+IF(NOT find_fftw GREATER -1)
+  FIND_PACKAGE(FFTW)
+ENDIF()
+
+IF(NOT GSL_FOUND AND NOT find_gsl GREATER -1)
   # older versions of cmake don't have FindGSL
   FIND_PACKAGE(PkgConfig)
   pkg_check_modules(GSL gsl>=2.1)
@@ -99,6 +115,10 @@ if(CCACHE_FOUND)
   set(ENV{CXX} "ccache ${CMAKE_CXX_COMPILER}")
 endif(CCACHE_FOUND)
 
+IF(MISSING_THIRDPARTIES)
+  LIST(REMOVE_DUPLICATES MISSING_THIRDPARTIES)
+ENDIF()
+
 #--------------------------------------------------------
 # Parse version, this will be used later to configure
 # cpf-core-redshift-version.cmake with the appropriate version number
@@ -136,8 +156,8 @@ LINK_DIRECTORIES( ${cpf-redshift_LINK_DIR} )
 # Exported configuration variables
 #--------------------------------------------------------
 
-IF( NOT (CFITSIO_FOUND AND FFTW_FOUND AND GSL_FOUND AND Boost_FOUND) )
-  MESSAGE( STATUS "Some library not found on system. Using thirdparty/" )
+IF( MISSING_THIRDPARTIES )
+  MESSAGE( STATUS "Some library not found on system. Using thirdparty/ for ${MISSING_THIRDPARTIES}" )
   set(PARALLEL_BUILD_FLAG "-j4")
   ADD_SUBDIRECTORY( tools )
 ELSE()

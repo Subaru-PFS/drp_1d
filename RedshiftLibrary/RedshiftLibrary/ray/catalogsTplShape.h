@@ -5,7 +5,7 @@
 #include <RedshiftLibrary/ray/ray.h>
 #include <RedshiftLibrary/ray/catalog.h>
 #include <RedshiftLibrary/linemodel/elementlist.h>
-
+#include <RedshiftLibrary/statistics/pdfz.h>
 
 #include <boost/format.hpp>
 
@@ -23,6 +23,8 @@ class CRayCatalogsTplShape
 {
 
 public:
+
+
     CRayCatalogsTplShape();
     ~CRayCatalogsTplShape();
     Bool Init(std::string calibrationPath, std::string opt_tplratioCatRelPath, Int32 enableISMCalzetti);
@@ -30,17 +32,20 @@ public:
     Bool Load( const char* dirPath );
     bool LoadVelocities( const char* filepath, Int32 k );
     bool LoadPrior( const char* filepath, Int32 k );
+    bool LoadPriorPz( const char* filepath, Int32 k );
+
     //Bool AreCatalogsAligned( const CRayCatalog::TRayVector& restRayList, Int32 typeFilter, Int32 forceFilter  );
     Float64 GetBestFit(const CRayCatalog::TRayVector& restRayList, std::vector<Float64> fittedAmplitudes, std::vector<Float64> fittedErrors, std::vector<Float64> &amplitudesCorrected , std::string &bestTplName);
     CRayCatalog::TRayVector GetRestLinesList( const Int32 index );
     Int32 GetCatalogsCount();
     std::vector<Float64> getCatalogsPriors();
+    std::vector<CPdfz::SPriorZ> getCatalogsPriorsPz();
     std::string GetCatalogName(Int32 idx);
     Float64 GetIsmCoeff(Int32 idx);
 
     Bool GetCatalogVelocities(Int32 idx, Float64& elv, Float64& alv );
     Bool SetMultilineNominalAmplitudes(CLineModelElementList& LineModelElementList, Int32 iLine);
-    Bool SetLyaProfile(CLineModelElementList &LineModelElementList, Int32 iCatalog);
+    Bool SetLyaProfile(CLineModelElementList &LineModelElementList, Int32 iCatalog, bool forceLyaFitting);
     Bool InitLineCorrespondingAmplitudes(CLineModelElementList &LineModelElementList);
     Bool SetMultilineNominalAmplitudesFast(CLineModelElementList &LineModelElementList, Int32 iCatalog);
 
@@ -55,6 +60,7 @@ private:
     std::vector<Float64> m_ELvelocities;
     std::vector<Float64> m_ABSvelocities;
     std::vector<Float64> m_Priors;
+    std::vector<CPdfz::SPriorZ> m_PriorsPz;
     std::vector<Int32> m_IsmIndexes;
 
     CSpectrumFluxCorrectionCalzetti* m_ismCorrectionCalzetti;

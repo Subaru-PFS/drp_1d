@@ -91,7 +91,7 @@ void CLineModelSolveResult::SaveLine( const CDataStore& store, std::ostream& str
     }else if(m_bestRedshiftMethod==2)
     {
         GetBestRedshiftFromPdf( store, redshift, merit, sigma, snrHa, lfHa, snrOII, lfOII, tplratioName, tplcontinuumName);
-        //Log.LogInfo( "Linemodelsolve-result: extracting best redshift from PDF: z=%f", redshift);
+        Log.LogInfo( "Linemodelsolve-result: extracting best redshift from PDF: z=%f", redshift);
     }else{
         //Log.LogError( "Linemodelsolve-result: can't parse best redshift estimation method");
     }
@@ -217,7 +217,6 @@ Bool CLineModelSolveResult::GetBestRedshiftFromPdf(const CDataStore& store,
     {
         auto lineModelResult = std::dynamic_pointer_cast<const CLineModelResult>( results_chi2.lock() );
 
-
         if(logzpdf1d->Redshifts.size() != lineModelResult->Redshifts.size())
         {
             Log.LogError( "GetBestRedshiftFromPdf: pdf samplecount != chisquare samplecount");
@@ -286,6 +285,24 @@ Bool CLineModelSolveResult::GetBestRedshiftFromPdf(const CDataStore& store,
                 }
             }
         }
+
+
+        //*************  ////////////////////////////
+        //logging the p_mis value
+        CPdfz pdfz;
+        Float64 zwidth = 2e-2;
+        Float64 pmis=-1;
+        Float64 zmap = tmpRedshift;
+        Log.LogDetail( "pdfz: using zmap=%f", zmap);
+        Int32 retPMis = pdfz.getPmis( logzpdf1d->Redshifts,
+                                      logzpdf1d->valProbaLog,
+                                      zmap,
+                                      lineModelResult->ExtremaResult.Extrema,
+                                      zwidth,
+                                      pmis);
+
+        //*************  ////////////////////////////
+
     }
 
     redshift = tmpRedshift;

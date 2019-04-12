@@ -45,6 +45,10 @@
 #include "RedshiftLibrary/spectrum/axis.h"
 #include "RedshiftLibrary/spectrum/fluxaxis.h"
 #include "RedshiftLibrary/spectrum/spectralaxis.h"
+#include "RedshiftLibrary/method/linemodelsolve.h"
+#include "RedshiftLibrary/method/dtreebsolve.h"
+#include "RedshiftLibrary/method/dtree7solve.h"
+#include "RedshiftLibrary/method/chisquare2solve.h"
 using namespace NSEpic;
 %}
 
@@ -266,10 +270,8 @@ class CSpectrumSpectralAxis : public CSpectrumAxis {
 %rename(CSpectrumFluxAxis_default) CSpectrumFluxAxis();
 %rename(CSpectrumFluxAxis_empty) CSpectrumFluxAxis(UInt32 n);
 %rename(CSpectrumFluxAxis_withSpectrum) CSpectrumFluxAxis(const Float64* samples, UInt32 n);
-%rename(CSpectrumFluxAxis_withError) CSpectrumFluxAxis( double* samples,
-							UInt32 n,
- 							double* error,
-							UInt32 m );
+%rename(CSpectrumFluxAxis_withError) CSpectrumFluxAxis( const double* samples, UInt32 n,
+ 							const double* error, UInt32 m );
 
 %apply (double* IN_ARRAY1, int DIM1) {(const Float64* samples, UInt32 n)}
 %apply (double* IN_ARRAY1, int DIM1) {(const double* samples, UInt32 n),
@@ -297,3 +299,35 @@ class CTemplate : public CSpectrum
   bool Save( const char* filePath ) const;
 };
 
+class CLineModelSolve
+{
+ public:
+  CLineModelSolve(std::string calibrationPath="");
+  ~CLineModelSolve();
+  const std::string GetDescription();
+};
+
+class COperatorDTreeBSolve
+{
+ public:
+  COperatorDTreeBSolve( std::string calibrationPath="" );
+  ~COperatorDTreeBSolve();
+  const std::string GetDescription();
+};
+
+class COperatorDTree7Solve
+{
+ public:
+
+  COperatorDTree7Solve(std::string calibrationPath="");
+  ~COperatorDTree7Solve();
+  const std::string GetDescription();
+};
+
+class CMethodChisquare2Solve
+{
+ public:
+  CMethodChisquare2Solve( std::string calibrationPath="" );
+  ~CMethodChisquare2Solve();
+  const std::string GetDescription();
+};
