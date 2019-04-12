@@ -1,10 +1,10 @@
-set(cpf-redshift_VERSION 0.0.0)
+set(cpf-redshift_VERSION @PROJECT_VERSION@)
 @PACKAGE_INIT@
 
 set ( cpf-redshift_INCLUDE_DIR "@PACKAGE_cpf-redshift_INCLUDE_DIR@")
 set ( cpf-redshift_LINK_DIR "@PACKAGE_cpf-redshift_LINK_DIR@")
 
 set ( cpf-redshift_LIB "cpf-redshift;@cpf-redshift_THIRDPARTY_LIBS@" )
-set ( cpf-redshift_STATIC_LIB "libcpf-redshift.a;@cpf-redshift_THIRDPARTY_STATIC_LIBS@" )
+set ( cpf-redshift_STATIC_LIB "libcpf-redshift.a;@cpf-redshift_THIRDPARTY_LIBS@" )
 
 set ( cpf-redshift_REVISION "@GIT_REVISION@" )

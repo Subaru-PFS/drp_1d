@@ -7,6 +7,7 @@
 #include <RedshiftLibrary/operator/linemodel.h>
 
 #include <RedshiftLibrary/operator/pdfMargZLogResult.h>
+#include <RedshiftLibrary/operator/pdfLogresult.h>
 
 namespace NSEpic
 {
@@ -43,7 +44,9 @@ private:
                      std::string opt_combine,
                      Float64 opt_stronglinesprior,
                      Float64 opt_euclidNHaEmittersPriorStrength,
-                     std::shared_ptr<CPdfMargZLogResult> postmargZResult);
+                     Float64 opt_modelPriorZStrength,
+                     std::shared_ptr<CPdfMargZLogResult> postmargZResult,
+                     std::shared_ptr<CPdfLogResult> zPrior);
     Int32 SaveContinuumPDF(CDataStore &store, std::shared_ptr<const CLineModelResult> result);
 
 
@@ -53,10 +56,13 @@ private:
     std::string m_opt_secondpasslcfittingmethod;
     std::string m_opt_continuumcomponent;
     std::string m_opt_skipsecondpass="no";
+    std::string m_opt_secondpass_continuumfit="fromfirstpass";
 
     std::string m_opt_tplfit_dustfit="no";
     std::string m_opt_tplfit_igmfit="no";
     Float64 m_opt_continuumfitcount;
+    Float64 m_opt_tplfit_continuumprior_beta=1.0;
+    std::string m_opt_tplfit_continuumprior_reldirpath="";
     std::string m_opt_tplfit_ignoreLinesSupport="no";
 
     std::string m_opt_rigidity;
@@ -71,8 +77,24 @@ private:
     Float64 m_opt_abs_velocity_fit_min;
     Float64 m_opt_abs_velocity_fit_max;
     Float64 m_opt_abs_velocity_fit_step;
+    Float64 m_opt_manvelfit_dz_min;
+    Float64 m_opt_manvelfit_dz_max;
+    Float64 m_opt_manvelfit_dz_step;
     std::string m_opt_continuumreest;
     std::string m_opt_rules;
+
+    std::string m_opt_lya_forcefit;
+    std::string m_opt_lya_forcedisablefit;
+    Float64 m_opt_lya_fit_asym_min;
+    Float64 m_opt_lya_fit_asym_max;
+    Float64 m_opt_lya_fit_asym_step;
+    Float64 m_opt_lya_fit_width_min;
+    Float64 m_opt_lya_fit_width_max;
+    Float64 m_opt_lya_fit_width_step;
+    Float64 m_opt_lya_fit_delta_min;
+    Float64 m_opt_lya_fit_delta_max;
+    Float64 m_opt_lya_fit_delta_step;
+
 
     //options for rigidity=tplshape
     std::string m_opt_tplratio_reldirpath="";
@@ -90,6 +112,7 @@ private:
     std::string m_opt_pdfcombination;
     Float64 m_opt_stronglinesprior;
     Float64 m_opt_euclidNHaEmittersPriorStrength;
+    Float64 m_opt_modelZPriorStrength;
     std::string m_opt_saveintermediateresults;
     bool m_opt_enableSaveChisquareTplshapeResults;
 

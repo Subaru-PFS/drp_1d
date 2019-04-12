@@ -59,6 +59,13 @@ class processParamCheck(object):
         """
         deprecated_keywords = ["lambdaRange", "redshiftRange", "redshiftStep"]
         deprecated_keywords.append("fastfitlargegridstep")
+        deprecated_keywords.append("linecatalogs_tplshape_ExtendedTemplatesJan2017v3_20170602_B14C_v3") #this tpl-ratio catalog should not be used anymore, OII lines ratio have been updated
+        deprecated_keywords.append("linecatalogs_tplshape_ExtendedTemplatesJan2017v3_20170602_B14C_v4") #this tpl-ratio catalog should not be used anymore, CIII lines ratio have been updated 
+        deprecated_keywords.append("continuumismfit") #replaced by continuumfit.ismfit
+        deprecated_keywords.append("continuumigmfit") #replaced by continuumfit.ismfit 
+        deprecated_keywords.append("continuumfitcount") #replaced by continuumfit.count 
+        deprecated_keywords.append("continuumfitignorelinesupport") #replaced by continuumfit.ignorelinesupport 
+        
         print("Info: checking for the following deprecated keywords: \n{}\n".format(deprecated_keywords))
         
         f = open(self.parampath, 'r')

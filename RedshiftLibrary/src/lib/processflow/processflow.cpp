@@ -124,8 +124,9 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
         Float64 zref = -1.0;
         namespace fs = boost::filesystem;
         Int32 reverseInclusionForIdMatching = 0; //0: because the names must match exactly, but: linemeas catalog includes the extension (.fits) and spc.GetName doesn't.
+
         bool computeOnZrange=false; //nb: hardcoded option for now
-        Int32 colId = 2;//starts at 1, so that (for the linemeas_catalog) id_column=1, zref_column=2
+
         fs::path refFilePath(opt_linemeas_catalog_path.c_str());
 
 
@@ -133,17 +134,18 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
         {
             std::string spcSubStringId = ctx.GetSpectrum().GetName();
             Log.LogInfo( "Override z-search: using spc-string: %s", spcSubStringId.c_str());
-            getValueFromRefFile( refFilePath.c_str(), spcSubStringId, colId, zref, reverseInclusionForIdMatching);
+            getValueFromRefFile( refFilePath.c_str(), spcSubStringId, zref, reverseInclusionForIdMatching);
         }
         if(zref==-1)
         {
           throw std::runtime_error("Override z-search: unable to find zref!");
         }
 
+
+        Float64 stepZ = 1e-5;
         if(computeOnZrange) //computing only on zref, or on a zrange around zref
         {
             Float64 deltaZrangeHalf = 0.5e-2; //override zrange
-            Float64 stepZ = 1e-5;
             Float64 nStepsZ = deltaZrangeHalf*2/stepZ+1;
             for(Int32 kz=0; kz<nStepsZ; kz++)
             {
@@ -158,8 +160,8 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
         if(methodName=="linemodel"){
             ctx.GetDataStore().SetScopedParam( "linemodelsolve.linemodel.extremacount", 1.0);
             Log.LogInfo( "Override z-search: Using overriden linemodelsolve.linemodel.extremacount: %f", 1.0);
-            ctx.GetDataStore().SetScopedParam( "linemodelsolve.linemodel.firstpass.largegridstep", 0.0);
-            Log.LogInfo( "Override z-search: Using overriden linemodelsolve.linemodel.firstpass.largegridstep: %f", 0.0);
+            ctx.GetDataStore().SetScopedParam( "linemodelsolve.linemodel.firstpass.largegridstep", stepZ);
+            Log.LogInfo( "Override z-search: Using overriden linemodelsolve.linemodel.firstpass.largegridstep: %f", stepZ);
         }
 
         Log.LogInfo( "Override z-search: Using overriden zref for spc %s : zref=%f", ctx.GetSpectrum().GetName().c_str(), zref);
@@ -860,8 +862,10 @@ Bool CProcessFlow::isPdfValid(CProcessFlowContext& ctx) const
  * reverseInclusion=0 (default): spcId is searched to be included in the Ref-File-Id
  * reverseInclusion=1 : Ref-File-Id is searched to be included in the spcId
  **/
-Int32 CProcessFlow::getValueFromRefFile( const char* filePath, std::string spcid, Int32 colID, Float64& zref, Int32 reverseInclusion )
+Int32 CProcessFlow::getValueFromRefFile( const char* filePath, std::string spcid, Float64& zref, Int32 reverseInclusion )
 {
+    int colID = -1;
+
     ifstream file;
 
     file.open( filePath, ifstream::in );
@@ -882,9 +886,28 @@ Int32 CProcessFlow::getValueFromRefFile( const char* filePath, std::string spcid
         // Tokenize each line
         typedef tokenizer< char_separator<char> > ttokenizer;
         ttokenizer tok( line, sep );
+        ttokenizer::iterator it;
+
+        if (colID == -1) {
+            int count = 0;
+            for ( it = tok.begin(); it != tok.end() ; ++count, ++it );
+            switch (count) {
+            case 2:
+                // Two-columns style redshift reference catalog
+                colID = 2;
+                break;
+            case 13:
+                // redshift.csv style redshift reference catalog
+                colID = 3;
+                break;
+            default:
+                Log.LogError("Invalid number of columns in reference catalog (%d)", count);
+                throw std::runtime_error("Invalid number of columns in reference catalog");
+            }
+        }
+        it = tok.begin();
 
         // Check if it's not a comment
-        ttokenizer::iterator it = tok.begin();
         if( it != tok.end() && *it != "#" )
         {
             string name;

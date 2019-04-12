@@ -19,12 +19,28 @@ ELSE()
   SET(Boost_USE_STATIC_LIBS ON)
 ENDIF()
 
-FIND_PACKAGE(Boost COMPONENTS filesystem system thread timer chrono program_options unit_test_framework)
-FIND_PACKAGE(Cfitsio)
-FIND_PACKAGE(GSL 2.1)
-FIND_PACKAGE(FFTW)
+LIST(FIND MISSING_THIRDPARTIES "boost" find_boost)
+LIST(FIND MISSING_THIRDPARTIES "cfitsio" find_cfitsio)
+LIST(FIND MISSING_THIRDPARTIES "gsl" find_gsl)
+LIST(FIND MISSING_THIRDPARTIES "fftw" find_fftw)
 
-IF(NOT GSL_FOUND)
+IF(NOT find_boost GREATER -1)
+  FIND_PACKAGE(Boost COMPONENTS filesystem system thread timer chrono program_options unit_test_framework)
+ENDIF()
+
+IF(NOT find_cfitsio GREATER -1)
+  FIND_PACKAGE(Cfitsio)
+ENDIF()
+
+IF(NOT find_gsl GREATER -1)
+  FIND_PACKAGE(GSL 2.1)
+ENDIF()
+
+IF(NOT find_fftw GREATER -1)
+  FIND_PACKAGE(FFTW)
+ENDIF()
+
+IF(NOT GSL_FOUND AND NOT find_gsl GREATER -1)
   # older versions of cmake don't have FindGSL
   FIND_PACKAGE(PkgConfig)
   pkg_check_modules(GSL gsl>=2.1)
@@ -99,13 +115,17 @@ if(CCACHE_FOUND)
   set(ENV{CXX} "ccache ${CMAKE_CXX_COMPILER}")
 endif(CCACHE_FOUND)
 
+IF(MISSING_THIRDPARTIES)
+  LIST(REMOVE_DUPLICATES MISSING_THIRDPARTIES)
+ENDIF()
+
 #--------------------------------------------------------
 # Parse version, this will be used later to configure
 # cpf-core-redshift-version.cmake with the appropriate version number
 #--------------------------------------------------------
 
-FILE (STRINGS ${ROOT_DIR}/VERSION VERSION)
-MESSAGE( STATUS "Version used: ${VERSION}" )
+FILE (STRINGS ${ROOT_DIR}/VERSION PROJECT_VERSION)
+MESSAGE( STATUS "Version used: ${PROJECT_VERSION}" )
 
 #SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall -Wno-sign-compare -Wno-parentheses")
 IF(BUILD_SHARED_LIBS)
@@ -136,8 +156,8 @@ LINK_DIRECTORIES( ${cpf-redshift_LINK_DIR} )
 # Exported configuration variables
 #--------------------------------------------------------
 
-IF( NOT (CFITSIO_FOUND AND FFTW_FOUND AND GSL_FOUND AND Boost_FOUND) )
-  MESSAGE( STATUS "Some library not found on system. Using thirdparty/" )
+IF( MISSING_THIRDPARTIES )
+  MESSAGE( STATUS "Some library not found on system. Using thirdparty/ for ${MISSING_THIRDPARTIES}" )
   set(PARALLEL_BUILD_FLAG "-j4")
   ADD_SUBDIRECTORY( tools )
 ELSE()
@@ -151,11 +171,6 @@ if (OPENMP_FOUND)
     set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 endif()
-
-#-------------------------  -------------------------------
-# Extract version number
-#--------------------------------------------------------
-FILE (STRINGS ${ROOT_DIR}/VERSION VERSION_NUMBER)
 
 #--------------------------------------------------------
 # Compile library
@@ -248,11 +263,11 @@ CONFIGURE_PACKAGE_CONFIG_FILE(
 )
 
 # Configure version file (this is used by find_package to determine a matching version)
-CONFIGURE_FILE(
-       ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cpf-redshift-config-version.cmake.in
-       ${CMAKE_CURRENT_BINARY_DIR}/cmake/cpf-redshift-config-version.cmake
-       @ONLY
-)
+WRITE_BASIC_PACKAGE_VERSION_FILE(
+  ${CMAKE_CURRENT_BINARY_DIR}/cmake/cpf-redshift-config-version.cmake
+  VERSION ${VERSION}
+  COMPATIBILITY SameMajorVersion
+  )
 
 CONFIGURE_FILE(
 	${CMAKE_CURRENT_SOURCE_DIR}/cmake/version.h.in
@@ -262,6 +277,7 @@ CONFIGURE_FILE(
 # Generate TAGS file if etags is installed
 find_program(ETAGS NAMES etags ctags)
 if(ETAGS)
-  execute_process(COMMAND "find ${ROOT_DIR}/RedshiftLibrary/ ( -name *.cpp -o -name *.h -o -name *.hpp -o -name *.py -o -name *.c ) -exec ${ETAGS} -a ${ROOT_DIR}/TAGS {} +"
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+  message("Running " ${ETAGS})
+  execute_process(COMMAND find RedshiftLibrary/ ( -name *.cpp -o -name *.h -o -name *.hpp -o -name *.py -o -name *.c ) -not -name redshift.py -exec ${ETAGS} -a TAGS {} +
+    WORKING_DIRECTORY ${ROOT_DIR})
 endif(ETAGS)

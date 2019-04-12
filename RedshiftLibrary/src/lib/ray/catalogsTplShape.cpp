@@ -8,6 +8,8 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/algorithm/string/replace.hpp>
+#include <boost/algorithm/string/predicate.hpp>
+
 #include <string>
 #include <fstream>
 #include <iostream>
@@ -43,7 +45,7 @@ Bool CRayCatalogsTplShape::Init( std::string calibrationPath, std::string opt_tp
     std::string dirPath = (calibrationFolder/tplshapedcatalog_relpath.c_str()).string();
 
     m_opt_dust_calzetti = enableISMCalzetti;
-    m_ismCorrectionCalzetti->Init(calibrationPath, 0.0, 0.1, 4);
+    m_ismCorrectionCalzetti->Init(calibrationPath, 0.0, 0.1, 10);
 
     bool ret = Load(dirPath.c_str());
     if(!ret)
@@ -63,6 +65,7 @@ Bool CRayCatalogsTplShape::Load( const char* dirPath )
     m_ELvelocities.clear();
     m_ABSvelocities.clear();
     m_Priors.clear();
+    m_PriorsPz.clear();
     m_IsmIndexes.clear();
 
     //load the catalogs list from the files in the tplshape-catalogs folder : tplshapeCatalogDir
@@ -120,6 +123,23 @@ Bool CRayCatalogsTplShape::Load( const char* dirPath )
         Log.LogWarning("    CatalogsTplShape - ERROR - unable to find priors directory");
     }
     Log.LogInfo( "    CatalogsTplShape - Found %d tplshaped priors files", tplshapePriorsList.size());
+
+    //load the priorsPz list for all the catalogs
+    fs::path tplshapePriorsPzDir = tplshapeCatalogDir/"priors_pZ_Tplr/";
+    std::vector<std::string> tplshapePriorsPzList;
+    if ( fs::exists(tplshapePriorsPzDir) && fs::is_directory(tplshapePriorsPzDir))
+    {
+      for( fs::directory_iterator dir_iter(tplshapePriorsPzDir) ; dir_iter != end_iter ; ++dir_iter)
+      {
+        if (fs::is_regular_file(dir_iter->status()) )
+        {
+          tplshapePriorsPzList.push_back(dir_iter->path().c_str());
+        }
+      }
+    }else{
+        Log.LogWarning("    CatalogsTplShape - ERROR - unable to find priorsPz directory");
+    }
+    Log.LogInfo( "    CatalogsTplShape - Found %d tplshaped priorsPz files", tplshapePriorsPzList.size());
 
 
 
@@ -218,6 +238,36 @@ Bool CRayCatalogsTplShape::Load( const char* dirPath )
                 }
             }
 
+
+            CPdfz::SPriorZ pz;
+            m_PriorsPz.push_back(pz);
+            Int32 kpriorPz = -1;
+            tplname = name.filename().c_str();
+            boost::replace_all( tplname, "_catalog.txt", "_prior_pZ_Tplr.ascii");
+            for(Int32 kp=0; kp<tplshapePriorsPzList.size(); kp++)
+            {
+                std::string priorname = tplshapePriorsPzList[kp];
+                std::size_t foundstra = priorname.find(tplname.c_str());
+                if (foundstra==std::string::npos){
+                    continue;
+                }
+                kpriorPz = kp;
+            }
+            if(kpriorPz<0 || !successLoadPriors)
+            {
+                Log.LogWarning( "    CatalogsTplShape - Failed to match tplshape-catalog with tplshape-priorPz files: %s", tplname.c_str());
+                successLoadPriors=false;
+            }
+            if(successLoadPriors)
+            {
+                bool retPrior = LoadPriorPz(tplshapePriorsPzList[kpriorPz].c_str(), m_PriorsPz.size()-1);
+                if( !retPrior )
+                {
+                    Log.LogError( "    CatalogsTplShape - Failed to load tplshape priorPz: %s", tplshapePriorsPzList[kpriorPz].c_str());
+                    successLoadPriors=false;
+                }
+            }
+
         }
     }
     if(!successLoadPriors) //if not all priors were successfully loaded, replace by cst prior
@@ -276,6 +326,92 @@ bool CRayCatalogsTplShape::LoadVelocities( const char* filePath, Int32 k )
     return true;
 }
 
+bool CRayCatalogsTplShape::LoadPriorPz( const char* filePath, Int32 k )
+{
+    Float64 prior=1.0;
+
+    ifstream file;
+    file.open( filePath, ifstream::in );
+    if( file.rdstate() & ios_base::failbit ){
+        return false;
+    }
+    string line;
+
+    Float64 amp=0.0;
+    Float64 mu=0.0;
+    Float64 sigma=0.0;
+    Float64 p0=0.0;
+
+    // Read file line by line
+    Int32 readNums = 0;
+    while( getline( file, line ) )
+    {
+        if( boost::starts_with( line, "#" ) )
+        {
+            continue;
+        }
+        boost::char_separator<char> sep("\t");
+        // Tokenize each line
+        typedef boost::tokenizer< boost::char_separator<char> > ttokenizer;
+        ttokenizer tok( line, sep );
+
+        // Check if it's not a comment
+        ttokenizer::iterator it = tok.begin();
+        if( it != tok.end() )
+        {
+            amp = boost::lexical_cast<double>(*it);
+            ++it;
+
+            if( it != tok.end() )
+            {
+                mu = boost::lexical_cast<double>(*it);
+                ++it;
+            }
+            else
+            {
+                file.close();
+                return false;
+            }
+
+            if( it != tok.end() )
+            {
+                sigma = boost::lexical_cast<double>(*it);
+                ++it;
+            }
+            else
+            {
+                file.close();
+                return false;
+            }
+
+            if( it != tok.end() )
+            {
+                p0 = boost::lexical_cast<double>(*it);
+                ++it;
+            }
+            else
+            {
+                file.close();
+                return false;
+            }
+        }
+        readNums++;
+    }
+    file.close();
+    if(readNums!=1)
+    {
+        return false;
+    }
+
+    Log.LogDebug( "    CatalogsTplShape - k=%d - Set priorZ : a=%f, mu=%f, sigma=%f, p0=%f", k, amp, mu, sigma, p0);
+    m_PriorsPz[k].amp = amp;
+    m_PriorsPz[k].mu = mu;
+    m_PriorsPz[k].sigma = sigma;
+    m_PriorsPz[k].p0 = p0;
+
+    return true;
+}
+
 bool CRayCatalogsTplShape::LoadPrior( const char* filePath, Int32 k )
 {
     Float64 prior=1.0;
@@ -303,7 +439,7 @@ bool CRayCatalogsTplShape::LoadPrior( const char* filePath, Int32 k )
         return false;
     }
 
-    Log.LogDebug( "    CatalogsTplShape - k=%d - Set prior=%.1f", k, prior);
+    Log.LogDebug( "    CatalogsTplShape - k=%d - Set prior=%f", k, prior);
     m_Priors[k] = prior;
 
     return true;
@@ -332,6 +468,12 @@ std::vector<Float64> CRayCatalogsTplShape::getCatalogsPriors()
 {
     return m_Priors;
 }
+
+std::vector<CPdfz::SPriorZ> CRayCatalogsTplShape::getCatalogsPriorsPz()
+{
+    return m_PriorsPz;
+}
+
 
 std::string CRayCatalogsTplShape::GetCatalogName(Int32 idx)
 {
@@ -484,7 +626,7 @@ Bool CRayCatalogsTplShape::SetMultilineNominalAmplitudes(CLineModelElementList &
     return true;
 }
 
-Bool CRayCatalogsTplShape::SetLyaProfile(CLineModelElementList &LineModelElementList, Int32 iCatalog)
+Bool CRayCatalogsTplShape::SetLyaProfile(CLineModelElementList &LineModelElementList, Int32 iCatalog, bool forceLyaFitting)
 {
     if(iCatalog<0){
         return false;
@@ -501,6 +643,10 @@ Bool CRayCatalogsTplShape::SetLyaProfile(CLineModelElementList &LineModelElement
             continue;
         }
 	CRay::TProfile targetProfile = currentCatalogLineList[kL].GetProfile();
+    if(forceLyaFitting)
+    {
+        targetProfile = CRay::ASYMFIT;
+    }
 
         //find line Lya in the elementList
         for( UInt32 iElts=0; iElts<LineModelElementList.m_Elements.size(); iElts++ )

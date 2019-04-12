@@ -46,6 +46,7 @@ Use `brew` as packet manager on MacOS:
 
 Use [Anaconda](https://www.anaconda.com/) as python3 provider and then install python dependencies with `pip`:
 
+    pip3 install numpy
     pip3 install astropy
 
 

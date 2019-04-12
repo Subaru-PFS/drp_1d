@@ -220,7 +220,7 @@ std::shared_ptr<const CLineDetectionResult> CLineDetection::Compute( const CSpec
             if( ratioAmp<m_cut )
 	      {
                 toAdd = false;
-                std::string status = (boost::format( "Peak_%1% : ratioAmp<m_cut" ) % j).str();
+                std::string status = (boost::format( "Peak_%d : ratioAmp<m_cut (%f<%f)" ) % j % ratioAmp % m_cut).str();
 		if ( ! m_bypassDebug )
 		  Log.LogDebug ( "Peak_%d : ratioAmp<m_cut (%f<%f)", j, ratioAmp, m_cut );
                 result->PeakListDetectionStatus.push_back( status );
