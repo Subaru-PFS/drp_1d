@@ -417,13 +417,13 @@ BOOST_AUTO_TEST_CASE(Compute){
   std::shared_ptr<const CLineDetectionResult> res = lineDetection.Compute(spc, lambdaRange, resPeaks, resPeaks);
 
 
-  BOOST_CHECK_EQUAL(res->PeakListDetectionStatus[0], "Peak_0 : ratioAmp<m_cut");
+  BOOST_CHECK_EQUAL(res->PeakListDetectionStatus[0], "Peak_0 : ratioAmp<m_cut (3.927489<5.000000)");
   BOOST_CHECK_EQUAL(res->PeakListDetectionStatus[1], "Peak_1 : fwhm<m_minsize");
   BOOST_CHECK_EQUAL(res->PeakListDetectionStatus[2], "Peak_2 : fwhm>m_maxsize");
   BOOST_CHECK_EQUAL(res->PeakListDetectionStatus[3], "Peak_3 : gaussAmp far from spectrum max_value");
   //bug here two stqtus for one peak
   BOOST_CHECK_EQUAL(res->PeakListDetectionStatus[4], "Peak_3 : gaussAmp far from spectrum max_value (Angstrom)");
-  BOOST_CHECK_EQUAL(res->PeakListDetectionStatus[5], "Peak_4 : ratioAmp<m_cut");
+  BOOST_CHECK_EQUAL(res->PeakListDetectionStatus[5], "Peak_4 : ratioAmp<m_cut (1.501982<5.000000)");
   BOOST_CHECK_EQUAL(res->PeakListDetectionStatus[6], "Peak_5 : GaussAmp negative");
   BOOST_CHECK_EQUAL(res->PeakListDetectionStatus[7], "Peak_6 : Fitting failed");
 

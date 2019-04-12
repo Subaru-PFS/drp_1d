@@ -5,6 +5,7 @@
 #include <RedshiftLibrary/common/range.h>
 #include <RedshiftLibrary/processflow/result.h>
 #include <RedshiftLibrary/common/mask.h>
+#include <RedshiftLibrary/statistics/priorhelpercontinuum.h>
 
 #include <vector>
 
@@ -39,13 +40,14 @@ public:
 
     virtual  std::shared_ptr<COperatorResult> Compute( const CSpectrum& spectrum,
                                                        const CTemplate& tpl,
-                                            const TFloat64Range& lambdaRange,
+                                                       const TFloat64Range& lambdaRange,
                                                        const TFloat64List& redshifts,
                                                        Float64 overlapThreshold,
                                                        std::vector<CMask> additional_spcMasks,
                                                        std::string opt_interp,
                                                        Int32 opt_extinction,
-                                                       Int32 opt_dustFitting) = 0;
+                                                       Int32 opt_dustFitting,
+                                                       CPriorHelperContinuum::TPriorZEList logprior) = 0;
 
 protected:
 

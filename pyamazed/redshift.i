@@ -270,10 +270,8 @@ class CSpectrumSpectralAxis : public CSpectrumAxis {
 %rename(CSpectrumFluxAxis_default) CSpectrumFluxAxis();
 %rename(CSpectrumFluxAxis_empty) CSpectrumFluxAxis(UInt32 n);
 %rename(CSpectrumFluxAxis_withSpectrum) CSpectrumFluxAxis(const Float64* samples, UInt32 n);
-%rename(CSpectrumFluxAxis_withError) CSpectrumFluxAxis( double* samples,
-							UInt32 n,
- 							double* error,
-							UInt32 m );
+%rename(CSpectrumFluxAxis_withError) CSpectrumFluxAxis( const double* samples, UInt32 n,
+ 							const double* error, UInt32 m );
 
 %apply (double* IN_ARRAY1, int DIM1) {(const Float64* samples, UInt32 n)}
 %apply (double* IN_ARRAY1, int DIM1) {(const double* samples, UInt32 n),

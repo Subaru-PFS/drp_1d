@@ -22,8 +22,11 @@ public:
 
     std::shared_ptr<COperatorResult> Compute(const CSpectrum& spectrum, const CTemplate& tpl,
                                     const TFloat64Range& lambdaRange, const TFloat64List& redshifts,
-                                    Float64 overlapThreshold, std::vector<CMask> additional_spcMasks_unused, std::string opt_interp_unused="lin", Int32 opt_extinction_unused=0,
-                                              Int32 opt_dustFitting_unused=0 );
+                                    Float64 overlapThreshold, std::vector<CMask> additional_spcMasks_unused,
+                                             std::string opt_interp_unused="lin",
+                                             Int32 opt_extinction_unused=0,
+                                             Int32 opt_dustFitting_unused=0,
+                                             CPriorHelperContinuum::TPriorZEList logpriorze_unused=CPriorHelperContinuum::TPriorZEList());
 
 
 private:
