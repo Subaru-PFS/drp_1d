@@ -590,7 +590,7 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
                     ampl = forcedAmplitude;
                 }
                 //Generalized method (ampl can take any value now) for chi2 estimate
-                fit = sumT*ampl*ampl - 2.*ampl*sumCross;
+                fit = sumS + sumT*ampl*ampl - 2.*ampl*sumCross;
             }
 
             //*

@@ -533,7 +533,7 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
                 1e-2; // these values will be replaced by the fine grid
                       // interpolation below...
             m_result->ScaleMargCorrection[i] =
-                m_model->getScaleMargCorrection();
+                m_result->ScaleMargCorrection[i-1];
             m_result->LineModelSolutions[i] =
                 m_result->LineModelSolutions[i - 1];
             m_result->ContinuumModelSolutions[i]=
@@ -554,7 +554,7 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
                     m_model->getLeastSquareContinuumMeritFast();
             }
             m_result->ScaleMargCorrectionContinuum[i] =
-                m_model->getContinuumScaleMargCorrection();
+                m_result->ScaleMargCorrectionContinuum[i-1];
         }
         ++show_progress;
     }

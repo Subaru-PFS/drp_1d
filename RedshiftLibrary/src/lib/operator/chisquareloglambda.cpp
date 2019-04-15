@@ -729,6 +729,14 @@ Int32 COperatorChiSquareLogLambda::FitAllz(const TFloat64Range &lambdaRange,
         }
 
         //*
+        Float64 dtd = 0.0;
+        Float64 inv_err2 = 1.0;
+        for (Int32 j = 0; j < nSpc; j++)
+        {
+            inv_err2 = 1.0 / (error[j] * error[j]);
+            dtd += spectrumRebinedFluxRaw[j] * spectrumRebinedFluxRaw[j] * inv_err2;
+        }
+
         FitRangez(spectrumRebinedLambda, spectrumRebinedFluxRaw, error,
                   tplRebinedLambda, tplRebinedFluxRaw, nSpc, nTpl, subresult,
                   igmMeiksinCoeffs, ismEbmvCoeffs);
@@ -793,7 +801,7 @@ Int32 COperatorChiSquareLogLambda::FitAllz(const TFloat64Range &lambdaRange,
                                      ampl);
                     }
                     result->FitAmplitude[fullResultIdx] = ampl;
-                    result->ChiSquare[fullResultIdx] = result->FitMtM[fullResultIdx]*ampl*ampl - 2.*ampl*result->FitDtM[fullResultIdx];
+                    result->ChiSquare[fullResultIdx] = dtd + result->FitMtM[fullResultIdx]*ampl*ampl - 2.*ampl*result->FitDtM[fullResultIdx];
 
                     Float64 logPa = logpriorze[fullResultIdx][kism_best].betaA*
                             (ampl-logpriorze[fullResultIdx][kism_best].A_mean)*(ampl-logpriorze[fullResultIdx][kism_best].A_mean)
