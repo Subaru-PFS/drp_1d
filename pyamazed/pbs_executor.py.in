@@ -1,0 +1,46 @@
+# **Template** python script used by pbs scheduler to produce python executor
+# script
+#
+
+import sys
+import subprocess
+import json
+
+tasks = {tasks}
+notification_url = '{notification_url}'
+
+if __name__ == '__main__':
+    # usage :
+    # pbs_executor N : run task #N
+
+    print("Running {{}}".format(sys.argv))
+    task = tasks[int(sys.argv[1]) - 1]
+    task_name = '{{}}-{{}}'.format(task[0], int(sys.argv[1]) - 1)
+
+    if notification_url:
+        req = {{'_id': task_name, 'state': 'RUNNING'}}
+        try:
+            requests.put(notification_url,
+                         headers={{'content-type': 'application/json'}},
+                         data=json.dumps([req]))
+        except Exception as e:
+            print("Can't open notification url", e)
+
+    # Run the task
+    p = subprocess.run(task)
+
+    if notification_url:
+        if p.returncode == 0:
+            req = {{'_id': task_name, 'state': 'SUCCESS'}}
+        else:
+            req = {{'_id': task_name, 'state': 'ERROR'}}
+        try:
+            requests.put(notification_url,
+                         headers={{'content-type': 'application/json'}},
+                         data=json.dumps([req]))
+        except Exception as e:
+            print("Can't open notification url", e)
+
+# Local Variables:
+# mode: python
+# End:

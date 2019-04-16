@@ -1,4 +1,5 @@
 import argparse
+import os
 from .redshift import CLog, get_version, CLineModelSolve, \
     COperatorDTreeBSolve, COperatorDTree7Solve, CMethodChisquare2Solve
 
@@ -49,10 +50,10 @@ class BooleanAction(argparse.Action):
 
 
 def build_epilog():
-    methods =  [CLineModelSolve,
-                COperatorDTreeBSolve,
-                COperatorDTree7Solve,
-                CMethodChisquare2Solve]
+    methods = [CLineModelSolve,
+               COperatorDTreeBSolve,
+               COperatorDTree7Solve,
+               CMethodChisquare2Solve]
 
     text = '\n'.join(['Methods parameters file (see parameters.json):',
                       '\n'.join([m().GetDescription() for m in methods]),
@@ -69,7 +70,7 @@ parser = argparse.ArgumentParser(description='AMAZED client tool.',
 
 parser.add_argument('--parameters', '-p', dest='parameters_file',
                     metavar='FILE', type=str, help='Parameters file')
-parser.add_argument('--output', '-o', dest='output_folder', metavar='DIR',
+parser.add_argument('--output', '-o', dest='output_dir', metavar='DIR',
                     type=str,
                     help='Directory where all generated files are '
                     'going to be stored')
@@ -115,5 +116,18 @@ parser.add_argument('--save_intermediate_results', '-b',
                     'processed')
 parser.add_argument('--linemeascatalog', '-d',
                     help='Optionally specify a linemeas-catalog file path')
+
+parser.add_argument('--worker', '-w', choices=['pbs', 'local'],
+                    help='Worker to use to run amazed.')
+parser.add_argument('--concurrency', '-C',
+                    help='Concurrency level for parallel run.'
+                    ' -1 means infinity.')
+parser.add_argument('--bunch_size', '-s',
+                    help='Number of spectra to run per worker.')
+parser.add_argument('--pre_command',
+                    help='Command to run before each worker.')
+parser.add_argument('--notification_url',
+                    help='URL of notification service.')
+
 parser.add_argument('--version', '-v', action='version', version=get_version(),
                     help='Print version and exit.')

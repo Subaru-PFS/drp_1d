@@ -13,10 +13,9 @@ setup(
     packages=['pyamazed'],
     long_description=open(os.path.join(os.path.dirname(__file__),
                                        'README.md')).read(),
-
-    setup_requires=['pytest-runner', 'numpy>=1.16.0', 'astropy>=3.1.1'],
-    tests_require=['pytest', ],
+    setup_requires=['numpy>=1.16.0', 'astropy>=3.1.1'],
     install_requires=['numpy>=1.16.0', 'astropy>=3.1.1'],
+    tests_require=['pytest-runner', 'pytest', ],
     py_modules=['pyamazed/redshift'],
     classifiers=[
         "Development Status :: 1 - Planning",
@@ -29,6 +28,7 @@ setup(
     entry_points={
         'console_scripts': [
             'amazed=pyamazed.amazed:main',
+            'process_spectra_worker=pyamazed.amazed:process_spectra_worker',
             'amazed-cmp=pyamazed.output_compare:main',
             'amazed-convert=pyamazed.catalog2fits:main',
         ],

@@ -1,11 +1,14 @@
 import json
-import os.path
+import os
 from .redshift import CLog
 
 defaults = {
     'parameters_file': 'parameters.json',
     'config': None,
-    'output_folder': './output',
+    'worker': 'local',
+    'concurrency': os.cpu_count(),
+    'bunch_size': 8,
+    'output_dir': './output',
     'input_file': 'input.spectrumlist',
     'error_file': None,
     'spectrum_dir': 'spectrum',
@@ -17,6 +20,8 @@ defaults = {
     'linecatalog_convert': False,
     'linemeascatalog': '',
     'save_intermediate_results': 'all',
+    'pre_command': None,
+    'notification_url': None,
     }
 
 
@@ -34,16 +39,21 @@ class Config:
                 cfg = json.load(f)
             for k, v in cfg.items():
                 if k not in defaults:
-                    raise AttributeError('Invalid config file parameter {}'.format(k))
+                    raise AttributeError('Invalid config file parameter '
+                                         '{}'.format(k))
                 setattr(self, k, v)
-
 
         # override with command line parameters
         for arg in vars(args):
             if arg not in defaults:
-                raise AttributeError('Invalid command line parameter {}'.format(arg))
+                raise AttributeError('Invalid command line parameter '
+                                     '{}'.format(arg))
             if getattr(args, arg) is not None:
                 setattr(self, arg, getattr(args, arg))
+
+        # validate args
+        if self.worker not in (None, 'pbs', 'local'):
+            raise AttributeError('Invalid worker {}'.format(self.worker))
 
     def save(self, path):
         """Save configuration to path"""
