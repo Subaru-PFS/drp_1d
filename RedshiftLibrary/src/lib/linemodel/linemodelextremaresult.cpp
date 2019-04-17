@@ -73,6 +73,8 @@ void CLineModelExtremaResult::Resize(Int32 size)
     FittedTplshapeName.resize(size);
     FittedTplshapeIsmCoeff.resize(size);
     FittedTplshapeAmplitude.resize(size);
+    FittedTplshapeDtm.resize(size);
+    FittedTplshapeMtm.resize(size);
 }
 
 /**
@@ -469,6 +471,26 @@ void CLineModelExtremaResult::Save( const CDataStore& store, std::ostream& strea
         for ( int i=0; i<FittedTplshapeAmplitude.size(); i++)
         {
             stream <<  FittedTplshapeAmplitude[i] << "\t";
+        }
+        stream << "}" << std::endl;
+    }
+
+    // save FittedTplshapeDtm, on 1 line
+    if(FittedTplshapeDtm.size()>0){
+        stream <<  "#FittedTplshapeDtm for each extrema = {";
+        for ( int i=0; i<FittedTplshapeDtm.size(); i++)
+        {
+            stream <<  FittedTplshapeDtm[i] << "\t";
+        }
+        stream << "}" << std::endl;
+    }
+
+    // save FittedTplshapeMtm, on 1 line
+    if(FittedTplshapeMtm.size()>0){
+        stream <<  "#FittedTplshapeMtm for each extrema = {";
+        for ( int i=0; i<FittedTplshapeMtm.size(); i++)
+        {
+            stream <<  FittedTplshapeMtm[i] << "\t";
         }
         stream << "}" << std::endl;
     }

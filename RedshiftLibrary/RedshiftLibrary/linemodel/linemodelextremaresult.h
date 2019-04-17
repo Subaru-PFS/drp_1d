@@ -82,6 +82,8 @@ public:
     //template ratio
     std::vector<std::string>      FittedTplshapeName;   //Name of the best template fitted for tplcorr/tplshape
     std::vector<Float64>      FittedTplshapeAmplitude;   //amp of the best template fitted for tplcorr/tplshape
+    std::vector<Float64>      FittedTplshapeDtm;   //dtm of the best template fitted for tplcorr/tplshape
+    std::vector<Float64>      FittedTplshapeMtm;   //mtm of the best template fitted for tplcorr/tplshape
     std::vector<Float64>      FittedTplshapeIsmCoeff;   //IsmCoeff/EBMV of the best template fitted for tplcorr/tplshape
 
 };

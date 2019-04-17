@@ -1604,6 +1604,18 @@ Float64 CLineModelElementList::getTplshape_bestAmplitude()
 }
 
 
+Float64 CLineModelElementList::getTplshape_bestDtm()
+{
+    return m_tplshapeBestTplDtm;
+}
+
+
+Float64 CLineModelElementList::getTplshape_bestMtm()
+{
+    return m_tplshapeBestTplMtm;
+}
+
+
 Int32 CLineModelElementList::getTplshape_count()
 {
     if(m_rigidity!="tplshape")
@@ -2518,6 +2530,8 @@ Float64 CLineModelElementList::fit(Float64 redshift,
                     m_tplshapeBestTplName = m_CatalogTplShape->GetCatalogName(savedIdxFitted);
                     m_tplshapeBestTplIsmCoeff = m_CatalogTplShape->GetIsmCoeff(savedIdxFitted);
                     m_tplshapeBestTplAmplitude = m_FittedAmpTplshape[savedIdxFitted][0]; //Should be only 1 elt in tpl ratio mode...
+                    m_tplshapeBestTplDtm = m_DtmTplshape[savedIdxFitted][0]; //Should be only 1 elt in tpl ratio mode...
+                    m_tplshapeBestTplMtm = m_MtmTplshape[savedIdxFitted][0]; //Should be only 1 elt in tpl ratio mode...
                 }
             }
 
@@ -5070,7 +5084,7 @@ Float64 CLineModelElementList::getScaleMargCorrection(Int32 idxLine)
     Float64 corr=0.0;
 
     //scale marg for continuum
-    corr += getContinuumScaleMargCorrection();
+    //corr += getContinuumScaleMargCorrection();
 
 
 
@@ -5083,9 +5097,9 @@ Float64 CLineModelElementList::getScaleMargCorrection(Int32 idxLine)
         if(m_Elements[iElts]->IsOutsideLambdaRange() == true){
             continue;
         }
-        if(m_Elements[iElts]->GetElementAmplitude()<=0.0){
-            continue;
-        }
+        //if(m_Elements[iElts]->GetElementAmplitude()<=0.0){
+        //    continue;
+        //}
 
         Float64 mtm = m_Elements[iElts]->GetSumGauss();
         if(mtm>0.0){

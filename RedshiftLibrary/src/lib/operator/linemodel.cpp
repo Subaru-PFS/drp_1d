@@ -1610,6 +1610,10 @@ Int32 COperatorLineModel::ComputeSecondPass(CDataStore &dataStore,
             m_model->getTplshape_bestTplIsmCoeff();
         m_result->ExtremaResult.FittedTplshapeAmplitude[i] =
             m_model->getTplshape_bestAmplitude();
+        m_result->ExtremaResult.FittedTplshapeDtm[i] =
+            m_model->getTplshape_bestDtm();
+        m_result->ExtremaResult.FittedTplshapeMtm[i] =
+            m_model->getTplshape_bestMtm();
     }
 
     // ComputeArea2(*m_result);

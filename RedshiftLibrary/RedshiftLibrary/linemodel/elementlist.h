@@ -122,6 +122,8 @@ public:
     std::string getTplshape_bestTplName();
     Float64 getTplshape_bestTplIsmCoeff();
     Float64 getTplshape_bestAmplitude();
+    Float64 getTplshape_bestDtm();
+    Float64 getTplshape_bestMtm();
     Int32 getTplshape_count();
     std::vector<Float64> getTplshape_priors();
     std::vector<CPdfz::SPriorZ> getTplshape_priorsPz();
@@ -377,6 +379,8 @@ private:
     std::string m_tplshapeBestTplName;
     Float64 m_tplshapeBestTplIsmCoeff;
     Float64 m_tplshapeBestTplAmplitude;
+    Float64 m_tplshapeBestTplDtm;
+    Float64 m_tplshapeBestTplMtm;
     Int32 m_tplshapeLeastSquareFast = 0;    //for rigidity=tplshape: switch to use fast least square estimation
     CPriorHelper* m_tplshape_priorhelper;
 

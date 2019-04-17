@@ -588,7 +588,7 @@ Int32 CLineModelSolve::CombinePDF(std::shared_ptr<const CLineModelResult> result
         {
             logLikelihoodCorrected[k] = result->ChiSquare[k];
         }
-        if(m_opt_pdf_margAmpCorrection=="yes")
+        if(false && m_opt_pdf_margAmpCorrection=="yes") //maybe there should not be a scalemarg correction for the bestchi2 option ? Todo: raise warning then...
         {
             for ( UInt32 k=0; k<result->Redshifts.size(); k++)
             {
@@ -653,11 +653,26 @@ Int32 CLineModelSolve::CombinePDF(std::shared_ptr<const CLineModelResult> result
             {
                 logLikelihoodCorrected[kz] = result->ChiSquareTplshapes[k][kz];
             }
-            if(m_opt_pdf_margAmpCorrection=="yes")
+            if(m_opt_pdf_margAmpCorrection=="yes") //nb: this is experimental.
             {
+                //find max scalemargcorr
+                //*
+                Float64 maxscalemargcorr=-DBL_MAX;
                 for ( UInt32 kz=0; kz<result->Redshifts.size(); kz++)
                 {
-                    logLikelihoodCorrected[kz] += result->ScaleMargCorrectionTplshapes[k][kz];
+                    if(maxscalemargcorr < result->ScaleMargCorrectionTplshapes[k][kz])
+                    {
+                        maxscalemargcorr = result->ScaleMargCorrectionTplshapes[k][kz];
+                    }
+                }
+                Log.LogError("Linemodel: maxscalemargcorr= %e", maxscalemargcorr);
+                //*/
+                for ( UInt32 kz=0; kz<result->Redshifts.size(); kz++)
+                {
+                    if(result->ScaleMargCorrectionTplshapes[k][kz]!=0) //warning, this is experimental.
+                    {
+                        logLikelihoodCorrected[kz] += result->ScaleMargCorrectionTplshapes[k][kz] - maxscalemargcorr;
+                    }
                 }
             }
             if(zPriorLines && result->PriorLinesTplshapes[k].size()==result->Redshifts.size())
