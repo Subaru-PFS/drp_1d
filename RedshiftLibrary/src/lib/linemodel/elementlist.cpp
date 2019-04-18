@@ -84,7 +84,7 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
     //tplfit continuum option: warning, these options not used when using the precomputed continuum fit store (which is recommended)
     m_fitContinuum_dustfit = -10;
     m_fitContinuum_igm = 1;
-    m_fitContinuum_outsidelinesmask = 0;
+    m_fitContinuum_outsidelinesmask = 1;
     m_fitContinuum_observedFrame = 0;
 
     //m_nominalWidthDefaultEmission = 1.15;// suited to new pfs simulations
