@@ -1261,8 +1261,16 @@ Int32 COperatorLineModel::ComputeSecondPass(CDataStore &dataStore,
                 duration_secondpass_seconds);
     Log.LogInfo("<proc-lm-secondpass><%d>", (Int32)duration_secondpass_seconds);
 
+    m_model->SetFitContinuum_Option(savedFitContinuumOption);
 
+    return 0;
+}
 
+Int32 COperatorLineModel::SaveResults(const CSpectrum &spectrum,
+                                      const TFloat64Range &lambdaRange,
+                                      const std::string &opt_continuumreest)
+{
+    Int32 savedFitContinuumOption = m_model->GetFitContinuum_Option();
     Log.LogInfo("  Operator-Linemodel: Now storing extrema results");
     Int32 extremumCount = m_secondpass_parameters_extremaResult.Extrema.size();
     m_result->ExtremaResult.Resize(extremumCount);
@@ -1278,6 +1286,7 @@ Int32 COperatorLineModel::ComputeSecondPass(CDataStore &dataStore,
     m_savedModelRulesResults.clear();
     m_savedModelContinuumSpectrumResults.clear();
 
+    Log.LogDetail("  Operator-Linemodel: N extrema results will be saved : %d", extremumCount);
     for (Int32 i = 0; i < extremumCount; i++)
     {
         Int32 index_extremum = m_secondpass_indiceSortedCandidatesList[i];
@@ -2255,7 +2264,7 @@ Int32 COperatorLineModel::RecomputeAroundCandidates(TPointList input_extremumLis
                 if (m_result->ChiSquare[iz] < _secondpass_recomputed_extremumList[i].Y)
                 {
                     _secondpass_recomputed_extremumList[i].X = m_result->Redshifts[iz];
-                    _secondpass_recomputed_extremumList[i].Y = m_result->ChiSquare[iz];
+                    _secondpass_recomputed_extremumList[i].Y = m_result->ChiSquare[iz]; //WARNING: here the priors should be included in the comparison !
 
                     // set the second pass parameters used in the model export procedure in computeSecondPass()
                     m_secondpass_parameters_extremaResult.Extrema[i] = m_result->Redshifts[iz];

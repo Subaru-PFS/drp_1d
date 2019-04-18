@@ -1194,7 +1194,20 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
             Log.LogError( "Line Model, second pass failed. Aborting" );
             return false;
         }
+    }else{
+        linemodel.m_secondpass_parameters_extremaResult = linemodel.m_firstpass_extremaResult;
+        Int32 extremumCount = linemodel.m_secondpass_parameters_extremaResult.Extrema.size();
+        linemodel.m_secondpass_indiceSortedCandidatesList.clear();
+        for (Int32 ie = 0; ie < extremumCount; ie++)
+        {
+            linemodel.m_secondpass_indiceSortedCandidatesList.push_back(ie);
+        }
     }
+
+    Int32 retSaveResults = linemodel.SaveResults(_spc,
+                                                 lambdaRange,
+                                                 m_opt_continuumreest);
+
     std::shared_ptr<const CLineModelResult> result = std::dynamic_pointer_cast<const CLineModelResult>( linemodel.getResult() );
 
 

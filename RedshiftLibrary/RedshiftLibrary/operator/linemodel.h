@@ -199,6 +199,10 @@ public:
                                       const Float64 &opt_absvelocityfitmax,
                                       const Float64 &opt_absvelocityfitstep);
 
+    Int32 SaveResults(const CSpectrum& spectrum,
+                      const TFloat64Range& lambdaRange,
+                      const std::string &opt_continuumreest="no");
+
     void InitTplratioPriors();
 
     void storeGlobalModelResults( CDataStore &dataStore );
@@ -252,17 +256,19 @@ public:
     Float64 m_opt_lya_fit_delta_max;
     Float64 m_opt_lya_fit_delta_step;
 
+
+    //candidates
+    TPointList m_firstpass_extremumList;
+    std::vector<Int32> m_secondpass_indiceSortedCandidatesList;
+    CLineModelExtremaResult m_firstpass_extremaResult;
+    CLineModelExtremaResult m_secondpass_parameters_extremaResult;
+
 private:
 
     std::shared_ptr<CLineModelResult> m_result;
     std::shared_ptr<CLineModelElementList> m_model;
     TFloat64List m_sortedRedshifts;
 
-    //candidates
-    TPointList m_firstpass_extremumList;
-    CLineModelExtremaResult m_firstpass_extremaResult;
-    CLineModelExtremaResult m_secondpass_parameters_extremaResult;
-    std::vector<Int32> m_secondpass_indiceSortedCandidatesList;
 
     Int32 m_enableFastFitLargeGrid = 0;
     Int32 m_estimateLeastSquareFast = 0;
