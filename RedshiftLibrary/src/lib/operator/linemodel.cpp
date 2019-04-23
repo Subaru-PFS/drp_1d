@@ -1336,9 +1336,45 @@ Int32 COperatorLineModel::SaveResults(const CSpectrum &spectrum,
             contreest_iterations = 0;
         }
 
-        m_model->SetVelocityEmission(m_secondpass_parameters_extremaResult.Elv[index_extremum]);
-        m_model->SetVelocityAbsorption(m_secondpass_parameters_extremaResult.Alv[index_extremum]);
+        if(m_enableWidthFitByGroups)
+        {
+            std::vector<std::vector<Int32>> idxVelfitGroups;
+            //absorption
+            idxVelfitGroups.clear();
+            idxVelfitGroups = m_model->GetModelVelfitGroups(
+                        CRay::nType_Absorption);
+            std::string alv_list_str = "";
+            for (Int32 kgroup = 0; kgroup < idxVelfitGroups.size(); kgroup++)
+            {
+                for (Int32 ke = 0; ke < idxVelfitGroups[kgroup].size(); ke++)
+                {
+                    m_model->SetVelocityAbsorptionOneElement(m_secondpass_parameters_extremaResult.GroupsALv[i][kgroup],
+                                                             idxVelfitGroups[kgroup][ke]);
+                }
+                alv_list_str.append(boost::str(boost::format("%.2f, ") %m_secondpass_parameters_extremaResult.GroupsALv[i][kgroup]));
+            }
+            Log.LogInfo("    Operator-Linemodel: saveResults with groups alv=%s", alv_list_str.c_str());
+            //emission
+            idxVelfitGroups.clear();
+            idxVelfitGroups = m_model->GetModelVelfitGroups(
+                        CRay::nType_Emission);
+            std::string elv_list_str = "";
+            for (Int32 kgroup = 0; kgroup < idxVelfitGroups.size(); kgroup++)
+            {
+                for (Int32 ke = 0; ke < idxVelfitGroups[kgroup].size(); ke++)
+                {
+                    m_model->SetVelocityEmissionOneElement(m_secondpass_parameters_extremaResult.GroupsELv[i][kgroup],
+                                                             idxVelfitGroups[kgroup][ke]);
+                }
+                elv_list_str.append(boost::str(boost::format("%.2f") %m_secondpass_parameters_extremaResult.GroupsELv[i][kgroup]));
+            }
+            Log.LogInfo("    Operator-Linemodel: saveResults with groups elv=%s", elv_list_str.c_str());
 
+        }else
+        {
+            m_model->SetVelocityEmission(m_secondpass_parameters_extremaResult.Elv[index_extremum]);
+            m_model->SetVelocityAbsorption(m_secondpass_parameters_extremaResult.Alv[index_extremum]);
+        }
 
         if (!mlmfit_modelInfoSave)
         {
@@ -2062,7 +2098,7 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
                                         m_model ->SetVelocityAbsorptionOneElement( vOptim,
                                                                                    idxVelfitGroups[kgroup][ke]);
                                     }
-                                    //todo: elv/alv fitting per fitting groups: should be saved in m_secondpass_parameters_extremaResult[i].GroupsLv
+                                    m_secondpass_parameters_extremaResult.GroupsALv[i][kgroup] = vOptim;
                                 } else
                                 {
                                     m_model->SetVelocityAbsorption(vOptim);
@@ -2079,7 +2115,7 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
                                         m_model->SetVelocityEmissionOneElement( vOptim,
                                                                                 idxVelfitGroups[kgroup][ke]);
                                     }
-                                    //todo: elv/alv fitting per fitting groups: should be saved in m_secondpass_parameters_extremaResult[i].GroupsLv
+                                    m_secondpass_parameters_extremaResult.GroupsELv[i][kgroup] = vOptim;
                                 } else
                                 {
                                     m_model->SetVelocityEmission(vOptim);
@@ -2100,7 +2136,14 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
         }else{
             m_secondpass_parameters_extremaResult.Elv[i] = m_model->GetVelocityEmission();
             m_secondpass_parameters_extremaResult.Alv[i] = m_model->GetVelocityAbsorption();
-
+            for(Int32 kg=0; kg<m_secondpass_parameters_extremaResult.GroupsELv[i].size(); kg++)
+            {
+                m_secondpass_parameters_extremaResult.GroupsELv[i][kg] = m_secondpass_parameters_extremaResult.Elv[i];
+            }
+            for(Int32 kg=0; kg<m_secondpass_parameters_extremaResult.GroupsALv[i].size(); kg++)
+            {
+                m_secondpass_parameters_extremaResult.GroupsALv[i][kg] = m_secondpass_parameters_extremaResult.Alv[i];
+            }
         }
     }
 
@@ -2134,11 +2177,50 @@ Int32 COperatorLineModel::RecomputeAroundCandidates(TPointList input_extremumLis
             Log.LogInfo("  Operator-Linemodel: Second pass - recompute around Candidate #%d", i);
             Log.LogInfo("  Operator-Linemodel: ---------- /\\ ---------- ---------- ---------- Candidate #%d", i);
             Float64 z = input_extremumList[i].X;
-            m_model->SetVelocityEmission(m_secondpass_parameters_extremaResult.Elv[i]);
-            m_model->SetVelocityAbsorption(m_secondpass_parameters_extremaResult.Alv[i]);
-            Log.LogInfo("    Operator-Linemodel: recompute with elv=%.1f, alv=%.1f",
-                        m_model->GetVelocityEmission(),
-                        m_model->GetVelocityAbsorption());
+
+            if(m_enableWidthFitByGroups)
+            {
+                std::vector<std::vector<Int32>> idxVelfitGroups;
+                //absorption
+                idxVelfitGroups.clear();
+                idxVelfitGroups = m_model->GetModelVelfitGroups(
+                            CRay::nType_Absorption);
+                std::string alv_list_str = "";
+                for (Int32 kgroup = 0; kgroup < idxVelfitGroups.size(); kgroup++)
+                {
+                    for (Int32 ke = 0; ke < idxVelfitGroups[kgroup].size(); ke++)
+                    {
+                        m_model->SetVelocityAbsorptionOneElement(m_secondpass_parameters_extremaResult.GroupsALv[i][kgroup],
+                                                                 idxVelfitGroups[kgroup][ke]);
+                    }
+                    alv_list_str.append(boost::str(boost::format("%.2f, ") %m_secondpass_parameters_extremaResult.GroupsALv[i][kgroup]));
+                }
+                Log.LogInfo("    Operator-Linemodel: recompute with groups alv=%s", alv_list_str.c_str());
+                //emission
+                idxVelfitGroups.clear();
+                idxVelfitGroups = m_model->GetModelVelfitGroups(
+                            CRay::nType_Emission);
+                std::string elv_list_str = "";
+                for (Int32 kgroup = 0; kgroup < idxVelfitGroups.size(); kgroup++)
+                {
+                    for (Int32 ke = 0; ke < idxVelfitGroups[kgroup].size(); ke++)
+                    {
+                        m_model->SetVelocityEmissionOneElement(m_secondpass_parameters_extremaResult.GroupsELv[i][kgroup],
+                                                                 idxVelfitGroups[kgroup][ke]);
+                    }
+                    elv_list_str.append(boost::str(boost::format("%.2f") %m_secondpass_parameters_extremaResult.GroupsELv[i][kgroup]));
+                }
+                Log.LogInfo("    Operator-Linemodel: recompute with groups elv=%s", elv_list_str.c_str());
+
+            }else
+            {
+                m_model->SetVelocityEmission(m_secondpass_parameters_extremaResult.Elv[i]);
+                m_model->SetVelocityAbsorption(m_secondpass_parameters_extremaResult.Alv[i]);
+                Log.LogInfo("    Operator-Linemodel: recompute with elv=%.1f, alv=%.1f",
+                            m_model->GetVelocityEmission(),
+                            m_model->GetVelocityAbsorption());
+            }
+
 
             // fix some fitcontinuum values for this extremum
             if(tplfit_option==2 || tplfit_option==3)

@@ -64,7 +64,8 @@ public:
     //line width
     std::vector<Float64>      Elv;   //emission line width
     std::vector<Float64>      Alv;   //absorption line width
-    std::vector<std::vector<Float64>>      GroupsLv;   //per fitting group line width
+    std::vector<std::vector<Float64>>      GroupsELv;   //per fitting group line width , EL
+    std::vector<std::vector<Float64>>      GroupsALv;   //per fitting group line width , AL
 
 
     //template continuum

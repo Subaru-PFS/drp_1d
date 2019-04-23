@@ -57,7 +57,13 @@ void CLineModelExtremaResult::Resize(Int32 size)
 
     Elv.resize(size);
     Alv.resize(size);
-    GroupsLv.resize(size);
+    GroupsELv.resize(size);
+    GroupsALv.resize(size);
+    for(Int32 ke=0; ke<size; ke++)
+    {
+        GroupsELv[ke] = std::vector<Float64>(250, -1);   //WARNING: hardcoded ngroups max
+        GroupsALv[ke] = std::vector<Float64>(250, -1);   //WARNING: hardcoded ngroups max
+    }
 
     FittedTplName.resize(size);
     FittedTplAmplitude.resize(size);

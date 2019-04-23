@@ -688,6 +688,10 @@ void CMultiLine::fitAmplitudeAndLambdaOffset(const CSpectrumSpectralAxis& spectr
         if(atLeastOneOffsetToFit)
         {
             Float64 offset = min+step*idxBestMerit;
+            if(m_verbose)
+            {
+                Log.LogDebug( "    multiline: offset best found=%f", offset);
+            }
             for(Int32 iR=0; iR<nRays; iR++)
             {
                 if(m_Rays[iR].GetOffsetFitEnabled())
