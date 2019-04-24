@@ -1052,8 +1052,8 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, I
         //redo the fit only for the current template continuum, IGM/ISM will be fitted accoring to m_fitContinuum_igm/m_fitContinuum_dustfit
         //todo: fix the ISM/IGM to the previously fitted values
 
-        //bestFitRedshift = m_Redshift;
-        bestFitRedshift = m_fitContinuum_tplFitRedshift;
+        bestFitRedshift = m_Redshift; //using aligned redshift Lines/Continuum
+        //bestFitRedshift = m_fitContinuum_tplFitRedshift; //using redishift from previous estimations
 
 
         //hardcoded parameters
