@@ -38,7 +38,6 @@ public:
     CRayCatalog::TRayVector GetRestLinesList( const Int32 index );
     Int32 GetCatalogsCount();
     std::vector<Float64> getCatalogsPriors();
-    std::vector<CPdfz::SPriorZ> getCatalogsPriorsPz();
     std::string GetCatalogName(Int32 idx);
     Int32 GetIsmIndex(Int32 idx);
     Float64 GetIsmCoeff(Int32 idx);
@@ -60,7 +59,6 @@ private:
     std::vector<Float64> m_ELvelocities;
     std::vector<Float64> m_ABSvelocities;
     std::vector<Float64> m_Priors;
-    std::vector<CPdfz::SPriorZ> m_PriorsPz;
     std::vector<Int32> m_IsmIndexes;
 
     CSpectrumFluxCorrectionCalzetti* m_ismCorrectionCalzetti;

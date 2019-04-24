@@ -22,13 +22,13 @@ BOOST_AUTO_TEST_CASE(Instance){
   catalogIndexes.push_back(1);
   catalogIndexes.push_back(0);
 
-  CMultiLine element = CMultiLine(rs,  "fixed",  0.9, 1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes);
+  CMultiLine element = CMultiLine(rs,  "fixed",  8.0, 0.9, 1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes);
   BOOST_CHECK_CLOSE( 1.0, element.GetVelocityEmission(), 0.01 );
   BOOST_CHECK_CLOSE( 1.1, element.GetVelocityAbsorption(), 0.01 );
   BOOST_CHECK(element.GetElementTypeTag() == "CMultiLine" );
   BOOST_CHECK(element.GetSize()==2);
 
-  BOOST_CHECK_THROW(CMultiLine(rs,  "foobar",  0.9, 1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes),
+  BOOST_CHECK_THROW(CMultiLine(rs,  "foobar",  8.0, 0.9, 1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes),
 		    std::runtime_error);
 
   element.SetVelocityEmission(2.0);
@@ -66,11 +66,11 @@ BOOST_AUTO_TEST_CASE(GetLineWidth){
     catalogIndexes.push_back(1);
     catalogIndexes.push_back(0);
 
-    CMultiLine elementID = CMultiLine(rs,  "instrumentdriven",  0.9, 1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes);
-    CMultiLine elementfixed = CMultiLine(rs,  "fixed",  0.9, 1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes);
-    CMultiLine elementcombined = CMultiLine(rs,  "combined",  0.9, 1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes);
-    CMultiLine elementVD = CMultiLine(rs,  "velocitydriven",  0.9, 1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes);
-    CMultiLine elementNip = CMultiLine(rs,  "nispsim2016",  0.9, 1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes);
+    CMultiLine elementID = CMultiLine(rs,  "instrumentdriven", 8.0, 0.9, 1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes);
+    CMultiLine elementfixed = CMultiLine(rs,  "fixed", 8.0, 0.9, 1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes);
+    CMultiLine elementcombined = CMultiLine(rs,  "combined", 8.0, 0.9, 1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes);
+    CMultiLine elementVD = CMultiLine(rs,  "velocitydriven", 8.0, 0.9, 1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes);
+    CMultiLine elementNip = CMultiLine(rs,  "nispsim2016", 8.0, 0.9, 1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes);
 
     BOOST_CHECK_CLOSE( 3346.06, elementID.GetLineWidth(10000., 1., true, CRay::NONE), 0.001);
     BOOST_CHECK_CLOSE( 3346.06, elementID.GetLineWidth(10000., 1., false, CRay::NONE),0.001);
@@ -95,7 +95,7 @@ BOOST_AUTO_TEST_CASE(GetLineProfile){
   std::vector<UInt32> catalogIndexes;
   catalogIndexes.push_back(1);
   catalogIndexes.push_back(0);
-  CMultiLine element = CMultiLine(rs,  "combined",  0.9, 1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes);
+  CMultiLine element = CMultiLine(rs,  "combined", 8.0, 0.9, 1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes);
 
   BOOST_CHECK_CLOSE(0.237755, element.GetLineProfile(CRay::SYM,6564.61, 6568., 2. ), 0.001);
   BOOST_CHECK_CLOSE(0.944159, element.GetLineProfile(CRay::SYMXL,6564.61, 6568., 2. ), 0.001);
@@ -117,7 +117,7 @@ BOOST_AUTO_TEST_CASE(GetLineProfileDerivSigma){
   std::vector<UInt32> catalogIndexes;
   catalogIndexes.push_back(1);
   catalogIndexes.push_back(0);
-  CMultiLine element = CMultiLine(rs,  "velocitydriven",  0.9, 1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes);
+  CMultiLine element = CMultiLine(rs,  "velocitydriven", 8.0, 0.9, 1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes);
 
   BOOST_CHECK_CLOSE(0.34153872866337925, element.GetLineProfileDerivSigma(CRay::SYM, 6564.61, 6568., 2. ), 0.001);
   BOOST_CHECK_CLOSE(0.010850371757731672, element.GetLineProfileDerivSigma(CRay::SYMXL, 6564.61, 6568., 2. ), 0.001);
@@ -137,7 +137,7 @@ BOOST_AUTO_TEST_CASE(GetNSigmaSupport){
   std::vector<UInt32> catalogIndexes;
   catalogIndexes.push_back(1);
   catalogIndexes.push_back(0);
-  CMultiLine element = CMultiLine(rs,  "nispsim2016",  0.9, 1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes);
+  CMultiLine element = CMultiLine(rs,  "nispsim2016", 8.0, 0.9, 1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes);
 
 
   BOOST_CHECK_CLOSE(8., element.GetNSigmaSupport(CRay::SYM), 0.001);

@@ -40,12 +40,14 @@ public:
     CLineModelElementList(const CSpectrum& spectrum,
                           const CSpectrum& spectrumContinuum,
                           const CTemplateCatalog& tplCatalog,
+                          const CTemplateCatalog& orthoTplCatalog,
                           const TStringList& tplCategoryList,
                           const std::string calibrationPath,
                           const CRayCatalog::TRayVector& restRayList,
                           const std::string& opt_fittingmethod,
                           const std::string &opt_continuumcomponent,
                           const std::string& lineWidthType,
+                          const Float64 nsigmasupport,
                           const Float64 resolution,
                           const Float64 velocityEmission,
                           const Float64 velocityAbsorption,
@@ -126,7 +128,6 @@ public:
     Float64 getTplshape_bestMtm();
     Int32 getTplshape_count();
     std::vector<Float64> getTplshape_priors();
-    std::vector<CPdfz::SPriorZ> getTplshape_priorsPz();
     std::vector<Float64> GetChisquareTplshape();
     std::vector<Float64> GetPriorLinesTplshape();
     std::vector<Float64> GetScaleMargTplshape();
@@ -357,6 +358,7 @@ private:
     Float64 m_ContinuumWinsize;
     std::string m_ContinuumComponent;
     std::string m_LineWidthType;
+    Float64 m_NSigmaSupport;
     Float64 m_resolution;
     Float64 m_velocityEmission;
     Float64 m_velocityAbsorption;
@@ -375,6 +377,7 @@ private:
 
     std::shared_ptr<CSpectrum> m_inputSpc;
     CTemplateCatalog m_tplCatalog;
+    CTemplateCatalog m_orthoTplCatalog;
     TStringList m_tplCategoryList;
     std::string m_tplshapeBestTplName;
     Float64 m_tplshapeBestTplIsmCoeff;
@@ -385,10 +388,10 @@ private:
     CPriorHelper* m_tplshape_priorhelper;
 
     COperatorChiSquare2* m_chiSquareOperator;
-    Int32 m_fitContinuum_dustfit;
-    Int32 m_fitContinuum_igm;
-    Int32 m_fitContinuum_outsidelinesmask;
-    Int32 m_fitContinuum_observedFrame;
+    Int32 m_secondpass_fitContinuum_dustfit;
+    Int32 m_secondpass_fitContinuum_igm;
+    Int32 m_secondpass_fitContinuum_outsidelinesmask;
+    Int32 m_secondpass_fitContinuum_observedFrame;
 
     CTemplatesFitStore* m_fitContinuum_tplfitStore;
     Int32 m_fitContinuum_option;

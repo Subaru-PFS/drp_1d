@@ -32,6 +32,7 @@ BOOST_AUTO_TEST_CASE(Constructor)
   Int32 lineTypeFilter = CRay::nType_Emission;
   Int32 forceFilter = CRay::nForce_Strong;
   string opt_lineWidthType = "velocitydriven";
+  Float64 opt_nsigmasupport = 8.;
   Float64 opt_resolution = 2350; //unused with velocity driven linewidth
   Float64 initVelocity = 50.0;
   Float64 opt_velocityEmission = initVelocity;
@@ -71,18 +72,18 @@ BOOST_AUTO_TEST_CASE(Constructor)
 
   // no continuum
   CLineModelElementList model_nocontinuum(spectrum, spectrumContinuum,
-					  tplCatalog, tplCategories,
+                                          tplCatalog, tplCatalog, tplCategories,
 					  calibrationPath.c_str(), lineList,
 					  "lmfit", "nocontinuum",
-					  opt_lineWidthType, opt_resolution, opt_velocityEmission,
+                                          opt_lineWidthType, opt_nsigmasupport, opt_resolution, opt_velocityEmission,
 					  opt_velocityAbsorption, opt_rules, opt_rigidity);
 
   // continuum from spectrum
   CLineModelElementList model_fromspectrum(spectrum, spectrumContinuum,
-					   tplCatalog, tplCategories,
+                                           tplCatalog, tplCatalog, tplCategories,
 					   calibrationPath.c_str(), lineList,
 					   "lmfit", "fromspectrum",
-					   opt_lineWidthType, opt_resolution, opt_velocityEmission,
+                                           opt_lineWidthType, opt_nsigmasupport, opt_resolution, opt_velocityEmission,
 					   opt_velocityAbsorption, opt_rules, opt_rigidity);
 
   model_fromspectrum.fit(0.5, range, solution, c_solution, iterations, false);
@@ -90,10 +91,10 @@ BOOST_AUTO_TEST_CASE(Constructor)
   // tplfit
   BOOST_MESSAGE("TODO : tplfit doesn't work. Bad Meiksin generation ?");
   CLineModelElementList model_tplfit(spectrum, spectrumContinuum,
-   				     tplCatalog, tplCategories,
+                                     tplCatalog, tplCatalog, tplCategories,
    				     calibrationPath.c_str(), lineList,
    				     "lmfit", "tplfit",
-   				     opt_lineWidthType, opt_resolution, opt_velocityEmission,
+                                     opt_lineWidthType, opt_nsigmasupport, opt_resolution, opt_velocityEmission,
    				     opt_velocityAbsorption, opt_rules, opt_rigidity);
 
   /*

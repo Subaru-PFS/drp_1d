@@ -15,7 +15,7 @@ namespace bfs = boost::filesystem;
 
 using namespace NSEpic;
 
-CLineModelElement::CLineModelElement(const std::string& widthType, const Float64 resolution, const Float64 velocityEmission, const Float64 velocityAbsorption)
+CLineModelElement::CLineModelElement(const std::string& widthType, const Float64 nsigmasupport, const Float64 resolution, const Float64 velocityEmission, const Float64 velocityAbsorption)
 {
     if( widthType == "instrumentdriven"){
         m_LineWidthType = INSTRUMENTDRIVEN;
@@ -33,6 +33,8 @@ CLineModelElement::CLineModelElement(const std::string& widthType, const Float64
         Log.LogError("Unknown LineWidthType %s", widthType.c_str());
         throw std::runtime_error("Unknown LineWidthType");
     }
+
+    m_nsigmasupport = nsigmasupport;
 
     //m_Resolution = 250.0 * (1.0 + 0.0); //dr=+0.5 found empirically on VVDS DEEP 651
     m_Resolution = resolution;
@@ -451,7 +453,7 @@ Float64 CLineModelElement::GetLineProfileDerivSigma(CRay::TProfile profile, Floa
 
 Float64 CLineModelElement::GetNSigmaSupport(CRay::TProfile profile)
 {
-    static Float64 nominal = 8;
+    Float64 nominal = m_nsigmasupport;
     Float64 val=nominal;
 
     switch (profile) {

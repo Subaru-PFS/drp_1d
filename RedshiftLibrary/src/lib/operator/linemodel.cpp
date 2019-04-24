@@ -186,6 +186,7 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
                 opt_fittingmethod,
                 opt_continuumcomponent,
                 opt_lineWidthType,
+                m_linesmodel_nsigmasupport,
                 opt_resolution,
                 opt_velocityEmission,
                 opt_velocityAbsorption,
@@ -204,12 +205,14 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
                                                          spectrum,
                                                          spectrumContinuum,
                                                          tplCatalog,
+                                                         *orthoTplCatalog,
                                                          tplCategoryList,
                                                          opt_calibrationPath,
                                                          restRayList,
                                                          opt_fittingmethod,
                                                          opt_continuumcomponent,
                                                          opt_lineWidthType,
+                                                         m_linesmodel_nsigmasupport,
                                                          opt_resolution,
                                                          opt_velocityEmission,
                                                          opt_velocityAbsorption,
@@ -2473,7 +2476,8 @@ Int32 COperatorLineModel::RecomputeAroundCandidates(TPointList input_extremumLis
 }
 
 Int32 COperatorLineModel::Init(const CSpectrum &spectrum,
-                               const TFloat64List &redshifts)
+                               const TFloat64List &redshifts,
+                               const Float64 nsigmasupport)
 {
     // initialize empty results so that it can be returned anyway in case of an
     // error
@@ -2489,6 +2493,9 @@ Int32 COperatorLineModel::Init(const CSpectrum &spectrum,
     // sort the redshifts
     m_sortedRedshifts = redshifts;
     std::sort(m_sortedRedshifts.begin(), m_sortedRedshifts.end());
+
+    // set the nsigmasupport
+    m_linesmodel_nsigmasupport = nsigmasupport;
 
     return 0;
 }

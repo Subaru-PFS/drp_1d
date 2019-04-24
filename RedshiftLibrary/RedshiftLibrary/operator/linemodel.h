@@ -67,7 +67,7 @@ public:
                                               const Float64 &opt_manvelfit_dzmax=6e-4,
                                               const Float64 &opt_manvelfit_dzstep=1e-4);
 
-    Int32 Init(const CSpectrum& spectrum, const TFloat64List& redshifts);
+    Int32 Init(const CSpectrum& spectrum, const TFloat64List& redshifts, const Float64 nsigmasupport);
     std::shared_ptr<COperatorResult> getResult();
     std::shared_ptr<CLineModelExtremaResult> GetFirstpassExtremaResult() const;
 
@@ -212,6 +212,8 @@ public:
 
 
     bool m_enableWidthFitByGroups = false;
+
+    Float64 m_linesmodel_nsigmasupport;
 
     Int32 m_maxModelSaveCount;
     Float64 m_secondPass_extensionradius = 0.005;

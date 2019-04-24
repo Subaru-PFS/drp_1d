@@ -20,14 +20,6 @@ class CPdfz
 
 public:
 
-    struct SPriorZ
-    {
-        Float64 amp=-1.0;
-        Float64 mu=-1.0;
-        Float64 sigma=-1.0;
-        Float64 p0=-1.0;
-    };
-
     CPdfz();
     ~CPdfz();
 

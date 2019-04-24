@@ -51,12 +51,14 @@ using namespace std;
 CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
                           const CSpectrum &spectrumContinuum,
                           const CTemplateCatalog& tplCatalog,
+                          const CTemplateCatalog& orthoTplCatalog,
                           const TStringList& tplCategoryList,
                           const std::string calibrationPath,
                           const CRayCatalog::TRayVector& restRayList,
                           const std::string& opt_fittingmethod,
                           const std::string& opt_continuumcomponent,
                           const std::string& widthType,
+                          const Float64 nsigmasupport,
                           const Float64 resolution,
                           const Float64 velocityEmission,
                           const Float64 velocityAbsorption,
@@ -66,11 +68,33 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
 {
     //members for chi2 continuum fitting
     m_tplCatalog = tplCatalog;
+    m_orthoTplCatalog = orthoTplCatalog;
     m_tplCategoryList = tplCategoryList;
+
+    //check if tplcat and orthoTplCat are aligned
+    for( UInt32 i=0; i<m_tplCategoryList.size(); i++ )
+    {
+        std::string category = m_tplCategoryList[i];
+
+        for( UInt32 j=0; j<m_tplCatalog.GetTemplateCount( category ); j++ )
+        {
+            const CTemplate& tpl = m_tplCatalog.GetTemplate( category, j );
+            const CTemplate& orthotpl = m_orthoTplCatalog.GetTemplate( category, j );
+
+            if(tpl.GetName()!=orthotpl.GetName())
+            {
+                Log.LogError("Failed Init Element Model. Tplcat and orthotplcat are not aligned for category=%s, i=%d", category.c_str(), j);
+                throw runtime_error( "Failed Init Element Model. Tplcat and orthotplcat are not aligned");
+            }
+        }
+    }
+
+
     m_inputSpc = std::shared_ptr<CSpectrum>( new CSpectrum(spectrum) );
 
     m_ContinuumComponent = opt_continuumcomponent;
     m_LineWidthType = widthType;
+    m_NSigmaSupport = nsigmasupport;
     m_resolution = resolution;
     m_velocityEmission = velocityEmission;
     m_velocityAbsorption = velocityAbsorption;
@@ -82,10 +106,10 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
     m_calibrationPath = calibrationPath;
 
     //tplfit continuum option: warning, these options not used when using the precomputed continuum fit store (which is recommended)
-    m_fitContinuum_dustfit = -10;
-    m_fitContinuum_igm = 1;
-    m_fitContinuum_outsidelinesmask = 1;
-    m_fitContinuum_observedFrame = 0;
+    m_secondpass_fitContinuum_dustfit = -10;
+    m_secondpass_fitContinuum_igm = 1;
+    m_secondpass_fitContinuum_outsidelinesmask = 0; //hardcoded deactivated because ortho templates are used
+    m_secondpass_fitContinuum_observedFrame = 0;
 
     //m_nominalWidthDefaultEmission = 1.15;// suited to new pfs simulations
     m_nominalWidthDefaultEmission = 13.4;// euclid 1 px
@@ -162,12 +186,12 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
         if(m_observeGridContinuumFlux == NULL){
           throw runtime_error("unable to allocate m_observeGridContinuumFlux");
         }
-        if(0)
+        if(1)
         {
-            Log.LogInfo( "Elementlist: fitContinuum_dustfit = %d", m_fitContinuum_dustfit );
-            Log.LogInfo( "Elementlist: fitContinuum_igm = %d", m_fitContinuum_igm );
-            Log.LogInfo( "Elementlist: fitContinuum_outsidelinesmask = %d", m_fitContinuum_outsidelinesmask );
-            Log.LogInfo( "Elementlist: fitContinuum_observedFrame = %d", m_fitContinuum_observedFrame );
+            Log.LogInfo( "Elementlist: secondpass fitContinuum_dustfit = %d", m_secondpass_fitContinuum_dustfit );
+            Log.LogInfo( "Elementlist: secondpass fitContinuum_igm = %d", m_secondpass_fitContinuum_igm );
+            Log.LogInfo( "Elementlist: secondpass fitContinuum_outsidelinesmask = %d", m_secondpass_fitContinuum_outsidelinesmask );
+            Log.LogInfo( "Elementlist: secondpass fitContinuum_observedFrame = %d", m_secondpass_fitContinuum_observedFrame );
         }
     }
 
@@ -772,7 +796,7 @@ void CLineModelElementList::LoadCatalog(const CRayCatalog::TRayVector& restRayLi
         }
         if(lines.size()>0)
         {
-            m_Elements.push_back(boost::shared_ptr<CLineModelElement> (new CMultiLine(lines, m_LineWidthType, m_resolution, m_velocityEmission, m_velocityAbsorption, amps, m_nominalWidthDefaultAbsorption, inds)));
+            m_Elements.push_back(boost::shared_ptr<CLineModelElement> (new CMultiLine(lines, m_LineWidthType, m_NSigmaSupport, m_resolution, m_velocityEmission, m_velocityAbsorption, amps, m_nominalWidthDefaultAbsorption, inds)));
         }
     }
 }
@@ -792,7 +816,7 @@ void CLineModelElementList::LoadCatalogOneMultiline(const CRayCatalog::TRayVecto
 
     if(lines.size()>0)
     {
-        m_Elements.push_back(boost::shared_ptr<CLineModelElement> (new CMultiLine(lines, m_LineWidthType, m_resolution, m_velocityEmission, m_velocityAbsorption, amps, m_nominalWidthDefaultAbsorption, inds)));
+        m_Elements.push_back(boost::shared_ptr<CLineModelElement> (new CMultiLine(lines, m_LineWidthType, m_NSigmaSupport, m_resolution, m_velocityEmission, m_velocityAbsorption, amps, m_nominalWidthDefaultAbsorption, inds)));
     }
 }
 
@@ -816,7 +840,7 @@ void CLineModelElementList::LoadCatalogTwoMultilinesAE(const CRayCatalog::TRayVe
 
         if(lines.size()>0)
         {
-            m_Elements.push_back(boost::shared_ptr<CLineModelElement> (new CMultiLine(lines, m_LineWidthType, m_resolution, m_velocityEmission, m_velocityAbsorption, amps, m_nominalWidthDefaultAbsorption, inds)));
+            m_Elements.push_back(boost::shared_ptr<CLineModelElement> (new CMultiLine(lines, m_LineWidthType, m_NSigmaSupport, m_resolution, m_velocityEmission, m_velocityAbsorption, amps, m_nominalWidthDefaultAbsorption, inds)));
         }
     }
 }
@@ -861,7 +885,7 @@ void CLineModelElementList::LoadFitContinuumOneTemplate(const TFloat64Range& lam
   Float64 fitLogprior = 0.0;
   Float64 overlapThreshold = 1.0;
 
-  bool ignoreLinesSupport=m_fitContinuum_outsidelinesmask;
+  bool ignoreLinesSupport=m_secondpass_fitContinuum_outsidelinesmask;
   std::vector<CMask> maskList;
   if(ignoreLinesSupport){
       maskList.resize(1);
@@ -869,8 +893,8 @@ void CLineModelElementList::LoadFitContinuumOneTemplate(const TFloat64Range& lam
   }
   std::vector<Float64> redshifts(1, m_Redshift);
   std::string opt_interp = "precomputedfinegrid"; //"lin";
-  Int32 opt_extinction = m_fitContinuum_igm;
-  Int32 opt_dustFit = m_fitContinuum_dustfit;
+  Int32 opt_extinction = m_secondpass_fitContinuum_igm;
+  Int32 opt_dustFit = m_secondpass_fitContinuum_dustfit;
 
   if(m_observeGridContinuumFlux == NULL)
   {
@@ -931,11 +955,11 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, I
     if(m_fitContinuum_option==0){
         //hardcoded parameters
         std::string opt_interp = "lin"; //"precomputedfinegrid"; //
-        Int32 opt_extinction = m_fitContinuum_igm;
-        Int32 opt_dustFit = m_fitContinuum_dustfit;
+        Int32 opt_extinction = m_secondpass_fitContinuum_igm;
+        Int32 opt_dustFit = m_secondpass_fitContinuum_dustfit;
         Float64 overlapThreshold = 1.0;
 
-        bool ignoreLinesSupport=m_fitContinuum_outsidelinesmask;
+        bool ignoreLinesSupport=m_secondpass_fitContinuum_outsidelinesmask;
         std::vector<CMask> maskList;
         if(ignoreLinesSupport){
             maskList.resize(1);
@@ -943,7 +967,7 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, I
         }
 
         std::vector<Float64> redshifts(1, m_Redshift);
-        if(m_fitContinuum_observedFrame){
+        if(m_secondpass_fitContinuum_observedFrame){
             redshifts[0] = 0.0;
         }
 
@@ -951,9 +975,9 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, I
         {
             std::string category = m_tplCategoryList[i];
 
-            for( UInt32 j=0; j<m_tplCatalog.GetTemplateCount( category ); j++ )
+            for( UInt32 j=0; j<m_orthoTplCatalog.GetTemplateCount( category ); j++ )
             {
-                const CTemplate& tpl = m_tplCatalog.GetTemplate( category, j );
+                const CTemplate& tpl = m_orthoTplCatalog.GetTemplate( category, j );
 
                 Float64 merit = DBL_MAX;
                 Float64 fitAmplitude = -1.0;
@@ -1025,15 +1049,20 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, I
         bestFitRedshift = m_fitContinuum_tplFitRedshift;
         bestFitPolyCoeffs = m_fitContinuum_tplFitPolyCoeffs;
     }else if(m_fitContinuum_option==3){
-        //redo the fit only for the current template/ISM/IGM continuum
+        //redo the fit only for the current template continuum, IGM/ISM will be fitted accoring to m_fitContinuum_igm/m_fitContinuum_dustfit
+        //todo: fix the ISM/IGM to the previously fitted values
+
+        //bestFitRedshift = m_Redshift;
+        bestFitRedshift = m_fitContinuum_tplFitRedshift;
+
 
         //hardcoded parameters
         std::string opt_interp = "lin"; //"precomputedfinegrid"; //
-        Int32 opt_extinction = m_fitContinuum_igm;
-        Int32 opt_dustFit = m_fitContinuum_dustfit;
+        Int32 opt_extinction = m_secondpass_fitContinuum_igm;
+        Int32 opt_dustFit = m_secondpass_fitContinuum_dustfit;
         Float64 overlapThreshold = 1.0;
 
-        bool ignoreLinesSupport=m_fitContinuum_outsidelinesmask;
+        bool ignoreLinesSupport=m_secondpass_fitContinuum_outsidelinesmask;
         std::vector<CMask> maskList;
         if(ignoreLinesSupport){
             maskList.resize(1);
@@ -1041,7 +1070,7 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, I
         }
 
         std::vector<Float64> redshifts(1, m_Redshift);
-        if(m_fitContinuum_observedFrame){
+        if(m_secondpass_fitContinuum_observedFrame){
             redshifts[0] = 0.0;
         }
 
@@ -1049,9 +1078,9 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, I
         {
             std::string category = m_tplCategoryList[i];
 
-            for( UInt32 j=0; j<m_tplCatalog.GetTemplateCount( category ); j++ )
+            for( UInt32 j=0; j<m_orthoTplCatalog.GetTemplateCount( category ); j++ )
             {
-                const CTemplate& tpl = m_tplCatalog.GetTemplate( category, j );
+                const CTemplate& tpl = m_orthoTplCatalog.GetTemplate( category, j );
 
                 if(tpl.GetName()==m_fitContinuum_tplName)
                 {
@@ -1103,6 +1132,7 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, I
         //Log.LogInfo( "For z=%.5f : Best continuum tpl found: %s", m_Redshift, bestTplName.c_str());
         //
         //Retrieve the best template
+        bool foundBestTemplate = false;
         for( UInt32 i=0; i<m_tplCategoryList.size(); i++ )
         {
             std::string category = m_tplCategoryList[i];
@@ -1113,6 +1143,7 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, I
 
                 if(tpl.GetName()==bestTplName)
                 {
+                    foundBestTemplate = true;
                     m_fitContinuum_tplFitAmplitude = bestFitAmplitude;
                     m_fitContinuum_tplFitMerit = bestMerit;
                     m_fitContinuum_tplFitDustCoeff = bestFitDustCoeff;
@@ -1152,6 +1183,11 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, I
                     break;
                 }
             }
+        }
+        if(!foundBestTemplate)
+        {
+            Log.LogError("Failed to load-fit continuum. Failed to find best template=%s", bestTplName.c_str());
+            throw runtime_error( "Failed to load and fit continuum. Failed to find best template by name");
         }
     }else{
         Log.LogError("Failed to load-fit continuum for cfitopt=%d", m_fitContinuum_option);
@@ -1635,16 +1671,6 @@ std::vector<Float64> CLineModelElementList::getTplshape_priors()
     return m_CatalogTplShape->getCatalogsPriors();
 }
 
-std::vector<CPdfz::SPriorZ> CLineModelElementList::getTplshape_priorsPz()
-{
-    if(m_rigidity!="tplshape")
-    {
-        std::vector<CPdfz::SPriorZ> dumb;
-        return dumb;
-    }
-    return m_CatalogTplShape->getCatalogsPriorsPz();
-}
-
 std::vector<Float64> CLineModelElementList::GetChisquareTplshape()
 {
     return m_ChisquareTplshape;
@@ -1839,7 +1865,7 @@ Float64 CLineModelElementList::fit(Float64 redshift,
         }
         if(m_ContinuumComponent != "nocontinuum"){
             //prepare the continuum
-            if( (m_ContinuumComponent == "tplfit" || m_ContinuumComponent == "tplfitauto") && m_fitContinuum_observedFrame){
+            if( (m_ContinuumComponent == "tplfit" || m_ContinuumComponent == "tplfitauto") && m_secondpass_fitContinuum_observedFrame){
                 PrepareContinuum(0.0);
             }else{
                 PrepareContinuum(redshift);
@@ -2669,10 +2695,10 @@ void CLineModelElementList::SetFittingMethod(std::string fitMethod)
         }
         if(0)
         {
-            Log.LogInfo( "Elementlist: fitContinuum_dustfit = %d", m_fitContinuum_dustfit );
-            Log.LogInfo( "Elementlist: fitContinuum_igm = %d", m_fitContinuum_igm );
-            Log.LogInfo( "Elementlist: fitContinuum_outsidelinesmask = %d", m_fitContinuum_outsidelinesmask );
-            Log.LogInfo( "Elementlist: fitContinuum_observedFrame = %d", m_fitContinuum_observedFrame );
+            Log.LogInfo( "Elementlist: secondpass fitContinuum_dustfit = %d", m_secondpass_fitContinuum_dustfit );
+            Log.LogInfo( "Elementlist: secondpass fitContinuum_igm = %d", m_secondpass_fitContinuum_igm );
+            Log.LogInfo( "Elementlist: secondpass fitContinuum_outsidelinesmask = %d", m_secondpass_fitContinuum_outsidelinesmask );
+            Log.LogInfo( "Elementlist: fitContinuum_observedFrame = %d", m_secondpass_fitContinuum_observedFrame );
         }
       }
    }
@@ -5740,7 +5766,7 @@ void CLineModelElementList::addDoubleLine(const CRay &r1, const CRay &r2, Int32 
     std::vector<UInt32> a;
     a.push_back(index1);
     a.push_back(index2);
-    m_Elements.push_back(boost::shared_ptr<CLineModelElement> (new CMultiLine(lines, m_LineWidthType, m_resolution, m_velocityEmission, m_velocityAbsorption, amps, nominalWidth, a)));
+    m_Elements.push_back(boost::shared_ptr<CLineModelElement> (new CMultiLine(lines, m_LineWidthType, m_NSigmaSupport, m_resolution, m_velocityEmission, m_velocityAbsorption, amps, nominalWidth, a)));
 }
 
 /**

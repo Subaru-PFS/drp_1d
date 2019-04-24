@@ -70,6 +70,7 @@ private:
 
     std::string m_opt_rigidity;
     std::string m_opt_lineWidthType;
+    Float64 m_opt_nsigmasupport;
     Float64 m_opt_resolution;
     Float64 m_opt_velocity_emission;
     Float64 m_opt_velocity_absorption;

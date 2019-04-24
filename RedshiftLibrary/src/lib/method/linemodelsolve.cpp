@@ -71,6 +71,7 @@ const std::string CLineModelSolve::GetDescription()
 
     desc.append("\tparam: linemodel.offsets_catalog = <relative path>\n");
     desc.append("\tparam: linemodel.linewidthtype = {""instrumentdriven"", ""velocitydriven"",  ""combined"",  ""nispvsspsf201707"", ""fixed""}\n");
+    desc.append("\tparam: linemodel.nsigmasupport = <float value>\n");
     desc.append("\tparam: linemodel.instrumentresolution = <float value>\n");
     desc.append("\tparam: linemodel.velocityemission = <float value>\n");
     desc.append("\tparam: linemodel.velocityabsorption = <float value>\n");
@@ -177,6 +178,7 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
     dataStore.GetScopedParam( "linemodel.offsets_catalog", m_opt_offsets_reldirpath, "linecatalogs_offsets/offsetsCatalogs_20170410_m150" );
 
     dataStore.GetScopedParam( "linemodel.linewidthtype", m_opt_lineWidthType, "velocitydriven" );
+    dataStore.GetScopedParam( "linemodel.nsigmasupport", m_opt_nsigmasupport, 8.0 );
     dataStore.GetScopedParam( "linemodel.instrumentresolution", m_opt_resolution, 2350.0 );
     dataStore.GetScopedParam( "linemodel.velocityemission", m_opt_velocity_emission, 200.0 );
     dataStore.GetScopedParam( "linemodel.velocityabsorption", m_opt_velocity_absorption, 300.0 );
@@ -259,6 +261,9 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
         Log.LogInfo( "    -velocity absorption: %.2f", m_opt_velocity_absorption);
         Log.LogInfo( "    -velocity fit: %s", m_opt_velocityfit.c_str());
     }
+
+    Log.LogInfo( "    -nsigmasupport: %.1f", m_opt_nsigmasupport);
+
     if(m_opt_velocityfit=="yes"){
         Log.LogInfo( "    -em velocity fit min : %.1f", m_opt_em_velocity_fit_min);
         Log.LogInfo( "    -em velocity fit max : %.1f", m_opt_em_velocity_fit_max);
@@ -888,7 +893,7 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
 
     // Compute with linemodel operator
     COperatorLineModel linemodel;
-    Int32 retInit = linemodel.Init(_spc, redshifts);
+    Int32 retInit = linemodel.Init(_spc, redshifts, m_opt_nsigmasupport);
     if( retInit!=0 )
     {
         Log.LogError( "Line Model, init failed. Aborting" );
@@ -1036,7 +1041,7 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
     //**************************************************
     Bool enableFirstpass_B = (m_opt_extremacountB>0) && (m_opt_continuumcomponent=="tplfit" || m_opt_continuumcomponent=="tplfitauto") && (m_opt_extremacountB>1);
     COperatorLineModel linemodel_fpb;
-    Int32 retInitB = linemodel_fpb.Init(_spc, redshifts);
+    Int32 retInitB = linemodel_fpb.Init(_spc, redshifts, m_opt_nsigmasupport);
     if( retInitB!=0 )
     {
         Log.LogError( "Line Model fpB, init failed. Aborting" );

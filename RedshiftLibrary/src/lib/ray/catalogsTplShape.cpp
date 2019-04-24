@@ -65,7 +65,6 @@ Bool CRayCatalogsTplShape::Load( const char* dirPath )
     m_ELvelocities.clear();
     m_ABSvelocities.clear();
     m_Priors.clear();
-    m_PriorsPz.clear();
     m_IsmIndexes.clear();
 
     //load the catalogs list from the files in the tplshape-catalogs folder : tplshapeCatalogDir
@@ -351,12 +350,6 @@ std::vector<Float64> CRayCatalogsTplShape::getCatalogsPriors()
 {
     return m_Priors;
 }
-
-std::vector<CPdfz::SPriorZ> CRayCatalogsTplShape::getCatalogsPriorsPz()
-{
-    return m_PriorsPz;
-}
-
 
 std::string CRayCatalogsTplShape::GetCatalogName(Int32 idx)
 {

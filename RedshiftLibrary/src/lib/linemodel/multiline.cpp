@@ -15,13 +15,14 @@ using namespace NSEpic;
  * \brief Constructs the object setting memebers according to arguments and defaults.
  **/
 CMultiLine::CMultiLine( std::vector<CRay> rs,
-			const std::string& widthType,
-			const Float64 resolution,
+            const std::string& widthType,
+            const Float64 nsigmasupport,
+            const Float64 resolution,
 			const Float64 velocityEmission,
 			const Float64 velocityAbsorption,
 			std::vector<Float64> nominalAmplitudes,
 			Float64 nominalWidth,
-			std::vector<UInt32> catalogIndexes ) : CLineModelElement ( widthType, resolution, velocityEmission, velocityAbsorption )
+            std::vector<UInt32> catalogIndexes ) : CLineModelElement ( widthType, nsigmasupport, resolution, velocityEmission, velocityAbsorption )
 {
     m_ElementType = "CMultiLine";
     m_c_kms = 300000.0; //to be defined in a better location ?
