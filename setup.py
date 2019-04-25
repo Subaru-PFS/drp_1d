@@ -3,35 +3,26 @@ from setuptools import setup
 from swig_ext import swig_ext
 
 setup(
-    name="pyamazed",
+    name="pylibamazed",
     version="0.7.0",
     author="LAM - Laboratoire d'Astrophysique de Marseille",
     author_email="amazed-support@lam.fr",
-    description=("AMAZED python client."),
+    description=("AMAZED python library."),
     license="GPLv3+",
     url="http://www.lam.fr",
-    packages=['pyamazed'],
+    packages=['pylibamazed'],
     long_description=open(os.path.join(os.path.dirname(__file__),
                                        'README.md')).read(),
     setup_requires=['numpy>=1.16.0', 'astropy>=3.1.1'],
     install_requires=['numpy>=1.16.0', 'astropy>=3.1.1'],
     tests_require=['pytest-runner', 'pytest', ],
-    py_modules=['pyamazed/redshift'],
+    py_modules=['pylibamazed/redshift'],
     classifiers=[
-        "Development Status :: 1 - Planning",
+        "Development Status :: 2 - Pre-Alpha",
         "Topic :: Scientific/Engineering",
         "Programming Language :: Python",
         "License :: OSI Approved :: GNU General Public License v3 or "
         "later (GPLv3+)",
     ],
     ext_modules=[swig_ext],
-    entry_points={
-        'console_scripts': [
-            'amazed=pyamazed.amazed:main',
-            'process_spectra_worker=pyamazed.amazed:process_spectra_worker',
-            'amazed-cmp=pyamazed.output_compare:main',
-            'amazed-convert=pyamazed.catalog2fits:main',
-        ],
-    },
-
 )
