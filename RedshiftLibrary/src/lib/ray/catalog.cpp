@@ -320,8 +320,8 @@ void CRayCatalog::Load( const char* filePath )
 
 Bool CRayCatalog::Save( const char* filePath )
 {
-    ofstream file;
-    file.open( filePath, ofstream::out );
+    std::ofstream file;
+    file.open( filePath, std::ofstream::out );
     if( file.rdstate() & ios_base::failbit )
     {
         return false;
