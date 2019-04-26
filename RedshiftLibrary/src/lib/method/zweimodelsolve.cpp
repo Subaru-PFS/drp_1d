@@ -450,9 +450,9 @@ Int32 CZweiModelSolve::SaveContinuumPDF(CDataStore &store, std::shared_ptr<const
  **/
 Int32 CZweiModelSolve::getVelocitiesFromRefFile( const char* filePath, std::string spcid, Float64& elv, Float64& alv )
 {
-    ifstream file;
+    std::ifstream file;
 
-    file.open( filePath, ifstream::in );
+    file.open( filePath, std::ifstream::in );
     if( file.rdstate() & ios_base::failbit )
         return false;
 
@@ -536,9 +536,9 @@ Int32 CZweiModelSolve::getVelocitiesFromRefFile( const char* filePath, std::stri
  **/
 Int32 CZweiModelSolve::getValueFromRefFile( const char* filePath, std::string spcid, Int32 colID, Float64& zref, Int32 reverseInclusion )
 {
-    ifstream file;
+    std::ifstream file;
 
-    file.open( filePath, ifstream::in );
+    file.open( filePath, std::ifstream::in );
     if( file.rdstate() & ios_base::failbit )
         return false;
 
@@ -1197,9 +1197,9 @@ Int32 CZweiModelSolve::getContaminantNameFromFile( const char* filePath, std::st
     contSpcFileName = "";
     contErrorFileName = "";
 
-    ifstream file;
+    std::ifstream file;
 
-    file.open( filePath, ifstream::in );
+    file.open( filePath, std::ifstream::in );
     if( file.rdstate() & ios_base::failbit )
         return false;
 

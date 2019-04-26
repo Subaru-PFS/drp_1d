@@ -767,9 +767,9 @@ Int32 CLineModelSolve::SaveContinuumPDF(CDataStore &store, std::shared_ptr<const
  **/
 Int32 getVelocitiesFromRefFile( const char* filePath, std::string spcid, Float64& elv, Float64& alv )
 {
-    ifstream file;
+    std::ifstream file;
 
-    file.open( filePath, ifstream::in );
+    file.open( filePath, std::ifstream::in );
     if( file.rdstate() & ios_base::failbit )
         return false;
 

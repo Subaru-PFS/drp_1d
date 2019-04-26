@@ -308,9 +308,9 @@ Bool CLineModelTplshapeSolve::Solve( CDataStore& dataStore,
 
 Bool CLineModelTplshapeSolve::LoadVelocities( const char* filePath, Float64& elv, Float64& alv )
 {
-    ifstream file;
+    std::ifstream file;
 
-    file.open( filePath, ifstream::in );
+    file.open( filePath, std::ifstream::in );
     if( file.rdstate() & ios_base::failbit )
         return false;
 

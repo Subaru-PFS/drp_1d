@@ -37,8 +37,8 @@ void CCalibrationConfigHelper::Init( std::string calibrationPath)
 
 void CCalibrationConfigHelper::Load( const char* filePath )
 {
-    ifstream file;
-    file.open( filePath, ifstream::in );
+    std::ifstream file;
+    file.open( filePath, std::ifstream::in );
     if( file.rdstate() & ios_base::failbit ){
       Log.LogError("Can't load calibration config file [%s]", filePath);
       throw runtime_error("Can't load calibration config file");

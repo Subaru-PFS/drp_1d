@@ -260,8 +260,8 @@ bool CRayCatalogsTplShape::LoadVelocities( const char* filePath, Int32 k )
     Float64 elv=100.0;
     Float64 alv=300.0;
 
-    ifstream file;
-    file.open( filePath, ifstream::in );
+    std::ifstream file;
+    file.open( filePath, std::ifstream::in );
     if( file.rdstate() & ios_base::failbit ){
         return false;
     }
@@ -298,8 +298,8 @@ bool CRayCatalogsTplShape::LoadPrior( const char* filePath, Int32 k )
 {
     Float64 prior=1.0;
 
-    ifstream file;
-    file.open( filePath, ifstream::in );
+    std::ifstream file;
+    file.open( filePath, std::ifstream::in );
     if( file.rdstate() & ios_base::failbit ){
         return false;
     }

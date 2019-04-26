@@ -297,8 +297,8 @@ Float64 CClassifierStore::Load_version ( const char* directoryPath)
     {
         return 0.0;
     }
-    ifstream file;
-    file.open( filePath.string(), ifstream::in );
+    std::ifstream file;
+    file.open( filePath.string(), std::ifstream::in );
     if( file.rdstate() & ios_base::failbit )
     {
         return -1;

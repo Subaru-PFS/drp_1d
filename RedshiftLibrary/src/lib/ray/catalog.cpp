@@ -143,7 +143,7 @@ static void parse_asymfixed(std::string &profileString, TAsymParams &asymParams)
  */
 void CRayCatalog::Load( const char* filePath )
 {
-    ifstream file;
+    std::ifstream file;
 
     // Clear current line list
     m_List.clear();
@@ -153,7 +153,7 @@ void CRayCatalog::Load( const char* filePath )
       throw runtime_error("Can't load line catalog");
     }
 
-    file.open( filePath, ifstream::in );
+    file.open( filePath, std::ifstream::in );
     if( file.rdstate() & ios_base::failbit ) {
       throw runtime_error("file cannot be opened");
     }

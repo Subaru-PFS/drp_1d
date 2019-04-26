@@ -873,9 +873,9 @@ Bool CProcessFlow::isPdfValid(CProcessFlowContext& ctx) const
  **/
 Int32 CProcessFlow::getValueFromRefFile( const char* filePath, std::string spcid, Int32 colID, Float64& zref, Int32 reverseInclusion )
 {
-    ifstream file;
+    std::ifstream file;
 
-    file.open( filePath, ifstream::in );
+    file.open( filePath, std::ifstream::in );
     if( file.rdstate() & ios_base::failbit )
         return false;
 
