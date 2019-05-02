@@ -242,8 +242,8 @@ CONFIGURE_FILE(
   ${CMAKE_CURRENT_SOURCE_DIR}/swig_ext.py.in
   ${CMAKE_CURRENT_SOURCE_DIR}/swig_ext.py
   )
-SET (GENERATED_FILES_LIST "swig_ext.py" "pyamazed/redshift_wrap.cpp"
-  "pyamazed/redshift_wrap.h" "pyamazed/redshift.py" "pyamazed.egg-info")
+SET (GENERATED_FILES_LIST "swig_ext.py" "pylibamazed/redshift_wrap.cpp"
+  "pylibamazed/redshift_wrap.h" "pylibamazed/redshift.py" "pylibamazed.egg-info")
 
 SET_DIRECTORY_PROPERTIES(PROPERTIES
   ADDITIONAL_MAKE_CLEAN_FILES "${GENERATED_FILES_LIST}")

@@ -26,8 +26,8 @@ public:
     void Get( const std::string& name, Float64& v, Float64 defaultValue  = 0 ) const;
     void Get( const std::string& name, Int64& v, Int64 defaultValue = 0 ) const;
     void Get( const std::string& name, Bool& v, Bool defaultValue = true ) const;
-    void Get( const std::string& name, TFloat64Range& v, TFloat64Range defaultValue = TFloat64Range( 0.0, 0.0 ) ) const;
-    void Get( const std::string& name, std::string& v, std::string defaultValue = "" ) const;
+    void Get( const std::string& name, TFloat64Range& v, const TFloat64Range& defaultValue = TFloat64Range( 0.0, 0.0 ) ) const;
+    void Get( const std::string& name, std::string& v, const std::string& defaultValue = "" ) const;
 
     void Set( const std::string& name, const TFloat64List& v );
     void Set( const std::string& name, const TInt64List& v );
@@ -41,7 +41,7 @@ public:
 
     void Save( const std::string& path ) const;
     void Load( const std::string& path );
-
+    void FromString(const std::string& json);
 private:
 
     mutable boost::property_tree::ptree m_PropertyTree;
@@ -52,4 +52,3 @@ private:
 }
 
 #endif // PARAMETERSTORE_H
-
