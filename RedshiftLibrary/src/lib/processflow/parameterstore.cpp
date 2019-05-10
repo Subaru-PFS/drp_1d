@@ -292,3 +292,9 @@ void CParameterStore::Load( const std::string& path )
 {
     bpt::json_parser::read_json( path, m_PropertyTree );
 }
+
+void CParameterStore::FromString(const std::string& json)
+{
+    std::istringstream jsonstream(json);
+    bpt::json_parser::read_json(jsonstream, m_PropertyTree);
+}
