@@ -6048,8 +6048,9 @@ CLineModelSolution CLineModelElementList::GetModelSolution(Int32 opt_level)
                         fluxError = m_Elements[eIdx]->GetLineFlux(m_RestRayList[iRestRay].GetProfile(), sigma, ampError);
                     }else{
                         Float64 _amp = cont*amp;
+                        Float64 _ampError = cont*ampError;
                         flux = -m_Elements[eIdx]->GetLineFlux(m_RestRayList[iRestRay].GetProfile(), sigma, _amp);
-                        fluxError = m_Elements[eIdx]->GetLineFlux(m_RestRayList[iRestRay].GetProfile(), sigma, ampError); //to be checked
+                        fluxError = m_Elements[eIdx]->GetLineFlux(m_RestRayList[iRestRay].GetProfile(), sigma, _ampError);
                     }
                 }
                 modelSolution.Sigmas.push_back(sigma);
