@@ -41,6 +41,7 @@ public:
 
     void Save( const std::string& path ) const;
     void Load( const std::string& path );
+    void FromString(const std::string& json);
 
 private:
 
