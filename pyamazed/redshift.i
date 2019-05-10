@@ -127,6 +127,7 @@ class CParameterStore {
 public:
   CParameterStore();
   void Load( const std::string& path );
+  void FromString(const std::string & json);
   void Save( const std::string& path ) const;
   void Get( const std::string& name, std::string& out_str, std::string defaultValue = "" );
   void Get( const std::string& name, Int64& out_int, Int64 defaultValue = 0 );
