@@ -296,6 +296,8 @@ public:
     bool m_opt_firstpass_forcedisableTplratioISMfit=true;
     std::string m_opt_firstpass_fittingmethod = "hybrid";
     std::string m_opt_secondpass_fittingmethod = "hybrid";
+
+    bool m_opt_enable_improveBalmerFit=false;
 private:
 
     Int32 fitAmplitudesHybrid(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& spcFluxAxisNoContinuum, const CSpectrumFluxAxis &continuumfluxAxis, Float64 redshift);

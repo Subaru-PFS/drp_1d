@@ -86,6 +86,7 @@ private:
     Float64 m_opt_manvelfit_dz_step;
     std::string m_opt_continuumreest;
     std::string m_opt_rules;
+    std::string m_opt_enableImproveBalmerFit;
 
     std::string m_opt_lya_forcefit;
     std::string m_opt_lya_forcedisablefit;

@@ -77,6 +77,7 @@ const std::string CLineModelSolve::GetDescription()
     desc.append("\tparam: linemodel.velocityabsorption = <float value>\n");
     desc.append("\tparam: linemodel.continuumreestimation = {""no"", ""onlyextrema"", ""always""}\n");
     desc.append("\tparam: linemodel.rules = {""all"", ""balmer"", ""strongweak"", ""superstrong"", ""ratiorange"", ""ciiiratio"", ""no""}\n");
+    desc.append("\tparam: linemodel.improveBalmerFit = {""yes"", ""no""}\n");
     desc.append("\tparam: linemodel.extremacount = <float value>\n");
     desc.append("\tparam: linemodel.extremacountB = <float value>\n");
     desc.append("\tparam: linemodel.extremacutprobathreshold = <float value> (-1:disabled)\n");
@@ -165,6 +166,7 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
         dataStore.GetScopedParam( "linemodel.continuumfit.priors.catalog_dirpath", m_opt_tplfit_continuumprior_dirpath, "" ); //no priors by default
     }
     dataStore.GetScopedParam( "linemodel.rigidity", m_opt_rigidity, "rules" );
+
     if(m_opt_rigidity=="tplshape")
     {
         dataStore.GetScopedParam( "linemodel.tplratio_catalog", m_opt_tplratio_reldirpath, "linecatalogs_tplshapes/linecatalogs_tplshape_ExtendedTemplatesJan2017v3_20170602_B14C_v5_emission" );
@@ -174,6 +176,9 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
         dataStore.GetScopedParam( "linemodel.tplratio.priors.betaTE", m_opt_tplratio_prior_betaTE, 1. );
         dataStore.GetScopedParam( "linemodel.tplratio.priors.betaZ", m_opt_tplratio_prior_betaZ, 1. );
         dataStore.GetScopedParam( "linemodel.tplratio.priors.catalog_dirpath", m_opt_tplratio_prior_dirpath, "" ); //no priors by default
+    }else if(m_opt_rigidity=="rules")
+    {
+        dataStore.GetScopedParam( "linemodel.improveBalmerFit", m_opt_enableImproveBalmerFit, "yes" );
     }
     dataStore.GetScopedParam( "linemodel.offsets_catalog", m_opt_offsets_reldirpath, "linecatalogs_offsets/offsetsCatalogs_20170410_m150" );
 
@@ -235,6 +240,7 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
         dataStore.SetScopedParam("linemodel.firstpass.fittingmethod", m_opt_firstpass_fittingmethod);
         Log.LogInfo( "LineModel first pass fitting method auto-correct due to tplshape rigidity");
     }
+
     Log.LogInfo( "Linemodel parameters:");
     Log.LogInfo( "    -linetypefilter: %s", m_opt_linetypefilter.c_str());
     Log.LogInfo( "    -lineforcefilter: %s", m_opt_lineforcefilter.c_str());
@@ -279,6 +285,10 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
     Log.LogInfo( "    -rigidity: %s", m_opt_rigidity.c_str());
     if(m_opt_rigidity=="rules"){
         Log.LogInfo( "      -rules: %s", m_opt_rules.c_str());
+        if(m_opt_fittingmethod == "hybrid")
+        {
+            Log.LogInfo( "      -Improve Balmer Fit: %s", m_opt_enableImproveBalmerFit.c_str());
+        }
     }else if(m_opt_rigidity=="tplshape")
     {
         Log.LogInfo( "      -tplratio_catalog: %s", m_opt_tplratio_reldirpath.c_str());
@@ -934,6 +944,11 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
         linemodel.m_opt_tplratio_prior_betaA = m_opt_tplratio_prior_betaA;
         linemodel.m_opt_tplratio_prior_betaTE = m_opt_tplratio_prior_betaTE;
         linemodel.m_opt_tplratio_prior_betaZ = m_opt_tplratio_prior_betaZ;
+    }
+
+    if(m_opt_rigidity=="rules")
+    {
+        linemodel.m_opt_enableImproveBalmerFit = m_opt_enableImproveBalmerFit;
     }
 
     if(m_opt_continuumcomponent=="fromspectrum"){

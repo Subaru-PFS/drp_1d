@@ -3323,7 +3323,9 @@ Int32 CLineModelElementList::fitAmplitudesHybrid(const CSpectrumSpectralAxis& sp
 
   }
 
-  improveBalmerFit();
+  if(m_opt_enable_improveBalmerFit){
+      improveBalmerFit();
+  }
 
   return 0;
 }

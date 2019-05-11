@@ -258,6 +258,7 @@ public:
     Float64 m_opt_lya_fit_delta_max;
     Float64 m_opt_lya_fit_delta_step;
 
+    std::string m_opt_enableImproveBalmerFit;
 
     //candidates
     TPointList m_firstpass_extremumList;

@@ -335,6 +335,8 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
     m_model->m_opt_lya_fit_delta_step=m_opt_lya_fit_delta_step;
 
 
+    m_model->m_opt_enable_improveBalmerFit = m_opt_enableImproveBalmerFit=="yes";
+
     if (opt_rigidity == "tplshape")
     {
         // init catalog tplratios
