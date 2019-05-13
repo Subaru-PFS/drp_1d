@@ -607,7 +607,8 @@ Int32 CLineModelElementList::GetFluxDirectIntegration(TInt32List eIdx_list,
 
         Float64 ea = m_ErrorNoContinuum[t]*m_ErrorNoContinuum[t];
         Float64 eb = m_ErrorNoContinuum[t+1]*m_ErrorNoContinuum[t+1];
-        Float64 diffError = (spectralAxis[t+1]-spectralAxis[t])*(eb+ea)*0.5;
+        Float64 trapweight = (spectralAxis[t+1]-spectralAxis[t])*0.5;
+        Float64 diffError = trapweight*trapweight*(eb+ea);
         sumErr += diffError;
 
         //direct - missing dlambda
