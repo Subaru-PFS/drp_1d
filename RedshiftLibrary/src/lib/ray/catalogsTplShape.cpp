@@ -45,7 +45,14 @@ Bool CRayCatalogsTplShape::Init( std::string calibrationPath, std::string opt_tp
     std::string dirPath = (calibrationFolder/tplshapedcatalog_relpath.c_str()).string();
 
     m_opt_dust_calzetti = enableISMCalzetti;
-    m_ismCorrectionCalzetti->Init(calibrationPath, 0.0, 0.1, 10);
+    //hardcoded fitting values for EBV, should be in the json
+    Float64 ebmv_start=0.0;
+    Float64 ebmv_step=0.1;
+    Float64 ebmv_n=10;
+    //Float64 ebmv_start=0.9;
+    //Float64 ebmv_step=0.1;
+    //Float64 ebmv_n=1;
+    m_ismCorrectionCalzetti->Init(calibrationPath, ebmv_start, ebmv_step, ebmv_n);
 
     bool ret = Load(dirPath.c_str());
     if(!ret)
