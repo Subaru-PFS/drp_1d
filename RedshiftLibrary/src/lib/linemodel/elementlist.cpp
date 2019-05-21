@@ -1904,7 +1904,7 @@ Float64 CLineModelElementList::fit(Float64 redshift,
 
                 if(m_forcedisableTplratioISMfit)
                 {
-                    if(m_CatalogTplShape->GetIsmCoeff(ifitting)>0)
+                    if(m_CatalogTplShape->GetIsmCoeff(ifitting)>0 && ifitting>0)
                     {
                         //copy the values for ebmv=ebmv_fixed (=0) here
                         m_ChisquareTplshape[ifitting] = m_ChisquareTplshape[ifitting-1];
