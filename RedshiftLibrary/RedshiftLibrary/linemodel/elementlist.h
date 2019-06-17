@@ -272,6 +272,7 @@ public:
     std::vector<std::vector<Float64>> m_DtmTplshape;
     std::vector<std::vector<Float64>> m_LyaAsymCoeffTplshape;
     std::vector<std::vector<Float64>> m_LyaWidthCoeffTplshape;
+    std::vector<std::vector<Float64>> m_LyaDeltaCoeffTplshape;
     std::vector<std::vector<Float64>> m_LinesLogPriorTplshape;
 
     bool m_enableAmplitudeOffsets;

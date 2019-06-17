@@ -94,6 +94,7 @@ Bool CRayCatalogsTplShape::Load( const char* dirPath )
     {
         return false;
     }
+    std::sort(tplshapeCatalogList.begin(),tplshapeCatalogList.end());
     Log.LogDebug( "    CatalogsTplShape - Found %d tplshaped catalogs", tplshapeCatalogList.size());
 
     //load the velocities list for all the catalogs

@@ -542,7 +542,14 @@ class processHelper(object):
                     
                 if not dryrun:
                     if local=="cluster_lam":
-                        bashCommand = "qsub {}".format(fpbspath)
+                        
+                        options = ""
+                        options += " " ##
+                        options += "-q batch"
+                        options += " " ##
+                        
+                        bashCommand = "qsub {} {}".format(options, fpbspath)
+                                            
                     elif local=="cluster_in2p3":
                         options = "-l sps=1"
                         options += " " ##

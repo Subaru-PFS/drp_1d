@@ -296,6 +296,7 @@ Bool CLineModelElementList::initTplratioCatalogs(std::string opt_tplratioCatRelP
     m_FittedAmpTplshape.resize(m_CatalogTplShape->GetCatalogsCount());
     m_LyaAsymCoeffTplshape.resize(m_CatalogTplShape->GetCatalogsCount());
     m_LyaWidthCoeffTplshape.resize(m_CatalogTplShape->GetCatalogsCount());
+    m_LyaDeltaCoeffTplshape.resize(m_CatalogTplShape->GetCatalogsCount());
     m_FittedErrorTplshape.resize(m_CatalogTplShape->GetCatalogsCount());
     m_MtmTplshape.resize(m_CatalogTplShape->GetCatalogsCount());
     m_DtmTplshape.resize(m_CatalogTplShape->GetCatalogsCount());
@@ -308,6 +309,7 @@ Bool CLineModelElementList::initTplratioCatalogs(std::string opt_tplratioCatRelP
         m_DtmTplshape[ktplshape].resize(m_Elements.size());
         m_LyaAsymCoeffTplshape[ktplshape].resize(m_Elements.size());
         m_LyaWidthCoeffTplshape[ktplshape].resize(m_Elements.size());
+        m_LyaDeltaCoeffTplshape[ktplshape].resize(m_Elements.size());
         m_LinesLogPriorTplshape[ktplshape].resize(m_Elements.size());
     }
 
@@ -1725,7 +1727,6 @@ Bool CLineModelElementList::setTplshapeModel(Int32 itplshape, Bool enableSetVelo
 {
     m_CatalogTplShape->SetLyaProfile(*this, itplshape, m_forceLyaFitting);
 
-    //m_CatalogTplShape->SetMultilineNominalAmplitudes( *this, ifitting );
     m_CatalogTplShape->SetMultilineNominalAmplitudesFast( *this, itplshape );
 
     if(enableSetVelocity)
@@ -1922,6 +1923,7 @@ Float64 CLineModelElementList::fit(Float64 redshift,
 
                             m_LyaAsymCoeffTplshape[ifitting][iElts] = m_LyaAsymCoeffTplshape[ifitting-1][iElts];
                             m_LyaWidthCoeffTplshape[ifitting][iElts] = m_LyaWidthCoeffTplshape[ifitting-1][iElts];
+                            m_LyaDeltaCoeffTplshape[ifitting][iElts] = m_LyaDeltaCoeffTplshape[ifitting-1][iElts];
                             m_LinesLogPriorTplshape[ifitting][iElts] = m_LinesLogPriorTplshape[ifitting-1][iElts];
                         }
                         continue;
@@ -2536,6 +2538,7 @@ Float64 CLineModelElementList::fit(Float64 redshift,
 
                                 m_LyaAsymCoeffTplshape[ifitting][iElts] = m_Elements[iElts]->GetAsymfitAlphaCoeff();
                                 m_LyaWidthCoeffTplshape[ifitting][iElts] = m_Elements[iElts]->GetAsymfitWidthCoeff();
+                                m_LyaDeltaCoeffTplshape[ifitting][iElts] = m_Elements[iElts]->GetAsymfitDelta();
 
                                 savedAmp=true;
                                 break;
@@ -2622,11 +2625,14 @@ Float64 CLineModelElementList::fit(Float64 redshift,
             }
 
             //Lya
+            //*
             for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
             {
                 m_Elements[iElts]->SetAsymfitAlphaCoeff(m_LyaAsymCoeffTplshape[savedIdxFitted][iElts]);
                 m_Elements[iElts]->SetAsymfitWidthCoeff(m_LyaWidthCoeffTplshape[savedIdxFitted][iElts]);
+                m_Elements[iElts]->SetAsymfitDelta(m_LyaDeltaCoeffTplshape[savedIdxFitted][iElts]);
             }
+            //*/
 
             refreshModel();
 
