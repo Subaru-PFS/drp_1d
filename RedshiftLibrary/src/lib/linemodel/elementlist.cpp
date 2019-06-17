@@ -2679,6 +2679,18 @@ std::vector<CLmfitController*> CLineModelElementList::createLmfitControllers( co
 
 
 
+void CLineModelElementList::SetSecondpassContinuumFitPrms(Int32 dustfit, Int32 meiksinfit)
+{
+    m_secondpass_fitContinuum_dustfit = dustfit;
+    m_secondpass_fitContinuum_igm = meiksinfit;
+
+    if(1)
+    {
+        Log.LogInfo( "Elementlist: SetSecondpassContinuumFitPrms fitContinuum_dustfit = %d", m_secondpass_fitContinuum_dustfit );
+        Log.LogInfo( "Elementlist: SetSecondpassContinuumFitPrms fitContinuum_igm = %d", m_secondpass_fitContinuum_igm );
+    }
+}
+
 
 void CLineModelElementList::SetFittingMethod(std::string fitMethod)
 {

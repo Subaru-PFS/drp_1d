@@ -49,9 +49,9 @@ Bool CRayCatalogsTplShape::Init( std::string calibrationPath, std::string opt_tp
     Float64 ebmv_start=0.0;
     Float64 ebmv_step=0.1;
     Float64 ebmv_n=10;
-    //Float64 ebmv_start=0.9;
-    //Float64 ebmv_step=0.1;
-    //Float64 ebmv_n=1;
+    //Float64 ebmv_start=0.0;
+    //Float64 ebmv_step=0.9;
+    //Float64 ebmv_n=2;
     m_ismCorrectionCalzetti->Init(calibrationPath, ebmv_start, ebmv_step, ebmv_n);
 
     bool ret = Load(dirPath.c_str());
@@ -423,18 +423,20 @@ Bool CRayCatalogsTplShape::InitLineCorrespondingAmplitudes(CLineModelElementList
         }
     }
 
-//    //Now log the linesCorrespondingNominalAmp
-//    for( UInt32 iElts=0; iElts<LineModelElementList.m_Elements.size(); iElts++ )
-//    {
-//        for(Int32 k=0; k<GetCatalogsCount(); k++)
-//        {
-//            Int32 nRays = LineModelElementList.m_Elements[iElts]->GetSize();
-//            for(UInt32 j=0; j<nRays; j++){
-//                Float64 nomAmp = m_RayCatalogLinesCorrespondingNominalAmp[iElts][k][j];
-//                Log.LogDebug( "    CatalogsTplShape - linesCorrespondingNominalAmp iElt=%d, iCatalog=%d, iLine=%d : NominalAmpFound = %e", iElts, k, j, nomAmp);
-//            }
-//        }
-//    }
+    //Now log the linesCorrespondingNominalAmp
+    for( UInt32 iElts=0; iElts<LineModelElementList.m_Elements.size(); iElts++ )
+    {
+        for(Int32 k=0; k<GetCatalogsCount(); k++)
+        {
+            Int32 nRays = LineModelElementList.m_Elements[iElts]->GetSize();
+            for(UInt32 j=0; j<nRays; j++){
+                Float64 ebv = m_ismCorrectionCalzetti->GetEbmvValue(m_IsmIndexes[k]);
+                Float64 nomAmp = m_RayCatalogLinesCorrespondingNominalAmp[iElts][k][j];
+                std::string lineName = LineModelElementList.m_RestRayList[LineModelElementList.m_Elements[iElts]->m_LineCatalogIndexes[j]].GetName();
+                Log.LogDebug( "    CatalogsTplShape - linesCorrespondingNominalAmp iElt=%d, iCatalog=%d, iLine=%d with name=%s, ebv=%f: NominalAmpFound = %e", iElts, k, j, lineName.c_str(), ebv, nomAmp);
+            }
+        }
+    }
 
     return 0;
 }

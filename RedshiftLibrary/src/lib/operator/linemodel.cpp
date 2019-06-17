@@ -321,6 +321,12 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
     m_model->m_opt_firstpass_fittingmethod = m_opt_firstpass_fittingmethod;
     m_model->m_opt_secondpass_fittingmethod = opt_fittingmethod;
 
+    Int32 opt_tplfit_integer_chi2_dustfit = -1;
+    if(m_opt_tplfit_dustFit)
+    {
+        opt_tplfit_integer_chi2_dustfit=-10;
+    }
+    m_model->SetSecondpassContinuumFitPrms(opt_tplfit_integer_chi2_dustfit, m_opt_tplfit_extinction);
 
     m_model->m_opt_lya_forcefit=m_opt_lya_forcefit=="yes";
     m_model->m_opt_lya_forcedisablefit=m_opt_lya_forcedisablefit=="yes";
