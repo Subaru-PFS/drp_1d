@@ -2481,7 +2481,7 @@ Float64 CLineModelElementList::fit(Float64 redshift,
                                     break;
                                 }
                                 Float64 amp = m_Elements[iElts]->GetFittedAmplitude(j);
-                                if(!m_Elements[iElts]->IsOutsideLambdaRange(j))
+                                if(amp>0 && !m_Elements[iElts]->IsOutsideLambdaRange(j))
                                 {
                                     Float64 nominal_amp = m_Elements[iElts]->GetNominalAmplitude(j);
                                     ampl = amp/nominal_amp;
@@ -2525,6 +2525,7 @@ Float64 CLineModelElementList::fit(Float64 redshift,
                         m_LyaAsymCoeffTplshape[ifitting][iElts] = NAN;
                         m_LyaWidthCoeffTplshape[ifitting][iElts] = NAN;
                         m_LyaDeltaCoeffTplshape[ifitting][iElts] = NAN;
+                        bool allampzero = true;
                         //*/
 
                         UInt32 nRays = m_Elements[iElts]->GetSize();
@@ -2534,7 +2535,10 @@ Float64 CLineModelElementList::fit(Float64 redshift,
                                 break;
                             }
                             Float64 amp = m_Elements[iElts]->GetFittedAmplitude(j);
-                            if(!m_Elements[iElts]->IsOutsideLambdaRange(j))
+                            if(amp>0){
+                                allampzero=false;
+                            }
+                            if(amp>0 && !m_Elements[iElts]->IsOutsideLambdaRange(j))
                             {
 
                                 Float64 amp_error = m_Elements[iElts]->GetFittedAmplitudeErrorSigma(j);
@@ -2553,6 +2557,11 @@ Float64 CLineModelElementList::fit(Float64 redshift,
                                 savedAmp=true;
                                 break;
                             }
+                        }
+
+                        if(allampzero && !savedAmp) //TODO: this case should be treated more carefully, save dtm, mtm, and more...
+                        {
+                            m_FittedAmpTplshape[ifitting][iElts] = 0.0;
                         }
                     }
                 }
