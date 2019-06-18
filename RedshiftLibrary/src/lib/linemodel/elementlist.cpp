@@ -346,8 +346,6 @@ Int32 CLineModelElementList::setPassMode(Int32 iPass)
         Log.LogInfo("    model: set forceLyaFitting ASYMFIT for Tpl-ratio mode : %d", m_forceLyaFitting);
     }
 
-    //todo add new iPass==3 for second pass recompute, and use iPass==2 for second pass estimate parameters ?
-
     return true;
 }
 
@@ -2483,7 +2481,7 @@ Float64 CLineModelElementList::fit(Float64 redshift,
                                     break;
                                 }
                                 Float64 amp = m_Elements[iElts]->GetFittedAmplitude(j);
-                                if(amp>0.0 && !m_Elements[iElts]->IsOutsideLambdaRange(j))
+                                if(!m_Elements[iElts]->IsOutsideLambdaRange(j))
                                 {
                                     Float64 nominal_amp = m_Elements[iElts]->GetNominalAmplitude(j);
                                     ampl = amp/nominal_amp;
@@ -2518,6 +2516,16 @@ Float64 CLineModelElementList::fit(Float64 redshift,
                         m_LinesLogPriorTplshape[ifitting][iElts] = _meritprior;
 
                         bool savedAmp=false;
+                        //init
+                        //*
+                        m_FittedAmpTplshape[ifitting][iElts] = NAN;
+                        m_FittedErrorTplshape[ifitting][iElts] = NAN;
+                        m_DtmTplshape[ifitting][iElts] = NAN;
+                        m_MtmTplshape[ifitting][iElts] = NAN;
+                        m_LyaAsymCoeffTplshape[ifitting][iElts] = NAN;
+                        m_LyaWidthCoeffTplshape[ifitting][iElts] = NAN;
+                        m_LyaDeltaCoeffTplshape[ifitting][iElts] = NAN;
+                        //*/
 
                         UInt32 nRays = m_Elements[iElts]->GetSize();
                         for(UInt32 j=0; j<nRays; j++){
@@ -2526,12 +2534,14 @@ Float64 CLineModelElementList::fit(Float64 redshift,
                                 break;
                             }
                             Float64 amp = m_Elements[iElts]->GetFittedAmplitude(j);
-                            if(amp>0.0 && !m_Elements[iElts]->IsOutsideLambdaRange(j))
+                            if(!m_Elements[iElts]->IsOutsideLambdaRange(j))
                             {
 
                                 Float64 amp_error = m_Elements[iElts]->GetFittedAmplitudeErrorSigma(j);
                                 Float64 nominal_amp = m_Elements[iElts]->GetNominalAmplitude(j);
                                 m_FittedAmpTplshape[ifitting][iElts] = amp/nominal_amp;
+                                Log.LogDebug( "    model : fit tplratio mode, tplratio_fittedamp: %e", m_FittedAmpTplshape[ifitting][iElts]);
+
                                 m_FittedErrorTplshape[ifitting][iElts] = amp_error/nominal_amp;
                                 m_DtmTplshape[ifitting][iElts] = m_Elements[iElts]->GetSumCross();
                                 m_MtmTplshape[ifitting][iElts] = m_Elements[iElts]->GetSumGauss();
