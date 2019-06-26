@@ -45,7 +45,14 @@ Bool CRayCatalogsTplShape::Init( std::string calibrationPath, std::string opt_tp
     std::string dirPath = (calibrationFolder/tplshapedcatalog_relpath.c_str()).string();
 
     m_opt_dust_calzetti = enableISMCalzetti;
-    m_ismCorrectionCalzetti->Init(calibrationPath, 0.0, 0.1, 10);
+    //hardcoded fitting values for EBV, should be in the json
+    Float64 ebmv_start=0.0;
+    Float64 ebmv_step=0.1;
+    Float64 ebmv_n=10;
+    //Float64 ebmv_start=0.0;
+    //Float64 ebmv_step=0.9;
+    //Float64 ebmv_n=2;
+    m_ismCorrectionCalzetti->Init(calibrationPath, ebmv_start, ebmv_step, ebmv_n);
 
     bool ret = Load(dirPath.c_str());
     if(!ret)
@@ -65,7 +72,6 @@ Bool CRayCatalogsTplShape::Load( const char* dirPath )
     m_ELvelocities.clear();
     m_ABSvelocities.clear();
     m_Priors.clear();
-    m_PriorsPz.clear();
     m_IsmIndexes.clear();
 
     //load the catalogs list from the files in the tplshape-catalogs folder : tplshapeCatalogDir
@@ -88,6 +94,7 @@ Bool CRayCatalogsTplShape::Load( const char* dirPath )
     {
         return false;
     }
+    std::sort(tplshapeCatalogList.begin(),tplshapeCatalogList.end());
     Log.LogDebug( "    CatalogsTplShape - Found %d tplshaped catalogs", tplshapeCatalogList.size());
 
     //load the velocities list for all the catalogs
@@ -237,37 +244,6 @@ Bool CRayCatalogsTplShape::Load( const char* dirPath )
                     }
                 }
             }
-
-
-            CPdfz::SPriorZ pz;
-            m_PriorsPz.push_back(pz);
-            Int32 kpriorPz = -1;
-            tplname = name.filename().c_str();
-            boost::replace_all( tplname, "_catalog.txt", "_prior_pZ_Tplr.ascii");
-            for(Int32 kp=0; kp<tplshapePriorsPzList.size(); kp++)
-            {
-                std::string priorname = tplshapePriorsPzList[kp];
-                std::size_t foundstra = priorname.find(tplname.c_str());
-                if (foundstra==std::string::npos){
-                    continue;
-                }
-                kpriorPz = kp;
-            }
-            if(kpriorPz<0 || !successLoadPriors)
-            {
-                Log.LogWarning( "    CatalogsTplShape - Failed to match tplshape-catalog with tplshape-priorPz files: %s", tplname.c_str());
-                successLoadPriors=false;
-            }
-            if(successLoadPriors)
-            {
-                bool retPrior = LoadPriorPz(tplshapePriorsPzList[kpriorPz].c_str(), m_PriorsPz.size()-1);
-                if( !retPrior )
-                {
-                    Log.LogError( "    CatalogsTplShape - Failed to load tplshape priorPz: %s", tplshapePriorsPzList[kpriorPz].c_str());
-                    successLoadPriors=false;
-                }
-            }
-
         }
     }
     if(!successLoadPriors) //if not all priors were successfully loaded, replace by cst prior
@@ -292,8 +268,8 @@ bool CRayCatalogsTplShape::LoadVelocities( const char* filePath, Int32 k )
     Float64 elv=100.0;
     Float64 alv=300.0;
 
-    ifstream file;
-    file.open( filePath, ifstream::in );
+    std::ifstream file;
+    file.open( filePath, std::ifstream::in );
     if( file.rdstate() & ios_base::failbit ){
         return false;
     }
@@ -326,98 +302,12 @@ bool CRayCatalogsTplShape::LoadVelocities( const char* filePath, Int32 k )
     return true;
 }
 
-bool CRayCatalogsTplShape::LoadPriorPz( const char* filePath, Int32 k )
-{
-    Float64 prior=1.0;
-
-    ifstream file;
-    file.open( filePath, ifstream::in );
-    if( file.rdstate() & ios_base::failbit ){
-        return false;
-    }
-    string line;
-
-    Float64 amp=0.0;
-    Float64 mu=0.0;
-    Float64 sigma=0.0;
-    Float64 p0=0.0;
-
-    // Read file line by line
-    Int32 readNums = 0;
-    while( getline( file, line ) )
-    {
-        if( boost::starts_with( line, "#" ) )
-        {
-            continue;
-        }
-        boost::char_separator<char> sep("\t");
-        // Tokenize each line
-        typedef boost::tokenizer< boost::char_separator<char> > ttokenizer;
-        ttokenizer tok( line, sep );
-
-        // Check if it's not a comment
-        ttokenizer::iterator it = tok.begin();
-        if( it != tok.end() )
-        {
-            amp = boost::lexical_cast<double>(*it);
-            ++it;
-
-            if( it != tok.end() )
-            {
-                mu = boost::lexical_cast<double>(*it);
-                ++it;
-            }
-            else
-            {
-                file.close();
-                return false;
-            }
-
-            if( it != tok.end() )
-            {
-                sigma = boost::lexical_cast<double>(*it);
-                ++it;
-            }
-            else
-            {
-                file.close();
-                return false;
-            }
-
-            if( it != tok.end() )
-            {
-                p0 = boost::lexical_cast<double>(*it);
-                ++it;
-            }
-            else
-            {
-                file.close();
-                return false;
-            }
-        }
-        readNums++;
-    }
-    file.close();
-    if(readNums!=1)
-    {
-        return false;
-    }
-
-    Log.LogDebug( "    CatalogsTplShape - k=%d - Set priorZ : a=%f, mu=%f, sigma=%f, p0=%f", k, amp, mu, sigma, p0);
-    m_PriorsPz[k].amp = amp;
-    m_PriorsPz[k].mu = mu;
-    m_PriorsPz[k].sigma = sigma;
-    m_PriorsPz[k].p0 = p0;
-
-    return true;
-}
-
 bool CRayCatalogsTplShape::LoadPrior( const char* filePath, Int32 k )
 {
     Float64 prior=1.0;
 
-    ifstream file;
-    file.open( filePath, ifstream::in );
+    std::ifstream file;
+    file.open( filePath, std::ifstream::in );
     if( file.rdstate() & ios_base::failbit ){
         return false;
     }
@@ -469,12 +359,6 @@ std::vector<Float64> CRayCatalogsTplShape::getCatalogsPriors()
     return m_Priors;
 }
 
-std::vector<CPdfz::SPriorZ> CRayCatalogsTplShape::getCatalogsPriorsPz()
-{
-    return m_PriorsPz;
-}
-
-
 std::string CRayCatalogsTplShape::GetCatalogName(Int32 idx)
 {
     return m_RayCatalogNames[idx];
@@ -483,6 +367,11 @@ std::string CRayCatalogsTplShape::GetCatalogName(Int32 idx)
 Float64 CRayCatalogsTplShape::GetIsmCoeff(Int32 idx)
 {
     return m_ismCorrectionCalzetti->GetEbmvValue(m_IsmIndexes[idx]);
+}
+
+Int32 CRayCatalogsTplShape::GetIsmIndex(Int32 idx)
+{
+    return m_IsmIndexes[idx];
 }
 
 Bool CRayCatalogsTplShape::GetCatalogVelocities(Int32 idx, Float64& elv, Float64& alv )
@@ -535,18 +424,20 @@ Bool CRayCatalogsTplShape::InitLineCorrespondingAmplitudes(CLineModelElementList
         }
     }
 
-//    //Now log the linesCorrespondingNominalAmp
-//    for( UInt32 iElts=0; iElts<LineModelElementList.m_Elements.size(); iElts++ )
-//    {
-//        for(Int32 k=0; k<GetCatalogsCount(); k++)
-//        {
-//            Int32 nRays = LineModelElementList.m_Elements[iElts]->GetSize();
-//            for(UInt32 j=0; j<nRays; j++){
-//                Float64 nomAmp = m_RayCatalogLinesCorrespondingNominalAmp[iElts][k][j];
-//                Log.LogDebug( "    CatalogsTplShape - linesCorrespondingNominalAmp iElt=%d, iCatalog=%d, iLine=%d : NominalAmpFound = %e", iElts, k, j, nomAmp);
-//            }
-//        }
-//    }
+    //Now log the linesCorrespondingNominalAmp
+    for( UInt32 iElts=0; iElts<LineModelElementList.m_Elements.size(); iElts++ )
+    {
+        for(Int32 k=0; k<GetCatalogsCount(); k++)
+        {
+            Int32 nRays = LineModelElementList.m_Elements[iElts]->GetSize();
+            for(UInt32 j=0; j<nRays; j++){
+                Float64 ebv = m_ismCorrectionCalzetti->GetEbmvValue(m_IsmIndexes[k]);
+                Float64 nomAmp = m_RayCatalogLinesCorrespondingNominalAmp[iElts][k][j];
+                std::string lineName = LineModelElementList.m_RestRayList[LineModelElementList.m_Elements[iElts]->m_LineCatalogIndexes[j]].GetName();
+                Log.LogDebug( "    CatalogsTplShape - linesCorrespondingNominalAmp iElt=%d, iCatalog=%d, iLine=%d with name=%s, ebv=%f: NominalAmpFound = %e", iElts, k, j, lineName.c_str(), ebv, nomAmp);
+            }
+        }
+    }
 
     return 0;
 }

@@ -12,8 +12,9 @@ using namespace std;
 
 CPdfCandidateszResult::CPdfCandidateszResult()
 {
-    optMethod = 1; //gaussian fit
-    Fullwidth = 1e-2;
+    optMethod = 0; //di
+    //optMethod = 1; //gaussian fit
+    Fullwidth = 6e-3;
 }
 
 CPdfCandidateszResult::~CPdfCandidateszResult()
@@ -27,13 +28,11 @@ void CPdfCandidateszResult::Resize(Int32 n)
     ValSumProba.resize(n);
     Rank.resize(n);
 
-    if(optMethod==1)
-    {
-        GaussAmp.resize(n);
-        GaussSigma.resize(n);
-        GaussAmpErr.resize(n);
-        GaussSigmaErr.resize(n);
-    }
+    //only for method 1
+    GaussAmp.resize(n);
+    GaussSigma.resize(n);
+    GaussAmpErr.resize(n);
+    GaussSigmaErr.resize(n);
 }
 
 /**
@@ -57,6 +56,10 @@ Int32 CPdfCandidateszResult::Compute( std::vector<Float64> zc,  std::vector<Floa
         if(optMethod==0)
         {
             ValSumProba[kc] = pdfz.getCandidateSumTrapez( Pdfz, PdfProbalog, zc[kc], Fullwidth);
+            GaussAmp[kc]=-1;
+            GaussAmpErr[kc]=-1;
+            GaussSigma[kc]=-1;
+            GaussSigmaErr[kc]=-1;
         }else
         {
             Int32 retGaussFit = pdfz.getCandidateRobustGaussFit( Pdfz, PdfProbalog, zc[kc], Fullwidth, GaussAmp[kc], GaussAmpErr[kc], GaussSigma[kc], GaussSigmaErr[kc]);
@@ -91,6 +94,8 @@ void CPdfCandidateszResult::Save( const CDataStore& store, std::ostream& stream 
     if(optMethod==1)
     {
         stream << "\t" << "gaussAmp" << "\t" << "gaussAmpErr" << "\t" << "gaussSigma" << "\t" << "gaussSigmaErr";
+    }else{
+        stream << "\t" << "gaussAmp_unused" << "\t" << "gaussAmpErr_unused" << "\t" << "gaussSigma_unused" << "\t" << "gaussSigmaErr_unused";
     }
     stream  << "\n";
     for(Int32 k=0; k<Redshifts.size(); k++)
@@ -98,13 +103,13 @@ void CPdfCandidateszResult::Save( const CDataStore& store, std::ostream& stream 
         stream << Rank[k] << "\t";
         stream << Redshifts[k] << "\t";
         stream << ValSumProba[k] << "\t";
-        if(optMethod==1)
-        {
-            stream << GaussAmp[k] << "\t";
-            stream << GaussAmpErr[k] << "\t";
-            stream << GaussSigma[k] << "\t";
-            stream << GaussSigmaErr[k] << "\t";
-        }
+
+        //only for method 1, but leave columns with -1 value ste in compute()
+        stream << GaussAmp[k] << "\t";
+        stream << GaussAmpErr[k] << "\t";
+        stream << GaussSigma[k] << "\t";
+        stream << GaussSigmaErr[k] << "\t";
+
         stream << "\n";
     }
     stream << std::endl;

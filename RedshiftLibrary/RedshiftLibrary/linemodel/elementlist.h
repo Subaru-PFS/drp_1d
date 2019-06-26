@@ -40,12 +40,14 @@ public:
     CLineModelElementList(const CSpectrum& spectrum,
                           const CSpectrum& spectrumContinuum,
                           const CTemplateCatalog& tplCatalog,
+                          const CTemplateCatalog& orthoTplCatalog,
                           const TStringList& tplCategoryList,
                           const std::string calibrationPath,
                           const CRayCatalog::TRayVector& restRayList,
                           const std::string& opt_fittingmethod,
                           const std::string &opt_continuumcomponent,
                           const std::string& lineWidthType,
+                          const Float64 nsigmasupport,
                           const Float64 resolution,
                           const Float64 velocityEmission,
                           const Float64 velocityAbsorption,
@@ -93,7 +95,7 @@ public:
     Float64* getPrecomputedGridContinuumFlux();
     void SetContinuumComponent(std::string component);
     Int32 SetFitContinuum_FitStore(CTemplatesFitStore* fitStore);
-    Int32 SetFitContinuum_PriorHelper(CPriorHelperContinuum* priorhelper);
+    Int32 SetFitContinuum_PriorHelper(CPriorHelper* priorhelper);
     void SetFitContinuum_SNRMax(Float64 snr_max);
     void SetFitContinuum_Option(Int32 opt);
     Int32 GetFitContinuum_Option();
@@ -122,13 +124,16 @@ public:
     std::string getTplshape_bestTplName();
     Float64 getTplshape_bestTplIsmCoeff();
     Float64 getTplshape_bestAmplitude();
+    Float64 getTplshape_bestDtm();
+    Float64 getTplshape_bestMtm();
     Int32 getTplshape_count();
     std::vector<Float64> getTplshape_priors();
-    std::vector<CPdfz::SPriorZ> getTplshape_priorsPz();
     std::vector<Float64> GetChisquareTplshape();
+    std::vector<Float64> GetPriorLinesTplshape();
     std::vector<Float64> GetScaleMargTplshape();
     std::vector<bool> GetStrongELPresentTplshape();
     std::vector<Int32> GetNLinesAboveSNRTplshape();
+    Int32 SetTplshape_PriorHelper(CPriorHelper* priorhelper);
 
     Int32 GetNElements();
     Int32 GetModelValidElementsNDdl();
@@ -169,6 +174,7 @@ public:
     std::vector<CLmfitController*> createLmfitControllers( const TFloat64Range& lambdaRange);
     void fitWithModelSelection(Float64 redshift, const TFloat64Range& lambdaRange, CLineModelSolution &modelSolution);
     void SetFittingMethod(std::string fitMethod);
+    void SetSecondpassContinuumFitPrms(Int32 dustfit, Int32 meiksinfit);
 
     void SetAbsLinesLimit(Float64 limit);
     void SetLeastSquareFastEstimationEnabled(Int32 enabled);
@@ -266,6 +272,8 @@ public:
     std::vector<std::vector<Float64>> m_DtmTplshape;
     std::vector<std::vector<Float64>> m_LyaAsymCoeffTplshape;
     std::vector<std::vector<Float64>> m_LyaWidthCoeffTplshape;
+    std::vector<std::vector<Float64>> m_LyaDeltaCoeffTplshape;
+    std::vector<std::vector<Float64>> m_LinesLogPriorTplshape;
 
     bool m_enableAmplitudeOffsets;
     Float64 m_LambdaOffsetMin = -400.0;
@@ -290,6 +298,8 @@ public:
     bool m_opt_firstpass_forcedisableTplratioISMfit=true;
     std::string m_opt_firstpass_fittingmethod = "hybrid";
     std::string m_opt_secondpass_fittingmethod = "hybrid";
+
+    bool m_opt_enable_improveBalmerFit=false;
 private:
 
     Int32 fitAmplitudesHybrid(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& spcFluxAxisNoContinuum, const CSpectrumFluxAxis &continuumfluxAxis, Float64 redshift);
@@ -352,6 +362,7 @@ private:
     Float64 m_ContinuumWinsize;
     std::string m_ContinuumComponent;
     std::string m_LineWidthType;
+    Float64 m_NSigmaSupport;
     Float64 m_resolution;
     Float64 m_velocityEmission;
     Float64 m_velocityAbsorption;
@@ -370,17 +381,21 @@ private:
 
     std::shared_ptr<CSpectrum> m_inputSpc;
     CTemplateCatalog m_tplCatalog;
+    CTemplateCatalog m_orthoTplCatalog;
     TStringList m_tplCategoryList;
     std::string m_tplshapeBestTplName;
     Float64 m_tplshapeBestTplIsmCoeff;
     Float64 m_tplshapeBestTplAmplitude;
+    Float64 m_tplshapeBestTplDtm;
+    Float64 m_tplshapeBestTplMtm;
     Int32 m_tplshapeLeastSquareFast = 0;    //for rigidity=tplshape: switch to use fast least square estimation
+    CPriorHelper* m_tplshape_priorhelper;
 
     COperatorChiSquare2* m_chiSquareOperator;
-    Int32 m_fitContinuum_dustfit;
-    Int32 m_fitContinuum_igm;
-    Int32 m_fitContinuum_outsidelinesmask;
-    Int32 m_fitContinuum_observedFrame;
+    Int32 m_secondpass_fitContinuum_dustfit;
+    Int32 m_secondpass_fitContinuum_igm;
+    Int32 m_secondpass_fitContinuum_outsidelinesmask;
+    Int32 m_secondpass_fitContinuum_observedFrame;
 
     CTemplatesFitStore* m_fitContinuum_tplfitStore;
     Int32 m_fitContinuum_option;
@@ -397,7 +412,7 @@ private:
     std::vector<Float64> m_fitContinuum_tplFitPolyCoeffs;   // only used with m_fitContinuum_option==2 for now
     bool m_forcedisableMultipleContinuumfit=false;
     Float64 m_fitContinuum_tplFitAlpha=0.;
-    CPriorHelperContinuum* m_fitContinuum_priorhelper;
+    CPriorHelper* m_fitContinuum_priorhelper;
 
     bool m_lmfit_noContinuumTemplate;
     bool m_lmfit_bestTemplate;

@@ -43,6 +43,7 @@ private:
                      std::string opt_rigidity,
                      std::string opt_combine,
                      Float64 opt_stronglinesprior,
+                     Float64 opt_hapriorstrength,
                      Float64 opt_euclidNHaEmittersPriorStrength,
                      Float64 opt_modelPriorZStrength,
                      std::shared_ptr<CPdfMargZLogResult> postmargZResult,
@@ -61,12 +62,15 @@ private:
     std::string m_opt_tplfit_dustfit="no";
     std::string m_opt_tplfit_igmfit="no";
     Float64 m_opt_continuumfitcount;
-    Float64 m_opt_tplfit_continuumprior_beta=1.0;
-    std::string m_opt_tplfit_continuumprior_reldirpath="";
+    Float64 m_opt_tplfit_continuumprior_betaA=1.0;
+    Float64 m_opt_tplfit_continuumprior_betaTE=1.0;
+    Float64 m_opt_tplfit_continuumprior_betaZ=1.0;
+    std::string m_opt_tplfit_continuumprior_dirpath="";
     std::string m_opt_tplfit_ignoreLinesSupport="no";
 
     std::string m_opt_rigidity;
     std::string m_opt_lineWidthType;
+    Float64 m_opt_nsigmasupport;
     Float64 m_opt_resolution;
     Float64 m_opt_velocity_emission;
     Float64 m_opt_velocity_absorption;
@@ -82,6 +86,7 @@ private:
     Float64 m_opt_manvelfit_dz_step;
     std::string m_opt_continuumreest;
     std::string m_opt_rules;
+    std::string m_opt_enableImproveBalmerFit;
 
     std::string m_opt_lya_forcefit;
     std::string m_opt_lya_forcedisablefit;
@@ -99,9 +104,15 @@ private:
     //options for rigidity=tplshape
     std::string m_opt_tplratio_reldirpath="";
     std::string m_opt_tplratio_ismfit="no";
+    Float64 m_opt_tplratio_prior_betaA=1.0;
+    Float64 m_opt_tplratio_prior_betaTE=1.0;
+    Float64 m_opt_tplratio_prior_betaZ=1.0;
+    std::string m_opt_tplratio_prior_dirpath="";
     std::string m_opt_offsets_reldirpath="";
 
     Float64 m_opt_extremacount;
+    Float64 m_opt_extremacountB;
+
     Float64 m_opt_candidatesLogprobaCutThreshold;
     Float64 m_opt_firstpass_largegridstep;
     std::string m_opt_firstpass_largegridsampling;
@@ -110,7 +121,10 @@ private:
     std::string m_opt_firstpass_fittingmethod;
 
     std::string m_opt_pdfcombination;
+    std::string m_opt_pdf_margAmpCorrection="no";
+    std::string m_opt_bestz_option="maxproba"; //"maxintgproba"
     Float64 m_opt_stronglinesprior;
+    Float64 m_opt_haPrior;
     Float64 m_opt_euclidNHaEmittersPriorStrength;
     Float64 m_opt_modelZPriorStrength;
     std::string m_opt_saveintermediateresults;

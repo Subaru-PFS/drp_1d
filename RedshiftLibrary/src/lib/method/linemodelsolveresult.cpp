@@ -239,7 +239,7 @@ Bool CLineModelSolveResult::GetBestRedshiftFromPdf(const CDataStore& store,
                 Log.LogDebug( "GetBestRedshiftFromPdf: z=%f : probalog = %f", zInCandidateRange, probaLog);
 
                 CPdfz pdfz;
-                Int32 method=0;
+                Int32 method=0; //0=direct intg, 1=gauss fit
                 Float64 flux_integral = -1;
                 if(method==1)
                 {
@@ -267,10 +267,20 @@ Bool CLineModelSolveResult::GetBestRedshiftFromPdf(const CDataStore& store,
                     flux_integral = pdfz.getCandidateSumTrapez( logzpdf1d->Redshifts, logzpdf1d->valProbaLog, zInCandidateRange, Fullwidth);
                 }
 
+                Float64 bestval, val;
+                if(m_bestRedshiftFromPdfOption=="maxproba")
+                {
+                    bestval = tmpProbaLog;
+                    val = probaLog;
+                }else{
+                    bestval = tmpIntgProba;
+                    val = flux_integral;
+                }
                 //Float64 merit = lineModelResult->ChiSquare[solIdx];
                 //if( merit < tmpMerit )
-                if(probaLog>tmpProbaLog)
+                //if(probaLog>tmpProbaLog)
                 //if(flux_integral>tmpIntgProba)
+                if(val>bestval)
                 {
                     tmpIntgProba = flux_integral;
                     tmpProbaLog = probaLog;
@@ -293,7 +303,7 @@ Bool CLineModelSolveResult::GetBestRedshiftFromPdf(const CDataStore& store,
         Float64 zwidth = 2e-2;
         Float64 pmis=-1;
         Float64 zmap = tmpRedshift;
-        Log.LogDetail( "pdfz: using zmap=%f", zmap);
+        Log.LogDetail( "pdfz: pmis using zmap=%f", zmap);
         Int32 retPMis = pdfz.getPmis( logzpdf1d->Redshifts,
                                       logzpdf1d->valProbaLog,
                                       zmap,
@@ -322,6 +332,12 @@ Bool CLineModelSolveResult::GetBestRedshiftFromPdf(const CDataStore& store,
     modelTplContinuum = tmpModelTplcontinuum;
     return true;
 }
+
+void CLineModelSolveResult::SetBestZFromPdfOption(std::string str_opt)
+{
+    m_bestRedshiftFromPdfOption = str_opt;
+}
+
 
 Int32 CLineModelSolveResult::GetEvidenceFromPdf(const CDataStore& store, Float64 &evidence) const
 {

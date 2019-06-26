@@ -93,8 +93,8 @@ Bool CLineCatalogsOffsets::LoadCatalog( const char* filePath )
 
     SOffsetsCatalog newCatalog;
 
-    ifstream file;
-    file.open( filePath, ifstream::in );
+    std::ifstream file;
+    file.open( filePath, std::ifstream::in );
     if( file.rdstate() & ios_base::failbit )
     {
         return false;
@@ -248,8 +248,8 @@ Int32 CLineCatalogsOffsets::AutoSelectStackFromReferenceFile(std::string spectru
     bfs::path calibrationFolder( m_Calibration_path.c_str() );
     std::string filePath = (calibrationFolder/reference_stacks_relpath.c_str()).string();
 
-    ifstream file;
-    file.open( filePath, ifstream::in );
+    std::ifstream file;
+    file.open( filePath, std::ifstream::in );
     if( file.rdstate() & ios_base::failbit )
     {
         return -1;

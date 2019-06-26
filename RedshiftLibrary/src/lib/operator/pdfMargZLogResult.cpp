@@ -42,8 +42,8 @@ Int32 CPdfMargZLogResult::Load( std::string filePath )
     Redshifts.clear();
     valProbaLog.clear();
 
-    ifstream file;
-    file.open( filePath, ifstream::in );
+    std::ifstream file;
+    file.open( filePath, std::ifstream::in );
     if( file.rdstate() & ios_base::failbit )
     {
         return -3;
