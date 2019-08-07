@@ -2,32 +2,31 @@ CMAKE_MINIMUM_REQUIRED (VERSION 3.0)
 PROJECT( cpf-redshift )
 
 # extra path for modules
-SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake)
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake)
 include(SetupVar)
 include(gitrevision)
 
-# Force build type to release if not defined
-if(NOT CMAKE_BUILD_TYPE)
-  set(CMAKE_BUILD_TYPE Release)
-endif()
-
 message("Using git revision : " ${GIT_REVISION})
 
-IF(BUILD_STATIC_LIBS)
-  SET(BUILD_SHARED_LIBS OFF)
-ELSE()
-  SET(BUILD_SHARED_LIBS ON)
-ENDIF()
+if(BUILD_STATIC_LIBS)
+  set(BUILD_SHARED_LIBS OFF)
+else()
+  set(BUILD_SHARED_LIBS ON)
+endif()
 
-IF(BUILD_SHARED_LIBS)
-  SET(Boost_USE_STATIC_LIBS OFF)
-ELSE()
-  SET(Boost_USE_STATIC_LIBS ON)
-ENDIF()
+message(STATUS "BUILD_SHARED_LIBS=" ${BUILD_SHARED_LIBS})
+
+if(BUILD_SHARED_LIBS)
+  set(Boost_USE_STATIC_LIBS OFF)
+else()
+  set(Boost_USE_STATIC_LIBS ON)
+endif()
 
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
   set(CMAKE_INSTALL_PREFIX "$ENV{HOME}/usr" CACHE PATH "" FORCE)
 endif()
+
+message(STATUS "CMAKE_INSTALL_PREFIX=" ${CMAKE_INSTALL_PREFIX})
 
 SET( CMAKE_PREFIX_PATH ${CMAKE_INSTALL_PREFIX} )
 SET( cpf-redshift_INCLUDE_DIR ${CMAKE_INSTALL_PREFIX}/include )
@@ -53,7 +52,7 @@ IF(NOT find_gsl GREATER -1)
 ENDIF()
 
 IF(NOT find_fftw GREATER -1)
-  pkg_check_modules(FFTW fftw>=3.3.8)
+  pkg_check_modules(FFTW fftw3>=3.3.8)
 ENDIF()
 
 #--------------------------------------------------------
