@@ -35,7 +35,7 @@ LIST(FIND MISSING_THIRDPARTIES "fftw" find_fftw)
 FIND_PACKAGE(PkgConfig)
 
 IF(NOT find_boost GREATER -1)
-  FIND_PACKAGE(Boost 1.57 COMPONENTS filesystem system thread timer chrono program_options unit_test_framework)
+  FIND_PACKAGE(Boost 1.53 COMPONENTS filesystem system thread timer chrono program_options unit_test_framework)
 ENDIF()
 
 IF(NOT find_cfitsio GREATER -1)
