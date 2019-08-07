@@ -1,4 +1,4 @@
-CMAKE_MINIMUM_REQUIRED (VERSION 2.8)
+CMAKE_MINIMUM_REQUIRED (VERSION 3.0)
 PROJECT( cpf-redshift )
 
 # extra path for modules
@@ -19,44 +19,41 @@ ELSE()
   SET(Boost_USE_STATIC_LIBS ON)
 ENDIF()
 
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+  set(CMAKE_INSTALL_PREFIX "$ENV{HOME}/usr" CACHE PATH "" FORCE)
+endif()
+
+SET( CMAKE_PREFIX_PATH ${CMAKE_INSTALL_PREFIX} )
+SET( cpf-redshift_INCLUDE_DIR ${CMAKE_INSTALL_PREFIX}/include )
+SET( cpf-redshift_LINK_DIR ${CMAKE_INSTALL_PREFIX}/lib )
+
 LIST(FIND MISSING_THIRDPARTIES "boost" find_boost)
 LIST(FIND MISSING_THIRDPARTIES "cfitsio" find_cfitsio)
 LIST(FIND MISSING_THIRDPARTIES "gsl" find_gsl)
 LIST(FIND MISSING_THIRDPARTIES "fftw" find_fftw)
 
+FIND_PACKAGE(PkgConfig)
+
 IF(NOT find_boost GREATER -1)
-  FIND_PACKAGE(Boost COMPONENTS filesystem system thread timer chrono program_options unit_test_framework)
+  FIND_PACKAGE(Boost 1.57 COMPONENTS filesystem system thread timer chrono program_options unit_test_framework)
 ENDIF()
 
 IF(NOT find_cfitsio GREATER -1)
-  FIND_PACKAGE(Cfitsio)
+  pkg_check_modules(CFITSIO cfitsio>=3.36)
 ENDIF()
 
 IF(NOT find_gsl GREATER -1)
-  FIND_PACKAGE(GSL 2.1)
+  pkg_check_modules(GSL gsl>=2.5)
 ENDIF()
 
 IF(NOT find_fftw GREATER -1)
-  FIND_PACKAGE(FFTW)
-ENDIF()
-
-IF(NOT GSL_FOUND AND NOT find_gsl GREATER -1)
-  # older versions of cmake don't have FindGSL
-  FIND_PACKAGE(PkgConfig)
-  pkg_check_modules(GSL gsl>=2.1)
+  pkg_check_modules(FFTW fftw>=3.3.8)
 ENDIF()
 
 #--------------------------------------------------------
 # Setup shortcut access directory
 #--------------------------------------------------------
 SET( ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}" )
-
-if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-  set(CMAKE_INSTALL_PREFIX "$ENV{HOME}/usr" CACHE PATH "" FORCE)
-endif()
-
-SET( cpf-redshift_INCLUDE_DIR ${CMAKE_INSTALL_PREFIX}/include )
-SET( cpf-redshift_LINK_DIR ${CMAKE_INSTALL_PREFIX}/lib )
 
 # Set up THIRDPARTY_LIBS
 IF (Boost_FOUND)
