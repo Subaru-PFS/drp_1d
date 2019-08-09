@@ -86,8 +86,8 @@ def _standard_build(path, prefix, options, extra_flags=''):
 
 def _boost_build(path, prefix, options, extra_flags=''):
     os.system("cd {path}; ./bootstrap.sh "
-              "--with-libraries=test,filesystem,program_options,thread,"
-              "regex,python,timer,chrono --prefix={prefix};"
+              "--with-libraries=system,filesystem,program_options,thread,"
+              "timer,chrono,test --prefix={prefix};"
               "./b2 -j{parallel} link={shared} install; cd ../".format(
                   path=path, prefix=prefix,
                   parallel=options.parallel,

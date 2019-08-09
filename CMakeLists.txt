@@ -76,15 +76,18 @@ IF (Boost_FOUND)
     ${Boost_PROGRAM_OPTIONS_LIBRARY_${BOOST_TARGET}}
     ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY_${BOOST_TARGET}})
   LIST(APPEND cpf-redshift_THIRDPARTY_LIBS ${boost_libs})
+  LIST(APPEND cpf-redshift_LINK_DIR ${Boost_LIBRARY_DIRS})
   LIST(APPEND cpf-redshift_INCLUDE_DIR ${Boost_INCLUDE_DIRS})
 ELSE()
   LIST(APPEND MISSING_THIRDPARTIES "boost")
   LIST(APPEND cpf-redshift_THIRDPARTY_LIBS pthread boost_filesystem
-    boost_system boost_thread boost_timer boost_chrono boost_program_options)
+    boost_system boost_thread boost_timer boost_chrono boost_program_options
+    boost_unit_test_framework)
 ENDIF()
 
 IF (CFITSIO_FOUND)
   LIST(APPEND cpf-redshift_THIRDPARTY_LIBS ${CFITSIO_LIBRARIES})
+  LIST(APPEND cpf-redshift_LINK_DIR ${CFITSIO_LIBRARY_DIRS})
   LIST(APPEND cpf-redshift_INCLUDE_DIR ${CFITSIO_INCLUDE_DIRS})
 ELSE()
   LIST(APPEND MISSING_THIRDPARTIES "cfitsio")
@@ -93,7 +96,8 @@ ENDIF()
 
 IF (FFTW_FOUND)
   LIST(APPEND cpf-redshift_THIRDPARTY_LIBS ${FFTW_LIBRARIES})
-  LIST(APPEND cpf-redshift_INCLUDE_DIR ${FFTW_INCLUDE_DIR})
+  LIST(APPEND cpf-redshift_LINK_DIR ${FFTW_LIBRARY_DIRS})
+  LIST(APPEND cpf-redshift_INCLUDE_DIR ${FFTW_INCLUDE_DIRS})
 ELSE()
   LIST(APPEND MISSING_THIRDPARTIES "fftw")
   LIST(APPEND cpf-redshift_THIRDPARTY_LIBS fftw3)
@@ -101,7 +105,8 @@ ENDIF()
 
 IF (GSL_FOUND)
   LIST(APPEND cpf-redshift_THIRDPARTY_LIBS ${GSL_LIBRARIES})
-  LIST(APPEND cpf-redshift_INCLUDE_DIR ${GSL_INCLUDE_DIR})
+  LIST(APPEND cpf-redshift_LINK_DIR ${GSL_LIBRARY_DIRS})
+  LIST(APPEND cpf-redshift_INCLUDE_DIR ${GSL_INCLUDE_DIRS})
 ELSE()
   LIST(APPEND MISSING_THIRDPARTIES "gsl")
   LIST(APPEND cpf-redshift_THIRDPARTY_LIBS gsl gslcblas)
@@ -119,6 +124,10 @@ endif(CCACHE_FOUND)
 IF(MISSING_THIRDPARTIES)
   LIST(REMOVE_DUPLICATES MISSING_THIRDPARTIES)
 ENDIF()
+
+if(cpf-redshift_LINK_DIR)
+  list(REMOVE_DUPLICATES cpf-redshift_LINK_DIR)
+endif()
 
 #--------------------------------------------------------
 # Parse version, this will be used later to configure
