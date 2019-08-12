@@ -1,4 +1,4 @@
-CMAKE_MINIMUM_REQUIRED (VERSION 3.0)
+CMAKE_MINIMUM_REQUIRED (VERSION 3.13)
 PROJECT( cpf-redshift )
 
 # extra path for modules
@@ -7,6 +7,14 @@ include(SetupVar)
 include(gitrevision)
 
 message("Using git revision : " ${GIT_REVISION})
+
+if(NOT BUILD_TESTS)
+  set(BUILD_TESTS ON)
+else()
+  set(BUILD_TESTS OFF)
+endif()
+
+message(STATUS "BUILD_TESTS=" ${BUILD_TESTS})
 
 if(BUILD_STATIC_LIBS)
   set(BUILD_SHARED_LIBS OFF)
