@@ -77,7 +77,7 @@ def _check_lib(name, prefix, options):
 
 def _standard_build(path, prefix, options, extra_flags=''):
     os.system("cd {path} ; ./configure --prefix={prefix} {shared} {extra_flags};"
-              "make clean ; make -j{parallel} all; make install".format(
+              "make -j{parallel} all; make install".format(
                   path=path, prefix=prefix,
                   parallel=options.parallel,
                   shared='--enable-shared' if options.shared else '--enable-static',
@@ -86,8 +86,8 @@ def _standard_build(path, prefix, options, extra_flags=''):
 
 def _boost_build(path, prefix, options, extra_flags=''):
     os.system("cd {path}; ./bootstrap.sh "
-              "--with-libraries=test,filesystem,program_options,thread,"
-              "regex,python,timer,chrono --prefix={prefix};"
+              "--with-libraries=system,filesystem,program_options,thread,"
+              "timer,chrono,test --prefix={prefix};"
               "./b2 -j{parallel} link={shared} install; cd ../".format(
                   path=path, prefix=prefix,
                   parallel=options.parallel,
@@ -97,7 +97,7 @@ def _boost_build(path, prefix, options, extra_flags=''):
 def _cfitsio_build(path, prefix, options, extra_flags=''):
     os.system("cd {path}; ./configure --enable-reentrant --prefix={prefix} "
               "--enable-sse2 --enable-ssse3 ;"
-              "make -j{parallel} clean {shared}; make install; cd ../".format(
+              "make -j{parallel} {shared}; make install; cd ../".format(
                   path=path, prefix=prefix,
                   parallel=options.parallel,
                   shared='shared' if options.shared else 'all-nofitsio'))
@@ -180,8 +180,3 @@ def Main(argv):
 
 
 Main(sys.argv)
-
-
-
-
-
