@@ -7,7 +7,7 @@ libs = '@cpf-redshift_THIRDPARTY_LIBS@'.split(';')
 coverage = @cpf-redshift_COVERAGE@
 
 extra_compile_args = ['-std=c++11']
-if '@CMAKE_C_COMPILER_ID@'.lower() == 'clang':
+if '@CMAKE_C_COMPILER_ID@'.lower().find('clang') > 0 :
     extra_compile_args.append('-stdlib=libc++')
 
 extra_link_args = []
