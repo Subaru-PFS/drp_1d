@@ -60,7 +60,7 @@ pylibamazed/redshift_wrap.cpp
 pylibamazed/redshift_wrap.h
 pylibamazed/redshift.py
 *.egg*
-fixed-wheel
+wheel
 
 swig_ext.py
 
