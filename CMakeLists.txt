@@ -260,11 +260,26 @@ CONFIGURE_FILE(
   ${CMAKE_CURRENT_SOURCE_DIR}/swig_ext.py.in
   ${CMAKE_CURRENT_SOURCE_DIR}/swig_ext.py
   )
-SET (GENERATED_FILES_LIST "swig_ext.py" "pylibamazed/redshift_wrap.cpp"
-  "pylibamazed/redshift_wrap.h" "pylibamazed/redshift.py" "pylibamazed.egg-info")
 
-SET_DIRECTORY_PROPERTIES(PROPERTIES
-  ADDITIONAL_MAKE_CLEAN_FILES "${GENERATED_FILES_LIST}")
+set_property(DIRECTORY PROPERTY ADDITIONAL_MAKE_CLEAN_FILES
+  "${CMAKE_CURRENT_SOURCE_DIR}/swig_ext.py"
+  "${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/redshift_wrap.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/redshift_wrap.h"
+  "${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/redshift.py"
+  "${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed.egg-info")
+
+set(SWIG_FILES
+  "${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/redshift_wrap.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/redshift_wrap.h"
+  "${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/redshift.py"
+  "${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed.egg-info"
+)
+
+add_custom_target(clean_swig
+  COMMAND rm -rf ${SWIG_FILES}
+  COMMENT "Removing existing SWIG wrapper"
+  VERBATIM
+)
 
 #--------------------------------------------------------
 # Package deployement and config
