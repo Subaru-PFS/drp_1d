@@ -40,6 +40,11 @@ SET( CMAKE_PREFIX_PATH ${CMAKE_INSTALL_PREFIX} )
 SET( cpf-redshift_INCLUDE_DIR ${CMAKE_INSTALL_PREFIX}/include )
 SET( cpf-redshift_LINK_DIR ${CMAKE_INSTALL_PREFIX}/lib )
 
+FIND_PACKAGE(Python3 COMPONENTS Interpreter)
+IF (NOT Python3_Interpreter_FOUND)
+  MESSAGE(FATAL_ERROR "Can't find Python3 interpreter")
+ENDIF()
+
 LIST(FIND MISSING_THIRDPARTIES "boost" find_boost)
 LIST(FIND MISSING_THIRDPARTIES "cfitsio" find_cfitsio)
 LIST(FIND MISSING_THIRDPARTIES "gsl" find_gsl)
@@ -262,22 +267,27 @@ CONFIGURE_FILE(
   )
 
 set_property(DIRECTORY PROPERTY ADDITIONAL_MAKE_CLEAN_FILES
-  "${CMAKE_CURRENT_SOURCE_DIR}/swig_ext.py"
-  "${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/redshift_wrap.cpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/redshift_wrap.h"
-  "${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/redshift.py"
-  "${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed.egg-info")
-
-set(SWIG_FILES
   "${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/redshift_wrap.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/redshift_wrap.h"
   "${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/redshift.py"
   "${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed.egg-info"
+  "${CMAKE_CURRENT_SOURCE_DIR}/dist"
+  "${CMAKE_CURRENT_SOURCE_DIR}/wheel")
+
+set(PYTHON_BUILD_FILES
+  "${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/redshift_wrap.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/redshift_wrap.h"
+  "${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/redshift.py"
+  "${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed.egg-info"
+  "${CMAKE_CURRENT_SOURCE_DIR}/dist"
+  "${CMAKE_CURRENT_SOURCE_DIR}/wheel"
 )
 
-add_custom_target(clean_swig
-  COMMAND rm -rf ${SWIG_FILES}
-  COMMENT "Removing existing SWIG wrapper"
+add_custom_target(clean_python_build
+  COMMAND rm -rf ${PYTHON_BUILD_FILES}
+  COMMAND ${Python3_EXECUTABLE} setup.py clean --all
+  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+  COMMENT "Removing existing python build files"
   VERBATIM
 )
 

@@ -48,11 +48,9 @@ wheel36-osx:
   script:
     - cd build
     - make install
-    - make clean_swig
+    - make clean_python_build
     - cd ..
     - conda activate gitlab-ci-amazed-p36
-    - python setup.py clean --all
-    - rm -rf wheel dist
     - MACOSX_DEPLOYMENT_TARGET=10.7 CC=clang CXX=clang++ python setup.py bdist_wheel
     - delocate-wheel -w wheel/ dist/pylibamazed-*-cp36-cp36m-*.whl
   artifacts:
@@ -142,10 +140,8 @@ wheel36-manylinux2010:
   script:
     - cd build
     - make install
-    - make clean_swig
+    - make clean_python_build
     - cd ..
-    - python3.6 setup.py clean --all
-    - rm -rf wheel dist
     - python3.6 setup.py bdist_wheel
     - auditwheel repair dist/pylibamazed-*-cp36-cp36m-*.whl -w wheel --plat manylinux2010_x86_64
   artifacts:
