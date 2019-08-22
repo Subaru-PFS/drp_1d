@@ -1,6 +1,12 @@
 import os
 from setuptools import setup
+from distutils.command.build import build
 from swig_ext import swig_ext
+
+class CustomBuild(build):
+    def run(self):
+        self.run_command('build_ext')
+        build.run(self)
 
 setup(
     name="pylibamazed",
@@ -24,5 +30,6 @@ setup(
         "License :: OSI Approved :: GNU General Public License v3 or "
         "later (GPLv3+)",
     ],
+    cmdclass={'build': CustomBuild},
     ext_modules=[swig_ext],
 )
