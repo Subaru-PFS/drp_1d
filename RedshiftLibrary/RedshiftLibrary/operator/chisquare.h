@@ -26,7 +26,7 @@ public:
                                              std::string opt_interp_unused="lin",
                                              Int32 opt_extinction_unused=0,
                                              Int32 opt_dustFitting_unused=0,
-                                             CPriorHelperContinuum::TPriorZEList logpriorze_unused=CPriorHelperContinuum::TPriorZEList());
+                                             CPriorHelper::TPriorZEList logpriorze_unused=CPriorHelper::TPriorZEList());
 
 
 private:

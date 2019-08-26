@@ -246,7 +246,7 @@ std::shared_ptr<CLineModelSolveResult> CZweiModelSolve::Compute( CDataStore& dat
             for(Int32 km=0; km<result->ChiSquareTplshapes.size(); km++)
             {
                 std::shared_ptr<CLineModelResult> result_chisquaretplshape = std::shared_ptr<CLineModelResult>( new CLineModelResult() );
-                result_chisquaretplshape->Init( result->Redshifts, result->restRayList, 0, std::vector<Float64>(), std::vector<CPdfz::SPriorZ>());
+                result_chisquaretplshape->Init( result->Redshifts, result->restRayList, 0, std::vector<Float64>());
                 for(Int32 kz=0; kz<result->Redshifts.size(); kz++)
                 {
                     result_chisquaretplshape->ChiSquare[kz] = result->ChiSquareTplshapes[km][kz];
@@ -261,7 +261,7 @@ std::shared_ptr<CLineModelSolveResult> CZweiModelSolve::Compute( CDataStore& dat
             for(Int32 km=0; km<result->ScaleMargCorrectionTplshapes.size(); km++)
             {
                 std::shared_ptr<CLineModelResult> result_chisquaretplshape = std::shared_ptr<CLineModelResult>( new CLineModelResult() );
-                result_chisquaretplshape->Init( result->Redshifts, result->restRayList, 0, std::vector<Float64>(), std::vector<CPdfz::SPriorZ>());
+                result_chisquaretplshape->Init( result->Redshifts, result->restRayList, 0, std::vector<Float64>());
                 for(Int32 kz=0; kz<result->Redshifts.size(); kz++)
                 {
                     result_chisquaretplshape->ChiSquare[kz] = result->ScaleMargCorrectionTplshapes[km][kz];
@@ -450,9 +450,9 @@ Int32 CZweiModelSolve::SaveContinuumPDF(CDataStore &store, std::shared_ptr<const
  **/
 Int32 CZweiModelSolve::getVelocitiesFromRefFile( const char* filePath, std::string spcid, Float64& elv, Float64& alv )
 {
-    ifstream file;
+    std::ifstream file;
 
-    file.open( filePath, ifstream::in );
+    file.open( filePath, std::ifstream::in );
     if( file.rdstate() & ios_base::failbit )
         return false;
 
@@ -536,9 +536,9 @@ Int32 CZweiModelSolve::getVelocitiesFromRefFile( const char* filePath, std::stri
  **/
 Int32 CZweiModelSolve::getValueFromRefFile( const char* filePath, std::string spcid, Int32 colID, Float64& zref, Int32 reverseInclusion )
 {
-    ifstream file;
+    std::ifstream file;
 
-    file.open( filePath, ifstream::in );
+    file.open( filePath, std::ifstream::in );
     if( file.rdstate() & ios_base::failbit )
         return false;
 
@@ -1197,9 +1197,9 @@ Int32 CZweiModelSolve::getContaminantNameFromFile( const char* filePath, std::st
     contSpcFileName = "";
     contErrorFileName = "";
 
-    ifstream file;
+    std::ifstream file;
 
-    file.open( filePath, ifstream::in );
+    file.open( filePath, std::ifstream::in );
     if( file.rdstate() & ios_base::failbit )
         return false;
 

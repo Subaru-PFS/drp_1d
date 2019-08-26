@@ -940,11 +940,11 @@ Int32   CPdfz::getPmis(std::vector<Float64> redshifts,
     //estimate zcalc intg proba
     Float64 pzcalc = getCandidateSumTrapez( redshifts, valprobalog, zbest, zwidth);
 
-    Log.LogInfo("pdfz: <pmisraw><%.6e>", pmis_raw);
-    Log.LogInfo("pdfz: <pmap><%.6e>", pzcalc);
+    Log.LogDetail("pdfz: <pmisraw><%.6e>", pmis_raw);
+    Log.LogDetail("pdfz: <pmap><%.6e>", pzcalc);
 
     pmis = pmis_raw/(1.-pzcalc);
-    Log.LogInfo("pdfz: <pmis><%.6e>", pmis);
+    Log.LogDetail("pdfz: <pmis><%.6e>", pmis);
 
     return 0;
 }
@@ -1046,79 +1046,6 @@ CPdfz::GetNLinesSNRAboveCutLogZPrior(std::vector<Int32> nlinesAboveSNR,
     return logzPrior;
 }
 
-std::vector<Float64>
-CPdfz::GetModelZPrior(CPdfz::SPriorZ priorPzDef,
-                      std::vector<Float64> redshifts,
-                      Float64 aCoeff)
-{
-    if(aCoeff<=0)
-    {
-        Log.LogError( "    CPdfz::GetModelZPrior: problem found aCoeff<=0: aCoeff=%f", aCoeff);
-        throw std::runtime_error("    CPdfz::GetModelZPrior: problem found aCoeff<=0");
-    }
-
-    Float64 maxP = -DBL_MAX;
-    Float64 minP = DBL_MAX;
-    Int32 nz = redshifts.size();
-    std::vector<Float64> zPrior(nz, 0.0);
-    for (UInt32 kz = 0; kz < nz; kz++)
-    {
-        Float64 muc = (redshifts[kz]-priorPzDef.mu);
-        Float64 gProfile = exp(-0.5*muc*muc/(priorPzDef.sigma*priorPzDef.sigma));
-        zPrior[kz] = priorPzDef.amp*gProfile + priorPzDef.p0;
-
-        zPrior[kz] /= priorPzDef.amp + priorPzDef.p0; //pre-normalization in order to have a pow(.., 128) not overflown//max aCoeff would be 128 then
-
-        //apply strength
-        zPrior[kz] = pow(zPrior[kz], aCoeff);
-
-        if (zPrior[kz] > maxP)
-        {
-            maxP = zPrior[kz];
-        }
-        if (zPrior[kz] < minP)
-        {
-            minP = zPrior[kz];
-        }
-    }
-    //Log.LogDetail("Pdfz: zPrior: using HalphaZPrior min=%e", minP);
-    //Log.LogDetail("Pdfz: zPrior: using HalphaZPrior max=%e", maxP);
-    Float64 dynamicCut = 1e128;
-    if (maxP > 0)
-    {
-        for (UInt32 kz = 0; kz < redshifts.size(); kz++)
-        {
-            zPrior[kz] /= maxP;
-            if (zPrior[kz] < 1. / dynamicCut)
-            {
-                zPrior[kz] = 1. / dynamicCut;
-            }
-        }
-    }
-
-    Float64 sum = 0.0;
-    for (UInt32 kz = 0; kz < redshifts.size(); kz++)
-    {
-        sum += zPrior[kz];
-    }
-    if (sum > 0)
-    {
-        for (UInt32 kz = 0; kz < nz; kz++)
-        {
-            zPrior[kz] /= sum;
-        }
-    }
-
-    // switch to log
-    std::vector<Float64> logzPrior(nz, 0.0);
-    for (UInt32 kz = 0; kz < nz; kz++)
-    {
-        logzPrior[kz] = log(zPrior[kz]);
-    }
-
-    return logzPrior;
-}
-
 std::vector<Float64> CPdfz::GetEuclidNhaLogZPrior(std::vector<Float64> redshifts, Float64 aCoeff)
 {
     if(aCoeff<=0)
@@ -1149,7 +1076,7 @@ std::vector<Float64> CPdfz::GetEuclidNhaLogZPrior(std::vector<Float64> redshifts
                       - 2288.98457865 );
 
         //shape prior at low z, left of the bell
-        Bool enable_low_z_flat = true;
+        Bool enable_low_z_flat = false;
         if(enable_low_z_flat && z<0.7204452872044528){
             zPrior[kz]=20367.877916402278;
         }else{

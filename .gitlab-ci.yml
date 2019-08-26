@@ -1,24 +1,243 @@
-image: ubuntu
+stages:
+  - build
+  - test
+  - build-wheel
+  - test-wheel
+  - push-rc
+  - test-rc
+  - push-prod
 
-before_script:
-  # install required packages
-  - apt-get update && apt-get install -y git cmake ccache build-essential swig
-      python3-pip python3-venv libboost-filesystem-dev libboost-system-dev
-      libboost-thread-dev libboost-timer-dev libboost-chrono-dev
-      libboost-program-options-dev libboost-regex-dev libboost-test-dev
-      libcfitsio-dev libgsl-dev libfftw3-dev pkg-config
-      python3-numpy python3-astropy
-  - pip3 install --upgrade pip
+variables:
+  TWINE_USERNAME: amazed
+  TWINE_PASSWORD: $CI_TWINE_PASSWORD
+  PYPI_REPOSITORY_URL: https://pypi.lam.fr
+  PYPI_TEST_REPOSITORY_URL: https://pypi.lam.fr
+  MANYLINUX2010_PYTHON35_PATH: /opt/python/cp35-cp35m/bin/
+  MANYLINUX2010_PYTHON36_PATH: /opt/python/cp36-cp36m/bin/
+  MANYLINUX2010_PYTHON37_PATH: /opt/python/cp37-cp37m/bin/
+  OSX_PYTHON35_PATH: gitlab-ci-amazed-p35
+  OSX_PYTHON36_PATH: gitlab-ci-amazed-p36
+  OSX_PYTHON37_PATH: gitlab-ci-amazed-p37
 
-job:
+# OSX Stages
+
+build-osx:
+  stage: build
+  tags:
+    - osx
   script:
-    - mkdir build
+    - conda activate gitlab-ci-amazed-p36
+    - mkdir -p build
     - cd build
-    - cmake .. -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=ON
+    - cmake ..
     - make -j4
+  cache:
+    key: osx
+    untracked: true
+
+test-osx:
+  stage: test
+  tags:
+    - osx
+  allow_failure: true
+  script:
+    - conda activate gitlab-ci-amazed-p36
+    - cd build
     - make install
     - make test
+  cache:
+    key: osx
+    untracked: true
+
+wheel36-osx:
+  stage: build-wheel
+  tags:
+    - osx
+  script:
+    - conda activate gitlab-ci-amazed-p36
+    - cd build
+    - make install
+    - make clean_python_build
     - cd ..
-    - python3.6 -m venv --system-site-packages venv
-    - source venv/bin/activate
-    - pip3.6 install .
+    - MACOSX_DEPLOYMENT_TARGET=10.7 CC=clang CXX=clang++ python setup.py bdist_wheel
+    - delocate-wheel -w wheel/ dist/pylibamazed-*-cp36-cp36m-*.whl
+  artifacts:
+    paths:
+      - wheel/
+    expire_in: 1 week
+  cache:
+    key: osx
+    untracked: true
+
+test-wheel-osx:
+  stage: test-wheel
+  tags:
+    - osx
+  script:
+    - conda activate gitlab-ci-amazed-p36
+    - pip install wheel/pylibamazed*
+    - python -c "import pylibamazed; import pkg_resources; print(pkg_resources.get_distribution('pylibamazed').version)"
+    - cd /
+    - python -c "from pylibamazed.redshift import get_version ; print(get_version())"
+  after_script:
+    - conda activate gitlab-ci-amazed-p36
+    - pip uninstall -y pylibamazed
+  dependencies:
+    - wheel36-osx
+  cache:
+    key: osx
+    untracked: true
+
+push-rc-osx:
+  stage: push-rc
+  tags:
+    - osx
+  when: manual
+  script:
+    - conda activate gitlab-ci-amazed-p36
+    - twine upload --repository-url=$PYPI_TEST_REPOSITORY_URL --verbose --skip-existing --disable-progress-bar wheel/*
+  cache:
+    key: osx
+    untracked: true
+  dependencies:
+    - wheel36-osx
+
+auto-push-rc-osx:
+  stage: push-rc
+  tags:
+    - osx
+  only:
+      variables:
+        - $AUTO_PUSH_RC == "true"
+  script:
+    - conda activate gitlab-ci-amazed-p36
+    - twine upload --repository-url=$PYPI_TEST_REPOSITORY_URL --verbose --disable-progress-bar wheel/*
+  cache:
+    key: osx
+    untracked: true
+  dependencies:
+    - wheel36-osx
+
+# Manylinux2010 stages
+
+build-manylinux2010:
+  image: portus.lam.fr/amazed/amazed-manylinux2010
+  stage: build
+  script:
+    - source /venv/p36/bin/activate
+    - mkdir -p build
+    - cd build
+    - cmake ..
+    - make -j4
+  cache:
+    key: manylinux2010
+    untracked: true
+
+test-manylinux2010:
+  image: portus.lam.fr/amazed/amazed-manylinux2010
+  stage: test
+  allow_failure: true
+  script:
+    - cd build
+    - make install
+    - make test
+  cache:
+    key: manylinux2010
+    untracked: true
+
+wheel36-manylinux2010:
+  image: portus.lam.fr/amazed/amazed-manylinux2010
+  stage: build-wheel
+  script:
+    - source /venv/p36/bin/activate
+    - cd build
+    - make install
+    - make clean_python_build
+    - cd ..
+    - python setup.py bdist_wheel
+    - auditwheel repair dist/pylibamazed-*-cp36-cp36m-*.whl -w wheel --plat manylinux2010_x86_64
+  artifacts:
+    paths:
+      - wheel/
+    expire_in: 1 week
+  cache:
+    key: manylinux2010
+    untracked: true
+
+test-wheel-manylinux2010:
+  image: portus.lam.fr/amazed/amazed-manylinux2010
+  stage: test-wheel
+  script:
+    - source /venv/p36/bin/activate
+    - pip install wheel/pylibamazed*
+    - python -c "import pylibamazed; import pkg_resources; print(pkg_resources.get_distribution('pylibamazed').version)"
+    - cd /
+    - python -c "from pylibamazed.redshift import get_version ; print(get_version())"
+  after_script:
+    - source /venv/p36/bin/activate
+    - pip uninstall -y pylibamazed
+  cache:
+    key: manylinux2010
+    untracked: true
+  dependencies:
+    - wheel36-manylinux2010
+
+push-rc-manylinux2010:
+  image: portus.lam.fr/amazed/amazed-manylinux2010
+  stage: push-rc
+  when: manual
+  script:
+    - source /venv/p36/bin/activate
+    - twine upload --repository-url=$PYPI_TEST_REPOSITORY_URL --verbose --disable-progress-bar wheel/*
+  cache:
+    key: manylinux2010
+    untracked: true
+  dependencies:
+    - wheel36-manylinux2010
+
+# Centos7 stages
+
+build-centos7:
+  image: portus.lam.fr/amazed/amazed-centos7
+  stage: build
+  when: manual
+  script:
+    - mkdir -p build
+    - cd build
+    - cmake3 ..
+    - make -j 4
+  cache:
+    key: centos7
+    untracked: true
+
+test-centos7:
+  image: portus.lam.fr/amazed/amazed-centos7
+  stage: test
+  when: manual
+  allow_failure: true
+  script:
+    - cd build
+    - make install
+    - make test
+  cache:
+    key: centos7
+    untracked: true
+  dependencies:
+    - build-centos7
+
+test-wheel-centos7:
+  image: portus.lam.fr/amazed/amazed-centos7
+  stage: test-wheel
+  when: manual
+  script:
+    - pip3.6 install wheel/pylibamazed*
+    - python3.6 -c "import pylibamazed; import pkg_resources; print(pkg_resources.get_distribution('pylibamazed').version)"
+    - cd /
+    - python3.6 -c "from pylibamazed.redshift import get_version ; print(get_version())"
+  after_script:
+    - pip3.6 uninstall -y pylibamazed
+  cache:
+    key: manylinux2010
+    untracked: true
+  dependencies:
+    - wheel36-manylinux2010

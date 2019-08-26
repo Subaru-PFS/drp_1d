@@ -20,14 +20,6 @@ class CPdfz
 
 public:
 
-    struct SPriorZ
-    {
-        Float64 amp=-1.0;
-        Float64 mu=-1.0;
-        Float64 sigma=-1.0;
-        Float64 p0=-1.0;
-    };
-
     CPdfz();
     ~CPdfz();
 
@@ -35,8 +27,6 @@ public:
     std::vector<Float64> GetConstantLogZPrior(UInt32 nredshifts);
     std::vector<Float64> GetStrongLinePresenceLogZPrior(std::vector<bool> linePresence, Float64 penalization_factor);
     std::vector<Float64> GetNLinesSNRAboveCutLogZPrior(std::vector<Int32> nlinesAboveSNR, Float64 penalization_factor);
-    std::vector<Float64> GetModelZPrior(CPdfz::SPriorZ priorPzDef,
-                                        std::vector<Float64> redshifts, Float64 aCoeff);
     std::vector<Float64> GetEuclidNhaLogZPrior(std::vector<Float64> redshifts, Float64 aCoeff);
     std::vector<Float64> CombineLogZPrior(std::vector<Float64> logprior1, std::vector<Float64> logprior2);
 

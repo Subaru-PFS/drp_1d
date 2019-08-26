@@ -100,7 +100,7 @@ void CParameterStore::Get( const std::string& name, TStringList& v, const TStrin
     }
 }
 
-void CParameterStore::Get( const std::string& name, std::string& v, std::string defaultValue ) const
+void CParameterStore::Get( const std::string& name, std::string& v, const std::string& defaultValue ) const
 {
   //std::cout << "Get v5" << std::endl;
   boost::optional< std::string > property = m_PropertyTree.get_optional< std::string >( name );
@@ -165,7 +165,7 @@ void CParameterStore::Get( const std::string& name, Bool& v, Bool defaultValue )
 }
 
 
-void CParameterStore::Get( const std::string& name, TFloat64Range& v, TFloat64Range defaultValue ) const
+void CParameterStore::Get( const std::string& name, TFloat64Range& v, const TFloat64Range& defaultValue ) const
 {
   //std::cout << "Get v9" << std::endl;
     TFloat64List listDefault( 2 );
@@ -291,4 +291,10 @@ void CParameterStore::Save( const std::string& path ) const
 void CParameterStore::Load( const std::string& path )
 {
     bpt::json_parser::read_json( path, m_PropertyTree );
+}
+
+void CParameterStore::FromString(const std::string& json)
+{
+    std::istringstream jsonstream(json);
+    bpt::json_parser::read_json(jsonstream, m_PropertyTree);
 }

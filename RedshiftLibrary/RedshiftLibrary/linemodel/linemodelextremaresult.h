@@ -64,7 +64,8 @@ public:
     //line width
     std::vector<Float64>      Elv;   //emission line width
     std::vector<Float64>      Alv;   //absorption line width
-    std::vector<std::vector<Float64>>      GroupsLv;   //per fitting group line width
+    std::vector<std::vector<Float64>>      GroupsELv;   //per fitting group line width , EL
+    std::vector<std::vector<Float64>>      GroupsALv;   //per fitting group line width , AL
 
 
     //template continuum
@@ -82,6 +83,8 @@ public:
     //template ratio
     std::vector<std::string>      FittedTplshapeName;   //Name of the best template fitted for tplcorr/tplshape
     std::vector<Float64>      FittedTplshapeAmplitude;   //amp of the best template fitted for tplcorr/tplshape
+    std::vector<Float64>      FittedTplshapeDtm;   //dtm of the best template fitted for tplcorr/tplshape
+    std::vector<Float64>      FittedTplshapeMtm;   //mtm of the best template fitted for tplcorr/tplshape
     std::vector<Float64>      FittedTplshapeIsmCoeff;   //IsmCoeff/EBMV of the best template fitted for tplcorr/tplshape
 
 };
