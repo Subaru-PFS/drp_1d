@@ -1,7 +1,15 @@
 #!/usr/bin/env python
+from __future__ import (absolute_import, division,
+                        print_function, unicode_literals)
+from builtins import *
 
-from urllib import request, error
 import sys
+if sys.version_info[0] < 3:
+    import urllib2 as request
+    import urllib2 as error
+else:
+    from urllib import request, error
+
 import argparse
 import os
 import tarfile
@@ -41,7 +49,8 @@ def DownloadHTTPFile(fileUrl, localFilePath):
     try:
         urlfile = request.urlopen(fileUrl)
     except error.URLError as e:
-        print("Download from: " + fileUrl + "failed.\nReason are:" + str(e.reason))
+        print("Download from: " + fileUrl + " failed.\nReason are: " + str(e.reason))
+        raise
 
     localFile = open(localFilePath, 'wb')
 
@@ -138,11 +147,8 @@ libDict = {
 
 
 def Main(argv):
-    if sys.version_info[0] < 3:
-        print("Python version 3.X needed")
-        return
 
-    if sys.version_info[1] < 4:
+    if (sys.version_info[0] < 3 and sys.version_info[1] < 4):
         # __file__ was relative until python 3.4
         build_dir = os.path.abspath(os.path.join(os.getcwd(),
                                                  os.path.dirname(__file__),
