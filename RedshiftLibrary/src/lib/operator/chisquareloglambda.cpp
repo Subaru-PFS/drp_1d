@@ -17,6 +17,7 @@
 #include <float.h>
 #include <gsl/gsl_interp.h>
 #include <gsl/gsl_spline.h>
+#include <gsl/gsl_errno.h>
 #include <math.h>
 
 #include <boost/algorithm/string/predicate.hpp>
@@ -1459,10 +1460,13 @@ Int32 COperatorChiSquareLogLambda::InterpolateResult(const Float64 *in,
     gsl_interp *interpolation = gsl_interp_alloc(gsl_interp_linear, n);
     gsl_interp_init(interpolation, inGrid, in, n);
     gsl_interp_accel *accelerator = gsl_interp_accel_alloc();
+    Int32 status;
     // spline
     // gsl_spline *spline = gsl_spline_alloc (gsl_interp_cspline, n);
     // gsl_spline_init (spline, inGrid, in, n);
     // gsl_interp_accel * accelerator =  gsl_interp_accel_alloc();
+
+    gsl_set_error_handler_off();
 
     for (Int32 j = 0; j < tgtn; j++)
     {
@@ -1478,15 +1482,24 @@ Int32 COperatorChiSquareLogLambda::InterpolateResult(const Float64 *in,
             Log.LogError("Error while interpolating loglambda chi2 result. xrebin(%f)<x[0](%f)", Xrebin, inGrid[0]);
             throw runtime_error("Error while interpolating loglambda chi2 result.");
         }
-        out[j] = gsl_interp_eval(interpolation,
-                                 inGrid,
-                                 in,
-                                 Xrebin,
-                                 accelerator); // lin
+
+        status = gsl_interp_eval_e(interpolation,
+                                   inGrid,
+                                   in,
+                                   Xrebin,
+                                   accelerator,
+                                   &out[j]); // lin
+
+        if (status != GSL_SUCCESS) {
+          Log.LogError("    Operator-ChisquareLog: InterpolateError: GSL code = %d, %s", status, gsl_strerror(status));
+          throw std::runtime_error("GSL Error");
+        }
         // out[j] = gsl_spline_eval (spline, Xrebin, accelerator); //spline
         // Log.LogInfo("  Operator-ChisquareLog: FitAllz: interpolating
         // gsl-spline z result, , ztgt=%f, rebinY=%f", tgtGrid[j], out[j]);
     }
+
+    gsl_set_error_handler(NULL);
 
     gsl_interp_free(interpolation);
     // gsl_spline_free (spline);
