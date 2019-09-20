@@ -7,6 +7,8 @@
 
 #include <RedshiftLibrary/reliability/zclassifierstore.h>
 
+#include <gsl/gsl_errno.h>
+
 #include <map>
 #include <string>
 #include <memory>
