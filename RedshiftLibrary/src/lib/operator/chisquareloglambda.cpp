@@ -1466,7 +1466,7 @@ Int32 COperatorChiSquareLogLambda::InterpolateResult(const Float64 *in,
     // gsl_spline_init (spline, inGrid, in, n);
     // gsl_interp_accel * accelerator =  gsl_interp_accel_alloc();
 
-    gsl_set_error_handler_off();
+    gsl_error_handler_t *gsl_error_handler_old = gsl_set_error_handler_off();
 
     for (Int32 j = 0; j < tgtn; j++)
     {
@@ -1499,7 +1499,7 @@ Int32 COperatorChiSquareLogLambda::InterpolateResult(const Float64 *in,
         // gsl-spline z result, , ztgt=%f, rebinY=%f", tgtGrid[j], out[j]);
     }
 
-    gsl_set_error_handler(NULL);
+    gsl_set_error_handler(gsl_error_handler_old);
 
     gsl_interp_free(interpolation);
     // gsl_spline_free (spline);
