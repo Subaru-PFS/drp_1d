@@ -1491,7 +1491,7 @@ Int32 COperatorChiSquareLogLambda::InterpolateResult(const Float64 *in,
                                    &out[j]); // lin
 
         if (status != GSL_SUCCESS) {
-          Log.LogError("    Operator-ChisquareLog: InterpolateError: GSL code = %d, %s", status, gsl_strerror(status));
+          Log.LogError("   Operator-ChisquareLog: InterpolateError: GSL code = %d, %s ; see file: %s at line: %d", status, gsl_strerror(status), __FILENAME__, __LINE__);
           throw std::runtime_error("GSL Error");
         }
         // out[j] = gsl_spline_eval (spline, Xrebin, accelerator); //spline
