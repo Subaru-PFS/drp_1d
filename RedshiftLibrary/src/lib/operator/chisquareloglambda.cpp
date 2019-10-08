@@ -1492,7 +1492,7 @@ Int32 COperatorChiSquareLogLambda::InterpolateResult(const Float64 *in,
 
         if (status != GSL_SUCCESS) {
           Log.LogError("   Operator-ChisquareLog: InterpolateError: GSL code = %d, %s ; see file: %s at line: %d", status, gsl_strerror(status), __FILENAME__, __LINE__);
-          throw std::runtime_error("GSL Error");
+          throw std::runtime_error("GSL Error during the interpolation evaluation");
         }
         // out[j] = gsl_spline_eval (spline, Xrebin, accelerator); //spline
         // Log.LogInfo("  Operator-ChisquareLog: FitAllz: interpolating
@@ -1808,7 +1808,7 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(const CSpe
                     [spectrum.GetSpectralAxis().GetSamplesCount() - 1];
         }
 
-        {
+        /*{
             // zstep lower lbda range for this sampling
             Float64 dlambda_begin =
                 (targetSpectralAxis[1] - targetSpectralAxis[0]);
@@ -1835,7 +1835,7 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(const CSpe
             Log.LogDetail("  Operator-ChisquareLog: Log-Rebin: "
                         "dz_zrangemin_end=%f : dz_zrangemax_end=%f",
                         dz_zrangemin_end, dz_zrangemax_end);
-        }
+        }*/
 
         if (verboseExportLogRebin)
         {
@@ -1952,10 +1952,9 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(const CSpe
             Float64 relativeErrAbs =
                 std::abs((_loglbdaStep - loglbdaStep) / loglbdaStep);
             // if(verboseLogRebin)
-            //{
-            //    Log.LogInfo("  Operator-ChisquareLog: _loglbdastep = %f,
-            //    relativeErrAbs = %f", _loglbdaStep, relativeErrAbs);
-            //}
+            // {
+            //     Log.LogInfo("  Operator-ChisquareLog: _loglbdastep = %f, relativeErrAbs = %f", _loglbdaStep, relativeErrAbs);
+            // }
 
             if (relativeErrAbs > maxAbsRelativeError)
             {
