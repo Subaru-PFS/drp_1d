@@ -914,7 +914,7 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64 *spectrumRebinedLambda,
     }
 
     //
-    Int32 nshifts = nTpl - nSpc;
+    Int32 nshifts = nTpl - nSpc + 1;
     m_nPaddedSamples = (Int32)nTpl * 2.0;
     /*
     //next power of two
@@ -940,13 +940,12 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64 *spectrumRebinedLambda,
     InitFFT(m_nPaddedSamples);
 
     // prepare z array
-    Int32 zoff = 1;
     std::vector<Float64> z_vect(nshifts, 0.0);
     Int32 z_vect_size = z_vect.size();
     for (Int32 t = 0; t < z_vect_size; t++)
     {
-        z_vect[t] = (spectrumRebinedLambda[0] - tplRebinedLambda[t + zoff]) /
-                    tplRebinedLambda[t + zoff];
+        z_vect[t] = (spectrumRebinedLambda[0] - tplRebinedLambda[t]) /
+                    tplRebinedLambda[t];
     }
 
     // Estimate DtD
