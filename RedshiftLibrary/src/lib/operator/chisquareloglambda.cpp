@@ -2009,15 +2009,15 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(const CSpe
         // The template grid has to be aligned with the spectrum log-grid (will
         // use the spc first element)
         Float64 tpl_raw_loglbdamin =
-	    log( targetSpectralAxis[0]/(1.0 + sortedRedshifts[sortedRedshifts.size() - 1]));  // tpl lambdarange cropped to useful range given
+	    log( spectrumRebinedSpectralAxis[0]/(1.0 + sortedRedshifts[sortedRedshifts.size() - 1]));  // tpl lambdarange cropped to useful range given
 	                                                                                      // zmax
         Float64 tpl_raw_loglbdamax =
-	    log( targetSpectralAxis[loglbdaCount - 1]/ (1.0 + sortedRedshifts[0])); // tpl lambdarange cropped to useful range given
+	    log( spectrumRebinedSpectralAxis[loglbdaCount - 1]/ (1.0 + sortedRedshifts[0])); // tpl lambdarange cropped to useful range given
                                                                                     // zmin
 
-	Float64 ref_loglbda =  targetSpectralAxis[1]; //not [0] because possibly slightly shifted of 1E-5
-	Float64 tpl_tgt_loglbdamin = ref_loglbda + floor((tpl_raw_loglbdamin - ref_loglbda)/loglbdastep)*loglbdastep;
-	Float64 tpl_tgt_loglbdamax = ref_loglbda + ceil((tpl_raw_loglbdamax - ref_loglbda)/loglbdastep)*loglbdastep;
+	Float64 ref_loglbda =  spectrumRebinedSpectralAxis[1]; //not [0] because possibly slightly shifted of 1E-5
+	Float64 tpl_tgt_loglbdamin = ref_loglbda + floor((tpl_raw_loglbdamin - ref_loglbda)/loglbdaStep)*loglbdaStep;
+	Float64 tpl_tgt_loglbdamax = ref_loglbda + ceil((tpl_raw_loglbdamax - ref_loglbda)/loglbdaStep)*loglbdaStep;
 
         Int32 tpl_loglbdaCount =
             int((tpl_tgt_loglbdamax - tpl_tgt_loglbdamin) / loglbdaStep + 1);
