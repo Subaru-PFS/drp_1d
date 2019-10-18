@@ -914,7 +914,8 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64 *spectrumRebinedLambda,
     }
 
     //
-    Int32 nshifts = nTpl - nSpc + 1;
+    Int32 nshifts = nTpl - nSpc; //+ 1;
+    // Int32 nshifts = nTpl*2.0;
     m_nPaddedSamples = (Int32)nTpl * 2.0;
     /*
     //next power of two
@@ -940,12 +941,13 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64 *spectrumRebinedLambda,
     InitFFT(m_nPaddedSamples);
 
     // prepare z array
+    Int32 zoff = 1;
     std::vector<Float64> z_vect(nshifts, 0.0);
     Int32 z_vect_size = z_vect.size();
     for (Int32 t = 0; t < z_vect_size; t++)
     {
-        z_vect[t] = (spectrumRebinedLambda[0] - tplRebinedLambda[t]) /
-                    tplRebinedLambda[t];
+        z_vect[t] = (spectrumRebinedLambda[0] - tplRebinedLambda[t + zoff]) /
+                    tplRebinedLambda[t + zoff];
     }
 
     // Estimate DtD
@@ -1217,7 +1219,10 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64 *spectrumRebinedLambda,
                 {
                     amp[k] = max(0.0, dtm_vec[k] / mtm_vec[k]);
                     chi2[k] = dtd - dtm_vec[k] * amp[k];
+                    // Formula correction following issue #5424 :
+                    //chi2[k] = dtd - mtm_vec[k] * amp[k] * amp[k];
                 }
+                // chi2[k] = dtm_vec[k];
             }
 
             for (Int32 k = 0; k < dtm_vec_size; k++)
@@ -1722,8 +1727,8 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(const CSpe
                      "lambdarange observed spectral indexes");
     }
 
-    // Float64 loglbdaStep_fromOriSpc = log(spectrum.GetSpectralAxis()[lbdaMaxIdx]) -
-    //                       log(spectrum.GetSpectralAxis()[lbdaMaxIdx - 1]);
+    Float64 loglbdaStep_fromOriSpc = log(spectrum.GetSpectralAxis()[lbdaMaxIdx]) -
+                          log(spectrum.GetSpectralAxis()[lbdaMaxIdx - 1]);
 
     //find loglbdaStep from tgt redshift grid
     Float64 tgtDzOnepzMin=DBL_MAX;
@@ -1738,11 +1743,14 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(const CSpe
     }
     Log.LogDetail("  Operator-ChisquareLog: Log-Rebin: tgtDzOnepzMin = %f", tgtDzOnepzMin);
     Float64 loglbdaStep_fromTgtZgrid = log(1.0+tgtDzOnepzMin);
-    // Log.LogDetail("  Operator-ChisquareLog: Log-Rebin: loglbdaStep_fromOriSpc = %f", loglbdaStep_fromOriSpc);
+    Log.LogDetail("  Operator-ChisquareLog: Log-Rebin: loglbdaStep_fromOriSpc = %f", loglbdaStep_fromOriSpc);
     Log.LogDetail("  Operator-ChisquareLog: Log-Rebin: loglbdaStep_fromTgtZgrid = %f", loglbdaStep_fromTgtZgrid);
+    //Float64 loglbdaStep = std::min(loglbdaStep_fromOriSpc, loglbdaStep_fromTgtZgrid);
     Float64 loglbdaStep = loglbdaStep_fromTgtZgrid;
     Log.LogDetail("  Operator-ChisquareLog: Log-Rebin: loglbdaStep = %f", loglbdaStep);
 
+    // Float64 loglbdaStep =
+    // log(spectrum.GetSpectralAxis()[1])-log(spectrum.GetSpectralAxis()[0]);
     Float64 loglbdamin = log(lambdaRange.GetBegin());
     Float64 loglbdamax = log(lambdaRange.GetEnd());
     Int32 loglbdaCount = int((loglbdamax - loglbdamin) / loglbdaStep + 1);
@@ -2002,22 +2010,58 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(const CSpe
         }
     }
 
-    // rebin the template
+    // Create the Template Log-Rebined spectral axis
     {
-	// Create the Template Log-Rebined spectral axis
+
         // The template grid has to be aligned with the spectrum log-grid (will
         // use the spc first element)
+        // Float64 tpl_raw_loglbdamin = log(tpl.GetSpectralAxis()[0]); //full
+        // tpl lambda range Float64 tpl_raw_loglbdamax =
+        // log(tpl.GetSpectralAxis()[tpl.GetSpectralAxis().GetSamplesCount()-1]);
+        // //full tpl lambda range
+        Float64 tplloglbdaStep =
+            log(tpl.GetSpectralAxis()[1]) -
+            log(tpl.GetSpectralAxis()[0]); // warning : considering constant
+                                           // dlambda for the input template
+        Float64 roundingErrorsMargin = tplloglbdaStep / 2.0; //
         Float64 tpl_raw_loglbdamin =
-	    log( spectrumRebinedSpectralAxis[0]/(1.0 + sortedRedshifts[sortedRedshifts.size() - 1]));  // tpl lambdarange cropped to useful range given
-	                                                                                      // zmax
+            log(lambdaRange.GetBegin() /
+                (1.0 + sortedRedshifts[sortedRedshifts.size() - 1])) -
+            roundingErrorsMargin; // lambdarange cropped to useful range given
+                                  // zmin
         Float64 tpl_raw_loglbdamax =
-	    log( spectrumRebinedSpectralAxis[loglbdaCount - 1]/ (1.0 + sortedRedshifts[0])); // tpl lambdarange cropped to useful range given
-                                                                                    // zmin
+            log(lambdaRange.GetEnd() / (1.0 + sortedRedshifts[0])) +
+            roundingErrorsMargin; // lambdarange cropped to useful range given
+                                  // zmin
 
-	Float64 ref_loglbda =  spectrumRebinedSpectralAxis[1]; //not [0] because possibly slightly shifted of 1E-5
-	Float64 tpl_tgt_loglbdamin = ref_loglbda + floor((tpl_raw_loglbdamin - ref_loglbda)/loglbdaStep)*loglbdaStep;
-	Float64 tpl_tgt_loglbdamax = ref_loglbda + ceil((tpl_raw_loglbdamax - ref_loglbda)/loglbdaStep)*loglbdaStep;
-
+        Float64 tpl_tgt_loglbdamin = loglbdamin;
+        if (tpl_raw_loglbdamin <= loglbdamin)
+        {
+            while (tpl_tgt_loglbdamin - loglbdaStep >= tpl_raw_loglbdamin)
+            {
+                tpl_tgt_loglbdamin -= loglbdaStep;
+            }
+        } else
+        {
+            while (tpl_tgt_loglbdamin + loglbdaStep <= tpl_raw_loglbdamin)
+            {
+                tpl_tgt_loglbdamin += loglbdaStep;
+            }
+        }
+        Float64 tpl_tgt_loglbdamax = loglbdamax;
+        if (tpl_raw_loglbdamax <= loglbdamax)
+        {
+            while (tpl_tgt_loglbdamax - loglbdaStep >= tpl_raw_loglbdamax)
+            {
+                tpl_tgt_loglbdamax -= loglbdaStep;
+            }
+        } else
+        {
+            while (tpl_tgt_loglbdamax + loglbdaStep <= tpl_raw_loglbdamax)
+            {
+                tpl_tgt_loglbdamax += loglbdaStep;
+            }
+        }
         Int32 tpl_loglbdaCount =
             int((tpl_tgt_loglbdamax - tpl_tgt_loglbdamin) / loglbdaStep + 1);
         if (verboseLogRebin)
@@ -2032,8 +2076,9 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(const CSpe
                 "  Operator-ChisquareLog: Log-Rebin: tpl loglbdaCount = %d",
                 tpl_loglbdaCount);
         }
-        // todo: check that the coverage is ok with the current tgtTplAxis ?
+        // todo: check that the coverage is ok with teh current tgtTplAxis ?
 
+        // rebin the template
         CSpectrumSpectralAxis tpl_targetSpectralAxis;
         tpl_targetSpectralAxis.SetSize(tpl_loglbdaCount);
         for (Int32 k = 0; k < tpl_loglbdaCount; k++)
