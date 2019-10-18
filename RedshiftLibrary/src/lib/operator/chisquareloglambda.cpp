@@ -393,7 +393,7 @@ Int32 COperatorChiSquareLogLambda::InitFFT(Int32 nPadded)
     if (outSpc == 0)
     {
         Log.LogError(
-            "  Operator-ChisquareLog: InitFFT: Unable to allocate inSpc");
+            "  Operator-ChisquareLog: InitFFT: Unable to allocate outSpc");
         return -1;
     }
 
@@ -914,7 +914,7 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64 *spectrumRebinedLambda,
     }
 
     //
-    Int32 nshifts = nTpl - nSpc;
+    Int32 nshifts = nTpl - nSpc; //+ 1;
     // Int32 nshifts = nTpl*2.0;
     m_nPaddedSamples = (Int32)nTpl * 2.0;
     /*
@@ -1219,6 +1219,8 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64 *spectrumRebinedLambda,
                 {
                     amp[k] = max(0.0, dtm_vec[k] / mtm_vec[k]);
                     chi2[k] = dtd - dtm_vec[k] * amp[k];
+                    // Formula correction following issue #5424 :
+                    //chi2[k] = dtd - mtm_vec[k] * amp[k] * amp[k];
                 }
                 // chi2[k] = dtm_vec[k];
             }
@@ -1468,6 +1470,16 @@ Int32 COperatorChiSquareLogLambda::InterpolateResult(const Float64 *in,
 
     gsl_error_handler_t *gsl_error_handler_old = gsl_set_error_handler_off();
 
+    if(tgtGrid[0] < inGrid[0] || tgtGrid[tgtn-1] > inGrid[n-1])
+    {
+        if(tgtGrid[0] < inGrid[0]) {
+            Log.LogError("Error while interpolating loglambda chi2 result : xrebin(%f) < x[0](%f)", tgtGrid[0], inGrid[0]);
+        } else {
+            Log.LogError("Error while interpolating loglambda chi2 result : xrebin(%f) > x[n-1](%f)", tgtGrid[tgtn-1], inGrid[n-1]);
+        }
+        throw runtime_error("Error while interpolating loglambda chi2 result.");
+    }
+
     for (Int32 j = 0; j < tgtn; j++)
     {
         Float64 Xrebin = tgtGrid[j];
@@ -1476,11 +1488,6 @@ Int32 COperatorChiSquareLogLambda::InterpolateResult(const Float64 *in,
             Log.LogDebug("  Operator-ChisquareLog: InterpolateResult, j=%d, xrebin=%f",
                      j,
                      Xrebin);
-        }
-        if(Xrebin<inGrid[0])
-        {
-            Log.LogError("Error while interpolating loglambda chi2 result. xrebin(%f)<x[0](%f)", Xrebin, inGrid[0]);
-            throw runtime_error("Error while interpolating loglambda chi2 result.");
         }
 
         status = gsl_interp_eval_e(interpolation,
@@ -1738,7 +1745,8 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(const CSpe
     Float64 loglbdaStep_fromTgtZgrid = log(1.0+tgtDzOnepzMin);
     Log.LogDetail("  Operator-ChisquareLog: Log-Rebin: loglbdaStep_fromOriSpc = %f", loglbdaStep_fromOriSpc);
     Log.LogDetail("  Operator-ChisquareLog: Log-Rebin: loglbdaStep_fromTgtZgrid = %f", loglbdaStep_fromTgtZgrid);
-    Float64 loglbdaStep = std::max(loglbdaStep_fromOriSpc, loglbdaStep_fromTgtZgrid);
+    //Float64 loglbdaStep = std::min(loglbdaStep_fromOriSpc, loglbdaStep_fromTgtZgrid);
+    Float64 loglbdaStep = loglbdaStep_fromTgtZgrid;
     Log.LogDetail("  Operator-ChisquareLog: Log-Rebin: loglbdaStep = %f", loglbdaStep);
 
     // Float64 loglbdaStep =
