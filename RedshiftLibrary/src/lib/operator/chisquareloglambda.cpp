@@ -914,8 +914,7 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64 *spectrumRebinedLambda,
     }
 
     //
-    Int32 nshifts = nTpl - nSpc; //+ 1;
-    // Int32 nshifts = nTpl*2.0;
+    Int32 nshifts = nTpl - nSpc;
     m_nPaddedSamples = (Int32)nTpl * 2.0;
     /*
     //next power of two
@@ -1219,10 +1218,7 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64 *spectrumRebinedLambda,
                 {
                     amp[k] = max(0.0, dtm_vec[k] / mtm_vec[k]);
                     chi2[k] = dtd - dtm_vec[k] * amp[k];
-                    // Formula correction following issue #5424 :
-                    //chi2[k] = dtd - mtm_vec[k] * amp[k] * amp[k];
                 }
-                // chi2[k] = dtm_vec[k];
             }
 
             for (Int32 k = 0; k < dtm_vec_size; k++)
@@ -1727,8 +1723,8 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(const CSpe
                      "lambdarange observed spectral indexes");
     }
 
-    Float64 loglbdaStep_fromOriSpc = log(spectrum.GetSpectralAxis()[lbdaMaxIdx]) -
-                          log(spectrum.GetSpectralAxis()[lbdaMaxIdx - 1]);
+    // Float64 loglbdaStep_fromOriSpc = log(spectrum.GetSpectralAxis()[lbdaMaxIdx]) -
+    //                       log(spectrum.GetSpectralAxis()[lbdaMaxIdx - 1]);
 
     //find loglbdaStep from tgt redshift grid
     Float64 tgtDzOnepzMin=DBL_MAX;
@@ -1743,14 +1739,11 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(const CSpe
     }
     Log.LogDetail("  Operator-ChisquareLog: Log-Rebin: tgtDzOnepzMin = %f", tgtDzOnepzMin);
     Float64 loglbdaStep_fromTgtZgrid = log(1.0+tgtDzOnepzMin);
-    Log.LogDetail("  Operator-ChisquareLog: Log-Rebin: loglbdaStep_fromOriSpc = %f", loglbdaStep_fromOriSpc);
+    // Log.LogDetail("  Operator-ChisquareLog: Log-Rebin: loglbdaStep_fromOriSpc = %f", loglbdaStep_fromOriSpc);
     Log.LogDetail("  Operator-ChisquareLog: Log-Rebin: loglbdaStep_fromTgtZgrid = %f", loglbdaStep_fromTgtZgrid);
-    //Float64 loglbdaStep = std::min(loglbdaStep_fromOriSpc, loglbdaStep_fromTgtZgrid);
     Float64 loglbdaStep = loglbdaStep_fromTgtZgrid;
     Log.LogDetail("  Operator-ChisquareLog: Log-Rebin: loglbdaStep = %f", loglbdaStep);
 
-    // Float64 loglbdaStep =
-    // log(spectrum.GetSpectralAxis()[1])-log(spectrum.GetSpectralAxis()[0]);
     Float64 loglbdamin = log(lambdaRange.GetBegin());
     Float64 loglbdamax = log(lambdaRange.GetEnd());
     Int32 loglbdaCount = int((loglbdamax - loglbdamin) / loglbdaStep + 1);
