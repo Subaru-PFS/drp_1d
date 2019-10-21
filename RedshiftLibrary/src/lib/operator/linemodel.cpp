@@ -639,6 +639,7 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
                                                              zsampling);
     std::vector<Float64> redshiftsTplFit = tplfitStore->GetRedshiftList();
     Log.LogInfo("  Operator-Linemodel: continuum tpl redshift list n=%d",redshiftsTplFit.size());
+    //for(UInt32 kztplfit=0; kztplfit<Int32(redshiftsTplFit.size()); kztplfit++)
     for(UInt32 kztplfit=0; kztplfit<std::min(Int32(redshiftsTplFit.size()), Int32(10)); kztplfit++)
     {
         Log.LogDebug("  Operator-Linemodel: continuum tpl redshift list[%d] = %f",
@@ -898,6 +899,7 @@ Int32 COperatorLineModel::ComputeCandidates(const Int32 opt_extremacount,
         if (m_firstpass_extremumList.size() == 0)
         {
             Log.LogError("  Operator-Linemodel: Extremum find method failed");
+            throw runtime_error("  Operator-Linemodel: Extremum find method failed");
             return -1;
         }
 
@@ -1218,7 +1220,7 @@ Int32 COperatorLineModel::ComputeSecondPass(CDataStore &dataStore,
         continnuum_fit_option=3;
     }else{
         Log.LogError("  Operator-Linemodel: continnuum_fit_option not found: %d", continnuum_fit_option);
-        throw std::runtime_error("  Operator-Linemodel: continnuum_fit_option not found");
+        throw runtime_error("  Operator-Linemodel: continnuum_fit_option not found");
     }
     RecomputeAroundCandidates(m_firstpass_extremumList,
                               lambdaRange,
@@ -1559,6 +1561,7 @@ Int32 COperatorLineModel::SaveResults(const CSpectrum &spectrum,
             if (ret != 0)
             {
                 Log.LogError("  Operator-Linemodel: Deltaz computation failed");
+                throw runtime_error("  Operator-Linemodel: Deltaz computation failed");
             }
         }
         m_result->ExtremaResult.DeltaZ[i] = dz;
