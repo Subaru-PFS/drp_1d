@@ -896,15 +896,14 @@ Int32 COperatorLineModel::ComputeCandidates(const Int32 opt_extremacount,
         CExtremum extremum(redshiftsRange, opt_extremacount, invertForMinSearch,
                            2);
         extremum.Find(m_result->Redshifts, floatValues, m_firstpass_extremumList);
+        Log.LogInfo("  Operator-Linemodel: found %d extrema",
+                    m_firstpass_extremumList.size());
         if (m_firstpass_extremumList.size() == 0)
         {
             Log.LogError("  Operator-Linemodel: Extremum find method failed");
             throw runtime_error("  Operator-Linemodel: Extremum find method failed");
             return -1;
         }
-
-        Log.LogInfo("  Operator-Linemodel: found %d extrema",
-                    m_firstpass_extremumList.size());
     }
 
     // remove extrema with merit threshold (input floatValues MUST be log-proba !)
