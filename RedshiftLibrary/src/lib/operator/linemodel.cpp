@@ -1559,8 +1559,7 @@ Int32 COperatorLineModel::SaveResults(const CSpectrum &spectrum,
                                            m_result->Redshifts, z, range, dz);
             if (ret != 0)
             {
-                Log.LogError("  Operator-Linemodel: Deltaz computation failed");
-                throw runtime_error("  Operator-Linemodel: Deltaz computation failed");
+                Log.LogWarning("  Operator-Linemodel: Deltaz computation failed");
             }
         }
         m_result->ExtremaResult.DeltaZ[i] = dz;
