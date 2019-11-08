@@ -1656,8 +1656,8 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(const CSpe
             "the spectrum spectral range (max lambdarange)");
     }
 
-    Float64 loglbdaStep;
-    // sort the redshift and keep track of the indexes
+
+    // sort the redshifts and keep track of the indexes
     TFloat64List sortedRedshifts;
     TFloat64List
         sortedIndexes; // used for the correspondence between input redshifts
@@ -1676,45 +1676,12 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(const CSpe
         sortedIndexes.push_back(vp[i].second);
     }
 
-    if (overlapThreshold < 1.0)
-    {
-        Log.LogError("  Operator-ChisquareLog: overlap threshold can't be "
-                     "lower than 1.0");
-        return NULL;
-    }
-    // check that the overlap is >1. for all sortedRedshifts
-    Bool overlapFull = true;
-    if (lambdaRange.GetBegin() <
-        tpl.GetSpectralAxis()[0] *
-            (1 + sortedRedshifts[sortedRedshifts.size() - 1]))
-    {
-        overlapFull = false;
-    }
-    if (lambdaRange.GetEnd() >
-        tpl.GetSpectralAxis()[tpl.GetSpectralAxis().GetSamplesCount() - 1] *
-            (1 + sortedRedshifts[0]))
-    {
-        overlapFull = false;
-    }
-    if (!overlapFull)
-    {
-        Log.LogError("  Operator-ChisquareLog: overlap found to be lower than "
-                     "1.0 for this redshift range");
-        Log.LogError(
-            "  Operator-ChisquareLog: for zmin=%f, tpl.lbdamax is %f (should "
-            "be >%f)",
-            sortedRedshifts[0],
-            tpl.GetSpectralAxis()[tpl.GetSpectralAxis().GetSamplesCount() - 1],
-            lambdaRange.GetEnd() / (1 + sortedRedshifts[0]));
-        Log.LogError("  Operator-ChisquareLog: for zmax=%f, tpl.lbdamin is %f "
-                     "(should be <%f)",
-                     sortedRedshifts[sortedRedshifts.size() - 1],
-                     tpl.GetSpectralAxis()[0],
-                     lambdaRange.GetBegin() /
-                         (1 + sortedRedshifts[sortedRedshifts.size() - 1]));
-        return NULL;
-    }
-
+    /****************************************************************
+     *                                                   
+     *  Determine the loglambda step
+     *   it will be used for: Spectrum, template and redshift grid
+     *
+     ****************************************************************/
     // Create/Retrieve the spectrum log-lambda spectral axis
     Int32 lbdaMinIdx =
         spectrum.GetSpectralAxis().GetIndexAtWaveLength(lambdaRange.GetBegin());
@@ -1746,16 +1713,70 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(const CSpe
     Log.LogDetail("  Operator-ChisquareLog: Log-Rebin: loglbdaStep_fromTgtZgrid = %f", loglbdaStep_fromTgtZgrid);
 
     
-    //loglbdaStep = std::max(loglbdaStep_fromOriSpc, loglbdaStep_fromTgtZgrid);
+    //Float64 loglbdaStep = std::max(loglbdaStep_fromOriSpc, loglbdaStep_fromTgtZgrid);
     //Force loglbdaStep to loglambdaStep_fromTgtZgrid
-    loglbdaStep = loglbdaStep_fromTgtZgrid;
+    Float64 loglbdaStep = loglbdaStep_fromTgtZgrid;
     Log.LogDetail("  Operator-ChisquareLog: Log-Rebin: loglbdaStep = %f", loglbdaStep);
+    // check that the overlap is >1. for all sortedRedshifts
+    if (overlapThreshold < 1.0)
+    {
+        Log.LogError("  Operator-ChisquareLog: overlap threshold can't be "
+                     "lower than 1.0");
+        return NULL;
+    }
 
-    // Float64 loglbdaStep =
-    // log(spectrum.GetSpectralAxis()[1])-log(spectrum.GetSpectralAxis()[0]);
+    // compute the effective zrange of the new redshift grid
+    // set the min to the initial min
+    // set the max to an interger number of log(z+1) steps 
+    Float64 redshift_epsilon = 1e-6; // used to be sure the new range will be larger by epsilon
+    Float64 zmin_new = sortedRedshifts[0] - redshift_epsilon;
+    Float64 zmax_new = sortedRedshifts[sortedRedshifts.size() - 1];
+    {
+	Float64 log_zmin_new_p1 = log(zmin_new + 1.);
+	Float64 log_zmax_new_p1 = log(zmax_new + 1.);
+	zmax_new = exp(log_zmin_new_p1 + ceil((log_zmax_new_p1 - log_zmin_new_p1)/loglbdaStep)*loglbdaStep) - 1.
+	    + redshift_epsilon;
+    }
+
+    // Check the template coverage wrt the new effective redshift range
+    Bool overlapFull = true;
+    if (lambdaRange.GetBegin() < tpl.GetSpectralAxis()[0] * (1 + zmax_new))
+    {
+        overlapFull = false;
+    }
+    if (lambdaRange.GetEnd() >
+        tpl.GetSpectralAxis()[tpl.GetSpectralAxis().GetSamplesCount() - 1] * (1 + zmin_new))
+    {
+        overlapFull = false;
+    }
+    if (!overlapFull)
+    {
+        Log.LogError("  Operator-ChisquareLog: overlap found to be lower than "
+                     "1.0 for this redshift range");
+        Log.LogError(
+            "  Operator-ChisquareLog: for zmin=%f, tpl.lbdamax is %f (should "
+            "be >%f)",
+            zmin_new,
+            tpl.GetSpectralAxis()[tpl.GetSpectralAxis().GetSamplesCount() - 1],
+            lambdaRange.GetEnd() / (1 + zmin_new));
+        Log.LogError("  Operator-ChisquareLog: for zmax=%f, tpl.lbdamin is %f "
+                     "(should be <%f)",
+                     zmax_new,
+                     tpl.GetSpectralAxis()[0],
+                     lambdaRange.GetBegin() /(1 + zmax_new));
+        return NULL;
+    }
+
+    /****************************************************************
+     *                                                   
+     *  Rebin the spectrum
+     *  or check that the raw spectrum grid is in log-regular grid 
+     *  with expected step
+     *
+     ****************************************************************/
     Float64 loglbdamin = log(lambdaRange.GetBegin());
     Float64 loglbdamax = log(lambdaRange.GetEnd());
-    Int32 loglbdaCount = int((loglbdamax - loglbdamin) / loglbdaStep + 1);
+    Int32 loglbdaCount = (Int32) floor((loglbdamax - loglbdamin) / loglbdaStep + 1);
 
     // Allocate the Log-rebined spectrum and mask
     CSpectrumFluxAxis &spectrumRebinedFluxAxis =
@@ -1817,35 +1838,6 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(const CSpe
                 spectrum.GetSpectralAxis()
                     [spectrum.GetSpectralAxis().GetSamplesCount() - 1];
         }
-
-        /*{
-            // zstep lower lbda range for this sampling
-            Float64 dlambda_begin =
-                (targetSpectralAxis[1] - targetSpectralAxis[0]);
-            Float64 dz_zrangemin_begin =
-                dlambda_begin /
-                (targetSpectralAxis[0] / (1. + sortedRedshifts[0]));
-            Float64 dz_zrangemax_begin =
-                dlambda_begin /
-                (targetSpectralAxis[0] /
-                 (1. + sortedRedshifts[sortedRedshifts.size() - 1]));
-            Log.LogDetail("  Operator-ChisquareLog: Log-Rebin: "
-                        "dz_zrangemin_begin=%f : dz_zrangemax_begin=%f",
-                        dz_zrangemin_begin, dz_zrangemax_begin);
-
-            Float64 dlambda_end = (targetSpectralAxis[loglbdaCount - 1] -
-                                   targetSpectralAxis[loglbdaCount - 2]);
-            Float64 dz_zrangemin_end =
-                dlambda_end / (targetSpectralAxis[loglbdaCount - 2] /
-                               (1. + sortedRedshifts[0]));
-            Float64 dz_zrangemax_end =
-                dlambda_end /
-                (targetSpectralAxis[loglbdaCount - 2] /
-                 (1. + sortedRedshifts[sortedRedshifts.size() - 1]));
-            Log.LogDetail("  Operator-ChisquareLog: Log-Rebin: "
-                        "dz_zrangemin_end=%f : dz_zrangemax_end=%f",
-                        dz_zrangemin_end, dz_zrangemax_end);
-        }*/
 
         if (verboseExportLogRebin)
         {
@@ -2012,72 +2004,40 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(const CSpe
         }
     }
 
+     /****************************************************************
+     *                                                   
+     *  Rebin the template
+     *
+     ****************************************************************/
     // Create the Template Log-Rebined spectral axis
     {
 
-        // The template grid has to be aligned with the spectrum log-grid (will
-        // use the spc first element)
-        // Float64 tpl_raw_loglbdamin = log(tpl.GetSpectralAxis()[0]); //full
-        // tpl lambda range Float64 tpl_raw_loglbdamax =
-        // log(tpl.GetSpectralAxis()[tpl.GetSpectralAxis().GetSamplesCount()-1]);
-        // //full tpl lambda range
-        /*Float64 tplloglbdaStep =
-            log(tpl.GetSpectralAxis()[1]) -
-            log(tpl.GetSpectralAxis()[0]); // warning : considering constant
-                                           // dlambda for the input template
+        // The template grid has to be aligned with the spectrum log-grid redshifted at all the new redshift grid
+        // We align the rebined spectrum max lambda at min redshift.
 
-        //Float64 roundingErrorsMargin = loglbdaStep;
-	*/
-        Float64 tpl_raw_loglbdamin = log( spectrumRebinedSpectralAxis[0]/(1.0 + sortedRedshifts[sortedRedshifts.size() - 1]));
-        Float64 tpl_raw_loglbdamax = log( spectrumRebinedSpectralAxis[loglbdaCount - 1]/ (1.0 + sortedRedshifts[0]));
+        Float64 tpl_raw_loglbdamin = log( spectrumRebinedSpectralAxis[0]/(1.0 + zmax_new));
+        Float64 tpl_raw_loglbdamax = log( spectrumRebinedSpectralAxis[loglbdaCount - 1]/ (1.0 + zmin_new));
 
-        Float64 ref_loglbda =  log(spectrumRebinedSpectralAxis[1]); //not [0] because possibly slightly shifted of 1E-5
-        Float64 tpl_tgt_loglbdamin = ref_loglbda + floor((tpl_raw_loglbdamin - ref_loglbda)/loglbdaStep)*loglbdaStep;
-        Float64 tpl_tgt_loglbdamax = ref_loglbda + ceil((tpl_raw_loglbdamax - ref_loglbda)/loglbdaStep)*loglbdaStep;
-	/*
-        Float64 tpl_raw_loglbdamin =
-            log(lambdaRange.GetBegin() /
-                (1.0 + sortedRedshifts[sortedRedshifts.size() - 1])) -
-            roundingErrorsMargin; // lambdarange cropped to useful range given
-                                  // zmin
-        Float64 tpl_raw_loglbdamax =
-            log(lambdaRange.GetEnd() / (1.0 + sortedRedshifts[0])) +
-            roundingErrorsMargin; // lambdarange cropped to useful range given
-                                  // zmin
+        Float64 tpl_tgt_loglbdamax = tpl_raw_loglbdamax;
+        Float64 tpl_tgt_loglbdamin = tpl_tgt_loglbdamax - ceil((tpl_tgt_loglbdamax - tpl_raw_loglbdamin)/loglbdaStep)*loglbdaStep;
 
-
-        Float64 tpl_tgt_loglbdamin = loglbdamin;
-        if (tpl_raw_loglbdamin <= loglbdamin)
-        {
-            while (tpl_tgt_loglbdamin - loglbdaStep >= tpl_raw_loglbdamin)
-            {
-                tpl_tgt_loglbdamin -= loglbdaStep;
-            }
-        } else
-        {
-            while (tpl_tgt_loglbdamin + loglbdaStep <= tpl_raw_loglbdamin)
-            {
-                tpl_tgt_loglbdamin += loglbdaStep;
-            }
-        }
-        Float64 tpl_tgt_loglbdamax = loglbdamax;
-        if (tpl_raw_loglbdamax <= loglbdamax)
-        {
-            while (tpl_tgt_loglbdamax - loglbdaStep >= tpl_raw_loglbdamax)
-            {
-                tpl_tgt_loglbdamax -= loglbdaStep;
-            }
-        } else
-        {
-            while (tpl_tgt_loglbdamax + loglbdaStep <= tpl_raw_loglbdamax)
-            {
-                tpl_tgt_loglbdamax += loglbdaStep;
-            }
-        }
-	*/
-
-        Int32 tpl_loglbdaCount =
-            int((tpl_tgt_loglbdamax - tpl_tgt_loglbdamin) / loglbdaStep + 1);
+	// Recheck the template coverage is larger,
+	//  by construction only the min has to be re-checked,
+	//  since the max is aligned to the max of the rebined spectrum at zmin which is
+	// smaller to the max input lamdba range at min already checked 
+	if (exp(tpl_tgt_loglbdamin) < tpl.GetSpectralAxis()[0] )
+	{
+	    Log.LogError("  Operator-ChisquareLog: overlap found to be lower than "
+			 "1.0 for this redshift range");
+	    Log.LogError("DIDIER  Operator-ChisquareLog: for zmax=%f, tpl.lbdamin is %f "
+			 "(should be <%f)",
+			 zmax_new,
+			 tpl.GetSpectralAxis()[0],
+			 exp(tpl_tgt_loglbdamin));
+	    return NULL;
+	}
+	
+        Int32 tpl_loglbdaCount = (int) floor((tpl_tgt_loglbdamax - tpl_tgt_loglbdamin) / loglbdaStep + 1);
         if (verboseLogRebin)
         {
             Log.LogInfo("  Operator-ChisquareLog: Log-Rebin: tpl loglbdamin=%f "
@@ -2090,7 +2050,7 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(const CSpe
                 "  Operator-ChisquareLog: Log-Rebin: tpl loglbdaCount = %d",
                 tpl_loglbdaCount);
         }
-        // todo: check that the coverage is ok with teh current tgtTplAxis ?
+        // todo: check that the coverage is ok with the current tgtTplAxis ?
 
         // rebin the template
         CSpectrumSpectralAxis tpl_targetSpectralAxis;
