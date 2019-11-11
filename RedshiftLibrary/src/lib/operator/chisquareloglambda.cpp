@@ -531,7 +531,7 @@ Int32 COperatorChiSquareLogLambda::FitAllz(const TFloat64Range &lambdaRange,
                                            CMask spcMaskAdditional,
                                            CPriorHelper::TPriorZEList logpriorze)
 {
-    bool verboseLogFitAllz = false;
+    bool verboseLogFitAllz = true;
 
     CSpectrumFluxAxis &spectrumRebinedFluxAxis =
         m_spectrumRebinedLog.GetFluxAxis();
@@ -649,9 +649,9 @@ Int32 COperatorChiSquareLogLambda::FitAllz(const TFloat64Range &lambdaRange,
     Float64 *tplRebinedFluxRawGlobal = tplRebinedFluxAxis.GetSamples();
     //    UInt32 nTpl = tplRebinedSpectralAxis.GetSamplesCount();
     Float64 *tplRebinedLambda =
-        new Float64[(int)tplRebinedSpectralAxis.GetSamplesCount()]();
+        new Float64[(int)tplRebinedSpectralAxis.GetSamplesCount()+1]();
     Float64 *tplRebinedFluxRaw =
-        new Float64[(int)tplRebinedSpectralAxis.GetSamplesCount()]();
+        new Float64[(int)tplRebinedSpectralAxis.GetSamplesCount()+1]();
 
     for (Int32 k = 0; k < nzranges; k++)
     {
@@ -722,7 +722,7 @@ Int32 COperatorChiSquareLogLambda::FitAllz(const TFloat64Range &lambdaRange,
                             (1.0 + zrange.GetBegin()));
         }
 
-        UInt32 nTpl = ilbda.GetEnd() - ilbda.GetBegin() + 1;
+        UInt32 nTpl = ilbda.GetEnd() - ilbda.GetBegin() + 2;
         for (UInt32 j = 0; j < nTpl; j++)
         {
             tplRebinedLambda[j] = tplRebinedLambdaGlobal[j + ilbda.GetBegin()];
@@ -910,7 +910,7 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64 *spectrumRebinedLambda,
             tplRebinedLambda[0] *
                 (1.0 + result->Redshifts[result->Redshifts.size() - 1]));
         Log.LogInfo("  Operator-ChisquareLog: FitRangez: tpl[max]*zmin = %f",
-                    tplRebinedLambda[nTpl - 1] * (1 + result->Redshifts[0]));
+                    tplRebinedLambda[nTpl - 2] * (1 + result->Redshifts[0]));
     }
 
     //
@@ -1524,32 +1524,50 @@ TInt32Range COperatorChiSquareLogLambda::FindTplSpectralIndex(
     Float64 spcLambdaMargin = abs(spcLambda[1] - spcLambda[0]);
     Float64 tplLambdaMargin = abs(tplLambda[1] - tplLambda[0]);
 
+    Log.LogInfo("  Operator-ChisquareLog: FindTplSpectralIndex: redshiftMargin = %f", redshiftMargin);
+    Log.LogInfo("  Operator-ChisquareLog: FindTplSpectralIndex: spcLambdaMargin = %f", spcLambdaMargin);
+    Log.LogInfo("  Operator-ChisquareLog: FindTplSpectralIndex: tplLambdaMargin = %f", tplLambdaMargin);
+
     UInt32 ilbdamin = 0;
+    Log.LogInfo("  Operator-ChisquareLog: FindTplSpectralIndex: ilbdamin computation starts");
     for (UInt32 k = 0; k < nTpl; k++)
     {
         Float64 _spcLambda = spcLambda[0] - spcLambdaMargin;
         Float64 _tplLambda = tplLambda[k] + tplLambdaMargin;
         Float64 _z = (_spcLambda - _tplLambda) / _tplLambda;
+
+	Log.LogInfo("  Operator-ChisquareLog: FindTplSpectralIndex: _spcLambda = %f", _spcLambda);
+	Log.LogInfo("  Operator-ChisquareLog: FindTplSpectralIndex: _tplLambda = %f (k=%d)", _tplLambda, k);
+	Log.LogInfo("  Operator-ChisquareLog: FindTplSpectralIndex: _z = %f", _z);
+
         if (_z > redshiftrange.GetEnd() + redshiftMargin)
         {
             ilbdamin = k;
         } else
         {
+	    Log.LogInfo("  Operator-ChisquareLog: FindTplSpectralIndex: ilbdamin computation breaks");
             break;
         }
     }
-    UInt32 ilbdamax = nTpl - 1;
 
+    UInt32 ilbdamax = nTpl - 1;
+    Log.LogInfo("  Operator-ChisquareLog: FindTplSpectralIndex: ilbdamax computation starts");
     for (UInt32 k = nTpl - 1; k > 0; k--)
     {
         Float64 _spcLambda = spcLambda[nSpc - 1] + spcLambdaMargin;
         Float64 _tplLambda = tplLambda[k] - tplLambdaMargin;
         Float64 _z = (_spcLambda - _tplLambda) / _tplLambda;
+
+        Log.LogInfo("  Operator-ChisquareLog: FindTplSpectralIndex: _spcLambda = %f", _spcLambda);
+        Log.LogInfo("  Operator-ChisquareLog: FindTplSpectralIndex: _tplLambda = %f (k=%d)", _tplLambda, k);
+        Log.LogInfo("  Operator-ChisquareLog: FindTplSpectralIndex: _z = %f", _z);
+
         if (_z < redshiftrange.GetBegin() - redshiftMargin)
         {
             ilbdamax = k;
         } else
         {
+	    Log.LogInfo("  Operator-ChisquareLog: FindTplSpectralIndex: ilbdamax computation breaks");
             break;
         }
     }
