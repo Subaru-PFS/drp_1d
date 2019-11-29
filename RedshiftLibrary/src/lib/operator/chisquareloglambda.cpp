@@ -662,7 +662,7 @@ Int32 COperatorChiSquareLogLambda::FitAllz(const TFloat64Range &lambdaRange,
             TFloat64Range(result->Redshifts[izrangelist[k].GetBegin()],
                           result->Redshifts[izrangelist[k].GetEnd()]);
         TInt32Range ilbda;
-        if (result->Redshifts.size() > 1)
+        if (enableIGM && result->Redshifts.size() > 1)
         {
             TFloat64List subRedshifts;
             for (Int32 kzsub = izrangelist[k].GetBegin();
@@ -688,7 +688,7 @@ Int32 COperatorChiSquareLogLambda::FitAllz(const TFloat64Range &lambdaRange,
         {
             ilbda =
                 TInt32Range(0, tplRebinedSpectralAxis.GetSamplesCount() - 1);
-            subresult->Init(1, std::max((Int32)ismEbmvCoeffs.size(), 1),
+            subresult->Init(result->Redshifts.size(), std::max((Int32)ismEbmvCoeffs.size(), 1),
                             std::max((Int32)igmMeiksinCoeffs.size(), 1));
             subresult->Redshifts = result->Redshifts;
         }
@@ -713,7 +713,7 @@ Int32 COperatorChiSquareLogLambda::FitAllz(const TFloat64Range &lambdaRange,
                         ilbda.GetBegin(), ilbda.GetEnd());
             Log.LogInfo("  Operator-ChisquareLog: FitAllz: indexes tpl full: "
                         "lbda min=%d, max=%d",
-                        0, tplRebinedSpectralAxis.GetSamplesCount());
+                        0, tplRebinedSpectralAxis.GetSamplesCount()-1);
             Log.LogInfo("  Operator-ChisquareLog: FitAllz: tpl lbda "
                         "min*zmax=%f, max*zmin=%f",
                         tplRebinedLambdaGlobal[ilbda.GetBegin()] *
@@ -1440,7 +1440,7 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64 *spectrumRebinedLambda,
 }
 
 Int32 COperatorChiSquareLogLambda::InterpolateResult(const Float64 *in,
-                                                     const Float64 *inGrid,
+                                                     Float64 *inGrid,
                                                      const Float64 *tgtGrid,
                                                      Int32 n,
                                                      Int32 tgtn,
@@ -1458,7 +1458,6 @@ Int32 COperatorChiSquareLogLambda::InterpolateResult(const Float64 *in,
     // initialise and allocate the gsl objects
     // lin
     gsl_interp *interpolation = gsl_interp_alloc(gsl_interp_linear, n);
-    gsl_interp_init(interpolation, inGrid, in, n);
     gsl_interp_accel *accelerator = gsl_interp_accel_alloc();
     Int32 status;
     // spline
@@ -1468,15 +1467,35 @@ Int32 COperatorChiSquareLogLambda::InterpolateResult(const Float64 *in,
 
     gsl_error_handler_t *gsl_error_handler_old = gsl_set_error_handler_off();
 
-    if(tgtGrid[0] < inGrid[0] || tgtGrid[tgtn-1] > inGrid[n-1])
+    // Deal with exp/log accuracy
+    Float64 epsilon = 1E-8;
+
+    if (tgtGrid[0] < inGrid[0])
     {
-        if(tgtGrid[0] < inGrid[0]) {
-            Log.LogError("Error while interpolating loglambda chi2 result : xrebin(%f) < x[0](%f)", tgtGrid[0], inGrid[0]);
-        } else {
-            Log.LogError("Error while interpolating loglambda chi2 result : xrebin(%f) > x[n-1](%f)", tgtGrid[tgtn-1], inGrid[n-1]);
+        if ( (inGrid[0] - tgtGrid[0]) < epsilon)
+        {
+            inGrid[0] = tgtGrid[0] - epsilon;
         }
-        throw runtime_error("Error while interpolating loglambda chi2 result.");
+        else
+        {
+            Log.LogError("Error while interpolating loglambda chi2 result : xrebin(%f) < x[0](%f)", tgtGrid[0], inGrid[0]);
+            throw runtime_error("Error while interpolating loglambda chi2 result.");
+        }
     }
+    if (tgtGrid[tgtn-1] > inGrid[n-1])
+    {
+        if ((tgtGrid[tgtn-1] - inGrid[n-1]) < epsilon)
+        {
+            inGrid[n-1] = tgtGrid[tgtn-1] + epsilon;
+        }
+        else
+        {
+            Log.LogError("Error while interpolating loglambda chi2 result : xrebin(%f) > x[n-1](%f)", tgtGrid[tgtn-1], inGrid[n-1]);
+            throw runtime_error("Error while interpolating loglambda chi2 result.");
+        }
+    }
+
+    gsl_interp_init(interpolation, inGrid, in, n);
 
     for (Int32 j = 0; j < tgtn; j++)
     {
@@ -1746,7 +1765,7 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(const CSpe
     // compute the effective zrange of the new redshift grid
     // set the min to the initial min
     // set the max to an interger number of log(z+1) steps 
-    Float64 redshift_epsilon = 1e-6; // used to be sure the new range will be larger by epsilon
+    Float64 redshift_epsilon = 0.;//1e-6; // used to be sure the new range will be larger by epsilon
     Float64 zmin_new = sortedRedshifts[0] - redshift_epsilon;
     Float64 zmax_new = sortedRedshifts[sortedRedshifts.size() - 1];
     {
@@ -1757,8 +1776,8 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(const CSpe
     }
 
     // Display the template coverage
-    Log.LogInfo("  Operator-ChisquareLog: Log-Rebin: tpl[min] = %f, tpl[min]*(1 +zmax_new) = %f", tpl.GetSpectralAxis()[0], tpl.GetSpectralAxis()[0] * (1. + zmax_new));
-    Log.LogInfo("  Operator-ChisquareLog: Log-Rebin: tpl[max] = %f, tpl[max]*(1 +zmin_new) = %f", tpl.GetSpectralAxis()[tpl.GetSpectralAxis().GetSamplesCount() - 1],
+    Log.LogInfo("  Operator-ChisquareLog: Log-Rebin: tpl[min] = %f, tpl[min]*(1 + zmax_new) = %f", tpl.GetSpectralAxis()[0], tpl.GetSpectralAxis()[0] * (1. + zmax_new));
+    Log.LogInfo("  Operator-ChisquareLog: Log-Rebin: tpl[max] = %f, tpl[max]*(1 + zmin_new) = %f", tpl.GetSpectralAxis()[tpl.GetSpectralAxis().GetSamplesCount() - 1],
 		tpl.GetSpectralAxis()[tpl.GetSpectralAxis().GetSamplesCount() - 1] * (1. + zmin_new));
 
     // Check the template coverage wrt the new effective redshift range
@@ -2041,7 +2060,7 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(const CSpe
         Float64 tpl_raw_loglbdamin = log( spectrumRebinedSpectralAxis[0]/(1.0 + zmax_new));
         Float64 tpl_raw_loglbdamax = log( spectrumRebinedSpectralAxis[loglbdaCount - 1]/ (1.0 + zmin_new));
 
-        Float64 tpl_tgt_loglbdamax = tpl_raw_loglbdamax + loglbdaStep;
+        Float64 tpl_tgt_loglbdamax = tpl_raw_loglbdamax;// + loglbdaStep;
         Float64 tpl_tgt_loglbdamin = tpl_raw_loglbdamax - ceil((tpl_raw_loglbdamax - tpl_raw_loglbdamin)/loglbdaStep)*loglbdaStep;
 
 	// Display lambda min and max for raw templates

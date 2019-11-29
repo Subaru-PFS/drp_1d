@@ -88,7 +88,7 @@ private:
 
     TInt32Range FindTplSpectralIndex(const Float64 *spcLambda, const Float64* tplLambda, UInt32 nSpc, UInt32 nTpl, TFloat64Range redshiftrange, Float64 redshiftStep);
 
-    Int32 InterpolateResult(const Float64* in, const Float64* inGrid, const Float64* tgtGrid, Int32 n, Int32 tgtn, std::vector<Float64>& out, Float64 defaultValue);
+    Int32 InterpolateResult(const Float64* in, Float64* inGrid, const Float64* tgtGrid, Int32 n, Int32 tgtn, std::vector<Float64>& out, Float64 defaultValue);
 
     void freeFFTPlans();
     void freeFFTPrecomputedBuffers();
