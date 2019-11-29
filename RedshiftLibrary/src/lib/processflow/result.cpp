@@ -12,7 +12,10 @@ COperatorResult::~COperatorResult()
 
 }
 
-
+void COperatorResult::SaveJSON(const CDataStore& store, std::ostream& stream) const
+{
+  // does nothing, -> no need to cast COperatorResult to LineModelResult in COperatorResultStore::SaveAllResults
+}
 
 void COperatorResult::SetReliabilityLabel( std::string lbl )
 {
