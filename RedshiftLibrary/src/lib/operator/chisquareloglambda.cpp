@@ -1765,15 +1765,13 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(const CSpe
     // compute the effective zrange of the new redshift grid
     // set the min to the initial min
     // set the max to an interger number of log(z+1) steps 
-    Float64 redshift_epsilon = 0.;//1e-6; // used to be sure the new range will be larger by epsilon
-    Float64 zmin_new = sortedRedshifts[0] - redshift_epsilon;
+    Float64 zmin_new = sortedRedshifts[0];
     Float64 zmax_new = sortedRedshifts[sortedRedshifts.size() - 1];
     {
         Float64 log_zmin_new_p1 = log(zmin_new + 1.);
         Float64 log_zmax_new_p1 = log(zmax_new + 1.);
         Int32 nb_z = Int32( ceil((log_zmax_new_p1 - log_zmin_new_p1)/loglbdaStep) );
-        zmax_new = exp(log_zmin_new_p1 + nb_z*loglbdaStep) - 1.
-            + redshift_epsilon;
+        zmax_new = exp(log_zmin_new_p1 + nb_z*loglbdaStep) - 1.;
     }
 
     // Display the template coverage
@@ -2061,7 +2059,7 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(const CSpe
         Float64 tpl_raw_loglbdamin = log( spectrumRebinedSpectralAxis[0]/(1.0 + zmax_new));
         Float64 tpl_raw_loglbdamax = log( spectrumRebinedSpectralAxis[loglbdaCount - 1]/ (1.0 + zmin_new));
 
-        Float64 tpl_tgt_loglbdamax = tpl_raw_loglbdamax;// + loglbdaStep;
+        Float64 tpl_tgt_loglbdamax = tpl_raw_loglbdamax;
         Int32 tpl_loglbdaCount = Int32(ceil((tpl_raw_loglbdamax - tpl_raw_loglbdamin)/loglbdaStep)) + 1;
         Float64 tpl_tgt_loglbdamin = tpl_raw_loglbdamax - (tpl_loglbdaCount-1)*loglbdaStep;
 
@@ -2081,7 +2079,7 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(const CSpe
 	{
 	    Log.LogError("  Operator-ChisquareLog: overlap found to be lower than "
 			 "1.0 for this redshift range");
-	    Log.LogError("DIDIER  Operator-ChisquareLog: for zmax=%f, tpl.lbdamin is %f "
+        Log.LogError("  Operator-ChisquareLog: for zmax=%f, tpl.lbdamin is %f "
 			 "(should be <%f)",
 			 zmax_new,
 			 tpl.GetSpectralAxis()[0],
