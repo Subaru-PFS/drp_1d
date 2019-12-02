@@ -1769,10 +1769,11 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(const CSpe
     Float64 zmin_new = sortedRedshifts[0] - redshift_epsilon;
     Float64 zmax_new = sortedRedshifts[sortedRedshifts.size() - 1];
     {
-	Float64 log_zmin_new_p1 = log(zmin_new + 1.);
-	Float64 log_zmax_new_p1 = log(zmax_new + 1.);
-	zmax_new = exp(log_zmin_new_p1 + ceil((log_zmax_new_p1 - log_zmin_new_p1)/loglbdaStep)*loglbdaStep) - 1.
-	    + redshift_epsilon;
+        Float64 log_zmin_new_p1 = log(zmin_new + 1.);
+        Float64 log_zmax_new_p1 = log(zmax_new + 1.);
+        Int32 nb_z = Int32( ceil((log_zmax_new_p1 - log_zmin_new_p1)/loglbdaStep) );
+        zmax_new = exp(log_zmin_new_p1 + nb_z*loglbdaStep) - 1.
+            + redshift_epsilon;
     }
 
     // Display the template coverage
@@ -2061,7 +2062,8 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(const CSpe
         Float64 tpl_raw_loglbdamax = log( spectrumRebinedSpectralAxis[loglbdaCount - 1]/ (1.0 + zmin_new));
 
         Float64 tpl_tgt_loglbdamax = tpl_raw_loglbdamax;// + loglbdaStep;
-        Float64 tpl_tgt_loglbdamin = tpl_raw_loglbdamax - ceil((tpl_raw_loglbdamax - tpl_raw_loglbdamin)/loglbdaStep)*loglbdaStep;
+        Int32 tpl_loglbdaCount = Int32(ceil((tpl_raw_loglbdamax - tpl_raw_loglbdamin)/loglbdaStep)) + 1;
+        Float64 tpl_tgt_loglbdamin = tpl_raw_loglbdamax - (tpl_loglbdaCount-1)*loglbdaStep;
 
 	// Display lambda min and max for raw templates
 	Log.LogInfo("  Operator-ChisquareLog: Log-Rebin: tpl raw loglbdamin=%f : raw loglbdamax=%f",
@@ -2087,7 +2089,6 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(const CSpe
 	    return NULL;
 	}
 	
-        Int32 tpl_loglbdaCount = (int) floor((tpl_tgt_loglbdamax - tpl_tgt_loglbdamin) / loglbdaStep + 1);
         if (verboseLogRebin)
         {
             Log.LogInfo("  Operator-ChisquareLog: Log-Rebin: tpl (tgt) loglbdamin=%f "
