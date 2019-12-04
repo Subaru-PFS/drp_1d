@@ -3,6 +3,7 @@
 
 #include <RedshiftLibrary/common/datatypes.h>
 
+#include <cmath>
 #include <vector>
 
 namespace NSEpic {
@@ -90,7 +91,7 @@ template <typename T> class CRange
         return v;
     }
 
-    std::vector<T> SpreadOverLog(Float64 delta) const
+    /*std::vector<T> SpreadOverLog(Float64 delta) const
     {
         std::vector<T> v;
 
@@ -115,6 +116,32 @@ template <typename T> class CRange
         }
 
         return v;
+    }*/
+
+    std::vector<T> SpreadOverLog(Float64 delta) const
+    {
+	std::vector<T> v;
+	if (GetIsEmpty() || delta == 0.0 || GetLength() < delta)
+	{
+	    v.resize(1);
+	    v[0] = m_Begin;
+	    return v;
+	}
+
+	v.push_back(m_Begin);
+       //New part ; see issue #5429
+       Float64 x = m_Begin +1;
+       Float64 edelta = exp(delta);
+       Int32 count = 0;
+       Int32 maxCount = 1e8;
+       while (x*edelta < m_End+1. && count < maxCount)
+       {
+	   x *= edelta;
+           v.push_back(x-1.);
+           count++;
+       }
+
+	return v;
     }
 
   private:
