@@ -2,7 +2,7 @@
 #define _REDSHIFT_OPERATOR_RESULT_
 
 #include <RedshiftLibrary/common/datatypes.h>
-
+#include <RedshiftLibrary/continuum/indexes.h>
 #include <vector>
 #include <ostream>
 #include <map>
@@ -32,7 +32,12 @@ public:
     void SetTypeLabel( std::string lbl );
     virtual Int32 GetEvidenceFromPdf(const CDataStore& store, Float64 &evidence) const = 0;
 
-
+    void SaveTFloat64List(std::ostream& stream,std::string name,TFloat64List data) const;
+    void SaveTFloat64ListOfList(std::ostream& stream,std::string name,std::vector<TFloat64List> data) const;
+    void SaveInt32Vector(std::ostream& stream,std::string name,std::vector<Int32> data) const;
+    void SaveStringVector(std::ostream& stream,std::string name,std::vector<std::string>) const;
+    void SaveStringVectorOfVector(std::ostream& stream,std::string name,std::vector<std::vector<std::string>>) const;
+    void SaveTContinuumIndexListVector(std::ostream& stream,std::string name,std::vector<CContinuumIndexes::TContinuumIndexList>) const;
 protected:
 
     std::string m_ReliabilityLabel="-1";
