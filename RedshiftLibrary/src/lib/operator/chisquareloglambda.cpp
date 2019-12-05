@@ -1205,6 +1205,7 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64 *spectrumRebinedLambda,
                 // return 2;
                 continue;
             }
+            Log.LogDetail("  Operator-ChisquareLog: FitRangez: kISM = %d, kIGM = %d", kISM, kIGM);
             std::vector<Float64> chi2(dtm_vec_size, DBL_MAX);
             std::vector<Float64> amp(dtm_vec_size, DBL_MAX);
             for (Int32 k = 0; k < dtm_vec_size; k++)
@@ -1212,14 +1213,17 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64 *spectrumRebinedLambda,
                 if (mtm_vec[k] == 0.0)
                 {
                     amp[k] = 0.0;
-                    chi2[k] = dtd;
+                    //chi2[k] = dtd;
                 } else
                 {
                     amp[k] = max(0.0, dtm_vec[k] / mtm_vec[k]);
-                    chi2[k] = dtd - dtm_vec[k] * amp[k];
-                    // Formula correction following issue #5424 :
+                    //chi2[k] = dtd - dtm_vec[k] * amp[k];
+                    // Other formula correction following issue #5424 :
                     //chi2[k] = dtd - mtm_vec[k] * amp[k] * amp[k];
                 }
+                // Formula correction following issue #5424 :
+                chi2[k] = dtd - 2 * dtm_vec[k] * amp[k] + mtm_vec[k] * amp[k] * amp[k];
+                Log.LogDetail("  Operator-ChisquareLog: FitRangez: chi2[%d] = %f", k, chi2[k]);
                 // chi2[k] = dtm_vec[k];
             }
 
