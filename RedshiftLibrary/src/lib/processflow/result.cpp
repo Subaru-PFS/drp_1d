@@ -27,13 +27,19 @@ void COperatorResult::SetTypeLabel( std::string lbl )
     m_TypeLabel = lbl;
 }
 
+void COperatorResult::SaveFloat64(std::ostream& stream,Float64 data) const
+{
+    if (data != data ) stream << "null";
+    else stream << data;
+}
+
 void COperatorResult::SaveTFloat64List(std::ostream& stream,std::string name,TFloat64List data) const 
 {
   if(data.size()>0){
     stream <<  "\""<< name<<"\" : [";
     for ( int i=0; i<data.size(); i++)
     {
-      stream <<  data[i];
+      SaveFloat64(stream,data[i]);
       if( i< data.size()-1) stream << ",";
     }
     stream << "]" ;
@@ -49,7 +55,7 @@ void COperatorResult::SaveTFloat64ListOfList(std::ostream& stream,std::string na
       stream << "[";
       for ( int ip=0; ip<data[i].size(); ip++)
       {
-        stream <<  data[i][ip];
+        SaveFloat64(stream,data[i][ip]);
         if ( ip< data[i].size() - 1) stream << ",";
       }
       stream << "]";
@@ -114,9 +120,7 @@ void COperatorResult::SaveTContinuumIndexListVector(std::ostream& stream,std::st
       stream << "[";
       for(Int32 kci=0; kci<data[i].size(); kci++)
       {
-	      Float64 col = data[i][kci].Color;
-        if (col != col ) stream << "null";
-	      else stream << col;
+	      SaveFloat64(stream,data[i][kci].Color);
         if ( kci<data[i].size() - 1) stream << ",";
       }
       stream << "]";
@@ -129,9 +133,7 @@ void COperatorResult::SaveTContinuumIndexListVector(std::ostream& stream,std::st
       stream << "[";
       for(Int32 kci=0; kci<data[i].size(); kci++)
       {
-	Float64 break_ = data[i][kci].Break;
-        if (break_ != break_ ) stream << "null";
-	else stream <<  break_ ;
+	      SaveFloat64(stream,data[i][kci].Break);	
         if ( kci<data[i].size() - 1) stream << ",";
       }
       stream << "]";
