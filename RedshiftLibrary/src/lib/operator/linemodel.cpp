@@ -2443,9 +2443,8 @@ Int32 COperatorLineModel::RecomputeAroundCandidates(TPointList input_extremumLis
 
     // sort extremumList using merit values : smallest to highest
     // m_secondpass_indiceSortedCandidatesList will contain the indexes order
-    // todo: recode using map and sort from std lib
 
-    //Mira code: sorting candidates using map. Utility: it solves the ducplicate candidate problem
+    //Sorting candidates using map. Utility: it solves the ducplicate candidate problem
     vector<int> V(_secondpass_recomputed_extremumList.size());//vector of indices
     int x = 0;
     std::iota(V.begin(), V.end(), x++);//initialization of m_secondpass_indiceSortedCandidatesList
