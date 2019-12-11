@@ -2454,7 +2454,7 @@ Int32 COperatorLineModel::RecomputeAroundCandidates(TPointList input_extremumLis
     for ( Int32 ie = 0; ie < V.size(); ie++){
         m_secondpass_indiceSortedCandidatesList.push_back(V[ie]);
     }
-    
+
     if (mlmfit_modelInfoSave)
     {
         TFloat64List OrderedLMZ;
@@ -2842,22 +2842,22 @@ void COperatorLineModel::storeGlobalModelResults(CDataStore &dataStore)
     for (Int32 k = 0; k < nResults; k++)
     {
         std::string fname_spc =
-            (boost::format("linemodel_spc_extrema_%1%") % k).str();
+            (boost::format("linemodel_spc_extrema_tmp_%1%") % k).str();
         dataStore.StoreScopedGlobalResult(fname_spc.c_str(),
                                           m_savedModelSpectrumResults[k]);
 
         std::string fname_fit =
-            (boost::format("linemodel_fit_extrema_%1%") % k).str();
+            (boost::format("linemodel_fit_extrema_tmp_%1%") % k).str();
         dataStore.StoreScopedGlobalResult(fname_fit.c_str(),
                                           m_savedModelFittingResults[k]);
 
         std::string fname_fitcontinuum =
-            (boost::format("linemodel_fitcontinuum_extrema_%1%") % k).str();
+            (boost::format("linemodel_fitcontinuum_extrema_tmp_%1%") % k).str();
         dataStore.StoreScopedGlobalResult(
             fname_fitcontinuum.c_str(), m_savedModelContinuumFittingResults[k]);
 
         std::string fname_rules =
-            (boost::format("linemodel_rules_extrema_%1%") % k).str();
+            (boost::format("linemodel_rules_extrema_tmp_%1%") % k).str();
         dataStore.StoreScopedGlobalResult(fname_rules.c_str(),
                                           m_savedModelRulesResults[k]);
     }
@@ -2865,7 +2865,7 @@ void COperatorLineModel::storeGlobalModelResults(CDataStore &dataStore)
     for (Int32 k = 0; k < m_savedModelContinuumSpectrumResults.size(); k++)
     {
         std::string nameBaselineStr =
-            (boost::format("linemodel_continuum_extrema_%1%") % k).str();
+            (boost::format("linemodel_continuum_extrema_tmp_%1%") % k).str();
         dataStore.StoreScopedGlobalResult(
             nameBaselineStr.c_str(), m_savedModelContinuumSpectrumResults[k]);
     }
