@@ -4,6 +4,7 @@
 #include <RedshiftLibrary/spectrum/template/template.h>
 
 #include <boost/filesystem.hpp>
+#include <boost/format.hpp>
 #include <fstream>
 #include <boost/algorithm/string.hpp>
 
@@ -41,6 +42,26 @@ void COperatorResultStore::StoreResult( TResultsMap& map, const std::string& pat
     }
 
     map[ scopedName ] = result;
+}
+
+/**
+ * /brief Delete a key:value name in the resultstore
+*/
+void COperatorResultStore::DeleteGlobalResult(const std::string& path, const std::string& name )
+{
+    std::string scopedName;
+    if( ! path.empty() ) {
+        scopedName = path;
+        scopedName.append( "." );
+    }
+    scopedName.append( name );
+
+    TResultsMap::const_iterator it = m_GlobalResults.find( scopedName ); 
+    if( it != m_GlobalResults.end() )
+    {
+        m_GlobalResults.erase(scopedName);   
+    }
+    return;
 }
 
 void COperatorResultStore::StorePerTemplateResult( const CTemplate& t, const std::string& path, const std::string& name, std::shared_ptr<const COperatorResult> result )

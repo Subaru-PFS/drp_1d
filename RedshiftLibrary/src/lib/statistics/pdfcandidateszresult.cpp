@@ -100,7 +100,7 @@ void CPdfCandidateszResult::Save( const CDataStore& store, std::ostream& stream 
     stream  << "\n";
     for(Int32 k=0; k<Redshifts.size(); k++)
     {
-        stream << Rank[k] << "\t";
+        stream << k << "\t"; 
         stream << Redshifts[k] << "\t";
         stream << ValSumProba[k] << "\t";
 
@@ -121,7 +121,7 @@ void CPdfCandidateszResult::SaveLine( const CDataStore& store, std::ostream& str
 
     for(Int32 k=0; k<Redshifts.size(); k++)
     {
-        stream << Rank[k] << "\t";
+        stream << k << "\t";
         stream << Redshifts[k] << "\t";
         stream << ValSumProba[k] << "\t";
         stream << GaussAmp[k] << "\t";
@@ -136,6 +136,7 @@ void CPdfCandidateszResult::SortByRank()
     {
         Rank[i] = i;
     }
+    SortByValSumProba(Rank);//update ranks based on valproba
     SortByValSumProba(Redshifts);
     SortByValSumProba(ValSumProba);
     if(optMethod==1)
@@ -144,7 +145,7 @@ void CPdfCandidateszResult::SortByRank()
         SortByValSumProba(GaussAmpErr);
         SortByValSumProba(GaussSigma);
         SortByValSumProba(GaussSigmaErr);
-    }
+    }  
 }
 
 void CPdfCandidateszResult::SortByValSumProba(TFloat64List& flist)

@@ -5,6 +5,7 @@
 #include <RedshiftLibrary/processflow/result.h>
 
 #include <boost/filesystem.hpp>
+#include <boost/format.hpp>
 #include <vector>
 #include <ostream>
 
@@ -35,6 +36,7 @@ public:
     std::weak_ptr<const COperatorResult> GetPerTemplateResult( const CTemplate& t, const std::string& name ) const;
     TOperatorResultMap      GetPerTemplateResult( const std::string& name ) const;
     std::weak_ptr<const COperatorResult>  GetGlobalResult( const std::string& name ) const;
+    void                    DeleteGlobalResult(const std::string& path, const std::string& name);
 
     void                    SaveRedshiftResultError( const std::string spcName, const std::string processingID, const boost::filesystem::path& dir );
     void                    SaveRedshiftResult( const CDataStore& store, const boost::filesystem::path& dir );

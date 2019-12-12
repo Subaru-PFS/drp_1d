@@ -34,6 +34,10 @@
 #include <gsl/gsl_spline.h>
 #include <math.h>
 
+#include <iostream>
+#include <vector>
+#include <numeric>  //std::iota
+#include <algorithm>//std::sort
 #define NOT_OVERLAP_VALUE NAN
 #include <stdio.h>
 
@@ -2439,33 +2443,18 @@ Int32 COperatorLineModel::RecomputeAroundCandidates(TPointList input_extremumLis
 
     // sort extremumList using merit values : smallest to highest
     // m_secondpass_indiceSortedCandidatesList will contain the indexes order
-    // todo: recode using map and sort from std lib
-    Int32 extremumCount = m_secondpass_parameters_extremaResult.Extrema.size();
-    m_secondpass_indiceSortedCandidatesList.clear();
-    for (Int32 ie = 0; ie < extremumCount; ie++)
-    {
-        Int32 iYmin = 0;
-        Float64 YMin = DBL_MAX;
-        for (Int32 ie2 = 0; ie2 < _secondpass_recomputed_extremumList.size(); ie2++)
-        {
-            if (YMin > _secondpass_recomputed_extremumList[ie2].Y)
-            {
-                YMin = _secondpass_recomputed_extremumList[ie2].Y;
-                iYmin = ie2;
-            }
-        }
-        _secondpass_recomputed_extremumList.erase(_secondpass_recomputed_extremumList.begin() + iYmin);
 
-        // find the initial index in _secondpass_recomputed_extremumList
-        for (Int32 ie2 = 0; ie2 < m_secondpass_indiceSortedCandidatesList.size(); ie2++)
-        {
-            if (iYmin >= m_secondpass_indiceSortedCandidatesList[ie2])
-            {
-                iYmin++;
-            }
-        }
-        m_secondpass_indiceSortedCandidatesList.push_back(iYmin);
+    //Sorting candidates using map. Utility: it solves the ducplicate candidate problem
+    vector<int> V(_secondpass_recomputed_extremumList.size());//vector of indices
+    int x = 0;
+    std::iota(V.begin(), V.end(), x++);//initialization of m_secondpass_indiceSortedCandidatesList
+    sort(V.begin(), V.end(), [&](int i, int j){return _secondpass_recomputed_extremumList[i].Y < _secondpass_recomputed_extremumList[j].Y;} );
+
+    m_secondpass_indiceSortedCandidatesList.clear();
+    for ( Int32 ie = 0; ie < V.size(); ie++){
+        m_secondpass_indiceSortedCandidatesList.push_back(V[ie]);
     }
+
     if (mlmfit_modelInfoSave)
     {
         TFloat64List OrderedLMZ;
@@ -2853,22 +2842,22 @@ void COperatorLineModel::storeGlobalModelResults(CDataStore &dataStore)
     for (Int32 k = 0; k < nResults; k++)
     {
         std::string fname_spc =
-            (boost::format("linemodel_spc_extrema_%1%") % k).str();
+            (boost::format("linemodel_spc_extrema_tmp_%1%") % k).str();
         dataStore.StoreScopedGlobalResult(fname_spc.c_str(),
                                           m_savedModelSpectrumResults[k]);
 
         std::string fname_fit =
-            (boost::format("linemodel_fit_extrema_%1%") % k).str();
+            (boost::format("linemodel_fit_extrema_tmp_%1%") % k).str();
         dataStore.StoreScopedGlobalResult(fname_fit.c_str(),
                                           m_savedModelFittingResults[k]);
 
         std::string fname_fitcontinuum =
-            (boost::format("linemodel_fitcontinuum_extrema_%1%") % k).str();
+            (boost::format("linemodel_fitcontinuum_extrema_tmp_%1%") % k).str();
         dataStore.StoreScopedGlobalResult(
             fname_fitcontinuum.c_str(), m_savedModelContinuumFittingResults[k]);
 
         std::string fname_rules =
-            (boost::format("linemodel_rules_extrema_%1%") % k).str();
+            (boost::format("linemodel_rules_extrema_tmp_%1%") % k).str();
         dataStore.StoreScopedGlobalResult(fname_rules.c_str(),
                                           m_savedModelRulesResults[k]);
     }
@@ -2876,7 +2865,7 @@ void COperatorLineModel::storeGlobalModelResults(CDataStore &dataStore)
     for (Int32 k = 0; k < m_savedModelContinuumSpectrumResults.size(); k++)
     {
         std::string nameBaselineStr =
-            (boost::format("linemodel_continuum_extrema_%1%") % k).str();
+            (boost::format("linemodel_continuum_extrema_tmp_%1%") % k).str();
         dataStore.StoreScopedGlobalResult(
             nameBaselineStr.c_str(), m_savedModelContinuumSpectrumResults[k]);
     }
