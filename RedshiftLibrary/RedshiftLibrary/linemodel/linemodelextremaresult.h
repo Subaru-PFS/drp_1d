@@ -23,6 +23,8 @@ public:
     void Resize(Int32 size);
 
     void Save( const CDataStore& store, std::ostream& stream ) const;
+    void SaveJSON( const CDataStore& store, std::ostream& stream ) const;
+
     void SaveLine( const CDataStore& store, std::ostream& stream ) const;
     inline Int32 GetEvidenceFromPdf(const CDataStore& store, Float64 &evidence) const
     {
@@ -62,10 +64,10 @@ public:
     TFloat64List            OutsideLinesSTDError;   //STD measured on the error spectrum outside lines
 
     //line width
-    std::vector<Float64>      Elv;   //emission line width
-    std::vector<Float64>      Alv;   //absorption line width
-    std::vector<std::vector<Float64>>      GroupsELv;   //per fitting group line width , EL
-    std::vector<std::vector<Float64>>      GroupsALv;   //per fitting group line width , AL
+    TFloat64List      Elv;   //emission line width
+    TFloat64List      Alv;   //absorption line width
+    std::vector<TFloat64List>      GroupsELv;   //per fitting group line width , EL
+    std::vector<TFloat64List>      GroupsALv;   //per fitting group line width , AL
 
 
     //template continuum
@@ -82,10 +84,10 @@ public:
 
     //template ratio
     std::vector<std::string>      FittedTplshapeName;   //Name of the best template fitted for tplcorr/tplshape
-    std::vector<Float64>      FittedTplshapeAmplitude;   //amp of the best template fitted for tplcorr/tplshape
-    std::vector<Float64>      FittedTplshapeDtm;   //dtm of the best template fitted for tplcorr/tplshape
-    std::vector<Float64>      FittedTplshapeMtm;   //mtm of the best template fitted for tplcorr/tplshape
-    std::vector<Float64>      FittedTplshapeIsmCoeff;   //IsmCoeff/EBMV of the best template fitted for tplcorr/tplshape
+    TFloat64List      FittedTplshapeAmplitude;   //amp of the best template fitted for tplcorr/tplshape
+    TFloat64List      FittedTplshapeDtm;   //dtm of the best template fitted for tplcorr/tplshape
+    TFloat64List      FittedTplshapeMtm;   //mtm of the best template fitted for tplcorr/tplshape
+    TFloat64List      FittedTplshapeIsmCoeff;   //IsmCoeff/EBMV of the best template fitted for tplcorr/tplshape
 
 };
 

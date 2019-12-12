@@ -545,3 +545,160 @@ void CLineModelExtremaResult::Save( const CDataStore& store, std::ostream& strea
 
 
 }
+
+/**
+ * \brief Prints the results currently in the argument store, in the argument stream.
+ * Using the argument stream to print values from the argument store:
+ * Print a header as a comment.
+ * Print each redshift and chisquare values.
+ * Print each Extrema as a comment.
+ * Print each BIC as a comment.
+ * Print each POSTERIOR as a comment.
+ * Print each SigmaZ as a comment.
+ * Print each LogArea as a comment.
+ **/
+void CLineModelExtremaResult::SaveJSON( const CDataStore& store, std::ostream& stream ) const
+{
+  stream << "{"<< std::endl;
+  // save extrema list, on 1 line
+  SaveTFloat64List(stream,"z_extrema", Extrema);
+  stream << "," << std::endl;
+
+  // save extremaMerit list, on 1 line
+  SaveTFloat64List(stream,"z_ExtremaMerit",ExtremaMerit);
+  stream << "," << std::endl;
+  // save extremaMeritContinuum list, on 1 line
+  SaveTFloat64List(stream,"z_ExtremaMeritContinuum",ExtremaMeritContinuum);
+  stream << "," << std::endl;
+  // save extrema Deltaz list, on 1 line
+  SaveTFloat64List(stream,"z_ExtremaDeltaZ",DeltaZ);
+  stream << "," << std::endl;
+  // save extrema mTransposeM list, on 1 line
+  SaveTFloat64List(stream,"z_mTransposeM",mTransposeM);
+  stream << "," << std::endl;
+  // save NDof list, on 1 line
+  SaveInt32Vector(stream,"z_NDof",NDof);
+  stream << "," << std::endl;
+  // save CorrScaleMarg list, on 1 line
+  SaveTFloat64List(stream,"z_CorrScaleMarg",CorrScaleMarg);
+  stream << "," << std::endl;
+  // save ExtremaLastPass list, on 1 line
+  SaveTFloat64List(stream,"z_ExtremaLastPass",ExtremaLastPass);
+  stream << "," << std::endl;
+  // save lmfitPass list, on 1 line
+  SaveTFloat64List(stream,"z_lmfitPass",lmfitPass);
+  stream << "," << std::endl;
+  // save snrHa list, on 1 line
+  SaveTFloat64List(stream,"z_snrHa",snrHa);
+  stream << "," << std::endl;
+  // save lfHa list, on 1 line
+  SaveTFloat64List(stream,"z_lfHa",lfHa);
+  stream << "," << std::endl;
+
+  // save snrOII list, on 1 line
+  SaveTFloat64List(stream,"z_snrOII",snrOII);
+  stream << "," << std::endl;
+  // save lfOII list, on 1 line
+  SaveTFloat64List(stream,"z_lfOII",lfOII);
+  stream << "," << std::endl;
+  // save bic list, on 1 line
+  SaveTFloat64List(stream,"ext_BIC",bic);
+  stream << "," << std::endl;
+  // save posterior list, on 1 line
+  SaveTFloat64List(stream,"ext_POSTERIOR",Posterior);
+  stream << "," << std::endl;
+  // save SigmaZ list, on 1 line
+  SaveTFloat64List(stream,"ext_SigmaZ",SigmaZ);
+  stream << "," << std::endl;
+  // save LogArea list, on 1 line
+  SaveTFloat64List(stream,"ext_LogArea",LogArea);
+  stream << "," << std::endl;
+  // save ContinuumIndexes list, on 1 line
+  SaveTContinuumIndexListVector(stream,"ext_ContinuumIndexes",ContinuumIndexes);
+  stream << "," << std::endl;	
+
+
+  // save StrongELSNR list, on 1 line
+  SaveTFloat64List(stream,"ext_StrongELSNR",StrongELSNR);
+  stream << "," << std::endl;
+
+  // save StrongELSNRAboveCut list, on 1 line
+  SaveStringVectorOfVector(stream,"ext_StrongELSNRAboveCut",StrongELSNRAboveCut);
+  stream << "," << std::endl;
+
+  // save FittedTplName, on 1 line
+  SaveStringVector(stream,"ext_FittedTplName",FittedTplName);
+  stream << "," << std::endl;
+  // save FittedTplAmplitude, on 1 line
+  SaveTFloat64List(stream,"ext_FittedTplAmplitude",FittedTplAmplitude);
+  stream << "," << std::endl;
+  // save FittedTplMerit, on 1 line
+  SaveTFloat64List(stream,"ext_FittedTplMerit",FittedTplMerit);
+  stream << "," << std::endl;
+  // save FittedTplDustCoeff, on 1 line
+  stream << std::setprecision(3);
+  SaveTFloat64List(stream,"ext_FittedTplDustCoeff",FittedTplDustCoeff); 
+  stream << "," << std::endl; 
+
+  // save FittedTplMeiksinIdx, on 1 line
+  SaveInt32Vector(stream,"ext_FittedTplMeiksinIdx",FittedTplMeiksinIdx);
+  stream << "," << std::endl;
+   
+  // save FittedTplRedshift, on 1 line
+   stream << std::setprecision(8);
+  SaveTFloat64List(stream,"ext_FittedTplRedshift",FittedTplRedshift);  
+  stream << "," << std::endl;
+
+  // save FittedTplDtm, on 1 line
+      stream << std::setprecision(8);
+  SaveTFloat64List(stream,"ext_FittedTplDtm",FittedTplDtm);
+  stream << "," << std::endl;
+  // save FittedTplMtm, on 1 line
+    stream << std::setprecision(8);
+  SaveTFloat64List(stream,"ext_FittedTplMtm",FittedTplMtm);
+  stream << "," << std::endl;
+  // save FittedTplLogPrior, on 1 line
+    stream << std::setprecision(8);
+  SaveTFloat64List(stream,"ext_FittedTplLogPrior",FittedTplLogPrior);
+  stream << "," << std::endl;
+  // save FittedTplpCoeffs, on 1 line
+    stream << std::setprecision(8);
+  SaveTFloat64ListOfList(stream,"ext_FittedTplpCoeffs",FittedTplpCoeffs);
+  stream << "," << std::endl;
+
+  // save FittedTplshapeName, on 1 line
+  SaveStringVector(stream,"ext_FittedTplshapeName",FittedTplshapeName);
+  stream << "," << std::endl;
+  // save FittedTplshapeIsmCoeff, on 1 line
+  SaveTFloat64List(stream,"ext_FittedTplshapeIsmCoeff",FittedTplshapeIsmCoeff);
+  stream << "," << std::endl;
+  // save FittedTplshapeAmplitude, on 1 line
+  SaveTFloat64List(stream,"ext_FittedTplshapeAmplitude",FittedTplshapeAmplitude);
+  stream << "," << std::endl;
+  // save FittedTplshapeDtm, on 1 line
+  SaveTFloat64List(stream,"ext_FittedTplshapeDtm",FittedTplshapeDtm);
+  stream << "," << std::endl;
+  // save FittedTplshapeMtm, on 1 line
+  SaveTFloat64List(stream,"ext_FittedTplshapeMtm",FittedTplshapeMtm);
+  stream << "," << std::endl;
+
+  // save OutsideLinesSTDFlux, on 1 line
+  stream << std::scientific << std::setprecision(5);
+  SaveTFloat64List(stream,"ext_OutsideLinesSTDFlux",OutsideLinesSTDFlux);
+  stream << "," << std::endl;
+  // save OutsideLinesSTDError, on 1 line
+  stream << std::scientific << std::setprecision(5);
+  SaveTFloat64List(stream,"ext_OutsideLinesSTDError",OutsideLinesSTDError);
+  stream << "," << std::endl;
+  // save Elv, on 1 line
+  stream << std::fixed << std::setprecision(1);
+  SaveTFloat64List(stream,"ext_Elv",Elv);
+  stream << "," << std::endl;
+  // save Alv, on 1 line
+  stream << std::fixed << std::setprecision(1);
+  SaveTFloat64List(stream,"ext_Alv",Alv);
+
+  stream <<  "}";
+
+}
+
