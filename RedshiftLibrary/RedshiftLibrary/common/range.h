@@ -130,13 +130,13 @@ template <typename T> class CRange
 
 	v.push_back(m_Begin);
        //New part ; see issue #5429
-       Float64 x = m_Begin +1;
+       Float64 x = m_Begin + 1.;
        Float64 edelta = exp(delta);
        Int32 count = 0;
        Int32 maxCount = 1e8;
        while (x*edelta < m_End+1. && count < maxCount)
        {
-	   x *= edelta;
+           x *= edelta;
            v.push_back(x-1.);
            count++;
        }
