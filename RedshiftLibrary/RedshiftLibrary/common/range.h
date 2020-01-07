@@ -91,33 +91,6 @@ template <typename T> class CRange
         return v;
     }
 
-    /*std::vector<T> SpreadOverLog(Float64 delta) const
-    {
-        std::vector<T> v;
-
-        if (GetIsEmpty() || delta == 0.0 || GetLength() < delta)
-        {
-            v.resize(1);
-            v[0] = m_Begin;
-            return v;
-        }
-
-        v.push_back(m_Begin);
-        Float64 x = m_Begin;
-        Float64 step = delta * (1. + m_Begin);
-        Int32 count = 0;
-        Int32 maxCount = 1e8;
-        while (x + step < m_End && count < maxCount)
-        {
-            x = x + step;
-            v.push_back(x);
-            step = delta * (1. + x);
-            count++;
-        }
-
-        return v;
-    }*/
-
     std::vector<T> SpreadOverLog(Float64 delta) const
     {
 	std::vector<T> v;
@@ -141,7 +114,7 @@ template <typename T> class CRange
            count++;
        }
 
-	return v;
+       return v;
     }
 
   private:
