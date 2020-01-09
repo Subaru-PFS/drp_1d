@@ -40,10 +40,12 @@ Use `brew` as packet manager on MacOS:
 
     brew install gcc cmake swig boost cfitsio gsl fftw
 
-Use [Anaconda](https://www.anaconda.com/) as python3 provider and then install python dependencies with `pip`:
+### Installing python dependencies
 
-    pip3 install numpy
-    pip3 install astropy
+Activate your virtual environment as needed then install python dependencies with `pip`:
+
+    pip install numpy
+    pip install astropy
 
 
 ## Installing pylibamazed
@@ -67,15 +69,7 @@ You can specify install directory with `CMAKE_INSTALL_PREFIX` (defaults to `$HOM
 
 From `drp_1d` root directory:
 
-#### For linux users
-
     pip install .
-
-#### For MacOSX users
-
-    MACOSX_DEPLOYMENT_TARGET=10.13 CC=clang CXX=clang++ pip3 install .
-
-Set `MACOSX_DEPLOYMENT_TARGET` variable to properly MacOSX version (`sw_vers` command on terminal).
 
 ### Testing an installed pylibamazed
 
