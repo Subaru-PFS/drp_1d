@@ -1205,7 +1205,7 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64 *spectrumRebinedLambda,
                 // return 2;
                 continue;
             }
-            Log.LogDetail("  Operator-ChisquareLog: FitRangez: kISM = %d, kIGM = %d", kISM, kIGM);
+            //Log.LogDetail("  Operator-ChisquareLog: FitRangez: kISM = %d, kIGM = %d", kISM, kIGM);
             std::vector<Float64> chi2(dtm_vec_size, DBL_MAX);
             std::vector<Float64> amp(dtm_vec_size, DBL_MAX);
             for (Int32 k = 0; k < dtm_vec_size; k++)
