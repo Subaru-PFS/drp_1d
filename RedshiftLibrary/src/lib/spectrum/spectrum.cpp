@@ -8,8 +8,8 @@
 #include <RedshiftLibrary/common/mask.h>
 #include <RedshiftLibrary/debug/assert.h>
 
-#include <math.h>
-#include <stdio.h>
+#include <cmath>
+#include <cstdio>
 #include <algorithm>
 
 #include <gsl/gsl_fit.h>
@@ -240,8 +240,12 @@ const Bool CSpectrum::IsFluxValid( Float64 LambdaMin,  Float64 LambdaMax ) const
     Log.LogDetail( "CSpectrum::IsFluxValid - checking on the configured lambdarange = (%f, %f)", LambdaMin, LambdaMax );
     Log.LogDetail( "CSpectrum::IsFluxValid - checking on the true observed spectral axis lambdarange = (%f, %f)", m_SpectralAxis[iMin], m_SpectralAxis[iMax] );
     for(Int32 i=iMin; i<iMax; i++){
-
         //check flux
+        if( abs(flux[i]) <= DBL_MIN ){
+            //check if flux is below minimum normalized positive value of double
+            atleastOneInvalidValue = true;
+            Log.LogDebug("    CSpectrum::IsFluxValid - Found subnormal flux value (=%e) at index=%d", i, flux[i]);
+        }
         if( std::isnan(flux[i]) ){
             atleastOneInvalidValue = true;
             Log.LogDebug("    CSpectrum::IsFluxValid - Found nan flux value (=%e) at index=%d", i, flux[i]);
@@ -276,10 +280,12 @@ const Bool CSpectrum::IsNoiseValid( Float64 LambdaMin,  Float64 LambdaMax ) cons
     Log.LogDebug("    CSpectrum::IsNoiseValid - wl=%f iMin=%d error[iMin]=%e", LambdaMin, iMin, error[iMin]);
     Log.LogDebug("    CSpectrum::IsNoiseValid - wl=%f iMax=%d error[iMax]=%e", LambdaMax, iMax, error[iMax]);
     for(Int32 i=iMin; i<iMax; i++){
+        //check noise
         Bool validSample=true;
-        if( error[i] <= 0 ){
+        if( error[i] < DBL_MIN ){
+            //check if noise is below minimum normalized positive value of double
             validSample = false;
-            Log.LogDebug("    CSpectrum::IsNoiseValid - Found negative noise value (=%e) at index=%d", i, error[i]);
+            Log.LogDebug("    CSpectrum::IsNoiseValid - Found subnormal noise value (=%e) at index=%d", i, error[i]);
         }
         if( std::isnan(error[i]) ){
             validSample = false;
@@ -322,7 +328,7 @@ Bool CSpectrum::correctSpectrum( Float64 LambdaMin,  Float64 LambdaMax, Float64 
     for(Int32 i=iMin; i<=iMax; i++){
         //Log.LogDebug("    CSpectrum::correctSpectrum - debug - RAW sample for maxFlux/minNoise. Found err(=%f) and flux=%f", error[i], flux[i]);
         //check noise
-        if( error[i] <= 0 ){
+        if( error[i] <= 0.0 ){
             continue;
         }
         if( std::isnan(error[i]) ){
@@ -370,7 +376,7 @@ Bool CSpectrum::correctSpectrum( Float64 LambdaMin,  Float64 LambdaMax, Float64 
         Bool validSample=true;
 
         //check noise
-        if( error[i] <= 0 ){
+        if( error[i] <= 0.0 ){
             validSample = false;
             Log.LogDebug("    CSpectrum::correctSpectrum - Found negative noise value (=%f) at index=%d (w=%f)", i, error[i], m_SpectralAxis[i]);
         }
