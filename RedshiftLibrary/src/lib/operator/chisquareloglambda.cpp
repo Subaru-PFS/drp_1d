@@ -1543,50 +1543,50 @@ TInt32Range COperatorChiSquareLogLambda::FindTplSpectralIndex(
     Float64 spcLambdaMargin = abs(spcLambda[1] - spcLambda[0]);
     Float64 tplLambdaMargin = abs(tplLambda[1] - tplLambda[0]);
 
-    Log.LogInfo("  Operator-ChisquareLog: FindTplSpectralIndex: redshiftMargin = %f", redshiftMargin);
-    Log.LogInfo("  Operator-ChisquareLog: FindTplSpectralIndex: spcLambdaMargin = %f", spcLambdaMargin);
-    Log.LogInfo("  Operator-ChisquareLog: FindTplSpectralIndex: tplLambdaMargin = %f", tplLambdaMargin);
+    //Log.LogInfo("  Operator-ChisquareLog: FindTplSpectralIndex: redshiftMargin = %f", redshiftMargin);
+    //Log.LogInfo("  Operator-ChisquareLog: FindTplSpectralIndex: spcLambdaMargin = %f", spcLambdaMargin);
+    //Log.LogInfo("  Operator-ChisquareLog: FindTplSpectralIndex: tplLambdaMargin = %f", tplLambdaMargin);
 
     UInt32 ilbdamin = 0;
-    Log.LogInfo("  Operator-ChisquareLog: FindTplSpectralIndex: ilbdamin computation starts");
+    //Log.LogInfo("  Operator-ChisquareLog: FindTplSpectralIndex: ilbdamin computation starts");
     for (UInt32 k = 0; k < nTpl; k++)
     {
         Float64 _spcLambda = spcLambda[0] - spcLambdaMargin;
         Float64 _tplLambda = tplLambda[k] + tplLambdaMargin;
         Float64 _z = (_spcLambda - _tplLambda) / _tplLambda;
 
-	Log.LogInfo("  Operator-ChisquareLog: FindTplSpectralIndex: _spcLambda = %f, spcLambda[%d]=%f", _spcLambda, 0, spcLambda[0]);
-	Log.LogInfo("  Operator-ChisquareLog: FindTplSpectralIndex: _tplLambda = %f, tplLambda[%d]=%f", _tplLambda, k, tplLambda[k]);
-	Log.LogInfo("  Operator-ChisquareLog: FindTplSpectralIndex: _z = %f", _z);
+	//Log.LogInfo("  Operator-ChisquareLog: FindTplSpectralIndex: _spcLambda = %f, spcLambda[%d]=%f", _spcLambda, 0, spcLambda[0]);
+	//Log.LogInfo("  Operator-ChisquareLog: FindTplSpectralIndex: _tplLambda = %f, tplLambda[%d]=%f", _tplLambda, k, tplLambda[k]);
+	//Log.LogInfo("  Operator-ChisquareLog: FindTplSpectralIndex: _z = %f", _z);
 
         if (_z > redshiftrange.GetEnd() + redshiftMargin)
         {
             ilbdamin = k;
         } else
         {
-	    Log.LogInfo("  Operator-ChisquareLog: FindTplSpectralIndex: ilbdamin computation breaks");
+	    //Log.LogInfo("  Operator-ChisquareLog: FindTplSpectralIndex: ilbdamin computation breaks");
             break;
         }
     }
 
     UInt32 ilbdamax = nTpl - 1;
-    Log.LogInfo("  Operator-ChisquareLog: FindTplSpectralIndex: ilbdamax computation starts");
+    //Log.LogInfo("  Operator-ChisquareLog: FindTplSpectralIndex: ilbdamax computation starts");
     for (UInt32 k = nTpl - 1; k > 0; k--)
     {
         Float64 _spcLambda = spcLambda[nSpc - 1] + spcLambdaMargin;
         Float64 _tplLambda = tplLambda[k] - tplLambdaMargin;
         Float64 _z = (_spcLambda - _tplLambda) / _tplLambda;
 
-        Log.LogInfo("  Operator-ChisquareLog: FindTplSpectralIndex: _spcLambda = %f, spcLambda[%d]=%f", _spcLambda, nSpc - 1, spcLambda[nSpc - 1]);
-        Log.LogInfo("  Operator-ChisquareLog: FindTplSpectralIndex: _tplLambda = %f, tplLambda[%d]=%f", _tplLambda, k, tplLambda[k]);
-        Log.LogInfo("  Operator-ChisquareLog: FindTplSpectralIndex: _z = %f", _z);
+        //Log.LogInfo("  Operator-ChisquareLog: FindTplSpectralIndex: _spcLambda = %f, spcLambda[%d]=%f", _spcLambda, nSpc - 1, spcLambda[nSpc - 1]);
+        //Log.LogInfo("  Operator-ChisquareLog: FindTplSpectralIndex: _tplLambda = %f, tplLambda[%d]=%f", _tplLambda, k, tplLambda[k]);
+        //Log.LogInfo("  Operator-ChisquareLog: FindTplSpectralIndex: _z = %f", _z);
 
         if (_z < redshiftrange.GetBegin() - redshiftMargin)
         {
             ilbdamax = k;
         } else
         {
-	    Log.LogInfo("  Operator-ChisquareLog: FindTplSpectralIndex: ilbdamax computation breaks");
+	    //Log.LogInfo("  Operator-ChisquareLog: FindTplSpectralIndex: ilbdamax computation breaks");
             break;
         }
     }
