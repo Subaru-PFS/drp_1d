@@ -138,6 +138,11 @@ void CPdfCandidateszResult::SortByRank()
     }
     SortByValSumProba(Rank);//update ranks based on valproba
     SortByValSumProba(Redshifts);
+    for (Int32 i = 0; i <Rank.size(); i++){
+        if(Rank[i]!=i){
+            Log.LogDebug("Zcand %f has his rank updated from %d to %f \n", Redshifts[i], i, Rank[i]);
+        }
+    }
     SortByValSumProba(ValSumProba);
     if(optMethod==1)
     {
