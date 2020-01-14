@@ -718,6 +718,17 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
         Log.LogInfo( "  Integrating %d candidates proba.", zcandidates_unordered_list.size() );
         zcand->Compute(zcandidates_unordered_list, logzpdf1d->Redshifts, logzpdf1d->valProbaLog);
         ctx.GetDataStore().StoreScopedGlobalResult( "candidatesresult", zcand );
+        //zcand->compute recompute sthe order of candidates based on valprobalog at this level we have the candidates ordered
+        std::vector<std::string> info {"spc", "fit", "fitcontinuum", "rules", "continuum"};
+        for(Int32 f = 0; f<info.size(); f++) {
+            for( Int32 i = 0; i<zcand->Rank.size(); i++){
+                std::string fname_old =
+                (boost::format("linemodelsolve.linemodel_%1%_extrema_tmp_%2%") % info[f] % i).str();
+                std::string fname_new =
+                (boost::format("linemodelsolve.linemodel_%1%_extrema_%2%") % info[f] % zcand->Rank[i]).str();
+                ctx.GetDataStore().ChangeScopedGlobalResult(fname_old, fname_new);    
+            }
+        }
     }else{
         Log.LogInfo("No z-candidates found. Skipping probabilities integration...");
     }

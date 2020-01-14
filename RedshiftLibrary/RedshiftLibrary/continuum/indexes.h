@@ -28,9 +28,10 @@ public:
     };
     typedef std::vector<SContinuumIndex> TContinuumIndexList;
 
-
+  //should be static !
     TContinuumIndexList getIndexes(const CSpectrum& spectrum, Float64 z);
     SContinuumRelevance getRelevance(const CSpectrum& spectrum, const CSpectrum& continuum);
+  
 private:
 };
 

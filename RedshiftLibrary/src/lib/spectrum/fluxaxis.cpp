@@ -343,7 +343,8 @@ Bool CSpectrumFluxAxis::RebinVarianceWeighted( const CSpectrumFluxAxis& sourceFl
                 Xrebin[j] = Xsrc[k] + xSrcStep * t;
                 Yrebin[j] = Ysrc[k] + ( Ysrc[k+1] - Ysrc[k] ) * t;
 
-                Errrebin[j] = sqrt(Errsrc[k]*Errsrc[k] + ( Errsrc[k+1]*Errsrc[k+1] - Errsrc[k]*Errsrc[k] ) * t*t);
+                //Errrebin[j] = sqrt(Errsrc[k]*Errsrc[k] + ( Errsrc[k+1]*Errsrc[k+1] - Errsrc[k]*Errsrc[k] ) * t*t);
+                Errrebin[j] = sqrt(Errsrc[k]*Errsrc[k]*(1-t)*(1-t) + Errsrc[k+1]*Errsrc[k+1] * t*t);
                 //*
                 if(j<targetSpectralAxis.GetSamplesCount()-1)
                 {
@@ -568,5 +569,3 @@ Bool CSpectrumFluxAxis::Invert()
     }
     return true;
 }
-
-

@@ -80,6 +80,8 @@ public:
 
     void                            StoreScopedPerTemplateResult( const CTemplate& t, const std::string& name, std::shared_ptr<const COperatorResult>  result );
     void                            StoreScopedGlobalResult( const std::string& name, std::shared_ptr<const COperatorResult>  result );
+    void                            ChangeScopedGlobalResult( const std::string& oldkey, const std::string& newkey );
+    void                            DeleteScopedGlobalResult( const std::string& name );
     void                            StoreGlobalResult( const std::string& name, std::shared_ptr<const COperatorResult>  result );
 
     std::weak_ptr<const COperatorResult>          GetPerTemplateResult( const CTemplate& t, const std::string& name ) const;
