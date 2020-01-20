@@ -251,7 +251,7 @@ const Bool CSpectrum::checkFlux( Float64 flux, Int32 index ) const
 const Bool CSpectrum::checkNoise( Float64 error, Int32 index ) const
 {
     Log.LogDebug("    CSpectrum::checkNoise - Found noise value (=%e) at index=%d", error, index);
-    Bool validValue=true;
+    Bool validValue = true;
     if( error < DBL_MIN ){
         //check if noise is below minimum normalized positive value of double
         validValue = false;
@@ -274,8 +274,9 @@ const Bool CSpectrum::checkNoise( Float64 error, Int32 index ) const
 
 const Bool CSpectrum::IsFluxValid( Float64 LambdaMin,  Float64 LambdaMax ) const
 {
-    Bool allzero=true;
-    Bool atleastOneInvalidValue = false;
+    Bool allzero = true;
+    Bool invalidValue = false;
+    Int32 nInvalid = 0;
 
     const Float64* flux = m_FluxAxis.GetSamples();
     Int32 iMin = m_SpectralAxis.GetIndexAtWaveLength(LambdaMin);
@@ -284,7 +285,12 @@ const Bool CSpectrum::IsFluxValid( Float64 LambdaMin,  Float64 LambdaMax ) const
     Log.LogDetail( "CSpectrum::IsFluxValid - checking on the true observed spectral axis lambdarange = (%f, %f)", m_SpectralAxis[iMin], m_SpectralAxis[iMax] );
     for(Int32 i=iMin; i<iMax; i++){
         //check flux
-        atleastOneInvalidValue = checkFlux(flux[i], i);
+        Bool atleastOneInvalidValue = checkFlux(flux[i], i);
+
+        if(atleastOneInvalidValue){
+            invalidValue = true;
+            nInvalid++;
+        }
 
         //all zero check
         if( flux[i] != 0.0 ){
@@ -292,7 +298,11 @@ const Bool CSpectrum::IsFluxValid( Float64 LambdaMin,  Float64 LambdaMax ) const
             //Log.LogDebug("    CSpectrum::IsFluxValid - Found non zero and valid flux value (=%e) at index=%d", i, flux[i]);
         }
     }
-    Bool valid = !allzero && !atleastOneInvalidValue;
+    Bool valid = !invalidValue && !allzero;
+    if(nInvalid>0)
+    {
+        Log.LogDetail("    CSpectrum::IsFluxValid - Found %d invalid flux samples", nInvalid);
+    }
     return valid;
 }
 
