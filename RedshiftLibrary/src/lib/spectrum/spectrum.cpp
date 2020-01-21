@@ -394,13 +394,8 @@ Bool CSpectrum::correctSpectrum( Float64 LambdaMin,  Float64 LambdaMax, Float64 
     }
 
     for(Int32 i=iMin; i<=iMax; i++){
-        Bool validSample=true;
-
-        //check noise
-        validSample = checkNoise(error[i], i);
-
-        //check flux
-        validSample = !checkFlux(flux[i], i);
+        //check noise & flux
+        Bool validSample = checkNoise(error[i], i) && !checkFlux(flux[i], i);
 
         if(!validSample){
             error[i]=maxNoise*coeffCorr;
