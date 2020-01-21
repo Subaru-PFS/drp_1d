@@ -197,26 +197,41 @@ BOOST_AUTO_TEST_CASE(Calcul)
     //--------------------//
     //test IsFluxValid
 
-    BOOST_CHECK(object_CSpectrum2.IsFluxValid(1,12)==false);//cas dans tout l'intervalle
-    BOOST_CHECK(object_CSpectrum2.IsFluxValid(1,6)==false);//cas dans l'intervalle 1 à 6 avec 0.0
-    BOOST_CHECK(object_CSpectrum2.IsFluxValid(5,11)==false);//cas dans l'intervalle 5 à 11 avec nan et inf
-    BOOST_CHECK(object_CSpectrum2.IsFluxValid(5,8)==true);//cas dans l'intervalle 5 à 8
+    BOOST_CHECK(object_CSpectrum2.IsFluxValid(1,11)==false);//cas dans tout l'intervalle
+    BOOST_CHECK(object_CSpectrum2.IsFluxValid(1,5)==false);//cas dans l'intervalle 1 à 5 avec 0.0
+    BOOST_CHECK(object_CSpectrum2.IsFluxValid(1,6)==true);//cas dans l'intervalle 1 à 6
+    BOOST_CHECK(object_CSpectrum2.IsFluxValid(6,11)==false);//cas dans l'intervalle 6 à 11 avec nan et inf
+    BOOST_CHECK(object_CSpectrum2.IsFluxValid(6,7)==true);//cas dans l'intervalle 6 à 7
     BOOST_CHECK(object_CSpectrum2.IsFluxValid(7,9)==false);//cas dans l'intervalle 7 à 9 avec nan
-    BOOST_CHECK(object_CSpectrum2.IsFluxValid(9,10)==true);//cas où l'intervalle est un point
-    BOOST_CHECK(object_CSpectrum2.IsFluxValid(9,12)==false);//cas dans l'intervalle 9 à 12 avec inf
-    BOOST_CHECK(object_CSpectrum2.IsFluxValid(10,11)==false);//cas où l'intervalle est un point inf
+    BOOST_CHECK(object_CSpectrum2.IsFluxValid(9,9)==true);//cas où l'intervalle est un point
+    BOOST_CHECK(object_CSpectrum2.IsFluxValid(9,11)==false);//cas dans l'intervalle 9 à 11 avec inf
+    BOOST_CHECK(object_CSpectrum2.IsFluxValid(10,10)==false);//cas où l'intervalle est un point inf
 
     //--------------------//
     //test IsNoiseValid
 
-    BOOST_CHECK(object_CSpectrum2.IsNoiseValid(1,12)==false);//cas dans tout l'intervalle
-    BOOST_CHECK(object_CSpectrum2.IsNoiseValid(1,6)==false);//cas dans l'intervalle 1 à 6 avec 0.0
+    BOOST_CHECK(object_CSpectrum2.IsNoiseValid(1,11)==false);//cas dans tout l'intervalle
+    BOOST_CHECK(object_CSpectrum2.IsNoiseValid(1,5)==false);//cas dans l'intervalle 1 à 5 avec 0.0
+    BOOST_CHECK(object_CSpectrum2.IsNoiseValid(1,6)==false);//cas dans l'intervalle 1 à 6
     BOOST_CHECK(object_CSpectrum2.IsNoiseValid(6,11)==false);//cas dans l'intervalle 6 à 11 avec nan et inf
-    BOOST_CHECK(object_CSpectrum2.IsNoiseValid(6,8)==true);//cas dans l'intervalle 6 à 8
+    BOOST_CHECK(object_CSpectrum2.IsNoiseValid(6,7)==true);//cas dans l'intervalle 6 à 7
     BOOST_CHECK(object_CSpectrum2.IsNoiseValid(7,9)==false);//cas dans l'intervalle 7 à 9 avec nan
-    BOOST_CHECK(object_CSpectrum2.IsNoiseValid(9,10)==true);//cas où l'intervalle est un point
-    BOOST_CHECK(object_CSpectrum2.IsNoiseValid(9,12)==false);//cas dans l'intervalle 9 à 12 avec inf
-    BOOST_CHECK(object_CSpectrum2.IsNoiseValid(10,11)==false);//cas où l'intervalle est un point inf
+    BOOST_CHECK(object_CSpectrum2.IsNoiseValid(9,9)==true);//cas où l'intervalle est un point
+    BOOST_CHECK(object_CSpectrum2.IsNoiseValid(9,11)==false);//cas dans l'intervalle 9 à 11 avec inf
+    BOOST_CHECK(object_CSpectrum2.IsNoiseValid(10,10)==false);//cas où l'intervalle est un point inf
+
+    //--------------------//
+    //test correctSpectrum
+
+    BOOST_CHECK(object_CSpectrum2.correctSpectrum(1,5)==false);//cas dans l'intervalle 1 à 5 avec 0.0
+    BOOST_CHECK(object_CSpectrum2.correctSpectrum(1,6)==true);//cas dans l'intervalle 1 à 6
+    BOOST_CHECK(object_CSpectrum2.correctSpectrum(6,7)==false);//cas dans l'intervalle 6 à 7
+    BOOST_CHECK(object_CSpectrum2.correctSpectrum(7,9)==true);//cas dans l'intervalle 7 à 9 avec nan
+    BOOST_CHECK(object_CSpectrum2.correctSpectrum(9,9)==false);//cas où l'intervalle est un point
+    BOOST_CHECK(object_CSpectrum2.correctSpectrum(9,11)==true);//cas dans l'intervalle 9 à 11 avec inf
+    BOOST_CHECK(object_CSpectrum2.correctSpectrum(10,10)==false);//cas où l'intervalle est un point inf
+    BOOST_CHECK(object_CSpectrum2.correctSpectrum(6,11)==false);//cas dans l'intervalle 6 à 11 avec nan et inf
+    BOOST_CHECK(object_CSpectrum2.correctSpectrum(1,11)==false);//cas dans tout l'intervalle
 
     //--------------------//
     //test GetLambdaRange
