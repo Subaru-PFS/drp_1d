@@ -232,20 +232,20 @@ void CSpectrum::SetName( const char* name )
 const Bool CSpectrum::checkFlux( Float64 flux, Int32 index ) const
 {
     Log.LogDebug("    CSpectrum::checkFlux - Found flux value (=%e) at index=%d", flux, index);
-    Bool invalidValue = false;
+    Bool validValue = true;
     if( std::isnan(flux) ){
-        invalidValue = true;
+        validValue = false;
         Log.LogDebug("    CSpectrum::checkFlux - Found nan flux value (=%e) at index=%d", flux, index);
     }
     if( std::isinf(flux) ){
-        invalidValue = true;
+        validValue = false;
         Log.LogDebug("    CSpectrum::checkFlux - Found inf flux value (=%e) at index=%d", flux, index);
     }
     if( flux != flux ){
-        invalidValue = true;
+        validValue = false;
         Log.LogDebug("    CSpectrum::checkFlux - Found invalid flux value (=%e) at index=%d", flux, index);
     }
-    return invalidValue;
+    return validValue;
 }
 
 const Bool CSpectrum::checkNoise( Float64 error, Int32 index ) const
@@ -283,11 +283,11 @@ const Bool CSpectrum::IsFluxValid( Float64 LambdaMin,  Float64 LambdaMax ) const
     Int32 iMax = m_SpectralAxis.GetIndexAtWaveLength(LambdaMax);
     Log.LogDetail( "CSpectrum::IsFluxValid - checking on the configured lambdarange = (%f, %f)", LambdaMin, LambdaMax );
     Log.LogDetail( "CSpectrum::IsFluxValid - checking on the true observed spectral axis lambdarange = (%f, %f)", m_SpectralAxis[iMin], m_SpectralAxis[iMax] );
-    for(Int32 i=iMin; i<iMax; i++){
+    for(Int32 i=iMin; i<=iMax; i++){
         //check flux
-        Bool atleastOneInvalidValue = checkFlux(flux[i], i);
+        Bool validSample = checkFlux(flux[i], i);
 
-        if(atleastOneInvalidValue){
+        if(!validSample){
             invalidValue = true;
             nInvalid++;
         }
@@ -308,7 +308,7 @@ const Bool CSpectrum::IsFluxValid( Float64 LambdaMin,  Float64 LambdaMax ) const
 
 const Bool CSpectrum::IsNoiseValid( Float64 LambdaMin,  Float64 LambdaMax ) const
 {
-    Bool valid=true;
+    Bool valid = true;
     Int32 nInvalid = 0;
 
     const TFloat64List& error = m_FluxAxis.GetError();
@@ -316,12 +316,12 @@ const Bool CSpectrum::IsNoiseValid( Float64 LambdaMin,  Float64 LambdaMax ) cons
     Int32 iMax = m_SpectralAxis.GetIndexAtWaveLength(LambdaMax);
     Log.LogDebug("    CSpectrum::IsNoiseValid - wl=%f iMin=%d error[iMin]=%e", LambdaMin, iMin, error[iMin]);
     Log.LogDebug("    CSpectrum::IsNoiseValid - wl=%f iMax=%d error[iMax]=%e", LambdaMax, iMax, error[iMax]);
-    for(Int32 i=iMin; i<iMax; i++){
+    for(Int32 i=iMin; i<=iMax; i++){
         //check noise
         Bool validSample = checkNoise(error[i], i);
 
         if(!validSample){
-            valid=false;
+            valid = false;
             nInvalid++;
         }
     }
@@ -395,7 +395,7 @@ Bool CSpectrum::correctSpectrum( Float64 LambdaMin,  Float64 LambdaMax, Float64 
 
     for(Int32 i=iMin; i<=iMax; i++){
         //check noise & flux
-        Bool validSample = checkNoise(error[i], i) && !checkFlux(flux[i], i);
+        Bool validSample = checkNoise(error[i], i) && checkFlux(flux[i], i);
 
         if(!validSample){
             error[i]=maxNoise*coeffCorr;
