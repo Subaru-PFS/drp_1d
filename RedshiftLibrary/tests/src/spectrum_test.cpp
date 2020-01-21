@@ -5,14 +5,15 @@
 #include <RedshiftLibrary/common/mask.h>
 #include <RedshiftLibrary/debug/assert.h>
 
-#include <math.h>
-#include <stdio.h>
 #include <algorithm>
-#include <time.h>
-
+#include <cmath>
+#include <cstdio>
+#include <ctime>
+#include <limits>
+#include <vector>
 
 #include <gsl/gsl_fit.h>
-#include <vector>
+
 #include <RedshiftLibrary/common/range.h>
 #include <RedshiftLibrary/common/datatypes.h>
 
@@ -84,27 +85,37 @@ BOOST_AUTO_TEST_CASE(Calcul)
     CSpectrumSpectralAxis m_SpectralAxis;
 
     int nbmin=0;
-    int nbmax=10;
+    int nbmax=11;
 
     CSpectrumSpectralAxis *_SpectralAxis = new CSpectrumSpectralAxis(nbmax, false);
     CSpectrumFluxAxis *_FluxAxis = new CSpectrumFluxAxis(nbmax);
 
-    for (int i=nbmin; i<nbmax;++i)
+    for (int i=nbmin; i<nbmax;i++)
     {
+        (*_SpectralAxis)[i] = i+1;
 
-        (*_SpectralAxis)[i]=i+1;
-        (*_FluxAxis)[i]=i+2;
-
-
-        if(i>(nbmax-nbmin)/2) //introduction error pour intervalle 6 à 10
+        if (i<(nbmax-nbmin)/2)
         {
-
-            (*_FluxAxis).GetError()[i] = -1;
-
+            (*_FluxAxis)[i] = 0.0;
+            (*_FluxAxis).GetError()[i] = 0.0;
+        }
+        else if (i==7)
+        {
+            (*_FluxAxis)[i] = std::nan("1");
+            (*_FluxAxis).GetError()[i] = std::nan("2");
+        }
+        else if (i==9)
+        {
+            (*_FluxAxis)[i] = std::numeric_limits<double>::infinity();
+            (*_FluxAxis).GetError()[i] = std::numeric_limits<double>::infinity();
+        }
+        else
+        {
+            (*_FluxAxis)[i] = i+2;
+            (*_FluxAxis).GetError()[i] = 1e-12;
         }
 
         BOOST_TEST_MESSAGE("(*_SpectralAxis)[i]:"<<(*_SpectralAxis)[i]);
-
     }
 
     m_SpectralAxis = *_SpectralAxis;
@@ -186,14 +197,26 @@ BOOST_AUTO_TEST_CASE(Calcul)
     //--------------------//
     //test IsFluxValid
 
-    BOOST_CHECK(object_CSpectrum2.IsFluxValid(nbmin,nbmax)==true);//cas dans l'intervalle
-    BOOST_CHECK(object_CSpectrum2.IsFluxValid(nbmin-3,nbmin-1)==false);//cas en dehors de l intervalle inferieur a nbmin
-    BOOST_CHECK(object_CSpectrum2.IsFluxValid(nbmax+1,nbmax+3)==false); //cas en dehors de l'intervalle superieur a nbmax
+    BOOST_CHECK(object_CSpectrum2.IsFluxValid(nbmin,nbmax)==false);//cas dans tout l'intervalle
+    BOOST_CHECK(object_CSpectrum2.IsFluxValid(1,5)==false);//cas dans l'intervalle 1 à 5 avec 0.0
+    BOOST_CHECK(object_CSpectrum2.IsFluxValid(5,11)==false);//cas dans l'intervalle 5 à 11 avec nan et inf
+    BOOST_CHECK(object_CSpectrum2.IsFluxValid(5,8)==true);//cas dans l'intervalle 5 à 8
+    BOOST_CHECK(object_CSpectrum2.IsFluxValid(7,9)==false);//cas dans l'intervalle 7 à 9 avec nan
+    BOOST_CHECK(object_CSpectrum2.IsFluxValid(9,10)==true);//cas où l'intervalle est un point
+    BOOST_CHECK(object_CSpectrum2.IsFluxValid(9,11)==false);//cas dans l'intervalle 9 à 11 avec inf
+    BOOST_CHECK(object_CSpectrum2.IsFluxValid(10,11)==false);//cas où l'intervalle est un point inf
+
     //--------------------//
     //test IsNoiseValid
 
-    BOOST_CHECK(object_CSpectrum2.IsNoiseValid(0,5)==true);//cas dans l'intervalle 0 à 5
-    BOOST_CHECK(object_CSpectrum2.IsNoiseValid(6,10)==false);//cas dans l'intervalle 6 à 10 (error)
+    BOOST_CHECK(object_CSpectrum2.IsNoiseValid(nbmin,nbmax)==false);//cas dans tout l'intervalle
+    BOOST_CHECK(object_CSpectrum2.IsNoiseValid(1,6)==false);//cas dans l'intervalle 1 à 6 avec 0.0
+    BOOST_CHECK(object_CSpectrum2.IsNoiseValid(6,11)==false);//cas dans l'intervalle 6 à 11 avec nan et inf
+    BOOST_CHECK(object_CSpectrum2.IsNoiseValid(6,8)==true);//cas dans l'intervalle 6 à 8
+    BOOST_CHECK(object_CSpectrum2.IsNoiseValid(7,9)==false);//cas dans l'intervalle 7 à 9 avec nan
+    BOOST_CHECK(object_CSpectrum2.IsNoiseValid(9,10)==true);//cas où l'intervalle est un point
+    BOOST_CHECK(object_CSpectrum2.IsNoiseValid(9,11)==false);//cas dans l'intervalle 9 à 11 avec inf
+    BOOST_CHECK(object_CSpectrum2.IsNoiseValid(10,11)==false);//cas où l'intervalle est un point inf
 
     //--------------------//
     //test GetLambdaRange
