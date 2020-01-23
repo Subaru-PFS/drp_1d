@@ -112,7 +112,7 @@ BOOST_AUTO_TEST_CASE(Calcul)
         else
         {
             (*_FluxAxis)[i] = i+2;
-            (*_FluxAxis).GetError()[i] = 1.e-12;
+            (*_FluxAxis).GetError()[i] = 1e-12;
         }
 
         BOOST_TEST_MESSAGE("(*_SpectralAxis)[i]:"<<(*_SpectralAxis)[i]);
@@ -148,8 +148,8 @@ BOOST_AUTO_TEST_CASE(Calcul)
     CSpectrum* object_CSpectrum3=new CSpectrum(object_CSpectrum2,mask);
 
     BOOST_CHECK(object_CSpectrum3->GetSampleCount()==1);
-    BOOST_CHECK_CLOSE(object_CSpectrum3->GetFluxAxis()[0],object_CSpectrum2.GetFluxAxis()[0],1.e-12);
-    BOOST_CHECK_CLOSE(object_CSpectrum3->GetSpectralAxis()[0],object_CSpectrum2.GetSpectralAxis()[0],1.e-12);
+    BOOST_CHECK_CLOSE(object_CSpectrum3->GetFluxAxis()[0],object_CSpectrum2.GetFluxAxis()[0],1e-12);
+    BOOST_CHECK_CLOSE(object_CSpectrum3->GetSpectralAxis()[0],object_CSpectrum2.GetSpectralAxis()[0],1e-12);
 
 
     BOOST_TEST_MESSAGE("index43:"<<object_CSpectrum3->GetFluxAxis()[0]);
@@ -206,6 +206,7 @@ BOOST_AUTO_TEST_CASE(Calcul)
     BOOST_CHECK(object_CSpectrum2.IsFluxValid(9,9)==true);//cas où l'intervalle est un point
     BOOST_CHECK(object_CSpectrum2.IsFluxValid(9,11)==false);//cas dans l'intervalle 9 à 11 avec inf
     BOOST_CHECK(object_CSpectrum2.IsFluxValid(10,10)==false);//cas où l'intervalle est un point inf
+    BOOST_CHECK(object_CSpectrum2.IsFluxValid(11,14)==false);//cas où l'intervalle est à l'extérieur
 
     //--------------------//
     //test IsNoiseValid
@@ -219,6 +220,7 @@ BOOST_AUTO_TEST_CASE(Calcul)
     BOOST_CHECK(object_CSpectrum2.IsNoiseValid(9,9)==true);//cas où l'intervalle est un point
     BOOST_CHECK(object_CSpectrum2.IsNoiseValid(9,11)==false);//cas dans l'intervalle 9 à 11 avec inf
     BOOST_CHECK(object_CSpectrum2.IsNoiseValid(10,10)==false);//cas où l'intervalle est un point inf
+    BOOST_CHECK(object_CSpectrum2.IsNoiseValid(11,14)==false);//cas où l'intervalle est à l'extérieur
 
     //--------------------//
     //test correctSpectrum
@@ -232,13 +234,14 @@ BOOST_AUTO_TEST_CASE(Calcul)
     BOOST_CHECK(object_CSpectrum2.correctSpectrum(10,10)==false);//cas où l'intervalle est un point inf
     BOOST_CHECK(object_CSpectrum2.correctSpectrum(6,11)==false);//cas dans l'intervalle 6 à 11 avec nan et inf
     BOOST_CHECK(object_CSpectrum2.correctSpectrum(1,11)==false);//cas dans tout l'intervalle
+    BOOST_CHECK(object_CSpectrum2.correctSpectrum(11,14)==false);//cas où l'intervalle est à l'extérieur
 
     //--------------------//
     //test GetLambdaRange
 
     Float64 intervalle=object_CSpectrum2.GetSpectralAxis().GetLambdaRange().GetLength();
 
-    BOOST_CHECK_CLOSE(intervalle,object_CSpectrum2.GetLambdaRange().GetLength(),1.e-12);
+    BOOST_CHECK_CLOSE(intervalle,object_CSpectrum2.GetLambdaRange().GetLength(),1e-12);
 
     BOOST_TEST_MESSAGE("result9A:"<<object_CSpectrum2.GetSpectralAxis().GetLambdaRange().GetLength());
     BOOST_TEST_MESSAGE("index55A:"<<object_CSpectrum2.GetSpectralAxis().GetLambdaRange().GetBegin());
@@ -274,7 +277,7 @@ BOOST_AUTO_TEST_CASE(Calcul)
     Float64 result6=object_CSpectrum2.GetMeanResolution();
     Float64 result7=object_CSpectrum2.GetSpectralAxis().GetMeanResolution();
 
-    BOOST_CHECK_CLOSE(result6,result7,1.e-12);
+    BOOST_CHECK_CLOSE(result6,result7,1e-12);
 
     BOOST_TEST_MESSAGE("result6:"<<result6);
     BOOST_TEST_MESSAGE("result7:"<<result7);
@@ -286,7 +289,7 @@ BOOST_AUTO_TEST_CASE(Calcul)
     Float64 result8=object_CSpectrum2.GetResolution();
     Float64 result9=object_CSpectrum2.GetSpectralAxis().GetResolution();
 
-    BOOST_CHECK_CLOSE(result8,result9,1.e-12);
+    BOOST_CHECK_CLOSE(result8,result9,1e-12);
 
     BOOST_TEST_MESSAGE("result8:"<<result8);
     BOOST_TEST_MESSAGE("result9:"<<result9);
