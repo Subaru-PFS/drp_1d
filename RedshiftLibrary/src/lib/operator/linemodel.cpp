@@ -894,34 +894,29 @@ Int32 COperatorLineModel::ComputeCandidates(const Int32 opt_extremacount,
                  "redshiftsRange.GetEnd() = %f",
                  redshiftsRange.GetBegin(), redshiftsRange.GetEnd());
 
+    Bool invertForMinSearch = true; 
+    if(opt_sign == 1){
+     invertForMinSearch = false;
+    }
+
+    CExtremum extremum(redshiftsRange, opt_extremacount, invertForMinSearch, 2, m_secondPass_extensionradius);
+
     if (m_result->Redshifts.size() == 1)
     {
-        m_firstpass_extremumList.push_back(
-            SPoint(m_result->Redshifts[0], m_result->ChiSquare[0]));
+        extremum.DefaultExtremum( m_result->Redshifts, m_result->ChiSquare, m_firstpass_extremumList); 
         Log.LogInfo("  Operator-Linemodel: found only 1 redshift calculated, "
                     "thus using only 1 extremum");
     } else if (opt_extremacount == -1)
     {
-        for (Int32 ke = 0; ke < m_result->Redshifts.size(); ke++)
-        {
-            m_firstpass_extremumList.push_back(
-                SPoint(m_result->Redshifts[ke], m_result->ChiSquare[ke]));
-        }
+        extremum.DefaultExtremum( m_result->Redshifts, m_result->ChiSquare, m_firstpass_extremumList);
         Log.LogInfo("  Operator-Linemodel: all initial redshifts considered as "
                     "extrema");
-    } else
-    {
+    } else{
         Log.LogInfo("  Operator-Linemodel: ChiSquare min val = %e",
                     m_result->GetMinChiSquare());
         Log.LogInfo("  Operator-Linemodel: ChiSquare max val = %e",
                     m_result->GetMaxChiSquare());
-        Bool invertForMinSearch = true;
-        if (opt_sign == 1)
-        {
-            invertForMinSearch = false;
-        }
-        CExtremum extremum(redshiftsRange, opt_extremacount, invertForMinSearch,
-                           2);
+
         extremum.Find(m_result->Redshifts, floatValues, m_firstpass_extremumList);
         Log.LogInfo("  Operator-Linemodel: found %d extrema",
                     m_firstpass_extremumList.size());
@@ -935,25 +930,8 @@ Int32 COperatorLineModel::ComputeCandidates(const Int32 opt_extremacount,
 
     // remove extrema with merit threshold (input floatValues MUST be log-proba !)
     if(meritCut>0.0){
-        Float64 meritThres = meritCut; //30=default logProba value for 1% missed values on PFS-cosmo noOiiDoublet
         Int32 keepMinN = 2;
-        Int32 nExtrema = m_firstpass_extremumList.size();
-        Int32 iExtremumFinalList = 0;
-        for (Int32 i = 0; i < nExtrema; i++)
-        {
-            Float64 meritDiff = m_firstpass_extremumList[0].Y-m_firstpass_extremumList[iExtremumFinalList].Y;
-            if(meritDiff>meritThres && i>=keepMinN)
-            {
-                Log.LogInfo("  Operator-Linemodel: Candidates selection by proba cut: removing i=%d, final_i=%d, e.X=%f, e.Y=%e",
-                            i,
-                            iExtremumFinalList,
-                            m_firstpass_extremumList[iExtremumFinalList].X,
-                            m_firstpass_extremumList[iExtremumFinalList].Y);
-                m_firstpass_extremumList.erase(m_firstpass_extremumList.begin() + iExtremumFinalList);
-            }else{
-                iExtremumFinalList++;
-            }
-        }
+        extremum.Cut_Threshold(m_firstpass_extremumList, meritCut, m_firstpass_extremumList[0].Y, keepMinN);
     }
 
     /*

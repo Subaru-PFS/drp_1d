@@ -588,7 +588,7 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(const CSpectru
 
             TPointList extremumListFine;
             TFloat64Range rangeFine = TFloat64Range( left_border, right_border );
-            CExtremum extremumFine( rangeFine , 1, true);
+            CExtremum extremumFine( rangeFine , 1, true, radius/10);
             extremumFine.Find( result->Redshifts, result->ChiSquare, extremumListFine );
             if(extremumListFine.size()>0){
                 extremumList[i] = extremumListFine[0];

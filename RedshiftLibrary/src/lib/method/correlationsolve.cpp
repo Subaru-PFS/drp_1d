@@ -101,7 +101,7 @@ Bool COperatorCorrelationSolve::Solve( CDataStore& resultStore, const CSpectrum&
 
         TPointList extremumListFine;
         TFloat64Range rangeFine = TFloat64Range( left_border, right_border );
-        CExtremum extremumFine( rangeFine , 1);
+        CExtremum extremumFine( rangeFine , 1, radius/10);
         extremumFine.Find( result->Redshifts, result->Correlation, extremumListFine );
         extremumList[i] = extremumListFine[0];
     }

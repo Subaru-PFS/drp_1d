@@ -2,7 +2,7 @@
 #include <RedshiftLibrary/extremum/extremum.h>
 
 #include <boost/test/unit_test.hpp>
-
+#include <iostream>  
 using namespace NSEpic;
 
 BOOST_AUTO_TEST_SUITE(Extremum)
@@ -16,6 +16,11 @@ void print_point(TPointList points)
 }
 
 void check_points(TPointList points, TPointList test_points) {
+  std::cout << " returned peaks: "<<points.size()<<"\n";
+  for(Int32 i=0; i<points.size(); i++){
+    std::cout << " returned points: " << i << " " <<points[i].X << " " << points[i].Y << " " << test_points[i].X << " " << test_points[i].Y<<"\n";
+  }
+  
   BOOST_CHECK(points.size() == test_points.size());
   for (int i=0; i<points.size(); ++i) {
     BOOST_CHECK((points[i].X == test_points[i].X &&
@@ -32,6 +37,7 @@ BOOST_AUTO_TEST_CASE(Extremum1)
     TFloat64List x = { 0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0 };
     TFloat64List y = { 1.0, 5.0, 0.0, 3.0, 9.0, 0.1, 0.2, 0.5, 8.0, 1.0, 4.0 };
     TFloat64List y_2 = { 5.0, 0.0, 0.0, 3.0, 9.0, 0.1, 0.2, 0.5, 8.0, 1.0, 4.0 };
+    TFloat64List y_plank = { 5.0, 0.0, 9.0, 9.0, 9.0, 0.1, 0.2, 0.5, 8.0, 1.0, 4.0 };
     TFloat64List x_empty = {};
 
     peaks2 = CExtremum(TFloat64Range(-10.0, 10.0), 5, true, 2);
@@ -45,6 +51,9 @@ BOOST_AUTO_TEST_CASE(Extremum1)
     check_points(maxPoint, TPointList({ {0.4,9}, {0.8,8} }));
 
     peaks1.Find( x, y_2, maxPoint);
+    check_points(maxPoint, TPointList({ {0.4,9}, {0.8,8} }));
+
+    peaks1.Find( x, y_plank, maxPoint);
     check_points(maxPoint, TPointList({ {0.4,9}, {0.8,8} }));
 
     BOOST_CHECK( peaks1.Find( x_empty, y, maxPoint) == false);
