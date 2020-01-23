@@ -899,10 +899,7 @@ Int32 COperatorLineModel::ComputeCandidates(const Int32 opt_extremacount,
      invertForMinSearch = false;
     }
 
-    Int32 extremacount = 10;
-    if(opt_extremacount > extremacount)
-        extremacount = opt_extremacount;
-    CExtremum extremum(redshiftsRange, /*opt_*/extremacount, m_secondPass_extensionradius, invertForMinSearch);
+    CExtremum extremum(redshiftsRange, opt_extremacount, invertForMinSearch, 2, m_secondPass_extensionradius);
 
     if (m_result->Redshifts.size() == 1)
     {
@@ -934,6 +931,35 @@ Int32 COperatorLineModel::ComputeCandidates(const Int32 opt_extremacount,
         }
     }
 
+    // remove extrema with merit threshold (input floatValues MUST be log-proba !)
+    if(meritCut>0.0){
+        Int32 keepMinN = 2;
+        extremum.Cut_Threshold(m_firstpass_extremumList, meritCut, m_firstpass_extremumList[0].Y, keepMinN);
+    }
+
+    /*
+    // Refine Extremum with a second maximum search around the z candidates:
+    // This corresponds to the finer xcorrelation in EZ Pandora (in standard_DP
+    fctn in SolveKernel.py) Float64 radius = 0.001; for( Int32 i=0;
+    i<m_firstpass_extremumList.size(); i++ )
+    {
+        Float64 x = m_firstpass_extremumList[i].X;
+        Float64 left_border = max(redshiftsRange.GetBegin(), x-radius);
+        Float64 right_border=min(redshiftsRange.GetEnd(), x+radius);
+
+        TPointList m_extremumListFine;
+        TFloat64Range rangeFine = TFloat64Range( left_border, right_border );
+        CExtremum extremumFine( rangeFine , 1, true);
+        extremumFine.Find( m_result->Redshifts, m_result->ChiSquare,
+    m_extremumListFine ); if(m_extremumListFine.size()>0){ m_firstpass_extremumList[i] =
+    m_extremumListFine[0];
+        }
+    }
+    //*/
+
+
+
+    //*
     // extend z around the extrema
     m_result->ExtremaResult.ExtremaExtendedRedshifts.resize(m_firstpass_extremumList.size());
     for (Int32 j = 0; j < m_firstpass_extremumList.size(); j++)
