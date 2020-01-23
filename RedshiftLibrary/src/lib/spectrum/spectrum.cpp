@@ -382,7 +382,7 @@ Bool CSpectrum::correctSpectrum( Float64 LambdaMin,  Float64 LambdaMax, Float64 
     if(maxNoise==-DBL_MAX)
     {
         Log.LogError("    CSpectrum::correctSpectrum - unable to set maxNoise value.");
-        return false;
+        throw std::runtime_error("    CSpectrum::correctSpectrum - impossible to correct input spectrum.");
     }
 
     for(Int32 i=iMin; i<=iMax; i++){

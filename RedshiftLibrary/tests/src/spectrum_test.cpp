@@ -225,7 +225,7 @@ BOOST_AUTO_TEST_CASE(Calcul)
     //--------------------//
     //test correctSpectrum
 
-    BOOST_CHECK(object_CSpectrum2.correctSpectrum(1,5)==false);//cas dans l'intervalle 1 à 5 avec 0.0
+    BOOST_CHECK_THROW(object_CSpectrum2.correctSpectrum(1,5), std::runtime_error);//cas dans l'intervalle 1 à 5 avec 0.0
     BOOST_CHECK(object_CSpectrum2.correctSpectrum(1,6)==true);//cas dans l'intervalle 1 à 6
     BOOST_CHECK(object_CSpectrum2.correctSpectrum(6,7)==false);//cas dans l'intervalle 6 à 7
     BOOST_CHECK(object_CSpectrum2.correctSpectrum(7,9)==true);//cas dans l'intervalle 7 à 9 avec nan
