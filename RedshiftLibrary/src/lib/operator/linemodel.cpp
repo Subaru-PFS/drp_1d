@@ -1427,7 +1427,7 @@ Int32 COperatorLineModel::SaveResults(const CSpectrum &spectrum,
         // WARNING: saving results TODO: this is currently wrong !! the model
         // saved corresponds to the bestchi2 model. PDFs should be combined
         // prior to exporting the best model for each extrema...
-        static Int32 maxModelSave = std::min(m_maxModelSaveCount, extremumCount);
+        Int32 maxModelSave = std::min(m_maxModelSaveCount, extremumCount);
         Int32 maxSaveNLinemodelContinua = maxModelSave;
         if (savedModels < maxModelSave)
         {
