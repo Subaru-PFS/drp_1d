@@ -351,9 +351,6 @@ Bool CSpectrum::correctSpectrum( Float64 LambdaMin,  Float64 LambdaMax, Float64 
 
     TFloat64List& error = m_FluxAxis.GetError();
     Float64* flux = m_FluxAxis.GetSamples();
-    if (LambdaMin < m_SpectralAxis[0] || LambdaMax > m_SpectralAxis[m_SpectralAxis.GetSamplesCount()-1]){
-        return false;
-    }
 
     Int32 iMin = m_SpectralAxis.GetIndexAtWaveLength(LambdaMin);
     Int32 iMax = m_SpectralAxis.GetIndexAtWaveLength(LambdaMax);
