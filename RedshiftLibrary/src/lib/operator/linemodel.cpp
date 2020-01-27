@@ -899,7 +899,7 @@ Int32 COperatorLineModel::ComputeCandidates(const Int32 opt_extremacount,
      invertForMinSearch = false;
     }
 
-    CExtremum extremum(redshiftsRange, opt_extremacount, invertForMinSearch, 2, m_secondPass_extensionradius);
+    CExtremum extremum(redshiftsRange, opt_extremacount, m_secondPass_extensionradius, invertForMinSearch, 2);
 
     if (m_result->Redshifts.size() == 1)
     {

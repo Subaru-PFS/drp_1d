@@ -2246,19 +2246,19 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(const CSpe
     // extrema
     Int32 extremumCount = 10;
     if (result->Redshifts.size() > extremumCount)
-    {
+    {   Float64 radius = 0.001;
         TPointList extremumList;
         TFloat64Range redshiftsRange(
             result->Redshifts[0],
             result->Redshifts[result->Redshifts.size() - 1]);
-        CExtremum extremum(redshiftsRange, extremumCount, true);
+        CExtremum extremum(redshiftsRange, extremumCount, radius, true);
         extremum.Find(result->Redshifts, result->ChiSquare, extremumList);
 
         //*
         // Refine Extremum with a second maximum search around the z candidates:
         // This corresponds to the finer xcorrelation in EZ Pandora (in
         // standard_DP fctn in SolveKernel.py)
-        Float64 radius = 0.001;
+        
         for (Int32 i = 0; i < extremumList.size(); i++)
         {
             Float64 x = extremumList[i].X;

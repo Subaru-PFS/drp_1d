@@ -38,7 +38,7 @@ CExtremum::CExtremum( Bool invertForMinSearch ) :
 /**
  * Member attribution constructor.
  */
-CExtremum::CExtremum( const TFloat64Range& xRange, UInt32 maxPeakCount, Bool invertForMinSearch, UInt32 refreshCount, Float64 radius ) :
+CExtremum::CExtremum( const TFloat64Range& xRange, UInt32 maxPeakCount, Float64 radius, Bool invertForMinSearch, UInt32 refreshCount) :
     m_MaxPeakCount( maxPeakCount ),
     m_RefreshCount( refreshCount ),
     m_XRange( xRange ),

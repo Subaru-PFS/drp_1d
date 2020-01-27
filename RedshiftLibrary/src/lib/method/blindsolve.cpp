@@ -105,15 +105,16 @@ Bool COperatorBlindSolve::BlindSolve( CDataStore& resultStore, const CSpectrum& 
     }
 
     resultStore.StoreScopedPerTemplateResult( tpl, "correlation", correlationResult );
-
+    
+    Float64 radius = 0.001;
     // Find redshifts extremum
     TPointList extremumList;
-    CExtremum extremum( redshiftsRange, correlationExtremumCount);
+    CExtremum extremum( redshiftsRange, correlationExtremumCount, radius);
     extremum.Find( correlationResult->Redshifts, correlationResult->Correlation, extremumList);
 
     // Refine Extremum with a second maximum search around the z candidates:
     // This corresponds to the finer xcorrelation in EZ Pandora (in standard_DP fctn in SolveKernel.py)
-    Float64 radius = 0.001;
+    
     for( Int32 i=0; i<extremumList.size(); i++ )
     {
         Float64 x = extremumList[i].X;

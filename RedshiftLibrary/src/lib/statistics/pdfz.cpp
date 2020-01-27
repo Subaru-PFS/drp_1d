@@ -889,10 +889,11 @@ Int32 CPdfz::getPmis(std::vector<Float64> redshifts,
 
     //override amazed-zcandidates by all pdf peaks found
     Int32 maxpeakscount = 1000;
+    Float64 radius = 0.005;
     TFloat64Range redshiftsRange(
         redshifts[0],
         redshifts[redshifts.size() - 1]);
-    CExtremum extremum(redshiftsRange, maxpeakscount, false, 2);
+    CExtremum extremum(redshiftsRange, maxpeakscount, radius, false, 2);
     TPointList extremumList;
     extremum.Find(redshifts, valprobalog, extremumList);
     zcandidates.clear();
@@ -1254,15 +1255,12 @@ Int32 CPdfz::Marginalize(TFloat64List redshifts,
         Bool invalidFound = false;
         for (Int32 kz = 0; kz < _merit.size(); kz++)
         {
-            if (_merit[kz] != _merit[kz])
+            if (_merit[kz] != _merit[kz])//weird check
             {
                 Log.LogError("    CPdfz::Marginalize - merit result #%d has at "
                              "least one nan or invalid value at index=%d",
                              km, kz);
                 invalidFound = true;
-            }
-            if (invalidFound)
-            {
                 break;
             }
         }
@@ -1344,7 +1342,7 @@ Int32 CPdfz::Marginalize(TFloat64List redshifts,
             //                Log.LogInfo("Pdfz: Marginalize: for km=%d,
             //                logEvidence=%e", km, MaxiLogEvidence);
             //            }
-            Float64 logEvidenceWPriorM = logEvidence + logPriorModel[km];
+            Float64 logEvidenceWPriorM = logEvidence + (Float64)logPriorModel[km];
 
             LogEvidencesWPriorM.push_back(logEvidenceWPriorM);
             if (MaxiLogEvidence < logEvidenceWPriorM)
