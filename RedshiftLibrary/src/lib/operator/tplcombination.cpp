@@ -573,14 +573,17 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(const CSpectru
     Int32 extremumCount = 10;
     if(result->Redshifts.size()>extremumCount)
     {   
+<<<<<<< HEAD
         Float64 radius = 0.005;
+=======
+        Float64 radius = 0.001;
+>>>>>>> Updating arguments order in extremum constructor and all its corresponding calls
         TPointList extremumList;
         TFloat64Range redshiftsRange(result->Redshifts[0], result->Redshifts[result->Redshifts.size()-1]);
         CExtremum extremum( redshiftsRange, extremumCount, radius, true);
         extremum.Find( result->Redshifts, result->ChiSquare, extremumList );
         // Refine Extremum with a second maximum search around the z candidates:
         // This corresponds to the finer xcorrelation in EZ Pandora (in standard_DP fctn in SolveKernel.py)
-        Float64 radius = 0.001;
         for( Int32 i=0; i<extremumList.size(); i++ )
         {
             Float64 x = extremumList[i].X;
@@ -589,7 +592,7 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(const CSpectru
 
             TPointList extremumListFine;
             TFloat64Range rangeFine = TFloat64Range( left_border, right_border );
-            CExtremum extremumFine( rangeFine , 1, true, radius/10);
+            CExtremum extremumFine( rangeFine , 1, radius/10, true);
             extremumFine.Find( result->Redshifts, result->ChiSquare, extremumListFine );
             if(extremumListFine.size()>0){
                 extremumList[i] = extremumListFine[0];
