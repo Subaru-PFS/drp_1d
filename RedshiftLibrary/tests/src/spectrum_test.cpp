@@ -90,7 +90,7 @@ BOOST_AUTO_TEST_CASE(Calcul)
     CSpectrumSpectralAxis *_SpectralAxis = new CSpectrumSpectralAxis(nbmax, false);
     CSpectrumFluxAxis *_FluxAxis = new CSpectrumFluxAxis(nbmax);
 
-    for (int i=nbmin; i<nbmax;i++)
+    for (int i=nbmin; i<nbmax;++i)
     {
         (*_SpectralAxis)[i] = i+1;
 
@@ -195,6 +195,47 @@ BOOST_AUTO_TEST_CASE(Calcul)
     BOOST_CHECK( result11c == false );
 
     //--------------------//
+    CSpectrumFluxAxis *_FluxAxis2 = new CSpectrumFluxAxis(nbmax);
+    CSpectrumFluxAxis *_FluxAxis3 = new CSpectrumFluxAxis(nbmax);
+    CSpectrumFluxAxis *_FluxAxis4 = new CSpectrumFluxAxis(nbmax);
+    CSpectrumFluxAxis *_FluxAxis5 = new CSpectrumFluxAxis(nbmax);
+    CSpectrumFluxAxis *_FluxAxis6 = new CSpectrumFluxAxis(nbmax);
+
+    for (int i=nbmin; i<nbmax;++i)
+    {
+        (*_FluxAxis2)[i] = (i+2)*1e+3;
+        (*_FluxAxis3)[i] = (*_FluxAxis2)[i];
+        (*_FluxAxis4)[i] = 0.0;
+        (*_FluxAxis6)[i] = (*_FluxAxis2)[i];
+        (*_FluxAxis2).GetError()[i] = 1e-5;
+        (*_FluxAxis3).GetError()[i] = 0.0;
+        (*_FluxAxis4).GetError()[i] = (*_FluxAxis2).GetError()[i];
+        (*_FluxAxis5).GetError()[i] = (*_FluxAxis2).GetError()[i];
+
+        if (i<(nbmax-nbmin)/2)
+        {
+            (*_FluxAxis5)[i] = std::nan("5");
+            (*_FluxAxis6).GetError()[i] = std::nan("6");
+        }
+        else if(i==5)
+        {
+            (*_FluxAxis5)[i] = 1e+3;
+            (*_FluxAxis6).GetError()[i] = 1e-9;
+        }
+        else
+        {
+            (*_FluxAxis5)[i] = std::numeric_limits<double>::infinity();
+            (*_FluxAxis6).GetError()[i] = std::numeric_limits<double>::infinity();
+        }
+    }
+
+    CSpectrum* object_CSpectrum4=new CSpectrum(*_SpectralAxis, *_FluxAxis2);
+    CSpectrum* object_CSpectrum5=new CSpectrum(*_SpectralAxis, *_FluxAxis3);
+    CSpectrum* object_CSpectrum6=new CSpectrum(*_SpectralAxis, *_FluxAxis4);
+    CSpectrum* object_CSpectrum7=new CSpectrum(*_SpectralAxis, *_FluxAxis5);
+    CSpectrum* object_CSpectrum8=new CSpectrum(*_SpectralAxis, *_FluxAxis6);
+
+    //--------------------//
     //test IsFluxValid
 
     BOOST_CHECK(object_CSpectrum2.IsFluxValid(1,11)==false);//cas dans tout l'intervalle
@@ -207,6 +248,12 @@ BOOST_AUTO_TEST_CASE(Calcul)
     BOOST_CHECK(object_CSpectrum2.IsFluxValid(9,11)==false);//cas dans l'intervalle 9 à 11 avec inf
     BOOST_CHECK(object_CSpectrum2.IsFluxValid(10,10)==false);//cas où l'intervalle est un point inf
     BOOST_CHECK(object_CSpectrum2.IsFluxValid(11,14)==false);//cas où l'intervalle est à l'extérieur
+
+    BOOST_CHECK(object_CSpectrum4->IsFluxValid(1,11)==true);//cas dans tout l'intervalle
+    BOOST_CHECK(object_CSpectrum5->IsFluxValid(1,11)==true);//cas dans tout l'intervalle
+    BOOST_CHECK(object_CSpectrum6->IsFluxValid(1,11)==false);//cas dans tout l'intervalle
+    BOOST_CHECK(object_CSpectrum7->IsFluxValid(1,11)==false);//cas dans tout l'intervalle
+    BOOST_CHECK(object_CSpectrum8->IsFluxValid(1,11)==true);//cas dans tout l'intervalle
 
     //--------------------//
     //test IsNoiseValid
@@ -222,72 +269,131 @@ BOOST_AUTO_TEST_CASE(Calcul)
     BOOST_CHECK(object_CSpectrum2.IsNoiseValid(10,10)==false);//cas où l'intervalle est un point inf
     BOOST_CHECK(object_CSpectrum2.IsNoiseValid(11,14)==false);//cas où l'intervalle est à l'extérieur
 
+    BOOST_CHECK(object_CSpectrum4->IsNoiseValid(1,11)==true);//cas dans tout l'intervalle
+    BOOST_CHECK(object_CSpectrum5->IsNoiseValid(1,11)==false);//cas dans tout l'intervalle
+    BOOST_CHECK(object_CSpectrum6->IsNoiseValid(1,11)==true);//cas dans tout l'intervalle
+    BOOST_CHECK(object_CSpectrum7->IsNoiseValid(1,11)==true);//cas dans tout l'intervalle
+    BOOST_CHECK(object_CSpectrum8->IsNoiseValid(1,11)==false);//cas dans tout l'intervalle
+
     //--------------------//
     //test correctSpectrum
+
+    //cas dans tout l'intervalle
+    BOOST_CHECK(object_CSpectrum4->correctSpectrum(1,11)==false);
+    BOOST_CHECK_THROW(object_CSpectrum5->correctSpectrum(1,11), std::runtime_error);
+    BOOST_CHECK(object_CSpectrum6->correctSpectrum(1,11)==false);
+
+    BOOST_CHECK(object_CSpectrum7->correctSpectrum(1,11)==true);
+    for (int i=nbmin; i<nbmax;++i)
+    {
+        if (i==5){ //seule valeur correcte
+            BOOST_CHECK(object_CSpectrum7->GetFluxAxis()[i]==1e+3);
+            BOOST_CHECK(object_CSpectrum7->GetFluxAxis().GetError()[i]==1e-5);
+        }else{ //valeurs corrigées
+            BOOST_CHECK(object_CSpectrum7->GetFluxAxis()[i]==1e+2);
+            BOOST_CHECK(object_CSpectrum7->GetFluxAxis().GetError()[i]==1e-4);
+        }
+    }
+
+    BOOST_CHECK(object_CSpectrum8->correctSpectrum(1,11)==true);
+    for (int i=nbmin; i<nbmax;++i)
+    {
+        if (i==5){ //seule valeur correcte
+            BOOST_CHECK(object_CSpectrum8->GetFluxAxis()[i]==7.0*1e+3);
+            BOOST_CHECK(object_CSpectrum8->GetFluxAxis().GetError()[i]==1e-9);
+        }else{ //valeurs corrigées
+            BOOST_CHECK(object_CSpectrum8->GetFluxAxis()[i]==7.0*1e+2);
+            BOOST_CHECK(object_CSpectrum8->GetFluxAxis().GetError()[i]==1e-8);
+        }
+    }
 
     //cas dans l'intervalle 1 à 5 avec 0.0
     BOOST_CHECK_THROW(object_CSpectrum2.correctSpectrum(1,5), std::runtime_error);
 
     //cas dans l'intervalle 1 à 6
-    BOOST_CHECK(object_CSpectrum2.correctSpectrum(1,6)==true);
-    for (int i=0; i<6;i++)
+    CSpectrum object_CSpectrum9=object_CSpectrum;
+    BOOST_CHECK(object_CSpectrum9.correctSpectrum(1,6)==true);
+    for (int i=nbmin; i<nbmax;++i)
     {
-        if (i==5){ //valeur correcte en position 6
-            BOOST_CHECK(object_CSpectrum2.GetFluxAxis()[i]==7.0);
-            BOOST_CHECK(object_CSpectrum2.GetFluxAxis().GetError()[i]==1e-12);
+        if (i<5){ //valeurs corrigées
+            BOOST_CHECK(object_CSpectrum9.GetFluxAxis()[i]==0.7);
+            BOOST_CHECK(object_CSpectrum9.GetFluxAxis().GetError()[i]==1e-11);
+        }else if (i==7){ //nan en position 8
+            BOOST_CHECK(std::isnan(object_CSpectrum9.GetFluxAxis()[i])==true);
+            BOOST_CHECK(std::isnan(object_CSpectrum9.GetFluxAxis().GetError()[i])==true);
         }else{
-            BOOST_CHECK(object_CSpectrum2.GetFluxAxis()[i]==0.7);
-            BOOST_CHECK(object_CSpectrum2.GetFluxAxis().GetError()[i]==1e-11);
+            BOOST_CHECK(object_CSpectrum9.GetFluxAxis()[i]==(*_FluxAxis)[i]);
+            BOOST_CHECK(object_CSpectrum9.GetFluxAxis().GetError()[i]==(*_FluxAxis).GetError()[i]);
         }
     }
 
     //cas dans l'intervalle 6 à 7
-    BOOST_CHECK(object_CSpectrum2.correctSpectrum(6,7)==false);
-    for (int i=5; i<7;i++)
+    CSpectrum object_CSpectrum10=object_CSpectrum;
+    BOOST_CHECK(object_CSpectrum10.correctSpectrum(6,7)==false);
+    for (int i=nbmin; i<nbmax;++i)
     {
-        BOOST_CHECK(object_CSpectrum2.GetFluxAxis()[i]==(*_FluxAxis)[i]);
-        BOOST_CHECK(object_CSpectrum2.GetFluxAxis().GetError()[i]==(*_FluxAxis).GetError()[i]);
+        if (i==7){ //nan en position 8
+            BOOST_CHECK(std::isnan(object_CSpectrum10.GetFluxAxis()[i])==true);
+            BOOST_CHECK(std::isnan(object_CSpectrum10.GetFluxAxis().GetError()[i])==true);
+        }else{
+            BOOST_CHECK(object_CSpectrum10.GetFluxAxis()[i]==(*_FluxAxis)[i]);
+            BOOST_CHECK(object_CSpectrum10.GetFluxAxis().GetError()[i]==(*_FluxAxis).GetError()[i]);
+        }
     }
 
     //cas dans l'intervalle 7 à 9 avec nan
-    BOOST_CHECK(object_CSpectrum2.correctSpectrum(7,9)==true);
-    for (int i=6; i<9;i++)
+    CSpectrum object_CSpectrum11=object_CSpectrum;
+    BOOST_CHECK(object_CSpectrum11.correctSpectrum(7,9)==true);
+    for (int i=nbmin; i<nbmax;++i)
     {
-        if (i==7){ //nan en position 8
-            BOOST_CHECK(object_CSpectrum2.GetFluxAxis()[i]==0.8);
-            BOOST_CHECK(object_CSpectrum2.GetFluxAxis().GetError()[i]==1e-11);
+        if (i==7){ //nan en position 8 : valeur corrigée
+            BOOST_CHECK(object_CSpectrum11.GetFluxAxis()[i]==0.8);
+            BOOST_CHECK(object_CSpectrum11.GetFluxAxis().GetError()[i]==1e-11);
         }else{
-            BOOST_CHECK(object_CSpectrum2.GetFluxAxis()[i]==(*_FluxAxis)[i]);
-            BOOST_CHECK(object_CSpectrum2.GetFluxAxis().GetError()[i]==(*_FluxAxis).GetError()[i]);
+            BOOST_CHECK(object_CSpectrum11.GetFluxAxis()[i]==(*_FluxAxis)[i]);
+            BOOST_CHECK(object_CSpectrum11.GetFluxAxis().GetError()[i]==(*_FluxAxis).GetError()[i]);
         }
     }
 
     //cas où l'intervalle est un point
-    BOOST_CHECK(object_CSpectrum2.correctSpectrum(9,9)==false);
-    BOOST_CHECK(object_CSpectrum2.GetFluxAxis()[8]==(*_FluxAxis)[8]);
-    BOOST_CHECK(object_CSpectrum2.GetFluxAxis().GetError()[8]==(*_FluxAxis).GetError()[8]);
+    CSpectrum object_CSpectrum12=object_CSpectrum;
+    BOOST_CHECK(object_CSpectrum12.correctSpectrum(9,9)==false);
+    for (int i=nbmin; i<nbmax;++i)
+    {
+        if (i==7){ //nan en position 8
+            BOOST_CHECK(std::isnan(object_CSpectrum12.GetFluxAxis()[i])==true);
+            BOOST_CHECK(std::isnan(object_CSpectrum12.GetFluxAxis().GetError()[i])==true);
+        }else{
+            BOOST_CHECK(object_CSpectrum12.GetFluxAxis()[i]==(*_FluxAxis)[i]);
+            BOOST_CHECK(object_CSpectrum12.GetFluxAxis().GetError()[i]==(*_FluxAxis).GetError()[i]);
+        }
+    }
 
     //cas dans l'intervalle 9 à 11 avec inf
-    BOOST_CHECK(object_CSpectrum2.correctSpectrum(9,11)==true);
-    for (int i=8; i<11;i++)
+    CSpectrum object_CSpectrum13=object_CSpectrum;
+    BOOST_CHECK(object_CSpectrum13.correctSpectrum(9,11)==true);
+    for (int i=nbmin; i<nbmax;++i)
     {
-        if (i==9){ //inf en position 10
-            BOOST_CHECK(object_CSpectrum2.GetFluxAxis()[i]==1.0);
-            BOOST_CHECK(object_CSpectrum2.GetFluxAxis().GetError()[i]==1e-11);
+        if (i==9){ //inf en position 10 : valeur corrigée
+            BOOST_CHECK(object_CSpectrum13.GetFluxAxis()[i]==1.0);
+            BOOST_CHECK(object_CSpectrum13.GetFluxAxis().GetError()[i]==1e-11);
+        }else if (i==7){ //nan en position 8
+            BOOST_CHECK(std::isnan(object_CSpectrum13.GetFluxAxis()[i])==true);
+            BOOST_CHECK(std::isnan(object_CSpectrum13.GetFluxAxis().GetError()[i])==true);
         }else{
-            BOOST_CHECK(object_CSpectrum2.GetFluxAxis()[i]==(*_FluxAxis)[i]);
-            BOOST_CHECK(object_CSpectrum2.GetFluxAxis().GetError()[i]==(*_FluxAxis).GetError()[i]);
+            BOOST_CHECK(object_CSpectrum13.GetFluxAxis()[i]==(*_FluxAxis)[i]);
+            BOOST_CHECK(object_CSpectrum13.GetFluxAxis().GetError()[i]==(*_FluxAxis).GetError()[i]);
         }
     }
 
     //cas après correction où l'intervalle est un point inf
-    BOOST_CHECK(object_CSpectrum2.correctSpectrum(10,10)==false);
+    BOOST_CHECK(object_CSpectrum13.correctSpectrum(10,10)==false);
 
-    //cas après correction dans l'intervalle 6 à 11 avec nan et inf
-    BOOST_CHECK(object_CSpectrum2.correctSpectrum(6,11)==false);
+    //cas après correction dans l'intervalle 6 à 9 avec nan
+    BOOST_CHECK(object_CSpectrum11.correctSpectrum(6,9)==false);
 
-    //cas après correction dans tout l'intervalle
-    BOOST_CHECK(object_CSpectrum2.correctSpectrum(1,11)==false);
+    //cas après correction dans l'intervalle 1 à 7
+    BOOST_CHECK(object_CSpectrum9.correctSpectrum(1,7)==false);
 
     //cas où l'intervalle est à l'extérieur
     BOOST_CHECK(object_CSpectrum2.correctSpectrum(11,14)==false);
@@ -351,7 +457,6 @@ BOOST_AUTO_TEST_CASE(Calcul)
     BOOST_TEST_MESSAGE("result9:"<<result9);
 
 
-
     //--------------------//
     // //test removeContinuum
 
@@ -362,7 +467,17 @@ BOOST_AUTO_TEST_CASE(Calcul)
 
     delete _SpectralAxis;
     delete _FluxAxis;
+    delete _FluxAxis2;
+    delete _FluxAxis3;
+    delete _FluxAxis4;
+    delete _FluxAxis5;
+    delete _FluxAxis6;
     delete object_CSpectrum3;
+    delete object_CSpectrum4;
+    delete object_CSpectrum5;
+    delete object_CSpectrum6;
+    delete object_CSpectrum7;
+    delete object_CSpectrum8;
     delete object_CRange;
     delete object_CRangeb;
     delete object_CRangec;
