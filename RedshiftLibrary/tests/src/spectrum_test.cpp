@@ -276,10 +276,7 @@ BOOST_AUTO_TEST_CASE(Calcul)
 
     //cas où une seule valeur du flux est valide, et l'erreur valide
     BOOST_CHECK(object_CSpectrum7->correctSpectrum(1,11)==true);
-    std::vector<double> f7;
-    for (int i=nbmin; i<nbmax;i++){
-        f7.push_back(object_CSpectrum7->GetFluxAxis()[i]);
-    }
+    std::vector<double> f7 = object_CSpectrum7->GetFluxAxis().GetSamplesVector();
     std::vector<double> f7c = {1e+2, 1e+2, 1e+2, 1e+2, 1e+2, 1e+3, 1e+2, 1e+2, 1e+2, 1e+2, 1e+2};
     BOOST_CHECK(f7==f7c);
     std::vector<double> e7 = object_CSpectrum7->GetFluxAxis().GetError();
@@ -288,10 +285,7 @@ BOOST_AUTO_TEST_CASE(Calcul)
 
     //cas où une seule valeur de l'erreur est valide, et le flux valide
     BOOST_CHECK(object_CSpectrum8->correctSpectrum(1,11)==true);
-    std::vector<double> f8;
-    for (int i=nbmin; i<nbmax;i++){
-        f8.push_back(object_CSpectrum8->GetFluxAxis()[i]);
-    }
+    std::vector<double> f8 = object_CSpectrum8->GetFluxAxis().GetSamplesVector();
     std::vector<double> f8c = {7.0*1e+2, 7.0*1e+2, 7.0*1e+2, 7.0*1e+2, 7.0*1e+2, 7.0*1e+3, 7.0*1e+2, 7.0*1e+2, 7.0*1e+2, 7.0*1e+2, 7.0*1e+2};
     BOOST_CHECK(f8==f8c);
     std::vector<double> e8 = object_CSpectrum8->GetFluxAxis().GetError();
