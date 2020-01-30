@@ -722,10 +722,10 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
         std::vector<std::string> info {"spc", "fit", "fitcontinuum", "rules", "continuum"};
         for(Int32 f = 0; f<info.size(); f++) {
             for( Int32 i = 0; i<zcand->Rank.size(); i++){
-                std::string fname_old =
-                (boost::format("linemodelsolve.linemodel_%1%_extrema_tmp_%2%") % info[f] % i).str();
                 std::string fname_new =
-                (boost::format("linemodelsolve.linemodel_%1%_extrema_%2%") % info[f] % zcand->Rank[i]).str();
+                (boost::format("linemodelsolve.linemodel_%1%_extrema_%2%") % info[f] % i).str();
+                std::string fname_old =
+                (boost::format("linemodelsolve.linemodel_%1%_extrema_tmp_%2%") % info[f] % zcand->Rank[i]).str();
                 ctx.GetDataStore().ChangeScopedGlobalResult(fname_old, fname_new);    
             }
         }
