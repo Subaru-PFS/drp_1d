@@ -899,7 +899,9 @@ Int32 COperatorLineModel::ComputeCandidates(const Int32 opt_extremacount,
      invertForMinSearch = false;
     }
 
-    CExtremum extremum(redshiftsRange, opt_extremacount, m_secondPass_extensionradius, invertForMinSearch, 2);
+    //Following Didier proposition: find 100 peaks??
+    Int32 extremacount = 100; 
+    CExtremum extremum(redshiftsRange, /*opt_*/extremacount, m_secondPass_extensionradius, invertForMinSearch);
 
     if (m_result->Redshifts.size() == 1)
     {
@@ -929,12 +931,6 @@ Int32 COperatorLineModel::ComputeCandidates(const Int32 opt_extremacount,
             throw runtime_error("  Operator-Linemodel: Extremum find method failed");
             return -1;
         }
-    }
-
-    // remove extrema with merit threshold (input floatValues MUST be log-proba !)
-    if(meritCut>0.0){
-        Int32 keepMinN = 2;
-        extremum.Cut_Threshold(m_firstpass_extremumList, meritCut, m_firstpass_extremumList[0].Y, keepMinN);
     }
 
     /*

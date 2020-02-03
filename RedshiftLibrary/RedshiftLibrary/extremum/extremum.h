@@ -20,7 +20,7 @@ class CExtremum
 public:
 
     CExtremum( Bool invertForMinSearch = false );
-    CExtremum( const TFloat64Range& xRange, UInt32 maxPeakCount = 5, Float64 radius = 0.005, Bool invertForMinSearch=false, UInt32 refreshCount = 2);
+    CExtremum( const TFloat64Range& xRange, UInt32 maxPeakCount = 10, Float64 radius = 0.005, Bool invertForMinSearch=false);
     ~CExtremum();
 
     void SetMaxPeakCount( UInt32 n );

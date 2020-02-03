@@ -321,6 +321,7 @@ Bool CExtremum::Cut_Threshold( vector <Float64>& maxX, vector <Float64>& maxY, I
     maxX.push_back(vp_[s-i].first);
     maxY.push_back(vp_[s-i].second);
   }
+  
   return true;
 }
 

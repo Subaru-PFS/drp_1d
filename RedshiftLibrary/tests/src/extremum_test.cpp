@@ -53,11 +53,16 @@ BOOST_AUTO_TEST_CASE(Extremum1)
 
     maxPoint.clear();
     peaks1.Find( x, y_2, maxPoint);
+    check_points(maxPoint, TPointList({ {0.3,9}, {0.8,8} }));
+
+    peaks1.Find( x, y_plank, maxPoint);
     check_points(maxPoint, TPointList({ {0.4,9}, {0.8,8} }));
-  
-    maxPoint.clear();
+
     BOOST_CHECK( peaks1.Find( x_empty, y, maxPoint) == false);
     print_point(maxPoint);
+
+    peaks_empty = CExtremum(TFloat64Range(1.0, 1.0), 5, radius, false);
+    peaks_empty.Find( x, y, maxPoint); 
 
     // peaks1.Find( x_empty, x_empty, maxPoint);
     // print_point(maxPoint);
