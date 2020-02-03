@@ -5,7 +5,7 @@
 #include <RedshiftLibrary/common/range.h>
 
 #include <vector>
-
+using namespace std; 
 namespace NSEpic
 {
 
@@ -20,31 +20,29 @@ class CExtremum
 public:
 
     CExtremum( Bool invertForMinSearch = false );
-    CExtremum( const TFloat64Range& xRange, UInt32 maxPeakCount = 5, Float64 radius = 0.005, Bool invertForMinSearch=false, UInt32 refreshCount = 2);
+    CExtremum( const TFloat64Range& xRange, UInt32 maxPeakCount = 10, Float64 radius = 0.005, Bool invertForMinSearch=false);
     ~CExtremum();
 
     void SetMaxPeakCount( UInt32 n );
-    void SetRefreshCount( UInt32 n );
     void SetXRange( const TFloat64Range& r );
     void SetSignSearch( Float64 val );
+    void SetMeritCut( UInt32 n );
     Bool Find( const TFloat64List& xAxis, const TFloat64List& yAxis, TPointList& maxPoint ) const;
-    Bool DefaultExtremum( const TFloat64List& xAxis, const TFloat64List& yAxis, TPointList& maxPoint ) ;
-    Bool Cut_Threshold( TPointList& maxPoint, UInt32 meritCut, Float64 bestPDF, Int32 keepMinN) const;
+    Bool DefaultExtremum( const TFloat64List& xAxis, const TFloat64List& yAxis, TPointList& maxPoint );
 private:
+    Bool FindAllPeaks(const Float64* xAxis, const Float64* yAxis, UInt32 n, vector <Float64>& maxX, vector <Float64>& maxY) const;
+    Bool RefinePeakSelection( vector <Float64>& maxX, vector <Float64>& maxY, UInt32 n) const;
+    Bool Cut_Threshold( vector <Float64>& maxX, vector <Float64>& maxY, Int32 keepMinN) const;
+    Bool Truncate( vector <Float64>& xAxis, vector <Float64>& yAxis, Int32 maxCount, TPointList& maxPoint) const;
 
-    Bool InternalFind2( const Float64* xAxis, const Float64* yAxis, UInt32 n, TPointList& maxPoint ) const;
-    Bool InternalFind( const Float64* xAxis, const Float64* yAxis, UInt32 n, TPointList& maxPoint ) const;
-
-    //Mira:
-    Bool FindPeaks_extended(const TFloat64List& xAxis, const TFloat64List& yAxis, UInt32 n, TPointList& maxPoint ) const; 
-    Bool InternalFind_refact_ext(const Float64* xAxis, const Float64* yAxis, UInt32 n, TPointList& maxPoint) const;
-    
     UInt32          m_MaxPeakCount;
-    UInt32          m_RefreshCount;
     TFloat64Range   m_XRange;
-
+    Float64         m_meritCut;
     Float64         m_SignSearch;
     Float64         m_Radius;
+
+    //TO change
+    UInt32 m_maxCount;
 };
 
 

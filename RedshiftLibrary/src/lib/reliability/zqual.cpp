@@ -176,7 +176,7 @@ Bool CQualz::ExtractFeaturesPDF(CDataStore &resultStore,
         Int32 extremumCount = 1000;
         Float64 radius = 0.005;
 
-        CExtremum extremum(redshiftRange, extremumCount, radius, false, 2);
+        CExtremum extremum(redshiftRange, extremumCount, radius, false);
         extremum.Find(logzpdf1d->Redshifts, logzpdf1d->valProbaLog,
                       extremumList); // already sorted list in logPZ in output
         // extremum.Find( logzpdf1d->Redshifts, zpdf1d, extremumList ); //

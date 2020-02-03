@@ -40,18 +40,18 @@ BOOST_AUTO_TEST_CASE(Extremum1)
     TFloat64List y_plank = { 5.0, 0.0, 9.0, 9.0, 9.0, 0.1, 0.2, 0.5, 8.0, 1.0, 4.0 };
     TFloat64List x_empty = {};
 
-    peaks2 = CExtremum(TFloat64Range(-10.0, 10.0), 5, true, 2);
-    peaks2 = CExtremum(TFloat64Range(-10.0, 10.0), 5, false, 2);
+    Float64 radius = 0.005;
+    peaks2 = CExtremum(TFloat64Range(-10.0, 10.0), 5, radius, true);
+    peaks2 = CExtremum(TFloat64Range(-10.0, 10.0), 5, radius, false);
 
     peaks1.SetMaxPeakCount(2);
-    peaks1.SetRefreshCount(2);
     peaks1.SetXRange( TFloat64Range(-10.0, 10.0) );
 
     peaks1.Find( x, y, maxPoint);
     check_points(maxPoint, TPointList({ {0.4,9}, {0.8,8} }));
 
     peaks1.Find( x, y_2, maxPoint);
-    check_points(maxPoint, TPointList({ {0.4,9}, {0.8,8} }));
+    check_points(maxPoint, TPointList({ {0.3,9}, {0.8,8} }));
 
     peaks1.Find( x, y_plank, maxPoint);
     check_points(maxPoint, TPointList({ {0.4,9}, {0.8,8} }));
@@ -59,8 +59,8 @@ BOOST_AUTO_TEST_CASE(Extremum1)
     BOOST_CHECK( peaks1.Find( x_empty, y, maxPoint) == false);
     print_point(maxPoint);
 
-    peaks_empty = CExtremum(TFloat64Range(1.0, 1.0), 5, false, 2);
-    peaks_empty.Find( x, y, maxPoint);
+    peaks_empty = CExtremum(TFloat64Range(1.0, 1.0), 5, radius, false);
+    peaks_empty.Find( x, y, maxPoint); 
 
     // peaks1.Find( x_empty, x_empty, maxPoint);
     // print_point(maxPoint);

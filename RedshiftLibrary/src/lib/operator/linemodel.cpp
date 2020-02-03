@@ -899,14 +899,16 @@ Int32 COperatorLineModel::ComputeCandidates(const Int32 opt_extremacount,
      invertForMinSearch = false;
     }
 
-    CExtremum extremum(redshiftsRange, opt_extremacount, m_secondPass_extensionradius, invertForMinSearch, 2);
+    //Following Didier proposition: find 100 peaks??
+    Int32 extremacount = 100; 
+    CExtremum extremum(redshiftsRange, /*opt_*/extremacount, m_secondPass_extensionradius, invertForMinSearch);
 
     if (m_result->Redshifts.size() == 1)
     {
         extremum.DefaultExtremum( m_result->Redshifts, m_result->ChiSquare, m_firstpass_extremumList); 
         Log.LogInfo("  Operator-Linemodel: found only 1 redshift calculated, "
                     "thus using only 1 extremum");
-    } else if (opt_extremacount == -1)
+    } else if (/*opt_*/extremacount == -1)
     {
         extremum.DefaultExtremum( m_result->Redshifts, m_result->ChiSquare, m_firstpass_extremumList);
         Log.LogInfo("  Operator-Linemodel: all initial redshifts considered as "
@@ -916,6 +918,9 @@ Int32 COperatorLineModel::ComputeCandidates(const Int32 opt_extremacount,
                     m_result->GetMinChiSquare());
         Log.LogInfo("  Operator-Linemodel: ChiSquare max val = %e",
                     m_result->GetMaxChiSquare());
+        
+        if(meritCut>0.0)
+            extremum.SetMeritCut(meritCut);
 
         extremum.Find(m_result->Redshifts, floatValues, m_firstpass_extremumList);
         Log.LogInfo("  Operator-Linemodel: found %d extrema",
@@ -926,12 +931,6 @@ Int32 COperatorLineModel::ComputeCandidates(const Int32 opt_extremacount,
             throw runtime_error("  Operator-Linemodel: Extremum find method failed");
             return -1;
         }
-    }
-
-    // remove extrema with merit threshold (input floatValues MUST be log-proba !)
-    if(meritCut>0.0){
-        Int32 keepMinN = 2;
-        extremum.Cut_Threshold(m_firstpass_extremumList, meritCut, m_firstpass_extremumList[0].Y, keepMinN);
     }
 
     /*

@@ -19,11 +19,11 @@ using namespace std;
  * Constructs CExtremum with default values, and SetSignSearch ( -1.0 ) if argument is true, SetSignSearch ( 1.0 ) otherwise.
  */
 CExtremum::CExtremum( Bool invertForMinSearch ) :
-    m_MaxPeakCount( 5 ),
-    m_RefreshCount( 1 ),
+    m_MaxPeakCount( 10 ),
     m_XRange( 0.0, 0.0 ),
     m_SignSearch( 1.0 ),
-    m_Radius(0.005)
+    m_Radius(0.005),
+    m_meritCut(-2)
 {
     if( invertForMinSearch )
       {
@@ -38,12 +38,12 @@ CExtremum::CExtremum( Bool invertForMinSearch ) :
 /**
  * Member attribution constructor.
  */
-CExtremum::CExtremum( const TFloat64Range& xRange, UInt32 maxPeakCount, Float64 radius, Bool invertForMinSearch, UInt32 refreshCount) :
+CExtremum::CExtremum( const TFloat64Range& xRange, UInt32 maxPeakCount, Float64 radius, Bool invertForMinSearch) :
     m_MaxPeakCount( maxPeakCount ),
-    m_RefreshCount( refreshCount ),
     m_XRange( xRange ),
     m_SignSearch( 1.0 ),
-    m_Radius(radius)
+    m_Radius(radius),
+    m_meritCut(-2)
 {
     if( invertForMinSearch )
       {
@@ -80,11 +80,11 @@ void CExtremum::SetMaxPeakCount( UInt32 n )
 }
 
 /**
- * Sets m_RefreshCount to n.
+ * Sets m_meritCut to n.
  */
-void CExtremum::SetRefreshCount( UInt32 n )
+void CExtremum::SetMeritCut( UInt32 n )
 {
-    m_RefreshCount = n;
+    m_meritCut = n;
 }
 
 /**
@@ -144,37 +144,56 @@ Bool CExtremum::Find( const TFloat64List& xAxis, const TFloat64List& yAxis, TPoi
             }
         }
     }
-    TPointList maxPoint_ ;
-    Bool method1 = InternalFind( selectedXAxis+rangeXBeginIndex, selectedYAxis+rangeXBeginIndex, (rangeXEndIndex-rangeXBeginIndex)+1, maxPoint_ );
-         
     
-    Bool method2 = InternalFind_refact_ext( selectedXAxis+rangeXBeginIndex, selectedYAxis+rangeXBeginIndex, (rangeXEndIndex-rangeXBeginIndex)+1, maxPoint );
-    return method2;
+    //Find does 4 things: findAllPeaks; Cut_Threshold; PeakRefinement using sliding windows; Truncation based on allowed peak number
+    //Didier proposes to set extremaCount=100 (hardcoded value) when called from linemodelsolve.
+    //And that extremaCount, as defined in param.json, is taken into consideration elsewhere, at the end of the processing
+    vector < Float64 >  maxX;
+    vector < Float64 >  maxY;
+    Bool method = FindAllPeaks( selectedXAxis+rangeXBeginIndex, selectedYAxis+rangeXBeginIndex, (rangeXEndIndex-rangeXBeginIndex)+1, maxX, maxY );
+ 
+    Int32 keepMinN = 2;
+
+    //Cut_Threshold is optional
+    if(m_meritCut>0.0){
+      Bool v = Cut_Threshold(maxX, maxY, keepMinN);
+    }
+
+    //refine using sliding windows: aiming at avoiding duplicate candidates when possible. 
+    RefinePeakSelection(maxX, maxY, m_MaxPeakCount);//keep at least keepMinN candidates
+
+    //truncate: reduces size of candidate list and also prepares the maxPoint List
+    //TODO: not sure about this; need to talk to Didier
+    Truncate(maxX, maxY, m_MaxPeakCount, maxPoint);
+
+    return true;
 }
 /**
- * Brief: removes extrema based on meritCut.
+ * \Brief: removes extrema based on meritCut.
  * It returns the new list of extrema
 */
-/*Bool CExtremum::Cut_Threshold(const TFloat64List& xAxis, const TFloat64List& yAxis, UInt32 meritCut, Int32 keepMinN, TPointList& maxPoint ) const{
+Bool CExtremum::Cut_Threshold( vector <Float64>& maxX, vector <Float64>& maxY, Int32 keepMinN) const{
+  Int32 n = maxX.size();
+  std::vector<Float64>::iterator resultBest;
+  resultBest = std::max_element(maxY.begin(), maxY.end());
+  Float64 bestPDF = maxY[std::distance(maxY.begin(), resultBest)];//::distance returns an index referring to the max
 
-}*/
-
-Bool CExtremum::Cut_Threshold( TPointList& maxPoint, UInt32 meritCut, Float64 bestPDF, Int32 keepMinN) const{
-  Int32 n = maxPoint.size();
   Int32 iExtremumFinalList = 0;
   for (Int32 i = 0; i < n; i++){
-    Float64 meritDiff = bestPDF - maxPoint[iExtremumFinalList].Y;
-    if( meritDiff > meritCut && i>=keepMinN){
+    Float64 meritDiff = bestPDF - maxY[iExtremumFinalList];
+    if( meritDiff > m_meritCut && i>=keepMinN){
         Log.LogInfo("  Extremum: Candidates selection by proba cut: removing i=%d, final_i=%d, e.X=%f, e.Y=%e",
                             i,
                             iExtremumFinalList,
-                            maxPoint[iExtremumFinalList].X,
-                            maxPoint[iExtremumFinalList].Y);
-        maxPoint.erase(maxPoint.begin() + iExtremumFinalList);
+                            maxX[iExtremumFinalList],
+                            maxY[iExtremumFinalList]);
+        maxX.erase(maxX.begin() + iExtremumFinalList);
+        maxY.erase(maxY.begin() + iExtremumFinalList);
         }else{
           iExtremumFinalList++;
         }
   }
+  
   return true;
 }
 
@@ -185,56 +204,32 @@ Bool CExtremum::Cut_Threshold( TPointList& maxPoint, UInt32 meritCut, Float64 be
  * Eliminate close candidates: close, i.e., in a window of 0.005(1+z) around a z candidate of strong value???
  * //TODO: should rethink about the order for applying  these conditions
 */
-Bool CExtremum::FindPeaks_extended(const TFloat64List& xAxis, const TFloat64List& yAxis, UInt32 n, TPointList& maxPoint ) const
+Bool CExtremum::RefinePeakSelection(vector <Float64>& maxX, vector <Float64>& maxY, UInt32 n)const
 {
-  if (n == 0)
+  if (n == 0){
+    std::cout<< "heyyyyy previous call didnt find any candidate \n";
     return false;
+  }
+
   vector < Float64 >  tmpX;
   vector < Float64 >  tmpY;
-  vector < Float64 >  maxX;
-  vector < Float64 >  maxY;
-
-
-  CQuickSort<Float64> sort_;
-  vector<Int32> sortedIndexes_(n);
-  sort_.SortIndexes( yAxis.data(), sortedIndexes_.data(), sortedIndexes_.size() );
-  //best value corresponds to the last in sortedIndexes
-  Float64 best_pdf = yAxis[sortedIndexes_[n-1]];
-  //do a first selection based on maxY value relative to the best tmpY
-  Int32 cnt = 0;  
-
-//below doesnt do anything given that meritCut is set to max value
-  Float64 /*pdfDiff = DBL_MAX,*/ meritCut = DBL_MAX;//30;
-  for (Int32 i = 0; i< n; i++){
-    if(i == sortedIndexes_[n-1]){
-      tmpX.push_back(xAxis[i]);
-      tmpY.push_back(yAxis[i]);
-      continue;
-    }
-    /*
-    //looking for the smallest diff, i.e., 10^7..too big
-    if( pdfDiff>(best_pdf - yAxis[i])){
-      pdfDiff = best_pdf - yAxis[i];
-    }*/
-    if((best_pdf - yAxis[i]) < meritCut){
-      tmpX.push_back(xAxis[i]);
-      tmpY.push_back(yAxis[i]);
-    }
+  //copy maxX/Y into temperory arrays
+  for (Int32 i = 0; i<maxX.size(); i++){
+    tmpX.push_back(maxX[i]);
+    tmpY.push_back(maxY[i]);
   }
 
-  //Mira: TODO: should pass radius as an optional argument probably
-  //Float64 radius = 0.005;//similar to when we extend around zcand
-  if(tmpX.size() == 0){
-     return false;
-  }
- 
+  //clear vectors to fill later
+  maxX.clear();
+  maxY.clear();
+
   Float64 wind_low = tmpX[1] - m_Radius*(1+tmpX[1]);
   Float64 wind_high = tmpX[1] + m_Radius*(1+tmpX[1]);
   vector<Int32> idxList, missedList; 
   Int32 i = 0, imax = -1; 
   Float64 maxPDF = -INFINITY;
-  while(i<tmpX.size()){
 
+  while(i<tmpX.size()){
     //if element belongs to the selected window
     if(tmpX[i]>wind_low && tmpX[i]<=wind_high){
       idxList.push_back(i);
@@ -285,26 +280,8 @@ Bool CExtremum::FindPeaks_extended(const TFloat64List& xAxis, const TFloat64List
     
   }
  
-//we need to check if we didnt skip any candidate because of window borders
+  //Check if we didnt skip any candidate because of window borders
   Int32 s = missedList.size();
-
-  Int32 nbPeaks = m_MaxPeakCount;
-  if( maxX.size()<m_MaxPeakCount ){
-    nbPeaks = maxX.size();
-  }
-  maxPoint.resize( nbPeaks );
- // Extract best results
-  CQuickSort<Float64> sort;
-  vector<Int32> sortedIndexes( maxX.size() );
-  sort.SortIndexes( maxY.data(), sortedIndexes.data(), sortedIndexes.size() );
-
-  // save candidates as SPoints
-  for (Int32 j = 0; j < nbPeaks; j++) {
-     Int32 jidx = sortedIndexes[(sortedIndexes.size()- j -1)];
-    if( !std::isnan( maxY[jidx] ) ){
-      maxPoint[j] = SPoint(maxX[jidx], m_SignSearch * maxY[jidx]);
-    }
-  }
   return true;
 }
 
@@ -312,12 +289,10 @@ Bool CExtremum::FindPeaks_extended(const TFloat64List& xAxis, const TFloat64List
  * Brief: Attempts to find peaks, returning (when appropriate) the points where they reside in the maxPoint argument.
  * Extended to include distance between peaks and a threshold to eliminate peaks
  */
-Bool CExtremum::InternalFind_refact_ext(const Float64* xAxis, const Float64* yAxis, UInt32 n, TPointList& maxPoint) const {
+Bool CExtremum::FindAllPeaks(const Float64* xAxis, const Float64* yAxis, UInt32 n, vector <Float64>& maxX, vector <Float64>& maxY) const {
   if (n == 0)
     return false;
 
-  vector < Float64 > maxX;
-  vector < Float64 > maxY;
   vector < Float64 > tmpX(n);
   vector < Float64 > tmpY(n);
 
@@ -326,7 +301,7 @@ Bool CExtremum::InternalFind_refact_ext(const Float64* xAxis, const Float64* yAx
     tmpY[t] = m_SignSearch * yAxis[t];
   }
 
-    Int32 maxCount = 0;
+  Int32 maxCount = 0;
 
     // find first and last non Nan element
     Int32 firstNonNanInd = 0;
@@ -407,209 +382,28 @@ Bool CExtremum::InternalFind_refact_ext(const Float64* xAxis, const Float64* yAx
       maxY.push_back(tmpY[idx]);
       maxCount++;
     }
-
-    //compute average and variance of yaxis: not used
-    Float64 avg = 0.0, var = 0.0;
-    /*for (Int32 i = firstNonNanInd; i < lastNonNanInd + 1; i++) {
-      avg = avg + yAxis[i]; 
-    }
-    avg = avg/(lastNonNanInd - firstNonNanInd + 1);
-
-    for (Int32 i = firstNonNanInd; i < lastNonNanInd + 1; i++) {
-      var += (yAxis[i] - avg)*(yAxis[i] - avg); 
-    }
-    var /= (lastNonNanInd - firstNonNanInd + 1);*/
-    
-  //select candidates
-  return  FindPeaks_extended( maxX, maxY, maxCount, maxPoint );
-}
-/**
- * Attempts to find peaks, returning (when appropriate) the points where they reside in the maxPoint argument.
- */
-Bool CExtremum::InternalFind( const Float64* xAxis, const Float64* yAxis, UInt32 n, TPointList& maxPoint ) const
-{
-    if( n == 0 )
-        return false;
-
-    //Method 1, use only 1 extremum
-    /*
-    maxPoint.resize( 1 );
-
-    Float64 max = DBL_MIN ;
-    Int32 maxIndex = 0;
-    for( Int32 i=0; i<n; i++ )
-    {
-    	if( yAxis[i] > max ) {
-    		max = yAxis[i];
-    		maxIndex = i;
-    	}
-    }
-
-    maxPoint[0].X = xAxis[maxIndex];
-    maxPoint[0].Y = yAxis[maxIndex];
-
-    return true;
-    //*/
-
-    vector<Float64> maxX( n );
-    vector<Float64> maxY( n );
-
-    // Tmp array can be considered as the "input" of each iteration.
-    vector<Float64> tmpX( n );
-    vector<Float64> tmpY( n );
-    UInt32 tmpSize = n;
-    for( UInt32 t=0; t<n; t++ )
-    {
-        tmpX[t] = xAxis[t];
-        tmpY[t] = m_SignSearch*yAxis[t];
-    }
-
-
-    for( UInt32 count=0; count<m_RefreshCount; count++ )
-    {
-        Int32 maxCount = 0;
-
-        // find first and last non Nan element
-        Int32 firstNonNanInd = 0;
-        for( Int32 iFirst=0; iFirst<tmpSize-1; iFirst++ )
-	  {
-            if( !std::isnan( (double) tmpY[iFirst] ) )
-	      {
-                firstNonNanInd = iFirst;
-                break;
-	      }
-	  }
-        Int32 lastNonNanInd = tmpSize-1;
-        for( Int32 iLast=tmpSize-1; iLast>0; iLast-- )
-	  {
-            if( !std::isnan( tmpY[iLast] ) )
-	      {
-                lastNonNanInd = iLast;
-                break;
-	      }
-	  }
-
-        // First element
-        if( tmpY[firstNonNanInd] > tmpY[firstNonNanInd+1] )
-	  {
-            maxX[maxCount] = tmpX[firstNonNanInd];
-            maxY[maxCount] = tmpY[firstNonNanInd];
-            maxCount++;
-	  }
-
-        for( Int32 i=firstNonNanInd+1; i<lastNonNanInd; i++ )
-	  {
-            if( ( tmpY[i]>tmpY[i-1] ) && ( tmpY[i]>tmpY[i+1] ) )
-	      {
-                maxX[maxCount] = tmpX[i];
-                maxY[maxCount] = tmpY[i];
-                maxCount++;
-	      }
-	  }
-
-        // last elements
-        if( tmpY[lastNonNanInd-1]<tmpY[lastNonNanInd] )
-	  {
-            maxX[maxCount] = tmpX[lastNonNanInd];
-            maxY[maxCount] = tmpY[lastNonNanInd];
-            maxCount++;
-	  }
-
-        //tmpX = vector<Float64>( maxCount );
-        //tmpY = vector<Float64>( maxCount );
-
-        tmpSize = maxCount;
-        // Prepare for next iteration by storing every maximum found in this iteration in the tmp array used as input for the next iteration
-        for( Int32 t=0; t<maxCount; t++ )
-	  {
-            tmpX[t]=maxX[t];
-            tmpY[t]=maxY[t];
-	  }
-
-        /*//debug:
-        // save median and xmad,  flux data
-        FILE* f = fopen( "extremum_dbg.txt", "w+" );
-        for( Int32 t=0;t<maxCount;t++)
-        {
-            fprintf( f, "%d %f %f\n", t, tmpX[t], tmpY[t]);
-        }
-        fclose( f );
-        //*/
-
-        if( maxCount == 0 )
-	  {
-            break;
-	  }
-
-        if( tmpSize <= PEAKS_SMOOTH_LIMIT )
-	  {
-            break;
-	  }
-    }
-
-    Int32 nbPeaks = m_MaxPeakCount;
-    if( tmpSize<m_MaxPeakCount )
-      {
-        nbPeaks = tmpSize;
-      }
-
-    // Extract best results
-    CQuickSort<Float64> sort;
-
-    vector<Int32> sortedIndexes( tmpSize );
-    sort.SortIndexes( tmpY.data(), sortedIndexes.data(), sortedIndexes.size() );
-
-    maxPoint.resize( nbPeaks );
-    Int32 k = 0;
-
-    for( Int32 i=0; i<nbPeaks; i++ )
-      {
-        Int32 j = sortedIndexes[(sortedIndexes.size()-1)-i];
-        if( !std::isnan( tmpY[j] ) )
-	  {
-            maxPoint[k++] = SPoint( tmpX[j], m_SignSearch*tmpY[j] );
-	  }
-      }
-
-    return true;
+  return  true;
 }
 
-
 /**
- * Attempts to find peaks, returning (when appropriate) the points where they reside in the maxPoint argument.
- */
-Bool CExtremum::InternalFind2( const Float64* xAxis, const Float64* yAxis, UInt32 n, TPointList& maxPoint ) const
-{
-    if( n == 0 )
-        return false;
+ * Brief: Reduce number of peaks based on maxCount passed from param.json if present
+ * Reduction happens based on PDF values (we eliminate peaks with the smallest values)
+*/
+Bool CExtremum::Truncate( vector <Float64>& maxX, vector <Float64>& maxY, Int32 maxCount, TPointList& maxPoint) const {
+  
+  Int32 n = maxX.size();
+  maxCount = std::min(maxCount, n);
 
-    vector<Float64> tmpX( n );
-    vector<Float64> tmpY( n );
-    Int32 tmpSize = n;
-    for( UInt32 t=0; t<n; t++ )
-      {
-        if( !std::isnan( yAxis[t] ) )
-	  {
-            tmpX[t] = xAxis[t];
-            tmpY[t] = yAxis[t];
-	  }
-      }
-
-    // Extract best results
-    CQuickSort<Float64> sort;
-
-    vector<Int32> sortedIndexes( tmpSize );
-    sort.SortIndexes( tmpY.data(), sortedIndexes.data(), tmpSize );
-
-    maxPoint.resize( m_MaxPeakCount );
-    Int32 k = 0;
-
-    for( UInt32 i=0; i<m_MaxPeakCount; i++ )
-      {
-        UInt32 j = sortedIndexes[(sortedIndexes.size()-1)-i];
-
-        maxPoint[k++] = SPoint( tmpX[j], tmpY[j] );
-      }
-
-    return true;
+  CQuickSort<Float64> sort;
+  vector<Int32> sortedIndexes(n);
+  sort.SortIndexes( maxY.data(), sortedIndexes.data(), sortedIndexes.size() );
+ 
+  // save candidates as SPoints
+  for (Int32 j = 0; j < maxCount; j++) {
+     Int32 jidx = sortedIndexes[(sortedIndexes.size()- j -1)];
+    if( !std::isnan( maxY[jidx] ) ){
+      maxPoint.push_back(SPoint(maxX[jidx], m_SignSearch * maxY[jidx]) );
+    }
+  }
+  return true;
 }

@@ -893,7 +893,7 @@ Int32 CPdfz::getPmis(std::vector<Float64> redshifts,
     TFloat64Range redshiftsRange(
         redshifts[0],
         redshifts[redshifts.size() - 1]);
-    CExtremum extremum(redshiftsRange, maxpeakscount, radius, false, 2);
+    CExtremum extremum(redshiftsRange, maxpeakscount, radius, false);
     TPointList extremumList;
     extremum.Find(redshifts, valprobalog, extremumList);
     zcandidates.clear();
