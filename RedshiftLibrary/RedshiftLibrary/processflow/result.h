@@ -33,12 +33,12 @@ public:
     virtual Int32 GetEvidenceFromPdf(const CDataStore& store, Float64 &evidence) const = 0;
 
     void SaveFloat64(std::ostream& stream,Float64 data) const;
-    void SaveTFloat64List(std::ostream& stream,std::string name,TFloat64List data) const;
-    void SaveTFloat64ListOfList(std::ostream& stream,std::string name,std::vector<TFloat64List> data) const;
-    void SaveInt32Vector(std::ostream& stream,std::string name,std::vector<Int32> data) const;
-    void SaveStringVector(std::ostream& stream,std::string name,std::vector<std::string>) const;
-    void SaveStringVectorOfVector(std::ostream& stream,std::string name,std::vector<std::vector<std::string>>) const;
-    void SaveTContinuumIndexListVector(std::ostream& stream,std::string name,std::vector<CContinuumIndexes::TContinuumIndexList>) const;
+    void SaveTFloat64List(std::ostream& stream,std::string name,TFloat64List data, TFloat64List order) const;
+    void SaveTFloat64ListOfList(std::ostream& stream,std::string name,std::vector<TFloat64List> data, TFloat64List order) const;
+    void SaveInt32Vector(std::ostream& stream,std::string name,std::vector<Int32> data, TFloat64List order) const;
+    void SaveStringVector(std::ostream& stream,std::string name,std::vector<std::string>, TFloat64List order) const;
+    void SaveStringVectorOfVector(std::ostream& stream,std::string name,std::vector<std::vector<std::string>>, TFloat64List order) const;
+    void SaveTContinuumIndexListVector(std::ostream& stream,std::string name,std::vector<CContinuumIndexes::TContinuumIndexList>, TFloat64List order) const;
 protected:
 
     std::string m_ReliabilityLabel="-1";

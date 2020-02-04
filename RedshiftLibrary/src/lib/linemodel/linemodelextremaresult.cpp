@@ -1,4 +1,5 @@
 #include <RedshiftLibrary/linemodel/linemodelextremaresult.h>
+#include <RedshiftLibrary/processflow/datastore.h>
 
 #include <boost/tokenizer.hpp>
 #include <boost/lexical_cast.hpp>
@@ -7,7 +8,6 @@
 #include <iomanip>      // std::setprecision
 
 #include <string>
-
 using namespace NSEpic;
 
 
@@ -28,7 +28,8 @@ CLineModelExtremaResult::~CLineModelExtremaResult()
 }
 
 void CLineModelExtremaResult::Resize(Int32 size)
-{
+{   
+    ExtremaPDF.resize(size);
     Extrema.resize(size);
     ExtremaMerit.resize(size);
     ExtremaMeritContinuum.resize(size);
@@ -83,6 +84,7 @@ void CLineModelExtremaResult::Resize(Int32 size)
     FittedTplshapeMtm.resize(size);
 }
 
+
 /**
  * \brief Empty method.
  **/
@@ -104,12 +106,25 @@ void CLineModelExtremaResult::SaveLine(const CDataStore &store, std::ostream& st
  **/
 void CLineModelExtremaResult::Save( const CDataStore& store, std::ostream& stream ) const
 {
+    //Read directly from store; but couldnt save in the member variable!!!
+    TFloat64List Rank_PDF =  store.GetRank();
+    TFloat64List ExtremaPDF = store.GetIntgPDF();
     // save extrema list, on 1 line
     if(Extrema.size()>0){
         stream <<  "#Extrema for z = {";
         for ( int i=0; i<Extrema.size(); i++)
         {
-            stream <<  Extrema[i] << "\t";
+            stream <<  Extrema[Rank_PDF[i]] << "\t";
+        }
+        stream << "}" << std::endl;
+    }
+
+
+    if(ExtremaPDF.size()>0){
+        stream <<  "#Extrema PDF for z = {";
+        for ( int i=0; i<ExtremaPDF.size(); i++)
+        {
+            stream <<  ExtremaPDF[i] << "\t";
         }
         stream << "}" << std::endl;
     }
@@ -119,7 +134,7 @@ void CLineModelExtremaResult::Save( const CDataStore& store, std::ostream& strea
         stream <<  "#ExtremaMerit for z = {";
         for ( int i=0; i<ExtremaMerit.size(); i++)
         {
-            stream <<  ExtremaMerit[i] << "\t";
+            stream <<  ExtremaMerit[Rank_PDF[i]] << "\t";
         }
         stream << "}" << std::endl;
     }
@@ -129,7 +144,7 @@ void CLineModelExtremaResult::Save( const CDataStore& store, std::ostream& strea
         stream <<  "#ExtremaMeritContinuum for z = {";
         for ( int i=0; i<ExtremaMeritContinuum.size(); i++)
         {
-            stream <<  ExtremaMeritContinuum[i] << "\t";
+            stream <<  ExtremaMeritContinuum[Rank_PDF[i]] << "\t";
         }
         stream << "}" << std::endl;
     }
@@ -139,7 +154,7 @@ void CLineModelExtremaResult::Save( const CDataStore& store, std::ostream& strea
         stream <<  "#ExtremaDeltaZ for z = {";
         for ( int i=0; i<DeltaZ.size(); i++)
         {
-            stream <<  DeltaZ[i] << "\t";
+            stream <<  DeltaZ[Rank_PDF[i]] << "\t";
         }
         stream << "}" << std::endl;
     }
@@ -149,7 +164,7 @@ void CLineModelExtremaResult::Save( const CDataStore& store, std::ostream& strea
         stream <<  "#mTransposeM for z = {";
         for ( int i=0; i<mTransposeM.size(); i++)
         {
-            stream <<  mTransposeM[i] << "\t";
+            stream <<  mTransposeM[Rank_PDF[i]] << "\t";
         }
         stream << "}" << std::endl;
     }
@@ -159,7 +174,7 @@ void CLineModelExtremaResult::Save( const CDataStore& store, std::ostream& strea
         stream <<  "#NDof for z = {";
         for ( int i=0; i<NDof.size(); i++)
         {
-            stream <<  NDof[i] << "\t";
+            stream <<  NDof[Rank_PDF[i]] << "\t";
         }
         stream << "}" << std::endl;
     }
@@ -169,7 +184,7 @@ void CLineModelExtremaResult::Save( const CDataStore& store, std::ostream& strea
         stream <<  "#CorrScaleMarg for z = {";
         for ( int i=0; i<CorrScaleMarg.size(); i++)
         {
-            stream <<  CorrScaleMarg[i] << "\t";
+            stream <<  CorrScaleMarg[Rank_PDF[i]] << "\t";
         }
         stream << "}" << std::endl;
     }
@@ -179,7 +194,7 @@ void CLineModelExtremaResult::Save( const CDataStore& store, std::ostream& strea
         stream <<  "#ExtremaLastPass for z = {";
         for ( int i=0; i<ExtremaLastPass.size(); i++)
         {
-            stream <<  ExtremaLastPass[i] << "\t";
+            stream <<  ExtremaLastPass[Rank_PDF[i]] << "\t";
         }
         stream << "}" << std::endl;
     }
@@ -189,7 +204,7 @@ void CLineModelExtremaResult::Save( const CDataStore& store, std::ostream& strea
         stream <<  "#lmfitPass for z = {";
         for ( int i=0; i<lmfitPass.size(); i++)
         {
-            stream <<  lmfitPass[i] << "\t";
+            stream <<  lmfitPass[Rank_PDF[i]] << "\t";
         }
         stream << "}" << std::endl;
     }
@@ -199,7 +214,7 @@ void CLineModelExtremaResult::Save( const CDataStore& store, std::ostream& strea
         stream <<  "#snrHa for z = {";
         for ( int i=0; i<snrHa.size(); i++)
         {
-            stream <<  snrHa[i] << "\t";
+            stream <<  snrHa[Rank_PDF[i]] << "\t";
         }
         stream << "}" << std::endl;
     }
@@ -209,7 +224,7 @@ void CLineModelExtremaResult::Save( const CDataStore& store, std::ostream& strea
         stream <<  "#lfHa for z = {";
         for ( int i=0; i<lfHa.size(); i++)
         {
-            stream <<  lfHa[i] << "\t";
+            stream <<  lfHa[Rank_PDF[i]] << "\t";
         }
         stream << "}" << std::endl;
     }
@@ -220,7 +235,7 @@ void CLineModelExtremaResult::Save( const CDataStore& store, std::ostream& strea
         stream <<  "#snrOII for z = {";
         for ( int i=0; i<snrOII.size(); i++)
         {
-            stream <<  snrOII[i] << "\t";
+            stream <<  snrOII[Rank_PDF[i]] << "\t";
         }
         stream << "}" << std::endl;
     }
@@ -230,7 +245,7 @@ void CLineModelExtremaResult::Save( const CDataStore& store, std::ostream& strea
         stream <<  "#lfOII for z = {";
         for ( int i=0; i<lfOII.size(); i++)
         {
-            stream <<  lfOII[i] << "\t";
+            stream <<  lfOII[Rank_PDF[i]] << "\t";
         }
         stream << "}" << std::endl;
     }
@@ -240,7 +255,7 @@ void CLineModelExtremaResult::Save( const CDataStore& store, std::ostream& strea
         stream <<  "#BIC for each extrema = {";
         for ( int i=0; i<bic.size(); i++)
         {
-            stream <<  bic[i] << "\t";
+            stream <<  bic[Rank_PDF[i]] << "\t";
         }
         stream << "}" << std::endl;
     }
@@ -250,7 +265,7 @@ void CLineModelExtremaResult::Save( const CDataStore& store, std::ostream& strea
         stream <<  "#POSTERIOR for each extrema = {";
         for ( int i=0; i<Posterior.size(); i++)
         {
-            stream <<  Posterior[i] << "\t";
+            stream <<  Posterior[Rank_PDF[i]] << "\t";
         }
         stream << "}" << std::endl;
     }
@@ -260,7 +275,7 @@ void CLineModelExtremaResult::Save( const CDataStore& store, std::ostream& strea
         stream <<  "#SigmaZ for each extrema = {";
         for ( int i=0; i<SigmaZ.size(); i++)
         {
-            stream <<  SigmaZ[i] << "\t";
+            stream <<  SigmaZ[Rank_PDF[i]] << "\t";
         }
         stream << "}" << std::endl;
     }
@@ -270,7 +285,7 @@ void CLineModelExtremaResult::Save( const CDataStore& store, std::ostream& strea
         stream <<  "#LogArea for each extrema = {";
         for ( int i=0; i<LogArea.size(); i++)
         {
-            stream <<  LogArea[i] << "\t";
+            stream <<  LogArea[Rank_PDF[i]] << "\t";
         }
         stream << "}" << std::endl;
     }
@@ -281,9 +296,9 @@ void CLineModelExtremaResult::Save( const CDataStore& store, std::ostream& strea
         for ( int i=0; i<ContinuumIndexes.size(); i++)
         {
             stream << "<";
-            for(Int32 kci=0; kci<ContinuumIndexes[i].size(); kci++)
+            for(Int32 kci=0; kci<ContinuumIndexes[Rank_PDF[i]].size(); kci++)
             {
-                stream <<  ContinuumIndexes[i][kci].Color << "\t";
+                stream <<  ContinuumIndexes[Rank_PDF[i]][kci].Color << "\t";
             }
             stream << ">";
         }
@@ -292,9 +307,9 @@ void CLineModelExtremaResult::Save( const CDataStore& store, std::ostream& strea
         for ( int i=0; i<ContinuumIndexes.size(); i++)
         {
             stream << "<";
-            for(Int32 kci=0; kci<ContinuumIndexes[i].size(); kci++)
+            for(Int32 kci=0; kci<ContinuumIndexes[Rank_PDF[i]].size(); kci++)
             {
-                stream <<  ContinuumIndexes[i][kci].Break << "\t";
+                stream <<  ContinuumIndexes[Rank_PDF[i]][kci].Break << "\t";
             }
             stream << ">";
         }
@@ -307,7 +322,7 @@ void CLineModelExtremaResult::Save( const CDataStore& store, std::ostream& strea
         stream <<  "#StrongELSNR for each extrema = {";
         for ( int i=0; i<StrongELSNR.size(); i++)
         {
-            stream <<  StrongELSNR[i] << "\t";
+            stream <<  StrongELSNR[Rank_PDF[i]] << "\t";
         }
         stream << "}" << std::endl;
     }
@@ -318,7 +333,7 @@ void CLineModelExtremaResult::Save( const CDataStore& store, std::ostream& strea
         stream <<  "#StrongELSNRAboveCut for each extrema = {";
         for ( int i=0; i<StrongELSNRAboveCut.size(); i++)
         {
-            std::vector<std::string> line_list = StrongELSNRAboveCut[i];
+            std::vector<std::string> line_list = StrongELSNRAboveCut[Rank_PDF[i]];
             for ( int ki=0; ki<line_list.size(); ki++)
             {
                 if(ki>0)
@@ -337,7 +352,7 @@ void CLineModelExtremaResult::Save( const CDataStore& store, std::ostream& strea
         stream <<  "#FittedTplName for each extrema = {";
         for ( int i=0; i<FittedTplName.size(); i++)
         {
-            stream <<  FittedTplName[i] << "\t";
+            stream <<  FittedTplName[Rank_PDF[i]] << "\t";
         }
         stream << "}" << std::endl;
     }
@@ -347,7 +362,7 @@ void CLineModelExtremaResult::Save( const CDataStore& store, std::ostream& strea
         stream <<  "#FittedTplAmplitude for each extrema = {";
         for ( int i=0; i<FittedTplAmplitude.size(); i++)
         {
-            stream <<  FittedTplAmplitude[i] << "\t";
+            stream <<  FittedTplAmplitude[Rank_PDF[i]] << "\t";
         }
         stream << "}" << std::endl;
     }
@@ -357,7 +372,7 @@ void CLineModelExtremaResult::Save( const CDataStore& store, std::ostream& strea
         stream <<  "#FittedTplMerit for each extrema = {";
         for ( int i=0; i<FittedTplMerit.size(); i++)
         {
-            stream <<  FittedTplMerit[i] << "\t";
+            stream <<  FittedTplMerit[Rank_PDF[i]] << "\t";
         }
         stream << "}" << std::endl;
     }
@@ -368,7 +383,7 @@ void CLineModelExtremaResult::Save( const CDataStore& store, std::ostream& strea
         stream << std::setprecision(3);
         for ( int i=0; i<FittedTplDustCoeff.size(); i++)
         {
-            stream <<  FittedTplDustCoeff[i] << "\t";
+            stream <<  FittedTplDustCoeff[Rank_PDF[i]] << "\t";
         }
         stream << "}" << std::endl;
     }
@@ -378,7 +393,7 @@ void CLineModelExtremaResult::Save( const CDataStore& store, std::ostream& strea
         stream <<  "#FittedTplMeiksinIdx for each extrema = {";
         for ( int i=0; i<FittedTplMeiksinIdx.size(); i++)
         {
-            stream <<  FittedTplMeiksinIdx[i] << "\t";
+            stream <<  FittedTplMeiksinIdx[Rank_PDF[i]] << "\t";
         }
         stream << "}" << std::endl;
     }
@@ -390,7 +405,7 @@ void CLineModelExtremaResult::Save( const CDataStore& store, std::ostream& strea
         stream << std::setprecision(8);
         for ( int i=0; i<FittedTplRedshift.size(); i++)
         {
-            stream <<  FittedTplRedshift[i] << "\t";
+            stream <<  FittedTplRedshift[Rank_PDF[i]] << "\t";
         }
         stream << "}" << std::endl;
     }
@@ -401,7 +416,7 @@ void CLineModelExtremaResult::Save( const CDataStore& store, std::ostream& strea
         stream << std::setprecision(8);
         for ( int i=0; i<FittedTplDtm.size(); i++)
         {
-            stream <<  FittedTplDtm[i] << "\t";
+            stream <<  FittedTplDtm[Rank_PDF[i]] << "\t";
         }
         stream << "}" << std::endl;
     }
@@ -412,7 +427,7 @@ void CLineModelExtremaResult::Save( const CDataStore& store, std::ostream& strea
         stream << std::setprecision(8);
         for ( int i=0; i<FittedTplMtm.size(); i++)
         {
-            stream <<  FittedTplMtm[i] << "\t";
+            stream <<  FittedTplMtm[Rank_PDF[i]] << "\t";
         }
         stream << "}" << std::endl;
     }
@@ -423,7 +438,7 @@ void CLineModelExtremaResult::Save( const CDataStore& store, std::ostream& strea
         stream << std::setprecision(8);
         for ( int i=0; i<FittedTplLogPrior.size(); i++)
         {
-            stream <<  FittedTplLogPrior[i] << "\t";
+            stream <<  FittedTplLogPrior[Rank_PDF[i]] << "\t";
         }
         stream << "}" << std::endl;
     }
@@ -438,13 +453,13 @@ void CLineModelExtremaResult::Save( const CDataStore& store, std::ostream& strea
             {
                 stream << "\t";
             }
-            for ( int ip=0; ip<FittedTplpCoeffs[i].size(); ip++)
+            for ( int ip=0; ip<FittedTplpCoeffs[Rank_PDF[i]].size(); ip++)
             {
                 if(ip>0)
                 {
                     stream << ":";
                 }
-                stream <<  FittedTplpCoeffs[i][ip];
+                stream <<  FittedTplpCoeffs[Rank_PDF[i]][ip];
             }
 
         }
@@ -456,7 +471,7 @@ void CLineModelExtremaResult::Save( const CDataStore& store, std::ostream& strea
         stream <<  "#FittedTplshapeName for each extrema = {";
         for ( int i=0; i<FittedTplshapeName.size(); i++)
         {
-            stream <<  FittedTplshapeName[i] << "\t";
+            stream <<  FittedTplshapeName[Rank_PDF[i]] << "\t";
         }
         stream << "}" << std::endl;
     }
@@ -466,7 +481,7 @@ void CLineModelExtremaResult::Save( const CDataStore& store, std::ostream& strea
         stream <<  "#FittedTplshapeIsmCoeff for each extrema = {";
         for ( int i=0; i<FittedTplshapeIsmCoeff.size(); i++)
         {
-            stream <<  FittedTplshapeIsmCoeff[i] << "\t";
+            stream <<  FittedTplshapeIsmCoeff[Rank_PDF[i]] << "\t";
         }
         stream << "}" << std::endl;
     }
@@ -476,7 +491,7 @@ void CLineModelExtremaResult::Save( const CDataStore& store, std::ostream& strea
         stream <<  "#FittedTplshapeAmplitude for each extrema = {";
         for ( int i=0; i<FittedTplshapeAmplitude.size(); i++)
         {
-            stream <<  FittedTplshapeAmplitude[i] << "\t";
+            stream <<  FittedTplshapeAmplitude[Rank_PDF[i]] << "\t";
         }
         stream << "}" << std::endl;
     }
@@ -486,7 +501,7 @@ void CLineModelExtremaResult::Save( const CDataStore& store, std::ostream& strea
         stream <<  "#FittedTplshapeDtm for each extrema = {";
         for ( int i=0; i<FittedTplshapeDtm.size(); i++)
         {
-            stream <<  FittedTplshapeDtm[i] << "\t";
+            stream <<  FittedTplshapeDtm[Rank_PDF[i]] << "\t";
         }
         stream << "}" << std::endl;
     }
@@ -496,7 +511,7 @@ void CLineModelExtremaResult::Save( const CDataStore& store, std::ostream& strea
         stream <<  "#FittedTplshapeMtm for each extrema = {";
         for ( int i=0; i<FittedTplshapeMtm.size(); i++)
         {
-            stream <<  FittedTplshapeMtm[i] << "\t";
+            stream <<  FittedTplshapeMtm[Rank_PDF[i]] << "\t";
         }
         stream << "}" << std::endl;
     }
@@ -507,7 +522,7 @@ void CLineModelExtremaResult::Save( const CDataStore& store, std::ostream& strea
         stream <<  "#OutsideLinesSTDFlux for each extrema = {";
         for ( int i=0; i<OutsideLinesSTDFlux.size(); i++)
         {
-            stream << std::scientific << std::setprecision(5) <<  OutsideLinesSTDFlux[i] << "\t";
+            stream << std::scientific << std::setprecision(5) <<  OutsideLinesSTDFlux[Rank_PDF[i]] << "\t";
         }
         stream << "}" << std::endl;
     }
@@ -517,7 +532,7 @@ void CLineModelExtremaResult::Save( const CDataStore& store, std::ostream& strea
         stream <<  "#OutsideLinesSTDError for each extrema = {";
         for ( int i=0; i<OutsideLinesSTDError.size(); i++)
         {
-            stream << std::scientific << std::setprecision(5) <<  OutsideLinesSTDError[i] << "\t";
+            stream << std::scientific << std::setprecision(5) <<  OutsideLinesSTDError[Rank_PDF[i]] << "\t";
         }
         stream << "}" << std::endl;
     }
@@ -527,7 +542,7 @@ void CLineModelExtremaResult::Save( const CDataStore& store, std::ostream& strea
         stream <<  "#Elv for each extrema = {";
         for ( int i=0; i<Elv.size(); i++)
         {
-            stream << std::fixed << std::setprecision(1) <<  Elv[i] << "\t";
+            stream << std::fixed << std::setprecision(1) <<  Elv[Rank_PDF[i]] << "\t";
         }
         stream << "}" << std::endl;
     }
@@ -537,7 +552,7 @@ void CLineModelExtremaResult::Save( const CDataStore& store, std::ostream& strea
         stream <<  "#Alv for each extrema = {";
         for ( int i=0; i<Alv.size(); i++)
         {
-            stream << std::fixed << std::setprecision(1) <<  Alv[i] << "\t";
+            stream << std::fixed << std::setprecision(1) <<  Alv[Rank_PDF[i]] << "\t";
         }
         stream << "}" << std::endl;
     }
@@ -545,6 +560,7 @@ void CLineModelExtremaResult::Save( const CDataStore& store, std::ostream& strea
 
 
 }
+
 
 /**
  * \brief Prints the results currently in the argument store, in the argument stream.
@@ -559,144 +575,152 @@ void CLineModelExtremaResult::Save( const CDataStore& store, std::ostream& strea
  **/
 void CLineModelExtremaResult::SaveJSON( const CDataStore& store, std::ostream& stream ) const
 {
+
+  TFloat64List order =  store.GetRank();
+
   stream << "{"<< std::endl;
   // save extrema list, on 1 line
-  SaveTFloat64List(stream,"z_extrema", Extrema);
+  SaveTFloat64List(stream,"z_extrema", Extrema, order);
+  stream << "," << std::endl;
+
+  // save extremaPDF list, on 1 line
+  TFloat64List intgPDF = store.GetIntgPDF();
+  SaveTFloat64List(stream,"z_extremaPDF", intgPDF, {});
   stream << "," << std::endl;
 
   // save extremaMerit list, on 1 line
-  SaveTFloat64List(stream,"z_ExtremaMerit",ExtremaMerit);
+  SaveTFloat64List(stream,"z_ExtremaMerit",ExtremaMerit, order);
   stream << "," << std::endl;
   // save extremaMeritContinuum list, on 1 line
-  SaveTFloat64List(stream,"z_ExtremaMeritContinuum",ExtremaMeritContinuum);
+  SaveTFloat64List(stream,"z_ExtremaMeritContinuum",ExtremaMeritContinuum, order);
   stream << "," << std::endl;
   // save extrema Deltaz list, on 1 line
-  SaveTFloat64List(stream,"z_ExtremaDeltaZ",DeltaZ);
+  SaveTFloat64List(stream,"z_ExtremaDeltaZ",DeltaZ, order);
   stream << "," << std::endl;
   // save extrema mTransposeM list, on 1 line
-  SaveTFloat64List(stream,"z_mTransposeM",mTransposeM);
+  SaveTFloat64List(stream,"z_mTransposeM",mTransposeM, order);
   stream << "," << std::endl;
   // save NDof list, on 1 line
-  SaveInt32Vector(stream,"z_NDof",NDof);
+  SaveInt32Vector(stream,"z_NDof",NDof, order);
   stream << "," << std::endl;
   // save CorrScaleMarg list, on 1 line
-  SaveTFloat64List(stream,"z_CorrScaleMarg",CorrScaleMarg);
+  SaveTFloat64List(stream,"z_CorrScaleMarg",CorrScaleMarg, order);
   stream << "," << std::endl;
   // save ExtremaLastPass list, on 1 line
-  SaveTFloat64List(stream,"z_ExtremaLastPass",ExtremaLastPass);
+  SaveTFloat64List(stream,"z_ExtremaLastPass",ExtremaLastPass, order);
   stream << "," << std::endl;
   // save lmfitPass list, on 1 line
-  SaveTFloat64List(stream,"z_lmfitPass",lmfitPass);
+  SaveTFloat64List(stream,"z_lmfitPass",lmfitPass, order);
   stream << "," << std::endl;
   // save snrHa list, on 1 line
-  SaveTFloat64List(stream,"z_snrHa",snrHa);
+  SaveTFloat64List(stream,"z_snrHa",snrHa, order);
   stream << "," << std::endl;
   // save lfHa list, on 1 line
-  SaveTFloat64List(stream,"z_lfHa",lfHa);
+  SaveTFloat64List(stream,"z_lfHa",lfHa, order);
   stream << "," << std::endl;
 
   // save snrOII list, on 1 line
-  SaveTFloat64List(stream,"z_snrOII",snrOII);
+  SaveTFloat64List(stream,"z_snrOII",snrOII, order);
   stream << "," << std::endl;
   // save lfOII list, on 1 line
-  SaveTFloat64List(stream,"z_lfOII",lfOII);
+  SaveTFloat64List(stream,"z_lfOII",lfOII, order);
   stream << "," << std::endl;
   // save bic list, on 1 line
-  SaveTFloat64List(stream,"ext_BIC",bic);
+  SaveTFloat64List(stream,"ext_BIC",bic, order);
   stream << "," << std::endl;
   // save posterior list, on 1 line
-  SaveTFloat64List(stream,"ext_POSTERIOR",Posterior);
+  SaveTFloat64List(stream,"ext_POSTERIOR",Posterior, order);
   stream << "," << std::endl;
   // save SigmaZ list, on 1 line
-  SaveTFloat64List(stream,"ext_SigmaZ",SigmaZ);
+  SaveTFloat64List(stream,"ext_SigmaZ",SigmaZ, order);
   stream << "," << std::endl;
   // save LogArea list, on 1 line
-  SaveTFloat64List(stream,"ext_LogArea",LogArea);
+  SaveTFloat64List(stream,"ext_LogArea",LogArea, order);
   stream << "," << std::endl;
   // save ContinuumIndexes list, on 1 line
-  SaveTContinuumIndexListVector(stream,"ext_ContinuumIndexes",ContinuumIndexes);
+  SaveTContinuumIndexListVector(stream,"ext_ContinuumIndexes",ContinuumIndexes, order);
   stream << "," << std::endl;	
 
 
   // save StrongELSNR list, on 1 line
-  SaveTFloat64List(stream,"ext_StrongELSNR",StrongELSNR);
+  SaveTFloat64List(stream,"ext_StrongELSNR",StrongELSNR, order);
   stream << "," << std::endl;
 
   // save StrongELSNRAboveCut list, on 1 line
-  SaveStringVectorOfVector(stream,"ext_StrongELSNRAboveCut",StrongELSNRAboveCut);
+  SaveStringVectorOfVector(stream,"ext_StrongELSNRAboveCut",StrongELSNRAboveCut, order);
   stream << "," << std::endl;
 
   // save FittedTplName, on 1 line
-  SaveStringVector(stream,"ext_FittedTplName",FittedTplName);
+  SaveStringVector(stream,"ext_FittedTplName",FittedTplName, order);
   stream << "," << std::endl;
   // save FittedTplAmplitude, on 1 line
-  SaveTFloat64List(stream,"ext_FittedTplAmplitude",FittedTplAmplitude);
+  SaveTFloat64List(stream,"ext_FittedTplAmplitude",FittedTplAmplitude, order);
   stream << "," << std::endl;
   // save FittedTplMerit, on 1 line
-  SaveTFloat64List(stream,"ext_FittedTplMerit",FittedTplMerit);
+  SaveTFloat64List(stream,"ext_FittedTplMerit",FittedTplMerit, order);
   stream << "," << std::endl;
   // save FittedTplDustCoeff, on 1 line
   stream << std::setprecision(3);
-  SaveTFloat64List(stream,"ext_FittedTplDustCoeff",FittedTplDustCoeff); 
+  SaveTFloat64List(stream,"ext_FittedTplDustCoeff",FittedTplDustCoeff, order); 
   stream << "," << std::endl; 
 
   // save FittedTplMeiksinIdx, on 1 line
-  SaveInt32Vector(stream,"ext_FittedTplMeiksinIdx",FittedTplMeiksinIdx);
+  SaveInt32Vector(stream,"ext_FittedTplMeiksinIdx",FittedTplMeiksinIdx, order);
   stream << "," << std::endl;
    
   // save FittedTplRedshift, on 1 line
    stream << std::setprecision(8);
-  SaveTFloat64List(stream,"ext_FittedTplRedshift",FittedTplRedshift);  
+  SaveTFloat64List(stream,"ext_FittedTplRedshift",FittedTplRedshift, order);  
   stream << "," << std::endl;
 
   // save FittedTplDtm, on 1 line
       stream << std::setprecision(8);
-  SaveTFloat64List(stream,"ext_FittedTplDtm",FittedTplDtm);
+  SaveTFloat64List(stream,"ext_FittedTplDtm",FittedTplDtm, order);
   stream << "," << std::endl;
   // save FittedTplMtm, on 1 line
     stream << std::setprecision(8);
-  SaveTFloat64List(stream,"ext_FittedTplMtm",FittedTplMtm);
+  SaveTFloat64List(stream,"ext_FittedTplMtm",FittedTplMtm, order);
   stream << "," << std::endl;
   // save FittedTplLogPrior, on 1 line
     stream << std::setprecision(8);
-  SaveTFloat64List(stream,"ext_FittedTplLogPrior",FittedTplLogPrior);
+  SaveTFloat64List(stream,"ext_FittedTplLogPrior",FittedTplLogPrior, order);
   stream << "," << std::endl;
   // save FittedTplpCoeffs, on 1 line
     stream << std::setprecision(8);
-  SaveTFloat64ListOfList(stream,"ext_FittedTplpCoeffs",FittedTplpCoeffs);
+  SaveTFloat64ListOfList(stream,"ext_FittedTplpCoeffs",FittedTplpCoeffs, order);
   stream << "," << std::endl;
 
   // save FittedTplshapeName, on 1 line
-  SaveStringVector(stream,"ext_FittedTplshapeName",FittedTplshapeName);
+  SaveStringVector(stream,"ext_FittedTplshapeName",FittedTplshapeName, order);
   stream << "," << std::endl;
   // save FittedTplshapeIsmCoeff, on 1 line
-  SaveTFloat64List(stream,"ext_FittedTplshapeIsmCoeff",FittedTplshapeIsmCoeff);
+  SaveTFloat64List(stream,"ext_FittedTplshapeIsmCoeff",FittedTplshapeIsmCoeff, order);
   stream << "," << std::endl;
   // save FittedTplshapeAmplitude, on 1 line
-  SaveTFloat64List(stream,"ext_FittedTplshapeAmplitude",FittedTplshapeAmplitude);
+  SaveTFloat64List(stream,"ext_FittedTplshapeAmplitude",FittedTplshapeAmplitude, order);
   stream << "," << std::endl;
   // save FittedTplshapeDtm, on 1 line
-  SaveTFloat64List(stream,"ext_FittedTplshapeDtm",FittedTplshapeDtm);
+  SaveTFloat64List(stream,"ext_FittedTplshapeDtm",FittedTplshapeDtm, order);
   stream << "," << std::endl;
   // save FittedTplshapeMtm, on 1 line
-  SaveTFloat64List(stream,"ext_FittedTplshapeMtm",FittedTplshapeMtm);
+  SaveTFloat64List(stream,"ext_FittedTplshapeMtm",FittedTplshapeMtm, order);
   stream << "," << std::endl;
 
   // save OutsideLinesSTDFlux, on 1 line
   stream << std::scientific << std::setprecision(5);
-  SaveTFloat64List(stream,"ext_OutsideLinesSTDFlux",OutsideLinesSTDFlux);
+  SaveTFloat64List(stream,"ext_OutsideLinesSTDFlux",OutsideLinesSTDFlux, order);
   stream << "," << std::endl;
   // save OutsideLinesSTDError, on 1 line
   stream << std::scientific << std::setprecision(5);
-  SaveTFloat64List(stream,"ext_OutsideLinesSTDError",OutsideLinesSTDError);
+  SaveTFloat64List(stream,"ext_OutsideLinesSTDError",OutsideLinesSTDError, order);
   stream << "," << std::endl;
   // save Elv, on 1 line
   stream << std::fixed << std::setprecision(1);
-  SaveTFloat64List(stream,"ext_Elv",Elv);
+  SaveTFloat64List(stream,"ext_Elv",Elv, order);
   stream << "," << std::endl;
   // save Alv, on 1 line
   stream << std::fixed << std::setprecision(1);
-  SaveTFloat64List(stream,"ext_Alv",Alv);
+  SaveTFloat64List(stream,"ext_Alv",Alv, order);
 
   stream <<  "}";
 

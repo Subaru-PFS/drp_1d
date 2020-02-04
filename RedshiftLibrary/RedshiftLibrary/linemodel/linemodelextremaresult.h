@@ -33,6 +33,9 @@ public:
     //void Load( std::istream& stream );
 
     //Extrema results
+    //TFloat64List            Rank_PDF;    // Ranks extrema
+    TFloat64List            ExtremaPDF;    // Ranks extrema
+
     TFloat64List            Extrema;    // z extrema
     TFloat64List            ExtremaMerit;    // extrema merit
     TFloat64List            ExtremaMeritContinuum; //extrema merit for continuum

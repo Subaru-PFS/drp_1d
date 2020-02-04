@@ -718,6 +718,13 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
         Log.LogInfo( "  Integrating %d candidates proba.", zcandidates_unordered_list.size() );
         zcand->Compute(zcandidates_unordered_list, logzpdf1d->Redshifts, logzpdf1d->valProbaLog);
         ctx.GetDataStore().StoreScopedGlobalResult( "candidatesresult", zcand );
+        
+        //std::shared_ptr<const NSEpic::COperatorResult> sprank(zcand->Rank);
+        
+        ctx.GetDataStore().SetRank(zcand->Rank);
+        ctx.GetDataStore().SetIntgPDF(zcand->ValSumProba);
+
+        //ctx.editResultStore("linemodelsolve.linemodek_extrema", "rank_PDf" and ExtremaPDF, zcand->Rank);
         //zcand->compute recompute sthe order of candidates based on valprobalog at this level we have the candidates ordered
         std::vector<std::string> info {"spc", "fit", "fitcontinuum", "rules", "continuum"};
         for(Int32 f = 0; f<info.size(); f++) {

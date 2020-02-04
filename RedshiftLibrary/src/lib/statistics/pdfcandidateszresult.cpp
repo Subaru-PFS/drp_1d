@@ -90,7 +90,7 @@ void CPdfCandidateszResult::Save( const CDataStore& store, std::ostream& stream 
     stream  << "#" << store.GetSpectrumName() << "\t" << store.GetProcessingID() << "\t";
     stream  << std::endl;
 
-    stream  << "#" << "rank" << "\t" << "redshift" << "\t" << "intgProba";
+    stream  << "#" << "rank" << "\t" << "redshift" << "\t" << "intgProba"<< "\t" << "Rank_PDF";
     if(optMethod==1)
     {
         stream << "\t" << "gaussAmp" << "\t" << "gaussAmpErr" << "\t" << "gaussSigma" << "\t" << "gaussSigmaErr";
@@ -103,7 +103,7 @@ void CPdfCandidateszResult::Save( const CDataStore& store, std::ostream& stream 
         stream << k << "\t"; 
         stream << Redshifts[k] << "\t";
         stream << ValSumProba[k] << "\t";
-
+        stream << Rank[k] << "\t";
         //only for method 1, but leave columns with -1 value ste in compute()
         stream << GaussAmp[k] << "\t";
         stream << GaussAmpErr[k] << "\t";
@@ -118,14 +118,14 @@ void CPdfCandidateszResult::Save( const CDataStore& store, std::ostream& stream 
 void CPdfCandidateszResult::SaveLine( const CDataStore& store, std::ostream& stream ) const
 {
     stream  << store.GetSpectrumName() << "\t" << store.GetProcessingID() << "\t";
-
     for(Int32 k=0; k<Redshifts.size(); k++)
     {
         stream << k << "\t";
         stream << Redshifts[k] << "\t";
         stream << ValSumProba[k] << "\t";
+        stream << Rank[k] << "\t";
         stream << GaussAmp[k] << "\t";
-        stream << GaussSigma[k] << "\t";
+        stream << GaussSigma[k] << "\t"; 
     }
     stream << std::endl;
 }
