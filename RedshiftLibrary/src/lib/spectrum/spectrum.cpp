@@ -8,8 +8,8 @@
 #include <RedshiftLibrary/common/mask.h>
 #include <RedshiftLibrary/debug/assert.h>
 
-#include <math.h>
-#include <stdio.h>
+#include <cmath>
+#include <cstdio>
 #include <algorithm>
 
 #include <gsl/gsl_fit.h>
@@ -229,80 +229,119 @@ void CSpectrum::SetName( const char* name )
     m_Name = name;
 }
 
+const Bool CSpectrum::checkFlux( Float64 flux, Int32 index ) const
+{
+    Log.LogDebug("    CSpectrum::checkFlux - Found flux value (=%e) at index=%d", flux, index);
+    Bool validValue = true;
+    if( std::isnan(flux) ){
+        validValue = false;
+        Log.LogDebug("    CSpectrum::checkFlux - Found nan flux value (=%e) at index=%d", flux, index);
+    }
+    if( std::isinf(flux) ){
+        validValue = false;
+        Log.LogDebug("    CSpectrum::checkFlux - Found inf flux value (=%e) at index=%d", flux, index);
+    }
+    if( flux != flux ){
+        validValue = false;
+        Log.LogDebug("    CSpectrum::checkFlux - Found invalid flux value (=%e) at index=%d", flux, index);
+    }
+    return validValue;
+}
+
+const Bool CSpectrum::checkNoise( Float64 error, Int32 index ) const
+{
+    Log.LogDebug("    CSpectrum::checkNoise - Found noise value (=%e) at index=%d", error, index);
+    Bool validValue = true;
+    if( error < DBL_MIN ){
+        //check if noise is below minimum normalized positive value of double
+        validValue = false;
+        Log.LogDebug("    CSpectrum::checkNoise - Found subnormal noise value (=%e) at index=%d", error, index);
+    }
+    if( std::isnan(error) ){
+        validValue = false;
+        Log.LogDebug("    CSpectrum::checkNoise - Found nan noise value (=%e) at index=%d", error, index);
+    }
+    if( std::isinf(error) ){
+        validValue = false;
+        Log.LogDebug("    CSpectrum::checkNoise - Found inf noise value (=%e) at index=%d", error, index);
+    }
+    if( error != error ){
+        validValue = false;
+        Log.LogDebug("    CSpectrum::checkNoise - Found invalid noise value (=%e) at index=%d", error, index);
+    }
+    return validValue;
+}
+
 const Bool CSpectrum::IsFluxValid( Float64 LambdaMin,  Float64 LambdaMax ) const
 {
-    Bool allzero=true;
-    Bool atleastOneInvalidValue = false;
+    Bool allzero = true;
+    Bool invalidValue = false;
+    Int32 nInvalid = 0;
 
     const Float64* flux = m_FluxAxis.GetSamples();
-    Int32 iMin = m_SpectralAxis.GetIndexAtWaveLength(LambdaMin);
-    Int32 iMax = m_SpectralAxis.GetIndexAtWaveLength(LambdaMax);
-    Log.LogDetail( "CSpectrum::IsFluxValid - checking on the configured lambdarange = (%f, %f)", LambdaMin, LambdaMax );
-    Log.LogDetail( "CSpectrum::IsFluxValid - checking on the true observed spectral axis lambdarange = (%f, %f)", m_SpectralAxis[iMin], m_SpectralAxis[iMax] );
-    for(Int32 i=iMin; i<iMax; i++){
-
-        //check flux
-        if( std::isnan(flux[i]) ){
-            atleastOneInvalidValue = true;
-            Log.LogDebug("    CSpectrum::IsFluxValid - Found nan flux value (=%e) at index=%d", i, flux[i]);
-        }
-        if( std::isinf(flux[i]) ){
-            atleastOneInvalidValue = true;
-            Log.LogDebug("    CSpectrum::IsFluxValid - Found inf flux value (=%e) at index=%d", i, flux[i]);
-        }
-        if( flux[i] != flux[i] ){
-            atleastOneInvalidValue = true;
-            Log.LogDebug("    CSpectrum::IsFluxValid - Found invalid flux value (=%e) at index=%d", i, flux[i]);
-        }
-
-        //all zero check
-        if( flux[i] != 0.0 ){
-            allzero = false;
-            //Log.LogDebug("    CSpectrum::IsFluxValid - Found non zero and valid flux value (=%e) at index=%d", i, flux[i]);
-        }
+    if (LambdaMin < m_SpectralAxis[0] || LambdaMax > m_SpectralAxis[m_SpectralAxis.GetSamplesCount()-1]){
+        return false;
     }
-    Bool valid = !allzero && !atleastOneInvalidValue;
-    return valid;
+    else
+    {
+        Int32 iMin = m_SpectralAxis.GetIndexAtWaveLength(LambdaMin);
+        Int32 iMax = m_SpectralAxis.GetIndexAtWaveLength(LambdaMax);
+        Log.LogDetail( "CSpectrum::IsFluxValid - checking on the configured lambdarange = (%f, %f)", LambdaMin, LambdaMax );
+        Log.LogDetail( "CSpectrum::IsFluxValid - checking on the true observed spectral axis lambdarange = (%f, %f)", m_SpectralAxis[iMin], m_SpectralAxis[iMax] );
+        for(Int32 i=iMin; i<=iMax; i++){
+            //check flux
+            Bool validSample = checkFlux(flux[i], i);
+
+            if(!validSample){
+                invalidValue = true;
+                nInvalid++;
+            }
+
+            //all zero check
+            if( flux[i] != 0.0 ){
+                allzero = false;
+                //Log.LogDebug("    CSpectrum::IsFluxValid - Found non zero and valid flux value (=%e) at index=%d", i, flux[i]);
+            }
+        }
+        Bool valid = !invalidValue && !allzero;
+        if(nInvalid>0)
+        {
+            Log.LogDetail("    CSpectrum::IsFluxValid - Found %d invalid flux samples", nInvalid);
+        }
+        return valid;
+    }
 }
 
 const Bool CSpectrum::IsNoiseValid( Float64 LambdaMin,  Float64 LambdaMax ) const
 {
-    Bool valid=true;
+    Bool valid = true;
     Int32 nInvalid = 0;
 
     const TFloat64List& error = m_FluxAxis.GetError();
-    Int32 iMin = m_SpectralAxis.GetIndexAtWaveLength(LambdaMin);
-    Int32 iMax = m_SpectralAxis.GetIndexAtWaveLength(LambdaMax);
-    Log.LogDebug("    CSpectrum::IsNoiseValid - wl=%f iMin=%d error[iMin]=%e", LambdaMin, iMin, error[iMin]);
-    Log.LogDebug("    CSpectrum::IsNoiseValid - wl=%f iMax=%d error[iMax]=%e", LambdaMax, iMax, error[iMax]);
-    for(Int32 i=iMin; i<iMax; i++){
-        Bool validSample=true;
-        if( error[i] <= 0 ){
-            validSample = false;
-            Log.LogDebug("    CSpectrum::IsNoiseValid - Found negative noise value (=%e) at index=%d", i, error[i]);
-        }
-        if( std::isnan(error[i]) ){
-            validSample = false;
-            Log.LogDebug("    CSpectrum::IsNoiseValid - Found nan noise value (=%e) at index=%d", i, error[i]);
-        }
-        if( std::isinf(error[i]) ){
-            validSample = false;
-            Log.LogDebug("    CSpectrum::IsNoiseValid - Found inf noise value (=%e) at index=%d", i, error[i]);
-        }
-        if( error[i] != error[i] ){
-            validSample = false;
-            Log.LogDebug("    CSpectrum::IsNoiseValid - Found != noise value (=%e) at index=%d", i, error[i]);
-        }
-        if(!validSample){
-            valid=false;
-            nInvalid++;
-        }
+    if (LambdaMin < m_SpectralAxis[0] || LambdaMax > m_SpectralAxis[m_SpectralAxis.GetSamplesCount()-1]){
+        return false;
     }
-    if(nInvalid>0)
+    else
     {
-        Log.LogDetail("    CSpectrum::IsNoiseValid - Found %d invalid noise samples", nInvalid);
+        Int32 iMin = m_SpectralAxis.GetIndexAtWaveLength(LambdaMin);
+        Int32 iMax = m_SpectralAxis.GetIndexAtWaveLength(LambdaMax);
+        Log.LogDebug("    CSpectrum::IsNoiseValid - wl=%f iMin=%d error[iMin]=%e", LambdaMin, iMin, error[iMin]);
+        Log.LogDebug("    CSpectrum::IsNoiseValid - wl=%f iMax=%d error[iMax]=%e", LambdaMax, iMax, error[iMax]);
+        for(Int32 i=iMin; i<=iMax; i++){
+            //check noise
+            Bool validSample = checkNoise(error[i], i);
+
+            if(!validSample){
+                valid = false;
+                nInvalid++;
+            }
+        }
+        if(nInvalid>0)
+        {
+            Log.LogDetail("    CSpectrum::IsNoiseValid - Found %d invalid noise samples", nInvalid);
+        }
+        return valid;
     }
-    return valid;
 }
 
 Bool CSpectrum::correctSpectrum( Float64 LambdaMin,  Float64 LambdaMax, Float64 coeffCorr )
@@ -321,30 +360,10 @@ Bool CSpectrum::correctSpectrum( Float64 LambdaMin,  Float64 LambdaMax, Float64 
     Float64 minFlux = DBL_MAX;
     for(Int32 i=iMin; i<=iMax; i++){
         //Log.LogDebug("    CSpectrum::correctSpectrum - debug - RAW sample for maxFlux/minNoise. Found err(=%f) and flux=%f", error[i], flux[i]);
-        //check noise
-        if( error[i] <= 0 ){
-            continue;
-        }
-        if( std::isnan(error[i]) ){
-            continue;
-        }
-        if( std::isinf(error[i]) ){
-            continue;
-        }
-        if( error[i] != error[i] ){
-            continue;
-        }
+        //check noise & flux
+	if (!checkNoise(error[i], i) || !checkFlux(flux[i], i))
+	    continue;
 
-        //check flux
-        if( std::isnan(flux[i]) ){
-            continue;
-        }
-        if( std::isinf(flux[i]) ){
-            continue;
-        }
-        if( flux[i] != flux[i] ){
-            continue;
-        }
         //Log.LogDebug("    CSpectrum::correctSpectrum - debug - valid sample for maxFlux/minNoise. Found err(=%f) and flux=%f", error[i], flux[i]);
         if(error[i] > maxNoise)
         {
@@ -363,43 +382,12 @@ Bool CSpectrum::correctSpectrum( Float64 LambdaMin,  Float64 LambdaMax, Float64 
     if(maxNoise==-DBL_MAX)
     {
         Log.LogError("    CSpectrum::correctSpectrum - unable to set maxNoise value.");
-        return false;
+        throw std::runtime_error("    CSpectrum::correctSpectrum - impossible to correct input spectrum.");
     }
 
     for(Int32 i=iMin; i<=iMax; i++){
-        Bool validSample=true;
-
-        //check noise
-        if( error[i] <= 0 ){
-            validSample = false;
-            Log.LogDebug("    CSpectrum::correctSpectrum - Found negative noise value (=%f) at index=%d (w=%f)", i, error[i], m_SpectralAxis[i]);
-        }
-        if( std::isnan(error[i]) ){
-            validSample = false;
-            Log.LogDebug("    CSpectrum::correctSpectrum - Found nan noise value (=%f) at index=%d (w=%f)", i, error[i], m_SpectralAxis[i]);
-        }
-        if( std::isinf(error[i]) ){
-            validSample = false;
-            Log.LogDebug("    CSpectrum::correctSpectrum - Found inf noise value (=%f) at index=%d (w=%f)", i, error[i], m_SpectralAxis[i]);
-        }
-        if( error[i] != error[i] ){
-            validSample = false;
-            Log.LogDebug("    CSpectrum::correctSpectrum - Found != noise value (=%f) at index=%d (w=%f)", i, error[i], m_SpectralAxis[i]);
-        }
-
-        //check flux
-        if( std::isnan(flux[i]) ){
-            validSample = false;
-            Log.LogDebug("    CSpectrum::correctSpectrum - Found nan flux value (=%f) at index=%d (w=%f)", i, flux[i], m_SpectralAxis[i]);
-        }
-        if( std::isinf(flux[i]) ){
-            validSample = false;
-            Log.LogDebug("    CSpectrum::correctSpectrum - Found inf flux value (=%f) at index=%d (w=%f)", i, flux[i], m_SpectralAxis[i]);
-        }
-        if( flux[i] != flux[i] ){
-            validSample = false;
-            Log.LogDebug("    CSpectrum::correctSpectrum - Found != flux value (=%f) at index=%d (w=%f)", i, flux[i], m_SpectralAxis[i]);
-        }
+        //check noise & flux
+        Bool validSample = checkNoise(error[i], i) && checkFlux(flux[i], i);
 
         if(!validSample){
             error[i]=maxNoise*coeffCorr;
@@ -414,7 +402,6 @@ Bool CSpectrum::correctSpectrum( Float64 LambdaMin,  Float64 LambdaMax, Float64 
     }
     return corrected;
 }
-
 
 const std::string& CSpectrum::GetFullPath() const
 {
