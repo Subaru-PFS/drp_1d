@@ -40,10 +40,10 @@ void COperatorResult::SaveTFloat64List(std::ostream& stream,std::string name,TFl
     stream <<  "\""<< name<<"\" : [";
     for ( int i=0; i<data.size(); i++)
     {
-      if(!b)
-        SaveFloat64(stream,data[order[i]]);
-      else //case when data is well sorted
+      if(b)
         SaveFloat64(stream,data[i]);
+      else //case when data is well sorted
+        SaveFloat64(stream,data[order[i]]);
       if( i< data.size()-1) stream << ",";
     }
     stream << "]" ;
@@ -71,11 +71,15 @@ void COperatorResult::SaveTFloat64ListOfList(std::ostream& stream,std::string na
 
 void COperatorResult::SaveInt32Vector(std::ostream& stream,std::string name,std::vector<Int32> data, TFloat64List order) const
 {
+  Bool b = order.size()==0;
   if(data.size()>0){
     stream <<  "\""<< name<<"\" : [";
     for ( int i=0; i<data.size(); i++)
     {
-      stream <<  data[order[i]];
+      if(b)
+        stream <<  data[i];
+      else //case when data is well sorted
+        stream <<  data[order[i]];
       if( i< data.size()-1) stream << ",";
     }
     stream << "]" ;
@@ -84,11 +88,15 @@ void COperatorResult::SaveInt32Vector(std::ostream& stream,std::string name,std:
 
 void COperatorResult::SaveStringVector(std::ostream& stream,std::string name,std::vector<std::string> data, TFloat64List order) const 
 {
-if(data.size()>0){
+  Bool b = order.size()==0;
+  if(data.size()>0){
     stream <<  "\""<< name<<"\" : [";
     for ( int i=0; i<data.size(); i++)
     {
-      stream << "\"" << data[order[i]] << "\"";
+      if(b)
+        stream << "\"" << data[i] << "\""; 
+      else
+        stream << "\"" << data[order[i]] << "\""; 
       if( i< data.size()-1) stream << ",";
     }
     stream << "]" ;
@@ -98,10 +106,15 @@ if(data.size()>0){
 void COperatorResult::SaveStringVectorOfVector(std::ostream& stream,std::string name,std::vector<std::vector<std::string>> data, TFloat64List order) const
 {
 if(data.size()>0){
+    Bool b = order.size()==0;
     stream <<  "\""<< name <<"\" : [";
     for ( int i=0; i<data.size(); i++)
     {
-      std::vector<std::string> line_list = data[order[i]];
+      std::vector<std::string> line_list;
+      if(b)
+        line_list = data[i];
+      else
+        line_list = data[order[i]];
       stream << "[";
       for ( int ki=0; ki<line_list.size(); ki++)
       {

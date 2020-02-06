@@ -31,7 +31,7 @@ public:
 
     Int32                       optMethod; //0: direct integration, 1:gaussian fit
     Float64                     Fullwidth;
-
+    std::vector<std::string> ExtremaIDs; //also sort ids
 
     TFloat64List           		Redshifts;
     TFloat64List           		ValSumProba;
@@ -48,6 +48,8 @@ public:
 private:
     void SortByRank();
     void SortByValSumProba(TFloat64List &flist);
+    //to sort IDs
+    void SortIDsByValSumProba(std::vector<std::string>& flist);
 
 };
 

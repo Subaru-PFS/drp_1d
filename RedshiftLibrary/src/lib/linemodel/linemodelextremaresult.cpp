@@ -6,8 +6,8 @@
 #include <string>
 #include <fstream>
 #include <iomanip>      // std::setprecision
-
-#include <string>
+#include <iostream>
+#include <numeric>
 using namespace NSEpic;
 
 
@@ -30,6 +30,7 @@ CLineModelExtremaResult::~CLineModelExtremaResult()
 void CLineModelExtremaResult::Resize(Int32 size)
 {   
     ExtremaPDF.resize(size);
+    ExtremaIDs.resize(size);
     Extrema.resize(size);
     ExtremaMerit.resize(size);
     ExtremaMeritContinuum.resize(size);
@@ -104,11 +105,10 @@ void CLineModelExtremaResult::SaveLine(const CDataStore &store, std::ostream& st
  * Print each SigmaZ as a comment.
  * Print each LogArea as a comment.
  **/
-void CLineModelExtremaResult::Save( const CDataStore& store, std::ostream& stream ) const
+void CLineModelExtremaResult::Save( const CDataStore& store, std::ostream& stream) const
 {
     //Read directly from store; but couldnt save in the member variable!!!
     TFloat64List Rank_PDF =  store.GetRank();
-    TFloat64List ExtremaPDF = store.GetIntgPDF();
     // save extrema list, on 1 line
     if(Extrema.size()>0){
         stream <<  "#Extrema for z = {";
@@ -118,17 +118,39 @@ void CLineModelExtremaResult::Save( const CDataStore& store, std::ostream& strea
         }
         stream << "}" << std::endl;
     }
+    if(ExtremaIDs.size()>0){
+        stream <<  "#ExtremaIDs for z = {";
+        for ( int i=0; i<ExtremaIDs.size(); i++)
+        {
+            std::string s = ExtremaIDs[Rank_PDF[i]];
+            stream <<  s  << "\t";
+        }
+        stream << "}" << std::endl;
+    }
+   //below is a sign that we are saving firstpass data
+   //TODO: check if removing these info is valid for all types of spectra
+   bool zeros = std::all_of(ExtremaMeritContinuum.begin(), ExtremaMeritContinuum.end(), [](int i) { return i==0; });
+   if(!zeros){
+        // save extrema reference rank, used to map
+        if(Extrema.size()>0){
+          stream <<  "#Extrema final Rank for z = {";
+            for ( int i=0; i<Extrema.size(); i++)
+            {
+                stream <<  i << "\t";
+            }
+            stream << "}" << std::endl;
+        }
 
-
-    if(ExtremaPDF.size()>0){
-        stream <<  "#Extrema PDF for z = {";
+     TFloat64List ExtremaPDF = store.GetIntgPDF();
+     if(ExtremaPDF.size()>0){
+        stream <<  "#Extrema IntgPDF for z = {";
         for ( int i=0; i<ExtremaPDF.size(); i++)
         {
             stream <<  ExtremaPDF[i] << "\t";
         }
         stream << "}" << std::endl;
+     }
     }
-
     // save extremaMerit list, on 1 line
     if(ExtremaMerit.size()>0){
         stream <<  "#ExtremaMerit for z = {";
@@ -138,7 +160,7 @@ void CLineModelExtremaResult::Save( const CDataStore& store, std::ostream& strea
         }
         stream << "}" << std::endl;
     }
-
+if(!zeros){
     // save extremaMeritContinuum list, on 1 line
     if(ExtremaMeritContinuum.size()>0){
         stream <<  "#ExtremaMeritContinuum for z = {";
@@ -346,7 +368,7 @@ void CLineModelExtremaResult::Save( const CDataStore& store, std::ostream& strea
         }
         stream << "}" << std::endl;
     }
-
+}
     // save FittedTplName, on 1 line
     if(FittedTplName.size()>0){
         stream <<  "#FittedTplName for each extrema = {";
@@ -431,7 +453,7 @@ void CLineModelExtremaResult::Save( const CDataStore& store, std::ostream& strea
         }
         stream << "}" << std::endl;
     }
-
+ if(!zeros){
     // save FittedTplLogPrior, on 1 line
     if(FittedTplLogPrior.size()>0){
         stream <<  "#FittedTplLogPrior for each extrema = {";
@@ -536,7 +558,7 @@ void CLineModelExtremaResult::Save( const CDataStore& store, std::ostream& strea
         }
         stream << "}" << std::endl;
     }
-
+ }
     // save Elv, on 1 line
     if(Elv.size()>0){
         stream <<  "#Elv for each extrema = {";
@@ -573,9 +595,9 @@ void CLineModelExtremaResult::Save( const CDataStore& store, std::ostream& strea
  * Print each SigmaZ as a comment.
  * Print each LogArea as a comment.
  **/
-void CLineModelExtremaResult::SaveJSON( const CDataStore& store, std::ostream& stream ) const
+void CLineModelExtremaResult::SaveJSON( const CDataStore& store, std::ostream& stream) const
 {
-
+  //TODO: check if a re-ordering is useful for firstpass as well
   TFloat64List order =  store.GetRank();
 
   stream << "{"<< std::endl;
@@ -583,14 +605,30 @@ void CLineModelExtremaResult::SaveJSON( const CDataStore& store, std::ostream& s
   SaveTFloat64List(stream,"z_extrema", Extrema, order);
   stream << "," << std::endl;
 
-  // save extremaPDF list, on 1 line
-  TFloat64List intgPDF = store.GetIntgPDF();
-  SaveTFloat64List(stream,"z_extremaPDF", intgPDF, {});
+  //warning: for results of second pass, no need to reorder ids cause already done in pdfcandidateresult
+  //while is necessary for firstpassids!!
+  // save extrema list, on 1 line
+  SaveStringVector(stream,"z_extremaIDs", ExtremaIDs, order);
   stream << "," << std::endl;
 
-  // save extremaMerit list, on 1 line
+  bool zeros = std::all_of(ExtremaMeritContinuum.begin(), ExtremaMeritContinuum.end(), [](int i) { return i==0; });
+  if(!zeros){
+    // save extremum final rank list, on 1 line
+    std::vector<int> finalRanks(Extrema.size());
+    std::iota(finalRanks.begin(), finalRanks.end(), 0);
+    SaveInt32Vector(stream,"z_ExtremaFinalRank", finalRanks, {});
+    stream << "," << std::endl;
+
+    // save extremaPDF list, on 1 line
+    TFloat64List intgPDF = store.GetIntgPDF();
+    SaveTFloat64List(stream,"z_extremaIntgPDF", intgPDF, {});
+    stream << "," << std::endl;
+  }
+    // save extremaMerit list, on 1 line
   SaveTFloat64List(stream,"z_ExtremaMerit",ExtremaMerit, order);
   stream << "," << std::endl;
+
+  if(!zeros){
   // save extremaMeritContinuum list, on 1 line
   SaveTFloat64List(stream,"z_ExtremaMeritContinuum",ExtremaMeritContinuum, order);
   stream << "," << std::endl;
@@ -649,7 +687,7 @@ void CLineModelExtremaResult::SaveJSON( const CDataStore& store, std::ostream& s
   // save StrongELSNRAboveCut list, on 1 line
   SaveStringVectorOfVector(stream,"ext_StrongELSNRAboveCut",StrongELSNRAboveCut, order);
   stream << "," << std::endl;
-
+}
   // save FittedTplName, on 1 line
   SaveStringVector(stream,"ext_FittedTplName",FittedTplName, order);
   stream << "," << std::endl;
@@ -681,6 +719,8 @@ void CLineModelExtremaResult::SaveJSON( const CDataStore& store, std::ostream& s
     stream << std::setprecision(8);
   SaveTFloat64List(stream,"ext_FittedTplMtm",FittedTplMtm, order);
   stream << "," << std::endl;
+
+  if(!zeros){
   // save FittedTplLogPrior, on 1 line
     stream << std::setprecision(8);
   SaveTFloat64List(stream,"ext_FittedTplLogPrior",FittedTplLogPrior, order);
@@ -714,6 +754,7 @@ void CLineModelExtremaResult::SaveJSON( const CDataStore& store, std::ostream& s
   stream << std::scientific << std::setprecision(5);
   SaveTFloat64List(stream,"ext_OutsideLinesSTDError",OutsideLinesSTDError, order);
   stream << "," << std::endl;
+  }
   // save Elv, on 1 line
   stream << std::fixed << std::setprecision(1);
   SaveTFloat64List(stream,"ext_Elv",Elv, order);

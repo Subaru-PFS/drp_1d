@@ -716,7 +716,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
         }
 
         Log.LogInfo( "  Integrating %d candidates proba.", zcandidates_unordered_list.size() );
-        zcand->Compute(zcandidates_unordered_list, logzpdf1d->Redshifts, logzpdf1d->valProbaLog);
+        zcand->Compute(zcandidates_unordered_list, logzpdf1d->Redshifts, logzpdf1d->valProbaLog, );
         ctx.GetDataStore().StoreScopedGlobalResult( "candidatesresult", zcand );
         
         //std::shared_ptr<const NSEpic::COperatorResult> sprank(zcand->Rank);

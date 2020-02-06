@@ -68,6 +68,7 @@ public:
     TFloat64List            Redshifts;  // z axis
     TFloat64List            ChiSquare;  // min chi2
     TFloat64List            ScaleMargCorrection;  // margCorrection for min chi2
+    std::vector<std::string> ExtremaIDs; //extrema IDs, i.g.,"E1", inherited from firstpass results
 
     std::vector<TFloat64List> ChiSquareTplshapes; // full chi2 results (for each tplshape)
     std::vector<Float64> PriorTplshapes; // model prior (for each tplshape)

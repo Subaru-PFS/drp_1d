@@ -27,7 +27,7 @@ void CPdfCandidateszResult::Resize(Int32 n)
     Redshifts.resize(n);
     ValSumProba.resize(n);
     Rank.resize(n);
-
+    ExtremaIDs.resize(n) ;
     //only for method 1
     GaussAmp.resize(n);
     GaussSigma.resize(n);
@@ -53,6 +53,7 @@ Int32 CPdfCandidateszResult::Compute( std::vector<Float64> zc,  std::vector<Floa
     {
         Rank[kc] = -1;
         Redshifts[kc] = zc[kc];
+        ExtremaIDs[kc] = "";
         if(optMethod==0)
         {
             ValSumProba[kc] = pdfz.getCandidateSumTrapez( Pdfz, PdfProbalog, zc[kc], Fullwidth);
@@ -90,7 +91,7 @@ void CPdfCandidateszResult::Save( const CDataStore& store, std::ostream& stream 
     stream  << "#" << store.GetSpectrumName() << "\t" << store.GetProcessingID() << "\t";
     stream  << std::endl;
 
-    stream  << "#" << "rank" << "\t" << "redshift" << "\t" << "intgProba"<< "\t" << "Rank_PDF";
+    stream  << "#" << "rank" << "\t"  << "IDs" << "\t"<< "redshift" << "\t" << "intgProba"<< "\t" << "Rank_PDF";
     if(optMethod==1)
     {
         stream << "\t" << "gaussAmp" << "\t" << "gaussAmpErr" << "\t" << "gaussSigma" << "\t" << "gaussSigmaErr";
@@ -101,6 +102,7 @@ void CPdfCandidateszResult::Save( const CDataStore& store, std::ostream& stream 
     for(Int32 k=0; k<Redshifts.size(); k++)
     {
         stream << k << "\t"; 
+        stream << ExtremaIDs[k] << "\t";
         stream << Redshifts[k] << "\t";
         stream << ValSumProba[k] << "\t";
         stream << Rank[k] << "\t";
@@ -121,6 +123,7 @@ void CPdfCandidateszResult::SaveLine( const CDataStore& store, std::ostream& str
     for(Int32 k=0; k<Redshifts.size(); k++)
     {
         stream << k << "\t";
+        stream << ExtremaIDs[k] << "\t";
         stream << Redshifts[k] << "\t";
         stream << ValSumProba[k] << "\t";
         stream << Rank[k] << "\t";
@@ -137,6 +140,7 @@ void CPdfCandidateszResult::SortByRank()
         Rank[i] = i;
     }
     SortByValSumProba(Rank);//update ranks based on valproba
+    SortIDsByValSumProba(ExtremaIDs);//update ranks based on valproba
     SortByValSumProba(Redshifts);
     for (Int32 i = 0; i <Rank.size(); i++){
         if(Rank[i]!=i){
@@ -161,6 +165,29 @@ void CPdfCandidateszResult::SortByValSumProba(TFloat64List& flist)
 
     // This is a vector of {value,index} pairs
     vector<pair<Float64,Float64> > vp;
+    vp.reserve(Redshifts.size());
+    for (Int32 i = 0 ; i < Redshifts.size() ; i++) {
+        vp.push_back(make_pair(ValSumProba[i], flist[i]));
+    }
+    std::sort(vp.rbegin(), vp.rend()); //sort reverse order
+    for (Int32 i = 0 ; i < vp.size() ; i++) {
+        sortedProba.push_back(vp[i].first);
+        sortedFlist.push_back(vp[i].second);
+    }
+
+    for (Int32 i = 0 ; i < Redshifts.size() ; i++) {
+        flist[i] = sortedFlist[i];
+    }
+}
+
+void CPdfCandidateszResult::SortIDsByValSumProba(std::vector<std::string>& flist)
+{
+    //sort the valProbaSum and reorder flist accordingly
+    TFloat64List sortedProba;
+    std::vector<std::string> sortedFlist;
+
+    // This is a vector of {value,index} pairs
+    vector<pair<Float64,std::string> > vp;
     vp.reserve(Redshifts.size());
     for (Int32 i = 0 ; i < Redshifts.size() ; i++) {
         vp.push_back(make_pair(ValSumProba[i], flist[i]));

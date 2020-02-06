@@ -22,8 +22,8 @@ public:
 
     void Resize(Int32 size);
 
-    void Save( const CDataStore& store, std::ostream& stream ) const;
-    void SaveJSON( const CDataStore& store, std::ostream& stream ) const;
+    void Save( const CDataStore& store, std::ostream& stream) const;
+    void SaveJSON( const CDataStore& store, std::ostream& stream) const;
 
     void SaveLine( const CDataStore& store, std::ostream& stream ) const;
     inline Int32 GetEvidenceFromPdf(const CDataStore& store, Float64 &evidence) const
@@ -35,6 +35,7 @@ public:
     //Extrema results
     //TFloat64List            Rank_PDF;    // Ranks extrema
     TFloat64List            ExtremaPDF;    // Ranks extrema
+    std::vector<std::string> ExtremaIDs;    // Ranks extrema 
 
     TFloat64List            Extrema;    // z extrema
     TFloat64List            ExtremaMerit;    // extrema merit
