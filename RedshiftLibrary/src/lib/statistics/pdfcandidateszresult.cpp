@@ -38,7 +38,7 @@ void CPdfCandidateszResult::Resize(Int32 n)
 /**
  * @brief CPdfCandidateszResult::Compute
  */
-Int32 CPdfCandidateszResult::Compute( std::vector<Float64> zc,  std::vector<Float64> Pdfz,  std::vector<Float64> PdfProbalog )
+Int32 CPdfCandidateszResult::Compute( std::vector<Float64> zc,  std::vector<Float64> Pdfz,  std::vector<Float64> PdfProbalog, std::vector<std::string> IDs)
 {
     if(optMethod==0)
     {
@@ -53,7 +53,7 @@ Int32 CPdfCandidateszResult::Compute( std::vector<Float64> zc,  std::vector<Floa
     {
         Rank[kc] = -1;
         Redshifts[kc] = zc[kc];
-        ExtremaIDs[kc] = "";
+        ExtremaIDs[kc] = IDs[kc];
         if(optMethod==0)
         {
             ValSumProba[kc] = pdfz.getCandidateSumTrapez( Pdfz, PdfProbalog, zc[kc], Fullwidth);

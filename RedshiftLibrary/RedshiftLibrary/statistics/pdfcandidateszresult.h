@@ -25,7 +25,7 @@ public:
     }
 
     void Resize(Int32 n);
-    Int32 Compute(std::vector<Float64> zc , std::vector<Float64> Pdfz, std::vector<Float64> PdfProbalog);
+    Int32 Compute(std::vector<Float64> zc , std::vector<Float64> Pdfz, std::vector<Float64> PdfProbalog, std::vector<std::string> IDs);
     void SetFullWidth(Float64 width);
 
 

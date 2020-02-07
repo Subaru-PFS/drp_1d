@@ -33,7 +33,6 @@ public:
     //void Load( std::istream& stream );
 
     //Extrema results
-    //TFloat64List            Rank_PDF;    // Ranks extrema
     TFloat64List            ExtremaPDF;    // Ranks extrema
     std::vector<std::string> ExtremaIDs;    // Ranks extrema 
 

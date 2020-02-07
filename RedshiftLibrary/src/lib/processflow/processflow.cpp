@@ -715,11 +715,19 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
             throw std::runtime_error("Extract Proba. for z candidates: no results retrieved from scope");
         }
 
+        //if we want to have IDs in the candidateresults.csv, two options: pass the IDs to ->compute
+        //or use zcand->Rank to sort them here
+        auto v = ctx.GetDataStore().GetGlobalResult("linemodelsolve.linemodel").lock();
+        auto v_ = std::dynamic_pointer_cast<const CLineModelResult>(v);
+        /*for(Int32 i = 0; i<zcand->Rank.size(); i++) {
+            zcand->ExtremaIDs[i] = v_->ExtremaResult.ExtremaIDs[zcand->Rank[i]];
+        }*/
+
         Log.LogInfo( "  Integrating %d candidates proba.", zcandidates_unordered_list.size() );
-        zcand->Compute(zcandidates_unordered_list, logzpdf1d->Redshifts, logzpdf1d->valProbaLog, );
-        ctx.GetDataStore().StoreScopedGlobalResult( "candidatesresult", zcand );
+        zcand->Compute(zcandidates_unordered_list, logzpdf1d->Redshifts, logzpdf1d->valProbaLog, v_->ExtremaResult.ExtremaIDs);
         
-        //std::shared_ptr<const NSEpic::COperatorResult> sprank(zcand->Rank);
+        
+        ctx.GetDataStore().StoreScopedGlobalResult( "candidatesresult", zcand );
         
         ctx.GetDataStore().SetRank(zcand->Rank);
         ctx.GetDataStore().SetIntgPDF(zcand->ValSumProba);
