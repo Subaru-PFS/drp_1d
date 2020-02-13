@@ -719,9 +719,6 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
         //or use zcand->Rank to sort them here
         auto v = ctx.GetDataStore().GetGlobalResult("linemodelsolve.linemodel").lock();
         auto v_ = std::dynamic_pointer_cast<const CLineModelResult>(v);
-        /*for(Int32 i = 0; i<zcand->Rank.size(); i++) {
-            zcand->ExtremaIDs[i] = v_->ExtremaResult.ExtremaIDs[zcand->Rank[i]];
-        }*/
 
         Log.LogInfo( "  Integrating %d candidates proba.", zcandidates_unordered_list.size() );
         zcand->Compute(zcandidates_unordered_list, logzpdf1d->Redshifts, logzpdf1d->valProbaLog, v_->ExtremaResult.ExtremaIDs);
