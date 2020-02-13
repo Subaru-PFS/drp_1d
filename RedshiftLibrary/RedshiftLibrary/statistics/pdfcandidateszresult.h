@@ -35,7 +35,7 @@ public:
 
     TFloat64List           		Redshifts;
     TFloat64List           		ValSumProba;
-    TFloat64List                Rank;
+    TInt32List                Rank;
     //opt 1: direct integration
     //
     //opt 2: gaussian fit
@@ -50,6 +50,7 @@ private:
     void SortByValSumProba(TFloat64List &flist);
     //to sort IDs
     void SortIDsByValSumProba(std::vector<std::string>& flist);
+    void SortByValSumProbaInt(TInt32List& flist);
 
 };
 

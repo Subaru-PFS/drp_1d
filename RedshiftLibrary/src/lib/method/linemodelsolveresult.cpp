@@ -222,16 +222,16 @@ Bool CLineModelSolveResult::GetBestRedshiftFromPdf(const CDataStore& store,
             Log.LogError( "GetBestRedshiftFromPdf: pdf samplecount != chisquare samplecount");
             return false;
         }
-
-        for( Int32 i=0; i<lineModelResult->ExtremaResult.Extrema.size(); i++ )
+        Int32 bestIdx = -1;
+        
+        for(Int32 kval=0; kval<lineModelResult->ExtremaResult.ExtremaExtendedRedshifts.size(); kval++)
         {
-            for(Int32 kval=0; kval<lineModelResult->ExtremaResult.ExtremaExtendedRedshifts.size(); kval++)
-            {
                 Float64 zInCandidateRange = lineModelResult->ExtremaResult.ExtremaExtendedRedshifts[kval];
                 UInt32 solIdx = logzpdf1d->getIndex(zInCandidateRange);
                 if(solIdx<0 || solIdx>=logzpdf1d->valProbaLog.size())
                 {
-                    Log.LogError( "GetBestRedshiftFromPdf: pdf proba value not found for extremumIndex = %d", i);
+                    Int32  d = lineModelResult->ExtremaResult.ExtremaExtendedRedshifts.size()/lineModelResult->ExtremaResult.Extrema.size(); 
+                    Log.LogError( "GetBestRedshiftFromPdf: pdf proba value not found for extremumIndex = %d", kval/d);
                     return false;
                 }
 
@@ -280,23 +280,30 @@ Bool CLineModelSolveResult::GetBestRedshiftFromPdf(const CDataStore& store,
                 //if( merit < tmpMerit )
                 //if(probaLog>tmpProbaLog)
                 //if(flux_integral>tmpIntgProba)
+                 if(kval == lineModelResult->ExtremaResult.ExtremaExtendedRedshifts.size() - 1){
+                     Int32 c;
+                 }
                 if(val>bestval)
                 {
                     tmpIntgProba = flux_integral;
                     tmpProbaLog = probaLog;
                     tmpRedshift = zInCandidateRange;//lineModelResult->ExtremaResult.ExtremaLastPass[i];
-                    tmpSigma = lineModelResult->ExtremaResult.DeltaZ[i];
-                    tmpSnrHa = lineModelResult->ExtremaResult.snrHa[i];
-                    tmpLFHa = lineModelResult->ExtremaResult.lfHa[i];
-                    tmpSnrOII = lineModelResult->ExtremaResult.snrOII[i];
-                    tmpLFOII = lineModelResult->ExtremaResult.lfOII[i];
-                    tmpModelTplratio = lineModelResult->ExtremaResult.FittedTplshapeName[i];
-                    tmpModelTplcontinuum = lineModelResult->ExtremaResult.FittedTplName[i];
+                    bestIdx = kval;   
                 }
-            }
+        
         }
 
+        Int32  d = lineModelResult->ExtremaResult.ExtremaExtendedRedshifts.size()/lineModelResult->ExtremaResult.Extrema.size(); 
+        bestIdx = bestIdx/d;
 
+        tmpSigma = lineModelResult->ExtremaResult.DeltaZ[bestIdx];
+        tmpSnrHa = lineModelResult->ExtremaResult.snrHa[bestIdx];
+        tmpLFHa = lineModelResult->ExtremaResult.lfHa[bestIdx];
+        tmpSnrOII = lineModelResult->ExtremaResult.snrOII[bestIdx];
+        tmpLFOII = lineModelResult->ExtremaResult.lfOII[bestIdx];
+        tmpModelTplratio = lineModelResult->ExtremaResult.FittedTplshapeName[bestIdx];
+        tmpModelTplcontinuum = lineModelResult->ExtremaResult.FittedTplName[bestIdx];
+       
         //*************  ////////////////////////////
         //logging the p_mis value
         CPdfz pdfz;

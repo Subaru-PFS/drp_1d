@@ -956,6 +956,7 @@ Int32 COperatorLineModel::ComputeCandidates(const Int32 opt_extremacount,
 
 
     //*
+    //Me parece raro!!
     // extend z around the extrema
     for (Int32 i = 0; i < m_firstpass_extremumList.size(); i++)
     {
@@ -1367,10 +1368,10 @@ Int32 COperatorLineModel::SaveResults(const CSpectrum &spectrum,
             {
                 for (Int32 ke = 0; ke < idxVelfitGroups[kgroup].size(); ke++)
                 {
-                    m_model->SetVelocityAbsorptionOneElement(m_secondpass_parameters_extremaResult.GroupsALv[i][kgroup],
+                    m_model->SetVelocityAbsorptionOneElement(m_secondpass_parameters_extremaResult.GroupsALv[index_extremum][kgroup],
                                                              idxVelfitGroups[kgroup][ke]);
                 }
-                alv_list_str.append(boost::str(boost::format("%.2f, ") %m_secondpass_parameters_extremaResult.GroupsALv[i][kgroup]));
+                alv_list_str.append(boost::str(boost::format("%.2f, ") %m_secondpass_parameters_extremaResult.GroupsALv[index_extremum][kgroup]));
             }
             Log.LogInfo("    Operator-Linemodel: saveResults with groups alv=%s", alv_list_str.c_str());
             //emission
@@ -1382,10 +1383,10 @@ Int32 COperatorLineModel::SaveResults(const CSpectrum &spectrum,
             {
                 for (Int32 ke = 0; ke < idxVelfitGroups[kgroup].size(); ke++)
                 {
-                    m_model->SetVelocityEmissionOneElement(m_secondpass_parameters_extremaResult.GroupsELv[i][kgroup],
+                    m_model->SetVelocityEmissionOneElement(m_secondpass_parameters_extremaResult.GroupsELv[index_extremum][kgroup],
                                                              idxVelfitGroups[kgroup][ke]);
                 }
-                elv_list_str.append(boost::str(boost::format("%.2f") %m_secondpass_parameters_extremaResult.GroupsELv[i][kgroup]));
+                elv_list_str.append(boost::str(boost::format("%.2f") %m_secondpass_parameters_extremaResult.GroupsELv[index_extremum][kgroup]));
             }
             Log.LogInfo("    Operator-Linemodel: saveResults with groups elv=%s", elv_list_str.c_str());
 
@@ -2451,7 +2452,7 @@ Int32 COperatorLineModel::RecomputeAroundCandidates(TPointList input_extremumLis
     // m_secondpass_indiceSortedCandidatesList will contain the indexes order
 
     //Sorting candidates using map. Utility: it solves the ducplicate candidate problem
-   /* vector<int> V(_secondpass_recomputed_extremumList.size());//vector of indices
+/*  vector<int> V(_secondpass_recomputed_extremumList.size());//vector of indices
     int x = 0;
     std::iota(V.begin(), V.end(), x++);//initialization of m_secondpass_indiceSortedCandidatesList
     sort(V.begin(), V.end(), [&](int i, int j){return _secondpass_recomputed_extremumList[i].Y < _secondpass_recomputed_extremumList[j].Y;} );
