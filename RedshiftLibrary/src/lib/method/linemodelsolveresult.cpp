@@ -226,21 +226,25 @@ Bool CLineModelSolveResult::GetBestRedshiftFromPdf(const CDataStore& store,
         
         for(Int32 kval=0; kval<lineModelResult->ExtremaResult.ExtremaExtendedRedshifts.size(); kval++)
         {
-                Float64 zInCandidateRange = lineModelResult->ExtremaResult.ExtremaExtendedRedshifts[kval];
-                UInt32 solIdx = logzpdf1d->getIndex(zInCandidateRange);
-                if(solIdx<0 || solIdx>=logzpdf1d->valProbaLog.size())
+            Float64 zInCandidateRange = lineModelResult->ExtremaResult.ExtremaExtendedRedshifts[kval];
+            UInt32 solIdx = logzpdf1d->getIndex(zInCandidateRange);
+            if(solIdx<0 || solIdx>=logzpdf1d->valProbaLog.size())
                 {
                     Int32  d = lineModelResult->ExtremaResult.ExtremaExtendedRedshifts.size()/lineModelResult->ExtremaResult.Extrema.size(); 
                     Log.LogError( "GetBestRedshiftFromPdf: pdf proba value not found for extremumIndex = %d", kval/d);
                     return false;
-                }
+            }
 
-                Float64 probaLog = logzpdf1d->valProbaLog[solIdx];
-                Log.LogDebug( "GetBestRedshiftFromPdf: z=%f : probalog = %f", zInCandidateRange, probaLog);
-
-                CPdfz pdfz;
+                            
+            CPdfz pdfz;
+            Float64 flux_integral = -1;
+            Float64 probaLog = -1;
+            Float64 bestval, val;
+            
+            //case of integrated probability: two options for integration: direct or gauss fit
+            if("maxintgproba") 
+            { 
                 Int32 method=0; //0=direct intg, 1=gauss fit
-                Float64 flux_integral = -1;
                 if(method==1)
                 {
                     Float64 gauss_amp = -1;
@@ -267,29 +271,24 @@ Bool CLineModelSolveResult::GetBestRedshiftFromPdf(const CDataStore& store,
                     flux_integral = pdfz.getCandidateSumTrapez( logzpdf1d->Redshifts, logzpdf1d->valProbaLog, zInCandidateRange, Fullwidth);
                 }
 
-                Float64 bestval, val;
-                if(m_bestRedshiftFromPdfOption=="maxproba")
-                {
+                bestval = tmpIntgProba;
+                val = flux_integral;
+            }
+            else{
+                if(m_bestRedshiftFromPdfOption=="maxproba"){
+                    probaLog = logzpdf1d->valProbaLog[solIdx];
+                    Log.LogDebug( "GetBestRedshiftFromPdf: z=%f : probalog = %f", zInCandidateRange, probaLog);
                     bestval = tmpProbaLog;
                     val = probaLog;
-                }else{
-                    bestval = tmpIntgProba;
-                    val = flux_integral;
                 }
-                //Float64 merit = lineModelResult->ChiSquare[solIdx];
-                //if( merit < tmpMerit )
-                //if(probaLog>tmpProbaLog)
-                //if(flux_integral>tmpIntgProba)
-                 if(kval == lineModelResult->ExtremaResult.ExtremaExtendedRedshifts.size() - 1){
-                     Int32 c;
-                 }
-                if(val>bestval)
-                {
-                    tmpIntgProba = flux_integral;
-                    tmpProbaLog = probaLog;
-                    tmpRedshift = zInCandidateRange;//lineModelResult->ExtremaResult.ExtremaLastPass[i];
-                    bestIdx = kval;   
-                }
+            }
+            if(val>bestval)
+            {
+                tmpIntgProba = flux_integral;
+                tmpProbaLog = probaLog;//useless
+                tmpRedshift = zInCandidateRange;//lineModelResult->ExtremaResult.ExtremaLastPass[i];
+                bestIdx = kval;   
+            }
         
         }
 
@@ -328,7 +327,10 @@ Bool CLineModelSolveResult::GetBestRedshiftFromPdf(const CDataStore& store,
     //option 2.
     //merit = tmpProbaLog;
     //option 3
-    merit = tmpIntgProba;
+    if(m_bestRedshiftFromPdfOption=="maxintgproba")
+        merit = tmpIntgProba;
+    else 
+        merit = tmpProbaLog;
 
     sigma = tmpSigma;
     snrHa = tmpSnrHa;
