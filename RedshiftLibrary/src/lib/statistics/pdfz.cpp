@@ -1255,7 +1255,7 @@ Int32 CPdfz::Marginalize(TFloat64List redshifts,
         Bool invalidFound = false;
         for (Int32 kz = 0; kz < _merit.size(); kz++)
         {
-            if (_merit[kz] != _merit[kz])//weird check
+            if (_merit[kz] != _merit[kz])
             {
                 Log.LogError("    CPdfz::Marginalize - merit result #%d has at "
                              "least one nan or invalid value at index=%d",
@@ -1276,7 +1276,7 @@ Int32 CPdfz::Marginalize(TFloat64List redshifts,
     std::vector<Float64> logPriorModel;
     if (/*false &&*/ modelPriors.size() != meritResults.size())
     {
-        Float64 priorModelCst = 1.0 / ((Float64)meritResults.size());
+        Float64 priorModelCst = 1.0 / (meritResults.size());
         Log.LogInfo(
             "Pdfz: Marginalize: no priors loaded, using constant priors (=%f)",
             priorModelCst);
