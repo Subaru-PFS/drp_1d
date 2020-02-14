@@ -1255,7 +1255,7 @@ Int32 CPdfz::Marginalize(TFloat64List redshifts,
         Bool invalidFound = false;
         for (Int32 kz = 0; kz < _merit.size(); kz++)
         {
-            if (_merit[kz] != _merit[kz])//weird check
+            if (_merit[kz] != _merit[kz])
             {
                 Log.LogError("    CPdfz::Marginalize - merit result #%d has at "
                              "least one nan or invalid value at index=%d",

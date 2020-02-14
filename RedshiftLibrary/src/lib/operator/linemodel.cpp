@@ -933,29 +933,6 @@ Int32 COperatorLineModel::ComputeCandidates(const Int32 opt_extremacount,
         }
     }
 
-    /*
-    // Refine Extremum with a second maximum search around the z candidates:
-    // This corresponds to the finer xcorrelation in EZ Pandora (in standard_DP
-    fctn in SolveKernel.py) Float64 radius = 0.001; for( Int32 i=0;
-    i<m_firstpass_extremumList.size(); i++ )
-    {
-        Float64 x = m_firstpass_extremumList[i].X;
-        Float64 left_border = max(redshiftsRange.GetBegin(), x-radius);
-        Float64 right_border=min(redshiftsRange.GetEnd(), x+radius);
-
-        TPointList m_extremumListFine;
-        TFloat64Range rangeFine = TFloat64Range( left_border, right_border );
-        CExtremum extremumFine( rangeFine , 1, true);
-        extremumFine.Find( m_result->Redshifts, m_result->ChiSquare,
-    m_extremumListFine ); if(m_extremumListFine.size()>0){ m_firstpass_extremumList[i] =
-    m_extremumListFine[0];
-        }
-    }
-    //*/
-
-
-
-    //*
     // extend z around the extrema
     m_result->ExtremaResult.ExtremaExtendedRedshifts.resize(m_firstpass_extremumList.size());
     for (Int32 j = 0; j < m_firstpass_extremumList.size(); j++)
