@@ -222,7 +222,7 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
     dataStore.GetScopedParam( "linemodel.modelpriorzStrength", m_opt_modelZPriorStrength, -1);
     dataStore.GetScopedParam( "linemodel.pdfcombination", m_opt_pdfcombination, "marg");
     dataStore.GetScopedParam( "linemodel.pdf.margampcorr", m_opt_pdf_margAmpCorrection, "no");
-    dataStore.GetScopedParam( "linemodel.pdf.bestzoption", m_opt_bestz_option, "maxproba");
+    dataStore.GetScopedParam( "linemodel.pdf.bestzoption", m_opt_bestz_option, "maxintgproba");
 
     dataStore.GetScopedParam( "linemodel.saveintermediateresults", m_opt_saveintermediateresults, "no");
 
