@@ -160,40 +160,46 @@ Bool CExtremum::Find( const TFloat64List& xAxis, const TFloat64List& yAxis, TPoi
     }
 
     //refine using sliding windows: aiming at avoiding duplicate candidates when possible. 
-    RefinePeakSelection(maxX, maxY, m_MaxPeakCount);//keep at least keepMinN candidates
+    FilterOutNeighboringPeaks(maxX, maxY, keepMinN);//keep at least keepMinN candidates
 
     //truncate: reduces size of candidate list and also prepares the maxPoint List
-    //TODO: not sure about this; need to talk to Didier
     Truncate(maxX, maxY, m_MaxPeakCount, maxPoint);
 
     return true;
 }
 /**
  * \Brief: removes extrema based on meritCut.
+ * First: sort based on Y values
+ * Second: remove non-relevant candidates 
+ * Third: sort based on X values to return candidates following their initial order
  * It returns the new list of extrema
 */
 Bool CExtremum::Cut_Threshold( vector <Float64>& maxX, vector <Float64>& maxY, Int32 keepMinN) const{
   Int32 n = maxX.size();
-  std::vector<Float64>::iterator resultBest;
-  resultBest = std::max_element(maxY.begin(), maxY.end());
-  Float64 bestPDF = maxY[std::distance(maxY.begin(), resultBest)];//::distance returns an index referring to the max
-
-  Int32 iExtremumFinalList = 0;
-  for (Int32 i = 0; i < n; i++){
-    Float64 meritDiff = bestPDF - maxY[iExtremumFinalList];
-    if( meritDiff > m_meritCut && i>=keepMinN){
-        Log.LogInfo("  Extremum: Candidates selection by proba cut: removing i=%d, final_i=%d, e.X=%f, e.Y=%e",
-                            i,
-                            iExtremumFinalList,
-                            maxX[iExtremumFinalList],
-                            maxY[iExtremumFinalList]);
-        maxX.erase(maxX.begin() + iExtremumFinalList);
-        maxY.erase(maxY.begin() + iExtremumFinalList);
-        }else{
-          iExtremumFinalList++;
-        }
+  //create pairs of X and Y
+  vector<pair<Float64,Float64> > vp, vp_;
+  vp.reserve(n);
+  for (Int32 i = 0 ; i < n ; i++) {
+    vp.push_back(make_pair(maxY[i], maxX[i]));
   }
+  std::sort(vp.rbegin(), vp.rend()); //sort descending order
+  vp_.push_back(make_pair(vp[0].second, vp[0].first)); //save best one
   
+  maxX.clear(); maxY.clear();
+  for(Int32 i = 1; i<n-1; i++){
+    Float64 meritDiff = vp[0].first - vp[i].first;
+    if( meritDiff > m_meritCut && i>=keepMinN){
+      break; //no need to continue iterating since vp is sorted!
+    }else{
+      vp_.push_back(make_pair(vp[i].second, vp[i].first));
+    }
+  }
+  std::sort(vp_.rbegin(), vp_.rend()); //sort based on maxX values
+  Int32 s = vp_.size();
+  for(Int32 i = 1; i<s+1; i++){
+    maxX.push_back(vp_[s-i].first);
+    maxY.push_back(vp_[s-i].second);
+  }
   return true;
 }
 
@@ -202,15 +208,10 @@ Bool CExtremum::Cut_Threshold( vector <Float64>& maxX, vector <Float64>& maxY, I
  * @xAxis and @yAxis represents local maxima from 
  * Eliminate candidates with a very low Y value, comparing to others?
  * Eliminate close candidates: close, i.e., in a window of 0.005(1+z) around a z candidate of strong value???
- * //TODO: should rethink about the order for applying  these conditions
+ * //TODO: Need to implement the keepmin
 */
-Bool CExtremum::RefinePeakSelection(vector <Float64>& maxX, vector <Float64>& maxY, UInt32 n)const
+Bool CExtremum::FilterOutNeighboringPeaks(vector <Float64>& maxX, vector <Float64>& maxY, UInt32 keepmin)const
 {
-  if (n == 0){
-    std::cout<< "heyyyyy previous call didnt find any candidate \n";
-    return false;
-  }
-
   vector < Float64 >  tmpX;
   vector < Float64 >  tmpY;
   //copy maxX/Y into temperory arrays
@@ -279,9 +280,7 @@ Bool CExtremum::RefinePeakSelection(vector <Float64>& maxX, vector <Float64>& ma
     }
     
   }
- 
-  //Check if we didnt skip any candidate because of window borders
-  Int32 s = missedList.size();
+
   return true;
 }
 
@@ -347,9 +346,8 @@ Bool CExtremum::FindAllPeaks(const Float64* xAxis, const Float64* yAxis, UInt32 
       }
       if((tmpY[i] == tmpY[i - 1])){ 
         //high plank: signal is decreasing after the plank. Peak identified
-        if (tmpY[i] > tmpY[i + 1]){
+        if (tmpY[i] > tmpY[i + 1] && plank){ //check if we already identified a high plank
           cnt_plk++;
-          //TODO: talk to Didier: which element of the plank should be kept as Zcand, last elt or plank center?
           Int32 idx_plk = i - round(cnt_plk/2);
           //plank end point
           maxX.push_back(tmpX[idx_plk]);

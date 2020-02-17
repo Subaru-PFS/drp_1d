@@ -29,10 +29,12 @@ public:
     void SetMeritCut( UInt32 n );
     Bool Find( const TFloat64List& xAxis, const TFloat64List& yAxis, TPointList& maxPoint ) const;
     Bool DefaultExtremum( const TFloat64List& xAxis, const TFloat64List& yAxis, TPointList& maxPoint );
+    //made it public to do unit tests
+    Bool Cut_Threshold( vector <Float64>& maxX, vector <Float64>& maxY, Int32 keepMinN) const;
 private:
     Bool FindAllPeaks(const Float64* xAxis, const Float64* yAxis, UInt32 n, vector <Float64>& maxX, vector <Float64>& maxY) const;
-    Bool RefinePeakSelection( vector <Float64>& maxX, vector <Float64>& maxY, UInt32 n) const;
-    Bool Cut_Threshold( vector <Float64>& maxX, vector <Float64>& maxY, Int32 keepMinN) const;
+    Bool FilterOutNeighboringPeaks( vector <Float64>& maxX, vector <Float64>& maxY, UInt32 n) const;
+    
     Bool Truncate( vector <Float64>& xAxis, vector <Float64>& yAxis, Int32 maxCount, TPointList& maxPoint) const;
 
     UInt32          m_MaxPeakCount;
