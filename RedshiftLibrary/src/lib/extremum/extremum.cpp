@@ -321,7 +321,24 @@ Bool CExtremum::Cut_Threshold( vector <Float64>& maxX, vector <Float64>& maxY, I
     maxX.push_back(vp_[s-i].first);
     maxY.push_back(vp_[s-i].second);
   }
+  std::sort(vp.rbegin(), vp.rend()); //sort descending order
+  vp_.push_back(make_pair(vp[0].second, vp[0].first)); //save best one
   
+  maxX.clear(); maxY.clear();
+  for(Int32 i = 1; i<n-1; i++){
+    Float64 meritDiff = vp[0].first - vp[i].first;
+    if( meritDiff > m_meritCut && i>=keepMinN){
+      break; //no need to continue iterating since vp is sorted!
+    }else{
+      vp_.push_back(make_pair(vp[i].second, vp[i].first));
+    }
+  }
+  std::sort(vp_.rbegin(), vp_.rend()); //sort based on maxX values
+  Int32 s = vp_.size();
+  for(Int32 i = 1; i<s+1; i++){
+    maxX.push_back(vp_[s-i].first);
+    maxY.push_back(vp_[s-i].second);
+  }
   return true;
 }
 
