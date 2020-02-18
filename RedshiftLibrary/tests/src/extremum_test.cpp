@@ -38,10 +38,6 @@ BOOST_AUTO_TEST_CASE(Extremum1)
     TFloat64List x = { 0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0 };
     TFloat64List y = { 1.0, 5.0, 0.0, 3.0, 9.0, 0.1, 0.2, 0.5, 8.0, 1.0, 4.0 };
     TFloat64List y_2 = { 5.0, 0.0, 0.0, 3.0, 9.0, 0.1, 0.2, 0.5, 8.0, 1.0, 4.0 };
-    TFloat64List y_plank = { 5.0, 0.0, 9.0, 9.0, 9.0, 0.1, 0.2, 0.5, 8.0, 1.0, 4.0 };
-    TFloat64List y_plank_chair = { 5.0, 9.5, 9.0, 9.0, 9.0, 0.1, 0.2, 0.5, 8.0, 1.0, 4.0 };
-    TFloat64List y_plank_stair = { 5.0, 0.0, 9.0, 9.0, 9.0, 9.5, 0.2, 0.5, 8.0, 1.0, 4.0 };
-    TFloat64List y_plank_low = { 5.0, 0.0, 0.0, 0.0, 0.0, 9.5, 0.2, 0.5, 8.0, 1.0, 4.0 };
     TFloat64List x_empty = {};
 
     Float64 radius = 0.005;
@@ -51,36 +47,15 @@ BOOST_AUTO_TEST_CASE(Extremum1)
     peaks1.SetMaxPeakCount(2);
     peaks1.SetXRange( TFloat64Range(-10.0, 10.0) );
 
-std::cout << " 1 \n ";
     peaks1.Find( x, y, maxPoint);
     check_points(maxPoint, TPointList({ {0.4,9}, {0.8,8} }));
     maxPoint.clear();
     peaks1.Find( x, y_2, maxPoint);
     check_points(maxPoint, TPointList({ {0.4,9}, {0.8,8} }));
-std::cout << " 3 \n ";    
-    maxPoint.clear();
-    peaks1.Find( x, y_plank, maxPoint);
-    check_points(maxPoint, TPointList({ {0.3,9}, {0.8,8} }));
-std::cout << " 4 \n ";
-    maxPoint.clear();
-    peaks1.Find( x, y_plank_chair, maxPoint);
-    check_points(maxPoint, TPointList({ {0.1,9.5}, {0.8,8} }));
-std::cout << " 5 \n ";
-    maxPoint.clear();
-    peaks1.Find( x, y_plank_stair, maxPoint);
-    check_points(maxPoint, TPointList({ {0.5,9.5}, {0.8,8} }));
-std::cout << " 6 \n ";
-    maxPoint.clear();
-    peaks1.Find( x, y_plank_low, maxPoint);
-    check_points(maxPoint, TPointList({ {0.5,9.5}, {0.8,8} }));
-std::cout << " 7 \n ";
+  
     maxPoint.clear();
     BOOST_CHECK( peaks1.Find( x_empty, y, maxPoint) == false);
     print_point(maxPoint);
-std::cout << " 8 \n ";
-    maxPoint.clear();
-    peaks_empty = CExtremum(TFloat64Range(1.0, 1.0), 5, radius, false);
-    peaks_empty.Find( x, y, maxPoint); 
 
     // peaks1.Find( x_empty, x_empty, maxPoint);
     // print_point(maxPoint);
