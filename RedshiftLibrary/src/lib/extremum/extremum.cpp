@@ -169,9 +169,9 @@ Bool CExtremum::Find( const TFloat64List& xAxis, const TFloat64List& yAxis, TPoi
 }
 /**
  * \Brief: removes extrema based on meritCut.
- * First: sort based on Y values
- * Second: remove non-relevant candidates 
- * Third: sort based on X values to return candidates following their initial order
+ * First: Sort based on Y values
+ * Second: Remove non-relevant candidates 
+ * Third: Sort based on X values to return candidates following their initial order
  * It returns the new list of extrema
 */
 Bool CExtremum::Cut_Threshold( vector <Float64>& maxX, vector <Float64>& maxY, Int32 keepMinN) const{
@@ -212,6 +212,9 @@ Bool CExtremum::Cut_Threshold( vector <Float64>& maxX, vector <Float64>& maxY, I
 */
 Bool CExtremum::FilterOutNeighboringPeaks(vector <Float64>& maxX, vector <Float64>& maxY, UInt32 keepmin)const
 {
+  if(maxX.size() <= keepmin)
+    return true;
+
   vector < Float64 >  tmpX;
   vector < Float64 >  tmpY;
   //copy maxX/Y into temperory arrays
@@ -221,64 +224,71 @@ Bool CExtremum::FilterOutNeighboringPeaks(vector <Float64>& maxX, vector <Float6
   }
 
   //clear vectors to fill later
-  maxX.clear();
-  maxY.clear();
+  maxX.clear(); maxY.clear();
 
-  Float64 wind_low = tmpX[1] - m_Radius*(1+tmpX[1]);
-  Float64 wind_high = tmpX[1] + m_Radius*(1+tmpX[1]);
-  vector<Int32> idxList, missedList; 
+  //starting from first element
+  Float64 wind_high = tmpX[0] + m_Radius*(1+tmpX[0]);
+  vector<Int32> idxList; 
   Int32 i = 0, imax = -1; 
   Float64 maxPDF = -INFINITY;
+  Bool fullwdw = false;
 
   while(i<tmpX.size()){
-    //if element belongs to the selected window
-    if(tmpX[i]>wind_low && tmpX[i]<=wind_high){
+
+    std::cout << i <<"\n";
+    //if element belongs to the selected half-window
+    if(tmpX[i]<=wind_high){
+      std::cout << tmpX[i] << " "  << wind_high << "\n";
       idxList.push_back(i);
       if(tmpY[i]>maxPDF){//keep track of maxPDF element
         maxPDF = tmpY[i];
         imax = i;
       }
-      i++;
-      continue;
-    }
-    //we should enter below only after updating window size
-    if(tmpX[i]<wind_low){
-      //TODO:test if its PDF is relevant maybe, ??
-      //otherwise add it by default (is dangerous!)
-      maxX.push_back(tmpX[i]);
-      maxY.push_back(tmpY[i]);
-
-      missedList.push_back(i);
-      i++;
+      //i++; 
+      //case where the last element belongs to the current window
+      //we need to push 
+      if(i==tmpX.size()-1 && imax>-1){
+          maxX.push_back(tmpX[imax]);
+          maxY.push_back(tmpY[imax]);
+          break;
+      }else{
+        i++;
+        continue;
+      }
     }
 
     if(tmpX[i]>wind_high){
-      //push the best PDF as a best local candidate before calculating a new window
-      maxX.push_back(tmpX[imax]);
-      maxY.push_back(tmpY[imax]);
-      
-      if(i == tmpX.size()-1 ){ //PUSH ANYWAY!! 
-        maxX.push_back(tmpX[i]);
-        maxY.push_back(tmpY[i]);
-        idxList.push_back(i);//update listed indexes for later checks
-        break; //leave the while lopp
-      }
-      //reinitialize imax and maxPDF
-      imax = -1; maxPDF = -INFINITY;
-      //calculate a new window based on two candidates ahead of the current one
-      Int32 startIdx;
-      if(i+1 < tmpX.size()){
-        startIdx = i+1;
-      }else{
-        if(i < tmpX.size()){
-          startIdx = i;
+     
+      if(fullwdw){
+        std::cout << tmpX[i] << " Full window "  << wind_high << "\n";
+        //push the best PDF as a best local candidate before calculating a new window
+        maxX.push_back(tmpX[imax]);
+        maxY.push_back(tmpY[imax]);
+        //reinitialize all
+        fullwdw = false; 
+        imax = -1; maxPDF = -INFINITY;
+        //calculate a new window based on the current i
+        wind_high = tmpX[i] + m_Radius*(1+tmpX[i]);
+      }else {
+        //Check if last elet. if yes, push it to maxX/Y
+        if(i==tmpX.size()-1 && imax>-1){
+          if(imax>-1){
+            maxX.push_back(tmpX[imax]);
+            maxY.push_back(tmpY[imax]);
+          }
+          //Maybe there is here a need to compare with the last identified
+          break; //end of loop
+        }else{
+          //calculate a new window based on the imax we found till now
+          //keep maxPDF set to compare others with it
+          wind_high = tmpX[imax] + m_Radius*(1+tmpX[imax]);
+          std::cout << tmpX[i] << " half window "  << wind_high << "\n";
+          fullwdw = true; 
+          continue;
         }
       }
-      wind_low = tmpX[startIdx] - m_Radius*(1+tmpX[startIdx]);
-      wind_high = tmpX[startIdx] + m_Radius*(1+tmpX[startIdx]);
-      //dont increment so that we can check the value of tmpX with the newly calculated window
+      
     }
-    
   }
 
   return true;
@@ -382,6 +392,7 @@ Bool CExtremum::FindAllPeaks(const Float64* xAxis, const Float64* yAxis, UInt32 
     }
   return  true;
 }
+
 
 /**
  * Brief: Reduce number of peaks based on maxCount passed from param.json if present
