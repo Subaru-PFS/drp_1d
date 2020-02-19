@@ -88,6 +88,7 @@ void CLineModelExtremaResult::Resize(Int32 size)
     FittedTplshapeMtm.resize(size);
 }
 
+<<<<<<< HEAD
 bool CLineModelExtremaResult::RemoveSecondPassCandidatebyIdx(Int32 idx){
     ExtremaPDF.erase(ExtremaPDF.begin() + idx);
     ExtremaIDs.erase( ExtremaIDs.begin() + idx);
@@ -140,7 +141,51 @@ bool CLineModelExtremaResult::RemoveSecondPassCandidatebyIdx(Int32 idx){
     FittedTplshapeMtm.erase(FittedTplshapeMtm.begin() + idx);
     ExtremaExtendedRedshifts.erase(ExtremaExtendedRedshifts.begin() + idx);
     return true;
-}
+=======
+void CLineModelExtremaResult::Reorder( TFloat64List& arr, TFloat64List indexes) 
+{ 
+    Int32 n = indexes.size();
+    TFloat64List temp;  
+    // arr[i] should be present at index[i] index 
+    for (Int32 i=0; i<n; i++) 
+        temp.push_back( arr[indexes[i]] ); 
+  
+    // Copy temp[] to arr[] 
+    for (Int32 i=0; i<n; i++) 
+    {  
+       arr[i]  = temp[i]; 
+    } 
+} 
+
+void CLineModelExtremaResult::Reorder_int32Vect( TInt32List& arr, TFloat64List indexes) 
+{ 
+    Int32 n = indexes.size();
+    TInt32List temp;  
+    // arr[i] should be present at index[i] index 
+    for (Int32 i=0; i<n; i++) 
+        temp.push_back( arr[indexes[i]] ); 
+  
+    // Copy temp[] to arr[] 
+    for (Int32 i=0; i<n; i++) 
+    {  
+       arr[i]  = temp[i]; 
+    } 
+} 
+void CLineModelExtremaResult::Reorder_Float64ListOfList( std::vector<TFloat64List>& arr, TFloat64List indexes) 
+{ 
+    Int32 n = indexes.size();
+    std::vector<TFloat64List> temp;  
+    // arr[i] should be present at index[i] index 
+    for (Int32 i=0; i<n; i++) 
+        temp.push_back( arr[indexes[i]] ); 
+  
+    // Copy temp[] to arr[] 
+    for (Int32 i=0; i<n; i++) 
+    {  
+       arr[i]  = temp[i]; 
+    } 
+} 
+
 void CLineModelExtremaResult::Reorder_stringVectofVector( std::vector<std::vector<std::string>>& arr, TFloat64List indexes) 
 { 
     Int32 n = indexes.size();

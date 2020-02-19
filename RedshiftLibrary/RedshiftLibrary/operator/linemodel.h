@@ -198,6 +198,7 @@ public:
                                       const Float64 &opt_absvelocityfitmin,
                                       const Float64 &opt_absvelocityfitmax,
                                       const Float64 &opt_absvelocityfitstep);
+    Int32 TruncateFinalCandidates(Int32 maxCount);
 
     Int32 SaveResults(const CSpectrum& spectrum,
                       const TFloat64Range& lambdaRange,
