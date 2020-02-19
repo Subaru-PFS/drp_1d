@@ -1221,6 +1221,10 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
             linemodel.m_secondpass_indiceSortedCandidatesList.push_back(ie);
         }
     }
+    //Truncate candidates before saving
+    if(linemodel.m_secondpass_parameters_extremaResult.Extrema.size() > m_opt_extremacount){
+        linemodel.TruncateFinalCandidates(m_opt_extremacount);
+    }
 
 
     Int32 retSaveResults = linemodel.SaveResults(_spc,

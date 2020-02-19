@@ -235,10 +235,8 @@ Bool CExtremum::FilterOutNeighboringPeaks(vector <Float64>& maxX, vector <Float6
 
   while(i<tmpX.size()){
 
-    std::cout << i <<"\n";
     //if element belongs to the selected half-window
     if(tmpX[i]<=wind_high){
-      std::cout << tmpX[i] << " "  << wind_high << "\n";
       idxList.push_back(i);
       if(tmpY[i]>maxPDF){//keep track of maxPDF element
         maxPDF = tmpY[i];
@@ -260,7 +258,6 @@ Bool CExtremum::FilterOutNeighboringPeaks(vector <Float64>& maxX, vector <Float6
     if(tmpX[i]>wind_high){
      
       if(fullwdw){
-        std::cout << tmpX[i] << " Full window "  << wind_high << "\n";
         //push the best PDF as a best local candidate before calculating a new window
         maxX.push_back(tmpX[imax]);
         maxY.push_back(tmpY[imax]);
@@ -282,7 +279,6 @@ Bool CExtremum::FilterOutNeighboringPeaks(vector <Float64>& maxX, vector <Float6
           //calculate a new window based on the imax we found till now
           //keep maxPDF set to compare others with it
           wind_high = tmpX[imax] + m_Radius*(1+tmpX[imax]);
-          std::cout << tmpX[i] << " half window "  << wind_high << "\n";
           fullwdw = true; 
           continue;
         }

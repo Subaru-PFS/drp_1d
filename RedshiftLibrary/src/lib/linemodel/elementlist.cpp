@@ -1050,7 +1050,7 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, I
         }
     }else if(m_fitContinuum_option==1){//using precomputed fit store, i.e., fitValues
         CTemplatesFitStore::TemplateFitValues fitValues = m_fitContinuum_tplfitStore->GetFitValues(m_Redshift, icontinuum);
-        if(fitValues.tplName=="")
+        if(fitValues.tplName.empty())
         {
             throw runtime_error("Empty template name");
         }
@@ -1164,7 +1164,7 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, I
         throw runtime_error("Elementlist, cannot parse fitContinuum_option");
     }
 
-    if(bestTplName!="")
+    if(!bestTplName.empty())
     {
         if(bestFitAmplitudeNegative){
             Log.LogError( "For z=%.5f : Best continuum tpl found: %s has neg. amplitude", m_Redshift, bestTplName.c_str());

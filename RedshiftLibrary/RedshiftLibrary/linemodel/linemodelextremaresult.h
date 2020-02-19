@@ -21,9 +21,14 @@ public:
     ~CLineModelExtremaResult();
 
     void Resize(Int32 size);
-
-    void Save( const CDataStore& store, std::ostream& stream) const;
-    void SaveJSON( const CDataStore& store, std::ostream& stream) const;
+    void Reorder( TFloat64List &arr, TFloat64List indexes);
+    void Reorder_stringVect( std::vector<std::string>& arr, TFloat64List indexes); 
+    void Reorder_Float64ListOfList( std::vector<TFloat64List>& arr, TFloat64List indexes) ;
+    void Reorder_ExtRedarray( TFloat64List& arr, TFloat64List indexes); 
+    void ReorderAll(TFloat64List indexes);
+    
+    void Save( const CDataStore& store, std::ostream& stream ) const;
+    void SaveJSON( const CDataStore& store, std::ostream& stream ) const;
 
     void SaveLine( const CDataStore& store, std::ostream& stream ) const;
     inline Int32 GetEvidenceFromPdf(const CDataStore& store, Float64 &evidence) const
@@ -94,6 +99,7 @@ public:
     TFloat64List      FittedTplshapeDtm;   //dtm of the best template fitted for tplcorr/tplshape
     TFloat64List      FittedTplshapeMtm;   //mtm of the best template fitted for tplcorr/tplshape
     TFloat64List      FittedTplshapeIsmCoeff;   //IsmCoeff/EBMV of the best template fitted for tplcorr/tplshape
+
 
 };
 
