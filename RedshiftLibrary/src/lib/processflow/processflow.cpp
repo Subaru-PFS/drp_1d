@@ -732,9 +732,32 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
         }
 
         Log.LogInfo( "  Integrating %d candidates proba.", zcandidates_unordered_list.size() );
-        zcand->Compute(zcandidates_unordered_list, logzpdf1d->Redshifts, logzpdf1d->valProbaLog);
+        zcand->Compute(zcandidates_unordered_list, logzpdf1d->Redshifts, logzpdf1d->valProbaLog, maxCount);
+
+        TInt32List idx_compl;
+        //Truncate candidates before saving
+        if(zcandidates_unordered_list.size()>maxCount){
+            auto __r = ctx.GetDataStore().GetGlobalResult("linemodelsolve.linemodel");
+            //Dirty trick to modify a const variable: kept separate to show the need for such complexity
+            std::shared_ptr<const CLineModelResult> _r = std::dynamic_pointer_cast< const CLineModelResult>( __r.lock() );
+            std::shared_ptr<CLineModelResult> *result = (std::shared_ptr<CLineModelResult>*)(&_r);
+            (*result)->ExtremaResult.Reorder_ResizeAll(zcand->Rank);
+
+            //to write it again in the result store, we need to delete it first!!
+            ctx.GetDataStore().DeleteScopedGlobalResult("linemodelsolve.linemodel_extrema");
+            ctx.GetDataStore().StoreScopedGlobalResult( "linemodelsolve.linemodel_extrema", (*result)->GetExtremaResult() );
+            ctx.GetDataStore().DeleteScopedGlobalResult("linemodelsolve.linemodel");
+            ctx.GetDataStore().StoreScopedGlobalResult( "linemodelsolve.linemodel", *result );
+
+            for(Int32 i = 0; i<zcandidates_unordered_list.size(); i++){
+                bool found = (std::find(idx_compl.begin(), idx_compl.end(), i) != idx_compl.end());
+                if(!found)
+                    idx_compl.push_back(i);
+            }
+        }
+
         ctx.GetDataStore().StoreScopedGlobalResult( "candidatesresult", zcand );
-        //zcand->compute recompute sthe order of candidates based on valprobalog at this level we have the candidates ordered
+        //zcand->compute recomputes sthe order of candidates based on valprobalog at this level we have the candidates ordered
         std::vector<std::string> info {"spc", "fit", "fitcontinuum", "rules", "continuum"};
         for(Int32 f = 0; f<info.size(); f++) {
             for( Int32 i = 0; i<zcand->Rank.size(); i++){
@@ -743,6 +766,13 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
                 std::string fname_old =
                 (boost::format("linemodelsolve.linemodel_%1%_extrema_tmp_%2%") % info[f] % zcand->Rank[i]).str();
                 ctx.GetDataStore().ChangeScopedGlobalResult(fname_old, fname_new);    
+            }
+            //remove extra _tmp elements from datastore, following the 
+            if(!idx_compl.empty()){
+                for(Int32 i = 0; i<idx_compl.size(); i++){
+                    std::string name = (boost::format("linemodelsolve.linemodel_%1%_extrema_tmp_%2%") % info[f] % idx_compl[i]).str();
+                    ctx.GetDataStore().DeleteScopedGlobalResult(name);
+                }
             }
         }
     }else{
