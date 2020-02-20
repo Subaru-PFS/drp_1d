@@ -33,7 +33,7 @@
 #include <gsl/gsl_multifit.h>
 #include <gsl/gsl_spline.h>
 #include <math.h>
-
+#include <string>
 #include <iostream>
 #include <vector>
 #include <numeric>  //std::iota
@@ -1005,6 +1005,9 @@ Int32 COperatorLineModel::ComputeCandidates(const Int32 opt_extremacount,
 
         //save basic fitting info from first pass
         m_firstpass_extremaResult.Extrema[i] = z;
+        //Index refers to "F"irst "P"ass "E"xtremum following by an index
+        std::string id = "FPE"+ std::to_string(i);
+        m_firstpass_extremaResult.ExtremaIDs[i] = id;
         m_firstpass_extremaResult.ExtremaMerit[i] = m;
         m_firstpass_extremaResult.Elv[i] = m_result->LineModelSolutions[idx].EmissionVelocity;
         m_firstpass_extremaResult.Alv[i] = m_result->LineModelSolutions[idx].AbsorptionVelocity;
@@ -1535,6 +1538,8 @@ Int32 COperatorLineModel::SaveResults(const CSpectrum &spectrum,
         m_result->ExtremaResult.ExtremaMerit[i] = m;
         m_result->ExtremaResult.Elv[i] = m_model->GetVelocityEmission();
         m_result->ExtremaResult.Alv[i] = m_model->GetVelocityAbsorption();
+        
+        m_result->ExtremaResult.ExtremaIDs[i] = m_secondpass_parameters_extremaResult.ExtremaIDs[index_extremum];
 
         if (!m_estimateLeastSquareFast)
         {
@@ -1757,7 +1762,8 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
 
         m_secondpass_parameters_extremaResult.Extrema[i] = z;
         m_secondpass_parameters_extremaResult.ExtremaMerit[i] = m;
-
+        //assign same IDs to extremum of second pass
+        m_secondpass_parameters_extremaResult.ExtremaIDs[i] = m_firstpass_extremaResult.ExtremaIDs[i];
         // fix the fitcontinuum values for this extremum : keep the 1st pass values
         if(m_opt_secondpass_estimateParms_tplfit_fixfromfirstpass)
         {
@@ -2445,14 +2451,18 @@ Int32 COperatorLineModel::RecomputeAroundCandidates(TPointList input_extremumLis
     // m_secondpass_indiceSortedCandidatesList will contain the indexes order
 
     //Sorting candidates using map. Utility: it solves the ducplicate candidate problem
-    vector<int> V(_secondpass_recomputed_extremumList.size());//vector of indices
+   /* vector<int> V(_secondpass_recomputed_extremumList.size());//vector of indices
     int x = 0;
     std::iota(V.begin(), V.end(), x++);//initialization of m_secondpass_indiceSortedCandidatesList
     sort(V.begin(), V.end(), [&](int i, int j){return _secondpass_recomputed_extremumList[i].Y < _secondpass_recomputed_extremumList[j].Y;} );
-
+*/
     m_secondpass_indiceSortedCandidatesList.clear();
-    for ( Int32 ie = 0; ie < V.size(); ie++){
+    /*for ( Int32 ie = 0; ie < V.size(); ie++){
         m_secondpass_indiceSortedCandidatesList.push_back(V[ie]);
+    }*/
+       
+    for ( Int32 ie = 0; ie < _secondpass_recomputed_extremumList.size(); ie++){
+        m_secondpass_indiceSortedCandidatesList.push_back(ie);
     }
 
     if (mlmfit_modelInfoSave)
