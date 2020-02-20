@@ -25,6 +25,7 @@ public:
     }
 
     void Resize(Int32 n);
+
     Int32 Compute(std::vector<Float64> zc , std::vector<Float64> Pdfz, std::vector<Float64> PdfProbalog, std::vector<Float64> wdwWidth = std::vector<Float64>(), std::vector<std::string> IDs = std::vector<std::string>());
     Int32 SetIntegrationWindows( std::vector<Float64> Pdfz, std::vector<Float64> zc,  std::vector<Float64> deltaz, std::vector<Float64>& halfWidth_right, std::vector<Float64>& halfWidth_left);
 

@@ -23,9 +23,13 @@ public:
     void Resize(Int32 size);
     void Reorder( TFloat64List &arr, TFloat64List indexes);
     void Reorder_stringVect( std::vector<std::string>& arr, TFloat64List indexes); 
+    void Reorder_stringVectofVector( std::vector<std::vector<std::string>>& arr, TFloat64List indexes); 
+    void Reorder_int32Vect( TInt32List& arr, TFloat64List indexes);
     void Reorder_Float64ListOfList( std::vector<TFloat64List>& arr, TFloat64List indexes) ;
+    void Reorder_TContinuumIndexListVector( std::vector<CContinuumIndexes::TContinuumIndexList>& arr, TFloat64List indexes); 
+    void Reorder_CMask( std::vector<NSEpic::CMask>& arr, TFloat64List indexes);
     void Reorder_ExtRedarray( TFloat64List& arr, TFloat64List indexes); 
-    void ReorderAll(TFloat64List indexes);
+    void Reorder_ResizeAll(TFloat64List indexes);
     
     void Save( const CDataStore& store, std::ostream& stream ) const;
     void SaveJSON( const CDataStore& store, std::ostream& stream ) const;

@@ -148,6 +148,10 @@ Int32 CPdfCandidateszResult::Compute( std::vector<Float64> zc,  std::vector<Floa
         Rank[i] = i;
     }
     SortByValSumProbaInt(Rank);//update only ranks based on valproba
+
+    //update vectors size based on the number of candidates user asked to return!!
+    if(zc.size()>maxCount)
+        Resize(maxCount);
     return 0;
 }
 

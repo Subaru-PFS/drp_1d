@@ -141,6 +141,49 @@ bool CLineModelExtremaResult::RemoveSecondPassCandidatebyIdx(Int32 idx){
     ExtremaExtendedRedshifts.erase(ExtremaExtendedRedshifts.begin() + idx);
     return true;
 }
+void CLineModelExtremaResult::Reorder_stringVectofVector( std::vector<std::vector<std::string>>& arr, TFloat64List indexes) 
+{ 
+    Int32 n = indexes.size();
+    std::vector<std::vector<std::string>> temp;  
+    // arr[i] should be present at index[i] index 
+    for (Int32 i=0; i<n; i++) 
+        temp.push_back( arr[indexes[i]] ); 
+  
+    // Copy temp[] to arr[] 
+    for (Int32 i=0; i<n; i++) 
+    {  
+       arr[i]  = temp[i]; 
+    } 
+}
+
+void CLineModelExtremaResult::Reorder_TContinuumIndexListVector( std::vector<CContinuumIndexes::TContinuumIndexList>& arr, TFloat64List indexes) 
+{ 
+    Int32 n = indexes.size();
+    std::vector<CContinuumIndexes::TContinuumIndexList> temp;  
+    // arr[i] should be present at index[i] index 
+    for (Int32 i=0; i<n; i++) 
+        temp.push_back( arr[indexes[i]] ); 
+  
+    // Copy temp[] to arr[] 
+    for (Int32 i=0; i<n; i++) 
+    {  
+       arr[i]  = temp[i]; 
+    } 
+}
+void CLineModelExtremaResult::Reorder_CMask( std::vector<NSEpic::CMask>& arr, TFloat64List indexes) 
+{ 
+    Int32 n = indexes.size();
+     std::vector<NSEpic::CMask> temp;  
+    // arr[i] should be present at index[i] index 
+    for (Int32 i=0; i<n; i++) 
+        temp.push_back( arr[indexes[i]] ); 
+  
+    // Copy temp[] to arr[] 
+    for (Int32 i=0; i<n; i++) 
+    {  
+       arr[i]  = temp[i]; 
+    } 
+}
 
 /** 
  * set writing order for first pass candidates based on sorted IDS using integrated PDF.

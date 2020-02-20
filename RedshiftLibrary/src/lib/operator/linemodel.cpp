@@ -2137,45 +2137,6 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
 
     return 0;
 }
-Int32 COperatorLineModel::TruncateFinalCandidates(Int32 maxCount){
-    Int32 n = m_secondpass_parameters_extremaResult.Extrema.size(); 
-
-    vector<pair<Float64,Int32> > vp;
-    vp.reserve(n);
-    for (Int32 i = 0 ; i < n ; i++) {
-        vp.push_back(make_pair(m_secondpass_parameters_extremaResult.ExtremaMerit[i], i));
-    }
-    //TODO:check if sorting order is fine
-    std::sort(vp.rbegin(), vp.rend()); //sort descending order (dont know how to do it ascending)
-    
-    //Do a second sort based on indexes, for this swap key:value
-    vector<pair<Int32, Float64> > vp_;
-    for (Int32 i = n-1; i>=maxCount; i--){ 
-        vp_.push_back(make_pair(vp[i].second, vp[i].first));
-    }
-    std::sort(vp_.rbegin(), vp_.rend()); //sort descending order (dont know how to do it ascending)
-    vp.clear();//clean a bit
-
-    TFloat64List idx_order;
-    for (Int32 i = maxCount-1; i>=0; i--){   
-        idx_order.push_back(vp_[i].first);
-    }
-
-    m_secondpass_parameters_extremaResult.ReorderAll(idx_order);
-    
-//TODO
-//WARNIIINNNG!!! Rubbish!! NEED a REBASE -- waiting for merge on develop!!
-//m_secondpass_indiceSortedCandidatesList.Reorder(idx_order);
-    vector<pair<Float64,Int32> > vp__tmp;
-    for (Int32 i = 0 ; i < idx_order.size() ; i++) {
-        vp__tmp.push_back(make_pair(m_secondpass_indiceSortedCandidatesList[i], i));
-    }
-    std::sort(vp__tmp.rbegin(), vp__tmp.rend()); 
-    for(Int32 i=0; i<vp__tmp.size(); i++){
-        m_secondpass_indiceSortedCandidatesList[i]  = vp__tmp[vp__tmp.size() - i - 1].second;
-    }
-return 1;
-}
 
 Int32 COperatorLineModel::RecomputeAroundCandidates(TPointList input_extremumList,
                                                     const TFloat64Range &lambdaRange,

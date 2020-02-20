@@ -86,10 +86,13 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
     TFloat64Range lambdaRange;
     TFloat64Range redshiftRange;
     Float64       redshiftStep;
+    Float64       maxCount; 
 
     ctx.GetParameterStore().Get( "lambdarange", lambdaRange );
     ctx.GetParameterStore().Get( "redshiftrange", redshiftRange );
     ctx.GetParameterStore().Get( "redshiftstep", redshiftStep );
+    ctx.GetDataStore().GetScopedParam( "linemodelsolve.linemodel.extremacount", maxCount);
+
     TFloat64Range spcLambdaRange;
     ctx.GetSpectrum().GetSpectralAxis().ClampLambdaRange( lambdaRange, spcLambdaRange );
 
