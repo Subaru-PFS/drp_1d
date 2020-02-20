@@ -108,7 +108,7 @@ void CLineModelExtremaResult::SaveLine(const CDataStore &store, std::ostream& st
 void CLineModelExtremaResult::Save( const CDataStore& store, std::ostream& stream) const
 {
     //Read directly from store; but couldnt save in the member variable!!!
-    TFloat64List Rank_PDF =  store.GetRank();
+    TInt32List Rank_PDF =  store.GetRank();
     // save extrema list, on 1 line
     if(Extrema.size()>0){
         stream <<  "#Extrema for z = {";
@@ -598,7 +598,7 @@ if(!zeros){
 void CLineModelExtremaResult::SaveJSON( const CDataStore& store, std::ostream& stream) const
 {
   //TODO: check if a re-ordering is useful for firstpass as well
-  TFloat64List order =  store.GetRank();
+  TInt32List order =  store.GetRank();
 
   stream << "{"<< std::endl;
   // save extrema list, on 1 line

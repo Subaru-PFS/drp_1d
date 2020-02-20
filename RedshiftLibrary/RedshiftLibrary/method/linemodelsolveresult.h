@@ -64,7 +64,7 @@ private:
 
 
         UInt32 m_bestRedshiftMethod = 2;
-        std::string m_bestRedshiftFromPdfOption = "maxproba";
+        std::string m_bestRedshiftFromPdfOption = "maxintgproba";
 
 };
 

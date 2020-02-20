@@ -45,8 +45,8 @@ public:
 
     std::string         GetScope( const COperatorResult&  result) const;
 
-    void                SetRank(const TFloat64List& Rank);
-    const TFloat64List& GetRank() const;
+    void                SetRank(const TInt32List& Rank);
+    const TInt32List& GetRank() const;
     
     void                SetIntgPDF(const TFloat64List& pdf);
     const TFloat64List& GetIntgPDF() const;
@@ -115,7 +115,7 @@ protected:
     std::string                     m_ProcessingID;
 
     TScopeStack                     m_ScopeStack;
-    TFloat64List                    m_Rank;
+    TInt32List                      m_Rank;
     TFloat64List                    m_IntgPDF;
 
 

@@ -33,7 +33,7 @@ void COperatorResult::SaveFloat64(std::ostream& stream,Float64 data) const
     else stream << data;
 }
 
-void COperatorResult::SaveTFloat64List(std::ostream& stream,std::string name,TFloat64List data, TFloat64List order) const 
+void COperatorResult::SaveTFloat64List(std::ostream& stream,std::string name,TFloat64List data, TInt32List order) const 
 {
   Bool b = order.size()==0;
   if(data.size()>0){
@@ -50,7 +50,7 @@ void COperatorResult::SaveTFloat64List(std::ostream& stream,std::string name,TFl
   }
 }
 
-void COperatorResult::SaveTFloat64ListOfList(std::ostream& stream,std::string name,std::vector<TFloat64List> data, TFloat64List order) const
+void COperatorResult::SaveTFloat64ListOfList(std::ostream& stream,std::string name,std::vector<TFloat64List> data, TInt32List order) const
 {
     if(data.size()>0){
     stream <<  "\""<<name<<"\" : [";
@@ -69,7 +69,7 @@ void COperatorResult::SaveTFloat64ListOfList(std::ostream& stream,std::string na
   }
 }
 
-void COperatorResult::SaveInt32Vector(std::ostream& stream,std::string name,std::vector<Int32> data, TFloat64List order) const
+void COperatorResult::SaveInt32Vector(std::ostream& stream,std::string name,std::vector<Int32> data, TInt32List order) const
 {
   Bool b = order.size()==0;
   if(data.size()>0){
@@ -86,7 +86,7 @@ void COperatorResult::SaveInt32Vector(std::ostream& stream,std::string name,std:
   }
 }
 
-void COperatorResult::SaveStringVector(std::ostream& stream,std::string name,std::vector<std::string> data, TFloat64List order) const 
+void COperatorResult::SaveStringVector(std::ostream& stream,std::string name,std::vector<std::string> data, TInt32List order) const 
 {
   Bool b = order.size()==0;
   if(data.size()>0){
@@ -103,7 +103,7 @@ void COperatorResult::SaveStringVector(std::ostream& stream,std::string name,std
   }
 }
 
-void COperatorResult::SaveStringVectorOfVector(std::ostream& stream,std::string name,std::vector<std::vector<std::string>> data, TFloat64List order) const
+void COperatorResult::SaveStringVectorOfVector(std::ostream& stream,std::string name,std::vector<std::vector<std::string>> data, TInt32List order) const
 {
 if(data.size()>0){
     Bool b = order.size()==0;
@@ -128,7 +128,7 @@ if(data.size()>0){
   }
 }
 
-void COperatorResult::SaveTContinuumIndexListVector(std::ostream& stream,std::string name,std::vector<CContinuumIndexes::TContinuumIndexList> data, TFloat64List order) const
+void COperatorResult::SaveTContinuumIndexListVector(std::ostream& stream,std::string name,std::vector<CContinuumIndexes::TContinuumIndexList> data, TInt32List order) const
 {
   if(data.size()>0){
     stream <<  "\""<<name << "Color\" : [";
