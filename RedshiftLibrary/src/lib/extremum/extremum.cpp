@@ -528,7 +528,8 @@ Bool CExtremum::FindAllPeaks(const Float64* xAxis, const Float64* yAxis, UInt32 
   return  true;
 }
 
-Bool CExtremum::FindAllPeaks(const Float64* xAxis, const Float64* yAxis, UInt32 n, vector <Float64>& maxX, vector <Float64>& maxY, Float64 SignSearch) const {
+Bool CExtremum::FindAllPeaks(const Float64* xAxis, const Float64* yAxis, UInt32 n, vector <Float64>& maxX, vector <Float64>& maxY, Float64 SignSearch) const 
+{
   if (n == 0)
     return false;
 
