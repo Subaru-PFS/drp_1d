@@ -152,13 +152,13 @@ Bool CExtremum::Find( const TFloat64List& xAxis, const TFloat64List& yAxis, TPoi
     vector < Float64 >  maxY, minY;
     Bool method = FindAllPeaks( selectedXAxis+rangeXBeginIndex, selectedYAxis+rangeXBeginIndex, (rangeXEndIndex-rangeXBeginIndex)+1, maxX, maxY );    
 
-    //below we will be looking for all local minima
+    //Look for all local minima
     Bool method_min = FindAllPeaks( selectedXAxis+rangeXBeginIndex, selectedYAxis+rangeXBeginIndex, (rangeXEndIndex-rangeXBeginIndex)+1, minX, minY, -1*m_SignSearch); 
     for(Int32 i = 0; i <minX.size(); i++){
       minY[i] = -1*minY[i];
     }
     //Calculate prominence and remove "low" prominence peaks
-    //this is useful also for eliminating neighboring peaks
+    //this is ALSO useful for eliminating neighboring peaks in some cases
     Cut_Prominence_Merit(maxX, maxY, minX, minY);
 
     //refine using sliding windows: aiming at avoiding duplicate candidates when possible. 
@@ -174,7 +174,7 @@ Bool CExtremum::Find( const TFloat64List& xAxis, const TFloat64List& yAxis, TPoi
     return true;
 }
 /**
- * prominence: vertical distance between a summit and the key col, i.e., the closest (horizantal) minima
+ * prominence: vertical distance between a summit and the key col, i.e., the closest (horizontal) minima
  * joint prominence_merit cut
  * Method: 
  * 1. identify for consecutive peaks the key col.
@@ -182,37 +182,85 @@ Bool CExtremum::Find( const TFloat64List& xAxis, const TFloat64List& yAxis, TPoi
  * 3. if prominence == peak.y, then peak is a very high peak
  * 4. Remove low prominence peaks : TO decide on "low" value
  * 
+ * To identify key col for each peak:
+ * 1. Extend to the right and to the left of the peak until reaching higher peaks (ya_current < ya_right_after) //skip peaks of same value and continue extending
+ * 2. Find the highest minima within the range identified in (1), considered as the key col.
 */
 Bool CExtremum::Cut_Prominence_Merit( vector <Float64>& maxX, vector <Float64>& maxY, vector <Float64>& minX, vector <Float64>& minY) const{
-  Int32 imin = -1;
-  //determine if we are starting with a min or a max
-  if(maxX[0]<minX[0]){
-    imin = 0;
-  }else{
-    imin = 1; //dismiss the first min value 
-  }
-
   //find highest peak:
   Float64 maxV = maxY[*max_element(maxY.begin(), maxY.end()) ]; 
-
-  //TODO: check size concordance between maxX and minX
   vector <Float64> prominence(maxX.size()), tmpX, tmpY; 
-  //double check each time the order of maxX and minY
+
   for(Int32 i = 0; i<maxX.size(); i++){
-    if(minX[imin]<maxX[i]){
-      Log.LogError("Problem in Prominence computation for peak selection");
-      throw runtime_error("Problem in Prominence computation for peak selection");
+    //current peak elevation
+    Float64 ymax = maxY[i];
+    TFloat64List rangex, rangey;//To remove: kept for debugging
+    Float64 rangex_low, rangex_high;
+    //extend to the left until reaching a higher peak
+    bool right = true, left = true;
+    //extend to the right until reaching a higher peak
+    Int32 j = i + 1;
+    while(right && j < maxX.size()){
+      rangex.push_back(maxX[j]);
+      rangey.push_back(maxY[j]);
+      //a higher peak is reached, leave
+      if(maxY[j] > ymax){
+        right = false;
+        rangex_high = maxX[j];
+        break;
+      } 
+      j++;
     }
-    prominence[i] = maxY[i] - minY[imin++]; 
+    j = i - 1;
+    while(left && j > -1 ){
+      rangex.push_back(maxX[j]);
+      rangey.push_back(maxY[j]);
+      //a higher peak is reached, leave
+      if(maxY[j] > ymax){
+        left = false;
+        rangex_low = maxX[j];
+        break;
+      } 
+      j--;
+    }
+    //look into minx looking for key_col within [rangex[0]; rangex[last]]
+    Float64 key_coly = -DBL_MAX, key_colx;
+    if(minX[0] > maxX[0]){
+      Log.LogDebug("the first identified is not preceded by a real minima; TODO: Fix it NOW maybe!!");
+    }
+    j = i;
+    //usually there should be as much minima as maxima, for this reason I start j = i and check inclusion
+    while(j < minX.size()){
+      if(minX[j] < rangex_low || minX[j] > rangex_high){ //minima outside range
+        break;
+      }
+      //key_col is the highest minima within the range
+      if(minY[j] > key_coly){
+        key_coly = minY[j];
+        key_colx = minX[j];//not useful, but just to check!
+      }
+      j++;
+    }
+
+    j = i-1;
+    //usually there should be as much minima as maxima, for this reason I start j = i and check inclusion
+    while(j > -1){
+      if(minX[j] < rangex_low || minX[j] > rangex_high){ //minima outside range
+        break;
+      }
+      if(minY[j] > key_coly){
+        key_coly = minY[j];
+        key_colx = minX[j];
+      }
+      j--;
+    }
+    prominence[i] = maxY[i] - key_coly; 
     //keep peaks whose height is almost equal to their prominence
-    Float64 prominence_thresh = 900; //heuristic value
+    Float64 prominence_thresh = 600; //heuristic value
     if(prominence[i]>prominence_thresh || (m_meritCut &&(maxV - maxY[i] < m_meritCut)) ){ //heuristic value
       tmpX.push_back(maxX[i]);
       tmpY.push_back(maxY[i]);
     }
-    //compare prominence with maxY values
-    if(imin == minX.size())
-      break; 
   }
   maxX.clear(); maxY.clear();
   for(Int32 i = 0; i<tmpX.size(); i++){

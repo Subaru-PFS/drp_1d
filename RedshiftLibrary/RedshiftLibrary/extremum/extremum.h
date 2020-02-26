@@ -37,6 +37,7 @@ private:
     Bool FilterOutNeighboringPeaks( vector <Float64>& maxX, vector <Float64>& maxY) const;
     Bool Truncate( vector <Float64>& xAxis, vector <Float64>& yAxis, Int32 maxCount, TPointList& maxPoint) const;
     Bool Cut_Prominence_Merit( vector <Float64>& maxX, vector <Float64>& maxY, vector <Float64>& minX, vector <Float64>& minY) const;
+ 
     UInt32          m_MaxPeakCount;
     TFloat64Range   m_XRange;
     Float64         m_meritCut;
