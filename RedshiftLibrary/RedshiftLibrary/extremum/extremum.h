@@ -31,6 +31,7 @@ public:
     Bool DefaultExtremum( const TFloat64List& xAxis, const TFloat64List& yAxis, TPointList& maxPoint );
     //made it public to do unit tests
     Bool Cut_Threshold( vector <Float64>& maxX, vector <Float64>& maxY, Int32 keepMinN) const;
+    
 private:
     Bool FindAllPeaks(const Float64* xAxis, const Float64* yAxis, UInt32 n, vector <Float64>& maxX, vector <Float64>& maxY) const;
     Bool FindAllPeaks(const Float64* xAxis, const Float64* yAxis, UInt32 n, vector <Float64>& maxX, vector <Float64>& maxY, Float64 SignSearch) const;
