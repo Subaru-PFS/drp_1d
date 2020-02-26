@@ -188,7 +188,10 @@ Bool CExtremum::Find( const TFloat64List& xAxis, const TFloat64List& yAxis, TPoi
 */
 Bool CExtremum::Cut_Prominence_Merit( vector <Float64>& maxX, vector <Float64>& maxY, vector <Float64>& minX, vector <Float64>& minY) const{
   //find highest peak:
-  Float64 maxV = maxY[*max_element(maxY.begin(), maxY.end()) ]; 
+  Float64 maxV = *std::max_element(maxY.begin(), maxY.end()); //max of maxY
+  Float64 minV = *std::min_element(minY.begin(), minY.end()); //min of minY
+  Float64 ref_prominence = maxV - minV; //used to normalize obtained prominence TODO: requires discussion
+  Float64 prominence_thresh = 0.1; //heuristic value, TODO: requires discussion (maybe passed in param.json)
   vector <Float64> prominence(maxX.size()), tmpX, tmpY; 
 
   for(Int32 i = 0; i<maxX.size(); i++){
@@ -271,10 +274,9 @@ Bool CExtremum::Cut_Prominence_Merit( vector <Float64>& maxX, vector <Float64>& 
       }
       l--;
     }
-    prominence[i] = maxY[i] - std::max(key_coly_l, key_coly_r); 
+    prominence[i] = (maxY[i] - std::max(key_coly_l, key_coly_r))/ ref_prominence;
     //keep peaks whose height is almost equal to their prominence
-    Float64 prominence_thresh = 600; //heuristic value
-    if(prominence[i]>prominence_thresh || (m_meritCut &&(maxV - maxY[i] < m_meritCut)) ){ //heuristic value
+    if(prominence[i] > prominence_thresh || (m_meritCut &&(maxV - maxY[i] < m_meritCut)) ){ //heuristic value
       tmpX.push_back(maxX[i]);
       tmpY.push_back(maxY[i]);
     }
