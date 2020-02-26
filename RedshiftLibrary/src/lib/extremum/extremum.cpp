@@ -195,66 +195,83 @@ Bool CExtremum::Cut_Prominence_Merit( vector <Float64>& maxX, vector <Float64>& 
     //current peak elevation
     Float64 ymax = maxY[i];
     TFloat64List rangex, rangey;//To remove: kept for debugging
-    Float64 rangex_low, rangex_high;
+    Float64 rangex_low = -1, rangex_high = -1;
     //extend to the left until reaching a higher peak
     bool right = true, left = true;
     //extend to the right until reaching a higher peak
     Int32 j = i + 1;
-    while(right && j < maxX.size()){
-      rangex.push_back(maxX[j]);
-      rangey.push_back(maxY[j]);
-      //a higher peak is reached, leave
-      if(maxY[j] > ymax){
+    while(right){
+      //a higher peak or last element is reached, leave
+      if(maxY[j] > ymax || j == maxX.size()){
         right = false;
-        rangex_high = maxX[j];
+        if(j == maxX.size())
+          rangex_high = std::max(minX[minX.size() - 1], maxX[maxX.size() - 1]);
+        else
+          rangex_high = maxX[j];
         break;
       } 
+      rangex.push_back(maxX[j]);
+      rangey.push_back(maxY[j]);
       j++;
     }
     j = i - 1;
-    while(left && j > -1 ){
-      rangex.push_back(maxX[j]);
-      rangey.push_back(maxY[j]);
-      //a higher peak is reached, leave
-      if(maxY[j] > ymax){
+    while(left){
+      //a higher peak  or first element is reached, leave
+      if(maxY[j] > ymax || j == -1){
         left = false;
-        rangex_low = maxX[j];
+        if(j<0)
+          rangex_low = std::min(minX[0], maxX[0]);
+        else
+          rangex_low = maxX[j];
         break;
-      } 
+      }
+      rangex.push_back(maxX[j]);
+      rangey.push_back(maxY[j]); 
       j--;
     }
-    //look into minx looking for key_col within [rangex[0]; rangex[last]]
-    Float64 key_coly = -DBL_MAX, key_colx;
-    if(minX[0] > maxX[0]){
-      Log.LogDebug("the first identified is not preceded by a real minima; TODO: Fix it NOW maybe!!");
+    if(rangex_low + rangex_high < 0){
+      Log.LogError("Problem in range determination %d", i);
+      throw runtime_error("Problem in range determination");
     }
-    j = i;
+    //look into minX for key_col within rangex
+    //key_col is the highest minima between the lowest minimum to the right of the peak abd to the left of the peak
+    Float64 key_coly_r = DBL_MAX, key_coly_l = DBL_MAX, key_colx;
+    Int32 r, l; 
+    if(maxX[0]<minX[0]){ //signal starts with a peak
+      l = i - 1;
+      r = i;
+      if(i == -1) //consider only right range
+        key_coly_l = -DBL_MAX;
+    } else { //signal starts with a minima
+      l = i;
+      r = i + 1; 
+      if(r == minX.size()) //consider only left range
+        key_coly_r = -DBL_MAX;  
+    }
     //usually there should be as much minima as maxima, for this reason I start j = i and check inclusion
-    while(j < minX.size()){
-      if(minX[j] < rangex_low || minX[j] > rangex_high){ //minima outside range
+    //case where a peak is the first of last element (needs more work)
+    while(r < minX.size()){
+      if(minX[r] < rangex_low || minX[r] > rangex_high){ //minima outside range
         break;
       }
-      //key_col is the highest minima within the range
-      if(minY[j] > key_coly){
-        key_coly = minY[j];
-        key_colx = minX[j];//not useful, but just to check!
+      if(minY[r] < key_coly_r){
+        key_coly_r = minY[r];
+        key_colx = minX[r];//not useful, but just to check!
       }
-      j++;
+      r++;
     }
 
-    j = i-1;
-    //usually there should be as much minima as maxima, for this reason I start j = i and check inclusion
-    while(j > -1){
-      if(minX[j] < rangex_low || minX[j] > rangex_high){ //minima outside range
+    while(l > -1){
+      if(minX[l] < rangex_low || minX[l] > rangex_high){ //minima outside range
         break;
       }
-      if(minY[j] > key_coly){
-        key_coly = minY[j];
-        key_colx = minX[j];
+      if(minY[l] < key_coly_l){
+        key_coly_l = minY[l];
+        key_colx = minX[l];
       }
-      j--;
+      l--;
     }
-    prominence[i] = maxY[i] - key_coly; 
+    prominence[i] = maxY[i] - std::max(key_coly_l, key_coly_r); 
     //keep peaks whose height is almost equal to their prominence
     Float64 prominence_thresh = 600; //heuristic value
     if(prominence[i]>prominence_thresh || (m_meritCut &&(maxV - maxY[i] < m_meritCut)) ){ //heuristic value
