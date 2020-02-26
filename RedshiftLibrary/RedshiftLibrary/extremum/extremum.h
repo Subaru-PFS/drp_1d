@@ -33,9 +33,10 @@ public:
     Bool Cut_Threshold( vector <Float64>& maxX, vector <Float64>& maxY, Int32 keepMinN) const;
 private:
     Bool FindAllPeaks(const Float64* xAxis, const Float64* yAxis, UInt32 n, vector <Float64>& maxX, vector <Float64>& maxY) const;
-    Bool FilterOutNeighboringPeaks( vector <Float64>& maxX, vector <Float64>& maxY, UInt32 n) const;
+    Bool FindAllPeaks(const Float64* xAxis, const Float64* yAxis, UInt32 n, vector <Float64>& maxX, vector <Float64>& maxY, Float64 SignSearch) const;
+    Bool FilterOutNeighboringPeaks( vector <Float64>& maxX, vector <Float64>& maxY) const;
     Bool Truncate( vector <Float64>& xAxis, vector <Float64>& yAxis, Int32 maxCount, TPointList& maxPoint) const;
-
+    Bool Cut_Prominence_Merit( vector <Float64>& maxX, vector <Float64>& maxY, vector <Float64>& minX, vector <Float64>& minY) const;
     UInt32          m_MaxPeakCount;
     TFloat64Range   m_XRange;
     Float64         m_meritCut;

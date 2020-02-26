@@ -148,24 +148,78 @@ Bool CExtremum::Find( const TFloat64List& xAxis, const TFloat64List& yAxis, TPoi
     //Find does 4 things: findAllPeaks; Cut_Threshold; PeakRefinement using sliding windows; Truncation based on allowed peak number
     //Didier proposes to set extremaCount=100 (hardcoded value) when called from linemodelsolve.
     //And that extremaCount, as defined in param.json, is taken into consideration elsewhere, at the end of the processing
-    vector < Float64 >  maxX;
-    vector < Float64 >  maxY;
-    Bool method = FindAllPeaks( selectedXAxis+rangeXBeginIndex, selectedYAxis+rangeXBeginIndex, (rangeXEndIndex-rangeXBeginIndex)+1, maxX, maxY );
- 
-    Int32 keepMinN = 2;
+    vector < Float64 >  maxX, minX;
+    vector < Float64 >  maxY, minY;
+    Bool method = FindAllPeaks( selectedXAxis+rangeXBeginIndex, selectedYAxis+rangeXBeginIndex, (rangeXEndIndex-rangeXBeginIndex)+1, maxX, maxY );    
 
-    //Cut_Threshold is optional
-    if(m_meritCut>0.0){
-      Bool v = Cut_Threshold(maxX, maxY, keepMinN);
+    //below we will be looking for all local minima
+    Bool method_min = FindAllPeaks( selectedXAxis+rangeXBeginIndex, selectedYAxis+rangeXBeginIndex, (rangeXEndIndex-rangeXBeginIndex)+1, minX, minY, -1*m_SignSearch); 
+    for(Int32 i = 0; i <minX.size(); i++){
+      minY[i] = -1*minY[i];
     }
+    //Calculate prominence and remove "low" prominence peaks
+    //this is useful also for eliminating neighboring peaks
+    Cut_Prominence_Merit(maxX, maxY, minX, minY);
 
     //refine using sliding windows: aiming at avoiding duplicate candidates when possible. 
     FilterOutNeighboringPeaks(maxX, maxY, keepMinN);//keep at least keepMinN candidates
 
+    //Cut_Threshold is optional
+  /*  if(m_meritCut>0.0){ 
+      Bool v = Cut_Threshold(maxX, maxY);
+    }*/
     //truncate: reduces size of candidate list and also prepares the maxPoint List
     Truncate(maxX, maxY, m_MaxPeakCount, maxPoint);
 
     return true;
+}
+/**
+ * prominence: vertical distance between a summit and the key col, i.e., the closest (horizantal) minima
+ * joint prominence_merit cut
+ * Method: 
+ * 1. identify for consecutive peaks the key col.
+ * 2. calculate prominence for the current peak
+ * 3. if prominence == peak.y, then peak is a very high peak
+ * 4. Remove low prominence peaks : TO decide on "low" value
+ * 
+*/
+Bool CExtremum::Cut_Prominence_Merit( vector <Float64>& maxX, vector <Float64>& maxY, vector <Float64>& minX, vector <Float64>& minY) const{
+  Int32 imin = -1;
+  //determine if we are starting with a min or a max
+  if(maxX[0]<minX[0]){
+    imin = 0;
+  }else{
+    imin = 1; //dismiss the first min value 
+  }
+
+  //find highest peak:
+  Float64 maxV = maxY[*max_element(maxY.begin(), maxY.end()) ]; 
+
+  //TODO: check size concordance between maxX and minX
+  vector <Float64> prominence(maxX.size()), tmpX, tmpY; 
+  //double check each time the order of maxX and minY
+  for(Int32 i = 0; i<maxX.size(); i++){
+    if(minX[imin]<maxX[i]){
+      Log.LogError("Problem in Prominence computation for peak selection");
+      throw runtime_error("Problem in Prominence computation for peak selection");
+    }
+    prominence[i] = maxY[i] - minY[imin++]; 
+    //keep peaks whose height is almost equal to their prominence
+    Float64 prominence_thresh = 900; //heuristic value
+    if(prominence[i]>prominence_thresh || (m_meritCut &&(maxV - maxY[i] < m_meritCut)) ){ //heuristic value
+      tmpX.push_back(maxX[i]);
+      tmpY.push_back(maxY[i]);
+    }
+    //compare prominence with maxY values
+    if(imin == minX.size())
+      break; 
+  }
+  maxX.clear(); maxY.clear();
+  for(Int32 i = 0; i<tmpX.size(); i++){
+    maxX.push_back(tmpX[i]);
+    maxY.push_back(tmpY[i]);
+  }
+  return true;
 }
 /**
  * \Brief: removes extrema based on meritCut.
@@ -389,7 +443,100 @@ Bool CExtremum::FindAllPeaks(const Float64* xAxis, const Float64* yAxis, UInt32 
   return  true;
 }
 
+Bool CExtremum::FindAllPeaks(const Float64* xAxis, const Float64* yAxis, UInt32 n, vector <Float64>& maxX, vector <Float64>& maxY, Float64 SignSearch) const {
+  if (n == 0)
+    return false;
 
+  vector < Float64 > tmpX(n);
+  vector < Float64 > tmpY(n);
+
+  for (UInt32 t = 0; t < n; t++) {
+    tmpX[t] = xAxis[t];
+    tmpY[t] = SignSearch * yAxis[t];
+  }
+
+  Int32 maxCount = 0;
+
+    // find first and last non Nan element
+    Int32 firstNonNanInd = 0;
+    for (Int32 iFirst = 0; iFirst < n - 1; iFirst++) {
+      if (!std::isnan((double) tmpY[iFirst])) {
+        firstNonNanInd = iFirst;
+        break;
+      }
+    }
+    Int32 lastNonNanInd = n - 1;
+    for (Int32 iLast = n - 1; iLast > 0; iLast--) {
+      if (!std::isnan(tmpY[iLast])) {
+        lastNonNanInd = iLast; 
+        break;
+      }
+    }
+    
+    bool plank = false; Int32 cnt_plk = 0; 
+    // First element
+    if (tmpY[firstNonNanInd] > tmpY[firstNonNanInd + 1]) {
+      maxX.push_back(tmpX[firstNonNanInd]);
+      maxY.push_back(tmpY[firstNonNanInd]);
+      maxCount++;
+    }else{
+      if(tmpY[firstNonNanInd] == tmpY[firstNonNanInd + 1]) {
+        plank = true;
+        cnt_plk++;
+      }
+    }
+
+    for (Int32 i = firstNonNanInd + 1; i < lastNonNanInd; i++) {
+     if ((tmpY[i] > tmpY[i - 1]) && (tmpY[i] > tmpY[i + 1])) {
+        maxX.push_back(tmpX[i]);
+        maxY.push_back(tmpY[i]);
+        maxCount++;
+        continue;
+      }
+      if((tmpY[i] > tmpY[i - 1]) && (tmpY[i] == tmpY[i + 1])){
+        //plank start point
+        plank = true;
+        cnt_plk++;
+        continue;
+      }
+      if((tmpY[i] == tmpY[i - 1])){ 
+        //high plank: signal is decreasing after the plank. Peak identified
+        if (tmpY[i] > tmpY[i + 1] && plank){ //check if we already identified a high plank
+          cnt_plk++;
+          Int32 idx_plk = i - round(cnt_plk/2);
+          //plank end point
+          maxX.push_back(tmpX[idx_plk]);
+          maxY.push_back(tmpY[idx_plk]);
+          maxCount++; 
+          plank = false;
+          cnt_plk = 0;
+          continue;
+        }
+        //low plank: pdf is increasing after the plank. No peak here!
+        if(tmpY[i] < tmpY[i + 1]){
+          plank = false; //end
+          cnt_plk = 0;
+        } else { //Plank is getting larger
+          cnt_plk++;
+        }
+      }
+    }
+    // last element: check if plank is extended
+    if (tmpY[lastNonNanInd - 1] <= tmpY[lastNonNanInd]) {
+      Int32 idx;
+      if(plank){
+        cnt_plk++;
+        idx = lastNonNanInd - round(cnt_plk/2);
+      }else{ 
+        idx = lastNonNanInd;
+      }
+
+      maxX.push_back(tmpX[idx]);
+      maxY.push_back(tmpY[idx]);
+      maxCount++;
+    }
+  return  true;
+}
 /**
  * Brief: Reduce number of peaks based on maxCount passed from param.json if present
  * Reduction happens based on PDF values (we eliminate peaks with the smallest values)
