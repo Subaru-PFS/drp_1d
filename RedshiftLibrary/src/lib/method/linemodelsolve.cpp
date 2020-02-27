@@ -1221,7 +1221,6 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
             linemodel.m_secondpass_indiceSortedCandidatesList.push_back(ie);
         }
     }
-///truncate was here
 
 
     Int32 retSaveResults = linemodel.SaveResults(_spc,
