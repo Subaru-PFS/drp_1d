@@ -243,7 +243,7 @@ Bool CExtremum::Cut_Prominence_Merit( vector <Float64>& maxX, vector <Float64>& 
     if(maxX[0]<minX[0]){ //signal starts with a peak
       l = i - 1;
       r = i;
-      if(i == -1) //consider only right range
+      if(l == -1) //consider only right range
         key_coly_l = -DBL_MAX;
     } else { //signal starts with a minima
       l = i;
