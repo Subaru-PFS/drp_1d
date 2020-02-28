@@ -232,7 +232,7 @@ Bool CExtremum::Cut_Prominence_Merit( vector <Float64>& maxX, vector <Float64>& 
       rangey.push_back(maxY[j]); 
       j--;
     }
-    if(rangex_low + rangex_high < 0){
+    if(rangex_low == -1 || rangex_high == -1){
       Log.LogError("Problem in range determination %d", i);
       throw runtime_error("Problem in range determination");
     }
