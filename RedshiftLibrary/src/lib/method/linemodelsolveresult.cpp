@@ -172,13 +172,47 @@ Bool CLineModelSolveResult::GetBestRedshift(const CDataStore& store,
 }
 
 /**
+ * Simply reading from datastore info related to the best Candidate
+*/
+Bool CLineModelSolveResult::GetBestRedshiftFromPdf(const CDataStore& store,
+                                            Float64& redshift,
+                                            Float64& probaLog,
+                                            Float64& sigma,
+                                            Float64& snrHa,
+                                            Float64& lfHa ,
+                                            Float64 &snrOII,
+                                            Float64 &lfOII,
+                                            std::string& modelTplratio,
+                                            std::string& modelTplContinuum ) const
+{
+    std::string scope = store.GetScope( *this ) + "linemodelsolve.linemodel";
+    auto results = store.GetGlobalResult( scope.c_str() );
+    auto lineModelResult = std::dynamic_pointer_cast<const CLineModelResult>( results.lock() );
+    //ideally ExtremaPDF should be saved in resultstore as part of lineModelResult object! 
+    TFloat64List ExtremaPDF = store.GetIntgPDF();
+
+    if(results.expired())
+        return false;
+
+    redshift = lineModelResult->ExtremaResult.Extrema[0];
+    probaLog = ExtremaPDF[0];
+    sigma = lineModelResult->ExtremaResult.DeltaZ[0];
+    snrHa = lineModelResult->ExtremaResult.snrHa[0];
+    lfHa = lineModelResult->ExtremaResult.lfHa[0];
+    snrOII = lineModelResult->ExtremaResult.snrOII[0];
+    lfOII = lineModelResult->ExtremaResult.lfOII[0];
+    modelTplratio = lineModelResult->ExtremaResult.FittedTplshapeName[0];
+    modelTplContinuum = lineModelResult->ExtremaResult.FittedTplName[0];
+    return true;
+}
+/**
  * \brief Searches the best_z = argmax(pdf)
  * output: redshift = argmax(pdf)
  * output: merit = chi2(redshift)
  * output: sigma = deltaz(redshift)
  *
  **/
-Bool CLineModelSolveResult::GetBestRedshiftFromPdf(const CDataStore& store,
+Bool CLineModelSolveResult::GetBestRedshiftFromPdf_old(const CDataStore& store,
                                                     Float64& redshift,
                                                     Float64& merit,
                                                     Float64& sigma,

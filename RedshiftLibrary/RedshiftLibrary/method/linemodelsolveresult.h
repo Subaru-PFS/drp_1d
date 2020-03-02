@@ -43,6 +43,16 @@ public:
                          Float64 &lfOII) const;
     Bool GetBestRedshiftLogArea( const CDataStore& store, Float64& redshift, Float64& merit ) const;
     Bool GetBestRedshiftWithStrongELSnrPrior( const CDataStore& store, Float64& redshift, Float64& merit ) const;
+    Bool GetBestRedshiftFromPdf_old(const CDataStore& store,
+                                Float64& redshift,
+                                Float64& merit,
+                                Float64& sigma,
+                                Float64 &snrHa,
+                                Float64 &lfHa,
+                                Float64 &snrOII,
+                                Float64 &lfOII,
+                                std::string &modelTplratio,
+                                std::string &modelTplContinuum) const;
     Bool GetBestRedshiftFromPdf(const CDataStore& store,
                                 Float64& redshift,
                                 Float64& merit,
