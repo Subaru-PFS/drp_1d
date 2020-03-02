@@ -206,6 +206,7 @@ Bool CLineModelSolveResult::GetBestRedshiftFromPdf(const CDataStore& store,
     return true;
 }
 /**
+ * TODO: To Delete 
  * \brief Searches the best_z = argmax(pdf)
  * output: redshift = argmax(pdf)
  * output: merit = chi2(redshift)
