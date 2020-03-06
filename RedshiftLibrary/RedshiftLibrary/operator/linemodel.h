@@ -282,6 +282,8 @@ private:
     void ComputeArea2(CLineModelResult& results);
     Float64 FitBayesWidth( CSpectrumSpectralAxis& spectralAxis, CSpectrumFluxAxis& fluxAxis, Float64 z, Int32 start, Int32 end);
 
+    Bool AllAmplitudesAreZero(const TBoolList &amplitudesZero, Int32 nbZ);
+
     Int32 interpolateLargeGridOnFineGrid(TFloat64List redshiftsLargeGrid, TFloat64List redshiftsFineGrid, TFloat64List meritLargeGrid, TFloat64List &meritFineGrid);
 
     std::vector<std::shared_ptr<CModelSpectrumResult>  > m_savedModelSpectrumResults;

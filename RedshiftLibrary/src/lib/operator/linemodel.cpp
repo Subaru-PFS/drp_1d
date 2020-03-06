@@ -473,6 +473,7 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
         "  Operator-Linemodel: ---------- ---------- ---------- ----------");
 
     //
+    TBoolList allAmplitudesZero;
     Int32 indexLargeGrid = 0;
     std::vector<Float64> calculatedLargeGridRedshifts;
     std::vector<Float64> calculatedLargeGridMerits;
@@ -557,6 +558,27 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
             m_result->ScaleMargCorrectionContinuum[i] =
                 m_result->ScaleMargCorrectionContinuum[i-1];
         }
+        // Flags on continuum and model amplitudes
+        //Log.Logdetail("Continuum amplitude = %f at z=%f", m_result->ContinuumModelSolutions[i].tplAmplitude, m_result->Redshifts[i]);
+        Int32 nbLines = m_result->LineModelSolutions[i].Amplitudes.size();
+        Bool continuumAmplitudeZero = (m_result->ContinuumModelSolutions[i].tplAmplitude == 0.0);
+        Bool modelAmplitudesZero = true;
+        for (Int32 l = 0; l < nbLines; l++)
+        {
+            modelAmplitudesZero = (modelAmplitudesZero && m_result->LineModelSolutions[i].Amplitudes[l] <= 0.0);
+            //Log.LogDetail("Model amplitude [%d]: %f", l, m_result->LineModelSolutions[i].Amplitudes[l]);
+        }
+        //Log.Logdetail("modelAmplitudesZero = %s at z=%f", modelAmplitudesZero ? "true" : "false", m_result->Redshifts[i]);
+        allAmplitudesZero.push_back(modelAmplitudesZero && continuumAmplitudeZero);
+        //Log.LogDetail("allAmplitudesZero [%d] = %s at z=%f", i, allAmplitudesZero[i] ? "true" : "false", m_result->Redshifts[i]);
+
+    }
+    // Check if all amplitudes are zero for all z
+    Bool checkAllAmplitudes = AllAmplitudesAreZero(allAmplitudesZero, m_result->Redshifts.size());
+    if (checkAllAmplitudes == true)
+    {
+        Log.LogError("  Operator-Linemodel: All amplitudes (continuum & model) are zero for all z. Aborting...");
+        throw runtime_error("  Operator-Linemodel: All amplitudes (continuum & model) are zero for all z. Aborting...");
     }
 
     // now interpolate large grid merit results onto the fine grid
@@ -599,6 +621,15 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
     return 0;
 }
 
+Bool COperatorLineModel::AllAmplitudesAreZero(const TBoolList &amplitudesZero, Int32 nbZ)
+{
+    Bool areZero = true;
+    for (Int32 iZ = 0; iZ < nbZ; iZ++)
+    {
+       areZero = (areZero && amplitudesZero[iZ]);
+    }
+    return areZero;
+}
 
 void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
                                                  const CSpectrum &spectrumContinuum,
