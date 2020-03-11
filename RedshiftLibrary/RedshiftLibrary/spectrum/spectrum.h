@@ -55,9 +55,11 @@ public:
     Bool                            ConvertToLinearScale();
 
     Bool                            RemoveContinuum( CContinuum& remover );
+    const Bool                      checkFlux(Float64 flux, Int32 index) const;
+    const Bool                      checkNoise(Float64 error, Int32 index) const;
     const Bool                      IsFluxValid(Float64 LambdaMin, Float64 LambdaMax) const;
     const Bool                      IsNoiseValid(Float64 LambdaMin, Float64 LambdaMax) const;
-    Bool                            correctSpectrum( Float64 LambdaMin,  Float64 LambdaMax, Float64 coeffCorr=10.0);
+    Bool                            correctSpectrum(Float64 LambdaMin, Float64 LambdaMax, Float64 coeffCorr=10.0);
 
     const std::string&       	    GetFullPath() const;
     const Int32                     GetDecompScales() const;

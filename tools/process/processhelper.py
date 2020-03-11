@@ -8,6 +8,7 @@ Created on Sat Dec 24 08:25:11 2016
 import os
 import sys
 import time
+from datetime import datetime
 import argparse
 
 import math
@@ -31,12 +32,13 @@ import spectrumlist
 
 
 class processHelper(object):
-    def __init__(self, confpath, binpath, rootoutputpath, dividecount, opt_bracketing, bracketing_templatesRootPath, refpath):
+    def __init__(self, confpath, binpath, rootoutputpath, dividecount, opt_bracketing, bracketing_templatesRootPath, refpath, opt_queue_lam):
         self.logTagStr = "processHelper"
         self.ready = False
         self.configPath = confpath
         self.binPath = binpath
         self.baseoutputpath = rootoutputpath
+        self.opt_queue_lam = opt_queue_lam
         
         self.logsPath = os.path.join(self.baseoutputpath, "cluster_logs")
         if not os.path.exists(self.logsPath):
@@ -64,7 +66,8 @@ class processHelper(object):
             return
         
         #prepare the working dir
-        self.work_process_dir = os.path.abspath("process-work")
+        fn_datestr = datetime.now().strftime('%Y%m%d_%H%M%S')
+        self.work_process_dir = os.path.abspath("process-work_{}".format(fn_datestr))
         if not os.path.exists(self.work_process_dir):
             os.mkdir(self.work_process_dir)        
         
@@ -281,7 +284,8 @@ class processHelper(object):
                     
                     fin=open(self.config_parametersPath)
                     data_json = json.load(fin)
-                    data_json['linemodelsolve']['linemodel']['stronglinesprior']=selpp
+                    #data_json['linemodelsolve']['linemodel']['stronglinesprior']=selpp
+                    data_json['linemodelsolve']['linemodel']['haprior']=selpp
                     data_json['linemodelsolve']['linemodel']['euclidnhaemittersStrength']=nhaempriorS
                     fin.close()
                     # Writing JSON data
@@ -488,7 +492,10 @@ class processHelper(object):
                     f.write("\n")
                     f.write("#PBS -l mem=2GB") # request 2GB of memory
                     f.write("\n")
-                    f.write("#PBS -l walltime=30:00:00")
+                    if self.opt_queue_lam=="batch":
+                        f.write("#PBS -l walltime=60:00:00")
+                    elif self.opt_queue_lam=="short":
+                        f.write("#PBS -l walltime=04:00:00")
                     f.write("\n")
                     f.write("\n")
                     f.write("cd $PBS_O_WORKDIR")
@@ -539,7 +546,17 @@ class processHelper(object):
                     
                 if not dryrun:
                     if local=="cluster_lam":
-                        bashCommand = "qsub {}".format(fpbspath)
+                        
+                        options = ""
+                        options += " " ##
+                        if self.opt_queue_lam=="batch":
+                            options += "-q batch"
+                        elif self.opt_queue_lam=="short":
+                            options += "-q short"
+                        options += " " ##
+                        
+                        bashCommand = "qsub {} {}".format(options, fpbspath)
+                                            
                     elif local=="cluster_in2p3":
                         options = "-l sps=1"
                         options += " " ##
@@ -602,6 +619,10 @@ def StartFromCommandLine( argv ) :
     parser.add_argument("-r", "--refPath", dest="refPath", default="",
                 help="path to the reference file, used for processing at z for each source. Forces spclist splitting with count=1") 
     
+    parser.add_argument("-q", "--queuelam", dest="queuelam", default="batch",
+                help="LAM cluster queue selection (also sets the walltime)") 
+    
+    
                     
     options = parser.parse_args()
     #print(options)
@@ -638,6 +659,9 @@ def StartFromCommandLine( argv ) :
         opt_bracketing = options.methodBracketing
         print("INFO: cmdline arg bracketing = {}".format(opt_bracketing))
         
+        opt_queue_lam = options.queuelam
+        print("INFO: using queue (specific to LAM cluster: {}".format(opt_queue_lam))
+        
         bracketing_templatesRootPath = ""
         if not opt_bracketing=="" and not opt_bracketing=="priors_optimization-euclid":
             bracketing_templatesRootPath = os.path.abspath(options.brackTemplatesRootPath)
@@ -645,7 +669,14 @@ def StartFromCommandLine( argv ) :
                 print("ERROR: bracketing templates root path not found: {}\nAborting".format(bracketing_templatesRootPath))
                 exit()
                 
-        cp = processHelper(confpath=rpath, binpath=rbinpath, rootoutputpath=routputpath, dividecount=dividecount, opt_bracketing=opt_bracketing, bracketing_templatesRootPath=bracketing_templatesRootPath, refpath=rrefPath)
+        cp = processHelper(confpath=rpath, 
+                           binpath=rbinpath, 
+                           rootoutputpath=routputpath, 
+                           dividecount=dividecount, 
+                           opt_bracketing=opt_bracketing, 
+                           bracketing_templatesRootPath=bracketing_templatesRootPath, 
+                           refpath=rrefPath,
+                           opt_queue_lam=opt_queue_lam)
             
         if options.local == "dryrun":
             dryrun = True

@@ -11,7 +11,7 @@
 #include <RedshiftLibrary/spectrum/template/template.h>
 #include <RedshiftLibrary/spectrum/fluxcorrectionmeiksin.h>
 #include <RedshiftLibrary/spectrum/fluxcorrectioncalzetti.h>
-#include <RedshiftLibrary/statistics/priorhelpercontinuum.h>
+#include <RedshiftLibrary/statistics/priorhelper.h>
 
 namespace NSEpic
 {
@@ -33,7 +33,7 @@ public:
                                               std::string opt_interp,
                                               Int32 opt_extinction=0,
                                               Int32 opt_dustFitting=0,
-                                              CPriorHelperContinuum::TPriorZEList logpriorze=CPriorHelperContinuum::TPriorZEList());
+                                              CPriorHelper::TPriorZEList logpriorze=CPriorHelper::TPriorZEList());
 
     const COperatorResult* ExportChi2versusAZ( const CSpectrum& spectrum, const CTemplate& tpl,
                                     const TFloat64Range& lambdaRange, const TFloat64List& redshifts,
@@ -67,7 +67,7 @@ private:
                   Int32 opt_extinction=0,
                   Int32 opt_dustFitting=0,
                   CMask spcMaskAdditional=CMask(),
-                  CPriorHelperContinuum::TPriorEList logpriore=CPriorHelperContinuum::TPriorEList());
+                  CPriorHelper::TPriorEList logpriore=CPriorHelper::TPriorEList());
 
     // buffers for the precomputed fine grid template
     CTemplate       m_templateRebined_bf; //buffer

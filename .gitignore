@@ -38,6 +38,9 @@ pkgconfig
 *.so
 *.dylib
 
+# Vscod IDE
+.vscode
+
 # Eclipse IDE
 .cproject
 .project
@@ -56,11 +59,11 @@ Thumbs.db
 *.pyc
 *__pycache__
 dist
-pyamazed/redshift_wrap.cpp
-pyamazed/redshift_wrap.h
-pyamazed/redshift.py
+pylibamazed/redshift_wrap.cpp
+pylibamazed/redshift_wrap.h
+pylibamazed/redshift.py
 *.egg*
-fixed-wheel
+wheel
 
 swig_ext.py
 

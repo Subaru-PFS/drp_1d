@@ -1,62 +1,88 @@
-CMAKE_MINIMUM_REQUIRED (VERSION 2.8)
+CMAKE_MINIMUM_REQUIRED (VERSION 3.6)
 PROJECT( cpf-redshift )
 
 # extra path for modules
-SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake)
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake)
 include(SetupVar)
 include(gitrevision)
 
-# Force build type to release if not defined
-if(NOT CMAKE_BUILD_TYPE)
-  set(CMAKE_BUILD_TYPE Release)
-endif()
-
 message("Using git revision : " ${GIT_REVISION})
 
-IF(BUILD_SHARED_LIBS)
-  SET(Boost_USE_STATIC_LIBS OFF)
-ELSE()
-  SET(Boost_USE_STATIC_LIBS ON)
+if(NOT BUILD_TESTS)
+  set(BUILD_TESTS ON)
+else()
+  set(BUILD_TESTS OFF)
+endif()
+
+message(STATUS "BUILD_TESTS=" ${BUILD_TESTS})
+
+if(BUILD_STATIC_LIBS)
+  set(BUILD_SHARED_LIBS OFF)
+else()
+  set(BUILD_SHARED_LIBS ON)
+endif()
+
+message(STATUS "BUILD_SHARED_LIBS=" ${BUILD_SHARED_LIBS})
+
+if(BUILD_SHARED_LIBS)
+  set(Boost_USE_STATIC_LIBS OFF)
+else()
+  set(Boost_USE_STATIC_LIBS ON)
+endif()
+
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+  set(CMAKE_INSTALL_PREFIX "$ENV{HOME}/local" CACHE PATH "" FORCE)
+endif()
+
+message(STATUS "CMAKE_INSTALL_PREFIX=" ${CMAKE_INSTALL_PREFIX})
+
+SET( CMAKE_PREFIX_PATH ${CMAKE_INSTALL_PREFIX} )
+SET( cpf-redshift_INCLUDE_DIR ${CMAKE_INSTALL_PREFIX}/include )
+SET( cpf-redshift_LINK_DIR ${CMAKE_INSTALL_PREFIX}/lib )
+
+set(Python_ADDITIONAL_VERSIONS 3.8 3.7 3.6 3.5 3.4 2.7)
+
+FIND_PACKAGE(PythonInterp)
+IF (NOT PYTHONINTERP_FOUND)
+  MESSAGE(FATAL_ERROR "Can't find Python interpreter")
 ENDIF()
+
+# PythonInterp is deprecated since version 3.12
+# Use Python3 in future version of pylibamazed
+#
+#FIND_PACKAGE(Python3 COMPONENTS Interpreter)
+#IF (NOT Python3_Interpreter_FOUND)
+#  MESSAGE(FATAL_ERROR "Can't find Python3 interpreter")
+#ENDIF()
+#set(PYTHON_EXECUTABLE ${Python3_EXECUTABLE})
 
 LIST(FIND MISSING_THIRDPARTIES "boost" find_boost)
 LIST(FIND MISSING_THIRDPARTIES "cfitsio" find_cfitsio)
 LIST(FIND MISSING_THIRDPARTIES "gsl" find_gsl)
 LIST(FIND MISSING_THIRDPARTIES "fftw" find_fftw)
 
+FIND_PACKAGE(PkgConfig)
+
 IF(NOT find_boost GREATER -1)
-  FIND_PACKAGE(Boost COMPONENTS filesystem system thread timer chrono program_options unit_test_framework)
+  FIND_PACKAGE(Boost 1.53 COMPONENTS filesystem system thread timer chrono program_options unit_test_framework)
 ENDIF()
 
 IF(NOT find_cfitsio GREATER -1)
-  FIND_PACKAGE(Cfitsio)
+  pkg_check_modules(CFITSIO cfitsio>=3.36)
 ENDIF()
 
 IF(NOT find_gsl GREATER -1)
-  FIND_PACKAGE(GSL 2.1)
+  pkg_check_modules(GSL gsl>=2.5)
 ENDIF()
 
 IF(NOT find_fftw GREATER -1)
-  FIND_PACKAGE(FFTW)
-ENDIF()
-
-IF(NOT GSL_FOUND AND NOT find_gsl GREATER -1)
-  # older versions of cmake don't have FindGSL
-  FIND_PACKAGE(PkgConfig)
-  pkg_check_modules(GSL gsl>=2.1)
+  pkg_check_modules(FFTW fftw3>=3.3.8)
 ENDIF()
 
 #--------------------------------------------------------
 # Setup shortcut access directory
 #--------------------------------------------------------
 SET( ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}" )
-
-if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-  set(CMAKE_INSTALL_PREFIX "$ENV{HOME}/usr" CACHE PATH "" FORCE)
-endif()
-
-SET( cpf-redshift_INCLUDE_DIR ${CMAKE_INSTALL_PREFIX}/include )
-SET( cpf-redshift_LINK_DIR ${CMAKE_INSTALL_PREFIX}/lib )
 
 # Set up THIRDPARTY_LIBS
 IF (Boost_FOUND)
@@ -74,16 +100,18 @@ IF (Boost_FOUND)
     ${Boost_PROGRAM_OPTIONS_LIBRARY_${BOOST_TARGET}}
     ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY_${BOOST_TARGET}})
   LIST(APPEND cpf-redshift_THIRDPARTY_LIBS ${boost_libs})
-  LIST(APPEND cpf-redshift_INCLUDE_DIR ${Boost_INCLUDE_DIRS})
   LIST(APPEND cpf-redshift_LINK_DIR ${Boost_LIBRARY_DIRS})
+  LIST(APPEND cpf-redshift_INCLUDE_DIR ${Boost_INCLUDE_DIRS})
 ELSE()
   LIST(APPEND MISSING_THIRDPARTIES "boost")
   LIST(APPEND cpf-redshift_THIRDPARTY_LIBS pthread boost_filesystem
-    boost_system boost_thread boost_timer boost_chrono boost_program_options)
+    boost_system boost_thread boost_timer boost_chrono boost_program_options
+    boost_unit_test_framework)
 ENDIF()
 
 IF (CFITSIO_FOUND)
   LIST(APPEND cpf-redshift_THIRDPARTY_LIBS ${CFITSIO_LIBRARIES})
+  LIST(APPEND cpf-redshift_LINK_DIR ${CFITSIO_LIBRARY_DIRS})
   LIST(APPEND cpf-redshift_INCLUDE_DIR ${CFITSIO_INCLUDE_DIRS})
 ELSE()
   LIST(APPEND MISSING_THIRDPARTIES "cfitsio")
@@ -92,7 +120,8 @@ ENDIF()
 
 IF (FFTW_FOUND)
   LIST(APPEND cpf-redshift_THIRDPARTY_LIBS ${FFTW_LIBRARIES})
-  LIST(APPEND cpf-redshift_INCLUDE_DIR ${FFTW_INCLUDE_DIR})
+  LIST(APPEND cpf-redshift_LINK_DIR ${FFTW_LIBRARY_DIRS})
+  LIST(APPEND cpf-redshift_INCLUDE_DIR ${FFTW_INCLUDE_DIRS})
 ELSE()
   LIST(APPEND MISSING_THIRDPARTIES "fftw")
   LIST(APPEND cpf-redshift_THIRDPARTY_LIBS fftw3)
@@ -100,7 +129,8 @@ ENDIF()
 
 IF (GSL_FOUND)
   LIST(APPEND cpf-redshift_THIRDPARTY_LIBS ${GSL_LIBRARIES})
-  LIST(APPEND cpf-redshift_INCLUDE_DIR ${GSL_INCLUDE_DIR})
+  LIST(APPEND cpf-redshift_LINK_DIR ${GSL_LIBRARY_DIRS})
+  LIST(APPEND cpf-redshift_INCLUDE_DIR ${GSL_INCLUDE_DIRS})
 ELSE()
   LIST(APPEND MISSING_THIRDPARTIES "gsl")
   LIST(APPEND cpf-redshift_THIRDPARTY_LIBS gsl gslcblas)
@@ -118,6 +148,10 @@ endif(CCACHE_FOUND)
 IF(MISSING_THIRDPARTIES)
   LIST(REMOVE_DUPLICATES MISSING_THIRDPARTIES)
 ENDIF()
+
+if(cpf-redshift_LINK_DIR)
+  list(REMOVE_DUPLICATES cpf-redshift_LINK_DIR)
+endif()
 
 #--------------------------------------------------------
 # Parse version, this will be used later to configure
@@ -220,7 +254,7 @@ CONFIGURE_FILE(${ROOT_DIR}/RedshiftLibrary/tests/src/test-config.h.in
 FOREACH(TEST_SOURCE ${TEST_SOURCE_FILES})
   GET_FILENAME_COMPONENT(TEST_NAME ${TEST_SOURCE} NAME_WE)
   ADD_EXECUTABLE( ${TEST_NAME} ${TEST_SOURCE} )
-  TARGET_LINK_LIBRARIES( ${TEST_NAME} ${LIB_NAME} ${cpf-redshift_THIRDPARTY_LIBS} ${tests_THIRDPARTY_LIBS})
+  TARGET_LINK_LIBRARIES( ${TEST_NAME} ${LIB_NAME} ${cpf-redshift_THIRDPARTY_LIBS})
   ADD_TEST(NAME ${TEST_NAME} COMMAND ${TEST_NAME} )
   SET_PROPERTY(SOURCE ${TEST_SOURCE} APPEND PROPERTY COMPILE_DEFINITIONS BOOST_TEST_MODULE=${TEST_NAME} )
 ENDFOREACH(TEST_SOURCE)
@@ -242,11 +276,31 @@ CONFIGURE_FILE(
   ${CMAKE_CURRENT_SOURCE_DIR}/swig_ext.py.in
   ${CMAKE_CURRENT_SOURCE_DIR}/swig_ext.py
   )
-SET (GENERATED_FILES_LIST "swig_ext.py" "pyamazed/redshift_wrap.cpp"
-  "pyamazed/redshift_wrap.h" "pyamazed/redshift.py" "pyamazed.egg-info")
 
-SET_DIRECTORY_PROPERTIES(PROPERTIES
-  ADDITIONAL_MAKE_CLEAN_FILES "${GENERATED_FILES_LIST}")
+set_property(DIRECTORY PROPERTY ADDITIONAL_MAKE_CLEAN_FILES
+  "${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/redshift_wrap.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/redshift_wrap.h"
+  "${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/redshift.py"
+  "${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed.egg-info"
+  "${CMAKE_CURRENT_SOURCE_DIR}/dist"
+  "${CMAKE_CURRENT_SOURCE_DIR}/wheel")
+
+set(PYTHON_BUILD_FILES
+  "${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/redshift_wrap.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/redshift_wrap.h"
+  "${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/redshift.py"
+  "${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed.egg-info"
+  "${CMAKE_CURRENT_SOURCE_DIR}/dist"
+  "${CMAKE_CURRENT_SOURCE_DIR}/wheel"
+)
+
+add_custom_target(clean_python_build
+  COMMAND rm -rf ${PYTHON_BUILD_FILES}
+  COMMAND ${PYTHON_EXECUTABLE} setup.py clean --all
+  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+  COMMENT "Removing existing python build files"
+  VERBATIM
+)
 
 #--------------------------------------------------------
 # Package deployement and config

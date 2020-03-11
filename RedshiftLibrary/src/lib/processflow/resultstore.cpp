@@ -4,6 +4,7 @@
 #include <RedshiftLibrary/spectrum/template/template.h>
 
 #include <boost/filesystem.hpp>
+#include <boost/format.hpp>
 #include <fstream>
 #include <boost/algorithm/string.hpp>
 
@@ -41,6 +42,26 @@ void COperatorResultStore::StoreResult( TResultsMap& map, const std::string& pat
     }
 
     map[ scopedName ] = result;
+}
+
+/**
+ * /brief Delete a key:value name in the resultstore
+*/
+void COperatorResultStore::DeleteGlobalResult(const std::string& path, const std::string& name )
+{
+    std::string scopedName;
+    if( ! path.empty() ) {
+        scopedName = path;
+        scopedName.append( "." );
+    }
+    scopedName.append( name );
+
+    TResultsMap::const_iterator it = m_GlobalResults.find( scopedName ); 
+    if( it != m_GlobalResults.end() )
+    {
+        m_GlobalResults.erase(scopedName);   
+    }
+    return;
 }
 
 void COperatorResultStore::StorePerTemplateResult( const CTemplate& t, const std::string& path, const std::string& name, std::shared_ptr<const COperatorResult> result )
@@ -327,7 +348,7 @@ void COperatorResultStore::SaveCandidatesResult( const CDataStore& store, const 
         //*
         if(ret==1)
         {
-            outputStream <<  "#Spectrum\tProcessingID\tRank_1\tRedshift_1\tProb_1\tgaussAmp_1\tgaussSigma_1\tRank_2\tRedshift_2\tProb_2\tgaussAmp_2\tgaussSigma_2\t..."<< std::endl;
+            outputStream <<  "#Spectrum\tProcessingID\tRank_1\tID_1\tRedshift_1\tProb_1\tgaussAmp_1\tgaussSigma_1\tRank_2\tID_2\tRedshift_2\tProb_2\tgaussAmp_2\tgaussSigma_2\t..."<< std::endl;
         }
         //*/
 
@@ -386,10 +407,19 @@ void COperatorResultStore::SaveAllResults( const CDataStore& store, const bfs::p
             std::string resultName = (*it).first;
             auto  result = (*it).second;
 
+            bool firstpass = false;
             bool saveThisResult = false;
+	        bool saveJSON = false;
             if(opt_lower=="all" || opt_lower=="global"){
                 saveThisResult = true;
-            }else if(opt_lower=="linemeas")
+                //save extrema results
+                std::string extremaresTagRes = "linemodel_extrema";
+                std::size_t foundstr = resultName.find(extremaresTagRes.c_str());
+                if (foundstr!=std::string::npos){
+		            saveJSON = true;
+                }
+            }
+            else if(opt_lower=="linemeas")
             {
                 std::string linemeasTagRes = "linemodel_fit_extrema_0";
                 std::size_t foundstr = resultName.find(linemeasTagRes.c_str());
@@ -403,6 +433,7 @@ void COperatorResultStore::SaveAllResults( const CDataStore& store, const bfs::p
                 std::size_t foundstr = resultName.find(extremaresTagRes.c_str());
                 if (foundstr!=std::string::npos){
                     saveThisResult=true;
+		            saveJSON = true;
                 }
 
                 //save first pass extrema results
@@ -450,10 +481,22 @@ void COperatorResultStore::SaveAllResults( const CDataStore& store, const bfs::p
                 continue;
             }
 
+
+            std::string firstpassextremaresTagRes = "linemodel_firstpass_extrema";
+            std::size_t foundstr = resultName.find(firstpassextremaresTagRes.c_str());
+            if (foundstr!=std::string::npos){
+                    firstpass=true;
+            }
+
             std::fstream outputStream;
             // Save result at root of output directory
             CreateResultStorage( outputStream, bfs::path( resultName + ".csv"), dir );
-            result->Save( store, outputStream );
+            result->Save( store, outputStream);
+	        if(saveJSON){
+		        std::fstream outputJSONStream;
+		        CreateResultStorage( outputJSONStream, bfs::path( resultName + ".json"), dir );
+		        result->SaveJSON(store,outputJSONStream);
+	        }
         }
     }
 

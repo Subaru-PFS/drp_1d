@@ -222,25 +222,29 @@ Bool CLineModelSolveResult::GetBestRedshiftFromPdf(const CDataStore& store,
             Log.LogError( "GetBestRedshiftFromPdf: pdf samplecount != chisquare samplecount");
             return false;
         }
-
-        for( Int32 i=0; i<lineModelResult->ExtremaResult.Extrema.size(); i++ )
+        Int32 bestIdx = -1;
+        
+        for(Int32 kval=0; kval<lineModelResult->ExtremaResult.ExtremaExtendedRedshifts.size(); kval++)
         {
-            for(Int32 kval=0; kval<lineModelResult->ExtremaResult.ExtremaExtendedRedshifts.size(); kval++)
-            {
-                Float64 zInCandidateRange = lineModelResult->ExtremaResult.ExtremaExtendedRedshifts[kval];
-                UInt32 solIdx = logzpdf1d->getIndex(zInCandidateRange);
-                if(solIdx<0 || solIdx>=logzpdf1d->valProbaLog.size())
+            Float64 zInCandidateRange = lineModelResult->ExtremaResult.ExtremaExtendedRedshifts[kval];
+            UInt32 solIdx = logzpdf1d->getIndex(zInCandidateRange);
+            if(solIdx<0 || solIdx>=logzpdf1d->valProbaLog.size())
                 {
-                    Log.LogError( "GetBestRedshiftFromPdf: pdf proba value not found for extremumIndex = %d", i);
+                    Int32  d = lineModelResult->ExtremaResult.ExtremaExtendedRedshifts.size()/lineModelResult->ExtremaResult.Extrema.size(); 
+                    Log.LogError( "GetBestRedshiftFromPdf: pdf proba value not found for extremumIndex = %d", kval/d);
                     return false;
-                }
+            }
 
-                Float64 probaLog = logzpdf1d->valProbaLog[solIdx];
-                Log.LogDebug( "GetBestRedshiftFromPdf: z=%f : probalog = %f", zInCandidateRange, probaLog);
-
-                CPdfz pdfz;
-                Int32 method=0;
-                Float64 flux_integral = -1;
+                            
+            CPdfz pdfz;
+            Float64 flux_integral = -1;
+            Float64 probaLog = -1;
+            Float64 bestval, val;
+            
+            //case of integrated probability: two options for integration: direct or gauss fit
+            if("maxintgproba") 
+            { 
+                Int32 method=0; //0=direct intg, 1=gauss fit
                 if(method==1)
                 {
                     Float64 gauss_amp = -1;
@@ -267,33 +271,45 @@ Bool CLineModelSolveResult::GetBestRedshiftFromPdf(const CDataStore& store,
                     flux_integral = pdfz.getCandidateSumTrapez( logzpdf1d->Redshifts, logzpdf1d->valProbaLog, zInCandidateRange, Fullwidth);
                 }
 
-                //Float64 merit = lineModelResult->ChiSquare[solIdx];
-                //if( merit < tmpMerit )
-                if(probaLog>tmpProbaLog)
-                //if(flux_integral>tmpIntgProba)
-                {
-                    tmpIntgProba = flux_integral;
-                    tmpProbaLog = probaLog;
-                    tmpRedshift = zInCandidateRange;//lineModelResult->ExtremaResult.ExtremaLastPass[i];
-                    tmpSigma = lineModelResult->ExtremaResult.DeltaZ[i];
-                    tmpSnrHa = lineModelResult->ExtremaResult.snrHa[i];
-                    tmpLFHa = lineModelResult->ExtremaResult.lfHa[i];
-                    tmpSnrOII = lineModelResult->ExtremaResult.snrOII[i];
-                    tmpLFOII = lineModelResult->ExtremaResult.lfOII[i];
-                    tmpModelTplratio = lineModelResult->ExtremaResult.FittedTplshapeName[i];
-                    tmpModelTplcontinuum = lineModelResult->ExtremaResult.FittedTplName[i];
+                bestval = tmpIntgProba;
+                val = flux_integral;
+            }
+            else{
+                if(m_bestRedshiftFromPdfOption=="maxproba"){
+                    probaLog = logzpdf1d->valProbaLog[solIdx];
+                    Log.LogDebug( "GetBestRedshiftFromPdf: z=%f : probalog = %f", zInCandidateRange, probaLog);
+                    bestval = tmpProbaLog;
+                    val = probaLog;
                 }
             }
+            if(val>bestval)
+            {
+                tmpIntgProba = flux_integral;
+                tmpProbaLog = probaLog;//useless
+                tmpRedshift = zInCandidateRange;//lineModelResult->ExtremaResult.ExtremaLastPass[i];
+                bestIdx = kval;   
+            }
+        
         }
 
+        Int32  d = lineModelResult->ExtremaResult.ExtremaExtendedRedshifts.size()/lineModelResult->ExtremaResult.Extrema.size(); 
+        bestIdx = bestIdx/d;
 
+        tmpSigma = lineModelResult->ExtremaResult.DeltaZ[bestIdx];
+        tmpSnrHa = lineModelResult->ExtremaResult.snrHa[bestIdx];
+        tmpLFHa = lineModelResult->ExtremaResult.lfHa[bestIdx];
+        tmpSnrOII = lineModelResult->ExtremaResult.snrOII[bestIdx];
+        tmpLFOII = lineModelResult->ExtremaResult.lfOII[bestIdx];
+        tmpModelTplratio = lineModelResult->ExtremaResult.FittedTplshapeName[bestIdx];
+        tmpModelTplcontinuum = lineModelResult->ExtremaResult.FittedTplName[bestIdx];
+       
         //*************  ////////////////////////////
         //logging the p_mis value
         CPdfz pdfz;
         Float64 zwidth = 2e-2;
         Float64 pmis=-1;
         Float64 zmap = tmpRedshift;
-        Log.LogDetail( "pdfz: using zmap=%f", zmap);
+        Log.LogDetail( "pdfz: pmis using zmap=%f", zmap);
         Int32 retPMis = pdfz.getPmis( logzpdf1d->Redshifts,
                                       logzpdf1d->valProbaLog,
                                       zmap,
@@ -311,7 +327,10 @@ Bool CLineModelSolveResult::GetBestRedshiftFromPdf(const CDataStore& store,
     //option 2.
     //merit = tmpProbaLog;
     //option 3
-    merit = tmpIntgProba;
+    if(m_bestRedshiftFromPdfOption=="maxintgproba")
+        merit = tmpIntgProba;
+    else 
+        merit = tmpProbaLog;
 
     sigma = tmpSigma;
     snrHa = tmpSnrHa;
@@ -322,6 +341,12 @@ Bool CLineModelSolveResult::GetBestRedshiftFromPdf(const CDataStore& store,
     modelTplContinuum = tmpModelTplcontinuum;
     return true;
 }
+
+void CLineModelSolveResult::SetBestZFromPdfOption(std::string str_opt)
+{
+    m_bestRedshiftFromPdfOption = str_opt;
+}
+
 
 Int32 CLineModelSolveResult::GetEvidenceFromPdf(const CDataStore& store, Float64 &evidence) const
 {

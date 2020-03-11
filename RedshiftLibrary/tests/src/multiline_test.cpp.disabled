@@ -31,7 +31,7 @@ BOOST_AUTO_TEST_CASE(Instance) {
     fluxAxis[k] = k;
   }
 
-  CMultiLine element = CMultiLine(rs, "fixed", 0.9, 1.0, 1.1, nominalAmplitudes,
+  CMultiLine element = CMultiLine(rs, "fixed", 8.0, 0.9, 1.0, 1.1, nominalAmplitudes,
                                   1.2, catalogIndexes);
   BOOST_CHECK("Abs" == element.GetRayName(0));
   BOOST_CHECK("-1" == element.GetRayName(2));
@@ -78,7 +78,7 @@ BOOST_AUTO_TEST_CASE(prepareSupportSeparated) {
   }
   TFloat64Range lambdaRange = TFloat64Range(3900.0, 12500.0);
 
-  CMultiLine element = CMultiLine(rs, "fixed", 0.9, 1.0, 1.1, nominalAmplitudes,
+  CMultiLine element = CMultiLine(rs, "fixed", 8.0, 0.9, 1.0, 1.1, nominalAmplitudes,
                                   10.2, catalogIndexes);
 
   Float64 redshift = 0.1;
@@ -190,7 +190,7 @@ BOOST_AUTO_TEST_CASE(prepareSupportJoined) {
   }
   TFloat64Range lambdaRange = TFloat64Range(3900.0, 12500.0);
 
-  CMultiLine element = CMultiLine(rs, "fixed", 0.9, 1.0, 1.1, nominalAmplitudes,
+  CMultiLine element = CMultiLine(rs, "fixed", 8.0, 0.9, 1.0, 1.1, nominalAmplitudes,
                                   10.2, catalogIndexes);
 
   Float64 redshift = 0.1;
@@ -298,7 +298,7 @@ BOOST_AUTO_TEST_CASE(addModel_SupportAll) {
 
   TFloat64Range lambdaRange = TFloat64Range(1.0, 50);
 
-  CMultiLine element = CMultiLine(rs, "fixed", 0.9, 1.0, 1.1, nominalAmplitudes,
+  CMultiLine element = CMultiLine(rs, "fixed", 8.0, 0.9, 1.0, 1.1, nominalAmplitudes,
                                   10.2, catalogIndexes);
   Float64 redshift = 0.1;
   element.prepareSupport(spectralAxis, redshift, lambdaRange);
@@ -379,7 +379,7 @@ BOOST_AUTO_TEST_CASE(addModel_SupportPartial) {
 
   TFloat64Range lambdaRange = TFloat64Range(1.0, 30);
 
-  CMultiLine element = CMultiLine(rs, "fixed", 0.9, 1.0, 1.1, nominalAmplitudes,
+  CMultiLine element = CMultiLine(rs, "fixed", 8.0, 0.9, 1.0, 1.1, nominalAmplitudes,
                                   10.2, catalogIndexes);
   Float64 redshift = 0.1;
   element.prepareSupport(spectralAxis, redshift, lambdaRange);
@@ -464,7 +464,7 @@ BOOST_AUTO_TEST_CASE(addModel_totalOutside) {
 
   TFloat64Range lambdaRange = TFloat64Range(100, 200);
 
-  CMultiLine element = CMultiLine(rs, "fixed", 0.9, 1.0, 1.1, nominalAmplitudes,
+  CMultiLine element = CMultiLine(rs, "fixed", 8.0, 0.9, 1.0, 1.1, nominalAmplitudes,
                                   10.2, catalogIndexes);
   Float64 redshift = 0.1;
   element.prepareSupport(spectralAxis, redshift, lambdaRange);
@@ -540,7 +540,7 @@ BOOST_AUTO_TEST_CASE(fitAmplitude) {
 
   TFloat64Range lambdaRange = TFloat64Range(0, 40);
 
-  CMultiLine element = CMultiLine(rs, "velocitydriven", 0.9, velocity, 1.1,
+  CMultiLine element = CMultiLine(rs, "velocitydriven", 8.0, 0.9, velocity, 1.1,
                                   nominalAmplitudes, 10.2, catalogIndexes);
 
   element.prepareSupport(spectralAxis, redshift, lambdaRange);

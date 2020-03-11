@@ -67,7 +67,7 @@ public:
                                               const Float64 &opt_manvelfit_dzmax=6e-4,
                                               const Float64 &opt_manvelfit_dzstep=1e-4);
 
-    Int32 Init(const CSpectrum& spectrum, const TFloat64List& redshifts);
+    Int32 Init(const CSpectrum& spectrum, const TFloat64List& redshifts, const Float64 nsigmasupport);
     std::shared_ptr<COperatorResult> getResult();
     std::shared_ptr<CLineModelExtremaResult> GetFirstpassExtremaResult() const;
 
@@ -199,6 +199,12 @@ public:
                                       const Float64 &opt_absvelocityfitmax,
                                       const Float64 &opt_absvelocityfitstep);
 
+    Int32 SaveResults(const CSpectrum& spectrum,
+                      const TFloat64Range& lambdaRange,
+                      const std::string &opt_continuumreest="no");
+
+    void InitTplratioPriors();
+
     void storeGlobalModelResults( CDataStore &dataStore );
     void storePerTemplateModelResults( CDataStore &dataStore, const CTemplate& tpl );
     std::shared_ptr<CModelSpectrumResult> GetModelSpectrumResult(Int32 idx);
@@ -206,6 +212,8 @@ public:
 
 
     bool m_enableWidthFitByGroups = false;
+
+    Float64 m_linesmodel_nsigmasupport;
 
     Int32 m_maxModelSaveCount;
     Float64 m_secondPass_extensionradius = 0.005;
@@ -222,8 +230,10 @@ public:
     Int32 m_opt_tplfit_extinction = 1;
     Int32 m_opt_fitcontinuum_maxN = 2;
     bool m_opt_tplfit_ignoreLinesSupport=false; //default: false, as ortho templates store makes this un-necessary
-    Float64 m_opt_tplfit_continuumprior_beta=1.0;
-    std::string m_opt_tplfit_continuumprior_reldirpath="";
+    Float64 m_opt_tplfit_continuumprior_betaA=1.0;
+    Float64 m_opt_tplfit_continuumprior_betaTE=1.0;
+    Float64 m_opt_tplfit_continuumprior_betaZ=1.0;
+    std::string m_opt_tplfit_continuumprior_dirpath="";
 
     Int32 m_opt_tplratio_ismFit = 1;
     Int32 m_opt_firstpass_tplratio_ismFit=0;
@@ -231,6 +241,10 @@ public:
     std::string m_opt_firstpass_fittingmethod;
     std::string m_opt_secondpasslcfittingmethod="-1";
     Int32 m_opt_secondpass_estimateParms_tplfit_fixfromfirstpass=1; //0: load fit continuum, 1 (default): use the best continuum from first pass
+    Float64 m_opt_tplratio_prior_betaA=1.0;
+    Float64 m_opt_tplratio_prior_betaTE=1.0;
+    Float64 m_opt_tplratio_prior_betaZ=1.0;
+    std::string m_opt_tplratio_prior_dirpath="";
 
     std::string m_opt_lya_forcefit;
     std::string m_opt_lya_forcedisablefit;
@@ -244,17 +258,20 @@ public:
     Float64 m_opt_lya_fit_delta_max;
     Float64 m_opt_lya_fit_delta_step;
 
+    std::string m_opt_enableImproveBalmerFit;
+
+    //candidates
+    TPointList m_firstpass_extremumList;
+    std::vector<Int32> m_secondpass_indiceSortedCandidatesList;
+    CLineModelExtremaResult m_firstpass_extremaResult;
+    CLineModelExtremaResult m_secondpass_parameters_extremaResult;
+
 private:
 
     std::shared_ptr<CLineModelResult> m_result;
     std::shared_ptr<CLineModelElementList> m_model;
     TFloat64List m_sortedRedshifts;
 
-    //candidates
-    TPointList m_firstpass_extremumList;
-    CLineModelExtremaResult m_firstpass_extremaResult;
-    CLineModelExtremaResult m_secondpass_parameters_extremaResult;
-    std::vector<Int32> m_secondpass_indiceSortedCandidatesList;
 
     Int32 m_enableFastFitLargeGrid = 0;
     Int32 m_estimateLeastSquareFast = 0;

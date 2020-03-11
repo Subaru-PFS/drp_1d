@@ -52,7 +52,7 @@ Float64 COperatorCorrelation::GetComputationDuration() const
                                                                    std::string opt_interp_unused,
                                                                    Int32 opt_extinction_unused,
                                                                    Int32 opt_dustFitting_unused,
-                                                                   CPriorHelperContinuum::TPriorZEList logpriorze_unused)
+                                                                   CPriorHelper::TPriorZEList logpriorze_unused)
  {
     Bool retVal;
 
@@ -171,7 +171,7 @@ Float64 COperatorCorrelation::GetComputationDuration() const
 
         // k index: move over template
         // j index: move over spectrum
-        
+
         // Cross correlation function:
         // (t(x) - moy(t)) * (s(x) - moy(s))
         // ---------------------------------
@@ -199,5 +199,3 @@ Float64 COperatorCorrelation::GetComputationDuration() const
 
     return result;
 }
-
-

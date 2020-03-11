@@ -166,7 +166,7 @@ void COperatorChiSquare::BasicFit( const CSpectrum& spectrum, const CTemplate& t
                           Float64 overlapThreshold , std::vector<CMask> additional_spcMasks_unused, string opt_interp_unused,
                                                                Int32 opt_extinction_unused,
                                                                Int32 opt_dustFitting_unused,
-                                                               CPriorHelperContinuum::TPriorZEList logpriorze_unused)
+                                                               CPriorHelper::TPriorZEList logpriorze_unused)
 {
 
     if( spectrum.GetSpectralAxis().IsInLinearScale() == false || tpl.GetSpectralAxis().IsInLinearScale() == false )

@@ -45,6 +45,12 @@ public:
 
     std::string         GetScope( const COperatorResult&  result) const;
 
+    void                SetRank(const TInt32List& Rank);
+    const TInt32List& GetRank() const;
+    
+    void                SetIntgPDF(const TFloat64List& pdf);
+    const TFloat64List& GetIntgPDF() const;
+
     // Wrapper functions
     void                            GetScopedParam( const std::string& name, TFloat64List& v, const TFloat64List& defaultValue = TFloat64List() ) const;
     void                            GetScopedParam( const std::string& name, TInt64List& v, const TInt64List& defaultValue = TInt64List() ) const;
@@ -80,6 +86,8 @@ public:
 
     void                            StoreScopedPerTemplateResult( const CTemplate& t, const std::string& name, std::shared_ptr<const COperatorResult>  result );
     void                            StoreScopedGlobalResult( const std::string& name, std::shared_ptr<const COperatorResult>  result );
+    void                            ChangeScopedGlobalResult( const std::string& oldkey, const std::string& newkey );
+    void                            DeleteScopedGlobalResult( const std::string& name );
     void                            StoreGlobalResult( const std::string& name, std::shared_ptr<const COperatorResult>  result );
 
     std::weak_ptr<const COperatorResult>          GetPerTemplateResult( const CTemplate& t, const std::string& name ) const;
@@ -107,6 +115,8 @@ protected:
     std::string                     m_ProcessingID;
 
     TScopeStack                     m_ScopeStack;
+    TInt32List                      m_Rank;
+    TFloat64List                    m_IntgPDF;
 
 
 };

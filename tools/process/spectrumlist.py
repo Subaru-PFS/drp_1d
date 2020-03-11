@@ -194,7 +194,7 @@ def StartFromCommandLine( argv ) :
     
     #option to add a relative path to the flux file path and noise file path
     parser.add_argument("-p", "--prefixpath", dest="prefixpath", default="",
-                    help="prefix relative path to be added to the flux and noise paths")
+                    help="prefix relative path to be added to the flux and noise paths (ex. vvds_deep/cesam_vvds_spF02_DEEP_1D/)")
           
     options = parser.parse_args()
     #print(options)
