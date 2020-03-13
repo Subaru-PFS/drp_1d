@@ -35,7 +35,7 @@ Bool CSpectrumIOFitsReader::Read2( fitsfile* fptr, CSpectrum& spectrum )
     Int32 length = 0;
     Int32 hdunum = 2;
     Int32 hdutype = 0;
-    Float64 nullval = std::numeric_limits<Float64>::quiet_NaN(); //see https://heasarc.gsfc.nasa.gov/fitsio/c/c_user/node80.html
+    Float64 nullval = 0.0; // Support for IEEE 754 raw floating-point and special values; see https://heasarc.gsfc.nasa.gov/docs/software/fitsio/c/c_user/node27.html
     Int32 anynul = 0;
 
     // Move to second hdu

@@ -38,6 +38,9 @@ pkgconfig
 *.so
 *.dylib
 
+# Vscod IDE
+.vscode
+
 # Eclipse IDE
 .cproject
 .project

@@ -1,3 +1,27 @@
+# 0.8.0 (2020-02-27)
+
+## New Features
+
+* Add support for IEEE 754 raw floating-point and special values
+* Add GSL error handling
+
+## API Changes
+None
+
+## Bug Fixes
+
+* Fix ranking redshift candidate
+* Fix chi2 computation in chisquareloglamba
+* Fix clang compiler detection for OSX plateform
+* Fix build sequence for python build
+
+## Other Changes and Additions
+
+* Update minimum thirdparties version (`cmake` > 3.0, `boost` > 1.53, `cfistio` > 3.36, `gsl` > 2.5, `fftw` > 3.3.8)
+* Python module name change to `pylibamazed`
+* Thirdparty script is now compatible with python 2.7
+
+
 # 0.6.1 (2019-04-11)
 
 ## Bug Fixes
