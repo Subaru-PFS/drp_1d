@@ -104,13 +104,8 @@ BOOST_AUTO_TEST_CASE(GetLineProfile){
   BOOST_CHECK_CLOSE(0.0628983, element.GetLineProfile(CRay::ASYM2,6564.61, 6568., 2. ), 0.001);
 
   // Theses value are for asym profile with mean shift
-  BOOST_CHECK_CLOSE(0.2893982, element.GetLineProfile(CRay::ASYMFIT,6564.61, 6568., 2. ), 0.001);
-  BOOST_CHECK_CLOSE(0.2893982, element.GetLineProfile(CRay::ASYMFIXED,6564.61, 6568., 2. ), 0.001);
-
-  // Theses tests failed since 56e4b5fdc567f65370075474d74f6a79ed3093c4
-  // c.f. asym profile with mean shift
-  //BOOST_CHECK_CLOSE(0.0628983, element.GetLineProfile(CRay::ASYMFIT,6564.61, 6568., 2. ), 0.001);
-  //BOOST_CHECK_CLOSE(0.0628983, element.GetLineProfile(CRay::ASYMFIXED,6564.61, 6568., 2. ), 0.001);
+  BOOST_CHECK_CLOSE(0.781894, element.GetLineProfile(CRay::ASYMFIT,6564.61, 6568., 2. ), 0.001);
+  BOOST_CHECK_CLOSE(0.781894, element.GetLineProfile(CRay::ASYMFIXED,6564.61, 6568., 2. ), 0.001);
 
 }
 
@@ -128,9 +123,9 @@ BOOST_AUTO_TEST_CASE(GetLineProfileDerivSigma){
   BOOST_CHECK_CLOSE(0.34153872866337925, element.GetLineProfileDerivSigma(CRay::SYM, 6564.61, 6568., 2. ), 0.001);
   BOOST_CHECK_CLOSE(0.010850371757731672, element.GetLineProfileDerivSigma(CRay::SYMXL, 6564.61, 6568., 2. ), 0.001);
   BOOST_CHECK_CLOSE(0.24081246138668605, element.GetLineProfileDerivSigma(CRay::ASYM, 6564.61, 6565., 2. ), 0.001);
-  BOOST_CHECK_CLOSE(0.067426590554372501, element.GetLineProfileDerivSigma(CRay::ASYM2, 6564.61, 6568., 2. ), 0.001);
-  BOOST_CHECK_CLOSE(0.067426590554372501, element.GetLineProfileDerivSigma(CRay::ASYMFIT, 6564.61, 6568., 2. ), 0.001);
-  BOOST_CHECK_CLOSE(0.067426590554372501, element.GetLineProfileDerivSigma(CRay::ASYMFIXED, 6564.61, 6568., 2. ), 0.001);
+  BOOST_CHECK_CLOSE(0.13485318110874497, element.GetLineProfileDerivSigma(CRay::ASYM2, 6564.61, 6568., 2. ), 0.001);
+  BOOST_CHECK_CLOSE(0.6909365681559104, element.GetLineProfileDerivSigma(CRay::ASYMFIT, 6564.61, 6568., 2. ), 0.001);
+  BOOST_CHECK_CLOSE(0.6909365681559104, element.GetLineProfileDerivSigma(CRay::ASYMFIXED, 6564.61, 6568., 2. ), 0.001);
 }
 
 
