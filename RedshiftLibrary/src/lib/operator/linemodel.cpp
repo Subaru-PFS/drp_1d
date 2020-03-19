@@ -46,7 +46,7 @@ using namespace std;
 
 /**
  **/
-COperatorLineModel::COperatorLineModel() { m_maxModelSaveCount = 10; }
+COperatorLineModel::COperatorLineModel() { m_maxModelSaveCount = 20; }
 
 /**
  * \brief Empty destructor.
