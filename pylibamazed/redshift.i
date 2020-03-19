@@ -124,6 +124,7 @@ class CParameterStore {
 %rename(Get_Int64) Get( const std::string& name, Int64& out_int, Int64 defaultValue = 0);
 %rename(Get_Float64) Get( const std::string& name, Float64& out_float, Float64 defaultValue = 0);
 %rename(Set_String) Set( const std::string& name, const std::string& v);
+
 public:
   CParameterStore();
   void Load( const std::string& path );
@@ -189,6 +190,7 @@ public:
   void SaveCandidatesResult(const std::string& dir);
   void SaveReliabilityResult(const std::string& dir);
   void SaveStellarResult(const std::string& dir);
+  void SaveQsoResult(const std::string& dir);
   void SaveClassificationResult(const std::string& dir);
   void SaveAllResults(const std::string& dir, const std::string opt) const;
 };

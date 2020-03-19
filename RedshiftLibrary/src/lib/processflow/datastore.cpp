@@ -58,6 +58,18 @@ void CDataStore::SetSpectrumName( const std::string& name )
     m_SpectrumName = name;
 }
 
+void CDataStore::SetRank(const TInt32List& rank) {
+    m_Rank = rank;
+}
+const TInt32List& CDataStore::GetRank() const{
+    return m_Rank;
+}
+void CDataStore::SetIntgPDF(const TFloat64List& pdf) {
+    m_IntgPDF = pdf;
+}
+const TFloat64List& CDataStore::GetIntgPDF() const{
+    return m_IntgPDF;
+}
 const std::string& CDataStore::GetProcessingID() const
 {
     return m_ProcessingID;
@@ -112,6 +124,19 @@ void  CDataStore::StoreScopedPerTemplateResult( const CTemplate& t, const std::s
 void CDataStore::StoreScopedGlobalResult( const std::string& name, std::shared_ptr<const COperatorResult> result )
 {
     m_ResultStore.StoreGlobalResult( GetCurrentScopeName(), name, result );
+}
+
+void CDataStore::DeleteScopedGlobalResult( const std::string& name )
+{
+    m_ResultStore.DeleteGlobalResult(GetCurrentScopeName(), name);
+    
+}
+void CDataStore::ChangeScopedGlobalResult( const std::string& oldkey, const std::string& newkey )
+{
+    
+    auto  result = GetGlobalResult( oldkey ).lock();
+    StoreScopedGlobalResult(newkey, result);
+    DeleteScopedGlobalResult(oldkey);
 }
 
 void CDataStore::StoreGlobalResult( const std::string& name, std::shared_ptr<const COperatorResult> result )

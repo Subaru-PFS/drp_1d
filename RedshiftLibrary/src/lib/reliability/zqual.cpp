@@ -154,6 +154,7 @@ Bool CQualz::ExtractFeaturesPDF(CDataStore &resultStore,
 
     if (nanVector)
     {
+        Log.LogError("ZClassifier: ExtractFeaturesPDF: valProbaLog is a nanVector");
         throw runtime_error("ZClassifier: ExtractFeaturesPDF: nanVector");
     } else
     {
@@ -210,6 +211,7 @@ Bool CQualz::ExtractFeaturesPDF(CDataStore &resultStore,
 
         if (nanVector)
         {
+            Log.LogError("ZClassifier: ExtractFeaturesPDF: %d extrema found", extremumList.size());
             throw runtime_error("ZClassifier: ExtractFeaturesPDF: nanVector here");
         } else
         {

@@ -8,6 +8,7 @@
 #include <boost/range/combine.hpp>
 #include <boost/foreach.hpp>
 #include <boost/test/unit_test.hpp>
+#include <boost/filesystem.hpp>
 
 using namespace NSEpic;
 
@@ -44,8 +45,9 @@ BOOST_AUTO_TEST_CASE(ParameterStore1)
   store.Set( "Int64", Int64(12));
   store.Set( "Bool", Bool(true));
 
-  store.Save("/tmp/paramstore.test");
-  store_.Load("/tmp/paramstore.test");
+  boost::filesystem::path _path = boost::filesystem::unique_path("file_%%%%%%%%%%");
+  BOOST_CHECK_NO_THROW(store.Save(_path.c_str()));
+  BOOST_CHECK_NO_THROW(store_.Load(_path.c_str()));
 
   store_.Get( "TFloat64List", float64_list_ );
   store_.Get( "TInt64List", int64_list_ );

@@ -7,7 +7,7 @@
 #include <RedshiftLibrary/spectrum/spectralaxis.h>
 #include <RedshiftLibrary/operator/operator.h>
 #include <RedshiftLibrary/operator/correlationresult.h>
-#include <RedshiftLibrary/statistics/priorhelpercontinuum.h>
+#include <RedshiftLibrary/statistics/priorhelper.h>
 
 
 namespace NSEpic
@@ -36,7 +36,7 @@ public:
                                               std::string opt_interp_unused="lin",
                                               Int32 opt_extinction_unused=0 ,
                                               Int32 opt_dustFitting_unused=0,
-                                              CPriorHelperContinuum::TPriorZEList logpriorze_unused=CPriorHelperContinuum::TPriorZEList());
+                                              CPriorHelper::TPriorZEList logpriorze_unused=CPriorHelper::TPriorZEList());
 
     Float64 GetComputationDuration() const;
 

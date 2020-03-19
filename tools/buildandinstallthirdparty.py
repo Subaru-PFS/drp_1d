@@ -1,7 +1,15 @@
 #!/usr/bin/env python
+from __future__ import (absolute_import, division,
+                        print_function, unicode_literals)
+from builtins import *
 
-from urllib import request, error
 import sys
+if sys.version_info[0] < 3:
+    import urllib2 as request
+    import urllib2 as error
+else:
+    from urllib import request, error
+
 import argparse
 import os
 import tarfile
@@ -41,7 +49,8 @@ def DownloadHTTPFile(fileUrl, localFilePath):
     try:
         urlfile = request.urlopen(fileUrl)
     except error.URLError as e:
-        print("Download from: " + fileUrl + "failed.\nReason are:" + str(e.reason))
+        print("Download from: " + fileUrl + " failed.\nReason are: " + str(e.reason))
+        raise
 
     localFile = open(localFilePath, 'wb')
 
@@ -77,7 +86,7 @@ def _check_lib(name, prefix, options):
 
 def _standard_build(path, prefix, options, extra_flags=''):
     os.system("cd {path} ; ./configure --prefix={prefix} {shared} {extra_flags};"
-              "make clean ; make -j{parallel} all; make install".format(
+              "make -j{parallel} all; make install".format(
                   path=path, prefix=prefix,
                   parallel=options.parallel,
                   shared='--enable-shared' if options.shared else '--enable-static',
@@ -86,8 +95,8 @@ def _standard_build(path, prefix, options, extra_flags=''):
 
 def _boost_build(path, prefix, options, extra_flags=''):
     os.system("cd {path}; ./bootstrap.sh "
-              "--with-libraries=test,filesystem,program_options,thread,"
-              "regex,python,timer,chrono --prefix={prefix};"
+              "--with-libraries=system,filesystem,program_options,thread,"
+              "timer,chrono,test --prefix={prefix};"
               "./b2 -j{parallel} link={shared} install; cd ../".format(
                   path=path, prefix=prefix,
                   parallel=options.parallel,
@@ -97,7 +106,7 @@ def _boost_build(path, prefix, options, extra_flags=''):
 def _cfitsio_build(path, prefix, options, extra_flags=''):
     os.system("cd {path}; ./configure --enable-reentrant --prefix={prefix} "
               "--enable-sse2 --enable-ssse3 ;"
-              "make -j{parallel} clean {shared}; make install; cd ../".format(
+              "make -j{parallel} {shared}; make install; cd ../".format(
                   path=path, prefix=prefix,
                   parallel=options.parallel,
                   shared='shared' if options.shared else 'all-nofitsio'))
@@ -138,11 +147,8 @@ libDict = {
 
 
 def Main(argv):
-    if sys.version_info[0] < 3:
-        print("Python version 3.X needed")
-        return
 
-    if sys.version_info[1] < 4:
+    if (sys.version_info[0] < 3 and sys.version_info[1] < 4):
         # __file__ was relative until python 3.4
         build_dir = os.path.abspath(os.path.join(os.getcwd(),
                                                  os.path.dirname(__file__),
@@ -180,8 +186,3 @@ def Main(argv):
 
 
 Main(sys.argv)
-
-
-
-
-

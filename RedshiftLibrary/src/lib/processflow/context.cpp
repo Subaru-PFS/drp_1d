@@ -33,10 +33,19 @@ namespace bfs = boost::filesystem;
 
 using namespace NSEpic;
 
+static void NewHandler(const char * reason,
+        const char * file,
+        int line,
+        int gsl_errno){
+
+ Log.LogError(" gsl: %s:%d: ERROR: %s (Errtype: %s)" ,file, line, reason, gsl_strerror(gsl_errno));
+  throw std::runtime_error("GSL Error");
+  return ;
+}
 
 CProcessFlowContext::CProcessFlowContext()
 {
-
+  gsl_set_error_handler(NewHandler);
 }
 
 CProcessFlowContext::~CProcessFlowContext()
@@ -277,5 +286,3 @@ const CRayCatalog& CProcessFlowContext::GetRayCatalog() const
 {
     return *m_RayCatalog;
 }
-
-

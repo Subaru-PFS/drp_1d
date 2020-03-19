@@ -5,7 +5,7 @@
 #include <RedshiftLibrary/common/range.h>
 #include <RedshiftLibrary/processflow/result.h>
 #include <RedshiftLibrary/common/mask.h>
-#include <RedshiftLibrary/statistics/priorhelpercontinuum.h>
+#include <RedshiftLibrary/statistics/priorhelper.h>
 
 #include <vector>
 
@@ -47,7 +47,7 @@ public:
                                                        std::string opt_interp,
                                                        Int32 opt_extinction,
                                                        Int32 opt_dustFitting,
-                                                       CPriorHelperContinuum::TPriorZEList logprior) = 0;
+                                                       CPriorHelper::TPriorZEList logprior) = 0;
 
 protected:
 

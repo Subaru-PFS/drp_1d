@@ -152,8 +152,10 @@ CMultiRollModel::CMultiRollModel(const CSpectrum& spectrum,
 
     for(Int32 km=0; km<nModels; km++)
     {
+        Float64 lines_nsigmasupport = 6;
         m_models.push_back(std::shared_ptr<CLineModelElementList> (new CLineModelElementList(*spcRolls[km],
                                                                                              spcContinuumForMultimodel,
+                                                                                             tplCatalog,
                                                                                              tplCatalog,
                                                                                              tplCategoryList,
                                                                                              calibrationPath,
@@ -161,6 +163,7 @@ CMultiRollModel::CMultiRollModel(const CSpectrum& spectrum,
                                                                                              opt_fittingmethod,
                                                                                              opt_continuumcomponent,
                                                                                              widthType,
+                                                                                             lines_nsigmasupport,
                                                                                              resolution,
                                                                                              velocityEmission,
                                                                                              velocityAbsorption,

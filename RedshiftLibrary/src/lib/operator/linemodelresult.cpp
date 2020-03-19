@@ -43,8 +43,7 @@ CLineModelResult::~CLineModelResult()
 Int32 CLineModelResult::Init(std::vector<Float64> redshifts,
                               CRayCatalog::TRayVector restRays,
                               Int32 nTplshapes,
-                              std::vector<Float64> tplshapesPriors,
-                              std::vector<CPdfz::SPriorZ> tplshapesPriorsPz)
+                              std::vector<Float64> tplshapesPriors)
 {
     Int32 err = 0;
     if(tplshapesPriors.size()!=nTplshapes)
@@ -78,7 +77,8 @@ Int32 CLineModelResult::Init(std::vector<Float64> redshifts,
         NLinesAboveSNRTplshapes.push_back(nlac);
 
         PriorTplshapes.push_back(tplshapesPriors[k]);
-        PriorPzTplshapes.push_back(tplshapesPriorsPz[k]);
+        TFloat64List _logpriors(nResults, 0.0);
+        PriorLinesTplshapes.push_back(_logpriors);
     }
 
     ChiSquareContinuum.resize( nResults );
@@ -91,7 +91,8 @@ Int32 CLineModelResult::SetChisquareTplshapeResult(Int32 index_z,
                                                     TFloat64List chisquareTplshape,
                                                     TFloat64List scaleMargCorrTplshape,
                                                     std::vector<bool> strongEmissionLinePresentTplshape,
-                                                    std::vector<Int32> nLinesAboveSNRTplshape)
+                                                    std::vector<Int32> nLinesAboveSNRTplshape,
+                                                    TFloat64List priorLinesTplshape)
 {
     if(index_z>=Redshifts.size())
     {
@@ -117,6 +118,10 @@ Int32 CLineModelResult::SetChisquareTplshapeResult(Int32 index_z,
     {
         return -4;
     }
+    if(chisquareTplshape.size()!=priorLinesTplshape.size())
+    {
+        return -4;
+    }
 
     for(Int32 k=0; k<chisquareTplshape.size(); k++)
     {
@@ -124,6 +129,7 @@ Int32 CLineModelResult::SetChisquareTplshapeResult(Int32 index_z,
         ScaleMargCorrectionTplshapes[k][index_z] = scaleMargCorrTplshape[k];
         StrongELPresentTplshapes[k][index_z] = strongEmissionLinePresentTplshape[k];
         NLinesAboveSNRTplshapes[k][index_z] = nLinesAboveSNRTplshape[k];
+        PriorLinesTplshapes[k][index_z] = priorLinesTplshape[k];
     }
     return 0;
 }
@@ -204,6 +210,27 @@ std::vector<Int32> CLineModelResult::GetNLinesAboveSNRTplshapeResult( Int32 inde
     for(Int32 k=0; k<NLinesAboveSNRTplshapes.size(); k++)
     {
         priorTplshape.push_back(NLinesAboveSNRTplshapes[k][index_z]);
+    }
+
+    return priorTplshape;
+}
+
+
+std::vector<Float64> CLineModelResult::GetPriorLinesTplshapeResult( Int32 index_z )
+{
+    std::vector<Float64> priorTplshape;
+    if(index_z>=Redshifts.size())
+    {
+        return priorTplshape;
+    }
+    if(PriorLinesTplshapes.size()<1)
+    {
+        return priorTplshape;
+    }
+
+    for(Int32 k=0; k<PriorLinesTplshapes.size(); k++)
+    {
+        priorTplshape.push_back(PriorLinesTplshapes[k][index_z]);
     }
 
     return priorTplshape;
@@ -453,9 +480,11 @@ std::vector<Int32> CLineModelResult::GetNLinesAboveSnrcut( std::vector<CLineMode
  */
 std::vector<bool> CLineModelResult::GetStrongestLineIsHa( std::vector<CLineModelSolution> linemodelsols ) const
 {
+    bool verbose = true;
     UInt32 filterType=1;
     linetags ltags;
     std::vector<bool> strongestIsHa(linemodelsols.size(), false);
+    std::string ampMaxLineTag = "";
     for ( UInt32 solutionIdx=0; solutionIdx<linemodelsols.size(); solutionIdx++)
     {
         strongestIsHa[solutionIdx] = false;
@@ -487,8 +516,9 @@ std::vector<bool> CLineModelResult::GetStrongestLineIsHa( std::vector<CLineModel
             if(linemodelsols[solutionIdx].Amplitudes[j]>ampMax)
             {
                 ampMax = linemodelsols[solutionIdx].Amplitudes[j];
+                ampMaxLineTag = linemodelsols[solutionIdx].Rays[j].GetName().c_str();
             }
-            if(linemodelsols[solutionIdx].Rays[j].GetName().c_str()==ltags.halpha_em)
+            if(linemodelsols[solutionIdx].Rays[j].GetName()==ltags.halpha_em)
             {
                 ampHa = linemodelsols[solutionIdx].Amplitudes[j];
             }
@@ -497,6 +527,10 @@ std::vector<bool> CLineModelResult::GetStrongestLineIsHa( std::vector<CLineModel
         if(ampHa>0 && ampMax==ampHa)
         {
             strongestIsHa[solutionIdx] = true;
+        }
+        if(verbose)
+        {
+            Log.LogDetail("    linemodelresult: z=%f, ampHa=%e, ampMax=%e, ampMaxLineTag=%s", linemodelsols[solutionIdx].Redshift, ampHa, ampMax, ampMaxLineTag.c_str());
         }
     }
 

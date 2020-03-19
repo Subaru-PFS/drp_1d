@@ -125,8 +125,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
         namespace fs = boost::filesystem;
         Int32 reverseInclusionForIdMatching = 0; //0: because the names must match exactly, but: linemeas catalog includes the extension (.fits) and spc.GetName doesn't.
 
-        bool computeOnZrange=false; //nb: hardcoded option for now
-
+        Int32 colId = 2;//starts at 1, so that (for the linemeas_catalog) id_column=1, zref_column=2
         fs::path refFilePath(opt_linemeas_catalog_path.c_str());
 
 
@@ -143,9 +142,17 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
 
 
         Float64 stepZ = 1e-5;
+        Float64 deltaZrangeHalf = -1;//0.5e-2; //override zrange
+        ctx.GetParameterStore().Get( "linemeas.dzhalf", deltaZrangeHalf, -1);
+        ctx.GetParameterStore().Get( "linemeas.dzstep", stepZ, 1e-5);
+        bool computeOnZrange=false;
+        if(deltaZrangeHalf>0.0)
+        {
+            computeOnZrange=true;
+        }
         if(computeOnZrange) //computing only on zref, or on a zrange around zref
         {
-            Float64 deltaZrangeHalf = 0.5e-2; //override zrange
+
             Float64 nStepsZ = deltaZrangeHalf*2/stepZ+1;
             for(Int32 kz=0; kz<nStepsZ; kz++)
             {
@@ -162,6 +169,8 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
             Log.LogInfo( "Override z-search: Using overriden linemodelsolve.linemodel.extremacount: %f", 1.0);
             ctx.GetDataStore().SetScopedParam( "linemodelsolve.linemodel.firstpass.largegridstep", stepZ);
             Log.LogInfo( "Override z-search: Using overriden linemodelsolve.linemodel.firstpass.largegridstep: %f", stepZ);
+            Log.LogInfo( "Override z-search: Using overriden half zrange around zref: %f", deltaZrangeHalf);
+            Log.LogInfo( "Override z-search: Using overriden dzstep: %f", stepZ);
         }
 
         Log.LogInfo( "Override z-search: Using overriden zref for spc %s : zref=%f", ctx.GetSpectrum().GetName().c_str(), zref);
@@ -706,9 +715,32 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
             throw std::runtime_error("Extract Proba. for z candidates: no results retrieved from scope");
         }
 
+        //if we want to have IDs in the candidateresults.csv, two options: pass the IDs to ->compute
+        //or use zcand->Rank to sort them here
+        auto v = ctx.GetDataStore().GetGlobalResult("linemodelsolve.linemodel").lock();
+        auto v_ = std::dynamic_pointer_cast<const CLineModelResult>(v);
+
         Log.LogInfo( "  Integrating %d candidates proba.", zcandidates_unordered_list.size() );
-        zcand->Compute(zcandidates_unordered_list, logzpdf1d->Redshifts, logzpdf1d->valProbaLog);
+        zcand->Compute(zcandidates_unordered_list, logzpdf1d->Redshifts, logzpdf1d->valProbaLog, v_->ExtremaResult.ExtremaIDs);
+        
+        
         ctx.GetDataStore().StoreScopedGlobalResult( "candidatesresult", zcand );
+        
+        ctx.GetDataStore().SetRank(zcand->Rank);
+        ctx.GetDataStore().SetIntgPDF(zcand->ValSumProba);
+
+        //ctx.editResultStore("linemodelsolve.linemodek_extrema", "rank_PDf" and ExtremaPDF, zcand->Rank);
+        //zcand->compute recompute sthe order of candidates based on valprobalog at this level we have the candidates ordered
+        std::vector<std::string> info {"spc", "fit", "fitcontinuum", "rules", "continuum"};
+        for(Int32 f = 0; f<info.size(); f++) {
+            for( Int32 i = 0; i<zcand->Rank.size(); i++){
+                std::string fname_new =
+                (boost::format("linemodelsolve.linemodel_%1%_extrema_%2%") % info[f] % i).str();
+                std::string fname_old =
+                (boost::format("linemodelsolve.linemodel_%1%_extrema_tmp_%2%") % info[f] % zcand->Rank[i]).str();
+                ctx.GetDataStore().ChangeScopedGlobalResult(fname_old, fname_new);    
+            }
+        }
     }else{
         Log.LogInfo("No z-candidates found. Skipping probabilities integration...");
     }
@@ -868,7 +900,7 @@ Int32 CProcessFlow::getValueFromRefFile( const char* filePath, std::string spcid
 
     ifstream file;
 
-    file.open( filePath, ifstream::in );
+    file.open( filePath, std::ifstream::in );
     if( file.rdstate() & ios_base::failbit )
         return false;
 
