@@ -558,7 +558,7 @@ Int32 CLineModelElementList::GetFluxDirectIntegration(TInt32List eIdx_list,
                                                                       winsizeAngstrom);
 
 
-        for( Int32 t=indexRange.GetBegin();t<indexRange.GetEnd()-1;t++)
+        for( Int32 t=indexRange.GetBegin();t<indexRange.GetEnd();t++)
         {
             indexes.push_back(t);
         }
@@ -5097,9 +5097,7 @@ Float64 CLineModelElementList::getLeastSquareContinuumMerit(const TFloat64Range&
  **/
 Float64 CLineModelElementList::getLeastSquareMeritFast(Int32 idxLine)
 {
-    Float64 fit;
-
-    fit = getLeastSquareContinuumMeritFast();
+    Float64 fit = getLeastSquareContinuumMeritFast();
 
     for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
     {
@@ -5251,7 +5249,7 @@ Float64 CLineModelElementList::getLeastSquareMeritUnderElements()
 
 /**
  * \brief Returns the error of the support for subelements under the element with the argument eltId as index.
- * Accumulate "fit", the squared difference between model and spectrum, divied by the square of the m_ErrorNoContinuum value.
+ * Accumulate "fit", the squared difference between model and spectrum, divided by the square of the m_ErrorNoContinuum value.
  * Accumulate "sumErr" 1 / square of the m_ErrorNoContinuum value.
  * return the square root of fit / sumErr.
  **/
