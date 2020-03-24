@@ -368,7 +368,7 @@ Int32 CSpectrumSpectralAxis::GetIndexAtWaveLength( Float64 waveLength ) const
         else
             return m;
 
-        if (lo >= hi)
+        if (lo > hi)
             return(lo);
     }
 
