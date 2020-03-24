@@ -91,6 +91,8 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
                                    Float64& overlapRate,
                                    Float64& chiSquare,
                                    Float64& fittingAmplitude,
+                                   Float64& fittingAmplitudeError,
+                                   Bool& fittingAmplitudeNegative,
                                    Float64& fittingDtM,
                                    Float64& fittingMtM,
                                    Float64& fittingLogprior,
@@ -122,6 +124,8 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
         }
     }
     fittingAmplitude = -1.0;
+    fittingAmplitudeError = -1.0;
+    fittingAmplitudeNegative = 0;
     overlapRate = 0.0;
     status = nStatus_DataError;
 
@@ -548,26 +552,33 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
             }
 
             Float64 ampl = 0.0;
+            Float64 ampl_err = 0.0;
             if( sumT==0 )
             {
                 ampl = 0.0;
+                ampl_err = 0.0;
                 fit = sumS;
+                fittingAmplitudeNegative = 0;
                 //status = nStatus_DataError;
                 //return;
             }else{
                 Float64 ampl_best=0.0;
+                Float64 ampl_best_err = 0.0;
 
                 if(logpriore.size()==m_ismCorrectionCalzetti->GetNPrecomputedDustCoeffs())
                 {
                     if(logpriore[kDust].A_sigma>0.0 && logpriore[kDust].betaA>0.0)
                     {
-                        Float64 s2b = logpriore[kDust].A_sigma*logpriore[kDust].A_sigma/logpriore[kDust].betaA;
-                        ampl_best = (s2b*sumCross+logpriore[kDust].A_mean)/(s2b*sumT+1.0);
+                        Float64 bss2 = logpriore[kDust].betaA/(logpriore[kDust].A_sigma*logpriore[kDust].A_sigma);
+                        //ampl_best = (s2b*sumCross+logpriore[kDust].A_mean)/(s2b*sumT+1.0);
+                        ampl_best = (sumCross+logpriore[kDust].A_mean*bss2)/(sumT+bss2);
+                        ampl_best_err = sqrt(sumT)/(sumT+bss2); 
                         /*
                         Log.LogInfo("  Operator-Chisquare2: Constrained amplitude (betaA=%e):  s2b=%e, mtm=%e", logpriore[kDust].betaA, s2b, sumT);
                         //*/
                     }else{
-                        ampl_best=sumCross/sumT;
+                        ampl_best = sumCross/sumT;
+                        ampl_best_err = sqrt(1./sumT);
                         /*
                         Log.LogInfo("  Operator-Chisquare2: Unconstrained amplitude (sigmaA=%e, betaA=%e)",
                                     logpriore[kDust].A_sigma,
@@ -577,6 +588,8 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
                     }
                 }else{
                     ampl_best=sumCross/sumT;
+                    ampl_best_err = sqrt(1./sumT);
+
                     //Log.LogInfo("  Operator-Chisquare2: Unconstrained amplitude: logpriore.size=%d", logpriore.size());
                 }
 
@@ -584,12 +597,21 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
                 if(amplForcePositive)
                 {
                     ampl = max(0.0, ampl_best);
+                    ampl_err = ampl_best_err; // DV: To be checked
                 }else{
                     ampl = ampl_best;
+                    ampl_err = ampl_best_err;
                 }
                 if(forcedAmplitude !=-1){
                     ampl = forcedAmplitude;
+                    ampl_err = 0.;
                 }
+
+                if (ampl_best < -3*ampl_best_err)
+                {
+                    fittingAmplitudeNegative = 1;
+                }
+
                 //Generalized method (ampl can take any value now) for chi2 estimate
                 fit = sumS + sumT*ampl*ampl - 2.*ampl*sumCross;
             }
@@ -653,6 +675,7 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
                 fittingDustCoeff = coeffEBMV;
                 fittingMeiksinIdx = meiksinIdx;
                 fittingAmplitude = ampl;
+                fittingAmplitudeError = ampl_err;
                 fittingDtM = sumCross;
                 fittingMtM = sumT;
                 fittingLogprior = logprior;
@@ -906,6 +929,8 @@ std::shared_ptr<COperatorResult> COperatorChiSquare2::Compute(const CSpectrum& s
                   result->Overlap[i],
                   result->ChiSquare[i],
                   result->FitAmplitude[i],
+                  result->FitAmplitudeError[i],
+                  result->FitAmplitudeNegative[i],
                   result->FitDtM[i],
                   result->FitMtM[i],
                   result->LogPrior[i],
@@ -1292,6 +1317,8 @@ const COperatorResult* COperatorChiSquare2::ExportChi2versusAZ(const CSpectrum& 
                       result->Overlap[i],
                       result->ChiSquare[i],
                       result->FitAmplitude[i],
+                      result->FitAmplitudeError[i],
+                      result->FitAmplitudeNegative[i],
                       result->FitDtM[i],
                       result->FitMtM[i],
                       result->LogPrior[i],

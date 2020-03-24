@@ -23,6 +23,8 @@ void CChisquareResult::Init(UInt32 n , Int32 nISM, Int32 nIGM)
 {
     ChiSquare.resize( n );
     FitAmplitude.resize( n );
+    FitAmplitudeError.resize( n );
+    FitAmplitudeNegative.resize( n);
     FitDustCoeff.resize( n );
     FitMeiksinIdx.resize( n );
     FitDtM.resize( n );
@@ -194,6 +196,45 @@ void CChisquareResult::Save( const CDataStore& store, std::ostream& stream ) con
             }
             stream << "}" << std::endl;
         }
+
+
+        if(FitAmplitudeError.size()>0){
+            stream <<  "#Extrema FitAmplitudeErrors = {";
+            for ( int i=0; i<Extrema.size(); i++)
+            {
+                Int32 idx=0;
+                for ( UInt32 i2=0; i2<Redshifts.size(); i2++)
+                {
+                    if(Redshifts[i2] == Extrema[i]){
+                        idx = i2;
+                        break;
+                    }
+                }
+
+                stream << std::setprecision(16) << "\t" << std::scientific <<   FitAmplitudeError[idx] << "\t";
+            }
+            stream << "}" << std::endl;
+        }
+
+        if(FitAmplitudeNegative.size()>0){
+            stream <<  "#Extrema FitAmplitudesNegative = {";
+            for ( int i=0; i<Extrema.size(); i++)
+            {
+                Int32 idx=0;
+                for ( UInt32 i2=0; i2<Redshifts.size(); i2++)
+                {
+                    if(Redshifts[i2] == Extrema[i]){
+                        idx = i2;
+                        break;
+                    }
+                }
+
+                stream << "\t" <<   FitAmplitudeNegative[idx] << "\t";
+            }
+            stream << "}" << std::endl;
+        }
+
+
 
         if(FitDustCoeff.size()>0){
             stream <<  "#Extrema FitDustCoeff = {";
