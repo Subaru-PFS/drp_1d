@@ -1468,7 +1468,7 @@ Int32 COperatorLineModel::SaveResults(const CSpectrum &spectrum,
                             m_model->GetVelocityAbsorption()));
                 m_savedModelFittingResults.push_back(resultfitmodel);
 
-                // CModelContinuumFittingResult
+                // CModelContinuumFittingResult : mira: below is the content of output files _fitcontinuum_extrema
                 std::shared_ptr<CModelContinuumFittingResult>
                     resultfitcontinuummodel =
                         std::shared_ptr<CModelContinuumFittingResult>(
@@ -2841,7 +2841,7 @@ void COperatorLineModel::storeGlobalModelResults(CDataStore &dataStore)
         dataStore.StoreScopedGlobalResult(fname_rules.c_str(),
                                           m_savedModelRulesResults[k]);
     }
-
+//TODO: delete below for loop
     for (Int32 k = 0; k < m_savedModelContinuumSpectrumResults.size(); k++)
     {
         std::string nameBaselineStr =

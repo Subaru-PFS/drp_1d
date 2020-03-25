@@ -2243,7 +2243,7 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(const CSpe
         m_spectrumRebinedLog, lambdaRange); // 0.0;//Todo: check how to estimate
                                             // that value for loglambda//
 
-    // extrema
+    // Mira: looking for continuum extrema 
     Int32 extremumCount = 10;
     if (result->Redshifts.size() > extremumCount)
     {   Float64 radius = 0.005;
