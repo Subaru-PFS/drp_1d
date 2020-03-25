@@ -715,21 +715,16 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
             throw std::runtime_error("Extract Proba. for z candidates: no results retrieved from scope");
         }
 
-        //if we want to have IDs in the candidateresults.csv, two options: pass the IDs to ->compute
-        //or use zcand->Rank to sort them here
+        Log.LogInfo( "  Integrating %d candidates proba.", zcandidates_unordered_list.size() );
+        
         if(methodName == "linemodel"){
+            //retrieve extremum IDs saved in datastore from firstpass 
             auto v = ctx.GetDataStore().GetGlobalResult("linemodelsolve.linemodel").lock();
             auto v_ = std::dynamic_pointer_cast<const CLineModelResult>(v);
-
-            Log.LogInfo( "  Integrating %d candidates proba.", zcandidates_unordered_list.size() );
             zcand->Compute(zcandidates_unordered_list, logzpdf1d->Redshifts, logzpdf1d->valProbaLog, v_->ExtremaResult.ExtremaIDs);
-        }else {
-            //create IDs for identified candidates
-            std::vector<std::string> IDs;
-            for (Int32 i = 0; i< zcandidates_unordered_list.size(); i++){
-                IDs.push_back("Ext"+ std::to_string(i));
-            }
-            zcand->Compute(zcandidates_unordered_list, logzpdf1d->Redshifts, logzpdf1d->valProbaLog, IDs);
+        }else{
+            Log.LogInfo( "  Integrating %d candidates proba.", zcandidates_unordered_list.size() );
+            zcand->Compute(zcandidates_unordered_list, logzpdf1d->Redshifts, logzpdf1d->valProbaLog);
         }
         
         ctx.GetDataStore().StoreScopedGlobalResult( "candidatesresult", zcand );
@@ -739,18 +734,18 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
 
         //ctx.editResultStore("linemodelsolve.linemodek_extrema", "rank_PDf" and ExtremaPDF, zcand->Rank);
         //zcand->compute recompute sthe order of candidates based on valprobalog at this level we have the candidates ordered
-   if(methodName == "linemodel"){
-        std::vector<std::string> info {"spc", "fit", "fitcontinuum", "rules", "continuum"};
-        for(Int32 f = 0; f<info.size(); f++) {
-            for( Int32 i = 0; i<zcand->Rank.size(); i++){
-                std::string fname_new =
-                (boost::format("linemodelsolve.linemodel_%1%_extrema_%2%") % info[f] % i).str();
-                std::string fname_old =
-                (boost::format("linemodelsolve.linemodel_%1%_extrema_tmp_%2%") % info[f] % zcand->Rank[i]).str();
-                ctx.GetDataStore().ChangeScopedGlobalResult(fname_old, fname_new);    
+        if(methodName == "linemodel"){
+            std::vector<std::string> info {"spc", "fit", "fitcontinuum", "rules", "continuum"};
+            for(Int32 f = 0; f<info.size(); f++) {
+                for( Int32 i = 0; i<zcand->Rank.size(); i++){
+                    std::string fname_new =
+                    (boost::format("linemodelsolve.linemodel_%1%_extrema_%2%") % info[f] % i).str();
+                    std::string fname_old =
+                    (boost::format("linemodelsolve.linemodel_%1%_extrema_tmp_%2%") % info[f] % zcand->Rank[i]).str();
+                    ctx.GetDataStore().ChangeScopedGlobalResult(fname_old, fname_new);    
+                }
             }
         }
-   }
     }else{
         Log.LogInfo("No z-candidates found. Skipping probabilities integration...");
     }

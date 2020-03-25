@@ -53,7 +53,12 @@ Int32 CPdfCandidateszResult::Compute( std::vector<Float64> zc,  std::vector<Floa
     {
         Rank[kc] = -1;
         Redshifts[kc] = zc[kc];
-        ExtremaIDs[kc] = IDs[kc];
+        if(IDs.size()){
+             ExtremaIDs[kc] = IDs[kc];
+        }else{
+            //generate IDs 
+            ExtremaIDs[kc] = "Ext" + std::to_string(kc);
+        }
         if(optMethod==0)
         {
             ValSumProba[kc] = pdfz.getCandidateSumTrapez( Pdfz, PdfProbalog, zc[kc], Fullwidth);
