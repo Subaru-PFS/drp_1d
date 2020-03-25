@@ -457,6 +457,8 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
             }else{
                 Log.LogError( "Failed to get z candidates from these results");
             }
+            //compute the integratedPDF and sort candidates based on intg PDF
+            Bool b = Solve.ExtractCandidateResults(ctx.GetDataStore(), zcandidates_unordered_list);
         }
 
     }else if(methodName  == "zweimodelsolve" ){
@@ -515,6 +517,8 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
             }else{
                 Log.LogError( "Failed to get z candidates from these results");
             }
+            
+            Bool b= solve.ExtractCandidateResults(ctx.GetDataStore(), zcandidates_unordered_list);
         }
 
     }else if(methodName  == "chisquarelogsolve" ){
@@ -559,6 +563,8 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
             }else{
                 Log.LogError( "  Failed to get z candidates from these results");
             }
+
+            Bool b = solve.ExtractCandidateResults(ctx.GetDataStore(), zcandidates_unordered_list);
         }
 
 
@@ -700,53 +706,8 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
     }
 
     //Extracting the candidates summarized results (nb: only works for linemodel and chisquare methods as of Aug.2018)
-    if(zcandidates_unordered_list.size()>0)
+    if(zcandidates_unordered_list.size() == 0)
     {
-        Log.LogInfo( "Computing candidates Probabilities" );
-        std::shared_ptr<CPdfCandidateszResult> zcand = std::shared_ptr<CPdfCandidateszResult>(new CPdfCandidateszResult());
-
-        std::string scope_res = "zPDF/logposterior.logMargP_Z_data";
-        auto results =  ctx.GetDataStore().GetGlobalResult( scope_res.c_str() );
-        auto logzpdf1d = std::dynamic_pointer_cast<const CPdfMargZLogResult>( results.lock() );
-
-        if(!logzpdf1d)
-        {
-            Log.LogError( "Extract Proba. for z candidates: no results retrieved from scope: %s", scope_res.c_str());
-            throw std::runtime_error("Extract Proba. for z candidates: no results retrieved from scope");
-        }
-
-        Log.LogInfo( "  Integrating %d candidates proba.", zcandidates_unordered_list.size() );
-        
-        if(methodName == "linemodel"){
-            //retrieve extremum IDs saved in datastore from firstpass 
-            auto v = ctx.GetDataStore().GetGlobalResult("linemodelsolve.linemodel").lock();
-            auto v_ = std::dynamic_pointer_cast<const CLineModelResult>(v);
-            zcand->Compute(zcandidates_unordered_list, logzpdf1d->Redshifts, logzpdf1d->valProbaLog, v_->ExtremaResult.ExtremaIDs);
-        }else{
-            Log.LogInfo( "  Integrating %d candidates proba.", zcandidates_unordered_list.size() );
-            zcand->Compute(zcandidates_unordered_list, logzpdf1d->Redshifts, logzpdf1d->valProbaLog);
-        }
-        
-        ctx.GetDataStore().StoreScopedGlobalResult( "candidatesresult", zcand );
-        
-        ctx.GetDataStore().SetRank(zcand->Rank);
-        ctx.GetDataStore().SetIntgPDF(zcand->ValSumProba);
-
-        //ctx.editResultStore("linemodelsolve.linemodek_extrema", "rank_PDf" and ExtremaPDF, zcand->Rank);
-        //zcand->compute recompute sthe order of candidates based on valprobalog at this level we have the candidates ordered
-        if(methodName == "linemodel"){
-            std::vector<std::string> info {"spc", "fit", "fitcontinuum", "rules", "continuum"};
-            for(Int32 f = 0; f<info.size(); f++) {
-                for( Int32 i = 0; i<zcand->Rank.size(); i++){
-                    std::string fname_new =
-                    (boost::format("linemodelsolve.linemodel_%1%_extrema_%2%") % info[f] % i).str();
-                    std::string fname_old =
-                    (boost::format("linemodelsolve.linemodel_%1%_extrema_tmp_%2%") % info[f] % zcand->Rank[i]).str();
-                    ctx.GetDataStore().ChangeScopedGlobalResult(fname_old, fname_new);    
-                }
-            }
-        }
-    }else{
         Log.LogInfo("No z-candidates found. Skipping probabilities integration...");
     }
 
