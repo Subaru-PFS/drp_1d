@@ -8,6 +8,7 @@
 #include <RedshiftLibrary/extremum/extremum.h>
 #include <RedshiftLibrary/processflow/datastore.h>
 #include <RedshiftLibrary/statistics/pdfz.h>
+#include <RedshiftLibrary/statistics/pdfcandidateszresult.h>
 
 #include <RedshiftLibrary/spectrum/io/fitswriter.h>
 #include <float.h>
@@ -350,5 +351,29 @@ Int32 CMethodTplcombinationSolve::CombinePDF(CDataStore &store, std::string scop
     return retPdfz;
 }
 
+Bool CMethodTplcombinationSolve::ExtractCandidateResults(CDataStore &store, std::vector<Float64> zcandidates_unordered_list)
+{
+        Log.LogInfo( "Computing candidates Probabilities" );
+        std::shared_ptr<CPdfCandidateszResult> zcand = std::shared_ptr<CPdfCandidateszResult>(new CPdfCandidateszResult());
+
+        std::string scope_res = "zPDF/logposterior.logMargP_Z_data";
+        auto results =  store.GetGlobalResult( scope_res.c_str() );
+        auto logzpdf1d = std::dynamic_pointer_cast<const CPdfMargZLogResult>( results.lock() );
+
+        if(!logzpdf1d)
+        {
+            Log.LogError( "Extract Proba. for z candidates: no results retrieved from scope: %s", scope_res.c_str());
+            throw std::runtime_error("Extract Proba. for z candidates: no results retrieved from scope");
+        }
+
+        Log.LogInfo( "  Integrating %d candidates proba.", zcandidates_unordered_list.size() );
+        zcand->Compute(zcandidates_unordered_list, logzpdf1d->Redshifts, logzpdf1d->valProbaLog);
+        
+        store.StoreScopedGlobalResult( "candidatesresult", zcand ); 
+        store.SetRank(zcand->Rank);
+        store.SetIntgPDF(zcand->ValSumProba);
+
+    return true;
+}
 
 

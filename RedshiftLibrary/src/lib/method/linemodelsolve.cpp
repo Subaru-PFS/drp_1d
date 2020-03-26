@@ -1287,9 +1287,10 @@ Bool CLineModelSolve::ExtractCandidateResults(CDataStore &store, std::vector<Flo
         
         
         //retrieve extremum IDs saved in datastore from firstpass 
-        auto v = store.GetGlobalResult("linemodelsolve.linemodel").lock();
-        auto v_ = std::dynamic_pointer_cast<const CLineModelResult>(v);
-        zcand->Compute(zcandidates_unordered_list, logzpdf1d->Redshifts, logzpdf1d->valProbaLog, v_->ExtremaResult.ExtremaIDs);
+        std::shared_ptr<const CLineModelResult> v = std::dynamic_pointer_cast<const CLineModelResult>(
+            store.GetGlobalResult("linemodelsolve.linemodel").lock());
+
+        zcand->Compute(zcandidates_unordered_list, logzpdf1d->Redshifts, logzpdf1d->valProbaLog, v->ExtremaResult.ExtremaIDs);
         
         store.StoreScopedGlobalResult( "candidatesresult", zcand ); 
         store.SetRank(zcand->Rank);
