@@ -750,6 +750,8 @@ Int32 COperatorChiSquareLogLambda::FitAllz(const TFloat64Range &lambdaRange,
             UInt32 fullResultIdx = isubz + izrangelist[k].GetBegin();
             result->ChiSquare[fullResultIdx] = subresult->ChiSquare[isubz];
             result->FitAmplitude[fullResultIdx] = subresult->FitAmplitude[isubz];
+            result->FitAmplitudeError[fullResultIdx] = subresult->FitAmplitudeError[isubz];
+            result->FitAmplitudeNegative[fullResultIdx] = subresult->FitAmplitudeNegative[isubz];
             result->FitDtM[fullResultIdx] = subresult->FitDtM[isubz];
             result->FitMtM[fullResultIdx] = subresult->FitMtM[isubz];
 
@@ -1031,6 +1033,8 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64 *spectrumRebinedLambda,
     // prepare best fit data buffer
     std::vector<Float64> bestChi2(nshifts, DBL_MAX);
     std::vector<Float64> bestFitAmp(nshifts, -1.0);
+    std::vector<Float64> bestFitAmpErr(nshifts, -1.0);
+    std::vector<Bool> bestFitAmpNeg(nshifts);
     std::vector<Float64> bestFitDtm(nshifts, -1.0);
     std::vector<Float64> bestFitMtm(nshifts, -1.0);
     std::vector<Float64> bestISMCoeff(nshifts, -1.0);
@@ -1208,15 +1212,29 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64 *spectrumRebinedLambda,
             //Log.LogDetail("  Operator-ChisquareLog: FitRangez: kISM = %d, kIGM = %d", kISM, kIGM);
             std::vector<Float64> chi2(dtm_vec_size, DBL_MAX);
             std::vector<Float64> amp(dtm_vec_size, DBL_MAX);
+            std::vector<Float64> bestamp(dtm_vec_size, DBL_MAX);
+            std::vector<Bool> amp_neg(dtm_vec_size);
+            std::vector<Float64> amp_err(dtm_vec_size, DBL_MAX);
             for (Int32 k = 0; k < dtm_vec_size; k++)
             {
                 if (mtm_vec[k] == 0.0)
                 {
                     amp[k] = 0.0;
+                    amp_err[k] = 0.0;
+                    amp_neg[k] = 0;
                     chi2[k] = dtd;
                 } else
                 {
-                    amp[k] = max(0.0, dtm_vec[k] / mtm_vec[k]);
+                    bestamp[k] = dtm_vec[k] / mtm_vec[k];
+                    amp[k] = max(0.0, bestamp[k]);
+                    amp_err[k] = sqrt(1./mtm_vec[k]);
+                    if (bestamp[k] < -3*amp_err[k])
+                    {
+                        amp_neg[k] = 1;
+                    } else
+                    {
+                        amp_neg[k] = 0;
+                    }
                     chi2[k] = dtd - 2 * dtm_vec[k] * amp[k] + mtm_vec[k] * amp[k] * amp[k];
                 }
                 //Log.LogDetail("  Operator-ChisquareLog: FitRangez: chi2[%d] = %f", k, chi2[k]);
@@ -1240,6 +1258,8 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64 *spectrumRebinedLambda,
                 {
                     bestChi2[k] = chi2[k];
                     bestFitAmp[k] = amp[k];
+                    bestFitAmpErr[k] = amp_err[k];
+                    bestFitAmpNeg[k] = amp_neg[k];
                     bestFitDtm[k] = dtm_vec[k];
                     bestFitMtm[k] = mtm_vec[k];
                     if (enableISM)
@@ -1315,23 +1335,27 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64 *spectrumRebinedLambda,
         // return -2;
     }
 
-    // interpolating on the regular z grid
-    Float64 *zreversed_array = new Float64[(int)z_vect_size]();
-    Float64 *chi2reversed_array = new Float64[(int)bestChi2.size()]();
-    Float64 *ampreversed_array = new Float64[(int)bestFitAmp.size()]();
-    Float64 *dtmreversed_array = new Float64[(int)bestFitDtm.size()]();
-    Float64 *mtmreversed_array = new Float64[(int)bestFitMtm.size()]();
-    Float64 *ismCoeffreversed_array = new Float64[(int)bestISMCoeff.size()]();
-    Float64 *igmIdxreversed_array = new Float64[(int)bestIGMIdx.size()]();
+    // interpolating on the initial z grid
+    Float64 *z_reversed_array = new Float64[(int)z_vect_size]();
+    Float64 *chi2_reversed_array = new Float64[(int)bestChi2.size()]();
+    Float64 *amp_reversed_array = new Float64[(int)bestFitAmp.size()]();
+    Float64 *amperr_reversed_array = new Float64[(int)bestFitAmpErr.size()]();
+    Bool *ampneg_reversed_array = new Bool[(int)bestFitAmpNeg.size()]();
+    Float64 *dtm_reversed_array = new Float64[(int)bestFitDtm.size()]();
+    Float64 *mtm_reversed_array = new Float64[(int)bestFitMtm.size()]();
+    Float64 *ismCoeff_reversed_array = new Float64[(int)bestISMCoeff.size()]();
+    Float64 *igmIdx_reversed_array = new Float64[(int)bestIGMIdx.size()]();
     for (Int32 t = 0; t < z_vect_size; t++)
     {
-        zreversed_array[t] = z_vect[z_vect_size - 1 - t];
-        chi2reversed_array[t] = bestChi2[z_vect_size - 1 - t];
-        ampreversed_array[t] = bestFitAmp[z_vect_size - 1 - t];
-        dtmreversed_array[t] = bestFitDtm[z_vect_size - 1 - t];
-        mtmreversed_array[t] = bestFitMtm[z_vect_size - 1 - t];
-        ismCoeffreversed_array[t] = bestISMCoeff[z_vect_size - 1 - t];
-        igmIdxreversed_array[t] = bestIGMIdx[z_vect_size - 1 - t];
+        z_reversed_array[t] = z_vect[z_vect_size - 1 - t];
+        chi2_reversed_array[t] = bestChi2[z_vect_size - 1 - t];
+        amp_reversed_array[t] = bestFitAmp[z_vect_size - 1 - t];
+        amperr_reversed_array[t] = bestFitAmpErr[z_vect_size - 1 -t];
+        ampneg_reversed_array[t] = bestFitAmpNeg[z_vect_size - 1 -t];
+        dtm_reversed_array[t] = bestFitDtm[z_vect_size - 1 - t];
+        mtm_reversed_array[t] = bestFitMtm[z_vect_size - 1 - t];
+        ismCoeff_reversed_array[t] = bestISMCoeff[z_vect_size - 1 - t];
+        igmIdx_reversed_array[t] = bestIGMIdx[z_vect_size - 1 - t];
         // Log.LogInfo("  Operator-ChisquareLog: FitRangez: interpolating z
         // result, for z=%f, chi2reversed_array=%f", zreversed_array[t],
         // chi2reversed_array[t]);
@@ -1346,7 +1370,7 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64 *spectrumRebinedLambda,
         // gsl-bsearch z result, , ztgt=%f, zcalc_min=%f, zcalc_max=%f",
         // result->Redshifts[iz], zreversed_array[0],
         // zreversed_array[z_vect_size-1]);
-        k = gsl_interp_bsearch(zreversed_array, result->Redshifts[iz], klow,
+        k = gsl_interp_bsearch(z_reversed_array, result->Redshifts[iz], klow,
                                z_vect_size - 1);
         klow = k;
 
@@ -1365,11 +1389,13 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64 *spectrumRebinedLambda,
         //*/
 
         result->Overlap[iz] = 1.0;
-        result->FitAmplitude[iz] = ampreversed_array[k];
-        result->FitDtM[iz] = dtmreversed_array[k];
-        result->FitMtM[iz] = mtmreversed_array[k];
-        result->FitDustCoeff[iz] = ismCoeffreversed_array[k];
-        result->FitMeiksinIdx[iz] = igmIdxreversed_array[k];
+        result->FitAmplitude[iz] = amp_reversed_array[k];
+        result->FitAmplitudeError[iz] = amperr_reversed_array[k];
+        result->FitAmplitudeNegative[iz] = ampneg_reversed_array[k];
+        result->FitDtM[iz] = dtm_reversed_array[k];
+        result->FitMtM[iz] = mtm_reversed_array[k];
+        result->FitDustCoeff[iz] = ismCoeff_reversed_array[k];
+        result->FitMeiksinIdx[iz] = igmIdx_reversed_array[k];
         result->Status[iz] = nStatus_OK;
 
         //*/
@@ -1378,13 +1404,13 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64 *spectrumRebinedLambda,
     //*
     Log.LogDetail("  Operator-ChisquareLog: FitRangez: interpolating (lin) z result from n=%d (min=%f, max=%f) to n=%d (min=%f, max=%f)",
                   z_vect_size,
-                  zreversed_array[0],
-            zreversed_array[z_vect_size - 1],
+                  z_reversed_array[0],
+            z_reversed_array[z_vect_size - 1],
             result->Redshifts.size(),
             result->Redshifts[0],
             result->Redshifts[result->Redshifts.size() - 1]);
-    InterpolateResult(chi2reversed_array,
-                      zreversed_array,
+    InterpolateResult(chi2_reversed_array,
+                      z_reversed_array,
                       &result->Redshifts.front(),
                       z_vect_size,
                       result->Redshifts.size(),
@@ -1406,7 +1432,7 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64 *spectrumRebinedLambda,
                 intermChi2BufferReversed_array[t] =
                     intermediateChi2[z_vect_size - 1 - t][kism][kigm];
             }
-            InterpolateResult(intermChi2BufferReversed_array, zreversed_array,
+            InterpolateResult(intermChi2BufferReversed_array, z_reversed_array,
                               &result->Redshifts.front(), z_vect_size,
                               result->Redshifts.size(),
                               intermChi2BufferRebinned_array, DBL_MAX);
@@ -1420,13 +1446,15 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64 *spectrumRebinedLambda,
 
     delete[] intermChi2BufferReversed_array;
 
-    delete[] zreversed_array;
-    delete[] chi2reversed_array;
-    delete[] ampreversed_array;
-    delete[] dtmreversed_array;
-    delete[] mtmreversed_array;
-    delete[] ismCoeffreversed_array;
-    delete[] igmIdxreversed_array;
+    delete[] z_reversed_array;
+    delete[] chi2_reversed_array;
+    delete[] amp_reversed_array;
+    delete[] amperr_reversed_array;
+    delete[] ampneg_reversed_array;
+    delete[] dtm_reversed_array;
+    delete[] mtm_reversed_array;
+    delete[] ismCoeff_reversed_array;
+    delete[] igmIdx_reversed_array;
 
     delete[] spcRebinedFluxOverErr2;
     delete[] oneSpcRebinedFluxOverErr2;
