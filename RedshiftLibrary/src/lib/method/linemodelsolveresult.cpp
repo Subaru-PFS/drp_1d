@@ -172,173 +172,37 @@ Bool CLineModelSolveResult::GetBestRedshift(const CDataStore& store,
 }
 
 /**
- * \brief Searches the best_z = argmax(pdf)
- * output: redshift = argmax(pdf)
- * output: merit = chi2(redshift)
- * output: sigma = deltaz(redshift)
- *
- **/
+ * Simply reading from datastore info related to the best Candidate
+*/
 Bool CLineModelSolveResult::GetBestRedshiftFromPdf(const CDataStore& store,
-                                                    Float64& redshift,
-                                                    Float64& merit,
-                                                    Float64& sigma,
-                                                    Float64& snrHa,
-                                                    Float64& lfHa,
-                                                    Float64 &snrOII,
-                                                    Float64 &lfOII,
-                                                    std::string& modelTplratio,
-                                                    std::string& modelTplContinuum ) const
+                                            Float64& redshift,
+                                            Float64& probaLog,
+                                            Float64& sigma,
+                                            Float64& snrHa,
+                                            Float64& lfHa ,
+                                            Float64 &snrOII,
+                                            Float64 &lfOII,
+                                            std::string& modelTplratio,
+                                            std::string& modelTplContinuum ) const
 {
     std::string scope = store.GetScope( *this ) + "linemodelsolve.linemodel";
-    auto results_chi2 = store.GetGlobalResult( scope.c_str() );
+    auto results = store.GetGlobalResult( scope.c_str() );
+    auto lineModelResult = std::dynamic_pointer_cast<const CLineModelResult>( results.lock() );
+    //ideally ExtremaPDF should be saved in resultstore as part of lineModelResult object! 
+    TFloat64List ExtremaPDF = store.GetIntgPDF();
 
-    std::string scope_res = "zPDF/logposterior.logMargP_Z_data";
-    auto results_pdf =  store.GetGlobalResult( scope_res.c_str() );
-    auto logzpdf1d = std::dynamic_pointer_cast<const CPdfMargZLogResult>( results_pdf.lock() );
-
-    if(!logzpdf1d)
-    {
-        Log.LogError( "GetBestRedshiftFromPdf: no pdf results retrieved from scope: %s", scope_res.c_str());
+    if(results.expired())
         return false;
-    }
 
-    Float64 tmpProbaLog = -DBL_MAX;
-    Float64 tmpIntgProba = -DBL_MAX;
-    Float64 tmpRedshift = 0.0;
-    Float64 tmpSigma = -1.0;
-    Float64 tmpSnrHa = -3.0;
-    Float64 tmpLFHa = -3.0;
-    Float64 tmpSnrOII = -3.0;
-    Float64 tmpLFOII = -3.0;
-    std::string tmpModelTplratio = "-1";
-    std::string tmpModelTplcontinuum = "-1";
-
-    if( !results_chi2.expired() )
-    {
-        auto lineModelResult = std::dynamic_pointer_cast<const CLineModelResult>( results_chi2.lock() );
-
-        if(logzpdf1d->Redshifts.size() != lineModelResult->Redshifts.size())
-        {
-            Log.LogError( "GetBestRedshiftFromPdf: pdf samplecount != chisquare samplecount");
-            return false;
-        }
-        Int32 bestIdx = -1;
-        
-        for(Int32 kval=0; kval<lineModelResult->ExtremaResult.ExtremaExtendedRedshifts.size(); kval++)
-        {
-            Float64 zInCandidateRange = lineModelResult->ExtremaResult.ExtremaExtendedRedshifts[kval];
-            UInt32 solIdx = logzpdf1d->getIndex(zInCandidateRange);
-            if(solIdx<0 || solIdx>=logzpdf1d->valProbaLog.size())
-                {
-                    Int32  d = lineModelResult->ExtremaResult.ExtremaExtendedRedshifts.size()/lineModelResult->ExtremaResult.Extrema.size(); 
-                    Log.LogError( "GetBestRedshiftFromPdf: pdf proba value not found for extremumIndex = %d", kval/d);
-                    return false;
-            }
-
-                            
-            CPdfz pdfz;
-            Float64 flux_integral = -1;
-            Float64 probaLog = -1;
-            Float64 bestval, val;
-            
-            //case of integrated probability: two options for integration: direct or gauss fit
-            if("maxintgproba") 
-            { 
-                Int32 method=0; //0=direct intg, 1=gauss fit
-                if(method==1)
-                {
-                    Float64 gauss_amp = -1;
-                    Float64 gauss_amp_err = -1;
-                    Float64 gauss_width = -1;
-                    Float64 gauss_width_err = -1;
-                    Float64 Fullwidth = 1e-2;
-                    Int32 retGaussFit = pdfz.getCandidateRobustGaussFit( logzpdf1d->Redshifts,
-                                                                         logzpdf1d->valProbaLog,
-                                                                         zInCandidateRange,
-                                                                         Fullwidth,
-                                                                         gauss_amp,
-                                                                         gauss_amp_err,
-                                                                         gauss_width,
-                                                                         gauss_width_err);
-                    if(retGaussFit==0)
-                    {
-                        flux_integral = gauss_amp*gauss_width*sqrt(2*M_PI);
-                    }else{
-                        flux_integral = -1;
-                    }
-                }else{
-                    Float64 Fullwidth = 6e-3;
-                    flux_integral = pdfz.getCandidateSumTrapez( logzpdf1d->Redshifts, logzpdf1d->valProbaLog, zInCandidateRange, Fullwidth);
-                }
-
-                bestval = tmpIntgProba;
-                val = flux_integral;
-            }
-            else{
-                if(m_bestRedshiftFromPdfOption=="maxproba"){
-                    probaLog = logzpdf1d->valProbaLog[solIdx];
-                    Log.LogDebug( "GetBestRedshiftFromPdf: z=%f : probalog = %f", zInCandidateRange, probaLog);
-                    bestval = tmpProbaLog;
-                    val = probaLog;
-                }
-            }
-            if(val>bestval)
-            {
-                tmpIntgProba = flux_integral;
-                tmpProbaLog = probaLog;//useless
-                tmpRedshift = zInCandidateRange;//lineModelResult->ExtremaResult.ExtremaLastPass[i];
-                bestIdx = kval;   
-            }
-        
-        }
-
-        Int32  d = lineModelResult->ExtremaResult.ExtremaExtendedRedshifts.size()/lineModelResult->ExtremaResult.Extrema.size(); 
-        bestIdx = bestIdx/d;
-
-        tmpSigma = lineModelResult->ExtremaResult.DeltaZ[bestIdx];
-        tmpSnrHa = lineModelResult->ExtremaResult.snrHa[bestIdx];
-        tmpLFHa = lineModelResult->ExtremaResult.lfHa[bestIdx];
-        tmpSnrOII = lineModelResult->ExtremaResult.snrOII[bestIdx];
-        tmpLFOII = lineModelResult->ExtremaResult.lfOII[bestIdx];
-        tmpModelTplratio = lineModelResult->ExtremaResult.FittedTplshapeName[bestIdx];
-        tmpModelTplcontinuum = lineModelResult->ExtremaResult.FittedTplName[bestIdx];
-       
-        //*************  ////////////////////////////
-        //logging the p_mis value
-        CPdfz pdfz;
-        Float64 zwidth = 2e-2;
-        Float64 pmis=-1;
-        Float64 zmap = tmpRedshift;
-        Log.LogDetail( "pdfz: pmis using zmap=%f", zmap);
-        Int32 retPMis = pdfz.getPmis( logzpdf1d->Redshifts,
-                                      logzpdf1d->valProbaLog,
-                                      zmap,
-                                      lineModelResult->ExtremaResult.Extrema,
-                                      zwidth,
-                                      pmis);
-
-        //*************  ////////////////////////////
-
-    }
-
-    redshift = tmpRedshift;
-    //option 1.
-    //merit = tmpMerit;
-    //option 2.
-    //merit = tmpProbaLog;
-    //option 3
-    if(m_bestRedshiftFromPdfOption=="maxintgproba")
-        merit = tmpIntgProba;
-    else 
-        merit = tmpProbaLog;
-
-    sigma = tmpSigma;
-    snrHa = tmpSnrHa;
-    lfHa = tmpLFHa;
-    snrOII = tmpSnrOII;
-    lfOII = tmpLFOII;
-    modelTplratio = tmpModelTplratio;
-    modelTplContinuum = tmpModelTplcontinuum;
+    redshift = lineModelResult->ExtremaResult.Extrema[0];
+    probaLog = ExtremaPDF[0];
+    sigma = lineModelResult->ExtremaResult.DeltaZ[0];
+    snrHa = lineModelResult->ExtremaResult.snrHa[0];
+    lfHa = lineModelResult->ExtremaResult.lfHa[0];
+    snrOII = lineModelResult->ExtremaResult.snrOII[0];
+    lfOII = lineModelResult->ExtremaResult.lfOII[0];
+    modelTplratio = lineModelResult->ExtremaResult.FittedTplshapeName[0];
+    modelTplContinuum = lineModelResult->ExtremaResult.FittedTplName[0];
     return true;
 }
 
