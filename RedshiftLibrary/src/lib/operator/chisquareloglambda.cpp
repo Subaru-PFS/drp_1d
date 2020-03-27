@@ -777,44 +777,58 @@ Int32 COperatorChiSquareLogLambda::FitAllz(const TFloat64Range &lambdaRange,
                     }
                 }
 
-                logprior += -2.0*logpriorze[fullResultIdx][kism_best].betaTE*logpriorze[fullResultIdx][kism_best].logprior_precompTE;
-                logprior += -2.0*logpriorze[fullResultIdx][kism_best].betaA*logpriorze[fullResultIdx][kism_best].logprior_precompA;
-                logprior += -2.0*logpriorze[fullResultIdx][kism_best].betaZ*logpriorze[fullResultIdx][kism_best].logprior_precompZ;
+                CPriorHelper::SPriorTZE &pTZE = logpriorze[fullResultIdx][kism_best];
+                logprior += -2.0*pTZE.betaTE*pTZE.logprior_precompTE;
+                logprior += -2.0*pTZE.betaA*pTZE.logprior_precompA;
+                logprior += -2.0*pTZE.betaZ*pTZE.logprior_precompZ;
 
 
-                if(logpriorze[fullResultIdx][kism_best].A_sigma>0.0 && logpriorze[fullResultIdx][kism_best].A_mean>0.0)
+                if(pTZE.A_sigma>0.0 && pTZE.A_mean>0.0)
                 {
                     //now update the amplitude if there is any constraints from the priors
                     Float64 ampl = result->FitAmplitude[fullResultIdx];
-                    if(logpriorze[fullResultIdx][kism_best].betaA>0.0)
+                    Float64 ampl_err = result->FitAmplitudeError[fullResultIdx];
+                    Float64 ampl_neg = result->FitAmplitudeNegative[fullResultIdx];
+                    if(pTZE.betaA>0.0)
                     {
-                        Float64 s2b = logpriorze[fullResultIdx][kism_best].A_sigma*logpriorze[fullResultIdx][kism_best].A_sigma
-                                /logpriorze[fullResultIdx][kism_best].betaA;
-                        ampl = (s2b*result->FitDtM[fullResultIdx]+logpriorze[fullResultIdx][kism_best].A_mean)/(s2b*result->FitMtM[fullResultIdx]+1.0);
+                        Float64 bss2 = pTZE.betaA/(pTZE.A_sigma*pTZE.A_sigma);
+                        ampl = (result->FitDtM[fullResultIdx]+pTZE.A_mean*bss2)/(result->FitMtM[fullResultIdx]+bss2);
+                        ampl_err = sqrt(result->FitMtM[fullResultIdx])/(result->FitMtM[fullResultIdx]+bss2); 
+
                     }else{
-                        ampl=result->FitDtM[fullResultIdx]/result->FitMtM[fullResultIdx];
+                        ampl = result->FitDtM[fullResultIdx]/result->FitMtM[fullResultIdx];
+                        ampl_err = sqrt(1./result->FitMtM[fullResultIdx]);
                     }
 
                     if(verbose_priorA)
                     {
                         Log.LogDetail("    ChisquareLogLamnbda: update the amplitude (a_mean=%e, a_sigma=%e)",
-                                     logpriorze[fullResultIdx][kism_best].A_mean,
-                                     logpriorze[fullResultIdx][kism_best].A_sigma);
+                                     pTZE.A_mean,
+                                     pTZE.A_sigma);
                         Log.LogDetail("    ChisquareLogLamnbda: update the amplitude (ampl was = %e, updated to %e)",
                                      result->FitAmplitude[fullResultIdx],
                                      ampl);
                     }
+
+                    // check negative amplitude
+                    ampl_neg = ampl < -3*ampl_err ? 1 : 0;
+                    
+                    // force positivity
+                    ampl = max(0., ampl);
+
                     result->FitAmplitude[fullResultIdx] = ampl;
+                    result->FitAmplitudeError[fullResultIdx] = ampl_err;
+                    result->FitAmplitudeNegative[fullResultIdx] = ampl_neg;
                     result->ChiSquare[fullResultIdx] = dtd + result->FitMtM[fullResultIdx]*ampl*ampl - 2.*ampl*result->FitDtM[fullResultIdx];
 
-                    Float64 logPa = logpriorze[fullResultIdx][kism_best].betaA*
-                            (ampl-logpriorze[fullResultIdx][kism_best].A_mean)*(ampl-logpriorze[fullResultIdx][kism_best].A_mean)
-                            /(logpriorze[fullResultIdx][kism_best].A_sigma*logpriorze[fullResultIdx][kism_best].A_sigma);
+                    Float64 logPa = pTZE.betaA*
+                            (ampl-pTZE.A_mean)*(ampl-pTZE.A_mean)
+                            /(pTZE.A_sigma*pTZE.A_sigma);
                     if(std::isnan(logPa) || logPa!=logPa || std::isinf(logPa))
                     {
                         Log.LogError("    ChisquareLogLamnbda: logPa is NAN (a_mean=%e, a_sigma=%e)",
-                                     logpriorze[fullResultIdx][kism_best].A_mean,
-                                     logpriorze[fullResultIdx][kism_best].A_sigma);
+                                     pTZE.A_mean,
+                                     pTZE.A_sigma);
                         throw std::runtime_error("    ChisquareLogLamnbda: logPa is NAN or inf, or invalid");
                     }
                     logprior += logPa;
@@ -822,16 +836,16 @@ Int32 COperatorChiSquareLogLambda::FitAllz(const TFloat64Range &lambdaRange,
                     if(verbose_priorA)
                     {
                         Log.LogDetail("    ChisquareLogLamnbda: NOT updating the amplitude (a_mean=%e, a_sigma=%e)",
-                                     logpriorze[fullResultIdx][kism_best].A_mean,
-                                     logpriorze[fullResultIdx][kism_best].A_sigma);
+                                     pTZE.A_mean,
+                                     pTZE.A_sigma);
                     }
                 }
                 if(std::isnan(logprior) || logprior!=logprior || std::isinf(logprior))
                 {
                     Log.LogError("    ChisquareLogLambda: logPa is NAN (a_mean=%e, a_sigma=%e, precompA=%e)",
-                                 logpriorze[fullResultIdx][kism_best].A_mean,
-                                 logpriorze[fullResultIdx][kism_best].A_sigma,
-                                 logpriorze[fullResultIdx][kism_best].logprior_precompA);
+                                 pTZE.A_mean,
+                                 pTZE.A_sigma,
+                                 pTZE.logprior_precompA);
                     throw std::runtime_error("    ChisquareLogLamnbda: logPrior is NAN or inf, or invalid");
                 }
                 result->ChiSquare[fullResultIdx] += logprior;
@@ -1212,7 +1226,6 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64 *spectrumRebinedLambda,
             //Log.LogDetail("  Operator-ChisquareLog: FitRangez: kISM = %d, kIGM = %d", kISM, kIGM);
             std::vector<Float64> chi2(dtm_vec_size, DBL_MAX);
             std::vector<Float64> amp(dtm_vec_size, DBL_MAX);
-            std::vector<Float64> bestamp(dtm_vec_size, DBL_MAX);
             std::vector<Bool> amp_neg(dtm_vec_size);
             std::vector<Float64> amp_err(dtm_vec_size, DBL_MAX);
             for (Int32 k = 0; k < dtm_vec_size; k++)
@@ -1225,16 +1238,11 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64 *spectrumRebinedLambda,
                     chi2[k] = dtd;
                 } else
                 {
-                    bestamp[k] = dtm_vec[k] / mtm_vec[k];
-                    amp[k] = max(0.0, bestamp[k]);
+                    amp[k] = dtm_vec[k] / mtm_vec[k];
                     amp_err[k] = sqrt(1./mtm_vec[k]);
-                    if (bestamp[k] < -3*amp_err[k])
-                    {
-                        amp_neg[k] = 1;
-                    } else
-                    {
-                        amp_neg[k] = 0;
-                    }
+                    amp_neg[k] = amp[k] < -3*amp_err[k] ? 1 : 0;
+                    amp[k] = max(0.0, amp[k]);
+
                     chi2[k] = dtd - 2 * dtm_vec[k] * amp[k] + mtm_vec[k] * amp[k] * amp[k];
                 }
                 //Log.LogDetail("  Operator-ChisquareLog: FitRangez: chi2[%d] = %f", k, chi2[k]);
@@ -1262,22 +1270,8 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64 *spectrumRebinedLambda,
                     bestFitAmpNeg[k] = amp_neg[k];
                     bestFitDtm[k] = dtm_vec[k];
                     bestFitMtm[k] = mtm_vec[k];
-                    if (enableISM)
-                    {
-                        Int32 kDustCalzetti = ismEbmvCoeffs[kISM];
-                        bestISMCoeff[k] = m_ismCorrectionCalzetti->GetEbmvValue(
-                            kDustCalzetti);
-                    } else
-                    {
-                        bestISMCoeff[k] = -1;
-                    }
-                    if (enableIGM)
-                    {
-                        bestIGMIdx[k] = igmMeiksinCoeffs[kIGM];
-                    } else
-                    {
-                        bestIGMIdx[k] = -1;
-                    }
+                    bestISMCoeff[k] = enableISM ? m_ismCorrectionCalzetti->GetEbmvValue(ismEbmvCoeffs[kISM]) : -1;
+                    bestIGMIdx[k] = enableIGM ? igmMeiksinCoeffs[kIGM] : -1;
                 }
             }
 

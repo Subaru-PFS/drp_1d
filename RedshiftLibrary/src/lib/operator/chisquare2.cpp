@@ -562,23 +562,21 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
                 //status = nStatus_DataError;
                 //return;
             }else{
-                Float64 ampl_best=0.0;
-                Float64 ampl_best_err = 0.0;
-
+    
                 if(logpriore.size()==m_ismCorrectionCalzetti->GetNPrecomputedDustCoeffs())
                 {
                     if(logpriore[kDust].A_sigma>0.0 && logpriore[kDust].betaA>0.0)
                     {
                         Float64 bss2 = logpriore[kDust].betaA/(logpriore[kDust].A_sigma*logpriore[kDust].A_sigma);
                         //ampl_best = (s2b*sumCross+logpriore[kDust].A_mean)/(s2b*sumT+1.0);
-                        ampl_best = (sumCross+logpriore[kDust].A_mean*bss2)/(sumT+bss2);
-                        ampl_best_err = sqrt(sumT)/(sumT+bss2); 
+                        ampl = (sumCross+logpriore[kDust].A_mean*bss2)/(sumT+bss2);
+                        ampl_err = sqrt(sumT)/(sumT+bss2); 
                         /*
                         Log.LogInfo("  Operator-Chisquare2: Constrained amplitude (betaA=%e):  s2b=%e, mtm=%e", logpriore[kDust].betaA, s2b, sumT);
                         //*/
                     }else{
-                        ampl_best = sumCross/sumT;
-                        ampl_best_err = sqrt(1./sumT);
+                        ampl = sumCross/sumT;
+                        ampl_err = sqrt(1./sumT);
                         /*
                         Log.LogInfo("  Operator-Chisquare2: Unconstrained amplitude (sigmaA=%e, betaA=%e)",
                                     logpriore[kDust].A_sigma,
@@ -587,29 +585,25 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
 
                     }
                 }else{
-                    ampl_best=sumCross/sumT;
-                    ampl_best_err = sqrt(1./sumT);
+                    ampl = sumCross/sumT;
+                    ampl_err = sqrt(1./sumT);
 
                     //Log.LogInfo("  Operator-Chisquare2: Unconstrained amplitude: logpriore.size=%d", logpriore.size());
                 }
 
-
-                if(amplForcePositive)
-                {
-                    ampl = max(0.0, ampl_best);
-                    ampl_err = ampl_best_err; // DV: To be checked
-                }else{
-                    ampl = ampl_best;
-                    ampl_err = ampl_best_err;
-                }
                 if(forcedAmplitude !=-1){
                     ampl = forcedAmplitude;
                     ampl_err = 0.;
                 }
 
-                if (ampl_best < -3*ampl_best_err)
+                if (ampl < -3*ampl_err)
                 {
                     fittingAmplitudeNegative = 1;
+                }
+
+                if(amplForcePositive)
+                {
+                    ampl = max(0.0, ampl);
                 }
 
                 //Generalized method (ampl can take any value now) for chi2 estimate
