@@ -2244,7 +2244,8 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(const CSpe
                                             // that value for loglambda//
 
     // Mira: looking for continuum extrema 
-    Int32 extremumCount = 10;
+    //moved to chisquarelogsolve.cpp
+    /*Int32 extremumCount = 10;
     if (result->Redshifts.size() > extremumCount)
     {   Float64 radius = 0.005;
         TPointList extremumList;
@@ -2281,7 +2282,7 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(const CSpe
         {
             result->Extrema[i] = tmpX[sortedIndexes[i]];
         }
-    }
+    }*/
 
     return result;
 }

@@ -1036,7 +1036,7 @@ std::shared_ptr<COperatorResult> COperatorChiSquare2::Compute(const CSpectrum& s
 
     //estimate CstLog for PDF estimation
     result->CstLog = EstimateLikelihoodCstLog(spectrum, lambdaRange);
-
+/*
     // extrema
     Int32 extremumCount = 10;
     if(result->Redshifts.size()>extremumCount)
@@ -1074,8 +1074,7 @@ std::shared_ptr<COperatorResult> COperatorChiSquare2::Compute(const CSpectrum& s
             result->Extrema[i] = tmpX[sortedIndexes[i]];
         }
         Log.LogDebug("  Operator-Chisquare2: EXTREMA forced n=%d", result->Extrema.size());
-    }
-
+    }*/
     return result;
 
 }

@@ -77,6 +77,7 @@ public:
                                 const TStringList &tplCategoryList,
                                 const std::string opt_calibrationPath,
                                 const TFloat64Range &lambdaRange,
+                                const std::string opt_continuumcomponent,
                                 const Float64 redshiftStep=0.00015,
                                 const string zsampling="log",
                                 bool ignoreLinesSupport=false);
