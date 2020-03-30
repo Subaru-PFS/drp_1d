@@ -776,7 +776,7 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
             //check the method: 
             //if full-model, no need to compute extremum of the continuum
             //otherwise, compute extremum
-        if(opt_continuumcomponent!= "tpltfit"){
+        if(opt_continuumcomponent!= "tplfit"){
             Int32 extremumCount = 10;
             if (chisquareResult->Redshifts.size() > extremumCount)
             {
