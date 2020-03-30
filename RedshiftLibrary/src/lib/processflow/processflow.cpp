@@ -403,7 +403,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
         }
         DebugAssert( qso_redshifts.size() > 0 );
 
-        Log.LogInfo("Processing stellar fitting");
+        Log.LogInfo("Processing QSO fitting");
         CMethodChisquare2Solve solve(calibrationDirPath);
         //CMethodChisquareLogSolve solve(calibrationDirPath);
         qsoResult = solve.Compute( ctx.GetDataStore(),
