@@ -240,8 +240,9 @@ BOOST_AUTO_TEST_CASE(Scale)
   BOOST_CHECK_CLOSE(n112Axis[0],1.,1e-12);
 }
 
-BOOST_AUTO_TEST_CASE(lambdaRange)
+BOOST_AUTO_TEST_CASE(LambdaRange)
 {
+  // linear
   Float64 n121Array[] = {0.,1.};
   CSpectrumSpectralAxis n121Axis = CSpectrumSpectralAxis(n121Array,2,false);
   TLambdaRange irange6 = n121Axis.GetLambdaRange();
@@ -255,11 +256,14 @@ BOOST_AUTO_TEST_CASE(lambdaRange)
   TLambdaRange irange8 = n123Axis.GetLambdaRange();
   BOOST_CHECK_CLOSE(irange8.GetBegin(),0.,1.e-12);
   BOOST_CHECK_CLOSE(irange8.GetEnd(),0.,1.e-12);
-  Float64 n124Array[] = {0.};
-  CSpectrumSpectralAxis n124Axis = CSpectrumSpectralAxis(n124Array,2,true);
+
+  // log
+  Float64 n124Array[] = {0.,1.,2.};
+  CSpectrumSpectralAxis n124Axis = CSpectrumSpectralAxis(n124Array,3,true);
+  BOOST_CHECK(n124Axis.IsInLogScale()==true);
   TLambdaRange irange9 = n124Axis.GetLambdaRange();
-  BOOST_CHECK_CLOSE(irange9.GetBegin(),1.,1.e-12);
-  BOOST_CHECK_CLOSE(irange9.GetEnd(),1.,1.e-12);
+  BOOST_CHECK_CLOSE(irange9.GetBegin(),exp(0.),1.e-12);
+  BOOST_CHECK_CLOSE(irange9.GetEnd(),exp(2.),1.e-12);
 }
 
 BOOST_AUTO_TEST_CASE(ClampLambdaRange)
