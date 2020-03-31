@@ -43,6 +43,7 @@ class CMethodChisquare2Solve
                                                     std::string opt_extinction="no",
                                                     std::string opt_dustFit="no");
 
+    Bool ExtractCandidateResults(CDataStore &store, std::vector<Float64> zcandidates_unordered_list);
 
 
 private:
