@@ -24,6 +24,7 @@ public:
 
         Float64 merit;
         Float64 fitAmplitude;
+        Float64 fitAmplitudeError;
         Float64 fitDtM;
         Float64 fitMtM;
         Float64 logprior;
@@ -39,6 +40,7 @@ public:
              Float64 redshift,
              Float64 merit,
              Float64 fitAmplitude,
+             Float64 fitAmplitudeError,
              Float64 fitDtM,
              Float64 fitMtM,
              Float64 logprior);
