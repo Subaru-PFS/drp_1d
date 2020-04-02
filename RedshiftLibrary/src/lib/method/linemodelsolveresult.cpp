@@ -190,19 +190,19 @@ Bool CLineModelSolveResult::GetBestRedshiftFromPdf(const CDataStore& store,
     auto lineModelResult = std::dynamic_pointer_cast<const CLineModelResult>( results.lock() );
     //ideally ExtremaPDF should be saved in resultstore as part of lineModelResult object! 
     TFloat64List ExtremaPDF = store.GetIntgPDF();
+    Int32 bestIdx = store.GetRank()[0];
 
     if(results.expired())
         return false;
 
-    redshift = lineModelResult->ExtremaResult.Extrema[0];
+    redshift = lineModelResult->ExtremaResult.Extrema[bestIdx];
     probaLog = ExtremaPDF[0];
-    sigma = lineModelResult->ExtremaResult.DeltaZ[0];
-    snrHa = lineModelResult->ExtremaResult.snrHa[0];
-    lfHa = lineModelResult->ExtremaResult.lfHa[0];
-    snrOII = lineModelResult->ExtremaResult.snrOII[0];
-    lfOII = lineModelResult->ExtremaResult.lfOII[0];
-    modelTplratio = lineModelResult->ExtremaResult.FittedTplshapeName[0];
-    modelTplContinuum = lineModelResult->ExtremaResult.FittedTplName[0];
+    sigma = lineModelResult->ExtremaResult.DeltaZ[bestIdx];
+    snrHa = lineModelResult->ExtremaResult.snrHa[bestIdx];
+    lfHa = lineModelResult->ExtremaResult.lfHa[bestIdx];
+    snrOII = lineModelResult->ExtremaResult.snrOII[bestIdx];
+    lfOII = lineModelResult->ExtremaResult.lfOII[bestIdx];
+    modelTplratio = lineModelResult->ExtremaResult.FittedTplshapeName[bestIdx];
     return true;
 }
 
