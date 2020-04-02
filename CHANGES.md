@@ -1,3 +1,13 @@
+# 0.8.1 (2020-03-31)
+
+## Bug Fixes
+
+* Fix 5610 : Make output files: redshift.csv and candidateresults.csv consistent
+* Fix 5618 : Generating IDs for candidates obtained with methods other than linemodel
+* Fix 5620 : Add missing column header in candidates.csv
+* Fix 5633 : Throw error if the number of identified candidates is greater than a constant set to 20 candidates
+* Fix 5701 : Correction of unit tests in spectralaxis_test.cpp
+
 # 0.8.0 (2020-02-27)
 
 ## New Features
