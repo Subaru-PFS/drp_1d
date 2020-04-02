@@ -885,6 +885,7 @@ void CLineModelElementList::LoadFitContinuumOneTemplate(const TFloat64Range& lam
   Float64 merit = DBL_MAX;
 
   Float64 fitContinuumAmplitude = -1.0;
+  Float64 fitContinuumAmplitudeError = -1.0;
   Float64 fitDustCoeff = -1.0;
   Int32 fitMeiksinIdx = -1;
   Float64 fitDtM = -1.0;
@@ -918,6 +919,7 @@ void CLineModelElementList::LoadFitContinuumOneTemplate(const TFloat64Range& lam
                              opt_dustFit,
                              merit,
                              fitContinuumAmplitude,
+                             fitContinuumAmplitudeError,
                              fitDustCoeff,
                              fitMeiksinIdx,
                              fitDtM,
@@ -950,6 +952,7 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, I
 
     Float64 bestMerit = DBL_MAX;
     Float64 bestFitAmplitude = -1.0;
+    Float64 bestFitAmplitudeError = -1.0;
     Float64 bestFitDustCoeff = -1.0;
     Int32 bestFitMeiksinIdx = -1;
     Float64 bestFitRedshift = m_Redshift;
@@ -993,6 +996,7 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, I
 
                 Float64 merit = DBL_MAX;
                 Float64 fitAmplitude = -1.0;
+                Float64 fitAmplitudeError = -1.0;
                 Float64 fitDustCoeff = -1.0;
                 Int32 fitMeiksinIdx = -1;
                 Float64 fitDtM = -1.0;
@@ -1009,6 +1013,7 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, I
                                            opt_dustFit,
                                            merit,
                                            fitAmplitude,
+                                           fitAmplitudeError,
                                            fitDustCoeff,
                                            fitMeiksinIdx,
                                            fitDtM,
@@ -1021,6 +1026,7 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, I
                     {
                         bestMerit = merit;
                         bestFitAmplitude = fitAmplitude;
+                        bestFitAmplitudeError = fitAmplitudeError;
                         bestFitDustCoeff = fitDustCoeff;
                         bestFitMeiksinIdx = fitMeiksinIdx;
                         bestFitDtM = fitDtM;
@@ -1042,6 +1048,7 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, I
         }
         bestMerit = fitValues.merit;
         bestFitAmplitude = fitValues.fitAmplitude;
+        bestFitAmplitudeError = fitValues.fitAmplitudeError;
         bestFitDustCoeff = fitValues.ismDustCoeff;
         bestFitMeiksinIdx = fitValues.igmMeiksinIdx;
         bestFitDtM = fitValues.fitDtM;
@@ -1053,6 +1060,7 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, I
         bestTplName = m_fitContinuum_tplName;
         bestMerit = m_fitContinuum_tplFitMerit;
         bestFitAmplitude = m_fitContinuum_tplFitAmplitude;
+        bestFitAmplitudeError = m_fitContinuum_tplFitAmplitudeError;
         bestFitDustCoeff = m_fitContinuum_tplFitDustCoeff;
         bestFitMeiksinIdx = m_fitContinuum_tplFitMeiksinIdx;
         bestFitDtM = m_fitContinuum_tplFitDtM;
@@ -1098,6 +1106,7 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, I
                 {
                     Float64 merit = DBL_MAX;
                     Float64 fitAmplitude = -1.0;
+                    Float64 fitAmplitudeError =-1.0;
                     Float64 fitDustCoeff = -1.0;
                     Int32 fitMeiksinIdx = -1;
                     Float64 fitDtM = -1.0;
@@ -1114,6 +1123,7 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, I
                                                opt_dustFit,
                                                merit,
                                                fitAmplitude,
+                                               fitAmplitudeError,
                                                fitDustCoeff,
                                                fitMeiksinIdx,
                                                fitDtM,
@@ -1124,6 +1134,7 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, I
                     {
                         bestMerit = merit;
                         bestFitAmplitude = fitAmplitude;
+                        bestFitAmplitudeError = fitAmplitudeError;
                         bestFitDustCoeff = fitDustCoeff;
                         bestFitMeiksinIdx = fitMeiksinIdx;
                         bestFitDtM = fitDtM;
@@ -1157,6 +1168,7 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, I
                 {
                     foundBestTemplate = true;
                     m_fitContinuum_tplFitAmplitude = bestFitAmplitude;
+                    m_fitContinuum_tplFitAmplitudeError = bestFitAmplitudeError;
                     m_fitContinuum_tplFitMerit = bestMerit;
                     m_fitContinuum_tplFitDustCoeff = bestFitDustCoeff;
                     m_fitContinuum_tplFitMeiksinIdx = bestFitMeiksinIdx;
@@ -1179,10 +1191,11 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, I
                     ApplyContinuumOnGrid(tpl, m_fitContinuum_tplFitRedshift);
 
                     m_fitContinuum_tplFitPolyCoeffs = bestFitPolyCoeffs;
-                    setFitContinuum_tplAmplitude(bestFitAmplitude, bestFitPolyCoeffs);
+                    setFitContinuum_tplAmplitude(bestFitAmplitude, bestFitAmplitudeError, bestFitPolyCoeffs);
 
                     Log.LogDebug( "    model : LoadFitContinuum, loaded: %s", bestTplName.c_str());
                     Log.LogDebug( "    model : LoadFitContinuum, loaded with A=%e", bestFitAmplitude);
+                    Log.LogDebug( "    model : LoadFitContinuum, loaded with A_error=%e", bestFitAmplitudeError);
                     Log.LogDebug( "    model : LoadFitContinuum, loaded with dtm=%e", bestFitDtM);
                     Log.LogDebug( "    model : LoadFitContinuum, loaded with mtm=%e", bestFitMtM);
                     Log.LogDebug( "    model : LoadFitContinuum, loaded with logprior=%e", bestFitLogprior);
@@ -1207,12 +1220,13 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, I
     }
 }
 
-void CLineModelElementList::setFitContinuum_tplAmplitude(Float64 tplAmp, std::vector<Float64> polyCoeffs){
+void CLineModelElementList::setFitContinuum_tplAmplitude(Float64 tplAmp, Float64 tplAmpErr, std::vector<Float64> polyCoeffs){
     const CSpectrumSpectralAxis& spcSpectralAxis = m_SpectrumModel->GetSpectralAxis();
 
     Float64 alpha = m_fitContinuum_tplFitAlpha; //alpha blend = 1: only m_SpcContinuumFluxAxis, alpha=0: only tplfit
 
     m_fitContinuum_tplFitAmplitude = tplAmp;
+    m_fitContinuum_tplFitAmplitude = tplAmpErr;
     m_fitContinuum_tplFitPolyCoeffs = polyCoeffs;
     for (UInt32 k=0; k<m_ContinuumFluxAxis.GetSamplesCount(); k++){
         m_ContinuumFluxAxis[k] = (1.-alpha)*m_observeGridContinuumFlux[k]*tplAmp + (alpha)*m_SpcContinuumFluxAxis[k];
@@ -1231,9 +1245,8 @@ void CLineModelElementList::setFitContinuum_tplAmplitude(Float64 tplAmp, std::ve
 }
 
 
-
 /*
-Change the actaul value of redshift.
+Change the actual value of redshift.
 the continuum can be reinterpolate.
 */
 void CLineModelElementList::setRedshift(Float64 redshift, bool reinterpolatedContinuum){
@@ -1343,6 +1356,7 @@ Bool CLineModelElementList::SolveContinuum(const CSpectrum& spectrum,
                                            Int32 opt_dustFit,
                                            Float64& merit,
                                            Float64& fitAmplitude,
+                                           Float64& fitAmplitudeError,
                                            Float64& fitDustCoeff,
                                            Int32& fitMeiksinIdx,
                                            Float64& fitDtM,
@@ -1380,6 +1394,7 @@ Bool CLineModelElementList::SolveContinuum(const CSpectrum& spectrum,
         // Store results
         merit = chisquareResult->ChiSquare[0];
         fitAmplitude = chisquareResult->FitAmplitude[0];
+        fitAmplitudeError = chisquareResult->FitAmplitudeError[0];
         fitDustCoeff = chisquareResult->FitDustCoeff[0];
         fitMeiksinIdx = chisquareResult->FitMeiksinIdx[0];
         fitDtM = chisquareResult->FitDtM[0];
@@ -1527,6 +1542,11 @@ Float64 CLineModelElementList::getFitContinuum_tplAmplitude()
     return m_fitContinuum_tplFitAmplitude;
 }
 
+Float64 CLineModelElementList::getFitContinuum_tplAmplitudeError()
+{
+    return m_fitContinuum_tplFitAmplitudeError;
+}
+
 //This SNR estimate maybe needs to use observed spectrum with lines removed ?
 Float64 CLineModelElementList::getFitContinuum_snr()
 {
@@ -1589,6 +1609,7 @@ Int32 CLineModelElementList::GetFitContinuum_Option()
 
 void CLineModelElementList::SetFitContinuum_FitValues(std::string tplfit_name,
                                                       Float64 tplfit_amp,
+                                                      Float64 tplfit_amperr,
                                                       Float64 tplfit_chi2,
                                                       Float64 tplfit_ebmv,
                                                       Int32 tplfit_meiksinidx,
@@ -1600,11 +1621,11 @@ void CLineModelElementList::SetFitContinuum_FitValues(std::string tplfit_name,
 {
     m_fitContinuum_tplName = tplfit_name;
     m_fitContinuum_tplFitAmplitude = tplfit_amp;
+    m_fitContinuum_tplFitAmplitudeError = tplfit_amperr;
     m_fitContinuum_tplFitMerit = tplfit_chi2;
     m_fitContinuum_tplFitDustCoeff = tplfit_ebmv;
     m_fitContinuum_tplFitMeiksinIdx = tplfit_meiksinidx;
     m_fitContinuum_tplFitRedshift = tplfit_continuumredshift;
-
 
     m_fitContinuum_tplFitDtM = tplfit_dtm;
     m_fitContinuum_tplFitMtM = tplfit_mtm;
@@ -1633,7 +1654,7 @@ void CLineModelElementList::PrepareContinuum(Float64 z)
 
 
     std::vector<Float64> polyCoeffs=m_fitContinuum_tplFitPolyCoeffs;
-    setFitContinuum_tplAmplitude(m_fitContinuum_tplFitAmplitude, polyCoeffs);
+    setFitContinuum_tplAmplitude(m_fitContinuum_tplFitAmplitude, m_fitContinuum_tplFitAmplitudeError, polyCoeffs);
     return;
 }
 
@@ -2118,7 +2139,7 @@ Float64 CLineModelElementList::fit(Float64 redshift,
                     const CTemplate* tpl = bestController->getTemplate();
                     ApplyContinuumOnGrid(*tpl, m_Redshift);
                     std::vector<Float64> polyCoeffs;
-                    setFitContinuum_tplAmplitude(bestController->getContinuumAmp(), polyCoeffs);
+                    setFitContinuum_tplAmplitude(bestController->getContinuumAmp(), bestController->getContinuumAmpErr(), polyCoeffs);
                       //setFitContinuum_tplAmplitude(  bestController->getContinuumAmp());
                   }else if (bestController-> isRedshiftFitted()){
                     setRedshift(bestController-> getRedshift(), bestController->isContinuumLoaded());
@@ -2194,8 +2215,9 @@ Float64 CLineModelElementList::fit(Float64 redshift,
                 }
 
                 m_fitContinuum_tplFitAmplitude = 1.0;
+                m_fitContinuum_tplFitAmplitudeError = 1.0;
                 std::vector<Float64> polyCoeffs_unused;
-                setFitContinuum_tplAmplitude(m_fitContinuum_tplFitAmplitude, polyCoeffs_unused);
+                setFitContinuum_tplAmplitude(m_fitContinuum_tplFitAmplitude, m_fitContinuum_tplFitAmplitudeError, polyCoeffs_unused);
 
                 std::vector<UInt32> validEltsIdx = GetModelValidElementsIndexes();
                 std::vector<Float64> ampsfitted;
@@ -2224,7 +2246,7 @@ Float64 CLineModelElementList::fit(Float64 redshift,
                 {
                     polyCoeffs.push_back(ampsfitted[kpoly]);
                 }
-                setFitContinuum_tplAmplitude(m_fitContinuum_tplFitAmplitude, polyCoeffs);
+                setFitContinuum_tplAmplitude(m_fitContinuum_tplFitAmplitude, m_fitContinuum_tplFitAmplitudeError, polyCoeffs);
                 //PrepareContinuum(m_Redshift);
                 for(UInt32 i=0; i<modelFluxAxis.GetSamplesCount(); i++)
                 {
