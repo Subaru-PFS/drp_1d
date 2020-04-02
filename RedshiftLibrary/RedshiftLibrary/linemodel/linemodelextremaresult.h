@@ -76,6 +76,7 @@ public:
     //template continuum
     std::vector<std::string>      FittedTplName;    //Name of the best template fitted for continuum
     TFloat64List            FittedTplAmplitude;     //Amplitude for the best template fitted for continuum
+    TFloat64List            FittedTplAmplitudeError;     //Amplitude error for the best template fitted for continuum
     TFloat64List            FittedTplMerit;     //Chisquare for the best template fitted for continuum
     TFloat64List            FittedTplDustCoeff;     //Calzetti dustcoeff for the best template fitted for continuum
     std::vector<Int32>      FittedTplMeiksinIdx;    //Meiksin igm index for the best template fitted for continuum

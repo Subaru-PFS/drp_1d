@@ -70,6 +70,7 @@ void CLineModelExtremaResult::Resize(Int32 size)
 
     FittedTplName.resize(size);
     FittedTplAmplitude.resize(size);
+    FittedTplAmplitudeError.resize(size);
     FittedTplMerit.resize(size);
     FittedTplDustCoeff.resize(size);
     FittedTplMeiksinIdx.resize(size);
