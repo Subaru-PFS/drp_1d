@@ -53,17 +53,22 @@ Int32 CPdfCandidateszResult::Compute( std::vector<Float64> zc,  std::vector<Floa
     {
         Rank[kc] = -1;
         Redshifts[kc] = zc[kc];
-        ExtremaIDs[kc] = IDs[kc];
+        if(IDs.size()){
+             ExtremaIDs[kc] = IDs[kc];
+        }else{
+            //generate IDs 
+            ExtremaIDs[kc] = "Ext" + std::to_string(kc);
+        }
         if(optMethod==0)
         {
-            ValSumProba[kc] = pdfz.getCandidateSumTrapez( Pdfz, PdfProbalog, zc[kc], Fullwidth);
+            ValSumProba[kc] = pdfz.getCandidateSumTrapez( Pdfz, PdfProbalog, zc[kc], Fullwidth*(1+zc[kc]));
             GaussAmp[kc]=-1;
             GaussAmpErr[kc]=-1;
             GaussSigma[kc]=-1;
             GaussSigmaErr[kc]=-1;
         }else
         {
-            Int32 retGaussFit = pdfz.getCandidateRobustGaussFit( Pdfz, PdfProbalog, zc[kc], Fullwidth, GaussAmp[kc], GaussAmpErr[kc], GaussSigma[kc], GaussSigmaErr[kc]);
+            Int32 retGaussFit = pdfz.getCandidateRobustGaussFit( Pdfz, PdfProbalog, zc[kc], Fullwidth*(1+zc[kc]), GaussAmp[kc], GaussAmpErr[kc], GaussSigma[kc], GaussSigmaErr[kc]);
             if(retGaussFit==0)
             {
                 ValSumProba[kc] = GaussAmp[kc]*GaussSigma[kc]*sqrt(2*M_PI);

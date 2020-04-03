@@ -10,6 +10,8 @@
 #include <RedshiftLibrary/statistics/pdfz.h>
 #include <RedshiftLibrary/operator/pdfLogresult.h>
 
+#include <RedshiftLibrary/statistics/pdfcandidateszresult.h>
+
 #include <boost/tokenizer.hpp>
 #include <boost/lexical_cast.hpp>
 #include <string>
@@ -1264,4 +1266,45 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
     }
 
     return true;
+}
+
+Bool CLineModelSolve::ExtractCandidateResults(CDataStore &store, std::vector<Float64> zcandidates_unordered_list)
+{
+        Log.LogInfo( "Computing candidates Probabilities" );
+        std::shared_ptr<CPdfCandidateszResult> zcand = std::shared_ptr<CPdfCandidateszResult>(new CPdfCandidateszResult());
+
+        std::string scope_res = "zPDF/logposterior.logMargP_Z_data";
+        auto results =  store.GetGlobalResult( scope_res.c_str() );
+        auto logzpdf1d = std::dynamic_pointer_cast<const CPdfMargZLogResult>( results.lock() );
+
+        if(!logzpdf1d)
+        {
+            Log.LogError( "Extract Proba. for z candidates: no results retrieved from scope: %s", scope_res.c_str());
+            throw std::runtime_error("Extract Proba. for z candidates: no results retrieved from scope");
+        }
+
+        Log.LogInfo( "  Integrating %d candidates proba.", zcandidates_unordered_list.size() );
+        
+        
+        //retrieve extremum IDs saved in datastore from firstpass 
+        std::shared_ptr<const CLineModelResult> v = std::dynamic_pointer_cast<const CLineModelResult>(
+            store.GetGlobalResult("linemodelsolve.linemodel").lock());
+
+        zcand->Compute(zcandidates_unordered_list, logzpdf1d->Redshifts, logzpdf1d->valProbaLog, v->ExtremaResult.ExtremaIDs);
+        
+        store.StoreScopedGlobalResult( "candidatesresult", zcand ); 
+        store.SetRank(zcand->Rank);
+        store.SetIntgPDF(zcand->ValSumProba);
+
+        std::vector<std::string> info {"spc", "fit", "fitcontinuum", "rules", "continuum"};
+        for(Int32 f = 0; f<info.size(); f++) {
+            for( Int32 i = 0; i<zcand->Rank.size(); i++){
+                std::string fname_new =
+                (boost::format("linemodelsolve.linemodel_%1%_extrema_%2%") % info[f] % i).str();
+                std::string fname_old =
+                (boost::format("linemodelsolve.linemodel_%1%_extrema_tmp_%2%") % info[f] % zcand->Rank[i]).str();
+                store.ChangeScopedGlobalResult(fname_old, fname_new);    
+            }
+        }
+return true;
 }

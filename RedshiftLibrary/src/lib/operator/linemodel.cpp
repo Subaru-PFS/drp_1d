@@ -46,7 +46,7 @@ using namespace std;
 
 /**
  **/
-COperatorLineModel::COperatorLineModel() { m_maxModelSaveCount = 10; }
+COperatorLineModel::COperatorLineModel() { m_maxModelSaveCount = 20; }
 
 /**
  * \brief Empty destructor.
@@ -1293,6 +1293,11 @@ Int32 COperatorLineModel::SaveResults(const CSpectrum &spectrum,
     Int32 savedFitContinuumOption = m_model->GetFitContinuum_Option();
     Log.LogInfo("  Operator-Linemodel: Now storing extrema results");
     Int32 extremumCount = m_secondpass_parameters_extremaResult.Extrema.size();
+    if( extremumCount > m_maxModelSaveCount){
+      Log.LogError("COperatorLineModel::SaveResults: ExtremumCount [%d] is greater the maxModelSaveCount [%d]", extremumCount, m_maxModelSaveCount);
+      throw runtime_error("COperatorLineModel::SaveResults: ExtremumCount passed in param.json exceeds the count limit, ie., 10. Abort!");
+    }
+
     m_result->ExtremaResult.Resize(extremumCount);
 
     // Int32 start =
