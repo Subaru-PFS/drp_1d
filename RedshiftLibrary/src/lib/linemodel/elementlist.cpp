@@ -1226,7 +1226,7 @@ void CLineModelElementList::setFitContinuum_tplAmplitude(Float64 tplAmp, Float64
     Float64 alpha = m_fitContinuum_tplFitAlpha; //alpha blend = 1: only m_SpcContinuumFluxAxis, alpha=0: only tplfit
 
     m_fitContinuum_tplFitAmplitude = tplAmp;
-    m_fitContinuum_tplFitAmplitude = tplAmpErr;
+    m_fitContinuum_tplFitAmplitudeError = tplAmpErr;
     m_fitContinuum_tplFitPolyCoeffs = polyCoeffs;
     for (UInt32 k=0; k<m_ContinuumFluxAxis.GetSamplesCount(); k++){
         m_ContinuumFluxAxis[k] = (1.-alpha)*m_observeGridContinuumFlux[k]*tplAmp + (alpha)*m_SpcContinuumFluxAxis[k];
