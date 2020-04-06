@@ -38,7 +38,7 @@ void CPdfCandidateszResult::Resize(Int32 n)
 /**
  * @brief CPdfCandidateszResult::Compute
  */
-Int32 CPdfCandidateszResult::Compute( std::vector<Float64> zc,  std::vector<Float64> Pdfz,  std::vector<Float64> PdfProbalog, std::vector<std::string> IDs)
+Int32 CPdfCandidateszResult::Compute( std::vector<Float64> zc,  std::vector<Float64> Pdfz,  std::vector<Float64> PdfProbalog, std::vector<std::string> IDs, std::vector<Float64> wdwWidth)
 {
     if(optMethod==0)
     {
@@ -48,6 +48,12 @@ Int32 CPdfCandidateszResult::Compute( std::vector<Float64> zc,  std::vector<Floa
     }
     Resize(zc.size());
 
+    if(wdwWidth.size() == 0){
+        for(Int32 i = 0; i< zc.size(); i++){
+            Log.LogInfo("    CPdfCandidateszResult::Compute pdf using fixed window = 6e-3 (method=direct integration)" );
+            wdwWidth.push_back(Fullwidth); //create an identity vector having a unique value = Fullwidth
+        }
+    }
     CPdfz pdfz;
     for(Int32 kc=0; kc<zc.size(); kc++)
     {
@@ -61,14 +67,14 @@ Int32 CPdfCandidateszResult::Compute( std::vector<Float64> zc,  std::vector<Floa
         }
         if(optMethod==0)
         {
-            ValSumProba[kc] = pdfz.getCandidateSumTrapez( Pdfz, PdfProbalog, zc[kc], Fullwidth*(1+zc[kc]));
+            ValSumProba[kc] = pdfz.getCandidateSumTrapez( Pdfz, PdfProbalog, zc[kc], 6*wdwWidth[kc]*(1+zc[kc]));
             GaussAmp[kc]=-1;
             GaussAmpErr[kc]=-1;
             GaussSigma[kc]=-1;
             GaussSigmaErr[kc]=-1;
         }else
         {
-            Int32 retGaussFit = pdfz.getCandidateRobustGaussFit( Pdfz, PdfProbalog, zc[kc], Fullwidth*(1+zc[kc]), GaussAmp[kc], GaussAmpErr[kc], GaussSigma[kc], GaussSigmaErr[kc]);
+            Int32 retGaussFit = pdfz.getCandidateRobustGaussFit( Pdfz, PdfProbalog, zc[kc], 6*wdwWidth[kc]*(1+zc[kc]), GaussAmp[kc], GaussAmpErr[kc], GaussSigma[kc], GaussSigmaErr[kc]);
             if(retGaussFit==0)
             {
                 ValSumProba[kc] = GaussAmp[kc]*GaussSigma[kc]*sqrt(2*M_PI);
@@ -89,6 +95,7 @@ void CPdfCandidateszResult::SetFullWidth(Float64 width)
 
 void CPdfCandidateszResult::Save( const CDataStore& store, std::ostream& stream ) const
 {
+    //TODO: change output considering new values for fullwidth
     stream  << "#fullwidth = " << Fullwidth << std::endl;
     stream  << "#method = " << optMethod << std::endl;
     stream  << std::endl;
