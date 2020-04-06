@@ -174,7 +174,7 @@ public:
     std::vector<CLmfitController*> createLmfitControllers( const TFloat64Range& lambdaRange);
     void fitWithModelSelection(Float64 redshift, const TFloat64Range& lambdaRange, CLineModelSolution &modelSolution);
     void SetFittingMethod(std::string fitMethod);
-    void SetSecondpassContinuumFitPrms(Int32 dustfit, Int32 meiksinfit);
+    void SetSecondpassContinuumFitPrms(Int32 dustfit, Int32 meiksinfit, Int32 outsidelinemask, Int32 observedFrame);
 
     void SetAbsLinesLimit(Float64 limit);
     void SetLeastSquareFastEstimationEnabled(Int32 enabled);

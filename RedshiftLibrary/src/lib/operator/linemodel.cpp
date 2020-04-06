@@ -176,10 +176,15 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
         restraycatalog.GetFilteredList(typeFilter, forceFilter);
     Log.LogDebug("restRayList.size() = %d", restRayList.size());
 
-    //*
-    //tpl orthogonalization
-    bool enableOrtho = (opt_continuumcomponent == "tplfit" || opt_continuumcomponent == "tplfitauto");
+    //tpl orthogonalization obligatory when doing Full-model
+    //Two methods for orthogonalisation: using line masks or line-free orthogonalisation
+    //               m_opt_tplfit_ignoreLinesSupport = (yes, no) defines which method should be used
+    bool enableOrtho = !m_opt_tplfit_ignoreLinesSupport && (opt_continuumcomponent == "tplfit" || opt_continuumcomponent == "tplfitauto");
     Log.LogInfo("  Operator-Linemodel: TemplatesOrthogonalization enabled = %d", enableOrtho);
+    //orthogonalize templates 
+    //Mira: my guess is that the passage by CTemplatesortho is obligatory!; it s enableortho that will activate the orthog or not
+    //if not activate, templates are returned the same (just different type); otherwise orthog happens
+    //if it's like this, then we just need to make enableOrtho takes into account the value of m_opt_tplfit_ignoreLinesSupport
 
     // prepare continuum templates catalog
     CTemplatesOrthogonalization tplOrtho(
@@ -330,7 +335,10 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
     {
         opt_tplfit_integer_chi2_dustfit=-10;
     }
-    m_model->SetSecondpassContinuumFitPrms(opt_tplfit_integer_chi2_dustfit, m_opt_tplfit_extinction);
+    //should be replaced with option passed in param.json?
+    Int32 observedFrame = 0;
+    //passing the ignorelinesSupport option to the secondpass; //before it was hardcoded to 0
+    m_model->SetSecondpassContinuumFitPrms(opt_tplfit_integer_chi2_dustfit, m_opt_tplfit_extinction, m_opt_tplfit_ignoreLinesSupport, observedFrame);
 
     m_model->m_opt_lya_forcefit=m_opt_lya_forcefit=="yes";
     m_model->m_opt_lya_forcedisablefit=m_opt_lya_forcedisablefit=="yes";
@@ -466,7 +474,9 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
     Log.LogInfo("  Operator-Linemodel: set abs lines limit to %f (ex: -1 means "
                 "disabled)",
                 absLinesLimit);
-
+//Mira: ignorelistmask should take effect here below:
+/*??not sure anymore
+*/
     // Set model parameter: continuum least-square estimation fast
     // note: this fast method requires continuum templates and linemodels to be
     // orthogonal. The velfit option turns this trickier...
