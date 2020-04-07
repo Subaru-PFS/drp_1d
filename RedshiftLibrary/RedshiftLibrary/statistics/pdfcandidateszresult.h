@@ -25,7 +25,7 @@ public:
     }
 
     void Resize(Int32 n);
-    Int32 Compute(std::vector<Float64> zc , std::vector<Float64> Pdfz, std::vector<Float64> PdfProbalog, std::vector<std::string> IDs = std::vector<std::string>());
+    Int32 Compute(std::vector<Float64> zc , std::vector<Float64> Pdfz, std::vector<Float64> PdfProbalog, std::vector<Float64> wdwWidth = std::vector<Float64>(), std::vector<std::string> IDs = std::vector<std::string>());
     void SetFullWidth(Float64 width);
 
 
@@ -35,7 +35,8 @@ public:
 
     TFloat64List           		Redshifts;
     TFloat64List           		ValSumProba;
-    TInt32List                Rank;
+    TInt32List                  Rank;
+    TFloat64List                WdwWidth;
     //opt 1: direct integration
     //
     //opt 2: gaussian fit

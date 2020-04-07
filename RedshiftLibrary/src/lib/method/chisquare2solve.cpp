@@ -10,6 +10,7 @@
 #include <RedshiftLibrary/statistics/pdfz.h>
 #include <RedshiftLibrary/statistics/pdfcandidateszresult.h>
 
+#include <RedshiftLibrary/statistics/deltaz.h>
 #include <RedshiftLibrary/spectrum/io/fitswriter.h>
 #include <float.h>
 using namespace NSEpic;
@@ -390,8 +391,26 @@ Bool CMethodChisquare2Solve::ExtractCandidateResults(CDataStore &store, std::vec
             throw std::runtime_error("Extract Proba. for z candidates: no results retrieved from scope");
         }
 
+        //Compute Deltaz should happen after marginalization
+        // use it for computing the integrated PDF
+        //TODO: Deltaz computation should be moved elsewhere!!
+        std::vector<Float64> Deltaz;
+        Float64 zRangeHalf = 0.005;
+        for (Int32 i = 0; i < zcandidates_unordered_list.size(); i++){
+                Float64 z = zcandidates_unordered_list[i];
+                Float64 dz = -1.;
+                CDeltaz deltaz;
+                TFloat64Range range = TFloat64Range(z - zRangeHalf*(1+z), z + zRangeHalf*(1+z));
+                Int32 ret = deltaz.Compute3ddl(logzpdf1d->valProbaLog,
+                                           logzpdf1d->Redshifts, z, range, dz);
+                if (ret != 0){
+                    Log.LogWarning("  Method-Chisquare2solve: Deltaz computation failed");
+                }
+                else Deltaz.push_back(dz);  
+        }
+
         Log.LogInfo( "  Integrating %d candidates proba.", zcandidates_unordered_list.size() );
-        zcand->Compute(zcandidates_unordered_list, logzpdf1d->Redshifts, logzpdf1d->valProbaLog);
+        zcand->Compute(zcandidates_unordered_list, logzpdf1d->Redshifts, logzpdf1d->valProbaLog, Deltaz);
         
         store.StoreScopedGlobalResult( "candidatesresult", zcand ); 
         store.SetRank(zcand->Rank);

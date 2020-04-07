@@ -199,7 +199,9 @@ Int32 CDeltaz::Compute3ddl(TFloat64List merits, TFloat64List redshifts, Float64 
 #define COV(i,j) (gsl_matrix_get(cov,(i),(j)))
 
     double zcorr = x0-C(1)/(2.0*C(2));
-    sigma = sqrt(1.0/C(2));
+    Float64 cc_ = C(2);
+    sigma = sqrt(1.0/cc_);
+    //sigma = sqrt(1.0/C(2));
 
     //Float64 a = (Float64)(C(0));
     //Float64 b2sur4c = (Float64)(C(1)*C(1)/((Float64)(4.0*C(2))));

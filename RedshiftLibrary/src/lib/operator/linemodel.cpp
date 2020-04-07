@@ -1567,6 +1567,8 @@ Int32 COperatorLineModel::SaveResults(const CSpectrum &spectrum,
         {
             CDeltaz deltaz;
             Float64 zRangeHalf = 0.005;
+            //Mira: TODO: this should be investigated further investigated
+            //TFloat64Range range = TFloat64Range(z - zRangeHalf*(1+z), z + zRangeHalf*(1+z));
             TFloat64Range range = TFloat64Range(z - zRangeHalf, z + zRangeHalf);
             // Int32 ret = deltaz.Compute(m_result->ChiSquare,
             // m_result->Redshifts, z, range, dz);

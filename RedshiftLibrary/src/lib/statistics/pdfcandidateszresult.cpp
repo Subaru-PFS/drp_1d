@@ -27,7 +27,8 @@ void CPdfCandidateszResult::Resize(Int32 n)
     Redshifts.resize(n);
     ValSumProba.resize(n);
     Rank.resize(n);
-    ExtremaIDs.resize(n) ;
+    ExtremaIDs.resize(n);
+    WdwWidth.resize(n);
     //only for method 1
     GaussAmp.resize(n);
     GaussSigma.resize(n);
@@ -38,7 +39,7 @@ void CPdfCandidateszResult::Resize(Int32 n)
 /**
  * @brief CPdfCandidateszResult::Compute
  */
-Int32 CPdfCandidateszResult::Compute( std::vector<Float64> zc,  std::vector<Float64> Pdfz,  std::vector<Float64> PdfProbalog, std::vector<std::string> IDs, std::vector<Float64> wdwWidth)
+Int32 CPdfCandidateszResult::Compute( std::vector<Float64> zc,  std::vector<Float64> Pdfz,  std::vector<Float64> PdfProbalog, std::vector<Float64> deltaz, std::vector<std::string> IDs)
 {
     if(optMethod==0)
     {
@@ -48,10 +49,10 @@ Int32 CPdfCandidateszResult::Compute( std::vector<Float64> zc,  std::vector<Floa
     }
     Resize(zc.size());
 
-    if(wdwWidth.size() == 0){
+    if(deltaz.size() == 0){
         for(Int32 i = 0; i< zc.size(); i++){
-            Log.LogInfo("    CPdfCandidateszResult::Compute pdf using fixed window = 6e-3 (method=direct integration)" );
-            wdwWidth.push_back(Fullwidth); //create an identity vector having a unique value = Fullwidth
+            Log.LogInfo("    CPdfCandidateszResult::Compute pdf using Default full-window size, i.e., 6e-3 (method=direct integration)" );
+            deltaz.push_back(Fullwidth); //create an identity vector having a unique value = Fullwidth
         }
     }
     CPdfz pdfz;
@@ -65,16 +66,17 @@ Int32 CPdfCandidateszResult::Compute( std::vector<Float64> zc,  std::vector<Floa
             //generate IDs 
             ExtremaIDs[kc] = "Ext" + std::to_string(kc);
         }
+        WdwWidth[kc] = deltaz[kc];
         if(optMethod==0)
         {
-            ValSumProba[kc] = pdfz.getCandidateSumTrapez( Pdfz, PdfProbalog, zc[kc], 6*wdwWidth[kc]*(1+zc[kc]));
+            ValSumProba[kc] = pdfz.getCandidateSumTrapez( Pdfz, PdfProbalog, zc[kc], 2*WdwWidth[kc]*(1+zc[kc]));
             GaussAmp[kc]=-1;
             GaussAmpErr[kc]=-1;
             GaussSigma[kc]=-1;
             GaussSigmaErr[kc]=-1;
         }else
         {
-            Int32 retGaussFit = pdfz.getCandidateRobustGaussFit( Pdfz, PdfProbalog, zc[kc], 6*wdwWidth[kc]*(1+zc[kc]), GaussAmp[kc], GaussAmpErr[kc], GaussSigma[kc], GaussSigmaErr[kc]);
+            Int32 retGaussFit = pdfz.getCandidateRobustGaussFit( Pdfz, PdfProbalog, zc[kc], 2*WdwWidth[kc]*(1+zc[kc]), GaussAmp[kc], GaussAmpErr[kc], GaussSigma[kc], GaussSigmaErr[kc]);
             if(retGaussFit==0)
             {
                 ValSumProba[kc] = GaussAmp[kc]*GaussSigma[kc]*sqrt(2*M_PI);
@@ -95,15 +97,14 @@ void CPdfCandidateszResult::SetFullWidth(Float64 width)
 
 void CPdfCandidateszResult::Save( const CDataStore& store, std::ostream& stream ) const
 {
-    //TODO: change output considering new values for fullwidth
-    stream  << "#fullwidth = " << Fullwidth << std::endl;
+    //stream  << "#fullwidth = " << Fullwidth << std::endl;
     stream  << "#method = " << optMethod << std::endl;
     stream  << std::endl;
 
     stream  << "#" << store.GetSpectrumName() << "\t" << store.GetProcessingID() << "\t";
     stream  << std::endl;
 
-    stream  << "#" << "rank" << "\t"  << "IDs" << "\t"<< "redshift" << "\t" << "intgProba"<< "\t" << "Rank_PDF";
+    stream  << "#" << "rank" << "\t"  << "IDs" << "\t"<< "redshift" << "\t" << "intgProba"<< "\t" << "Rank_PDF" << "\t" <<"Fullwidth";
     if(optMethod==1)
     {
         stream << "\t" << "gaussAmp" << "\t" << "gaussAmpErr" << "\t" << "gaussSigma" << "\t" << "gaussSigmaErr";
@@ -118,6 +119,7 @@ void CPdfCandidateszResult::Save( const CDataStore& store, std::ostream& stream 
         stream << Redshifts[k] << "\t";
         stream << ValSumProba[k] << "\t";
         stream << Rank[k] << "\t";
+        stream << WdwWidth[k] << "\t";
         //only for method 1, but leave columns with -1 value ste in compute()
         stream << GaussAmp[k] << "\t";
         stream << GaussAmpErr[k] << "\t";
@@ -139,6 +141,7 @@ void CPdfCandidateszResult::SaveLine( const CDataStore& store, std::ostream& str
         stream << Redshifts[k] << "\t";
         stream << ValSumProba[k] << "\t";
         stream << Rank[k] << "\t";
+        stream << WdwWidth[k] << "\t";
         stream << GaussAmp[k] << "\t";
         stream << GaussSigma[k] << "\t"; 
     }
@@ -160,6 +163,7 @@ void CPdfCandidateszResult::SortByRank()
         }
     }
     SortByValSumProba(ValSumProba);
+    SortByValSumProba(WdwWidth);
     if(optMethod==1)
     {
         SortByValSumProba(GaussAmp);
