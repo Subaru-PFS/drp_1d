@@ -953,6 +953,7 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, I
     Float64 bestMerit = DBL_MAX;
     Float64 bestFitAmplitude = -1.0;
     Float64 bestFitAmplitudeError = -1.0;
+    Bool bestFitAmplitudeNegative = false;
     Float64 bestFitDustCoeff = -1.0;
     Int32 bestFitMeiksinIdx = -1;
     Float64 bestFitRedshift = m_Redshift;
@@ -1049,6 +1050,7 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, I
         bestMerit = fitValues.merit;
         bestFitAmplitude = fitValues.fitAmplitude;
         bestFitAmplitudeError = fitValues.fitAmplitudeError;
+        bestFitAmplitudeNegative = fitValues.fitAmplitudeNegative;
         bestFitDustCoeff = fitValues.ismDustCoeff;
         bestFitMeiksinIdx = fitValues.igmMeiksinIdx;
         bestFitDtM = fitValues.fitDtM;
@@ -1152,7 +1154,11 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, I
 
     if(bestTplName!="")
     {
-        //Log.LogInfo( "For z=%.5f : Best continuum tpl found: %s", m_Redshift, bestTplName.c_str());
+        if(bestFitAmplitudeNegative){
+            Log.LogInfo( "For z=%.5f : Best continuum tpl found: %s has neg. amplitude", m_Redshift, bestTplName.c_str());
+        }else{
+            Log.LogInfo( "For z=%.5f : Best continuum tpl found: %s", m_Redshift, bestTplName.c_str());
+        }
         //
         //Retrieve the best template
         bool foundBestTemplate = false;
