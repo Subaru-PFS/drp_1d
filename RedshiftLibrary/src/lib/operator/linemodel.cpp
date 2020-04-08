@@ -797,24 +797,25 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
     for (Int32 i = 0; i < nredshiftsTplFitResults; i++)
     {
         Float64 redshift = redshiftsTplFit[i];
+
         for (UInt32 j = 0; j < chisquareResultsAllTpl.size(); j++)
         {
             auto chisquareResult =
                 std::dynamic_pointer_cast<CChisquareResult>(
                     chisquareResultsAllTpl[j]);
 
-            Int32 retAdd = tplfitStore->Add(chisquareResultsTplName[j],
+            bool retAdd = tplfitStore->Add(chisquareResultsTplName[j],
                              chisquareResult->FitDustCoeff[i],
                              chisquareResult->FitMeiksinIdx[i],
                              redshift,
                              chisquareResult->ChiSquare[i],
                              chisquareResult->FitAmplitude[i],
                              chisquareResult->FitAmplitudeError[i],
+                             chisquareResult->FitAmplitudeNegative[i],
                              chisquareResult->FitDtM[i],
                              chisquareResult->FitMtM[i],
                              chisquareResult->LogPrior[i]);
             //Log.LogInfo("  Operator-Linemodel: check prior data, tplfitStore->Add logprior = %e", chisquareResult->LogPrior[i]);
-
 
            if(!retAdd)
            {
@@ -860,6 +861,20 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
     Log.LogInfo("  Operator-Linemodel: fitcontinuum_maxCount set to %d",
                 m_model->m_opt_fitcontinuum_maxCount);
 
+    // Check if best continuum amplitudes are negative fitted amplitudes
+    std::vector<bool> negativeAmplitudes;
+    Int32 icontinuum = 0;
+    for (Int32 i = 0; i < nredshiftsTplFitResults; i++)
+    {
+        Float64 redshift = redshiftsTplFit[i];
+        CTemplatesFitStore::TemplateFitValues fitValues = tplfitStore->GetFitValues(redshift, icontinuum);
+        bool bestIsNegative = fitValues.fitAmplitudeNegative;
+        negativeAmplitudes.push_back(bestIsNegative);
+        if(bestIsNegative) {
+	     Log.LogError("  Operator-Linemodel: Negative amplitude found at z=%.5f: best continuum tpl %s, ampli = %e & error = %e",
+                             redshift, fitValues.tplName.c_str(), fitValues.fitAmplitude, fitValues.fitAmplitudeError);
+        }
+    }
 }
 
 /**
