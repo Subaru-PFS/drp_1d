@@ -121,6 +121,7 @@ bool CTemplatesFitStore::Add(std::string tplName,
                              Float64 merit,
                              Float64 fitAmplitude,
                              Float64 fitAmplitudeError,
+                             Bool fitAmplitudeNegative,
                              Float64 fitDtM,
                              Float64 fitMtM,
                              Float64 logprior)
@@ -129,6 +130,7 @@ bool CTemplatesFitStore::Add(std::string tplName,
     tmpSValues.merit = merit;
     tmpSValues.fitAmplitude = fitAmplitude;
     tmpSValues.fitAmplitudeError = fitAmplitudeError;
+    tmpSValues.fitAmplitudeNegative = fitAmplitudeNegative;
     tmpSValues.fitDtM = fitDtM;
     tmpSValues.fitMtM = fitMtM;
     tmpSValues.logprior = logprior;
