@@ -1562,23 +1562,30 @@ Int32 COperatorLineModel::SaveResults(const CSpectrum &spectrum,
 
         // computing errz (or deltaz, dz...): should probably be computed in
         // linemodelresult.cpp instead ?
-        Float64 dz = -1.;
+        Float64 dz = 0.001;//default case in case couldnt compute deltaz using compute3ddl
         if (m_result->Redshifts.size() > 1)
         {
-            CDeltaz deltaz;
-            Float64 zRangeHalf = 0.005;
-            //Mira: TODO: this should be investigated further investigated
-            //TFloat64Range range = TFloat64Range(z - zRangeHalf*(1+z), z + zRangeHalf*(1+z));
-            TFloat64Range range = TFloat64Range(z - zRangeHalf, z + zRangeHalf);
-            // Int32 ret = deltaz.Compute(m_result->ChiSquare,
-            // m_result->Redshifts, z, range, dz);
-            Int32 ret = deltaz.Compute3ddl(m_result->ChiSquare,
+            Int32 ret = -1, deltaz_i = 0;
+            while(ret == -1 && deltaz_i < 2){//iterate only twice
+                CDeltaz deltaz;
+                Float64 zRangeHalf = 0.002/(deltaz_i+1); 
+                Log.LogInfo("  Operator-Linemodel: Deltaz computation nb %i with zRangeHalf %f", deltaz_i, zRangeHalf);
+                TFloat64Range range = TFloat64Range(z - zRangeHalf*(1+z), z + zRangeHalf*(1+z));
+                //TFloat64Range range = TFloat64Range(z - zRangeHalf, z + zRangeHalf);
+                // Int32 ret = deltaz.Compute(m_result->ChiSquare,
+                // m_result->Redshifts, z, range, dz);
+                ret = deltaz.Compute3ddl(m_result->ChiSquare,
                                            m_result->Redshifts, z, range, dz);
-            if (ret != 0)
-            {
-                Log.LogWarning("  Operator-Linemodel: Deltaz computation failed");
+                if (ret == -1)
+                {
+                    Log.LogWarning("  Operator-Linemodel: Deltaz computation failed for %f", zRangeHalf);
+                    deltaz_i++;
+                    if(deltaz_i == 2)
+                        Log.LogWarning("  Operator-Linemodel: Using default Deltaz %f", dz);
+                }
             }
         }
+        
         m_result->ExtremaResult.DeltaZ[i] = dz;
 
         // store model Ha SNR & Flux
