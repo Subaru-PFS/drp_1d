@@ -433,6 +433,20 @@ Float64 CPdfz::getSumRect(std::vector<Float64> redshifts,
     return sum;
 }
 
+Int32 CPdfz::getIndex( std::vector<Float64> redshifts, Float64 z )
+{
+    Int32 solutionIdx=-1;
+    for ( UInt32 i2=0; i2<redshifts.size(); i2++)
+    {
+        if( redshifts[i2]==z )
+        {
+            solutionIdx = i2;
+            break;
+        }
+    }
+    return solutionIdx;
+}
+
 /**
  * @brief CPdfz::getCandidateSumTrapez
  * @param redshifts
@@ -466,22 +480,31 @@ Float64 CPdfz::getCandidateSumTrapez(std::vector<Float64> redshifts,
     if(zwidth_right == - 1)
         zwidth_right = zwidth_left;
 
-    for (UInt32 k = 0; k < redshifts.size(); k++)
-    {
-        if (redshifts[k] < zwidth_left)
-        {
+    UInt32 cand_Idx = getIndex(redshifts, zcandidate);
+    for (UInt32 k = cand_Idx - 1; k >0; k--){
+        if(redshifts[k] == zwidth_left){
             kmin = k;
+            break;
+        }
+        if(redshifts[k] < zwidth_left){
+            kmin = k - 1;
+            break;
         }
     }
+
     Log.LogDebug("    CPdfz::getCandidateSumTrapez - kmin index=%d", kmin);
 
-    for (UInt32 k = redshifts.size() - 1; k > 0; k--)
-    {
-        if (redshifts[k] > zwidth_right)
-        {
+    for (UInt32 k = cand_Idx + 1; k < redshifts.size(); k++){
+        if(redshifts[k] == zwidth_right){
             kmax = k;
+            break;
+        }
+        if(redshifts[k] > zwidth_right){
+            kmax = k - 1;
+            break;
         }
     }
+
     Log.LogDebug("    CPdfz::getCandidateSumTrapez - kmax index=%d", kmax);
 
     // initialize the LOG-SUM-EXP trick

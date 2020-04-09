@@ -36,7 +36,7 @@ public:
     TFloat64List           		Redshifts;
     TFloat64List           		ValSumProba;
     TInt32List                  Rank;
-    TFloat64List                WdwWidth;
+    TFloat64List                Deltaz;
     //opt 1: direct integration
     //
     //opt 2: gaussian fit

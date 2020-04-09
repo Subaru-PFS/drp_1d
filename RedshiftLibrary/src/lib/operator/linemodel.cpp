@@ -1573,6 +1573,7 @@ Int32 COperatorLineModel::SaveResults(const CSpectrum &spectrum,
                 TFloat64Range range = TFloat64Range(z - zRangeHalf*(1+z), z + zRangeHalf*(1+z));
                 // Int32 ret = deltaz.Compute(m_result->ChiSquare,
                 // m_result->Redshifts, z, range, dz);
+                //Compute3ddl
                 ret = deltaz.Compute3ddl(m_result->ChiSquare,
                                            m_result->Redshifts, z, range, dz);
                 if (ret == -1)
