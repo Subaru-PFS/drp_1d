@@ -168,21 +168,23 @@ Float64 CSpectrumSpectralAxis::GetResolution( Float64 atWavelength ) const
 
     Int32 i = 0;
 
-    if( atWavelength > -1.0 )
+    if( atWavelength >= 0.0 )
     {
         i = GetIndexAtWaveLength( atWavelength );
 
-        if( i >= m_Samples.size()-1 )
-            i = m_Samples.size()-2;
+        if( i > m_Samples.size()-1 )
+            i = m_Samples.size()-1;
+        if( i < 1 )
+            i = 1;
 
-        return m_Samples[i+1] - m_Samples[i];
+        return m_Samples[i] - m_Samples[i-1];
     }
     else
     {
         return m_Samples[1] - m_Samples[0];
     }
 
-    return 0;
+    return 0.0;
 }
 
 /**

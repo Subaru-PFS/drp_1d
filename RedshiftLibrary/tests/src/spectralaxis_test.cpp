@@ -103,17 +103,24 @@ BOOST_AUTO_TEST_CASE(Operator)
 
 BOOST_AUTO_TEST_CASE(Resolution)
 {
-  Float64 n8Array[] = {1.,3.,4.,10.};
-  CSpectrumSpectralAxis n8Axis = CSpectrumSpectralAxis(n8Array,4,false);
-  BOOST_CHECK_CLOSE(n8Axis.GetResolution(),2.,1.e-12);
-  BOOST_CHECK_CLOSE(n8Axis.GetMeanResolution(),3.,1.e-12);
-  BOOST_CHECK_CLOSE(n8Axis.GetResolution(-1.),2.,1.e-12);
-  BOOST_CHECK_CLOSE(n8Axis.GetResolution(0.),2.,1.e-12);
-  BOOST_CHECK_CLOSE(n8Axis.GetResolution(1.),2.,1.e-12);
-  BOOST_CHECK_CLOSE(n8Axis.GetResolution(2.),1.,1.e-12);
-  BOOST_CHECK_CLOSE(n8Axis.GetResolution(3.),1.,1.e-12);
-  BOOST_CHECK_CLOSE(n8Axis.GetResolution(4.),6.,1.e-12);
-  BOOST_CHECK_CLOSE(n8Axis.GetResolution(11.),6.,1.e-12);
+  Float64 n8Array[] = {1.,3.,4.,10.,15.,16.};
+  CSpectrumSpectralAxis n8Axis = CSpectrumSpectralAxis(n8Array,6,false);
+  BOOST_CHECK_CLOSE(n8Axis.GetResolution(),2.0,1.e-12);
+  BOOST_CHECK_CLOSE(n8Axis.GetMeanResolution(),3.0,1.e-12);
+  BOOST_CHECK_CLOSE(n8Axis.GetResolution(-1.0),2.0,1.e-12);
+  BOOST_CHECK_CLOSE(n8Axis.GetResolution(-0.1),2.0,1.e-12);
+  BOOST_CHECK_CLOSE(n8Axis.GetResolution(0.0),2.0,1.e-12);
+  BOOST_CHECK_CLOSE(n8Axis.GetResolution(1.1),2.0,1.e-12);
+  BOOST_CHECK_CLOSE(n8Axis.GetResolution(2.0),2.0,1.e-12);
+  BOOST_CHECK_CLOSE(n8Axis.GetResolution(3.0),2.0,1.e-12);
+  BOOST_CHECK_CLOSE(n8Axis.GetResolution(3.3),1.0,1.e-12);
+  BOOST_CHECK_CLOSE(n8Axis.GetResolution(4.0),1.0,1.e-12);
+  BOOST_CHECK_CLOSE(n8Axis.GetResolution(7.7),6.0,1.e-12);
+  BOOST_CHECK_CLOSE(n8Axis.GetResolution(10.0),6.0,1.e-12);
+  BOOST_CHECK_CLOSE(n8Axis.GetResolution(11.5),5.0,1.e-12);
+  BOOST_CHECK_CLOSE(n8Axis.GetResolution(15.0),5.0,1.e-12);
+  BOOST_CHECK_CLOSE(n8Axis.GetResolution(15.6),1.0,1.e-12);
+  BOOST_CHECK_CLOSE(n8Axis.GetResolution(17.2),1.0,1.e-12);
 
   // not enough samples
   Float64 array[] = {10.};
