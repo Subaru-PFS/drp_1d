@@ -83,16 +83,6 @@ Int32 CPdfCandidateszResult::SetIntegrationWindows( std::vector<Float64> redshif
             range_left[idx_h] = ( std::max(redshifts[idx_l], range_left[idx_h]) +
                                   std::min(redshifts[idx_h], range_right[idx_l]) )/2;
             range_right[idx_l] = range_left[idx_h] - 1E-4;
-
-            /*if(redshifts[idx_h]< range_right[idx_l] && redshifts[idx_l]>range_left[idx_h]){
-                range_left[idx_h] = (redshifts[idx_l] + redshifts[idx_h])/2;
-                range_right[idx_l] = range_left[idx_h] - 1E-4;
-            }else{
-                //update the window sides of each candidate while taking into account deltaz values
-                range_left[idx_h] = (range_right[idx_l] + range_left[idx_h])/2;
-                range_right[idx_l] = range_left[idx_h] - 1E-4;
-            }*/
-
          }
     }
 
