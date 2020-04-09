@@ -56,12 +56,11 @@ Int32 CPdfCandidateszResult::SetIntegrationWindows( std::vector<Float64> redshif
     for(Int32 i = 0; i< n; i++){
         if(deltaz[i] == -1 || nodz) 
             deltaz[i] = dzDefault;
-        WdwWidth[i] = 6*deltaz[i];     
+        WdwWidth[i] = 6*deltaz[i]*(1 + redshifts[i]);     
         //initialize range boundaries for each candidate
-        halfWidth_right.push_back(redshifts[i] + WdwWidth[i]/2 * (1 + redshifts[i]));//higher boundary, including the multiplication by (1+z)
+        halfWidth_right.push_back(redshifts[i] + WdwWidth[i]/2 * (1 + redshifts[i]));//higher boundary
         halfWidth_left.push_back(redshifts[i] - WdwWidth[i]/2  * (1 + redshifts[i]));//lower boundary
-    }
-    //WdwWidth[kc] = 6*deltaz[kc];
+    };
     // sort zc values to facilitate comparison and keep track of initial order
     vector<pair<Float64,Int32 >> vp;
     vp.reserve(n);
@@ -70,26 +69,19 @@ Int32 CPdfCandidateszResult::SetIntegrationWindows( std::vector<Float64> redshif
     }
     std::sort(vp.rbegin(), vp.rend());  //sort from the highest to the lowest!
 
-    //below code considers that overlapping happens max between two consecutif candidates, given that 
-    //the min distance between two close candidates is 2*0.005(1+z) 
-    //maybe an exception for OIII???
     Int32 b = 0; 
     for(Int32 i = 0; i<n - 1; i++){ //i represents the higher candidate; go till n-1 since j increments i by one
         Int32 idx_h = vp[i].second; 
         Int32 j = i + 1; 
-        //for(Int32 j = i+1; j<n; j++){ //i think no need to comparing i with all other j candidates
-            Int32 idx_l = vp[j].second;
-            Float64 overlap =  halfWidth_left[idx_h] - halfWidth_right[idx_l];
-            if(overlap < 0 ){//overlapping between i and j
-                b = 1;
-                //update the window sides of each candidate
-                halfWidth_left[idx_h] = (halfWidth_right[idx_l] + halfWidth_left[idx_h])/2;
-                halfWidth_right[idx_l] = halfWidth_left[idx_h];
-                Log.LogDebug("    CPdfCandidateszResult::Trimming: integration supports overlap for %f and %f", redshifts[idx_h], redshifts[idx_l] ); 
-            }else{
-                //no overlap..keep all the same
-            }
-        //}
+        Int32 idx_l = vp[j].second;
+        Float64 overlap =  halfWidth_left[idx_h] - halfWidth_right[idx_l];
+        if(overlap < 0 ){
+            b = 1;
+            Log.LogDebug("    CPdfCandidateszResult::Trimming: integration supports overlap for %f and %f", redshifts[idx_h], redshifts[idx_l] ); 
+            //update the window sides of each candidate
+            halfWidth_left[idx_h] = (halfWidth_right[idx_l] + halfWidth_left[idx_h])/2;
+            halfWidth_right[idx_l] = halfWidth_left[idx_h];
+         }
     }
 
     return b; //b is an indicator about overlapping presence
@@ -122,8 +114,6 @@ Int32 CPdfCandidateszResult::Compute( std::vector<Float64> zc,  std::vector<Floa
             ExtremaIDs[kc] = "Ext" + std::to_string(kc);
         }
 
-        //TODO, following Didier proposal --> but im not convinced about it
-        //check overlapping between candidate ranges, and adjusting the range if required
         if(optMethod==0)
         {
             ValSumProba[kc] = pdfz.getCandidateSumTrapez( Pdfz, PdfProbalog, zc[kc], halfWidth_left[kc], halfWidth_right[kc]);
@@ -133,7 +123,7 @@ Int32 CPdfCandidateszResult::Compute( std::vector<Float64> zc,  std::vector<Floa
             GaussSigmaErr[kc]=-1;
         }else
         {
-            //TODO: this requires further check...
+            //TODO: this requires further check ?...
             Int32 retGaussFit = pdfz.getCandidateRobustGaussFit( Pdfz, PdfProbalog, zc[kc], (halfWidth_left[kc] + halfWidth_right[kc]), GaussAmp[kc], GaussAmpErr[kc], GaussSigma[kc], GaussSigmaErr[kc]);
             if(retGaussFit==0)
             {
