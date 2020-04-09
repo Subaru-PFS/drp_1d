@@ -14,7 +14,9 @@ CPdfCandidateszResult::CPdfCandidateszResult()
 {
     optMethod = 0; //di
     //optMethod = 1; //gaussian fit
-    Fullwidth = 6e-3;
+    dzDefault = 1e-3;
+    Fullwidth = 6*dzDefault;//default value in case deltaz couldnt be calculted
+    
 }
 
 CPdfCandidateszResult::~CPdfCandidateszResult()
@@ -35,7 +37,63 @@ void CPdfCandidateszResult::Resize(Int32 n)
     GaussAmpErr.resize(n);
     GaussSigmaErr.resize(n);
 }
+/**
+ * 1) Fix Deltaz problems: none is passed or none could be compute --> use default values
+ * 2) Check if integration windows overlap, mostly for close candidates
+ *      1) if no, keep deltaz value
+ *      2) if overlapping, update the half-width of the left and right sides of the integration windows
+ * Note: Output range includes the multiplication by (1+z).
+ * Returns 0 if no overlapping; otherwise 1;
+*/
+Int32 CPdfCandidateszResult::SetIntegrationWindows( std::vector<Float64> redshifts,  std::vector<Float64> deltaz, std::vector<Float64>& halfWidth_right, std::vector<Float64>& halfWidth_left){ 
+    Bool nodz = false;
+    Int32 n = redshifts.size();
+    if(!deltaz.size()){
+        Log.LogInfo("    CPdfCandidateszResult::Compute pdf using Default full-window size, i.e., 6e-3" );      
+        nodz = true;
+    }
+    //check cases where deltaz couldnt be computed or wasnt set--> use default value, 
+    for(Int32 i = 0; i< n; i++){
+        if(deltaz[i] == -1 || nodz) 
+            deltaz[i] = dzDefault;
+        WdwWidth[i] = 6*deltaz[i];     
+        //initialize range boundaries for each candidate
+        halfWidth_right.push_back(redshifts[i] + WdwWidth[i]/2 * (1 + redshifts[i]));//higher boundary, including the multiplication by (1+z)
+        halfWidth_left.push_back(redshifts[i] - WdwWidth[i]/2  * (1 + redshifts[i]));//lower boundary
+    }
+    //WdwWidth[kc] = 6*deltaz[kc];
+    // sort zc values to facilitate comparison and keep track of initial order
+    vector<pair<Float64,Int32 >> vp;
+    vp.reserve(n);
+    for (Int32 i = 0 ; i < n ; i++) {
+        vp.push_back(make_pair(redshifts[i], i));
+    }
+    std::sort(vp.rbegin(), vp.rend());  //sort from the highest to the lowest!
 
+    //below code considers that overlapping happens max between two consecutif candidates, given that 
+    //the min distance between two close candidates is 2*0.005(1+z) 
+    //maybe an exception for OIII???
+    Int32 b = 0; 
+    for(Int32 i = 0; i<n - 1; i++){ //i represents the higher candidate; go till n-1 since j increments i by one
+        Int32 idx_h = vp[i].second; 
+        Int32 j = i + 1; 
+        //for(Int32 j = i+1; j<n; j++){ //i think no need to comparing i with all other j candidates
+            Int32 idx_l = vp[j].second;
+            Float64 overlap =  halfWidth_left[idx_h] - halfWidth_right[idx_l];
+            if(overlap < 0 ){//overlapping between i and j
+                b = 1;
+                //update the window sides of each candidate
+                halfWidth_left[idx_h] = (halfWidth_right[idx_l] + halfWidth_left[idx_h])/2;
+                halfWidth_right[idx_l] = halfWidth_left[idx_h];
+                Log.LogDebug("    CPdfCandidateszResult::Trimming: integration supports overlap for %f and %f", redshifts[idx_h], redshifts[idx_l] ); 
+            }else{
+                //no overlap..keep all the same
+            }
+        //}
+    }
+
+    return b; //b is an indicator about overlapping presence
+}
 /**
  * @brief CPdfCandidateszResult::Compute
  */
@@ -48,13 +106,10 @@ Int32 CPdfCandidateszResult::Compute( std::vector<Float64> zc,  std::vector<Floa
         Log.LogInfo("    CPdfCandidateszResult::Compute pdf peaks info (method=gaussian fitting)" );
     }
     Resize(zc.size());
-
-    if(deltaz.size() == 0){
-        for(Int32 i = 0; i< zc.size(); i++){
-            Log.LogInfo("    CPdfCandidateszResult::Compute pdf using Default full-window size, i.e., 6e-3 (method=direct integration)" );
-            deltaz.push_back(Fullwidth); //create an identity vector having a unique value = Fullwidth
-        }
-    }
+ 
+    std::vector<Float64> halfWidth_right, halfWidth_left; 
+    Int32 b = SetIntegrationWindows(zc, deltaz, halfWidth_right, halfWidth_left);
+    //b == 0 --> no overlapping, b == 1 --> overlapping
     CPdfz pdfz;
     for(Int32 kc=0; kc<zc.size(); kc++)
     {
@@ -66,17 +121,20 @@ Int32 CPdfCandidateszResult::Compute( std::vector<Float64> zc,  std::vector<Floa
             //generate IDs 
             ExtremaIDs[kc] = "Ext" + std::to_string(kc);
         }
-        WdwWidth[kc] = deltaz[kc];
+
+        //TODO, following Didier proposal --> but im not convinced about it
+        //check overlapping between candidate ranges, and adjusting the range if required
         if(optMethod==0)
         {
-            ValSumProba[kc] = pdfz.getCandidateSumTrapez( Pdfz, PdfProbalog, zc[kc], 2*WdwWidth[kc]*(1+zc[kc]));
+            ValSumProba[kc] = pdfz.getCandidateSumTrapez( Pdfz, PdfProbalog, zc[kc], halfWidth_left[kc], halfWidth_right[kc]);
             GaussAmp[kc]=-1;
             GaussAmpErr[kc]=-1;
             GaussSigma[kc]=-1;
             GaussSigmaErr[kc]=-1;
         }else
         {
-            Int32 retGaussFit = pdfz.getCandidateRobustGaussFit( Pdfz, PdfProbalog, zc[kc], 2*WdwWidth[kc]*(1+zc[kc]), GaussAmp[kc], GaussAmpErr[kc], GaussSigma[kc], GaussSigmaErr[kc]);
+            //TODO: this requires further check...
+            Int32 retGaussFit = pdfz.getCandidateRobustGaussFit( Pdfz, PdfProbalog, zc[kc], (halfWidth_left[kc] + halfWidth_right[kc]), GaussAmp[kc], GaussAmpErr[kc], GaussSigma[kc], GaussSigmaErr[kc]);
             if(retGaussFit==0)
             {
                 ValSumProba[kc] = GaussAmp[kc]*GaussSigma[kc]*sqrt(2*M_PI);
@@ -90,10 +148,6 @@ Int32 CPdfCandidateszResult::Compute( std::vector<Float64> zc,  std::vector<Floa
     return 0;
 }
 
-void CPdfCandidateszResult::SetFullWidth(Float64 width)
-{
-    Fullwidth = width;
-}
 
 void CPdfCandidateszResult::Save( const CDataStore& store, std::ostream& stream ) const
 {
@@ -159,7 +213,7 @@ void CPdfCandidateszResult::SortByRank()
     SortByValSumProba(Redshifts);
     for (Int32 i = 0; i <Rank.size(); i++){
         if(Rank[i]!=i){
-            Log.LogDebug("Zcand %f has his rank updated from %d to %f \n", Redshifts[i], i, Rank[i]);
+            Log.LogDebug("Zcand %f has his rank updated from %d to %d \n", Redshifts[i], i, Rank[i]);
         }
     }
     SortByValSumProba(ValSumProba);

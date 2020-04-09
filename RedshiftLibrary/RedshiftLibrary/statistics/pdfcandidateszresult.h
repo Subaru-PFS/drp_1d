@@ -26,11 +26,11 @@ public:
 
     void Resize(Int32 n);
     Int32 Compute(std::vector<Float64> zc , std::vector<Float64> Pdfz, std::vector<Float64> PdfProbalog, std::vector<Float64> wdwWidth = std::vector<Float64>(), std::vector<std::string> IDs = std::vector<std::string>());
-    void SetFullWidth(Float64 width);
 
 
     Int32                       optMethod; //0: direct integration, 1:gaussian fit
     Float64                     Fullwidth;
+    Float64                     dzDefault;
     std::vector<std::string> ExtremaIDs; //also sort ids
 
     TFloat64List           		Redshifts;
@@ -52,7 +52,7 @@ private:
     //to sort IDs
     void SortIDsByValSumProba(std::vector<std::string>& flist);
     void SortByValSumProbaInt(TInt32List& flist);
-
+    Int32 SetIntegrationWindows( std::vector<Float64> zc,  std::vector<Float64> deltaz, std::vector<Float64>& halfWidth_right, std::vector<Float64>& halfWidth_left);
 };
 
 

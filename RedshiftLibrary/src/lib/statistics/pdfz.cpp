@@ -443,7 +443,9 @@ Float64 CPdfz::getSumRect(std::vector<Float64> redshifts,
  */
 Float64 CPdfz::getCandidateSumTrapez(std::vector<Float64> redshifts,
                                      std::vector<Float64> valprobalog,
-                                     Float64 zcandidate, Float64 zwidth)
+                                     Float64 zcandidate, 
+                                     Float64 zwidth_left,
+                                     Float64 zwidth_right)
 {
     // check that redshifts are sorted
     for (UInt32 k = 1; k < redshifts.size(); k++)
@@ -461,10 +463,12 @@ Float64 CPdfz::getCandidateSumTrapez(std::vector<Float64> redshifts,
     // redshifts[kmin]:redshifts[kmax] ]
     Int32 kmin = 0;
     Int32 kmax = redshifts.size() - 1;
-    Float64 halfzwidth = zwidth / 2.0;
+    if(zwidth_right == - 1)
+        zwidth_right = zwidth_left;
+
     for (UInt32 k = 0; k < redshifts.size(); k++)
     {
-        if (redshifts[k] < (zcandidate - halfzwidth))
+        if (redshifts[k] < zwidth_left)
         {
             kmin = k;
         }
@@ -473,7 +477,7 @@ Float64 CPdfz::getCandidateSumTrapez(std::vector<Float64> redshifts,
 
     for (UInt32 k = redshifts.size() - 1; k > 0; k--)
     {
-        if (redshifts[k] > (zcandidate + halfzwidth))
+        if (redshifts[k] > zwidth_right)
         {
             kmax = k;
         }
@@ -528,6 +532,7 @@ Float64 CPdfz::getCandidateSumTrapez(std::vector<Float64> redshifts,
     return sum;
 }
 
+//TODO: this requires a deeper check to include the updates window support range
 Int32 CPdfz::getCandidateRobustGaussFit(std::vector<Float64> redshifts,
                                         std::vector<Float64> valprobalog,
                                         Float64 zcandidate, Float64 zwidth,
@@ -938,7 +943,7 @@ Int32   CPdfz::getPmis(std::vector<Float64> redshifts,
     pmis_raw = getSumTrapez(redshifts_selected, valprobalog_selected);
 
     //estimate zcalc intg proba
-    Float64 pzcalc = getCandidateSumTrapez( redshifts, valprobalog, zbest, zwidth);
+    Float64 pzcalc = getCandidateSumTrapez( redshifts, valprobalog, zbest, zwidth/2);
 
     Log.LogDetail("pdfz: <pmisraw><%.6e>", pmis_raw);
     Log.LogDetail("pdfz: <pmap><%.6e>", pzcalc);

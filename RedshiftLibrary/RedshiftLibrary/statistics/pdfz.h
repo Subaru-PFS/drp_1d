@@ -35,7 +35,8 @@ public:
     Float64 getCandidateSumTrapez(std::vector<Float64> redshifts,
                                   std::vector<Float64> valprobalog,
                                   Float64 zcandidate,
-                                  Float64 zwidth);
+                                  Float64 zwidth_left,
+                                  Float64 zwidth_right = -1);//default: zwidth_left = zwidth_right
 
     Int32   getCandidateRobustGaussFit(std::vector<Float64> redshifts,
                                        std::vector<Float64> valprobalog,
