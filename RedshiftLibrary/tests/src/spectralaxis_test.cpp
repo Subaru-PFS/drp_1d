@@ -110,6 +110,7 @@ BOOST_AUTO_TEST_CASE(Resolution)
   BOOST_CHECK_CLOSE(n8Axis.GetResolution(-1.0),2.0,1.e-12);
   BOOST_CHECK_CLOSE(n8Axis.GetResolution(-0.1),2.0,1.e-12);
   BOOST_CHECK_CLOSE(n8Axis.GetResolution(0.0),2.0,1.e-12);
+  BOOST_CHECK_CLOSE(n8Axis.GetResolution(1.0),2.0,1.e-12);
   BOOST_CHECK_CLOSE(n8Axis.GetResolution(1.1),2.0,1.e-12);
   BOOST_CHECK_CLOSE(n8Axis.GetResolution(2.0),2.0,1.e-12);
   BOOST_CHECK_CLOSE(n8Axis.GetResolution(3.0),2.0,1.e-12);
@@ -125,8 +126,8 @@ BOOST_AUTO_TEST_CASE(Resolution)
   // not enough samples
   Float64 array[] = {10.};
   CSpectrumSpectralAxis axis = CSpectrumSpectralAxis(array,1,false);
-  BOOST_CHECK_CLOSE(axis.GetResolution(),0.,1.e-12);
-  BOOST_CHECK_CLOSE(axis.GetMeanResolution(),0.,1.e-12);
+  BOOST_CHECK_CLOSE(axis.GetResolution(),0.0,1.e-12);
+  BOOST_CHECK_CLOSE(axis.GetMeanResolution(),0.0,1.e-12);
 
 }
 
