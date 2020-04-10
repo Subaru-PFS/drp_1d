@@ -178,7 +178,6 @@ void CChisquareResult::Save( const CDataStore& store, std::ostream& stream ) con
             stream << "}" << std::endl;
         }
 
-
         if(FitAmplitude.size()>0){
             stream <<  "#Extrema FitAmplitudes = {";
             for ( int i=0; i<Extrema.size(); i++)
@@ -196,7 +195,6 @@ void CChisquareResult::Save( const CDataStore& store, std::ostream& stream ) con
             }
             stream << "}" << std::endl;
         }
-
 
         if(FitAmplitudeError.size()>0){
             stream <<  "#Extrema FitAmplitudeErrors = {";
@@ -233,8 +231,6 @@ void CChisquareResult::Save( const CDataStore& store, std::ostream& stream ) con
             }
             stream << "}" << std::endl;
         }
-
-
 
         if(FitDustCoeff.size()>0){
             stream <<  "#Extrema FitDustCoeff = {";
