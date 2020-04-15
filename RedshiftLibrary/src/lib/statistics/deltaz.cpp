@@ -124,6 +124,51 @@ Int32 CDeltaz::Compute(TFloat64List merits, TFloat64List redshifts, Float64 reds
     return 0;
 }
 
+Int32 CDeltaz::ComputeDirect(TFloat64List merits, TFloat64List redshifts, Float64 redshift, TFloat64Range redshiftRange, Float64& sigma)
+{
+    sigma = -1.0;
+
+    //find indexes: iz, izmin and izmax
+    Int32 izmin= -1;
+    Int32 iz= -1;
+    Int32 izmax= -1;
+    for( Int32 i2=0; i2<redshifts.size(); i2++ )
+    {
+        if(iz == -1 && redshift <= redshifts[i2]){
+            iz = i2;
+        }
+        if(izmin == -1 && (redshiftRange.GetBegin()) <= redshifts[i2]){
+            izmin = i2;
+        }
+        if(izmax == -1 && (redshiftRange.GetEnd()) <= redshifts[i2]){
+            izmax = i2;
+            break;
+        }
+    }
+    if(izmin == -1 || izmax == -1 || iz == -1){
+        return 1;
+    }
+
+    Float64 x0 = redshifts[iz];
+    Float64 y0 = merits[iz];
+    Float64 xi, yi, c0_direct; 
+    Float64 sum = 0, sum2 = 0;
+    Int32 n = 0;
+    n = izmax - izmin +1;
+    for (Int32 i = 0; i < n; i++)
+    {
+        xi = redshifts[i+izmin]-x0;
+        yi = merits[i+izmin];//-y0 pour re-caler les y pour que le centre soit à zero pour x0
+        sum += xi*yi;
+        sum2 += xi*xi;
+    }
+    c0_direct = sum/sum2; 
+    sigma = sqrt(1.0/c0_direct);
+    if(c0_direct<=0) 
+        return -1;
+    return 0;
+}
+
 //todo : merge with previous function instead of duplicating code...
 Int32 CDeltaz::Compute3ddl(TFloat64List merits, TFloat64List redshifts, Float64 redshift, TFloat64Range redshiftRange, Float64& sigma)
 {
