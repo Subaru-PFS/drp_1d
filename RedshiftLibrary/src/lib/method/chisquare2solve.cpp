@@ -10,6 +10,8 @@
 #include <RedshiftLibrary/statistics/pdfcandidateszresult.h>
 
 #include <RedshiftLibrary/statistics/deltaz.h>
+#include <RedshiftLibrary/extremum/findSetup.h>
+
 #include <RedshiftLibrary/common/quicksort.h>
 #include <RedshiftLibrary/spectrum/io/fitswriter.h>
 #include <float.h>
@@ -245,6 +247,8 @@ Bool CMethodChisquare2Solve::Solve(CDataStore& resultStore,
                                                                                                            enable_extinction,
                                                                                                            option_dustFitting ) );
 
+       /* CFindSetup<std::shared_ptr<CChisquareResult>> find_();
+        find_.callFind(chisquareResult);*/
         // extrema
         Int32 extremumCount = 10;
         if(chisquareResult->Redshifts.size()>extremumCount)
