@@ -4,8 +4,10 @@
 #include <RedshiftLibrary/processflow/parameterstore.h>
 #include <RedshiftLibrary/processflow/resultstore.h>
 #include <RedshiftLibrary/statistics/deltaz.h>
+#include <RedshiftLibrary/statistics/pdfcandidateszresult.h>
 
 #include <istream>
+#include <iostream>
 #include <fstream>
 #include <boost/math/special_functions.hpp>
 #include <boost/filesystem.hpp>
@@ -17,7 +19,6 @@
 //#include <boost/algorithm/string/predicate.hpp>
 
 #include <boost/test/unit_test.hpp>
-
 using namespace NSEpic;
 using namespace std;
 
@@ -99,6 +100,78 @@ BOOST_AUTO_TEST_CASE(Deltaz)
     DeltazTestCompute( chi2sample, center_redshift, redshiftRange);
 
 }
+//both redshifts belong to overlapping range
+BOOST_AUTO_TEST_CASE(Deltaz_overlapping1)
+{
+    std::vector<Float64> center_redshifts = {1.0, 1.5};
+    std::vector<Float64> deltaz = { 0.5/3, 0.5/3}; 
+    std::vector<Float64> range_right, range_left;
+    std::vector<Float64> correct_range_left = {0, 1.25}, correct_range_right = {1.24990, 2.75 };
 
+    CPdfCandidateszResult res; 
+    res.Resize(center_redshifts.size());
+    res.SetIntegrationWindows(center_redshifts,  deltaz, range_right, range_left);
 
+    std::cout <<range_right[0] <<"\n"<< range_right[1] <<"\n" <<range_left[0] <<"\n"<< range_left[1]<<"\n";
+    BOOST_CHECK_CLOSE(range_right[0], correct_range_right[0], 1E-4);
+    BOOST_CHECK_CLOSE(range_right[1], correct_range_right[1], 1E-4);
+    BOOST_CHECK_CLOSE(range_left[0], correct_range_left[0], 1E-4);
+    BOOST_CHECK_CLOSE(range_left[1], correct_range_left[1], 1E-4);
+}
+//no overlapping
+BOOST_AUTO_TEST_CASE(Deltaz_nooverlapping)
+{
+    std::vector<Float64> center_redshifts = {1.0, 5.0};
+    std::vector<Float64> deltaz = { 0.5/3, 0.5/3}; 
+    std::vector<Float64> range_right, range_left;
+    std::vector<Float64> correct_range_left = {0, 2}, correct_range_right = {2, 8};
+
+    CPdfCandidateszResult res; 
+    res.Resize(center_redshifts.size());
+    res.SetIntegrationWindows(center_redshifts,  deltaz, range_right, range_left);
+
+    std::cout <<range_right[0] <<"\n"<< range_right[1] <<"\n" <<range_left[0] <<"\n"<< range_left[1]<<"\n";
+    BOOST_CHECK_CLOSE(range_right[0], correct_range_right[0], 1E-4);
+    BOOST_CHECK_CLOSE(range_right[1], correct_range_right[1], 1E-4);
+    BOOST_CHECK_CLOSE(range_left[0], correct_range_left[0], 1E-4);
+    BOOST_CHECK_CLOSE(range_left[1], correct_range_left[1], 1E-4);
+}
+//only the smallest redshift belongs to the overlapping region
+BOOST_AUTO_TEST_CASE(Deltaz_overlapping_3)
+{
+    std::vector<Float64> center_redshifts = {1.0, 4.0};
+    std::vector<Float64> deltaz = { 0.5/3, 0.5/3}; 
+    std::vector<Float64> range_right, range_left;
+    std::vector<Float64> correct_range_left = {0, 1.75}, correct_range_right = {1.7499, 6.5};
+
+    CPdfCandidateszResult res; 
+    res.Resize(center_redshifts.size());
+    res.SetIntegrationWindows(center_redshifts,  deltaz, range_right, range_left);
+
+    std::cout <<range_right[0] <<"\n"<< range_right[1] <<"\n" <<range_left[0] <<"\n"<< range_left[1]<<"\n";
+    BOOST_CHECK_CLOSE(range_right[0], correct_range_right[0], 1E-4);
+    BOOST_CHECK_CLOSE(range_right[1], correct_range_right[1], 1E-4);
+    BOOST_CHECK_CLOSE(range_left[0], correct_range_left[0], 1E-4);
+    BOOST_CHECK_CLOSE(range_left[1], correct_range_left[1], 1E-4);
+}
+
+//only the greatest redshift belong to overlapping region
+BOOST_AUTO_TEST_CASE(Deltaz_overlapping_4)
+{
+    std::vector<Float64> center_redshifts = {1.0, 4.0};
+    std::vector<Float64> deltaz = {1.0/3, 0.5/3}; 
+    std::vector<Float64> range_right, range_left;
+    std::vector<Float64> correct_range_left = {-1, 2.25}, correct_range_right = {2.2499, 6.5};
+
+    CPdfCandidateszResult res;
+    res.Resize(center_redshifts.size());
+    res.SetIntegrationWindows(center_redshifts, deltaz, range_right, range_left);
+
+    std::cout <<"overlapping 4 \n";
+    std::cout <<range_right[0] <<"\n"<< range_right[1] <<"\n" <<range_left[0] <<"\n"<< range_left[1]<<"\n";
+    BOOST_CHECK_CLOSE(range_right[0], correct_range_right[0], 1E-4);
+    BOOST_CHECK_CLOSE(range_right[1], correct_range_right[1], 1E-4);
+    BOOST_CHECK_CLOSE(range_left[0], correct_range_left[0], 1E-4);
+    BOOST_CHECK_CLOSE(range_left[1], correct_range_left[1], 1E-4);
+}
 BOOST_AUTO_TEST_SUITE_END()
