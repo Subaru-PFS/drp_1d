@@ -1,5 +1,5 @@
 #include <RedshiftLibrary/statistics/deltaz.h>
-
+#include <cmath>
 #include <RedshiftLibrary/log/log.h>
 
 using namespace NSEpic;
@@ -73,13 +73,13 @@ Int32 CDeltaz::Compute(TFloat64List merits, TFloat64List redshifts, Float64 reds
     Float64 y0 = merits[iz];
     for (i = 0; i < n; i++)
     {
-        xi = redshifts[i+izmin];
-        yi = merits[i+izmin]-y0;
+        xi = redshifts[i+izmin] - x0;
+        yi = merits[i+izmin] - y0;
         if(verbose){
             fprintf (stderr, "  x = %+.5e,  y = %+.5e\n",xi, yi);
         }
         ei = 1.0; //todo, estimate weighting ?
-        gsl_matrix_set (X, i, 0, (xi-x0)*(xi-x0));
+        gsl_matrix_set (X, i, 0, xi*xi);
 
         gsl_vector_set (y, i, yi);
         gsl_vector_set (w, i, 1.0/(ei*ei));
@@ -151,20 +151,20 @@ Int32 CDeltaz::ComputeDirect(TFloat64List merits, TFloat64List redshifts, Float6
 
     Float64 x0 = redshifts[iz];
     Float64 y0 = merits[iz];
-    Float64 xi, yi, c0_direct; 
+    Float64 xi2, yi, c0; 
     Float64 sum = 0, sum2 = 0;
     Int32 n = 0;
     n = izmax - izmin +1;
     for (Int32 i = 0; i < n; i++)
     {
-        xi = redshifts[i+izmin]-x0;
-        yi = merits[i+izmin];//-y0 pour re-caler les y pour que le centre soit à zero pour x0
-        sum += xi*yi;
-        sum2 += xi*xi;
+        xi2 = std::pow(redshifts[i+izmin]-x0, 2);
+        yi = merits[i+izmin]-y0; //pour re-caler les y pour que le centre soit à zero pour x0
+        sum += xi2*yi;
+        sum2 += xi2*xi2;
     }
-    c0_direct = sum/sum2; 
-    sigma = sqrt(1.0/c0_direct);
-    if(c0_direct<=0) 
+    c0 = sum/sum2; 
+    sigma = sqrt(1.0/c0);
+    if(c0<=0) 
         return -1;
     return 0;
 }

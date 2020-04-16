@@ -1573,7 +1573,7 @@ Int32 COperatorLineModel::SaveResults(const CSpectrum &spectrum,
                 TFloat64Range range = TFloat64Range(z - zRangeHalf*(1+z), z + zRangeHalf*(1+z));
                 //ret = deltaz.Compute3ddl(m_result->ChiSquare, m_result->Redshifts, z, range, dz);
                 ret = deltaz.ComputeDirect(m_result->ChiSquare,
-                                           m_result->Redshifts, z, range, dz);            
+                                           m_result->Redshifts, z, range, dz, 3);            
                 if (ret == -1)
                 {
                     Log.LogWarning("  Operator-Linemodel: Deltaz computation failed for %f", zRangeHalf);
