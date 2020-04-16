@@ -58,18 +58,6 @@ void CDataStore::SetSpectrumName( const std::string& name )
     m_SpectrumName = name;
 }
 
-void CDataStore::SetRank(const TInt32List& rank) {
-    m_Rank = rank;
-}
-const TInt32List& CDataStore::GetRank() const{
-    return m_Rank;
-}
-void CDataStore::SetIntgPDF(const TFloat64List& pdf) {
-    m_IntgPDF = pdf;
-}
-const TFloat64List& CDataStore::GetIntgPDF() const{
-    return m_IntgPDF;
-}
 const std::string& CDataStore::GetProcessingID() const
 {
     return m_ProcessingID;

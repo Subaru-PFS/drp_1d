@@ -394,8 +394,6 @@ Bool CMethodTplcombinationSolve::ExtractCandidateResults(CDataStore &store, std:
         zcand->Compute(zcandidates_unordered_list, logzpdf1d->Redshifts, logzpdf1d->valProbaLog, Deltaz);
         
         store.StoreScopedGlobalResult( "candidatesresult", zcand ); 
-        store.SetRank(zcand->Rank);
-        store.SetIntgPDF(zcand->ValSumProba);
 
     return true;
 }

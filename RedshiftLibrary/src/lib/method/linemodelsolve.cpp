@@ -1293,8 +1293,6 @@ Bool CLineModelSolve::ExtractCandidateResults(CDataStore &store, std::vector<Flo
         zcand->Compute(zcandidates_unordered_list, logzpdf1d->Redshifts, logzpdf1d->valProbaLog, v->ExtremaResult.DeltaZ, v->ExtremaResult.ExtremaIDs);
         
         store.StoreScopedGlobalResult( "candidatesresult", zcand ); 
-        store.SetRank(zcand->Rank);
-        store.SetIntgPDF(zcand->ValSumProba);
 
         std::vector<std::string> info {"spc", "fit", "fitcontinuum", "rules", "continuum"};
         for(Int32 f = 0; f<info.size(); f++) {
