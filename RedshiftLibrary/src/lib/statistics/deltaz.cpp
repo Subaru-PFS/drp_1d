@@ -1,5 +1,4 @@
 #include <RedshiftLibrary/statistics/deltaz.h>
-#include <cmath>
 #include <RedshiftLibrary/log/log.h>
 
 using namespace NSEpic;
@@ -51,7 +50,8 @@ Int32 CDeltaz::Compute(TFloat64List merits, TFloat64List redshifts, Float64 reds
     n = izmax - izmin +1;
     for (Int32 i = 0; i < n; i++)
     {
-        xi2 = std::pow(redshifts[i+izmin]-x0, 2);
+        xi2 = redshifts[i+izmin]-x0;
+        xi2 *= xi2;
         yi = merits[i+izmin]-y0; //pour re-caler les y pour que le centre soit à zero pour x0
         sum += xi2*yi;
         sum2 += xi2*xi2;
