@@ -1,5 +1,5 @@
-#ifndef _REDSHIFT_LINEMODEL_TEMPLATES_ORTHO_
-#define _REDSHIFT_LINEMODEL_TEMPLATES_ORTHO_
+#ifndef _REDSHIFT_LINEMODEL_TEMPLATESORTHO_
+#define _REDSHIFT_LINEMODEL_TEMPLATESORTHO_
 
 #include <RedshiftLibrary/common/range.h>
 #include <RedshiftLibrary/common/datatypes.h>
@@ -74,10 +74,4 @@ private:
 
 }
 
-
-
-
-
-
-
-#endif // TEMPLATESORTHO_H
+#endif // _REDSHIFT_LINEMODEL_TEMPLATESORTHO_

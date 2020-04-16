@@ -17,6 +17,9 @@
 #include <RedshiftLibrary/ray/catalog.h>
 #include <RedshiftLibrary/operator/raymatching.h>
 #include <RedshiftLibrary/common/median.h>
+#include <RedshiftLibrary/continuum/irregularsamplingmedian.h>
+#include <RedshiftLibrary/continuum/waveletsdf.h>
+#include <RedshiftLibrary/continuum/indexesresult.h>
 
 #include <RedshiftLibrary/operator/correlation.h>
 #include <RedshiftLibrary/operator/chicorr.h>
@@ -83,6 +86,24 @@ CProcessFlow::~CProcessFlow()
 
 void CProcessFlow::Process( CProcessFlowContext& ctx )
 {
+    std::string methodName;
+    ctx.GetParameterStore().Get( "method", methodName );
+    boost::algorithm::to_lower(methodName);
+
+    // Compute continuum substracted spectrum
+    if(methodName!="linemodel" && methodName!="zweimodelsolve")
+    {
+        EstimateContinuum(ctx.GetSpectrum(), ctx.GetSpectrumWithoutContinuum(), ctx.GetParameterStore(), ctx.GetDataStore());
+    }else
+    {
+        std::string continuumcomponent;
+        ctx.GetParameterStore().Get( "linemodelsolve.linemodel.continuumcomponent", continuumcomponent, "fromspectrum" );
+        if(continuumcomponent=="fromspectrum")
+        {
+            EstimateContinuum(ctx.GetSpectrum(), ctx.GetSpectrumWithoutContinuum(), ctx.GetParameterStore(), ctx.GetDataStore());
+        }
+    }
+
     Log.LogInfo("<proc-spc><%s>", ctx.GetSpectrum().GetName().c_str());
 
     TFloat64Range lambdaRange;
@@ -103,10 +124,6 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
             spcLambdaRange.GetBegin(), spcLambdaRange.GetEnd(), ctx.GetSpectrum().GetResolution());
 
     //std::cout << "Processing spectrum " << ctx.GetSpectrum().GetName() << std::endl;
-
-    std::string methodName;
-    ctx.GetParameterStore().Get( "method", methodName );
-    boost::algorithm::to_lower(methodName);
 
     // Create redshift initial list by spanning redshift acdross the given range, with the given delta
     std::string redshiftSampling;
@@ -543,8 +560,6 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
                                  spcLambdaRange,
                                  redshifts );
 
-
-
     }else if(methodName  == "chisquare2solve" ){
         Float64 overlapThreshold;
         ctx.GetParameterStore().Get( "chisquare2solve.overlapThreshold", overlapThreshold, 1.0);
@@ -623,7 +638,6 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
                                  radius,
                                  opt_spcComponent, opt_interp, opt_extinction, opt_dustFit);
 
-
         if( mResult)
         {
             Log.LogInfo( "Extracting z-candidates from ChisquareLogsolve method results" );
@@ -640,7 +654,6 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
 
             Bool b = solve.ExtractCandidateResults(ctx.GetDataStore(), zcandidates_unordered_list);
         }
-
 
     }else if(methodName  == "tplcombinationsolve" ){
         Float64 overlapThreshold;
@@ -832,6 +845,148 @@ else if(methodName  == "reliability" ){
       throw std::runtime_error("Unable to store method result");
     }
 }
+
+
+/**
+ * @brief SetMedianContinuum
+ */
+template <class T> void CProcessFlow::SetMedianContinuum(T& continuum, CSpectrum& spectrumWithoutContinuum, CParameterStore& paramStore)
+{
+    Float64 opt_medianKernelWidth;
+    paramStore.Get( "continuumRemoval.medianKernelWidth", opt_medianKernelWidth, 75 );
+    continuum.SetMedianKernelWidth(opt_medianKernelWidth);
+    continuum.SetMeanKernelWidth(opt_medianKernelWidth);
+    spectrumWithoutContinuum.RemoveContinuum( continuum );
+    spectrumWithoutContinuum.SetMedianWinsize(opt_medianKernelWidth);
+    Log.LogInfo( "Continuum estimation - medianKernelWidth = %.2f", opt_medianKernelWidth );
+}
+
+/**
+ * @brief SetDFContinuum
+ */
+void CProcessFlow::SetDFContinuum(const CSpectrum& spectrum, CSpectrum& spectrumWithoutContinuum, CParameterStore& paramStore)
+{
+    Int64 nscales;
+    paramStore.Get( "continuumRemoval.decompScales", nscales, 6);
+    std::string dfBinPath;
+    paramStore.Get( "continuumRemoval.binPath", dfBinPath, "absolute_path_to_df_binaries_here");
+    spectrumWithoutContinuum.SetWaveletsDFBinPath(dfBinPath);
+    CContinuumDF continuum(dfBinPath);
+    spectrumWithoutContinuum.SetDecompScales(nscales);
+    bool ret = spectrumWithoutContinuum.RemoveContinuum( continuum );
+    if( !ret ) //doesn't seem to work. TODO: check that the df errors lead to a ret=false value
+    {
+        Log.LogError("Failed to apply continuum substraction for spectrum: %s", spectrum.GetName().c_str());
+        throw runtime_error("Failed to apply continuum substraction");
+    }
+}
+
+/**
+ * @brief SetRawOrZeroMedian
+ */
+void CProcessFlow::SetRawOrZeroMedian(const CSpectrum& spectrum, CSpectrum& spectrumWithoutContinuum, std::string option)
+{
+    CSpectrumFluxAxis& spcFluxAxis = spectrumWithoutContinuum.GetFluxAxis();
+    spcFluxAxis.SetSize( spectrum.GetSampleCount() );
+    CSpectrumSpectralAxis& spcSpectralAxis = spectrumWithoutContinuum.GetSpectralAxis();
+    spcSpectralAxis.SetSize( spectrum.GetSampleCount() );
+
+    Int32 nSamples = spectrumWithoutContinuum.GetSampleCount();
+    if(option == "raw")
+    {
+        for(Int32 k=0; k<nSamples; k++)
+        {
+            spcFluxAxis[k] = 0.0;
+        }
+    }else if(option == "zero")
+    {
+        for(Int32 k=0; k<nSamples; k++)
+        {
+            spcFluxAxis[k] = spectrum.GetFluxAxis()[k];
+        }
+    }
+}
+
+/**
+ * @brief EstimateContinuum
+ */
+void CProcessFlow::EstimateContinuum(const CSpectrum& spectrum, CSpectrum& spectrumWithoutContinuum, CParameterStore& paramStore, CDataStore& dataStore)
+{
+    std::string medianRemovalMethod;
+    paramStore.Get( "continuumRemoval.method", medianRemovalMethod, "IrregularSamplingMedian" );
+    //paramStore.Get( "continuumRemoval.method", medianRemovalMethod, "waveletsDF" );
+
+    const char* nameBaseline;               // baseline filename
+    Log.LogInfo( "Continuum estimation on input spectrum: using %s", medianRemovalMethod.c_str() );
+    if( medianRemovalMethod== "IrregularSamplingMedian")
+    {
+        nameBaseline = "preprocess/baselineISMedian";
+        CContinuumIrregularSamplingMedian continuum;
+        SetMedianContinuum(continuum, spectrumWithoutContinuum, paramStore);
+    }else if( medianRemovalMethod== "Median")
+    {
+        nameBaseline = "preprocess/baselineMedian";
+        CContinuumMedian continuum;
+        SetMedianContinuum(continuum, spectrumWithoutContinuum, paramStore);
+    }else if( medianRemovalMethod== "waveletsDF")
+    {
+        nameBaseline = "preprocess/baselineDF";
+        SetDFContinuum(spectrum, spectrumWithoutContinuum, paramStore);
+    }else if( medianRemovalMethod== "raw")
+    {
+        nameBaseline = "preprocess/baselineRAW";
+        SetRawOrZeroMedian(spectrum, spectrumWithoutContinuum, "raw");
+    }else if( medianRemovalMethod== "zero")
+    {
+        nameBaseline = "preprocess/baselineZERO";
+        SetRawOrZeroMedian(spectrum, spectrumWithoutContinuum, "zero");
+    }
+    spectrumWithoutContinuum.SetContinuumEstimationMethod(medianRemovalMethod);
+    Log.LogInfo("===============================================");
+
+    // Process continuum relevance
+    ProcessRelevance(spectrum, spectrumWithoutContinuum, dataStore);
+
+    // Logarithmic scale ??
+    spectrumWithoutContinuum.ConvertToLogScale();
+
+    // Save the baseline in store
+    std::shared_ptr<CSpectraFluxResult> baselineResult = (std::shared_ptr<CSpectraFluxResult>) new CSpectraFluxResult();
+    baselineResult->m_optio = 0;
+    UInt32 len = spectrum.GetSampleCount();
+
+    baselineResult->fluxes.resize(len);
+    baselineResult->wavel.resize(len);
+    for( Int32 k=0; k<len; k++ )
+    {
+        baselineResult->fluxes[k] = (spectrum.GetFluxAxis())[k] - (spectrumWithoutContinuum.GetFluxAxis())[k];
+        baselineResult->wavel[k]  = (spectrum.GetSpectralAxis())[k];
+    }
+    dataStore.StoreScopedGlobalResult(nameBaseline, baselineResult);
+}
+
+/**
+ * @brief ProcessRelevance
+ */
+void CProcessFlow::ProcessRelevance(const CSpectrum& spectrum, const CSpectrum& spectrumWithoutContinuum, CDataStore& dataStore)
+{
+    CContinuumIndexes continuumIndexes;
+    CSpectrum _spcContinuum = spectrum;
+    CSpectrumFluxAxis spcfluxAxis = _spcContinuum.GetFluxAxis();
+    spcfluxAxis.Subtract( spectrumWithoutContinuum.GetFluxAxis() );
+    CSpectrumFluxAxis& sfluxAxisPtr = _spcContinuum.GetFluxAxis();
+    sfluxAxisPtr = spcfluxAxis;
+
+    CContinuumIndexes::SContinuumRelevance continuumRelevance = continuumIndexes.getRelevance( spectrum, _spcContinuum );
+
+    // Save the continuum relevance in store
+    const char* nameContinuumIndexesResult;         // continuum indexes filename
+    nameContinuumIndexesResult = "preprocess/continuumIndexes";
+    std::shared_ptr<CContinuumIndexesResult> continuumIndexesResult = (std::shared_ptr<CContinuumIndexesResult>) new CContinuumIndexesResult();
+    continuumIndexesResult->SetValues(continuumRelevance.StdSpectrum, continuumRelevance.StdContinuum);
+    dataStore.StoreScopedGlobalResult(nameContinuumIndexesResult, continuumIndexesResult);
+}
+
 
 /**
  * @brief isPdfValid

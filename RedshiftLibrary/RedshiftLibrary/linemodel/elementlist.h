@@ -1,5 +1,5 @@
-#ifndef ELEMENTLIST_H
-#define ELEMENTLIST_H
+#ifndef _REDSHIFT_LINEMODEL_ELEMENTLIST_
+#define _REDSHIFT_LINEMODEL_ELEMENTLIST_
 
 #include <RedshiftLibrary/common/range.h>
 #include <RedshiftLibrary/common/datatypes.h>
@@ -436,9 +436,4 @@ private:
 }
 
 
-
-
-
-
-
-#endif // ELEMENTLIST_H
+#endif // _REDSHIFT_LINEMODEL_ELEMENTLIST_

@@ -1,5 +1,5 @@
-#ifndef _REDSHIFT_PDF_CANDIDATESZRESULT_
-#define _REDSHIFT_PDF_CANDIDATESZRESULT_
+#ifndef _REDSHIFT_STATISTICS_PDFCANDIDATESZRESULT_
+#define _REDSHIFT_STATISTICS_PDFCANDIDATESZRESULT_
 
 #include <RedshiftLibrary/processflow/result.h>
 #include <RedshiftLibrary/common/datatypes.h>

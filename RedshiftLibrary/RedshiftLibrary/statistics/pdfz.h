@@ -1,5 +1,5 @@
-#ifndef _REDSHIFT_RAY_PDFZ_
-#define _REDSHIFT_RAY_PDFZ_
+#ifndef _REDSHIFT_STATISTICS_PDFZ_
+#define _REDSHIFT_STATISTICS_PDFZ_
 
 #include <RedshiftLibrary/common/datatypes.h>
 #include <RedshiftLibrary/common/range.h>
@@ -76,4 +76,3 @@ private:
 }
 
 #endif
-

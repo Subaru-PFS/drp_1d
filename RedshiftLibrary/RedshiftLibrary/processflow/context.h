@@ -52,12 +52,14 @@ public:
 	      std::shared_ptr<CParameterStore> paramStore,
 	      std::shared_ptr<CClassifierStore> zqualStore);
 
+    void SmoothFlux(std::shared_ptr<CParameterStore> paramStore);
+
     const CSpectrum&                GetSpectrum() const;
-    const CSpectrum&                GetSpectrumWithoutContinuum() const;
+    CSpectrum&                      GetSpectrumWithoutContinuum();
     const CTemplateCatalog&         GetTemplateCatalog() const;
     const CRayCatalog&              GetRayCatalog() const;
 
-    bool correctSpectrum(Float64 LambdaMin,  Float64 LambdaMax);
+    bool correctSpectrum(Float64 LambdaMin, Float64 LambdaMax);
 
     CParameterStore&                GetParameterStore();
     COperatorResultStore&           GetResultStore();
@@ -76,7 +78,7 @@ private:
     std::shared_ptr<COperatorResultStore>      m_ResultStore;
 
     std::shared_ptr<CDataStore>                m_DataStore;
-    std::shared_ptr<CClassifierStore>                 m_ClassifierStore;
+    std::shared_ptr<CClassifierStore>          m_ClassifierStore;
 
 };
 

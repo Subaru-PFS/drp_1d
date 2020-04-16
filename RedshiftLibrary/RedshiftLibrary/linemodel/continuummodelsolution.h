@@ -1,5 +1,5 @@
-#ifndef _REDSHIFT_OPERATOR_CONTINUUMMODELSOLUTION_
-#define _REDSHIFT_OPERATOR_CONTINUUMMODELSOLUTION_
+#ifndef _REDSHIFT_LINEMODEL_CONTINUUMMODELSOLUTION_
+#define _REDSHIFT_LINEMODEL_CONTINUUMMODELSOLUTION_
 
 #include <RedshiftLibrary/processflow/result.h>
 #include <RedshiftLibrary/common/datatypes.h>

@@ -1,4 +1,5 @@
- 
+#ifndef _REDSHIFT_COMMON_REF_
+#define _REDSHIFT_COMMON_REF_
 
 template < class DataType >
 CRef<DataType>::CRef()
@@ -116,3 +117,5 @@ CRef<DataType>::operator DataType* () const
 {
     return m_Pointer;
 }
+
+#endif

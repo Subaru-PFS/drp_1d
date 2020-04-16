@@ -1,15 +1,15 @@
-#ifndef _CORE_DEBUG_DEBUG_
-#define _CORE_DEBUG_DEBUG_
+#ifndef _REDSHIFT_DEBUG_DEBUG_
+#define _REDSHIFT_DEBUG_DEBUG_
 
 #include <RedshiftLibrary/common/datatypes.h>
 
-#include <stdio.h>
+#include <cstdio>
 
 namespace NSEpic
 {
 
 /**
- * \ingroup Core
+ * \ingroup Redshift
  * @{
  */
 

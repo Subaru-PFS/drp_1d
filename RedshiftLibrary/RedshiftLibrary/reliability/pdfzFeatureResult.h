@@ -1,5 +1,5 @@
-#ifndef _REDSHIFT_OPERATOR_PDFZFEATURERESULT_
-#define _REDSHIFT_OPERATOR_PDFZFEATURERESULT_
+#ifndef _REDSHIFT_RELIABILITY_PDFZFEATURERESULT_
+#define _REDSHIFT_RELIABILITY_PDFZFEATURERESULT_
 
 #include <RedshiftLibrary/processflow/result.h>
 #include <RedshiftLibrary/operator/operator.h>

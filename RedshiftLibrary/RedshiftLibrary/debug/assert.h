@@ -1,5 +1,5 @@
-#ifndef _CORE_DEBUG_ASSERT_
-#define _CORE_DEBUG_ASSERT_
+#ifndef _REDSHIFT_DEBUG_ASSERT_
+#define _REDSHIFT_DEBUG_ASSERT_
 
 #include <RedshiftLibrary/debug/debug.h>
 

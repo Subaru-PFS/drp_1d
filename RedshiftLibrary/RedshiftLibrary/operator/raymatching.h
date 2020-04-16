@@ -1,5 +1,5 @@
-#ifndef _REDSHIFT_RAY_MATCHING_
-#define _REDSHIFT_RAY_MATCHING_
+#ifndef _REDSHIFT_OPERATOR_RAYMATCHING_
+#define _REDSHIFT_OPERATOR_RAYMATCHING_
 
 #include <RedshiftLibrary/common/datatypes.h>
 #include <RedshiftLibrary/common/range.h>
@@ -27,4 +27,4 @@ namespace NSEpic
   };
 }
 
-#endif //_REDSHIFT_RAY_MATCHING_
+#endif // _REDSHIFT_OPERATOR_RAYMATCHING_

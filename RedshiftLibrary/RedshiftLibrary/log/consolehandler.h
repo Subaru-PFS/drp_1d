@@ -1,5 +1,5 @@
-#ifndef _CORE_LOG_CONSOLEHANDLER_
-#define _CORE_LOG_CONSOLEHANDLER_
+#ifndef _REDSHIFT_LOG_CONSOLEHANDLER_
+#define _REDSHIFT_LOG_CONSOLEHANDLER_
 
 #include <RedshiftLibrary/common/datatypes.h>
 #include <RedshiftLibrary/log/handler.h>
@@ -8,7 +8,7 @@ namespace NSEpic
 {
 
 /**
- * \ingroup Core
+ * \ingroup Redshift
  * Handler that outputs log to stdout.
  */
 class CLogConsoleHandler : public CLogHandler
