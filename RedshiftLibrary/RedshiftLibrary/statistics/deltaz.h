@@ -22,9 +22,8 @@ public:
 
     CDeltaz();
     ~CDeltaz();
-    Int32 Compute(TFloat64List merits, TFloat64List redshifts, Float64 redshift, TFloat64Range redshiftRange, Float64 &deltaz);
     Int32 Compute3ddl(TFloat64List merits, TFloat64List redshifts, Float64 redshift, TFloat64Range redshiftRange, Float64 &deltaz);
-    Int32 ComputeDirect(TFloat64List merits, TFloat64List redshifts, Float64 redshift, TFloat64Range redshiftRange, Float64& sigma);
+    Int32 Compute(TFloat64List merits, TFloat64List redshifts, Float64 redshift, TFloat64Range redshiftRange, Float64& sigma);
 private:
 
 
