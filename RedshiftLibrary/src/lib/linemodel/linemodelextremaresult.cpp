@@ -108,9 +108,8 @@ void CLineModelExtremaResult::SaveLine(const CDataStore &store, std::ostream& st
  **/
 void CLineModelExtremaResult::Save( const CDataStore& store, std::ostream& stream) const
 {
-    //Read directly from store; but couldnt save in the member variable!!!
-    std::string scope = store.GetScope( *this ) + "candidatesresults";
-    auto res = store.GetGlobalResult( scope.c_str() );
+    //here there is no scope set--> error in accessing results using GetScope()
+    auto res = store.GetGlobalResult( "candidatesresult"  );
     auto candResults = std::dynamic_pointer_cast<const CPdfCandidateszResult>( res.lock());
     TInt32List Rank_PDF = candResults->Rank;
 
@@ -602,8 +601,7 @@ if(!zeros){
  **/
 void CLineModelExtremaResult::SaveJSON( const CDataStore& store, std::ostream& stream) const
 {
-  std::string scope = store.GetScope( *this ) + "candidatesresults";
-  auto res = store.GetGlobalResult( scope.c_str() );
+  auto res = store.GetGlobalResult( "candidatesresult");
   auto candResults = std::dynamic_pointer_cast<const CPdfCandidateszResult>( res.lock());
   TInt32List order = candResults->Rank;
 
