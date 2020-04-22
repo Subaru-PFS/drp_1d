@@ -137,13 +137,34 @@ Float64 CMultiLine::GetContinuumAtCenterProfile(Int32 subeIdx, const CSpectrumSp
 /**
  * \brief Returns the theoretical support range for the line
  **/
-TInt32Range CMultiLine::EstimateTheoreticalSupport(Int32 subeIdx, const CSpectrumSpectralAxis& spectralAxis, Float64 redshift,  const TFloat64Range &lambdaRange)
+TInt32Range CMultiLine::EstimateTheoreticalSupport(Int32 subeIdx, const CSpectrumSpectralAxis& spectralAxis, Float64 redshift, const TFloat64Range &lambdaRange)
 {
     Float64 mu = GetObservedPosition(subeIdx, redshift);
     Float64 c = GetLineWidth(mu, redshift, m_Rays[subeIdx].GetIsEmission(), m_profile[subeIdx]);
     Float64 winsize = GetNSigmaSupport(m_profile[subeIdx])*c;
 
-    TInt32Range supportRange = EstimateIndexRange(subeIdx, spectralAxis, redshift, lambdaRange, winsize);
+    TInt32Range supportRange = EstimateIndexRange(spectralAxis, mu, lambdaRange, winsize);
+
+    m_StartTheoretical[subeIdx] = supportRange.GetBegin();
+    m_EndTheoretical[subeIdx] = supportRange.GetEnd();
+    m_StartNoOverlap[subeIdx] = supportRange.GetBegin();
+    m_EndNoOverlap[subeIdx] = supportRange.GetEnd();
+
+    if(supportRange.GetBegin()>supportRange.GetEnd()) //in this case the line is completely outside the lambdarange
+    {
+        m_OutsideLambdaRangeList[subeIdx]=true;
+    }else{  //in this case the line is completely inside the lambdarange or with partial overlap
+
+        Int32 minLineOverlap = m_OutsideLambdaRangeOverlapThreshold*winsize;
+        Float64 startLbda = spectralAxis[m_StartNoOverlap[subeIdx]];
+        Float64 endLbda = spectralAxis[m_EndNoOverlap[subeIdx]];
+
+        if( startLbda >= (lambdaRange.GetEnd()-minLineOverlap) || endLbda<=(lambdaRange.GetBegin()+minLineOverlap) ){
+            m_OutsideLambdaRangeList[subeIdx]=true;
+        }else{
+            m_OutsideLambdaRangeList[subeIdx]=false;
+        }
+    }
 
     return supportRange;
 }
@@ -151,10 +172,9 @@ TInt32Range CMultiLine::EstimateTheoreticalSupport(Int32 subeIdx, const CSpectru
 /**
  * \brief Returns the index range for a given window size (Angstrom)
  **/
-TInt32Range CMultiLine::EstimateIndexRange(Int32 subeIdx, const CSpectrumSpectralAxis& spectralAxis, Float64 redshift,  const TFloat64Range &lambdaRange, Float64 winsizeAngstrom)
+TInt32Range CMultiLine::EstimateIndexRange(const CSpectrumSpectralAxis& spectralAxis, Float64 mu,  const TFloat64Range &lambdaRange, Float64 winsizeAngstrom)
 {
     TInt32Range supportRange;
-    Float64 mu = GetObservedPosition(subeIdx, redshift);
     Float64 winsize = winsizeAngstrom;
 
     Float64 lambda_start = mu-winsize/2.0;
@@ -201,29 +221,6 @@ void CMultiLine::prepareSupport(const CSpectrumSpectralAxis& spectralAxis, Float
     m_OutsideLambdaRangeList.resize(nRays);
     for(Int32 i=0; i<nRays; i++){
         TInt32Range supportRange = EstimateTheoreticalSupport(i, spectralAxis, redshift, lambdaRange);
-        m_StartTheoretical[i] = supportRange.GetBegin();
-        m_EndTheoretical[i] = supportRange.GetEnd();
-        m_StartNoOverlap[i] = supportRange.GetBegin();
-        m_EndNoOverlap[i] = supportRange.GetEnd();
-
-        if(supportRange.GetBegin()>supportRange.GetEnd()) //in this case the line is completely outside the lambdarange
-        {
-            m_OutsideLambdaRangeList[i]=true;
-        }else{  //in this case the line is completely inside the lambdarange or with partial overlap
-
-            Float64 mu = GetObservedPosition(i, redshift);
-            Float64 c = GetLineWidth(mu, redshift, m_Rays[i].GetIsEmission(), m_profile[i]);
-            Float64 winsize = GetNSigmaSupport(m_profile[i])*c;
-            Int32 minLineOverlap = m_OutsideLambdaRangeOverlapThreshold*winsize;
-            Float64 startLbda = spectralAxis[m_StartNoOverlap[i]];
-            Float64 endLbda = spectralAxis[m_EndNoOverlap[i]];
-
-            if( startLbda >= (lambdaRange.GetEnd()-minLineOverlap) || endLbda<=(lambdaRange.GetBegin()+minLineOverlap) ){
-                m_OutsideLambdaRangeList[i]=true;
-            }else{
-                m_OutsideLambdaRangeList[i]=false;
-            }
-        }
 
         // set the global outside lambda range
         m_OutsideLambdaRange = m_OutsideLambdaRange && m_OutsideLambdaRangeList[i];

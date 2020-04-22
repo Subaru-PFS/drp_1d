@@ -45,8 +45,8 @@ class CLineModelElement
     virtual TInt32Range getTheoreticalSupportSubElt(Int32 subeIdx) = 0;
 
     virtual TInt32Range
-    EstimateIndexRange(Int32 subeIdx, const CSpectrumSpectralAxis &spectralAxis,
-                       Float64 redshift, const TFloat64Range &lambdaRange,
+    EstimateIndexRange(const CSpectrumSpectralAxis &spectralAxis,
+                       Float64 mu, const TFloat64Range &lambdaRange,
                        Float64 winsizeAngstrom) = 0;
 
     virtual Float64 GetContinuumAtCenterProfile(
