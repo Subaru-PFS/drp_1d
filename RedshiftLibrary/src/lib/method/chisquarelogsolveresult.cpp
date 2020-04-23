@@ -15,7 +15,7 @@ CChisquareLogSolveResult::CChisquareLogSolveResult()
 {
     m_type = nType_raw;
     m_scope = "chisquarelog";
-    m_name = "Chisquarelog";
+    m_name = "ChisquareLog";
 }
 
 CChisquareLogSolveResult::~CChisquareLogSolveResult()
