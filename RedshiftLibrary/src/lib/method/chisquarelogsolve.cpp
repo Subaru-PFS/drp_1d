@@ -11,6 +11,7 @@
 #include <RedshiftLibrary/operator/pdfLogresult.h>
 #include <RedshiftLibrary/statistics/pdfcandidateszresult.h>
 
+#include <RedshiftLibrary/statistics/deltaz.h>
 #include <RedshiftLibrary/spectrum/io/fitswriter.h>
 #include <float.h>
 using namespace NSEpic;
@@ -407,9 +408,32 @@ Bool CMethodChisquareLogSolve::ExtractCandidateResults(CDataStore &store, std::v
             Log.LogError( "Extract Proba. for z candidates: no results retrieved from scope: %s", scope_res.c_str());
             throw std::runtime_error("Extract Proba. for z candidates: no results retrieved from scope");
         }
-
+        //Compute Deltaz should happen after marginalization
+        // use it for computing the integrated PDF
+        //TODO: Deltaz computation should be moved elsewhere!!
+        std::vector<Float64> Deltaz;        
+        for (Int32 i = 0; i < zcandidates_unordered_list.size(); i++){
+            Float64 z = zcandidates_unordered_list[i], dz = -1;
+            Int32 ret = -1, deltaz_i = 0, maxIter = 2;
+            while(ret == -1 && deltaz_i < maxIter){//iterate only twice
+                CDeltaz deltaz;
+                Float64 zRangeHalf = 0.002/(deltaz_i+1); 
+                Log.LogInfo("  Method-Chisquarelogsolve: Deltaz computation nb %i with zRangeHalf %f", deltaz_i, zRangeHalf);
+                TFloat64Range range = TFloat64Range(z - zRangeHalf*(1+z), z + zRangeHalf*(1+z));
+                // Int32 ret = deltaz.Compute(m_result->ChiSquare,
+                // m_result->Redshifts, z, range, dz);
+                Int32 ret = deltaz.Compute3ddl(logzpdf1d->valProbaLog,
+                                               logzpdf1d->Redshifts, z, range, dz);
+                if (ret == -1)
+                {
+                    Log.LogWarning("  Method-Chisquarelogsolve: Deltaz computation failed for %f", zRangeHalf);
+                    deltaz_i++; 
+                }
+            }
+            Deltaz.push_back(dz);
+        }
         Log.LogInfo( "  Integrating %d candidates proba.", zcandidates_unordered_list.size() );
-        zcand->Compute(zcandidates_unordered_list, logzpdf1d->Redshifts, logzpdf1d->valProbaLog);
+        zcand->Compute(zcandidates_unordered_list, logzpdf1d->Redshifts, logzpdf1d->valProbaLog, Deltaz);
         
         store.StoreScopedGlobalResult( "candidatesresult", zcand ); 
         store.SetRank(zcand->Rank);
