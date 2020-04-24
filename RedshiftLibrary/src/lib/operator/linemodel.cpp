@@ -1934,9 +1934,9 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
                     Float64 vSupLim;
                     Float64 vStep;
 
-                    Float64 dzInfLim = opt_manvelfit_dzmin;
-                    Float64 dzStep = opt_manvelfit_dzstep;
-                    Float64 dzSupLim = opt_manvelfit_dzmax;
+                    Float64 dzInfLim = roundf(opt_manvelfit_dzmin*10000)/10000;//set precision to 10^4
+                    Float64 dzStep = roundf(opt_manvelfit_dzstep*10000)/10000;
+                    Float64 dzSupLim = roundf(10000*opt_manvelfit_dzmax)/10000;
 
                     if (iLineType == 0)
                     {
