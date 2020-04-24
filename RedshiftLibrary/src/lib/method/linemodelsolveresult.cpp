@@ -1,5 +1,5 @@
 #include <RedshiftLibrary/method/linemodelsolveresult.h>
-
+#include <RedshiftLibrary/statistics/pdfcandidateszresult.h>
 #include <RedshiftLibrary/processflow/context.h>
 #include <RedshiftLibrary/operator/linemodelresult.h>
 #include <stdio.h>
@@ -189,8 +189,12 @@ Bool CLineModelSolveResult::GetBestRedshiftFromPdf(const CDataStore& store,
     auto results = store.GetGlobalResult( scope.c_str() );
     auto lineModelResult = std::dynamic_pointer_cast<const CLineModelResult>( results.lock() );
     //ideally ExtremaPDF should be saved in resultstore as part of lineModelResult object! 
-    TFloat64List ExtremaPDF = store.GetIntgPDF();
-    Int32 bestIdx = store.GetRank()[0];
+    
+    scope = store.GetScope( *this ) + "candidatesresult";
+    auto res = store.GetGlobalResult( scope.c_str() );
+    auto candResults = std::dynamic_pointer_cast<const CPdfCandidateszResult>( res.lock());
+    TFloat64List ExtremaPDF = candResults->ValSumProba;
+    Int32 bestIdx = candResults->Rank[0];
 
     if(results.expired())
         return false;

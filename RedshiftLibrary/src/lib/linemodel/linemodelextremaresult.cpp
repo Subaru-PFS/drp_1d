@@ -1,4 +1,5 @@
 #include <RedshiftLibrary/linemodel/linemodelextremaresult.h>
+#include <RedshiftLibrary/statistics/pdfcandidateszresult.h>
 #include <RedshiftLibrary/processflow/datastore.h>
 
 #include <boost/tokenizer.hpp>
@@ -107,8 +108,11 @@ void CLineModelExtremaResult::SaveLine(const CDataStore &store, std::ostream& st
  **/
 void CLineModelExtremaResult::Save( const CDataStore& store, std::ostream& stream) const
 {
-    //Read directly from store; but couldnt save in the member variable!!!
-    TInt32List Rank_PDF =  store.GetRank();
+    //here there is no scope set--> error in accessing results using GetScope()
+    auto res = store.GetGlobalResult( "candidatesresult"  );
+    auto candResults = std::dynamic_pointer_cast<const CPdfCandidateszResult>( res.lock());
+    TInt32List Rank_PDF = candResults->Rank;
+
     // save extrema list, on 1 line
     if(Extrema.size()>0){
         stream <<  "#Extrema for z = {";
@@ -141,7 +145,7 @@ void CLineModelExtremaResult::Save( const CDataStore& store, std::ostream& strea
             stream << "}" << std::endl;
         }
 
-     TFloat64List ExtremaPDF = store.GetIntgPDF();
+     TFloat64List ExtremaPDF = candResults->ValSumProba;
      if(ExtremaPDF.size()>0){
         stream <<  "#Extrema IntgPDF for z = {";
         for ( int i=0; i<ExtremaPDF.size(); i++)
@@ -597,8 +601,9 @@ if(!zeros){
  **/
 void CLineModelExtremaResult::SaveJSON( const CDataStore& store, std::ostream& stream) const
 {
-  //TODO: check if a re-ordering is useful for firstpass as well
-  TInt32List order =  store.GetRank();
+  auto res = store.GetGlobalResult( "candidatesresult");
+  auto candResults = std::dynamic_pointer_cast<const CPdfCandidateszResult>( res.lock());
+  TInt32List order = candResults->Rank;
 
   stream << "{"<< std::endl;
   // save extrema list, on 1 line
@@ -620,7 +625,7 @@ void CLineModelExtremaResult::SaveJSON( const CDataStore& store, std::ostream& s
     stream << "," << std::endl;
 
     // save extremaPDF list, on 1 line
-    TFloat64List intgPDF = store.GetIntgPDF();
+    TFloat64List intgPDF = candResults->ValSumProba;
     SaveTFloat64List(stream,"z_extremaIntgPDF", intgPDF, {});
     stream << "," << std::endl;
   }
