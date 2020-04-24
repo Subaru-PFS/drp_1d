@@ -626,14 +626,14 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
 
 
 void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
-                                                 const CSpectrum &spectrumContinuum,
-                                                 const CTemplateCatalog &tplCatalog,
-                                                 const TStringList &tplCategoryList,
-                                                 const std::string opt_calibrationPath,
-                                                 const TFloat64Range &lambdaRange,
-                                                 const Float64 redshiftStep,
-                                                 const string zsampling,
-                                                 bool ignoreLinesSupport)
+                                                const CSpectrum &spectrumContinuum,
+                                                const CTemplateCatalog &tplCatalog,
+                                                const TStringList &tplCategoryList,
+                                                const std::string opt_calibrationPath,
+                                                const TFloat64Range &lambdaRange,
+                                                const Float64 redshiftStep,
+                                                const string zsampling,
+                                                bool ignoreLinesSupport)
 {
     boost::chrono::thread_clock::time_point start_tplfitprecompute =
         boost::chrono::thread_clock::now();
@@ -762,7 +762,6 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
             //Float64 priorDataLogCheck = zePriorData[0][0].logpriorTZE;
             //Log.LogInfo("  Operator-Linemodel: check prior data, zePriorData[0][0].logpriorTZE = %e", priorDataLogCheck);
             //*/
-
 
             auto chisquareResult =
                 std::dynamic_pointer_cast<CChisquareResult>(

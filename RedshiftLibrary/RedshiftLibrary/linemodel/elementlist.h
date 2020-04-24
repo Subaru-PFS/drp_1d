@@ -81,6 +81,7 @@ public:
                         Float64 &merit,
                         Float64& fitAmplitude,
                         Float64& fitAmplitudeError,
+                        Bool& fitAmplitudeNegative,
                         Float64 &fitDustCoeff,
                         Int32 &fitMeiksinIdx,
                         Float64& fitDtM,
