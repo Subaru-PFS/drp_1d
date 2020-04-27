@@ -870,8 +870,9 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
         bool bestIsNegative = fitValues.fitAmplitudeNegative;
         negativeAmplitudes.push_back(bestIsNegative);
         if(bestIsNegative) {
-	     Log.LogError("  Operator-Linemodel: Negative amplitude found at z=%.5f: best continuum tpl %s, ampli = %e & error = %e",
-                             redshift, fitValues.tplName.c_str(), fitValues.fitAmplitude, fitValues.fitAmplitudeError);
+            Log.LogError("  Operator-Linemodel: Negative amplitude found at z=%.5f: best continuum tpl %s, amplitude = %e & error = %e",
+                            redshift, fitValues.tplName.c_str(), fitValues.fitAmplitude, fitValues.fitAmplitudeError);
+            throw runtime_error("  Operator-Linemodel: Failed to compute continuum fit. Negative amplitude detected! aborting...");
         }
     }
 }
