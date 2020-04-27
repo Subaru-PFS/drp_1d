@@ -939,13 +939,13 @@ void CLineModelElementList::LoadFitContinuumOneTemplate(const TFloat64Range& lam
   Log.LogInfo("LMfit : Continuum amplitude set Init at %0.00f", fitContinuumAmplitude);
   Log.LogInfo("LMfit : Continuum amplitude error set Init at %0.00f", fitContinuumAmplitudeError);
   Log.LogInfo("LMfit : Continuum %s amplitude is set", fitContinuumAmplitudeNegative ? "positive" : "negative");
-  Log.LogInfo("Lmfit: solve succes %s", (ret? "t": "f"));
+  Log.LogInfo("LMfit : Solve succes %s", (ret? "true": "false"));
   ApplyContinuumOnGrid(tpl, m_Redshift);
 }
 
 /**
  * \brief Generates a continuum from the fitting with a set of templates : uses the chisquare2 operator
- **/
+ */
 void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, Int32 icontinuum, Int32 autoSelect)
 {
     Log.LogDebug("Elementlist, m_fitContinuum_option=%d", m_fitContinuum_option);
@@ -1165,7 +1165,8 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, I
     if(bestTplName!="")
     {
         if(bestFitAmplitudeNegative){
-            Log.LogInfo( "For z=%.5f : Best continuum tpl found: %s has neg. amplitude", m_Redshift, bestTplName.c_str());
+            Log.LogError( "For z=%.5f : Best continuum tpl found: %s has neg. amplitude", m_Redshift, bestTplName.c_str());
+            throw runtime_error("Elementlist, cannot loadfitcontinuum because best template has negative amplitude");
         }else{
             Log.LogInfo( "For z=%.5f : Best continuum tpl found: %s", m_Redshift, bestTplName.c_str());
         }
@@ -1289,8 +1290,8 @@ void CLineModelElementList::setRedshift(Float64 redshift, bool reinterpolatedCon
 }
 
 /**
-Apply the template continuum by interpolating the grid as define in Init COntinuum
-**/
+ * Apply the template continuum by interpolating the grid as define in Init Continuum
+ */
 Int32 CLineModelElementList::ApplyContinuumOnGrid(const CTemplate& tpl, Float64 zcontinuum){
     m_fitContinuum_tplName = tpl.GetName();
 
@@ -1298,7 +1299,7 @@ Int32 CLineModelElementList::ApplyContinuumOnGrid(const CTemplate& tpl, Float64 
     CSpectrumFluxAxis tplFluxAxis = tpl.GetFluxAxis();
     const CSpectrumSpectralAxis& tplSpectralAxis = tpl.GetSpectralAxis();
 
-    //inialize and allocate the gsl objects
+    //initialize and allocate the gsl objects
     Float64* Ysrc = tplFluxAxis.GetSamples();
     const Float64* Xsrc = tplSpectralAxis.GetSamples();
     //apply dust attenuation
@@ -1343,7 +1344,7 @@ Int32 CLineModelElementList::ApplyContinuumOnGrid(const CTemplate& tpl, Float64 
             m_observeGridContinuumFlux[k] = gsl_spline_eval (spline, x, accelerator);//m_fitContinuum_tplFitAmplitude*
 
         }
-        /*//debug:
+      /*//debug:
       // save reflex data
       FILE* f = fopen( "observegrid.txt", "w+" );
       for( Int32 t=0;t<spcSpectralAxis.GetSamplesCount();t++)
@@ -1352,10 +1353,7 @@ Int32 CLineModelElementList::ApplyContinuumOnGrid(const CTemplate& tpl, Float64 
       }
       fclose( f );
       //*/
-
-    }
-
-
+  }
 
   gsl_spline_free (spline);
   gsl_interp_accel_free (accelerator);
