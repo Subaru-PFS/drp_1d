@@ -938,7 +938,7 @@ void CLineModelElementList::LoadFitContinuumOneTemplate(const TFloat64Range& lam
   //*/
   Log.LogInfo("LMfit : Continuum amplitude set Init at %0.00f", fitContinuumAmplitude);
   Log.LogInfo("LMfit : Continuum amplitude error set Init at %0.00f", fitContinuumAmplitudeError);
-  Log.LogInfo("LMfit : Continuum %s amplitude is set", fitContinuumAmplitudeNegative ? "positive" : "negative");
+  Log.LogInfo("LMfit : Continuum %s amplitude is set", fitContinuumAmplitudeNegative ? "negative" : "positive");
   Log.LogInfo("LMfit : Solve succes %s", (ret? "true": "false"));
   ApplyContinuumOnGrid(tpl, m_Redshift);
 }
@@ -1213,7 +1213,7 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, I
                     Log.LogDebug( "    model : LoadFitContinuum, loaded: %s", bestTplName.c_str());
                     Log.LogDebug( "    model : LoadFitContinuum, loaded with A=%e", bestFitAmplitude);
                     Log.LogDebug( "    model : LoadFitContinuum, loaded with A_error=%e", bestFitAmplitudeError);
-                    Log.LogDebug( "    model : LoadFitContinuum, loaded with a %s amplitude", bestFitAmplitudeNegative ? "positive" : "negative");
+                    Log.LogDebug( "    model : LoadFitContinuum, loaded with a %s amplitude", bestFitAmplitudeNegative ? "negative" : "positive");
                     Log.LogDebug( "    model : LoadFitContinuum, loaded with dtm=%e", bestFitDtM);
                     Log.LogDebug( "    model : LoadFitContinuum, loaded with mtm=%e", bestFitMtM);
                     Log.LogDebug( "    model : LoadFitContinuum, loaded with logprior=%e", bestFitLogprior);
