@@ -2020,7 +2020,7 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
                                 m_result->Redshifts[idx];
                     }
 
-                    Int32 nDzSteps = (int)(round((dzSupLim - dzInfLim) / dzStep));
+                    Int32 nDzSteps = round((dzSupLim - dzInfLim) / dzStep);
                     if (nDzSteps == 0)
                     {
                         nDzSteps = 1;
