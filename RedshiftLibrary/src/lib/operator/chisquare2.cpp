@@ -551,12 +551,13 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
 
             Float64 ampl = 0.0;
             Float64 ampl_err = 0.0;
+            Bool ampl_neg = false;
             if( sumT==0 )
             {
                 ampl = 0.0;
                 ampl_err = 0.0;
                 fit = sumS;
-                fittingAmplitudeNegative = 0;
+                ampl_neg = false;
                 //status = nStatus_DataError;
                 //return;
             }else{
@@ -596,7 +597,7 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
 
                 if (ampl < -3*ampl_err)
                 {
-                    fittingAmplitudeNegative = 1;
+                    ampl_neg = true;
                 }
 
                 if(amplForcePositive)
@@ -668,6 +669,7 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
                 fittingMeiksinIdx = meiksinIdx;
                 fittingAmplitude = ampl;
                 fittingAmplitudeError = ampl_err;
+                fittingAmplitudeNegative = ampl_neg;
                 fittingDtM = sumCross;
                 fittingMtM = sumT;
                 fittingLogprior = logprior;
