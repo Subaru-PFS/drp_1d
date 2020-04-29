@@ -210,11 +210,6 @@ Bool CLineModelSolveResult::GetBestRedshiftFromPdf(const CDataStore& store,
     return true;
 }
 
-void CLineModelSolveResult::SetBestZFromPdfOption(std::string str_opt)
-{
-    m_bestRedshiftFromPdfOption = str_opt;
-}
-
 
 Int32 CLineModelSolveResult::GetEvidenceFromPdf(const CDataStore& store, Float64 &evidence) const
 {

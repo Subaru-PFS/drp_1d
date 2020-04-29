@@ -58,13 +58,10 @@ public:
 
     Int32 GetEvidenceFromPdf(const CDataStore& store, Float64 &evidence) const;
 
-    void SetBestZFromPdfOption(std::string str_opt);
-
 private:
 
 
         UInt32 m_bestRedshiftMethod = 2;
-        std::string m_bestRedshiftFromPdfOption = "maxintgproba";
 
 };
 

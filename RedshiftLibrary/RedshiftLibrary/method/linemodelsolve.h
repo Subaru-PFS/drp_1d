@@ -124,7 +124,6 @@ private:
 
     std::string m_opt_pdfcombination;
     std::string m_opt_pdf_margAmpCorrection="no";
-    std::string m_opt_bestz_option= "maxintgproba"; //"maxproba"
     Float64 m_opt_stronglinesprior;
     Float64 m_opt_haPrior;
     Float64 m_opt_euclidNHaEmittersPriorStrength;
