@@ -193,6 +193,11 @@ const std::string& CRay::GetVelGroupName() const
  * This function converts lambda vacuum to lambda air
  *
  * see. Morton 2000 ApJS, 130, 403-436 (https://iopscience.iop.org/article/10.1086/317349)
+ * 
+ * Accomodate the equation to PFS by setting s to cte = 0.8,  i.e., average factor for PFS wavelength.
+ * By doing so, we zero out the variability in wavelength caused by the vacuum-to-air conversion.
+ * This allows the conversion on the input line-catalog and then the redshift 
+ * (if not, we would have to apply the conversion after redshifting) 
  */
 void CRay::ConvertVacuumToAir()
 {
