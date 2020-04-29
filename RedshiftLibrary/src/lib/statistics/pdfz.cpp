@@ -100,7 +100,7 @@ Float64 CPdfz::logSumExpTrick(TFloat64List valproba, TFloat64List redshifts,
     else
         logfactor = valproba[1] + log( (redshifts[2] - redshifts[0]) * 0.5 );
     Log.LogDebug(
-        "Pdfz: Pdfz computation: using maxi value for log-sum-exp trick=%e",
+        "Pdfz: Pdfz computation: using common factor value for log-sum-exp trick=%e",
         logfactor);
 
     Float64 sumModifiedExp = 0.0;
@@ -844,7 +844,7 @@ Int32 CPdfz::getPmis(std::vector<Float64> redshifts,
 
     return 0;
 }
-
+///Mira
 std::vector<Float64> CPdfz::GetConstantLogZPrior(UInt32 nredshifts)
 {
     std::vector<Float64> zPrior(nredshifts, 1.0);
@@ -1180,7 +1180,7 @@ Int32 CPdfz::Marginalize(TFloat64List redshifts,
             Log.LogError("Pdfz: sumPriors should be close to 1... !!!");
         }
     }
-
+//Mira: meritresults corresponds probably to results for different templates
     for (Int32 km = 0; km < meritResults.size(); km++)
     {
         // Todo: Check if the status is OK ?
@@ -1204,7 +1204,8 @@ Int32 CPdfz::Marginalize(TFloat64List redshifts,
             //                Log.LogInfo("Pdfz: Marginalize: for km=%d,
             //                logEvidence=%e", km, MaxiLogEvidence);
             //            }
-            Float64 logEvidenceWPriorM = logEvidence + (Float64)logPriorModel[km];
+    //Mira: taking into account priors on models        
+            Float64 logEvidenceWPriorM = logEvidence + logPriorModel[km];
 
             LogEvidencesWPriorM.push_back(logEvidenceWPriorM);
             if (MaxiLogEvidence < logEvidenceWPriorM)
