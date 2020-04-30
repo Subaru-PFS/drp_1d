@@ -135,8 +135,14 @@ Int32 CPdfCandidateszResult::Compute( std::vector<Float64> zc,  std::vector<Floa
             }
         }
     }
-
-    SortByRank();
+    //Didier proposes that everythings stays in the first-pass order
+    //Rank is used when printing
+    //SortByRank();
+    for (Int32 i = 0 ; i < Redshifts.size() ; i++)
+    {
+        Rank[i] = i;
+    }
+    SortByValSumProbaInt(Rank);//update only ranks based on valproba
     return 0;
 }
 
@@ -158,13 +164,14 @@ void CPdfCandidateszResult::Save( const CDataStore& store, std::ostream& stream 
         stream << "\t" << "gaussAmp_unused" << "\t" << "gaussAmpErr_unused" << "\t" << "gaussSigma_unused" << "\t" << "gaussSigmaErr_unused";
     }
     stream  << "\n";
-    for(Int32 k=0; k<Redshifts.size(); k++)
+    for(Int32 i=0; i<Redshifts.size(); i++)
     {
-        stream << k << "\t"; 
+        Int32 k = Rank[i]; //use final rank for the output order
+        stream << i << "\t"; 
         stream << ExtremaIDs[k] << "\t";
         stream << Redshifts[k] << "\t";
         stream << ValSumProba[k] << "\t";
-        stream << Rank[k] << "\t";
+        stream << i << "\t";
         stream << Deltaz[k] << "\t";
         //only for method 1, but leave columns with -1 value ste in compute()
         stream << GaussAmp[k] << "\t";
@@ -180,13 +187,14 @@ void CPdfCandidateszResult::Save( const CDataStore& store, std::ostream& stream 
 void CPdfCandidateszResult::SaveLine( const CDataStore& store, std::ostream& stream ) const
 {
     stream  << store.GetSpectrumName() << "\t" << store.GetProcessingID() << "\t";
-    for(Int32 k=0; k<Redshifts.size(); k++)
+    for(Int32 i=0; i<Redshifts.size(); i++)
     {
-        stream << k << "\t";
+        Int32 k = Rank[i];
+        stream << i << "\t";
         stream << ExtremaIDs[k] << "\t";
         stream << Redshifts[k] << "\t";
         stream << ValSumProba[k] << "\t";
-        stream << Rank[k] << "\t";
+        stream << i << "\t"; 
         stream << Deltaz[k] << "\t";
         stream << GaussAmp[k] << "\t";
         stream << GaussSigma[k] << "\t"; 
@@ -194,6 +202,7 @@ void CPdfCandidateszResult::SaveLine( const CDataStore& store, std::ostream& str
     stream << std::endl;
 }
 
+//Mira: TODO: delete all below functions except sortByValSumProbaInt
 void CPdfCandidateszResult::SortByRank()
 {
     for (Int32 i = 0 ; i < Redshifts.size() ; i++)
