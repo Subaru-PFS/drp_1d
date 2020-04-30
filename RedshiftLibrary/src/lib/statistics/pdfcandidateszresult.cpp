@@ -135,9 +135,7 @@ Int32 CPdfCandidateszResult::Compute( std::vector<Float64> zc,  std::vector<Floa
             }
         }
     }
-    //Didier proposes that everythings stays in the first-pass order
-    //Rank is used when printing
-    //SortByRank();
+
     for (Int32 i = 0 ; i < Redshifts.size() ; i++)
     {
         Rank[i] = i;
@@ -202,54 +200,6 @@ void CPdfCandidateszResult::SaveLine( const CDataStore& store, std::ostream& str
     stream << std::endl;
 }
 
-//Mira: TODO: delete all below functions except sortByValSumProbaInt
-void CPdfCandidateszResult::SortByRank()
-{
-    for (Int32 i = 0 ; i < Redshifts.size() ; i++)
-    {
-        Rank[i] = i;
-    }
-    SortByValSumProbaInt(Rank);//update ranks based on valproba
-    SortIDsByValSumProba(ExtremaIDs);//update ranks based on valproba
-    SortByValSumProba(Redshifts);
-    for (Int32 i = 0; i <Rank.size(); i++){
-        if(Rank[i]!=i){
-            Log.LogDebug("Zcand %f has his rank updated from %d to %d \n", Redshifts[i], i, Rank[i]);
-        }
-    }
-    SortByValSumProba(ValSumProba);
-    SortByValSumProba(Deltaz);
-    if(optMethod==1)
-    {
-        SortByValSumProba(GaussAmp);
-        SortByValSumProba(GaussAmpErr);
-        SortByValSumProba(GaussSigma);
-        SortByValSumProba(GaussSigmaErr);
-    }  
-}
-
-void CPdfCandidateszResult::SortByValSumProba(TFloat64List& flist)
-{
-    //sort the valProbaSum and reorder flist accordingly
-    TFloat64List sortedProba;
-    TFloat64List sortedFlist;
-
-    // This is a vector of {value,index} pairs
-    vector<pair<Float64,Float64> > vp;
-    vp.reserve(Redshifts.size());
-    for (Int32 i = 0 ; i < Redshifts.size() ; i++) {
-        vp.push_back(make_pair(ValSumProba[i], flist[i]));
-    }
-    std::sort(vp.rbegin(), vp.rend()); //sort reverse order
-    for (Int32 i = 0 ; i < vp.size() ; i++) {
-        sortedProba.push_back(vp[i].first);
-        sortedFlist.push_back(vp[i].second);
-    }
-
-    for (Int32 i = 0 ; i < Redshifts.size() ; i++) {
-        flist[i] = sortedFlist[i];
-    }
-}
 
 void CPdfCandidateszResult::SortByValSumProbaInt(TInt32List& flist)
 {
@@ -259,29 +209,6 @@ void CPdfCandidateszResult::SortByValSumProbaInt(TInt32List& flist)
 
     // This is a vector of {value,index} pairs
     vector<pair<Float64,Int32> > vp;
-    vp.reserve(Redshifts.size());
-    for (Int32 i = 0 ; i < Redshifts.size() ; i++) {
-        vp.push_back(make_pair(ValSumProba[i], flist[i]));
-    }
-    std::sort(vp.rbegin(), vp.rend()); //sort reverse order
-    for (Int32 i = 0 ; i < vp.size() ; i++) {
-        sortedProba.push_back(vp[i].first);
-        sortedFlist.push_back(vp[i].second);
-    }
-
-    for (Int32 i = 0 ; i < Redshifts.size() ; i++) {
-        flist[i] = sortedFlist[i];
-    }
-}
-
-void CPdfCandidateszResult::SortIDsByValSumProba(std::vector<std::string>& flist)
-{
-    //sort the valProbaSum and reorder flist accordingly
-    TFloat64List sortedProba;
-    std::vector<std::string> sortedFlist;
-
-    // This is a vector of {value,index} pairs
-    vector<pair<Float64,std::string> > vp;
     vp.reserve(Redshifts.size());
     for (Int32 i = 0 ; i < Redshifts.size() ; i++) {
         vp.push_back(make_pair(ValSumProba[i], flist[i]));
