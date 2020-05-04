@@ -252,7 +252,7 @@ Int32 CPdfz::Compute(TFloat64List merits, TFloat64List redshifts,
         Log.LogDetail("Pdfz: Pdfz computation: using logZPrior max=%e",
                       logZPriorMin);
     }
-
+//TODO: check if logZPrior is a cte vector; if so
     logPdf.resize(redshifts.size());
     TFloat64List Xi2_2withPrior;
     for(Int32 i = 0; i<merits.size(); i++){
@@ -844,7 +844,7 @@ Int32 CPdfz::getPmis(std::vector<Float64> redshifts,
 
     return 0;
 }
-///Mira
+// setting cte priors for all redshift values
 std::vector<Float64> CPdfz::GetConstantLogZPrior(UInt32 nredshifts)
 {
     std::vector<Float64> zPrior(nredshifts, 1.0);
@@ -1137,8 +1137,8 @@ Int32 CPdfz::Marginalize(TFloat64List redshifts,
 
     std::vector<Float64> logPriorModel;
     if (/*false &&*/ modelPriors.size() != meritResults.size())
-    {
-        Float64 priorModelCst = 1.0 / (meritResults.size());
+    
+        Float64 priorModelCst = 1.0 / ((Float64)meritResults.size());
         Log.LogInfo(
             "Pdfz: Marginalize: no priors loaded, using constant priors (=%f)",
             priorModelCst);
@@ -1147,7 +1147,7 @@ Int32 CPdfz::Marginalize(TFloat64List redshifts,
             logPriorModel.push_back(log(priorModelCst));
         }
     } else
-    {
+    { //we need to check if modelPriors is a const vector passed from linemodelsolve.combinePDF
         /*
         //override modelPriors with pypelid 10 knn templates priors
         logPriorModel.push_back(log(0.1490));
@@ -1180,7 +1180,9 @@ Int32 CPdfz::Marginalize(TFloat64List redshifts,
             Log.LogError("Pdfz: sumPriors should be close to 1... !!!");
         }
     }
-//Mira: meritresults corresponds probably to results for different templates
+
+    std::vector<TFloat64List> logProbaList;
+    TFloat64List logEvidenceList;
     for (Int32 km = 0; km < meritResults.size(); km++)
     {
         // Todo: Check if the status is OK ?
@@ -1190,7 +1192,7 @@ Int32 CPdfz::Marginalize(TFloat64List redshifts,
         TFloat64List logProba;
         Float64 logEvidence;
         Int32 retPdfz = pdfz.Compute(meritResults[km], redshifts, cstLog,
-                                     zPriors[km], logProba, logEvidence);
+                                     zPriors[km], logProba, logEvidence); //here we are passing cte priors over all Z;
         if (retPdfz != 0)
         {
             Log.LogError("Pdfz: Pdfz computation - compute logEvidence: failed "
@@ -1199,12 +1201,14 @@ Int32 CPdfz::Marginalize(TFloat64List redshifts,
             return -1;
         } else
         {
+            //save logProba and logEvidence for later user, instead of recomputing them
+            logProbaList.push_back(logProba);
+            logEvidenceList.push_back(logEvidence);
             //            if(verbose)
             //            {
             //                Log.LogInfo("Pdfz: Marginalize: for km=%d,
             //                logEvidence=%e", km, MaxiLogEvidence);
-            //            }
-    //Mira: taking into account priors on models        
+            //            }        
             Float64 logEvidenceWPriorM = logEvidence + logPriorModel[km];
 
             LogEvidencesWPriorM.push_back(logEvidenceWPriorM);
@@ -1224,7 +1228,7 @@ Int32 CPdfz::Marginalize(TFloat64List redshifts,
     {
         sumModifiedEvidences += exp(LogEvidencesWPriorM[k] - MaxiLogEvidence);
     }
-    Float64 logSumEvidence = MaxiLogEvidence + log(sumModifiedEvidences);
+    Float64 logSumEvidence = MaxiLogEvidence + log(sumModifiedEvidences); //here is the marginalized evidence, used for classification
     if (verbose)
     {
         Log.LogInfo("Pdfz: Marginalize: logSumEvidence=%e", logSumEvidence);
@@ -1239,10 +1243,13 @@ Int32 CPdfz::Marginalize(TFloat64List redshifts,
 
         // Todo: Check if the status is OK ?
         // meritResult->Status[i] == COperator::nStatus_OK
-
-        CPdfz pdfz;
         TFloat64List logProba;
         Float64 logEvidence;
+        logProba = logProbaList[km];
+        logEvidence = logEvidenceList[km];
+/*
+        CPdfz pdfz;
+        //recomputing pdfz!!
         Int32 retPdfz = pdfz.Compute(meritResults[km], redshifts, cstLog,
                                      zPriors[km], logProba, logEvidence);
         if (retPdfz != 0)
@@ -1250,7 +1257,8 @@ Int32 CPdfz::Marginalize(TFloat64List redshifts,
             Log.LogError("Pdfz: Pdfz computation failed for result km=%d", km);
             return -1;
         } else
-        {
+        {*/
+
             if (!initPostMarg)
             {
                 nSum.resize(redshifts.size());
@@ -1265,6 +1273,7 @@ Int32 CPdfz::Marginalize(TFloat64List redshifts,
                     nSum[k] = 0;
                 }
                 initPostMarg = true;
+                postmargZResult->valEvidenceLog = logSumEvidence;
             } else
             {
                 // check if the redshift bins are the same
@@ -1280,7 +1289,6 @@ Int32 CPdfz::Marginalize(TFloat64List redshifts,
                 }
             }
 
-            postmargZResult->valEvidenceLog = logSumEvidence;
             for (UInt32 k = 0; k < redshifts.size(); k++)
             {
                 if (true /*meritResult->Status[k]== COperator::nStatus_OK*/) // todo: check (temporarily considers status is always OK for linemodel tplshape)
@@ -1299,7 +1307,7 @@ Int32 CPdfz::Marginalize(TFloat64List redshifts,
                     nSum[k]++;
                 }
             }
-        }
+        //}
     }
 
     // THIS DOES NOT ALLOW Marginalization with coverage<100% for ALL templates
