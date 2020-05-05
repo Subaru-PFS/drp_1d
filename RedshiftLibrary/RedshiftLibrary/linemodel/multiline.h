@@ -25,7 +25,8 @@ public:
     ~CMultiLine();
 
     std::string GetRayName(Int32 subeIdx);
-    Float64 GetObservedPosition(Int32 subeIdx, Float64 redshift);
+    Float64 GetObservedPosition(Int32 subeIdx, Float64 redshift, Bool doAsymfitdelta=true);
+    Float64 GetLineProfileAtRedshift(Int32 subeIdx, Float64 redshift, Float64 x);
     Float64 GetWidth(Int32 subeIdx, Float64 redshift);
     Float64 GetSignFactor(Int32 subeIdx);
     std::vector<CRay> GetRays();
@@ -85,8 +86,6 @@ private:
 
     Float64 m_absLinesLimit;
 
-    TFloat64List        mBuffer_mu;
-    TFloat64List        mBuffer_c;
     CRay::TProfileList  m_profile;
 
 

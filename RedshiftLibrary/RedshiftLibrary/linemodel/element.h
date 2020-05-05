@@ -123,7 +123,7 @@ class CLineModelElement
     Float64 GetAsymfitDelta();
 
     virtual Float64 GetSignFactor(Int32 subeIdx) = 0;
-    virtual Float64 GetObservedPosition(Int32 subeIdx, Float64 redshift) = 0;
+    virtual Float64 GetObservedPosition(Int32 subeIdx, Float64 redshift, Bool doAsymfitdelta=true) = 0;
     virtual Float64 GetWidth(Int32 subeIdx, Float64 redshift) = 0;
     Int32 GetSize();
     virtual std::vector<CRay> GetRays() = 0;
