@@ -861,14 +861,12 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
                 m_model->m_opt_fitcontinuum_maxCount);
 
     // Check if best continuum amplitudes are negative fitted amplitudes
-    std::vector<bool> negativeAmplitudes;
     Int32 icontinuum = 0;
     for (Int32 i = 0; i < nredshiftsTplFitResults; i++)
     {
         Float64 redshift = redshiftsTplFit[i];
         CTemplatesFitStore::TemplateFitValues fitValues = tplfitStore->GetFitValues(redshift, icontinuum);
         bool bestIsNegative = fitValues.fitAmplitudeNegative;
-        negativeAmplitudes.push_back(bestIsNegative);
         if(bestIsNegative) {
             Log.LogError("  Operator-Linemodel: Negative amplitude found at z=%.5f: best continuum tpl %s, amplitude = %e & error = %e",
                             redshift, fitValues.tplName.c_str(), fitValues.fitAmplitude, fitValues.fitAmplitudeError);
