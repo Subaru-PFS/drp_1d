@@ -487,9 +487,9 @@ Float64 CLineModelElementList::GetContinuumError(Int32 eIdx, Int32 subeIdx)
     TFloat64Range lambdaRange = spectralAxis.GetLambdaRange(); //using the full wavelength range for this error estimation
     Float64 winsizeAngstrom = 150;
 
-    TInt32Range indexRange = m_Elements[eIdx]->EstimateIndexRange(subeIdx,
-                                                                    spectralAxis,
-                                                                    m_Redshift,
+    Float64 mu = m_Elements[eIdx]->GetObservedPosition(subeIdx, m_Redshift);
+    TInt32Range indexRange = m_Elements[eIdx]->EstimateIndexRange(spectralAxis,
+                                                                    mu,
                                                                     lambdaRange,
                                                                     winsizeAngstrom);
 
@@ -557,9 +557,9 @@ Int32 CLineModelElementList::GetFluxDirectIntegration(TInt32List eIdx_list,
         Float64 mu = m_Elements[eIdx]->GetObservedPosition(subeIdx, m_Redshift);
         Float64 instrumentSigma = mu/m_resolution;
         Float64 winsizeAngstrom = instrumentSigma*nsigma;
-        TInt32Range indexRange = m_Elements[eIdx]->EstimateIndexRange(subeIdx,
-                                                                      spectralAxis,
-                                                                      m_Redshift,
+
+        TInt32Range indexRange = m_Elements[eIdx]->EstimateIndexRange(spectralAxis,
+                                                                      mu,
                                                                       lambdaRange,
                                                                       winsizeAngstrom);
 

@@ -224,27 +224,25 @@ Float64 CLineModelElement::GetLineProfile(CRay::TProfile profile, Float64 x, Flo
     case CRay::ASYMFIXED:
         coeff = m_asymfit_sigma_coeff;
         sigma = sigma*coeff;
+        alpha = m_asymfit_alpha;
 
-        //*
         //correction in order to have the line shifted on the mean: from https://en.wikipedia.org/wiki/Skew_normal_distribution
-        delta = m_asymfit_alpha/std::sqrt(1.+m_asymfit_alpha*m_asymfit_alpha);
+        delta = alpha/std::sqrt(1.+alpha*alpha);
         muz = delta*sqrt(2./M_PI);
-        xc = xc + m_asymfit_sigma_coeff*muz;
-        //*/
+        xc = xc + sigma*muz;
 
         /*
         //correction in order to have the line shifted on the mode: from https://en.wikipedia.org/wiki/Skew_normal_distribution
-        delta = m_asymfit_alpha/std::sqrt(1.+m_asymfit_alpha*m_asymfit_alpha);
+        delta = alpha/std::sqrt(1.+alpha*alpha);
         muz = delta*sqrt(2./M_PI);
         sigmaz = std::sqrt(1-muz*muz);
         gamma1 = ((4-M_PI)/2.0)*pow(delta*std::sqrt(2/M_PI), 3.)/pow(1-2*delta*delta/M_PI, 3./2.);
-        m0 = muz - gamma1*sigmaz/2.0 - 0.5*exp(-2*M_PI/m_asymfit_alpha);
-        xc = xc + m_asymfit_sigma_coeff*m0;
+        m0 = muz - gamma1*sigmaz/2.0 - 0.5*exp(-2*M_PI/alpha);
+        xc = xc + sigma*m0;
         //*/
 
-        xcd = xc+m_asymfit_delta;
+        xcd = xc + m_asymfit_delta;
         xsurc = xcd/sigma;
-        alpha = m_asymfit_alpha;
         val = exp(-0.5*xsurc*xsurc)*(1.0+erf(alpha/sqrt(2.0)*xsurc));
         break;
     case CRay::EXTINCT:
@@ -281,7 +279,7 @@ Float64 CLineModelElement::GetLineFlux(CRay::TProfile profile, Float64 sigma, Fl
         break;
     case CRay::ASYMFIT:
     case CRay::ASYMFIXED:
-        val = A*sigma*m_asymfit_sigma_coeff*sqrt(2*M_PI); //not checked if this analytic integral is correct
+        val = A*sigma*m_asymfit_sigma_coeff*sqrt(2*M_PI);
         break;
     default:
         Log.LogError("Invalid ray profile for GetLineFlux : %d", profile);
@@ -293,7 +291,9 @@ Float64 CLineModelElement::GetLineFlux(CRay::TProfile profile, Float64 sigma, Fl
 Float64 CLineModelElement::GetLineProfileDerivZ(CRay::TProfile profile, Float64 x, Float64 lambda0, Float64 redshift, Float64 sigma){
   Float64 xc = x-lambda0*(1+redshift);
   Float64 val=0.0;
-  Float64 xsurc, coeff, alpha, xcd;
+  Float64 xsurc, xsurc2, coeff, alpha, alpha2, xcd;
+  Float64 muz, sigmaz, delta, gamma1, m0;
+
 
   switch (profile) {
   case CRay::SYM:
@@ -310,25 +310,44 @@ Float64 CLineModelElement::GetLineProfileDerivZ(CRay::TProfile profile, Float64 
       coeff = m_asym_sigma_coeff;
       sigma = sigma*coeff;
       xsurc = xc/sigma;
+      xsurc2 = xsurc*xsurc;
       alpha = m_asym_alpha;
-      val = lambda0 /sigma * xsurc * exp(-0.5*xsurc*xsurc) *(1.0+erf(alpha/sqrt(2.0)*xsurc)) -alpha * lambda0 /sqrt(2*M_PI) /sigma * exp(-(1+alpha*alpha)/2 * xsurc * xsurc);
+      val = lambda0 /sigma * xsurc * exp(-0.5*xsurc2) *(1.0+erf(alpha/sqrt(2.0)*xsurc)) -alpha * lambda0 /sqrt(2*M_PI) /sigma * exp(-(1+alpha*alpha)/2 * xsurc2);
       break;
   case CRay::ASYM2:
       coeff = m_asym2_sigma_coeff;
       sigma = sigma*coeff;
       xsurc = xc/sigma;
+      xsurc2 = xsurc*xsurc;
       alpha = m_asym2_alpha;
-      val = lambda0 /sigma * xsurc * exp(-0.5*xsurc*xsurc) *(1.0+erf(alpha/sqrt(2.0)*xsurc)) -alpha * lambda0 /sqrt(2*M_PI) /sigma * exp(-(1+alpha*alpha)/2 * xsurc * xsurc);
+      val = lambda0 /sigma * xsurc * exp(-0.5*xsurc2) *(1.0+erf(alpha/sqrt(2.0)*xsurc)) -alpha * lambda0 /sqrt(2*M_PI) /sigma * exp(-(1+alpha*alpha)/2 * xsurc2);
       break;
   case CRay::ASYMFIT:
   case CRay::ASYMFIXED:
       coeff = m_asymfit_sigma_coeff;
-      xcd = xc+m_asymfit_delta;
-
       sigma = sigma*coeff;
-      xsurc = xcd/sigma;
       alpha = m_asymfit_alpha;
-      val = lambda0 /sigma * xsurc * exp(-0.5*xsurc*xsurc) *(1.0+erf(alpha/sqrt(2.0)*xsurc)) -alpha * lambda0 /sqrt(2*M_PI) /sigma * exp(-(1+alpha*alpha)/2 * xsurc * xsurc);
+      alpha2 = alpha*alpha;
+
+      //correction in order to have the line shifted on the mean: from https://en.wikipedia.org/wiki/Skew_normal_distribution
+      delta = alpha/std::sqrt(1.+alpha2);
+      muz = delta*sqrt(2./M_PI);
+      xc = xc + sigma*muz;
+
+      /*
+      //correction in order to have the line shifted on the mode: from https://en.wikipedia.org/wiki/Skew_normal_distribution
+      delta = alpha/std::sqrt(1.+alpha2);
+      muz = delta*sqrt(2./M_PI);
+      sigmaz = std::sqrt(1-muz*muz);
+      gamma1 = ((4-M_PI)/2.0)*pow(delta*std::sqrt(2/M_PI), 3.)/pow(1-2*delta*delta/M_PI, 3./2.);
+      m0 = muz - gamma1*sigmaz/2.0 - 0.5*exp(-2*M_PI/alpha);
+      xc = xc + sigma*m0;
+      //*/
+
+      xcd = xc+m_asymfit_delta;
+      xsurc = xcd/sigma;
+      xsurc2 = xsurc*xsurc;
+      val = lambda0 /sigma * xsurc * exp(-0.5*xsurc2) *(1.0+erf(alpha/sqrt(2.0)*xsurc)) -alpha * lambda0 /sqrt(2*M_PI) /sigma * exp(-(1+alpha2)/2 * xsurc2);
       break;
   default:
       Log.LogError("Deriv for Z not IMPLEMENTED for profile %d", profile);
@@ -367,79 +386,86 @@ Float64 CLineModelElement::GetLineProfileDerivSigma(CRay::TProfile profile, Floa
     Float64 val=0.0;
     //Float64 cel = 300000.0;
     Float64 xc = x-x0;
-    Float64 xsurc, coeff, alpha, valsym, valsymd, valasym, arg, valasymd, xcd;
+    Float64 xsurc, xsurc2, coeff, alpha, alpha2, valsym, valsymd, valasym, arg, valasymd, xcd;
+    Float64 muz, sigmaz, delta, gamma1, m0;
     Float64 sigma_rest, z, dataStartLambda;
     Int32 valI;
 
     switch (profile) {
     case CRay::SYM:
         xsurc = xc/sigma;
-        val = xc*xc  /(sigma*sigma*sigma) * exp(-0.5*xsurc*xsurc);
+        xsurc2 = xsurc*xsurc;
+        val = xsurc2/sigma * exp(-0.5*xsurc2);
         break;
     case CRay::SYMXL:
         coeff = m_symxl_sigma_coeff;
         sigma = sigma*coeff;
         xsurc = xc/sigma;
-        val = xc*xc/(sigma*sigma*sigma) * exp(-0.5*xsurc*xsurc);
+        xsurc2 = xsurc*xsurc;
+        val = xsurc2/sigma * exp(-0.5*xsurc2);
         break;
     case CRay::ASYM:
         coeff = m_asym_sigma_coeff;
 
         sigma = sigma*coeff;
         xsurc = xc/sigma;
+        xsurc2 = xsurc*xsurc;
         alpha = m_asym_alpha;
-        valsym = exp(-0.5*xsurc*xsurc);
-        valsymd = xc*xc/(sigma*sigma*sigma) * exp(-0.5*xsurc*xsurc);
+        valsym = exp(-0.5*xsurc2);
+        valsymd = coeff * xsurc2/sigma * exp(-0.5*xsurc2);
 
         valasym = (1.0+erf(alpha/sqrt(2.0)*xsurc));
-        arg = alpha*xc/sqrt(2)/sigma;
-        //const Float64 valasymd = -alpha/sqrt(2*M_PI)*xc /(sigma*sigma) /cel*x0*exp(-arg*arg);
-        valasymd = -alpha*sqrt(2)/sqrt(M_PI)*xc /(sigma*sigma)*exp(-arg*arg);
+        valasymd = -coeff*alpha*sqrt(2)/sqrt(M_PI)*xsurc/sigma*exp(-0.5*xsurc2*alpha*alpha);
         val = valsym*valasymd+valsymd*valasym;
-        //val = valsymd;
-
-        //Float64 v = sigma*cel/x0;
-        //val = -sqrt(2)*alpha*cel*(x - x0)*exp(-0.5*pow(cel*(x - x0)/(v*x0),2))*exp(-pow(alpha*cel*(x - x0), 2)/(2*pow(v*x0, 2)))/(sqrt(M_PI)*pow(v,2)*x0) + 1.0*pow(cel*(x - x0),2)*(erf(sqrt(2)*alpha*cel*(x - x0)/(2*v*x0)) + 1)*exp(-0.5*pow(cel*(x - x0)/(v*x0),2))/(pow(v,3)*pow(x0,2));
         break;
     case CRay::ASYM2:
         coeff = m_asym2_sigma_coeff;
 
         sigma = sigma*coeff;
         xsurc = xc/sigma;
+        xsurc2 = xsurc*xsurc;
         alpha = m_asym2_alpha;
-        valsym = exp(-0.5*xsurc*xsurc);
-        valsymd = xc*xc /(sigma*sigma*sigma) * exp(-0.5*xsurc*xsurc);
+        valsym = exp(-0.5*xsurc2);
+        valsymd = coeff*xsurc2/sigma * exp(-0.5*xsurc2);
 
         valasym = (1.0+erf(alpha/sqrt(2.0)*xsurc));
-        arg = alpha*xc/sqrt(2)/sigma;
-        //const Float64 valasymd = -alpha/sqrt(2*M_PI)*xc /(sigma*sigma) /cel*x0*exp(-arg*arg);
-        valasymd = -alpha*sqrt(2)/sqrt(M_PI)*xc /(sigma*sigma)*exp(-arg*arg);
+        valasymd = -coeff*alpha*sqrt(2)/sqrt(M_PI)*xsurc/sigma*exp(-0.5*xsurc2*alpha*alpha);
         val = valsym*valasymd+valsymd*valasym;
-        //val = valsymd;
-
-        //Float64 v = sigma*cel/x0;
-        //val = -sqrt(2)*alpha*cel*(x - x0)*exp(-0.5*pow(cel*(x - x0)/(v*x0),2))*exp(-pow(alpha*cel*(x - x0), 2)/(2*pow(v*x0, 2)))/(sqrt(M_PI)*pow(v,2)*x0) + 1.0*pow(cel*(x - x0),2)*(erf(sqrt(2)*alpha*cel*(x - x0)/(2*v*x0)) + 1)*exp(-0.5*pow(cel*(x - x0)/(v*x0),2))/(pow(v,3)*pow(x0,2));
         break;
     case CRay::ASYMFIT:
     case CRay::ASYMFIXED:
         coeff = m_asymfit_sigma_coeff;
-        xcd = xc+m_asymfit_delta;
-
         sigma = sigma*coeff;
-        xsurc = xcd/sigma;
         alpha = m_asymfit_alpha;
-        valsym = exp(-0.5*xsurc*xsurc);
-        valsymd = xcd*xcd  /(sigma*sigma*sigma) * exp(-0.5*xsurc*xsurc);
+        alpha2 = alpha*alpha;
+
+        //correction in order to have the line shifted on the mean: from https://en.wikipedia.org/wiki/Skew_normal_distribution
+        delta = alpha/std::sqrt(1.+alpha2);
+        muz = delta*sqrt(2./M_PI);
+        xc = xc + sigma*muz;
+
+        /*
+        //correction in order to have the line shifted on the mode: from https://en.wikipedia.org/wiki/Skew_normal_distribution
+        delta = alpha/std::sqrt(1.+alpha2);
+        muz = delta*sqrt(2./M_PI);
+        sigmaz = std::sqrt(1-muz*muz);
+        gamma1 = ((4-M_PI)/2.0)*pow(delta*std::sqrt(2/M_PI), 3.)/pow(1-2*delta*delta/M_PI, 3./2.);
+        m0 = muz - gamma1*sigmaz/2.0 - 0.5*exp(-2*M_PI/alpha);
+        xc = xc + sigma*m0;
+        //*/
+
+        xcd = xc + m_asymfit_delta;
+        xsurc = xcd/sigma;
+        xsurc2 = xsurc * xsurc;
+        valsym = exp(-0.5*xsurc2);
+        valsymd = coeff * (xsurc2 /sigma - muz*xsurc/sigma) * exp(-0.5*xsurc2); // for mean centering
+        /* valsymd = coeff * (xsurc2 /sigma - m0*xsurc/sigma) * exp(-0.5*xsurc2); //for mode centering*/
 
         valasym = (1.0+erf(alpha/sqrt(2.0)*xsurc));
-        arg = alpha*xcd/sqrt(2)/sigma;
-        //const Float64 valasymd = -alpha/sqrt(2*M_PI)*xcd /(sigma*sigma) /cel*x0*exp(-arg*arg);
-        valasymd = -alpha*sqrt(2)/sqrt(M_PI)*xcd /(sigma*sigma)*exp(-arg*arg);
-        val = valsym*valasymd+valsymd*valasym;
-        //val = valsymd;
+        valasymd = coeff  * alpha*sqrt(2)/(sigma*sqrt(M_PI))*(muz - xsurc) * exp(-0.5*xsurc2*alpha2); // for mean centering
+        /* valasymd = coeff  * alpha*sqrt(2)/(sigma*sqrt(M_PI))*(m0 - xsurc) * exp(-0.5*xsurc2*alpha2); // for mode centering */
 
-        //Float64 v = sigma*cel/x0;
-        //val = -sqrt(2)*alpha*cel*(x - x0)*exp(-0.5*pow(cel*(x - x0)/(v*x0),2))*exp(-pow(alpha*cel*(x - x0), 2)/(2*pow(v*x0, 2)))/(sqrt(M_PI)*pow(v,2)*x0) + 1.0*pow(cel*(x - x0),2)*(erf(sqrt(2)*alpha*cel*(x - x0)/(2*v*x0)) + 1)*exp(-0.5*pow(cel*(x - x0)/(v*x0),2))/(pow(v,3)*pow(x0,2));
+        val = valsym * valasymd + valsymd * valasym;
         break;
     case CRay::EXTINCT:
         //NOT IMPLEMENTED FOR THIS PROFILE, to be done when necessary...
