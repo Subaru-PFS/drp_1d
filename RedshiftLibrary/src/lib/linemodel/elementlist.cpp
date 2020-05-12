@@ -105,12 +105,18 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
     m_rigidity = opt_rigidity;
     m_calibrationPath = calibrationPath;
 
+//Mira1: why setting second-pass params at this level in the code, given than this method is called from
+//within ComputeFirstPass and from within OrthogonalizeTemplate???
+//Mira2: In addition, these args are overwritten each time this method is called!! -- non-sense
+//   ---> preliminary solution: move these initialisations to elementlist.h
+//Mira3: m_secondpass_fitContinuum_dustfit and m_secondpass_fitContinuum_igm are also set from within ::ComputeFirstPass, using ::SetSecondpassContinuumFitPrms (only called once!)
+//below should be set using as setter function: 
     //tplfit continuum option: warning, these options not used when using the precomputed continuum fit store (which is recommended)
-    m_secondpass_fitContinuum_dustfit = -10;
+/*    m_secondpass_fitContinuum_dustfit = -10;
     m_secondpass_fitContinuum_igm = 1;
     m_secondpass_fitContinuum_outsidelinesmask = 0; //hardcoded deactivated because ortho templates are used
     m_secondpass_fitContinuum_observedFrame = 0;
-
+*/
     //m_nominalWidthDefaultEmission = 1.15;// suited to new pfs simulations
     m_nominalWidthDefaultEmission = 13.4;// euclid 1 px
     m_nominalWidthDefaultAbsorption = m_nominalWidthDefaultEmission;
@@ -962,6 +968,11 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, I
 
         bool ignoreLinesSupport=m_secondpass_fitContinuum_outsidelinesmask;
         std::vector<CMask> maskList;
+    //Mira: using masks for "poor orthog"
+    //here we dont check if continuum is already orthogonalized or not!?
+    //ignoreLinesSupport == true --> orthogonalization already happened;so we create a masklist that makes fail the application
+    //of mask in SolveContinuum -->ChisquareOperator::Compute
+    //in the case where ortho didnt take place, we dont create masks by calling getOutsideLinesMask
         if(ignoreLinesSupport){
             maskList.resize(1);
             maskList[0]=getOutsideLinesMask();
@@ -1023,7 +1034,7 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, I
                 }
             }
         }
-    }else if(m_fitContinuum_option==1){
+    }else if(m_fitContinuum_option==1){//using precomputed fit store, i.e., fitValues
         CTemplatesFitStore::TemplateFitValues fitValues = m_fitContinuum_tplfitStore->GetFitValues(m_Redshift, icontinuum);
         if(fitValues.tplName=="")
         {
@@ -2703,16 +2714,20 @@ std::vector<CLmfitController*> CLineModelElementList::createLmfitControllers( co
 
 
 
-
-void CLineModelElementList::SetSecondpassContinuumFitPrms(Int32 dustfit, Int32 meiksinfit)
+void CLineModelElementList::SetSecondpassContinuumFitPrms(Int32 dustfit, Int32 meiksinfit, Int32 outsidelinemask, Int32 observedFrame)
 {
     m_secondpass_fitContinuum_dustfit = dustfit;
     m_secondpass_fitContinuum_igm = meiksinfit;
+    m_secondpass_fitContinuum_outsidelinesmask = outsidelinemask; //hardcoded deactivated because ortho templates are used
+    m_secondpass_fitContinuum_observedFrame = observedFrame;
 
     if(1)
     {
         Log.LogInfo( "Elementlist: SetSecondpassContinuumFitPrms fitContinuum_dustfit = %d", m_secondpass_fitContinuum_dustfit );
         Log.LogInfo( "Elementlist: SetSecondpassContinuumFitPrms fitContinuum_igm = %d", m_secondpass_fitContinuum_igm );
+        Log.LogInfo( "Elementlist: SetSecondpassContinuumFitPrms fitContinuum_outsidelinemask = %d", m_secondpass_fitContinuum_outsidelinesmask );
+        Log.LogInfo( "Elementlist: SetSecondpassContinuumFitPrms fitContinuum_observedFrame = %d", m_secondpass_fitContinuum_observedFrame );
+
     }
 }
 
@@ -3176,6 +3191,7 @@ CMask CLineModelElementList::getOutsideLinesMask()
     {
         _mask[i]=1;
     }
+    //Mira: setting masks
     for( UInt32 i=0; i<supportIdxes.size(); i++ )
     {
         _mask[supportIdxes[i]] = 0;
