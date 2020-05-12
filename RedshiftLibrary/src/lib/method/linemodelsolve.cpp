@@ -224,8 +224,6 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
     dataStore.GetScopedParam( "linemodel.modelpriorzStrength", m_opt_modelZPriorStrength, -1);
     dataStore.GetScopedParam( "linemodel.pdfcombination", m_opt_pdfcombination, "marg");
     dataStore.GetScopedParam( "linemodel.pdf.margampcorr", m_opt_pdf_margAmpCorrection, "no");
-    dataStore.GetScopedParam( "linemodel.pdf.bestzoption", m_opt_bestz_option, "maxintgproba");
-
     dataStore.GetScopedParam( "linemodel.saveintermediateresults", m_opt_saveintermediateresults, "no");
 
     //Auto-correct fitting method
@@ -334,7 +332,6 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
     Log.LogInfo( "    -pdf-modelpriorzStrength: %e", m_opt_modelZPriorStrength);
     Log.LogInfo( "    -pdf-combination: %s", m_opt_pdfcombination.c_str()); // "marg";    // "bestchi2";    // "bestproba";
     Log.LogInfo( "    -pdf-margAmpCorrection: %s", m_opt_pdf_margAmpCorrection.c_str());
-    Log.LogInfo( "    -pdf-best z option: %s", m_opt_bestz_option.c_str());
 
     if(m_opt_saveintermediateresults=="yes")
     {
@@ -485,8 +482,6 @@ std::shared_ptr<CLineModelSolveResult> CLineModelSolve::Compute( CDataStore& dat
 
 
     std::shared_ptr<CLineModelSolveResult>  lmsolveresult = std::shared_ptr<CLineModelSolveResult>( new CLineModelSolveResult() );
-    Log.LogInfo("    linemodelsolve: Pdfz option set : %s", m_opt_bestz_option.c_str());
-    lmsolveresult->SetBestZFromPdfOption( m_opt_bestz_option );
     return lmsolveresult;
 }
 
