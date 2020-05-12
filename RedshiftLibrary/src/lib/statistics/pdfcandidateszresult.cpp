@@ -45,7 +45,7 @@ void CPdfCandidateszResult::Resize(Int32 n)
  * Note: Output range includes the multiplication by (1+z).
  * Returns 0 if no overlapping; otherwise 1;
 */
-Int32 CPdfCandidateszResult::SetIntegrationWindows( std::vector<Float64> redshifts,  std::vector<Float64> deltaz, std::vector<Float64>& range_right, std::vector<Float64>& range_left){ 
+Int32 CPdfCandidateszResult::SetIntegrationWindows( std::vector<Float64> Pdfz, std::vector<Float64> redshifts,  std::vector<Float64> deltaz, std::vector<Float64>& range_right, std::vector<Float64>& range_left){ 
     Bool nodz = false;
     Int32 n = redshifts.size();
     if(!deltaz.size()){
@@ -60,8 +60,15 @@ Int32 CPdfCandidateszResult::SetIntegrationWindows( std::vector<Float64> redshif
         Deltaz[i] = deltaz[i]; 
         halfWidth.push_back(3*deltaz[i]*(1 + redshifts[i]));     
         //initialize range boundaries for each candidate
-        range_right.push_back(redshifts[i] + halfWidth[i]);//higher boundary
-        range_left.push_back(redshifts[i] - halfWidth[i]);//lower boundary
+        if(redshifts[i] == Pdfz[Pdfz.size()-1])
+            range_right.push_back(redshifts[i]);
+        else    
+            range_right.push_back(redshifts[i] + halfWidth[i]);//higher boundary
+        
+        if(redshifts[i] == Pdfz[0])
+            range_left.push_back(redshifts[i]);
+        else    
+            range_left.push_back(redshifts[i] - halfWidth[i]);//lower boundary
     };
     // sort zc values to facilitate comparison and keep track of initial order
     vector<pair<Float64,Int32 >> vp;
@@ -102,7 +109,7 @@ Int32 CPdfCandidateszResult::Compute( std::vector<Float64> zc,  std::vector<Floa
     Resize(zc.size());
  
     std::vector<Float64> range_right, range_left; 
-    Int32 b = SetIntegrationWindows(zc, deltaz, range_right, range_left);
+    Int32 b = SetIntegrationWindows( Pdfz, zc, deltaz, range_right, range_left);
     //b == 0 --> no overlapping, b == 1 --> overlapping
     CPdfz pdfz;
     for(Int32 kc=0; kc<zc.size(); kc++)
