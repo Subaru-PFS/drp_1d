@@ -47,10 +47,6 @@ public:
     //TFloat64List           		GaussSkewness; //todo !
 
 private:
-    void SortByRank();
-    void SortByValSumProba(TFloat64List &flist);
-    //to sort IDs
-    void SortIDsByValSumProba(std::vector<std::string>& flist);
     void SortByValSumProbaInt(TInt32List& flist);
 };
 

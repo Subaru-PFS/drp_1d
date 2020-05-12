@@ -200,7 +200,7 @@ Bool CLineModelSolveResult::GetBestRedshiftFromPdf(const CDataStore& store,
         return false;
 
     redshift = lineModelResult->ExtremaResult.Extrema[bestIdx];
-    probaLog = ExtremaPDF[0];
+    probaLog = ExtremaPDF[bestIdx];
     sigma = lineModelResult->ExtremaResult.DeltaZ[bestIdx];
     snrHa = lineModelResult->ExtremaResult.snrHa[bestIdx];
     lfHa = lineModelResult->ExtremaResult.lfHa[bestIdx];

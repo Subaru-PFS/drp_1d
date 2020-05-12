@@ -150,7 +150,7 @@ void CLineModelExtremaResult::Save( const CDataStore& store, std::ostream& strea
         stream <<  "#Extrema IntgPDF for z = {";
         for ( int i=0; i<ExtremaPDF.size(); i++)
         {
-            stream <<  ExtremaPDF[i] << "\t";
+            stream <<  ExtremaPDF[Rank_PDF[i]] << "\t";
         }
         stream << "}" << std::endl;
      }
@@ -180,7 +180,7 @@ if(!zeros){
         stream <<  "#ExtremaDeltaZ for z = {";
         for ( int i=0; i<DeltaZ.size(); i++)
         {
-            stream <<  DeltaZ[i] << "\t";
+            stream <<  DeltaZ[Rank_PDF[i]] << "\t";
         }
         stream << "}" << std::endl;
     }
@@ -626,7 +626,7 @@ void CLineModelExtremaResult::SaveJSON( const CDataStore& store, std::ostream& s
 
     // save extremaPDF list, on 1 line
     TFloat64List intgPDF = candResults->ValSumProba;
-    SaveTFloat64List(stream,"z_extremaIntgPDF", intgPDF, {});
+    SaveTFloat64List(stream,"z_extremaIntgPDF", intgPDF, order);
     stream << "," << std::endl;
   }
     // save extremaMerit list, on 1 line
@@ -638,7 +638,7 @@ void CLineModelExtremaResult::SaveJSON( const CDataStore& store, std::ostream& s
   SaveTFloat64List(stream,"z_ExtremaMeritContinuum",ExtremaMeritContinuum, order);
   stream << "," << std::endl;
   // save extrema Deltaz list, on 1 line
-  SaveTFloat64List(stream,"z_ExtremaDeltaZ",DeltaZ, {});
+  SaveTFloat64List(stream,"z_ExtremaDeltaZ",DeltaZ, order);
   stream << "," << std::endl;
   // save extrema mTransposeM list, on 1 line
   SaveTFloat64List(stream,"z_mTransposeM",mTransposeM, order);
