@@ -29,6 +29,13 @@ Int32 CDeltaz::Compute(TFloat64List merits, TFloat64List redshifts, Float64 reds
     {
         if(iz == -1 && redshift <= redshifts[i2]){
             iz = i2;
+            if(i2 == redshifts.size()-1 && izmax == -1){
+                izmax = iz;
+            }else{
+                if(i2 == 0 && izmin == -1){
+                    izmin = iz;
+                }
+            }
         }
         if(izmin == -1 && (redshiftRange.GetBegin()) <= redshifts[i2]){
             izmin = i2;
@@ -38,16 +45,7 @@ Int32 CDeltaz::Compute(TFloat64List merits, TFloat64List redshifts, Float64 reds
             break;
         }
     }
-    if( iz>-1){
-        if(izmax == -1 && izmin>-1){
-            izmax = iz;
-        }
-        if(izmin == -1 && izmax>-1){
-            izmin = iz;
-        }
-        if(izmin == -1 && izmax == -1)
-            return 1;
-    }else{
+    if( iz==-1 || izmin == -1 || izmax == -1 ){
         return 1;
     }
 
