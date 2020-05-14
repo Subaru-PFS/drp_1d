@@ -66,9 +66,10 @@ Int32 CDeltaz::Compute(TFloat64List merits, TFloat64List redshifts, Float64 reds
         sum2 += xi2*xi2;
     }
     c0 = sum/sum2; 
-    sigma = sqrt(1.0/c0);
-    if(c0<=0) 
+    if(c0<=0){
         return -1;
+    }
+    sigma = sqrt(1.0/c0);
     return 0;
 }
 

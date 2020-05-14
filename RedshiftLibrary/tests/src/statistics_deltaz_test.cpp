@@ -60,7 +60,7 @@ string chi2sample = "#Redshifts	ChiSquare	Overlap\n"
     "0.00370000000000000016375789613221	4.94273889573849737644195556640625e+04\n"
     "0.00379999999999999999236721670570	4.94273989573849758016876876354218e+04\n";
 
-TFloat64Range redshiftRange = TFloat64Range( 0, 6);
+TFloat64Range redshiftRange = TFloat64Range( 0, 5);
 Float64       redshiftStep = 1E-4;
 std::vector<Float64> pdfz = redshiftRange.SpreadOverLog( redshiftStep );
 
@@ -93,6 +93,27 @@ BOOST_AUTO_TEST_CASE(Deltaz)
 {
     //
     Float64 center_redshift = 0.001;
+    Float64 zRangeHalf = 0.0001;
+    TFloat64Range redshiftRange = TFloat64Range( center_redshift-zRangeHalf, center_redshift+zRangeHalf );
+
+    DeltazTestCompute( chi2sample, center_redshift, redshiftRange);
+
+}
+
+BOOST_AUTO_TEST_CASE(Deltazbordermin)
+{
+    //
+    Float64 center_redshift = 0;
+    Float64 zRangeHalf = 0.0001;
+    TFloat64Range redshiftRange = TFloat64Range( center_redshift-zRangeHalf, center_redshift+zRangeHalf );
+
+    DeltazTestCompute( chi2sample, center_redshift, redshiftRange);
+
+}
+BOOST_AUTO_TEST_CASE(Deltazbordermax)
+{
+    //
+    Float64 center_redshift = 0.0038;
     Float64 zRangeHalf = 0.0001;
     TFloat64Range redshiftRange = TFloat64Range( center_redshift-zRangeHalf, center_redshift+zRangeHalf );
 
