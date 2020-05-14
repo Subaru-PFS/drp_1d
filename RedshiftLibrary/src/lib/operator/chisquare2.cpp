@@ -349,6 +349,7 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
         //Loop on the EBMV dust coeff
         for(Int32 kDust=iDustCoeffMin; kDust<=iDustCoeffMax; kDust++)
         {
+            Int32 kDust_ = kDust - iDustCoeffMin; //index used to fill some arrays
             if(ytpl_modified)
             {
                 //re-init flux tpl without dust and other weightin
@@ -550,15 +551,15 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
             }
             if(option_igmFastProcessing && meiksinIdx==0 && sumsIgmSaved==1)
             {
-                sumCross_outsideIGM[kDust] = sumCross-sumCross_IGM;
-                sumT_outsideIGM[kDust] = sumT-sumT_IGM;
-                sumS_outsideIGM[kDust] = sumS-sumS_IGM;
+                sumCross_outsideIGM[kDust_] = sumCross-sumCross_IGM;
+                sumT_outsideIGM[kDust_] = sumT-sumT_IGM;
+                sumS_outsideIGM[kDust_] = sumS-sumS_IGM;
             }
             if(option_igmFastProcessing && meiksinIdx>0)
             {
-                sumCross += sumCross_outsideIGM[kDust];
-                sumT += sumT_outsideIGM[kDust];
-                sumS += sumS_outsideIGM[kDust];
+                sumCross += sumCross_outsideIGM[kDust_];
+                sumT += sumT_outsideIGM[kDust_];
+                sumS += sumS_outsideIGM[kDust_];
             }
 
             if ( numDevs==0 )
@@ -579,7 +580,7 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
                 //status = nStatus_DataError;
                 //return;
             }else{
-    
+
                 if(logpriore.size()==m_ismCorrectionCalzetti->GetNPrecomputedDustCoeffs())
                 {
                     if(logpriore[kDust].A_sigma>0.0 && logpriore[kDust].betaA>0.0)
@@ -676,9 +677,9 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
             fit *= overlapCorrection;
             //*/
         //Note: to avoid coresegmentation errors
-            ChiSquareInterm[kDust - iDustCoeffMin][kM] = fit;
-            IsmCalzettiCoeffInterm[kDust - iDustCoeffMin][kM] = coeffEBMV;
-            IgmMeiksinIdxInterm[kDust - iDustCoeffMin][kM] = meiksinIdx;
+            ChiSquareInterm[kDust_][kM] = fit;
+            IsmCalzettiCoeffInterm[kDust_][kM] = coeffEBMV;
+            IgmMeiksinIdxInterm[kDust_][kM] = meiksinIdx;
 
             if(fit<chiSquare)
             {
