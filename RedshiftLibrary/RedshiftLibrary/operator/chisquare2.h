@@ -33,7 +33,10 @@ public:
                                               std::string opt_interp,
                                               Int32 opt_extinction=0,
                                               Int32 opt_dustFitting=0,
-                                              CPriorHelper::TPriorZEList logpriorze=CPriorHelper::TPriorZEList());
+                                              CPriorHelper::TPriorZEList logpriorze=CPriorHelper::TPriorZEList(),
+                                              Bool keepigmism = false,
+                                              Float64 FitDustCoeff=-1,
+                                              Float64 FitMeiksinIdx=-1);
 
     const COperatorResult* ExportChi2versusAZ( const CSpectrum& spectrum, const CTemplate& tpl,
                                     const TFloat64Range& lambdaRange, const TFloat64List& redshifts,
@@ -69,7 +72,8 @@ private:
                   Int32 opt_extinction=0,
                   Int32 opt_dustFitting=0,
                   CMask spcMaskAdditional=CMask(),
-                  CPriorHelper::TPriorEList logpriore=CPriorHelper::TPriorEList());
+                  CPriorHelper::TPriorEList logpriore=CPriorHelper::TPriorEList(),
+                  bool keepigmism=false);
 
     // buffers for the precomputed fine grid template
     CTemplate       m_templateRebined_bf; //buffer

@@ -35,7 +35,10 @@ public:
                                               std::string opt_interp,
                                               Int32 opt_extinction=0,
                                               Int32 opt_dustFitting=0,
-                                              CPriorHelper::TPriorZEList logpriorze=CPriorHelper::TPriorZEList());
+                                              CPriorHelper::TPriorZEList logpriorze=CPriorHelper::TPriorZEList(),
+                                              Bool keepigmism = false,
+                                              Float64 FitDustCoeff=-1,
+                                              Float64 FitMeiksinIdx=-1);
 
     const Float64*  getDustCoeff(Float64 dustCoeff, Float64 maxLambda);
     const Float64*  getMeiksinCoeff(Int32 meiksinIdx, Float64 redshift, Float64 maxLambda);

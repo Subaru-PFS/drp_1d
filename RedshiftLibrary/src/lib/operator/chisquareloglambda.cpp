@@ -1661,7 +1661,10 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(const CSpe
         std::string opt_interp,
         Int32 opt_extinction,
         Int32 opt_dustFitting,
-        CPriorHelper::TPriorZEList logpriorze)
+        CPriorHelper::TPriorZEList logpriorze,
+        Bool keepigmism,
+        Float64 FitDustCoeff,
+        Float64 FitMeiksinIdx)
 {
     Log.LogInfo(
         "  Operator-ChisquareLog: starting computation for template: %s",

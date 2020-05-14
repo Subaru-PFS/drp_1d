@@ -109,7 +109,8 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
                                    Int32 opt_extinction,
                                    Int32 opt_dustFitting,
                                    CMask spcMaskAdditional,
-                                   CPriorHelper::TPriorEList logpriore)
+                                   CPriorHelper::TPriorEList logpriore,
+                                   bool keepigmism)
 {
     bool verbose = false;
     bool amplForcePositive=true;
@@ -265,9 +266,21 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
 
     //Optionally apply some IGM absorption
     Int32 nIGMCoeffs=1;
+    TInt32List MeiksinList;
     if(opt_extinction)
     {
-        nIGMCoeffs = m_igmCorrectionMeiksin->GetIdxCount();
+        if(keepigmism && fittingMeiksinIdx!=-1){
+            nIGMCoeffs = 1;
+            MeiksinList.push_back(fittingMeiksinIdx);//fill it with only the index passed as argument   
+        }
+        else{
+            nIGMCoeffs = m_igmCorrectionMeiksin->GetIdxCount();
+            for(Int32 mk = 0; mk<nIGMCoeffs; mk++){
+                MeiksinList.push_back(mk);
+            }
+        }
+    }else{//at least have one element
+        MeiksinList.push_back(0);
     }
 
     Bool option_igmFastProcessing = true; //todo: find a way to unit-test this acceleration
@@ -281,8 +294,9 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
 
 
     //Loop on the meiksin Idx
+
     Bool igmLoopUseless_WavelengthRange = false;
-    for(Int32 kMeiksin=0; kMeiksin<nIGMCoeffs; kMeiksin++)
+    for(Int32 kM=0; kM<nIGMCoeffs; kM++)
     {
         if(igmLoopUseless_WavelengthRange)
         {
@@ -298,9 +312,9 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
             }
             break;
         }
-        Int32 meiksinIdx = kMeiksin; //index for the Meiksin curve (0-6; 3 being the median extinction value)
+        Int32 meiksinIdx = MeiksinList[kM]; //index for the Meiksin curve (0-6; 3 being the median extinction value)
 
-        if(option_igmFastProcessing && kMeiksin>0)
+        if(option_igmFastProcessing && meiksinIdx>0)
         {
             lbda_max = m_igmCorrectionMeiksin->GetLambdaMax()*(1+redshift);
             if(lbda_max>currentRange.GetEnd())
@@ -345,6 +359,10 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
             }
 
             Float64 coeffEBMV = m_ismCorrectionCalzetti->GetEbmvValue(kDust);
+            //check that we got the same coeff:
+            if(keepigmism && (coeffEBMV - fittingDustCoeff)<1E-6){//comparing floats
+                Log.LogInfo("Keepihmism: coeffEBMW corresponds to passed param: %f vs %f", coeffEBMV, fittingDustCoeff);
+            }
             //Log.LogInfo("  Operator-Chisquare2: fitting with dust coeff value: %f", coeffEBMV);
 
             Float64 z = redshift;
@@ -514,7 +532,7 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
                         return ;
                     }
 
-                    if(option_igmFastProcessing && kMeiksin==0)
+                    if(option_igmFastProcessing && meiksinIdx==0)
                     {
                         //store intermediate sums for IGM range
                         if(sumsIgmSaved==0)
@@ -530,13 +548,13 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
                     }
                 }
             }
-            if(option_igmFastProcessing && kMeiksin==0 && sumsIgmSaved==1)
+            if(option_igmFastProcessing && meiksinIdx==0 && sumsIgmSaved==1)
             {
                 sumCross_outsideIGM[kDust] = sumCross-sumCross_IGM;
                 sumT_outsideIGM[kDust] = sumT-sumT_IGM;
                 sumS_outsideIGM[kDust] = sumS-sumS_IGM;
             }
-            if(option_igmFastProcessing && kMeiksin>0)
+            if(option_igmFastProcessing && meiksinIdx>0)
             {
                 sumCross += sumCross_outsideIGM[kDust];
                 sumT += sumT_outsideIGM[kDust];
@@ -657,10 +675,10 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
             Float64 overlapCorrection = 1.0/overlapRate;
             fit *= overlapCorrection;
             //*/
-
-            ChiSquareInterm[kDust][kMeiksin] = fit;
-            IsmCalzettiCoeffInterm[kDust][kMeiksin] = coeffEBMV;
-            IgmMeiksinIdxInterm[kDust][kMeiksin] = meiksinIdx;
+        //Note: to avoid coresegmentation errors
+            ChiSquareInterm[kDust - iDustCoeffMin][kM] = fit;
+            IsmCalzettiCoeffInterm[kDust - iDustCoeffMin][kM] = coeffEBMV;
+            IgmMeiksinIdxInterm[kDust - iDustCoeffMin][kM] = meiksinIdx;
 
             if(fit<chiSquare)
             {
@@ -703,7 +721,10 @@ std::shared_ptr<COperatorResult> COperatorChiSquare2::Compute(const CSpectrum& s
                                                               std::string opt_interp,
                                                               Int32 opt_extinction,
                                                               Int32 opt_dustFitting,
-                                                              CPriorHelper::TPriorZEList logpriorze)
+                                                              CPriorHelper::TPriorZEList logpriorze,
+                                                              Bool keepigmism,
+                                                              Float64 FitDustCoeff,
+                                                              Float64 FitMeiksinIdx)
 {
     Log.LogDetail("  Operator-Chisquare2: starting computation for template: %s", tpl.GetName().c_str());
     if(0)
@@ -866,8 +887,8 @@ std::shared_ptr<COperatorResult> COperatorChiSquare2::Compute(const CSpectrum& s
         nDustCoeffs = m_ismCorrectionCalzetti->GetNPrecomputedDustCoeffs();
     }
     Int32 nIGMCoeffs=1;
-    if(opt_extinction)
-    {
+    if(opt_extinction && !keepigmism)
+    { 
         nIGMCoeffs = m_igmCorrectionMeiksin->GetIdxCount();
     }
 
@@ -913,6 +934,10 @@ std::shared_ptr<COperatorResult> COperatorChiSquare2::Compute(const CSpectrum& s
         }
 
         Float64 redshift = result->Redshifts[i];
+        if( keepigmism /*&& opt_extinction && opt_dustFitting>-1 */){
+            result->FitDustCoeff[i] = FitDustCoeff;
+            result->FitMeiksinIdx[i] = FitMeiksinIdx;
+        }
 
         BasicFit( spectrum,
                   tpl,
@@ -939,7 +964,8 @@ std::shared_ptr<COperatorResult> COperatorChiSquare2::Compute(const CSpectrum& s
                   opt_extinction,
                   opt_dustFitting,
                   additional_spcMask,
-                  logp);
+                  logp,
+                  keepigmism);
 
         if(result->Status[i]==nStatus_InvalidProductsError)
         {

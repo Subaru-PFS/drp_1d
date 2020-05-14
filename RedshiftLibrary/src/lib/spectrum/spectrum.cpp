@@ -231,19 +231,19 @@ void CSpectrum::SetName( const char* name )
 
 const Bool CSpectrum::checkFlux( Float64 flux, Int32 index ) const
 {
-    Log.LogDebug("    CSpectrum::checkFlux - Found flux value (=%e) at index=%d", flux, index);
+    //Log.LogDebug("    CSpectrum::checkFlux - Found flux value (=%e) at index=%d", flux, index);
     Bool validValue = true;
     if( std::isnan(flux) ){
         validValue = false;
-        Log.LogDebug("    CSpectrum::checkFlux - Found nan flux value (=%e) at index=%d", flux, index);
+        //Log.LogDebug("    CSpectrum::checkFlux - Found nan flux value (=%e) at index=%d", flux, index);
     }
     if( std::isinf(flux) ){
         validValue = false;
-        Log.LogDebug("    CSpectrum::checkFlux - Found inf flux value (=%e) at index=%d", flux, index);
+        //Log.LogDebug("    CSpectrum::checkFlux - Found inf flux value (=%e) at index=%d", flux, index);
     }
     if( flux != flux ){
         validValue = false;
-        Log.LogDebug("    CSpectrum::checkFlux - Found invalid flux value (=%e) at index=%d", flux, index);
+        //Log.LogDebug("    CSpectrum::checkFlux - Found invalid flux value (=%e) at index=%d", flux, index);
     }
     return validValue;
 }
