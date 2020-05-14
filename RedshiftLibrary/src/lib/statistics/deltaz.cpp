@@ -38,7 +38,16 @@ Int32 CDeltaz::Compute(TFloat64List merits, TFloat64List redshifts, Float64 reds
             break;
         }
     }
-    if(izmin == -1 || izmax == -1 || iz == -1){
+    if( iz>-1){
+        if(izmax == -1 && izmin>-1){
+            izmax = iz;
+        }
+        if(izmin == -1 && izmax>-1){
+            izmin = iz;
+        }
+        if(izmin == -1 && izmax == -1)
+            return 1;
+    }else{
         return 1;
     }
 
