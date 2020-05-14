@@ -1087,8 +1087,11 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, I
 
         //hardcoded parameters
         std::string opt_interp = "lin"; //"precomputedfinegrid"; //
-        Int32 opt_extinction = m_secondpass_fitContinuum_igm;
-        Int32 opt_dustFit = m_secondpass_fitContinuum_dustfit;
+        //we dont want to fit any, but we want that firstpass result is taken into consideration
+        Int32 opt_extinction = m_secondpass_fitContinuum_igm;//these latter are based on param.json: yes or no
+        //below is based on the hardcoded values in Operators: ->Init(0, 0.1, 1), i.e., Dustcoeff indexes go from 0 to 10 and values go from 0 to 1 with a step of 0.1
+        //TODO: this code should be replaced to be resilient to these hard coded values, especially is step and first value changes
+        Int32 opt_dustFit = Int32(m_fitContinuum_tplFitDustCoeff*10); //getDustCoeffIndex(m_fitContinuum_tplFitDustCoeff); //m_secondpass_fitContinuum_dustfit;
         Float64 overlapThreshold = 1.0;
 
         bool ignoreLinesSupport=m_secondpass_fitContinuum_outsidelinesmask;
@@ -1117,8 +1120,8 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, I
                     Float64 fitAmplitude = -1.0;
                     Float64 fitAmplitudeError =-1.0;
                     Bool fitAmplitudeNegative = false;
-                    Float64 fitDustCoeff = -1.0;
-                    Int32 fitMeiksinIdx = -1;
+                    Float64 fitDustCoeff = m_fitContinuum_tplFitDustCoeff;
+                    Int32 fitMeiksinIdx = m_fitContinuum_tplFitMeiksinIdx;
                     Float64 fitDtM = -1.0;
                     Float64 fitMtM = -1.0;
                     Float64 fitLogprior = 0.0;
@@ -1154,6 +1157,10 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, I
                         bestFitLogprior = fitLogprior;
                         bestTplName = tpl.GetName();
                     }
+
+    std::cout<< "Redshift "<< m_Redshift<<" "<< fitDustCoeff << " firstpass idx for DustCoeff " << " : "<<m_fitContinuum_tplFitDustCoeff << "\n";
+    std::cout<< "Redshift "<< m_Redshift<<" "<< fitMeiksinIdx << " firstpass idx for MeiksinIdx "<< " : "<< m_fitContinuum_tplFitMeiksinIdx << "\n";
+        
                     break;
                 }
             }
@@ -1387,6 +1394,10 @@ Bool CLineModelElementList::SolveContinuum(const CSpectrum& spectrum,
         Log.LogError("    model: Failed to get prior for chi2 solvecontinuum.");
         throw runtime_error("    model: Failed to get prior for chi2 solvecontinuum.");
     }
+    bool keepigmism = false;
+    if(fitDustCoeff+fitMeiksinIdx != -2){
+        keepigmism = true;
+    }
 
     // Compute merit function
     //Log.LogInfo("Solving continuum for %s at z=%.4e", tpl.GetName().c_str(), redshifts[0]);
@@ -1400,7 +1411,10 @@ Bool CLineModelElementList::SolveContinuum(const CSpectrum& spectrum,
                                                                                                        opt_interp,
                                                                                                        opt_extinction,
                                                                                                        opt_dustFit,
-                                                                                                       zePriorData) );
+                                                                                                       zePriorData, 
+                                                                                                       keepigmism,
+                                                                                                       fitDustCoeff, 
+                                                                                                       fitMeiksinIdx) );
     if( !chisquareResult )
     {
 
