@@ -840,7 +840,7 @@ Int32 CPdfz::getCandidateGaussFit(std::vector<Float64> redshifts,
     return ret;
 }
 
-Int32   CPdfz::getPmis(std::vector<Float64> redshifts,
+Int32 CPdfz::getPmis(std::vector<Float64> redshifts,
                        std::vector<Float64> valprobalog,
                        Float64 zbest,
                        std::vector<Float64> zcandidates,
