@@ -20,6 +20,12 @@ CDeltaz::~CDeltaz()
 Int32 CDeltaz::Compute(TFloat64List merits, TFloat64List redshifts, Float64 redshift, TFloat64Range redshiftRange, Float64& sigma)
 {
     sigma = -1.0;
+    TFloat64Range refRange = TFloat64Range(redshifts[0], redshifts[redshifts.size()-1]);
+    bool ret = TFloat64Range::Intersect(redshiftRange, refRange, redshiftRange);
+    if(!ret){
+        Log.LogError("  Deltaz: Deltaz range for candidate %f is completely outside the redshift range", redshift);
+        throw runtime_error("Deltaz: Candidate is outside range!");
+    }
 
     //find indexes: iz, izmin and izmax
     Int32 izmin= -1;
@@ -29,13 +35,6 @@ Int32 CDeltaz::Compute(TFloat64List merits, TFloat64List redshifts, Float64 reds
     {
         if(iz == -1 && redshift <= redshifts[i2]){
             iz = i2;
-            if(i2 == redshifts.size()-1 && izmax == -1){
-                izmax = iz;
-            }else{
-                if(i2 == 0 && izmin == -1){
-                    izmin = iz;
-                }
-            }
         }
         if(izmin == -1 && (redshiftRange.GetBegin()) <= redshifts[i2]){
             izmin = i2;
@@ -76,7 +75,13 @@ Int32 CDeltaz::Compute3ddl(TFloat64List merits, TFloat64List redshifts, Float64 
 {
     sigma = -1.0; //default value
     Bool verbose = false;
-
+    
+    TFloat64Range refRange = TFloat64Range(redshifts[0], redshifts[redshifts.size()-1]);
+    bool ret = TFloat64Range::Intersect(redshiftRange, refRange, redshiftRange);
+    if(!ret){
+        Log.LogError("  Deltaz: Deltaz range for candidate %f is completely outside the redshift range", redshift);
+        throw runtime_error("Deltaz: Candidate is outside range!");
+    }
     //find iz, izmin and izmax
     Int32 izmin= -1;
     Int32 iz= -1;

@@ -20,7 +20,7 @@ using namespace std;
 BOOST_AUTO_TEST_SUITE(Statistics_deltaz)
 
 string chi2sample = "#Redshifts	ChiSquare	Overlap\n"
-    "0	4.98333324134186914307065308094025e+04\n"
+    "0	                                4.98333324134186914307065308094025e+04\n"
     "0.00010000000000000000479217360239	4.98333424134186934679746627807617e+04\n"
     "0.00020000000000000000958434720477	4.98333524134186955052427947521210e+04\n"
     "0.00030000000000000002792904796323	4.98333624134186975425109267234802e+04\n"
@@ -57,7 +57,7 @@ string chi2sample = "#Redshifts	ChiSquare	Overlap\n"
     "0.00340000000000000024424906541753	4.94273589573849676526151597499847e+04\n"
     "0.00350000000000000007285838599103	4.94273689573849696898832917213440e+04\n"
     "0.00360000000000000033514857555872	4.94273789573849717271514236927032e+04\n"
-    "0.00370000000000000016375789613221	4.94273889573849737644195556640625e+04\n"
+    "0.00370000000000000016375789613221	4.94373889573849737644195556640625e+04\n"
     "0.00379999999999999999236721670570	4.94273989573849758016876876354218e+04\n";
 
 TFloat64Range redshiftRange = TFloat64Range( 0, 5);
@@ -132,7 +132,7 @@ BOOST_AUTO_TEST_CASE(Deltaz_overlapping1)
     res.Resize(center_redshifts.size());
     res.SetIntegrationWindows(pdfz, center_redshifts,  deltaz, range_right, range_left);
 
-    std::cout <<range_right[0] <<"\n"<< range_right[1] <<"\n" <<range_left[0] <<"\n"<< range_left[1]<<"\n";
+    //std::cout <<range_right[0] <<"\n"<< range_right[1] <<"\n" <<range_left[0] <<"\n"<< range_left[1]<<"\n";
     BOOST_CHECK_CLOSE(range_right[0], correct_range_right[0], 1E-4);
     BOOST_CHECK_CLOSE(range_right[1], correct_range_right[1], 1E-4);
     BOOST_CHECK_CLOSE(range_left[0], correct_range_left[0], 1E-4);
@@ -150,7 +150,7 @@ BOOST_AUTO_TEST_CASE(Deltaz_nooverlapping)
     res.Resize(center_redshifts.size());
     res.SetIntegrationWindows(pdfz, center_redshifts,  deltaz, range_right, range_left);
 
-    std::cout <<range_right[0] <<"\n"<< range_right[1] <<"\n" <<range_left[0] <<"\n"<< range_left[1]<<"\n";
+    //std::cout <<range_right[0] <<"\n"<< range_right[1] <<"\n" <<range_left[0] <<"\n"<< range_left[1]<<"\n";
     BOOST_CHECK_CLOSE(range_right[0], correct_range_right[0], 1E-4);
     BOOST_CHECK_CLOSE(range_right[1], correct_range_right[1], 1E-4);
     BOOST_CHECK_CLOSE(range_left[0], correct_range_left[0], 1E-4);
@@ -168,7 +168,7 @@ BOOST_AUTO_TEST_CASE(Deltaz_overlapping_3)
     res.Resize(center_redshifts.size());
     res.SetIntegrationWindows(pdfz, center_redshifts,  deltaz, range_right, range_left);
 
-    std::cout <<range_right[0] <<"\n"<< range_right[1] <<"\n" <<range_left[0] <<"\n"<< range_left[1]<<"\n";
+    //std::cout <<range_right[0] <<"\n"<< range_right[1] <<"\n" <<range_left[0] <<"\n"<< range_left[1]<<"\n";
     BOOST_CHECK_CLOSE(range_right[0], correct_range_right[0], 1E-4);
     BOOST_CHECK_CLOSE(range_right[1], correct_range_right[1], 1E-4);
     BOOST_CHECK_CLOSE(range_left[0], correct_range_left[0], 1E-4);
@@ -187,8 +187,8 @@ BOOST_AUTO_TEST_CASE(Deltaz_overlapping_4)
     res.Resize(center_redshifts.size());
     res.SetIntegrationWindows(pdfz, center_redshifts, deltaz, range_right, range_left);
 
-    std::cout <<"overlapping 4 \n";
-    std::cout <<range_right[0] <<"\n"<< range_right[1] <<"\n" <<range_left[0] <<"\n"<< range_left[1]<<"\n";
+    //std::cout <<"overlapping 4 \n";
+    //std::cout <<range_right[0] <<"\n"<< range_right[1] <<"\n" <<range_left[0] <<"\n"<< range_left[1]<<"\n";
     BOOST_CHECK_CLOSE(range_right[0], correct_range_right[0], 1E-4);
     BOOST_CHECK_CLOSE(range_right[1], correct_range_right[1], 1E-4);
     BOOST_CHECK_CLOSE(range_left[0], correct_range_left[0], 1E-4);
