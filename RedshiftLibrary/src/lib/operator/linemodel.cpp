@@ -2425,7 +2425,7 @@ Int32 COperatorLineModel::RecomputeAroundCandidates(TPointList input_extremumLis
                 ++show_progress;
             }
             // m_model->SetFittingMethod(opt_fittingmethod);
-
+            //TODO: check that it is still the best peak on the range used to compute Deltaz!!
 
             Log.LogInfo("  Operator-Linemodel: Recomputed extr #%d, idx=%d, z_e.X=%f, m_e.Y=%f",
                         i,
