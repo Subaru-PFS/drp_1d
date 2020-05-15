@@ -46,7 +46,7 @@ using namespace std;
 
 /**
  **/
-COperatorLineModel::COperatorLineModel() { m_maxModelSaveCount = 10; }
+COperatorLineModel::COperatorLineModel() { m_maxModelSaveCount = 20; }
 
 /**
  * \brief Empty destructor.
@@ -176,10 +176,15 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
         restraycatalog.GetFilteredList(typeFilter, forceFilter);
     Log.LogDebug("restRayList.size() = %d", restRayList.size());
 
-    //*
-    //tpl orthogonalization
-    bool enableOrtho = (opt_continuumcomponent == "tplfit" || opt_continuumcomponent == "tplfitauto");
+    //tpl orthogonalization obligatory when doing Full-model
+    //Two methods for orthogonalisation: using line masks or line-free orthogonalisation
+    //               m_opt_tplfit_ignoreLinesSupport = (yes, no) defines which method should be used
+    bool enableOrtho = !m_opt_tplfit_ignoreLinesSupport && (opt_continuumcomponent == "tplfit" || opt_continuumcomponent == "tplfitauto");
     Log.LogInfo("  Operator-Linemodel: TemplatesOrthogonalization enabled = %d", enableOrtho);
+    //orthogonalize templates 
+    //Mira: my guess is that the passage by CTemplatesortho is obligatory!; it s enableortho that will activate the orthog or not
+    //if not activate, templates are returned the same (just different type); otherwise orthog happens
+    //if it's like this, then we just need to make enableOrtho takes into account the value of m_opt_tplfit_ignoreLinesSupport
 
     // prepare continuum templates catalog
     CTemplatesOrthogonalization tplOrtho(
@@ -330,7 +335,10 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
     {
         opt_tplfit_integer_chi2_dustfit=-10;
     }
-    m_model->SetSecondpassContinuumFitPrms(opt_tplfit_integer_chi2_dustfit, m_opt_tplfit_extinction);
+    //should be replaced with option passed in param.json?
+    Int32 observedFrame = 0;
+    //passing the ignorelinesSupport option to the secondpass; //before it was hardcoded to 0
+    m_model->SetSecondpassContinuumFitPrms(opt_tplfit_integer_chi2_dustfit, m_opt_tplfit_extinction, m_opt_tplfit_ignoreLinesSupport, observedFrame);
 
     m_model->m_opt_lya_forcefit=m_opt_lya_forcefit=="yes";
     m_model->m_opt_lya_forcedisablefit=m_opt_lya_forcedisablefit=="yes";
@@ -466,7 +474,9 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
     Log.LogInfo("  Operator-Linemodel: set abs lines limit to %f (ex: -1 means "
                 "disabled)",
                 absLinesLimit);
-
+//Mira: ignorelistmask should take effect here below:
+/*??not sure anymore
+*/
     // Set model parameter: continuum least-square estimation fast
     // note: this fast method requires continuum templates and linemodels to be
     // orthogonal. The velfit option turns this trickier...
@@ -1293,6 +1303,11 @@ Int32 COperatorLineModel::SaveResults(const CSpectrum &spectrum,
     Int32 savedFitContinuumOption = m_model->GetFitContinuum_Option();
     Log.LogInfo("  Operator-Linemodel: Now storing extrema results");
     Int32 extremumCount = m_secondpass_parameters_extremaResult.Extrema.size();
+    if( extremumCount > m_maxModelSaveCount){
+      Log.LogError("COperatorLineModel::SaveResults: ExtremumCount [%d] is greater the maxModelSaveCount [%d]", extremumCount, m_maxModelSaveCount);
+      throw runtime_error("COperatorLineModel::SaveResults: ExtremumCount passed in param.json exceeds the count limit, ie., 10. Abort!");
+    }
+
     m_result->ExtremaResult.Resize(extremumCount);
 
     // Int32 start =
@@ -1557,21 +1572,27 @@ Int32 COperatorLineModel::SaveResults(const CSpectrum &spectrum,
 
         // computing errz (or deltaz, dz...): should probably be computed in
         // linemodelresult.cpp instead ?
-        Float64 dz = -1.;
+        Float64 dz = -1;
         if (m_result->Redshifts.size() > 1)
         {
-            CDeltaz deltaz;
-            Float64 zRangeHalf = 0.005;
-            TFloat64Range range = TFloat64Range(z - zRangeHalf, z + zRangeHalf);
-            // Int32 ret = deltaz.Compute(m_result->ChiSquare,
-            // m_result->Redshifts, z, range, dz);
-            Int32 ret = deltaz.Compute3ddl(m_result->ChiSquare,
-                                           m_result->Redshifts, z, range, dz);
-            if (ret != 0)
-            {
-                Log.LogWarning("  Operator-Linemodel: Deltaz computation failed");
+            Int32 ret = -1, deltaz_i = 0, maxIter = 2;
+            while(ret == -1 && deltaz_i < maxIter){//iterate only twice
+                CDeltaz deltaz;
+                Float64 zRangeHalf = 0.002/(deltaz_i+1); 
+                Log.LogInfo("  Operator-Linemodel: Deltaz computation nb %i with zRangeHalf %f", deltaz_i, zRangeHalf);
+                TFloat64Range range = TFloat64Range(z - zRangeHalf*(1+z), z + zRangeHalf*(1+z));
+                //ret = deltaz.Compute3ddl(m_result->ChiSquare, m_result->Redshifts, z, range, dz);
+                ret = deltaz.Compute(m_result->ChiSquare,
+                                           m_result->Redshifts, z, range, dz);            
+                if (ret == -1)
+                {
+                    Log.LogWarning("  Operator-Linemodel: Deltaz computation failed for %f", zRangeHalf);
+                    deltaz_i++; 
+                }
             }
         }
+        if(dz == -1)    
+            Log.LogError("  Operator-Linemodel: Deltaz for candidate %f couldnt be calculated", z);
         m_result->ExtremaResult.DeltaZ[i] = dz;
 
         // store model Ha SNR & Flux
@@ -2009,7 +2030,7 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
                                 m_result->Redshifts[idx];
                     }
 
-                    Int32 nDzSteps = (int)((dzSupLim - dzInfLim) / dzStep);
+                    Int32 nDzSteps = round((dzSupLim - dzInfLim) / dzStep);
                     if (nDzSteps == 0)
                     {
                         nDzSteps = 1;
