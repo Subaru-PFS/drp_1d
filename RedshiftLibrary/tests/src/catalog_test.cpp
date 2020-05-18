@@ -33,7 +33,6 @@ BOOST_AUTO_TEST_CASE(LoadCatalog)
     BOOST_CHECK( catalog_r.GetTemplateCount( "qso" ) == 1 );
     BOOST_CHECK( catalog_r.GetTemplateCount( "star" ) == 2 );
 
-    //catalog_r.GetTemplateWithoutContinuum(categories);
     categories.push_back("galaxy");
     categories.push_back("star");
     TStringList expected={ "galaxy_test_template_2.txt",

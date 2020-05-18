@@ -1,30 +1,7 @@
 #include <RedshiftLibrary/processflow/context.h>
 
-#include <RedshiftLibrary/processflow/datastore.h>
-#include <RedshiftLibrary/spectrum/spectrum.h>
-#include <RedshiftLibrary/spectrum/io/reader.h>
-#include <RedshiftLibrary/spectrum/template/catalog.h>
-#include <RedshiftLibrary/noise/flat.h>
-#include <RedshiftLibrary/noise/fromfile.h>
-#include <RedshiftLibrary/ray/ray.h>
-#include <RedshiftLibrary/ray/catalog.h>
-#include <RedshiftLibrary/continuum/median.h>
-#include <RedshiftLibrary/continuum/waveletsdf.h>
-#include <RedshiftLibrary/continuum/irregularsamplingmedian.h>
-#include <RedshiftLibrary/continuum/indexes.h>
-#include <RedshiftLibrary/continuum/indexesresult.h>
-
 #include <RedshiftLibrary/log/log.h>
 #include <RedshiftLibrary/debug/assert.h>
-
-#include <RedshiftLibrary/method/blindsolveresult.h>
-#include <RedshiftLibrary/operator/raymatchingresult.h>
-#include <RedshiftLibrary/operator/spectraFluxResult.h>
-
-#include <stdio.h>
-#include <float.h>
-#include <fstream>
-#include <memory>
 
 #include <boost/filesystem.hpp>
 
@@ -52,41 +29,32 @@ CProcessFlowContext::~CProcessFlowContext()
 
 }
 
-void CProcessFlowContext::SmoothFlux(std::shared_ptr<CParameterStore> paramStore)
-{
-    Int64 smoothWidth;
-    paramStore->Get( "smoothWidth", smoothWidth, 0 );
-    if( smoothWidth > 0 )
-      m_Spectrum->GetFluxAxis().ApplyMeanSmooth( smoothWidth );
-}
-
 bool CProcessFlowContext::Init( std::shared_ptr<CSpectrum> spectrum,
                                 const std::string processingID,
                                 std::shared_ptr<const CTemplateCatalog> templateCatalog,
                                 std::shared_ptr<const CRayCatalog> rayCatalog,
                                 std::shared_ptr<CParameterStore> paramStore,
-                                std::shared_ptr<CClassifierStore> zqualStore  )
+                                std::shared_ptr<CClassifierStore> zqualStore )
 {
     Log.LogInfo("Processing context initialization");
 
     m_ClassifierStore = zqualStore;
-
-    m_Spectrum = spectrum;
-    m_SpectrumWithoutContinuum = std::shared_ptr<CSpectrum>( new CSpectrum() );
-    *m_SpectrumWithoutContinuum = *spectrum;
 
     m_TemplateCatalog = templateCatalog;
     m_RayCatalog = rayCatalog;
     m_ParameterStore = paramStore;
     m_ResultStore = std::shared_ptr<COperatorResultStore>( new COperatorResultStore );
 
+    // Spectrum initialization
+    m_Spectrum = spectrum;
+    InitSpectrum();
+
     // DataStore initialization
     m_DataStore = std::shared_ptr<CDataStore>( new CDataStore( *m_ResultStore, *m_ParameterStore ) );
     m_DataStore->SetSpectrumName( m_Spectrum->GetName() );
     m_DataStore->SetProcessingID( processingID );
 
-    // Smooth flux
-    SmoothFlux(paramStore);
+    Log.LogInfo("Processing context is ready");
 
     return true;
 }
@@ -129,7 +97,32 @@ bool CProcessFlowContext::Init( std::shared_ptr<CSpectrum> spectrum,
     }
 
     return Init( spectrum, processingID, templateCatalog, rayCatalog, paramStore, zqualStore );
+}
 
+void CProcessFlowContext::InitSpectrum()
+{
+    // Smooth flux
+    Int64 smoothWidth;
+    m_ParameterStore->Get( "smoothWidth", smoothWidth, 0 );
+    if( smoothWidth > 0 )
+        m_Spectrum->GetFluxAxis().ApplyMeanSmooth(smoothWidth);
+
+    // Continuum removal params
+    std::string medianRemovalMethod;
+    m_ParameterStore->Get( "continuumRemoval.method", medianRemovalMethod, "IrregularSamplingMedian" );
+    m_Spectrum->SetContinuumEstimationMethod(medianRemovalMethod);
+
+    Float64 medianKernelWidth;
+    m_ParameterStore->Get( "continuumRemoval.medianKernelWidth", medianKernelWidth, 75.0 );
+    m_Spectrum->SetMedianWinsize(medianKernelWidth);
+
+    Float64 nscales;
+    m_ParameterStore->Get( "continuumRemoval.decompScales", nscales, 6.0 );
+    m_Spectrum->SetDecompScales((Int32)nscales);
+
+    std::string dfBinPath;
+    m_ParameterStore->Get( "continuumRemoval.binPath", dfBinPath, "absolute_path_to_df_binaries_here" );
+    m_Spectrum->SetWaveletsDFBinPath(dfBinPath);
 }
 
 CParameterStore& CProcessFlowContext::GetParameterStore()
@@ -152,19 +145,14 @@ CDataStore& CProcessFlowContext::GetDataStore()
     return *m_DataStore;
 }
 
+bool CProcessFlowContext::correctSpectrum(Float64 LambdaMin,  Float64 LambdaMax)
+{
+    return m_Spectrum->correctSpectrum( LambdaMin, LambdaMax );
+}
+
 const CSpectrum& CProcessFlowContext::GetSpectrum() const
 {
     return *m_Spectrum;
-}
-
-bool CProcessFlowContext::correctSpectrum(Float64 LambdaMin,  Float64 LambdaMax)
-{
-    return m_Spectrum->correctSpectrum( LambdaMin, LambdaMax ) ;
-}
-
-CSpectrum& CProcessFlowContext::GetSpectrumWithoutContinuum()
-{
-    return *m_SpectrumWithoutContinuum;
 }
 
 const CTemplateCatalog& CProcessFlowContext::GetTemplateCatalog() const

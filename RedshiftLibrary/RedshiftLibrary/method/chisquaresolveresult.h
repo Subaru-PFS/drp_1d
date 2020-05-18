@@ -1,5 +1,5 @@
-#ifndef _REDSHIFT_OPERATOR_CHISQUARESOLVERESULT_
-#define _REDSHIFT_OPERATOR_CHISQUARESOLVERESULT_
+#ifndef _REDSHIFT_METHOD_CHISQUARESOLVERESULT_
+#define _REDSHIFT_METHOD_CHISQUARESOLVERESULT_
 
 #include <RedshiftLibrary/method/solveresult.h>
 #include <RedshiftLibrary/common/datatypes.h>

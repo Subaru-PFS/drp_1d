@@ -1,8 +1,12 @@
 #ifndef _REDSHIFT_PROCESSFLOW_CONTEXT_
 #define _REDSHIFT_PROCESSFLOW_CONTEXT_
 
-#include <RedshiftLibrary/spectrum/template/template.h>
 #include <RedshiftLibrary/processflow/datastore.h>
+#include <RedshiftLibrary/ray/catalog.h>
+#include <RedshiftLibrary/ray/ray.h>
+#include <RedshiftLibrary/spectrum/template/catalog.h>
+#include <RedshiftLibrary/spectrum/template/template.h>
+#include <RedshiftLibrary/spectrum/spectrum.h>
 #include <RedshiftLibrary/spectrum/io/reader.h>
 
 #include <RedshiftLibrary/reliability/zclassifierstore.h>
@@ -17,9 +21,6 @@ namespace NSEpic
 {
 
 class CSpectrum;
-class CContinuum;
-class CPeakStore;
-class CRayCatalog;
 class CTemplateCatalog;
 class CRayCatalog;
 class CParameterStore;
@@ -41,7 +42,7 @@ public:
 
     bool Init(std::shared_ptr<CSpectrum> spectrum,
 	      std::string processingID,
-	      const char* tempalteCatalogPath, const char* rayCatalogPath,
+	      const char* templateCatalogPath, const char* rayCatalogPath,
 	      std::shared_ptr<CParameterStore> paramStore,
 	      std::shared_ptr<CClassifierStore> zqualStore);
 
@@ -52,10 +53,7 @@ public:
 	      std::shared_ptr<CParameterStore> paramStore,
 	      std::shared_ptr<CClassifierStore> zqualStore);
 
-    void SmoothFlux(std::shared_ptr<CParameterStore> paramStore);
-
     const CSpectrum&                GetSpectrum() const;
-    CSpectrum&                      GetSpectrumWithoutContinuum();
     const CTemplateCatalog&         GetTemplateCatalog() const;
     const CRayCatalog&              GetRayCatalog() const;
 
@@ -68,8 +66,8 @@ public:
 
 private:
 
+    void                                       InitSpectrum();
     std::shared_ptr<CSpectrum>                 m_Spectrum;
-    std::shared_ptr<CSpectrum>                 m_SpectrumWithoutContinuum;
 
     std::shared_ptr<const CTemplateCatalog>    m_TemplateCatalog;
     std::shared_ptr<const CRayCatalog>         m_RayCatalog;

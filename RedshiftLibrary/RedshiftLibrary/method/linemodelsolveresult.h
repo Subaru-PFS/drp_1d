@@ -1,5 +1,5 @@
-#ifndef _REDSHIFT_OPERATOR_LINEMODELSOLVERESULT_
-#define _REDSHIFT_OPERATOR_LINEMODELSOLVERESULT_
+#ifndef _REDSHIFT_METHOD_LINEMODELSOLVERESULT_
+#define _REDSHIFT_METHOD_LINEMODELSOLVERESULT_
 
 #include <RedshiftLibrary/method/solveresult.h>
 #include <RedshiftLibrary/common/datatypes.h>
@@ -79,4 +79,3 @@ private:
 }
 
 #endif
-

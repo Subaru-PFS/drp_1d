@@ -162,7 +162,7 @@ public:
 class CTemplateCatalog
 {
 public:
-    CTemplateCatalog( std::string cremovalmethod="Median", Float64 mediankernelsize=75.0, Float64 waveletsScales=8, std::string waveletsDFBinPath="");
+    CTemplateCatalog( std::string cremovalmethod="Median", Float64 mediankernelsize=75.0, Float64 waveletsScales=8.O, std::string waveletsDFBinPath="" );
     void Load( const char* filePath );
     void Add( std::shared_ptr<CTemplate> r );
 };
@@ -175,7 +175,7 @@ public:
             std::shared_ptr<const CTemplateCatalog> templateCatalog,
             std::shared_ptr<const CRayCatalog> rayCatalog,
             std::shared_ptr<CParameterStore> paramStore,
-            std::shared_ptr<CClassifierStore> zqualStore  );
+            std::shared_ptr<CClassifierStore> zqualStore);
   CDataStore& GetDataStore();
   COperatorResultStore& GetResultStore();
 };

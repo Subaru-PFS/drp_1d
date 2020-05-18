@@ -19,7 +19,7 @@ using namespace boost::filesystem;
 /**
  * Variable instantiator constructor.
  */
-CTemplateCatalog::CTemplateCatalog(string cremovalmethod, Float64 mediankernelsize , Float64 waveletsScales, string waveletsDFBinPath)
+CTemplateCatalog::CTemplateCatalog(string cremovalmethod, Float64 mediankernelsize, Float64 waveletsScales, string waveletsDFBinPath)
 {
     m_continuumRemovalMethod = cremovalmethod;
     m_continuumRemovalMedianKernelWidth = mediankernelsize;
@@ -132,14 +132,14 @@ void CTemplateCatalog::Add( std::shared_ptr<CTemplate> r )
         continuum.SetMedianKernelWidth( m_continuumRemovalMedianKernelWidth );
         tmplWithoutCont->RemoveContinuum( continuum );
     }
-    else if( m_continuumRemovalMethod== "IrregularSamplingMedian")
+    else if( m_continuumRemovalMethod == "IrregularSamplingMedian" )
     {
         CContinuumIrregularSamplingMedian continuum;
         continuum.SetMedianKernelWidth( m_continuumRemovalMedianKernelWidth );
         continuum.SetMeanKernelWidth( m_continuumRemovalMedianKernelWidth );
         tmplWithoutCont->RemoveContinuum( continuum );
     }
-    else if( m_continuumRemovalMethod== "waveletsDF")
+    else if( m_continuumRemovalMethod == "waveletsDF" )
     {
         CContinuumDF continuum(m_continuumRemovalWaveletsBinPath);
         tmplWithoutCont->SetDecompScales(m_continuumRemovalWaveletsNScales);

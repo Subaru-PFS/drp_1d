@@ -1,4 +1,3 @@
-
 #include <RedshiftLibrary/method/chisquaresolve.h>
 
 #include <RedshiftLibrary/debug/assert.h>
@@ -24,10 +23,15 @@ CMethodChisquareSolve::~CMethodChisquareSolve()
 }
 
 
-std::shared_ptr<const CChisquareSolveResult>  CMethodChisquareSolve::Compute(  CDataStore& dataStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
-                                                        const CTemplateCatalog& tplCatalog, const TStringList& tplCategoryList,
-                                                        const TFloat64Range& lambdaRange, const TFloat64List& redshifts, Float64 overlapThreshold, 
-                                                        const Float64 radius, std::string opt_interp )
+std::shared_ptr<const CChisquareSolveResult> CMethodChisquareSolve::Compute(CDataStore& dataStore,
+                                                                            const CSpectrum& spc,
+                                                                            const CTemplateCatalog& tplCatalog,
+                                                                            const TStringList& tplCategoryList,
+                                                                            const TFloat64Range& lambdaRange,
+                                                                            const TFloat64List& redshifts,
+                                                                            Float64 overlapThreshold,
+                                                                            const Float64 radius,
+                                                                            std::string opt_interp)
 {
     Bool storeResult = false;
     m_radius = radius;
@@ -40,9 +44,8 @@ std::shared_ptr<const CChisquareSolveResult>  CMethodChisquareSolve::Compute(  C
         for( UInt32 j=0; j<tplCatalog.GetTemplateCount( category ); j++ )
         {
             const CTemplate& tpl = tplCatalog.GetTemplate( category, j );
-            const CTemplate& tplWithoutCont = tplCatalog.GetTemplateWithoutContinuum( category, j );
 
-            Solve( dataStore, spc, spcWithoutCont, tpl, tplWithoutCont, lambdaRange, redshifts, overlapThreshold, nType_full );
+            Solve(dataStore, spc, tpl, lambdaRange, redshifts, overlapThreshold, nType_full);
 
             storeResult = true;
         }
@@ -57,34 +60,21 @@ std::shared_ptr<const CChisquareSolveResult>  CMethodChisquareSolve::Compute(  C
     return NULL;
 }
 
-Bool CMethodChisquareSolve::Solve( CDataStore& dataStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont, const CTemplate& tpl, const CTemplate& tplWithoutCont,
-                               const TFloat64Range& lambdaRange, const TFloat64List& redshifts, Float64 overlapThreshold, Int32 spctype, std::string opt_interp )
+Bool CMethodChisquareSolve::Solve(CDataStore& dataStore,
+                                  const CSpectrum& spc,
+                                  const CTemplate& tpl,
+                                  const TFloat64Range& lambdaRange,
+                                  const TFloat64List& redshifts,
+                                  Float64 overlapThreshold,
+                                  Int32 spctype,
+                                  std::string opt_interp)
 {
-    CSpectrum _spc;
-    CTemplate _tpl;
+    CSpectrum _spc = spc;
+    CTemplate _tpl = tpl;
 
-    if(spctype == nType_continuumOnly){
-        // use continuum only
-        _spc = spc;
-        CSpectrumFluxAxis spcfluxAxis = _spc.GetFluxAxis();
-        spcfluxAxis.Subtract(spcWithoutCont.GetFluxAxis());
-        CSpectrumFluxAxis& sfluxAxisPtr = _spc.GetFluxAxis();
-        sfluxAxisPtr = spcfluxAxis;
-        _tpl = tpl;
-        CSpectrumFluxAxis tplfluxAxis = _tpl.GetFluxAxis();
-        tplfluxAxis.Subtract(tplWithoutCont.GetFluxAxis());
-        CSpectrumFluxAxis& tfluxAxisPtr = _tpl.GetFluxAxis();
-        tfluxAxisPtr = tplfluxAxis;
-    }else if(spctype == nType_full){
-        // use full spectrum
-        _spc = spc;
-        _tpl = tpl;
+    _spc.SetType(spctype);
+    _tpl.SetType(spctype);
 
-    }else if(spctype == nType_noContinuum){
-        // use spectrum without continuum
-        _spc = spcWithoutCont;
-        _tpl = tplWithoutCont;
-    }
     // prepare the unused masks
     std::vector<CMask> maskList;
 

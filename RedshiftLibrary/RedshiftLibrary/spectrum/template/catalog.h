@@ -15,7 +15,7 @@ class CTemplateCatalog
 
 public:
 
-    CTemplateCatalog( std::string cremovalmethod="Median", Float64 mediankernelsize=75.0, Float64 waveletsScales=8, std::string waveletsDFBinPath="");
+    CTemplateCatalog(std::string cremovalmethod="Median", Float64 mediankernelsize=75.0, Float64 waveletsScales=8.0, std::string waveletsDFBinPath="");
     ~CTemplateCatalog();
 
     void Add( std::shared_ptr<CTemplate> );
@@ -25,10 +25,8 @@ public:
 
     const CTemplate& GetTemplate( const std::string& category, UInt32 i ) const;
     const CTemplate& GetTemplateByName(const TStringList& tplCategoryList, const std::string tplName ) const;
-    const CTemplate& GetTemplateWithoutContinuum( const std::string& category, UInt32 i ) const;
 
     TTemplateRefList GetTemplate( const TStringList& categoryList ) const;
-    TTemplateRefList GetTemplateWithoutContinuum(  const TStringList& categoryList  ) const;
 
     TStringList GetCategoryList() const;
 
@@ -36,7 +34,7 @@ public:
 
 private:
 
-    Bool                    LoadCategory( const boost::filesystem::path& dirPath, const std::string& category );
+    Bool                     LoadCategory( const boost::filesystem::path& dirPath, const std::string& category );
 
     TTemplatesRefDict        m_List;
     TTemplatesRefDict        m_ListWithoutCont;
