@@ -145,8 +145,10 @@ void COperatorTplcombination::BasicFit(const CSpectrum& spectrum,
         CSpectrumSpectralAxis& itplTplSpectralAxis = m_templatesRebined_bf[ktpl]->GetSpectralAxis();
         CMask& itplMask = *m_masksRebined_bf[ktpl];
 
-        //CSpectrumFluxAxis::Rebin( intersectedLambdaRange, tplFluxAxis, shiftedTplSpectralAxis, spcSpectralAxis, itplTplFluxAxis, itplTplSpectralAxis, itplMask );
-        CSpectrumFluxAxis::Rebin2( intersectedLambdaRange, tplFluxAxis, pfgTplBuffer, redshift, *m_shiftedTemplatesSpectralAxis_bf[ktpl], spcSpectralAxis, itplTplFluxAxis, itplTplSpectralAxis, itplMask, opt_interp );
+    //CSpectrum *objSpec = new CSpectrum(pfgTplBuffer);
+        Float64* CSpectrum::m_pfgTplBuffer = pfgTplBuffer;
+        //CSpectrum::Rebin( intersectedLambdaRange, tplFluxAxis, shiftedTplSpectralAxis, spcSpectralAxis, itplTplFluxAxis, itplTplSpectralAxis, itplMask );
+        CSpectrum::Rebin2( intersectedLambdaRange, tplFluxAxis, redshift, *m_shiftedTemplatesSpectralAxis_bf[ktpl], spcSpectralAxis, itplTplFluxAxis, itplTplSpectralAxis, itplMask, opt_interp );
 
         Log.LogDebug("  Operator-Tplcombination: Rebinned template #%d has n=%d samples in lambdarange: %.2f - %.2f", ktpl, itplTplSpectralAxis.GetSamplesCount(), itplTplSpectralAxis[0], itplTplSpectralAxis[itplTplSpectralAxis.GetSamplesCount()-1]);
 

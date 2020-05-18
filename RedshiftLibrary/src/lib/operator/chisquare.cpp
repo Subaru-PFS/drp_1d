@@ -69,7 +69,7 @@ void COperatorChiSquare::BasicFit( const CSpectrum& spectrum, const CTemplate& t
     CSpectrumFluxAxis itplTplFluxAxis;
     CSpectrumSpectralAxis itplTplSpectralAxis;
     CMask itplMask;
-    CSpectrumFluxAxis::Rebin( intersectedLambdaRange, tplFluxAxis, shiftedTplSpectralAxis, spcSpectralAxis, itplTplFluxAxis, itplTplSpectralAxis, itplMask );
+    CSpectrum::Rebin( intersectedLambdaRange, tplFluxAxis, shiftedTplSpectralAxis, spcSpectralAxis, itplTplFluxAxis, itplTplSpectralAxis, itplMask );
 
     CMask mask;
     spcSpectralAxis.GetMask( lambdaRange, mask );

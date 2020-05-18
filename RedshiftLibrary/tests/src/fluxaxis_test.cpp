@@ -49,6 +49,7 @@ BOOST_AUTO_TEST_CASE(calcul)
   // test rbin
   CSpectrumFluxAxis *object_CSpectrumFluxAxis =
     new CSpectrumFluxAxis(Array1, n);
+  CSpectrum object_CSpectrum;
 
   TFloat64Range *object_Range = new TFloat64Range(1., 5.);
   CSpectrumFluxAxis *sourceFluxAxis = new CSpectrumFluxAxis(Array1, n);
@@ -63,7 +64,7 @@ BOOST_AUTO_TEST_CASE(calcul)
 
   // cas 1
 
-  bool resultcas1 = object_CSpectrumFluxAxis->Rebin((*object_Range),
+  bool resultcas1 = object_CSpectrum.Rebin((*object_Range),
 						    (*sourceFluxAxis),
 						    (*sourceSpectralAxis),
 						    (*targetSpectralAxis),
@@ -71,7 +72,7 @@ BOOST_AUTO_TEST_CASE(calcul)
 						    (*rebinedSpectralAxis),
 						    (*rebinedMask));
   BOOST_CHECK(resultcas1 == true);
-  BOOST_TEST_MESSAGE("cas1:" << object_CSpectrumFluxAxis->Rebin((*object_Range),
+  BOOST_TEST_MESSAGE("cas1:" << object_CSpectrum.Rebin((*object_Range),
 								(*sourceFluxAxis),
 								(*sourceSpectralAxis),
 								(*targetSpectralAxis),
@@ -84,7 +85,7 @@ BOOST_AUTO_TEST_CASE(calcul)
   CSpectrumSpectralAxis *sourceSpectralAxis2 =
     new CSpectrumSpectralAxis(n + 1, false);
 
-  bool resultcas2 = object_CSpectrumFluxAxis->Rebin((*object_Range),
+  bool resultcas2 = object_CSpectrum.Rebin((*object_Range),
 						    (*sourceFluxAxis),
 						    (*sourceSpectralAxis2),
 						    (*targetSpectralAxis),
@@ -99,7 +100,7 @@ BOOST_AUTO_TEST_CASE(calcul)
   CSpectrumSpectralAxis *sourceSpectralAxis3 =
     new CSpectrumSpectralAxis(n, true);
 
-  bool resultcas3 = object_CSpectrumFluxAxis->Rebin((*object_Range),
+  bool resultcas3 = object_CSpectrum.Rebin((*object_Range),
 						    (*sourceFluxAxis),
 						    (*sourceSpectralAxis3),
 						    (*targetSpectralAxis),
@@ -125,7 +126,7 @@ BOOST_AUTO_TEST_CASE(calcul)
   CSpectrumSpectralAxis *sourceSpectralAxis4 =
     new CSpectrumSpectralAxis(Array4b, n, true);
 
-  bool resultcas4 = object_CSpectrumFluxAxis->Rebin((*object_Range4),
+  bool resultcas4 = object_CSpectrum.Rebin((*object_Range4),
 						    (*sourceFluxAxis),
 						    (*sourceSpectralAxis4),
 						    (*targetSpectralAxis4),
@@ -144,7 +145,7 @@ BOOST_AUTO_TEST_CASE(calcul)
   Float64 source = 1;
   const std::string opt_interp = "lin";
 
-  bool resultrebin2cas1 = object_CSpectrumFluxAxis->Rebin2((*object_Range),
+  bool resultrebin2cas1 = object_CSpectrum.Rebin2((*object_Range),
 							   (*sourceFluxAxis),
 							   Buffer, source,
 							   (*sourceSpectralAxis),
@@ -158,7 +159,7 @@ BOOST_AUTO_TEST_CASE(calcul)
 
   // cas 2
 
-  bool resultrebin2cas2 = object_CSpectrumFluxAxis->Rebin2((*object_Range),
+  bool resultrebin2cas2 = object_CSpectrum.Rebin2((*object_Range),
 							   (*sourceFluxAxis),
 							   Buffer, source,
 							   (*sourceSpectralAxis2),
@@ -172,7 +173,7 @@ BOOST_AUTO_TEST_CASE(calcul)
 
   // cas 3
 
-  bool resultrebin2cas3 = object_CSpectrumFluxAxis->Rebin2(
+  bool resultrebin2cas3 = object_CSpectrum.Rebin2(
 							   (*object_Range), (*sourceFluxAxis), Buffer, source,
 							   (*sourceSpectralAxis3), (*targetSpectralAxis), (*rebinedFluxAxis),
 							   (*rebinedSpectralAxis), (*rebinedMask), opt_interp);
@@ -181,7 +182,7 @@ BOOST_AUTO_TEST_CASE(calcul)
 
   // cas 4
 
-  bool resultrebin2cas4 = object_CSpectrumFluxAxis->Rebin2(
+  bool resultrebin2cas4 = object_CSpectrum.Rebin2(
 							   (*object_Range4), (*sourceFluxAxis), Buffer, source,
 							   (*sourceSpectralAxis4), (*targetSpectralAxis4), (*rebinedFluxAxis),
 							   (*rebinedSpectralAxis), (*rebinedMask), opt_interp);
@@ -191,14 +192,14 @@ BOOST_AUTO_TEST_CASE(calcul)
   // cas 5
   const std::string opt_interp2 = "precomputedfinegrid";
 
-  bool resultrebin2cas5 = object_CSpectrumFluxAxis->Rebin2(
+  bool resultrebin2cas5 = object_CSpectrum.Rebin2(
 							   (*object_Range4), (*sourceFluxAxis), Buffer, source,
 							   (*sourceSpectralAxis4), (*targetSpectralAxis4), (*rebinedFluxAxis),
 							   (*rebinedSpectralAxis), (*rebinedMask), opt_interp2);
   BOOST_CHECK(resultrebin2cas5 == true);
   BOOST_TEST_MESSAGE("rebin2 cas5:" << resultrebin2cas5);
 
-  bool resultrebin2cas5bis = object_CSpectrumFluxAxis->Rebin2(
+  bool resultrebin2cas5bis = object_CSpectrum.Rebin2(
 							      (*object_Range4), (*sourceFluxAxis), NULL, source,
 							      (*sourceSpectralAxis4), (*targetSpectralAxis4), (*rebinedFluxAxis),
 							      (*rebinedSpectralAxis), (*rebinedMask), opt_interp2);
@@ -207,7 +208,7 @@ BOOST_AUTO_TEST_CASE(calcul)
   // cas 6
   const std::string opt_interp3 = "spline";
 
-  bool resultrebin2cas6 = object_CSpectrumFluxAxis->Rebin2(
+  bool resultrebin2cas6 = object_CSpectrum.Rebin2(
 							   (*object_Range4), (*sourceFluxAxis), Buffer, source,
 							   (*sourceSpectralAxis4), (*targetSpectralAxis4), (*rebinedFluxAxis),
 							   (*rebinedSpectralAxis), (*rebinedMask), opt_interp3);
@@ -217,7 +218,7 @@ BOOST_AUTO_TEST_CASE(calcul)
   // cas 7
   const std::string opt_interp4 = "ngp";
 
-  bool resultrebin2cas7 = object_CSpectrumFluxAxis->Rebin2(
+  bool resultrebin2cas7 = object_CSpectrum.Rebin2(
 							   (*object_Range4), (*sourceFluxAxis), Buffer, source,
 							   (*sourceSpectralAxis4), (*targetSpectralAxis4), (*rebinedFluxAxis),
 							   (*rebinedSpectralAxis), (*rebinedMask), opt_interp4);

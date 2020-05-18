@@ -114,11 +114,11 @@ int COperatorChicorr::Compute(const CSpectrum& spectrum, const CSpectrum& spectr
         CSpectrumFluxAxis itplTplWithoutContFluxAxis;
         CSpectrumSpectralAxis itplTplSpectralAxis;
         CMask itplMask;
-        CSpectrumFluxAxis::Rebin( intersectedLambdaRange, tplWithoutContFluxAxis, shiftedTplSpectralAxis, spcSpectralAxis, itplTplWithoutContFluxAxis, itplTplSpectralAxis, itplMask );
+        CSpectrum::Rebin( intersectedLambdaRange, tplWithoutContFluxAxis, shiftedTplSpectralAxis, spcSpectralAxis, itplTplWithoutContFluxAxis, itplTplSpectralAxis, itplMask );
 
         // same function for the spc with continuum, todo check ?
         CSpectrumFluxAxis itplTplFluxAxis;
-        CSpectrumFluxAxis::Rebin( intersectedLambdaRange, tplFluxAxis, shiftedTplSpectralAxis, spcSpectralAxis, itplTplFluxAxis, itplTplSpectralAxis, itplMask );
+        CSpectrum::Rebin( intersectedLambdaRange, tplFluxAxis, shiftedTplSpectralAxis, spcSpectralAxis, itplTplFluxAxis, itplTplSpectralAxis, itplMask );
 
 
         CMask mask;

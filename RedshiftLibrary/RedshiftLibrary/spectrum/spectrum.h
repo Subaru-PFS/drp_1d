@@ -73,12 +73,16 @@ public:
     void                SetContinuumEstimationMethod(std::string method);
     void                SetWaveletsDFBinPath(std::string binPath);
 
-    void LoadSpectrum(const char* spectrumFilePath, const char* noiseFilePath);
-
+    void                LoadSpectrum(const char* spectrumFilePath, const char* noiseFilePath);
+    static Bool         Rebin( const TFloat64Range& range, const CSpectrumFluxAxis& sourceFluxAxis, const CSpectrumSpectralAxis& sourceSpectralAxis, const CSpectrumSpectralAxis& targetSpectralAxis,
+                               CSpectrumFluxAxis& rebinedFluxAxis, CSpectrumSpectralAxis& rebinedSpectralAxis, CMask& rebinedMask  );
+    static Bool         Rebin2( const TFloat64Range& range, const CSpectrumFluxAxis& sourceFluxAxis, Float64 sourcez, const CSpectrumSpectralAxis& sourceSpectralAxis, const CSpectrumSpectralAxis& targetSpectralAxis,
+                               CSpectrumFluxAxis& rebinedFluxAxis, CSpectrumSpectralAxis& rebinedSpectralAxis, CMask& rebinedMask , const std::string opt_interp );
+    static Float64*                        m_pfgTplBuffer;
 protected:
     CSpectrumSpectralAxis           m_SpectralAxis;
     CSpectrumFluxAxis               m_FluxAxis;
-
+    
 private:
 
     std::string                     m_Name;

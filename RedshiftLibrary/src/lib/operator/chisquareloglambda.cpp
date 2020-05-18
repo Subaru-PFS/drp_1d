@@ -1936,8 +1936,8 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(const CSpe
                                        exp(loglbdamax + 0.5 * loglbdaStep));
             Float64 *pfgBuffer_unused = 0;
             Float64 redshift_unused = 0.0;
-            CSpectrumFluxAxis::Rebin2(
-                spcLbdaRange, spectrum.GetFluxAxis(), pfgBuffer_unused,
+            CSpectrum::Rebin2(
+                spcLbdaRange, spectrum.GetFluxAxis(),
                 redshift_unused, spectrum.GetSpectralAxis(), targetSpectralAxis,
                 spectrumRebinedFluxAxis, spectrumRebinedSpectralAxis,
                 m_mskRebinedLog, rebinMethod);
@@ -1954,8 +1954,8 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(const CSpe
             CMask error_mskRebinedLog;
             error_mskRebinedLog.SetSize(loglbdaCount);
 
-            CSpectrumFluxAxis::Rebin2(
-                spcLbdaRange, errorFluxAxis, pfgBuffer_unused, redshift_unused,
+            CSpectrum::Rebin2(
+                spcLbdaRange, errorFluxAxis, redshift_unused,
                 spectrum.GetSpectralAxis(), targetSpectralAxis,
                 m_errorRebinedLog, errorRebinedSpectralAxis,
                 error_mskRebinedLog, rebinMethod);
@@ -2208,8 +2208,8 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(const CSpe
         templateRebinedSpectralAxis.SetSize(tpl_loglbdaCount);
         CMask tpl_mskRebinedLog;
         tpl_mskRebinedLog.SetSize(tpl_loglbdaCount);
-        CSpectrumFluxAxis::Rebin2(
-            tplLbdaRange, tpl.GetFluxAxis(), pfgBuffer_unused, redshift_unused,
+        CSpectrum::Rebin2(
+            tplLbdaRange, tpl.GetFluxAxis(), redshift_unused,
             tpl.GetSpectralAxis(), tpl_targetSpectralAxis,
             templateRebinedFluxAxis, templateRebinedSpectralAxis,
             tpl_mskRebinedLog, rebinMethod);

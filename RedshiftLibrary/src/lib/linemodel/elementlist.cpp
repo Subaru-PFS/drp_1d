@@ -1045,7 +1045,7 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, I
                 }else{
                     Log.LogError("Failed to load-fit continuum");
                     throw std::runtime_error("Failed to load-fit continuum");
-                }
+                } 
             }
         }
     }else if(m_fitContinuum_option==1){//using precomputed fit store, i.e., fitValues
@@ -1078,8 +1078,7 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, I
         bestFitRedshift = m_fitContinuum_tplFitRedshift;
         bestFitPolyCoeffs = m_fitContinuum_tplFitPolyCoeffs;
     }else if(m_fitContinuum_option==3){
-        //redo the fit only for the current template continuum, IGM/ISM will be fitted according to m_fitContinuum_igm and m_fitContinuum_dustfit
-        //todo: fix the ISM/IGM to the previously fitted values
+        //redo the fit only for the current template continuum, IGM/ISM will be fitted accoring to m_fitContinuum_igm/m_fitContinuum_dustfit
 
         bestFitRedshift = m_Redshift; //using aligned redshift Lines/Continuum
         //bestFitRedshift = m_fitContinuum_tplFitRedshift; //using redishift from previous estimations
@@ -1087,11 +1086,10 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, I
 
         //hardcoded parameters
         std::string opt_interp = "lin"; //"precomputedfinegrid"; //
-        //we dont want to fit any, but we want that firstpass result is taken into consideration
-        Int32 opt_extinction = m_secondpass_fitContinuum_igm;//these latter are based on param.json: yes or no
+        Int32 opt_extinction = m_secondpass_fitContinuum_igm;
         //below is based on the hardcoded values in Operators: ->Init(0, 0.1, 1), i.e., Dustcoeff indexes go from 0 to 10 and values go from 0 to 1 with a step of 0.1
         //TODO: this code should be replaced to be resilient to these hard coded values, especially is step and first value changes
-        Int32 opt_dustFit = Int32(m_fitContinuum_tplFitDustCoeff*10); //getDustCoeffIndex(m_fitContinuum_tplFitDustCoeff); //m_secondpass_fitContinuum_dustfit;
+        Int32 opt_dustFit = Int32(m_fitContinuum_tplFitDustCoeff*10); //getDustCoeffIndex(m_fitContinuum_tplFitDustCoeff);
         Float64 overlapThreshold = 1.0;
 
         bool ignoreLinesSupport=m_secondpass_fitContinuum_outsidelinesmask;
@@ -1387,7 +1385,6 @@ Bool CLineModelElementList::SolveContinuum(const CSpectrum& spectrum,
                                            Float64& fitLogprior)
 {
     CPriorHelper::TPriorZEList zePriorData;
-    //*
     bool retGetPrior = m_fitContinuum_priorhelper->GetTplPriorData(tpl.GetName(), redshifts, zePriorData);
     if(retGetPrior==false)
     {

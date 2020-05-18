@@ -170,8 +170,10 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
     CSpectrumSpectralAxis& itplTplSpectralAxis = m_templateRebined_bf.GetSpectralAxis();
     CMask& itplMask = m_mskRebined_bf;
 
-    //CSpectrumFluxAxis::Rebin( intersectedLambdaRange, tplFluxAxis, shiftedTplSpectralAxis, spcSpectralAxis, itplTplFluxAxis, itplTplSpectralAxis, itplMask );
-    CSpectrumFluxAxis::Rebin2( intersectedLambdaRange, tplFluxAxis, pfgTplBuffer, redshift, m_shiftedTplSpectralAxis_bf, spcSpectralAxis, itplTplFluxAxis, itplTplSpectralAxis, itplMask, opt_interp );
+    //below is non-sense and doesnt work
+    Float64* CSpectrum::m_pfgTplBuffer = pfgTplBuffer;
+    //CSpectrum::Rebin( intersectedLambdaRange, tplFluxAxis, shiftedTplSpectralAxis, spcSpectralAxis, itplTplFluxAxis, itplTplSpectralAxis, itplMask );
+    CSpectrum::Rebin2( intersectedLambdaRange, tplFluxAxis, redshift, m_shiftedTplSpectralAxis_bf, spcSpectralAxis, itplTplFluxAxis, itplTplSpectralAxis, itplMask, opt_interp );
 
 
     /*//overlapRate, Method 1
