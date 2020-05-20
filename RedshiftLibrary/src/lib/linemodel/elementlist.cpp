@@ -6901,7 +6901,7 @@ Float64 CLineModelElementList::EstimateMTransposeM(const TFloat64Range& lambdaRa
     }
     //Log.LogDebug( "CLineModelElementList::EstimateMTransposeM val = %f", mtm );
 
-
+    
     return mtm;
 }
 
