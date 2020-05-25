@@ -60,7 +60,7 @@ Int32 CDeltaz::Compute(TFloat64List merits, TFloat64List redshifts, Float64 reds
         xi2 *= xi2;
         yi = merits[i+izmin]-y0; //pour re-caler les y pour que le centre soit à zero pour x0
         if(yi<0){
-            Log.LogError("    CDeltaz::  Xi2 value of zi = %f should be greater than Xi2 of Zcand = %f \n",redshifts[i+izmin], redshift);
+            Log.LogError("    CDeltaz::  Xi2 value of zi = %f should be greater than Xi2 of Zcand = %f \n", redshifts[i+izmin], redshift);
             //two possible reasons: 1) deltaz range is too large and a neighboring peak can fall within this range and
             //the second pass updates the candidate value but didnt check that the new Zcand is a true peak on the deltaz range
             return -1;

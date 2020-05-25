@@ -2225,6 +2225,7 @@ Int32 COperatorLineModel::RecomputeAroundCandidates(TPointList input_extremumLis
     if (enable_recompute_around_candidate)
     {
         m_secondpass_parameters_extremaResult.ExtremaExtendedRedshifts.clear();
+        TInt32List eliminateIdx; 
         for (Int32 i = 0; i < input_extremumList.size(); i++)
         {
             Log.LogInfo("");
@@ -2425,16 +2426,17 @@ Int32 COperatorLineModel::RecomputeAroundCandidates(TPointList input_extremumLis
                 ++show_progress;
             }
             // m_model->SetFittingMethod(opt_fittingmethod);
-
             //if the recomputed peak corresponds to a candidate on the border of the recompution window, raise an error
             //we cannot be sure that it corresponds to a real one unless we enlarge the window to compare it with its neighbors!
             //TODO: Investigate why the fit of the second pass degenarated?!
             //TODO: Deltaz computation considers a radius of 0.002(1+zcand) around each candidate:
-            //We should ensure that Deltaz window interesect with the secondpass_radius and not only with the redshift range.
+            //We should ensure that Deltaz window interesects with the secondpass_radius and not only with the redshift range.
             //TODO: check that it is still the best peak on the range used to compute Deltaz!!
             if(idx2==izmin_cand || idx2==izmax_cand){
-                Log.LogError("  Operator-Linemodel: Second-pass fitting degenerates the first-pass results: Recomputed extr %f is at the border of zrange", m_secondpass_parameters_extremaResult.Extrema[i]);
-                //throw runtime_error("  Operator-Linemodel: Second-pass fitting degenerates the first-pass results: Recomputed extrema is at the border of zrange");
+                Log.LogWarning("  Operator-Linemodel: Second-pass fitting degenerates the first-pass results: Recomputed extr %f is at the border of zrange", m_secondpass_parameters_extremaResult.Extrema[i]);
+                Log.LogWarning(" Flag - Operator-Linemodel: Eliminating a second-pass candidate");
+                eliminateIdx.push_back(i);
+                continue;
             }
             Log.LogInfo("  Operator-Linemodel: Recomputed extr #%d, idx=%d, "
                         "z_e.X=%f, m_e.Y=%f",
@@ -2481,6 +2483,16 @@ Int32 COperatorLineModel::RecomputeAroundCandidates(TPointList input_extremumLis
                         pCoeff1,
                         pCoeff2);
         }
+        Int32 s = eliminateIdx.size();
+        if(s){
+            if(s == input_extremumList.size()){
+                Log.LogError("  Operator-Linemodel: Second-pass fitting degenerated all results from first-pass. Aborting");
+                throw runtime_error(" Operator-Linemodel: Second-pass fitting degenerated all results from first-pass. Aborting");
+            }
+            for(Int32 i = s-1; i>=0; i--){
+                m_secondpass_parameters_extremaResult.RemoveSecondPassCandidatebyIdx(eliminateIdx[i]);
+            }
+        }
     } else
     {
         for (Int32 i = 0; i < input_extremumList.size(); i++)
@@ -2490,20 +2502,7 @@ Int32 COperatorLineModel::RecomputeAroundCandidates(TPointList input_extremumLis
         }
     }
 
-    // sort extremumList using merit values : smallest to highest
-    // m_secondpass_indiceSortedCandidatesList will contain the indexes order
-
-    //Sorting candidates using map. Utility: it solves the ducplicate candidate problem
-/*  vector<int> V(_secondpass_recomputed_extremumList.size());//vector of indices
-    int x = 0;
-    std::iota(V.begin(), V.end(), x++);//initialization of m_secondpass_indiceSortedCandidatesList
-    sort(V.begin(), V.end(), [&](int i, int j){return _secondpass_recomputed_extremumList[i].Y < _secondpass_recomputed_extremumList[j].Y;} );
-*/
     m_secondpass_indiceSortedCandidatesList.clear();
-    /*for ( Int32 ie = 0; ie < V.size(); ie++){
-        m_secondpass_indiceSortedCandidatesList.push_back(V[ie]);
-    }*/
-       
     for ( Int32 ie = 0; ie < _secondpass_recomputed_extremumList.size(); ie++){
         m_secondpass_indiceSortedCandidatesList.push_back(ie);
     }
