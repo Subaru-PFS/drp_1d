@@ -18,6 +18,7 @@ struct CContinuumModelSolution
     //template continuum
     std::string         tplName;
     Float64             tplAmplitude;
+    Float64             tplAmplitudeError;
     Float64             tplDustCoeff;
     Int32               tplMeiksinIdx;
     Float64             tplRedshift;

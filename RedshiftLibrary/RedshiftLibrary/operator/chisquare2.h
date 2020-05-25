@@ -53,6 +53,8 @@ private:
                   Float64& overlapRate,
                   Float64& chiSquare,
                   Float64 &fittingAmplitude,
+                  Float64& fittingAmplitudeError,
+                  Bool& fittingAmplitudeNegative,
                   Float64& fittingDtM,
                   Float64& fittingMtM,
                   Float64 &fittingLogprior,

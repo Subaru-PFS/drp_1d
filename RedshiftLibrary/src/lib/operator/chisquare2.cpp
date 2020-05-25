@@ -67,6 +67,8 @@ COperatorChiSquare2::~COperatorChiSquare2()
  * @param overlapRate
  * @param chiSquare
  * @param fittingAmplitude
+ * @param fittingAmplitudeError
+ * @param fittingAmplitudeNegative
  * @param fittingDtM
  * @param fittingMtM
  * @param fittingDustCoeff
@@ -91,6 +93,8 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
                                    Float64& overlapRate,
                                    Float64& chiSquare,
                                    Float64& fittingAmplitude,
+                                   Float64& fittingAmplitudeError,
+                                   Bool& fittingAmplitudeNegative,
                                    Float64& fittingDtM,
                                    Float64& fittingMtM,
                                    Float64& fittingLogprior,
@@ -122,6 +126,8 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
         }
     }
     fittingAmplitude = -1.0;
+    fittingAmplitudeError = -1.0;
+    fittingAmplitudeNegative = 0;
     overlapRate = 0.0;
     status = nStatus_DataError;
 
@@ -206,7 +212,6 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
     if(spcSpectralAxis.IsInLinearScale()){
         currentRange = intersectedLambdaRange;
     }
-
 
 
     /*//debug:
@@ -387,7 +392,6 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
             }
             //*/
 
-
             /*//debug:
             // save final ISM/IGM template model
             if(redshift>=2.4 && redshift<2.4001 && meiksinIdx==6){
@@ -495,7 +499,6 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
                         return ;
                     }
 
-
                     if( std::isinf(sumS) || std::isnan(sumS) || sumS!=sumS ){
                         Log.LogError("  Operator-Chisquare2: found invalid dtd : dtd=%e, for index=%d at wl=%f", sumS, j, spcSpectralAxis[j]);
                         Log.LogError("  Operator-Chisquare2: found invalid dtd : Yspc=%e, for index=%d at wl=%f", Yspc[j], j, spcSpectralAxis[j]);
@@ -510,7 +513,6 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
                         status = nStatus_InvalidProductsError;
                         return ;
                     }
-
 
                     if(option_igmFastProcessing && kMeiksin==0)
                     {
@@ -548,26 +550,32 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
             }
 
             Float64 ampl = 0.0;
+            Float64 ampl_err = 0.0;
+            Bool ampl_neg = 0;
             if( sumT==0 )
             {
                 ampl = 0.0;
+                ampl_err = 0.0;
                 fit = sumS;
+                ampl_neg = 0;
                 //status = nStatus_DataError;
                 //return;
             }else{
-                Float64 ampl_best=0.0;
-
+    
                 if(logpriore.size()==m_ismCorrectionCalzetti->GetNPrecomputedDustCoeffs())
                 {
                     if(logpriore[kDust].A_sigma>0.0 && logpriore[kDust].betaA>0.0)
                     {
-                        Float64 s2b = logpriore[kDust].A_sigma*logpriore[kDust].A_sigma/logpriore[kDust].betaA;
-                        ampl_best = (s2b*sumCross+logpriore[kDust].A_mean)/(s2b*sumT+1.0);
+                        Float64 bss2 = logpriore[kDust].betaA/(logpriore[kDust].A_sigma*logpriore[kDust].A_sigma);
+                        //ampl_best = (s2b*sumCross+logpriore[kDust].A_mean)/(s2b*sumT+1.0);
+                        ampl = (sumCross+logpriore[kDust].A_mean*bss2)/(sumT+bss2);
+                        ampl_err = sqrt(sumT)/(sumT+bss2); 
                         /*
                         Log.LogInfo("  Operator-Chisquare2: Constrained amplitude (betaA=%e):  s2b=%e, mtm=%e", logpriore[kDust].betaA, s2b, sumT);
                         //*/
                     }else{
-                        ampl_best=sumCross/sumT;
+                        ampl = sumCross/sumT;
+                        ampl_err = sqrt(1./sumT);
                         /*
                         Log.LogInfo("  Operator-Chisquare2: Unconstrained amplitude (sigmaA=%e, betaA=%e)",
                                     logpriore[kDust].A_sigma,
@@ -576,20 +584,27 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
 
                     }
                 }else{
-                    ampl_best=sumCross/sumT;
+                    ampl = sumCross/sumT;
+                    ampl_err = sqrt(1./sumT);
+
                     //Log.LogInfo("  Operator-Chisquare2: Unconstrained amplitude: logpriore.size=%d", logpriore.size());
                 }
 
+                if(forcedAmplitude !=-1){
+                    ampl = forcedAmplitude;
+                    ampl_err = 0.;
+                }
+
+                if (ampl < -3*ampl_err)
+                {
+                    ampl_neg = 1;
+                }
 
                 if(amplForcePositive)
                 {
-                    ampl = max(0.0, ampl_best);
-                }else{
-                    ampl = ampl_best;
+                    ampl = max(0.0, ampl);
                 }
-                if(forcedAmplitude !=-1){
-                    ampl = forcedAmplitude;
-                }
+
                 //Generalized method (ampl can take any value now) for chi2 estimate
                 fit = sumS + sumT*ampl*ampl - 2.*ampl*sumCross;
             }
@@ -653,6 +668,8 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
                 fittingDustCoeff = coeffEBMV;
                 fittingMeiksinIdx = meiksinIdx;
                 fittingAmplitude = ampl;
+                fittingAmplitudeError = ampl_err;
+                fittingAmplitudeNegative = ampl_neg;
                 fittingDtM = sumCross;
                 fittingMtM = sumT;
                 fittingLogprior = logprior;
@@ -785,7 +802,7 @@ std::shared_ptr<COperatorResult> COperatorChiSquare2::Compute(const CSpectrum& s
         //Float64 precomputedFineGridTplFlux[999999];
         //Log.LogInfo( "nTgt: %d samples", nTgt);
 
-        //inialise and allocate the gsl objects
+        //initialise and allocate the gsl objects
         Float64* Ysrc = tplFluxAxis.GetSamples();
         Float64* Xsrc = tplSpectralAxis.GetSamples();
         // linear
@@ -906,6 +923,8 @@ std::shared_ptr<COperatorResult> COperatorChiSquare2::Compute(const CSpectrum& s
                   result->Overlap[i],
                   result->ChiSquare[i],
                   result->FitAmplitude[i],
+                  result->FitAmplitudeError[i],
+                  result->FitAmplitudeNegative[i],
                   result->FitDtM[i],
                   result->FitMtM[i],
                   result->LogPrior[i],
@@ -1173,7 +1192,7 @@ const COperatorResult* COperatorChiSquare2::ExportChi2versusAZ(const CSpectrum& 
     //Float64 precomputedFineGridTplFlux[999999];
     //Log.LogInfo( "nTgt: %d samples", nTgt);
 
-    //inialise and allocate the gsl objects
+    //initialise and allocate the gsl objects
     Float64* Ysrc = tplFluxAxis.GetSamples();
     Float64* Xsrc = tplSpectralAxis.GetSamples();
     // linear
@@ -1225,7 +1244,6 @@ const COperatorResult* COperatorChiSquare2::ExportChi2versusAZ(const CSpectrum& 
     //Float64 acenter = 4.6772031621836956e-17;
     //Float64 arange = acenter/2.0/2.0; //
 
-
     // fill the redshift grid
     //sortedRedshifts.push_back(zcenter);
     Float64 zmin = zcenter - 0.025;
@@ -1256,6 +1274,8 @@ const COperatorResult* COperatorChiSquare2::ExportChi2versusAZ(const CSpectrum& 
     CChisquareResult* result = new CChisquareResult();
     result->ChiSquare.resize( sortedRedshifts.size() );
     result->FitAmplitude.resize( sortedRedshifts.size() );
+    result->FitAmplitudeError.resize( sortedRedshifts.size() );
+    result->FitAmplitudeNegative.resize( sortedRedshifts.size() );
     result->FitDtM.resize( sortedRedshifts.size() );
     result->FitMtM.resize( sortedRedshifts.size() );
     result->FitDustCoeff.resize( sortedRedshifts.size() );
@@ -1265,7 +1285,6 @@ const COperatorResult* COperatorChiSquare2::ExportChi2versusAZ(const CSpectrum& 
     result->Status.resize( sortedRedshifts.size() );
 
     result->Redshifts = sortedRedshifts;
-
 
     FILE* fa = fopen( "chi2_versus_ampl_z_axes_ampl.txt", "w+" );
     for (Int32 j=0;j<sortedAmplitudes.size();j++)
@@ -1292,6 +1311,8 @@ const COperatorResult* COperatorChiSquare2::ExportChi2versusAZ(const CSpectrum& 
                       result->Overlap[i],
                       result->ChiSquare[i],
                       result->FitAmplitude[i],
+                      result->FitAmplitudeError[i],
+                      result->FitAmplitudeNegative[i],
                       result->FitDtM[i],
                       result->FitMtM[i],
                       result->LogPrior[i],
@@ -1312,8 +1333,6 @@ const COperatorResult* COperatorChiSquare2::ExportChi2versusAZ(const CSpectrum& 
         fprintf( f, "\n");
     }
     fclose( f );
-
-
 
     free(precomputedFineGridTplFlux);
     return result;
