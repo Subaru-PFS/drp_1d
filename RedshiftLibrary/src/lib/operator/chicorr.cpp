@@ -68,8 +68,8 @@ int COperatorChicorr::Compute(const CSpectrum& spectrum, const CSpectrum& spectr
     const CSpectrumFluxAxis& spcWithoutContFluxAxis = spectrumWithoutCont.GetFluxAxis();
 
     const CSpectrumSpectralAxis& tplSpectralAxis = tplWithoutCont.GetSpectralAxis();
-    const CSpectrumFluxAxis& tplFluxAxis = tpl.GetFluxAxis();
-    const CSpectrumFluxAxis& tplWithoutContFluxAxis = tplWithoutCont.GetFluxAxis();
+    const CSpectrumFluxAxis tplFluxAxis = tpl.GetFluxAxis();
+    const CSpectrumFluxAxis tplWithoutContFluxAxis = tplWithoutCont.GetFluxAxis();
 
 
     // Compute clamped lambda range over spectrum
@@ -114,11 +114,15 @@ int COperatorChicorr::Compute(const CSpectrum& spectrum, const CSpectrum& spectr
         CSpectrumFluxAxis itplTplWithoutContFluxAxis;
         CSpectrumSpectralAxis itplTplSpectralAxis;
         CMask itplMask;
-        CSpectrum::Rebin( intersectedLambdaRange, tplWithoutContFluxAxis, shiftedTplSpectralAxis, spcSpectralAxis, itplTplWithoutContFluxAxis, itplTplSpectralAxis, itplMask );
+        std::shared_ptr<CSpectrum> spec, spec2;
+        spec = std::shared_ptr<CSpectrum>( new CSpectrum(shiftedTplSpectralAxis, tplWithoutContFluxAxis) );
+        //CSpectrum spec  = new CSpectrum(shiftedTplSpectralAxis, tplWithoutContFluxAxis);
+        spec->Rebin2( intersectedLambdaRange, spcSpectralAxis, itplTplWithoutContFluxAxis, itplTplSpectralAxis, itplMask );
 
         // same function for the spc with continuum, todo check ?
         CSpectrumFluxAxis itplTplFluxAxis;
-        CSpectrum::Rebin( intersectedLambdaRange, tplFluxAxis, shiftedTplSpectralAxis, spcSpectralAxis, itplTplFluxAxis, itplTplSpectralAxis, itplMask );
+        spec = std::shared_ptr<CSpectrum>( new CSpectrum(shiftedTplSpectralAxis, tplFluxAxis));
+        spec2->Rebin2( intersectedLambdaRange, spcSpectralAxis, itplTplFluxAxis, itplTplSpectralAxis, itplMask );
 
 
         CMask mask;

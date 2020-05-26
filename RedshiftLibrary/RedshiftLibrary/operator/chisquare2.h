@@ -49,7 +49,6 @@ private:
 
     void BasicFit(const CSpectrum& spectrum,
                   const CTemplate& tpl,
-                  Float64 *pfgTplBuffer,
                   const TFloat64Range& lambdaRange,
                   Float64 redshift,
                   Float64 overlapThreshold,

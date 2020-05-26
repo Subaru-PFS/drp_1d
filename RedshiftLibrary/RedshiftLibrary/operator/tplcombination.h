@@ -52,7 +52,6 @@ private:
 
     void BasicFit(const CSpectrum& spectrum,
                   std::vector<CTemplate>& tplList,
-                  Float64 *pfgTplBuffer,
                   const TFloat64Range& lambdaRange,
                   Float64 redshift,
                   Float64 overlapThreshold,

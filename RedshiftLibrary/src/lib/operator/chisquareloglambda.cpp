@@ -1934,13 +1934,13 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(const CSpe
             // rebin the spectrum
             TFloat64Range spcLbdaRange(exp(loglbdamin - 0.5 * loglbdaStep),
                                        exp(loglbdamax + 0.5 * loglbdaStep));
-            Float64 *pfgBuffer_unused = 0;
-            Float64 redshift_unused = 0.0;
-            CSpectrum::Rebin2(
-                spcLbdaRange, spectrum.GetFluxAxis(),
-                redshift_unused, spectrum.GetSpectralAxis(), targetSpectralAxis,
+            std::shared_ptr<CSpectrum> spec, spec_error;
+            spec = std::shared_ptr<CSpectrum>( new CSpectrum(spectrum.GetSpectralAxis(), spectrum.GetFluxAxis()));
+            //linear 
+            spec->Rebin2(
+                spcLbdaRange, targetSpectralAxis,
                 spectrumRebinedFluxAxis, spectrumRebinedSpectralAxis,
-                m_mskRebinedLog, rebinMethod);
+                m_mskRebinedLog);
 
             // rebin the variance
             const TFloat64List &error = spectrum.GetFluxAxis().GetError();
@@ -1954,11 +1954,11 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(const CSpe
             CMask error_mskRebinedLog;
             error_mskRebinedLog.SetSize(loglbdaCount);
 
-            CSpectrum::Rebin2(
-                spcLbdaRange, errorFluxAxis, redshift_unused,
-                spectrum.GetSpectralAxis(), targetSpectralAxis,
+            spec_error  = std::shared_ptr<CSpectrum>(new CSpectrum(spectrum.GetSpectralAxis(), errorFluxAxis));
+            spec_error->Rebin2(
+                spcLbdaRange, targetSpectralAxis,
                 m_errorRebinedLog, errorRebinedSpectralAxis,
-                error_mskRebinedLog, rebinMethod);
+                error_mskRebinedLog);
         }
 
         // put the error in the spectrum object: needed for cstLog estimation
@@ -2198,21 +2198,19 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(const CSpe
                          "modify the processing parameter <lambdarange>");
         }
 
-        Float64 *pfgBuffer_unused = 0;
-        Float64 redshift_unused = 0.0;
-        CSpectrumFluxAxis &templateRebinedFluxAxis =
-            m_templateRebinedLog.GetFluxAxis();
-        CSpectrumSpectralAxis &templateRebinedSpectralAxis =
-            m_templateRebinedLog.GetSpectralAxis();
+        CSpectrumFluxAxis &templateRebinedFluxAxis =  m_templateRebinedLog.GetFluxAxis();
+        CSpectrumSpectralAxis &templateRebinedSpectralAxis = m_templateRebinedLog.GetSpectralAxis();
         templateRebinedFluxAxis.SetSize(tpl_loglbdaCount);
         templateRebinedSpectralAxis.SetSize(tpl_loglbdaCount);
         CMask tpl_mskRebinedLog;
         tpl_mskRebinedLog.SetSize(tpl_loglbdaCount);
-        CSpectrum::Rebin2(
-            tplLbdaRange, tpl.GetFluxAxis(), redshift_unused,
-            tpl.GetSpectralAxis(), tpl_targetSpectralAxis,
+        std::shared_ptr<CSpectrum> spec;
+        spec = std::shared_ptr<CSpectrum>( new CSpectrum(tpl.GetSpectralAxis(), tpl.GetFluxAxis()) );
+        spec->Rebin2(
+            tplLbdaRange,
+            tpl_targetSpectralAxis,
             templateRebinedFluxAxis, templateRebinedSpectralAxis,
-            tpl_mskRebinedLog, rebinMethod);
+            tpl_mskRebinedLog);
         if (verboseExportLogRebin)
         {
             // save rebinned data

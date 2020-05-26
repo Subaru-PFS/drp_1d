@@ -26,7 +26,7 @@ public:
 
     CSpectrum();
     CSpectrum(const CSpectrum& other, TFloat64List mask);
-    CSpectrum(CSpectrumSpectralAxis& spectralAxis, CSpectrumFluxAxis& fluxAxis);
+    CSpectrum(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis);
     ~CSpectrum();
 
     CSpectrum& operator=(const CSpectrum& other);
@@ -74,15 +74,18 @@ public:
     void                SetWaveletsDFBinPath(std::string binPath);
 
     void                LoadSpectrum(const char* spectrumFilePath, const char* noiseFilePath);
-    static Bool         Rebin( const TFloat64Range& range, const CSpectrumFluxAxis& sourceFluxAxis, const CSpectrumSpectralAxis& sourceSpectralAxis, const CSpectrumSpectralAxis& targetSpectralAxis,
-                               CSpectrumFluxAxis& rebinedFluxAxis, CSpectrumSpectralAxis& rebinedSpectralAxis, CMask& rebinedMask  );
-    static Bool         Rebin2( const TFloat64Range& range, const CSpectrumFluxAxis& sourceFluxAxis, Float64 sourcez, const CSpectrumSpectralAxis& sourceSpectralAxis, const CSpectrumSpectralAxis& targetSpectralAxis,
-                               CSpectrumFluxAxis& rebinedFluxAxis, CSpectrumSpectralAxis& rebinedSpectralAxis, CMask& rebinedMask , const std::string opt_interp );
-    static Float64*                        m_pfgTplBuffer;
+
+    Bool                SetTemplateBuffer( CSpectrum spectrum);
+    /*Bool              Rebin( const TFloat64Range& range, const CSpectrumSpectralAxis& targetSpectralAxis,
+                               CSpectrum& rebinedSpectrum, CMask& rebinedMask, const std::string opt_interp ); //linear always
+                               */
+    Bool                Rebin2( const TFloat64Range& range, const CSpectrumSpectralAxis& targetSpectralAxis,
+                                CSpectrumFluxAxis& rebinedFluxAxis, CSpectrumSpectralAxis& rebinedSpectralAxis,/*CSpectrum& rebinedSpectrum,*/ CMask& rebinedMask, const std::string opt_interp = "lin", Float64 sourcez = -1 ); 
+                               //sourcez only used with precomputefinegrid  
 protected:
     CSpectrumSpectralAxis           m_SpectralAxis;
     CSpectrumFluxAxis               m_FluxAxis;
-    
+    TFloat64List                    m_pfgTplBuffer;
 private:
 
     std::string                     m_Name;

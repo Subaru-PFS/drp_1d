@@ -116,7 +116,9 @@ Float64 COperatorCorrelation::GetComputationDuration() const
         CSpectrumFluxAxis itplTplFluxAxis;
         CSpectrumSpectralAxis itplTplSpectralAxis;
         CMask itplMask;
-        CSpectrum::Rebin( intersectedLambdaRange, tplFluxAxis, shiftedTplSpectralAxis, spcSpectralAxis, itplTplFluxAxis, itplTplSpectralAxis, itplMask );
+        std::shared_ptr<CSpectrum> spec, spec_error;
+        spec = std::shared_ptr<CSpectrum>( new CSpectrum(shiftedTplSpectralAxis, tplFluxAxis));
+        spec->Rebin2( intersectedLambdaRange, spcSpectralAxis, itplTplFluxAxis, itplTplSpectralAxis, itplMask );
 
         CMask mask;
         spcSpectralAxis.GetMask( lambdaRange, mask );

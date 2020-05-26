@@ -86,7 +86,6 @@ COperatorChiSquare2::~COperatorChiSquare2()
  */
 void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
                                    const CTemplate& tpl,
-                                   Float64* pfgTplBuffer,
                                    const TFloat64Range& lambdaRange,
                                    Float64 redshift,
                                    Float64 overlapThreshold,
@@ -169,11 +168,12 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
     CSpectrumFluxAxis& itplTplFluxAxis = m_templateRebined_bf.GetFluxAxis();
     CSpectrumSpectralAxis& itplTplSpectralAxis = m_templateRebined_bf.GetSpectralAxis();
     CMask& itplMask = m_mskRebined_bf;
-
-    //below is non-sense and doesnt work
-    Float64* CSpectrum::m_pfgTplBuffer = pfgTplBuffer;
+    std::shared_ptr<CSpectrum> spec;
+    spec = std::shared_ptr<CSpectrum>( new CSpectrum( m_shiftedTplSpectralAxis_bf, tplFluxAxis));
+    if(opt_interp=="precomputedfinegrid")
+        spec->SetTemplateBuffer(tpl);
     //CSpectrum::Rebin( intersectedLambdaRange, tplFluxAxis, shiftedTplSpectralAxis, spcSpectralAxis, itplTplFluxAxis, itplTplSpectralAxis, itplMask );
-    CSpectrum::Rebin2( intersectedLambdaRange, tplFluxAxis, redshift, m_shiftedTplSpectralAxis_bf, spcSpectralAxis, itplTplFluxAxis, itplTplSpectralAxis, itplMask, opt_interp );
+    spec->Rebin2( intersectedLambdaRange, spcSpectralAxis, itplTplFluxAxis, itplTplSpectralAxis, itplMask, opt_interp, redshift);
 
 
     /*//overlapRate, Method 1
@@ -795,9 +795,12 @@ std::shared_ptr<COperatorResult> COperatorChiSquare2::Compute(const CSpectrum& s
     m_mskRebined_bf.SetSize(spectrum.GetSampleCount());
     m_shiftedTplSpectralAxis_bf.SetSize( tpl.GetSampleCount());
 
-    Float64* precomputedFineGridTplFlux;
-    if(opt_interp=="precomputedfinegrid"){
-        //*/
+    //Float64* precomputedFineGridTplFlux;
+
+//below is moved to basic fit
+   /* if(opt_interp=="precomputedfinegrid"){
+       
+        
         // Precalculate a fine grid template to be used for the 'closest value' rebin method
         Int32 n = tpl.GetSampleCount();
         CSpectrumFluxAxis tplFluxAxis = tpl.GetFluxAxis();
@@ -853,8 +856,9 @@ std::shared_ptr<COperatorResult> COperatorChiSquare2::Compute(const CSpectrum& s
 
         gsl_spline_free (spline);
         gsl_interp_accel_free (accelerator);
-        //*/
-    }
+
+        
+    }*/
     /*//debug:
     // save templateFine
     FILE* f = fopen( "template_fine.txt", "w+" );
@@ -944,7 +948,6 @@ std::shared_ptr<COperatorResult> COperatorChiSquare2::Compute(const CSpectrum& s
 
         BasicFit( spectrum,
                   tpl,
-                  precomputedFineGridTplFlux,
                   lambdaRange,
                   redshift,
                   overlapThreshold,
@@ -1091,9 +1094,6 @@ std::shared_ptr<COperatorResult> COperatorChiSquare2::Compute(const CSpectrum& s
         Log.LogDebug("  Operator-Chisquare2: EXTREMA forced n=%d", result->Extrema.size());
     }
 
-    if(opt_interp=="precomputedfinegrid"){
-        free(precomputedFineGridTplFlux);
-    }
     return result;
 
 }
@@ -1197,55 +1197,7 @@ const COperatorResult* COperatorChiSquare2::ExportChi2versusAZ(const CSpectrum& 
     m_shiftedTplSpectralAxis_bf.SetSize( tpl.GetSampleCount());
 
 
-    //*/
-    // Precalculate a fine grid template to be used for the 'closest value' rebin method
-    Int32 n = tpl.GetSampleCount();
-    CSpectrumFluxAxis tplFluxAxis = tpl.GetFluxAxis();
-    CSpectrumSpectralAxis tplSpectralAxis = tpl.GetSpectralAxis();
-    //Float64 dLambdaTgt =  1.0 * ( spectrum.GetMeanResolution()*0.9 )/( 1+sortedRedshifts[sortedRedshifts.size()-1] );
-    Float64 dLambdaTgt =  0.1;
-    //Float64 lmin = tplSpectralAxis[0];
-    Float64 lmin = 0;
-    Float64 lmax = tplSpectralAxis[n-1];
-    Int32 nTgt = (lmax-lmin)/dLambdaTgt + 2.0/dLambdaTgt;
-
-    // pfg with std::vector
-    //CTemplate       templateFine;
-    //templateFine.GetSpectralAxis().SetSize(nTgt);
-    //templateFine.GetFluxAxis().SetSize(nTgt);
-    //Float64* precomputedFineGridTplFlux = templateFine.GetFluxAxis().GetSamples();
-    // pfg with malloc
-    Float64* precomputedFineGridTplFlux = (Float64*)malloc(nTgt*sizeof(Float64));
-    // pfg with static array => doesn't work
-    //nTgt = 999999;
-    //Float64 precomputedFineGridTplFlux[999999];
-    //Log.LogInfo( "nTgt: %d samples", nTgt);
-
-    //initialise and allocate the gsl objects
-    Float64* Ysrc = tplFluxAxis.GetSamples();
-    Float64* Xsrc = tplSpectralAxis.GetSamples();
-    // linear
-    //gsl_interp *interpolation = gsl_interp_alloc (gsl_interp_linear,n);
-    //gsl_interp_init(interpolation, Xsrc, Ysrc, n);
-    //gsl_interp_accel * accelerator =  gsl_interp_accel_alloc();
-
-    //spline
-    gsl_spline *spline = gsl_spline_alloc (gsl_interp_cspline, n);
-    gsl_spline_init (spline, Xsrc, Ysrc, n);
-    gsl_interp_accel * accelerator =  gsl_interp_accel_alloc();
-
-    Int32 k = 0;
-    Float64 x = 0.0;
-    for(k=0; k<nTgt; k++){
-        x = lmin + k*dLambdaTgt;
-        if(x < tplSpectralAxis[0] || x > tplSpectralAxis[n-1]){
-            precomputedFineGridTplFlux[k] = 0.0;
-        }else{
-            //precomputedFineGridTplFlux[k] = gsl_interp_eval(interpolation, Xsrc, Ysrc, x, accelerator);
-            precomputedFineGridTplFlux[k] = gsl_spline_eval (spline, x, accelerator);
-        }
-    }
-    //*/
+    
 
     /*//debug:
     // save templateFine
@@ -1336,7 +1288,7 @@ const COperatorResult* COperatorChiSquare2::ExportChi2versusAZ(const CSpectrum& 
         for (Int32 j=0;j<sortedAmplitudes.size();j++)
         {
             Float64 ampl = sortedAmplitudes[j];
-            BasicFit( spectrum, tpl, precomputedFineGridTplFlux, lambdaRange, result->Redshifts[i], overlapThreshold,
+            BasicFit( spectrum, tpl, lambdaRange, result->Redshifts[i], overlapThreshold,
                       result->Overlap[i],
                       result->ChiSquare[i],
                       result->FitAmplitude[i],
@@ -1363,7 +1315,10 @@ const COperatorResult* COperatorChiSquare2::ExportChi2versusAZ(const CSpectrum& 
     }
     fclose( f );
 
+<<<<<<< HEAD
     free(precomputedFineGridTplFlux);
+=======
+>>>>>>> Refactoring and merging Rebin and Rebin2; Updating and correcting associated unit tests
     return result;
 
 }
