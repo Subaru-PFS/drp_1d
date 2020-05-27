@@ -46,9 +46,8 @@
 #include "RedshiftLibrary/spectrum/fluxaxis.h"
 #include "RedshiftLibrary/spectrum/spectralaxis.h"
 #include "RedshiftLibrary/method/linemodelsolve.h"
-#include "RedshiftLibrary/method/dtreebsolve.h"
-#include "RedshiftLibrary/method/dtreecsolve.h"
-#include "RedshiftLibrary/method/dtree7solve.h"
+#include "RedshiftLibrary/method/linematchingsolve.h"
+#include "RedshiftLibrary/method/linematching2solve.h"
 #include "RedshiftLibrary/method/chisquare2solve.h"
 #include "RedshiftLibrary/method/chisquarelogsolve.h"
 #include "RedshiftLibrary/method/tplcombinationsolve.h"
@@ -313,28 +312,19 @@ class CLineModelSolve
   const std::string GetDescription();
 };
 
-class CMethodDTreeBSolve
+class CMethodLineMatchingSolve
 {
  public:
-  CMethodDTreeBSolve( std::string calibrationPath="" );
-  ~CMethodDTreeBSolve();
+  CMethodLineMatchingSolve();
+  ~CMethodLineMatchingSolve();
   const std::string GetDescription();
 };
 
-class CMethodDTreeCSolve
+class CMethodLineMatching2Solve
 {
  public:
-  CMethodDTreeCSolve( std::string calibrationPath="" );
-  ~CMethodDTreeCSolve();
-  const std::string GetDescription();
-};
-
-class CMethodDTree7Solve
-{
- public:
-
-  CMethodDTree7Solve(std::string calibrationPath="");
-  ~CMethodDTree7Solve();
+  CMethodLineMatching2Solve();
+  ~CMethodLineMatching2Solve();
   const std::string GetDescription();
 };
 
