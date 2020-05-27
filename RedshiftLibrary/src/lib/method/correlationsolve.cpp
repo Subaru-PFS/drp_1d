@@ -11,17 +11,17 @@ using namespace NSEpic;
 using namespace std;
 
 
-COperatorCorrelationSolve::COperatorCorrelationSolve()
+CMethodCorrelationSolve::CMethodCorrelationSolve()
 {
 
 }
 
-COperatorCorrelationSolve::~COperatorCorrelationSolve()
+CMethodCorrelationSolve::~CMethodCorrelationSolve()
 {
 
 }
 
-std::shared_ptr<CCorrelationSolveResult>  COperatorCorrelationSolve::Compute(  CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
+std::shared_ptr<CCorrelationSolveResult>  CMethodCorrelationSolve::Compute(  CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
                                                         const CTemplateCatalog& tplCatalog, const TStringList& tplCategoryList,
                                                         const TFloat64Range& lambdaRange, const TFloat64Range& redshiftsRange, Float64 redshiftStep,
                                                         Float64 overlapThreshold )
@@ -58,7 +58,7 @@ std::shared_ptr<CCorrelationSolveResult>  COperatorCorrelationSolve::Compute(  C
     return NULL;
 }
 
-Bool COperatorCorrelationSolve::Solve( CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont, const CTemplate& tpl, const CTemplate& tplWithoutCont,
+Bool CMethodCorrelationSolve::Solve( CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont, const CTemplate& tpl, const CTemplate& tplWithoutCont,
                                const TFloat64Range& lambdaRange, const TFloat64Range& redshiftsRange, Float64 redshiftStep, Float64 overlapThreshold )
 {
     CSpectrum s = spc;

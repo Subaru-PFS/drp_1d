@@ -20,17 +20,17 @@ using namespace NSEpic;
 using namespace std;
 
 
-COperatorDTreeCSolve::COperatorDTreeCSolve( std::string calibrationPath)
+CMethodDTreeCSolve::CMethodDTreeCSolve( std::string calibrationPath)
 {
     m_calibrationPath = calibrationPath;
 }
 
-COperatorDTreeCSolve::~COperatorDTreeCSolve()
+CMethodDTreeCSolve::~CMethodDTreeCSolve()
 {
 
 }
 
-const std::string COperatorDTreeCSolve::GetDescription()
+const std::string CMethodDTreeCSolve::GetDescription()
 {
     std::string desc;
 
@@ -62,7 +62,7 @@ const std::string COperatorDTreeCSolve::GetDescription()
 
 }
 
-std::shared_ptr<CDTreeCSolveResult> COperatorDTreeCSolve::Compute( CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
+std::shared_ptr<CDTreeCSolveResult> CMethodDTreeCSolve::Compute( CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
                                                         const CTemplateCatalog& tplCatalog, const TStringList &tplCategoryList, const CRayCatalog &restRayCatalog,
                                                         const TFloat64Range& lambdaRange, const TFloat64List &redshifts)
 {
@@ -88,7 +88,7 @@ std::shared_ptr<CDTreeCSolveResult> COperatorDTreeCSolve::Compute( CDataStore& r
     return NULL;
 }
 
-Bool COperatorDTreeCSolve::Solve(CDataStore &dataStore, const CSpectrum &spc, const CSpectrum &spcWithoutCont, const CTemplateCatalog &tplCatalog, const TStringList &tplCategoryList, const CRayCatalog &restRayCatalog, const TFloat64Range &lambdaRange, const TFloat64List &redshifts, string &scopeStr)
+Bool CMethodDTreeCSolve::Solve(CDataStore &dataStore, const CSpectrum &spc, const CSpectrum &spcWithoutCont, const CTemplateCatalog &tplCatalog, const TStringList &tplCategoryList, const CRayCatalog &restRayCatalog, const TFloat64Range &lambdaRange, const TFloat64List &redshifts, string &scopeStr)
 {
     CSpectrum _spcContinuum = spc;
     CSpectrumFluxAxis spcfluxAxis = _spcContinuum.GetFluxAxis();
@@ -280,7 +280,7 @@ Bool COperatorDTreeCSolve::Solve(CDataStore &dataStore, const CSpectrum &spc, co
 }
 
 
-Bool COperatorDTreeCSolve::GetCombinedRedshift(CDataStore& store, std::string scopeStr)
+Bool CMethodDTreeCSolve::GetCombinedRedshift(CDataStore& store, std::string scopeStr)
 {
     std::string scope = "dtreeCsolve.linemodel";
     auto results = std::dynamic_pointer_cast<const CLineModelResult>( store.GetGlobalResult(scope.c_str()).lock() );
@@ -697,7 +697,7 @@ Bool COperatorDTreeCSolve::GetCombinedRedshift(CDataStore& store, std::string sc
 }
 
 /**
- * @brief COperatorDTreeCSolve::GetBestRedshiftChi2List
+ * @brief CMethodDTreeCSolve::GetBestRedshiftChi2List
  * get the best chi2 result (between all template), with the corresponding redshift list
  * @param store
  * @param scopeStr
@@ -705,7 +705,7 @@ Bool COperatorDTreeCSolve::GetCombinedRedshift(CDataStore& store, std::string sc
  * @param zList
  * @return
  */
-TFloat64List COperatorDTreeCSolve::GetBestRedshiftChi2List( CDataStore& store, std::string scopeStr,  Float64& minmerit, TFloat64List& zList)
+TFloat64List CMethodDTreeCSolve::GetBestRedshiftChi2List( CDataStore& store, std::string scopeStr,  Float64& minmerit, TFloat64List& zList)
 {
     std::string scope = "dtreeCsolve.chisquare2solve.";
     scope.append(scopeStr.c_str());
@@ -745,7 +745,7 @@ TFloat64List COperatorDTreeCSolve::GetBestRedshiftChi2List( CDataStore& store, s
 }
 
 
-TFloat64List COperatorDTreeCSolve::GetMargChi2List( CDataStore& store, std::string scopeStr,  Float64& minmerit, TFloat64List& zList)
+TFloat64List CMethodDTreeCSolve::GetMargChi2List( CDataStore& store, std::string scopeStr,  Float64& minmerit, TFloat64List& zList)
 {
     std::string scope = "dtreeCsolve.chisquare2solve.";
     scope.append(scopeStr.c_str());
@@ -806,7 +806,7 @@ TFloat64List COperatorDTreeCSolve::GetMargChi2List( CDataStore& store, std::stri
 
 }
 
-TFloat64List COperatorDTreeCSolve::GetChi2ListForGivenTemplateName( CDataStore& store, std::string scopeStr, TFloat64List givenRedshifts, std::vector<std::string> givenTplNames)
+TFloat64List CMethodDTreeCSolve::GetChi2ListForGivenTemplateName( CDataStore& store, std::string scopeStr, TFloat64List givenRedshifts, std::vector<std::string> givenTplNames)
 {
     std::string scope = "dtreeCsolve.chisquare2solve.";
     scope.append(scopeStr.c_str());

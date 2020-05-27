@@ -627,7 +627,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
     }
     /*
     else if(methodName  == "amazed0_1" ){
-        COperatorDTree7Solve Solve(calibrationDirPath);
+        CMethodDTree7Solve Solve(calibrationDirPath);
         mResult = Solve.Compute( ctx.GetDataStore(),
                                  ctx.GetSpectrum(),
                                  ctx.GetSpectrumWithoutContinuum(),
@@ -639,7 +639,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
                                  redshiftStep);
 
     }else if(methodName  == "amazed0_2" ){
-        COperatorDTreeBSolve Solve(calibrationDirPath);
+        CMethodDTreeBSolve Solve(calibrationDirPath);
         mResult = Solve.Compute( ctx.GetDataStore(),
                                  ctx.GetSpectrum(),
                                  ctx.GetSpectrumWithoutContinuum(),
@@ -649,7 +649,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
                                  spcLambdaRange, redshifts);
 
     }else if(methodName  == "amazed0_3" ){
-        COperatorDTreeCSolve Solve(calibrationDirPath);
+        CMethodDTreeCSolve Solve(calibrationDirPath);
         mResult = Solve.Compute( ctx.GetDataStore(),
                                  ctx.GetSpectrum(),
                                  ctx.GetSpectrumWithoutContinuum(),
@@ -660,7 +660,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
                                  redshifts);
 
     }else if(methodName  == "correlationsolve" ){
-        COperatorCorrelationSolve solve;
+        CMethodCorrelationSolve solve;
         mResult = solve.Compute( ctx.GetDataStore(),
                                  ctx.GetSpectrum(),
                                  ctx.GetSpectrumWithoutContinuum(),
@@ -669,7 +669,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
                                  lambdaRange, redshiftRange, redshiftStep );
 
     }else if(methodName  == "blindsolve" ){
-        COperatorBlindSolve blindSolve;
+        CMethodBlindSolve blindSolve;
         mResult = blindSolve.Compute( ctx.GetDataStore(),
                                       ctx.GetSpectrum(),
                                       ctx.GetSpectrumWithoutContinuum(),
@@ -678,7 +678,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
                                       lambdaRange, redshiftRange, redshiftStep);
 
     }else if(methodName  == "linematching" ){
-        COperatorLineMatchingSolve Solve;
+        CMethodLineMatchingSolve Solve;
         mResult = Solve.Compute(ctx.GetDataStore(), ctx.GetSpectrum(),
                                 lambdaRange,
                                 redshiftRange,
@@ -686,7 +686,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
                                 ctx.GetRayCatalog() );
 
     }else if(methodName  == "linematching2" ){
-        COperatorLineMatching2Solve Solve;
+        CMethodLineMatching2Solve Solve;
         mResult = Solve.Compute(ctx.GetDataStore(),
                                 ctx.GetSpectrum(),
                                 spcLambdaRange,
