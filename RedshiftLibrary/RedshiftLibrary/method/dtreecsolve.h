@@ -20,7 +20,7 @@ class CMethodDTreeCSolve
 
 public:
 
-    CMethodDTreeCSolve(std::string calibrationPath);
+    CMethodDTreeCSolve( std::string calibrationPath="" );
     ~CMethodDTreeCSolve();
 
     const std::string GetDescription();
