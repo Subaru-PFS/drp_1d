@@ -165,17 +165,18 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
     TFloat64Range::Intersect( tplLambdaRange, spcLambdaRange, intersectedLambdaRange );
 
     //UInt32 tgtn = spcSpectralAxis.GetSamplesCount() ;
-    CSpectrumFluxAxis& itplTplFluxAxis = m_templateRebined_bf.GetFluxAxis();
-    CSpectrumSpectralAxis& itplTplSpectralAxis = m_templateRebined_bf.GetSpectralAxis();
+    CSpectrumFluxAxis itplTplFluxAxis;
+    CSpectrumSpectralAxis itplTplSpectralAxis;
+    CSpectrum itplTplSpectrum;
     CMask& itplMask = m_mskRebined_bf;
+
     std::shared_ptr<CSpectrum> spec;
     spec = std::shared_ptr<CSpectrum>( new CSpectrum( m_shiftedTplSpectralAxis_bf, tplFluxAxis));
-    if(opt_interp=="precomputedfinegrid")
-        spec->SetTemplateBuffer(tpl);
-    //CSpectrum::Rebin( intersectedLambdaRange, tplFluxAxis, shiftedTplSpectralAxis, spcSpectralAxis, itplTplFluxAxis, itplTplSpectralAxis, itplMask );
-    spec->Rebin2( intersectedLambdaRange, spcSpectralAxis, itplTplFluxAxis, itplTplSpectralAxis, itplMask, opt_interp, redshift);
+    spec->Rebin( intersectedLambdaRange, spcSpectralAxis, itplTplSpectrum, itplMask, opt_interp, redshift);
 
-
+    itplTplFluxAxis = itplTplSpectrum.GetFluxAxis();
+    itplTplSpectralAxis = itplTplSpectrum.GetSpectralAxis();
+    m_templateRebined_bf.SetAxis(itplTplSpectrum);
     /*//overlapRate, Method 1
     CMask mask;
     spcSpectralAxis.GetMask( lambdaRange, mask );

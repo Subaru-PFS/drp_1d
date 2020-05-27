@@ -19,12 +19,13 @@ public:
     CTemplate( const std::string& name, const std::string& category );
     CTemplate( const std::string& name, const std::string& category,
 	       CSpectrumSpectralAxis& spectralAxis, CSpectrumFluxAxis& fluxAxis);
-    ~CTemplate();
+     ~CTemplate();
 
     const std::string&  GetCategory() const;
     const std::string&  GetName() const;
     Bool Save(const char *filePath ) const;
-
+    Bool SetAxis(const CSpectrum& spectrum); //kind of copy 
+   
 private:
 
     std::string     m_Category;

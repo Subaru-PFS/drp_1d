@@ -113,17 +113,22 @@ int COperatorChicorr::Compute(const CSpectrum& spectrum, const CSpectrum& spectr
 
         CSpectrumFluxAxis itplTplWithoutContFluxAxis;
         CSpectrumSpectralAxis itplTplSpectralAxis;
+        CSpectrum itplTplWithoutContinuumSpectrum, itplTplSpectrum;
+
         CMask itplMask;
+
         std::shared_ptr<CSpectrum> spec, spec2;
         spec = std::shared_ptr<CSpectrum>( new CSpectrum(shiftedTplSpectralAxis, tplWithoutContFluxAxis) );
         //CSpectrum spec  = new CSpectrum(shiftedTplSpectralAxis, tplWithoutContFluxAxis);
-        spec->Rebin2( intersectedLambdaRange, spcSpectralAxis, itplTplWithoutContFluxAxis, itplTplSpectralAxis, itplMask );
+        spec->Rebin( intersectedLambdaRange, spcSpectralAxis, itplTplWithoutContinuumSpectrum, itplMask );
+        itplTplWithoutContFluxAxis = itplTplWithoutContinuumSpectrum.GetFluxAxis();
 
         // same function for the spc with continuum, todo check ?
         CSpectrumFluxAxis itplTplFluxAxis;
         spec = std::shared_ptr<CSpectrum>( new CSpectrum(shiftedTplSpectralAxis, tplFluxAxis));
-        spec2->Rebin2( intersectedLambdaRange, spcSpectralAxis, itplTplFluxAxis, itplTplSpectralAxis, itplMask );
-
+        spec2->Rebin( intersectedLambdaRange, spcSpectralAxis, itplTplSpectrum, itplMask );
+        itplTplFluxAxis =  itplTplSpectrum.GetFluxAxis();
+        itplTplSpectralAxis = itplTplSpectrum.GetSpectralAxis();
 
         CMask mask;
         spcSpectralAxis.GetMask( lambdaRange, mask );

@@ -1936,12 +1936,14 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(const CSpe
                                        exp(loglbdamax + 0.5 * loglbdaStep));
             std::shared_ptr<CSpectrum> spec, spec_error;
             spec = std::shared_ptr<CSpectrum>( new CSpectrum(spectrum.GetSpectralAxis(), spectrum.GetFluxAxis()));
+            CSpectrum spectrumRebinedSpectrum, errorspectrumRebinedSpectrum;
             //linear 
-            spec->Rebin2(
+            spec->Rebin(
                 spcLbdaRange, targetSpectralAxis,
-                spectrumRebinedFluxAxis, spectrumRebinedSpectralAxis,
+                spectrumRebinedSpectrum,//spectrumRebinedFluxAxis, spectrumRebinedSpectralAxis
                 m_mskRebinedLog);
-
+            spectrumRebinedFluxAxis = spectrumRebinedSpectrum.GetFluxAxis();
+            spectrumRebinedSpectralAxis = spectrumRebinedSpectrum.GetSpectralAxis();
             // rebin the variance
             const TFloat64List &error = spectrum.GetFluxAxis().GetError();
             CSpectrumFluxAxis errorFluxAxis(spectrum.GetSampleCount());
@@ -1949,18 +1951,18 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(const CSpe
             {
                 errorFluxAxis[t] = error[t];
             }
-            CSpectrumSpectralAxis errorRebinedSpectralAxis;
-            errorRebinedSpectralAxis.SetSize(loglbdaCount);
+            /*CSpectrumSpectralAxis errorRebinedSpectralAxis;
+            errorRebinedSpectralAxis.SetSize(loglbdaCount);*/
             CMask error_mskRebinedLog;
             error_mskRebinedLog.SetSize(loglbdaCount);
 
             spec_error  = std::shared_ptr<CSpectrum>(new CSpectrum(spectrum.GetSpectralAxis(), errorFluxAxis));
-            spec_error->Rebin2(
+            spec_error->Rebin(
                 spcLbdaRange, targetSpectralAxis,
-                m_errorRebinedLog, errorRebinedSpectralAxis,
+                errorspectrumRebinedSpectrum, //m_errorRebinedLog, errorRebinedSpectralAxis,
                 error_mskRebinedLog);
+            m_errorRebinedLog = errorspectrumRebinedSpectrum.GetFluxAxis();
         }
-
         // put the error in the spectrum object: needed for cstLog estimation
         // (at least)
         for (Int32 t = 0; t < m_spectrumRebinedLog.GetSampleCount(); t++)
@@ -2197,30 +2199,33 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(const CSpe
                          "Extend your input template wavelength range or "
                          "modify the processing parameter <lambdarange>");
         }
-
+        /*
         CSpectrumFluxAxis &templateRebinedFluxAxis =  m_templateRebinedLog.GetFluxAxis();
         CSpectrumSpectralAxis &templateRebinedSpectralAxis = m_templateRebinedLog.GetSpectralAxis();
         templateRebinedFluxAxis.SetSize(tpl_loglbdaCount);
         templateRebinedSpectralAxis.SetSize(tpl_loglbdaCount);
+*/
+        CSpectrum templateRebinnedLogSpectrum;
         CMask tpl_mskRebinedLog;
         tpl_mskRebinedLog.SetSize(tpl_loglbdaCount);
         std::shared_ptr<CSpectrum> spec;
         spec = std::shared_ptr<CSpectrum>( new CSpectrum(tpl.GetSpectralAxis(), tpl.GetFluxAxis()) );
-        spec->Rebin2(
+        spec->Rebin(
             tplLbdaRange,
             tpl_targetSpectralAxis,
-            templateRebinedFluxAxis, templateRebinedSpectralAxis,
-            tpl_mskRebinedLog);
+            templateRebinnedLogSpectrum,
+            tpl_mskRebinedLog);     
+        m_templateRebinedLog.SetAxis(templateRebinnedLogSpectrum);  //cause used below in fitAllz
         if (verboseExportLogRebin)
         {
             // save rebinned data
             FILE *f_tpl_tgtlbda =
                 fopen("loglbda_rebinlog_tpllogrebin_dbg.txt", "w+");
-            for (Int32 t = 0; t < m_templateRebinedLog.GetSampleCount(); t++)
+            for (Int32 t = 0; t < templateRebinnedLogSpectrum.GetSampleCount(); t++)
             {
                 fprintf(f_tpl_tgtlbda, "%f\t%e\n",
-                        m_templateRebinedLog.GetSpectralAxis()[t],
-                        m_templateRebinedLog.GetFluxAxis()[t]);
+                        templateRebinnedLogSpectrum.GetSpectralAxis()[t],
+                        templateRebinnedLogSpectrum.GetFluxAxis()[t]);
             }
             fclose(f_tpl_tgtlbda);
         }

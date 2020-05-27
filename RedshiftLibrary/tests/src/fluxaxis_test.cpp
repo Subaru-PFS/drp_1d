@@ -64,17 +64,15 @@ BOOST_AUTO_TEST_CASE(calcul)
   // cas 1
   std::shared_ptr<CSpectrum> object_CSpectrum;
   object_CSpectrum = std::shared_ptr<CSpectrum>( new CSpectrum( (*sourceSpectralAxis), (*sourceFluxAxis)));
-
-  bool resultcas1 = object_CSpectrum->Rebin2((*object_Range),
+  CSpectrum rebinnedSpectrum;
+  bool resultcas1 = object_CSpectrum->Rebin((*object_Range),
 						    (*targetSpectralAxis),
-						    (*rebinedFluxAxis),
-						    (*rebinedSpectralAxis),
+						    rebinnedSpectrum,
 						    (*rebinedMask));
   BOOST_CHECK(resultcas1 == true);
-  BOOST_TEST_MESSAGE("cas1:" << object_CSpectrum->Rebin2((*object_Range),
+  BOOST_TEST_MESSAGE("cas1:" << object_CSpectrum->Rebin((*object_Range),
 								(*targetSpectralAxis),
-								(*rebinedFluxAxis),
-								(*rebinedSpectralAxis),
+								rebinnedSpectrum,
 								(*rebinedMask)));
 
   // cas 2
@@ -84,11 +82,10 @@ BOOST_AUTO_TEST_CASE(calcul)
 
   std::shared_ptr<CSpectrum> object_CSpectrum2;
   object_CSpectrum2 = std::shared_ptr<CSpectrum>( new CSpectrum( (*sourceSpectralAxis2), (*sourceFluxAxis)));
-  
-  bool resultcas2 = object_CSpectrum2->Rebin2((*object_Range),
+  CSpectrum rebinnedSpectrum2;
+  bool resultcas2 = object_CSpectrum2->Rebin((*object_Range),
 						    (*targetSpectralAxis),
-						    (*rebinedFluxAxis),
-						    (*rebinedSpectralAxis),
+						    rebinnedSpectrum2,
 						    (*rebinedMask));
   BOOST_CHECK(resultcas2 == false);
   BOOST_TEST_MESSAGE("cas2:" << resultcas2);
@@ -100,11 +97,10 @@ BOOST_AUTO_TEST_CASE(calcul)
 
   std::shared_ptr<CSpectrum> object_CSpectrum3;
   object_CSpectrum3 = std::shared_ptr<CSpectrum>( new CSpectrum( (*sourceSpectralAxis3), (*sourceFluxAxis)));
-  
-  bool resultcas3 = object_CSpectrum3->Rebin2((*object_Range),
+  CSpectrum rebinnedSpectrum3;
+  bool resultcas3 = object_CSpectrum3->Rebin((*object_Range),
 						    (*targetSpectralAxis),
-						    (*rebinedFluxAxis),
-						    (*rebinedSpectralAxis),
+						    rebinnedSpectrum3,
 						    (*rebinedMask));
   BOOST_CHECK(resultcas3 == false);
   BOOST_TEST_MESSAGE("cas3:" << resultcas3);
@@ -128,11 +124,10 @@ BOOST_AUTO_TEST_CASE(calcul)
 
   std::shared_ptr<CSpectrum> object_CSpectrum4;
   object_CSpectrum4 = std::shared_ptr<CSpectrum>( new CSpectrum( (*sourceSpectralAxis4), (*sourceFluxAxis)));
-  
-  bool resultcas4 = object_CSpectrum4->Rebin2((*object_Range4),
+  CSpectrum rebinnedSpectrum4;
+  bool resultcas4 = object_CSpectrum4->Rebin((*object_Range4),
 						    (*targetSpectralAxis4),
-						    (*rebinedFluxAxis),
-						    (*rebinedSpectralAxis),
+						    rebinnedSpectrum4,
 						    (*rebinedMask2));
   BOOST_CHECK(resultcas4 == true);
   BOOST_TEST_MESSAGE("cas4:" << resultcas4);
@@ -149,47 +144,49 @@ BOOST_AUTO_TEST_CASE(calcul)
   std::shared_ptr<CSpectrum> object_CSpectrum5;
   object_CSpectrum5 = std::shared_ptr<CSpectrum>( new CSpectrum( (*sourceSpectralAxis), (*sourceFluxAxis)));
   CMask *rebinedMask3 = new CMask();
-  bool resultrebin2cas1 = object_CSpectrum5->Rebin2((*object_Range),
+  CSpectrum rebinnedSpectrum5;
+  bool resultRebincas1 = object_CSpectrum5->Rebin((*object_Range),
 							   (*targetSpectralAxis),
-							   (*rebinedFluxAxis),
-							   (*rebinedSpectralAxis),
+							   rebinnedSpectrum5,
 							   (*rebinedMask3),
 							   opt_interp, source);
-  BOOST_CHECK(resultrebin2cas1 == true);
-  BOOST_TEST_MESSAGE("rebin2 cas1:" << resultrebin2cas1);
+  BOOST_CHECK(resultRebincas1 == true);
+  BOOST_TEST_MESSAGE("Rebin cas1:" << resultRebincas1);
 
   // cas 2
   CMask *rebinedMask4 = new CMask();
   std::shared_ptr<CSpectrum> object_CSpectrum6;
   object_CSpectrum6 = std::shared_ptr<CSpectrum>( new CSpectrum( (*sourceSpectralAxis2), (*sourceFluxAxis)));
-  bool resultrebin2cas2 = object_CSpectrum6->Rebin2((*object_Range),
+  CSpectrum rebinnedSpectrum6;
+  bool resultRebincas2 = object_CSpectrum6->Rebin((*object_Range),
 							   (*targetSpectralAxis),
-							   (*rebinedFluxAxis),
-							   (*rebinedSpectralAxis),
+							   rebinnedSpectrum6,
 							   (*rebinedMask4),
 							   opt_interp, source);
-  BOOST_CHECK(resultrebin2cas2 == false);
-  BOOST_TEST_MESSAGE("rebin2 cas2:" << resultrebin2cas2);
+  BOOST_CHECK(resultRebincas2 == false);
+  BOOST_TEST_MESSAGE("Rebin cas2:" << resultRebincas2);
 
   // cas 3
   CMask *rebinedMask5 = new CMask();
   std::shared_ptr<CSpectrum> object_CSpectrum7;
   object_CSpectrum7 = std::shared_ptr<CSpectrum>( new CSpectrum( (*sourceSpectralAxis3), (*sourceFluxAxis)));
-  bool resultrebin2cas3 = object_CSpectrum7->Rebin2(
-							   (*object_Range), (*targetSpectralAxis), (*rebinedFluxAxis),
-							   (*rebinedSpectralAxis), (*rebinedMask5), opt_interp, source);
-  BOOST_CHECK(resultrebin2cas3 == false);
-  BOOST_TEST_MESSAGE("rebin2 cas3:" << resultrebin2cas3);
+  CSpectrum rebinnedSpectrum7;
+  bool resultRebincas3 = object_CSpectrum7->Rebin(
+							   (*object_Range), (*targetSpectralAxis), rebinnedSpectrum7, 
+                 (*rebinedMask5), opt_interp, source);
+  BOOST_CHECK(resultRebincas3 == false);
+  BOOST_TEST_MESSAGE("Rebin cas3:" << resultRebincas3);
 
   // cas 4
   std::shared_ptr<CSpectrum> object_CSpectrum8;
   object_CSpectrum8 = std::shared_ptr<CSpectrum>( new CSpectrum( (*sourceSpectralAxis4), (*sourceFluxAxis)));
   CMask *rebinedMask6 = new CMask();
-  bool resultrebin2cas4 = object_CSpectrum8->Rebin2(
-							   (*object_Range4), (*targetSpectralAxis4), (*rebinedFluxAxis),
-							   (*rebinedSpectralAxis), (*rebinedMask6), opt_interp);
-  BOOST_CHECK(resultrebin2cas4 == true);
-  BOOST_TEST_MESSAGE("rebin2 cas4:" << resultrebin2cas4);
+  CSpectrum rebinnedSpectrum8;
+  bool resultRebincas4 = object_CSpectrum8->Rebin(
+							   (*object_Range4), (*targetSpectralAxis4), 
+                 rebinnedSpectrum8, (*rebinedMask6), opt_interp);
+  BOOST_CHECK(resultRebincas4 == true);
+  BOOST_TEST_MESSAGE("Rebin cas4:" << resultRebincas4);
   
 
   // cas 5
@@ -199,24 +196,25 @@ BOOST_AUTO_TEST_CASE(calcul)
   object_CSpectrum9 = std::shared_ptr<CSpectrum>( new CSpectrum( (*sourceSpectralAxis4), (*sourceFluxAxis)));
   
   //Todo:below requires verification
-  object_CSpectrum9->SetTemplateBuffer(*object_CSpectrum9);//const Float64 *Buffer = sourceSpectralAxis->GetSamples();
+  //object_CSpectrum9->SetTemplateBuffer(*object_CSpectrum9);//const Float64 *Buffer = sourceSpectralAxis->GetSamples();
   CMask *rebinedMask7 = new CMask();
-
-  bool resultrebin2cas5 = object_CSpectrum9->Rebin2(
-							   (*object_Range4), (*targetSpectralAxis4), (*rebinedFluxAxis),
-							   (*rebinedSpectralAxis), (*rebinedMask7), opt_interp2, source);
-  BOOST_CHECK(resultrebin2cas5 == true);
-  BOOST_TEST_MESSAGE("rebin2 cas5:" << resultrebin2cas5);
+  CSpectrum rebinnedSpectrum9;
+  bool resultRebincas5 = object_CSpectrum9->Rebin(
+							   (*object_Range4), (*targetSpectralAxis4), 
+                 rebinnedSpectrum9, (*rebinedMask7), opt_interp2, source);
+  BOOST_CHECK(resultRebincas5 == true);
+  BOOST_TEST_MESSAGE("Rebin cas5:" << resultRebincas5);
 
   CMask *rebinedMask8 = new CMask();
   std::shared_ptr<CSpectrum> object_CSpectrum10;
   object_CSpectrum10 = std::shared_ptr<CSpectrum>( new CSpectrum( (*sourceSpectralAxis4), (*sourceFluxAxis)));
   std::shared_ptr<CSpectrum> object_CSpectrum_null = std::shared_ptr<CSpectrum>( new CSpectrum());
-  object_CSpectrum10->SetTemplateBuffer(*object_CSpectrum_null);
-  bool resultrebin2cas5bis = object_CSpectrum10->Rebin2(
-							      (*object_Range4), (*targetSpectralAxis4), (*rebinedFluxAxis),
-							      (*rebinedSpectralAxis), (*rebinedMask8), opt_interp2, source);
-  BOOST_CHECK(resultrebin2cas5bis == false);
+  //object_CSpectrum10->SetTemplateBuffer(*object_CSpectrum_null); //TODO check this
+  CSpectrum rebinnedSpectrum10;
+  bool resultRebincas5bis = object_CSpectrum10->Rebin(
+							      (*object_Range4), (*targetSpectralAxis4), 
+                    rebinnedSpectrum10, (*rebinedMask8), opt_interp2, source);
+  BOOST_CHECK(resultRebincas5bis == false);
 
   // cas 6
   const std::string opt_interp3 = "spline";
@@ -224,22 +222,24 @@ BOOST_AUTO_TEST_CASE(calcul)
   CMask *rebinedMask9 = new CMask();
   std::shared_ptr<CSpectrum> object_CSpectrum11;
   object_CSpectrum11 = std::shared_ptr<CSpectrum>( new CSpectrum( (*sourceSpectralAxis4), (*sourceFluxAxis)));
-  bool resultrebin2cas6 = object_CSpectrum11->Rebin2(
-							   (*object_Range4), (*targetSpectralAxis4), (*rebinedFluxAxis),
-							   (*rebinedSpectralAxis), (*rebinedMask9), opt_interp3, source);
-  BOOST_CHECK(resultrebin2cas6 == true);
-  BOOST_TEST_MESSAGE("rebin2 cas6:" << resultrebin2cas6);
+  CSpectrum rebinnedSpectrum11;
+  bool resultRebincas6 = object_CSpectrum11->Rebin(
+							   (*object_Range4), (*targetSpectralAxis4), 
+                 rebinnedSpectrum11, (*rebinedMask9), opt_interp3, source);
+  BOOST_CHECK(resultRebincas6 == true);
+  BOOST_TEST_MESSAGE("Rebin cas6:" << resultRebincas6);
 
   // cas 7
   const std::string opt_interp4 = "ngp";
   CMask *rebinedMask10 = new CMask();
   std::shared_ptr<CSpectrum> object_CSpectrum12;
   object_CSpectrum12 = std::shared_ptr<CSpectrum>( new CSpectrum( (*sourceSpectralAxis4), (*sourceFluxAxis)));
-  bool resultrebin2cas7 = object_CSpectrum12->Rebin2(
-							   (*object_Range4), (*targetSpectralAxis4), (*rebinedFluxAxis),
-							   (*rebinedSpectralAxis), (*rebinedMask10), opt_interp4);
-  BOOST_CHECK(resultrebin2cas7 == true);
-  BOOST_TEST_MESSAGE("rebin2 cas7:" << resultrebin2cas7);
+  CSpectrum rebinnedSpectrum12;
+  bool resultRebincas7 = object_CSpectrum12->Rebin(
+							   (*object_Range4), (*targetSpectralAxis4), 
+                 rebinnedSpectrum12, (*rebinedMask10), opt_interp4);
+  BOOST_CHECK(resultRebincas7 == true);
+  BOOST_TEST_MESSAGE("Rebin cas7:" << resultRebincas7);
 
   //---------//
   // test ApplyMedianSmooth

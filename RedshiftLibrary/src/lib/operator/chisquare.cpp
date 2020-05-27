@@ -68,11 +68,14 @@ void COperatorChiSquare::BasicFit( const CSpectrum& spectrum, const CTemplate& t
 
     CSpectrumFluxAxis itplTplFluxAxis;
     CSpectrumSpectralAxis itplTplSpectralAxis;
+    CSpectrum itplTplSpectrum;
     CMask itplMask;
     std::shared_ptr<CSpectrum> spec, spec_error;
     spec = std::shared_ptr<CSpectrum>( new CSpectrum(shiftedTplSpectralAxis, tplFluxAxis) );
-    spec->Rebin2( intersectedLambdaRange, spcSpectralAxis, itplTplFluxAxis, itplTplSpectralAxis, itplMask );
+    spec->Rebin( intersectedLambdaRange, spcSpectralAxis, itplTplSpectrum, itplMask );
 
+    itplTplFluxAxis = itplTplSpectrum.GetFluxAxis();
+    itplTplSpectralAxis = itplTplSpectrum.GetSpectralAxis();
     CMask mask;
     spcSpectralAxis.GetMask( lambdaRange, mask );
     itplMask &= mask;

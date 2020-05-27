@@ -1156,7 +1156,7 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, I
                         bestTplName = tpl.GetName();
                     }
 
-    std::cout<< "Redshift "<< m_Redshift<<" "<< fitDustCoeff << " firstpass idx for DustCoeff " << " : "<<m_fitContinuum_tplFitDustCoeff << "\n";
+  //  std::cout<< "Redshift "<< m_Redshift<<" "<< fitDustCoeff << " firstpass idx for DustCoeff " << " : "<<m_fitContinuum_tplFitDustCoeff << "\n";
     std::cout<< "Redshift "<< m_Redshift<<" "<< fitMeiksinIdx << " firstpass idx for MeiksinIdx "<< " : "<< m_fitContinuum_tplFitMeiksinIdx << "\n";
         
                     break;

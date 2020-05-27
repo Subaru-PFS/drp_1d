@@ -29,8 +29,8 @@ public:
     CSpectrum(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis);
     ~CSpectrum();
 
-    CSpectrum& operator=(const CSpectrum& other);
-
+    CSpectrum& operator=(const CSpectrum& other); 
+ 
     void  SetName( const char* name );
 
     Bool InvertFlux();
@@ -74,18 +74,17 @@ public:
     void                SetWaveletsDFBinPath(std::string binPath);
 
     void                LoadSpectrum(const char* spectrumFilePath, const char* noiseFilePath);
+    Bool                SetAxis( CSpectrumSpectralAxis& spectralAxis, CSpectrumFluxAxis& fluxAxis);
 
-    Bool                SetTemplateBuffer( CSpectrum spectrum);
-    /*Bool              Rebin( const TFloat64Range& range, const CSpectrumSpectralAxis& targetSpectralAxis,
-                               CSpectrum& rebinedSpectrum, CMask& rebinedMask, const std::string opt_interp ); //linear always
-                               */
-    Bool                Rebin2( const TFloat64Range& range, const CSpectrumSpectralAxis& targetSpectralAxis,
-                                CSpectrumFluxAxis& rebinedFluxAxis, CSpectrumSpectralAxis& rebinedSpectralAxis,/*CSpectrum& rebinedSpectrum,*/ CMask& rebinedMask, const std::string opt_interp = "lin", Float64 sourcez = -1 ); 
-                               //sourcez only used with precomputefinegrid  
+    Bool                Rebin( const TFloat64Range& range, const CSpectrumSpectralAxis& targetSpectralAxis,
+                                CSpectrum& rebinedSpectrum, CMask& rebinedMask, const std::string opt_interp = "lin", Float64 sourcez = -1 ); 
 protected:
     CSpectrumSpectralAxis           m_SpectralAxis;
     CSpectrumFluxAxis               m_FluxAxis;
     TFloat64List                    m_pfgTplBuffer;
+    Bool                            RebinFineGrid();
+    Bool                            m_FineGridInterpolated = false;
+    Float64                         m_dLambdaTgt = 0.1;//oversampling step for fine grid 
 private:
 
     std::string                     m_Name;

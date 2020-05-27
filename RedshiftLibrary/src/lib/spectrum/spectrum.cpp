@@ -99,26 +99,30 @@ CSpectrum& CSpectrum::operator=(const CSpectrum& other)
 
     return *this;
 }
+Bool  CSpectrum::SetAxis( CSpectrumSpectralAxis& spectralAxis, CSpectrumFluxAxis& fluxAxis){
+    
+    m_SpectralAxis = spectralAxis;
+    m_FluxAxis = fluxAxis;
+    return true;
+}
 /**
  * below should be calculated in the case of precomputedfinegrid
 */
-Bool CSpectrum::SetTemplateBuffer(CSpectrum tpl){
+Bool CSpectrum::RebinFineGrid(){
  // Precalculate a fine grid template to be used for the 'closest value' rebin method
-  Int32 n = tpl.GetSampleCount();
+  Int32 n = m_FluxAxis.GetSamplesCount();
   if(!n)
     return false;
-  CSpectrumFluxAxis tplFluxAxis = tpl.GetFluxAxis();
-  CSpectrumSpectralAxis tplSpectralAxis = tpl.GetSpectralAxis();
-  Float64 dLambdaTgt = 0.1;
-  Float64 lmin = 0;
-  Float64 lmax = tplSpectralAxis[n - 1];
-  Int32 nTgt = (lmax - lmin) / dLambdaTgt + 2.0 / dLambdaTgt;
+
+  Float64 lmin = m_SpectralAxis[0];//templates wavelength never starts with 0
+  Float64 lmax = m_SpectralAxis[n - 1];
+  Int32 nTgt = (lmax - lmin) / m_dLambdaTgt + 2.0 / m_dLambdaTgt;
 
   TFloat64List precomputedFineGridTplFlux(nTgt * sizeof(Float64));
 
   //inialise and allocate the gsl objects
-  Float64 * Ysrc = tplFluxAxis.GetSamples();
-  Float64 * Xsrc = tplSpectralAxis.GetSamples();
+  Float64 * Ysrc = m_FluxAxis.GetSamples();
+  Float64 * Xsrc = m_SpectralAxis.GetSamples();
 
   //spline
   gsl_spline * spline = gsl_spline_alloc(gsl_interp_cspline, n);
@@ -128,8 +132,8 @@ Bool CSpectrum::SetTemplateBuffer(CSpectrum tpl){
   Int32 k = 0;
   Float64 x = 0.0;
   for (k = 0; k < nTgt; k++) {
-    x = lmin + k * dLambdaTgt;
-    if (x < tplSpectralAxis[0] || x > tplSpectralAxis[n - 1]) {
+    x = lmin + k * m_dLambdaTgt;
+    if (x < m_SpectralAxis[0] || x > m_SpectralAxis[n - 1]) {
       precomputedFineGridTplFlux[k] = 0.0;
     } else {
       precomputedFineGridTplFlux[k] = gsl_spline_eval(spline, x, accelerator);
@@ -138,6 +142,7 @@ Bool CSpectrum::SetTemplateBuffer(CSpectrum tpl){
   gsl_spline_free(spline);
   gsl_interp_accel_free(accelerator);
   m_pfgTplBuffer = precomputedFineGridTplFlux;
+  m_FineGridInterpolated = true;
   return true;
 }
 
@@ -539,16 +544,21 @@ void CSpectrum::LoadSpectrum(const char* spectrumFilePath, const char* noiseFile
 /// - opt_interp = 'spline' : GSL/spline interpolation is performed (TODO - not tested)
 /// - opt_interp = 'ngp' : nearest grid point is performed (TODO - not tested)
 ///
-Bool CSpectrum::Rebin2( const TFloat64Range& range, const CSpectrumSpectralAxis& targetSpectralAxis,
-                        CSpectrumFluxAxis& rebinedFluxAxis, CSpectrumSpectralAxis& rebinedSpectralAxis, CMask& rebinedMask , const std::string opt_interp, Float64 sourcez )
+Bool CSpectrum::Rebin( const TFloat64Range& range, const CSpectrumSpectralAxis& targetSpectralAxis,
+                     CSpectrum& rebinedSpectrum, CMask& rebinedMask , const std::string opt_interp, Float64 sourcez )
 {
     
     if( m_SpectralAxis.GetSamplesCount() != m_FluxAxis.GetSamplesCount() )
     {
         return false;
     }
+    
+    if( opt_interp=="precomputedfinegrid" && m_FineGridInterpolated == false)
+    {
+        RebinFineGrid();
+    }
 
-    if(m_pfgTplBuffer.size()==0 && opt_interp=="precomputedfinegrid")
+    if(m_pfgTplBuffer.size()==0 && opt_interp=="precomputedfinegrid" && m_FineGridInterpolated == true)
     {
         return false;
     }
@@ -561,18 +571,18 @@ Bool CSpectrum::Rebin2( const TFloat64Range& range, const CSpectrumSpectralAxis&
     if(m_SpectralAxis.IsInLinearScale()){
         currentRange = range;
     }
-    if(!rebinedFluxAxis.GetSamplesCount())
-        rebinedFluxAxis.SetSize( targetSpectralAxis.GetSamplesCount() );
-    if(!rebinedSpectralAxis.GetSamplesCount())
-        rebinedSpectralAxis.SetSize( targetSpectralAxis.GetSamplesCount() );
+    UInt32 s = targetSpectralAxis.GetSamplesCount();
+    CSpectrumFluxAxis *rebinedFluxAxis = new CSpectrumFluxAxis(s);
+    CSpectrumSpectralAxis *rebinedSpectralAxis = new CSpectrumSpectralAxis(s, m_SpectralAxis.IsInLinearScale());
+
     if(!rebinedMask.GetMasksCount())
-        rebinedMask.SetSize( targetSpectralAxis.GetSamplesCount() );
+        rebinedMask.SetSize(s);
 
     const Float64* Xsrc = m_SpectralAxis.GetSamples();
     const Float64* Ysrc = m_FluxAxis.GetSamples();
     const Float64* Xtgt = targetSpectralAxis.GetSamples();
-    Float64* Yrebin = rebinedFluxAxis.GetSamples();
-    Float64* Xrebin = rebinedSpectralAxis.GetSamples();
+    Float64* Yrebin = rebinedFluxAxis->GetSamples();
+    Float64* Xrebin = rebinedSpectralAxis->GetSamples();
 
     // Move cursors up to lambda range start
     Int32 j = 0;
@@ -587,7 +597,7 @@ Bool CSpectrum::Rebin2( const TFloat64Range& range, const CSpectrumSpectralAxis&
     //    j--;
 
     if(opt_interp=="lin"){
-        //Default interp.
+        //Default linear interp.
         Int32 k = 0;
         Float64 t = 0.0;
         // For each sample in the valid lambda range interval.
@@ -607,14 +617,13 @@ Bool CSpectrum::Rebin2( const TFloat64Range& range, const CSpectrumSpectralAxis&
             k++;
         }
     }else if(opt_interp=="precomputedfinegrid"){
-        //* // Precomputed FINE GRID nearest sample, 20150801
+        // Precomputed FINE GRID nearest sample, 20150801
         if(sourcez==-1){
-            Log.LogError("  CSpectrum::Rebin2 missing reference redshift value! ");
-            throw runtime_error("  CSpectrum::Rebin2 missing reference redshift value! ");
+            Log.LogError("  CSpectrum::Rebin missing reference redshift value! ");
+            throw runtime_error("  CSpectrum::Rebin missing reference redshift value! ");
         }
         Int32 k = 0;
-        Float64 dl = 0.1;
-        Float64 Coeffk = 1.0/dl/(1+sourcez);
+        Float64 Coeffk = 1.0/m_dLambdaTgt/(1+sourcez);
         // For each sample in the target spectrum
         while( j<targetSpectralAxis.GetSamplesCount() && Xtgt[j] <= currentRange.GetEnd() )
         {
@@ -629,14 +638,9 @@ Bool CSpectrum::Rebin2( const TFloat64Range& range, const CSpectrumSpectralAxis&
         }
         //*/
     }else if(opt_interp=="spline"){
-        //* // GSL method spline
+         // GSL method spline
         //initialise and allocate the gsl objects
         Int32 n = m_SpectralAxis.GetSamplesCount();
-        //lin
-        //gsl_interp *interpolation = gsl_interp_alloc (gsl_interp_linear,n);
-        //gsl_interp_init(interpolation, Xsrc, Ysrc, n);
-        //gsl_interp_accel * accelerator =  gsl_interp_accel_alloc();
-        //spline
         gsl_spline *spline = gsl_spline_alloc (gsl_interp_cspline, n);
         gsl_spline_init (spline, Xsrc, Ysrc, n);
         gsl_interp_accel * accelerator =  gsl_interp_accel_alloc();
@@ -651,20 +655,11 @@ Bool CSpectrum::Rebin2( const TFloat64Range& range, const CSpectrumSpectralAxis&
 
             j++;
         }
-        //*/
     }else if(opt_interp=="ngp"){
-        //* //nearest sample, lookup
-        Int32 k = 0;
+        //nearest sample, lookup
+        Int32 k = 0;// k = (int)(Xtgt[j]*Coeffk+0.5); (TODO:Didier proposes something here!! Dont forget mira)
         Int32 kprev = 0;
         Int32 n = m_SpectralAxis.GetSamplesCount();
-        //    Int32 jmax = gsl_interp_bsearch (Xtgt, currentRange.GetEnd(), 0, targetSpectralAxis.GetSamplesCount());
-        //    for(k=j; k<=jmax; k++){
-
-        //        Xrebin[k] = Xtgt[k];
-        //        Yrebin[k] = 0;
-        //        rebinedMask[k] = 1;
-        //    }
-        // For each sample in the valid lambda range interval.
         while( j<targetSpectralAxis.GetSamplesCount() && Xtgt[j] <= currentRange.GetEnd() )
         {
             k = gsl_interp_bsearch (Xsrc, Xtgt[j], kprev, n);
@@ -676,10 +671,10 @@ Bool CSpectrum::Rebin2( const TFloat64Range& range, const CSpectrumSpectralAxis&
             rebinedMask[j] = 1;
             j++;
         }
-        //return false;
-        //*/
     }
 
+    //rebinedSpectrum.CSpectrum(rebinedFluxAxis, rebinedSpectralAxis);
+    rebinedSpectrum.SetAxis( *rebinedSpectralAxis, *rebinedFluxAxis);
     while( j < targetSpectralAxis.GetSamplesCount() )
     {
         rebinedMask[j] = 0;
