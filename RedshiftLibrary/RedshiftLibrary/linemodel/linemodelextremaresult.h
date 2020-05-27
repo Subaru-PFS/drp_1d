@@ -53,7 +53,7 @@ public:
     TFloat64List            lfOII;
 
     //Deprecated?
-    TFloat64List            ExtremaExtendedRedshifts;    // z range around extrema
+    std::vector<TFloat64List> ExtremaExtendedRedshifts;    // z range around extrema
     TFloat64List            Posterior;    // z extrema
     TFloat64List            LogArea;    // log area for each extrema
     TFloat64List            LogAreaCorrectedExtrema;    //corrected z for each extrema

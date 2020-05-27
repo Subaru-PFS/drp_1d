@@ -138,7 +138,7 @@ bool CLineModelExtremaResult::RemoveSecondPassCandidatebyIdx(Int32 idx){
     FittedTplshapeAmplitude.erase( FittedTplshapeAmplitude.begin() + idx);
     FittedTplshapeDtm.erase( FittedTplshapeDtm.begin() + idx);
     FittedTplshapeMtm.erase(FittedTplshapeMtm.begin() + idx);
-    ExtremaExtendedRedshifts.erase(ExtremaExtendedRedshifts.begin() + idx*100, ExtremaExtendedRedshifts.begin() + idx*100 + 100);
+    ExtremaExtendedRedshifts.erase(ExtremaExtendedRedshifts.begin() + idx);
     return true;
 }
 

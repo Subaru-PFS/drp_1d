@@ -976,30 +976,27 @@ Int32 COperatorLineModel::ComputeCandidates(const Int32 opt_extremacount,
     }
     //*/
 
-
-
-    //*
-    //Me parece raro!!
     // extend z around the extrema
-    for (Int32 i = 0; i < m_firstpass_extremumList.size(); i++)
+    m_result->ExtremaResult.ExtremaExtendedRedshifts.resize(m_firstpass_extremumList.size());
+    for (Int32 j = 0; j < m_firstpass_extremumList.size(); j++)
     {
-        Log.LogInfo("  Operator-Linemodel: Raw extr #%d, z_e.X=%f, m_e.Y=%e", i,
-                    m_firstpass_extremumList[i].X, m_firstpass_extremumList[i].Y);
-        Float64 x = m_firstpass_extremumList[i].X;
+        Log.LogInfo("  Operator-Linemodel: Raw extr #%d, z_e.X=%f, m_e.Y=%e", j,
+                    m_firstpass_extremumList[j].X, m_firstpass_extremumList[j].Y);
+        Float64 x = m_firstpass_extremumList[j].X;
         Float64 left_border =
             max(redshiftsRange.GetBegin(), x - m_secondPass_extensionradius*(1.+x));
         Float64 right_border =
             min(redshiftsRange.GetEnd(), x + m_secondPass_extensionradius*(1.+x));
-
+        TFloat64List extendedList;
         for (Int32 i = 0; i < m_result->Redshifts.size(); i++)
         {
             if (m_result->Redshifts[i] >= left_border &&
                 m_result->Redshifts[i] <= right_border)
             {
-                m_result->ExtremaResult.ExtremaExtendedRedshifts.push_back(
-                    m_result->Redshifts[i]);
+                extendedList.push_back( m_result->Redshifts[i]);
             }
         }
+        m_result->ExtremaResult.ExtremaExtendedRedshifts[j] = extendedList;
     }
     //*/
     // todo: remove duplicate redshifts from the extended extrema list
@@ -1067,7 +1064,8 @@ Int32 COperatorLineModel::Combine_firstpass_candidates(std::shared_ptr<CLineMode
     Int32 retval = 0;
     Float64 skip_thres_absdiffz = 5e-4; //threshold to remove duplicate extrema/candidates
 
-
+    m_result->ExtremaResult.ExtremaExtendedRedshifts.resize(m_firstpass_extremumList.size() + firstpass_results_b->Extrema.size());
+    Int32 startIdx = m_firstpass_extremumList.size();
     for (Int32 keb = 0; keb < firstpass_results_b->Extrema.size(); keb++)
     {
         Float64 z_fpb = firstpass_results_b->Extrema[keb];
@@ -1091,7 +1089,7 @@ Int32 COperatorLineModel::Combine_firstpass_candidates(std::shared_ptr<CLineMode
         //append the candidate to m_firstpass_extremumList and m_firstpass_extremaResult
         m_firstpass_extremumList.push_back(SPoint(z_fpb, m_fpb));
 
-        //*
+        //* duplicate code
         // extend z around the extrema
         TFloat64Range redshiftsRange(
             m_result->Redshifts[0],
@@ -1100,15 +1098,16 @@ Int32 COperatorLineModel::Combine_firstpass_candidates(std::shared_ptr<CLineMode
                 max(redshiftsRange.GetBegin(), z_fpb - m_secondPass_extensionradius*(1.+z_fpb));
         Float64 right_border =
                 min(redshiftsRange.GetEnd(), z_fpb + m_secondPass_extensionradius*(1.+z_fpb));
+        TFloat64List extendedRedshifts;
         for (Int32 i = 0; i < m_result->Redshifts.size(); i++)
         {
             if (m_result->Redshifts[i] >= left_border &&
                     m_result->Redshifts[i] <= right_border)
             {
-                m_result->ExtremaResult.ExtremaExtendedRedshifts.push_back(
-                            m_result->Redshifts[i]);
+                extendedRedshifts.push_back(m_result->Redshifts[i]);
             }
         }
+        m_result->ExtremaResult.ExtremaExtendedRedshifts[startIdx + keb] = extendedRedshifts;
         //*/
         // todo: remove duplicate redshifts from the extended extrema list
 
@@ -1585,8 +1584,7 @@ Int32 COperatorLineModel::SaveResults(const CSpectrum &spectrum,
                 m_model->getLeastSquareContinuumMeritFast();
         }
 
-        m_result->ExtremaResult.ExtremaLastPass[i] =
-            z; // refined extremum is initialized here.
+        m_result->ExtremaResult.ExtremaLastPass[i] =  z; // refined extremum is initialized here.
 
         // computing errz (or deltaz, dz...): should probably be computed in
         // linemodelresult.cpp instead ?
@@ -1594,12 +1592,17 @@ Int32 COperatorLineModel::SaveResults(const CSpectrum &spectrum,
         if (m_result->Redshifts.size() > 1)
         {
             Int32 ret = -1, deltaz_i = 0, maxIter = 2;
-            while(ret == -1 && deltaz_i < maxIter){//iterate only twice
+            Int32 s = m_secondpass_parameters_extremaResult.ExtremaExtendedRedshifts[i].size();
+            TFloat64Range secondpassRange = TFloat64Range(m_secondpass_parameters_extremaResult.ExtremaExtendedRedshifts[i][0], 
+                                            m_secondpass_parameters_extremaResult.ExtremaExtendedRedshifts[i][s-1]);
+            while(ret == -1 && deltaz_i < maxIter){
                 CDeltaz deltaz;
                 Float64 zRangeHalf = 0.002/(deltaz_i+1); 
                 Log.LogInfo("  Operator-Linemodel: Deltaz computation nb %i with zRangeHalf %f", deltaz_i, zRangeHalf);
                 TFloat64Range range = TFloat64Range(z - zRangeHalf*(1+z), z + zRangeHalf*(1+z));
-                //ret = deltaz.Compute3ddl(m_result->ChiSquare, m_result->Redshifts, z, range, dz);
+                //compute intersection between deltazRange and secondpassRange
+                Int32 ret = TFloat64Range::Intersect(range, secondpassRange, range);
+
                 ret = deltaz.Compute(m_result->ChiSquare,
                                            m_result->Redshifts, z, range, dz);            
                 if (ret == -1)
@@ -2225,6 +2228,7 @@ Int32 COperatorLineModel::RecomputeAroundCandidates(TPointList input_extremumLis
     if (enable_recompute_around_candidate)
     {
         m_secondpass_parameters_extremaResult.ExtremaExtendedRedshifts.clear();
+        m_secondpass_parameters_extremaResult.ExtremaExtendedRedshifts.resize(input_extremumList.size());
         TInt32List eliminateIdx; 
         for (Int32 i = 0; i < input_extremumList.size(); i++)
         {
@@ -2372,7 +2376,7 @@ Int32 COperatorLineModel::RecomputeAroundCandidates(TPointList input_extremumLis
             for (Int32 iz = izmin_cand; iz <= izmax_cand; iz++)
             {
                 Log.LogDetail("Fit for Extended redshift %d, z = %f", iz, m_result->Redshifts[iz]);
-                m_secondpass_parameters_extremaResult.ExtremaExtendedRedshifts.push_back(m_result->Redshifts[iz]);
+                m_secondpass_parameters_extremaResult.ExtremaExtendedRedshifts[i].push_back(m_result->Redshifts[iz]);
 
                 m_result->ChiSquare[iz] =
                         m_model->fit(m_result->Redshifts[iz],
@@ -2488,9 +2492,11 @@ Int32 COperatorLineModel::RecomputeAroundCandidates(TPointList input_extremumLis
             if(s == input_extremumList.size()){
                 Log.LogError("  Operator-Linemodel: Second-pass fitting degenerated all results from first-pass. Aborting");
                 throw runtime_error(" Operator-Linemodel: Second-pass fitting degenerated all results from first-pass. Aborting");
+                return -1;
             }
             for(Int32 i = s-1; i>=0; i--){
                 m_secondpass_parameters_extremaResult.RemoveSecondPassCandidatebyIdx(eliminateIdx[i]);
+                _secondpass_recomputed_extremumList.erase(_secondpass_recomputed_extremumList.begin() + eliminateIdx[i]);
             }
         }
     } else
