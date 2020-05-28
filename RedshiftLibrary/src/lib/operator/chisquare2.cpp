@@ -1316,10 +1316,6 @@ const COperatorResult* COperatorChiSquare2::ExportChi2versusAZ(const CSpectrum& 
     }
     fclose( f );
 
-<<<<<<< HEAD
-    free(precomputedFineGridTplFlux);
-=======
->>>>>>> Refactoring and merging Rebin and Rebin2; Updating and correcting associated unit tests
     return result;
 
 }
