@@ -228,7 +228,12 @@ Bool CLineModelSolveResult::GetBestRedshiftFromPdf_real(const CDataStore& store,
                 if(method == 1){//max integrated proba but only on peaks in this range
                     CPdfz pdfz;
                     Float64 flux_integral = -1;
-                    if(logzpdf1d->valProbaLog[solIdx]>logzpdf1d->valProbaLog[solIdx-1] && logzpdf1d->valProbaLog[solIdx]>logzpdf1d->valProbaLog[solIdx+1]){
+                    Float64 prev, next;
+                    prev = logzpdf1d->valProbaLog[solIdx-1];
+                    next = logzpdf1d->valProbaLog[solIdx+1];
+                    if((probaLog > prev&& probaLog > next) ||
+                        (solIdx == 0 && probaLog>next) ||
+                        (solIdx == logzpdf1d->valProbaLog.size()-1 && probaLog > prev)){
                         //if current value is a peak
                         Float64 Fullwidth = 6e-3;//should be replaced with deltaz
                         flux_integral = pdfz.getCandidateSumTrapez( logzpdf1d->Redshifts, logzpdf1d->valProbaLog, zInCandidateRange, Fullwidth);
