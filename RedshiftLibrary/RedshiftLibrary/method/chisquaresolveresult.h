@@ -31,6 +31,14 @@ public:
     CChisquareSolveResult();
     virtual ~CChisquareSolveResult();
 
+    void SetType(const Int32 type);
+    void SetScope(const std::string scope);
+    void SetName(const std::string name);
+
+    const Int32 GetType() const;
+    const std::string GetScope() const;
+    const std::string GetName() const;
+
     void Save( const CDataStore& store, std::ostream& stream ) const;
     void SaveLine( const CDataStore& store, std::ostream& stream ) const;
     Bool GetBestRedshift(const CDataStore& store, Float64& redshift, Float64& merit, std::string& tplName, Float64 &amplitude, Float64 &amplitudeError, Float64 &dustCoeff, Int32 &meiksinIdx) const;

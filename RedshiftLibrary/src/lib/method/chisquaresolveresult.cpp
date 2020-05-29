@@ -2,7 +2,6 @@
 
 #include <RedshiftLibrary/processflow/context.h>
 #include <RedshiftLibrary/operator/chisquareresult.h>
-#include <RedshiftLibrary/operator/correlationresult.h>
 #include <stdio.h>
 #include <float.h>
 #include <RedshiftLibrary/log/log.h>
@@ -21,6 +20,36 @@ CChisquareSolveResult::CChisquareSolveResult()
 CChisquareSolveResult::~CChisquareSolveResult()
 {
 
+}
+
+void CChisquareSolveResult::SetType(const Int32 type)
+{
+    m_type = type;
+}
+
+const Int32 CChisquareSolveResult::GetType() const
+{
+    return m_type;
+}
+
+void CChisquareSolveResult::SetScope(const std::string scope)
+{
+    m_scope = scope;
+}
+
+const std::string CChisquareSolveResult::GetScope() const
+{
+    return m_scope;
+}
+
+void CChisquareSolveResult::SetName(const std::string name)
+{
+    m_name = name;
+}
+
+const std::string CChisquareSolveResult::GetName() const
+{
+    return m_name;
 }
 
 void CChisquareSolveResult::Save( const CDataStore& store, std::ostream& stream ) const

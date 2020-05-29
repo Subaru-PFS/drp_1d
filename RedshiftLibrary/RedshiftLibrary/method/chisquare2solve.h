@@ -3,7 +3,7 @@
 
 
 #include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/method/chisquare2solveresult.h>
+#include <RedshiftLibrary/method/chisquaresolveresult.h>
 #include <RedshiftLibrary/spectrum/template/template.h>
 #include <RedshiftLibrary/operator/chisquare2.h>
 #include <RedshiftLibrary/operator/pdfMargZLogResult.h>
@@ -28,7 +28,7 @@ class CMethodChisquare2Solve
     ~CMethodChisquare2Solve();
     const std::string GetDescription();
 
-    std::shared_ptr<CChisquare2SolveResult> Compute(CDataStore& resultStore,
+    std::shared_ptr<CChisquareSolveResult> Compute(CDataStore& resultStore,
                                                     const CSpectrum& spc,
                                                     const CSpectrum& spcWithoutCont,
                                                     const CTemplateCatalog& tplCatalog,
@@ -49,7 +49,7 @@ class CMethodChisquare2Solve
 private:
 
     Bool Solve(CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont, const CTemplate& tpl, const CTemplate& tplWithoutCont,
-                                   const TFloat64Range& lambdaRange, const TFloat64List& redshifts, Float64 overlapThreshold , std::vector<CMask> maskList, Int32 spctype=CChisquare2SolveResult::nType_raw, std::string opt_interp="lin", std::string opt_extinction="no", std::string opt_dustFitting="no");
+                                   const TFloat64Range& lambdaRange, const TFloat64List& redshifts, Float64 overlapThreshold , std::vector<CMask> maskList, Int32 spctype=CChisquareSolveResult::nType_raw, std::string opt_interp="lin", std::string opt_extinction="no", std::string opt_dustFitting="no");
     Int32 CombinePDF(CDataStore& store,
                      std::string scopeStr,
                      std::string opt_combine,

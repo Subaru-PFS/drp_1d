@@ -3,7 +3,6 @@
 #include <RedshiftLibrary/log/log.h>
 #include <RedshiftLibrary/debug/assert.h>
 #include <RedshiftLibrary/spectrum/template/catalog.h>
-#include <RedshiftLibrary/operator/correlation.h>
 #include <RedshiftLibrary/operator/chisquare.h>
 #include <RedshiftLibrary/extremum/extremum.h>
 #include <RedshiftLibrary/processflow/datastore.h>
@@ -48,7 +47,7 @@ const std::string CMethodChisquareLogSolve::GetDescription()
 }
 
 
-std::shared_ptr<CChisquareLogSolveResult> CMethodChisquareLogSolve::Compute(CDataStore& resultStore,
+std::shared_ptr<CChisquareSolveResult> CMethodChisquareLogSolve::Compute(CDataStore& resultStore,
                                                                               const CSpectrum& spc,
                                                                               const CSpectrum& spcWithoutCont,
                                                                               const CTemplateCatalog& tplCatalog,
@@ -65,21 +64,23 @@ std::shared_ptr<CChisquareLogSolveResult> CMethodChisquareLogSolve::Compute(CDat
 {
     Bool storeResult = false;
 
+    std::string _name = "ChisquareLog";
     CDataStore::CAutoScope resultScope( resultStore, "chisquarelogsolve" );
-    std::string scopeStr = "chisquare";
+    std::string _scope = "chisquarelog";
+    std::string scopeStr = _scope;
 
     Int32 _type;
     if(spcComponent=="raw"){
-       _type = CChisquareLogSolveResult::nType_raw;
-       scopeStr = "chisquare";
+       _type = CChisquareSolveResult::nType_raw;
+       //scopeStr = "chisquarelog";
     }else if(spcComponent=="nocontinuum"){
-       _type = CChisquareLogSolveResult::nType_noContinuum;
-       scopeStr = "chisquare_nocontinuum";
+       _type = CChisquareSolveResult::nType_noContinuum;
+       scopeStr = _scope + "_nocontinuum";
     }else if(spcComponent=="continuum"){
-        _type = CChisquareLogSolveResult::nType_continuumOnly;
-        scopeStr = "chisquare_continuum";
+        _type = CChisquareSolveResult::nType_continuumOnly;
+        scopeStr = _scope + "_continuum";
     }else if(spcComponent=="all"){
-        _type = CChisquareLogSolveResult::nType_all;
+        _type = CChisquareSolveResult::nType_all;
     }
 
     resultStore.GetScopedParam( "pdfcombination", m_opt_pdfcombination, "marg");
@@ -129,8 +130,10 @@ std::shared_ptr<CChisquareLogSolveResult> CMethodChisquareLogSolve::Compute(CDat
 
     if( storeResult )
     {
-        std::shared_ptr< CChisquareLogSolveResult>  ChisquareSolveResult = std::shared_ptr< CChisquareLogSolveResult>( new CChisquareLogSolveResult() );
-        ChisquareSolveResult->m_type = _type;
+        std::shared_ptr< CChisquareSolveResult>  ChisquareSolveResult = std::shared_ptr< CChisquareSolveResult>( new CChisquareSolveResult() );
+        ChisquareSolveResult->SetType(_type);
+        ChisquareSolveResult->SetScope(_scope);
+        ChisquareSolveResult->SetName(_name);
 
         std::shared_ptr<CPdfMargZLogResult> postmargZResult = std::shared_ptr<CPdfMargZLogResult>(new CPdfMargZLogResult());
         Int32 retCombinePdf = CombinePDF(resultStore, scopeStr, m_opt_pdfcombination, postmargZResult);
@@ -162,10 +165,10 @@ Bool CMethodChisquareLogSolve::Solve(CDataStore& resultStore,
 {
     CSpectrum _spc;
     CTemplate _tpl;
-    std::string scopeStr = "chisquare";
+    std::string scopeStr = "chisquarelog";
     Int32 _ntype = 1;
     Int32 _spctype = spctype;
-    Int32 _spctypetab[3] = {CChisquareLogSolveResult::nType_raw, CChisquareLogSolveResult::nType_noContinuum, CChisquareLogSolveResult::nType_continuumOnly};
+    Int32 _spctypetab[3] = {CChisquareSolveResult::nType_raw, CChisquareSolveResult::nType_noContinuum, CChisquareSolveResult::nType_continuumOnly};
 
 
     Int32 enable_extinction = 0; //TODO: extinction should be deactivated for nocontinuum anyway ? TBD
@@ -183,18 +186,18 @@ Bool CMethodChisquareLogSolve::Solve(CDataStore& resultStore,
 
 
     //case: nType_all
-    if(spctype == CChisquareLogSolveResult::nType_all){
+    if(spctype == CChisquareSolveResult::nType_all){
         _ntype = 3;
     }
 
     for( Int32 i=0; i<_ntype; i++){
-        if(spctype == CChisquareLogSolveResult::nType_all){
+        if(spctype == CChisquareSolveResult::nType_all){
             _spctype = _spctypetab[i];
         }else{
             _spctype = spctype;
         }
 
-        if(_spctype == CChisquareLogSolveResult::nType_continuumOnly){
+        if(_spctype == CChisquareSolveResult::nType_continuumOnly){
             // use continuum only
             _spc = spc;
             CSpectrumFluxAxis spcfluxAxis = _spc.GetFluxAxis();
@@ -208,14 +211,14 @@ Bool CMethodChisquareLogSolve::Solve(CDataStore& resultStore,
             tfluxAxisPtr = tplfluxAxis;
 
 
-            scopeStr = "chisquare_continuum";
-        }else if(_spctype == CChisquareLogSolveResult::nType_raw){
+            scopeStr = "chisquarelog_continuum";
+        }else if(_spctype == CChisquareSolveResult::nType_raw){
             // use full spectrum
             _spc = spc;
             _tpl = tpl;
-            scopeStr = "chisquare";
+            scopeStr = "chisquarelog";
 
-        }else if(_spctype == CChisquareLogSolveResult::nType_noContinuum){
+        }else if(_spctype == CChisquareSolveResult::nType_noContinuum){
             // use spectrum without continuum
             _spc = spc;
             CSpectrumFluxAxis spcfluxAxis = spcWithoutCont.GetFluxAxis();
@@ -225,7 +228,7 @@ Bool CMethodChisquareLogSolve::Solve(CDataStore& resultStore,
             CSpectrumFluxAxis tplfluxAxis = tplWithoutCont.GetFluxAxis();
             CSpectrumFluxAxis& tfluxAxisPtr = _tpl.GetFluxAxis();
             tfluxAxisPtr = tplfluxAxis;
-            scopeStr = "chisquare_nocontinuum";
+            scopeStr = "chisquarelog_nocontinuum";
             //
             option_dustFitting = -1;
         }
