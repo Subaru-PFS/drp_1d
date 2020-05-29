@@ -53,7 +53,16 @@ public:
                                 Float64 &lfOII,
                                 std::string &modelTplratio,
                                 std::string &modelTplContinuum) const;
-
+    Bool GetBestRedshiftFromPdf_real(const CDataStore& store,
+                                          TFloat64List& redshift//,
+                                                    /*Float64& merit,
+                                                    Float64& sigma,
+                                                    Float64& snrHa,
+                                                    Float64& lfHa,
+                                                    Float64 &snrOII,
+                                                    Float64 &lfOII,
+                                                    std::string& modelTplratio,
+                                                    std::string& modelTplContinuum */) const;
     Bool GetRedshiftCandidates( const CDataStore& store,  std::vector<Float64>& redshiftcandidates) const;
 
     Int32 GetEvidenceFromPdf(const CDataStore& store, Float64 &evidence) const;

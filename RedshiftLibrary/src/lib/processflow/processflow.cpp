@@ -448,8 +448,8 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
         {
             Log.LogInfo( "Extracting z-candidates from Linemodel method results" );
             std::shared_ptr<CLineModelSolveResult> solveResult = std::dynamic_pointer_cast<CLineModelSolveResult>( mResult );
-            std::vector<Float64> zcandidates_unordered_list;
-            Bool retzc = solveResult->GetRedshiftCandidates( ctx.GetDataStore(), zcandidates_unordered_list);
+            std::vector<Float64> zcandidates_unordered_list, zcandidates_unordered_lists;
+            Bool retzc = solveResult->GetBestRedshiftFromPdf_real(ctx.GetDataStore(), zcandidates_unordered_lists);
             if(retzc)
             {
                 Log.LogInfo( "Found %d z-candidates", zcandidates_unordered_list.size() );
@@ -457,7 +457,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
                 Log.LogError( "Failed to get z candidates from these results");
             }
             //compute the integratedPDF and sort candidates based on intg PDF
-            Bool b = Solve.ExtractCandidateResults(ctx.GetDataStore(), zcandidates_unordered_list);
+            Bool b = Solve.ExtractCandidateResults(ctx.GetDataStore(), zcandidates_unordered_lists);
         }
 
     }else if(methodName  == "zweimodelsolve" ){

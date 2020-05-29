@@ -1313,6 +1313,7 @@ Int32 COperatorLineModel::ComputeSecondPass(CDataStore &dataStore,
 
 Int32 COperatorLineModel::SaveResults(const CSpectrum &spectrum,
                                       const TFloat64Range &lambdaRange,
+                                      std::shared_ptr<CPdfMargZLogResult> postmargZResult,
                                       const std::string &opt_continuumreest)
 {
     Int32 savedFitContinuumOption = m_model->GetFitContinuum_Option();
@@ -1586,35 +1587,9 @@ Int32 COperatorLineModel::SaveResults(const CSpectrum &spectrum,
 
         m_result->ExtremaResult.ExtremaLastPass[i] =  z; // refined extremum is initialized here.
 
-        // computing errz (or deltaz, dz...): should probably be computed in
-        // linemodelresult.cpp instead ?
-        Float64 dz = -1;
-        if (m_result->Redshifts.size() > 1)
-        {
-            Int32 ret = -1, deltaz_i = 0, maxIter = 2;
-            Int32 s = m_secondpass_parameters_extremaResult.ExtremaExtendedRedshifts[i].size();
-            TFloat64Range secondpassRange = TFloat64Range(m_secondpass_parameters_extremaResult.ExtremaExtendedRedshifts[i][0], 
-                                            m_secondpass_parameters_extremaResult.ExtremaExtendedRedshifts[i][s-1]);
-            while(ret == -1 && deltaz_i < maxIter){
-                CDeltaz deltaz;
-                Float64 zRangeHalf = 0.002/(deltaz_i+1); 
-                Log.LogInfo("  Operator-Linemodel: Deltaz computation nb %i with zRangeHalf %f", deltaz_i, zRangeHalf);
-                TFloat64Range range = TFloat64Range(z - zRangeHalf*(1+z), z + zRangeHalf*(1+z));
-                //compute intersection between deltazRange and secondpassRange
-                Int32 ret = TFloat64Range::Intersect(range, secondpassRange, range);
-
-                ret = deltaz.Compute(m_result->ChiSquare,
-                                           m_result->Redshifts, z, range, dz);            
-                if (ret == -1)
-                {
-                    Log.LogWarning("  Operator-Linemodel: Deltaz computation failed for %f", zRangeHalf);
-                    deltaz_i++; 
-                }
-            }
-        }
-        if(dz == -1)    
-            Log.LogError("  Operator-Linemodel: Deltaz for candidate %f couldnt be calculated", z);
-        m_result->ExtremaResult.DeltaZ[i] = dz;
+        //m_result->ExtremaResult.DeltaZ[i] = m_result->GetDeltaz( z );
+        //deltaz cannot be calculated here, but mostly on the new peaks in the pdf
+       // m_result->ExtremaResult.DeltaZ[i] = m_result->GetDeltaz(postmargZResult->Redshifts, postmargZResult->valProbaLog, z);
 
         // store model Ha SNR & Flux
         m_result->ExtremaResult.snrHa[i] =

@@ -132,6 +132,7 @@ private:
     bool m_opt_enableSaveChisquareTplshapeResults;
 
     std::string m_calibrationPath;
+    std::string m_outputPdfRelDir;
 };
 
 

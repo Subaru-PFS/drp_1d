@@ -49,7 +49,6 @@ public:
 
     Float64 GetMinChiSquare() const;
     Float64 GetMaxChiSquare() const;
-
     Int32 ResizeChisquareTplShapes( Int32 nTplshapes, Int32 nRedshifts );
     Int32 SetChisquareTplshapeResult(Int32 index,
                                      TFloat64List chisquareTplshape,
@@ -92,6 +91,9 @@ public:
     Float64 dTransposeDNocontinuum = 0;
     Float64 dTransposeD = 0;
     Float64 cstLog = 0;
+
+    Float64 GetDeltaz(Float64 z);
+    Float64 GetDeltaz(TFloat64List redshifts, TFloat64List pdf, Float64 z);
 };
 
 

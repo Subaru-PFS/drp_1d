@@ -8,7 +8,7 @@
 #include <RedshiftLibrary/log/log.h>
 #include <RedshiftLibrary/operator/pdfMargZLogResult.h>
 #include <RedshiftLibrary/statistics/pdfz.h>
-
+#include <RedshiftLibrary/statistics/deltaz.h>
 
 using namespace NSEpic;
 
@@ -171,6 +171,154 @@ Bool CLineModelSolveResult::GetBestRedshift(const CDataStore& store,
     return true;
 }
 
+Bool CLineModelSolveResult::GetBestRedshiftFromPdf_real(const CDataStore& store,
+                                                    TFloat64List& redshift//,
+                                                    /*Float64& merit,
+                                                    Float64& sigma,
+                                                    /*Float64& snrHa,
+                                                    Float64& lfHa,
+                                                    Float64 &snrOII,
+                                                    Float64 &lfOII,
+                                                    std::string& modelTplratio,
+                                                    std::string& modelTplContinuum */) const
+{
+    std::string scope = store.GetScope( *this ) + "linemodelsolve.linemodel";
+    auto results_chi2 = store.GetGlobalResult( scope.c_str() );
+
+    std::string scope_res = "zPDF/logposterior.logMargP_Z_data";
+    auto results_pdf =  store.GetGlobalResult( scope_res.c_str() );
+    auto logzpdf1d = std::dynamic_pointer_cast<const CPdfMargZLogResult>( results_pdf.lock() );
+
+    if(!logzpdf1d)
+    {
+        Log.LogError( "GetBestRedshiftFromPdf: no pdf results retrieved from scope: %s", scope_res.c_str());
+        return false;
+    }
+
+    Float64 tmpProbaLog = -DBL_MAX;
+    Float64 tmpIntgProba = -DBL_MAX;
+    Float64 tmpRedshift = 0.0;
+    Float64 tmpSigma = -1.0;
+    Float64 tmpSnrHa = -3.0;
+    Float64 tmpLFHa = -3.0;
+    Float64 tmpSnrOII = -3.0;
+    Float64 tmpLFOII = -3.0;
+    std::string tmpModelTplratio = "-1";
+    std::string tmpModelTplcontinuum = "-1";
+
+    if( !results_chi2.expired() )
+    {
+        auto lineModelResult = std::dynamic_pointer_cast<const CLineModelResult>( results_chi2.lock() );
+
+        if(logzpdf1d->Redshifts.size() != lineModelResult->Redshifts.size())
+        {
+            Log.LogError( "GetBestRedshiftFromPdf: pdf samplecount != chisquare samplecount");
+            return false;
+        }
+        Float64 z;
+       for( Int32 i=0; i<lineModelResult->ExtremaResult.Extrema.size(); i++ )
+        {
+            z = lineModelResult->ExtremaResult.Extrema[i];
+            Float64 tmpIntgProba = -DBL_MAX;
+            Float64 tmpProbaLog = -DBL_MAX;
+            for(Int32 kval=0; kval<lineModelResult->ExtremaResult.ExtremaExtendedRedshifts[i].size(); kval++)
+            {
+                Float64 zInCandidateRange = lineModelResult->ExtremaResult.ExtremaExtendedRedshifts[i][kval];
+                UInt32 solIdx = logzpdf1d->getIndex(zInCandidateRange);
+                if(solIdx<0 || solIdx>=logzpdf1d->valProbaLog.size())
+                {
+                    Log.LogError( "GetBestRedshiftFromPdf: pdf proba value not found for extremumIndex = %d", i);
+                    return false;
+                }
+
+                Float64 probaLog = logzpdf1d->valProbaLog[solIdx];
+                Log.LogDebug( "GetBestRedshiftFromPdf: z=%f : probalog = %f", zInCandidateRange, probaLog);
+                
+                Int32 method=1; //0=maxpdf, 1=direct integration on peaks only
+                if(method == 0){
+                    if(probaLog>tmpProbaLog){
+                        tmpRedshift = zInCandidateRange;
+                        tmpProbaLog = probaLog;
+                    }
+                }    
+                if(method == 1){//max integrated proba but only on peaks in this range
+                    CPdfz pdfz;
+                    Float64 flux_integral = -1;
+                    if(logzpdf1d->valProbaLog[solIdx]>logzpdf1d->valProbaLog[solIdx-1] && logzpdf1d->valProbaLog[solIdx]>logzpdf1d->valProbaLog[solIdx+1]){
+                        //if current value is a peak
+                        Float64 Fullwidth = 6e-3;//should be replaced with deltaz
+                        flux_integral = pdfz.getCandidateSumTrapez( logzpdf1d->Redshifts, logzpdf1d->valProbaLog, zInCandidateRange, Fullwidth);
+                        if(flux_integral>tmpIntgProba){
+                            tmpRedshift = zInCandidateRange;
+                            tmpIntgProba = probaLog;
+                        }
+                    }
+                    else 
+                    {
+                        continue; //it doesnt work to compute here the pdfz
+                    }
+                } 
+
+                /*if(method==1)
+                {
+                    Float64 gauss_amp = -1;
+                    Float64 gauss_amp_err = -1;
+                    Float64 gauss_width = -1;
+                    Float64 gauss_width_err = -1;
+                    Float64 Fullwidth = 1e-2;
+                    Int32 retGaussFit = pdfz.getCandidateRobustGaussFit( logzpdf1d->Redshifts,
+                                                                         logzpdf1d->valProbaLog,
+                                                                         zInCandidateRange,
+                                                                         Fullwidth,
+                                                                         gauss_amp,
+                                                                         gauss_amp_err,
+                                                                         gauss_width,
+                                                                         gauss_width_err);
+                    if(retGaussFit==0)
+                    {
+                        flux_integral = gauss_amp*gauss_width*sqrt(2*M_PI);
+                    }else{
+                        flux_integral = -1;
+                    }
+                }else{
+                    Float64 Fullwidth = 6e-3;//should be replaced with deltaz
+                    flux_integral = pdfz.getCandidateSumTrapez( logzpdf1d->Redshifts, logzpdf1d->valProbaLog, zInCandidateRange, Fullwidth);
+                }
+
+                Float64 bestval, val;
+                bestval = tmpIntgProba;
+                val = flux_integral;
+                if(val>bestval)
+                {
+                    tmpIntgProba = flux_integral;
+                    tmpProbaLog = probaLog;
+                    tmpRedshift = zInCandidateRange;
+                    tmpSigma = lineModelResult->ExtremaResult.DeltaZ[i];
+                    tmpSnrHa = lineModelResult->ExtremaResult.snrHa[i];
+                    tmpLFHa = lineModelResult->ExtremaResult.lfHa[i];
+                    tmpSnrOII = lineModelResult->ExtremaResult.snrOII[i];
+                    tmpLFOII = lineModelResult->ExtremaResult.lfOII[i];
+                    tmpModelTplratio = lineModelResult->ExtremaResult.FittedTplshapeName[i];
+                    tmpModelTplcontinuum = lineModelResult->ExtremaResult.FittedTplName[i];
+                }*/
+            }
+            redshift.push_back(tmpRedshift);
+        }
+
+    }
+
+    //redshift = tmpRedshift;
+    //merit = tmpIntgProba;
+    /*
+    sigma = tmpSigma;
+    snrHa = tmpSnrHa;
+    lfHa = tmpLFHa;
+    snrOII = tmpSnrOII;
+    lfOII = tmpLFOII;
+    modelTplratio = tmpModelTplratio;
+    modelTplContinuum = tmpModelTplcontinuum;*/
+    return true;
+}
 /**
  * Simply reading from datastore info related to the best Candidate
 */
@@ -198,7 +346,7 @@ Bool CLineModelSolveResult::GetBestRedshiftFromPdf(const CDataStore& store,
 
     if(results.expired())
         return false;
-
+    //is not possible, we are reading values from datastore that we update in pdfzcandidatesresult!!!
     redshift = lineModelResult->ExtremaResult.Extrema[bestIdx];
     probaLog = ExtremaPDF[bestIdx];
     sigma = lineModelResult->ExtremaResult.DeltaZ[bestIdx];
