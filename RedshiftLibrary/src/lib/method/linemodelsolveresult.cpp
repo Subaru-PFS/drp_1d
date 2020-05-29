@@ -8,7 +8,6 @@
 #include <RedshiftLibrary/log/log.h>
 #include <RedshiftLibrary/operator/pdfMargZLogResult.h>
 #include <RedshiftLibrary/statistics/pdfz.h>
-#include <RedshiftLibrary/statistics/deltaz.h>
 
 using namespace NSEpic;
 
@@ -172,15 +171,7 @@ Bool CLineModelSolveResult::GetBestRedshift(const CDataStore& store,
 }
 
 Bool CLineModelSolveResult::GetBestRedshiftFromPdf_real(const CDataStore& store,
-                                                    TFloat64List& redshift//,
-                                                    /*Float64& merit,
-                                                    Float64& sigma,
-                                                    /*Float64& snrHa,
-                                                    Float64& lfHa,
-                                                    Float64 &snrOII,
-                                                    Float64 &lfOII,
-                                                    std::string& modelTplratio,
-                                                    std::string& modelTplContinuum */) const
+                                                    TFloat64List& redshift) const
 {
     std::string scope = store.GetScope( *this ) + "linemodelsolve.linemodel";
     auto results_chi2 = store.GetGlobalResult( scope.c_str() );
@@ -198,13 +189,6 @@ Bool CLineModelSolveResult::GetBestRedshiftFromPdf_real(const CDataStore& store,
     Float64 tmpProbaLog = -DBL_MAX;
     Float64 tmpIntgProba = -DBL_MAX;
     Float64 tmpRedshift = 0.0;
-    Float64 tmpSigma = -1.0;
-    Float64 tmpSnrHa = -3.0;
-    Float64 tmpLFHa = -3.0;
-    Float64 tmpSnrOII = -3.0;
-    Float64 tmpLFOII = -3.0;
-    std::string tmpModelTplratio = "-1";
-    std::string tmpModelTplcontinuum = "-1";
 
     if( !results_chi2.expired() )
     {
@@ -258,65 +242,12 @@ Bool CLineModelSolveResult::GetBestRedshiftFromPdf_real(const CDataStore& store,
                         continue; //it doesnt work to compute here the pdfz
                     }
                 } 
-
-                /*if(method==1)
-                {
-                    Float64 gauss_amp = -1;
-                    Float64 gauss_amp_err = -1;
-                    Float64 gauss_width = -1;
-                    Float64 gauss_width_err = -1;
-                    Float64 Fullwidth = 1e-2;
-                    Int32 retGaussFit = pdfz.getCandidateRobustGaussFit( logzpdf1d->Redshifts,
-                                                                         logzpdf1d->valProbaLog,
-                                                                         zInCandidateRange,
-                                                                         Fullwidth,
-                                                                         gauss_amp,
-                                                                         gauss_amp_err,
-                                                                         gauss_width,
-                                                                         gauss_width_err);
-                    if(retGaussFit==0)
-                    {
-                        flux_integral = gauss_amp*gauss_width*sqrt(2*M_PI);
-                    }else{
-                        flux_integral = -1;
-                    }
-                }else{
-                    Float64 Fullwidth = 6e-3;//should be replaced with deltaz
-                    flux_integral = pdfz.getCandidateSumTrapez( logzpdf1d->Redshifts, logzpdf1d->valProbaLog, zInCandidateRange, Fullwidth);
-                }
-
-                Float64 bestval, val;
-                bestval = tmpIntgProba;
-                val = flux_integral;
-                if(val>bestval)
-                {
-                    tmpIntgProba = flux_integral;
-                    tmpProbaLog = probaLog;
-                    tmpRedshift = zInCandidateRange;
-                    tmpSigma = lineModelResult->ExtremaResult.DeltaZ[i];
-                    tmpSnrHa = lineModelResult->ExtremaResult.snrHa[i];
-                    tmpLFHa = lineModelResult->ExtremaResult.lfHa[i];
-                    tmpSnrOII = lineModelResult->ExtremaResult.snrOII[i];
-                    tmpLFOII = lineModelResult->ExtremaResult.lfOII[i];
-                    tmpModelTplratio = lineModelResult->ExtremaResult.FittedTplshapeName[i];
-                    tmpModelTplcontinuum = lineModelResult->ExtremaResult.FittedTplName[i];
-                }*/
             }
             redshift.push_back(tmpRedshift);
         }
 
     }
 
-    //redshift = tmpRedshift;
-    //merit = tmpIntgProba;
-    /*
-    sigma = tmpSigma;
-    snrHa = tmpSnrHa;
-    lfHa = tmpLFHa;
-    snrOII = tmpSnrOII;
-    lfOII = tmpLFOII;
-    modelTplratio = tmpModelTplratio;
-    modelTplContinuum = tmpModelTplcontinuum;*/
     return true;
 }
 /**
@@ -342,14 +273,18 @@ Bool CLineModelSolveResult::GetBestRedshiftFromPdf(const CDataStore& store,
     auto res = store.GetGlobalResult( scope.c_str() );
     auto candResults = std::dynamic_pointer_cast<const CPdfCandidateszResult>( res.lock());
     TFloat64List ExtremaPDF = candResults->ValSumProba;
+    //reading from candResults cause deltaz is computed correctly there and what is saved in datastore is bad
+    TFloat64List ExtremaDeltaz = candResults->Deltaz;
+    TFloat64List Extrema = candResults->Redshifts;
     Int32 bestIdx = candResults->Rank[0];
 
     if(results.expired())
         return false;
     //is not possible, we are reading values from datastore that we update in pdfzcandidatesresult!!!
-    redshift = lineModelResult->ExtremaResult.Extrema[bestIdx];
+    redshift = Extrema[bestIdx];//lineModelResult->ExtremaResult.Extrema[bestIdx];
     probaLog = ExtremaPDF[bestIdx];
-    sigma = lineModelResult->ExtremaResult.DeltaZ[bestIdx];
+    sigma = ExtremaDeltaz[bestIdx];//lineModelResult->ExtremaResult.DeltaZ[bestIdx];
+    //not sure that below values are correct!
     snrHa = lineModelResult->ExtremaResult.snrHa[bestIdx];
     lfHa = lineModelResult->ExtremaResult.lfHa[bestIdx];
     snrOII = lineModelResult->ExtremaResult.snrOII[bestIdx];

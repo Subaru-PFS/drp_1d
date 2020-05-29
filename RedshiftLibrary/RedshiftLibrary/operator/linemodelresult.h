@@ -84,7 +84,6 @@ public:
     //Extrema results
     CLineModelExtremaResult ExtremaResult;
 
-    //
     COperator::TStatusList  Status;
     CRayCatalog::TRayVector restRayList;
     Int32 nSpcSamples = 0;
@@ -92,7 +91,6 @@ public:
     Float64 dTransposeD = 0;
     Float64 cstLog = 0;
 
-    Float64 GetDeltaz(Float64 z);
     Float64 GetDeltaz(TFloat64List redshifts, TFloat64List pdf, Float64 z);
 };
 

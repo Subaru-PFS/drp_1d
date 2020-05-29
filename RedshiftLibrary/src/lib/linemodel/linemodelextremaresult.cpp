@@ -156,7 +156,6 @@ Int32 CLineModelExtremaResult::SetWOrderforFP_basedonSortedIDs(TInt32List& Rank_
             for(auto ch : sub) {
                 number = (number * 10) + (ch - '0');
             }
-            std::cout<<number<<"\n";
             Rank_PDF.push_back(number);//get last character
         }
         for(Int32 i = 0; i<Extrema.size(); i++){

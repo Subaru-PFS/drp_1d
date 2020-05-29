@@ -201,7 +201,7 @@ public:
 
     Int32 SaveResults(const CSpectrum& spectrum,
                       const TFloat64Range& lambdaRange,
-                      std::shared_ptr<CPdfMargZLogResult> postmargZResult,
+                      //std::shared_ptr<CPdfMargZLogResult> postmargZResult,
                       const std::string &opt_continuumreest="no");
 
     void InitTplratioPriors();

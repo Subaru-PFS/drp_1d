@@ -1313,7 +1313,6 @@ Int32 COperatorLineModel::ComputeSecondPass(CDataStore &dataStore,
 
 Int32 COperatorLineModel::SaveResults(const CSpectrum &spectrum,
                                       const TFloat64Range &lambdaRange,
-                                      std::shared_ptr<CPdfMargZLogResult> postmargZResult,
                                       const std::string &opt_continuumreest)
 {
     Int32 savedFitContinuumOption = m_model->GetFitContinuum_Option();
