@@ -99,7 +99,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
     Log.LogInfo( "Processing spc:%s (CLambdaRange: %f-%f:%f)", ctx.GetSpectrum().GetName().c_str(),
             spcLambdaRange.GetBegin(), spcLambdaRange.GetEnd(), ctx.GetSpectrum().GetResolution());
 
-    std::cout << "Processing spectrum " << ctx.GetSpectrum().GetName() << std::endl;
+    //std::cout << "Processing spectrum " << ctx.GetSpectrum().GetName() << std::endl;
 
     std::string methodName;
     ctx.GetParameterStore().Get( "method", methodName );

@@ -503,7 +503,7 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
     boost::chrono::thread_clock::time_point start_mainloop =
         boost::chrono::thread_clock::now();
 
-    std::cout<<"First Pass"<<std::endl;
+    //std::cout<<"First Pass"<<std::endl;
     //#pragma omp parallel for
     for (Int32 i = 0; i < m_result->Redshifts.size(); i++)
     {
@@ -1710,7 +1710,7 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
     }
 
     m_secondpass_parameters_extremaResult.Resize(m_firstpass_extremumList.size());
-    std::cout << "Second Pass" << std::endl;
+    //std::cout << "Second Pass" << std::endl;
     for (Int32 i = 0; i < m_firstpass_extremumList.size(); i++)
     {
         Log.LogInfo("");
