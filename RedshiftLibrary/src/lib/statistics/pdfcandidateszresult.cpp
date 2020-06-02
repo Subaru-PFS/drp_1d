@@ -98,7 +98,7 @@ Int32 CPdfCandidateszResult::SetIntegrationWindows( std::vector<Float64> Pdfz, s
 /**
  * @brief CPdfCandidateszResult::Compute
  */
-Int32 CPdfCandidateszResult::Compute( std::vector<Float64> zc,  std::vector<Float64> Pdfz,  std::vector<Float64> PdfProbalog, std::vector<Float64> deltaz, std::vector<std::string> IDs)
+Int32 CPdfCandidateszResult::Compute( std::vector<Float64> zc,  std::vector<Float64> Pdfz,  std::vector<Float64> PdfProbalog,  Int32 maxCount, std::vector<Float64> deltaz, std::vector<std::string> IDs)
 {
     if(optMethod==0)
     {

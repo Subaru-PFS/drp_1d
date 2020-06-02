@@ -376,7 +376,6 @@ Bool CMethodTplcombinationSolve::ExtractCandidateResults(CDataStore &store, std:
         }
         Log.LogInfo( "  Integrating %d candidates proba.", zcandidates_unordered_list.size() );
         zcand->Compute(zcandidates_unordered_list, logzpdf1d->Redshifts, logzpdf1d->valProbaLog, deltaz);
-        
         store.StoreScopedGlobalResult( "candidatesresult", zcand ); 
 
     return true;

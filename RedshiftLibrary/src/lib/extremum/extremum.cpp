@@ -160,7 +160,7 @@ Bool CExtremum::Find( const TFloat64List& xAxis, const TFloat64List& yAxis, TPoi
     //Calculate prominence and remove "low" prominence peaks
     //this is ALSO useful for eliminating neighboring peaks in some cases
     Cut_Prominence_Merit(maxX, maxY, minX, minY);
-
+    Int32 keepMinN = 2;
     //refine using sliding windows: aiming at avoiding duplicate candidates when possible. 
     FilterOutNeighboringPeaks(maxX, maxY, keepMinN);//keep at least keepMinN candidates
 
@@ -334,7 +334,7 @@ Bool CExtremum::Cut_Threshold( vector <Float64>& maxX, vector <Float64>& maxY, I
     }
   }
   std::sort(vp_.rbegin(), vp_.rend()); //sort based on maxX values
-  Int32 s = vp_.size();
+  s = vp_.size();
   for(Int32 i = 1; i<s+1; i++){
     maxX.push_back(vp_[s-i].first);
     maxY.push_back(vp_[s-i].second);
