@@ -576,7 +576,7 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
                 m_result->ScaleMargCorrectionContinuum[i-1];
         }
     }
-    std::cout<<"now interpolate large grid merit results onto the fine grid"<< std::endl;
+
     // now interpolate large grid merit results onto the fine grid
     if (m_result->Redshifts.size() > calculatedLargeGridMerits.size() &&
         calculatedLargeGridMerits.size() > 1)
@@ -2295,9 +2295,6 @@ Int32 COperatorLineModel::RecomputeAroundCandidates(TPointList input_extremumLis
                         n_progresssteps,
                         m_result->Redshifts[izmin_cand],
                         m_result->Redshifts[izmax_cand]);
-            std::cout<< "Operator-Linemodel: Fit n="<<n_progresssteps <<
-              " values for z in ["<< m_result->Redshifts[izmin_cand] << "," <<
-              m_result->Redshifts[izmax_cand] << "]" << std::endl;
 
             for (Int32 iz = izmin_cand; iz <= izmax_cand; iz++)
             {

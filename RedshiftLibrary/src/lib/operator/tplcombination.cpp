@@ -470,7 +470,7 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(const CSpectru
     }
 
 
-    std::cout << "Tplcombination, fit on " << sortedRedshifts.size() << " sorted redshifts"<< std::endl;
+    //    std::cout << "Tplcombination, fit on " << sortedRedshifts.size() << " sorted redshifts"<< std::endl;
     for (Int32 i=0;i<sortedRedshifts.size();i++)
     {
         //default mask
@@ -509,7 +509,7 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(const CSpectru
         result->ChiSquareIntermediate[i]=fittingResults.ChiSquareInterm;
 
     }
-    std::cout << "Tplcombination," << sortedRedshifts.size() << " redshifts fitted"<< std::endl;
+    //    std::cout << "Tplcombination," << sortedRedshifts.size() << " redshifts fitted"<< std::endl;
 
     //overlap warning
     Float64 overlapValidInfZ = -1;

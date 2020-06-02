@@ -199,7 +199,6 @@ bool CProcessFlowContext::Init( std::shared_ptr<CSpectrum> spectrum,
     continuumIndexesResult->SetValues(continuumRelevance.StdSpectrum, continuumRelevance.StdContinuum);
     m_DataStore->StoreScopedGlobalResult(nameContinuumIndexesResult, continuumIndexesResult);
 
-    std::cout <<"Context initialized" << std::endl;
 
     return true;
 }
