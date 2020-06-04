@@ -243,7 +243,7 @@ Bool CMethodTplcombinationSolve::Solve(CDataStore& resultStore,
         }
 
         // Compute merit function
-        auto  result = std::dynamic_pointer_cast<CTplcombinationResult>( m_tplcombinationOperator->Compute( _spc, tplList, lambdaRange, redshifts, overlapThreshold, maskList, opt_interp, enable_extinction, enable_dustFitting ) );
+        auto  result = std::dynamic_pointer_cast<CChisquareResult>( m_tplcombinationOperator->Compute( _spc, tplList, lambdaRange, redshifts, overlapThreshold, maskList, opt_interp, enable_extinction, enable_dustFitting ) );
 
         if( !result )
         {
@@ -275,7 +275,7 @@ Int32 CMethodTplcombinationSolve::CombinePDF(CDataStore &store, std::string scop
     {
         throw runtime_error("tplcombinationsolve: CombinePDF - Unable to retrieve tplcombination results");
     }
-    std::shared_ptr<const CTplcombinationResult> result = std::dynamic_pointer_cast<const CTplcombinationResult>( results.lock() );
+    std::shared_ptr<const CChisquareResult> result = std::dynamic_pointer_cast<const CChisquareResult>( results.lock() );
 
     CPdfz pdfz;
     Float64 cstLog = -1;

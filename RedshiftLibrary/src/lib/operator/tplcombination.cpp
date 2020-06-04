@@ -5,7 +5,6 @@
 #include <RedshiftLibrary/spectrum/template/template.h>
 #include <RedshiftLibrary/spectrum/tools.h>
 #include <RedshiftLibrary/common/mask.h>
-#include <RedshiftLibrary/operator/chisquareresult.h>
 #include <RedshiftLibrary/extremum/extremum.h>
 #include <RedshiftLibrary/common/quicksort.h>
 
@@ -504,7 +503,7 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(const CSpectru
     }
 
     Log.LogDebug("  Operator-tplcombination: prepare the results");
-    std::shared_ptr<CTplcombinationResult> result = std::shared_ptr<CTplcombinationResult>( new CTplcombinationResult() );
+    std::shared_ptr<CChisquareResult> result = std::shared_ptr<CChisquareResult>( new CChisquareResult() );
     Int32 nDustCoeffs=1;
     if(opt_dustFitting)
     {
