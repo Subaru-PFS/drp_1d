@@ -211,6 +211,10 @@ void CLineModelExtremaResult::Save( const CDataStore& store, std::ostream& strea
         Int32 n = Rank_PDF.size();
         if(n<Extrema.size()){
             //in this case, rank doesnt mean anything
+            /*Rank_PDF.clear();
+            for(Int32 i = 0; i<Extrema.size(); i++){
+                Rank_PDF.push_back(i);
+            }*/
             std::vector<std::string> ids = candResults->ExtremaIDs;
             Int32 ret = FixRanksUsingSortedIDs(Rank_PDF, ids);
             if(ret<0){

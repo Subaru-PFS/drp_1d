@@ -171,107 +171,6 @@ Bool CLineModelSolveResult::GetBestRedshift(const CDataStore& store,
     return true;
 }
 
-Bool CLineModelSolveResult::GetBestRedshiftsFromPdf(const CDataStore& store,
-                                                    TFloat64List& redshift) const
-{
-    std::string scope = store.GetScope( *this ) + "linemodelsolve.linemodel";
-    auto results_chi2 = store.GetGlobalResult( scope.c_str() );
-
-    std::string scope_res = "zPDF/logposterior.logMargP_Z_data";
-    auto results_pdf =  store.GetGlobalResult( scope_res.c_str() );
-    auto logzpdf1d = std::dynamic_pointer_cast<const CPdfMargZLogResult>( results_pdf.lock() );
-
-    if(!logzpdf1d)
-    {
-        Log.LogError( "GetBestRedshiftFromPdf: no pdf results retrieved from scope: %s", scope_res.c_str());
-        return false;
-    }
-
-    if( !results_chi2.expired() )
-    {
-        auto lineModelResult = std::dynamic_pointer_cast<const CLineModelResult>( results_chi2.lock() );
-
-        if(logzpdf1d->Redshifts.size() != lineModelResult->Redshifts.size())
-        {
-            Log.LogError( "GetBestRedshiftFromPdf: pdf samplecount != chisquare samplecount");
-            return false;
-        }
-        Float64 Fullwidth = 6e-3;//should be replaced with deltaz?
-        Int32 method = 1; //0=maxpdf, 1=direct integration on peaks only
-        for( Int32 i=0; i<lineModelResult->ExtremaResult.Extrema.size(); i++ )
-        {
-            Float64 tmpIntgProba = -DBL_MAX;
-            Float64 tmpRedshift = 0.0; 
-            /*//TODO: below commented code should replace executing code once the new finder is ready; find() arguments shd also be updated
-            TPointList extremumList;
-            Int32 s = lineModelResult->ExtremaResult.ExtremaExtendedRedshifts[i].size();
-            TFloat64Range redshiftsRange = TFloat64Range( lineModelResult->ExtremaResult.ExtremaExtendedRedshifts[i][0], 
-                                                           lineModelResult->ExtremaResult.ExtremaExtendedRedshifts[i][s-1]);
-            //call Find on each secondpass range and retrieve the best 10 peaks?
-            CExtremum extremum(redshiftsRange, 10, false, 1);
-            extremum.Find(logzpdf1d->Redshifts, logzpdf1d->valProbaLog, extremumList);
-            if(method == 0){
-                redshift.push_back(extremumList[0].X);
-                continue;
-            }
-            for(Int32 j = 0; j < extremumList.size(); j++){
-                CPdfz pdfz;
-                Float64 flux_integral = -1;
-                flux_integral = pdfz.getCandidateSumTrapez( logzpdf1d->Redshifts, logzpdf1d->valProbaLog, extremumList[j].X, Fullwidth);
-                if(flux_integral>tmpIntgProba){
-                        tmpRedshift = extremumList[j].X;
-                        tmpIntgProba = extremumList[j].Y;
-                }
-            }*/
-            Float64 tmpProbaLog = -DBL_MAX;
-            for(Int32 kval=0; kval<lineModelResult->ExtremaResult.ExtremaExtendedRedshifts[i].size(); kval++)
-            {
-                Float64 zInCandidateRange = lineModelResult->ExtremaResult.ExtremaExtendedRedshifts[i][kval];
-                UInt32 solIdx = logzpdf1d->getIndex(zInCandidateRange);
-                if(solIdx<0 || solIdx>=logzpdf1d->valProbaLog.size())
-                {
-                    Log.LogError( "GetBestRedshiftFromPdf: pdf proba value not found for extremumIndex = %d", i);
-                    return false;
-                }
-
-                Float64 probaLog = logzpdf1d->valProbaLog[solIdx];
-                Log.LogDebug( "GetBestRedshiftFromPdf: z=%f : probalog = %f", zInCandidateRange, probaLog);
-                
-                if(method == 0){
-                    if(probaLog>tmpProbaLog){
-                        tmpRedshift = zInCandidateRange;
-                        tmpProbaLog = probaLog;
-                    }
-                }    
-                if(method == 1){//max integrated proba but only on peaks in this range
-                    CPdfz pdfz;
-                    Float64 flux_integral = -1;
-                    Float64 prev, next;
-                    prev = logzpdf1d->valProbaLog[solIdx-1];
-                    next = logzpdf1d->valProbaLog[solIdx+1];
-                    if((probaLog > prev&& probaLog > next) ||
-                        (solIdx == 0 && probaLog>next) ||
-                        (solIdx == logzpdf1d->valProbaLog.size()-1 && probaLog > prev)){
-                        //if current value is a peak
-                        flux_integral = pdfz.getCandidateSumTrapez( logzpdf1d->Redshifts, logzpdf1d->valProbaLog, zInCandidateRange, Fullwidth);
-                        if(flux_integral>tmpIntgProba){
-                            tmpRedshift = zInCandidateRange;
-                            tmpIntgProba = probaLog;
-                        }
-                    }
-                    else 
-                    {
-                        continue; //it doesnt work to compute here the pdfz
-                    }
-                } 
-            }
-            redshift.push_back(tmpRedshift);
-        }
-
-    }
-
-    return true;
-}
 /**
  * Simply reading from datastore info related to the best Candidate
 */
@@ -310,7 +209,7 @@ Bool CLineModelSolveResult::GetBestRedshiftFromPdf(const CDataStore& store,
     redshift = Extrema[bestIdx];
     probaLog = ExtremaPDF[bestIdx];
     sigma = ExtremaDeltaz[bestIdx];
-    //not sure that below values are correct!
+    //not sure that below values are correct! im right..they are not
     snrHa = lineModelResult->ExtremaResult.snrHa[bestIdx];
     lfHa = lineModelResult->ExtremaResult.lfHa[bestIdx];
     snrOII = lineModelResult->ExtremaResult.snrOII[bestIdx];

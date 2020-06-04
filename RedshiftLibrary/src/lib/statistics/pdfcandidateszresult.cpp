@@ -230,3 +230,92 @@ void CPdfCandidateszResult::SortByValSumProbaInt(TInt32List& flist)
         flist[i] = sortedFlist[i];
     }
 }
+
+Bool CPdfCandidateszResult::GetBestRedshiftsFromPdf(const CDataStore& store, 
+                                                    TFloat64List Extrema,  
+                                                    std::vector<TFloat64List> ExtremaExtendedRedshifts,
+                                                    TFloat64List& candidates ) const
+{
+        std::string scope_res = "zPDF/logposterior.logMargP_Z_data";
+        auto results_pdf =  store.GetGlobalResult( scope_res.c_str() );
+        auto logzpdf1d = std::dynamic_pointer_cast<const CPdfMargZLogResult>( results_pdf.lock() );
+
+        if(!logzpdf1d)
+        {
+            Log.LogError( "GetBestRedshiftFromPdf: no pdf results retrieved from scope: %s", scope_res.c_str());
+            return false;
+        }
+        Float64 Fullwidth = 6e-3;//should be replaced with deltaz?
+        Int32 method = 1; //0=maxpdf, 1=direct integration on peaks only
+        for( Int32 i=0; i<Extrema.size(); i++ )
+        {
+            Float64 tmpIntgProba = -DBL_MAX;
+            Float64 tmpRedshift = 0.0; 
+            /*//TODO: below commented code should replace executing code once the new finder is ready; find() arguments shd also be updated
+            TPointList extremumList;
+            Int32 s = ExtremaExtendedRedshifts[i].size();
+            TFloat64Range redshiftsRange = TFloat64Range( ExtremaExtendedRedshifts[i][0], 
+                                                           ExtremaExtendedRedshifts[i][s-1]);
+            //call Find on each secondpass range and retrieve the best 10 peaks?
+            CExtremum extremum(redshiftsRange, 10, false, 1);
+            extremum.Find(logzpdf1d->Redshifts, logzpdf1d->valProbaLog, extremumList);
+            if(method == 0){
+                redshift.push_back(extremumList[0].X);
+                continue;
+            }
+            for(Int32 j = 0; j < extremumList.size(); j++){
+                CPdfz pdfz;
+                Float64 flux_integral = -1;
+                flux_integral = pdfz.getCandidateSumTrapez( logzpdf1d->Redshifts, logzpdf1d->valProbaLog, extremumList[j].X, Fullwidth);
+                if(flux_integral>tmpIntgProba){
+                        tmpRedshift = extremumList[j].X;
+                        tmpIntgProba = extremumList[j].Y;
+                }
+            }*/
+            Float64 tmpProbaLog = -DBL_MAX;
+            for(Int32 kval=0; kval<ExtremaExtendedRedshifts[i].size(); kval++)
+            {
+                Float64 zInCandidateRange = ExtremaExtendedRedshifts[i][kval];
+                UInt32 solIdx = logzpdf1d->getIndex(zInCandidateRange);
+                if(solIdx<0 || solIdx>=logzpdf1d->valProbaLog.size())
+                {
+                    Log.LogError( "GetBestRedshiftFromPdf: pdf proba value not found for extremumIndex = %d", i);
+                    return false;
+                }
+
+                Float64 probaLog = logzpdf1d->valProbaLog[solIdx];
+                Log.LogDebug( "GetBestRedshiftFromPdf: z=%f : probalog = %f", zInCandidateRange, probaLog);
+                
+                if(method == 0){
+                    if(probaLog>tmpProbaLog){
+                        tmpRedshift = zInCandidateRange;
+                        tmpProbaLog = probaLog;
+                    }
+                }    
+                if(method == 1){//max integrated proba but only on peaks in this range
+                    CPdfz pdfz;
+                    Float64 flux_integral = -1;
+                    Float64 prev, next;
+                    prev = logzpdf1d->valProbaLog[solIdx-1];
+                    next = logzpdf1d->valProbaLog[solIdx+1];
+                    if((probaLog > prev&& probaLog > next) ||
+                        (solIdx == 0 && probaLog>next) ||
+                        (solIdx == logzpdf1d->valProbaLog.size()-1 && probaLog > prev)){
+                        //if current value is a peak
+                        flux_integral = pdfz.getCandidateSumTrapez( logzpdf1d->Redshifts, logzpdf1d->valProbaLog, zInCandidateRange, Fullwidth);
+                        if(flux_integral>tmpIntgProba){
+                            tmpRedshift = zInCandidateRange;
+                            tmpIntgProba = probaLog;
+                        }
+                    }
+                    else 
+                    {
+                        continue; //it doesnt work to compute here the pdfz
+                    }
+                } 
+            }
+            candidates.push_back(tmpRedshift);
+        }
+
+    return true;
+}
