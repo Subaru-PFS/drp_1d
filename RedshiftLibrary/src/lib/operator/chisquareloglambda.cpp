@@ -1940,7 +1940,7 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(const CSpe
             //linear 
             spec->Rebin(
                 spcLbdaRange, targetSpectralAxis,
-                spectrumRebinedSpectrum,//spectrumRebinedFluxAxis, spectrumRebinedSpectralAxis
+                spectrumRebinedSpectrum,
                 m_mskRebinedLog);
             spectrumRebinedFluxAxis = spectrumRebinedSpectrum.GetFluxAxis();
             spectrumRebinedSpectralAxis = spectrumRebinedSpectrum.GetSpectralAxis();
@@ -1959,7 +1959,7 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(const CSpe
             spec_error  = std::shared_ptr<CSpectrum>(new CSpectrum(spectrum.GetSpectralAxis(), errorFluxAxis));
             spec_error->Rebin(
                 spcLbdaRange, targetSpectralAxis,
-                errorspectrumRebinedSpectrum, //m_errorRebinedLog, errorRebinedSpectralAxis,
+                errorspectrumRebinedSpectrum, 
                 error_mskRebinedLog);
             m_errorRebinedLog = errorspectrumRebinedSpectrum.GetFluxAxis();
         }

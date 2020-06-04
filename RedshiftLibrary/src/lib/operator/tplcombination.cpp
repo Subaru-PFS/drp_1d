@@ -128,35 +128,40 @@ void COperatorTplcombination::BasicFit(const CSpectrum& spectrum,
 
         // Compute shifted template
         Float64 onePlusRedshift = 1.0 + redshift;
+        //no longer used in the rebin cause we rebin templates in resframe
         m_shiftedTemplatesSpectralAxis_bf[ktpl]->ShiftByWaveLength( tplSpectralAxis, onePlusRedshift, CSpectrumSpectralAxis::nShiftForward );
         TFloat64Range intersectedLambdaRange( 0.0, 0.0 );
 
         // Compute clamped lambda range over template
         TFloat64Range tplLambdaRange;
-        m_shiftedTemplatesSpectralAxis_bf[ktpl]->ClampLambdaRange( lambdaRange, tplLambdaRange );
+        /*m_shiftedTemplatesSpectralAxis_bf[ktpl]->*/tplSpectralAxis.ClampLambdaRange( lambdaRange, tplLambdaRange );
 
         // if there is any intersection between the lambda range of the spectrum and the lambda range of the template
         // Compute the intersected range
         TFloat64Range::Intersect( tplLambdaRange, spcLambdaRange, intersectedLambdaRange );
 
-        //UInt32 tgtn = spcSpectralAxis.GetSamplesCount() ;
-        /*
-        CSpectrumFluxAxis& itplTplFluxAxis = m_templatesRebined_bf[ktpl]->GetFluxAxis();
-        CSpectrumSpectralAxis& itplTplSpectralAxis = m_templatesRebined_bf[ktpl]->GetSpectralAxis();
-        */
         CMask& itplMask = *m_masksRebined_bf[ktpl];
 
         CSpectrumSpectralAxis __mshifedTplSpec = *m_shiftedTemplatesSpectralAxis_bf[ktpl];
+        
+        CSpectrumSpectralAxis spcSpectralAxis_( spcSpectralAxis.GetSamplesCount(), spcSpectralAxis.IsInLogScale() ); 
+        
+        //redshift in restframe the tgtSpectralAxis, i.e., division by (1+Z)
+        spcSpectralAxis_.ShiftByWaveLength( spcSpectralAxis, onePlusRedshift, CSpectrumSpectralAxis::nShiftBackward );
+        
         CSpectrum itplTplSpectrum;
         std::shared_ptr<CSpectrum> spec;
-        spec = std::shared_ptr<CSpectrum>( new CSpectrum(__mshifedTplSpec, tplFluxAxis ) );
-        spec->Rebin( intersectedLambdaRange, spcSpectralAxis, itplTplSpectrum, itplMask, opt_interp, redshift );
+        spec = std::shared_ptr<CSpectrum>( new CSpectrum(tplSpectralAxis/*__mshifedTplSpec*/, tplFluxAxis ) );
+        spec->Rebin( intersectedLambdaRange, spcSpectralAxis_, itplTplSpectrum, itplMask, opt_interp );
         
         m_templatesRebined_bf[ktpl]->SetAxis(itplTplSpectrum);//saving results in class variable for later use
         CSpectrumFluxAxis itplTplFluxAxis = itplTplSpectrum.GetFluxAxis();
         CSpectrumSpectralAxis& itplTplSpectralAxis = itplTplSpectrum.GetSpectralAxis();
+        itplTplSpectralAxis.ShiftByWaveLength( onePlusRedshift, CSpectrumSpectralAxis::nShiftForward );
+
         Log.LogDebug("  Operator-Tplcombination: Rebinned template #%d has n=%d samples in lambdarange: %.2f - %.2f", 
-        ktpl, itplTplSpectralAxis.GetSamplesCount(), itplTplSpectralAxis[0], itplTplSpectralAxis[itplTplSpectralAxis.GetSamplesCount()-1]);
+                        ktpl, itplTplSpectralAxis.GetSamplesCount(), itplTplSpectralAxis[0], 
+                        itplTplSpectralAxis[itplTplSpectralAxis.GetSamplesCount()-1]);
 
         /*//overlapRate, Method 1
         CMask mask;

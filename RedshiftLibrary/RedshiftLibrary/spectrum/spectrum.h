@@ -77,14 +77,15 @@ public:
     Bool                SetAxis( CSpectrumSpectralAxis& spectralAxis, CSpectrumFluxAxis& fluxAxis);
 
     Bool                Rebin( const TFloat64Range& range, const CSpectrumSpectralAxis& targetSpectralAxis,
-                                CSpectrum& rebinedSpectrum, CMask& rebinedMask, const std::string opt_interp = "lin", Float64 sourcez = -1 ); 
+                            CSpectrum& rebinedSpectrum, CMask& rebinedMask, const std::string opt_interp = "lin"); 
 protected:
     CSpectrumSpectralAxis           m_SpectralAxis;
     CSpectrumFluxAxis               m_FluxAxis;
     TFloat64List                    m_pfgTplBuffer;
     Bool                            RebinFineGrid();
     Bool                            m_FineGridInterpolated = false;
-    Float64                         m_dLambdaTgt = 0.1;//oversampling step for fine grid 
+    Float64                         m_dLambdaTgt = 0.1;//oversampling step for fine grid //check if enough to be private
+    Float64                         m_lmin = 0; //default value set to 0, i.e., the first begining of 
 private:
 
     std::string                     m_Name;

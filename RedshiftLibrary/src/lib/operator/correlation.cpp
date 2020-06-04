@@ -105,7 +105,7 @@ Float64 COperatorCorrelation::GetComputationDuration() const
 
         // Compute clamped lambda range over template
         TFloat64Range tplLambdaRange;
-        retVal = shiftedTplSpectralAxis.ClampLambdaRange( lambdaRange, tplLambdaRange );
+        retVal = /*shiftedTplSpectralAxis*/tplSpectralAxis.ClampLambdaRange( lambdaRange, tplLambdaRange );
         DebugAssert( retVal );
 
         // if there is any intersection between the lambda range of the spectrum and the lambda range of the template
@@ -115,17 +115,24 @@ Float64 COperatorCorrelation::GetComputationDuration() const
 
         CSpectrumFluxAxis itplTplFluxAxis;
         CSpectrumSpectralAxis itplTplSpectralAxis;
+        
+        CSpectrumSpectralAxis spcSpectralAxis_( spcSpectralAxis.GetSamplesCount(), spcSpectralAxis.IsInLogScale() ); 
+
         CSpectrum itplSpectrum;
         CMask itplMask;
         std::shared_ptr<CSpectrum> spec, spec_error;
-        spec = std::shared_ptr<CSpectrum>( new CSpectrum(shiftedTplSpectralAxis, tplFluxAxis));
-        spec->Rebin( intersectedLambdaRange, spcSpectralAxis, itplSpectrum, itplMask );
+
+        spcSpectralAxis_.ShiftByWaveLength( onePlusRedshift, CSpectrumSpectralAxis::nShiftBackward );
+
+        spec = std::shared_ptr<CSpectrum>( new CSpectrum(/*shiftedTplSpectralAxis*/tplSpectralAxis, tplFluxAxis));
+        spec->Rebin( intersectedLambdaRange, spcSpectralAxis_, itplSpectrum, itplMask );
 
         itplTplFluxAxis = itplSpectrum.GetFluxAxis();
         itplTplSpectralAxis = itplSpectrum.GetSpectralAxis();
-        CMask mask;
-        spcSpectralAxis.GetMask( lambdaRange, mask );
+        itplTplSpectralAxis.ShiftByWaveLength( onePlusRedshift, CSpectrumSpectralAxis::nShiftForward );
 
+        CMask mask;
+        spcSpectralAxis.GetMask( lambdaRange, mask );  
         itplMask &= mask;
 
         result->Overlap[i] = mask.CompouteOverlapRate( itplMask );

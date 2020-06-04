@@ -60,7 +60,7 @@ void COperatorChiSquare::BasicFit( const CSpectrum& spectrum, const CTemplate& t
 
     // Compute clamped lambda range over template
     TFloat64Range tplLambdaRange;
-    shiftedTplSpectralAxis.ClampLambdaRange( lambdaRange, tplLambdaRange );
+    /*shiftedTplSpectralAxis*/tplSpectralAxis.ClampLambdaRange( lambdaRange, tplLambdaRange );
 
     // if there is any intersection between the lambda range of the spectrum and the lambda range of the template
     // Compute the intersected range
@@ -68,14 +68,21 @@ void COperatorChiSquare::BasicFit( const CSpectrum& spectrum, const CTemplate& t
 
     CSpectrumFluxAxis itplTplFluxAxis;
     CSpectrumSpectralAxis itplTplSpectralAxis;
+    
+    CSpectrumSpectralAxis spcSpectralAxis_( spcSpectralAxis.GetSamplesCount(), spcSpectralAxis.IsInLogScale() ); 
     CSpectrum itplTplSpectrum;
     CMask itplMask;
     std::shared_ptr<CSpectrum> spec, spec_error;
-    spec = std::shared_ptr<CSpectrum>( new CSpectrum(shiftedTplSpectralAxis, tplFluxAxis) );
-    spec->Rebin( intersectedLambdaRange, spcSpectralAxis, itplTplSpectrum, itplMask );
+
+    spcSpectralAxis_.ShiftByWaveLength( spcSpectralAxis, onePlusRedshift, CSpectrumSpectralAxis::nShiftBackward );
+
+    spec = std::shared_ptr<CSpectrum>( new CSpectrum(/*shiftedTplSpectralAxis*/tplSpectralAxis, tplFluxAxis) );
+    spec->Rebin( intersectedLambdaRange, spcSpectralAxis_, itplTplSpectrum, itplMask );
 
     itplTplFluxAxis = itplTplSpectrum.GetFluxAxis();
     itplTplSpectralAxis = itplTplSpectrum.GetSpectralAxis();
+    itplTplSpectralAxis.ShiftByWaveLength( onePlusRedshift, CSpectrumSpectralAxis::nShiftForward );
+
     CMask mask;
     spcSpectralAxis.GetMask( lambdaRange, mask );
     itplMask &= mask;

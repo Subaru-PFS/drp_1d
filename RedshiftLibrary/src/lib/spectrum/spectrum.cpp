@@ -114,9 +114,9 @@ Bool CSpectrum::RebinFineGrid(){
   if(!n)
     return false;
 
-  Float64 lmin = m_SpectralAxis[0];//templates wavelength never starts with 0
+  m_lmin = m_SpectralAxis[0];//template wavelength never starts at 0
   Float64 lmax = m_SpectralAxis[n - 1];
-  Int32 nTgt = (lmax - lmin) / m_dLambdaTgt + 2.0 / m_dLambdaTgt;
+  Int32 nTgt = (lmax - m_lmin) / m_dLambdaTgt + 2.0 / m_dLambdaTgt;
 
   TFloat64List precomputedFineGridTplFlux(nTgt * sizeof(Float64));
 
@@ -132,7 +132,7 @@ Bool CSpectrum::RebinFineGrid(){
   Int32 k = 0;
   Float64 x = 0.0;
   for (k = 0; k < nTgt; k++) {
-    x = lmin + k * m_dLambdaTgt;
+    x = m_lmin + k * m_dLambdaTgt;
     if (x < m_SpectralAxis[0] || x > m_SpectralAxis[n - 1]) {
       precomputedFineGridTplFlux[k] = 0.0;
     } else {
@@ -543,13 +543,16 @@ void CSpectrum::LoadSpectrum(const char* spectrumFilePath, const char* noiseFile
 /// - opt_interp = 'precomputedfinegrid' : nearest grid point interpolation is performed using m_pfgTplBuffer which is the precomputed fine grid
 /// - opt_interp = 'spline' : GSL/spline interpolation is performed (TODO - not tested)
 /// - opt_interp = 'ngp' : nearest grid point is performed (TODO - not tested)
-///
+/**
+ * targetSpectralAxis should be expressed in restframe, same as source
+*/
 Bool CSpectrum::Rebin( const TFloat64Range& range, const CSpectrumSpectralAxis& targetSpectralAxis,
-                     CSpectrum& rebinedSpectrum, CMask& rebinedMask , const std::string opt_interp, Float64 sourcez )
+                     CSpectrum& rebinedSpectrum, CMask& rebinedMask , const std::string opt_interp)
 {
     
     if( m_SpectralAxis.GetSamplesCount() != m_FluxAxis.GetSamplesCount() )
     {
+        std::cout<<"Problem samplecountsize betwee spectral axis and fluw axis\n";
         return false;
     }
     
@@ -560,14 +563,18 @@ Bool CSpectrum::Rebin( const TFloat64Range& range, const CSpectrumSpectralAxis& 
 
     if(m_pfgTplBuffer.size()==0 && opt_interp=="precomputedfinegrid" && m_FineGridInterpolated == true)
     {
+        std::cout<<"Problem buffer couldnt be computed\n";
         return false;
     }
 
     //the spectral axis should be in the same scale
     TFloat64Range logIntersectedLambdaRange( log( range.GetBegin() ), log( range.GetEnd() ) );
     TFloat64Range currentRange = logIntersectedLambdaRange;
-    if( m_SpectralAxis.IsInLinearScale() != targetSpectralAxis.IsInLinearScale() )
+    if(m_SpectralAxis.IsInLinearScale() != targetSpectralAxis.IsInLinearScale() ){
+       std::cout<<"Problem spectral axis and target spectral axis are not in same scale\n";
         return false;
+
+    }
     if(m_SpectralAxis.IsInLinearScale()){
         currentRange = range;
     }
@@ -618,12 +625,8 @@ Bool CSpectrum::Rebin( const TFloat64Range& range, const CSpectrumSpectralAxis& 
         }
     }else if(opt_interp=="precomputedfinegrid"){
         // Precomputed FINE GRID nearest sample, 20150801
-        if(sourcez==-1){
-            Log.LogError("  CSpectrum::Rebin missing reference redshift value! ");
-            throw runtime_error("  CSpectrum::Rebin missing reference redshift value! ");
-        }
         Int32 k = 0;
-        Float64 Coeffk = 1.0/m_dLambdaTgt/(1+sourcez);
+        Float64 Coeffk = 1.0/m_dLambdaTgt;
         // For each sample in the target spectrum
         while( j<targetSpectralAxis.GetSamplesCount() && Xtgt[j] <= currentRange.GetEnd() )
         {
@@ -657,12 +660,14 @@ Bool CSpectrum::Rebin( const TFloat64Range& range, const CSpectrumSpectralAxis& 
         }
     }else if(opt_interp=="ngp"){
         //nearest sample, lookup
-        Int32 k = 0;// k = (int)(Xtgt[j]*Coeffk+0.5); (TODO:Didier proposes something here!! Dont forget mira)
+        Float64 coeffk = 1.0/m_dLambdaTgt; ///(1+sourcez); No more sourcez passed here!
+        Int32 k = 0; 
         Int32 kprev = 0;
         Int32 n = m_SpectralAxis.GetSamplesCount();
         while( j<targetSpectralAxis.GetSamplesCount() && Xtgt[j] <= currentRange.GetEnd() )
         {
             k = gsl_interp_bsearch (Xsrc, Xtgt[j], kprev, n);
+            k = m_lmin + (int)(Xsrc[k]*coeffk+0.5);//to align using lmin, i.e., k corresponds tp k steps starting from lmin and not from lambda = 0;
             kprev = k;
             // closest value
             Xrebin[j] = Xtgt[j];

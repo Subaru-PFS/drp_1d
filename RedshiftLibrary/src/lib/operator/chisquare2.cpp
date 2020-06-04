@@ -153,12 +153,13 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
 
     // Compute shifted template
     Float64 onePlusRedshift = 1.0 + redshift;
+    //m_shiftedTplSpectralAxis_bf is no longer used in the rebin cause we privilige restframe axis
     m_shiftedTplSpectralAxis_bf.ShiftByWaveLength( tplSpectralAxis, onePlusRedshift, CSpectrumSpectralAxis::nShiftForward );
     TFloat64Range intersectedLambdaRange( 0.0, 0.0 );
 
     // Compute clamped lambda range over template
     TFloat64Range tplLambdaRange;
-    m_shiftedTplSpectralAxis_bf.ClampLambdaRange( lambdaRange, tplLambdaRange );
+    /*m_shiftedTplSpectralAxis_bf*/tplSpectralAxis.ClampLambdaRange( lambdaRange, tplLambdaRange );
 
     // if there is any intersection between the lambda range of the spectrum and the lambda range of the template
     // Compute the intersected range
@@ -166,17 +167,26 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
 
     //UInt32 tgtn = spcSpectralAxis.GetSamplesCount() ;
     CSpectrumFluxAxis itplTplFluxAxis;
-    CSpectrumSpectralAxis itplTplSpectralAxis;
+    CSpectrumSpectralAxis itplTplSpectralAxis; 
+    //make sure that spcSpectralAxis_ has same size as spcSpectralAxis
+    CSpectrumSpectralAxis spcSpectralAxis_( spcSpectralAxis.GetSamplesCount(), spcSpectralAxis.IsInLogScale() ); 
     CSpectrum itplTplSpectrum;
     CMask& itplMask = m_mskRebined_bf;
 
+    
+    //redshift in restframe the tgtSpectralAxis, i.e., division by (1+Z)
+    spcSpectralAxis_.ShiftByWaveLength(spcSpectralAxis, onePlusRedshift, CSpectrumSpectralAxis::nShiftBackward );
+    
     std::shared_ptr<CSpectrum> spec;
-    spec = std::shared_ptr<CSpectrum>( new CSpectrum( m_shiftedTplSpectralAxis_bf, tplFluxAxis));
-    spec->Rebin( intersectedLambdaRange, spcSpectralAxis, itplTplSpectrum, itplMask, opt_interp, redshift);
+    spec = std::shared_ptr<CSpectrum>( new CSpectrum( tplSpectralAxis/*m_shiftedTplSpectralAxis_bf*/, tplFluxAxis));
+    spec->Rebin( intersectedLambdaRange, spcSpectralAxis_, itplTplSpectrum, itplMask, opt_interp);
+
 
     itplTplFluxAxis = itplTplSpectrum.GetFluxAxis();
     itplTplSpectralAxis = itplTplSpectrum.GetSpectralAxis();
+    itplTplSpectralAxis.ShiftByWaveLength( onePlusRedshift, CSpectrumSpectralAxis::nShiftForward );
     m_templateRebined_bf.SetAxis(itplTplSpectrum);
+
     /*//overlapRate, Method 1
     CMask mask;
     spcSpectralAxis.GetMask( lambdaRange, mask );

@@ -149,7 +149,7 @@ BOOST_AUTO_TEST_CASE(calcul)
 							   (*targetSpectralAxis),
 							   rebinnedSpectrum5,
 							   (*rebinedMask3),
-							   opt_interp, source);
+							   opt_interp/*, source*/);
   BOOST_CHECK(resultRebincas1 == true);
   BOOST_TEST_MESSAGE("Rebin cas1:" << resultRebincas1);
 
@@ -162,7 +162,7 @@ BOOST_AUTO_TEST_CASE(calcul)
 							   (*targetSpectralAxis),
 							   rebinnedSpectrum6,
 							   (*rebinedMask4),
-							   opt_interp, source);
+							   opt_interp/*, source*/);
   BOOST_CHECK(resultRebincas2 == false);
   BOOST_TEST_MESSAGE("Rebin cas2:" << resultRebincas2);
 
@@ -173,7 +173,7 @@ BOOST_AUTO_TEST_CASE(calcul)
   CSpectrum rebinnedSpectrum7;
   bool resultRebincas3 = object_CSpectrum7->Rebin(
 							   (*object_Range), (*targetSpectralAxis), rebinnedSpectrum7, 
-                 (*rebinedMask5), opt_interp, source);
+                 (*rebinedMask5), opt_interp/*, source*/);
   BOOST_CHECK(resultRebincas3 == false);
   BOOST_TEST_MESSAGE("Rebin cas3:" << resultRebincas3);
 
@@ -187,7 +187,6 @@ BOOST_AUTO_TEST_CASE(calcul)
                  rebinnedSpectrum8, (*rebinedMask6), opt_interp);
   BOOST_CHECK(resultRebincas4 == true);
   BOOST_TEST_MESSAGE("Rebin cas4:" << resultRebincas4);
-  
 
   // cas 5
   const std::string opt_interp2 = "precomputedfinegrid";
@@ -195,13 +194,11 @@ BOOST_AUTO_TEST_CASE(calcul)
   std::shared_ptr<CSpectrum> object_CSpectrum9;
   object_CSpectrum9 = std::shared_ptr<CSpectrum>( new CSpectrum( (*sourceSpectralAxis4), (*sourceFluxAxis)));
   
-  //Todo:below requires verification
-  //object_CSpectrum9->SetTemplateBuffer(*object_CSpectrum9);//const Float64 *Buffer = sourceSpectralAxis->GetSamples();
   CMask *rebinedMask7 = new CMask();
   CSpectrum rebinnedSpectrum9;
   bool resultRebincas5 = object_CSpectrum9->Rebin(
 							   (*object_Range4), (*targetSpectralAxis4), 
-                 rebinnedSpectrum9, (*rebinedMask7), opt_interp2, source);
+                 rebinnedSpectrum9, (*rebinedMask7), opt_interp2/*, source*/);
   BOOST_CHECK(resultRebincas5 == true);
   BOOST_TEST_MESSAGE("Rebin cas5:" << resultRebincas5);
 
@@ -209,13 +206,12 @@ BOOST_AUTO_TEST_CASE(calcul)
   std::shared_ptr<CSpectrum> object_CSpectrum10;
   object_CSpectrum10 = std::shared_ptr<CSpectrum>( new CSpectrum( (*sourceSpectralAxis4), (*sourceFluxAxis)));
   std::shared_ptr<CSpectrum> object_CSpectrum_null = std::shared_ptr<CSpectrum>( new CSpectrum());
-  //object_CSpectrum10->SetTemplateBuffer(*object_CSpectrum_null); //TODO check this
   CSpectrum rebinnedSpectrum10;
   bool resultRebincas5bis = object_CSpectrum10->Rebin(
 							      (*object_Range4), (*targetSpectralAxis4), 
-                    rebinnedSpectrum10, (*rebinedMask8), opt_interp2, source);
-  BOOST_CHECK(resultRebincas5bis == false);
-
+                    rebinnedSpectrum10, (*rebinedMask8), opt_interp2);
+  BOOST_CHECK(resultRebincas5bis == true);
+  BOOST_TEST_MESSAGE("Rebin cas5bis:" << resultRebincas5bis);
   // cas 6
   const std::string opt_interp3 = "spline";
 
@@ -225,7 +221,7 @@ BOOST_AUTO_TEST_CASE(calcul)
   CSpectrum rebinnedSpectrum11;
   bool resultRebincas6 = object_CSpectrum11->Rebin(
 							   (*object_Range4), (*targetSpectralAxis4), 
-                 rebinnedSpectrum11, (*rebinedMask9), opt_interp3, source);
+                 rebinnedSpectrum11, (*rebinedMask9), opt_interp3/*, source*/);
   BOOST_CHECK(resultRebincas6 == true);
   BOOST_TEST_MESSAGE("Rebin cas6:" << resultRebincas6);
 
