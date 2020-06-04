@@ -1286,10 +1286,10 @@ Bool CLineModelSolve::ExtractCandidateResults(CDataStore &store, std::vector<Flo
             store.GetGlobalResult("linemodelsolve.linemodel").lock());
         //compute Deltaz
         TFloat64List deltaz;
-        CLineModelResult* lm_obj = new CLineModelResult();
+        CDeltaz* deltaz_obj = new CDeltaz();
         for(Int32 i =0; i<zcandidates_unordered_list.size(); i++){
             Float64 z = zcandidates_unordered_list[i];
-            deltaz.push_back(lm_obj->GetDeltaz(logzpdf1d->Redshifts, logzpdf1d->valProbaLog, z));
+            deltaz.push_back(deltaz_obj->GetDeltaz(logzpdf1d->Redshifts, logzpdf1d->valProbaLog, z));
         }
         zcand->Compute(zcandidates_unordered_list, logzpdf1d->Redshifts, logzpdf1d->valProbaLog, deltaz/*v->ExtremaResult.DeltaZ*/, v->ExtremaResult.ExtremaIDs);
 

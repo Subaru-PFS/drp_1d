@@ -17,6 +17,30 @@ CDeltaz::~CDeltaz()
 
 }
 
+Float64 CDeltaz::GetDeltaz(TFloat64List redshifts, TFloat64List pdf, Float64 z) 
+{
+    Float64 dz = -1;
+    if (!redshifts.size() )
+        return 0;
+    Int32 ret = -1, deltaz_i = 0, maxIter = 2;
+    while(ret == -1 && deltaz_i < maxIter){//iterate only twice
+            Float64 zRangeHalf = 0.002/(deltaz_i+1); 
+            Log.LogInfo("  Deltaz: Deltaz computation nb %i with zRangeHalf %f", deltaz_i, zRangeHalf);
+            TFloat64Range range = TFloat64Range(z - zRangeHalf*(1+z), z + zRangeHalf*(1+z));
+            //ret = Compute3ddl(pdf, Redshifts, z, range, dz);
+            ret = Compute(pdf, redshifts, z, range, dz);            
+            if (ret == -1){
+                Log.LogWarning("  Deltaz: Deltaz computation failed for %f", zRangeHalf);
+                deltaz_i++; 
+            }
+    }
+    if(dz == -1){    
+        Log.LogError("  Deltaz: Deltaz for candidate %f couldnt be calculated", z);
+        dz = 0.001; //default value
+    }
+    return dz;
+}
+
 Int32 CDeltaz::Compute(TFloat64List merits, TFloat64List redshifts, Float64 redshift, TFloat64Range redshiftRange, Float64& sigma)
 {
     sigma = -1.0;
@@ -48,23 +72,15 @@ Int32 CDeltaz::Compute(TFloat64List merits, TFloat64List redshifts, Float64 reds
         return 1;
     }
 
-    Int32 n = 0;
-    n = izmax - izmin +1;
     Float64 x0 = redshifts[iz];
     Float64 y0 = merits[iz];
     Float64 xi2, yi, c0; 
     Float64 sum = 0, sum2 = 0;
-    for (Int32 i = 0; i < n; i++)
+    for (Int32 i = izmin; i < izmax+1; i++)
     {
-        xi2 = redshifts[i+izmin]-x0;
+        xi2 = redshifts[i]-x0;
         xi2 *= xi2;
-        yi = y0 - merits[i+izmin]; //pour re-caler les y pour que le centre soit à zero pour x0
-        if(yi<0){
-            Log.LogError("    CDeltaz::  Xi2 value of zi = %f should be greater than Xi2 of Zcand = %f \n", redshifts[i+izmin], redshift);
-            //two possible reasons: 1) deltaz range is too large and a neighboring peak can fall within this range and
-            //the second pass updates the candidate value but didnt check that the new Zcand is a true peak on the deltaz range
-            return -1;
-        }
+        yi = y0 - merits[i]; //pour re-caler les y pour que le centre soit à zero pour x0
         sum += xi2*yi;
         sum2 += xi2*xi2;
     }

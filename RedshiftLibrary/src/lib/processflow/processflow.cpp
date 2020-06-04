@@ -449,7 +449,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
             Log.LogInfo( "Extracting z-candidates from Linemodel method results" );
             std::shared_ptr<CLineModelSolveResult> solveResult = std::dynamic_pointer_cast<CLineModelSolveResult>( mResult );
             std::vector<Float64> zcandidates_unordered_list, zcandidates_unordered_lists;
-            Bool retzc = solveResult->GetBestRedshiftFromPdf_real(ctx.GetDataStore(), zcandidates_unordered_lists);
+            Bool retzc = solveResult->GetBestRedshiftsFromPdf(ctx.GetDataStore(), zcandidates_unordered_lists);
             if(retzc)
             {
                 Log.LogInfo( "Found %d z-candidates", zcandidates_unordered_list.size() );

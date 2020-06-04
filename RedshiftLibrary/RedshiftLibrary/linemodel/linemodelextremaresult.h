@@ -32,7 +32,7 @@ public:
     }
     //void Load( std::istream& stream );
     bool RemoveSecondPassCandidatebyIdx(Int32 idx);
-    Int32 SetWOrderforFP_basedonSortedIDs(TInt32List& Rank_PDF, std::vector<std::string> ids) const;
+    Int32 FixRanksUsingSortedIDs(TInt32List& Rank_PDF, std::vector<std::string> ids) const;
 
     //Extrema results
     TFloat64List            ExtremaPDF;    // Ranks extrema

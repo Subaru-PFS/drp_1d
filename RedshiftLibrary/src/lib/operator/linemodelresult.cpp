@@ -604,29 +604,3 @@ Float64 CLineModelResult::GetMaxChiSquare() const
     }
     return max;
 }
-
-Float64 CLineModelResult::GetDeltaz(TFloat64List redshifts, TFloat64List pdf, Float64 z) 
-{
-    Float64 dz = -1;
-    if (redshifts.size() > 1)
-    {
-        Int32 ret = -1, deltaz_i = 0, maxIter = 2;
-        while(ret == -1 && deltaz_i < maxIter){//iterate only twice
-            CDeltaz deltaz;
-            Float64 zRangeHalf = 0.002/(deltaz_i+1); 
-            Log.LogInfo("  Operator-Linemodel: Deltaz computation nb %i with zRangeHalf %f", deltaz_i, zRangeHalf);
-            TFloat64Range range = TFloat64Range(z - zRangeHalf*(1+z), z + zRangeHalf*(1+z));
-            //ret = deltaz.Compute3ddl(m_result->ChiSquare, m_result->Redshifts, z, range, dz);
-            ret = deltaz.Compute(pdf, redshifts, z, range, dz);            
-            if (ret == -1){
-                Log.LogWarning("  Operator-LinemodelResult: Deltaz computation failed for %f", zRangeHalf);
-                deltaz_i++; 
-            }
-        }
-    }
-    if(dz == -1){    
-        Log.LogError("  Operator-LinemodelResul: Deltaz for candidate %f couldnt be calculated", z);
-        dz = 0.001; //default value
-    }
-    return dz;
-}

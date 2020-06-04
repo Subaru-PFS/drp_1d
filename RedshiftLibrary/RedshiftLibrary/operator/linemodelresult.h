@@ -90,8 +90,6 @@ public:
     Float64 dTransposeDNocontinuum = 0;
     Float64 dTransposeD = 0;
     Float64 cstLog = 0;
-
-    Float64 GetDeltaz(TFloat64List redshifts, TFloat64List pdf, Float64 z);
 };
 
 

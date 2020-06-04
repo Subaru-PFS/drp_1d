@@ -147,7 +147,7 @@ bool CLineModelExtremaResult::RemoveSecondPassCandidatebyIdx(Int32 idx){
  * set writing order for first pass candidates based on sorted IDS using integrated PDF.
  * This is useful when some of first-pass candidates are cut off or eliminated in the second pass
 */
-Int32 CLineModelExtremaResult::SetWOrderforFP_basedonSortedIDs(TInt32List& Rank_PDF, std::vector<std::string> ids) const 
+Int32 CLineModelExtremaResult::FixRanksUsingSortedIDs(TInt32List& Rank_PDF, std::vector<std::string> ids) const 
 {       Rank_PDF.clear();
         //getcorresponding Rank:
         for(Int32 i = 0; i <ids.size(); i++){
@@ -210,12 +210,12 @@ void CLineModelExtremaResult::Save( const CDataStore& store, std::ostream& strea
         //make sure to save all data we collected from first pass
         Int32 n = Rank_PDF.size();
         if(n<Extrema.size()){
-             //in this case, rank doesnt mean anything
+            //in this case, rank doesnt mean anything
             std::vector<std::string> ids = candResults->ExtremaIDs;
-            Int32 ret = SetWOrderforFP_basedonSortedIDs(Rank_PDF, ids);
+            Int32 ret = FixRanksUsingSortedIDs(Rank_PDF, ids);
             if(ret<0){
-                Log.LogError("   CLineModelExtremaResult::SetWOrderforFP_basedonSortedIDs failed!");
-                throw std::runtime_error("   CLineModelExtremaResult::SetWOrderforFP_basedonSortedIDs failed!");
+                Log.LogError("   CLineModelExtremaResult::FixRanksUsingSortedIDs failed!");
+                throw std::runtime_error("   CLineModelExtremaResult::FixRanksUsingSortedIDs failed!");
             }
         }
     }
@@ -728,10 +728,10 @@ void CLineModelExtremaResult::SaveJSON( const CDataStore& store, std::ostream& s
         if(n<Extrema.size()){
             order.clear(); //in this case, rank doesnt mean anything
             std::vector<std::string> ids = candResults->ExtremaIDs;
-            Int32 ret = SetWOrderforFP_basedonSortedIDs(order, ids);
+            Int32 ret = FixRanksUsingSortedIDs(order, ids);
             if(ret<0){
-                Log.LogError("   CLineModelExtremaResult::SetWOrderforFP_basedonSortedIDs failed!");
-                throw std::runtime_error("   CLineModelExtremaResult::SetWOrderforFP_basedonSortedIDs failed!");
+                Log.LogError("   CLineModelExtremaResult::FixRanksUsingSortedIDs failed!");
+                throw std::runtime_error("   CLineModelExtremaResult::FixRanksUsingSortedIDs failed!");
             }
         }
     }
