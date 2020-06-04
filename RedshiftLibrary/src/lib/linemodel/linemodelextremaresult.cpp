@@ -394,6 +394,16 @@ if(!zeros){
         stream << "}" << std::endl;
     }
 
+    // save FittedTplAmplitudeError, on 1 line
+    if(FittedTplAmplitudeError.size()>0){
+        stream <<  "#FittedTplAmplitudeError for each extrema = {";
+        for ( int i=0; i<FittedTplAmplitudeError.size(); i++)
+        {
+            stream <<  FittedTplAmplitudeError[Rank_PDF[i]] << "\t";
+        }
+	stream << "}" << std::endl;
+    }
+
     // save FittedTplMerit, on 1 line
     if(FittedTplMerit.size()>0){
         stream <<  "#FittedTplMerit for each extrema = {";
@@ -699,6 +709,9 @@ void CLineModelExtremaResult::SaveJSON( const CDataStore& store, std::ostream& s
   stream << "," << std::endl;
   // save FittedTplAmplitude, on 1 line
   SaveTFloat64List(stream,"ext_FittedTplAmplitude",FittedTplAmplitude, order);
+  stream << "," << std::endl;
+  // save FittedTplAmplitudeError, on 1 line
+  SaveTFloat64List(stream,"ext_FittedTplAmplitudeError",FittedTplAmplitudeError, order);
   stream << "," << std::endl;
   // save FittedTplMerit, on 1 line
   SaveTFloat64List(stream,"ext_FittedTplMerit",FittedTplMerit, order);
