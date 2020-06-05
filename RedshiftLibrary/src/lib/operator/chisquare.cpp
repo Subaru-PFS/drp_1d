@@ -84,7 +84,7 @@ void COperatorChiSquare::BasicFit( const CSpectrum& spectrum, const CTemplate& t
     itplTplSpectralAxis.ShiftByWaveLength( onePlusRedshift, CSpectrumSpectralAxis::nShiftForward );
 
     CMask mask;
-    spcSpectralAxis.GetMask( lambdaRange, mask );
+    spcSpectralAxis_restframe.GetMask( lambdaRange, mask );
     itplMask &= mask;
     overlapRate = mask.CompouteOverlapRate( itplMask );
     // Check for overlap rate
@@ -96,7 +96,7 @@ void COperatorChiSquare::BasicFit( const CSpectrum& spectrum, const CTemplate& t
 
     const Float64* Xtpl = itplTplSpectralAxis.GetSamples();
     const Float64* Ytpl = itplTplFluxAxis.GetSamples();
-    const Float64* Xspc = spcSpectralAxis.GetSamples();
+    const Float64* Xspc = spcSpectralAxis_restframe.GetSamples();
     const Float64* Yspc = spcFluxAxis.GetSamples();
     TFloat64Range logIntersectedLambdaRange( log( intersectedLambdaRange.GetBegin() ), log( intersectedLambdaRange.GetEnd() ) );
     //the spectral axis should be in the same scale
@@ -109,7 +109,7 @@ void COperatorChiSquare::BasicFit( const CSpectrum& spectrum, const CTemplate& t
 
     // j cursor move over spectrum
     Int32 j = 0;
-    while( j < spcSpectralAxis.GetSamplesCount() && Xspc[j] < currentRange.GetBegin() )
+    while( j < spcSpectralAxis_restframe.GetSamplesCount() && Xspc[j] < currentRange.GetBegin() )
         j++;
 
     // k cursor move over template
@@ -127,7 +127,7 @@ void COperatorChiSquare::BasicFit( const CSpectrum& spectrum, const CTemplate& t
     Int32 numDevs = 0;
     const TFloat64List& error = spcFluxAxis.GetError();
 
-    while( j<spcSpectralAxis.GetSamplesCount() && Xspc[j] <= currentRange.GetEnd() )
+    while( j<spcSpectralAxis_restframe.GetSamplesCount() && Xspc[j] <= currentRange.GetEnd() )
     {
         numDevs++;
         err2 = 1.0 / (error[j] * error[j]);
@@ -152,7 +152,7 @@ void COperatorChiSquare::BasicFit( const CSpectrum& spectrum, const CTemplate& t
 
     Float64 s = 0;
 
-    while( j<spcSpectralAxis.GetSamplesCount() && Xspc[j] <= currentRange.GetEnd() )
+    while( j<spcSpectralAxis_restframe.GetSamplesCount() && Xspc[j] <= currentRange.GetEnd() )
     {
         int k=j;
         {

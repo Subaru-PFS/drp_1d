@@ -141,7 +141,7 @@ int COperatorChicorr::Compute(const CSpectrum& spectrum, const CSpectrum& spectr
         //spcSpectralAxis.ShiftByWaveLength( onePlusRedshift, CSpectrumSpectralAxis::nShiftForward ); 
 
         CMask mask;
-        spcSpectralAxis.GetMask( lambdaRange, mask );
+        spcSpectralAxis_restframe.GetMask( lambdaRange, mask );
         itplMask &= mask;
         result_corr->Overlap[i] = mask.CompouteOverlapRate( itplMask );
         result_chi->Overlap[i] = result_corr->Overlap[i];
@@ -175,7 +175,7 @@ int COperatorChicorr::Compute(const CSpectrum& spectrum, const CSpectrum& spectr
         const Float64* Xtpl = itplTplSpectralAxis.GetSamples();
         const Float64* YtplWithoutCont = itplTplWithoutContFluxAxis.GetSamples();
         const Float64* Ytpl = itplTplFluxAxis.GetSamples();
-        const Float64* Xspc = spcSpectralAxis.GetSamples();
+        const Float64* Xspc = spcSpectralAxis_restframe.GetSamples();
         const Float64* YspcWithoutCont = spcWithoutContFluxAxis.GetSamples();
         const Float64* Yspc = spcFluxAxis.GetSamples();
 
@@ -183,7 +183,7 @@ int COperatorChicorr::Compute(const CSpectrum& spectrum, const CSpectrum& spectr
 
         // j cursor move over spectrum
         Int32 j = 0;
-        while( j < spcSpectralAxis.GetSamplesCount() && Xspc[j] < logIntersectedLambdaRange.GetBegin() )
+        while( j < spcSpectralAxis_restframe.GetSamplesCount() && Xspc[j] < logIntersectedLambdaRange.GetBegin() )
             j++;
 
         // k cursor move over template
@@ -205,7 +205,7 @@ int COperatorChicorr::Compute(const CSpectrum& spectrum, const CSpectrum& spectr
 
         // Loop 1, compute the Chisquare coeff.
         // For each sample in the valid lambda range interval.
-        while( j<spcSpectralAxis.GetSamplesCount() && Xspc[j] <= logIntersectedLambdaRange.GetEnd() )
+        while( j<spcSpectralAxis_restframe.GetSamplesCount() && Xspc[j] <= logIntersectedLambdaRange.GetEnd() )
         {
             numDevs++;
             err2 = 1.0 / (error[j] * error[j]);
@@ -226,7 +226,7 @@ int COperatorChicorr::Compute(const CSpectrum& spectrum, const CSpectrum& spectr
 
         // Loop 2, compute the Chisquare sum and the Correlation sum.
         j=jStart;
-        while( j<spcSpectralAxis.GetSamplesCount() && Xspc[j] <= logIntersectedLambdaRange.GetEnd() )
+        while( j<spcSpectralAxis_restframe.GetSamplesCount() && Xspc[j] <= logIntersectedLambdaRange.GetEnd() )
         {
             int k=j;
             {

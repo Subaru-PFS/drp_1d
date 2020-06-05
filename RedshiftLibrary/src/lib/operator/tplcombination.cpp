@@ -124,6 +124,8 @@ void COperatorTplcombination::BasicFit(const CSpectrum& spectrum,
     TFloat64Range lambdaRange_restframe( lambdaRange.GetBegin() / onePlusRedshift, 
                                         lambdaRange.GetEnd() / onePlusRedshift );
     spcSpectralAxis.ClampLambdaRange( lambdaRange, spcLambdaRange );
+    CSpectrumSpectralAxis spcSpectralAxis_restframe( spcSpectralAxis, onePlusRedshift, CSpectrumSpectralAxis::nShiftBackward);
+    spcSpectralAxis_restframe.ClampLambdaRange( lambdaRange_restframe, spcLambdaRange_restframe );
     // Now interpolating all the templates
     Log.LogDebug("  Operator-tplcombination: BasicFit - interpolating");
     for(Int32 ktpl=0; ktpl<tplList.size(); ktpl++)
@@ -147,9 +149,6 @@ void COperatorTplcombination::BasicFit(const CSpectrum& spectrum,
         CMask& itplMask = *m_masksRebined_bf[ktpl];
 
         CSpectrumSpectralAxis __mshifedTplSpec = *m_shiftedTemplatesSpectralAxis_bf[ktpl];
-        
-        CSpectrumSpectralAxis spcSpectralAxis_restframe( spcSpectralAxis, onePlusRedshift, CSpectrumSpectralAxis::nShiftBackward);
-        spcSpectralAxis_restframe.ClampLambdaRange( lambdaRange_restframe, spcLambdaRange_restframe );
 
         CSpectrum itplTplSpectrum;
         std::shared_ptr<CSpectrum> spec;
@@ -179,7 +178,7 @@ void COperatorTplcombination::BasicFit(const CSpectrum& spectrum,
         //overlapRate = mask.IntersectAndComputeOverlapRate( itplMask );
 
         //overlapRate, Method 3
-        fittingResults.overlapRate = spcSpectralAxis.IntersectMaskAndComputeOverlapRate( lambdaRange, itplMask );
+        fittingResults.overlapRate = spcSpectralAxis_restframe.IntersectMaskAndComputeOverlapRate( lambdaRange, itplMask );
 
         // Check for overlap rate
         if( fittingResults.overlapRate < overlapThreshold || fittingResults.overlapRate<=0.0 )
@@ -190,13 +189,13 @@ void COperatorTplcombination::BasicFit(const CSpectrum& spectrum,
     }
 
     // Linear fit
-    Int32 imin_lbda = spcSpectralAxis.GetIndexAtWaveLength(spcLambdaRange.GetBegin());
-    if(spcSpectralAxis[imin_lbda]<spcLambdaRange.GetBegin() && imin_lbda+1<spcSpectralAxis.GetSamplesCount())
+    Int32 imin_lbda = spcSpectralAxis_restframe.GetIndexAtWaveLength(spcLambdaRange_restframe.GetBegin());
+    if(spcSpectralAxis_restframe[imin_lbda]<spcLambdaRange_restframe.GetBegin() && imin_lbda+1<spcSpectralAxis_restframe.GetSamplesCount())
     {
         imin_lbda += 1;
     }
-    Int32 imax_lbda = spcSpectralAxis.GetIndexAtWaveLength(spcLambdaRange.GetEnd());
-    if(spcSpectralAxis[imax_lbda]>spcLambdaRange.GetEnd() && imax_lbda-1>=imin_lbda)
+    Int32 imax_lbda = spcSpectralAxis_restframe.GetIndexAtWaveLength(spcLambdaRange_restframe.GetEnd());
+    if(spcSpectralAxis_restframe[imax_lbda]>spcLambdaRange_restframe.GetEnd() && imax_lbda-1>=imin_lbda)
     {
         imax_lbda -= 1;
     }

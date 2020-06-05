@@ -134,7 +134,7 @@ Float64 COperatorCorrelation::GetComputationDuration() const
         itplTplSpectralAxis.ShiftByWaveLength( onePlusRedshift, CSpectrumSpectralAxis::nShiftForward );
 
         CMask mask;
-        spcSpectralAxis.GetMask( lambdaRange, mask );  
+        spcSpectralAxis_restframe.GetMask( lambdaRange, mask );  
         itplMask &= mask;
 
         result->Overlap[i] = mask.CompouteOverlapRate( itplMask );
@@ -167,14 +167,14 @@ Float64 COperatorCorrelation::GetComputationDuration() const
 
         const Float64* Xtpl = itplTplSpectralAxis.GetSamples();
         const Float64* Ytpl = itplTplFluxAxis.GetSamples();
-        const Float64* Xspc = spcSpectralAxis.GetSamples();
+        const Float64* Xspc = spcSpectralAxis_restframe.GetSamples();
         const Float64* Yspc = spcFluxAxis.GetSamples();
 
         TFloat64Range logIntersectedLambdaRange( log( intersectedLambdaRange.GetBegin() ), log( intersectedLambdaRange.GetEnd() ) );
 
         // j cursor move over spectrum
         Int32 j = 0;
-        while( j < spcSpectralAxis.GetSamplesCount() && Xspc[j] < logIntersectedLambdaRange.GetBegin() )
+        while( j < spcSpectralAxis_restframe.GetSamplesCount() && Xspc[j] < logIntersectedLambdaRange.GetBegin() )
             j++;
 
         // j cursor move over template
@@ -194,7 +194,7 @@ Float64 COperatorCorrelation::GetComputationDuration() const
         // ---------------------------------
         //          stddev(x) * stddev(s)
         // For each sample in the valid lambda range interval.
-        while( j<spcSpectralAxis.GetSamplesCount() && Xspc[j] <= logIntersectedLambdaRange.GetEnd() )
+        while( j<spcSpectralAxis_restframe.GetSamplesCount() && Xspc[j] <= logIntersectedLambdaRange.GetEnd() )
         {
             sumWeight += 1.0 / error[j];
             sumCorr += ( Ytpl[k] - tplMean ) * ( Yspc[j] - spcMean ) / error[j];
