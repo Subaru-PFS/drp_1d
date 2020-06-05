@@ -146,45 +146,42 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
         status = nStatus_DataError;
         return ;
     }
+    Float64 onePlusRedshift = 1.0 + redshift;
 
     // Compute clamped lambda range over spectrum
-    TFloat64Range spcLambdaRange;
+    TFloat64Range spcLambdaRange, spcLambdaRange_restframe;
     spcSpectralAxis.ClampLambdaRange( lambdaRange, spcLambdaRange );
 
-    // Compute shifted template
-    Float64 onePlusRedshift = 1.0 + redshift;
     //m_shiftedTplSpectralAxis_bf is no longer used in the rebin cause we privilige restframe axis
     m_shiftedTplSpectralAxis_bf.ShiftByWaveLength( tplSpectralAxis, onePlusRedshift, CSpectrumSpectralAxis::nShiftForward );
-    TFloat64Range intersectedLambdaRange( 0.0, 0.0 );
 
-    // Compute clamped lambda range over template
+    //shift lambdaRange backward to be in restframe
+    TFloat64Range lambdaRange_restframe( lambdaRange.GetBegin() / onePlusRedshift, 
+                                         lambdaRange.GetEnd() / onePlusRedshift );
+
+    //redshift in restframe the tgtSpectralAxis, i.e., division by (1+Z)
+    CSpectrumSpectralAxis spcSpectralAxis_restframe( spcSpectralAxis, onePlusRedshift, CSpectrumSpectralAxis::nShiftBackward);
+    spcSpectralAxis_restframe.ClampLambdaRange( lambdaRange_restframe, spcLambdaRange_restframe );
+                                         
+    // Compute clamped lambda range over template in restframe
     TFloat64Range tplLambdaRange;
-    /*m_shiftedTplSpectralAxis_bf*/tplSpectralAxis.ClampLambdaRange( lambdaRange, tplLambdaRange );
-
-    // if there is any intersection between the lambda range of the spectrum and the lambda range of the template
+    tplSpectralAxis.ClampLambdaRange( lambdaRange_restframe, tplLambdaRange );
     // Compute the intersected range
-    TFloat64Range::Intersect( tplLambdaRange, spcLambdaRange, intersectedLambdaRange );
+    TFloat64Range intersectedLambdaRange( 0.0, 0.0 );
+    TFloat64Range::Intersect( tplLambdaRange, spcLambdaRange_restframe, intersectedLambdaRange );
 
-    //UInt32 tgtn = spcSpectralAxis.GetSamplesCount() ;
     CSpectrumFluxAxis itplTplFluxAxis;
-    CSpectrumSpectralAxis itplTplSpectralAxis; 
-    //make sure that spcSpectralAxis_ has same size as spcSpectralAxis
-    CSpectrumSpectralAxis spcSpectralAxis_( spcSpectralAxis.GetSamplesCount(), spcSpectralAxis.IsInLogScale() ); 
+    CSpectrumSpectralAxis itplTplSpectralAxis;  
     CSpectrum itplTplSpectrum;
     CMask& itplMask = m_mskRebined_bf;
 
-    
-    //redshift in restframe the tgtSpectralAxis, i.e., division by (1+Z)
-    spcSpectralAxis_.ShiftByWaveLength(spcSpectralAxis, onePlusRedshift, CSpectrumSpectralAxis::nShiftBackward );
-    
-    std::shared_ptr<CSpectrum> spec;
-    spec = std::shared_ptr<CSpectrum>( new CSpectrum( tplSpectralAxis/*m_shiftedTplSpectralAxis_bf*/, tplFluxAxis));
-    spec->Rebin( intersectedLambdaRange, spcSpectralAxis_, itplTplSpectrum, itplMask, opt_interp);
+    std::shared_ptr<CSpectrum> tpl_;
+    tpl_ = std::shared_ptr<CSpectrum>( new CSpectrum( tplSpectralAxis, tplFluxAxis));
+    tpl_->Rebin( intersectedLambdaRange, spcSpectralAxis_restframe, itplTplSpectrum, itplMask, opt_interp);
 
 
     itplTplFluxAxis = itplTplSpectrum.GetFluxAxis();
     itplTplSpectralAxis = itplTplSpectrum.GetSpectralAxis();
-    itplTplSpectralAxis.ShiftByWaveLength( onePlusRedshift, CSpectrumSpectralAxis::nShiftForward );
     m_templateRebined_bf.SetAxis(itplTplSpectrum);
 
     /*//overlapRate, Method 1
@@ -382,8 +379,7 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
             Float64 z = redshift;
             for(Int32 k=kStart; k<=kEnd; k++)
             {
-                Float64 restLambda = Xtpl[k]/(1.0+z);
-                Float64 coeffDust = m_ismCorrectionCalzetti->getDustCoeff( kDust, restLambda);
+                Float64 coeffDust = m_ismCorrectionCalzetti->getDustCoeff( kDust, Xtpl[k]);
 
                 Ytpl[k] *= coeffDust;
             }
@@ -399,14 +395,12 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
                 Bool igmCorrectionAppliedOnce = false;
                 for(Int32 k=kStart; k<=kEnd; k++)
                 {
-
-                    Float64 restLambda = Xtpl[k]/(1.0+z);
-                    if(restLambda <= m_igmCorrectionMeiksin->GetLambdaMax())
+                    if(Xtpl[k] <= m_igmCorrectionMeiksin->GetLambdaMax())
                     {
                         Int32 kLbdaMeiksin = 0;
-                        if(restLambda >= m_igmCorrectionMeiksin->GetLambdaMin())
+                        if(Xtpl[k] >= m_igmCorrectionMeiksin->GetLambdaMin())
                         {
-                            kLbdaMeiksin = Int32(restLambda-m_igmCorrectionMeiksin->GetLambdaMin());
+                            kLbdaMeiksin = Int32(Xtpl[k]-m_igmCorrectionMeiksin->GetLambdaMin());
                         }else //if lambda lower than min meiksin value, use lower meiksin value
                         {
                             kLbdaMeiksin = 0;

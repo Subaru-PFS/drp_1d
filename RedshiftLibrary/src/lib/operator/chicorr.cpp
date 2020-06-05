@@ -100,41 +100,40 @@ int COperatorChicorr::Compute(const CSpectrum& spectrum, const CSpectrum& spectr
         Float64 onePlusRedshift = 1.0 + redshifts[i];
         shiftedTplSpectralAxis.ShiftByWaveLength( tplSpectralAxis, onePlusRedshift, CSpectrumSpectralAxis::nShiftForward );
 
-        TFloat64Range intersectedLambdaRange( 0.0, 0.0 );
+        //shift lambdaRange backward to be in restframe
+        TFloat64Range lambdaRange_restframe( lambdaRange.GetBegin() / onePlusRedshift, 
+                                            lambdaRange.GetEnd() / onePlusRedshift );
+        //get spectrum in restframe
+        TFloat64Range spcLambdaRange_restframe;
+        CSpectrumSpectralAxis spcSpectralAxis_restframe( spcSpectralAxis, onePlusRedshift, CSpectrumSpectralAxis::nShiftBackward);
+        spcSpectralAxis_restframe.ClampLambdaRange( lambdaRange_restframe, spcLambdaRange_restframe );
 
         // Compute clamped lambda range over template
         TFloat64Range tplLambdaRange;
-        retVal = /*shiftedTplSpectralAxis*/tplSpectralAxis.ClampLambdaRange( lambdaRange, tplLambdaRange );
+        retVal = tplSpectralAxis.ClampLambdaRange( lambdaRange_restframe, tplLambdaRange );
         DebugAssert( retVal );
 
         // if there is any intersection between the lambda range of the spectrum and the lambda range of the template
         // Compute the intersected range   
-        TFloat64Range::Intersect( tplLambdaRange, spcLambdaRange, intersectedLambdaRange );
+        TFloat64Range intersectedLambdaRange( 0.0, 0.0 );
+        TFloat64Range::Intersect( tplLambdaRange, spcLambdaRange_restframe, intersectedLambdaRange );
 
         CSpectrumFluxAxis itplTplWithoutContFluxAxis;
         CSpectrumSpectralAxis itplTplSpectralAxis;
-        
-        CSpectrumSpectralAxis spcSpectralAxis_( spcSpectralAxis.GetSamplesCount(), spcSpectralAxis.IsInLogScale() ); 
-
         CSpectrum itplTplWithoutContinuumSpectrum, itplTplSpectrum;
-
         CMask itplMask;
 
         std::shared_ptr<CSpectrum> spec, spec2;
-        spec = std::shared_ptr<CSpectrum>( new CSpectrum(/*shiftedTplSpectralAxis*/tplSpectralAxis, tplWithoutContFluxAxis) );
-        
-        spcSpectralAxis_.ShiftByWaveLength(spcSpectralAxis, onePlusRedshift, CSpectrumSpectralAxis::nShiftBackward );
-    
-        //CSpectrum spec  = new CSpectrum(shiftedTplSpectralAxis, tplWithoutContFluxAxis);
-        spec->Rebin( intersectedLambdaRange, spcSpectralAxis_, itplTplWithoutContinuumSpectrum, itplMask );
+        spec = std::shared_ptr<CSpectrum>( new CSpectrum(tplSpectralAxis, tplWithoutContFluxAxis) );
+        spec->Rebin( intersectedLambdaRange, spcSpectralAxis_restframe, itplTplWithoutContinuumSpectrum, itplMask );
         
         itplTplWithoutContFluxAxis = itplTplWithoutContinuumSpectrum.GetFluxAxis();
         //itplTplWithoutContSpectAxis.ShiftByWaveLength( onePlusRedshift, CSpectrumSpectralAxis::nShiftForward ); 
 
         // same function for the spc with continuum, todo check ?
         CSpectrumFluxAxis itplTplFluxAxis;
-        spec = std::shared_ptr<CSpectrum>( new CSpectrum(/*shiftedTplSpectralAxis*/tplSpectralAxis, tplFluxAxis));
-        spec2->Rebin( intersectedLambdaRange, spcSpectralAxis_, itplTplSpectrum, itplMask );
+        spec = std::shared_ptr<CSpectrum>( new CSpectrum(tplSpectralAxis, tplFluxAxis));
+        spec2->Rebin( intersectedLambdaRange, spcSpectralAxis_restframe, itplTplSpectrum, itplMask );
         itplTplFluxAxis =  itplTplSpectrum.GetFluxAxis();
         itplTplSpectralAxis = itplTplSpectrum.GetSpectralAxis();
         itplTplSpectralAxis.ShiftByWaveLength( onePlusRedshift, CSpectrumSpectralAxis::nShiftForward );
