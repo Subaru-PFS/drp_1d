@@ -201,7 +201,6 @@ public:
 
     Int32 SaveResults(const CSpectrum& spectrum,
                       const TFloat64Range& lambdaRange,
-                      //std::shared_ptr<CPdfMargZLogResult> postmargZResult,
                       const std::string &opt_continuumreest="no");
 
     void InitTplratioPriors();
@@ -266,10 +265,12 @@ public:
     std::vector<Int32> m_secondpass_indiceSortedCandidatesList;
     CLineModelExtremaResult m_firstpass_extremaResult;
     CLineModelExtremaResult m_secondpass_parameters_extremaResult;
+    //make it public so i can change it after gettinf pdf candidates
+    std::shared_ptr<CLineModelResult> m_result;
 
 private:
 
-    std::shared_ptr<CLineModelResult> m_result;
+   
     std::shared_ptr<CLineModelElementList> m_model;
     TFloat64List m_sortedRedshifts;
 

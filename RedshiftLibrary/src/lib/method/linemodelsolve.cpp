@@ -1222,6 +1222,10 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
         }
     }
 
+
+    Int32 retSaveResults = linemodel.SaveResults(_spc,
+                                                 lambdaRange,
+                                                 m_opt_continuumreest);
  //combinePDF using results from secondpass
      Log.LogInfo("linemodelsolve: Pdfz computation");
     std::shared_ptr<const CLineModelResult> lmresultsp = std::dynamic_pointer_cast<const CLineModelResult>( linemodel.getResult() );
@@ -1270,15 +1274,14 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
                                     linemodel.m_secondpass_parameters_extremaResult.Extrema,//should be replaced by a simple variable
                                     linemodel.m_secondpass_parameters_extremaResult.ExtremaExtendedRedshifts, 
                                     zcandidates_unordered_lists);
+
     //overwrite linemodelExtrema with pdfcandidates before saving into datastore
     for(Int32 idx = 0; idx<zcandidates_unordered_lists.size(); idx++){
         linemodel.m_secondpass_parameters_extremaResult.Extrema[idx] = zcandidates_unordered_lists[idx];
-        //TODO: not sure merit values should be updated as well?!
+        //Important TODO:
+        //we'd rather separate saveresults into two functions: one to do more calculations and one to save into m_results data to be saved in datastore
+        linemodel.m_result->ExtremaResult.Extrema[idx] = zcandidates_unordered_lists[idx];
     }
-    Int32 retSaveResults = linemodel.SaveResults(_spc,
-                                                 lambdaRange,
-                                                 //postmargZResult,
-                                                 m_opt_continuumreest);
 
     std::shared_ptr<const CLineModelResult> result = std::dynamic_pointer_cast<const CLineModelResult>( linemodel.getResult() );
 
