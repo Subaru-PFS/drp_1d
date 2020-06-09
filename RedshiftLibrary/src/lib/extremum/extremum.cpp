@@ -153,9 +153,13 @@ Bool CExtremum::Find( const TFloat64List& xAxis, const TFloat64List& yAxis, TPoi
     Bool method = FindAllPeaks( selectedXAxis+rangeXBeginIndex, selectedYAxis+rangeXBeginIndex, (rangeXEndIndex-rangeXBeginIndex)+1, maxX, maxY );    
 
     //Look for all local minima
-    Bool method_min = FindAllPeaks( selectedXAxis+rangeXBeginIndex, selectedYAxis+rangeXBeginIndex, (rangeXEndIndex-rangeXBeginIndex)+1, minX, minY, -1*m_SignSearch); 
-    for(Int32 i = 0; i <minX.size(); i++){
-      minY[i] = -1*minY[i];
+    Bool activateprominence = false;
+    if(activateprominence){
+      Bool method_min = FindAllPeaks( selectedXAxis+rangeXBeginIndex, selectedYAxis+rangeXBeginIndex, (rangeXEndIndex-rangeXBeginIndex)+1, minX, minY, -1*m_SignSearch); 
+    
+      for(Int32 i = 0; i <minX.size(); i++){
+        minY[i] = -1*minY[i];
+      }
     }
 
     if(maxX.size() == 0){
@@ -165,24 +169,26 @@ Bool CExtremum::Find( const TFloat64List& xAxis, const TFloat64List& yAxis, TPoi
 
     //Calculate prominence and remove "low" prominence peaks
     //this is ALSO useful for eliminating neighboring peaks in some cases
-    Cut_Prominence_Merit(maxX, maxY, minX, minY);
+    // Deactivate Cut_Prominence_Merit for the moment until stat tests are ready
+    if(activateprominence){
+      TFloat64List ret_prominences = Cut_Prominence_Merit(maxX, maxY, minX, minY);    
 
-    if(maxX.size() == 0){
+      if(maxX.size() == 0){
         Log.LogError("        CExtremum::Find: Cut_Prominence_Merit returns empty MaxX");
         throw runtime_error("CExtremum::Find: Cut_Prominence_Merit returns empty MaxX");
       }
-
-
+    }
     Int32 keepMinN = 2;
     //refine using sliding windows: aiming at avoiding duplicate candidates when possible. 
-    FilterOutNeighboringPeaks(maxX, maxY, keepMinN);//keep at least keepMinN candidates
+    Bool b = FilterOutNeighboringPeaks(maxX, maxY, keepMinN);//keep at least keepMinN candidates
 
     //Cut_Threshold is optional
-  /*  if(m_meritCut>0.0){ 
-      Bool v = Cut_Threshold(maxX, maxY);
+    /*if(m_meritCut>0.0){ 
+        Bool v = Cut_Threshold(maxX, maxY);
     }*/
-    //truncate: reduces size of candidate list and also prepares the maxPoint List
-    Truncate(maxX, maxY, m_MaxPeakCount, maxPoint);
+
+    //truncate based on pdf value for the moment: reduces size of candidate list and also prepares the maxPoint List
+    b = Truncate(maxX, maxY, m_MaxPeakCount, maxPoint);
 
     return true;
 }
@@ -190,7 +196,7 @@ Bool CExtremum::Find( const TFloat64List& xAxis, const TFloat64List& yAxis, TPoi
  * prominence: vertical distance between a summit and the key col, i.e., the closest (horizontal) minima
  * joint prominence_merit cut
  * Method: 
- * 1. identify for consecutive peaks the key col.
+ * 1. identify the key col for consecutive peaks.
  * 2. calculate prominence for the current peak
  * 3. if prominence == peak.y, then peak is a very high peak
  * 4. Remove low prominence peaks : TO decide on "low" value
@@ -198,26 +204,29 @@ Bool CExtremum::Find( const TFloat64List& xAxis, const TFloat64List& yAxis, TPoi
  * To identify key col for each peak:
  * 1. Extend to the right and to the left of the peak until reaching higher peaks (ya_current < ya_right_after) //skip peaks of same value and continue extending
  * 2. Find the highest minima within the range identified in (1), considered as the key col.
+ * 
+ * //returned @prominences could be used as a metric for truncating candidates instead of pdf values
 */
-Bool CExtremum::Cut_Prominence_Merit( vector <Float64>& maxX, vector <Float64>& maxY, vector <Float64>& minX, vector <Float64>& minY) const{
+TFloat64List CExtremum::Cut_Prominence_Merit( vector <Float64>& maxX, vector <Float64>& maxY, vector <Float64>& minX, vector <Float64>& minY) const
+{
   //find highest peak:
   Float64 maxV = *std::max_element(maxY.begin(), maxY.end()); //max of maxY
   Float64 minV = *std::min_element(minY.begin(), minY.end()); //min of minY
-  Float64 ref_prominence = maxV - minV; //used to normalize obtained prominence TODO: requires discussion
+  Float64 ref_prominence = maxV - minV; //used to normalize obtained prominence TODO: requires discussion based on results from stats
   Float64 prominence_thresh = 0.1; //heuristic value, TODO: requires discussion (maybe passed in param.json)
 
-  Log.LogDebug("CExtremum::Find: prominenceCut set to %d and normalization value: %d \n", prominence_thresh, ref_prominence);
+  Log.LogDebug("CExtremum::Find: setting prominenceCut to %d and normalization value to %d \n", prominence_thresh, ref_prominence);
 
   if(maxX.size() == 0){
-        Log.LogError("    CExtremum::Cut_Prominence_Merit:empty MaxX");
-        throw runtime_error("CExtremum::Cut_Prominence_Merit:empty MaxX");
+    Log.LogError("    CExtremum::Cut_Prominence_Merit:empty MaxX");
+    throw runtime_error("CExtremum::Cut_Prominence_Merit:empty MaxX");
   }
 
   vector <Float64> prominence(maxX.size()), tmpX, tmpY; 
 
   if(maxX.size() == 1){
     prominence[0] = DBL_MAX; //there is no point of calculating the prominence; Force keeping this only candidate
-    return true;
+    return prominence;
   }
 
   for(Int32 i = 0; i<maxX.size(); i++){
@@ -263,7 +272,7 @@ Bool CExtremum::Cut_Prominence_Merit( vector <Float64>& maxX, vector <Float64>& 
       throw runtime_error("Problem in range determination");
     }
     //look into minX for key_col within rangex
-    //key_col is the highest minima between the lowest minimum to the right of the peak abd to the left of the peak
+    //key_col is the highest minima between the lowest minimum to the right and left of the peak
     Float64 key_coly_r = DBL_MAX, key_coly_l = DBL_MAX, key_colx;
     Int32 r, l; 
     if(maxX[0]<minX[0]){ //signal starts with a peak
@@ -308,12 +317,13 @@ Bool CExtremum::Cut_Prominence_Merit( vector <Float64>& maxX, vector <Float64>& 
       prominence[i] = tmpProminence;
     }
   }
+
   maxX.clear(); maxY.clear();
   for(Int32 i = 0; i<tmpX.size(); i++){
     maxX.push_back(tmpX[i]);
     maxY.push_back(tmpY[i]);
   }
-  return true;
+  return prominence;
 }
 /**
  * \Brief: removes extrema based on meritCut.
@@ -327,6 +337,9 @@ Bool CExtremum::Cut_Threshold( vector <Float64>& maxX, vector <Float64>& maxY, I
   if(maxX.size() == 0){
         Log.LogError("      CExtremum::Cut_threshold: empty MaxX arg");
         throw runtime_error(" CExtremum::Cut_threshold: empty MaxX arg");
+  }
+  if(maxX.size()<=keepMinN){
+    return true; 
   }
 
   Int32 n = maxX.size();
@@ -354,24 +367,6 @@ Bool CExtremum::Cut_Threshold( vector <Float64>& maxX, vector <Float64>& maxY, I
     maxX.push_back(vp_[s-i].first);
     maxY.push_back(vp_[s-i].second);
   }
-  std::sort(vp.rbegin(), vp.rend()); //sort descending order
-  vp_.push_back(make_pair(vp[0].second, vp[0].first)); //save best one
-  
-  maxX.clear(); maxY.clear();
-  for(Int32 i = 1; i<n-1; i++){
-    Float64 meritDiff = vp[0].first - vp[i].first;
-    if( meritDiff > m_meritCut && i>=keepMinN){
-      break; //no need to continue iterating since vp is sorted!
-    }else{
-      vp_.push_back(make_pair(vp[i].second, vp[i].first));
-    }
-  }
-  std::sort(vp_.rbegin(), vp_.rend()); //sort based on maxX values
-  s = vp_.size();
-  for(Int32 i = 1; i<s+1; i++){
-    maxX.push_back(vp_[s-i].first);
-    maxY.push_back(vp_[s-i].second);
-  }
   return true;
 }
 
@@ -380,7 +375,7 @@ Bool CExtremum::Cut_Threshold( vector <Float64>& maxX, vector <Float64>& maxY, I
  * @xAxis and @yAxis represents local maxima from 
  * Eliminate candidates with a very low Y value, comparing to others?
  * Eliminate close candidates: close, i.e., in a window of 0.005(1+z) around a z candidate of strong value???
- * //TODO: Need to implement the keepmin
+ * //TODO: Need to implement the keepmin: probably no need for this!!
 */
 Bool CExtremum::FilterOutNeighboringPeaks(vector <Float64>& maxX, vector <Float64>& maxY, UInt32 keepmin)const
 {
@@ -400,14 +395,13 @@ Bool CExtremum::FilterOutNeighboringPeaks(vector <Float64>& maxX, vector <Float6
 
   //starting from first element
   //minimal distance between two close extrema should be >= secondpass_range used to find extended redshifts
-  Float64 wind_high = tmpX[0] + 2*m_Radius*(1+tmpX[0]);
+  Float64 wind_high = tmpX[0] + m_Radius*(1+tmpX[0]);
   vector<Int32> idxList; 
   Int32 i = 0, imax = -1; 
   Float64 maxPDF = -INFINITY;
   Bool fullwdw = false;
 
   while(i<tmpX.size()){
-
     //if element belongs to the selected half-window
     if(tmpX[i]<=wind_high){
       idxList.push_back(i);
@@ -438,7 +432,7 @@ Bool CExtremum::FilterOutNeighboringPeaks(vector <Float64>& maxX, vector <Float6
         fullwdw = false; 
         imax = -1; maxPDF = -INFINITY;
         //calculate a new window based on the current i
-        wind_high = tmpX[i] + 2*m_Radius*(1+tmpX[i]);
+        wind_high = tmpX[i] + m_Radius*(1+tmpX[i]);
       }else {
         //Check if last elet. if yes, push it to maxX/Y
         if(i==tmpX.size()-1 && imax>-1){
@@ -451,7 +445,7 @@ Bool CExtremum::FilterOutNeighboringPeaks(vector <Float64>& maxX, vector <Float6
         }else{
           //calculate a new window based on the imax we found till now
           //keep maxPDF set to compare others with it
-          wind_high = tmpX[imax] + 2*m_Radius*(1+tmpX[imax]);
+          wind_high = tmpX[imax] + m_Radius*(1+tmpX[imax]);
           fullwdw = true; 
           continue;
         }
