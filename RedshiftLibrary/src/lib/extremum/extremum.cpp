@@ -395,7 +395,7 @@ Bool CExtremum::FilterOutNeighboringPeaks(vector <Float64>& maxX, vector <Float6
 
   //starting from first element
   //minimal distance between two close extrema should be >= secondpass_range used to find extended redshifts
-  Float64 wind_high = tmpX[0] + m_Radius*(1+tmpX[0]);
+  Float64 wind_high = tmpX[0] + 2*m_Radius*(1+tmpX[0]);
   vector<Int32> idxList; 
   Int32 i = 0, imax = -1; 
   Float64 maxPDF = -INFINITY;
@@ -432,7 +432,7 @@ Bool CExtremum::FilterOutNeighboringPeaks(vector <Float64>& maxX, vector <Float6
         fullwdw = false; 
         imax = -1; maxPDF = -INFINITY;
         //calculate a new window based on the current i
-        wind_high = tmpX[i] + m_Radius*(1+tmpX[i]);
+        wind_high = tmpX[i] + 2*m_Radius*(1+tmpX[i]);
       }else {
         //Check if last elet. if yes, push it to maxX/Y
         if(i==tmpX.size()-1 && imax>-1){
@@ -445,7 +445,7 @@ Bool CExtremum::FilterOutNeighboringPeaks(vector <Float64>& maxX, vector <Float6
         }else{
           //calculate a new window based on the imax we found till now
           //keep maxPDF set to compare others with it
-          wind_high = tmpX[imax] + m_Radius*(1+tmpX[imax]);
+          wind_high = tmpX[imax] + 2*m_Radius*(1+tmpX[imax]);
           fullwdw = true; 
           continue;
         }

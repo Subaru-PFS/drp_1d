@@ -164,7 +164,7 @@ BOOST_AUTO_TEST_CASE(Extremum_FilterOutNeighboringPeaks)
         
         maxPoint.push_back(SPoint(x[i],  y[i]) );
     }
-    check_points(maxPoint, TPointList({{0.1,5.0}, {0.8,8}, {1,4}})); //here we lose a good peak (0.6, 6) since it is close to 0.8, within sliding windows 
+    check_points(maxPoint, TPointList({{0.1,5.0}, {0.8,8}})); //here we lose a good peak (0.6, 6) since it is close to 0.8, within sliding windows 
 }
 
 //testing case where nb of peaks = keepmin
