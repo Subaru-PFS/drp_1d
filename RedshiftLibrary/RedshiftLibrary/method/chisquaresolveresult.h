@@ -49,11 +49,13 @@ public:
     Int32 GetEvidenceFromPdf(const CDataStore& store, Float64 &evidence) const;
     Bool GetRedshiftCandidates( const CDataStore& store,  std::vector<Float64>& redshiftcandidates, Int32 n_candidates) const;
 
+    Int32 m_bestRedshiftMethod = 2; //best chi2, best proba
+
+private:
+
     Int32 m_type;
     std::string m_name;
     std::string m_scope;
-
-    Int32 m_bestRedshiftMethod = 2; //best chi2, best proba
 
 };
 
