@@ -157,9 +157,22 @@ Bool CExtremum::Find( const TFloat64List& xAxis, const TFloat64List& yAxis, TPoi
     for(Int32 i = 0; i <minX.size(); i++){
       minY[i] = -1*minY[i];
     }
+
+    if(maxX.size() == 0){
+      Log.LogError("          CExtremum::Find: FindAllPeaks returned empty MaxX");
+      throw runtime_error("CExtremum::Find: FindAllPeaks returned empty MaxX");
+    }
+
     //Calculate prominence and remove "low" prominence peaks
     //this is ALSO useful for eliminating neighboring peaks in some cases
     Cut_Prominence_Merit(maxX, maxY, minX, minY);
+
+    if(maxX.size() == 0){
+        Log.LogError("        CExtremum::Find: Cut_Prominence_Merit returns empty MaxX");
+        throw runtime_error("CExtremum::Find: Cut_Prominence_Merit returns empty MaxX");
+      }
+
+
     Int32 keepMinN = 2;
     //refine using sliding windows: aiming at avoiding duplicate candidates when possible. 
     FilterOutNeighboringPeaks(maxX, maxY, keepMinN);//keep at least keepMinN candidates
@@ -192,7 +205,20 @@ Bool CExtremum::Cut_Prominence_Merit( vector <Float64>& maxX, vector <Float64>& 
   Float64 minV = *std::min_element(minY.begin(), minY.end()); //min of minY
   Float64 ref_prominence = maxV - minV; //used to normalize obtained prominence TODO: requires discussion
   Float64 prominence_thresh = 0.1; //heuristic value, TODO: requires discussion (maybe passed in param.json)
+
+  Log.LogDebug("CExtremum::Find: prominenceCut set to %d and normalization value: %d \n", prominence_thresh, ref_prominence);
+
+  if(maxX.size() == 0){
+        Log.LogError("    CExtremum::Cut_Prominence_Merit:empty MaxX");
+        throw runtime_error("CExtremum::Cut_Prominence_Merit:empty MaxX");
+  }
+
   vector <Float64> prominence(maxX.size()), tmpX, tmpY; 
+
+  if(maxX.size() == 1){
+    prominence[0] = DBL_MAX; //there is no point of calculating the prominence; Force keeping this only candidate
+    return true;
+  }
 
   for(Int32 i = 0; i<maxX.size(); i++){
     //current peak elevation
@@ -274,11 +300,12 @@ Bool CExtremum::Cut_Prominence_Merit( vector <Float64>& maxX, vector <Float64>& 
       }
       l--;
     }
-    prominence[i] = (maxY[i] - std::max(key_coly_l, key_coly_r))/ ref_prominence;
+    Float64 tmpProminence = (maxY[i] - std::max(key_coly_l, key_coly_r))/ ref_prominence;
     //keep peaks whose height is almost equal to their prominence
-    if(prominence[i] > prominence_thresh || (m_meritCut &&(maxV - maxY[i] < m_meritCut)) ){ //heuristic value
+    if(tmpProminence > prominence_thresh || (m_meritCut &&(maxV - maxY[i] < m_meritCut)) ){ //heuristic value
       tmpX.push_back(maxX[i]);
       tmpY.push_back(maxY[i]);
+      prominence[i] = tmpProminence;
     }
   }
   maxX.clear(); maxY.clear();
@@ -295,7 +322,13 @@ Bool CExtremum::Cut_Prominence_Merit( vector <Float64>& maxX, vector <Float64>& 
  * Third: Sort based on X values to return candidates following their initial order
  * It returns the new list of extrema
 */
-Bool CExtremum::Cut_Threshold( vector <Float64>& maxX, vector <Float64>& maxY, Int32 keepMinN) const{
+Bool CExtremum::Cut_Threshold( vector <Float64>& maxX, vector <Float64>& maxY, Int32 keepMinN) const
+{
+  if(maxX.size() == 0){
+        Log.LogError("      CExtremum::Cut_threshold: empty MaxX arg");
+        throw runtime_error(" CExtremum::Cut_threshold: empty MaxX arg");
+  }
+
   Int32 n = maxX.size();
   //create pairs of X and Y
   vector<pair<Float64,Float64> > vp, vp_;

@@ -461,7 +461,8 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
                 Log.LogError( "Failed to get z candidates from these results");
             }
             //compute the integratedPDF and sort candidates based on intg PDF
-            Bool b = Solve.ExtractCandidateResults(ctx.GetDataStore(), zcandidates_unordered_list);
+            //truncate based on maxCount
+            Bool b = Solve.ExtractCandidateResults(ctx.GetDataStore(), zcandidates_unordered_list, maxCount);
         }
 
     }else if(methodName  == "zweimodelsolve" ){

@@ -98,7 +98,7 @@ Int32 CPdfCandidateszResult::SetIntegrationWindows( std::vector<Float64> Pdfz, s
 /**
  * @brief CPdfCandidateszResult::Compute
  */
-Int32 CPdfCandidateszResult::Compute( std::vector<Float64> zc,  std::vector<Float64> Pdfz,  std::vector<Float64> PdfProbalog,  Int32 maxCount, std::vector<Float64> deltaz, std::vector<std::string> IDs)
+Int32 CPdfCandidateszResult::Compute( std::vector<Float64> zc,  std::vector<Float64> Pdfz,  std::vector<Float64> PdfProbalog, std::vector<Float64> deltaz, std::vector<std::string> IDs)
 {
     if(optMethod==0)
     {
@@ -107,7 +107,7 @@ Int32 CPdfCandidateszResult::Compute( std::vector<Float64> zc,  std::vector<Floa
         Log.LogInfo("    CPdfCandidateszResult::Compute pdf peaks info (method=gaussian fitting)" );
     }
     Resize(zc.size());
- 
+
     std::vector<Float64> range_right, range_left; 
     Int32 b = SetIntegrationWindows( Pdfz, zc, deltaz, range_right, range_left);
     //b == 0 --> no overlapping, b == 1 --> overlapping
@@ -147,11 +147,9 @@ Int32 CPdfCandidateszResult::Compute( std::vector<Float64> zc,  std::vector<Floa
     {
         Rank[i] = i;
     }
+    
     SortByValSumProbaInt(Rank);//update only ranks based on valproba
 
-    //update vectors size based on the number of candidates user asked to return!!
-    if(zc.size()>maxCount)
-        Resize(maxCount);
     return 0;
 }
 
@@ -173,7 +171,7 @@ void CPdfCandidateszResult::Save( const CDataStore& store, std::ostream& stream 
         stream << "\t" << "gaussAmp_unused" << "\t" << "gaussAmpErr_unused" << "\t" << "gaussSigma_unused" << "\t" << "gaussSigmaErr_unused";
     }
     stream  << "\n";
-    for(Int32 i=0; i<Redshifts.size(); i++)
+    for(Int32 i=0; i<Rank.size(); i++)
     {
         Int32 k = Rank[i]; //use final rank for the output order
         stream << i << "\t"; 
@@ -196,7 +194,7 @@ void CPdfCandidateszResult::Save( const CDataStore& store, std::ostream& stream 
 void CPdfCandidateszResult::SaveLine( const CDataStore& store, std::ostream& stream ) const
 {
     stream  << store.GetSpectrumName() << "\t" << store.GetProcessingID() << "\t";
-    for(Int32 i=0; i<Redshifts.size(); i++)
+    for(Int32 i=0; i<Rank.size(); i++)
     {
         Int32 k = Rank[i];
         stream << i << "\t";

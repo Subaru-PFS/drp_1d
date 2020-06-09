@@ -1322,7 +1322,7 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
     return true;
 }
 
-Bool CLineModelSolve::ExtractCandidateResults(CDataStore &store, std::vector<Float64> zcandidates_unordered_list)
+Bool CLineModelSolve::ExtractCandidateResults(CDataStore &store, std::vector<Float64> zcandidates_unordered_list, Int32 maxCount)
 {
         Log.LogInfo( "Computing candidates Probabilities" );
         std::shared_ptr<CPdfCandidateszResult> zcand = std::shared_ptr<CPdfCandidateszResult>(new CPdfCandidateszResult());
@@ -1343,6 +1343,7 @@ Bool CLineModelSolve::ExtractCandidateResults(CDataStore &store, std::vector<Flo
         //retrieve extremum IDs saved in datastore from firstpass 
         std::shared_ptr<const CLineModelResult> v = std::dynamic_pointer_cast<const CLineModelResult>(
             store.GetGlobalResult("linemodelsolve.linemodel").lock());
+<<<<<<< HEAD
         //compute Deltaz
         TFloat64List deltaz;
         CDeltaz* deltaz_obj = new CDeltaz();
@@ -1353,16 +1354,47 @@ Bool CLineModelSolve::ExtractCandidateResults(CDataStore &store, std::vector<Flo
         zcand->Compute(zcandidates_unordered_list, logzpdf1d->Redshifts, logzpdf1d->valProbaLog, deltaz, v->ExtremaResult.ExtremaIDs);
 
         store.StoreScopedGlobalResult( "candidatesresult", zcand ); 
+=======
+
+        zcand->Compute(zcandidates_unordered_list, logzpdf1d->Redshifts, logzpdf1d->valProbaLog, v->ExtremaResult.DeltaZ, v->ExtremaResult.ExtremaIDs);
+        
+        /* Below code doesnt work anymore
+        //Truncate candidates before saving and rewrite in the resultstore
+        auto __r = store.GetGlobalResult("linemodelsolve.linemodel");
+        //Dirty trick to modify a const variable: kept separate to show the need for such a complexity
+        std::shared_ptr<const CLineModelResult> _r = std::dynamic_pointer_cast< const CLineModelResult>( __r.lock() );
+        std::shared_ptr<CLineModelResult> *result = (std::shared_ptr<CLineModelResult>*)(&_r);
+        
+        (*result)->ExtremaResult.Reorder_ResizeAll(zcand->Rank);
+        */ 
+>>>>>>> Fixing some incompatibilities with develop; truncate final candidates only at writing into files phase; adding some throw errors in extremum.cpp
 
         std::vector<std::string> info {"spc", "fit", "fitcontinuum", "rules", "continuum"};
         for(Int32 f = 0; f<info.size(); f++) {
-            for( Int32 i = 0; i<zcand->Rank.size(); i++){
+            for( Int32 i = 0; i< maxCount; i++){
                 std::string fname_new =
                 (boost::format("linemodelsolve.linemodel_%1%_extrema_%2%") % info[f] % i).str();
                 std::string fname_old =
                 (boost::format("linemodelsolve.linemodel_%1%_extrema_tmp_%2%") % info[f] % zcand->Rank[i]).str();
                 store.ChangeScopedGlobalResult(fname_old, fname_new);    
             }
+            //TODO: Delete extra tmp data corresponding to truncated candidates
+            //if a truncation should happen
+            if(zcand->Rank.size() > maxCount){
+                for(Int32 i = maxCount; i<zcand->Rank.size(); i++){
+                    std::string fname_old =
+                    (boost::format("linemodelsolve.linemodel_%1%_extrema_tmp_%2%") % info[f] % zcand->Rank[i]).str();
+                    store.DeleteScopedGlobalResult(fname_old); 
+                }
+            }
         }
+
+        //Truncate only Rank size since is the only sorted vector
+        //the real truncation happen at saving time, into output files
+        if(zcand->Rank.size()>maxCount)
+            zcand->Rank.resize(maxCount);
+
+        store.StoreScopedGlobalResult( "candidatesresult", zcand );
+
 return true;
 }

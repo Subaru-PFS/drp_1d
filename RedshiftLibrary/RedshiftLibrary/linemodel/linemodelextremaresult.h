@@ -21,15 +21,6 @@ public:
     ~CLineModelExtremaResult();
 
     void Resize(Int32 size);
-    void Reorder( TFloat64List &arr, TInt32List indexes);
-    void Reorder_stringVect( std::vector<std::string>& arr, TInt32List indexes); 
-    void Reorder_stringVectofVector( std::vector<std::vector<std::string>>& arr, TInt32List indexes); 
-    void Reorder_int32Vect( TInt32List& arr, TInt32List indexes);
-    void Reorder_Float64ListOfList( std::vector<TFloat64List>& arr, TInt32List indexes) ;
-    void Reorder_TContinuumIndexListVector( std::vector<CContinuumIndexes::TContinuumIndexList>& arr, TInt32List indexes); 
-    void Reorder_CMask( std::vector<NSEpic::CMask>& arr, TInt32List indexes);
-    void Reorder_ExtRedarray( TFloat64List& arr, TInt32List indexes); 
-    void Reorder_ResizeAll(TInt32List indexes);
     
     void Save( const CDataStore& store, std::ostream& stream ) const;
     void SaveJSON( const CDataStore& store, std::ostream& stream ) const;

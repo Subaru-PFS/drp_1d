@@ -2255,10 +2255,9 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(const CSpe
         extremum.Find(result->Redshifts, result->ChiSquare, extremumList);
 
         // store extrema results
-        result->Extrema.resize(extremumCount);
+        result->Extrema.resize(extremumList.size());
         for (Int32 i = 0; i < extremumList.size(); i++)
         {
-
             result->Extrema[i] = extremumList[i].X;
         }
 
