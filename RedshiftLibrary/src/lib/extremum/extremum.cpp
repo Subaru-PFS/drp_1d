@@ -183,9 +183,9 @@ Bool CExtremum::Find( const TFloat64List& xAxis, const TFloat64List& yAxis, TPoi
     Bool b = FilterOutNeighboringPeaks(maxX, maxY, keepMinN);//keep at least keepMinN candidates
 
     //Cut_Threshold is optional
-    /*if(m_meritCut>0.0){ 
-        Bool v = Cut_Threshold(maxX, maxY);
-    }*/
+    if(m_meritCut>0.0){ 
+        Bool v = Cut_Threshold(maxX, maxY, keepMinN);
+    }
 
     //truncate based on pdf value for the moment: reduces size of candidate list and also prepares the maxPoint List
     b = Truncate(maxX, maxY, m_MaxPeakCount, maxPoint);
