@@ -63,21 +63,20 @@ std::shared_ptr<CChisquareSolveResult> CMethodTplcombinationSolve::Compute(CData
 {
     Bool storeResult = false;
 
-    std::string _name = "Tplcombination";
+//    std::string _name = "Tplcombination";
     CDataStore::CAutoScope resultScope( resultStore, "tplcombinationsolve" );
-    std::string _scope = "tplcombination";
-    std::string scopeStr = _scope;
+//    std::string _scope = "tplcombination";
+    std::string scopeStr = "chisquare";
 
     Int32 _type;
     if(spcComponent=="raw"){
        _type = CChisquareSolveResult::nType_raw;
-       //scopeStr = "tplcombination";
     }else if(spcComponent=="nocontinuum"){
        _type = CChisquareSolveResult::nType_noContinuum;
-       scopeStr = _scope + "_nocontinuum";
+       scopeStr = "chisquare_nocontinuum";
     }else if(spcComponent=="continuum"){
         _type = CChisquareSolveResult::nType_continuumOnly;
-        scopeStr = _scope + "_continuum";
+        scopeStr = "chisquare_continuum";
     }else if(spcComponent=="all"){
         _type = CChisquareSolveResult::nType_all;
     }
@@ -127,10 +126,8 @@ std::shared_ptr<CChisquareSolveResult> CMethodTplcombinationSolve::Compute(CData
 
     if( storeResult )
     {
-        std::shared_ptr< CChisquareSolveResult>  solveResult = std::shared_ptr< CChisquareSolveResult>( new CChisquareSolveResult() );
-        solveResult->SetType(_type);
-        solveResult->SetScope(_scope);
-        solveResult->SetName(_name);
+        std::shared_ptr< CChisquareSolveResult>  solveResult =
+                std::shared_ptr< CChisquareSolveResult>( new CChisquareSolveResult(_type, "tplcombinationsolve") );
 
         std::shared_ptr<CPdfMargZLogResult> postmargZResult = std::shared_ptr<CPdfMargZLogResult>(new CPdfMargZLogResult());
         Int32 retCombinePdf = CombinePDF(resultStore, scopeStr, m_opt_pdfcombination, postmargZResult);
@@ -225,11 +222,11 @@ Bool CMethodTplcombinationSolve::Solve(CDataStore& resultStore,
             spcfluxAxis.Subtract(spcWithoutCont.GetFluxAxis());
             CSpectrumFluxAxis& sfluxAxisPtr = _spc.GetFluxAxis();
             sfluxAxisPtr = spcfluxAxis;
-            scopeStr = "tplcombination_continuum";
+            scopeStr = "chisquare_continuum";
         }else if(_spctype == CChisquareSolveResult::nType_raw){
             // use full spectrum
             _spc = spc;
-            scopeStr = "tplcombination";
+            scopeStr = "chisquare";
 
         }else if(_spctype == CChisquareSolveResult::nType_noContinuum){
             // use spectrum without continuum
@@ -237,7 +234,7 @@ Bool CMethodTplcombinationSolve::Solve(CDataStore& resultStore,
             CSpectrumFluxAxis spcfluxAxis = spcWithoutCont.GetFluxAxis();
             CSpectrumFluxAxis& sfluxAxisPtr = _spc.GetFluxAxis();
             sfluxAxisPtr = spcfluxAxis;
-            scopeStr = "tplcombination_nocontinuum";
+            scopeStr = "chisquare_nocontinuum";
             //
             enable_dustFitting = 0;
         }

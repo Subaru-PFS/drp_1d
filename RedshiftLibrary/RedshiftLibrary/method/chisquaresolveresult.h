@@ -6,6 +6,7 @@
 #include <RedshiftLibrary/ray/catalog.h>
 
 #include <vector>
+#include <unordered_map>
 
 namespace NSEpic
 {
@@ -28,16 +29,7 @@ public:
              nType_all = 4,
     };
 
-    CChisquareSolveResult();
-    virtual ~CChisquareSolveResult();
-
-    void SetType(const Int32 type);
-    void SetScope(const std::string scope);
-    void SetName(const std::string name);
-
-    const Int32 GetType() const;
-    const std::string GetScope() const;
-    const std::string GetName() const;
+    CChisquareSolveResult(const Int32 type=nType_raw, const std::string scope="chisquaresolve");
 
     void Save( const CDataStore& store, std::ostream& stream ) const;
     void SaveLine( const CDataStore& store, std::ostream& stream ) const;
@@ -53,9 +45,16 @@ public:
 
 private:
 
-    Int32 m_type;
+    std::unordered_map<std::string, std::string> m_scope2name = {
+        {"chisquaresolve",      "ChisquareSolve"},
+        {"chisquare2solve",     "Chisquare2Solve"},
+        {"chisquarelogsolve",   "ChisquareLogSolve"},
+        {"tplcombinationsolve", "TplcombinationSolve"}
+    };
+
+    const Int32 m_type;
+    const std::string m_scope;
     std::string m_name;
-    std::string m_scope;
 
 };
 

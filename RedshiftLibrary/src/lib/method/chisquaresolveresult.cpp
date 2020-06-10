@@ -10,47 +10,14 @@
 
 using namespace NSEpic;
 
-CChisquareSolveResult::CChisquareSolveResult()
-{
-    m_type = nType_raw;
-    m_scope = "chisquare";
-    m_name = "Chisquare";
+CChisquareSolveResult::CChisquareSolveResult(const Int32 type, const std::string scope):
+    m_type(type),
+    m_scope(scope)
+{  
+    m_name = m_scope2name[m_scope];
 }
 
-CChisquareSolveResult::~CChisquareSolveResult()
-{
 
-}
-
-void CChisquareSolveResult::SetType(const Int32 type)
-{
-    m_type = type;
-}
-
-const Int32 CChisquareSolveResult::GetType() const
-{
-    return m_type;
-}
-
-void CChisquareSolveResult::SetScope(const std::string scope)
-{
-    m_scope = scope;
-}
-
-const std::string CChisquareSolveResult::GetScope() const
-{
-    return m_scope;
-}
-
-void CChisquareSolveResult::SetName(const std::string name)
-{
-    m_name = name;
-}
-
-const std::string CChisquareSolveResult::GetName() const
-{
-    return m_name;
-}
 
 void CChisquareSolveResult::Save( const CDataStore& store, std::ostream& stream ) const
 {
@@ -79,9 +46,9 @@ void CChisquareSolveResult::Save( const CDataStore& store, std::ostream& stream 
     if(m_bestRedshiftMethod==2)
     {
         GetBestRedshiftFromPdf( store, redshift, merit, evidence );
-        Log.LogInfo( "%ssolve-result: extracting best redshift from PDF: z=%f", m_name.c_str(), redshift);
+        Log.LogInfo( "%s-result: extracting best redshift from PDF: z=%f", m_name.c_str(), redshift);
         GetBestModel(store, redshift, tplName);
-        Log.LogInfo( "%ssolve-result: extracted best model: model=%s", m_name.c_str(), tplName.c_str());
+        Log.LogInfo( "%s-result: extracted best model: model=%s", m_name.c_str(), tplName.c_str());
 
         stream << redshift << "\t"
                << merit << "\t"
@@ -103,15 +70,16 @@ Bool CChisquareSolveResult::GetBestRedshiftPerTemplateString( const CDataStore& 
 {
     std::string scopeStr;
     if(m_type == nType_raw){
-	scopeStr = m_scope;
+        scopeStr = "chisquare";
     }else if(m_type == nType_all){
-	scopeStr = m_scope;
+        scopeStr = "chisquare";
     }else if(m_type == nType_noContinuum){
-	scopeStr = m_scope + "_nocontinuum";
+        scopeStr = "chisquare_nocontinuum";
     }else if(m_type == nType_continuumOnly){
-	scopeStr = m_scope + "_continuum";
+        scopeStr = "chisquare_continuum";
     }
-    std::string scope = store.GetScope( *this ) + m_scope + "solve." + scopeStr.c_str();
+
+    std::string scope = store.GetScope( *this ) + m_scope + "." + scopeStr.c_str();
     TOperatorResultMap meritResults = store.GetPerTemplateResult(scope.c_str());
 
     for( TOperatorResultMap::const_iterator it = meritResults.begin(); it != meritResults.end(); it++ )
@@ -168,15 +136,15 @@ void CChisquareSolveResult::SaveLine( const CDataStore& store, std::ostream& str
     if(m_bestRedshiftMethod==0)
     {
         GetBestRedshift( store, redshift, merit, tplName, amplitude, amplitudeError, dustCoeff, meiksinIdx );
-        Log.LogInfo( "%ssolve-result: extracted best redshift from chi2 extrema: z=%f", m_name.c_str(), redshift);
+        Log.LogInfo( "%s-result: extracted best redshift from chi2 extrema: z=%f", m_name.c_str(), redshift);
     }else if(m_bestRedshiftMethod==2)
     {
         GetBestRedshiftFromPdf( store, redshift, merit, evidence );
-        Log.LogInfo( "%ssolve-result: extracted best redshift from PDF: z=%f", m_name.c_str(), redshift);
+        Log.LogInfo( "%s-result: extracted best redshift from PDF: z=%f", m_name.c_str(), redshift);
         GetBestModel(store, redshift, tplName);
-        Log.LogInfo( "%ssolve-result: extracted best model: model=%s", m_name.c_str(), tplName.c_str());
+        Log.LogInfo( "%s-result: extracted best model: model=%s", m_name.c_str(), tplName.c_str());
     }else{
-        Log.LogError( "%ssolve-result: can't parse best redshift estimation method", m_name.c_str());
+        Log.LogError( "%s-result: can't parse best redshift estimation method", m_name.c_str());
     }
 
     stream << store.GetSpectrumName() << "\t"
@@ -184,7 +152,7 @@ void CChisquareSolveResult::SaveLine( const CDataStore& store, std::ostream& str
                 << redshift << "\t"
                 << merit << "\t"
                 << tplName << "\t"
-                << m_name + "Solve_" << tmpChar << "\t"
+                << m_name + "_" << tmpChar << "\t"
                 << "-1" << "\t" //deltaz
                 << m_ReliabilityLabel << "\t"
                 << "-1" << "\t"
@@ -199,15 +167,15 @@ Bool CChisquareSolveResult::GetBestRedshift( const CDataStore& store, Float64& r
 {
     std::string scopeStr;
     if(m_type == nType_raw){
-        scopeStr = m_scope;
+        scopeStr = "chisquare";
     }else if(m_type == nType_all){
-        scopeStr = m_scope;
+        scopeStr = "chisquare";
     }else if(m_type == nType_noContinuum){
-        scopeStr = m_scope + "_nocontinuum";
+        scopeStr = "chisquare_nocontinuum";
     }else if(m_type == nType_continuumOnly){
-        scopeStr = m_scope + "_continuum";
+        scopeStr = "chisquare_continuum";
     }
-    std::string scope = store.GetScope( *this ) + m_scope + "solve." + scopeStr.c_str();
+    std::string scope = store.GetScope( *this ) + m_scope + "." + scopeStr.c_str();
     TOperatorResultMap meritResults = store.GetPerTemplateResult(scope.c_str());
 
     Float64 tmpMerit = DBL_MAX ;
@@ -343,15 +311,15 @@ Int32 CChisquareSolveResult::GetBestModel(const CDataStore& store, Float64 z, st
 
     std::string scopeStr;
     if(m_type == nType_raw){
-        scopeStr = m_scope;
+        scopeStr = "chisquare";
     }else if(m_type == nType_all){
-        scopeStr = m_scope;
+        scopeStr = "chisquare";
     }else if(m_type == nType_noContinuum){
-        scopeStr = m_scope + "_nocontinuum";
+        scopeStr = "chisquare_nocontinuum";
     }else if(m_type == nType_continuumOnly){
-        scopeStr = m_scope + "_continuum";
+        scopeStr = "chisquare_continuum";
     }
-    std::string scope = store.GetScope( *this ) + m_scope + "solve." + scopeStr.c_str();
+    std::string scope = store.GetScope( *this ) + m_scope + "." + scopeStr.c_str();
     TOperatorResultMap meritResults = store.GetPerTemplateResult(scope.c_str());
 
     Float64 tmpMerit = DBL_MAX ;
