@@ -1370,8 +1370,10 @@ Bool CLineModelSolve::ExtractCandidateResults(CDataStore &store, std::vector<Flo
 >>>>>>> Fixing some incompatibilities with develop; truncate final candidates only at writing into files phase; adding some throw errors in extremum.cpp
 
         std::vector<std::string> info {"spc", "fit", "fitcontinuum", "rules", "continuum"};
+        Int32 s = zcand->Rank.size();
+        Int32 l = std::min(maxCount, s);
         for(Int32 f = 0; f<info.size(); f++) {
-            for( Int32 i = 0; i< maxCount; i++){
+            for( Int32 i = 0; i<l; i++){
                 std::string fname_new =
                 (boost::format("linemodelsolve.linemodel_%1%_extrema_%2%") % info[f] % i).str();
                 std::string fname_old =
