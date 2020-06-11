@@ -6253,6 +6253,7 @@ CContinuumModelSolution CLineModelElementList::GetContinuumModelSolution()
     continuumModelSolution.tplDustCoeff = m_fitContinuum_tplFitDustCoeff;
     continuumModelSolution.tplMeiksinIdx = m_fitContinuum_tplFitMeiksinIdx;
     continuumModelSolution.tplAmplitude = m_fitContinuum_tplFitAmplitude;
+    continuumModelSolution.tplAmplitudeError = m_fitContinuum_tplFitAmplitudeError;
     continuumModelSolution.tplMerit = m_fitContinuum_tplFitMerit;
     continuumModelSolution.tplDtm = m_fitContinuum_tplFitDtM;
     continuumModelSolution.tplMtm = m_fitContinuum_tplFitMtM;

@@ -215,6 +215,7 @@ Bool CLineModelSolveResult::GetBestRedshiftFromPdf(const CDataStore& store,
     snrOII = lineModelResult->ExtremaResult.snrOII[bestIdx];
     lfOII = lineModelResult->ExtremaResult.lfOII[bestIdx];
     modelTplratio = lineModelResult->ExtremaResult.FittedTplshapeName[bestIdx];
+    modelTplContinuum = lineModelResult->ExtremaResult.FittedTplName[bestIdx];
     return true;
 }
 
