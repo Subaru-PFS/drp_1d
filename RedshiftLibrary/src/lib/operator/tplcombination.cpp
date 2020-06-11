@@ -132,11 +132,7 @@ void COperatorTplcombination::BasicFit(const CSpectrum& spectrum,
     {
         const CSpectrumSpectralAxis& tplSpectralAxis = tplList[ktpl].GetSpectralAxis();
         const CSpectrumFluxAxis& tplFluxAxis = tplList[ktpl].GetFluxAxis();
-
-
-        //no longer used in the rebin cause we rebin templates in resframe
-        m_shiftedTemplatesSpectralAxis_bf[ktpl]->ShiftByWaveLength( tplSpectralAxis, onePlusRedshift, CSpectrumSpectralAxis::nShiftForward );
-        TFloat64Range intersectedLambdaRange( 0.0, 0.0 );
+         TFloat64Range intersectedLambdaRange( 0.0, 0.0 );
 
         // Compute clamped lambda range over template
         TFloat64Range tplLambdaRange;
@@ -148,18 +144,12 @@ void COperatorTplcombination::BasicFit(const CSpectrum& spectrum,
 
         CMask& itplMask = *m_masksRebined_bf[ktpl];
 
-        CSpectrumSpectralAxis __mshifedTplSpec = *m_shiftedTemplatesSpectralAxis_bf[ktpl];
-
         CSpectrum itplTplSpectrum;
-        std::shared_ptr<CSpectrum> spec;
-        spec = std::shared_ptr<CSpectrum>( new CSpectrum(tplSpectralAxis, tplFluxAxis ) );
-        spec->Rebin( intersectedLambdaRange, spcSpectralAxis_restframe, itplTplSpectrum, itplMask, opt_interp );
+        tplList[ktpl].Rebin( intersectedLambdaRange, spcSpectralAxis_restframe, itplTplSpectrum, itplMask, opt_interp );
         
         m_templatesRebined_bf[ktpl]->SetAxis(itplTplSpectrum);//saving results in class variable for later use
         CSpectrumFluxAxis itplTplFluxAxis = itplTplSpectrum.GetFluxAxis();
         CSpectrumSpectralAxis& itplTplSpectralAxis = itplTplSpectrum.GetSpectralAxis();
-        //TODO: check if below is necessary
-        itplTplSpectralAxis.ShiftByWaveLength( onePlusRedshift, CSpectrumSpectralAxis::nShiftForward );
 
         Log.LogDebug("  Operator-Tplcombination: Rebinned template #%d has n=%d samples in lambdarange: %.2f - %.2f", 
                         ktpl, itplTplSpectralAxis.GetSamplesCount(), itplTplSpectralAxis[0], 
@@ -178,7 +168,7 @@ void COperatorTplcombination::BasicFit(const CSpectrum& spectrum,
         //overlapRate = mask.IntersectAndComputeOverlapRate( itplMask );
 
         //overlapRate, Method 3
-        fittingResults.overlapRate = spcSpectralAxis_restframe.IntersectMaskAndComputeOverlapRate( lambdaRange, itplMask );
+        fittingResults.overlapRate = spcSpectralAxis.IntersectMaskAndComputeOverlapRate( lambdaRange, itplMask );
 
         // Check for overlap rate
         if( fittingResults.overlapRate < overlapThreshold || fittingResults.overlapRate<=0.0 )

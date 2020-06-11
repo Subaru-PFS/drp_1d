@@ -123,17 +123,14 @@ int COperatorChicorr::Compute(const CSpectrum& spectrum, const CSpectrum& spectr
         CSpectrum itplTplWithoutContinuumSpectrum, itplTplSpectrum;
         CMask itplMask;
 
-        std::shared_ptr<CSpectrum> spec, spec2;
-        spec = std::shared_ptr<CSpectrum>( new CSpectrum(tplSpectralAxis, tplWithoutContFluxAxis) );
-        spec->Rebin( intersectedLambdaRange, spcSpectralAxis_restframe, itplTplWithoutContinuumSpectrum, itplMask );
+        tplWithoutCont.Rebin( intersectedLambdaRange, spcSpectralAxis_restframe, itplTplWithoutContinuumSpectrum, itplMask );
         
         itplTplWithoutContFluxAxis = itplTplWithoutContinuumSpectrum.GetFluxAxis();
         //itplTplWithoutContSpectAxis.ShiftByWaveLength( onePlusRedshift, CSpectrumSpectralAxis::nShiftForward ); 
 
         // same function for the spc with continuum, todo check ?
         CSpectrumFluxAxis itplTplFluxAxis;
-        spec = std::shared_ptr<CSpectrum>( new CSpectrum(tplSpectralAxis, tplFluxAxis));
-        spec2->Rebin( intersectedLambdaRange, spcSpectralAxis_restframe, itplTplSpectrum, itplMask );
+        tpl.Rebin( intersectedLambdaRange, spcSpectralAxis_restframe, itplTplSpectrum, itplMask );
         itplTplFluxAxis =  itplTplSpectrum.GetFluxAxis();
         itplTplSpectralAxis = itplTplSpectrum.GetSpectralAxis();
         itplTplSpectralAxis.ShiftByWaveLength( onePlusRedshift, CSpectrumSpectralAxis::nShiftForward );

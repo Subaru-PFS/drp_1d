@@ -175,9 +175,7 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
     CSpectrum itplTplSpectrum;
     CMask& itplMask = m_mskRebined_bf;
 
-    std::shared_ptr<CSpectrum> spec;
-    spec = std::shared_ptr<CSpectrum>( new CSpectrum( tplSpectralAxis, tplFluxAxis));
-    spec->Rebin( intersectedLambdaRange, spcSpectralAxis_restframe, itplTplSpectrum, itplMask, opt_interp);
+   tpl.Rebin( intersectedLambdaRange, spcSpectralAxis_restframe, itplTplSpectrum, itplMask, opt_interp);
 
 
     itplTplFluxAxis = itplTplSpectrum.GetFluxAxis();

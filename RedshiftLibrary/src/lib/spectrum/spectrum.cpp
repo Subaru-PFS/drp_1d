@@ -70,6 +70,8 @@ CSpectrum::CSpectrum(const CSpectrum& other, TFloat64List mask)
     m_dfBinPath = other.GetWaveletsDFBinPath();
     m_medianWindowSize = other.GetMedianWinsize();
     m_nbScales = other.GetDecompScales();
+
+    m_lmin = m_SpectralAxis[0];
 }
 
 CSpectrum::CSpectrum(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis) :
@@ -80,6 +82,8 @@ CSpectrum::CSpectrum(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumF
     m_medianWindowSize = -1;
     m_nbScales = -1;
     m_dfBinPath = "";
+
+    m_lmin = spectralAxis[0];
 }
 
 CSpectrum::~CSpectrum()
@@ -91,6 +95,7 @@ CSpectrum& CSpectrum::operator=(const CSpectrum& other)
 {
     m_SpectralAxis = other.GetSpectralAxis();
     m_FluxAxis = other.GetFluxAxis();
+    m_lmin = m_SpectralAxis[0];
 
     m_estimationMethod = other.GetContinuumEstimationMethod();
     m_dfBinPath = other.GetWaveletsDFBinPath();
@@ -103,25 +108,27 @@ Bool  CSpectrum::SetAxis(const CSpectrumSpectralAxis& spectralAxis, const CSpect
     
     m_SpectralAxis = spectralAxis;
     m_FluxAxis = fluxAxis;
+    m_lmin = spectralAxis[0];
     return true;
 }
 /**
  * below should be calculated in the case of precomputedfinegrid
 */
-Bool CSpectrum::RebinFineGrid(){
+Bool CSpectrum::RebinFineGrid() const
+{
  // Precalculate a fine grid template to be used for the 'closest value' rebin method
   Int32 n = m_FluxAxis.GetSamplesCount();
   if(!n)
     return false;
 
-  m_lmin = m_SpectralAxis[0];//template wavelength never starts at 0
+  //m_lmin = m_SpectralAxis[0];//template wavelength never starts at 0
   Float64 lmax = m_SpectralAxis[n - 1];
   Int32 nTgt = (lmax - m_lmin) / m_dLambdaFineGrid + 2.0 / m_dLambdaFineGrid;
 
   m_pfgFlux.resize(nTgt * sizeof(Float64));
   //inialise and allocate the gsl objects
-  Float64 * Ysrc = m_FluxAxis.GetSamples();
-  Float64 * Xsrc = m_SpectralAxis.GetSamples();
+  const Float64 * Ysrc = m_FluxAxis.GetSamples();
+  const Float64 * Xsrc = m_SpectralAxis.GetSamples();
 
   //spline
   gsl_spline * spline = gsl_spline_alloc(gsl_interp_cspline, n);
@@ -545,7 +552,7 @@ void CSpectrum::LoadSpectrum(const char* spectrumFilePath, const char* noiseFile
  * targetSpectralAxis should be expressed in restframe, same as source
 */
 Bool CSpectrum::Rebin( const TFloat64Range& range, const CSpectrumSpectralAxis& targetSpectralAxis,
-                     CSpectrum& rebinedSpectrum, CMask& rebinedMask , const std::string opt_interp)
+                     CSpectrum& rebinedSpectrum, CMask& rebinedMask , const std::string opt_interp) const
 {
     
     if( m_SpectralAxis.GetSamplesCount() != m_FluxAxis.GetSamplesCount() )
