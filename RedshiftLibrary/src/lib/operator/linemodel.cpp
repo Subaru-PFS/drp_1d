@@ -181,10 +181,6 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
     //               m_opt_tplfit_ignoreLinesSupport = (yes, no) defines which method should be used
     bool enableOrtho = !m_opt_tplfit_ignoreLinesSupport && (opt_continuumcomponent == "tplfit" || opt_continuumcomponent == "tplfitauto");
     Log.LogInfo("  Operator-Linemodel: TemplatesOrthogonalization enabled = %d", enableOrtho);
-    //orthogonalize templates 
-    //Mira: my guess is that the passage by CTemplatesortho is obligatory!; it s enableortho that will activate the orthog or not
-    //if not activate, templates are returned the same (just different type); otherwise orthog happens
-    //if it's like this, then we just need to make enableOrtho takes into account the value of m_opt_tplfit_ignoreLinesSupport
 
     // prepare continuum templates catalog
     CTemplatesOrthogonalization tplOrtho(
@@ -474,9 +470,7 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
     Log.LogInfo("  Operator-Linemodel: set abs lines limit to %f (ex: -1 means "
                 "disabled)",
                 absLinesLimit);
-//Mira: ignorelistmask should take effect here below:
-/*??not sure anymore
-*/
+
     // Set model parameter: continuum least-square estimation fast
     // note: this fast method requires continuum templates and linemodels to be
     // orthogonal. The velfit option turns this trickier...
