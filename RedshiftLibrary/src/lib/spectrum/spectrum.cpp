@@ -31,40 +31,30 @@ CSpectrum::CSpectrum()
 }
 
 
-CSpectrum::CSpectrum(const CSpectrum& other, TFloat64List mask)
+CSpectrum::CSpectrum(const CSpectrum& other, TFloat64List mask):
+    m_SpectralAxis(UInt32(0), other.GetSpectralAxis().IsInLogScale())
 {
-    TFloat64List tmpFlux;
-    TFloat64List tmpError;
-    TFloat64List tmpWave;
-
-    CSpectrumSpectralAxis otherSpectral = other.GetSpectralAxis();
-    CSpectrumFluxAxis otherFlux = other.GetFluxAxis();
-
+    const CSpectrumSpectralAxis & otherSpectral = other.GetSpectralAxis();
+    const CSpectrumFluxAxis & otherFlux = other.GetFluxAxis();
     const TFloat64List& error = otherFlux.GetError();
 
-    for(Int32 i=0; i<mask.size(); i++){
+    TAxisSampleList & SpectralVector = m_SpectralAxis.GetSamplesVector();
+    TAxisSampleList & FluxVector = m_FluxAxis.GetSamplesVector();
+    TFloat64List & ErrorVector = m_FluxAxis.GetError();
+
+    const UInt32 otherSpectralSize = otherSpectral.GetSamplesCount();
+    const UInt32 otherFluxSize = otherFlux.GetSamplesCount();
+    UInt32 minsize = min((UInt32)mask.size(), otherSpectralSize );
+    minsize = min(minsize, otherFluxSize );
+    for(Int32 i=0; i<minsize; i++){
         if(mask[i]!=0){
-            tmpWave.push_back(otherSpectral[i]);
-            tmpFlux.push_back(otherFlux[i]);
+            SpectralVector.push_back(otherSpectral[i]);
+            FluxVector.push_back(otherFlux[i]);
             if( !error.empty() ){
-                tmpError.push_back(error[i]);
+                ErrorVector.push_back(error[i]);
             }
         }
     }
-
-    CSpectrumSpectralAxis *_SpectralAxis = new CSpectrumSpectralAxis(tmpWave.size(), otherSpectral.IsInLogScale());
-    CSpectrumFluxAxis *_FluxAxis = new CSpectrumFluxAxis(tmpFlux.size());
-
-    for(Int32 i=0; i<tmpFlux.size(); i++){
-        (*_SpectralAxis)[i] = tmpWave[i];
-        (*_FluxAxis)[i] = tmpFlux[i];
-        if( !error.empty() ){
-            (*_FluxAxis).GetError()[i] = tmpError[i];
-        }
-    }
-
-    m_SpectralAxis = *_SpectralAxis;
-    m_FluxAxis = *_FluxAxis;
 
     m_estimationMethod = other.GetContinuumEstimationMethod();
     m_dfBinPath = other.GetWaveletsDFBinPath();
