@@ -731,9 +731,9 @@ void CLineModelExtremaResult::SaveJSON( const CDataStore& store, std::ostream& s
 
   if(!zeros){
     // save extremum final rank list, on 1 line
-    std::vector<int> finalRanks(Extrema.size());
+    std::vector<int> finalRanks(order.size());
     std::iota(finalRanks.begin(), finalRanks.end(), 0);
-    SaveInt32Vector(stream,"z_ExtremaFinalRank", finalRanks, {});
+    SaveInt32Vector(stream,"z_ExtremaFinalRank", finalRanks, finalRanks);
     stream << "," << std::endl;
 
     // save extremaPDF list, on 1 line

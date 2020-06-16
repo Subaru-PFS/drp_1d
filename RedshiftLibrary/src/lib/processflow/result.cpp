@@ -35,17 +35,12 @@ void COperatorResult::SaveFloat64(std::ostream& stream,Float64 data) const
 
 void COperatorResult::SaveTFloat64List(std::ostream& stream,std::string name,TFloat64List data, TInt32List order) const 
 {
-  Bool b = order.size()==0;
   if(data.size()>0){
     stream <<  "\""<< name<<"\" : [";
     for ( int i=0; i<order.size(); i++)
     {
-      if(b)
-        SaveFloat64(stream,data[i]);
-      else //case when data is well sorted
         SaveFloat64(stream,data[order[i]]);
-        
-      if( i< order.size()-1) stream << ",";
+        if( i< order.size()-1) stream << ",";
     }
     stream << "]" ;
   }
@@ -53,7 +48,7 @@ void COperatorResult::SaveTFloat64List(std::ostream& stream,std::string name,TFl
 
 void COperatorResult::SaveTFloat64ListOfList(std::ostream& stream,std::string name,std::vector<TFloat64List> data, TInt32List order) const
 {
-    if(data.size()>0){
+  if(data.size()>0){
     stream <<  "\""<<name<<"\" : [";
     for ( int i=0; i<order.size(); i++)
     {
@@ -72,15 +67,11 @@ void COperatorResult::SaveTFloat64ListOfList(std::ostream& stream,std::string na
 
 void COperatorResult::SaveInt32Vector(std::ostream& stream,std::string name,std::vector<Int32> data, TInt32List order) const
 {
-  Bool b = order.size()==0;
   if(data.size()>0){
     stream <<  "\""<< name<<"\" : [";
     for ( int i=0; i<order.size(); i++)
     {
-      if(b)
-        stream <<  data[i];
-      else //case when data is well sorted
-        stream <<  data[order[i]];
+      stream <<  data[order[i]];
       if( i<order.size()-1) stream << ",";
     }
     stream << "]" ;
@@ -89,15 +80,11 @@ void COperatorResult::SaveInt32Vector(std::ostream& stream,std::string name,std:
 
 void COperatorResult::SaveStringVector(std::ostream& stream,std::string name,std::vector<std::string> data, TInt32List order) const 
 {
-  Bool b = order.size()==0;
   if(data.size()>0){
     stream <<  "\""<< name<<"\" : [";
     for ( int i=0; i<order.size(); i++)
     {
-      if(b)
-        stream << "\"" << data[i] << "\""; 
-      else
-        stream << "\"" << data[order[i]] << "\""; 
+      stream << "\"" << data[order[i]] << "\""; 
       if( i< order.size()-1) stream << ",";
     }
     stream << "]" ;
@@ -107,15 +94,11 @@ void COperatorResult::SaveStringVector(std::ostream& stream,std::string name,std
 void COperatorResult::SaveStringVectorOfVector(std::ostream& stream,std::string name,std::vector<std::vector<std::string>> data, TInt32List order) const
 {
 if(data.size()>0){
-    Bool b = order.size()==0;
     stream <<  "\""<< name <<"\" : [";
     for ( int i=0; i<order.size(); i++)
     {
       std::vector<std::string> line_list;
-      if(b)
-        line_list = data[i];
-      else
-        line_list = data[order[i]];
+      line_list = data[order[i]];
       stream << "[";
       for ( int ki=0; ki<line_list.size(); ki++)
       {
