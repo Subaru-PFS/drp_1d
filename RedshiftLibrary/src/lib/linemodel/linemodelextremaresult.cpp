@@ -478,7 +478,7 @@ if(!zeros){
     // save FittedTplAmplitudeError, on 1 line
     if(FittedTplAmplitudeError.size()>0){
         stream <<  "#FittedTplAmplitudeError for each extrema = {";
-        for ( int i=0; i<FittedTplAmplitudeError.size(); i++)
+        for ( int i=0; i<Rank_PDF.size(); i++)
         {
             stream <<  FittedTplAmplitudeError[Rank_PDF[i]] << "\t";
         }
