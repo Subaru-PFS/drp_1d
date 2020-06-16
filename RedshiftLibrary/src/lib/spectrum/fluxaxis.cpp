@@ -20,28 +20,22 @@ CSpectrumFluxAxis::CSpectrumFluxAxis()
 
 CSpectrumFluxAxis::CSpectrumFluxAxis( UInt32 n ) :
     CSpectrumAxis( n ),
-    m_StatError( n )
+    m_StatError( n, 1.0 )
 {
-    for( UInt32 i=0; i<n; i++ )
-    {
-        m_StatError[i] = 1.0;
-    }
+
 }
 
 CSpectrumFluxAxis::CSpectrumFluxAxis( const Float64* samples, UInt32 n ) :
     CSpectrumAxis( samples, n ),
-    m_StatError( n )
+    m_StatError( n, 1.0 )
 {
-    for( UInt32 i=0; i<n; i++ )
-    {
-        m_StatError[i] = 1.0;
-    }
+
 }
 
 CSpectrumFluxAxis::CSpectrumFluxAxis( const Float64* samples, UInt32 n,
 				      const Float64* error, UInt32 m ) :
     CSpectrumAxis( samples, n ),
-    m_StatError( n )
+    m_StatError( n, 1.0 )
 {
     for( UInt32 i=0; i<n; i++ )
     {
@@ -146,7 +140,6 @@ Bool CSpectrumFluxAxis::RebinVarianceWeighted( const CSpectrumFluxAxis& sourceFl
 void CSpectrumFluxAxis::SetSize( UInt32 s )
 {
     CSpectrumAxis::SetSize( s );
-    m_StatError.resize( s );
     m_StatError.assign(s, 1.0);
 }
 

@@ -61,8 +61,6 @@ int COperatorChicorr::Compute(const CSpectrum& spectrum, const CSpectrum& spectr
 
     DebugAssert( overlapThreshold > 0.0 && overlapThreshold <= 1.0 );
 
-    CSpectrumSpectralAxis shiftedTplSpectralAxis( tpl.GetSampleCount(), true );
-
     const CSpectrumSpectralAxis& spcSpectralAxis = spectrumWithoutCont.GetSpectralAxis();
     const CSpectrumFluxAxis& spcFluxAxis = spectrum.GetFluxAxis();
     const CSpectrumFluxAxis& spcWithoutContFluxAxis = spectrumWithoutCont.GetFluxAxis();
@@ -90,25 +88,32 @@ int COperatorChicorr::Compute(const CSpectrum& spectrum, const CSpectrum& spectr
     result_chi->Status.resize( redshifts.size() );
     result_chi->Redshifts = redshifts;
 
+    // Pre-Allocate the rebined template and mask with regard to the spectrum size
+    m_templateRebined_bf.GetSpectralAxis().SetSize(spectrum.GetSampleCount());
+    m_templateRebined_bf.GetFluxAxis().SetSize(spectrum.GetSampleCount());
+    m_templateWOContRebined_bf.GetSpectralAxis().SetSize(spectrum.GetSampleCount());
+    m_templateWOContRebined_bf.GetFluxAxis().SetSize(spectrum.GetSampleCount());
+    m_mskRebined_bf.SetSize(spectrum.GetSampleCount());
+    m_spcSpectralAxis_restframe.SetSize(spectrum.GetSampleCount());
+
     for ( Int32 i=0; i<redshifts.size(); i++)
     {
         result_corr->Correlation[i] = NAN;
         result_corr->Status[i] = COperator::nStatus_DataError;
         result_corr->Overlap[i] = 0;
 
-        // Shift Template (Since template are created at Z=0)
         Float64 onePlusRedshift = 1.0 + redshifts[i];
-        shiftedTplSpectralAxis.ShiftByWaveLength( tplSpectralAxis, onePlusRedshift, CSpectrumSpectralAxis::nShiftForward );
 
         //shift lambdaRange backward to be in restframe
         TFloat64Range lambdaRange_restframe( lambdaRange.GetBegin() / onePlusRedshift, 
                                             lambdaRange.GetEnd() / onePlusRedshift );
-        //get spectrum in restframe
-        TFloat64Range spcLambdaRange_restframe;
-        CSpectrumSpectralAxis spcSpectralAxis_restframe( spcSpectralAxis, onePlusRedshift, CSpectrumSpectralAxis::nShiftBackward);
-        spcSpectralAxis_restframe.ClampLambdaRange( lambdaRange_restframe, spcLambdaRange_restframe );
 
-        // Compute clamped lambda range over template
+        //get spectrum in restframe
+        m_spcSpectralAxis_restframe.ShiftByWaveLength(spcSpectralAxis, onePlusRedshift, CSpectrumSpectralAxis::nShiftBackward);
+        TFloat64Range spcLambdaRange_restframe(spcLambdaRange.GetBegin()/onePlusRedshift,
+                                               spcLambdaRange.GetEnd()/onePlusRedshift);
+
+        // Compute clamped lambda range over template in restframe
         TFloat64Range tplLambdaRange;
         retVal = tplSpectralAxis.ClampLambdaRange( lambdaRange_restframe, tplLambdaRange );
         DebugAssert( retVal );
@@ -118,27 +123,22 @@ int COperatorChicorr::Compute(const CSpectrum& spectrum, const CSpectrum& spectr
         TFloat64Range intersectedLambdaRange( 0.0, 0.0 );
         TFloat64Range::Intersect( tplLambdaRange, spcLambdaRange_restframe, intersectedLambdaRange );
 
-        CSpectrumFluxAxis itplTplWithoutContFluxAxis;
-        CSpectrumSpectralAxis itplTplSpectralAxis;
-        CSpectrum itplTplWithoutContinuumSpectrum, itplTplSpectrum;
-        CMask itplMask;
+        CSpectrum & itplTplWithoutContinuumSpectrum = m_templateWOContRebined_bf;
+        CSpectrum & itplTplSpectrum = m_templateRebined_bf;
+        CMask & itplMask = m_mskRebined_bf;
 
-        tplWithoutCont.Rebin( intersectedLambdaRange, spcSpectralAxis_restframe, itplTplWithoutContinuumSpectrum, itplMask );
+        tplWithoutCont.Rebin( intersectedLambdaRange, m_spcSpectralAxis_restframe, itplTplWithoutContinuumSpectrum, itplMask );
         
-        itplTplWithoutContFluxAxis = itplTplWithoutContinuumSpectrum.GetFluxAxis();
-        //itplTplWithoutContSpectAxis.ShiftByWaveLength( onePlusRedshift, CSpectrumSpectralAxis::nShiftForward ); 
+        const CSpectrumFluxAxis & itplTplWithoutContFluxAxis = itplTplWithoutContinuumSpectrum.GetFluxAxis();
 
         // same function for the spc with continuum, todo check ?
-        CSpectrumFluxAxis itplTplFluxAxis;
-        tpl.Rebin( intersectedLambdaRange, spcSpectralAxis_restframe, itplTplSpectrum, itplMask );
-        itplTplFluxAxis =  itplTplSpectrum.GetFluxAxis();
-        itplTplSpectralAxis = itplTplSpectrum.GetSpectralAxis();
-        itplTplSpectralAxis.ShiftByWaveLength( onePlusRedshift, CSpectrumSpectralAxis::nShiftForward );
+        tpl.Rebin( intersectedLambdaRange, m_spcSpectralAxis_restframe, itplTplSpectrum, itplMask );
 
-        //spcSpectralAxis.ShiftByWaveLength( onePlusRedshift, CSpectrumSpectralAxis::nShiftForward ); 
+        const CSpectrumFluxAxis & itplTplFluxAxis =  itplTplSpectrum.GetFluxAxis();
+        const CSpectrumSpectralAxis& itplTplSpectralAxis = itplTplSpectrum.GetSpectralAxis();
 
         CMask mask;
-        spcSpectralAxis_restframe.GetMask( lambdaRange, mask );
+        m_spcSpectralAxis_restframe.GetMask( lambdaRange_restframe, mask );
         itplMask &= mask;
         result_corr->Overlap[i] = mask.CompouteOverlapRate( itplMask );
         result_chi->Overlap[i] = result_corr->Overlap[i];
@@ -169,18 +169,18 @@ int COperatorChicorr::Compute(const CSpectrum& spectrum, const CSpectrum& spectr
             continue;
         }
 
-        const Float64* Xtpl = itplTplSpectralAxis.GetSamples();
-        const Float64* YtplWithoutCont = itplTplWithoutContFluxAxis.GetSamples();
-        const Float64* Ytpl = itplTplFluxAxis.GetSamples();
-        const Float64* Xspc = spcSpectralAxis_restframe.GetSamples();
-        const Float64* YspcWithoutCont = spcWithoutContFluxAxis.GetSamples();
-        const Float64* Yspc = spcFluxAxis.GetSamples();
+        const TAxisSampleList & Xtpl = itplTplSpectralAxis.GetSamplesVector();
+        const TAxisSampleList & YtplWithoutCont = itplTplWithoutContFluxAxis.GetSamplesVector();
+        const TAxisSampleList & Ytpl = itplTplFluxAxis.GetSamplesVector();
+        const TAxisSampleList & Xspc = m_spcSpectralAxis_restframe.GetSamplesVector();
+        const TAxisSampleList & YspcWithoutCont = spcWithoutContFluxAxis.GetSamplesVector();
+        const TAxisSampleList & Yspc = spcFluxAxis.GetSamplesVector();
 
         TFloat64Range logIntersectedLambdaRange( log( intersectedLambdaRange.GetBegin() ), log( intersectedLambdaRange.GetEnd() ) );
 
         // j cursor move over spectrum
         Int32 j = 0;
-        while( j < spcSpectralAxis_restframe.GetSamplesCount() && Xspc[j] < logIntersectedLambdaRange.GetBegin() )
+        while( j < m_spcSpectralAxis_restframe.GetSamplesCount() && Xspc[j] < logIntersectedLambdaRange.GetBegin() )
             j++;
 
         // k cursor move over template
@@ -202,7 +202,7 @@ int COperatorChicorr::Compute(const CSpectrum& spectrum, const CSpectrum& spectr
 
         // Loop 1, compute the Chisquare coeff.
         // For each sample in the valid lambda range interval.
-        while( j<spcSpectralAxis_restframe.GetSamplesCount() && Xspc[j] <= logIntersectedLambdaRange.GetEnd() )
+        while( j<m_spcSpectralAxis_restframe.GetSamplesCount() && Xspc[j] <= logIntersectedLambdaRange.GetEnd() )
         {
             numDevs++;
             err2 = 1.0 / (error[j] * error[j]);
@@ -223,7 +223,7 @@ int COperatorChicorr::Compute(const CSpectrum& spectrum, const CSpectrum& spectr
 
         // Loop 2, compute the Chisquare sum and the Correlation sum.
         j=jStart;
-        while( j<spcSpectralAxis_restframe.GetSamplesCount() && Xspc[j] <= logIntersectedLambdaRange.GetEnd() )
+        while( j<m_spcSpectralAxis_restframe.GetSamplesCount() && Xspc[j] <= logIntersectedLambdaRange.GetEnd() )
         {
             int k=j;
             {

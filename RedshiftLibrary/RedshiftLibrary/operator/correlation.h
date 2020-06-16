@@ -8,7 +8,7 @@
 #include <RedshiftLibrary/operator/operator.h>
 #include <RedshiftLibrary/operator/correlationresult.h>
 #include <RedshiftLibrary/statistics/priorhelper.h>
-
+#include <RedshiftLibrary/spectrum/template/template.h>
 
 namespace NSEpic
 {
@@ -46,6 +46,12 @@ public:
 private:
 
     Float64                 m_TotalDuration;
+
+    // buffers for the interpolated axis (template & spectrum)
+    CTemplate       m_templateRebined_bf; //buffer
+    CMask           m_mskRebined_bf; //buffer
+    CSpectrumSpectralAxis m_spcSpectralAxis_restframe; //buffer
+
 };
 
 

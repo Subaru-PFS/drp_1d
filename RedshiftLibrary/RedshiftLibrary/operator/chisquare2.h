@@ -47,6 +47,8 @@ public:
 
 private:
 
+    void BasicFit_preallocateBuffers(const CSpectrum& spectrum);
+
     void BasicFit(const CSpectrum& spectrum,
                   const CTemplate& tpl,
                   const TFloat64Range& lambdaRange,
@@ -74,10 +76,10 @@ private:
                   CPriorHelper::TPriorEList logpriore=CPriorHelper::TPriorEList(),
                   bool keepigmism=false);
 
-    // buffers for the precomputed fine grid template
+    // buffers for the interpolated axis (template & spectrum)
     CTemplate       m_templateRebined_bf; //buffer
     CMask           m_mskRebined_bf; //buffer
-    CSpectrumSpectralAxis m_shiftedTplSpectralAxis_bf; //buffer
+    CSpectrumSpectralAxis m_spcSpectralAxis_restframe; //buffer
 
     //ISM Calzetti
     Float64* m_YtplRawBuffer;

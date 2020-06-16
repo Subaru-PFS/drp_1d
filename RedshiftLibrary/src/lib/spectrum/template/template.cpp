@@ -91,9 +91,10 @@ Bool CTemplate::Save( const char* filePath ) const
     return true;
 }
 
+/*
 Bool CTemplate::SetAxis( const CSpectrum& spectrum)
 {
   m_SpectralAxis = spectrum.GetSpectralAxis();
   m_FluxAxis = spectrum.GetFluxAxis();
   return true;
-}
+}*/

@@ -74,18 +74,21 @@ public:
     void                SetWaveletsDFBinPath(std::string binPath);
 
     void                LoadSpectrum(const char* spectrumFilePath, const char* noiseFilePath);
-    Bool                SetAxis(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis);
+//    Bool                SetAxis(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis);
 
     Bool                Rebin( const TFloat64Range& range, const CSpectrumSpectralAxis& targetSpectralAxis,
-                            CSpectrum& rebinedSpectrum, CMask& rebinedMask, const std::string opt_interp = "lin") const; 
+                               CSpectrum& rebinedSpectrum, CMask& rebinedMask, const std::string opt_interp = "lin",
+                               const std::string opt_error_interp="no") const;
 protected:
+
     CSpectrumSpectralAxis           m_SpectralAxis;
     CSpectrumFluxAxis               m_FluxAxis;
-    mutable TFloat64List            m_pfgFlux;
+
     Bool                            RebinFineGrid() const;
-    mutable Bool                    m_FineGridInterpolated = false;
     Float64                         m_dLambdaFineGrid = 0.1;//oversampling step for fine grid //check if enough to be private
-    Float64                         m_lmin = 0; //default value set to 0, i.e., the first begining of the spectral axis
+    mutable TFloat64List            m_pfgFlux;
+    mutable Bool                    m_FineGridInterpolated = false;
+
 private:
 
     std::string                     m_Name;
@@ -117,6 +120,7 @@ const CSpectrumFluxAxis& CSpectrum::GetFluxAxis() const
 inline
 CSpectrumSpectralAxis& CSpectrum::GetSpectralAxis()
 {
+    m_FineGridInterpolated = false; // since Axis may be modifed
     return m_SpectralAxis;
 }
 
