@@ -3,7 +3,6 @@
 #include <RedshiftLibrary/log/log.h>
 #include <RedshiftLibrary/debug/assert.h>
 #include <RedshiftLibrary/spectrum/template/catalog.h>
-#include <RedshiftLibrary/operator/correlation.h>
 #include <RedshiftLibrary/operator/chisquare.h>
 #include <RedshiftLibrary/extremum/extremum.h>
 #include <RedshiftLibrary/processflow/datastore.h>
@@ -47,7 +46,7 @@ const std::string CMethodTplcombinationSolve::GetDescription()
 }
 
 
-std::shared_ptr<CTplcombinationSolveResult> CMethodTplcombinationSolve::Compute(CDataStore& resultStore,
+std::shared_ptr<CChisquareSolveResult> CMethodTplcombinationSolve::Compute(CDataStore& resultStore,
                                                                               const CSpectrum& spc,
                                                                               const CSpectrum& spcWithoutCont,
                                                                               const CTemplateCatalog& tplCatalog,
@@ -64,21 +63,22 @@ std::shared_ptr<CTplcombinationSolveResult> CMethodTplcombinationSolve::Compute(
 {
     Bool storeResult = false;
 
+//    std::string _name = "Tplcombination";
     CDataStore::CAutoScope resultScope( resultStore, "tplcombinationsolve" );
+//    std::string _scope = "tplcombination";
     std::string scopeStr = "chisquare";
 
     Int32 _type;
     if(spcComponent=="raw"){
-       _type = CTplcombinationSolveResult::nType_raw;
-       scopeStr = "chisquare";
+       _type = CChisquareSolveResult::nType_raw;
     }else if(spcComponent=="nocontinuum"){
-       _type = CTplcombinationSolveResult::nType_noContinuum;
+       _type = CChisquareSolveResult::nType_noContinuum;
        scopeStr = "chisquare_nocontinuum";
     }else if(spcComponent=="continuum"){
-        _type = CTplcombinationSolveResult::nType_continuumOnly;
+        _type = CChisquareSolveResult::nType_continuumOnly;
         scopeStr = "chisquare_continuum";
     }else if(spcComponent=="all"){
-        _type = CTplcombinationSolveResult::nType_all;
+        _type = CChisquareSolveResult::nType_all;
     }
 
 
@@ -126,8 +126,8 @@ std::shared_ptr<CTplcombinationSolveResult> CMethodTplcombinationSolve::Compute(
 
     if( storeResult )
     {
-        std::shared_ptr< CTplcombinationSolveResult>  solveResult = std::shared_ptr< CTplcombinationSolveResult>( new CTplcombinationSolveResult() );
-        solveResult->m_type = _type;
+        std::shared_ptr< CChisquareSolveResult>  solveResult =
+                std::shared_ptr< CChisquareSolveResult>( new CChisquareSolveResult(_type, "tplcombinationsolve") );
 
         std::shared_ptr<CPdfMargZLogResult> postmargZResult = std::shared_ptr<CPdfMargZLogResult>(new CPdfMargZLogResult());
         Int32 retCombinePdf = CombinePDF(resultStore, scopeStr, m_opt_pdfcombination, postmargZResult);
@@ -176,7 +176,7 @@ Bool CMethodTplcombinationSolve::Solve(CDataStore& resultStore,
     std::string scopeStr = "tplcombination";
     Int32 _ntype = 1;
     Int32 _spctype = spctype;
-    Int32 _spctypetab[3] = {CTplcombinationSolveResult::nType_raw, CTplcombinationSolveResult::nType_noContinuum, CTplcombinationSolveResult::nType_continuumOnly};
+    Int32 _spctypetab[3] = {CChisquareSolveResult::nType_raw, CChisquareSolveResult::nType_noContinuum, CChisquareSolveResult::nType_continuumOnly};
 
 
     Int32 enable_extinction = 0; //TODO: extinction should be deactivated for nocontinuum anyway ? TBD
@@ -205,17 +205,17 @@ Bool CMethodTplcombinationSolve::Solve(CDataStore& resultStore,
     }
 
     //case: nType_all
-    if(spctype == CTplcombinationSolveResult::nType_all){
+    if(spctype == CChisquareSolveResult::nType_all){
         _ntype = 3;
     }
     for( Int32 i=0; i<_ntype; i++){
-        if(spctype == CTplcombinationSolveResult::nType_all){
+        if(spctype == CChisquareSolveResult::nType_all){
             _spctype = _spctypetab[i];
         }else{
             _spctype = spctype;
         }
 
-        if(_spctype == CTplcombinationSolveResult::nType_continuumOnly){
+        if(_spctype == CChisquareSolveResult::nType_continuumOnly){
             // use continuum only
             _spc = spc;
             CSpectrumFluxAxis spcfluxAxis = _spc.GetFluxAxis();
@@ -223,12 +223,12 @@ Bool CMethodTplcombinationSolve::Solve(CDataStore& resultStore,
             CSpectrumFluxAxis& sfluxAxisPtr = _spc.GetFluxAxis();
             sfluxAxisPtr = spcfluxAxis;
             scopeStr = "chisquare_continuum";
-        }else if(_spctype == CTplcombinationSolveResult::nType_raw){
+        }else if(_spctype == CChisquareSolveResult::nType_raw){
             // use full spectrum
             _spc = spc;
             scopeStr = "chisquare";
 
-        }else if(_spctype == CTplcombinationSolveResult::nType_noContinuum){
+        }else if(_spctype == CChisquareSolveResult::nType_noContinuum){
             // use spectrum without continuum
             _spc = spc;
             CSpectrumFluxAxis spcfluxAxis = spcWithoutCont.GetFluxAxis();
@@ -240,7 +240,7 @@ Bool CMethodTplcombinationSolve::Solve(CDataStore& resultStore,
         }
 
         // Compute merit function
-        auto  result = std::dynamic_pointer_cast<CTplcombinationResult>( m_tplcombinationOperator->Compute( _spc, tplList, lambdaRange, redshifts, overlapThreshold, maskList, opt_interp, enable_extinction, enable_dustFitting ) );
+        auto  result = std::dynamic_pointer_cast<CChisquareResult>( m_tplcombinationOperator->Compute( _spc, tplList, lambdaRange, redshifts, overlapThreshold, maskList, opt_interp, enable_extinction, enable_dustFitting ) );
 
         if( !result )
         {
@@ -272,7 +272,7 @@ Int32 CMethodTplcombinationSolve::CombinePDF(CDataStore &store, std::string scop
     {
         throw runtime_error("tplcombinationsolve: CombinePDF - Unable to retrieve tplcombination results");
     }
-    std::shared_ptr<const CTplcombinationResult> result = std::dynamic_pointer_cast<const CTplcombinationResult>( results.lock() );
+    std::shared_ptr<const CChisquareResult> result = std::dynamic_pointer_cast<const CChisquareResult>( results.lock() );
 
     CPdfz pdfz;
     Float64 cstLog = -1;

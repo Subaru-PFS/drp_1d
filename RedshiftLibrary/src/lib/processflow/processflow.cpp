@@ -507,7 +507,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
         if( mResult)
         {
             Log.LogInfo( "Extracting z-candidates from Chisquare2solve method results" );
-            std::shared_ptr<CChisquare2SolveResult> solveResult = std::dynamic_pointer_cast<CChisquare2SolveResult>( mResult );
+            std::shared_ptr<CChisquareSolveResult> solveResult = std::dynamic_pointer_cast<CChisquareSolveResult>( mResult );
             Int32 n_cand = 5; //this is hardcoded for now for this method
             std::vector<Float64> zcandidates_unordered_list;
             Bool retzc = solveResult->GetRedshiftCandidates( ctx.GetDataStore(), zcandidates_unordered_list, n_cand);
@@ -554,7 +554,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
         if( mResult)
         {
             Log.LogInfo( "Extracting z-candidates from ChisquareLogsolve method results" );
-            std::shared_ptr<CChisquareLogSolveResult> solveResult = std::dynamic_pointer_cast<CChisquareLogSolveResult>( mResult );
+            std::shared_ptr<CChisquareSolveResult> solveResult = std::dynamic_pointer_cast<CChisquareSolveResult>( mResult );
             Int32 n_cand = 5; //this is hardcoded for now for this method
             std::vector<Float64> zcandidates_unordered_list;
             Bool retzc = solveResult->GetRedshiftCandidates( ctx.GetDataStore(), zcandidates_unordered_list, n_cand);
@@ -602,7 +602,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
         if( mResult)
         {
             Log.LogInfo( "Extracting z-candidates from TplcombinationSolve method results" );
-            std::shared_ptr<CTplcombinationSolveResult> solveResult = std::dynamic_pointer_cast<CTplcombinationSolveResult>( mResult );
+            std::shared_ptr<CChisquareSolveResult> solveResult = std::dynamic_pointer_cast<CChisquareSolveResult>( mResult );
             Int32 n_cand = 5; //this is hardcoded for now for this method
             std::vector<Float64> zcandidates_unordered_list;
             Bool retzc = solveResult->GetRedshiftCandidates( ctx.GetDataStore(), zcandidates_unordered_list, n_cand);
