@@ -92,14 +92,6 @@ CSpectrum& CSpectrum::operator=(const CSpectrum& other)
     return *this;
 }
 
-/*Bool  CSpectrum::SetAxis(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis){
-    
-    m_SpectralAxis = spectralAxis;
-    m_FluxAxis = fluxAxis;
-    m_lmin = spectralAxis[0];
-    return true;
-}*/
-
 /**
  * below should be calculated in the case of precomputedfinegrid
 */

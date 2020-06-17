@@ -28,11 +28,9 @@ CSpectrumFluxCorrectionCalzetti::CSpectrumFluxCorrectionCalzetti()
 
 CSpectrumFluxCorrectionCalzetti::~CSpectrumFluxCorrectionCalzetti()
 {
-    if(!calzettiInitFailed)
-    {
-        delete[] m_dataCalzetti;
-        delete[] m_dataDustCoeff;
-    }
+    delete[] m_dataCalzetti;
+    delete[] m_dataDustCoeff;
+
 }
 
 Bool CSpectrumFluxCorrectionCalzetti::Init( std::string calibrationPath, Float64 ebmv_start, Float64 ebmv_step, Float64 ebmv_n)

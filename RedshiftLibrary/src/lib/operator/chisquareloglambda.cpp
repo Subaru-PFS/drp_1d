@@ -649,7 +649,6 @@ Int32 COperatorChiSquareLogLambda::FitAllz(const TFloat64Range &lambdaRange,
 
     const TAxisSampleList & tplRebinedLambdaGlobal = tplRebinedSpectralAxis.GetSamplesVector();
     const TAxisSampleList & tplRebinedFluxRawGlobal = tplRebinedFluxAxis.GetSamplesVector();
-    //    UInt32 nTpl = tplRebinedSpectralAxis.GetSamplesCount();
     TAxisSampleList tplRebinedLambda(tplRebinedLambdaGlobal.size());
     TAxisSampleList tplRebinedFluxRaw(tplRebinedLambdaGlobal.size());
 
@@ -876,9 +875,6 @@ Int32 COperatorChiSquareLogLambda::FitAllz(const TFloat64Range &lambdaRange,
             }
         }
     }
-
-//    delete[] tplRebinedLambda;
-//    delete[] tplRebinedFluxRaw;
 
     return 0;
 }

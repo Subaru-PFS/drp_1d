@@ -74,7 +74,6 @@ public:
     void                SetWaveletsDFBinPath(std::string binPath);
 
     void                LoadSpectrum(const char* spectrumFilePath, const char* noiseFilePath);
-//    Bool                SetAxis(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis);
 
     Bool                Rebin( const TFloat64Range& range, const CSpectrumSpectralAxis& targetSpectralAxis,
                                CSpectrum& rebinedSpectrum, CMask& rebinedMask, const std::string opt_interp = "lin",

@@ -167,7 +167,6 @@ void COperatorTplcombination::BasicFit(const CSpectrum& spectrum,
 
         tplList[ktpl].Rebin( intersectedLambdaRange, m_spcSpectralAxis_restframe, itplTplSpectrum, itplMask, opt_interp );
         
-//        CSpectrumFluxAxis & itplTplFluxAxis = itplTplSpectrum.GetFluxAxis();
         const CSpectrumSpectralAxis& itplTplSpectralAxis = itplTplSpectrum.GetSpectralAxis();
         Log.LogDebug("  Operator-Tplcombination: Rebinned template #%d has n=%d samples in lambdarange: %.2f - %.2f", 
                         ktpl, itplTplSpectralAxis.GetSamplesCount(), itplTplSpectralAxis[0], 
