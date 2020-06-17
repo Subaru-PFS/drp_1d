@@ -1333,32 +1333,7 @@ Int32 COperatorChiSquareLogLambda::FitRangez(const TAxisSampleList & spectrumReb
     std::reverse(bestISMCoeff.begin(), bestISMCoeff.end());
     std::reverse(bestIGMIdx.begin(), bestIGMIdx.end());
 
-    /*
-    Float64 *z_reversed_array = new Float64[(int)z_vect_size]();
-    Float64 *chi2_reversed_array = new Float64[(int)bestChi2.size()]();
-    Float64 *amp_reversed_array = new Float64[(int)bestFitAmp.size()]();
-    Float64 *amperr_reversed_array = new Float64[(int)bestFitAmpErr.size()]();
-    Bool *ampneg_reversed_array = new Bool[(int)bestFitAmpNeg.size()]();
-    Float64 *dtm_reversed_array = new Float64[(int)bestFitDtm.size()]();
-    Float64 *mtm_reversed_array = new Float64[(int)bestFitMtm.size()]();
-    Float64 *ismCoeff_reversed_array = new Float64[(int)bestISMCoeff.size()]();
-    Float64 *igmIdx_reversed_array = new Float64[(int)bestIGMIdx.size()]();
-    for (Int32 t = 0; t < z_vect_size; t++)
-    {
-        z_reversed_array[t] = z_vect[z_vect_size - 1 - t];
-        chi2_reversed_array[t] = bestChi2[z_vect_size - 1 - t];
-        amp_reversed_array[t] = bestFitAmp[z_vect_size - 1 - t];
-        amperr_reversed_array[t] = bestFitAmpErr[z_vect_size - 1 -t];
-        ampneg_reversed_array[t] = bestFitAmpNeg[z_vect_size - 1 -t];
-        dtm_reversed_array[t] = bestFitDtm[z_vect_size - 1 - t];
-        mtm_reversed_array[t] = bestFitMtm[z_vect_size - 1 - t];
-        ismCoeff_reversed_array[t] = bestISMCoeff[z_vect_size - 1 - t];
-        igmIdx_reversed_array[t] = bestIGMIdx[z_vect_size - 1 - t];
-        // Log.LogInfo("  Operator-ChisquareLog: FitRangez: interpolating z
-        // result, for z=%f, chi2reversed_array=%f", zreversed_array[t],
-        // chi2reversed_array[t]);
-    }
-*/
+
     Int32 k = 0;
     Int32 klow = 0;
     for (Int32 iz = 0; iz < result->Redshifts.size(); iz++)
@@ -1900,30 +1875,19 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(const CSpe
             fclose(f_targetSpcAxis);
         }
 
-        bool enableVarianceWeightedRebin = false;
-       /* if (enableVarianceWeightedRebin)
-        {
-            const TFloat64List &error = spectrum.GetFluxAxis().GetError();
-            CSpectrumFluxAxis errorFluxAxis(spectrum.GetSampleCount());
-            for (Int32 t = 0; t < spectrum.GetSampleCount(); t++)
-            {
-                errorFluxAxis[t] = error[t];
-            }
-            CSpectrumFluxAxis::RebinVarianceWeighted(
-                spectrum.GetFluxAxis(), spectrum.GetSpectralAxis(),
-                errorFluxAxis, targetSpectralAxis, spectrumRebinedFluxAxis,
-                spectrumRebinedSpectralAxis, m_errorRebinedLog, "lin");
-        } else */
-        {
-            // rebin the spectrum
-            TFloat64Range spcLbdaRange(exp(loglbdamin - 0.5 * loglbdaStep),
-                                       exp(loglbdamax + 0.5 * loglbdaStep));
-            //linear 
-            spectrum.Rebin(
-                spcLbdaRange, targetSpectralAxis,
-                m_spectrumRebinedLog,
-                m_mskRebinedLog, rebinMethod, "rebin");
-         }
+        bool enableVarianceWeightedRebin = true;
+        std:string errorRebinMethod = "rebin";
+        if (enableVarianceWeightedRebin)
+            errorRebinMethod = "rebinVariance";
+
+        // rebin the spectrum
+        TFloat64Range spcLbdaRange(exp(loglbdamin - 0.5 * loglbdaStep),
+                                   exp(loglbdamax + 0.5 * loglbdaStep));
+        //linear
+        spectrum.Rebin(
+            spcLbdaRange, targetSpectralAxis,
+            m_spectrumRebinedLog,
+            m_mskRebinedLog, rebinMethod, errorRebinMethod);
 
         if (verboseExportLogRebin)
         {

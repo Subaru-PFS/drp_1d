@@ -42,11 +42,6 @@ public:
     Bool                Subtract(const CSpectrumFluxAxis& other);
     Bool                Invert();
 
-    static Bool         RebinVarianceWeighted( const CSpectrumFluxAxis& sourceFluxAxis, const CSpectrumSpectralAxis& sourceSpectralAxis, const CSpectrumFluxAxis& sourceError,
-                                                   const CSpectrumSpectralAxis& targetSpectralAxis,
-                                                   CSpectrumFluxAxis& rebinedFluxAxis, CSpectrumSpectralAxis& rebinedSpectralAxis, CSpectrumFluxAxis& rebinedError,
-                                                   const std::string opt_interp );
-
 private:
 
     Bool                ComputeMeanAndSDevWithoutError( const CMask& mask, Float64& mean,  Float64& sdev) const;

@@ -602,7 +602,6 @@ Bool CSpectrum::Rebin( const TFloat64Range& range, const CSpectrumSpectralAxis& 
     if(opt_interp=="lin"){
         //Default linear interp.
         Int32 k = 0;
-        Float64 t = 0.0;
         // For each sample in the valid lambda range interval.
         while( k<m_SpectralAxis.GetSamplesCount()-1 && Xsrc[k] <= currentRange.GetEnd() )
         {           
@@ -610,13 +609,33 @@ Bool CSpectrum::Rebin( const TFloat64Range& range, const CSpectrumSpectralAxis& 
             while( j<targetSpectralAxis.GetSamplesCount() && Xtgt[j] <= Xsrc[k+1] )
             {
                 // perform linear interpolation of the flux
-                t = ( Xtgt[j] - Xsrc[k] ) / ( Xsrc[k+1] - Xsrc[k] );
+                Float64 xSrcStep = ( Xsrc[k+1] - Xsrc[k] );
+                Float64 t = ( Xtgt[j] - Xsrc[k] ) / xSrcStep;
                 Yrebin[j] = Ysrc[k] + ( Ysrc[k+1] - Ysrc[k] ) * t;
                 rebinedMask[j] = 1;
 
-                if (opt_error_interp == "rebin" )
-                    ErrorRebin[j] = Error[k] + ( Error[k+1] - Error[k] ) * t;
-
+                if (opt_error_interp != "no")
+                {
+                    if (opt_error_interp == "rebin" )
+                        ErrorRebin[j] = Error[k] + ( Error[k+1] - Error[k] ) * t;
+                    else if (opt_error_interp == "rebinVariance")
+                    {
+                        ErrorRebin[j] = sqrt(Error[k]*Error[k]*(1-t)*(1-t) + Error[k+1]*Error[k+1] * t*t);
+                        //*
+                        Float64 xDestStep, xStepCompensation;
+                        if(j<targetSpectralAxis.GetSamplesCount()-1)
+                        {
+                            xDestStep = Xtgt[j+1]-Xtgt[j];
+                            xStepCompensation = xSrcStep/xDestStep;
+                        }else if(j>0){
+                            xDestStep = Xtgt[j]-Xtgt[j-1];
+                            xStepCompensation = xSrcStep/xDestStep;
+                        }else{
+                            xStepCompensation = 1.0;
+                        }
+                        ErrorRebin[j] *= sqrt(xStepCompensation);
+                    }
+                }
                 j++;
             }
 
@@ -632,7 +651,10 @@ Bool CSpectrum::Rebin( const TFloat64Range& range, const CSpectrumSpectralAxis& 
             k = int( (Xtgt[j] - lmin)/m_dLambdaFineGrid + 0.5 );
             Yrebin[j] = m_pfgFlux[k];
             rebinedMask[j] = 1;
+
             // note: error rebin not implemented for precomputedfinegrid
+            if (opt_error_interp != "no")
+                return false;
 
             j++;
 
@@ -650,7 +672,10 @@ Bool CSpectrum::Rebin( const TFloat64Range& range, const CSpectrumSpectralAxis& 
         {
             Yrebin[j] = gsl_spline_eval (spline, Xtgt[j], accelerator);
             rebinedMask[j] = 1;
+
             // note: error rebin not implemented for spline interp
+            if (opt_error_interp != "no")
+                return false;
 
             j++;
         }
@@ -665,8 +690,27 @@ Bool CSpectrum::Rebin( const TFloat64Range& range, const CSpectrumSpectralAxis& 
             kprev = k;
             // closest value
             Yrebin[j] = Ysrc[k];
-            if (opt_error_interp == "rebin" )
+
+            if (opt_error_interp != "no")
+            {
                 ErrorRebin[j] = Error[k];
+
+                if (opt_error_interp == "rebinVariance")
+                {
+                     Float64 xSrcStep, xDestStep, xStepCompensation;
+                     if(j<targetSpectralAxis.GetSamplesCount()-1)
+                     {
+                         xDestStep = Xtgt[j+1]-Xtgt[j];
+                         xStepCompensation = xSrcStep/xDestStep;
+                     }else if(j>0){
+                         xDestStep = Xtgt[j]-Xtgt[j-1];
+                         xStepCompensation = xSrcStep/xDestStep;
+                     }else{
+                         xStepCompensation = 1.0;
+                     }
+                     ErrorRebin[j] *= sqrt(xStepCompensation);
+                }
+            }
 
             rebinedMask[j] = 1;
             j++;

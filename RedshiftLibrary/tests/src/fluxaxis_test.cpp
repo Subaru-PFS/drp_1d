@@ -403,7 +403,7 @@ BOOST_AUTO_TEST_CASE(calcul)
 
 
 }
-
+/*
 BOOST_AUTO_TEST_CASE(RebinVarianceWeighted)
 {
   //--------------------//
@@ -450,6 +450,6 @@ BOOST_AUTO_TEST_CASE(RebinVarianceWeighted)
 						       "dummy" ) == false);
 
 }
-
+*/
 
 BOOST_AUTO_TEST_SUITE_END()

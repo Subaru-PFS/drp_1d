@@ -50,7 +50,7 @@ private:
     //hardcoded config: REBIN
     Bool verboseLogRebin = 0;
     Bool verboseExportLogRebin = 0;
-    std::string rebinMethod = "lin";
+    const std::string rebinMethod = "lin";
 
     //hardcoded config: FIT_RANGEZ
     bool verboseLogFitFitRangez = false;
