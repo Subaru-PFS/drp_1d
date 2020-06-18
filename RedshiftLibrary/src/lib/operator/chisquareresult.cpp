@@ -294,15 +294,18 @@ void CChisquareResult::SaveLine( const CDataStore& store, std::ostream& stream )
     stream << "ChisquareResult" << "\t" << Redshifts.size() << std::endl;
 }
 
-bool CChisquareResult::CallFind() {
+bool CChisquareResult::CallFind() 
+{
   Int32 extremumCount = 10;
+  Float64 radius = 0.001;
+  TPointList extremumList;
+  TFloat64Range redshiftsRange( Redshifts[0], Redshifts[Redshifts.size() - 1]);
+//*
   if (Redshifts.size() > extremumCount) {
-    TPointList extremumList;
-    TFloat64Range redshiftsRange( Redshifts[0], Redshifts[Redshifts.size() - 1]);
     CExtremum extremum(redshiftsRange, extremumCount, true);
     extremum.Find(Redshifts, ChiSquare, extremumList);
     // Refine Extremum with a second maximum search around the z candidates:
-    Float64 radius = 0.001;
+
     for (Int32 i = 0; i < extremumList.size(); i++) {
       Float64 x = extremumList[i].X;
       Float64 left_border = std::max(redshiftsRange.GetBegin(), x - radius);
@@ -341,5 +344,25 @@ bool CChisquareResult::CallFind() {
       Extrema[i] = tmpX[sortedIndexes[i]];
     }
   }
+//*
+    //Important:
+    //apart from variable declarations, above code is meant to disappear once branch 5619 will be merged into develop
+/*
+    CExtremum extremum(redshiftsRange, extremumCount, radius, true);
+
+    if (m_result->Redshifts.size() == 1 || Redshifts.size() > extremumCount)
+    {
+        extremum.DefaultExtremum( m_result->Redshifts, m_result->ChiSquare, m_firstpass_extremumList); 
+
+    } else{
+        extremum.Find(Redshifts, ChiSquare, extremumList);   
+    }
+    // store extrema results
+    Extrema.resize(extremumCount);
+    for (Int32 i = 0; i < extremumList.size(); i++) {
+      Extrema[i] = extremumList[i].X;
+    }
+
+*/   
   return true;
 }
