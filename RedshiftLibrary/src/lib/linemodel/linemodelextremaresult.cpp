@@ -142,8 +142,7 @@ bool CLineModelExtremaResult::RemoveSecondPassCandidatebyIdx(Int32 idx){
     return true;
 }
 
-/**
- * SetWOrderforFP_basedonSortedIDs: 
+/** 
  * set writing order for first pass candidates based on sorted IDS using integrated PDF.
  * This is useful when some of first-pass candidates are cut off or eliminated in the second pass
 */

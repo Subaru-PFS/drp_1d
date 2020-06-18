@@ -15,7 +15,7 @@ BOOST_AUTO_TEST_CASE(Extremum1)
   TInt32List Rank_PDF = {0, 2, 3, 1};
   std::vector<std::string> ids =  {"FPE0", "FPE2", "FPE4", "FPE3"};
   TInt32List Rank_PDF_firstpass = {0, 2, 4, 3, 1};
-  Int32 ret = m_firstpass_extremaResult.SetWOrderforFP_basedonSortedIDs( Rank_PDF, ids); 
+  Int32 ret = m_firstpass_extremaResult.FixRanksUsingSortedIDs( Rank_PDF, ids); 
   BOOST_CHECK(ret==0);
   BOOST_CHECK_EQUAL_COLLECTIONS(Rank_PDF.begin(), Rank_PDF.begin()+5, 
                               Rank_PDF_firstpass.begin(), Rank_PDF_firstpass.begin()+5);

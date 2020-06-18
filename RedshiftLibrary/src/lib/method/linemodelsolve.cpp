@@ -1276,13 +1276,14 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
                                     zcandidates_unordered_lists);
 
     //overwrite linemodelExtrema with pdfcandidates before saving into datastore
+    std::shared_ptr<CLineModelResult> lmresult_edt = std::dynamic_pointer_cast< CLineModelResult>( linemodel.getResult() );
     for(Int32 idx = 0; idx<zcandidates_unordered_lists.size(); idx++){
         linemodel.m_secondpass_parameters_extremaResult.Extrema[idx] = zcandidates_unordered_lists[idx];
         //Important TODO:
         //we'd rather separate saveresults into two functions: one to do more calculations and one to save into m_results data to be saved in datastore
-        linemodel.m_result->ExtremaResult.Extrema[idx] = zcandidates_unordered_lists[idx];
+        lmresult_edt->ExtremaResult.Extrema[idx] = zcandidates_unordered_lists[idx];
     }
-
+    //read it as constant to save it
     std::shared_ptr<const CLineModelResult> result = std::dynamic_pointer_cast<const CLineModelResult>( linemodel.getResult() );
 
 
