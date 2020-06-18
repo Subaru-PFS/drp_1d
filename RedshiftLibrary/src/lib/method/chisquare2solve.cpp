@@ -7,6 +7,7 @@
 #include <RedshiftLibrary/extremum/extremum.h>
 #include <RedshiftLibrary/processflow/datastore.h>
 #include <RedshiftLibrary/statistics/pdfz.h>
+#include <RedshiftLibrary/statistics/deltaz.h>
 #include <RedshiftLibrary/statistics/pdfcandidateszresult.h>
 
 #include <RedshiftLibrary/operator/findExtrema.h>
@@ -246,8 +247,7 @@ Bool CMethodChisquare2Solve::Solve(CDataStore& resultStore,
                                                                                                            enable_extinction,
                                                                                                            option_dustFitting ) );
 
-        CFindExtrema<std::shared_ptr<CChisquareResult>> fn;
-        fn.callFind(chisquareResult);
+        chisquareResult->CallFind();
         
         if( !chisquareResult )
         {

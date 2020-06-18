@@ -93,8 +93,7 @@ Bool CMethodChisquareSolve::Solve( CDataStore& dataStore, const CSpectrum& spc, 
     //adding cast to be capable of reading redshift attribute
     auto  chisquareResult = std::dynamic_pointer_cast<CChisquareResult>(chiSquare.Compute( _spc, _tpl, lambdaRange, redshifts, overlapThreshold, maskList, opt_interp));
     
-    CFindExtrema<std::shared_ptr<CChisquareResult>> fn;
-    fn.callFind(chisquareResult);  
+    chisquareResult->CallFind();  
     
     if( !chisquareResult )
     {

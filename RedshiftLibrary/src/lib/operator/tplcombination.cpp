@@ -569,8 +569,7 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(const CSpectru
     //estimate CstLog for PDF estimation
     result->CstLog = EstimateLikelihoodCstLog(spectrum, lambdaRange);
     
-    CFindExtrema<std::shared_ptr<CTplcombinationResult>> fn;
-    fn.callFind(result);
+    result->CallFind();
 
     //store spectrum results
     Int32 nMaxExtremaSpectraSave = 1;

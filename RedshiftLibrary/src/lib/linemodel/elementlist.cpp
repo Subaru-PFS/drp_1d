@@ -1410,8 +1410,7 @@ Bool CLineModelElementList::SolveContinuum(const CSpectrum& spectrum,
                                                                                                        opt_extinction,
                                                                                                        opt_dustFit,
                                                                                                        zePriorData) );
-   CFindExtrema<std::shared_ptr<CChisquareResult>> fn;
-    fn.callFind(chisquareResult);
+    chisquareResult->CallFind();
 
     if( !chisquareResult )
     {
@@ -1509,9 +1508,8 @@ Int32 CLineModelElementList::LoadFitContaminantTemplate(const TFloat64Range& lam
                                                                                                        opt_interp,
                                                                                                        opt_extinction,
                                                                                                        opt_dustFit ) );
-    CFindExtrema<std::shared_ptr<CChisquareResult>> fn;
-    fn.callFind(chisquareResult);
- 
+    chisquareResult->CallFind();
+
     if( !chisquareResult )
     {
 

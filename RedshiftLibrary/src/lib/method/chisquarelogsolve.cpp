@@ -6,6 +6,7 @@
 #include <RedshiftLibrary/operator/chisquare.h>
 #include <RedshiftLibrary/extremum/extremum.h>
 #include <RedshiftLibrary/processflow/datastore.h>
+#include <RedshiftLibrary/statistics/deltaz.h>
 #include <RedshiftLibrary/statistics/pdfz.h>
 #include <RedshiftLibrary/operator/pdfLogresult.h>
 #include <RedshiftLibrary/statistics/pdfcandidateszresult.h>
@@ -241,8 +242,7 @@ Bool CMethodChisquareLogSolve::Solve(CDataStore& resultStore,
                                                                                                            opt_interp,
                                                                                                            enable_extinction,
                                                                                                            option_dustFitting ) );
-        CFindExtrema<std::shared_ptr<CChisquareResult>> fn;
-        fn.callFind(chisquareResult);
+        chisquareResult->CallFind();
 
         if( !chisquareResult )
         {
