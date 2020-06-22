@@ -893,7 +893,7 @@ Int32 COperatorLineModel::ComputeCandidates(const Int32 opt_extremacount,
      invertForMinSearch = false;
     }
 
-    Int32 extremacount = 10;
+    Int32 extremacount = 5;
     /*if(opt_extremacount > extremacount)
         extremacount = opt_extremacount;*/
     CExtremum extremum(redshiftsRange, /*opt_*/extremacount, m_secondPass_extensionradius, invertForMinSearch);
