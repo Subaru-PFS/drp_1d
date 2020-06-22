@@ -88,9 +88,6 @@ void CLineModelExtremaResult::Resize(Int32 size)
     FittedTplshapeMtm.resize(size);
 }
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-
 bool CLineModelExtremaResult::RemoveSecondPassCandidatebyIdx(Int32 idx){
     ExtremaPDF.erase(ExtremaPDF.begin() + idx);
     ExtremaIDs.erase( ExtremaIDs.begin() + idx);
@@ -144,6 +141,39 @@ bool CLineModelExtremaResult::RemoveSecondPassCandidatebyIdx(Int32 idx){
     ExtremaExtendedRedshifts.erase(ExtremaExtendedRedshifts.begin() + idx);
     return true;
 } 
+
+/** 
+ * set writing order for first pass candidates based on sorted IDS using integrated PDF.
+ * This is useful when some of first-pass candidates are cut off or eliminated in the second pass
+*/
+Int32 CLineModelExtremaResult::FixRanksUsingSortedIDs(TInt32List& Rank_PDF, std::vector<std::string> ids) const 
+{       Rank_PDF.clear();
+        //getcorresponding Rank:
+        for(Int32 i = 0; i <ids.size(); i++){
+            std::string sub = ids[i].substr(3, ids[i].length()); 
+            int number  = 0;
+            for(auto ch : sub) {
+                number = (number * 10) + (ch - '0');
+            }
+            Rank_PDF.push_back(number);//get last character
+        }
+        for(Int32 i = 0; i<Extrema.size(); i++){
+            bool found = false;
+            for(Int32 j = 0; j<ids.size(); j++){
+                if(Rank_PDF[j] == i){
+                    found = true;
+                    break; 
+                }
+            }
+            if(!found)
+                Rank_PDF.push_back(i);
+        }
+        if(Rank_PDF.size()!= Extrema.size()){
+            return -1;
+        }
+        return 0;
+}
+
 
 /**
  * \brief Empty method.
@@ -697,7 +727,6 @@ void CLineModelExtremaResult::SaveJSON( const CDataStore& store, std::ostream& s
   auto candResults = std::dynamic_pointer_cast<const CPdfCandidateszResult>( res.lock());
   TInt32List order = candResults->Rank;
 
-<<<<<<< HEAD
   bool zeros = std::all_of(ExtremaMeritContinuum.begin(), ExtremaMeritContinuum.end(), [](int i) { return i==0; });
   if(zeros){
         //saving firstpass data

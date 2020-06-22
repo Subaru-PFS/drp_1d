@@ -1343,7 +1343,6 @@ Bool CLineModelSolve::ExtractCandidateResults(CDataStore &store, std::vector<Flo
         //retrieve extremum IDs saved in datastore from firstpass 
         std::shared_ptr<const CLineModelResult> v = std::dynamic_pointer_cast<const CLineModelResult>(
             store.GetGlobalResult("linemodelsolve.linemodel").lock());
-<<<<<<< HEAD
         //compute Deltaz
         TFloat64List deltaz;
         CDeltaz* deltaz_obj = new CDeltaz();
@@ -1352,22 +1351,6 @@ Bool CLineModelSolve::ExtractCandidateResults(CDataStore &store, std::vector<Flo
             deltaz.push_back(deltaz_obj->GetDeltaz(logzpdf1d->Redshifts, logzpdf1d->valProbaLog, z));
         }
         zcand->Compute(zcandidates_unordered_list, logzpdf1d->Redshifts, logzpdf1d->valProbaLog, deltaz, v->ExtremaResult.ExtremaIDs);
-
-        store.StoreScopedGlobalResult( "candidatesresult", zcand ); 
-=======
-
-        zcand->Compute(zcandidates_unordered_list, logzpdf1d->Redshifts, logzpdf1d->valProbaLog, v->ExtremaResult.DeltaZ, v->ExtremaResult.ExtremaIDs);
-        
-        /* Below code doesnt work anymore
-        //Truncate candidates before saving and rewrite in the resultstore
-        auto __r = store.GetGlobalResult("linemodelsolve.linemodel");
-        //Dirty trick to modify a const variable: kept separate to show the need for such a complexity
-        std::shared_ptr<const CLineModelResult> _r = std::dynamic_pointer_cast< const CLineModelResult>( __r.lock() );
-        std::shared_ptr<CLineModelResult> *result = (std::shared_ptr<CLineModelResult>*)(&_r);
-        
-        (*result)->ExtremaResult.Reorder_ResizeAll(zcand->Rank);
-        */ 
->>>>>>> Fixing some incompatibilities with develop; truncate final candidates only at writing into files phase; adding some throw errors in extremum.cpp
 
         std::vector<std::string> info {"spc", "fit", "fitcontinuum", "rules", "continuum"};
         Int32 s = zcand->Rank.size();
@@ -1392,7 +1375,7 @@ Bool CLineModelSolve::ExtractCandidateResults(CDataStore &store, std::vector<Flo
         }
 
         //Truncate only Rank size since is the only sorted vector
-        //the real truncation happen at saving time, into output files
+        //the real truncation happens at saving time, into output files
         if(zcand->Rank.size()>maxCount)
             zcand->Rank.resize(maxCount);
 
