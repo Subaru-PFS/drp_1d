@@ -65,9 +65,24 @@ COperatorTplcombination::~COperatorTplcombination()
 }
 
 
+void COperatorTplcombination::BasicFit_preallocateBuffers(const CSpectrum& spectrum, const std::vector<CTemplate>& tplList)
+{
+
+    // Pre-Allocate the rebined template and mask with regard to the spectrum size
+    m_templatesRebined_bf.resize(tplList.size());
+    m_spcSpectralAxis_restframe.SetSize(spectrum.GetSampleCount());
+
+    for(Int32 ktpl=0; ktpl<tplList.size(); ktpl++)
+    {
+        m_templatesRebined_bf[ktpl].GetSpectralAxis().SetSize(spectrum.GetSampleCount());
+        m_templatesRebined_bf[ktpl].GetFluxAxis().SetSize(spectrum.GetSampleCount());
+        m_masksRebined_bf[ktpl].SetSize(spectrum.GetSampleCount());
+    }
+}
+
+
 void COperatorTplcombination::BasicFit(const CSpectrum& spectrum,
-                                       std::vector<CTemplate>& tplList,
-                                       Float64* pfgTplBuffer,
+                                       const std::vector<CTemplate>& tplList,
                                        const TFloat64Range& lambdaRange,
                                        Float64 redshift,
                                        Float64 overlapThreshold,
@@ -114,11 +129,19 @@ void COperatorTplcombination::BasicFit(const CSpectrum& spectrum,
         fittingResults.status = COperator::nStatus_DataError;
         return ;
     }
-    // Compute clamped lambda range over spectrum
-    TFloat64Range spcLambdaRange;
-    spcSpectralAxis.ClampLambdaRange( lambdaRange, spcLambdaRange );
-    Log.LogDebug("  Operator-Tplcombination: spectrum has n=%d samples in lambdarange: %.2f - %.2f", spcSpectralAxis.GetSamplesCount(), spcSpectralAxis[0], spcSpectralAxis[spcSpectralAxis.GetSamplesCount()-1]);
 
+    Float64 onePlusRedshift = 1.0 + redshift;
+
+    //shift lambdaRange backward to be in restframe
+    TFloat64Range spcLambdaRange_restframe;
+    TFloat64Range lambdaRange_restframe( lambdaRange.GetBegin() / onePlusRedshift,
+                                         lambdaRange.GetEnd() / onePlusRedshift );
+
+    //redshift in restframe the tgtSpectralAxis,
+    m_spcSpectralAxis_restframe.ShiftByWaveLength(spcSpectralAxis, onePlusRedshift, CSpectrumSpectralAxis::nShiftBackward);
+    m_spcSpectralAxis_restframe.ClampLambdaRange( lambdaRange_restframe, spcLambdaRange_restframe );
+
+    TFloat64Range intersectedAllLambdaRange(spcLambdaRange_restframe);
 
     // Now interpolating all the templates
     Log.LogDebug("  Operator-tplcombination: BasicFit - interpolating");
@@ -127,28 +150,27 @@ void COperatorTplcombination::BasicFit(const CSpectrum& spectrum,
         const CSpectrumSpectralAxis& tplSpectralAxis = tplList[ktpl].GetSpectralAxis();
         const CSpectrumFluxAxis& tplFluxAxis = tplList[ktpl].GetFluxAxis();
 
-        // Compute shifted template
-        Float64 onePlusRedshift = 1.0 + redshift;
-        m_shiftedTemplatesSpectralAxis_bf[ktpl]->ShiftByWaveLength( tplSpectralAxis, onePlusRedshift, CSpectrumSpectralAxis::nShiftForward );
-        TFloat64Range intersectedLambdaRange( 0.0, 0.0 );
-
         // Compute clamped lambda range over template
         TFloat64Range tplLambdaRange;
-        m_shiftedTemplatesSpectralAxis_bf[ktpl]->ClampLambdaRange( lambdaRange, tplLambdaRange );
+        tplSpectralAxis.ClampLambdaRange( lambdaRange_restframe, tplLambdaRange );
 
         // if there is any intersection between the lambda range of the spectrum and the lambda range of the template
         // Compute the intersected range
-        TFloat64Range::Intersect( tplLambdaRange, spcLambdaRange, intersectedLambdaRange );
+        TFloat64Range intersectedLambdaRange( 0.0, 0.0 );
+        TFloat64Range::Intersect( tplLambdaRange, spcLambdaRange_restframe, intersectedLambdaRange );
 
-        //UInt32 tgtn = spcSpectralAxis.GetSamplesCount() ;
-        CSpectrumFluxAxis& itplTplFluxAxis = m_templatesRebined_bf[ktpl]->GetFluxAxis();
-        CSpectrumSpectralAxis& itplTplSpectralAxis = m_templatesRebined_bf[ktpl]->GetSpectralAxis();
-        CMask& itplMask = *m_masksRebined_bf[ktpl];
+        // find lambda range intersection common to all templates
+        intersectedAllLambdaRange.IntersectWith(intersectedLambdaRange);
 
-        //CSpectrumFluxAxis::Rebin( intersectedLambdaRange, tplFluxAxis, shiftedTplSpectralAxis, spcSpectralAxis, itplTplFluxAxis, itplTplSpectralAxis, itplMask );
-        CSpectrumFluxAxis::Rebin2( intersectedLambdaRange, tplFluxAxis, pfgTplBuffer, redshift, *m_shiftedTemplatesSpectralAxis_bf[ktpl], spcSpectralAxis, itplTplFluxAxis, itplTplSpectralAxis, itplMask, opt_interp );
+        CSpectrum & itplTplSpectrum = m_templatesRebined_bf[ktpl];
+        CMask & itplMask = m_masksRebined_bf[ktpl];
 
-        Log.LogDebug("  Operator-Tplcombination: Rebinned template #%d has n=%d samples in lambdarange: %.2f - %.2f", ktpl, itplTplSpectralAxis.GetSamplesCount(), itplTplSpectralAxis[0], itplTplSpectralAxis[itplTplSpectralAxis.GetSamplesCount()-1]);
+        tplList[ktpl].Rebin( intersectedLambdaRange, m_spcSpectralAxis_restframe, itplTplSpectrum, itplMask, opt_interp );
+        
+        const CSpectrumSpectralAxis& itplTplSpectralAxis = itplTplSpectrum.GetSpectralAxis();
+        Log.LogDebug("  Operator-Tplcombination: Rebinned template #%d has n=%d samples in lambdarange: %.2f - %.2f", 
+                        ktpl, itplTplSpectralAxis.GetSamplesCount(), itplTplSpectralAxis[0], 
+                        itplTplSpectralAxis[itplTplSpectralAxis.GetSamplesCount()-1]);
 
         /*//overlapRate, Method 1
         CMask mask;
@@ -163,7 +185,7 @@ void COperatorTplcombination::BasicFit(const CSpectrum& spectrum,
         //overlapRate = mask.IntersectAndComputeOverlapRate( itplMask );
 
         //overlapRate, Method 3
-        fittingResults.overlapRate = spcSpectralAxis.IntersectMaskAndComputeOverlapRate( lambdaRange, itplMask );
+        fittingResults.overlapRate = m_spcSpectralAxis_restframe.IntersectMaskAndComputeOverlapRate( lambdaRange_restframe, itplMask );
 
         // Check for overlap rate
         if( fittingResults.overlapRate < overlapThreshold || fittingResults.overlapRate<=0.0 )
@@ -174,17 +196,18 @@ void COperatorTplcombination::BasicFit(const CSpectrum& spectrum,
     }
 
     // Linear fit
-    Int32 imin_lbda = spcSpectralAxis.GetIndexAtWaveLength(spcLambdaRange.GetBegin());
-    if(spcSpectralAxis[imin_lbda]<spcLambdaRange.GetBegin() && imin_lbda+1<spcSpectralAxis.GetSamplesCount())
+    Int32 imin_lbda = m_spcSpectralAxis_restframe.GetIndexAtWaveLength(intersectedAllLambdaRange.GetBegin());
+    if(m_spcSpectralAxis_restframe[imin_lbda]<spcLambdaRange_restframe.GetBegin() && imin_lbda+1<m_spcSpectralAxis_restframe.GetSamplesCount())
     {
         imin_lbda += 1;
     }
-    Int32 imax_lbda = spcSpectralAxis.GetIndexAtWaveLength(spcLambdaRange.GetEnd());
-    if(spcSpectralAxis[imax_lbda]>spcLambdaRange.GetEnd() && imax_lbda-1>=imin_lbda)
+    Int32 imax_lbda = m_spcSpectralAxis_restframe.GetIndexAtWaveLength(intersectedAllLambdaRange.GetEnd());
+    if(m_spcSpectralAxis_restframe[imax_lbda]>spcLambdaRange_restframe.GetEnd() && imax_lbda-1>=imin_lbda)
     {
         imax_lbda -= 1;
     }
-    Int32 n=imax_lbda-imin_lbda+1;
+
+    Int32 n = imax_lbda - imin_lbda + 1;
     Log.LogDebug("  Operator-Tplcombination: prep. linear fitting with n=%d samples in the clamped lambdarange spectrum (imin=%d, lbda_min=%.3f - imax=%d, lbda_max=%.3f)", n, imin_lbda, spcSpectralAxis[imin_lbda], imax_lbda, spcSpectralAxis[imax_lbda]);
     Int32 nddl=tplList.size();
     gsl_matrix *X, *cov;
@@ -221,7 +244,7 @@ void COperatorTplcombination::BasicFit(const CSpectrum& spectrum,
 
         for (Int32 iddl = 0; iddl < nddl; iddl++)
         {
-            Float64 fval =  m_templatesRebined_bf[iddl]->GetFluxAxis()[i+imin_lbda];
+            Float64 fval =  m_templatesRebined_bf[iddl].GetFluxAxis()[i+imin_lbda];
             gsl_matrix_set (X, i, iddl, fval);
 
             if(0 && verbose)
@@ -293,12 +316,12 @@ void COperatorTplcombination::BasicFit(const CSpectrum& spectrum,
     }
 
     //build the model
-    CSpectrum modelSpectrum;
+    CSpectrum & modelSpectrum = fittingResults.modelSpectrum;
     modelSpectrum.GetSpectralAxis().SetSize(n);
     modelSpectrum.GetFluxAxis().SetSize(n);
     for(Int32 k=0; k<modelSpectrum.GetSampleCount(); k++)
     {
-        modelSpectrum.GetSpectralAxis()[k]=spcSpectralAxis[k+imin_lbda];
+        modelSpectrum.GetSpectralAxis()[k] = spcSpectralAxis[k+imin_lbda];
         modelSpectrum.GetFluxAxis()[k]=.0;
         for (Int32 iddl = 0; iddl < nddl; iddl++)
         {
@@ -306,10 +329,9 @@ void COperatorTplcombination::BasicFit(const CSpectrum& spectrum,
             if(k==0){
                 Log.LogDebug("  Operator-Tplcombination: Building model with tpl/component #%d with amplitude a=%+.5e", iddl, a);
             }
-            modelSpectrum.GetFluxAxis()[k] += a*m_templatesRebined_bf[iddl]->GetFluxAxis()[k+imin_lbda];
+            modelSpectrum.GetFluxAxis()[k] += a*m_templatesRebined_bf[iddl].GetFluxAxis()[k+imin_lbda];
         }
     }
-    fittingResults.modelSpectrum = modelSpectrum;
 
     //estimate the lst-square brute force
     fittingResults.chisquare = .0;
@@ -355,7 +377,7 @@ void COperatorTplcombination::BasicFit(const CSpectrum& spectrum,
  * input: if additional_spcMasks size is 0, no additional mask will be used, otherwise its size should match the redshifts list size
  **/
 std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(const CSpectrum& spectrum,
-                                                                  std::vector<CTemplate> tplList,
+                                                                  const std::vector<CTemplate> tplList,
                                                                   const TFloat64Range& lambdaRange,
                                                                   const TFloat64List& redshifts,
                                                                   Float64 overlapThreshold,
@@ -394,98 +416,8 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(const CSpectru
     }
 
     Log.LogDebug("  Operator-tplcombination: allocating memory for buffers (N = %d)", tplList.size());
-    Float64* precomputedFineGridTplFlux = NULL; //Todo: define as a list for each tpl
-    for(Int32 ktpl=0; ktpl<tplList.size(); ktpl++)
-    {
-        // Pre-Allocate the rebined template with regard to the spectrum size
-        std::shared_ptr<CTemplate> templateRebined_bf = std::shared_ptr<CTemplate>( new CTemplate( tplList[ktpl].GetName(), tplList[ktpl].GetCategory() ) );
-        templateRebined_bf->GetSpectralAxis().SetSize(spectrum.GetSampleCount());
-        templateRebined_bf->GetFluxAxis().SetSize(spectrum.GetSampleCount());
-        m_templatesRebined_bf.push_back(templateRebined_bf);
 
-        // Pre-Allocate the rebined mask with regard to the spectrum size
-        std::shared_ptr<CMask> mskRebined_bf = std::shared_ptr<CMask>( new CMask() );
-        mskRebined_bf->SetSize(spectrum.GetSampleCount());
-        m_masksRebined_bf.push_back(mskRebined_bf);
-
-        //
-        std::shared_ptr<CSpectrumSpectralAxis> shiftedTplSpectralAxis_bf = std::shared_ptr<CSpectrumSpectralAxis>( new CSpectrumSpectralAxis(  ));
-        shiftedTplSpectralAxis_bf->SetSize(tplList[ktpl].GetSampleCount());
-        m_shiftedTemplatesSpectralAxis_bf.push_back(shiftedTplSpectralAxis_bf);
-
-        if(opt_interp=="precomputedfinegrid"){
-            /*/
-            // Precalculate a fine grid template to be used for the 'closest value' rebin method
-            Int32 n = tpl.GetSampleCount();
-            CSpectrumFluxAxis tplFluxAxis = tpl.GetFluxAxis();
-            CSpectrumSpectralAxis tplSpectralAxis = tpl.GetSpectralAxis();
-            //Float64 dLambdaTgt =  1.0 * ( spectrum.GetMeanResolution()*0.9 )/( 1+sortedRedshifts[sortedRedshifts.size()-1] );
-            Float64 dLambdaTgt =  0.1;
-            //Float64 lmin = tplSpectralAxis[0];
-            Float64 lmin = 0;
-            Float64 lmax = tplSpectralAxis[n-1];
-            Int32 nTgt = (lmax-lmin)/dLambdaTgt + 2.0/dLambdaTgt;
-
-            // pfg with std::vector
-            //CTemplate       templateFine;
-            //templateFine.GetSpectralAxis().SetSize(nTgt);
-            //templateFine.GetFluxAxis().SetSize(nTgt);
-            //Float64* precomputedFineGridTplFlux = templateFine.GetFluxAxis().GetSamples();
-            // pfg with malloc
-            precomputedFineGridTplFlux = (Float64*)malloc(nTgt*sizeof(Float64));
-            if(precomputedFineGridTplFlux == NULL)
-            {
-                Log.LogError("  Operator-Chisquare2: unable to allocate the precomputed fine grid buffer... aborting!");
-                return NULL;
-            }
-            // pfg with static array => doesn't work
-            //nTgt = 999999;
-            //Float64 precomputedFineGridTplFlux[999999];
-            //Log.LogInfo( "nTgt: %d samples", nTgt);
-
-            //inialise and allocate the gsl objects
-            Float64* Ysrc = tplFluxAxis.GetSamples();
-            Float64* Xsrc = tplSpectralAxis.GetSamples();
-            // linear
-            //gsl_interp *interpolation = gsl_interp_alloc (gsl_interp_linear,n);
-            //gsl_interp_init(interpolation, Xsrc, Ysrc, n);
-            //gsl_interp_accel * accelerator =  gsl_interp_accel_alloc();
-
-            //spline
-            gsl_spline *spline = gsl_spline_alloc (gsl_interp_cspline, n);
-            gsl_spline_init (spline, Xsrc, Ysrc, n);
-            gsl_interp_accel * accelerator =  gsl_interp_accel_alloc();
-
-            Int32 k = 0;
-            Float64 x = 0.0;
-            for(k=0; k<nTgt; k++){
-                x = lmin + k*dLambdaTgt;
-                if(x < tplSpectralAxis[0] || x > tplSpectralAxis[n-1]){
-                    precomputedFineGridTplFlux[k] = 0.0;
-                }else{
-                    //precomputedFineGridTplFlux[k] = gsl_interp_eval(interpolation, Xsrc, Ysrc, x, accelerator);
-                    precomputedFineGridTplFlux[k] = gsl_spline_eval (spline, x, accelerator);
-                }
-            }
-
-            gsl_spline_free (spline);
-            gsl_interp_accel_free (accelerator);
-            //*/
-        }
-        /*//debug:
-        // save templateFine
-        FILE* f = fopen( "template_precomputedFineGrid.txt", "w+" );
-        for(Int32 m=0; m<nTgt; m++){
-            Float64 x = lmin + k*dLambdaTgt;
-            if( Yfine[m] < 0.0001 ){
-                fprintf( f, "%e %e\n", x, precomputedFineGridTplFlux[m]);
-            }else{
-                fprintf( f, "%f %f\n", x, precomputedFineGridTplFlux[m]);
-            }
-        }
-        fclose( f );
-        //*/
-    }
+    BasicFit_preallocateBuffers(spectrum, tplList);
 
     //sort the redshift and keep track of the indexes
     TFloat64List sortedRedshifts;
@@ -553,10 +485,9 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(const CSpectru
         Float64 redshift = result->Redshifts[i];
 
         STplcombination_basicfitresult fittingResults;
-
+        
         BasicFit( spectrum,
                   tplList,
-                  precomputedFineGridTplFlux,
                   lambdaRange,
                   redshift,
                   overlapThreshold,
@@ -729,7 +660,6 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(const CSpectru
 
             BasicFit( spectrum,
                       tplList,
-                      precomputedFineGridTplFlux,
                       lambdaRange,
                       redshift,
                       overlapThreshold,
@@ -759,9 +689,6 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(const CSpectru
         }
     }
 
-    if(opt_interp=="precomputedfinegrid"){
-        free(precomputedFineGridTplFlux);
-    }
     return result;
 
 }

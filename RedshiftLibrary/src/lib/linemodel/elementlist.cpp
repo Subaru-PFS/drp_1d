@@ -1045,7 +1045,7 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, I
                 }else{
                     Log.LogError("Failed to load-fit continuum");
                     throw std::runtime_error("Failed to load-fit continuum");
-                }
+                } 
             }
         }
     }else if(m_fitContinuum_option==1){//using precomputed fit store, i.e., fitValues
@@ -1078,8 +1078,7 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, I
         bestFitRedshift = m_fitContinuum_tplFitRedshift;
         bestFitPolyCoeffs = m_fitContinuum_tplFitPolyCoeffs;
     }else if(m_fitContinuum_option==3){
-        //redo the fit only for the current template continuum, IGM/ISM will be fitted according to m_fitContinuum_igm and m_fitContinuum_dustfit
-        //todo: fix the ISM/IGM to the previously fitted values
+        //redo the fit only for the current template continuum, IGM/ISM will be fitted accoring to m_fitContinuum_igm/m_fitContinuum_dustfit
 
         bestFitRedshift = m_Redshift; //using aligned redshift Lines/Continuum
         //bestFitRedshift = m_fitContinuum_tplFitRedshift; //using redishift from previous estimations
@@ -1088,7 +1087,9 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, I
         //hardcoded parameters
         std::string opt_interp = "lin"; //"precomputedfinegrid"; //
         Int32 opt_extinction = m_secondpass_fitContinuum_igm;
-        Int32 opt_dustFit = m_secondpass_fitContinuum_dustfit;
+        //below is based on the hardcoded values in Operators: ->Init(0, 0.1, 1), i.e., Dustcoeff indexes go from 0 to 10 and values go from 0 to 1 with a step of 0.1
+        //TODO: this code should be replaced to be resilient to these hard coded values, especially is step and first value changes
+        Int32 opt_dustFit = Int32(m_fitContinuum_tplFitDustCoeff*10); //getDustCoeffIndex(m_fitContinuum_tplFitDustCoeff);
         Float64 overlapThreshold = 1.0;
 
         bool ignoreLinesSupport=m_secondpass_fitContinuum_outsidelinesmask;
@@ -1117,8 +1118,8 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, I
                     Float64 fitAmplitude = -1.0;
                     Float64 fitAmplitudeError =-1.0;
                     Bool fitAmplitudeNegative = false;
-                    Float64 fitDustCoeff = -1.0;
-                    Int32 fitMeiksinIdx = -1;
+                    Float64 fitDustCoeff = m_fitContinuum_tplFitDustCoeff;
+                    Int32 fitMeiksinIdx = m_fitContinuum_tplFitMeiksinIdx;
                     Float64 fitDtM = -1.0;
                     Float64 fitMtM = -1.0;
                     Float64 fitLogprior = 0.0;
@@ -1154,6 +1155,7 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, I
                         bestFitLogprior = fitLogprior;
                         bestTplName = tpl.GetName();
                     }
+        
                     break;
                 }
             }
@@ -1380,12 +1382,15 @@ Bool CLineModelElementList::SolveContinuum(const CSpectrum& spectrum,
                                            Float64& fitLogprior)
 {
     CPriorHelper::TPriorZEList zePriorData;
-    //*
     bool retGetPrior = m_fitContinuum_priorhelper->GetTplPriorData(tpl.GetName(), redshifts, zePriorData);
     if(retGetPrior==false)
     {
         Log.LogError("    model: Failed to get prior for chi2 solvecontinuum.");
         throw runtime_error("    model: Failed to get prior for chi2 solvecontinuum.");
+    }
+    bool keepigmism = false;
+    if(fitDustCoeff+fitMeiksinIdx != -2){
+        keepigmism = true;
     }
 
     // Compute merit function
@@ -1400,7 +1405,10 @@ Bool CLineModelElementList::SolveContinuum(const CSpectrum& spectrum,
                                                                                                        opt_interp,
                                                                                                        opt_extinction,
                                                                                                        opt_dustFit,
-                                                                                                       zePriorData) );
+                                                                                                       zePriorData, 
+                                                                                                       keepigmism,
+                                                                                                       fitDustCoeff, 
+                                                                                                       fitMeiksinIdx) );
     if( !chisquareResult )
     {
 

@@ -46,4 +46,8 @@ void CSpectrumAxis::SetSize( UInt32 s )
     m_Samples.resize( s );
 }
 
+UInt32 CSpectrumAxis::GetSamplesCount( )
+{
+    return m_Samples.size();
+}
 

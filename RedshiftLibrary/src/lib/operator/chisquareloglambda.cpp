@@ -70,13 +70,14 @@ COperatorChiSquareLogLambda::~COperatorChiSquareLogLambda()
     freeFFTPlans();
 }
 
-Int32 COperatorChiSquareLogLambda::EstimateXtYSlow(const Float64 *X,
-                                                   const Float64 *Y, UInt32 nX,
+Int32 COperatorChiSquareLogLambda::EstimateXtYSlow(const std::vector<Float64>& X,
+                                                   const std::vector<Float64>& Y,
                                                    UInt32 nShifts,
                                                    std::vector<Float64> &XtY)
 {
     XtY.resize(nShifts);
 
+    UInt32 nX = X.size();
     Float64 xty = 0.0;
     for (Int32 k = 0; k < nShifts; k++)
     {
@@ -91,13 +92,14 @@ Int32 COperatorChiSquareLogLambda::EstimateXtYSlow(const Float64 *X,
 }
 
 // only works for mtm, Y=model^2, X=1.
-Int32 COperatorChiSquareLogLambda::EstimateMtMFast(const Float64 *X,
-                                                   const Float64 *Y, UInt32 nX,
+Int32 COperatorChiSquareLogLambda::EstimateMtMFast(const std::vector<Float64> &X,
+                                                   const std::vector<Float64> &Y,
                                                    UInt32 nShifts,
                                                    std::vector<Float64> &XtY)
 {
     XtY.resize(nShifts);
 
+    UInt32 nX = X.size();
     Float64 xty = 0.0;
     for (Int32 j = 0; j < nX; j++)
     {
@@ -116,15 +118,15 @@ Int32 COperatorChiSquareLogLambda::EstimateMtMFast(const Float64 *X,
     return 0;
 }
 
-Int32 COperatorChiSquareLogLambda::EstimateXtY(const Float64 *X,
-                                               const Float64 *Y, UInt32 nx,
-                                               UInt32 ny, UInt32 nshifts,
+Int32 COperatorChiSquareLogLambda::EstimateXtY(const std::vector<Float64> &X,
+                                               const std::vector<Float64> &Y,
+                                               UInt32 nshifts,
                                                std::vector<Float64> &XtY,
                                                Int32 precomputedFFT)
 {
     // Processing the FFT
-    Int32 nSpc = nx;
-    Int32 nTpl = ny;
+    Int32 nSpc = X.size();
+    Int32 nTpl = Y.size();
     Int32 nPadded = m_nPaddedSamples;
 
     Int32 nPadBeforeSpc = nPadded - nSpc; //(Int32)nPadded/2.0;
@@ -533,13 +535,13 @@ Int32 COperatorChiSquareLogLambda::FitAllz(const TFloat64Range &lambdaRange,
 {
     bool verboseLogFitAllz = true;
 
-    CSpectrumFluxAxis &spectrumRebinedFluxAxis =
+    const CSpectrumFluxAxis &spectrumRebinedFluxAxis =
         m_spectrumRebinedLog.GetFluxAxis();
-    Float64 *error = m_errorRebinedLog.GetSamples();
-    CSpectrumSpectralAxis &spectrumRebinedSpectralAxis =
+    const TAxisSampleList & error = spectrumRebinedFluxAxis.GetError();
+    const CSpectrumSpectralAxis &spectrumRebinedSpectralAxis =
         m_spectrumRebinedLog.GetSpectralAxis();
-    CSpectrumFluxAxis &tplRebinedFluxAxis = m_templateRebinedLog.GetFluxAxis();
-    CSpectrumSpectralAxis &tplRebinedSpectralAxis =
+    const CSpectrumFluxAxis &tplRebinedFluxAxis = m_templateRebinedLog.GetFluxAxis();
+    const CSpectrumSpectralAxis &tplRebinedSpectralAxis =
         m_templateRebinedLog.GetSpectralAxis();
 
     bool enableIGM = true;
@@ -636,8 +638,8 @@ Int32 COperatorChiSquareLogLambda::FitAllz(const TFloat64Range &lambdaRange,
         }
     }
 
-    Float64 *spectrumRebinedLambda = spectrumRebinedSpectralAxis.GetSamples();
-    Float64 *spectrumRebinedFluxRaw = spectrumRebinedFluxAxis.GetSamples();
+    const TAxisSampleList & spectrumRebinedLambda = spectrumRebinedSpectralAxis.GetSamplesVector();
+    const TAxisSampleList & spectrumRebinedFluxRaw = spectrumRebinedFluxAxis.GetSamplesVector();
     UInt32 nSpc = spectrumRebinedSpectralAxis.GetSamplesCount();
     if (verboseLogFitAllz)
     {
@@ -645,13 +647,10 @@ Int32 COperatorChiSquareLogLambda::FitAllz(const TFloat64Range &lambdaRange,
                     spectrumRebinedLambda[0], spectrumRebinedLambda[nSpc - 1]);
     }
 
-    Float64 *tplRebinedLambdaGlobal = tplRebinedSpectralAxis.GetSamples();
-    Float64 *tplRebinedFluxRawGlobal = tplRebinedFluxAxis.GetSamples();
-    //    UInt32 nTpl = tplRebinedSpectralAxis.GetSamplesCount();
-    Float64 *tplRebinedLambda =
-        new Float64[(int)tplRebinedSpectralAxis.GetSamplesCount()]();
-    Float64 *tplRebinedFluxRaw =
-        new Float64[(int)tplRebinedSpectralAxis.GetSamplesCount()]();
+    const TAxisSampleList & tplRebinedLambdaGlobal = tplRebinedSpectralAxis.GetSamplesVector();
+    const TAxisSampleList & tplRebinedFluxRawGlobal = tplRebinedFluxAxis.GetSamplesVector();
+    TAxisSampleList tplRebinedLambda(tplRebinedLambdaGlobal.size());
+    TAxisSampleList tplRebinedFluxRaw(tplRebinedLambdaGlobal.size());
 
     for (Int32 k = 0; k < nzranges; k++)
     {
@@ -679,11 +678,8 @@ Int32 COperatorChiSquareLogLambda::FitAllz(const TFloat64Range &lambdaRange,
             Float64 redshiftStep_toBeDoneDifferently =
                 result->Redshifts[izrangelist[k].GetBegin() + 1] -
                 result->Redshifts[izrangelist[k].GetBegin()];
-            ilbda = FindTplSpectralIndex(
-                spectrumRebinedLambda, tplRebinedLambdaGlobal,
-                spectrumRebinedSpectralAxis.GetSamplesCount(),
-                tplRebinedSpectralAxis.GetSamplesCount(), zrange,
-                redshiftStep_toBeDoneDifferently);
+            ilbda = FindTplSpectralIndex(spectrumRebinedLambda, tplRebinedLambdaGlobal,
+                                         zrange, redshiftStep_toBeDoneDifferently);
         } else
         {
             ilbda =
@@ -723,6 +719,8 @@ Int32 COperatorChiSquareLogLambda::FitAllz(const TFloat64Range &lambdaRange,
         }
 
         UInt32 nTpl = ilbda.GetEnd() - ilbda.GetBegin() + 1;
+        tplRebinedLambda.resize(nTpl);
+        tplRebinedFluxRaw.resize(nTpl);
         for (UInt32 j = 0; j < nTpl; j++)
         {
             tplRebinedLambda[j] = tplRebinedLambdaGlobal[j + ilbda.GetBegin()];
@@ -740,7 +738,7 @@ Int32 COperatorChiSquareLogLambda::FitAllz(const TFloat64Range &lambdaRange,
         }
 
         FitRangez(spectrumRebinedLambda, spectrumRebinedFluxRaw, error,
-                  tplRebinedLambda, tplRebinedFluxRaw, nSpc, nTpl, subresult,
+                  tplRebinedLambda, tplRebinedFluxRaw, subresult,
                   igmMeiksinCoeffs, ismEbmvCoeffs);
         //*/
 
@@ -878,9 +876,6 @@ Int32 COperatorChiSquareLogLambda::FitAllz(const TFloat64Range &lambdaRange,
         }
     }
 
-    delete[] tplRebinedLambda;
-    delete[] tplRebinedFluxRaw;
-
     return 0;
 }
 
@@ -900,19 +895,21 @@ Int32 COperatorChiSquareLogLambda::FitAllz(const TFloat64Range &lambdaRange,
  * @param ismEbmvCoeffs
  * @return
  */
-Int32 COperatorChiSquareLogLambda::FitRangez(Float64 *spectrumRebinedLambda,
-                                             Float64 *spectrumRebinedFluxRaw,
-                                             Float64 *error,
-                                             Float64 *tplRebinedLambda,
-                                             Float64 *tplRebinedFluxRaw,
-                                             UInt32 nSpc,
-                                             UInt32 nTpl,
+Int32 COperatorChiSquareLogLambda::FitRangez(const TAxisSampleList & spectrumRebinedLambda,
+                                             const TAxisSampleList & spectrumRebinedFluxRaw,
+                                             const TAxisSampleList & error,
+                                             const TAxisSampleList & tplRebinedLambda,
+                                             const TAxisSampleList & tplRebinedFluxRaw,
                                              std::shared_ptr<CChisquareResult> result,
                                              std::vector<Int32> igmMeiksinCoeffs,
                                              std::vector<Int32> ismEbmvCoeffs)
 {
-    Float64 redshiftValueMeiksin = result->Redshifts[0];
-    if (verboseLogFitFitRangez)
+    Int32 nTpl = tplRebinedLambda.size(),
+            nSpc = spectrumRebinedLambda.size();
+
+   Float64 redshiftValueMeiksin = result->Redshifts[0];
+
+   if (verboseLogFitFitRangez)
     {
         Log.LogInfo(
             "  Operator-ChisquareLog: FitRangez: redshiftValueMeiksin = %f",
@@ -929,9 +926,8 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64 *spectrumRebinedLambda,
                     tplRebinedLambda[nTpl - 1] * (1 + result->Redshifts[0]));
     }
 
-    //
     Int32 nshifts = nTpl - nSpc + 1;
-    m_nPaddedSamples = (Int32)nTpl * 2.0;
+    m_nPaddedSamples = nTpl * 2.0;
     /*
     //next power of two
     Int32 maxnsamples = (Int32)(nTpl*2);
@@ -982,8 +978,8 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64 *spectrumRebinedLambda,
     }
 
     // prepare arrays
-    Float64 *spcRebinedFluxOverErr2 = new Float64[nSpc]();
-    Float64 *oneSpcRebinedFluxOverErr2 = new Float64[nSpc]();
+    TAxisSampleList spcRebinedFluxOverErr2(nSpc);
+    TAxisSampleList oneSpcRebinedFluxOverErr2(nSpc);
     for (Int32 j = 0; j < nSpc; j++)
     {
         inv_err2 = 1.0 / (error[j] * error[j]);
@@ -1003,13 +999,12 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64 *spectrumRebinedLambda,
         fclose(f);
     }
 
-    Float64 *tplRebinedFluxIgm = new Float64[nTpl]();
-    Float64 *tplRebinedFlux = new Float64[nTpl]();
-    Float64 *tpl2RebinedFlux = new Float64[nTpl]();
+    TAxisSampleList tplRebinedFluxIgm = tplRebinedFluxRaw;
+    TAxisSampleList tplRebinedFlux = tplRebinedFluxRaw;
+    TAxisSampleList tpl2RebinedFlux(nTpl);
+
     for (Int32 j = 0; j < nTpl; j++)
     {
-        tplRebinedFluxIgm[j] = tplRebinedFluxRaw[j];
-        tplRebinedFlux[j] = tplRebinedFluxRaw[j];
         tpl2RebinedFlux[j] = tplRebinedFlux[j] * tplRebinedFlux[j];
     }
 
@@ -1163,7 +1158,7 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64 *spectrumRebinedLambda,
             // Estimate DtM
             std::vector<Float64> dtm_vec;
             //*
-            EstimateXtY(spcRebinedFluxOverErr2, tplRebinedFlux, nSpc, nTpl,
+            EstimateXtY(spcRebinedFluxOverErr2, tplRebinedFlux,
                         nshifts, dtm_vec,
                         //-1);
                         0);
@@ -1185,7 +1180,7 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64 *spectrumRebinedLambda,
             // Estimate MtM
             std::vector<Float64> mtm_vec;
             //*
-            EstimateXtY(oneSpcRebinedFluxOverErr2, tpl2RebinedFlux, nSpc, nTpl,
+            EstimateXtY(oneSpcRebinedFluxOverErr2, tpl2RebinedFlux,
                         nshifts, mtm_vec,
                         //-1);
                         1);
@@ -1318,42 +1313,22 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64 *spectrumRebinedLambda,
 
     if (errorWhileFitting != 0)
     {
-      delete[] spcRebinedFluxOverErr2;
-      delete[] oneSpcRebinedFluxOverErr2;
-      delete[] tplRebinedFlux;
-      delete[] tpl2RebinedFlux;
-      delete[] tplRebinedFluxIgm;
-
       freeFFTPlans();
       throw runtime_error("Error while fitting");
         // return -2;
     }
 
     // interpolating on the initial z grid
-    Float64 *z_reversed_array = new Float64[(int)z_vect_size]();
-    Float64 *chi2_reversed_array = new Float64[(int)bestChi2.size()]();
-    Float64 *amp_reversed_array = new Float64[(int)bestFitAmp.size()]();
-    Float64 *amperr_reversed_array = new Float64[(int)bestFitAmpErr.size()]();
-    Bool *ampneg_reversed_array = new Bool[(int)bestFitAmpNeg.size()]();
-    Float64 *dtm_reversed_array = new Float64[(int)bestFitDtm.size()]();
-    Float64 *mtm_reversed_array = new Float64[(int)bestFitMtm.size()]();
-    Float64 *ismCoeff_reversed_array = new Float64[(int)bestISMCoeff.size()]();
-    Float64 *igmIdx_reversed_array = new Float64[(int)bestIGMIdx.size()]();
-    for (Int32 t = 0; t < z_vect_size; t++)
-    {
-        z_reversed_array[t] = z_vect[z_vect_size - 1 - t];
-        chi2_reversed_array[t] = bestChi2[z_vect_size - 1 - t];
-        amp_reversed_array[t] = bestFitAmp[z_vect_size - 1 - t];
-        amperr_reversed_array[t] = bestFitAmpErr[z_vect_size - 1 -t];
-        ampneg_reversed_array[t] = bestFitAmpNeg[z_vect_size - 1 -t];
-        dtm_reversed_array[t] = bestFitDtm[z_vect_size - 1 - t];
-        mtm_reversed_array[t] = bestFitMtm[z_vect_size - 1 - t];
-        ismCoeff_reversed_array[t] = bestISMCoeff[z_vect_size - 1 - t];
-        igmIdx_reversed_array[t] = bestIGMIdx[z_vect_size - 1 - t];
-        // Log.LogInfo("  Operator-ChisquareLog: FitRangez: interpolating z
-        // result, for z=%f, chi2reversed_array=%f", zreversed_array[t],
-        // chi2reversed_array[t]);
-    }
+    std::reverse(z_vect.begin(), z_vect.end());
+    std::reverse(bestChi2.begin(), bestChi2.end());
+    std::reverse(bestFitAmp.begin(), bestFitAmp.end());
+    std::reverse(bestFitAmpErr.begin(), bestFitAmpErr.end());
+    std::reverse(bestFitAmpNeg.begin(), bestFitAmpNeg.end());
+    std::reverse(bestFitDtm.begin(), bestFitDtm.end());
+    std::reverse(bestFitMtm.begin(), bestFitMtm.end());
+    std::reverse(bestISMCoeff.begin(), bestISMCoeff.end());
+    std::reverse(bestIGMIdx.begin(), bestIGMIdx.end());
+
 
     Int32 k = 0;
     Int32 klow = 0;
@@ -1364,7 +1339,7 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64 *spectrumRebinedLambda,
         // gsl-bsearch z result, , ztgt=%f, zcalc_min=%f, zcalc_max=%f",
         // result->Redshifts[iz], zreversed_array[0],
         // zreversed_array[z_vect_size-1]);
-        k = gsl_interp_bsearch(z_reversed_array, result->Redshifts[iz], klow,
+        k = gsl_interp_bsearch(&z_vect.at(0), result->Redshifts[iz], klow,
                                z_vect_size - 1);
         klow = k;
 
@@ -1383,13 +1358,13 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64 *spectrumRebinedLambda,
         //*/
 
         result->Overlap[iz] = 1.0;
-        result->FitAmplitude[iz] = amp_reversed_array[k];
-        result->FitAmplitudeError[iz] = amperr_reversed_array[k];
-        result->FitAmplitudeNegative[iz] = ampneg_reversed_array[k];
-        result->FitDtM[iz] = dtm_reversed_array[k];
-        result->FitMtM[iz] = mtm_reversed_array[k];
-        result->FitDustCoeff[iz] = ismCoeff_reversed_array[k];
-        result->FitMeiksinIdx[iz] = igmIdx_reversed_array[k];
+        result->FitAmplitude[iz] = bestFitAmp[k];
+        result->FitAmplitudeError[iz] = bestFitAmpErr[k];
+        result->FitAmplitudeNegative[iz] = bestFitAmpNeg[k];
+        result->FitDtM[iz] = bestFitDtm[k];
+        result->FitMtM[iz] = bestFitMtm[k];
+        result->FitDustCoeff[iz] = bestISMCoeff[k];
+        result->FitMeiksinIdx[iz] = bestIGMIdx[k];
         result->Status[iz] = nStatus_OK;
 
         //*/
@@ -1398,24 +1373,21 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64 *spectrumRebinedLambda,
     //*
     Log.LogDetail("  Operator-ChisquareLog: FitRangez: interpolating (lin) z result from n=%d (min=%f, max=%f) to n=%d (min=%f, max=%f)",
                   z_vect_size,
-                  z_reversed_array[0],
-            z_reversed_array[z_vect_size - 1],
+                  z_vect.front(),
+            z_vect.back(),
             result->Redshifts.size(),
-            result->Redshifts[0],
-            result->Redshifts[result->Redshifts.size() - 1]);
-    InterpolateResult(chi2_reversed_array,
-                      z_reversed_array,
-                      &result->Redshifts.front(),
-                      z_vect_size,
-                      result->Redshifts.size(),
+            result->Redshifts.front(),
+            result->Redshifts.back());
+    InterpolateResult(bestChi2,
+                      z_vect,
+                      result->Redshifts,
                       result->ChiSquare, DBL_MAX);
     //*/
 
     //*
     // Interpolating intermediate chisquare results
-    Float64 *intermChi2BufferReversed_array =
-        new Float64[(int)intermediateChi2.size()]();
-    std::vector<Float64> intermChi2BufferRebinned_array(
+    TFloat64List intermChi2BufferReversed_array(intermediateChi2.size());
+    TFloat64List intermChi2BufferRebinned_array(
         result->Redshifts.size(), boost::numeric::bounds<float>::highest());
     for (Int32 kism = 0; kism < nISM; kism++)
     {
@@ -1426,9 +1398,8 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64 *spectrumRebinedLambda,
                 intermChi2BufferReversed_array[t] =
                     intermediateChi2[z_vect_size - 1 - t][kism][kigm];
             }
-            InterpolateResult(intermChi2BufferReversed_array, z_reversed_array,
-                              &result->Redshifts.front(), z_vect_size,
-                              result->Redshifts.size(),
+            InterpolateResult(intermChi2BufferReversed_array, z_vect,
+                              result->Redshifts,
                               intermChi2BufferRebinned_array, DBL_MAX);
             for (Int32 t = 0; t < result->Redshifts.size(); t++)
             {
@@ -1438,37 +1409,19 @@ Int32 COperatorChiSquareLogLambda::FitRangez(Float64 *spectrumRebinedLambda,
         }
     }
 
-    delete[] intermChi2BufferReversed_array;
-
-    delete[] z_reversed_array;
-    delete[] chi2_reversed_array;
-    delete[] amp_reversed_array;
-    delete[] amperr_reversed_array;
-    delete[] ampneg_reversed_array;
-    delete[] dtm_reversed_array;
-    delete[] mtm_reversed_array;
-    delete[] ismCoeff_reversed_array;
-    delete[] igmIdx_reversed_array;
-
-    delete[] spcRebinedFluxOverErr2;
-    delete[] oneSpcRebinedFluxOverErr2;
-    delete[] tplRebinedFlux;
-    delete[] tpl2RebinedFlux;
-    delete[] tplRebinedFluxIgm;
-
     freeFFTPlans();
     return 0;
 }
 
-Int32 COperatorChiSquareLogLambda::InterpolateResult(const Float64 *in,
-                                                     Float64 *inGrid,
-                                                     const Float64 *tgtGrid,
-                                                     Int32 n,
-                                                     Int32 tgtn,
+Int32 COperatorChiSquareLogLambda::InterpolateResult(const std::vector<Float64>& in,
+                                                     std::vector<Float64>& inGrid,
+                                                     const std::vector<Float64>& tgtGrid,
                                                      std::vector<Float64> &out,
                                                      Float64 defaultValue)
 {
     bool debug = 0;
+    Int32 n = inGrid.size();
+    Int32 tgtn = tgtGrid.size();
     out.resize(tgtn);
     for (Int32 j = 0; j < tgtn; j++)
     {
@@ -1516,7 +1469,7 @@ Int32 COperatorChiSquareLogLambda::InterpolateResult(const Float64 *in,
         }
     }
 
-    gsl_interp_init(interpolation, inGrid, in, n);
+    gsl_interp_init(interpolation, &inGrid.at(0), &in.at(0), n);
 
     for (Int32 j = 0; j < tgtn; j++)
     {
@@ -1529,8 +1482,8 @@ Int32 COperatorChiSquareLogLambda::InterpolateResult(const Float64 *in,
         }
 
         status = gsl_interp_eval_e(interpolation,
-                                   inGrid,
-                                   in,
+                                   &inGrid.at(0),
+                                   &in.at(0),
                                    Xrebin,
                                    accelerator,
                                    &out[j]); // lin
@@ -1554,8 +1507,8 @@ Int32 COperatorChiSquareLogLambda::InterpolateResult(const Float64 *in,
 }
 
 TInt32Range COperatorChiSquareLogLambda::FindTplSpectralIndex(
-    const Float64 *spcLambda, const Float64 *tplLambda, UInt32 nSpc,
-    UInt32 nTpl, TFloat64Range redshiftrange, Float64 redshiftStep)
+    const TAxisSampleList & spcLambda, const TAxisSampleList & tplLambda,
+        TFloat64Range redshiftrange, Float64 redshiftStep)
 {
     Float64 redshiftMargin =
         10.0 *
@@ -1563,6 +1516,9 @@ TInt32Range COperatorChiSquareLogLambda::FindTplSpectralIndex(
                       // there are spclambdamargin and tpllambdamargin
     Float64 spcLambdaMargin = abs(spcLambda[1] - spcLambda[0]);
     Float64 tplLambdaMargin = abs(tplLambda[1] - tplLambda[0]);
+
+    const UInt32 nTpl = tplLambda.size(),
+                 nSpc = spcLambda.size();
 
     //Log.LogInfo("  Operator-ChisquareLog: FindTplSpectralIndex: redshiftMargin = %f", redshiftMargin);
     //Log.LogInfo("  Operator-ChisquareLog: FindTplSpectralIndex: spcLambdaMargin = %f", spcLambdaMargin);
@@ -1661,7 +1617,10 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(const CSpe
         std::string opt_interp,
         Int32 opt_extinction,
         Int32 opt_dustFitting,
-        CPriorHelper::TPriorZEList logpriorze)
+        CPriorHelper::TPriorZEList logpriorze,
+        Bool keepigmism,
+        Float64 FitDustCoeff,
+        Float64 FitMeiksinIdx)
 {
     Log.LogInfo(
         "  Operator-ChisquareLog: starting computation for template: %s",
@@ -1848,7 +1807,6 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(const CSpe
     spectrumRebinedFluxAxis.SetSize(loglbdaCount);
     spectrumRebinedSpectralAxis.SetSize(loglbdaCount);
     m_mskRebinedLog.SetSize(loglbdaCount);
-    m_errorRebinedLog.SetSize(m_spectrumRebinedLog.GetSampleCount());
 
     if (m_opt_spcrebin)
     {
@@ -1914,79 +1872,44 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(const CSpe
         }
 
         bool enableVarianceWeightedRebin = true;
+        std:string errorRebinMethod = "rebin";
         if (enableVarianceWeightedRebin)
-        {
-            const TFloat64List &error = spectrum.GetFluxAxis().GetError();
-            CSpectrumFluxAxis errorFluxAxis(spectrum.GetSampleCount());
-            for (Int32 t = 0; t < spectrum.GetSampleCount(); t++)
-            {
-                errorFluxAxis[t] = error[t];
-            }
-            CSpectrumFluxAxis::RebinVarianceWeighted(
-                spectrum.GetFluxAxis(), spectrum.GetSpectralAxis(),
-                errorFluxAxis, targetSpectralAxis, spectrumRebinedFluxAxis,
-                spectrumRebinedSpectralAxis, m_errorRebinedLog, "lin");
-        } else
-        {
-            // rebin the spectrum
-            TFloat64Range spcLbdaRange(exp(loglbdamin - 0.5 * loglbdaStep),
-                                       exp(loglbdamax + 0.5 * loglbdaStep));
-            Float64 *pfgBuffer_unused = 0;
-            Float64 redshift_unused = 0.0;
-            CSpectrumFluxAxis::Rebin2(
-                spcLbdaRange, spectrum.GetFluxAxis(), pfgBuffer_unused,
-                redshift_unused, spectrum.GetSpectralAxis(), targetSpectralAxis,
-                spectrumRebinedFluxAxis, spectrumRebinedSpectralAxis,
-                m_mskRebinedLog, rebinMethod);
+            errorRebinMethod = "rebinVariance";
 
-            // rebin the variance
-            const TFloat64List &error = spectrum.GetFluxAxis().GetError();
-            CSpectrumFluxAxis errorFluxAxis(spectrum.GetSampleCount());
-            for (Int32 t = 0; t < spectrum.GetSampleCount(); t++)
-            {
-                errorFluxAxis[t] = error[t];
-            }
-            CSpectrumSpectralAxis errorRebinedSpectralAxis;
-            errorRebinedSpectralAxis.SetSize(loglbdaCount);
-            CMask error_mskRebinedLog;
-            error_mskRebinedLog.SetSize(loglbdaCount);
-
-            CSpectrumFluxAxis::Rebin2(
-                spcLbdaRange, errorFluxAxis, pfgBuffer_unused, redshift_unused,
-                spectrum.GetSpectralAxis(), targetSpectralAxis,
-                m_errorRebinedLog, errorRebinedSpectralAxis,
-                error_mskRebinedLog, rebinMethod);
-        }
-
-        // put the error in the spectrum object: needed for cstLog estimation
-        // (at least)
-        for (Int32 t = 0; t < m_spectrumRebinedLog.GetSampleCount(); t++)
-        {
-            m_spectrumRebinedLog.GetFluxAxis().GetError()[t] =
-                m_errorRebinedLog[t];
-        }
+        // rebin the spectrum
+        TFloat64Range spcLbdaRange(exp(loglbdamin - 0.5 * loglbdaStep),
+                                   exp(loglbdamax + 0.5 * loglbdaStep));
+        //linear
+        spectrum.Rebin(
+            spcLbdaRange, targetSpectralAxis,
+            m_spectrumRebinedLog,
+            m_mskRebinedLog, rebinMethod, errorRebinMethod);
 
         if (verboseExportLogRebin)
         {
             // save rebinned data
             FILE *f = fopen("loglbda_rebinlog_spclogrebin_dbg.txt", "w+");
-            for (Int32 t = 0; t < m_spectrumRebinedLog.GetSampleCount(); t++)
+            const TAxisSampleList & w = spectrumRebinedSpectralAxis.GetSamplesVector();
+            const TAxisSampleList & F = spectrumRebinedFluxAxis.GetSamplesVector();
+            for (Int32 t = 0; t < w.size(); t++)
             {
                 fprintf(f, "%f\t%e\n",
-                        m_spectrumRebinedLog.GetSpectralAxis()[t],
-                        m_spectrumRebinedLog.GetFluxAxis()[t]);
+                        w[t],
+                        F[t]);
             }
             fclose(f);
         }
         if (verboseExportLogRebin)
         {
-            // save rebinned data
+            // save error rebinned data
             FILE *f = fopen("loglbda_rebinlog_errorlogrebin_dbg.txt", "w+");
-            for (Int32 t = 0; t < m_errorRebinedLog.GetSamplesCount(); t++)
+            const TAxisSampleList & w = spectrumRebinedSpectralAxis.GetSamplesVector();
+            const TAxisSampleList & err = spectrumRebinedFluxAxis.GetError();
+            for (Int32 t = 0; t < w.size(); t++)
             {
                 fprintf(f, "%f\t%e\n",
-                        m_spectrumRebinedLog.GetSpectralAxis()[t],
-                        m_errorRebinedLog[t]);
+                        w[t],
+                        err[t]);
             }
             fclose(f);
         }
@@ -2048,7 +1971,7 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(const CSpe
             spectrumRebinedFluxAxis[t] = spectrum.GetFluxAxis()[lbdaMinIdx + t];
             spectrumRebinedSpectralAxis[t] =
                 spectrum.GetSpectralAxis()[lbdaMinIdx + t];
-            m_errorRebinedLog[t] =
+            spectrumRebinedFluxAxis.GetError()[t] =
                 spectrum.GetFluxAxis().GetError()[lbdaMinIdx + t];
             m_mskRebinedLog[t] = 1;
         }
@@ -2195,21 +2118,12 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(const CSpe
                          "modify the processing parameter <lambdarange>");
         }
 
-        Float64 *pfgBuffer_unused = 0;
-        Float64 redshift_unused = 0.0;
-        CSpectrumFluxAxis &templateRebinedFluxAxis =
-            m_templateRebinedLog.GetFluxAxis();
-        CSpectrumSpectralAxis &templateRebinedSpectralAxis =
-            m_templateRebinedLog.GetSpectralAxis();
-        templateRebinedFluxAxis.SetSize(tpl_loglbdaCount);
-        templateRebinedSpectralAxis.SetSize(tpl_loglbdaCount);
-        CMask tpl_mskRebinedLog;
-        tpl_mskRebinedLog.SetSize(tpl_loglbdaCount);
-        CSpectrumFluxAxis::Rebin2(
-            tplLbdaRange, tpl.GetFluxAxis(), pfgBuffer_unused, redshift_unused,
-            tpl.GetSpectralAxis(), tpl_targetSpectralAxis,
-            templateRebinedFluxAxis, templateRebinedSpectralAxis,
-            tpl_mskRebinedLog, rebinMethod);
+        tpl.Rebin(
+            tplLbdaRange,
+            tpl_targetSpectralAxis,
+            m_templateRebinedLog,
+            m_mskRebinedLog);
+
         if (verboseExportLogRebin)
         {
             // save rebinned data

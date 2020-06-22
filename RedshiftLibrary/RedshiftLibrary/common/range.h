@@ -47,6 +47,11 @@ template <typename T> class CRange
 
     T GetLength() const { return m_End - m_Begin; }
 
+    Bool IntersectWith(const CRange<T> r)
+    {
+        return Intersect(*this, r, *this);
+    }
+
     static Bool Intersect(const CRange<T> &a, const CRange<T> b,
                           CRange<T> &intersect)
     {
