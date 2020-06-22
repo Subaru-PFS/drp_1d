@@ -225,7 +225,13 @@ Bool COperatorDTreeBSolve::Solve(CDataStore &dataStore, const CSpectrum &spc, co
     if(opt_redshiftsupport == "full"){
         redshiftsChi2 = redshifts;
     }else if(opt_redshiftsupport == "extremaextended"){
-        redshiftsChi2= result->ExtremaResult.ExtremaExtendedRedshifts;
+        //transform std::vector<TFloat64List> into a TFloat64List
+        for(Int32 i = 0; i <result->ExtremaResult.ExtremaExtendedRedshifts.size(); i++){ 
+            for(Int32 j = 0; j <result->ExtremaResult.ExtremaExtendedRedshifts[i].size(); j++){
+                redshiftsChi2.push_back(result->ExtremaResult.ExtremaExtendedRedshifts[i][j]);
+            }
+        }
+        //redshiftsChi2= result->ExtremaResult.ExtremaExtendedRedshifts;
     }else{
         redshiftsChi2= result->ExtremaResult.Extrema;
     }

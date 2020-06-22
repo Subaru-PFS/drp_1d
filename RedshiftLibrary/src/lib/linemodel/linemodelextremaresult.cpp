@@ -1,6 +1,7 @@
 #include <RedshiftLibrary/linemodel/linemodelextremaresult.h>
 #include <RedshiftLibrary/statistics/pdfcandidateszresult.h>
 #include <RedshiftLibrary/processflow/datastore.h>
+#include <RedshiftLibrary/log/log.h>
 
 #include <boost/tokenizer.hpp>
 #include <boost/lexical_cast.hpp>
@@ -87,6 +88,91 @@ void CLineModelExtremaResult::Resize(Int32 size)
     FittedTplshapeMtm.resize(size);
 }
 
+bool CLineModelExtremaResult::RemoveSecondPassCandidatebyIdx(Int32 idx){
+    ExtremaPDF.erase(ExtremaPDF.begin() + idx);
+    ExtremaIDs.erase( ExtremaIDs.begin() + idx);
+    Extrema.erase( Extrema.begin() + idx);
+    ExtremaMerit.erase( ExtremaMerit.begin() + idx);
+    ExtremaMeritContinuum.erase( ExtremaMeritContinuum.begin() + idx);
+    DeltaZ.erase( DeltaZ.begin() + idx);
+    mTransposeM.erase( mTransposeM.begin() + idx);
+    CorrScaleMarg.erase( CorrScaleMarg.begin() + idx);
+    NDof.erase( NDof.begin() + idx);
+    ExtremaLastPass.erase( ExtremaLastPass.begin() + idx);
+    lmfitPass.erase( lmfitPass.begin() + idx);
+    snrHa.erase( snrHa.begin() + idx);
+    lfHa.erase( lfHa.begin() + idx);
+    snrOII.erase( snrOII.begin() + idx);
+    lfOII.erase( lfOII.begin() + idx);
+
+    Posterior.erase( Posterior.begin() + idx);
+    StrongELSNR.erase( StrongELSNR.begin() + idx);
+    StrongELSNRAboveCut.erase( StrongELSNRAboveCut.begin() + idx);
+    LogArea.erase( LogArea.begin() + idx);
+    LogAreaCorrectedExtrema.erase( LogAreaCorrectedExtrema.begin() + idx);
+    SigmaZ.erase( SigmaZ.begin() + idx);
+    bic.erase( bic.begin() + idx);
+    ContinuumIndexes.erase( ContinuumIndexes.begin() + idx);
+    OutsideLinesMask.erase( OutsideLinesMask.begin() + idx);
+    OutsideLinesSTDFlux.erase( OutsideLinesSTDFlux.begin() + idx);
+    OutsideLinesSTDError.erase( OutsideLinesSTDError.begin() + idx);
+
+    Elv.erase( Elv.begin() + idx);
+    Alv.erase( Alv.begin() + idx);
+    GroupsELv.erase( GroupsELv.begin() + idx);
+    GroupsALv.erase( GroupsALv.begin() + idx);
+
+    FittedTplName.erase( FittedTplName.begin() + idx);
+    FittedTplAmplitude.erase( FittedTplAmplitude.begin() + idx);
+    FittedTplMerit.erase( FittedTplMerit.begin() + idx);
+    FittedTplDustCoeff.erase( FittedTplDustCoeff.begin() + idx);
+    FittedTplMeiksinIdx.erase( FittedTplMeiksinIdx.begin() + idx);
+    FittedTplRedshift.erase( FittedTplRedshift.begin() + idx);
+    FittedTplDtm.erase( FittedTplDtm.begin() + idx);
+    FittedTplMtm.erase( FittedTplMtm.begin() + idx);
+    FittedTplLogPrior.erase( FittedTplLogPrior.begin() + idx);
+    FittedTplpCoeffs.erase( FittedTplpCoeffs.begin() + idx);
+
+    FittedTplshapeName.erase( FittedTplshapeName.begin() + idx);
+    FittedTplshapeIsmCoeff.erase( FittedTplshapeIsmCoeff.begin() + idx);
+    FittedTplshapeAmplitude.erase( FittedTplshapeAmplitude.begin() + idx);
+    FittedTplshapeDtm.erase( FittedTplshapeDtm.begin() + idx);
+    FittedTplshapeMtm.erase(FittedTplshapeMtm.begin() + idx);
+    ExtremaExtendedRedshifts.erase(ExtremaExtendedRedshifts.begin() + idx);
+    return true;
+}
+
+/** 
+ * set writing order for first pass candidates based on sorted IDS using integrated PDF.
+ * This is useful when some of first-pass candidates are cut off or eliminated in the second pass
+*/
+Int32 CLineModelExtremaResult::FixRanksUsingSortedIDs(TInt32List& Rank_PDF, std::vector<std::string> ids) const 
+{       Rank_PDF.clear();
+        //getcorresponding Rank:
+        for(Int32 i = 0; i <ids.size(); i++){
+            std::string sub = ids[i].substr(3, ids[i].length()); 
+            int number  = 0;
+            for(auto ch : sub) {
+                number = (number * 10) + (ch - '0');
+            }
+            Rank_PDF.push_back(number);//get last character
+        }
+        for(Int32 i = 0; i<Extrema.size(); i++){
+            bool found = false;
+            for(Int32 j = 0; j<ids.size(); j++){
+                if(Rank_PDF[j] == i){
+                    found = true;
+                    break; 
+                }
+            }
+            if(!found)
+                Rank_PDF.push_back(i);
+        }
+        if(Rank_PDF.size()!= Extrema.size()){
+            return -1;
+        }
+        return 0;
+}
 
 /**
  * \brief Empty method.
@@ -114,6 +200,29 @@ void CLineModelExtremaResult::Save( const CDataStore& store, std::ostream& strea
     auto candResults = std::dynamic_pointer_cast<const CPdfCandidateszResult>( res.lock());
     TInt32List Rank_PDF = candResults->Rank;
 
+    //below is a sign that we are saving firstpass data
+    //TODO: check if removing these info is valid for all types of spectra
+    bool zeros = std::all_of(ExtremaMeritContinuum.begin(), ExtremaMeritContinuum.end(), [](int i) { return i==0; });
+    if(zeros){
+        //saving firstpass data
+        //in the case where some candidates from first-pass are eliminated from second-pass
+        //make sure to save all data we collected from first pass
+        Int32 n = Rank_PDF.size();
+        if(n<Extrema.size()){
+            //in this case, rank doesnt mean anything
+            /*Rank_PDF.clear();
+            for(Int32 i = 0; i<Extrema.size(); i++){
+                Rank_PDF.push_back(i);
+            }*/
+            std::vector<std::string> ids = candResults->ExtremaIDs;
+            Int32 ret = FixRanksUsingSortedIDs(Rank_PDF, ids);
+            if(ret<0){
+                Log.LogError("   CLineModelExtremaResult::FixRanksUsingSortedIDs failed!");
+                throw std::runtime_error("   CLineModelExtremaResult::FixRanksUsingSortedIDs failed!");
+            }
+        }
+    }
+
     // save extrema list, on 1 line
     if(Extrema.size()>0){
         stream <<  "#Extrema for z = {";
@@ -132,9 +241,6 @@ void CLineModelExtremaResult::Save( const CDataStore& store, std::ostream& strea
         }
         stream << "}" << std::endl;
     }
-   //below is a sign that we are saving firstpass data
-   //TODO: check if removing these info is valid for all types of spectra
-   bool zeros = std::all_of(ExtremaMeritContinuum.begin(), ExtremaMeritContinuum.end(), [](int i) { return i==0; });
    if(!zeros){
         // save extrema reference rank, used to map
         if(Extrema.size()>0){
@@ -616,6 +722,22 @@ void CLineModelExtremaResult::SaveJSON( const CDataStore& store, std::ostream& s
   auto candResults = std::dynamic_pointer_cast<const CPdfCandidateszResult>( res.lock());
   TInt32List order = candResults->Rank;
 
+  bool zeros = std::all_of(ExtremaMeritContinuum.begin(), ExtremaMeritContinuum.end(), [](int i) { return i==0; });
+  if(zeros){
+        //saving firstpass data
+        //in the case where some candidates from first-pass are eliminated from second-pass
+        //make sure to save all data we collected from first pass
+        Int32 n = order.size();
+        if(n<Extrema.size()){
+            order.clear(); //in this case, rank doesnt mean anything
+            std::vector<std::string> ids = candResults->ExtremaIDs;
+            Int32 ret = FixRanksUsingSortedIDs(order, ids);
+            if(ret<0){
+                Log.LogError("   CLineModelExtremaResult::FixRanksUsingSortedIDs failed!");
+                throw std::runtime_error("   CLineModelExtremaResult::FixRanksUsingSortedIDs failed!");
+            }
+        }
+    }
   stream << "{"<< std::endl;
   // save extrema list, on 1 line
   SaveTFloat64List(stream,"z_extrema", Extrema, order);
@@ -627,7 +749,6 @@ void CLineModelExtremaResult::SaveJSON( const CDataStore& store, std::ostream& s
   SaveStringVector(stream,"z_extremaIDs", ExtremaIDs, order);
   stream << "," << std::endl;
 
-  bool zeros = std::all_of(ExtremaMeritContinuum.begin(), ExtremaMeritContinuum.end(), [](int i) { return i==0; });
   if(!zeros){
     // save extremum final rank list, on 1 line
     std::vector<int> finalRanks(Extrema.size());

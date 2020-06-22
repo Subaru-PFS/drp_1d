@@ -31,6 +31,8 @@ public:
         return 1;
     }
     //void Load( std::istream& stream );
+    bool RemoveSecondPassCandidatebyIdx(Int32 idx);
+    Int32 FixRanksUsingSortedIDs(TInt32List& Rank_PDF, std::vector<std::string> ids) const;
 
     //Extrema results
     TFloat64List            ExtremaPDF;    // Ranks extrema
@@ -51,7 +53,7 @@ public:
     TFloat64List            lfOII;
 
     //Deprecated?
-    TFloat64List            ExtremaExtendedRedshifts;    // z range around extrema
+    std::vector<TFloat64List> ExtremaExtendedRedshifts;    // z range around extrema
     TFloat64List            Posterior;    // z extrema
     TFloat64List            LogArea;    // log area for each extrema
     TFloat64List            LogAreaCorrectedExtrema;    //corrected z for each extrema

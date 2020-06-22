@@ -2,13 +2,13 @@
 #include <RedshiftLibrary/statistics/pdfcandidateszresult.h>
 #include <RedshiftLibrary/processflow/context.h>
 #include <RedshiftLibrary/operator/linemodelresult.h>
+#include <RedshiftLibrary/extremum/extremum.h>
 #include <stdio.h>
 #include <float.h>
 #include <math.h>
 #include <RedshiftLibrary/log/log.h>
 #include <RedshiftLibrary/operator/pdfMargZLogResult.h>
 #include <RedshiftLibrary/statistics/pdfz.h>
-
 
 using namespace NSEpic;
 
@@ -194,14 +194,22 @@ Bool CLineModelSolveResult::GetBestRedshiftFromPdf(const CDataStore& store,
     auto res = store.GetGlobalResult( scope.c_str() );
     auto candResults = std::dynamic_pointer_cast<const CPdfCandidateszResult>( res.lock());
     TFloat64List ExtremaPDF = candResults->ValSumProba;
+    //reading from candResults cause deltaz is computed correctly there and what is saved in datastore is bad
+    TFloat64List ExtremaDeltaz = candResults->Deltaz;
+    TFloat64List Extrema = candResults->Redshifts;
     Int32 bestIdx = candResults->Rank[0];
 
+    if(bestIdx>=Extrema.size() || !Extrema.size()){
+       Log.LogError("CLineModelSolveResult::GetBestRedshiftFromPdf: Can't access best redshift ");
+       throw runtime_error("Can't access best redshift");
+    }
     if(results.expired())
         return false;
-
-    redshift = lineModelResult->ExtremaResult.Extrema[bestIdx];
+    //is not possible, we are reading values from datastore that we update in pdfzcandidatesresult!!!
+    redshift = Extrema[bestIdx];
     probaLog = ExtremaPDF[bestIdx];
-    sigma = lineModelResult->ExtremaResult.DeltaZ[bestIdx];
+    sigma = ExtremaDeltaz[bestIdx];
+    //not sure that below values are correct! im right..they are not
     snrHa = lineModelResult->ExtremaResult.snrHa[bestIdx];
     lfHa = lineModelResult->ExtremaResult.lfHa[bestIdx];
     snrOII = lineModelResult->ExtremaResult.snrOII[bestIdx];

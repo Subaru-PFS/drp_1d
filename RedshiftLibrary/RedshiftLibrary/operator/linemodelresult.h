@@ -49,7 +49,6 @@ public:
 
     Float64 GetMinChiSquare() const;
     Float64 GetMaxChiSquare() const;
-
     Int32 ResizeChisquareTplShapes( Int32 nTplshapes, Int32 nRedshifts );
     Int32 SetChisquareTplshapeResult(Int32 index,
                                      TFloat64List chisquareTplshape,
@@ -85,7 +84,6 @@ public:
     //Extrema results
     CLineModelExtremaResult ExtremaResult;
 
-    //
     COperator::TStatusList  Status;
     CRayCatalog::TRayVector restRayList;
     Int32 nSpcSamples = 0;

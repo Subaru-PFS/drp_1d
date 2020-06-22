@@ -28,6 +28,10 @@ public:
     Int32 Compute(std::vector<Float64> zc , std::vector<Float64> Pdfz, std::vector<Float64> PdfProbalog, std::vector<Float64> wdwWidth = std::vector<Float64>(), std::vector<std::string> IDs = std::vector<std::string>());
     Int32 SetIntegrationWindows( std::vector<Float64> Pdfz, std::vector<Float64> zc,  std::vector<Float64> deltaz, std::vector<Float64>& halfWidth_right, std::vector<Float64>& halfWidth_left);
 
+    Bool GetBestRedshiftsFromPdf(const CDataStore& store, 
+                                TFloat64List Extrema,  
+                                std::vector<TFloat64List> ExtremaExtendedRedshifts, 
+                                TFloat64List& candidates) const;
     Int32                       optMethod; //0: direct integration, 1:gaussian fit
     Float64                     Fullwidth;
     Float64                     dzDefault;
