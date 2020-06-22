@@ -242,7 +242,7 @@ Bool CMethodChisquareLogSolve::Solve(CDataStore& resultStore,
                                                                                                            opt_interp,
                                                                                                            enable_extinction,
                                                                                                            option_dustFitting ) );
-        chisquareResult->CallFind();
+        chisquareResult->CallFindExtrema();
 
         if( !chisquareResult )
         {

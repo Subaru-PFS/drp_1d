@@ -39,7 +39,7 @@ public:
     TFloat64List            FitDtM;
     TFloat64List            FitMtM;
     TFloat64List            LogPrior;
-    bool    CallFind();
+    bool    CallFindExtrema();
     //intermediate chisquare results
     std::vector<std::vector<TFloat64List>> ChiSquareIntermediate; // chi2 for each intermediate results (for each config [z][Calzetti][Meiksin])
     std::vector<std::vector<TFloat64List>> IsmDustCoeffIntermediate; // calzetti dust coeff for each intermediate result (for each config [z][Calzetti][Meiksin])

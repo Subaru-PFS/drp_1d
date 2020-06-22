@@ -294,7 +294,7 @@ void CChisquareResult::SaveLine( const CDataStore& store, std::ostream& stream )
     stream << "ChisquareResult" << "\t" << Redshifts.size() << std::endl;
 }
 
-bool CChisquareResult::CallFind() 
+bool CChisquareResult::CallFindExtrema() 
 {
   Int32 extremumCount = 10;
   Float64 radius = 0.001;
