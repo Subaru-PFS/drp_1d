@@ -2243,47 +2243,6 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(const CSpe
         m_spectrumRebinedLog, lambdaRange); // 0.0;//Todo: check how to estimate
                                             // that value for loglambda//
 
-    // Mira: looking for continuum extrema 
-    //moved to chisquarelogsolve.cpp
-    /*Int32 extremumCount = 10;
-    if (result->Redshifts.size() > extremumCount)
-    {   Float64 radius = 0.005;
-        TPointList extremumList;
-        TFloat64Range redshiftsRange(
-            result->Redshifts[0],
-            result->Redshifts[result->Redshifts.size() - 1]);
-        CExtremum extremum(redshiftsRange, extremumCount, radius, true);
-        extremum.Find(result->Redshifts, result->ChiSquare, extremumList);
-
-        // store extrema results
-        result->Extrema.resize(extremumList.size());
-        for (Int32 i = 0; i < extremumList.size(); i++)
-        {
-            result->Extrema[i] = extremumList[i].X;
-        }
-
-    } else
-    {
-        // store extrema results
-        result->Extrema.resize(result->Redshifts.size());
-        TFloat64List tmpX;
-        TFloat64List tmpY;
-        for (Int32 i = 0; i < result->Redshifts.size(); i++)
-        {
-            tmpX.push_back(result->Redshifts[i]);
-            tmpY.push_back(result->ChiSquare[i]);
-        }
-        // sort the results by merit
-        CQuickSort<Float64> sort;
-        vector<Int32> sortedIndexes(result->Redshifts.size());
-        sort.SortIndexes(tmpY.data(), sortedIndexes.data(),
-                         sortedIndexes.size());
-        for (Int32 i = 0; i < result->Redshifts.size(); i++)
-        {
-            result->Extrema[i] = tmpX[sortedIndexes[i]];
-        }
-    }*/
-
     return result;
 }
 

@@ -1037,9 +1037,6 @@ std::shared_ptr<COperatorResult> COperatorChiSquare2::Compute(const CSpectrum& s
     //estimate CstLog for PDF estimation
     result->CstLog = EstimateLikelihoodCstLog(spectrum, lambdaRange);
 
-    if(opt_interp=="precomputedfinegrid"){
-        free(precomputedFineGridTplFlux);
-    }
     return result;
 
 }

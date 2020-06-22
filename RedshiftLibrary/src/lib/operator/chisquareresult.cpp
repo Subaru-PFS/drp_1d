@@ -300,59 +300,12 @@ bool CChisquareResult::CallFindExtrema()
   Float64 radius = 0.001;
   TPointList extremumList;
   TFloat64Range redshiftsRange( Redshifts[0], Redshifts[Redshifts.size() - 1]);
-//*
-  if (Redshifts.size() > extremumCount) {
-    CExtremum extremum(redshiftsRange, extremumCount, true);
-    extremum.Find(Redshifts, ChiSquare, extremumList);
-    // Refine Extremum with a second maximum search around the z candidates:
 
-    for (Int32 i = 0; i < extremumList.size(); i++) {
-      Float64 x = extremumList[i].X;
-      Float64 left_border = std::max(redshiftsRange.GetBegin(), x - radius);
-      Float64 right_border = std::min(redshiftsRange.GetEnd(), x + radius);
-
-      TPointList extremumListFine;
-      TFloat64Range rangeFine = TFloat64Range(left_border, right_border);
-      CExtremum extremumFine(rangeFine, 1, true);
-      extremumFine.Find(Redshifts, ChiSquare,
-        extremumListFine);
-      if (extremumListFine.size() > 0) {
-        extremumList[i] = extremumListFine[0];
-      }
-    }
-    // store extrema results
-    Extrema.resize(extremumCount);
-    for (Int32 i = 0; i < extremumList.size(); i++) {
-
-      Extrema[i] = extremumList[i].X;
-    }
-
-  } else {
-    // store extrema results
-    Extrema.resize(Redshifts.size());
-    TFloat64List tmpX;
-    TFloat64List tmpY;
-    for (Int32 i = 0; i < Redshifts.size(); i++) {
-      tmpX.push_back(Redshifts[i]);
-      tmpY.push_back(ChiSquare[i]);
-    }
-    // sort the results by merit
-    NSEpic::CQuickSort < Float64 > sort;
-    vector < Int32 > sortedIndexes(Redshifts.size());
-    sort.SortIndexes(tmpY.data(), sortedIndexes.data(), sortedIndexes.size());
-    for (Int32 i = 0; i < Redshifts.size(); i++) {
-      Extrema[i] = tmpX[sortedIndexes[i]];
-    }
-  }
-//*
-    //Important:
-    //apart from variable declarations, above code is meant to disappear once branch 5619 will be merged into develop
-/*
     CExtremum extremum(redshiftsRange, extremumCount, radius, true);
 
-    if (m_result->Redshifts.size() == 1 || Redshifts.size() > extremumCount)
+    if (Redshifts.size() == 1 || Redshifts.size() > extremumCount)
     {
-        extremum.DefaultExtremum( m_result->Redshifts, m_result->ChiSquare, m_firstpass_extremumList); 
+        extremum.DefaultExtremum( Redshifts, ChiSquare, extremumList); 
 
     } else{
         extremum.Find(Redshifts, ChiSquare, extremumList);   
@@ -361,8 +314,6 @@ bool CChisquareResult::CallFindExtrema()
     Extrema.resize(extremumCount);
     for (Int32 i = 0; i < extremumList.size(); i++) {
       Extrema[i] = extremumList[i].X;
-    }
-
-*/   
+    }  
   return true;
 }
