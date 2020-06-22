@@ -183,36 +183,30 @@ Bool CQualz::ExtractFeaturesPDF(CDataStore &resultStore,
         // std::cout<<"extremumList.size() = " <<
         // extremumList.size()<<std::endl;
 
-        if (extremumList.size() <= 1)
+        Bool noExtremum = false;
+        if (extremumList.size() == 0)
         {
-            if (extremumList.size() == 0)
-            {
-                dist_peaks.X = NAN; // distance in z between the two first best
-                                    // peaks in zPDF
-                dist_peaks.Y = NAN; // distance in pz
-                significant_peaks = -1;
-                nanVector = true;
-            } else
-            {
-                dist_peaks.X =
-                    0; // distance in z between the two first best peaks in zPDF
-                dist_peaks.Y = 1; // distance in pz
-                significant_peaks = 1;
-            }
+            dist_peaks.X = NAN; // distance in z between the two first best peaks in zPDF
+            dist_peaks.Y = NAN; // distance in pz
+            significant_peaks = -1;
+            noExtremum = true;
+        } else if (extremumList.size() == 1)
+        {
+            dist_peaks.X = 0; // distance in z between the two first best peaks in zPDF
+            dist_peaks.Y = 1; // distance in pz
+            significant_peaks = 1;
         } else
         {
-            dist_peaks.X =
-                abs(extremumList[0].X -
-                    extremumList[1].X); // distance in z between the two first
-                                        // best peaks in zPDF
-            dist_peaks.Y = (exp(extremumList[0].Y + lbins) -
-                            exp(extremumList[1].Y + lbins)); // distance in pz
+            // distance in z between the two first best peaks in zPDF
+            dist_peaks.X = abs(extremumList[0].X - extremumList[1].X);
+            // distance in pz
+            dist_peaks.Y = (exp(extremumList[0].Y + lbins) - exp(extremumList[1].Y + lbins));
         }
 
-        if (nanVector)
+        if (noExtremum)
         {
             Log.LogError("ZClassifier: ExtractFeaturesPDF: %d extrema found", extremumList.size());
-            throw runtime_error("ZClassifier: ExtractFeaturesPDF: nanVector here");
+            throw runtime_error("ZClassifier: ExtractFeaturesPDF: no extremum found");
         } else
         {
 
