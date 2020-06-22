@@ -21,9 +21,9 @@ public:
     ~CLineModelExtremaResult();
 
     void Resize(Int32 size);
-
-    void Save( const CDataStore& store, std::ostream& stream) const;
-    void SaveJSON( const CDataStore& store, std::ostream& stream) const;
+    
+    void Save( const CDataStore& store, std::ostream& stream ) const;
+    void SaveJSON( const CDataStore& store, std::ostream& stream ) const;
 
     void SaveLine( const CDataStore& store, std::ostream& stream ) const;
     inline Int32 GetEvidenceFromPdf(const CDataStore& store, Float64 &evidence) const
@@ -94,6 +94,7 @@ public:
     TFloat64List      FittedTplshapeDtm;   //dtm of the best template fitted for tplcorr/tplshape
     TFloat64List      FittedTplshapeMtm;   //mtm of the best template fitted for tplcorr/tplshape
     TFloat64List      FittedTplshapeIsmCoeff;   //IsmCoeff/EBMV of the best template fitted for tplcorr/tplshape
+
 
 };
 

@@ -181,10 +181,6 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
     //               m_opt_tplfit_ignoreLinesSupport = (yes, no) defines which method should be used
     bool enableOrtho = !m_opt_tplfit_ignoreLinesSupport && (opt_continuumcomponent == "tplfit" || opt_continuumcomponent == "tplfitauto");
     Log.LogInfo("  Operator-Linemodel: TemplatesOrthogonalization enabled = %d", enableOrtho);
-    //orthogonalize templates 
-    //Mira: my guess is that the passage by CTemplatesortho is obligatory!; it s enableortho that will activate the orthog or not
-    //if not activate, templates are returned the same (just different type); otherwise orthog happens
-    //if it's like this, then we just need to make enableOrtho takes into account the value of m_opt_tplfit_ignoreLinesSupport
 
     // prepare continuum templates catalog
     CTemplatesOrthogonalization tplOrtho(
@@ -474,9 +470,7 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
     Log.LogInfo("  Operator-Linemodel: set abs lines limit to %f (ex: -1 means "
                 "disabled)",
                 absLinesLimit);
-//Mira: ignorelistmask should take effect here below:
-/*??not sure anymore
-*/
+
     // Set model parameter: continuum least-square estimation fast
     // note: this fast method requires continuum templates and linemodels to be
     // orthogonal. The velfit option turns this trickier...
@@ -894,34 +888,35 @@ Int32 COperatorLineModel::ComputeCandidates(const Int32 opt_extremacount,
                  "redshiftsRange.GetEnd() = %f",
                  redshiftsRange.GetBegin(), redshiftsRange.GetEnd());
 
+    Bool invertForMinSearch = true; 
+    if(opt_sign == 1){
+     invertForMinSearch = false;
+    }
+
+    Int32 extremacount = 5;
+    /*if(opt_extremacount > extremacount)
+        extremacount = opt_extremacount;*/
+    CExtremum extremum(redshiftsRange, /*opt_*/extremacount, m_secondPass_extensionradius, invertForMinSearch);
+
     if (m_result->Redshifts.size() == 1)
     {
-        m_firstpass_extremumList.push_back(
-            SPoint(m_result->Redshifts[0], m_result->ChiSquare[0]));
+        extremum.DefaultExtremum( m_result->Redshifts, m_result->ChiSquare, m_firstpass_extremumList); 
         Log.LogInfo("  Operator-Linemodel: found only 1 redshift calculated, "
                     "thus using only 1 extremum");
-    } else if (opt_extremacount == -1)
+    } else if (/*opt_*/extremacount == -1)
     {
-        for (Int32 ke = 0; ke < m_result->Redshifts.size(); ke++)
-        {
-            m_firstpass_extremumList.push_back(
-                SPoint(m_result->Redshifts[ke], m_result->ChiSquare[ke]));
-        }
+        extremum.DefaultExtremum( m_result->Redshifts, m_result->ChiSquare, m_firstpass_extremumList);
         Log.LogInfo("  Operator-Linemodel: all initial redshifts considered as "
                     "extrema");
-    } else
-    {
+    } else{
         Log.LogInfo("  Operator-Linemodel: ChiSquare min val = %e",
                     m_result->GetMinChiSquare());
         Log.LogInfo("  Operator-Linemodel: ChiSquare max val = %e",
                     m_result->GetMaxChiSquare());
-        Bool invertForMinSearch = true;
-        if (opt_sign == 1)
-        {
-            invertForMinSearch = false;
-        }
-        CExtremum extremum(redshiftsRange, opt_extremacount, invertForMinSearch,
-                           2);
+        
+        if(meritCut>0.0)
+            extremum.SetMeritCut(meritCut);
+
         extremum.Find(m_result->Redshifts, floatValues, m_firstpass_extremumList);
         Log.LogInfo("  Operator-Linemodel: found %d extrema",
                     m_firstpass_extremumList.size());
@@ -932,49 +927,6 @@ Int32 COperatorLineModel::ComputeCandidates(const Int32 opt_extremacount,
             return -1;
         }
     }
-
-    // remove extrema with merit threshold (input floatValues MUST be log-proba !)
-    if(meritCut>0.0){
-        Float64 meritThres = meritCut; //30=default logProba value for 1% missed values on PFS-cosmo noOiiDoublet
-        Int32 keepMinN = 2;
-        Int32 nExtrema = m_firstpass_extremumList.size();
-        Int32 iExtremumFinalList = 0;
-        for (Int32 i = 0; i < nExtrema; i++)
-        {
-            Float64 meritDiff = m_firstpass_extremumList[0].Y-m_firstpass_extremumList[iExtremumFinalList].Y;
-            if(meritDiff>meritThres && i>=keepMinN)
-            {
-                Log.LogInfo("  Operator-Linemodel: Candidates selection by proba cut: removing i=%d, final_i=%d, e.X=%f, e.Y=%e",
-                            i,
-                            iExtremumFinalList,
-                            m_firstpass_extremumList[iExtremumFinalList].X,
-                            m_firstpass_extremumList[iExtremumFinalList].Y);
-                m_firstpass_extremumList.erase(m_firstpass_extremumList.begin() + iExtremumFinalList);
-            }else{
-                iExtremumFinalList++;
-            }
-        }
-    }
-
-    /*
-    // Refine Extremum with a second maximum search around the z candidates:
-    // This corresponds to the finer xcorrelation in EZ Pandora (in standard_DP
-    fctn in SolveKernel.py) Float64 radius = 0.001; for( Int32 i=0;
-    i<m_firstpass_extremumList.size(); i++ )
-    {
-        Float64 x = m_firstpass_extremumList[i].X;
-        Float64 left_border = max(redshiftsRange.GetBegin(), x-radius);
-        Float64 right_border=min(redshiftsRange.GetEnd(), x+radius);
-
-        TPointList m_extremumListFine;
-        TFloat64Range rangeFine = TFloat64Range( left_border, right_border );
-        CExtremum extremumFine( rangeFine , 1, true);
-        extremumFine.Find( m_result->Redshifts, m_result->ChiSquare,
-    m_extremumListFine ); if(m_extremumListFine.size()>0){ m_firstpass_extremumList[i] =
-    m_extremumListFine[0];
-        }
-    }
-    //*/
 
     // extend z around the extrema
     m_result->ExtremaResult.ExtremaExtendedRedshifts.resize(m_firstpass_extremumList.size());
@@ -1089,7 +1041,7 @@ Int32 COperatorLineModel::Combine_firstpass_candidates(std::shared_ptr<CLineMode
         //append the candidate to m_firstpass_extremumList and m_firstpass_extremaResult
         m_firstpass_extremumList.push_back(SPoint(z_fpb, m_fpb));
 
-        //* duplicate code
+        
         // extend z around the extrema
         TFloat64Range redshiftsRange(
             m_result->Redshifts[0],
@@ -1293,7 +1245,6 @@ Int32 COperatorLineModel::ComputeSecondPass(CDataStore &dataStore,
                                   lambdaRange,
                                   opt_continuumreest,
                                   2);
-
     }
 
     boost::chrono::thread_clock::time_point stop_secondpass =
@@ -1931,9 +1882,9 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
                     Float64 vSupLim;
                     Float64 vStep;
 
-                    Float64 dzInfLim = opt_manvelfit_dzmin;
+                    Float64 dzInfLim = roundf(opt_manvelfit_dzmin*10000)/10000;//set precision to 10^4
                     Float64 dzStep = opt_manvelfit_dzstep;
-                    Float64 dzSupLim = opt_manvelfit_dzmax;
+                    Float64 dzSupLim = roundf(10000*opt_manvelfit_dzmax)/10000;
 
                     if (iLineType == 0)
                     {

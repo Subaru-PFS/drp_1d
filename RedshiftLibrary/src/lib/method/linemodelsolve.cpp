@@ -1322,7 +1322,7 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
     return true;
 }
 
-Bool CLineModelSolve::ExtractCandidateResults(CDataStore &store, std::vector<Float64> zcandidates_unordered_list)
+Bool CLineModelSolve::ExtractCandidateResults(CDataStore &store, std::vector<Float64> zcandidates_unordered_list, Int32 maxCount)
 {
         Log.LogInfo( "Computing candidates Probabilities" );
         std::shared_ptr<CPdfCandidateszResult> zcand = std::shared_ptr<CPdfCandidateszResult>(new CPdfCandidateszResult());
@@ -1352,17 +1352,34 @@ Bool CLineModelSolve::ExtractCandidateResults(CDataStore &store, std::vector<Flo
         }
         zcand->Compute(zcandidates_unordered_list, logzpdf1d->Redshifts, logzpdf1d->valProbaLog, deltaz, v->ExtremaResult.ExtremaIDs);
 
-        store.StoreScopedGlobalResult( "candidatesresult", zcand ); 
-
         std::vector<std::string> info {"spc", "fit", "fitcontinuum", "rules", "continuum"};
+        Int32 s = zcand->Rank.size();
+        Int32 l = std::min(maxCount, s);
         for(Int32 f = 0; f<info.size(); f++) {
-            for( Int32 i = 0; i<zcand->Rank.size(); i++){
+            for( Int32 i = 0; i<l; i++){
                 std::string fname_new =
                 (boost::format("linemodelsolve.linemodel_%1%_extrema_%2%") % info[f] % i).str();
                 std::string fname_old =
                 (boost::format("linemodelsolve.linemodel_%1%_extrema_tmp_%2%") % info[f] % zcand->Rank[i]).str();
                 store.ChangeScopedGlobalResult(fname_old, fname_new);    
             }
+            //TODO: Delete extra tmp data corresponding to truncated candidates
+            //if a truncation should happen
+            if(zcand->Rank.size() > maxCount){
+                for(Int32 i = maxCount; i<zcand->Rank.size(); i++){
+                    std::string fname_old =
+                    (boost::format("linemodelsolve.linemodel_%1%_extrema_tmp_%2%") % info[f] % zcand->Rank[i]).str();
+                    store.DeleteScopedGlobalResult(fname_old); 
+                }
+            }
         }
+
+        //Truncate only Rank size since is the only sorted vector
+        //the real truncation happens at saving time, into output files
+        if(zcand->Rank.size()>maxCount)
+            zcand->Rank.resize(maxCount);
+
+        store.StoreScopedGlobalResult( "candidatesresult", zcand );
+
 return true;
 }

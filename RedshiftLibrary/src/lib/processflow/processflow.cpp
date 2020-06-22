@@ -86,10 +86,13 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
     TFloat64Range lambdaRange;
     TFloat64Range redshiftRange;
     Float64       redshiftStep;
+    Float64       maxCount; 
 
     ctx.GetParameterStore().Get( "lambdarange", lambdaRange );
     ctx.GetParameterStore().Get( "redshiftrange", redshiftRange );
     ctx.GetParameterStore().Get( "redshiftstep", redshiftStep );
+    ctx.GetDataStore().GetScopedParam( "linemodelsolve.linemodel.extremacount", maxCount);
+
     TFloat64Range spcLambdaRange;
     ctx.GetSpectrum().GetSpectralAxis().ClampLambdaRange( lambdaRange, spcLambdaRange );
 
@@ -458,7 +461,8 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
                 Log.LogError( "Failed to get z candidates from these results");
             }
             //compute the integratedPDF and sort candidates based on intg PDF
-            Bool b = Solve.ExtractCandidateResults(ctx.GetDataStore(), zcandidates_unordered_list);
+            //truncate based on maxCount
+            Bool b = Solve.ExtractCandidateResults(ctx.GetDataStore(), zcandidates_unordered_list, maxCount);
         }
 
     }else if(methodName  == "zweimodelsolve" ){
