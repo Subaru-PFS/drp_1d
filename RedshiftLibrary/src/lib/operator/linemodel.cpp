@@ -503,7 +503,7 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
     boost::chrono::thread_clock::time_point start_mainloop =
         boost::chrono::thread_clock::now();
 
-    boost::progress_display show_progress(m_result->Redshifts.size());
+    //std::cout<<"First Pass"<<std::endl;
     //#pragma omp parallel for
     for (Int32 i = 0; i < m_result->Redshifts.size(); i++)
     {
@@ -575,7 +575,6 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
             m_result->ScaleMargCorrectionContinuum[i] =
                 m_result->ScaleMargCorrectionContinuum[i-1];
         }
-        ++show_progress;
     }
 
     // now interpolate large grid merit results onto the fine grid
@@ -1711,6 +1710,7 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
     }
 
     m_secondpass_parameters_extremaResult.Resize(m_firstpass_extremumList.size());
+    //std::cout << "Second Pass" << std::endl;
     for (Int32 i = 0; i < m_firstpass_extremumList.size(); i++)
     {
         Log.LogInfo("");
@@ -1871,7 +1871,6 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
                     m_model->SetFittingMethod("individual");
                 }
                 m_model->SetForcedisableTplratioISMfit(m_model->m_opt_firstpass_forcedisableTplratioISMfit); //todo, add new param for this ?
-
                 // m_model->m_enableAmplitudeOffsets = true;
                 // contreest_iterations = 1;
                 std::vector<std::vector<Int32>> idxVelfitGroups;
@@ -1981,8 +1980,7 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
                         Log.LogInfo("  Operator-Linemodel: manualStep n=%d", nDzSteps);
                     }
 
-                    Int32 n_progresssteps = idxVelfitGroups.size() * nDzSteps * nVelSteps;
-                    boost::progress_display show_progress(n_progresssteps);
+
                     for (Int32 kgroup = 0; kgroup < idxVelfitGroups.size(); kgroup++)
                     {
                         Log.LogInfo("  Operator-Linemodel: manualStep fitting group=%d", kgroup);
@@ -2064,9 +2062,9 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
                                         z_vOptim = zTest;
                                     }
                                 }
-                                ++show_progress;
                             }
                         }
+
                         if (vOptim != -1.0)
                         {
                             Log.LogInfo("  Operator-Linemodel: best Velocity found = %.1f", vOptim);
@@ -2297,7 +2295,7 @@ Int32 COperatorLineModel::RecomputeAroundCandidates(TPointList input_extremumLis
                         n_progresssteps,
                         m_result->Redshifts[izmin_cand],
                         m_result->Redshifts[izmax_cand]);
-            boost::progress_display show_progress(n_progresssteps);
+
             for (Int32 iz = izmin_cand; iz <= izmax_cand; iz++)
             {
                 Log.LogDetail("Fit for Extended redshift %d, z = %f", iz, m_result->Redshifts[iz]);
@@ -2352,7 +2350,6 @@ Int32 COperatorLineModel::RecomputeAroundCandidates(TPointList input_extremumLis
 
                     idx2 = iz;
                 }
-                ++show_progress;
             }
             // m_model->SetFittingMethod(opt_fittingmethod);
             //if the recomputed peak corresponds to a candidate on the border of the recompution window, raise an error

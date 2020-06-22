@@ -60,6 +60,7 @@ bool CProcessFlowContext::Init( std::shared_ptr<CSpectrum> spectrum,
                                 std::shared_ptr<CParameterStore> paramStore,
                                 std::shared_ptr<CClassifierStore> zqualStore  )
 {
+  //std::cout <<"Initializing context" << std::endl;
     Log.LogInfo("Processing context initialization");
 
     m_ClassifierStore = zqualStore;
@@ -198,6 +199,7 @@ bool CProcessFlowContext::Init( std::shared_ptr<CSpectrum> spectrum,
     continuumIndexesResult->SetValues(continuumRelevance.StdSpectrum, continuumRelevance.StdContinuum);
     m_DataStore->StoreScopedGlobalResult(nameContinuumIndexesResult, continuumIndexesResult);
 
+
     return true;
 }
 
@@ -207,6 +209,7 @@ bool CProcessFlowContext::Init( std::shared_ptr<CSpectrum> spectrum,
                                 std::shared_ptr<CParameterStore> paramStore,
 		   	        std::shared_ptr<CClassifierStore> zqualStore )
 {
+
     std::string medianRemovalMethod;
     paramStore->Get( "continuumRemoval.method", medianRemovalMethod, "IrregularSamplingMedian" );
     //override the continuum removal for the templates :
