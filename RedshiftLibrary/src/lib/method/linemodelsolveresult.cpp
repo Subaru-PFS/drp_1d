@@ -27,22 +27,10 @@ CLineModelSolveResult::~CLineModelSolveResult()
 
 }
 
-/**
- * \brief Outputs to the output stream the values for redshift and merit and template name of the best redshift obtained.
- **/
-void CLineModelSolveResult::Save( const CDataStore& store, std::ostream& stream ) const
-{
-    Float64 redshift;
-    Float64 merit;
-    std::string tplratioName="-1";
-    std::string tplcontinuumName="-1";
-    Float64 sigma;
-    Float64 snrHa=-1.0;
-    Float64 lfHa=-1.0;
-    Float64 snrOII=-1.0;
-    Float64 lfOII=-1.0;
 
-    //GetBestRedshiftWithStrongELSnrPrior( store, redshift, merit );
+void CLineModelSolveResult::preSave(const CDataStore& store)
+{
+   //GetBestRedshiftWithStrongELSnrPrior( store, redshift, merit );
     if(m_bestRedshiftMethod==0)
     {
         GetBestRedshift( store, redshift, merit, sigma, snrHa, lfHa, snrOII, lfOII );
@@ -57,6 +45,14 @@ void CLineModelSolveResult::Save( const CDataStore& store, std::ostream& stream 
         Log.LogError( "Linemodelsolve-result: can't parse best redshift estimation method");
     }
 
+}
+/**
+ * \brief Outputs to the output stream the values for redshift and merit and template name of the best redshift obtained.
+ **/
+void CLineModelSolveResult::Save( const CDataStore& store, std::ostream& stream ) const
+{
+
+ 
 
     stream <<  "#Redshifts\tMerit\tTemplateRatio\tTemplateContinuum\tmethod\tsigma"<< std::endl;
     stream << redshift << "\t"

@@ -1,7 +1,7 @@
 #ifndef _REDSHIFT_OPERATOR_LINEMODELSOLVERESULT_
 #define _REDSHIFT_OPERATOR_LINEMODELSOLVERESULT_
 
-#include <RedshiftLibrary/processflow/result.h>
+#include <RedshiftLibrary/method/solveresult.h>
 #include <RedshiftLibrary/common/datatypes.h>
 #include <RedshiftLibrary/ray/catalog.h>
 
@@ -15,7 +15,7 @@ class CProcessFlowContext;
 /**
  * \ingroup Redshift
  */
-class CLineModelSolveResult : public COperatorResult
+class CLineModelSolveResult : public CSolveResult
 {
 
 public:
@@ -57,10 +57,19 @@ public:
 
     Int32 GetEvidenceFromPdf(const CDataStore& store, Float64 &evidence) const;
 
+  void preSave(const CDataStore& store);
 private:
 
 
         UInt32 m_bestRedshiftMethod = 2;
+
+    std::string tplratioName="-1";
+    std::string tplcontinuumName="-1";
+    Float64 sigma;
+    Float64 snrHa=-1.0;
+    Float64 lfHa=-1.0;
+    Float64 snrOII=-1.0;
+    Float64 lfOII=-1.0;
 
 };
 

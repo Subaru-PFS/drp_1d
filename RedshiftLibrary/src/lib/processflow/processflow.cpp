@@ -261,7 +261,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
 
 
     // Stellar method
-    std::shared_ptr<COperatorResult> starResult;
+    std::shared_ptr<CSolveResult> starResult;
     std::string enableStarFitting;
     ctx.GetParameterStore().Get( "enablestellarsolve", enableStarFitting, "no" );
     Log.LogInfo( "Stellar solve enabled : %s", enableStarFitting.c_str());
@@ -344,7 +344,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
     }
 
     // Quasar method
-    std::shared_ptr<COperatorResult> qsoResult;
+    std::shared_ptr<CSolveResult> qsoResult;
     std::string enableQsoFitting;
     ctx.GetParameterStore().Get( "enableqsosolve", enableQsoFitting, "no" );
     Log.LogInfo( "QSO solve enabled : %s", enableQsoFitting.c_str());
@@ -433,7 +433,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
     }
 
     // Galaxy method
-    std::shared_ptr<COperatorResult> mResult;
+    std::shared_ptr<CSolveResult> mResult;
     std::string galaxy_method_pdf_reldir = "zPDF";
     if(methodName  == "linemodel" ){
 
@@ -622,7 +622,9 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
             Bool b = solve.ExtractCandidateResults(ctx.GetDataStore(), zcandidates_unordered_list);
         }
 
-    }else if(methodName  == "amazed0_1" ){
+    }
+    /*
+    else if(methodName  == "amazed0_1" ){
         COperatorDTree7Solve Solve(calibrationDirPath);
         mResult = Solve.Compute( ctx.GetDataStore(),
                                  ctx.GetSpectrum(),
@@ -690,7 +692,9 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
                                 redshiftStep,
                                 ctx.GetRayCatalog() );
 
-    }else if(methodName  == "reliability" ){
+    }
+    */
+else if(methodName  == "reliability" ){
         Log.LogInfo( "Processing RELIABILITY ONLY");
         //using an input pdf (ie. bypass redshift estimation method) from <intermSpcDir>/zPDF/logposterior.logMargP_Z_data.csv
 
@@ -715,6 +719,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
         throw std::runtime_error("Problem found while parsing the method parameter");
     }
 
+    mResult->preSave(ctx.GetDataStore());
     //Process Reliability estimation
     if(!mResult){
         Log.LogWarning( "Reliability skipped - no redshift results found");
