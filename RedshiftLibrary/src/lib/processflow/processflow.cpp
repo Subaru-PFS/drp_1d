@@ -729,7 +729,7 @@ else if(methodName  == "reliability" ){
         Log.LogWarning( "Reliability skipped - no valid pdf result found");
     }else{
       Float64 merit = mResult->getMerit();
-      if (if isnan(merit)) mResult->SetReliabilityLabel("C6");                                       
+      if (isnan(merit)) mResult->SetReliabilityLabel("C6");                                       
         {
           int reliability = 6 - floor(merit*6);
           if (reliability == 0) reliability = 1;
