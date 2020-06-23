@@ -17,21 +17,23 @@ CChisquareSolveResult::CChisquareSolveResult(const Int32 type, const std::string
     m_name = m_scope2name[m_scope];
 }
 
+void CChisquareSolveResult::preSave(const CDataStore& store)
+{
+    GetBestRedshift( store, redshift, merit, tplName, amplitude, amplitudeError, dustCoeff, meiksinIdx );
+    if(m_bestRedshiftMethod==2)
+    {
+        GetBestRedshiftFromPdf( store, redshift, merit, evidence );
+        Log.LogInfo( "%s-result: extracting best redshift from PDF: z=%f", m_name.c_str(), redshift);
+        GetBestModel(store, redshift, tplName);
+        Log.LogInfo( "%s-result: extracted best model: model=%s", m_name.c_str(), tplName.c_str());
 
+    }
+}
 
 void CChisquareSolveResult::Save( const CDataStore& store, std::ostream& stream ) const
 {
-    Float64 redshift;
-    Float64 merit;
-    Float64 evidence;
-    std::string tplName;
-    Float64 amplitude;
-    Float64 amplitudeError;
-    Float64 dustCoeff;
-    Int32 meiksinIdx;
 
-    GetBestRedshift( store, redshift, merit, tplName, amplitude, amplitudeError, dustCoeff, meiksinIdx );
-
+  
     stream <<  "#Redshifts\tMerit\tTemplate\tAmplitude\tAmplitudeError\tdustcoeff\tmeiksinidx"<< std::endl;
 
     stream << redshift << "\t"
@@ -45,11 +47,6 @@ void CChisquareSolveResult::Save( const CDataStore& store, std::ostream& stream 
     stream <<  "#Redshifts\tprobaLog\tevidenceLog\tModel"<< std::endl;
     if(m_bestRedshiftMethod==2)
     {
-        GetBestRedshiftFromPdf( store, redshift, merit, evidence );
-        Log.LogInfo( "%s-result: extracting best redshift from PDF: z=%f", m_name.c_str(), redshift);
-        GetBestModel(store, redshift, tplName);
-        Log.LogInfo( "%s-result: extracted best model: model=%s", m_name.c_str(), tplName.c_str());
-
         stream << redshift << "\t"
                << merit << "\t"
                << evidence << "\t"

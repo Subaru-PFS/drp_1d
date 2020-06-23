@@ -17,15 +17,6 @@ void COperatorResult::SaveJSON(const CDataStore& store, std::ostream& stream) co
   // does nothing, -> no need to cast COperatorResult to LineModelResult in COperatorResultStore::SaveAllResults
 }
 
-void COperatorResult::SetReliabilityLabel( std::string lbl )
-{
-    m_ReliabilityLabel = lbl;
-}
-
-void COperatorResult::SetTypeLabel( std::string lbl )
-{
-    m_TypeLabel = lbl;
-}
 
 void COperatorResult::SaveFloat64(std::ostream& stream,Float64 data) const
 {
