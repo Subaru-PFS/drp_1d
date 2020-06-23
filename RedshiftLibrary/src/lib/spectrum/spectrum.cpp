@@ -74,6 +74,18 @@ CSpectrum::CSpectrum(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumF
 
 }
 
+CSpectrum::CSpectrum(const CSpectrum& other)
+{
+    m_SpectralAxis = other.GetSpectralAxis();
+    m_FluxAxis = other.GetFluxAxis();
+
+    m_estimationMethod = other.GetContinuumEstimationMethod();
+    m_dfBinPath = other.GetWaveletsDFBinPath();
+    m_medianWindowSize = other.GetMedianWinsize();
+    m_nbScales = other.GetDecompScales();
+
+}
+
 CSpectrum::~CSpectrum()
 {
 

@@ -21,7 +21,8 @@ CPdfzPredictResult::CPdfzPredictResult()
 
 CPdfzPredictResult::~CPdfzPredictResult()
 {
-
+    if(m_score != nullptr) gsl_vector_free(m_score);
+    if(m_posterior != nullptr) gsl_vector_free(m_posterior);
 }
 
 

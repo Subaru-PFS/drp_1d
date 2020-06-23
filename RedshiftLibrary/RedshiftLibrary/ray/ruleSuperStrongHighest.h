@@ -16,6 +16,7 @@ class CRuleSuperStrong : public CRule
 {
   public:
     CRuleSuperStrong();
+    ~CRuleSuperStrong();
     Bool Check(CLineModelElementList &LineModelElementList);
     void SetUp(Bool EnabledArgument, ...);
 

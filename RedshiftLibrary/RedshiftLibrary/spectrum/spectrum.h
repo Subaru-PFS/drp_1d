@@ -27,6 +27,7 @@ public:
     CSpectrum();
     CSpectrum(const CSpectrum& other, TFloat64List mask);
     CSpectrum(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis);
+    CSpectrum(const CSpectrum& other);
     ~CSpectrum();
 
     CSpectrum& operator=(const CSpectrum& other); 
@@ -88,7 +89,6 @@ protected:
     mutable TFloat64List            m_pfgFlux;
     mutable Bool                    m_FineGridInterpolated = false;
 
-private:
 
     std::string                     m_Name;
     std::string                     m_FullPath;

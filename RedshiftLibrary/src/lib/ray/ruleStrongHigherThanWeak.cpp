@@ -12,6 +12,10 @@ CRuleStrongHigherThanWeak::CRuleStrongHigherThanWeak():
 {
 }
 
+CRuleStrongHigherThanWeak::~CRuleStrongHigherThanWeak()
+{
+}
+
 void CRuleStrongHigherThanWeak::SetUp( Bool EnabledArgument, ... )
 {
   Name = "strongweak";

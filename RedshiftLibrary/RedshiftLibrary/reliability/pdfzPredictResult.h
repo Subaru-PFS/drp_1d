@@ -31,8 +31,8 @@ public:
 
 	TStringList m_Labels;
 
-	gsl_vector* m_score;
-	gsl_vector* m_posterior;
+	gsl_vector* m_score = nullptr;
+	gsl_vector* m_posterior = nullptr;
 
 	Float64 m_predProba;
 	std::string m_predLabel;

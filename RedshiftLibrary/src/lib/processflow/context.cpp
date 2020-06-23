@@ -77,8 +77,7 @@ bool CProcessFlowContext::Init( std::shared_ptr<CSpectrum> spectrum,
 
 
     // Compute continuum substracted spectrum
-    m_SpectrumWithoutContinuum = std::shared_ptr<CSpectrum>( new CSpectrum() );
-    *m_SpectrumWithoutContinuum = *spectrum;
+    m_SpectrumWithoutContinuum = std::shared_ptr<CSpectrum>( new CSpectrum(*spectrum ));
 
     std::string medianRemovalMethod;
     paramStore->Get( "continuumRemoval.method", medianRemovalMethod, "IrregularSamplingMedian" );

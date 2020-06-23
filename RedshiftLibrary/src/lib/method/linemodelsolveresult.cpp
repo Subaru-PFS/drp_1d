@@ -35,13 +35,18 @@ void CLineModelSolveResult::preSave(const CDataStore& store)
     {
         GetBestRedshift( store, redshift, merit, sigma, snrHa, lfHa, snrOII, lfOII );
         Log.LogInfo( "Linemodelsolve-result: extracting best redshift from chi2 extrema: z=%f", redshift);
-    }else if(m_bestRedshiftMethod==2)
+    }
+    else if(m_bestRedshiftMethod==2)
     {
-        GetBestRedshiftFromPdf( store, redshift, merit, sigma, snrHa, lfHa, snrOII, lfOII, tplratioName, tplcontinuumName );
+        if(GetBestRedshiftFromPdf( store, redshift, merit, sigma, snrHa, lfHa, snrOII, lfOII, tplratioName, tplcontinuumName ))
+        {
         Log.LogInfo( "Linemodelsolve-result: extracting best redshift from PDF: z=%f", redshift);
         Log.LogInfo( "Linemodelsolve-result: extracted best model-tplratio=%s", tplratioName.c_str());
         Log.LogInfo( "Linemodelsolve-result: extracted best model-tplcontinuum=%s", tplcontinuumName.c_str());
-    }else{
+        }
+        else Log.LogError( "Linemodelsolve-result: can't get best redshift From Pdf");
+    }
+    else{
         Log.LogError( "Linemodelsolve-result: can't parse best redshift estimation method");
     }
 
