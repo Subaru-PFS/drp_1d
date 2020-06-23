@@ -632,18 +632,20 @@ Int32 CLineModelElementList::GetFluxDirectIntegration(TInt32List eIdx_list,
         nsum++;
     }
 
-    fluxdi = 0.;
+    fluxdi = NAN; //std::nan();
+    snrdi = NAN;
     if(nsum>0)
     {
-        fluxdi = sumFlux;
-    }else{
-        ret=-1;
-    }
+        if (fluxdi > DBL_EPSILON)
+        {
+            fluxdi = sumFlux;
+            snrdi = fluxdi/sqrt(sumErr);
+        }else
+        {
+            fluxdi = 0.;
+            snrdi = -99.;
+         }
 
-    snrdi = -1;
-    if(sumErr>0.0)
-    {
-        snrdi = fluxdi/sqrt(sumErr);
     }else{
         ret=-1;
     }
@@ -6094,10 +6096,10 @@ CLineModelSolution CLineModelElementList::GetModelSolution(Int32 opt_level)
     modelSolution.nDDL = GetModelNonZeroElementsNDdl();
     modelSolution.Rays = m_RestRayList;
     modelSolution.ElementId.resize(m_RestRayList.size());
-    modelSolution.snrHa = -1.0;
-    modelSolution.lfHa = -1.0;
-    modelSolution.snrOII = -1.0;
-    modelSolution.lfOII = -1.0;
+    modelSolution.snrHa = NAN;
+    modelSolution.lfHa = NAN;
+    modelSolution.snrOII = NAN;
+    modelSolution.lfOII = NAN;
 
     TInt32List eIdx_oii;
     TInt32List subeIdx_oii;
@@ -6142,10 +6144,10 @@ CLineModelSolution CLineModelElementList::GetModelSolution(Int32 opt_level)
                 modelSolution.CenterContinuumFlux.push_back(cont);
                 modelSolution.ContinuumError.push_back(GetContinuumError(eIdx, subeIdx));
                 Float64 sigma = m_Elements[eIdx]->GetWidth(subeIdx, m_Redshift);
-                Float64 flux = -1;
-                Float64 fluxError = -1;
-                Float64 fluxDI = -1;
-                Float64 snrDI = -1;
+                Float64 flux = NAN;
+                Float64 fluxError = NAN;
+                Float64 fluxDI = NAN;
+                Float64 snrDI = NAN;
                 TInt32List eIdx_line(1, eIdx);
                 TInt32List subeIdx_line(1, subeIdx);
                 Int32 opt_cont_substract_abslinesmodel=0;
@@ -6185,6 +6187,7 @@ CLineModelSolution CLineModelElementList::GetModelSolution(Int32 opt_level)
                         }
                         if(flux>0.0)
                         {
+
                             modelSolution.lfHa = log10(flux);
                         }
                     }else{
@@ -6193,25 +6196,33 @@ CLineModelSolution CLineModelElementList::GetModelSolution(Int32 opt_level)
                         {
                             modelSolution.lfHa = log10(fluxDI);
                         }
+                        else if (fluxDI == 0.)
+                        {
+                            modelSolution.lfHa = -99.;
+                        }
                     }
                 }
                 if((m_RestRayList[iRestRay].GetName()==ltags.oII3726_em || m_RestRayList[iRestRay].GetName()==ltags.oII3729_em)
                         && m_RestRayList[iRestRay].GetType()==CRay::nType_Emission)
                 {
                     //here we only cover the fluxDI case.
-                    eIdx_oii.push_back(eIdx);
-                    subeIdx_oii.push_back(subeIdx);
+                    //eIdx_oii.push_back(eIdx);
+                    //subeIdx_oii.push_back(subeIdx);
                     if(true)
                     {
-                        fluxDI = -1;
+ /*                       fluxDI = -1;
                         Float64 snrDI = -1;
                         Int32 opt_cont_substract_abslinesmodel=0;
                         Int32 retdi = GetFluxDirectIntegration(eIdx_oii, subeIdx_oii, opt_cont_substract_abslinesmodel,fluxDI, snrDI);
-
+*/
                         modelSolution.snrOII = snrDI;
                         if(fluxDI>0.0)
                         {
                             modelSolution.lfOII = log10(fluxDI);
+                        }
+                        else if (fluxDI == 0.)
+                        {
+                            modelSolution.lfOII = -99.;
                         }
                     }
                 }
