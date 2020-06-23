@@ -95,6 +95,7 @@ Bool CRayCatalog::Add( const CRay& r )
     TRayVector::iterator it;
     for( it = m_List.begin(); it != m_List.end(); ++it )
     {
+      //TODO this should be a map with key defined as struct{name,position,type}
         // Can't add a line with a name + position + type that already exists in the list
         if( (*it).GetName() == r.GetName() && (*it).GetPosition() == r.GetPosition() && (*it).GetType() == r.GetType() )
             return false;

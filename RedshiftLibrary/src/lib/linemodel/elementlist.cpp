@@ -91,7 +91,7 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
         }
     }
 
-
+    //TODO [ml] if m_inputSpc is not modified, no reason to copy it
     m_inputSpc = std::shared_ptr<CSpectrum>( new CSpectrum(spectrum) );
 
     m_ContinuumComponent = opt_continuumcomponent;
@@ -126,6 +126,7 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
     m_enableAmplitudeOffsets = false; //this is highly experimental for now.
     m_enableLambdaOffsetsFit = true; //enable lambdaOffsetFit. Once enabled, the offset fixed value or the fitting on/off switch is done through the offset calibration file.
 
+    //TODO [ml] if m_spectrum is not modified, no reason to copy it
     m_SpectrumModel = std::shared_ptr<CSpectrum>( new CSpectrum(spectrum) );
     m_SpcCorrectedUnderLines = std::shared_ptr<CSpectrum>( new CSpectrum(spectrum) );
     UInt32 spectrumSampleCount = spectrum.GetSampleCount();
@@ -263,6 +264,11 @@ CLineModelElementList::~CLineModelElementList()
     {
         delete m_chiSquareOperator;
     }
+    if(m_tplshape_priorhelper) delete m_tplshape_priorhelper;
+    if(m_fitContinuum_priorhelper) delete m_fitContinuum_priorhelper;
+    if(m_fitContinuum_tplfitStore) delete m_fitContinuum_tplfitStore;
+    if(m_Regulament) delete m_Regulament;
+    //TODO [ml] m_unscaleContinuumFluxAxisDerivZ if it used again
 }
 
 void CLineModelElementList::initLambdaOffsets(std::string offsetsCatalogsRelPath)
@@ -270,7 +276,7 @@ void CLineModelElementList::initLambdaOffsets(std::string offsetsCatalogsRelPath
   CLineCatalogsOffsets* ctlgOffsets = new CLineCatalogsOffsets();
   ctlgOffsets->Init(m_calibrationPath, offsetsCatalogsRelPath);
   // load static offset catalog, idx=0
-  ctlgOffsets->SetLinesOffsets( *this, 0);
+  ctlgOffsets->SetLinesOffsets( this, 0);
 
   // load auto stack, hack from reference catalog
   //std::string spcName = m_inputSpc->GetName();

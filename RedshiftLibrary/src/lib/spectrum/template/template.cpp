@@ -18,19 +18,34 @@ CTemplate::CTemplate( )
  * Constructor, assigns values to members.
  */
 CTemplate::CTemplate( const std::string& name, const std::string& category ) :
-    m_Category( category ),
-    m_Name( name )
+  m_Category( category ) 
 {
-
+  this->m_Name = name ;  
 }
 
 CTemplate::CTemplate( const std::string& name, const std::string& category,
 		      CSpectrumSpectralAxis& spectralAxis, CSpectrumFluxAxis& fluxAxis) :
-    m_Category( category ),
-    m_Name( name )
+    m_Category( category )
 {
+  this->m_Name = name ;
   m_SpectralAxis = spectralAxis;
   m_FluxAxis = fluxAxis;
+}
+
+//TODO use copy constructor of CSpectrum
+CTemplate::CTemplate( const CTemplate& other)
+{
+    m_Name = other.GetName();
+    m_FullPath = other.GetFullPath();
+    m_SpectralAxis = other.GetSpectralAxis();
+    m_FluxAxis = other.GetFluxAxis();
+
+    m_estimationMethod = other.GetContinuumEstimationMethod();
+    m_dfBinPath = other.GetWaveletsDFBinPath();
+    m_medianWindowSize = other.GetMedianWinsize();
+    m_nbScales = other.GetDecompScales();
+
+    m_Category = other.GetCategory();
 }
 
 /**

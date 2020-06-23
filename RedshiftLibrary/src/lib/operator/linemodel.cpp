@@ -118,32 +118,13 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
                     (abs(m_sortedRedshifts[i + 1] - m_sortedRedshifts[i]) <
                      dz_thres);
             }
-            if (conditionKeepSample)
+            if (!conditionKeepSample) 
             {
-                removed_inds.push_back(i);
-            } else
-            {
+                largeGridRedshifts.push_back(m_sortedRedshifts[i]);
                 lastKeptInd = i;
             }
         }
-        Int32 rmInd = 0;
-        for (Int32 i = 1; i < m_sortedRedshifts.size(); i++)
-        {
-            bool addToLargeGrid = true;
-            if (removed_inds.size() > 0)
-            {
-                if (removed_inds[rmInd] == i)
-                {
-                    rmInd++;
-                    addToLargeGrid = false;
-                }
-            }
-            if (addToLargeGrid)
-            {
-                largeGridRedshifts.push_back(m_sortedRedshifts[i]);
-            }
-        }
-        if (largeGridRedshifts.size() < 1)
+        if (largeGridRedshifts.empty())
         {
             m_enableFastFitLargeGrid = 0;
             Log.LogInfo("  Operator-Linemodel: FastFitLargeGrid auto disabled: "

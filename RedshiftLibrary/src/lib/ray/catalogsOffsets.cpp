@@ -174,7 +174,7 @@ Bool CLineCatalogsOffsets::LoadCatalog( const char* filePath )
     return true;
 }
 
-Bool CLineCatalogsOffsets::SetLinesOffsets(CLineModelElementList &LineModelElementList, Int32 index)
+Bool CLineCatalogsOffsets::SetLinesOffsets(CLineModelElementList *LineModelElementList, Int32 index)
 {
     Int32 nLines = m_OffsetsCatalog[index].Offsets.size();
     if(index>=nLines)
@@ -182,12 +182,12 @@ Bool CLineCatalogsOffsets::SetLinesOffsets(CLineModelElementList &LineModelEleme
         return false;
     }
     //first reset all offsets
-    for( UInt32 iElts=0; iElts<LineModelElementList.m_Elements.size(); iElts++ )
+    for( UInt32 iElts=0; iElts<LineModelElementList->m_Elements.size(); iElts++ )
     {
-        Int32 nRays = LineModelElementList.m_Elements[iElts]->GetSize();
+        Int32 nRays = LineModelElementList->m_Elements[iElts]->GetSize();
         for(UInt32 j=0; j<nRays; j++){
-            LineModelElementList.m_Elements[iElts]->m_Rays[j].SetOffset(0.0);
-            LineModelElementList.m_Elements[iElts]->m_Rays[j].EnableOffsetFit(false); //default is to not fit the offset
+            LineModelElementList->m_Elements[iElts]->m_Rays[j].SetOffset(0.0);
+            LineModelElementList->m_Elements[iElts]->m_Rays[j].EnableOffsetFit(false); //default is to not fit the offset
         }
     }
 
@@ -199,15 +199,15 @@ Bool CLineCatalogsOffsets::SetLinesOffsets(CLineModelElementList &LineModelEleme
         bool enableOffsetFit = m_OffsetsCatalog[index].FittingMode[kL]=="fit";
         std::string name = m_OffsetsCatalog[index].Names[kL];
         //find line in the elementList
-        for( UInt32 iElts=0; iElts<LineModelElementList.m_Elements.size(); iElts++ )
+        for( UInt32 iElts=0; iElts<LineModelElementList->m_Elements.size(); iElts++ )
         {
-            Int32 nRays = LineModelElementList.m_Elements[iElts]->GetSize();
+            Int32 nRays = LineModelElementList->m_Elements[iElts]->GetSize();
             for(UInt32 j=0; j<nRays; j++){
 
-                if(LineModelElementList.m_Elements[iElts]->m_Rays[j].GetName() == name)
+                if(LineModelElementList->m_Elements[iElts]->m_Rays[j].GetName() == name)
                 {
-                    LineModelElementList.m_Elements[iElts]->m_Rays[j].SetOffset(offset);
-                    LineModelElementList.m_Elements[iElts]->m_Rays[j].EnableOffsetFit(enableOffsetFit);
+                    LineModelElementList->m_Elements[iElts]->m_Rays[j].SetOffset(offset);
+                    LineModelElementList->m_Elements[iElts]->m_Rays[j].EnableOffsetFit(enableOffsetFit);
                     Log.LogInfo( "    CatalogsOffsets - setting line: %s\t offset:%.1f\t fitMode:%s\t fitEnabled:%d ", name.c_str(), offset, m_OffsetsCatalog[index].FittingMode[kL].c_str(), enableOffsetFit);
 
                 }
@@ -221,7 +221,7 @@ Bool CLineCatalogsOffsets::SetLinesOffsets(CLineModelElementList &LineModelEleme
     return true;
 }
 
-Bool CLineCatalogsOffsets::SetLinesOffsetsAutoSelectStack(CLineModelElementList &LineModelElementList, std::string spectrumName)
+Bool CLineCatalogsOffsets::SetLinesOffsetsAutoSelectStack(CLineModelElementList *LineModelElementList, std::string spectrumName)
 {
     Int32 offsetCtlgIndex = AutoSelectStackFromReferenceFile(spectrumName);
     if(offsetCtlgIndex>=0)

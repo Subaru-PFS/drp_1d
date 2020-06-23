@@ -38,10 +38,10 @@ public:
 
     void Load( const char* dirPath );
     Bool LoadCatalog( const char* filePath );
-    Bool SetLinesOffsets(CLineModelElementList &LineModelElementList, Int32 index);
+    Bool SetLinesOffsets(CLineModelElementList *LineModelElementList, Int32 index);
 
     // Hack: select/bypass stack automatically from its name in the reference_stack catalog
-    Bool SetLinesOffsetsAutoSelectStack(CLineModelElementList &LineModelElementList, std::string spectrumName);
+    Bool SetLinesOffsetsAutoSelectStack(CLineModelElementList *LineModelElementList, std::string spectrumName);
     Int32 AutoSelectStackFromReferenceFile(std::string spectrumName);
 
 private:

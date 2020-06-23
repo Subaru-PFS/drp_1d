@@ -12,6 +12,14 @@
 using namespace NSEpic;
 using namespace std;
 
+CRuleBalmerLinearSolver::CRuleBalmerLinearSolver()
+{
+}
+
+CRuleBalmerLinearSolver::~CRuleBalmerLinearSolver()
+{
+}
+
 void CRuleBalmerLinearSolver::SetUp( Bool EnabledArgument, ... )
 {
   Name = "balmerlinesolve";
