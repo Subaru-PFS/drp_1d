@@ -636,7 +636,7 @@ Int32 CLineModelElementList::GetFluxDirectIntegration(TInt32List eIdx_list,
     snrdi = NAN;
     if(nsum>0)
     {
-        if (fluxdi > DBL_EPSILON)
+        if (sumFlux > DBL_EPSILON)
         {
             fluxdi = sumFlux;
             snrdi = fluxdi/sqrt(sumErr);
