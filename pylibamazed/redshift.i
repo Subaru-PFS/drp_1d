@@ -46,9 +46,11 @@
 #include "RedshiftLibrary/spectrum/fluxaxis.h"
 #include "RedshiftLibrary/spectrum/spectralaxis.h"
 #include "RedshiftLibrary/method/linemodelsolve.h"
-#include "RedshiftLibrary/method/dtreebsolve.h"
-#include "RedshiftLibrary/method/dtree7solve.h"
+#include "RedshiftLibrary/method/linematchingsolve.h"
+#include "RedshiftLibrary/method/linematching2solve.h"
 #include "RedshiftLibrary/method/chisquare2solve.h"
+#include "RedshiftLibrary/method/chisquarelogsolve.h"
+#include "RedshiftLibrary/method/tplcombinationsolve.h"
 using namespace NSEpic;
 %}
 
@@ -59,7 +61,7 @@ import_array();
 %}
 
 // %include "../RedshiftLibrary/RedshiftLibrary/common/datatypes.h"
-typedef	double Float64;
+typedef double Float64;
 typedef unsigned int UInt32;
 
 namespace NSEpic {
@@ -165,11 +167,11 @@ class CProcessFlowContext {
 public:
   CProcessFlowContext();
   bool Init(std::shared_ptr<CSpectrum> spectrum,
-	    std::string processingID,
-	    std::shared_ptr<const CTemplateCatalog> templateCatalog,
-	    std::shared_ptr<const CRayCatalog> rayCatalog,
-	    std::shared_ptr<CParameterStore> paramStore,
-	    std::shared_ptr<CClassifierStore> zqualStore  );
+            std::string processingID,
+            std::shared_ptr<const CTemplateCatalog> templateCatalog,
+            std::shared_ptr<const CRayCatalog> rayCatalog,
+            std::shared_ptr<CParameterStore> paramStore,
+            std::shared_ptr<CClassifierStore> zqualStore  );
   CDataStore& GetDataStore();
   COperatorResultStore& GetResultStore();
 };
@@ -274,7 +276,7 @@ class CSpectrumSpectralAxis : public CSpectrumAxis {
 %rename(CSpectrumFluxAxis_empty) CSpectrumFluxAxis(UInt32 n);
 %rename(CSpectrumFluxAxis_withSpectrum) CSpectrumFluxAxis(const Float64* samples, UInt32 n);
 %rename(CSpectrumFluxAxis_withError) CSpectrumFluxAxis( const double* samples, UInt32 n,
- 							const double* error, UInt32 m );
+                                                        const double* error, UInt32 m );
 
 %apply (double* IN_ARRAY1, int DIM1) {(const Float64* samples, UInt32 n)}
 %apply (double* IN_ARRAY1, int DIM1) {(const double* samples, UInt32 n),
@@ -310,20 +312,19 @@ class CLineModelSolve
   const std::string GetDescription();
 };
 
-class COperatorDTreeBSolve
+class CMethodLineMatchingSolve
 {
  public:
-  COperatorDTreeBSolve( std::string calibrationPath="" );
-  ~COperatorDTreeBSolve();
+  CMethodLineMatchingSolve();
+  ~CMethodLineMatchingSolve();
   const std::string GetDescription();
 };
 
-class COperatorDTree7Solve
+class CMethodLineMatching2Solve
 {
  public:
-
-  COperatorDTree7Solve(std::string calibrationPath="");
-  ~COperatorDTree7Solve();
+  CMethodLineMatching2Solve();
+  ~CMethodLineMatching2Solve();
   const std::string GetDescription();
 };
 
@@ -332,5 +333,21 @@ class CMethodChisquare2Solve
  public:
   CMethodChisquare2Solve( std::string calibrationPath="" );
   ~CMethodChisquare2Solve();
+  const std::string GetDescription();
+};
+
+class CMethodChisquareLogSolve
+{
+ public:
+  CMethodChisquareLogSolve( std::string calibrationPath="" );
+  ~CMethodChisquareLogSolve();
+  const std::string GetDescription();
+};
+
+class CMethodTplcombinationSolve
+{
+ public:
+  CMethodTplcombinationSolve( std::string calibrationPath="" );
+  ~CMethodTplcombinationSolve();
   const std::string GetDescription();
 };

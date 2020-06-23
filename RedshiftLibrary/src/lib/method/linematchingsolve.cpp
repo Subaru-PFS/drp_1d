@@ -20,7 +20,7 @@ using namespace NSEpic;
 using namespace std;
 
 
-COperatorLineMatchingSolve::COperatorLineMatchingSolve()
+CMethodLineMatchingSolve::CMethodLineMatchingSolve()
 {
 //     Peak Detection
 //    m_winsize = 250.0;
@@ -54,13 +54,13 @@ COperatorLineMatchingSolve::COperatorLineMatchingSolve()
 //    }
 }
 
-COperatorLineMatchingSolve::~COperatorLineMatchingSolve()
+CMethodLineMatchingSolve::~CMethodLineMatchingSolve()
 {
 
 }
 
 
-const std::string COperatorLineMatchingSolve::GetDescription()
+const std::string CMethodLineMatchingSolve::GetDescription()
 {
     std::string desc;
 
@@ -83,7 +83,7 @@ const std::string COperatorLineMatchingSolve::GetDescription()
 
 }
 
-std::shared_ptr<CLineMatchingSolveResult> COperatorLineMatchingSolve::Compute(  CDataStore& dataStore, const CSpectrum& spc,
+std::shared_ptr<CLineMatchingSolveResult> CMethodLineMatchingSolve::Compute(  CDataStore& dataStore, const CSpectrum& spc,
                                                                       const TFloat64Range& lambdaRange, const TFloat64Range& redshiftsRange, Float64 redshiftStep, const CRayCatalog& restRayCatalog )
 {
     Bool storeResult = false;

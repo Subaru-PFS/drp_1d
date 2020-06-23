@@ -11,18 +11,18 @@ using namespace NSEpic;
 using namespace std;
 
 
-COperatorBlindSolve::COperatorBlindSolve()
+CMethodBlindSolve::CMethodBlindSolve()
 {
 
 }
 
-COperatorBlindSolve::~COperatorBlindSolve()
+CMethodBlindSolve::~CMethodBlindSolve()
 {
 
 }
 
 
-const std::string COperatorBlindSolve::GetDescription()
+const std::string CMethodBlindSolve::GetDescription()
 {
     std::string desc;
 
@@ -35,7 +35,7 @@ const std::string COperatorBlindSolve::GetDescription()
 
 }
 
-std::shared_ptr<CBlindSolveResult> COperatorBlindSolve::Compute(  CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
+std::shared_ptr<CBlindSolveResult> CMethodBlindSolve::Compute(  CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
                                                         const CTemplateCatalog& tplCatalog, const TStringList& tplCategoryList,
                                                         const TFloat64Range& lambdaRange, const TFloat64Range& redshiftsRange, Float64 redshiftStep,
                                                         Int32 correlationExtremumCount, Float64 overlapThreshold )
@@ -77,7 +77,7 @@ std::shared_ptr<CBlindSolveResult> COperatorBlindSolve::Compute(  CDataStore& re
     return NULL;
 }
 
-Bool COperatorBlindSolve::BlindSolve( CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont, const CTemplate& tpl, const CTemplate& tplWithoutCont,
+Bool CMethodBlindSolve::BlindSolve( CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont, const CTemplate& tpl, const CTemplate& tplWithoutCont,
                                const TFloat64Range& lambdaRange, const TFloat64Range& redshiftsRange, Float64 redshiftStep, Int32 correlationExtremumCount,
                                Float64 overlapThreshold )
 {

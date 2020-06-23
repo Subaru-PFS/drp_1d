@@ -38,17 +38,17 @@ using namespace NSEpic;
 using namespace std;
 
 
-COperatorDTreeBSolve::COperatorDTreeBSolve( std::string calibrationPath )
+CMethodDTreeBSolve::CMethodDTreeBSolve( std::string calibrationPath )
 {
     m_calibrationPath = calibrationPath;
 }
 
-COperatorDTreeBSolve::~COperatorDTreeBSolve()
+CMethodDTreeBSolve::~CMethodDTreeBSolve()
 {
 
 }
 
-const std::string COperatorDTreeBSolve::GetDescription()
+const std::string CMethodDTreeBSolve::GetDescription()
 {
     std::string desc;
 
@@ -77,7 +77,7 @@ const std::string COperatorDTreeBSolve::GetDescription()
 
 }
 
-std::shared_ptr<CDTreeBSolveResult> COperatorDTreeBSolve::Compute( CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
+std::shared_ptr<CDTreeBSolveResult> CMethodDTreeBSolve::Compute( CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
                                                         const CTemplateCatalog& tplCatalog, const TStringList &tplCategoryList, const CRayCatalog &restRayCatalog,
                                                         const TFloat64Range& lambdaRange, const TFloat64List &redshifts)
 {
@@ -98,7 +98,7 @@ std::shared_ptr<CDTreeBSolveResult> COperatorDTreeBSolve::Compute( CDataStore& r
     return NULL;
 }
 
-Bool COperatorDTreeBSolve::Solve(CDataStore &dataStore, const CSpectrum &spc, const CSpectrum &spcWithoutCont, const CTemplateCatalog &tplCatalog, const TStringList &tplCategoryList, const CRayCatalog &restRayCatalog, const TFloat64Range &lambdaRange, const TFloat64List &redshifts)
+Bool CMethodDTreeBSolve::Solve(CDataStore &dataStore, const CSpectrum &spc, const CSpectrum &spcWithoutCont, const CTemplateCatalog &tplCatalog, const TStringList &tplCategoryList, const CRayCatalog &restRayCatalog, const TFloat64Range &lambdaRange, const TFloat64List &redshifts)
 {
     CSpectrum _spcContinuum = spc;
     CSpectrumFluxAxis spcfluxAxis = _spcContinuum.GetFluxAxis();
@@ -297,7 +297,7 @@ Bool COperatorDTreeBSolve::Solve(CDataStore &dataStore, const CSpectrum &spc, co
 }
 
 
-Bool COperatorDTreeBSolve::GetCombinedRedshift(CDataStore& store)
+Bool CMethodDTreeBSolve::GetCombinedRedshift(CDataStore& store)
 {
     std::shared_ptr<CChisquareResult> resultCombined = std::shared_ptr<CChisquareResult>( new CChisquareResult() );
 
@@ -494,7 +494,7 @@ Bool COperatorDTreeBSolve::GetCombinedRedshift(CDataStore& store)
 }
 
 
-TFloat64List COperatorDTreeBSolve::GetBestRedshiftChi2List( CDataStore& store, std::string scopeStr,  Float64& minmerit, TFloat64List& zList)
+TFloat64List CMethodDTreeBSolve::GetBestRedshiftChi2List( CDataStore& store, std::string scopeStr,  Float64& minmerit, TFloat64List& zList)
 {
     std::string scope = "dtreeBsolve.chisquare2solve.";
     scope.append(scopeStr.c_str());
