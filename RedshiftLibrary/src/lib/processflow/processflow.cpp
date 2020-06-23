@@ -63,6 +63,8 @@
 #include <boost/algorithm/string.hpp>
 #include <stdio.h>
 #include <float.h>
+#include <cmath>
+#include <math.h>
 
 using namespace std;
 using namespace boost;
@@ -726,29 +728,17 @@ else if(methodName  == "reliability" ){
     }else if(!isPdfValid(ctx)){
         Log.LogWarning( "Reliability skipped - no valid pdf result found");
     }else{
-        CClassifierStore classifStore = ctx.GetClassifierStore();
-        if(!classifStore.m_isInitialized)
+      Float64 merit = mResult->getMerit();
+      if (if isnan(merit)) mResult->SetReliabilityLabel("C6");                                       
         {
-            Log.LogWarning( "Reliability not initialized. Skipped.");
-        }else
-        {
-            Log.LogInfo( "Processing reliability");
-            CQualz solveReliab;
-            std::shared_ptr<const CQualzResult> solveReliabResult = solveReliab.Compute( ctx.GetDataStore(), classifStore, redshiftRange, redshiftStep );
+          int reliability = 6 - floor(merit*6);
+          if (reliability == 0) reliability = 1;
+          std::ostringstream os;
 
-            if(solveReliabResult)
-            {
-                std::string predLabel="";
-                bool retPredLabel = solveReliabResult->GetPredictedLabel( ctx.GetDataStore(), predLabel );
-                if( retPredLabel ) {
-                    mResult->SetReliabilityLabel(predLabel);
-                }else{
-                    Log.LogError( "Unable to estimate Reliability");
-                }
-            }else{
-                Log.LogInfo( "No Reliability Result Found");
-            }
-        }
+          os << "C" << reliability;
+          
+          mResult->SetReliabilityLabel(os.str());
+        } 
     }
 
     //estimate star/galaxy/qso classification
