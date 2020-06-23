@@ -15,6 +15,7 @@
 #include <RedshiftLibrary/statistics/deltaz.h>
 #include <RedshiftLibrary/statistics/priorhelper.h>
 
+#include <RedshiftLibrary/common/quicksort.h>
 #include <RedshiftLibrary/log/log.h>
 #include <RedshiftLibrary/spectrum/io/fitswriter.h>
 
@@ -619,14 +620,14 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
 
 
 void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
-                                                const CSpectrum &spectrumContinuum,
-                                                const CTemplateCatalog &tplCatalog,
-                                                const TStringList &tplCategoryList,
-                                                const std::string opt_calibrationPath,
-                                                const TFloat64Range &lambdaRange,
-                                                const Float64 redshiftStep,
-                                                const string zsampling,
-                                                bool ignoreLinesSupport)
+                                                 const CSpectrum &spectrumContinuum,
+                                                 const CTemplateCatalog &tplCatalog,
+                                                 const TStringList &tplCategoryList,
+                                                 const std::string opt_calibrationPath,
+                                                 const TFloat64Range &lambdaRange,
+                                                 const Float64 redshiftStep,
+                                                 const string zsampling,
+                                                 bool ignoreLinesSupport)
 {
     boost::chrono::thread_clock::time_point start_tplfitprecompute =
         boost::chrono::thread_clock::now();
@@ -769,6 +770,7 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
                             m_opt_tplfit_extinction,
                             opt_tplfit_integer_chi2_dustfit,
                             zePriorData));
+
             if (!chisquareResult)
             {
                 Log.LogInfo("  Operator-Linemodel failed to compute chi "
@@ -1468,7 +1470,7 @@ Int32 COperatorLineModel::SaveResults(const CSpectrum &spectrum,
                             m_model->GetVelocityAbsorption()));
                 m_savedModelFittingResults.push_back(resultfitmodel);
 
-                // CModelContinuumFittingResult
+                // CModelContinuumFittingResult : mira: below is the content of output files _fitcontinuum_extrema
                 std::shared_ptr<CModelContinuumFittingResult>
                     resultfitcontinuummodel =
                         std::shared_ptr<CModelContinuumFittingResult>(
@@ -2841,7 +2843,7 @@ void COperatorLineModel::storeGlobalModelResults(CDataStore &dataStore)
         dataStore.StoreScopedGlobalResult(fname_rules.c_str(),
                                           m_savedModelRulesResults[k]);
     }
-
+//TODO: delete below for loop
     for (Int32 k = 0; k < m_savedModelContinuumSpectrumResults.size(); k++)
     {
         std::string nameBaselineStr =

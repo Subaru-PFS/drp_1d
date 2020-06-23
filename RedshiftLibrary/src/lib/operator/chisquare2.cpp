@@ -1037,45 +1037,6 @@ std::shared_ptr<COperatorResult> COperatorChiSquare2::Compute(const CSpectrum& s
     //estimate CstLog for PDF estimation
     result->CstLog = EstimateLikelihoodCstLog(spectrum, lambdaRange);
 
-    // extrema
-    Int32 extremumCount = 10;
-    if(result->Redshifts.size()>extremumCount)
-    {
-        Float64 radius = 0.005;
-        TPointList extremumList;
-        TFloat64Range redshiftsRange(result->Redshifts[0], result->Redshifts[result->Redshifts.size()-1]);
-        CExtremum extremum( redshiftsRange, extremumCount, radius, true);
-        extremum.Find( result->Redshifts, result->ChiSquare, extremumList );
-        // store extrema results
-        result->Extrema.resize( extremumCount );
-        for( Int32 i=0; i<extremumList.size(); i++ )
-        {
-            result->Extrema[i] = extremumList[i].X;
-        }
-
-        Log.LogDebug("  Operator-Chisquare2: EXTREMA found n=%d", extremumList.size());
-    }else
-    {
-        // store extrema results
-        result->Extrema.resize( result->Redshifts.size() );
-        TFloat64List tmpX;
-        TFloat64List tmpY;
-        for( Int32 i=0; i<result->Redshifts.size(); i++ )
-        {
-            tmpX.push_back(result->Redshifts[i]);
-            tmpY.push_back(result->ChiSquare[i]);
-        }
-        // sort the results by merit
-        CQuickSort<Float64> sort;
-        vector<Int32> sortedIndexes( result->Redshifts.size() );
-        sort.SortIndexes( tmpY.data(), sortedIndexes.data(), sortedIndexes.size() );
-        for( Int32 i=0; i<result->Redshifts.size(); i++ )
-        {
-            result->Extrema[i] = tmpX[sortedIndexes[i]];
-        }
-        Log.LogDebug("  Operator-Chisquare2: EXTREMA forced n=%d", result->Extrema.size());
-    }
-
     return result;
 
 }

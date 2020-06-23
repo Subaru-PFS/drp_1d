@@ -18,6 +18,8 @@
 #include <RedshiftLibrary/debug/assert.h>
 #include <RedshiftLibrary/log/log.h>
 
+#include <RedshiftLibrary/extremum/extremum.h>
+#include <RedshiftLibrary/common/quicksort.h>
 #include <math.h>
 #include <boost/numeric/conversion/bounds.hpp>
 #include <boost/format.hpp>
@@ -1405,10 +1407,9 @@ Bool CLineModelElementList::SolveContinuum(const CSpectrum& spectrum,
                                                                                                        opt_interp,
                                                                                                        opt_extinction,
                                                                                                        opt_dustFit,
-                                                                                                       zePriorData, 
-                                                                                                       keepigmism,
-                                                                                                       fitDustCoeff, 
-                                                                                                       fitMeiksinIdx) );
+                                                                                                       zePriorData) );
+    chisquareResult->CallFindExtrema();
+
     if( !chisquareResult )
     {
 
@@ -1505,6 +1506,8 @@ Int32 CLineModelElementList::LoadFitContaminantTemplate(const TFloat64Range& lam
                                                                                                        opt_interp,
                                                                                                        opt_extinction,
                                                                                                        opt_dustFit ) );
+    chisquareResult->CallFindExtrema();
+
     if( !chisquareResult )
     {
 

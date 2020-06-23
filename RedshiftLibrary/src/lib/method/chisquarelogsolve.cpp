@@ -6,11 +6,13 @@
 #include <RedshiftLibrary/operator/chisquare.h>
 #include <RedshiftLibrary/extremum/extremum.h>
 #include <RedshiftLibrary/processflow/datastore.h>
+#include <RedshiftLibrary/statistics/deltaz.h>
 #include <RedshiftLibrary/statistics/pdfz.h>
 #include <RedshiftLibrary/operator/pdfLogresult.h>
 #include <RedshiftLibrary/statistics/pdfcandidateszresult.h>
+#include <RedshiftLibrary/common/quicksort.h>
 
-#include <RedshiftLibrary/statistics/deltaz.h>
+
 #include <RedshiftLibrary/spectrum/io/fitswriter.h>
 #include <float.h>
 using namespace NSEpic;
@@ -239,6 +241,7 @@ Bool CMethodChisquareLogSolve::Solve(CDataStore& resultStore,
                                                                                                            opt_interp,
                                                                                                            enable_extinction,
                                                                                                            option_dustFitting ) );
+        chisquareResult->CallFindExtrema();
 
         if( !chisquareResult )
         {

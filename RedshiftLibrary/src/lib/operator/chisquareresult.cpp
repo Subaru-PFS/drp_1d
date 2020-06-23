@@ -1,4 +1,5 @@
 #include <RedshiftLibrary/operator/chisquareresult.h>
+#include <RedshiftLibrary/extremum/extremum.h>
 
 #include <boost/tokenizer.hpp>
 #include <boost/lexical_cast.hpp>
@@ -291,4 +292,28 @@ void CChisquareResult::Save( const CDataStore& store, std::ostream& stream ) con
 void CChisquareResult::SaveLine( const CDataStore& store, std::ostream& stream ) const
 {
     stream << "ChisquareResult" << "\t" << Redshifts.size() << std::endl;
+}
+
+bool CChisquareResult::CallFindExtrema() 
+{
+  Int32 extremumCount = 10;
+  Float64 radius = 0.001;
+  TPointList extremumList;
+  TFloat64Range redshiftsRange( Redshifts[0], Redshifts[Redshifts.size() - 1]);
+
+    CExtremum extremum(redshiftsRange, extremumCount, radius, true);
+
+    if (Redshifts.size() == 1 || Redshifts.size() > extremumCount)
+    {
+        extremum.DefaultExtremum( Redshifts, ChiSquare, extremumList); 
+
+    } else{
+        extremum.Find(Redshifts, ChiSquare, extremumList);   
+    }
+    // store extrema results
+    Extrema.resize(extremumCount);
+    for (Int32 i = 0; i < extremumList.size(); i++) {
+      Extrema[i] = extremumList[i].X;
+    }  
+  return true;
 }
