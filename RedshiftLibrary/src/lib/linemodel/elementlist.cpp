@@ -27,8 +27,6 @@
 #include <boost/algorithm/string.hpp>
 #include <algorithm>
 
-#include <RedshiftLibrary/operator/findExtrema.h>
-
 #include <stdlib.h>
 #include <stdio.h>
 //#include <gsl/gsl_rng.h>

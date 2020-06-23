@@ -30,7 +30,6 @@
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/chrono/thread_clock.hpp>
 #include <boost/progress.hpp>
-#include <RedshiftLibrary/operator/findExtrema.h> 
 #include <assert.h>
 
 #define NOT_OVERLAP_VALUE NAN

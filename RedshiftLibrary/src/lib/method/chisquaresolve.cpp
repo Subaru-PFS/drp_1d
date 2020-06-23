@@ -9,7 +9,6 @@
 #include <RedshiftLibrary/extremum/extremum.h>
 #include <RedshiftLibrary/processflow/datastore.h>
 #include <RedshiftLibrary/common/quicksort.h>
-#include <RedshiftLibrary/operator/findExtrema.h>
 using namespace NSEpic;
 using namespace std;
 

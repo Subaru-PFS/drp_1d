@@ -10,8 +10,6 @@
 #include <RedshiftLibrary/statistics/deltaz.h>
 #include <RedshiftLibrary/statistics/pdfcandidateszresult.h>
 
-#include <RedshiftLibrary/operator/findExtrema.h>
-
 #include <RedshiftLibrary/common/quicksort.h>
 #include <RedshiftLibrary/spectrum/io/fitswriter.h>
 #include <float.h>
