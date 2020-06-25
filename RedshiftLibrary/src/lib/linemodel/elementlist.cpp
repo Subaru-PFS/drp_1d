@@ -632,11 +632,11 @@ Int32 CLineModelElementList::GetFluxDirectIntegration(TInt32List eIdx_list,
         nsum++;
     }
 
-    fluxdi = NAN; //std::nan();
+    fluxdi = NAN;
     snrdi = NAN;
     if(nsum>0)
     {
-        if (sumFlux > DBL_EPSILON)
+        if (sumFlux > 0.)
         {
             fluxdi = sumFlux;
             snrdi = fluxdi/sqrt(sumErr);
@@ -6101,6 +6101,8 @@ CLineModelSolution CLineModelElementList::GetModelSolution(Int32 opt_level)
     modelSolution.snrOII = NAN;
     modelSolution.lfOII = NAN;
 
+    TInt32List eIdx_oii;
+    TInt32List subeIdx_oii;
 
     for( UInt32 iRestRay=0; iRestRay<m_RestRayList.size(); iRestRay++ )
     {
@@ -6202,8 +6204,16 @@ CLineModelSolution CLineModelElementList::GetModelSolution(Int32 opt_level)
                 if((m_RestRayList[iRestRay].GetName()==ltags.oII3726_em || m_RestRayList[iRestRay].GetName()==ltags.oII3729_em)
                         && m_RestRayList[iRestRay].GetType()==CRay::nType_Emission)
                 {
+                    //here we only cover the fluxDI case.
+                    eIdx_oii.push_back(eIdx);
+                    subeIdx_oii.push_back(subeIdx);
                     if(true)
                     {
+                        fluxDI = NAN ;
+                        Float64 snrDI = NAN;
+                        Int32 opt_cont_substract_abslinesmodel=0;
+                        Int32 retdi = GetFluxDirectIntegration(eIdx_oii, subeIdx_oii, opt_cont_substract_abslinesmodel,fluxDI, snrDI);
+
                         modelSolution.snrOII = snrDI;
                         if(fluxDI>0.0)
                         {
