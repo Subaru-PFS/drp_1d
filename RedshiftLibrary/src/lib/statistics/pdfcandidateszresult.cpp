@@ -1,6 +1,6 @@
 #include <RedshiftLibrary/statistics/pdfcandidateszresult.h>
 #include <RedshiftLibrary/statistics/pdfz.h>
-
+#include <RedshiftLibrary/extremum/extremum.h>
 #include <RedshiftLibrary/log/log.h>
 
 #include <RedshiftLibrary/processflow/context.h>
@@ -253,16 +253,16 @@ Bool CPdfCandidateszResult::GetBestRedshiftsFromPdf(const CDataStore& store,
         {
             Float64 tmpIntgProba = -DBL_MAX;
             Float64 tmpRedshift = 0.0; 
-            /*//TODO: below commented code should replace executing code once the new finder is ready; find() arguments shd also be updated
+            //TODO: below commented code should replace executing code once the new finder is ready; find() arguments shd also be updated
             TPointList extremumList;
             Int32 s = ExtremaExtendedRedshifts[i].size();
             TFloat64Range redshiftsRange = TFloat64Range( ExtremaExtendedRedshifts[i][0], 
                                                            ExtremaExtendedRedshifts[i][s-1]);
             //call Find on each secondpass range and retrieve the best 10 peaks?
-            CExtremum extremum(redshiftsRange, 10, false, 1);
+            CExtremum extremum(redshiftsRange, 5, false, 1);
             extremum.Find(logzpdf1d->Redshifts, logzpdf1d->valProbaLog, extremumList);
             if(method == 0){
-                redshift.push_back(extremumList[0].X);
+                candidates.push_back(extremumList[0].X);
                 continue;
             }
             for(Int32 j = 0; j < extremumList.size(); j++){
@@ -271,50 +271,8 @@ Bool CPdfCandidateszResult::GetBestRedshiftsFromPdf(const CDataStore& store,
                 flux_integral = pdfz.getCandidateSumTrapez( logzpdf1d->Redshifts, logzpdf1d->valProbaLog, extremumList[j].X, Fullwidth);
                 if(flux_integral>tmpIntgProba){
                         tmpRedshift = extremumList[j].X;
-                        tmpIntgProba = extremumList[j].Y;
+                        tmpIntgProba = flux_integral;
                 }
-            }*/
-            Float64 tmpProbaLog = -DBL_MAX;
-            for(Int32 kval=0; kval<ExtremaExtendedRedshifts[i].size(); kval++)
-            {
-                Float64 zInCandidateRange = ExtremaExtendedRedshifts[i][kval];
-                UInt32 solIdx = logzpdf1d->getIndex(zInCandidateRange);
-                if(solIdx<0 || solIdx>=logzpdf1d->valProbaLog.size())
-                {
-                    Log.LogError( "GetBestRedshiftFromPdf: pdf proba value not found for extremumIndex = %d", i);
-                    return false;
-                }
-
-                Float64 probaLog = logzpdf1d->valProbaLog[solIdx];
-                Log.LogDebug( "GetBestRedshiftFromPdf: z=%f : probalog = %f", zInCandidateRange, probaLog);
-                
-                if(method == 0){
-                    if(probaLog>tmpProbaLog){
-                        tmpRedshift = zInCandidateRange;
-                        tmpProbaLog = probaLog;
-                    }
-                }    
-                if(method == 1){//max integrated proba but only on peaks in this range
-                    CPdfz pdfz;
-                    Float64 flux_integral = -1;
-                    Float64 prev, next;
-                    prev = logzpdf1d->valProbaLog[solIdx-1];
-                    next = logzpdf1d->valProbaLog[solIdx+1];
-                    if((probaLog > prev&& probaLog > next) ||
-                        (solIdx == 0 && probaLog>next) ||
-                        (solIdx == logzpdf1d->valProbaLog.size()-1 && probaLog > prev)){
-                        //if current value is a peak
-                        flux_integral = pdfz.getCandidateSumTrapez( logzpdf1d->Redshifts, logzpdf1d->valProbaLog, zInCandidateRange, Fullwidth);
-                        if(flux_integral>tmpIntgProba){
-                            tmpRedshift = zInCandidateRange;
-                            tmpIntgProba = probaLog;
-                        }
-                    }
-                    else 
-                    {
-                        continue; //it doesnt work to compute here the pdfz
-                    }
-                } 
             }
             candidates.push_back(tmpRedshift);
         }
