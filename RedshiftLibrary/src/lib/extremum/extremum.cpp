@@ -87,6 +87,10 @@ void CExtremum::SetMeritCut( UInt32 n )
     m_meritCut = n;
 }
 
+void CExtremum::DeactivateSlidingWindow()
+{
+    m_slidingWindowactive = false;
+}
 /**
  * Sets m_SignSearch to val.
  */
@@ -180,7 +184,9 @@ Bool CExtremum::Find( const TFloat64List& xAxis, const TFloat64List& yAxis, TPoi
     }
     Int32 keepMinN = 2;
     //refine using sliding windows: aiming at avoiding duplicate candidates when possible. 
-    Bool b = FilterOutNeighboringPeaks(maxX, maxY, keepMinN);//keep at least keepMinN candidates
+    Bool b;
+    if(m_slidingWindowactive)
+      b = FilterOutNeighboringPeaks(maxX, maxY, keepMinN);//keep at least keepMinN candidates
 
     //Cut_Threshold is optional
     if(m_meritCut>0.0){ 

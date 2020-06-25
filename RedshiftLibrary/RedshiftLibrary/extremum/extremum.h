@@ -35,6 +35,7 @@ public:
     Bool Truncate( vector <Float64>& xAxis, vector <Float64>& yAxis, Int32 maxCount, TPointList& maxPoint) const;
     Bool FilterOutNeighboringPeaks( vector <Float64>& maxX, vector <Float64>& maxY, UInt32 keepmin) const;
     
+    void DeactivateSlidingWindow();
 private:
     Bool FindAllPeaks(const Float64* xAxis, const Float64* yAxis, UInt32 n, vector <Float64>& maxX, vector <Float64>& maxY) const;
     Bool FindAllPeaks(const Float64* xAxis, const Float64* yAxis, UInt32 n, vector <Float64>& maxX, vector <Float64>& maxY, Float64 SignSearch) const;
@@ -45,7 +46,7 @@ private:
     Float64         m_meritCut;
     Float64         m_SignSearch;
     Float64         m_Radius;
-
+    Bool            m_slidingWindowactive = true;
     //TO change
     UInt32 m_maxCount;
 };
