@@ -260,6 +260,7 @@ Bool CPdfCandidateszResult::GetBestRedshiftsFromPdf(const CDataStore& store,
                                                            ExtremaExtendedRedshifts[i][s-1]);
             //call Find on each secondpass range and retrieve the best 10 peaks?
             CExtremum extremum(redshiftsRange, 5, false, 1);
+            extremum.DeactivateSlidingWindow();
             extremum.Find(logzpdf1d->Redshifts, logzpdf1d->valProbaLog, extremumList);
             if(method == 0){
                 candidates.push_back(extremumList[0].X);
@@ -274,6 +275,55 @@ Bool CPdfCandidateszResult::GetBestRedshiftsFromPdf(const CDataStore& store,
                         tmpIntgProba = flux_integral;
                 }
             }
+            /*Float64 tmpProbaLog = -DBL_MAX;
+            for(Int32 kval=0; kval<ExtremaExtendedRedshifts[i].size(); kval++)
+            {
+                Float64 zInCandidateRange = ExtremaExtendedRedshifts[i][kval];
+                UInt32 solIdx = logzpdf1d->getIndex(zInCandidateRange);
+                if(solIdx<0 || solIdx>=logzpdf1d->valProbaLog.size())
+                {
+                    Log.LogError( "GetBestRedshiftFromPdf: pdf proba value not found for extremumIndex = %d", i);
+                    return false;
+                }
+
+                Float64 probaLog = logzpdf1d->valProbaLog[solIdx];
+                Log.LogDebug( "GetBestRedshiftFromPdf: z=%f : probalog = %f", zInCandidateRange, probaLog);
+                
+                if(method == 0){
+                    if(probaLog>tmpProbaLog){
+                        tmpRedshift = zInCandidateRange;
+                        tmpProbaLog = probaLog;
+                    }
+                }    
+                if(method == 1){//max integrated proba but only on peaks in this range
+                    CPdfz pdfz;
+                    Float64 flux_integral = -1;
+                    Float64 prev, next;
+                    if(solIdx == 0){
+                        prev = logzpdf1d->valProbaLog[solIdx];
+                    }
+                    if(solIdx == logzpdf1d->valProbaLog.size() - 1){
+                        next = logzpdf1d->valProbaLog[solIdx];
+                    }
+                    prev = logzpdf1d->valProbaLog[solIdx-1];
+                    next = logzpdf1d->valProbaLog[solIdx+1];
+                    if((probaLog > prev&& probaLog > next) ||
+                        (solIdx == 0 && probaLog>next) ||
+                        (solIdx == logzpdf1d->valProbaLog.size()-1 && probaLog > prev)){
+                        //if current value is a peak
+                        flux_integral = pdfz.getCandidateSumTrapez( logzpdf1d->Redshifts, logzpdf1d->valProbaLog, zInCandidateRange, Fullwidth);
+                        if(flux_integral>tmpIntgProba){
+                            tmpRedshift = zInCandidateRange;
+                            tmpIntgProba = flux_integral;
+                        }
+                    }
+                    else 
+                    {
+                        continue; //it doesnt work to compute here the pdfz
+                    }
+                } 
+            }*/
+
             candidates.push_back(tmpRedshift);
         }
 
