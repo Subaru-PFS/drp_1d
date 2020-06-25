@@ -248,18 +248,18 @@ Bool CPdfCandidateszResult::GetBestRedshiftsFromPdf(const CDataStore& store,
             return false;
         }
         Float64 Fullwidth = 6e-3;//should be replaced with deltaz?
-        Int32 method = 1; //0=maxpdf, 1=direct integration on peaks only
+        Int32 method = 0; //0=maxpdf, 1=direct integration on peaks only
         for( Int32 i=0; i<Extrema.size(); i++ )
         {
             Float64 tmpIntgProba = -DBL_MAX;
-            Float64 tmpRedshift = 0.0; 
+            Float64 tmpRedshift = Extrema[i]; //by default
             //TODO: below commented code should replace executing code once the new finder is ready; find() arguments shd also be updated
             TPointList extremumList;
             Int32 s = ExtremaExtendedRedshifts[i].size();
             TFloat64Range redshiftsRange = TFloat64Range( ExtremaExtendedRedshifts[i][0], 
                                                            ExtremaExtendedRedshifts[i][s-1]);
             //call Find on each secondpass range and retrieve the best 10 peaks?
-            CExtremum extremum(redshiftsRange, 5, false, 1);
+            /*CExtremum extremum(redshiftsRange, 5, false, 1);
             extremum.DeactivateSlidingWindow();
             extremum.Find(logzpdf1d->Redshifts, logzpdf1d->valProbaLog, extremumList);
             if(method == 0){
@@ -274,8 +274,8 @@ Bool CPdfCandidateszResult::GetBestRedshiftsFromPdf(const CDataStore& store,
                         tmpRedshift = extremumList[j].X;
                         tmpIntgProba = flux_integral;
                 }
-            }
-            /*Float64 tmpProbaLog = -DBL_MAX;
+            }*/
+            Float64 tmpProbaLog = -DBL_MAX;
             for(Int32 kval=0; kval<ExtremaExtendedRedshifts[i].size(); kval++)
             {
                 Float64 zInCandidateRange = ExtremaExtendedRedshifts[i][kval];
@@ -301,12 +301,15 @@ Bool CPdfCandidateszResult::GetBestRedshiftsFromPdf(const CDataStore& store,
                     Float64 prev, next;
                     if(solIdx == 0){
                         prev = logzpdf1d->valProbaLog[solIdx];
+                    }else{
+                        prev = logzpdf1d->valProbaLog[solIdx-1];
                     }
+
                     if(solIdx == logzpdf1d->valProbaLog.size() - 1){
                         next = logzpdf1d->valProbaLog[solIdx];
+                    }else{
+                        next = logzpdf1d->valProbaLog[solIdx+1];
                     }
-                    prev = logzpdf1d->valProbaLog[solIdx-1];
-                    next = logzpdf1d->valProbaLog[solIdx+1];
                     if((probaLog > prev&& probaLog > next) ||
                         (solIdx == 0 && probaLog>next) ||
                         (solIdx == logzpdf1d->valProbaLog.size()-1 && probaLog > prev)){
@@ -322,7 +325,7 @@ Bool CPdfCandidateszResult::GetBestRedshiftsFromPdf(const CDataStore& store,
                         continue; //it doesnt work to compute here the pdfz
                     }
                 } 
-            }*/
+            }
 
             candidates.push_back(tmpRedshift);
         }
