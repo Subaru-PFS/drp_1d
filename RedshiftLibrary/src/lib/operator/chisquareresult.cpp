@@ -303,7 +303,7 @@ bool CChisquareResult::CallFindExtrema()
 
     CExtremum extremum(redshiftsRange, extremumCount, radius, true);
 
-    if (Redshifts.size() == 1 || Redshifts.size() > extremumCount)
+    if (Redshifts.size() == 1 || Redshifts.size() < extremumCount)
     {
         extremum.DefaultExtremum( Redshifts, ChiSquare, extremumList); 
 
