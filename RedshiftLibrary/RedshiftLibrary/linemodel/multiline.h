@@ -25,7 +25,8 @@ public:
     ~CMultiLine();
 
     std::string GetRayName(Int32 subeIdx);
-    Float64 GetObservedPosition(Int32 subeIdx, Float64 redshift);
+    Float64 GetObservedPosition(Int32 subeIdx, Float64 redshift, Bool doAsymfitdelta=true);
+    Float64 GetLineProfileAtRedshift(Int32 subeIdx, Float64 redshift, Float64 x);
     Float64 GetWidth(Int32 subeIdx, Float64 redshift);
     Float64 GetSignFactor(Int32 subeIdx);
     std::vector<CRay> GetRays();
@@ -37,7 +38,7 @@ public:
     TInt32Range getSupportSubElt(Int32 subeIdx);
     TInt32Range getTheoreticalSupportSubElt(Int32 subeIdx);
 
-    TInt32Range EstimateIndexRange(Int32 subeIdx, const CSpectrumSpectralAxis& spectralAxis, Float64 redshift,  const TFloat64Range &lambdaRange, Float64 winsizeAngstrom);
+    TInt32Range EstimateIndexRange(const CSpectrumSpectralAxis& spectralAxis, Float64 mu,  const TFloat64Range &lambdaRange, Float64 winsizeAngstrom);
 
     Float64 GetContinuumAtCenterProfile(Int32 subeIdx, const CSpectrumSpectralAxis& spectralAxis, Float64 redshift, CSpectrumFluxAxis &continuumfluxAxis);
 
@@ -85,8 +86,6 @@ private:
 
     Float64 m_absLinesLimit;
 
-    TFloat64List        mBuffer_mu;
-    TFloat64List        mBuffer_c;
     CRay::TProfileList  m_profile;
 
 

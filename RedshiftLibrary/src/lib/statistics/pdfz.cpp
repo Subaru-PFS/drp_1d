@@ -433,6 +433,20 @@ Float64 CPdfz::getSumRect(std::vector<Float64> redshifts,
     return sum;
 }
 
+Int32 CPdfz::getIndex( std::vector<Float64> redshifts, Float64 z )
+{
+    Int32 solutionIdx=-1;
+    for ( UInt32 i2=0; i2<redshifts.size(); i2++)
+    {
+        if( redshifts[i2]==z )
+        {
+            solutionIdx = i2;
+            break;
+        }
+    }
+    return solutionIdx;
+}
+
 /**
  * @brief CPdfz::getCandidateSumTrapez
  * @param redshifts
@@ -443,7 +457,9 @@ Float64 CPdfz::getSumRect(std::vector<Float64> redshifts,
  */
 Float64 CPdfz::getCandidateSumTrapez(std::vector<Float64> redshifts,
                                      std::vector<Float64> valprobalog,
-                                     Float64 zcandidate, Float64 zwidth)
+                                     Float64 zcandidate, 
+                                     Float64 zwidth_left,
+                                     Float64 zwidth_right)
 {
     // check that redshifts are sorted
     for (UInt32 k = 1; k < redshifts.size(); k++)
@@ -461,21 +477,37 @@ Float64 CPdfz::getCandidateSumTrapez(std::vector<Float64> redshifts,
     // redshifts[kmin]:redshifts[kmax] ]
     Int32 kmin = 0;
     Int32 kmax = redshifts.size() - 1;
-    Float64 halfzwidth = zwidth / 2.0;
-    for (UInt32 k = 0; k < redshifts.size(); k++)
-    {
-        if (redshifts[k] < (zcandidate - halfzwidth))
-        {
-            kmin = k;
+    if(zwidth_right == - 1)
+        zwidth_right = zwidth_left;
+
+    UInt32 cand_Idx = getIndex(redshifts, zcandidate);
+    if(cand_Idx == 0){
+        kmin = 0;
+    }else{
+        for (UInt32 k = cand_Idx - 1; k >0; k--){
+            if(redshifts[k] == zwidth_left){
+                kmin = k;
+                break;
+            }
+            if(redshifts[k] < zwidth_left){
+                kmin = k - 1;
+                break;
+            }
         }
     }
     Log.LogDebug("    CPdfz::getCandidateSumTrapez - kmin index=%d", kmin);
-
-    for (UInt32 k = redshifts.size() - 1; k > 0; k--)
-    {
-        if (redshifts[k] > (zcandidate + halfzwidth))
-        {
-            kmax = k;
+    if(cand_Idx == redshifts.size()-1){
+        kmax = redshifts.size()-1;
+    }else{
+        for (UInt32 k = cand_Idx + 1; k < redshifts.size(); k++){
+            if(redshifts[k] == zwidth_right){
+                kmax = k;
+                break;
+            }
+            if(redshifts[k] > zwidth_right){
+                kmax = k - 1;
+                break;
+            }
         }
     }
     Log.LogDebug("    CPdfz::getCandidateSumTrapez - kmax index=%d", kmax);
@@ -528,6 +560,7 @@ Float64 CPdfz::getCandidateSumTrapez(std::vector<Float64> redshifts,
     return sum;
 }
 
+//TODO: this requires a deeper check to include the updates window support range
 Int32 CPdfz::getCandidateRobustGaussFit(std::vector<Float64> redshifts,
                                         std::vector<Float64> valprobalog,
                                         Float64 zcandidate, Float64 zwidth,
@@ -807,7 +840,7 @@ Int32 CPdfz::getCandidateGaussFit(std::vector<Float64> redshifts,
     return ret;
 }
 
-Int32   CPdfz::getPmis(std::vector<Float64> redshifts,
+Int32 CPdfz::getPmis(std::vector<Float64> redshifts,
                        std::vector<Float64> valprobalog,
                        Float64 zbest,
                        std::vector<Float64> zcandidates,
@@ -856,10 +889,11 @@ Int32   CPdfz::getPmis(std::vector<Float64> redshifts,
 
     //override amazed-zcandidates by all pdf peaks found
     Int32 maxpeakscount = 1000;
+    Float64 radius = 0.005;
     TFloat64Range redshiftsRange(
         redshifts[0],
         redshifts[redshifts.size() - 1]);
-    CExtremum extremum(redshiftsRange, maxpeakscount, false, 2);
+    CExtremum extremum(redshiftsRange, maxpeakscount, radius, false);
     TPointList extremumList;
     extremum.Find(redshifts, valprobalog, extremumList);
     zcandidates.clear();
@@ -938,7 +972,7 @@ Int32   CPdfz::getPmis(std::vector<Float64> redshifts,
     pmis_raw = getSumTrapez(redshifts_selected, valprobalog_selected);
 
     //estimate zcalc intg proba
-    Float64 pzcalc = getCandidateSumTrapez( redshifts, valprobalog, zbest, zwidth);
+    Float64 pzcalc = getCandidateSumTrapez( redshifts, valprobalog, zbest, zwidth/2);
 
     Log.LogDetail("pdfz: <pmisraw><%.6e>", pmis_raw);
     Log.LogDetail("pdfz: <pmap><%.6e>", pzcalc);
@@ -1227,9 +1261,6 @@ Int32 CPdfz::Marginalize(TFloat64List redshifts,
                              "least one nan or invalid value at index=%d",
                              km, kz);
                 invalidFound = true;
-            }
-            if (invalidFound)
-            {
                 break;
             }
         }
@@ -1245,7 +1276,7 @@ Int32 CPdfz::Marginalize(TFloat64List redshifts,
     std::vector<Float64> logPriorModel;
     if (/*false &&*/ modelPriors.size() != meritResults.size())
     {
-        Float64 priorModelCst = 1.0 / ((Float64)meritResults.size());
+        Float64 priorModelCst = 1.0 / (meritResults.size());
         Log.LogInfo(
             "Pdfz: Marginalize: no priors loaded, using constant priors (=%f)",
             priorModelCst);
@@ -1311,7 +1342,7 @@ Int32 CPdfz::Marginalize(TFloat64List redshifts,
             //                Log.LogInfo("Pdfz: Marginalize: for km=%d,
             //                logEvidence=%e", km, MaxiLogEvidence);
             //            }
-            Float64 logEvidenceWPriorM = logEvidence + logPriorModel[km];
+            Float64 logEvidenceWPriorM = logEvidence + (Float64)logPriorModel[km];
 
             LogEvidencesWPriorM.push_back(logEvidenceWPriorM);
             if (MaxiLogEvidence < logEvidenceWPriorM)

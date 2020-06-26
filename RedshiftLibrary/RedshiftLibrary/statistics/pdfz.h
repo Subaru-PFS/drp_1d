@@ -35,7 +35,8 @@ public:
     Float64 getCandidateSumTrapez(std::vector<Float64> redshifts,
                                   std::vector<Float64> valprobalog,
                                   Float64 zcandidate,
-                                  Float64 zwidth);
+                                  Float64 zwidth_left,
+                                  Float64 zwidth_right = -1);//default: zwidth_left = zwidth_right
 
     Int32   getCandidateRobustGaussFit(std::vector<Float64> redshifts,
                                        std::vector<Float64> valprobalog,
@@ -59,7 +60,7 @@ public:
                       std::vector<Float64> modelPriors=std::vector<Float64>());
     Int32 BestProba(TFloat64List redshifts, std::vector<TFloat64List> meritResults, std::vector<TFloat64List> zPriors, Float64 cstLog, std::shared_ptr<CPdfMargZLogResult> postmargZResult);
     Int32 BestChi2(TFloat64List redshifts, std::vector<TFloat64List> meritResults, std::vector<TFloat64List> zPriors, Float64 cstLog, std::shared_ptr<CPdfMargZLogResult> postmargZResult);
-
+    Int32 getIndex( std::vector<Float64> redshifts, Float64 z );
 
 private:
 

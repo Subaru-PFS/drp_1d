@@ -8,7 +8,7 @@
 #include <RedshiftLibrary/operator/chisquare2.h>
 #include <RedshiftLibrary/extremum/extremum.h>
 #include <RedshiftLibrary/processflow/datastore.h>
-
+#include <RedshiftLibrary/common/quicksort.h>
 using namespace NSEpic;
 using namespace std;
 
@@ -89,7 +89,11 @@ Bool CMethodChisquareSolve::Solve( CDataStore& dataStore, const CSpectrum& spc, 
 
     // Compute merit function
     COperatorChiSquare2 chiSquare(m_calibrationPath);
-    auto  chisquareResult = chiSquare.Compute( _spc, _tpl, lambdaRange, redshifts, overlapThreshold, maskList, opt_interp);
+    //adding cast to be capable of reading redshift attribute
+    auto  chisquareResult = std::dynamic_pointer_cast<CChisquareResult>(chiSquare.Compute( _spc, _tpl, lambdaRange, redshifts, overlapThreshold, maskList, opt_interp));
+    
+    chisquareResult->CallFindExtrema();  
+    
     if( !chisquareResult )
     {
         //Log.LogInfo( "Failed to compute chi square value");

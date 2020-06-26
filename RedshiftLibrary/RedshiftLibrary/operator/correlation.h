@@ -8,7 +8,7 @@
 #include <RedshiftLibrary/operator/operator.h>
 #include <RedshiftLibrary/operator/correlationresult.h>
 #include <RedshiftLibrary/statistics/priorhelper.h>
-
+#include <RedshiftLibrary/spectrum/template/template.h>
 
 namespace NSEpic
 {
@@ -36,13 +36,22 @@ public:
                                               std::string opt_interp_unused="lin",
                                               Int32 opt_extinction_unused=0 ,
                                               Int32 opt_dustFitting_unused=0,
-                                              CPriorHelper::TPriorZEList logpriorze_unused=CPriorHelper::TPriorZEList());
+                                              CPriorHelper::TPriorZEList logpriorze_unused=CPriorHelper::TPriorZEList(),
+                                              Bool keepigmism = false,
+                                              Float64 FitDustCoeff=-1,
+                                              Float64 FitMeiksinIdx=-1);
 
     Float64 GetComputationDuration() const;
 
 private:
 
     Float64                 m_TotalDuration;
+
+    // buffers for the interpolated axis (template & spectrum)
+    CTemplate       m_templateRebined_bf; //buffer
+    CMask           m_mskRebined_bf; //buffer
+    CSpectrumSpectralAxis m_spcSpectralAxis_restframe; //buffer
+
 };
 
 

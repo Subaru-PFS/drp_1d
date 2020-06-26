@@ -15,14 +15,14 @@ class CDataStore;
 /**
  * \ingroup Redshift
  */
-class COperatorDTree7Solve
+class CMethodDTree7Solve
 {
 
 
 public:
 
-    COperatorDTree7Solve(std::string calibrationPath="");
-    ~COperatorDTree7Solve();
+    CMethodDTree7Solve(std::string calibrationPath="");
+    ~CMethodDTree7Solve();
 
     const std::string GetDescription();
 

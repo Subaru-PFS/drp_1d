@@ -28,9 +28,8 @@ public:
     virtual void SaveJSON(const CDataStore& store, std::ostream& stream) const;
     //virtual void Load( std::istream& stream ) = 0;
 
-    void SetReliabilityLabel( std::string lbl );
-    void SetTypeLabel( std::string lbl );
-    virtual Int32 GetEvidenceFromPdf(const CDataStore& store, Float64 &evidence) const = 0;
+
+
 
     void SaveFloat64(std::ostream& stream,Float64 data) const;
     void SaveTFloat64List(std::ostream& stream,std::string name,TFloat64List data, TInt32List order) const;
@@ -41,8 +40,6 @@ public:
     void SaveTContinuumIndexListVector(std::ostream& stream,std::string name,std::vector<CContinuumIndexes::TContinuumIndexList>, TInt32List order) const;
 protected:
 
-    std::string m_ReliabilityLabel="-1";
-    std::string m_TypeLabel="-1";
 };
 
 typedef std::vector< std::shared_ptr<COperatorResult> >           TOperatorResultList;

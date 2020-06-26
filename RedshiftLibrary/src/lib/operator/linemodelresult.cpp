@@ -1,5 +1,6 @@
 #include <RedshiftLibrary/operator/linemodelresult.h>
 
+#include <RedshiftLibrary/statistics/deltaz.h>
 #include <boost/tokenizer.hpp>
 #include <boost/lexical_cast.hpp>
 #include <string>

@@ -11,7 +11,7 @@
 #include <RedshiftLibrary/operator/pdfLogresult.h>
 
 #include <RedshiftLibrary/statistics/pdfcandidateszresult.h>
-
+#include <RedshiftLibrary/statistics/deltaz.h>
 #include <boost/tokenizer.hpp>
 #include <boost/lexical_cast.hpp>
 #include <string>
@@ -224,8 +224,6 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
     dataStore.GetScopedParam( "linemodel.modelpriorzStrength", m_opt_modelZPriorStrength, -1);
     dataStore.GetScopedParam( "linemodel.pdfcombination", m_opt_pdfcombination, "marg");
     dataStore.GetScopedParam( "linemodel.pdf.margampcorr", m_opt_pdf_margAmpCorrection, "no");
-    dataStore.GetScopedParam( "linemodel.pdf.bestzoption", m_opt_bestz_option, "maxintgproba");
-
     dataStore.GetScopedParam( "linemodel.saveintermediateresults", m_opt_saveintermediateresults, "no");
 
     //Auto-correct fitting method
@@ -334,7 +332,6 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
     Log.LogInfo( "    -pdf-modelpriorzStrength: %e", m_opt_modelZPriorStrength);
     Log.LogInfo( "    -pdf-combination: %s", m_opt_pdfcombination.c_str()); // "marg";    // "bestchi2";    // "bestproba";
     Log.LogInfo( "    -pdf-margAmpCorrection: %s", m_opt_pdf_margAmpCorrection.c_str());
-    Log.LogInfo( "    -pdf-best z option: %s", m_opt_bestz_option.c_str());
 
     if(m_opt_saveintermediateresults=="yes")
     {
@@ -364,6 +361,7 @@ std::shared_ptr<CLineModelSolveResult> CLineModelSolve::Compute( CDataStore& dat
                                                                  const std::string outputPdfRelDir)
 {
     CDataStore::CAutoScope resultScope( dataStore, "linemodelsolve" );
+    m_outputPdfRelDir = outputPdfRelDir;
 
     PopulateParameters( dataStore );
     Int32 retSolve = Solve( dataStore, spc, spcWithoutCont, tplCatalog, tplCategoryList, restraycatalog, lambdaRange, redshifts);
@@ -371,7 +369,7 @@ std::shared_ptr<CLineModelSolveResult> CLineModelSolve::Compute( CDataStore& dat
     if(retSolve){
 
         /* ------------------------  COMPUTE POSTERIOR PDF  --------------------------  */
-        Log.LogInfo("linemodelsolve: Pdfz computation");
+ //       Log.LogInfo("linemodelsolve: Pdfz computation");
 
         std::string scope = "linemodelsolve.linemodel";
         auto results = dataStore.GetGlobalResult( scope.c_str() );
@@ -380,9 +378,9 @@ std::shared_ptr<CLineModelSolveResult> CLineModelSolve::Compute( CDataStore& dat
             Log.LogError("linemodelsolve: Unable to retrieve linemodel results");
             return NULL;
         }
-        std::shared_ptr<const CLineModelResult> result = std::dynamic_pointer_cast<const CLineModelResult>( results.lock() );
+        std::shared_ptr<const CLineModelResult> result = std::dynamic_pointer_cast<const CLineModelResult>( results.lock());
 
-        std::shared_ptr<CPdfMargZLogResult> postmargZResult = std::shared_ptr<CPdfMargZLogResult>(new CPdfMargZLogResult());
+      /*  std::shared_ptr<CPdfMargZLogResult> postmargZResult = std::shared_ptr<CPdfMargZLogResult>(new CPdfMargZLogResult());
         std::shared_ptr<CPdfLogResult> zpriorResult = std::shared_ptr<CPdfLogResult>(new CPdfLogResult());
         Int32 retCombinePdf = CombinePDF(result,
                                          m_opt_rigidity,
@@ -418,7 +416,7 @@ std::shared_ptr<CLineModelSolveResult> CLineModelSolve::Compute( CDataStore& dat
             std::string pdfPath = outputPdfRelDir+"/logposterior.logMargP_Z_data";
             dataStore.StoreGlobalResult( pdfPath.c_str(), postmargZResult); //need to store this pdf with this exact same name so that zqual can load it. see zqual.cpp/ExtractFeaturesPDF
         }
-
+*/
 
         //SaveContinuumPDF(dataStore, result);
 
@@ -485,8 +483,6 @@ std::shared_ptr<CLineModelSolveResult> CLineModelSolve::Compute( CDataStore& dat
 
 
     std::shared_ptr<CLineModelSolveResult>  lmsolveresult = std::shared_ptr<CLineModelSolveResult>( new CLineModelSolveResult() );
-    Log.LogInfo("    linemodelsolve: Pdfz option set : %s", m_opt_bestz_option.c_str());
-    lmsolveresult->SetBestZFromPdfOption( m_opt_bestz_option );
     return lmsolveresult;
 }
 
@@ -1226,10 +1222,68 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
         }
     }
 
+
     Int32 retSaveResults = linemodel.SaveResults(_spc,
                                                  lambdaRange,
                                                  m_opt_continuumreest);
+ //combinePDF using results from secondpass
+     Log.LogInfo("linemodelsolve: Pdfz computation");
+    std::shared_ptr<const CLineModelResult> lmresultsp = std::dynamic_pointer_cast<const CLineModelResult>( linemodel.getResult() );
 
+    std::shared_ptr<CPdfMargZLogResult> postmargZResult = std::shared_ptr<CPdfMargZLogResult>(new CPdfMargZLogResult());
+    std::shared_ptr<CPdfLogResult> zpriorResult = std::shared_ptr<CPdfLogResult>(new CPdfLogResult());
+    Int32 retCombinePdf = CombinePDF(lmresultsp,
+                                         m_opt_rigidity,
+                                         m_opt_pdfcombination,
+                                         m_opt_stronglinesprior,
+                                         m_opt_haPrior,
+                                         m_opt_euclidNHaEmittersPriorStrength,
+                                         m_opt_modelZPriorStrength,
+                                         postmargZResult,
+                                         zpriorResult);
+
+    if(retCombinePdf!=0)
+    {
+            Log.LogError("Linemodel: Pdfz computation failed");
+    }else{
+
+            Log.LogDetail("    linemodelsolve: Storing priors (size=%d)", zpriorResult->Redshifts.size());
+            std::string priorPath = m_outputPdfRelDir+"/logprior.logP_Z_data";
+            dataStore.StoreGlobalResult( priorPath.c_str(), zpriorResult);
+
+            //check pdf sum=1
+            CPdfz pdfz;
+            Float64 sumRect = pdfz.getSumRect(postmargZResult->Redshifts, postmargZResult->valProbaLog);
+            Float64 sumTrapez = pdfz.getSumTrapez(postmargZResult->Redshifts, postmargZResult->valProbaLog);
+            Log.LogDetail("    linemodelsolve: Pdfz normalization - sum rect. = %e", sumRect);
+            Log.LogDetail("    linemodelsolve: Pdfz normalization - sum trapz. = %e", sumTrapez);
+            Bool pdfSumCheck = abs(sumRect-1.0)<1e-1 || abs(sumTrapez-1.0)<1e-1;
+            if(!pdfSumCheck){
+                Log.LogWarning("    linemodelsolve: Pdfz normalization failed (rectsum = %f, trapzesum = %f)", sumRect, sumTrapez);
+            }
+
+            Log.LogDetail("    linemodelsolve: Storing PDF results");
+            std::string pdfPath = m_outputPdfRelDir+"/logposterior.logMargP_Z_data";
+            dataStore.StoreGlobalResult( pdfPath.c_str(), postmargZResult); 
+    }
+
+    //Get candidatesfromPDF before saving all, otherwise incoherence appears in output files
+    TFloat64List zcandidates_unordered_lists;
+    std::shared_ptr<CPdfCandidateszResult> pdfcandResult_obj = std::shared_ptr<CPdfCandidateszResult>(new CPdfCandidateszResult());
+    pdfcandResult_obj->GetBestRedshiftsFromPdf(dataStore, 
+                                    linemodel.m_secondpass_parameters_extremaResult.Extrema,//should be replaced by a simple variable
+                                    linemodel.m_secondpass_parameters_extremaResult.ExtremaExtendedRedshifts, 
+                                    zcandidates_unordered_lists);
+
+    //overwrite linemodelExtrema with pdfcandidates before saving into datastore
+    std::shared_ptr<CLineModelResult> lmresult_edt = std::dynamic_pointer_cast< CLineModelResult>( linemodel.getResult() );
+    for(Int32 idx = 0; idx<zcandidates_unordered_lists.size(); idx++){
+        linemodel.m_secondpass_parameters_extremaResult.Extrema[idx] = zcandidates_unordered_lists[idx];
+        //Important TODO:
+        //we'd rather separate saveresults into two functions: one to do more calculations and one to save into m_results data to be saved in datastore
+        lmresult_edt->ExtremaResult.Extrema[idx] = zcandidates_unordered_lists[idx];
+    }
+    //read it as constant to save it
     std::shared_ptr<const CLineModelResult> result = std::dynamic_pointer_cast<const CLineModelResult>( linemodel.getResult() );
 
 
@@ -1268,7 +1322,7 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
     return true;
 }
 
-Bool CLineModelSolve::ExtractCandidateResults(CDataStore &store, std::vector<Float64> zcandidates_unordered_list)
+Bool CLineModelSolve::ExtractCandidateResults(CDataStore &store, std::vector<Float64> zcandidates_unordered_list, Int32 maxCount)
 {
         Log.LogInfo( "Computing candidates Probabilities" );
         std::shared_ptr<CPdfCandidateszResult> zcand = std::shared_ptr<CPdfCandidateszResult>(new CPdfCandidateszResult());
@@ -1289,22 +1343,43 @@ Bool CLineModelSolve::ExtractCandidateResults(CDataStore &store, std::vector<Flo
         //retrieve extremum IDs saved in datastore from firstpass 
         std::shared_ptr<const CLineModelResult> v = std::dynamic_pointer_cast<const CLineModelResult>(
             store.GetGlobalResult("linemodelsolve.linemodel").lock());
-
-        zcand->Compute(zcandidates_unordered_list, logzpdf1d->Redshifts, logzpdf1d->valProbaLog, v->ExtremaResult.ExtremaIDs);
-        
-        store.StoreScopedGlobalResult( "candidatesresult", zcand ); 
-        store.SetRank(zcand->Rank);
-        store.SetIntgPDF(zcand->ValSumProba);
+        //compute Deltaz
+        TFloat64List deltaz;
+        CDeltaz* deltaz_obj = new CDeltaz();
+        for(Int32 i =0; i<zcandidates_unordered_list.size(); i++){
+            Float64 z = zcandidates_unordered_list[i];
+            deltaz.push_back(deltaz_obj->GetDeltaz(logzpdf1d->Redshifts, logzpdf1d->valProbaLog, z));
+        }
+        zcand->Compute(zcandidates_unordered_list, logzpdf1d->Redshifts, logzpdf1d->valProbaLog, deltaz, v->ExtremaResult.ExtremaIDs);
 
         std::vector<std::string> info {"spc", "fit", "fitcontinuum", "rules", "continuum"};
+        Int32 s = zcand->Rank.size();
+        Int32 l = std::min(maxCount, s);
         for(Int32 f = 0; f<info.size(); f++) {
-            for( Int32 i = 0; i<zcand->Rank.size(); i++){
+            for( Int32 i = 0; i<l; i++){
                 std::string fname_new =
                 (boost::format("linemodelsolve.linemodel_%1%_extrema_%2%") % info[f] % i).str();
                 std::string fname_old =
                 (boost::format("linemodelsolve.linemodel_%1%_extrema_tmp_%2%") % info[f] % zcand->Rank[i]).str();
                 store.ChangeScopedGlobalResult(fname_old, fname_new);    
             }
+            //TODO: Delete extra tmp data corresponding to truncated candidates
+            //if a truncation should happen
+            if(zcand->Rank.size() > maxCount){
+                for(Int32 i = maxCount; i<zcand->Rank.size(); i++){
+                    std::string fname_old =
+                    (boost::format("linemodelsolve.linemodel_%1%_extrema_tmp_%2%") % info[f] % zcand->Rank[i]).str();
+                    store.DeleteScopedGlobalResult(fname_old); 
+                }
+            }
         }
+
+        //Truncate only Rank size since is the only sorted vector
+        //the real truncation happens at saving time, into output files
+        if(zcand->Rank.size()>maxCount)
+            zcand->Rank.resize(maxCount);
+
+        store.StoreScopedGlobalResult( "candidatesresult", zcand );
+
 return true;
 }

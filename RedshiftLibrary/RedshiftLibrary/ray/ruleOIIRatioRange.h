@@ -14,6 +14,7 @@ class CRuleRatioRange : public CRule
 {
   public:
     CRuleRatioRange();
+    ~CRuleRatioRange();
     Bool Check(CLineModelElementList &LineModelElementList);
     void SetUp(Bool EnabledArgument, ...);
 

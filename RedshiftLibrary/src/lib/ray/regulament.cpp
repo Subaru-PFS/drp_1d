@@ -20,6 +20,9 @@ CRegulament::CRegulament()
 {
 }
 
+CRegulament::~CRegulament()
+{
+}
 void CRegulament::Apply( CLineModelElementList& LineModelElementList )
 {
   for( std::vector<CRule*>::iterator it = m_RulesVector.begin(); it != m_RulesVector.end(); it++ )
@@ -45,6 +48,8 @@ Bool CRegulament::CreateRulesFromJSONFiles( void )
   //CRuleBalmerLinearSolver* ARule8 = new CRuleBalmerLinearSolver( );
   //ARule8->SetUp( True );
   //m_RulesVector.push_back( dynamic_cast<CRule*>( ARule8 ) );
+
+  //TODO [ml] check all these new objects, they are "possibly lost in loss record" according to valgrind, reveiew CRull... constructor
 
   CRule2SingleLinesAmplitude* ARule1 = new CRule2SingleLinesAmplitude( );
   ARule1->SetUp( True, CRay::nType_Emission, ltags.halpha_em, ltags.hbeta_em, 1.0/2.86*1.1 );
