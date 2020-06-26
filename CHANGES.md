@@ -1,3 +1,34 @@
+# 0.10.0 (2020-06-23)
+
+## New Features
+
+* [5619] New algorithm for peak surch
+* [5770] Compute reliability with merit
+
+## Bug Fixes
+
+* [5417] Check negative continuum amplitude 
+* [5772] Fix pdf integration (especially when Zcand close to Zmin or Zmax)
+* [5659] Fix wrong Lya profile
+* [5739|5757] Fix redshift candidates rank
+* [5652] Fix redshift measurement on close candidates (overlap of integration support)
+* [5431] Fixing deltaz computation based on the marginalized pdf rather than the secondpass Xi2 results
+* [5646] Continuum 1st pass -> 2nd pass
+* [5826] Fix tplAmplitudeError parameter
+* [5773] Reeng : solveResult intermediate Class + preSave method
+* [5627] Remove extrema continuum computation
+* [5736] Remove memory leek
+
+## API Changes
+
+* [5800] Refactoring on method name 
+
+## Other Changes and Additions
+
+* [5418] Update the error message in the case of peaks/extremums not found during the reliability computation
+* [5495] Remove basic progress message
+* [5778] Avoid negative SNR for Ha and OII lines
+
 # 0.8.1 (2020-04-03)
 
 ## Bug Fixes
